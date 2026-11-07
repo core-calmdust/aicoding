@@ -15,7 +15,15 @@ const TR = [(r, c) => [r, c], (r, c) => [c, n - 1 - r], (r, c) => [n - 1 - r, n 
 const tsq = (k, i) => { const [r, c] = TR[k](Math.floor(i / n), i % n); return r * n + c; };
 const canon = m => Math.min(...TR.map((_, k) => tsq(k, E.mFrom(m)) + 256 * tsq(k, E.mTo(m))));
 const block = new Set([2, 12, 22, 8, 20, 32, 88, 100, 112, 98, 108, 118]);
-const L10 = (ja, en, zh, ko, es, fr, pt, de, hi, ar) => ({ ja, en, zh, ko, es, fr, pt, de, hi, ar });
+// ru / zh-TW / id / tr: looked up by the English text in tools/op_new4.json ({ en: [ru, zh-TW, id, tr] }); texts with a
+// placeholder ({n}, {m}) are looked up by the English template (the template is filled for each language). A new text
+// needs its 4 translations there (the generator stops otherwise).
+const NEW4 = JSON.parse(require('fs').readFileSync(require('path').join(__dirname, 'op_new4.json'), 'utf8'));
+const L10 = (ja, en, zh, ko, es, fr, pt, de, hi, ar, tpl) => {
+  const m = NEW4[tpl ? tpl.en : en]; if (!m) throw new Error('op_new4.json: no ru / zh-TW / id / tr for: ' + (tpl ? tpl.en : en));
+  const f = s => tpl ? s.replace(/\{(\w+)\}/g, (_, k) => tpl.v[k]) : s;
+  return { ja, en, zh, ko, es, fr, pt, de, hi, ar, ru: f(m[0]), 'zh-TW': f(m[1]), id: f(m[2]), tr: f(m[3]) };
+};
 const evalWord = v => v > 250 ? L10('攻め手有利', 'attackers better', '攻方占优', '공격 측 우세', 'ventaja atacantes', 'avantage attaquants', 'vantagem atacantes', 'Angreifer besser', 'आक्रमणकारी बेहतर', 'أفضلية المهاجمين')
   : v > 90 ? L10('攻め手やや有利', 'attackers slightly better', '攻方稍优', '공격 측 약간 우세', 'atacantes algo mejor', 'attaquants un peu mieux', 'atacantes um pouco melhor', 'Angreifer etwas besser', 'आक्रमणकारी थोड़े बेहतर', 'المهاجمون أفضل قليلاً')
   : v < -250 ? L10('守り手有利', 'defenders better', '守方占优', '수비 측 우세', 'ventaja defensores', 'avantage défenseurs', 'vantagem defensores', 'Verteidiger besser', 'रक्षक बेहतर', 'أفضلية المدافعين')
@@ -46,7 +54,8 @@ const DEF_DESC = [
   L10('角の近くへ駒を送り、攻め手の角固めを先に崩します。', 'Pieces head for a corner to break the attackers\u2019 corner guard before it is built.', '把棋子送到角落附近，抢先破坏攻方的守角。', '모서리 근처로 말을 보내 공격 측의 모서리 굳히기를 먼저 무너뜨립니다.', 'Las piezas van hacia una esquina para romper la guardia antes de que se forme.', 'Les pièces filent vers un coin pour briser la garde avant qu\u2019elle se forme.', 'As peças vão a um canto para quebrar a guarda antes que se forme.', 'Figuren eilen zu einer Ecke, um die Eckwache zu brechen, bevor sie steht.', 'मोहरे कोने की ओर जाकर रक्षा-घेरा बनने से पहले तोड़ते हैं।', 'تتجه القطع نحو زاوية لكسر حراستها قبل أن تكتمل.'),
 ];
 const introOf = (d, nt) => { const o = {}; for (const k in d) o[k] = [d[k], nt[k]]; return o; };
-const join = (a, b) => { const o = {}; for (const k in a) o[k] = a[k] + ' (AI: ' + b[k] + ')'; return o; };
+const AIW = l => l === 'zh-TW' ? ['（AI：', '）'] : l === 'ru' ? [' (ИИ: ', ')'] : l === 'tr' ? [' (YZ: ', ')'] : [' (AI: ', ')'];
+const join = (a, b) => { const o = {}; for (const k in a) o[k] = a[k] + AIW(k)[0] + b[k] + AIW(k)[1]; return o; };
 function extend(line, plies) {
   const out = line.slice();
   while (out.length < plies) { const L = analyze(out, MS); if (!L.length) break; out.push(L[0][0]); const { pos } = E.replay(null, out, V); if (pos.res) break; }
@@ -84,7 +93,7 @@ for (const [m, v] of att) {
   const line = extend([m], 14), { pos: p0 } = E.replay(null, [], V);
   const notes = line.map((mm, i) => { const { pos } = E.replay(null, line.slice(0, i), V); const L = analyze(line.slice(0, i + 1), 600); const vv = L.length ? (i % 2 === 0 ? -L[0][1] : L[0][1]) : 0; return join(noteOf(pos, mm), evalWord(vv)); });
   const t = ATT_TITLES[k];
-  sets.push({ id: 'a' + (sets.length + 1), grp: 'att', side: 1, show: 3, moves: name(p0, m), title: t, short: L10(`初手 ${name(p0, m)} から`, `Starting with ${name(p0, m)}`, `首着 ${name(p0, m)}`, `첫 수 ${name(p0, m)}`, `Empieza con ${name(p0, m)}`, `Commence par ${name(p0, m)}`, `Começa com ${name(p0, m)}`, `Beginnt mit ${name(p0, m)}`, `${name(p0, m)} से शुरुआत`, `يبدأ بـ ${name(p0, m)}`),
+  sets.push({ id: 'a' + (sets.length + 1), grp: 'att', side: 1, show: 3, moves: name(p0, m), title: t, short: L10(`初手 ${name(p0, m)} から`, `Starting with ${name(p0, m)}`, `首着 ${name(p0, m)}`, `첫 수 ${name(p0, m)}`, `Empieza con ${name(p0, m)}`, `Commence par ${name(p0, m)}`, `Começa com ${name(p0, m)}`, `Beginnt mit ${name(p0, m)}`, `${name(p0, m)} से शुरुआत`, `يبدأ بـ ${name(p0, m)}`, { en: 'Starting with {m}', v: { m: name(p0, m) } }),
     intro: introOf(ATT_DESC[k], notes[0]), study: { line, notes }, problems: problems(line, 1) });
 }
 // defenders: answers to the attackers' best first move
@@ -104,7 +113,7 @@ for (const [m, v] of second) {
   const line = extend([m1, m], 14);
   const notes = line.map((mm, i) => { const { pos } = E.replay(null, line.slice(0, i), V); const L = analyze(line.slice(0, i + 1), 600); const vv = L.length ? L[0][1] * (i % 2 === 0 ? -1 : 1) : 0; return join(noteOf(pos, mm), evalWord(vv)); });
   const t = DEF_TITLES[di], dd = DEF_DESC[di]; di++;
-  sets.push({ id: 'd' + di, grp: 'def', side: 2, show: 4, moves: `${name(E.Pos.from(null, V), m1)} ${name(p1, m)}`, title: t, short: L10(`${name(p1, m)} で応じる`, `Answering with ${name(p1, m)}`, `以 ${name(p1, m)} 应对`, `${name(p1, m)}로 응수`, `Responde con ${name(p1, m)}`, `Répond par ${name(p1, m)}`, `Responde com ${name(p1, m)}`, `Antwort ${name(p1, m)}`, `${name(p1, m)} से जवाब`, `الرد بـ ${name(p1, m)}`),
+  sets.push({ id: 'd' + di, grp: 'def', side: 2, show: 4, moves: `${name(E.Pos.from(null, V), m1)} ${name(p1, m)}`, title: t, short: L10(`${name(p1, m)} で応じる`, `Answering with ${name(p1, m)}`, `以 ${name(p1, m)} 应对`, `${name(p1, m)}로 응수`, `Responde con ${name(p1, m)}`, `Répond par ${name(p1, m)}`, `Responde com ${name(p1, m)}`, `Antwort ${name(p1, m)}`, `${name(p1, m)} से जवाब`, `الرد بـ ${name(p1, m)}`, { en: 'Answering with {m}', v: { m: name(p1, m) } }),
     intro: introOf(dd, notes[1]), study: { line, notes }, problems: problems(line, 2) });
 }
 fs.writeFileSync(path.join(__dirname, '..', 'openings.json'), JSON.stringify(keepLangs({ version: 1, sets }, path.join(__dirname, '..', 'openings.json'))));

@@ -1,0 +1,182 @@
+{
+ "Corner guard": [
+  "Охрана углов",
+  "守角",
+  "Jaga sudut",
+  "Köşe koruması"
+ ],
+ "Wing spread": [
+  "Раскрытие флангов",
+  "展翼",
+  "Sayap melebar",
+  "Kanat açılımı"
+ ],
+ "Diagonal wall": [
+  "Диагональная стена",
+  "斜線牆",
+  "Tembok diagonal",
+  "Çapraz duvar"
+ ],
+ "Edge squeeze": [
+  "Давление по краю",
+  "邊線壓迫",
+  "Tekanan tepi",
+  "Kenar sıkıştırması"
+ ],
+ "Early king": [
+  "Ранний король",
+  "王早出",
+  "Raja keluar dini",
+  "Erken kral"
+ ],
+ "Flank break": [
+  "Прорыв фланга",
+  "側翼突破",
+  "Terobos sayap",
+  "Kanat yarması"
+ ],
+ "Outward development": [
+  "Развитие наружу",
+  "向外展開",
+  "Berkembang keluar",
+  "Dışa gelişim"
+ ],
+ "Corner pressure": [
+  "Давление на угол",
+  "角落施壓",
+  "Tekan sudut",
+  "Köşe baskısı"
+ ],
+ "The attackers guard the corners from the first move, shutting the king’s paths in advance.": [
+  "Атакующие с первого хода охраняют углы и заранее перекрывают пути короля.",
+  "攻方從第一步就守住角落，預先封住王的去路。",
+  "Penyerang menjaga sudut sejak langkah pertama, menutup jalan raja lebih awal.",
+  "Saldıranlar ilk hamleden köşeleri korur ve kralın yollarını önceden kapatır."
+ ],
+ "A piece from the middle of a side spreads sideways to build the ring early.": [
+  "Фигура из середины стороны уходит вбок, чтобы рано построить кольцо.",
+  "邊中央的棋子向兩側展開，及早築起包圍圈。",
+  "Bidak dari tengah sisi melebar ke samping untuk membangun kepungan lebih awal.",
+  "Kenarın ortasındaki taş yana açılarak çemberi erkenden kurar."
+ ],
+ "Pieces link up diagonally into a wall that slowly narrows the king’s way.": [
+  "Фигуры выстраиваются по диагонали в стену, которая постепенно сужает путь короля.",
+  "棋子斜向相連成牆，慢慢縮窄王的去路。",
+  "Bidak-bidak bersambung diagonal menjadi tembok yang perlahan mempersempit jalan raja.",
+  "Taşlar çapraz bağlanıp kralın yolunu yavaşça daraltan bir duvar örer."
+ ],
+ "Pieces slide along the edge and hold the defenders’ exits from outside.": [
+  "Фигуры скользят вдоль края и держат выходы защитников снаружи.",
+  "棋子沿著邊線移動，從外側守住守方的出口。",
+  "Bidak bergeser di sepanjang tepi dan menahan jalan keluar pembela dari luar.",
+  "Taşlar kenar boyunca kayar ve savunanların çıkışlarını dışarıdan tutar."
+ ],
+ "The defenders clear the king’s surroundings early and send the king itself out.": [
+  "Защитники рано освобождают пространство вокруг короля и выводят его самого.",
+  "守方及早清開王的周圍，讓王親自出擊。",
+  "Pembela mengosongkan sekitar raja lebih awal dan mengirim raja sendiri keluar.",
+  "Savunanlar kralın çevresini erkenden açar ve kralın kendisini dışarı gönderir."
+ ],
+ "The defenders strike at a thin flank of the ring to open a gap.": [
+  "Защитники бьют в тонкий фланг кольца, чтобы пробить брешь.",
+  "守方攻擊包圍圈薄弱的側翼，打開缺口。",
+  "Pembela menyerang sisi kepungan yang tipis untuk membuka celah.",
+  "Savunanlar çemberin ince bir kanadına vurarak gedik açar."
+ ],
+ "Pieces go outwards to use the whole board and spread the attackers thin.": [
+  "Фигуры выходят наружу, используют всю доску и растягивают атакующих.",
+  "棋子向外發展，運用整個棋盤，讓攻方兵力分散。",
+  "Bidak bergerak keluar untuk memakai seluruh papan dan membuat penyerang terpencar.",
+  "Taşlar dışa çıkarak tüm tahtayı kullanır ve saldıranları dağıtır."
+ ],
+ "Pieces head for a corner to break the attackers’ corner guard before it is built.": [
+  "Фигуры идут к углу, чтобы сломать охрану угла атакующих, пока она не построена.",
+  "棋子朝角落前進，在攻方守角成形前將其破壞。",
+  "Bidak menuju sudut untuk mematahkan penjagaan sudut penyerang sebelum terbentuk.",
+  "Taşlar köşeye yönelir, saldıranların köşe korumasını kurulmadan bozar."
+ ],
+ "Guards a corner (shuts a path of the king).": [
+  "Охраняет угол (закрывает путь короля).",
+  "守住角落（封住王的一條去路）。",
+  "Menjaga sudut (menutup jalan raja).",
+  "Bir köşeyi korur (kralın bir yolunu kapatır)."
+ ],
+ "attackers slightly better": [
+  "у атакующих небольшой перевес",
+  "攻方略優",
+  "penyerang sedikit unggul",
+  "saldıranlar biraz iyi"
+ ],
+ "A defender develops outwards, widening the king’s lanes.": [
+  "Защитник выходит наружу и расширяет пути короля.",
+  "守方棋子向外展開，拓寬王的通路。",
+  "Pembela bergerak keluar, melebarkan jalur raja.",
+  "Bir savunan dışa açılır, kralın yollarını genişletir."
+ ],
+ "Touches an enemy piece, preparing a capture.": [
+  "Встаёт вплотную к фигуре противника, готовя взятие.",
+  "貼近敵方棋子，準備吃子。",
+  "Menempel bidak lawan, bersiap menangkap.",
+  "Rakip taşa bitişir, almaya hazırlanır."
+ ],
+ "The king moves out, looking for a path.": [
+  "Король выходит в поисках пути.",
+  "王出動，尋找去路。",
+  "Raja keluar mencari jalan.",
+  "Kral yol aramak için çıkar."
+ ],
+ "attackers better": [
+  "у атакующих перевес",
+  "攻方較優",
+  "penyerang unggul",
+  "saldıranlar iyi"
+ ],
+ "The attackers tighten the ring and narrow the exits.": [
+  "Атакующие сжимают кольцо и сужают выходы.",
+  "攻方收緊包圍圈，縮小出口。",
+  "Penyerang merapatkan kepungan dan mempersempit jalan keluar.",
+  "Saldıranlar çemberi daraltır, çıkışları kısar."
+ ],
+ "A capture.": [
+  "Взятие.",
+  "吃子。",
+  "Menangkap.",
+  "Taş alır."
+ ],
+ "level": [
+  "равно",
+  "均勢",
+  "seimbang",
+  "eşit"
+ ],
+ "A defender goes to the edge and disturbs the ring from outside.": [
+  "Защитник выходит на край и расшатывает кольцо снаружи.",
+  "守方棋子走到邊上，從外側擾亂包圍圈。",
+  "Pembela keluar ke tepi dan mengganggu kepungan dari luar.",
+  "Bir savunan kenara çıkar ve çemberi dışarıdan bozar."
+ ],
+ "defenders slightly better": [
+  "у защитников небольшой перевес",
+  "守方略優",
+  "pembela sedikit unggul",
+  "savunanlar biraz iyi"
+ ],
+ "defenders better": [
+  "у защитников перевес",
+  "守方較優",
+  "pembela unggul",
+  "savunanlar iyi"
+ ],
+ "Starting with {m}": [
+  "Начало {m}",
+  "以 {m} 開局",
+  "Dimulai {m}",
+  "{m} ile başlangıç"
+ ],
+ "Answering with {m}": [
+  "Ответ {m}",
+  "以 {m} 應對",
+  "Menjawab dengan {m}",
+  "{m} ile cevap"
+ ]
+}

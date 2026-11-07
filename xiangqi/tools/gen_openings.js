@@ -4,8 +4,18 @@
 const fs = require('fs'), path = require('path');
 const { load } = require('./wasm.js');
 const { keepLangs } = require(path.join(__dirname, '../../tools', 'keep-langs.js'));   // keeps ru / zh-TW / id / tr of unchanged texts
-const L10 = (ja, en, zh, ko, es, fr, pt, de, hi, ar) => ({ ja, en, zh, ko, es, fr, pt, de, hi, ar });
-const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
+// ru / zh-TW / id / tr: looked up by the English text in tools/op_new4.json ({ en: [ru, zh-TW, id, tr] }); texts with a
+// placeholder ({n}, {m}) are looked up by the English template (the template is filled for each language). A new text
+// needs its 4 translations there (the generator stops otherwise).
+const NEW4 = JSON.parse(require('fs').readFileSync(require('path').join(__dirname, 'op_new4.json'), 'utf8'));
+const L10 = (ja, en, zh, ko, es, fr, pt, de, hi, ar, tpl) => {
+  const m = NEW4[tpl ? tpl.en : en]; if (!m) throw new Error('op_new4.json: no ru / zh-TW / id / tr for: ' + (tpl ? tpl.en : en));
+  const f = s => tpl ? s.replace(/\{(\w+)\}/g, (_, k) => tpl.v[k]) : s;
+  return { ja, en, zh, ko, es, fr, pt, de, hi, ar, ru: f(m[0]), 'zh-TW': f(m[1]), id: f(m[2]), tr: f(m[3]) };
+};
+const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar', 'ru', 'zh-TW', 'id', 'tr'];
+// the engine's verdict after a note: '（AI: …）' (ja / zh), '（AI：…）' (zh-TW), ' (ИИ: …)', ' (YZ: …)', ' (AI: …)'
+const AIW = l => l === 'ja' || l === 'zh' ? ['（AI: ', '）'] : l === 'zh-TW' ? ['（AI：', '）'] : l === 'ru' ? [' (ИИ: ', ')'] : l === 'tr' ? [' (YZ: ', ')'] : [' (AI: ', ')'];
 // [id, group, moves (Chinese notation), title, short, intro]
 const SETS = [
   ['zpp', 'a', '炮二平五 马8进7 马二进三 车9平8 车一平二 马2进3',
@@ -98,7 +108,7 @@ const EVW = { even: L10('互角', 'level', '均势', '호각', 'igualado', 'équ
       line.push(m);
       const k = before.at(E.mTo(m)) ? 'cap' : after.inCheck() ? 'check' : tp === 6 && E.mTo(m) % 9 === 4 ? 'cent' : tp === 4 ? 'horse' : tp === 5 ? 'rook' : tp === 7 ? 'pawn' : tp === 2 || tp === 3 ? 'def' : tp === 6 ? 'cannon' : 'king';
       const vr = (before.side ? -1 : 1) * L[0].v, ev = Math.abs(vr) < 30 ? 'even' : vr > 0 ? (vr < 120 ? 'r1' : 'r2') : (vr > -120 ? 'b1' : 'b2');
-      const note = {}; for (const l of LANGS) note[l] = NOTE[k][l] + (l === 'ja' || l === 'zh' ? '（' : ' (') + 'AI: ' + EVW[ev][l] + (l === 'ja' || l === 'zh' ? '）' : ')');
+      const note = {}; for (const l of LANGS) note[l] = NOTE[k][l] + AIW(l)[0] + EVW[ev][l] + AIW(l)[1];
       notes.push(note);
     }
     // practice: positions along the line (after the first two plies), the side to move finds the engine's move
