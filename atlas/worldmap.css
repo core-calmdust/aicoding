@@ -55,7 +55,8 @@
   .aminfo{--amH:196px;display:grid;grid-template-columns:280px minmax(0,1fr) 190px;grid-template-rows:auto 1fr;grid-template-areas:"top story acts" "facts jour acts";column-gap:0;row-gap:0;padding:16px 0}
   .aminfo .amfacts,.aminfo .amjour{padding-top:10px}
   .aminfo>*{padding-inline:22px;min-width:0}
-  .aminfo .amtop{grid-area:top}
+  .aminfo .amtop{grid-area:top;align-self:start;align-items:flex-start}   /* the icon keeps one place whatever the name's length (1 or 2 lines) */
+  .aminfo .amtop>div{padding-top:4px}
   .aminfo .amtop b{font-size:19px;line-height:1.2;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
   .aminfo .amfacts{grid-area:facts;align-self:end;display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 10px;align-items:center}
   .aminfo .amfacts span{display:contents}
@@ -79,7 +80,7 @@
 .amtop small{display:block;font-size:12px;font-weight:700;color:var(--ink2)}
 .amtop b{display:block;font-size:20px;line-height:1.25}
 .amart{flex:none;display:grid;place-items:center;width:64px;height:64px;border-radius:20px;background:color-mix(in srgb,var(--c) 18%,#fff)}
-.amart img{width:118%;height:118%;object-fit:contain}
+.amart img{width:92%;height:92%;object-fit:contain;transform:translateY(-2%)}   /* (the icon sits inside its tinted tile: the plinth of the 3D icons spans 93% of the image) */
 .amart img.flat{width:76%;height:76%;border-radius:10px}
 .amfacts{display:flex;gap:8px;flex-wrap:wrap}
 .amfacts span{display:inline-flex;align-items:center;gap:6px;padding:4px 11px 4px 5px;border-radius:99px;background:#f6eedb;font-weight:900;font-size:13.5px}

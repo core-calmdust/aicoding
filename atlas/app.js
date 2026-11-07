@@ -222,7 +222,7 @@
     const ja = lang === 'ja', phone = innerWidth < 760;
     // long titles put their first part in the tag above the ribbon (like 世界の in Japanese), so the ribbon keeps big letters
     const SPLIT = { ja: ['世界の', 'ボドゲ大百科'], fr: ['ATLAS MONDIAL', 'Jeux de société'], es: ['ATLAS MUNDIAL', 'Juegos de Mesa'], pt: ['ATLAS MUNDIAL', 'Jogos de Tabuleiro'],
-      de: ['WELT', 'Brettspiel-Atlas'], id: ['ATLAS DUNIA', 'Permainan Papan'], tr: ['DÜNYA ATLASI', 'Masa Oyunları'],
+      de: ['WELT', 'Brettspiel-Atlas'], id: ['ATLAS DUNIA', 'Permainan Papan'], tr: ['DÜNYA ATLASI', 'Masa Oyunları'], ru: ['АТЛАС', 'Настольные игры'],
       zh: ['世界', '桌游大全'], 'zh-TW': ['世界', '桌遊大百科'], ko: ['세계의', '보드게임 대전'], hi: ['विश्व', 'बोर्ड गेम एटलस'] }[lang];
     $('ttl').innerHTML = emblem(SPLIT ? SPLIT[1] : t('title'), SPLIT ? SPLIT[0] : '', A_.GAMES.length);
     $('ttl').setAttribute('aria-label', t('title') + ' — World Board Game Atlas');
@@ -409,19 +409,8 @@
     $(ids.ic).innerHTML = SRCH;
   }
   // the random tile: an isometric die with "?" faces on a thick base, drawn like the 3D game icons
-  const RND_SVG = `<svg class="dieic" viewBox="9.8 19.9 180.4 180.4" aria-hidden="true">
-    <g stroke-linejoin="round" stroke-width="10">
-      <path d="M16 122 100 166 100 184 16 140Z" fill="#7552e0" stroke="#7552e0"/><path d="M100 166 184 122 184 140 100 184Z" fill="#5a3cc4" stroke="#5a3cc4"/>
-      <path d="M100 78 184 122 100 166 16 122Z" fill="#a98bff" stroke="#a98bff"/></g>
-    <g fill="#fff" opacity=".35"><circle cx="46" cy="122" r="4"/><circle cx="154" cy="122" r="4"/><circle cx="100" cy="94" r="4"/><circle cx="100" cy="150" r="4"/></g>
-    <ellipse cx="100" cy="128" rx="42" ry="16" fill="#3a2390" opacity=".28"/>
-    <g transform="translate(100 114) scale(.74) translate(-100 -114)"><g class="cube" stroke-linejoin="round" stroke-width="7">
-      <path d="M48 54 100 80 100 136 48 110Z" fill="#f3eeff" stroke="#f3eeff"/><path d="M100 80 152 54 152 110 100 136Z" fill="#dcd0ff" stroke="#dcd0ff"/>
-      <path d="M100 28 152 54 100 80 48 54Z" fill="#fff" stroke="#fff"/>
-      <g transform="matrix(.52 .26 0 .56 48 54)"><text x="50" y="80" text-anchor="middle" font-family="Fredoka,sans-serif" font-weight="700" font-size="78" fill="#ff5d5d">?</text></g>
-      <g transform="matrix(.52 -.26 0 .56 100 80)"><text x="50" y="80" text-anchor="middle" font-family="Fredoka,sans-serif" font-weight="700" font-size="78" fill="#36b4ff">?</text></g>
-      <g transform="matrix(.52 -.26 .52 .26 48 54)" fill="#ffc928"><circle cx="26" cy="26" r="10"/><circle cx="50" cy="50" r="10"/><circle cx="74" cy="74" r="10"/></g>
-    </g></g></svg>`;
+  // the ランダム tile: a 3D icon in two layers like the others (atlas/icons3d.js ICONS.random, ?part=base / top): the die bobs on its own
+  const RND_SVG = `<span class="dieic" aria-hidden="true"><img class="rb" src="../images/atlas/random-base.webp?v=1" alt="" decoding="async"><img class="cube" src="../images/atlas/random-die.webp?v=1" alt="" decoding="async"></span>`;
   function renderGrid() {
     const list = visibleGames();
     const rnd = list.length ? `<button type="button" class="ic rnd" id="rndTile" style="--c:#8d6bff" aria-label="${esc(t('rnd.n'))}"><span class="art">${RND_SVG}<img class="rimg" alt="" decoding="async" hidden></span>
@@ -1092,7 +1081,7 @@
     $('bvTodLb').textContent = L[K.indexOf(cur)];
     menu.innerHTML = K.map((v, i) => `<button type="button" role="option" data-v="${v}" class="${v === cur ? 'on' : ''}" aria-selected="${v === cur}"><span class="sw" style="background:${SW[v]}"></span>${L[i]}</button>`).join('');
     const close = () => { menu.hidden = true; btn.setAttribute('aria-expanded', 'false'); };
-    btn.onclick = e => { e.stopPropagation(); const open = menu.hidden; menu.hidden = !open; btn.setAttribute('aria-expanded', String(open)); const pm = $('bvPlMenu'); if (open && pm) pm.hidden = true; };
+    btn.onclick = e => { e.stopPropagation(); const open = menu.hidden; menu.hidden = !open; btn.setAttribute('aria-expanded', String(open)); const pm = $('bvPlMenu'); if (open && pm && !pm.hidden) { if (renderPlace.close) renderPlace.close(); else pm.hidden = true; } };   // (closing the place panel through its own close() also slides the board back: hiding it alone left the camera aside)
     menu.querySelectorAll('button').forEach(b => b.onclick = e => { e.stopPropagation(); close(); if (window.Table3D && Table3D.setTimeOfDay) Table3D.setTimeOfDay(b.dataset.v); renderTod(); });
     if (!renderTod.bound) { renderTod.bound = 1; document.addEventListener('click', () => { const m = $('bvTodMenu'); if (m && !m.hidden) { m.hidden = true; $('bvTodBtn').setAttribute('aria-expanded', 'false'); } }); document.addEventListener('keydown', e => { if (e.key === 'Escape') { const m = $('bvTodMenu'); if (m && !m.hidden) { m.hidden = true; $('bvTodBtn').setAttribute('aria-expanded', 'false'); } } }); }
   }
