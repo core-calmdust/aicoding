@@ -37,7 +37,7 @@
   const TOUCH = !matchMedia('(hover: hover) and (pointer: fine)').matches;
   const HC = navigator.hardwareConcurrency || 2;
   const CTRL0 = 'serviceWorker' in navigator && !!navigator.serviceWorker.controller;   // (this page itself came through a worker)
-  const CAN = 'serviceWorker' in navigator && !!window.isSecureContext && typeof WebAssembly === 'object' && typeof Atomics === 'object' && HC >= 2;
+  const CAN = 'serviceWorker' in navigator && !!window.isSecureContext && typeof WebAssembly === 'object' && HC >= 2;   // (no Atomics test: Safari exposes Atomics / SharedArrayBuffer only once the page is isolated)
   const helpers = () => Math.max(0, Math.min(HC - 1, TOUCH ? 3 : 7));
   const pref = () => LS.get(K_PREF);            // '1' on, '0' off, none: automatic (PC on, phones / tablets off)
   const want = () => { const p = pref(); return p === '1' || (p !== '0' && !TOUCH); };
