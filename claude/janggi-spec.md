@@ -24,7 +24,12 @@
 
 ## 3D（大百科）
 - atlas/models/janggi.js：木製の厚い盤＋八角形の駒（将が大、士・兵が小）。
-- atlas/skin/janggi.js：フル機能版（?skin=atlas）。atlas/games/janggi.js：3D卓プレイ（未登録）。
+- atlas/skin/janggi.js：フル機能版（?skin=atlas）。atlas/games/janggi.js：3D卓プレイ（引き分けボタンなし、HUDの色は楚=緑・漢=赤）。展示盤は scale 1.1（長辺≈10.1）。
+
+## ポータル・トップ
+- shared/atlas.js（GAMES：cat chess、color #4aa58f、released 2026-11-07、UPDATES、進み具合）、index.html（カード key jg・説明14言語・JSON-LD）、shared/rulesoffer.js。
+- 画像：images/janggi.webp（盤面のみ1200×900）、atlas/shots/janggi.webp（tools/shots.js）、images/icons/janggi.svg（八角駒の楚）、images/atlas/janggi.webp（icons3d.js の janggi()、atlas/tools/icon-post.py）。
+- atlas：i18n（about/hist）、gamelist-i18n、mapdata（中国→朝鮮半島、伝来時期は諸説）、tables3d の背景。
 
 ## 未完了
-- トップページ・大百科への登録（アイコン・SS・地図・ヒストリア・3Dルールコース）。
+- 3Dルールコース（atlas/rules/janggi.js）、ヒストリア（atlas/historia/*/janggi.json）。
