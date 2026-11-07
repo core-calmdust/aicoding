@@ -1,0 +1,188 @@
+{
+ "hook": {
+  "n": "32",
+  "unit": "Steine",
+  "line": "Zweiunddreißig achteckige Steine auf einem Brett ohne Fluss – in ganz Korea noch heute in Parks und zu Hause gespielt.",
+  "say": "Willkommen bei der Geschichte von Janggi!"
+ },
+ "ch": [
+  {
+   "k": "origin",
+   "t": "Xiangqi ohne Fluss",
+   "say": "Das chinesische Schach wurde in Korea neu geboren.",
+   "p": [
+    "Das chinesische Xiangqi erreichte die koreanische Halbinsel und bekam eigene Regeln. Wann es ankam, ist unklar.",
+    "Der Fluss verschwand, Elefant und Kanone änderten sich, und die Steine wurden achteckig."
+   ],
+   "pins": [
+    "China",
+    "Korea"
+   ],
+   "st": [
+    [
+     "Umstritten",
+     "China",
+     "Xiangqi nimmt Gestalt an"
+    ],
+    [
+     "Zeit unbekannt",
+     "Korea",
+     "Es wird zum Janggi ohne Fluss"
+    ]
+   ]
+  },
+  {
+   "k": "tl",
+   "t": "Zeitleiste",
+   "say": "Die Regeln änderten sich nach und nach.",
+   "tl": [
+    [
+     "Song-Dynastie",
+     "Xiangqi mit Kanone erhält in China seine heutige Form"
+    ],
+    [
+     "Zeit unbekannt",
+     "Es erreicht die koreanische Halbinsel"
+    ],
+    [
+     "Danach",
+     "Der Fluss verschwindet; Elefant und Kanone ändern sich"
+    ],
+    [
+     "Heute",
+     "Gespielt in Parks und zu Hause, mit Turnieren"
+    ]
+   ]
+  },
+  {
+   "k": "board",
+   "t": "Der Palast und seine Diagonalen",
+   "say": "Die Palastdiagonalen sind eine Abkürzung für alle!",
+   "cap": "Figuren auf den 9×10 Punkten; kein Fluss, das X markiert den Palast",
+   "p": [
+    "Die Steine stehen auf den Punkten und ziehen entlang der Linien.",
+    "General und Wächter bleiben im Palast, dessen Diagonalen auch Wagen, Kanonen und Soldaten nutzen. Die Kanone springt immer über eine Figur."
+   ]
+  },
+  {
+   "k": "vars",
+   "t": "Verwandte in Asien",
+   "say": "Auch die Nachbarn haben Verwandte.",
+   "cards": [
+    [
+     "Xiangqi",
+     "China",
+     "Traditionell",
+     "Fluss, Palast und runde Steine"
+    ],
+    [
+     "Cờ tướng",
+     "Vietnam",
+     "Traditionell",
+     "Xiangqi in Vietnam"
+    ],
+    [
+     "Shogi",
+     "Japan",
+     "Traditionell",
+     "Geschlagene Figuren kommen zurück"
+    ],
+    [
+     "Makruk",
+     "Thailand",
+     "Traditionell",
+     "Thailands Schach"
+    ]
+   ]
+  },
+  {
+   "k": "legend",
+   "t": "Janggi in Zahlen",
+   "say": "Auch Zahlen erzählen Geschichten.",
+   "items": [
+    [
+     "4",
+     "Aufstellungen",
+     "Vier Arten, Pferde und Elefanten zu stellen",
+     "4",
+     "Arten"
+    ],
+    [
+     "13",
+     "Wagen",
+     "Punkte des Wagens bei der Punktewertung",
+     "13",
+     "Pkt."
+    ],
+    [
+     "1,5",
+     "Hans Bonus",
+     "Punkte für Han, das als Zweites zieht",
+     "1,5",
+     "Pkt."
+    ],
+    [
+     "90",
+     "Punkte",
+     "Das Brett hat 90 Punkte",
+     "90",
+     "Punkte"
+    ],
+    [
+     "32",
+     "Steine",
+     "Je 16, zusammen 32",
+     "32",
+     "Steine"
+    ]
+   ]
+  },
+  {
+   "k": "trivia",
+   "t": "Wusstest du?",
+   "say": "Tippe auf eine Karte, um sie umzudrehen!",
+   "cards": [
+    [
+     "Wer beginnt?",
+     "Cho (grün oder blau) zieht zuerst"
+    ],
+    [
+     "Sind die Steine gleich groß?",
+     "Nein: der General ist am größten, Wächter und Soldaten am kleinsten"
+    ],
+    [
+     "Wo beginnt der General?",
+     "In der Mitte des Palasts"
+    ],
+    [
+     "Kann eine Kanone eine Kanone schlagen?",
+     "Nein, nicht einmal überspringen"
+    ],
+    [
+     "Gibt es Remis?",
+     "Nein, am Ende entscheiden die Punkte"
+    ],
+    [
+     "Wie weit kommt der Elefant?",
+     "Ohne Fluss überallhin"
+    ],
+    [
+     "Dürfen Soldaten seitwärts?",
+     "Ja, von Anfang an"
+    ],
+    [
+     "Was ruft man beim Schach?",
+     "„Janggun!“ (장군)"
+    ]
+   ]
+  },
+  {
+   "k": "end",
+   "t": "Stürm den Palast",
+   "say": "Probier einen Kanonensprung!",
+   "p": [
+    "Spiel selbst eine Partie mit den achteckigen Steinen."
+   ]
+  }
+ ]
+}

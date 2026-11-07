@@ -31,5 +31,5 @@
 - 画像：images/janggi.webp（盤面のみ1200×900）、atlas/shots/janggi.webp（tools/shots.js）、images/icons/janggi.svg（八角駒の楚）、images/atlas/janggi.webp（icons3d.js の janggi()、atlas/tools/icon-post.py）。
 - atlas：i18n（about/hist）、gamelist-i18n、mapdata（中国→朝鮮半島、伝来時期は諸説）、tables3d の背景。
 
-## 未完了
-- 3Dルールコース（atlas/rules/janggi.js）、ヒストリア（atlas/historia/*/janggi.json）。
+- 3Dルールコース：atlas/rules/janggi.js（rules/xiangqi.js のフォーク、案内はショウギツネ、14ステップ・14言語。車・九宮の斜め・馬・足・象・士・包・卒・상차림・詰み・点数決着）。
+- ヒストリア：atlas/historia/<lang>/janggi.json と s/janggi.json（盤図は八角駒 ps:'jg'）。伝来の時期など不確かなことは「はっきりしない」と書く。

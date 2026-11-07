@@ -1,0 +1,188 @@
+{
+ "hook": {
+  "n": "32",
+  "unit": "peças",
+  "line": "Trinta e duas peças octogonais num tabuleiro sem rio — ainda jogadas em parques e casas por toda a Coreia.",
+  "say": "Bem-vindo à história do janggi!"
+ },
+ "ch": [
+  {
+   "k": "origin",
+   "t": "O xiangqi sem rio",
+   "say": "O xadrez chinês renasceu na península coreana.",
+   "p": [
+    "O xiangqi chinês chegou à península coreana e ganhou regras próprias. Não se sabe quando chegou.",
+    "O rio sumiu, o elefante e o canhão mudaram e as peças ficaram octogonais."
+   ],
+   "pins": [
+    "China",
+    "Coreia"
+   ],
+   "st": [
+    [
+     "Debatido",
+     "China",
+     "O xiangqi toma forma"
+    ],
+    [
+     "Data desconhecida",
+     "Coreia",
+     "Vira o janggi, sem rio"
+    ]
+   ]
+  },
+  {
+   "k": "tl",
+   "t": "Linha do tempo",
+   "say": "As regras mudaram aos poucos.",
+   "tl": [
+    [
+     "Dinastia Song",
+     "O xiangqi com canhão ganha a forma moderna na China"
+    ],
+    [
+     "Data desconhecida",
+     "Chega à península coreana"
+    ],
+    [
+     "Depois",
+     "O rio some; o elefante e o canhão mudam"
+    ],
+    [
+     "Hoje",
+     "Jogado em parques e em casa, com torneios"
+    ]
+   ]
+  },
+  {
+   "k": "board",
+   "t": "O palácio e suas diagonais",
+   "say": "As diagonais do palácio são um atalho para todos!",
+   "cap": "Peças nos pontos 9×10; sem rio, o X marca o palácio",
+   "p": [
+    "As peças ficam nos pontos e andam pelas linhas.",
+    "O general e os guardas não saem do palácio, cujas diagonais carros, canhões e soldados também usam. O canhão sempre salta uma peça."
+   ]
+  },
+  {
+   "k": "vars",
+   "t": "Parentes asiáticos",
+   "say": "Os vizinhos também têm parentes.",
+   "cards": [
+    [
+     "Xiangqi",
+     "China",
+     "Tradicional",
+     "Rio, palácio e peças redondas"
+    ],
+    [
+     "Cờ tướng",
+     "Vietnã",
+     "Tradicional",
+     "O xiangqi do Vietnã"
+    ],
+    [
+     "Shogi",
+     "Japão",
+     "Tradicional",
+     "Peças capturadas voltam"
+    ],
+    [
+     "Makruk",
+     "Tailândia",
+     "Tradicional",
+     "O xadrez da Tailândia"
+    ]
+   ]
+  },
+  {
+   "k": "legend",
+   "t": "O janggi em números",
+   "say": "Os números também contam histórias.",
+   "items": [
+    [
+     "4",
+     "Disposições",
+     "Quatro maneiras de pôr cavalos e elefantes",
+     "4",
+     "maneiras"
+    ],
+    [
+     "13",
+     "Carro",
+     "Pontos do carro quando se decide por pontos",
+     "13",
+     "pts"
+    ],
+    [
+     "1,5",
+     "Bônus de Han",
+     "Pontos somados a Han, que joga em segundo",
+     "1,5",
+     "pts"
+    ],
+    [
+     "90",
+     "Pontos",
+     "O tabuleiro tem 90 pontos",
+     "90",
+     "pontos"
+    ],
+    [
+     "32",
+     "Peças",
+     "16 de cada lado, 32 no total",
+     "32",
+     "peças"
+    ]
+   ]
+  },
+  {
+   "k": "trivia",
+   "t": "Você sabia?",
+   "say": "Toque numa carta para virá-la!",
+   "cards": [
+    [
+     "Quem começa?",
+     "Cho (verde ou azul) joga primeiro"
+    ],
+    [
+     "As peças são do mesmo tamanho?",
+     "Não: o general é o maior; guardas e soldados, os menores"
+    ],
+    [
+     "Onde o general começa?",
+     "No centro do palácio"
+    ],
+    [
+     "Um canhão captura outro?",
+     "Não, nem pode saltá-lo"
+    ],
+    [
+     "Existe empate?",
+     "Não: no fim os pontos decidem"
+    ],
+    [
+     "Até onde vai o elefante?",
+     "Sem rio, a qualquer lugar do tabuleiro"
+    ],
+    [
+     "Soldados andam para o lado?",
+     "Sim, desde o início"
+    ],
+    [
+     "O que se grita ao dar xeque?",
+     "“Janggun!” (장군)"
+    ]
+   ]
+  },
+  {
+   "k": "end",
+   "t": "Tome o palácio",
+   "say": "Tente um salto de canhão!",
+   "p": [
+    "Jogue você também com as peças octogonais."
+   ]
+  }
+ ]
+}

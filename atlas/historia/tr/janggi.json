@@ -1,0 +1,188 @@
+{
+ "hook": {
+  "n": "32",
+  "unit": "taş",
+  "line": "Nehirsiz bir tahtada otuz iki sekizgen taş — Kore'nin her yerinde parklarda ve evlerde hâlâ oynanıyor.",
+  "say": "Janggi'nin hikâyesine hoş geldin!"
+ },
+ "ch": [
+  {
+   "k": "origin",
+   "t": "Nehirsiz xiangqi",
+   "say": "Çin satrancı Kore'de yeniden doğdu.",
+   "p": [
+    "Çin xiangqi'si Kore yarımadasına ulaştı ve kendi kurallarını edindi. Ne zaman geldiği belirsiz.",
+    "Nehir kalktı, fil ve top değişti, taşlar sekizgen oldu."
+   ],
+   "pins": [
+    "Çin",
+    "Kore"
+   ],
+   "st": [
+    [
+     "Tartışmalı",
+     "Çin",
+     "Xiangqi şekillenir"
+    ],
+    [
+     "Tarih bilinmiyor",
+     "Kore",
+     "Nehirsiz janggi'ye dönüşür"
+    ]
+   ]
+  },
+  {
+   "k": "tl",
+   "t": "Zaman çizelgesi",
+   "say": "Kurallar yavaş yavaş değişti.",
+   "tl": [
+    [
+     "Song hanedanı",
+     "Toplu xiangqi Çin'de bugünkü biçimini alır"
+    ],
+    [
+     "Tarih bilinmiyor",
+     "Kore yarımadasına ulaşır"
+    ],
+    [
+     "Sonra",
+     "Nehir kalkar; fil ve top değişir"
+    ],
+    [
+     "Bugün",
+     "Parklarda ve evlerde oynanır, turnuvalar yapılır"
+    ]
+   ]
+  },
+  {
+   "k": "board",
+   "t": "Saray ve köşegenleri",
+   "say": "Sarayın köşegenleri herkes için kestirme!",
+   "cap": "Taşlar 9×10 noktada; nehir yok, × sarayı gösterir",
+   "p": [
+    "Taşlar noktalara konur ve çizgiler boyunca gider.",
+    "General ve muhafızlar saraydan çıkmaz; köşegenlerini araba, top ve askerler de kullanır. Top her zaman bir taşın üzerinden atlar."
+   ]
+  },
+  {
+   "k": "vars",
+   "t": "Asya'daki akrabalar",
+   "say": "Komşuların da akrabaları var.",
+   "cards": [
+    [
+     "Xiangqi",
+     "Çin",
+     "Geleneksel",
+     "Nehir, saray ve yuvarlak taşlar"
+    ],
+    [
+     "Cờ tướng",
+     "Vietnam",
+     "Geleneksel",
+     "Vietnam'daki xiangqi"
+    ],
+    [
+     "Şogi",
+     "Japonya",
+     "Geleneksel",
+     "Alınan taşlar geri gelir"
+    ],
+    [
+     "Makruk",
+     "Tayland",
+     "Geleneksel",
+     "Tayland satrancı"
+    ]
+   ]
+  },
+  {
+   "k": "legend",
+   "t": "Rakamlarla janggi",
+   "say": "Rakamlar da hikâye anlatır.",
+   "items": [
+    [
+     "4",
+     "Dizilişler",
+     "At ve filleri dizmenin dört yolu",
+     "4",
+     "yol"
+    ],
+    [
+     "13",
+     "Savaş arabası",
+     "Puanla karar verilirken arabanın puanı",
+     "13",
+     "puan"
+    ],
+    [
+     "1,5",
+     "Han'ın bonusu",
+     "İkinci oynayan Han'a eklenen puan",
+     "1,5",
+     "puan"
+    ],
+    [
+     "90",
+     "Nokta",
+     "Tahtada 90 nokta var",
+     "90",
+     "nokta"
+    ],
+    [
+     "32",
+     "Taş",
+     "Her tarafta 16, toplam 32",
+     "32",
+     "taş"
+    ]
+   ]
+  },
+  {
+   "k": "trivia",
+   "t": "Biliyor muydun?",
+   "say": "Çevirmek için bir karta dokun!",
+   "cards": [
+    [
+     "Kim başlar?",
+     "Cho (yeşil ya da mavi) önce oynar"
+    ],
+    [
+     "Taşlar aynı boyda mı?",
+     "Hayır: general en büyük, muhafızlar ve askerler en küçük"
+    ],
+    [
+     "General nereden başlar?",
+     "Sarayın ortasından"
+    ],
+    [
+     "Top topu alabilir mi?",
+     "Hayır, üzerinden atlayamaz bile"
+    ],
+    [
+     "Beraberlik var mı?",
+     "Hayır, sonunda puan karar verir"
+    ],
+    [
+     "Fil ne kadar uzağa gider?",
+     "Nehir yok, her yere"
+    ],
+    [
+     "Askerler yana gidebilir mi?",
+     "Evet, baştan itibaren"
+    ],
+    [
+     "Şah çekerken ne bağırılır?",
+     "“Janggun!” (장군)"
+    ]
+   ]
+  },
+  {
+   "k": "end",
+   "t": "Sarayı fethet",
+   "say": "Bir top sıçrayışı dene!",
+   "p": [
+    "Sen de sekizgen taşlarla bir oyun oyna."
+   ]
+  }
+ ]
+}

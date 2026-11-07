@@ -1,0 +1,188 @@
+{
+ "hook": {
+  "n": "32",
+  "unit": "pièces",
+  "line": "Trente-deux pièces octogonales sur un plateau sans rivière, encore jouées dans les parcs et les foyers de toute la Corée.",
+  "say": "Bienvenue dans l'histoire du janggi !"
+ },
+ "ch": [
+  {
+   "k": "origin",
+   "t": "Le xiangqi sans rivière",
+   "say": "Les échecs chinois ont pris une nouvelle vie en Corée.",
+   "p": [
+    "Le xiangqi chinois est arrivé dans la péninsule coréenne et s'est donné ses propres règles. On ignore quand il est arrivé.",
+    "La rivière a disparu, l'éléphant et le canon ont changé, et les pièces sont devenues octogonales."
+   ],
+   "pins": [
+    "Chine",
+    "Corée"
+   ],
+   "st": [
+    [
+     "Débattu",
+     "Chine",
+     "Le xiangqi prend forme"
+    ],
+    [
+     "Date inconnue",
+     "Corée",
+     "Il devient le janggi, sans rivière"
+    ]
+   ]
+  },
+  {
+   "k": "tl",
+   "t": "Chronologie",
+   "say": "Les règles ont changé peu à peu.",
+   "tl": [
+    [
+     "Dynastie Song",
+     "Le xiangqi avec canon prend sa forme moderne en Chine"
+    ],
+    [
+     "Date inconnue",
+     "Il arrive dans la péninsule coréenne"
+    ],
+    [
+     "Ensuite",
+     "La rivière disparaît ; l'éléphant et le canon changent"
+    ],
+    [
+     "Aujourd'hui",
+     "Joué dans les parcs et à la maison, avec des tournois"
+    ]
+   ]
+  },
+  {
+   "k": "board",
+   "t": "Le palais et ses diagonales",
+   "say": "Les diagonales du palais sont un raccourci pour tous !",
+   "cap": "Les pièces sur les 9×10 points ; pas de rivière, le X marque le palais",
+   "p": [
+    "Les pièces se posent sur les points et suivent les lignes.",
+    "Le général et les gardes restent dans le palais, dont les chars, canons et soldats suivent aussi les diagonales. Le canon saute toujours une pièce."
+   ]
+  },
+  {
+   "k": "vars",
+   "t": "Cousins d'Asie",
+   "say": "Les voisins ont aussi des cousins.",
+   "cards": [
+    [
+     "Xiangqi",
+     "Chine",
+     "Traditionnel",
+     "Rivière, palais et pièces rondes"
+    ],
+    [
+     "Cờ tướng",
+     "Viêt Nam",
+     "Traditionnel",
+     "Le xiangqi du Viêt Nam"
+    ],
+    [
+     "Shogi",
+     "Japon",
+     "Traditionnel",
+     "Les pièces prises reviennent"
+    ],
+    [
+     "Makruk",
+     "Thaïlande",
+     "Traditionnel",
+     "Les échecs thaïlandais"
+    ]
+   ]
+  },
+  {
+   "k": "legend",
+   "t": "Le janggi en chiffres",
+   "say": "Les chiffres racontent aussi.",
+   "items": [
+    [
+     "4",
+     "Dispositions",
+     "Quatre façons de placer chevaux et éléphants",
+     "4",
+     "façons"
+    ],
+    [
+     "13",
+     "Char",
+     "Points du char quand on compte les points",
+     "13",
+     "pts"
+    ],
+    [
+     "1,5",
+     "Bonus de Han",
+     "Points ajoutés à Han, qui joue second",
+     "1,5",
+     "pts"
+    ],
+    [
+     "90",
+     "Points",
+     "Le plateau compte 90 points",
+     "90",
+     "points"
+    ],
+    [
+     "32",
+     "Pièces",
+     "16 chacun, 32 en tout",
+     "32",
+     "pièces"
+    ]
+   ]
+  },
+  {
+   "k": "trivia",
+   "t": "Le savais-tu ?",
+   "say": "Touche une carte pour la retourner !",
+   "cards": [
+    [
+     "Qui commence ?",
+     "Cho (vert ou bleu) joue en premier"
+    ],
+    [
+     "Les pièces ont-elles la même taille ?",
+     "Non : le général est le plus grand, gardes et soldats les plus petits"
+    ],
+    [
+     "Où commence le général ?",
+     "Au centre du palais"
+    ],
+    [
+     "Un canon peut-il prendre un canon ?",
+     "Non, il ne peut même pas le sauter"
+    ],
+    [
+     "Y a-t-il des nulles ?",
+     "Non : les points décident à la fin"
+    ],
+    [
+     "Jusqu'où va l'éléphant ?",
+     "Sans rivière, partout sur le plateau"
+    ],
+    [
+     "Les soldats vont-ils de côté ?",
+     "Oui, dès le début"
+    ],
+    [
+     "Que crie-t-on en faisant échec ?",
+     "« Janggun ! » (장군)"
+    ]
+   ]
+  },
+  {
+   "k": "end",
+   "t": "À l'assaut du palais",
+   "say": "Essaie un saut de canon !",
+   "p": [
+    "Joue à ton tour avec les pièces octogonales."
+   ]
+  }
+ ]
+}
