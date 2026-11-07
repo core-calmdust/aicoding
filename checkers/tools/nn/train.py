@@ -203,6 +203,8 @@ def main():
     ap.add_argument('--lr', type=float, default=1e-3); ap.add_argument('--lam', type=float, default=0.75)
     ap.add_argument('--scale', type=float, default=0); ap.add_argument('--max-positions', type=int, default=0)
     ap.add_argument('--val', type=float, default=0.02); ap.add_argument('--seed', type=int, default=1)
+    ap.add_argument('--val-data', nargs='+', default=[], metavar='FILE',
+                    help='validation records, not trained on (loop.sh: one file of the newest round)')
     ap.add_argument('--only-pieces', type=int, default=0, metavar='N',
                     help='train only the weights used by positions with at most N pieces (the feature / output buckets that serve '
                          'nothing else; needs --init). Positions with more pieces in the data are dropped. Other weights stay bit-identical.')
@@ -211,6 +213,11 @@ def main():
     if not a.out or not a.files: ap.error('--out and data files are required')
 
     raw = load_records(a.files, a.max_positions, a.seed)
+    nval = 0
+    if a.val_data:   # validation only on these (positions no net has trained on): unbiased when continuing from --init
+        vraw = load_records(a.val_data, 200000, a.seed); nval = len(vraw); raw = np.concatenate([raw, vraw]); del vraw
+    elif a.init:
+        print('note: --init without --val-data: the validation positions may be ones the initial net was trained on', flush=True)
     b, w, k = raw[:, 0].view(np.uint32).copy(), raw[:, 1].view(np.uint32).copy(), raw[:, 2].view(np.uint32).copy()
     side = (raw[:, 3] & 1).astype(np.int8); val = np.clip(raw[:, 4].astype(np.float32), -3000, 3000); res = raw[:, 5].astype(np.float32)
     del raw
@@ -230,6 +237,7 @@ def main():
     if a.only_pieces:
         if not a.init: ap.error('--only-pieces needs --init')
         keep = npc <= a.only_pieces
+        if nval: nval = int(keep[-nval:].sum())
         b, w, k, side, T, npc = b[keep], w[keep], k[keep], side[keep], T[keep], npc[keep]
         N = len(b); print('only-pieces %d: %d positions' % (a.only_pieces, N), flush=True)
 
@@ -251,8 +259,11 @@ def main():
         fbs, obs = sorted(lo_fb), sorted(lo_ob)
         upd = {'Wb': fbs, 'W1': obs, 'b1': obs, 'W2': obs, 'b2': obs, 'W3': obs, 'b3': obs}
         print('training only feature buckets %s, output buckets %s' % (fbs, obs), flush=True)
-    perm = rng.permutation(N); nv = max(1000, min(200000, int(N * a.val)))
-    va, tr = perm[:nv], perm[nv:]
+    if nval:
+        nv = nval; va = np.arange(N - nval, N); tr = rng.permutation(N - nval)
+    else:
+        perm = rng.permutation(N); nv = max(1000, min(200000, int(N * a.val)))
+        va, tr = perm[:nv], perm[nv:]
 
     def batch_inputs(j):
         Fm = features(b[j], w[j], k[j], side[j]); Fo = features(b[j], w[j], k[j], 1 - side[j])

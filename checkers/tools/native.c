@@ -34,7 +34,7 @@ static void useNetW(const Net *N) {
   if (N->w) { memcpy(W1, N->w, N->n * 4); net_set(N->h, N->h2, N->scale); }
 }
 // one engine "player": node budget (k), optional net
-typedef struct { int nodesK; int depth; Net *net; int ms; } Player;
+typedef struct { int nodes; int depth; Net *net; int ms; } Player;   // nodes per move (0 = none), or ms per move
 static int setupFrom(const Pos *start, Move *hist, int nh) {
   IO[0] = start->p[0]; IO[1] = start->p[1]; IO[2] = start->k; IO[3] = start->side; IO[4] = nh;
   for (int i = 0; i < nh; i++) { IO[5 + 2 * i] = hist[i].f | (hist[i].t << 5); IO[6 + 2 * i] = hist[i].cap; }
@@ -44,7 +44,7 @@ static int pickMove(Player *P, const Pos *start, Move *hist, int nh, Move *out, 
   if (!setupFrom(start, hist, nh)) { fprintf(stderr, "bad setup\n"); exit(1); }
   if (!rootN) return 0;
   useNetW(P->net);
-  best(P->depth ? P->depth : 99, P->ms, P->ms ? 0 : P->nodesK);
+  best_n(P->depth ? P->depth : 99, P->ms, P->ms ? 0 : P->nodes);
   for (int i = 0; i < rootN; i++) if (rootL[i].f == (IO[0] & 31) && rootL[i].t == ((IO[0] >> 5) & 31) && rootL[i].cap == (u32)IO[1]) { *out = rootL[i]; if (val) *val = IO[2]; return 1; }
   *out = rootL[0]; return 1;
 }
@@ -127,7 +127,7 @@ static int cmdMatch(int argc, char **argv) {
 }
 static int cmdGen(int argc, char **argv) {
   // gen games nodesPlay nodesLabel out.bin [net] [seed]
-  int G = atoi(argv[2]); Player P = { atoi(argv[3]), 0, 0, 0 }; int lab = atoi(argv[4]);
+  int G = atoi(argv[2]); Player P = { atoi(argv[3]) * 1000, 0, 0, 0 }; int lab = atoi(argv[4]);
   FILE *f = fopen(argv[5], "ab+"); Net n0 = { 0 };
   if (argc > 6 && strcmp(argv[6], "-")) { n0 = loadNet(argv[6]); P.net = &n0; }
   if (argc > 7) rng ^= (u64)atoll(argv[7]) * 0x9E3779B97F4A7C15ull;
@@ -136,12 +136,12 @@ static int cmdGen(int argc, char **argv) {
 }
 
 // ---------------------------------------------------------------- AI levels (mirror of engine.js LEVELS) for calibration
-typedef struct { int d, noise, hand, s, nk, ms, book; double blunder; } Lv;
+typedef struct { int d, noise, hand, s, nk, ms, book; double blunder; } Lv;   // nk: nodes per move (engine.js LEVELS: n)
 static Lv LVS[21] = { {0},
   { 1, 260, 1, 0, 0, 0, 0, .32 }, { 2, 200, 1, 0, 0, 0, 0, .24 }, { 2, 150, 1, 0, 0, 0, 0, .18 }, { 3, 115, 1, 0, 0, 0, 0, .13 }, { 3, 85, 1, 0, 0, 0, 0, .09 },
   { 4, 65, 1, 0, 0, 0, 0, .06 }, { 4, 48, 1, 0, 0, 0, 0, .04 }, { 5, 36, 1, 0, 0, 0, 0, .025 }, { 6, 26, 1, 0, 0, 0, 0, .015 }, { 6, 18, 1, 0, 0, 0, 0, 0 },
-  { 7, 12, 1, 0, 0, 0, 0, 0 }, { 99, 0, 0, 1, 2, 0, 0, 0 }, { 99, 0, 0, 1, 5, 0, 0, 0 }, { 99, 0, 0, 1, 12, 0, 0, 0 }, { 99, 0, 0, 1, 30, 0, 0, 0 },
-  { 99, 0, 0, 1, 80, 3000, 0, 0 }, { 99, 0, 0, 1, 200, 3000, 0, 0 }, { 99, 0, 0, 1, 500, 3000, 0, 0 }, { 99, 0, 0, 1, 0, 1000, 1, 0 }, { 99, 0, 0, 1, 0, 2500, 1, 0 } };
+  { 7, 12, 1, 0, 0, 0, 0, 0 }, { 99, 0, 0, 1, 2000, 0, 0, 0 }, { 99, 0, 0, 1, 5000, 0, 0, 0 }, { 99, 0, 0, 1, 12000, 0, 0, 0 }, { 99, 0, 0, 1, 30000, 0, 0, 0 },
+  { 99, 0, 0, 1, 80000, 3000, 0, 0 }, { 99, 0, 0, 1, 200000, 3000, 0, 0 }, { 99, 0, 0, 1, 500000, 3000, 0, 0 }, { 99, 0, 0, 1, 0, 1000, 1, 0 }, { 99, 0, 0, 1, 0, 2500, 1, 0 } };
 static double TSCALE = 1.0;
 static double gaussR(void) { double u = 0, v = 0; while (u <= 0) u = (rnd32() + 1.0) / 4294967297.0; while (v <= 0) v = (rnd32() + 1.0) / 4294967297.0; return sqrt(-2 * log(u)) * cos(2 * 3.14159265358979 * v); }
 static Net *LVNET = 0;
@@ -166,7 +166,7 @@ static int lvPick(int lv, const Pos *start, Move *hist, int nh, Move *out) {
     int n = IO[0], k = 0, ok[MAXMV]; for (int i = 0; i < n; i++) if (IO[4 + 3 * i] >= IO[4] - 8) ok[k++] = i;
     int i = ok[rnd32() % k]; for (int j = 0; j < rootN; j++) if (rootL[j].f == (IO[2 + 3 * i] & 31) && rootL[j].t == ((IO[2 + 3 * i] >> 5) & 31) && rootL[j].cap == (u32)IO[3 + 3 * i]) { *out = rootL[j]; return 1; }
   }
-  best(L.d, ms, L.nk);
+  best_n(L.d, ms, L.nk);   // nk: nodes per move
   for (int j = 0; j < rootN; j++) if (rootL[j].f == (IO[0] & 31) && rootL[j].t == ((IO[0] >> 5) & 31) && rootL[j].cap == (u32)IO[1]) { *out = rootL[j]; return 1; }
   *out = rootL[0]; return 1;
 }
@@ -231,7 +231,7 @@ static void loadBallots(void) {
 static Player parsePlayer(const char *spec) {
   Player P = { 0, 0, 0, 0 }; char buf[512]; snprintf(buf, sizeof buf, "%s", spec);
   char *c = strchr(buf, ':'); if (c) { *c = 0; if (strcmp(c + 1, "-")) { Net *n = malloc(sizeof(Net)); *n = loadNet(c + 1); P.net = n; } }
-  int v = atoi(buf); if (strstr(buf, "ms")) P.ms = v; else P.nodesK = v;
+  if (strstr(buf, "ms")) P.ms = atoi(buf); else P.nodes = (int)(atof(buf) * 1000 + 0.5);   // "1.5k" = 1,500 nodes
   return P;
 }
 // one game from an opening; returns 1 black win, -1 white win, 0 draw. extra random plies after the opening.
