@@ -4,7 +4,7 @@
    game-specific ones). Every setting starts at "the level's default" (marked ●); only what differs from it is used, and it
    is never used in rated games (the game does not ask for it there; the button is hidden).
 
-     <script src="../shared/proset.js?v=1t2svhx"></script>     (after the dialog markup)
+     <script src="../shared/proset.js?v=1t2svhxb"></script>     (after the dialog markup)
      const PRO = ProSet.init({
        game: 'chess',                               // storage: localStorage 'aicoding-pro:<game>' (or cfg.store)
        field: '#fLevel',                            // the level field: the button and the panel go in it (default)
@@ -184,7 +184,6 @@ const CSS = `
 .pro-lab{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin:0 0 2px}
 .pro-lab b{font-size:13px;font-weight:600;color:var(--text,#eee)}
 .pro-row.ch .pro-lab b{color:var(--ngl-hi,var(--accent,#d8b56a))}
-.pro-row.ch .pro-lab b::before{content:'PRO';display:inline-block;margin-inline-end:6px;padding:0 5px;border-radius:4px;font-size:9px;letter-spacing:.1em;vertical-align:2px;background:var(--ngl-hi,var(--accent,#d8b56a));color:#1a140c}
 .pro-help{display:block;margin:0 0 6px;font-size:11.5px;color:var(--muted,#aaa);line-height:1.45}
 .pro-seg{display:flex;gap:3px;padding:3px;border-radius:10px;background:rgba(0,0,0,.3);border:1px solid var(--line,rgba(255,255,255,.12))}
 .pro-seg button{position:relative;flex:1 1 0;min-width:0;padding:6px 4px;border:0;border-radius:7px;background:none;color:var(--muted,#aaa);font:inherit;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;-webkit-tap-highlight-color:transparent}
