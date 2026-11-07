@@ -6,7 +6,7 @@
    app.js calls Historia.sync(game, lang) when a board opens, and defers its stage framing to Historia.fit() while open. */
 (function () {
   'use strict';
-  const V = 13;                     // data version (bump when historia/*.json change)
+  const V = 14;                     // data version (bump when historia/*.json change)
   const BGM_SRC = 'historia/bgm.mp3', BGM_VOL = .28;
   const LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];   // (a game without text in a language falls back to English)
   const UI = {
@@ -29,7 +29,7 @@
   const GUIDE = { shogi: 'm-shogi', chess: 'm-knight', reversi: 'm-disc', sudoku: 'm-tile', speedsudoku: 'av/tile-2', samegame: 'av/hippo-0', jailbreak: 'av/mole-0',
     poker: 'av/joker-0', baccarat: 'av/joker-1', blackjack: 'av/joker-2', solitaire: 'av/ghost-0', checkers: 'm-crab', ugolki: 'av/daruma-0', agon: 'av/teddy-0', fanorona: 'av/monkey-0',
     alquerque: 'av/camel-0', xiangqi: 'av/ryuou-0', tafl: 'av/seal-0', go: 'av/goke-0', gomoku: 'm-stone', dots: 'm-dot', connect4: 'm-plop', mancala: 'm-gem',
-    backgammon: 'm-dice', morris: 'm-owl', hex: 'av/bee-0', ur: 'av/goat-0', konane: 'av/hermit-0', senet: 'av/camel-2', janggi: 'av/ryuou-0' };
+    backgammon: 'm-dice', morris: 'm-owl', hex: 'av/bee-0', ur: 'av/goat-0', konane: 'av/hermit-0', senet: 'av/camel-2', janggi: 'av/ryuou-0', ludo: 'av/monkey-1' };
   const guideSrc = id => '../images/atlas/' + (GUIDE[id] || 'm-tile') + '.webp';
   const BOOK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v15H5.5A1.5 1.5 0 0 0 4 20.5z"/><path d="M20 5.5c0-.8-.7-1.5-1.5-1.5H13v15h5.5c.8 0 1.5.7 1.5 1.5z"/><path d="M7 8h2M15 8h2M7 11h2M15 11h2"/></svg>';
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -50,7 +50,7 @@
 
   /* ---------- entry button (in the board view, top-left of the 3D scene) ---------- */
   // the games that have a history (historia/s/<id>.json); a newer game without one shows no ヒストリア button
-  const IDS = new Set('agon alquerque baccarat backgammon blackjack checkers chess connect4 dots fanorona go gomoku hex jailbreak konane mancala morris poker reversi samegame shogi solitaire speedsudoku sudoku tafl ugolki ur xiangqi senet janggi'.split(' ')), has = id => IDS.has(id);
+  const IDS = new Set('agon alquerque baccarat backgammon blackjack checkers chess connect4 dots fanorona go gomoku hex jailbreak konane mancala morris poker reversi samegame shogi solitaire speedsudoku sudoku tafl ugolki ur xiangqi senet janggi ludo'.split(' ')), has = id => IDS.has(id);
   function sync(g, l, c) {
     game = g; lang = LANGS.includes(l) ? l : 'en'; if (c) ctx = c;
     const b = $('bvHist'); if (!b) return;
@@ -734,6 +734,24 @@
       const R = pt ? cell * .4 : cell * .38;
       pcs(s.pcs).forEach(([i, j, c, g], k) => { body += piece(X(i), Y(j), c, g, R, s.ps, dd + k * step); });
       (s.arrows || []).forEach(([a, b, c2, d2], k) => { body += `<path class="ar" pathLength="1" style="--d:${dd + (s.pcs || []).length * step + 200 + k * 300}ms" d="M${X(a)} ${Y(b)}L${X(c2)} ${Y(d2)}" marker-end="url(#hsArr2)"/>`; });
+    } else if (T === 'ludo') {   // ludo (15 × 15: four yards, the cross of track, the coloured home runs) or pachisi (19 × 19 cross, castles)
+      const pach = s.rule === 'pachisi', n = pach ? 19 : 15, cell = pach ? 15 : 19, C4 = pach ? ['#f5c23c', '#d8423a', '#2b2b30', '#3caf6e'] : ['#d8423a', '#3caf6e', '#f5c23c', '#3a78d8'];
+      W = H = n * cell + PD * 2; const X = i => PD + i * cell, cl = (i, j, f, d) => `<rect class="cl" style="--d:${d}ms" x="${X(i)}" y="${X(j)}" width="${cell}" height="${cell}" fill="${f}" stroke="${line}" stroke-width=".8"/>`;
+      out.push(`<rect class="bd" x="${PD - 8}" y="${PD - 8}" width="${n * cell + 16}" height="${n * cell + 16}" rx="10" fill="${pach ? 'transparent' : wood}"/>`);
+      if (!pach) {
+        [[0, 9], [0, 0], [9, 0], [9, 9]].forEach(([x, y], k) => { out.push(`<rect class="cl" x="${X(x)}" y="${X(y)}" width="${6 * cell}" height="${6 * cell}" fill="${C4[k]}"/><rect class="cl" x="${X(x + 1)}" y="${X(y + 1)}" width="${4 * cell}" height="${4 * cell}" rx="6" fill="#fffdf6"/>`); });
+        for (let j = 0; j < 15; j++) for (let i = 0; i < 15; i++) { const inX = i >= 6 && i <= 8, inY = j >= 6 && j <= 8; if (!(inX || inY) || (inX && inY)) continue;
+          const hc = (i === 7 && j >= 9 && j <= 13) || (i === 6 && j === 13) ? 0 : (j === 7 && i >= 1 && i <= 5) || (i === 1 && j === 6) ? 1 : (i === 7 && j >= 1 && j <= 5) || (i === 8 && j === 1) ? 2 : (j === 7 && i >= 9 && i <= 13) || (i === 13 && j === 8) ? 3 : -1;
+          const f = hc < 0 ? '#fffdf6' : C4[hc]; out.push(cl(i, j, f, (i + j) * 12)); }
+        const c = X(7.5); [[6, 9, 9, 9], [6, 6, 6, 9], [6, 6, 9, 6], [9, 6, 9, 9]].forEach(([a, b, e, f], k) => out.push(`<path class="cl" d="M${X(a)} ${X(b)}L${X(e)} ${X(f)}L${c} ${c}Z" fill="${C4[k]}" stroke="${line}" stroke-width=".8"/>`));
+      } else {
+        for (let j = 0; j < 19; j++) for (let i = 0; i < 19; i++) { const inX = i >= 8 && i <= 10, inY = j >= 8 && j <= 10; if (!(inX || inY) || (inX && inY)) continue;
+          const d8 = inX ? Math.abs(j - 9) : Math.abs(i - 9), side = inX ? i - 9 : j - 9;
+          out.push(cl(i, j, (d8 === 9 && side === 0) || (d8 === 6 && side !== 0) ? '#b8341f' : '#d8423a', (i + j) * 10));
+          if ((d8 === 9 && side === 0) || (d8 === 6 && side !== 0)) out.push(`<path class="cl" d="M${X(i) + 2} ${X(j) + 2}L${X(i + 1) - 2} ${X(j + 1) - 2}M${X(i + 1) - 2} ${X(j) + 2}L${X(i) + 2} ${X(j + 1) - 2}" stroke="#f5d48a" stroke-width="1.2"/>`); }
+        out.push(`<circle class="cl" cx="${X(9.5)}" cy="${X(9.5)}" r="${cell * 1.4}" fill="#f5d48a" stroke="${line}" stroke-width="1"/>`);
+      }
+      pcs(s.pcs).forEach(([i, j, c], k) => { body += piece(X(i + .5), X(j + .5), c, null, cell * .36, null, dd + k * step); });
     } else if (T === 'morris') {
       const S = 36; W = H = 6 * S + PD * 2;
       const pos = (r, k) => { const o = r * S, L = 6 * S - 2 * o, P0 = PD + o; const C = [[0, 0], [.5, 0], [1, 0], [1, .5], [1, 1], [.5, 1], [0, 1], [0, .5]][k]; return [P0 + C[0] * L, P0 + C[1] * L]; };

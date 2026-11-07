@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+<defs><clipPath id="ld-c"><rect width="96" height="96" rx="20"/></clipPath></defs>
+<g clip-path="url(#ld-c)">
+<rect width="96" height="96" fill="#fbf7ec"/>
+<rect x="0.00" y="57.60" width="38.40" height="38.40" fill="#e2403a"/>
+<rect x="6.40" y="64.00" width="25.60" height="25.60" rx="4" fill="#fff"/>
+<circle cx="12.80" cy="70.40" r="4.80" fill="#e2403a"/>
+<circle cx="25.60" cy="70.40" r="4.80" fill="#e2403a"/>
+<circle cx="12.80" cy="83.20" r="4.80" fill="#e2403a"/>
+<circle cx="25.60" cy="83.20" r="4.80" fill="#e2403a"/>
+<rect x="0.00" y="0.00" width="38.40" height="38.40" fill="#2fa65a"/>
+<rect x="6.40" y="6.40" width="25.60" height="25.60" rx="4" fill="#fff"/>
+<circle cx="12.80" cy="12.80" r="4.80" fill="#2fa65a"/>
+<circle cx="25.60" cy="12.80" r="4.80" fill="#2fa65a"/>
+<circle cx="12.80" cy="25.60" r="4.80" fill="#2fa65a"/>
+<circle cx="25.60" cy="25.60" r="4.80" fill="#2fa65a"/>
+<rect x="57.60" y="0.00" width="38.40" height="38.40" fill="#f2c12e"/>
+<rect x="64.00" y="6.40" width="25.60" height="25.60" rx="4" fill="#fff"/>
+<circle cx="70.40" cy="12.80" r="4.80" fill="#f2c12e"/>
+<circle cx="83.20" cy="12.80" r="4.80" fill="#f2c12e"/>
+<circle cx="70.40" cy="25.60" r="4.80" fill="#f2c12e"/>
+<circle cx="83.20" cy="25.60" r="4.80" fill="#f2c12e"/>
+<rect x="57.60" y="57.60" width="38.40" height="38.40" fill="#2f7ad8"/>
+<rect x="64.00" y="64.00" width="25.60" height="25.60" rx="4" fill="#fff"/>
+<circle cx="70.40" cy="70.40" r="4.80" fill="#2f7ad8"/>
+<circle cx="83.20" cy="70.40" r="4.80" fill="#2f7ad8"/>
+<circle cx="70.40" cy="83.20" r="4.80" fill="#2f7ad8"/>
+<circle cx="83.20" cy="83.20" r="4.80" fill="#2f7ad8"/>
+<rect x="44.80" y="57.60" width="6.40" height="32.00" fill="#e2403a"/>
+<rect x="6.40" y="44.80" width="32.00" height="6.40" fill="#2fa65a"/>
+<rect x="44.80" y="6.40" width="6.40" height="32.00" fill="#f2c12e"/>
+<rect x="57.60" y="44.80" width="32.00" height="6.40" fill="#2f7ad8"/>
+<path d="M38.40 57.60L57.60 57.60L48.00 48.00Z" fill="#e2403a"/>
+<path d="M38.40 38.40L38.40 57.60L48.00 48.00Z" fill="#2fa65a"/>
+<path d="M38.40 38.40L57.60 38.40L48.00 48.00Z" fill="#f2c12e"/>
+<path d="M57.60 38.40L57.60 57.60L48.00 48.00Z" fill="#2f7ad8"/>
+<g stroke="#3b3326" stroke-width=".5" fill="none" opacity=".55">
+<path d="M38.40 0.00h19.20"/>
+<path d="M0.00 38.40v19.20"/>
+<path d="M38.40 6.40h19.20"/>
+<path d="M6.40 38.40v19.20"/>
+<path d="M38.40 12.80h19.20"/>
+<path d="M12.80 38.40v19.20"/>
+<path d="M38.40 19.20h19.20"/>
+<path d="M19.20 38.40v19.20"/>
+<path d="M38.40 25.60h19.20"/>
+<path d="M25.60 38.40v19.20"/>
+<path d="M38.40 32.00h19.20"/>
+<path d="M32.00 38.40v19.20"/>
+<path d="M38.40 38.40h19.20"/>
+<path d="M38.40 38.40v19.20"/>
+<path d="M38.40 57.60h19.20"/>
+<path d="M57.60 38.40v19.20"/>
+<path d="M38.40 64.00h19.20"/>
+<path d="M64.00 38.40v19.20"/>
+<path d="M38.40 70.40h19.20"/>
+<path d="M70.40 38.40v19.20"/>
+<path d="M38.40 76.80h19.20"/>
+<path d="M76.80 38.40v19.20"/>
+<path d="M38.40 83.20h19.20"/>
+<path d="M83.20 38.40v19.20"/>
+<path d="M38.40 89.60h19.20"/>
+<path d="M89.60 38.40v19.20"/>
+<path d="M38.40 96.00h19.20"/>
+<path d="M96.00 38.40v19.20"/>
+<path d="M44.80 0v38.40M51.20 0v38.40M44.80 57.60v38.40M51.20 57.60v38.40M0 44.80h38.40M0 51.20h38.40M57.60 44.80h38.40M57.60 51.20h38.40"/>
+</g>
+</g></svg>
