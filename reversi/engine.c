@@ -31,13 +31,36 @@ static inline int lsb(u64 x) { return __builtin_ctzll(x); }
 #define R9(v) ((v) >> 9)
 #define L7(v) ((v) << 7)
 #define R7(v) ((v) >> 7)
+#ifdef __wasm_simd128__
+#include <wasm_simd128.h>
+/* the board and its vertical mirror (byte swap) in the two lanes of one vector: a left shift by 8 / 9 / 7 is the direction
+   +8 / +9 / +7 in lane 0 and -8 / -7 / -9 in lane 1, so three Kogge-Stone floods cover six directions */
+#define BSWAP2(v) wasm_i8x16_swizzle(v, wasm_i8x16_const(7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8))
+static inline u64 bswap64(u64 x) { return __builtin_bswap64(x); }
 static u64 genMoves(u64 P, u64 O) {
   const u64 E = ~(P | O), I = O & 0x7E7E7E7E7E7E7E7EULL;
-  u64 m = 0, x;
-#define GM(SH, MSK) x = SH(P) & MSK; x |= SH(x) & MSK; x |= SH(x) & MSK; x |= SH(x) & MSK; x |= SH(x) & MSK; x |= SH(x) & MSK; m |= SH(x) & E;
-  GM(L1, I) GM(R1, I) GM(L8, O) GM(R8, O) GM(L9, I) GM(R9, I) GM(L7, I) GM(R7, I)
+  const v128_t vP = wasm_i64x2_make(P, bswap64(P)), vO = wasm_i64x2_make(O, bswap64(O)), vI = wasm_v128_and(vO, wasm_i64x2_splat(0x7E7E7E7E7E7E7E7EULL));
+  v128_t g, p, m = wasm_i64x2_splat(0);
+#define KSV(S, MSK) p = MSK; g = wasm_v128_or(vP, wasm_v128_and(p, wasm_i64x2_shl(vP, S))); p = wasm_v128_and(p, wasm_i64x2_shl(p, S)); \
+  g = wasm_v128_or(g, wasm_v128_and(p, wasm_i64x2_shl(g, 2 * S))); p = wasm_v128_and(p, wasm_i64x2_shl(p, 2 * S)); \
+  g = wasm_v128_or(g, wasm_v128_and(p, wasm_i64x2_shl(g, 4 * S))); m = wasm_v128_or(m, wasm_i64x2_shl(wasm_v128_andnot(g, vP), S));
+  KSV(8, vO) KSV(9, vI) KSV(7, vI)
+  u64 r = (u64)wasm_i64x2_extract_lane(m, 0) | bswap64((u64)wasm_i64x2_extract_lane(m, 1)), gg, pp;
+#define KSL1(S, MSK) pp = MSK; gg = P | (pp & (P << S)); pp &= pp << S; gg |= pp & (gg << (2 * S)); pp &= pp << (2 * S); gg |= pp & (gg << (4 * S)); r |= (gg & ~P) << S;
+#define KSR1(S, MSK) pp = MSK; gg = P | (pp & (P >> S)); pp &= pp >> S; gg |= pp & (gg >> (2 * S)); pp &= pp >> (2 * S); gg |= pp & (gg >> (4 * S)); r |= (gg & ~P) >> S;
+  KSL1(1, I) KSR1(1, I)
+  return r & E;
+}
+#else
+static u64 genMoves(u64 P, u64 O) {   // Kogge-Stone: each direction in 3 doubling steps instead of 6 single steps
+  const u64 E = ~(P | O), I = O & 0x7E7E7E7E7E7E7E7EULL;
+  u64 m = 0, g, p;
+#define KSL(S, MSK) p = MSK; g = P | (p & (P << S)); p &= p << S; g |= p & (g << (2 * S)); p &= p << (2 * S); g |= p & (g << (4 * S)); m |= ((g & ~P) << S) & E;
+#define KSR(S, MSK) p = MSK; g = P | (p & (P >> S)); p &= p >> S; g |= p & (g >> (2 * S)); p &= p >> (2 * S); g |= p & (g >> (4 * S)); m |= ((g & ~P) >> S) & E;
+  KSL(1, I) KSR(1, I) KSL(8, O) KSR(8, O) KSL(9, I) KSR(9, I) KSL(7, I) KSR(7, I)
   return m;
 }
+#endif
 static u64 neighbours(u64 b) {
   const u64 a = b & 0x7F7F7F7F7F7F7F7FULL, c = b & 0xFEFEFEFEFEFEFEFEULL;
   return (a << 1) | (c >> 1) | (b << 8) | (b >> 8) | (a << 9) | (c << 7) | (a >> 7) | (c >> 9);
@@ -56,13 +79,54 @@ static void initRays(void) {
     }
   }
 }
-static u64 flips(int sq, u64 P, u64 O) {   // the discs of O enclosed between sq and a disc of P, in the 8 directions
-  const u64 m = 1ULL << sq, I = O & 0x7E7E7E7E7E7E7E7EULL;
-  u64 f = 0, x;
-#define FL(SH, MSK) x = SH(m) & MSK; x |= SH(x) & MSK; x |= SH(x) & MSK; x |= SH(x) & MSK; x |= SH(x) & MSK; x |= SH(x) & MSK; if (SH(x) & P) f |= x;
-  FL(L1, I) FL(R1, I) FL(L8, O) FL(R8, O) FL(L9, I) FL(R9, I) FL(L7, I) FL(R7, I)
+static u64 RAYM[64][8];   // the squares beyond sq in each direction: 0..3 towards higher squares (+1 +7 +8 +9), 4..7 towards lower
+static void initRayM(void) {
+  static const int D[8][2] = { { 0, 1 }, { 1, -1 }, { 1, 0 }, { 1, 1 }, { 0, -1 }, { -1, 1 }, { -1, 0 }, { -1, -1 } };
+  for (int sq = 0; sq < 64; sq++) for (int d = 0; d < 8; d++) {
+    u64 m = 0; int r = (sq >> 3) + D[d][0], c = (sq & 7) + D[d][1];
+    while (r >= 0 && r < 8 && c >= 0 && c < 8) { m |= 1ULL << (r * 8 + c); r += D[d][0]; c += D[d][1]; }
+    RAYM[sq][d] = m;
+  }
+}
+// the discs of O enclosed between sq and a disc of P, in the 8 directions (no loops: carry propagation upwards, leading zeros downwards)
+#if defined(__wasm_simd128__) && defined(SIMD_FLIPS)
+/* SIMD: lane 0 the board, lane 1 its vertical mirror (bswap), so the carry method for the directions +7 +8 +9 in lane 1 is
+   -9 -8 -7 on the board; the horizontal pair is done in scalar. Branch-free. */
+static v128_t RAYV[64][3];
+static void initRayV(void) {
+  for (int sq = 0; sq < 64; sq++) for (int k = 0; k < 3; k++) RAYV[sq][k] = wasm_i64x2_make(RAYM[sq][k + 1], RAYM[sq ^ 56][k + 1]);
+}
+static inline u64 flips(int sq, u64 P, u64 O) {
+  const v128_t vP = wasm_i64x2_make(P, bswap64(P)), vO = wasm_i64x2_make(O, bswap64(O)), z = wasm_i64x2_splat(0);
+  v128_t vf = z;
+  for (int k = 0; k < 3; k++) {
+    const v128_t M = RAYV[sq][k], lo = wasm_v128_and(M, wasm_i64x2_neg(M));
+    const v128_t out = wasm_v128_andnot(wasm_v128_and(wasm_i64x2_add(wasm_v128_or(vO, wasm_v128_not(M)), lo), M), vO);
+    const v128_t ok = wasm_v128_not(wasm_i64x2_eq(wasm_v128_and(out, vP), z));
+    vf = wasm_v128_or(vf, wasm_v128_and(wasm_v128_and(wasm_i64x2_sub(out, lo), M), ok));
+  }
+  u64 f = (u64)wasm_i64x2_extract_lane(vf, 0) | bswap64((u64)wasm_i64x2_extract_lane(vf, 1));
+  { const u64 M = RAYM[sq][0]; if (M) { const u64 lo = M & (0 - M), out = ((O | ~M) + lo) & M & ~O; if (out & P) f |= (out - lo) & M; } }
+  { const u64 M = RAYM[sq][4], h = M & ~O; if (h) { const u64 out = 1ULL << (63 - __builtin_clzll(h)); if (out & P) f |= M & ~((out << 1) - 1); } }
   return f;
 }
+#else
+#define initRayV()
+static inline u64 flips(int sq, u64 P, u64 O) {
+  const u64 *R = RAYM[sq]; u64 f = 0;
+  for (int d = 0; d < 4; d++) {   // towards higher squares: the first square of the ray that is not O
+    const u64 M = R[d]; if (!M) continue;
+    const u64 lo = M & (0 - M), out = ((O | ~M) + lo) & M & ~O;
+    if (out & P) f |= (out - lo) & M;
+  }
+  for (int d = 4; d < 8; d++) {   // towards lower squares: the highest square of the ray that is not O
+    const u64 M = R[d], h = M & ~O; if (!h) continue;
+    const u64 out = 1ULL << (63 - __builtin_clzll(h));
+    if (out & P) f |= M & ~((out << 1) - 1);
+  }
+  return f;
+}
+#endif
 static inline int discDiff(u64 P, u64 O) { return pc(P) - pc(O); }
 static int finalScore(u64 P, u64 O) {
   int p = pc(P), o = pc(O), e = 64 - p - o;
@@ -78,7 +142,7 @@ static int finalScore(u64 P, u64 O) {
 static i16 W[WMAX];
 static int NINST, NPHASE, PHASE_SIZE, USE_EXT, EXT_OFF;
 static int I_OFF[MAXI], SQ_START[65], SQI[MAXI * 10], SQP[MAXI * 10];
-static TLS int STA[NSTK * MAXI], STB[NSTK * MAXI];
+static TLS unsigned short STA[NSTK * MAXI], STB[NSTK * MAXI];   // pattern indices (< 3^10, fit 16 bits), a fixed stride of MAXI per ply so a child copies whole vectors
 EXPORT(w_ptr) i16 *w_ptr(void) { return W; }
 EXPORT(w_max) int w_max(void) { return WMAX; }
 EXPORT(tab_ptr) int *tab_ptr(int k) { return k == 0 ? I_OFF : k == 1 ? SQ_START : k == 2 ? SQI : SQP; }
@@ -99,23 +163,23 @@ static int evalFull(u64 P, u64 O) {   // = engine.js evalPattern
   return (s * 100) / 32;
 }
 static void initIdx(int ply, u64 P, u64 O) {
-  int a0 = ply * NINST;
-  for (int i = 0; i < NINST; i++) STA[a0 + i] = STB[a0 + i] = 0;
+  int a0 = ply * MAXI;
+  for (int i = 0; i < MAXI; i++) STA[a0 + i] = STB[a0 + i] = 0;
   for (u64 x = P; x; x &= x - 1) { int q = lsb(x); for (int j = SQ_START[q], e = SQ_START[q + 1]; j < e; j++) { STA[a0 + SQI[j]] += SQP[j]; STB[a0 + SQI[j]] += 2 * SQP[j]; } }
   for (u64 x = O; x; x &= x - 1) { int q = lsb(x); for (int j = SQ_START[q], e = SQ_START[q + 1]; j < e; j++) { STA[a0 + SQI[j]] += 2 * SQP[j]; STB[a0 + SQI[j]] += SQP[j]; } }
 }
 static void childIdx(int ply, int s, u64 f) {
-  int a0 = ply * NINST, c0 = a0 + NINST;
-  for (int i = 0; i < NINST; i++) { STA[c0 + i] = STB[a0 + i]; STB[c0 + i] = STA[a0 + i]; }
+  int a0 = ply * MAXI, c0 = a0 + MAXI;
+  for (int i = 0; i < MAXI; i++) { STA[c0 + i] = STB[a0 + i]; STB[c0 + i] = STA[a0 + i]; }
   for (int j = SQ_START[s], e = SQ_START[s + 1]; j < e; j++) { STA[c0 + SQI[j]] += 2 * SQP[j]; STB[c0 + SQI[j]] += SQP[j]; }
   for (u64 x = f; x; x &= x - 1) { int q = lsb(x); for (int j = SQ_START[q], e = SQ_START[q + 1]; j < e; j++) { STA[c0 + SQI[j]] += SQP[j]; STB[c0 + SQI[j]] -= SQP[j]; } }
 }
 static void passIdx(int ply) {
-  int a0 = ply * NINST, c0 = a0 + NINST;
-  for (int i = 0; i < NINST; i++) { STA[c0 + i] = STB[a0 + i]; STB[c0 + i] = STA[a0 + i]; }
+  int a0 = ply * MAXI, c0 = a0 + MAXI;
+  for (int i = 0; i < MAXI; i++) { STA[c0 + i] = STB[a0 + i]; STB[c0 + i] = STA[a0 + i]; }
 }
 static int evalAt(int ply, u64 P, u64 O) {
-  int base = phaseOf(pc(P | O)) * PHASE_SIZE, a0 = ply * NINST, s = W[base + PHASE_SIZE - 1];
+  int base = phaseOf(pc(P | O)) * PHASE_SIZE, a0 = ply * MAXI, s = W[base + PHASE_SIZE - 1];
   for (int i = 0; i < NINST; i++) s += W[base + I_OFF[i] + STA[a0 + i]];
   if (USE_EXT) s += extSum(P, O, base);
   return (s * 100) / 32;
@@ -276,15 +340,37 @@ static u64 stableOf(u64 X, u64 filled) {
 // ------------------------------------------------------------------ endgame solver
 static i8 QUAD[64];
 static const u64 QMASK[4] = { 0x0F0F0F0FULL, 0xF0F0F0F0ULL, 0x0F0F0F0FULL << 32, 0xF0F0F0F0ULL << 32 };
+/* the last move: the number of discs it flips when every other square is filled, from four 8-bit lines (row, column and the
+   two diagonals gathered into one byte each) and a table CNT[position in line][line of P] — no flip computation */
+static u8 CNT[8][256];
+static void initCnt(void) {
+  for (int x = 0; x < 8; x++) for (int l = 0; l < 256; l++) {
+    int n = 0;
+    if (!((l >> x) & 1)) {
+      int k = x + 1; while (k < 8 && !((l >> k) & 1)) k++; if (k < 8) n += k - x - 1;
+      k = x - 1; while (k >= 0 && !((l >> k) & 1)) k--; if (k >= 0) n += x - k - 1;
+    }
+    CNT[x][l] = (u8)n;
+  }
+}
+static inline int lastCount(int s, u64 P) {
+  const int x = s & 7, y = s >> 3;
+  const int row = (int)((P >> (8 * y)) & 0xFF);
+  const int col = (int)((((P >> x) & 0x0101010101010101ULL) * 0x0102040810204080ULL) >> 56);
+  const int d9 = (int)(((P & DIAG9M[y - x + 7]) * 0x0101010101010101ULL) >> 56);
+  const int d7 = (int)(((P & DIAG7M[y + x]) * 0x0101010101010101ULL) >> 56);
+  return CNT[x][row] + CNT[y][col] + CNT[x][d9] + CNT[x][d7];
+}
 static int solveLast1(u64 P, u64 O) {   // one empty square: play it if possible (else the opponent, else nobody)
   ++nodes;
   const u64 E = ~(P | O); const int s = lsb(E);
-  u64 f = flips(s, P, O);
-  if (f) return pc(P) - pc(O) + 1 + 2 * pc(f);
+  const int d = pc(P) - pc(O);
+  int n = lastCount(s, P);
+  if (n) return d + 1 + 2 * n;
   ++nodes;   // (the pass node of the generic solver)
-  f = flips(s, O, P);
-  if (f) return pc(P) - pc(O) - 1 - 2 * pc(f);
-  int d = pc(P) - pc(O); return d > 0 ? d + 1 : d < 0 ? d - 1 : 0;
+  n = lastCount(s, O);
+  if (n) return d - 1 - 2 * n;
+  return d > 0 ? d + 1 : d < 0 ? d - 1 : 0;
 }
 static u64 NEIGH[64];   // the 8 squares around each square
 static int solveSmall(u64 P, u64 O, int alpha, int beta, int empties, int passed) {
@@ -292,7 +378,10 @@ static int solveSmall(u64 P, u64 O, int alpha, int beta, int empties, int passed
   ++nodes;
   const u64 E = ~(P | O); int best = -99, moved = 0;
   u64 odd = 0;   // the empty squares in quadrants with an odd number of empties (searched first)
-  for (int q = 0; q < 4; q++) if (pc(E & QMASK[q]) & 1) odd |= QMASK[q];
+  {   // parity of each quadrant by folding: columns (x ^= x>>2, x>>1) then rows (x>>16, x>>8) → bits 0, 4, 32, 36
+    u64 y = E ^ (E >> 2); y ^= y >> 1; y ^= y >> 16; y ^= y >> 8;
+    odd = (QMASK[0] & (0 - (y & 1))) | (QMASK[1] & (0 - ((y >> 4) & 1))) | (QMASK[2] & (0 - ((y >> 32) & 1))) | (QMASK[3] & (0 - ((y >> 36) & 1)));
+  }
   const u64 cand = E & neighbours(O);   // a move must touch an opponent disc
   for (int pass = 0; pass < 2; pass++) {
     for (u64 x = cand & (pass ? ~odd : odd); x; x &= x - 1) {
@@ -389,7 +478,7 @@ EXPORT(search) int search(u32 pl, u32 ph, u32 ol, u32 oh, int depth, int alpha, 
 EXPORT(solve_) int solve_(u32 pl, u32 ph, u32 ol, u32 oh, int alpha, int beta, int empties, int ply, int passed) { return solve(B(pl, ph), B(ol, oh), alpha, beta, empties, ply, passed); }
 EXPORT(evaluate) int evaluate(u32 pl, u32 ph, u32 ol, u32 oh) { return evalFull(B(pl, ph), B(ol, oh)); }
 EXPORT(init) void init(void) {
-  initRays(); initDiag();
+  initRays(); initRayM(); initRayV(); initDiag(); initCnt();
   for (int s = 0; s < 64; s++) QUAD[s] = (i8)(((s >> 5) << 1) | ((s & 7) >> 2));
   clear_tt();
 }
