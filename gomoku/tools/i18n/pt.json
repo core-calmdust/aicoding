@@ -1,4 +1,7 @@
 {
+  "btn.rules.title": "Aprender as regras",
+  "ls.toList": "Voltar às lições",
+  "ls.toOpen": "Voltar às aberturas",
   "meta.title": "Gomoku e Renju — Cinco em linha",
   "brand": "Gomoku e Renju",
   "p1": "Pretas",
@@ -387,7 +390,6 @@
   "ru.open.task1": "Lance 1: jogue as pretas no ponto central",
   "ru.open.task3": "Lance 3: jogue as pretas a no máximo duas linhas do centro (área pontilhada)",
   "ru.open.ok": "Pronto, uma abertura de renju.",
-  "btn.rules.title": "Aprender as regras",
   "op.d.kansei": "Centro, branca e preta numa linha vertical. As pretas tapam a branca e constroem por cima.",
   "op.d.keigetsu": "Na diagonal acima da branca, encostada. Abertura vencedora típica em que as pretas atacam rápido.",
   "op.d.sosei": "Longe do centro na diagonal. As pretas ficam pouco ligadas; as brancas estão um pouco melhor.",

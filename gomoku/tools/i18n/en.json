@@ -1,4 +1,7 @@
 {
+  "btn.rules.title": "Learn the rules",
+  "ls.toList": "Back to lessons",
+  "ls.toOpen": "Back to openings",
   "meta.title": "Gomoku & Renju — Five in a Row",
   "brand": "Gomoku & Renju",
   "p1": "Black",
@@ -387,7 +390,6 @@
   "ru.open.task1": "Move 1: play Black on the centre point",
   "ru.open.task3": "Move 3: play Black within two lines of the centre (the dotted area)",
   "ru.open.ok": "That is a Renju opening shape.",
-  "btn.rules.title": "Learn the rules",
   "op.d.kansei": "Centre, white and black stand in one vertical line. Black caps the white stone and builds from above.",
   "op.d.keigetsu": "Placed diagonally above white, touching it. A typical winning opening where black attacks quickly.",
   "op.d.sosei": "Placed far from the centre on the diagonal. The black stones are loosely connected; white is slightly better.",

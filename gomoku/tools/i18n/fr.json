@@ -1,4 +1,7 @@
 {
+  "btn.rules.title": "Apprendre les règles",
+  "ls.toList": "Retour aux leçons",
+  "ls.toOpen": "Retour aux ouvertures",
   "meta.title": "Gomoku & Renju — cinq en ligne",
   "brand": "Gomoku & Renju",
   "p1": "Noir",
@@ -387,7 +390,6 @@
   "ru.open.task1": "Coup 1 : jouez Noir sur le point central",
   "ru.open.task3": "Coup 3 : jouez Noir à deux lignes au plus du centre (zone pointillée)",
   "ru.open.ok": "Voilà une ouverture de renju.",
-  "btn.rules.title": "Apprendre les règles",
   "op.d.kansei": "Centre, blanc et noir alignés verticalement. Noir coiffe la pierre blanche et construit par le haut.",
   "op.d.keigetsu": "En diagonale au-dessus du blanc, au contact. Ouverture gagnante typique où noir attaque vite.",
   "op.d.sosei": "Loin du centre sur la diagonale. Les pierres noires sont peu liées ; blanc est un peu mieux.",

@@ -1,8 +1,11 @@
 // node tools/build_i18n.js → i18n.js
 // The game-independent UI strings (dialogs, buttons, rated games, lessons / puzzles frames …) are taken from Checkers
 // (../checkers/i18n.js, same page design); everything that is about xiangqi comes from tools/i18n_xq.js and tools/i18n_lessons.js.
+// ru / zh-TW / id / tr (added 2026-11, generic and xiangqi keys alike) live in tools/i18n_new4.json: a key used by the page
+// must be there for those 4 languages too (the build stops otherwise), so a rebuild never drops them.
 const fs = require('fs'), path = require('path'), vm = require('vm');
-const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
+const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];   // the 10 languages of checkers/i18n.js and i18n_xq.js
+const NEW4 = JSON.parse(fs.readFileSync(path.join(__dirname, 'i18n_new4.json'), 'utf8'));   // { ru: {…}, 'zh-TW': {…}, id: {…}, tr: {…} }
 const root = path.join(__dirname, '..');
 const sb = { window: {} }; vm.runInNewContext(fs.readFileSync(path.join(root, '../checkers/i18n.js'), 'utf8'), sb);
 const CK = sb.window.I18N;
@@ -23,16 +26,24 @@ op.title op.study op.studyDesc op.practice op.practiceDesc op.studyStart op.stud
 op.goal op.pass op.why op.hint op.auto pz.retry pz.answer pz.next pz.list pz.checking pz.fail pz.good pz.yourMove pz.solved pz.hintText pz.showing pz.answerDone
 pz.stray pz.best daily.title daily.streak daily.best daily.go
 dr.aiOffer dr.accept dr.decline dr.resignQ dr.resign dr.wait dr.accepted dr.declined dr.aiResigned`.split(/\s+/).filter(Boolean);
+// generic keys whose xiangqi wording differs from checkers (per language)
+const OVER = { 'ls.toOpen': { ko: '오프닝으로 돌아가기' } };
 const XQ = Object.assign({}, require('./i18n_xq.js'), fs.existsSync(path.join(__dirname, 'i18n_lessons.js')) ? require('./i18n_lessons.js') : {});
 const out = {};
 for (const [li, L] of LANGS.entries()) {
   const o = {};
-  for (const k of GENERIC) { const v = CK[L][k] !== undefined ? CK[L][k] : CK.en[k]; if (v === undefined) throw new Error('missing generic ' + k); o[k] = v; }
+  for (const k of GENERIC) { const v = (OVER[k] || {})[L] !== undefined ? OVER[k][L] : CK[L][k] !== undefined ? CK[L][k] : CK.en[k]; if (v === undefined) throw new Error('missing generic ' + k); o[k] = v; }
   for (const k in XQ) { const v = XQ[k][li]; if (v === undefined || v === null) throw new Error('missing ' + k + ' / ' + L); o[k] = v; }
   out[L] = o;
 }
+for (const L in NEW4) {
+  const o = {};
+  for (const k in out.en) { const v = NEW4[L][k]; if (v === undefined) throw new Error('missing ' + k + ' / ' + L + ' (add it to tools/i18n_new4.json)'); o[k] = v; }
+  out[L] = o;
+}
+const ALL = LANGS.concat(Object.keys(NEW4));
 let s = '// UI strings for Xiangqi — ja / en / zh (Simplified) / ko / es / fr / pt / de / hi / ar (built by tools/build_i18n.js)\nwindow.I18N = {\n';
-for (const L of LANGS) s += L + ': ' + JSON.stringify(out[L]) + ',\n';
+for (const L of ALL) s += (L.includes('-') ? "'" + L + "'" : L) + ': ' + JSON.stringify(out[L]) + ',\n';
 s += '};\n';
 fs.writeFileSync(path.join(root, 'i18n.js'), s);
-console.log('i18n.js', LANGS.map(l => l + ':' + Object.keys(out[l]).length).join(' '));
+console.log('i18n.js', ALL.map(l => l + ':' + Object.keys(out[l]).length).join(' '));

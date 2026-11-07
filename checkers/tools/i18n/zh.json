@@ -1,4 +1,6 @@
 {
+ "ls.toList": "返回课程",
+ "ls.toOpen": "返回开局",
  "meta.title": "西洋跳棋 — World Board Game Atlas",
  "title": "西洋跳棋",
  "sub": "",
