@@ -4,7 +4,7 @@
    game-specific ones). Every setting starts at "the level's default" (marked ●); only what differs from it is used, and it
    is never used in rated games (the game does not ask for it there; the button is hidden).
 
-     <script src="../shared/proset.js?v=1t2sv"></script>     (after the dialog markup)
+     <script src="../shared/proset.js?v=1t2svh"></script>     (after the dialog markup)
      const PRO = ProSet.init({
        game: 'chess',                               // storage: localStorage 'aicoding-pro:<game>' (or cfg.store)
        field: '#fLevel',                            // the level field: the button and the panel go in it (default)
@@ -80,19 +80,20 @@ const T = {
     es: 'Activa «Multihilo» en Opciones (engranaje) para elegirlo.', fr: 'Activez « Multithread » dans les Options (roue dentée) pour le choisir.', pt: 'Ative “Multithread” nas Opções (engrenagem) para escolher.',
     de: 'Schalte „Multithreading" in den Optionen (Zahnrad) ein, um dies zu wählen.', ru: 'Включите «Многопоточность» в Опциях (шестерёнка), чтобы выбрать.', tr: 'Seçmek için Seçenekler\'de (dişli) "Çoklu iş parçacığı"nı açın.',
     id: 'Aktifkan "Multi-thread" di Opsi (roda gigi) untuk memilih.', hi: 'चुनने के लिए विकल्प (गियर) में "मल्टी-थ्रेड" चालू करें।', ar: 'شغّل «متعدد المسارات» في الخيارات (الترس) لاختيار ذلك.' },
-  'threads.h': { ja: '時間で考えるときに同時に使うCPUコアの数（オプションのマルチスレッドがオンのとき）。',
-    en: 'CPU cores that search together on a time limit (when multi-threading is on in Options).',
-    zh: '按时间思考时同时使用的CPU核心数（选项中的多线程开启时）。', 'zh-TW': '按時間思考時同時使用的CPU核心數（選項中的多執行緒開啟時）。',
-    ko: '시간 제한으로 생각할 때 함께 쓰는 CPU 코어 수(옵션의 멀티스레드가 켜져 있을 때).',
-    es: 'Núcleos de CPU que calculan juntos con límite de tiempo (con el multihilo activado en Opciones).',
-    fr: 'Cœurs du processeur qui calculent ensemble avec une limite de temps (multithread activé dans Options).',
-    pt: 'Núcleos da CPU que calculam juntos com limite de tempo (com multithread ativado em Opções).',
-    de: 'CPU-Kerne, die bei Zeitgrenze gemeinsam rechnen (wenn Multithreading in den Optionen an ist).',
-    ru: 'Сколько ядер считают вместе при ограничении по времени (если в Опциях включена многопоточность).',
-    tr: 'Süre sınırında birlikte arayan CPU çekirdekleri (Seçenekler’de çoklu iş parçacığı açıkken).',
-    id: 'Inti CPU yang mencari bersama saat batas waktu (bila multi-thread aktif di Opsi).',
-    hi: 'समय-सीमा पर साथ में खोजने वाले CPU कोर (जब विकल्पों में मल्टी-थ्रेड चालू हो)।',
-    ar: 'أنوية المعالج التي تبحث معًا عند حدّ الوقت (عند تشغيل تعدد المسارات في الخيارات).' },
+  'threads.h': { ja: '同時に読むCPUコアの数。時間・深さ・局面数のどの制限でも効き、深さ・局面数ではメインのスレッドの上限まで読む間、ほかのスレッドが手助けします（オプションのマルチスレッドがオンのとき）。',
+    en: 'CPU cores that search together. Works with any limit (time, depth or nodes); with depth / nodes the main thread searches to its limit while the others help (when multi-threading is on in Options).',
+    zh: '同时搜索的CPU核心数。时间、深度、局面数任一限制都有效；按深度/局面数时，主线程搜到上限，其余线程协助（选项中的多线程开启时）。',
+    'zh-TW': '同時搜尋的CPU核心數。時間、深度、局面數任一限制都有效；按深度／局面數時，主執行緒搜到上限，其餘執行緒協助（選項中的多執行緒開啟時）。',
+    ko: '함께 읽는 CPU 코어 수. 시간·깊이·국면 수 어느 제한에도 적용되며, 깊이·국면 수에서는 메인 스레드가 한도까지 읽는 동안 나머지가 돕습니다(옵션의 멀티스레드가 켜져 있을 때).',
+    es: 'Núcleos de CPU que calculan juntos. Sirve con cualquier límite (tiempo, profundidad o nodos); con profundidad / nodos el hilo principal llega a su límite y los demás ayudan (con el multihilo activado en Opciones).',
+    fr: 'Cœurs qui calculent ensemble. Fonctionne avec toute limite (temps, profondeur ou nœuds) ; en profondeur / nœuds, le thread principal va jusqu’à sa limite pendant que les autres l’aident (multithread activé dans Options).',
+    pt: 'Núcleos da CPU que calculam juntos. Vale para qualquer limite (tempo, profundidade ou nós); com profundidade / nós o thread principal vai até o limite e os outros ajudam (com multithread ativado em Opções).',
+    de: 'CPU-Kerne, die gemeinsam rechnen. Gilt für jede Grenze (Zeit, Tiefe oder Knoten); bei Tiefe / Knoten rechnet der Hauptthread bis zu seiner Grenze, die anderen helfen (wenn Multithreading in den Optionen an ist).',
+    ru: 'Сколько ядер считают вместе. Работает при любом ограничении (время, глубина, позиции); при глубине / позициях основной поток считает до предела, остальные помогают (если в Опциях включена многопоточность).',
+    tr: 'Birlikte arayan CPU çekirdeği sayısı. Her sınırla çalışır (süre, derinlik, konum); derinlik / konumda ana iş parçacığı sınırına kadar arar, diğerleri yardım eder (Seçenekler\'de çoklu iş parçacığı açıkken).',
+    id: 'Jumlah inti CPU yang mencari bersama. Berlaku untuk batas apa pun (waktu, kedalaman, posisi); dengan kedalaman / posisi, thread utama mencari sampai batasnya sementara yang lain membantu (bila multi-thread aktif di Opsi).',
+    hi: 'एक साथ खोजने वाले CPU कोर। हर सीमा (समय, गहराई, स्थितियाँ) पर काम करता है; गहराई/स्थितियों में मुख्य थ्रेड अपनी सीमा तक खोजता है और बाकी मदद करते हैं (विकल्प में मल्टी-थ्रेड चालू होने पर)।',
+    ar: 'عدد أنوية المعالج التي تبحث معًا. يعمل مع أي حد (الوقت أو العمق أو المواضع)؛ ومع العمق/المواضع يبحث المسار الرئيسي حتى حده بينما تساعده المسارات الأخرى (عند تشغيل تعدد المسارات في الخيارات).' },
   book: { ja: '定跡', en: 'Opening book', zh: '开局库', 'zh-TW': '開局庫', ko: '오프닝 북', es: 'Libro de aperturas', fr: 'Livre d’ouvertures', pt: 'Livro de aberturas', de: 'Eröffnungsbuch', ru: 'Дебютная книга', tr: 'Açılış kitabı', id: 'Buku pembukaan', hi: 'ओपनिंग बुक', ar: 'كتاب الافتتاحيات' },
   'book.h': { ja: '序盤に登録された手順を使うか。オフにすると1手目から自分で読みます。',
     en: 'Play the stored opening lines? Off: the AI thinks for itself from the first move.',
