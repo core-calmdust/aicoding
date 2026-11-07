@@ -84,7 +84,8 @@
     });
     const baize = mesh(top, M({ map: tex, roughness: .95, bump: false }), 0, .3, 0); baize.receiveShadow = true; g.add(baize);
     // a dark base under the baize (seen through nothing, casts the table's shadow)
-    g.add(mesh(new TT.ShapeGeometry(new TT.Shape(pts(.4)), 1).rotateX(-Math.PI / 2), M({ color: 0x0b2a22 }), 0, .02, 0));
+    { const bm = M({ color: 0x0b2a22 }); bm.shadowSide = TT.DoubleSide;   // (a one-sided plane facing up casts nothing in three's shadow pass: the cards' and chips' shadows fell through the table)
+      const bs = mesh(new TT.ShapeGeometry(new TT.Shape(pts(.4)), 1).rotateX(-Math.PI / 2), bm, 0, .02, 0); bs.castShadow = true; bs.receiveShadow = false; g.add(bs); }
     g.userData.top = .31;
     return g;
   }
