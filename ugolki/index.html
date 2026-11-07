@@ -1357,11 +1357,11 @@ html:is([data-bd=gzhel],[data-bd=birch]) .reserve .rsv-plate .rsv-w:not(.hot) b{
 <script src="i18n-ug-more.js?v=4lv"></script>
 <script src="i18n-ug-eu.js?v=4lvn"></script>
 <script src="i18n-ug-hiar.js?v=4lv-l14"></script>
-<script src="i18n-online.js?v=stale1-l14"></script>
+<script src="i18n-online.js?v=stale1-l14-hb1"></script>
 <script src="../shared/pzbook.js?v=5l14"></script>
 <script src="../shared/placement.js?v=1l14"></script>
 <script src="../shared/rulesoffer.js?v=16l14"></script>
-<script src="../shared/headerbar.js?v=46l14"></script>
+<script src="../shared/headerbar.js?v=48l14"></script>
 <script src="../shared/flipbtn.js?v=3l14"></script>
 <script src="../shared/cardbar.js?v=7l14"></script>
 <script src="../shared/watchpause.js?v=2l14"></script>
@@ -1389,7 +1389,7 @@ html:is([data-bd=gzhel],[data-bd=birch]) .reserve .rsv-plate .rsv-w:not(.hot) b{
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=111l14')).then(() => load('../atlas/tables3d.js?v=12l14')).then(() => load('../atlas/skin/common.js?v=32l14nn')).then(() => load('../atlas/models/ugolki.js?v=3l14')).then(() => load('../atlas/skin/ugolki.js?v=2l14'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=112l14')).then(() => load('../atlas/tables3d.js?v=13l14')).then(() => load('../atlas/skin/common.js?v=33l14nn')).then(() => load('../atlas/models/ugolki.js?v=3l14')).then(() => load('../atlas/skin/ugolki.js?v=2l14'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>

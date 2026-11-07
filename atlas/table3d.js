@@ -921,7 +921,7 @@
     kick(600);
   }
   // the place (table design, 0..5) and the brightness (0..2) are shared by the portal and every ?skin=atlas page:
-  // localStorage 'atlas-table' / 'atlas-bright'; a change fires window 'atlas-table' (detail { table, bright }) for the labels / floors
+  // localStorage 'atlas-table' / 'atlas-bright2'; a change fires window 'atlas-table' (detail { table, bright }) for the labels / floors
   const say = () => { try { dispatchEvent(new CustomEvent('atlas-table', { detail: { table: tableStyle, bright } })); } catch (e) {} };
   function setTable(k) {   // switch the table design (0..5) and rebuild the room (no reload)
     k = Math.max(0, Math.min(5, k | 0)); if (!TABLES[k] && k) k = 0;
@@ -937,23 +937,24 @@
     }
     say();
   }
-  // 明るさ: 0 標準 · 1 明るい · 2 とても明るい — exposure × BRIGHT[b], plus a soft light on the board and a lift of the ambient
-  const BRIGHT = [1, 1.2, 1.42], BOARD_ADD = [0, .32, .66], AMB_ADD = [0, .14, .3];
-  let bright = (() => { try { const v = +localStorage.getItem('atlas-bright'); return v >= 0 && v <= 2 ? v | 0 : 0; } catch (e) { return 0; } })();
+  // 明るさ: 0 暗い（やや抑えた明かり） · 1 標準 · 2 明るい — exposure × BRIGHT[b], the soft light on the board × BOARD_K + BOARD_ADD, a lift of the ambient.
+  // Kept in 'atlas-bright2' (the earlier 'atlas-bright' 0 標準 · 1 明るい · 2 とても明るい is read once: 0 → 1, 1 / 2 → 2) (2026-11-07)
+  const BRIGHT = [.8, 1, 1.2], BOARD_K = [.7, 1, 1], BOARD_ADD = [0, 0, .32], AMB_ADD = [0, 0, .14];
+  let bright = (() => { try { const v = localStorage.getItem('atlas-bright2'); if (v !== null && +v >= 0 && +v <= 2) return +v | 0; const o = localStorage.getItem('atlas-bright'); return o === '1' || o === '2' ? 2 : 1; } catch (e) { return 1; } })();
   let baseExp = .78, boardLamp = null, boardLampI = 0, ambLift = null;
   const expo = v => v * BRIGHT[bright];
   function setBright(b) {
     bright = Math.max(0, Math.min(2, b | 0));
-    try { localStorage.setItem('atlas-bright', String(bright)); } catch (e) {}
+    try { localStorage.setItem('atlas-bright2', String(bright)); } catch (e) {}
     if (R) { if (!museumOn) R.toneMappingExposure = expo(baseExp); else { glareW = -1; R.toneMappingExposure = MUSEUM_EXP; }
-      if (boardLamp) boardLamp.intensity = boardLampI + BOARD_ADD[bright]; if (ambLift) ambLift.intensity = AMB_ADD[bright]; dirty = true; kick(300); }
+      if (boardLamp) boardLamp.intensity = boardLampI * BOARD_K[bright] + BOARD_ADD[bright]; if (ambLift) ambLift.intensity = AMB_ADD[bright]; dirty = true; kick(300); }
     say();
   }
   // the board is never left in the dark: every place gets a soft light straight onto the board (no shadow: free of shadow passes)
   // and the brightness option adds to it; `I` is the place's own guaranteed amount
   function boardLight(TT, scene, I, col = 0xfff4e6) {
     boardLampI = I;
-    const L = new TT.DirectionalLight(col, I + BOARD_ADD[bright]); L.position.set(2, 30, 18); scene.add(L); boardLamp = L;
+    const L = new TT.DirectionalLight(col, I * BOARD_K[bright] + BOARD_ADD[bright]); L.position.set(2, 30, 18); scene.add(L); boardLamp = L;
     const h = new TT.HemisphereLight(0xffffff, 0xd8c8b0, AMB_ADD[bright]); scene.add(h); ambLift = h;
   }
   // a place may show the page's own CSS behind a transparent canvas (2D準拠): the canvas container carries it
@@ -975,7 +976,7 @@
   const TABLES = {};
   let tableStyle = (() => { try { const m = /[?&]tbl=(\d)/.exec(location.search); if (m) return +m[1]; return +(localStorage.getItem('atlas-table') || 0) || 0; } catch (e) { return 0; } })();
   let tblInfo = null, roomBg = null, viewOnly = [];
-  try { const m = /[?&]bright=(\d)/.exec(location.search); if (m) localStorage.setItem('atlas-bright', m[1]); } catch (e) {}
+  try { const m = /[?&]bright=(\d)/.exec(location.search); if (m) localStorage.setItem('atlas-bright2', m[1]); } catch (e) {}
   const LOOK = {
     morning: { sky: ['#cfe9ff', '#fff2d6'], sun: 0xfff4e2, sunI: 1.05, sunPos: [-14, 12, -10], hemi: [0xe8f2ff, 0x6a5038, .45], lamp: 0, exp: .84 },
     day:     { sky: ['#8fd0ff', '#e6f6ff'], sun: 0xffffff, sunI: 1.02, sunPos: [-8, 18, -6], hemi: [0xf4f8ff, 0x6a5038, .46], lamp: 0, exp: .78 },
