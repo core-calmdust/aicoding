@@ -123,7 +123,8 @@
     const f = e => { if (e.data && e.data.type === 'mt-pong') { clearTimeout(to); navigator.serviceWorker.removeEventListener('message', f); res(!!e.data.nav); } };
     navigator.serviceWorker.addEventListener('message', f); c.postMessage({ type: 'mt-ping' });
   });
-  let booted = false;
+  let booted = false, touched = false;   // touched: the player has clicked / typed — never reload under them
+  ['pointerdown', 'keydown'].forEach(t => addEventListener(t, () => { touched = true; }, { capture: true, once: true }));
   let SWURL = 'sw.js';
   const ensureSW = async () => { try { await navigator.serviceWorker.register(SWURL, { scope: './' }); await navigator.serviceWorker.ready; } catch (e) {} };
   async function boot(swUrl, light) {
@@ -151,7 +152,7 @@
     if (recently() || (CTRL0 && await ping())) { LS.set(K_NODIP, navigator.userAgent); return; }   // the page came through our worker and still no isolation: no DIP here
     await navigator.serviceWorker.ready;
     if (!navigator.serviceWorker.controller) await new Promise(res => { navigator.serviceWorker.addEventListener('controllerchange', res, { once: true }); setTimeout(res, 4000); });
-    if (performance.now() < 20000 && !document.body.classList.contains('in-online')) reload();   // (later: next visit)
+    if (!touched && performance.now() < 20000 && !document.body.classList.contains('in-online')) reload();   // (not once the player has started using the page: then from the next visit)
   }
 
   // ------------------------------------------------------------------ the option
