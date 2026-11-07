@@ -214,6 +214,10 @@
       c.traverse(o => { if (o.isMesh) { o.castShadow = o.receiveShadow = true; } });
     });
     if (X.mergeStatic) { try { X.mergeStatic(base); } catch (err) {} }   // the board: a handful of draw calls
+    // the board is built of open shells (a ring, walls, a plane): they barely reach the shadow map, so the pieces' shadows fell
+    // through it onto the floor. An unseen closed slab just under the field casts the board's shadow (the field still receives).
+    { const sc = new TT.Mesh(new TT.BoxGeometry(W - .06, HF - .03, D - .06), new TT.MeshBasicMaterial({ colorWrite: false, depthWrite: false }));
+      sc.position.y = (HF - .03) / 2; sc.castShadow = true; sc.receiveShadow = false; sc.userData.noInst = true; sc.material.userData.noMerge = true; g.add(sc); }
     g.userData.top = HF + .001; g.userData.u = u; g.userData.W = W; g.userData.D = D;
     g.userData.pt = (i, j) => [(i - 4) * u, (j - 4.5) * u];   // i: file 0..8 left → right, j: rank 0..9 far → near
     g.userData.piece = piece;

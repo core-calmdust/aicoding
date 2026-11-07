@@ -196,7 +196,8 @@
     const tr = mesh(ring, [m.top, m.side]); tr.rotation.x = -Math.PI / 2; tr.position.y = bv; g.add(tr);
     const fl = mesh(new TT.ShapeGeometry(rrShape(new TT.Shape(), TW_ / 2 - WALL + .01, TDp / 2 - WALL + .01, TR - WALL, X.coarse ? 8 : 12), X.coarse ? 8 : 12), m.suede, false);
     fl.rotation.x = -Math.PI / 2; fl.position.y = FL; g.add(fl);
-    const base = mesh(new TT.ShapeGeometry(rrShape(new TT.Shape(), TW_ / 2 - .02, TDp / 2 - .02, TR - .02, 6), 6), m.side, false); base.rotation.x = Math.PI / 2; base.position.y = .002; g.add(base);
+    const baseM = m.side.clone(); baseM.shadowSide = TT.DoubleSide;   // (the bottom casts the tray's shadow: one-sided planes cast nothing, so the tiles' shadows fell through the tray)
+    const base = mesh(new TT.ShapeGeometry(rrShape(new TT.Shape(), TW_ / 2 - .02, TDp / 2 - .02, TR - .02, 6), 6), baseM, true); base.rotation.x = Math.PI / 2; base.position.y = .002; base.receiveShadow = false; g.add(base);
     // walnut spine across the tray
     const spL = TW_ - 2 * WALL - .02, sp = mesh(X.RB(spL, SP_H - FL + .02, SP_D, .07, 3), m.walnut); sp.position.y = (SP_H + FL) / 2 - .01; g.add(sp);
     // eight bronze rails in brass ferrules
