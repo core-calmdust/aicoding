@@ -191,7 +191,7 @@
       <path d="M40 160H600L580 205L600 250H40L60 205Z" fill="#fff" stroke="#111" stroke-width="6" stroke-linejoin="round"/>
       <path d="M86 172H554M86 238H554" stroke="#111" stroke-width="2" stroke-dasharray="2 6" stroke-linecap="round"/>
       ${pre ? `<rect x="268" y="112" width="104" height="38" rx="6" fill="#111"/><text x="320" y="139" text-anchor="middle" font-family="'${TF}',sans-serif" font-size="22" letter-spacing="1" fill="#fff">${esc(pre)}</text>` : ''}
-      <text x="320" y="${205 + big * .36}" text-anchor="middle" font-family="'${TF}','Zen Maru Gothic',sans-serif" font-size="${big}" fill="#111" letter-spacing="${Math.round(big * .05)}">${esc(main)}</text>
+      <text class="ttlMain" x="320" y="${205 + big * .36}" text-anchor="middle" font-family="'${TF}','Zen Maru Gothic',sans-serif" font-size="${big}" fill="#111" letter-spacing="${Math.round(big * .05)}">${esc(main)}</text>
       <g transform="translate(320 286)"><rect x="-66" y="-17" width="132" height="34" rx="17" fill="#111"/><text y="8" text-anchor="middle" font-family="Fredoka,sans-serif" font-weight="700" font-size="22" fill="#fff">${n}<tspan font-family="Fredoka,sans-serif" font-weight="700" font-size="13" dx="6" letter-spacing="2">GAMES</tspan></text></g>
       <!-- piece tips on the compass -->
       <g fill="#fff" stroke="#111" stroke-width="4">
@@ -204,10 +204,22 @@
   // SVG text doesn't always trigger web-font loading (iOS Safari) → load the title face explicitly, then redraw
   let tfReady = false;
   if (document.fonts && document.fonts.load) document.fonts.load(`40px "${TF}"`, 'ボドゲ大百科世界の').then(() => { tfReady = true; if (page === 'home') renderHero(true); }).catch(() => {});
+  // the ribbon title must stay inside the ribbon in every language: measure it and shrink the font (never squeeze the glyphs)
+  function fitTitle() {
+    const tx = $('ttl').querySelector('.ttlMain'); if (!tx || !tx.getComputedTextLength) return;
+    const MAX = 430;   // (the ribbon's inner width between the dotted lines is 468)
+    let fs = parseFloat(tx.getAttribute('font-size'));
+    for (let i = 0; i < 4; i++) {
+      const w = tx.getComputedTextLength(); if (!(w > MAX)) break;
+      fs = Math.max(18, Math.floor(fs * MAX / w * 10) / 10);
+      tx.setAttribute('font-size', fs); tx.setAttribute('letter-spacing', Math.round(fs * .05)); tx.setAttribute('y', (205 + fs * .36).toFixed(1));
+    }
+  }
   function renderHero(titleOnly) {
     const ja = lang === 'ja', phone = innerWidth < 760;
     $('ttl').innerHTML = emblem(ja ? 'ボドゲ大百科' : t('title'), ja ? '世界の' : '', A_.GAMES.length);
     $('ttl').setAttribute('aria-label', t('title') + ' — World Board Game Atlas');
+    fitTitle();
     if (titleOnly && $('props').childElementCount) return;   // (the font arrived: only the title is redrawn, the pieces keep floating)
     $('props').innerHTML = PROPS.filter((_, i) => !phone || i < 17).map(([img, gid, x, y, w, r], i) => `<span class="pp" data-g="${gid}" style="--x:${x}%;--y:${y}%;--w:${Math.round(w * (phone ? .44 : 1))}px;--r:${r}deg"><img src="../images/atlas/p-${img}.webp?v=2" alt="" decoding="async"></span>`).join('');
     $('props').querySelectorAll('[data-g]').forEach(b => b.onclick = () => { hop(b, true); setTimeout(() => openBoard(b.dataset.g), 380); });
