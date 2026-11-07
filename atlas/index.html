@@ -242,7 +242,9 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .bv.playing .x,.bv.playing .bvtod{display:none!important}
 /* time-of-day picker (own UI), left of the × */
 .bvtod{position:absolute;top:calc(12px + env(safe-area-inset-top));inset-inline-end:62px;z-index:4;display:flex;gap:8px;align-items:center}
-.bvtod.notod #bvTodBtn{display:none}
+.bvtod #bvTodBtn,.bvtod #bvTodMenu{display:none!important}   /* 時間帯 lives in the place panel now (one chip for the place, 明るさ and 時間帯) */
+.plp .plbr + .pltodh{margin-top:14px}
+.plbr.pltod button i{box-shadow:0 0 0 1px rgba(0,0,0,.1)!important}
 .bv.playing .bvplm{display:none!important}
 /* the place (table design) picker: a chip with the place's thumbnail → one row of the six places + 明るさ */
 .bvplb{padding-inline-start:5px}
@@ -267,11 +269,12 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .plbr button[data-b="2"] i{box-shadow:0 0 0 1px rgba(0,0,0,.08),0 0 8px 3px #ffd75e}
 @media (max-width:760px){
   .bvplm{inset-inline:10px;width:auto;padding:12px 12px 14px;top:auto;bottom:calc(12px + env(safe-area-inset-bottom))}   /* over the card: the board above stays in sight */
-  .bvtod:not(.notod) .bvplb span{display:none}
+  .bvplb span{display:none}   /* phones: the chip is the place's picture alone */
   .plrow{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:8px;padding-bottom:4px;margin:0 -4px;padding-inline:4px;scrollbar-width:none}
   .plrow::-webkit-scrollbar{display:none}
   .plcb{flex:0 0 100px;scroll-snap-align:start}
   .plbr{gap:2px}.plbr button{font-size:14px;padding:10px 4px}.plbr button i{margin-inline-end:5px}   /* 「とても明るい」 fits on a phone */
+  .plbr.pltod button{font-size:13px;padding-inline:2px}.plbr.pltod button i{margin-inline-end:3px}   /* five times of day in a row */
   .bvplb span{max-width:7.5em;overflow:hidden;text-overflow:ellipsis}
 }
 /* the きせかえ tab: テーブル (the same picker, bigger) */
@@ -1555,7 +1558,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 <script src="i18n.js?v=53n"></script>
 <script src="gamelist-i18n.js?v=8n"></script>
 <script src="table3d.js?v=113"></script>
-<script src="tables3d.js?v=19"></script>
+<script src="tables3d.js?v=20"></script>
 <script src="models/shogi.js?v=23"></script>
 <script src="models/chess.js?v=13"></script>
 <script src="models/backgammon.js?v=118"></script>
@@ -1644,6 +1647,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <link rel="stylesheet" href="worldmap.css?v=18">
 <script src="worldmap.js?v=25"></script>
 <script src="updnews.js?v=7"></script>
-<script src="app.js?v=212"></script>
+<script src="app.js?v=213"></script>
 </body>
 </html>

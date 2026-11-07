@@ -1109,7 +1109,15 @@
       <div class="plrow" role="group">${names.map((n, i) => `<button type="button" class="plcb" data-k="${i}" aria-pressed="${i === k}"><img src="${X.placeThumb(i)}" alt="" loading="lazy" width="160" height="107"><span>${esc(n)}</span></button>`).join('')}</div>
       ${boardRowHtml(big)}
       <div class="plh">${esc(X.placeUi('bright', lang))}</div>
-      <div class="plbr" role="group">${B.map((n, i) => `<button type="button" data-b="${i}" aria-pressed="${i === b}"><i></i>${esc(n)}</button>`).join('')}</div></div>`;
+      <div class="plbr" role="group">${B.map((n, i) => `<button type="button" data-b="${i}" aria-pressed="${i === b}"><i></i>${esc(n)}</button>`).join('')}</div>${big || k === 1 ? '' : todRowHtml()}</div>`;
+  }
+  // 時間帯 (the room's time of day): in the same panel as the place, under 明るさ (the board view's one chip opens both; 2D準拠 has none)
+  const TODH = { ja: '時間帯', en: 'Time of day', zh: '时间段', 'zh-TW': '時段', ko: '시간대', es: 'Hora del día', fr: 'Moment de la journée', pt: 'Hora do dia', de: 'Tageszeit', hi: 'दिन का समय', ar: 'وقت اليوم', ru: 'Время суток', id: 'Waktu', tr: 'Günün saati' };
+  const TODK = ['auto', 'morning', 'day', 'evening', 'night'], TODSW = { auto: 'conic-gradient(#ffd36b 0 25%,#ffe9a8 0 50%,#ff9d6b 0 75%,#3b4a8a 0)', morning: 'linear-gradient(#ffe7b0,#ffc9a0)', day: 'linear-gradient(#bfe6ff,#7fc8ff)', evening: 'linear-gradient(#ffb36b,#e0607a)', night: 'linear-gradient(#3b4a8a,#151a3a)' };
+  function todRowHtml() {
+    const L = TOD[lang] || TOD.en, cur = (window.Table3D && Table3D.timeOfDayPick) ? Table3D.timeOfDayPick() : 'auto';
+    return `<div class="plh pltodh">${esc(TODH[lang] || TODH.en)}<small>${esc(L[TODK.indexOf(cur)])}</small></div>
+      <div class="plbr pltod" role="group">${TODK.map((v, i) => `<button type="button" data-t="${v}" aria-pressed="${v === cur}"><i style="background:${TODSW[v]}"></i>${esc(L[i])}</button>`).join('')}</div>`;
   }
   // 盤: the game on the table has more than one 3D board (Table3D.BOARDS: chess, go, gomoku, backgammon, agon) → its boards
   // as a row of their own, under the places (the board view's panel only; the きせかえ tab has no game)
@@ -1123,7 +1131,7 @@
   function setBoard(v) {
     const X = P3(), g = bvGame; if (!X || !g || !X.BOARDS[g.id] || X.BOARDS[g.id].get() === v) return;
     X.setBoard(g.id, v);
-    const m = $('bvPlMenu'); if (m && !m.hidden) { m.innerHTML = placeHtml(); bindPlace(m); }
+    const m = $('bvPlMenu'); if (m && !m.hidden) placeInto(m);
     if (!glOK || !$('bv').classList.contains('on') || $('bv').classList.contains('playing')) return;
     const gl = $('gl'); clearTimeout(plFade); gl.style.transition = 'opacity .12s ease-out'; gl.style.opacity = '0';
     plFade = setTimeout(() => { try { Table3D.show(g.id, null, { still: true }); Table3D.play(false); } catch (e) { console.warn(e); } requestAnimationFrame(() => requestAnimationFrame(() => { gl.style.transition = 'opacity .24s ease-in'; gl.style.opacity = ''; })); }, 130);
@@ -1137,9 +1145,16 @@
     clearTimeout(plFade); gl.style.transition = 'opacity .16s ease-out'; gl.style.opacity = '0';
     plFade = setTimeout(() => { try { X.setTable(k); } catch (e) { console.warn(e); } requestAnimationFrame(() => requestAnimationFrame(() => { gl.style.transition = 'opacity .28s ease-in'; gl.style.opacity = ''; })); }, 170);
   }
+  // re-draws a place panel without losing where its rows were scrolled to (picking a place used to jump the row back to its start)
+  function placeInto(root, big) {
+    const rows = [...root.querySelectorAll('.plrow')].map(r => r.scrollLeft), top = root.scrollTop;
+    root.innerHTML = placeHtml(big); bindPlace(root);
+    root.querySelectorAll('.plrow').forEach((r, i) => { if (rows[i]) r.scrollLeft = rows[i]; }); if (top) root.scrollTop = top;
+  }
   function bindPlace(root) {
     root.querySelectorAll('.plcb').forEach(b => b.onclick = e => { e.stopPropagation(); if (b.dataset.bd) setBoard(b.dataset.bd); else setPlace(+b.dataset.k); });
-    root.querySelectorAll('.plbr button').forEach(b => b.onclick = e => { e.stopPropagation(); P3().setBright(+b.dataset.b); });
+    root.querySelectorAll('.plbr button[data-b]').forEach(b => b.onclick = e => { e.stopPropagation(); P3().setBright(+b.dataset.b); });
+    root.querySelectorAll('.plbr button[data-t]').forEach(b => b.onclick = e => { e.stopPropagation(); if (window.Table3D && Table3D.setTimeOfDay) Table3D.setTimeOfDay(b.dataset.t); renderTod(); const m = $('bvPlMenu'); if (m && !m.hidden) placeInto(m); });
   }
   // PC: while the panel is open the board slides aside (a shift lens, like ヒストリア), so the new place is seen at once
   let plShift = false;
@@ -1156,7 +1171,7 @@
     $('bvPlIm').src = X.placeThumb(k); $('bvPlLb').textContent = names[k];
     btn.setAttribute('aria-label', X.placeUi('place', lang) + ': ' + names[k]);
     $('bvTodW').classList.toggle('notod', k === 1);   // the time of day: every place but 「2D準拠」 (which follows the 2D page)
-    const m = $('bvPlMenu'); if (!m.hidden) { m.innerHTML = placeHtml(); bindPlace(m); }
+    const m = $('bvPlMenu'); if (!m.hidden) placeInto(m);
     // 明るさ while playing at the table (the place panel is hidden then): 暗い · 標準 · 明るい at the top left
     { let pb = $('bvBrPlay'); if (!pb) { pb = document.createElement('div'); pb.id = 'bvBrPlay'; pb.className = 'bvbrp'; pb.setAttribute('role', 'group'); $('bv').appendChild(pb);
         pb.addEventListener('click', e => { const q = e.target.closest('[data-b]'); if (!q) return; e.stopPropagation(); P3().setBright(+q.dataset.b); }); }
@@ -1513,7 +1528,7 @@
     $('dseg').querySelectorAll('button').forEach(b => b.onclick = () => { dKind = b.dataset.k; renderDress(); });
     dsegPos();
     $('dsort').style.display = dKind === 'table' ? 'none' : '';
-    if (dKind === 'table') { $('dItems').classList.remove('grouped'); $('dItems').innerHTML = placeHtml(true); bindPlace($('dItems')); return; }
+    if (dKind === 'table') { $('dItems').classList.remove('grouped'); placeInto($('dItems'), true); return; }
     const slot = dKind;
     // 'own': only the owned items (by rarity) · 'rarD' / 'rarA': every item in sections by rarity (owned first in each section)
     $('dsort').innerHTML = ['own', 'rarD', 'rarA'].map(k => `<button type="button" aria-pressed="${dSort === k}" data-s="${k}">${t('dress.sort.' + k)}</button>`).join('');
