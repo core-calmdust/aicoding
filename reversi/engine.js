@@ -833,7 +833,7 @@ function think(cells, toMove, opts, onProgress) {
   const t0 = Date.now();
   nodes = 0; aborted = false;
   if (moves.length === 0) return { move: -1, score: 0, depth: 0, nodes: 0, ms: 0 };
-  if (lv.mpc && !opts.noBook) {
+  if ((lv.mpc || opts.book) && !opts.noBook) {   // (opts.book: PRO mode's opening book at any level)
     const bk = bookLookup(pl, ph, ol, oh);
     if (bk && bk.length) {
       const top = bk[0].score, margin = opts.bookMargin ?? 0.8;

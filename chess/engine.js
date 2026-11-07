@@ -695,10 +695,10 @@ let ENG = null, MENG = null;
 const eng = () => ENG || (ENG = new Engine());
 const meng = () => MENG || (MENG = new Engine(18));
 const kindOf = v => Math.abs(v) > MATET ? 'mate' : 'cp';
-function think(fen, moves, level, rand) {
+function think(fen, moves, level, rand, cfg) {
   rand = rand || Math.random;
   const { pos, hashes } = replay(fen, moves);
-  const L = LEVELS[level] || LEVELS[12];
+  const L = cfg || LEVELS[level] || LEVELS[12];   // cfg: a level of the page's PRO mode (shared/proset.js; same keys as LEVELS)
   const all = pos.legal(); if (!all.length) return { move: 0 };
   if (L.book && !fen) {
     const bk = bookMoves(uciSeq(moves));
@@ -715,7 +715,7 @@ function think(fen, moves, level, rand) {
     for (const e of vals) { const x = e.v + (Math.abs(e.v) > MATET ? 0 : gauss(rand) * L.noise); if (x > bv) { bv = x; best = e.m; } }
     return { move: best };
   }
-  const r = E.best(pos, L.d, L.ms);
+  const r = E.best(pos, L.d, L.ms || (L.d < 64 ? 0 : 20000), L.wnodes || 0);
   return { move: r.m, v: r.v, depth: r.depth };
 }
 function uciSeq(moves) { const pos = Pos.fromFEN(START), out = []; for (const m of moves) { out.push(pos.uci(m)); pos.make(m); } return out; }
@@ -805,9 +805,12 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
     }
     return { list: (last || []).map(e => ({ m: pos.fromUci(wUci(e.cm)), v: e.v, kind: e.kind })), depth, nodes: X.res_nodes() };
   }
-  function wThink(fen, moves, level, rand) {
+  // cfg (PRO mode, shared/proset.js): a level of its own — d / ms / wnodes / noise / blunder / book as in LEVELS, and hand: 1 =
+  // the hand-made evaluation instead of the NNUE. A noise level with ms / wnodes scores the root moves within that limit.
+  function wThink(fen, moves, level, rand, cfg) {
     rand = rand || Math.random;
-    const L = LEVELS[level] || LEVELS[12];
+    const L = cfg || LEVELS[level] || LEVELS[12];
+    if (L.hand && !MTL) { X.nn_enable(0); try { return wThink(fen, moves, level, rand, Object.assign({}, L, { hand: 0 })); } finally { X.nn_enable(1); } }
     const jpos = replay(fen, moves).pos;
     if (!jpos.legal().length) return { move: 0 };
     if (L.book && !fen) {
@@ -816,14 +819,14 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
     }
     const pos = wSet(fen, moves);
     if (L.noise !== undefined) {
-      const r = wRootLoop(pos, 4000, L.d, 0, null, L.nodes);
+      const r = L.ms || L.wnodes ? wRootLoop(pos, L.ms || 60000, 64, 0, null, L.wnodes) : wRootLoop(pos, cfg ? 600000 : 4000, L.d, 0, null, L.nodes);
       const vals = r.list.length ? r.list : jpos.legal().map(m => ({ m, v: 0 }));
       if (L.blunder && rand() < L.blunder) return { move: vals[Math.floor(rand() * vals.length)].m };
       let best = null, bv = -Infinity;
       for (const e of vals) { const x = e.v + (Math.abs(e.v) > MATET ? 0 : gauss(rand) * L.noise); if (x > bv) { bv = x; best = e.m; } }
       return { move: best };
     }
-    const cm = L.wnodes ? X.think(0, 0, 64, L.wnodes) : X.think(L.ms * 0.55, L.ms, 64, 0);
+    const cm = L.wnodes ? X.think(0, 0, 64, L.wnodes) : L.ms ? X.think(L.ms * 0.55, L.ms, 64, 0) : X.think(0, 0, L.d, 0);
     const r = new Int32Array(MEM.buffer, X.res_ptr(), 8);
     return { move: pos.fromUci(wUci(cm)), v: toJS(r[1]), depth: r[2], nodes: X.res_nodes(), wasm: true };
   }
@@ -891,7 +894,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
     const m = e.data;
     try {
       if (m.type !== 'mate') await wasmReady;
-      if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...(X ? wThink(m.fen, m.moves, m.level) : think(m.fen, m.moves, m.level)) });
+      if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...(X ? wThink(m.fen, m.moves, m.level, null, m.cfg) : think(m.fen, m.moves, m.level, null, m.cfg)) });
       else if (m.type === 'analyze') {
         const prog = (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth });
         let r;

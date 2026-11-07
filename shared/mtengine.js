@@ -17,6 +17,7 @@
 //   const MT = MTEngine.use({ wasm, lead, helper, slot, initial, maximum, imports(mem) → importObject, help(job) → msg|null,
 //                             after(X, mem, workers)?, isDone(msg)?, isProg(msg)? (the lead's final / progress messages;
 //                             default type 'result' / 'progress') }) ; MT.pool() → a ready pool or null, MT.cancel(tag)
+//   (job.mtThreads: use only that many threads, lead included — PRO mode)
 //   pool.free(), pool.run(job, onProgress, tag) → Promise<result (nodes = all threads) | null (cancelled) | undefined (the
 //   threads failed: do it the usual way)>, pool.cancel(tag)
 //   MTEngine.on() (threads in use now), .coi (COOP mode), .isolated, .helpers(), .onChange(fn)
@@ -225,11 +226,11 @@
         j.running = true;
         Atomics.store(ctl, 0, 0); X.mt_stop(0); cnt.fill(0);
         const hSum = () => { let s = 0; for (let i = 1; i <= H; i++) s += cnt[i]; return s; };
-        const help = cfg.help ? cfg.help(msg) : null;
-        let hNodes = 0, left = help ? hw.length : 0;
+        const help = cfg.help ? cfg.help(msg) : null, hs = msg.mtThreads > 0 ? hw.slice(0, msg.mtThreads - 1) : hw;   // (mtThreads: PRO mode's thread count, shared/proset.js)
+        let hNodes = 0, left = help ? hs.length : 0;
         const hDone = new Promise(res => {
           if (!left) { res(); return; }
-          hw.forEach(w => { w.onmessage = e => { const m = e.data; if (m && m.type === 'done' && m.job === j.id) { hNodes += m.nodes || 0; if (--left === 0) res(); } }; w.postMessage(Object.assign({}, help, { type: 'help', job: j.id })); });
+          hs.forEach(w => { w.onmessage = e => { const m = e.data; if (m && m.type === 'done' && m.job === j.id) { hNodes += m.nodes || 0; if (--left === 0) res(); } }; w.postMessage(Object.assign({}, help, { type: 'help', job: j.id })); });
         });
         const t0 = performance.now();
         const res = await new Promise(res => {
@@ -240,7 +241,7 @@
         await Promise.race([hDone, new Promise(r => setTimeout(r, 8000))]);
         if (left > 0) { dead = true; console.warn('[mtengine] a helper did not stop'); }
         if (job === j) job = null;   // (free before the caller hears of it: it may start the next job at once)
-        if (j.resolve) j.resolve(Object.assign({}, res, { nodes: (res.nodes || 0) + hNodes, helperNodes: hNodes, threads: 1 + H, ms: performance.now() - t0 }));
+        if (j.resolve) j.resolve(Object.assign({}, res, { nodes: (res.nodes || 0) + hNodes, helperNodes: hNodes, threads: 1 + hs.length, ms: performance.now() - t0 }));
       })().catch(e => { console.warn('[mtengine]', e); dead = true; if (j.resolve) j.resolve(j.cancelled ? null : undefined); }).finally(() => { if (job === j) job = null; if (dead) close(); });
       return out;
     }

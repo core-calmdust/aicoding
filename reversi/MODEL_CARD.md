@@ -193,3 +193,6 @@ ReversiEngine.setWeights(new Int16Array(raw), 30); // 1フェーズあたりの�
 ```
 
 詳しくは同じフォルダの `LICENSE` を参照してください。
+
+## 対局設定の Pro モード（2026-11-08）
+対局設定の「AIの強さ」の PRO ボタン（`shared/proset.js`、addendum「対局設定の Pro モード」）。項目：思考の制限（時間 0.1〜60 秒／深さ 1〜30）、スレッド数（時間制限のとき、マルチスレッドがオンのとき）、完全読み（残り 0〜28 マスから）、勝敗読み（0〜30、0 で使わない）、定石、手のばらつき（Lv.1〜13 の既定はそのレベルの noise。変えると variety：最善から 小 1.5石／大 4石 以内の手から選ぶ）。値は engine.js `think` の `opts.cfg`（LEVELS と同じキー）・`opts.book`／`noBook`・`variety`／`varietyMargin` で渡す（ページの `LEVELS_UI` は engine.js LEVELS の写し）。PRO のときは根分割の並列探索（PAR_LEVELS）は使わない。レート戦では使わない。戦績は `ai:pro`。

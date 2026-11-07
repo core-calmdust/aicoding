@@ -114,7 +114,7 @@
   const stopMT = () => { if (MT.X) MT.X.mt_stop(1); };
   let FB = null;
   async function goFB(time) {
-    if (!FB) { FB = new Worker('../engine.js?v=47'); const wt = await loadWeights(); FB.postMessage({ type: 'weights', buffer: wt.buffer, nphase: wt.nphase }); }
+    if (!FB) { FB = new Worker('../engine.js?v=49'); const wt = await loadWeights(); FB.postMessage({ type: 'weights', buffer: wt.buffer, nphase: wt.nphase }); }
     const { c, me } = replay(line);
     return new Promise(res => { FB.onmessage = e => { if (e.data.type === 'result') res({ ...e.data, me }); }; FB.postMessage({ type: 'think', id: 1, cells: c, toMove: me, opts: { level: 20, time } }); });
   }
