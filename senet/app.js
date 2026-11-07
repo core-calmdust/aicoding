@@ -18,6 +18,7 @@ const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&am
 const settings = { mode: 'ai', rule: 'std', color: '0', level: 6, level2: 12, clock: 0, speed: 2, autoRoll: false, autoPick: true, eval: true, last: true, danger: true, coach: true, sound: true, design: 'tut', pieces: 'tut', lang: '' };
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); if (n.startsWith('zh')) return /^zh-(tw|hk|mo|hant)/.test(n) ? 'zh-TW' : 'zh'; return SUPPORTED.find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
+const AIW = () => ({ ru: 'ИИ', tr: 'YZ' })[LANG] || 'AI';   // the word "AI" in displayed player labels (ru / tr use their own abbreviation; saved records keep 'AI')
 function t(k, v) {
   let x = (I18N[LANG] || I18N.en)[k]; if (x === undefined) x = I18N.en[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k;
   if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : '');
@@ -349,8 +350,8 @@ function homeCount(st, s) { const g = E.RULES[st.rule].goal; return st.pos[s].fi
 function playerName(s) {
   if (settings.mode === 'online' && typeof olPlayerName === 'function') return olPlayerName(s);
   if (settings.mode === 'pvp') return sideName(s);
-  if (settings.mode === 'watch') return 'AI ' + LV(levelFor(s));
-  return s === game.human ? t('you') : 'AI ' + LV(levelFor(s)) + (rgame && !phone() ? ` (R${rgame.or})` : '');   // (phones: the narrow card shows the level only)
+  if (settings.mode === 'watch') return AIW() + ' ' + LV(levelFor(s));
+  return s === game.human ? t('you') : AIW() + ' ' + LV(levelFor(s)) + (rgame && !phone() ? ` (R${rgame.or})` : '');   // (phones: the narrow card shows the level only)
 }
 function renderInfo() {
   const st = curState(), rl = E.RULES[st.rule], rc = E.raceCount(st), sta = special ? { over: false } : statusAt(cur);
@@ -865,8 +866,9 @@ $('#ruleCards').onclick = e => { const b = e.target.closest('button'); if (!b) r
 $('#levelRange').oninput = e => { draft.level = +e.target.value; $('#levelName').innerHTML = levelLabelHTML(draft.level); };
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; $('#levelName2').innerHTML = levelLabelHTML(draft.level2); };
 [['optAutoRoll', 'autoRoll'], ['optAutoPick', 'autoPick'], ['optEval', 'eval'], ['optLast', 'last'], ['optDanger', 'danger']].forEach(([id, k]) => { $('#' + id).onchange = e => { draft[k] = e.target.checked; }; });
-$('#bdRow').onclick = e => { const b = e.target.closest('button'); if (!b) return; draft.design = b.dataset.v; designPickers(); };
-$('#pcRow').onclick = e => { const b = e.target.closest('button'); if (!b) return; draft.pieces = b.dataset.v; designPickers(); };
+// デザインは選んだ瞬間に盤へ反映（共通ルール）：開始・キャンセルを待たない
+$('#bdRow').onclick = e => { const b = e.target.closest('button'); if (!b) return; draft.design = b.dataset.v; designPickers(); setDesign(draft.design, draft.pieces); };
+$('#pcRow').onclick = e => { const b = e.target.closest('button'); if (!b) return; draft.pieces = b.dataset.v; designPickers(); setDesign(draft.design, draft.pieces); };
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
 $('#btnStart').onclick = () => {
   hideOverlay('#newOverlay');

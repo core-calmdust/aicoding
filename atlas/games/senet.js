@@ -44,7 +44,7 @@
     const d = LVD[lang] || LVD.en, w = WHO[lang] || WHO.en;
     return { name: 'Lv.' + n, desc: d[n <= 4 ? 0 : n <= 9 ? 1 : n <= 15 ? 2 : 3], rating: RATING[n], who: w[n <= 2 ? 0 : n <= 5 ? 1 : n <= 8 ? 2 : n <= 11 ? 3 : n <= 15 ? 4 : n <= 18 ? 5 : 6] };
   }
-  const BASE = '../senet/', EV = '?v=2';
+  const BASE = '../senet/', EV = '?v=3';
   const loadJS = (src, ok) => ok() ? Promise.resolve() : new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
   const loadEngine = () => loadJS(BASE + 'engine.js' + EV, () => !!window.SenetEngine).then(() => window.SenetEngine);
   const TX = {
@@ -255,7 +255,7 @@
     document.addEventListener('keydown', onKey);
 
     /* ---------- go ---------- */
-    loadJS(BASE + 'board2d.js' + EV, () => !!window.SenetBoard2D).catch(() => null).then(loadEngine).then(e => {
+    loadJS(BASE + 'sprites.js?v=1', () => !!window.SENET_SPRITES).catch(() => null).then(() => loadJS(BASE + 'board2d.js?v=5', () => !!window.SenetBoard2D)).catch(() => null).then(loadEngine).then(e => {
       if (stopped) return; E = e;
       kit = window.SenetKit.make(T3, { design: dsg, pieces: look, sfx: k => SND[k] && SND[k]() });
       frame();
