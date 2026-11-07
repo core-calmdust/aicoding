@@ -249,13 +249,14 @@ static int evalAt(int ply, u64 P, u64 O) {
 }
 
 // ------------------------------------------------------------------ search state
-static TLS double nodes, deadline; static TLS int aborted;
+static TLS double nodes, deadline, nodeMax; static TLS int aborted;   /* nodeMax: PRO mode's node limit (0 = none) */
 static TLS double MPC_T = 1.5, MPC_A = 357.32, MPC_B = 1.1, MPC_C = -3.14; static TLS int MPC_ON = 1, MPC_MIN = 3;
 static TLS int T_EVALMIN = 12, T_SEARCHMIN = 14, T_SDEPTH = 1, T_KE = 8;
 EXPORT(set_state) void set_state(double n, double dl, int mpcOn, double t, double a, double b, double c, int minDepth, int evalMin, int searchMin, int sDepth, int kE) {
   nodes = n; deadline = dl; aborted = 0; MPC_ON = mpcOn; MPC_T = t; MPC_A = a; MPC_B = b; MPC_C = c; MPC_MIN = minDepth;
   T_EVALMIN = evalMin; T_SEARCHMIN = searchMin; T_SDEPTH = sDepth; T_KE = kE;
 }
+EXPORT(set_node_max) void set_node_max(double n) { nodeMax = n; }
 EXPORT(get_nodes) double get_nodes(void) { return nodes; }
 EXPORT(get_aborted) int get_aborted(void) { return aborted; }
 static inline void checkTime(void) {
@@ -263,6 +264,7 @@ static inline void checkTime(void) {
   if (gStop) { aborted = 1; return; }
 #endif
   if (deadline > 0 && now() > deadline) aborted = 1;
+  if (nodeMax > 0 && nodes >= nodeMax) aborted = 1;
 }
 
 #define TT_SIZE (1 << 20)
