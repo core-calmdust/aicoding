@@ -215,15 +215,15 @@
   const updText = (u, l) => placeWord(l === 'ja' ? u[2] : l === 'en' ? u[3] : (u[4] && u[4][l]) || u[3], l);
   const lastUpdate = id => (UPDATES.find(u => u[1] === id) || [])[0] || null;
   // Badges (max 2 shown, in this priority):
-  //   NEW     released within 14 days
-  //   UPDATE  changelog entry within 7 days (and not NEW)
-  //   BETA    g.beta
+  //   BETA    g.beta (first; it takes the place of NEW)
+  //   NEW     released within 14 days (not for a beta title)
+  //   UPDATE  changelog entry within 7 days (and not within the 14 days after release)
   //   (no PREMIUM badge any more: nearly every title had it, so it told players nothing)
   function badges(g) {
     const out = [];
-    if (g.released && daysSince(g.released) <= 14) out.push('new');
+    if (g.beta) out.push('beta');   // a beta title shows BETA in place of NEW (common rule 2026-11-08: new titles are beta until the owner says)
+    if (g.released && daysSince(g.released) <= 14) { if (!g.beta) out.push('new'); }
     else { const u = lastUpdate(g.id); if (u && daysSince(u) <= 7) out.push('update'); }
-    if (g.beta) out.push('beta');
     return out.slice(0, 2);
   }
   // games ordered by the changelog (UPDATES is newest first); games without entries keep registry order
