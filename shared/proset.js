@@ -376,5 +376,37 @@ function init(cfg) {
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount); else mount();
   return api;
 }
-window.ProSet = { init, T, maxThreads };
+// The common 20-step ladder of the board games (checkers, xiangqi, janggi, ugolki, agon, fanorona, kōnane):
+// weak steps { d, noise, blunder, look, hand } score the root moves at depth d and add noise; strong steps { s: 1, d, nk
+// (thousands of nodes), ms, book } search for the best move. ladder(LEVELS, o) gives the PRO defaults / params and turns the
+// effective values into such a step (engine.js think(): L = the page's cfg or LEVELS[level]); the engine's strong search
+// takes L.dx (or L.d) as its maximum depth. o: { dmax, nmax, tmax, book: true (a real opening book: show it), bookFrom (its first level) }.
+function ladder(LEVELS, o) {
+  o = o || {};
+  const noisy = [], n = LEVELS.length;
+  for (let i = 1; i < n; i++) if (LEVELS[i] && !LEVELS[i].s && LEVELS[i].noise) noisy.push(i);
+  const nz = k => { const i = noisy[Math.max(0, Math.min(noisy.length - 1, k))]; return i ? LEVELS[i].noise : 30; };
+  const small = nz(noisy.length - 1), large = nz(Math.floor(noisy.length / 2));   // (the mildest noise / the middle of the weak steps)
+  const L0 = lv => LEVELS[lv] || LEVELS[Math.min(n - 1, 10)] || {};
+  return {
+    defaults: lv => { const L = L0(lv);
+      return { limit: !L.s ? { k: 'depth', v: Math.max(1, Math.round(L.d || 1)) } : L.nk ? { k: 'nodes', v: Math.round(L.nk * 1000) } : L.ms ? { k: 'time', v: L.ms / 1000 } : { k: 'depth', v: Math.min(o.dmax || 30, L.d || 8) },
+        book: o.bookFrom ? lv >= o.bookFrom : !!L.book, var: L.s ? 0 : L.blunder ? 2 : 1 }; },
+    params: [{ key: 'limit', kinds: { time: [0.1, o.tmax || 30], depth: [1, o.dmax || 20], nodes: [1000, o.nmax || 5e7] } }].concat(o.book ? [{ key: 'book' }] : [], [{ key: 'var', when: e => e.limit.k === 'depth' }]),
+    cfg(e, lv) {
+      const L = L0(lv), lim = e.limit, chL = e.changed.includes('limit'), chV = e.changed.includes('var');
+      if (e.var && lim.k === 'depth') {   // the weak steps' way: root values at a depth, with noise
+        const c = { d: chL ? lim.v : L.s ? Math.min(lim.v, 6) : L.d };
+        if (!chV && !L.s) { c.noise = L.noise; ['blunder', 'look', 'hand'].forEach(k => { if (L[k]) c[k] = L[k]; }); }
+        else c.noise = e.var === 1 ? small : large;
+        return c;
+      }
+      const c = { s: 1, d: 99, ms: 600000 };
+      if (o.book ? e.book : L.book && lim.k === 'time') c.book = 1;   // (the ladder's own "book" = opening variety, timed: only with a time limit)
+      if (lim.k === 'depth') c.d = c.dx = lim.v; else if (lim.k === 'nodes') c.nk = lim.v / 1000; else c.ms = Math.round(lim.v * 1000);
+      return c;
+    },
+  };
+}
+window.ProSet = { init, T, maxThreads, ladder };
 })();

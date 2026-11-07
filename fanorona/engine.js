@@ -314,9 +314,10 @@ function wSetup(start, moves) {
 function wList() { const r = wIO(), L = []; for (let i = 0; i < r[0]; i++) L.push({ m: fromWire(r[2 + 3 * i], r[3 + 3 * i]), v: r[4 + 3 * i] }); return L; }
 const kindOf = v => Math.abs(v) > WINT ? 'exact' : 'heur';
 
+let PRO_CFG = null;   // a step of the page's PRO mode for the current 'think' message (same keys as LEVELS)
 function think(start, moves, level, rand) {
   rand = rand || Math.random;
-  const L = LEVELS[level] || LEVELS[10];
+  const L = PRO_CFG || LEVELS[level] || LEVELS[10];   // (PRO_CFG: the page's PRO mode, shared/proset.js ladder())
   const { pos } = replay(start, moves);
   const all = pos.moves();
   if (!all.length) return { move: null };
@@ -339,7 +340,7 @@ function think(start, moves, level, rand) {
     for (const e of vals) { const x = e.v + (Math.abs(e.v) > WINT ? 0 : gauss(rand) * L.noise); if (x > bv) { bv = x; best = e.m; } }
     return { move: best, v: vals[0].v };
   }
-  if (L.s && L.d >= 99 && level >= 15 && BOOK && !start && RULE === 'sivy') {   // the opening book (deep analysis of the first moves)
+  if (L.s && (PRO_CFG ? L.book : L.d >= 99 && level >= 15) && BOOK && !start && RULE === 'sivy') {   // (PRO_CFG: the PRO mode's own book choice)   // the opening book (deep analysis of the first moves)
     const bk = BOOK[pos.key()];
     if (bk && bk.length) { const m = bk[Math.floor(rand() * bk.length)]; if (all.includes(m)) return { move: m, book: true }; }
   }
@@ -445,7 +446,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
     queue = queue.then(() => readyP).catch(() => {}).then(() => {
       try {
         setRule(m.rule || 'sivy');
-        if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...think(m.start, m.moves, m.level) });
+        if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...(() => { PRO_CFG = m.cfg || null; try { return think(m.start, m.moves, m.level); } finally { PRO_CFG = null; } })() });
         else if (m.type === 'analyze') {
           const r = analyze(m.start, m.moves, m.time || 1000, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth }));
           self.postMessage({ id: m.id, type: 'result', ...r });

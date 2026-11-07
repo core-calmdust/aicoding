@@ -329,10 +329,11 @@ function resist(pos, list) {
   for (const e of pool) { const q = pos.clone().play(e.m), s = q.mobility(me) * 2 - q.mobility(3 - me) * 3; if (s > bs) { bs = s; bm = e.m; } }
   return bm;
 }
+let PRO_CFG = null;   // a step of the page's PRO mode for the current 'think' message (same keys as LEVELS)
 function think(start, moves, level, rand, rule) {
   if (rule) setRule(rule);
   rand = rand || Math.random;
-  const L = LEVELS[level] || LEVELS[10];
+  const L = PRO_CFG || LEVELS[level] || LEVELS[10];   // (PRO_CFG: the page's PRO mode, shared/proset.js ladder())
   const { pos } = replay(start, moves);
   const all = pos.moves();
   if (!all.length) return { move: -1 };
@@ -347,7 +348,7 @@ function think(start, moves, level, rand, rule) {
     for (const e of vals) { const x = e.v + (Math.abs(e.v) > WINT ? 0 : gauss(rand) * L.noise); if (x > bv) { bv = x; best = e.m; } }
     return { move: best, v: vals[0].v };
   }
-  const r = bestMove(pos, 60, L.ms || 0, L.nk || (L.ms ? 0 : 50));
+  const r = bestMove(pos, L.dx || 60, L.ms || 0, L.nk || (L.ms ? 0 : 50));
   if (r.v < -WINT && r.depth > 0) {
     nodes = 0; stop = false; tEnd = Date.now() + 800; nodeLimit = Infinity;
     const vals = rootValues(pos, Math.max(1, r.depth));
@@ -507,7 +508,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
     queueP = queueP.then(() => {
       try {
         setRule(m.rule || 's8');
-        if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...think(m.start, m.moves, m.level) });
+        if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...(() => { PRO_CFG = m.cfg || null; try { return think(m.start, m.moves, m.level); } finally { PRO_CFG = null; } })() });
         else if (m.type === 'analyze') {
           const r = analyze(m.start, m.moves, m.time || 1000, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth }));
           self.postMessage({ id: m.id, type: 'result', ...r });

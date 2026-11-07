@@ -214,9 +214,10 @@ const wMove = (ft, cap) => mv(ft & 31, (ft >> 5) & 31, cap >>> 0);
 function wList() { const r = wIO(), L = []; for (let i = 0; i < r[0]; i++) L.push({ m: wMove(r[2 + 3 * i], r[3 + 3 * i]), v: r[4 + 3 * i] }); return L; }
 const kindOf = v => Math.abs(v) > WINT ? 'exact' : 'heur';
 
+let PRO_CFG = null;   // a step of the page's PRO mode for the current 'think' message (same keys as LEVELS)
 function think(start, moves, level, rand) {
   rand = rand || Math.random;
-  const L = LEVELS[level] || LEVELS[10];
+  const L = PRO_CFG || LEVELS[level] || LEVELS[10];   // (PRO_CFG: the page's PRO mode, shared/proset.js ladder())
   const { pos } = replay(start, moves);
   const all = pos.moves();
   if (!all.length) return { move: -1 };
@@ -333,7 +334,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
     const m = e.data;
     queue = queue.then(() => readyP).catch(() => {}).then(() => {
       try {
-        if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...think(m.start, m.moves, m.level) });
+        if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...(() => { PRO_CFG = m.cfg || null; try { return think(m.start, m.moves, m.level); } finally { PRO_CFG = null; } })() });
         else if (m.type === 'analyze') {
           const r = analyze(m.start, m.moves, m.time || 1000, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth }));
           self.postMessage({ id: m.id, type: 'result', ...r });
