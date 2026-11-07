@@ -256,6 +256,11 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .plp .plh small{font:700 14px var(--round,inherit);color:var(--ink2)}
 .plp .plh + .plrow + .plh{margin-top:14px}
 .plrow{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+/* the 3D view's panel (PC too, like phones): short cards — a fixed-height picture and the name on one line (2026-11-07) */
+.bvplm .plcb{gap:4px;padding:4px 4px 6px;border-radius:13px}
+.bvplm .plcb img{height:62px;aspect-ratio:auto;border-radius:9px}
+.bvplm .plcb span{display:block;min-height:0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bvplm .plp .plh{margin-bottom:7px;font-size:15px}.bvplm .plp .plh + .plrow + .plh,.bvplm .plp .plh + .sgw + .plh,.bvplm .plp .plbr + .pltodh{margin-top:10px}
 .plcb{display:flex;flex-direction:column;align-items:center;gap:6px;padding:5px 5px 8px;border-radius:15px;border:2px solid var(--line);background:#fffdf7;cursor:pointer;font:800 15px var(--round,inherit);color:var(--ink);min-width:0;transition:transform .12s,border-color .12s}
 .plcb:hover{transform:translateY(-2px)}
 .plcb img{width:100%;aspect-ratio:3/2;border-radius:10px;object-fit:cover;display:block;background:#efe6d6}
