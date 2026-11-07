@@ -296,7 +296,11 @@ html.atlas-sn #bdRow button.sn3b::after{content:'3D';position:absolute;top:6px;i
     }
   }
   function stickPlaces(side) {   // four sticks lying across the strip, side by side
-    const b = B2.stickBox(O, side), cx = b[0] + b[2] / 2, cy = b[1] + b[3] / 2, out = [];
+    const b = B2.stickBox(O, side), cy = b[1] + b[3] / 2, out = [];
+    // across the strip where the page keeps the (hidden) 2D sticks: PC lays them at the left with the count beside them (senet/app.js placeDock)
+    let cx = b[0] + b[2] / 2;
+    const dk = document.getElementById('diceDock'), hs = document.getElementById('diceHost');
+    if (O !== 'v' && dk && hs && dk.style.flexDirection === 'row') { const r = dk.getBoundingClientRect(), h = hs.getBoundingClientRect(); if (r.width > 0) cx = b[0] + b[2] * Math.min(.5, Math.max(.12, (h.left + h.width / 2 - r.left) / r.width)); }
     for (let i = 0; i < 4; i++) { const t = (i - 1.5) * 42; out.push(O === 'v' ? [cx + ((i * 37) % 7 - 3) * 1.5, cy + t] : [cx + t, cy + ((i * 37) % 7 - 3) * 1.5]); }
     return out;
   }
