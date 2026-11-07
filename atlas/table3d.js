@@ -1641,7 +1641,11 @@
   let quietOn = false, quietKey = '';
   function quiet(on) { quietOn = !!on; quietKey = ''; kick(300); }
   document.addEventListener('visibilitychange', () => { if (document.hidden) { cancelAnimationFrame(rafId); rafId = 0; } else kick(300); });
-  addEventListener('blur', () => { blurred = true; }); addEventListener('focus', () => { blurred = false; kick(300); });
+  // window not focused (another window or the browser's side panel in front): no continuous rendering, but the picture stays —
+  // anything that would change it (a resize: the side panel narrows the window, a move, the camera following the board) still
+  // draws, in a short burst of frames that then stops again (the canvas is cleared by a resize, so it must be drawn once more)
+  let blurBurst = 0;
+  addEventListener('blur', () => { blurred = true; blurBurst = performance.now() + 400; wake(); }); addEventListener('focus', () => { blurred = false; kick(300); });
   // on-demand rendering (shared rule for every 3D skin): a frame is drawn only while something moves —
   // a kick(ms) from an animation, a changed board rect / canvas size, or dirty; otherwise the GPU stays idle
   let lastKey = null, kickUntil = 0, dirty = true, lastDraw = 0;
@@ -1658,16 +1662,16 @@
       kick(300); cancelAnimationFrame(rafId); rafId = 0; lastT = 0; loop(performance.now());
     });
   });
-  function kick(ms = 700) { kickUntil = Math.max(kickUntil, performance.now() + ms); dirty = true; shadowDirty = true; wake(); }
+  function kick(ms = 700) { kickUntil = Math.max(kickUntil, performance.now() + ms); dirty = true; shadowDirty = true; if (blurred) blurBurst = Math.max(blurBurst, performance.now() + Math.min(ms, 700) + 150); wake(); }
   // the loop runs only while something needs frames and stops by itself afterwards (0 callbacks while idle — battery):
   // wake() restarts it at once; poke(ms) asks it only to look whether the DOM board / the canvas moved or appeared
   // (a frame is drawn only if it did) — for layout changes nobody announces (a class, a transition, a scroll, a late font)
   let checkUntil = 0, wasHidden = false;
   let parked = true;   // the loop has stopped: its first frame again starts the clock afresh (no jump for the time it slept)
-  function wake() { if (!rafId && R && !document.hidden && !blurred) rafId = requestAnimationFrame(loop); }
+  function wake() { if (!rafId && R && !document.hidden && (!blurred || performance.now() < blurBurst)) rafId = requestAnimationFrame(loop); }
   // (quiet — Historia's page over the room on phones — : the page's own class changes, animations and scrolling are not looked at;
   // Historia announces every change of the stage itself — setInset / play / museum kick)
-  function poke(ms = 250) { if (quietOn) return; checkUntil = Math.max(checkUntil, performance.now() + ms); wake(); }
+  function poke(ms = 250) { if (quietOn) return; checkUntil = Math.max(checkUntil, performance.now() + ms); if (blurred) blurBurst = Math.max(blurBurst, performance.now() + Math.min(ms, 700) + 150); wake(); }
   let hooked = false;
   function wakeHooks() {
     if (hooked) return; hooked = true;
@@ -1793,7 +1797,7 @@
   function step(now) {
     if (!el.offsetParent && !alignFn) { wasHidden = true; return now <= checkUntil; }   // the canvas is hidden: a poke (its class / style changed) looks again
     if (wasHidden) { wasHidden = false; kick(300); }
-    if (blurred) return false;   // window not focused: no rendering at all (resumes on focus)
+    if (blurred && now > blurBurst) return false;   // window not focused: only the short bursts above (resumes fully on focus)
     if (now - lastT < FRAME_MS - 2) return true;
     const dt = Math.min(250, now - (lastT || now)); lastT = now;
     let moving = false;   // anything below still easing / turning: more frames
