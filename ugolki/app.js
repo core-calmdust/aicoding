@@ -2267,7 +2267,7 @@ if (window.CountTick) CountTick.setMuted(() => !settings.sound);
 $('#langSel').onchange = e => {
   LANG = e.target.value; settings.lang = LANG; save(); applyI18n();
   try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {}
-  renderInfo(); renderFx();
+  renderInfo(); renderFx(); try { renderReserves(posAt(cur).pos); } catch (_) {}   // (the counters above / below the board follow the language at once)
   if ($('#newOverlay').classList.contains('show')) { segSync(); designPickers(); }
   if ($('#rulesOverlay').classList.contains('show')) renderRules();
   if (HB) HB.relabel();
