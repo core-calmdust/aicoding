@@ -222,7 +222,7 @@
     const ja = lang === 'ja', phone = innerWidth < 760;
     // long titles put their first part in the tag above the ribbon (like 世界の in Japanese), so the ribbon keeps big letters
     const SPLIT = { ja: ['世界の', 'ボドゲ大百科'], fr: ['ATLAS MONDIAL', 'Jeux de société'], es: ['ATLAS MUNDIAL', 'Juegos de Mesa'], pt: ['ATLAS MUNDIAL', 'Jogos de Tabuleiro'],
-      de: ['WELT', 'Brettspiel-Atlas'], id: ['ATLAS DUNIA', 'Permainan Papan'], tr: ['DÜNYA ATLASI', 'Masa Oyunları'],
+      de: ['WELT', 'Brettspiel-Atlas'], id: ['ATLAS DUNIA', 'Permainan Papan'], tr: ['DÜNYA ATLASI', 'Masa Oyunları'], ru: ['АТЛАС', 'Настольные игры'],
       zh: ['世界', '桌游大全'], 'zh-TW': ['世界', '桌遊大百科'], ko: ['세계의', '보드게임 대전'], hi: ['विश्व', 'बोर्ड गेम एटलस'] }[lang];
     $('ttl').innerHTML = emblem(SPLIT ? SPLIT[1] : t('title'), SPLIT ? SPLIT[0] : '', A_.GAMES.length);
     $('ttl').setAttribute('aria-label', t('title') + ' — World Board Game Atlas');
