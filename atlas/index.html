@@ -429,12 +429,13 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .gnone[hidden]{display:none}
 @media (max-width:760px){.gfilter{flex-direction:column-reverse;align-items:stretch;gap:8px}.gsearch{width:auto;margin:0}.gfilter .cats{margin:0 -16px;padding:2px 16px 4px}}
 /* random tile */
-.ic.rnd .art svg{position:absolute;inset:0;width:100%;height:100%;filter:drop-shadow(0 8px 6px rgba(60,30,0,.18));transition:transform .25s cubic-bezier(.3,1.6,.5,1)}
-.ic.rnd:hover .art svg{transform:translateY(-8px) scale(1.05)}
-.ic.rnd .cube{transform-origin:100px 90px;animation:dieIdle 3.2s ease-in-out infinite}
+.ic.rnd .art .dieic{position:absolute;inset:0;filter:drop-shadow(0 8px 6px rgba(60,30,0,.18));transition:transform .25s cubic-bezier(.3,1.6,.5,1)}
+.ic.rnd .art .dieic img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;filter:none;transition:none;transform:none}
+.ic.rnd:hover .art .dieic,.ic.rnd:focus-visible .art .dieic{transform:translateY(-8px) scale(1.05)}
+.ic.rnd .art .dieic img.cube{transform-origin:50% 42%;animation:dieIdle 3.2s ease-in-out infinite}
 @keyframes dieIdle{0%,70%,100%{transform:none}78%{transform:translateY(-12px) rotate(-8deg)}86%{transform:translateY(0) rotate(4deg)}92%{transform:rotate(0)}}
 .ic.rnd .pr i{background:linear-gradient(90deg,var(--coral),var(--sun),var(--mint),var(--sky),var(--grape))}
-.ic.rnd.roll .art svg{animation:dieRoll .3s ease-in forwards}
+.ic.rnd.roll .art .dieic{animation:dieRoll .3s ease-in forwards}
 @keyframes dieRoll{40%{transform:translateY(-22px) rotate(-14deg) scale(1.06)}100%{transform:translateY(0) scale(.2);opacity:0}}
 .ic.rnd .rimg[hidden]{display:none}
 /* login bonus popup: a guide character pops up with a speech bubble */
@@ -1640,6 +1641,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <link rel="stylesheet" href="worldmap.css?v=18">
 <script src="worldmap.js?v=25"></script>
 <script src="updnews.js?v=2"></script>
-<script src="app.js?v=207"></script>
+<script src="app.js?v=208"></script>
 </body>
 </html>

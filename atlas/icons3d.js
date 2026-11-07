@@ -696,6 +696,17 @@
       g.add(at(piece(true, 1.35), p(0) - .15, 2.15, p(0) - .2, .55, 0, -.35));
       return g;
     },
+    random() {   // the portal's ランダム tile: a toy die with a red and a blue question mark and three gold pips, over a lilac plinth
+      const g = new T.Group(), S = 1.62, lift = .32, d = at(rbox(S, S, S, .3, C(0xfbf9ff, { roughness: .32 }), true), 0, lift, 0); g.add(d);
+      d.geometry.computeBoundingBox(); const E = d.geometry.boundingBox.max.x + .006;   // (the bevel reaches past S / 2)
+      const q = (key, col) => M({ map: X.canvasTex('ic-rq' + key, 256, 256, (c, W) => { c.clearRect(0, 0, W, W); c.fillStyle = col; c.font = '800 236px "Arial Rounded MT Bold", Fredoka, "Helvetica Neue", Arial, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('?', W / 2, W / 2 + 14); }), transparent: true, roughness: .35 });
+      const face = (m, x, z, ry) => { const f = mesh(new T.PlaneGeometry(S * .86, S * .86), m); f.position.set(x, lift + S / 2, z); f.rotation.y = ry; f.castShadow = false; g.add(f); };
+      face(q('r', '#ff5d5d'), -E, 0, -Math.PI / 2);   // the face seen front-left
+      face(q('b', '#36b4ff'), 0, E, 0);               // the face seen front-right
+      const pip = C(0xffc928, { roughness: .3 }), top = d.geometry.boundingBox.max.y + lift;
+      [-.42, 0, .42].forEach(t => { const b = ball(.17, pip); b.scale.y = .4; b.position.set(t, top - .01, 0); g.add(b); });   // three pips corner to corner across the top
+      g.userData.part = 'top'; return g;
+    },
     jailbreak() {   // a 3×3 patch of concrete cell floor: crates, the orange inmate slipping through the bars, a gold key
       const g0 = new T.Group();
       const tile = C(0xd8d2c4, { roughness: .7 });
@@ -1130,14 +1141,14 @@
   };
 
   // post-process: pieces onto the thick base; scenes without a board get a square plinth
-  const PLINTH = { connect4: [0x1f5ed9, 5.2], mancala: [0xb37540, 4.6], sudoku: [0xf4efe6, 3.9], speedsudoku: [0xfff0e2, 3.9], samegame: [0xf2eadb, 3.9], jailbreak: [0x3a3f4a, 3.9], solitaire: [0x22704a, 3.9], poker: [0x1f1f24, 3.9], baccarat: [0x3d0f1a, 3.9], blackjack: [0x0b3a3a, 3.9] };
+  const PLINTH = { random: [0x9a7cff, 3.9], connect4: [0x1f5ed9, 5.2], mancala: [0xb37540, 4.6], sudoku: [0xf4efe6, 3.9], speedsudoku: [0xfff0e2, 3.9], samegame: [0xf2eadb, 3.9], jailbreak: [0x3a3f4a, 3.9], solitaire: [0x22704a, 3.9], poker: [0x1f1f24, 3.9], baccarat: [0x3d0f1a, 3.9], blackjack: [0x0b3a3a, 3.9] };
   const FIX = {};
   Object.keys(ICONS).forEach(id => {
     FIX[id] = () => {
       const g = ICONS[id]();
       if (PLINTH[id]) {
         const [col, size] = PLINTH[id], wrap = new T.Group(), pl = rbox(size, BASE_H, size, .34, id === 'mancala' ? M({ map: softWood('icpl', '#d39a5c', '#8a5a2a'), roughness: .5 }) : gloss(col), true);
-        g.position.y = BASE_H; wrap.add(pl, g); return wrap;
+        g.position.y = BASE_H; pl.userData.part = 'base'; wrap.add(pl, g); return wrap;
       }
       const lift = g.userData.lift || 0;
       g.children.forEach((c, i) => { if (i >= 2) c.position.y += lift; });
