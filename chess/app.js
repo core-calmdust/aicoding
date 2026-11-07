@@ -194,16 +194,35 @@ function noteNps(nodes, ms) {
 }
 let jobId = 0;
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261107nps'); w.jobs = new Map();
+  const w = new Worker('engine.js?v=20261108mt'); w.jobs = new Map();
   w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (!j) return; if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; } w.jobs.delete(m.id); noteNps(m.nodes, performance.now() - j.t0); j.resolve(m); };
   return w;
 }
 let aiW = makeWorker(), anaW = makeWorker();
+// multi-threaded search (shared/mtengine.js; common rule 2026-11-08): analysis, hints, coach, the review box and the strongest
+// timed AI levels outside rated games go to the pool of threads when it is free; rated games and the node-limited levels stay
+// on the one-thread workers (the same moves as before)
+const MTP = window.MTEngine ? MTEngine.use({
+  wasm: 'engine_mt.wasm?v=1', lead: 'engine.js?v=20261108mt&mt=1', helper: 'mt-helper.js?v=1', slot: 2 << 20, initial: 512, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
+  imports: mem => ({ env: { memory: mem, now: () => performance.now(), progress: () => {} } }),
+  help: m => { const p = E.Pos.fromFEN(m.fen || E.START), u = []; for (const x of m.moves || []) { u.push(p.uci(x)); p.make(x); } return { setup: (m.fen || E.START) + (u.length ? ' moves ' + u.join(' ') : '') }; },
+}) : null;
+function mtWants(which, msg) {
+  if (msg.type === 'analyze' || msg.type === 'multipv' || msg.type === 'mpvLoop') return true;
+  if (msg.type !== 'think' || (which === 'ai' && rgame)) return false;
+  const L = E.LEVELS[msg.level]; return !!L && !L.wnodes && L.noise === undefined && L.ms >= 500;
+}
 function request(which, msg, onProgress) {
+  const mp = MTP && mtWants(which, msg) && MTP.pool();
+  if (mp) { const t0 = performance.now(), fen = startFen; return mp.run({ fen, ...msg }, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, { fen, ...msg }, onProgress) : r; }); }
+  return requestW(which, msg, onProgress);
+}
+function requestW(which, msg, onProgress) {   // (the one-thread workers)
   const w = which === 'ai' ? aiW : anaW;
   return new Promise(resolve => { const id = ++jobId; w.jobs.set(id, { resolve, onProgress, t0: performance.now() }); w.postMessage({ fen: startFen, ...msg, id }); });
 }
 function cancelWorker(which) {
+  if (MTP) MTP.cancel(which);
   const w = which === 'ai' ? aiW : anaW;
   if (!w.jobs.size) return;
   w.terminate(); w.jobs.forEach(j => j.resolve(null));
@@ -2324,7 +2343,7 @@ function studyEnd(quiet) {
 }
 function rvbWorker() { if (!rvbW) rvbW = makeWorker(); return rvbW; }
 function rvbCands(push, done) {
-  const w = rvbWorker(), id = ++jobId, mv = moves.slice(0, cur), fen = startFen, idx = cur;
+  const id = ++jobId, mv = moves.slice(0, cur), fen = startFen, idx = cur;
   const played = !inStudy() && idx < moves.length ? moves[idx] : 0;
   const conv = list => (list || []).map(e => {
     const lb = valLabel(e.v), p = E.replay(fen, mv).pos, parts = [];
@@ -2337,6 +2356,12 @@ function rvbCands(push, done) {
     return { id: e.m, move: hbEsc(p0.san(e.m)), val: lb.big, cls: e.v > 25 ? 'pos' : e.v < -25 ? 'neg' : '', pv: hbEsc(parts.join(' ')), played: e.m === played, ref: { m: e.m, pv: e.pv, idx, key: keyOf(idx) } };
   });
   const info = m => ({ depth: m.depth || 0, nodes: m.nodes || 0, partial: !!m.partial });
+  const mp = MTP && MTP.pool();   // (the threads when free)
+  if (mp) {
+    mp.run({ type: 'mpvLoop', fen, moves: mv, n: 4, depth: 60 }, m => push(conv(m.list), info(m)), 'rvb').then(r => done(r && r.list ? conv(r.list) : null, r ? info(r) : {}));
+    return () => MTP.cancel('rvb');
+  }
+  const w = rvbWorker();
   w.jobs.set(id, { resolve: r => done(r && r.list ? conv(r.list) : null, r ? info(r) : {}), onProgress: m => push(conv(m.list), info(m)) });
   w.postMessage({ type: 'mpvLoop', fen, moves: mv, n: 4, depth: 60, id });   // continuous analysis: RVB terminates it to stop
   return () => { if (rvbW === w) { w.terminate(); w.jobs.forEach(j => j.resolve(null)); rvbW = null; } };

@@ -1185,13 +1185,17 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof modul
   const pos = new Position();
   const se = new Searcher(pos);
   // WebAssembly build of the same search (engine.c): identical results, faster. Falls back to JS if unavailable.
-  let X = null, wProgress = null, wAProgress = null, nueReady = false, nueCur = false;
+  let X = null, MEM = null, wProgress = null, wAProgress = null, nueReady = false, nueCur = false;
+  // ?…&mt=1: the lead thread of the page's multi-thread pool (shared/mtengine.js): engine_mt.wasm (NNUE 512) on the shared
+  // memory sent with the first message ('mtinit'); the helpers (mt-helper.js) search the same root meanwhile.
+  const MTL = /[?&]mt=1\b/.test(self.location.search || ''), QS = (self.location.search || '').replace(/&mt=1\b/, '');
+  const mtInit = MTL ? new Promise(res => self.addEventListener('message', function f(e) { if (e.data && e.data.type === 'mtinit') { self.removeEventListener('message', f); res(e.data); } })) : null;
   // WebAssembly SIMD (needed for the NNUE evaluation to be fast): engine_simd.wasm + nnue.bin.gz, otherwise engine.wasm with the linear evaluation
   const simdOK = (() => { try { return WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11])); } catch (e) { return false; } })();
   // the net is fetched first: its hidden size picks the build (engine_simd.wasm: 256, engine_simd512.wasm: 512)
   async function fetchNNUE() {
     if (typeof DecompressionStream === 'undefined') return null;
-    const res = await fetch(new URL('nnue.bin.gz' + (self.location.search || ''), self.location.href));
+    const res = await fetch(new URL('nnue.bin.gz' + QS, self.location.href));
     if (!res.ok) return null;
     let buf = new Uint8Array(await res.arrayBuffer());
     if (buf[0] === 0x1f && buf[1] === 0x8b) buf = new Uint8Array(await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
@@ -1204,9 +1208,9 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof modul
     const H = dv.getInt32(4, true), NIN = dv.getInt32(8, true), b = buf.buffer;
     if (x.nue_h && x.nue_h() !== H) return;
     let o = buf.byteOffset + 12;
-    new Int16Array(x.memory.buffer, x.nue_w1_ptr(), NIN * H).set(new Int16Array(b.slice(o, o + NIN * H * 2))); o += NIN * H * 2;
-    new Int32Array(x.memory.buffer, x.nue_b1_ptr(), H).set(new Int32Array(b.slice(o, o + H * 4))); o += H * 4;
-    new Int16Array(x.memory.buffer, x.nue_w2_ptr(), 2 * H).set(new Int16Array(b.slice(o, o + H * 4))); o += H * 4;
+    new Int16Array(MEM.buffer, x.nue_w1_ptr(), NIN * H).set(new Int16Array(b.slice(o, o + NIN * H * 2))); o += NIN * H * 2;
+    new Int32Array(MEM.buffer, x.nue_b1_ptr(), H).set(new Int32Array(b.slice(o, o + H * 4))); o += H * 4;
+    new Int16Array(MEM.buffer, x.nue_w2_ptr(), 2 * H).set(new Int16Array(b.slice(o, o + H * 4))); o += H * 4;
     x.nue_set_b2(dv.getInt32(o - buf.byteOffset, true));
     nueReady = true;
   }
@@ -1217,23 +1221,26 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof modul
     wReady = (simdOK ? fetchNNUE().catch(() => null) : Promise.resolve(null)).then(net => {
       const H = net ? new DataView(net.buffer, net.byteOffset, net.byteLength).getInt32(4, true) : 256;
       const file = !simdOK ? 'engine.wasm' : H === 512 ? 'engine_simd512.wasm' : 'engine_simd.wasm';
-      const url = new URL(file + (self.location.search || ''), self.location.href);
-      return WebAssembly.instantiateStreaming(fetch(url), { env: { now: () => Date.now(), progress: (d, s, n, p, l) => wProgress && wProgress(d, s, n, p, l), aprogress: (d, n, mp, sp) => wAProgress && wAProgress(d, n, mp, sp) } })
-        .then(r => { const x = r.instance.exports; x.init(); X = x; new Int16Array(X.memory.buffer, X.weights_ptr(), NFEAT).set(W instanceof Int16Array ? W : Int16Array.from(W)); if (simdOK && x.nue_enable) { try { loadNNUE(x, net); } catch (e) { nueReady = false; } } });
-    }).catch(() => { X = null; });
+      const url = new URL(file + QS, self.location.href);
+      const env = { now: () => Date.now(), progress: (d, s, n, p, l) => wProgress && wProgress(d, s, n, p, l), aprogress: (d, n, mp, sp) => wAProgress && wAProgress(d, n, mp, sp) };
+      const inst = MTL ? mtInit.then(m => { MEM = m.mem; const x = new WebAssembly.Instance(m.module, { env: Object.assign(env, { memory: MEM }) }).exports; x.mt_stack(m.top); x.mt_thread(m.tls, 0); return { instance: { exports: x } }; })
+        : WebAssembly.instantiateStreaming(fetch(url), { env });
+      return inst
+        .then(r => { const x = r.instance.exports; if (!MTL) MEM = x.memory; x.init(); X = x; new Int16Array(MEM.buffer, X.weights_ptr(), NFEAT).set(W instanceof Int16Array ? W : Int16Array.from(W)); if (simdOK && x.nue_enable) { try { loadNNUE(x, net); } catch (e) { nueReady = false; } } if (MTL) self.postMessage({ type: 'mtready', error: nueReady ? undefined : 'nnue' }); });
+    }).catch(e => { X = null; if (MTL) self.postMessage({ type: 'mtready', error: String(e && e.message || e) }); });
   } catch (e) { X = null; }
   function wsetup(d) {
     const p = new Position(); p.setSfen(d.sfen);
-    const b = new Int8Array(X.memory.buffer, X.setup_ptr(), 98);
+    const b = new Int8Array(MEM.buffer, X.setup_ptr(), 98);
     b.set(p.board, 0); b.set(p.hand, 81); b[97] = p.side; X.set_position();
     for (const u of d.moves || []) X.play_move(p.fromUsi(u));
   }
   const useWasm = () => X && !NN;
   function wasmAnalyze(o, onDepth) {
-    wAProgress = onDepth ? (depth, n, mp, sp) => { const ms = new Int32Array(X.memory.buffer, mp, n), ss = new Float64Array(X.memory.buffer, sp, n); onDepth(Array.from(ms, (m, i) => ({ m, s: ss[i] })), depth); } : null;
+    wAProgress = onDepth ? (depth, n, mp, sp) => { const ms = new Int32Array(MEM.buffer, mp, n), ss = new Float64Array(MEM.buffer, sp, n); onDepth(Array.from(ms, (m, i) => ({ m, s: ss[i] })), depth); } : null;
     const n = X.analyze(o.time || 0, o.depth || 0, o.nodes || 0);
     wAProgress = null;
-    const ms = new Int32Array(X.memory.buffer, X.ana_moves(), n), ss = new Float64Array(X.memory.buffer, X.ana_scores(), n), ds = new Int32Array(X.memory.buffer, X.ana_depths(), n);
+    const ms = new Int32Array(MEM.buffer, X.ana_moves(), n), ss = new Float64Array(MEM.buffer, X.ana_scores(), n), ds = new Int32Array(MEM.buffer, X.ana_depths(), n);
     return Array.from(ms, (m, i) => ({ m, s: ss[i], d: ds[i] }));
   }
   function setup(d) {
@@ -1246,7 +1253,7 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof modul
     if (d.type === 'weights') {
       const nn = parseNN(d.buffer);
       if (nn) NN = nn;
-      else { const w = new Int16Array(d.buffer); if (w.length === NFEAT) { W = w; if (X) new Int16Array(X.memory.buffer, X.weights_ptr(), NFEAT).set(W); } }
+      else { const w = new Int16Array(d.buffer); if (w.length === NFEAT) { W = w; if (X) new Int16Array(MEM.buffer, X.weights_ptr(), NFEAT).set(W); } }
       return;
     }
     if (d.type === 'think') {
@@ -1279,11 +1286,11 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof modul
       }
       if (useWasm()) {
         nueUse(!o.linear); wsetup(d);
-        wProgress = (depth, score, nodes, pp, pl) => self.postMessage({ type: 'progress', id: d.id, depth, score, pv: Array.from(new Int32Array(X.memory.buffer, pp, pl), m => pos.toUsi(m)), nodes });
+        wProgress = (depth, score, nodes, pp, pl) => self.postMessage({ type: 'progress', id: d.id, depth, score, pv: Array.from(new Int32Array(MEM.buffer, pp, pl), m => pos.toUsi(m)), nodes });
         const t0 = Date.now();
         const mv = X.root_search(o.time || 0, o.depth || 0, o.nodes || 0);
         wProgress = null;
-        const r = new Int32Array(X.memory.buffer, X.res_ptr(), 4 + 64);
+        const r = new Int32Array(MEM.buffer, X.res_ptr(), 4 + 64);
         self.postMessage({ type: 'result', id: d.id, move: mv ? pos.toUsi(mv) : null, score: X.res_score(), depth: r[1], pv: Array.from(r.subarray(4, 4 + r[3]), m => pos.toUsi(m)), nodes: r[2], time: Date.now() - t0, wasm: true, nnue: nueCur });
         return;
       }
@@ -1349,11 +1356,11 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof modul
         if (useWasm()) {
           nueUse(true); wsetup(d);
           const ex = out.map(e => e.m);
-          if (ex.length) new Int32Array(X.memory.buffer, X.exclude_ptr(), ex.length).set(ex);
+          if (ex.length) new Int32Array(MEM.buffer, X.exclude_ptr(), ex.length).set(ex);
           X.set_exclude(ex.length);
           const mv = X.root_search(ms, 0, nb);
           if (!mv) break;
-          const rr = new Int32Array(X.memory.buffer, X.res_ptr(), 4 + 64);
+          const rr = new Int32Array(MEM.buffer, X.res_ptr(), 4 + 64);
           r = { m: mv, score: X.res_score(), depth: rr[1], nodes: rr[2], pv: Array.from(rr.subarray(4, 4 + Math.min(64, rr[3]))) };
         } else {
           setup(d);
@@ -1382,11 +1389,11 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof modul
         setup(d);
         if (useWasm()) {
           nueUse(true); wsetup(d);
-          if (ex.length) new Int32Array(X.memory.buffer, X.exclude_ptr(), ex.length).set(ex);
+          if (ex.length) new Int32Array(MEM.buffer, X.exclude_ptr(), ex.length).set(ex);
           X.set_exclude(ex.length);
           const mv = X.root_search(ms, 0, 0);
           if (!mv) break;
-          const rr = new Int32Array(X.memory.buffer, X.res_ptr(), 4 + 64);
+          const rr = new Int32Array(MEM.buffer, X.res_ptr(), 4 + 64);
           r = { m: mv, score: X.res_score(), pv: Array.from(rr.subarray(4, 4 + rr[3])) };
         } else {
           const res = se.rootSearch({ time: ms, exclude: ex.slice() });
@@ -1430,11 +1437,11 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof modul
             let r;
             if (useWasm()) {
               nueUse(true); wsetup(d);
-              if (ex.length) new Int32Array(X.memory.buffer, X.exclude_ptr(), ex.length).set(ex);
+              if (ex.length) new Int32Array(MEM.buffer, X.exclude_ptr(), ex.length).set(ex);
               X.set_exclude(ex.length);
               const mv = X.root_search(0, depth, 0);
               if (!mv) break;
-              const h = new Int32Array(X.memory.buffer, X.res_ptr(), 4), rr = new Int32Array(X.memory.buffer, X.res_ptr(), 4 + Math.min(64, h[3]));
+              const h = new Int32Array(MEM.buffer, X.res_ptr(), 4), rr = new Int32Array(MEM.buffer, X.res_ptr(), 4 + Math.min(64, h[3]));
               nodes += h[2];
               r = { m: mv, score: X.res_score(), pv: Array.from(rr.subarray(4)) };
             } else {

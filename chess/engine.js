@@ -746,21 +746,34 @@ if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.ChessEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
   // WebAssembly search (engine.c) with the NNUE evaluation (nnue.bin.gz). Falls back to the JS engine if unavailable.
-  const VER = self.location.search || '';
-  let X = null;
+  // ?…&mt=1: the lead thread of the page's multi-thread pool (shared/mtengine.js): engine_mt.wasm on the shared memory
+  // sent with the first message ('mtinit'); the helpers (mt-helper.js) search the same root meanwhile.
+  const MTL = /[?&]mt=1\b/.test(self.location.search || '');
+  const VER = (self.location.search || '').replace(/&mt=1\b/, '');
+  const mtInit = MTL ? new Promise(res => self.addEventListener('message', function f(e) { if (e.data && e.data.type === 'mtinit') { self.removeEventListener('message', f); res(e.data); } })) : null;
+  let X = null, MEM = null;
   const wasmReady = (async () => {
     try {
-      const r = await WebAssembly.instantiateStreaming(fetch(new URL('engine.wasm' + VER, self.location.href)), { env: { now: () => performance.now(), progress: () => {} } });
-      const x = r.instance.exports; x.init(); x.new_game();
+      let x;
+      if (MTL) {
+        const m = await mtInit; MEM = m.mem;
+        x = new WebAssembly.Instance(m.module, { env: { memory: MEM, now: () => performance.now(), progress: () => {} } }).exports;
+        x.mt_stack(m.top); x.mt_thread(m.tls, 0);
+      } else {
+        const r = await WebAssembly.instantiateStreaming(fetch(new URL('engine.wasm' + VER, self.location.href)), { env: { now: () => performance.now(), progress: () => {} } });
+        x = r.instance.exports; MEM = x.memory;
+      }
+      x.init(); x.new_game();
       const res = await fetch(new URL('nnue.bin.gz' + VER, self.location.href));
       if (!res.ok) throw new Error('nnue ' + res.status);
       let buf;
       if (typeof DecompressionStream === 'function') buf = new Uint8Array(await new Response(res.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
       else throw new Error('no DecompressionStream');
       if (buf.length !== x.nn_size()) throw new Error('nnue size');
-      new Uint8Array(x.memory.buffer).set(buf, x.nn_ptr()); x.nn_enable(1);
+      new Uint8Array(MEM.buffer).set(buf, x.nn_ptr()); x.nn_enable(1);
       X = x;
-    } catch (err) { X = null; }
+    } catch (err) { X = null; if (MTL) self.postMessage({ type: 'mtready', error: String(err && err.message || err) }); return; }
+    if (MTL) self.postMessage({ type: 'mtready' });
   })();
   const CMATE = 31000, CMATE_MAX = CMATE - 256;
   const toJS = v => v >= CMATE_MAX ? MATE - (CMATE - v) : v <= -CMATE_MAX ? -MATE + (CMATE + v) : v;
@@ -768,21 +781,21 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
     const pos = Pos.fromFEN(fen || START), u = [];
     for (const m of moves || []) { u.push(pos.uci(m)); pos.make(m); }
     const s = (fen || START) + (u.length ? ' moves ' + u.join(' ') : '') + '\0';
-    new Uint8Array(X.memory.buffer).set(new TextEncoder().encode(s), X.setup_ptr());
+    new Uint8Array(MEM.buffer).set(new TextEncoder().encode(s), X.setup_ptr());
     X.set_position();
     return pos;
   }
-  const wUci = m => { const a = new Uint8Array(X.memory.buffer), p = X.move_uci(m); let s = ''; for (let i = p; a[i]; i++) s += String.fromCharCode(a[i]); return s; };
+  const wUci = m => { const a = new Uint8Array(MEM.buffer), p = X.move_uci(m); let s = ''; for (let i = p; a[i]; i++) s += String.fromCharCode(a[i]); return s; };
   // values of all root moves, depth by depth, until the time runs out
   function wRootLoop(pos, ms, maxDepth, margin, onDepth, nodeLim) {
-    const legal = X.legal_moves(), L = Array.from(new Int32Array(X.memory.buffer, X.legal_ptr(), legal));
+    const legal = X.legal_moves(), L = Array.from(new Int32Array(MEM.buffer, X.legal_ptr(), legal));
     let order = L, last = null, depth = 0; const t0 = performance.now();
     X.ana_begin(ms, nodeLim || 0);
     for (let d = 1; d <= maxDepth; d++) {
-      new Int32Array(X.memory.buffer, X.ana_moves(), order.length).set(order);
+      new Int32Array(MEM.buffer, X.ana_moves(), order.length).set(order);
       const n = X.analyze_depth(order.length, d, margin);
       if (n < 0) break;
-      const vals = new Int32Array(X.memory.buffer, X.ana_vals(), n), kinds = new Int32Array(X.memory.buffer, X.ana_kind(), n);
+      const vals = new Int32Array(MEM.buffer, X.ana_vals(), n), kinds = new Int32Array(MEM.buffer, X.ana_kind(), n);
       last = order.map((cm, i) => ({ cm, v: toJS(vals[i]), kind: kinds[i] ? 'ub' : 'exact' })); depth = d;
       if (onDepth) onDepth(last, d);
       order = last.slice().sort((a, b) => (b.v - a.v) || ((a.kind === 'ub') - (b.kind === 'ub'))).map(e => e.cm);
@@ -811,7 +824,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
       return { move: best };
     }
     const cm = L.wnodes ? X.think(0, 0, 64, L.wnodes) : X.think(L.ms * 0.55, L.ms, 64, 0);
-    const r = new Int32Array(X.memory.buffer, X.res_ptr(), 8);
+    const r = new Int32Array(MEM.buffer, X.res_ptr(), 8);
     return { move: pos.fromUci(wUci(cm)), v: toJS(r[1]), depth: r[2], nodes: X.res_nodes(), wasm: true };
   }
   // review box: the best few moves with their lines (each search excludes the moves already found), best first
@@ -825,13 +838,13 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
     const ex = [];
     for (let k = 0; k < Math.min(n, legal.length); k++) {
       wSet(m.fen, m.moves);
-      if (ex.length) new Int32Array(X.memory.buffer, X.exclude_ptr(), ex.length).set(ex);
+      if (ex.length) new Int32Array(MEM.buffer, X.exclude_ptr(), ex.length).set(ex);
       X.set_excluded(ex.length);
       const ms = (m.time || 600) * (k ? 0.7 : 1), cm = X.think(ms * 0.5, ms, 64, 0);
       X.set_excluded(0);
       if (!cm) break;
       ex.push(cm);
-      const r = new Int32Array(X.memory.buffer, X.res_ptr(), 8 + 64), us = [];
+      const r = new Int32Array(MEM.buffer, X.res_ptr(), 8 + 64), us = [];
       for (let j = 0; j < r[4] && j < 10; j++) us.push(wUci(r[8 + j]));
       if (!us.length || us[0] !== wUci(cm)) us.splice(0, us.length, wUci(cm));
       const pv = lineOf(us); if (!pv.length) break;
@@ -852,13 +865,13 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
       const ex = [], out = [];
       for (let k = 0; k < n; k++) {
         wSet(m.fen, m.moves);
-        if (ex.length) new Int32Array(X.memory.buffer, X.exclude_ptr(), ex.length).set(ex);
+        if (ex.length) new Int32Array(MEM.buffer, X.exclude_ptr(), ex.length).set(ex);
         X.set_excluded(ex.length);
         const cm = X.think(0, 0, d, 0);
         X.set_excluded(0);
         if (!cm) break;
         ex.push(cm);
-        const r = new Int32Array(X.memory.buffer, X.res_ptr(), 8 + 64), us = [];
+        const r = new Int32Array(MEM.buffer, X.res_ptr(), 8 + 64), us = [];
         nodes += r[3] >>> 0;
         for (let j = 0; j < r[4] && j < 12; j++) us.push(wUci(r[8 + j]));
         if (!us.length || us[0] !== wUci(cm)) us.splice(0, us.length, wUci(cm));
