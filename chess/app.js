@@ -126,6 +126,7 @@ let LANG = detectLang();
   for (const l in OD) if (I18N[l]) for (const k in OD[l]) if (I18N[l]['od.' + k] === undefined) I18N[l]['od.' + k] = OD[l][k]; }
 function t(k, v) { let x = (I18N[LANG] || I18N.en)[k]; if (x === undefined) x = I18N.en[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
 const pname = p => t(p === P1 ? 'p1' : 'p2');
+const AIW = () => ({ ru: 'ИИ', tr: 'YZ' })[LANG] || 'AI'; // the word "AI" in player labels (ru / tr use their own abbreviation)
 const LV = i => t('lv')[i];
 // level description: how the AI plays + its rating on this site's scale (RT_LV)
 function LVD(i) {
@@ -409,9 +410,9 @@ function playerName(p) {
   if (puzzle) return p === puzzle.me ? t('you') : t('defender');
   if (lesson || settings.mode === 'pvp') return '';
   if (settings.mode === 'online') { const g = net && net.game; return !g ? '' : !net.spectate && p === net.me ? t('you') : p === P1 ? g.wn : g.bn; }
-  if (settings.mode === 'watch') return `AI ${LV(levelFor(p))}`;
-  if (rgame) return p === humanColor ? t('you') + ' · R' + rgame.my : `AI ${rtLvName(rgame.lv)} · R${rgame.or}`;
-  return p === humanColor ? t('you') : `AI ${LV(settings.level)}`;
+  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(p))}`;
+  if (rgame) return p === humanColor ? t('you') + ' · R' + rgame.my : `${AIW()} ${rtLvName(rgame.lv)} · R${rgame.or}`;
+  return p === humanColor ? t('you') : `${AIW()} ${LV(settings.level)}`;
 }
 function material(pos, c) { let m = 0; for (let s = 0; s < 128; s++) { if (s & 0x88) { s += 7; continue; } const p = pos.b[s]; if (p && (p >> 3) === c) m += PVAL[p & 7]; } return m; }
 function renderInfo() {
@@ -776,7 +777,7 @@ function recordGame(st) {
   if (!window.GameRecord || settings.mode !== 'ai' || settings.rsNoRec || lesson || puzzle || net || recordedMv === moves || !st || !st.over) return;
   if (st.why === 'resign' && moves.length < 2) return;   // resigning before playing is not a game
   recordedMv = moves;
-  const lv = levelFor(3 - humanColor), opp = rgame ? 'AI ' + rtLvName(rgame.lv) : 'AI Lv.' + lv + ' ' + LV(lv);
+  const lv = levelFor(3 - humanColor), opp = rgame ? AIW() + ' ' + rtLvName(rgame.lv) : AIW() + ' Lv.' + lv + ' ' + LV(lv);
   GameRecord.add({ mode: rgame ? 'rated' : 'ai', res: !st.winner ? 'd' : st.winner === humanColor ? 'w' : 'l', side: humanColor - 1, opp, key: (rgame ? 'rt:' + rgame.lv : 'ai:' + lv), n: Math.ceil(moves.length / 2), why: t('res.why.' + st.why) });
 }
 function canUndo() {
@@ -2205,7 +2206,7 @@ function plainWhy(best, mine, mover, pos) {
   const sa = word(best.v), sb = word(mine.v);
   return t('rx.cp', { b, a: amt }) + (sa !== sb ? ' ' + t('rx.flow', { c: sideLabel(mover), x: sa, y: sb }) : '');
 }
-function sideLabel(p) { return settings.mode === 'ai' ? (p === humanColor ? t('you') : 'AI') : pname(p); }
+function sideLabel(p) { return settings.mode === 'ai' ? (p === humanColor ? t('you') : AIW()) : pname(p); }
 // the move at the current position only (like shogi): what the best move was and why
 function rvExplainHtml() {
   if (!rv || rv.running || cur >= moves.length) return '';
