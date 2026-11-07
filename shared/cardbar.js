@@ -101,7 +101,7 @@ const GAME_ID = ((window.GAME && window.GAME.id) || (location.pathname.match(/\/
 const QK = { shogi: { pz: 'ts.title', ls: 'ls.tabLesson', op: 'ls.tabOpen' }, go: { pz: 'tab.puzzle' }, alquerque: { pz: null },
   // chess: 詰めチェス or 戦術問題, after the collection the current problem is from
   chess: { pz: () => { try { return PUZZLES.levels[puzzle.L].kind === 'line' ? 'pz.tacHead' : 'pz.mateHead'; } catch (e) { return 'pz.mateHead'; } } } };
-const pageLang = () => { const l = (document.documentElement.lang || 'ja').toLowerCase().split('-')[0]; return QT[l] ? l : 'en'; };
+const pageLang = () => { const l = (s => /^zh-(tw|hk|mo|hant)/i.test(s) ? 'zh-TW' : s.slice(0, 2).toLowerCase())(document.documentElement.lang || 'ja'); return QT[l] ? l : 'en'; };
 function gameT(k) { try { if (k && typeof window.t === 'function') { const x = window.t(k); if (typeof x === 'string' && x && x !== k && !/[<{]/.test(x)) return x; } } catch (e) {} return ''; }
 function quitMode(card) {
   if (card.id === 'puzzleCard') return 'pz';
