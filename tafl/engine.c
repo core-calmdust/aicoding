@@ -633,6 +633,7 @@ EXPORT(new_game) void new_game(void) { memset(TT, 0, sizeof(TT)); ttAge = 0; }
 
 // ---------------------------------------------------------------- search
 static TLS u64 nodes; static TLS double tEnd; static TLS int stopFlag, nodeLimit_on; static TLS u64 nodeLimit;
+EXPORT(last_nodes) double last_nodes(void) { return (double)nodes; }   /* nodes of the last search (the page shows the speed) */
 static TLS int hist[2][NSQ][NSQ / 8 + 1];   // history by (from, to>>3) to keep it small
 static TLS int histT[2][NSQ];
 static TLS Move killers[MAXPLY][2];

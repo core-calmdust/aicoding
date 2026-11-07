@@ -332,7 +332,7 @@ function think(start, moves, level, v, seed) {
   WX.think(level, seed === undefined ? (Math.random() * 2147483647) | 0 : seed);
   const r = wIO();
   if (r[0] < 0) return { move: all[0] };
-  const out = { move: wMove(r[0]), v: r[2], depth: r[3] };
+  const out = { move: wMove(r[0]), v: r[2], depth: r[3], nodes: WX.last_nodes ? WX.last_nodes() : 0 };
   if (out.v < -WINT) { const rs = resist(start, moves, v, pos); if (rs) { out.move = rs.move; out.v = rs.v; out.resist = true; } }
   return out;
 }
@@ -342,7 +342,7 @@ function analyze(start, moves, ms, onProgress, v) {
   if (!wSetup(start, moves, v)) return { list: [], depth: 0 };
   progressCb = onProgress ? (d => onProgress(wList().map(e => ({ ...e, kind: kindOf(e.v) })), d)) : null;
   WX.analyze(ms, 40); progressCb = null;
-  return { list: wList().map(e => ({ ...e, kind: kindOf(e.v) })), depth: wIO()[1] };
+  return { list: wList().map(e => ({ ...e, kind: kindOf(e.v) })), depth: wIO()[1], nodes: WX.last_nodes ? WX.last_nodes() : 0 };
 }
 // review box (PC): the best k candidate moves with values, each with a line of up to `plies` further moves
 // (each move of the line is the engine's choice after a short search; the transposition table of the analysis helps)
@@ -381,7 +381,7 @@ const API = { P1, P2, WIN, WINT, DRAW_PLIES, VARIANTS, VID, START, RULES, geo, P
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.TaflEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  const V = 'v=20261107sr1';   // engine.wasm + nnue-copenhagen.bin.gz
+  const V = 'v=20261108nps';   // engine.wasm + nnue-copenhagen.bin.gz
   let readyP = null;
   if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
     const imp = { env: { now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } };
