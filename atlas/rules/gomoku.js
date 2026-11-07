@@ -173,6 +173,190 @@
         { say: 'عرفت القواعد! <b>خمسة في صف تفوز</b>. صُدّ <b>أربعات الخصم وثلاثاته المفتوحة</b>، واسعَ أنت إلى <b>أربعة-ثلاثة</b>. في رينجو يوضع الحجر الأول في المركز، والثاني والثالث قريبًا منه. هيا نلعب!' },
       ],
     },
+    ru: {
+      name: 'Стоунгвин',
+      next: 'Далее',
+      back: 'Назад',
+      start: 'Сыграем',
+      again: 'Ещё раз',
+      tap: 'Нажми на светящийся пункт',
+      nope: 'Не туда! Нажми на светящийся пункт',
+      five: 'Пять!',
+      forb: 'Запрещено для чёрных',
+      block: 'Закрыто!',
+      fourThree: 'Четыре-три!',
+      s: [{
+        say: 'Привет! Я <b>Стоунгвин</b>, пингвин-камешек. Давай вместе изучим <b>гомоку и рэндзю</b> на этой прекрасной доске из каи. Это очень просто!'
+      }, {
+        say: 'На доске по <b>15 линий</b> в каждую сторону. Камни ставят на <b>пересечения линий</b>, а не в клетки. <b>Чёрные ходят первыми.</b> Нажми на светящийся пункт в центре (<b>тэнгэн</b>), чтобы поставить первый чёрный камень!',
+        done: 'Щёлк! Поставленный камень <b>никогда не двигается</b> и <b>никогда не снимается</b>.'
+      }, {
+        say: 'Белые сходили. Чёрные и белые ходят <b>по очереди, по одному камню</b>. Снова чёрные — поставь камень на светящийся пункт!',
+        done: 'Вот и весь ход. Обычно можно ходить на любой пустой пункт.'
+      }, {
+        say: 'Цель одна — выстроить <b>пять своих камней в ряд</b>! У чёрных четыре по горизонтали. Нажми на светящийся конец, чтобы получилось <b>пять</b>!',
+        done: 'Пять в ряд! Кто первым построит пятёрку, тот <b>побеждает</b>.'
+      }, {
+        say: 'Пять <b>по вертикали</b> или <b>по диагонали</b> тоже побеждают. Вот четыре на диагонали — нажми на один из светящихся концов!',
+        done: 'Диагональная пятёрка! Всегда следи за всеми <b>четырьмя направлениями</b>: горизонталью, вертикалью и обеими диагоналями.'
+      }, {
+        say: 'Осторожно! У белых <b>четвёрка</b> по горизонтали. Левый конец закрыт чёрными, но правый открыт — если белые сходят туда, они победят. Нажми на светящийся пункт, чтобы <b>закрыть</b>!',
+        done: 'Фух! <b>Четвёрку</b> (в шаге от пятёрки) надо закрывать сразу, иначе проиграешь.'
+      }, {
+        say: 'Белые построили <b>тройку</b>. Тройка с двумя открытыми концами — <b>открытая тройка</b>. Если её оставить, она станет четвёркой с двумя открытыми концами — а её уже не остановить! Закрой один из концов.',
+        done: 'Отлично! Открытые тройки останавливай <b>заранее</b>.'
+      }, {
+        say: 'Теперь атакуют чёрные! Продли открытую тройку чёрных до <b>открытой четвёрки</b> — четвёрки со свободными обоими концами. Нажми на светящийся пункт!',
+        mid: 'Белые закрыли один конец… но другой всё ещё открыт! Нажми на светящийся пункт и заверши!',
+        done: 'Пять! Открытая четвёрка становится пятёркой с любого конца, поэтому её <b>не остановить одним ходом</b>.'
+      }, {
+        say: 'Вот сильный приём — <b>четыре-три</b>. Один камень делает <b>четвёрку</b> и <b>открытую тройку</b> одновременно. Нажми на светящийся пункт: он даёт четвёрку по горизонтали и тройку по вертикали!',
+        done: 'Четыре-три! Белые обязаны закрыть четвёрку, и чёрные превращают тройку в открытую четвёрку и побеждают. Это <b>классическая выигрышная схема</b>.'
+      }, {
+        say: 'В <b>рэндзю</b> у чёрных (кто ходит первым) есть <b>запрещённые ходы</b>, чтобы игра была честной: <b>двойная тройка</b> (3-3), <b>двойная четвёрка</b> (4-4) и <b>длинный ряд</b> (шесть и больше). × — пункт 3-3 для чёрных. Нажми на него!',
+        done: 'Бззт! Чёрным туда нельзя. <b>У белых запрещённых ходов нет</b>, а чёрные побеждают только <b>ровно пятью</b>. В партии запрещённые пункты отмечены ×.'
+      }, {
+        say: 'Ты знаешь правила! <b>Пять в ряд — победа</b>. Закрывай <b>четвёрки и открытые тройки</b> соперника и сам стремись к <b>четыре-три</b>. В рэндзю первый камень ставят в центр, а 2-й и 3-й — рядом с ним. Сыграем!'
+      }]
+    },
+    'zh-TW': {
+      name: '棋子企鵝',
+      next: '下一步',
+      back: '返回',
+      start: '來下棋吧',
+      again: '再一次',
+      tap: '點擊發光的點',
+      nope: '不是那裡！請點擊發光的點',
+      five: '五連！',
+      forb: '黑方禁手',
+      block: '擋住了！',
+      fourThree: '四三！',
+      s: [{
+        say: '你好！我是<b>棋子企鵝</b>。一起在這塊漂亮的榧木棋盤上學<b>五子棋與連珠</b>吧。真的很簡單喔！'
+      }, {
+        say: '棋盤縱橫各有<b>15條線</b>。棋子下在<b>線的交叉點</b>上，而不是格子裡。<b>黑方先下。</b>點擊中央發光的點（<b>天元</b>），下第一顆黑子吧！',
+        done: '喀！下好的棋子<b>不會移動</b>，也<b>不會被吃掉</b>。'
+      }, {
+        say: '白方下了。黑白雙方<b>輪流，每次一顆</b>。又輪到黑方——在發光的點下一顆吧！',
+        done: '一手就是這樣而已。通常任何空點都可以下。'
+      }, {
+        say: '目標只有一個：讓<b>自己的5顆棋子連成一線</b>！黑方橫向有4顆了。點擊發光的一端連成<b>五子</b>！',
+        done: '五連！先連成五子的一方<b>獲勝</b>。'
+      }, {
+        say: '<b>直向</b>或<b>斜向</b>連成五子也算贏。這裡斜向有4顆——點擊發光的其中一端！',
+        done: '斜向五連！要隨時注意橫、直、兩條斜線這<b>四個方向</b>。'
+      }, {
+        say: '小心！白方橫向有<b>四</b>了。黑方擋住了左端，但右端還空著——白方下在那裡就會贏。點擊發光的點<b>擋住</b>！',
+        done: '呼！<b>四</b>（再一子就成五）必須立刻擋住，不然就輸了。'
+      }, {
+        say: '白方做出了<b>三</b>。兩端都空著的三叫做<b>活三</b>。放著不管就會變成兩端都空的四——那就擋不住了！擋住其中一端。',
+        done: '很好！活三要<b>及早</b>擋住。'
+      }, {
+        say: '換黑方進攻！把黑方的活三延長成<b>活四</b>——兩端都空著的四。點擊發光的點！',
+        mid: '白方擋住了一端……但另一端還空著！點擊發光的點完成吧！',
+        done: '五連！活四兩端都能成五，所以<b>一手擋不住</b>。'
+      }, {
+        say: '這裡有一招強力的手法：<b>四三</b>。一顆子同時做出<b>四</b>和<b>活三</b>。點擊發光的點：橫向成四、直向成三！',
+        done: '四三！白方必須擋四，黑方就把三變成活四獲勝。這是<b>經典的必勝棋形</b>。'
+      }, {
+        say: '在<b>連珠</b>中，為了公平，先下的黑方有<b>禁手</b>：<b>雙三</b>（三三）、<b>雙四</b>（四四）與<b>長連</b>（六子以上）。×是黑方的三三點。點點看！',
+        done: '嗶！黑方不能下在那裡。<b>白方沒有禁手</b>，黑方要<b>剛好五子</b>才算贏。對局中禁手點會標上×。'
+      }, {
+        say: '規則都學會了！<b>五子連線就獲勝</b>。擋住對手的<b>四與活三</b>，自己則瞄準<b>四三</b>。連珠的第1子下在天元，第2、3子下在它附近。來下棋吧！'
+      }]
+    },
+    id: {
+      name: 'Stoneguin',
+      next: 'Berikutnya',
+      back: 'Kembali',
+      start: 'Ayo main',
+      again: 'Lagi',
+      tap: 'Ketuk titik yang menyala',
+      nope: 'Bukan di situ! Ketuk titik yang menyala',
+      five: 'Lima!',
+      forb: 'Terlarang bagi Hitam',
+      block: 'Diblok!',
+      fourThree: 'Empat-tiga!',
+      s: [{
+        say: 'Hai! Aku <b>Stoneguin</b>, penguin batu go. Ayo belajar <b>gomoku dan renju</b> bersama di papan kaya yang indah ini. Gampang kok!'
+      }, {
+        say: 'Papan punya <b>15 garis</b> ke tiap arah. Batu ditaruh di <b>titik persilangan garis</b>, bukan di dalam kotak. <b>Hitam jalan duluan.</b> Ketuk titik menyala di tengah (<b>titik pusat</b>) untuk menaruh batu hitam pertama!',
+        done: 'Klik! Batu yang sudah ditaruh <b>tak pernah bergerak</b> dan <b>tak pernah ditangkap</b>.'
+      }, {
+        say: 'Putih sudah main. Hitam dan Putih <b>bergantian, satu batu masing-masing</b>. Giliran Hitam lagi — taruh batu di titik yang menyala!',
+        done: 'Begitulah satu giliran. Biasanya kamu bisa main di titik kosong mana pun.'
+      }, {
+        say: 'Tujuannya hanya satu: dapatkan <b>lima batumu berderet</b>! Hitam punya empat mendatar. Ketuk ujung yang menyala untuk membuat <b>lima</b>!',
+        done: 'Lima berderet! Siapa yang pertama membuat lima <b>menang</b>.'
+      }, {
+        say: 'Lima <b>menurun</b> atau <b>diagonal</b> juga menang. Ini empat di diagonal — ketuk salah satu ujung yang menyala!',
+        done: 'Lima diagonal! Selalu perhatikan keempat <b>arah</b>: mendatar, menurun, dan kedua diagonal.'
+      }, {
+        say: 'Awas! Putih punya <b>empat</b> mendatar. Hitam memblok ujung kiri, tapi ujung kanan terbuka — jika Putih main di sana, Putih menang. Ketuk titik yang menyala untuk <b>memblok</b>!',
+        done: 'Fiuh! <b>Empat</b> (satu lagi jadi lima) harus segera diblok, atau kamu kalah.'
+      }, {
+        say: 'Putih membuat <b>tiga</b>. Tiga dengan kedua ujung terbuka adalah <b>tiga terbuka</b>. Jika dibiarkan, ia jadi empat dengan dua ujung terbuka — dan itu tak bisa dihentikan! Blok salah satu ujungnya.',
+        done: 'Bagus! Hentikan tiga terbuka <b>sejak dini</b>.'
+      }, {
+        say: 'Sekarang Hitam menyerang! Perpanjang tiga terbuka Hitam menjadi <b>empat terbuka</b> — empat dengan kedua ujung bebas. Ketuk titik yang menyala!',
+        mid: 'Putih memblok satu ujung… tapi ujung lainnya masih terbuka! Ketuk titik yang menyala untuk menuntaskan!',
+        done: 'Lima! Empat terbuka bisa jadi lima di ujung mana saja, jadi <b>tak bisa dihentikan dengan satu langkah</b>.'
+      }, {
+        say: 'Ini trik kuat: <b>empat-tiga</b>. Satu batu membuat <b>empat</b> dan <b>tiga terbuka</b> sekaligus. Ketuk titik yang menyala: jadi empat mendatar dan tiga menurun!',
+        done: 'Empat-tiga! Putih harus memblok empat, lalu Hitam mengubah tiga jadi empat terbuka dan menang. Ini <b>pola menang klasik</b>.'
+      }, {
+        say: 'Dalam <b>renju</b>, Hitam (yang jalan duluan) punya <b>langkah terlarang</b> agar adil: <b>tiga ganda</b> (3-3), <b>empat ganda</b> (4-4), dan <b>baris berlebih</b> (enam atau lebih). × adalah titik 3-3 bagi Hitam. Ketuk!',
+        done: 'Bzzt! Hitam tak bisa main di sana. <b>Putih tak punya langkah terlarang</b>, dan Hitam menang hanya dengan <b>tepat lima</b>. Dalam permainan, titik terlarang ditandai ×.'
+      }, {
+        say: 'Kamu sudah tahu aturannya! <b>Lima berderet menang</b>. Blok <b>empat dan tiga terbuka</b> lawan, dan incar <b>empat-tiga</b> sendiri. Dalam renju batu pertama di tengah, dan yang ke-2 dan ke-3 di dekatnya. Ayo main!'
+      }]
+    },
+    tr: {
+      name: 'Stoneguin',
+      next: 'İleri',
+      back: 'Geri',
+      start: 'Hadi oynayalım',
+      again: 'Tekrar',
+      tap: 'Parlayan noktaya dokun',
+      nope: 'Orası değil! Parlayan noktaya dokun',
+      five: 'Beşli!',
+      forb: 'Siyah için yasak',
+      block: 'Kesildi!',
+      fourThree: 'Dört-üç!',
+      s: [{
+        say: 'Merhaba! Ben go taşı penguen <b>Stoneguin</b>. Bu güzel kaya tahtasında <b>gomoku ve renju</b>yu birlikte öğrenelim. Gerçekten çok kolay!'
+      }, {
+        say: 'Tahtada her yönde <b>15 çizgi</b> var. Taşlar karelerin içine değil, <b>çizgilerin kesiştiği noktalara</b> konur. <b>İlk Siyah oynar.</b> İlk siyah taşı koymak için ortadaki parlayan noktaya (<b>merkez nokta</b>) dokun!',
+        done: 'Tık! Konan taş <b>asla hareket etmez</b> ve <b>asla alınmaz</b>.'
+      }, {
+        say: 'Beyaz oynadı. Siyah ve Beyaz <b>sırayla, birer taş</b> koyar. Yine Siyah\'ın sırası — parlayan noktaya bir taş koy!',
+        done: 'Bir hamle bu kadar. Genelde herhangi bir boş noktaya oynayabilirsin.'
+      }, {
+        say: 'Tek amaç var: <b>beş taşını yan yana dizmek</b>! Siyah\'ın yatayda dört taşı var. <b>Beşli</b> yapmak için parlayan uca dokun!',
+        done: 'Beşli sıra! Beşliyi ilk yapan <b>kazanır</b>.'
+      }, {
+        say: '<b>Dikey</b> ya da <b>çapraz</b> beşli de kazandırır. Çaprazda dört taş var — parlayan uçlardan birine dokun!',
+        done: 'Çapraz beşli! Her zaman dört <b>yönü</b> de izle: yatay, dikey ve iki çapraz.'
+      }, {
+        say: 'Dikkat! Beyaz\'ın yatayda <b>dörtlüsü</b> var. Siyah sol ucu kesmiş ama sağ uç açık — Beyaz oraya oynarsa kazanır. <b>Kesmek</b> için parlayan noktaya dokun!',
+        done: 'Oh! <b>Dörtlü</b> (beşliye bir kala) hemen kesilmeli, yoksa kaybedersin.'
+      }, {
+        say: 'Beyaz <b>üçlü</b> yaptı. İki ucu açık üçlüye <b>açık üçlü</b> denir. Bırakılırsa iki ucu açık bir dörtlüye döner — ve o durdurulamaz! Uçlardan birini kes.',
+        done: 'Güzel! Açık üçlüleri <b>erken</b> durdur.'
+      }, {
+        say: 'Şimdi Siyah saldırıyor! Siyah\'ın açık üçlüsünü iki ucu boş bir <b>açık dörtlü</b>ye uzat. Parlayan bir noktaya dokun!',
+        mid: 'Beyaz bir ucu kesti… ama diğer uç hâlâ açık! Bitirmek için parlayan noktaya dokun!',
+        done: 'Beşli! Açık dörtlü iki uçtan da beşli olabilir, bu yüzden <b>tek hamleyle durdurulamaz</b>.'
+      }, {
+        say: 'İşte güçlü bir numara: <b>dört-üç</b>. Tek bir taş aynı anda <b>dörtlü</b> ve <b>açık üçlü</b> yapar. Parlayan noktaya dokun: yatayda dörtlü, dikeyde üçlü olur!',
+        done: 'Dört-üç! Beyaz dörtlüyü kesmek zorunda, Siyah da üçlüyü açık dörtlüye çevirip kazanır. Bu <b>klasik kazanma kalıbı</b>dır.'
+      }, {
+        say: '<b>Renju</b>\'da oyun adil olsun diye ilk oynayan Siyah\'ın <b>yasak hamleleri</b> vardır: <b>çifte üçlü</b> (3-3), <b>çifte dörtlü</b> (4-4) ve <b>uzun sıra</b> (altı ya da daha fazla). × Siyah için bir 3-3 noktası. Dokun!',
+        done: 'Bıızt! Siyah oraya oynayamaz. <b>Beyaz\'ın yasak hamlesi yoktur</b>, Siyah ise yalnızca <b>tam beşliyle</b> kazanır. Oyunda yasak noktalar × ile işaretlenir.'
+      }, {
+        say: 'Kuralları biliyorsun! <b>Beşli sıra kazanır</b>. Rakibin <b>dörtlülerini ve açık üçlülerini</b> kes, kendin de <b>dört-üç</b>e oyna. Renju\'da ilk taş merkeze, 2. ve 3. taş da yakınına konur. Hadi oynayalım!'
+      }]
+    },
   };
   const SHOW = [112, 127, 129, 126, 124, 114, 143, 96, 109, 157, 156, 142, 110, 111, 81, 139, 95, 123, 82, 65, 67];
   const STEPS = [
