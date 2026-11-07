@@ -880,7 +880,8 @@ function think(cells, toMove, opts, onProgress) {
     const midMax = doExact ? Math.min(maxDepth, 10) : maxDepth;
     const startD = Math.min((doExact ? 2 : 1) + (opts.d0 || 0), midMax);   // d0: a helper thread starting a ply ahead (pro/)
     for (let d = startD; d <= midMax; d++) {
-      const ordered = orderRoot(moves, prev);
+      let ordered = orderRoot(moves, prev);
+      if (opts.rot && ordered.length > 1) { const k = opts.rot % ordered.length; ordered = ordered.slice(k).concat(ordered.slice(0, k)); }   // pro/ helper threads: another first move (Lazy SMP diversity)
       let r;
       if (variety && !doExact) {
         const all = scoreAllMoves(pos, ordered, 'mid', d);
@@ -904,7 +905,8 @@ function think(cells, toMove, opts, onProgress) {
     if (time) deadline = t0 + Math.max(hardTime, 2000);
     else deadline = Infinity;
     try {
-      const ordered = orderRoot(moves, prev);
+      let ordered = orderRoot(moves, prev);
+      if (opts.rot && ordered.length > 1) { const k = opts.rot % ordered.length; ordered = ordered.slice(k).concat(ordered.slice(0, k)); }
       let r;
       if (variety) {
         const all = scoreAllMoves(pos, ordered, 'exact');
