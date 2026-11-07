@@ -209,6 +209,10 @@ html.atlas-ur .ur3dnote b{display:block;font-size:14px;color:#2b3044;margin-bott
     de: ['3D: das Brett des British Museum', 'Das Brett aus den Königsgräbern von Ur (Einlagen aus Muschel, Lapislazuli und rotem Kalkstein) in 3D. Das Aussehen der Steine wählst du unten.'],
     hi: ['3D: ब्रिटिश म्यूज़ियम का बोर्ड', 'उर की शाही कब्रों से मिला बोर्ड (सीप, लाजवर्द और लाल चूना पत्थर की जड़ाई) 3D में। गोटियों का रूप नीचे चुनें।'],
     ar: ['ثلاثي الأبعاد: رقعة المتحف البريطاني', 'رقعة المقابر الملكية في أور (تطعيم بالصدف واللازورد والحجر الجيري الأحمر) بالأبعاد الثلاثة. اختر شكل القطع أدناه.'],
+    ru: ['3D: доска Британского музея', 'Доска из царских гробниц Ура (инкрустация из раковин, лазурита и красного известняка) в 3D. Ниже выберите вид фишек.'],
+    'zh-TW': ['3D：大英博物館的棋盤', '以3D重現烏爾王陵出土的棋盤（貝殼、青金石與紅色石灰岩鑲嵌）。可在下方選擇棋子的外觀。'],
+    id: ['3D: papan British Museum', 'Papan dari Makam Kerajaan Ur (tatahan kerang, lapis lazuli, dan batu kapur merah) dalam 3D. Pilih tampilan bidak di bawah.'],
+    tr: ['3D: British Museum tahtası', 'Ur Kraliyet Mezarları\'ndan tahta (deniz kabuğu, lapis lazuli ve kırmızı kireçtaşı kakma) 3D olarak. Taşların görünümünü aşağıdan seç.'],
   };
   // phones: a shorter label where the page's one does not fit a round menu chip (like checkers' "Game")
   const SHORT = { btnNew: { en: 'Game', es: 'Partida', pt: 'Partida', fr: 'Partie', de: 'Partie' }, btnUndo: { es: 'Atrás', pt: 'Voltar' }, btnResign: { fr: 'Abandon', de: 'Aufgabe', es: 'Rendir', hi: 'हार' },

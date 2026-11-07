@@ -89,6 +89,10 @@ html.atlas-ugolki .ug3dnote b{display:block;font-size:14px;color:#1d3f9a;margin-
     de: ['Gschel-Porzellanbrett in 3D', 'Ein Brett aus Gschel-Porzellan mit weißen und kobaltblauen Fliesen unter glänzender Glasur, mit bemalten Porzellansteinen (Weiß: weiß, Schwarz: kobalt).'],
     hi: ['3D ग्ज़ेल पोर्सिलेन बोर्ड', 'चमकदार ग्लेज़ के नीचे सफ़ेद और कोबाल्ट टाइलों वाला ग्ज़ेल पोर्सिलेन बोर्ड, और फूल बने पोर्सिलेन मोहरे (सफ़ेद: सफ़ेद, काला: कोबाल्ट)।'],
     ar: ['رقعة خزف غجيل ثلاثية الأبعاد', 'رقعة من خزف غجيل ببلاطات بيضاء وكوبالتية تحت طلاء لامع، مع قطع خزفية مرسومة (الأبيض: أبيض، الأسود: كوبالت).'],
+    ru: ['Гжельская фарфоровая 3D-доска', 'Гжельская фарфоровая доска из бело-синих плиток под блестящей глазурью, с расписными фарфоровыми фишками (белые — белые, чёрные — кобальтовые).'],
+    'zh-TW': ['3D格熱利瓷器棋盤', '白與鈷藍磁磚覆上亮釉的格熱利瓷器棋盤，搭配手繪瓷器棋子（白方：白色，黑方：鈷藍）。'],
+    id: ['Papan 3D porselen Gzhel', 'Papan porselen Gzhel dari ubin putih dan kobalt di bawah glasir mengilap, dengan bidak porselen berlukis (Putih: putih, Hitam: kobalt).'],
+    tr: ['Gzhel porselen 3D tahta', 'Parlak sır altında beyaz ve kobalt karolardan Gzhel porselen tahta, boyalı porselen taşlarla (Beyaz: beyaz, Siyah: kobalt).'],
   };
   const fd = document.getElementById('fDesign');
   if (fd) {

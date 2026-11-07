@@ -488,7 +488,7 @@
   }
   /* ---------- the portal's top bar: logo, coins, language, home (same layout as the portal) ---------- */
     const lang = () => (document.getElementById('langSel') || {}).value || 'ja';
-    const TITLE = { ja: '世界のボドゲ大百科', en: 'World Board Game Atlas', zh: '世界桌游大全', ko: '세계의 보드게임 대전', es: 'Atlas de Juegos de Mesa', fr: 'Atlas des jeux de société', pt: 'Atlas de Jogos de Tabuleiro', de: 'Brettspiel-Atlas', hi: 'विश्व बोर्ड गेम एटलस', ar: 'أطلس ألعاب الطاولة' };
+    const TITLE = { ja: '世界のボドゲ大百科', en: 'World Board Game Atlas', zh: '世界桌游大全', ko: '세계의 보드게임 대전', es: 'Atlas de Juegos de Mesa', fr: 'Atlas des jeux de société', pt: 'Atlas de Jogos de Tabuleiro', de: 'Brettspiel-Atlas', hi: 'विश्व बोर्ड गेम एटलस', ar: 'أطلس ألعاب الطاولة', ru: 'Атлас настольных игр', 'zh-TW': '世界桌遊大百科', id: 'Atlas Permainan Papan Dunia', tr: 'Dünya Masa Oyunları Atlası' };
     const bar = document.createElement('header'); bar.className = 'atlas-top';
     bar.innerHTML = `<a class="atlas-brand" href="${BASE}"><img src="${BASE}logo.svg" alt="" width="44" height="44"><span><b class="wmT"></b><small>World Board Game Atlas</small></span></a><span class="sp"></span>
       <span class="atlas-coin"><i>¢</i><b class="coinN">0</b></span>
@@ -535,7 +535,7 @@
        puts a "3D" tile first in the board row (row); picking any of the game's 2D boards there shows the plain 2D board in the
        portal's frame (html.atlas-2d: the 3D canvas hidden, the skin's 3D-only classes off), the 3D tile brings the 3D board back.
        The choice is kept (localStorage key). Returns { is3d(), set(is3d) }. */
-    const V3L = { ja: '3D盤', en: '3D board', zh: '3D棋盘', ko: '3D 보드', es: 'Tablero 3D', fr: 'Plateau 3D', pt: 'Tabuleiro 3D', de: '3D-Brett', hi: '3D बोर्ड', ar: 'لوحة ثلاثية الأبعاد' };
+    const V3L = { ja: '3D盤', en: '3D board', zh: '3D棋盘', ko: '3D 보드', es: 'Tablero 3D', fr: 'Plateau 3D', pt: 'Tabuleiro 3D', de: '3D-Brett', hi: '3D बोर्ड', ar: 'لوحة ثلاثية الأبعاد', ru: '3D-доска', 'zh-TW': '3D棋盤', id: 'Papan 3D', tr: '3D tahta' };
     function view(v) {
       if (!document.getElementById('a3vCss')) {
         const st = document.createElement('style'); st.id = 'a3vCss';
@@ -585,7 +585,7 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
       apply();
       return { is3d: () => is3, set };
     }
-    const NAMES = { ja: 'Japanese', en: 'English', zh: 'Chinese', ko: 'Korean', es: 'Spanish', fr: 'French', pt: 'Portuguese', de: 'German', hi: 'Hindi', ar: 'Arabic' };
+    const NAMES = { ja: 'Japanese', en: 'English', zh: 'Chinese', ko: 'Korean', es: 'Spanish', fr: 'French', pt: 'Portuguese', de: 'German', hi: 'Hindi', ar: 'Arabic', ru: 'Russian', 'zh-TW': 'Chinese (Traditional)', id: 'Indonesian', tr: 'Turkish' };
     function fitWM(b, sm) { if (!b || !sm) return; sm.style.fontSize = ''; const k = b.querySelector('.wk'); if (!k || sm.hidden) return; const r = document.createRange(); r.setStartAfter(k); r.setEnd(b, b.childNodes.length); const mw = r.getBoundingClientRect().width, sw = sm.scrollWidth; if (mw > 0 && sw > mw) sm.style.fontSize = Math.max(7, parseFloat(getComputedStyle(sm).fontSize) * mw / sw * .98) + 'px'; }
     // the title never gets cut off: if it doesn't fit beside the buttons, its font steps down (to 12px at least)
     function fitT(b) { if (!b) return; b.style.fontSize = ''; if (document.documentElement.classList.contains('atlas-land')) return; const cw = b.clientWidth, sw = b.scrollWidth; if (cw > 0 && sw > cw + .5) b.style.fontSize = Math.max(12, parseFloat(getComputedStyle(b).fontSize) * cw / sw * .99) + 'px'; }

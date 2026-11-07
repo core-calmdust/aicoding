@@ -119,6 +119,10 @@ html.atlas-checkers .ck3dnote b{display:block;font-size:14px;color:#2b3044;margi
     de: ['Luxus-3D-Brett', 'Lackiertes Spielfeld im schwarzen Lackrahmen, mit goldenen (Schwarz) und silbernen (Weiß) Metallsteinen.'],
     hi: ['3D लक्ज़री बोर्ड', 'लाख वाला बोर्ड, काले लाख का फ़्रेम, और सुनहरी (काला) व चाँदी (सफ़ेद) धातु की गोटियाँ।'],
     ar: ['رقعة فاخرة ثلاثية الأبعاد', 'سطح مطلي بالورنيش داخل إطار من الورنيش الأسود، مع قطع معدنية ذهبية (الأسود) وفضية (الأبيض).'],
+    ru: ['Роскошная 3D-доска', 'Лаковое поле в чёрной лаковой раме, с золотыми (чёрные) и серебряными (белые) металлическими шашками.'],
+    'zh-TW': ['高級3D棋盤', '漆面棋盤配黑漆邊框，搭配金色（黑方）與銀色（白方）的金屬棋子。'],
+    id: ['Papan 3D mewah', 'Bidang berpernis dalam bingkai pernis hitam, dengan bidak logam emas (Hitam) dan perak (Putih).'],
+    tr: ['Lüks 3D tahta', 'Siyah lake çerçeve içinde lake alan, altın (Siyah) ve gümüş (Beyaz) metal taşlarla.'],
   };
   const fd = document.getElementById('fDesign');
   if (fd) {

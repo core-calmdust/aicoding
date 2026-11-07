@@ -46,8 +46,8 @@
   const PCK = 'atlas-chess-pc';
   let mine = 'lux'; try { const v = localStorage.getItem(PCK); mine = v === '0' ? '' : v === 'wood' ? 'wood' : 'lux'; } catch (e) {}
   const LBLS = {
-    lux: { ja: '高級3D', en: 'Luxury 3D', zh: '豪华3D', ko: '고급 3D', es: 'Lujo 3D', fr: 'Luxe 3D', pt: 'Luxo 3D', de: 'Luxus 3D', hi: 'लक्ज़री 3D', ar: 'فاخر ثلاثي' },
-    wood: { ja: '木製3D', en: 'Wooden 3D', zh: '木制3D', ko: '목재 3D', es: 'Madera 3D', fr: 'Bois 3D', pt: 'Madeira 3D', de: 'Holz 3D', hi: 'लकड़ी 3D', ar: 'خشبي ثلاثي' },
+    lux: { ja: '高級3D', en: 'Luxury 3D', zh: '豪华3D', ko: '고급 3D', es: 'Lujo 3D', fr: 'Luxe 3D', pt: 'Luxo 3D', de: 'Luxus 3D', hi: 'लक्ज़री 3D', ar: 'فاخر ثلاثي', ru: 'Роскошные 3D', 'zh-TW': '高級3D', id: '3D mewah', tr: 'Lüks 3D' },
+    wood: { ja: '木製3D', en: 'Wooden 3D', zh: '木制3D', ko: '목재 3D', es: 'Madera 3D', fr: 'Bois 3D', pt: 'Madeira 3D', de: 'Holz 3D', hi: 'लकड़ी 3D', ar: 'خشبي ثلاثي', ru: 'Деревянные 3D', 'zh-TW': '木製3D', id: '3D kayu', tr: 'Ahşap 3D' },
   };
   const BTN = { lux: 'atlas3d', wood: 'atlaswood' };
   // the 3D sets sit in the game's piece-design row (with a picture); the board row only sets the board. Pieces and board are chosen independently.

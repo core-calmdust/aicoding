@@ -112,8 +112,8 @@
 
   /* ---------- the board-design row: two 3D looks + the game's own 2D boards ---------- */
   const LBLS = {
-    lacquer: { ja: '漆・沈金3D', en: 'Lacquer 3D', zh: '漆金3D', ko: '옻칠 3D', es: 'Laca 3D', fr: 'Laque 3D', pt: 'Laca 3D', de: 'Lack 3D', hi: 'लाख 3D', ar: 'ورنيش ثلاثي' },
-    kaya: { ja: '榧3D', en: 'Kaya 3D', zh: '榧木3D', ko: '비자 3D', es: 'Kaya 3D', fr: 'Kaya 3D', pt: 'Kaya 3D', de: 'Kaya 3D', hi: 'काया 3D', ar: 'كايا ثلاثي' },
+    lacquer: { ja: '漆・沈金3D', en: 'Lacquer 3D', zh: '漆金3D', ko: '옻칠 3D', es: 'Laca 3D', fr: 'Laque 3D', pt: 'Laca 3D', de: 'Lack 3D', hi: 'लाख 3D', ar: 'ورنيش ثلاثي', ru: 'Лак 3D', 'zh-TW': '漆器3D', id: '3D pernis', tr: 'Lake 3D' },
+    kaya: { ja: '榧3D', en: 'Kaya 3D', zh: '榧木3D', ko: '비자 3D', es: 'Kaya 3D', fr: 'Kaya 3D', pt: 'Kaya 3D', de: 'Kaya 3D', hi: 'काया 3D', ar: 'كايا ثلاثي', ru: 'Кая 3D', 'zh-TW': '榧木3D', id: '3D kaya', tr: 'Kaya ağacı 3D' },
   };
   const BTN = { lacquer: 'atlaslacq', kaya: 'atlaskaya' };
   const seg = document.getElementById('segSkin');
