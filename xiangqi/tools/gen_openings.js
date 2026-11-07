@@ -15,7 +15,7 @@ const L10 = (ja, en, zh, ko, es, fr, pt, de, hi, ar, tpl) => {
 };
 const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar', 'ru', 'zh-TW', 'id', 'tr'];
 // the engine's verdict after a note: '（AI: …）' (ja / zh), '（AI：…）' (zh-TW), ' (ИИ: …)', ' (YZ: …)', ' (AI: …)'
-const AIW = l => l === 'ja' || l === 'zh' ? ['（AI: ', '）'] : l === 'zh-TW' ? ['（AI：', '）'] : l === 'ru' ? [' (ИИ: ', ')'] : l === 'tr' ? [' (YZ: ', ')'] : [' (AI: ', ')'];
+const AIW = l => l === 'ja' || l === 'zh' ? ['（AI: ', '）'] : l === 'zh-TW' ? ['（AI: ', '）'] : l === 'ru' ? [' (ИИ: ', ')'] : l === 'tr' ? [' (YZ: ', ')'] : [' (AI: ', ')'];
 // [id, group, moves (Chinese notation), title, short, intro]
 const SETS = [
   ['zpp', 'a', '炮二平五 马8进7 马二进三 车9平8 车一平二 马2进3',
@@ -100,7 +100,7 @@ const EVW = { even: L10('互角', 'level', '均势', '호각', 'igualado', 'équ
     let pos = E.Pos.from(null); const line = [], notes = [];
     for (const s of mvs.split(' ')) { const m = E.parse(pos, s); if (m == null) throw new Error(id + ': ' + s); line.push(m); notes.push(null); pos.play(m); }
     const named = line.length;
-    notes[named - 1] = {}; for (const l of LANGS) notes[named - 1][l] = NOTE.named[l].replace('{n}', title[l]);
+    notes[named - 1] = {}; for (const l of LANGS) notes[named - 1][l] = NOTE.named[l].replace('{n}', l === 'ru' ? title[l][0].toLowerCase() + title[l].slice(1) : title[l]);   // ru: «Порядок ходов: центральная пушка …»
     W.newGame();
     while (line.length < 20) {
       const r = E.analyze(null, line, ms), L = r.list; if (!L.length) break;
