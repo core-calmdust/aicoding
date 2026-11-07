@@ -353,7 +353,10 @@ function fitBar(bar, info, getMenu, isOn) {
       //  resign / hint — does, for its first chip alone — the turn —; the chips left over are left out whole below)
       const toIco = b => () => { const s = b.querySelector(':scope > span').textContent.trim(); if (!b.title) { b.title = s; b.dataset.hbT = '1'; } if (!b.getAttribute('aria-label')) { b.setAttribute('aria-label', s); b.dataset.hbAl = '1'; } b.classList.add('hb-ico'); };
       const main4 = btns.filter(shown).slice(0, 4);
-      const steps = [() => bar.classList.add('hb-t1'), () => bar.classList.add('hb-lc'), () => { want = two; }]
+      // (Japanese: the bar at 1280 px stays as it was designed — the info gives up its extra chips first, before the spacing,
+      //  the language button or a menu button changes)
+      const ja = (document.documentElement.lang || 'ja') === 'ja';
+      const steps = (ja ? [() => { want = least; }] : []).concat([() => bar.classList.add('hb-t1'), () => bar.classList.add('hb-lc'), () => { want = Math.max(ja ? least : 0, Math.min(want, two)); }])
         .concat(ico.filter(b => !main4.includes(b)).map(toIco), [() => { want = least; }], ico.filter(b => main4.includes(b)).map(toIco));
       for (const st of steps) { st(); if (ok()) break; }
     }
