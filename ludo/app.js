@@ -18,8 +18,8 @@ const t = (k, v) => { let s = (I18N[LANG] && I18N[LANG][k]) ?? I18N.en[k] ?? k; 
 const DEF = { rule: 'ludo', mode: 'ai', players: 4, first: '0', level: 8, speed: 2, autoRoll: false, autoPick: true, blocks: false, three: true, design: { ludo: 'classic', pachisi: 'classic' }, sound: true };
 let saved = {}; try { saved = JSON.parse(localStorage.getItem(STORE) || '{}') || {}; } catch (e) {}
 const settings = Object.assign({}, DEF, saved.settings || {}); settings.design = Object.assign({}, DEF.design, (saved.settings || {}).design || {});
-let G = null;   // { opts, mode, level, state, thr (current throw or null), log: [], hist: [] }
-function save() { try { localStorage.setItem(STORE, JSON.stringify({ settings, game: G && { opts: G.opts, mode: G.mode, level: G.level, state: G.state, thr: G.thr, log: G.log.slice(-400), hist: G.hist.slice(-60) } })); } catch (e) {} }
+let G = null, SP = null, SP_commit = null;   // SP: a lesson / puzzle on the board (app-learn.js)   // { opts, mode, level, state, thr (current throw or null), log: [], hist: [] }
+function save() { if (SP) return; try { localStorage.setItem(STORE, JSON.stringify({ settings, game: G && { opts: G.opts, mode: G.mode, level: G.level, state: G.state, thr: G.thr, log: G.log.slice(-400), hist: G.hist.slice(-60) } })); } catch (e) {} }
 
 /* ---------- sound ---------- */
 let AC = null; const ac = () => { try { if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); return AC; } catch (e) { return null; } };
@@ -150,6 +150,7 @@ function rollLabel() { $('#btnRoll').textContent = t(isPachisi() ? 'btn.throw' :
 /* ---------- game flow ---------- */
 let busy = false, token = 0, moves = [], selK = -1;
 function newGame(fromDialog) {
+  if (SP && window.LudoLearn) LudoLearn.quit();
   const players = settings.rule === 'pachisi' && settings.players === 3 ? 4 : settings.players;
   const opts = { rule: settings.rule, players, blocks: settings.blocks, threeSixes: settings.three };
   let st = E.newGame(opts);
@@ -161,6 +162,7 @@ function newGame(fromDialog) {
   step();
 }
 function step() {
+  if (SP) return;
   const my = ++token;
   clearMarks(); renderPlayers(); $('#btnPass').classList.add('hidden');
   const s = G.state;
@@ -210,6 +212,7 @@ function afterThrow(my) {
   }
 }
 async function commit(m) {
+  if (SP) { SP_commit(m); return; }
   if (busy) return; busy = true; const my = ++token;
   clearMarks(); $('#btnPass').classList.add('hidden');
   const g0 = G, s0 = G.state, thr = G.thr, seat = s0.turn;
@@ -261,7 +264,6 @@ $('#btnResign').onclick = () => {
   const go = () => { const s = G.state, me = s.team[s.seats.find(x => s.ctrl[x] === 0)]; s.over = true; s.winner = s.seats.map(x => s.team[x]).find(tm => tm !== me); G.thr = null; token++; busy = false; save(); step(); };
   if (window.Resign) Resign.confirm({ lang: LANG }).then(ok => { if (ok) go(); }); else go();
 };
-$('#btnRules').onclick = () => toast(t('rules.soon'), 1600);
 
 /* ---------- result ---------- */
 function showResult() {
@@ -319,7 +321,7 @@ const paintSnd = () => $('#btnSound').classList.toggle('off', !settings.sound);
 $('#btnSound').onclick = () => { settings.sound = !settings.sound; paintSnd(); save(); };
 
 /* ---------- start ---------- */
-const HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules'], lang: () => LANG }) : null;
+const HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
 applyI18n(); paintSnd();
 if (saved.game && saved.game.state && saved.game.state.pos) {
   G = { opts: saved.game.opts, mode: saved.game.mode, level: saved.game.level, state: saved.game.state, thr: saved.game.thr, log: saved.game.log || [], hist: saved.game.hist || [] };
