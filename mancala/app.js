@@ -5,6 +5,7 @@ const $ = s => document.querySelector(s);
 const SUPPORTED = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
 function detectLang() { const f = (navigator.language || 'en').toLowerCase(); if (/^zh-(tw|hk|mo|hant)/.test(f)) return 'zh-TW'; const n = f.slice(0, 2); return SUPPORTED.includes(n) ? n : 'en'; }
 let LANG = detectLang();
+const AIW = () => ({ ru: 'ИИ', tr: 'YZ' })[LANG] || 'AI';   // the word "AI" in displayed player labels (ru / tr use their own abbreviation; saved records keep 'AI')
 function t(k, v) {
   let x = (I18N[LANG] || {})[k];
   if (x === undefined) x = I18N.en[k];
@@ -667,13 +668,13 @@ function canHumanPlay() {
 function sideName(s) {
   if (lesson || puzzle) return s === 0 ? t('you') : (puzzle && puzzle.P.kind === 'end' ? t('defender') : t('opp'));
   if (settings.mode === 'online' && window.olPlayerName) return olPlayerName(s);
-  if (settings.mode === 'ai') return s === game.human ? t('you') : `AI ${LV(settings.level)}`;
-  if (settings.mode === 'watch') return `AI ${LV(levelFor(s))}`;
+  if (settings.mode === 'ai') return s === game.human ? t('you') : `${AIW()} ${LV(settings.level)}`;
+  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(s))}`;
   return t(s === 0 ? 'p0' : 'p1');
 }
 function shortName(s) {
   if (settings.mode === 'online' && window.olShortName && !lesson && !puzzle) return olShortName(s);
-  if (settings.mode === 'ai' && !lesson && !puzzle) return s === game.human ? t('you') : 'AI';
+  if (settings.mode === 'ai' && !lesson && !puzzle) return s === game.human ? t('you') : AIW();
   return t(s === 0 ? 'p0' : 'p1');
 }
 const ICON_P = '<svg viewBox="0 0 24 24"><circle cx="12" cy="7.6" r="4.4"/><path d="M3.6 21.4c0-5 3.8-8 8.4-8s8.4 3 8.4 8z"/></svg>';
@@ -762,7 +763,7 @@ function renderInfo() {
   if (window.MancalaCoach) MancalaCoach.render();
   const nav = $('#navBar'); nav.querySelector('[data-n=first]').disabled = nav.querySelector('[data-n=prev]').disabled = cur === 0;
   nav.querySelector('[data-n=next]').disabled = nav.querySelector('[data-n=last]').disabled = cur >= game.moves.length;
-  const mode = settings.mode === 'ai' ? `AI Lv.${settings.level} ${LV(settings.level)}` : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : t('ng.pvp');
+  const mode = settings.mode === 'ai' ? `${AIW()} Lv.${settings.level} ${LV(settings.level)}` : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : t('ng.pvp');
   $('#infoLine').textContent = `${t('rule.' + game.rules)} · ${t('ng.seedsN', { n: game.seeds })} · ${mode} · ${t('info.moves', { n: game.moves.length })}`;
   hbInfo(p, ev);
   if (window.olAfterInfo) olAfterInfo();

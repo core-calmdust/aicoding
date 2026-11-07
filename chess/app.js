@@ -444,7 +444,7 @@ function renderInfo() {
   $('#btnSound').classList.toggle('on', settings.sound);
   renderReview(); rvbRender();
   if (window.ChessCoach) ChessCoach.render();
-  $('#infoLine').textContent = `${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? 'AI Lv.' + levelFor(0) + ' ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : '') : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`;
+  $('#infoLine').textContent = `${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? AIW() + ' Lv.' + levelFor(0) + ' ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : '') : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`;
 }
 // PC header bar: side to move, move number, evaluation (hidden in rated / online games), opening name
 let HB = null;   // set at boot (shared/headerbar.js)
