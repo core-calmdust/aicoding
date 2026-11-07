@@ -417,5 +417,7 @@
 "tr.ardri.b": "<b>Ard Rí</b> ('Gran Rey') es un juego irlandés en un tablero de 7×7: 16 atacantes contra 8 defensores y el rey. Más de la mitad del tablero está llena desde el inicio: un combate estrecho y de contacto constante.\nAquí se juega con <b>escape a las esquinas</b> y el rey capturado <b>por los cuatro lados</b> (nunca en el borde). Se sabe que con escape por cualquier borde los defensores ganan siempre.",
 "tr.ardri.task": "Rodea al rey por los cuatro lados con los atacantes (negros).",
 "tr.ardri.ok": "¡Rey capturado! Hacen falta los cuatro lados.",
-"tr.ardri.ng": "Pon un atacante en la única casilla libre junto al rey."
+"tr.ardri.ng": "Pon un atacante en la única casilla libre junto al rey.",
+"pro.btn": "Análisis profundo",
+"pro.btn.title": "Abrir el análisis con varios núcleos (nueva pestaña)"
 }

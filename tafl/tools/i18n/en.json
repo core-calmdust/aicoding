@@ -417,5 +417,7 @@
 "tr.ardri.b": "<b>Ard Rí</b> ('High King') is an Irish game on a 7×7 board: 16 attackers against 8 defenders and the king. More than half the board is full from the start, so it is a cramped game of constant contact.\nHere it is played with <b>escape to the corners</b> and the king captured <b>on all four sides</b> (never on the edge). With escape to any edge the defenders are known always to win.",
 "tr.ardri.task": "Surround the king on all four sides with the attackers (black).",
 "tr.ardri.ok": "The king is captured! All four sides are needed.",
-"tr.ardri.ng": "Put an attacker on the one free square next to the king."
+"tr.ardri.ng": "Put an attacker on the one free square next to the king.",
+"pro.btn": "Deep analysis",
+"pro.btn.title": "Open the multi-core analysis page (new tab)"
 }

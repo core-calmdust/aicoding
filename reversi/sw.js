@@ -1,5 +1,5 @@
 // Offline support (bump CACHE when data files change): page and scripts are network-first (so updates arrive), large data files cache-first.
-const CACHE = 'reversi-v4-50';
+const CACHE = 'reversi-v4-52';
 const CORE = ['./', 'index.html', 'i18n.js', 'engine.js', 'engine-wasm.js', 'online.js', 'rbox.js', 'firebase-config.js', '../shared/onlinesec.js', 'manifest.webmanifest', 'icon-192.png', '../shared/pzbook.js', '../shared/rulesoffer.js', '../shared/headerbar.js', '../shared/tick.js', '../shared/ruletour.js', '../shared/resign.js'];
 const DATA = ['weights.bin.gz', 'weights.json', 'book.json', 'lessons.json', 'puzzles.json'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE.concat(DATA))).then(() => self.skipWaiting())); });

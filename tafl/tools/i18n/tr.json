@@ -422,5 +422,7 @@
  "tr.ardri.b": "<b>Ard Rí</b> ('Yüce Kral') 7×7 tahtada oynanan bir İrlanda oyunudur: 16 saldırana karşı 8 savunan ve kral. Tahtanın yarısından fazlası baştan doludur; sürekli temasın olduğu sıkışık bir oyundur.\nBurada <b>köşeye kaçış</b> ve <b>dört yandan</b> kral yakalama (kenarda asla) ile oynanır. Herhangi bir kenara kaçışla savunanların her zaman kazandığı bilinir.",
  "tr.ardri.task": "Kralı saldıranlarla (siyah) dört yandan kuşatın.",
  "tr.ardri.ok": "Kral yakalandı! Dört yanın hepsi gerekir.",
- "tr.ardri.ng": "Kralın yanındaki tek boş kareye bir saldıran koyun."
+ "tr.ardri.ng": "Kralın yanındaki tek boş kareye bir saldıran koyun.",
+"pro.btn": "Derin analiz",
+"pro.btn.title": "Çok çekirdekli analizi aç (yeni sekme)"
 }

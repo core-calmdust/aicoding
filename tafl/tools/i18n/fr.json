@@ -417,5 +417,7 @@
 "tr.ardri.b": "<b>Ard Rí</b> (« Haut Roi ») est un jeu irlandais sur 7×7 : 16 attaquants contre 8 défenseurs et le roi. Plus de la moitié du plateau est occupée dès le départ : un combat à l’étroit, au contact permanent.\nIci, on joue avec la <b>fuite aux coins</b> et le roi pris <b>sur ses quatre côtés</b> (jamais au bord). Avec la fuite par n’importe quel bord, on sait que les défenseurs gagnent toujours.",
 "tr.ardri.task": "Entourez le roi sur ses quatre côtés avec les attaquants (noirs).",
 "tr.ardri.ok": "Le roi est pris ! Il faut les quatre côtés.",
-"tr.ardri.ng": "Placez un attaquant sur la seule case libre à côté du roi."
+"tr.ardri.ng": "Placez un attaquant sur la seule case libre à côté du roi.",
+"pro.btn": "Analyse approfondie",
+"pro.btn.title": "Ouvrir l’analyse multicœur (nouvel onglet)"
 }
