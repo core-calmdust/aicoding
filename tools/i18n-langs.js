@@ -109,7 +109,8 @@ function apply(file, trFile) {
     const ar = u.by.ar, lineStart = src.lastIndexOf('\n', ar.keyStart) + 1, pre = src.slice(lineStart, ar.keyStart);
     const ownLine = /^\s*$/.test(pre), indent = ownLine ? pre : '';
     const keyQ = ar.quote || (u.by.en.quote || '');
-    const parts = u.missing.map(l => { if (T[l] === undefined) throw new Error(`${file}: ${idOf(u, k)} lacks ${l}`); const kq = keyQ || (l === 'zh-TW' ? "'" : ''); return kq + l + kq + ': ' + ser(T[l], u.enTxt, indent); });
+    const isJson = /\.json$/i.test(file); // JSON: double quotes everywhere
+    const parts = u.missing.map(l => { if (T[l] === undefined) throw new Error(`${file}: ${idOf(u, k)} lacks ${l}`); const kq = isJson ? '"' : keyQ || (l === 'zh-TW' ? "'" : ''); return kq + l + kq + ': ' + (isJson ? JSON.stringify(T[l]) : ser(T[l], u.enTxt, indent)); });
     const sep = ownLine ? ',\n' + indent : ', ';
     ins.push({ at: ar.valEnd, text: sep + parts.join(sep) });
     done++;

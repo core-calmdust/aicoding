@@ -1508,6 +1508,779 @@
 "d": "أن تأسر القطعة الآسرة مجددًا في الدور نفسه. يجب تغيير الاتجاه كل مرة، ولا يجوز العودة إلى نقطة زارتها. المواصلة اختيارية."
 }
 }
+},
+"ru": {
+"head": "Тренер",
+"sw": "Тренер",
+"swT": "Тренер (как думать) вкл. / выкл.",
+"on": "Тренер ВКЛ",
+"off": "Тренер ВЫКЛ",
+"rest": "Во время уроков, задач, просмотра и т. п. тренер отдыхает — подумайте сами. Он вернётся, когда вы снова сыграете с ИИ или с другом.",
+"offNote": "Тренер выключен. Включите переключатель вверху справа, чтобы видеть, как думать о позиции и в чём смысл ходов-кандидатов.",
+"overRv": "Партия окончена. Запустите анализ — здесь появится разбор по ходам (лучшие ходы, ошибки и почему).",
+"oppTurn": "Ход соперника. Попробуйте угадать, что он возьмёт следующим, — так растёт умение считать.",
+"over": "Партия окончена. Нажмите [Анализ] под записью, чтобы разобрать её.",
+"calc": "Обдумываю кандидатов…",
+"form": "Позиция",
+"mat": "Фишки",
+"stage": "Стадия",
+"st.open": "Дебют",
+"st.mid": "Миттельшпиль",
+"st.end": "Эндшпиль",
+"f.win": "выигрыш",
+"f.big": "намного лучше",
+"f.adv": "лучше",
+"f.sl": "чуть лучше",
+"f.even": "равно",
+"f.sld": "чуть хуже",
+"f.dis": "хуже",
+"f.bad": "намного хуже",
+"f.lost": "проигрыш",
+"mat.even": "поровну",
+"mat.up": "+{x}",
+"mat.down": "−{x}",
+"mat.n": " ({a} : {b})",
+"recWhy": "Первый выбор здесь — план «{c}». Позиция: {f} (шансы на победу {p}%).",
+"recSharp": "Второй выбор заметно хуже ({x} шансов на победу): здесь играйте точно.",
+"recBranch": "Кандидаты близки — это развилка. Выберите понравившийся план из списка ниже.",
+"recOnly": "Любой другой ход сильно теряет. Этот ход стоит сыграть без колебаний.",
+"recForced": "Это единственный возможный ход (взятие обязательно).",
+"brH": "Развилка — планы на выбор",
+"brIntro": "Ни один из них не намного хуже. Играть удобный вам план — самый быстрый путь к росту.",
+"cdH": "Ходы-кандидаты и планы",
+"cdIntro": "Лучшие кандидаты с пояснением по планам.",
+"tt.paika": "Фишку с {sq} на {to}",
+"tt.cap": "Взять {n} фишкой с {sq}",
+"tt.chain": "Взять {n} за {s} шага фишкой с {sq}",
+"gap.best": "лучший",
+"gap.eq": "почти равно",
+"gap.lt": "чуть хуже",
+"gap.bad": "хуже",
+"q.best": "лучший",
+"q.good": "хороший",
+"q.dubious": "сомнительный",
+"q.bad": "ошибка",
+"opH": "Выбор в дебюте — первый ход",
+"opIntro": "В дебюте изученные ходы важнее мелкой разницы в оценке. Сначала выучите стандартные ходы, потом пробуйте остальные.",
+"op.main": "стандарт",
+"op.alt": "побочный",
+"op.book": "дебют",
+"op.w0": "Фанорона решена компьютером в 2007 году: при лучшей игре — ничья. У первого игрока пять первых ходов; доказано, что к ничьей ведут f2-e3A и d3-e3A.",
+"op.f2e3.t": "f2 на e3 (диагональный подход)",
+"op.f2e3.x": "Шаг по диагонали в центр со взятием d4 и c5. Стандартный первый ход, доказано ведущий к ничьей. Второй игрок сразу берёт в ответ, так что считайте и ответное взятие.",
+"op.d3e3.t": "d3 на e3 (подход по средней линии)",
+"op.d3e3.x": "Шаг в центр по средней линии со взятием f3. Тоже стандартный ход, ведущий к ничьей: берёт мало, но сохраняет прочную позицию.",
+"op.d3e3w.t": "d3 на e3 (отход, взятие c3)",
+"op.d3e3w.x": "Тот же шаг, но со взятием c3 позади отходом. Движок сайта оценивает его почти как равный.",
+"op.d2e3.t": "d2 на e3 (диагональный подход)",
+"op.d2e3.x": "Берёт f4 и g5. По оценке движка сайта ответное взятие второго игрока велико, и первый обычно теряет около одной фишки.",
+"op.e2e3.t": "e2 на e3 (прямой подход)",
+"op.e2e3.x": "Берёт e4 и e5. По оценке движка сайта ответное взятие второго игрока велико, и первый обычно теряет фишку или больше.",
+"op.next.t": "{sq} на {to}",
+"op.next.x": "Дебютный ход. Ведёт к «{n}».",
+"op.done.x": "Этим ходом партия приходит к «{n}».",
+"bkWhy": "Эта позиция ещё дебютная теория. Выберите один из названных вариантов.",
+"prevBook": "Стандартный дебютный ход.",
+"prevOff": "Стандартные ходы здесь: {m}.",
+"senkei": "Дебют",
+"moyo": "{n} (вероятно)",
+"fixed": "{n}",
+"strong": "Сильные пункты",
+"meC": "вы",
+"opC": "соперник",
+"who": "{k} ({w})",
+"tipsH": "Как думать",
+"more": "Ещё советы ({n})",
+"less": "Меньше",
+"prev": "Последний ход {m}: {q}",
+"prevBest": "Ход «{c}» — совпадает с первым выбором ИИ.",
+"prevAlt": "Первым выбором ИИ был {m} ({c}).",
+"prevAltOk": "Не хуже первого выбора ИИ {m} ({c}).",
+"lp.shot": "💡 Совет: если взятий несколько, сравните «взято − потеряно в ответ».",
+"lp.hang": "💡 Совет: перед ходом без взятия (пайкой) проверьте, что не оставляете фишку под взятие.",
+"c.win": "Выигрыш",
+"b.win": "Завершить партию",
+"x.win": "ИИ просчитал форсированный выигрыш с этого хода. Остерегайтесь ответных взятий и доведите дело до конца.",
+"c.chain": "Серия взятий",
+"b.chain": "Брать дальше",
+"x.chain": "Фишка с {sq} берёт {s} раза подряд, всего {n} фишек. Проверьте, что её не возьмут там, где она остановится.",
+"c.big": "Крупное взятие",
+"b.big": "Взять весь ряд",
+"x.big": "Фишка с {sq} берёт сразу {n} фишек. В фанороне уходит целый ряд, так что счёт может быстро меняться.",
+"c.short": "Остановиться",
+"b.short": "Прервать серию",
+"x.short": "Можно было брать дальше, но здесь ход нарочно остановлен — чтобы фишка не оказалась там, где соперник возьмёт ещё больше.",
+"c.cap": "Взятие",
+"b.cap": "Взять",
+"x.cap": "Фишка с {sq} берёт {n}. Взятие обязательно, поэтому, если вариантов несколько, сравните позицию после хода и ответные взятия.",
+"c.safe": "Безопасно",
+"b.safe": "Ничего не отдавать",
+"x.safe": "Фишку с {sq} на {to}, не оставляя сопернику взятий. Основная идея, когда брать нечего.",
+"c.save": "Уход",
+"b.save": "Спасти фишку",
+"x.save": "Фишка на {sq} под ударом; уведите её на {to}, где она в безопасности.",
+"c.sac": "Жертва",
+"b.sac": "Отдать фишку",
+"x.sac": "Фишку с {sq} на {to}, нарочно отдавая её. По расчёту ИИ потеря невелика (позиция соперника страдает).",
+"c.strong": "Сильный пункт",
+"b.strong": "Занять сильный пункт",
+"x.strong": "Фишку с {sq} на сильный пункт {to}, где пересекаются диагонали. Там она ходит в 8 направлениях — для атаки и защиты.",
+"c.wait": "Выжидание",
+"b.wait": "Держать позицию",
+"x.wait": "Фишку с {sq} на {to}, сохраняя прочную позицию в ожидании хода соперника. Главное — не дать ничего взять.",
+"tp.forced": "Можно брать, и взятие обязательно. Вариантов: {n}. Сравните, сколько возьмёте вы и сколько соперник возьмёт в ответ.",
+"tp.forced1": "Можно брать; взятие обязательно, так что это единственный ход.",
+"tp.both": "Один из ваших шагов берёт и подходом, и отходом. Взять оба ряда нельзя — выберите один.",
+"tp.chain": "После взятия та же фишка может брать дальше. Продолжать необязательно: проверьте, безопасен ли пункт приземления.",
+"tp.big": "Можно взять сразу {n} фишек — взять целый ряд и есть суть фанороны.",
+"tp.hang": "Фишки на {sq} могут быть взяты (будь сейчас ход соперника). Уйдите или подготовьте ответное взятие.",
+"tp.oppBig": "Соперник угрожает следующим ходом взять сразу {n} фишек. Разбейте этот ряд или возьмите первым.",
+"tp.paika": "Брать нечего (позиция пайки). Идите на пункт, который не даёт сопернику взятий.",
+"tp.ahead": "Вы впереди. Не нужно форсировать: избегайте позиций, где соперник может много взять за раз.",
+"tp.behind": "Вы позади. Ищите шанс взять целый ряд, когда фишки соперника выстроятся.",
+"tp.strong": "У соперника больше сильных пунктов (где пересекаются диагонали). Фишки там ходят в 8 направлениях и активно работают в атаке и защите.",
+"tp.strong2": "У вас больше сильных пунктов. Фишки там ходят в 8 направлениях и контролируют всю доску.",
+"tp.end1": "В эндшпиле держите сильные пункты и отнимайте у фишек соперника пути отхода. При перевесе в одну-две фишки завершение может занять много ходов.",
+"tp.endDef": "Если фишек меньше, не вставайте на одну линию с фишкой соперника: на линии вас могут взять подходом или отходом.",
+"tp.winning": "Вы выигрываете. Играйте надёжно и не давайте сопернику крупных взятий.",
+"tp.losing": "Вы проигрываете. Ждите, пока фишки соперника выстроятся, и ищите крупное ответное взятие.",
+"tp.branch": "Кандидаты близки — это развилка. Сначала выберите план, потом ход.",
+"tp.sharp": "Лучший ход намного сильнее второго ({x} шансов на победу). Сыграйте его точно — это решает партию.",
+"tp.open1": "Дебют — это крупный размен взятиями. Считайте не только то, что берёте, но и то, что соперник возьмёт в ответ.",
+"tp.open2": "Серию взятий можно прервать на любом шаге. Если продолжение приведёт туда, где соперник много возьмёт в ответ, лучше остановиться.",
+"tp.mid1": "Выбирайте между взятиями по принципу «взято − взято в ответ».",
+"tp.mid2": "Фишку, стоящую на одной линии с фишкой соперника через один пункт, можно взять подходом.",
+"sep": ", ",
+"gl": {
+"force": {
+"m": [
+"взятие обязательно",
+"брать обязательно",
+"обязательно"
+],
+"t": "Обязательное взятие",
+"d": "Когда взятие возможно, ход без взятия (пайка) запрещён. Если взятий несколько, можно выбрать любое."
+},
+"approach": {
+"m": [
+"подходом",
+"подход"
+],
+"t": "Подход",
+"d": "Шаг к фишке соперника: фишка соперника рядом с пунктом приземления взята вместе с фишками соперника, стоящими за ней на той же линии."
+},
+"withdraw": {
+"m": [
+"отходом",
+"отход"
+],
+"t": "Отход",
+"d": "Шаг прямо прочь от соседней фишки соперника: она взята вместе с фишками соперника, стоящими за ней на той же линии."
+},
+"paika": {
+"m": [
+"пайкой",
+"пайки",
+"пайка"
+],
+"t": "Пайка",
+"d": "Ход без взятия. Разрешён, только когда взять нечего."
+},
+"strong": {
+"m": [
+"сильных пунктов",
+"сильный пункт",
+"сильные пункты"
+],
+"t": "Сильный пункт",
+"d": "Пункт, где пересекаются диагонали. Фишка там ходит в 8 направлениях (в остальных — только в 4)."
+},
+"chain": {
+"m": [
+"серию взятий",
+"серия взятий",
+"серии взятий"
+],
+"t": "Серия взятий",
+"d": "Бравшая фишка берёт снова в тот же ход. Каждый раз она должна менять направление и не может возвращаться на пункт, где уже была. Продолжать необязательно."
+}
+}
+},
+"zh-TW": {
+"head": "教練",
+"sw": "教練",
+"swT": "教練（思路講解）開／關",
+"on": "教練 ON",
+"off": "教練 OFF",
+"rest": "課程、謎題、觀戰等期間，教練會休息 — 試著自己思考吧。回到與 AI 對局或雙人對戰時，教練就會回來。",
+"offNote": "教練功能已關閉。打開右上角的開關，就能看到局面思路和候選著法的講解。",
+"overRv": "對局結束了。進行分析後，這裡會顯示逐手覆盤（最佳著法、失誤及原因）。",
+"oppTurn": "輪到對手。猜猜對手下一步會吃哪裡 — 猜得越準，計算力越強。",
+"over": "對局結束了。可以用棋譜下方的［分析］覆盤這一局。",
+"calc": "正在思考候選著法…",
+"form": "形勢",
+"mat": "子數",
+"stage": "階段",
+"st.open": "開局",
+"st.mid": "中局",
+"st.end": "殘局",
+"f.win": "勝勢",
+"f.big": "優勢",
+"f.adv": "有利",
+"f.sl": "略有利",
+"f.even": "均勢",
+"f.sld": "略不利",
+"f.dis": "不利",
+"f.bad": "劣勢",
+"f.lost": "敗勢",
+"mat.even": "持平",
+"mat.up": "多 {x} 子",
+"mat.down": "少 {x} 子",
+"mat.n": "（{a} 比 {b}）",
+"recWhy": "這個局面的第一候選是「{c}」方針。形勢{f}（勝率 {p}%）。",
+"recSharp": "第二候選明顯較差（勝率差 {x}），這裡要走準。",
+"recBranch": "候選之間差距很小，是個分歧點。從下面的候選中選擇喜歡的方針吧。",
+"recOnly": "其他著法都會大虧。這一手應毫不猶豫地走。",
+"recForced": "這是唯一能走的著法（能吃子時必須吃子）。",
+"brH": "分歧點 — 可選的方針",
+"brIntro": "哪一個都差不多。照自己擅長的方針下，是進步的捷徑。",
+"cdH": "候選著法與方針",
+"cdIntro": "依方針講解排名靠前的候選。",
+"tt.paika": "把 {sq} 的棋子走到 {to}",
+"tt.cap": "用 {sq} 的棋子吃 {n} 子",
+"tt.chain": "用 {sq} 的棋子連吃 {s} 次，共 {n} 子",
+"gap.best": "最佳",
+"gap.eq": "幾乎相同",
+"gap.lt": "稍差",
+"gap.bad": "較差",
+"q.best": "最佳",
+"q.good": "好棋",
+"q.dubious": "疑問手",
+"q.bad": "惡手",
+"opH": "開局的選擇 — 第一手",
+"opIntro": "開局時，照研究過的著法走，比評估的細微差距更重要。先記住標準著法，熟練後再試試其他變化。",
+"op.main": "標準",
+"op.alt": "冷門",
+"op.book": "開局",
+"op.w0": "法諾納於 2007 年經電腦完全解析：雙方最佳著法下為和局。先手共有 5 種第一手；已證明 f2-e3A 和 d3-e3A 通向和局。",
+"op.f2e3.t": "f2 走到 e3（斜向接近）",
+"op.f2e3.x": "斜向走進中央，吃掉 d4 和 c5。經證明通向和局的標準第一手。後手會立刻反吃，所以連反吃的數量也要算到。",
+"op.d3e3.t": "d3 走到 e3（沿中線接近）",
+"op.d3e3.x": "沿中間一排走進中央，吃掉 f3。同樣是通向和局的標準著法：吃得少，但形狀穩固。",
+"op.d3e3w.t": "d3 走到 e3（撤離，吃 c3）",
+"op.d3e3w.x": "同樣的一步，但用撤離吃掉後方的 c3。本站引擎評估為幾乎均勢。",
+"op.d2e3.t": "d2 走到 e3（斜向接近）",
+"op.d2e3.x": "吃掉 f4 和 g5。依本站引擎，後手的反吃很大，先手容易少一子左右。",
+"op.e2e3.t": "e2 走到 e3（直向接近）",
+"op.e2e3.x": "吃掉 e4 和 e5。依本站引擎，後手的反吃很大，先手容易少一子以上。",
+"op.next.t": "{sq} 走到 {to}",
+"op.next.x": "開局著法。通向「{n}」。",
+"op.done.x": "這一手讓對局進入「{n}」。",
+"bkWhy": "這個局面仍在開局定式中。從有名稱的變化中選一個吧。",
+"prevBook": "標準的開局著法。",
+"prevOff": "這裡的標準著法是 {m}。",
+"senkei": "開局",
+"moyo": "{n}（可能）",
+"fixed": "{n}",
+"strong": "強點",
+"meC": "你",
+"opC": "對手",
+"who": "{k}（{w}）",
+"tipsH": "思考方式",
+"more": "更多提示（{n}）",
+"less": "收起",
+"prev": "上一手 {m}：{q}",
+"prevBest": "「{c}」的一手 — 與 AI 的第一候選相同。",
+"prevAlt": "AI 的第一候選是 {m}（{c}）。",
+"prevAltOk": "與 AI 的第一候選 {m}（{c}）一樣好。",
+"lp.shot": "💡 要點：有多種吃法時，比較「吃掉的子 − 被反吃的子」。",
+"lp.hang": "💡 要點：走不吃子的著法（帕伊卡）前，確認不會留下會被吃的棋子。",
+"c.win": "勝著",
+"b.win": "決定勝負",
+"x.win": "AI 已算出從這一手開始的必勝。小心反吃，準確收尾。",
+"c.chain": "連續吃子",
+"b.chain": "繼續吃",
+"x.chain": "{sq} 的棋子連吃 {s} 次，共吃 {n} 子。確認落點不會被吃。",
+"c.big": "大量吃子",
+"b.big": "整排吃掉",
+"x.big": "{sq} 的棋子一次吃掉 {n} 子。法諾納會整排被吃，子數可能一下子大幅變動。",
+"c.short": "提早停手",
+"b.short": "停止連吃",
+"x.short": "其實還能繼續吃，但刻意在此停下 — 以免棋子停在會被對手吃回更多的地方。",
+"c.cap": "吃子",
+"b.cap": "吃子",
+"x.cap": "{sq} 的棋子吃 {n} 子。吃子是義務，有多種吃法時，比較吃完後的形狀與反吃。",
+"c.safe": "保持安全",
+"b.safe": "不給機會",
+"x.safe": "把 {sq} 的棋子走到 {to}，不給對手吃子的機會。沒有子可吃時的基本想法。",
+"c.save": "逃跑",
+"b.save": "救子",
+"x.save": "{sq} 的棋子被盯上了；把它走到安全的 {to}。",
+"c.sac": "棄子",
+"b.sac": "送一子",
+"x.sac": "把 {sq} 的棋子走到 {to}，故意讓對手吃。依 AI 的計算，損失很小（對手的形狀會變差）。",
+"c.strong": "強點",
+"b.strong": "占據強點",
+"x.strong": "把 {sq} 的棋子走到斜線交會的強點 {to}。在那裡能往 8 個方向走，攻守兼備。",
+"c.wait": "等待",
+"b.wait": "保持形狀",
+"x.wait": "把 {sq} 的棋子走到 {to}，保持穩固的形狀等待對手。首要是不給對手吃子機會。",
+"tp.forced": "可以吃子，而且吃子是義務。共有 {n} 種吃法：比較自己吃的子數與對手能反吃的子數。",
+"tp.forced1": "可以吃子；吃子是義務，所以只有這一手。",
+"tp.both": "你有一步棋可以用接近或撤離吃子。兩排不能同時吃 — 選一排。",
+"tp.chain": "吃子後，同一顆棋子還能繼續吃。是否繼續可以自由決定：確認落點是否安全。",
+"tp.big": "可以一次吃掉 {n} 子 — 整排吃掉正是法諾納的精髓。",
+"tp.hang": "{sq} 的棋子可能被吃（如果輪到對手）。逃開，或準備好反吃。",
+"tp.oppBig": "對手下一手威脅一次吃掉 {n} 子。打散那一排，或先吃子。",
+"tp.paika": "沒有子可吃（帕伊卡局面）。走到不給對手吃子機會的點。",
+"tp.ahead": "你領先。不必勉強：避免讓對手一次吃很多的形狀。",
+"tp.behind": "你落後。等對手棋子排成一排時，找機會整排吃回來。",
+"tp.strong": "對手占的強點（斜線交會處）比較多。那裡的棋子能往 8 個方向走，攻守都很活躍。",
+"tp.strong2": "你占的強點比較多。那裡的棋子能往 8 個方向走，掌控整個棋盤。",
+"tp.end1": "殘局時要占住強點，封住對手棋子的退路。只領先一兩子時，可能要很多手才能收尾。",
+"tp.endDef": "子少時，避免和對手棋子排在同一條線上：在同一線上可能被接近或撤離吃掉。",
+"tp.winning": "你占優勢。穩穩地下，不給對手大量吃子的機會。",
+"tp.losing": "你處於劣勢。等對手棋子排成一排，尋找大量反吃的機會。",
+"tp.branch": "候選之間差距很小，是個分歧點。先決定方針，再選著法。",
+"tp.sharp": "最佳著法比第二候選好很多（勝率差 {x}）。走對這一手就能決定勝負。",
+"tp.open1": "開局是大規模的吃子交換。不只算自己吃多少，也要算對手會反吃多少。",
+"tp.open2": "連續吃子可以在任何一步停下。如果繼續吃會停在被對手大量反吃的地方，停下才是好判斷。",
+"tp.mid1": "選擇吃法時，以「吃掉的 − 被反吃的」來比較。",
+"tp.mid2": "與對手棋子在同一線上、相隔一點的棋子，可能被接近吃掉。",
+"sep": "、",
+"gl": {
+"force": {
+"m": [
+"吃子是義務",
+"必須吃子"
+],
+"t": "吃子義務",
+"d": "能吃子時，不能走不吃子的著法（帕伊卡）。有多種吃法時，選哪一種都可以。"
+},
+"approach": {
+"m": [
+"接近"
+],
+"t": "接近吃子",
+"d": "朝對手棋子走一步：吃掉緊鄰落點的對手棋子，以及它後面同一線上連續排列的對手棋子。"
+},
+"withdraw": {
+"m": [
+"撤離"
+],
+"t": "撤離吃子",
+"d": "從相鄰的對手棋子筆直退開一步：吃掉它以及它後面同一線上連續排列的對手棋子。"
+},
+"paika": {
+"m": [
+"帕伊卡"
+],
+"t": "帕伊卡",
+"d": "不吃子的著法。只有在沒有子可吃時才能走。"
+},
+"strong": {
+"m": [
+"強點"
+],
+"t": "強點",
+"d": "斜線交會的點。這裡的棋子能往 8 個方向走（其他點只有 4 個方向）。"
+},
+"chain": {
+"m": [
+"連續吃子",
+"連吃",
+"繼續吃"
+],
+"t": "連續吃子",
+"d": "吃子的棋子在同一回合再次吃子。每次都必須改變方向，且不能回到走過的點。是否繼續可以自由決定。"
+}
+}
+},
+"id": {
+"head": "Pelatih",
+"sw": "Pelatih",
+"swT": "Pelatih (cara berpikir) aktif / nonaktif",
+"on": "Pelatih ON",
+"off": "Pelatih OFF",
+"rest": "Pelatih beristirahat saat pelajaran, teka-teki, menonton, dan sejenisnya — pikirkan sendiri dulu. Pelatih kembali saat kamu bermain lagi melawan AI atau teman.",
+"offNote": "Pelatih nonaktif. Nyalakan sakelar di kanan atas untuk melihat cara berpikir tentang posisi dan maksud langkah kandidat.",
+"overRv": "Permainan selesai. Jalankan analisis, dan kotak ini menampilkan ulasan per langkah (langkah terbaik, kesalahan, dan alasannya).",
+"oppTurn": "Giliran lawan. Coba tebak apa yang akan dimakannya berikutnya — menebak dengan benar melatih kemampuan membaca.",
+"over": "Permainan selesai. Gunakan [Analisis] di bawah catatan untuk meninjaunya.",
+"calc": "Memikirkan kandidat…",
+"form": "Posisi",
+"mat": "Biji",
+"stage": "Fase",
+"st.open": "Pembukaan",
+"st.mid": "Tengah permainan",
+"st.end": "Akhir permainan",
+"f.win": "menang",
+"f.big": "jauh lebih baik",
+"f.adv": "lebih baik",
+"f.sl": "sedikit lebih baik",
+"f.even": "seimbang",
+"f.sld": "sedikit lebih buruk",
+"f.dis": "lebih buruk",
+"f.bad": "jauh lebih buruk",
+"f.lost": "kalah",
+"mat.even": "sama",
+"mat.up": "+{x}",
+"mat.down": "−{x}",
+"mat.n": " ({a} lawan {b})",
+"recWhy": "Pilihan pertama di sini adalah rencana \"{c}\". Posisi: {f} ({p}% peluang menang).",
+"recSharp": "Pilihan kedua jelas lebih buruk ({x} peluang menang): mainkan dengan tepat di sini.",
+"recBranch": "Kandidat-kandidatnya berdekatan — ini titik percabangan. Pilih rencana yang kamu suka dari daftar di bawah.",
+"recOnly": "Semua langkah lain rugi besar. Langkah ini harus dimainkan tanpa ragu.",
+"recForced": "Ini satu-satunya langkah sah (makan itu wajib).",
+"brH": "Titik percabangan — rencana yang bisa dipilih",
+"brIntro": "Tidak ada yang jauh lebih buruk. Memainkan rencana yang kamu kuasai adalah cara tercepat untuk berkembang.",
+"cdH": "Langkah kandidat dan rencana",
+"cdIntro": "Kandidat teratas, dijelaskan per rencana.",
+"tt.paika": "Gerakkan biji di {sq} ke {to}",
+"tt.cap": "Makan {n} dengan biji di {sq}",
+"tt.chain": "Makan {n} dalam {s} langkah dengan biji di {sq}",
+"gap.best": "terbaik",
+"gap.eq": "hampir sama",
+"gap.lt": "sedikit lebih buruk",
+"gap.bad": "lebih buruk",
+"q.best": "terbaik",
+"q.good": "bagus",
+"q.dubious": "meragukan",
+"q.bad": "kesalahan",
+"opH": "Pilihan pembukaan — langkah pertama",
+"opIntro": "Di pembukaan, langkah yang sudah dipelajari lebih penting daripada selisih kecil evaluasi. Pelajari langkah standar dulu, lalu coba yang lain.",
+"op.main": "standar",
+"op.alt": "alternatif",
+"op.book": "pembukaan",
+"op.w0": "Fanorona dipecahkan komputer pada 2007: dengan permainan terbaik hasilnya seri. Pemain pertama punya lima langkah pertama; f2-e3A dan d3-e3A terbukti berujung seri.",
+"op.f2e3.t": "f2 ke e3 (pendekatan diagonal)",
+"op.f2e3.x": "Melangkah diagonal ke tengah dan memakan d4 dan c5. Langkah pertama standar yang terbukti berujung seri. Pemain kedua langsung makan balik, jadi hitung juga makan balasannya.",
+"op.d3e3.t": "d3 ke e3 (mendekat di baris tengah)",
+"op.d3e3.x": "Melangkah ke tengah lewat baris tengah dan memakan f3. Juga langkah standar yang berujung seri: makan sedikit, tetapi bentuknya kokoh.",
+"op.d3e3w.t": "d3 ke e3 (menjauh, makan c3)",
+"op.d3e3w.x": "Langkah yang sama, tetapi memakan c3 di belakang dengan menjauh. Mesin situs ini menilainya hampir seimbang.",
+"op.d2e3.t": "d2 ke e3 (pendekatan diagonal)",
+"op.d2e3.x": "Memakan f4 dan g5. Menurut mesin situs ini makan balasan pemain kedua besar, dan pemain pertama cenderung kehilangan sekitar satu biji.",
+"op.e2e3.t": "e2 ke e3 (pendekatan lurus)",
+"op.e2e3.x": "Memakan e4 dan e5. Menurut mesin situs ini makan balasan pemain kedua besar, dan pemain pertama cenderung kehilangan satu biji atau lebih.",
+"op.next.t": "{sq} ke {to}",
+"op.next.x": "Langkah pembukaan. Menuju \"{n}\".",
+"op.done.x": "Dengan langkah ini permainan mencapai \"{n}\".",
+"bkWhy": "Posisi ini masih teori pembukaan. Pilih salah satu variasi yang bernama.",
+"prevBook": "Langkah pembukaan standar.",
+"prevOff": "Langkah standar di sini adalah {m}.",
+"senkei": "Pembukaan",
+"moyo": "{n} (kemungkinan)",
+"fixed": "{n}",
+"strong": "Titik kuat",
+"meC": "kamu",
+"opC": "lawan",
+"who": "{k} ({w})",
+"tipsH": "Cara berpikir",
+"more": "Tips lainnya ({n})",
+"less": "Lebih sedikit",
+"prev": "Langkah terakhir {m}: {q}",
+"prevBest": "Langkah \"{c}\" — sama dengan pilihan pertama AI.",
+"prevAlt": "Pilihan pertama AI adalah {m} ({c}).",
+"prevAltOk": "Sama bagusnya dengan pilihan pertama AI {m} ({c}).",
+"lp.shot": "💡 Tips: jika ada beberapa cara makan, bandingkan \"biji dimakan − biji hilang saat dibalas\".",
+"lp.hang": "💡 Tips: sebelum langkah tanpa makan (paika), pastikan tidak meninggalkan biji yang bisa dimakan.",
+"c.win": "Jalur menang",
+"b.win": "Tuntaskan permainan",
+"x.win": "AI sudah menghitung kemenangan paksa dari langkah ini. Waspadai makan balasan dan tuntaskan dengan tepat.",
+"c.chain": "Makan beruntun",
+"b.chain": "Terus makan",
+"x.chain": "Biji di {sq} makan {s} kali berturut-turut, total {n} biji. Pastikan tidak dimakan di tempat ia mendarat.",
+"c.big": "Makan besar",
+"b.big": "Makan satu barisan",
+"x.big": "Biji di {sq} memakan {n} biji sekaligus. Di Fanorona satu barisan penuh bisa hilang, jadi jumlah biji bisa berubah cepat.",
+"c.short": "Berhenti lebih awal",
+"b.short": "Hentikan rantai",
+"x.short": "Sebenarnya masih bisa makan, tetapi sengaja berhenti di sini — agar biji tidak berakhir di tempat lawan bisa makan balik lebih banyak.",
+"c.cap": "Makan",
+"b.cap": "Makan",
+"x.cap": "Biji di {sq} memakan {n}. Makan itu wajib, jadi jika ada beberapa pilihan, bandingkan bentuk sesudahnya dan makan balasannya.",
+"c.safe": "Tetap aman",
+"b.safe": "Tidak memberi apa pun",
+"x.safe": "Gerakkan biji di {sq} ke {to} dan jangan beri lawan kesempatan makan. Ide dasar saat tidak ada yang bisa dimakan.",
+"c.save": "Kabur",
+"b.save": "Selamatkan biji",
+"x.save": "Biji di {sq} terancam; pindahkan ke {to}, tempat yang aman.",
+"c.sac": "Korban",
+"b.sac": "Berikan satu biji",
+"x.sac": "Gerakkan biji di {sq} ke {to} dan biarkan sengaja dimakan. Menurut hitungan AI kerugiannya kecil (bentuk lawan jadi rusak).",
+"c.strong": "Titik kuat",
+"b.strong": "Ambil titik kuat",
+"x.strong": "Gerakkan biji di {sq} ke titik kuat {to}, tempat diagonal bersilangan. Di sana biji bisa bergerak ke 8 arah, untuk menyerang dan bertahan.",
+"c.wait": "Menunggu",
+"b.wait": "Jaga bentuk",
+"x.wait": "Gerakkan biji di {sq} ke {to} dan jaga bentuk yang kokoh sambil menunggu lawan. Yang utama: jangan beri apa pun untuk dimakan.",
+"tp.forced": "Kamu bisa makan, dan makan itu wajib. Ada {n} cara: bandingkan biji yang kamu makan dengan biji yang bisa dimakan balik lawan.",
+"tp.forced1": "Kamu bisa makan; makan itu wajib, jadi ini satu-satunya langkah.",
+"tp.both": "Salah satu langkahmu bisa makan dengan mendekat atau menjauh. Kamu tidak bisa makan kedua barisan — pilih satu.",
+"tp.chain": "Setelah makan, biji yang sama bisa terus makan. Melanjutkan itu pilihan: pastikan titik mendaratnya aman.",
+"tp.big": "Kamu bisa makan {n} biji sekaligus — memakan satu barisan penuh adalah inti Fanorona.",
+"tp.hang": "Biji di {sq} bisa dimakan (jika giliran lawan). Menjauhlah, atau siapkan makan balasan.",
+"tp.oppBig": "Lawan mengancam memakan {n} biji sekaligus di langkah berikutnya. Pecah barisan itu, atau makan lebih dulu.",
+"tp.paika": "Tidak ada yang bisa dimakan (posisi paika). Pindah ke titik yang tidak memberi lawan kesempatan makan.",
+"tp.ahead": "Kamu unggul. Tidak perlu memaksa: hindari bentuk yang membuat lawan bisa makan banyak sekaligus.",
+"tp.behind": "Kamu tertinggal. Cari kesempatan memakan satu barisan saat biji lawan berjajar.",
+"tp.strong": "Lawan menguasai lebih banyak titik kuat (tempat diagonal bersilangan). Biji di sana bergerak ke 8 arah dan aktif menyerang serta bertahan.",
+"tp.strong2": "Kamu menguasai lebih banyak titik kuat. Biji di sana bergerak ke 8 arah dan mengawasi seluruh papan.",
+"tp.end1": "Di akhir permainan, kuasai titik kuat dan tutup jalan kabur biji lawan. Dengan keunggulan hanya satu atau dua biji, butuh banyak langkah untuk menuntaskan.",
+"tp.endDef": "Dengan biji lebih sedikit, hindari segaris dengan biji lawan: dalam satu garis kamu bisa dimakan dengan mendekat atau menjauh.",
+"tp.winning": "Kamu hampir menang. Main aman dan jangan beri lawan kesempatan makan besar.",
+"tp.losing": "Kamu tertinggal jauh. Tunggu biji lawan berjajar dan cari makan balasan yang besar.",
+"tp.branch": "Kandidat-kandidatnya berdekatan — ini titik percabangan. Tentukan rencana dulu, lalu pilih langkahnya.",
+"tp.sharp": "Langkah terbaik jauh lebih baik dari yang kedua ({x} peluang menang). Memainkannya dengan benar menentukan permainan.",
+"tp.open1": "Pembukaan adalah pertukaran makan yang besar. Hitung bukan hanya yang kamu makan, tetapi juga yang dimakan balik lawan.",
+"tp.open2": "Kamu boleh menghentikan makan beruntun di langkah mana pun. Jika melanjutkan membuatmu mendarat di tempat lawan bisa makan balik banyak, berhenti adalah keputusan yang baik.",
+"tp.mid1": "Pilih cara makan berdasarkan \"dimakan − dimakan balik\".",
+"tp.mid2": "Biji yang segaris dengan biji lawan, berjarak satu titik, bisa dimakan dengan mendekat.",
+"sep": ", ",
+"gl": {
+"force": {
+"m": [
+"makan itu wajib",
+"wajib makan",
+"wajib"
+],
+"t": "Wajib makan",
+"d": "Jika bisa makan, langkah tanpa makan (paika) tidak boleh. Jika ada beberapa cara makan, boleh memilih yang mana saja."
+},
+"approach": {
+"m": [
+"dengan mendekat",
+"mendekat"
+],
+"t": "Mendekat",
+"d": "Melangkah menuju biji lawan: biji lawan di sebelah titik mendarat dimakan, bersama biji lawan tepat di belakangnya pada garis itu."
+},
+"withdraw": {
+"m": [
+"dengan menjauh",
+"menjauh"
+],
+"t": "Menjauh",
+"d": "Melangkah lurus menjauh dari biji lawan di sebelahmu: biji itu dimakan, bersama biji lawan di belakangnya pada garis itu."
+},
+"paika": {
+"m": [
+"paika"
+],
+"t": "Paika",
+"d": "Langkah yang tidak memakan apa pun. Hanya boleh jika tidak ada yang bisa dimakan."
+},
+"strong": {
+"m": [
+"titik kuat"
+],
+"t": "Titik kuat",
+"d": "Titik tempat diagonal bersilangan. Biji di sana bisa bergerak ke 8 arah (di tempat lain hanya 4)."
+},
+"chain": {
+"m": [
+"makan beruntun",
+"terus makan"
+],
+"t": "Makan beruntun",
+"d": "Biji yang makan memakan lagi di giliran yang sama. Setiap kali harus berganti arah dan tidak boleh kembali ke titik yang sudah dilewati. Melanjutkan itu pilihan."
+}
+}
+},
+"tr": {
+"head": "Koç",
+"sw": "Koç",
+"swT": "Koç (nasıl düşünülür) aç / kapat",
+"on": "Koç AÇIK",
+"off": "Koç KAPALI",
+"rest": "Dersler, bulmacalar, izleme ve benzerlerinde koç dinleniyor — kendin düşün. YZ'ye ya da bir arkadaşına karşı yeniden oynadığında geri gelir.",
+"offNote": "Koç kapalı. Konum hakkında nasıl düşünüleceğini ve aday hamlelerin amacını görmek için sağ üstteki düğmeyi aç.",
+"overRv": "Oyun bitti. Analiz et; bu kutuda hamle hamle değerlendirme görünür (en iyi hamleler, hatalar ve nedenleri).",
+"oppTurn": "Sıra rakipte. Bir sonraki hamlede ne alacağını tahmin etmeye çalış — doğru tahmin okumayı geliştirir.",
+"over": "Oyun bitti. İncelemek için kaydın altındaki [Analiz]'i kullan.",
+"calc": "Adaylar düşünülüyor…",
+"form": "Konum",
+"mat": "Taşlar",
+"stage": "Evre",
+"st.open": "Açılış",
+"st.mid": "Oyun ortası",
+"st.end": "Oyun sonu",
+"f.win": "kazanıyor",
+"f.big": "çok daha iyi",
+"f.adv": "daha iyi",
+"f.sl": "biraz daha iyi",
+"f.even": "eşit",
+"f.sld": "biraz daha kötü",
+"f.dis": "daha kötü",
+"f.bad": "çok daha kötü",
+"f.lost": "kaybediyor",
+"mat.even": "eşit",
+"mat.up": "+{x}",
+"mat.down": "−{x}",
+"mat.n": " ({a} - {b})",
+"recWhy": "Buradaki ilk tercih \"{c}\" planı. Konum: {f} (kazanma şansı %{p}).",
+"recSharp": "İkinci tercih açıkça daha kötü (kazanma şansında {x}): burada dikkatli oyna.",
+"recBranch": "Adaylar birbirine yakın — bir yol ayrımı. Aşağıdaki listeden sevdiğin planı seç.",
+"recOnly": "Diğer her hamle çok kaybettirir. Bu hamle tereddütsüz oynanmalı.",
+"recForced": "Tek geçerli hamle bu (almak zorunludur).",
+"brH": "Yol ayrımı — seçilebilecek planlar",
+"brIntro": "Hiçbiri çok daha kötü değil. Rahat ettiğin planı oynamak gelişmenin en hızlı yoludur.",
+"cdH": "Aday hamleler ve planlar",
+"cdIntro": "En iyi adaylar, plan plan açıklanmış.",
+"tt.paika": "{sq} taşını {to}'ya oynat",
+"tt.cap": "{sq} taşıyla {n} al",
+"tt.chain": "{sq} taşıyla {s} adımda {n} al",
+"gap.best": "en iyi",
+"gap.eq": "neredeyse eşit",
+"gap.lt": "biraz daha kötü",
+"gap.bad": "daha kötü",
+"q.best": "en iyi",
+"q.good": "iyi",
+"q.dubious": "şüpheli",
+"q.bad": "hata",
+"opH": "Açılış seçenekleri — ilk hamle",
+"opIntro": "Açılışta iyi incelenmiş hamleler, değerlendirmedeki küçük farklardan daha önemlidir. Önce standart hamleleri öğren, sonra diğerlerini dene.",
+"op.main": "standart",
+"op.alt": "yan yol",
+"op.book": "açılış",
+"op.w0": "Fanorona 2007'de bilgisayarla çözüldü: en iyi oyunla berabere biter. Birinci oyuncunun beş ilk hamlesi vardır; f2-e3A ve d3-e3A'nın beraberliğe gittiği gösterildi.",
+"op.f2e3.t": "f2'den e3'e (çapraz yaklaşma)",
+"op.f2e3.x": "Çapraz olarak merkeze ilerler ve d4 ile c5'i alır. Beraberliğe götürdüğü gösterilen standart bir ilk hamle. İkinci oyuncu hemen geri alır, karşı almayı da say.",
+"op.d3e3.t": "d3'ten e3'e (orta sıra boyunca yaklaşma)",
+"op.d3e3.x": "Orta sıra boyunca merkeze ilerler ve f3'ü alır. Bu da beraberliğe giden standart bir hamle: az alır ama sağlam bir şekil korur.",
+"op.d3e3w.t": "d3'ten e3'e (uzaklaşma, c3'ü alır)",
+"op.d3e3w.x": "Aynı adım, ama arkadaki c3'ü uzaklaşmayla alır. Bu sitenin motoru neredeyse eşit görüyor.",
+"op.d2e3.t": "d2'den e3'e (çapraz yaklaşma)",
+"op.d2e3.x": "f4 ve g5'i alır. Bu sitenin motoruna göre ikinci oyuncunun karşı alması büyüktür ve birinci oyuncu genelde bir taş kadar kaybeder.",
+"op.e2e3.t": "e2'den e3'e (düz yaklaşma)",
+"op.e2e3.x": "e4 ve e5'i alır. Bu sitenin motoruna göre ikinci oyuncunun karşı alması büyüktür ve birinci oyuncu genelde bir taş ya da daha fazla kaybeder.",
+"op.next.t": "{sq}'dan {to}'ya",
+"op.next.x": "Bir açılış hamlesi. \"{n}\"a götürür.",
+"op.done.x": "Bu hamleyle oyun \"{n}\"a ulaşır.",
+"bkWhy": "Bu konum hâlâ açılış teorisi. Adı olan varyantlardan birini seç.",
+"prevBook": "Standart bir açılış hamlesi.",
+"prevOff": "Buradaki standart hamleler: {m}.",
+"senkei": "Açılış",
+"moyo": "{n} (muhtemel)",
+"fixed": "{n}",
+"strong": "Güçlü noktalar",
+"meC": "sen",
+"opC": "rakip",
+"who": "{k} ({w})",
+"tipsH": "Nasıl düşünülür",
+"more": "Daha fazla ipucu ({n})",
+"less": "Daha az",
+"prev": "Son hamle {m}: {q}",
+"prevBest": "Bir \"{c}\" hamlesi — YZ'nin ilk tercihiyle aynı.",
+"prevAlt": "YZ'nin ilk tercihi {m} ({c}) idi.",
+"prevAltOk": "YZ'nin ilk tercihi {m} ({c}) kadar iyi.",
+"lp.shot": "💡 İpucu: birden çok alma varsa \"alınan taşlar − karşılığında kaybedilenler\"i karşılaştır.",
+"lp.hang": "💡 İpucu: almasız bir hamleden (paika) önce alınabilecek bir taş bırakmadığını kontrol et.",
+"c.win": "Kazanç yolu",
+"b.win": "Oyunu bitir",
+"x.win": "YZ bu hamleden zorunlu bir galibiyet hesapladı. Karşı almalara dikkat et ve doğru bitir.",
+"c.chain": "Art arda alma",
+"b.chain": "Almaya devam",
+"x.chain": "{sq} taşı art arda {s} kez alır, toplam {n} taş. İndiği yerde alınmadığını kontrol et.",
+"c.big": "Büyük alma",
+"b.big": "Bütün sırayı al",
+"x.big": "{sq} taşı tek seferde {n} taş alır. Fanorona'da bütün bir sıra gider, bu yüzden sayı hızla değişebilir.",
+"c.short": "Erken dur",
+"b.short": "Zinciri durdur",
+"x.short": "Daha çok alma mümkündü ama bilerek burada durur — taş, rakibin daha fazlasını geri alacağı yerde kalmasın diye.",
+"c.cap": "Alma",
+"b.cap": "Al",
+"x.cap": "{sq} taşı {n} alır. Almak zorunludur; birden çok seçenek varsa sonraki şekli ve karşı almaları karşılaştır.",
+"c.safe": "Güvende kal",
+"b.safe": "Hiçbir şey verme",
+"x.safe": "{sq} taşını {to}'ya oynat ve rakibe alma bırakma. Alınacak bir şey yokken temel fikir.",
+"c.save": "Kaç",
+"b.save": "Taşı kurtar",
+"x.save": "{sq} taşı tehdit altında; güvende olacağı {to}'ya götür.",
+"c.sac": "Feda",
+"b.sac": "Taş ver",
+"x.sac": "{sq} taşını {to}'ya oynat ve bilerek alınmasına izin ver. YZ'nin okumasına göre kayıp küçük (rakibin şekli bozulur).",
+"c.strong": "Güçlü nokta",
+"b.strong": "Güçlü noktayı al",
+"x.strong": "{sq} taşını çaprazların kesiştiği güçlü nokta {to}'ya oynat. Orada 8 yöne gidebilir, saldırı ve savunma için.",
+"c.wait": "Bekle",
+"b.wait": "Şekli koru",
+"x.wait": "{sq} taşını {to}'ya oynat ve rakibi beklerken sağlam bir şekil koru. Önce alınacak bir şey vermemek gelir.",
+"tp.forced": "Alabilirsin ve almak zorunludur. {n} yol var: alacağın taşları rakibin geri alabileceklerle karşılaştır.",
+"tp.forced1": "Alabilirsin; almak zorunlu olduğu için tek hamle bu.",
+"tp.both": "Adımlarından biri yaklaşmayla da uzaklaşmayla da alabiliyor. İki sırayı birden alamazsın — birini seç.",
+"tp.chain": "Bir almadan sonra aynı taş almaya devam edebilir. Devam etmek isteğe bağlıdır: iniş noktasının güvenli olduğunu kontrol et.",
+"tp.big": "Tek seferde {n} taş alabilirsin — bütün bir sırayı almak Fanorona'nın özüdür.",
+"tp.hang": "{sq} taşları alınabilir (sıra rakipte olsaydı). Uzaklaş ya da karşı almayı mümkün kıl.",
+"tp.oppBig": "Rakip bir sonraki hamlede tek seferde {n} taş almakla tehdit ediyor. O sırayı boz ya da önce sen al.",
+"tp.paika": "Alınacak bir şey yok (paika konumu). Rakibe alma vermeyen bir noktaya git.",
+"tp.ahead": "Öndesin. Zorlamaya gerek yok: rakibin tek seferde çok almasına izin veren şekillerden kaçın.",
+"tp.behind": "Geridesin. Rakibin taşları sıralandığında bütün bir sırayı geri alma fırsatı ara.",
+"tp.strong": "Rakip daha çok güçlü noktayı (çaprazların kesiştiği) tutuyor. Oradaki taşlar 8 yöne gider ve saldırıda da savunmada da çok çalışır.",
+"tp.strong2": "Daha çok güçlü noktayı sen tutuyorsun. Oradaki taşlar 8 yöne gider ve bütün tahtayı gözetler.",
+"tp.end1": "Oyun sonunda güçlü noktaları tut ve rakip taşların kaçış yollarını kes. Yalnızca bir iki taş öndeyken bitirmek çok hamle sürebilir.",
+"tp.endDef": "Daha az taşın varsa bir rakip taşla aynı hatta durmaktan kaçın: hatta yaklaşma ya da uzaklaşmayla alınabilirsin.",
+"tp.winning": "Kazanıyorsun. Güvenli oyna ve rakibe büyük alma verme.",
+"tp.losing": "Kaybediyorsun. Rakibin taşlarının sıralanmasını bekle ve büyük bir karşı alma ara.",
+"tp.branch": "Adaylar birbirine yakın — bir yol ayrımı. Önce bir plana karar ver, sonra hamleyi seç.",
+"tp.sharp": "En iyi hamle ikinciden çok daha iyi (kazanma şansında {x}). Bunu doğru oynamak oyunu belirler.",
+"tp.open1": "Açılış büyük bir alma değişimidir. Yalnızca aldığını değil, rakibin geri alacağını da say.",
+"tp.open2": "Art arda almayı her adımda durdurabilirsin. Devam etmek seni rakibin çok geri alacağı yere indiriyorsa durmak iyi bir karardır.",
+"tp.mid1": "Almalar arasında \"alınan − geri alınan\"a göre seç.",
+"tp.mid2": "Bir rakip taşla aynı hatta, bir nokta arayla duran taş yaklaşmayla alınabilir.",
+"sep": ", ",
+"gl": {
+"force": {
+"m": [
+"almak zorunludur",
+"almak zorunlu",
+"zorunlu"
+],
+"t": "Zorunlu alma",
+"d": "Alma mümkünse almasız hamle (paika) yapılamaz. Birden çok alma varsa istediğini seçebilirsin."
+},
+"approach": {
+"m": [
+"yaklaşmayla",
+"yaklaşma"
+],
+"t": "Yaklaşma",
+"d": "Bir rakip taşa doğru adım at: iniş noktasının yanındaki rakip taş, o hatta hemen arkasındaki rakip taşlarla birlikte alınır."
+},
+"withdraw": {
+"m": [
+"uzaklaşmayla",
+"uzaklaşma"
+],
+"t": "Uzaklaşma",
+"d": "Yanındaki rakip taştan dümdüz uzaklaş: o taş, o hatta arkasındaki rakip taşlarla birlikte alınır."
+},
+"paika": {
+"m": [
+"paika"
+],
+"t": "Paika",
+"d": "Hiçbir şey almayan hamle. Yalnızca hiç alma mümkün değilken yapılabilir."
+},
+"strong": {
+"m": [
+"güçlü noktayı",
+"güçlü noktalar",
+"güçlü nokta"
+],
+"t": "Güçlü nokta",
+"d": "Çaprazların kesiştiği nokta. Oradaki taş 8 yöne gidebilir (diğer yerlerde yalnızca 4)."
+},
+"chain": {
+"m": [
+"art arda almayı",
+"art arda alma"
+],
+"t": "Art arda alma",
+"d": "Alan taşın aynı sırada yeniden alması. Her seferinde yön değiştirmeli ve geçtiği noktaya geri dönemez. Devam etmek isteğe bağlıdır."
+}
+}
 }
 }); })();
 // Alquerque (rule 'alq'): the texts that differ (jumps, the chain must go on, no backward steps); ja / en in coach.js
@@ -1767,6 +2540,328 @@
 "tp.mid1": "القفزة تحتاج نقطة فارغة خلف القطعة مباشرة. غطِّ النقطة خلف قطعتك بقطعة صديقة فلا يمكن أسرها.",
 "tp.mid2": "اختر بين طرق الأسر بحسب «المأخوذة − المقفوز فوقها ردًا».",
 "Agl": { "force": { "m": ["الأسر إجباري"], "t": "الأسر الإجباري", "d": "إذا أمكن الأسر فلا تجوز نقلة بلا أسر. وإن تعددت طرق الأسر فاختر أيًّا منها." }, "jump": { "m": ["يُقفز فوق", "القفز فوق", "تقفز"], "t": "الأسر بالقفز", "d": "القفز فوق قطعة مجاورة للخصم على خط إلى النقطة الفارغة خلفها مباشرة؛ وتؤخذ القطعة المقفوز فوقها. عند الأسر يجوز القفز في أي اتجاه، حتى إلى الخلف." }, "chain": { "m": ["سلسلة قفزات", "سلسلة"], "t": "سلسلة القفز", "d": "إذا أمكن للقطعة القفز مجددًا من نقطة هبوطها فيجب أن تستمر في الدور نفسه، ولا يجوز التوقف في المنتصف." }, "strong": { "m": ["تتقاطع فيها الخطوط القطرية", "نقطة قطرية"], "t": "النقاط القطرية", "d": "النقاط التي تتقاطع فيها الخطوط القطرية (نصف نقاط اللوحة). القطعة هناك تتحرك وتقفز قطريًا أيضًا." }, "noback": { "m": ["لا ترجع"], "t": "لا رجوع", "d": "النقلة بلا أسر خطوة إلى الأمام أو إلى الجانب. وحدها قفزة الأسر يمكن أن تكون إلى الخلف." } }
+},
+"ru": {
+"oppTurn": "Ход соперника. Попробуйте угадать, какую фишку он перепрыгнет следующей, — так растёт умение считать.",
+"tt.cap": "Прыжком взять {n} фишкой с {sq}",
+"tt.chain": "Прыгнуть {s} раза фишкой с {sq}, взяв {n}",
+"b.big": "Взять несколько",
+"x.big": "Фишка с {sq} прыгает раз за разом и берёт сразу {n}. Проверьте, что там, где она остановится, её не перепрыгнут в ответ.",
+"x.chain": "Фишка с {sq} прыгает {s} раза подряд, всего {n} фишек. Серию нужно продолжать, пока это возможно. Проверьте, что там, где она приземлится, её не перепрыгнут в ответ.",
+"x.cap": "Фишка с {sq} прыгает и берёт {n}. Взятие обязательно, поэтому, если вариантов несколько, сравните, могут ли перепрыгнуть фишку после приземления.",
+"x.safe": "Фишку с {sq} на {to}, не оставляя сопернику прыжков. Фишку, у которой дальняя сторона прикрыта, перепрыгнуть нельзя.",
+"x.save": "Фишка на {sq} под ударом; уведите её на {to}. Важно, чтобы пункт за ней (со стороны соперника) там не был пустым.",
+"x.sac": "Фишку с {sq} на {to}, нарочно давая её перепрыгнуть. Взятие обязательно, так что это выманивает фишку соперника; по расчёту ИИ потеря невелика (или материал возвращается).",
+"c.strong": "Диагональный пункт",
+"b.strong": "На диагональный пункт",
+"x.strong": "Фишку с {sq} на {to} — пункт, где пересекаются диагонали. Там она может ходить и прыгать по диагонали, в атаке и в защите.",
+"x.wait": "Фишку с {sq} на {to}, сохраняя прочную позицию в ожидании. Назад фишки не ходят, так что не спешите вперёд: важно иметь запас ходов.",
+"strong": "Диагональные пункты",
+"mobK": "Запас ходов",
+"lp.shot": "💡 Совет: если взятий несколько, сравните «взято − перепрыгнуто в ответ».",
+"lp.hang": "💡 Совет: перед ходом проверьте пункт за каждой фишкой (со стороны соперника): если он пуст, фишку можно перепрыгнуть.",
+"tp.chain": "Взятие можно продолжить новыми прыжками. Серию нужно продолжать, пока это возможно: проверьте, безопасен ли последний пункт приземления.",
+"tp.big": "Серия прыжков берёт сразу {n} фишек. Проверьте, что там, где фишка приземлится, её не перепрыгнут в ответ.",
+"tp.hang": "Фишки на {sq} могут быть перепрыгнуты (будь сейчас ход соперника). Прикройте пункт за ними своей фишкой, уйдите или подготовьте ответный прыжок.",
+"tp.oppBig": "Соперник угрожает следующим ходом серией из {n} прыжков. Прикройте пункт приземления своей фишкой или возьмите первым.",
+"tp.paika": "Брать нечего. Фишки ходят только вперёд или вбок, так что идите на пункт, который не даёт сопернику прыжков, — помня, что вернуться нельзя.",
+"tp.behind": "Вы позади. Цельтесь в фишки соперника с пустым пунктом позади и стройте серию прыжков, чтобы вернуть материал.",
+"tp.losing": "Вы проигрываете. Ищите отыгрыш: отдайте одну фишку, чтобы выманить фишку соперника, и перепрыгните в ответ несколько.",
+"tp.strong": "У соперника больше пунктов, где пересекаются диагонали. Фишки там ходят и прыгают по диагонали и контролируют больше доски.",
+"tp.strong2": "У вас больше пунктов, где пересекаются диагонали. Фишки, способные ходить и прыгать по диагонали, сильны в атаке и защите.",
+"tp.end1": "Эндшпиль — борьба за запас ходов: назад фишки не ходят, и сторона без ходов проигрывает. Держите выжидательные ходы и отнимайте у фишек соперника простор.",
+"tp.endDef": "Если фишек меньше, не вставайте рядом с фишкой соперника, когда позади вас пустой пункт, и оставляйте место для хода вбок.",
+"tp.mob": "Доступные ходы без взятия: у вас {a}, у соперника {b}. Сторона без ходов проигрывает, поэтому в эндшпиле лучше тому, у кого больше запас ходов.",
+"tp.open1": "Дебютная борьба начинается вокруг центра c3. Взятие обязательно, так что следите за «отдай одну, возьми две»: фишку подставляют под прыжок, а затем прыгают в ответ.",
+"tp.open2": "Назад фишки не ходят (только прыжок со взятием может быть в любую сторону). Не спешите вперёд; держите фишки заднего ряда для защиты.",
+"tp.mid1": "Для прыжка нужен пустой пункт сразу за фишкой. Прикройте пункт прямо за фишкой своей — и её нельзя будет взять.",
+"tp.mid2": "Выбирайте между взятиями по принципу «взято − перепрыгнуто в ответ».",
+"Agl": {
+"force": {
+"m": [
+"взятие обязательно",
+"брать обязательно",
+"обязательно"
+],
+"t": "Обязательное взятие",
+"d": "Когда взятие возможно, ход без взятия запрещён. Если взятий несколько, можно выбрать любое."
+},
+"jump": {
+"m": [
+"перепрыгнуто в ответ",
+"перепрыгнуть",
+"прыжков",
+"прыжок"
+],
+"t": "Взятие прыжком",
+"d": "Перепрыгните по линии через соседнюю фишку соперника на пустой пункт сразу за ней; перепрыгнутая фишка взята. Прыжок со взятием может быть в любую сторону, в том числе назад."
+},
+"chain": {
+"m": [
+"серию прыжков",
+"серия прыжков",
+"серией из"
+],
+"t": "Серия прыжков",
+"d": "Если с места приземления фишка может прыгнуть снова, она обязана продолжать прыжки в тот же ход — остановиться на полпути нельзя."
+},
+"strong": {
+"m": [
+"пересекаются диагонали",
+"диагональный пункт"
+],
+"t": "Диагональные пункты",
+"d": "Пункты, где пересекаются диагонали (половина доски). Фишка там может также ходить и прыгать по диагонали."
+},
+"noback": {
+"m": [
+"назад фишки не ходят",
+"вернуться нельзя"
+],
+"t": "Без ходов назад",
+"d": "Ход без взятия — один шаг вперёд или вбок. Назад может идти только прыжок со взятием."
+}
+}
+},
+"zh-TW": {
+"oppTurn": "輪到對手。猜猜對手下一步會跳吃哪顆棋子 — 猜得越準，計算力越強。",
+"tt.cap": "用 {sq} 的棋子跳吃 {n} 顆",
+"tt.chain": "用 {sq} 的棋子連跳 {s} 次，吃 {n} 顆",
+"b.big": "一次多吃",
+"x.big": "{sq} 的棋子連續跳，一次吃掉 {n} 顆。也要確認最後的落點不會被跳回。",
+"x.chain": "{sq} 的棋子連跳 {s} 次，共吃 {n} 顆。只要還能跳就必須繼續跳。確認落點不會被跳回。",
+"x.cap": "{sq} 的棋子跳吃 {n} 顆。吃子是義務，有多種吃法時，比較落地後會不會被跳回再選。",
+"x.safe": "把 {sq} 的棋子走到 {to}，不給對手跳吃的機會。棋子後方的點被擋住就不會被跳。",
+"x.save": "{sq} 的棋子被盯上了；把它走到 {to}。關鍵是在那裡，從對手看去它後方的點不能是空的。",
+"x.sac": "把 {sq} 的棋子走到 {to}，故意讓對手跳吃。吃子是義務，可以引出對手棋子；依 AI 的計算損失很小（或能吃回來）。",
+"c.strong": "斜線點",
+"b.strong": "走到斜線點",
+"x.strong": "把 {sq} 的棋子走到斜線交會的點 {to}。在那裡也能斜走、斜跳，攻守兼備。",
+"x.wait": "把 {sq} 的棋子走到 {to}，保持穩固的形狀等待。棋子不能後退，所以不要急著前衝：留住可走的步數很重要。",
+"strong": "斜線點",
+"mobK": "可走步數",
+"lp.shot": "💡 要點：有多種吃法時，比較「吃掉的 − 被跳回的」。",
+"lp.hang": "💡 要點：走子前先看每顆棋子後方的點（從對手看去）：如果是空的，這顆棋子就可能被跳吃。",
+"tp.chain": "吃子可以繼續連跳。只要還能跳就必須跳到底：確認最後的落點是否安全。",
+"tp.big": "連跳可以一次吃掉 {n} 顆。確認落點不會被跳回。",
+"tp.hang": "{sq} 的棋子可能被跳吃（如果輪到對手）。用自己的棋子擋住後方的點、逃開，或準備好跳回。",
+"tp.oppBig": "對手下一手威脅連跳 {n} 次。用自己的棋子擋住落點，或先吃子。",
+"tp.paika": "沒有子可吃。棋子只能向前或橫走，所以要走到不給對手跳吃的點 — 記住走了就回不來。",
+"tp.behind": "你落後。瞄準後方有空點的對手棋子，做出連跳來吃回子數。",
+"tp.losing": "你處於劣勢。尋找翻盤：送一顆棋子引出對手棋子，再跳回吃多顆。",
+"tp.strong": "對手占的斜線交會點比較多。那裡的棋子能斜走、斜跳，掌控更多棋盤。",
+"tp.strong2": "你占的斜線交會點比較多。能斜走、斜跳的棋子攻守都很強。",
+"tp.end1": "殘局是可走步數的比拚：棋子不能後退，無棋可走的一方判負。保留等待的著法，壓縮對手棋子的空間。",
+"tp.endDef": "子少時，避免站在對手棋子旁邊而自己後方是空點，並保留橫走的空間。",
+"tp.mob": "不吃子的可走著法：你 {a}、對手 {b}。無棋可走的一方判負，所以殘局時步數較多的一方有利。",
+"tp.open1": "開局的爭奪從中央 c3 周圍開始。吃子是義務，要注意「送一吃二」：故意讓對手跳吃，再跳回來。",
+"tp.open2": "棋子不能後退（只有吃子的跳躍可以往任何方向）。不要急著前衝；留住後排的棋子防守。",
+"tp.mid1": "跳吃需要棋子正後方有空點。用自己的棋子擋住棋子正後方的點，它就不會被吃。",
+"tp.mid2": "選擇吃法時，以「吃掉的 − 被跳回的」來比較。",
+"Agl": {
+"force": {
+"m": [
+"吃子是義務",
+"必須吃子"
+],
+"t": "吃子義務",
+"d": "能吃子時，不能走不吃子的著法。有多種吃法時，選哪一種都可以。"
+},
+"jump": {
+"m": [
+"跳吃",
+"跳回",
+"連跳"
+],
+"t": "跳吃",
+"d": "沿線跳過相鄰的對手棋子，落到正後方的空點；被跳過的棋子被吃掉。吃子的跳躍可以往任何方向，也包括後方。"
+},
+"chain": {
+"m": [
+"連續跳",
+"繼續跳"
+],
+"t": "連跳",
+"d": "落點還能再跳時，必須在同一回合繼續跳 — 不能中途停下。"
+},
+"strong": {
+"m": [
+"斜線交會",
+"斜線點"
+],
+"t": "斜線點",
+"d": "斜線交會的點（棋盤上一半的點）。這裡的棋子也能斜走、斜跳。"
+},
+"noback": {
+"m": [
+"不能後退"
+],
+"t": "不能後退",
+"d": "不吃子的著法只能向前或橫走一步。只有吃子的跳躍可以往後。"
+}
+}
+},
+"id": {
+"oppTurn": "Giliran lawan. Coba tebak biji mana yang akan dilompatinya berikutnya — menebak dengan benar melatih kemampuan membaca.",
+"tt.cap": "Lompat dan makan {n} dengan biji di {sq}",
+"tt.chain": "Lompat {s} kali dengan biji di {sq}, makan {n}",
+"b.big": "Makan beberapa",
+"x.big": "Biji di {sq} melompat terus, memakan {n} sekaligus. Pastikan tidak bisa dilompati balik di tempat ia akhirnya mendarat.",
+"x.chain": "Biji di {sq} melompat {s} kali berturut-turut, total {n} biji. Rantai harus diteruskan selama masih bisa. Pastikan tidak bisa dilompati balik di tempat ia mendarat.",
+"x.cap": "Biji di {sq} melompat dan memakan {n}. Makan itu wajib, jadi jika ada beberapa pilihan, bandingkan apakah biji bisa dilompati balik setelah mendarat.",
+"x.safe": "Gerakkan biji di {sq} ke {to} dan jangan beri lawan kesempatan melompat. Biji yang sisi seberangnya tertutup tidak bisa dilompati.",
+"x.save": "Biji di {sq} terancam; pindahkan ke {to}. Yang penting, titik di belakangnya (dilihat dari lawan) di sana tidak kosong.",
+"x.sac": "Gerakkan biji di {sq} ke {to} dan biarkan sengaja dilompati. Makan itu wajib, jadi ini memancing biji lawan; menurut hitungan AI kerugiannya kecil (atau biji bisa direbut kembali).",
+"c.strong": "Titik diagonal",
+"b.strong": "Ke titik diagonal",
+"x.strong": "Gerakkan biji di {sq} ke {to}, titik tempat diagonal bersilangan. Di sana biji bisa melangkah dan melompat diagonal, untuk menyerang dan bertahan.",
+"x.wait": "Gerakkan biji di {sq} ke {to} dan jaga bentuk yang kokoh sambil menunggu. Biji tidak bisa mundur, jadi jangan terburu-buru maju: menyimpan langkah itu penting.",
+"strong": "Titik diagonal",
+"mobK": "Sisa langkah",
+"lp.shot": "💡 Tips: jika ada beberapa cara makan, bandingkan \"biji dimakan − biji dilompati balik\".",
+"lp.hang": "💡 Tips: sebelum bergerak, periksa titik di belakang tiap biji (dilihat dari lawan): jika kosong, biji itu bisa dilompati.",
+"tp.chain": "Makan bisa dilanjutkan dengan lompatan lain. Rantai harus diteruskan selama masih bisa: pastikan titik mendarat terakhir aman.",
+"tp.big": "Rantai lompatan memakan {n} biji sekaligus. Pastikan biji tidak bisa dilompati balik di tempat ia mendarat.",
+"tp.hang": "Biji di {sq} bisa dilompati (jika giliran lawan). Tutup titik di belakangnya dengan bijimu, menjauhlah, atau siapkan lompatan balasan.",
+"tp.oppBig": "Lawan mengancam rantai {n} lompatan di langkah berikutnya. Tutup titik mendarat dengan salah satu bijimu, atau makan lebih dulu.",
+"tp.paika": "Tidak ada yang bisa dimakan. Biji hanya melangkah maju atau ke samping, jadi pindah ke titik yang tidak memberi lawan lompatan — ingat kamu tidak bisa kembali.",
+"tp.behind": "Kamu tertinggal. Incar biji lawan yang di belakangnya ada titik kosong, dan bangun rantai lompatan untuk merebut kembali biji.",
+"tp.losing": "Kamu tertinggal jauh. Cari jalan bangkit: berikan satu biji untuk memancing biji lawan, lalu lompati balik beberapa.",
+"tp.strong": "Lawan menguasai lebih banyak titik tempat diagonal bersilangan. Biji di sana bisa melangkah dan melompat diagonal dan mengawasi lebih banyak papan.",
+"tp.strong2": "Kamu menguasai lebih banyak titik tempat diagonal bersilangan. Biji yang bisa melangkah dan melompat diagonal kuat dalam menyerang dan bertahan.",
+"tp.end1": "Akhir permainan adalah adu sisa langkah: biji tidak bisa mundur, dan pihak yang tidak bisa bergerak kalah. Simpan langkah tunggu dan persempit ruang biji lawan.",
+"tp.endDef": "Dengan biji lebih sedikit, hindari berdiri di sebelah biji lawan dengan titik kosong di belakangmu, dan sisakan ruang untuk melangkah ke samping.",
+"tp.mob": "Langkah tanpa makan yang tersedia: kamu {a}, lawan {b}. Pihak yang tidak bisa bergerak kalah, jadi pihak dengan sisa langkah lebih banyak unggul di akhir permainan.",
+"tp.open1": "Pertarungan pembukaan dimulai di sekitar tengah c3. Makan itu wajib, jadi waspadai \"beri satu, makan dua\": biji disodorkan untuk dilompati, lalu dilompati balik.",
+"tp.open2": "Biji tidak bisa mundur (hanya lompatan makan yang boleh ke arah mana pun). Jangan terburu-buru maju; simpan biji baris belakang untuk bertahan.",
+"tp.mid1": "Lompatan butuh titik kosong tepat di seberangnya. Tutup titik tepat di belakang biji dengan biji kawan, maka biji itu tidak bisa dimakan.",
+"tp.mid2": "Pilih cara makan berdasarkan \"dimakan − dilompati balik\".",
+"Agl": {
+"force": {
+"m": [
+"makan itu wajib",
+"wajib makan",
+"wajib"
+],
+"t": "Wajib makan",
+"d": "Jika bisa makan, langkah tanpa makan tidak boleh. Jika ada beberapa cara makan, boleh memilih yang mana saja."
+},
+"jump": {
+"m": [
+"dilompati balik",
+"melompat",
+"lompatan",
+"dilompati"
+],
+"t": "Makan dengan melompat",
+"d": "Lompati biji lawan di sebelahmu sepanjang garis ke titik kosong tepat di seberangnya; biji yang dilompati dimakan. Lompatan makan boleh ke arah mana pun, termasuk mundur."
+},
+"chain": {
+"m": [
+"rantai lompatan",
+"rantai"
+],
+"t": "Rantai lompatan",
+"d": "Jika biji bisa melompat lagi dari tempat ia mendarat, ia harus terus melompat di giliran yang sama — tidak bisa berhenti di tengah jalan."
+},
+"strong": {
+"m": [
+"diagonal bersilangan",
+"titik diagonal"
+],
+"t": "Titik diagonal",
+"d": "Titik tempat garis diagonal bersilangan (separuh papan). Biji di sana juga bisa melangkah dan melompat diagonal."
+},
+"noback": {
+"m": [
+"tidak bisa mundur",
+"tidak bisa kembali"
+],
+"t": "Tidak bisa mundur",
+"d": "Langkah tanpa makan adalah satu langkah maju atau ke samping. Hanya lompatan makan yang boleh mundur."
+}
+}
+},
+"tr": {
+"oppTurn": "Sıra rakipte. Bir sonraki hamlede hangi taşın üzerinden atlayacağını tahmin etmeye çalış — doğru tahmin okumayı geliştirir.",
+"tt.cap": "{sq} taşıyla atla ve {n} al",
+"tt.chain": "{sq} taşıyla {s} kez atla, {n} al",
+"b.big": "Birkaç taş al",
+"x.big": "{sq} taşı art arda atlayarak tek seferde {n} alır. Sonunda indiği yerde geri atlanamayacağını kontrol et.",
+"x.chain": "{sq} taşı art arda {s} kez atlar, toplam {n} taş. Zincir mümkün olduğu sürece devam etmelidir. İndiği yerde geri atlanamayacağını kontrol et.",
+"x.cap": "{sq} taşı atlar ve {n} alır. Almak zorunludur; birden çok seçenek varsa taşın indikten sonra geri atlanıp atlanamayacağını karşılaştır.",
+"x.safe": "{sq} taşını {to}'ya oynat ve rakibe atlama bırakma. Arka tarafı kapalı bir taşın üzerinden atlanamaz.",
+"x.save": "{sq} taşı tehdit altında; {to}'ya götür. Önemli olan, orada arkasındaki noktanın (rakipten bakınca) boş olmaması.",
+"x.sac": "{sq} taşını {to}'ya oynat ve bilerek üzerinden atlanmasına izin ver. Almak zorunlu olduğu için bu bir rakip taşı çeker; YZ'nin okumasına göre kayıp küçük (ya da taş geri kazanılır).",
+"c.strong": "Çapraz nokta",
+"b.strong": "Çapraz noktaya",
+"x.strong": "{sq} taşını çaprazların kesiştiği {to} noktasına oynat. Orada çapraz da gidip atlayabilir, saldırıda ve savunmada.",
+"x.wait": "{sq} taşını {to}'ya oynat ve beklerken sağlam bir şekil koru. Taşlar geri gidemez, ileri atılmakta acele etme: elde hamle tutmak önemlidir.",
+"strong": "Çapraz noktalar",
+"mobK": "Kalan hamle",
+"lp.shot": "💡 İpucu: birden çok alma varsa \"alınan taşlar − geri atlanan taşlar\"ı karşılaştır.",
+"lp.hang": "💡 İpucu: hamleden önce her taşın arkasındaki noktaya bak (rakipten bakınca): boşsa o taşın üzerinden atlanabilir.",
+"tp.chain": "Alma başka atlamalarla sürebilir. Zincir mümkün olduğu sürece devam etmelidir: son iniş noktasının güvenli olduğunu kontrol et.",
+"tp.big": "Bir atlama zinciri tek seferde {n} taş alır. Taşın indiği yerde geri atlanamayacağını kontrol et.",
+"tp.hang": "{sq} taşlarının üzerinden atlanabilir (sıra rakipte olsaydı). Arkadaki noktayı kendi taşınla kapat, uzaklaş ya da geri atlamayı mümkün kıl.",
+"tp.oppBig": "Rakip bir sonraki hamlede {n} atlamalık bir zincirle tehdit ediyor. Bir iniş noktasını kendi taşınla kapat ya da önce sen al.",
+"tp.paika": "Alınacak bir şey yok. Taşlar yalnızca ileri ya da yana gider; rakibe atlama vermeyen bir noktaya git — geri dönemeyeceğini unutma.",
+"tp.behind": "Geridesin. Arkasında boş nokta olan rakip taşları hedefle ve taş geri kazanmak için bir atlama zinciri kur.",
+"tp.losing": "Kaybediyorsun. Geri dönüş ara: bir rakip taşı çekmek için bir taş ver, sonra birkaçını geri atla.",
+"tp.strong": "Rakip çaprazların kesiştiği daha çok noktayı tutuyor. Oradaki taşlar çapraz gidip atlayabilir ve tahtanın daha çoğunu gözetler.",
+"tp.strong2": "Çaprazların kesiştiği daha çok noktayı sen tutuyorsun. Çapraz gidip atlayabilen taşlar saldırıda ve savunmada güçlüdür.",
+"tp.end1": "Oyun sonu bir kalan hamle savaşıdır: taşlar geri gidemez ve hamlesi kalmayan taraf kaybeder. Elde bekleme hamleleri tut ve rakip taşların alanını daralt.",
+"tp.endDef": "Daha az taşın varsa arkanda boş nokta varken bir rakip taşın yanında durmaktan kaçın ve yana gidecek yer bırak.",
+"tp.mob": "Mümkün almasız hamleler: sen {a}, rakip {b}. Hamlesi kalmayan taraf kaybeder; oyun sonunda elinde daha çok hamle olan taraf daha iyidir.",
+"tp.open1": "Açılış mücadelesi merkez c3 çevresinde başlar. Almak zorunlu olduğundan \"bir ver, iki al\"a dikkat et: üzerinden atlansın diye bir taş sunulur, sonra geri atlanır.",
+"tp.open2": "Taşlar geri gidemez (yalnızca alan bir atlama her yöne olabilir). İleri atılmakta acele etme; arka sıradaki taşları savunma için tut.",
+"tp.mid1": "Atlama için hemen ötede boş bir nokta gerekir. Bir taşın hemen arkasındaki noktayı dost bir taşla kapat, o taş alınamaz.",
+"tp.mid2": "Almalar arasında \"alınan − geri atlanan\"a göre seç.",
+"Agl": {
+"force": {
+"m": [
+"almak zorunludur",
+"almak zorunlu",
+"zorunlu"
+],
+"t": "Zorunlu alma",
+"d": "Alma mümkünse almasız hamle yapılamaz. Birden çok alma varsa istediğini seçebilirsin."
+},
+"jump": {
+"m": [
+"geri atlanan",
+"geri atlamayı",
+"atlama",
+"atlar"
+],
+"t": "Atlayarak alma",
+"d": "Bir hat boyunca yanındaki rakip taşın üzerinden hemen ötedeki boş noktaya atla; üzerinden atlanan taş alınır. Alan bir atlama her yöne, geriye de olabilir."
+},
+"chain": {
+"m": [
+"atlama zinciri",
+"zincir"
+],
+"t": "Atlama zinciri",
+"d": "Taş indiği yerden yeniden atlayabiliyorsa aynı sırada atlamaya devam etmek zorundadır — yarıda duramaz."
+},
+"strong": {
+"m": [
+"çaprazların kesiştiği",
+"çapraz nokta"
+],
+"t": "Çapraz noktalar",
+"d": "Çapraz hatların kesiştiği noktalar (tahtanın yarısı). Oradaki taş çapraz da gidip atlayabilir."
+},
+"noback": {
+"m": [
+"geri gidemez",
+"geri dönemeyeceğini"
+],
+"t": "Geri gitmek yok",
+"d": "Almasız hamle ileri ya da yana tek adımdır. Yalnızca alan bir atlama geriye gidebilir."
+}
+}
 }
 }); })();
 // Alquerque, Alfonso's rules ('alqf'): the texts that differ again (a piece may also step back); ja / en in coach.js
@@ -1810,7 +2905,27 @@
 "x.wait": "حرّك القطعة من {sq} إلى {to} وحافظ على تشكيل متماسك وأنت تنتظر. الأهم ألا تترك للخصم أي قفزة.",
 "tp.paika": "لا يوجد أسر. انتقل إلى نقطة لا تمنح الخصم أي قفزة؛ ويمكن للقطع الرجوع أيضًا، فالتراجع للدفاع خيار متاح.",
 "tp.end1": "في النهاية ضيّق المساحة على قطع الخصم شيئًا فشيئًا: الطرف الذي لا يستطيع التحرك يخسر.",
-"tp.open2": "في الافتتاح لا تتقدّم كثيرًا: أبقِ النقاط خلف قطعك مغطاة حتى لا يُقفز فوقها." } }
+"tp.open2": "في الافتتاح لا تتقدّم كثيرًا: أبقِ النقاط خلف قطعك مغطاة حتى لا يُقفز فوقها." } },
+"ru": { "F": {
+"x.wait": "Фишку с {sq} на {to}, сохраняя прочную позицию в ожидании. Главное — не дать сопернику прыжков.",
+"tp.paika": "Брать нечего. Идите на пункт, который не даёт сопернику прыжков; фишки могут ходить и назад, так что можно отступить для защиты.",
+"tp.end1": "В эндшпиле шаг за шагом отнимайте у фишек соперника простор: сторона без ходов проигрывает.",
+"tp.open2": "В дебюте не спешите вперёд: держите пункты за своими фишками прикрытыми, чтобы их нельзя было перепрыгнуть." } },
+"zh-TW": { "F": {
+"x.wait": "把 {sq} 的棋子走到 {to}，保持穩固的形狀等待。最重要的是不給對手跳吃的機會。",
+"tp.paika": "沒有子可吃。走到不給對手跳吃機會的點；棋子也能後退，退回防守也是一種選擇。",
+"tp.end1": "殘局時一步步壓縮對手棋子的空間：無棋可走的一方判負。",
+"tp.open2": "開局不要衝得太前：擋住自己棋子後方的點，讓它們不會被跳吃。" } },
+"id": { "F": {
+"x.wait": "Gerakkan biji di {sq} ke {to} dan jaga bentuk yang kokoh sambil menunggu. Yang utama: jangan beri lawan lompatan.",
+"tp.paika": "Tidak ada yang bisa dimakan. Pindah ke titik yang tidak memberi lawan lompatan; biji juga bisa mundur, jadi mundur untuk bertahan pun bisa.",
+"tp.end1": "Di akhir permainan, persempit ruang biji lawan sedikit demi sedikit: pihak yang tidak bisa bergerak kalah.",
+"tp.open2": "Di pembukaan jangan terburu-buru maju: tutup titik di belakang bijimu agar tidak bisa dilompati." } },
+"tr": { "F": {
+"x.wait": "{sq} taşını {to}'ya oynat ve beklerken sağlam bir şekil koru. Önce rakibe atlama vermemek gelir.",
+"tp.paika": "Alınacak bir şey yok. Rakibe atlama vermeyen bir noktaya git; taşlar geri de gidebilir, savunmak için geri çekilmek de bir seçenek.",
+"tp.end1": "Oyun sonunda rakip taşların alanını adım adım daralt: hamlesi kalmayan taraf kaybeder.",
+"tp.open2": "Açılışta ileri atılmakta acele etme: taşlarının arkasındaki noktaları kapalı tut ki üzerlerinden atlanamasın." } }
 }); })();
 // the "coach is resting" note (lessons, puzzles, watching…)
 (() => { if (!window.FanoronaCoach) return; FanoronaCoach.merge({"zh":{"rest":"课程、谜题、观战等期间，教练暂停。试着靠自己思考吧。回到与AI对局或双人对战时，教练会恢复。"},

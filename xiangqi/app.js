@@ -42,7 +42,8 @@ function statusAt(i) {
 }
 const toMoveAt = i => posAt(i).pos.turn;
 // notation: Chinese characters in Japanese / Chinese, WXF elsewhere
-const notaStyle = () => settings.nota && settings.nota !== 'auto' ? settings.nota : LANG === 'ja' ? 'ja' : LANG === 'zh' ? 'zh' : 'wxf';
+const autoNota = () => LANG === 'ja' ? 'ja' : LANG === 'zh' ? 'zh' : LANG === 'zh-TW' ? 'tw' : 'wxf';   // zh-TW: traditional characters (傌 俥 包 …)
+const notaStyle = () => settings.nota && settings.nota !== 'auto' ? settings.nota : autoNota();
 function mvAt(i) { return E.name(posAt(i).pos, moves[i], notaStyle()); }
 function mvIn(pos, m) { return E.name(pos, m, notaStyle()); }
 const isCapAt = i => !!posAt(i).pos.at(mTo(moves[i]));
@@ -50,8 +51,8 @@ const isCapAt = i => !!posAt(i).pos.at(mTo(moves[i]));
 // ====================================================================== state
 const STORE = 'aicoding-xiangqi';
 const settings = { mode: 'ai', rule: 'standard', color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, coach: true, last: true, threat: false, num: true, lang: '', bd: 'wood', pcs: 'wood', nota: 'auto' };
-const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
-function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
+const SUPPORTED = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
+function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); if (/^zh-(tw|hk|mo|hant)/.test(n)) return 'zh-TW'; return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
 function t(k, v) { let x = (I18N[LANG] || I18N.en)[k]; if (x === undefined) x = I18N.en[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
 const pname = p => t(p === P1 ? 'p1' : 'p2');
@@ -113,7 +114,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=20261105x7';
+const ENGINE_URL = 'engine.js?v=20261105x7-l14';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -1210,7 +1211,7 @@ function rtConfirm(after) {
 
 // ====================================================================== lessons (20 points per problem, 75 to pass)
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=20261104rp').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=20261104rp-l14').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { try { return JSON.parse(localStorage.getItem(PZ_STORE) || '{}'); } catch (e) { return {}; } }
@@ -1502,7 +1503,7 @@ $('#lsList').onclick = () => { if (!lesson) return; if (lesson.study || lesson.v
 // ====================================================================== openings (famous lines, studied move by move, then practice)
 let OPEN = null, openChoiceIdx = -1;
 function OPEN_DATA() { return OPEN; }   // (coach.js: the named first moves of each opening)
-const openReady = fetch('openings.json?v=1').then(r => r.json()).then(d => (OPEN = d)).catch(() => null)
+const openReady = fetch('openings.json?v=2').then(r => r.json()).then(d => (OPEN = d)).catch(() => null)
   .then(() => { if (!OPEN) document.querySelectorAll('.ls-tabs button[data-v=open]').forEach(b => b.remove()); });
 const OP_STORE = STORE + '-open';
 function opProg() { try { return JSON.parse(localStorage.getItem(OP_STORE) || '{}'); } catch (e) { return {}; } }
@@ -2188,10 +2189,10 @@ async function xqDiagram(mode) {
   await RX.fonts();
   const serif = "'Shippori Mincho B1','Noto Serif SC','Songti SC',serif";
   let cap = RX.tx('start');
-  if (cur) { const q = posAt(cur - 1).pos; cap = `${((cur - 1) >> 1) + 1}.${(cur - 1) & 1 ? '..' : ''} ${E.name(q, moves[cur - 1], LANG === 'ja' ? 'ja' : LANG === 'zh' ? 'zh' : 'wxf')}`; }
+  if (cur) { const q = posAt(cur - 1).pos; cap = `${((cur - 1) >> 1) + 1}.${(cur - 1) & 1 ? '..' : ''} ${E.name(q, moves[cur - 1], autoNota())}`; }
   const st = statusAt(cur);
   cap += '　' + (st.over ? (st.winner === P1 ? '1-0' : st.winner === P2 ? '0-1' : '½-½') : RX.tx('toMove', { s: pname(pos.turn) }));
-  const tokens = []; if (mode === 'moves') { const q = E.Pos.from(startSpec); moves.slice(0, cur).forEach((m, i) => { tokens.push((i % 2 === 0 ? (i / 2 + 1) + '. ' : '') + E.name(q, m, LANG === 'ja' ? 'ja' : LANG === 'zh' ? 'zh' : 'wxf')); q.play(m); }); }
+  const tokens = []; if (mode === 'moves') { const q = E.Pos.from(startSpec); moves.slice(0, cur).forEach((m, i) => { tokens.push((i % 2 === 0 ? (i / 2 + 1) + '. ' : '') + E.name(q, m, autoNota())); q.play(m); }); }
   const lt = cur ? mTo(moves[cur - 1]) : -1, lf = cur ? mFrom(moves[cur - 1]) : -1;
   const pl = [P1, P2].map(p => ({ name: pname(p) + (RX.name(p - 1, playerName(p)) ? ' ' + RX.name(p - 1, playerName(p)) : ''), swatch: (g, x, y, r) => RX.disc(g, x, y, r, '#fbf6ea', p === P1 ? red : ink, 1.8) }));
   return RX.sheet({ bw: BW + 2.3 * S, bh: BH + 2.3 * S, title: t('meta.title').split(/[|｜—–]/)[0].trim(), caption: cap, players: pl, moves: tokens, path: 'xiangqi', font: "'Zen Kaku Gothic New'," + serif, titleFont: serif, draw: (g, x0, y0) => {

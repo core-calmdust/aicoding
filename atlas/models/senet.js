@@ -41,7 +41,7 @@
     return (b2p = new Promise(res => {
       if (window.SenetBoard2D) return res();
       const sc = document.createElement('script'), base = /\/(atlas|senet)\//.test(location.pathname) ? '../senet/' : 'senet/';
-      sc.src = base + 'board2d.js?v=1'; sc.onload = () => res(); sc.onerror = () => res(); document.head.appendChild(sc);
+      sc.src = base + 'board2d.js?v=2'; sc.onload = () => res(); sc.onerror = () => res(); document.head.appendChild(sc);
     }));
   }
   function topTex(design) {
@@ -97,7 +97,7 @@
     const TT = T(), g = new TT.Group(), B = BOX[design];
     const body = mat('bd' + design, () => phys({ color: B.body, roughness: B.rough, clearcoat: B.coat || undefined, clearcoatRoughness: .25, envMapIntensity: .9 }));
     const gold = mat('tr' + design, () => phys({ color: B.trim, roughness: .3, metalness: B.trimM }));
-    const topM = mat('top' + design, () => phys({ map: topTex(design), color: '#ffffff', roughness: design === 'faience' ? .25 : design === 'papyrus' ? .75 : .45, clearcoat: design === 'papyrus' ? undefined : .35, clearcoatRoughness: .3, envMapIntensity: .7 }));
+    const topM = mat('top' + design, () => phys({ map: topTex(design), color: '#e4ddd0', roughness: design === 'faience' ? .35 : design === 'papyrus' ? .8 : .6, clearcoat: design === 'papyrus' ? undefined : .12, clearcoatRoughness: .45, envMapIntensity: .5 }));   // (toned down: the white squares glared under the table lights)
     const box = new TT.Mesh(new TT.BoxGeometry(W, H, D), [body, body, topM, body, body, body]);
     box.position.y = H / 2; box.castShadow = box.receiveShadow = true; g.add(box);
     // gilded edges round the top and the foot of the box

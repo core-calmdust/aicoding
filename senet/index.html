@@ -56,7 +56,7 @@ html[lang=ar] .frame, html[lang=ar] .board-wrap, html[lang=ar] .kifu, html[lang=
 .card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:14px;padding:12px 14px;min-width:0;position:relative}
 .card::before{content:"";position:absolute;inset:3px;border-radius:11px;border:1px solid rgba(217,180,90,.08);pointer-events:none}
 .label,.kifu-head .label,.evalrow .label{font-family:var(--serif);font-size:15px;letter-spacing:.12em;color:var(--accent);font-weight:700}
-html[lang=ja] .label, html[lang=zh] .label, html[lang=ko] .label{font-family:var(--mincho);font-size:13.5px}
+html[lang=ja] .label, html[lang=zh] .label,html[lang=zh-TW] .label, html[lang=ko] .label{font-family:var(--mincho);font-size:13.5px}
 .kifu-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
 .kifu-head .kb{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
 .kifu-head button{font-size:11.5px;color:var(--muted);padding:3px 8px;border-radius:6px;border:1px solid var(--line);background:rgba(0,0,0,.15);white-space:nowrap}
@@ -67,7 +67,7 @@ html[lang=ja] .label, html[lang=zh] .label, html[lang=ko] .label{font-family:var
 .brand-l{min-width:0;display:flex;flex-direction:column}
 .brand a.series{font-size:11px;color:var(--dim);text-decoration:none;letter-spacing:.08em;white-space:nowrap}
 .brand h1{font-family:var(--mincho);font-weight:800;font-size:21px;letter-spacing:.08em;white-space:nowrap;line-height:1.15;cursor:pointer;background:linear-gradient(180deg,#fff3cf,#d9b45a 70%,#a8843a);-webkit-background-clip:text;background-clip:text;color:transparent}
-html:not([lang=ja]):not([lang=zh]):not([lang=ko]) .brand h1{font-family:var(--serif);font-size:23px;letter-spacing:.04em}
+html:not([lang=ja]):not([lang=zh]):not([lang=zh-TW]):not([lang=ko]) .brand h1{font-family:var(--serif);font-size:23px;letter-spacing:.04em}
 .brand h1 small{display:none}
 .brand-r{display:flex;align-items:center;gap:6px;flex:none}
 /* landscape option (phones, as backgammon): the wrapper page only holds the turned iframe; the button, its pulse and the tip */
@@ -155,8 +155,8 @@ body.no-anim .dice-dock.can .roll-pill{animation:none}
 .dice-dock .roll-pill:active,.dice-dock.press .roll-pill{transform:translate(-50%,-50%) translateY(2px) scale(.97);filter:drop-shadow(0 2px 2px rgba(0,0,0,.6)) brightness(.9)}
 .dice-dock .roll-pill:focus-visible{outline:2px solid #f3d88f;outline-offset:3px}
 html.bv .frame > .dice-dock .roll-pill{width:calc(var(--bw) * .118);height:calc(var(--bw) * .3);font-size:calc(var(--bw) * .044);writing-mode:vertical-rl;letter-spacing:.2em;text-indent:.2em;padding:calc(var(--bw) * .03) 0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 300' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='b' x1='0' y1='0' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='%232e2620'/%3E%3Cstop offset='.5' stop-color='%2316110d'/%3E%3Cstop offset='1' stop-color='%230c0907'/%3E%3C/linearGradient%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23f6dc98'/%3E%3Cstop offset='.45' stop-color='%23b98d3e'/%3E%3Cstop offset='.7' stop-color='%23f0d38a'/%3E%3Cstop offset='1' stop-color='%238f6a2a'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M94.8 48.0V252.0A46.8 46.8 0 0 1 1.2 252.0V48.0A46.8 46.8 0 0 1 94.8 48.0Z' fill='url%28%23b%29' stroke='url%28%23g%29' stroke-width='2.4'/%3E%3Cpath d='M91.4 48.0V252.0A43.4 43.4 0 0 1 4.6 252.0V48.0A43.4 43.4 0 0 1 91.4 48.0Z' fill='none' stroke='%23c9a352' stroke-opacity='.55' stroke-width='.9'/%3E%3Cpath d='M86.5 52.1L83.5 48.0L86.5 43.9L89.5 48.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M86.5 68.3L83.5 64.2L86.5 60.1L89.5 64.2Z' fill='%237a2a1e'/%3E%3Cpath d='M86.5 84.6L83.5 80.5L86.5 76.4L89.5 80.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M86.5 100.8L83.5 96.7L86.5 92.6L89.5 96.7Z' fill='%237a2a1e'/%3E%3Cpath d='M86.5 117.1L83.5 113.0L86.5 108.9L89.5 113.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M86.5 133.3L83.5 129.2L86.5 125.1L89.5 129.2Z' fill='%237a2a1e'/%3E%3Cpath d='M86.5 149.6L83.5 145.5L86.5 141.4L89.5 145.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M86.5 165.8L83.5 161.7L86.5 157.6L89.5 161.7Z' fill='%237a2a1e'/%3E%3Cpath d='M86.5 182.1L83.5 178.0L86.5 173.9L89.5 178.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M86.5 198.3L83.5 194.2L86.5 190.1L89.5 194.2Z' fill='%237a2a1e'/%3E%3Cpath d='M86.5 214.6L83.5 210.5L86.5 206.4L89.5 210.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M86.5 230.8L83.5 226.7L86.5 222.6L89.5 226.7Z' fill='%237a2a1e'/%3E%3Cpath d='M86.5 247.1L83.5 243.0L86.5 238.9L89.5 243.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M85.1 263.2L82.9 258.6L86.6 255.1L88.8 259.7Z' fill='%237a2a1e'/%3E%3Cpath d='M77.2 277.4L77.1 272.3L81.9 270.7L82.0 275.8Z' fill='%23e9dcc0'/%3E%3Cpath d='M64.3 287.1L66.2 282.5L71.3 282.9L69.3 287.6Z' fill='%237a2a1e'/%3E%3Cpath d='M48.4 290.7L52.2 287.3L56.6 289.8L52.9 293.2Z' fill='%23e9dcc0'/%3E%3Cpath d='M32.5 287.5L37.3 285.9L40.4 290.0L35.5 291.6Z' fill='%237a2a1e'/%3E%3Cpath d='M19.4 278.0L24.4 278.5L25.5 283.5L20.4 283.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M11.2 264.0L15.6 266.5L14.6 271.5L10.1 269.0Z' fill='%237a2a1e'/%3E%3Cpath d='M9.5 247.9L12.5 252.0L9.5 256.1L6.5 252.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M9.5 231.7L12.5 235.8L9.5 239.9L6.5 235.8Z' fill='%237a2a1e'/%3E%3Cpath d='M9.5 215.4L12.5 219.5L9.5 223.6L6.5 219.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M9.5 199.2L12.5 203.3L9.5 207.4L6.5 203.3Z' fill='%237a2a1e'/%3E%3Cpath d='M9.5 182.9L12.5 187.0L9.5 191.1L6.5 187.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M9.5 166.7L12.5 170.8L9.5 174.9L6.5 170.8Z' fill='%237a2a1e'/%3E%3Cpath d='M9.5 150.4L12.5 154.5L9.5 158.6L6.5 154.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M9.5 134.2L12.5 138.3L9.5 142.4L6.5 138.3Z' fill='%237a2a1e'/%3E%3Cpath d='M9.5 117.9L12.5 122.0L9.5 126.1L6.5 122.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M9.5 101.7L12.5 105.8L9.5 109.9L6.5 105.8Z' fill='%237a2a1e'/%3E%3Cpath d='M9.5 85.4L12.5 89.5L9.5 93.6L6.5 89.5Z' fill='%23e9dcc0'/%3E%3Cpath d='M9.5 69.2L12.5 73.3L9.5 77.4L6.5 73.3Z' fill='%237a2a1e'/%3E%3Cpath d='M9.5 52.9L12.5 57.0L9.5 61.1L6.5 57.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M10.9 36.8L13.1 41.4L9.4 44.9L7.2 40.3Z' fill='%237a2a1e'/%3E%3Cpath d='M18.8 22.6L18.9 27.7L14.1 29.3L14.0 24.2Z' fill='%23e9dcc0'/%3E%3Cpath d='M31.7 12.9L29.8 17.5L24.7 17.1L26.7 12.4Z' fill='%237a2a1e'/%3E%3Cpath d='M47.6 9.3L43.8 12.7L39.4 10.2L43.1 6.8Z' fill='%23e9dcc0'/%3E%3Cpath d='M63.5 12.5L58.7 14.1L55.6 10.0L60.5 8.4Z' fill='%237a2a1e'/%3E%3Cpath d='M76.6 22.0L71.6 21.5L70.5 16.5L75.6 17.0Z' fill='%23e9dcc0'/%3E%3Cpath d='M84.8 36.0L80.4 33.5L81.4 28.5L85.9 31.0Z' fill='%237a2a1e'/%3E%3Cpath d='M81.4 48.0V252.0A33.4 33.4 0 0 1 14.6 252.0V48.0A33.4 33.4 0 0 1 81.4 48.0Z' fill='none' stroke='url%28%23g%29' stroke-width='1.3'/%3E%3Cpath d='M31 48.0V252.0' stroke='%23fff' stroke-opacity='.06' stroke-width='10' stroke-linecap='round'/%3E%3C/svg%3E")}
-html.bv[lang=ja] .frame > .dice-dock .roll-pill,html.bv[lang=zh] .frame > .dice-dock .roll-pill,html.bv[lang=ko] .frame > .dice-dock .roll-pill{text-orientation:upright;letter-spacing:.3em}
-html[lang=ja] .dice-dock .roll-pill,html[lang=zh] .dice-dock .roll-pill,html[lang=ko] .dice-dock .roll-pill{letter-spacing:.32em;text-indent:.32em;font-family:'Shippori Mincho B1',var(--serif);font-weight:800}
+html.bv[lang=ja] .frame > .dice-dock .roll-pill,html.bv[lang=zh] .frame > .dice-dock .roll-pill,html.bv[lang=zh-TW] .frame > .dice-dock .roll-pill,html.bv[lang=ko] .frame > .dice-dock .roll-pill{text-orientation:upright;letter-spacing:.3em}
+html[lang=ja] .dice-dock .roll-pill,html[lang=zh] .dice-dock .roll-pill,html[lang=zh-TW] .dice-dock .roll-pill,html[lang=ko] .dice-dock .roll-pill{letter-spacing:.32em;text-indent:.32em;font-family:'Shippori Mincho B1',var(--serif);font-weight:800}
 /* while the dice roll the plate steps aside */
 .dice-dock.rolling .roll-pill{display:none}
 .dice-dock:not(.can) .roll-pill{display:none}
@@ -165,7 +165,7 @@ html[lang=ja] .dice-dock .roll-pill,html[lang=zh] .dice-dock .roll-pill,html[lan
   font-family:var(--serif);font-weight:700;letter-spacing:.14em;color:#fff3cf;font-size:calc(var(--bw) * .036);
   padding:.35em 1.3em .4em;border-radius:999px;background:radial-gradient(120% 140% at 50% 50%,rgba(28,18,10,.72),rgba(28,18,10,.42) 60%,rgba(30,20,12,0) 100%);
   text-shadow:0 0 18px rgba(230,197,115,.55),0 1px 2px rgba(0,0,0,.7);transition:opacity .35s ease,transform .5s ease}
-html[lang=ja] .fx-msg, html[lang=zh] .fx-msg, html[lang=ko] .fx-msg{font-family:var(--mincho)}
+html[lang=ja] .fx-msg, html[lang=zh] .fx-msg,html[lang=zh-TW] .fx-msg, html[lang=ko] .fx-msg{font-family:var(--mincho)}
 html.bv .fx-msg{font-size:calc(var(--bw) * .07)}
 .fx-msg small{display:block;font-family:'Zen Kaku Gothic New',sans-serif;font-size:.48em;letter-spacing:.08em;color:rgba(239,232,214,.8);margin-top:.2em;font-weight:500}
 /* readable at a glance (the main word ≈ 40px on PC, 28–34px on phones; the line under it ≥ 15px); the shown time is unchanged */
@@ -342,7 +342,7 @@ body:is(.in-lesson,.in-puzzle) .cb-bar{padding-bottom:2px}
   background:linear-gradient(180deg,#2e2014,#1a110a);border:1px solid rgba(217,180,90,.35);border-radius:18px;padding:24px;box-shadow:0 40px 80px rgba(0,0,0,.6),inset 0 0 0 4px rgba(217,180,90,.05);transform:translateY(10px);transition:transform .25s;position:relative}
 .overlay.show .modal{transform:none}
 .modal h2{font-family:var(--mincho);font-size:22px;letter-spacing:.12em;margin-bottom:18px;color:#fff3cf}
-html:not([lang=ja]):not([lang=zh]):not([lang=ko]) .modal h2{font-family:var(--serif);font-size:25px;letter-spacing:.06em}
+html:not([lang=ja]):not([lang=zh]):not([lang=zh-TW]):not([lang=ko]) .modal h2{font-family:var(--serif);font-size:25px;letter-spacing:.06em}
 @media (max-width: 520px), (max-height: 560px){
   .overlay{padding:10px}
   .modal{padding:18px 16px;max-height:calc(100dvh - 20px);border-radius:14px}
@@ -369,7 +369,7 @@ html:not([lang=ja]):not([lang=zh]):not([lang=ko]) .modal h2{font-family:var(--se
 .mbtn.go{background:linear-gradient(180deg,#f1d68e,#c9a24f);color:#1b1408;border-color:transparent}
 .mbtn.go:hover{filter:brightness(1.07)}
 .result-big{font-family:var(--mincho);font-size:34px;font-weight:800;text-align:center;letter-spacing:.1em;margin:4px 0 10px;color:#fff3cf}
-html:not([lang=ja]):not([lang=zh]):not([lang=ko]) .result-big{font-family:var(--serif)}
+html:not([lang=ja]):not([lang=zh]):not([lang=zh-TW]):not([lang=ko]) .result-big{font-family:var(--serif)}
 .result-disc{display:flex;justify-content:center;margin:6px 0 4px}
 .result-disc .pdisc{width:54px;height:54px}
 .result-sub{text-align:center;color:var(--muted);font-size:13px;margin-top:8px;line-height:1.7}
@@ -622,7 +622,9 @@ html:not([lang=ja]):not([lang=zh]):not([lang=ko]) .result-big{font-family:var(--
   html.sn-land, html.sn-land body{height:100%!important;overflow:hidden!important;overscroll-behavior:none}
   html.sn-land{--lvh:100vh;--ltw:300px;--lcw:166px;--tp:36px;--sl:env(safe-area-inset-left);--sr:env(safe-area-inset-right)}
   @supports (height:100dvh){html.sn-land{--lvh:100dvh}}
-  html.sn-land{--bw:min(calc((var(--lvh) - var(--tp) - 20px) * 1.890), calc(100vw - var(--lcw) - 58px - 36px - max(8px, var(--sr)) - max(10px, var(--sl))))!important}
+  /* the board drops its bear-off trays here (board2d setTrays(false); the counts are in the players' cards): 1096 × 396 */
+  html.sn-land{--pr:52px;--bw:min(calc((var(--lvh) - var(--tp) - 26px - var(--pr)) * 2.768), calc(100vw - 58px - 26px - max(8px, var(--sr)) - max(10px, var(--sl))))!important}
+  html.sn-land .frame{aspect-ratio:1096/396!important}
   html.sn-land body.lt-on .app{display:grid!important;position:static!important;height:var(--lvh)!important;min-height:0!important;max-width:none!important;margin:0!important;box-sizing:border-box;overflow:hidden;
     padding:6px max(8px, var(--sr)) 6px max(10px, var(--sl))!important;gap:6px 8px!important;
     grid-template-columns:auto minmax(0,1fr) auto 58px!important;grid-template-rows:var(--tp) minmax(0,1fr)!important;
@@ -636,34 +638,25 @@ html:not([lang=ja]):not([lang=zh]):not([lang=ko]) .result-big{font-family:var(--
   html.sn-land body.lt-on .brand-r > :is(button, a){width:34px!important;height:32px!important;min-width:0;padding:0!important;display:inline-flex;align-items:center;justify-content:center;border-radius:8px!important;flex:none}
   html.sn-land body.lt-on .brand-r > :is(button, a) svg{width:17px!important;height:17px!important}
   html.sn-land body.lt-on .brand-r #langSel{width:74px!important;max-width:74px;height:32px!important;font-size:12px;padding:0 4px}
-  html.sn-land body.lt-on .controls{grid-area:ct;display:flex!important;flex-direction:row;gap:4px!important;align-items:center;justify-content:flex-start;padding:0!important;background:none!important;border:0!important;box-shadow:none!important;min-width:0;overflow:hidden}
+  html.sn-land body.lt-on .controls{grid-area:ct;display:flex!important;flex-direction:row;gap:4px!important;align-items:center;justify-content:flex-end;padding:0!important;background:none!important;border:0!important;box-shadow:none!important;min-width:0;overflow:hidden}
   html.sn-land body.lt-on .controls::before{display:none}
   html.sn-land body.lt-on .controls .btn span{display:none!important}
   html.sn-land body.lt-on .controls .btn{padding:0!important;flex:none!important;width:38px!important;height:32px!important;gap:0!important;border-radius:8px!important;justify-content:center}
   html.sn-land body.lt-on .controls .btn svg{width:17px!important;height:17px!important}
   html.sn-land body.lt-on .controls :is(#btnLesson, #btnPuzzle, #btnRules){display:none!important}
   html.sn-land body.lt-on :is(.pl-col, .info-line, .mtabs, .mt-strip, #itNav, #itCoachRest){display:none!important}
-  /* the board and the cards: the cards in a column left of the board (their order: the opponent above, you below) */
+  /* the board across the full width, the two players' cards side by side under it (the opponent left, you right, as at the table) */
   html.sn-land body.lt-on .board-area{grid-area:board;align-self:center;justify-self:center;min-height:0;display:grid!important;
-    grid-template-columns:var(--lcw) var(--bw);grid-template-rows:auto auto;column-gap:10px;row-gap:8px;align-items:center}
-  html.sn-land body.lt-on .board-area > .frame{grid-column:2;grid-row:1 / 3;margin:0!important}
-  html.sn-land body.lt-on .board-area > .player{grid-column:1;width:var(--lcw)!important;height:auto!important;flex-wrap:wrap;row-gap:6px;padding:8px 8px 8px 10px!important}
-  html.sn-land body.lt-on .board-area > .player:not(.frame ~ .player){align-self:start}
-  html.sn-land body.lt-on .board-area > .frame ~ .player{align-self:end}
-  html.sn-land body.lt-on .board-area > .player > .pdk{flex:1 1 100%;width:auto}
-  html.sn-land body.lt-on .board-area > .player > .review-bar{flex:1 1 100%;flex-wrap:wrap;justify-content:center}
+    grid-template-columns:calc((var(--bw) - 8px) / 2) calc((var(--bw) - 8px) / 2);grid-template-rows:auto var(--pr);column-gap:8px;row-gap:8px;align-items:stretch}
+  html.sn-land body.lt-on .board-area > .frame{grid-column:1 / 3;grid-row:1;margin:0!important}
+  html.sn-land body.lt-on .board-area > .player{grid-row:2;width:auto!important;height:var(--pr)!important;flex-wrap:nowrap;padding:4px 6px 4px 10px!important;min-width:0}
+  html.sn-land body.lt-on .board-area > .player:not(.frame ~ .player){grid-column:1}
+  html.sn-land body.lt-on .board-area > .frame ~ .player{grid-column:2}
+  html.sn-land body.lt-on .board-area > .player > .pdk{flex:none;width:clamp(136px, calc(var(--bw) * .2), 176px)}
+  /* a small phone (667 × 375 …): the name keeps its room — the count says only n/5 */
+  @media (max-width: 720px){ html.sn-land body.lt-on .board-area > .player .home small .hl{display:none} }
+  html.sn-land body.lt-on .board-area > .player > .review-bar{flex:none;flex-wrap:nowrap}
   html.sn-land body.lt-on .board-area > .player > .review-bar button{padding:6px 8px;font-size:11px}
-  /* a shorter screen (667 × 375 …): the cards above / below the board instead, the board as wide as the height leaves */
-  @media (max-aspect-ratio: 2/1){
-    html.sn-land{--bw:min(calc((var(--lvh) - var(--tp) - 20px - 120px) * 1.890), calc(100vw - 58px - 26px - max(8px, var(--sr)) - max(10px, var(--sl))))!important}
-    html.sn-land body.lt-on .board-area{grid-template-columns:var(--bw);grid-template-rows:auto auto auto;row-gap:8px}
-    html.sn-land body.lt-on .board-area > .frame{grid-column:1;grid-row:2}
-    html.sn-land body.lt-on .board-area > .player{grid-column:1;width:var(--bw)!important;flex-wrap:nowrap;height:52px!important;padding:4px 6px 4px 10px!important}
-    html.sn-land body.lt-on .board-area > .player:not(.frame ~ .player){grid-row:1}
-    html.sn-land body.lt-on .board-area > .frame ~ .player{grid-row:3}
-    html.sn-land body.lt-on .board-area > .player > .pdk{flex:none;width:176px}
-    html.sn-land body.lt-on .board-area > .player > .review-bar{flex:none;flex-wrap:nowrap}
-  }
   /* the rail */
   html.sn-land body.lt-on #ltRail{grid-area:rl;display:flex;flex-direction:column;justify-content:center;gap:4px;align-self:stretch;min-height:0;overflow-y:auto;scrollbar-width:none;
     padding:4px 0;border-radius:12px;background:rgba(0,0,0,.3);border:1px solid var(--line);position:relative;z-index:61}
@@ -745,7 +738,7 @@ html:not([lang=ja]):not([lang=zh]):not([lang=ko]) .result-big{font-family:var(--
   <aside class="side">
     <div class="brand">
       <div class="brand-l"><a class="series" href="../" data-i18n="series"></a><h1 class="to-board" role="button" tabindex="0"><span id="brandTitle"></span><small></small></h1></div>
-      <span class="brand-r"><button id="btnSound" class="snd" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="on-w" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/><path class="off-x" d="M16 9l6 6M22 9l-6 6"/></svg></button><select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option><option value="ko">한국어</option><option value="es">Español</option><option value="fr">Français</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="hi">हिन्दी</option><option value="ar">العربية</option></select><button id="btnLand" class="snd land" data-i18n-title="land.title" aria-label="Landscape"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="11" rx="2"/><path d="M7 4.5h6M17 21a4 4 0 0 0 3-3"/><path d="M19.5 16.5 20 18l1.5-.5"/></svg></button><a href="../" class="snd home" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a></span>
+      <span class="brand-r"><button id="btnSound" class="snd" aria-label="Sound"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="on-w" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/><path class="off-x" d="M16 9l6 6M22 9l-6 6"/></svg></button><select id="langSel" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option><option value="zh">简体中文</option><option value="zh-TW">繁體中文</option><option value="ko">한국어</option><option value="es">Español</option><option value="fr">Français</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="ru">Русский</option><option value="tr">Türkçe</option><option value="id">Bahasa Indonesia</option><option value="hi">हिन्दी</option><option value="ar">العربية</option></select><button id="btnLand" class="snd land" data-i18n-title="land.title" aria-label="Landscape"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="11" rx="2"/><path d="M7 4.5h6M17 21a4 4 0 0 0 3-3"/><path d="M19.5 16.5 20 18l1.5-.5"/></svg></button><a href="../" class="snd home" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></a></span>
     </div>
     <div class="card controls">
       <button class="btn primary" id="btnNew"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="btn.new"></span></button>
@@ -1012,7 +1005,7 @@ html:not([lang=ja]):not([lang=zh]):not([lang=ko]) .result-big{font-family:var(--
     fit(); addEventListener('resize', fit);
     // (the iframe took the room / record links along; the portal look stays for a reload)
     try { history.replaceState(null, '', location.pathname + (/[?&]skin=atlas\b/.test(location.search) ? '?skin=atlas' : '')); } catch (e) {}
-  } else document.write('<script src="i18n.js?v=1"><\/script><script src="i18n-online.js?v=1"><\/script><script src="../shared/pzbook.js?v=5"><\/script><script src="../shared/placement.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=17"><\/script><script src="../shared/headerbar.js?v=43"><\/script><script src="../shared/cardbar.js?v=7"><\/script><script src="../shared/watchpause.js?v=2"><\/script><script src="../shared/tick.js?v=2"><\/script><script src="../shared/ruletour.js?v=29"><\/script><script src="engine.js?v=1"><\/script><script src="board2d.js?v=1"><\/script><script src="tour.js?v=1" onerror="window.__noTour=1"><\/script><script src="../shared/resign.js?v=3"><\/script><script src="../shared/coachkit.js?v=16"><\/script><script src="../shared/record.js?v=12"><\/script><script src="../shared/export.js?v=9"><\/script><script src="coach.js?v=1"><\/script><script src="coach-i18n.js?v=1"><\/script><script src="firebase-config.js?v=1"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="online.js?v=1"><\/script><script src="app.js?v=1"><\/script><script src="rv-i18n.js?v=1"><\/script><script src="rvbox.js?v=1"><\/script><script src="app-learn.js?v=1"><\/script><script src="online-ui.js?v=2"><\/script><script src="landtabs.js?v=1"><\/script><script src="../shared/pickdrop.js?v=8"><\/script><script src="../shared/ngtabs.js?v=25"><\/script><script src="../shared/nglux.js?v=13"><\/script><script src="../shared/resumeng.js?v=1"><\/script><script src="../shared/rulelink.js?v=1" data-btn="#btnRules"><\/script>');
+  } else document.write('<script src="i18n.js?v=1"><\/script><script src="i18n-online.js?v=1"><\/script><script src="../shared/pzbook.js?v=5"><\/script><script src="../shared/placement.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=17"><\/script><script src="../shared/headerbar.js?v=43"><\/script><script src="../shared/cardbar.js?v=7"><\/script><script src="../shared/watchpause.js?v=2"><\/script><script src="../shared/tick.js?v=2"><\/script><script src="../shared/ruletour.js?v=29"><\/script><script src="engine.js?v=1"><\/script><script src="board2d.js?v=2"><\/script><script src="tour.js?v=1" onerror="window.__noTour=1"><\/script><script src="../shared/resign.js?v=3"><\/script><script src="../shared/coachkit.js?v=16"><\/script><script src="../shared/record.js?v=12"><\/script><script src="../shared/export.js?v=9"><\/script><script src="coach.js?v=1"><\/script><script src="coach-i18n.js?v=1"><\/script><script src="firebase-config.js?v=1"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="online.js?v=1"><\/script><script src="app.js?v=2"><\/script><script src="rv-i18n.js?v=1"><\/script><script src="rvbox.js?v=1"><\/script><script src="app-learn.js?v=1"><\/script><script src="online-ui.js?v=2"><\/script><script src="landtabs.js?v=2"><\/script><script src="../shared/pickdrop.js?v=8"><\/script><script src="../shared/ngtabs.js?v=25"><\/script><script src="../shared/nglux.js?v=14"><\/script><script src="../shared/resumeng.js?v=1"><\/script><script src="../shared/rulelink.js?v=1" data-btn="#btnRules"><\/script>');
 })();
 </script>
 <!-- World Board Game Atlas portal skin: senet/?skin=atlas — the board in 3D (atlas/models/senet.js + atlas/skin/senet.js), the DOM board stays on top for taps -->
@@ -1024,7 +1017,7 @@ html:not([lang=ja]):not([lang=zh]):not([lang=ko]) .result-big{font-family:var(--
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=105')).then(() => load('../atlas/tables3d.js?v=9')).then(() => load('../atlas/skin/common.js?v=29')).then(() => load('../atlas/models/senet.js?v=2')).then(() => load('../atlas/skin/senet.js?v=1'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=107')).then(() => load('../atlas/tables3d.js?v=10')).then(() => load('../atlas/skin/common.js?v=29')).then(() => load('../atlas/models/senet.js?v=3')).then(() => load('../atlas/skin/senet.js?v=3'))
     .catch(() => { const u = new URL(location.href); u.searchParams.delete('skin'); location.replace(u.href); });   // (the 3D files are missing: the plain 2D page)
 })();
 </script>

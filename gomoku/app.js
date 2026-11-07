@@ -54,8 +54,8 @@ const STORE = 'aicoding-gomoku';
 let resigned = null;
 const rsKey = () => rule + '|' + moves.join(',');
 const settings = { coach: true, lvv: 2, mode: 'ai', rule: 'renju', color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: false, forbid: true, num: false, confirm: null, lang: '', skin: 'classic' };
-const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
-function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
+const SUPPORTED = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
+function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); if (n.startsWith('zh')) return /^zh-(tw|hk|mo|hant)/.test(n) ? 'zh-TW' : 'zh'; return ['ja', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
 function t(k, v) { let x = (I18N[LANG] || I18N.en)[k]; if (x === undefined) x = I18N.en[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
 const pname = p => t(p === P1 ? 'p1' : 'p2');
@@ -964,6 +964,10 @@ const RULE_D = {
   de: { renju: 'Die offiziellen Regeln: Nur Schwarz hat verbotene Züge (3-3, 4-4, Überlänge). Schwarz braucht genau fünf, Weiß fünf oder mehr.', standard: 'Keine verbotenen Züge. Genau fünf in einer Reihe gewinnen; sechs oder mehr zählen nicht.', free: 'Keine verbotenen Züge. Fünf oder mehr in einer Reihe gewinnen – am einfachsten, aber Schwarz ist stark im Vorteil.' },
   hi: { renju: 'आधिकारिक नियम: केवल काले के लिए वर्जित चालें (3-3, 4-4, पाँच से अधिक) हैं। काले को ठीक पाँच, सफ़ेद को पाँच या अधिक चाहिए।', standard: 'कोई वर्जित चाल नहीं। ठीक पाँच की पंक्ति जीतती है; छह या अधिक नहीं गिने जाते।', free: 'कोई वर्जित चाल नहीं। पाँच या अधिक की पंक्ति जीतती है — सबसे आसान, पर पहले चलने वाले काले को बड़ा लाभ है।' },
   ar: { renju: 'القواعد الرسمية: للأسود وحده نقلات محظورة (3-3 و4-4 وأكثر من خمسة). يحتاج الأسود خمسة بالضبط، والأبيض خمسة أو أكثر.', standard: 'لا نقلات محظورة. خمسة متتالية بالضبط تفوز؛ ستة أو أكثر لا تُحتسب.', free: 'لا نقلات محظورة. خمسة متتالية أو أكثر تفوز — أبسط القواعد، لكن الأسود صاحب البداية متفوق كثيرًا.' },
+  ru: { renju: 'Официальные правила: запрещённые ходы (3-3, 4-4, длинный ряд) есть только у чёрных. Чёрным нужно ровно пять, белым — пять или больше.', standard: 'Запрещённых ходов нет. Побеждает ровно пять в ряд; шесть и больше не считаются.', free: 'Запрещённых ходов нет. Побеждает пять и больше в ряд — самые простые правила, но у чёрных большое преимущество.' },
+  'zh-TW': { renju: '正式規則：只有黑棋有禁手（三三・四四・長連）。黑棋須正好五連，白棋五連以上即勝。', standard: '沒有禁手。正好五連即勝，六連以上不算。', free: '沒有禁手。五連以上即勝——最輕鬆的規則，但黑棋優勢很大。' },
+  id: { renju: 'Aturan resmi: hanya Hitam yang punya langkah terlarang (3-3, 4-4, baris panjang). Hitam harus tepat lima, Putih lima atau lebih.', standard: 'Tanpa langkah terlarang. Tepat lima berderet menang; enam atau lebih tidak dihitung.', free: 'Tanpa langkah terlarang. Lima atau lebih berderet menang — aturan paling santai, tapi Hitam sangat diuntungkan.' },
+  tr: { renju: 'Resmî kurallar: yasak hamleler (3-3, 4-4, uzun sıra) yalnızca Siyah\'ta var. Siyah\'a tam beşli, Beyaz\'a beş veya fazlası gerekir.', standard: 'Yasak hamle yok. Tam beşli sıra kazanır; altı ve fazlası sayılmaz.', free: 'Yasak hamle yok. Beş veya fazlası sıra kazanır — en rahat kural, ama Siyah çok avantajlı.' },
 };
 function ruleArt(r) {
   const N = 9, u = 6.4, o = 3.2, P = i => o + i * u;
@@ -1155,7 +1159,7 @@ function rtConfirm(after) {
 
 // ====================================================================== lessons (20 points per problem, 75 to pass)
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=20261104rp').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=20261104rp-l14').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { try { return JSON.parse(localStorage.getItem(PZ_STORE) || '{}'); } catch (e) { return {}; } }
@@ -1517,7 +1521,7 @@ const openReady = fetch('openings.json?v=20261019a').then(r => r.json()).then(d 
 const OP_STORE = STORE + '-open';
 function opProg() { try { return JSON.parse(localStorage.getItem(OP_STORE) || '{}'); } catch (e) { return {}; } }
 const LL = o => o ? (typeof o === 'string' ? o : o[LANG] !== undefined ? o[LANG] : o.en !== undefined ? o.en : o.ja) : '';
-const opName = g => LANG === 'ja' ? g.kanji : LANG === 'zh' ? g.zh || g.kanji : LANG === 'ko' ? g.ko || g.name : g.name;
+const opName = g => LANG === 'ja' ? g.kanji : LANG === 'zh' || LANG === 'zh-TW' ? g.zh || g.kanji : LANG === 'ko' ? g.ko || g.name : g.name;
 const opEval = g => `<span class="op-ev ${g.ev}">${t('ev.' + g.ev + 'x')}</span>`;
 async function openOpenings(kind) {
   await openReady; selTab('open');
@@ -1532,7 +1536,7 @@ async function openOpenings(kind) {
     const r = pr[g.id], L = g.line.split(' ');
     const th = thumbSvg([L[0], L[2]], [L[1]], { crop: [5, 5, 9, 9], n: { [L[0]]: 1, [L[1]]: 2, [L[2]]: 3 } });
     const st = r ? (r.pass ? `<span class="lx-st ok">✓ ${t('u.pt', { n: r.best })}</span>` : `<span class="lx-st">${t('u.pt', { n: r.best })}</span>`) : `<span class="lx-st new">${t('ls.notyet')}</span>`;
-    const sub = LANG === 'ja' ? g.kana : LANG === 'zh' ? '' : g.kanji;
+    const sub = LANG === 'ja' ? g.kana : LANG === 'zh' || LANG === 'zh-TW' ? '' : g.kanji;
     return `<button class="lx-card op${r && r.pass ? ' clear' : ''}" data-o="${i}"><span class="lx-th">${th}</span><span class="lx-tx">` +
       `<span class="lx-top"><span class="lx-no">${g.kind === 'direct' ? 'D' : 'I'}${g.no}</span>${opEval(g)}${st}</span><b class="lx-t">${opName(g)}${sub ? `<small>${sub}</small>` : ''}</b>` +
       `<span class="lx-desc">${t('op.d.' + g.id)}</span>${lxBar(r ? r.best / 100 : 0, r && r.pass ? 'ok' : '')}</span></button>`;
@@ -2101,7 +2105,11 @@ const GTIP = {
   pt: { win: 'Quando há vitória, procure primeiro o golpe final: um quatro-três ou uma sequência de quatros.', block: 'Pare os três e quatros do rival antes de continuar o seu ataque.', four: 'Um quatro obriga a responder. Calcule onde cai a resposta antes de jogar.', three: 'Um três aberto força a resposta e mantém a iniciativa com você.', shape: 'Mantenha as pedras ligadas para que o próximo lance forme um dois ou um três.' },
   de: { win: 'Gibt es einen Gewinn, suche zuerst den entscheidenden Zug: Vier-Drei oder eine Kette von Vieren.', block: 'Stoppe gegnerische Dreier und Vierer, bevor du selbst weiter angreifst.', four: 'Ein Vierer muss beantwortet werden. Rechne vorher, wo die Antwort landet.', three: 'Ein offener Dreier erzwingt eine Antwort – so behältst du die Initiative.', shape: 'Halte deine Steine verbunden, damit der nächste Zug einen Zweier oder Dreier bildet.' },
   hi: { win: 'जीत संभव हो तो पहले निर्णायक चाल खोजें: चार-तीन या लगातार चार।', block: 'अपने हमले से पहले विरोधी के तीन और चार को रोकना मूल नियम है।', four: 'चार का जवाब देना ही पड़ता है। चलने से पहले सोचें कि जवाब कहाँ आएगा।', three: 'खुला तीन बनाने पर विरोधी को रोकना ही पड़ता है — पहल आपके हाथ में रहती है।', shape: 'पत्थरों को जुड़ा रखें ताकि अगली चाल से दो या तीन बन सके।' },
-  ar: { win: 'إذا وُجد فوز فابحث أولًا عن الضربة الحاسمة: أربعة-ثلاثة أو سلسلة من الأربعات.', block: 'أوقف ثلاثيات الخصم ورباعياته قبل أن تواصل هجومك.', four: 'الأربعة تُجبر الخصم على الرد. احسب موضع الرد قبل أن تلعبها.', three: 'الثلاثة المفتوحة تُجبر على الرد وتُبقي المبادرة معك.', shape: 'حافظ على ترابط أحجارك ليصنع الحجر التالي اثنين أو ثلاثة.' }
+  ar: { win: 'إذا وُجد فوز فابحث أولًا عن الضربة الحاسمة: أربعة-ثلاثة أو سلسلة من الأربعات.', block: 'أوقف ثلاثيات الخصم ورباعياته قبل أن تواصل هجومك.', four: 'الأربعة تُجبر الخصم على الرد. احسب موضع الرد قبل أن تلعبها.', three: 'الثلاثة المفتوحة تُجبر على الرد وتُبقي المبادرة معك.', shape: 'حافظ على ترابط أحجارك ليصنع الحجر التالي اثنين أو ثلاثة.' },
+  ru: { win: 'Если есть выигрыш, сначала ищите решающий ход: вилку 4-3 или серию четвёрок.', block: 'Сначала останавливайте тройки и четвёрки соперника, а потом продолжайте свою атаку.', four: 'На четвёрку обязательно отвечают. Прежде чем ставить её, просчитайте, куда ляжет ответ.', three: 'Открытая тройка требует ответа — инициатива остаётся за вами.', shape: 'Держите камни связанными, чтобы следующим ходом получилась двойка или тройка.' },
+  'zh-TW': { win: '有勝機時，先找四三或連續衝四等決勝手。', block: '對手的活三、衝四，基本上要比自己的進攻先擋住。', four: '衝四對手必須應。下之前先算好對手會擋在哪裡。', three: '活三逼對手應手——先手留在你這邊。', shape: '讓棋子保持相連，下一手才能做出二或三。' },
+  id: { win: 'Jika ada kemenangan, cari dulu langkah penentu: empat-tiga atau rangkaian empat.', block: 'Hentikan tiga dan empat lawan sebelum melanjutkan seranganmu sendiri.', four: 'Empat wajib dijawab. Baca dulu di mana lawan akan menutup sebelum memainkannya.', three: 'Tiga terbuka memaksa lawan menjawab — inisiatif tetap di tanganmu.', shape: 'Jaga batu tetap terhubung agar langkah berikutnya bisa membentuk dua atau tiga.' },
+  tr: { win: 'Kazanç varsa önce bitirici hamleyi ara: dört-üç ya da art arda dörtlüler.', block: 'Kendi saldırına devam etmeden önce rakibin üçlü ve dörtlülerini durdur.', four: 'Dörtlüye mutlaka cevap verilir. Oynamadan önce cevabın nereye geleceğini hesapla.', three: 'Açık üçlü cevap ister — inisiyatif sende kalır.', shape: 'Taşlarını bağlı tut ki sonraki hamle bir ikili ya da üçlü yapabilsin.' }
 };
 const kenMoves = () => moves.slice(0, ken.base).concat(ken.line);
 function kenOk() { return !!(ken && ken.gk === gameKey() && rvOpen && rv && !lesson && !puzzle && !net && BOX && BOX.pc()); }

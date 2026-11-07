@@ -46,8 +46,8 @@ function mvIn(pos, m) { return E.name(pos, m); }
 // ====================================================================== state
 const STORE = 'aicoding-tafl';
 const settings = { mode: 'ai', rule: 'copenhagen', color: 2, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: false, num: true, lang: '', bd: 'carved', pcs: 'bone' };
-const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
-function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
+const SUPPORTED = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
+function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); if (/^zh-(tw|hk|mo|hant)/.test(n)) return 'zh-TW'; return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
 function t(k, v) { let x = (I18N[LANG] || I18N.en)[k]; if (x === undefined) x = I18N.en[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
 const pname = p => t(p === P1 ? 'p1' : 'p2');
@@ -1511,7 +1511,7 @@ $('#lsList').onclick = () => { if (!lesson) return; if (lesson.study || lesson.v
 
 // ====================================================================== openings (opening plans, studied move by move, then practice)
 let OPEN = null, openChoiceIdx = -1;
-const openReady = fetch('openings.json?v=1').then(r => r.json()).then(d => (OPEN = d)).catch(() => null)
+const openReady = fetch('openings.json?v=2').then(r => r.json()).then(d => (OPEN = d)).catch(() => null)
   .then(() => { if (!OPEN) document.querySelectorAll('.ls-tabs button[data-v=open]').forEach(b => b.remove()); });
 const OP_STORE = STORE + '-open';
 function opProg() { try { return JSON.parse(localStorage.getItem(OP_STORE) || '{}'); } catch (e) { return {}; } }

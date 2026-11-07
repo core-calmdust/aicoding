@@ -3,10 +3,10 @@
    分かれ道（上位の候補を方針で分類：上がり／入れ替え／美の家／出口へ／ペア／壁／逃げる／前進…、ホバー・タップで盤に矢印）、
    考え方のヒント（各駒が入れ替えられる確率、出目の確率、もう一度投げる目、美の家と出口の目）、前の手の評価（◎○△✕）。
    評価はこのサイトのエンジン（senet/engine.js：期待値探索＋自己対局で学習した評価）。ルールの出典は senet/tools/RULES-RESEARCH.md。
-   Texts: TX.ja / TX.en here, the other languages in coach-i18n.js (SenetCoach.merge). */
+   Texts: CTX.ja / CTX.en here, the other languages in coach-i18n.js (SenetCoach.merge). */
 (() => {
 'use strict';
-const TX = {
+const CTX = {
 ja: {
   head: 'コーチ', sw: 'コーチ', swT: 'コーチ（考え方の解説）のオン／オフ', on: 'コーチ ON', off: 'コーチ OFF',
   rest: 'レート戦・オンライン・AI同士・レッスン・パズルの間、コーチはお休みです。AIとの対局や二人対戦に戻ると再開します。',
@@ -97,7 +97,7 @@ en: {
 const S = { lists: new Map(), open: false, hov: null };
 let card = null;
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-function tx(k, v) { let x = (TX[LANG] || TX.en)[k]; if (x === undefined) x = TX.en[k]; if (x === undefined) x = TX.ja[k]; if (x === undefined) return k; if (v) x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
+function tx(k, v) { let x = (CTX[LANG] || CTX.en)[k]; if (x === undefined) x = CTX.en[k]; if (x === undefined) x = CTX.ja[k]; if (x === undefined) return k; if (v) x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
 const pct = x => Math.round(x * 100) + '%';
 function usable() { return !!game && !special && !rgame && !ken && (settings.mode === 'ai' || settings.mode === 'pvp'); }
 function active() { return !!settings.coach && usable(); }
@@ -243,6 +243,6 @@ function init() {
   SenetCoach.sw = CoachKit.sw({ mount: '.brand-r', get: () => !!settings.coach, set: v => { settings.coach = !!v; save(); CoachKit.flash(tx(v ? 'on' : 'off')); coachHover = null; render(); renderBoard(); }, label: on => ({ text: tx('sw'), title: tx('swT') + ' — ' + tx(on ? 'on' : 'off') }) });
 }
 function relabel() { if (SenetCoach.sw) SenetCoach.sw.sync(); if (card) card.dataset.h = ''; render(); }
-function merge(more) { for (const l in more) TX[l] = Object.assign({}, TX[l] || {}, more[l]); }
-window.SenetCoach = { init, render, relabel, merge, tx, TX, active, usable, classify };
+function merge(more) { for (const l in more) CTX[l] = Object.assign({}, CTX[l] || {}, more[l]); }
+window.SenetCoach = { init, render, relabel, merge, tx, CTX, active, usable, classify };
 })();

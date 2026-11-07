@@ -39,7 +39,10 @@
 - 棋譜：「⇄」入れ替え、「↻」もう一度、「27≈15」水に落ちて戻った先。
 - コーチ（`senet/coach.js`、8言語は `coach-i18n.js`＝`tools/build_coach_i18n.py` で生成）：勝率・レース差・壁・上がり数、方針（上がり／入れ替え／美の家／出口へ／ペア／壁／逃げる／安全／前進／水）、入れ替えられる確率、投げ棒の確率。
 - オンライン：「準備中」（`firebase-config.js` は null）。
-- 10言語：`senet/i18n.js` は `tools/build_i18n.py`（ウルの i18n ＋ `tools/i18n_over.py`）で生成。
+- 14言語（2026-11-07、言語メニューにも追加済み・`node tools/i18n-langs.js coverage senet` で未翻訳0）。
+  - `senet/i18n.js` は `tools/build_i18n.py`（ウルの i18n ＋ `tools/i18n_over.py`）で生成。ru・zh-TW・id・tr は**翻訳メモリ `senet/tools/tm14.json`**（英語 → 4言語）から。同じ英語で意味が違うものは build_i18n.py の `KEYOVR`（例：sp.off）。
+  - 辞書形式のファイル（i18n-online.js・tour.js・rv-i18n.js・coach-i18n.js）は `node senet/tools/apply14.js <file> [英語辞書のファイル#目印]`、1文字列ずつの形式（lessons.json・puzzles.json・landtabs.js・atlas 側）は `node senet/tools/tm_apply_units.js <file>`。足りない英語は一覧が出るので tm14.json に足す。
+  - レッスン・パズルの文言（tools/learn_text.js の `O()`）も tm14.json から4言語を足す。英語を集めるのは `tools/collect_en.js`。
 - localStorage：`aicoding-senet`、`aicoding-senet-rules`（ルールツアー）、`aicoding-senet-online`、記録は `atlas-rec-senet`。
 
 ## 5. 学ぶ
@@ -52,5 +55,5 @@
 - `atlas/skin/senet.js`：全画面スキン（縦向きは盤を −90°）。`window.SenetSkin3D = {sync, animateMove, animateRoll}`。
 - `atlas/games/senet.js`＋`senet-kit.js`：ポータルの卓上対局（AI／二人）。`atlas/rules/senet.js`：3Dルールコース（案内役 セティ）。
 
-## 7. 今後
-- アトラスの「ヒストリア」へのセネトの追加は未対応。
+## 7. ヒストリア
+- ヒストリア（2026-11-07）：`atlas/historia/s/senet.json`（地図：サッカラ・テーベ・キプロス・ボストン、3×10の盤図と逆S字の矢印）と14言語の本文 `atlas/historia/<lang>/senet.json`。案内役は av/camel-2。

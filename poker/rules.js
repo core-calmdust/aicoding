@@ -200,7 +200,915 @@ fr: {"ui": {"hole": "Cartes privatives", "board": "Tableau", "you": "Vous", "sel
 pt: {"ui": {"hole": "Cartas da mão", "board": "Mesa", "you": "Você", "sel": "{n}/5 cartas", "selO": "Mão {h}/2 · Mesa {b}/3", "change": "Trocar {n}", "stand": "Não trocar", "pot": "Pote", "none": "Ninguém apostou ainda", "odds": "O pote é 100 e o adversário aposta 50. Sua equity é de cerca de 20%", "pl": "Pot limit: o pote é 20 e o adversário aposta 10. Seu aumento máximo?", "fl": "Limite fixo 2/4. Depois da troca, uma aposta é…", "allin": "All-in", "pot2": "Até o pote", "fold": "Desistir", "check": "Mesa", "bet": "Apostar", "call": "Pagar"}, "holdem": {"origin": "Texas, EUA", "players": "2–10", "time": "1–3 min por mão", "facts": "52 cartas|2 na mão + 5 comunitárias|Blinds|4 rodadas de apostas", "hist": "Diz-se que nasceu em Robstown, Texas, no início dos anos 1900. Tornou-se o Main Event da World Series of Poker (desde 1970), e a vitória do amador Chris Moneymaker em 2003 iniciou um boom mundial.", "win": "Ganhe o pote (1) tendo as melhores cinco entre suas duas cartas e as cinco da mesa no showdown, ou (2) fazendo todos os outros desistirem.", "cult": "“Um minuto para aprender, uma vida para dominar.” A sorte conta numa mão, a habilidade em muitas.", "p": [{"t": "Ranking de mãos", "b": "Straight flush > quadra > full house > flush > sequência > trinca > dois pares > um par > carta alta.", "task": "Toque na mão mais forte", "ok": "Trinca ganha de dois pares!", "ng": "Tente de novo — confira a ordem das mãos."}, {"t": "Melhores cinco de sete", "b": "Use quaisquer cinco das sete cartas — as suas duas e as cinco da mesa. Pode até não usar nenhuma das suas.", "task": "Escolha as cinco cartas mais fortes", "ok": "Um flush de copas com ás!", "ng": "Há cinco mais fortes — conte os naipes."}, {"t": "Botão e blinds", "b": "À esquerda do botão do dealer (D) fica o small blind, depois o big blind — apostas obrigatórias. No pré-flop o jogador à esquerda do BB (UTG) age primeiro.", "task": "Toque em quem age primeiro no pré-flop", "ok": "À esquerda do big blind: UTG!", "ng": "Os blinds agem por último no pré-flop."}, {"t": "Mesa e apostar", "b": "Sem aposta você pode dar mesa e passar a vez de graça. Diante de uma aposta, você desiste, paga ou aumenta.", "task": "Uma mão fraca. Como ver a próxima carta de graça?", "ok": "Mesa — de graça!", "ng": "Ninguém apostou, então você segue de graça."}, {"t": "Pot odds", "b": "Pagar 50 para ganhar 200 (pote 100 + os 50 dele + os seus 50) exige 50 ÷ 200 = 25% de equity. Com menos, desistir ganha no longo prazo.", "task": "20% de equity. Pagar ou desistir?", "ok": "20% < 25%: desista!", "ng": "Você precisa de 25%; 20% não basta."}, {"t": "Showdown", "b": "Se dois ou mais jogadores restarem após a última aposta, as mãos são mostradas. As melhores cinco cartas ganham o pote.", "task": "Toque no vencedor", "ok": "K-Q-J-T-9, uma sequência!", "ng": "Combine-as com o J, o T e o 9 da mesa."}]}, "plo": {"origin": "EUA", "players": "2–9", "time": "1–3 min por mão", "facts": "52 cartas|4 na mão + 5 da mesa|Exatamente 2 da mão + 3 da mesa|Pot limit", "hist": "O Omaha surgiu nos cassinos de Las Vegas nos anos 1980. Com quatro cartas na mão, mãos grandes são comuns; é o segundo pôquer mais popular, sobretudo na Europa.", "win": "Joga-se como o hold'em, mas sua mão deve usar exatamente duas cartas da mão e exatamente três da mesa.", "cult": "O PLO é chamado de “o jogo da ação”: as equities são próximas, então os potes ficam grandes.", "p": [{"t": "Duas mais três", "b": "Sempre exatamente duas das suas quatro cartas e exatamente três das cinco cartas da mesa.", "task": "Escolha as melhores cinco: 2 da mão + 3 da mesa", "ok": "O nut flush com A♠K♠!", "ng": "Exatamente duas da mão, três da mesa."}, {"t": "Uma carta não faz flush", "b": "Quatro copas na mesa não são flush a menos que você tenha duas copas — a maior diferença em relação ao hold'em.", "task": "Toque no jogador que tem flush", "ok": "Só o P2, com duas copas, tem flush!", "ng": "Uma copas na mão não pode ser usada."}, {"t": "Pot limit", "b": "O aumento máximo é o tamanho do pote após o seu call. Pote 20, aposta 10: pague 10 (pote 40) e aumente mais 40 — para 50.", "task": "Seu aumento máximo?", "ok": "10 + (20 + 10 + 10) = 50!", "ng": "Primeiro some o seu call ao pote."}]}, "shortdeck": {"origin": "Reino Unido / Ásia", "players": "2–9", "time": "1–3 min por mão", "facts": "36 cartas (sem 2–5)|2 na mão + 5 da mesa|Flush > full house|A-6-7-8-9 é sequência", "hist": "Profissionais britânicos o popularizaram nos anos 2010 e ele decolou nos jogos de apostas altas em Macau e na Ásia. Também chamado de “6+ hold'em”.", "win": "Como no hold'em, as melhores cinco de sete — mas o ranking muda porque as chances mudam.", "cult": "Com menos cartas, os projetos acertam mais e all-ins são comuns. Aqui trinca ganha de sequência.", "p": [{"t": "Um baralho de 36 cartas", "b": "Todos os 2, 3, 4 e 5 são removidos.", "task": "Toque na carta que não está no baralho", "ok": "Os quatros estão fora!", "ng": "Do 2 ao 5 são removidos."}, {"t": "Flush ganha de full house", "b": "Com só nove cartas por naipe, flushes são mais raros que full houses — por isso valem mais.", "task": "Toque na mão mais forte no Short Deck", "ok": "O flush ganha no Short Deck!", "ng": "Aqui a ordem é invertida."}, {"t": "A-6-7-8-9", "b": "Sem o 5, o ás vale como carta baixa abaixo do 6: A-6-7-8-9 é sequência.", "task": "Toque na sequência", "ok": "A-6-7-8-9 é sequência!", "ng": "O ás também se liga abaixo do 6."}]}, "stud": {"origin": "EUA", "players": "2–8", "time": "2–4 min por mão", "facts": "52 cartas|Sem mesa: sete cartas cada|Quatro delas abertas|Ante + bring-in, limite fixo", "hist": "Jogado desde a época da Guerra Civil (anos 1860), foi o pôquer mais popular dos EUA até o hold'em assumir por volta de 2000.", "win": "Duas fechadas e uma aberta, depois mais três abertas e uma última fechada. As melhores cinco das suas sete ganham.", "cult": "Todas as cartas abertas são visíveis — lembrar quais cartas já saíram decide muitas mãos.", "p": [{"t": "O bring-in", "b": "Todos pagam o ante; a menor carta aberta paga o bring-in. Empates são decididos pelo naipe: ♣ < ♦ < ♥ < ♠.", "task": "Toque em quem paga o bring-in", "ok": "O 3♣ é a menor carta aberta!", "ng": "Entre os três, paus é o menor."}, {"t": "A melhor mão aberta age primeiro", "b": "A partir da 4ª street, o jogador com a melhor mão aberta age primeiro.", "task": "Quem age primeiro na 4ª street?", "ok": "P2, mostrando um par de damas!", "ng": "Compare só o que está aberto."}, {"t": "Cinco de sete", "b": "Na 7ª street escolha as melhores cinco das suas sete cartas.", "task": "Escolha as melhores cinco", "ok": "Full house de quatros com noves!", "ng": "Procure valores iguais."}]}, "draw": {"origin": "EUA", "players": "2–6", "time": "1–2 min por mão", "facts": "52 cartas|5 cartas, sem mesa|Uma troca|Limite fixo", "hist": "Uma das formas mais antigas de pôquer, jogada desde meados dos anos 1800 — o pôquer de “trocar as cartas” dos filmes e quadrinhos.", "win": "Cinco cartas, uma aposta, uma troca de 0–5 cartas, outra aposta; as melhores cinco ganham.", "cult": "Todos veem quantas você troca — não trocar para parecer forte faz parte do jogo.", "p": [{"t": "Mantenha o par", "b": "Com um par, mantenha o par e troque as outras três.", "task": "Escolha as cartas para trocar e toque em Trocar", "ok": "Manteve as damas e trocou três!", "ng": "Troque as três que não fazem parte do par."}, {"t": "Uma no projeto de flush", "b": "Com quatro do mesmo naipe, troque só a quinta carta (cerca de 19% de fazer o flush).", "task": "Troque para buscar o flush", "ok": "Trocou só o K♠!", "ng": "Mantenha as quatro copas."}, {"t": "Showdown", "b": "Após a segunda rodada de apostas, as mãos são mostradas.", "task": "Toque no vencedor", "ok": "O full house ganha!", "ng": "Full house > flush > sequência."}, {"t": "Limite fixo", "b": "As apostas são fixas: a aposta pequena (2) antes da troca, a grande (4) depois, no máximo quatro apostas por rodada.", "task": "A aposta depois da troca?", "ok": "A aposta grande, 4!", "ng": "Depois da troca é a aposta grande."}]}},
 de: {"ui": {"hole": "Hole Cards", "board": "Board", "you": "Du", "sel": "{n}/5 Karten", "selO": "Hand {h}/2 · Board {b}/3", "change": "{n} tauschen", "stand": "Nicht tauschen", "pot": "Pot", "none": "Noch hat niemand gesetzt", "odds": "Der Pot ist 100 und dein Gegner setzt 50. Deine Equity liegt bei etwa 20 %", "pl": "Pot Limit: Der Pot ist 20 und dein Gegner setzt 10. Deine maximale Erhöhung?", "fl": "Fixed Limit 2/4. Nach dem Tausch ist ein Einsatz…", "allin": "All-in", "pot2": "Bis zum Pot", "fold": "Folden", "check": "Checken", "bet": "Setzen", "call": "Callen"}, "holdem": {"origin": "Texas, USA", "players": "2–10", "time": "1–3 Min. pro Hand", "facts": "52 Karten|2 Hole Cards + 5 Gemeinschaftskarten|Blinds|4 Setzrunden", "hist": "Soll Anfang der 1900er in Robstown, Texas, entstanden sein. Es wurde das Main Event der World Series of Poker (ab 1970), und der Sieg des Amateurs Chris Moneymaker 2003 löste einen weltweiten Boom aus.", "win": "Gewinne den Pot, indem du (1) beim Showdown die besten fünf aus deinen zwei Karten und den fünf auf dem Board hast oder (2) alle anderen zum Folden bringst.", "cult": "„In einer Minute gelernt, ein Leben lang gemeistert.“ In einer Hand zählt Glück, über viele Hände Können.", "p": [{"t": "Handrangfolge", "b": "Straight Flush > Vierling > Full House > Flush > Straße > Drilling > zwei Paare > ein Paar > höchste Karte.", "task": "Tippe die stärkere Hand an", "ok": "Drilling schlägt zwei Paare!", "ng": "Nochmal — prüfe die Reihenfolge der Hände."}, {"t": "Beste fünf aus sieben", "b": "Nutze beliebige fünf der sieben Karten — deine zwei und die fünf des Boards. Du darfst sogar keine deiner Karten nutzen.", "task": "Wähle die stärksten fünf Karten", "ok": "Ein Herz-Flush mit Ass!", "ng": "Es gibt stärkere fünf — zähl die Farben."}, {"t": "Button und Blinds", "b": "Links vom Dealer-Button (D) sitzt der Small Blind, dann der Big Blind — Pflichteinsätze. Preflop handelt der Spieler links vom BB (UTG) zuerst.", "task": "Tippe an, wer preflop zuerst handelt", "ok": "Links vom Big Blind: UTG!", "ng": "Die Blinds handeln preflop zuletzt."}, {"t": "Checken und setzen", "b": "Ohne Einsatz kannst du checken und kostenlos weitergeben. Bei einem Einsatz foldest du, callst oder erhöhst.", "task": "Eine schwache Hand. Wie siehst du die nächste Karte gratis?", "ok": "Checken — gratis!", "ng": "Niemand hat gesetzt, also geht es gratis weiter."}, {"t": "Pot Odds", "b": "50 zahlen, um 200 zu gewinnen (Pot 100 + seine 50 + deine 50), braucht 50 ÷ 200 = 25 % Equity. Mit weniger gewinnt Folden auf lange Sicht.", "task": "20 % Equity. Callen oder folden?", "ok": "20 % < 25 %: folden!", "ng": "Du brauchst 25 %; 20 % reichen nicht."}, {"t": "Showdown", "b": "Sind nach dem letzten Einsatz noch zwei oder mehr Spieler übrig, werden die Hände gezeigt. Die besten fünf Karten gewinnen den Pot.", "task": "Tippe den Gewinner an", "ok": "K-Q-J-T-9, eine Straße!", "ng": "Kombiniere sie mit J, T und 9 auf dem Board."}]}, "plo": {"origin": "USA", "players": "2–9", "time": "1–3 Min. pro Hand", "facts": "52 Karten|4 Hole Cards + 5 Board-Karten|Genau 2 Hole + 3 Board|Pot Limit", "hist": "Omaha tauchte in den 1980ern in den Casinos von Las Vegas auf. Mit vier Hole Cards sind große Hände häufig; es ist die zweitbeliebteste Pokervariante, besonders in Europa.", "win": "Gespielt wie Hold'em, aber deine Hand muss genau zwei Hole Cards und genau drei Board-Karten nutzen.", "cult": "PLO gilt als „das Action-Spiel“: Die Equities liegen eng beieinander, daher werden die Pots groß.", "p": [{"t": "Zwei plus drei", "b": "Immer genau zwei deiner vier Hole Cards und genau drei der fünf Board-Karten.", "task": "Wähle die besten fünf: 2 Hole + 3 Board", "ok": "Der Nut Flush mit A♠K♠!", "ng": "Genau zwei von der Hand, drei vom Board."}, {"t": "Eine Karte ist kein Flush", "b": "Vier Herz auf dem Board sind kein Flush, wenn du nicht zwei Herz hältst — der größte Unterschied zum Hold'em.", "task": "Tippe den Spieler mit Flush an", "ok": "Nur P2 mit zwei Herz hat einen Flush!", "ng": "Ein Herz auf der Hand kann nicht genutzt werden."}, {"t": "Pot Limit", "b": "Die maximale Erhöhung ist die Pot-Größe nach deinem Call. Pot 20, Einsatz 10: 10 callen (Pot 40), 40 mehr erhöhen — auf 50.", "task": "Deine maximale Erhöhung?", "ok": "10 + (20 + 10 + 10) = 50!", "ng": "Rechne zuerst deinen Call zum Pot."}]}, "shortdeck": {"origin": "Großbritannien / Asien", "players": "2–9", "time": "1–3 Min. pro Hand", "facts": "36 Karten (ohne 2–5)|2 Hole Cards + 5 Board-Karten|Flush > Full House|A-6-7-8-9 ist eine Straße", "hist": "Britische Profis machten es in den 2010ern populär, und in den High-Stakes-Spielen in Macau und Asien hob es ab. Auch „6+ Hold'em“ genannt.", "win": "Wie Hold'em die besten fünf aus sieben — aber die Rangfolge ändert sich, weil sich die Chancen ändern.", "cult": "Mit weniger Karten treffen Draws öfter und All-ins sind häufig. Hier schlägt ein Drilling eine Straße.", "p": [{"t": "Ein Deck mit 36 Karten", "b": "Alle 2er, 3er, 4er und 5er werden entfernt.", "task": "Tippe die Karte an, die nicht im Deck ist", "ok": "Die Vieren sind raus!", "ng": "2 bis 5 werden entfernt."}, {"t": "Flush schlägt Full House", "b": "Mit nur neun Karten pro Farbe sind Flushes seltener als Full Houses — deshalb stehen sie höher.", "task": "Tippe die im Short Deck stärkere Hand an", "ok": "Im Short Deck gewinnt der Flush!", "ng": "Hier ist die Reihenfolge vertauscht."}, {"t": "A-6-7-8-9", "b": "Ohne die 5 zählt das Ass unter der 6: A-6-7-8-9 ist eine Straße.", "task": "Tippe die Straße an", "ok": "A-6-7-8-9 ist eine Straße!", "ng": "Das Ass schließt auch unter der 6 an."}]}, "stud": {"origin": "USA", "players": "2–8", "time": "2–4 Min. pro Hand", "facts": "52 Karten|Kein Board: sieben Karten je Spieler|Vier davon offen|Ante + Bring-in, Fixed Limit", "hist": "Seit der Zeit des Bürgerkriegs (1860er) gespielt, war es Amerikas beliebteste Pokervariante, bis Hold'em um 2000 übernahm.", "win": "Zwei verdeckt und eine offen, dann drei weitere offen und eine letzte verdeckt. Die besten fünf deiner sieben gewinnen.", "cult": "Jede offene Karte ist sichtbar — wer sich merkt, welche Karten weg sind, entscheidet viele Hände.", "p": [{"t": "Das Bring-in", "b": "Alle zahlen die Ante; die niedrigste offene Karte zahlt das Bring-in. Gleichstände entscheidet die Farbe: ♣ < ♦ < ♥ < ♠.", "task": "Tippe an, wer das Bring-in zahlt", "ok": "Die 3♣ ist die niedrigste offene Karte!", "ng": "Unter den Dreien ist Kreuz am niedrigsten."}, {"t": "Beste offene Hand zuerst", "b": "Ab der 4th Street handelt der Spieler mit der besten offenen Hand zuerst.", "task": "Wer handelt auf der 4th Street zuerst?", "ok": "P2 mit einem offenen Damenpaar!", "ng": "Vergleiche nur, was offen liegt."}, {"t": "Fünf aus sieben", "b": "Auf der 7th Street wählst du die besten fünf deiner sieben Karten.", "task": "Wähle die besten fünf", "ok": "Vieren full mit Neunen!", "ng": "Suche gleiche Ränge."}]}, "draw": {"origin": "USA", "players": "2–6", "time": "1–2 Min. pro Hand", "facts": "52 Karten|5 Karten, kein Board|Ein Tausch|Fixed Limit", "hist": "Eine der ältesten Pokerformen, seit Mitte des 19. Jahrhunderts gespielt — das „Karten tauschen“-Poker aus Filmen und Comics.", "win": "Fünf Karten, eine Setzrunde, ein Tausch von 0–5 Karten, eine weitere Setzrunde; die besten fünf gewinnen.", "cult": "Alle sehen, wie viele du tauschst — nicht zu tauschen, um stark zu wirken, gehört dazu.", "p": [{"t": "Das Paar behalten", "b": "Mit einem Paar behältst du das Paar und tauschst die anderen drei.", "task": "Wähle die Karten zum Tauschen, dann Tauschen", "ok": "Damen behalten und drei getauscht!", "ng": "Tausche die drei, die nicht zum Paar gehören."}, {"t": "Eine zum Vier-Flush", "b": "Mit vier einer Farbe tauschst du nur die fünfte Karte (etwa 19 %, den Flush zu machen).", "task": "Auf den Flush ziehen", "ok": "Nur den K♠ getauscht!", "ng": "Behalte die vier Herz."}, {"t": "Showdown", "b": "Nach der zweiten Setzrunde werden die Hände gezeigt.", "task": "Tippe den Gewinner an", "ok": "Das Full House gewinnt!", "ng": "Full House > Flush > Straße."}, {"t": "Fixed Limit", "b": "Die Einsätze sind fest: der kleine Einsatz (2) vor dem Tausch, der große (4) danach, höchstens vier Einsätze pro Runde.", "task": "Der Einsatz nach dem Tausch?", "ok": "Der große Einsatz, 4!", "ng": "Nach dem Tausch gilt der große Einsatz."}]}},
 hi: {"ui": {"hole": "होल कार्ड", "board": "बोर्ड", "you": "आप", "sel": "{n}/5 कार्ड", "selO": "होल {h}/2 · बोर्ड {b}/3", "change": "{n} बदलें", "stand": "स्टैंड पैट", "pot": "पॉट", "none": "अभी तक किसी ने बेट नहीं किया", "odds": "पॉट 100 है और विरोधी 50 बेट करता है। आपकी इक्विटी लगभग 20% है", "pl": "पॉट लिमिट: पॉट 20 है और विरोधी 10 बेट करता है। आपका अधिकतम रेज़?", "fl": "फ़िक्स्ड लिमिट 2/4। ड्रॉ के बाद एक बेट है…", "allin": "ऑल-इन", "pot2": "पॉट तक", "fold": "फोल्ड", "check": "चेक", "bet": "बेट", "call": "कॉल"}, "holdem": {"origin": "टेक्सास, अमेरिका", "players": "2–10", "time": "प्रति हैंड 1–3 मिनट", "facts": "52 कार्ड|2 होल + 5 साझा बोर्ड कार्ड|ब्लाइंड|4 बेटिंग राउंड", "hist": "माना जाता है कि इसका जन्म 1900 के दशक की शुरुआत में रॉबस्टाउन, टेक्सास में हुआ। यह वर्ल्ड सीरीज़ ऑफ़ पोकर का मेन इवेंट बना (1970 से), और 2003 में शौकिया खिलाड़ी क्रिस मनीमेकर की जीत से दुनिया भर में इसकी लहर शुरू हुई।", "win": "पॉट जीतें: (1) शोडाउन पर अपने दो और बोर्ड के पाँच कार्ड से सबसे अच्छे पाँच रखकर, या (2) बाकी सबको फोल्ड करवाकर।", "cult": "“सीखने में एक मिनट, महारत में पूरी ज़िंदगी।” एक हैंड में किस्मत, कई हैंड में कौशल मायने रखता है।", "p": [{"t": "हैंड रैंकिंग", "b": "स्ट्रेट फ्लश > फोर ऑफ़ अ काइंड > फुल हाउस > फ्लश > स्ट्रेट > थ्री ऑफ़ अ काइंड > टू पेयर > वन पेयर > हाई कार्ड।", "task": "मज़बूत हैंड पर टैप करें", "ok": "थ्री ऑफ़ अ काइंड टू पेयर को हराता है!", "ng": "फिर कोशिश करें — हैंड का क्रम देखें।"}, {"t": "सात में से सबसे अच्छे पाँच", "b": "सात कार्ड में से कोई भी पाँच इस्तेमाल करें — आपके दो और बोर्ड के पाँच। अपना एक भी न लें तो भी चलेगा।", "task": "सबसे मज़बूत पाँच कार्ड चुनें", "ok": "इक्का-हाई हार्ट फ्लश!", "ng": "इससे मज़बूत पाँच हैं — सूट गिनें।"}, {"t": "बटन और ब्लाइंड", "b": "डीलर बटन (D) के बाईं ओर स्मॉल ब्लाइंड, फिर बिग ब्लाइंड — अनिवार्य बेट। प्रीफ्लॉप में BB के बाईं ओर वाला (UTG) पहले बोलता है।", "task": "प्रीफ्लॉप में पहले बोलने वाले पर टैप करें", "ok": "बिग ब्लाइंड के बाईं ओर: UTG!", "ng": "प्रीफ्लॉप में ब्लाइंड आखिर में बोलते हैं।"}, {"t": "चेक और बेट", "b": "बेट न हो तो आप चेक करके मुफ़्त में बारी आगे बढ़ा सकते हैं। बेट के सामने आप फोल्ड, कॉल या रेज़ करते हैं।", "task": "कमज़ोर हैंड। अगला कार्ड मुफ़्त में कैसे देखें?", "ok": "चेक — मुफ़्त!", "ng": "किसी ने बेट नहीं किया, तो आप मुफ़्त में आगे बढ़ सकते हैं।"}, {"t": "पॉट ऑड्स", "b": "200 (पॉट 100 + उनके 50 + आपके 50) जीतने के लिए 50 देने पर 50 ÷ 200 = 25% इक्विटी चाहिए। इससे कम हो तो लंबे समय में फोल्ड फ़ायदेमंद है।", "task": "20% इक्विटी। कॉल या फोल्ड?", "ok": "20% < 25%: फोल्ड!", "ng": "25% चाहिए; 20% काफ़ी नहीं।"}, {"t": "शोडाउन", "b": "आखिरी बेट के बाद दो या ज़्यादा खिलाड़ी बचे हों तो हैंड दिखाए जाते हैं। सबसे अच्छे पाँच कार्ड पॉट जीतते हैं।", "task": "विजेता पर टैप करें", "ok": "K-Q-J-T-9, स्ट्रेट!", "ng": "बोर्ड के J, T और 9 के साथ मिलाएँ।"}]}, "plo": {"origin": "अमेरिका", "players": "2–9", "time": "प्रति हैंड 1–3 मिनट", "facts": "52 कार्ड|4 होल + 5 बोर्ड कार्ड|ठीक 2 होल + 3 बोर्ड|पॉट लिमिट", "hist": "ओमाहा 1980 के दशक में लास वेगास के कैसीनो में आया। चार होल कार्ड से बड़े हैंड आम हैं; यह दूसरा सबसे लोकप्रिय पोकर है, खासकर यूरोप में।", "win": "होल्डेम की तरह खेला जाता है, पर आपके हैंड में ठीक दो होल कार्ड और ठीक तीन बोर्ड कार्ड होने चाहिए।", "cult": "PLO को “एक्शन गेम” कहते हैं: इक्विटी करीब रहती है, इसलिए पॉट बड़े होते हैं।", "p": [{"t": "दो और तीन", "b": "हमेशा अपने चार होल कार्ड में से ठीक दो और बोर्ड के पाँच में से ठीक तीन।", "task": "सबसे अच्छे पाँच चुनें: 2 होल + 3 बोर्ड", "ok": "A♠K♠ के साथ नट फ्लश!", "ng": "हाथ से ठीक दो, बोर्ड से तीन।"}, {"t": "एक कार्ड से फ्लश नहीं", "b": "बोर्ड पर चार हार्ट तब तक फ्लश नहीं जब तक आपके पास दो हार्ट न हों — होल्डेम से सबसे बड़ा अंतर।", "task": "जिस खिलाड़ी के पास फ्लश है उस पर टैप करें", "ok": "सिर्फ़ P2, दो हार्ट के साथ, के पास फ्लश है!", "ng": "हाथ का एक हार्ट इस्तेमाल नहीं हो सकता।"}, {"t": "पॉट लिमिट", "b": "अधिकतम रेज़ आपके कॉल के बाद के पॉट जितना है। पॉट 20, बेट 10: 10 कॉल (पॉट 40), 40 और रेज़ — 50 तक।", "task": "आपका अधिकतम रेज़?", "ok": "10 + (20 + 10 + 10) = 50!", "ng": "पहले अपना कॉल पॉट में जोड़ें।"}]}, "shortdeck": {"origin": "ब्रिटेन / एशिया", "players": "2–9", "time": "प्रति हैंड 1–3 मिनट", "facts": "36 कार्ड (2–5 नहीं)|2 होल + 5 बोर्ड कार्ड|फ्लश > फुल हाउस|A-6-7-8-9 स्ट्रेट है", "hist": "2010 के दशक में ब्रिटिश प्रो खिलाड़ियों ने इसे लोकप्रिय बनाया और यह मकाऊ व एशिया के हाई-स्टेक गेम्स में छा गया। इसे “6+ होल्डेम” भी कहते हैं।", "win": "होल्डेम की तरह, सात में से सबसे अच्छे पाँच — पर संभावनाएँ बदलने से रैंकिंग बदल जाती है।", "cult": "कम कार्ड होने से ड्रॉ ज़्यादा लगते हैं और ऑल-इन आम हैं। यहाँ थ्री ऑफ़ अ काइंड स्ट्रेट को हराता है।", "p": [{"t": "36 कार्ड की डेक", "b": "सभी 2, 3, 4 और 5 हटा दिए जाते हैं।", "task": "जो कार्ड डेक में नहीं है उस पर टैप करें", "ok": "चौके बाहर हैं!", "ng": "2 से 5 हटाए जाते हैं।"}, {"t": "फ्लश फुल हाउस को हराता है", "b": "एक सूट के सिर्फ़ नौ कार्ड होने से फ्लश फुल हाउस से दुर्लभ है — इसलिए ऊपर रैंक करता है।", "task": "शॉर्ट डेक में मज़बूत हैंड पर टैप करें", "ok": "शॉर्ट डेक में फ्लश जीतता है!", "ng": "यहाँ क्रम उल्टा है।"}, {"t": "A-6-7-8-9", "b": "5 न होने से इक्का 6 के नीचे छोटा बनकर खेलता है: A-6-7-8-9 स्ट्रेट है।", "task": "स्ट्रेट पर टैप करें", "ok": "A-6-7-8-9 स्ट्रेट है!", "ng": "इक्का 6 के नीचे भी जुड़ता है।"}]}, "stud": {"origin": "अमेरिका", "players": "2–8", "time": "प्रति हैंड 2–4 मिनट", "facts": "52 कार्ड|कोई बोर्ड नहीं: हर किसी के सात कार्ड|उनमें से चार खुले|एंटी + ब्रिंग-इन, फ़िक्स्ड लिमिट", "hist": "गृहयुद्ध के दौर (1860 का दशक) से खेला जाता है; 2000 के आसपास होल्डेम के आगे निकलने तक यह अमेरिका का सबसे लोकप्रिय पोकर था।", "win": "दो बंद और एक खुला, फिर तीन और खुले और आखिरी एक बंद। आपके सात में से सबसे अच्छे पाँच जीतते हैं।", "cult": "हर खुला कार्ड दिखता है — याद रखना कि कौन से कार्ड जा चुके हैं, कई हैंड तय करता है।", "p": [{"t": "ब्रिंग-इन", "b": "सभी एंटी देते हैं; सबसे छोटा खुला कार्ड ब्रिंग-इन देता है। बराबरी सूट से तय होती है: ♣ < ♦ < ♥ < ♠।", "task": "ब्रिंग-इन देने वाले पर टैप करें", "ok": "3♣ सबसे छोटा खुला कार्ड है!", "ng": "तिक्कों में क्लब सबसे छोटा है।"}, {"t": "सबसे अच्छा खुला हैंड पहले बोलता है", "b": "फोर्थ स्ट्रीट से सबसे अच्छा खुला हैंड दिखाने वाला खिलाड़ी पहले बोलता है।", "task": "फोर्थ स्ट्रीट पर पहले कौन बोलता है?", "ok": "P2, जिसके पास क्वीन की पेयर खुली है!", "ng": "सिर्फ़ खुले कार्ड की तुलना करें।"}, {"t": "सात में से पाँच", "b": "सेवंथ स्ट्रीट पर अपने सात कार्ड में से सबसे अच्छे पाँच चुनें।", "task": "सबसे अच्छे पाँच चुनें", "ok": "चौकों पर नहले का फुल हाउस!", "ng": "एक जैसे रैंक खोजें।"}]}, "draw": {"origin": "अमेरिका", "players": "2–6", "time": "प्रति हैंड 1–2 मिनट", "facts": "52 कार्ड|5 कार्ड, कोई बोर्ड नहीं|एक ड्रॉ|फ़िक्स्ड लिमिट", "hist": "पोकर के सबसे पुराने रूपों में से एक, 1800 के दशक के मध्य से खेला जाता है — फ़िल्मों और कॉमिक्स का “कार्ड बदलने वाला” पोकर।", "win": "पाँच कार्ड, एक बेट, 0–5 कार्ड का एक ड्रॉ, फिर एक बेट; सबसे अच्छे पाँच जीतते हैं।", "cult": "सब देखते हैं कि आप कितने बदलते हैं — मज़बूत दिखने के लिए स्टैंड पैट करना खेल का हिस्सा है।", "p": [{"t": "पेयर रखें", "b": "एक पेयर हो तो पेयर रखें और बाकी तीन बदलें।", "task": "बदलने वाले कार्ड चुनें, फिर बदलें दबाएँ", "ok": "क्वीन रखीं और तीन बदले!", "ng": "पेयर के अलावा तीनों बदलें।"}, {"t": "फोर-फ्लश पर एक", "b": "एक सूट के चार हों तो सिर्फ़ पाँचवाँ कार्ड बदलें (फ्लश बनने की लगभग 19% संभावना)।", "task": "फ्लश के लिए ड्रॉ करें", "ok": "सिर्फ़ K♠ बदला!", "ng": "चारों हार्ट रखें।"}, {"t": "शोडाउन", "b": "दूसरे बेटिंग राउंड के बाद हैंड दिखाए जाते हैं।", "task": "विजेता पर टैप करें", "ok": "फुल हाउस जीतता है!", "ng": "फुल हाउस > फ्लश > स्ट्रेट।"}, {"t": "फ़िक्स्ड लिमिट", "b": "बेट तय हैं: ड्रॉ से पहले छोटा बेट (2), बाद में बड़ा बेट (4), हर राउंड में अधिकतम चार बेट।", "task": "ड्रॉ के बाद का बेट?", "ok": "बड़ा बेट, 4!", "ng": "ड्रॉ के बाद बड़ा बेट होता है।"}]}},
-ar: {"ui": {"hole": "الأوراق المخفية", "board": "الطاولة", "you": "أنت", "sel": "{n}/5 أوراق", "selO": "مخفية {h}/2 · طاولة {b}/3", "change": "بدّل {n}", "stand": "احتفظ بيدك", "pot": "البوت", "none": "لم يراهن أحد بعد", "odds": "البوت 100 وخصمك يراهن 50. الإكويتي لديك نحو 20%", "pl": "بوت ليمت: البوت 20 وخصمك يراهن 10. ما أقصى رفع لك؟", "fl": "ليمت ثابت 2/4. بعد التبديل، الرهان الواحد هو…", "allin": "أول-إن", "pot2": "حتى حجم البوت", "fold": "فولد", "check": "تشيك", "bet": "بِت", "call": "كول"}, "holdem": {"origin": "تكساس، الولايات المتحدة", "players": "2–10", "time": "1–3 دقائق لليد", "facts": "52 ورقة|ورقتان مخفيتان + 5 أوراق مشتركة|البلايندز|4 جولات رهان", "hist": "يُقال إنها وُلدت في روبستاون بتكساس في أوائل القرن العشرين. أصبحت الحدث الرئيسي في بطولة العالم للبوكر (منذ 1970)، وأطلق فوز الهاوي كريس مانيميكر عام 2003 موجة انتشار عالمية.", "win": "اربح البوت إما (1) بامتلاك أفضل خمس من ورقتيك والخمس على الطاولة في الشوداون، أو (2) بجعل الجميع ينسحبون.", "cult": "“دقيقة لتتعلمها، وعمر لتتقنها.” الحظ مهم في يد واحدة، والمهارة على مدى أيدٍ كثيرة.", "p": [{"t": "ترتيب الأيدي", "b": "ستريت فلاش > رباعية > فول هاوس > فلاش > ستريت > ثلاثية > زوجان > زوج > ورقة عالية.", "task": "اضغط على اليد الأقوى", "ok": "الثلاثية تتفوق على الزوجين!", "ng": "حاول مجددًا — راجع ترتيب الأيدي."}, {"t": "أفضل خمس من سبع", "b": "استخدم أي خمس من الأوراق السبع — ورقتيك والخمس على الطاولة. يمكنك ألا تستخدم أيًّا من ورقتيك.", "task": "اختر أقوى خمس أوراق", "ok": "فلاش قلوب أعلاه آص!", "ng": "هناك خمس أقوى — عُدّ الأشكال."}, {"t": "الزر والبلايندز", "b": "يسار زر الموزّع (D) يجلس البلايند الصغير ثم البلايند الكبير — رهانات إجبارية. قبل الفلوب يتصرف أولًا اللاعب الذي على يسار BB (UTG).", "task": "اضغط على من يتصرف أولًا قبل الفلوب", "ok": "يسار البلايند الكبير: UTG!", "ng": "البلايندز تتصرف أخيرًا قبل الفلوب."}, {"t": "تشيك وبِت", "b": "بلا رهان يمكنك التشيك وتمرير الدور مجانًا. أمام رهان: فولد أو كول أو رفع.", "task": "يد ضعيفة. كيف ترى الورقة التالية مجانًا؟", "ok": "تشيك — مجانًا!", "ng": "لم يراهن أحد، فيمكنك المتابعة مجانًا."}, {"t": "احتمالات البوت", "b": "دفع 50 لربح 200 (البوت 100 + 50 منه + 50 منك) يتطلب إكويتي 50 ÷ 200 = 25%. إن كان أقل فالفولد يربح على المدى الطويل.", "task": "إكويتي 20%. كول أم فولد؟", "ok": "20% < 25%: فولد!", "ng": "تحتاج 25%؛ و20% لا تكفي."}, {"t": "الشوداون", "b": "إذا بقي لاعبان أو أكثر بعد آخر رهان تُكشف الأيدي. أفضل خمس أوراق تربح البوت.", "task": "اضغط على الفائز", "ok": "K-Q-J-T-9، ستريت!", "ng": "اجمعها مع J وT و9 على الطاولة."}]}, "plo": {"origin": "الولايات المتحدة", "players": "2–9", "time": "1–3 دقائق لليد", "facts": "52 ورقة|4 مخفية + 5 على الطاولة|2 مخفية + 3 من الطاولة بالضبط|بوت ليمت", "hist": "ظهرت أوماها في كازينوهات لاس فيغاس في الثمانينيات. مع أربع أوراق مخفية تكثر الأيدي الكبيرة؛ وهي ثاني أكثر أنواع البوكر شعبية، خاصة في أوروبا.", "win": "تُلعب مثل الهولدم، لكن يجب أن تستخدم يدك ورقتين مخفيتين بالضبط وثلاث أوراق من الطاولة بالضبط.", "cult": "يُسمّى PLO “لعبة الأكشن”: الإكويتي متقارب فتكبر البوتات.", "p": [{"t": "اثنتان وثلاث", "b": "دائمًا اثنتان بالضبط من أوراقك المخفية الأربع وثلاث بالضبط من أوراق الطاولة الخمس.", "task": "اختر أفضل خمس: 2 مخفية + 3 من الطاولة", "ok": "نَت فلاش مع A♠K♠!", "ng": "اثنتان بالضبط من يدك وثلاث من الطاولة."}, {"t": "ورقة واحدة لا تصنع فلاشًا", "b": "أربع قلوب على الطاولة ليست فلاشًا ما لم تحمل قلبين — أكبر فرق عن الهولدم.", "task": "اضغط على اللاعب الذي لديه فلاش", "ok": "P2 وحده، بقلبين، لديه فلاش!", "ng": "قلب واحد في اليد لا يمكن استخدامه."}, {"t": "بوت ليمت", "b": "أقصى رفع هو حجم البوت بعد الكول. البوت 20 والرهان 10: كول 10 (البوت 40)، ثم ارفع 40 إضافية — إلى 50.", "task": "ما أقصى رفع لك؟", "ok": "10 + (20 + 10 + 10) = 50!", "ng": "أضف الكول إلى البوت أولًا."}]}, "shortdeck": {"origin": "بريطانيا / آسيا", "players": "2–9", "time": "1–3 دقائق لليد", "facts": "36 ورقة (بدون 2–5)|2 مخفية + 5 على الطاولة|فلاش > فول هاوس|A-6-7-8-9 ستريت", "hist": "نشرها محترفون بريطانيون في العقد الثاني من القرن الحادي والعشرين وانطلقت في ألعاب الرهانات العالية في ماكاو وآسيا. تُسمّى أيضًا “هولدم 6+”.", "win": "مثل الهولدم، أفضل خمس من سبع — لكن الترتيب يتغير لأن الاحتمالات تتغير.", "cult": "مع أوراق أقل يكتمل الدرو أكثر وتكثر حالات الأول-إن. هنا الثلاثية تتفوق على الستريت.", "p": [{"t": "مجموعة من 36 ورقة", "b": "تُحذف كل أوراق 2 و3 و4 و5.", "task": "اضغط على الورقة غير الموجودة في المجموعة", "ok": "الأربعات محذوفة!", "ng": "تُحذف الأوراق من 2 إلى 5."}, {"t": "الفلاش يتفوق على الفول هاوس", "b": "مع تسع أوراق فقط لكل شكل يصبح الفلاش أندر من الفول هاوس — لذا يأتي أعلى.", "task": "اضغط على اليد الأقوى في شورت ديك", "ok": "الفلاش يفوز في شورت ديك!", "ng": "الترتيب معكوس هنا."}, {"t": "A-6-7-8-9", "b": "بلا ورقة 5 يلعب الآص منخفضًا تحت الـ6: A-6-7-8-9 ستريت.", "task": "اضغط على الستريت", "ok": "A-6-7-8-9 ستريت!", "ng": "الآص يتصل أيضًا تحت الـ6."}]}, "stud": {"origin": "الولايات المتحدة", "players": "2–8", "time": "2–4 دقائق لليد", "facts": "52 ورقة|بلا طاولة: سبع أوراق لكل لاعب|أربع منها مكشوفة|أنتي + برينغ-إن، ليمت ثابت", "hist": "تُلعب منذ حقبة الحرب الأهلية (ستينيات القرن التاسع عشر)، وكانت أشهر أنواع البوكر في أمريكا حتى تفوّق عليها الهولدم نحو عام 2000.", "win": "ورقتان مقلوبتان وواحدة مكشوفة، ثم ثلاث أخرى مكشوفة وأخيرة مقلوبة. أفضل خمس من أوراقك السبع تفوز.", "cult": "كل ورقة مكشوفة مرئية — تذكّر الأوراق التي خرجت يحسم أيديًا كثيرة.", "p": [{"t": "البرينغ-إن", "b": "الجميع يدفع أنتي؛ وأدنى ورقة مكشوفة تدفع البرينغ-إن. يُحسم التعادل بالشكل: ♣ < ♦ < ♥ < ♠.", "task": "اضغط على من يدفع البرينغ-إن", "ok": "3♣ هي أدنى ورقة مكشوفة!", "ng": "بين الثلاثات، السباتي هو الأدنى."}, {"t": "الأفضل ظاهرًا يتصرف أولًا", "b": "من الشارع الرابع يتصرف أولًا اللاعب الذي يُظهر أفضل يد.", "task": "من يتصرف أولًا في الشارع الرابع؟", "ok": "P2، الذي يُظهر زوج ملكات!", "ng": "قارن الأوراق المكشوفة فقط."}, {"t": "خمس من سبع", "b": "في الشارع السابع اختر أفضل خمس من أوراقك السبع.", "task": "اختر أفضل خمس", "ok": "فول هاوس: ثلاث أربعات وزوج تسعات!", "ng": "ابحث عن الرتب المتطابقة."}]}, "draw": {"origin": "الولايات المتحدة", "players": "2–6", "time": "1–2 دقيقة لليد", "facts": "52 ورقة|5 أوراق بلا طاولة|تبديل واحد|ليمت ثابت", "hist": "من أقدم أشكال البوكر، تُلعب منذ منتصف القرن التاسع عشر — بوكر “تبديل الأوراق” في الأفلام والقصص المصورة.", "win": "خمس أوراق، رهان، تبديل واحد من 0 إلى 5 أوراق، ثم رهان آخر؛ أفضل خمس تفوز.", "cult": "الجميع يرى كم تبدّل — الاحتفاظ باليد للظهور بمظهر القوي جزء من اللعبة.", "p": [{"t": "احتفظ بالزوج", "b": "مع زوج واحد احتفظ بالزوج وبدّل الثلاث الأخرى.", "task": "اختر الأوراق للتبديل ثم اضغط بدّل", "ok": "احتفظت بالملكتين وبدّلت ثلاثًا!", "ng": "بدّل الثلاث التي ليست من الزوج."}, {"t": "واحدة لأربع من شكل واحد", "b": "مع أربع من شكل واحد بدّل الورقة الخامسة فقط (نحو 19% لإكمال الفلاش).", "task": "بدّل من أجل الفلاش", "ok": "بدّلت K♠ فقط!", "ng": "احتفظ بالقلوب الأربع."}, {"t": "الشوداون", "b": "بعد جولة الرهان الثانية تُكشف الأيدي.", "task": "اضغط على الفائز", "ok": "الفول هاوس يفوز!", "ng": "فول هاوس > فلاش > ستريت."}, {"t": "ليمت ثابت", "b": "الرهانات ثابتة: الرهان الصغير (2) قبل التبديل، والكبير (4) بعده، وأربعة رهانات كحد أقصى في الجولة.", "task": "الرهان بعد التبديل؟", "ok": "الرهان الكبير، 4!", "ng": "بعد التبديل يكون الرهان الكبير."}]}}
+ar: {"ui": {"hole": "الأوراق المخفية", "board": "الطاولة", "you": "أنت", "sel": "{n}/5 أوراق", "selO": "مخفية {h}/2 · طاولة {b}/3", "change": "بدّل {n}", "stand": "احتفظ بيدك", "pot": "البوت", "none": "لم يراهن أحد بعد", "odds": "البوت 100 وخصمك يراهن 50. الإكويتي لديك نحو 20%", "pl": "بوت ليمت: البوت 20 وخصمك يراهن 10. ما أقصى رفع لك؟", "fl": "ليمت ثابت 2/4. بعد التبديل، الرهان الواحد هو…", "allin": "أول-إن", "pot2": "حتى حجم البوت", "fold": "فولد", "check": "تشيك", "bet": "بِت", "call": "كول"}, "holdem": {"origin": "تكساس، الولايات المتحدة", "players": "2–10", "time": "1–3 دقائق لليد", "facts": "52 ورقة|ورقتان مخفيتان + 5 أوراق مشتركة|البلايندز|4 جولات رهان", "hist": "يُقال إنها وُلدت في روبستاون بتكساس في أوائل القرن العشرين. أصبحت الحدث الرئيسي في بطولة العالم للبوكر (منذ 1970)، وأطلق فوز الهاوي كريس مانيميكر عام 2003 موجة انتشار عالمية.", "win": "اربح البوت إما (1) بامتلاك أفضل خمس من ورقتيك والخمس على الطاولة في الشوداون، أو (2) بجعل الجميع ينسحبون.", "cult": "“دقيقة لتتعلمها، وعمر لتتقنها.” الحظ مهم في يد واحدة، والمهارة على مدى أيدٍ كثيرة.", "p": [{"t": "ترتيب الأيدي", "b": "ستريت فلاش > رباعية > فول هاوس > فلاش > ستريت > ثلاثية > زوجان > زوج > ورقة عالية.", "task": "اضغط على اليد الأقوى", "ok": "الثلاثية تتفوق على الزوجين!", "ng": "حاول مجددًا — راجع ترتيب الأيدي."}, {"t": "أفضل خمس من سبع", "b": "استخدم أي خمس من الأوراق السبع — ورقتيك والخمس على الطاولة. يمكنك ألا تستخدم أيًّا من ورقتيك.", "task": "اختر أقوى خمس أوراق", "ok": "فلاش قلوب أعلاه آص!", "ng": "هناك خمس أقوى — عُدّ الأشكال."}, {"t": "الزر والبلايندز", "b": "يسار زر الموزّع (D) يجلس البلايند الصغير ثم البلايند الكبير — رهانات إجبارية. قبل الفلوب يتصرف أولًا اللاعب الذي على يسار BB (UTG).", "task": "اضغط على من يتصرف أولًا قبل الفلوب", "ok": "يسار البلايند الكبير: UTG!", "ng": "البلايندز تتصرف أخيرًا قبل الفلوب."}, {"t": "تشيك وبِت", "b": "بلا رهان يمكنك التشيك وتمرير الدور مجانًا. أمام رهان: فولد أو كول أو رفع.", "task": "يد ضعيفة. كيف ترى الورقة التالية مجانًا؟", "ok": "تشيك — مجانًا!", "ng": "لم يراهن أحد، فيمكنك المتابعة مجانًا."}, {"t": "احتمالات البوت", "b": "دفع 50 لربح 200 (البوت 100 + 50 منه + 50 منك) يتطلب إكويتي 50 ÷ 200 = 25%. إن كان أقل فالفولد يربح على المدى الطويل.", "task": "إكويتي 20%. كول أم فولد؟", "ok": "20% < 25%: فولد!", "ng": "تحتاج 25%؛ و20% لا تكفي."}, {"t": "الشوداون", "b": "إذا بقي لاعبان أو أكثر بعد آخر رهان تُكشف الأيدي. أفضل خمس أوراق تربح البوت.", "task": "اضغط على الفائز", "ok": "K-Q-J-T-9، ستريت!", "ng": "اجمعها مع J وT و9 على الطاولة."}]}, "plo": {"origin": "الولايات المتحدة", "players": "2–9", "time": "1–3 دقائق لليد", "facts": "52 ورقة|4 مخفية + 5 على الطاولة|2 مخفية + 3 من الطاولة بالضبط|بوت ليمت", "hist": "ظهرت أوماها في كازينوهات لاس فيغاس في الثمانينيات. مع أربع أوراق مخفية تكثر الأيدي الكبيرة؛ وهي ثاني أكثر أنواع البوكر شعبية، خاصة في أوروبا.", "win": "تُلعب مثل الهولدم، لكن يجب أن تستخدم يدك ورقتين مخفيتين بالضبط وثلاث أوراق من الطاولة بالضبط.", "cult": "يُسمّى PLO “لعبة الأكشن”: الإكويتي متقارب فتكبر البوتات.", "p": [{"t": "اثنتان وثلاث", "b": "دائمًا اثنتان بالضبط من أوراقك المخفية الأربع وثلاث بالضبط من أوراق الطاولة الخمس.", "task": "اختر أفضل خمس: 2 مخفية + 3 من الطاولة", "ok": "نَت فلاش مع A♠K♠!", "ng": "اثنتان بالضبط من يدك وثلاث من الطاولة."}, {"t": "ورقة واحدة لا تصنع فلاشًا", "b": "أربع قلوب على الطاولة ليست فلاشًا ما لم تحمل قلبين — أكبر فرق عن الهولدم.", "task": "اضغط على اللاعب الذي لديه فلاش", "ok": "P2 وحده، بقلبين، لديه فلاش!", "ng": "قلب واحد في اليد لا يمكن استخدامه."}, {"t": "بوت ليمت", "b": "أقصى رفع هو حجم البوت بعد الكول. البوت 20 والرهان 10: كول 10 (البوت 40)، ثم ارفع 40 إضافية — إلى 50.", "task": "ما أقصى رفع لك؟", "ok": "10 + (20 + 10 + 10) = 50!", "ng": "أضف الكول إلى البوت أولًا."}]}, "shortdeck": {"origin": "بريطانيا / آسيا", "players": "2–9", "time": "1–3 دقائق لليد", "facts": "36 ورقة (بدون 2–5)|2 مخفية + 5 على الطاولة|فلاش > فول هاوس|A-6-7-8-9 ستريت", "hist": "نشرها محترفون بريطانيون في العقد الثاني من القرن الحادي والعشرين وانطلقت في ألعاب الرهانات العالية في ماكاو وآسيا. تُسمّى أيضًا “هولدم 6+”.", "win": "مثل الهولدم، أفضل خمس من سبع — لكن الترتيب يتغير لأن الاحتمالات تتغير.", "cult": "مع أوراق أقل يكتمل الدرو أكثر وتكثر حالات الأول-إن. هنا الثلاثية تتفوق على الستريت.", "p": [{"t": "مجموعة من 36 ورقة", "b": "تُحذف كل أوراق 2 و3 و4 و5.", "task": "اضغط على الورقة غير الموجودة في المجموعة", "ok": "الأربعات محذوفة!", "ng": "تُحذف الأوراق من 2 إلى 5."}, {"t": "الفلاش يتفوق على الفول هاوس", "b": "مع تسع أوراق فقط لكل شكل يصبح الفلاش أندر من الفول هاوس — لذا يأتي أعلى.", "task": "اضغط على اليد الأقوى في شورت ديك", "ok": "الفلاش يفوز في شورت ديك!", "ng": "الترتيب معكوس هنا."}, {"t": "A-6-7-8-9", "b": "بلا ورقة 5 يلعب الآص منخفضًا تحت الـ6: A-6-7-8-9 ستريت.", "task": "اضغط على الستريت", "ok": "A-6-7-8-9 ستريت!", "ng": "الآص يتصل أيضًا تحت الـ6."}]}, "stud": {"origin": "الولايات المتحدة", "players": "2–8", "time": "2–4 دقائق لليد", "facts": "52 ورقة|بلا طاولة: سبع أوراق لكل لاعب|أربع منها مكشوفة|أنتي + برينغ-إن، ليمت ثابت", "hist": "تُلعب منذ حقبة الحرب الأهلية (ستينيات القرن التاسع عشر)، وكانت أشهر أنواع البوكر في أمريكا حتى تفوّق عليها الهولدم نحو عام 2000.", "win": "ورقتان مقلوبتان وواحدة مكشوفة، ثم ثلاث أخرى مكشوفة وأخيرة مقلوبة. أفضل خمس من أوراقك السبع تفوز.", "cult": "كل ورقة مكشوفة مرئية — تذكّر الأوراق التي خرجت يحسم أيديًا كثيرة.", "p": [{"t": "البرينغ-إن", "b": "الجميع يدفع أنتي؛ وأدنى ورقة مكشوفة تدفع البرينغ-إن. يُحسم التعادل بالشكل: ♣ < ♦ < ♥ < ♠.", "task": "اضغط على من يدفع البرينغ-إن", "ok": "3♣ هي أدنى ورقة مكشوفة!", "ng": "بين الثلاثات، السباتي هو الأدنى."}, {"t": "الأفضل ظاهرًا يتصرف أولًا", "b": "من الشارع الرابع يتصرف أولًا اللاعب الذي يُظهر أفضل يد.", "task": "من يتصرف أولًا في الشارع الرابع؟", "ok": "P2، الذي يُظهر زوج ملكات!", "ng": "قارن الأوراق المكشوفة فقط."}, {"t": "خمس من سبع", "b": "في الشارع السابع اختر أفضل خمس من أوراقك السبع.", "task": "اختر أفضل خمس", "ok": "فول هاوس: ثلاث أربعات وزوج تسعات!", "ng": "ابحث عن الرتب المتطابقة."}]}, "draw": {"origin": "الولايات المتحدة", "players": "2–6", "time": "1–2 دقيقة لليد", "facts": "52 ورقة|5 أوراق بلا طاولة|تبديل واحد|ليمت ثابت", "hist": "من أقدم أشكال البوكر، تُلعب منذ منتصف القرن التاسع عشر — بوكر “تبديل الأوراق” في الأفلام والقصص المصورة.", "win": "خمس أوراق، رهان، تبديل واحد من 0 إلى 5 أوراق، ثم رهان آخر؛ أفضل خمس تفوز.", "cult": "الجميع يرى كم تبدّل — الاحتفاظ باليد للظهور بمظهر القوي جزء من اللعبة.", "p": [{"t": "احتفظ بالزوج", "b": "مع زوج واحد احتفظ بالزوج وبدّل الثلاث الأخرى.", "task": "اختر الأوراق للتبديل ثم اضغط بدّل", "ok": "احتفظت بالملكتين وبدّلت ثلاثًا!", "ng": "بدّل الثلاث التي ليست من الزوج."}, {"t": "واحدة لأربع من شكل واحد", "b": "مع أربع من شكل واحد بدّل الورقة الخامسة فقط (نحو 19% لإكمال الفلاش).", "task": "بدّل من أجل الفلاش", "ok": "بدّلت K♠ فقط!", "ng": "احتفظ بالقلوب الأربع."}, {"t": "الشوداون", "b": "بعد جولة الرهان الثانية تُكشف الأيدي.", "task": "اضغط على الفائز", "ok": "الفول هاوس يفوز!", "ng": "فول هاوس > فلاش > ستريت."}, {"t": "ليمت ثابت", "b": "الرهانات ثابتة: الرهان الصغير (2) قبل التبديل، والكبير (4) بعده، وأربعة رهانات كحد أقصى في الجولة.", "task": "الرهان بعد التبديل؟", "ok": "الرهان الكبير، 4!", "ng": "بعد التبديل يكون الرهان الكبير."}]}},
+ru: {
+  ui: {
+    hole: 'Карты на руках',
+    board: 'Борд',
+    you: 'Вы',
+    sel: '{n}/5 карт',
+    selO: 'Рука {h}/2 · Борд {b}/3',
+    change: 'Сменить {n}',
+    stand: 'Без обмена',
+    pot: 'Банк',
+    none: 'Ставок ещё не было',
+    odds: 'В банке 100, соперник ставит 50. Ваше эквити около 20%',
+    pl: 'Пот-лимит: в банке 20, соперник ставит 10. Ваш максимальный рейз?',
+    fl: 'Фикс-лимит 2/4. После обмена одна ставка равна…',
+    fl3: 'Фикс-лимит 2/4. После третьего обмена одна ставка равна…',
+    allin: 'Олл-ин',
+    pot2: 'До размера банка',
+    fold: 'Фолд',
+    check: 'Чек',
+    bet: 'Бет',
+    call: 'Колл'
+  },
+  holdem: {
+    origin: 'Техас, США',
+    players: '2–10',
+    time: '1–3 мин на раздачу',
+    facts: '52 карты|2 на руках + 5 общих карт|Блайнды|4 круга торговли',
+    hist: 'Считается, что игра родилась в Робстауне (Техас) в начале 1900-х. С 1970 года это главный турнир Мировой серии покера, а победа любителя Криса Манимейкера в 2003 году вызвала мировой покерный бум.',
+    win: 'Выиграйте банк: (1) собрав на вскрытии лучшие пять карт из двух своих и пяти общих или (2) заставив всех остальных сбросить.',
+    cult: '«Научиться можно за минуту, освоить — за всю жизнь». В одной раздаче решает удача, на дистанции — мастерство.',
+    p: [{
+      t: 'Старшинство комбинаций',
+      b: 'Стрит-флеш > каре > фулл-хаус > флеш > стрит > тройка > две пары > пара > старшая карта.',
+      task: 'Нажмите на более сильную руку',
+      ok: 'Тройка бьёт две пары!',
+      ng: 'Ещё раз — проверьте порядок комбинаций.'
+    }, {
+      t: 'Лучшие пять из семи',
+      b: 'Можно использовать любые пять из семи карт — две свои и пять с борда. Можно даже не использовать свои.',
+      task: 'Выберите пять самых сильных карт',
+      ok: 'Червовый флеш до туза!',
+      ng: 'Есть пятёрка сильнее — посчитайте масти.'
+    }, {
+      t: 'Баттон и блайнды',
+      b: 'Слева от баттона дилера (D) — малый блайнд, затем большой: это обязательные ставки. На префлопе первым ходит игрок слева от BB (UTG).',
+      task: 'Нажмите на того, кто ходит первым на префлопе',
+      ok: 'Слева от большого блайнда: UTG!',
+      ng: 'Блайнды на префлопе ходят последними.'
+    }, {
+      t: 'Чек и бет',
+      b: 'Если ставки нет, можно сделать чек и бесплатно передать ход. Против ставки — фолд, колл или рейз.',
+      task: 'Слабая рука. Как бесплатно увидеть следующую карту?',
+      ok: 'Чек — бесплатно!',
+      ng: 'Никто не ставил, так что можно идти дальше бесплатно.'
+    }, {
+      t: 'Шансы банка',
+      b: 'Платить 50, чтобы выиграть 200 (банк 100 + его 50 + ваши 50), — нужно 50 ÷ 200 = 25% эквити. Если меньше, на дистанции выгоднее фолд.',
+      task: 'Эквити 20%. Колл или фолд?',
+      ok: '20% < 25%: фолд!',
+      ng: 'Нужно 25%, 20% не хватает.'
+    }, {
+      t: 'Вскрытие',
+      b: 'Если после последней ставки осталось двое или больше, руки открываются. Лучшие пять карт забирают банк.',
+      task: 'Нажмите на победителя',
+      ok: 'K-Q-J-T-9 — стрит!',
+      ng: 'Объедините с J, T и 9 на борде.'
+    }]
+  },
+  plo: {
+    origin: 'США',
+    players: '2–9',
+    time: '1–3 мин на раздачу',
+    facts: '52 карты|4 на руках + 5 на борде|Ровно 2 с руки + 3 с борда|Пот-лимит',
+    hist: 'Омаха появилась в казино Лас-Вегаса в 1980-х. С четырьмя картами на руках сильные комбинации обычны; это второй по популярности покер, особенно в Европе.',
+    win: 'Играется как холдем, но рука должна состоять ровно из двух карт с руки и ровно трёх с борда.',
+    cult: 'PLO называют «игрой действия»: эквити близки, поэтому банки растут.',
+    p: [{
+      t: 'Две плюс три',
+      b: 'Всегда ровно две из четырёх карт на руках и ровно три из пяти карт борда.',
+      task: 'Выберите лучшие пять: 2 с руки + 3 с борда',
+      ok: 'Натс-флеш с A♠K♠!',
+      ng: 'Ровно две с руки, три с борда.'
+    }, {
+      t: 'Одной карты для флеша мало',
+      b: 'Четыре червы на борде — не флеш, если у вас нет двух черв. Это главное отличие от холдема.',
+      task: 'Нажмите на игрока, у которого флеш',
+      ok: 'Флеш только у P2 с двумя червами!',
+      ng: 'Одну черву с руки не использовать.'
+    }, {
+      t: 'Пот-лимит',
+      b: 'Максимальный рейз — размер банка после вашего колла. Банк 20, ставка 10: колл 10 (банк 40), рейз ещё на 40 — до 50.',
+      task: 'Ваш максимальный рейз?',
+      ok: '10 + (20 + 10 + 10) = 50!',
+      ng: 'Сначала добавьте свой колл к банку.'
+    }]
+  },
+  shortdeck: {
+    origin: 'Великобритания / Азия',
+    players: '2–9',
+    time: '1–3 мин на раздачу',
+    facts: '36 карт (без 2–5)|2 на руках + 5 на борде|Флеш > фулл-хаус|A-6-7-8-9 — стрит',
+    hist: 'Британские профессионалы популяризовали его в 2010-х, а затем он стал популярен в хайроллерских играх Макао и Азии. Также называется «6+ холдем».',
+    win: 'Как в холдеме, лучшие пять из семи — но старшинство меняется, потому что меняются вероятности.',
+    cult: 'При меньшем числе карт дро собираются чаще и олл-ины обычны. Здесь тройка бьёт стрит.',
+    p: [{
+      t: 'Колода из 36 карт',
+      b: 'Все двойки, тройки, четвёрки и пятёрки убраны.',
+      task: 'Нажмите на карту, которой нет в колоде',
+      ok: 'Четвёрок нет!',
+      ng: 'С 2 по 5 убраны.'
+    }, {
+      t: 'Флеш бьёт фулл-хаус',
+      b: 'Карт одной масти всего девять, поэтому флеш реже фулл-хауса — и он старше.',
+      task: 'Нажмите на более сильную руку в шорт-деке',
+      ok: 'В шорт-деке побеждает флеш!',
+      ng: 'Здесь порядок поменян.'
+    }, {
+      t: 'A-6-7-8-9',
+      b: 'Без пятёрки туз играет как младшая карта ниже 6: A-6-7-8-9 — стрит.',
+      task: 'Нажмите на стрит',
+      ok: 'A-6-7-8-9 — стрит!',
+      ng: 'Туз соединяется и снизу с 6.'
+    }]
+  },
+  stud: {
+    origin: 'США',
+    players: '2–8',
+    time: '2–4 мин на раздачу',
+    facts: '52 карты|Без борда: по семь карт|Четыре из них открыты|Анте + брин-ин, фикс-лимит',
+    hist: 'В него играют со времён Гражданской войны (1860-е); это был самый популярный покер в Америке, пока около 2000 года его не потеснил холдем.',
+    win: 'Две закрытые и одна открытая, затем ещё три открытые и последняя закрытая. Побеждают лучшие пять из семи.',
+    cult: 'Все открытые карты видны — запоминание вышедших карт решает многие раздачи.',
+    p: [{
+      t: 'Брин-ин',
+      b: 'Все ставят анте; самая младшая открытая карта платит брин-ин. При равенстве решает масть: ♣ < ♦ < ♥ < ♠.',
+      task: 'Нажмите на того, кто платит брин-ин',
+      ok: '3♣ — самая младшая открытая карта!',
+      ng: 'Среди троек трефы младше всех.'
+    }, {
+      t: 'Первым ходит лучшая открытая',
+      b: 'С 4-й улицы первым ходит игрок с лучшей открытой комбинацией.',
+      task: 'Кто ходит первым на 4-й улице?',
+      ok: 'P2 с открытой парой дам!',
+      ng: 'Сравнивайте только открытые карты.'
+    }, {
+      t: 'Пять из семи',
+      b: 'На 7-й улице выберите лучшие пять из своих семи карт.',
+      task: 'Выберите лучшие пять',
+      ok: 'Фулл-хаус: четвёрки и девятки!',
+      ng: 'Ищите одинаковые достоинства.'
+    }]
+  },
+  triple: {
+    origin: 'США',
+    players: '2–6',
+    time: '2–4 мин на раздачу',
+    facts: '52 карты|5 карт, без борда|Три обмена|Побеждает младшая рука',
+    hist: 'Лоубол (покер, где побеждает худшая рука) появился в Америке в начале 1900-х; 2-7 Triple Draw полюбился хайроллерам Лас-Вегаса и каждый год разыгрывается на WSOP.',
+    win: 'Пять карт, затем три обмена и четыре круга торговли. В конце побеждает самая младшая рука. Туз — старшая карта; стриты и флеши считаются комбинациями — это плохо.',
+    cult: 'Лучшую руку 7-5-4-3-2 называют «номер один». Главное в игре — читать, сколько карт меняет каждый.',
+    p: [{
+      t: 'Чем меньше, тем лучше',
+      b: 'Без пары, стрита и флеша побеждает рука, у которой старшая карта младше всех: 8-лоу бьёт 9-лоу.',
+      task: 'Нажмите на лучшую (младшую) руку',
+      ok: '8-лоу бьёт 9-лоу!',
+      ng: 'Сравните старшие карты.'
+    }, {
+      t: 'Туз — старший',
+      b: 'В 2-7 туз всегда старше короля. A-5-4-3-2 — это «до туза», очень слабая рука.',
+      task: 'Нажмите на лучшую (младшую) руку',
+      ok: 'До короля младше, чем до туза!',
+      ng: 'Туз — самая старшая карта.'
+    }, {
+      t: 'Стриты — это плохо',
+      b: 'Стриты и флеши считаются комбинациями — плохо для лоу (7-6-5-4-3 — стрит).',
+      task: 'Нажмите на лучшую (младшую) руку',
+      ok: 'Побеждает простой 9-лоу!',
+      ng: 'Стрит — это комбинация, а значит плохо.'
+    }, {
+      t: 'Разбивайте пары',
+      b: 'Пары тоже плохи. Смените одну из парных карт и собирайте разные младшие карты.',
+      task: 'Выберите карты для обмена и нажмите «Сменить»',
+      ok: 'Сменили одну 5 и идёте на 7-лоу!',
+      ng: 'Смените только одну из двух пятёрок.'
+    }, {
+      t: 'Размер ставок',
+      b: 'Четыре круга торговли (до обменов и после каждого из трёх). В первых двух — малая ставка (2), в последних двух — большая (4).',
+      task: 'Ставка после третьего обмена?',
+      ok: 'Большая ставка, 4!',
+      ng: 'После второго обмена уже большая ставка.'
+    }]
+  },
+  draw: {
+    origin: 'США',
+    players: '2–6',
+    time: '1–2 мин на раздачу',
+    facts: '52 карты|5 карт, без борда|Один обмен|Фикс-лимит',
+    hist: 'Одна из древнейших форм покера, в неё играют с середины 1800-х — тот самый покер «со сменой карт» из фильмов и комиксов.',
+    win: 'Пять карт, торговля, один обмен от 0 до 5 карт, снова торговля; побеждают лучшие пять.',
+    cult: 'Все видят, сколько карт вы меняете, — остаться без обмена, чтобы выглядеть сильным, тоже часть игры.',
+    p: [{
+      t: 'Оставьте пару',
+      b: 'С одной парой оставьте её и смените остальные три.',
+      task: 'Выберите карты для обмена и нажмите «Сменить»',
+      ok: 'Оставили дам и взяли три!',
+      ng: 'Смените три карты, не входящие в пару.'
+    }, {
+      t: 'Одна к четырём на флеш',
+      b: 'С четырьмя картами одной масти меняйте только пятую (около 19% собрать флеш).',
+      task: 'Идите на флеш',
+      ok: 'Сменили только K♠!',
+      ng: 'Оставьте четыре червы.'
+    }, {
+      t: 'Вскрытие',
+      b: 'После второго круга торговли руки открываются.',
+      task: 'Нажмите на победителя',
+      ok: 'Побеждает фулл-хаус!',
+      ng: 'Фулл-хаус > флеш > стрит.'
+    }, {
+      t: 'Фикс-лимит',
+      b: 'Ставки фиксированы: малая (2) до обмена, большая (4) после, не больше четырёх ставок за круг.',
+      task: 'Ставка после обмена?',
+      ok: 'Большая ставка, 4!',
+      ng: 'После обмена — большая ставка.'
+    }]
+  }
+},
+'zh-TW': {
+  ui: {
+    hole: '手牌',
+    board: '公共牌',
+    you: '你',
+    sel: '{n}/5 張',
+    selO: '手牌 {h}/2 · 公共牌 {b}/3',
+    change: '換 {n} 張',
+    stand: '不換',
+    pot: '底池',
+    none: '還沒有人下注',
+    odds: '底池 100，對手下注 50。你的勝率約 20%',
+    pl: '底池限注：底池 20，對手下注 10。你最多能加注到多少？',
+    fl: '固定限注 2/4。換牌後的一注是…',
+    fl3: '固定限注 2/4。第三次換牌後的一注是…',
+    allin: '全下',
+    pot2: '最多到底池',
+    fold: '棄牌',
+    check: '過牌',
+    bet: '下注',
+    call: '跟注'
+  },
+  holdem: {
+    origin: '美國德州',
+    players: '2～10',
+    time: '每手 1～3 分鐘',
+    facts: '52 張牌|手牌 2 張＋公共牌 5 張|盲注制|4 輪下注',
+    hist: '據說 1900 年代初誕生於德州羅布斯敦。1970 年起成為世界撲克大賽（WSOP）的主賽事，2003 年業餘玩家克里斯・曼尼梅克奪冠，掀起了全球熱潮。',
+    win: '贏得底池的方法：(1) 攤牌時用兩張手牌和五張公共牌組成最好的五張牌，或 (2) 讓其他人全部棄牌。',
+    cult: '「一分鐘學會，一輩子精通。」一手牌靠運氣，長期靠實力。',
+    p: [{
+      t: '牌型大小',
+      b: '同花順 > 四條 > 葫蘆 > 同花 > 順子 > 三條 > 兩對 > 一對 > 高牌。',
+      task: '點選比較強的牌',
+      ok: '三條勝過兩對！',
+      ng: '再試一次——確認牌型的順序。'
+    }, {
+      t: '七選五',
+      b: '從七張牌（兩張手牌和五張公共牌）中任選五張。甚至可以一張手牌都不用。',
+      task: '選出最強的五張牌',
+      ok: 'A 高的紅心同花！',
+      ng: '還有更強的五張——數數花色。'
+    }, {
+      t: '按鈕與盲注',
+      b: '莊家按鈕（D）左邊是小盲，再來是大盲——都是強制下注。翻牌前由大盲左邊的玩家（UTG）最先行動。',
+      task: '點選翻牌前最先行動的人',
+      ok: '大盲的左邊：UTG！',
+      ng: '翻牌前盲注是最後行動的。'
+    }, {
+      t: '過牌與下注',
+      b: '沒人下注時可以過牌，免費把行動交給下一位。面對下注時則選擇棄牌、跟注或加注。',
+      task: '牌很弱。要怎麼免費看下一張？',
+      ok: '過牌——免費！',
+      ng: '沒人下注，可以免費繼續。'
+    }, {
+      t: '底池賠率',
+      b: '付 50 去贏 200（底池 100＋對手 50＋你的 50）需要 50 ÷ 200 = 25% 的勝率。低於這個數字，長期來看棄牌比較好。',
+      task: '勝率 20%。跟注還是棄牌？',
+      ok: '20% < 25%：棄牌！',
+      ng: '需要 25%，20% 不夠。'
+    }, {
+      t: '攤牌',
+      b: '最後一輪下注後若還剩兩人以上，就亮牌比大小。最好的五張牌贏得底池。',
+      task: '點選贏家',
+      ok: 'K-Q-J-T-9，順子！',
+      ng: '和公共牌的 J、T、9 組合看看。'
+    }]
+  },
+  plo: {
+    origin: '美國',
+    players: '2～9',
+    time: '每手 1～3 分鐘',
+    facts: '52 張牌|手牌 4 張＋公共牌 5 張|必須用 2 張手牌＋3 張公共牌|底池限注',
+    hist: '奧馬哈在 1980 年代出現在拉斯維加斯的賭場。手牌有四張，大牌很常見；是第二受歡迎的撲克，在歐洲特別流行。',
+    win: '玩法和德州撲克一樣，但你的牌必須剛好用兩張手牌和剛好三張公共牌。',
+    cult: 'PLO 被稱為「動作遊戲」：雙方勝率接近，所以底池常常很大。',
+    p: [{
+      t: '二加三',
+      b: '一定是四張手牌中剛好兩張，加上五張公共牌中剛好三張。',
+      task: '選出最好的五張：2 張手牌＋3 張公共牌',
+      ok: 'A♠K♠ 的堅果同花！',
+      ng: '手牌剛好兩張、公共牌三張。'
+    }, {
+      t: '一張不算同花',
+      b: '公共牌有四張紅心，但你沒有兩張紅心就不是同花——這是和德州撲克最大的不同。',
+      task: '點選拿到同花的玩家',
+      ok: '只有握著兩張紅心的 P2 是同花！',
+      ng: '手中只有一張紅心是不能用的。'
+    }, {
+      t: '底池限注',
+      b: '最大加注額是你跟注後的底池大小。底池 20、下注 10：先跟 10（底池 40），再加 40——加注到 50。',
+      task: '你最多能加注到多少？',
+      ok: '10 +（20 + 10 + 10）= 50！',
+      ng: '先把你的跟注加進底池。'
+    }]
+  },
+  shortdeck: {
+    origin: '英國／亞洲',
+    players: '2～9',
+    time: '每手 1～3 分鐘',
+    facts: '36 張牌（去掉 2～5）|手牌 2 張＋公共牌 5 張|同花 > 葫蘆|A-6-7-8-9 也是順子',
+    hist: '2010 年代由英國職業玩家推廣，在澳門與亞洲的高額牌局中大受歡迎。也叫「6+ 德州撲克」。',
+    win: '和德州撲克一樣從七張中選最好的五張——但機率改變了，所以牌型大小也跟著變。',
+    cult: '牌比較少，聽牌更容易成，全下也很常見。在這裡三條比順子大。',
+    p: [{
+      t: '36 張的牌組',
+      b: '所有的 2、3、4、5 都被拿掉了。',
+      task: '點選不在牌組裡的牌',
+      ok: '4 被拿掉了！',
+      ng: '2 到 5 都被拿掉。'
+    }, {
+      t: '同花勝過葫蘆',
+      b: '每種花色只有九張，同花比葫蘆更難湊——所以排名更高。',
+      task: '點選短牌中比較強的牌',
+      ok: '短牌裡同花獲勝！',
+      ng: '這裡的順序是對調的。'
+    }, {
+      t: 'A-6-7-8-9',
+      b: '沒有 5，所以 A 可以接在 6 的下面：A-6-7-8-9 是順子。',
+      task: '點選順子',
+      ok: 'A-6-7-8-9 是順子！',
+      ng: 'A 也能接在 6 的下面。'
+    }]
+  },
+  stud: {
+    origin: '美國',
+    players: '2～8',
+    time: '每手 2～4 分鐘',
+    facts: '52 張牌|沒有公共牌：每人七張|其中四張是明牌|前注＋強制開注、限注',
+    hist: '從南北戰爭時期（1860 年代）就有人玩，在 2000 年左右被德州撲克取代之前，一直是美國最受歡迎的撲克。',
+    win: '先發兩張暗牌一張明牌，接著再發三張明牌，最後一張暗牌。七張中最好的五張獲勝。',
+    cult: '明牌全都看得到——記住哪些牌已經出現過，往往決定勝負。',
+    p: [{
+      t: '強制開注',
+      b: '所有人付前注；明牌最小的人付強制開注。點數相同時比花色：♣ < ♦ < ♥ < ♠。',
+      task: '點選要付強制開注的人',
+      ok: '3♣ 是最小的明牌！',
+      ng: '同樣是 3 時，梅花最小。'
+    }, {
+      t: '明牌最大的先行動',
+      b: '從第四街起，由明牌牌型最好的玩家先行動。',
+      task: '第四街誰先行動？',
+      ok: '亮出一對 Q 的 P2！',
+      ng: '只比較明牌。'
+    }, {
+      t: '七選五',
+      b: '第七街時，從自己的七張牌中選出最好的五張。',
+      task: '選出最好的五張',
+      ok: '三張 4 帶一對 9 的葫蘆！',
+      ng: '找找相同點數的牌。'
+    }]
+  },
+  triple: {
+    origin: '美國',
+    players: '2～6',
+    time: '每手 2～4 分鐘',
+    facts: '52 張牌|5 張牌，沒有公共牌|換牌三次|最小的牌獲勝',
+    hist: '低牌撲克（最爛的牌獲勝的撲克）在 1900 年代初出現於美國；2-7 三次換牌深受拉斯維加斯高額牌局喜愛，每年都會在 WSOP 舉行。',
+    win: '發五張牌，接著換牌三次、下注四輪。最後牌最小的人獲勝。A 是最大的牌；順子和同花算成牌——是壞牌。',
+    cult: '最好的牌 7-5-4-3-2 被稱為「第一名」。看懂每個人換了幾張牌，是這個遊戲的核心。',
+    p: [{
+      t: '越小越好',
+      b: '沒有對子、順子、同花時，最大的牌越小的那手獲勝：8 低勝過 9 低。',
+      task: '點選比較好（比較小）的牌',
+      ok: '8 低勝過 9 低！',
+      ng: '比較最大的那張牌。'
+    }, {
+      t: 'A 是最大的',
+      b: '在 2-7 中 A 永遠是最大的牌，比 K 還大。A-5-4-3-2 是「A 高」——非常弱的牌。',
+      task: '點選比較好（比較小）的牌',
+      ok: 'K 高比 A 高還小！',
+      ng: 'A 是最大的牌。'
+    }, {
+      t: '順子是壞牌',
+      b: '順子和同花算成牌——對低牌來說是壞牌（7-6-5-4-3 是順子）。',
+      task: '點選比較好（比較小）的牌',
+      ok: '普通的 9 低獲勝！',
+      ng: '順子是成牌——是壞牌。'
+    }, {
+      t: '拆掉對子',
+      b: '對子也是壞牌。換掉成對的其中一張，湊齊不同點數的小牌。',
+      task: '選好要換的牌後按「換牌」',
+      ok: '換掉一張 5，去聽 7 低！',
+      ng: '兩張 5 只換一張。'
+    }, {
+      t: '下注大小',
+      b: '下注四輪（換牌前，以及三次換牌後各一輪）。前兩輪用小注（2），後兩輪用大注（4）。',
+      task: '第三次換牌後的一注是？',
+      ok: '大注，4！',
+      ng: '從第二次換牌後開始就是大注。'
+    }]
+  },
+  draw: {
+    origin: '美國',
+    players: '2～6',
+    time: '每手 1～2 分鐘',
+    facts: '52 張牌|5 張牌，沒有公共牌|換牌一次|固定限注',
+    hist: '最古老的撲克形式之一，從 1800 年代中期就有人玩——就是電影和漫畫裡那種「換牌」的撲克。',
+    win: '發五張牌、下注、換 0～5 張牌一次、再下注；最好的五張獲勝。',
+    cult: '大家都看得到你換了幾張——故意不換牌裝強，也是遊戲的一部分。',
+    p: [{
+      t: '留下對子',
+      b: '有一對時留下對子，換掉其他三張。',
+      task: '選好要換的牌後按「換牌」',
+      ok: '留下一對 Q，換了三張！',
+      ng: '換掉不是對子的那三張。'
+    }, {
+      t: '四張同花換一張',
+      b: '有四張同花色時只換第五張（約 19% 能湊成同花）。',
+      task: '去聽同花',
+      ok: '只換了 K♠！',
+      ng: '留下四張紅心。'
+    }, {
+      t: '攤牌',
+      b: '第二輪下注結束後亮牌。',
+      task: '點選贏家',
+      ok: '葫蘆獲勝！',
+      ng: '葫蘆 > 同花 > 順子。'
+    }, {
+      t: '固定限注',
+      b: '下注金額固定：換牌前是小注（2），換牌後是大注（4），每輪最多四注。',
+      task: '換牌後的一注是？',
+      ok: '大注，4！',
+      ng: '換牌後是大注。'
+    }]
+  }
+},
+id: {
+  ui: {
+    hole: 'Hole card',
+    board: 'Board',
+    you: 'Kamu',
+    sel: '{n}/5 kartu',
+    selO: 'Hole {h}/2 · Board {b}/3',
+    change: 'Tukar {n}',
+    stand: 'Tidak tukar',
+    pot: 'Pot',
+    none: 'Belum ada yang bet',
+    odds: 'Pot 100 dan lawan bet 50. Equity-mu sekitar 20%',
+    pl: 'Pot limit: pot 20 dan lawan bet 10. Raise maksimalmu?',
+    fl: 'Fixed limit 2/4. Setelah tukar, satu bet adalah…',
+    fl3: 'Fixed limit 2/4. Setelah tukar ketiga, satu bet adalah…',
+    allin: 'All-in',
+    pot2: 'Sampai sebesar pot',
+    fold: 'Fold',
+    check: 'Check',
+    bet: 'Bet',
+    call: 'Call'
+  },
+  holdem: {
+    origin: 'Texas, AS',
+    players: '2–10',
+    time: '1–3 mnt per hand',
+    facts: '52 kartu|2 hole + 5 kartu board bersama|Blind|4 putaran taruhan',
+    hist: 'Konon lahir di Robstown, Texas, pada awal 1900-an. Sejak 1970 menjadi Main Event World Series of Poker, dan kemenangan amatir Chris Moneymaker pada 2003 memicu demam poker di seluruh dunia.',
+    win: 'Menangkan pot dengan (1) memegang lima kartu terbaik dari dua kartumu dan lima di board saat showdown, atau (2) membuat semua lawan fold.',
+    cult: '“Semenit untuk belajar, seumur hidup untuk menguasai.” Di satu hand keberuntungan berperan, dalam banyak hand keahlianlah yang menentukan.',
+    p: [{
+      t: 'Urutan kombinasi',
+      b: 'Straight flush > four of a kind > full house > flush > straight > three of a kind > two pair > one pair > high card.',
+      task: 'Ketuk tangan yang lebih kuat',
+      ok: 'Three of a kind mengalahkan two pair!',
+      ng: 'Coba lagi — cek urutan kombinasinya.'
+    }, {
+      t: 'Lima terbaik dari tujuh',
+      b: 'Pakai lima kartu mana saja dari tujuh — dua milikmu dan lima di board. Boleh juga tidak memakai kartumu sama sekali.',
+      task: 'Pilih lima kartu terkuat',
+      ok: 'Flush hati dengan As tertinggi!',
+      ng: 'Ada lima kartu yang lebih kuat — hitung jenisnya.'
+    }, {
+      t: 'Button dan blind',
+      b: 'Di kiri dealer button (D) ada small blind, lalu big blind — taruhan wajib. Saat preflop, pemain di kiri BB (UTG) bertindak pertama.',
+      task: 'Ketuk siapa yang bertindak pertama saat preflop',
+      ok: 'Kiri big blind: UTG!',
+      ng: 'Blind bertindak terakhir saat preflop.'
+    }, {
+      t: 'Check dan bet',
+      b: 'Kalau belum ada bet, kamu bisa check dan meneruskan giliran gratis. Saat menghadapi bet, kamu fold, call, atau raise.',
+      task: 'Tangan lemah. Bagaimana melihat kartu berikutnya gratis?',
+      ok: 'Check — gratis!',
+      ng: 'Belum ada yang bet, jadi kamu bisa lanjut gratis.'
+    }, {
+      t: 'Pot odds',
+      b: 'Membayar 50 untuk memenangkan 200 (pot 100 + 50 lawan + 50 milikmu) butuh equity 50 ÷ 200 = 25%. Kalau kurang, fold lebih untung dalam jangka panjang.',
+      task: 'Equity 20%. Call atau fold?',
+      ok: '20% < 25%: fold!',
+      ng: 'Kamu butuh 25%; 20% tidak cukup.'
+    }, {
+      t: 'Showdown',
+      b: 'Jika tersisa dua pemain atau lebih setelah bet terakhir, kartu dibuka. Lima kartu terbaik memenangkan pot.',
+      task: 'Ketuk pemenangnya',
+      ok: 'K-Q-J-T-9, straight!',
+      ng: 'Gabungkan dengan J, T, dan 9 di board.'
+    }]
+  },
+  plo: {
+    origin: 'AS',
+    players: '2–9',
+    time: '1–3 mnt per hand',
+    facts: '52 kartu|4 hole + 5 kartu board|Tepat 2 hole + 3 board|Pot limit',
+    hist: 'Omaha muncul di kasino Las Vegas pada 1980-an. Dengan empat hole card, kombinasi besar sering muncul; ini poker terpopuler kedua, terutama di Eropa.',
+    win: 'Dimainkan seperti hold\'em, tapi tanganmu harus memakai tepat dua hole card dan tepat tiga kartu board.',
+    cult: 'PLO disebut “game aksi”: equity-nya berdekatan, jadi pot cepat membesar.',
+    p: [{
+      t: 'Dua tambah tiga',
+      b: 'Selalu tepat dua dari empat hole card dan tepat tiga dari lima kartu board.',
+      task: 'Pilih lima terbaik: 2 hole + 3 board',
+      ok: 'Nut flush dengan A♠K♠!',
+      ng: 'Tepat dua dari tangan, tiga dari board.'
+    }, {
+      t: 'Satu kartu bukan flush',
+      b: 'Empat hati di board bukan flush kecuali kamu memegang dua hati — perbedaan terbesar dengan hold\'em.',
+      task: 'Ketuk pemain yang punya flush',
+      ok: 'Hanya P2, dengan dua hati, yang flush!',
+      ng: 'Satu hati di tangan tidak bisa dipakai.'
+    }, {
+      t: 'Pot limit',
+      b: 'Raise maksimal adalah besar pot setelah call-mu. Pot 20, bet 10: call 10 (pot 40), raise 40 lagi — jadi 50.',
+      task: 'Raise maksimalmu?',
+      ok: '10 + (20 + 10 + 10) = 50!',
+      ng: 'Tambahkan call-mu ke pot dulu.'
+    }]
+  },
+  shortdeck: {
+    origin: 'Inggris / Asia',
+    players: '2–9',
+    time: '1–3 mnt per hand',
+    facts: '36 kartu (tanpa 2–5)|2 hole + 5 kartu board|Flush > full house|A-6-7-8-9 adalah straight',
+    hist: 'Para pro Inggris memopulerkannya pada 2010-an dan game ini meledak di meja high-stakes Makau dan Asia. Juga disebut “6+ hold\'em”.',
+    win: 'Seperti hold\'em, lima terbaik dari tujuh — tapi urutannya berubah karena peluangnya berubah.',
+    cult: 'Dengan kartu lebih sedikit, draw lebih sering jadi dan all-in sering terjadi. Di sini three of a kind mengalahkan straight.',
+    p: [{
+      t: 'Dek 36 kartu',
+      b: 'Semua kartu 2, 3, 4, dan 5 dibuang.',
+      task: 'Ketuk kartu yang tidak ada di dek',
+      ok: 'Kartu 4 sudah dibuang!',
+      ng: '2 sampai 5 dibuang.'
+    }, {
+      t: 'Flush mengalahkan full house',
+      b: 'Hanya ada sembilan kartu per jenis, jadi flush lebih jarang daripada full house — karena itu peringkatnya lebih tinggi.',
+      task: 'Ketuk tangan yang lebih kuat di Short Deck',
+      ok: 'Di Short Deck flush yang menang!',
+      ng: 'Urutannya tertukar di sini.'
+    }, {
+      t: 'A-6-7-8-9',
+      b: 'Tanpa 5, As bisa jadi kartu rendah di bawah 6: A-6-7-8-9 adalah straight.',
+      task: 'Ketuk straight-nya',
+      ok: 'A-6-7-8-9 adalah straight!',
+      ng: 'As juga tersambung di bawah 6.'
+    }]
+  },
+  stud: {
+    origin: 'AS',
+    players: '2–8',
+    time: '2–4 mnt per hand',
+    facts: '52 kartu|Tanpa board: tujuh kartu masing-masing|Empat di antaranya terbuka|Ante + bring-in, fixed limit',
+    hist: 'Dimainkan sejak era Perang Saudara (1860-an), ini poker terpopuler di Amerika sampai hold\'em mengambil alih sekitar tahun 2000.',
+    win: 'Dua tertutup dan satu terbuka, lalu tiga lagi terbuka dan satu terakhir tertutup. Lima terbaik dari tujuh kartumu yang menang.',
+    cult: 'Semua kartu terbuka terlihat — mengingat kartu mana yang sudah keluar menentukan banyak hand.',
+    p: [{
+      t: 'Bring-in',
+      b: 'Semua membayar ante; kartu terbuka terendah membayar bring-in. Jika sama, ditentukan jenis kartu: ♣ < ♦ < ♥ < ♠.',
+      task: 'Ketuk siapa yang membayar bring-in',
+      ok: '3♣ adalah kartu terbuka terendah!',
+      ng: 'Di antara kartu 3, keriting yang terendah.'
+    }, {
+      t: 'Kartu terbuka terbaik bertindak pertama',
+      b: 'Mulai 4th street, pemain dengan kartu terbuka terbaik bertindak pertama.',
+      task: 'Siapa yang bertindak pertama di 4th street?',
+      ok: 'P2, dengan pair Q terbuka!',
+      ng: 'Bandingkan hanya kartu yang terbuka.'
+    }, {
+      t: 'Lima dari tujuh',
+      b: 'Di 7th street, pilih lima terbaik dari tujuh kartumu.',
+      task: 'Pilih lima terbaik',
+      ok: 'Full house 4 dan 9!',
+      ng: 'Cari nilai kartu yang sama.'
+    }]
+  },
+  triple: {
+    origin: 'AS',
+    players: '2–6',
+    time: '2–4 mnt per hand',
+    facts: '52 kartu|5 kartu, tanpa board|Tiga kali tukar|Tangan terendah menang',
+    hist: 'Lowball (poker di mana tangan terburuk menang) muncul di Amerika pada awal 1900-an; 2-7 Triple Draw jadi favorit meja high-stakes Las Vegas dan dimainkan setiap tahun di WSOP.',
+    win: 'Lima kartu, lalu tiga putaran tukar dengan empat putaran taruhan. Tangan terendah di akhir yang menang. As bernilai tinggi; straight dan flush dihitung sebagai kombinasi — buruk.',
+    cult: 'Tangan terbaik, 7-5-4-3-2, dijuluki “the number one”. Membaca berapa kartu yang ditukar tiap pemain adalah inti permainannya.',
+    p: [{
+      t: 'Makin rendah makin baik',
+      b: 'Tanpa pair, straight, atau flush, tangan dengan kartu tertinggi paling rendah yang menang: 8-low mengalahkan 9-low.',
+      task: 'Ketuk tangan yang lebih baik (lebih rendah)',
+      ok: '8-low mengalahkan 9-low!',
+      ng: 'Bandingkan kartu tertingginya.'
+    }, {
+      t: 'As bernilai tinggi',
+      b: 'Di 2-7, As selalu kartu tertinggi, di atas King. A-5-4-3-2 adalah “ace high” — tangan yang sangat lemah.',
+      task: 'Ketuk tangan yang lebih baik (lebih rendah)',
+      ok: 'King high lebih rendah dari ace high!',
+      ng: 'As adalah kartu tertinggi.'
+    }, {
+      t: 'Straight itu buruk',
+      b: 'Straight dan flush dihitung sebagai kombinasi — buruk untuk low (7-6-5-4-3 adalah straight).',
+      task: 'Ketuk tangan yang lebih baik (lebih rendah)',
+      ok: '9-low biasa yang menang!',
+      ng: 'Straight adalah kombinasi — buruk.'
+    }, {
+      t: 'Pecah pair',
+      b: 'Pair juga buruk. Tukar salah satu kartu pair dan kumpulkan nilai rendah yang berbeda.',
+      task: 'Pilih kartu yang ditukar, lalu Tukar',
+      ok: 'Tukar satu 5 untuk mengejar 7-low!',
+      ng: 'Tukar salah satu dari dua kartu 5 saja.'
+    }, {
+      t: 'Besar taruhan',
+      b: 'Empat putaran taruhan (sebelum tukar dan setelah tiap tukar). Dua yang pertama memakai small bet (2), dua terakhir big bet (4).',
+      task: 'Bet setelah tukar ketiga?',
+      ok: 'Big bet, 4!',
+      ng: 'Mulai setelah tukar kedua sudah big bet.'
+    }]
+  },
+  draw: {
+    origin: 'AS',
+    players: '2–6',
+    time: '1–2 mnt per hand',
+    facts: '52 kartu|5 kartu, tanpa board|Satu kali tukar|Fixed limit',
+    hist: 'Salah satu bentuk poker tertua, dimainkan sejak pertengahan 1800-an — poker “tukar kartu” seperti di film dan komik.',
+    win: 'Lima kartu, taruhan, satu kali tukar 0–5 kartu, taruhan lagi; lima terbaik yang menang.',
+    cult: 'Semua orang melihat berapa kartu yang kamu tukar — tidak menukar agar terlihat kuat juga bagian dari permainan.',
+    p: [{
+      t: 'Simpan pair',
+      b: 'Dengan one pair, simpan pair-nya dan tukar tiga lainnya.',
+      task: 'Pilih kartu yang ditukar, lalu Tukar',
+      ok: 'Simpan pair Q dan tukar tiga!',
+      ng: 'Tukar tiga kartu yang bukan pair.'
+    }, {
+      t: 'Satu untuk four-flush',
+      b: 'Dengan empat kartu satu jenis, tukar hanya kartu kelima (sekitar 19% untuk jadi flush).',
+      task: 'Kejar flush',
+      ok: 'Hanya menukar K♠!',
+      ng: 'Simpan empat hati.'
+    }, {
+      t: 'Showdown',
+      b: 'Setelah putaran taruhan kedua, kartu dibuka.',
+      task: 'Ketuk pemenangnya',
+      ok: 'Full house yang menang!',
+      ng: 'Full house > flush > straight.'
+    }, {
+      t: 'Fixed limit',
+      b: 'Taruhan tetap: small bet (2) sebelum tukar, big bet (4) sesudahnya, maksimal empat bet per putaran.',
+      task: 'Bet setelah tukar?',
+      ok: 'Big bet, 4!',
+      ng: 'Setelah tukar adalah big bet.'
+    }]
+  }
+},
+tr: {
+  ui: {
+    hole: 'Kapalı kartlar',
+    board: 'Board',
+    you: 'Sen',
+    sel: '{n}/5 kart',
+    selO: 'Kapalı {h}/2 · Board {b}/3',
+    change: '{n} değiştir',
+    stand: 'Değiştirme',
+    pot: 'Pot',
+    none: 'Henüz kimse bahis yapmadı',
+    odds: 'Pot 100 ve rakip 50 bahis yapıyor. Equity\'n yaklaşık %20',
+    pl: 'Pot limit: pot 20 ve rakip 10 bahis yapıyor. En fazla ne kadar artırabilirsin?',
+    fl: 'Sabit limit 2/4. Değişimden sonra bir bahis…',
+    fl3: 'Sabit limit 2/4. Üçüncü değişimden sonra bir bahis…',
+    allin: 'All-in',
+    pot2: 'Pot kadar',
+    fold: 'Çekil',
+    check: 'Pas',
+    bet: 'Bahis',
+    call: 'Gör'
+  },
+  holdem: {
+    origin: 'Teksas, ABD',
+    players: '2–10',
+    time: 'El başı 1–3 dk',
+    facts: '52 kart|2 kapalı + 5 ortak board kartı|Blind\'lar|4 bahis turu',
+    hist: '1900\'lerin başında Teksas\'ın Robstown kasabasında doğduğu söylenir. 1970\'ten itibaren World Series of Poker\'ın Main Event\'i oldu; 2003\'te amatör Chris Moneymaker\'ın zaferi dünya çapında bir poker çılgınlığı başlattı.',
+    win: 'Potu kazanmanın yolu: (1) showdown\'da iki kartın ve board\'daki beş karttan en iyi beşliyi tutmak ya da (2) herkesi çekilmeye zorlamak.',
+    cult: '“Öğrenmesi bir dakika, ustalaşması bir ömür.” Tek elde şans, çok elde beceri belirler.',
+    p: [{
+      t: 'El sıralaması',
+      b: 'Sıralı floş > kare > ful > floş > kent > üçlü > iki çift > bir çift > yüksek kart.',
+      task: 'Güçlü olan ele dokun',
+      ok: 'Üçlü, iki çifti yener!',
+      ng: 'Tekrar dene — ellerin sırasına bak.'
+    }, {
+      t: 'Yediden en iyi beş',
+      b: 'Yedi karttan istediğin beşini kullan — iki kartın ve board\'daki beş kart. Kendi kartlarından hiçbirini kullanmayabilirsin bile.',
+      task: 'En güçlü beş kartı seç',
+      ok: 'As yüksek kupa floşu!',
+      ng: 'Daha güçlü bir beşli var — renkleri say.'
+    }, {
+      t: 'Buton ve blind\'lar',
+      b: 'Krupiye butonunun (D) solunda small blind, sonra big blind var — zorunlu bahisler. Preflop\'ta BB\'nin solundaki oyuncu (UTG) ilk oynar.',
+      task: 'Preflop\'ta ilk kimin oynadığına dokun',
+      ok: 'Big blind\'ın solu: UTG!',
+      ng: 'Preflop\'ta blind\'lar en son oynar.'
+    }, {
+      t: 'Pas ve bahis',
+      b: 'Bahis yoksa pas geçip sırayı bedavaya devredebilirsin. Bahis varsa çekilir, görür ya da artırırsın.',
+      task: 'Zayıf el. Sonraki kartı bedavaya nasıl görürsün?',
+      ok: 'Pas — bedava!',
+      ng: 'Kimse bahis yapmadı, bedavaya devam edebilirsin.'
+    }, {
+      t: 'Pot oranı',
+      b: '200 kazanmak için 50 ödemek (pot 100 + onun 50\'si + senin 50\'n) 50 ÷ 200 = %25 equity gerektirir. Daha azsa uzun vadede çekilmek kazandırır.',
+      task: '%20 equity. Gör mü, çekil mi?',
+      ok: '%20 < %25: çekil!',
+      ng: '%25 gerekiyor; %20 yetmez.'
+    }, {
+      t: 'Showdown',
+      b: 'Son bahisten sonra iki ya da daha fazla oyuncu kaldıysa eller açılır. En iyi beş kart potu kazanır.',
+      task: 'Kazanana dokun',
+      ok: 'K-Q-J-T-9, kent!',
+      ng: 'Board\'daki J, T ve 9 ile birleştir.'
+    }]
+  },
+  plo: {
+    origin: 'ABD',
+    players: '2–9',
+    time: 'El başı 1–3 dk',
+    facts: '52 kart|4 kapalı + 5 board kartı|Tam 2 kapalı + 3 board|Pot limit',
+    hist: 'Omaha 1980\'lerde Las Vegas kumarhanelerinde ortaya çıktı. Dört kapalı kartla büyük eller sık görülür; özellikle Avrupa\'da en popüler ikinci pokerdir.',
+    win: 'Hold\'em gibi oynanır, ama elin tam olarak iki kapalı kart ve tam olarak üç board kartı kullanmalı.',
+    cult: 'PLO\'ya “aksiyon oyunu” denir: equity\'ler birbirine yakındır, bu yüzden potlar büyür.',
+    p: [{
+      t: 'İki artı üç',
+      b: 'Her zaman dört kapalı kartından tam ikisi ve beş board kartından tam üçü.',
+      task: 'En iyi beşliyi seç: 2 kapalı + 3 board',
+      ok: 'A♠K♠ ile nuts floş!',
+      ng: 'Elinden tam iki, board\'dan üç.'
+    }, {
+      t: 'Tek kart floş olmaz',
+      b: 'Board\'da dört kupa olsa da elinde iki kupa yoksa floş değildir — Hold\'em\'den en büyük fark.',
+      task: 'Floşu olan oyuncuya dokun',
+      ok: 'Yalnız iki kupası olan P2\'de floş var!',
+      ng: 'Eldeki tek kupa kullanılamaz.'
+    }, {
+      t: 'Pot limit',
+      b: 'En fazla artırma, senin görmenden sonraki pot kadardır. Pot 20, bahis 10: 10 gör (pot 40), 40 daha artır — 50\'ye.',
+      task: 'En fazla ne kadar artırabilirsin?',
+      ok: '10 + (20 + 10 + 10) = 50!',
+      ng: 'Önce görme miktarını pota ekle.'
+    }]
+  },
+  shortdeck: {
+    origin: 'Britanya / Asya',
+    players: '2–9',
+    time: 'El başı 1–3 dk',
+    facts: '36 kart (2–5 yok)|2 kapalı + 5 board kartı|Floş > ful|A-6-7-8-9 kenttir',
+    hist: '2010\'larda İngiliz profesyoneller yaygınlaştırdı; Makao ve Asya\'daki yüksek bahisli oyunlarda patlama yaptı. “6+ hold\'em” olarak da bilinir.',
+    win: 'Hold\'em gibi yediden en iyi beş — ama olasılıklar değiştiği için sıralama da değişir.',
+    cult: 'Kart az olduğu için beraberlik elleri daha sık tamamlanır, all-in\'ler yaygındır. Burada üçlü, kenti yener.',
+    p: [{
+      t: '36 kartlık deste',
+      b: 'Bütün 2\'ler, 3\'ler, 4\'ler ve 5\'ler çıkarılır.',
+      task: 'Destede olmayan karta dokun',
+      ok: '4\'ler çıkarıldı!',
+      ng: '2\'den 5\'e kadar çıkarılır.'
+    }, {
+      t: 'Floş fulü yener',
+      b: 'Her renkten yalnız dokuz kart olduğu için floş fulden daha nadirdir — bu yüzden daha üst sıradadır.',
+      task: 'Short Deck\'te güçlü olan ele dokun',
+      ok: 'Short Deck\'te floş kazanır!',
+      ng: 'Burada sıra yer değiştirmiştir.'
+    }, {
+      t: 'A-6-7-8-9',
+      b: '5 olmadığı için as, 6\'nın altında küçük kart olarak oynar: A-6-7-8-9 kenttir.',
+      task: 'Kente dokun',
+      ok: 'A-6-7-8-9 kenttir!',
+      ng: 'As, 6\'nın altına da bağlanır.'
+    }]
+  },
+  stud: {
+    origin: 'ABD',
+    players: '2–8',
+    time: 'El başı 2–4 dk',
+    facts: '52 kart|Board yok: herkese yedi kart|Dördü açık|Ante + bring-in, sabit limit',
+    hist: 'İç Savaş döneminden (1860\'lar) beri oynanır; 2000 civarında Hold\'em öne geçene kadar Amerika\'nın en popüler pokeriydi.',
+    win: 'İki kapalı ve bir açık, sonra üç açık daha ve son bir kapalı. Yedi kartından en iyi beşi kazanır.',
+    cult: 'Tüm açık kartlar görünür — hangi kartların çıktığını hatırlamak birçok eli belirler.',
+    p: [{
+      t: 'Bring-in',
+      b: 'Herkes ante öder; en düşük açık kart bring-in öder. Eşitlikte renk belirler: ♣ < ♦ < ♥ < ♠.',
+      task: 'Bring-in ödeyene dokun',
+      ok: '3♣ en düşük açık kart!',
+      ng: '3\'ler arasında sinek en düşüktür.'
+    }, {
+      t: 'En iyi açık el önce oynar',
+      b: '4. sokaktan itibaren açık kartlarda en iyi eli gösteren oyuncu önce oynar.',
+      task: '4. sokakta önce kim oynar?',
+      ok: 'Açıkta kız çifti gösteren P2!',
+      ng: 'Yalnız açık kartları karşılaştır.'
+    }, {
+      t: 'Yediden beş',
+      b: '7. sokakta yedi kartından en iyi beşini seç.',
+      task: 'En iyi beşi seç',
+      ok: '4\'ler ve 9\'lar ful!',
+      ng: 'Aynı değerdeki kartlara bak.'
+    }]
+  },
+  triple: {
+    origin: 'ABD',
+    players: '2–6',
+    time: 'El başı 2–4 dk',
+    facts: '52 kart|5 kart, board yok|Üç değiştirme|En düşük el kazanır',
+    hist: 'Lowball (en kötü elin kazandığı poker) 1900\'lerin başında Amerika\'da ortaya çıktı; 2-7 Triple Draw, Las Vegas\'ın yüksek bahisli oyunlarının gözdesi oldu ve her yıl WSOP\'ta oynanır.',
+    win: 'Beş kart, ardından dört bahis turuyla üç değiştirme turu. Sonunda en düşük el kazanır. As yüksektir; kent ve floş el sayılır — kötüdür.',
+    cult: 'En iyi el olan 7-5-4-3-2\'ye “bir numara” denir. Herkesin kaç kart değiştirdiğini okumak oyunun özüdür.',
+    p: [{
+      t: 'Düşük olan iyidir',
+      b: 'Çift, kent ya da floş yoksa en yüksek kartı en düşük olan el kazanır: 8-low, 9-low\'u yener.',
+      task: 'Daha iyi (daha düşük) ele dokun',
+      ok: '8-low, 9-low\'u yener!',
+      ng: 'En yüksek kartları karşılaştır.'
+    }, {
+      t: 'As yüksektir',
+      b: '2-7\'de as her zaman en yüksek karttır, papazdan da büyüktür. A-5-4-3-2 “as yüksek” — çok zayıf bir eldir.',
+      task: 'Daha iyi (daha düşük) ele dokun',
+      ok: 'Papaz yüksek, as yüksekten düşüktür!',
+      ng: 'As en yüksek karttır.'
+    }, {
+      t: 'Kent kötüdür',
+      b: 'Kent ve floş el sayılır — low için kötüdür (7-6-5-4-3 kenttir).',
+      task: 'Daha iyi (daha düşük) ele dokun',
+      ok: 'Sade 9-low kazanır!',
+      ng: 'Kent bir eldir — kötü.'
+    }, {
+      t: 'Çiftleri boz',
+      b: 'Çiftler de kötüdür. Çiftteki kartlardan birini değiştir, farklı düşük değerler topla.',
+      task: 'Değiştireceğin kartları seç, sonra Değiştir',
+      ok: 'Bir 5\'i değiştirip 7-low\'a gittin!',
+      ng: 'İki 5\'ten yalnız birini değiştir.'
+    }, {
+      t: 'Bahis miktarları',
+      b: 'Dört bahis turu (değişimlerden önce ve üçünün her birinden sonra). İlk ikisinde küçük bahis (2), son ikisinde büyük bahis (4).',
+      task: 'Üçüncü değişimden sonraki bahis?',
+      ok: 'Büyük bahis, 4!',
+      ng: 'İkinci değişimden sonra büyük bahis başlar.'
+    }]
+  },
+  draw: {
+    origin: 'ABD',
+    players: '2–6',
+    time: 'El başı 1–2 dk',
+    facts: '52 kart|5 kart, board yok|Bir değiştirme|Sabit limit',
+    hist: 'Pokerin en eski biçimlerinden biri, 1800\'lerin ortasından beri oynanır — filmlerdeki ve çizgi romanlardaki “kart değiştirmeli” poker.',
+    win: 'Beş kart, bahis, bir kez 0–5 kart değiştirme, yine bahis; en iyi beş kazanır.',
+    cult: 'Herkes kaç kart değiştirdiğini görür — güçlü görünmek için hiç değiştirmemek de oyunun parçası.',
+    p: [{
+      t: 'Çifti tut',
+      b: 'Bir çiftin varsa çifti tut, diğer üçünü değiştir.',
+      task: 'Değiştireceğin kartları seç, sonra Değiştir',
+      ok: 'Kızları tutup üç kart çektin!',
+      ng: 'Çift olmayan üçünü değiştir.'
+    }, {
+      t: 'Dört renkliye bir kart',
+      b: 'Aynı renkten dört kartın varsa yalnız beşinciyi değiştir (floş yapma şansı yaklaşık %19).',
+      task: 'Floşa git',
+      ok: 'Yalnız K♠\'yi değiştirdin!',
+      ng: 'Dört kupayı tut.'
+    }, {
+      t: 'Showdown',
+      b: 'İkinci bahis turundan sonra eller açılır.',
+      task: 'Kazanana dokun',
+      ok: 'Ful kazanır!',
+      ng: 'Ful > floş > kent.'
+    }, {
+      t: 'Sabit limit',
+      b: 'Bahisler sabittir: değişimden önce küçük bahis (2), sonra büyük bahis (4), turda en fazla dört bahis.',
+      task: 'Değişimden sonraki bahis?',
+      ok: 'Büyük bahis, 4!',
+      ng: 'Değişimden sonra büyük bahis.'
+    }]
+  }
+}
 };
 const L = () => A.LANG, T = v => ((RT[L()] || RT.en)[v]) || RT.en[v], U = (k, o) => { let x = ((RT[L()] || RT.en).ui || {})[k]; if (x === undefined) x = RT.en.ui[k]; if (o) x = x.replace(/\{(\w+)\}/g, (_, y) => o[y]); return x; };
 const IMG = '../images/icons/poker.svg';

@@ -112,7 +112,975 @@ fr: {"kicker": {"m": ["kickers", "kicker"], "t": "Kicker", "d": "Carte qui ne fa
 pt: {"kicker": {"m": ["kickers", "kicker"], "t": "Kicker", "d": "Carta que não faz parte do par ou da trinca da sua mão. Mãos iguais são decididas pelo kicker mais alto (A-K com par de ases: kicker K). Perder assim é “perder no kicker”."}, "outs": {"m": ["outs"], "t": "Outs", "d": "Cartas não vistas que dariam a você a mão vencedora na próxima carta — ex.: 9 num flush draw."}, "rule24": {"m": ["regra do 2 e do 4", "×4", "×2"], "t": "Regra do 2 e do 4", "d": "Estimativa rápida a partir dos outs: × 4 no flop (faltam duas cartas), × 2 no turn (falta uma) ≈ seu % de acertar."}, "potodds": {"m": ["pot odds"], "t": "Pot odds", "d": "O preço do call comparado com o pote que você pode ganhar. Equity necessária = call ÷ (pote + call)."}, "implied": {"m": ["reverse implied odds", "implied odds"], "t": "Implied odds", "d": "Contar as fichas que você espera ganhar nas rodadas seguintes quando acerta, não só o pote atual. Reverse implied odds: acertar, mas perder um pote grande para uma mão melhor."}, "spr": {"m": ["SPR"], "t": "SPR (relação stack-pote)", "d": "Stack efetivo ÷ pote. SPR baixo = você está comprometido; SPR alto = um par é arriscado num pote grande."}, "range": {"m": ["ranges", "range"], "t": "Range", "d": "O conjunto de mãos que um jogador pode ter, ex.: “top 15%”. As ações dele (raise, call, check) o estreitam."}, "nuts": {"m": ["nut flush draw", "nut flush", "the nuts", "nuts"], "t": "Nuts", "d": "A melhor mão possível neste board — não pode perder."}, "fd": {"m": ["projeto de flush", "flush draws", "flush draw"], "t": "Flush draw", "d": "Quatro cartas de um naipe: mais uma faz flush (9 outs)."}, "oe": {"m": ["projeto de sequência aberto", "sequência aberta", "open-ended"], "t": "Sequência aberta (open-ended)", "d": "Quatro em sequência: uma carta em qualquer ponta completa a sequência (8 outs)."}, "gs": {"m": ["gutshot"], "t": "Gutshot", "d": "Quatro cartas com um buraco: só esse valor completa a sequência (4 outs)."}, "combo": {"m": ["combo draw"], "t": "Combo draw", "d": "Flush draw e projeto de sequência ao mesmo tempo — muitos outs, forte mesmo antes de completar."}, "backdoor": {"m": ["backdoor"], "t": "Backdoor draw", "d": "Um projeto que precisa do turn e do river (ex.: três para flush)."}, "dirty": {"m": ["sujos"], "t": "Outs sujos", "d": "Cartas que completam sua mão, mas também dão ao adversário uma melhor (um flush ou full house)."}, "set": {"m": ["set mining", "sets", "set"], "t": "Set", "d": "Trinca feita com um par na mão mais uma carta do board — forte e bem escondida. Pagar com pares baixos para acertar uma é “set mining”."}, "trips": {"m": ["trinca"], "t": "Trinca (trips)", "d": "Trinca feita com um par do board mais uma das suas cartas — o kicker importa."}, "overpair": {"m": ["overpair"], "t": "Overpair", "d": "Um par na mão maior que todas as cartas do board (QQ em J-7-2)."}, "toppair": {"m": ["top pair"], "t": "Top pair", "d": "Um par com a carta mais alta do board — forte para um par."}, "overcards": {"m": ["overcards"], "t": "Overcards", "d": "Cartas da mão mais altas que todas as do board: podem fazer top pair."}, "cbet": {"m": ["aposta de continuação", "c-bets", "c-bet"], "t": "C-bet", "d": "Aposta de continuação: quem aumentou pré-flop aposta de novo no flop, muitas vezes tendo acertado ou não."}, "threebet": {"m": ["reaumente", "re-raise", "3-bet"], "t": "3-bet", "d": "Um reaumento. No pré-flop o primeiro aumento conta como a 2ª aposta, então o reaumento é o 3-bet."}, "position": {"m": ["fora de posição", "em posição", "posição"], "t": "Posição", "d": "A ordem de ação. Agir depois permite ver primeiro o que os outros fazem; o botão é o melhor lugar."}, "blinds": {"m": ["blinds", "blind"], "t": "Blinds", "d": "Apostas obrigatórias postas antes das cartas: o small blind (à esquerda do botão) e o big blind."}, "limp": {"m": ["limper", "limp"], "t": "Limp", "d": "Entrar no pré-flop apenas pagando o big blind em vez de aumentar."}, "polar": {"m": ["polarizada"], "t": "Polarizada", "d": "Um range de apostas feito de mãos muito fortes e blefes, com poucas mãos médias — típico de apostas grandes."}, "value": {"m": ["por valor"], "t": "Aposta por valor", "d": "Uma aposta feita para que mãos piores paguem."}, "bluff": {"m": ["blefando", "blefes", "blefar", "blefe", "blefa"], "t": "Blefe", "d": "Apostar com uma mão fraca para fazer mãos melhores desistirem."}, "showdown": {"m": ["showdown"], "t": "Showdown", "d": "Quando dois ou mais jogadores continuam após a última aposta, as mãos são mostradas e a melhor vence."}, "equity": {"m": ["equities", "equity"], "t": "Equity", "d": "Com que frequência você venceria se todas as cartas fossem distribuídas (empates contam metade), contra os ranges dos adversários."}, "ev": {"m": ["valor esperado", "EV"], "t": "EV (valor esperado)", "d": "O resultado médio por decisão se repetida muitas vezes: equity × o que você ganha − o que você paga."}, "board": {"m": ["boards com muitos draws", "board com draws", "boards secos", "board seco", "molhado"], "t": "Board molhado / seco", "d": "Um board molhado tem valores conectados ou cartas do mesmo naipe com muitos draws; um board seco tem poucos."}, "utg": {"m": ["UTG"], "t": "UTG (under the gun)", "d": "O primeiro a agir no pré-flop (à esquerda do big blind). Precisa das mãos mais fortes."}, "hj": {"m": ["HJ"], "t": "HJ (hijack)", "d": "Em mesa de seis: o lugar entre o UTG e o cutoff."}, "co": {"m": ["cutoff", "CO"], "t": "CO (cutoff)", "d": "O lugar à direita do botão; só o botão e os blinds agem depois dele."}, "btn": {"m": ["botão", "BTN"], "t": "BTN (botão)", "d": "O lugar do dealer: age por último depois do flop — a melhor posição."}, "sb": {"m": ["SB"], "t": "SB (small blind)", "d": "À esquerda do botão; põe metade do big blind e age primeiro depois do flop."}, "bb": {"m": ["BB"], "t": "BB (big blind)", "d": "Põe a aposta mínima; também usado como unidade (3BB)."}, "tag": {"m": ["TAG"], "t": "TAG", "d": "Tight-agressivo: poucas mãos, jogadas de forma agressiva."}, "lag": {"m": ["LAG"], "t": "LAG", "d": "Loose-agressivo: muitas mãos, muitas apostas e blefes."}, "station": {"m": ["calling station"], "t": "Calling station", "d": "Um jogador que raramente desiste — não blefe, aposte mais alto por valor."}, "rock": {"m": ["rocha", "rock"], "t": "Rock (rocha)", "d": "Um jogador que só aposta com mãos muito fortes."}, "pat": {"m": ["stand pat"], "t": "Stand pat", "d": "Não trocar nenhuma carta no Five Card Draw — mão feita ou blefe."}, "dead": {"m": ["cartas mortas"], "t": "Cartas mortas", "d": "Cartas que você sabe que já saíram (ex.: nas cartas abertas dos adversários), então não pode tirá-las."}, "bringin": {"m": ["bring-in"], "t": "Bring-in", "d": "No stud, a primeira aposta obrigatória, paga pela menor carta aberta."}, "ds": {"m": ["double-suited"], "t": "Double-suited", "d": "Mão de Omaha com duas cartas de cada um de dois naipes: duas chances de flush."}, "wrap": {"m": ["wrap"], "t": "Wrap", "d": "Projeto de sequência do Omaha com muitos outs, formado por cartas da mão conectadas ao redor do board."}, "allin": {"m": ["all-in"], "t": "All-in", "d": "Apostar todas as suas fichas; não há mais decisões até o showdown."}, "playboard": {"m": ["joga o board"], "t": "Jogar o board", "d": "Suas cinco melhores são todas cartas do board — suas cartas da mão não jogam."}},
 de: {"kicker": {"m": ["Kickern", "Kicker"], "t": "Kicker", "d": "Eine Karte, die nicht zum Paar oder Drilling deiner Hand gehört. Gleiche Hände entscheidet der höhere Kicker (A-K mit Ass-Paar: K-Kicker). Wer so verliert, wird „ausgekickt“."}, "outs": {"m": ["Outs"], "t": "Outs", "d": "Ungesehene Karten, die dir mit der nächsten Karte die Gewinnerhand geben würden — z. B. 9 bei einem Flush Draw."}, "rule24": {"m": ["2er- und 4er-Regel", "×4", "×2"], "t": "2er- und 4er-Regel", "d": "Schnelle Schätzung aus deinen Outs: × 4 am Flop (zwei Karten kommen noch), × 2 am Turn (eine Karte) ≈ deine Treffer-%."}, "potodds": {"m": ["Pot Odds"], "t": "Pot Odds", "d": "Der Preis eines Calls im Vergleich zum Pot, den du gewinnen kannst. Nötige Equity = Call ÷ (Pot + Call)."}, "implied": {"m": ["Reverse Implied Odds", "Implied Odds"], "t": "Implied Odds", "d": "Die Chips mitzählen, die du bei einem Treffer auf späteren Straßen gewinnen willst, nicht nur den aktuellen Pot. Reverse Implied Odds: treffen, aber einen großen Pot an eine bessere Hand verlieren."}, "spr": {"m": ["SPR"], "t": "SPR (Stack-to-Pot-Ratio)", "d": "Effektiver Stack ÷ Pot. Niedriges SPR = du bist committed; hohes SPR = ein Paar ist in einem großen Pot riskant."}, "range": {"m": ["Ranges", "Range"], "t": "Range", "d": "Die Menge der Hände, die ein Spieler haben kann, z. B. „Top 15 %“. Seine Aktionen (Raise, Call, Check) verengen sie."}, "nuts": {"m": ["Nut Flush Draw", "Nut Flush", "Nuts"], "t": "Die Nuts", "d": "Die bestmögliche Hand auf diesem Board — sie kann nicht verlieren."}, "fd": {"m": ["Flush Draws", "Flush Draw", "Vier-Flush"], "t": "Flush Draw", "d": "Vier Karten einer Farbe: eine weitere macht den Flush (9 Outs)."}, "oe": {"m": ["Open-Ended Straight Draw", "Open-Ended", "Open-Ender"], "t": "Open-Ended Straight Draw", "d": "Vier in Folge: eine Karte an einem der beiden Enden macht die Straße (8 Outs)."}, "gs": {"m": ["Gutshot"], "t": "Gutshot", "d": "Vier Karten mit einer Lücke: nur dieser Rang macht die Straße (4 Outs)."}, "combo": {"m": ["Combo Draw"], "t": "Combo Draw", "d": "Flush Draw und Straight Draw gleichzeitig — viele Outs, schon vor dem Treffer stark."}, "backdoor": {"m": ["Backdoor"], "t": "Backdoor Draw", "d": "Ein Draw, der Turn und River braucht (z. B. drei zum Flush)."}, "dirty": {"m": ["schmutzig"], "t": "Schmutzige Outs", "d": "Karten, die deine Hand vervollständigen, aber einem Gegner eine bessere geben (Flush oder Full House)."}, "set": {"m": ["Set Mining", "Sets", "Set"], "t": "Set", "d": "Ein Drilling aus Pocket Pair plus einer Boardkarte — stark und gut versteckt. Mit kleinen Paaren callen, um eines zu treffen, heißt „Set Mining“."}, "trips": {"m": ["Trips"], "t": "Trips", "d": "Ein Drilling aus Board-Paar plus einer deiner Karten — der Kicker zählt."}, "overpair": {"m": ["Overpair"], "t": "Overpair", "d": "Ein Pocket Pair, das höher ist als jede Boardkarte (QQ auf J-7-2)."}, "toppair": {"m": ["Top Pair"], "t": "Top Pair", "d": "Ein Paar mit der höchsten Boardkarte — stark für ein Paar."}, "overcards": {"m": ["Overcards"], "t": "Overcards", "d": "Hole Cards, die höher als jede Boardkarte sind: Sie können Top Pair machen."}, "cbet": {"m": ["Continuation Bet", "C-Bets", "C-Bet"], "t": "C-Bet", "d": "Continuation Bet: Der Preflop-Raiser bettet am Flop erneut, oft egal ob er getroffen hat."}, "threebet": {"m": ["re-raisen", "Re-Raise", "3-Bet"], "t": "3-Bet", "d": "Ein Re-Raise. Preflop zählt der erste Raise als 2. Bet, also ist der Re-Raise die 3-Bet."}, "position": {"m": ["Out of Position", "In Position", "Position"], "t": "Position", "d": "Die Reihenfolge des Handelns. Wer später handelt, sieht zuerst, was die anderen tun; der Button ist der beste Platz."}, "blinds": {"m": ["Blinds", "Blind"], "t": "Blinds", "d": "Pflichteinsätze vor dem Austeilen: der Small Blind (links vom Button) und der Big Blind."}, "limp": {"m": ["hineingelimpt", "Limper"], "t": "Limp", "d": "Preflop nur den Big Blind callen, statt zu raisen."}, "polar": {"m": ["polarisiert"], "t": "Polarisiert", "d": "Eine Bet-Range aus sehr starken Händen und Bluffs mit wenigen mittleren Händen — typisch für große Bets."}, "value": {"m": ["Value Bets", "auf Value", "Value"], "t": "Value Bet", "d": "Eine Bet, damit schlechtere Hände callen."}, "bluff": {"m": ["bluffen", "Bluffs", "Bluffe", "blufft", "Bluff"], "t": "Bluff", "d": "Mit einer schwachen Hand setzen, damit bessere Hände folden."}, "showdown": {"m": ["Showdown"], "t": "Showdown", "d": "Bleiben nach der letzten Bet zwei oder mehr Spieler übrig, werden die Hände gezeigt und die beste gewinnt."}, "equity": {"m": ["Equities", "Equity"], "t": "Equity", "d": "Wie oft du gewinnen würdest, wenn alle Karten ausgeteilt würden (Unentschieden zählen halb), gegen die Ranges der Gegner."}, "ev": {"m": ["Erwartungswert", "EV"], "t": "EV (Erwartungswert)", "d": "Das durchschnittliche Ergebnis pro Entscheidung bei vielen Wiederholungen: Equity × was du gewinnst − was du zahlst."}, "board": {"m": ["drawlastigen Boards", "drawlastigen Board", "trockenen Boards", "trockenes Board", "nasses"], "t": "Nasses / trockenes Board", "d": "Ein nasses Board hat verbundene Ränge oder gleiche Farben mit vielen Draws; ein trockenes hat wenige."}, "utg": {"m": ["UTG"], "t": "UTG (Under the Gun)", "d": "Der erste Platz, der preflop handelt (links vom Big Blind). Braucht die stärksten Hände."}, "hj": {"m": ["HJ"], "t": "HJ (Hijack)", "d": "An sechs Plätzen: der Platz zwischen UTG und Cutoff."}, "co": {"m": ["Cutoff", "CO"], "t": "CO (Cutoff)", "d": "Der Platz rechts vom Button; nur Button und Blinds handeln danach."}, "btn": {"m": ["Button", "BTN"], "t": "BTN (Button)", "d": "Der Dealer-Platz: handelt nach dem Flop zuletzt — die beste Position."}, "sb": {"m": ["SB"], "t": "SB (Small Blind)", "d": "Links vom Button; setzt den halben Big Blind und handelt nach dem Flop zuerst."}, "bb": {"m": ["BB"], "t": "BB (Big Blind)", "d": "Setzt den Mindesteinsatz; dient auch als Einheit (3BB)."}, "tag": {"m": ["TAG"], "t": "TAG", "d": "Tight-aggressiv: wenige Hände, aggressiv gespielt."}, "lag": {"m": ["LAG"], "t": "LAG", "d": "Loose-aggressiv: viele Hände, viel Betten und Bluffen."}, "station": {"m": ["Calling Station"], "t": "Calling Station", "d": "Ein Spieler, der selten foldet — nicht bluffen, größer auf Value betten."}, "rock": {"m": ["Rock"], "t": "Rock", "d": "Ein Spieler, der nur mit sehr starken Händen bettet."}, "pat": {"m": ["Stand Pat"], "t": "Stand Pat", "d": "Im Five Card Draw keine Karte tauschen — eine fertige Hand oder ein Bluff."}, "dead": {"m": ["Dead Cards", "tot"], "t": "Dead Cards (tote Karten)", "d": "Karten, von denen du weißt, dass sie weg sind (z. B. in den offenen Karten der Gegner), sodass du sie nicht ziehen kannst."}, "bringin": {"m": ["Bring-in"], "t": "Bring-in", "d": "Im Stud der erste Pflichteinsatz, gezahlt von der niedrigsten offenen Karte."}, "ds": {"m": ["Double-suited"], "t": "Double-suited", "d": "Eine Omaha-Hand mit je zwei Karten zweier Farben: zwei Flush-Chancen."}, "wrap": {"m": ["Wrap"], "t": "Wrap", "d": "Ein Omaha-Straight-Draw mit vielen Outs aus verbundenen Hole Cards rund um das Board."}, "allin": {"m": ["All-in"], "t": "All-in", "d": "Alle Chips setzen; bis zum Showdown keine Entscheidungen mehr."}, "playboard": {"m": ["spielst das Board"], "t": "Das Board spielen", "d": "Deine besten fünf sind alle Boardkarten — deine Hole Cards spielen nicht mit."}},
 hi: {"kicker": {"m": ["किकर"], "t": "किकर", "d": "वह कार्ड जो आपके हाथ के पेयर या सेट का हिस्सा नहीं है। बराबर हाथों का फ़ैसला सबसे ऊँचे किकर से होता है (इक्कों के पेयर वाला A-K: K किकर)। इस तरह हारना “किकर से हारना” है।"}, "outs": {"m": ["आउट्स"], "t": "आउट्स", "d": "अनदेखे कार्ड जो अगले कार्ड पर आपको जीतने वाला हाथ दे दें — जैसे फ्लश ड्रॉ में 9।"}, "rule24": {"m": ["2 और 4 का नियम", "×4", "×2"], "t": "2 और 4 का नियम", "d": "आउट्स से तुरंत अंदाज़ा: फ्लॉप पर × 4 (दो कार्ड बाकी), टर्न पर × 2 (एक कार्ड) ≈ हिट होने का %।"}, "potodds": {"m": ["पॉट ऑड्स"], "t": "पॉट ऑड्स", "d": "कॉल की कीमत की तुलना उस पॉट से जो आप जीत सकते हैं। ज़रूरी इक्विटी = कॉल ÷ (पॉट + कॉल)।"}, "implied": {"m": ["रिवर्स इम्प्लाइड ऑड्स", "इम्प्लाइड ऑड्स"], "t": "इम्प्लाइड ऑड्स", "d": "सिर्फ़ मौजूदा पॉट नहीं, बल्कि हाथ बनने पर आगे की स्ट्रीट्स में जीतने वाले चिप्स भी गिनना। रिवर्स इम्प्लाइड ऑड्स: हाथ बन जाए, पर बेहतर हाथ से बड़ा पॉट हार जाएँ।"}, "spr": {"m": ["SPR"], "t": "SPR (स्टैक-टू-पॉट अनुपात)", "d": "इफ़ेक्टिव स्टैक ÷ पॉट। कम SPR = आप कमिटेड हैं; ज़्यादा SPR = बड़े पॉट में वन पेयर जोखिम भरा।"}, "range": {"m": ["रेंज"], "t": "रेंज", "d": "हाथों का वह समूह जो किसी खिलाड़ी के पास हो सकता है, जैसे “टॉप 15%”। उसके एक्शन (रेज़, कॉल, चेक) इसे संकरा करते हैं।"}, "nuts": {"m": ["नट फ्लश ड्रॉ", "नट फ्लश", "नट्स"], "t": "नट्स", "d": "इस बोर्ड पर सबसे अच्छा संभव हाथ — यह हार नहीं सकता।"}, "fd": {"m": ["फ्लश ड्रॉ", "चार-फ्लश", "फोर-फ्लश"], "t": "फ्लश ड्रॉ", "d": "एक सूट के चार कार्ड: एक और आए तो फ्लश (9 आउट्स)।"}, "oe": {"m": ["ओपन-एंडेड स्ट्रेट ड्रॉ", "ओपन-एंडेड", "ओपन-एंडर"], "t": "ओपन-एंडेड स्ट्रेट ड्रॉ", "d": "लगातार चार: किसी भी सिरे का कार्ड स्ट्रेट बना देता है (8 आउट्स)।"}, "gs": {"m": ["गटशॉट"], "t": "गटशॉट", "d": "बीच में एक खाली के साथ चार कार्ड: सिर्फ़ वही नंबर स्ट्रेट बनाता है (4 आउट्स)।"}, "combo": {"m": ["कॉम्बो ड्रॉ"], "t": "कॉम्बो ड्रॉ", "d": "एक साथ फ्लश ड्रॉ और स्ट्रेट ड्रॉ — बहुत आउट्स, बनने से पहले भी मज़बूत।"}, "backdoor": {"m": ["बैकडोर"], "t": "बैकडोर ड्रॉ", "d": "ऐसा ड्रॉ जिसे टर्न और रिवर दोनों चाहिए (जैसे फ्लश के लिए तीन)।"}, "dirty": {"m": ["गंदे"], "t": "गंदे आउट्स", "d": "ऐसे कार्ड जो आपका हाथ पूरा करते हैं, पर विरोधी को उससे बेहतर हाथ (फ्लश या फुल हाउस) भी दे देते हैं।"}, "set": {"m": ["सेट माइनिंग", "सेट"], "t": "सेट", "d": "पॉकेट पेयर और बोर्ड के एक कार्ड से बना थ्री ऑफ़ अ काइंड — मज़बूत और अच्छी तरह छिपा हुआ। इसे पाने के लिए छोटे पेयर से कॉल करना “सेट माइनिंग” है।"}, "trips": {"m": ["ट्रिप्स"], "t": "ट्रिप्स", "d": "बोर्ड पेयर और आपके एक कार्ड से बना थ्री ऑफ़ अ काइंड — किकर मायने रखता है।"}, "overpair": {"m": ["ओवरपेयर"], "t": "ओवरपेयर", "d": "बोर्ड के हर कार्ड से ऊँचा पॉकेट पेयर (J-7-2 पर QQ)।"}, "toppair": {"m": ["टॉप पेयर"], "t": "टॉप पेयर", "d": "बोर्ड के सबसे ऊँचे कार्ड से बना पेयर — वन पेयर के रूप में मज़बूत।"}, "overcards": {"m": ["ओवरकार्ड"], "t": "ओवरकार्ड", "d": "बोर्ड के हर कार्ड से ऊँचे होल कार्ड: ये टॉप पेयर बना सकते हैं।"}, "cbet": {"m": ["कंटिन्यूएशन बेट", "c-bet"], "t": "c-bet", "d": "कंटिन्यूएशन बेट: प्रीफ्लॉप रेज़र फ्लॉप पर फिर बेट करता है, अक्सर हाथ बने या न बने।"}, "threebet": {"m": ["री-रेज़", "3-बेट"], "t": "3-बेट", "d": "री-रेज़। प्रीफ्लॉप में पहली रेज़ दूसरी बेट गिनी जाती है, इसलिए री-रेज़ 3-बेट है।"}, "position": {"m": ["पोज़ीशन से बाहर", "पोज़ीशन में", "पोज़ीशन", "पोज़िशन"], "t": "पोज़ीशन", "d": "एक्ट करने का क्रम। बाद में एक्ट करने पर आप पहले देख लेते हैं कि दूसरे क्या करते हैं; बटन सबसे अच्छी सीट है।"}, "blinds": {"m": ["ब्लाइंड्स", "ब्लाइंड"], "t": "ब्लाइंड्स", "d": "कार्ड बँटने से पहले लगने वाली ज़बरदस्ती की बेट: स्मॉल ब्लाइंड (बटन के बाईं ओर) और बिग ब्लाइंड।"}, "limp": {"m": ["लिम्पर", "लिम्प"], "t": "लिम्प", "d": "प्रीफ्लॉप में रेज़ करने के बजाय सिर्फ़ बिग ब्लाइंड कॉल करके आना।"}, "polar": {"m": ["पोलराइज़्ड"], "t": "पोलराइज़्ड", "d": "बेटिंग रेंज जिसमें बहुत मज़बूत हाथ और ब्लफ़ हों, मध्यम हाथ कम — बड़ी बेट्स में आम।"}, "value": {"m": ["वैल्यू बेट्स", "वैल्यू बेट", "वैल्यू"], "t": "वैल्यू बेट", "d": "ऐसी बेट जिसे कमज़ोर हाथ कॉल करें।"}, "bluff": {"m": ["ब्लफ़"], "t": "ब्लफ़", "d": "कमज़ोर हाथ से बेट करना ताकि बेहतर हाथ फ़ोल्ड करें।"}, "showdown": {"m": ["शोडाउन"], "t": "शोडाउन", "d": "आख़िरी बेट के बाद दो या ज़्यादा खिलाड़ी बचें तो हाथ दिखाए जाते हैं और सबसे अच्छा जीतता है।"}, "equity": {"m": ["इक्विटी"], "t": "इक्विटी", "d": "सारे कार्ड बँट जाएँ तो आप विरोधियों की रेंज के खिलाफ़ कितनी बार जीतेंगे (टाई आधी गिनी जाती है)।"}, "ev": {"m": ["अपेक्षित मूल्य", "EV"], "t": "EV (अपेक्षित मूल्य)", "d": "एक फ़ैसले को कई बार दोहराने पर औसत नतीजा: इक्विटी × जो आप जीतते हैं − जो आप देते हैं।"}, "board": {"m": ["ड्रॉ वाले बोर्ड", "ड्राई बोर्ड", "वेट"], "t": "वेट / ड्राई बोर्ड", "d": "वेट बोर्ड में जुड़े नंबर या एक सूट के कार्ड होते हैं और ड्रॉ बहुत होते हैं; ड्राई बोर्ड में कम।"}, "utg": {"m": ["UTG"], "t": "UTG (अंडर द गन)", "d": "प्रीफ्लॉप में पहले एक्ट करने वाली सीट (बिग ब्लाइंड के बाईं ओर)। इसे सबसे मज़बूत हाथ चाहिए।"}, "hj": {"m": ["HJ"], "t": "HJ (हाईजैक)", "d": "छह खिलाड़ियों की टेबल पर: UTG और कटऑफ़ के बीच की सीट।"}, "co": {"m": ["कटऑफ़", "CO"], "t": "CO (कटऑफ़)", "d": "बटन के दाईं ओर की सीट; इसके बाद सिर्फ़ बटन और ब्लाइंड्स एक्ट करते हैं।"}, "btn": {"m": ["बटन", "BTN"], "t": "BTN (बटन)", "d": "डीलर की सीट: फ्लॉप के बाद सबसे आख़िर में एक्ट करती है — सबसे अच्छी पोज़ीशन।"}, "sb": {"m": ["SB"], "t": "SB (स्मॉल ब्लाइंड)", "d": "बटन के बाईं ओर; बिग ब्लाइंड का आधा देता है और फ्लॉप के बाद पहले एक्ट करता है।"}, "bb": {"m": ["BB"], "t": "BB (बिग ब्लाइंड)", "d": "न्यूनतम बेट देता है; इकाई के रूप में भी इस्तेमाल होता है (3BB)।"}, "tag": {"m": ["TAG"], "t": "TAG", "d": "टाइट-अग्रेसिव: कम हाथ, आक्रामक तरीके से खेले गए।"}, "lag": {"m": ["LAG"], "t": "LAG", "d": "लूज़-अग्रेसिव: बहुत हाथ, ढेर सारी बेटिंग और ब्लफ़िंग।"}, "station": {"m": ["कॉलिंग स्टेशन"], "t": "कॉलिंग स्टेशन", "d": "ऐसा खिलाड़ी जो शायद ही फ़ोल्ड करता है — ब्लफ़ न करें, बड़ी वैल्यू बेट करें।"}, "rock": {"m": ["रॉक"], "t": "रॉक", "d": "ऐसा खिलाड़ी जो सिर्फ़ बहुत मज़बूत हाथ से बेट करता है।"}, "pat": {"m": ["स्टैंड पैट"], "t": "स्टैंड पैट", "d": "फाइव कार्ड ड्रॉ में एक भी कार्ड न बदलना — बना हुआ हाथ या ब्लफ़।"}, "dead": {"m": ["डेड कार्ड"], "t": "डेड कार्ड", "d": "ऐसे कार्ड जिनके बारे में आप जानते हैं कि वे निकल चुके हैं (जैसे विरोधियों के खुले कार्डों में), इसलिए आप उन्हें नहीं पा सकते।"}, "bringin": {"m": ["ब्रिंग-इन"], "t": "ब्रिंग-इन", "d": "स्टड में सबसे छोटे खुले कार्ड वाले की ज़बरदस्ती की पहली बेट।"}, "ds": {"m": ["डबल-सूटेड"], "t": "डबल-सूटेड", "d": "ओमाहा का हाथ जिसमें दो सूट के दो-दो कार्ड हों: फ्लश के दो मौके।"}, "wrap": {"m": ["रैप ड्रॉ", "रैप"], "t": "रैप", "d": "ओमाहा का बहुत आउट्स वाला स्ट्रेट ड्रॉ, जो बोर्ड के आसपास जुड़े होल कार्डों से बनता है।"}, "allin": {"m": ["ऑल-इन"], "t": "ऑल-इन", "d": "अपने सारे चिप्स लगा देना; शोडाउन तक कोई और फ़ैसला नहीं।"}, "playboard": {"m": ["बोर्ड खेल रहे हैं"], "t": "बोर्ड खेलना", "d": "आपके सबसे अच्छे पाँचों कार्ड बोर्ड के हैं — आपके होल कार्ड इस्तेमाल नहीं होते।"}},
-ar: {"kicker": {"m": ["الكيكر", "كيكر"], "t": "الكيكر", "d": "ورقة ليست جزءًا من زوج يدك أو ثلاثيتها. تُحسم الأيدي المتساوية بأعلى كيكر (A-K مع زوج آسات: الكيكر K). والخسارة بهذه الطريقة هي «الخسارة بالكيكر»."}, "outs": {"m": ["الأوتس", "أوتس"], "t": "الأوتس", "d": "أوراق غير مرئية تمنحك اليد الرابحة في الورقة التالية — مثل 9 في فلاش درو."}, "rule24": {"m": ["قاعدة 2 و4", "×4", "×2"], "t": "قاعدة 2 و4", "d": "تقدير سريع من الأوتس: × 4 في الفلوب (بقيت ورقتان)، × 2 في التيرن (ورقة واحدة) ≈ نسبة إصابتك %."}, "potodds": {"m": ["احتمالات البوت"], "t": "احتمالات البوت (Pot odds)", "d": "ثمن المجاراة مقارنةً بالبوت الذي يمكنك ربحه. الإكويتي المطلوب = المجاراة ÷ (البوت + المجاراة)."}, "implied": {"m": ["الاحتمالات الضمنية العكسية", "الاحتمالات الضمنية"], "t": "الاحتمالات الضمنية (Implied odds)", "d": "احتساب الفيشات التي تتوقع ربحها في الجولات اللاحقة إذا اكتملت يدك، لا البوت الحالي فقط. الاحتمالات الضمنية العكسية: تكتمل يدك لكنك تخسر بوتًا كبيرًا أمام يد أفضل."}, "spr": {"m": ["SPR"], "t": "SPR (نسبة الرصيد إلى البوت)", "d": "الرصيد الفعّال ÷ البوت. SPR منخفض = أنت ملتزم؛ SPR مرتفع = الزوج الواحد خطر في بوت كبير."}, "range": {"m": ["نطاقًا", "النطاق", "نطاق", "رينج"], "t": "النطاق (الرينج)", "d": "مجموعة الأيدي التي قد يحملها اللاعب، مثل «أعلى 15%». أفعاله (رفع، مجاراة، تشيك) تضيّقها."}, "nuts": {"m": ["نَتس فلاش درو", "نَتس فلاش", "النَّتس", "النَتس", "نَتس"], "t": "النَّتس", "d": "أقوى يد ممكنة على هذه الطاولة — لا يمكن أن تخسر."}, "fd": {"m": ["درو الفلاش", "فلاش درو"], "t": "فلاش درو", "d": "أربع أوراق من نوع واحد: ورقة أخرى تصنع فلاش (9 أوتس)."}, "oe": {"m": ["ستريت درو مفتوح الطرفين", "الستريت المفتوح", "مفتوح الطرفين"], "t": "ستريت درو مفتوح الطرفين", "d": "أربع متتالية: ورقة من أي طرف تكمل الستريت (8 أوتس)."}, "gs": {"m": ["الغتشوت", "غَت شوت", "غتشوت"], "t": "غَت شوت", "d": "أربع أوراق بينها فجوة واحدة: هذه الرتبة وحدها تكمل الستريت (4 أوتس)."}, "combo": {"m": ["كومبو درو"], "t": "كومبو درو", "d": "فلاش درو وستريت درو معًا — أوتس كثيرة، وقوية حتى قبل أن تكتمل."}, "backdoor": {"m": ["باكدور"], "t": "باكدور درو", "d": "درو يحتاج إلى التيرن والريفر معًا (مثل ثلاث أوراق للفلاش)."}, "dirty": {"m": ["ملوثة"], "t": "أوتس ملوثة", "d": "أوراق تكمل يدك لكنها تمنح الخصم يدًا أفضل أيضًا (فلاش أو فل هاوس)."}, "set": {"m": ["التنقيب عن السِت", "السِت", "سِت"], "t": "السِت", "d": "ثلاثية من زوج في يدك مع ورقة من الطاولة — قوية ومخفية جيدًا. مجاراة الرهانات بأزواج صغيرة لإصابتها تُسمى «التنقيب عن السِت»."}, "trips": {"m": ["تريبس"], "t": "تريبس", "d": "ثلاثية من زوج على الطاولة مع ورقة من يدك — الكيكر مهم."}, "overpair": {"m": ["أوفربير"], "t": "أوفربير", "d": "زوج في يدك أعلى من كل أوراق الطاولة (QQ على J-7-2)."}, "toppair": {"m": ["التوب بير", "توب بير"], "t": "توب بير", "d": "زوج مع أعلى ورقة على الطاولة — قوي كزوج واحد."}, "overcards": {"m": ["أوفركارد"], "t": "أوفركارد", "d": "أوراق في يدك أعلى من كل أوراق الطاولة: يمكنها صنع توب بير."}, "cbet": {"m": ["رهانات الاستمرار", "رهان الاستمرار", "c-bet"], "t": "رهان الاستمرار (c-bet)", "d": "رهان استمرار: من رفع قبل الفلوب يراهن مجددًا في الفلوب، غالبًا سواء أصاب أم لا."}, "threebet": {"m": ["إعادة الرفع", "أعد الرفع", "3-bet"], "t": "3-bet (إعادة الرفع)", "d": "إعادة رفع. قبل الفلوب يُحسب الرفع الأول رهانًا ثانيًا، فتكون إعادة الرفع هي الـ3-bet."}, "position": {"m": ["خارج الموقع", "في الموقع", "الموقع"], "t": "الموقع", "d": "ترتيب التصرف. التصرف لاحقًا يتيح لك رؤية ما يفعله الآخرون أولًا؛ الزر هو أفضل مقعد."}, "blinds": {"m": ["البلايندز", "البلايند", "بلايند"], "t": "البلايندز", "d": "رهانات إجبارية تُدفع قبل توزيع الأوراق: البلايند الصغير (يسار الزر) والبلايند الكبير."}, "limp": {"m": ["ليمبر", "ليمب"], "t": "الليمب", "d": "الدخول قبل الفلوب بمجاراة البلايند الكبير فقط بدلًا من الرفع."}, "polar": {"m": ["مستقطَب"], "t": "مستقطَب", "d": "نطاق رهان من أيدٍ قوية جدًا وخدع، مع قليل من الأيدي المتوسطة — شائع في الرهانات الكبيرة."}, "value": {"m": ["للقيمة", "القيمة"], "t": "رهان القيمة", "d": "رهان يهدف إلى أن تجاريه أيدٍ أضعف."}, "bluff": {"m": ["الخداع", "الخدع", "خدعة", "يخدع"], "t": "الخدعة (بلَف)", "d": "الرهان بيد ضعيفة لدفع الأيدي الأقوى إلى الانسحاب."}, "showdown": {"m": ["الشوداون"], "t": "الشوداون", "d": "عندما يبقى لاعبان أو أكثر بعد الرهان الأخير تُكشف الأيدي ويفوز الأفضل."}, "equity": {"m": ["الإكويتي", "إكويتي"], "t": "الإكويتي (نسبة الفوز)", "d": "كم مرة ستفوز لو وُزعت كل الأوراق (التعادل يُحسب نصفًا)، أمام نطاقات الخصوم."}, "ev": {"m": ["القيمة المتوقعة", "EV"], "t": "EV (القيمة المتوقعة)", "d": "متوسط النتيجة لكل قرار إذا تكرر كثيرًا: الإكويتي × ما تربحه − ما تدفعه."}, "board": {"m": ["الطاولات الكثيرة الدرو", "الطاولات الجافة", "طاولة جافة", "رطبة"], "t": "طاولة رطبة / جافة", "d": "الطاولة الرطبة فيها رتب متتالية أو أوراق من نفس النوع مع درو كثيرة؛ والجافة فيها القليل."}, "utg": {"m": ["UTG"], "t": "UTG (أندر ذا غن)", "d": "أول مقعد يتصرف قبل الفلوب (يسار البلايند الكبير). يحتاج إلى أقوى الأيدي."}, "hj": {"m": ["HJ"], "t": "HJ (هاي جاك)", "d": "في طاولة من ستة: المقعد بين UTG والكت أوف."}, "co": {"m": ["الكت أوف", "CO"], "t": "CO (الكت أوف)", "d": "المقعد على يمين الزر؛ لا يتصرف بعده إلا الزر والبلايندز."}, "btn": {"m": ["الزر", "BTN"], "t": "BTN (الزر)", "d": "مقعد الموزّع: يتصرف أخيرًا بعد الفلوب — أفضل موقع."}, "sb": {"m": ["SB"], "t": "SB (البلايند الصغير)", "d": "يسار الزر؛ يدفع نصف البلايند الكبير ويتصرف أولًا بعد الفلوب."}, "bb": {"m": ["BB"], "t": "BB (البلايند الكبير)", "d": "يدفع الرهان الأدنى؛ ويُستخدم أيضًا وحدةً للقياس (3BB)."}, "tag": {"m": ["TAG"], "t": "TAG", "d": "محكم وهجومي: أيدٍ قليلة تُلعب بعدوانية."}, "lag": {"m": ["LAG"], "t": "LAG", "d": "متساهل وهجومي: أيدٍ كثيرة ورهانات وخدع كثيرة."}, "station": {"m": ["محطة مجاراة"], "t": "محطة مجاراة (Calling station)", "d": "لاعب نادرًا ما ينسحب — لا تخدعه، وراهن للقيمة بمبالغ أكبر."}, "rock": {"m": ["صخرة"], "t": "صخرة (Rock)", "d": "لاعب لا يراهن إلا بالأيدي القوية جدًا."}, "pat": {"m": ["الاحتفاظ باليد", "Stand pat"], "t": "الاحتفاظ باليد (Stand pat)", "d": "عدم تبديل أي ورقة في فايف كارد درو — يد مكتملة أو خدعة."}, "dead": {"m": ["الأوراق الميتة", "أوراق ميتة"], "t": "الأوراق الميتة", "d": "أوراق تعرف أنها خرجت (مثل أوراق الخصوم المكشوفة)، فلا يمكنك سحبها."}, "bringin": {"m": ["البرينغ-إن", "برينغ-إن"], "t": "البرينغ-إن", "d": "في الستاد، الرهان الإجباري الأول الذي يدفعه صاحب أدنى ورقة مكشوفة."}, "ds": {"m": ["دبل سوتد"], "t": "دبل سوتد", "d": "يد أوماها فيها ورقتان من كل نوع من نوعين: فرصتان للفلاش."}, "wrap": {"m": ["راب درو"], "t": "راب درو", "d": "ستريت درو في الأوماها بأوتس كثيرة، من أوراق متتالية في يدك حول أوراق الطاولة."}, "allin": {"m": ["أول-إن"], "t": "أول-إن", "d": "المراهنة بكل فيشاتك؛ لا قرارات أخرى حتى الشوداون."}, "playboard": {"m": ["تلعب الطاولة"], "t": "لعب الطاولة", "d": "أفضل خمس أوراق لديك كلها من الطاولة — أوراق يدك لا تُستخدم."}}
+ar: {"kicker": {"m": ["الكيكر", "كيكر"], "t": "الكيكر", "d": "ورقة ليست جزءًا من زوج يدك أو ثلاثيتها. تُحسم الأيدي المتساوية بأعلى كيكر (A-K مع زوج آسات: الكيكر K). والخسارة بهذه الطريقة هي «الخسارة بالكيكر»."}, "outs": {"m": ["الأوتس", "أوتس"], "t": "الأوتس", "d": "أوراق غير مرئية تمنحك اليد الرابحة في الورقة التالية — مثل 9 في فلاش درو."}, "rule24": {"m": ["قاعدة 2 و4", "×4", "×2"], "t": "قاعدة 2 و4", "d": "تقدير سريع من الأوتس: × 4 في الفلوب (بقيت ورقتان)، × 2 في التيرن (ورقة واحدة) ≈ نسبة إصابتك %."}, "potodds": {"m": ["احتمالات البوت"], "t": "احتمالات البوت (Pot odds)", "d": "ثمن المجاراة مقارنةً بالبوت الذي يمكنك ربحه. الإكويتي المطلوب = المجاراة ÷ (البوت + المجاراة)."}, "implied": {"m": ["الاحتمالات الضمنية العكسية", "الاحتمالات الضمنية"], "t": "الاحتمالات الضمنية (Implied odds)", "d": "احتساب الفيشات التي تتوقع ربحها في الجولات اللاحقة إذا اكتملت يدك، لا البوت الحالي فقط. الاحتمالات الضمنية العكسية: تكتمل يدك لكنك تخسر بوتًا كبيرًا أمام يد أفضل."}, "spr": {"m": ["SPR"], "t": "SPR (نسبة الرصيد إلى البوت)", "d": "الرصيد الفعّال ÷ البوت. SPR منخفض = أنت ملتزم؛ SPR مرتفع = الزوج الواحد خطر في بوت كبير."}, "range": {"m": ["نطاقًا", "النطاق", "نطاق", "رينج"], "t": "النطاق (الرينج)", "d": "مجموعة الأيدي التي قد يحملها اللاعب، مثل «أعلى 15%». أفعاله (رفع، مجاراة، تشيك) تضيّقها."}, "nuts": {"m": ["نَتس فلاش درو", "نَتس فلاش", "النَّتس", "النَتس", "نَتس"], "t": "النَّتس", "d": "أقوى يد ممكنة على هذه الطاولة — لا يمكن أن تخسر."}, "fd": {"m": ["درو الفلاش", "فلاش درو"], "t": "فلاش درو", "d": "أربع أوراق من نوع واحد: ورقة أخرى تصنع فلاش (9 أوتس)."}, "oe": {"m": ["ستريت درو مفتوح الطرفين", "الستريت المفتوح", "مفتوح الطرفين"], "t": "ستريت درو مفتوح الطرفين", "d": "أربع متتالية: ورقة من أي طرف تكمل الستريت (8 أوتس)."}, "gs": {"m": ["الغتشوت", "غَت شوت", "غتشوت"], "t": "غَت شوت", "d": "أربع أوراق بينها فجوة واحدة: هذه الرتبة وحدها تكمل الستريت (4 أوتس)."}, "combo": {"m": ["كومبو درو"], "t": "كومبو درو", "d": "فلاش درو وستريت درو معًا — أوتس كثيرة، وقوية حتى قبل أن تكتمل."}, "backdoor": {"m": ["باكدور"], "t": "باكدور درو", "d": "درو يحتاج إلى التيرن والريفر معًا (مثل ثلاث أوراق للفلاش)."}, "dirty": {"m": ["ملوثة"], "t": "أوتس ملوثة", "d": "أوراق تكمل يدك لكنها تمنح الخصم يدًا أفضل أيضًا (فلاش أو فل هاوس)."}, "set": {"m": ["التنقيب عن السِت", "السِت", "سِت"], "t": "السِت", "d": "ثلاثية من زوج في يدك مع ورقة من الطاولة — قوية ومخفية جيدًا. مجاراة الرهانات بأزواج صغيرة لإصابتها تُسمى «التنقيب عن السِت»."}, "trips": {"m": ["تريبس"], "t": "تريبس", "d": "ثلاثية من زوج على الطاولة مع ورقة من يدك — الكيكر مهم."}, "overpair": {"m": ["أوفربير"], "t": "أوفربير", "d": "زوج في يدك أعلى من كل أوراق الطاولة (QQ على J-7-2)."}, "toppair": {"m": ["التوب بير", "توب بير"], "t": "توب بير", "d": "زوج مع أعلى ورقة على الطاولة — قوي كزوج واحد."}, "overcards": {"m": ["أوفركارد"], "t": "أوفركارد", "d": "أوراق في يدك أعلى من كل أوراق الطاولة: يمكنها صنع توب بير."}, "cbet": {"m": ["رهانات الاستمرار", "رهان الاستمرار", "c-bet"], "t": "رهان الاستمرار (c-bet)", "d": "رهان استمرار: من رفع قبل الفلوب يراهن مجددًا في الفلوب، غالبًا سواء أصاب أم لا."}, "threebet": {"m": ["إعادة الرفع", "أعد الرفع", "3-bet"], "t": "3-bet (إعادة الرفع)", "d": "إعادة رفع. قبل الفلوب يُحسب الرفع الأول رهانًا ثانيًا، فتكون إعادة الرفع هي الـ3-bet."}, "position": {"m": ["خارج الموقع", "في الموقع", "الموقع"], "t": "الموقع", "d": "ترتيب التصرف. التصرف لاحقًا يتيح لك رؤية ما يفعله الآخرون أولًا؛ الزر هو أفضل مقعد."}, "blinds": {"m": ["البلايندز", "البلايند", "بلايند"], "t": "البلايندز", "d": "رهانات إجبارية تُدفع قبل توزيع الأوراق: البلايند الصغير (يسار الزر) والبلايند الكبير."}, "limp": {"m": ["ليمبر", "ليمب"], "t": "الليمب", "d": "الدخول قبل الفلوب بمجاراة البلايند الكبير فقط بدلًا من الرفع."}, "polar": {"m": ["مستقطَب"], "t": "مستقطَب", "d": "نطاق رهان من أيدٍ قوية جدًا وخدع، مع قليل من الأيدي المتوسطة — شائع في الرهانات الكبيرة."}, "value": {"m": ["للقيمة", "القيمة"], "t": "رهان القيمة", "d": "رهان يهدف إلى أن تجاريه أيدٍ أضعف."}, "bluff": {"m": ["الخداع", "الخدع", "خدعة", "يخدع"], "t": "الخدعة (بلَف)", "d": "الرهان بيد ضعيفة لدفع الأيدي الأقوى إلى الانسحاب."}, "showdown": {"m": ["الشوداون"], "t": "الشوداون", "d": "عندما يبقى لاعبان أو أكثر بعد الرهان الأخير تُكشف الأيدي ويفوز الأفضل."}, "equity": {"m": ["الإكويتي", "إكويتي"], "t": "الإكويتي (نسبة الفوز)", "d": "كم مرة ستفوز لو وُزعت كل الأوراق (التعادل يُحسب نصفًا)، أمام نطاقات الخصوم."}, "ev": {"m": ["القيمة المتوقعة", "EV"], "t": "EV (القيمة المتوقعة)", "d": "متوسط النتيجة لكل قرار إذا تكرر كثيرًا: الإكويتي × ما تربحه − ما تدفعه."}, "board": {"m": ["الطاولات الكثيرة الدرو", "الطاولات الجافة", "طاولة جافة", "رطبة"], "t": "طاولة رطبة / جافة", "d": "الطاولة الرطبة فيها رتب متتالية أو أوراق من نفس النوع مع درو كثيرة؛ والجافة فيها القليل."}, "utg": {"m": ["UTG"], "t": "UTG (أندر ذا غن)", "d": "أول مقعد يتصرف قبل الفلوب (يسار البلايند الكبير). يحتاج إلى أقوى الأيدي."}, "hj": {"m": ["HJ"], "t": "HJ (هاي جاك)", "d": "في طاولة من ستة: المقعد بين UTG والكت أوف."}, "co": {"m": ["الكت أوف", "CO"], "t": "CO (الكت أوف)", "d": "المقعد على يمين الزر؛ لا يتصرف بعده إلا الزر والبلايندز."}, "btn": {"m": ["الزر", "BTN"], "t": "BTN (الزر)", "d": "مقعد الموزّع: يتصرف أخيرًا بعد الفلوب — أفضل موقع."}, "sb": {"m": ["SB"], "t": "SB (البلايند الصغير)", "d": "يسار الزر؛ يدفع نصف البلايند الكبير ويتصرف أولًا بعد الفلوب."}, "bb": {"m": ["BB"], "t": "BB (البلايند الكبير)", "d": "يدفع الرهان الأدنى؛ ويُستخدم أيضًا وحدةً للقياس (3BB)."}, "tag": {"m": ["TAG"], "t": "TAG", "d": "محكم وهجومي: أيدٍ قليلة تُلعب بعدوانية."}, "lag": {"m": ["LAG"], "t": "LAG", "d": "متساهل وهجومي: أيدٍ كثيرة ورهانات وخدع كثيرة."}, "station": {"m": ["محطة مجاراة"], "t": "محطة مجاراة (Calling station)", "d": "لاعب نادرًا ما ينسحب — لا تخدعه، وراهن للقيمة بمبالغ أكبر."}, "rock": {"m": ["صخرة"], "t": "صخرة (Rock)", "d": "لاعب لا يراهن إلا بالأيدي القوية جدًا."}, "pat": {"m": ["الاحتفاظ باليد", "Stand pat"], "t": "الاحتفاظ باليد (Stand pat)", "d": "عدم تبديل أي ورقة في فايف كارد درو — يد مكتملة أو خدعة."}, "dead": {"m": ["الأوراق الميتة", "أوراق ميتة"], "t": "الأوراق الميتة", "d": "أوراق تعرف أنها خرجت (مثل أوراق الخصوم المكشوفة)، فلا يمكنك سحبها."}, "bringin": {"m": ["البرينغ-إن", "برينغ-إن"], "t": "البرينغ-إن", "d": "في الستاد، الرهان الإجباري الأول الذي يدفعه صاحب أدنى ورقة مكشوفة."}, "ds": {"m": ["دبل سوتد"], "t": "دبل سوتد", "d": "يد أوماها فيها ورقتان من كل نوع من نوعين: فرصتان للفلاش."}, "wrap": {"m": ["راب درو"], "t": "راب درو", "d": "ستريت درو في الأوماها بأوتس كثيرة، من أوراق متتالية في يدك حول أوراق الطاولة."}, "allin": {"m": ["أول-إن"], "t": "أول-إن", "d": "المراهنة بكل فيشاتك؛ لا قرارات أخرى حتى الشوداون."}, "playboard": {"m": ["تلعب الطاولة"], "t": "لعب الطاولة", "d": "أفضل خمس أوراق لديك كلها من الطاولة — أوراق يدك لا تُستخدم."}},
+ru: {
+  kicker: {
+    m: ['кикер'],
+    t: 'Кикер',
+    d: 'Карта, не входящая в пару или сет вашей руки. Равные руки решает старший кикер (A-K с парой тузов: кикер K). Проиграть так — «проиграть по кикеру».'
+  },
+  outs: {
+    m: ['аут'],
+    t: 'Ауты',
+    d: 'Невидимые карты, которые на следующей улице дадут вам выигрышную руку — например, 9 при флеш-дро.'
+  },
+  rule24: {
+    m: ['правило 2 и 4', 'правила 2 и 4', '×4', '×2'],
+    t: 'Правило 2 и 4',
+    d: 'Быстрая оценка по аутам: × 4 на флопе (впереди две карты), × 2 на тёрне (одна карта) ≈ ваш % собрать руку.'
+  },
+  potodds: {
+    m: ['шансы банка', 'шансов банка', 'шансам банка', 'шансами банка'],
+    t: 'Шансы банка',
+    d: 'Цена колла по сравнению с банком, который можно выиграть. Нужное эквити = колл ÷ (банк + колл).'
+  },
+  implied: {
+    m: ['обратные подразумеваемые шансы', 'подразумеваемые шансы', 'подразумеваемых шансов'],
+    t: 'Подразумеваемые шансы',
+    d: 'Учёт фишек, которые вы ожидаете выиграть на следующих улицах, если соберёте руку, а не только текущего банка. Обратные подразумеваемые шансы: собрать руку, но проиграть крупный банк руке сильнее.'
+  },
+  spr: {
+    m: ['SPR'],
+    t: 'SPR (стек к банку)',
+    d: 'Эффективный стек ÷ банк. Низкий SPR — вы привязаны к банку; высокий SPR — одна пара в большом банке рискованна.'
+  },
+  range: {
+    m: ['диапазон'],
+    t: 'Диапазон',
+    d: 'Набор рук, которые может держать игрок, например «топ-15%». Его действия (рейз, колл, чек) сужают диапазон.'
+  },
+  nuts: {
+    m: ['натс-флеш-дро', 'натс-флеш', 'натс'],
+    t: 'Натс',
+    d: 'Лучшая возможная рука на этом борде — она не может проиграть.'
+  },
+  fd: {
+    m: ['флеш-дро'],
+    t: 'Флеш-дро',
+    d: 'Четыре карты одной масти: ещё одна даст флеш (9 аутов).'
+  },
+  oe: {
+    m: ['двусторонн'],
+    t: 'Двустороннее стрит-дро',
+    d: 'Четыре карты подряд: карта с любого края даст стрит (8 аутов).'
+  },
+  gs: {
+    m: ['гатшот'],
+    t: 'Гатшот',
+    d: 'Четыре карты с одним пропуском: стрит даёт только одно достоинство (4 аута).'
+  },
+  combo: {
+    m: ['комбо-дро'],
+    t: 'Комбо-дро',
+    d: 'Флеш-дро и стрит-дро одновременно — много аутов, рука сильна ещё до того, как соберётся.'
+  },
+  backdoor: {
+    m: ['бэкдор'],
+    t: 'Бэкдор-дро',
+    d: 'Дро, которому нужны и тёрн, и ривер (например, три карты к флешу).'
+  },
+  dirty: {
+    m: ['грязные ауты', 'грязных аутов'],
+    t: 'Грязные ауты',
+    d: 'Карты, которые собирают вашу руку, но дают сопернику ещё более сильную (флеш или фулл-хаус).'
+  },
+  set: {
+    m: ['сет-майнинг', 'сет'],
+    t: 'Сет',
+    d: 'Тройка из карманной пары и одной карты борда — сильная и хорошо скрытая. Колл с мелкой парой ради сета — «сет-майнинг».'
+  },
+  trips: {
+    m: ['трипс'],
+    t: 'Трипс',
+    d: 'Тройка из пары на борде и одной вашей карты — кикер важен.'
+  },
+  overpair: {
+    m: ['оверпар'],
+    t: 'Оверпара',
+    d: 'Карманная пара выше всех карт борда (QQ на J-7-2).'
+  },
+  toppair: {
+    m: ['топ-пар'],
+    t: 'Топ-пара',
+    d: 'Пара со старшей картой борда — сильная рука для одной пары.'
+  },
+  overcards: {
+    m: ['оверкарт'],
+    t: 'Оверкарты',
+    d: 'Карты на руках старше всех карт борда: они могут дать топ-пару.'
+  },
+  cbet: {
+    m: ['продолженная ставка', 'продолженной ставки', 'конт-бет'],
+    t: 'Конт-бет',
+    d: 'Продолженная ставка: рейзер префлопа снова ставит на флопе, часто независимо от того, попал он или нет.'
+  },
+  threebet: {
+    m: ['3-бет', 'ре-рейз'],
+    t: '3-бет',
+    d: 'Ре-рейз. На префлопе первый рейз считается 2-й ставкой, поэтому ре-рейз — это 3-бет.'
+  },
+  position: {
+    m: ['в позиции', 'без позиции', 'позици'],
+    t: 'Позиция',
+    d: 'Порядок ходов. Ходить позже — значит сначала видеть действия других; баттон — лучшее место.'
+  },
+  blinds: {
+    m: ['блайнд'],
+    t: 'Блайнды',
+    d: 'Обязательные ставки до раздачи карт: малый блайнд (слева от баттона) и большой блайнд.'
+  },
+  limp: {
+    m: ['лимпер', 'лимп'],
+    t: 'Лимп',
+    d: 'Вход на префлопе простым коллом большого блайнда вместо рейза.'
+  },
+  polar: {
+    m: ['поляризован'],
+    t: 'Поляризованный',
+    d: 'Диапазон ставок из очень сильных рук и блефов, почти без средних рук — типично для крупных ставок.'
+  },
+  value: {
+    m: ['вэлью-бет', 'вэлью'],
+    t: 'Вэлью-бет',
+    d: 'Ставка, на которую должны заплатить более слабые руки.'
+  },
+  bluff: {
+    m: ['блеф'],
+    t: 'Блеф',
+    d: 'Ставка со слабой рукой, чтобы заставить более сильные руки сбросить.'
+  },
+  showdown: {
+    m: ['вскрыти', 'шоудаун'],
+    t: 'Вскрытие (шоудаун)',
+    d: 'Если после последней ставки осталось двое или больше игроков, карты открываются и побеждает лучшая рука.'
+  },
+  equity: {
+    m: ['эквити'],
+    t: 'Эквити',
+    d: 'Как часто вы выиграли бы, если бы все карты были розданы до конца (ничья — половина), против диапазонов соперников.'
+  },
+  ev: {
+    m: ['EV'],
+    t: 'EV (матожидание)',
+    d: 'Средний результат решения при многократном повторении: эквити × выигрыш − то, что вы платите.'
+  },
+  board: {
+    m: ['мокрый борд', 'мокрого борда', 'сухой борд', 'сухого борда', 'сухом борде', 'мокром борде'],
+    t: 'Мокрый / сухой борд',
+    d: 'На мокром борде связанные достоинства или одномастные карты и много дро; на сухом — мало.'
+  },
+  utg: {
+    m: ['UTG'],
+    t: 'UTG (under the gun)',
+    d: 'Первое место, которое ходит на префлопе (слева от большого блайнда). Требует самых сильных рук.'
+  },
+  hj: {
+    m: ['HJ'],
+    t: 'HJ (хайджек)',
+    d: 'За шестиместным столом: место между UTG и катоффом.'
+  },
+  co: {
+    m: ['CO', 'катофф'],
+    t: 'CO (катофф)',
+    d: 'Место справа от баттона; после него ходят только баттон и блайнды.'
+  },
+  btn: {
+    m: ['BTN', 'баттон'],
+    t: 'BTN (баттон)',
+    d: 'Место дилера: после флопа ходит последним — лучшая позиция.'
+  },
+  sb: {
+    m: ['SB'],
+    t: 'SB (малый блайнд)',
+    d: 'Слева от баттона; ставит половину большого блайнда и после флопа ходит первым.'
+  },
+  bb: {
+    m: ['BB'],
+    t: 'BB (большой блайнд)',
+    d: 'Ставит минимальную ставку; также используется как единица (3BB).'
+  },
+  tag: {
+    m: ['TAG'],
+    t: 'TAG',
+    d: 'Тайт-агрессивный: мало рук, но играет их агрессивно.'
+  },
+  lag: {
+    m: ['LAG'],
+    t: 'LAG',
+    d: 'Луз-агрессивный: много рук, много ставок и блефа.'
+  },
+  station: {
+    m: ['колл-станци'],
+    t: 'Колл-станция',
+    d: 'Игрок, который редко сбрасывает: не блефуйте, а ставьте на вэлью крупнее.'
+  },
+  rock: {
+    m: ['рок'],
+    t: 'Рок',
+    d: 'Игрок, который ставит только с очень сильными руками.'
+  },
+  pat: {
+    m: ['без обмена'],
+    t: 'Без обмена (стоять)',
+    d: 'Не менять ни одной карты в пятикарточном дро — готовая рука или блеф.'
+  },
+  dead: {
+    m: ['мёртвые карт', 'мёртвых карт'],
+    t: 'Мёртвые карты',
+    d: 'Карты, о которых известно, что они вышли (например, в открытых картах соперников), поэтому прийти они не могут.'
+  },
+  bringin: {
+    m: ['брин-ин'],
+    t: 'Брин-ин',
+    d: 'В стаде — обязательная первая ставка, которую делает самая младшая открытая карта.'
+  },
+  ds: {
+    m: ['двойная одномаст', 'двойной одномаст', 'двойную одномаст'],
+    t: 'Двойная одномастность',
+    d: 'Рука в омахе с двумя картами каждой из двух мастей: два шанса на флеш.'
+  },
+  wrap: {
+    m: ['врап'],
+    t: 'Врап',
+    d: 'Стрит-дро в омахе с множеством аутов из связанных карт на руках вокруг борда.'
+  },
+  allin: {
+    m: ['олл-ин'],
+    t: 'Олл-ин',
+    d: 'Ставка всех своих фишек; до вскрытия больше решений нет.'
+  },
+  playboard: {
+    m: ['играть борд', 'играете борд', 'играет борд'],
+    t: 'Играть борд',
+    d: 'Ваши лучшие пять карт — все с борда; ваши карты на руках не играют.'
+  }
+},
+'zh-TW': {
+  kicker: {
+    m: ['踢腳'],
+    t: '踢腳',
+    d: '不屬於你的對子或三條的那張牌。牌型相同時比最大的踢腳（A-K 成 A 對：K 踢腳）。這樣輸掉叫「踢腳輸」。'
+  },
+  outs: {
+    m: ['補牌數', '補牌'],
+    t: '補牌（outs）',
+    d: '還沒出現、下一張出來就能讓你成為贏牌的牌——例如同花聽牌有 9 張。'
+  },
+  rule24: {
+    m: ['2 與 4 法則', '×4', '×2'],
+    t: '2 與 4 法則',
+    d: '從補牌數快速估算：翻牌時（還有兩張）× 4，轉牌時（還有一張）× 2 ≈ 成牌的 %。'
+  },
+  potodds: {
+    m: ['底池賠率'],
+    t: '底池賠率',
+    d: '跟注的代價與能贏得的底池相比。所需勝率＝跟注額 ÷（底池＋跟注額）。'
+  },
+  implied: {
+    m: ['反隱含賠率', '隱含賠率'],
+    t: '隱含賠率',
+    d: '不只看目前的底池，也把成牌後在之後幾條街預期能贏的籌碼算進去。反隱含賠率：成牌了，卻輸給更大的牌、丟掉大底池。'
+  },
+  spr: {
+    m: ['SPR'],
+    t: 'SPR（籌碼底池比）',
+    d: '有效籌碼 ÷ 底池。SPR 低＝你已經被套牢；SPR 高＝大底池裡只有一對很危險。'
+  },
+  range: {
+    m: ['範圍'],
+    t: '範圍',
+    d: '一名玩家可能持有的手牌集合，例如「前 15%」。他的行動（加注、跟注、過牌）會讓範圍縮小。'
+  },
+  nuts: {
+    m: ['堅果同花聽牌', '堅果同花', '堅果牌', '堅果'],
+    t: '堅果牌',
+    d: '在這個牌面上可能的最大牌——不會輸。'
+  },
+  fd: {
+    m: ['同花聽牌', '四張同花'],
+    t: '同花聽牌',
+    d: '四張同花色：再來一張就成同花（9 張補牌）。'
+  },
+  oe: {
+    m: ['兩頭順子聽牌', '兩頭順'],
+    t: '兩頭順子聽牌',
+    d: '四張連續：兩端任何一張都能成順子（8 張補牌）。'
+  },
+  gs: {
+    m: ['卡順'],
+    t: '卡順',
+    d: '四張牌中間缺一張：只有那個點數能成順子（4 張補牌）。'
+  },
+  combo: {
+    m: ['組合聽牌'],
+    t: '組合聽牌',
+    d: '同時有同花聽牌和順子聽牌——補牌很多，還沒成牌就很強。'
+  },
+  backdoor: {
+    m: ['後門'],
+    t: '後門聽牌',
+    d: '轉牌和河牌都要來才能成的聽牌（例如三張同花）。'
+  },
+  dirty: {
+    m: ['髒補牌'],
+    t: '髒補牌',
+    d: '能讓你成牌，卻也讓對手成更大牌（同花或葫蘆）的牌。'
+  },
+  set: {
+    m: ['挖暗三', '暗三'],
+    t: '暗三（set）',
+    d: '用口袋對子加一張公共牌組成的三條——強又隱蔽。用小對子跟注想中暗三叫「挖暗三」。'
+  },
+  trips: {
+    m: ['明三'],
+    t: '明三（trips）',
+    d: '用公共牌的對子加你的一張牌組成的三條——踢腳很重要。'
+  },
+  overpair: {
+    m: ['超對'],
+    t: '超對',
+    d: '比所有公共牌都大的口袋對子（J-7-2 上的 QQ）。'
+  },
+  toppair: {
+    m: ['頂對'],
+    t: '頂對',
+    d: '和最大公共牌成對——在一對裡算是強的。'
+  },
+  overcards: {
+    m: ['高張'],
+    t: '高張',
+    d: '比所有公共牌都大的手牌：可能成頂對。'
+  },
+  cbet: {
+    m: ['持續下注'],
+    t: '持續下注（C-bet）',
+    d: '翻牌前加注的人在翻牌圈再次下注，常常不管有沒有中牌。'
+  },
+  threebet: {
+    m: ['3-bet', '再加注'],
+    t: '3-bet',
+    d: '再加注。翻牌前第一次加注算第 2 注，所以再加注就是 3-bet。'
+  },
+  position: {
+    m: ['有位置', '沒位置', '位置'],
+    t: '位置',
+    d: '行動的順序。越晚行動越能先看到別人怎麼做；按鈕位是最好的位置。'
+  },
+  blinds: {
+    m: ['盲注'],
+    t: '盲注',
+    d: '發牌前的強制下注：小盲（按鈕左邊）和大盲。'
+  },
+  limp: {
+    m: ['溜入'],
+    t: '溜入（limp）',
+    d: '翻牌前不加注，只跟大盲入池。'
+  },
+  polar: {
+    m: ['兩極化'],
+    t: '兩極化',
+    d: '下注範圍由非常強的牌和詐唬組成，中等牌很少——大注的典型特徵。'
+  },
+  value: {
+    m: ['價值下注', '價值注'],
+    t: '價值下注',
+    d: '為了讓比較弱的牌跟注而下的注。'
+  },
+  bluff: {
+    m: ['詐唬'],
+    t: '詐唬',
+    d: '用弱牌下注，讓比較強的牌棄牌。'
+  },
+  showdown: {
+    m: ['攤牌'],
+    t: '攤牌',
+    d: '最後一輪下注後還剩兩人以上時，亮牌比大小，最大的贏。'
+  },
+  equity: {
+    m: ['勝率'],
+    t: '勝率（equity）',
+    d: '把所有牌發完時你會贏的機率（平手算一半），以對手的範圍計算。'
+  },
+  ev: {
+    m: ['EV'],
+    t: 'EV（期望值）',
+    d: '同樣的決策重複很多次後的平均結果：勝率 × 贏得的金額 − 付出的金額。'
+  },
+  board: {
+    m: ['濕牌面', '乾牌面'],
+    t: '濕／乾牌面',
+    d: '濕牌面是點數相連或同花色多、聽牌多的牌面；乾牌面則聽牌很少。'
+  },
+  utg: {
+    m: ['UTG'],
+    t: 'UTG（槍口位）',
+    d: '翻牌前最先行動的位置（大盲左邊）。需要最強的牌。'
+  },
+  hj: {
+    m: ['HJ'],
+    t: 'HJ（劫位）',
+    d: '六人桌中介於 UTG 和關煞位之間的位置。'
+  },
+  co: {
+    m: ['CO', '關煞位'],
+    t: 'CO（關煞位）',
+    d: '按鈕右邊的位置；之後只剩按鈕和盲注行動。'
+  },
+  btn: {
+    m: ['BTN', '按鈕位'],
+    t: 'BTN（按鈕位）',
+    d: '莊家的位置：翻牌後最後行動——最好的位置。'
+  },
+  sb: {
+    m: ['SB'],
+    t: 'SB（小盲）',
+    d: '按鈕左邊；付大盲的一半，翻牌後最先行動。'
+  },
+  bb: {
+    m: ['BB'],
+    t: 'BB（大盲）',
+    d: '付最低下注額；也當作單位使用（3BB）。'
+  },
+  tag: {
+    m: ['TAG'],
+    t: 'TAG',
+    d: '緊兇型：玩的牌少，但打得很積極。'
+  },
+  lag: {
+    m: ['LAG'],
+    t: 'LAG',
+    d: '鬆兇型：玩很多牌，常下注也常詐唬。'
+  },
+  station: {
+    m: ['跟注站'],
+    t: '跟注站',
+    d: '很少棄牌的玩家——別詐唬他，價值下注要下大一點。'
+  },
+  rock: {
+    m: ['岩石'],
+    t: '岩石型',
+    d: '只拿非常強的牌才下注的玩家。'
+  },
+  pat: {
+    m: ['不換牌'],
+    t: '不換牌',
+    d: '五張換牌中一張都不換——已經成牌，或是詐唬。'
+  },
+  dead: {
+    m: ['死牌'],
+    t: '死牌',
+    d: '已知已經出現的牌（例如對手的明牌），所以不可能再補到。'
+  },
+  bringin: {
+    m: ['強制開注'],
+    t: '強制開注',
+    d: '梭哈中由明牌最小的人付的強制第一注。'
+  },
+  ds: {
+    m: ['雙同花'],
+    t: '雙同花',
+    d: '奧馬哈中兩種花色各兩張的手牌：有兩個同花機會。'
+  },
+  wrap: {
+    m: ['包抄'],
+    t: '包抄聽牌（wrap）',
+    d: '奧馬哈中，用連續的手牌圍住公共牌形成的多補牌順子聽牌。'
+  },
+  allin: {
+    m: ['全下'],
+    t: '全下',
+    d: '押上所有籌碼；直到攤牌都不必再做決定。'
+  },
+  playboard: {
+    m: ['打公共牌'],
+    t: '打公共牌',
+    d: '你最好的五張全是公共牌——你的手牌派不上用場。'
+  }
+},
+id: {
+  kicker: {
+    m: ['kalah kicker', 'kicker'],
+    t: 'Kicker',
+    d: 'Kartu yang bukan bagian dari pair atau set tanganmu. Tangan yang sama ditentukan oleh kicker tertinggi (A-K dengan pair As: kicker K). Kalah dengan cara ini disebut “kalah kicker”.'
+  },
+  outs: {
+    m: ['outs'],
+    t: 'Outs',
+    d: 'Kartu yang belum terlihat yang akan membuatmu menang di kartu berikutnya — misalnya 9 untuk flush draw.'
+  },
+  rule24: {
+    m: ['aturan 2 dan 4', '×4', '×2'],
+    t: 'Aturan 2 dan 4',
+    d: 'Perkiraan cepat dari outs: × 4 di flop (dua kartu lagi), × 2 di turn (satu kartu) ≈ % peluangmu jadi.'
+  },
+  potodds: {
+    m: ['pot odds', 'Pot odds'],
+    t: 'Pot odds',
+    d: 'Harga call dibandingkan pot yang bisa dimenangkan. Equity yang dibutuhkan = call ÷ (pot + call).'
+  },
+  implied: {
+    m: ['reverse implied odds', 'implied odds'],
+    t: 'Implied odds',
+    d: 'Menghitung chip yang kamu harapkan menang di street berikutnya saat jadi, bukan hanya pot sekarang. Reverse implied odds: jadi, tapi kalah pot besar dari tangan yang lebih baik.'
+  },
+  spr: {
+    m: ['SPR'],
+    t: 'SPR (rasio stack ke pot)',
+    d: 'Effective stack ÷ pot. SPR rendah = kamu sudah terikat; SPR tinggi = one pair berisiko di pot besar.'
+  },
+  range: {
+    m: ['range'],
+    t: 'Range',
+    d: 'Kumpulan tangan yang mungkin dipegang pemain, misalnya “top 15%”. Aksinya (raise, call, check) mempersempitnya.'
+  },
+  nuts: {
+    m: ['nut flush draw', 'nut flush', 'nuts'],
+    t: 'Nuts',
+    d: 'Tangan terbaik yang mungkin di board ini — tidak bisa kalah.'
+  },
+  fd: {
+    m: ['flush draw', 'four-flush'],
+    t: 'Flush draw',
+    d: 'Empat kartu satu jenis: satu lagi jadi flush (9 outs).'
+  },
+  oe: {
+    m: ['open-ended straight draw', 'open-ended'],
+    t: 'Open-ended straight draw',
+    d: 'Empat berurutan: kartu di ujung mana pun jadi straight (8 outs).'
+  },
+  gs: {
+    m: ['gutshot'],
+    t: 'Gutshot',
+    d: 'Empat kartu dengan satu celah: hanya nilai itu yang jadi straight (4 outs).'
+  },
+  combo: {
+    m: ['combo draw'],
+    t: 'Combo draw',
+    d: 'Flush draw dan straight draw sekaligus — banyak outs, kuat bahkan sebelum jadi.'
+  },
+  backdoor: {
+    m: ['backdoor'],
+    t: 'Backdoor draw',
+    d: 'Draw yang butuh turn dan river sekaligus (misalnya tiga kartu ke flush).'
+  },
+  dirty: {
+    m: ['dirty outs', 'dirty'],
+    t: 'Dirty outs',
+    d: 'Kartu yang melengkapi tanganmu, tapi juga memberi lawan tangan yang lebih baik (flush atau full house).'
+  },
+  set: {
+    m: ['set mining', 'set'],
+    t: 'Set',
+    d: 'Three of a kind dari pocket pair plus satu kartu board — kuat dan tersembunyi. Call dengan pair kecil untuk mengejarnya disebut “set mining”.'
+  },
+  trips: {
+    m: ['trips'],
+    t: 'Trips',
+    d: 'Three of a kind dari pair di board plus satu kartumu — kicker penting.'
+  },
+  overpair: {
+    m: ['overpair'],
+    t: 'Overpair',
+    d: 'Pocket pair yang lebih tinggi dari semua kartu board (QQ di J-7-2).'
+  },
+  toppair: {
+    m: ['top pair'],
+    t: 'Top pair',
+    d: 'Pair dengan kartu board tertinggi — kuat untuk one pair.'
+  },
+  overcards: {
+    m: ['overcard'],
+    t: 'Overcard',
+    d: 'Hole card yang lebih tinggi dari semua kartu board: bisa jadi top pair.'
+  },
+  cbet: {
+    m: ['c-bet', 'continuation bet'],
+    t: 'C-bet',
+    d: 'Continuation bet: yang raise preflop bet lagi di flop, sering tanpa peduli kena atau tidak.'
+  },
+  threebet: {
+    m: ['3-bet', 're-raise'],
+    t: '3-bet',
+    d: 'Re-raise. Saat preflop raise pertama dihitung bet ke-2, jadi re-raise adalah 3-bet.'
+  },
+  position: {
+    m: ['in position', 'out of position', 'posisi'],
+    t: 'Posisi',
+    d: 'Urutan bertindak. Bertindak belakangan membuatmu melihat aksi lawan lebih dulu; button adalah kursi terbaik.'
+  },
+  blinds: {
+    m: ['blind'],
+    t: 'Blind',
+    d: 'Taruhan wajib sebelum kartu dibagikan: small blind (kiri button) dan big blind.'
+  },
+  limp: {
+    m: ['limper', 'limp'],
+    t: 'Limp',
+    d: 'Masuk preflop hanya dengan call big blind, bukan raise.'
+  },
+  polar: {
+    m: ['terpolarisasi', 'polarized'],
+    t: 'Terpolarisasi',
+    d: 'Range bet yang terdiri dari tangan sangat kuat dan bluff, dengan sedikit tangan menengah — khas bet besar.'
+  },
+  value: {
+    m: ['value bet', 'value'],
+    t: 'Value bet',
+    d: 'Bet yang dibuat agar tangan yang lebih lemah mau call.'
+  },
+  bluff: {
+    m: ['bluff'],
+    t: 'Bluff',
+    d: 'Bet dengan tangan lemah agar tangan yang lebih baik fold.'
+  },
+  showdown: {
+    m: ['showdown'],
+    t: 'Showdown',
+    d: 'Jika tersisa dua pemain atau lebih setelah bet terakhir, kartu dibuka dan yang terbaik menang.'
+  },
+  equity: {
+    m: ['equity'],
+    t: 'Equity',
+    d: 'Seberapa sering kamu menang jika semua kartu dibagikan sampai habis (seri dihitung setengah), melawan range lawan.'
+  },
+  ev: {
+    m: ['EV'],
+    t: 'EV (nilai harapan)',
+    d: 'Hasil rata-rata per keputusan jika diulang berkali-kali: equity × yang dimenangkan − yang dibayar.'
+  },
+  board: {
+    m: ['board basah', 'board kering', 'wet board', 'dry board'],
+    t: 'Board basah / kering',
+    d: 'Board basah punya nilai berurutan atau kartu sejenis dengan banyak draw; board kering hanya sedikit.'
+  },
+  utg: {
+    m: ['UTG'],
+    t: 'UTG (under the gun)',
+    d: 'Kursi pertama yang bertindak saat preflop (kiri big blind). Butuh tangan terkuat.'
+  },
+  hj: {
+    m: ['HJ'],
+    t: 'HJ (hijack)',
+    d: 'Di meja 6 orang: kursi di antara UTG dan cutoff.'
+  },
+  co: {
+    m: ['CO', 'cutoff'],
+    t: 'CO (cutoff)',
+    d: 'Kursi di kanan button; setelahnya hanya button dan blind yang bertindak.'
+  },
+  btn: {
+    m: ['BTN', 'button'],
+    t: 'BTN (button)',
+    d: 'Kursi dealer: bertindak terakhir setelah flop — posisi terbaik.'
+  },
+  sb: {
+    m: ['SB'],
+    t: 'SB (small blind)',
+    d: 'Di kiri button; memasang setengah big blind dan bertindak pertama setelah flop.'
+  },
+  bb: {
+    m: ['BB'],
+    t: 'BB (big blind)',
+    d: 'Memasang bet minimum; juga dipakai sebagai satuan (3BB).'
+  },
+  tag: {
+    m: ['TAG'],
+    t: 'TAG',
+    d: 'Tight-agresif: sedikit tangan, dimainkan dengan agresif.'
+  },
+  lag: {
+    m: ['LAG'],
+    t: 'LAG',
+    d: 'Loose-agresif: banyak tangan, banyak bet dan bluff.'
+  },
+  station: {
+    m: ['calling station'],
+    t: 'Calling station',
+    d: 'Pemain yang jarang fold — jangan bluff, value bet lebih besar.'
+  },
+  rock: {
+    m: ['rock'],
+    t: 'Rock',
+    d: 'Pemain yang hanya bet dengan tangan sangat kuat.'
+  },
+  pat: {
+    m: ['tidak tukar', 'stand pat'],
+    t: 'Stand pat',
+    d: 'Tidak menukar kartu sama sekali di five card draw — tangan jadi atau bluff.'
+  },
+  dead: {
+    m: ['kartu mati', 'dead card'],
+    t: 'Kartu mati',
+    d: 'Kartu yang kamu tahu sudah keluar (misalnya di kartu terbuka lawan), jadi tidak bisa kamu dapat.'
+  },
+  bringin: {
+    m: ['bring-in'],
+    t: 'Bring-in',
+    d: 'Di stud, taruhan wajib pertama yang dipasang kartu terbuka terendah.'
+  },
+  ds: {
+    m: ['double-suited'],
+    t: 'Double-suited',
+    d: 'Tangan Omaha dengan masing-masing dua kartu dari dua jenis: dua peluang flush.'
+  },
+  wrap: {
+    m: ['wrap'],
+    t: 'Wrap',
+    d: 'Straight draw Omaha dengan banyak outs, dari hole card berurutan di sekitar board.'
+  },
+  allin: {
+    m: ['all-in'],
+    t: 'All-in',
+    d: 'Bet semua chip; tidak ada keputusan lagi sampai showdown.'
+  },
+  playboard: {
+    m: ['main board', 'play the board'],
+    t: 'Main board',
+    d: 'Lima kartu terbaikmu semuanya kartu board — hole card-mu tidak terpakai.'
+  }
+},
+tr: {
+  kicker: {
+    m: ['kicker'],
+    t: 'Kicker',
+    d: 'Elindeki çiftin ya da setin parçası olmayan kart. Eşit eller en yüksek kicker\'la belirlenir (as çifti yapan A-K: K kicker). Böyle kaybetmeye “kicker\'a yenilmek” denir.'
+  },
+  outs: {
+    m: ['out'],
+    t: 'Out',
+    d: 'Sonraki kartta sana kazanan eli verecek, henüz görünmeyen kartlar — örneğin floş beraberliğinde 9.'
+  },
+  rule24: {
+    m: ['2 ve 4 kuralı', '×4', '×2'],
+    t: '2 ve 4 kuralı',
+    d: 'Out sayısından hızlı tahmin: flopta (iki kart var) × 4, turnde (bir kart) × 2 ≈ elini yapma yüzden.'
+  },
+  potodds: {
+    m: ['pot oran'],
+    t: 'Pot oranı',
+    d: 'Görmenin bedelinin kazanılabilecek pota oranı. Gereken equity = görme ÷ (pot + görme).'
+  },
+  implied: {
+    m: ['ters zımni oran', 'zımni oran'],
+    t: 'Zımni oran',
+    d: 'Yalnız mevcut potu değil, elini yaparsan sonraki sokaklarda kazanmayı beklediğin fişleri de saymak. Ters zımni oran: elini yapıp daha iyi bir ele büyük pot kaybetmek.'
+  },
+  spr: {
+    m: ['SPR'],
+    t: 'SPR (fiş-pot oranı)',
+    d: 'Etkin fiş ÷ pot. Düşük SPR = pota bağlısın; yüksek SPR = büyük potta tek çift risklidir.'
+  },
+  range: {
+    m: ['aralı'],
+    t: 'Aralık (range)',
+    d: 'Bir oyuncunun tutabileceği eller kümesi, ör. “ilk %15”. Hamleleri (artırma, görme, pas) aralığı daraltır.'
+  },
+  nuts: {
+    m: ['nuts floş beraberliği', 'nuts floş', 'nuts'],
+    t: 'Nuts',
+    d: 'Bu board\'daki mümkün olan en iyi el — kaybedemez.'
+  },
+  fd: {
+    m: ['floş beraberliğ', 'floş beraberlik'],
+    t: 'Floş beraberliği',
+    d: 'Aynı renkten dört kart: bir tane daha floş yapar (9 out).'
+  },
+  oe: {
+    m: ['açık uçlu kent beraberliğ', 'açık uçlu'],
+    t: 'Açık uçlu kent beraberliği',
+    d: 'Sıralı dört kart: iki uçtan herhangi bir kart kent yapar (8 out).'
+  },
+  gs: {
+    m: ['gutshot'],
+    t: 'Gutshot',
+    d: 'Arada bir boşluk olan dört kart: kenti yalnız o değer yapar (4 out).'
+  },
+  combo: {
+    m: ['kombo beraberlik', 'kombo beraberliğ'],
+    t: 'Kombo beraberlik',
+    d: 'Aynı anda floş ve kent beraberliği — çok out, tamamlanmadan bile güçlü.'
+  },
+  backdoor: {
+    m: ['backdoor'],
+    t: 'Backdoor beraberlik',
+    d: 'Hem turn hem river gerektiren beraberlik (ör. floşa üç kart).'
+  },
+  dirty: {
+    m: ['kirli out'],
+    t: 'Kirli out',
+    d: 'Elini tamamlayan ama rakibe daha iyi bir el de veren kartlar (floş ya da ful).'
+  },
+  set: {
+    m: ['set madenciliğ', 'set'],
+    t: 'Set',
+    d: 'Cep çifti artı bir board kartıyla yapılan üçlü — güçlü ve iyi gizli. Küçük çiftlerle onu tutturmak için görmeye “set madenciliği” denir.'
+  },
+  trips: {
+    m: ['trips'],
+    t: 'Trips',
+    d: 'Board\'daki çift artı senin bir kartınla yapılan üçlü — kicker önemlidir.'
+  },
+  overpair: {
+    m: ['overpair'],
+    t: 'Overpair',
+    d: 'Board\'daki tüm kartlardan yüksek cep çifti (J-7-2\'de QQ).'
+  },
+  toppair: {
+    m: ['top pair', 'üst çift'],
+    t: 'Üst çift (top pair)',
+    d: 'Board\'un en yüksek kartıyla yapılan çift — tek çift için güçlüdür.'
+  },
+  overcards: {
+    m: ['overcard'],
+    t: 'Overcard',
+    d: 'Board\'daki tüm kartlardan yüksek kapalı kartlar: üst çift yapabilirler.'
+  },
+  cbet: {
+    m: ['c-bet', 'devam bahsi'],
+    t: 'C-bet',
+    d: 'Devam bahsi: preflop artıran oyuncu flopta yine bahis yapar, çoğu zaman isabet etsin etmesin.'
+  },
+  threebet: {
+    m: ['3-bet', 'yeniden artır'],
+    t: '3-bet',
+    d: 'Yeniden artırma. Preflop\'ta ilk artırma 2. bahis sayılır, bu yüzden yeniden artırma 3-bet\'tir.'
+  },
+  position: {
+    m: ['pozisyon'],
+    t: 'Pozisyon',
+    d: 'Oynama sırası. Sonra oynamak, önce başkalarının ne yaptığını görmeni sağlar; buton en iyi koltuktur.'
+  },
+  blinds: {
+    m: ['blind'],
+    t: 'Blind\'lar',
+    d: 'Kartlardan önce konan zorunlu bahisler: small blind (butonun solu) ve big blind.'
+  },
+  limp: {
+    m: ['limper', 'limp'],
+    t: 'Limp',
+    d: 'Preflop\'ta artırmak yerine yalnız big blind\'ı görerek girmek.'
+  },
+  polar: {
+    m: ['kutuplaşmış', 'polarize'],
+    t: 'Kutuplaşmış',
+    d: 'Çok güçlü eller ve blöflerden oluşan, orta eli az olan bahis aralığı — büyük bahislerin tipik özelliği.'
+  },
+  value: {
+    m: ['value bet', 'değer bahs'],
+    t: 'Değer bahsi',
+    d: 'Daha zayıf ellerin görmesi için yapılan bahis.'
+  },
+  bluff: {
+    m: ['blöf'],
+    t: 'Blöf',
+    d: 'Daha iyi ellerin çekilmesi için zayıf elle bahis yapmak.'
+  },
+  showdown: {
+    m: ['showdown'],
+    t: 'Showdown',
+    d: 'Son bahisten sonra iki ya da daha fazla oyuncu kalırsa eller açılır ve en iyisi kazanır.'
+  },
+  equity: {
+    m: ['equity'],
+    t: 'Equity',
+    d: 'Tüm kartlar sonuna kadar açılsa rakiplerin aralıklarına karşı ne sıklıkla kazanacağın (beraberlik yarım sayılır).'
+  },
+  ev: {
+    m: ['EV'],
+    t: 'EV (beklenen değer)',
+    d: 'Bir karar çok kez tekrarlansa ortalama sonuç: equity × kazanılan − ödenen.'
+  },
+  board: {
+    m: ['ıslak board', 'kuru board'],
+    t: 'Islak / kuru board',
+    d: 'Islak board\'da sıralı değerler ya da aynı renk kartlar ve çok beraberlik olur; kuru board\'da az olur.'
+  },
+  utg: {
+    m: ['UTG'],
+    t: 'UTG (under the gun)',
+    d: 'Preflop\'ta ilk oynayan koltuk (big blind\'ın solu). En güçlü elleri ister.'
+  },
+  hj: {
+    m: ['HJ'],
+    t: 'HJ (hijack)',
+    d: 'Altı kişilik masada UTG ile cutoff arasındaki koltuk.'
+  },
+  co: {
+    m: ['CO', 'cutoff'],
+    t: 'CO (cutoff)',
+    d: 'Butonun sağındaki koltuk; ondan sonra yalnız buton ve blind\'lar oynar.'
+  },
+  btn: {
+    m: ['BTN', 'buton'],
+    t: 'BTN (buton)',
+    d: 'Krupiye koltuğu: flop\'tan sonra en son oynar — en iyi pozisyon.'
+  },
+  sb: {
+    m: ['SB'],
+    t: 'SB (small blind)',
+    d: 'Butonun solu; big blind\'ın yarısını koyar ve flop\'tan sonra ilk oynar.'
+  },
+  bb: {
+    m: ['BB'],
+    t: 'BB (big blind)',
+    d: 'En düşük bahsi koyar; birim olarak da kullanılır (3BB).'
+  },
+  tag: {
+    m: ['TAG'],
+    t: 'TAG',
+    d: 'Sıkı-agresif: az el, agresif oynanır.'
+  },
+  lag: {
+    m: ['LAG'],
+    t: 'LAG',
+    d: 'Gevşek-agresif: çok el, bol bahis ve blöf.'
+  },
+  station: {
+    m: ['hep gören', 'calling station'],
+    t: 'Hep gören (calling station)',
+    d: 'Nadiren çekilen oyuncu — blöf yapma, değer bahsini büyüt.'
+  },
+  rock: {
+    m: ['kaya'],
+    t: 'Kaya (rock)',
+    d: 'Yalnız çok güçlü ellerle bahis yapan oyuncu.'
+  },
+  pat: {
+    m: ['hiç değiştirmeme', 'stand pat'],
+    t: 'Değiştirmemek (stand pat)',
+    d: 'Five card draw\'da hiç kart değiştirmemek — hazır el ya da blöf.'
+  },
+  dead: {
+    m: ['ölü kart'],
+    t: 'Ölü kartlar',
+    d: 'Çıktığını bildiğin kartlar (ör. rakiplerin açık kartlarında), bu yüzden onları çekemezsin.'
+  },
+  bringin: {
+    m: ['bring-in'],
+    t: 'Bring-in',
+    d: 'Stud\'da en düşük açık kartın koyduğu zorunlu ilk bahis.'
+  },
+  ds: {
+    m: ['çift renkli', 'double-suited'],
+    t: 'Çift renkli (double-suited)',
+    d: 'İki renkten ikişer kart olan Omaha eli: iki floş şansı.'
+  },
+  wrap: {
+    m: ['wrap'],
+    t: 'Wrap',
+    d: 'Board çevresindeki sıralı kapalı kartlardan oluşan, çok outlu Omaha kent beraberliği.'
+  },
+  allin: {
+    m: ['all-in'],
+    t: 'All-in',
+    d: 'Tüm fişlerle bahis; showdown\'a kadar başka karar yok.'
+  },
+  playboard: {
+    m: ['board\'u oyna', 'board oynar'],
+    t: 'Board\'u oynamak',
+    d: 'En iyi beşin tamamen board kartları — kapalı kartların oyuna girmez.'
+  }
+}
 };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const RE = {};
@@ -122,10 +1090,13 @@ function re(lang) {
   const forms = [];
   for (const k in G) (G[k].m || []).forEach(m => forms.push([m, k]));
   forms.sort((a, b) => b[0].length - a[0].length);
-  const latin = !['ja', 'zh', 'ko', 'hi', 'ar'].includes(lang);
+  const latin = !['ja', 'zh', 'zh-TW', 'ko', 'hi', 'ar'].includes(lang);
   const q = s => esc(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const src = forms.map(([m]) => latin && /^[\w-]/.test(m) ? `\\b${q(m)}\\b` : q(m)).join('|');
+  // ru / tr: words take endings (позиции, pozisyonda) — match at a word start and keep the ending inside the term
+  const L = { ru: '[а-яё]', tr: '[a-zçğıöşüâî]' }[lang];
+  const src = forms.map(([m]) => L && /^[\wа-яё]/i.test(m) ? `(?<!${L})${q(m)}${L}*` : latin && /^[\w-]/.test(m) ? `\\b${q(m)}\\b` : q(m)).join('|');
   const map = {}; forms.forEach(([m, k]) => { map[esc(m).toLowerCase()] = k; });
+  if (L) { const pre = forms.map(([m, k]) => [esc(m).toLowerCase(), k]); return (RE[lang] = src ? { r: new RegExp(src, 'gi'), map: new Proxy(map, { get: (o, s) => o[s] || (pre.find(([f]) => String(s).startsWith(f)) || [])[1] }) } : null); }
   return (RE[lang] = src ? { r: new RegExp(src, 'g' + (latin ? 'i' : '')), map } : null);
 }
 // wrap the terms (only in text, never inside tags)
