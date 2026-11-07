@@ -109,7 +109,7 @@ function rtStatsHtml() {
   }
   if (h.length) html += `<div class="rt-lbl2">${esc(t('rt.recent'))}</div><div class="rt-hist">` + h.map(x => { const c = x.s === 1 ? 'w' : x.s === 0 ? 'l' : 'd'; return `<span class="rt-chip ${c}" title="${esc(lvName(x.lv) + ' · R' + x.or)}"><i>${esc(t('rt.' + c.toUpperCase()))}</i>Lv${x.lv}<b>${rtD(x.d)}</b></span>`; }).join('') + '</div>';
   if (!pick) pick = rtPick(st.r);
-  html += `<div class="rt-opp">${esc(t('rt.next'))} <b>AI ${esc(lvName(pick.lv))}</b> <span class="rt-tag ${pick.tag}">R ${pick.or} · ${esc(t('rt.' + pick.tag))}</span></div>`;
+  html += `<div class="rt-opp">${esc(t('rt.next'))} <b>${AIW()} ${esc(lvName(pick.lv))}</b> <span class="rt-tag ${pick.tag}">R ${pick.or} · ${esc(t('rt.' + pick.tag))}</span></div>`;
   return html + `</div><p class="rt-desc">${esc(t('rt.desc'))}</p>`;
 }
 
@@ -152,7 +152,7 @@ newGame = function () { RT = null; put(RT_CUR, null); return _newGame.apply(this
 levelFor = function (p) { return rtGame() ? RT.lv : _levelFor(p); };
 playerName = function (p) {
   if (!rtGame()) return _playerName(p);
-  return p === RT.human ? `${t('you')} · R${RT.my}` : `AI ${lvName(RT.lv)} · R${RT.or}`;
+  return p === RT.human ? `${t('you')} · R${RT.my}` : `${AIW()} ${lvName(RT.lv)} · R${RT.or}`;
 };
 canUndo = function () { return rtGame() ? false : _canUndo(); };
 resumeHere = function () { if (rtGame()) { viewAt(moves.length); return; } return _resumeHere.apply(this, arguments); };   // no taking back in a rated game
@@ -168,7 +168,7 @@ renderInfo = function () {
   const live = rtLive();
   document.body.classList.toggle('rated-live', live);
   if (rtGame()) {
-    $('#infoLine').textContent = `${t('info.moves', { n: moves.length })}  ·  ${t('ng.rated')} · AI ${lvName(RT.lv)} (R ${RT.or})`;
+    $('#infoLine').textContent = `${t('info.moves', { n: moves.length })}  ·  ${t('ng.rated')} · ${AIW()} ${lvName(RT.lv)} (R ${RT.or})`;
     $('#btnUndo').disabled = true;
     $('#btnHint').disabled = live; $('#btnAnalyze').disabled = live;
   } else { $('#btnHint').disabled = false; $('#btnAnalyze').disabled = false; }

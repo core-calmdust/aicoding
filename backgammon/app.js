@@ -9,6 +9,7 @@ function detectLang() {
   return 'en';
 }
 let LANG = detectLang();
+const AIW = () => ({ ru: 'ИИ', tr: 'YZ' })[LANG] || 'AI';   // the word "AI" in displayed player labels (ru / tr use their own abbreviation; saved records keep 'AI')
 function t(k, v) {
   let x = (I18N[LANG] || {})[k];
   if (x === undefined) x = I18N.en[k];
@@ -112,8 +113,8 @@ function playerName(s) {
   if (puzzle || lesson) return s === (lesson || puzzle).side ? t('you') : '';
   if (settings.mode === 'pvp') return '';
   if (settings.mode === 'online') return window.olPlayerName ? olPlayerName(s) : '';
-  if (settings.mode === 'watch') return `AI ${LV(levelFor(s))}`;
-  return s === humanSide ? t('you') : `AI ${LV(settings.level)}`;
+  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(s))}`;
+  return s === humanSide ? t('you') : `${AIW()} ${LV(settings.level)}`;
 }
 
 // ====================================================================== storage
@@ -1184,7 +1185,7 @@ function statusText(st) {
   if (lesson) return `${$('#lsStep').textContent} · ${$('#lsTitle').textContent}`;
   if (puzzle) return $('#pzStep').textContent;
   if (!match) return '';
-  const name = s => settings.mode === 'online' && window.olShortName ? olShortName(s) : isAI(s) ? `AI Lv${levelFor(s)}` : settings.mode === 'pvp' ? pname(s) : t('you');
+  const name = s => settings.mode === 'online' && window.olShortName ? olShortName(s) : isAI(s) ? `${AIW()} Lv${levelFor(s)}` : settings.mode === 'pvp' ? pname(s) : t('you');
   if (st.over) return `${name(st.winner)} ${t('st.win', { n: st.points })}`;
   let last = '';
   if (st.lastMoves && st.lastSide >= 0) last = `${name(st.lastSide)}: ${st.lastMoves.length ? BG.notation(st.lastMoves) : t('nomove')}`;
@@ -1208,7 +1209,7 @@ function renderInfo() {
   for (const s of [0, 1]) {
     const nm = playerName(s);
     const full = nm ? nm + ' · ' + pname(s) : pname(s);
-    const short = (lesson || puzzle) ? (nm || pname(s)) : settings.mode === 'online' && window.olShortName ? olShortName(s) : settings.mode === 'pvp' ? pname(s) : isAI(s) ? `AI Lv${levelFor(s)}` : t('you');
+    const short = (lesson || puzzle) ? (nm || pname(s)) : settings.mode === 'online' && window.olShortName ? olShortName(s) : settings.mode === 'pvp' ? pname(s) : isAI(s) ? `${AIW()} Lv${levelFor(s)}` : t('you');
     $('#name' + s).innerHTML = `<span class="nl">${esc(full)}</span><span class="ns">${esc(short)}</span>`;
     $('#pl' + s).title = full;
     $('#pip' + s).textContent = BG.pips(st.pos, s);
@@ -1237,7 +1238,7 @@ function renderInfo() {
   $('#btnHint').classList.toggle('on', settings.hint);
   $('#btnSound').classList.toggle('on', settings.sound);
   renderReview(); renderHintCard(); renderBox();
-  const mode = settings.mode === 'ai' ? `AI Lv.${settings.level}` : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : t('ng.pvp');
+  const mode = settings.mode === 'ai' ? `${AIW()} Lv.${settings.level}` : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : t('ng.pvp');
   const mt = match.len ? t('info.match', { n: match.len }) + (gm.crawford ? ' · ' + t('info.crawford') : '') : t('info.single');
   const over = matchOver() || settings.mode !== 'ai' || (stateAt(match.games.length - 1, match.games[match.games.length - 1].actions.length).over && !match.len);
   const fair = over ? `seed ${match.seed}` : `SHA-256 ${commitHash}…`;
@@ -1694,7 +1695,7 @@ function segSync() {
 // checker colours: one row per side (AI game: you / AI), four swatches each; the two sides always differ
 function ckSync() {
   const T = window.BGTheme; if (!T) return;
-  const m = draft.mode, lab = s => m === 'ai' ? (s === (draft.resume ? draft.side : 0) ? t('you') : 'AI') : m === 'watch' ? 'AI ' + (s + 1) : t('ng.pl', { n: s + 1 });
+  const m = draft.mode, lab = s => m === 'ai' ? (s === (draft.resume ? draft.side : 0) ? t('you') : AIW()) : m === 'watch' ? AIW() + ' ' + (s + 1) : t('ng.pl', { n: s + 1 });
   document.querySelectorAll('#ckRows .ckrow').forEach(row => {
     const s = +row.dataset.s;
     row.querySelector('.ckl').textContent = lab(s);
@@ -1838,7 +1839,7 @@ async function runReview() {
 }
 function revealReview() { if (!ROT && matchMedia('(max-aspect-ratio: 1/1) and (pointer: coarse)').matches) setTimeout(() => $('#reviewCard').scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 60); }
 function rvJudgeAt(g, i) { if (!rv || rv.running || !rvOpen || rv.sig !== rvSig()) return null; return rv.items.get(g + ':' + i) || null; }
-function sideLabel(s) { return settings.mode === 'ai' ? (s === humanSide ? t('you') : 'AI') : pname(s); }
+function sideLabel(s) { return settings.mode === 'ai' ? (s === humanSide ? t('you') : AIW()) : pname(s); }
 let rvSel = null;   // the move picked in the review list {g, i} (the board then shows the position before it, with arrows)
 function rvCurrent() {
   if (!rv || rv.running || !match) return null;
