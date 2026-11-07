@@ -122,8 +122,17 @@
     navigator.serviceWorker.addEventListener('message', f); c.postMessage({ type: 'mt-ping' });
   });
   let booted = false;
-  async function boot(swUrl) {
-    if (booted || !CAN) return; booted = true;
+  let SWURL = 'sw.js';
+  const ensureSW = async () => { try { await navigator.serviceWorker.register(SWURL, { scope: './' }); await navigator.serviceWorker.ready; } catch (e) {} };
+  async function boot(swUrl, light) {
+    if (booted || !CAN) return; booted = true; SWURL = swUrl;
+    // light (a folder whose worker exists only for this — chess, shogi): no worker at all unless threads may be used through
+    // Document-Isolation-Policy (Chromium on a computer) or COOP mode was asked for; an installed one is removed. (On iPhone a
+    // worker in the folder coincided with the Google sign-in popup being blocked.)
+    if (light && !FLAGGED && !ISO && !(want() && dipLikely())) {
+      try { const r = await navigator.serviceWorker.getRegistration('./'); if (r && new URL(r.scope).pathname === new URL('./', location.href).pathname) { try { await (await caches.open(FLAG_CACHE)).delete(FLAG_URL); } catch (e) {} await r.unregister(); } } catch (e) {}
+      return;
+    }
     try { await navigator.serviceWorker.register(swUrl, { scope: './' }); } catch (e) { return; }
     let cached = false; try { cached = !!(await (await caches.open(FLAG_CACHE)).match(FLAG_URL)); } catch (e) {}
     if (ISO) {
@@ -155,7 +164,7 @@
       const prev = pref(); LS.set(K_PREF, '1');
       if (dipLikely()) { reload(); return; }   // Chromium: Document-Isolation-Policy first (sign-in stays); if it does not work, the next time asks for COOP mode
       if (!confirm(tx('reload'))) { if (prev === null) LS.del(K_PREF); else LS.set(K_PREF, prev); return; }
-      setFlag(true).then(reload);
+      ensureSW().then(() => setFlag(true)).then(reload);
     } else {
       LS.set(K_PREF, '0');
       if (FLAGGED) { setFlag(false).then(reload); return; }
@@ -171,7 +180,7 @@
   function init(o) {
     o = o || {};
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', addOpt); else addOpt();
-    const go = () => boot(o.sw || 'sw.js');
+    const go = () => boot(o.sw || 'sw.js', !!o.light);
     if (document.readyState === 'complete') setTimeout(go, 0); else addEventListener('load', () => setTimeout(go, 0));
   }
 
