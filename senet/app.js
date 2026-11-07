@@ -173,7 +173,7 @@ const orient = () => !mqV.matches ? 'h' : (lvhPx() - ohPx()) / 11.04 >= (innerWi
 const animOn = () => settings.speed > 0;
 const SPD = () => [3, .7, 1, 1.8][settings.speed] || 1;
 function buildView() {
-  view = B2.mount($('#board'), { orient: orient(), trayLabel: k => t('tray.' + k), design: settings.design, pieces: settings.pieces, speed: SPD() });
+  view = B2.mount($('#board'), { orient: orient(), trayLabel: k => (HB && HB.on && orient() !== 'v' ? '' : t('tray.' + k)), design: settings.design, pieces: settings.pieces, speed: SPD() });
   view.on('cell', e => onCell(e)).on('tray', e => onTray(e));
   bindHover();
   dice2d = null;

@@ -334,7 +334,7 @@
     let s = '';
     for (const side of [0, 1]) {
       const n = L.pieces.filter(q => q.side === side && q.where === 'goal').length, [x, y, w, h] = trayBox(o, side);
-      const t = (lab && lab('goal')) || 'Off';
+      const t = lab ? lab('goal') : 'Off'; if (t === '') continue;   // ('' = no count on the board: PC shows the borne-off pieces alone, the count is in the players' cards)
       const V = OB(o) === 'v', tx = V ? x + w / 2 : x - 14, ty = V ? y - 14 : y + h / 2 + 7;
       s += `<text x="${tx}" y="${ty}" text-anchor="${V ? 'middle' : 'end'}" font-size="23" font-weight="700" fill="#f1d58c" opacity=".9" letter-spacing=".04em" font-family="'Shippori Mincho B1','Cormorant Garamond','Noto Serif JP',serif">${t} ${n}</text>`;
     }
