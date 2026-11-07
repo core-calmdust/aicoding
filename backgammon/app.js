@@ -1,10 +1,11 @@
 // Backgammon V2 — page logic
 'use strict';
 // ====================================================================== i18n
-const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
+const SUPPORTED = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
 function detectLang() {
   const n = (navigator.language || 'en').toLowerCase();
-  for (const l of SUPPORTED) if (n.startsWith(l)) return l;
+  if (/^zh-(tw|hk|mo|hant)/.test(n)) return 'zh-TW';
+  for (const l of SUPPORTED) if (n.startsWith(l.toLowerCase())) return l;
   return 'en';
 }
 let LANG = detectLang();
