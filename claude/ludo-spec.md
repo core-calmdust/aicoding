@@ -42,5 +42,17 @@
 - 14言語：`ludo/i18n.js` は `ludo/tools/build_i18n.py` で生成。
 - localStorage：`aicoding-ludo`（settings と対局）。
 
-## 3. 未完了
-- ルール説明（ruletour）、レッスン、パズル、コーチ、振り返り、戦績・レート戦、オンライン（Firebase）、3D（atlas/models・skin・games・rules）、ポータル・トップ登録、ヒストリア。
+## 3. 学ぶ（`ludo/tour.js`・`app-learn.js`・`learn.json`）
+- ルール説明：盤上で動かすチュートリアル（RuleTour、ルード／パチーシ 各8ページ・14言語）。既読は `aicoding-ludo-rules-<rule>`。最初のページの絵は `images/atlas/ludo.webp`。
+- レッスン：10ステップ（ルード5・パチーシ5：出す・取る・上がる・安全マス／城・逃げる）、各5問、20点×5、75点で合格。`aicoding-ludo-lessons`（id → 最高点）。
+- 次の一手パズル：120問（各ルール60、★1〜3 は最善手と次善手の差）。`aicoding-ludo-puzzles`（`rule:番号` → 1）。
+- 問題は `node ludo/tools/gen_learn.js [局数]` で AI 自己対局から作る（Lv.20 評価で最善手が次善手より 4 以上良く、教える種類に当てはまる局面。手番の色を席0へ回して、いつも赤／黄の番にする）。
+
+## 4. 3D・ポータル
+- 3D モデル：`atlas/models/ludo.js`（`Table3D.MODELS.ludo(live, rule)`／`MODELS.pachisi`）。ルードは2D盤の絵を貼った木枠の盤と挽き物の駒、パチーシは十字の布と蜂の巣形の駒。サイコロ、タカラガイ。
+- ちゃぶ台で遊ぶ：`atlas/games/ludo.js`。カードの「ルールと人数」でルード 4/3/2人・パチーシ 4人（2対2）/2人（1人2色）。AI 戦（あなたは赤／黄、ほかは全部 AI。4人パチーシの味方の黒も AI）と二人以上で対戦（全色を順にタップ）。待った（自分の番の初めへ）・ヒント（Lv.20 の手）・投了。時計なし。テキストは `ludo/i18n.js` を読み込んで使う。
+- ポータル登録：`shared/atlas.js`（GAMES・更新情報・進み具合）、`atlas/i18n.js`（about／hist）、3Dアイコン `atlas/icons3d.js` → `images/atlas/ludo.webp`、一覧の絵 `atlas/shots/ludo.webp`（`tools/shots.js`）、地図 `atlas/mapdata.js`、ヒストリア `atlas/historia/<言語>/ludo.json`・`s/ludo.json`（`python3 ludo/tools/gen_historia.py` で生成。盤の図は historia.js の `t:'ludo'`）。
+- トップページ：`index.html` のカード（key `ld`）・JSON-LD、アイコン `images/icons/ludo.svg`、サムネイル `images/ludo.webp`。
+
+## 5. 未完了
+- コーチ、振り返り、戦績・レート戦、オンライン（Firebase）、3D のルールコース（atlas/rules）とフル機能スキン。

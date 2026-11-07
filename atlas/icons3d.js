@@ -683,6 +683,39 @@
       g0.add(at(db, 1.2, .08, -.8, 0, .3, 0));
       return g0;
     },
+    ludo() {   // the middle of a ludo board: the four coloured home triangles and the track round them, a red start square with
+      // its arrow; a green and a yellow pawn on the track, a white die showing six, and the big red pawn hopping in
+      const top = M({ map: X.canvasTex('icld', 512, 512, (g, W) => {
+        const n = 5, s = W / n, col = ['#e2403a', '#2fa65a', '#f2c12e', '#2f7ad8'];
+        g.fillStyle = '#fbf7ec'; g.fillRect(0, 0, W, W);
+        g.strokeStyle = '#3b3326'; g.lineWidth = 4;
+        for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) { if (x >= 1 && x <= 3 && y >= 1 && y <= 3) continue; g.strokeRect(x * s, y * s, s, s); }
+        // home columns entering the centre (red from below, green from the left …)
+        g.fillStyle = col[0]; g.fillRect(2 * s, 4 * s, s, s); g.fillStyle = col[1]; g.fillRect(0, 2 * s, s, s); g.fillStyle = col[2]; g.fillRect(2 * s, 0, s, s); g.fillStyle = col[3]; g.fillRect(4 * s, 2 * s, s, s);
+        g.strokeRect(2 * s, 4 * s, s, s); g.strokeRect(0, 2 * s, s, s); g.strokeRect(2 * s, 0, s, s); g.strokeRect(4 * s, 2 * s, s, s);
+        // the centre: four triangles
+        const c = [W / 2, W / 2], q = [[s, 4 * s, 4 * s, 4 * s], [s, s, s, 4 * s], [s, s, 4 * s, s], [4 * s, s, 4 * s, 4 * s]];
+        q.forEach(([x1, y1, x2, y2], i) => { g.fillStyle = col[i]; g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.lineTo(c[0], c[1]); g.closePath(); g.fill(); g.stroke(); });
+        // a star (safe square) and an arrow
+        const star = (x, y, r) => { g.beginPath(); for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? r * .45 : r; g[k ? 'lineTo' : 'moveTo'](x + Math.cos(a) * rr, y + Math.sin(a) * rr); } g.closePath(); g.fillStyle = '#9a8f78'; g.fill(); };
+        star(.5 * s, 4.5 * s, s * .32); star(4.5 * s, .5 * s, s * .32);
+        g.strokeStyle = '#fff'; g.lineWidth = 10; g.lineCap = 'round'; g.beginPath(); g.moveTo(2.5 * s, 4.75 * s); g.lineTo(2.5 * s, 4.25 * s); g.moveTo(2.3 * s, 4.45 * s); g.lineTo(2.5 * s, 4.25 * s); g.lineTo(2.7 * s, 4.45 * s); g.stroke();
+      }), roughness: .35 });
+      const g = boardChunk(5, 3.6, top, C(0x4a2c16, { roughness: .4 }));
+      const q = i => (i - 2) * .62;
+      const pawn = (hex, sc) => { const P = [[0, 0], [.38, 0], [.4, .05], [.37, .1], [.24, .16], [.17, .3], [.14, .46], [.2, .5], [.2, .53], [.12, .56]].map(([r, y]) => new T.Vector2(r, y));
+        for (let k = 0; k <= 10; k++) { const a = -Math.PI / 2 + k / 10 * Math.PI; P.push(new T.Vector2(Math.max(0, Math.cos(a) * .16), .71 + Math.sin(a) * .16)); }
+        const m = mesh(new T.LatheGeometry(P, 40), C(hex, { roughness: .25 })); m.scale.setScalar(sc); return m; };
+      g.add(at(pawn(0x2fa65a, 1.05), q(0), .5, q(2)));
+      g.add(at(pawn(0xf2c12e, 1.05), q(2), .5, q(0)));
+      // the die: a rounded white cube, six on top
+      const pip = C(0x1d1b18, { roughness: .4 }), dg = new T.Group(); dg.add(rbox(.62, .62, .62, .12, C(0xfbf7ee, { roughness: .3 }), true));
+      [[-1, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [1, 1]].forEach(([x, z]) => { const d = mesh(new T.CylinderGeometry(.06, .06, .02, 16), pip); d.position.set(x * .15, .625, z * .17); dg.add(d); });
+      [[0, 0]].forEach(() => { const d = mesh(new T.CylinderGeometry(.08, .08, .02, 16), C(0xd7302a, { roughness: .4 })); d.rotation.x = Math.PI / 2; d.position.set(0, .31, .315); dg.add(d); });
+      g.add(at(dg, q(4) - .05, .5, q(3) + .15, 0, .5, 0));
+      g.add(at(pawn(0xe2403a, 1.6), -.15, 1.85, .1, .38, 0, -.3));
+      return g;
+    },
     ur() {   // a corner of the Ur board: shell plaques (a rosette, eyes, five circles) on a lapis grid in a black frame with a
       // shell diamond band; a shale piece on the rosette, a shell piece hopping in, a tetrahedral die with its white tip up
       const top = M({ map: X.canvasTex('icur', 512, 512, (g, W) => {

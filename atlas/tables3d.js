@@ -169,6 +169,7 @@
     shogi: ["#130d09", "radial-gradient(1200px 700px at 30% -10%, #34230f, transparent 60%), radial-gradient(900px 600px at 110% 110%, #281a0d, transparent 60%)"],
     go: ["#0b0e15", "radial-gradient(1100px 700px at 25% -10%, #1d2740, transparent 60%), radial-gradient(900px 600px at 110% 110%, #1a1f33, transparent 60%)"],
     reversi: ["#0b1110", "radial-gradient(1200px 700px at 30% -10%, #1b2b26, transparent 60%), radial-gradient(900px 600px at 110% 110%, #16231f, transparent 60%)"],
+    ludo: ["#1a0f0c", "radial-gradient(1100px 650px at 20% -10%, rgba(217, 71, 59, 0.38), transparent 62%), radial-gradient(900px 600px at 110% 115%, rgba(242, 193, 46, 0.22), transparent 60%)"],
     janggi: ["#0e1416", "radial-gradient(1200px 700px at 28% -10%, #15403c, transparent 60%), radial-gradient(900px 600px at 110% 110%, #112f33, transparent 60%)"],
     xiangqi: ["#13090b", "radial-gradient(1200px 700px at 28% -10%, #461521, transparent 60%), radial-gradient(900px 600px at 110% 110%, #3c121d, transparent 60%)"],
     backgammon: ["#0b1110", "radial-gradient(1200px 700px at 30% -10%, #1b2b26, transparent 60%), radial-gradient(900px 600px at 110% 110%, #16231f, transparent 60%)"],
