@@ -194,7 +194,7 @@
   function pool(cfg) {
     const H = helpers(), HM = Math.max(H, maxHelpers()), SLOT = cfg.slot || (2 << 20);   // H spawned at once, up to HM on demand (PRO)
     const isDone = cfg.isDone || (m => m.type === 'result'), isProg = cfg.isProg || (m => m.type === 'progress');   // the lead's message types
-    let ok = false, dead = false, X = null, lead = null, hw = [], ctl = null, cnt = null, job = null, seq = 0, ini = null;
+    let ok = false, dead = false, X = null, lead = null, hw = [], ctl = null, cnt = null, job = null, seq = 0, ini = null, memRef = null;
     const P = { threads: 1 + H, maxThreads: 1 + HM, ready: null, free: () => ok && !dead && (!job || job.cancelled), run, cancel, close, preempt: t => preempt(t) };
     const spawn = (url, msg) => new Promise((res, rej) => {
       const w = new Worker(url);
@@ -206,6 +206,7 @@
       const resp = await fetch(cfg.wasm);
       const module = WebAssembly.compileStreaming && /wasm/.test(resp.headers.get('content-type') || '') ? await WebAssembly.compileStreaming(resp) : await WebAssembly.compile(await resp.arrayBuffer());
       const mem = new WebAssembly.Memory({ initial: cfg.initial || 512, maximum: cfg.maximum || 16384, shared: true });
+      memRef = mem;
       X = (await WebAssembly.instantiate(module, cfg.imports(mem))).exports;
       const base = Math.ceil(X.mt_heap_base() / 65536) * 65536, n = 1 + HM, need = base + (n + 1) * SLOT;
       if (need > mem.buffer.byteLength) mem.grow(Math.ceil((need - mem.buffer.byteLength) / 65536));
@@ -231,7 +232,11 @@
         j.running = true;
         Atomics.store(ctl, 0, 0); X.mt_stop(0); cnt.fill(0);
         const nh = msg.mtThreads > 0 ? Math.min(HM, msg.mtThreads - 1) : H;   // (mtThreads: PRO mode's thread count, shared/proset.js — more helpers are started when asked for)
-        try { while (hw.length < nh) hw.push(await spawn(cfg.helper, ini(hw.length + 1))); } catch (e) { console.warn('[mtengine] helper', e); }
+        try {   // more helpers asked for (PRO): start them and give them the same setup as the first ones (weights, tables)
+          const add = []; while (hw.length + add.length < nh) add.push(await spawn(cfg.helper, ini(hw.length + add.length + 1)));
+          if (add.length && cfg.after) await cfg.after(X, memRef, add);
+          hw.push(...add);
+        } catch (e) { console.warn('[mtengine] helper', e); }
         const hSum = () => { let s = 0; for (let i = 1; i <= hw.length; i++) s += cnt[i]; return s; };
         const help = cfg.help ? cfg.help(msg) : null, hs = hw.slice(0, nh);   // (mtThreads: PRO mode's thread count, shared/proset.js)
         let hNodes = 0, left = help ? hs.length : 0;
