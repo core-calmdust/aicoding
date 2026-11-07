@@ -49,12 +49,12 @@
   }
   // localized name of a classify() result (falls back: lang -> en -> ja)
   const NAMES = {
-    aifuri: { zh: '相振飞车', ko: '상후리비샤', es: 'Doble torre desplazada', fr: 'Double tour déplacée', pt: 'Torre deslocada dupla', de: 'Doppelschwenkturm', hi: 'दोहरा घूमता हाथी', ar: 'الرخ المتنقل المزدوج' },
-    kakugawari: { zh: '角换', ko: '각교환', es: 'Cambio de alfiles', fr: 'Échange des fous', pt: 'Troca de bispos', de: 'Läufertausch', hi: 'ऊँट की अदला-बदली', ar: 'تبادل الفيلة' },
-    yokofu: { zh: '横步取', ko: '횡보잡기', es: 'Captura del peón lateral', fr: 'Prise du pion latéral', pt: 'Captura do peão lateral', de: 'Seitenbauernraub', hi: 'बगल का प्यादा पकड़ना', ar: 'أسر الجندي الجانبي' },
-    yagura: { zh: '矢仓', ko: '야구라', es: 'Yagura', fr: 'Yagura', pt: 'Yagura', de: 'Yagura', hi: 'यागुरा', ar: 'ياغورا' },
-    aigakari: { zh: '相挂', ko: '아이가카리', es: 'Doble ataque de ala', fr: "Double attaque d'aile", pt: 'Ataque duplo de ala', de: 'Doppelflügelangriff', hi: 'दोहरा विंग आक्रमण', ar: 'هجوم الجناحين المزدوج' },
-    ibisha: { zh: '相居飞车', ko: '상이비샤', es: 'Doble torre estática', fr: 'Double tour statique', pt: 'Torre estática dupla', de: 'Doppel-Standturm', hi: 'दोहरा स्थिर हाथी', ar: 'الرخ الثابت المزدوج' },
+    aifuri: { zh: '相振飞车', ko: '상후리비샤', es: 'Doble torre desplazada', fr: 'Double tour déplacée', pt: 'Torre deslocada dupla', de: 'Doppelschwenkturm', hi: 'दोहरा घूमता हाथी', ar: 'الرخ المتنقل المزدوج', ru: 'Две подвижные ладьи', 'zh-TW': '相振飛車', id: 'Dua Benteng Bergeser', tr: 'Çift Kayan Kale' },
+    kakugawari: { zh: '角换', ko: '각교환', es: 'Cambio de alfiles', fr: 'Échange des fous', pt: 'Troca de bispos', de: 'Läufertausch', hi: 'ऊँट की अदला-बदली', ar: 'تبادل الفيلة', ru: 'Размен слонов', 'zh-TW': '角換', id: 'Tukar Gajah', tr: 'Fil Değişimi' },
+    yokofu: { zh: '横步取', ko: '횡보잡기', es: 'Captura del peón lateral', fr: 'Prise du pion latéral', pt: 'Captura do peão lateral', de: 'Seitenbauernraub', hi: 'बगल का प्यादा पकड़ना', ar: 'أسر الجندي الجانبي', ru: 'Взятие боковой пешки', 'zh-TW': '橫步取', id: 'Makan Pion Samping', tr: 'Yan Piyon Alma' },
+    yagura: { zh: '矢仓', ko: '야구라', es: 'Yagura', fr: 'Yagura', pt: 'Yagura', de: 'Yagura', hi: 'यागुरा', ar: 'ياغورا', ru: 'Ягура', 'zh-TW': '矢倉', id: 'Yagura', tr: 'Yagura' },
+    aigakari: { zh: '相挂', ko: '아이가카리', es: 'Doble ataque de ala', fr: "Double attaque d'aile", pt: 'Ataque duplo de ala', de: 'Doppelflügelangriff', hi: 'दोहरा विंग आक्रमण', ar: 'هجوم الجناحين المزدوج', ru: 'Атака на обоих флангах', 'zh-TW': '相掛', id: 'Serangan Dua Sayap', tr: 'Çift Kanat Saldırısı' },
+    ibisha: { zh: '相居飞车', ko: '상이비샤', es: 'Doble torre estática', fr: 'Double tour statique', pt: 'Torre estática dupla', de: 'Doppel-Standturm', hi: 'दोहरा स्थिर हाथी', ar: 'الرخ الثابت المزدوج', ru: 'Две статичные ладьи', 'zh-TW': '相居飛車', id: 'Dua Benteng Statis', tr: 'Çift Sabit Kale' },
   };
   // ranging-rook file 8,7,6,5 (from Sente's view) / side names / template
   const FURI = {
@@ -66,6 +66,10 @@
     de: { r: { 8: 'Gegenturm', 7: 'Turm auf 3. Linie', 6: 'Turm auf 4. Linie', 5: 'Zentralturm' }, s: ['Sente', 'Gote'], f: 'Stand- gg. Schwenkturm ({s}: {r})' },
     hi: { r: { 8: 'आमने-सामने हाथी', 7: 'तीसरे कॉलम का हाथी', 6: 'चौथे कॉलम का हाथी', 5: 'केंद्रीय हाथी' }, s: ['सेन्ते', 'गोते'], f: 'स्थिर बनाम घूमता ({s}: {r})' },
     ar: { r: { 8: 'الرخ المقابل', 7: 'رخ العمود الثالث', 6: 'رخ العمود الرابع', 5: 'الرخ المركزي' }, s: ['سينتي', 'غوتي'], f: 'ثابت ضد متنقل ({s}: {r})' },
+    ru: { r: { 8: 'встречная ладья', 7: 'ладья на 3-й вертикали', 6: 'ладья на 4-й вертикали', 5: 'центральная ладья' }, s: ['Сэнтэ', 'Готэ'], f: 'Статичная против подвижной ({s}: {r})' },
+    'zh-TW': { r: { 8: '向飛車', 7: '三間飛車', 6: '四間飛車', 5: '中飛車' }, s: ['先手', '後手'], f: '對抗形（{s}{r}）' },
+    id: { r: { 8: 'Benteng Berhadapan', 7: 'Benteng Lajur Tiga', 6: 'Benteng Lajur Empat', 5: 'Benteng Tengah' }, s: ['Sente', 'Gote'], f: 'Statis vs Bergeser ({s}: {r})' },
+    tr: { r: { 8: 'Karşı Kale', 7: 'Üçüncü Sütun Kale', 6: 'Dördüncü Sütun Kale', 5: 'Merkez Kale' }, s: ['Sente', 'Gote'], f: 'Sabit - Kayan Kale ({s}: {r})' },
   };
   function localName(c, lang) {
     if (!c) return '';
