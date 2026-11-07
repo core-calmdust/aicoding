@@ -4,7 +4,7 @@ const fs = require('fs'), path = require('path');
 const root = path.join(__dirname, '..', '..');
 global.window = {}; eval(fs.readFileSync(path.join(root, 'xiangqi/i18n.js'), 'utf8'));
 const base = window.I18N, O = {};
-for (const f of fs.readdirSync(__dirname).filter(f => /^i18n_jg_.*\.json$/.test(f))) Object.assign(O, JSON.parse(fs.readFileSync(path.join(__dirname, f), 'utf8')));
+for (const f of fs.readdirSync(__dirname).filter(f => /^i18n_jg_.*\.json$/.test(f))) for (const [l, v] of Object.entries(JSON.parse(fs.readFileSync(path.join(__dirname, f), 'utf8')))) O[l] = Object.assign(O[l] || {}, v);
 const langs = Object.keys(base), out = {};
 for (const l of langs) {
   const o = Object.assign({}, base[l], O[l] || {});

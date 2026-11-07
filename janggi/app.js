@@ -1236,7 +1236,7 @@ function rtConfirm(after) {
 
 // ====================================================================== lessons (20 points per problem, 75 to pass)
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=20261104rp').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=1').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { try { return JSON.parse(localStorage.getItem(PZ_STORE) || '{}'); } catch (e) { return {}; } }
@@ -1257,8 +1257,8 @@ function exitSpecial() {
 function quitSpecial() { exitSpecial(); update(false); afterPosition(); }
 function showLessonView(v) { ['lessonListView', 'lessonIntroView', 'lessonDoneView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); if (v === 'lessonDoneView') lsDoneLabel(); }
 // lesson list (same layout as Gomoku / Morris / Checkers): a tab per course, a banner, cards with a board picture and a short explanation
-const discIcon = (ch, red) => `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#f3d9a6" stroke="#7a5326" stroke-width="1.4"/><circle cx="12" cy="12" r="8" fill="none" stroke="${red ? '#b8231b' : '#211b17'}" stroke-opacity=".5"/><text x="12" y="12.8" font-size="11" text-anchor="middle" dominant-baseline="central" fill="${red ? '#b8231b' : '#211b17'}" font-family="Shippori Mincho B1,serif" font-weight="800">${ch}</text></svg>`;
-const LS_ICON = { basics: discIcon('兵', true), tactics: discIcon('馬', false), mates: discIcon('將', false), endgame: discIcon('俥', true) };
+const discIcon = (ch, red) => `<svg viewBox="0 0 24 24"><polygon points="22.0,16.1 16.1,22.0 7.9,22.0 2.0,16.1 2.0,7.9 7.9,2.0 16.1,2.0 22.0,7.9" fill="#f3d9a6" stroke="#7a5326" stroke-width="1.4"/><polygon points="19.9,15.3 15.3,19.9 8.7,19.9 4.1,15.3 4.1,8.7 8.7,4.1 15.3,4.1 19.9,8.7" fill="none" stroke="${red ? '#b8231b' : '#13705c'}" stroke-opacity=".5"/><text x="12" y="12.8" font-size="11" text-anchor="middle" dominant-baseline="central" fill="${red ? '#b8231b' : '#13705c'}" font-family="Noto Serif KR,Shippori Mincho B1,serif" font-weight="800">${ch}</text></svg>`;   // octagonal janggi pieces: red = Han, green = Cho
+const LS_ICON = { basics: discIcon('卒', false), tactics: discIcon('馬', true), mates: discIcon('楚', false), endgame: discIcon('車', true) };
 const lsIcon = k => `<span class="ic sv">${LS_ICON[k] || '●'}</span>`;
 const plainText = html => String(html || '').replace(/<br\s*\/?>|<\/p>/g, ' ').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
 const lxBar = (p, cls) => `<span class="lx-bar ${cls || ''}"><i style="width:${Math.round(Math.max(0, Math.min(1, p)) * 100)}%"></i></span>`;
@@ -1669,7 +1669,7 @@ function startPractice(gi) {
 
 // ====================================================================== puzzles: mate in N (杀法), PZBook v2
 let PUZZLES = null;
-const puzzlesReady = fetch('puzzles.json?v=1').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
+const puzzlesReady = fetch('puzzles.json?v=2').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
 let pzLevel = 0;
 const pzKey = (id, j) => id + '-' + j;
 const starVal = x => x === true ? 3 : (+x || 0);
