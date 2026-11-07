@@ -79,7 +79,7 @@
 .amtop small{display:block;font-size:12px;font-weight:700;color:var(--ink2)}
 .amtop b{display:block;font-size:20px;line-height:1.25}
 .amart{flex:none;display:grid;place-items:center;width:64px;height:64px;border-radius:20px;background:color-mix(in srgb,var(--c) 18%,#fff)}
-.amart img{width:118%;height:118%;object-fit:contain}
+.amart img{width:92%;height:92%;object-fit:contain;transform:translateY(-2%)}   /* (the icon sits inside its tinted tile: the plinth of the 3D icons spans 93% of the image) */
 .amart img.flat{width:76%;height:76%;border-radius:10px}
 .amfacts{display:flex;gap:8px;flex-wrap:wrap}
 .amfacts span{display:inline-flex;align-items:center;gap:6px;padding:4px 11px 4px 5px;border-radius:99px;background:#f6eedb;font-weight:900;font-size:13.5px}
