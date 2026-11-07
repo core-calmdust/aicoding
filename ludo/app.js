@@ -45,7 +45,7 @@ const isPachisi = () => G && G.state.rule === 'pachisi';
 const svg = $('#bsvg'); let geo = null, gPcs = null, gMarks = null;
 function drawBoard() {
   const rule = G.state.rule, d = B.drawBoard(rule, settings.design[rule]); geo = B.geometry(rule);
-  svg.setAttribute('viewBox', `-0.4 -0.4 ${d.n + .8} ${d.n + .8}`);
+  svg.setAttribute('viewBox', `-0.4 -0.4 ${d.n + .8} ${d.n + .8}`); Z2.cur = null; Z2.pts = null; $('#frame').classList.remove('zoomed');
   svg.innerHTML = d.svg + '<g id="gMarks"></g><g id="gPrev"></g><g id="gPcs"></g>';
   gPcs = svg.querySelector('#gPcs'); gMarks = svg.querySelector('#gMarks');
   pcEls = {};
@@ -57,8 +57,64 @@ function drawBoard() {
   placeAll();
 }
 let pcEls = {};
+
+/* ---------- the focus (phones): the board view moves in on the seat to move — its yard before the throw, the pieces that can move
+   and where they go after it, the walking piece while it walks — and glides on to the next seat (a smooth pan and zoom of the
+   SVG's viewBox, never a cut). The corner button switches it off (the whole board), remembered in aicoding-ludo-zoom. ---------- */
+const Z2 = { on: true, cur: null, to: null, raf: 0, pts: null, btn: null };
+try { Z2.on = localStorage.getItem('aicoding-ludo-zoom') !== '0'; } catch (e) {}
+const zSmall = () => matchMedia('(max-width: 600px)').matches;
+function zBase() { const n = geo ? (G.state.rule === 'pachisi' ? 19 : 15) : 15; return [-.4, -.4, n + .8, n + .8]; }
+function zSet(v) { svg.setAttribute('viewBox', v.map(x => x.toFixed(3)).join(' ')); const b = zBase(); $('#frame').classList.toggle('zoomed', v[2] < b[2] - .05); }
+function zGo(to) {
+  Z2.to = to; if (!Z2.cur) { Z2.cur = to.slice(); zSet(to); return; }
+  if (Z2.raf) return;
+  let last = performance.now();
+  const tick = now => {
+    const dt = Math.min(64, now - last); last = now; const k = 1 - Math.pow(1 - .085, dt / 16.7); let mv = false;
+    for (let i = 0; i < 4; i++) { const d = Z2.to[i] - Z2.cur[i]; if (Math.abs(d) > .004) { Z2.cur[i] += d * k; mv = true; } else Z2.cur[i] = Z2.to[i]; }
+    zSet(Z2.cur); Z2.raf = mv ? requestAnimationFrame(tick) : 0;
+  };
+  Z2.raf = requestAnimationFrame(tick);
+}
+function zApply(snap) {
+  if (!geo || !G) return;
+  if (Z2.btn) { Z2.btn.hidden = !zSmall() || !!SP; Z2.btn.classList.toggle('off', !Z2.on); }
+  const b = zBase(), n = b[2] - .8;
+  let to = b;
+  if (Z2.on && zSmall() && !SP && !VIEW && Z2.pts && Z2.pts.length) {
+    let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+    Z2.pts.forEach(([x, y]) => { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); });
+    const span = Math.max(9.5, x1 - x0 + 2.4, y1 - y0 + 2.4);
+    if (span < n - 1.5) { const cl = c => Math.max(span / 2 - .4, Math.min(n + .4 - span / 2, c)); to = [cl((x0 + x1) / 2) - span / 2, cl((y0 + y1) / 2) - span / 2, span, span]; }
+  }
+  if (snap) { if (Z2.raf) cancelAnimationFrame(Z2.raf); Z2.raf = 0; Z2.cur = to.slice(); Z2.to = to; zSet(to); } else zGo(to);
+}
+function zFocus(pts) { Z2.pts = pts; zApply(); }
+function zSeat(seat) {
+  const s = G.state, pts = [];
+  if (s.rule === 'ludo') { const Y0 = [[0, 9], [0, 0], [9, 0], [9, 9]][seat]; pts.push([Y0[0], Y0[1]], [Y0[0] + 6, Y0[1] + 6]); }
+  else { for (let k = 0; k < 4; k++) pts.push(geo.yard(seat, k)); pts.push(geo.cellXY(seat, 0)); }
+  zFocus(pts);
+}
+function zMoves(seat, ms) {
+  const pts = [];
+  ms.filter(m => !m.pass).forEach(m => { pts.push(homeXY(seat, m.k, G.state.pos[seat][m.k])); pts.push(m.to >= E.lastOf(G.state) ? geo.home(seat, m.k) : geo.cellXY(seat, m.to)); });
+  if (pts.length) zFocus(pts);
+}
+(function () {
+  const ZL = { ja: ['手番に寄る', '盤全体を見る'], en: ['Zoom to the player', 'Whole board'], zh: ['聚焦当前玩家', '查看整个棋盘'], 'zh-TW': ['聚焦目前玩家', '查看整個棋盤'], ko: ['차례인 사람에게 확대', '판 전체 보기'], es: ['Acercar al turno', 'Tablero entero'], fr: ['Zoom sur le joueur', 'Plateau entier'], pt: ['Aproximar da vez', 'Tabuleiro inteiro'], de: ['Zum Spieler zoomen', 'Ganzes Brett'], ru: ['Приблизить к ходящему', 'Вся доска'], tr: ['Sıradakine yakınlaş', 'Tüm tahta'], id: ['Perbesar ke giliran', 'Seluruh papan'], hi: ['बारी वाले पर ज़ूम', 'पूरा बोर्ड'], ar: ['تقريب إلى صاحب الدور', 'اللوحة كاملة'] };
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'zbtn'; Z2.btn = b; b.hidden = true;
+  Z2.paint = () => { const zl = ZL[LANG] || ZL.en, tt = Z2.on ? zl[1] : zl[0]; b.title = tt; b.setAttribute('aria-label', tt);
+    b.innerHTML = Z2.on ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>' : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5M10.5 8v5M8 10.5h5"/></svg>'; };
+  Z2.paint();
+  b.onclick = e => { e.stopPropagation(); Z2.on = !Z2.on; try { localStorage.setItem('aicoding-ludo-zoom', Z2.on ? '1' : '0'); } catch (er) {} Z2.paint(); zApply(); };
+  $('#frame').appendChild(b);
+  addEventListener('resize', () => zApply());
+})();
 function homeXY(seat, k, p) { return p < 0 ? geo.yard(seat, k) : p >= E.lastOf(G.state) ? geo.home(seat, k) : geo.cellXY(seat, p); }
 function placeAll(skip) {
+  if (VIEW && Z2.cur && Z2.pts) { Z2.pts = null; zApply(); }
   const s = VIEW || G.state, groups = {};
   for (const seat of s.seats) s.pos[seat].forEach((p, k) => {
     const key = p < 0 || p >= E.lastOf(s) ? 'y' + seat + k : String(E.cellOf(s.rule, seat, p));
@@ -174,9 +230,10 @@ function step() {
   const my = ++token;
   clearMarks(); renderPlayers(); $('#btnPass').classList.add('hidden');
   const s = G.state;
-  if (s.over) { setStatus(''); $('#btnRoll').disabled = true; gameOver(); cRender(); return; }
+  if (s.over) { setStatus(''); $('#btnRoll').disabled = true; zFocus(null); gameOver(); cRender(); return; }
   const seat = s.turn, human = humanSeat(seat);
   if (G.thr) { afterThrow(my); return; }
+  zSeat(seat);
   $('#btnRoll').disabled = !human;
   if (human) {
     setStatus(G.mode === 'pvp' ? t('st.turn', { p: seatName(seat) + '（' + colName(seat) + '）' }) + ' — ' + t(isPachisi() ? 'st.throwv' : 'st.rollv') : t('st.yourRoll', { b: t(isPachisi() ? 'st.throwv' : 'st.rollv') }));
@@ -213,7 +270,7 @@ function afterThrow(my) {
   if (humanSeat(seat)) {
     const ks = [...new Set(real.map(m => m.k))];
     if (settings.autoPick && real.length === 1 && !moves.some(m => m.pass)) { setTimeout(() => { if (my === token) commit(real[0]); }, 260 * SPD()); return; }
-    ks.forEach(k => pcEls[seat + ',' + k].classList.add('can'));
+    ks.forEach(k => pcEls[seat + ',' + k].classList.add('can')); zMoves(seat, real);
     $('#btnPass').classList.toggle('hidden', !moves.some(m => m.pass));
     setStatus(t('st.pick', { v: thr.v }));
     cRender();
@@ -229,6 +286,7 @@ async function commit(m) {
   const g0 = G, s0 = G.state, thr = G.thr, seat = s0.turn;
   if (humanSeat(seat) && G.mode === 'ai') G.hist.push({ state: s0, thr, log: G.log.length, pl: G.plies.length });
   if (VIEW && window.LudoRv) LudoRv.toLatest();
+  if (m && !m.pass) zFocus([homeXY(seat, m.k, s0.pos[seat][m.k]), m.to >= E.lastOf(s0) ? geo.home(seat, m.k) : geo.cellXY(seat, m.to)]);
   await animateMove(s0, m);
   if (G !== g0) return;   // a new game started meanwhile
   if (m && m.cap && m.cap.length) { sCap(); toast(t('st.cap')); await animateCaptures(s0, m.cap); }
@@ -343,6 +401,7 @@ document.querySelectorAll('.overlay').forEach(o => o.addEventListener('click', e
 
 /* ---------- language, sound ---------- */
 function applyI18n() {
+  if (Z2.paint) Z2.paint();
   if (window.LudoRv) LudoRv.relabel();
   document.documentElement.lang = LANG; document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });

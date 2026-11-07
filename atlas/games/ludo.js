@@ -63,7 +63,7 @@
   let i18nP = null;
   function loadTexts() {
     if (window.I18N && window.I18N.ja && window.I18N.ja['st.grace']) return Promise.resolve(window.I18N);
-    return i18nP || (i18nP = new Promise(res => { const s = document.createElement('script'); s.src = '../ludo/i18n.js?v=2'; s.onload = () => res(window.I18N || {}); s.onerror = () => { i18nP = null; res({}); }; document.head.appendChild(s); }));
+    return i18nP || (i18nP = new Promise(res => { const s = document.createElement('script'); s.src = '../ludo/i18n.js?v=3'; s.onload = () => res(window.I18N || {}); s.onerror = () => { i18nP = null; res({}); }; document.head.appendChild(s); }));
   }
 
   function start(ctx) {
@@ -73,7 +73,8 @@
     const board = T3.MODELS.ludo(true, rule); T3.show('ludo', board);
     const U = board.userData, Y = U.top, u = U.u, n = U.n, geo = B2.geometry(rule);
     const tall = innerHeight > innerWidth * 1.15, W = n * u;
-    if (T3.fit) T3.fit(tall ? { w: W + .4, d: W + .9, y: Y + .2, pitch: 1.05 } : { w: W + .3, d: W + .6, y: Y + .2, pitch: 1.0 });
+    const baseFit = () => innerHeight > innerWidth * 1.15 ? { w: W + .4, d: W + .9, y: Y + .2, pitch: 1.05 } : { w: W + .3, d: W + .6, y: Y + .2, pitch: 1.0 };
+    if (T3.fit) T3.fit(baseFit());
     let S = {};   // texts (ludo/i18n.js)
     const tx = (k, o) => { let s = (S[k] != null ? S[k] : k); if (o) for (const q in o) s = s.split('{' + q + '}').join(o[q]); return s; };
     const L = { you: t('p.you'), ai: t('p.ai'), think: t('p.think'), win: t('res.win'), lose: t('res.lose') };
@@ -170,8 +171,8 @@
     /* ---------- marks ---------- */
     const mk2 = new TH.Group(); board.add(mk2);
     const basic = (c, o) => new TH.MeshBasicMaterial({ color: c, transparent: true, opacity: o, toneMapped: false, depthWrite: false });
-    const MAT = { can: basic(0xffd84a, .95), hint: basic(0xff7a1a, 1), dest: basic(0x3df59a, .8), last: basic(0x2f8cff, .5) };
-    const GEO = { ring: new TH.TorusGeometry(u * .46, u * .05, 8, 40), disc: new TH.CircleGeometry(u * .38, 32) };
+    const MAT = { can: basic(0xffa000, 1), hint: basic(0xff3d7f, 1), dest: basic(0x3df59a, .8), last: basic(0x2f8cff, .5) };
+    const GEO = { ring: new TH.TorusGeometry(u * .48, u * .075, 8, 40), disc: new TH.CircleGeometry(u * .38, 32) };
     GEO.ring.rotateX(Math.PI / 2); GEO.disc.rotateX(-Math.PI / 2);
     let pulse = 0;
     function clearMarks() { while (mk2.children.length) mk2.remove(mk2.children[0]); if (T3.kick) T3.kick(120); }
@@ -187,9 +188,58 @@
       if (!pulse) { const t0 = performance.now(); pulse = setInterval(() => { if (stopped || !mk2.children.length) return; const s = 1 + Math.sin((performance.now() - t0) / 220) * .07; mk2.children.forEach(m => { if (m.geometry === GEO.ring) m.scale.setScalar(s * (m.userData.s0 || (m.userData.s0 = m.scale.x))); }); if (T3.kick) T3.kick(80); }, 60); }
     }
 
+    /* ---------- the focus (phones): the camera moves in on the seat to move — its yard and die before the roll, the pieces that can
+       move and where they go after it, the walking piece while it walks — and glides on to the next seat (no cut). The button at the
+       right edge switches it off (the whole board), remembered in atlas-ludo-zoom. ---------- */
+    let zoomPref = true; try { zoomPref = localStorage.getItem('atlas-ludo-zoom') !== '0'; } catch (e) {}
+    const small = () => innerWidth <= 700 || innerHeight > innerWidth * 1.15;
+    let focusPts = null;
+    function yardPts(seat) {
+      if (rule === 'ludo') { const Y0 = [[0, 9], [0, 0], [9, 0], [9, 9]][seat]; return [[Y0[0], Y0[1]], [Y0[0] + 6, Y0[1] + 6]]; }
+      const [sx, sy] = throwSpot(seat), o = [[sx - 2.6, sy - 2.6], [sx + 2.6, sy + 2.6]];
+      for (let k = 0; k < 4; k++) o.push(geo.yard(seat, k));
+      return o;
+    }
+    const cellPt = (seat, m) => m.to >= E.lastOf(st) ? geo.home(seat, m.k) : geo.cellXY(seat, m.to);
+    function applyFocus() {
+      if (!T3.fit || stopped) return;
+      const on = zoomPref && small() && focusPts && focusPts.length;
+      if (zoomBtn) { zoomBtn.hidden = !small() || over; zoomBtn.classList.toggle('off', !zoomPref); }
+      if (!on) { T3.fit(Object.assign(baseFit(), { ease: true })); return; }
+      let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+      focusPts.forEach(([x, y]) => { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); });
+      const pad = 1.4, sw = Math.max(8, x1 - x0 + pad * 2), sd = Math.max(8, y1 - y0 + pad * 2);
+      if (Math.max(sw, sd) > n - 2) { T3.fit(Object.assign(baseFit(), { ease: true })); return; }   // spread over the board: the whole board
+      // the view is wider or taller than the box (the screen's shape): keep what it really shows inside the board, no table at the edge
+      const asp = (ctx.el.clientWidth || innerWidth) / (ctx.el.clientHeight || innerHeight), vw = Math.min(n, Math.max(sw, sd * asp)), vd = Math.min(n, Math.max(sd, sw / asp * .82));
+      const cl = (c, h) => Math.max(h, Math.min(n - h, c));
+      const gx = cl((x0 + x1) / 2, vw / 2 - .4), gy = cl((y0 + y1) / 2, vd / 2 - .4), [cx, cz] = wx(gx, gy), B0 = baseFit();
+      T3.fit({ w: sw * u, d: sd * u + (B0.d - W), y: Y + .2, pitch: B0.pitch, cx, cz, ease: true });
+    }
+    function focus(pts) { focusPts = pts; applyFocus(); }
+    const focusSeat = seat => focus(yardPts(seat).concat([throwSpot(seat)]));
+    function focusMoves(seat, ms) {
+      const pts = [];
+      ms.filter(m => !m.pass).forEach(m => { const g = pcs[seat + ',' + m.k]; pts.push([g.userData.gx, g.userData.gy]); pts.push(cellPt(seat, m)); });
+      if (pts.length) focus(pts);
+    }
+    let zoomBtn = null;
+    {
+      const ZL = { ja: ['手番に寄る', '盤全体を見る'], en: ['Zoom to the player', 'Whole board'], zh: ['聚焦当前玩家', '查看整个棋盘'], 'zh-TW': ['聚焦目前玩家', '查看整個棋盤'], ko: ['차례인 사람에게 확대', '판 전체 보기'], es: ['Acercar al turno', 'Tablero entero'], fr: ['Zoom sur le joueur', 'Plateau entier'], pt: ['Aproximar da vez', 'Tabuleiro inteiro'], de: ['Zum Spieler zoomen', 'Ganzes Brett'], ru: ['Приблизить к ходящему', 'Вся доска'], tr: ['Sıradakine yakınlaş', 'Tüm tahta'], id: ['Perbesar ke giliran', 'Seluruh papan'], hi: ['बारी वाले पर ज़ूम', 'पूरा बोर्ड'], ar: ['تقريب إلى صاحب الدور', 'اللوحة كاملة'] };
+      const zl = ZL[ctx.lang] || ZL.en;
+      zoomBtn = document.createElement('button'); zoomBtn.type = 'button'; zoomBtn.className = 'ldzoom';
+      const paint = () => { const t2 = zoomPref ? zl[1] : zl[0]; zoomBtn.title = t2; zoomBtn.setAttribute('aria-label', t2);
+        zoomBtn.innerHTML = zoomPref ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>' : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5M10.5 8v5M8 10.5h5"/></svg>'; };
+      paint();
+      zoomBtn.onclick = e => { e.stopPropagation(); zoomPref = !zoomPref; try { localStorage.setItem('atlas-ludo-zoom', zoomPref ? '1' : '0'); } catch (er) {} paint(); applyFocus(); };
+      (ctx.el.parentNode || document.body).appendChild(zoomBtn);
+    }
+    const onResize = () => applyFocus();
+    addEventListener('resize', onResize);
+
     /* ---------- HUD ---------- */
     const css = document.createElement('style');
-    css.textContent = '.hud .ldb{padding:8px 16px;font-size:15px;white-space:nowrap}.hud .lds{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:99px;font-weight:800;font-size:13px;opacity:.6;white-space:nowrap}.hud .lds.on{opacity:1;background:rgba(255,255,255,.9);box-shadow:0 2px 8px rgba(0,0,0,.15)}.hud .lds i{width:14px;height:14px;border-radius:50%;display:inline-block;flex:none;box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.25)}.hud .ldm{font-weight:800;font-size:13px;max-width:46vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ldtoast{position:fixed;left:50%;top:calc(76px + env(safe-area-inset-top));transform:translateX(-50%);z-index:90;max-width:min(92vw,520px);padding:9px 18px;border-radius:99px;background:#2b3044;color:#fff;font-weight:900;font-size:14px;box-shadow:0 8px 22px rgba(0,0,0,.3);pointer-events:none;white-space:nowrap}@media (max-width:560px){.hud .ldb{padding:7px 11px;font-size:13px}.hud .lds{padding:3px 6px;font-size:12px}.hud .lds .nm{display:none}}';
+    css.textContent = '.ldzoom{position:absolute;z-index:4;right:12px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.92);color:#3a3f55;box-shadow:0 3px 10px rgba(0,0,0,.22);display:grid;place-items:center;cursor:pointer;padding:0}.ldzoom svg{width:22px;height:22px}.ldzoom[hidden]{display:none}.ldzoom.off{color:#e0662a}' + '.hud .ldb{padding:8px 16px;font-size:15px;white-space:nowrap}.hud .lds{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:99px;font-weight:800;font-size:13px;opacity:.6;white-space:nowrap}.hud .lds.on{opacity:1;background:rgba(255,255,255,.9);box-shadow:0 2px 8px rgba(0,0,0,.15)}.hud .lds i{width:14px;height:14px;border-radius:50%;display:inline-block;flex:none;box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.25)}.hud .ldm{font-weight:800;font-size:13px;max-width:46vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ldtoast{position:fixed;left:50%;top:calc(76px + env(safe-area-inset-top));transform:translateX(-50%);z-index:90;max-width:min(92vw,520px);padding:9px 18px;border-radius:99px;background:#2b3044;color:#fff;font-weight:900;font-size:14px;box-shadow:0 8px 22px rgba(0,0,0,.3);pointer-events:none;white-space:nowrap}@media (max-width:560px){.hud .ldb{padding:7px 11px;font-size:13px}.hud .lds{padding:3px 6px;font-size:12px}.hud .lds .nm{display:none}}';
     document.head.appendChild(css);
     let toastEl = null, toastT = 0;
     function toast(m) { if (toastEl) toastEl.remove(); clearTimeout(toastT); if (!m || stopped) return; toastEl = document.createElement('div'); toastEl.className = 'ldtoast'; toastEl.textContent = m; document.body.appendChild(toastEl); const el = toastEl; toastT = setTimeout(() => { el.remove(); if (toastEl === el) toastEl = null; }, 1500); }
@@ -215,6 +265,7 @@
       if (over || stopped) return;
       thr = null; moves = []; selK = -1; hintMv = null; clearMarks(); onTurn();
       const seat = st.turn;
+      focusSeat(seat);
       if (human(seat)) {
         if (!pvp) hist.push(E.clone(st));
         phase = 'roll'; say(pvp ? tx('st.turn', { p: colName(seat) }) : tx('st.yourRoll', { b: tx(rule === 'pachisi' ? 'st.throwv' : 'st.rollv') }));
@@ -231,12 +282,13 @@
       if (!real.length) { const m = moves[0] || { pass: true }; phase = 'auto'; const w = m.forfeit ? tx('st.three') : tx('st.nomove'); say(sub + ' — ' + w); toast(w); later(() => commit(m), 1000); return; }
       if (!human(seat)) { phase = 'auto'; const r = E.think(st, th, level); later(() => commit(r.move || real[0]), 380); return; }
       if (real.length === 1 && !moves.some(m => m.pass)) { phase = 'auto'; say(sub); later(() => commit(real[0]), 420); return; }
-      phase = 'move'; say(tx('st.pick', { v: sub })); showMarks();
+      phase = 'move'; say(tx('st.pick', { v: sub })); showMarks(); focusMoves(seat, real);
     }
     async function commit(m) {
       if (over || stopped || busy) return;
       busy = true; phase = 'anim'; clearMarks();
       const s0 = st, seat = s0.turn, th = thr;
+      if (m && !m.pass) { const g = pcs[seat + ',' + m.k], pts = [[g.userData.gx, g.userData.gy], cellPt(seat, m)]; focus(pts); }
       await walk(s0, m); if (stopped) return;
       if (m && m.cap && m.cap.length) { SND.take(); toast(tx('st.cap')); await flyHome(m.cap); if (stopped) return; }
       const r = E.apply(s0, m, th);
@@ -248,7 +300,7 @@
       void seat;
     }
     function end() {
-      over = true; phase = 'over'; clearMarks(); if (ctx.onTurn) ctx.onTurn(-1);
+      over = true; phase = 'over'; clearMarks(); focus(null); if (ctx.onTurn) ctx.onTurn(-1);
       const winSeats = st.seats.filter(x => st.team[x] === st.winner), names = [...new Set(winSeats.map(colName))].join('・');
       const wt = tx('res.lose', { p: names });
       SND.home();
@@ -302,7 +354,7 @@
     const myTurn = () => !stopped && !over && !busy && st && human(st.turn) && (phase === 'roll' || phase === 'move');
     function finish(why) {
       if (over || !st) return;
-      tok++; over = true; phase = 'over'; busy = false; clearMarks(); if (ctx.onTurn) ctx.onTurn(-1);
+      tok++; over = true; phase = 'over'; busy = false; clearMarks(); focus(null); if (ctx.onTurn) ctx.onTurn(-1);
       const r = t(why === 'time' ? 'act.timeout' : 'act.resigned');
       say(L.lose); setTimeout(() => { if (!stopped) ctx.onEnd(pvp ? { win: false, draw: false, level, score: r, pvp: true, winnerText: r } : { win: false, draw: false, level, score: r }); }, 200);
     }
@@ -327,7 +379,7 @@
       stop() {
         stopped = true; tok++; timers.forEach(clearTimeout); clearInterval(pulse);
         ctx.el.removeEventListener('click', onClick); document.removeEventListener('click', onHud, true); document.removeEventListener('keydown', onKey);
-        css.remove(); if (toastEl) toastEl.remove();
+        css.remove(); if (toastEl) toastEl.remove(); if (zoomBtn) zoomBtn.remove(); removeEventListener('resize', onResize);
         Object.values(MAT).forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose());
       },
       _debug: { st: () => st, phase: () => phase, moves: () => moves, thr: () => thr, roll: () => doRoll(), commit: m => commit(m), at: (gx, gy) => { const [x, z] = wx(gx, gy); return T3.project(x, z, Y); }, piece: key => { const g = pcs[key]; return g && T3.project(g.position.x, g.position.z, Y); }, geo },

@@ -37,22 +37,32 @@
 - 盤：SVG（1マス＝1単位）。ルード 15×15（色：赤・緑・黄・青）、パチーシ 19×19 の十字（色：黄・赤・黒・緑、布は朱に金糸）。デザイン：クラシック／木目（対局設定のデザインタブ、押した瞬間に反映）。
 - 駒は1マスずつ跳ねて進む。取られた駒は回りながら陣地へ。同じマスの駒は小さく並べる。
 - 操作：「振る／投げる」（スペースキーでも）→ 光る駒をタップ。パチーシの恵みで2通りあるときは行き先の丸をタップ。パチーシはパスボタンあり。
+- 手番フォーカス（スマホ、2026-11-08）：盤が小さいので、手番の色に寄せて表示する（桃鉄の手番のような感じ）。振る前はその色の陣地、振った後は動かせる駒と行き先、動いている間は出発点と行き先を枠に入れ、次の手番へは viewBox をなめらかにパン・ズームしてつなぐ（カットしない）。範囲は最小9.5マス、盤の外は見せない。盤の右上のボタンで「盤全体」と切り替え（`aicoding-ludo-zoom`）。レッスン・パズル・振り返り中は全体表示。
 - オプション：自動で振る、1手しかないときは自動で動かす、速さ（ゆっくり／ふつう／速い）。
 - 待った（AI戦のみ）：自分の最後の選択の前に戻る（同じ目のまま）。ヒント：Lv.20 の手の駒を光らせる。投了：Resign.confirm。
 - 14言語：`ludo/i18n.js` は `ludo/tools/build_i18n.py` で生成。
 - localStorage：`aicoding-ludo`（settings と対局）。
 
-## 3. 学ぶ（`ludo/tour.js`・`app-learn.js`・`learn.json`）
-- ルール説明：盤上で動かすチュートリアル（RuleTour、ルード／パチーシ 各8ページ・14言語）。既読は `aicoding-ludo-rules-<rule>`。最初のページの絵は `images/atlas/ludo.webp`。
-- レッスン：10ステップ（ルード5・パチーシ5：出す・取る・上がる・安全マス／城・逃げる）、各5問、20点×5、75点で合格。`aicoding-ludo-lessons`（id → 最高点）。
-- 次の一手パズル：120問（各ルール60、★1〜3 は最善手と次善手の差）。`aicoding-ludo-puzzles`（`rule:番号` → 1）。
-- 問題は `node ludo/tools/gen_learn.js [局数]` で AI 自己対局から作る（Lv.20 評価で最善手が次善手より 4 以上良く、教える種類に当てはまる局面。手番の色を席0へ回して、いつも赤／黄の番にする）。
+## 3. 学ぶ（`ludo/tour.js`・`app-learn.js`・`lessons.json`・`puzzles.json`）
+- 共通ルール（`claude/puzzle-collection-spec.md`・`game-conventions*.md`）どおり：ルール／レッスン／パズルは1つのオーバーレイのタブ（`ls-tabs`）、一覧は `shared/pzbook.js`、カード操作は `shared/cardbar.js`。
+- ルール説明：盤上で動かすチュートリアル（RuleTour、ルード／パチーシ 各8ページ・14言語）。既読は `aicoding-ludo-rules-<rule>` と `aicoding-ludo-rules-seen`。最初のページの絵は `images/atlas/ludo.webp`。
+- レッスン：4カテゴリ（ルードの基本・ルードの作戦・パチーシの基本・パチーシの作戦）×計10ステップ（出す・取る・上がる・安全マス／城・逃げる）。各ステップは図の説明 → 解説つきの例 → やさしい例 → 5問。採点は1問20点（ヒント1回16・2回12、やり直し10、答え0）、75点で合格。`aicoding-ludo-lessons`（id → {best, pass}）、カテゴリの記憶 `aicoding-ludo-ls-cat`。
+- 次の一手パズル：500問（ルード・パチーシ × 出す・取る・上がる・安全・逃げる の10テーマ × 50問、10問ずつのステージ、★1〜3 は最善手と次善手の差）。`aicoding-ludo-puzzles`（`テーマ-番号` → ★）、続きは `-pz-last`・`-pz-tab`。デイリー（毎日1問、連続日数）は `aicoding-ludo-daily`。
+- 問題は `node ludo/tools/gen_learn.js [局数=300]` で AI 自己対局から作る（Lv.20 評価で最善手が次善手より 4 以上良く、教える種類に当てはまる局面。手番の色を席0へ回して、いつも赤／黄の番にする）。文言は `ludo/i18n.js`（ls.* / lsc.* / lb.* / lh.* / pz.* / daily.*）。
 
-## 4. 3D・ポータル
+## 4. コーチ・振り返り・戦績・レート戦
+- コーチ（`ludo/coach.js`・`coach-i18n.js`、`shared/coachkit.js`）：AI戦・対人戦で、自分の手を Lv.20 の評価（`LudoEngine.rank`）で採点し、最善手との勝率差で判定。候補手と理由（取る・出す・安全・逃げる・上がる）を表示。レート戦・レッスン中は出さない。
+- 勝率：`LudoEngine.winProb`（ルール×人数ごとのロジスティック近似 `WP`、`node ludo/tools/fit_wp.js` で自己対局から当てはめ）。
+- 振り返り（`ludo/review.js`）：対局後に全手を評価し、形勢グラフ・手の質（好手〜悪手）・正確さ（100 − 平均損失×400）。←→↑↓で移動。PCは盤の高さに右欄を合わせる。
+- 戦績：`shared/record.js`（ルール×人数ごとの勝敗）。レート戦（`ludo/rated.js`）：Lv.1〜20 の AI 相手の段位戦、`RT_LV` の Elo 表、`aicoding-ludo-rated`。待った・ヒント・コーチなし、途中で離れると負け。
+- 情報タブ（`shared/infotabs.js`）：スマホは「対局・形勢・棋譜・コーチ」。オンラインはまだ無いので `body.no-online`。
+
+## 5. 3D・ポータル
 - 3D モデル：`atlas/models/ludo.js`（`Table3D.MODELS.ludo(live, rule)`／`MODELS.pachisi`）。ルードは2D盤の絵を貼った木枠の盤と挽き物の駒、パチーシは十字の布と蜂の巣形の駒。サイコロ、タカラガイ。
-- ちゃぶ台で遊ぶ：`atlas/games/ludo.js`。カードの「ルールと人数」でルード 4/3/2人・パチーシ 4人（2対2）/2人（1人2色）。AI 戦（あなたは赤／黄、ほかは全部 AI。4人パチーシの味方の黒も AI）と二人以上で対戦（全色を順にタップ）。待った（自分の番の初めへ）・ヒント（Lv.20 の手）・投了。時計なし。テキストは `ludo/i18n.js` を読み込んで使う。
+- ちゃぶ台で遊ぶ：`atlas/games/ludo.js`。カードの「ルールと人数」でルード 4/3/2人・パチーシ 4人（2対2）/2人（1人2色）。AI 戦（あなたは赤／黄、ほかは全部 AI。4人パチーシの味方の黒も AI）と二人以上で対戦（全色を順にタップ）。待った（自分の番の初めへ）・ヒント（Lv.20 の手）・投了。時計なし。スマホでは2D版と同じ手番フォーカス：カメラが手番の色の陣地・動かせる駒・動く駒へ寄り、次の手番へなめらかにパン・ズーム（`Table3D.fit({cx, cz, ease:true})`、`atlas/table3d.js` に追加した中心指定となめらか移動）。画面右端のボタンで全体表示に切り替え（`atlas-ludo-zoom`）。テキストは `ludo/i18n.js` を読み込んで使う。
+- 3Dルールコース：`atlas/rules/ludo.js`。案内役はヨーヨーの得意なサルの「ルディ」（`images/atlas/av/monkey-1.webp`）。ルードの8ページ（あいさつ・盤と出発マス・6で出発・目の数だけ進む・捕まえる・安全なマス・ゴール・勝ち）。各ページで3Dのサイコロを振って（目は仕込み）駒を動かす。台詞は全ページ・14言語ともルディの口調（ヨーヨーやバナナのひと言ボケ）。文字送りの声・黄色の課題札・正解後の自動送り（1.6秒＋文字数×45ms）・駒の差分配置は共通ルールどおり。
 - ポータル登録：`shared/atlas.js`（GAMES・更新情報・進み具合）、`atlas/i18n.js`（about／hist）、3Dアイコン `atlas/icons3d.js` → `images/atlas/ludo.webp`、一覧の絵 `atlas/shots/ludo.webp`（`tools/shots.js`）、地図 `atlas/mapdata.js`、ヒストリア `atlas/historia/<言語>/ludo.json`・`s/ludo.json`（`python3 ludo/tools/gen_historia.py` で生成。盤の図は historia.js の `t:'ludo'`）。
 - トップページ：`index.html` のカード（key `ld`）・JSON-LD、アイコン `images/icons/ludo.svg`、サムネイル `images/ludo.webp`。
 
-## 5. 未完了
-- コーチ、振り返り、戦績・レート戦、オンライン（Firebase）、3D のルールコース（atlas/rules）とフル機能スキン。
+## 6. 未完了
+- オンライン対戦（Firebase の新しいプロジェクトと公開ルールの設定が必要）、フル機能スキン（`?skin=atlas`）。
