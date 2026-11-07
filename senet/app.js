@@ -173,7 +173,7 @@ const orient = () => !mqV.matches ? 'h' : (lvhPx() - ohPx()) / 11.04 >= (innerWi
 const animOn = () => settings.speed > 0;
 const SPD = () => [3, .7, 1, 1.8][settings.speed] || 1;
 function buildView() {
-  view = B2.mount($('#board'), { orient: orient(), trayLabel: k => t('tray.' + k), design: settings.design, pieces: settings.pieces, speed: SPD() });
+  view = B2.mount($('#board'), { orient: orient(), trayLabel: k => (HB && HB.on && orient() !== 'v' ? '' : t('tray.' + k)), design: settings.design, pieces: settings.pieces, speed: SPD() });
   view.on('cell', e => onCell(e)).on('tray', e => onTray(e));
   bindHover();
   dice2d = null;
@@ -222,6 +222,13 @@ function placeDice() {
   const host = $('#diceHost'); ['position', 'width', 'height', 'left', 'top', 'flex'].forEach(k => { host.style[k] = ''; });
   dock.classList.toggle('d3', false);
   $('#diceCap').style.display = view.orient() === 'v' ? 'none' : '';
+  // PC: the sticks at the left of the strip, their count beside them (not under them: it would reach the info row), the roll plate on the sticks
+  const row = !!(HB && HB.on && view.orient() !== 'v');
+  dock.style.flexDirection = row ? 'row' : ''; dock.style.justifyContent = row ? 'flex-start' : ''; dock.style.gap = row ? Math.round(rr.height * .06) + 'px' : '';
+  if (row) { const hw = Math.min(rr.width * .62, rr.height * 256 / 140); host.style.flex = 'none'; host.style.width = hw + 'px'; host.style.height = '100%'; dock.style.setProperty('--pillx', hw / 2 + 'px'); }
+  else dock.style.removeProperty('--pillx');
+  // the count on the strip's middle line, level with the 上がり / Off count (the sticks reach into the room past the strip, the strip itself is the first / last 2/3)
+  const cap = $('#diceCap'); cap.style.transform = row ? `translateY(${(side === 1 ? 1 : -1) * rr.height / 6}px)` : '';
 }
 
 function lastMarks() {
@@ -304,6 +311,9 @@ function boardTip(msg, sub, side) {
   let extra = sub || '';
   if (!special && game && !overNow() && atLatest()) { const rc = E.raceCount(curState()); extra = t('tip.race', { a: rc.pips[side], b: rc.pips[1 - side] }); }
   el.className = 'board-tip s' + side; el.innerHTML = esc(msg) + (extra ? `<small>${esc(extra)}</small>` : '');
+  // centred on the board; nudged right only if a long note would reach the sticks at the left of the strip
+  el.style.marginLeft = ''; const hr = $('#diceHost').getBoundingClientRect(), tr = el.getBoundingClientRect();
+  if (hr.width && tr.left < hr.right + 12 && tr.bottom > hr.top && tr.top < hr.bottom) el.style.marginLeft = Math.ceil(hr.right + 12 - tr.left) + 'px';
   void el.offsetWidth; el.classList.add('show');
   tipT = setTimeout(() => el.classList.remove('show'), 3600);
 }
