@@ -1,0 +1,188 @@
+{
+ "hook": {
+  "n": "32",
+  "unit": "pieces",
+  "line": "Thirty-two octagonal pieces on a board with no river — still played in parks and homes all over Korea.",
+  "say": "Welcome to the story of janggi!"
+ },
+ "ch": [
+  {
+   "k": "origin",
+   "t": "Xiangqi without the river",
+   "say": "Chinese chess was reborn on the Korean peninsula.",
+   "p": [
+    "Chinese xiangqi reached the Korean peninsula and grew rules of its own. When it arrived is unclear.",
+    "The river went, the elephant and cannon changed, and the pieces became octagons."
+   ],
+   "pins": [
+    "China",
+    "Korea"
+   ],
+   "st": [
+    [
+     "Debated",
+     "China",
+     "Xiangqi takes shape"
+    ],
+    [
+     "Date unknown",
+     "Korea",
+     "Grows into janggi, with no river"
+    ]
+   ]
+  },
+  {
+   "k": "tl",
+   "t": "Timeline",
+   "say": "The rules changed little by little.",
+   "tl": [
+    [
+     "Song dynasty",
+     "Xiangqi with the cannon takes its modern form in China"
+    ],
+    [
+     "Date unknown",
+     "It reaches the Korean peninsula"
+    ],
+    [
+     "Later",
+     "The river disappears; the elephant and cannon change"
+    ],
+    [
+     "Today",
+     "Played in parks and homes, with tournaments"
+    ]
+   ]
+  },
+  {
+   "k": "board",
+   "t": "The palace and its diagonals",
+   "say": "The palace diagonals are a shortcut for everyone!",
+   "cap": "Pieces sit on the 9×10 points; no river, the X marks the palace",
+   "p": [
+    "Pieces stand on the points and move along the lines.",
+    "The general and guards stay in the palace, whose diagonals chariots, cannons and soldiers may use too. The cannon always moves by jumping one piece."
+   ]
+  },
+  {
+   "k": "vars",
+   "t": "Asian relatives",
+   "say": "The neighbours have relatives too.",
+   "cards": [
+    [
+     "Xiangqi",
+     "China",
+     "Traditional",
+     "River, palace and round pieces"
+    ],
+    [
+     "Cờ tướng",
+     "Vietnam",
+     "Traditional",
+     "Xiangqi as played in Vietnam"
+    ],
+    [
+     "Shogi",
+     "Japan",
+     "Traditional",
+     "Captured pieces come back"
+    ],
+    [
+     "Makruk",
+     "Thailand",
+     "Traditional",
+     "Thailand's chess"
+    ]
+   ]
+  },
+  {
+   "k": "legend",
+   "t": "Janggi in numbers",
+   "say": "Numbers tell a story too.",
+   "items": [
+    [
+     "4",
+     "Set-ups",
+     "Four ways to place horses and elephants",
+     "4",
+     "ways"
+    ],
+    [
+     "13",
+     "Chariot",
+     "A chariot's points when the game goes to points",
+     "13",
+     "pts"
+    ],
+    [
+     "1.5",
+     "Han's bonus",
+     "Points added to Han, who moves second",
+     "1.5",
+     "pts"
+    ],
+    [
+     "90",
+     "Points",
+     "The board has 90 points",
+     "90",
+     "points"
+    ],
+    [
+     "32",
+     "Pieces",
+     "16 each, 32 in all",
+     "32",
+     "pieces"
+    ]
+   ]
+  },
+  {
+   "k": "trivia",
+   "t": "Did you know?",
+   "say": "Tap a card to flip it!",
+   "cards": [
+    [
+     "Who moves first?",
+     "Cho (green or blue) moves first"
+    ],
+    [
+     "Are the pieces the same size?",
+     "No — the general is biggest, guards and soldiers smallest"
+    ],
+    [
+     "Where does the general start?",
+     "In the middle of the palace"
+    ],
+    [
+     "Can a cannon take a cannon?",
+     "No — it can't even jump over one"
+    ],
+    [
+     "Are there draws?",
+     "No — the points decide in the end"
+    ],
+    [
+     "How far can an elephant go?",
+     "With no river, anywhere on the board"
+    ],
+    [
+     "Can soldiers move sideways?",
+     "Yes, from the very start"
+    ],
+    [
+     "What do you call out when giving check?",
+     "\"Janggun!\" (장군)"
+    ]
+   ]
+  },
+  {
+   "k": "end",
+   "t": "Storm the palace",
+   "say": "Try a cannon jump!",
+   "p": [
+    "Play a game with the octagonal pieces yourself."
+   ]
+  }
+ ]
+}

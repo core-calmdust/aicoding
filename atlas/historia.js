@@ -6,7 +6,7 @@
    app.js calls Historia.sync(game, lang) when a board opens, and defers its stage framing to Historia.fit() while open. */
 (function () {
   'use strict';
-  const V = 11;                     // data version (bump when historia/*.json change)
+  const V = 12;                     // data version (bump when historia/*.json change)
   const BGM_SRC = 'historia/bgm.mp3', BGM_VOL = .28;
   const LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];   // (a game without text in a language falls back to English)
   const UI = {
@@ -29,7 +29,7 @@
   const GUIDE = { shogi: 'm-shogi', chess: 'm-knight', reversi: 'm-disc', sudoku: 'm-tile', speedsudoku: 'av/tile-2', samegame: 'av/hippo-0', jailbreak: 'av/mole-0',
     poker: 'av/joker-0', baccarat: 'av/joker-1', blackjack: 'av/joker-2', solitaire: 'av/ghost-0', checkers: 'm-crab', ugolki: 'av/daruma-0', agon: 'av/teddy-0', fanorona: 'av/monkey-0',
     alquerque: 'av/camel-0', xiangqi: 'av/ryuou-0', tafl: 'av/seal-0', go: 'av/goke-0', gomoku: 'm-stone', dots: 'm-dot', connect4: 'm-plop', mancala: 'm-gem',
-    backgammon: 'm-dice', morris: 'm-owl', hex: 'av/bee-0', ur: 'av/goat-0', konane: 'av/hermit-0', senet: 'av/camel-2' };
+    backgammon: 'm-dice', morris: 'm-owl', hex: 'av/bee-0', ur: 'av/goat-0', konane: 'av/hermit-0', senet: 'av/camel-2', janggi: 'av/ryuou-0' };
   const guideSrc = id => '../images/atlas/' + (GUIDE[id] || 'm-tile') + '.webp';
   const BOOK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v15H5.5A1.5 1.5 0 0 0 4 20.5z"/><path d="M20 5.5c0-.8-.7-1.5-1.5-1.5H13v15h5.5c.8 0 1.5.7 1.5 1.5z"/><path d="M7 8h2M15 8h2M7 11h2M15 11h2"/></svg>';
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -50,7 +50,7 @@
 
   /* ---------- entry button (in the board view, top-left of the 3D scene) ---------- */
   // the games that have a history (historia/s/<id>.json); a newer game without one shows no ヒストリア button
-  const IDS = new Set('agon alquerque baccarat backgammon blackjack checkers chess connect4 dots fanorona go gomoku hex jailbreak konane mancala morris poker reversi samegame shogi solitaire speedsudoku sudoku tafl ugolki ur xiangqi senet'.split(' ')), has = id => IDS.has(id);
+  const IDS = new Set('agon alquerque baccarat backgammon blackjack checkers chess connect4 dots fanorona go gomoku hex jailbreak konane mancala morris poker reversi samegame shogi solitaire speedsudoku sudoku tafl ugolki ur xiangqi senet janggi'.split(' ')), has = id => IDS.has(id);
   function sync(g, l, c) {
     game = g; lang = LANGS.includes(l) ? l : 'en'; if (c) ctx = c;
     const b = $('bvHist'); if (!b) return;
@@ -692,13 +692,14 @@
   }
 
   /* ---------- board diagrams (SVG, drawn from a small spec; pieces drop in one after another) ---------- */
-  const COL = { b: ['#2b2b30', '#55555c'], w: ['#fbf7ee', '#cfc6b2'], r: ['#d8423a', '#9e2a24'], y: ['#f5c23c', '#c48d13'], u: ['#3a78d8', '#23519e'], g: ['#3caf6e', '#237a4a'], p: ['#8d6bff', '#5d40c4'], o: ['#f08a2c', '#b8611a'], k: ['#d9b07a', '#a87b45'] };
+  const COL = { b: ['#2b2b30', '#55555c'], w: ['#fbf7ee', '#cfc6b2'], r: ['#d8423a', '#9e2a24'], y: ['#f5c23c', '#c48d13'], u: ['#3a78d8', '#23519e'], g: ['#3caf6e', '#237a4a'], p: ['#8d6bff', '#5d40c4'], o: ['#f08a2c', '#b8611a'], c: ['#13705c', '#0d4f40'], k: ['#d9b07a', '#a87b45'] };
   function piece(x, y, c, gl, R, shape, d) {
     const [f, s] = COL[c] || COL.b, sty = `style="--d:${d}ms"`;
     const W_ = (inner, rot = '') => `<g transform="translate(${x} ${y})${rot}"><g class="pc" ${sty}>${inner}</g></g>`;
     if (shape === 'sh') return W_(`<path d="M0 ${-R * .95} ${R * .72} ${-R * .6} ${R * .85} ${R * .9} ${-R * .85} ${R * .9} ${-R * .72} ${-R * .6}z" fill="#f2d79b" stroke="#a57a3a" stroke-width="${R * .08}"/>${gl ? `<text y="${R * .32}" font-size="${R * .9}" text-anchor="middle" fill="#2b2b30">${esc(gl)}</text>` : ''}`, c === 'r' ? ' rotate(180)' : '');
     if (shape === 'ch') return W_(`<text y="${R * .55}" font-size="${R * 1.75}" text-anchor="middle" fill="${c === 'w' ? '#fbf7ee' : '#2b2b30'}" stroke="${c === 'w' ? '#2b2b30' : '#fbf7ee'}" stroke-width="${R * .07}" paint-order="stroke" style="font-family:'Segoe UI Symbol','DejaVu Sans','Noto Sans Symbols2',serif">${esc(gl)}&#xFE0E;</text>`);
     if (shape === 'xq') return W_(`<circle r="${R * .92}" fill="#f6e6c2" stroke="${f}" stroke-width="${R * .12}"/><circle r="${R * .7}" fill="none" stroke="${f}" stroke-width="${R * .05}"/>${gl ? `<text y="${R * .34}" font-size="${R * .9}" text-anchor="middle" fill="${f}">${esc(gl)}</text>` : ''}`);
+    if (shape === 'jg') { const o = k => { const t = Math.PI / 8 + k * Math.PI / 4, q = R * 1.02; return `${(Math.cos(t) * q).toFixed(2)},${(Math.sin(t) * q).toFixed(2)}`; }; return W_(`<polygon points="${[0, 1, 2, 3, 4, 5, 6, 7].map(o).join(' ')}" fill="#f6e6c2" stroke="${f}" stroke-width="${R * .12}"/>${gl ? `<text y="${R * .34}" font-size="${R * .9}" text-anchor="middle" fill="${f}">${esc(gl)}</text>` : ''}`); }   // janggi: octagonal pieces
     if (shape === 'tile') return W_(`<rect x="${-R * .9}" y="${-R * .9}" width="${R * 1.8}" height="${R * 1.8}" rx="${R * .25}" fill="${c === 'w' ? '#fffdf7' : f}" stroke="${c === 'w' ? '#d8c9a6' : s}" stroke-width="${R * .08}"/>${gl ? `<text y="${R * .4}" font-size="${R * 1.05}" text-anchor="middle" fill="${c === 'w' ? '#2b3044' : '#fff'}" font-weight="700">${esc(gl)}</text>` : ''}`);
     if (shape === 'sq') return W_(`<rect x="${-R}" y="${-R}" width="${R * 2}" height="${R * 2}" rx="${R * .35}" fill="${f}" stroke="${s}" stroke-width="${R * .1}"/><circle cx="${-R * .35}" cy="${-R * .35}" r="${R * .22}" fill="#fff" opacity=".45"/>`);
     return W_(`<circle r="${R}" fill="${f}" stroke="${s}" stroke-width="${R * .12}"/><circle cx="${-R * .3}" cy="${-R * .32}" r="${R * .3}" fill="#fff" opacity="${c === 'w' ? .7 : .22}"/>${gl ? `<text y="${R * .36}" font-size="${R * .95}" text-anchor="middle" fill="${c === 'w' || c === 'y' ? '#2b2b30' : '#fff'}" font-weight="700">${esc(gl)}</text>` : ''}`);

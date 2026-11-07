@@ -1,0 +1,188 @@
+{
+ "hook": {
+  "n": "32",
+  "unit": "bidak",
+  "line": "Tiga puluh dua bidak segi delapan di papan tanpa sungai — masih dimainkan di taman dan rumah di seluruh Korea.",
+  "say": "Selamat datang di kisah janggi!"
+ },
+ "ch": [
+  {
+   "k": "origin",
+   "t": "Xiangqi tanpa sungai",
+   "say": "Catur Tiongkok terlahir kembali di Korea.",
+   "p": [
+    "Xiangqi Tiongkok sampai di Semenanjung Korea dan mendapat aturan sendiri. Kapan tibanya tidak jelas.",
+    "Sungai dihapus, gajah dan meriam berubah, dan bidaknya menjadi segi delapan."
+   ],
+   "pins": [
+    "Tiongkok",
+    "Korea"
+   ],
+   "st": [
+    [
+     "Diperdebatkan",
+     "Tiongkok",
+     "Xiangqi terbentuk"
+    ],
+    [
+     "Waktu tak diketahui",
+     "Korea",
+     "Menjadi janggi tanpa sungai"
+    ]
+   ]
+  },
+  {
+   "k": "tl",
+   "t": "Linimasa",
+   "say": "Aturannya berubah sedikit demi sedikit.",
+   "tl": [
+    [
+     "Dinasti Song",
+     "Xiangqi dengan meriam mendapat bentuk modernnya di Tiongkok"
+    ],
+    [
+     "Waktu tak diketahui",
+     "Sampai di Semenanjung Korea"
+    ],
+    [
+     "Kemudian",
+     "Sungai hilang; gajah dan meriam berubah"
+    ],
+    [
+     "Kini",
+     "Dimainkan di taman dan rumah, ada turnamen"
+    ]
+   ]
+  },
+  {
+   "k": "board",
+   "t": "Istana dan diagonalnya",
+   "say": "Diagonal istana adalah jalan pintas untuk semua!",
+   "cap": "Bidak di titik 9×10; tanpa sungai, tanda × adalah istana",
+   "p": [
+    "Bidak berdiri di titik dan bergerak di sepanjang garis.",
+    "Jenderal dan pengawal tetap di istana, yang diagonalnya juga dipakai kereta, meriam, dan prajurit. Meriam selalu melompati satu bidak."
+   ]
+  },
+  {
+   "k": "vars",
+   "t": "Kerabat di Asia",
+   "say": "Tetangga juga punya kerabat.",
+   "cards": [
+    [
+     "Xiangqi",
+     "Tiongkok",
+     "Tradisional",
+     "Sungai, istana, bidak bundar"
+    ],
+    [
+     "Cờ tướng",
+     "Vietnam",
+     "Tradisional",
+     "Xiangqi di Vietnam"
+    ],
+    [
+     "Shogi",
+     "Jepang",
+     "Tradisional",
+     "Bidak yang dimakan kembali"
+    ],
+    [
+     "Makruk",
+     "Thailand",
+     "Tradisional",
+     "Catur Thailand"
+    ]
+   ]
+  },
+  {
+   "k": "legend",
+   "t": "Janggi dalam angka",
+   "say": "Angka juga bercerita.",
+   "items": [
+    [
+     "4",
+     "Susunan",
+     "Empat cara menaruh kuda dan gajah",
+     "4",
+     "cara"
+    ],
+    [
+     "13",
+     "Kereta",
+     "Poin kereta saat ditentukan poin",
+     "13",
+     "poin"
+    ],
+    [
+     "1,5",
+     "Bonus Han",
+     "Poin tambahan untuk Han yang jalan kedua",
+     "1,5",
+     "poin"
+    ],
+    [
+     "90",
+     "Titik",
+     "Papan punya 90 titik",
+     "90",
+     "titik"
+    ],
+    [
+     "32",
+     "Bidak",
+     "Masing-masing 16, total 32",
+     "32",
+     "bidak"
+    ]
+   ]
+  },
+  {
+   "k": "trivia",
+   "t": "Tahukah kamu?",
+   "say": "Ketuk kartu untuk membaliknya!",
+   "cards": [
+    [
+     "Siapa jalan duluan?",
+     "Cho (hijau atau biru)"
+    ],
+    [
+     "Apakah bidak sama besar?",
+     "Tidak: jenderal terbesar, pengawal dan prajurit terkecil"
+    ],
+    [
+     "Di mana jenderal mulai?",
+     "Di tengah istana"
+    ],
+    [
+     "Bisakah meriam memakan meriam?",
+     "Tidak, melompatinya pun tidak"
+    ],
+    [
+     "Ada remis?",
+     "Tidak, akhirnya poin yang menentukan"
+    ],
+    [
+     "Seberapa jauh gajah pergi?",
+     "Tanpa sungai, ke mana saja"
+    ],
+    [
+     "Bisakah prajurit ke samping?",
+     "Ya, sejak awal"
+    ],
+    [
+     "Apa yang diteriakkan saat skak?",
+     "“Janggun!” (장군)"
+    ]
+   ]
+  },
+  {
+   "k": "end",
+   "t": "Serbu istana",
+   "say": "Coba lompatan meriam!",
+   "p": [
+    "Mainkan sendiri dengan bidak segi delapan."
+   ]
+  }
+ ]
+}
