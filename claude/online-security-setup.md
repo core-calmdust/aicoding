@@ -50,6 +50,11 @@
 - Realtime Database（asia-southeast1）を作成し、(a) のルールを貼り付け。
 - App Check：reCAPTCHA Enterprise のキーを登録（サイトキーは `<game>/firebase-config.js` に設定済み）。
 
+### 注意：APIキーのリファラー制限（2026-11-08 の障害）
+- Google Cloud の「APIとサービス → 認証情報」でブラウザ用 APIキーに「ウェブサイト」の制限をかけるときは、`core-calmdust.github.io/*` に加えて **`https://<projectId>.firebaseapp.com/*` と `https://<projectId>.web.app/*` を必ず入れる**。
+- Google ログインのポップアップは `<projectId>.firebaseapp.com/__/auth/handler` で動き、同じキーで Firebase に問い合わせる。入っていないとポップアップが「The requested action is invalid.」で止まる（対局・データベースは動くので気づきにくい。ログイン用ページが設定を一時的に覚えるため、端末によってはしばらく通ってしまう）。
+- 2026-11-08、将棋（shogi-multiplay）とチェス（chess-multiplay）でこれが起きていた（リバーシは制限なし）。firebaseapp.com / web.app を追加して解消。
+
 ### (a) ルールの貼り付け（ゲームごとに1回）
 
 1. https://console.firebase.google.com で該当のプロジェクトを開きます。
