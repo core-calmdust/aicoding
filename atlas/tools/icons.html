@@ -60,6 +60,16 @@
     const el = 35.26 * Math.PI / 180;   // true isometric
     cam.position.set(c.x, c.y + 40 * Math.sin(el), c.z + 40 * Math.cos(el)); cam.lookAt(c.x, c.y, c.z); cam.updateProjectionMatrix();
   }
+  // ?part=base | top (an icon in two layers, framed alike — the portal's ランダム tile bobs its die): base = the die unseen
+  // (it still casts its shadow on the plinth), top = the die alone
+  const part = q.get('part');
+  if (part) g.traverse(o => {
+    let p = null; for (let x = o; x && !p; x = x.parent) p = x.userData && x.userData.part;
+    if (!o.isMesh || !p || p === part) return;
+    if (part === 'base') { const ms = Array.isArray(o.material) ? o.material : [o.material]; o.material = ms.map(m => { const c = m.clone(); c.colorWrite = false; c.depthWrite = false; return c; }); if (o.material.length === 1) o.material = o.material[0]; }
+    else o.visible = false;
+  });
+  if (part === 'top') floor.visible = false;
   R.render(scene, cam);
   window.SHOT = R.domElement.toDataURL('image/png');
 })();
