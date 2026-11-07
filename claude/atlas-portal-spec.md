@@ -34,6 +34,7 @@ URL: https://core-calmdust.github.io/aicoding/atlas/  ／ 詳細: repo の atlas
 - 実績はゲームごとの記録（localStorage）から自動計算。銅50・銀120・金300・プラチナ800コイン
 - コイン＝実績＋ログインボーナス（毎日30・7日ごと+150）＋ガチャかぶり返金−使用分
 - ガチャ 1回100／10回900（10回目SR以上）、N58/R28/SR10/SSR3.5/UR0.5%。アイテム350種（アバター200・背景100・フレーム50）
+- 「今日のゲーム」カードの本文は `hist.<id>`（i18n.js、14言語）＝そのゲームの歴史・雑学。ルール説明（`about.<id>`）は載せない。ゲーム追加時は `hist.<id>` を必ず書く（無い言語は英語、英語も無ければ空）。
 - ショップ：毎日6品（アイコン3・背景2・フレーム1。PCは横1列で幅いっぱい、スマホは3×2。ガチャのページの下段）
 
 ## 共通アカウント
@@ -43,4 +44,4 @@ URL: https://core-calmdust.github.io/aicoding/atlas/  ／ 詳細: repo の atlas
 - 進捗系のキーは合算マージ、対局中データや設定は新しい方を採用
 
 ## ゲーム追加の手順
-GAMES に追加（store 含む）→ READ に進捗読み取り → UPDATES に1行 → icons3d.js にアイコンシーン＋書き出し → table3d.js に盤モデル → 3D対局は games/<id>.js → ゲームページに `HeaderBar.init` を入れておけば、ポータル版でもロゴ横のゲーム名・メニューが自動で出る
+GAMES に追加（store 含む）→ i18n.js に hist.<id>（歴史・雑学、14言語）→ READ に進捗読み取り → UPDATES に1行 → icons3d.js にアイコンシーン＋書き出し → table3d.js に盤モデル → 3D対局は games/<id>.js → ゲームページに `HeaderBar.init` を入れておけば、ポータル版でもロゴ横のゲーム名・メニューが自動で出る
