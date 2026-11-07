@@ -92,7 +92,7 @@ html[lang=ar] .hb .hb-menu{padding:0 0 0 14px;border-right:0;border-left:1px sol
 @media (max-width: 960px){.hb .hb-title .brand-l .series{display:none}}
 /* fitting the bar to the window (2026-11-07, long languages): fit() below adds these step by step, only while something does not
    fit — the bar never runs past the window and the info keeps room for its first chips. hb-t1: tighter spacing; hb-lc: the language
-   button shows its code (DE) instead of its name; hb-ico: a menu button shows its icon only (its name stays in title / aria-label,
+   button shows its code (DE) instead of its name; hb-sub: the title's subtitle is hidden; hb-ico: a menu button shows its icon only (its name stays in title / aria-label,
    lowest priority first: from the end of the menu); hb-t2: the title gives way (subtitle hidden, then cut with …); in the info,
    a chip that does not fit is left out whole (hb-cut, from the end) instead of being cut, and the first one shrinks with … */
 .hb.hb-t1{gap:10px}
@@ -106,7 +106,7 @@ html[lang=ar] .hb.hb-t1 .hb-menu{padding:0 0 0 10px!important}
 .hb.hb-t2 .hb-title{flex:0 1 auto;min-width:72px;overflow:hidden}
 .hb.hb-t2 .hb-title .brand-l{min-width:0;max-width:100%}
 .hb.hb-t2 .hb-title .brand-l > *{max-width:100%;overflow:hidden;text-overflow:ellipsis}
-.hb.hb-t2 .hb-title .brand-l h1 small,.hb.hb-t2 .hb-title .brand-l h1 .sub{display:none!important}
+.hb.hb-sub .hb-title .brand-l h1 small,.hb.hb-sub .hb-title .brand-l h1 .sub{display:none!important}
 .hb .hb-info > .hb-cut{display:none!important}
 .hb .hb-info > .hb-shrink{flex:0 1 auto!important;min-width:0!important;max-width:100%}
 .hb .hb-info > .hb-shrink > b,.hb .hb-info > .hb-shrink > span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -227,7 +227,7 @@ function fitLabels(controls, isOn) {
 }
 // the PC bar fitted to the window (2026-11-07): long languages (de / fr / ru / id / tr …) made the menu run off the right edge
 // and squeezed the info (turn, move, evaluation) to nothing. Measured on every change, the bar steps down only as far as needed:
-// tighter spacing → the language button shows its code → menu buttons show their icon only (from the last one: lessons /
+// tighter spacing → the language button shows its code → the title's subtitle (年代・別名) is hidden → menu buttons show their icon only (from the last one: lessons /
 // draw offer / puzzles before new / undo) → the title gives way. The info keeps room for its first two chips; chips that still
 // do not fit are left out whole from the end (never cut in half), the first one alone shrinks with … as the very last resort.
 function fitBar(bar, info, getMenu, isOn) {
@@ -246,7 +246,7 @@ function fitBar(bar, info, getMenu, isOn) {
   const run = () => {
     q = 0; if (!isOn()) return;
     const menu = getMenu(), btns = menu ? [...menu.children] : [];
-    bar.classList.remove('hb-t1', 'hb-lc', 'hb-t2');
+    bar.classList.remove('hb-t1', 'hb-lc', 'hb-sub', 'hb-t2');
     btns.forEach(b => { b.classList.remove('hb-ico'); if (b.dataset.hbAl) { b.removeAttribute('aria-label'); delete b.dataset.hbAl; } if (b.dataset.hbT) { b.removeAttribute('title'); delete b.dataset.hbT; } });
     const chips = [...info.children];
     chips.forEach(c => c.classList.remove('hb-cut', 'hb-shrink'));
@@ -263,7 +263,7 @@ function fitBar(bar, info, getMenu, isOn) {
     if (!ok()) {
       // a menu button can show its icon only when it has an icon and its name in a span (the name moves to title / aria-label)
       const ico = btns.filter(b => shown(b) && b.querySelector(':scope > svg, :scope > img, :scope > i') && b.querySelector(':scope > span') && b.querySelector(':scope > span').textContent.trim() && getComputedStyle(b.querySelector(':scope > span')).display !== 'none').reverse();
-      const steps = [() => bar.classList.add('hb-t1'), () => bar.classList.add('hb-lc')]
+      const steps = [() => bar.classList.add('hb-t1'), () => bar.classList.add('hb-lc'), () => bar.classList.add('hb-sub')]
         .concat(ico.map(b => () => { const s = b.querySelector(':scope > span').textContent.trim(); if (!b.title) { b.title = s; b.dataset.hbT = '1'; } if (!b.getAttribute('aria-label')) { b.setAttribute('aria-label', s); b.dataset.hbAl = '1'; } b.classList.add('hb-ico'); }))
         .concat([() => bar.classList.add('hb-t2')]);
       for (const st of steps) { st(); if (ok()) break; }
