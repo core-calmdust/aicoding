@@ -22,6 +22,9 @@ const CSS = `
 .lsel-pop button:hover,.lsel-pop button:focus-visible{background:rgba(255,255,255,.08);outline:none}
 .lsel-pop button.on{background:rgba(255,255,255,.12);font-weight:700}
 .lsel-pop button.on small::after{content:' ✓';opacity:1}
+.lsel-pop.two{display:grid;grid-auto-flow:column;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px;width:min(400px,calc(100vw - 16px));min-width:0;max-height:none}
+.lsel-pop.two button{padding:8px 10px;gap:8px;min-width:0}
+.lsel-pop.two button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 `;
 const GLOBE = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.6 3.8 5.6 3.8 9s-1.2 6.4-3.8 9c-2.6-2.6-3.8-5.6-3.8-9S9.4 5.6 12 3z"/></svg>';
 const CHEV = '<svg class="lsel-ch" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>';
@@ -38,7 +41,7 @@ function enhance(sel) {
   sel.parentNode.insertBefore(wrap, sel); wrap.appendChild(btn); wrap.appendChild(sel); sel.style.display = 'none';
   const pop = document.createElement('div'); pop.className = 'lsel-pop'; pop.setAttribute('role', 'listbox'); document.body.appendChild(pop);
   const opts = () => [...sel.options];
-  const label = () => { const o = sel.options[sel.selectedIndex] || sel.options[0]; btn.innerHTML = GLOBE + `<span class="lsel-n">${o ? o.textContent : ''}</span><span class="lsel-c">${o ? o.value.toUpperCase() : ''}</span>` + CHEV; };
+  const label = () => { const o = sel.options[sel.selectedIndex] || sel.options[0]; btn.innerHTML = GLOBE + `<span class="lsel-n">${o ? o.textContent : ''}</span><span class="lsel-c">${o ? (o.value === 'zh-TW' ? 'TW' : o.value.toUpperCase()) : ''}</span>` + CHEV; };
   // follow programmatic changes of .value / .selectedIndex
   const P = HTMLSelectElement.prototype;
   for (const k of ['value', 'selectedIndex']) {
@@ -55,6 +58,8 @@ function enhance(sel) {
   function show() {
     pop.innerHTML = opts().map(o => `<button type="button" role="option" data-v="${o.value}" class="${o.value === sel.value ? 'on' : ''}" aria-selected="${o.value === sel.value}"><span>${o.textContent}</span><small>${o.value}</small></button>`).join('');
     pop.querySelectorAll('[data-v]').forEach(b => { b.onclick = () => pick(b.dataset.v); });
+    // many languages: two columns (read down each column) instead of a long scrolling list
+    const n = sel.options.length, two = n > 8; pop.classList.toggle('two', two); pop.style.gridTemplateRows = two ? `repeat(${Math.ceil(n / 2)}, auto)` : '';
     open = true; btn.setAttribute('aria-expanded', 'true'); place(); pop.classList.add('on');
     const cur = pop.querySelector('.on') || pop.querySelector('button'); if (cur) cur.focus({ preventScroll: true }); if (cur) cur.scrollIntoView({ block: 'nearest' });
   }

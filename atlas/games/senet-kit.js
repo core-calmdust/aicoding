@@ -24,7 +24,7 @@
     T3.show('senet', board); if (T3.play) T3.play(true);
     const tall = innerHeight > innerWidth * 1.15;
     const PT = opts.top ? 1.5703 : 0;
-    const fit0 = tall ? { w: U.D + 2.4, d: U.W + .9, y: Y, pitch: PT || 1.5, roll: -1 } : { w: U.W + .6, d: U.D + 2.9, y: Y, pitch: PT || 1.15 };
+    const fit0 = tall ? { w: U.D + 2.6, d: U.W + 3.3, up: .95, y: Y, pitch: 1.5703, roll: -1 } : { w: U.W + .6, d: U.D + 2.9, y: Y, pitch: PT || 1.15 };   // phone: straight down, the long board between the Quit button and the HUD
     if (T3.fit) T3.fit(fit0);
     let stopped = false;
     const anim = (dur, f) => new Promise(res => { const t0 = performance.now(); (function s(n) { if (stopped) return res(); const k = Math.min(1, Math.max(0, (n - t0) / dur)); f(k); T3.kick(150); if (k < 1) requestAnimationFrame(s); else res(); })(t0); });

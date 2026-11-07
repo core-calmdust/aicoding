@@ -18,12 +18,12 @@ const ICON = {
   rules: '<svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 10h8M8 14h8M8 18h5"/></svg>',
   puzzle: '<svg viewBox="0 0 24 24"><path d="M4 7h4a2 2 0 1 1 4 0h4v4a2 2 0 1 1 0 4v4h-4a2 2 0 1 0-4 0H4v-4a2 2 0 1 0 0-4z"/></svg>',
 };
-const ONL = { ja: 'オンライン', en: 'Online', zh: '在线', ko: '온라인', es: 'En línea', fr: 'En ligne', pt: 'Online', de: 'Online', hi: 'ऑनलाइन', ar: 'أونلاين' };
-const REC = { ja: '戦績', en: 'Record', zh: '战绩', ko: '전적', es: 'Historial', fr: 'Bilan', pt: 'Histórico', de: 'Bilanz', hi: 'रिकॉर्ड', ar: 'السجل' };
-const LTAB = {ja: 'ルール\nレッスン', en: 'Rules\nLessons', zh: '规则\n课程', ko: '규칙\n레슨', es: 'Reglas\nLecciones', fr: 'Règles\nLeçons', pt: 'Regras\nLições', de: 'Regeln\nLektionen', hi: 'नियम\nपाठ', ar: 'القواعد\nالدروس' };
+const ONL = { ja: 'オンライン', en: 'Online', zh: '在线', ko: '온라인', es: 'En línea', fr: 'En ligne', pt: 'Online', de: 'Online', hi: 'ऑनलाइन', ar: 'أونلاين', ru: 'Онлайн', 'zh-TW': '線上', id: 'Online', tr: 'Çevrimiçi' };
+const REC = { ja: '戦績', en: 'Record', zh: '战绩', ko: '전적', es: 'Historial', fr: 'Bilan', pt: 'Histórico', de: 'Bilanz', hi: 'रिकॉर्ड', ar: 'السجل', ru: 'Итоги', 'zh-TW': '戰績', id: 'Rekor', tr: 'Kayıt' };
+const LTAB = {ja: 'ルール\nレッスン', en: 'Rules\nLessons', zh: '规则\n课程', ko: '규칙\n레슨', es: 'Reglas\nLecciones', fr: 'Règles\nLeçons', pt: 'Regras\nLições', de: 'Regeln\nLektionen', hi: 'नियम\nपाठ', ar: 'القواعد\nالدروس', ru: 'Правила\nУроки', 'zh-TW': '規則\n課程', id: 'Aturan\nPelajaran', tr: 'Kurallar\nDersler' };
 // the コーチ tab is always there: when the coach can't work (AI vs AI, online, rated…) its box says so (the same words as
 // shared/infotabs.js on portrait phones)
-const CKL = { ja: 'コーチ', en: 'Coach', zh: '教练', ko: '코치', es: 'Entrenador', fr: 'Coach', pt: 'Treinador', de: 'Coach', hi: 'कोच', ar: 'المدرّب' };
+const CKL = { ja: 'コーチ', en: 'Coach', zh: '教练', ko: '코치', es: 'Entrenador', fr: 'Coach', pt: 'Treinador', de: 'Coach', hi: 'कोच', ar: 'المدرّب', ru: 'Тренер', 'zh-TW': '教練', id: 'Pelatih', tr: 'Koç' };
 const REST = {
   ja: 'コーチはAIとの対局・二人対戦の間に使えます。AI同士・オンライン・レッスンなどの間はお休みです。終局後の振り返りは、このタブで見られます。',
   en: 'The coach works while you play the AI or a friend on this device. It rests during AI vs AI, online games, lessons and the like. After a game, the review appears in this tab.',
@@ -34,9 +34,13 @@ const REST = {
   pt: 'O treinador funciona quando você joga contra a IA ou contra um amigo neste aparelho. Ele descansa em IA contra IA, partidas online, lições etc. Depois da partida, a revisão aparece nesta aba.',
   de: 'Der Coach hilft, wenn du gegen die KI oder zu zweit an diesem Gerät spielst. Bei KI gegen KI, Online-Partien, Lektionen usw. pausiert er. Nach der Partie erscheint die Analyse in diesem Tab.',
   hi: 'कोच तब काम करता है जब आप AI से या इसी डिवाइस पर किसी दोस्त से खेलते हैं। AI बनाम AI, ऑनलाइन खेल, पाठ आदि में यह आराम करता है। खेल के बाद समीक्षा इसी टैब में दिखती है।',
-  ar: 'يعمل المدرّب عندما تلعب ضد الذكاء الاصطناعي أو مع صديق على هذا الجهاز. ويتوقف أثناء مباريات الذكاء الاصطناعي ضد نفسه، واللعب عبر الإنترنت، والدروس ونحوها. بعد انتهاء المباراة تظهر المراجعة في هذا التبويب.'
+  ar: 'يعمل المدرّب عندما تلعب ضد الذكاء الاصطناعي أو مع صديق على هذا الجهاز. ويتوقف أثناء مباريات الذكاء الاصطناعي ضد نفسه، واللعب عبر الإنترنت، والدروس ونحوها. بعد انتهاء المباراة تظهر المراجعة في هذا التبويب.',
+  ru: 'Тренер помогает, когда вы играете с ИИ или с другом на этом устройстве. Во время партий ИИ против ИИ, онлайн-игр, уроков и т. п. он отдыхает. После партии здесь появится разбор.',
+  'zh-TW': '與 AI 對戰或在本裝置上雙人對戰時，教練會陪你下棋。AI 互戰、線上對戰、課程等期間教練會休息。對局結束後，覆盤會顯示在這個分頁。',
+  id: 'Pelatih bekerja saat kamu bermain melawan AI atau teman di perangkat ini. Pelatih beristirahat saat AI lawan AI, permainan online, pelajaran, dan sejenisnya. Setelah permainan, ulasan muncul di tab ini.',
+  tr: 'Koç, yapay zekâya ya da bu cihazda bir arkadaşına karşı oynarken çalışır. Yapay zekâ karşılaşmaları, çevrimiçi oyunlar, dersler ve benzerlerinde dinlenir. Oyundan sonra değerlendirme bu sekmede görünür.'
 };
-const LEARN = { ja: '学ぶ', en: 'Learn', zh: '学习', ko: '배우기', es: 'Aprender', fr: 'Apprendre', pt: 'Aprender', de: 'Lernen', hi: 'सीखें', ar: 'تعلّم' };
+const LEARN = { ja: '学ぶ', en: 'Learn', zh: '学习', ko: '배우기', es: 'Aprender', fr: 'Apprendre', pt: 'Aprender', de: 'Lernen', hi: 'सीखें', ar: 'تعلّم', ru: 'Учиться', 'zh-TW': '學習', id: 'Belajar', tr: 'Öğren' };
 const $ = s => document.querySelector(s);
 const ro = window.ResizeObserver ? new ResizeObserver(() => clampPanel(false)) : null;   // (the drawer's boxes: see clampPanel)
 let barMo = null, rail = null, panel = null, learn = null, nbox = null, rest = null, on = false, open = false, cur = 'coach', saved = false, homes = [];

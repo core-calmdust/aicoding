@@ -145,6 +145,7 @@ class Pos {
 const WXF_L = ' KAEHRCP';
 const ZH = { r: ' 帅仕相马车炮兵', b: ' 将士象马车炮卒', go: ['进', '退', '平'], fr: ['前', '后', '中'] };
 const JA = { r: ' 帥仕相馬車炮兵', b: ' 将士象馬車砲卒', go: ['進', '退', '平'], fr: ['前', '後', '中'] };
+const TW = { r: ' 帥仕相傌俥炮兵', b: ' 將士象馬車包卒', go: ['進', '退', '平'], fr: ['前', '後', '中'] };   // 'tw': Taiwan (traditional) notation
 const CN_NUM = ' 一二三四五六七八九';
 const fileNo = (c, col) => col ? c + 1 : 9 - c;    // Red counts files from its right, Black from its right
 const sqName = s => 'abcdefghi'[s % 9] + (9 - Math.floor(s / 9));
@@ -158,8 +159,8 @@ function name(pos, m, style) {
   if (col === 0) same.sort((a, b) => a - b); else same.sort((a, b) => b - a);   // front first (closest to the enemy)
   const straight = tp === KING || tp === ROOK || tp === CANNON || tp === PAWN;
   const destV = dir === 2 || !straight ? fileNo(tc, col) : Math.abs(tr - fr);
-  if (style === 'zh' || style === 'ja') {
-    const S = style === 'ja' ? JA : ZH, ch = S[col ? 'b' : 'r'][tp], num = n => col ? String(n) : CN_NUM[n];
+  if (style === 'zh' || style === 'ja' || style === 'tw') {
+    const S = style === 'ja' ? JA : style === 'tw' ? TW : ZH, ch = S[col ? 'b' : 'r'][tp], num = n => col ? String(n) : CN_NUM[n];
     let head;
     if (same.length >= 2 && tp !== KING && tp !== ADVISOR && tp !== ELEPHANT) {
       const i = same.indexOf(f), k = same.length === 2 ? [S.fr[0], S.fr[1]][i] : same.length === 3 ? [S.fr[0], S.fr[2], S.fr[1]][i] : num(i + 1);
@@ -181,12 +182,12 @@ function parse(pos, s) {
   const icc = s.toLowerCase().replace(/[-\s]/g, '').match(/^([a-i])([0-9])([a-i])([0-9])$/);
   if (icc) { const f = (9 - +icc[2]) * 9 + 'abcdefghi'.indexOf(icc[1]), t = (9 - +icc[4]) * 9 + 'abcdefghi'.indexOf(icc[3]); return L.includes(mv(f, t)) ? mv(f, t) : null; }
   const norm = x => x.replace(/[．.]/g, '=').replace(/\s/g, '').replace(/[Ｂ]/g, 'E').toUpperCase().replace(/^([KAEHRCPBN])/, (_, l) => ({ B: 'E', N: 'H' }[l] || l))
-    .replace(/[帥帅將将]/g, 'K').replace(/[仕士]/g, 'A').replace(/[相象]/g, 'E').replace(/[傌馬马]/g, 'H').replace(/[俥車车]/g, 'R').replace(/[炮砲]/g, 'C').replace(/[兵卒]/g, 'P')
+    .replace(/[帥帅將将]/g, 'K').replace(/[仕士]/g, 'A').replace(/[相象]/g, 'E').replace(/[傌馬马]/g, 'H').replace(/[俥車车]/g, 'R').replace(/[炮砲包]/g, 'C').replace(/[兵卒]/g, 'P')
     .replace(/[進进]/g, '+').replace(/退/g, '-').replace(/平/g, '=').replace(/[一二三四五六七八九]/g, d => CN_NUM.indexOf(d)).replace(/[１-９]/g, d => String.fromCharCode(d.charCodeAt(0) - 0xFEE0))
     .replace(/前/g, 'F').replace(/[后後]/g, 'B').replace(/中/g, 'M');
   const want = norm(s);
   for (const m of L) {
-    for (const st of ['wxf', 'zh', 'ja']) {
+    for (const st of ['wxf', 'zh', 'ja', 'tw']) {
       let n = norm(name(pos, m, st));
       // tandem forms: "+C=5" / "C+=5" / "前炮平五"
       if (n === want) return m;

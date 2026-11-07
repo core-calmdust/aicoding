@@ -254,9 +254,13 @@ const NAMES = {
   de: ['Automatisch', 'Statischer Turm', 'Wandernder Turm (beliebig)', 'Turm auf Linie 4', 'Turm auf Linie 3', 'Zentraler Turm', 'Gegenturm', 'Yagura', 'Läufertausch', 'Gangi', 'Kletternder Silber', 'Doppelflügelangriff', 'Anaguma (wandernder Turm)'],
   hi: ['स्वचालित', 'स्थिर रूक', 'घूमता रूक (कोई भी)', 'चौथे स्तंभ का रूक', 'तीसरे स्तंभ का रूक', 'केंद्रीय रूक', 'आमने-सामने रूक', 'यागुरा', 'बिशप अदला-बदली', 'गांगी', 'चढ़ता सिल्वर', 'दोहरा विंग आक्रमण', 'अनागुमा (घूमता रूक)'],
   ar: ['تلقائي', 'الرخ الثابت', 'الرخ المتنقل (أي نوع)', 'الرخ في العمود الرابع', 'الرخ في العمود الثالث', 'الرخ المركزي', 'الرخ المقابل', 'ياغورا', 'تبادل الفيلين', 'غانغي', 'الفضي المتسلق', 'هجوم الجناحين المزدوج', 'أناغوما (الرخ المتنقل)'],
+  ru: ['Авто', 'Статичная ладья', 'Подвижная ладья (любая)', 'Ладья на 4-й вертикали', 'Ладья на 3-й вертикали', 'Центральная ладья', 'Встречная ладья', 'Ягура', 'Размен слонов', 'Ганги', 'Восходящее серебро', 'Атака на обоих флангах', 'Анагума (подвижная ладья)'],
+  'zh-TW': ['自動', '居飛車', '振飛車（不限）', '四間飛車', '三間飛車', '中飛車', '向飛車', '矢倉', '角換', '雁木', '棒銀', '相掛', '穴熊（振飛車）'],
+  id: ['Otomatis', 'Benteng Statis', 'Benteng Bergeser (bebas)', 'Benteng Lajur Empat', 'Benteng Lajur Tiga', 'Benteng Tengah', 'Benteng Berhadapan', 'Yagura', 'Tukar Gajah', 'Gangi', 'Perak Memanjat', 'Serangan Dua Sayap', 'Anaguma (Benteng Bergeser)'],
+  tr: ['Otomatik', 'Sabit Kale', 'Kayan Kale (herhangi)', 'Dördüncü Sütun Kale', 'Üçüncü Sütun Kale', 'Merkez Kale', 'Karşı Kale', 'Yagura', 'Fil Değişimi', 'Gangi', 'Tırmanan Gümüş', 'Çift Kanat Saldırısı', 'Anaguma (Kayan Kale)'],
 };
-const LABEL = { ja: '戦型', en: 'Opening', zh: '战型', ko: '전법', es: 'Apertura', fr: 'Ouverture', pt: 'Abertura', de: 'Eröffnung', hi: 'ओपनिंग', ar: 'الافتتاح' };
-const PLAN = { ja: '作戦', en: 'Plan', zh: '作战', ko: '작전', es: 'Plan', fr: 'Plan', pt: 'Plano', de: 'Plan', hi: 'योजना', ar: 'خطة' };
+const LABEL = { ja: '戦型', en: 'Opening', zh: '战型', ko: '전법', es: 'Apertura', fr: 'Ouverture', pt: 'Abertura', de: 'Eröffnung', hi: 'ओपनिंग', ar: 'الافتتاح', ru: 'Дебют', 'zh-TW': '戰法', id: 'Pembukaan', tr: 'Açılış' };
+const PLAN = { ja: '作戦', en: 'Plan', zh: '作战', ko: '작전', es: 'Plan', fr: 'Plan', pt: 'Plano', de: 'Plan', hi: 'योजना', ar: 'خطة', ru: 'План', 'zh-TW': '方針', id: 'Rencana', tr: 'Plan' };
 const CS_I18N = {};
 for (const l in NAMES) { const o = CS_I18N[l] = { 'cs.label': LABEL[l], 'cs.plan': PLAN[l] }; STYLES.forEach((s, i) => { o['cs.s.' + s] = NAMES[l][i]; }); }
 if (typeof I18N !== 'undefined') for (const l in CS_I18N) if (I18N[l]) Object.assign(I18N[l], CS_I18N[l]);

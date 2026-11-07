@@ -2,7 +2,7 @@
    messages: { id, type:'think', state, n, level }          → { id, move }
              { id, type:'review', list:[{ state, n }] }      → { id, type:'progress', i, res } … { id, done:true }
                res = { ev:[{ from, to, wp }], wp0 }  (ev: every legal move, best first; wp0: the mover's win chance before rolling) */
-importScripts('engine.js?v=1');
+importScripts('engine.js?v=2');
 const E = self.SenetEngine;
 self.onmessage = e => {
   const d = e.data || {};

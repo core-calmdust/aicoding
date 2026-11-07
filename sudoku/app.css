@@ -656,6 +656,7 @@ html:is([lang=hi]) body{--font:'Noto Sans Devanagari','Zen Maru Gothic',system-u
 html:is([lang=ar]) body{--font:'Noto Sans Arabic','Zen Maru Gothic',system-ui,sans-serif}
 html:is([lang=ko]) body{--font:'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR','Zen Maru Gothic',system-ui,sans-serif}
 html:is([lang=zh-CN]) body{--font:'PingFang SC','Microsoft YaHei','Noto Sans SC','Zen Maru Gothic',system-ui,sans-serif}
+html:is([lang=zh-TW]) body{--font:'PingFang TC','Microsoft JhengHei','Noto Sans TC','Zen Maru Gothic',system-ui,sans-serif}
 @media (max-width:520px){
   .logo{font-size:17px}.logo .mk{width:22px;height:22px}
   .ib{width:34px;height:34px}.ib svg{width:20px;height:20px}

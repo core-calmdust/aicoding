@@ -18,6 +18,10 @@
     de: ['Einsteiger: zieht, wie die Stäbe fallen', 'Anfänger–Mittel: denkt an Tausch und Paare', 'Fortgeschritten: wägt Risiko und Chancen', 'Experte: rechnet die nächsten Würfe durch'],
     hi: ['आरंभिक: अंक के हिसाब से चलता है', 'शुरुआती–मध्यम: अदला-बदली और जोड़ी सोचता है', 'उन्नत: जोखिम और संभावना तौलता है', 'विशेषज्ञ: अगली फेंकों तक पढ़ता है'],
     ar: ['مبتدئ: يتحرك كما تقع العصيّ', 'مبتدئ–متوسط: يفكر في التبادل والأزواج', 'متقدم: يزن الخطر والاحتمالات', 'خبير: يحسب الرميات القادمة'],
+    ru: ['Новичок: ходит как выпадет', 'Начальный–средний: думает об обменах и парах', 'Продвинутый: взвешивает риск и шансы', 'Эксперт: просчитывает следующие броски'],
+    'zh-TW': ['入門：照點數隨意走', '初級～中級：會考慮交換與成對', '高級：權衡風險與機率', '專家：預讀接下來的投擲'],
+    id: ['Pemula: bergerak sesuai lemparan', 'Pemula–menengah: memikirkan tukar dan pasangan', 'Mahir: menimbang risiko dan peluang', 'Ahli: memperhitungkan lemparan berikutnya'],
+    tr: ['Başlangıç: çubuklar nasıl düşerse öyle oynar', 'Acemi–orta: takasları ve çiftleri düşünür', 'İleri: riski ve olasılıkları tartar', 'Uzman: sonraki atışları önceden hesaplar'],
   };
   const WHO = {
     ja: ['はじめて', 'ルールを覚えた人', '何局か遊んだ人', '慣れた人', '強い人', '上級者', '達人'],
@@ -30,13 +34,17 @@
     de: ['Erste Partie', 'Kennt die Regeln', 'Hat ein paar Partien gespielt', 'Geübter Spieler', 'Starker Spieler', 'Experte', 'Meister'],
     hi: ['पहला खेल', 'नियम जानता है', 'कुछ खेल खेले हैं', 'नियमित खिलाड़ी', 'मज़बूत खिलाड़ी', 'विशेषज्ञ', 'उस्ताद'],
     ar: ['أول مباراة', 'يعرف القواعد', 'لعب بضع مباريات', 'لاعب معتاد', 'لاعب قوي', 'خبير', 'أستاذ'],
+    ru: ['Первая игра', 'Знает правила', 'Сыграл несколько партий', 'Играет регулярно', 'Сильный игрок', 'Эксперт', 'Мастер'],
+    'zh-TW': ['第一次玩', '懂規則', '玩過幾局', '常玩', '強手', '專家', '大師'],
+    id: ['Permainan pertama', 'Tahu aturannya', 'Pernah main beberapa kali', 'Pemain rutin', 'Pemain kuat', 'Ahli', 'Master'],
+    tr: ['İlk oyun', 'Kuralları biliyor', 'Birkaç oyun oynadı', 'Düzenli oyuncu', 'Güçlü oyuncu', 'Uzman', 'Usta'],
   };
   const RATING = [0, 831, 853, 877, 896, 915, 930, 951, 969, 983, 1000, 1010, 1021, 1035, 1046, 1053, 1063, 1070, 1074, 1078, 1081];   // senet/app.js RT_LV
   function levelInfo(n, lang) {
     const d = LVD[lang] || LVD.en, w = WHO[lang] || WHO.en;
     return { name: 'Lv.' + n, desc: d[n <= 4 ? 0 : n <= 9 ? 1 : n <= 15 ? 2 : 3], rating: RATING[n], who: w[n <= 2 ? 0 : n <= 5 ? 1 : n <= 8 ? 2 : n <= 11 ? 3 : n <= 15 ? 4 : n <= 18 ? 5 : 6] };
   }
-  const BASE = '../senet/', EV = '?v=1';
+  const BASE = '../senet/', EV = '?v=2';
   const loadJS = (src, ok) => ok() ? Promise.resolve() : new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
   const loadEngine = () => loadJS(BASE + 'engine.js' + EV, () => !!window.SenetEngine).then(() => window.SenetEngine);
   const TX = {
@@ -50,6 +58,10 @@
     de: { n: ['Spulen', 'Kegel'], roll: 'Werfen', pass: 'Passen', pick: 'Leuchtende Figur antippen', dest: 'Ziel antippen', again: 'Noch einmal werfen!', noMove: 'Keine Figur kann ziehen', aiNoMove: 'KI: kein Zug', cap: 'Tausch!', home: 'Draußen!', water: 'Ins Wasser … zurück auf 15', first: 'Beginn: {p}', turnP: '{p} am Zug', win: '{p} gewinnen', off: 'raus' },
     hi: { n: ['फिरकी', 'शंकु'], roll: 'फेंकें', pass: 'पास', pick: 'चमकती गोटी छुएँ', dest: 'जगह छुएँ', again: 'फिर फेंकें!', noMove: 'कोई गोटी नहीं चल सकती', aiNoMove: 'AI: चाल नहीं', cap: 'अदला-बदली!', home: 'बाहर!', water: 'पानी में… 15 पर वापस', first: 'पहले: {p}', turnP: '{p} की बारी', win: '{p} जीते', off: 'बाहर' },
     ar: { n: ['البكرات', 'المخاريط'], roll: 'ارمِ', pass: 'تمرير', pick: 'المس قطعة مضيئة', dest: 'المس الوجهة', again: 'ارمِ مرة أخرى!', noMove: 'لا قطعة تتحرك', aiNoMove: 'الذكاء: لا حركة', cap: 'تبادل!', home: 'خرجت!', water: 'في الماء… عودة إلى 15', first: 'يبدأ: {p}', turnP: 'دور {p}', win: 'فازت {p}', off: 'خارج' },
+    ru: { n: ['Катушки', 'Конусы'], roll: 'Бросить', pass: 'Пас', pick: 'Нажмите на светящуюся фишку', dest: 'Нажмите, куда идти', again: 'Бросайте ещё!', noMove: 'Ходить нечем', aiNoMove: 'ИИ: хода нет', cap: 'Обмен!', home: 'Вышла!', water: 'В воду… назад на 15', first: 'Первыми ходят: {p}', turnP: 'Бросают: {p}', win: '{p} победили', off: 'вышли' },
+    'zh-TW': { n: ['線軸', '圓錐'], roll: '投擲', pass: '跳過', pick: '點選發光的棋子', dest: '點選要去的位置', again: '再投一次！', noMove: '沒有可走的棋子', aiNoMove: 'AI：無法走', cap: '交換！', home: '走出！', water: '落水……回到 15', first: '先手：{p}', turnP: '輪到{p}投擲', win: '{p}獲勝', off: '已出' },
+    id: { n: ['Gulungan', 'Kerucut'], roll: 'Lempar', pass: 'Lewati', pick: 'Ketuk bidak yang menyala', dest: 'Ketuk tujuan', again: 'Lempar lagi!', noMove: 'Tidak ada bidak yang bisa bergerak', aiNoMove: 'AI: tidak ada langkah', cap: 'Tukar!', home: 'Keluar!', water: 'Masuk air… kembali ke 15', first: 'Pertama: {p}', turnP: 'Giliran {p} melempar', win: '{p} menang', off: 'keluar' },
+    tr: { n: ['Makaralar', 'Koniler'], roll: 'At', pass: 'Pas', pick: 'Parlayan bir taşa dokun', dest: 'Gideceğin yere dokun', again: 'Tekrar at!', noMove: 'Hiçbir taş oynayamaz', aiNoMove: 'YZ: hamle yok', cap: 'Takas!', home: 'Çıktı!', water: 'Suya düştü… 15\'e geri', first: 'İlk: {p}', turnP: 'Atma sırası: {p}', win: '{p} kazandı', off: 'çıktı' },
   };
   // sounds (the portal's sound switch): wood on wood, the clatter of the sticks, a soft chime for the extra throw
   const SND = (() => {

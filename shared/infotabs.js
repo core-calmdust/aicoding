@@ -99,11 +99,11 @@ function init(tries) {
   // the tab says only "online" (the games' own label says "online play"); the counts stay
   const sh = ol && document.createElement('b');
   if (sh) { sh.className = 'it-sh'; ol.querySelector('.it-lb').prepend(sh); }
-  const shLab = () => { if (!sh) return; const l = (document.documentElement.lang || 'ja').slice(0, 2), v = ONL[l] || ONL.en; if (sh.textContent !== v) sh.textContent = v; };
+  const shLab = () => { if (!sh) return; const l = (s => /^zh-(tw|hk|mo|hant)/i.test(s) ? 'zh-TW' : s.slice(0, 2).toLowerCase())(document.documentElement.lang || 'ja'), v = ONL[l] || ONL.en; if (sh.textContent !== v) sh.textContent = v; };
   shLab(); new MutationObserver(() => { shLab(); try { relabel(); apply(); } catch (e) {} }).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
   // (in priority order: the kifu heading's own word, not the opening name shown beside it)
   const labOf = el => { for (const q of ['.ck-h > span', '.evalrow .label', '.progrow .label', '.kifu-head .label [data-i18n]', '.kifu-head .label']) { const l = el.querySelector(q); if (l) return l.textContent.trim(); } return ''; };
-  const relabel = () => order.forEach(k => { const a = labOf(box[k]) || (k === 'coach' ? CKL[(document.documentElement.lang || 'ja').slice(0, 2)] || CKL.en : ''), s = btn[k].querySelector('.it-lb'); if (a && s.textContent !== a) s.textContent = a; });
+  const relabel = () => order.forEach(k => { const a = labOf(box[k]) || (k === 'coach' ? CKL[(s => /^zh-(tw|hk|mo|hant)/i.test(s) ? 'zh-TW' : s.slice(0, 2).toLowerCase())(document.documentElement.lang || 'ja')] || CKL.en : ''), s = btn[k].querySelector('.it-lb'); if (a && s.textContent !== a) s.textContent = a; });
   relabel();
   order.forEach(k => new MutationObserver(relabel).observe(box[k], { subtree: true, childList: true, characterData: true }));
   // the コーチ tab is always there: when the coach can't work (AI vs AI, online, rated, lessons…) its box says so
@@ -114,7 +114,7 @@ function init(tries) {
   }
   const restSync = () => {
     if (!rest) return;
-    const l = (document.documentElement.lang || 'ja').slice(0, 2), lab = labOf(ck) || CKL[l] || CKL.en;
+    const l = (s => /^zh-(tw|hk|mo|hant)/i.test(s) ? 'zh-TW' : s.slice(0, 2).toLowerCase())(document.documentElement.lang || 'ja'), lab = labOf(ck) || CKL[l] || CKL.en;
     const h = `<h3 class="ck-h">${IC.coach}<span></span></h3><p class="ck-muted"></p>`;
     if (rest.dataset.h !== l + lab) { rest.dataset.h = l + lab; rest.innerHTML = h; rest.querySelector('span').textContent = lab; rest.querySelector('p').textContent = REST[l] || REST.en; }
     const show = matchMedia(MQ).matches && !document.body.classList.contains('ck-tab') && !document.querySelector('[data-itc=coach].show:not(#itCoachRest)');

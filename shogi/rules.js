@@ -58,7 +58,7 @@ function moves(tp, n) {
   return s;
 }
 const fig = (inner, cap) => `<figure class="ru-fig">${inner}${cap ? `<figcaption>${cap}</figcaption>` : ''}</figure>`;
-const rankLbl = n => Array.from({ length: n }, (_, i) => LANG === 'ja' || LANG === 'zh' ? KAN[i + 1] : String(i + 1));
+const rankLbl = n => Array.from({ length: n }, (_, i) => LANG === 'ja' || LANG === 'zh' || LANG === 'zh-TW' ? KAN[i + 1] : String(i + 1));
 function sfenRows(sfen) {
   const L = { p: FU, l: KY, n: KE, s: GI, b: KA, r: HI, g: KI, k: OU };
   return sfen.split(' ')[0].split('/').map(row => { const out = []; for (const ch of row) { if (/\d/.test(ch)) for (let i = 0; i < +ch; i++) out.push(null); else { const lc = ch.toLowerCase(); out.push([L[lc], ch === lc ? 1 : 0]); } } return out; });
