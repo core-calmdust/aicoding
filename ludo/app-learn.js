@@ -299,7 +299,7 @@
     setHtml($('#pzLevels'), PZBook.home({
       title: t('pz.title'), lead: t('pz.desc'), all: idx.map(i => pzRecs(Ts[i], pr)),
       cont: cont && { key: cont.key + ':' + cont.j, no: cont.j + 1, name: kTitle(Ts[+cont.key].kind, Ts[+cont.key].rule) + ' · ' + t('rule.' + Ts[+cont.key].rule) },
-      daily: dl ? [{ key: '1', board: th(Ts[dl.L], dl.j), title: '★ ' + t('daily.title'), date: dl.date.slice(5).replace('-', '/'), done: !!dd[dl.date], go: t('daily.go'), sub: t('rule.' + Ts[dl.L].rule) + ' · ' + kTitle(Ts[dl.L].kind, Ts[dl.L].rule) }] : [],
+      daily: dl ? [{ key: '1', board: th(Ts[dl.L], dl.j), title: '★ ' + t('daily.title'), date: dl.date.slice(5).replace('-', '/'), done: !!(dd.days && dd.days[dl.date]), go: t('daily.go'), sub: t('rule.' + Ts[dl.L].rule) + ' · ' + kTitle(Ts[dl.L].kind, Ts[dl.L].rule) + (dd.streak && dd.last ? ' · 🔥' + dd.streak : '') }] : [],
       cats: d.cats.map(c => { const r = idx.filter(i => Ts[i].cat === c.id).map(i => pzRecs(Ts[i], pr)).flat(); return { key: c.id, icon: PZBook.icon(PZ_IC[c.id] || 'theme'), name: t('rule.' + c.id), done: r.filter(x => x > 0).length, total: r.length }; }),
       cur,
       cards: idx.filter(i => Ts[i].cat === cur).map(i => { const T = Ts[i], r = pzRecs(T, pr); return { key: i, badge: '', name: kTitle(T.kind, T.rule), desc: kTip(T.kind, T.rule), recs: r, tier: themeTier(T), board: th(T, PZBook.nextIndex(r)) }; }),
@@ -342,7 +342,9 @@
       const ok = await playMove(m); if (!ok || puzzle !== Pz) return;
       const pr = prog(PZ_STORE), k = pzKey(Pz.T.id, Pz.j), before = pzRecs(Pz.T, pr), stars = PZBook.starsFor(Pz);
       if (!Pz.daily) pr[k] = Math.max(+pr[k] || 0, stars); progSet(PZ_STORE, pr);
-      if (Pz.daily) { const dd = prog(DAILY); dd[Pz.daily] = 1; progSet(DAILY, dd); }
+      if (Pz.daily) { const dd = prog(DAILY); dd.days = dd.days || {};
+        if (!dd.days[Pz.daily]) { const y = new Date(Pz.daily + 'T12:00:00'); y.setDate(y.getDate() - 1); dd.streak = dd.last === ymd(y) ? (dd.streak || 0) + 1 : 1; dd.best = Math.max(dd.best || 0, dd.streak); dd.days[Pz.daily] = 1; dd.last = Pz.daily; }
+        progSet(DAILY, dd); }
       const after = pzRecs(Pz.T, pr); PZBook.setLang(LANG);
       pzStatus(`<b class="ok">${esc(t('ls.right'))}</b> ${esc(t('kw.' + Pz.T.kind))}` + (Pz.daily ? '' : PZBook.solved({ stars, recs: after, j: Pz.j, events: PZBook.events(before, after, Pz.j) })));
       renderPuzzleCard(); return;

@@ -75,6 +75,13 @@ button{font:inherit;color:inherit}
 .seat .sb{font-size:12px;color:var(--muted)}
 .seat .hm{margin-left:auto;font-size:13px;color:var(--muted);white-space:nowrap}
 .seat .tm{font-size:11px;padding:1px 7px;border-radius:999px;border:1px solid var(--line);color:var(--muted);margin-left:6px}
+/* the players card is compact (common spec): one line per seat — name, colour in small, home count */
+.seat > div{display:flex;align-items:baseline;gap:7px;min-width:0}
+.seats{gap:3px;padding:6px}
+.seat{padding:5px 9px}
+.seat .dot{width:16px;height:16px}
+.seat .nm{font-size:14px}
+html.hb-on .throw .shown:not(.cw){width:60px;height:60px}html.hb-on .throw .shown.cw{width:104px;height:66px}html.hb-on .throw{padding:8px 12px}
 /* ---------- the throw ---------- */
 .throw{display:flex;align-items:center;gap:12px;padding:10px 12px}
 .throw .shown{width:76px;height:76px;flex:none;display:grid;place-items:center}
@@ -102,6 +109,13 @@ button{font:inherit;color:inherit}
   .side{grid-area:side}
   .frame{width:min(100%, calc(100vh - 110px), 860px)}
   html.hb-on .frame{width:min(100%, calc(100vh - var(--hb-h, 56px) - 70px), 860px)}
+  /* the right column never runs below the board (common spec): its height = the board's (app.js sideFit), the coach / review
+     cards shrink and scroll inside, the kifu stays short */
+  html.hb-on .side{max-height:var(--bdh, none);overflow-y:auto;overscroll-behavior:contain}
+  html.hb-on .side > *{flex:none}
+  html.hb-on .side > :is(#coachCard, .review-card.show){flex:1 1 auto;min-height:140px;overflow-y:auto}
+  html.hb-on .kifu{max-height:96px}
+  html.hb-on .graph{height:40px}
 }
 /* ---------- dialogs ---------- */
 .overlay{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;background:rgba(8,6,16,.62);backdrop-filter:blur(5px);opacity:0;pointer-events:none;transition:opacity .2s;padding:16px}
@@ -141,6 +155,97 @@ button{font:inherit;color:inherit}
 .result-dots i{width:26px;height:26px;border-radius:50%;box-shadow:inset 0 -3px 0 rgba(0,0,0,.25)}
 #resultOverlay .modal{width:min(440px,100%)}
 html[dir=rtl] .ngt-gcard{text-align:right}
+/* ---------- position card, review, coach (common spec; as senet) ---------- */
+.evalrow{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;gap:8px}
+.evalrow .val{font-family:'JetBrains Mono','Zen Kaku Gothic New',monospace;font-size:12.5px;text-align:end;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}
+.evalbar{position:relative;height:10px;border-radius:6px;background:linear-gradient(90deg,#3a3a44,#1c1c22);overflow:hidden;border:1px solid rgba(255,255,255,.08)}
+.evalbar .fill{position:absolute;inset:0 auto 0 0;width:50%;background:linear-gradient(90deg,#cfc3a3,#f4ecd6);transition:width .5s ease}
+.evalbar .mid{position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:rgba(244,176,66,.8)}
+.graph{margin-top:8px;width:100%;height:clamp(44px, 9vh, 96px);display:block;cursor:pointer;touch-action:none}
+.graph .zero{stroke:rgba(244,176,66,.35);stroke-dasharray:2 3}
+.graph .cur{stroke:var(--accent);stroke-width:1}
+.navbar{display:flex;gap:6px;margin-top:8px}
+.navbar button{flex:1;height:30px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--muted);display:flex;align-items:center;justify-content:center}
+.navbar button:hover{color:var(--text);border-color:var(--accent)}
+.navbar svg{width:15px;height:15px;fill:currentColor;stroke:currentColor;stroke-width:1.5;stroke-linejoin:round}
+.navbar .i-pause{display:none}
+.navbar button.playing .i-play{display:none}.navbar button.playing .i-pause{display:block}
+body.rated-live #evalCard .evalrow .val, body.rated-live #evalCard .evalbar, body.rated-live #evalCard .graph{visibility:hidden}
+
+/* ---------------------------------------------------------------- kifu */
+.kifu-card{display:flex;flex-direction:column;min-height:0}
+.kifu{flex:1;min-height:0;overflow-y:auto;display:grid;align-content:start;grid-auto-rows:min-content;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:2px;line-height:1.45;font-family:'JetBrains Mono','Zen Kaku Gothic New',monospace;font-size:12px;scrollbar-width:thin;scrollbar-color:var(--line) transparent;max-height:200px}
+.kifu button{min-height:24px;flex:none;padding:3px 6px;border-radius:5px;color:var(--muted);display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-align:start}
+.kifu button em{font-style:normal;color:var(--dim);font-size:.85em;min-width:1.9em;text-align:end}
+.kifu button i{width:8px;height:8px;border-radius:50%;flex:none}
+.kifu button i.s0{background:var(--light1)}.kifu button i.s1{background:#2a2a30;box-shadow:inset 0 0 0 1px #8a8a94}
+.kifu button .x{color:#ff9b8f}.kifu button .r{color:var(--accent)}
+.kifu button:hover{background:rgba(255,255,255,.05);color:var(--text)}
+.kifu button.cur{background:rgba(244,176,66,.16);color:var(--accent)}
+.kifu button.q-bad{box-shadow:inset 0 -2px 0 #ff6b5b}.kifu button.q-dub{box-shadow:inset 0 -2px 0 #f2c060}
+.kifu .empty{grid-column:1/-1;color:var(--dim);font-family:'Zen Kaku Gothic New';font-size:12px;padding:6px 0}
+
+/* ---------------------------------------------------------------- review card */
+.review-card{display:none}
+.review-card.show{display:block;overflow-y:auto}
+.rv-sum{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.rv-side{padding:8px 10px;border-radius:10px;background:rgba(0,0,0,.2);border:1px solid var(--line)}
+.rv-side h4{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;margin-bottom:4px;white-space:nowrap;overflow:hidden}
+.rv-side .acc{font-family:"Shippori Mincho B1",serif;font-size:22px;font-weight:700;color:var(--accent);line-height:1.1}
+.rv-side .acc small{font-family:'Zen Kaku Gothic New';font-size:11px;color:var(--dim);margin-inline-start:4px;font-weight:500}
+.rv-side .qc{display:flex;gap:8px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.qb{color:#8fe3b8}.qg{color:#9fc7ff}.qd{color:#f2c060}.qx{color:#ff8b7d}
+.rv-cur{font-size:13px;line-height:1.65;padding:8px 10px;border-radius:10px;background:rgba(244,176,66,.06);border:1px solid rgba(244,176,66,.25);margin-bottom:8px}
+.rv-cur b{color:var(--accent)}
+.rv-list{display:flex;flex-direction:column;gap:3px}
+.rv-list button{display:flex;gap:8px;align-items:center;text-align:start;font-size:12.5px;padding:4px 8px;border-radius:7px;border:1px solid transparent;color:var(--muted)}
+.rv-list button:hover{border-color:var(--line);color:var(--text);background:rgba(255,255,255,.03)}
+.rv-list .tag{flex:none;font-size:11px;font-weight:700;padding:0 6px;border-radius:5px;color:#0b1110}
+.tag.bad{background:#ff6b5b}.tag.dubious{background:#f2c060}.tag.best{background:#6fd3a0}.tag.good{background:#9fc7ff}
+.rv-prog{height:6px;border-radius:4px;background:rgba(0,0,0,.3);overflow:hidden;margin:6px 0}
+.rv-prog i{display:block;height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));width:0;transition:width .2s}
+.rv-note{font-size:12px;color:var(--dim);line-height:1.6}
+.ck-rvgo,.rv-go{display:inline-block;margin-top:8px;padding:7px 14px;border-radius:9px;font-weight:700;font-size:13px;background:linear-gradient(180deg,#f1d68e,#c9a24f);color:#1b1408;white-space:nowrap}
+
+/* ---------------------------------------------------------------- coach card (shared/coachkit.js styles + ours) */
+.ck-card{overflow-y:auto}
+.ck-card .ck-h{font-family:"Shippori Mincho B1",serif}
+/* coach text a size up (2026-11-05: easier to read) */
+#coachCard h3.ck-h,#coachCard .ck-h{font-size:15px}#coachCard h3.ck-h small{font-size:13px}
+#coachCard .ck-sum span{font-size:14px;padding:4px 11px}
+#coachCard .ck-rec .ck-rb{font-size:17px}
+#coachCard .ck-rec p{font-size:16px;line-height:1.75}
+#coachCard .ck-sec-h{font-size:14.5px}
+#coachCard .ck-intro{font-size:14.5px}
+#coachCard .ck-bt b{font-size:15.5px}#coachCard .ck-bt .mv{font-size:14.5px}#coachCard .ck-bt .tg,#coachCard .ck-bt .gp{font-size:12.5px}
+#coachCard .ck-bi p{font-size:14.8px}
+#coachCard .ck-tips li{font-size:15.2px}
+#coachCard .ck-vd{font-size:15px}#coachCard .ck-vd b{font-size:16px}
+#coachCard .ck-muted{font-size:15px}
+#coachCard .ck-calc{font-size:14.5px}
+.ck-pop{font-size:14.5px}.ck-pop b{font-size:15.5px}
+#coachCard.ck-off{opacity:.92}
+
+.kifu-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.kifu-head .label,.evalrow .label{font-size:12px;letter-spacing:.12em;color:var(--dim)}
+.kifu-head .kb button,#rvClose{height:26px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--muted);font-size:12px;cursor:pointer}
+.kifu .k{cursor:pointer;border-radius:5px;padding:0 3px}.kifu .k.cur{background:rgba(244,176,66,.18);color:var(--text)}
+.kifu .k.dubious{box-shadow:inset 0 -2px 0 #f2c060}.kifu .k.bad{box-shadow:inset 0 -2px 0 #ff7a66}
+.ev-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-inline-end:5px;vertical-align:0}
+.graph .mid{stroke:rgba(244,176,66,.35);stroke-dasharray:2 3}.graph .ln{fill:none;stroke:var(--accent);stroke-width:1.6;vector-effect:non-scaling-stroke}
+.navbar button:disabled{opacity:.35}
+.rv-lh{font-size:12px;color:var(--dim);margin:6px 0 4px;letter-spacing:.08em}
+.rv-list .tag.best,.rv-cur .tag.best{background:#7fd6a4}.rv-list .tag.good,.rv-cur .tag.good{background:#9cc8ff}.rv-list .tag.dubious,.rv-cur .tag.dubious{background:#f2c060}.rv-list .tag.bad,.rv-cur .tag.bad{background:#ff7a66}
+.rv-cur .tag{font-size:11px;font-weight:700;padding:0 6px;border-radius:5px;color:#0b1110}
+.rv-side .qc .dubious{color:#f2c060}.rv-side .qc .bad{color:#ff9b8f}.rv-side .qc .best{color:#8fe3b8}
+.rv-list button.on{border-color:var(--accent);color:var(--text)}
+.rt-card{padding:10px 12px;border-radius:12px;background:rgba(0,0,0,.22);border:1px solid var(--line)}.rt-top{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}.rt-l{font-size:12px;color:var(--dim)}.rt-r{font-size:22px;color:var(--accent)}.rt-k{font-size:12.5px;color:var(--muted)}.rt-n{font-size:12.5px;color:var(--muted);margin-top:3px}.rt-h{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.rt-h span{font:11px monospace;padding:1px 6px;border-radius:6px;border:1px solid var(--line)}.rt-h .w{color:#8fe3b8}.rt-h .l{color:#ff9b90}.rt-desc{font-size:12.5px;line-height:1.7;color:var(--muted);margin:8px 0 0}
+.mtabs{display:none;background:linear-gradient(180deg,#221b3d,#130f22);border-top:1px solid var(--line)}
+.mtabs button{background:none;border:0;color:var(--muted);position:relative;cursor:pointer}
+.mtabs button.sel{color:var(--accent)}
+body.reviewing #status{opacity:.5}
+body:has(.review-card.show) #coachCard{display:none!important}
+
 /* ---------- rules / lessons / puzzles (common spec; same markup and look as senet) ---------- */
 /* ---------------------------------------------------------------- lesson / puzzle cards */
 .lesson-card,.puzzle-card{display:none}
@@ -246,7 +351,7 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
 
 </style>
 </head>
-<body>
+<body class="no-online">
 <div class="app">
   <header class="top">
     <div class="brand">
@@ -305,9 +410,28 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
     </div>
     <div class="status" id="status" aria-live="polite"></div>
     <div class="card seats" id="players"></div>
-    <div class="card kifu-card"><div class="label" data-i18n="kifu"></div><div class="kifu" id="kifu"></div></div>
+    <div class="card ck-card hidden" id="coachCard" aria-live="polite"></div>
+    <div class="card review-card" id="reviewCard" data-itc="coach">
+      <div class="kifu-head"><span class="label" data-rv="head"></span><button id="rvClose" data-rv="close"></button></div>
+      <div id="rvBody"></div>
+    </div>
+    <div class="card" id="evalCard">
+      <div class="evalrow"><span class="label" data-rv="eval"></span><span class="val" id="evalText">—</span></div>
+      <div class="evalbar"><div class="fill" id="evalFill"></div><div class="mid"></div></div>
+      <svg class="graph" id="graph" viewBox="0 0 300 74" preserveAspectRatio="none"></svg>
+      <div class="navbar" id="navBar" dir="ltr">
+        <button data-n="first"><svg viewBox="0 0 24 24"><path d="M6 5v14"/><path d="M18 6 10 12l8 6z"/></svg></button>
+        <button data-n="prev"><svg viewBox="0 0 24 24"><path d="M15 6 8 12l7 6z"/></svg></button>
+        <button data-n="play" id="navPlay"><svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg class="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg></button>
+        <button data-n="next"><svg viewBox="0 0 24 24"><path d="M9 6l7 6-7 6z"/></svg></button>
+        <button data-n="last"><svg viewBox="0 0 24 24"><path d="M18 5v14"/><path d="M6 6l8 6-8 6z"/></svg></button>
+      </div>
+    </div>
+    <div class="card kifu-card"><div class="kifu-head"><span class="label" data-i18n="kifu"></span><span class="kb"><button id="btnAnalyze" data-rv="btn"></button></span></div><div class="kifu" id="kifu"></div></div>
   </aside>
 </div>
+
+<nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="tab.game"></button></nav>
 
 <!-- new game -->
 <div class="overlay" id="newOverlay">
@@ -319,8 +443,9 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
     </div>
     <div class="field" id="fMode">
       <label data-i18n="ng.mode"></label>
-      <div class="seg" id="segMode"><button data-v="ai" data-i18n="ng.ai"></button><button data-v="pvp" data-i18n="ng.pvp"></button><button data-v="watch" data-i18n="ng.watch"></button></div>
+      <div class="seg" id="segMode"><button data-v="ai" data-i18n="ng.ai"></button><button data-v="rated" data-i18n="ng.rated"></button><button data-v="pvp" data-i18n="ng.pvp"></button><button data-v="watch" data-i18n="ng.watch"></button></div>
     </div>
+    <div class="field hidden" id="fRatedInfo"><div id="rtStats"></div></div>
     <div class="ng-cols"><div class="ng-col">
       <div class="field" id="fPlayers"><label data-i18n="ng.players"></label><div class="seg" id="segPlayers"><button data-v="2"></button><button data-v="3"></button><button data-v="4"></button></div></div>
       <div class="field" id="fFirst"><label data-i18n="ng.firstp"></label><div class="seg" id="segFirst"><button data-v="0" data-i18n="ng.you"></button><button data-v="r" data-i18n="ng.random"></button></div></div>
@@ -385,30 +510,46 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
   </div>
 </div>
 
+<!-- leaving a rated game -->
+<div class="overlay" id="rtConfirm">
+  <div class="modal" style="width:min(420px,100%)">
+    <p id="rtConfirmText" style="font-size:15px;line-height:1.7;margin:4px 0 14px"></p>
+    <div class="modal-actions"><button class="mbtn" id="rtConfirmNo"></button><button class="mbtn go" id="rtConfirmYes"></button></div>
+  </div>
+</div>
+
 <!-- result -->
 <div class="overlay" id="resultOverlay">
   <div class="modal">
     <div class="result-dots" id="resultDots"></div>
     <div class="result-big" id="resultTitle"></div>
     <div class="result-sub" id="resultSub"></div>
-    <div class="modal-actions" style="justify-content:center"><button class="mbtn" id="btnResClose" data-i18n="close"></button><button class="mbtn go" id="btnAgain" data-i18n="res.again"></button></div>
+    <div class="modal-actions" style="justify-content:center;flex-wrap:wrap"><button class="mbtn" id="btnResClose" data-i18n="close"></button><button class="mbtn" id="btnResAnalyze" data-rv="btn"></button><button class="mbtn go" id="btnAgain" data-i18n="res.again"></button></div>
   </div>
 </div>
 
 <script src="i18n.js?v=3"></script>
-<script src="../shared/rulesoffer.js?v=17l14j"></script>
+<script src="../shared/rulesoffer.js?v=17l14k"></script>
 <script src="../shared/headerbar.js?v=50l14"></script>
 <script src="../shared/resign.js?v=3l14"></script>
 <script src="../shared/ruletour.js?v=29l14"></script>
 <script src="../shared/pzbook.js?v=5l14"></script>
 <script src="engine.js?v=1"></script>
 <script src="board2d.js?v=1"></script>
-<script src="app.js?v=3"></script>
+<script src="../shared/coachkit.js?v=16l14"></script>
+<script src="coach.js?v=1"></script>
+<script src="coach-i18n.js?v=1"></script>
+<script src="../shared/record.js?v=12l14"></script>
+<script src="app.js?v=5"></script>
+<script src="review.js?v=1"></script>
+<script src="../shared/placement.js?v=1l14"></script>
+<script src="rated.js?v=1"></script>
 <script src="tour.js?v=1"></script>
-<script src="app-learn.js?v=2"></script>
+<script src="app-learn.js?v=3"></script>
 <script src="../shared/cardbar.js?v=7l14"></script>
 <script src="../shared/ngtabs.js?v=25l14"></script>
 <script src="../shared/atlas.js?v=20261108ld2" defer></script>
 <script src="../shared/langsel.js?v=2l14" defer></script>
+<script src="../shared/infotabs.js?v=17l14" defer></script>
 </body>
 </html>
