@@ -849,14 +849,18 @@ function optCss() { if (!document.getElementById('hboCss')) { const st = documen
 function options(o) {
   optCss();
   const host = o.host; if (!host || host.querySelector(':scope > .hbo-gear')) return null;
-  const keep = o.keep || (() => false), take = o.take || (el => !keep(el));
+  const REC = '#btnRecord, #atlasRec';   // 戦績 stays outside, right before the gear (common rule 2026-11-08)
+  const keep0 = o.keep || (() => false), keep = el => el.matches(REC) || keep0(el), take = o.take ? (el => !el.matches(REC) && o.take(el)) : (el => !keep(el));
   const gear = document.createElement('button'); gear.type = 'button'; gear.className = (o.gearClass || 'snd') + ' hbo-gear'; gear.id = o.id || 'btnOpts';
   gear.innerHTML = GEAR; gear.setAttribute('aria-haspopup', 'true'); gear.setAttribute('aria-expanded', 'false');
   const pop = document.createElement('div'); pop.className = 'hbo-pop' + (o.theme === 'atlas' ? ' hbo-atlas' : ''); pop.setAttribute('role', 'menu');
   const list = document.createElement('div'); list.className = 'hbo-list'; pop.appendChild(list); document.body.appendChild(pop);
   // the gear: right before the orientation button / home (o.after), so 盤面反転 stays on its left
   const after = o.after || '#btnLand, #btnRot, .land, a';
-  const seat = () => { const a = [...host.children].find(c => c !== gear && c.matches(after)) || null; if (gear.parentNode !== host || gear.nextElementSibling !== a) host.insertBefore(gear, a); };
+  const seat = () => {
+    const a = [...host.children].find(c => c !== gear && c.matches(after)) || null; if (gear.parentNode !== host || gear.nextElementSibling !== a) host.insertBefore(gear, a);
+    const rec = host.querySelector(':scope > #btnRecord, :scope > #atlasRec'); if (rec && rec.nextElementSibling !== gear) host.insertBefore(rec, gear);
+  };
   seat();
   const rows = new Map();   // unit (the moved element) → row
   const kind = u => u.matches('.lsel, #langSel, #atlasLang') ? 'lang' : /^(btnSound|atlasSnd)$/.test(u.id) ? 'sound' : /^(btnRecord|atlasRec)$/.test(u.id) ? 'rec' : u.id === 'btnSettings' ? 'set' : 'other';

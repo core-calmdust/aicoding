@@ -623,7 +623,7 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
     // 横画面 (#atlasLand) and home stay in the bar. The language list opens under the gear.
     if (window.HeaderBar && HeaderBar.options) HeaderBar.options({ host: bar, theme: 'atlas', id: 'atlasOpts', gearClass: 'atlas-ic',
       after: '#atlasLand, a.atlas-ic',
-      keep: el => !/^(atlasRec|atlasSnd|atlasLang)$/.test(el.id) && !el.classList.contains('hbo-x'),
+      keep: el => !/^(atlasSnd|atlasLang)$/.test(el.id) && !el.classList.contains('hbo-x'),   // (atlasRec: kept outside by headerbar.js, before the gear)
       onLang: (b, g) => { const br = bar.getBoundingClientRect(), rtl = getComputedStyle(bar).direction === 'rtl';
         pop.style.top = Math.round(g.bottom - br.top + 8) + 'px';
         if (rtl) { pop.style.left = Math.max(0, Math.round(g.left - br.left)) + 'px'; pop.style.right = 'auto'; } else { pop.style.right = Math.max(0, Math.round(br.right - g.right)) + 'px'; pop.style.left = 'auto'; }
