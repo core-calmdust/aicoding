@@ -891,8 +891,9 @@ $('#ruleCards').onclick = e => { const b = e.target.closest('button'); if (!b) r
 $('#levelRange').oninput = e => { draft.level = +e.target.value; $('#levelName').innerHTML = levelLabelHTML(draft.level); };
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; $('#levelName2').innerHTML = levelLabelHTML(draft.level2); };
 [['optAutoRoll', 'autoRoll'], ['optAutoPick', 'autoPick'], ['optEval', 'eval'], ['optLast', 'last'], ['optDanger', 'danger']].forEach(([id, k]) => { $('#' + id).onchange = e => { draft[k] = e.target.checked; }; });
-$('#bdRow').onclick = e => { const b = e.target.closest('button'); if (!b) return; draft.design = b.dataset.v; designPickers(); };
-$('#pcRow').onclick = e => { const b = e.target.closest('button'); if (!b) return; draft.pieces = b.dataset.v; designPickers(); };
+// デザインは選んだ瞬間に盤へ反映（共通ルール）：開始・キャンセルを待たない
+$('#bdRow').onclick = e => { const b = e.target.closest('button'); if (!b) return; draft.design = b.dataset.v; designPickers(); setDesign(draft.design, draft.pieces); };
+$('#pcRow').onclick = e => { const b = e.target.closest('button'); if (!b) return; draft.pieces = b.dataset.v; designPickers(); setDesign(draft.design, draft.pieces); };
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
 $('#btnStart').onclick = () => {
   hideOverlay('#newOverlay');

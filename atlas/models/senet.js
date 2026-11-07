@@ -41,7 +41,7 @@
     return (b2p = new Promise(res => {
       if (window.SenetBoard2D) return res();
       const sc = document.createElement('script'), base = /\/(atlas|senet)\//.test(location.pathname) ? '../senet/' : 'senet/';
-      sc.src = base + 'board2d.js?v=4'; sc.onload = () => res(); sc.onerror = () => res(); document.head.appendChild(sc);
+      sc.src = base + 'board2d.js?v=5'; sc.onload = () => res(); sc.onerror = () => res(); document.head.appendChild(sc);
     }));
   }
   function topTex(design) {
