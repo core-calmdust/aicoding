@@ -137,7 +137,7 @@ let aiW = null, jobSeq = 0;
 const jobs = new Map();
 function worker() {
   if (aiW === false) return null;
-  if (!aiW) { try { aiW = new Worker('worker.js?v=1'); aiW.onmessage = e => { const d = e.data, j = jobs.get(d.id); if (j) j(d); }; aiW.onerror = () => { aiW = false; }; } catch (e) { aiW = false; return null; } }
+  if (!aiW) { try { aiW = new Worker('worker.js?v=2'); aiW.onmessage = e => { const d = e.data, j = jobs.get(d.id); if (j) j(d); }; aiW.onerror = () => { aiW = false; }; } catch (e) { aiW = false; return null; } }
   return aiW;
 }
 function think(st, n, level) {
