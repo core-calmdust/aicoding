@@ -256,11 +256,25 @@
     return { move: moves[bi], scores };
   }
 
+  /* ---------- win chance (coach / review) ---------- */
+  // logistic fit of "the side to move wins" against evaluate(), from self-play at Lv.12–20 (tools/fit_wp.js, 150 games per setup)
+  const WP = { ludo2: [0.0149, 0.0323], ludo3: [0.01596, -0.5117], ludo4: [0.01343, -0.8817], pachisi2: [0.0066, 0.0194], pachisi4: [0.00695, 0.0449] };
+  const wpKey = s => s.rule === 'pachisi' ? 'pachisi' + (s.players === 2 ? 2 : 4) : 'ludo' + s.seats.length;
+  function wpOf(s, v) { const c = WP[wpKey(s)] || WP.ludo2; if (v >= 5e4) return 1; if (v <= -5e4) return 0; return 1 / (1 + Math.exp(-(c[0] * v + c[1]))); }
+  function winProb(s, team) { if (s.over) return s.winner === team ? 1 : 0; return wpOf(s, evaluate(s, team)); }
+  // every legal move for throw t with its Lv.20 value and the win chance after it, best first: [{ move, v, wp, i }]
+  function rank(s, t) {
+    const moves = legalMoves(s, t); if (!moves.length) return [];
+    if (moves.length === 1) { const r = apply(s, moves[0], t); const v = evaluate(r.state, s.team[s.turn]); return [{ move: moves[0], v, wp: wpOf(s, v), i: 0 }]; }
+    const { scores } = think(s, t, 20, () => .5);
+    return moves.map((m, i) => ({ move: m, v: scores[i], wp: wpOf(s, scores[i]), i })).sort((a, b) => b.v - a.v);
+  }
+
   /* ---------- text ---------- */
   const COLORS = ['yellow', 'red', 'black', 'green'];   // pachisi pairs: 0+2 (yellow, black) vs 1+3 (red, green); ludo uses its own palette in the page
   function moveText(s, m, t) { if (!m || m.pass) return '—'; return (m.enter ? '▶' : (m.from + 1) + '→') + (m.home ? '⌂' : m.to + 1) + (m.cap && m.cap.length ? '×' : ''); }
 
-  const API = { RULES, N_PC, D6, COWRIE, throwsOf, rollThrow, cellOf, isSafe, sharedCell, PACHISI_CASTLE, LUDO_SAFE, newGame, clone, legalMoves, apply, evaluate, seatValue, threatProb, think, LEVELS, nextSeat, lastOf, moveText, COLORS };
+  const API = { RULES, N_PC, D6, COWRIE, throwsOf, rollThrow, cellOf, isSafe, sharedCell, PACHISI_CASTLE, LUDO_SAFE, newGame, clone, legalMoves, apply, evaluate, seatValue, threatProb, think, LEVELS, nextSeat, lastOf, moveText, COLORS, WP, wpOf, winProb, rank };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   else root.LudoEngine = API;
 })(typeof self !== 'undefined' ? self : this);

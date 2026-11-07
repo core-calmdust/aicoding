@@ -150,7 +150,7 @@ function rollLabel() { $('#btnRoll').textContent = t(isPachisi() ? 'btn.throw' :
 /* ---------- game flow ---------- */
 let busy = false, token = 0, moves = [], selK = -1;
 function newGame(fromDialog) {
-  if (SP && window.LudoLearn) LudoLearn.quit();
+  if (SP && window.LudoLearn) LudoLearn.exitSpecial(true);
   const players = settings.rule === 'pachisi' && settings.players === 3 ? 4 : settings.players;
   const opts = { rule: settings.rule, players, blocks: settings.blocks, threeSixes: settings.three };
   let st = E.newGame(opts);
@@ -233,7 +233,9 @@ async function commit(m) {
 }
 function pickPiece(seat, k) {
   if (busy || !G || G.state.over || !G.thr || G.state.turn !== seat || !humanSeat(seat)) return;
-  const ms = moves.filter(m => !m.pass && m.k === k); if (!ms.length) return;
+  let ms = moves.filter(m => !m.pass && m.k === k);
+  if (!ms.length && G.state.pos[seat][k] < 0) ms = moves.filter(m => m.enter);   // any piece in the yard: the bring-out move
+  if (!ms.length) return; k = ms[0].k;
   if (ms.length === 1) { commit(ms[0]); return; }
   // pachisi grace: the full throw or a single step — tap the destination
   selK = k; gMarks.innerHTML = '';
@@ -316,7 +318,7 @@ function applyI18n() {
   $('#langSel').value = LANG;
   if (G) { rollLabel(); renderPlayers(); renderKifu(); showThrow(G.thr); }
 }
-$('#langSel').onchange = e => { LANG = e.target.value; try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {} applyI18n(); if (G) step(); if ($('#newOverlay').classList.contains('show')) renderDialog(); if (HB) HB.relabel(); };
+$('#langSel').onchange = e => { LANG = e.target.value; try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {} applyI18n(); if (G) step(); if ($('#newOverlay').classList.contains('show')) renderDialog(); if (HB) HB.relabel(); if (window.LudoLearn) LudoLearn.relang(); if (window.LudoCoach) LudoCoach.relabel(); };
 const paintSnd = () => $('#btnSound').classList.toggle('off', !settings.sound);
 $('#btnSound').onclick = () => { settings.sound = !settings.sound; paintSnd(); save(); };
 
