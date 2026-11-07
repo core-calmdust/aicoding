@@ -80,7 +80,7 @@ html.atlas-skin .atlas-guide .pic{width:84px;height:84px}
 
 /* ---- the portal's top bar (logo · coins · sound · language · home) replaces the game's title row ---- */
 html.atlas-skin{--top:12px}
-html.atlas-skin .app{padding-top:calc(var(--pad) + 64px)!important}
+html.atlas-skin:not(.atlas-2d) .app{padding-top:calc(var(--pad) + 64px)!important}
 html.atlas-skin .brand{display:none!important}
 .atlas-top{position:fixed;z-index:40;top:0;left:0;right:0;height:64px;display:flex;align-items:center;gap:10px;padding:0 max(16px,env(safe-area-inset-right)) 0 max(16px,env(safe-area-inset-left));background:rgba(255,246,226,.9);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:2px solid #efe3c8;font-family:'Zen Maru Gothic',sans-serif;color:#2b3044}
 .atlas-top .sp{flex:1}
@@ -171,7 +171,16 @@ html.atlas-reversi.hb-atlas .app,html.atlas-shogi.hb-atlas .app{padding-top:var(
 html.atlas-2d.hb-atlas{--ttop:0px;--vh:calc(100vh - 64px)}
 html.atlas-2d.hb-atlas,html.atlas-2d.hb-atlas body{--hb-h:64px}
 html.atlas-2d.hb-atlas body{padding-top:64px}
-html.atlas-2d.hb-atlas .app{padding-top:var(--pad)!important}
+/* (.app keeps the page's own padding with the 2D board: mancala / fanorona use 12px, not --pad — forcing --pad put the board 50–90px low) */
+/* (2026-11-07) the online dock at the bottom takes its height off too, as on the 2D page (html.hb-on.ol-dock): the skin's own
+   dock rules (html.atlas-<game>.hb-atlas.ol-dock) are off with the 2D board (its class goes) — the rule above alone left the
+   page 108px too tall: the board pushed down onto the dock, and too large where the height limits it */
+@media not all and (pointer: coarse){
+  html.atlas-2d.hb-atlas.ol-dock{--vh:calc(100vh - 108px - 64px)}
+  @supports (height:100dvh){html.atlas-2d.hb-atlas.ol-dock{--vh:calc(100dvh - 108px - 64px)}}
+  html.atlas-2d.hb-atlas.ol-dock.ol-soon{--vh:calc(100vh - 46px - 64px)}
+  @supports (height:100dvh){html.atlas-2d.hb-atlas.ol-dock.ol-soon{--vh:calc(100dvh - 46px - 64px)}}
+}
 
 /* ===== shogi skin ===== */
 html.atlas-shogi .board{background:transparent!important;border-color:transparent!important;box-shadow:none!important}
