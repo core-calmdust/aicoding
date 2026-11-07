@@ -539,7 +539,7 @@ static void ttStore(u64 key, int d, int flag, int v, const Move *m, int ply) {
 EXPORT(new_game) void new_game(void) { memset(TT, 0, sizeof(TT)); ttAge = 0; }
 
 // ---------------------------------------------------------------- search
-static u64 nodes; static double tEnd; static int stopFlag, nodeLimit_on; static u64 nodeLimit;
+static u64 nodes; static double tEnd; static int stopFlag, nodeLimit_on; static u64 nodeLimit, nodeMask = 2047;   // small node limits are checked every 128 nodes
 EXPORT(nodes_k) int nodes_k(void) { return (int)(nodes / 1000); }   // nodes of the last search, in thousands (speed checks)
 static int hist[2][32][32];
 static Move killers[MAXPLY][2];
@@ -549,7 +549,7 @@ static int seldepth;
 static inline int sameMove(const Move *a, const Move *b) { return a->f == b->f && a->t == b->t && a->cap == b->cap; }
 static inline int timeUp(void) {
   if (stopFlag) return 1;
-  if ((nodes & 2047) == 0) { if ((tEnd > 0 && now() > tEnd) || (nodeLimit_on && nodes > nodeLimit)) stopFlag = 1; }
+  if ((nodes & nodeMask) == 0) { if ((tEnd > 0 && now() > tEnd) || (nodeLimit_on && nodes > nodeLimit)) stopFlag = 1; }
   return stopFlag;
 }
 static int isRep(u64 key, int from) {   // the position occurred before since the last irreversible move
@@ -707,8 +707,12 @@ static void beginSearch(int ms) {
   memset(killers, 0, sizeof(killers));
 }
 // best move: IO[0..1] = move, IO[2] = value, IO[3] = depth, IO[4] = nodes / 1000
-EXPORT(best) void best(int maxDepth, int ms, int nodeK) {
-  beginSearch(ms); nodeLimit_on = nodeK > 0; nodeLimit = (u64)nodeK * 1000;
+static void bestN(int maxDepth, int ms, u64 nodeLim);
+// nodeK: node limit in thousands (0 = none); best_n takes it in nodes (the weak levels need less than 1,000)
+EXPORT(best) void best(int maxDepth, int ms, int nodeK) { bestN(maxDepth, ms, nodeK > 0 ? (u64)nodeK * 1000 : 0); }
+EXPORT(best_n) void best_n(int maxDepth, int ms, int nodeLim) { bestN(maxDepth, ms, nodeLim > 0 ? (u64)nodeLim : 0); }
+static void bestN(int maxDepth, int ms, u64 nodeLim) {
+  beginSearch(ms); nodeLimit_on = nodeLim > 0; nodeLimit = nodeLim; nodeMask = nodeLimit_on && nodeLim < 100000 ? 127 : 2047;
   if (rootN == 0) { IO[0] = -1; IO[1] = 0; IO[2] = -WIN; IO[3] = 0; return; }
   Move bm = rootL[0]; int bv = 0, bd = 0;
   if (rootN == 1) { writeMove(IO, &bm); IO[2] = 0; IO[3] = 0; IO[4] = 0; return; }
@@ -741,7 +745,7 @@ EXPORT(best) void best(int maxDepth, int ms, int nodeK) {
 }
 // analysis: exact values of all root moves. IO[0] = n, IO[1] = depth, then (ft, cap, v) * n, best first
 EXPORT(analyze) void analyze(int ms, int maxDepth) {
-  beginSearch(ms); nodeLimit_on = 0;
+  beginSearch(ms); nodeLimit_on = 0; nodeMask = 2047;
   int depthDone = 0; int vals[MAXMV]; Move ord[MAXMV];
   for (int i = 0; i < rootN; i++) { ord[i] = rootL[i]; vals[i] = 0; }
   if (rootN) {
@@ -765,7 +769,7 @@ EXPORT(analyze) void analyze(int ms, int maxDepth) {
 }
 // fixed-depth values of all root moves (weak levels): IO like analyze
 EXPORT(values) void values(int depth, int noEval) {
-  beginSearch(0); nodeLimit_on = 0;
+  beginSearch(0); nodeLimit_on = 0; nodeMask = 2047;
   int saved = useNet; if (noEval) useNet = 0;
   for (int d = 1; d <= depth; d++) rootSearch(d, 1, -INF, INF);
   useNet = saved;
