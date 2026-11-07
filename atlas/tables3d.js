@@ -1220,8 +1220,8 @@
     try { X.mergeStatic(g); } catch (e) {}
     // the lamp carries the mood (and the one shadow); the board also gets an even warm light from above: never a dark corner on the board
     scene.add(new TT.HemisphereLight(day ? 0xe4ecf8 : T === 'evening' ? 0xd8b0a0 : 0x8a90b8, 0x2a170c, day ? .48 : T === 'evening' ? .36 : .3));
-    const key = new TT.SpotLight(0xffc78a, day ? 2.4 : 4.2, 80, 1.05, .95, .9); key.position.copy(bulbW); key.target.position.set(3, 0, 4); scene.add(key); scene.add(key.target);
-    const over = new TT.DirectionalLight(0xffdcb0, .42); over.position.set(-4, 30, 10); scene.add(over);
+    const key = new TT.SpotLight(0xffc78a, day ? 1.6 : 2.7, 80, 1.15, 1, .9); key.position.copy(bulbW); key.target.position.set(3, 0, 4);   // (2026-11-07: softer — the lamp no longer burns a bright spot into the board's middle) scene.add(key); scene.add(key.target);
+    const over = new TT.DirectionalLight(0xffdcb0, .56); over.position.set(-4, 30, 10); scene.add(over);
     key.shadow.camera.near = 1; key.shadow.camera.far = 50; key.shadow.bias = -.0003;
     const pool = new TT.PointLight(0xffb060, .9, 16, 2); pool.position.copy(bulbW).y -= .8; scene.add(pool);
     const shelfL = new TT.PointLight(0xffc890, .6, 70, 2); shelfL.position.set(0, 18, ZB + 14); scene.add(shelfL);   // the shelves' light falling on the chair, the desk's back edge
