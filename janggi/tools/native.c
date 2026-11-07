@@ -224,6 +224,27 @@ int main(int argc, char **argv) {
     fclose(fo);
     return 0;
   }
+  if (argc > 1 && !strcmp(argv[1], "dump")) {
+    // dump N level seed out.txt: positions of self-play games (random setups and openings), "F <ply> <fen>" per line
+    int N = atoi(argv[2]), lv = atoi(argv[3]); rng ^= (u64)atoll(argv[4]) * 2654435761ull; FILE *fo = fopen(argv[5], "w");
+    for (int g = 0; g < N; g++) {
+      u8 b[90]; int sd; randomStart(b, &sd);
+      int nh = 0, pre = 4 + rnd32() % 6; new_game();
+      setupBoard(b, sd, GH, 0, 0, 0); GK[0] = KEY;
+      for (int ply = 0; ply < 200; ply++) {
+        setupBoard(b, sd, GH, nh, 0, 0);
+        if (!rootN) break;
+        if (ply >= 8) { char fen[128]; loadRoot(); fenOf(fen); fprintf(fo, "F %d %s\n", ply, fen); setupBoard(b, sd, GH, nh, 0, 0); }
+        Move m = ply < pre ? rootL[rnd32() % rootN] : levelMove(lv, 0);
+        makeMove(m); GH[nh++] = m; GK[nh] = KEY;
+        int cnt = 0; for (int i = nh; i >= 0; i--) if (GK[i] == KEY) cnt++;
+        if (cnt >= 3) break;
+      }
+      if ((g + 1) % 20 == 0) { fprintf(stderr, "%d games\n", g + 1); fflush(fo); }
+    }
+    fclose(fo);
+    return 0;
+  }
   if (argc > 1 && !strcmp(argv[1], "mate")) {
     u8 b[90]; int sd; loadFen(argv[2], b, &sd); setupBoard(b, sd, 0, 0, 0, 0); loadRoot();
     int k = mateLen(atoi(argv[3]), atoi(argv[4]), 100000); Move fm = 0; int c1 = 0;

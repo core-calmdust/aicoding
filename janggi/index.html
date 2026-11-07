@@ -59,8 +59,8 @@ html.hb-on{--ttop:0px;--vh:calc(100vh - var(--hb-h))}
 html,body{height:100%;overflow:hidden}
 body{
   background:
-    radial-gradient(1200px 700px at 28% -10%, #461521 0%, transparent 60%),
-    radial-gradient(900px 600px at 110% 110%, #3c121d 0%, transparent 60%),
+    radial-gradient(1200px 700px at 28% -10%, #15403c 0%, transparent 60%),
+    radial-gradient(900px 600px at 110% 110%, #112f33 0%, transparent 60%),
     var(--bg);
   color:var(--text);
   font-family:'Zen Kaku Gothic New','Noto Sans Devanagari','Noto Sans Arabic',system-ui,sans-serif;
@@ -100,7 +100,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .lines .sh{stroke:rgba(0,0,0,.55)}
 .lines .ln{stroke:url(#brassG)}
-.lines .pt{fill:#270a11;stroke:rgba(226,194,117,.85)}
+.lines .pt{fill:#0e2326;stroke:rgba(226,194,117,.85)}
 .pieces,.fx{position:absolute;inset:0}
 .fx{pointer-events:none;z-index:6}
 .pc{position:absolute;width:calc(var(--cell) * .68);height:calc(var(--cell) * .68);margin:calc(var(--cell) * -.34) 0 0 calc(var(--cell) * -.34);border-radius:50%;will-change:transform;z-index:2;transition:filter .25s}
@@ -109,7 +109,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .pc.p1,.rv.p1{background:conic-gradient(from 200deg at 50% 50%,rgba(255,255,255,0) 0deg,rgba(255,255,255,.22) 40deg,rgba(255,255,255,0) 90deg,rgba(255,255,255,0) 220deg,rgba(255,255,255,.14) 260deg,rgba(255,255,255,0) 300deg),radial-gradient(circle at 34% 28%,var(--gold1) 0%,var(--gold2) 26%,var(--gold3) 68%,var(--gold4) 100%);box-shadow:inset 0 -4px 8px rgba(0,0,0,.35),inset 0 0 0 1.5px rgba(255,240,200,.35),0 6px 10px -4px rgba(0,0,0,.7)}
 .pc.p2,.rv.p2{background:conic-gradient(from 200deg at 50% 50%,rgba(255,255,255,0) 0deg,rgba(255,255,255,.28) 40deg,rgba(255,255,255,0) 90deg,rgba(255,255,255,0) 220deg,rgba(255,255,255,.18) 260deg,rgba(255,255,255,0) 300deg),radial-gradient(circle at 34% 28%,var(--plat1) 0%,var(--plat2) 26%,var(--plat3) 68%,var(--plat4) 100%);box-shadow:inset 0 -4px 8px rgba(0,0,0,.4),inset 0 0 0 1.5px rgba(255,255,255,.4),0 6px 10px -4px rgba(0,0,0,.7)}
 .pc.last::after{background:rgba(255,255,255,.88);box-shadow:0 0 6px rgba(255,255,255,.85)}
-.pc.p2.last::after{background:rgba(57,39,44,.85);box-shadow:0 0 5px rgba(255,255,255,.6)}
+.pc.p2.last::after{background:rgba(39,52,56,.85);box-shadow:0 0 5px rgba(255,255,255,.6)}
 .board.hide-last .pc.last::after{background:transparent;box-shadow:none}
 .pc.sel{z-index:4;box-shadow:0 0 0 3px rgba(255,236,170,.95),0 0 22px rgba(226,194,117,.85),0 10px 18px -6px rgba(0,0,0,.8)}
 .pc.tent{opacity:.92}
@@ -134,8 +134,8 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .mark.played.bad{border-color:#ff6b5b;box-shadow:0 0 12px rgba(255,107,91,.55)}
 .mark.played.dubious{border-color:#f2c060;box-shadow:0 0 12px rgba(242,192,96,.5)}
 .hintlbl{position:absolute;width:calc(var(--cell));height:calc(var(--cell));margin:calc(var(--cell) * -.5) 0 0 calc(var(--cell) * -.5);display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;z-index:9;font-family:'JetBrains Mono',monospace;line-height:1.05;text-shadow:0 1px 3px rgba(0,0,0,.9),0 0 6px rgba(0,0,0,.8)}
-.hintlbl b{font-size:calc(var(--cell) * .22);font-weight:700;background:rgba(25,7,12,.78);border-radius:6px;padding:0 .22em;box-shadow:0 0 0 1px rgba(255,255,255,.08)}
-.hintlbl small{font-size:calc(var(--cell) * .14);opacity:.95;background:rgba(25,7,12,.7);border-radius:4px;padding:0 .25em;margin-top:1px}
+.hintlbl b{font-size:calc(var(--cell) * .22);font-weight:700;background:rgba(7,18,20,.78);border-radius:6px;padding:0 .22em;box-shadow:0 0 0 1px rgba(255,255,255,.08)}
+.hintlbl small{font-size:calc(var(--cell) * .14);opacity:.95;background:rgba(7,18,20,.7);border-radius:4px;padding:0 .25em;margin-top:1px}
 .hintlbl.win{color:#9ff0c4}.hintlbl.loss{color:#ff9b90}.hintlbl.heur{color:rgba(255,255,255,.85)}.hintlbl.neg{color:#ffc2b8}
 .hintlbl.best b{color:var(--accent)}
 .hintlbl.best::before{content:"";position:absolute;inset:12%;border-radius:50%;border:2px solid rgba(226,194,117,.85);box-shadow:0 0 10px rgba(226,194,117,.5)}
@@ -172,7 +172,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .reserve .cap i{width:calc(var(--cell) * .24);height:calc(var(--cell) * .24);border-radius:50%;opacity:.55;display:inline-block}
 .toast{
   position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.9);z-index:20;
-  background:rgba(23,9,13,.9);backdrop-filter:blur(6px);
+  background:rgba(9,20,22,.9);backdrop-filter:blur(6px);
   border:1px solid rgba(201,169,97,.45);color:var(--text);
   padding:14px 26px;border-radius:12px;font-weight:700;letter-spacing:.08em;white-space:nowrap;
   opacity:0;pointer-events:none;transition:opacity .25s, transform .25s;
@@ -180,7 +180,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
 .toast.big{font-family:'Cormorant Garamond','Shippori Mincho B1',serif;font-size:30px;letter-spacing:.2em;padding:12px 34px;color:var(--accent)}
 .review-bar,.review-bar.show{display:none!important}
-.prompt{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(var(--cell) * .2);z-index:15;font-size:12.5px;color:var(--accent);white-space:nowrap;letter-spacing:.06em;pointer-events:none;opacity:0;transition:opacity .2s;background:rgba(23,9,13,.88);border:1px solid rgba(201,169,97,.4);border-radius:999px;padding:3px 12px}
+.prompt{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(var(--cell) * .2);z-index:15;font-size:12.5px;color:var(--accent);white-space:nowrap;letter-spacing:.06em;pointer-events:none;opacity:0;transition:opacity .2s;background:rgba(9,20,22,.88);border:1px solid rgba(201,169,97,.4);border-radius:999px;padding:3px 12px}
 .prompt.show{opacity:1}
 
 /* ---------------------------------------------------------------- side */
@@ -281,9 +281,9 @@ body.rated-live #evalCard .evalrow,body.rated-live #evalCard .evalbar,body.rated
 .info-line{font-size:11px;color:var(--dim);text-align:center;font-family:'JetBrains Mono','Zen Kaku Gothic New',monospace}
 
 /* ---------------------------------------------------------------- modal */
-.overlay{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;background:rgba(12,4,6,.62);backdrop-filter:blur(5px);opacity:0;pointer-events:none;transition:opacity .25s;padding:16px}
+.overlay{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;background:rgba(4,10,12,.62);backdrop-filter:blur(5px);opacity:0;pointer-events:none;transition:opacity .25s;padding:16px}
 .overlay.show{opacity:1;pointer-events:auto}
-.modal{width:min(460px,100%);max-height:calc(var(--vh) - 32px);overflow-y:auto;background:linear-gradient(180deg,#35161e,#260e14);border:1px solid rgba(201,169,97,.35);border-radius:18px;padding:24px;box-shadow:0 40px 80px rgba(0,0,0,.6);transform:translateY(10px);transition:transform .25s}
+.modal{width:min(460px,100%);max-height:calc(var(--vh) - 32px);overflow-y:auto;background:linear-gradient(180deg,#1f3438,#14252a);border:1px solid rgba(201,169,97,.35);border-radius:18px;padding:24px;box-shadow:0 40px 80px rgba(0,0,0,.6);transform:translateY(10px);transition:transform .25s}
 .overlay.show .modal{transform:none}
 .overlay.instant,.overlay.instant .modal{transition:none!important}
 .overlay{height:100vh;height:100dvh;bottom:auto}
@@ -939,7 +939,7 @@ html[data-pcs=box3d] .reserve .rv::before{display:none}
 #btnPuzzle{display:none!important}   /* パズルは非表示 (2026-11-01) */
 html body #btnDraw,html body .controls #btnDraw{display:none!important}   /* janggi has no draws (the points decide) */
 </style>
-<link rel="stylesheet" href="online.css?v=2">
+<link rel="stylesheet" href="online.css?v=3">
 <style>
 /* phones held upright (narrow touch screens): the board is sized from the width only, the same side gutter (10px) in every game —
    not from the height, which differs by browser (iOS Chrome: toolbars) and would make some boards narrower; the page scrolls instead */
@@ -1287,7 +1287,7 @@ html[data-pcs=west] .pc .ic svg .f{fill:var(--pCho)}html[data-pcs=west] .pc.p2 .
   </div>
 </div>
 
-<script src="i18n.js?v=1"></script>
+<script src="i18n.js?v=2"></script>
 <script src="i18n-online.js?v=1"></script>
 <script src="../shared/pzbook.js?v=5l14"></script>
 <script src="../shared/placement.js?v=1l14"></script>
@@ -1308,9 +1308,9 @@ html[data-pcs=west] .pc .ic svg .f{fill:var(--pCho)}html[data-pcs=west] .pc.p2 .
 <script src="../shared/record.js?v=12l14"></script>
 <script src="../shared/export.js?v=9l14"></script>
 <script src="coach.js?v=1"></script>
-<script src="coach-i18n.js?v=1"></script>
+<script src="coach-i18n.js?v=2"></script>
 <script src="coach-jg.js?v=1"></script>
-<script src="app.js?v=1"></script>
+<script src="app.js?v=2"></script>
 <script src="online-ui.js?v=1"></script>
 <!-- World Board Game Atlas portal skin: xiangqi/?skin=atlas — 3D antique lacquer board with boxwood discs, guide speech bubbles, portal look (all features kept) -->
 <script>
