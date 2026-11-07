@@ -272,7 +272,11 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
   .bvplb span{display:none}   /* phones: the chip is the place's picture alone */
   .plrow{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:8px;padding-bottom:4px;margin:0 -4px;padding-inline:4px;scrollbar-width:none}
   .plrow::-webkit-scrollbar{display:none}
-  .plcb{flex:0 0 100px;scroll-snap-align:start}
+  .plcb{flex:0 0 92px;scroll-snap-align:start;gap:4px;padding:4px 4px 6px;border-radius:13px}
+  .plcb img{height:56px;aspect-ratio:auto;border-radius:9px}   /* (a fixed height: iOS let the 3/2 box grow tall and the panel ran off the top) */
+  .plcb span{display:block;min-height:0;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .plp .plh{margin-bottom:7px;font-size:15px}.plp .plh + .plrow + .plh,.plp .plbr + .pltodh{margin-top:10px}
+  .bvplm{max-height:calc(100% - 80px - env(safe-area-inset-top) - env(safe-area-inset-bottom));overflow-y:auto;overscroll-behavior:contain}   /* (and if it is still too tall: it scrolls) */
   .plbr{gap:2px}.plbr button{font-size:14px;padding:10px 4px}.plbr button i{margin-inline-end:5px}   /* 「とても明るい」 fits on a phone */
   .plbr.pltod button{font-size:13px;padding-inline:2px}.plbr.pltod button i{margin-inline-end:3px}   /* five times of day in a row */
   .bvplb span{max-width:7.5em;overflow:hidden;text-overflow:ellipsis}
