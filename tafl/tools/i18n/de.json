@@ -417,5 +417,7 @@
 "tr.ardri.b": "<b>Ard Rí</b> („Hochkönig“) ist ein irisches Spiel auf 7×7: 16 Angreifer gegen 8 Verteidiger und den König. Mehr als das halbe Brett ist von Anfang an besetzt – ein enges Gefecht mit ständigem Kontakt.\nHier wird mit <b>Flucht in die Ecken</b> gespielt, und der König wird <b>von allen vier Seiten</b> gefangen (nie am Rand). Mit Flucht an jedem Rand gewinnen bekanntlich immer die Verteidiger.",
 "tr.ardri.task": "Umstelle den König mit den Angreifern (schwarz) von allen vier Seiten.",
 "tr.ardri.ok": "Der König ist gefangen! Alle vier Seiten sind nötig.",
-"tr.ardri.ng": "Setze einen Angreifer auf das einzige freie Feld neben dem König."
+"tr.ardri.ng": "Setze einen Angreifer auf das einzige freie Feld neben dem König.",
+"pro.btn": "Tiefenanalyse",
+"pro.btn.title": "Mehrkern-Analyse öffnen (neuer Tab)"
 }

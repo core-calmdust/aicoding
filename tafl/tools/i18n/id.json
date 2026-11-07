@@ -422,5 +422,7 @@
  "tr.ardri.b": "<b>Ard Rí</b> ('Raja Agung') adalah permainan Irlandia di papan 7×7: 16 penyerang melawan 8 pembela dan raja. Lebih dari separuh papan sudah penuh sejak awal, jadi ini permainan sesak dengan kontak terus-menerus.\nDi sini dimainkan dengan <b>kabur ke sudut</b> dan raja ditangkap <b>di keempat sisi</b> (tidak pernah di tepi). Dengan kabur ke tepi mana pun, pembela diketahui selalu menang.",
  "tr.ardri.task": "Kepung raja di keempat sisi dengan penyerang (hitam).",
  "tr.ardri.ok": "Raja tertangkap! Keempat sisi diperlukan.",
- "tr.ardri.ng": "Taruh penyerang di satu-satunya petak kosong di samping raja."
+ "tr.ardri.ng": "Taruh penyerang di satu-satunya petak kosong di samping raja.",
+"pro.btn": "Analisis mendalam",
+"pro.btn.title": "Buka analisis multi-inti (tab baru)"
 }

@@ -9,6 +9,14 @@ typedef signed char i8;
 typedef unsigned char u8;
 typedef short i16;
 #define EXPORT(n) __attribute__((export_name(#n)))
+/* MT (engine_mt.wasm): several threads search together on one shared memory ("Lazy SMP"); per-thread state is TLS,
+   the weights, the tables and the transposition tables are shared. Without MT TLS is nothing (same build as before). */
+#ifdef MT
+#define TLS _Thread_local
+static volatile int gStop;          /* shared: set when the main thread's search is over (the helpers stop) */
+#else
+#define TLS
+#endif
 extern double now(void) __attribute__((import_module("env"), import_name("now")));
 
 static inline int pc(u64 x) { return __builtin_popcountll(x); }
@@ -70,7 +78,7 @@ static int finalScore(u64 P, u64 O) {
 static i16 W[WMAX];
 static int NINST, NPHASE, PHASE_SIZE, USE_EXT, EXT_OFF;
 static int I_OFF[MAXI], SQ_START[65], SQI[MAXI * 10], SQP[MAXI * 10];
-static int STA[NSTK * MAXI], STB[NSTK * MAXI];
+static TLS int STA[NSTK * MAXI], STB[NSTK * MAXI];
 EXPORT(w_ptr) i16 *w_ptr(void) { return W; }
 EXPORT(w_max) int w_max(void) { return WMAX; }
 EXPORT(tab_ptr) int *tab_ptr(int k) { return k == 0 ? I_OFF : k == 1 ? SQ_START : k == 2 ? SQI : SQP; }
@@ -114,16 +122,21 @@ static int evalAt(int ply, u64 P, u64 O) {
 }
 
 // ------------------------------------------------------------------ search state
-static double nodes, deadline; static int aborted;
-static double MPC_T = 1.5, MPC_A = 357.32, MPC_B = 1.1, MPC_C = -3.14; static int MPC_ON = 1, MPC_MIN = 3;
-static int T_EVALMIN = 12, T_SEARCHMIN = 14, T_SDEPTH = 1, T_KE = 8;
+static TLS double nodes, deadline; static TLS int aborted;
+static TLS double MPC_T = 1.5, MPC_A = 357.32, MPC_B = 1.1, MPC_C = -3.14; static TLS int MPC_ON = 1, MPC_MIN = 3;
+static TLS int T_EVALMIN = 12, T_SEARCHMIN = 14, T_SDEPTH = 1, T_KE = 8;
 EXPORT(set_state) void set_state(double n, double dl, int mpcOn, double t, double a, double b, double c, int minDepth, int evalMin, int searchMin, int sDepth, int kE) {
   nodes = n; deadline = dl; aborted = 0; MPC_ON = mpcOn; MPC_T = t; MPC_A = a; MPC_B = b; MPC_C = c; MPC_MIN = minDepth;
   T_EVALMIN = evalMin; T_SEARCHMIN = searchMin; T_SDEPTH = sDepth; T_KE = kE;
 }
 EXPORT(get_nodes) double get_nodes(void) { return nodes; }
 EXPORT(get_aborted) int get_aborted(void) { return aborted; }
-static inline void checkTime(void) { if (deadline > 0 && now() > deadline) aborted = 1; }
+static inline void checkTime(void) {
+#ifdef MT
+  if (gStop) { aborted = 1; return; }
+#endif
+  if (deadline > 0 && now() > deadline) aborted = 1;
+}
 
 #define TT_SIZE (1 << 20)
 #define TT_MASK (TT_SIZE - 1)
@@ -145,7 +158,7 @@ static const i16 SQV[64] = {
   100, -20, 10, 5, 5, 10, -20, 100, -20, -50, -2, -2, -2, -2, -50, -20, 10, -2, 1, 1, 1, 1, -2, 10, 5, -2, 1, 0, 0, 1, -2, 5,
   5, -2, 1, 0, 0, 1, -2, 5, 10, -2, 1, 1, 1, 1, -2, 10, -20, -50, -2, -2, -2, -2, -50, -20, 100, -20, 10, 5, 5, 10, -20, 100 };
 #define MAXPLY 64
-static i8 MV[MAXPLY * 36]; static int SC[MAXPLY * 36];
+static TLS i8 MV[MAXPLY * 36]; static TLS int SC[MAXPLY * 36];
 static void sortMoves(int base, int n) {
   for (int i = 1; i < n; i++) {
     int m = MV[base + i], s = SC[base + i], j = i - 1;
@@ -380,3 +393,14 @@ EXPORT(init) void init(void) {
   for (int s = 0; s < 64; s++) QUAD[s] = (i8)(((s >> 5) << 1) | ((s & 7) >> 2));
   clear_tt();
 }
+
+#ifdef MT
+/* ------------------------------------------------------------------ threads (engine_mt.wasm, see pro/) */
+extern unsigned char __heap_base;
+extern void __wasm_init_tls(void *);
+EXPORT(mt_heap_base) u32 mt_heap_base(void) { return (u32)&__heap_base; }
+/* every instance first: mt_stack (its own stack top; a function without a frame of its own), then mt_thread */
+EXPORT(mt_stack) void mt_stack(u32 stackTop) { __asm__ volatile(".globaltype __stack_pointer, i32\n local.get %0\n global.set __stack_pointer" :: "r"(stackTop)); }
+EXPORT(mt_thread) void mt_thread(u32 tls) { __wasm_init_tls((void *)tls); }
+EXPORT(mt_stop) void mt_stop(int v) { __atomic_store_n(&gStop, v, __ATOMIC_SEQ_CST); }
+#endif

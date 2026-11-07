@@ -20,6 +20,13 @@ static void js_progress(i32 depth, double score, i32 nodes, i32 *pv, i32 pvlen) 
 static void js_aprogress(i32 depth, i32 n, i32 *moves, double *scores) { (void)depth; (void)n; (void)moves; (void)scores; }
 #else
 #define EXPORT(name) __attribute__((export_name(#name)))
+/* MT (engine_mt.wasm): several threads search together on one shared memory ("Lazy SMP"); per-thread state is TLS,
+   the tables, the evaluation weights and the transposition table are shared. Without MT TLS is nothing (same build as before). */
+#ifdef MT
+#define TLS _Thread_local
+#else
+#define TLS
+#endif
 #define IMPORT(name) __attribute__((import_module("env"), import_name(#name)))
 
 IMPORT(now) double js_now(void);
@@ -91,17 +98,17 @@ static inline int tsq(int c, int s, int mir) { if (c) s = 80 - s; if (mir) s = s
 
 /* ------------------------------------------------------------------ position */
 #define NST 1200
-static i8 board[81], hand[16], king[2];
-static int side = 0;
-static i32 hl, hh;
-static i32 acc[2];
-static i16 kidx[2]; static u8 mir[2];
-static i8 stCap[NST]; static i32 stMove[NST], stHL[NST], stHH[NST], stA0[NST], stA1[NST];
-static int sp = 0;
-static i32 histL[NST], histH[NST]; static u8 histChk[NST];
-static int hn = 0;
-static float nnA[2 * NN_MAXH];
-static float nnSt[NST * 2 * 32];
+static TLS i8 board[81], hand[16], king[2];
+static TLS int side = 0;
+static TLS i32 hl, hh;
+static TLS i32 acc[2];
+static TLS i16 kidx[2]; static TLS u8 mir[2];
+static TLS i8 stCap[NST]; static TLS i32 stMove[NST], stHL[NST], stHH[NST], stA0[NST], stA1[NST];
+static TLS int sp = 0;
+static TLS i32 histL[NST], histH[NST]; static TLS u8 histChk[NST];
+static TLS int hn = 0;
+static TLS float nnA[2 * NN_MAXH];
+static TLS float nnSt[NST * 2 * 32];
 /* NNUE (chess-style): (2534 -> 256) x 2 perspectives -> 1, SCReLU; int16 weights (x QA), int32 accumulators */
 #ifdef __wasm_simd128__
 #include <wasm_simd128.h>
@@ -122,10 +129,10 @@ static inline int nueBucket(void) { if (nueNB == 1) return 0; int t = 0; for (in
 /* accumulators, one per search-stack level (nueAc[sp]), updated lazily: doMove only records which features change
    (nueD*), and evaluate() brings the nearest computed ancestor up to the current level, child = parent - removed + added
    in one pass. Undo costs nothing (sp--), and moves whose position is never evaluated cost no accumulator work. */
-static i16 nueAc[NST + 1][2][NUE_H];
-static u8 nueOk[NST + 1];
-static i16 nueDA[NST][2][2], nueDR[NST][2][2];   /* [level][persp][k]: features added / removed by the move at that level (-1: none) */
-static u8 nueDN[NST];                           /* number of (add, remove) pairs: 0 (null move), 1, 2 (capture) */
+static TLS i16 nueAc[NST + 1][2][NUE_H];
+static TLS u8 nueOk[NST + 1];
+static TLS i16 nueDA[NST][2][2], nueDR[NST][2][2];   /* [level][persp][k]: features added / removed by the move at that level (-1: none) */
+static TLS u8 nueDN[NST];                           /* number of (add, remove) pairs: 0 (null move), 1, 2 (capture) */
 static i16 nueZero[NUE_H];
 #define nueA (nueAc[sp])
 static inline int nueB(int persp, int p, int s) { return ((colorOf(p) != persp) * 14 + typeOf(p) - 1) * 81 + (persp ? 80 - s : s); }
@@ -343,7 +350,7 @@ static inline int addMove(i32 *list, int n, int s, int to, int t, int cp, int us
   } else if (!capOnly || q) list[n++] = s | (to << 7);
   return n;
 }
-static u32 pmask[2][3];
+static TLS u32 pmask[2][3];
 #define SETB(c, s) (pmask[c][(s) / 27] |= 1u << ((s) % 27))
 #define CLRB(c, s) (pmask[c][(s) / 27] &= ~(1u << ((s) % 27)))
 static int gen(i32 *list, int mode) {
@@ -479,7 +486,7 @@ static void doNull(void) {
 }
 static void undoNull(void) { int s0 = --sp; hn--; side ^= 1; hl = stHL[s0]; hh = stHH[s0]; }
 
-static i32 hlBuf[1000];
+static TLS i32 hlBuf[1000];
 static int hasLegalMove(void) {
   int us = side, k = king[us];
   if (k >= 0) {
@@ -567,7 +574,7 @@ static int legalAfter(int m, int wasInChk) {
   if (dr && dc && dr != dc && dr != -dc) return 1;
   return lastMoveLegal(m);
 }
-static i32 lmBuf[1000];
+static TLS i32 lmBuf[1000];
 static int legalMoves(i32 *out, int full) {
   int n = gen(lmBuf, full ? 2 : 0), k = 0;
   for (int i = 0; i < n; i++) { int m = lmBuf[i]; doMove(m); int ok = lastMoveLegal(m); undoMove(); if (ok) out[k++] = m; }
@@ -627,7 +634,7 @@ static int isPseudo(int m) {
 }
 
 /* mate in 3 for the side to move (checks only); returns first move or 0 */
-static i32 m3a[1000], m3b[1000], m3c[600];
+static TLS i32 m3a[1000], m3b[1000], m3c[600];
 static int mate3(void) {
   int us = side, n = gen(m3a, 0);
   for (int i = 0; i < n; i++) {
@@ -655,6 +662,10 @@ static int mate3(void) {
 #define TT_SIZE (1 << TT_BITS)
 #define TT_MASK (TT_SIZE - 1)
 static i32 ttKey[TT_SIZE], ttMove[TT_SIZE], ttData[TT_SIZE];
+#ifdef MT
+static volatile int gStop;          /* shared: set when the main thread's search is over (the helpers stop) */
+static TLS int threadId;            /* 0 = the main thread (time control, result), 1.. = helpers */
+#endif
 static int ttAge = 0;
 #define F_EXACT 1
 #define F_LOWER 2
@@ -662,12 +673,12 @@ static int ttAge = 0;
 EXPORT(tt_clear) void tt_clear(void) { memset(ttKey, 0, sizeof ttKey); memset(ttMove, 0, sizeof ttMove); memset(ttData, 0, sizeof ttData); }
 
 #define NBUF (MAXPLY + 32)
-static i32 moveBuf[NBUF][1000], scoreBuf[NBUF][1000], quietBuf[NBUF][1000], quietScore[NBUF][1000], triedQ[NBUF][1000], mateBuf[NBUF][1000];
-static i32 killers[NBUF * 2];
-static i32 history[2 * 88 * 81 * 2];
-static i32 nodes; static int stopFlag; static double deadline; static i32 nodeLimit;
-static i32 pvTable[MAXPLY * MAXPLY], pvLen[MAXPLY];
-static int rootDepth = 1;
+static TLS i32 moveBuf[NBUF][1000], scoreBuf[NBUF][1000], quietBuf[NBUF][1000], quietScore[NBUF][1000], triedQ[NBUF][1000], mateBuf[NBUF][1000];
+static TLS i32 killers[NBUF * 2];
+static TLS i32 history[2 * 88 * 81 * 2];
+static TLS i32 nodes; static TLS int stopFlag; static TLS double deadline; static TLS i32 nodeLimit;
+static TLS i32 pvTable[MAXPLY * MAXPLY], pvLen[MAXPLY];
+static TLS int rootDepth = 1;
 /* tunables (same defaults as engine.js) */
 static int useMate1 = 1, rfpDepth = 3, rfpMargin = 90, nullAdapt = 1, histMalus = 0;   /* (2026-11: margin 120 -> 90, adaptive null move on, LMP count P[12] 6 -> 4: +190 Elo at 200k nodes) */
 static int P[32] = {[5] = 1, [7] = 1, [12] = 4, [14] = 1, [16] = 100};
@@ -678,10 +689,13 @@ EXPORT(set_param) void set_param(int k, int v) { if (k == 0) useMate1 = v; else 
 static double ln_(double x) { int k = 0; while (x > 1.5) { x *= 0.5; k++; } double z = (x - 1) / (x + 1), z2 = z * z, t = z, r = 0; for (int i = 1; i < 40; i += 2) { r += t / i; t *= z2; } return 2 * r + k * 0.6931471805599453; }
 static i8 LMRT[64][64];
 static void lmrInit(double div) { for (int d = 1; d < 64; d++) for (int n = 1; n < 64; n++) LMRT[d][n] = (i8)(0.6 + ln_(d) * ln_(n) / div); }
-static i32 counterMv[32 * 81];
+static TLS i32 counterMv[32 * 81];
 
 static inline int timeUp(void) {
   if ((nodes & 1023) == 0) {
+#ifdef MT
+    if (gStop) stopFlag = 1;
+#endif
     if (deadline > 0 && js_now() > deadline) stopFlag = 1;
     if (nodeLimit && nodes > nodeLimit) stopFlag = 1;
   }
@@ -944,7 +958,7 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
 }
 
 /* root */
-static i32 rootM[1000]; static double rootS[1000]; static int nRoot;
+static TLS i32 rootM[1000]; static TLS double rootS[1000]; static TLS int nRoot;
 static void rootMoveToFront(int idx) {
   if (idx <= 0) return;
   i32 m = rootM[idx]; double s = rootS[idx];
@@ -992,10 +1006,10 @@ static void sortRoot(void) {
   }
 }
 /* result buffer: [move, depth, nodes, pvlen, pv...]; score separately */
-static i32 res[8 + MAXPLY]; static double resScore;
+static TLS i32 res[8 + MAXPLY]; static TLS double resScore;
 EXPORT(res_ptr) i32 *res_ptr(void) { return res; }
 EXPORT(res_score) double res_score(void) { return resScore; }
-static i32 exclude[1000]; static int nExclude = 0;
+static TLS i32 exclude[1000]; static TLS int nExclude = 0;
 EXPORT(exclude_ptr) i32 *exclude_ptr(void) { return exclude; }
 EXPORT(set_exclude) void set_exclude(int n) { nExclude = n; }
 
@@ -1004,11 +1018,14 @@ EXPORT(root_search) int root_search(double timeMs, int maxDepth, int nodeLim) {
   stopFlag = 0; nodes = 0;
   deadline = timeMs > 0 ? t0 + timeMs : 0;
   nodeLimit = nodeLim;
+#ifdef MT
+  if (!threadId)
+#endif
   ttAge = (ttAge + 1) & 31;
   memset(killers, 0, sizeof killers);
   for (int k = 0; k < (int)(sizeof history / 4); k++) history[k] >>= 2;
   if (!maxDepth) maxDepth = 40;
-  static i32 legal[1000];
+  static TLS i32 legal[1000];
   int nl = legalMoves(legal, 0);
   nRoot = 0;
   for (int i = 0; i < nl; i++) {
@@ -1019,7 +1036,11 @@ EXPORT(root_search) int root_search(double timeMs, int maxDepth, int nodeLim) {
   if (!nRoot) { res[0] = 0; res[1] = 0; res[2] = 0; res[3] = 0; resScore = -MATE; return 0; }
   res[0] = rootM[0]; res[1] = 0; res[3] = 1; res[4] = rootM[0]; resScore = 0;
   double prevScore = 0;
-  for (int depth = 1; depth <= maxDepth; depth++) {
+  int d0 = 1;
+#ifdef MT
+  if (threadId) d0 = 1 + (threadId & 1);   /* helpers: every other one a ply ahead */
+#endif
+  for (int depth = d0; depth <= maxDepth; depth++) {
     rootDepth = depth;
     double alpha = -INF, beta = INF, delta = 60, score;
     if (depth >= 4) { alpha = prevScore - delta; beta = prevScore + delta; }
@@ -1045,18 +1066,21 @@ EXPORT(root_search) int root_search(double timeMs, int maxDepth, int nodeLim) {
     if ((score < 0 ? -score : score) > MATE - MAXPLY && depth > 3) break;
     if (deadline > 0 && js_now() - t0 > (deadline - t0) * (P[15] ? P[15] / 100.0 : 0.55)) break;
     if (nRoot == 1 && depth >= 2) break;
+#ifdef MT
+    if (gStop) break;
+#endif
   }
   res[2] = nodes;
   return res[0];
 }
 /* analyze: every root move with a full window; results in rootM/rootS (sorted) */
-static i32 anaD[1000];
+static TLS i32 anaD[1000];
 EXPORT(ana_moves) i32 *ana_moves(void) { return rootM; }
 EXPORT(ana_scores) double *ana_scores(void) { return rootS; }
 EXPORT(ana_depths) i32 *ana_depths(void) { return anaD; }
 EXPORT(analyze) int analyze(double timeMs, int maxDepth, int nodeLim) {
   double t0 = js_now();
-  static i32 legal[1000]; static double tmp[1000];
+  static TLS i32 legal[1000]; static TLS double tmp[1000];
   nRoot = legalMoves(legal, 0);
   for (int i = 0; i < nRoot; i++) { rootM[i] = legal[i]; rootS[i] = 0; anaD[i] = 0; }
   if (!maxDepth) maxDepth = 30;
@@ -1096,7 +1120,7 @@ static void computeHash(void) {
   if (side) { l ^= ZSIDE_L; h ^= ZSIDE_H; }
   hl = l; hh = h;
 }
-static i8 setupBuf[81 + 16 + 1];
+static TLS i8 setupBuf[81 + 16 + 1];
 EXPORT(setup_ptr) i8 *setup_ptr(void) { return setupBuf; }
 /* setupBuf: board[81], hand[16], side */
 EXPORT(set_position) void set_position(void) {
@@ -1178,3 +1202,15 @@ EXPORT(init) void init(void) {
   ZSIDE_L = rnd32(); ZSIDE_H = rnd32();
 }
 EXPORT(reset_search) void reset_search(void) { memset(history, 0, sizeof history); memset(killers, 0, sizeof killers); }
+
+#ifdef MT
+/* ------------------------------------------------------------------ threads (engine_mt.wasm, see pro/) */
+extern unsigned char __heap_base;
+extern void __wasm_init_tls(void *);
+EXPORT(mt_heap_base) u32 mt_heap_base(void) { return (u32)&__heap_base; }
+EXPORT(mt_tls_size) u32 mt_tls_size(void) { return __builtin_wasm_tls_size(); }
+/* every instance first: mt_stack (its own stack top; a function without a frame of its own), then mt_thread */
+EXPORT(mt_stack) void mt_stack(u32 stackTop) { __asm__ volatile(".globaltype __stack_pointer, i32\n local.get %0\n global.set __stack_pointer" :: "r"(stackTop)); }
+EXPORT(mt_thread) void mt_thread(u32 tls, int id) { __wasm_init_tls((void *)tls); threadId = id; }
+EXPORT(mt_stop) void mt_stop(int v) { __atomic_store_n(&gStop, v, __ATOMIC_SEQ_CST); }
+#endif
