@@ -4,7 +4,7 @@
    game-specific ones). Every setting starts at "the level's default" (marked ●); only what differs from it is used, and it
    is never used in rated games (the game does not ask for it there; the button is hidden).
 
-     <script src="../shared/proset.js?v=1t"></script>     (after the dialog markup)
+     <script src="../shared/proset.js?v=1t2"></script>     (after the dialog markup)
      const PRO = ProSet.init({
        game: 'chess',                               // storage: localStorage 'aicoding-pro:<game>' (or cfg.store)
        field: '#fLevel',                            // the level field: the button and the panel go in it (default)
@@ -346,7 +346,7 @@ function init(cfg) {
         const row = numRow('limit', val, val, R.min, R.max, R.step, (p.kunit && p.kunit[cur.k] && pick(p.kunit[cur.k], l)) || tx(UNIT[cur.k]), v => setVal('limit', { k: cur.k, v }));
         ctl += row.html; binds.push(['limit', row.bind]);
       } else if (p.type === 'threads') {
-        const mx = maxThreads(), list = [1, 2, 4, 6, 8, 12, 16, 24, 32, 48, 64].filter(n => n < mx); list.push(mx);
+        const mx = maxThreads(), list = [...new Set([1, 2, 4, 6, 8, 12, 16, 24, 32, 48, 64].filter(n => n < mx - 2).concat([mx - 2, mx - 1, mx]).filter(n => n >= 1))];   // (the top three: all cores, or one / two left free)
         const cur = eff.threads != null ? eff.threads : d.threads != null ? d.threads : 1;
         ctl = segHtml('threads', list.map(n => ({ v: n, label: String(n) })), Math.min(cur, mx), d.threads != null ? Math.min(d.threads, mx) : 1);
       } else if (p.type === 'bool') {
