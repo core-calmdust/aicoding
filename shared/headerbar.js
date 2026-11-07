@@ -103,6 +103,7 @@ body.hb-on{padding-top:${H}px}
 .atlas-top .hb-info b{color:#2b3044}
 .atlas-top .hb-info .hb-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:#fff;border:2px solid #efe3c8}
 html.atlas-skin .atlas-top .hb-menu{flex:none;display:flex!important;align-items:center;gap:6px;margin:0 6px 0 0!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;width:auto!important;height:auto!important}
+html.atlas-skin .atlas-top .hb-menu::before,html.atlas-skin .atlas-top .hb-menu::after,.hb .hb-menu::before,.hb .hb-menu::after{display:none!important}   /* (the card's inner ring — ur / senet .card::before, inset 3px — drew a short box across the 40px buttons) */
 html.atlas-skin .atlas-top .hb-menu > *{flex:none!important;display:inline-flex;flex-direction:row!important;align-items:center;justify-content:center;min-width:0!important;line-height:1!important;width:auto!important;height:40px!important;margin:0!important;padding:0 13px!important;border-radius:99px!important;font-size:13.5px!important;gap:6px;white-space:nowrap}
 html.atlas-skin .atlas-top .hb-menu > * svg{width:17px!important;height:17px!important;margin:0!important}
 html.atlas-skin .atlas-top .hb-menu > * span{margin:0!important}

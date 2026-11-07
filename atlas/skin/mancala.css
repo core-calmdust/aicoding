@@ -20,9 +20,15 @@ html.atlas-mancala .plate .pstat{color:#8a90a2!important}
 html.atlas-mancala .plate .pscore{color:#2b3044!important}
 html.atlas-mancala .side{position:relative;z-index:2}
 /* the game's dark round icons (PC header bar, the phone toolbar) → the portal's light ones */
-html.atlas-mancala :is(.atlas-top .hb-menu, .controls) > .btn:not(.primary){background:#fff!important;color:#2b3044!important;border:2px solid #efe3c8!important;box-shadow:0 2px 0 #efe3c8!important}
-html.atlas-mancala :is(.atlas-top .hb-menu, .controls) > .btn:not(.primary) svg{stroke:#2b3044!important}
-html.atlas-mancala :is(.atlas-top .hb-menu, .controls) > .btn:disabled{opacity:.45}
+html.atlas-mancala .controls:not(.hb-menu) > .btn:not(.primary){background:#fff!important;color:#2b3044!important;border:2px solid #efe3c8!important;box-shadow:0 2px 0 #efe3c8!important}
+html.atlas-mancala .controls:not(.hb-menu) > .btn:not(.primary) svg{stroke:#2b3044!important}
+html.atlas-mancala .controls:not(.hb-menu) > .btn:disabled{opacity:.45}
+/* PC header bar: the same translucent beige buttons as every other full-feature game (the page's own black / gold gradients off) */
+html.atlas-mancala .atlas-top .hb-menu > .btn{background:rgba(120,80,30,.07)!important;border:1px solid var(--line)!important;box-shadow:none!important;color:var(--muted)!important;filter:none!important}
+html.atlas-mancala .atlas-top .hb-menu > #btnNew{color:var(--text)!important}
+html.atlas-mancala .atlas-top .hb-menu > .btn svg{stroke:currentColor!important}
+html.atlas-mancala .atlas-top .hb-menu > .btn:hover:not(:disabled){border-color:var(--brass2)!important;color:var(--text)!important}
+html.atlas-mancala .atlas-top .hb-menu > .btn:disabled{opacity:.35!important}
 /* PC: the portal bar is the page's header bar (html.hb-atlas) — sized like the 2D page under its 56px bar (--hb-h = the 64px portal bar,
    the page starts below it), so the board, the info row and the lesson / puzzle card stay above the online dock */
 html.atlas-mancala.hb-atlas{--vh:calc(100vh - 64px)}
