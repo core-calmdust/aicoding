@@ -24,7 +24,10 @@ URL: https://core-calmdust.github.io/aicoding/go/ （2026-10-22 main に公開�
 - **数値指標はEGF換算（GoR）**：1級＝2000、初段＝2100、五段2500まで100刻み、六段2550・七段2600・八段2650・アマ最強2700（トップアマ相当）。18級は300。「EGF 3000」などプロ超えに見える表記は使わない（本作最強はKataGo本体の生の方策に及ばない）。モデルカードの表にEGF換算列あり。
 - レーティング戦：9路、5分＋秒読み20秒、RT_LV＝EGF換算（app.js egfOf）、開始値1000、予備選3局（Placement）。
 
-## コンテンツ（すべて10言語）
+## コンテンツ（すべて14言語：2026-11-07 に ru・zh-TW・id・tr を追加）
+- 多言語の注意：UI辞書は tools/i18n/<lang>.json（online_<lang>.json）→ tools/build_i18n.py で i18n.js の2行目を生成（3〜4行目の ls.toList/ls.toOpen は手書きなので、生成後に消えていたら戻す）。コーチは coach.js（ja/en）＋ coach-i18n.js の GoCoach.merge（残り12言語。i18n-langs.js の coverage には数えられない）。
+- lessons.json の4言語は tools/data/lessons-i18n.json にも入れてある（lessons-build.mjs で再生成しても残る）。ただしウォームアップ（step.ramp と rampUi）は lessons-ramps.mjs が10言語の位置引数 L(...) で書くため、再実行すると4言語が消える。再実行する前に L() に4言語を足すこと。
+- openings.json の訳（ja/en 以外の12言語）は生成元（tools/joseki/txt_*.mjs、tools/fuseki-text-*.mjs は ja/en のみ）にないので、build で作り直すと消える。作り直したら tools/i18n-langs.js extract/apply で訳を戻す。
 - lessons.json：6コース21ステップ×5問（ソルバー／エンジン検証）。生成 tools/lessons-build.mjs（訳は tools/data/lessons-i18n.json を合成）。
 - openings.json：7カテゴリ45本（定石23：星・小目・三々/高目/目外し・AI定石、布石22：基本・9/13路・置き碁）。全手解説・変化図・練習問題。生成 tools/joseki/、tools/fuseki-*.mjs、検証 tools/check-openings.mjs。置き碁は評価値を表示しない。
 - puzzles.json：詰碁10テーマ×50＝500問（取る・シチョウゲタ・ウッテガエシ・生き/殺し1手3手・5手以上・攻め合い・手筋）。ソルバー tsumego.js（GoTsumego.solve/reached）、生成 tools/gen-tsumego.mjs、検証 tools/test-tsumego.mjs。対象の石に△印。今日の一問あり。
