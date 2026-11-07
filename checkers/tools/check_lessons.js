@@ -4,7 +4,7 @@
 // node tools/check_lessons.js
 'use strict';
 const { load } = require('./wasm.js'), path = require('path');
-const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
+const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar', 'ru', 'zh-TW', 'id', 'tr'];
 (async () => {
   const W = await load(), E = W.E, D = require(path.join(__dirname, '..', 'lessons.json'));
   let bad = 0, n = 0;

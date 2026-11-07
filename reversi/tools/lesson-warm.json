@@ -129,6 +129,42 @@
      "p2ok": "<span dir=\"ltr\">d8</span> هي الصحيحة. <span dir=\"ltr\">h7</span> (خانة C) و<span dir=\"ltr\">g8</span> تهديان زاوية <span dir=\"ltr\">h8</span>. أما <span dir=\"ltr\">g7</span> فلا تهديها، لكنها تزيد القطع الخارجية كثيرًا.",
      "h0": "الزاوية لا تُقلب أبدًا. أما اللعب في X أو C فقد يهدي الخصم زاوية.",
      "look": "انظر إلى علامات الزوايا والخانات ذات الخط الأحمر المتقطع (نقلات تسمح للخصم بأخذ زاوية). خذ زاوية إن استطعت، وإلا فتجنّب الخانات الحمراء."
+    },
+    "ru": {
+     "c1": "Фишку в <b>углу</b> больше никогда не перевернуть. Если белые сыграют отмеченное h1, фишки верхнего края g1–e1 станут белыми, как показывает стрелка, и у белых появятся <b>непереворачиваемые фишки (стабильные)</b>, растущие от угла. Зато ход на <b>X</b> (по диагонали от угла) или <b>C</b> (рядом с углом на краю) может открыть сопернику путь к углу. Красные пунктирные поля — ходы, позволяющие сопернику взять угол.",
+     "g": "Сначала возьмите угол. Белые могут взять ровно один.",
+     "gok": "Вы взяли угол h1. Угол и связанные с ним фишки верхнего края больше не перевернуть. Отмеченное красным g2 — поле X: оно отдало бы h1 сопернику.",
+     "p1ok": "Верно — угол a1. Два других хода (g7, g8) имеют высокую открытость и дают сопернику больше мест для хода.",
+     "p2ok": "Верно — d8. h7 (поле C) и g8 отдают угол h8. g7 не отдаёт, но добавляет много внешних фишек.",
+     "h0": "Угол нельзя перевернуть. Но ход на поле X или C может отдать сопернику угол.",
+     "look": "Смотрите на подписи углов и красные пунктирные поля (ходы, позволяющие сопернику взять угол). Берите угол, если можно; если нет — избегайте красных полей."
+    },
+    "zh-TW": {
+     "c1": "<b>角</b>上的棋子再也不會被翻轉。白方下在標示的 h1 時，上邊的 g1～e1 會如箭頭所示變白，白方就從角長出<b>永遠不會被翻的棋子（穩定子）</b>。另一方面，下 <b>X</b>（角的斜旁）或 <b>C</b>（邊上緊鄰角）可能替對手打開通往角的路。紅色虛線的格子是會讓對手佔角的著法。",
+     "g": "先佔角。白方能佔的角只有一個。",
+     "gok": "你佔下了 h1 角。角和與它相連的上邊棋子再也不會被翻轉。標紅的 g2 是 X位：下那裡會把 h1 讓給對手。",
+     "p1ok": "a1 角是正解。另外兩手（g7、g8）開放度高，會給對手更多可下的位置。",
+     "p2ok": "d8 是正解。h7（C位）和 g8 會讓出 h8 角。g7 雖然不會，但會增加很多外側子。",
+     "h0": "角永遠不會被翻轉。但下在 X 或 C 位可能把角讓給對手。",
+     "look": "看角的標示和紅色虛線格（會讓對手佔角的著法）。能佔角就佔；不能的話，避開紅色格子。"
+    },
+    "id": {
+     "c1": "Keping di <b>sudut</b> tidak pernah bisa dibalik lagi. Jika Putih main di h1 yang ditandai, keping tepi atas g1–e1 menjadi putih seperti ditunjukkan panah, dan Putih mendapat <b>keping yang tak pernah bisa dibalik (keping stabil)</b> yang tumbuh dari sudut. Sebaliknya, main di <b>X</b> (diagonal sebelah sudut) atau <b>C</b> (sebelah sudut di tepi) bisa membuka jalan ke sudut bagi lawan. Petak bergaris putus merah adalah langkah yang membiarkan lawan mengambil sudut.",
+     "g": "Pertama, ambil sudut. Putih bisa mengambil tepat satu.",
+     "gok": "Anda mengambil sudut h1. Sudut dan keping tepi atas yang terhubung dengannya tidak pernah bisa dibalik. g2 yang ditandai merah adalah petak X: itu akan menyerahkan h1 ke lawan.",
+     "p1ok": "Sudut a1 benar. Dua langkah lainnya (g7, g8) keterbukaannya tinggi dan memberi lawan lebih banyak tempat main.",
+     "p2ok": "d8 benar. h7 (petak C) dan g8 menyerahkan sudut h8. g7 tidak, tapi menambah banyak keping luar.",
+     "h0": "Sudut tidak pernah bisa dibalik. Namun main di petak X atau C bisa memberi lawan sudut.",
+     "look": "Lihat label sudut dan petak bergaris putus merah (langkah yang membiarkan lawan mengambil sudut). Ambil sudut jika bisa; jika tidak, hindari petak merah."
+    },
+    "tr": {
+     "c1": "<b>Köşedeki</b> taş bir daha asla çevrilemez. Beyaz işaretli h1'e oynarsa üst kenardaki g1–e1 taşları okun gösterdiği gibi beyaza döner ve Beyaz köşeden büyüyen <b>asla çevrilemeyen taşlar (sabit taşlar)</b> kazanır. Öte yandan <b>X</b> (köşenin çaprazı) ya da <b>C</b> (kenarda köşenin yanı) oynamak rakibe köşenin yolunu açabilir. Kırmızı kesikli kareler, rakibin köşe almasına izin veren hamlelerdir.",
+     "g": "Önce köşeyi alın. Beyaz tam olarak bir köşe alabilir.",
+     "gok": "h1 köşesini aldınız. Köşe ve ona bağlı üst kenar taşları asla çevrilemez. Kırmızı işaretli g2 bir X karesi: h1'i rakibe verirdi.",
+     "p1ok": "a1 köşesi doğru. Diğer iki hamlenin (g7, g8) açıklığı yüksek ve rakibe daha çok oynama yeri verir.",
+     "p2ok": "d8 doğru. h7 (C karesi) ve g8, h8 köşesini verir. g7 vermez ama çok sayıda dış taş ekler.",
+     "h0": "Köşe asla çevrilemez. Ama X ya da C karesine oynamak rakibe köşe verebilir.",
+     "look": "Köşe etiketlerine ve kırmızı kesikli karelere (rakibin köşe almasına izin veren hamleler) bakın. Köşe alabiliyorsanız alın; alamıyorsanız kırmızı karelerden kaçının."
     }
    }
   },
@@ -256,6 +292,42 @@
      "p2ok": "<span dir=\"ltr\">c3</span> هي الصحيحة: يبقى للخصم 12 نقلة. أما <span dir=\"ltr\">b5</span> و<span dir=\"ltr\">b6</span> وغيرهما فتقلب قطعًا خارجية وتمنحه 15–16.",
      "h0": "المهم ليس عدد قطعك، بل عدد النقلات التي ستبقى للخصم بعد نقلتك.",
      "look": "كل رقم هو عدد نقلات الخصم بعد تلك النقلة. ابحث عن أصغر رقم."
+    },
+    "ru": {
+     "c1": "Красные точки — куда <b>соперник может сходить сейчас</b> (14 полей). Чем меньше мест у соперника, тем скорее он будет вынужден идти на нежелательные поля. Если белые сыграют отмеченное d7, варианты чёрных сократятся до <b>8</b>; отмеченное красным b7 увеличило бы их до <b>15</b>. Суть идеи — сравнивать, <b>сколько ходов будет у соперника после вашего хода</b>.",
+     "g": "Каждое число — сколько ходов будет у соперника после этого хода. Сыграйте ход с наименьшим числом.",
+     "gok": "После d7 ходов у соперника стало 8 вместо 14. Вы перевернули почти только внутренние фишки, поэтому новых полей у него почти не появилось.",
+     "p1ok": "Верно — a4. После него у соперника 7 ходов — намного меньше, чем после других (10–14).",
+     "p2ok": "Верно — c3: у соперника остаётся 12 ходов. b5, b6 и другие переворачивают внешние фишки и дают ему 15–16.",
+     "h0": "Важно не число ваших фишек, а сколько ходов у соперника после вашего хода.",
+     "look": "Каждое число — сколько ходов у соперника после этого хода. Найдите наименьшее."
+    },
+    "zh-TW": {
+     "c1": "紅點是<b>對手現在可以下的位置</b>（14處）。對手可下的位置越少，就越快被迫下在不想下的格子。白方下在標示的 d7，黑方的選擇會降到 <b>8</b>；標紅的 b7 則會增加到 <b>15</b>。比較<b>你下完後對手有幾個可下位置</b>，就是這個觀念的核心。",
+     "g": "每個數字是下那一手之後對手可下的位置數。請下數字最小的一手。",
+     "gok": "下 d7 後，對手的可下位置從14處降到8處。你幾乎只翻了內側的子，所以幾乎沒有替對手開出新的位置。",
+     "p1ok": "a4 是正解。之後對手只有7處可下，遠少於其他著法（10～14）。",
+     "p2ok": "c3 是正解：對手剩12處可下。b5、b6 等會翻外側子，讓對手有15～16處。",
+     "h0": "重要的不是你的子數，而是你下完後對手有幾個可下位置。",
+     "look": "每個數字是下那一手後對手的可下位置數。找出最小的。"
+    },
+    "id": {
+     "c1": "Titik merah adalah tempat <b>lawan bisa main sekarang</b> (14 petak). Makin sedikit tempat lawan, makin cepat ia terpaksa main di petak yang tidak diinginkan. Jika Putih main di d7 yang ditandai, pilihan Hitam turun menjadi <b>8</b>; b7 yang ditandai merah akan menaikkannya ke <b>15</b>. Membandingkan <b>berapa langkah lawan setelah langkah Anda</b> adalah inti ide ini.",
+     "g": "Tiap angka adalah jumlah langkah lawan setelah langkah itu. Mainkan langkah dengan angka terkecil.",
+     "gok": "Dengan d7, langkah lawan turun dari 14 ke 8. Anda hampir hanya membalik keping dalam, jadi nyaris tidak ada petak baru yang terbuka bagi lawan.",
+     "p1ok": "a4 benar. Sesudahnya lawan punya 7 langkah, jauh lebih sedikit daripada setelah langkah lain (10–14).",
+     "p2ok": "c3 benar: lawan tersisa 12 langkah. b5, b6, dan lainnya membalik keping luar dan memberinya 15–16.",
+     "h0": "Yang penting bukan jumlah keping Anda, tapi berapa langkah lawan setelah langkah Anda.",
+     "look": "Tiap angka adalah jumlah langkah lawan setelah langkah itu. Temukan yang terkecil."
+    },
+    "tr": {
+     "c1": "Kırmızı noktalar <b>rakibin şu an oynayabileceği</b> yerlerdir (14 kare). Rakibin yeri ne kadar azsa istemediği karelere o kadar çabuk zorlanır. Beyaz işaretli d7'ye oynarsa Siyahın seçenekleri <b>8</b>'e düşer; kırmızı işaretli b7 ise <b>15</b>'e çıkarırdı. <b>Hamlenizden sonra rakibin kaç hamlesi olduğunu</b> karşılaştırmak bu fikrin özüdür.",
+     "g": "Her sayı, o hamleden sonra rakibin kaç hamlesi olacağıdır. En küçük sayılı hamleyi oynayın.",
+     "gok": "d7 ile rakibin hamleleri 14'ten 8'e indi. Neredeyse yalnızca içteki taşları çevirdiniz, bu yüzden ona neredeyse hiç yeni kare açılmadı.",
+     "p1ok": "a4 doğru. Sonrasında rakibin 7 hamlesi var; diğer hamlelerden (10–14) çok daha az.",
+     "p2ok": "c3 doğru: rakibe 12 hamle kalır. b5, b6 ve diğerleri dış taşları çevirip ona 15–16 verir.",
+     "h0": "Önemli olan taş sayınız değil, hamlenizden sonra rakibin kaç hamlesi olduğudur.",
+     "look": "Her sayı, o hamleden sonra rakibin hamle sayısıdır. En küçüğünü bulun."
     }
    }
   },
@@ -385,6 +457,42 @@
      "p2ok": "<span dir=\"ltr\">h7</span> هي الصحيحة: انفتاح 2، أهدأ من غيرها (4 و5). و<span dir=\"ltr\">g7</span> كانت ستهدي زاوية <span dir=\"ltr\">h8</span> أيضًا.",
      "h0": "كلما قلّت الخانات الفارغة حول القطع التي تقلبها، قلّت الأماكن التي تمنحها للخصم.",
      "look": "كل رقم هو الانفتاح (الخانات الفارغة حول القطع المقلوبة). ابحث عن الأصغر."
+    },
+    "ru": {
+     "c1": "<b>Открытость</b> — число пустых полей вокруг фишек, которые вы переворачиваете. Если белые сыграют отмеченное g6, перевернутся f5 и e4 (обведены). Их касается только одно пустое поле, поэтому открытость <b>1</b>. Отмеченное красным g7 переворачивает внешние фишки: открытость <b>7</b>. Ход с низкой открытостью — это <b>тихий ход</b>, почти не дающий сопернику новых мест.",
+     "g": "Каждое число — открытость этого хода. Сыграйте самый тихий ход (наименьшее число).",
+     "gok": "g6 — тихий ход с открытостью 1. Перевёрнутые фишки окружены фишками, и соперник не может на них опереться.",
+     "p1ok": "Верно — c8: открытость 0. Он переворачивает только внутренние фишки, не касающиеся пустых полей, — настоящий тихий ход.",
+     "p2ok": "Верно — h7: открытость 2, тише остальных (4 и 5). g7 к тому же отдал бы угол h8.",
+     "h0": "Чем меньше пустых полей вокруг переворачиваемых фишек, тем меньше мест вы даёте сопернику.",
+     "look": "Каждое число — открытость (пустые поля вокруг перевёрнутых фишек). Найдите наименьшее."
+    },
+    "zh-TW": {
+     "c1": "<b>開放度</b>是你所翻棋子周圍的空格數。白方下在標示的 g6，會翻 f5 和 e4（框起來的子）。碰到它們的空格只有1個，所以開放度是 <b>1</b>。標紅的 g7 會翻外側的子：開放度 <b>7</b>。開放度低的一手就是幾乎不給對手新落點的<b>安靜之手</b>。",
+     "g": "每個數字是那一手的開放度。請下最安靜的一手（數字最小）。",
+     "gok": "g6 是開放度1的安靜之手。被翻的子被棋子包圍，對手無法拿來當立足點。",
+     "p1ok": "c8 是正解：開放度0。只翻不碰任何空格的內側子 — 真正的安靜之手。",
+     "p2ok": "h7 是正解：開放度2，比其他（4和5）安靜。g7 還會讓出 h8 角。",
+     "h0": "所翻棋子周圍的空格越少，給對手的落點就越少。",
+     "look": "每個數字是開放度（被翻棋子周圍的空格）。找出最小的。"
+    },
+    "id": {
+     "c1": "<b>Keterbukaan</b> adalah jumlah petak kosong di sekitar keping yang Anda balik. Jika Putih main di g6 yang ditandai, f5 dan e4 terbalik (bergaris tepi). Hanya satu petak kosong yang menyentuhnya, jadi keterbukaannya <b>1</b>. g7 yang ditandai merah membalik keping luar: keterbukaan <b>7</b>. Langkah berketerbukaan rendah adalah <b>langkah tenang</b> yang nyaris tidak memberi lawan tempat baru.",
+     "g": "Tiap angka adalah keterbukaan langkah itu. Mainkan langkah paling tenang (angka terkecil).",
+     "gok": "g6 adalah langkah tenang dengan keterbukaan 1. Keping yang dibalik dikelilingi keping, jadi lawan tidak bisa memakainya sebagai pijakan.",
+     "p1ok": "c8 benar: keterbukaan 0. Ia hanya membalik keping dalam yang tidak menyentuh petak kosong — langkah tenang sejati.",
+     "p2ok": "h7 benar: keterbukaan 2, lebih tenang dari yang lain (4 dan 5). g7 juga akan menyerahkan sudut h8.",
+     "h0": "Makin sedikit petak kosong di sekitar keping yang Anda balik, makin sedikit tempat yang Anda beri ke lawan.",
+     "look": "Tiap angka adalah keterbukaan (petak kosong di sekitar keping yang dibalik). Temukan yang terkecil."
+    },
+    "tr": {
+     "c1": "<b>Açıklık</b>, çevirdiğiniz taşların çevresindeki boş kare sayısıdır. Beyaz işaretli g6'ya oynarsa f5 ve e4'ü (çerçeveli) çevirir. Onlara yalnızca bir boş kare değiyor, bu yüzden açıklık <b>1</b>. Kırmızı işaretli g7 dış taşları çevirir: açıklık <b>7</b>. Düşük açıklıklı hamle, rakibe neredeyse hiç yeni yer vermeyen bir <b>sessiz hamledir</b>.",
+     "g": "Her sayı o hamlenin açıklığıdır. En sessiz hamleyi (en küçük sayı) oynayın.",
+     "gok": "g6, açıklığı 1 olan sessiz bir hamle. Çevrilen taşlar taşlarla çevrili olduğu için rakip onlara tutunamaz.",
+     "p1ok": "c8 doğru: açıklık 0. Hiçbir boş kareye değmeyen içteki taşları çevirir — gerçek bir sessiz hamle.",
+     "p2ok": "h7 doğru: açıklık 2, diğerlerinden (4 ve 5) daha sessiz. g7 ayrıca h8 köşesini verirdi.",
+     "h0": "Çevirdiğiniz taşların çevresinde ne kadar az boş kare varsa rakibe o kadar az yer verirsiniz.",
+     "look": "Her sayı açıklıktır (çevrilen taşların çevresindeki boş kareler). En küçüğünü bulun."
     }
    }
   },
@@ -564,6 +672,54 @@
      "g2ok": "<span dir=\"ltr\">c1</span> هي الصحيحة، ونقلة الاحتياط <span dir=\"ltr\">a2</span> ما زالت مدّخرة. <span dir=\"ltr\">b7</span> كانت ستهدي زاوية <span dir=\"ltr\">a8</span>.",
      "h0": "القطع الخارجية المصطفة تشكّل جدارًا وتقلل نقلاتك. اختر نقلات تقلب قطعًا داخلية.",
      "look": "كل رقم يبيّن عدد قطعك الخارجية (الملامسة لخانة فارغة) بعد النقلة. ابحث عن الأصغر."
+    },
+    "ru": {
+     "c1": "Обведённые фишки — <b>внешние фишки чёрных</b>, касающиеся пустых полей. Выстроившись, внешние фишки образуют <b>стену</b>, и за ней могут ходить только белые. Отмеченное b7 переворачивает внутренние фишки, поэтому внешних фишек у чёрных становится меньше; ход вроде g8 переворачивает вдоль стрелки, добавляет внешние фишки и утолщает стену.",
+     "g": "Каждое число — сколько внешних фишек будет у вас после этого хода. Сыграйте ход, оставляющий меньше всего.",
+     "gok": "После b7 у вас 9 внешних фишек — меньше, чем после любого другого хода (12). Ходы без стен сохраняют ваши варианты.",
+     "p1ok": "Верно — d2: тихий внутренний ход, снижающий число внешних фишек до 12.",
+     "p2ok": "Верно — h5: он сокращает внешние фишки до 15 и вклинивается между двумя белыми фишками на краю. g7 и h7 вытягивают стену наружу.",
+     "c2": "Вторая идея — <b>запасной ход</b>. Поле с меткой «З» (a2) — то, куда <b>могут ходить только белые, а чёрные — нет</b>. Чёрные никогда его не отнимут, так что его можно приберечь. Красные точки — ходы чёрных. Отмеченное c1 доступно и чёрным, поэтому его стоит сыграть первым.",
+     "g2": "Приберегите запасной ход на a2 и сыграйте другой безопасный ход. Красное пунктирное поле отдало бы сопернику угол.",
+     "g2ok": "Верно — c1, а запасной ход на a2 по-прежнему в запасе. b7 отдал бы угол a8.",
+     "h0": "Внешние фишки в ряд образуют стену и лишают вас ходов. Выбирайте ходы, переворачивающие внутренние фишки.",
+     "look": "Каждое число — сколько внешних фишек (касающихся пустого поля) будет у вас после хода. Найдите наименьшее."
+    },
+    "zh-TW": {
+     "c1": "框起來的是碰到空格的<b>黑方外側子</b>。外側子連成一排就成了<b>牆</b>，牆的另一側只有白方能下。標示的 b7 翻的是內側子，所以黑方的外側子會減少；像 g8 這樣的著法會沿著箭頭翻子，增加外側子，讓牆更厚。",
+     "g": "每個數字是下那一手後你的外側子數。請下剩下最少的一手。",
+     "gok": "下 b7 後你有9枚外側子，比其他任何著法（12）都少。不築牆的著法能保住自己的選擇。",
+     "p1ok": "d2 是正解：把外側子降到12枚的安靜內側之手。",
+     "p2ok": "h5 是正解：外側子降到15枚，並楔入邊上兩枚白子之間。g7 和 h7 會把牆往外延伸。",
+     "c2": "第二個觀念是<b>餘裕手</b>。標示「餘」的格子（a2）是<b>只有白方能下、黑方不能下</b>的位置。黑方永遠搶不走，所以可以留到之後。紅點是黑方的可下位置。標示的 c1 黑方也能下，所以值得先下。",
+     "g2": "留住 a2 的餘裕手，下另一手安全的棋。紅色虛線格會讓對手佔角。",
+     "g2ok": "c1 是正解，a2 的餘裕手也還留著。b7 會讓出 a8 角。",
+     "h0": "外側子連成一排就成了牆，會讓你沒棋可下。選擇翻內側子的著法。",
+     "look": "每個數字是下完後你的外側子（碰到空格的子）數。找出最小的。"
+    },
+    "id": {
+     "c1": "Keping bergaris tepi adalah <b>keping luar Hitam</b> yang menyentuh petak kosong. Jika keping luar berjajar, mereka membentuk <b>dinding</b>, dan hanya Putih yang bisa main di baliknya. b7 yang ditandai membalik keping dalam, sehingga keping luar Hitam berkurang; langkah seperti g8 membalik sepanjang panah, menambah keping luar, dan menebalkan dinding.",
+     "g": "Tiap angka adalah jumlah keping luar Anda setelah langkah itu. Mainkan langkah yang menyisakan paling sedikit.",
+     "gok": "Setelah b7 Anda punya 9 keping luar, lebih sedikit daripada langkah lain mana pun (12). Langkah yang tidak membangun dinding menjaga pilihan Anda tetap terbuka.",
+     "p1ok": "d2 benar: langkah dalam yang tenang yang menurunkan keping luar Anda menjadi 12.",
+     "p2ok": "h5 benar: memangkas keping luar Anda menjadi 15 dan menyelip di antara dua keping putih di tepi. g7 dan h7 memperpanjang dinding ke luar.",
+     "c2": "Ide kedua adalah <b>langkah cadangan</b>. Petak bertanda \"S\" (a2) adalah petak yang <b>hanya bisa dimainkan Putih — Hitam tidak bisa</b>. Hitam tidak akan pernah bisa merebutnya, jadi Anda bisa menyimpannya untuk nanti. Titik merah adalah langkah Hitam. c1 yang ditandai juga bisa dimainkan Hitam, jadi layak dipakai lebih dulu.",
+     "g2": "Simpan langkah cadangan di a2 dan mainkan langkah aman lain. Petak bergaris putus merah akan memberi lawan sudut.",
+     "g2ok": "c1 benar, dan langkah cadangan di a2 masih tersimpan. b7 akan menyerahkan sudut a8.",
+     "h0": "Keping luar yang berjajar membentuk dinding dan membuat Anda kehabisan langkah. Pilih langkah yang membalik keping dalam.",
+     "look": "Tiap angka adalah jumlah keping luar (keping yang menyentuh petak kosong) Anda sesudahnya. Temukan yang terkecil."
+    },
+    "tr": {
+     "c1": "Çerçeveli taşlar, boş karelere değen <b>Siyahın dış taşlarıdır</b>. Dış taşlar sıralanınca <b>duvar</b> olur ve ötesine yalnızca Beyaz oynayabilir. İşaretli b7 içteki taşları çevirir, böylece Siyahın dış taşları azalır; g8 gibi bir hamle ok boyunca çevirir, dış taş ekler ve duvarı kalınlaştırır.",
+     "g": "Her sayı, o hamleden sonra kaç dış taşınız olacağıdır. En az bırakan hamleyi oynayın.",
+     "gok": "b7 sonrası 9 dış taşınız var; diğer tüm hamlelerden (12) daha az. Duvar örmeyen hamleler kendi seçeneklerinizi açık tutar.",
+     "p1ok": "d2 doğru: dış taşlarınızı 12'ye indiren sessiz bir iç hamle.",
+     "p2ok": "h5 doğru: dış taşlarınızı 15'e indirir ve kenardaki iki beyaz taşın arasına kama gibi girer. g7 ve h7 duvarı dışarı uzatır.",
+     "c2": "İkinci fikir <b>yedek hamledir</b>. \"Y\" işaretli kare (a2), <b>yalnızca Beyazın oynayabileceği, Siyahın oynayamayacağı</b> bir karedir. Siyah onu asla alamaz, bu yüzden sonraya saklayabilirsiniz. Kırmızı noktalar Siyahın hamleleridir. İşaretli c1'e Siyah da oynayabilir, bu yüzden önce onu kullanmaya değer.",
+     "g2": "a2'deki yedek hamleyi saklayıp başka güvenli bir hamle oynayın. Kırmızı kesikli kare rakibe köşe verirdi.",
+     "g2ok": "c1 doğru ve a2'deki yedek hamle hâlâ kenarda. b7, a8 köşesini verirdi.",
+     "h0": "Sıralanan dış taşlar duvar oluşturur ve size hamle kaybettirir. İçteki taşları çeviren hamleleri seçin.",
+     "look": "Her sayı, sonrasında kaç dış taşınız (boş kareye değen taş) olacağıdır. En küçüğünü bulun."
     }
    }
   },
@@ -692,6 +848,42 @@
      "p2ok": "<span dir=\"ltr\">h2</span> هي الصحيحة: إسفين بين القطعتين البيضاوين في <span dir=\"ltr\">h1</span> و<span dir=\"ltr\">h3</span>.",
      "h0": "على الحافة، اللعب في فجوة بين قطعتين للخصم يفكّك بنية حافته.",
      "look": "تفقّد الحواف الأربع (الأشرطة المضيئة) بحثًا عن خانة فارغة بين قطعتين للخصم. الإطار المضيء يشير إلى الإسفين المرشّح."
+    },
+    "ru": {
+     "c1": "Светлые полосы — четыре <b>края</b>. На верхнем краю белые фишки на c1 и e1 (обведены), а между ними пустое d1. Ход в промежуток между двумя фишками соперника на краю называется <b>вклиниванием</b>. Если чёрные сыграют d1, край белых разбит, и чёрную фишку на d1 нельзя перевернуть вдоль края, ведь по обе стороны от неё белые.",
+     "g": "Сыграйте в пустое поле верхнего края между двумя белыми фишками (отмечено).",
+     "gok": "Вклинивание на d1 разбивает верхний край белых. b1 отдал бы угол a1.",
+     "p1ok": "Верно — a2: вклинивание между чёрными фишками на a1 и a3. К тому же a2 было полем, куда могли ходить только белые.",
+     "p2ok": "Верно — h2: вклинивание между белыми фишками на h1 и h3.",
+     "h0": "На краю ход в промежуток между двумя фишками соперника разбивает его край.",
+     "look": "Осмотрите четыре края (светлые полосы) в поисках пустого поля между двумя фишками соперника. Светящаяся рамка показывает кандидата на вклинивание."
+    },
+    "zh-TW": {
+     "c1": "亮色的帶狀區是四條<b>邊</b>。上邊的 c1 和 e1 有白子（框起來的子），中間的 d1 空著。下進邊上對手兩枚子之間的空隙，叫做<b>楔入</b>。黑方下 d1 後，白方的邊被切斷，而且 d1 的黑子兩側都是白子，沿著邊無法被翻。",
+     "g": "下在上邊兩枚白子之間的空格（有標示）。",
+     "gok": "d1 的楔入切斷了白方的上邊。b1 則會讓出 a1 角。",
+     "p1ok": "a2 是正解：楔入 a1 和 a3 的黑子之間。而且 a2 原本是只有白方能下的格子。",
+     "p2ok": "h2 是正解：楔入 h1 和 h3 的白子之間。",
+     "h0": "在邊上，下進對手兩枚子之間的空隙能切斷對手的邊。",
+     "look": "掃視四條邊（亮色帶），找出夾在對手兩枚子之間的空格。發光的框是楔入的候選。"
+    },
+    "id": {
+     "c1": "Pita terang adalah empat <b>tepi</b>. Di tepi atas ada keping putih di c1 dan e1 (bergaris tepi) dengan d1 kosong di antaranya. Main ke celah di antara dua keping lawan di tepi disebut <b>baji</b>. Jika Hitam main d1, tepi Putih terpecah, dan keping hitam di d1 tidak bisa dibalik sepanjang tepi karena ada keping putih di kedua sisinya.",
+     "g": "Mainkan petak kosong tepi atas di antara dua keping putih (ditandai).",
+     "gok": "Baji di d1 memecah tepi atas Putih. b1 akan menyerahkan sudut a1.",
+     "p1ok": "a2 benar: baji di antara keping hitam di a1 dan a3. Selain itu, a2 adalah petak yang hanya bisa dimainkan Putih.",
+     "p2ok": "h2 benar: baji di antara keping putih di h1 dan h3.",
+     "h0": "Di tepi, main ke celah di antara dua keping lawan memecah tepi lawan.",
+     "look": "Periksa empat tepi (pita terang) untuk mencari petak kosong di antara dua keping lawan. Bingkai bercahaya menunjukkan kandidat baji."
+    },
+    "tr": {
+     "c1": "Parlak şeritler dört <b>kenardır</b>. Üst kenarda c1 ve e1'de beyaz taşlar (çerçeveli) var, aralarında d1 boş. Kenarda rakibin iki taşı arasındaki boşluğa oynamaya <b>kama</b> denir. Siyah d1'e oynarsa Beyazın kenarı bölünür ve d1'deki siyah taş, iki yanında beyaz taş olduğu için kenar boyunca çevrilemez.",
+     "g": "Üst kenarda iki beyaz taşın arasındaki boş kareye (işaretli) oynayın.",
+     "gok": "d1'deki kama Beyazın üst kenarını böler. b1, a1 köşesini verirdi.",
+     "p1ok": "a2 doğru: a1 ve a3'teki siyah taşlar arasına kama. Üstelik a2 yalnızca Beyazın oynayabileceği bir kareydi.",
+     "p2ok": "h2 doğru: h1 ve h3'teki beyaz taşlar arasına kama.",
+     "h0": "Kenarda rakibin iki taşı arasındaki boşluğa oynamak rakibin kenarını böler.",
+     "look": "Rakibin iki taşı arasındaki boş kareyi bulmak için dört kenarı (parlak şeritler) tarayın. Parlayan çerçeve kama adayını gösterir."
     }
    }
   },
@@ -871,6 +1063,54 @@
      "p2ok": "<span dir=\"ltr\">b2</span> هي الصحيحة. إنها خانة X، لكن الأبيض لا يستطيع بعدها أخذ <span dir=\"ltr\">a1</span>. أما <span dir=\"ltr\">g1</span> (خانة C) فتهدي زاوية <span dir=\"ltr\">h1</span>.",
      "h0": "أمثال الزوايا وخانات X/C لها استثناءات. احكم بما يستطيع الخصم فعله بعد نقلتك.",
      "look": "الخانات ذات الخط الأحمر المتقطع نقلات تسمح للخصم بأخذ زاوية. ابحث عن نقلة لا تفعل ذلك."
+    },
+    "ru": {
+     "c1": "У правила «всегда бери угол» есть исключения. Здесь белые не могут взять угол a8 (красные точки — ходы белых). <b>Угол, который соперник не может взять, никуда не денется</b>, так что его можно оставить на потом. Отмеченное a5 не добавляет внешних фишек и сокращает ходы белых с 10 до 9. Угол можно взять позже.",
+     "g": "Угол a8 подождёт. Пока выберите ход, сокращающий варианты соперника (отмечен).",
+     "gok": "Верно — a5. Белые не могут взять a8, так что угол по-прежнему ваш на потом. a7 (поле C) позволил бы белым взять a8.",
+     "p1ok": "Верно — f7. Белые не могут взять угол a8, так что спешить некуда. f7 тихо сокращает ходы соперника.",
+     "c2": "Иногда ход на X верен. Проследите диагональ (стрелка): после хода чёрных g7 (поле X) все фишки от g7 до c3 чёрные, а за ними пустое b2. У белых нет фишки, чтобы зажать их со стороны h8, поэтому белые не могут взять угол. <b>«Поля X и C опасны» — поговорка, а не закон. Проверьте, сможет ли соперник взять угол после хода.</b>",
+     "g2": "Ход на X g7 безопасен. Избегайте красных пунктирных полей (они отдают угол) и сыграйте g7.",
+     "g2ok": "Верно — g7: белые не могут взять h8. После h6 или g8 белые смогли бы его взять.",
+     "p2ok": "Верно — b2. Это поле X, но белые после него не могут взять a1. g1 (поле C) отдаёт угол h1.",
+     "h0": "У поговорок про угол и X/C есть исключения. Судите по тому, что сможет сделать соперник после вашего хода.",
+     "look": "Красные пунктирные поля — ходы, позволяющие сопернику взять угол. Ищите ход, который этого не делает."
+    },
+    "zh-TW": {
+     "c1": "「一定要佔角」有例外。這裡白方無法佔 a8 角（紅點是白方的可下位置）。<b>對手佔不了的角不會跑掉</b>，所以可以留到之後。標示的 a5 不會增加外側子，並把白方的可下位置從10處減到9處。角之後再佔就好。",
+     "g": "a8 角可以等。現在先選能減少對手選擇的一手（有標示）。",
+     "gok": "a5 是正解。白方佔不了 a8，所以那個角之後仍然是你的。a7（C位）則會讓白方佔下 a8。",
+     "p1ok": "f7 是正解。白方佔不了 a8 角，所以不用急。f7 安靜地減少了對手的可下位置。",
+     "c2": "有時下 X位才是正解。沿著對角線（箭頭）看：黑方下 g7（X位）後，g7 到 c3 全是黑子，再過去的 b2 是空的。白方沒有能從 h8 夾住它們的子，所以白方佔不了角。<b>「X位與C位很危險」是格言，不是定律。要確認下完後對手能不能佔角。</b>",
+     "g2": "X位的 g7 是安全的。避開紅色虛線格（會讓出角），下 g7。",
+     "g2ok": "g7 是正解：白方佔不了 h8。如果下 h6 或 g8，白方就能佔角。",
+     "p2ok": "b2 是正解。雖然是 X位，但下完後白方佔不了 a1。g1（C位）則會讓出 h1 角。",
+     "h0": "角與 X/C 位的格言都有例外。要以你下完後對手能做什麼來判斷。",
+     "look": "紅色虛線格是會讓對手佔角的著法。找出不會讓角的一手。"
+    },
+    "id": {
+     "c1": "\"Selalu ambil sudut\" punya pengecualian. Di sini Putih tidak bisa mengambil sudut a8 (titik merah adalah langkah Putih). <b>Sudut yang tidak bisa diambil lawan tidak akan lari</b>, jadi bisa Anda tinggalkan untuk nanti. a5 yang ditandai tidak menambah keping luar dan memangkas langkah Putih dari 10 ke 9. Sudutnya bisa diambil sesudahnya.",
+     "g": "Sudut a8 bisa menunggu. Untuk sekarang, pilih langkah yang mengurangi pilihan lawan (ditandai).",
+     "gok": "a5 benar. Putih tidak bisa mengambil a8, jadi sudut itu masih milik Anda nanti. a7 (petak C) akan membiarkan Putih mengambil a8.",
+     "p1ok": "f7 benar. Putih tidak bisa mengambil sudut a8, jadi tidak perlu terburu-buru. f7 dengan tenang mengurangi langkah lawan.",
+     "c2": "Kadang langkah X itu benar. Ikuti diagonalnya (panah): setelah Hitam main g7 (petak X), semua keping dari g7 sampai c3 hitam dan b2 di baliknya kosong. Putih tidak punya keping untuk mengapitnya dari h8, jadi Putih tidak bisa mengambil sudut. <b>\"Petak X dan C berbahaya\" adalah pepatah, bukan hukum. Periksa apakah lawan bisa mengambil sudut sesudahnya.</b>",
+     "g2": "Langkah X g7 aman. Hindari petak bergaris putus merah (menyerahkan sudut) dan mainkan g7.",
+     "g2ok": "g7 benar: Putih tidak bisa mengambil h8. Setelah h6 atau g8, Putih bisa mengambilnya.",
+     "p2ok": "b2 benar. Itu petak X, tapi Putih tidak bisa mengambil a1 sesudahnya. g1 (petak C) menyerahkan sudut h1.",
+     "h0": "Pepatah soal sudut dan X/C punya pengecualian. Nilai dari apa yang bisa dilakukan lawan setelah langkah Anda.",
+     "look": "Petak bergaris putus merah adalah langkah yang membiarkan lawan mengambil sudut. Cari langkah yang tidak begitu."
+    },
+    "tr": {
+     "c1": "\"Her zaman köşeyi al\" kuralının istisnaları var. Burada Beyaz a8 köşesini alamaz (kırmızı noktalar Beyazın hamleleri). <b>Rakibin alamadığı köşe kaçmaz</b>, bu yüzden sonraya bırakabilirsiniz. İşaretli a5 dış taş eklemez ve Beyazın hamlelerini 10'dan 9'a indirir. Köşeyi sonra alabilirsiniz.",
+     "g": "a8 köşesi bekleyebilir. Şimdilik rakibin seçeneklerini azaltan hamleyi (işaretli) seçin.",
+     "gok": "a5 doğru. Beyaz a8'i alamaz, yani köşe sonra da sizin. a7 (C karesi) Beyazın a8'i almasına izin verirdi.",
+     "p1ok": "f7 doğru. Beyaz a8 köşesini alamaz, bu yüzden acele yok. f7 sessizce rakibin hamlelerini azaltır.",
+     "c2": "Bazen X hamlesi doğrudur. Köşegeni (ok) izleyin: Siyah g7'ye (X karesi) oynadıktan sonra g7'den c3'e kadar tüm taşlar siyah ve ötesindeki b2 boş. Beyazın onları h8'den sıkıştıracak taşı yok, bu yüzden Beyaz köşeyi alamaz. <b>\"X ve C kareleri tehlikelidir\" bir atasözüdür, kanun değil. Sonrasında rakibin köşeyi alıp alamayacağını kontrol edin.</b>",
+     "g2": "X hamlesi g7 güvenli. Kırmızı kesikli karelerden (köşe verirler) kaçının ve g7 oynayın.",
+     "g2ok": "g7 doğru: Beyaz h8'i alamaz. h6 ya da g8 sonrası Beyaz onu alabilirdi.",
+     "p2ok": "b2 doğru. Bir X karesi ama sonrasında Beyaz a1'i alamaz. g1 (C karesi) h1 köşesini verir.",
+     "h0": "Köşe ve X/C atasözlerinin istisnaları var. Hamlenizden sonra rakibin neler yapabileceğine göre karar verin.",
+     "look": "Kırmızı kesikli kareler, rakibin köşe almasına izin veren hamlelerdir. Bunu yapmayan bir hamle arayın."
     }
    }
   },
@@ -997,6 +1237,42 @@
      "p2ok": "<span dir=\"ltr\">d2</span> هي الصحيحة: املأ منطقة الخانة الواحدة أولًا. <span dir=\"ltr\">a1</span> و<span dir=\"ltr\">b1</span> تدخلان منطقة من خانتين (زوجية).",
      "h0": "عدّ الخانات الفارغة في كل منطقة والعب أولًا في منطقة فردية: هذه القاعدة الأساسية لنظرية الزوجية.",
      "look": "الأرقام على اللوحة أحجام المناطق. ابحث عن نقلة مسموحة داخل منطقة برتقالية (فردية)."
+    },
+    "ru": {
+     "c1": "В эндшпиле пустые поля делятся на <b>области</b>. Каждое число — размер области, к которой относится поле. Здесь есть область из 6 полей и область из 1 поля (c8). <b>Если первым войти в нечётную область</b>, последний ход в ней будет вашим. Если белые займут единственное поле c8, чёрным там нечего будет перевернуть обратно.",
+     "g": "Числа — размеры областей. Сходите в нечётную область (оранжевую).",
+     "gok": "Верно — c8. Белые заполнили область из 1 поля, поэтому чёрные не могут перевернуть обратно. b2 к тому же отдал бы угол a1.",
+     "p1ok": "Верно — h7: это область из 1 поля. Остальные ходы ведут в область из 4 полей (чётную).",
+     "p2ok": "Верно — d2: сначала заполните область из 1 поля. a1 и b1 ведут в область из 2 полей (чётную).",
+     "h0": "Считайте пустые поля по областям и сначала ходите в нечётную — основное правило чётности.",
+     "look": "Числа на доске — размеры областей. Найдите возможный ход в оранжевой (нечётной) области."
+    },
+    "zh-TW": {
+     "c1": "終盤時空格會分成幾個<b>區域</b>。每個數字是該格所屬區域的大小。這裡有6格的區域和1格的區域（c8）。<b>先下進奇數區域</b>，就能拿到那個區域的最後一手。白方填上唯一的格子 c8 後，黑方在那裡就翻不回任何子。",
+     "g": "數字是區域的大小。請下進奇數區域（橙色）。",
+     "gok": "c8 是正解。白方填上了1格的區域，所以黑方翻不回來。b2 還會讓出 a1 角。",
+     "p1ok": "h7 是正解：它是1格的區域。其他著法都會下進4格（偶數）的區域。",
+     "p2ok": "d2 是正解：先填1格的區域。a1 和 b1 會下進2格（偶數）的區域。",
+     "h0": "依區域數空格，先下進奇數區域 — 這是奇偶理論的基本原則。",
+     "look": "盤上的數字是區域大小。在橙色（奇數）區域裡找出可下的位置。"
+    },
+    "id": {
+     "c1": "Di akhir permainan, petak kosong terbagi menjadi <b>wilayah</b>. Tiap angka adalah ukuran wilayah tempat petak itu berada. Di sini ada wilayah 6 petak dan wilayah 1 petak (c8). <b>Jika Anda masuk lebih dulu ke wilayah ganjil</b>, Anda mendapat langkah terakhir di sana. Jika Putih mengisi petak tunggal c8, Hitam tidak bisa membalik apa pun kembali di sana.",
+     "g": "Angka-angka itu adalah ukuran wilayah. Mainkan ke wilayah ganjil (oranye).",
+     "gok": "c8 benar. Putih mengisi wilayah 1 petak, jadi Hitam tidak bisa membalik kembali. b2 juga akan menyerahkan sudut a1.",
+     "p1ok": "h7 benar: itu wilayah 1 petak. Langkah lain masuk ke wilayah 4 petak (genap).",
+     "p2ok": "d2 benar: isi wilayah 1 petak lebih dulu. a1 dan b1 masuk ke wilayah 2 petak (genap).",
+     "h0": "Hitung petak kosong per wilayah dan masuk ke wilayah ganjil lebih dulu — aturan dasar paritas.",
+     "look": "Angka di papan adalah ukuran wilayah. Temukan langkah sah di dalam wilayah oranye (ganjil)."
+    },
+    "tr": {
+     "c1": "Oyun sonunda boş kareler <b>bölgelere</b> ayrılır. Her sayı, o karenin ait olduğu bölgenin büyüklüğüdür. Burada 6 karelik bir bölge ve 1 karelik bir bölge (c8) var. <b>Tek bir bölgeye önce siz girerseniz</b> oradaki son hamle sizin olur. Beyaz tek kare c8'i doldurursa Siyah orada hiçbir şeyi geri çeviremez.",
+     "g": "Sayılar bölge büyüklükleridir. Tek bir bölgeye (turuncu) oynayın.",
+     "gok": "c8 doğru. Beyaz 1 karelik bölgeyi doldurdu, bu yüzden Siyah geri çeviremez. b2 ayrıca a1 köşesini verirdi.",
+     "p1ok": "h7 doğru: 1 karelik bir bölge. Diğer hamleler 4 karelik (çift) bölgeye girer.",
+     "p2ok": "d2 doğru: önce 1 karelik bölgeyi doldurun. a1 ve b1, 2 karelik (çift) bölgeye girer.",
+     "h0": "Boş kareleri bölge bölge sayın ve önce tek bir bölgeye oynayın — paritenin temel kuralı.",
+     "look": "Tahtadaki sayılar bölge büyüklükleridir. Turuncu (tek) bir bölgenin içinde geçerli bir hamle bulun."
     }
    }
   },
@@ -1123,6 +1399,42 @@
      "p2ok": "<span dir=\"ltr\">h7</span> هي الصحيحة. كانت النقلة الوحيدة للأبيض؛ بعد شغلها يمرّر الأبيض ويلعب الأسود مرة أخرى.",
      "h0": "ابحث عن نقلة لا تترك للخصم أي نقلة (تُجبره على التمرير).",
      "look": "كل رقم هو عدد نقلات الخصم بعد تلك النقلة. الرقم 0 يعني أن الخصم سيضطر إلى التمرير."
+    },
+    "ru": {
+     "c1": "Красные точки показывают, куда <b>соперник может сходить сейчас</b>: у белых только c1. Если чёрные первыми займут отмеченное c1, белым будет некуда ходить и они будут вынуждены <b>пасовать</b>, а чёрные сходят снова. В эндшпиле ход, вынуждающий пас, часто решает партию.",
+     "g": "Каждое число — сколько ходов будет у соперника после этого хода. Сыграйте ход, оставляющий 0 (он вынуждает пас).",
+     "gok": "После c1 белые вынуждены пасовать, и чёрные ходят снова. Это был единственный выигрывающий ход; все остальные проигрывают.",
+     "p1ok": "Верно — h6: вы занимаете единственный ход белых, поэтому белые вынуждены пасовать.",
+     "p2ok": "Верно — h7. Это был единственный ход белых; когда вы его заняли, белые пасуют, и чёрные ходят снова.",
+     "h0": "Ищите ход, после которого у соперника не останется ни одного хода (пас).",
+     "look": "Каждое число — сколько ходов у соперника после этого хода. 0 означает, что соперник должен пасовать."
+    },
+    "zh-TW": {
+     "c1": "紅點表示<b>對手現在可以下的位置</b>：白方只有 c1。黑方先佔下標示的 c1，白方就無處可下，必須 <b>Pass</b>，黑方再下一手。在終盤，逼對手 Pass 的一手常常決定勝負。",
+     "g": "每個數字是下那一手後對手的可下位置數。請下剩0的一手（逼對手 Pass）。",
+     "gok": "下 c1 後白方必須 Pass，黑方再下一手。這是唯一能贏的一手；其他著法全都會輸。",
+     "p1ok": "h6 是正解：你填掉白方唯一的可下位置，所以白方只能 Pass。",
+     "p2ok": "h7 是正解。那是白方唯一的可下位置；你填掉之後白方 Pass，黑方再下一手。",
+     "h0": "找出讓對手完全沒有可下位置（Pass）的一手。",
+     "look": "每個數字是下那一手後對手的可下位置數。0 代表對手必須 Pass。"
+    },
+    "id": {
+     "c1": "Titik merah menunjukkan tempat <b>lawan bisa main sekarang</b>: Putih hanya punya c1. Jika Hitam mengambil c1 yang ditandai lebih dulu, Putih tidak punya tempat main dan harus <b>pas</b>, lalu Hitam jalan lagi. Di akhir permainan, langkah yang memaksa pas sering menentukan game.",
+     "g": "Tiap angka adalah jumlah langkah lawan setelah langkah itu. Mainkan langkah yang menyisakan 0 (memaksa pas).",
+     "gok": "Setelah c1, Putih harus pas dan Hitam jalan lagi. Ini satu-satunya langkah menang; semua langkah lain kalah.",
+     "p1ok": "h6 benar: Anda mengisi satu-satunya langkah Putih, jadi Putih harus pas.",
+     "p2ok": "h7 benar. Itu satu-satunya langkah Putih; begitu Anda mengisinya, Putih pas dan Hitam jalan lagi.",
+     "h0": "Cari langkah yang membuat lawan sama sekali tidak punya langkah (pas).",
+     "look": "Tiap angka adalah jumlah langkah lawan setelah langkah itu. 0 berarti lawan harus pas."
+    },
+    "tr": {
+     "c1": "Kırmızı noktalar <b>rakibin şu an oynayabileceği</b> yerleri gösterir: Beyazın yalnızca c1'i var. Siyah işaretli c1'i önce alırsa Beyazın oynayacak yeri kalmaz ve <b>pas</b> geçmek zorunda kalır, Siyah yeniden oynar. Oyun sonunda pas zorlayan hamle çoğu zaman oyunu belirler.",
+     "g": "Her sayı, o hamleden sonra rakibin hamle sayısıdır. 0 bırakan (pas zorlayan) hamleyi oynayın.",
+     "gok": "c1 sonrası Beyaz pas geçmek zorunda ve Siyah yeniden oynar. Kazandıran tek hamle buydu; diğerlerinin hepsi kaybettirir.",
+     "p1ok": "h6 doğru: Beyazın tek hamlesini doldurursunuz, bu yüzden Beyaz pas geçmek zorunda.",
+     "p2ok": "h7 doğru. Beyazın tek hamlesiydi; onu doldurunca Beyaz pas geçer ve Siyah yeniden oynar.",
+     "h0": "Rakibe hiç hamle bırakmayan (pas) bir hamle arayın.",
+     "look": "Her sayı, o hamleden sonra rakibin hamle sayısıdır. 0, rakibin pas geçmek zorunda olduğu anlamına gelir."
     }
    }
   }

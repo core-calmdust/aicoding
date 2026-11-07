@@ -7,6 +7,7 @@
 // rest by at least 300. Squares are iccs names (a0..i9). Hints go concept (h) → where to look (look) → the answer.
 'use strict';
 const fs = require('fs'), path = require('path');
+const { keepLangs } = require(path.join(__dirname, '../../tools', 'keep-langs.js'));   // keeps ru / zh-TW / id / tr of unchanged texts
 const FILE = path.join(__dirname, '..', 'lessons.json');
 const L = (ja, en, zh, ko, es, fr, pt, de, hi, ar) => ({ ja, en, zh, ko, es, fr, pt, de, hi, ar });
 
@@ -50,7 +51,11 @@ const RAMPS = {
         "pt": "Garfo: atacar duas de uma vez",
         "de": "Gabel: zwei Ziele auf einmal",
         "hi": "फ़ोर्क: एक चाल से दो पर हमला",
-        "ar": "الشوكة: مهاجمة قطعتين معًا"
+        "ar": "الشوكة: مهاجمة قطعتين معًا",
+        "ru": "Вилка: удар сразу по двум",
+        "zh-TW": "捉雙：同時攻擊兩子",
+        "id": "Garpu: serang dua sekaligus",
+        "tr": "Çatal: aynı anda ikisine saldırı"
       },
       "body": {
         "ja": "<p>馬が矢印の点へ跳ぶと、<b>2つの車</b>（×印）を同時にねらいます。</p><p>相手は1手に1つしか逃げられないので、どちらかの車が取れます。馬は「日」の字に動き、行き先から最大8か所をにらめるので、両取りが生まれやすい駒です。</p><p class=\"note\">探し方：相手の大きい駒2つから、どちらも馬1回分の位置にある点を探し、そこへ自分の馬が跳べるかを見る。</p>",
@@ -62,7 +67,11 @@ const RAMPS = {
         "pt": "<p>O cavalo salta para o ponto da seta e ataca ao mesmo tempo <b>as duas carruagens</b> (os ×).</p><p>O adversário só salva uma por lance, então você ganha a outra. O cavalo alcança até oito pontos de onde cai: é a peça típica do garfo.</p><p class=\"note\">Como achar: procure um ponto a um salto de cavalo de duas peças grandes adversárias e veja se seu cavalo chega lá.</p>",
         "de": "<p>Das Pferd springt auf den Pfeilpunkt und greift <b>beide Wagen</b> (die ×) gleichzeitig an.</p><p>Der Gegner rettet pro Zug nur einen – du gewinnst den anderen. Das Pferd erreicht vom Landepunkt bis zu acht Punkte, darum ist es die typische Gabelfigur.</p><p class=\"note\">So findest du sie: Suche einen Punkt, der von zwei großen gegnerischen Figuren je einen Pferdesprung entfernt ist, und prüfe, ob dein Pferd dort landen kann.</p>",
         "hi": "<p>घोड़ा तीर वाले बिंदु पर कूदकर <b>दोनों रथों</b> (× वाले) पर एक साथ हमला करता है।</p><p>विरोधी एक चाल में एक ही बचा सकता है, तो दूसरा आपका। घोड़ा उतरने की जगह से आठ बिंदुओं तक पहुँचता है, इसलिए फ़ोर्क का ख़ास मोहरा है।</p><p class=\"note\">पहचान: ऐसा बिंदु खोजिए जो विरोधी के दो बड़े मोहरों से घोड़े की एक छलाँग पर हो, फिर देखिए आपका घोड़ा वहाँ पहुँचता है या नहीं।</p>",
-        "ar": "<p>يقفز الحصان إلى نقطة السهم فيهاجم <b>العربتين</b> (علامات ×) معًا.</p><p>لا ينقذ الخصم إلا واحدة في كل نقلة، فتكسب الأخرى. يصل الحصان إلى ثماني نقاط من موضع هبوطه، لذا هو قطعة الشوكة النموذجية.</p><p class=\"note\">كيف تجدها: ابحث عن نقطة على بُعد قفزة حصان من قطعتين كبيرتين للخصم، ثم انظر هل يصلها حصانك.</p>"
+        "ar": "<p>يقفز الحصان إلى نقطة السهم فيهاجم <b>العربتين</b> (علامات ×) معًا.</p><p>لا ينقذ الخصم إلا واحدة في كل نقلة، فتكسب الأخرى. يصل الحصان إلى ثماني نقاط من موضع هبوطه، لذا هو قطعة الشوكة النموذجية.</p><p class=\"note\">كيف تجدها: ابحث عن نقطة على بُعد قفزة حصان من قطعتين كبيرتين للخصم، ثم انظر هل يصلها حصانك.</p>",
+        "ru": "<p>Конь прыгает на точку стрелки и нападает сразу на <b>обе колесницы</b> (×).</p><p>За ход соперник может спасти только одну, и вы выиграете другую. С любой точки конь достаёт до восьми точек — поэтому он классическая фигура для вилок.</p><p class=\"note\">Как найти: ищите точку в одном ходе коня от двух крупных фигур соперника, затем проверьте, может ли ваш конь туда встать.</p>",
+        "zh-TW": "<p>馬跳到箭頭的點，同時捉<b>兩個車</b>（×）。</p><p>對方一步只能救一個，另一個就是你的了。馬落點後最多能控制八個點，是捉雙的代表棋子。</p><p class=\"note\">找法：先找離兩個敵方大子都是一步馬路的點，再看自己的馬能不能跳到那裡。</p>",
+        "id": "<p>Kuda melompat ke titik panah dan menyerang <b>kedua kereta</b> (×) sekaligus.</p><p>Lawan hanya bisa menyelamatkan satu per langkah, jadi kamu memenangkan yang lain. Dari mana pun ia mendarat, kuda menjangkau hingga delapan titik — itulah sebabnya ia bidak garpu klasik.</p><p class=\"note\">Cara menemukannya: cari titik yang berjarak satu langkah kuda dari dua bidak besar lawan, lalu lihat apakah kudamu bisa mendarat di sana.</p>",
+        "tr": "<p>At okun gösterdiği noktaya atlar ve aynı anda <b>iki kaleye</b> (×) saldırır.</p><p>Rakip bir hamlede yalnızca birini kurtarabilir, diğerini siz kazanırsınız. At indiği her yerden sekiz noktaya kadar ulaşır; bu yüzden klasik çatal taşıdır.</p><p class=\"note\">Nasıl bulunur: iki büyük rakip taşa bir at hamlesi uzaklıktaki noktayı arayın, sonra atınızın oraya gidip gidemeyeceğine bakın.</p>"
       }
     },
     {
@@ -87,7 +96,11 @@ const RAMPS = {
         "pt": "A mesma forma: ataque as duas carruagens.",
         "de": "Dieselbe Form: greif beide Wagen an.",
         "hi": "वही आकार: दोनों रथों पर एक साथ हमला।",
-        "ar": "الشكل نفسه: هاجم العربتين معًا."
+        "ar": "الشكل نفسه: هاجم العربتين معًا.",
+        "ru": "Та же форма: нападите сразу на обе колесницы.",
+        "zh-TW": "同樣的形狀：同時捉兩個車。",
+        "id": "Bentuk yang sama: serang kedua kereta sekaligus.",
+        "tr": "Aynı şekil: iki kaleye aynı anda saldırın."
       },
       "h": {
         "ja": "2つの車のどちらからも「日」の字1つ分の点はどこ？そこへ馬が跳べるか見よう。",
@@ -99,7 +112,11 @@ const RAMPS = {
         "pt": "Que ponto está a um salto de cavalo das duas carruagens? Seu cavalo chega lá?",
         "de": "Welcher Punkt ist von beiden Wagen einen Pferdesprung entfernt? Kommt dein Pferd hin?",
         "hi": "कौन-सा बिंदु दोनों रथों से घोड़े की एक छलाँग पर है? क्या घोड़ा वहाँ जा सकता है?",
-        "ar": "أي نقطة على بُعد قفزة حصان من العربتين معًا؟ هل يصلها حصانك؟"
+        "ar": "أي نقطة على بُعد قفزة حصان من العربتين معًا؟ هل يصلها حصانك؟",
+        "ru": "Какая точка в одном ходе коня от обеих колесниц? Может ли ваш конь туда прыгнуть?",
+        "zh-TW": "哪個點離兩個車都是一步馬路？你的馬跳得過去嗎？",
+        "id": "Titik mana yang berjarak satu langkah kuda dari kedua kereta? Bisakah kudamu melompat ke sana?",
+        "tr": "Hangi nokta iki kaleye de bir at hamlesi uzaklıkta? Atınız oraya atlayabilir mi?"
       },
       "y": {
         "ja": "正解！馬が2つの車を同時にねらい、どちらかの車が取れます。",
@@ -111,7 +128,11 @@ const RAMPS = {
         "pt": "Certo! O cavalo ataca as duas carruagens e uma cai.",
         "de": "Richtig! Das Pferd trifft beide Wagen – einer fällt.",
         "hi": "सही! घोड़ा दोनों रथों पर हमला करता है, एक जाएगा।",
-        "ar": "صحيح! الحصان يهاجم العربتين فتسقط إحداهما."
+        "ar": "صحيح! الحصان يهاجم العربتين فتسقط إحداهما.",
+        "ru": "Верно! Конь бьёт обе колесницы, и одна из них падёт.",
+        "zh-TW": "對！馬捉雙車，必得一車。",
+        "id": "Benar! Kuda menyerang kedua kereta, dan salah satunya jatuh.",
+        "tr": "Doğru! At iki kaleye birden saldırır ve biri düşer."
       }
     }
   ],
@@ -150,7 +171,11 @@ const RAMPS = {
         "pt": "Cavalo e canhão: o cavalo é a tela",
         "de": "Pferd und Kanone: das Pferd ist der Schirm",
         "hi": "घोड़ा-तोप: घोड़ा तोप की आड़",
-        "ar": "الحصان والمدفع: الحصان ستار المدفع"
+        "ar": "الحصان والمدفع: الحصان ستار المدفع",
+        "ru": "Конь за пушкой: конь — лафет пушки",
+        "zh-TW": "馬後炮：馬當炮架",
+        "id": "Kuda di depan meriam: kuda menjadi penyangga meriam",
+        "tr": "Topun önünde at: at topun perdesidir"
       },
       "body": {
         "ja": "<p>炮は<b>間にちょうど1つ駒をはさんで</b>王手をかけます。炮が矢印のとおり將と同じ筋へ来ると、光っている馬を台にして王手。</p><p>將の逃げ道（×印）は、左右の2か所を馬がにらみ、前の1か所は炮の筋のまま。どこへも逃げられず、詰みです。</p><p class=\"note\">形：將・馬・炮が<b>同じ筋</b>に縦に並ぶ。馬は「台」と「逃げ道ふさぎ」の二役。</p>",
@@ -162,7 +187,11 @@ const RAMPS = {
         "pt": "<p>O canhão dá xeque com <b>exatamente uma peça no meio</b>. Ao ir para a coluna do general (seta), dá xeque por cima do cavalo destacado.</p><p>As fugas (os ×): as duas laterais o cavalo cobre e a da frente segue na coluna do canhão. Sem saída: mate.</p><p class=\"note\">Forma: general, cavalo e canhão <b>na mesma coluna</b>. O cavalo é tela e guarda.</p>",
         "de": "<p>Die Kanone gibt Schach mit <b>genau einer Figur dazwischen</b>. Zieht sie auf die Linie des Generals (Pfeil), gibt sie über das leuchtende Pferd Schach.</p><p>Die Fluchtpunkte (die ×): die beiden seitlichen deckt das Pferd, der vordere liegt noch auf der Kanonenlinie. Kein Ausweg – matt.</p><p class=\"note\">Form: General, Pferd und Kanone <b>auf einer Linie</b>. Das Pferd ist Schirm und Wächter zugleich.</p>",
         "hi": "<p>तोप <b>बीच में ठीक एक मोहरा</b> रखकर शह देती है। तीर के अनुसार जनरल की रेखा पर आते ही वह चमकते घोड़े के ऊपर से शह देती है।</p><p>भागने के बिंदु (× वाले): दोनों बगल वाले घोड़ा रोकता है, सामने वाला अब भी तोप की रेखा पर है। कोई रास्ता नहीं: मात।</p><p class=\"note\">आकार: जनरल, घोड़ा और तोप <b>एक ही रेखा</b> पर। घोड़ा आड़ भी है और पहरेदार भी।</p>",
-        "ar": "<p>المدفع يكشّ <b>بقطعة واحدة بالضبط في الوسط</b>. حين ينتقل إلى عمود القائد (السهم) يكشّ من فوق الحصان المضيء.</p><p>المهارب (علامات ×): الجانبيتان يحميهما الحصان، والأمامية ما زالت على خط المدفع. لا مفرّ: مات.</p><p class=\"note\">الشكل: القائد والحصان والمدفع <b>على خط واحد</b>. الحصان ستار وحارس معًا.</p>"
+        "ar": "<p>المدفع يكشّ <b>بقطعة واحدة بالضبط في الوسط</b>. حين ينتقل إلى عمود القائد (السهم) يكشّ من فوق الحصان المضيء.</p><p>المهارب (علامات ×): الجانبيتان يحميهما الحصان، والأمامية ما زالت على خط المدفع. لا مفرّ: مات.</p><p class=\"note\">الشكل: القائد والحصان والمدفع <b>على خط واحد</b>. الحصان ستار وحارس معًا.</p>",
+        "ru": "<p>Пушка объявляет шах, когда между ней и целью <b>ровно одна фигура</b>. Встав на вертикаль генерала (стрелка), пушка шахует через светящегося коня.</p><p>Точки отступления (×): две боковые держит конь, а передняя по-прежнему на линии пушки. Уйти некуда — мат.</p><p class=\"note\">Форма: генерал, конь и пушка <b>на одной вертикали</b>. Конь — и лафет, и сторож.</p>",
+        "zh-TW": "<p>炮要<b>中間正好隔一子</b>才能將軍。炮平到將所在的直線上（箭頭），隔著發光的馬將軍。</p><p>將的退路（×）：兩側被馬控制，前方仍在炮的線上。無路可逃——將死。</p><p class=\"note\">形狀：將、馬、炮<b>在同一直線</b>。馬既是炮架又是守衛。</p>",
+        "id": "<p>Meriam memberi skak dengan <b>tepat satu bidak di antaranya</b>. Saat meriam bergeser ke lajur jenderal (panah), ia memberi skak melewati kuda yang menyala.</p><p>Titik pelarian (×): dua di samping dijaga kuda, dan yang di depan masih di lajur meriam. Tak ada jalan — mat.</p><p class=\"note\">Bentuknya: jenderal, kuda, dan meriam <b>di satu lajur</b>. Kuda sekaligus penyangga dan penjaga.</p>",
+        "tr": "<p>Top, arada <b>tam bir taş</b> olduğunda şah çeker. Top generalin dikeyine kayınca (ok) parlayan atın üstünden şah çeker.</p><p>Kaçış noktaları (×): yandaki ikisini at tutar, öndeki de hâlâ topun çizgisinde. Gidecek yer yok — mat.</p><p class=\"note\">Şekil: general, at ve top <b>aynı dikeyde</b>. At hem perde hem bekçidir.</p>"
       }
     },
     {
@@ -187,7 +216,11 @@ const RAMPS = {
         "pt": "Mate em um com cavalo e canhão.",
         "de": "Matt in eins mit Pferd und Kanone.",
         "hi": "घोड़ा-तोप से एक चाल में मात।",
-        "ar": "كش مات في نقلة بالحصان والمدفع."
+        "ar": "كش مات في نقلة بالحصان والمدفع.",
+        "ru": "Мат в один ход: конь за пушкой.",
+        "zh-TW": "用馬後炮一步殺。",
+        "id": "Mat dalam satu langkah dengan kuda dan meriam.",
+        "tr": "At ve topla tek hamlede mat."
       },
       "h": {
         "ja": "將と馬は同じ筋に縦に並んでいます。炮をその筋へ回すと？",
@@ -199,7 +232,11 @@ const RAMPS = {
         "pt": "O general e o cavalo estão na mesma coluna. E se o canhão for para ela?",
         "de": "General und Pferd stehen auf einer Linie. Was, wenn die Kanone auf diese Linie zieht?",
         "hi": "जनरल और घोड़ा एक ही रेखा पर हैं। तोप उस रेखा पर आए तो?",
-        "ar": "القائد والحصان على عمود واحد. ماذا لو انتقل المدفع إليه؟"
+        "ar": "القائد والحصان على عمود واحد. ماذا لو انتقل المدفع إليه؟",
+        "ru": "Генерал и конь стоят на одной вертикали. А если пушка перейдёт на эту вертикаль?",
+        "zh-TW": "將和馬在同一直線上。如果炮平到這條線上呢？",
+        "id": "Jenderal dan kuda berada di satu lajur. Bagaimana jika meriam pindah ke lajur itu?",
+        "tr": "General ve at aynı dikeyde. Top o dikeye geçerse ne olur?"
       },
       "y": {
         "ja": "正解！炮が馬を台に王手。逃げ道は馬が押さえています。",
@@ -211,7 +248,11 @@ const RAMPS = {
         "pt": "Certo! O canhão dá xeque sobre o cavalo, que cobre as fugas.",
         "de": "Richtig! Die Kanone gibt über das Pferd Schach, das die Fluchtpunkte deckt.",
         "hi": "सही! तोप घोड़े के ऊपर से शह देती है, और भागने के बिंदु घोड़ा रोकता है।",
-        "ar": "صحيح! المدفع يكشّ من فوق الحصان الذي يسدّ المهارب."
+        "ar": "صحيح! المدفع يكشّ من فوق الحصان الذي يسدّ المهارب.",
+        "ru": "Верно! Пушка шахует через коня, а конь закрывает точки отступления.",
+        "zh-TW": "對！炮隔馬將軍，馬封住退路。",
+        "id": "Benar! Meriam memberi skak melewati kuda, dan kuda menutup titik pelarian.",
+        "tr": "Doğru! Top atın üstünden şah çeker, at da kaçış noktalarını kapatır."
       }
     }
   ],
@@ -250,7 +291,11 @@ const RAMPS = {
         "pt": "Canhões dobrados: dois na mesma coluna",
         "de": "Doppelkanone: zwei auf einer Linie",
         "hi": "दोहरी तोप: एक रेखा पर दो तोपें",
-        "ar": "المدفعان المزدوجان: مدفعان على خط واحد"
+        "ar": "المدفعان المزدوجان: مدفعان على خط واحد",
+        "ru": "Двойная пушка: две пушки на одной вертикали",
+        "zh-TW": "重炮：雙炮同線",
+        "id": "Meriam ganda: dua meriam di satu lajur",
+        "tr": "Çift top: aynı dikeyde iki top"
       },
       "body": {
         "ja": "<p>光っている炮の後ろへ、もう1つの炮が矢印のとおり来ると、前の炮が台になって將に王手。</p><p>將の左右は自分の士でふさがり、前は炮の筋（×印）。台の炮を取れる駒も、間に入れる駒もないので詰みです。</p><p class=\"note\">士が將の両わきにいる形は、重炮にとても弱い。</p>",
@@ -262,7 +307,11 @@ const RAMPS = {
         "pt": "<p>Um segundo canhão vem para trás do canhão destacado (seta). O da frente vira tela e o general fica em xeque.</p><p>Os lados do general estão tapados pelos conselheiros e o ponto à frente está na coluna do canhão (o ×). Nada captura a tela nem se interpõe: mate.</p><p class=\"note\">Um general cercado pelos conselheiros é muito fraco contra canhões dobrados.</p>",
         "de": "<p>Eine zweite Kanone zieht hinter die leuchtende Kanone (Pfeil). Die vordere wird zum Schirm, der General steht im Schach.</p><p>Seine Seiten blockieren die eigenen Berater, der Punkt davor liegt auf der Kanonenlinie (das ×). Niemand schlägt den Schirm oder stellt sich dazwischen: Matt.</p><p class=\"note\">Ein General zwischen seinen Beratern ist gegen die Doppelkanone sehr schwach.</p>",
         "hi": "<p>दूसरी तोप तीर के अनुसार चमकती तोप के पीछे आती है। आगे वाली तोप आड़ बनती है और जनरल शह में।</p><p>जनरल के दोनों बगल उसके अपने सलाहकारों से बंद हैं और सामने वाला बिंदु तोप की रेखा पर है (×)। आड़ को कोई नहीं मार सकता, बीच में कोई नहीं आ सकता: मात।</p><p class=\"note\">अपने सलाहकारों से घिरा जनरल दोहरी तोप के आगे बहुत कमज़ोर है।</p>",
-        "ar": "<p>يأتي مدفع ثانٍ خلف المدفع المضيء (السهم). يصبح الأمامي ستارًا فيُكشّ القائد.</p><p>جانبا القائد مسدودان بمستشاريه، والنقطة الأمامية على خط المدفع (علامة ×). لا شيء يأخذ الستار أو يعترض: مات.</p><p class=\"note\">القائد المحاط بمستشاريه ضعيف جدًا أمام المدفعين المزدوجين.</p>"
+        "ar": "<p>يأتي مدفع ثانٍ خلف المدفع المضيء (السهم). يصبح الأمامي ستارًا فيُكشّ القائد.</p><p>جانبا القائد مسدودان بمستشاريه، والنقطة الأمامية على خط المدفع (علامة ×). لا شيء يأخذ الستار أو يعترض: مات.</p><p class=\"note\">القائد المحاط بمستشاريه ضعيف جدًا أمام المدفعين المزدوجين.</p>",
+        "ru": "<p>Вторая пушка встаёт позади светящейся (стрелка). Передняя пушка становится лафетом, и генералу шах.</p><p>По бокам генерала стоят его же советники, а точка впереди — на линии пушек (×). Взять переднюю пушку или закрыться нечем: мат.</p><p class=\"note\">Генерал, зажатый своими советниками, очень слаб против двойной пушки.</p>",
+        "zh-TW": "<p>另一門炮來到發光的炮後面（箭頭）。前炮成為炮架，將被將軍。</p><p>將的兩側被自己的士擋住，前方在炮的線上（×）。吃不到前炮也墊不了：將死。</p><p class=\"note\">被自己的雙士夾住的將，最怕重炮。</p>",
+        "id": "<p>Meriam kedua masuk di belakang meriam yang menyala (panah). Meriam depan menjadi penyangga dan jenderal kena skak.</p><p>Samping jenderal terhalang penasihatnya sendiri, dan titik di depan ada di lajur meriam (×). Tak ada yang bisa memakan meriam depan atau menghalangi: mat.</p><p class=\"note\">Jenderal yang diapit penasihatnya sendiri sangat lemah terhadap meriam ganda.</p>",
+        "tr": "<p>Parlayan topun arkasına ikinci bir top gelir (ok). Öndeki top perde olur ve general şahtadır.</p><p>Generalin yanlarını kendi danışmanları kapatır, öndeki nokta da top çizgisindedir (×). Öndeki topu alacak ya da araya girecek taş yok: mat.</p><p class=\"note\">Kendi danışmanlarının arasında kalan general çift topa karşı çok zayıftır.</p>"
       }
     },
     {
@@ -287,7 +336,11 @@ const RAMPS = {
         "pt": "Mate em um com canhões dobrados.",
         "de": "Matt in eins mit der Doppelkanone.",
         "hi": "दोहरी तोप से एक चाल में मात।",
-        "ar": "كش مات في نقلة بالمدفعين المزدوجين."
+        "ar": "كش مات في نقلة بالمدفعين المزدوجين.",
+        "ru": "Мат в один ход двойной пушкой.",
+        "zh-TW": "用重炮一步殺。",
+        "id": "Mat dalam satu langkah dengan meriam ganda.",
+        "tr": "Çift topla tek hamlede mat."
       },
       "h": {
         "ja": "炮が1つ、將と同じ筋にいます。もう1つの炮をその前（同じ筋）に置くと？",
@@ -299,7 +352,11 @@ const RAMPS = {
         "pt": "Um canhão já está na coluna do general. E se o outro ficar na frente dele?",
         "de": "Eine Kanone steht schon auf der Linie des Generals. Was, wenn die andere davor zieht?",
         "hi": "एक तोप पहले से जनरल की रेखा पर है। दूसरी तोप उसके आगे उसी रेखा पर रखें तो?",
-        "ar": "أحد المدفعين على عمود القائد بالفعل. ماذا لو وُضع الآخر أمامه على العمود نفسه؟"
+        "ar": "أحد المدفعين على عمود القائد بالفعل. ماذا لو وُضع الآخر أمامه على العمود نفسه؟",
+        "ru": "Одна пушка уже на вертикали генерала. А если другая встанет перед ней на этой вертикали?",
+        "zh-TW": "一門炮已經在將的直線上。如果另一門炮走到它前面的同一條線上呢？",
+        "id": "Satu meriam sudah di lajur jenderal. Bagaimana jika meriam lain masuk di depannya pada lajur itu?",
+        "tr": "Bir top zaten generalin dikeyinde. Diğer top aynı dikeyde onun önüne geçerse ne olur?"
       },
       "y": {
         "ja": "正解！前の炮が台になり、後ろの炮が王手。將は士にはさまれて動けません。",
@@ -311,7 +368,11 @@ const RAMPS = {
         "pt": "Certo! O canhão da frente é a tela e o de trás dá xeque; os conselheiros prendem o general.",
         "de": "Richtig! Die vordere Kanone ist der Schirm, die hintere gibt Schach – die Berater sperren den General ein.",
         "hi": "सही! आगे की तोप आड़ है और पीछे की तोप शह देती है; सलाहकार जनरल को घेर लेते हैं।",
-        "ar": "صحيح! المدفع الأمامي ستار والخلفي يكشّ، والمستشاران يحاصران القائد."
+        "ar": "صحيح! المدفع الأمامي ستار والخلفي يكشّ، والمستشاران يحاصران القائد.",
+        "ru": "Верно! Передняя пушка — лафет, задняя шахует; генерал заперт своими советниками.",
+        "zh-TW": "對！前炮當炮架、後炮將軍，將被自己的士困住。",
+        "id": "Benar! Meriam depan jadi penyangga dan yang belakang memberi skak; jenderal terkurung penasihatnya.",
+        "tr": "Doğru! Öndeki top perde, arkadaki şah çeker; general danışmanlarınca kapana kısılır."
       }
     }
   ],
@@ -346,7 +407,11 @@ const RAMPS = {
         "pt": "Os generais não podem se encarar",
         "de": "Die Generäle dürfen sich nicht ansehen",
         "hi": "दोनों जनरल आमने-सामने नहीं हो सकते",
-        "ar": "لا يتواجه القائدان"
+        "ar": "لا يتواجه القائدان",
+        "ru": "Генералы не могут смотреть друг на друга",
+        "zh-TW": "帥將不能照面",
+        "id": "Kedua jenderal tak boleh berhadapan",
+        "tr": "İki general yüz yüze gelemez"
       },
       "body": {
         "ja": "<p>帥と將が同じ筋で、間に駒なく向かい合う手は指せません。だから光っている帥は、<b>自分のいる筋全体</b>を將に使わせません。</p><p>車が矢印のとおり將の筋へ回って王手。將は横へ逃げると帥と向かい合うので行けず、前は車の筋（×印）。詰みです。</p><p class=\"note\">帥は攻めにも使える。同じ筋をふさぐ「見えない壁」になる。</p>",
@@ -358,7 +423,11 @@ const RAMPS = {
         "pt": "<p>Os generais nunca podem ficar na mesma coluna sem nada entre eles. Assim o general vermelho destacado tira do preto <b>toda a coluna dele</b>.</p><p>A carruagem vai à coluna do general (seta) e dá xeque. Ir para o lado o poria de frente ao general vermelho, e o ponto à frente está na coluna da carruagem (os ×). Mate.</p><p class=\"note\">Seu general também ataca: é um muro invisível na coluna dele.</p>",
         "de": "<p>Die Generäle dürfen nie ohne Figur dazwischen auf derselben Linie stehen. Der leuchtende rote General nimmt dem schwarzen also <b>seine ganze Linie</b>.</p><p>Der Wagen schwenkt auf die Linie des Generals (Pfeil) und gibt Schach. Seitwärts stünde er dem roten General gegenüber, und der Punkt davor liegt auf der Wagenlinie (die ×). Matt.</p><p class=\"note\">Auch dein General greift an: er ist eine unsichtbare Mauer auf seiner Linie.</p>",
         "hi": "<p>दोनों जनरल बीच में कोई मोहरा न हो तो एक ही रेखा पर कभी नहीं रह सकते। इसलिए चमकता लाल जनरल काले से <b>अपनी पूरी रेखा</b> छीन लेता है।</p><p>रथ तीर के अनुसार जनरल की रेखा पर आकर शह देता है। बगल में जाए तो लाल जनरल के सामने आएगा, और सामने वाला बिंदु रथ की रेखा पर है (× वाले)। मात।</p><p class=\"note\">आपका जनरल भी हमला करता है: अपनी रेखा पर एक अदृश्य दीवार।</p>",
-        "ar": "<p>لا يجوز أن يقف القائدان على عمود واحد بلا قطعة بينهما. لذا يحرم القائد الأحمر المضيء خصمه من <b>عموده كله</b>.</p><p>تنتقل العربة إلى عمود القائد (السهم) وتكشّه. التنحّي جانبًا يجعله مواجهًا للقائد الأحمر، والنقطة الأمامية على خط العربة (علامات ×). مات.</p><p class=\"note\">قائدك يهاجم أيضًا: إنه جدار خفيّ على عموده.</p>"
+        "ar": "<p>لا يجوز أن يقف القائدان على عمود واحد بلا قطعة بينهما. لذا يحرم القائد الأحمر المضيء خصمه من <b>عموده كله</b>.</p><p>تنتقل العربة إلى عمود القائد (السهم) وتكشّه. التنحّي جانبًا يجعله مواجهًا للقائد الأحمر، والنقطة الأمامية على خط العربة (علامات ×). مات.</p><p class=\"note\">قائدك يهاجم أيضًا: إنه جدار خفيّ على عموده.</p>",
+        "ru": "<p>Генералы никогда не могут стоять на одной вертикали без фигур между ними. Поэтому светящийся красный генерал отнимает у чёрного <b>всю свою вертикаль</b>.</p><p>Колесница встаёт на вертикаль генерала (стрелка) и шахует. Шаг в сторону — и генералы окажутся напротив, а точка впереди на линии колесницы (×). Мат.</p><p class=\"note\">Ваш генерал тоже атакует: он — невидимая стена вдоль своей вертикали.</p>",
+        "zh-TW": "<p>帥將不能在同一直線上中間無子地照面。所以發光的紅帥控制了<b>整條直線</b>，黑將不能走上去。</p><p>俥平到將的直線上（箭頭）將軍。將往旁邊走會與帥照面，前方在俥的線上（×）。將死。</p><p class=\"note\">老帥也能進攻：它是沿著直線的一道隱形牆。</p>",
+        "id": "<p>Kedua jenderal tidak boleh berada di lajur yang sama tanpa bidak di antaranya. Jadi jenderal merah yang menyala merebut <b>seluruh lajurnya</b> dari jenderal hitam.</p><p>Kereta bergeser ke lajur jenderal (panah) dan memberi skak. Melangkah ke samping berarti berhadapan dengan jenderal merah, dan titik di depan ada di lajur kereta (×). Mat.</p><p class=\"note\">Jenderalmu juga bisa menyerang: ia tembok tak terlihat di sepanjang lajurnya.</p>",
+        "tr": "<p>Generaller aralarında taş olmadan asla aynı dikeyde duramaz. Bu yüzden parlayan kırmızı general siyah generalin <b>bütün dikeyini</b> elinden alır.</p><p>Kale generalin dikeyine kayar (ok) ve şah çeker. Yana adım atmak kırmızı generalle yüz yüze gelmek demektir, öndeki nokta da kalenin çizgisindedir (×). Mat.</p><p class=\"note\">Generaliniz de saldırabilir: dikeyi boyunca görünmez bir duvardır.</p>"
       }
     },
     {
@@ -383,7 +452,11 @@ const RAMPS = {
         "pt": "Mate em um usando seu general.",
         "de": "Matt in eins mit Hilfe deines Generals.",
         "hi": "अपने जनरल की मदद से एक चाल में मात।",
-        "ar": "كش مات في نقلة بمساعدة قائدك."
+        "ar": "كش مات في نقلة بمساعدة قائدك.",
+        "ru": "Мат в один ход с помощью своего генерала.",
+        "zh-TW": "借助老帥一步殺。",
+        "id": "Mat dalam satu langkah dengan bantuan jenderalmu.",
+        "tr": "Generalinizin yardımıyla tek hamlede mat."
       },
       "h": {
         "ja": "將が横へ逃げようとすると、帥と同じ筋に入ってしまいます。車で將と同じ筋から王手すると？",
@@ -395,7 +468,11 @@ const RAMPS = {
         "pt": "Se o general sair de lado, cai na coluna do seu. E se a carruagem der xeque pela coluna do general?",
         "de": "Weicht der General seitlich aus, steht er auf der Linie deines Generals. Was, wenn der Wagen auf seiner Linie Schach gibt?",
         "hi": "जनरल बगल में जाए तो आपके जनरल की रेखा पर आ जाएगा। रथ जनरल की रेखा से शह दे तो?",
-        "ar": "إن تنحّى القائد جانبًا دخل عمود قائدك. ماذا لو كشّت العربة على عمود القائد؟"
+        "ar": "إن تنحّى القائد جانبًا دخل عمود قائدك. ماذا لو كشّت العربة على عمود القائد؟",
+        "ru": "Шагнув в сторону, генерал попадёт на вертикаль вашего генерала. А если колесница шахнет по вертикали генерала?",
+        "zh-TW": "將往旁邊走就會到帥的直線上。如果俥沿著將的直線將軍呢？",
+        "id": "Jika jenderal melangkah ke samping, ia masuk lajur jenderalmu. Bagaimana jika kereta memberi skak di lajur jenderal?",
+        "tr": "General yana adım atarsa sizin generalinizin dikeyine düşer. Kale generalin dikeyinden şah çekerse ne olur?"
       },
       "y": {
         "ja": "正解！車で王手。横は帥とにらみ合い、前は車の筋で、將は動けません。",
@@ -407,7 +484,11 @@ const RAMPS = {
         "pt": "Certo! A carruagem dá xeque; de lado encara seu general e à frente está na coluna da carruagem.",
         "de": "Richtig! Der Wagen gibt Schach; seitwärts steht er deinem General gegenüber, nach vorn auf der Wagenlinie.",
         "hi": "सही! रथ की शह; बगल में आपका जनरल सामने है और आगे रथ की रेखा।",
-        "ar": "صحيح! العربة تكشّ؛ جانبًا يواجه قائدك وأمامًا على خط العربة."
+        "ar": "صحيح! العربة تكشّ؛ جانبًا يواجه قائدك وأمامًا على خط العربة.",
+        "ru": "Верно! Колесница шахует; в сторону — напротив вашего генерала, вперёд — на линии колесницы.",
+        "zh-TW": "對！俥將軍；往旁邊走會與帥照面，往前則在俥的線上。",
+        "id": "Benar! Kereta memberi skak; ke samping berhadapan dengan jenderalmu, ke depan ada di lajur kereta.",
+        "tr": "Doğru! Kale şah çeker; yana gitmek generalinizle yüz yüze getirir, ileri ise kalenin çizgisidir."
       }
     }
   ]
@@ -418,7 +499,7 @@ if (require.main === module) {
   D.rampUi = UI;
   for (const s of D.steps) delete s.ramp;
   for (const id in RAMPS) { const s = D.steps.find(x => x.id === id); if (!s) throw new Error('no lesson ' + id); s.ramp = RAMPS[id]; }
-  fs.writeFileSync(FILE, JSON.stringify(D));
+  fs.writeFileSync(FILE, JSON.stringify(keepLangs(D, FILE)));
   console.log('ramps written:', Object.entries(RAMPS).map(([k, v]) => k + ' ' + v.length).join(', '));
 }
 module.exports = { UI, RAMPS };

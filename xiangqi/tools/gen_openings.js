@@ -3,6 +3,7 @@
 // 20-ply study line, plus practice problems (engine values of every move in positions of the line).
 const fs = require('fs'), path = require('path');
 const { load } = require('./wasm.js');
+const { keepLangs } = require(path.join(__dirname, '../../tools', 'keep-langs.js'));   // keeps ru / zh-TW / id / tr of unchanged texts
 const L10 = (ja, en, zh, ko, es, fr, pt, de, hi, ar) => ({ ja, en, zh, ko, es, fr, pt, de, hi, ar });
 const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 // [id, group, moves (Chinese notation), title, short, intro]
@@ -112,6 +113,6 @@ const EVW = { even: L10('互角', 'level', '均势', '호각', 'igualado', 'équ
     sets.push({ id, grp, side, show: named, named, moves: mvs, title, short, intro: Object.fromEntries(LANGS.map(l => [l, [intro[l]]])), study: { line, notes }, problems });
     process.stderr.write(id + ' ' + line.length + ' plies, ' + problems.length + ' problems\n');
   }
-  fs.writeFileSync(outF, JSON.stringify({ version: 1, sets }));
+  fs.writeFileSync(outF, JSON.stringify(keepLangs({ version: 1, sets }, outF)));
   console.log('openings.json', sets.length, 'sets');
 })();

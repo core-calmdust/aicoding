@@ -6,7 +6,7 @@
 'use strict';
 const path = require('path');
 const E = require(path.join(__dirname, '..', 'engine.js')), U = require('./c4util.js'), D = require(path.join(__dirname, '..', 'lessons.json'));
-const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
+const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar', 'ru', 'zh-TW', 'id', 'tr'];
 let bad = 0, n = 0;
 const fail = (id, m) => { bad++; console.log('NG', id, m); };
 const txt = (id, o, k) => { for (const l of LANGS) if (!o || typeof o[l] !== 'string' || !o[l]) fail(id, `missing ${k}.${l}`); };

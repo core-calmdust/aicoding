@@ -4,6 +4,8 @@
 // Positions come from AI self-play games (seeded). Warm-up ramps (step.ramp, not scored) for the harder concepts.
 // node tools/gen_lessons.js > lessons.json
 const E = require('../engine.js'); E.setRule('c33');
+const path = require('path');
+const { keepLangs } = require(path.join(__dirname, '../../tools', 'keep-langs.js'));   // keeps ru / zh-TW / id / tr of unchanged texts
 const L10 = (ja, en, zh, ko, es, fr, pt, de, hi, ar) => ({ ja, en, zh, ko, es, fr, pt, de, hi, ar });
 let seed = 2026; const rand = () => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; };
 const sqIdx = nm => (8 - +nm[1]) * 8 + 'abcdefgh'.indexOf(nm[0]);
@@ -200,4 +202,4 @@ const rampUi = {
   ans: L10('答えは {m} です。', 'The answer is {m}.', '答案是 {m}。', '정답은 {m}입니다.', 'La respuesta es {m}.', 'La réponse est {m}.', 'A resposta é {m}.', 'Die Lösung ist {m}.', 'उत्तर {m} है।', 'الجواب {m}.'),
   ng: L10('もう一度考えてみよう。', 'Think again.', '再想一想。', '다시 생각해 보자.', 'Piénsalo otra vez.', 'Réfléchissez encore.', 'Pense de novo.', 'Denk noch einmal nach.', 'फिर से सोचो।', 'فكّر مرة أخرى.'),
 };
-process.stdout.write(JSON.stringify({ version: 1, steps, rampUi }));
+process.stdout.write(JSON.stringify(keepLangs({ version: 1, steps, rampUi }, path.join(__dirname, '..', 'lessons.json'))));

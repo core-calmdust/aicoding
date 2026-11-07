@@ -9,6 +9,8 @@
 import fs from 'fs';
 import path from 'path';
 import { specFromRows, solveFirst, legalSetup, after, pt, T } from './lessons-lib.mjs';
+import { createRequire } from 'module';
+const { keepLangs } = createRequire(import.meta.url)('../../tools/keep-langs.js');   // keeps ru / zh-TW / id / tr of unchanged texts
 const DIR = path.dirname(new URL(import.meta.url).pathname), FILE = path.join(DIR, '..', 'lessons.json');
 const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 const L = (...a) => Object.fromEntries(LANGS.map((l, i) => [l, a[i]]));
@@ -142,7 +144,7 @@ if (!process.argv.includes('--check')) {
   D.rampUi = UI;
   for (const s of D.steps) delete s.ramp;
   for (const id in out) { const s = D.steps.find(x => x.id === id); if (!s) throw new Error('no lesson ' + id); s.ramp = out[id]; }
-  fs.writeFileSync(FILE, JSON.stringify(D, null, 1));
+  fs.writeFileSync(FILE, JSON.stringify(keepLangs(D, FILE), null, 1));
   console.log('ramps written:', Object.entries(out).map(([k, v]) => k + ' ' + v.length).join(', '));
 }
 console.log(`all ${Object.values(out).flat().length} ramp items OK`);

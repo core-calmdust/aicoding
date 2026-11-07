@@ -4,6 +4,7 @@
 // node tools/gen_openings.js [msPerPosition]
 const fs = require('fs'), path = require('path');
 const E = require('../engine.js');
+const { keepLangs } = require(path.join(__dirname, '../../tools', 'keep-langs.js'));   // keeps ru / zh-TW / id / tr of unchanged texts
 const X = new WebAssembly.Instance(new WebAssembly.Module(fs.readFileSync(path.join(__dirname, '..', 'engine.wasm'))), { env: { now: () => Date.now(), progress: () => {} } }).exports;
 const io = () => new Int32Array(X.memory.buffer, X.io_ptr(), 8192);
 const MS = +process.argv[2] || 2500, V = 'copenhagen', n = 11;
@@ -106,5 +107,5 @@ for (const [m, v] of second) {
   sets.push({ id: 'd' + di, grp: 'def', side: 2, show: 4, moves: `${name(E.Pos.from(null, V), m1)} ${name(p1, m)}`, title: t, short: L10(`${name(p1, m)} で応じる`, `Answering with ${name(p1, m)}`, `以 ${name(p1, m)} 应对`, `${name(p1, m)}로 응수`, `Responde con ${name(p1, m)}`, `Répond par ${name(p1, m)}`, `Responde com ${name(p1, m)}`, `Antwort ${name(p1, m)}`, `${name(p1, m)} से जवाब`, `الرد بـ ${name(p1, m)}`),
     intro: introOf(dd, notes[1]), study: { line, notes }, problems: problems(line, 2) });
 }
-fs.writeFileSync(path.join(__dirname, '..', 'openings.json'), JSON.stringify({ version: 1, sets }));
+fs.writeFileSync(path.join(__dirname, '..', 'openings.json'), JSON.stringify(keepLangs({ version: 1, sets }, path.join(__dirname, '..', 'openings.json'))));
 console.error('openings.json:', sets.length, 'sets,', sets.reduce((a, s) => a + s.problems.length, 0), 'practice problems');

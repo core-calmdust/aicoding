@@ -3,6 +3,7 @@
 // each continued by this site's engine to a 14-ply study line, plus practice problems (engine values of every move).
 const fs = require('fs'), path = require('path');
 const { load } = require('./wasm.js');
+const { keepLangs } = require(path.join(__dirname, '../../tools', 'keep-langs.js'));   // keeps ru / zh-TW / id / tr of unchanged texts
 const L10 = (ja, en, zh, ko, es, fr, pt, de, hi, ar) => ({ ja, en, zh, ko, es, fr, pt, de, hi, ar });
 // [id, group, moves, label (short), title]
 const SETS = [
@@ -77,5 +78,5 @@ const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
     sets.push({ id, grp, side, show: named, moves: mvs, label: { en: label }, title, short: null, intro: null, study: { line, notes }, problems });
     console.error(id, 'line', line.length, 'problems', problems.length);
   }
-  fs.writeFileSync(path.join(__dirname, '..', 'openings.json'), JSON.stringify({ version: 1, sets }));
+  fs.writeFileSync(path.join(__dirname, '..', 'openings.json'), JSON.stringify(keepLangs({ version: 1, sets }, path.join(__dirname, '..', 'openings.json'))));
 })();

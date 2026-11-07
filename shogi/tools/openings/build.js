@@ -3,7 +3,8 @@
 const fs = require('fs'), path = require('path');
 const { conv, show, START } = require('./kif.js');
 const DIR = path.join(__dirname, '../..');
-const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
+const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];   // the languages of src/*.js (ru / zh-TW / id / tr are kept from the current openings-*.json by tools/keep-langs.js)
+const { keepLangs } = require(path.join(__dirname, '../../../tools/keep-langs.js'));
 const book = JSON.parse(fs.readFileSync(path.join(DIR, 'book.json'), 'utf8'));
 const probs = fs.existsSync(path.join(__dirname, 'problems.json')) ? JSON.parse(fs.readFileSync(path.join(__dirname, 'problems.json'), 'utf8')) : {};
 const CATS = ['beg', 'mid', 'adv', 'sp', 'new', 'castle'];
@@ -56,10 +57,11 @@ for (const cat of CATS) {
     report.push(`${cat}\t${e.id}\t${steps.length} plies\t${pr.length} problems`);
     if (process.env.SHOW && (process.env.SHOW === e.id || process.env.SHOW === 'all')) console.log(e.id, '\n' + show(r.sfen));
   });
-  fs.writeFileSync(path.join(DIR, `openings-${cat}.json`), JSON.stringify({ version: 1, sets: out }));
+  const outF = path.join(DIR, `openings-${cat}.json`);
+  fs.writeFileSync(outF, JSON.stringify(keepLangs({ version: 1, sets: out }, outF)));
 }
 core.index = index;
-fs.writeFileSync(path.join(DIR, 'openings.json'), JSON.stringify(core));
+fs.writeFileSync(path.join(DIR, 'openings.json'), JSON.stringify(keepLangs(core, path.join(DIR, 'openings.json'))));
 console.log(report.join('\n'));
 if (warn.length) console.log('WARN\n' + warn.join('\n'));
 for (const c of CATS) { const f = path.join(DIR, `openings-${c}.json`); if (fs.existsSync(f)) console.log(c, fs.statSync(f).size); }

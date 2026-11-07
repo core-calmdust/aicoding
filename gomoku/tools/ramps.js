@@ -5,6 +5,7 @@
 // Hints go concept (h) → where to look (look) → the answer.  Texts: {ja,en,zh,ko,es,fr,pt,de,hi,ar}.
 'use strict';
 const fs = require('fs'), path = require('path'), E = require('../engine.js');
+const { keepLangs } = require(path.join(__dirname, '../../tools', 'keep-langs.js'));   // keeps ru / zh-TW / id / tr of unchanged texts
 const FILE = path.join(__dirname, '..', 'lessons.json');
 const L = (ja, en, zh, ko, es, fr, pt, de, hi, ar) => ({ ja, en, zh, ko, es, fr, pt, de, hi, ar });
 // the same shape turned / mirrored on the board (k = 0..7), so a practice item does not look like the example
@@ -146,7 +147,7 @@ if (require.main === module) {
   const D = JSON.parse(fs.readFileSync(FILE, 'utf8'));
   for (const s of D.steps) { if (RAMPS[s.id]) s.ramp = RAMPS[s.id]; else delete s.ramp; }
   D.rampUi = UI;
-  fs.writeFileSync(FILE, JSON.stringify(D, null, 1));
+  fs.writeFileSync(FILE, JSON.stringify(keepLangs(D, FILE), null, 1));
   console.log('ramps written:', Object.keys(RAMPS).join(', '));
 }
 module.exports = { RAMPS, UI };

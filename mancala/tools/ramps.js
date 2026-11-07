@@ -8,6 +8,7 @@
 // concept the step teaches holds (want: 'extra' / 'cap' / 'chain' / 'defend'); all 10 languages present.
 'use strict';
 const fs = require('fs'), path = require('path');
+const { keepLangs } = require(path.join(__dirname, '../../tools', 'keep-langs.js'));   // keeps ru / zh-TW / id / tr of unchanged texts
 const FILE = path.join(__dirname, '..', 'lessons.json');
 const LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
 const L = (...a) => Object.fromEntries(LANGS.map((l, i) => [l, a[i]]));
@@ -110,7 +111,7 @@ if (require.main === module) {
     const s = D.steps.find(x => x.id === id); if (!s) throw new Error('no lesson ' + id);
     s.ramp = RAMPS[id].map(it => { const o = Object.assign({}, it); delete o.want; return o; });
   }
-  fs.writeFileSync(FILE, JSON.stringify(D));
+  fs.writeFileSync(FILE, JSON.stringify(keepLangs(D, FILE)));
   console.log('ramps written:', Object.entries(RAMPS).map(([k, v]) => k + ' ' + v.length).join(', '));
 }
 module.exports = { UI, RAMPS, LANGS };
