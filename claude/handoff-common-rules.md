@@ -84,6 +84,7 @@
 | `resumeng.js` | 「この局面から再開」モードの対局設定 |
 | `placement.js` | ソロレート戦の予備選（3戦） |
 | `tick.js` | 秒読み時報音 `CountTick` |
+| `fischer.js` | 持ち時間のフィッシャー（プリセット・14言語の表記・対局設定のプリセット欄 `Fischer.picker`・AIの時間 `Fischer.budget`。addendum「持ち時間のフィッシャー」） |
 | `onlinesec.js` ＋ `tools/secrules.py` | オンライン改ざん対策（クライアント精算＋DBルール生成） |
 | `atlas.js` / `atlas-account.js` / `atlas-firebase-config.js` | ポータル共通アカウント・同期・タグ／バッジ |
 | `mtengine.js` / `mt-sw.js` | 本編のマルチスレッド（分離の Service Worker、オプション「マルチスレッド」、スレッドの組。addendum「本編のマルチスレッド」） |

@@ -859,9 +859,13 @@
      1 = the right one; side -1 = nobody, e.g. the game just ended) — the clock here runs the time and flags a loss on time. */
   const TCS = {   // per game (adapter.clock): the time controls its full version offers
     byo: [{ id: 'none' }, { id: 'b30', byo: 30 }, { id: 'm10', main: 600, byo: 30 }, { id: 'm30', main: 1800, byo: 60 }],      // reversi, shogi
-    fis: [{ id: 'none' }, { id: 'f3', main: 180, inc: 2 }, { id: 'f10', main: 600, inc: 5 }, { id: 'f15', main: 900, inc: 10 }],   // chess, gomoku (Fischer)
+    fis: [{ id: 'none' }],   // chess, gomoku … (Fischer only)
     bg: [{ id: 'none' }, { id: 'b30', byo: 30 }, { id: 'm5', main: 300, byo: 30 }, { id: 'm10', main: 600, byo: 30 }],           // backgammon
   };
+  // every game also offers the Fischer presets (common rule 持ち時間のフィッシャー, shared/fischer.js: 1+1 3+2 5+3 10+5 15+10 30+20;
+  // ids f3 / f10 / f15 kept from before 2026-11-08)
+  const FIS_TC = [[1, 1], [3, 2], [5, 3], [10, 5], [15, 10], [30, 20]].map(([m, s]) => ({ id: 'f' + m, main: m * 60, inc: s }));
+  for (const k in TCS) TCS[k].push(...FIS_TC);
   const tcOf = (ad, id) => { const L = ad && TCS[ad.clock]; if (!L) return null; return L.find(c => c.id === id) || L[0]; };
   const tcName = c => !c || (!c.main && !c.byo) ? t('tc.none') : c.inc ? t('tc.fis', { m: c.main / 60, s: c.inc }) : !c.main ? t('tc.byo', { s: c.byo }) : t('tc.mb', { m: c.main / 60, s: c.byo });
   const tcDesc = c => !c || (!c.main && !c.byo) ? t('tc.noneD') : c.inc ? t('tc.fisD', { m: c.main / 60, s: c.inc }) : !c.main ? t('tc.byoD', { s: c.byo }) : t('tc.mbD', { m: c.main / 60, s: c.byo });

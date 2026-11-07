@@ -15,7 +15,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 // ====================================================================== settings / i18n
-const settings = { mode: 'ai', rule: 'std', color: '0', level: 6, level2: 12, clock: 0, speed: 2, autoRoll: false, autoPick: true, eval: true, last: true, danger: true, coach: true, sound: true, design: 'tut', pieces: 'tut', lang: '' };
+const settings = { mode: 'ai', rule: 'std', color: '0', level: 6, level2: 12, clock: 0, fis: '5+3', speed: 2, autoRoll: false, autoPick: true, eval: true, last: true, danger: true, coach: true, sound: true, design: 'tut', pieces: 'tut', lang: '' };
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); if (n.startsWith('zh')) return /^zh-(tw|hk|mo|hant)/.test(n) ? 'zh-TW' : 'zh'; return SUPPORTED.find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
 const AIW = () => ({ ru: 'ИИ', tr: 'YZ' })[LANG] || 'AI';   // the word "AI" in displayed player labels (ru / tr use their own abbreviation; saved records keep 'AI')
@@ -91,7 +91,7 @@ function setRoll(r) { if (special) { special.n = r ? r.n : null; special.dice = 
 function save() {
   if (settings.mode === 'online') { if (typeof olSaveLocal === 'function') olSaveLocal(); return; }   // (the online game is not saved here: the local one is kept)
   try {
-    const d = { v: 1, settings, game: game && !special ? { rule: game.rule, first: game.first, human: game.human, plies: game.plies, roll: game.roll, undoLeft: game.undoLeft, end: game.end, id: game.id, mode: settings.mode, level: settings.level, level2: settings.level2 } : null, rgame };
+    const d = { v: 1, settings, game: game && !special ? { rule: game.rule, first: game.first, human: game.human, plies: game.plies, roll: game.roll, undoLeft: game.undoLeft, end: game.end, id: game.id, fz: game.fz || null, mode: settings.mode, level: settings.level, level2: settings.level2 } : null, rgame };
     localStorage.setItem(STORE, JSON.stringify(d));
   } catch (e) {}
 }
@@ -484,10 +484,38 @@ function recordText() {
 // ====================================================================== clock (1手30秒)
 let clockStart = 0, clockKey = '', clockHold = true;   // (a game restored on page load: the clock waits for the first move)
 const clockSec = () => rgame ? 30 : settings.clock;
-function clockOn() { return settings.mode !== 'online' && !special && !ken && clockSec() > 0 && settings.mode !== 'watch' && !overNow() && atLatest() && !reviewing && !isAI(curState().turn); }
+// settings.clock -1 = Fischer (shared/fischer.js, settings.fis = 'minutes+seconds'): each side has a bank game.fz.left (ms) that
+// runs while it is that side's turn (rolling and moving); after every ply it played (the first one included) the side gets inc back.
+// No per-move limit. The AI's side never runs. Undo / browsing do not charge; a reloaded game waits for the next move (clockHold).
+const fzOn = () => !!(game && game.fz && !rgame && settings.clock < 0 && settings.mode !== 'online');
+function fzNew() {
+  const f = window.Fischer && Fischer.parse(Fischer.norm(settings.fis)) || { main: 300, inc: 3 };
+  return { left: [f.main * 1000, f.main * 1000], inc: f.inc * 1000, n: game ? game.plies.length : 0, used: 0, side: -1 };
+}
+let fzLast = 0;
+function fzStep() {   // a ply was played (or taken back) since the last look: charge the side that was thinking
+  if (!fzOn()) return;
+  const z = game.fz, n = game.plies.length;
+  if (z.n === n) return;
+  if (n > z.n && z.side >= 0) z.left[z.side] = Math.max(0, z.left[z.side] - z.used) + z.inc;
+  z.n = n; z.used = 0; z.side = -1; clockHold = false;
+}
+const fzLeft = s => { const z = game.fz; return Math.max(0, z.left[s] - (z.side === s ? z.used : 0)); };
+function clockOn() { return settings.mode !== 'online' && !special && !ken && (clockSec() > 0 || fzOn()) && settings.mode !== 'watch' && !overNow() && atLatest() && !reviewing && !isAI(curState().turn); }
 function renderClock() {
   if (settings.mode === 'online' && typeof olClockRender === 'function') { olClockRender(); return; }
   for (const s of [0, 1]) $('#clk' + s).textContent = '';
+  if (fzOn() && !special && !ken && settings.mode !== 'watch') {   // Fischer: both players' banks (vs the AI: only yours)
+    fzStep();
+    const on = clockOn(), turn = curState().turn;
+    document.body.classList.add('has-clk');
+    for (const s of [0, 1]) {
+      if (isAI(s)) continue;
+      const ms = fzLeft(s), sec = Math.ceil(ms / 1000), el = $('#clk' + s);
+      el.textContent = Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0'); el.classList.toggle('low', on && s === turn && ms <= 10000);
+    }
+    return;
+  }
   if (!clockOn()) { document.body.classList.remove('has-clk'); return; }
   document.body.classList.add('has-clk');
   const st = curState(), k = game.id + ':' + game.plies.length;
@@ -497,6 +525,19 @@ function renderClock() {
   el.textContent = '0:' + String(Math.ceil(left / 1000)).padStart(2, '0'); el.classList.toggle('low', left <= 10000);
 }
 setInterval(() => {
+  const now = Date.now(), dt = now - (fzLast || now); fzLast = now;
+  if (fzOn()) {
+    fzStep();
+    if (!clockOn()) return;
+    const z = game.fz, st = curState();
+    if (z.side !== st.turn) { z.side = st.turn; z.used = 0; if (window.CountTick) CountTick.reset('mv'); }
+    if (!document.hidden && !clockHold) z.used += Math.min(dt, 1000);
+    const left = fzLeft(st.turn);
+    renderClock();
+    if (window.CountTick) CountTick.feed(left, 'mv');
+    if (left <= 0) { busyToken++; z.left[st.turn] = 0; z.used = 0; game.end = { winner: 1 - st.turn, why: 'time' }; game.roll = null; save(); update(); onGameEnd(); }
+    return;
+  }
   if (!game || !clockOn() || animating) return;
   if (document.hidden || clockHold) { clockStart = clockHold ? Date.now() : clockStart + 250; return; }
   const st = curState(), left = clockSec() * 1000 - (Date.now() - clockStart);
@@ -638,6 +679,7 @@ function newGame(rated) {
   rgame = rated || null;
   game = newGameObj(rgame ? 'std' : settings.rule, rgame ? (Math.random() < .5 ? 0 : 1) : first, 0);
   cur = 0; reviewing = false; gameOverShown = false; evalCache.clear(); clockHold = false; clockKey = '';
+  game.fz = settings.clock < 0 && !rgame ? fzNew() : null;
   if (window.SenetRv) SenetRv.reset();
   hideOverlay('#resultOverlay');
   save(); relayout(); update(); afterPosition();
@@ -830,10 +872,16 @@ function ruleArt(r) {
   return artCache.get(k);
 }
 function levelLabelHTML(v) { return `${esc(LV(v))}<small>${esc(LVD(v))}</small>`; }
+let fisUi = null;
 function segSync() {
   $$('#segMode button').forEach(b => b.classList.toggle('sel', b.dataset.v === draft.mode));
   $$('#segColor button').forEach(b => b.classList.toggle('sel', b.dataset.v === draft.color));
   $$('#segClock button').forEach(b => b.classList.toggle('sel', +b.dataset.v === +draft.clock));
+  if (window.Fischer) {   // フィッシャー: its presets open under the clock choices
+    if (!fisUi) fisUi = Fischer.picker($('#fisPick'), { lang: () => LANG, get: () => draft.fis, set: v => { draft.fis = v; } });
+    draft.fis = Fischer.norm(draft.fis); $('#btnFis').textContent = Fischer.name(LANG);
+    $('#fisPick').classList.toggle('hidden', +draft.clock >= 0); fisUi.sync();
+  }
   $$('#segSpeed button').forEach(b => b.classList.toggle('sel', +b.dataset.v === +draft.speed));
   const m = draft.mode, rated = m === 'rated';
   $('#fRatedInfo').classList.toggle('hidden', !rated);
@@ -884,10 +932,11 @@ $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
 $('#btnStart').onclick = () => {
   hideOverlay('#newOverlay');
   const rated = draft.mode === 'rated';
-  for (const k of ['rule', 'color', 'level', 'level2', 'clock', 'speed', 'autoRoll', 'autoPick', 'eval', 'last', 'danger']) settings[k] = draft[k];
+  const fzWas = settings.clock + ':' + settings.fis;
+  for (const k of ['rule', 'color', 'level', 'level2', 'clock', 'fis', 'speed', 'autoRoll', 'autoPick', 'eval', 'last', 'danger']) settings[k] = draft[k];
   if (!rated) settings.mode = draft.mode;
   setDesign(draft.design, draft.pieces);
-  if (draft.resume) { resumeWith(); return; }
+  if (draft.resume) { if (game && (fzWas !== settings.clock + ':' + settings.fis || !!game.fz !== settings.clock < 0)) game.fz = settings.clock < 0 ? fzNew() : null; resumeWith(); return; }
   if (rated) rtStart(); else newGame();
 };
 // the player-row discs (.pdisc) show the chosen pieces: the same picture as on the board, as a CSS image
