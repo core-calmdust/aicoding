@@ -84,8 +84,8 @@ function hanging(pos, color) {
 // ====================================================================== state
 const STORE = 'aicoding-chess';
 const settings = { mode: 'ai', color: 1, level: 12, level2: 12, lvv: 2, style: '', anim: true, sound: true, hint: false, eval: true, last: true, threat: false, lang: '', flip: false, skin: 'classic', pcs: 'std', coach: true };
-const SUPPORTED = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'];
-function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
+const SUPPORTED = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
+function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); if (/^zh-(tw|hk|mo|hant)/.test(n)) return 'zh-TW'; return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'].find(c => n.split('-')[0] === c) || 'en'; }
 let LANG = detectLang();
 // result reason for a resigned game (投了)
 { const RW = { ja: '投了', en: 'Resignation', zh: '认输', ko: '기권', es: 'Abandono', fr: 'Abandon', pt: 'Desistência', de: 'Aufgabe', hi: 'हार मान ली', ar: 'استسلام', ru: 'Сдача', 'zh-TW': '認輸', id: 'Menyerah', tr: 'Terk' };
@@ -1267,7 +1267,7 @@ function rtConfirm(after) {
 
 // ====================================================================== lessons (20 points per problem, 75 to pass)
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=20261104rp').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=20261107i14').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { try { return JSON.parse(localStorage.getItem(PZ_STORE) || '{}'); } catch (e) { return {}; } }
@@ -1662,7 +1662,7 @@ function drillMove(m) {
 
 // ====================================================================== openings: study a main line, then practice the moves strong players choose
 let OPEN = null, openChoiceIdx = -1;
-const openReady = fetch('openings.json?v=20261019g').then(r => r.json()).then(d => (OPEN = d)).catch(() => null)
+const openReady = fetch('openings.json?v=20261107i14').then(r => r.json()).then(d => (OPEN = d)).catch(() => null)
   .then(() => { if (!OPEN) document.querySelectorAll('.ls-tabs button[data-v=open]').forEach(b => b.remove()); });
 const OP_STORE = STORE + '-open';
 function opProg() { try { return JSON.parse(localStorage.getItem(OP_STORE) || '{}'); } catch (e) { return {}; } }
