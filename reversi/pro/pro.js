@@ -21,13 +21,14 @@
     ['#btnUndo', 'undo'], ['#btnFlip', 'flip'], ['#btnReset', 'reset'], ['#note', 'note']].forEach(([s, k]) => { const el = $(s); if (el) el.textContent = tr(k); });
   document.title = 'Reversi — ' + tr('ttl');
 
+  const COI_KEY = 'coi-reload:' + location.pathname;   // per page + time: a sessionStorage copy kept across the isolation switch must not block the next page
   async function ensureIsolated() {
-    if (self.crossOriginIsolated) { try { sessionStorage.removeItem('coi-reload'); } catch (e) {} return true; }
+    if (self.crossOriginIsolated) { try { localStorage.removeItem(COI_KEY); } catch (e) {} return true; }
     if (!('serviceWorker' in navigator) || !window.isSecureContext) return false;
-    let once = false; try { once = !!sessionStorage.getItem('coi-reload'); } catch (e) {}
+    let once = false; try { once = Date.now() - (+localStorage.getItem(COI_KEY) || 0) < 15000; } catch (e) {}
     try { await navigator.serviceWorker.register('coi-sw.js', { scope: './' }); await navigator.serviceWorker.ready; } catch (e) { return false; }
     if (once) return false;
-    try { sessionStorage.setItem('coi-reload', '1'); } catch (e) {}
+    try { localStorage.setItem(COI_KEY, String(Date.now())); } catch (e) {}
     location.reload();
     return new Promise(() => {});
   }
