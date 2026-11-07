@@ -39,7 +39,8 @@
   const HC = navigator.hardwareConcurrency || 2;
   const CTRL0 = 'serviceWorker' in navigator && !!navigator.serviceWorker.controller;   // (this page itself came through a worker)
   const CAN = 'serviceWorker' in navigator && !!window.isSecureContext && typeof WebAssembly === 'object' && HC >= 2;   // (no Atomics test: Safari exposes Atomics / SharedArrayBuffer only once the page is isolated)
-  const helpers = () => Math.max(0, Math.min(HC - 1, TOUCH ? 3 : 7));
+  const helpers = () => Math.max(0, Math.min(HC - 1, TOUCH ? 3 : 7));   // the default (automatic) number of helper threads
+  const maxHelpers = () => Math.max(0, HC - 1);                            // PRO mode may use every core the browser reports (at the user's own risk)
   const pref = () => LS.get(K_PREF);            // '1' on, '0' off, none: automatic (PC on, phones / tablets off)
   const want = () => { const p = pref(); return p === '1' || (p !== '0' && !TOUCH); };
   const on = () => ISO && want() && helpers() > 0;
@@ -187,10 +188,10 @@
 
   // ------------------------------------------------------------------ the pool of threads
   function pool(cfg) {
-    const H = helpers(), SLOT = cfg.slot || (2 << 20);
+    const H = helpers(), HM = Math.max(H, maxHelpers()), SLOT = cfg.slot || (2 << 20);   // H spawned at once, up to HM on demand (PRO)
     const isDone = cfg.isDone || (m => m.type === 'result'), isProg = cfg.isProg || (m => m.type === 'progress');   // the lead's message types
-    let ok = false, dead = false, X = null, lead = null, hw = [], ctl = null, cnt = null, job = null, seq = 0;
-    const P = { threads: 1 + H, ready: null, free: () => ok && !dead && (!job || job.cancelled), run, cancel, close, preempt: t => preempt(t) };
+    let ok = false, dead = false, X = null, lead = null, hw = [], ctl = null, cnt = null, job = null, seq = 0, ini = null;
+    const P = { threads: 1 + H, maxThreads: 1 + HM, ready: null, free: () => ok && !dead && (!job || job.cancelled), run, cancel, close, preempt: t => preempt(t) };
     const spawn = (url, msg) => new Promise((res, rej) => {
       const w = new Worker(url);
       w.onerror = e => rej(e.message || 'worker');
@@ -202,12 +203,12 @@
       const module = WebAssembly.compileStreaming && /wasm/.test(resp.headers.get('content-type') || '') ? await WebAssembly.compileStreaming(resp) : await WebAssembly.compile(await resp.arrayBuffer());
       const mem = new WebAssembly.Memory({ initial: cfg.initial || 512, maximum: cfg.maximum || 16384, shared: true });
       X = (await WebAssembly.instantiate(module, cfg.imports(mem))).exports;
-      const base = Math.ceil(X.mt_heap_base() / 65536) * 65536, n = 1 + H, need = base + (n + 1) * SLOT;
+      const base = Math.ceil(X.mt_heap_base() / 65536) * 65536, n = 1 + HM, need = base + (n + 1) * SLOT;
       if (need > mem.buffer.byteLength) mem.grow(Math.ceil((need - mem.buffer.byteLength) / 65536));
       X.mt_stack(base + n * SLOT + SLOT - 16); X.mt_thread(base + n * SLOT, 999);   // this page's own slot (mt_stop)
       ctl = new Int32Array(new SharedArrayBuffer(16));                 // [0]: 1 = stop (the helpers' loop)
-      cnt = new Float64Array(new SharedArrayBuffer(8 * (H + 2)));       // [id]: a helper's nodes in this job so far
-      const ini = id => ({ type: 'mtinit', module, mem, id, tls: base + id * SLOT, top: base + id * SLOT + SLOT - 16, ctl, cnt });
+      cnt = new Float64Array(new SharedArrayBuffer(8 * (HM + 2)));       // [id]: a helper's nodes in this job so far
+      ini = id => ({ type: 'mtinit', module, mem, id, tls: base + id * SLOT, top: base + id * SLOT + SLOT - 16, ctl, cnt });
       lead = await spawn(cfg.lead, ini(0));                       // (the lead loads the network / tables into the shared memory)
       for (let i = 1; i <= H; i++) hw.push(await spawn(cfg.helper, ini(i)));
       if (cfg.after) await cfg.after(X, mem, [lead].concat(hw));
@@ -225,8 +226,10 @@
         if (j.cancelled || !ok || dead) { if (j.resolve) j.resolve(j.cancelled ? null : undefined); return; }
         j.running = true;
         Atomics.store(ctl, 0, 0); X.mt_stop(0); cnt.fill(0);
-        const hSum = () => { let s = 0; for (let i = 1; i <= H; i++) s += cnt[i]; return s; };
-        const help = cfg.help ? cfg.help(msg) : null, hs = msg.mtThreads > 0 ? hw.slice(0, msg.mtThreads - 1) : hw;   // (mtThreads: PRO mode's thread count, shared/proset.js)
+        const nh = msg.mtThreads > 0 ? Math.min(HM, msg.mtThreads - 1) : H;   // (mtThreads: PRO mode's thread count, shared/proset.js — more helpers are started when asked for)
+        try { while (hw.length < nh) hw.push(await spawn(cfg.helper, ini(hw.length + 1))); } catch (e) { console.warn('[mtengine] helper', e); }
+        const hSum = () => { let s = 0; for (let i = 1; i <= hw.length; i++) s += cnt[i]; return s; };
+        const help = cfg.help ? cfg.help(msg) : null, hs = hw.slice(0, nh);   // (mtThreads: PRO mode's thread count, shared/proset.js)
         let hNodes = 0, left = help ? hs.length : 0;
         const hDone = new Promise(res => {
           if (!left) { res(); return; }
@@ -269,5 +272,5 @@
       get threads() { return p ? p.threads : 1; },
     };
   }
-  window.MTEngine = { init, use, pool, on, helpers, onChange: f => subs.push(f), isolated: ISO, coi: COI, touch: TOUCH, T };
+  window.MTEngine = { init, use, pool, on, helpers, maxHelpers, onChange: f => subs.push(f), isolated: ISO, coi: COI, touch: TOUCH, T };
 })();
