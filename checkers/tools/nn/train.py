@@ -75,6 +75,7 @@ class Net:
 
     @staticmethod
     def load(fn):
+        if not fn.endswith('.npz'): return Net.from_export(fn)
         z = np.load(fn)
         n = Net(int(z['fb']), int(z['h']), int(z['l1']), int(z['l2']), int(z['ob']), np.random.default_rng(0))
         for k in n.P: n.P[k] = z[k].astype(np.float32)
@@ -129,6 +130,17 @@ class Net:
         # keep the int16 accumulator and the int32 L1 sums safe after quantization
         np.clip(P['Ws'], -1.5, 1.5, out=P['Ws']); np.clip(P['Wb'], -1.5, 1.5, out=P['Wb']); np.clip(P['bf'], -2, 2, out=P['bf'])
         np.clip(P['W1'], -8, 8, out=P['W1'])
+
+    @staticmethod
+    def from_export(fn):
+        """Float weights back from an exported .nnue (shared part 0, all in the per-bucket part). Re-exporting gives the same bytes."""
+        fb, h, ob, scale, FW, FB, L = read_export(fn)
+        l1, l2 = L[0][0].shape[0], L[0][2].shape[0]
+        n = Net(fb, h, l1, l2, ob, np.random.default_rng(0)); P = n.P
+        P['Ws'][:] = 0; P['Wb'][:] = FW / QA; P['bf'][:] = FB / QA
+        for b, (W1, B1, W2, B2, W3, B3) in enumerate(L):
+            P['W1'][b] = W1 / QB; P['b1'][b] = B1 / (QA * QB); P['W2'][b] = W2; P['b2'][b] = B2; P['W3'][b] = W3; P['b3'][b] = B3
+        return n, float(scale)
 
     def export(s, fn, scale):
         P = s.P
@@ -191,6 +203,9 @@ def main():
     ap.add_argument('--lr', type=float, default=1e-3); ap.add_argument('--lam', type=float, default=0.75)
     ap.add_argument('--scale', type=float, default=0); ap.add_argument('--max-positions', type=int, default=0)
     ap.add_argument('--val', type=float, default=0.02); ap.add_argument('--seed', type=int, default=1)
+    ap.add_argument('--only-pieces', type=int, default=0, metavar='N',
+                    help='train only the weights used by positions with at most N pieces (the feature / output buckets that serve '
+                         'nothing else; needs --init). Positions with more pieces in the data are dropped. Other weights stay bit-identical.')
     a = ap.parse_args()
     if a.check: check(*a.check); return
     if not a.out or not a.files: ap.error('--out and data files are required')
@@ -202,7 +217,7 @@ def main():
     N = len(b); print('positions', N, ' results (mover) W/D/L', int((res > 0).sum()), int((res == 0).sum()), int((res < 0).sum()), flush=True)
 
     if a.scale > 0: K = a.scale
-    elif a.init and a.init.endswith('.npz'): K = Net.load(a.init)[1]
+    elif a.init: K = Net.load(a.init)[1]
     else:
         sub = np.random.default_rng(0).choice(N, min(N, 500000), replace=False); best = None
         for Kc in [15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 70, 80, 90, 100, 120, 140, 170, 200, 250, 300, 400]:
@@ -212,6 +227,11 @@ def main():
     print('teacher = %.2f * sigmoid(v / %g) + %.2f * result' % (a.lam, K, 1 - a.lam), flush=True)
     T = (a.lam * sig(val / K) + (1 - a.lam) * (res + 1) / 2).astype(np.float32)
     npc = popcount32(b | w).astype(np.int32)
+    if a.only_pieces:
+        if not a.init: ap.error('--only-pieces needs --init')
+        keep = npc <= a.only_pieces
+        b, w, k, side, T, npc = b[keep], w[keep], k[keep], side[keep], T[keep], npc[keep]
+        N = len(b); print('only-pieces %d: %d positions' % (a.only_pieces, N), flush=True)
 
     rng = np.random.default_rng(a.seed)
     if a.init:
@@ -220,6 +240,17 @@ def main():
             print('note: --init has a different shape; using its shape', (net.fb, net.h, net.l1, net.l2, net.ob))
     else:
         net = Net(a.fb, a.hidden, a.l1, a.l2, a.ob, rng)
+    upd = None   # None = train everything; else {param: index of the trainable part (None = whole)}
+    if a.only_pieces:
+        lo_fb = set(bucket(np.arange(2, a.only_pieces + 1), net.fb).tolist()); hi_fb = set(bucket(np.arange(a.only_pieces + 1, 25), net.fb).tolist())
+        lo_ob = set(bucket(np.arange(2, a.only_pieces + 1), net.ob).tolist()); hi_ob = set(bucket(np.arange(a.only_pieces + 1, 25), net.ob).tolist())
+        if lo_fb & hi_fb or lo_ob & hi_ob:
+            ap.error('--only-pieces %d: a bucket is shared with bigger positions (feature %s / %s, output %s / %s)' % (a.only_pieces, lo_fb, hi_fb, lo_ob, hi_ob))
+        if np.any(net.P['Ws']):   # move the shared part into every bucket so the chosen buckets can change alone
+            net.P['Wb'] += net.P['Ws'][None]; net.P['Ws'][:] = 0
+        fbs, obs = sorted(lo_fb), sorted(lo_ob)
+        upd = {'Wb': fbs, 'W1': obs, 'b1': obs, 'W2': obs, 'b2': obs, 'W3': obs, 'b3': obs}
+        print('training only feature buckets %s, output buckets %s' % (fbs, obs), flush=True)
     perm = rng.permutation(N); nv = max(1000, min(200000, int(N * a.val)))
     va, tr = perm[:nv], perm[nv:]
 
@@ -247,9 +278,12 @@ def main():
             tl += float(np.mean((p - T[j]) ** 2)); nb += 1
             G = net.backward(Fm, Fo, fbi, g, st); step += 1
             for kk, gr in G.items():
+                if upd is not None:
+                    if kk not in upd: continue
+                    ix = upd[kk]; gr = np.where(np.isin(np.arange(len(gr)), ix).reshape((-1,) + (1,) * (gr.ndim - 1)), gr, 0).astype(np.float32)
                 m[kk] = b1 * m[kk] + (1 - b1) * gr; v2[kk] = b2 * v2[kk] + (1 - b2) * gr * gr
                 net.P[kk] -= (lr * (m[kk] / (1 - b1 ** step)) / (np.sqrt(v2[kk] / (1 - b2 ** step)) + eps)).astype(np.float32)
-            net.clamp()
+            if upd is None: net.clamp()   # (fine-tuning keeps the loaded weights as they are)
             if nb % 200 == 0: print('\r  epoch %d  %d/%d  train %.6f' % (ep + 1, s0, len(tr), tl / nb), end='', file=sys.stderr, flush=True)
         vl = val_loss()
         print('\repoch %d  train %.6f  val %.6f  (%.0fs)%s' % (ep + 1, tl / nb, vl, time.time() - t0, '  saved' if vl < best else ''), flush=True)

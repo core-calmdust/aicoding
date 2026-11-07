@@ -7,11 +7,11 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const KYU = { ja: '{n}級', en: '{n} kyu', zh: '{n}级', ko: '{n}급', es: '{n} kyu', fr: '{n} kyu', pt: '{n} kyu', de: '{n}. Kyu', hi: '{n} क्यू', ar: '{n} كيو' };
+  const KYU = { ja: '{n}級', en: '{n} kyu', zh: '{n}级', ko: '{n}급', es: '{n} kyu', fr: '{n} kyu', pt: '{n} kyu', de: '{n}. Kyu', hi: '{n} क्यू', ar: '{n} كيو', ru: '{n} кю', 'zh-TW': '{n}級', id: '{n} kyu', tr: '{n} kyu' };
   const DAN = {
     ja: ['初段', '二段', '三段', '四段', '五段'], en: ['1 dan', '2 dan', '3 dan', '4 dan', '5 dan'], zh: ['初段', '二段', '三段', '四段', '五段'], ko: ['초단', '2단', '3단', '4단', '5단'],
     es: ['1 dan', '2 dan', '3 dan', '4 dan', '5 dan'], fr: ['1 dan', '2 dan', '3 dan', '4 dan', '5 dan'], pt: ['1 dan', '2 dan', '3 dan', '4 dan', '5 dan'], de: ['1. Dan', '2. Dan', '3. Dan', '4. Dan', '5. Dan'],
-    hi: ['1 दान', '2 दान', '3 दान', '4 दान', '5 दान'], ar: ['1 دان', '2 دان', '3 دان', '4 دان', '5 دان'],
+    hi: ['1 दान', '2 दान', '3 दान', '4 दान', '5 दान'], ar: ['1 دان', '2 دان', '3 دان', '4 دان', '5 دان'], ru: ['1 дан', '2 дан', '3 дан', '4 дан', '5 дан'], 'zh-TW': ['初段', '二段', '三段', '四段', '五段'], id: ['1 dan', '2 dan', '3 dan', '4 dan', '5 dan'], tr: ['1 dan', '2 dan', '3 dan', '4 dan', '5 dan'],
   };
   const LVD = {
     ja: ['入門：目に任せて動かす', '初級〜中級：ロゼットと取りを考える', '上級：危険と勝率を読む', '最上級：期待値を読み切る（最強はほぼ最善）'],
@@ -24,6 +24,10 @@
     de: ['Einsteiger: zieht nach Glück', 'Anfänger bis Mittel: denkt an Rosetten und Schlagen', 'Fortgeschritten: wägt Risiko und Chancen ab', 'Experte: rechnet die Erwartung durch (die Spitze ist fast perfekt)'],
     hi: ['शुरुआती: किस्मत से चलता है', 'नौसिखिया से मध्यम: रोज़ेट और पकड़ के बारे में सोचता है', 'उन्नत: जोखिम और संभावना तौलता है', 'विशेषज्ञ: अपेक्षाएँ पूरी गणना करता है (सबसे ऊपर लगभग सर्वोत्तम)'],
     ar: ['مبتدئ: يتحرك بالحظ', 'مبتدئ إلى متوسط: يفكر في الورود والأسر', 'متقدم: يوازن المخاطر والفرص', 'خبير: يحسب التوقعات حتى النهاية (الأقوى شبه مثالي)'],
+    ru: ['Начальный: ходит наудачу', 'Новичок–средний: думает о розетках и взятиях', 'Продвинутый: взвешивает риск и шансы на победу', 'Эксперт: просчитывает ожидания (высший уровень почти идеален)'],
+    'zh-TW': ['入門：憑運氣走', '初級～中級：會考慮玫瑰花格與吃子', '高級：權衡風險與勝率', '最高級：算出期望值（最高等級接近完美）'],
+    id: ['Pemula: bergerak mengandalkan keberuntungan', 'Dasar–menengah: memikirkan roset dan tangkapan', 'Mahir: menimbang risiko dan peluang menang', 'Ahli: membaca nilai harapan (level tertinggi hampir sempurna)'],
+    tr: ['Başlangıç: şansa göre oynar', 'Acemi–orta: rozetleri ve almaları düşünür', 'İleri: riskleri ve kazanma şansını tartar', 'Uzman: beklentileri sonuna dek hesaplar (en üst seviye neredeyse kusursuz)'],
   };
   const WHO = {
     ja: ['はじめて', 'ルールを覚えた人', '何局か遊んだ人', '慣れた人', '強い人', '上級者', '達人'],
@@ -36,6 +40,10 @@
     de: ['Erste Partie', 'Kennt die Regeln', 'Hat ein paar Partien gespielt', 'Geübter Spieler', 'Starker Spieler', 'Experte', 'Meister'],
     hi: ['पहला खेल', 'नियम जानता है', 'कुछ खेल खेले हैं', 'नियमित खिलाड़ी', 'मज़बूत खिलाड़ी', 'विशेषज्ञ', 'उस्ताद'],
     ar: ['أول مباراة', 'يعرف القواعد', 'لعب بضع مباريات', 'لاعب معتاد', 'لاعب قوي', 'خبير', 'أستاذ'],
+    ru: ['Первая игра', 'Знает правила', 'Сыграл несколько партий', 'Постоянный игрок', 'Сильный игрок', 'Эксперт', 'Мастер'],
+    'zh-TW': ['第一次玩', '懂規則', '玩過幾局', '常玩的人', '高手', '專家', '大師'],
+    id: ['Permainan pertama', 'Tahu aturannya', 'Sudah main beberapa kali', 'Pemain rutin', 'Pemain kuat', 'Ahli', 'Master'],
+    tr: ['İlk oyun', 'Kuralları biliyor', 'Birkaç oyun oynadı', 'Düzenli oyuncu', 'Güçlü oyuncu', 'Uzman', 'Usta'],
   };
   // the game's measured rating of each AI level (ur/app.js RT_LV)
   const RATING = [0, 600, 660, 715, 725, 735, 800, 865, 930, 990, 1070, 1155, 1240, 1325, 1375, 1430, 1485, 1535, 1550, 1570, 1610];
@@ -65,6 +73,10 @@
     de: { n: ['Hell', 'Dunkel'], roll: 'Würfeln', pass: 'Passen', tapRoll: 'Aufs Brett tippen zum Würfeln', pick: 'Leuchtenden Stein antippen', dest: 'Ziel antippen', again: 'Rosette! Noch einmal', zero: '0 — kein Zug', noMove: 'Kein Stein kann ziehen', cap: 'Geschlagen!', home: 'Im Ziel!', turnP: '{p} am Zug', win: '{p} gewinnt', first: '{p} beginnt', aiZero: 'KI würfelt 0 — passt', aiNoMove: 'Die KI kann nicht ziehen', left: 'übrig', inHome: 'im Ziel' },
     hi: { n: ['उजला', 'गहरा'], roll: 'फेंकें', pass: 'पास', tapRoll: 'बोर्ड छूकर पासे फेंकें', pick: 'चमकता मोहरा छुएँ', dest: 'जगह छुएँ', again: 'रोज़ेट! फिर से', zero: '0 — चाल नहीं', noMove: 'कोई मोहरा नहीं चल सकता', cap: 'पकड़ा!', home: 'घर!', turnP: '{p} की बारी', win: '{p} की जीत', first: '{p} पहले', aiZero: 'AI ने 0 — पास', aiNoMove: 'AI चल नहीं सकता', left: 'बाकी', inHome: 'घर' },
     ar: { n: ['الفاتح', 'الداكن'], roll: 'ارمِ', pass: 'تمرير', tapRoll: 'المس اللوحة للرمي', pick: 'المس قطعة مضيئة', dest: 'المس الوجهة', again: 'وردة! ارمِ مرة أخرى', zero: '0 — لا حركة', noMove: 'لا قطعة تستطيع الحركة', cap: 'أُسرت!', home: 'وصلت!', turnP: 'دور {p}', win: 'فوز {p}', first: '{p} يبدأ', aiZero: 'الذكاء رمى 0 — تمرير', aiNoMove: 'الذكاء لا يستطيع الحركة', left: 'متبقية', inHome: 'وصلت' },
+    ru: { n: ['Светлые', 'Тёмные'], roll: 'Бросок', pass: 'Пас', tapRoll: 'Нажмите на доску, чтобы бросить', pick: 'Нажмите на светящуюся фишку', dest: 'Нажмите, куда идти', again: 'Розетка! Бросайте ещё', zero: '0 — хода нет', noMove: 'Ни одна фишка не может ходить', cap: 'Взято!', home: 'Дома!', turnP: 'Ход: {p}', win: 'Победа: {p}', first: 'Начинают {p}', aiZero: 'ИИ выбросил 0 — пас', aiNoMove: 'ИИ не может ходить', left: 'осталось', inHome: 'дома' },
+    'zh-TW': { n: ['淺色', '深色'], roll: '擲骰', pass: '跳過', tapRoll: '點擊棋盤擲骰', pick: '點擊發光的棋子', dest: '點擊要移動到的位置', again: '玫瑰花格！再擲一次', zero: '0—無法移動', noMove: '沒有棋子可以移動', cap: '吃子！', home: '抵達終點！', turnP: '輪到{p}', win: '{p}獲勝', first: '{p}先手', aiZero: 'AI擲出0—跳過', aiNoMove: 'AI無法移動', left: '剩餘', inHome: '終點' },
+    id: { n: ['Terang', 'Gelap'], roll: 'Lempar', pass: 'Pass', tapRoll: 'Ketuk papan untuk melempar', pick: 'Ketuk bidak yang menyala', dest: 'Ketuk tujuan', again: 'Roset! Lempar lagi', zero: '0 — tak ada langkah', noMove: 'Tidak ada bidak yang bisa bergerak', cap: 'Ditangkap!', home: 'Sampai!', turnP: 'Giliran {p}', win: '{p} menang', first: '{p} mulai', aiZero: 'AI dapat 0 — pass', aiNoMove: 'AI tidak bisa bergerak', left: 'tersisa', inHome: 'sampai' },
+    tr: { n: ['Açık', 'Koyu'], roll: 'At', pass: 'Pas', tapRoll: 'Atmak için tahtaya dokun', pick: 'Parlayan bir taşa dokun', dest: 'Gideceği yere dokun', again: 'Rozet! Tekrar at', zero: '0 — hamle yok', noMove: 'Hiçbir taş hareket edemiyor', cap: 'Alındı!', home: 'Evde!', turnP: 'Sıra: {p}', win: '{p} kazandı', first: '{p} başlıyor', aiZero: 'YZ 0 attı — pas', aiNoMove: 'YZ oynayamıyor', left: 'kalan', inHome: 'evde' },
   };
   // sounds (the portal's sound switch): shell on shell, a rattle of bone dice, a soft chime for the rosette
   const SND = (() => {

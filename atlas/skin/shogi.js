@@ -103,7 +103,7 @@
   // the portal's raised-lacquer pieces are the default; the game's own piece sets stay selectable
   const PCK = 'atlas-shogi-pc';
   let mine = true; try { mine = localStorage.getItem(PCK) !== '0'; } catch (e) {}
-  const LBL = { ja: '盛り上げ（立体）', en: 'Raised lacquer 3D', zh: '漆雕（立体）', ko: '옻칠 입체', es: 'Laca en relieve 3D', fr: 'Laque en relief 3D', pt: 'Laca em relevo 3D', de: 'Lack-Relief 3D', hi: 'उभरी लाह 3D', ar: 'ورنيش بارز ثلاثي' };
+  const LBL = { ja: '盛り上げ（立体）', en: 'Raised lacquer 3D', zh: '漆雕（立体）', ko: '옻칠 입체', es: 'Laca en relieve 3D', fr: 'Laque en relief 3D', pt: 'Laca em relevo 3D', de: 'Lack-Relief 3D', hi: 'उभरी लाह 3D', ar: 'ورنيش بارز ثلاثي', ru: 'Рельефный лак 3D', 'zh-TW': '高蒔繪3D', id: '3D pernis timbul', tr: 'Kabartma lake 3D' };
   const seg = document.getElementById('segPieces');
   if (seg) {
     const b = document.createElement('button'); b.dataset.v = 'atlas3d'; seg.prepend(b);

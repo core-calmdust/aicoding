@@ -178,8 +178,8 @@ html.atlas-hex .bdrow button:disabled{opacity:.4;cursor:default}
 
   /* ---------- the design rows: "3D" for the board and for the stones + the game's own 2D designs ---------- */
   const LBL = {
-    bd: { ja: '寄木3D', en: 'Marquetry 3D', zh: '拼木3D', ko: '쪽매 3D', es: 'Marquetería 3D', fr: 'Marqueterie 3D', pt: 'Marchetaria 3D', de: 'Intarsie 3D', hi: 'जड़ाऊ 3D', ar: 'تطعيم ثلاثي' },
-    pc: { ja: 'ガラス3D', en: 'Glass 3D', zh: '玻璃3D', ko: '유리 3D', es: 'Vidrio 3D', fr: 'Verre 3D', pt: 'Vidro 3D', de: 'Glas 3D', hi: 'काँच 3D', ar: 'زجاج ثلاثي' },
+    bd: { ja: '寄木3D', en: 'Marquetry 3D', zh: '拼木3D', ko: '쪽매 3D', es: 'Marquetería 3D', fr: 'Marqueterie 3D', pt: 'Marchetaria 3D', de: 'Intarsie 3D', hi: 'जड़ाऊ 3D', ar: 'تطعيم ثلاثي', ru: 'Маркетри 3D', 'zh-TW': '拼花3D', id: '3D marketri', tr: 'Marketeri 3D' },
+    pc: { ja: 'ガラス3D', en: 'Glass 3D', zh: '玻璃3D', ko: '유리 3D', es: 'Vidrio 3D', fr: 'Verre 3D', pt: 'Vidro 3D', de: 'Glas 3D', hi: 'काँच 3D', ar: 'زجاج ثلاثي', ru: 'Стекло 3D', 'zh-TW': '玻璃3D', id: '3D kaca', tr: 'Cam 3D' },
   };
   const lang = () => (document.getElementById('langSel') || {}).value || 'ja';
   const vbOf = row => { const s = row && row.querySelector('button svg'); return (s && s.getAttribute('viewBox')) || '0 0 6 4'; };

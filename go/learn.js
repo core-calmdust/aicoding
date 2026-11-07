@@ -143,7 +143,7 @@ $('#rulesClose').onclick = () => closeRules();
 
 // ====================================================================== lessons (20 points per problem, 75 to pass)
 let LESSONS = null;
-const lessonsReady = fetch('lessons.json?v=20261104rp').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
+const lessonsReady = fetch('lessons.json?v=20261107l14').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
 const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles';
 function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}'); } catch (e) { return {}; } }
 function pzProgress() { try { return JSON.parse(localStorage.getItem(PZ_STORE) || '{}'); } catch (e) { return {}; } }
@@ -417,7 +417,7 @@ $('#lsList').onclick = () => { if (!lesson) return; if (lesson.study || lesson.v
 
 // ====================================================================== openings: 布石・定石 studied move by move (notes, side lines, engine values), then practice
 let OPEN = null, openChoiceIdx = -1;
-const openReady = fetch('openings.json?v=2').then(r => r.json()).then(d => (OPEN = d)).catch(() => null)
+const openReady = fetch('openings.json?v=3').then(r => r.json()).then(d => (OPEN = d)).catch(() => null)
   .then(() => { if (!OPEN) document.querySelectorAll('.ls-tabs button[data-v=open]').forEach(b => b.remove()); });
 const OP_STORE = STORE + '-open';
 function opProg() { try { return JSON.parse(localStorage.getItem(OP_STORE) || '{}'); } catch (e) { return {}; } }
@@ -581,7 +581,7 @@ function startPractice(gi) {
 
 // ====================================================================== puzzles: 詰碁 (PZBook v2; solver in the worker: tsumego.js)
 let PUZZLES = null;
-const puzzlesReady = fetch('puzzles.json?v=2').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
+const puzzlesReady = fetch('puzzles.json?v=3').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
 let pzLevel = 0;
 const pzKey = (id, j) => id + '-' + j;
 const starVal = x => x === true ? 3 : (+x || 0);

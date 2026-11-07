@@ -168,6 +168,10 @@ html.atlas-fanorona.lt-land body.lt-on .reserve .lbl{display:none!important}
     de: ['Geschnitztes 3D-Brett', 'Ein traditionelles Akazienbrett mit eingeschnitzten, gebrannten Linien und Punkten und matten Holzkugeln (Weiß: helles Holz, Schwarz: Ebenholz). Geschlagene Kugeln liegen in den Rillen an den Längsseiten.'],
     hi: ['3D नक्काशीदार बोर्ड', 'बबूल की एक लकड़ी पर रेखाएँ और बिंदु खोदकर जलाए गए पारंपरिक बोर्ड और मैट लकड़ी की गोलियाँ (सफ़ेद: हल्की लकड़ी, काला: आबनूस)। पकड़ी गई गोलियाँ लंबी तरफ़ की नालियों में रखी जाती हैं।'],
     ar: ['رقعة منحوتة ثلاثية الأبعاد', 'رقعة تقليدية من خشب الأكاسيا خطوطها ونقاطها منحوتة ومحروقة، مع كرات خشبية مطفأة (الأبيض: خشب فاتح، الأسود: أبنوس). تصطف الكرات المأسورة في المجاري على الجانبين الطويلين.'],
+    ru: ['Резная 3D-доска', 'Традиционная доска из акации с вырезанными и обожжёнными линиями и точками и матовыми деревянными шарами (белые — светлое дерево, чёрные — эбен). Взятые шары выстраиваются в желобках по длинным сторонам.'],
+    'zh-TW': ['3D木雕棋盤', '傳統的相思木棋盤，雕刻並燒灼出線與點，搭配霧面木球（白方：淺色木，黑方：烏木）。吃掉的球會排在長邊的溝槽裡。'],
+    id: ['Papan ukir 3D', 'Papan akasia tradisional dengan garis dan titik yang diukir dan dibakar, serta bola kayu doff (Putih: kayu terang, Hitam: eboni). Bola tangkapan berjajar di alur sisi panjang.'],
+    tr: ['Oyma 3D tahta', 'Çizgileri ve noktaları oyulup yakılmış geleneksel akasya tahta ve mat ahşap toplar (Beyaz: açık ahşap, Siyah: abanoz). Alınan toplar uzun kenarlardaki oluklarda dizilir.'],
   };
   const NOTE_ALQ = {
     ja: ['3D ダマスカス象嵌の盤', 'くるみ材に骨・黒檀・真珠母貝の寄木細工をほどこしたアラブ伝統の象嵌盤（線は真珠母貝、点は真鍮の鋲）と、真鍮の駒（白）と藍の七宝の駒（黒）で表示しています。取った駒は上下のベルベットのトレイに並びます。'],
@@ -180,6 +184,10 @@ html.atlas-fanorona.lt-land body.lt-on .reserve .lbl{display:none!important}
     de: ['Damaszener Intarsienbrett 3D', 'Ein traditionelles arabisches Brett aus Nussbaum mit Intarsien aus Bein, Ebenholz und Perlmutt (Linien aus Perlmutt, Messingnägel an den Punkten), mit Messingsteinen (Weiß) und Kobaltemaille-Steinen (Schwarz). Geschlagene Steine liegen in den Samtschalen.'],
     hi: ['3D दमिश्क़ी जड़ाऊ बोर्ड', 'अखरोट की लकड़ी पर हड्डी, आबनूस और सीप की जड़ाई वाला पारंपरिक अरबी बोर्ड (रेखाएँ सीप की, बिंदु पीतल की कीलें), पीतल के मोहरे (सफ़ेद) और कोबाल्ट मीनाकारी मोहरे (काला)। पकड़े गए मोहरे मखमली ट्रे में रहते हैं।'],
     ar: ['رقعة دمشقية مطعّمة ثلاثية الأبعاد', 'رقعة عربية تقليدية من خشب الجوز مطعّمة بالعظم والأبنوس والصدف (خطوط من الصدف ومسامير نحاسية عند النقاط)، مع قطع نحاسية (الأبيض) وقطع من المينا الكوبالتية (الأسود). تصطف القطع المأسورة في صواني المخمل.'],
+    ru: ['3D-доска с дамасской инкрустацией', 'Традиционная арабская инкрустированная доска из ореха с маркетри из кости, эбена и перламутра (перламутровые линии, латунные гвозди в точках), с латунными (белые) и кобальтово-эмалевыми (чёрные) фишками. Взятые фишки выстраиваются в бархатных лотках сверху и снизу.'],
+    'zh-TW': ['3D大馬士革鑲嵌棋盤', '傳統阿拉伯鑲嵌棋盤，胡桃木上以骨、烏木與珍珠母拼花（珍珠母線條、交點有黃銅鉚釘），搭配黃銅（白方）與鈷藍琺瑯（黑方）棋子。吃掉的棋子排在上下的天鵝絨托盤裡。'],
+    id: ['Papan 3D bertatahkan Damaskus', 'Papan tatah Arab tradisional dari walnut dengan marketri tulang, eboni, dan mutiara (garis mutiara, paku kuningan di titik), dengan bidak kuningan (Putih) dan enamel kobalt (Hitam). Bidak tangkapan berjajar di baki beludru atas dan bawah.'],
+    tr: ['Şam işi kakma 3D tahta', 'Kemik, abanoz ve sedef marketerili cevizden geleneksel Arap kakma tahtası (sedef çizgiler, noktalarda pirinç çiviler), pirinç (Beyaz) ve kobalt emaye (Siyah) taşlarla. Alınan taşlar üstteki ve alttaki kadife tepsilerde dizilir.'],
   };
   const fd = document.getElementById('fDesign');
   if (fd) {

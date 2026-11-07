@@ -7,7 +7,7 @@
 
   /* ---------- language ---------- */
   let lang = 'ja';
-  try { lang = localStorage.getItem('aicoding-lang') || (navigator.language || 'ja').slice(0, 2); } catch (e) {}
+  try { lang = localStorage.getItem('aicoding-lang') || (l => /^zh-(tw|hk|mo|hant)/i.test(l) ? 'zh-TW' : String(l).slice(0, 2))(navigator.language || 'ja'); } catch (e) {}   // zh-TW / zh-HK / zh-Hant → zh-TW, other zh → zh
   if (!I[lang]) lang = 'ja';
   const t = (k, v) => { let s = (I[lang] && I[lang][k]) ?? I.en[k] ?? I.ja[k] ?? k; if (v) for (const x in v) s = s.split('{' + x + '}').join(v[x]); return s; };
   const gname = g => g.name[lang] || g.name.en;
@@ -762,7 +762,7 @@
     zh: ['入门', '初级', '中级', '高级', '专家'], ko: ['입문', '초급', '중급', '상급', '전문가'],
     es: ['Iniciación', 'Principiante', 'Intermedio', 'Avanzado', 'Experto'], fr: ['Initiation', 'Débutant', 'Intermédiaire', 'Avancé', 'Expert'],
     pt: ['Iniciação', 'Iniciante', 'Intermediário', 'Avançado', 'Especialista'], de: ['Einstieg', 'Anfänger', 'Mittelstufe', 'Fortgeschritten', 'Experte'],
-    hi: ['परिचय', 'शुरुआती', 'मध्यम', 'उन्नत', 'विशेषज्ञ'], ar: ['تمهيدي', 'مبتدئ', 'متوسط', 'متقدم', 'خبير'] };
+    hi: ['परिचय', 'शुरुआती', 'मध्यम', 'उन्नत', 'विशेषज्ञ'], ar: ['تمهيدي', 'مبتدئ', 'متوسط', 'متقدم', 'خبير'], ru: ['Начальный', 'Новичок', 'Средний', 'Продвинутый', 'Эксперт'], 'zh-TW': ['入門', '初級', '中級', '高級', '最高級'], id: ['Pemula', 'Dasar', 'Menengah', 'Mahir', 'Ahli'], tr: ['Başlangıç', 'Acemi', 'Orta', 'İleri', 'Uzman'] };
   function lvNm(x, n, lang, max) {
     if (!x || !x.name) return '';
     if (x.name !== 'Lv.' + n) return x.name;
@@ -1062,7 +1062,7 @@
   $('bvClose').onclick = closeBoard;
   window.AtlasBoard = { open: id => openBoard(id), close: closeBoard };   // ヒストリア (opened from the game list) puts that game's board on the table first
   // the room's time of day (auto = by the clock)
-  const TOD = { ja: ['自動', '朝', '昼', '夕方', '夜'], en: ['Auto', 'Morning', 'Day', 'Evening', 'Night'], zh: ['自动', '早晨', '白天', '傍晚', '夜晚'], ko: ['자동', '아침', '낮', '저녁', '밤'], es: ['Auto', 'Mañana', 'Día', 'Tarde', 'Noche'], fr: ['Auto', 'Matin', 'Jour', 'Soir', 'Nuit'], pt: ['Auto', 'Manhã', 'Dia', 'Tarde', 'Noite'], de: ['Auto', 'Morgen', 'Tag', 'Abend', 'Nacht'], hi: ['ऑटो', 'सुबह', 'दिन', 'शाम', 'रात'], ar: ['تلقائي', 'صباح', 'نهار', 'مساء', 'ليل'] };
+  const TOD = { ja: ['自動', '朝', '昼', '夕方', '夜'], en: ['Auto', 'Morning', 'Day', 'Evening', 'Night'], zh: ['自动', '早晨', '白天', '傍晚', '夜晚'], ko: ['자동', '아침', '낮', '저녁', '밤'], es: ['Auto', 'Mañana', 'Día', 'Tarde', 'Noche'], fr: ['Auto', 'Matin', 'Jour', 'Soir', 'Nuit'], pt: ['Auto', 'Manhã', 'Dia', 'Tarde', 'Noite'], de: ['Auto', 'Morgen', 'Tag', 'Abend', 'Nacht'], hi: ['ऑटो', 'सुबह', 'दिन', 'शाम', 'रात'], ar: ['تلقائي', 'صباح', 'نهار', 'مساء', 'ليل'], ru: ['Авто', 'Утро', 'День', 'Вечер', 'Ночь'], 'zh-TW': ['自動', '早晨', '白天', '傍晚', '夜晚'], id: ['Otomatis', 'Pagi', 'Siang', 'Sore', 'Malam'], tr: ['Otomatik', 'Sabah', 'Gündüz', 'Akşam', 'Gece'] };
   function renderTod() {
     const btn = $('bvTodBtn'), menu = $('bvTodMenu'); if (!btn) return;
     const L = TOD[lang] || TOD.en, K = ['auto', 'morning', 'day', 'evening', 'night'], cur = (window.Table3D && Table3D.timeOfDayPick) ? Table3D.timeOfDayPick() : 'auto';
@@ -1664,17 +1664,17 @@
     $('wmSub').textContent = t('sub');
     fitBrand();
     document.title = title + ' — ' + (lang === 'en' ? '世界のボドゲ大百科' : 'World Board Game Atlas');
-    $('langSel').value = lang; $('langCode').textContent = lang.toUpperCase();
+    $('langSel').value = lang; $('langCode').textContent = lang === 'zh-TW' ? 'TW' : lang.toUpperCase();
     $('homeBtn').setAttribute('aria-label', t('tab.home')); $('footBack').textContent = t('back');
     tabsEl.querySelectorAll('.tab').forEach(b => { b.querySelector('span').textContent = t('tab.' + b.dataset.k); });
     document.querySelectorAll('#gsSeg button').forEach(b => { b.textContent = t('tab.' + b.dataset.v); });
   }
   // game-styled language picker (the native <select> stays as the source of the options)
-  const LNAME = { ja: 'Japanese', en: 'English', zh: 'Chinese', ko: 'Korean', es: 'Spanish', fr: 'French', pt: 'Portuguese', de: 'German', hi: 'Hindi', ar: 'Arabic' };
+  const LNAME = { ja: 'Japanese', en: 'English', zh: 'Chinese', ko: 'Korean', es: 'Spanish', fr: 'French', pt: 'Portuguese', de: 'German', hi: 'Hindi', ar: 'Arabic', ru: 'Russian', 'zh-TW': 'Chinese (Traditional)', id: 'Indonesian', tr: 'Turkish' };
   function openLang(on) {
     const pop = $('langPop'), btn = $('langBtn');
     if (on === undefined) on = pop.hidden;
-    if (on) pop.innerHTML = [...$('langSel').options].map(o => `<button type="button" role="option" data-l="${o.value}" aria-selected="${o.value === lang}"><b>${esc(o.text)}</b><small>${o.value.toUpperCase()} · ${LNAME[o.value]}</small></button>`).join('');
+    if (on) pop.innerHTML = [...$('langSel').options].map(o => `<button type="button" role="option" data-l="${o.value}" aria-selected="${o.value === lang}"><b>${esc(o.text)}</b><small>${o.value === 'zh-TW' ? 'TW' : o.value.toUpperCase()} · ${LNAME[o.value]}</small></button>`).join('');
     pop.hidden = !on; btn.setAttribute('aria-expanded', on);
     pop.querySelectorAll('[data-l]').forEach(b => b.onclick = () => { openLang(false); if (b.dataset.l !== lang) { $('langSel').value = b.dataset.l; $('langSel').dispatchEvent(new Event('change')); } });
   }

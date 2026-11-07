@@ -163,8 +163,8 @@ html.atlas-xiangqi .side{align-self:start!important}
 
   /* ---------- the design rows: "3D" for the board and for the pieces + the game's own 2D designs ---------- */
   const LBL = {
-    bd: { ja: '漆塗り3D', en: 'Lacquer 3D', zh: '漆盘3D', ko: '옻칠 3D', es: 'Laca 3D', fr: 'Laque 3D', pt: 'Laca 3D', de: 'Lack 3D', hi: 'लाख 3D', ar: 'ورنيش ثلاثي' },
-    pc: { ja: '黄楊3D', en: 'Boxwood 3D', zh: '黄杨3D', ko: '회양목 3D', es: 'Boj 3D', fr: 'Buis 3D', pt: 'Buxo 3D', de: 'Buchs 3D', hi: 'बॉक्सवुड 3D', ar: 'بقس ثلاثي' },
+    bd: { ja: '漆塗り3D', en: 'Lacquer 3D', zh: '漆盘3D', ko: '옻칠 3D', es: 'Laca 3D', fr: 'Laque 3D', pt: 'Laca 3D', de: 'Lack 3D', hi: 'लाख 3D', ar: 'ورنيش ثلاثي', ru: 'Лак 3D', 'zh-TW': '漆器3D', id: '3D pernis', tr: 'Lake 3D' },
+    pc: { ja: '黄楊3D', en: 'Boxwood 3D', zh: '黄杨3D', ko: '회양목 3D', es: 'Boj 3D', fr: 'Buis 3D', pt: 'Buxo 3D', de: 'Buchs 3D', hi: 'बॉक्सवुड 3D', ar: 'بقس ثلاثي', ru: 'Самшит 3D', 'zh-TW': '黃楊木3D', id: '3D boxwood', tr: 'Şimşir 3D' },
   };
   const lang = () => (document.getElementById('langSel') || {}).value || 'ja';
   const vbOf = row => { const s = row && row.querySelector('button svg'); return (s && s.getAttribute('viewBox')) || '0 0 9 6'; };

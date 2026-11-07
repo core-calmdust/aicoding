@@ -35,6 +35,10 @@
     de: { n: ['Weiß', 'Schwarz'], turn: '{p} am Zug', win: '{p} gewinnt', stuck: 'Dieser Stein kann nicht ziehen', own: 'Wähle einen deiner Steine', move: 'Dorthin geht es nicht', home: 'Alle Steine zuerst im Ziel', both: 'Gleich viele Züge bis ins Ziel (Remis)', stuck1: 'Bis Zug 40 die eigene Ecke nicht geräumt', stuck2: 'Keine Seite hat ihre Ecke rechtzeitig geräumt', count: 'Zuglimit: Steine im Ziel entscheiden', block: 'Kein Zug: Steine im Ziel entscheiden', rep: 'Dreifache Wiederholung', jump: 'Sprungkette!' },
     hi: { n: ['सफ़ेद', 'काला'], turn: '{p} की बारी', win: '{p} की जीत', stuck: 'यह गोटी नहीं चल सकती', own: 'अपनी कोई गोटी चुनें', move: 'वहाँ नहीं जा सकते', home: 'सारी गोटियाँ पहले पहुँचीं', both: 'बराबर चालों में पहुँचे (ड्रॉ)', stuck1: '40वीं चाल तक अपना कोना खाली नहीं किया', stuck2: 'दोनों ने समय पर कोना खाली नहीं किया', count: 'चाल सीमा: कोने की गोटियों से फ़ैसला', block: 'कोई चाल नहीं: कोने की गोटियों से फ़ैसला', rep: 'तीन बार एक ही स्थिति', jump: 'लगातार छलांग!' },
     ar: { n: ['الأبيض', 'الأسود'], turn: 'دور {p}', win: 'فوز {p}', stuck: 'هذه القطعة لا تستطيع الحركة', own: 'اختر إحدى قطعك', move: 'لا يمكن الذهاب إلى هناك', home: 'أوصل كل القطع أولًا', both: 'أنهى الطرفان بعدد النقلات نفسه (تعادل)', stuck1: 'لم يُخلِ زاويته قبل النقلة 40', stuck2: 'لم يُخلِ أي طرف زاويته في الوقت', count: 'حد النقلات: يحسم عدد القطع في الزاوية', block: 'لا نقلات: يحسم عدد القطع في الزاوية', rep: 'تكرار ثلاثي', jump: 'قفزات متتالية!' },
+    ru: { n: ['Белые', 'Чёрные'], turn: 'Ход: {p}', win: '{p} побеждают', stuck: 'Эта фишка не может ходить', own: 'Выберите свою фишку', move: 'Туда нельзя', home: 'Первым все фишки в доме', both: 'Оба закончили за одинаковое число ходов (ничья)', stuck1: 'Не покинул свой угол к 40-му ходу', stuck2: 'Ни одна сторона не покинула угол вовремя', count: 'Лимит ходов: решают фишки в доме', block: 'Нет ходов: решают фишки в доме', rep: 'Троекратное повторение', jump: 'Серия прыжков!' },
+    'zh-TW': { n: ['白方', '黑方'], turn: '輪到{p}', win: '{p}獲勝', stuck: '這枚棋子不能移動', own: '請選擇自己的棋子', move: '不能走到那裡', home: '率先全部進入陣地', both: '雙方以相同步數完成（和局）', stuck1: '第40手前沒有離開自己的角落', stuck2: '雙方都沒有及時離開角落', count: '達到步數上限：以進入陣地的棋子數決定', block: '無棋可走：以進入陣地的棋子數決定', rep: '三次重複局面', jump: '連跳！' },
+    id: { n: ['Putih', 'Hitam'], turn: 'Giliran {p}', win: '{p} menang', stuck: 'Bidak itu tidak bisa bergerak', own: 'Pilih salah satu bidakmu', move: 'Tidak bisa ke sana', home: 'Semua bidak masuk lebih dulu', both: 'Keduanya selesai dalam jumlah langkah sama (seri)', stuck1: 'Tidak meninggalkan pojok asal sebelum langkah 40', stuck2: 'Tak satu pun pihak meninggalkan pojoknya tepat waktu', count: 'Batas langkah: ditentukan bidak yang masuk', block: 'Tidak ada langkah sah: ditentukan bidak yang masuk', rep: 'Pengulangan tiga kali', jump: 'Lompatan beruntun!' },
+    tr: { n: ['Beyaz', 'Siyah'], turn: 'Sıra: {p}', win: '{p} kazandı', stuck: 'Bu taş hareket edemez', own: 'Taşlarından birini seç', move: 'Oraya gidemez', home: 'Önce tüm taşlar köşede', both: 'İkisi de aynı hamle sayısında bitirdi (berabere)', stuck1: '40. hamleye kadar kendi köşesinden çıkmadı', stuck2: 'İki taraf da köşesinden zamanında çıkmadı', count: 'Hamle sınırı: köşedeki taşlar belirler', block: 'Yasal hamle yok: köşedeki taşlar belirler', rep: 'Üç kez tekrar', jump: 'Zincirleme atlama!' },
   };
   const io = k => k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
 
@@ -318,6 +322,10 @@
     de: ['Einsteiger: macht manchmal Umwege', 'Anfänger bis Mittel: liest Sprungwege einige Züge voraus', 'Fortgeschritten: baut und sperrt Straßen', 'Meister: tiefe Suche, die das Rennen zählt'],
     hi: ['शुरुआती: कभी-कभी लंबा रास्ता लेता है', 'नौसिखिया से मध्यम: कुछ चाल आगे के छलांग-रास्ते पढ़ता है', 'उन्नत: रास्ता बनाता और रोकता है', 'विशेषज्ञ: गहरी गणना से दौड़ गिनता है'],
     ar: ['مبتدئ: يسلك أحيانًا طريقًا أطول', 'مبتدئ إلى متوسط: يقرأ طرق القفز بضع نقلات', 'متقدم: يبني الطرق ويسدّها', 'خبير: بحث عميق يحسب السباق'],
+    ru: ['Начальный: иногда идёт в обход', 'Новичок–средний: видит дороги прыжков на несколько ходов', 'Продвинутый: строит дороги и блоки', 'Эксперт: глубокий поиск, считающий гонку'],
+    'zh-TW': ['入門：有時會繞遠路', '初級～中級：能看出幾步內的跳躍路線', '高級：會鋪路與堵路', '最高級：計算競速的深入搜尋'],
+    id: ['Pemula: kadang mengambil jalan memutar', 'Dasar–menengah: membaca jalur lompatan beberapa langkah ke depan', 'Mahir: membangun jalur dan blok', 'Ahli: pencarian mendalam yang menghitung balapan'],
+    tr: ['Başlangıç: bazen uzun yolu seçer', 'Acemi–orta: birkaç hamle ilerideki atlama yollarını okur', 'İleri: yollar ve bloklar kurar', 'Uzman: yarışı hesaplayan derin arama'],
   };
   const RATING = [0, 450, 575, 700, 825, 950, 1075, 1200, 1325, 1450, 1575, 1700, 1825, 1950, 2030, 2090, 2150, 2200, 2250, 2300, 2350];   // ugolki RT_LV (rated games)
   const W7 = (a, b, c, d, e, f) => [a, a, a, a, b, b, b, b, b, c, c, c, c, c, c, d, d, d, e, f];
@@ -332,6 +340,10 @@
     de: W7('für Einsteiger', 'wenn du die Regeln kennst', 'wenn du den Dreh raus hast', 'für starke Spieler', 'selbst für Profis knifflig', 'die stärkste Stufe'),
     hi: W7('पहली बार खेलने वालों के लिए', 'नियम सीख चुके लोगों के लिए', 'जिन्हें आदत हो रही है उनके लिए', 'मज़बूत खिलाड़ियों के लिए', 'विशेषज्ञों के लिए भी कठिन', 'सबसे मज़बूत स्तर'),
     ar: W7('لمن يلعب أول مرة', 'لمن تعلّم القواعد', 'لمن بدأ يعتاد اللعب', 'للاعبين الأقوياء', 'صعب حتى على الخبراء', 'أقوى مستوى'),
+    ru: W7('для первой игры', 'когда знаете правила', 'когда освоились', 'для сильных игроков', 'трудно даже экспертам', 'самый сильный'),
+    'zh-TW': W7('給第一次玩的人', '懂規則之後', '漸漸上手時', '給高手', '連專家都覺得難', '最強'),
+    id: W7('untuk pemula', 'setelah tahu aturannya', 'mulai terbiasa', 'untuk pemain kuat', 'sulit bahkan bagi ahli', 'yang terkuat'),
+    tr: W7('ilk kez oynayanlar için', 'kuralları bilince', 'alışmaya başlayınca', 'güçlü oyuncular için', 'uzmanlar için bile zor', 'en güçlüsü'),
   };
   function levelInfo(n, lang) {
     const D = LVD[lang] || LVD.en, W = WHO[lang] || WHO.en;

@@ -2,7 +2,7 @@
 """Build go/i18n.js from tools/i18n/<lang>.json (UI strings). Missing keys fall back to en → ja in the page."""
 import json, os
 D = os.path.dirname(os.path.abspath(__file__))
-LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar']
+LANGS = ['ja', 'en', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'hi', 'ar', 'ru', 'zh-TW', 'id', 'tr']
 out = {}
 for l in LANGS:
     p = os.path.join(D, 'i18n', l + '.json')

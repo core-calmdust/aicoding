@@ -235,8 +235,8 @@ html.atlas-tafl #newOverlay .modal-actions .mbtn{padding-top:10px!important;padd
 
   /* ---------- the design rows: "3D" for the board and for the pieces + the game's own 2D designs ---------- */
   const LBL = {
-    bd: { ja: 'ヴァイキング3D', en: 'Viking 3D', zh: '维京3D', ko: '바이킹 3D', es: 'Vikingo 3D', fr: 'Viking 3D', pt: 'Viking 3D', de: 'Wikinger 3D', hi: 'वाइकिंग 3D', ar: 'فايكنغ ثلاثي' },
-    pc: { ja: '木彫り3D', en: 'Carved 3D', zh: '木雕3D', ko: '목각 3D', es: 'Tallado 3D', fr: 'Sculpté 3D', pt: 'Entalhado 3D', de: 'Geschnitzt 3D', hi: 'नक्काशी 3D', ar: 'منحوت ثلاثي' },
+    bd: { ja: 'ヴァイキング3D', en: 'Viking 3D', zh: '维京3D', ko: '바이킹 3D', es: 'Vikingo 3D', fr: 'Viking 3D', pt: 'Viking 3D', de: 'Wikinger 3D', hi: 'वाइकिंग 3D', ar: 'فايكنغ ثلاثي', ru: 'Викинги 3D', 'zh-TW': '維京3D', id: '3D Viking', tr: 'Viking 3D' },
+    pc: { ja: '木彫り3D', en: 'Carved 3D', zh: '木雕3D', ko: '목각 3D', es: 'Tallado 3D', fr: 'Sculpté 3D', pt: 'Entalhado 3D', de: 'Geschnitzt 3D', hi: 'नक्काशी 3D', ar: 'منحوت ثلاثي', ru: 'Резьба 3D', 'zh-TW': '木雕3D', id: '3D ukir', tr: 'Oyma 3D' },
   };
   const lang = () => (document.getElementById('langSel') || {}).value || 'ja';
   const vbOf = row => { const s = row && row.querySelector('button svg'); return (s && s.getAttribute('viewBox')) || '0 0 100 100'; };

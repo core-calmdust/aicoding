@@ -33,6 +33,10 @@
     de: { check: 'Schach!', mate: 'Schachmatt', stale: 'Kein Zug (Patt verliert)', pcheck: 'Dauerschach verliert', pchase: 'Dauerjagd verliert', rep: 'Dreifache Wiederholung', sixty: '60-Züge-Regel', material: 'Keine Angriffssteine' },
     hi: { check: 'शह!', mate: 'शह-मात', stale: 'कोई चाल नहीं (हार)', pcheck: 'लगातार शह से हार', pchase: 'लगातार पीछा करने से हार', rep: 'तीन बार दोहराव', sixty: '60 चाल नियम', material: 'हमलावर मोहरे नहीं' },
     ar: { check: 'كش!', mate: 'كش مات', stale: 'لا نقلات (خسارة)', pcheck: 'تكرار الكش يخسر', pchase: 'المطاردة المستمرة تخسر', rep: 'تكرار ثلاثي', sixty: 'قاعدة الستين نقلة', material: 'لا قطع هجومية' },
+    ru: { check: 'Шах!', mate: 'Мат', stale: 'Нет ходов (пат — поражение)', pcheck: 'Вечный шах — поражение', pchase: 'Вечное преследование — поражение', rep: 'Троекратное повторение', sixty: 'Правило 60 ходов', material: 'Нет атакующих фигур' },
+    'zh-TW': { check: '將軍！', mate: '將死', stale: '無棋可走（困斃判負）', pcheck: '長將判負', pchase: '長捉判負', rep: '三次重複局面', sixty: '60回合規則', material: '雙方無進攻子力' },
+    id: { check: 'Skak!', mate: 'Skakmat', stale: 'Tidak ada langkah sah (pat berarti kalah)', pcheck: 'Skak abadi berarti kalah', pchase: 'Kejar abadi berarti kalah', rep: 'Pengulangan tiga kali', sixty: 'Aturan 60 langkah', material: 'Tidak ada bidak penyerang' },
+    tr: { check: 'Şah!', mate: 'Şah mat', stale: 'Yasal hamle yok (pat kaybettirir)', pcheck: 'Sürekli şah kaybettirir', pchase: 'Sürekli kovalama kaybettirir', rep: 'Üç kez tekrar', sixty: '60 hamle kuralı', material: 'Saldıran taş yok' },
   };
   // two players on one device (ctx.mode 'pvp'): the colours' names, whose turn, who won
   const PV = {
@@ -40,7 +44,7 @@
     zh: { n: ['红方', '黑方'], turn: '轮到{p}', win: '{p}胜' }, ko: { n: ['홍', '흑'], turn: '{p} 차례', win: '{p} 승리' },
     es: { n: ['Rojo', 'Negro'], turn: 'Juega {p}', win: 'Gana {p}' }, fr: { n: ['Rouge', 'Noir'], turn: 'Trait à {p}', win: 'Victoire de {p}' },
     pt: { n: ['Vermelho', 'Preto'], turn: 'Vez do {p}', win: 'Vitória do {p}' }, de: { n: ['Rot', 'Schwarz'], turn: '{p} am Zug', win: '{p} gewinnt' },
-    hi: { n: ['लाल', 'काला'], turn: '{p} की बारी', win: '{p} की जीत' }, ar: { n: ['الأحمر', 'الأسود'], turn: 'دور {p}', win: 'فوز {p}' },
+    hi: { n: ['लाल', 'काला'], turn: '{p} की बारी', win: '{p} की जीत' }, ar: { n: ['الأحمر', 'الأسود'], turn: 'دور {p}', win: 'فوز {p}' }, ru: { n: ['Красные', 'Чёрные'], turn: 'Ход: {p}', win: '{p} побеждают' }, 'zh-TW': { n: ['紅方', '黑方'], turn: '輪到{p}', win: '{p}獲勝' }, id: { n: ['Merah', 'Hitam'], turn: 'Giliran {p}', win: '{p} menang' }, tr: { n: ['Kırmızı', 'Siyah'], turn: 'Sıra: {p}', win: '{p} kazandı' },
   };
   const VAL = [0, 0, 2, 2, 4, 9, 4.5, 1];
   const io = k => k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
@@ -357,6 +361,10 @@
     de: { kyu: '{n}. Kyu', dan: ['1. Dan', '2. Dan', '3. Dan', '4. Dan', '5. Dan'], lvd: ['Einsteiger: stellt manchmal Steine ein', 'Anfänger: rechnet ein paar Züge', 'Fortgeschritten: rechnet Abtausch und Matt', 'Experte: tiefe Suche'] },
     hi: { kyu: '{n} क्यू', dan: ['1 दान', '2 दान', '3 दान', '4 दान', '5 दान'], lvd: ['शुरुआती: कभी-कभी मोहरा दे देता है', 'नौसिखिया: कुछ चालें आगे देखता है', 'उन्नत: अदला-बदली और मात गिनता है', 'विशेषज्ञ: गहरी खोज'] },
     ar: { kyu: '{n} كيو', dan: ['1 دان', '2 دان', '3 دان', '4 دان', '5 دان'], lvd: ['مبتدئ: يخسر قطعة أحيانًا', 'مبتدئ: يحسب بضع نقلات', 'متقدم: يحسب التبادلات والكش مات', 'خبير: بحث عميق'] },
+    ru: { kyu: '{n} кю', dan: ['1 дан', '2 дан', '3 дан', '4 дан', '5 дан'], lvd: ['Начальный: иногда зевает фигуры', 'Новичок: считает на несколько ходов', 'Продвинутый: просчитывает размены и маты', 'Эксперт: глубокий поиск (NNUE, обученный у сильного движка)'] },
+    'zh-TW': { kyu: '{n}級', dan: ['初段', '二段', '三段', '四段', '五段'], lvd: ['入門：偶爾會送子', '初級：能看幾步', '高級：能算出兌子與殺法', '最高級：深入搜尋（向頂尖引擎學習的NNUE）'] },
+    id: { kyu: '{n} kyu', dan: ['1 dan', '2 dan', '3 dan', '4 dan', '5 dan'], lvd: ['Pemula: kadang memberikan bidak', 'Dasar: membaca beberapa langkah ke depan', 'Mahir: menghitung pertukaran dan skakmat', 'Ahli: pencarian mendalam (NNUE belajar dari mesin teratas)'] },
+    tr: { kyu: '{n} kyu', dan: ['1 dan', '2 dan', '3 dan', '4 dan', '5 dan'], lvd: ['Başlangıç: ara sıra taş kaptırır', 'Acemi: birkaç hamle ileriyi okur', 'İleri: değişimleri ve matları hesaplar', 'Uzman: derin arama (en iyi motordan öğrenen NNUE)'] },
   };
   const RATING = [0, 450, 535, 680, 795, 920, 1095, 1245, 1395, 1510, 1730, 1825, 1880, 1977, 2087, 2212, 2302, 2337, 2362, 2487, 2552];   // xiangqi RT_LV (rated games)
   const W7 = (a, b, c, d, e, f) => [a, a, a, a, b, b, b, b, b, c, c, c, c, c, c, d, d, d, e, f];
@@ -371,6 +379,10 @@
     de: W7('für Einsteiger', 'wenn du die Regeln kennst', 'wenn du den Dreh raus hast', 'für starke Spieler', 'selbst für Profis knifflig', 'die stärkste Stufe'),
     hi: W7('पहली बार खेलने वालों के लिए', 'नियम सीख चुके लोगों के लिए', 'जिन्हें आदत हो रही है उनके लिए', 'मज़बूत खिलाड़ियों के लिए', 'विशेषज्ञों के लिए भी कठिन', 'सबसे मज़बूत स्तर'),
     ar: W7('لمن يلعب أول مرة', 'لمن تعلّم القواعد', 'لمن بدأ يعتاد اللعب', 'للاعبين الأقوياء', 'صعب حتى على الخبراء', 'أقوى مستوى'),
+    ru: W7('для первой игры', 'когда знаете правила', 'когда освоились', 'для сильных игроков', 'трудно даже экспертам', 'самый сильный'),
+    'zh-TW': W7('給第一次玩的人', '懂規則之後', '漸漸上手時', '給高手', '連專家都覺得難', '最強'),
+    id: W7('untuk pemula', 'setelah tahu aturannya', 'mulai terbiasa', 'untuk pemain kuat', 'sulit bahkan bagi ahli', 'yang terkuat'),
+    tr: W7('ilk kez oynayanlar için', 'kuralları bilince', 'alışmaya başlayınca', 'güçlü oyuncular için', 'uzmanlar için bile zor', 'en güçlüsü'),
   };
   function levelInfo(n, lang) {   // n = 1..20 (the game's level: 15 kyu … 5 dan)
     const L = LVN[lang] || LVN.en, W = WHO[lang] || WHO.en;

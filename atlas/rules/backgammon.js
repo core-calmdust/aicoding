@@ -192,6 +192,198 @@
         { say: 'عرفت القواعد كلها! نصائح: اترك أقل عدد ممكن من القطع المكشوفة وابنِ نقاطًا متجاورة. تعلّم المزيد من الخطط في الدروس. هيا، ارمِ النرد والعب!' },
       ],
     },
+    ru: {
+      name: 'Дайспап',
+      next: 'Далее',
+      back: 'Назад',
+      start: 'Сыграем',
+      again: 'Ещё раз',
+      tap: 'Нажми на светящееся место',
+      roll: 'Нажми на доску, чтобы бросить',
+      nope: 'Туда нельзя!',
+      gammon: 'Марс ×2',
+      bg: 'Домашний марс ×3',
+      take: 'Принять',
+      drop: 'Отказаться',
+      s: [{
+        say: 'Гав! Я <b>Дайспап</b>, щенок-кубик. Давай вместе изучим нарды на этой чудесной доске с маркетри!'
+      }, {
+        say: 'На доске 24 треугольника — <b>пункты</b>, у каждого игрока <b>15 шашек</b>. С золотым ободком — <b>твои</b>, чёрные с платиновым — <b>соперника</b>. Шесть светящихся пунктов внизу справа — <b>твой дом</b>. Приведи все шашки домой и первым <b>выбрось их все</b> с доски — это победа!'
+      }, {
+        say: 'Все ходят в одну сторону: ты идёшь <b>с 24 на 1</b> — по верху справа налево, затем вниз и по низу слева направо, буквой U. Соперник идёт <b>в обратную сторону</b>.'
+      }, {
+        say: 'В свой ход сначала <b>брось два кубика</b>. Нажми на доску!',
+        done: '<b>5</b> и <b>3</b>! Пройди одной шашкой 5, а потом 3 (всего 8), или двумя шашками — одной 5, другой 3.'
+      }, {
+        say: 'Каждый кубик — <b>отдельный ход</b>. Пройди <b>тройкой</b> шашкой с 8 на три пункта — на <b>5</b>!',
+        done: 'А <b>единица</b> приведёт на 5 и шашку с 6. Когда там <b>две и больше</b> шашки, соперник не может туда встать — ты <b>занял пункт</b>!'
+      }, {
+        say: 'Одинаковые числа на обоих кубиках — это <b>дубль</b>: число играется <b>четыре раза</b>! С дублем 2 проведи шашку с 13 до самого 5!',
+        done: 'Прыг, прыг, прыг, прыг! Четыре двойки — восемь пунктов.'
+      }, {
+        say: 'Одинокая шашка — это <b>блот</b>. Встань на блот соперника, чтобы <b>побить</b> его и отправить на <b>бар</b> посередине. Побей чёрную шашку на 10 тройкой!',
+        done: 'Бито! Чёрная шашка уходит на бар и должна начать заново.'
+      }, {
+        say: 'Если у тебя шашка на баре, сначала нужно <b>ввести её в дом соперника</b>, и только потом ходить другими. Пункт 19 (твоя 6) <b>закрыт</b> двумя чёрными шашками, так что входи четвёркой на <b>21</b>!',
+        done: 'Вошла! Нельзя вставать на пункт, где две и больше шашек соперника.'
+      }, {
+        say: 'Пункты подряд <b>перекрывают</b> путь сопернику. Проведи тройкой шашку с 8 на 5 и дострой стену из <b>шести пунктов подряд — прайм</b> — с 4 по 9!',
+        done: 'Готово! Прайм из шести пунктов не перепрыгнуть, и чёрная шашка за ним в ловушке.'
+      }, {
+        say: 'Когда все 15 шашек в доме, можно <b>выбрасывать</b> — снимать их с доски. Выбрось шестёркой шашку с 6 в <b>лоток</b>!',
+        done: 'Щёлк! Если на кубике больше, чем у самой дальней шашки, можно выбросить и её.'
+      }, {
+        say: 'Первым выбросил все 15 — победа! Если соперник не выбросил ни одной — это <b>марс</b> (вдвойне), а если у него шашка ещё на баре или в твоём доме — <b>домашний марс</b> (втройне)!'
+      }, {
+        say: '<b>Кубик удвоения</b> поднимает ставки. Перед броском в свой ход можно предложить удвоение: соперник либо <b>принимает</b> (партия стоит вдвое больше, и кубик у него), либо <b>отказывается</b> (и проигрывает по текущей цене).'
+      }, {
+        say: 'Вот и все правила! Советы: оставляй как можно меньше блотов и строй пункты рядом друг с другом. Больше стратегии — в уроках. А теперь бросай кубики и играй!'
+      }]
+    },
+    'zh-TW': {
+      name: '骰子汪',
+      next: '下一步',
+      back: '返回',
+      start: '來對局吧',
+      again: '再一次',
+      tap: '點擊發光的地方',
+      roll: '點擊棋盤擲骰',
+      nope: '那裡不能走喔！',
+      gammon: '全勝 ×2',
+      bg: '完勝 ×3',
+      take: '接受',
+      drop: '放棄',
+      s: [{
+        say: '汪！我是骰子小狗<b>骰子汪</b>。一起在這塊漂亮的拼花棋盤上學西洋雙陸棋吧！'
+      }, {
+        say: '棋盤上有24個叫做<b>點</b>的三角形，雙方各有<b>15顆棋子</b>。金邊的是<b>你的</b>，白金邊的黑棋是<b>對手的</b>。右下方發光的6個點是<b>你的內盤</b>。把所有棋子帶回內盤，再率先把它們<b>全部移出</b>棋盤就獲勝！'
+      }, {
+        say: '大家都朝同一個方向走：你從<b>24走到1</b>——上排由右往左，再往下由左往右，走成U字形。對手則朝<b>相反方向</b>走。'
+      }, {
+        say: '輪到你時先<b>擲兩顆骰子</b>。點擊棋盤擲骰吧！',
+        done: '<b>5</b>和<b>3</b>！可以讓1顆棋子走5再走3（共8），也可以讓2顆棋子各走5和3。'
+      }, {
+        say: '每顆骰子都是<b>獨立的一步</b>。用<b>3</b>把8上的棋子往前走3點到<b>5</b>！',
+        done: '再用<b>1</b>把6上的棋子也帶到5。那裡有<b>2顆以上</b>棋子，對手就不能停進來——你<b>做出了一個點</b>！'
+      }, {
+        say: '兩顆骰子點數相同就是<b>對子</b>：那個點數要走<b>4次</b>！用雙2把13上的棋子一路走到5！',
+        done: '跳、跳、跳、跳！4個2——共8點。'
+      }, {
+        say: '單獨一顆棋子叫做<b>散子</b>。停到對手的散子上就能<b>打</b>掉它，送到中間的<b>槓</b>上。用3打掉10上的黑棋！',
+        done: '打中了！黑棋到了槓上，必須從頭開始。'
+      }, {
+        say: '有棋子在槓上時，必須先<b>把它放進對手的內盤</b>，才能移動其他棋子。19點（你的6）被2顆黑棋<b>擋住</b>了，所以用4進到<b>21</b>！',
+        done: '進來了！有2顆以上對手棋子的點絕對不能停。'
+      }, {
+        say: '連續的點會<b>擋住</b>對手的路。用3把8上的棋子移到5，完成從4到9<b>連續6個點的牆——封鎖</b>！',
+        done: '完成！6點封鎖跳不過去，後面的黑棋被困住了。'
+      }, {
+        say: '15顆棋子全部進入內盤後就能<b>移出</b>——把棋子拿出棋盤。用6把6上的棋子移到<b>托盤</b>裡！',
+        done: '喀！骰子點數比最遠的棋子還大時，也可以把那顆移出。'
+      }, {
+        say: '先把15顆全部移出就獲勝！對手連1顆都沒移出就是<b>全勝</b>（2倍），還有棋子在槓上或你的內盤裡就是<b>完勝</b>（3倍）！'
+      }, {
+        say: '<b>加倍骰</b>能提高賭注。輪到你擲骰前可以提出加倍：對手可以<b>接受</b>（這局價值變2倍，加倍骰歸對方），或<b>放棄</b>（以目前的價值認輸）。'
+      }, {
+        say: '規則全部學完了！訣竅：盡量少留散子，把點做在相鄰的位置。課程裡還有更多戰術。現在擲骰開始玩吧！'
+      }]
+    },
+    id: {
+      name: 'Dicepup',
+      next: 'Berikutnya',
+      back: 'Kembali',
+      start: 'Ayo main',
+      again: 'Lagi',
+      tap: 'Ketuk tempat yang menyala',
+      roll: 'Ketuk papan untuk melempar',
+      nope: 'Tidak bisa ke sana!',
+      gammon: 'Gammon ×2',
+      bg: 'Backgammon ×3',
+      take: 'Terima',
+      drop: 'Tolak',
+      s: [{
+        say: 'Guk! Aku <b>Dicepup</b>, anak anjing dadu. Ayo belajar backgammon bersama di papan marketri yang indah ini!'
+      }, {
+        say: 'Papan punya 24 segitiga yang disebut <b>poin</b>, dan tiap pemain punya <b>15 bidak</b>. Yang berbingkai emas adalah <b>milikmu</b>, yang hitam berbingkai platina milik <b>lawan</b>. Enam poin menyala di kanan bawah adalah <b>papan rumahmu</b>. Bawa semua bidak pulang, lalu jadilah yang pertama <b>mengeluarkan semuanya</b> untuk menang!'
+      }, {
+        say: 'Semua bergerak satu arah: kamu dari <b>24 ke 1</b> — kanan ke kiri di atas, lalu turun dan kiri ke kanan di bawah, membentuk U. Lawanmu bergerak <b>berlawanan arah</b>.'
+      }, {
+        say: 'Di giliranmu, pertama <b>lempar dua dadu</b>. Ketuk papan untuk melempar!',
+        done: '<b>5</b> dan <b>3</b>! Gerakkan satu bidak 5 lalu 3 (total 8), atau dua bidak, satu 5 dan satu 3.'
+      }, {
+        say: 'Setiap dadu adalah <b>langkah terpisah</b>. Pakai <b>3</b> untuk memindahkan bidak dari 8 tiga poin ke <b>5</b>!',
+        done: 'Sekarang <b>1</b> membawa bidak dari 6 ke 5 juga. Dengan <b>dua atau lebih</b> bidak di sana, lawan tak bisa mendarat — kamu sudah <b>membuat poin</b>!'
+      }, {
+        say: 'Angka sama di kedua dadu disebut <b>double</b>: angka itu dimainkan <b>empat kali</b>! Dengan double 2, bawa bidak dari 13 sampai ke 5!',
+        done: 'Lompat, lompat, lompat, lompat! Empat kali 2 — delapan poin.'
+      }, {
+        say: 'Bidak sendirian disebut <b>blot</b>. Mendarat di blot lawan untuk <b>memukul</b>nya ke <b>bar</b> di tengah. Pukul bidak hitam di 10 dengan 3-mu!',
+        done: 'Kena! Bidak hitam ke bar dan harus mulai lagi.'
+      }, {
+        say: 'Jika punya bidak di bar, kamu harus <b>memasukkannya ke papan rumah lawan</b> dulu sebelum menggerakkan yang lain. Poin 19 (angka 6-mu) <b>terblokir</b> dua bidak hitam, jadi masuk dengan 4 di <b>21</b>!',
+        done: 'Masuk! Kamu tak pernah bisa mendarat di poin yang dijaga dua atau lebih bidak lawan.'
+      }, {
+        say: 'Poin berderet <b>menghalangi</b> jalan lawan. Pindahkan bidak dari 8 ke 5 dengan 3 dan selesaikan tembok <b>enam poin berderet — prime</b> — dari 4 sampai 9!',
+        done: 'Selesai! Prime enam poin tak bisa dilompati, jadi bidak hitam di belakangnya terjebak.'
+      }, {
+        say: 'Setelah ke-15 bidak di papan rumah, kamu boleh <b>mengeluarkan</b> — mengangkatnya dari papan. Keluarkan bidak di 6 ke <b>baki</b> dengan 6!',
+        done: 'Tak! Jika dadu lebih besar dari bidak terjauhmu, bidak itu pun boleh dikeluarkan.'
+      }, {
+        say: 'Keluarkan ke-15 lebih dulu dan kamu menang! Jika lawan belum mengeluarkan satu pun, itu <b>gammon</b> (ganda), dan jika masih ada bidaknya di bar atau papan rumahmu, itu <b>backgammon</b> (tiga kali)!'
+      }, {
+        say: '<b>Kubus penggandaan</b> menaikkan taruhan. Sebelum melempar di giliranmu, kamu boleh menawarkan double: lawan bisa <b>menerima</b> (nilai permainan jadi dua kali dan kubus miliknya) atau <b>menolak</b> (dan kalah dengan nilai saat ini).'
+      }, {
+        say: 'Itu semua aturannya! Tips: sisakan blot sesedikit mungkin dan bangun poin yang bersebelahan. Pelajaran menunjukkan strategi lebih banyak. Sekarang lempar dadu dan main!'
+      }]
+    },
+    tr: {
+      name: 'Dicepup',
+      next: 'İleri',
+      back: 'Geri',
+      start: 'Hadi oynayalım',
+      again: 'Tekrar',
+      tap: 'Parlayan yere dokun',
+      roll: 'Atmak için tahtaya dokun',
+      nope: 'Oraya gidemez!',
+      gammon: 'Mars ×2',
+      bg: 'Katmerli mars ×3',
+      take: 'Kabul',
+      drop: 'Reddet',
+      s: [{
+        say: 'Hav! Ben zar köpeği <b>Dicepup</b>. Bu güzel marketeri tahtada tavlayı birlikte öğrenelim!'
+      }, {
+        say: 'Tahtada <b>hane</b> denen 24 üçgen var, her oyuncunun <b>15 pulu</b> var. Altın kenarlılar <b>senin</b>, platin kenarlı siyahlar <b>rakibinin</b>. Sağ alttaki parlayan altı hane <b>iç alanın</b>. Tüm pulları eve getir, sonra <b>hepsini ilk toplayan</b> sen ol ve kazan!'
+      }, {
+        say: 'Herkes tek yöne gider: sen <b>24\'ten 1\'e</b> gidersin — üstte sağdan sola, sonra aşağı inip altta soldan sağa, U şeklinde. Rakibin <b>ters yöne</b> gider.'
+      }, {
+        say: 'Sıran gelince önce <b>iki zar at</b>. Atmak için tahtaya dokun!',
+        done: '<b>5</b> ve <b>3</b>! Bir pulu 5 sonra 3 (toplam 8) oynat ya da iki pulu, birini 5 diğerini 3 oynat.'
+      }, {
+        say: 'Her zar <b>ayrı bir hamledir</b>. <b>3</b> ile 8\'deki pulu üç hane ilerletip <b>5</b>\'e götür!',
+        done: 'Şimdi <b>1</b> ile 6\'daki pulu da 5\'e getir. Orada <b>iki ya da daha fazla</b> pul olunca rakip oraya inemez — <b>kapı yaptın</b>!'
+      }, {
+        say: 'İki zarda aynı sayı gelirse <b>çift</b> olur: o sayıyı <b>dört kez</b> oynarsın! Dübeşle 13\'teki pulu ta 5\'e kadar götür!',
+        done: 'Hop, hop, hop, hop! Dört kez 2 — sekiz hane.'
+      }, {
+        say: 'Tek başına duran pula <b>açık pul</b> denir. Rakibin açık pulunun üstüne inersen onu <b>kırar</b> ve ortadaki <b>bar</b>a gönderirsin. 10\'daki siyah pulu 3\'le kır!',
+        done: 'Kırıldı! Siyah pul bara gider ve baştan başlamalı.'
+      }, {
+        say: 'Barda pulun varsa başka bir şey oynamadan önce onu <b>rakibin iç alanına sokmalısın</b>. 19. hane (senin 6\'n) iki siyah pulla <b>kapalı</b>, bu yüzden 4\'le <b>21</b>\'e gir!',
+        done: 'Girdi! İki ya da daha fazla rakip pulu olan haneye asla inemezsin.'
+      }, {
+        say: 'Art arda kapılar rakibin yolunu <b>keser</b>. 3\'le 8\'deki pulu 5\'e götür ve 4\'ten 9\'a <b>art arda altı kapılık bir duvar — prime</b> — tamamla!',
+        done: 'Tamam! Altılı prime\'ın üzerinden atlanamaz, arkasındaki siyah pul kapana kısıldı.'
+      }, {
+        say: '15 pulun hepsi iç alandayken <b>toplayabilirsin</b> — yani tahtadan çıkarabilirsin. 6\'daki pulu 6\'yla <b>tepsiye</b> topla!',
+        done: 'Tık! Zar en uzaktaki pulundan büyükse onu da toplayabilirsin.'
+      }, {
+        say: '15\'ini de ilk toplayan kazanır! Rakip tek pul bile toplamamışsa <b>mars</b> (iki kat), hâlâ barda ya da senin iç alanında pulu varsa <b>katmerli mars</b> (üç kat)!'
+      }, {
+        say: '<b>Katlama zarı</b> bahsi yükseltir. Sıranda atmadan önce katlama teklif edebilirsin: rakip ya <b>kabul eder</b> (oyun iki kat değerli olur ve zar ona geçer) ya da <b>reddeder</b> (ve mevcut değerle kaybeder).'
+      }, {
+        say: 'Kuralların hepsi bu! İpuçları: olabildiğince az açık pul bırak ve kapıları yan yana kur. Derslerde daha fazla strateji var. Şimdi zarları at ve oyna!'
+      }]
+    },
   };
 
   // the guided move: which checker, where, how far (merged into TXT)
@@ -206,6 +398,10 @@
     de: { tapCk: 'Tippe auf diesen Stein', tapDest: 'Tippe auf die leuchtende Stelle', hintPick: 'Tippe auf den leuchtenden Stein', hintDest: 'Tippe auf die leuchtende Stelle', dieMove: 'Würfel {n} → {n} Zungen weit', mid: 'Gut! Jetzt die <b>1</b>: Zieh einen Stein von 6 auf die <b>5</b>!', done4: 'Zwei Steine auf der 5! Mit <b>zwei oder mehr</b> Steinen darf der Gegner dort nicht hin – du hast <b>einen Punkt gebaut</b>!' },
     hi: { tapCk: 'इस गोटी पर टैप करें', tapDest: 'चमकती जगह पर टैप करें', hintPick: 'चमकती गोटी पर टैप कीजिए', hintDest: 'चमकती जगह पर टैप कीजिए', dieMove: 'पासा {n} → {n} पॉइंट आगे', mid: 'बढ़िया! अब <b>1</b>: 6 वाली गोटी को एक पॉइंट आगे <b>5</b> पर ले जाइए!', done4: '5 पर <b>दो</b> गोटियाँ! जहाँ दो या ज़्यादा गोटियाँ हों, विरोधी वहाँ नहीं रुक सकता — आपने <b>पॉइंट बना</b> लिया!' },
     ar: { tapCk: 'اضغط هذه القطعة', tapDest: 'اضغط المكان المضيء', hintPick: 'اضغط القطعة المضيئة', hintDest: 'اضغط المكان المضيء', dieMove: 'النرد {n} ← تقدّم {n} نقاط', mid: 'أحسنت! والآن الرقم <b>1</b>: انقل قطعة من 6 خطوة واحدة إلى <b>5</b>!', done4: 'قطعتان على 5! مع <b>قطعتين أو أكثر</b> لا يستطيع خصمك النزول هناك — لقد <b>صنعت نقطة</b>!' },
+    ru: { tapCk: 'Нажми на эту шашку', tapDest: 'Нажми на светящееся место', hintPick: 'Нажми на светящуюся шашку', hintDest: 'Нажми на светящееся место', dieMove: '{n} на кубике → пройди {n} пункт.', mid: 'Отлично! Теперь <b>единица</b>: пройди шашкой с 6 на один пункт — на <b>5</b>!', done4: 'Две шашки на 5! Когда там <b>две и больше</b>, соперник не может туда встать — ты <b>занял пункт</b>!' },
+    'zh-TW': { tapCk: '點擊這顆棋子', tapDest: '點擊發光的位置', hintPick: '請點擊發光的棋子', hintDest: '請點擊發光的位置', dieMove: '骰子{n} → 前進{n}點', mid: '很好！接著用<b>1</b>：把6上的棋子往前走1點到<b>5</b>！', done4: '5上有2顆棋子！那裡有<b>2顆以上</b>，對手就不能停進來——你<b>做出了一個點</b>！' },
+    id: { tapCk: 'Ketuk bidak ini', tapDest: 'Ketuk tempat yang menyala', hintPick: 'Ketuk bidak yang menyala', hintDest: 'Ketuk tempat yang menyala', dieMove: '{n} di dadu → maju {n} poin', mid: 'Bagus! Sekarang <b>1</b>: pindahkan bidak dari 6 satu poin ke <b>5</b>!', done4: 'Dua bidak di 5! Dengan <b>dua atau lebih</b> di sana, lawan tak bisa mendarat — kamu sudah <b>membuat poin</b>!' },
+    tr: { tapCk: 'Bu pula dokun', tapDest: 'Parlayan yere dokun', hintPick: 'Parlayan pula dokun', hintDest: 'Parlayan yere dokun', dieMove: 'Zarda {n} → {n} hane ilerle', mid: 'Güzel! Şimdi <b>1</b>: 6\'daki pulu bir hane ilerletip <b>5</b>\'e götür!', done4: '5\'te iki pul! Orada <b>iki ya da daha fazla</b> pul olunca rakip inemez — <b>kapı yaptın</b>!' },
   };
   /* positions: g / b = { point: count } in gold's numbering (24 → 1); bar / off counts
      glow: points that pulse gold · acts: guided single-die moves { from (point | 'bar'), to (point | 'off'), d = index of the die used } · dice: shown at the start */

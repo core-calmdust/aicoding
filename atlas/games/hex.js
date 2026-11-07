@@ -35,6 +35,10 @@
     de: { n: ['Rot', 'Blau'], turn: '{p} am Zug', win: '{p} gewinnt', conn: '{p} hat seine Ränder verbunden', swap: 'Tauschen', swapped: '{p} hat getauscht: Der erste Stein ist blau', taken: 'Das Feld ist besetzt', size: 'Brett', swapOk: 'Stein setzen oder tauschen' },
     hi: { n: ['लाल', 'नीला'], turn: '{p} की बारी', win: '{p} की जीत', conn: '{p} ने अपने किनारे जोड़े', swap: 'स्वैप', swapped: '{p} ने स्वैप किया: पहली गोटी नीली', taken: 'वह खाना भरा है', size: 'बोर्ड', swapOk: 'गोटी रखें या स्वैप करें' },
     ar: { n: ['الأحمر', 'الأزرق'], turn: 'دور {p}', win: 'فوز {p}', conn: 'وصل {p} حافتيه', swap: 'تبديل', swapped: 'بدّل {p}: الحجر الأول صار أزرق', taken: 'هذه الخانة مشغولة', size: 'الرقعة', swapOk: 'ضع حجرًا أو بدّل' },
+    ru: { n: ['Красные', 'Синие'], turn: 'Ход: {p}', win: 'Победа: {p}', conn: '{p}: стороны соединены', swap: 'Обмен', swapped: '{p}: обмен — первый камень теперь синий', taken: 'Эта клетка занята', size: 'Доска', swapOk: 'Поставьте камень или сделайте обмен' },
+    'zh-TW': { n: ['紅方', '藍方'], turn: '輪到{p}', win: '{p}獲勝', conn: '{p}連通了兩邊', swap: '交換', swapped: '{p}選擇交換：第一顆棋子歸藍方', taken: '那一格已經有棋子', size: '棋盤', swapOk: '下一顆棋子，或選擇交換' },
+    id: { n: ['Merah', 'Biru'], turn: 'Giliran {p}', win: '{p} menang', conn: '{p} menghubungkan sisinya', swap: 'Tukar', swapped: '{p} menukar: batu pertama milik Biru', taken: 'Sel itu sudah terisi', size: 'Papan', swapOk: 'Taruh batu, atau tukar' },
+    tr: { n: ['Kırmızı', 'Mavi'], turn: 'Sıra: {p}', win: '{p} kazandı', conn: '{p} kenarlarını birleştirdi', swap: 'Takas', swapped: '{p} takas yaptı: ilk taş Mavi\'nin', taken: 'O hücre dolu', size: 'Tahta', swapOk: 'Taş koy ya da takas yap' },
   };
 
   // a glazed stone set down on walnut: a bright "tock" (respects the portal's sound switch)
@@ -291,6 +295,10 @@
     de: { kyu: '{n}. Kyu', dan: ['1. Dan', '2. Dan', '3. Dan', '4. Dan', '5. Dan'], lvd: ['Einstieg: übersieht oft Drohungen', 'Anfänger bis Klub: baut Brücken, stoppt direkte Drohungen', 'Fortgeschritten: rechnet Leitern und erzwungene Verbindungen', 'Experte: tiefe Suche (denkt länger)'] },
     hi: { kyu: '{n} क्यू', dan: ['1 दान', '2 दान', '3 दान', '4 दान', '5 दान'], lvd: ['शुरुआत: अक्सर विरोधी के ख़तरे चूक जाता है', 'नौसिखिया से क्लब: ब्रिज बनाता है, सीधे ख़तरे रोकता है', 'उन्नत: सीढ़ियाँ और मजबूर कनेक्शन पढ़ता है', 'विशेषज्ञ: गहरी खोज (ज़्यादा सोचता है)'] },
     ar: { kyu: '{n} كيو', dan: ['1 دان', '2 دان', '3 دان', '4 دان', '5 دان'], lvd: ['مبتدئ جدًا: يفوّت كثيرًا تهديدات الخصم', 'مبتدئ إلى نادٍ: يبني الجسور ويوقف التهديدات المباشرة', 'متقدم: يحسب السلالم والاتصالات القسرية', 'خبير: بحث عميق (يفكر وقتًا أطول)'] },
+    ru: { kyu: '{n} кю', dan: ['1 дан', '2 дан', '3 дан', '4 дан', '5 дан'], lvd: ['Новичок: часто не видит угроз соперника', 'Начальный–клубный: строит мостики, блокирует прямые угрозы', 'Продвинутый: считает лесенки и вынужденные связи', 'Эксперт: глубокий поиск (думает дольше)'] },
+    'zh-TW': { kyu: '{n}級', dan: ['初段', '二段', '三段', '四段', '五段'], lvd: ['初學：常漏看對手的威脅', '入門～社團程度：會搭橋、擋住直接威脅', '高級：能算梯子與必然的連接', '最高級：深入搜尋（思考較久）'] },
+    id: { kyu: '{n} kyu', dan: ['1 dan', '2 dan', '3 dan', '4 dan', '5 dan'], lvd: ['Pemula: sering melewatkan ancaman lawan', 'Dasar–klub: membuat jembatan, memblok ancaman langsung', 'Mahir: membaca tangga dan sambungan paksa', 'Ahli: pencarian mendalam (berpikir lebih lama)'] },
+    tr: { kyu: '{n} kyu', dan: ['1 dan', '2 dan', '3 dan', '4 dan', '5 dan'], lvd: ['Acemi: rakibin tehditlerini sık kaçırır', 'Başlangıç–kulüp: köprü kurar, doğrudan tehditleri keser', 'İleri: merdivenleri ve zorunlu bağlantıları okur', 'Uzman: derin arama (daha uzun düşünür)'] },
   };
   const RATING = [0, 630, 740, 850, 1015, 1180, 1345, 1545, 1670, 1735, 1830, 1870, 1910, 1945, 1965, 1985, 2005, 2045, 2085, 2125, 2185];   // hex RT_LV (rated games)
   const W7 = (a, b, c, d, e, f) => [a, a, a, b, b, b, c, c, c, d, d, d, e, e, e, e, e, e, e, f];
@@ -305,6 +313,10 @@
     de: W7('für Einsteiger', 'wenn du die Regeln kennst', 'wenn du den Dreh raus hast', 'für starke Spieler', 'selbst für Profis knifflig', 'die stärkste Stufe'),
     hi: W7('पहली बार खेलने वालों के लिए', 'नियम सीख चुके लोगों के लिए', 'जिन्हें आदत हो रही है उनके लिए', 'मज़बूत खिलाड़ियों के लिए', 'विशेषज्ञों के लिए भी कठिन', 'सबसे मज़बूत स्तर'),
     ar: W7('لمن يلعب أول مرة', 'لمن تعلّم القواعد', 'لمن بدأ يعتاد اللعب', 'للاعبين الأقوياء', 'صعب حتى على الخبراء', 'أقوى مستوى'),
+    ru: W7('для первой игры', 'когда знаете правила', 'когда освоились', 'для сильных игроков', 'трудно даже экспертам', 'самый сильный'),
+    'zh-TW': W7('給第一次玩的人', '懂規則之後', '漸漸上手時', '給高手', '連專家都覺得難', '最強'),
+    id: W7('untuk pemula', 'setelah tahu aturannya', 'mulai terbiasa', 'untuk pemain kuat', 'sulit bahkan bagi ahli', 'yang terkuat'),
+    tr: W7('ilk kez oynayanlar için', 'kuralları bilince', 'alışmaya başlayınca', 'güçlü oyuncular için', 'uzmanlar için bile zor', 'en güçlüsü'),
   };
   function levelInfo(i, lang) {   // i = 1..20 (the game's level: 15 kyu … 5 dan)
     const L = LVN[lang] || LVN.en, W = WHO[lang] || WHO.en;
