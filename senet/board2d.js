@@ -92,7 +92,7 @@
     if (design !== 'night') defs += `<filter id="${id}lt" x="-2%" y="-5%" width="104%" height="110%"><feGaussianBlur in="SourceAlpha" stdDeviation="${design === 'faience' ? 5 : 3.4}" result="b"/>`
       + `<feDiffuseLighting in="b" surfaceScale="${design === 'faience' ? 6 : 4}" diffuseConstant="1" lighting-color="#fff" result="d"><feDistantLight azimuth="235" elevation="${design === 'papyrus' ? 62 : 52}"/></feDiffuseLighting>`
       + `<feSpecularLighting in="b" surfaceScale="${design === 'faience' ? 6 : 4}" specularConstant="${design === 'faience' ? .9 : design === 'tut' ? .45 : .12}" specularExponent="${design === 'faience' ? 26 : 16}" lighting-color="#fff" result="s"><feDistantLight azimuth="235" elevation="${design === 'papyrus' ? 62 : 52}"/></feSpecularLighting>`
-      + `<feComposite in="s" in2="SourceAlpha" operator="in" result="s2"/><feComposite in="SourceGraphic" in2="d" operator="arithmetic" k1="${design === 'papyrus' ? .55 : .85}" k2="${design === 'papyrus' ? .45 : .2}" result="m"/><feComposite in="m" in2="s2" operator="arithmetic" k2="1" k3="1"/><feComposite in2="SourceAlpha" operator="in"/></filter>`;
+      + `<feComposite in="s" in2="SourceAlpha" operator="in" result="s2"/><feComposite in="SourceGraphic" in2="d" operator="arithmetic" k1=".85" k2=".2" result="m"/><feComposite in="m" in2="s2" operator="arithmetic" k2="1" k3="1"/><feComposite in2="SourceAlpha" operator="in"/></filter>`;
     if (design === 'faience') defs += `<filter id="${id}cr" x="0" y="0" width="100%" height="100%"><feTurbulence type="turbulence" baseFrequency=".07" numOctaves="1" seed="21"/><feComponentTransfer><feFuncA type="table" tableValues="0 0 0 0 .8 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"/></feComponentTransfer><feColorMatrix values="0 0 0 0 .02  0 0 0 0 .2  0 0 0 0 .3  0 0 0 .32 0"/><feComposite in2="SourceGraphic" operator="in"/></filter>`;
     if (design === 'papyrus') defs += `<filter id="${id}rg" x="-2%" y="-2%" width="104%" height="104%"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="3" seed="13" result="t"/><feDisplacementMap in="SourceGraphic" in2="t" scale="5" xChannelSelector="R" yChannelSelector="G"/></filter>`
       + `<filter id="${id}pl" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".022" numOctaves="4" seed="6" result="t"/><feColorMatrix in="t" values="0 0 0 0 .86  0 0 0 0 .78  0 0 0 0 .62  0 0 0 -14 4.75" result="flake"/><feComposite in="flake" in2="SourceGraphic" operator="in"/></filter>`
@@ -157,11 +157,14 @@
       nums += `<text x="${x0 + 7}" y="${y0 + 17}" font-size="13" font-weight="700" fill="${p.num}" font-family="system-ui,sans-serif">${sq}</text>`;
     }
     if (design === 'night') body += tiles + marks;
-    else if (design === 'papyrus') {   // painted: the squares, lines and signs in one rough (hand-drawn) layer, then the wall's wear over them
-      body += `<g filter="url(#${id}rg)"><g filter="url(#${id}lt)">${tiles}</g>${marks}</g>`;
-      body += `<rect x="${fx}" y="${fy}" width="${fw}" height="${fh}" rx="${rad}" fill="#fff" filter="url(#${id}pl)" opacity=".75"/>`;   // 剥落（漆喰の地が見える）
-      body += `<rect x="${fx}" y="${fy}" width="${fw}" height="${fh}" rx="${rad}" fill="#fff" filter="url(#${id}ck)"/>`;   // ひび
-      body += `<rect x="${fx}" y="${fy}" width="${fw}" height="${fh}" rx="${rad}" fill="#f4ead2" opacity=".12"/>`;   // 色あせ
+    else if (design === 'papyrus') {   // the board itself stays a clean painted board; only its surround is the tomb wall (worn, cracked)
+      const [ix, iy] = cellXY(o, 0, 0), [jx, jy] = cellXY(o, 2, 9), qx = Math.min(ix, jx) - 62, qy = Math.min(iy, jy) - 62, qw = Math.abs(jx - ix) + 124, qh = Math.abs(jy - iy) + 124;
+      // the board: a painted wooden panel set into the wall (its own shadow on the plaster, a thin ochre edge)
+      body += `<rect x="${qx + 3}" y="${qy + 5}" width="${qw}" height="${qh}" rx="6" fill="#3a2412" opacity=".35" filter="url(#${id}sf)"/><rect x="${qx}" y="${qy}" width="${qw}" height="${qh}" rx="6" fill="#6e4122"/><rect x="${qx}" y="${qy}" width="${qw}" height="${qh}" rx="6" fill="#8b5530" filter="url(#${id}wd)"/><rect x="${qx + 2}" y="${qy + 2}" width="${qw - 4}" height="${qh - 4}" rx="5" fill="none" stroke="#c9952e" stroke-width="2.5" opacity=".8"/>`;
+      defs += `<filter id="${id}sf" x="-5%" y="-10%" width="110%" height="120%"><feGaussianBlur stdDeviation="6"/></filter><filter id="${id}wd" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="${V ? '.12 .006' : '.006 .12'}" numOctaves="4" seed="5"/><feColorMatrix values="0 0 0 0 .3  0 0 0 0 .16  0 0 0 0 .07  0 0 0 .8 -.25"/><feComposite in2="SourceGraphic" operator="in"/></filter>`;
+      body += `<g filter="url(#${id}lt)">${tiles}</g>${marks}`;
+      defs += `<mask id="${id}fr"><rect x="${fx}" y="${fy}" width="${fw}" height="${fh}" fill="#fff"/><rect x="${qx}" y="${qy}" width="${qw}" height="${qh}" rx="6" fill="#000"/></mask>`;
+      body += `<g mask="url(#${id}fr)"><rect x="${fx}" y="${fy}" width="${fw}" height="${fh}" rx="${rad}" fill="#fff" filter="url(#${id}pl)" opacity=".7"/><rect x="${fx}" y="${fy}" width="${fw}" height="${fh}" rx="${rad}" fill="#fff" filter="url(#${id}ck)"/></g>`;
     } else body += `<g filter="url(#${id}lt)">${tiles}</g>${marks}`;
     body += nums;
     if (design !== 'papyrus') body += `<rect x="${fx}" y="${fy}" width="${fw}" height="${fh}" rx="${rad}" fill="url(#${id}sh)"/>`;
@@ -190,8 +193,12 @@
   // spool (Light) and cone (Dark) seen a little from above. viewBox 0 0 100 100, standing at (50, 82). Shaded as turned, rounded
   // solids: a cylindrical light across (key light upper left, a rim light on the right), darker toward the foot, a soft specular
   // streak (blurred, not a hard shape) and the material's own surface (ivory grain, ebony grain, glaze pooling, metal bands)
+  // the pieces and sticks are pictures of the 3D models (senet/sprites.js, made by senet/tools/make_sprites.py): real turned
+  // ivory, ebony, glaze and gold; the vector drawings below are only the fallback when sprites.js is not loaded
+  const SPR = k => (window.SENET_SPRITES || {})[k];
   function pieceSVG(p, side, pcs) {
     pcs = PSTY[pcs] ? pcs : 'tut';
+    if (SPR(pcs + side)) return `<image href="${SPR(pcs + side)}" x="0" y="0" width="100" height="100"/>`;
     const [hi, mid, lo, edge] = PSTY[pcs][side], mat = PMAT[pcs][side], g = `${p}g${side}`, k = `${p}k${side}`, v = `${p}v${side}`, f = `${p}f${side}`, t = `${p}t${side}`, n = `${p}n${side}`;
     const metal = mat === 'metal', glaze = mat === 'glaze', matte = mat === 'matte';
     const across = metal
@@ -490,6 +497,7 @@
   };
   // a flat stick, slightly rounded across (lit from the upper left): the white face painted with bands and a lozenge, the back plain wood
   function stickSVG(up, sty, id) {
+    if (SPR('stick1')) return `<image href="${SPR(up ? 'stick1' : 'stick0')}" x="-17" y="-76" width="34" height="152" preserveAspectRatio="none"/>`;   // (the 3D stick: same for every piece set)
     const c = STK[sty] || STK.tut, R = 'x="-12" y="-62" width="24" height="124" rx="11"';
     if (up) return `<rect ${R} fill="url(#${id}w)" stroke="${c.w3}" stroke-width="1.6"/><rect ${R} fill="url(#${id}v)"/>`
       + `<path d="M-8 -46h16M-8 -39h16M-8 46h16M-8 39h16" stroke="${c.line}" stroke-width="3" stroke-linecap="round" opacity=".85"/><path d="M0 -28 L7 0 L0 28 L-7 0 Z" fill="${c.blue}" fill-opacity=".18" stroke="${c.line}" stroke-width="2.2" opacity=".85"/>`
@@ -501,25 +509,26 @@
     let sty = piecesKey(opts.style), cur = [0, 0, 0, 0], busy = false;
     const id = 'snd' + (++uid) + '_';
     host.innerHTML = '';
-    const svg = el('svg', { viewBox: '-128 -70 256 140', class: 'sn-sticks', style: 'display:block;width:100%;height:100%;overflow:visible' }, host);
+    const svg = el('svg', { viewBox: '-162 -46 324 92', class: 'sn-sticks', style: 'display:block;width:100%;height:100%;overflow:visible' }, host);
     const mkDefs = () => { const c = STK[sty] || STK.tut; return `<defs><linearGradient id="${id}w" x1="0" x2="1"><stop offset="0" stop-color="${c.w2}"/><stop offset=".3" stop-color="${c.w}"/><stop offset=".62" stop-color="${c.w}"/><stop offset="1" stop-color="${c.w3}"/></linearGradient>`
       + `<linearGradient id="${id}b" x1="0" x2="1"><stop offset="0" stop-color="${c.b2}"/><stop offset=".32" stop-color="${c.b}"/><stop offset=".6" stop-color="${c.b}"/><stop offset="1" stop-color="${c.b2}"/></linearGradient>`
       + `<linearGradient id="${id}v" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".18"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".16"/></linearGradient>`
       + `<pattern id="${id}g" width="24" height="124" patternUnits="userSpaceOnUse" x="-12" y="-62"><path d="M3 0 C6 30 1 62 5 124 M9 0 C12 40 7 80 11 124 M15 0 C13 36 18 70 15 124 M20 0 C22 44 18 90 21 124" fill="none" stroke="#1e0f05" stroke-opacity=".35" stroke-width="1.1"/><path d="M6 0 C9 50 4 90 8 124 M17 0 C15 52 20 96 18 124" fill="none" stroke="#f3c890" stroke-opacity=".18" stroke-width="1"/></pattern>`
       + `<filter id="${id}bl" x="-1" y="-.2" width="3" height="1.4"><feGaussianBlur stdDeviation="1.6"/></filter>`
       + `<radialGradient id="${id}s"><stop offset="0" stop-color="#000" stop-opacity=".55"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient></defs>`; };
-    const X = [-90, -30, 30, 90];
-    const rest = X.map((x, i) => ({ x, y: 0, a: [-6, 3, -2, 7][i] }));
+    // the sticks lie across the strip, two by two (the strip is long and low: lying down they are drawn much larger)
+    const X = [-78, 78, -80, 76], Y0 = [-21, -23, 21, 22], A0 = [92, 87, 89, 94];
+    const rest = X.map((x, i) => ({ x, y: Y0[i], a: A0[i] }));
     function draw(d, poses) {
       let s = mkDefs();
       d.forEach((u, i) => { const q = poses ? poses[i] : rest[i]; s += `<g transform="translate(${q.x.toFixed(1)} ${(q.y + 8).toFixed(1)}) rotate(${q.a.toFixed(1)})" opacity="${q.sh == null ? 1 : q.sh}"><ellipse rx="20" ry="68" fill="url(#${id}s)"/></g>`; });
       d.forEach((u, i) => { const q = poses ? poses[i] : rest[i]; const sx = q.flip == null ? 1 : q.flip; s += `<g transform="translate(${q.x.toFixed(1)} ${q.y.toFixed(1)}) rotate(${q.a.toFixed(1)}) scale(${Math.max(.08, Math.abs(sx)).toFixed(3)} ${(q.k || 1).toFixed(3)})">${stickSVG(sx >= 0 ? u : 1 - u, sty, id)}</g>`; });
       svg.innerHTML = s;
     }
-    function show(d) { cur = d.slice(); rest.forEach((q, i) => { q.a = [-6, 3, -2, 7][i] + (Math.random() - .5) * 6; }); draw(cur); }
+    function show(d) { cur = d.slice(); rest.forEach((q, i) => { q.a = A0[i] + (Math.random() - .5) * 6; }); draw(cur); }
     async function roll(d, o2 = {}) {
       busy = true; const sp = o2.speed || 1, ms = 760 / sp, from = o2.side ? -1 : 1;
-      const st = X.map((x, i) => ({ x0: x + (Math.random() - .5) * 60, y0: from * (120 + Math.random() * 40), spin: (Math.random() < .5 ? -1 : 1) * (200 + Math.random() * 300), flips: 3 + (Math.random() * 3 | 0), delay: i * 40 + Math.random() * 30, end: [-6, 3, -2, 7][i] + (Math.random() - .5) * 8 }));
+      const st = X.map((x, i) => ({ x0: x + (Math.random() - .5) * 60, y0: from * (120 + Math.random() * 40), spin: (Math.random() < .5 ? -1 : 1) * (200 + Math.random() * 300), flips: 3 + (Math.random() * 3 | 0), delay: i * 40 + Math.random() * 30, end: A0[i] + (Math.random() - .5) * 8 }));
       let hit = [0, 0, 0, 0];
       await tween(ms + 160, t => {
         const T = t * (ms + 160);
@@ -528,7 +537,7 @@
           if (u > .62 && !hit[i]) { hit[i] = 1; if (o2.onHit) try { o2.onHit(i, 1); } catch (e) {} }
           const bounce = u > .62 ? Math.abs(Math.sin((u - .62) / .38 * Math.PI * 2)) * (1 - u) * 18 : 0;
           const ph = (1 - e) * q.flips * Math.PI;   // 裏返り
-          return { x: q.x0 + (X[i] - q.x0) * e, y: q.y0 * (1 - e) - bounce, a: q.end + (1 - e) * q.spin, flip: Math.cos(ph), k: 1 + (1 - e) * .25, sh: .4 + .6 * e };
+          return { x: q.x0 + (X[i] - q.x0) * e, y: Y0[i] + q.y0 * (1 - e) - bounce, a: q.end + (1 - e) * q.spin, flip: Math.cos(ph), k: 1 + (1 - e) * .25, sh: .4 + .6 * e };
         });
         draw(d, poses);
       });

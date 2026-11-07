@@ -255,7 +255,7 @@
     document.addEventListener('keydown', onKey);
 
     /* ---------- go ---------- */
-    loadJS(BASE + 'board2d.js' + EV, () => !!window.SenetBoard2D).catch(() => null).then(loadEngine).then(e => {
+    loadJS(BASE + 'sprites.js?v=1', () => !!window.SENET_SPRITES).catch(() => null).then(() => loadJS(BASE + 'board2d.js?v=4', () => !!window.SenetBoard2D)).catch(() => null).then(loadEngine).then(e => {
       if (stopped) return; E = e;
       kit = window.SenetKit.make(T3, { design: dsg, pieces: look, sfx: k => SND[k] && SND[k]() });
       frame();

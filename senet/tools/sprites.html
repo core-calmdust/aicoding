@@ -1,0 +1,47 @@
+<!doctype html><meta charset="utf-8">
+<!-- senet/tools/sprites.html — renders the 3D pieces and throw sticks (atlas/models/senet.js) to transparent pictures for the 2D
+     board (senet/board2d.js uses them). Run by senet/tools/make_sprites.py (headless Chrome), which saves them as webp and
+     writes senet/sprites.js. Pieces: 3/4 view from above, the foot at (50 %, 82 %), the same frame as the old vector pieces. -->
+<body style="margin:0;background:transparent">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="../../atlas/table3d.js"></script>
+<script src="../../atlas/models/senet.js"></script>
+<script>
+const TT = THREE, X = Table3D, S3 = X.senet;
+const R = new TT.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+R.outputEncoding = TT.sRGBEncoding; R.toneMapping = TT.ACESFilmicToneMapping; R.toneMappingExposure = 1.05; R.physicallyCorrectLights = true;
+R.setPixelRatio(1); R.shadowMap.enabled = false;
+document.body.appendChild(R.domElement);
+function envMap() {   // a soft studio: a warm room, a big softbox upper left, a strip light on the right
+  const env = new TT.Scene();
+  const room = new TT.Mesh(new TT.SphereGeometry(20, 32, 16), new TT.MeshBasicMaterial({ color: 0x4a3c2c, side: TT.BackSide })); env.add(room);
+  const box = (c, w, h, x, y, z) => { const m = new TT.Mesh(new TT.PlaneGeometry(w, h), new TT.MeshBasicMaterial({ color: c, side: TT.DoubleSide })); m.position.set(x, y, z); m.lookAt(0, 0, 0); env.add(m); };
+  box(0xfff2dc, 14, 10, -10, 12, 6); box(0xffffff, 3, 16, 14, 4, -4); box(0x9a8a70, 30, 6, 0, -12, 0);
+  const pm = new TT.PMREMGenerator(R); const t = pm.fromScene(env, .04).texture; pm.dispose(); return t;
+}
+const ENV = envMap();
+function scene() {
+  const sc = new TT.Scene(); sc.environment = ENV;
+  const key = new TT.DirectionalLight(0xfff1dc, 2.6); key.position.set(-3, 5, 3); sc.add(key);
+  const rim = new TT.DirectionalLight(0xdfe8ff, 1.2); rim.position.set(4, 2, -2); sc.add(rim);
+  sc.add(new TT.HemisphereLight(0xfff6e6, 0x3a2a1a, .6));
+  return sc;
+}
+// one piece → PNG data URL (size px square)
+window.renderPiece = (side, look, size, elevDeg) => {
+  R.setSize(size, size); const sc = scene(); const p = S3.piece(side, look); sc.add(p);
+  const W = 1.36, el = elevDeg * Math.PI / 180, yc = .33 / Math.cos(el);
+  const cam = new TT.OrthographicCamera(-W / 2, W / 2, W / 2, -W / 2, .1, 50);
+  const tgt = new TT.Vector3(0, yc, 0); cam.position.set(0, yc + Math.sin(el) * 10, Math.cos(el) * 10); cam.lookAt(tgt);
+  R.setClearColor(0, 0); R.render(sc, cam); return R.domElement.toDataURL('image/png');
+};
+// one stick seen from straight above (its length up the picture), light face up or down → PNG
+window.renderStick = (white, w, h) => {
+  R.setSize(w, h); const sc = scene(); const g = S3.stick(); S3.stickUp(g, white, 0); sc.add(g);
+  const L = S3.STK.L * 1.04, k = w / h;
+  const cam = new TT.OrthographicCamera(-L * k / 2, L * k / 2, L / 2, -L / 2, .1, 50);
+  cam.position.set(-.6, 8, .9); cam.up.set(0, 0, -1); cam.lookAt(0, 0, 0);
+  R.setClearColor(0, 0); R.render(sc, cam); return R.domElement.toDataURL('image/png');
+};
+window.ready = true;
+</script>

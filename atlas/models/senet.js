@@ -41,7 +41,7 @@
     return (b2p = new Promise(res => {
       if (window.SenetBoard2D) return res();
       const sc = document.createElement('script'), base = /\/(atlas|senet)\//.test(location.pathname) ? '../senet/' : 'senet/';
-      sc.src = base + 'board2d.js?v=3'; sc.onload = () => res(); sc.onerror = () => res(); document.head.appendChild(sc);
+      sc.src = base + 'board2d.js?v=4'; sc.onload = () => res(); sc.onerror = () => res(); document.head.appendChild(sc);
     }));
   }
   function topTex(design) {
@@ -131,15 +131,34 @@
     const g = new TT.LatheGeometry(pts, LO() ? 18 : 30); if (X.share) X.share(g); return (geos.cone = g);
   }
   const PIECES = {
-    tut: [{ color: '#efe2c3', roughness: .42, clearcoat: .3 }, { color: '#22150c', roughness: .3, clearcoat: .7 }],
-    faience: [{ color: '#f4f2e6', roughness: .2, clearcoat: .9 }, { color: '#2a95c4', roughness: .18, clearcoat: .9 }],
-    gold: [{ color: '#e9b94a', roughness: .28, metalness: .95 }, { color: '#2a46a8', roughness: .35, metalness: .05, clearcoat: .6 }],
-    modern: [{ color: '#ead6b3', roughness: .5 }, { color: '#2a2c36', roughness: .25, clearcoat: .8 }],
+    tut: [{ color: '#ecdab2', roughness: .4, clearcoat: .35, tex: 'ivory' }, { color: '#2a1a0f', roughness: .3, clearcoat: .7, tex: 'ebony' }],
+    faience: [{ color: '#f4f2e6', roughness: .2, clearcoat: .9, tex: 'glazeW' }, { color: '#2a95c4', roughness: .18, clearcoat: .9, tex: 'glazeB' }],
+    gold: [{ color: '#e9b94a', roughness: .28, metalness: .95, tex: 'metal' }, { color: '#2a46a8', roughness: .35, metalness: .05, clearcoat: .6, tex: 'lapis' }],
+    modern: [{ color: '#ead6b3', roughness: .5, tex: 'fine' }, { color: '#2a2c36', roughness: .25, clearcoat: .8, tex: 'fine' }],
   };
+  // the turned pieces' surfaces (lathe UVs: u around, v up): ivory with fine lengthwise streaks and lathe rings, ebony grain,
+  // a glaze with its uneven depth and specks, gold with turning marks, lapis with its gold flecks and white veins
+  function pieceTex(kind) {
+    return X.canvasTex('snPc' + kind, 256, 128, (c, w, h) => {
+      let sd = kind.length * 97 + 13; const rnd = () => (sd = (sd * 9301 + 49297) % 233280) / 233280;
+      const base = { ivory: '#ffffff', ebony: '#ffffff', glazeW: '#ffffff', glazeB: '#ffffff', metal: '#ffffff', lapis: '#ffffff', fine: '#ffffff' }[kind];
+      c.fillStyle = base; c.fillRect(0, 0, w, h);
+      const streaks = (n, col, a, lw) => { for (let i = 0; i < n; i++) { const x = rnd() * w; c.strokeStyle = col; c.globalAlpha = a * (.3 + rnd() * .7); c.lineWidth = lw * (.5 + rnd()); c.beginPath(); c.moveTo(x, 0); c.bezierCurveTo(x + (rnd() - .5) * 8, h * .33, x + (rnd() - .5) * 8, h * .66, x + (rnd() - .5) * 6, h); c.stroke(); } c.globalAlpha = 1; };
+      const rings = (n, col, a) => { for (let i = 0; i < n; i++) { const y = rnd() * h; c.fillStyle = col; c.globalAlpha = a * (.4 + rnd() * .6); c.fillRect(0, y, w, .6 + rnd() * 1.4); } c.globalAlpha = 1; };
+      const blots = (n, col, a, r) => { for (let i = 0; i < n; i++) { const x = rnd() * w, y = rnd() * h, rr = r * (.4 + rnd()); const g = c.createRadialGradient(x, y, 0, x, y, rr); g.addColorStop(0, col); g.addColorStop(1, 'rgba(0,0,0,0)'); c.globalAlpha = a * (.4 + rnd() * .6); c.fillStyle = g; c.fillRect(x - rr, y - rr, rr * 2, rr * 2); } c.globalAlpha = 1; };
+      if (kind === 'ivory') { blots(30, '#d9c49a', .35, 30); streaks(70, '#c7ad7c', .35, 1.2); rings(10, '#b89a66', .25); blots(6, '#fffaf0', .5, 26); }
+      else if (kind === 'ebony') { streaks(120, '#000000', .55, 1.4); streaks(40, '#8a5a36', .35, 1); blots(8, '#5a3a22', .35, 24); }
+      else if (kind === 'glazeW') { blots(40, '#cfe6e2', .35, 26); blots(20, '#b9c9b8', .25, 18); for (let i = 0; i < 60; i++) { c.fillStyle = '#7a8a80'; c.globalAlpha = .35; c.fillRect(rnd() * w, rnd() * h, 1.2, 1.2); } c.globalAlpha = 1; }
+      else if (kind === 'glazeB') { blots(40, '#0d5a86', .45, 26); blots(30, '#9fe6ff', .3, 18); for (let i = 0; i < 70; i++) { c.fillStyle = '#062a40'; c.globalAlpha = .4; c.fillRect(rnd() * w, rnd() * h, 1.4, 1.4); } c.globalAlpha = 1; }
+      else if (kind === 'metal') { rings(70, '#9a7a3a', .3); rings(30, '#fff6d8', .3); blots(10, '#c99a40', .3, 30); }
+      else if (kind === 'lapis') { blots(40, '#16287a', .45, 26); blots(12, '#c9d4ff', .25, 10); for (let i = 0; i < 80; i++) { c.fillStyle = '#f6d47a'; c.globalAlpha = .7; c.fillRect(rnd() * w, rnd() * h, 1.1, 1.1); } c.globalAlpha = 1; }
+      else { blots(30, '#d0d0d0', .2, 20); }
+    });
+  }
   function piece(side, look) {
     look = PIECES[look] ? look : 'tut';
     const TT = T(), g = new TT.Group();
-    const m = mat('pc' + look + side, () => phys(Object.assign({ envMapIntensity: 1 }, PIECES[look][side])));
+    const m = mat('pc' + look + side, () => { const o = Object.assign({ envMapIntensity: 1 }, PIECES[look][side]), k = o.tex; delete o.tex; if (k && X.canvasTex) { o.map = pieceTex(k); o.bumpMap = o.map; o.bumpScale = .004; } return phys(o); });
     const body = new TT.Mesh(side === 0 ? spoolGeo() : coneGeo(), m); body.castShadow = true; body.receiveShadow = true; g.add(body);
     if (look === 'faience' || look === 'gold') {   // a painted band
       const bm = mat('pb' + look + side, () => phys({ color: look === 'gold' ? (side ? '#e9b94a' : '#2a46a8') : (side ? '#0c2f45' : '#2a95c4'), roughness: .3, metalness: look === 'gold' && side ? .9 : 0 }));
