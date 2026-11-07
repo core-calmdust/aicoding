@@ -229,7 +229,7 @@
     fitTitle();
     if (titleOnly && $('props').childElementCount) return;   // (the font arrived: only the title is redrawn, the pieces keep floating)
     $('props').innerHTML = PROPS.filter((_, i) => !phone || i < 17).map(([img, gid, x, y, w, r], i) => `<span class="pp" data-g="${gid}" style="--x:${x}%;--y:${y}%;--w:${Math.round(w * (phone ? .44 : 1))}px;--r:${r}deg"><img src="../images/atlas/p-${img}.webp?v=2" alt="" decoding="async"></span>`).join('');
-    $('props').querySelectorAll('[data-g]').forEach(b => b.onclick = () => { hop(b, true); SFX.boing(40); SFX.whoosh(110, .19); SFX.whoosh(290, .19); SFX.tok(515); setTimeout(() => openBoard(b.dataset.g), 380); });   // (the same sounds as a game icon's leap into the 3D view)
+    $('props').querySelectorAll('[data-g]').forEach(b => b.onclick = () => { hop(b, true); SFX.shimmer(60); SFX.chime(290); setTimeout(() => openBoard(b.dataset.g), 380); });   // (the sparkle a game icon ends on when its board appears)
     startProps();
   }
   /* floating pieces: bob + sway, random hops/spins, follow the pointer / phone tilt a little (JS, so it runs on every browser) */
