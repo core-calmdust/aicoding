@@ -1288,6 +1288,7 @@ const settings = { mode: 'ai', color: 1, level: 5, level2: 5, anim: true, sound:
 const SUPPORTED = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); if (/^zh-(tw|hk|mo|hant)/.test(n)) return 'zh-TW'; return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
+const AIW = () => ({ ru: 'ИИ', tr: 'YZ' })[LANG] || 'AI';   // the word "AI" in displayed player labels (ru / tr use their own abbreviation; saved records keep 'AI')
 // ---------------------------------------------------------------- board + disc skins (CSS: html[data-bd]; mini boards: SK_PAL)
 const SK_KEYS = ['lagoon', 'classic', 'walnut', 'neon', 'porcelain'], SK_STORE = 'connect4-skin';
 const SK_PAL = {   // frame, frame edge, plate, hole, hole rim, first / second disc [light, dark]
@@ -1646,8 +1647,8 @@ function playerName(p) {
   if (puzzle) return p === puzzle.me ? t('you') : t('defender');
   if (settings.mode === 'online' && window.olPlayerName) return olPlayerName(p);
   if (settings.mode === 'pvp') return '';
-  if (settings.mode === 'watch') return `AI ${LV(levelFor(p))}`;
-  return p === humanColor ? t('you') : `AI ${LV(settings.level)}`;
+  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(p))}`;
+  return p === humanColor ? t('you') : `${AIW()} ${LV(settings.level)}`;
 }
 let thinking = 0;  // color currently thinking
 function renderInfo() {
@@ -1679,7 +1680,7 @@ function renderInfo() {
   if (reviewing) $('#reviewText').textContent = t('review.viewing', { n: cur, m: moves.length });
   renderReview();
   hbInfo(shown, st, tm, ev);
-  $('#infoLine').textContent = `${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? 'AI Lv.' + settings.level + ' ' + LV(settings.level) : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`;
+  $('#infoLine').textContent = `${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? AIW() + ' Lv.' + settings.level + ' ' + LV(settings.level) : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`;
   if (window.olAfterInfo) olAfterInfo();
   if (window.C4Coach) C4Coach.render();
 }
@@ -2969,7 +2970,7 @@ function rvJudge(i) {
   const ok = !q && rankOf(mine) >= rankOf(best) - (both ? 3 : 0);
   return { q, ok, desc, best: best.c, c, loss: sOf(best) - sOf(mine), mine, bestE: best };
 }
-function sideLabel(p) { return settings.mode === 'ai' ? (p === humanColor ? t('you') : 'AI') : pname(p); }
+function sideLabel(p) { return settings.mode === 'ai' ? (p === humanColor ? t('you') : AIW()) : pname(p); }
 function renderReview() { renderReview0(); if (window.RvBox) RvBox.refresh(); }
 function renderReview0() {
   const card = $('#reviewCard');
@@ -3317,7 +3318,7 @@ document.addEventListener('keydown', e => {
   navGo(k);
 });
 </script>
-<script src="rated.js?v=20261107l14"></script><!-- レーティング戦 -->
+<script src="rated.js?v=20261107l14-ai1"></script><!-- レーティング戦 -->
 <script src="online-ui.js?v=20261030ckp"></script><!-- オンライン対戦・Google連携 -->
 <!-- World Board Game Atlas portal skin: connect4/?skin=atlas — 3D leather & walnut tile tower (tiles fall between the rails), guide speech bubbles, portal look (all features kept) -->
 <script>

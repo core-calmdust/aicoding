@@ -1716,6 +1716,7 @@ const settings = { mode: 'ai', color: 1, clock: 0, level: 14, level2: 14, lvV: 2
 const SUPPORTED = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); if (n.startsWith('zh')) return /^zh-(tw|hk|mo|hant)/.test(n) ? 'zh-TW' : 'zh'; return SUPPORTED.find(l => n.startsWith(l)) || 'en'; }
 let LANG = detectLang();
+const AIW = () => ({ ru: 'ИИ', tr: 'YZ' })[LANG] || 'AI';   // the word "AI" in displayed player labels (ru / tr use their own abbreviation; saved records keep 'AI')
 function t(k, v) { let x = (I18N[LANG] || I18N.en)[k]; if (x === undefined) x = I18N.en[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
 const cname = c => t(c === BLACK ? 'black' : 'white');
 function applyI18n() {
@@ -2100,9 +2101,9 @@ function showHints(list, done) {
 function playerName(color) {
   if (settings.mode === 'online') { const g = net && net.game; if (!g) return '…'; const nm = color === BLACK ? g.bn : g.wn, r = color === BLACK ? g.br : g.wr; return (color === net.me ? t('you') + ' · ' : '') + nm + ' (' + r + ')'; }
   if (settings.mode === 'pvp') return cname(color);
-  if (settings.mode === 'watch') return 'AI ' + LV(color === BLACK ? settings.level : settings.level2);
-  if (rated && settings.mode === 'ai') return color === humanColor ? t('you') + ' · R' + rated.my : 'AI ' + rtLvName(rated.lv) + ' · R' + rated.or;
-  return color === humanColor ? t('you') : 'AI ' + LV(settings.level);
+  if (settings.mode === 'watch') return AIW() + ' ' + LV(color === BLACK ? settings.level : settings.level2);
+  if (rated && settings.mode === 'ai') return color === humanColor ? t('you') + ' · R' + rated.my : AIW() + ' ' + rtLvName(rated.lv) + ' · R' + rated.or;
+  return color === humanColor ? t('you') : AIW() + ' ' + LV(settings.level);
 }
 // header bar (PC): whose turn, disc count, evaluation, move number
 function hbInfo(p, b, w, ev) {
@@ -4220,7 +4221,7 @@ function rvLoss(i) {   // loss of the move that led to position i (from the move
   const mine = p.ana.find(x => x.move === positions[i].last); if (!mine) return null;
   return { loss: Math.max(0, best - mine.score), best: bm };
 }
-function sideLabel(c) { return settings.mode === 'ai' ? (c === humanColor ? t('you') : 'AI') : cname(c); }
+function sideLabel(c) { return settings.mode === 'ai' ? (c === humanColor ? t('you') : AIW()) : cname(c); }
 // review: explain only the move at the current position (like shogi)
 const RV_CN = [0, 7, 56, 63], RV_X = [9, 14, 49, 54], RV_C = [1, 8, 6, 15, 48, 57, 55, 62];
 function rvSqKind(q, cells) {

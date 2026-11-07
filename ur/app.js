@@ -22,6 +22,7 @@ function detectLang() {
   return SUPPORTED.find(c => c !== 'zh-TW' && n.startsWith(c.toLowerCase())) || 'en';
 }
 let LANG = detectLang();
+const AIW = () => ({ ru: 'ИИ', tr: 'YZ' })[LANG] || 'AI';   // the word "AI" in displayed player labels (ru / tr use their own abbreviation; saved records keep 'AI')
 function t(k, v) {
   let x = (I18N[LANG] || I18N.en)[k]; if (x === undefined) x = I18N.en[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k;
   if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : '');
@@ -360,8 +361,8 @@ function homeCount(st, s) { const g = E.RULES[st.rule].goal; return st.pos[s].fi
 function playerName(s) {
   if (settings.mode === 'online' && typeof olPlayerName === 'function') return olPlayerName(s);
   if (settings.mode === 'pvp') return sideName(s);
-  if (settings.mode === 'watch') return 'AI ' + LV(levelFor(s));
-  return s === game.human ? t('you') : 'AI ' + LV(levelFor(s)) + (rgame && !phone() ? ` (R${rgame.or})` : '');   // (phones: the narrow card shows the level only)
+  if (settings.mode === 'watch') return AIW() + ' ' + LV(levelFor(s));
+  return s === game.human ? t('you') : AIW() + ' ' + LV(levelFor(s)) + (rgame && !phone() ? ` (R${rgame.or})` : '');   // (phones: the narrow card shows the level only)
 }
 function renderInfo() {
   const st = curState(), rl = E.RULES[st.rule], rc = E.raceCount(st), sta = special ? { over: false } : statusAt(cur);

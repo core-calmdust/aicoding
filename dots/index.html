@@ -1174,6 +1174,7 @@ const STORE = 'dots-emerald-v1', LSTORE = 'dots-lessons-v1', PSTORE = 'dots-puzz
 const SUPPORTED = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); if (/^zh-(tw|hk|mo|hant)/.test(n)) return 'zh-TW'; return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
+const AIW = () => ({ ru: 'ИИ', tr: 'YZ' })[LANG] || 'AI';   // the word "AI" in displayed player labels (ru / tr use their own abbreviation; saved records keep 'AI')
 function t(k, v) { let x = (I18N[LANG] || I18N.en)[k]; if (x === undefined) x = I18N.en[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
 function applyI18n() {
   document.documentElement.lang = LANG === 'zh' ? 'zh-CN' : LANG;
@@ -1241,7 +1242,7 @@ function save() {
 function playerName(i) {
   if (lesson || puzzle) return learnPlayerName(i);
   if (settings.mode === 'online' && window.olPlayerName) return olPlayerName(i);
-  if (settings.mode === 'ai') return i === game.human ? t('you') : 'AI ' + t('lv')[settings.level];
+  if (settings.mode === 'ai') return i === game.human ? t('you') : AIW() + ' ' + t('lv')[settings.level];
   if (settings.mode === 'watch') return (i === 0 ? t('aiA') : t('aiB')) + ' ' + t('lv')[i === 0 ? settings.level : settings.level2];
   return i === 0 ? t('pA') : t('pB');
 }
@@ -2277,7 +2278,7 @@ document.querySelector('#rsRestart').onclick = () => { document.querySelector('#
 document.querySelector('#rsResume').onclick = () => { document.querySelector('#resumeOverlay').classList.remove('show'); if ((window.rtGame && rtGame()) || settings.mode === 'online') { if (viewPly !== null) viewAt(null); return; } openNew(true); };   // the settings dialog in resume mode (rated games go on as they are)
 </script>
 <script src="online-ui.js?v=20261030rsp"></script>
-<script src="rated.js?v=20261021rsg"></script><!-- learn-ui: レーティング戦 -->
+<script src="rated.js?v=20261021rsg-ai1"></script><!-- learn-ui: レーティング戦 -->
 <!-- World Board Game Atlas portal skin: dots/?skin=atlas — 3D spiral notebook with red / blue ballpoint lines, guide speech bubbles, portal look (all features kept) -->
 <script>
 (function () {

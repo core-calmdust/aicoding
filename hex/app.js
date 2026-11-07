@@ -42,6 +42,7 @@ const settings = { mode: 'ai', n: 11, swap: true, color: 1, level: 6, level2: 6,
 const SUPPORTED = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); if (/^zh-(tw|hk|mo|hant)/.test(n)) return 'zh-TW'; return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
+const AIW = () => ({ ru: 'ИИ', tr: 'YZ' })[LANG] || 'AI';   // the word "AI" in displayed player labels (ru / tr use their own abbreviation; saved records keep 'AI')
 function t(k, v) { let x = (I18N[LANG] || I18N.en)[k]; if (x === undefined) x = I18N.en[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
 const pname = p => t(p === P1 ? 'p1' : 'p2');
 // AI strength: 20 steps, 15級 (1) … 1級 (15), 初段 (16) … 五段 (20)
@@ -422,9 +423,9 @@ function playerName(p) {
   if (lesson) return '';
   if (settings.mode === 'online' && window.olPlayerName) return olPlayerName(p);
   if (settings.mode === 'pvp') return '';
-  if (settings.mode === 'watch') return `AI ${LV(levelFor(p))}`;
-  if (rgame) return p === humanColor ? t('you') + ' · R' + rgame.my : `AI ${rtLvName(rgame.lv)} · R${rgame.or}`;
-  return p === humanColor ? t('you') : `AI ${LV(settings.level)}`;
+  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(p))}`;
+  if (rgame) return p === humanColor ? t('you') + ' · R' + rgame.my : `${AIW()} ${rtLvName(rgame.lv)} · R${rgame.or}`;
+  return p === humanColor ? t('you') : `${AIW()} ${LV(settings.level)}`;
 }
 let thinking = 0, animating = false;
 function renderInfo() {
@@ -457,7 +458,7 @@ function renderInfo() {
   $('#reviewBar').classList.toggle('show', reviewing && !lesson && !puzzle);
   renderReview();
   const sz = `${pos.n}×${pos.n}${!startSpec && gSwap ? ' · ' + t('ng.swapShort') : ''}`;
-  $('#infoLine').textContent = `${sz}  ·  ${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? 'AI ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : '') : settings.mode === 'watch' ? `${LV(settings.level)} vs ${LV(settings.level2)}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`;
+  $('#infoLine').textContent = `${sz}  ·  ${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? AIW() + ' ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : '') : settings.mode === 'watch' ? `${LV(settings.level)} vs ${LV(settings.level2)}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`;
   renderBrand();
   if (window.olAfterInfo) olAfterInfo();
   hbInfo(pos, st);
@@ -1904,7 +1905,7 @@ function rvCoach() {
   }
   return h + `<p class="cr-more">${t('cr.nav')}</p></div>`;
 }
-function sideLabel(p) { return settings.mode === 'ai' ? (p === humanColor ? t('you') : 'AI') : pname(p); }
+function sideLabel(p) { return settings.mode === 'ai' ? (p === humanColor ? t('you') : AIW()) : pname(p); }
 function renderReview() {
   const card = $('#reviewCard');
   if (rv && !lesson && !puzzle && rv.key !== gameKey()) { rvCancel(); rv = null; rvOpen = false; }
