@@ -1,6 +1,6 @@
 # コナネ（konane/）仕様
 
-URL: https://core-calmdust.github.io/aicoding/konane/ ／ トップは「アルケルケ」の次（cat: chess、定番タグ）。テーマ色 #0f8a7e（ティール）。
+URL: https://core-calmdust.github.io/aicoding/konane/ ／ トップは「アルケルケ」の次（cat: hist＝ヒストリカル、also: chess、定番タグ）。テーマ色 #0f8a7e（ティール）。
 
 ## ルール（8×8 を既定、ゲームタブで 6×6・8×8・10×10）
 - すべてのマスに黒白の石を交互に置いて開始（a1＝黒、黒が先手 P1）。

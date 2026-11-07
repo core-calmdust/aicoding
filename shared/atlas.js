@@ -52,7 +52,7 @@
       name: N("ファノロナ", "Fanorona", "法诺罗纳", "파노로나", "Fanorona", "Fanorona", "Fanorona", "Fanorona", "फ़ानोरोना", "فانورونا", "Фанорона", "法諾羅納", "Fanorona", "Fanorona") },
     { id: 'alquerque', cat: 'chess', store: ['aicoding-alquerque'], href: 'alquerque/', color: '#9a2a24', released: '2026-11-01', tags: ['classic', 'ai', 'online', 'rated', 'mobile'], total: {},
       name: N("アルケルケ", "Alquerque", "阿尔凯尔凯", "알케르케", "Alquerque", "Alquerque", "Alquerque", "Alquerque", "अलकेरके", "القِرْقة", "Алькерк", "阿爾凱爾凱", "Alquerque", "Alquerque") },
-    { id: 'konane', cat: 'chess', store: ['aicoding-konane', 'konane-online-name'], href: 'konane/', color: '#0f8a7e', released: '2026-11-06', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'variants', 'mobile'], total: { pz: 226, ls: 9 },
+    { id: 'konane', cat: 'hist', also: ['chess'], store: ['aicoding-konane', 'konane-online-name'], href: 'konane/', color: '#0f8a7e', released: '2026-11-06', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'variants', 'mobile'], total: { pz: 226, ls: 9 },
       name: N("コナネ", "Kōnane", "科纳内", "코나네", "Kōnane", "Kōnane", "Kōnane", "Kōnane", "कोनाने", "كونانيه", "Конане", "科納內", "Kōnane", "Kōnane") },
     { id: 'agon', cat: 'chess', store: ['aicoding-agon', 'agon-online-name'], href: 'agon/', color: '#6c1a1c', released: '2026-11-04', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'variants', 'mobile'], total: { pz: 152, ls: 12 },
       name: N("アゴン", "Agon", "阿贡棋", "아곤", "Agon", "Agon", "Agon", "Agon", "अगोन", "أغون", "Агон", "阿貢棋", "Agon", "Agon") },
