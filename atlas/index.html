@@ -231,6 +231,9 @@ h2.h::before{content:'';width:10px;height:22px;border-radius:5px;background:var(
 .hud .hs.on{background:var(--sun);box-shadow:0 3px 0 var(--sun2)}
 .hud .hs b{font-family:var(--round);font-size:20px;min-width:24px;text-align:center}
 .hud .hm{font-weight:900;font-size:13px;color:var(--ink2);padding:0 6px;white-space:nowrap;min-width:60px;text-align:center}
+.hudpop{position:fixed;left:50%;transform:translateX(-50%);z-index:60;max-width:min(92vw,440px);box-sizing:border-box;padding:10px 16px;border-radius:16px;background:rgba(255,253,247,.97);color:var(--ink);font-weight:800;font-size:14px;line-height:1.5;text-align:center;box-shadow:0 6px 18px rgba(0,0,0,.22);animation:hudpopIn .22s ease-out}
+.hudpop.out{opacity:0;transition:opacity .3s}
+@keyframes hudpopIn{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
 .dk{width:18px;height:18px;border-radius:50%;display:inline-block;box-shadow:inset 0 -2px 0 rgba(0,0,0,.2)}
 .dk.b{background:#24262d}.dk.w{background:#f6f3ea;border:1px solid #d9d2bf}
 .bv .quit{position:absolute;z-index:3;top:calc(12px + env(safe-area-inset-top));inset-inline-start:14px;display:none}
@@ -1569,7 +1572,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 <script src="models/fanorona.js?v=3"></script>
 <script src="models/ugolki.js?v=3"></script>
 <script src="models/konane.js?v=6"></script>
-<script src="models/senet.js?v=8"></script>
+<script src="models/senet.js?v=9"></script>
 <script src="models/agon.js?v=3"></script>
 <script src="models/alquerque.js?v=2"></script>
 <script src="models/cardtables.js?v=4"></script>
@@ -1641,6 +1644,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <link rel="stylesheet" href="worldmap.css?v=18">
 <script src="worldmap.js?v=25"></script>
 <script src="updnews.js?v=5"></script>
-<script src="app.js?v=211"></script>
+<script src="app.js?v=212"></script>
 </body>
 </html>
