@@ -11,8 +11,9 @@
    "t": "Le xiangqi sans rivière",
    "say": "Les échecs chinois ont pris une nouvelle vie en Corée.",
    "p": [
-    "Le xiangqi chinois est arrivé dans la péninsule coréenne et s'est donné ses propres règles. On ignore quand il est arrivé.",
-    "La rivière a disparu, l'éléphant et le canon ont changé, et les pièces sont devenues octogonales."
+    "Le xiangqi chinois a gagné la péninsule coréenne et s'y est doté de règles propres. On ignore quand il est arrivé ; les sources sûres commencent à l'époque Joseon.",
+    "La rivière a disparu, l'éléphant et le canon ont changé, et les pièces sont devenues octogonales.",
+    "Les noms Cho et Han rappellent Xiang Yu (Chu) et Liu Bang (Han), rivaux pour la Chine après la chute des Qin. Les pièces Cho sont écrites en cursive, les pièces Han en écriture régulière."
    ],
    "pins": [
     "Chine",
@@ -20,14 +21,29 @@
    ],
    "st": [
     [
-     "Débattu",
+     "Dynastie Song",
      "Chine",
-     "Le xiangqi prend forme"
+     "Le xiangqi avec le canon prend forme"
     ],
     [
      "Date inconnue",
      "Corée",
-     "Il devient le janggi, sans rivière"
+     "Il arrive et perd sa rivière"
+    ],
+    [
+     "XVe siècle",
+     "Joseon",
+     "Un recueil relate des parties sous le roi Sejong"
+    ],
+    [
+     "XVIIe siècle",
+     "Joseon",
+     "Jang Yu écrit un traité sur la façon de jouer"
+    ],
+    [
+     "Fin du XIXe s.",
+     "Joseon",
+     "Kim Jun-geun peint une partie"
     ]
    ]
   },
@@ -38,15 +54,27 @@
    "tl": [
     [
      "Dynastie Song",
-     "Le xiangqi avec canon prend sa forme moderne en Chine"
+     "Le xiangqi avec le canon prend sa forme moderne en Chine"
     ],
     [
      "Date inconnue",
-     "Il arrive dans la péninsule coréenne"
+     "Il arrive en Corée ; la rivière disparaît, l'éléphant et le canon changent"
     ],
     [
-     "Ensuite",
-     "La rivière disparaît ; l'éléphant et le canon changent"
+     "XVe siècle",
+     "Un recueil relate des parties sous le roi Sejong"
+    ],
+    [
+     "XVIIe siècle",
+     "Le traité de Jang Yu analyse la façon de jouer"
+    ],
+    [
+     "Fin du XIXe s.",
+     "Les scènes de genre de Kim Jun-geun montrent une partie"
+    ],
+    [
+     "1956",
+     "Une association de joueurs naît ; le titre Guksu débute l'année suivante"
     ],
     [
      "Aujourd'hui",

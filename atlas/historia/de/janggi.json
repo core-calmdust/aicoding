@@ -11,8 +11,9 @@
    "t": "Xiangqi ohne Fluss",
    "say": "Das chinesische Schach wurde in Korea neu geboren.",
    "p": [
-    "Das chinesische Xiangqi erreichte die koreanische Halbinsel und bekam eigene Regeln. Wann es ankam, ist unklar.",
-    "Der Fluss verschwand, Elefant und Kanone änderten sich, und die Steine wurden achteckig."
+    "Das chinesische Xiangqi gelangte auf die Koreanische Halbinsel und bekam dort eigene Regeln. Wann es ankam, ist unklar; sichere Belege gibt es ab der Joseon-Zeit.",
+    "Der Fluss verschwand, Elefant und Kanone änderten sich, und die Steine wurden achteckig.",
+    "Die Namen Cho und Han erinnern an Xiang Yu (Chu) und Liu Bang (Han), die nach dem Fall der Qin um China kämpften. Cho-Steine tragen Kursivschrift, Han-Steine Regelschrift."
    ],
    "pins": [
     "China",
@@ -20,14 +21,29 @@
    ],
    "st": [
     [
-     "Umstritten",
+     "Song-Dynastie",
      "China",
-     "Xiangqi nimmt Gestalt an"
+     "Xiangqi mit Kanone nimmt Gestalt an"
     ],
     [
      "Zeit unbekannt",
      "Korea",
-     "Es wird zum Janggi ohne Fluss"
+     "Kommt an und verliert den Fluss"
+    ],
+    [
+     "15. Jh.",
+     "Joseon",
+     "Ein Essay hält Partien unter König Sejong fest"
+    ],
+    [
+     "17. Jh.",
+     "Joseon",
+     "Jang Yu schreibt eine Abhandlung über das Spiel"
+    ],
+    [
+     "Ende 19. Jh.",
+     "Joseon",
+     "Kim Jun-geun malt eine Partie"
     ]
    ]
   },
@@ -42,11 +58,23 @@
     ],
     [
      "Zeit unbekannt",
-     "Es erreicht die koreanische Halbinsel"
+     "Es kommt nach Korea; der Fluss fällt weg, Elefant und Kanone ändern sich"
     ],
     [
-     "Danach",
-     "Der Fluss verschwindet; Elefant und Kanone ändern sich"
+     "15. Jh.",
+     "Ein Essay hält Partien unter König Sejong fest"
+    ],
+    [
+     "17. Jh.",
+     "Jang Yus Abhandlung bespricht das Spiel"
+    ],
+    [
+     "Ende 19. Jh.",
+     "Kim Jun-geuns Genrebilder zeigen eine Partie"
+    ],
+    [
+     "1956",
+     "Ein Spielerverband entsteht; im Jahr darauf beginnt der Guksu-Titel"
     ],
     [
      "Heute",

@@ -11,8 +11,9 @@
    "t": "Xiangqi tanpa sungai",
    "say": "Catur Tiongkok terlahir kembali di Korea.",
    "p": [
-    "Xiangqi Tiongkok sampai di Semenanjung Korea dan mendapat aturan sendiri. Kapan tibanya tidak jelas.",
-    "Sungai dihapus, gajah dan meriam berubah, dan bidaknya menjadi segi delapan."
+    "Xiangqi Tiongkok tiba di Semenanjung Korea dan tumbuh dengan aturannya sendiri. Kapan tibanya tidak jelas; catatan pasti baru muncul pada era Joseon.",
+    "Sungai dihapus, gajah dan meriam berubah, dan bidaknya menjadi segi delapan.",
+    "Nama Cho dan Han merujuk pada Xiang Yu (Chu) dan Liu Bang (Han) yang berebut Tiongkok setelah Qin runtuh. Bidak Cho ditulis dengan aksara kursif, bidak Han dengan aksara baku."
    ],
    "pins": [
     "Tiongkok",
@@ -20,14 +21,29 @@
    ],
    "st": [
     [
-     "Diperdebatkan",
+     "Dinasti Song",
      "Tiongkok",
-     "Xiangqi terbentuk"
+     "Xiangqi dengan meriam terbentuk"
     ],
     [
      "Waktu tak diketahui",
      "Korea",
-     "Menjadi janggi tanpa sungai"
+     "Tiba dan kehilangan sungainya"
+    ],
+    [
+     "Abad ke-15",
+     "Joseon",
+     "Sebuah esai mencatat permainan di masa Raja Sejong"
+    ],
+    [
+     "Abad ke-17",
+     "Joseon",
+     "Jang Yu menulis risalah tentang cara bermain"
+    ],
+    [
+     "Akhir abad ke-19",
+     "Joseon",
+     "Kim Jun-geun melukis permainan"
     ]
    ]
   },
@@ -38,19 +54,31 @@
    "tl": [
     [
      "Dinasti Song",
-     "Xiangqi dengan meriam mendapat bentuk modernnya di Tiongkok"
+     "Xiangqi dengan meriam mendapat bentuk modern di Tiongkok"
     ],
     [
      "Waktu tak diketahui",
-     "Sampai di Semenanjung Korea"
+     "Tiba di Korea; sungai hilang, gajah dan meriam berubah"
     ],
     [
-     "Kemudian",
-     "Sungai hilang; gajah dan meriam berubah"
+     "Abad ke-15",
+     "Sebuah esai mencatat permainan di masa Raja Sejong"
+    ],
+    [
+     "Abad ke-17",
+     "Risalah Jang Yu membahas cara bermain"
+    ],
+    [
+     "Akhir abad ke-19",
+     "Lukisan Kim Jun-geun menampilkan permainan"
+    ],
+    [
+     "1956",
+     "Asosiasi pemain berdiri; gelar Guksu dimulai tahun berikutnya"
     ],
     [
      "Kini",
-     "Dimainkan di taman dan rumah, ada turnamen"
+     "Dimainkan di taman dan rumah, dengan turnamen"
     ]
    ]
   },
