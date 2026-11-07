@@ -16,6 +16,14 @@
   const flagKey = () => self.registration.scope + '?mt-coi';
   const byClient = new Map();   // client id → COOP mode at its navigation (lost when the worker restarts: then the flag is read again)
   async function flag() { try { const c = await caches.open(FLAG_CACHE); return !!(await c.match(flagKey())); } catch (e) { return false; } }
+  // the flag, read once when the worker starts (and again after the page changed it): requests of a normal page then pass
+  // straight through without waiting for the Cache API — on iOS a slow pass-through delayed Firebase's sign-in setup so the
+  // Google popup was blocked
+  let FLAG = null;
+  const readFlag = () => flag().then(v => (FLAG = v));
+  readFlag();
+  // Document-Isolation-Policy only matters in Chromium (Chrome / Edge); elsewhere a normal page is left alone entirely
+  const DIP_UA = !!(self.navigator && self.navigator.userAgentData);
   function withHeaders(res, set) {
     if (!res || res.status === 0 || res.type === 'opaqueredirect') return res;   // opaque: nothing can be added
     const h = new Headers(res.headers);
@@ -41,15 +49,15 @@
     if (req.method !== 'GET') return false;
     if (req.mode === 'navigate') {
       e.respondWith((async () => {
-        const coi = await flag();
+        const coi = await readFlag();   // (fresh at every navigation: the page may have changed it through another worker instance)
         if (e.resultingClientId) byClient.set(e.resultingClientId, coi);
         if (coi) return coiFetch(req, own);
         const res = await ((own && own(req)) || fetch(req));
-        return withHeaders(res, DIP);
+        return DIP_UA ? withHeaders(res, DIP) : res;
       })().catch(err => { console.error(err); return fetch(req); }));
       return true;
     }
-    const known = byClient.get(e.clientId);
+    const known = byClient.has(e.clientId) ? byClient.get(e.clientId) : FLAG === false ? false : undefined;   // (the flag off: every page is normal)
     if (known === false) {   // a normal page: only the game's own cache handling (if any)
       const p = new URL(req.url).origin === location.origin && own && own(req);
       if (p) { e.respondWith(p); return true; }
@@ -63,7 +71,7 @@
     return true;
   }
   self.addEventListener('message', e => {   // the page: "forget the clients' modes" after it changed the flag
-    if (e.data && e.data.type === 'mt-flag') byClient.clear();
+    if (e.data && e.data.type === 'mt-flag') { byClient.clear(); FLAG = null; e.waitUntil(readFlag()); }
     if (e.data && e.data.type === 'mt-ping' && e.source) e.source.postMessage({ type: 'mt-pong', nav: byClient.has(e.source.id) });   // (the page: "did my page come through this worker?")
   });
   self.MTSW = { handle, flag, FLAG_CACHE };
