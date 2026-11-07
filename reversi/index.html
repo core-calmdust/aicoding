@@ -523,7 +523,7 @@ body.rated-live #evalCard::before{content:attr(data-rtnote);display:block;font-s
 .ol-tc button.sel small{color:var(--text);font-weight:400}
 .ol-tcinfo{color:var(--accent)!important}
 .dk-tc{flex:none;padding:2px;border-radius:8px}
-.dk-tc button{padding:4px 9px;font-size:12px;border-radius:6px}
+.dk-tc button{padding:4px 9px;font-size:12px;border-radius:6px;flex:1 0 auto}
 .dk-tc button small{display:none}
 @media (pointer: coarse){
   body.mtab-online .dk-tc{order:5;width:100%}
@@ -1478,7 +1478,7 @@ html.rb-study .frame{outline:3px solid var(--accent);outline-offset:3px}
     </div>
     <div class="field" id="fClock">
       <label data-i18n="ng.clock"></label>
-      <div class="seg" id="segClock"><button data-v="0" data-i18n="clk.none"></button><button data-v="1" data-i18n="clk.byo30"></button><button data-v="2" data-i18n="clk.10m"></button><button data-v="3" data-i18n="clk.30m"></button></div>
+      <div class="seg" id="segClock"><button data-v="0" data-i18n="clk.none"></button><button data-v="1" data-i18n="clk.byo30"></button><button data-v="2" data-i18n="clk.10m"></button><button data-v="3" data-i18n="clk.30m"></button><button data-v="4" id="btnFis"></button></div><div id="fisPick" class="hidden"></div>
     </div>
     <div class="field" id="fDisplay">
       <label data-i18n="ng.display"></label>
@@ -1678,12 +1678,14 @@ html.rb-study .frame{outline:3px solid var(--accent);outline-offset:3px}
 <script src="../shared/cardbar.js?v=7l14"></script>
 <script src="../shared/watchpause.js?v=2l14"></script>
 <script src="../shared/tick.js?v=2l14"></script>
+<script src="../shared/fischer.js?v=1"></script>
+<script>/* the Fischer time control (local and online, shared/fischer.js): its names in every language */ (function () { if (!window.Fischer) return; for (const l in I18N) Object.assign(I18N[l], { 'ol.tcn.fis': Fischer.name(l), 'ol.tcd.fis': Fischer.label('5+10', l), 'ol.tc.fis': Fischer.name(l) + ' ' + Fischer.label('5+10', l), 'ol.rulesFis': Fischer.name(l) + ' — ' + Fischer.desc('5+10', l) }); })();</script>
 <script src="../shared/resign.js?v=3l14"></script>
 <script src="../shared/export.js?v=9l14"></script>
 <script src="../shared/ruletour.js?v=29l14"></script>
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2l14"></script>
-<script src="online.js?v=stale2pf"></script>
+<script src="online.js?v=stale2fis"></script>
 <script src="../shared/mtengine.js?v=5"></script><script src="../shared/proset.js?v=3"></script><script>MTEngine.init({ sw: 'sw.js' });</script>
 <script src="rbox.js?v=3-rc2"></script>
 <script src="../shared/coachkit.js?v=16l14"></script>
@@ -2541,11 +2543,23 @@ function recordGame(b, w, lost, tl) {
 // position (passes are implicit: the side that moves next is simply positions[last].toMove); browsing / review /
 // lessons pause it, except in a rated game, where it keeps running (also across a reload).
 // clock = {main, byo, left: [_, black s, white s], used: s banked this turn, t0: ms the running stretch began (0 = paused), lost: colour that ran out}
-const CLOCKS = [null, { main: 0, byo: 30 }, { main: 600, byo: 30 }, { main: 1800, byo: 60 }];
+// 4 = Fischer (shared/fischer.js): settings.fis = 'minutes+seconds'; after every move (the first one included) the mover gets
+// clock.inc seconds back, no byoyomi
+const CLOCKS = [null, { main: 0, byo: 30 }, { main: 600, byo: 30 }, { main: 1800, byo: 60 }, null];
 const RT_CLOCK = 2;            // rated games: 10 min + 30 s byoyomi (CLOCKS[2]) on the player's side
+const fisId = () => window.Fischer ? Fischer.norm(settings.fis) : '5+3';
+const clockSpec = i => { if (i !== 4) return CLOCKS[i]; const f = window.Fischer && Fischer.parse(fisId()) || { main: 300, inc: 3 }; return { main: f.main, byo: 0, inc: f.inc }; };
+let fisUi = null;
+function fisSync() {   // the new-game dialog: the presets open under the clock choices while フィッシャー is chosen
+  if (!window.Fischer) return;
+  if (!fisUi) fisUi = Fischer.picker($('#fisPick'), { lang: () => LANG, get: () => draft.fis, set: v => { draft.fis = v; }, presets: Fischer.PRESETS });
+  draft.fis = Fischer.norm(draft.fis);
+  $('#btnFis').textContent = Fischer.name(LANG);
+  $('#fisPick').classList.toggle('hidden', draft.clock !== 4); fisUi.sync();
+}
 function clockInit() {
-  const c = CLOCKS[rated ? RT_CLOCK : settings.mode === 'ai' || settings.mode === 'pvp' ? settings.clock || 0 : 0];
-  clock = c ? { main: c.main, byo: c.byo, left: [0, c.main, c.main], used: 0, t0: 0, lost: 0 } : null;
+  const c = clockSpec(rated ? RT_CLOCK : settings.mode === 'ai' || settings.mode === 'pvp' ? settings.clock || 0 : 0);
+  clock = c ? { main: c.main, byo: c.byo, inc: c.inc || 0, left: [0, c.main, c.main], used: 0, t0: 0, lost: 0 } : null;
   clockHold = false;
 }
 function clockReset() { if (clock) { clock.used = 0; clock.t0 = 0; clock.lost = 0; } }   // undo / continue from here: a fresh turn
@@ -2570,7 +2584,7 @@ function clockSync() {
 function clockOnMove(color) {
   const c = clock; if (!c) return;
   clockSync();
-  c.left[color] = Math.max(0, c.left[color] - clockUsed());
+  c.left[color] = Math.max(0, c.left[color] - clockUsed()) + (c.inc || 0);   // Fischer: + the increment
   c.used = 0; c.t0 = 0; clockHold = false;
 }
 function clockTimeUp(color) {
@@ -2744,6 +2758,7 @@ function segInit(id, key) {
 function segSync() {
   for (const [id, key] of [['#segMode', 'mode'], ['#segColor', 'color'], ['#segClock', 'clock']])
     $(id).querySelectorAll('button').forEach(b => b.classList.toggle('sel', String(draft[key] ?? 0) === b.dataset.v));
+  fisSync();
   $('#fColor').classList.toggle('hidden', draft.mode !== 'ai');
   $('#fClock').classList.toggle('hidden', draft.mode !== 'ai' && draft.mode !== 'pvp');
   $('#fLevel').classList.toggle('hidden', draft.mode === 'pvp' || draft.mode === 'lesson' || draft.mode === 'puzzle' || draft.mode === 'online' || draft.mode === 'rated');
@@ -2856,8 +2871,8 @@ function openNew(resume) {
 }
 // 「ここから再開」 with the chosen settings: the position and the moves up to it are kept, who is to move stays
 function resumeWith() {
-  const pm = settings.mode, ph = humanColor, pc = settings.clock || 0;
-  Object.assign(settings, { mode: draft.mode, color: draft.color, level: draft.level, level2: draft.level2, clock: draft.clock || 0 });
+  const pm = settings.mode, ph = humanColor, pc = settings.clock || 0, pf = fisId();
+  Object.assign(settings, { mode: draft.mode, color: draft.color, level: draft.level, level2: draft.level2, clock: draft.clock || 0, fis: draft.fis });
   settings.legal = $('#optLegal').checked; settings.last = $('#optLast').checked;
   settings.eval = $('#optEval').checked; settings.anim = $('#optAnim').checked; settings.coach = $('#optCoach').checked;
   if (typeof stopPlay === 'function') stopPlay(); busyToken++; cancelAI(); wpPaused = false;
@@ -2865,7 +2880,7 @@ function resumeWith() {
   if (settings.mode === 'ai' && (pm !== 'ai' || ph !== humanColor)) settings.rsNoRec = true;   // taken over midway: not a game of the player's for the record
   if (reviewing) positions.length = cur + 1;
   cur = positions.length - 1; reviewing = false;
-  if (pm !== settings.mode || pc !== settings.clock || ph !== humanColor) clockInit(); else clockReset();   // a changed clock / side starts fresh
+  if (pm !== settings.mode || pc !== settings.clock || (pc === 4 && pf !== fisId()) || ph !== humanColor) clockInit(); else clockReset();   // a changed clock / side starts fresh
   hideOverlay('#resultOverlay');
   update(null); save();
 }
@@ -2902,7 +2917,7 @@ $('#btnStart').onclick = () => {
     hideOverlay('#newOverlay'); rtStart(); return;
   }
   if (draft.resume) { hideOverlay('#newOverlay'); resumeWith(); return; }
-  Object.assign(settings, { mode: draft.mode, color: draft.color, level: draft.level, level2: draft.level2, clock: draft.clock || 0 });
+  Object.assign(settings, { mode: draft.mode, color: draft.color, level: draft.level, level2: draft.level2, clock: draft.clock || 0, fis: draft.fis });
   settings.legal = $('#optLegal').checked; settings.last = $('#optLast').checked;
   settings.eval = $('#optEval').checked; settings.anim = $('#optAnim').checked; settings.coach = $('#optCoach').checked;
   hideOverlay('#newOverlay');
@@ -4701,7 +4716,7 @@ const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&a
 function fmtWait(ms) { const s = Math.max(0, Math.floor(ms / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
 // ---- time control (chosen before searching / creating a room; remembered per browser)
 const OL_TC_KEY = 'reversi-online-tc';
-function olTc() { try { const v = localStorage.getItem(OL_TC_KEY); if (Online.TC[v]) return v; } catch (e) {} return 'fast'; }
+function olTc() { try { const v = localStorage.getItem(OL_TC_KEY); if (Online.tcOk ? Online.tcOk(v) : Online.TC[v]) return v; } catch (e) {} return 'fast'; }
 function olSetTc(v) {
   if (!Online.TC[v]) return;
   try { localStorage.setItem(OL_TC_KEY, v); } catch (e) {}
@@ -4782,7 +4797,7 @@ async function olRender(view) {
       <div class="ol-me"><input id="olName" maxlength="16" value="${esc(P.name)}" aria-label="name"><span class="ol-r">R <b>${P.rating}</b><small>${t('ol.record', { g: P.games || 0, w: P.wins || 0, l: P.losses || 0, d: P.draws || 0 })}</small></span></div>
       <div class="ol-tcbox"><div class="ol-tcl">${t('ol.tc')}</div>${olTcSel()}</div>
       <div class="ol-acts"><button class="mbtn go" id="olAuto">${t('ol.auto')}</button></div>
-      <p class="ol-note small">${t('ol.rules')}</p>
+      <p class="ol-note small">${t('ol.rules')}${Online.fis ? ' ' + t('ol.rulesFis') : ''}</p>
       <div class="ol-sub">${t('ol.ranking')}</div><div class="ol-list" id="olRank"><div class="ol-note small">…</div></div>
       </div><div class="ol-col">
       <div class="ol-sub">${t('ol.rooms')}</div><div class="ol-list ol-rooms" id="olRooms">${olRoomRows(olRooms)}</div>
@@ -5039,7 +5054,7 @@ function dockRender() {
   const nPlay = dock.players.length, nWait = dock.lobby.length, nRoom = dock.rooms.length;
   $('#dkStat').textContent = t('ol.dockStat', { n: nPlay, w: nWait, r: nRoom });
   $('#mtCount').textContent = nPlay ? String(nPlay) : '';
-  const tcEl = $('#dkTc'); if (tcEl.dataset.l !== LANG) { tcEl.dataset.l = LANG; tcEl.outerHTML = olTcSel('dk-tc').replace('class="ol-tc dk-tc"', 'class="ol-tc dk-tc" id="dkTc" data-l="' + LANG + '"'); }
+  const tcEl = $('#dkTc'), tcL = LANG + (Online.fis ? '+fis' : ''); if (tcEl.dataset.l !== tcL) { tcEl.dataset.l = tcL; tcEl.outerHTML = olTcSel('dk-tc').replace('class="ol-tc dk-tc"', 'class="ol-tc dk-tc" id="dkTc" data-l="' + tcL + '"'); }
   if (dock.editing) return dockRenderLists();
   $('#dkMe').innerHTML = me ? `<button class="dk-name" title="${esc(t('ol.rename'))}">${esc(me.name)} <span>✎</span></button> <b>R ${me.rating}</b>` + (net && net.spectate ? ` · ${t('ol.st.watch')}` : net && !net.done && net.game ? ` · ${t('ol.st.play')}` : olView === 'search' && $('#onlineOverlay').classList.contains('show') ? ` · ${t('ol.st.lobby')}` : Online.room ? ` · ${t('ol.st.room')}` : '') : '';
   dockRenderLists();
@@ -5488,7 +5503,7 @@ if (olOn()) Online.onAuth(() => {
 // settings / name: newest change wins. Not synced: the game in progress, live online game / room data, export format, mock data.
 const RvSync = (() => {
   const META = 'reversi-sync-meta', RULES_KEY = 'aicoding-reversi-rules-seen';
-  const SET_KEYS = ['level', 'level2', 'lvV', 'clock', 'legal', 'last', 'eval', 'anim', 'sound', 'coach', 'lang', 'pro'];
+  const SET_KEYS = ['level', 'level2', 'lvV', 'clock', 'fis', 'legal', 'last', 'eval', 'anim', 'sound', 'coach', 'lang', 'pro'];
   const get = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; } };
   const put = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
   const prevDay = s => { const d = new Date(s + 'T12:00:00'); d.setDate(d.getDate() - 1); return ymd(d); };

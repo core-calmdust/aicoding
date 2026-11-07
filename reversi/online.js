@@ -11,8 +11,12 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
   const INITIAL = 1500;
   const MOVE_LIMIT = 90 * 1000;          // legacy games (records without tc): fixed 90 s per move
   // time controls: main time (ms) is used up first, then every move must be made within byo (byoyomi)
-  const TC = { fast: { main: 5 * 60000, byo: 30000 }, long: { main: 10 * 60000, byo: 30000 }, blitz: { main: 0, byo: 30000 } };
-  const TC_IDS = ['fast', 'long', 'blitz'];
+  // fis: Fischer 5 min + 10 s added after each move, no byoyomi (2026-11-08). Offered only once the database has the rules that
+  // know it (the probe secf is readable; shared/tools/secrules.py) — with the old rules a fis game could not be created
+  const TC = { fast: { main: 5 * 60000, byo: 30000 }, long: { main: 10 * 60000, byo: 30000 }, blitz: { main: 0, byo: 30000 }, fis: { main: 5 * 60000, byo: 0, inc: 10000 } };
+  let fisOn = false;
+  const tcIds = () => fisOn ? ['fast', 'long', 'blitz', 'fis'] : ['fast', 'long', 'blitz'];
+  const tcOk = tc => !!TC[tc] && (tc !== 'fis' || fisOn);
   const LEGACY = { main: 0, byo: MOVE_LIMIT };
   const GRACE = 3000;                    // latency allowance before the opponent may claim a timeout
   const CROSS_WAIT = 20000;
@@ -26,10 +30,10 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
   // clock of one side ('b' / 'w'); moving = it is this side's turn (time since g.t is running)
   function clockOf(g, side, moving, now) {
     const c = tcOf(g), m = mainOf(g, side);
-    if (!moving) return { main: m, byo: m > 0 ? null : c.byo, left: m + c.byo, moving: false };
+    if (!moving) return { main: m, byo: m > 0 || !c.byo ? null : c.byo, left: m + c.byo, moving: false };   // (Fischer: no byoyomi)
     const el = Math.max(0, (now == null ? (db ? db.now() : Date.now()) : now) - (g.t || now || Date.now()));
     const main = Math.max(0, m - el);
-    return { main, byo: main > 0 ? null : m + c.byo - el, left: m + c.byo - el, moving: true };
+    return { main, byo: main > 0 || !c.byo ? null : m + c.byo - el, left: m + c.byo - el, moving: true };
   }
   let db = null, uid = null, profile = null, ready = null;
   // anti-tamper protocol (shared/onlinesec.js): 'secure' once the new rules are published, else exactly the old behaviour
@@ -148,6 +152,7 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
       }
       await loadProfile();
       if (SEC) await SEC.init();
+      fisOn = MOCK || (secure() && await db.get('secf').then(() => true, () => false));
       if (!MOCK && secure() && authUser && authUser.isAnonymous && profile && (profile.games || 0) > 0) xferOut().then(v => { preX = v; });
       return { uid, profile };
     })();
@@ -380,7 +385,7 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
     await leave();       // searching for a rated game closes the own room (so two games can not start at once)
     setPresence('lobby');
     const since = db.now();
-    tc = TC[tc] ? tc : 'fast';
+    tc = tcOk(tc) ? tc : 'fast';
     lobbyState = { since, onMatched, onStatus, tc };
     await secPrepare(lobbyState);
     await db.set('lobby/' + uid, { name: profile.name, rating: profile.rating, tc, since: db.stamp(), hb: db.stamp(), game: null });
@@ -496,7 +501,7 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
   }
   async function createRoom({ onMatched, onExpired, priv, tc, title }) {
     title = String(title || '').replace(/\s+/g, ' ').trim().slice(0, 24);
-    tc = TC[tc] ? tc : 'fast';
+    tc = tcOk(tc) ? tc : 'fast';
     await leave();
     for (let tries = 0; tries < 6; tries++) {
       const code = Array.from({ length: 5 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join('');
@@ -654,7 +659,7 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
     if (!TC[g.tc]) return true;            // legacy record: fixed per-move limit, nothing to store
     const side = sideOf(g, uid), m = mainOf(g, side), el = Math.max(0, db.now() - (g.t || db.now()));
     if (el > m + TC[g.tc].byo + 1000) return false;
-    g['m' + side] = Math.max(0, m - el);
+    g['m' + side] = Math.max(0, m - el) + (TC[g.tc].inc || 0);   // Fischer: + the increment
     return true;
   }
   // append a move; n = number of moves already played (guards against double sends / races)
@@ -725,7 +730,7 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
   }
 
   window.Online = {
-    available: !!CFG || MOCK, configured: !!CFG, mock: MOCK, MOVE_LIMIT, INITIAL, TC, TC_IDS, GRACE, CROSS_WAIT, tcOf, clockOf, ROOM_TTL, REMATCH_MS, CHAT_N, CHAT_LEN, CHAT_GAP, get roomTc() { return roomTc; }, get roomPriv() { return roomPriv; }, get room() { return db ? room() : null; },
+    available: !!CFG || MOCK, configured: !!CFG, mock: MOCK, MOVE_LIMIT, INITIAL, TC, get TC_IDS() { return tcIds(); }, get fis() { return fisOn; }, tcOk, GRACE, CROSS_WAIT, tcOf, clockOf, ROOM_TTL, REMATCH_MS, CHAT_N, CHAT_LEN, CHAT_GAP, get roomTc() { return roomTc; }, get roomPriv() { return roomPriv; }, get room() { return db ? room() : null; },
     getGame: gid => db.get('games/' + gid), resumeRoom,
     init, setName, setPresence, watchPresence, watchRooms, watchLobby, enterLobby, createRoom, joinRoom, leave, leaveLobby, closeRoom, extendRoom, onRoom,
     setPost, requestRematch, answerRematch, expireRematch, watchChat, sendChat, roomGameOf, spectate, watchCount,
