@@ -254,6 +254,7 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
       }
       await loadProfile();
       if (SEC) await SEC.init();
+      if (!MOCK && secure() && authUser && authUser.isAnonymous && profile && (profile.games || 0) > 0) xferOut().then(v => { preX = v; });
       return { uid, profile };
     })();
     ready.catch(() => { ready = null; });
@@ -306,6 +307,7 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
     if (x) { try { await OnlineSec.xferIn(db, uid, x); } catch (e) { console.warn(e); } return; }
     if (!secure()) await db.set('players/' + uid, Object.assign({}, old, { last: null }));
   }
+  let preX = null;   // a snapshot of an anonymous player's record, made in advance for the switch at sign-in (secure mode)
   const xferOut = async () => { if (!secure()) return null; try { return await OnlineSec.xferOut(db, uid); } catch (e) { console.warn(e); return null; } };
   // sign in with Google: the anonymous account is upgraded (same uid) when possible, otherwise this session switches to
   // the existing Google account (its uid); returns { uid, linked, switched }
@@ -327,11 +329,14 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
     }
     const auth = firebase.auth(), prov = new firebase.auth.GoogleAuthProvider();
     prov.setCustomParameters({ prompt: 'select_account' });
-    const u = auth.currentUser;
+    const u = auth.currentUser, anon = !!(u && u.isAnonymous), old = anon ? profile : null, x0 = anon ? preX : null;
     try {
-      const r = u && u.isAnonymous ? await u.linkWithPopup(prov) : await auth.signInWithPopup(prov);
-      const switched = r.user.uid !== uid;
-      if (switched) { await dropLive(); uid = r.user.uid; await loadProfile(true); }
+      // the popup opens before anything is awaited: linkWithPopup first checks the account over the network and Safari (iPhone)
+      // then blocks the popup — so sign in directly and carry the anonymous player's record over afterwards (x0: made in advance)
+      const r = await auth.signInWithPopup(prov);
+      const fresh = !!(r.additionalUserInfo && r.additionalUserInfo.isNewUser);
+      const switched = r.user.uid !== uid && !(anon && fresh);
+      if (r.user.uid !== uid) { await dropLive(); uid = r.user.uid; if (anon) await carryPlayer(old, x0); await loadProfile(true); }
       authUser = r.user; emitAuth();
       return { uid, linked: !switched, switched };
     } catch (e) {
