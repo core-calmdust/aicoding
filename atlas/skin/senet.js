@@ -179,7 +179,7 @@ html.atlas-sn .sn3dnote b{display:block;font-size:14px;color:#2b3044;margin-bott
       if (row) row.querySelectorAll('button[data-v]').forEach(bt => {
         if (bt.querySelector('img.sn3t')) return;
         const sv = bt.querySelector('svg'), im = document.createElement('img'); im.className = 'sn3t'; im.alt = ''; im.draggable = false;
-        im.src = '../atlas/img/board-senet-' + bt.dataset.v + '.webp?v=2';
+        im.src = '../atlas/img/board-senet-' + bt.dataset.v + '.webp?v=3';
         if (sv) sv.replaceWith(im); else bt.prepend(im); bt.classList.add('sn3b');
       });
     };
