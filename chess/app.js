@@ -209,12 +209,12 @@ const MTP = window.MTEngine ? MTEngine.use({
 }) : null;
 function mtWants(which, msg) {
   if (msg.type === 'analyze' || msg.type === 'multipv' || msg.type === 'mpvLoop') return true;
-  if (msg.type !== 'think' || (which === 'ai' && rgame)) return false;
+  if (msg.type !== 'think') return false;   // (rated games too: the user's decision 2026-11-08, device differences accepted)
   if (msg.cfg) { const c = msg.cfg; return c.threads > 1 && c.ms >= 100 && !c.wnodes && c.noise === undefined && !c.hand; }   // PRO: its own thread count (mtThreads)
   const L = E.LEVELS[msg.level]; return !!L && !L.wnodes && L.noise === undefined && L.ms >= 500;
 }
 function request(which, msg, onProgress) {
-  const mp = MTP && mtWants(which, msg) && MTP.pool();
+  const mp = MTP && mtWants(which, msg) && MTP.pool(which === 'ai' ? 'ai' : null);
   if (mp) { const t0 = performance.now(), fen = startFen; return mp.run({ fen, ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, { fen, ...msg }, onProgress) : r; }); }
   return requestW(which, msg, onProgress);
 }

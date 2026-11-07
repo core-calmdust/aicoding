@@ -1509,7 +1509,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2l14"></script>
 <script src="online.js?v=stale2pf"></script>
-<script src="../shared/mtengine.js?v=4"></script><script src="../shared/proset.js?v=3"></script><script>MTEngine.init({ sw: 'sw.js?v=2', light: true });</script>
+<script src="../shared/mtengine.js?v=5"></script><script src="../shared/proset.js?v=3"></script><script>MTEngine.init({ sw: 'sw.js?v=2', light: true });</script>
 <script src="variants/search.js?v=20261030sv"></script>
 <script src="variants/vshogi.js?v=20261030sv"></script>
 <script src="variants/vtext.js?v=20261107l14"></script>
@@ -1688,18 +1688,18 @@ const MTP = window.MTEngine ? MTEngine.use({
     for (const u of m.moves || []) { const x = p.fromUsi(u); moves.push(x); p.doMove(x); p.sp = 0; } return { board, hand, side, moves }; },
   isDone: m => m.type === 'result' || m.type === 'analysis', isProg: m => m.type === 'progress' || m.type === 'analysisProgress',
 }) : null;
-function mtPool(msg) {
+function mtPool(msg, prio) {
   if (!MTP || (game && game.variant) || msg.variant) return null;
   const o = msg.opts || {};
   const ok = msg.type === 'coach' || msg.type === 'multipv' || msg.type === 'mpvLoop' || msg.type === 'analyze' || (msg.type === 'think' && o.time && !o.nodes && !o.noise && !o.linear);
-  return ok ? MTP.pool() : null;
+  return ok ? MTP.pool(prio) : null;
 }
 // the speed of a search on the threads, in the info line under the moves (as after the AI's moves)
 function mtNps(r, t0) { const ms = performance.now() - t0; if (r && r.nodes > 50000 && ms > 20) { const el = $('#infoLine'); if (el) el.textContent = t('info', { nps: Math.round(r.nodes / ms * 1000).toLocaleString() }); } }
 function cancelAI() { if (aiJob) { if (aiJob.mt) MTP.cancel('ai'); else if (aiJob.vw) Variants.kill('ai'); else { aiWorker.terminate(); aiWorker = makeWorker(aiMsg); } const j = aiJob; aiJob = null; j.resolve(null); } }
 function cancelAna() { if (anaJob) { if (anaJob.mt) MTP.cancel('ana'); else if (anaJob.vw) Variants.kill('ana'); else { anaWorker.terminate(); anaWorker = makeWorker(anaMsg); } const j = anaJob; anaJob = null; j.resolve(null); } }
 function aiCall(msg, onProgress) { return new Promise(resolve => { aiJob = { id: ++jobId, resolve, onProgress };
-  const mp = msg.mtThreads > 1 && mtPool(msg);   // PRO mode: a time limit on that many threads
+  const mp = msg.mtThreads > 1 && mtPool(msg, 'ai');   // PRO mode: a time limit on that many threads
   if (mp) { const j = aiJob; j.mt = 1; mp.run(msg, m => { if (aiJob === j && j.onProgress) j.onProgress(m); }, 'ai').then(r => { if (aiJob !== j) return; if (r === undefined) { j.mt = 0; aiWorker.postMessage({ ...msg, id: j.id }); return; } aiJob = null; resolve(r); }); return; }
   const vw = window.Variants && Variants.wk(msg, 'ai', aiMsg, aiJob.id); if (vw) aiJob.vw = 1; (vw || aiWorker).postMessage({ ...msg, id: aiJob.id }); }); }
 function anaCall(msg, onProgress) { cancelAna(); return new Promise(resolve => { anaJob = { id: ++jobId, resolve, onProgress };

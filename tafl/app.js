@@ -143,11 +143,11 @@ const MTP = window.MTEngine ? MTEngine.use({
 }) : null;
 function mtWants(which, msg) {
   if (msg.type === 'analyze' || msg.type === 'cands') return true;
-  if (msg.type === 'think' && msg.cfg) return msg.cfg.threads > 1 && !msg.cfg.nk && msg.cfg.d >= 99 && !(which === 'ai' && rgame);   // PRO: a time limit on its own thread count
-  return msg.type === 'think' && msg.level >= 19 && !(which === 'ai' && rgame);
+  if (msg.type === 'think' && msg.cfg) return msg.cfg.threads > 1 && !msg.cfg.nk && msg.cfg.d >= 99;   // PRO: a time limit on its own thread count
+  return msg.type === 'think' && msg.level >= 19;   // (rated games too: the user's decision 2026-11-08)
 }
 function request(which, msg, onProgress) {
-  const mp = MTP && mtWants(which, msg) && MTP.pool();
+  const mp = MTP && mtWants(which, msg) && MTP.pool(which === 'ai' ? 'ai' : null);
   if (mp) { const t0 = performance.now(), full = { start: startSpec, v: gv, ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }; return mp.run(full, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full, onProgress) : r; }); }
   return requestW(which, msg, onProgress);
 }

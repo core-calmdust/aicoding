@@ -1684,7 +1684,7 @@ html.rb-study .frame{outline:3px solid var(--accent);outline-offset:3px}
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2l14"></script>
 <script src="online.js?v=stale2pf"></script>
-<script src="../shared/mtengine.js?v=4"></script><script src="../shared/proset.js?v=3"></script><script>MTEngine.init({ sw: 'sw.js' });</script>
+<script src="../shared/mtengine.js?v=5"></script><script src="../shared/proset.js?v=3"></script><script>MTEngine.init({ sw: 'sw.js' });</script>
 <script src="rbox.js?v=3-rc2"></script>
 <script src="../shared/coachkit.js?v=16l14"></script>
 <script src="../shared/record.js?v=12l14"></script>
@@ -1855,13 +1855,13 @@ const MTP = window.MTEngine ? MTEngine.use({
     return { cells: m.cells, toMove: m.toMove, cfg: { depth: 60, exact: ex, wld: L ? L.wld : ex + 2, mpc: 1 } }; },
   isDone: m => m.type === 'result' || m.type === 'analysis', isProg: m => m.type === 'progress' || m.type === 'analysisProgress',
 }) : null;
-const mtPool = () => MTP && MTP.pool();
+const mtPool = prio => MTP && MTP.pool(prio);
 function cancelAI() { cancelPool(); if (MTP) MTP.cancel('ai'); if (aiJob) { aiWorker.terminate(); aiWorker = makeWorker(aiMsg); aiJob = null; } }
 function cancelAna() { if (anaJob) { if (anaJob.mt) MTP.cancel('ana'); else { anaWorker.terminate(); anaWorker = makeWorker(anaMsg); } anaJob = null; } }
 // the AI's move on the threads (levels 17–20, not rated); null: use the usual search
 // pc: the PRO settings (proCfg): threads only for a time limit, with its own thread count
 function mtThink(cells, toMove, level, onProgress, pc) {
-  const mp = !rtGame() && (pc ? pc.threads > 1 && pc.opts.cfg.time && !pc.opts.cfg.noise : MT_CFG[level]) && mtPool(); if (!mp) return null;
+  const mp = (pc ? pc.threads > 1 && pc.opts.cfg.time && !pc.opts.cfg.noise : MT_CFG[level]) && mtPool('ai'); if (!mp) return null;   // (rated games too: 2026-11-08)
   return mp.run({ type: 'think', cells, toMove, opts: pc ? { level, ...pc.opts } : { level }, ...(pc ? { mtThreads: pc.threads } : {}) }, onProgress, 'ai').then(r => { if (r) noteNps(r); return r; });
 }
 function think(cells, toMove, level, onProgress, pc) {
