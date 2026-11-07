@@ -175,7 +175,8 @@
   const TF = 'RocknRoll One';   // title face: characterful but stays legible (Dela Gothic crushed the dakuten)
   function emblem(main, pre, n) {
     const ring = 'WORLD BOARD GAME ATLAS ✦ 世界のボドゲ大百科 ✦ WORLD BOARD GAME ATLAS ✦ 世界のボドゲ大百科 ✦ ';
-    const big = main.length <= 5 ? 76 : Math.max(30, Math.round(380 / (main.length * .92)));
+    const cjk = /[\u3000-\u9fff\uac00-\ud7af]/.test(main);
+    const big = cjk ? (main.length <= 5 ? 76 : Math.max(30, Math.round(380 / (main.length * .92)))) : 56;   // (Latin etc.: start large, fitTitle shrinks it to the ribbon)
     const pts = (len, w) => [0, 90, 180, 270].map(a => `<path d="M320 ${200 - len}L${320 + w} 200H${320 - w}z" transform="rotate(${a} 320 200)"/>`).join('');
     return `<svg viewBox="0 0 640 400" role="img" aria-hidden="true">
       <defs><path id="ringP" d="M320 200m-153 0a153 153 0 1 1 306 0a153 153 0 1 1-306 0"/></defs>
@@ -190,14 +191,14 @@
       <path d="M40 160H600L580 205L600 250H40L60 205Z" fill="#111" transform="translate(8 8)"/>
       <path d="M40 160H600L580 205L600 250H40L60 205Z" fill="#fff" stroke="#111" stroke-width="6" stroke-linejoin="round"/>
       <path d="M86 172H554M86 238H554" stroke="#111" stroke-width="2" stroke-dasharray="2 6" stroke-linecap="round"/>
-      ${pre ? `<rect x="268" y="112" width="104" height="38" rx="6" fill="#111"/><text x="320" y="139" text-anchor="middle" font-family="'${TF}',sans-serif" font-size="22" letter-spacing="1" fill="#fff">${esc(pre)}</text>` : ''}
+      ${pre ? `<rect class="ttlPreBox" x="268" y="112" width="104" height="38" rx="6" fill="#111"/><text class="ttlPre" x="320" y="139" text-anchor="middle" font-family="'${TF}',sans-serif" font-size="22" letter-spacing="1" fill="#fff">${esc(pre)}</text>` : ''}
       <text class="ttlMain" x="320" y="${205 + big * .36}" text-anchor="middle" font-family="'${TF}','Zen Maru Gothic',sans-serif" font-size="${big}" fill="#111" letter-spacing="${Math.round(big * .05)}">${esc(main)}</text>
       <g transform="translate(320 286)"><rect x="-66" y="-17" width="132" height="34" rx="17" fill="#111"/><text y="8" text-anchor="middle" font-family="Fredoka,sans-serif" font-weight="700" font-size="22" fill="#fff">${n}<tspan font-family="Fredoka,sans-serif" font-weight="700" font-size="13" dx="6" letter-spacing="2">GAMES</tspan></text></g>
       <!-- piece tips on the compass -->
       <g fill="#fff" stroke="#111" stroke-width="4">
         <g transform="translate(320 72) scale(.8)"><circle r="13"/><path d="M-12 30h24l-4-14h-16z"/></g>
-        <g transform="translate(412 112) rotate(14) scale(.8)"><rect x="-15" y="-15" width="30" height="30" rx="7"/><circle cx="-6" cy="-6" r="2.6" fill="#111" stroke="none"/><circle cx="6" cy="6" r="2.6" fill="#111" stroke="none"/></g>
-        <g transform="translate(228 112) rotate(-10) scale(.8)"><path d="M0-19l13 6 4 30h-34l4-30z"/></g>
+        <g class="ttlTip" transform="translate(412 112) rotate(14) scale(.8)"><rect x="-15" y="-15" width="30" height="30" rx="7"/><circle cx="-6" cy="-6" r="2.6" fill="#111" stroke="none"/><circle cx="6" cy="6" r="2.6" fill="#111" stroke="none"/></g>
+        <g class="ttlTip" transform="translate(228 112) rotate(-10) scale(.8)"><path d="M0-19l13 6 4 30h-34l4-30z"/></g>
       </g>
     </svg>`;
   }
@@ -206,6 +207,8 @@
   if (document.fonts && document.fonts.load) document.fonts.load(`40px "${TF}"`, 'ボドゲ大百科世界の').then(() => { tfReady = true; if (page === 'home') renderHero(true); }).catch(() => {});
   // the ribbon title must stay inside the ribbon in every language: measure it and shrink the font (never squeeze the glyphs)
   function fitTitle() {
+    const pt = $('ttl').querySelector('.ttlPre'), pb = $('ttl').querySelector('.ttlPreBox');
+    if (pt && pb && pt.getComputedTextLength) { const w = pt.getComputedTextLength(); if (w > 0) { const bw = Math.max(104, Math.round(w + 32)); pb.setAttribute('width', bw); pb.setAttribute('x', 320 - bw / 2); $('ttl').querySelectorAll('.ttlTip').forEach(g => g.style.display = bw > 150 ? 'none' : ''); } }   // (a wide tag would cover the piece and die tips beside it)
     const tx = $('ttl').querySelector('.ttlMain'); if (!tx || !tx.getComputedTextLength) return;
     const MAX = 430;   // (the ribbon's inner width between the dotted lines is 468)
     let fs = parseFloat(tx.getAttribute('font-size'));
@@ -217,7 +220,11 @@
   }
   function renderHero(titleOnly) {
     const ja = lang === 'ja', phone = innerWidth < 760;
-    $('ttl').innerHTML = emblem(ja ? 'ボドゲ大百科' : t('title'), ja ? '世界の' : '', A_.GAMES.length);
+    // long titles put their first part in the tag above the ribbon (like 世界の in Japanese), so the ribbon keeps big letters
+    const SPLIT = { ja: ['世界の', 'ボドゲ大百科'], fr: ['ATLAS MONDIAL', 'Jeux de société'], es: ['ATLAS MUNDIAL', 'Juegos de Mesa'], pt: ['ATLAS MUNDIAL', 'Jogos de Tabuleiro'],
+      de: ['WELT', 'Brettspiel-Atlas'], id: ['ATLAS DUNIA', 'Permainan Papan'], tr: ['DÜNYA ATLASI', 'Masa Oyunları'],
+      zh: ['世界', '桌游大全'], 'zh-TW': ['世界', '桌遊大百科'], ko: ['세계의', '보드게임 대전'], hi: ['विश्व', 'बोर्ड गेम एटलस'] }[lang];
+    $('ttl').innerHTML = emblem(SPLIT ? SPLIT[1] : t('title'), SPLIT ? SPLIT[0] : '', A_.GAMES.length);
     $('ttl').setAttribute('aria-label', t('title') + ' — World Board Game Atlas');
     fitTitle();
     if (titleOnly && $('props').childElementCount) return;   // (the font arrived: only the title is redrawn, the pieces keep floating)
