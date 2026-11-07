@@ -99,6 +99,8 @@
   function faceGeo(tp) {
     const r = SIZE[tp] * u * .97, key = 'f' + r; if (geos[key]) return geos[key];
     const TT = T(), R = r / Math.cos(Math.PI / 8), g = new TT.CircleGeometry(R, 8); g.rotateZ(Math.PI / 8);
+    // re-map the UVs from the rotated positions (rotateZ carries the UVs round with it, skewing the face by 22.5°)
+    { const P = g.attributes.position, UV = g.attributes.uv; for (let k = 0; k < P.count; k++) UV.setXY(k, P.getX(k) / (2 * r) + .5, P.getY(k) / (2 * r) + .5); UV.needsUpdate = true; }
     if (X.share) X.share(g); return (geos[key] = g);
   }
   function faceTex(code) {

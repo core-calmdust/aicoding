@@ -126,7 +126,9 @@
     const face = M({ map: X.canvasTex('ic-jg' + ch + (han ? 'h' : 'c'), 256, 256, (c, W) => { const r = W / 2, Rr = r / Math.cos(Math.PI / 8), gr = c.createRadialGradient(r * .8, r * .7, 10, r, r, r); gr.addColorStop(0, '#fbecca'); gr.addColorStop(1, '#ebc98f'); c.fillStyle = gr; c.fillRect(0, 0, W, W);
       c.strokeStyle = ink; c.lineWidth = 10; c.beginPath(); for (let k = 0; k < 8; k++) { const a = Math.PI / 8 + k * Math.PI / 4; c[k ? 'lineTo' : 'moveTo'](r + Math.cos(a) * Rr * .8, r + Math.sin(a) * Rr * .8); } c.closePath(); c.stroke();
       c.fillStyle = ink; c.font = '900 136px "Noto Serif KR","Shippori Mincho B1","Noto Serif CJK JP",serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(ch, r, r + 8); }), roughness: .45 });
-    const top = mesh(new T.CircleGeometry(R * .95, 8), face); top.rotation.set(-Math.PI / 2, 0, turn + Math.PI / 8); top.position.y = .362; top.castShadow = false; g.add(top);
+    const tg = new T.CircleGeometry(R * .95, 8); tg.rotateZ(Math.PI / 8);   // octagon flat-topped; UVs re-mapped so the text stays upright
+    { const P = tg.attributes.position, UV = tg.attributes.uv; for (let k = 0; k < P.count; k++) UV.setXY(k, P.getX(k) / (2 * R * .95) + .5, P.getY(k) / (2 * R * .95) + .5); }
+    const top = mesh(tg, face); top.rotation.set(-Math.PI / 2, 0, turn); top.position.y = .362; top.castShadow = false; g.add(top);
     g.scale.setScalar(s); return g;
   }
   // a Gzhel porcelain piece (ugolki): glazed puck, the face painted with a cobalt (or white) eight-stroke rose, a band and a dot ring

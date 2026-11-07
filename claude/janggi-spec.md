@@ -23,7 +23,7 @@
 - ルールは janggi/tools/make_rules.py で xiangqi のルール＋janggi サブツリーを生成した janggi/database.rules.json を公開（2026-11-07 公開済み）。
 
 ## 3D（大百科）
-- atlas/models/janggi.js：木製の厚い盤＋八角形の駒（将が大、士・兵が小）。
+- atlas/models/janggi.js：木製の厚い盤＋八角形の駒（将が大、士・兵が小）。 駒面は八角の平らな辺が上下、文字は正立（CircleGeometry を rotateZ したら UV を位置から振り直す。rotateZ は UV ごと回るので文字が22.5°傾く）。icons3d.js の jgPiece も同じ。
 - atlas/skin/janggi.js：フル機能版（?skin=atlas）。atlas/games/janggi.js：3D卓プレイ（引き分けボタンなし、HUDの色は楚=緑・漢=赤）。展示盤は scale 1.1（長辺≈10.1）。
 
 ## ポータル・トップ
