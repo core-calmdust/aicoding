@@ -4,11 +4,11 @@
 <script>try { const S = (JSON.parse(localStorage.getItem('aicoding-fanorona') || '{}') || {}).settings || {}; document.documentElement.dataset.bd = S.bd || 'lambared'; document.documentElement.dataset.pcs = S.pcs || 'lacquer'; } catch (e) {}
 /* a wide window (16:10 or wider, as Backgammon's body.wide-side): the PC 9x5 board gets the column layout (CSS: html.sv-wide) */
 (function () { const m = matchMedia('(min-aspect-ratio: 8/5)'), f = () => document.documentElement.classList.toggle('sv-wide', m.matches); f(); if (m.addEventListener) m.addEventListener('change', f); else m.addListener(f); })();</script>
-<script>/* portal skin: show "loading" until the 3D board is ready */ if (/[?&]skin=atlas\b/.test(location.search) && !(!/[?&]embed=1/.test(location.search) && (function () { try { return localStorage.getItem('aicoding-fanorona-landscape') === '1'; } catch (e) { return false; } })() && matchMedia('(pointer: coarse)').matches)) { document.documentElement.classList.add('atlas-skin'); document.write('<style>html.atlas-skin{background:#fff6e2}html.atlas-skin body{opacity:0}html.atlas-skin.atlas-ready body{opacity:1;transition:opacity .2s}.atlas-load{visibility:hidden}</style><link rel="stylesheet" href="../atlas/skin/loading.css?v=2"><script src="../atlas/skin/loading.js?v=4"><\/script><script>AtlasLoading.show()<\/script>'); }</script>
+<script>/* portal skin: show "loading" until the 3D board is ready */ if (/[?&]skin=atlas\b/.test(location.search) && !(!/[?&]embed=1/.test(location.search) && (function () { try { return localStorage.getItem('aicoding-fanorona-landscape') === '1'; } catch (e) { return false; } })() && matchMedia('(pointer: coarse)').matches)) { document.documentElement.classList.add('atlas-skin'); document.write('<style>html.atlas-skin{background:#fff6e2}html.atlas-skin body{opacity:0}html.atlas-skin.atlas-ready body{opacity:1;transition:opacity .2s}.atlas-load{visibility:hidden}</style><link rel="stylesheet" href="../atlas/skin/loading.css?v=2l14"><script src="../atlas/skin/loading.js?v=4l14"><\/script><script>AtlasLoading.show()<\/script>'); }</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<script src="../shared/latinfs.js?v=1"></script>
-<script src="../shared/phonesnd.js?v=1"></script>
+<script src="../shared/latinfs.js?v=1l14"></script>
+<script src="../shared/phonesnd.js?v=1l14"></script>
 <meta name="theme-color" content="#180c06">
 <meta name="description" content="マダガスカルの国民的ボードゲーム「ファノロナ」。近づいて取る・離れて取る独特の捕獲で、相手の列をまとめて取る。20段階のAI（15級〜五段）、レーティング戦、レッスン・序盤・詰めファノロナ・今日の一問。登録不要でスマホでも遊べます。">
 <title>ファノロナ — 世界のボドゲ大百科</title>
@@ -1361,7 +1361,7 @@ body.lt-on .reserve .onb.on{border-color:var(--accent);box-shadow:0 0 0 1px var(
   html[data-rule=sivy]:is(.sv-wide, :has(> body.dock-open:not(.ol-soon))) body .side-in:not(#zz):not(#zy) > #evalCard .graph{display:block!important;flex:none!important;height:clamp(40px, calc(var(--vh) * .075), 72px)!important}
 }
 </style>
-<script src="../shared/rangetouch.js?v=1"></script>
+<script src="../shared/rangetouch.js?v=1l14"></script>
 </head>
 <body>
 <div class="app">
@@ -1673,7 +1673,7 @@ body.lt-on .reserve .onb.on{border-color:var(--accent);box-shadow:0 0 0 1px var(
     };
     fit(); addEventListener('resize', fit);
     try { history.replaceState(null, '', location.pathname); } catch (e) {}   // (the iframe took the room / record links along)
-  } else document.write('<script src="i18n.js?v=fb5l14"><\/script><script src="i18n-online.js?v=l14b"><\/script><script src="../shared/pzbook.js?v=5"><\/script><script src="../shared/placement.js?v=1"><\/script><script src="../shared/rulesoffer.js?v=16"><\/script><script src="../shared/headerbar.js?v=43"><\/script><script src="../shared/flipbtn.js?v=3"><\/script><script src="../shared/cardbar.js?v=7"><\/script><script src="../shared/watchpause.js?v=2"><\/script><script src="../shared/tick.js?v=2"><\/script><script src="../shared/ruletour.js?v=29"><\/script><script src="engine.js?v=fb4"><\/script><script src="firebase-config.js?v=fa2"><\/script><script src="../shared/onlinesec.js?v=2"><\/script><script src="online.js?v=fb3"><\/script><script src="../shared/resign.js?v=3"><\/script><script src="../shared/drawoffer.js?v=1"><\/script><script src="rvbox.js?v=fb3-l14"><\/script><script src="../shared/coachkit.js?v=16"><\/script><script src="../shared/record.js?v=12"><\/script><script src="coach.js?v=fb5"><\/script><script src="coach-i18n.js?v=fb6"><\/script><script src="../shared/export.js?v=9"><\/script><script src="app.js?v=fb9rh-crllv-dr1-rc1-l14"><\/script><script src="online-ui.js?v=fb2p-dr1"><\/script><script src="landtabs.js?v=fb5"><\/script><script src="../shared/pickdrop.js?v=8"><\/script><script src="../shared/ngtabs.js?v=25"><\/script><script src="../shared/nglux.js?v=14"><\/script><script src="../shared/resumeng.js?v=1"><\/script>');
+  } else document.write('<script src="i18n.js?v=fb5l14"><\/script><script src="i18n-online.js?v=l14b"><\/script><script src="../shared/pzbook.js?v=5l14"><\/script><script src="../shared/placement.js?v=1l14"><\/script><script src="../shared/rulesoffer.js?v=16l14"><\/script><script src="../shared/headerbar.js?v=43l14"><\/script><script src="../shared/flipbtn.js?v=3l14"><\/script><script src="../shared/cardbar.js?v=7l14"><\/script><script src="../shared/watchpause.js?v=2l14"><\/script><script src="../shared/tick.js?v=2l14"><\/script><script src="../shared/ruletour.js?v=29l14"><\/script><script src="engine.js?v=fb4"><\/script><script src="firebase-config.js?v=fa2"><\/script><script src="../shared/onlinesec.js?v=2l14"><\/script><script src="online.js?v=fb3"><\/script><script src="../shared/resign.js?v=3l14"><\/script><script src="../shared/drawoffer.js?v=1l14"><\/script><script src="rvbox.js?v=fb3-l14"><\/script><script src="../shared/coachkit.js?v=16l14"><\/script><script src="../shared/record.js?v=12l14"><\/script><script src="coach.js?v=fb5"><\/script><script src="coach-i18n.js?v=fb6"><\/script><script src="../shared/export.js?v=9l14"><\/script><script src="app.js?v=fb9rh-crllv-dr1-rc1-l14"><\/script><script src="online-ui.js?v=fb2p-dr1"><\/script><script src="landtabs.js?v=fb5"><\/script><script src="../shared/pickdrop.js?v=8l14"><\/script><script src="../shared/ngtabs.js?v=25l14"><\/script><script src="../shared/nglux.js?v=14l14"><\/script><script src="../shared/resumeng.js?v=1l14"><\/script>');
 })();
 </script>
 <!-- World Board Game Atlas portal skin: fanorona/?skin=atlas — 3D carved acacia board (scorched lines and points, grooves for the captured balls), matte wooden balls, guide speech bubbles, portal look (all features kept) -->
@@ -1681,20 +1681,20 @@ body.lt-on .reserve .onb.on{border-color:var(--accent);box-shadow:0 0 0 1px var(
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search) || window.__ROTWRAP) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=37'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=37l14'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=107')).then(() => load('../atlas/tables3d.js?v=10')).then(() => load('../atlas/skin/common.js?v=29')).then(() => load('../atlas/models/fanorona.js?v=2')).then(() => load('../atlas/skin/fanorona.js?v=6'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=107l14')).then(() => load('../atlas/tables3d.js?v=10l14')).then(() => load('../atlas/skin/common.js?v=29l14')).then(() => load('../atlas/models/fanorona.js?v=2l14')).then(() => load('../atlas/skin/fanorona.js?v=6l14'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
 <script src="../shared/atlas.js?v=20261108i14" defer></script>
-<script src="../shared/atlas-firebase-config.js?v=fa2" defer></script>
-<script src="../shared/atlas-account.js?v=20261101fa1" defer></script>
-<script src="../shared/infotabs.js?v=17" data-strips defer></script>
-<script src="../shared/langsel.js?v=1" defer></script>
-<script src="../shared/rulelink.js?v=1"></script>
+<script src="../shared/atlas-firebase-config.js?v=fa2l14" defer></script>
+<script src="../shared/atlas-account.js?v=20261101fa1l14" defer></script>
+<script src="../shared/infotabs.js?v=17l14" data-strips defer></script>
+<script src="../shared/langsel.js?v=1l14" defer></script>
+<script src="../shared/rulelink.js?v=1l14"></script>
 </body>
 </html>

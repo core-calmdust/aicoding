@@ -2,10 +2,10 @@
 <html lang="ja" data-sk="lamp">
 <head>
 <meta charset="UTF-8">
-<script>/* portal skin: show "loading" until the 3D board is ready */ if (/[?&]skin=atlas\b/.test(location.search)) { document.documentElement.classList.add('atlas-skin'); document.write('<style>html.atlas-skin{background:#fff6e2}html.atlas-skin body{opacity:0}html.atlas-skin.atlas-ready body{opacity:1;transition:opacity .2s}.atlas-load{visibility:hidden}</style><link rel="stylesheet" href="../atlas/skin/loading.css?v=2"><script src="../atlas/skin/loading.js?v=4"><\/script><script>AtlasLoading.show()<\/script>'); }</script>
+<script>/* portal skin: show "loading" until the 3D board is ready */ if (/[?&]skin=atlas\b/.test(location.search)) { document.documentElement.classList.add('atlas-skin'); document.write('<style>html.atlas-skin{background:#fff6e2}html.atlas-skin body{opacity:0}html.atlas-skin.atlas-ready body{opacity:1;transition:opacity .2s}.atlas-load{visibility:hidden}</style><link rel="stylesheet" href="../atlas/skin/loading.css?v=2l14"><script src="../atlas/skin/loading.js?v=4l14"><\/script><script>AtlasLoading.show()<\/script>'); }</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<script src="../shared/latinfs.js?v=1"></script>
-<script src="../shared/phonesnd.js?v=1"></script>
+<script src="../shared/latinfs.js?v=1l14"></script>
+<script src="../shared/phonesnd.js?v=1l14"></script>
 <meta name="theme-color" content="#16130f">
 <meta name="description" content="完全読みソルバーを備えたブラウザ版ドット・アンド・ボックス。レッスンと詰めドットで鎖・長鎖ルール・ダブルディールが学べます。">
 <title>ドット・アンド・ボックス</title>
@@ -896,7 +896,7 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
 .modal-actions:has(#btnLessonNextStep) .mbtn{flex:1 1 auto!important;min-width:max-content!important;width:auto!important;white-space:nowrap!important;padding-left:12px!important;padding-right:12px!important;letter-spacing:.02em}
 .modal-actions:has(#btnLessonNextStep) #btnLessonNextStep{flex-basis:100%!important}
 </style>
-<script src="../shared/rangetouch.js?v=1"></script>
+<script src="../shared/rangetouch.js?v=1l14"></script>
 </head>
 <body>
 <div class="app">
@@ -1143,27 +1143,27 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
 
 <script src="i18n.js?v=20261107l14"></script>
 <script src="i18n-learn.js?v=20261107l14"></script><!-- learn-ui -->
-<script src="../shared/placement.js?v=1"></script>
-<script src="../shared/pzbook.js?v=5"></script><!-- learn-ui -->
-<script src="../shared/headerbar.js?v=43"></script>
-<script src="../shared/flipbtn.js?v=3"></script>
-<script src="../shared/cardbar.js?v=7"></script>
-<script src="../shared/watchpause.js?v=2"></script>
-<script src="../shared/resign.js?v=3"></script>
-<script src="../shared/tick.js?v=2"></script>
-<script src="../shared/ruletour.js?v=29"></script><!-- only RuleTour.intro() for the rules intro page -->
+<script src="../shared/placement.js?v=1l14"></script>
+<script src="../shared/pzbook.js?v=5l14"></script><!-- learn-ui -->
+<script src="../shared/headerbar.js?v=43l14"></script>
+<script src="../shared/flipbtn.js?v=3l14"></script>
+<script src="../shared/cardbar.js?v=7l14"></script>
+<script src="../shared/watchpause.js?v=2l14"></script>
+<script src="../shared/resign.js?v=3l14"></script>
+<script src="../shared/tick.js?v=2l14"></script>
+<script src="../shared/ruletour.js?v=29l14"></script><!-- only RuleTour.intro() for the rules intro page -->
 <link rel="stylesheet" href="learn.css?v=20261028sk"><!-- learn-ui -->
 <script src="engine.js?v=20261028rb"></script>
 <script src="rvbox.js?v=20261107l14"></script><!-- 振り返りボックス (PC): 候補手・読み筋・検討 -->
 <script src="learn.js?v=20261101fl"></script>
 <script src="i18n-online.js?v=20261107l14"></script>
 <script src="firebase-config.js?v=ac1"></script>
-<script src="../shared/onlinesec.js?v=2"></script>
+<script src="../shared/onlinesec.js?v=2l14"></script>
 <script src="online.js?v=stale2"></script>
-<script src="../shared/coachkit.js?v=16"></script>
-<script src="../shared/record.js?v=12"></script>
+<script src="../shared/coachkit.js?v=16l14"></script>
+<script src="../shared/record.js?v=12l14"></script>
 <script src="coach.js?v=8"></script>
-<script src="../shared/export.js?v=9"></script>
+<script src="../shared/export.js?v=9l14"></script>
 <script src="coach-i18n.js?v=4"></script>
 <script>
 'use strict';
@@ -2283,25 +2283,25 @@ document.querySelector('#rsResume').onclick = () => { document.querySelector('#r
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=37'; document.head.appendChild(css);
-  const css2 = document.createElement('link'); css2.rel = 'stylesheet'; css2.href = '../atlas/skin/dots.css?v=2'; document.head.appendChild(css2);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=37l14'; document.head.appendChild(css);
+  const css2 = document.createElement('link'); css2.rel = 'stylesheet'; css2.href = '../atlas/skin/dots.css?v=2l14'; document.head.appendChild(css2);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&family=Kalam:wght@400;700&family=Zen+Kurenaido&family=Nanum+Pen+Script&family=Long+Cang&family=Aref+Ruqaa:wght@700&display=swap'; document.head.appendChild(f);   // (Kalam … Aref Ruqaa: the handwritten box initials and tally on the notebook page)
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=107')).then(() => load('../atlas/tables3d.js?v=10')).then(() => load('../atlas/skin/common.js?v=29')).then(() => load('../atlas/models/dots.js?v=3')).then(() => load('../atlas/skin/dots.js?v=7'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=107l14')).then(() => load('../atlas/tables3d.js?v=10l14')).then(() => load('../atlas/skin/common.js?v=29l14')).then(() => load('../atlas/models/dots.js?v=3l14')).then(() => load('../atlas/skin/dots.js?v=7l14'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
 <script src="../shared/atlas.js?v=20261108i14" defer></script>
-<script src="../shared/atlas-firebase-config.js?v=ac1" defer></script>
-<script src="../shared/atlas-account.js?v=20261101fa1" defer></script>
-<script src="../shared/infotabs.js?v=17" defer></script>
-<script src="../shared/pickdrop.js?v=8"></script>
-<script src="../shared/ngtabs.js?v=25"></script>
-<script src="../shared/nglux.js?v=14"></script>
-<script src="../shared/resumeng.js?v=1"></script>
-<script src="../shared/langsel.js?v=1" defer></script>
-<script src="../shared/rulelink.js?v=1"></script>
+<script src="../shared/atlas-firebase-config.js?v=ac1l14" defer></script>
+<script src="../shared/atlas-account.js?v=20261101fa1l14" defer></script>
+<script src="../shared/infotabs.js?v=17l14" defer></script>
+<script src="../shared/pickdrop.js?v=8l14"></script>
+<script src="../shared/ngtabs.js?v=25l14"></script>
+<script src="../shared/nglux.js?v=14l14"></script>
+<script src="../shared/resumeng.js?v=1l14"></script>
+<script src="../shared/langsel.js?v=1l14" defer></script>
+<script src="../shared/rulelink.js?v=1l14"></script>
 </body>
 </html>
