@@ -41,7 +41,7 @@
     return (b2p = new Promise(res => {
       if (window.SenetBoard2D) return res();
       const sc = document.createElement('script'), base = /\/(atlas|senet)\//.test(location.pathname) ? '../senet/' : 'senet/';
-      sc.src = base + 'board2d.js?v=2'; sc.onload = () => res(); sc.onerror = () => res(); document.head.appendChild(sc);
+      sc.src = base + 'board2d.js?v=3'; sc.onload = () => res(); sc.onerror = () => res(); document.head.appendChild(sc);
     }));
   }
   function topTex(design) {
@@ -153,20 +153,48 @@
   const STK = { L: 1.05, Wd: .15, Th: .05 };
   function stickFace(white) {
     return mat('sf' + white, () => {
-      const TT = T();
-      if (!white) return phys({ color: '#3a2416', roughness: .5, clearcoat: .4, clearcoatRoughness: .3 });
-      const t = X.canvasTex('snStickW', 64, 384, (c, w, h) => {
-        c.fillStyle = '#f2e6c6'; c.fillRect(0, 0, w, h);
-        c.strokeStyle = '#8a2d1c'; c.lineWidth = 6; [40, 62, h - 62, h - 40].forEach(y => { c.beginPath(); c.moveTo(6, y); c.lineTo(w - 6, y); c.stroke(); });
-        c.lineWidth = 4; c.beginPath(); c.moveTo(w / 2, h * .32); c.lineTo(w - 12, h / 2); c.lineTo(w / 2, h * .68); c.lineTo(12, h / 2); c.closePath(); c.stroke();
+      // both faces are wood: the back bare, oiled acacia with its grain; the front painted white over the same grain, bands and a lozenge
+      const grain = (c, w, h, base, line, alpha) => {
+        c.fillStyle = base; c.fillRect(0, 0, w, h);
+        let sd = 7; const rnd = () => (sd = (sd * 9301 + 49297) % 233280) / 233280;
+        for (let i = 0; i < 26; i++) {
+          const x0 = rnd() * w, amp = 2 + rnd() * 5, ph = rnd() * 6.28, fr = 2 + rnd() * 3;
+          c.strokeStyle = line; c.globalAlpha = alpha * (.35 + rnd() * .65); c.lineWidth = .8 + rnd() * 1.8;
+          c.beginPath(); for (let y = 0; y <= h; y += 8) { const x = x0 + Math.sin(y / h * fr * 6.28 + ph) * amp; y ? c.lineTo(x, y) : c.moveTo(x, y); } c.stroke();
+        }
+        for (let i = 0; i < 3; i++) { const y = rnd() * h, x = rnd() * w; c.globalAlpha = alpha * .8; c.fillStyle = line; c.beginPath(); c.ellipse(x, y, 3 + rnd() * 3, 9 + rnd() * 8, 0, 0, 6.28); c.fill(); }   // a few knots
+        c.globalAlpha = 1;
+      };
+      if (!white) {
+        const t = X.canvasTex('snStickB2', 64, 384, (c, w, h) => grain(c, w, h, '#7a4a28', '#2e170a', .55));
+        return phys({ map: t, color: '#ffffff', roughness: .48, clearcoat: .35, clearcoatRoughness: .35 });
+      }
+      const t = X.canvasTex('snStickW2', 64, 384, (c, w, h) => {
+        grain(c, w, h, '#fbf3df', '#b99a68', .28);
+        c.strokeStyle = '#a3301c'; c.lineWidth = 6; [40, 62, h - 62, h - 40].forEach(y => { c.beginPath(); c.moveTo(6, y); c.lineTo(w - 6, y); c.stroke(); });
+        c.fillStyle = 'rgba(47,91,208,.22)'; c.lineWidth = 4; c.beginPath(); c.moveTo(w / 2, h * .32); c.lineTo(w - 12, h / 2); c.lineTo(w / 2, h * .68); c.lineTo(12, h / 2); c.closePath(); c.fill(); c.stroke();
       });
-      return phys({ map: t, color: '#ffffff', roughness: .55 });
+      return phys({ map: t, color: '#ffffff', roughness: .5, clearcoat: .2, clearcoatRoughness: .5 });
     });
   }
+  // a throw stick: flat-ish but rounded across (both faces bulge a little, more on the painted one) and bowed a touch along its length
+  let stickGeo = null;
   function stick() {
     const TT = T(), g = new TT.Group();
     const dark = stickFace(false), light = stickFace(true);
-    const m = new TT.Mesh(new TT.BoxGeometry(STK.Wd, STK.Th, STK.L), [dark, dark, light, dark, dark, dark]);
+    if (!stickGeo) {
+      stickGeo = new TT.BoxGeometry(STK.Wd, STK.Th, STK.L, 8, 1, 10);
+      const P = stickGeo.attributes.position, hw = STK.Wd / 2, hl = STK.L / 2;
+      for (let i = 0; i < P.count; i++) {
+        const x = P.getX(i), y = P.getY(i), z = P.getZ(i), u = x / hw, v = z / hl;
+        const dome = (1 - u * u) * (y > 0 ? .028 : .012);   // rounded across
+        const ends = 1 - .12 * v * v;                       // a little thinner toward the ends
+        P.setY(i, (y > 0 ? y + dome : y - dome) * ends + .018 * (1 - v * v));   // bowed along the length
+        P.setX(i, x * (1 - .06 * v * v));
+      }
+      stickGeo.computeVertexNormals();
+    }
+    const m = new TT.Mesh(stickGeo, [dark, dark, light, dark, dark, dark]);
     m.castShadow = true; m.receiveShadow = true; g.add(m); g.userData.body = m;
     return g;
   }
@@ -181,7 +209,7 @@
     const put = (sq, side) => { const p = piece(side, 'tut'), [x, z] = U.pt(sq); p.position.set(x, U.top, z); g.add(p); const sh = X.contact(PR * .95, .45); sh.position.set(x, U.top + .001, z); g.add(sh); };
     [[3, 0], [4, 0], [9, 0], [14, 0], [26, 0], [5, 1], [11, 1], [12, 1], [17, 1], [22, 1]].forEach(([s, sd]) => put(s, sd));
     [1, 0, 1, 1].forEach((w, i) => { const s = stick(); stickUp(s, !!w, .15 * (i - 1.5)); s.position.set(-3 + i * .35, STK.Th / 2, D / 2 + .9); g.add(s); });
-    g.scale.setScalar(.62);
+    g.scale.setScalar(.93);   // (the showcase on the table: longest side ≈ 10.2, as the other long boards — ur, hex, mancala)
     return g;
   };
   X.senet = { board, piece, stick, stickUp, PR, PH, STK, W, D, H, DESIGNS };

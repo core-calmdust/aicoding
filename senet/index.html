@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <script src="../shared/latinfs.js?v=1l14"></script>
 <script src="../shared/phonesnd.js?v=1l14"></script>
-<meta name="theme-color" content="#130c07">
+<meta name="theme-color" content="#0f0b04">
 <meta name="description" content="古代エジプトのボードゲーム「セネト」。ツタンカーメンの黒檀と象牙の盤など、歴史の盤そのままの見た目で遊べます。投げ棒4本、30マスの逆S字の道、美の家と水の家。20段階のAI、レーティング戦、コーチ、レッスン・次の一手パズル。登録不要でスマホでも遊べます。">
 <title>セネト — 世界のボドゲ大百科</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231d120c'/%3E%3Cg fill='%23ecdcb6'%3E%3Crect x='7' y='14' width='15' height='11' rx='2'/%3E%3Crect x='25' y='14' width='15' height='11' rx='2'/%3E%3Crect x='43' y='14' width='15' height='11' rx='2'/%3E%3Crect x='7' y='28' width='15' height='11' rx='2'/%3E%3Crect x='25' y='28' width='15' height='11' rx='2'/%3E%3Crect x='43' y='28' width='15' height='11' rx='2'/%3E%3Crect x='7' y='42' width='15' height='11' rx='2'/%3E%3Crect x='25' y='42' width='15' height='11' rx='2'/%3E%3Crect x='43' y='42' width='15' height='11' rx='2'/%3E%3C/g%3E%3Cpath d='M45 47c3-3 7-3 10 0c-3 3-7 3-10 0z' fill='%231f3a6a'/%3E%3Cpath d='M28 33h11M33.5 29v8' stroke='%23d7ae55' stroke-width='2'/%3E%3C/svg%3E">
@@ -22,9 +22,10 @@
 <style>
 /* ================================================================ セネト — 黒檀と金、ファイアンスの青緑（ナイルの夕暮れ） */
 :root{
-  --bg:#130c07; --bg2:#1c130b; --panel:#22170e; --panel2:#2d1f13; --line:#4b3521;
-  --text:#efe8d6; --muted:#c8b99c; --dim:#958367;
-  --lapis:#1f8fa8; --lapis2:#146a80; --gold:#d9b45a; --gold2:#a8843a; --carn:#c2412d; --carn2:#8e2a1c;
+  /* Tutankhamun's mask: burnished gold, lapis-lazuli stripes, a little carnelian and turquoise — on gilded black */
+  --bg:#0f0b04; --bg2:#17110a; --panel:#1a150b; --panel2:#251d0e; --line:#5a4719;
+  --text:#f3ead2; --muted:#d3c39a; --dim:#9c8a5e;
+  --lapis:#2f5bd0; --lapis2:#1c3a96; --turq:#3fb7b0; --gold:#d9b45a; --gold2:#a8843a; --carn:#c2412d; --carn2:#8e2a1c;
   --accent:#e6c573; --brass:#d9b45a; --brass2:#8f7232; --red:#ff7a66; --good:#7fd6a4;
   --light1:#f4ecd6; --light2:#d8ccad; --dark1:#4a4a52; --dark2:#1c1c22;
   --vh:100vh; --gap:12px;
@@ -36,8 +37,9 @@
 html,body{height:100%}
 body{
   background:
-    radial-gradient(1100px 620px at 18% -12%, rgba(31,143,168,.22) 0%, transparent 62%),
-    radial-gradient(900px 600px at 110% 115%, rgba(214,150,60,.16) 0%, transparent 60%),
+    radial-gradient(1100px 620px at 18% -12%, rgba(232,180,64,.20) 0%, transparent 62%),
+    radial-gradient(900px 600px at 110% 115%, rgba(47,91,208,.22) 0%, transparent 60%),
+    repeating-linear-gradient(180deg, rgba(47,91,208,.028) 0 26px, rgba(0,0,0,0) 26px 34px, rgba(232,190,80,.02) 34px 60px, rgba(0,0,0,0) 60px 68px),
     radial-gradient(1px 1px at 12% 22%, rgba(255,240,200,.6), transparent),
     radial-gradient(1px 1px at 78% 12%, rgba(255,240,200,.5), transparent),
     radial-gradient(1.4px 1.4px at 64% 30%, rgba(255,240,200,.45), transparent),
@@ -53,7 +55,8 @@ html[lang=ar] body{direction:rtl}
 html[lang=ar] .frame, html[lang=ar] .board-wrap, html[lang=ar] .kifu, html[lang=ar] .graph, html[lang=ar] .navbar{direction:ltr}
 
 /* ---------------------------------------------------------------- shared look */
-.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:14px;padding:12px 14px;min-width:0;position:relative}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:14px;padding:12px 14px;min-width:0;position:relative;box-shadow:inset 0 1px 0 rgba(255,220,140,.08)}
+.card::after{content:'';position:absolute;left:14px;right:14px;top:-1px;height:3px;border-radius:0 0 3px 3px;background:repeating-linear-gradient(90deg,#e4b84c 0 14px,#2f5bd0 14px 22px);opacity:.75;pointer-events:none}
 .card::before{content:"";position:absolute;inset:3px;border-radius:11px;border:1px solid rgba(217,180,90,.08);pointer-events:none}
 .label,.kifu-head .label,.evalrow .label{font-family:var(--serif);font-size:15px;letter-spacing:.12em;color:var(--accent);font-weight:700}
 html[lang=ja] .label, html[lang=zh] .label,html[lang=zh-TW] .label, html[lang=ko] .label{font-family:var(--mincho);font-size:13.5px}
@@ -1005,7 +1008,7 @@ html:not([lang=ja]):not([lang=zh]):not([lang=zh-TW]):not([lang=ko]) .result-big{
     fit(); addEventListener('resize', fit);
     // (the iframe took the room / record links along; the portal look stays for a reload)
     try { history.replaceState(null, '', location.pathname + (/[?&]skin=atlas\b/.test(location.search) ? '?skin=atlas' : '')); } catch (e) {}
-  } else document.write('<script src="i18n.js?v=1"><\/script><script src="i18n-online.js?v=1"><\/script><script src="../shared/pzbook.js?v=5l14"><\/script><script src="../shared/placement.js?v=1l14"><\/script><script src="../shared/rulesoffer.js?v=17l14"><\/script><script src="../shared/headerbar.js?v=43l14"><\/script><script src="../shared/cardbar.js?v=7l14"><\/script><script src="../shared/watchpause.js?v=2l14"><\/script><script src="../shared/tick.js?v=2l14"><\/script><script src="../shared/ruletour.js?v=29l14"><\/script><script src="engine.js?v=2"><\/script><script src="board2d.js?v=2"><\/script><script src="tour.js?v=2" onerror="window.__noTour=1"><\/script><script src="../shared/resign.js?v=3l14"><\/script><script src="../shared/coachkit.js?v=16l14"><\/script><script src="../shared/record.js?v=12l14"><\/script><script src="../shared/export.js?v=9l14"><\/script><script src="coach.js?v=1"><\/script><script src="coach-i18n.js?v=1"><\/script><script src="firebase-config.js?v=1"><\/script><script src="../shared/onlinesec.js?v=2l14"><\/script><script src="online.js?v=1"><\/script><script src="app.js?v=3"><\/script><script src="rv-i18n.js?v=1"><\/script><script src="rvbox.js?v=1"><\/script><script src="app-learn.js?v=2"><\/script><script src="online-ui.js?v=2"><\/script><script src="landtabs.js?v=2"><\/script><script src="../shared/pickdrop.js?v=8l14"><\/script><script src="../shared/ngtabs.js?v=25l14"><\/script><script src="../shared/nglux.js?v=14l14"><\/script><script src="../shared/resumeng.js?v=1l14"><\/script><script src="../shared/rulelink.js?v=1l14" data-btn="#btnRules"><\/script>');
+  } else document.write('<script src="i18n.js?v=1"><\/script><script src="i18n-online.js?v=1"><\/script><script src="../shared/pzbook.js?v=5l14"><\/script><script src="../shared/placement.js?v=1l14"><\/script><script src="../shared/rulesoffer.js?v=17l14"><\/script><script src="../shared/headerbar.js?v=43l14"><\/script><script src="../shared/cardbar.js?v=7l14"><\/script><script src="../shared/watchpause.js?v=2l14"><\/script><script src="../shared/tick.js?v=2l14"><\/script><script src="../shared/ruletour.js?v=29l14"><\/script><script src="engine.js?v=2"><\/script><script src="board2d.js?v=3"><\/script><script src="tour.js?v=2" onerror="window.__noTour=1"><\/script><script src="../shared/resign.js?v=3l14"><\/script><script src="../shared/coachkit.js?v=16l14"><\/script><script src="../shared/record.js?v=12l14"><\/script><script src="../shared/export.js?v=9l14"><\/script><script src="coach.js?v=1"><\/script><script src="coach-i18n.js?v=1"><\/script><script src="firebase-config.js?v=2"><\/script><script src="../shared/onlinesec.js?v=2l14"><\/script><script src="online.js?v=1"><\/script><script src="app.js?v=3-ai1"><\/script><script src="rv-i18n.js?v=1"><\/script><script src="rvbox.js?v=1"><\/script><script src="app-learn.js?v=2"><\/script><script src="online-ui.js?v=2"><\/script><script src="landtabs.js?v=2"><\/script><script src="../shared/pickdrop.js?v=8l14"><\/script><script src="../shared/ngtabs.js?v=25l14"><\/script><script src="../shared/nglux.js?v=14l14"><\/script><script src="../shared/resumeng.js?v=1l14"><\/script><script src="../shared/rulelink.js?v=1l14" data-btn="#btnRules"><\/script>');
 })();
 </script>
 <!-- World Board Game Atlas portal skin: senet/?skin=atlas — the board in 3D (atlas/models/senet.js + atlas/skin/senet.js), the DOM board stays on top for taps -->
@@ -1017,12 +1020,12 @@ html:not([lang=ja]):not([lang=zh]):not([lang=zh-TW]):not([lang=ko]) .result-big{
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=107l14')).then(() => load('../atlas/tables3d.js?v=10l14')).then(() => load('../atlas/skin/common.js?v=29l14')).then(() => load('../atlas/models/senet.js?v=3l14')).then(() => load('../atlas/skin/senet.js?v=3l14'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=108l14')).then(() => load('../atlas/tables3d.js?v=10l14')).then(() => load('../atlas/skin/common.js?v=30l14')).then(() => load('../atlas/models/senet.js?v=4l14')).then(() => load('../atlas/skin/senet.js?v=3l14'))
     .catch(() => { const u = new URL(location.href); u.searchParams.delete('skin'); location.replace(u.href); });   // (the 3D files are missing: the plain 2D page)
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=20261108i14" defer></script>
+<script src="../shared/atlas.js?v=20261108sn3" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=fa2l14" defer></script>
 <script src="../shared/atlas-account.js?v=20261101fa1l14" defer></script>
 <script src="../shared/infotabs.js?v=17l14" defer></script>
