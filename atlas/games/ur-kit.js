@@ -38,7 +38,7 @@
     const PT = opts.top ? 1.5703 : 0;
     // (phone table play: the board between Quit and the HUD, like Senet — fit.up)
     // (fit's w / d are the extents across / up the screen: rolled, the board's length runs up it — as mancala's upright view)
-    const fit0 = tall ? (opts.stage ? { w: U.D + 1.5, d: U.W + 1.1, y: Y, pitch: PT || 1.5, roll: -1 } : { w: U.D + 2.2, d: U.W + 3.3, up: .95, y: Y, pitch: PT || 1.5, roll: -1 }) : { w: U.W + .5, d: opts.stage ? U.D + 2.2 : U.D + 1.9, y: Y, pitch: PT || 1.2 };   // (fit0: table play puts it back after the phone-landscape layout)
+    const fit0 = tall ? (opts.stage ? { w: U.D + 1.5, d: U.W + 1.1, y: Y, pitch: PT || 1.5, roll: -1 } : { w: U.D + 3, d: U.W + 4.2, up: .95, y: Y, pitch: PT || 1.5, roll: -1 }) : { w: opts.stage ? U.W + .5 : U.W + 2.4, d: opts.stage ? U.D + 2.2 : U.D + 3.4, y: Y, pitch: PT || 1.2 };   // (table play: the camera a step back — the dice and trays well inside the view, with the roll button beside the dice)   // (fit0: table play puts it back after the phone-landscape layout)
     if (T3.fit) T3.fit(fit0);   // (PC: the board about as large as the other tours' boards; trays and dice just inside the view)
     let stopped = false;
     const anim = (dur, f) => new Promise(res => { const t0 = performance.now(); (function s(n) { if (stopped) return res(); const k = Math.min(1, Math.max(0, (n - t0) / dur)); f(k); T3.kick(150); if (k < 1) requestAnimationFrame(s); else res(); })(t0); });
