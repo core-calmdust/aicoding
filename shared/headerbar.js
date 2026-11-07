@@ -25,6 +25,26 @@ const MQ = '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-
 const H = 56;
 const RULES = { ja: 'ルール', en: 'Rules', zh: '规则', ko: '규칙', es: 'Reglas', fr: 'Règles', pt: 'Regras', de: 'Regeln', hi: 'नियम', ar: 'القواعد', ru: 'Правила', 'zh-TW': '規則', id: 'Aturan', tr: 'Kurallar' };
 const RULES_T = { ja: '動かしながら覚えるルール', en: 'Learn the rules by playing', zh: '边玩边学规则', ko: '직접 해 보며 배우는 규칙', es: 'Aprende las reglas jugando', fr: 'Apprendre les règles en jouant', pt: 'Aprenda as regras jogando', de: 'Regeln beim Spielen lernen', hi: 'खेलते हुए नियम सीखें', ar: 'تعلّم القواعد باللعب', ru: 'Изучите правила в игре', 'zh-TW': '邊玩邊學規則', id: 'Pelajari aturan sambil bermain', tr: 'Kuralları oynayarak öğren' };
+// short names for the menu buttons (PC header bar and the phone menu under the title only — dialogs keep the game's own
+// longer wording; 2026-11-07): one natural word where the language has one, as Japanese already says 新規 rather than
+// 新しいゲーム. Keyed by language and by the game's full label, so only a known long label is replaced (a cash-out button
+// keeps its own meaning); the full label stays in the button's title. A short name already used by another button of the same
+// menu is not applied (de casino: «Lernen» is the study button there, so its lessons stay «Lektionen»). Japanese is unchanged.
+const SHORT = {
+  en: { 'New game': 'New', 'Offer draw': 'Draw?', 'Online play': 'Online' },
+  es: { 'Ofrecer tablas': '¿Tablas?', 'Problemas': 'Retos', 'Juego en línea': 'En línea', 'Retirar fichas': 'Cobrar' },
+  fr: { 'Abandonner': 'Abandon', 'Proposer nulle': 'Nulle ?', 'Problèmes': 'Défis', 'Jeu en ligne': 'En ligne', 'Statistiques': 'Stats' },
+  pt: { 'Propor empate': 'Empate?', 'Jogo online': 'Online' },
+  de: { 'Remis anbieten': 'Remis?', 'Lektionen': 'Lernen', 'Aufgaben': 'Rätsel', 'Online spielen': 'Online' },
+  ru: { 'Новая игра': 'Новая', 'Отмена хода': 'Отмена', 'Отменить': 'Отмена', 'Подсказка': 'Совет', 'Подсказки': 'Совет', 'Игра онлайн': 'Онлайн', 'Онлайн-игра': 'Онлайн', 'Забрать фишки': 'Выйти' },
+  tr: { 'Yeni oyun': 'Yeni', 'Beraberlik': 'Berabere?', 'Bulmacalar': 'Bulmaca', 'İpuçları': 'İpucu', 'Çevrim içi oyun': 'Çevrim içi', 'Fişleri boz': 'Kalk' },
+  id: { 'Permainan baru': 'Baru', 'Main baru': 'Baru', 'Urungkan': 'Batal', 'Tawarkan seri': 'Seri?', 'Tawar seri': 'Seri?', 'Tawarkan remis': 'Remis?', 'Teka-teki': 'Soal', 'Pelajaran': 'Belajar', 'Main online': 'Online' },
+  hi: { 'ड्रॉ प्रस्ताव': 'ड्रॉ?', 'पहेलियाँ': 'पहेली', 'ऑनलाइन खेल': 'ऑनलाइन' },
+  ar: { 'عرض تعادل': 'تعادل؟', 'الألغاز': 'ألغاز', 'الدروس': 'دروس', 'اللعب عبر الإنترنت': 'أونلاين', 'الإحصاءات': 'إحصاءات' },
+  ko: { '무승부 제안': '무승부?', '온라인 대국': '온라인', '되돌리기': '무르기' },
+  zh: { '在线对战': '在线', '离桌结算': '离桌', '结算离桌': '离桌', '残局题': '残局' },
+  'zh-TW': { '提議和棋': '提和', '提議和局': '提和', '線上對戰': '線上', '結算離桌': '離桌', '殘局題': '殘局' },
+};
 const ICON_RULES = '<svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M9 8h7M9 11.5h5"/></svg>';
 const CSS = `
 /* lesson / puzzle card buttons in the PC info column (common spec): two per row, labels on one line */
@@ -143,6 +163,7 @@ function init(o) {
     // keep the others (in their own order) after the common ones
     [...controls.children].filter(el => !list.includes(el)).forEach(el => controls.appendChild(el));
   }
+  if (controls) shortLabels(controls, L);
   // the bar
   const bar = document.createElement('header'); bar.className = 'hb'; bar.setAttribute('role', 'banner');
   bar.innerHTML = '<div class="hb-title"></div><div class="hb-info" aria-live="polite"></div><nav class="hb-menu-slot"></nav><div class="hb-icons"></div>';
@@ -195,6 +216,43 @@ function init(o) {
   if (!portal) fitBar(bar, info, () => controls, () => on);
   if (controls) fitLabels(controls, () => on);
   return api;
+}
+// the menu buttons' short names (SHORT above): applied whenever the game writes a label (start, language change, the draw
+// offer appearing …); the full label is kept in title (when the game set none) and in aria-label
+function shortLabels(controls, L) {
+  let q = 0;
+  const run = () => {
+    q = 0;
+    const lang = L() || document.documentElement.lang, map = SHORT[lang] || {};
+    const btns = [...controls.children].filter(b => b.querySelector(':scope > span'));
+    const sp = b => b.querySelector(':scope > span');
+    // a language change puts back the game's full label: drop what we added for the old one first
+    for (const b of btns) {
+      const s = sp(b), t = s.textContent.trim();
+      if (b.dataset.hbShort && t !== b.dataset.hbShort) {
+        if (b.dataset.hbST && b.title === b.dataset.hbFull) b.removeAttribute('title');
+        if (b.dataset.hbSA && b.getAttribute('aria-label') === b.dataset.hbFull) b.removeAttribute('aria-label');
+        for (const k of ['hbShort', 'hbFull', 'hbST', 'hbSA']) delete b.dataset[k];
+      }
+    }
+    const used = new Set(btns.map(b => sp(b).textContent.trim()));
+    for (const b of btns) {
+      const s = sp(b), t = s.textContent.trim(), sh = map[t];
+      if (!sh || b.dataset.hbShort || used.has(sh)) continue;
+      s.textContent = sh; used.add(sh);
+      b.dataset.hbShort = sh; b.dataset.hbFull = t;
+      if (!b.title) { b.title = t; b.dataset.hbST = '1'; }
+      if (!b.getAttribute('aria-label')) { b.setAttribute('aria-label', t); b.dataset.hbSA = '1'; }
+    }
+    mo.takeRecords();
+  };
+  // (a microtask, not a frame: the full label is never painted first)
+  const later = () => { if (!q) { q = 1; Promise.resolve().then(run); } };
+  const mo = new MutationObserver(later);
+  mo.observe(controls, { childList: true, subtree: true, characterData: true });
+  new MutationObserver(later).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+  window.addEventListener('load', later);
+  run();
 }
 // phone / tablet menu (the buttons under the title): a name that does not fit its button (ru «Подсказка», de «Lektionen» …) is
 // set a little smaller — only that one, down to 78% of its size; a name of several words that is still too long goes on two
@@ -280,18 +338,23 @@ function fitBar(bar, info, getMenu, isOn) {
     // the room the info wants: all its chips (the game's optional ones — .opt — aside), at most 30% of the bar but always its
     // first two (or a short text)
     const vc = chips.filter(shown), gap = parseFloat(getComputedStyle(info).columnGap) || 0;
-    let want = 0;
+    let want = 0, least = 0, two = 0;
     if (vc.length) {
       const sum = list => list.reduce((s, c, i) => s + chipW(c) + (i ? gap : 0), 0);
       const main = vc.filter(c => !c.classList.contains('opt'));
       want = Math.max(sum(vc.slice(0, 2)), Math.min(sum(main.length ? main : vc), bar.clientWidth * 0.3));
-    } else if (info.textContent.trim()) want = Math.min(info.scrollWidth, 200);
+      least = sum(vc.slice(0, 1)); two = Math.min(want, sum(vc.slice(0, 2)));
+    } else if (info.textContent.trim()) want = least = two = Math.min(info.scrollWidth, 200);
     const ok = () => over() <= 1 && info.clientWidth + 1 >= want;
     if (!ok()) {
       // a menu button can show its icon only when it has an icon and its name in a span (the name moves to title / aria-label)
       const ico = btns.filter(b => shown(b) && b.querySelector(':scope > svg, :scope > img, :scope > i') && b.querySelector(':scope > span') && b.querySelector(':scope > span').textContent.trim() && getComputedStyle(b.querySelector(':scope > span')).display !== 'none').reverse();
-      const steps = [() => bar.classList.add('hb-t1'), () => bar.classList.add('hb-lc')]
-        .concat(ico.map(b => () => { const s = b.querySelector(':scope > span').textContent.trim(); if (!b.title) { b.title = s; b.dataset.hbT = '1'; } if (!b.getAttribute('aria-label')) { b.setAttribute('aria-label', s); b.dataset.hbAl = '1'; } b.classList.add('hb-ico'); }));
+      // (before a button loses its name, the info settles for its first two chips; before one of the main four — new / undo /
+      //  resign / hint — does, for its first chip alone — the turn —; the chips left over are left out whole below)
+      const toIco = b => () => { const s = b.querySelector(':scope > span').textContent.trim(); if (!b.title) { b.title = s; b.dataset.hbT = '1'; } if (!b.getAttribute('aria-label')) { b.setAttribute('aria-label', s); b.dataset.hbAl = '1'; } b.classList.add('hb-ico'); };
+      const main4 = btns.filter(shown).slice(0, 4);
+      const steps = [() => bar.classList.add('hb-t1'), () => bar.classList.add('hb-lc'), () => { want = two; }]
+        .concat(ico.filter(b => !main4.includes(b)).map(toIco), [() => { want = least; }], ico.filter(b => main4.includes(b)).map(toIco));
       for (const st of steps) { st(); if (ok()) break; }
     }
     // chips that still do not fit: left out whole, from the end; the first one alone shrinks
