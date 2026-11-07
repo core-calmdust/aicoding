@@ -642,7 +642,7 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
       if (p) { e.stopPropagation(); X.setTable(+p.dataset.k); } else if (q) { e.stopPropagation(); X.setBright(+q.dataset.b); }
     });
     addEventListener('atlas-table', paint);
-    addEventListener('storage', e => { if (e.key === 'atlas-table') X.setTable(+e.newValue || 0); else if (e.key === 'atlas-bright') X.setBright(+e.newValue || 0); });
+    addEventListener('storage', e => { if (e.key === 'atlas-table') X.setTable(+e.newValue || 0); else if (e.key === 'atlas-bright2') X.setBright(+e.newValue); });
     const sel = document.getElementById('langSel'); if (sel) sel.addEventListener('change', () => setTimeout(paint, 40));
     paint();
   }

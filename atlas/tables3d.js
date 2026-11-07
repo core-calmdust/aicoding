@@ -81,9 +81,9 @@
       place: { ja: '場所', en: 'Place', zh: '场所', ko: '장소', es: 'Lugar', fr: 'Lieu', pt: 'Local', de: 'Ort', hi: 'जगह', ar: 'المكان', ru: 'Место', 'zh-TW': '場所', id: 'Tempat', tr: 'Mekân' },
       table: { ja: 'テーブル', en: 'Table', zh: '桌子', ko: '테이블', es: 'Mesa', fr: 'Table', pt: 'Mesa', de: 'Tisch', hi: 'टेबल', ar: 'الطاولة', ru: 'Стол', 'zh-TW': '桌子', id: 'Meja', tr: 'Masa' },
       bright: { ja: '明るさ', en: 'Brightness', zh: '亮度', ko: '밝기', es: 'Brillo', fr: 'Luminosité', pt: 'Brilho', de: 'Helligkeit', hi: 'रोशनी', ar: 'السطوع', ru: 'Яркость', 'zh-TW': '亮度', id: 'Kecerahan', tr: 'Parlaklık' },
-      b: { ja: ['標準', '明るい', 'とても明るい'], en: ['Normal', 'Bright', 'Very bright'], zh: ['标准', '明亮', '非常明亮'], ko: ['보통', '밝게', '아주 밝게'],
-        es: ['Normal', 'Claro', 'Muy claro'], fr: ['Normal', 'Clair', 'Très clair'], pt: ['Normal', 'Claro', 'Muito claro'], de: ['Normal', 'Hell', 'Sehr hell'],
-        hi: ['सामान्य', 'तेज़', 'बहुत तेज़'], ar: ['عادي', 'ساطع', 'ساطع جدًا'], ru: ['Обычная', 'Яркая', 'Очень яркая'], 'zh-TW': ['一般', '明亮', '非常明亮'], id: ['Normal', 'Terang', 'Sangat terang'], tr: ['Normal', 'Parlak', 'Çok parlak'] },
+      b: { ja: ['暗い', '標準', '明るい'], en: ['Dim', 'Normal', 'Bright'], zh: ['暗', '标准', '明亮'], ko: ['어둡게', '보통', '밝게'],
+        es: ['Tenue', 'Normal', 'Claro'], fr: ['Tamisé', 'Normal', 'Clair'], pt: ['Suave', 'Normal', 'Claro'], de: ['Gedämpft', 'Normal', 'Hell'],
+        hi: ['मंद', 'सामान्य', 'तेज़'], ar: ['خافت', 'عادي', 'ساطع'], ru: ['Приглушённая', 'Обычная', 'Яркая'], 'zh-TW': ['暗', '一般', '明亮'], id: ['Redup', 'Normal', 'Terang'], tr: ['Loş', 'Normal', 'Parlak'] },
     },
   };
   const pick = (o, l) => o[l] || o.en;
