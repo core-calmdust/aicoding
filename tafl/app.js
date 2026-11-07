@@ -112,21 +112,29 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=nn2sr';
+const ENGINE_URL = 'engine.js?v=nn2sr-nps';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
   w.onmessage = e => {
     const m = e.data, j = w.jobs.get(m.id); if (!j) return;
     if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; }
-    w.jobs.delete(m.id); j.resolve(m);
+    w.jobs.delete(m.id); noteNps(m.nodes, performance.now() - j.t0); j.resolve(m);
   };
   return w;
+}
+// search speed of the last engine search (nodes per second), shown quietly at the end of the info line under the moves
+let lastNps = 0;
+const npsText = () => lastNps ? '  ·  ' + (lastNps >= 1e6 ? (lastNps / 1e6).toFixed(1) + 'M' : Math.round(lastNps / 1e3) + 'k') + ' nps' : '';
+function noteNps(nodes, ms) {
+  if (!(nodes > 50000 && ms > 20)) return;
+  lastNps = nodes / ms * 1000;
+  const el = document.getElementById('infoLine'); if (el && el.dataset.base !== undefined) el.textContent = el.dataset.base + npsText();
 }
 let aiW = makeWorker(), anaW = makeWorker();
 function request(which, msg, onProgress) {
   const w = which === 'ai' ? aiW : anaW;
-  return new Promise(resolve => { const id = ++jobId; w.jobs.set(id, { resolve, onProgress }); w.postMessage({ start: startSpec, v: gv, ...msg, id }); });
+  return new Promise(resolve => { const id = ++jobId; w.jobs.set(id, { resolve, onProgress, t0: performance.now() }); w.postMessage({ start: startSpec, v: gv, ...msg, id }); });
 }
 function cancelWorker(which) {
   const w = which === 'ai' ? aiW : anaW;
@@ -451,7 +459,7 @@ function renderInfo() {
   $('#btnSound').classList.toggle('on', settings.sound);
   $('#reviewBar').classList.toggle('show', reviewing && !lesson && !puzzle);
   renderReview();
-  $('#infoLine').textContent = `${t('rule.' + gv)}  ·  ${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? AIW() + ' ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : '') : settings.mode === 'watch' ? `${LV(settings.level)} vs ${LV(settings.level2)}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`;
+  { const il = $('#infoLine'); il.dataset.base = `${t('rule.' + gv)}  ·  ${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? AIW() + ' ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : '') : settings.mode === 'watch' ? `${LV(settings.level)} vs ${LV(settings.level2)}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`; il.textContent = il.dataset.base + npsText(); }
   renderBrand();
   if (window.olAfterInfo) olAfterInfo();
   hbInfo(pos, st, lines);
