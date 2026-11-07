@@ -419,5 +419,6 @@
 "tr.ardri.ok": "Le roi est pris ! Il faut les quatre côtés.",
 "tr.ardri.ng": "Placez un attaquant sur la seule case libre à côté du roi.",
 "pro.btn": "Analyse approfondie",
-"pro.btn.title": "Ouvrir l’analyse multicœur (nouvel onglet)"
+"pro.btn.title": "Ouvrir l’analyse multicœur (nouvel onglet)",
+"edge.king4": "Un roi au bord ne peut pas être pris : les attaquants doivent l’entourer sur ses quatre côtés."
 }

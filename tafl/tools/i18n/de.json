@@ -419,5 +419,6 @@
 "tr.ardri.ok": "Der König ist gefangen! Alle vier Seiten sind nötig.",
 "tr.ardri.ng": "Setze einen Angreifer auf das einzige freie Feld neben dem König.",
 "pro.btn": "Tiefenanalyse",
-"pro.btn.title": "Mehrkern-Analyse öffnen (neuer Tab)"
+"pro.btn.title": "Mehrkern-Analyse öffnen (neuer Tab)",
+"edge.king4": "Ein König am Rand kann nicht gefangen werden: Die Angreifer müssen ihn von allen vier Seiten umstellen."
 }

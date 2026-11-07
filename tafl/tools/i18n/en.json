@@ -419,5 +419,6 @@
 "tr.ardri.ok": "The king is captured! All four sides are needed.",
 "tr.ardri.ng": "Put an attacker on the one free square next to the king.",
 "pro.btn": "Deep analysis",
-"pro.btn.title": "Open the multi-core analysis page (new tab)"
+"pro.btn.title": "Open the multi-core analysis page (new tab)",
+"edge.king4": "A king on the edge cannot be captured: the attackers must surround him on all four sides."
 }
