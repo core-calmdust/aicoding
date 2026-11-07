@@ -22,7 +22,9 @@
 - 横（h）：cellXY = ((c−4.5)·100, (r−1)·100)。縦（v）は h を −90° 回したもの：((1−r)·100, (c−4.5)·100)。3D の盤も同じ回転で縦にする。
 - 盤の絵は手続き生成のSVG（象牙・黒檀・ファイアンス・パピルス・夜空のフィルタ、マスの聖刻文字：15 アンク、26 ネフェル×3、27 水、28 III、29 II、30 ウジャトの目、各マスに小さな番号）。
 - デザイン：盤 `tut`（ツタンカーメン：黒檀×象牙・金縁、既定）／`faience`（青いファイアンス）／`papyrus`（パピルス画）／`night`（夜空・モダン）。駒 `tut`／`faience`／`gold`／`modern`。
-- 駒の形：side0＝糸巻き（spool）、side1＝円錐（cone）。3/4 見下ろしで描く。
+- 駒の形：side0＝糸巻き（spool）、side1＝円錐（cone）。3/4 見下ろしで描く。旋盤で削った立体として陰影を付ける（横方向の円筒の光・足もとの陰・ぼかした光沢・素材の質感：象牙の木目、黒檀の木目、釉薬、金属の帯）。線で描いた反射は使わない。
+- 盤の光：マスはぼかしたアルファからの拡散光＋鏡面光（feDiffuse/SpecularLighting）でやわらかい面取り。ファイアンスは細い貫入、`papyrus`（墓の壁画）は漆喰の壁に描いた盤：手描きの揺れ（feDisplacementMap）、ベンガラ・エジプシャンブルー・黄土の帯、剥落とひび。
+- 投げ棒：大きく明るく。白い面は彩色（帯と菱形）、裏は木目。3D（atlas/models/senet.js）も裏は木目のテクスチャ、断面は少し丸く、長さ方向にわずかに反る。
 - 投げ棒：`dice(host,{style})` → `{roll, show, setStyle}`。盤の両脇の帯（stickBox）で投げる。
 - `mini(state, opts)`：チュートリアル・カード用の同じ絵。
 
@@ -34,11 +36,11 @@
 - レート表 `RT_LV`（app.js）は `tools/ladder.js` で L10 相手に測った値から。強さ・探索を変えたら自己対局で確認してから。
 
 ## 4. 画面（ウルと同じ構成）
-- テーマ：黒檀の茶 `#130c07` ＋ 金 ＋ トルコ石。横長盤のPCレイアウト（盤上段、情報を下に横一列）。スマホ縦は盤を縦に。
+- テーマ（2026-11-07 変更）：ツタンカーメンの黄金のマスク — 金を帯びた黒 `#0f0b04` ＋ 金 ＋ ラピスラズリの青 `#2f5bd0`（ほかのゲームの茶×金と区別）。カードの上端にネメス頭巾の金と青の縞。上がりの置き場の文字は明朝。横長盤のPCレイアウト（盤上段、情報を下に横一列）。スマホ縦は盤を縦に。
 - ルール違い（ゲームタブ）：標準（5枚）／ロング（7枚）。
 - 棋譜：「⇄」入れ替え、「↻」もう一度、「27≈15」水に落ちて戻った先。
 - コーチ（`senet/coach.js`、8言語は `coach-i18n.js`＝`tools/build_coach_i18n.py` で生成）：勝率・レース差・壁・上がり数、方針（上がり／入れ替え／美の家／出口へ／ペア／壁／逃げる／安全／前進／水）、入れ替えられる確率、投げ棒の確率。
-- オンライン：「準備中」（`firebase-config.js` は null）。
+- オンライン（2026-11-07）：Firebase プロジェクト `senet-multiplay`（asia-southeast1）。ルールは `senet/database.rules.json`（`shared/tools/secrules.py` の `senet`：ウルと同じ投げ棒のコミット・リビール、もう一度投げる手番は nt、1手30秒、v＝std / long）。App Check のサイトキー設定済み。
 - 14言語（2026-11-07、言語メニューにも追加済み・`node tools/i18n-langs.js coverage senet` で未翻訳0）。
   - `senet/i18n.js` は `tools/build_i18n.py`（ウルの i18n ＋ `tools/i18n_over.py`）で生成。ru・zh-TW・id・tr は**翻訳メモリ `senet/tools/tm14.json`**（英語 → 4言語）から。同じ英語で意味が違うものは build_i18n.py の `KEYOVR`（例：sp.off）。
   - 辞書形式のファイル（i18n-online.js・tour.js・rv-i18n.js・coach-i18n.js）は `node senet/tools/apply14.js <file> [英語辞書のファイル#目印]`、1文字列ずつの形式（lessons.json・puzzles.json・landtabs.js・atlas 側）は `node senet/tools/tm_apply_units.js <file>`。足りない英語は一覧が出るので tm14.json に足す。
@@ -53,7 +55,7 @@
 ## 6. 3D（ポータル・`?skin=atlas`）
 - `atlas/models/senet.js`：ツタンカーメン風の黒檀の箱（金の縁、引き出し、ライオン脚の台とそり）。天板は board2d の絵をテクスチャに（board2d が未読込なら `../senet/board2d.js` を自分で読む）。
 - `atlas/skin/senet.js`：全画面スキン（縦向きは盤を −90°）。`window.SenetSkin3D = {sync, animateMove, animateRoll}`。
-- `atlas/games/senet.js`＋`senet-kit.js`：ポータルの卓上対局（AI／二人）。`atlas/rules/senet.js`：3Dルールコース（案内役 セティ）。セティの台詞（`VOICE`）は全ページ・全14言語でキャラクターの口調で書く（ルールツアーの文言は代替）。話すときに「ピッ」という声の効果音、課題の行（👆）は黄色の札で目立たせる。
+- `atlas/games/senet.js`＋`senet-kit.js`：ポータルの卓上対局（AI／二人）。斜めから見る向きでは、奥側（相手）の投げ棒と上がった駒を箱から離して置く（箱の陰に隠れないように、`FAR`）。`atlas/rules/senet.js`：3Dルールコース（案内役 セティ）。セティの台詞（`VOICE`）は全ページ・全14言語でキャラクターの口調で書く（ルールツアーの文言は代替）。話すときに「ピッ」という声の効果音、課題の行（👆）は黄色の札で目立たせる。
 
 ## 7. ヒストリア
 - ヒストリア（2026-11-07）：`atlas/historia/s/senet.json`（地図：サッカラ・テーベ・キプロス・ボストン、3×10の盤図と逆S字の矢印）と14言語の本文 `atlas/historia/<lang>/senet.json`。案内役は av/camel-2。
