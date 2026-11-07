@@ -588,7 +588,7 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
       apply();
       return { is3d: () => is3, set };
     }
-    const NAMES = { ja: 'Japanese', en: 'English', zh: 'Chinese', ko: 'Korean', es: 'Spanish', fr: 'French', pt: 'Portuguese', de: 'German', hi: 'Hindi', ar: 'Arabic', ru: 'Russian', 'zh-TW': 'Chinese (Traditional)', id: 'Indonesian', tr: 'Turkish' };
+    const NAMES = { ja: 'Japanese', en: 'English', zh: 'Chinese', ko: 'Korean', es: 'Spanish', fr: 'French', pt: 'Portuguese', de: 'German', hi: 'Hindi', ar: 'Arabic', ru: 'Russian', 'zh-TW': 'Chinese', id: 'Indonesian', tr: 'Turkish' };
     function fitWM(b, sm) { if (!b || !sm) return; sm.style.fontSize = ''; const k = b.querySelector('.wk'); if (!k || sm.hidden) return; const r = document.createRange(); r.setStartAfter(k); r.setEnd(b, b.childNodes.length); const mw = r.getBoundingClientRect().width, sw = sm.scrollWidth; if (mw > 0 && sw > mw) sm.style.fontSize = Math.max(7, parseFloat(getComputedStyle(sm).fontSize) * mw / sw * .98) + 'px'; }
     // the title never gets cut off: if it doesn't fit beside the buttons, its font steps down (to 12px at least)
     function fitT(b) { if (!b) return; b.style.fontSize = ''; if (document.documentElement.classList.contains('atlas-land')) return; const cw = b.clientWidth, sw = b.scrollWidth; if (cw > 0 && sw > cw + .5) b.style.fontSize = Math.max(12, parseFloat(getComputedStyle(b).fontSize) * cw / sw * .99) + 'px'; }
