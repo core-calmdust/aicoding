@@ -26,7 +26,7 @@
 // repetition handling, mate-distance values, and a hand-written evaluation tuned by self-play (see MODEL_CARD.md).
 // Since 2026-11-07 (search v2): log-based reductions, reverse futility / futility / late-move pruning near the leaves and
 // a null move, all off in PV nodes and under king threats (an escape line, a two-move escape, a king capture next move).
-// The levels with a node budget keep the earlier search (`classic`), so their calibrated strength is unchanged.
+// Since 2026-11-08 the levels with a node budget use it too, with smaller budgets calibrated to the same strength (MODEL_CARD.md).
 // Build (wasm): see tools/build.sh. Host protocol: everything goes through the shared i32 buffer at io_ptr().
 #include <stdint.h>
 typedef int32_t i32; typedef uint32_t u32; typedef int8_t i8; typedef uint8_t u8; typedef int16_t i16; typedef uint16_t u16; typedef uint64_t u64;
@@ -646,7 +646,8 @@ static inline int timeUp(void) {
 #ifdef MT
   if ((nodes & 1023) == 0 && gStop) stopFlag = 1;
 #endif
-  if ((nodes & 1023) == 0) { if ((tEnd > 0 && now() > tEnd) || (nodeLimit_on && nodes > nodeLimit)) stopFlag = 1; }
+  if (nodeLimit_on && nodes > nodeLimit) stopFlag = 1;   // checked at every node (the weak levels read a few hundred nodes)
+  if ((nodes & 1023) == 0 && tEnd > 0 && now() > tEnd) stopFlag = 1;
   return stopFlag;
 }
 static int isRep(u64 key, int from) { for (int i = hn - 2; i >= from; i -= 2) if (hkeys[i] == key) return 1; return 0; }
@@ -725,7 +726,6 @@ static void lmrInit(void) {
   for (int d = 0; d < 64; d++) for (int i = 0; i < 64; i++) LMRT[d][i] = (int)(SP[SP_LMRB] / 100.0 + lnx(d) * lnx(i) * 100 / SP[SP_LMRK]);   // ln(d)·ln(i) / k, rounded down
 }
 static TLS u8 nullAt[MAXPLY + 8];   // the move into this ply was a null move
-static TLS int classic = 0;   // the levels with a node budget: the search as before 2026-11-07 (their strength was calibrated with it)
 static int search(Pos *p, int depth, int alpha, int beta, int ply, int pv, int quietPlies) {
   if (p->res) return -(WIN - ply);     // the previous move won
   u64 key = p->h;
@@ -763,7 +763,7 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, int pv, int q
   // defenders to move with the king capturable next move: no pruning either
   int danger = p->side == 1 && !noTac && kingCapNow(p);
   // pruning near the leaves (not in PV nodes, not under a threat, not near a forced result): the static value
-  int calm = !classic && !pv && !threat && !danger && !noTac && ply > 0 && beta < WINT && alpha > -WINT, ev = 0;
+  int calm = !pv && !threat && !danger && !noTac && ply > 0 && beta < WINT && alpha > -WINT, ev = 0;
   int U = nnUse && nnVar == VAR ? SP[SP_UNIT] : SP[SP_HUNIT];
   // attackers to move and the king one move away from an escape line (a two-move escape threat): no static cuts
   int kthr = 0;
@@ -794,7 +794,7 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, int pv, int q
   int lmpN = calm && SP[SP_LMP] && depth <= SP[SP_LMPD] ? SP[SP_LMPB] * (2 + depth * depth) / 2 : MAXMV;
   int sc[MAXMV], k = p->king, side = p->side;
   int blk[4] = { -1, -1, -1, -1 }, nblk = 0;
-  if (side == 1 && SP[SP_BLK] && !classic) for (int d = 0; d < 4; d++) { int q = k + DIRS[d]; while (p->b[q] == EMP) q += DIRS[d]; if (p->b[q] == DEF) { blk[d] = q; nblk = 1; } }
+  if (side == 1 && SP[SP_BLK]) for (int d = 0; d < 4; d++) { int q = k + DIRS[d]; while (p->b[q] == EMP) q += DIRS[d]; if (p->b[q] == DEF) { blk[d] = q; nblk = 1; } }
   for (int i = 0; i < n; i++) {
     Move *m = &L[i]; int s = 0;
     if (hasTT && sameMove(m, &ttm)) s = 1 << 30;
@@ -829,7 +829,7 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, int pv, int q
     else if (i == 0) v = -search(&q, d1, -beta, -alpha, ply + 1, pv, qp);
     else {
       int red = 0;
-      if (SP[SP_LMR] && !classic) {
+      if (SP[SP_LMR]) {
         if (depth >= 3 && i >= 3 && quiet) {
           red = LMRT[depth < 63 ? depth : 63][i < 63 ? i : 63] - (pv ? 1 : 0) - (threat || danger ? 1 : 0);
           if (red > d1 - 1) red = d1 - 1;
@@ -943,9 +943,9 @@ static int rep(int v) {
   if (nnUse && nnVar == VAR) return (v - (ROOT.side ? nnCenter : -nnCenter)) * 2 / 5;   // the net: a logit × scale (1000) → the page's scale (about 400 per logit), taken relative to the start position like the hand-made values
   return v - (ROOT.side ? D0[VAR] : -D0[VAR]);
 }
-// best move: IO[0] = move, IO[2] = value, IO[3] = depth, IO[4] = nodes / 1000
-EXPORT(best) void best(int maxDepth, int ms, int nodeK) {
-  beginSearch(ms); nodeLimit_on = nodeK > 0; nodeLimit = (u64)nodeK * 1000;
+// best move: IO[0] = move, IO[2] = value, IO[3] = depth, IO[4] = nodes / 1000. nodeLim: nodes (0 = no limit)
+static void bestN(int maxDepth, int ms, u64 nodeLim) {
+  beginSearch(ms); nodeLimit_on = nodeLim > 0; nodeLimit = nodeLim;
   if (rootN == 0) { IO[0] = -1; IO[1] = 0; IO[2] = -WIN; IO[3] = 0; return; }
   orderRoot();
   Move bm = rootL[0]; int bv = rootVal[0], bd = 0;
@@ -987,6 +987,7 @@ EXPORT(best) void best(int maxDepth, int ms, int nodeK) {
   }
   writeMove(IO, &bm); IO[2] = rep(bv); IO[3] = bd; IO[4] = (i32)(nodes / 1000);
 }
+EXPORT(best) void best(int maxDepth, int ms, int nodeK) { bestN(maxDepth, ms, nodeK > 0 ? (u64)nodeK * 1000 : 0); }
 // analysis: values of all root moves. IO[0] = n, IO[1] = depth, then (move, v) * n, best first
 EXPORT(analyze) void analyze(int ms, int maxDepth) {
   beginSearch(ms); nodeLimit_on = 0;
@@ -1100,27 +1101,33 @@ EXPORT(set_noise) void set_noise(int amp, int seed) { noiseAmp = amp; noiseSeed 
 // ---------------------------------------------------------------- AI levels (20 steps: 15級 … 1級, 初段 … 五段)
 // kind 0: fixed-depth values of all moves + noise / an occasional slip; kind 1: normal search (node budget or time) with
 // a small evaluation noise for the middle levels. Shared by the browser (engine.js) and the native tools.
-typedef struct { int kind, depth, nodesK, ms, noise, slip, blind, miss; } Level;   // slip, blind, miss: per mille
+typedef struct { int kind, depth, nodesH, ms, noise, slip, blind, miss; } Level;   // nodesH: node budget in hundreds; slip, blind, miss: per mille
 // blind: the move is chosen without the tactical horizon (escape lines, king captures); miss (defenders only): an escape in
 // one is passed over — the low levels' defenders would otherwise never let a beginner's open line go
 static const Level LEVELS[21] = { { 0 },
   { 0, 1, 0, 0, 320, 300, 700, 500 }, { 0, 1, 0, 0, 260, 220, 550, 400 }, { 0, 1, 0, 0, 200, 160, 420, 300 },   // 15級 14級 13級
   { 0, 1, 0, 0, 160, 120, 300, 200 }, { 0, 2, 0, 0, 140, 90, 200, 120 }, { 0, 2, 0, 0, 110, 60, 120, 70 }, { 0, 2, 0, 0, 85, 40, 60, 30 },   // 12級 … 9級
-  { 1, 99, 2, 0, 60, 0, 0 }, { 1, 99, 3, 0, 50, 0, 0 }, { 1, 99, 4, 0, 40, 0, 0 }, { 1, 99, 8, 0, 30, 0, 0 },     // 8級 … 5級
-  { 1, 99, 15, 0, 22, 0, 0 }, { 1, 99, 30, 0, 15, 0, 0 }, { 1, 99, 60, 0, 10, 0, 0 }, { 1, 99, 120, 0, 6, 0, 0 }, // 4級 … 1級
-  { 1, 99, 250, 3000, 0, 0, 0 }, { 1, 99, 500, 3000, 0, 0, 0 }, { 1, 99, 1000, 3000, 0, 0, 0 },             // 初段 二段 三段
+  { 1, 99, 20, 0, 60, 0, 0 }, { 1, 99, 20, 0, 50, 0, 0 }, { 1, 99, 22, 0, 40, 0, 0 }, { 1, 99, 35, 0, 30, 0, 0 },     // 8級 … 5級
+  { 1, 99, 58, 0, 22, 0, 0 }, { 1, 99, 60, 0, 15, 0, 0 }, { 1, 99, 85, 0, 10, 0, 0 }, { 1, 99, 260, 0, 6, 0, 0 },   // 4級 … 1級
+  { 1, 99, 800, 3000, 0, 0, 0 }, { 1, 99, 1200, 3000, 0, 0, 0 }, { 1, 99, 3200, 3000, 0, 0, 0 },            // 初段 二段 三段
   { 1, 99, 0, 1200, 0, 0, 0 }, { 1, 99, 0, 2500, 0, 0, 0 } };                                             // 四段 五段
 static TLS u64 trng = 1;
 static u32 tr32(void) { trng ^= trng << 13; trng ^= trng >> 7; trng ^= trng << 17; return (u32)(trng >> 11); }
 static int gaussI(int amp) { int s = 0; for (int i = 0; i < 4; i++) s += (int)(tr32() % 2001) - 1000; return s * amp / 2000; }   // approx. N(0, amp^2 / 3)
 // IO[0] = move, IO[2] = value (the level's own view), IO[3] = depth
-// with the net, a level can read fewer nodes (NN_NODES, k; 0 = the level's own) and use a larger noise (NN_NOISE, % of the level's)
+// with the net, a level can read fewer nodes (NN_NODES, hundreds of nodes; 0 = the level's own) and use a larger noise (NN_NOISE, % of the level's)
 // so that the levels keep a smooth ladder from the hand-made ones below 8級 (see MODEL_CARD.md)
-static int NN_NODES[21] = { 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 5, 8, 14, 22, 30, 60, 140, 460, 0, 0 },   // 8級 … 三段; 四段・五段: the level's time
+static int NN_NODES[21] = { 0, 0, 0, 0, 0, 0, 0, 0, 7, 12, 21, 27, 36, 49, 55, 57, 90, 260, 620, 0, 0 },   // 8級 … 三段 (hundreds of nodes); 四段・五段: the level's time
            NN_NOISE[21] = { 0, 0, 0, 0, 0, 0, 0, 0, 800, 800, 800, 800, 800, 800, 600, 400, 0, 0, 0, 0, 0 };
+// rule sets where the search v2 needs other node budgets than the levels' own (hand-made evaluation) for the same strength
+// (0 = the level's own; measured, MODEL_CARD.md): Tablut and Tawlbwrdd (escape on any edge square) and Ard Ri (7x7, a king of four sides)
+static const int VAR_NODES[6][21] = { { 0 }, { 0 },
+  { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 130, 200, 480, 0, 0, 0, 0, 0 },
+  { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 130, 200, 480, 0, 0, 0, 0, 0 }, { 0 },
+  { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 25, 0, 90, 200, 0, 900, 1800, 3600, 0, 0 } };
 static int nnNoiseMul = 100;
 EXPORT(nn_noise) void nn_noise(int pct) { nnNoiseMul = pct; }
-EXPORT(nn_level) void nn_level(int level, int nodesK, int noisePct) { if (level >= 1 && level <= 20) { NN_NODES[level] = nodesK; NN_NOISE[level] = noisePct; } }
+EXPORT(nn_level) void nn_level(int level, int nodesH, int noisePct) { if (level >= 1 && level <= 20) { NN_NODES[level] = nodesH; NN_NOISE[level] = noisePct; } }
 static void think1(int level, int seed);
 // the learned evaluation (when loaded) is used from 8級 up (searching levels); the weakest levels keep the hand-made one,
 // whose noise and slips were set on its scale
@@ -1141,7 +1148,7 @@ static void think1(int level, int seed) {
     // two plies and play blind three times less often; the defenders keep the level's weaknesses (and its misses)
     const int att = ROOT.side == 0;
     noTac = L->blind && (int)(tr32() % 1000) < (att ? L->blind / 3 : L->blind);
-    classic = 1; values(att && L->depth < 2 ? 2 : L->depth, 0); classic = 0;
+    values(att && L->depth < 2 ? 2 : L->depth, 0);
     noTac = 0;
     int bestv = rootVal[0], miss = !att && L->miss && (int)(tr32() % 1000) < L->miss;   // the defenders pass over an escape in one
     if (miss) { for (int i = 0; i < rootN; i++) if (rootVal[i] > WINT) rootVal[i] = -WINT; bestv = -INF; for (int i = 0; i < rootN; i++) if (rootVal[i] > bestv) bestv = rootVal[i]; }
@@ -1157,13 +1164,12 @@ static void think1(int level, int seed) {
   }
   const int net = nnUse && nnVar == VAR;
   if (L->noise) set_noise(net ? L->noise * (NN_NOISE[level] ? NN_NOISE[level] : nnNoiseMul) / 100 : L->noise, (int)tr32()); else noiseAmp = 0;
-  int nk = net && NN_NODES[level] ? NN_NODES[level] : L->nodesK, ms = net && NN_NODES[level] ? 0 : L->ms;
+  int nh = net && NN_NODES[level] ? NN_NODES[level] : VAR_NODES[VAR][level] ? VAR_NODES[VAR][level] : L->nodesH, ms = net && NN_NODES[level] ? 0 : L->ms;
 #ifdef NATIVE
-  if (getenv("NODES_FOR_MS")) { best(L->depth, 0, nk ? nk : ms * 3 / 4); noiseAmp = 0; return; }   // calibration: the browser searches about 0.75 k nodes per ms
+  if (getenv("NODES_FOR_MS")) { bestN(L->depth, 0, nh ? (u64)nh * 100 : (u64)ms * 750); noiseAmp = 0; return; }   // calibration: the browser searches about 0.75 k nodes per ms
 #endif
-  classic = nk > 0;
-  best(L->depth, ms, nk);
-  noiseAmp = 0; classic = 0;
+  bestN(L->depth, ms, (u64)nh * 100);
+  noiseAmp = 0;
 }
 
 #ifdef MT
