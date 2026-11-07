@@ -222,7 +222,7 @@
     const empty = new Set(['3,4', '4,4', '3,2', '5,4', '2,4', '3,6', '5,2', '6,4', '1,4']);
     const put = (x, y, col) => { const p = U.piece(col), [px, pz] = U.pt(x, y); p.position.set(px, Y, pz); g.add(p); const sh = X.contact(R * .9, .45); sh.position.set(px, Y + .001, pz); g.add(sh); };
     for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) { if (empty.has(x + ',' + y)) continue; const r = 7 - y; put(x, y, (x + r) % 2 === 0 ? 1 : 2); }
-    g.scale.setScalar(.88);
+    g.scale.setScalar(1);   // (the showcase: ≈ 9.7 across, as tafl)
     return g;
   };
   X.konane = { board, piece, W: WOf, H: HOf, R, LOOKS };

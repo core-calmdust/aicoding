@@ -181,7 +181,7 @@
     const put = (sq, side) => { const p = piece(side, 'tut'), [x, z] = U.pt(sq); p.position.set(x, U.top, z); g.add(p); const sh = X.contact(PR * .95, .45); sh.position.set(x, U.top + .001, z); g.add(sh); };
     [[3, 0], [4, 0], [9, 0], [14, 0], [26, 0], [5, 1], [11, 1], [12, 1], [17, 1], [22, 1]].forEach(([s, sd]) => put(s, sd));
     [1, 0, 1, 1].forEach((w, i) => { const s = stick(); stickUp(s, !!w, .15 * (i - 1.5)); s.position.set(-3 + i * .35, STK.Th / 2, D / 2 + .9); g.add(s); });
-    g.scale.setScalar(.62);
+    g.scale.setScalar(.93);   // (the showcase on the table: longest side ≈ 10.2, as the other long boards — ur, hex, mancala)
     return g;
   };
   X.senet = { board, piece, stick, stickUp, PR, PH, STK, W, D, H, DESIGNS };
