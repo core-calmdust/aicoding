@@ -194,7 +194,7 @@ function noteNps(nodes, ms) {
 }
 let jobId = 0;
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261108mt'); w.jobs = new Map();
+  const w = new Worker('engine.js?v=20261108pro'); w.jobs = new Map();
   w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (!j) return; if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; } w.jobs.delete(m.id); noteNps(m.nodes, performance.now() - j.t0); j.resolve(m); };
   return w;
 }
@@ -203,18 +203,19 @@ let aiW = makeWorker(), anaW = makeWorker();
 // timed AI levels outside rated games go to the pool of threads when it is free; rated games and the node-limited levels stay
 // on the one-thread workers (the same moves as before)
 const MTP = window.MTEngine ? MTEngine.use({
-  wasm: 'engine_mt.wasm?v=1', lead: 'engine.js?v=20261108mt&mt=1', helper: 'mt-helper.js?v=1', slot: 2 << 20, initial: 512, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
+  wasm: 'engine_mt.wasm?v=1', lead: 'engine.js?v=20261108pro&mt=1', helper: 'mt-helper.js?v=1', slot: 2 << 20, initial: 512, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => performance.now(), progress: () => {} } }),
   help: m => { const p = E.Pos.fromFEN(m.fen || E.START), u = []; for (const x of m.moves || []) { u.push(p.uci(x)); p.make(x); } return { setup: (m.fen || E.START) + (u.length ? ' moves ' + u.join(' ') : '') }; },
 }) : null;
 function mtWants(which, msg) {
   if (msg.type === 'analyze' || msg.type === 'multipv' || msg.type === 'mpvLoop') return true;
   if (msg.type !== 'think' || (which === 'ai' && rgame)) return false;
+  if (msg.cfg) { const c = msg.cfg; return c.threads > 1 && c.ms >= 100 && !c.wnodes && c.noise === undefined && !c.hand; }   // PRO: its own thread count (mtThreads)
   const L = E.LEVELS[msg.level]; return !!L && !L.wnodes && L.noise === undefined && L.ms >= 500;
 }
 function request(which, msg, onProgress) {
   const mp = MTP && mtWants(which, msg) && MTP.pool();
-  if (mp) { const t0 = performance.now(), fen = startFen; return mp.run({ fen, ...msg }, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, { fen, ...msg }, onProgress) : r; }); }
+  if (mp) { const t0 = performance.now(), fen = startFen; return mp.run({ fen, ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, { fen, ...msg }, onProgress) : r; }); }
   return requestW(which, msg, onProgress);
 }
 function requestW(which, msg, onProgress) {   // (the one-thread workers)
@@ -437,9 +438,9 @@ function playerName(p) {
   if (puzzle) return p === puzzle.me ? t('you') : t('defender');
   if (lesson || settings.mode === 'pvp') return '';
   if (settings.mode === 'online') { const g = net && net.game; return !g ? '' : !net.spectate && p === net.me ? t('you') : p === P1 ? g.wn : g.bn; }
-  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(p))}`;
+  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(p))}${proCfg(levelFor(p)) ? ' PRO' : ''}`;
   if (rgame) return p === humanColor ? t('you') + ' · R' + rgame.my : `${AIW()} ${rtLvName(rgame.lv)} · R${rgame.or}`;
-  return p === humanColor ? t('you') : `${AIW()} ${LV(settings.level)}`;
+  return p === humanColor ? t('you') : `${AIW()} ${LV(settings.level)}${proCfg(settings.level) ? ' PRO' : ''}`;
 }
 function material(pos, c) { let m = 0; for (let s = 0; s < 128; s++) { if (s & 0x88) { s += 7; continue; } const p = pos.b[s]; if (p && (p >> 3) === c) m += PVAL[p & 7]; } return m; }
 function renderInfo() {
@@ -471,7 +472,7 @@ function renderInfo() {
   $('#btnSound').classList.toggle('on', settings.sound);
   renderReview(); rvbRender();
   if (window.ChessCoach) ChessCoach.render();
-  { const il = $('#infoLine'); il.dataset.base = `${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? AIW() + ' Lv.' + levelFor(0) + ' ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : '') : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`; il.textContent = il.dataset.base + npsText(); }
+  { const il = $('#infoLine'); il.dataset.base = `${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? AIW() + ' Lv.' + levelFor(0) + ' ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : proCfg(levelFor(0)) ? ' · PRO' : '') : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`; il.textContent = il.dataset.base + npsText(); }
 }
 // PC header bar: side to move, move number, evaluation (hidden in rated / online games), opening name
 let HB = null;   // set at boot (shared/headerbar.js)
@@ -703,7 +704,7 @@ async function maybeAI(tok) {
     const u = styleMove(E.uciSeq(moves.slice(0, cur)));
     if (u) { const pos = E.replay(null, moves.slice(0, cur)).pos; res = { move: pos.fromUci(u), book: true }; }
   }
-  if (!res) res = await request('ai', { type: 'think', moves: moves.slice(0, cur), level: levelFor(p) });
+  if (!res) res = await request('ai', { type: 'think', moves: moves.slice(0, cur), level: levelFor(p), cfg: proCfg(levelFor(p)) });
   if (!res || tok !== busyToken) { if (tok === busyToken) { thinking = 0; renderInfo(); } return; }
   const wait = (settings.mode === 'watch' ? 650 : 350) - (Date.now() - t0);
   if (wait > 0) await new Promise(r => setTimeout(r, wait));
@@ -804,8 +805,8 @@ function recordGame(st) {
   if (!window.GameRecord || settings.mode !== 'ai' || settings.rsNoRec || lesson || puzzle || net || recordedMv === moves || !st || !st.over) return;
   if (st.why === 'resign' && moves.length < 2) return;   // resigning before playing is not a game
   recordedMv = moves;
-  const lv = levelFor(3 - humanColor), opp = rgame ? AIW() + ' ' + rtLvName(rgame.lv) : AIW() + ' Lv.' + lv + ' ' + LV(lv);
-  GameRecord.add({ mode: rgame ? 'rated' : 'ai', res: !st.winner ? 'd' : st.winner === humanColor ? 'w' : 'l', side: humanColor - 1, opp, key: (rgame ? 'rt:' + rgame.lv : 'ai:' + lv), n: Math.ceil(moves.length / 2), why: t('res.why.' + st.why) });
+  const lv = levelFor(3 - humanColor), pro = !rgame && proCfg(lv), opp = rgame ? AIW() + ' ' + rtLvName(rgame.lv) : AIW() + ' Lv.' + lv + ' ' + LV(lv) + (pro ? ' PRO' : '');
+  GameRecord.add({ mode: rgame ? 'rated' : 'ai', res: !st.winner ? 'd' : st.winner === humanColor ? 'w' : 'l', side: humanColor - 1, opp, key: (rgame ? 'rt:' + rgame.lv : pro ? 'ai:pro' : 'ai:' + lv), n: Math.ceil(moves.length / 2), why: t('res.why.' + st.why) });
 }
 function canUndo() {
   if (lesson || puzzle || rgame || settings.mode === 'online') return false;
@@ -1124,6 +1125,26 @@ $('#styleSel').onchange = e => { draft.style = e.target.value; const d = styleDe
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
+// PRO mode (shared/proset.js; common rule「対局設定の Pro モード」): advanced settings for the AI beside the level — never in rated
+// games. The changed values make a level of their own (engine.js: think with cfg, the same keys as LEVELS).
+const PRO_DEF = lv => { const L = E.LEVELS[lv] || E.LEVELS[12];
+  return { limit: L.noise !== undefined ? { k: 'depth', v: L.d } : L.wnodes ? { k: 'nodes', v: L.wnodes } : { k: 'time', v: L.ms / 1000 },
+    threads: !L.wnodes && L.noise === undefined && L.ms >= 500 ? ProSet.maxThreads() : 1, book: !!L.book, var: L.noise === undefined ? 0 : L.noise >= 100 ? 2 : 1, eval: 'nnue' }; };
+var PRO = window.ProSet ? ProSet.init({ game: 'chess', lang: () => LANG, level: () => draft.level || settings.level, show: () => draft.mode === 'ai' || draft.mode === 'watch',
+  store: { get: () => settings.pro, set: v => { settings.pro = v; } }, defaults: PRO_DEF,
+  params: [{ key: 'limit', kinds: { time: [0.1, 60], depth: [1, 30], nodes: [1000, 1e8] } }, { key: 'threads', when: e => e.limit.k === 'time' && !e.var && e.eval !== 'hand' },
+    { key: 'book' }, { key: 'var' }, { key: 'eval' }] }) : null;
+// the PRO level for an AI side (null: the level as it is; never in rated / online games)
+function proCfg(lv) {
+  if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null;
+  const e = PRO.get(lv); if (!e) return null;
+  const L = E.LEVELS[lv] || E.LEVELS[12], c = { book: !!e.book, d: 64 };
+  if (e.limit.k === 'depth') c.d = e.limit.v; else if (e.limit.k === 'nodes') c.wnodes = e.limit.v; else c.ms = Math.round(e.limit.v * 1000);
+  if (e.var) { if (!e.changed.includes('var') && L.noise !== undefined) { c.noise = L.noise; if (L.blunder) c.blunder = L.blunder; } else c.noise = e.var === 1 ? 25 : 70; }
+  if (e.eval === 'hand') c.hand = 1;
+  c.threads = e.threads || 1;
+  return c;
+}
 $('#btnStart').onclick = () => {
   hideOverlay('#newOverlay');
   if (draft.mode === 'online') { openOnline(); return; }
@@ -3250,7 +3271,7 @@ async function googleLink() {
 // rated record: the one with the newer last game (else more games), settings / name: newest change wins.
 const ChessSync = (() => {
   const META = 'chess-sync-meta', RU_KEY = 'aicoding-chess-rules-seen';
-  const SET_KEYS = ['anim', 'sound', 'hint', 'eval', 'last', 'threat', 'skin', 'pcs', 'coach', 'level', 'level2', 'lvv', 'style', 'color', 'lang'];
+  const SET_KEYS = ['anim', 'sound', 'hint', 'eval', 'last', 'threat', 'skin', 'pcs', 'coach', 'level', 'level2', 'lvv', 'style', 'color', 'lang', 'pro'];
   const get = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; } };
   const put = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
   const prevDay = s => { const d = new Date(s + 'T12:00:00'); d.setDate(d.getDate() - 1); return ymd(d); };

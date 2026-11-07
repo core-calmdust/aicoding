@@ -1261,7 +1261,9 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof modul
       const o = d.opts || {};
       if (o.noise) {
         // weak levels: score every root move with a shallow full-window search, then pick softly among near-best moves
-        const list = useWasm() ? (nueUse(false), wsetup(d), wasmAnalyze({ depth: o.depth || 1 })) : se.analyze({ depth: o.depth || 1 });
+        // (PRO mode, shared/proset.js: a time / node limit instead of a depth, the NNUE with o.nnue)
+        const ao = { depth: o.depth || (o.time || o.nodes ? 0 : 1), time: o.time || 0, nodes: o.nodes || 0 };
+        const list = useWasm() ? (nueUse(!!o.nnue), wsetup(d), wasmAnalyze(ao)) : se.analyze(ao);
         if (!list.length) { self.postMessage({ type: 'result', id: d.id, move: null, score: -MATE, depth: 0, pv: [] }); return; }
         // beginner personality: likes captures and checks a little more than they are worth
         if (o.greedy) {

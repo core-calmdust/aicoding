@@ -101,7 +101,7 @@
   let FB = null;
   function goFB(ms) {
     if (!FB) {
-      FB = new Worker('../engine.js?v=20261108mt');
+      FB = new Worker('../engine.js?v=20261108pro');
       gunzip('../weights.bin.gz?v=20261018ol').then(w => FB.postMessage({ type: 'weights', buffer: w.buffer.slice(w.byteOffset, w.byteOffset + w.byteLength) })).catch(() => {});
     }
     return new Promise(res => { FB.onmessage = e => { if (e.data.type === 'result') res(e.data); }; FB.postMessage({ type: 'think', id: 1, sfen: startSfen, moves: line.slice(), opts: { time: ms } }); });

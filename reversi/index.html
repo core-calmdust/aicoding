@@ -1684,7 +1684,7 @@ html.rb-study .frame{outline:3px solid var(--accent);outline-offset:3px}
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2l14"></script>
 <script src="online.js?v=stale2pf"></script>
-<script src="../shared/mtengine.js?v=3"></script><script>MTEngine.init({ sw: 'sw.js' });</script>
+<script src="../shared/mtengine.js?v=4"></script><script src="../shared/proset.js?v=1"></script><script>MTEngine.init({ sw: 'sw.js' });</script>
 <script src="rbox.js?v=3-rc2"></script>
 <script src="../shared/coachkit.js?v=16l14"></script>
 <script src="../shared/record.js?v=12l14"></script>
@@ -1806,7 +1806,7 @@ weightsReady = (async () => {
 let book = null;
 const bookReady = fetch('book.json').then(r => r.ok ? r.json() : null).catch(() => null).then(b => (book = b));
 function makeWorker(onmsg) {
-  const w = new Worker('engine.js?v=47');
+  const w = new Worker('engine.js?v=49');
   w.onmessage = onmsg;
   const send = wt => { if (wt) w.postMessage({ type: 'weights', buffer: wt.buffer.slice(0), nphase: wt.nphase }); };
   if (weights) send(weights); else weightsReady.then(send);
@@ -1844,14 +1844,14 @@ let jobId = 0;
 // the helpers start from other root moves). Rated games keep the search they had (one thread, or the root split below).
 const MT_CFG = { 17: { exact: 18, wld: 20 }, 18: { exact: 18, wld: 21 }, 19: { exact: 19, wld: 21 }, 20: { exact: 20, wld: 22 } };   // the helpers' settings (engine.js LEVELS)
 const MTP = window.MTEngine ? MTEngine.use({
-  wasm: 'engine_mt.wasm?v=1', lead: 'mt-worker.js?v=1', helper: 'mt-worker.js?v=1', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
+  wasm: 'engine_mt.wasm?v=1', lead: 'mt-worker.js?v=2', helper: 'mt-worker.js?v=2', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => Date.now() } }),
   after: async (X, mem, ws) => {
     X.init();   // (the tables in the shared memory, once)
     const wt = await weightsReady, bk = await bookReady;
     ws.forEach(w => { if (wt) w.postMessage({ type: 'weights', buffer: wt.buffer.slice(0), nphase: wt.nphase }); if (bk) w.postMessage({ type: 'book', book: bk }); });
   },
-  help: m => { const o = m.opts || {}, L = MT_CFG[o.level], ex = L ? L.exact : o.exact || 18;
+  help: m => { const o = m.opts || {}, L = o.cfg ? { exact: o.cfg.exact, wld: o.cfg.wld || o.cfg.exact + 2 } : MT_CFG[o.level], ex = L ? L.exact : o.exact || 18;   // (o.cfg: PRO mode)
     return { cells: m.cells, toMove: m.toMove, cfg: { depth: 60, exact: ex, wld: L ? L.wld : ex + 2, mpc: 1 } }; },
   isDone: m => m.type === 'result' || m.type === 'analysis', isProg: m => m.type === 'progress' || m.type === 'analysisProgress',
 }) : null;
@@ -1859,14 +1859,15 @@ const mtPool = () => MTP && MTP.pool();
 function cancelAI() { cancelPool(); if (MTP) MTP.cancel('ai'); if (aiJob) { aiWorker.terminate(); aiWorker = makeWorker(aiMsg); aiJob = null; } }
 function cancelAna() { if (anaJob) { if (anaJob.mt) MTP.cancel('ana'); else { anaWorker.terminate(); anaWorker = makeWorker(anaMsg); } anaJob = null; } }
 // the AI's move on the threads (levels 17–20, not rated); null: use the usual search
-function mtThink(cells, toMove, level, onProgress) {
-  const mp = !rtGame() && MT_CFG[level] && mtPool(); if (!mp) return null;
-  return mp.run({ type: 'think', cells, toMove, opts: { level } }, onProgress, 'ai').then(r => { if (r) noteNps(r); return r; });
+// pc: the PRO settings (proCfg): threads only for a time limit, with its own thread count
+function mtThink(cells, toMove, level, onProgress, pc) {
+  const mp = !rtGame() && (pc ? pc.threads > 1 && pc.opts.cfg.time && !pc.opts.cfg.noise : MT_CFG[level]) && mtPool(); if (!mp) return null;
+  return mp.run({ type: 'think', cells, toMove, opts: pc ? { level, ...pc.opts } : { level }, ...(pc ? { mtThreads: pc.threads } : {}) }, onProgress, 'ai').then(r => { if (r) noteNps(r); return r; });
 }
-function think(cells, toMove, level, onProgress) {
+function think(cells, toMove, level, onProgress, pc) {
   return new Promise(resolve => {
     aiJob = { id: ++jobId, resolve, onProgress };
-    aiWorker.postMessage({ type: 'think', id: aiJob.id, cells, toMove, opts: { level } });
+    aiWorker.postMessage({ type: 'think', id: aiJob.id, cells, toMove, opts: pc ? { level, ...pc.opts } : { level } });
   });
 }
 // ---------------------------------------------------------------- parallel root search (levels 17-20)
@@ -2134,9 +2135,9 @@ function showHints(list, done) {
 function playerName(color) {
   if (settings.mode === 'online') { const g = net && net.game; if (!g) return '…'; const nm = color === BLACK ? g.bn : g.wn, r = color === BLACK ? g.br : g.wr; return (color === net.me ? t('you') + ' · ' : '') + nm + ' (' + r + ')'; }
   if (settings.mode === 'pvp') return cname(color);
-  if (settings.mode === 'watch') return AIW() + ' ' + LV(color === BLACK ? settings.level : settings.level2);
+  if (settings.mode === 'watch') return AIW() + ' ' + LV(color === BLACK ? settings.level : settings.level2) + (proCfg(color === BLACK ? settings.level : settings.level2) ? ' PRO' : '');
   if (rated && settings.mode === 'ai') return color === humanColor ? t('you') + ' · R' + rated.my : AIW() + ' ' + rtLvName(rated.lv) + ' · R' + rated.or;
-  return color === humanColor ? t('you') : AIW() + ' ' + LV(settings.level);
+  return color === humanColor ? t('you') : AIW() + ' ' + LV(settings.level) + (proCfg(settings.level) ? ' PRO' : '');
 }
 // header bar (PC): whose turn, disc count, evaluation, move number
 function hbInfo(p, b, w, ev) {
@@ -2331,15 +2332,15 @@ async function schedule(animInfo) {
     const t0 = performance.now();
     await weightsReady;
     if (token !== busyToken) return;
-    const lv = levelFor(color), [cb, cw] = counts(p.cells);
-    const usePar = NPAR >= 2 && PAR_LEVELS[lv] && 64 - cb - cw <= 45 && legalMoves(p.cells, color).length > 1;
+    const lv = levelFor(color), [cb, cw] = counts(p.cells), pc = proCfg(lv);   // pc: PRO mode (a level of its own)
+    const usePar = !pc && NPAR >= 2 && PAR_LEVELS[lv] && 64 - cb - cw <= 45 && legalMoves(p.cells, color).length > 1;
     const prog = m => {
       if (token !== busyToken) return;
       setStatus(color, rtLive() ? t('depth', { d: m.depth }) : `${t('depth', { d: m.depth })}  ${fmt(m.score)}`, true);
     };
-    let res = await mtThink(p.cells.slice(), color, lv, prog);   // (null: not on the threads)
+    let res = await mtThink(p.cells.slice(), color, lv, prog, pc);   // (null: not on the threads)
     if (token !== busyToken) return;
-    if (!res) res = await (usePar ? parallelThink : think)(p.cells.slice(), color, lv, prog);
+    if (!res) res = await (usePar ? parallelThink : think)(p.cells.slice(), color, lv, prog, pc);
     if (token !== busyToken) return;
     const minDelay = settings.mode === 'watch' ? 450 : (animInfo && animInfo.passed ? 1100 : 380);
     const wait = minDelay - (performance.now() - t0);
@@ -2533,7 +2534,7 @@ function recordGame(b, w, lost, tl) {
   if (lost && !positions.slice(1).some(p => p.mover === humanColor)) return;   // resigned / timed out before playing a move
   L0.recd = 1; save();
   const me = lost ? (lost === humanColor ? -1 : 1) : humanColor === BLACK ? b - w : w - b, lv = levelFor(3 - humanColor);
-  GameRecord.add({ mode: rtGame() ? 'rated' : 'ai', res: me > 0 ? 'w' : me < 0 ? 'l' : 'd', side: humanColor === BLACK ? 0 : 1, opp: 'AI ' + (rtGame() ? rtLvName(lv) : LV(lv)), key: (rtGame() ? 'rt:' : 'ai:') + lv, n: positions.length - 1, why: lost ? t(tl ? 'res.time' : 'rt.resigned') : b + ' - ' + w });
+  GameRecord.add({ mode: rtGame() ? 'rated' : 'ai', res: me > 0 ? 'w' : me < 0 ? 'l' : 'd', side: humanColor === BLACK ? 0 : 1, opp: 'AI ' + (rtGame() ? rtLvName(lv) : LV(lv) + (proCfg(lv) ? ' PRO' : '')), key: rtGame() ? 'rt:' + lv : proCfg(lv) ? 'ai:pro' : 'ai:' + lv, n: positions.length - 1, why: lost ? t(tl ? 'res.time' : 'rt.resigned') : b + ' - ' + w });
 }
 // ====================================================================== game clock (offline games: vs AI = only your clock, two players = both)
 // Main time, then byoyomi per move (same choices as shogi). A clock runs only for the side to move at the latest
@@ -2764,6 +2765,85 @@ function segSync() {
 segInit('#segMode', 'mode'); segInit('#segColor', 'color'); segInit('#segClock', 'clock');
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
+// PRO mode (shared/proset.js; common rule「対局設定の Pro モード」): advanced settings for the AI beside the level — vs the AI / AI vs AI,
+// never rated. The changed values make a level of their own (engine.js think: opts.cfg / variety / book).
+const LEVELS_UI = [   // (= engine.js LEVELS: the defaults the PRO panel shows)
+  null,
+  { depth: 1, exact: 2, noise: 4000 },              // 1  almost random
+  { depth: 1, exact: 3, noise: 1800 },              // 2
+  { depth: 1, exact: 3, noise: 1300 },              // 3
+  { depth: 1, exact: 4, noise: 900 },               // 4  (old Lv.1)
+  { depth: 1, exact: 4, noise: 450 },               // 5
+  { depth: 2, exact: 5, noise: 650 },               // 6
+  { depth: 2, exact: 6, noise: 450 },               // 7  (old Lv.2)
+  { depth: 2, exact: 6, noise: 200 },               // 8
+  { depth: 3, exact: 7, noise: 320 },               // 9  (≈ old Lv.3)
+  { depth: 4, exact: 9, noise: 400 },               // 10
+  { depth: 4, exact: 10, noise: 110 },              // 11 (old Lv.4)
+  { depth: 5, exact: 11, noise: 70 },               // 12
+  { depth: 6, exact: 12, noise: 40 },               // 13 (old Lv.5)
+  { depth: 8, exact: 14 },                          // 14 (old Lv.6)
+  { depth: 9, exact: 15, time: 700, mpc: 1 },       // 15
+  { depth: 10, exact: 16, time: 1000, mpc: 1 },     // 16 (old Lv.7)
+  { depth: 60, exact: 18, wld: 20, time: 1500, mpc: 1 },     // 17 (old Lv.8)
+  { depth: 60, exact: 18, wld: 21, time: 2200, mpc: 1 },     // 18
+  { depth: 60, exact: 19, wld: 21, time: 3000, mpc: 1 },     // 19 (old Lv.9)
+  { depth: 60, exact: 20, wld: 22, time: 5000, mpc: 1 },     // 20 (old Lv.10)
+];
+
+const PRO_T = {
+  exact: { ja: '完全読み', en: 'Perfect endgame', zh: '完全计算', 'zh-TW': '完全計算', ko: '완전 수읽기', es: 'Final perfecto', fr: 'Finale parfaite', pt: 'Final perfeito', de: 'Perfektes Endspiel', ru: 'Точный эндшпиль', tr: 'Kusursuz oyun sonu', id: 'Akhir sempurna', hi: 'पूर्ण अंत गणना', ar: 'حساب النهاية الكامل' },
+  exactH: { ja: '空きマスがこの数以下になったら最後まで読み切り、石数が最大になる手を打ちます（時間の制限内で）。',
+    en: 'From this many empty squares, the AI reads to the very end and plays for the best final disc count (within its time).',
+    zh: '空格少于等于此数时计算到终局，下出子数最多的一手（在时间限制内）。', 'zh-TW': '空格少於等於此數時計算到終局，下出子數最多的一手（在時間限制內）。',
+    ko: '빈칸이 이 수 이하가 되면 끝까지 읽어 돌 수가 가장 많아지는 수를 둡니다(시간 제한 안에서).',
+    es: 'Desde estas casillas vacías, la IA calcula hasta el final y busca el mejor recuento de fichas (dentro de su tiempo).',
+    fr: 'À partir de ce nombre de cases vides, l’IA calcule jusqu’au bout et vise le meilleur score de pions (dans son temps).',
+    pt: 'A partir dessas casas vazias, a IA calcula até o fim e busca a melhor contagem de peças (dentro do tempo).',
+    de: 'Ab so vielen leeren Feldern rechnet die KI bis zum Schluss und spielt auf die beste Steinzahl (innerhalb ihrer Zeit).',
+    ru: 'Начиная с этого числа пустых клеток ИИ просчитывает до конца и играет на лучший счёт фишек (в пределах времени).',
+    tr: 'Bu kadar boş kare kaldığında yapay zekâ sonuna kadar hesaplar ve en iyi taş sayısını hedefler (süresi içinde).',
+    id: 'Mulai dari jumlah kotak kosong ini, AI menghitung sampai akhir dan mengejar jumlah keping terbaik (dalam waktunya).',
+    hi: 'इतने खाली खाने बचने पर AI अंत तक गणना कर सबसे ज़्यादा गोटियों वाली चाल चलेगा (अपने समय में)।',
+    ar: 'ابتداءً من هذا العدد من الخانات الفارغة يحسب الذكاء حتى النهاية ويلعب لأفضل عدد أقراص (ضمن وقته).' },
+  wld: { ja: '勝敗読み', en: 'Win/loss endgame', zh: '胜负计算', 'zh-TW': '勝負計算', ko: '승패 수읽기', es: 'Final gana/pierde', fr: 'Finale gain/perte', pt: 'Final vitória/derrota', de: 'Sieg/Niederlage-Endspiel', ru: 'Эндшпиль на результат', tr: 'Kazan/kaybet oyun sonu', id: 'Akhir menang/kalah', hi: 'जीत/हार अंत गणना', ar: 'حساب الفوز/الخسارة' },
+  wldH: { ja: '完全読みより手前から、勝ち・引き分け・負けだけを読み切ります（石数を見ない分速い）。0 で使いません。',
+    en: 'Earlier than the perfect endgame, reads out only win / draw / loss (faster: the disc count is ignored). 0 = off.',
+    zh: '比完全计算更早，只计算胜/和/负（不看子数所以更快）。0 为不使用。', 'zh-TW': '比完全計算更早，只計算勝/和/負（不看子數所以更快）。0 為不使用。',
+    ko: '완전 수읽기보다 앞서 승·무·패만 끝까지 읽습니다(돌 수를 보지 않아 빠름). 0이면 사용 안 함.',
+    es: 'Antes del final perfecto, calcula solo gana / tablas / pierde (más rápido: ignora las fichas). 0 = no.',
+    fr: 'Avant la finale parfaite, calcule seulement gain / nulle / perte (plus rapide : sans compter les pions). 0 = non.',
+    pt: 'Antes do final perfeito, calcula só vitória / empate / derrota (mais rápido: ignora as peças). 0 = não.',
+    de: 'Schon vor dem perfekten Endspiel nur Sieg / Remis / Niederlage ausrechnen (schneller, ohne Steinzahl). 0 = aus.',
+    ru: 'Раньше точного эндшпиля просчитывает только победу / ничью / поражение (быстрее: без счёта фишек). 0 — нет.',
+    tr: 'Kusursuz oyun sonundan önce yalnızca kazanma / beraberlik / kaybı hesaplar (taş sayısına bakmadığı için hızlı). 0 = kapalı.',
+    id: 'Lebih awal dari akhir sempurna, hanya menghitung menang / seri / kalah (lebih cepat: jumlah keping diabaikan). 0 = mati.',
+    hi: 'पूर्ण अंत गणना से पहले सिर्फ़ जीत / ड्रॉ / हार निकालता है (गोटियाँ न गिनने से तेज़)। 0 = बंद।',
+    ar: 'قبل حساب النهاية الكامل، يحسب الفوز / التعادل / الخسارة فقط (أسرع لأنه يتجاهل عدد الأقراص). 0 = إيقاف.' },
+  u: { ja: 'マス', en: 'empties', zh: '空', 'zh-TW': '空', ko: '칸', es: 'vacías', fr: 'vides', pt: 'vazias', de: 'leer', ru: 'пуст.', tr: 'boş', id: 'kosong', hi: 'खाली', ar: 'فارغة' },
+  book: { ja: '定石' },
+};
+const PRO_DEF = lv => { const L = LEVELS_UI[lv] || LEVELS_UI[15];
+  return { limit: L.time ? { k: 'time', v: L.time / 1000 } : { k: 'depth', v: L.depth }, threads: MT_CFG[lv] ? ProSet.maxThreads() : 1, book: !!L.mpc,
+    var: !L.noise ? 0 : L.noise >= 400 ? 2 : 1, exact: L.exact, wld: L.wld || 0 }; };
+var PRO = window.ProSet ? ProSet.init({ game: 'reversi', lang: () => LANG, level: () => draft.level || settings.level, show: () => draft.mode === 'ai' || draft.mode === 'watch', stone: true,
+  store: { get: () => settings.pro, set: v => { settings.pro = v; } }, defaults: PRO_DEF,
+  params: [{ key: 'limit', kinds: { time: [0.1, 60], depth: [1, 30] } }, { key: 'threads', when: e => e.limit.k === 'time' && !e.var },
+    { key: 'exact', type: 'int', group: 'read', min: 0, max: 28, label: PRO_T.exact, help: PRO_T.exactH, unit: PRO_T.u },
+    { key: 'wld', type: 'int', group: 'read', min: 0, max: 30, label: PRO_T.wld, help: PRO_T.wldH, unit: PRO_T.u },
+    { key: 'book', label: Object.assign({}, ProSet.T.book, PRO_T.book) }, { key: 'var' }] }) : null;
+// the PRO settings of an AI side: { opts (engine.js think: cfg, book / noBook, variety), threads } or null (the level as it is)
+function proCfg(lv) {
+  if (!PRO || rtGame() || !(settings.mode === 'ai' || settings.mode === 'watch')) return null;
+  const e = PRO.get(lv); if (!e) return null;
+  const L = LEVELS_UI[lv] || LEVELS_UI[15], c = { depth: 60, exact: e.exact, mpc: L.mpc ? 1 : 0 }, o = { cfg: c };
+  if (e.wld > e.exact) c.wld = e.wld;
+  if (e.limit.k === 'depth') c.depth = e.limit.v; else c.time = Math.round(e.limit.v * 1000);
+  if (e.var && !e.changed.includes('var') && L.noise) { c.noise = L.noise; c.depth = e.limit.k === 'depth' ? e.limit.v : L.depth; }   // (the level's own randomness: a fixed depth)
+  else if (e.var) { o.variety = true; o.varietyMargin = e.var === 1 ? 150 : 400; }
+  if (e.book) o.book = true; else o.noBook = true;
+  return { opts: o, threads: e.threads || 1 };
+}
 function openNew(resume) {
   Object.assign(draft, settings);
   if (rated && settings.mode === 'ai') draft.mode = 'rated';
@@ -5408,7 +5488,7 @@ if (olOn()) Online.onAuth(() => {
 // settings / name: newest change wins. Not synced: the game in progress, live online game / room data, export format, mock data.
 const RvSync = (() => {
   const META = 'reversi-sync-meta', RULES_KEY = 'aicoding-reversi-rules-seen';
-  const SET_KEYS = ['level', 'level2', 'lvV', 'clock', 'legal', 'last', 'eval', 'anim', 'sound', 'coach', 'lang'];
+  const SET_KEYS = ['level', 'level2', 'lvV', 'clock', 'legal', 'last', 'eval', 'anim', 'sound', 'coach', 'lang', 'pro'];
   const get = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; } };
   const put = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
   const prevDay = s => { const d = new Date(s + 'T12:00:00'); d.setDate(d.getDate() - 1); return ymd(d); };

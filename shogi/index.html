@@ -1494,7 +1494,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="../shared/placement.js?v=1l14"></script>
 <script src="../shared/export.js?v=9l14"></script>
 <script src="../shared/rulesoffer.js?v=16l14j"></script>
-<script src="engine.js?v=20261108mt"></script>
+<script src="engine.js?v=20261108pro"></script>
 <script src="strategy.js?v=20261107l14"></script>
 <script src="cpu-style.js?v=20261107l14"></script>
 <script src="lists-ui.js?v=20261107l14"></script>
@@ -1509,7 +1509,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2l14"></script>
 <script src="online.js?v=stale2pf"></script>
-<script src="../shared/mtengine.js?v=3"></script><script>MTEngine.init({ sw: 'sw.js?v=2', light: true });</script>
+<script src="../shared/mtengine.js?v=4"></script><script src="../shared/proset.js?v=1"></script><script>MTEngine.init({ sw: 'sw.js?v=2', light: true });</script>
 <script src="variants/search.js?v=20261030sv"></script>
 <script src="variants/vshogi.js?v=20261030sv"></script>
 <script src="variants/vtext.js?v=20261107l14"></script>
@@ -1654,7 +1654,7 @@ const weightsReady = (async () => {
   return weights;
 })();
 function makeWorker(onmsg) {
-  const w = new Worker('engine.js?v=20261108mt');
+  const w = new Worker('engine.js?v=20261108pro');
   w.onmessage = onmsg;
   w.onerror = e => {
     console.warn('engine worker error', e.message);
@@ -1681,7 +1681,7 @@ aiWorker = makeWorker(aiMsg); anaWorker = makeWorker(anaMsg);
 // pool of threads when it is free (standard shogi only). The AI levels are node budgets (the same strength on every device),
 // so the AI and rated games stay on the one-thread workers.
 const MTP = window.MTEngine ? MTEngine.use({
-  wasm: 'engine_mt.wasm?v=1', lead: 'engine.js?v=20261108mt&mt=1', helper: 'mt-helper.js?v=1', slot: 8 << 20, initial: 1024, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
+  wasm: 'engine_mt.wasm?v=1', lead: 'engine.js?v=20261108pro&mt=1', helper: 'mt-helper.js?v=1', slot: 8 << 20, initial: 1024, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => Date.now(), progress: () => {}, aprogress: () => {} } }),
   after: async (X, mem, ws) => { const wt = await weightsReady; if (wt) ws[0].postMessage({ type: 'weights', buffer: wt.slice(0) }); },
   help: m => { const p = new E.Position(); p.setSfen(m.sfen); const board = Array.from(p.board), hand = Array.from(p.hand), side = p.side, moves = [];
@@ -1696,9 +1696,12 @@ function mtPool(msg) {
 }
 // the speed of a search on the threads, in the info line under the moves (as after the AI's moves)
 function mtNps(r, t0) { const ms = performance.now() - t0; if (r && r.nodes > 50000 && ms > 20) { const el = $('#infoLine'); if (el) el.textContent = t('info', { nps: Math.round(r.nodes / ms * 1000).toLocaleString() }); } }
-function cancelAI() { if (aiJob) { if (aiJob.vw) Variants.kill('ai'); else { aiWorker.terminate(); aiWorker = makeWorker(aiMsg); } const j = aiJob; aiJob = null; j.resolve(null); } }
+function cancelAI() { if (aiJob) { if (aiJob.mt) MTP.cancel('ai'); else if (aiJob.vw) Variants.kill('ai'); else { aiWorker.terminate(); aiWorker = makeWorker(aiMsg); } const j = aiJob; aiJob = null; j.resolve(null); } }
 function cancelAna() { if (anaJob) { if (anaJob.mt) MTP.cancel('ana'); else if (anaJob.vw) Variants.kill('ana'); else { anaWorker.terminate(); anaWorker = makeWorker(anaMsg); } const j = anaJob; anaJob = null; j.resolve(null); } }
-function aiCall(msg, onProgress) { return new Promise(resolve => { aiJob = { id: ++jobId, resolve, onProgress }; const vw = window.Variants && Variants.wk(msg, 'ai', aiMsg, aiJob.id); if (vw) aiJob.vw = 1; (vw || aiWorker).postMessage({ ...msg, id: aiJob.id }); }); }
+function aiCall(msg, onProgress) { return new Promise(resolve => { aiJob = { id: ++jobId, resolve, onProgress };
+  const mp = msg.mtThreads > 1 && mtPool(msg);   // PRO mode: a time limit on that many threads
+  if (mp) { const j = aiJob; j.mt = 1; mp.run(msg, m => { if (aiJob === j && j.onProgress) j.onProgress(m); }, 'ai').then(r => { if (aiJob !== j) return; if (r === undefined) { j.mt = 0; aiWorker.postMessage({ ...msg, id: j.id }); return; } aiJob = null; resolve(r); }); return; }
+  const vw = window.Variants && Variants.wk(msg, 'ai', aiMsg, aiJob.id); if (vw) aiJob.vw = 1; (vw || aiWorker).postMessage({ ...msg, id: aiJob.id }); }); }
 function anaCall(msg, onProgress) { cancelAna(); return new Promise(resolve => { anaJob = { id: ++jobId, resolve, onProgress };
   const mp = mtPool(msg);
   if (mp) { const j = anaJob, t0 = performance.now(); j.mt = 1; mp.run(msg, m => { if (anaJob === j && j.onProgress) j.onProgress(m, false); }, 'ana').then(r => { if (anaJob !== j) return; anaJob = null; mtNps(r, t0); resolve(r); }); return; } const vw = window.Variants && Variants.wk(msg, 'ana', anaMsg, anaJob.id); if (vw) anaJob.vw = 1; (vw || anaWorker).postMessage({ ...msg, id: anaJob.id }); }); }
@@ -2081,9 +2084,9 @@ function playerName(c) {
   if (settings.mode === 'pvp') return cname(c);
   const cs = window.CpuStyle && game ? CpuStyle.tag(game, c, t) : '';
   const lvN = i => game && game.variant && Variants.eng(game.variant) ? Variants.lvName(i) : t('lv')[i];
-  if (settings.mode === 'watch') return aiP() + lvN(c === 0 ? settings.level : settings.level2) + cs;
+  if (settings.mode === 'watch') return aiP() + lvN(c === 0 ? settings.level : settings.level2) + (proCfg(c === 0 ? settings.level : settings.level2) ? ' PRO' : '') + cs;
   if (game && game.rated) return c === game.human ? t('you') + ' · R' + game.rated.my : aiP() + rtLvName(game.rated.lv) + ' · R' + game.rated.or;
-  return c === game.human ? t('you') : aiP() + lvN(settings.level) + cs;
+  return c === game.human ? t('you') : aiP() + lvN(settings.level) + (proCfg(settings.level) ? ' PRO' : '') + cs;
 }
 const fmtScore = v => Math.abs(v) >= E.MATE - 200 ? (v > 0 ? '+' : '−') + t('mated') : (v > 0 ? '+' : v < 0 ? '−' : '±') + Math.abs(Math.round(v));
 const winRate = v => 1 / (1 + Math.exp(-v / (game && game.variant && window.Variants ? Variants.WR[game.variant] || 600 : 600)));   // variants: their own evaluation scale
@@ -2356,13 +2359,13 @@ async function schedule() {
     setStatus(side, t('thinking'), true);
     const t0 = performance.now();
     await weightsReady; if (token !== busyToken) return;
-    const lv = LEVELS[levelOf(side)];
+    const pc = proCfg(levelOf(side)), lv = pc ? pc.opts : LEVELS[levelOf(side)];   // PRO mode: a level of its own
     let bm = null, bmLbl = 'book';
     if (window.CpuStyle && CpuStyle.active(game, side, idx)) {   // chosen strategy (cpu-style.js): consistent book move / plan move / null = engine
-      const r = await CpuStyle.move({ E, P, game, side, ply: idx, book: levelOf(side) >= 2 ? BOOK : null, think: (mv, o) => aiCall({ type: 'think', sfen: game.start, moves: mv, opts: o }) });
+      const r = await CpuStyle.move({ E, P, game, side, ply: idx, book: (pc ? pc.book : levelOf(side) >= 2) ? BOOK : null, think: (mv, o) => aiCall({ type: 'think', sfen: game.start, moves: mv, opts: o }) });
       if (token !== busyToken) return;
       if (r) { bm = r.u; bmLbl = r.src === 'plan' ? 'cs.plan' : 'book'; }
-    } else bm = levelOf(side) >= 2 && !game.variant ? bookMove() : null;
+    } else bm = (pc ? pc.book : levelOf(side) >= 2) && !game.variant ? bookMove() : null;
     if (bm) {
       await sleep(settings.mode === 'watch' ? 500 : 400); if (token !== busyToken) return;
       const prev = game.info[idx]; if (prev && prev.pendingQ) delete prev.pendingQ;
@@ -2370,7 +2373,7 @@ async function schedule() {
       setStatus(side, t(bmLbl), false);
       return;
     }
-    const res = await aiCall({ type: 'think', sfen: game.start, moves: game.moves.slice(0, idx), opts: Variants.eng(game.variant) ? Variants.levelOpts(levelOf(side), game.variant) : lv }, m => {
+    const res = await aiCall({ type: 'think', sfen: game.start, moves: game.moves.slice(0, idx), opts: Variants.eng(game.variant) ? Variants.levelOpts(levelOf(side), game.variant) : lv, ...(pc && pc.threads > 1 ? { mtThreads: pc.threads } : {}) }, m => {
       if (token === busyToken) setStatus(side, rtLive() ? t('thinking.d', { d: m.depth }) : `${t('thinking.d', { d: m.depth })}  ${fmtScore(m.score)}`, true);
     });
     if (!res || token !== busyToken) return;
@@ -2394,7 +2397,7 @@ async function schedule() {
       }
     }
     // resign when hopeless (strong levels only)
-    if (!lv.noise && res.score <= -E.MATE + 200 && settings.mode === 'ai') {
+    if ((pc ? pc.resign : !lv.noise) && res.score <= -E.MATE + 200 && settings.mode === 'ai') {
       game.over = { winner: side ^ 1, reason: 'resign', ply: idx };
       renderInfo(); save(); showResult(); return;
     }
@@ -2465,9 +2468,9 @@ function recordGame() {
   Object.defineProperty(game, 'recorded', { value: true, enumerable: true, writable: true, configurable: true });
   const lvN = i => Variants.eng(game.variant) ? Variants.lvName(i) : t('lv')[i];
   const vn = game.variant ? ' · ' + Variants.vName(game.variant) : '';
-  const opp = game.rated ? 'AI ' + rtLvName(game.rated.lv) : 'AI ' + lvN(settings.level) + vn;
+  const pro = !game.rated && proCfg(settings.level), opp = game.rated ? 'AI ' + rtLvName(game.rated.lv) : 'AI ' + lvN(settings.level) + (pro ? ' PRO' : '') + vn;
   const why = o.reason === 'mate' ? t('res.mate', { n: o.ply }) : o.reason === 'resign' ? t('res.resign', { n: o.ply }) : t('res.' + o.reason);
-  GameRecord.add({ mode: game.rated ? 'rated' : 'ai', res: o.winner < 0 ? 'd' : o.winner === h ? 'w' : 'l', side: h, opp, key: (game.rated ? 'rt:' + game.rated.lv : 'ai:' + settings.level) + (game.variant || ''), n: o.ply, why });
+  GameRecord.add({ mode: game.rated ? 'rated' : 'ai', res: o.winner < 0 ? 'd' : o.winner === h ? 'w' : 'l', side: h, opp, key: (game.rated ? 'rt:' + game.rated.lv : pro ? 'ai:pro' : 'ai:' + settings.level) + (game.variant || ''), n: o.ply, why });
 }
 function showOverlay(s) { $(s).classList.add('show'); }
 function hideOverlay(s) { $(s).classList.remove('show'); }
@@ -2896,6 +2899,26 @@ $('#segSkin').onclick = e => { const b = e.target.closest('button'); if (!b) ret
 $('#segClock').onclick = e => { const b = e.target.closest('button'); if (b) { dlg.clock = +b.dataset.v; updDialog(); } };
 $('#segHandi').onclick = e => { const b = e.target.closest('button'); if (b) { dlg.handicap = +b.dataset.v; updDialog(); } };
 $('#rngLevel').oninput = updDialog; $('#rngLevel2').oninput = updDialog;
+// PRO mode (shared/proset.js; common rule「対局設定の Pro モード」): advanced settings for the AI beside the level — standard shogi
+// (and ランダム将棋, which keeps these levels) against the AI / AI vs AI, never rated. The changed values make engine opts of their own.
+const PRO_DEF = lv => { const L = LEVELS[lv] || LEVELS[LV_DEFAULT];
+  return { limit: L.noise ? { k: 'depth', v: L.depth } : L.nodes ? { k: 'nodes', v: L.nodes } : { k: 'time', v: (L.time || 1000) / 1000 }, threads: 1,
+    book: lv >= 2, var: !L.noise ? 0 : L.noise >= 60 ? 2 : 1, eval: L.noise || L.linear ? 'hand' : 'nnue', resign: !L.noise }; };
+const proVariantEng = () => { const c = document.querySelector('#newOverlay .ngt-gcard.sel[data-v]'); return !!(c && c.dataset.v && window.Variants && Variants.eng(c.dataset.v)); };
+var PRO = window.ProSet ? ProSet.init({ game: 'shogi', lang: () => LANG, level: () => +$('#rngLevel').value, show: () => (dlg.mode === 'ai' || dlg.mode === 'watch') && !proVariantEng(),
+  store: { get: () => settings.pro, set: v => { settings.pro = v; } }, defaults: PRO_DEF,
+  params: [{ key: 'limit', kinds: { time: [0.1, 60], depth: [1, 30], nodes: [100, 1e8] } }, { key: 'threads', when: e => e.limit.k === 'time' && !e.var && e.eval === 'nnue' },
+    { key: 'book' }, { key: 'var' }, { key: 'eval' }, { key: 'resign' }] }) : null;
+// the PRO settings of an AI side: { opts (for engine.js 'think'), book, resign, threads } or null (the level as it is; rated / online / variants with their own engine)
+function proCfg(lv) {
+  if (!PRO || !game || game.rated || !(settings.mode === 'ai' || settings.mode === 'watch') || (game.variant && window.Variants && Variants.eng(game.variant))) return null;
+  const e = PRO.get(lv); if (!e) return null;
+  const L = LEVELS[lv] || LEVELS[LV_DEFAULT], o = {};
+  if (e.limit.k === 'depth') o.depth = e.limit.v; else if (e.limit.k === 'nodes') o.nodes = e.limit.v; else o.time = Math.round(e.limit.v * 1000);
+  if (e.var) { o.noise = !e.changed.includes('var') && L.noise ? L.noise : e.var === 1 ? 30 : 80; if (L.greedy && !e.changed.includes('var')) o.greedy = 1; if (e.eval === 'nnue') o.nnue = 1; }
+  else if (e.eval === 'hand') o.linear = 1;
+  return { opts: o, book: !!e.book, resign: !!e.resign, threads: e.threads || 1 };
+}
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
 $('#btnStart').onclick = () => {
   hideOverlay('#newOverlay');
@@ -5117,7 +5140,7 @@ if (olOn()) Online.onAuth(olAuthChanged);
 // settings / name / rating: newest wins. Not synced: the game in progress, live online game, room choices, mock data.
 const ShogiSync = (() => {
   const META = 'shogi-sync-meta', RU_STORE = 'shogi-kaya-rules-v1';
-  const SET_KEYS = ['color', 'level', 'level2', 'handicap', 'legal', 'last', 'eval', 'coach', 'sound', 'pieces', 'skin', 'cstyle', 'cstyle2', 'lang'];
+  const SET_KEYS = ['color', 'level', 'level2', 'handicap', 'legal', 'last', 'eval', 'coach', 'sound', 'pieces', 'skin', 'cstyle', 'cstyle2', 'lang', 'pro'];
   const get = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; } };
   const put = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
   const prevDay = s => { const d = new Date(s + 'T12:00:00'); d.setDate(d.getDate() - 1); return ymd(d); };
