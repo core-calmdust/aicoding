@@ -95,12 +95,12 @@
   }
   const stopMT = () => { if (MT.X) MT.X.mt_stop(1); };
 
-  // single-thread fallback: the normal chess worker (level 20)
+  // single-thread fallback: the normal chess worker, with the chosen time (PRO-style cfg; the old fixed level 20 was 4 s)
   let FB = null;
   function goFB(fen, uciMoves, ms) {
-    if (!FB) FB = new Worker('../engine.js?v=20261108top');
+    if (!FB) FB = new Worker('../engine.js?v=20261108top2');
     const pos = E.Pos.fromFEN(fen), mv = []; for (const u of uciMoves) { const m = pos.fromUci(u); mv.push(m); pos.make(m); }
-    return new Promise(res => { FB.onmessage = e => { if (e.data.type === 'result') res(e.data); }; FB.postMessage({ type: 'think', id: 1, fen, moves: mv, level: 20 }); });
+    return new Promise(res => { FB.onmessage = e => { if (e.data.type === 'result') res(e.data); }; FB.postMessage({ type: 'think', id: 1, fen, moves: mv, level: 25, cfg: { d: 64, ms: ms || 5000 } }); });
   }
 
   // ------------------------------------------------------------------ game state and board
