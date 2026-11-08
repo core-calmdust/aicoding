@@ -24,58 +24,58 @@
   /* ---------- names and labels (10 languages): name = the picker, go = 「〜へ」 (today's card), play = 「〜で遊ぶ」 (the board card) ---------- */
   const PLACES = {
     name: {
-      ja: ['ちゃぶ台', '2D準拠', 'ダイニング', 'フェルト卓', 'テラス', '書斎', '縁側', '山小屋', 'リヤド', 'スカイラウンジ'],
-      en: ['Chabudai', 'Like 2D', 'Dining table', 'Green felt', 'Terrace', 'Study', 'Engawa', 'Mountain lodge', 'Riad', 'Sky lounge'],
-      zh: ['矮桌', '2D风格', '餐桌', '绿色绒布', '露台', '书房', '缘侧', '山间小屋', '摩洛哥庭院', '空中酒廊'],
-      ko: ['밥상', '2D 스타일', '식탁', '초록 펠트', '테라스', '서재', '툇마루', '산장', '리야드', '스카이 라운지'],
-      es: ['Mesa baja', 'Como en 2D', 'Comedor', 'Tapete verde', 'Terraza', 'Estudio', 'Engawa', 'Refugio', 'Riad', 'Sky lounge'],
-      fr: ['Table basse', 'Comme en 2D', 'Salle à manger', 'Tapis vert', 'Terrasse', 'Bureau', 'Engawa', 'Chalet', 'Riad', 'Sky lounge'],
-      pt: ['Mesa baixa', 'Como no 2D', 'Sala de jantar', 'Feltro verde', 'Terraço', 'Escritório', 'Engawa', 'Chalé', 'Riad', 'Sky lounge'],
-      de: ['Teetisch', 'Wie in 2D', 'Esstisch', 'Grüner Filz', 'Terrasse', 'Lesezimmer', 'Engawa', 'Berghütte', 'Riad', 'Sky-Lounge'],
-      hi: ['चाबुदाई', '2D जैसा', 'डाइनिंग टेबल', 'हरा फ़ेल्ट', 'टैरेस', 'स्टडी रूम', 'एंगावा बरामदा', 'पहाड़ी कॉटेज', 'रियाद', 'स्काई लाउंज'],
-      ar: ['طاولة واطئة', 'كما في 2D', 'طاولة الطعام', 'اللباد الأخضر', 'الشرفة', 'المكتب', 'إنغاوا', 'كوخ جبلي', 'رياض', 'صالة علوية'],
-      ru: ['Столик', 'Как в 2D', 'Обеденный стол', 'Зелёное сукно', 'Терраса', 'Кабинет', 'Энгава', 'Горный домик', 'Риад', 'Скай-лаунж'],
-      'zh-TW': ['矮桌', '同2D', '餐桌', '綠色絨布桌', '露台', '書房', '緣側', '山間小屋', '摩洛哥庭院', '空中酒廊'],
-      id: ['Meja rendah', 'Seperti 2D', 'Meja makan', 'Kain hijau', 'Teras', 'Ruang baca', 'Engawa', 'Pondok gunung', 'Riad', 'Sky lounge'],
-      tr: ['Alçak masa', '2D gibi', 'Yemek masası', 'Yeşil çuha', 'Teras', 'Çalışma odası', 'Engawa', 'Dağ evi', 'Riad', 'Sky lounge'],
+      ja: ['ちゃぶ台', '2D準拠', 'ダイニング', 'フェルト卓', 'テラス', '書斎', '縁側', '山小屋', 'リヤド', 'スカイラウンジ', 'キャンプ場', '茶館'],
+      en: ['Chabudai', 'Like 2D', 'Dining table', 'Green felt', 'Terrace', 'Study', 'Engawa', 'Mountain lodge', 'Riad', 'Sky lounge', 'Campsite', 'Teahouse'],
+      zh: ['矮桌', '2D风格', '餐桌', '绿色绒布', '露台', '书房', '缘侧', '山间小屋', '摩洛哥庭院', '空中酒廊', '露营地', '茶馆'],
+      ko: ['밥상', '2D 스타일', '식탁', '초록 펠트', '테라스', '서재', '툇마루', '산장', '리야드', '스카이 라운지', '캠핑장', '찻집'],
+      es: ['Mesa baja', 'Como en 2D', 'Comedor', 'Tapete verde', 'Terraza', 'Estudio', 'Engawa', 'Refugio', 'Riad', 'Sky lounge', 'Campamento', 'Casa de té'],
+      fr: ['Table basse', 'Comme en 2D', 'Salle à manger', 'Tapis vert', 'Terrasse', 'Bureau', 'Engawa', 'Chalet', 'Riad', 'Sky lounge', 'Camping', 'Maison de thé'],
+      pt: ['Mesa baixa', 'Como no 2D', 'Sala de jantar', 'Feltro verde', 'Terraço', 'Escritório', 'Engawa', 'Chalé', 'Riad', 'Sky lounge', 'Acampamento', 'Casa de chá'],
+      de: ['Teetisch', 'Wie in 2D', 'Esstisch', 'Grüner Filz', 'Terrasse', 'Lesezimmer', 'Engawa', 'Berghütte', 'Riad', 'Sky-Lounge', 'Zeltplatz', 'Teehaus'],
+      hi: ['चाबुदाई', '2D जैसा', 'डाइनिंग टेबल', 'हरा फ़ेल्ट', 'टैरेस', 'स्टडी रूम', 'एंगावा बरामदा', 'पहाड़ी कॉटेज', 'रियाद', 'स्काई लाउंज', 'कैंपसाइट', 'चायघर'],
+      ar: ['طاولة واطئة', 'كما في 2D', 'طاولة الطعام', 'اللباد الأخضر', 'الشرفة', 'المكتب', 'إنغاوا', 'كوخ جبلي', 'رياض', 'صالة علوية', 'مخيم', 'بيت الشاي'],
+      ru: ['Столик', 'Как в 2D', 'Обеденный стол', 'Зелёное сукно', 'Терраса', 'Кабинет', 'Энгава', 'Горный домик', 'Риад', 'Скай-лаунж', 'Кемпинг', 'Чайный дом'],
+      'zh-TW': ['矮桌', '同2D', '餐桌', '綠色絨布桌', '露台', '書房', '緣側', '山間小屋', '摩洛哥庭院', '空中酒廊', '露營地', '茶館'],
+      id: ['Meja rendah', 'Seperti 2D', 'Meja makan', 'Kain hijau', 'Teras', 'Ruang baca', 'Engawa', 'Pondok gunung', 'Riad', 'Sky lounge', 'Perkemahan', 'Rumah teh'],
+      tr: ['Alçak masa', '2D gibi', 'Yemek masası', 'Yeşil çuha', 'Teras', 'Çalışma odası', 'Engawa', 'Dağ evi', 'Riad', 'Sky lounge', 'Kamp alanı', 'Çay evi'],
     },
     go: {
-      ja: ['ちゃぶ台へ', '盤へ', 'ダイニングへ', 'フェルト卓へ', 'テラスへ', '書斎へ', '縁側へ', '山小屋へ', 'リヤドへ', 'スカイラウンジへ'],
-      en: ['To the table', 'To the board', 'To the dining table', 'To the felt table', 'To the terrace', 'To the study', 'To the engawa', 'To the lodge', 'To the riad', 'To the sky lounge'],
-      zh: ['前往棋桌', '前往棋盘', '前往餐桌', '前往牌桌', '前往露台', '前往书房', '前往缘侧', '前往山间小屋', '前往庭院', '前往空中酒廊'],
-      ko: ['판으로 가기', '보드로 가기', '식탁으로 가기', '펠트 테이블로 가기', '테라스로 가기', '서재로 가기', '툇마루로 가기', '산장으로 가기', '리야드로 가기', '스카이 라운지로 가기'],
-      es: ['Ir a la mesa', 'Ir al tablero', 'Ir al comedor', 'Ir al tapete', 'Ir a la terraza', 'Ir al estudio', 'Ir al engawa', 'Ir al refugio', 'Ir al riad', 'Ir al sky lounge'],
-      fr: ['Vers la table', 'Vers le plateau', 'Vers la salle à manger', 'Vers le tapis vert', 'Vers la terrasse', 'Vers le bureau', 'Vers l\'engawa', 'Vers le chalet', 'Vers le riad', 'Vers le sky lounge'],
-      pt: ['Ir para a mesa', 'Ir para o tabuleiro', 'Ir para a sala de jantar', 'Ir para o feltro', 'Ir para o terraço', 'Ir para o escritório', 'Ir para o engawa', 'Ir para o chalé', 'Ir para o riad', 'Ir para o sky lounge'],
-      de: ['Zum Tisch', 'Zum Brett', 'Zum Esstisch', 'Zum Filztisch', 'Auf die Terrasse', 'Ins Lesezimmer', 'Zur Engawa', 'Zur Berghütte', 'In den Riad', 'In die Sky-Lounge'],
-      hi: ['बोर्ड पर चलें', 'बोर्ड पर चलें', 'डाइनिंग टेबल पर चलें', 'फ़ेल्ट टेबल पर चलें', 'टैरेस पर चलें', 'स्टडी रूम में चलें', 'बरामदे पर चलें', 'कॉटेज में चलें', 'रियाद में चलें', 'स्काई लाउंज में चलें'],
-      ar: ['إلى الطاولة', 'إلى اللوحة', 'إلى طاولة الطعام', 'إلى طاولة اللباد', 'إلى الشرفة', 'إلى المكتب', 'إلى الإنغاوا', 'إلى الكوخ', 'إلى الرياض', 'إلى الصالة العلوية'],
-      ru: ['К столику', 'К доске', 'К обеденному столу', 'К суконному столу', 'На террасу', 'В кабинет', 'На энгаву', 'В горный домик', 'В риад', 'В скай-лаунж'],
-      'zh-TW': ['前往矮桌', '前往棋盤', '前往餐桌', '前往絨布桌', '前往露台', '前往書房', '前往緣側', '前往山間小屋', '前往庭院', '前往空中酒廊'],
-      id: ['Ke meja', 'Ke papan', 'Ke meja makan', 'Ke meja kain', 'Ke teras', 'Ke ruang baca', 'Ke engawa', 'Ke pondok', 'Ke riad', 'Ke sky lounge'],
-      tr: ['Masaya', 'Tahtaya', 'Yemek masasına', 'Çuha masaya', 'Terasa', 'Çalışma odasına', 'Engawa\'ya', 'Dağ evine', 'Riad\'a', 'Sky lounge’a'],
+      ja: ['ちゃぶ台へ', '盤へ', 'ダイニングへ', 'フェルト卓へ', 'テラスへ', '書斎へ', '縁側へ', '山小屋へ', 'リヤドへ', 'スカイラウンジへ', 'キャンプ場へ', '茶館へ'],
+      en: ['To the table', 'To the board', 'To the dining table', 'To the felt table', 'To the terrace', 'To the study', 'To the engawa', 'To the lodge', 'To the riad', 'To the sky lounge', 'To the campsite', 'To the teahouse'],
+      zh: ['前往棋桌', '前往棋盘', '前往餐桌', '前往牌桌', '前往露台', '前往书房', '前往缘侧', '前往山间小屋', '前往庭院', '前往空中酒廊', '前往露营地', '前往茶馆'],
+      ko: ['판으로 가기', '보드로 가기', '식탁으로 가기', '펠트 테이블로 가기', '테라스로 가기', '서재로 가기', '툇마루로 가기', '산장으로 가기', '리야드로 가기', '스카이 라운지로 가기', '캠핑장으로 가기', '찻집으로 가기'],
+      es: ['Ir a la mesa', 'Ir al tablero', 'Ir al comedor', 'Ir al tapete', 'Ir a la terraza', 'Ir al estudio', 'Ir al engawa', 'Ir al refugio', 'Ir al riad', 'Ir al sky lounge', 'Ir al campamento', 'Ir a la casa de té'],
+      fr: ['Vers la table', 'Vers le plateau', 'Vers la salle à manger', 'Vers le tapis vert', 'Vers la terrasse', 'Vers le bureau', 'Vers l\'engawa', 'Vers le chalet', 'Vers le riad', 'Vers le sky lounge', 'Vers le camping', 'Vers la maison de thé'],
+      pt: ['Ir para a mesa', 'Ir para o tabuleiro', 'Ir para a sala de jantar', 'Ir para o feltro', 'Ir para o terraço', 'Ir para o escritório', 'Ir para o engawa', 'Ir para o chalé', 'Ir para o riad', 'Ir para o sky lounge', 'Ir para o acampamento', 'Ir para a casa de chá'],
+      de: ['Zum Tisch', 'Zum Brett', 'Zum Esstisch', 'Zum Filztisch', 'Auf die Terrasse', 'Ins Lesezimmer', 'Zur Engawa', 'Zur Berghütte', 'In den Riad', 'In die Sky-Lounge', 'Zum Zeltplatz', 'Ins Teehaus'],
+      hi: ['बोर्ड पर चलें', 'बोर्ड पर चलें', 'डाइनिंग टेबल पर चलें', 'फ़ेल्ट टेबल पर चलें', 'टैरेस पर चलें', 'स्टडी रूम में चलें', 'बरामदे पर चलें', 'कॉटेज में चलें', 'रियाद में चलें', 'स्काई लाउंज में चलें', 'कैंपसाइट पर चलें', 'चायघर में चलें'],
+      ar: ['إلى الطاولة', 'إلى اللوحة', 'إلى طاولة الطعام', 'إلى طاولة اللباد', 'إلى الشرفة', 'إلى المكتب', 'إلى الإنغاوا', 'إلى الكوخ', 'إلى الرياض', 'إلى الصالة العلوية', 'إلى المخيم', 'إلى بيت الشاي'],
+      ru: ['К столику', 'К доске', 'К обеденному столу', 'К суконному столу', 'На террасу', 'В кабинет', 'На энгаву', 'В горный домик', 'В риад', 'В скай-лаунж', 'В кемпинг', 'В чайный дом'],
+      'zh-TW': ['前往矮桌', '前往棋盤', '前往餐桌', '前往絨布桌', '前往露台', '前往書房', '前往緣側', '前往山間小屋', '前往庭院', '前往空中酒廊', '前往露營地', '前往茶館'],
+      id: ['Ke meja', 'Ke papan', 'Ke meja makan', 'Ke meja kain', 'Ke teras', 'Ke ruang baca', 'Ke engawa', 'Ke pondok', 'Ke riad', 'Ke sky lounge', 'Ke perkemahan', 'Ke rumah teh'],
+      tr: ['Masaya', 'Tahtaya', 'Yemek masasına', 'Çuha masaya', 'Terasa', 'Çalışma odasına', 'Engawa\'ya', 'Dağ evine', 'Riad\'a', 'Sky lounge’a', 'Kamp alanına', 'Çay evine'],
     },
     play: {
-      ja: ['ちゃぶ台で遊ぶ', '盤で遊ぶ', 'ダイニングで遊ぶ', 'フェルト卓で遊ぶ', 'テラスで遊ぶ', '書斎で遊ぶ', '縁側で遊ぶ', '山小屋で遊ぶ', 'リヤドで遊ぶ', 'スカイラウンジで遊ぶ'],
-      en: ['Play on the table', 'Play on the board', 'Play at the dining table', 'Play on the felt', 'Play on the terrace', 'Play in the study', 'Play on the engawa', 'Play in the lodge', 'Play in the riad', 'Play in the sky lounge'],
-      zh: ['在矮桌上玩', '在棋盘上玩', '在餐桌上玩', '在牌桌上玩', '在露台上玩', '在书房里玩', '在缘侧上玩', '在山间小屋里玩', '在庭院里玩', '在空中酒廊里玩'],
-      ko: ['밥상에서 플레이', '보드에서 플레이', '식탁에서 플레이', '펠트 테이블에서 플레이', '테라스에서 플레이', '서재에서 플레이', '툇마루에서 플레이', '산장에서 플레이', '리야드에서 플레이', '스카이 라운지에서 플레이'],
-      es: ['Jugar en la mesa', 'Jugar en el tablero', 'Jugar en el comedor', 'Jugar en el tapete', 'Jugar en la terraza', 'Jugar en el estudio', 'Jugar en el engawa', 'Jugar en el refugio', 'Jugar en el riad', 'Jugar en el sky lounge'],
-      fr: ['Jouer sur la table', 'Jouer sur le plateau', 'Jouer dans la salle à manger', 'Jouer sur le tapis vert', 'Jouer sur la terrasse', 'Jouer au bureau', 'Jouer sur l\'engawa', 'Jouer au chalet', 'Jouer au riad', 'Jouer au sky lounge'],
-      pt: ['Jogar na mesa', 'Jogar no tabuleiro', 'Jogar na sala de jantar', 'Jogar no feltro', 'Jogar no terraço', 'Jogar no escritório', 'Jogar no engawa', 'Jogar no chalé', 'Jogar no riad', 'Jogar no sky lounge'],
-      de: ['Am Tisch spielen', 'Am Brett spielen', 'Am Esstisch spielen', 'Am Filztisch spielen', 'Auf der Terrasse spielen', 'Im Lesezimmer spielen', 'Auf der Engawa spielen', 'In der Berghütte spielen', 'Im Riad spielen', 'In der Sky-Lounge spielen'],
-      hi: ['मेज़ पर खेलें', 'बोर्ड पर खेलें', 'डाइनिंग टेबल पर खेलें', 'फ़ेल्ट टेबल पर खेलें', 'टैरेस पर खेलें', 'स्टडी रूम में खेलें', 'बरामदे पर खेलें', 'कॉटेज में खेलें', 'रियाद में खेलें', 'स्काई लाउंज में खेलें'],
-      ar: ['العب على الطاولة', 'العب على اللوحة', 'العب على طاولة الطعام', 'العب على طاولة اللباد', 'العب في الشرفة', 'العب في المكتب', 'العب في الإنغاوا', 'العب في الكوخ', 'العب في الرياض', 'العب في الصالة العلوية'],
-      ru: ['Играть на столике', 'Играть на доске', 'Играть за обеденным столом', 'Играть на сукне', 'Играть на террасе', 'Играть в кабинете', 'Играть на энгаве', 'Играть в горном домике', 'Играть в риаде', 'Играть в скай-лаунже'],
-      'zh-TW': ['在矮桌上玩', '在棋盤上玩', '在餐桌上玩', '在絨布桌上玩', '在露台上玩', '在書房裡玩', '在緣側上玩', '在山間小屋裡玩', '在庭院裡玩', '在空中酒廊裡玩'],
-      id: ['Main di meja', 'Main di papan', 'Main di meja makan', 'Main di kain hijau', 'Main di teras', 'Main di ruang baca', 'Main di engawa', 'Main di pondok', 'Main di riad', 'Main di sky lounge'],
-      tr: ['Masada oyna', 'Tahtada oyna', 'Yemek masasında oyna', 'Çuhada oyna', 'Terasta oyna', 'Çalışma odasında oyna', 'Engawa\'da oyna', 'Dağ evinde oyna', 'Riad\'da oyna', 'Sky lounge’da oyna'],
+      ja: ['ちゃぶ台で遊ぶ', '盤で遊ぶ', 'ダイニングで遊ぶ', 'フェルト卓で遊ぶ', 'テラスで遊ぶ', '書斎で遊ぶ', '縁側で遊ぶ', '山小屋で遊ぶ', 'リヤドで遊ぶ', 'スカイラウンジで遊ぶ', 'キャンプ場で遊ぶ', '茶館で遊ぶ'],
+      en: ['Play on the table', 'Play on the board', 'Play at the dining table', 'Play on the felt', 'Play on the terrace', 'Play in the study', 'Play on the engawa', 'Play in the lodge', 'Play in the riad', 'Play in the sky lounge', 'Play at the campsite', 'Play in the teahouse'],
+      zh: ['在矮桌上玩', '在棋盘上玩', '在餐桌上玩', '在牌桌上玩', '在露台上玩', '在书房里玩', '在缘侧上玩', '在山间小屋里玩', '在庭院里玩', '在空中酒廊里玩', '在露营地玩', '在茶馆里玩'],
+      ko: ['밥상에서 플레이', '보드에서 플레이', '식탁에서 플레이', '펠트 테이블에서 플레이', '테라스에서 플레이', '서재에서 플레이', '툇마루에서 플레이', '산장에서 플레이', '리야드에서 플레이', '스카이 라운지에서 플레이', '캠핑장에서 플레이', '찻집에서 플레이'],
+      es: ['Jugar en la mesa', 'Jugar en el tablero', 'Jugar en el comedor', 'Jugar en el tapete', 'Jugar en la terraza', 'Jugar en el estudio', 'Jugar en el engawa', 'Jugar en el refugio', 'Jugar en el riad', 'Jugar en el sky lounge', 'Jugar en el campamento', 'Jugar en la casa de té'],
+      fr: ['Jouer sur la table', 'Jouer sur le plateau', 'Jouer dans la salle à manger', 'Jouer sur le tapis vert', 'Jouer sur la terrasse', 'Jouer au bureau', 'Jouer sur l\'engawa', 'Jouer au chalet', 'Jouer au riad', 'Jouer au sky lounge', 'Jouer au camping', 'Jouer à la maison de thé'],
+      pt: ['Jogar na mesa', 'Jogar no tabuleiro', 'Jogar na sala de jantar', 'Jogar no feltro', 'Jogar no terraço', 'Jogar no escritório', 'Jogar no engawa', 'Jogar no chalé', 'Jogar no riad', 'Jogar no sky lounge', 'Jogar no acampamento', 'Jogar na casa de chá'],
+      de: ['Am Tisch spielen', 'Am Brett spielen', 'Am Esstisch spielen', 'Am Filztisch spielen', 'Auf der Terrasse spielen', 'Im Lesezimmer spielen', 'Auf der Engawa spielen', 'In der Berghütte spielen', 'Im Riad spielen', 'In der Sky-Lounge spielen', 'Auf dem Zeltplatz spielen', 'Im Teehaus spielen'],
+      hi: ['मेज़ पर खेलें', 'बोर्ड पर खेलें', 'डाइनिंग टेबल पर खेलें', 'फ़ेल्ट टेबल पर खेलें', 'टैरेस पर खेलें', 'स्टडी रूम में खेलें', 'बरामदे पर खेलें', 'कॉटेज में खेलें', 'रियाद में खेलें', 'स्काई लाउंज में खेलें', 'कैंपसाइट पर खेलें', 'चायघर में खेलें'],
+      ar: ['العب على الطاولة', 'العب على اللوحة', 'العب على طاولة الطعام', 'العب على طاولة اللباد', 'العب في الشرفة', 'العب في المكتب', 'العب في الإنغاوا', 'العب في الكوخ', 'العب في الرياض', 'العب في الصالة العلوية', 'العب في المخيم', 'العب في بيت الشاي'],
+      ru: ['Играть на столике', 'Играть на доске', 'Играть за обеденным столом', 'Играть на сукне', 'Играть на террасе', 'Играть в кабинете', 'Играть на энгаве', 'Играть в горном домике', 'Играть в риаде', 'Играть в скай-лаунже', 'Играть в кемпинге', 'Играть в чайном доме'],
+      'zh-TW': ['在矮桌上玩', '在棋盤上玩', '在餐桌上玩', '在絨布桌上玩', '在露台上玩', '在書房裡玩', '在緣側上玩', '在山間小屋裡玩', '在庭院裡玩', '在空中酒廊裡玩', '在露營地玩', '在茶館裡玩'],
+      id: ['Main di meja', 'Main di papan', 'Main di meja makan', 'Main di kain hijau', 'Main di teras', 'Main di ruang baca', 'Main di engawa', 'Main di pondok', 'Main di riad', 'Main di sky lounge', 'Main di perkemahan', 'Main di rumah teh'],
+      tr: ['Masada oyna', 'Tahtada oyna', 'Yemek masasında oyna', 'Çuhada oyna', 'Terasta oyna', 'Çalışma odasında oyna', 'Engawa\'da oyna', 'Dağ evinde oyna', 'Riad\'da oyna', 'Sky lounge’da oyna', 'Kamp alanında oyna', 'Çay evinde oyna'],
     },
     // the updates list (shared/atlas.js) says ちゃぶ台 / chabudai for the portal's own 3D play: the word that replaces it
     news: {
-      ja: ['ちゃぶ台', '盤', 'ダイニング', 'フェルト卓', 'テラス', '書斎', '縁側', '山小屋', 'リヤド', 'スカイラウンジ'],
-      en: ['chabudai', 'table', 'table', 'table', 'table', 'table', 'table', 'table', 'table', 'table'],
-      hi: ['चाबुदाई', 'मेज़', 'मेज़', 'मेज़', 'मेज़', 'मेज़', 'मेज़', 'मेज़', 'मेज़', 'मेज़'],
+      ja: ['ちゃぶ台', '盤', 'ダイニング', 'フェルト卓', 'テラス', '書斎', '縁側', '山小屋', 'リヤド', 'スカイラウンジ', 'キャンプ場', '茶館'],
+      en: ['chabudai', 'table', 'table', 'table', 'table', 'table', 'table', 'table', 'table', 'table', 'table', 'table'],
+      hi: ['चाबुदाई', 'मेज़', 'मेज़', 'मेज़', 'मेज़', 'मेज़', 'मेज़', 'मेज़', 'मेज़', 'मेज़', 'मेज़', 'मेज़'],
     },
     ui: {
       place: { ja: '場所', en: 'Place', zh: '场所', ko: '장소', es: 'Lugar', fr: 'Lieu', pt: 'Local', de: 'Ort', hi: 'जगह', ar: 'المكان', ru: 'Место', 'zh-TW': '場所', id: 'Tempat', tr: 'Mekân' },
@@ -92,7 +92,7 @@
   X.placeUi = (key, lang) => pick(PLACES.ui[key], lang);
   // the thumbnails (small real renders, atlas/img/place-k.webp), next to this script whichever page loads it
   const ME = (document.currentScript && document.currentScript.src) || location.href;
-  X.placeThumb = k => new URL('img/place-' + k + '.webp?v=' + (k >= 2 ? 2 : 1), ME).href;
+  X.placeThumb = k => new URL('img/place-' + k + '.webp?v=' + (k >= 2 ? 3 : 1), ME).href;
 
   const lin = (c, y0, y1, stops) => { const g = c.createLinearGradient(0, y0, 0, y1); stops.forEach(([k, col]) => g.addColorStop(k, col)); return g; };
   const rad = (c, x, y, r, stops) => { const g = c.createRadialGradient(x, y, 0, x, y, r); stops.forEach(([k, col]) => g.addColorStop(k, col)); return g; };
@@ -1523,8 +1523,8 @@
       floor: M({ map: rep(TT, fz, (XR - XL) / 9, (ZF - ZB) / 9), roughness: .34, clearcoat: .4, clearcoatRoughness: .3, color: night ? 0x80809a : 0xe4dcd0, bumpScale: .002 }),
       back: c => wall(c, XL, XR, [-34, -12, 12, 34], 3), left: c => wall(c, -ZF, -ZB, [10, 32, 54], 5), right: c => wall(c, ZB, ZF, [-50, -28, -6], 7) });
     skyDome(o, T, 400, '#c8b8a0');
-    // the fountain: an octagonal tiled basin, a carved marble bowl on a pedestal, a thin jet
-    { const Gf = grp(TT, g, 0, FL, -42), side = zellige(o, 'tbl8-basin', ['#ece4d4', '#2f6a6a', '#c8a060', '#2f6a6a'], 8), marble = M({ color: 0xeee8dc, roughness: .3, clearcoat: .4 });
+    // the fountain (back right, beside the table — in view from the seat): an octagonal tiled basin, a carved marble bowl on a pedestal, a thin jet
+    { const Gf = grp(TT, g, 26, FL, -30), side = zellige(o, 'tbl8-basin', ['#ece4d4', '#2f6a6a', '#c8a060', '#2f6a6a'], 8), marble = M({ color: 0xeee8dc, roughness: .3, clearcoat: .4 });
       at(Gf, new TT.Mesh(new TT.CylinderGeometry(9, 9.4, 3.4, 8), [M({ map: side, roughness: .25, clearcoat: .7 }), marble, marble]), 0, 1.7, 0, Math.PI / 8);
       const w = new TT.Mesh(new TT.CylinderGeometry(8.2, 8.2, .1, 8), M({ color: night ? 0x0c1a2a : 0x2a6a7a, roughness: .05, clearcoat: 1, transparent: true, opacity: .85 })); at(Gf, w, 0, 3.1, 0, Math.PI / 8, false);
       at(Gf, lathe(TT, [[0, 0], [1.6, 0], [1.1, .8], [.9, 9], [1.4, 10], [4.2, 11.4], [4.6, 12.4], [4.3, 12.5], [1.2, 12.1], [0, 12.1]], SEG(o, 24), marble), 0, 3, 0);   // (tall: the bowl and its jet show over the table)
@@ -1532,10 +1532,32 @@
       at(Gf, new TT.Mesh(new TT.CylinderGeometry(.1, .18, 3, 8), M({ color: 0xffffff, transparent: true, opacity: .45, roughness: .05 })), 0, 19.6, 0, 0, false);
       for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2, rr = new TT.Mesh(new TT.CylinderGeometry(.06, .06, 2.4, 4), new TT.MeshBasicMaterial({ color: 0xf0f8ff, transparent: true, opacity: .4 })); rr.rotation.set(Math.sin(a) * .5, 0, -Math.cos(a) * .5); at(Gf, rr, Math.cos(a) * 2.4, 17.2, Math.sin(a) * 2.4, 0, false); }
       [0, 1, 2, 3].forEach(i => { const p = new TT.Mesh(new TT.CircleGeometry(.9, 10), M({ color: 0xd84a5a, roughness: .7 })); p.rotation.x = -Math.PI / 2; at(Gf, p, Math.cos(i * 1.7) * 5.6, 3.16, Math.sin(i * 1.7) * 5.6, 0, false); });   // rose petals on the water
+      // the running water (2026-11-09): a jet from the top bowl, eight arcs falling to the big bowl, its overflow sheet, droplets, rings on the basin
+      { const Gw = grp(TT, Gf, 0, 0, 0), wcol = night ? 0xb8c8e8 : 0xf4fbff;
+        const stream = canvasTex('tbl8-stream', 32, 128, (c, W, H) => { c.clearRect(0, 0, W, H); for (let y = 0; y < H; y += 4) { c.fillStyle = `rgba(255,255,255,${.25 + Math.random() * .55})`; c.fillRect(Math.random() * W * .3, y, W * (.4 + Math.random() * .6), 2 + Math.random() * 3); } });
+        stream.wrapS = stream.wrapT = TT.RepeatWrapping;
+        const wm = new TT.MeshBasicMaterial({ map: stream, color: wcol, transparent: true, opacity: .62, depthWrite: false, side: TT.DoubleSide });
+        const jet = new TT.Mesh(new TT.CylinderGeometry(.09, .2, 4.2, 8, 1, true), wm); at(Gw, jet, 0, 20.4, 0, 0, false);
+        const arcs = [], N = o.COARSE ? 6 : 8;
+        for (let i = 0; i < N; i++) { const a = i / N * Math.PI * 2, c0 = Math.cos(a), s0 = Math.sin(a), pts = [];
+          for (let k = 0; k <= 10; k++) { const t = k / 10; pts.push(new TT.Vector3(c0 * (1.8 + t * 2.6), 18.3 - t * t * 3.2 + t * .6, s0 * (1.8 + t * 2.6))); }   // from the top bowl's lip to the big bowl
+          const m = new TT.Mesh(new TT.TubeGeometry(new TT.CatmullRomCurve3(pts), 12, .07, 5), wm); arcs.push(m); at(Gw, m, 0, 0, 0, 0, false); }
+        const sheet = new TT.Mesh(new TT.CylinderGeometry(4.55, 5.1, 12.3, 24, 1, true), new TT.MeshBasicMaterial({ map: stream, color: wcol, transparent: true, opacity: .3, depthWrite: false, side: TT.DoubleSide })); at(Gw, sheet, 0, 9.25, 0, 0, false);   // the big bowl's overflow, a thin falling curtain
+        const D = o.COARSE ? 40 : 90, dg = new TT.BufferGeometry(), dp = new Float32Array(D * 3), seeds = Array.from({ length: D }, (_, i) => [Math.random() * Math.PI * 2, Math.random(), .7 + Math.random() * .6]);
+        dg.setAttribute('position', new TT.BufferAttribute(dp, 3));
+        const drops = new TT.Points(dg, new TT.PointsMaterial({ color: wcol, size: .22, transparent: true, opacity: .8, depthWrite: false })); drops.frustumCulled = false; Gw.add(drops);
+        const rings = [0, 1, 2].map(i => { const r = new TT.Mesh(new TT.RingGeometry(.9, 1.05, 32), new TT.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .3, depthWrite: false })); r.rotation.x = -Math.PI / 2; at(Gw, r, Math.cos(i * 2.1) * 5.6, 3.17, Math.sin(i * 2.1) * 5.6, 0, false); return r; });
+        o.tick && o.tick(t => {
+          stream.offset.y = -(t * 1.6) % 1;
+          jet.scale.y = 1 + Math.sin(t * 9) * .05;
+          for (let i = 0; i < D; i++) { const [a, ph, sp] = seeds[i], u = (t * sp * .8 + ph) % 1, R2 = 4.6 + u * 1; dp[i * 3] = Math.cos(a) * R2; dp[i * 3 + 1] = 15.3 - u * u * 12.1; dp[i * 3 + 2] = Math.sin(a) * R2; }   // the overflow's drops falling into the basin
+          dg.attributes.position.needsUpdate = true;
+          rings.forEach((r, i) => { const u = (t * .45 + i / 3) % 1; r.scale.setScalar(.4 + u * 2.6); r.material.opacity = .34 * (1 - u); });
+        }, Gw); }
     }
     // orange trees in glazed pots, cushions on a low bench along the back
     const glazed = M({ color: 0x2f6a6a, roughness: .2, clearcoat: .8 }), orange = M({ color: 0xf08a24, roughness: .4, clearcoat: .3 });
-    [[-44, -48, 3], [34, -44, 9]].forEach(([x, z, sd]) => { const Gp = potPlant(o, g, x, z, FL, 1.5, glazed, leafTex('leaf-orange', '#4a7a32', '#2a5222'), sd); const R = rng(sd);
+    [[-40, -44, 3], [48, -50, 9]].forEach(([x, z, sd]) => { const Gp = potPlant(o, g, x, z, FL, 1.5, glazed, leafTex('leaf-orange', '#4a7a32', '#2a5222'), sd); const R = rng(sd);
       for (let i = 0; i < 14; i++) { const a = R() * 6.3, r = 3 + R() * 4; at(Gp, new TT.Mesh(new TT.SphereGeometry(.7, 10, 8), orange), Math.cos(a) * r, 22 + R() * 9, Math.sin(a) * r); } ao(o, x, FL, z, 14, 14, .4); });
     { const velvet = (col) => M({ map: X.cloth('tbl8-cush-' + col, col, 16, 128), roughness: .9, sheen: new TT.Color(0xffffff) });
       at(g, new TT.Mesh(RB(40, 4, 8, .6, 2), M({ color: 0xe2d4bc, roughness: .8 })), 0, FL + 2, ZB + 5);
@@ -1656,6 +1678,205 @@
   };
   TABLES[9].plain = { sun: 0xffe8cc, sunI: .76, hemi: [0xe8e4ec, 0x2a2018, .46], exp: .66 };
   TABLES[9].floor = (o) => ({ img: nero(o).image, w: 24, h: 24, dark: true, over: 'radial-gradient(60% 58% at 50% 44%, rgba(255,230,200,.12), transparent 75%), radial-gradient(125% 115% at 50% 46%, transparent 50%, rgba(0,0,0,.5))' });
+  const needleTex = () => canvasTex('leaf-needles', 128, 128, (c, W) => { c.clearRect(0, 0, W, W); c.strokeStyle = '#fff'; c.lineWidth = 2; for (let i = 0; i < 40; i++) { const a = -Math.PI / 2 + (i / 40 - .5) * 2.6; c.beginPath(); c.moveTo(W / 2, W * .9); c.lineTo(W / 2 + Math.cos(a) * W * .45, W * .9 + Math.sin(a) * W * .8); c.stroke(); } });
+  /* ---------- 10 · キャンプ場: a clearing in a pine forest by a lake — a slatted table, a tent, a campfire, a lantern, enamelware ---------- */
+  const slats = o => canvasTex('tbl10-slats', sz(o, 1024), sz(o, 768), (c, W, H) => {   // weathered pine slats with gaps
+    c.fillStyle = '#2a1c10'; c.fillRect(0, 0, W, H); const n = 7, h = H / n, R = rng(4);
+    for (let i = 0; i < n; i++) { const img = wood('tbl10-slat' + (i % 3), ['#c49a68', '#b88c5c', '#caa274'][i % 3], '#7a5432', 512, 128, 1.1).image; c.drawImage(img, R() * 80, 0, img.width - 80, img.height, 0, i * h + 2, W, h - 5); c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(0, i * h + h - 5, W, 1.5);
+      c.fillStyle = 'rgba(60,40,20,.65)'; [W * .12, W * .88].forEach(x => { c.beginPath(); c.arc(x, i * h + h / 2, 3, 0, 7); c.fill(); }); } });
+  TABLES[10] = (o) => {
+    const { TT, g } = o, T = TOD(o), FL = -16, Z0 = 1, lit = lampLit(T), night = T === 'night';
+    const top = M({ map: slats(o), roughness: .7, clearcoat: .05, bumpScale: .006 });
+    at(g, new TT.Mesh(RB(28, 1.2, 21, .25, 2), top), 0, -.6, Z0, 0, false).receiveShadow = true;
+    const pine = M({ map: wood('tbl10-frame', '#b48a5a', '#6a4626', 256, 512, 1), roughness: .7 });
+    [-1, 1].forEach(s => { [-1, 1].forEach(b => { const l = new TT.Mesh(RB(1.3, 17, 1.6, .2, 1), pine); l.rotation.x = b * .32; at(g, l, s * 11.5, FL / 2 - .6, Z0 + b * 2.6); }); at(g, new TT.Mesh(RB(1.2, 1.2, 20, .2, 1), pine), s * 11.5, -1.8, Z0, 0, false); });
+    at(g, new TT.Mesh(RB(23, 1.2, 1.4, .2, 1), pine), 0, FL + 6, Z0, 0, false);
+    // the ground: grass, a bare earth patch round the table and the fire, pine needles; the forest, the lake and the peaks painted all round
+    const ground = canvasTex('tbl10-ground', sz(o, 1024), sz(o, 1024), (c, W) => { const N = makeNoise(13), img = c.createImageData(W, W), d = img.data;
+      for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) { const u = x / W, v = y / W, n = N(u * 4, v * 4, 4), dirt = Math.min(1, Math.max(0, (n - .52) / .1)), k = (Math.random() - .5) * 30 + (N(u * 40, v * 40, 2) - .5) * 30, i = (y * W + x) * 4;
+        d[i] = 92 + k * .6 + (138 - 92) * dirt; d[i + 1] = 116 + k + (108 - 116) * dirt; d[i + 2] = 58 + k * .4 + (76 - 58) * dirt; d[i + 3] = 255; }
+      c.putImageData(img, 0, 0); const R = rng(2); for (let i = 0; i < 900; i++) { c.strokeStyle = `rgba(${120 + R() * 50 | 0},${80 + R() * 30 | 0},40,.5)`; c.lineWidth = 1; const x = R() * W, y = R() * W, a = R() * 6; c.beginPath(); c.moveTo(x, y); c.lineTo(x + Math.cos(a) * 9, y + Math.sin(a) * 9); c.stroke(); } });
+    { const gm = new TT.Mesh(new TT.PlaneGeometry(800, 800), M({ map: rep(TT, ground, 22, 22), roughness: .95, bumpScale: .012, color: night ? 0x5a6488 : T === 'evening' ? 0xf0d0c0 : 0xffffff })); gm.rotation.x = -Math.PI / 2; gm.position.set(0, FL, 0); gm.receiveShadow = true; g.add(gm); }
+    ao(o, 0, FL, Z0, 34, 26, .4);
+    skyDome(o, T, 560, night ? '#0a1010' : '#3e4a30');
+    panoBand(o, 'tbl10-pano-' + T, 320, -110, 120, FL - 20, 200, 3072, (c, ppu, ax) => {
+      const R = rng(10), W0 = ax(120), W1 = ax(-110), HZ = FL + 26, sk = SKY[T];
+      c.fillStyle = lin(c, 200, HZ, [[0, sk[0]], [.55, sk[1]], [1, sk[2]]]); c.fillRect(W0, HZ - 10, W1 - W0, 210 - HZ);
+      if (night) { for (let i = 0; i < 520; i++) { c.fillStyle = `rgba(255,255,240,${.2 + R() * .6})`; const r = .15 + R() * .3; ell(c, W0 + R() * (W1 - W0), HZ + 30 + R() * 170, r, r); }
+        blur(c, 6 * ppu); c.fillStyle = 'rgba(190,200,255,.08)'; c.beginPath(); c.moveTo(ax(-80), HZ + 40); c.quadraticCurveTo(ax(0), HZ + 200, ax(90), HZ + 120); c.lineTo(ax(90), HZ + 150); c.quadraticCurveTo(ax(0), HZ + 230, ax(-80), HZ + 70); c.fill(); blur(c, 0); }   // the milky way
+      else if (T === 'evening') { c.fillStyle = rad(c, ax(-20), HZ + 14, 140, [[0, 'rgba(255,230,180,.85)'], [.18, 'rgba(255,180,120,.35)'], [1, 'rgba(255,160,110,0)']]); c.fillRect(W0, HZ - 10, W1 - W0, 210 - HZ); }
+      blur(c, 1 * ppu);
+      const peak = night ? '#141a2c' : T === 'evening' ? '#6a5a80' : '#8a9cb4', snow = night ? '#3a4460' : T === 'evening' ? '#f0c8c8' : '#f4f6fa';
+      c.fillStyle = peak; c.beginPath(); c.moveTo(W0, HZ); [[110, 10], [80, 34], [62, 22], [40, 52], [20, 30], [0, 44], [-24, 26], [-50, 40], [-76, 20], [-110, 12]].forEach(([a, h]) => c.lineTo(ax(a), HZ + h)); c.lineTo(W1, HZ); c.fill();
+      c.fillStyle = snow; [[40, 52], [0, 44], [-50, 40], [80, 34]].forEach(([a, h]) => { c.beginPath(); c.moveTo(ax(a) - 9, HZ + h - 10); c.lineTo(ax(a), HZ + h); c.lineTo(ax(a) + 9, HZ + h - 10); c.lineTo(ax(a) + 3, HZ + h - 7); c.lineTo(ax(a) - 2, HZ + h - 9); c.fill(); });
+      blur(c, .3 * ppu);
+      const lake = night ? '#0c1426' : T === 'evening' ? '#9a7ea8' : '#5a8ab0'; c.fillStyle = lake; c.fillRect(ax(60), HZ - 8, ax(-70) - ax(60), 8);   // the lake below the peaks
+      c.fillStyle = 'rgba(255,255,255,.18)'; for (let i = 0; i < 60; i++) c.fillRect(ax(60) + R() * (ax(-70) - ax(60)), HZ - 8 + R() * 8, 2 + R() * 6, .12);
+      const tree = (x, y, h, col) => { c.fillStyle = col; c.beginPath(); c.moveTo(x, y + h); for (let k = 0; k <= 5; k++) { const yy = y + h * (1 - k / 5), w = h * .26 * (k / 5 + .15); c.lineTo(x - w, yy); c.lineTo(x - w * .45, yy + h * .06); } c.lineTo(x, y); for (let k = 5; k >= 0; k--) { const yy = y + h * (1 - k / 5), w = h * .26 * (k / 5 + .15); c.lineTo(x + w * .45, yy + h * .06); c.lineTo(x + w, yy); } c.fill(); };
+      const far = night ? '#0c1418' : T === 'evening' ? '#3a3a40' : '#4a6a50', near = night ? '#060a0c' : T === 'evening' ? '#24242a' : '#2e4a34';
+      for (let i = 0; i < 160; i++) { const a = -110 + R() * 230; if (a > -70 && a < 60 && R() < .7) continue; tree(ax(a), HZ - 10, 14 + R() * 14, far); }
+      for (let i = 0; i < 80; i++) { const a = -110 + R() * 230; if (a > -40 && a < 40) continue; tree(ax(a), FL - 2, 30 + R() * 30, near); }
+      c.fillStyle = night ? '#0a120c' : T === 'evening' ? '#4a4a30' : '#4e6a36'; c.fillRect(W0, FL - 20, W1 - W0, HZ - 8 - (FL - 20));
+      blur(c, 0);
+    });
+    // a few real pines near the clearing
+    const needle = needleTex();
+    const bark = M({ color: 0x4a3426, roughness: .95 });
+    [[-48, -54, 1.3], [-62, -20, 1.1], [56, -60, 1.4], [70, -26, 1.2]].forEach(([x, z, s], i) => { const Gt = grp(TT, g, x, FL, z); at(Gt, new TT.Mesh(new TT.CylinderGeometry(.6 * s, 1.2 * s, 44 * s, 8), bark), 0, 22 * s, 0);
+      for (let k = 0; k < 6; k++) foliage(o, Gt, o.COARSE ? 18 : 30, 0, (12 + k * 5.2) * s, 0, (8 - k * 1.1) * s, 1.6 * s, (8 - k * 1.1) * s, needle, 4.2 * s, 20 + i * 7 + k, night ? 0x1a2a20 : 0x2e5a34); });
+    // the tent (canvas, guy lines), its door open
+    { const Gt = grp(TT, g, -30, FL, -34, .45), canvasM = M({ map: X.cloth('tbl10-canvas', '#c8a878', 18, 256), roughness: .9, side: TT.DoubleSide, emissive: new TT.Color(lit ? 0x3a2006 : 0) });
+      const W = 16, D = 20, Hh = 13, sh = new TT.Shape(); sh.moveTo(-W / 2, 0); sh.lineTo(0, Hh); sh.lineTo(W / 2, 0); sh.lineTo(-W / 2, 0);
+      const body = new TT.Mesh(new TT.ExtrudeGeometry(sh, { depth: D, bevelEnabled: false }), canvasM); at(Gt, body, 0, 0, -D / 2, 0, false);
+      const door = new TT.Mesh(new TT.ShapeGeometry(sh), M({ color: lit ? 0xffc070 : 0x2a1e12, emissive: new TT.Color(lit ? 0xff9a40 : 0), emissiveIntensity: lit ? .8 : 0, side: TT.DoubleSide })); door.scale.set(.5, .6, 1); at(Gt, door, 0, 0, D / 2 + .05, 0, false);
+      [[-1], [1]].forEach(([s2]) => { const fl = new TT.Mesh(new TT.PlaneGeometry(4.4, 8), canvasM); fl.rotation.y = s2 * .9; at(Gt, fl, s2 * 3.4, 4, D / 2 + 1.6, 0, false); });
+      const rope = M({ color: 0xd8c8a8, roughness: .9 }); [[-W / 2 - 6, -D / 2], [W / 2 + 6, -D / 2], [-W / 2 - 6, D / 2], [W / 2 + 6, D / 2]].forEach(([x, z]) => { const L = Math.hypot(x, Hh); const r = new TT.Mesh(new TT.CylinderGeometry(.06, .06, L, 3), rope); r.rotation.z = Math.atan2(-x, Hh) * -1 + (x < 0 ? 0 : 0); r.rotation.z = Math.atan2(x, Hh); at(Gt, r, x / 2, Hh / 2, z, 0, false); });
+      if (lit) { const L = new TT.PointLight(0xffa850, .7, 30, 2); L.position.set(0, 5, 0); Gt.add(L); } ao(o, -30, FL, -34, 24, 28, .4); }
+    // the campfire in a ring of stones, logs to sit on, a kettle on a stand
+    const FX = 28, FZ = -30;
+    { const Gf = grp(TT, g, FX, FL, FZ), stone = M({ color: 0x7a7470, roughness: .9 }), logM = M({ map: wood('tbl7-log', '#8a5a34', '#4a2c14', 256, 512, 1.6), roughness: .8 }), char = M({ color: 0x1a1410, roughness: 1 });
+      for (let i = 0; i < 11; i++) { const a = i / 11 * Math.PI * 2, st = new TT.Mesh(new TT.DodecahedronGeometry(1, 0), stone); st.scale.set(1.6, 1.1, 1.3); st.rotation.y = a * 3; at(Gf, st, Math.cos(a) * 5.4, .8, Math.sin(a) * 5.4); }
+      at(Gf, new TT.Mesh(new TT.CircleGeometry(4.6, 18), char), 0, .05, 0, 0, false).rotation.x = -Math.PI / 2;
+      [0, 1.3, 2.6, 3.9].forEach((a, i) => { const lg = new TT.Mesh(new TT.CylinderGeometry(.5, .6, 6.4, 7), logM); lg.rotation.set(.9, a, 0); at(Gf, lg, Math.cos(a) * 1.2, 1.6, Math.sin(a) * 1.2); });
+      if (T !== 'day') { const fl = canvasTex('tbl7-flame', 128, 128, (c, W) => { c.fillStyle = rad(c, W / 2, W * .9, W * .7, [[0, 'rgba(255,240,180,1)'], [.25, 'rgba(255,170,60,.9)'], [.6, 'rgba(220,70,20,.4)'], [1, 'rgba(160,30,10,0)']]); c.beginPath(); c.moveTo(W * .15, W); c.quadraticCurveTo(W * .2, W * .4, W * .42, W * .1); c.quadraticCurveTo(W * .5, W * .45, W * .58, W * .2); c.quadraticCurveTo(W * .8, W * .5, W * .85, W); c.fill(); });
+        const Gx = grp(TT, Gf, 0, 0, 0), fls = [0, 1, 2, 3].map(i => { const m = new TT.Mesh(new TT.PlaneGeometry(4.6 - i * .6, 6.4 - i * .8), new TT.MeshBasicMaterial({ map: fl, transparent: true, depthWrite: false, blending: TT.AdditiveBlending, toneMapped: false })); m.position.set((i - 1.5) * .7, 3.4, 0); Gx.add(m); return m; });
+        halo(o, Gx, 0, 3, 0, T === 'morning' ? 10 : 22, 'rgba(255,150,70,'); const L = new TT.PointLight(0xff9040, night ? 3 : 1.6, 90, 2); L.position.set(0, 4, 0); Gx.add(L);
+        o.tick && o.tick((t) => { fls.forEach((m, i) => { m.scale.y = 1 + Math.sin(t * (7 + i * 1.7) + i) * .14; m.scale.x = 1 + Math.sin(t * (5 + i) + i * 2) * .08; }); L.intensity = (night ? 3 : 1.6) * (.85 + .15 * Math.sin(t * 9) * Math.sin(t * 3.3)); }, Gx);
+        fls.forEach(m => { m.onBeforeRender = (r, sc, cam) => { m.quaternion.copy(cam.quaternion); }; }); }
+      const kStand = M({ color: 0x1a1a1a, roughness: .5, metalness: .6 }); [[-1, -1], [1, 1]].forEach(([a]) => at(Gf, new TT.Mesh(new TT.CylinderGeometry(.12, .12, 9, 4), kStand), a * 6, 4.5, 0, 0, false)); const bar = new TT.Mesh(new TT.CylinderGeometry(.1, .1, 12, 4), kStand); bar.rotation.z = Math.PI / 2; at(Gf, bar, 0, 9, 0, 0, false);
+      at(Gf, lathe(TT, [[0, 0], [1.6, 0], [2, 1.4], [1.6, 2.8], [.6, 3.2], [0, 3.2]], 16, M({ color: 0x2a2e30, roughness: .4, metalness: .7 })), 0, 6, 0); ao(o, FX, FL, FZ, 16, 16, .5);
+      [[-9, 5, 1.2], [8, 7, -.6]].forEach(([x, z, r]) => { const lg = new TT.Mesh(new TT.CylinderGeometry(1.6, 1.7, 12, 10), logM); lg.rotation.set(0, r, Math.PI / 2); at(Gf, lg, x, 1.6, z); }); }
+    // a lantern on a pole by the table, string lights at dusk
+    { const Gl = grp(TT, g, -19, FL, -6), pole = M({ color: 0x3a2a1a, roughness: .7 }), tin = M({ color: 0x2a3a30, roughness: .45, metalness: .5 });
+      at(Gl, new TT.Mesh(new TT.CylinderGeometry(.3, .35, 26, 6), pole), 0, 13, 0); const arm = new TT.Mesh(new TT.CylinderGeometry(.2, .2, 4, 6), pole); arm.rotation.z = Math.PI / 2; at(Gl, arm, 2, 25.4, 0, 0, false);
+      const Gh = grp(TT, Gl, 3.8, 21, 0); at(Gh, lathe(TT, [[0, 0], [1.2, 0], [1.25, .8], [.8, 1], [0, 1]], 16, tin), 0, 0, 0); at(Gh, lathe(TT, [[.6, 1], [1, 2], [1, 3.4], [.6, 4.2]], 16, glassM()), 0, 0, 0, 0, false); at(Gh, lathe(TT, [[0, 4.2], [.9, 4.2], [.5, 5], [0, 5.2]], 14, tin), 0, 0, 0);
+      at(Gh, new TT.Mesh(new TT.TorusGeometry(.7, .05, 4, 12, Math.PI), tin), 0, 5.8, 0, 0, false);
+      if (lit || T === 'morning') { const f = new TT.Mesh(new TT.SphereGeometry(.24, 8, 6), new TT.MeshBasicMaterial({ color: 0xffd38a, toneMapped: false })); f.scale.set(1, 2, 1); at(Gh, f, 0, 2.6, 0, 0, false); halo(o, Gh, 0, 2.6, 0, 9); const L = new TT.PointLight(0xffb062, night ? 1.4 : .7, 50, 2); L.position.set(0, 2.6, 0); Gh.add(L); } }
+    if (lit) { const bulbM = new TT.MeshBasicMaterial({ color: 0xffd8a0, toneMapped: false }), wire = M({ color: 0x1a1a1a }); const pts = [];
+      for (let i = 0; i <= 24; i++) { const t = i / 24; pts.push(new TT.Vector3(-56 + t * 112, 30 - Math.sin(t * Math.PI) * 6 + Math.sin(t * Math.PI * 3) * 1.4, -46 + Math.sin(t * Math.PI) * 6)); }
+      at(g, new TT.Mesh(new TT.TubeGeometry(new TT.CatmullRomCurve3(pts), 48, .05, 3), wire), 0, 0, 0, 0, false); pts.forEach((p, i) => { if (i % 2) return; at(g, new TT.Mesh(new TT.SphereGeometry(.4, 8, 6), bulbM), p.x, p.y - .6, p.z, 0, false); halo(o, g, p.x, p.y - .6, p.z, 3.4); }); }
+    // folding camp chairs across the table
+    const fabric = M({ map: X.cloth('tbl10-chair', '#2e4a5a', 16, 128), roughness: .9, side: TT.DoubleSide }), alu = M({ color: 0x8a8c90, metalness: 1, roughness: .35 });
+    [-7.5, 7.5].forEach(x => { const G = grp(TT, g, x, FL, -15); [[-3, 3], [3, 3], [-3, -3], [3, -3]].forEach(([a, b]) => { const l = new TT.Mesh(new TT.CylinderGeometry(.22, .22, 11, 6), alu); l.rotation.set(b > 0 ? -.25 : .25, 0, 0); at(G, l, a, 5.4, b * .9); });
+      const seat = new TT.Mesh(new TT.PlaneGeometry(7, 7, 4, 4), fabric), P = seat.geometry.attributes.position; for (let i = 0; i < P.count; i++) P.setZ(i, -Math.cos(P.getX(i) / 3.5 * Math.PI / 2) * .8); seat.geometry.computeVertexNormals(); seat.rotation.x = -Math.PI / 2; at(G, seat, 0, 10.4, 0);
+      const back = new TT.Mesh(new TT.PlaneGeometry(7, 8), fabric); back.rotation.x = -.18; at(G, back, 0, 15, -3.6); [-1, 1].forEach(s => at(G, new TT.Mesh(new TT.CylinderGeometry(.22, .22, 9, 6), alu), s * 3.5, 15, -3.6, 0, false)); });
+    // the table of the hour: coffee from an enamel percolator, eggs in a skillet (morning), sandwiches (day), s'mores (evening, night); a compass and a map
+    const enamel = M({ color: 0x2e4a6a, roughness: .3, clearcoat: .6 }), speck = M({ map: canvasTex('tbl10-speck', 128, 64, (c, W, H) => { c.fillStyle = '#2e4a6a'; c.fillRect(0, 0, W, H); for (let i = 0; i < 260; i++) { c.fillStyle = `rgba(255,255,255,${.4 + Math.random() * .5})`; c.fillRect(Math.random() * W, Math.random() * H, 1.2, 1.2); } }), roughness: .3, clearcoat: .6 }), rimM = M({ color: 0x14161a, roughness: .3 });
+    { const Gp = grp(TT, g, -11.4, 0, -6.6); at(Gp, lathe(TT, [[0, 0], [1.4, 0], [1.6, .3], [1.6, 4], [1.1, 5], [.5, 5.3], [.4, 5.8], [0, 5.8]], SEG(o, 24), speck), 0, 0, 0);
+      at(Gp, new TT.Mesh(new TT.SphereGeometry(.4, 10, 8), M({ map: glassM().map, color: 0xd8e0e8, roughness: .05, clearcoat: 1, transparent: true, opacity: .6 })), 0, 6, 0);
+      const sp = new TT.Mesh(new TT.TubeGeometry(new TT.CatmullRomCurve3([new TT.Vector3(1.3, 3, 0), new TT.Vector3(2.2, 3.8, 0), new TT.Vector3(2.6, 4.8, 0)]), 8, .22, 6), speck); at(Gp, sp, 0, 0, 0);
+      const h = new TT.Mesh(new TT.TorusGeometry(1.2, .14, 6, 14, Math.PI), speck); h.rotation.z = Math.PI / 2; at(Gp, h, -1.5, 2.8, 0); }
+    const mug = (x, z, ry, drink) => { const G = grp(TT, g, x, 0, z, ry); at(G, lathe(TT, [[0, 0], [1, 0], [1.05, .1], [1.05, 2.2], [.97, 2.2], [.95, .25], [0, .22]], SEG(o, 22), speck), 0, 0, 0); at(G, new TT.Mesh(new TT.TorusGeometry(1.02, .07, 6, 22), rimM), 0, 2.2, 0, 0, false).rotation.x = Math.PI / 2;
+      const hh = new TT.Mesh(new TT.TorusGeometry(.55, .11, 6, 14, Math.PI * 1.1), speck); hh.rotation.z = -Math.PI * .55; at(G, hh, 1.2, 1.2, 0); const lq = new TT.Mesh(new TT.CircleGeometry(.95, 18), M({ color: drink, roughness: .2, clearcoat: .6 })); lq.rotation.x = -Math.PI / 2; at(G, lq, 0, 1.85, 0, 0, false); };
+    mug(-10.2, -2.6, .6, 0x3a1e10); mug(10.8, 3.8, -2.4, T === 'night' || T === 'evening' ? 0x5a3020 : 0x3a1e10);
+    const iron = M({ color: 0x1c1c1e, roughness: .5, metalness: .6 });
+    if (T === 'morning') { const Gs = grp(TT, g, 11, 0, -6.2, .4); at(Gs, lathe(TT, [[0, 0], [2.4, 0], [2.8, .7], [2.7, .75], [2.3, .2], [0, .2]], SEG(o, 28), iron), 0, 0, 0); const hd = new TT.Mesh(RB(4.4, .4, .7, .15, 1), iron); at(Gs, hd, 4.8, .5, 0, 0, false);
+      [[-.9, -.4], [.9, .5]].forEach(([x, z]) => { const w = new TT.Mesh(new TT.CircleGeometry(1.05, 20), M({ color: 0xfaf6ee, roughness: .5 })); w.rotation.x = -Math.PI / 2; at(Gs, w, x, .24, z, 0, false); const y = new TT.Mesh(new TT.SphereGeometry(.42, 14, 10), M({ color: 0xf2a62a, roughness: .25, clearcoat: .7 })); y.scale.set(1, .5, 1); at(Gs, y, x + .1, .3, z); }); }
+    else if (T === 'day') { const Gb = grp(TT, g, 11.2, 0, -6.2); at(Gb, new TT.Mesh(RB(5.4, .5, 4, .2, 1), M({ map: wood('tbl10-board', '#d8b080', '#9a7048', 256, 256, .8), roughness: .5 })), 0, .25, 0);
+      [[-1.2, 0, .2], [1.2, .2, -.3]].forEach(([x, z, r]) => { const sw = grp(TT, Gb, x, .5, z, r); [[.5, 0xe8d0a0], [.2, 0x6a9a3a], [.25, 0xc8584a], [.5, 0xe8d0a0]].reduce((y, [h, col]) => { at(sw, new TT.Mesh(RB(2.2, h, 2.2, .1, 1), M({ color: col, roughness: .8 })), 0, y + h / 2, 0); return y + h; }, 0); });
+      const ap = new TT.Mesh(new TT.SphereGeometry(.8, 14, 10), M({ color: 0xc82a2a, roughness: .3, clearcoat: .6 })); at(g, ap, 6.4, .8, -9.2); }
+    else { const Gm = grp(TT, g, 11, 0, -6.2); at(Gm, lathe(TT, [[0, 0], [1.8, 0], [2.1, .3], [2, .34], [1.7, .12], [0, .12]], SEG(o, 24), speck), 0, 0, 0);
+      for (let i = 0; i < 5; i++) { const a = i * 1.25, cr = new TT.Mesh(RB(1.4, .25, 1.4, .05, 1), M({ color: 0xc89058, roughness: .8 })); at(Gm, cr, Math.cos(a) * .9, .3 + (i % 2) * .26, Math.sin(a) * .9, a, false); const mm = new TT.Mesh(new TT.CylinderGeometry(.5, .5, .55, 12), M({ color: 0xfaf2e6, roughness: .85 })); at(Gm, mm, Math.cos(a) * .9, .62 + (i % 2) * .26, Math.sin(a) * .9, 0, false); }
+      [0, 1].forEach(i => { const st = new TT.Mesh(new TT.CylinderGeometry(.06, .08, 9, 4), M({ color: 0x8a6a42, roughness: .8 })); st.rotation.set(0, .3 + i * .2, Math.PI / 2 - .05); at(g, st, 4 + i * .6, .1, -10.4 + i * .5, 0, false); }); }
+    { const Gc = grp(TT, g, 6.4, 0, -9.6, .3), brass = M({ color: 0xc8a050, metalness: 1, roughness: .3 }); at(Gc, new TT.Mesh(new TT.CylinderGeometry(1.1, 1.1, .5, 24), brass), 0, .25, 0); const face = canvasTex('tbl10-compass', 128, 128, (c, W) => { c.fillStyle = '#f2ead6'; c.fillRect(0, 0, W, W); c.strokeStyle = '#2a2a2a'; for (let i = 0; i < 32; i++) { const a = i * Math.PI / 16, r1 = i % 4 ? 52 : 44; c.beginPath(); c.moveTo(W / 2 + Math.cos(a) * r1, W / 2 + Math.sin(a) * r1); c.lineTo(W / 2 + Math.cos(a) * 58, W / 2 + Math.sin(a) * 58); c.stroke(); } c.fillStyle = '#b8302a'; c.beginPath(); c.moveTo(W / 2, 18); c.lineTo(W / 2 + 7, W / 2); c.lineTo(W / 2 - 7, W / 2); c.fill(); c.fillStyle = '#2a2a2a'; c.beginPath(); c.moveTo(W / 2, W - 18); c.lineTo(W / 2 + 7, W / 2); c.lineTo(W / 2 - 7, W / 2); c.fill(); });
+      const fc = new TT.Mesh(new TT.CircleGeometry(.95, 24), M({ map: face, roughness: .2, clearcoat: 1, bump: false })); fc.rotation.x = -Math.PI / 2; at(Gc, fc, 0, .52, 0, 0, false); }
+    const { key, H } = hourLights(o, T, night ? [-14, 36, -10] : T === 'evening' ? [-26, 22, -8] : [-14, 34, -6], 0x5a6a3a, .95);   // (high enough that the tent and the pines never shade the board)
+    try { X.mergeStatic(g); } catch (e) {}
+    return { bg: SKY[T][1], exp: H.exp, board: H.board, boardCol: night ? 0xffd8b0 : undefined, key, env: { top: SKY[T][1], bottom: '#2a3a20', panels: [[0, 22, -10, 26, 10, night ? '#506090' : '#ffffff', night ? .4 : 1.5], [FX * .4, 3, FZ * .4, 6, 5, '#ff9040', T === 'day' ? 0 : 1.6], [0, 8, 18, 20, 5, '#d8c8a8', .5]] } };
+  };
+  TABLES[10].plain = { sun: 0xfff0dc, sunI: .78, hemi: [0xeef2f4, 0x5a6a3a, .5], exp: .64 };
+  TABLES[10].floor = (o) => ({ img: slats(o).image, w: 28, h: 21, over: 'radial-gradient(140% 120% at 50% 40%, transparent 55%, rgba(30,20,8,.25))' });
+
+  /* ---------- 11 · 茶館: a Chinese teahouse — a rosewood table, lattice windows, a moon gate on a bamboo garden, red silk lanterns, gongfu tea ---------- */
+  const rosewood = o => wood('tbl11-rosewood', '#5e2416', '#3a120a', sz(o, 1024), sz(o, 1024), 1.1);
+  TABLES[11] = (o) => {
+    const { TT, g, scene } = o, T = TOD(o), FL = -16, Z0 = 1, lit = lampLit(T), night = T === 'night', day = !lit;
+    const rw = M({ map: rosewood(o), roughness: .3, clearcoat: .7, clearcoatRoughness: .15, bumpScale: .002 });
+    at(g, new TT.Mesh(RB(28, 1.4, 21, .4, 3), rw), 0, -.7, Z0, 0, false).receiveShadow = true;
+    { const apron = canvasTex('tbl11-apron', 512, 64, (c, W, H) => { c.drawImage(rosewood(o).image, 0, 0, W, H); c.strokeStyle = 'rgba(200,150,80,.45)'; c.lineWidth = 2; for (let x = 10; x < W - 10; x += 36) { c.beginPath(); c.arc(x + 18, H / 2, 12, Math.PI, 0); c.stroke(); c.beginPath(); c.arc(x + 18, H / 2, 6, 0, Math.PI); c.stroke(); } });   // carved cloud scrolls
+      const am = M({ map: apron, roughness: .35, clearcoat: .6 }); at(g, new TT.Mesh(RB(25.6, 3, 18.6, .2, 1), [rw, rw, rw, rw, am, am]), 0, -2.8, Z0); }
+    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => { const l = new TT.Mesh(RB(1.8, -FL - 1.4, 1.8, .3, 1), rw); at(g, l, a * 12.2, (FL - 1.4) / 2, Z0 + b * 8.8); const ft = new TT.Mesh(new TT.SphereGeometry(1.1, 10, 8), rw); ft.scale.set(1, .6, 1); at(g, ft, a * 12.2, FL + .6, Z0 + b * 8.8); });
+    at(g, new TT.Mesh(RB(25, .8, .8, .1, 1), rw), 0, FL + 3, Z0 - 8.8, 0, false); at(g, new TT.Mesh(RB(25, .8, .8, .1, 1), rw), 0, FL + 3, Z0 + 8.8, 0, false);
+    // the room: lacquered red posts, carved lattice panels with the light of the hour behind them, a moon gate on the garden, beams
+    const XL = -60, XR = 60, ZB = -54, ZF = 150, Y1 = 44;
+    const sky = SKY[T], glow = night ? 'rgba(255,190,120,' : T === 'evening' ? 'rgba(255,200,150,' : 'rgba(255,248,232,';
+    const lattice = (c, x0, x1, y0, y1) => {   // a 冰裂 / 回纹 lattice window: lit paper behind dark wooden fretwork
+      c.fillStyle = night ? '#e8b878' : T === 'evening' ? '#f2c89a' : '#f4ead6'; c.fillRect(x0, y0, x1 - x0, y1 - y0);
+      c.fillStyle = rad(c, (x0 + x1) / 2, (y0 + y1) / 2, (x1 - x0) * .8, [[0, glow + '.6)'], [1, glow + '0)']]); c.fillRect(x0, y0, x1 - x0, y1 - y0);
+      c.strokeStyle = '#3a140c'; c.lineWidth = .5; const st = 2.4;
+      for (let x = x0; x < x1 - .1; x += st) for (let y = y0; y < y1 - .1; y += st) { const k = ((x - x0) / st + (y - y0) / st) % 2 | 0; c.beginPath(); if (k) { c.moveTo(x, y + st / 2); c.lineTo(x + st / 2, y + st / 2); c.lineTo(x + st / 2, y + st); } else { c.moveTo(x + st / 2, y); c.lineTo(x + st / 2, y + st / 2); c.lineTo(x + st, y + st / 2); } c.stroke(); }
+      c.lineWidth = 1.2; c.strokeRect(x0, y0, x1 - x0, y1 - y0); };
+    const wallBase = (c, a0, a1) => { c.fillStyle = '#e8dcc4'; c.fillRect(a0 - 2, FL - 2, a1 - a0 + 4, Y1 - FL + 4); const R = rng(a0 | 0); for (let i = 0; i < 200; i++) { c.fillStyle = `rgba(160,130,100,${.03 + R() * .04})`; ell(c, a0 + R() * (a1 - a0), FL + R() * (Y1 - FL), 1 + R() * 5, 1 + R() * 4); }
+      c.fillStyle = '#4a1a10'; c.fillRect(a0 - 2, FL, a1 - a0 + 4, 7); c.fillStyle = 'rgba(200,150,80,.35)'; c.fillRect(a0 - 2, FL + 7, a1 - a0 + 4, .3);
+      c.fillStyle = '#3a140c'; c.fillRect(a0 - 2, Y1 - 5, a1 - a0 + 4, 5); for (let x = a0; x < a1; x += 3) { c.fillStyle = (x / 3 | 0) % 2 ? '#2a5a4a' : '#8a2a1a'; c.fillRect(x, Y1 - 4.4, 2.8, 1.2); } };   // painted beam (green and red bands)
+    const post = (c, x) => { c.fillStyle = '#8a1e12'; c.fillRect(x - 1.4, FL, 2.8, Y1 - FL); c.fillStyle = 'rgba(255,255,255,.18)'; c.fillRect(x - .9, FL, .5, Y1 - FL); c.fillStyle = '#c8a050'; c.fillRect(x - 1.6, FL + 7, 3.2, .6); };
+    roomBox(o, { key: 'tbl11-room-' + T, xl: XL, xr: XR, zb: ZB, zf: ZF, y0: FL, y1: Y1, px: 2048, pxs: 1024, wb: day ? 1 : .86,
+      floor: M({ map: rep(TT, canvasTex('tbl11-floor', sz(o, 512), sz(o, 512), (c, W) => { const u = W / 4, R = rng(8); for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) { const k = R(); c.fillStyle = `rgb(${52 + k * 18 | 0},${50 + k * 16 | 0},${48 + k * 14 | 0})`; c.fillRect(i * u + 2, j * u + 2, u - 4, u - 4); } const img = c.getImageData(0, 0, W, W), d = img.data; for (let p = 0; p < d.length; p += 4) { const k = (Math.random() - .5) * 14; d[p] += k; d[p + 1] += k; d[p + 2] += k; } c.putImageData(img, 0, 0); }), 14, 18), roughness: .35, clearcoat: .4, clearcoatRoughness: .3 }),
+      back: (c, ppu) => { wallBase(c, XL, XR);
+        const MX = 0, MY = 14, MR = 17;   // the moon gate: the garden through it (bamboo, a rockery, the hour's sky)
+        c.save(); c.beginPath(); c.arc(MX, MY, MR, 0, 7); c.clip();
+        c.fillStyle = lin(c, MY + MR, MY - MR, [[0, sky[0]], [1, sky[2]]]); c.fillRect(MX - MR, MY - MR, MR * 2, MR * 2);
+        if (night) { c.fillStyle = '#f4f0dc'; ell(c, MX + 8, MY + 10, 2, 2); }
+        blur(c, .4 * ppu); const R = rng(3), bam = night ? '#142a1e' : T === 'evening' ? '#4a5a2a' : '#5a8a3a';
+        c.fillStyle = night ? '#1a2018' : '#8a8a80'; c.beginPath(); c.moveTo(MX - MR, FL); c.lineTo(MX - 10, MY - 8); c.lineTo(MX - 4, MY - 2); c.lineTo(MX + 2, MY - 9); c.lineTo(MX + 8, MY - 4); c.lineTo(MX + MR, FL); c.fill();   // the rockery
+        for (let i = 0; i < 14; i++) { const x = MX - MR + R() * MR * 2; c.fillStyle = bam; c.fillRect(x, FL, .6, MR * 2); for (let y = FL + 3; y < MY + MR; y += 3.4) { c.fillStyle = 'rgba(0,0,0,.3)'; c.fillRect(x - .1, y, .8, .25); } for (let k = 0; k < 8; k++) { c.fillStyle = bam; c.save(); c.translate(x, MY - MR * .2 + R() * MR * 1.2); c.rotate((R() - .5) * 2.4); ell(c, 1.6, 0, 1.8, .35); c.restore(); } }
+        blur(c, 0); c.restore();
+        c.strokeStyle = '#8a7a6a'; c.lineWidth = 1.4; c.beginPath(); c.arc(MX, MY, MR + .7, 0, 7); c.stroke(); c.strokeStyle = 'rgba(255,255,255,.4)'; c.lineWidth = .4; c.beginPath(); c.arc(MX, MY, MR + 1.5, 0, 7); c.stroke();
+        lattice(c, -48, -26, FL + 10, 30); lattice(c, 26, 48, FL + 10, 30); [-52, -22, 22, 52].forEach(x => post(c, x));
+        c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(-10, 34, 20, 6); c.fillStyle = '#2a0c06'; c.fillRect(-9.6, 34.4, 19.2, 5.2); c.fillStyle = '#c8a050'; for (let i = 0; i < 3; i++) c.fillRect(-6 + i * 4.6, 35.6, 3, 2.8); },   // a name board (plain gilt blocks)
+      left: (c) => { wallBase(c, -ZF, -ZB); lattice(c, 4, 22, FL + 10, 32); lattice(c, 30, 48, FL + 10, 32); [2, 26, 50].forEach(x => post(c, x));
+        c.fillStyle = '#f2ead8'; c.fillRect(58, 0, 6, 22); c.fillStyle = 'rgba(40,30,20,.75)'; for (let y = 2; y < 20; y += 3.2) c.fillRect(60.4, y, 1.2, 2.2); },   // a hanging scroll
+      right: (c) => { wallBase(c, ZB, ZF);   // shelves of tea jars and a scroll painting of mountains
+        c.fillStyle = '#3a140c'; [FL + 9, FL + 18, FL + 27].forEach(y => c.fillRect(-46, y, 30, .8)); const R = rng(5);
+        [FL + 9.8, FL + 18.8, FL + 27.8].forEach(y => { for (let x = -45; x < -18; x += 4.2) { const k = R(); c.fillStyle = k < .3 ? '#d8d0c0' : k < .6 ? '#6a3a24' : '#3a5a6a'; ell(c, x + 1.6, y + 2.2, 1.6, 2.2); c.fillStyle = '#c84a2a'; c.fillRect(x + .9, y + 3.6, 1.4, 1.2); } });
+        c.fillStyle = '#ece4d0'; c.fillRect(0, -4, 12, 30); c.fillStyle = '#6a5a4a'; c.fillRect(-.4, 25.6, 12.8, 1); c.fillRect(-.4, -4.6, 12.8, 1);
+        c.fillStyle = 'rgba(60,70,70,.6)'; c.beginPath(); c.moveTo(1, 2); c.lineTo(4, 14); c.lineTo(6, 9); c.lineTo(9, 19); c.lineTo(11, 2); c.fill(); c.fillStyle = 'rgba(60,70,70,.3)'; c.beginPath(); c.moveTo(1, 8); c.lineTo(3, 12); c.lineTo(7, 4); c.lineTo(11, 10); c.lineTo(11, 2); c.lineTo(1, 2); c.fill(); },
+      ceil: (c) => { c.fillStyle = '#2a0c06'; c.fillRect(XL - 2, ZB - 2, XR - XL + 4, ZF - ZB + 4); for (let x = XL; x < XR; x += 12) for (let z = ZB; z < ZF; z += 12) { c.strokeStyle = '#6a2a14'; c.lineWidth = .8; c.strokeRect(x + 1, z + 1, 10, 10); c.fillStyle = 'rgba(42,90,74,.5)'; c.beginPath(); c.arc(x + 6, z + 6, 3, 0, 7); c.fill(); c.fillStyle = 'rgba(200,160,80,.5)'; c.beginPath(); c.arc(x + 6, z + 6, 1.2, 0, 7); c.fill(); } },
+    });
+    // red silk lanterns hanging along both sides (lit at dusk), a bonsai on a stand, an incense burner
+    const silk = M({ color: 0xc8281e, roughness: .6, emissive: new TT.Color(lit ? 0xff5020 : 0x200404), emissiveIntensity: lit ? .9 : 1, side: TT.DoubleSide }), gold = M({ color: 0xc8a050, metalness: 1, roughness: .3 });
+    [[-34, -30], [34, -30], [-48, 4], [48, 4]].forEach(([x, z]) => { const Gl = grp(TT, g, x, 28, z);
+      const geo = new TT.SphereGeometry(3, 16, 10), P = geo.attributes.position; for (let i = 0; i < P.count; i++) { const a = Math.atan2(P.getZ(i), P.getX(i)), k = 1 - .06 * Math.abs(Math.cos(a * 6)); P.setX(i, P.getX(i) * k); P.setZ(i, P.getZ(i) * k); } geo.computeVertexNormals();
+      const lm = new TT.Mesh(geo, silk); lm.scale.set(1, .82, 1); at(Gl, lm, 0, 0, 0, 0, false);
+      [-2.5, 2.5].forEach(y => at(Gl, new TT.Mesh(new TT.CylinderGeometry(1.4, 1.4, .6, 14), gold), 0, y, 0, 0, false));
+      for (let k = 0; k < 7; k++) at(Gl, new TT.Mesh(new TT.CylinderGeometry(.04, .04, 3.2, 3), M({ color: 0xd8382a })), (k - 3) * .22, -4.6, 0, 0, false);   // the tassel
+      at(Gl, new TT.Mesh(new TT.CylinderGeometry(.05, .05, Y1 - 28, 3), M({ color: 0x1a1a1a })), 0, (Y1 - 28) / 2 + 2.6, 0, 0, false);
+      if (lit) { halo(o, Gl, 0, 0, 0, 14, 'rgba(255,120,70,'); const L = new TT.PointLight(0xff8a50, .8, 46, 2); Gl.add(L); } });
+    { const Gb = grp(TT, g, -38, FL, -38); at(Gb, new TT.Mesh(RB(8, 12, 8, .3, 1), rw), 0, 6, 0); at(Gb, new TT.Mesh(RB(9, 1, 6, .4, 2), M({ color: 0x4a6a7a, roughness: .25, clearcoat: .7 })), 0, 12.5, 0);
+      const tk = M({ color: 0x5a4030, roughness: .9 }); const t1 = new TT.Mesh(new TT.CylinderGeometry(.5, .9, 6, 6), tk); t1.rotation.z = .5; at(Gb, t1, -1, 15.6, 0); const t2 = new TT.Mesh(new TT.CylinderGeometry(.35, .5, 5, 6), tk); t2.rotation.z = -.8; at(Gb, t2, .6, 18.6, 0);
+      [[-3, 17.6, 0, 2.6], [2.6, 20.2, .4, 2.4], [-.6, 21.4, -.6, 1.8]].forEach(([x, y, z, r], i) => foliage(o, Gb, o.COARSE ? 24 : 40, x, y, z, r, .8, r * .8, needleTex(), 1.6, 40 + i, night ? 0x1a2a1e : 0x3a6a2a)); }
+    { const Gi = grp(TT, g, 38, FL, -40); at(Gi, new TT.Mesh(RB(7, 10, 7, .3, 1), rw), 0, 5, 0);
+      const bronze = M({ color: 0x5a4a2a, metalness: .9, roughness: .45 }); at(Gi, lathe(TT, [[0, 0], [1.6, 0], [2.4, 1], [2.6, 2.4], [2, 3], [2.2, 3.2], [0, 3.2]], 20, bronze), 0, 10, 0); [0, 2.1, 4.2].forEach(a => at(Gi, new TT.Mesh(new TT.CylinderGeometry(.2, .1, 1.2, 5), bronze), Math.cos(a) * 1.6, 9.8, Math.sin(a) * 1.6, 0, false));
+      at(Gi, lathe(TT, [[0, 3.2], [2, 3.2], [1.6, 4.4], [.6, 5.4], [.8, 5.8], [0, 6.2]], 20, bronze), 0, 10, 0);
+      const smokeT = canvasTex('tbl11-smoke', 64, 256, (c, W, H) => { c.clearRect(0, 0, W, H); c.strokeStyle = 'rgba(255,255,255,.5)'; c.lineWidth = 3; c.beginPath(); for (let y = H; y > 0; y -= 4) c.lineTo(W / 2 + Math.sin(y / 18) * (H - y) / 14, y); c.stroke(); });
+      smokeT.wrapT = TT.RepeatWrapping; const sm = new TT.Mesh(new TT.PlaneGeometry(2.4, 12), new TT.MeshBasicMaterial({ map: smokeT, transparent: true, opacity: .35, depthWrite: false })); sm.position.set(0, 22.4, 0); Gi.add(sm);
+      sm.onBeforeRender = (r, sc, cam) => { sm.quaternion.copy(cam.quaternion); }; o.tick && o.tick(t => { smokeT.offset.y = -(t * .08) % 1; }, sm); }
+    // two horseshoe-back chairs (圈椅) across the table
+    [-7.5, 7.5].forEach(x => { const G = grp(TT, g, x, FL, -14.6); [[-3, 3], [3, 3], [-3, -3], [3, -3]].forEach(([a, b]) => at(G, new TT.Mesh(RB(.9, 10.6, .9, .2, 1), rw), a, 5.3, b));
+      at(G, new TT.Mesh(RB(7.6, 1, 7.4, .2, 1), rw), 0, 10.8, 0); at(G, new TT.Mesh(RB(6.8, .5, 6.6, .3, 2), M({ map: X.cloth('tbl11-cush', '#8a2a1e', 14, 128), roughness: .85 })), 0, 11.5, 0);
+      const arm = new TT.Mesh(new TT.TorusGeometry(4, .38, 8, 24, Math.PI), rw); arm.rotation.x = -Math.PI / 2; arm.rotation.z = Math.PI; at(G, arm, 0, 17, 0);
+      [-4, 4].forEach(a => at(G, new TT.Mesh(new TT.CylinderGeometry(.3, .3, 6, 6), rw), a, 14, 0, 0, false)); const sp = new TT.Mesh(RB(2.6, 7, .5, .2, 1), rw); sp.rotation.x = -.12; at(G, sp, 0, 14.4, -3.8); });
+    // gongfu tea: a slatted tea tray, a purple-clay pot, small cups, a pitcher; dim sum in a bamboo steamer; nuts and a tea caddy
+    const clay = M({ color: 0x5a2a22, roughness: .5, clearcoat: .2 }), white = M({ color: 0xf6f2ea, roughness: .2, clearcoat: .7 }), bamboo = M({ map: canvasTex('tbl11-bamboo', 128, 64, (c, W, H) => { c.fillStyle = '#d8b878'; c.fillRect(0, 0, W, H); for (let x = 0; x < W; x += 6) { c.fillStyle = 'rgba(120,80,30,.35)'; c.fillRect(x, 0, 1.5, H); } c.fillStyle = 'rgba(120,80,30,.4)'; c.fillRect(0, H * .3, W, 2); c.fillRect(0, H * .7, W, 2); }), roughness: .7 });
+    { const Gt = grp(TT, g, -11.2, 0, -6.4, .15); at(Gt, new TT.Mesh(RB(7.4, .7, 5, .3, 2), rw), 0, .35, 0); for (let i = 0; i < 11; i++) at(Gt, new TT.Mesh(RB(6.6, .1, .26, .05, 1), M({ color: 0x3a140c, roughness: .5 })), 0, .72, -2 + i * .4, 0, false);
+      const pot = teapot(o, Gt, -1.6, -.2, .4, clay, .52); pot.position.y = .75;
+      [[1, -1.1], [2.1, -1.1], [1, .2], [2.1, .2]].forEach(([x, z]) => at(Gt, lathe(TT, [[0, 0], [.3, 0], [.5, .5], [.55, .6], [.5, .62], [0, .55]], 16, white), x, .75, z));
+      at(Gt, lathe(TT, [[0, 0], [.6, 0], [.75, 1.4], [.7, 1.5], [.6, .2], [0, .18]], 18, glassM()), 1.6, .75, 1.6, 0, false); at(Gt, new TT.Mesh(new TT.CylinderGeometry(.68, .6, 1, 18), M({ color: 0xb8782a, roughness: .05, clearcoat: 1, transparent: true, opacity: .7 })), 1.6, 1.3, 1.6, 0, false); }
+    { const Gs = grp(TT, g, 11, 0, -6.2); at(Gs, new TT.Mesh(new TT.CylinderGeometry(2.6, 2.6, 1.6, 24, 1, true), M({ map: bamboo.map, roughness: .7, side: TT.DoubleSide })), 0, .8, 0); at(Gs, new TT.Mesh(new TT.CircleGeometry(2.55, 24), M({ color: 0xd8c898, roughness: .8 })), 0, .2, 0, 0, false).rotation.x = -Math.PI / 2;
+      const bun = M({ color: 0xf6f0e2, roughness: .75 }); [[-1, -.6], [1, -.6], [0, 1]].forEach(([x, z]) => { const b = new TT.Mesh(new TT.SphereGeometry(.95, 14, 10), bun); b.scale.set(1, .72, 1); at(Gs, b, x, .82, z); const tw = new TT.Mesh(new TT.ConeGeometry(.3, .4, 8), bun); at(Gs, tw, x, 1.5, z, 0, false); });
+      const lid = new TT.Mesh(new TT.CylinderGeometry(2.7, 2.7, 1.2, 24), [M({ map: bamboo.map, roughness: .7 }), M({ color: 0xc8a868, roughness: .75 }), M({ color: 0xc8a868 })]); lid.rotation.z = .9; at(Gs, lid, 3.4, 1.6, .6); }
+    cupSaucer(o, g, 10.6, 3.6, -2.4, white, 0x9a6a20);
+    { const Gc = grp(TT, g, 6.4, 0, -9.4); at(Gc, new TT.Mesh(new TT.CylinderGeometry(.9, .9, 2.4, 20), M({ color: 0x2a4a5a, roughness: .25, clearcoat: .8 })), 0, 1.2, 0); at(Gc, new TT.Mesh(new TT.CylinderGeometry(.95, .95, .5, 20), gold), 0, 2.6, 0); }
+    // the lights: the lattice windows' daylight (or the lanterns), a soft overhead light on the table
+    scene.add(new TT.HemisphereLight(day ? 0xf2ece0 : 0x6a5060, 0x2a1008, day ? .46 : .28));
+    const key = dirLight(TT, day ? 0xfff2e0 : T === 'evening' ? 0xffb080 : 0xffc890, day ? 1.05 : T === 'evening' ? .7 : .45, [-30, 30, -24], 17); scene.add(key);
+    const over = new TT.SpotLight(0xffe0b8, lit ? 2.2 : 1, 70, .6, .8, 1.1); over.position.set(0, Y1 - 2, Z0 + 2); over.target.position.set(0, 0, Z0); scene.add(over); scene.add(over.target);
+    try { X.mergeStatic(g); } catch (e) {}
+    return { bg: '#2a0e08', exp: day ? .8 : .96, board: day ? .28 : .48, boardCol: lit ? 0xffdcb8 : undefined, key, env: { top: '#5a2a1a', bottom: '#140604', panels: [[0, 10, -28, 20, 14, day ? '#fff4e0' : '#ffb070', day ? 1.4 : .9], [-30, 10, -20, 10, 8, '#ff7040', lit ? 1.2 : .2], [0, 20, 2, 8, 6, '#ffe0b8', 2], [0, 8, 18, 20, 5, '#6a3020', .6]] } };
+  };
+  TABLES[11].plain = { sun: 0xffecd8, sunI: .76, hemi: [0xf2e8dc, 0x3a1408, .46], exp: .66 };
+  TABLES[11].floor = (o) => ({ img: rosewood(o).image, w: 36, h: 36, dark: true, over: 'radial-gradient(140% 120% at 50% 40%, transparent 55%, rgba(20,4,0,.35))' });
+
   TABLES[5].floor = (o) => ({ img: leatherFloor(o).image, w: 24, h: 18, dark: true,
     over: 'radial-gradient(80% 70% at 20% 10%, rgba(255,196,120,.20), transparent 62%), radial-gradient(130% 120% at 50% 46%, transparent 52%, rgba(4,8,5,.55))' });
 })();
