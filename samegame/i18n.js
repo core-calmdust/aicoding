@@ -50,7 +50,7 @@ window.SAME_I18N.ja = {
   'ach.daily7': '7日連続プレイ', 'ach.daily30': '30日連続プレイ', 'ach.gold10': 'デイリー金メダル10個', 'ach.blitz10k': 'BLITZで10,000点', 'ach.rise10k': 'せりあがりで10,000点', 'ach.col30': 'キャラ30種', 'ach.col100': 'キャラ全100種',
   'ga.title': 'ガチャ', 'ga.one': '1回', 'ga.ten': '10回', 'ga.rate': 'N 55% ／ R 28% ／ SR 12% ／ SSR 4% ／ UR 1%。10回ガチャは10体目がSR以上。', 'ga.dup': 'かぶったキャラはコインになって戻ります（N5・R15・SR40・SSR100・UR300）。', 'ga.refund': 'かぶり分 {n}コインが戻りました',
   'sh.title': 'ショップ', 'sh.d': '背景を買って着せかえ。', 'sh.use': 'つかう', 'sh.using': 'つかってる',
-  'bg.dots': 'ドット', 'bg.rays': 'サンバースト', 'bg.blue': 'ブルードット', 'bg.pink': 'ピンクドット', 'bg.stripe': 'ストライプ', 'bg.city': 'コミックシティ', 'bg.sea': 'さめの海', 'bg.boom': 'カブーム',
+  'bg.dots': 'ドット', 'bg.rays': 'サンバースト', 'bg.blue': 'ブルドーット', 'bg.pink': 'ピンクドット', 'bg.stripe': 'ストライプ', 'bg.city': 'コミックシティ', 'bg.sea': 'さめの海', 'bg.boom': 'カブーム',
   'bk.title': '図鑑', 'bk.d': '{n} / 100 種あつめました',
   'rk.title': 'ランキング', 'rk.p': '今日のパズル', 'rk.b': '今日のBLITZ', 'rk.m': '今月', 'rk.t': '累計', 'rk.load': 'LOADING…', 'rk.off': 'ランキングは準備中です。', 'rk.err': 'ランキングを読みこめませんでした。通信を確認してもう一度開いてください。', 'rk.empty': 'まだ記録がありません。一番乗りしよう！', 'rk.me': 'あなたは {r}位（{s}）',
   'set.title': '設定', 'set.snd': '効果音', 'set.anim': '演出（POP!の吹き出し・紙ふぶき）', 'set.emb': 'ブロックにマークを表示（色の見分け用）', 'set.tut': 'あそびかたを見る', 'set.reset': 'データを消す', 'set.reset.q': 'すべての記録・コイン・キャラが消えます。本当に消しますか？',

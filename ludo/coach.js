@@ -1,9 +1,9 @@
-/* ludo/coach.js — ルード・パチーシのコーチ（共通仕様 shared/COACH.md、見た目は shared/coachkit.js）。
+/* ludo/coach.js — ルドー・パチーシのコーチ（共通仕様 shared/COACH.md、見た目は shared/coachkit.js）。
    AI戦・二人以上の対戦で、人の番に表示：勝率・上がり・残りの歩数・ねらわれている駒（要約）、推奨方針（理由つき）、
    分かれ道（上位の候補を方針で分類：上がり／取る／出す／ホーム列・自分の道／安全マス・城／逃げる／ペア／前進／パス。
    ホバー・タップで盤に印）、考え方のヒント（各駒が取られる確率、目の確率、安全マス・城、ペア、恵み）、前の手の評価（◎○△✕）。
    評価はこのサイトのエンジン（ludo/engine.js の Lv.20：次の1投までの期待値。勝率は自己対局から当てはめた式 E.winProb）。
-   ルール：ルードは Ludo King に近い既定、パチーシは代表的なルール（claude/ludo-spec.md）。
+   ルール：ルドーは Ludo King に近い既定、パチーシは代表的なルール（claude/ludo-spec.md）。
    Texts: CTX.ja / CTX.en here, the other languages in coach-i18n.js (LudoCoach.merge). Uses the globals of app.js. */
 (() => {
 'use strict';
@@ -37,7 +37,7 @@ ja: {
   'c.pair': 'ペア', 'b.pair': '2つ並べて守る', 'x.pair': '同じ色の駒2つが並んだマスには、相手は止まれません（取られない）。',
   'c.adv': '前進', 'b.adv': '先へ進める', 'x.adv': '駒を進めてゴールに近づけます。進めた先で取られる確率は {r}%。',
   'c.pass': 'パス', 'b.pass': 'パスする', 'x.pass': '動かすと悪くなるときは、パスもできます（パチーシ）。',
-  'w.again': '（ルードではもう一度振れます）', 'w.roll': { ludo: '振れます', pachisi: '投げられます' },
+  'w.again': '（ルドーではもう一度振れます）', 'w.roll': { ludo: '振れます', pachisi: '投げられます' },
   tipsH: '考え方のヒント', more: 'ほかのヒント（{n}）', less: 'たたむ',
   'tp.risk': '{p}マス目の駒が次に取られる確率は {r}%。', 'tp.riskBig': '{p}マス目の駒は特にねらわれています（{r}%）。後ろ1〜6マスに相手の駒がいるマスは危険です。',
   'tp.safe': 'あなたの駒は今、どれも取られにくい位置にいます。',
