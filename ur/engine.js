@@ -25,8 +25,9 @@
  * evaluate(state, n, opts) → [{ move, wp }]  良い順。wp=指した後の自分の勝率（opts.depth 既定2）
  * think(state, n, level=20, opts) → move|null  opts.rng（既定 Math.random）、opts.timeLimit（ms、既定80。L20 の深さ2探索の打ち切り）
  *                             opts.ev（[{ move, wp }]：スレッドで読んだ評価。あれば探索せずにそこから選ぶ）
- * splitEval(state, n, depth) → { moves, tasks:[{ state, n, d }], combine(vals) → [{ move, wp }] }  並列用（手 × 出目）
- * rollTask(state, n, d) → 出目 n の後の手番側の最善の勝率（splitEval の仕事1つ）
+ * splitEval(state, n, depth, fine) → { moves, tasks:[{ state, n, d, k? }], combine(vals) → [{ move, wp }] }  並列用（手 × 出目、
+ *                             fine: さらに「× その出目の手」に分ける。どちらも evaluate と同じ数値）
+ * rollTask(state, n, d, k) → 出目 n の後の手番側の最善の勝率（splitEval の仕事1つ。k: その出目の k 番目の手だけの勝率）
  * hitRisk(state, side) → [prob per piece]   次の相手の1回の手番（ロゼットの追加手番は含まない）で各駒が取られる確率
  * raceCount(state) → { pips:[s0,s1], diff }   各側のゴールまでの残り歩数（diff = s1 − s0）
  * LEVELS[1..20]              各レベルの設定 { depth, temp, noise, capPref }
@@ -354,23 +355,61 @@
   // ---------- 並列（shared/mtworkers.js、2026-11-08）----------
   // evaluate(s, n, {depth: d}) を「手 × 次の出目」の独立な仕事に分ける。仕事 { state, n, d } の値は rollTask(state, n, d)
   // （worker.js の 'roll'）。combine(値の配列) → evaluate と同じ [{ move, wp }]（同じ数値）。d ≤ 0 の手は仕事なしで静的評価。
-  function splitEval(s, n, d) {
-    const ms = legalMoves(s, n), me = s.turn, items = [], tasks = [], pr = R(s.rule).probs;
+  // fine（2026-11-09、Mac の実測で 8スレッド以降が伸びなかったため）：「手 × 出目」は1局面 10〜20 個しかなく、8〜14 スレッドでは
+  // いちばん重い仕事を待つ時間が大半になる。fine なら各「手 × 出目」をさらにその出目の手ごとの仕事 { state, n, d, k } に分け、
+  // combine で最大を取る（bestAfterRoll と同じ max なので同じ数値）。
+  // how many tasks to ask splitEval for (0: one a "move × throw", as before): only where a position is heavy enough that the
+  // messages cost little beside the reading (one core: 3 throws ahead ≈ 30–60 ms a position, 2 ≈ 3 ms; splitting those cost more than it saved)
+  const fineFor = (d, threads) => d >= 3 && threads > 1 ? 3 * threads : 0;
+  // fine = how many tasks are wanted (e.g. 3 × the threads): the jobs with the most moves are split by move until there are
+  // that many; the tasks are handed out the heaviest first (a whole job ≈ its number of moves, one move ≈ 1). No fine: the
+  // tasks as before (one a job, in order).
+  function splitTasks(jobs, fine) {
+    let cnt = jobs.length;
+    if (fine && cnt < fine) for (const j of jobs.slice().sort((a, b) => b.k2 - a.k2)) { if (cnt >= fine) break; if (j.k2 > 1) { j.split = true; cnt += j.k2 - 1; } }
+    const list = [];
+    for (const j of jobs) {
+      if (j.split) { j.at = []; for (let k = 0; k < j.k2; k++) list.push({ j, k, w: 1 }); }
+      else list.push({ j, w: fine ? Math.max(1, j.k2) : 0 });
+    }
+    if (fine) list.sort((a, b) => b.w - a.w);
+    return list.map((e, i) => {
+      const t = { state: e.j.state, n: e.j.n, d: e.j.d };
+      if (e.k == null) e.j.at = i; else { e.j.at.push(i); t.k = e.k; }
+      return t;
+    });
+  }
+  const combineEval = (items, vals) => items.map(it => {
+    if (it.fixed != null) return { move: it.move, wp: it.fixed };
+    let v = 0;
+    for (const [j, p] of it.parts) {
+      if (!j.split) { v += p * vals[j.at]; continue; }
+      let best = -1; for (const i of j.at) if (vals[i] > best) best = vals[i];   // (the max of bestAfter: the same number)
+      v += p * best;
+    }
+    return { move: it.move, wp: it.flip ? 1 - v : v };
+  }).sort((a, b) => b.wp - a.wp);
+  function splitEval(s, n, d, fine) {
+    const ms = legalMoves(s, n), me = s.turn, items = [], jobs = [], pr = R(s.rule).probs;
     for (const m of ms) {
       const ns = apply(s, m).state;
       if (ns.winner >= 0) { items.push({ move: m, fixed: ns.winner === me ? 1 : 0 }); continue; }
       if (d <= 0) { const v = staticEval(ns); items.push({ move: m, fixed: ns.turn === me ? v : 1 - v }); continue; }
       const it = { move: m, flip: ns.turn !== me, parts: [] }; items.push(it);
-      for (let r = 0; r <= 4; r++) if (pr[r] > 0) { it.parts.push([tasks.length, pr[r]]); tasks.push({ state: ns, n: r, d }); }
+      for (let r = 0; r <= 4; r++) {
+        if (!(pr[r] > 0)) continue;
+        const j = { state: ns, n: r, d, k2: fine ? legalMoves(ns, r).length : 0, split: false };
+        it.parts.push([j, pr[r]]); jobs.push(j);
+      }
     }
-    const combine = vals => items.map(it => {
-      if (it.fixed != null) return { move: it.move, wp: it.fixed };
-      let v = 0; for (const [k, p] of it.parts) v += p * vals[k];
-      return { move: it.move, wp: it.flip ? 1 - v : v };
-    }).sort((a, b) => b.wp - a.wp);
-    return { moves: ms, tasks, combine };
+    const tasks = splitTasks(jobs, fine);
+    return { moves: ms, tasks, combine: vals => combineEval(items, vals) };
   }
-  function rollTask(state, n, d) { deadline = Infinity; return bestAfterRoll(state, n, d); }
+  function rollTask(state, n, d, k) {
+    deadline = Infinity;
+    if (k == null) return bestAfterRoll(state, n, d);
+    return wpAfter(state, legalMoves(state, n)[k], d - 1);   // (one move of bestAfterRoll)
+  }
 
   // 任意：別の評価ネット（ur/tools/net-<rule>.json と同形式）を非同期で差し替える。失敗しても内蔵ネットで動く
   function loadNet(rule, url) {
@@ -384,7 +423,7 @@
   const API = {
     RULES, PROB: P4.slice(), ROSETTES_RC, LEVELS, probs,
     newGame, clone, coords, pathOf, isRosette, isSafe, rollDice, mulberry32,
-    legalMoves, apply, key, moveText, winProb, evaluate, think, hitRisk, raceCount, staticEval, loadNet, splitEval, rollTask,
+    legalMoves, apply, key, moveText, winProb, evaluate, think, hitRisk, raceCount, staticEval, loadNet, splitEval, rollTask, fineFor,
     _valueToRoll: valueToRoll, _features: features, _hasNet: id => !!getNet(id),
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;

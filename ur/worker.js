@@ -3,14 +3,14 @@
              { id, type:'review', list:[{ state, n }] }      → { id, type:'progress', i, res } … { id, done:true }
                res = { ev:[{ from, to, wp }], wp0 }  (ev: every legal move, best first; wp0: the mover's win chance before rolling)
    the threads (../shared/mtworkers.js, one task per message):
-             { id, type:'roll', state, n, d }               → { id, v }   (E.rollTask: one move × one throw of E.splitEval)
+             { id, type:'roll', state, n, d, k? }           → { id, v }   (E.rollTask: one move × one throw [× one move: k] of E.splitEval)
              { id, type:'review1', state, n }               → { id, res }  (one position of the review) */
-importScripts('engine.js?v=3');
+importScripts('engine.js?v=4');
 const E = self.UrEngine;
 self.onmessage = e => {
   const d = e.data || {};
   try {
-    if (d.type === 'roll') postMessage({ id: d.id, v: E.rollTask(d.state, d.n, d.d) });
+    if (d.type === 'roll') postMessage({ id: d.id, v: E.rollTask(d.state, d.n, d.d, d.k) });
     else if (d.type === 'review1') {
       const ev = d.n ? E.evaluate(d.state, d.n, { depth: 2 }).map(x => ({ from: x.move.from, to: x.move.to, wp: x.wp })) : [];
       postMessage({ id: d.id, res: { ev, wp0: E.winProb(d.state, { depth: 1 }) } });
