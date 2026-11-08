@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>アゴン MT ベンチ</title>
+<style>
+:root{--bg:#f6f1e7;--fg:#2a2118;--mut:#7a6a58;--card:#fffaf0;--line:#e2d6c2;--acc:#a8562a;--ok:#2f7d4a;--ng:#b23b2e}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1d1915;--fg:#efe6d8;--mut:#a89884;--card:#28221c;--line:#3d342a;--acc:#e08a55;--ok:#6cc58a;--ng:#ef7b6c}}
+:root[data-theme="dark"]{--bg:#1d1915;--fg:#efe6d8;--mut:#a89884;--card:#28221c;--line:#3d342a;--acc:#e08a55;--ok:#6cc58a;--ng:#ef7b6c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif}
+main{max-width:860px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:22px;margin:0 0 4px}
+.sub{color:var(--mut);margin:0 0 16px;font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:0 0 14px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 14px;font-size:14px}
+.kv b{font-weight:600}
+.y{color:var(--ok);font-weight:600}.n{color:var(--ng);font-weight:600}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+label{font-size:14px}
+select,button{font:inherit}
+select{padding:4px 6px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg)}
+button{padding:8px 16px;border-radius:999px;border:0;background:var(--acc);color:#fff;font-weight:600;cursor:pointer}
+button.sec{background:transparent;color:var(--acc);border:1.5px solid var(--acc)}
+button:disabled{opacity:.45;cursor:default}
+#bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden;margin:10px 0 4px}
+#bar i{display:block;height:100%;width:0;background:var(--acc);transition:width .3s}
+#st{font-size:13px;color:var(--mut);min-height:1.5em}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--mut);font-weight:600;font-size:12px}
+h2{font-size:15px;margin:4px 0 8px}
+pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);margin:8px 0 0;max-height:200px;overflow:auto}
+</style>
+</head>
+<body>
+<main>
+<h1>アゴン マルチスレッド ベンチマーク</h1>
+<p class="sub">対局ページと同じ方式（shared/mtsplit.js：ふつうの Worker がルートの手と本筋（最初の手の先）を分担する Young Brothers Wait）で、スレッド数ごとの速さを測ります。PC の Chrome / Safari で開き、終わったら「結果をコピー」を押して貼り付けてください。</p>
+
+<div class="card"><div class="kv" id="env"></div></div>
+
+<div class="card">
+  <div class="row">
+    <label>重さ <select id="selW"><option value="light">軽い（数分）</option><option value="normal" selected>ふつう</option><option value="heavy">重い</option></select></label>
+  </div>
+  <div class="row" style="margin-top:12px">
+    <button id="btnRun" disabled>開始</button>
+    <button id="btnCopy" class="sec" disabled>結果をコピー</button>
+  </div>
+  <div id="bar"><i></i></div>
+  <div id="st">準備中…</div>
+</div>
+
+<div class="card"><h2>結果</h2><div class="tw"><table id="tbl"><thead><tr><th>測定</th><th>スレッド</th><th>時間</th><th>1スレッド比</th><th>効率</th><th>nps（合計）</th><th>1スレッドと一致</th></tr></thead><tbody></tbody></table></div><pre id="log"></pre></div>
+</main>
+<script src="engine.js?v=4-pro1-mt1"></script>
+<script src="../shared/mtsplit.js?v=1"></script>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const HC = navigator.hardwareConcurrency || 1;
+const COUNTS = (() => { const a = []; for (let t = 1; t < HC; t *= 2) a.push(t); a.push(HC); return [...new Set(a)]; })();
+const ua = (() => { const d = navigator.userAgentData; const b = d && (d.brands || []).filter(x => !/Not/.test(x.brand)).map(x => x.brand + ' ' + x.version).join(', '); return (b ? b + ' / ' + (d.platform || '') : '') || navigator.userAgent; })();
+let lines = [], started = 0;
+function env() {
+  $('#env').innerHTML = [['hardwareConcurrency', HC], ['測るスレッド数', COUNTS.join(', ')], ['起動できたスレッド', started || '—'], ['ブラウザ', ua.replace(/</g, '&lt;')]]
+    .map(([k, v]) => `<b>${k}</b><span>${v}</span>`).join('');
+}
+env();
+// ---- the game: G = { url, setup?, drive, positions(weight) → [{ name, msg }], tests: [{ key, label, msg(p, weight), cmp(r) → string (the answer compared with 1 thread), unit }] }
+
+const E = window.AgonEngine;
+const RULE = 'std', D = { light: 6, normal: 7, heavy: 8 }, TA = { light: 1000, normal: 2000, heavy: 4000 };
+const G = {
+  url: 'engine.js?v=4-pro1-mt1', drive: MTSplit.ladder.drive,
+  positions() {   // two games of Lv.6 vs Lv.6 (a fixed random seed), every 10 plies from ply 10
+    const out = []; let seed = 7; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+    E.setRule(RULE);
+    for (let g = 0; g < 2; g++) {
+      const moves = [];
+      for (let i = 0; i < 60; i++) {
+        const { pos } = E.replay(null, moves); if (E.judge(pos).over || !pos.moves().length) break;
+        const r = E.think(null, moves, 6 + g, rnd, RULE); if (r.move == null || r.move < 0) break; moves.push(r.move);
+        if (i >= 9 && i % 10 === 9) out.push({ name: `対局${g + 1}・${moves.length}手目`, moves: moves.slice() });
+      }
+    }
+    return out.slice(0, 5);
+  },
+  tests: [
+    { key: 'best', label: '最善手（深さ固定）', msg: (p, w) => ({ type: 'think', start: null, moves: p.moves, rule: RULE, level: 20, cfg: { s: 1, d: 99, dx: D[w], ms: 600000 } }), cmp: r => String(r.move) },
+    { key: 'ana', label: '全部の手の解析（読めた深さ）', more: true, extraName: '手', msg: (p, w) => ({ type: 'analyze', start: null, moves: p.moves, rule: RULE, time: TA[w] }), cmp: r => String(r.list[0].m), extra: r => r.depth },
+  ],
+};
+
+// a fresh pool for every run (no table left over from the run before), warmed up first
+async function once(t, msg) {
+  const pool = MTSplit.pool({ url: G.url, setup: G.setup, drive: G.drive });
+  await new Promise(r => setTimeout(r, 400));
+  if (G.warm) await pool.run(Object.assign({ mtThreads: t }, G.warm));
+  const t0 = performance.now();
+  const r = await pool.run(Object.assign({}, msg, { mtThreads: t }), null, 'bench');
+  const ms = performance.now() - t0;
+  pool.close();
+  if (!r) throw new Error('the search failed');
+  started = Math.max(started, r.threads || 1);
+  return { r, ms };
+}
+async function run() {
+  $('#btnRun').disabled = true; $('#btnCopy').disabled = true;
+  const w = $('#selW').value, P = G.positions(w);
+  const total = P.length * G.tests.length * COUNTS.length; let done = 0;
+  lines = [`agon bench ${new Date().toISOString()} | ${ua} | hc ${HC} | weight ${w}`];
+  const R = {};
+  try {
+    for (const p of P) for (const T of G.tests) {
+      let ref = null; const row = [`${p.name} ${T.key}`];
+      for (const t of COUNTS) {
+        $('#st').textContent = `${p.name}：${T.label}・${t}スレッド`;
+        const { r, ms } = await once(t, T.msg(p, w));
+        const ans = T.cmp(r); if (t === 1) ref = ans;
+        const a = R[T.key + '|' + t] || (R[T.key + '|' + t] = { ms: 0, nodes: 0, agree: 0, cnt: 0, extra: 0 });
+        a.ms += ms; a.nodes += r.nodes || 0; a.cnt++; if (ans === ref) a.agree++; if (T.extra) a.extra += T.extra(r);
+        row.push(`t${t}(${r.threads || 1}) ${Math.round(ms)}ms ${ans}${T.extra ? ' ' + T.extraName + T.extra(r) : ''}`);
+        $('#bar i').style.width = (++done / total * 100) + '%';
+      }
+      lines.push(row.join(' | ')); render(R);
+    }
+    $('#st').textContent = '完了。「結果をコピー」を押して、Claude に貼り付けてください。';
+  } catch (e) { $('#st').innerHTML = '<span class="n">エラー：' + String(e.message || e).replace(/</g, '&lt;') + '</span>'; lines.push('error ' + (e.message || e)); }
+  env();
+  lines.splice(1, 0, ...render(R));
+  $('#log').textContent = lines.join('\n');
+  $('#btnRun').disabled = false; $('#btnCopy').disabled = false;
+}
+function render(R) {
+  const tb = $('#tbl tbody'), out = []; tb.innerHTML = '';
+  for (const T of G.tests) {
+    const b = R[T.key + '|1']; if (!b) continue;
+    for (const t of COUNTS) {
+      const a = R[T.key + '|' + t]; if (!a) continue;
+      const sp = T.more ? (a.extra / a.cnt) / (b.extra / b.cnt) : b.ms / a.ms, nps = a.nodes / a.ms * 1000;
+      const spTxt = T.more ? `${(a.extra / a.cnt).toFixed(1)}${T.extraName}` : `${sp.toFixed(2)}×`;
+      tb.insertAdjacentHTML('beforeend', `<tr><td>${T.label}</td><td>${t}</td><td>${(a.ms / a.cnt / 1000).toFixed(2)}s</td><td>${spTxt}</td><td>${T.more ? '—' : (sp / t * 100).toFixed(0) + '%'}</td><td>${Math.round(nps / 1000)}k</td><td>${a.agree}/${a.cnt}</td></tr>`);
+      out.push(`${T.key} threads ${t}: ${(a.ms / a.cnt).toFixed(0)} ms, ${T.more ? 'avg ' + (a.extra / a.cnt).toFixed(2) + ' ' + T.extraName : 'x' + sp.toFixed(2) + ' vs 1, eff ' + (sp / t * 100).toFixed(0) + '%'}, ${Math.round(nps / 1000)}k nps, agree ${a.agree}/${a.cnt}`);
+    }
+  }
+  return out;
+}
+$('#btnRun').onclick = run;
+$('#btnCopy').onclick = async () => {
+  const txt = lines.join('\n');
+  try { await navigator.clipboard.writeText(txt); $('#btnCopy').textContent = 'コピーしました'; }
+  catch (e) { const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); $('#btnCopy').textContent = 'コピーしました'; } catch (e2) {} ta.remove(); }
+  setTimeout(() => { $('#btnCopy').textContent = '結果をコピー'; }, 2000);
+};
+(async () => { try { if (G.ready) await G.ready(); $('#st').textContent = `準備完了（最大 ${HC} スレッド）。「開始」を押してください。`; $('#btnRun').disabled = false; } catch (e) { $('#st').textContent = 'エラー：' + e; } })();
+</script>
+</body>
+</html>

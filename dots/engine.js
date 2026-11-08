@@ -842,7 +842,7 @@ async function chooseW5Async(p, cfg, rand, t, sure, t0, pool) {
   if (q.draw && !q.open.length) return { move: q.draw.move, value: q.draw.value, exact: false, outcome: 0 };
   const open = q.open, n = pool.size + 1, edges = p.edges(), span = Math.max(50, left() - (sure ? 40 : ms * cfg.w5.re) - 40);
   const jobs = [];
-  for (let i = 0; i < pool.size; i++) jobs.push(pool.run(i, { type: 'xpart', kind: 'sliced', R: G.R, C: G.C, edges, moves: open.filter((m, j) => j % n === i + 1), ms: span, t, x5: true }));
+  for (let i = 0; i < pool.size; i++) jobs.push(pool.run(i, { type: 'xpart', kind: 'sliced', R: G.R, C: G.C, edges, moves: open.filter((m, j) => j % n === i + 1), ms: span, until: Date.now() + span, t, x5: true }));
   const h = H.best(p, cfg.depth, Math.max(60, ms * (sure ? cfg.w5.hs : cfg.w5.hn)), rand);
   const mine = [h.move].concat(open.filter((m, j) => j % n === 0 && m !== h.move));
   const o = S.sliced(p, t, mine, Math.max(30, end - (sure ? 40 : ms * cfg.w5.re) - Date.now()));
@@ -871,6 +871,7 @@ async function chooseW5Async(p, cfg, rand, t, sure, t0, pool) {
 // work for a helper worker: an outcome (or exact) root search over the given moves, in that order
 function helperTask(d) {
   const G = geom(d.R, d.C), p = Pos.from(G, d.edges);
+  if (d.until) d.ms = Math.max(10, Math.min(d.ms, d.until - Date.now()));   // (the main worker's clock: a helper that starts late — loading its solver, many helpers — does not make the move late)
   if (d.bits) v2Bits = d.bits;
   if (d.x5 === false && x5Ok(G)) return { done: false, best: null, firstV: null };   // the main worker has no wasm: stay out
   const S = v2SolverFor(G); S.limit(0, d.ms);
@@ -907,7 +908,7 @@ async function chooseMoveAsync(p, level, rand, pool, lead, hist) {
   // very likely finish, this worker races as well.
   const order = i => i ? v2Moves(S, p, h.move, rand) : moves;
   const left = end - Date.now() - 40;
-  const jobs = []; for (let i = 0; i < pool.size; i++) jobs.push(pool.run(i, { type: 'xpart', R: G.R, C: G.C, edges, moves: order(i), ms: left, t, x5: x5Ok(G) }));
+  const jobs = []; for (let i = 0; i < pool.size; i++) jobs.push(pool.run(i, { type: 'xpart', R: G.R, C: G.C, edges, moves: order(i), ms: left, until: Date.now() + left, t, x5: x5Ok(G) }));
   let res, hm = h;
   if (safe <= v2Sure(cfg, G)) {
     S.limit(0, left);
@@ -1251,29 +1252,31 @@ return { candLine, x5Ready, setX5, X5, ponderStart, ponderStep, ponderStop, choo
 if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') {
   // helper workers for Lv9+ (nested workers, created on first use). None on single/dual-core or low-memory devices,
   // or where a worker cannot start workers: then the search simply runs in this worker.
+  // want: the number of helpers the page asks for (msg.mt: its option 「マルチスレッド」 — shared/mtworkers.js, min(cores − 1, 7)
+  // on a computer, 0 when off); without it (other pages, the atlas) the old default min(3, cores − 1)
   let pool = null;
-  const getPool = () => {
-    if (pool) return pool;
-    pool = { size: 0, ws: [], seq: 0 };
+  const getPool = want => {
+    if (!pool) {
+      pool = { ws: [], seq: 0, dead: false };
+      pool.run = (i, msg) => new Promise(resolve => {
+        const h = pool.ws[i], id = ++pool.seq;
+        const timer = setTimeout(() => { if (h.cb.delete(id)) resolve(null); }, (msg.ms || 0) + 2000);
+        h.cb.set(id, r => { clearTimeout(timer); resolve(r); });
+        h.w.postMessage(Object.assign({ id, bits: 21 }, msg));
+      });
+    }
+    const nav = self.navigator || {}, hc = nav.hardwareConcurrency || 1, dm = nav.deviceMemory;
+    let k = want === undefined || want === null ? Math.min(3, hc - 1) : Math.max(0, Math.min(want, hc - 1, 15));
+    if (dm && dm <= 2) k = 0; else if (dm && dm < 4) k = Math.min(k, 1);
     try {
-      const nav = self.navigator || {}, hc = nav.hardwareConcurrency || 1, dm = nav.deviceMemory;
-      let k = Math.min(3, hc - 1);
-      if (dm && dm <= 2) k = 0; else if (dm && dm < 4) k = Math.min(k, 1);
-      if (typeof Worker === 'function') for (let i = 0; i < k; i++) {
+      if (!pool.dead && typeof Worker === 'function') while (pool.ws.length < k) {
         const w = new Worker('engine.js' + ((self.location && self.location.search) || '')), cb = new Map();   // same version as this worker
         w.onmessage = ev => { const f = cb.get(ev.data.id); if (f) { cb.delete(ev.data.id); f(ev.data.type === 'error' ? null : ev.data.r); } };
         w.onerror = ev => { ev.preventDefault && ev.preventDefault(); cb.forEach(f => f(null)); cb.clear(); };
         pool.ws.push({ w, cb });
       }
-    } catch (e) { pool.ws = []; }
-    pool.size = pool.ws.length;
-    pool.run = (i, msg) => new Promise(resolve => {
-      const h = pool.ws[i], id = ++pool.seq;
-      const timer = setTimeout(() => { if (h.cb.delete(id)) resolve(null); }, (msg.ms || 0) + 2000);
-      h.cb.set(id, r => { clearTimeout(timer); resolve(r); });
-      h.w.postMessage(Object.assign({ id, bits: 21 }, msg));
-    });
-    return pool;
+    } catch (e) { pool.dead = true; }
+    return { size: Math.min(k, pool.ws.length), run: pool.run };
   };
   // pondering between moves (5x5 Lv9+ with the wasm solver): short steps, so that a new request is served at once
   let pondering = 0;
@@ -1292,7 +1295,7 @@ if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof
       if (d.R === 5 && d.C === 5 && d.type === 'move' && d.level >= 9) { const rd = DotsEngine.x5Ready(); if (rd && rd.then) await rd; }
       if (d.type === 'move') {
         const t0 = Date.now();
-        const r = (DotsEngine.LEVELS[d.level] || {}).kind === 'v2' ? await DotsEngine.chooseMoveAsync(p, d.level, null, getPool(), d.lead, d.edges) : DotsEngine.chooseMove(p, d.level);
+        const r = (DotsEngine.LEVELS[d.level] || {}).kind === 'v2' ? await DotsEngine.chooseMoveAsync(p, d.level, null, getPool(d.mt), d.lead, d.edges) : DotsEngine.chooseMove(p, d.level);
         self.postMessage({ type: 'move', id: d.id, move: r.move, value: r.value, exact: !!r.exact, ms: Date.now() - t0 });
         if (d.level >= 9 && d.R === 5 && d.C === 5 && d.ponder !== false) {
           const k = p.play(r.move);
