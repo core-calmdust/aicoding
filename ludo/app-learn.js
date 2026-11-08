@@ -115,7 +115,9 @@
   /* ---------------- tabs of the list dialogs: switching tabs shows the new dialog at once on top of the old one ---------------- */
   // the tabs: ルール（ルドー） · ルール（パチーシ） · レッスン (2026-11-09: the rule picks moved up into the tabs; puzzles retired)
   function tabLabels() { const [o, c] = /^(ja|zh)/.test(LANG) ? ['（', '）'] : [' (', ')'];
-    $$('.ls-tabs').forEach(g => g.querySelectorAll('button').forEach(b => { const v = b.dataset.v; b.textContent = v === 'lesson' ? t('tab.lesson') : t('tab.rules') + o + t('rule.' + v.slice(6)) + c; })); }
+    $$('.ls-tabs').forEach(g => g.querySelectorAll('button').forEach(b => { const v = b.dataset.v; if (v === 'lesson') { b.textContent = t('tab.lesson'); return; }
+      if (innerWidth <= 600) b.innerHTML = `<span class="tl">${t('tab.rules')}</span><span class="tn">${t('rule.' + v.slice(6))}</span>`;   // phones: two lines
+      else b.textContent = t('tab.rules') + o + t('rule.' + v.slice(6)) + c; })); void o; void c; }
   function selTab(v) { tabLabels(); $$('.ls-tabs').forEach(g => g.querySelectorAll('button').forEach(b => { const on = b.dataset.v === v; b.classList.toggle('sel', on); b.classList.toggle('on', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); })); }
   const LIST_OV = ['#rulesOverlay', '#lessonOverlay'];
   $$('.ls-tabs').forEach(g => g.addEventListener('click', async e => {

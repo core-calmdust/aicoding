@@ -64,18 +64,20 @@ let pcEls = {};
 const CUP = { seat: -1 };
 function cupSpot(seat) { const Y0 = [[0, 9], [0, 0], [9, 0], [9, 9]][seat]; return [Y0[0] + 3, Y0[1] + 3]; }
 const cupBody = col => `<g class="cupb"><ellipse cx="0" cy=".5" rx=".6" ry=".2" fill="rgba(0,0,0,.35)"/><path d="M-.5 .42L-.4 -.42Q0 -.56 .4 -.42L.5 .42Q0 .6 -.5 .42Z" fill="url(#cupG)" stroke="#3b210f" stroke-width=".03"/><path d="M-.47 .2Q0 .36 .47 .2L.46 .1Q0 .26 -.46 .1Z" fill="${col}" opacity=".95"/><path d="M-.43 -.22Q0 -.08 .43 -.22L.42 -.3Q0 -.16 -.42 -.3Z" fill="#d9b25a"/><ellipse cx="0" cy="-.43" rx=".4" ry=".12" fill="#8a5530" stroke="#3b210f" stroke-width=".025"/><path d="M-.3 -.3L-.36 .3" stroke="rgba(255,255,255,.22)" stroke-width=".07" stroke-linecap="round"/></g>`;
+// mouth up (waiting / shaking): narrow at the foot, the open mouth an ellipse at the top with the dark inside
+const cupUp = col => `<g class="cupb"><ellipse cx="0" cy=".5" rx=".55" ry=".18" fill="rgba(0,0,0,.35)"/><path d="M-.4 .44L-.5 -.38Q0 -.24 .5 -.38L.4 .44Q0 .58 -.4 .44Z" fill="url(#cupG)" stroke="#3b210f" stroke-width=".03"/><path d="M-.43 .2Q0 .34 .43 .2L.44 .1Q0 .24 -.44 .1Z" fill="${col}" opacity=".95"/><path d="M-.48 -.22Q0 -.08 .48 -.22L.49 -.3Q0 -.16 -.49 -.3Z" fill="#d9b25a"/><ellipse cx="0" cy="-.38" rx=".5" ry=".15" fill="#241208" stroke="#d9b25a" stroke-width=".035"/><ellipse cx="0" cy="-.34" rx=".38" ry=".08" fill="#120803"/><path d="M-.32 -.18L-.27 .3" stroke="rgba(255,255,255,.2)" stroke-width=".07" stroke-linecap="round"/></g>`;
 const CUP_DEF = '<defs><linearGradient id="cupG" x1="0" x2="1"><stop offset="0" stop-color="#5a3016"/><stop offset=".35" stop-color="#9a5e30"/><stop offset="1" stop-color="#4a250f"/></linearGradient></defs>';
 function diceAt(vals) {   // the thrown dice on the board, in grid units round (0, 0)
   const n = vals.length, sz = n > 2 ? .5 : n > 1 ? .6 : .78, gap = n > 2 ? .52 : .68;
   return vals.map((v, i) => { const x = (i - (n - 1) / 2) * gap - sz / 2, y = -sz / 2 + (n > 2 && i === 1 ? -.18 : 0), a = ((v * 37 + i * 53) % 30) - 15;
     return `<g transform="rotate(${a} ${x + sz / 2} ${y + sz / 2})">` + B.dieSVG(v).replace('<svg ', `<svg x="${x}" y="${y}" width="${sz}" height="${sz}" `) + '</g>'; }).join('');
 }
-function cupDraw(seat, mode, thr) {   // mode: 'ready' (tap me) · 'idle' · 'shake' · 'lift' (dice shown) · 'dice' (just the dice) · null (none)
+function cupDraw(seat, mode, thr) {   // mode: mouth up — 'ready' (tap me) · 'idle' · 'shake' · 'flip' (turning over); mouth down — 'down' · 'lift' (dice shown) · 'dice' (just the dice) · null (none)
   const gC = svg.querySelector('#gCup'); if (!gC) return;
   if (!G || SP || G.state.rule !== 'ludo' || mode == null || seat < 0) { gC.innerHTML = ''; CUP.seat = -1; return; }
   const [x, y] = cupSpot(seat), col = B.COL.ludo[seat][0], moved = CUP.seat >= 0 && CUP.seat !== seat && (mode === 'ready' || mode === 'idle');
   const dice = thr ? diceAt(thr.three6 ? [6, 6, 6] : thr.dice || [thr.v]) : '';
-  gC.innerHTML = CUP_DEF + `<g transform="translate(${x} ${y}) scale(1.25)">${dice ? `<g class="cupd">${dice}</g>` : ''}${mode === 'dice' ? '' : `<g class="cup ${mode}${moved ? ' slide' : ''}">${cupBody(col)}</g>`}</g>`;
+  gC.innerHTML = CUP_DEF + `<g transform="translate(${x} ${y}) scale(1.25)">${dice ? `<g class="cupd">${dice}</g>` : ''}${mode === 'dice' ? '' : `<g class="cup ${mode}${moved ? ' slide' : ''}">${/^(ready|idle|shake|flip)$/.test(mode) ? cupUp(col) : cupBody(col)}</g>`}</g>`;
   if (moved) { const [x0, y0] = cupSpot(CUP.seat), c = gC.querySelector('.cup'); c.style.setProperty('--dx', (x0 - x) + 'px'); c.style.setProperty('--dy', (y0 - y) + 'px'); }
   CUP.seat = seat;
 }
@@ -277,13 +279,19 @@ function doRoll() {
   if (busy || !G || G.state.over || G.thr) return;
   if (VIEW && window.LudoRv) LudoRv.toLatest();
   const my = ++token; busy = true;
-  $('#btnRoll').disabled = true; sRattle(); cupDraw(G.state.turn, 'shake');
+  $('#btnRoll').disabled = true; sRattle();
+  // ludo: the cup — shakes mouth up, turns over onto the board, then lifts away from the dice (2026-11-09 v2)
+  const cup = G.state.rule === 'ludo', k = Math.max(.6, Math.sqrt(SPD())), seat = G.state.turn, gC = svg.querySelector('#gCup');
+  if (gC) gC.style.setProperty('--k', k);
+  if (cup) cupDraw(seat, 'shake');
   let n = 0; const iv = setInterval(() => { showThrow(E.rollThrow(G.state), true); if (++n >= 5) clearInterval(iv); }, 70);
+  const T1 = cup ? 420 * k : 0, T2 = cup ? 260 * k : 0, T3 = cup ? 170 * k : 340 * Math.max(.6, SPD());
+  if (cup) { setTimeout(() => { if (my === token) cupDraw(seat, 'flip'); }, T1); setTimeout(() => { if (my === token) { cupDraw(seat, 'down'); tone(150, .08, 'sine', .08); } }, T1 + T2); }
   setTimeout(() => {
     clearInterval(iv); if (my !== token || !G) return;
-    G.thr = E.rollThrow(G.state); showThrow(G.thr); cupDraw(G.state.turn, 'lift', G.thr); save(); busy = false;
+    G.thr = E.rollThrow(G.state); showThrow(G.thr); cupDraw(seat, 'lift', G.thr); save(); busy = false;
     afterThrow(my);
-  }, 340 * Math.max(.6, SPD()));
+  }, T1 + T2 + T3);
 }
 function afterThrow(my) {
   const s = G.state, thr = G.thr, seat = s.turn;
