@@ -372,7 +372,7 @@
   let topMat = null;
   function board() {
     const TT = T(), g = new TT.Group();
-    topMat = topMat || new TT.MeshPhysicalMaterial({ map: boardTop(), roughness: .1, metalness: 0, clearcoat: 1, clearcoatRoughness: .02, envMapIntensity: 1.6 });
+    topMat = topMat || new TT.MeshPhysicalMaterial({ map: boardTop(), roughness: .1, metalness: 0, clearcoat: 1, clearcoatRoughness: .28, envMapIntensity: 1.6 });   // (2026-11-08: a softer lacquer — the near-mirror coat (.02) burnt a lamp's point into the board's middle, e.g. in the study)
     topMat.map.anisotropy = 8;
     Object.assign(topMat, { stencilWrite: true, stencilRef: 2, stencilFunc: T().AlwaysStencilFunc, stencilZPass: T().ReplaceStencilOp });   // marks where reflections may show
     const side = new TT.MeshPhysicalMaterial({ map: sideTex(), roughness: .16, clearcoat: 1, clearcoatRoughness: .04 });
