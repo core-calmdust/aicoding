@@ -104,26 +104,34 @@
     let plWas = null;
     function frame() { if (stopped || !kit) return; if (T3.fit) { if (isPL()) T3.fit({ w: kit.U.W + .7, d: kit.U.D + 2.6, y: kit.Y, pitch: 1.5 }); else applyFocus(); } if (isPL() !== plWas) { plWas = isPL(); hud(); } }
 
-    /* ---------- the focus (phones held upright, 2026-11-09 — as Ludo's): the long board seen whole is narrow, so the camera moves in
-       to the board's full width and pans along it to what matters now — the sticks before a throw, the pieces that can move and
+    /* ---------- the focus (phones held upright, 2026-11-09 — as Ludo's): the board lies across the screen, small when seen whole, so
+       the camera moves in and pans along it to what matters now — the sticks before a throw, the pieces that can move and
        where they go after it, the piece on its way while it walks — gliding (no cut); a span too long for the close view zooms out,
        up to the whole board. The button at the right edge switches it off (the whole board), remembered in atlas-senet-zoom. ---------- */
     let zoomPref = true; try { zoomPref = localStorage.getItem('atlas-senet-zoom') !== '0'; } catch (e) {}
-    const tallNow = () => innerHeight > innerWidth * 1.15 && !isPL() && kit && kit.fit0.roll;
-    let focusX = null;   // [x0, x1]: the stretch of the board (world x, along the track) to keep in view
+    const tallNow = () => innerHeight > innerWidth * 1.15 && !isPL() && kit && !kit.fit0.roll;
+    let focusX = null;   // [x0, x1]: the stretch of the board (world x, along the rows) to keep in view
     function applyFocus() {
       if (!T3.fit || stopped || !kit) return;
       if (zoomBtn) { zoomBtn.hidden = !tallNow() || over; zoomBtn.classList.toggle('off', !zoomPref); }
       const F = kit.fit0;
-      if (!(zoomPref && tallNow() && focusX)) { T3.fit(Object.assign({}, F, { ease: true })); return; }
-      const W = kit.U.W, w = kit.U.D + 1.9, d = Math.max(5.4, focusX[1] - focusX[0] + 2.4);
-      if (d >= F.d - .6) { T3.fit(Object.assign({}, F, { ease: true })); return; }
-      const el = ctx.el, asp = (el.clientHeight || innerHeight) / (el.clientWidth || innerWidth), vis = Math.max(d, w * asp * .78);   // (.78: the part of the height left between Quit and the HUD)
-      const lim = Math.max(0, W / 2 + .6 - vis / 2), cx = Math.max(-lim, Math.min(lim, (focusX[0] + focusX[1]) / 2));
-      T3.fit({ w, d, y: F.y, pitch: F.pitch, roll: F.roll, up: F.up, cx, cz: 0, ease: true });
+      if (!(zoomPref && tallNow() && focusX)) { curSpan = 0; T3.fit(Object.assign({}, F, { ease: true })); return; }
+      const W = kit.U.W, span = Math.max(5.4, focusX[1] - focusX[0] + 2.2);
+      if (span >= F.w - .4) { curSpan = 0; T3.fit(Object.assign({}, F, { ease: true })); return; }
+      const lim = Math.max(0, W / 2 + .25 - span / 2), cx = Math.max(-lim, Math.min(lim, manX != null ? manX : (focusX[0] + focusX[1]) / 2));
+      curSpan = span; curLim = lim; curCx = cx;
+      T3.fit({ w: span, d: F.d, y: F.y, pitch: F.pitch, up: F.up, cx, cz: 0, ease: true });
     }
     const sqX = sq => sq >= 31 ? kit.U.W / 2 - .3 : kit.U.pt(sq)[0];
-    function focus(xs) { focusX = xs && xs.length ? [Math.min(...xs), Math.max(...xs)] : null; applyFocus(); }
+    function focus(xs) { const f = xs && xs.length ? [Math.min(...xs), Math.max(...xs)] : null; if (JSON.stringify(f) !== JSON.stringify(focusX)) manX = null; focusX = f; applyFocus(); }
+    // a sideways swipe slides the board (until the focus moves on); the tap that ends a swipe is not a move
+    let manX = null, curSpan = 0, curLim = 0, curCx = 0, sw = null, swiped = 0;
+    const swDown = e => { if (!e.isPrimary || !(zoomPref && tallNow() && focusX && curSpan)) return; sw = { x: e.clientX, y: e.clientY, cx: curCx, on: false }; };
+    const swMove = e => { if (!sw) return; const dx = e.clientX - sw.x, dy = e.clientY - sw.y;
+      if (!sw.on && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.2) sw.on = true; if (!sw.on) return;
+      const k = curSpan / (ctx.el.clientWidth || innerWidth); manX = Math.max(-curLim, Math.min(curLim, sw.cx - dx * k)); applyFocus(); };
+    const swUp = () => { if (sw && sw.on) swiped = performance.now(); sw = null; };
+    ctx.el.addEventListener('pointerdown', swDown); addEventListener('pointermove', swMove); addEventListener('pointerup', swUp); addEventListener('pointercancel', swUp);
     const focusSticks = () => focus([-kit.U.W / 2 + .7, -kit.U.W / 2 + 2.6]);   // the sticks lie beside the start end
     const focusMoves = ms => focus(ms.reduce((a, m) => a.concat([sqX(m.from), sqX(m.finish ? 31 : m.to)], m.water && m.dest ? [sqX(m.dest)] : []), []));
     let zoomBtn = null;
@@ -264,7 +272,7 @@
 
     /* ---------- taps ---------- */
     function onClick(e) {
-      if (stopped || T3.wasDrag() || busy || !kit) return;
+      if (stopped || T3.wasDrag() || performance.now() - swiped < 350 || busy || !kit) return;
       if (phase === 'roll' && mine()) { doRoll(); return; }
       if (phase === 'pass' && mine()) { commit(null); return; }
       if (phase !== 'move' || !mine()) return;
@@ -328,7 +336,7 @@
       timeout(side) { finish(side, 'time'); },
       stop() {
         stopped = true; if (kit) kit.stop(); timers.forEach(clearTimeout); removeEventListener('atlasland', onPL); removeEventListener('resize', onPL);
-        ctx.el.removeEventListener('click', onClick); document.removeEventListener('click', onHud, true); document.removeEventListener('keydown', onKey);
+        ctx.el.removeEventListener('click', onClick); ctx.el.removeEventListener('pointerdown', swDown); removeEventListener('pointermove', swMove); removeEventListener('pointerup', swUp); removeEventListener('pointercancel', swUp); document.removeEventListener('click', onHud, true); document.removeEventListener('keydown', onKey);
         if (worker) worker.terminate(); worker = null; jobs.clear(); css.remove(); if (toastEl) toastEl.remove(); if (zoomBtn) zoomBtn.remove();
       },
       _debug: { st: () => st && { pos: st.pos.map(a => a.slice()), turn: st.turn, winner: st.winner }, phase: () => phase, roll: () => roll, busy: () => busy, legal: () => E && st ? legal() : [], sel: () => sel, kit: () => kit,
