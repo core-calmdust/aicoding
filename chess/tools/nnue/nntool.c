@@ -1,5 +1,5 @@
 /* nntool: native helpers for retraining the chess NNUE (chess/engine.c, the site's engine, built natively).
-   build: tools/nnue/build.sh  (cc -O3 -o nnwork/nntool tools/nnue/nntool.c)
+   build: tools/nnue/build.sh  (cc -O3 [-DNN_H=512] -o nntool tools/nnue/nntool.c; the hidden size must match the net)
 
    Record format (32 bytes with alignment, the same as tools/convert.c and tools/train.c):
      u64 occ; u8 pcs[16] (4 bits per piece, in the order of the occ bits, piece = colour*6 + type);
@@ -16,7 +16,7 @@
    nntool evalpos <net.bin|-> <data.bin> <n>
        prints the engine's static evaluation (side to move, cp) of the first n records, one per line
        (the trainer's --check prints the same numbers from Python: they must be identical).
-   nntool match <uci binary> <netA> <netB> <nodes|Nms> <games> <seed>
+   nntool match <uci binary[,binary for B]> <netA> <netB> <nodes|Nms> <games> <seed>
        netA vs netB, both as the native UCI engine (tools/uci.c) in child processes; pairs of games from the same random
        opening with colours swapped. Prints "+W -L =D" for netA and the score. "-" for a net = hand-made evaluation. */
 #include <stdio.h>
@@ -170,7 +170,9 @@ static int cmd_match(int argc, char **argv) {
   const char *lim = argv[5]; int games = atoi(argv[6]); xs ^= (u64)atoll(argv[7]) * 0x9E3779B97F4A7C15ULL; xr();
   char go[64]; size_t L = strlen(lim);
   if (L > 2 && !strcmp(lim + L - 2, "ms")) snprintf(go, sizeof go, "go movetime %d", atoi(lim)); else snprintf(go, sizeof go, "go nodes %d", atoi(lim));
-  Eng e[2]; eng_start(&e[0], argv[2], argv[3]); eng_start(&e[1], argv[2], argv[4]);
+  /* "binA,binB": a different build for each net (e.g. a net with another hidden size, tools/nnue/build.sh NN_H) */
+  static char bins[2][1024]; strncpy(bins[0], argv[2], 1023); char *cm = strchr(bins[0], ','); strcpy(bins[1], cm ? cm + 1 : bins[0]); if (cm) *cm = 0;
+  Eng e[2]; eng_start(&e[0], bins[0], argv[3]); eng_start(&e[1], bins[1], argv[4]);
   int w = 0, l = 0, d = 0, op[16], nop = 0;
   static char pos[1 << 15];
   for (int g = 0; g < games; g++) {

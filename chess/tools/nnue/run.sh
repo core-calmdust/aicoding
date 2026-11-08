@@ -17,6 +17,7 @@
 #   TEACHER   UCI engine that re-scores the self-play positions (default: stockfish if installed; "none" = keep the
 #             site engine's own scores). GPL engines are fine here: they only run on this Mac, nothing of them is shipped.
 #   TDEPTH    teacher depth (default 10)
+#   HIDDEN    hidden size (default 384 = the site; 512 / 768 = a bigger net, its own net-hN.bin, same data)
 #   EPOCHS (8)  LR (0.001)  LAM (0.9)  INIT (empty = from scratch; "base" = continue from the current site net)
 #   MNODES    match nodes per move (default 20000)  MGAMES (games per process, default 40)  MTIME (default 100ms; "" = skip)
 set -e
@@ -87,23 +88,27 @@ FILES="$SPFILES"
 [ -n "$EXTRA_DATA" ] && FILES="$EXTRA_DATA $FILES"
 LAST=$(echo $FILES | awk '{print $NF}')
 
-# 4. training
-if [ ! -f "$WORK/train.done" ]; then
-  log "== training ($EPOCHS epochs)"
-  INITOPT=""; [ "$INIT" = base ] && INITOPT="--init $WORK/base.bin"
-  python3 "$HERE/train.py" --out "$WORK/net.bin" --epochs $EPOCHS --lr $LR --lam $LAM $INITOPT $TRAIN_OPTS $FILES
-  touch "$WORK/train.done"
-  tail -1 "$WORK/net.bin.log" | sed 's/^/train: /' | tee -a "$WORK/log.txt"
+# 4. training (HIDDEN = the hidden size; 384 = the shipped engine. Another size gets its own net-hN.bin, the data is shared)
+HIDDEN=${HIDDEN:-384}; export HIDDEN
+if [ "$HIDDEN" = 384 ]; then NET=$WORK/net.bin; DONE=$WORK/train.done; NT=$WORK/nntool; UCIS=""; CAND=$WORK/nnue-candidate.bin.gz
+else NET=$WORK/net-h$HIDDEN.bin; DONE=$WORK/train-h$HIDDEN.done; NT=$WORK/nntool-$HIDDEN; UCIS="$WORK/chess-uci-$HIDDEN,$WORK/chess-uci"; CAND=$WORK/nnue-candidate-h$HIDDEN.bin.gz
+  bash "$HERE/build.sh"; fi
+if [ ! -f "$DONE" ]; then
+  log "== training (H $HIDDEN, $EPOCHS epochs)"
+  INITOPT=""; [ "$INIT" = base ] && { if [ "$HIDDEN" = 384 ]; then INITOPT="--init $WORK/base.bin"; else log "(INIT=base needs HIDDEN=384: training from scratch)"; fi; }
+  python3 "$HERE/train.py" --out "$NET" --hidden $HIDDEN --epochs $EPOCHS --lr $LR --lam $LAM $INITOPT $TRAIN_OPTS $FILES
+  touch "$DONE"
+  tail -1 "$NET.log" | sed 's/^/train: /' | tee -a "$WORK/log.txt"
 fi
 
 # 5. the engine reads the net exactly as the trainer computes it
-"$WORK/nntool" evalpos "$WORK/net.bin" "$LAST" 2000 > "$WORK/check-c.txt"
-python3 "$HERE/train.py" --check "$WORK/net.bin" "$LAST" 2000 > "$WORK/check-py.txt"
-if cmp -s "$WORK/check-c.txt" "$WORK/check-py.txt"; then log "check: engine = trainer on 2000 positions (identical)"; else log "check: MISMATCH (send check-*.txt)"; exit 1; fi
+"$NT" evalpos "$NET" "$LAST" 2000 > "$WORK/check-c.txt"
+python3 "$HERE/train.py" --check "$NET" "$LAST" 2000 > "$WORK/check-py.txt"
+if cmp -s "$WORK/check-c.txt" "$WORK/check-py.txt"; then log "check: engine = trainer on 2000 positions (identical, H $HIDDEN)"; else log "check: MISMATCH (send check-*.txt)"; exit 1; fi
 
-# 6. matches vs the current site net
-log "== matches vs the current net"
-bash "$HERE/match.sh" "$WORK/net.bin" "$WORK/base.bin" $MNODES $MGAMES $P | tee -a "$WORK/log.txt"
-[ -n "$MTIME" ] && bash "$HERE/match.sh" "$WORK/net.bin" "$WORK/base.bin" $MTIME $((MGAMES / 2)) $P | tee -a "$WORK/log.txt"
-gzip -9 -c "$WORK/net.bin" > "$WORK/nnue-candidate.bin.gz"
-log "done: $WORK/nnue-candidate.bin.gz (and log.txt, net.bin.log)"
+# 6. matches vs the current site net (a bigger net is slower: the 100ms line, same time, is the one that counts)
+log "== matches vs the current net (H $HIDDEN vs 384)"
+UCI=$UCIS bash "$HERE/match.sh" "$NET" "$WORK/base.bin" $MNODES $MGAMES $P | tee -a "$WORK/log.txt"
+[ -n "$MTIME" ] && UCI=$UCIS bash "$HERE/match.sh" "$NET" "$WORK/base.bin" $MTIME $((MGAMES / 2)) $P | tee -a "$WORK/log.txt"
+gzip -9 -c "$NET" > "$CAND"
+log "done: $CAND (and log.txt, ${NET##*/}.log)"
