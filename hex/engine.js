@@ -193,7 +193,7 @@ function think(start, moves, level, rand) {
   if (bk === -2 && m === SWAP) {   // the book said "no swap": take the best cell instead
     WX.analyze(300, 0, 2); const io = wIO(); for (let i = 0; i < io[0]; i++) if (io[2 + 3 * i] !== SWAP) { m = io[2 + 3 * i]; break; }
   }
-  return { move: m, v: r[1], po: r[2] };
+  return { move: m, v: r[1], po: r[2], nodes: r[2] };   // (nodes: the playouts, every thread's in the threads' build — the page's playouts/s)
 }
 function analyze(start, moves, ms, onProgress, maxList, pvN) {
   const { pos } = replay(start, moves);
@@ -202,7 +202,7 @@ function analyze(start, moves, ms, onProgress, maxList, pvN) {
   const read = () => { const io = wIO(), L = []; for (let i = 0; i < io[0]; i++) L.push({ m: io[2 + 3 * i], v: io[3 + 3 * i], n: io[4 + 3 * i], kind: kindOf(io[3 + 3 * i]) }); return L; };
   progressCb = null;
   WX.analyze(ms, 0, maxList || 24);
-  const out = { list: read(), playouts: wIO()[1] };
+  const out = { list: read(), playouts: wIO()[1], nodes: wIO()[1] };
   if (pvN && WX.pv) for (const e of out.list.slice(0, pvN)) { WX.pv(e.m, 10); const io = wIO(); e.pv = []; for (let k = 0; k < io[0]; k++) e.pv.push(io[1 + k]); }
   return out;
 }
@@ -223,8 +223,19 @@ if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.HexEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
   const V = 'v=3';
+  // ?…&mt=1: the lead thread of the page's multi-thread pool (shared/mtengine.js): engine_mt.wasm on the shared memory sent with
+  // the first message ('mtinit'); the helpers (mt-helper.js) grow the same search tree meanwhile. The rest is the usual API.
+  const MTL = /[?&]mt=1\b/.test(self.location.search || '');
   let readyP = null;
-  if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
+  if (MTL) {
+    readyP = new Promise(res => self.addEventListener('message', function f(e) { if (e.data && e.data.type === 'mtinit') { self.removeEventListener('message', f); res(e.data); } }))
+      .then(m => {
+        const x = new WebAssembly.Instance(m.module, { env: { memory: m.mem, now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } }).exports;
+        x.mt_stack(m.top); x.mt_thread(m.tls, 0);
+        WX = Object.assign({}, x, { memory: m.mem });   // (the memory is imported: WX.memory as in the normal build)
+        self.postMessage({ type: 'mtready' });
+      }).catch(err => { WX = null; self.postMessage({ type: 'mtready', error: String(err && err.message || err) }); });
+  } else if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
     const imp = { env: { now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } };
     const url = new URL('engine.wasm?' + V, self.location.href);
     readyP = (WebAssembly.instantiateStreaming ? WebAssembly.instantiateStreaming(fetch(url), imp) : fetch(url).then(r => r.arrayBuffer()).then(b => WebAssembly.instantiate(b, imp)))
@@ -235,6 +246,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
   let queue = Promise.resolve();
   self.onmessage = e => {
     const m = e.data;
+    if (m && m.type === 'mtinit') return;
     queue = queue.then(() => Promise.all([readyP, firstP])).catch(() => {}).then(() => {
       try {
         if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...(() => { PRO_CFG = m.cfg || null; try { return think(m.start, m.moves, m.level); } finally { PRO_CFG = null; } })() });
