@@ -1524,7 +1524,7 @@
       back: c => wall(c, XL, XR, [-34, -12, 12, 34], 3), left: c => wall(c, -ZF, -ZB, [10, 32, 54], 5), right: c => wall(c, ZB, ZF, [-50, -28, -6], 7) });
     skyDome(o, T, 400, '#c8b8a0');
     // the fountain (straight behind the table, tall enough that its bowls and water rise over the board in the seat's view): an octagonal tiled basin, a carved marble bowl on a pedestal, a thin jet
-    { const Gf = grp(TT, g, 0, FL, -36), side = zellige(o, 'tbl8-basin', ['#ece4d4', '#2f6a6a', '#c8a060', '#2f6a6a'], 8), marble = M({ color: 0xeee8dc, roughness: .3, clearcoat: .4 }); Gf.scale.setScalar(1.2);
+    { const Gf = grp(TT, g, 0, FL, -42), side = zellige(o, 'tbl8-basin', ['#ece4d4', '#2f6a6a', '#c8a060', '#2f6a6a'], 8), marble = M({ color: 0xeee8dc, roughness: .3, clearcoat: .4 }); Gf.scale.set(1.25, .62, 1.25);   // (a low, wide fountain: its bowls and the water fit in the seat's view over the board)
       at(Gf, new TT.Mesh(new TT.CylinderGeometry(9, 9.4, 3.4, 8), [M({ map: side, roughness: .25, clearcoat: .7 }), marble, marble]), 0, 1.7, 0, Math.PI / 8);
       const w = new TT.Mesh(new TT.CylinderGeometry(8.2, 8.2, .1, 8), M({ color: night ? 0x0c1a2a : 0x2a6a7a, roughness: .05, clearcoat: 1, transparent: true, opacity: .85 })); at(Gf, w, 0, 3.1, 0, Math.PI / 8, false);
       at(Gf, lathe(TT, [[0, 0], [1.6, 0], [1.1, .8], [.9, 9], [1.4, 10], [4.2, 11.4], [4.6, 12.4], [4.3, 12.5], [1.2, 12.1], [0, 12.1]], SEG(o, 24), marble), 0, 3, 0);   // (tall: the bowl and its jet show over the table)
@@ -1532,30 +1532,47 @@
       at(Gf, new TT.Mesh(new TT.CylinderGeometry(.1, .18, 3, 8), M({ color: 0xffffff, transparent: true, opacity: .45, roughness: .05 })), 0, 19.6, 0, 0, false);
       for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2, rr = new TT.Mesh(new TT.CylinderGeometry(.06, .06, 2.4, 4), new TT.MeshBasicMaterial({ color: 0xf0f8ff, transparent: true, opacity: .4 })); rr.rotation.set(Math.sin(a) * .5, 0, -Math.cos(a) * .5); at(Gf, rr, Math.cos(a) * 2.4, 17.2, Math.sin(a) * 2.4, 0, false); }
       [0, 1, 2, 3].forEach(i => { const p = new TT.Mesh(new TT.CircleGeometry(.9, 10), M({ color: 0xd84a5a, roughness: .7 })); p.rotation.x = -Math.PI / 2; at(Gf, p, Math.cos(i * 1.7) * 5.6, 3.16, Math.sin(i * 1.7) * 5.6, 0, false); });   // rose petals on the water
-      // the running water (2026-11-09): a jet from the top bowl, eight arcs falling to the big bowl, its overflow sheet, droplets, rings on the basin
-      { const Gw = grp(TT, Gf, 0, 0, 0), wcol = night ? 0x9ab8e0 : 0x8ccbe8;   // (a clear blue: plain white water vanished against the plaster)
-        const stream = canvasTex('tbl8-stream', 32, 128, (c, W, H) => { c.clearRect(0, 0, W, H); for (let y = 0; y < H; y += 4) { c.fillStyle = `rgba(255,255,255,${.25 + Math.random() * .55})`; c.fillRect(Math.random() * W * .3, y, W * (.4 + Math.random() * .6), 2 + Math.random() * 3); } });
-        stream.wrapS = stream.wrapT = TT.RepeatWrapping;
-        const wm = new TT.MeshBasicMaterial({ map: stream, color: wcol, transparent: true, opacity: .9, depthWrite: false, side: TT.DoubleSide });
-        const jet = new TT.Mesh(new TT.CylinderGeometry(.16, .34, 6, 8, 1, true), wm); at(Gw, jet, 0, 21.3, 0, 0, false);
-        const arcs = [], N = o.COARSE ? 6 : 8;
-        for (let i = 0; i < N; i++) { const a = i / N * Math.PI * 2, c0 = Math.cos(a), s0 = Math.sin(a), pts = [];
-          for (let k = 0; k <= 10; k++) { const t = k / 10; pts.push(new TT.Vector3(c0 * (1.8 + t * 2.6), 18.3 - t * t * 3.2 + t * .6, s0 * (1.8 + t * 2.6))); }   // from the top bowl's lip to the big bowl
-          const m = new TT.Mesh(new TT.TubeGeometry(new TT.CatmullRomCurve3(pts), 12, .13, 5), wm); arcs.push(m); at(Gw, m, 0, 0, 0, 0, false); }
-        for (let i = 0, n = o.COARSE ? 14 : 24; i < n; i++) { const a = (i + .5) / n * Math.PI * 2, c0 = Math.cos(a), s0 = Math.sin(a), pts = [];   // the big bowl's overflow: thin strands falling from its lip
-          for (let k = 0; k <= 8; k++) { const t = k / 8; pts.push(new TT.Vector3(c0 * (4.6 + t * t * .9), 15.3 - t * 12.1, s0 * (4.6 + t * t * .9))); }
-          at(Gw, new TT.Mesh(new TT.TubeGeometry(new TT.CatmullRomCurve3(pts), 10, .06 + (i % 3) * .02, 4), wm), 0, 0, 0, 0, false); }
-        const D = o.COARSE ? 40 : 90, dg = new TT.BufferGeometry(), dp = new Float32Array(D * 3), seeds = Array.from({ length: D }, (_, i) => [Math.random() * Math.PI * 2, Math.random(), .7 + Math.random() * .6]);
-        dg.setAttribute('position', new TT.BufferAttribute(dp, 3));
-        const drops = new TT.Points(dg, new TT.PointsMaterial({ color: 0xe8f6ff, size: .32, transparent: true, opacity: .9, depthWrite: false })); drops.frustumCulled = false; Gw.add(drops);
-        const rings = [0, 1, 2].map(i => { const r = new TT.Mesh(new TT.RingGeometry(.9, 1.05, 32), new TT.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .3, depthWrite: false })); r.rotation.x = -Math.PI / 2; at(Gw, r, Math.cos(i * 2.1) * 5.6, 3.17, Math.sin(i * 2.1) * 5.6, 0, false); return r; });
-        o.tick && o.tick(t => {
-          stream.offset.y = -(t * 1.6) % 1;
-          jet.scale.y = 1 + Math.sin(t * 9) * .05;
-          for (let i = 0; i < D; i++) { const [a, ph, sp] = seeds[i], u = (t * sp * .8 + ph) % 1, R2 = 4.6 + u * 1; dp[i * 3] = Math.cos(a) * R2; dp[i * 3 + 1] = 15.3 - u * u * 12.1; dp[i * 3 + 2] = Math.sin(a) * R2; }   // the overflow's drops falling into the basin
-          dg.attributes.position.needsUpdate = true;
-          rings.forEach((r, i) => { const u = (t * .45 + i / 3) % 1; r.scale.setScalar(.4 + u * 2.6); r.material.opacity = .34 * (1 - u); });
-        }, Gw); }
+      // the running water (2026-11-09, made real the same night): translucent water thrown up from the top bowl and falling as droplets —
+      // a jet that rises and breaks into a crown, drops falling into the bowls, the big bowl's overflow curtain, splashes on the basin.
+      // Particles on true ballistic paths (g scaled to the model: 1 unit ≈ 4.5 cm), soft round sprites, a faint water column and surfaces
+      { const Gw = grp(TT, Gf, 0, 0, 0), G = 120, wtint = night ? 0xc4d4f0 : 0xffffff, CO = o.COARSE ? .5 : 1;
+        const spr = canvasTex('tbl8-drop', 64, 64, (c, W) => { c.fillStyle = rad(c, W / 2, W / 2, W / 2, [[0, 'rgba(255,255,255,1)'], [.3, 'rgba(236,248,255,.9)'], [.6, 'rgba(150,190,215,.45)'], [.85, 'rgba(90,120,140,.14)'], [1, 'rgba(90,120,140,0)']]); c.fillRect(0, 0, W, W); });   // a bright core and a faint cool rim: reads on pale plaster and on dark water
+        const pts = (n, size, op) => { const geo = new TT.BufferGeometry(), p = new Float32Array(n * 3); geo.setAttribute('position', new TT.BufferAttribute(p, 3));
+          const m = new TT.Points(geo, new TT.PointsMaterial({ map: spr, color: wtint, size, transparent: true, opacity: op, depthWrite: false, sizeAttenuation: true })); m.frustumCulled = false; Gw.add(m); return { geo, p, n }; };
+        const rnd = Math.random;
+        const streaks = (n, op) => { const geo = new TT.BufferGeometry(), p = new Float32Array(n * 6); geo.setAttribute('position', new TT.BufferAttribute(p, 3));   // each drop's motion over ~1/25 s: what the eye sees of falling water
+          const m = new TT.LineSegments(geo, new TT.LineBasicMaterial({ color: wtint, transparent: true, opacity: op, depthWrite: false })); m.frustumCulled = false; Gw.add(m); return { geo, p, n }; };
+        // the jet: rises ~4.5 units, a crown spreading 0..5 units/s sideways; lands in the top bowl (y 18.3) or the big bowl (y 15.4)
+        const NJ = Math.round(460 * CO), J = pts(NJ, .62, .62), jp = Array.from({ length: NJ }, () => { const core = rnd() < .55, vy = 31 * (.86 + rnd() * .16), sp = core ? rnd() * 1.2 : 1.6 + rnd() * 3.6, th = rnd() * Math.PI * 2;
+          const y0 = 18.9, land = sp * (2 * vy / G) < 1.5 ? 18.3 : 15.4, T = (vy + Math.sqrt(vy * vy + 2 * G * (y0 - land))) / G; return [vy, sp * Math.cos(th), sp * Math.sin(th), y0, T, rnd()]; });
+        // the big bowl's overflow: a curtain of drops from its lip to the basin, drifting a little outward
+        const NO = Math.round(560 * CO), Ov = pts(NO, .5, .55), op2 = Array.from({ length: NO }, () => { const a = rnd() * Math.PI * 2, vr = 1 + rnd() * 2.4; return [Math.cos(a), Math.sin(a), vr, Math.sqrt(2 * 12.1 / G) * (.95 + rnd() * .1), rnd()]; });
+        // splashes where the curtain meets the basin, and a fine mist above it
+        const NS = Math.round(160 * CO), Sp = pts(NS, .42, .6), sp2 = Array.from({ length: NS }, () => { const a = rnd() * Math.PI * 2, r = 5.2 + rnd() * .9, vy = 3 + rnd() * 5, vr = (rnd() - .5) * 3; return [Math.cos(a), Math.sin(a), r, vy, vr, 2 * vy / 40, rnd()]; });
+        const NM = Math.round(70 * CO), Mi = pts(NM, 1.8, .16), mi2 = Array.from({ length: NM }, () => { const a = rnd() * Math.PI * 2; return [Math.cos(a), Math.sin(a), 4.6 + rnd() * 1.8, rnd() * 3, 1.5 + rnd() * 2, rnd()]; });
+        const JS = streaks(NJ, .32), OS = streaks(NO, .3), DT = .045;
+        // a faint glassy column inside the jet, water lying in both bowls
+        const glass = M({ color: 0xdff0ff, roughness: .02, clearcoat: 1, clearcoatRoughness: .02, transparent: true, opacity: .22, depthWrite: false, envMapIntensity: 1.4 });
+        const col = new TT.Mesh(new TT.CylinderGeometry(.12, .3, 4.2, 10, 1, true), glass); at(Gw, col, 0, 21, 0, 0, false);
+        const pool = (r, y) => { const m = new TT.Mesh(new TT.CircleGeometry(r, 32), M({ color: night ? 0x1a2a44 : 0x6aa8c0, roughness: .04, clearcoat: 1, transparent: true, opacity: .55, depthWrite: false })); m.rotation.x = -Math.PI / 2; at(Gw, m, 0, y, 0, 0, false); return m; };
+        pool(4.1, 15.25); pool(1.55, 18.15);
+        const ring = (r0, y, n) => [...Array(n)].map((_, i) => { const r = new TT.Mesh(new TT.RingGeometry(r0, r0 + .14, 48), new TT.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .3, depthWrite: false })); r.rotation.x = -Math.PI / 2; at(Gw, r, 0, y, 0, 0, false); r.userData.r0 = r0; return r; });
+        const rings = [...ring(5, 3.18, 3), ...ring(1.25, 15.3, 2)];   // the curtain's rings on the basin, the crown's rings in the big bowl
+        const flow = t => {
+          for (let i = 0; i < NJ; i++) { const [vy, vx, vz, y0, T, ph] = jp[i], a = ((t + ph * T) % T), b = Math.max(0, a - DT), k = i * 6;
+            J.p[i * 3] = vx * a; J.p[i * 3 + 1] = y0 + vy * a - G * a * a / 2; J.p[i * 3 + 2] = vz * a;
+            JS.p[k] = vx * a; JS.p[k + 1] = J.p[i * 3 + 1]; JS.p[k + 2] = vz * a; JS.p[k + 3] = vx * b; JS.p[k + 4] = y0 + vy * b - G * b * b / 2; JS.p[k + 5] = vz * b; }
+          for (let i = 0; i < NO; i++) { const [cx, cz, vr, T, ph] = op2[i], a = ((t + ph * T) % T), r = 4.62 + vr * a, b = Math.max(0, a - DT * 1.6), rb = 4.62 + vr * b, k = i * 6;
+            Ov.p[i * 3] = cx * r; Ov.p[i * 3 + 1] = 15.3 - G * a * a / 2; Ov.p[i * 3 + 2] = cz * r;
+            OS.p[k] = cx * r; OS.p[k + 1] = Ov.p[i * 3 + 1]; OS.p[k + 2] = cz * r; OS.p[k + 3] = cx * rb; OS.p[k + 4] = 15.3 - G * b * b / 2; OS.p[k + 5] = cz * rb; }
+          for (let i = 0; i < NS; i++) { const [cx, cz, r0, vy, vr, T, ph] = sp2[i], a = ((t + ph * T) % T), r = r0 + vr * a; Sp.p[i * 3] = cx * r; Sp.p[i * 3 + 1] = 3.2 + vy * a - 20 * a * a; Sp.p[i * 3 + 2] = cz * r; }
+          for (let i = 0; i < NM; i++) { const [cx, cz, r, h, sp, ph] = mi2[i], u = (t / sp + ph) % 1; Mi.p[i * 3] = cx * (r + u * .6); Mi.p[i * 3 + 1] = 3.4 + h * u; Mi.p[i * 3 + 2] = cz * (r + u * .6); }
+          [J, Ov, Sp, Mi, JS, OS].forEach(q => { q.geo.attributes.position.needsUpdate = true; });
+          col.scale.set(1 + Math.sin(t * 23) * .08, 1 + Math.sin(t * 11) * .04, 1 + Math.cos(t * 19) * .08);
+          rings.forEach((r, i) => { const u = (t * .5 + i / 3) % 1; r.scale.setScalar(1 + u * (r.userData.r0 > 2 ? .4 : 2.2)); r.material.opacity = .32 * (1 - u); });
+        };
+        flow(1.7);   // (a still picture — the thumbnail, a paused frame — already shows the water in mid-air)
+        o.tick && o.tick(flow, Gw); }
     }
     // orange trees in glazed pots, cushions on a low bench along the back
     const glazed = M({ color: 0x2f6a6a, roughness: .2, clearcoat: .8 }), orange = M({ color: 0xf08a24, roughness: .4, clearcoat: .3 });
@@ -1615,16 +1632,57 @@
       for (let i = 0; i < 12; i++) for (let j = -1; j < 26; j++) { const k = R(), x = i * u, y = j * u / 2; c.fillStyle = `rgb(${46 + k * 22 | 0},${30 + k * 14 | 0},${20 + k * 10 | 0})`; c.beginPath(); if (i % 2) { c.moveTo(x, y); c.lineTo(x + u, y + u / 2); c.lineTo(x + u, y + u); c.lineTo(x, y + u / 2); } else { c.moveTo(x, y + u / 2); c.lineTo(x + u, y); c.lineTo(x + u, y + u / 2); c.lineTo(x, y + u); } c.fill(); c.strokeStyle = 'rgba(0,0,0,.5)'; c.lineWidth = 1.2; c.stroke(); } });
     roomBox(o, { key: 'tbl9-lounge-' + T, xl: XL, xr: XR, zb: ZB, zf: ZF, y0: FL, y1: Y1, px: 2048, pxs: 1024,
       floor: M({ map: rep(TT, herring, 8, 12), roughness: .35, clearcoat: .45, clearcoatRoughness: .25 }),
-      back: (c, ppu) => { const R = rng(17), W0 = XL - 2, W1 = XR + 2, HZ = FL + 4;
-        c.fillStyle = lin(c, Y1, HZ, [[0, S.sky[0]], [1, S.sky[1]]]); c.fillRect(W0, HZ, W1 - W0, Y1 - HZ + 2);
-        if (T === 'evening') { c.fillStyle = rad(c, -30, HZ + 6, 40, [[0, 'rgba(255,220,170,.8)'], [.3, 'rgba(255,170,120,.3)'], [1, 'rgba(255,150,100,0)']]); c.fillRect(W0, HZ, W1 - W0, Y1 - HZ); }
-        if (night) for (let i = 0; i < 90; i++) { c.fillStyle = `rgba(255,255,255,${.2 + R() * .4})`; ell(c, W0 + R() * (W1 - W0), HZ + 20 + R() * 20, .12, .12); }
-        blur(c, .7 * ppu); c.fillStyle = S.far; for (let x = W0; x < W1; x += 1.2 + R() * 2) c.fillRect(x, HZ - 8, 1 + R() * 2.4, 8 + 6 + R() * 12); blur(c, 0);   // the far towers, hazy
-        c.fillStyle = S.haze; c.fillRect(W0, HZ - 2, W1 - W0, 14);
-        const towers = []; for (let x = W0; x < W1;) { const w = 3 + R() * 6, h = 6 + R() * 22; towers.push([x, w, h]); x += w + R() * 1.4; }
-        towers.forEach(([x, w, h]) => { c.fillStyle = S.near; c.fillRect(x, FL - 2, w, h + HZ - FL); if (R() < .2) { c.fillRect(x + w * .45, HZ + h, w * .1, 3); if (lit) { c.fillStyle = '#ff3a2a'; ell(c, x + w * .5, HZ + h + 3, .25, .25); } }
-          for (let y = FL; y < HZ + h - 1; y += 1.1) for (let wx = x + .4; wx < x + w - .4; wx += .9) { const on = R() < S.lit * .55; c.fillStyle = on ? `rgba(255,${200 + R() * 40 | 0},${130 + R() * 70 | 0},${.6 + R() * .4})` : (T === 'day' || T === 'morning') ? `rgba(220,235,250,${.12 + R() * .12})` : 'rgba(0,0,0,0)'; c.fillRect(wx, y, .5, .55); } });
-        if (lit) { blur(c, 1.2 * ppu); c.fillStyle = 'rgba(255,190,120,.16)'; c.fillRect(W0, FL, W1 - W0, HZ - FL + 6); blur(c, 0); }
+      back: (c, ppu) => {   // the city (2026-11-09: real towers): three depths of buildings — glass curtain walls, punched-window concrete, stone — with side faces, setbacks, roof plant, masts; haze between the depths
+        const R = rng(17), W0 = XL - 2, W1 = XR + 2, HZ = FL + 16, dayL = T === 'day' || T === 'morning';
+        c.fillStyle = lin(c, Y1, HZ - 30, [[0, S.sky[0]], [.75, S.sky[1]], [1, S.sky[1]]]); c.fillRect(W0, FL - 2, W1 - W0, Y1 - FL + 4);
+        if (T === 'evening') { c.fillStyle = rad(c, -36, HZ + 2, 60, [[0, 'rgba(255,226,180,.95)'], [.15, 'rgba(255,180,120,.5)'], [1, 'rgba(255,150,100,0)']]); c.fillRect(W0, FL, W1 - W0, Y1 - FL); }
+        if (night) { for (let i = 0; i < 40; i++) { c.fillStyle = `rgba(255,255,255,${.15 + R() * .3})`; ell(c, W0 + R() * (W1 - W0), HZ + 14 + R() * 26, .1, .1); } c.fillStyle = lin(c, HZ + 16, HZ - 4, [[0, 'rgba(120,90,140,0)'], [1, 'rgba(160,110,120,.35)']]); c.fillRect(W0, HZ - 4, W1 - W0, 20); }   // the city's glow on the night sky
+        const PAL = { glass: dayL ? [['#9ab8d4', '#4a6a8a'], ['#a8c4d8', '#5a7890'], ['#7a98b4', '#34506a'], ['#b8c8d0', '#6a7c88']] : T === 'evening' ? [['#d8a088', '#3a3050'], ['#c89080', '#2a2840']] : [['#1a2030', '#0a0e18'], ['#202838', '#0c1018']],
+          con: dayL ? ['#c8c0b0', '#b4aca0', '#d0ccc4', '#a8a49c', '#bcae98'] : T === 'evening' ? ['#9a8080', '#8a7078', '#a08880'] : ['#20222a', '#1a1c24', '#262830'] };
+        const lit = () => `rgba(255,${206 + R() * 30 | 0},${140 + R() * 70 | 0},${.75 + R() * .25})`, cool = () => `rgba(${210 + R() * 30 | 0},${226 + R() * 20 | 0},255,${.7 + R() * .3})`;
+        const mix = (a, b, t) => { const A = parseInt(a.slice(1), 16), B = parseInt(b.slice(1), 16), ch = sh => Math.round(((A >> sh) & 255) * (1 - t) + ((B >> sh) & 255) * t); return `rgb(${ch(16)},${ch(8)},${ch(0)})`; };
+        const skyRef = dayL ? S.sky[1] : T === 'evening' ? '#e8a080' : '#1a2238';
+        const facade = (x, y0, w, h, kind, shade, lightL) => {   // one face of a building: base colour lit across its width, sky in the glass, windows by the hour, grain, contact shadow
+          if (w < .05 || h < .05) return;
+          const k = PAL[kind === 'glass' ? 'glass' : 'con'], [a, b] = kind === 'glass' ? k[R() * k.length | 0] : [k[R() * k.length | 0], null];
+          if (kind === 'glass') {
+            c.fillStyle = lin(c, y0 + h, y0, [[0, mix(a, skyRef, .35)], [.55, a], [1, b]]); c.fillRect(x, y0, w, h);   // the sky reflected, brighter toward the top
+            const fh = .78; for (let y = y0; y < y0 + h; y += fh) { const v = (R() - .5) * .08; c.fillStyle = v > 0 ? `rgba(255,255,255,${v})` : `rgba(0,0,0,${-v})`; c.fillRect(x, y, w, fh); }   // panel tint by floor
+            if (dayL || T === 'evening') { const bx = x + R() * w * .6, bw = w * (.12 + R() * .25); c.fillStyle = lin(c, y0 + h, y0, [[0, 'rgba(255,255,255,.22)'], [1, 'rgba(255,255,255,0)']]); c.fillRect(bx, y0, Math.min(bw, x + w - bx), h); }   // a sheen
+            if (!dayL) for (let y = y0 + fh; y < y0 + h; y += fh) if (R() < (night ? .5 : .28)) { const s0 = x + R() * w * .4, s1 = x + w - R() * w * .4; c.fillStyle = R() < .72 ? lit() : cool(); c.fillRect(s0, y - fh + .14, Math.max(.3, s1 - s0), fh - .34); }
+            c.fillStyle = 'rgba(0,0,0,.22)'; for (let y = y0 + fh; y < y0 + h; y += fh) c.fillRect(x, y - .05, w, .1);
+            c.fillStyle = 'rgba(0,0,0,.12)'; for (let xx = x + .5; xx < x + w; xx += .5) c.fillRect(xx, y0, .04, h);
+          } else {
+            c.fillStyle = a; c.fillRect(x, y0, w, h);
+            const pier = .66, ww = .38, wh = .48, gy = .92;
+            for (let y = y0 + .45; y < y0 + h - .6; y += gy) { c.fillStyle = 'rgba(255,255,255,.08)'; c.fillRect(x, y - .1, w, .08);   // sills
+              for (let xx = x + .26; xx < x + w - ww - .05; xx += pier) { if (dayL) { const r2 = R(); c.fillStyle = mix('#2a3444', skyRef, .15 + r2 * .45); } else c.fillStyle = R() < (night ? .4 : .24) ? lit() : 'rgba(12,14,22,.9)'; c.fillRect(xx, y, ww, wh); } }
+          }
+          for (let n = 0; n < w * h * .5; n++) { c.fillStyle = `rgba(${R() > .5 ? '255,255,255' : '0,0,0'},${.02 + R() * .04})`; c.fillRect(x + R() * w, y0 + R() * h, .2 + R() * .8, .1 + R() * .3); }   // weathering grain
+          c.fillStyle = lin(c, x, x + w, lightL ? [[0, 'rgba(255,255,255,.08)'], [1, 'rgba(0,0,0,.14)']] : [[0, 'rgba(0,0,0,.14)'], [1, 'rgba(255,255,255,.06)']]); c.fillRect(x, y0, w, h);   // lit across the face
+          c.fillStyle = lin(c, y0, y0 + Math.min(4, h * .25), [[0, 'rgba(0,0,0,.35)'], [1, 'rgba(0,0,0,0)']]); c.fillRect(x, y0, w, Math.min(4, h * .25));   // contact shadow at the foot
+          if (shade) { c.fillStyle = `rgba(0,0,0,${shade})`; c.fillRect(x, y0, w, h); } };
+        const building = (x, base, w, h, kind, layer) => {
+          const side = Math.max(0, Math.min(w * .45, Math.abs(x + w / 2) * .03 * (1 + layer))), right = x + w / 2 < 0, lightL = T !== 'evening';   // the side face that shows, by where it stands
+          const tiers = h > 24 && R() < .5 ? 3 : h > 14 && R() < .4 ? 2 : 1; let y = base, ww = w, xx = x;
+          for (let t2 = 0; t2 < tiers; t2++) { const th = t2 === tiers - 1 ? h - (y - base) : h * (t2 ? .18 : .62), sw = side * (1 - t2 * .2);
+            if (sw > .2) { const sx = right ? xx + ww : xx - sw; facade(sx, y, sw, th, kind, dayL ? (right === lightL ? .38 : .18) : .5, lightL); }
+            facade(xx, y, ww, th, kind, 0, lightL); y += th; if (t2 < tiers - 1) { c.fillStyle = dayL ? 'rgba(190,196,204,.9)' : 'rgba(20,22,30,.95)'; c.fillRect(xx, y, ww, .35); } xx += ww * .09; ww *= .82; }
+          const top = base + h, eye = HZ + 6;
+          if (top < eye) { const rh = Math.min(2.4, (eye - top) * .07 * (1 + layer * .3)); c.fillStyle = dayL ? '#8a8e96' : '#14161c'; c.fillRect(xx, top, ww, rh); c.fillStyle = dayL ? 'rgba(255,255,255,.15)' : 'rgba(255,255,255,.03)'; c.fillRect(xx, top + rh - .15, ww, .15);   // the roof seen from above
+            c.fillStyle = dayL ? '#6a6e76' : '#0c0d12'; for (let k = 0; k < 2 + R() * 3; k++) { const bw = .6 + R() * 1.6; c.fillRect(xx + R() * (ww - bw), top + rh * (.2 + R() * .5), bw, .35 + R() * .6); } }
+          else { c.fillStyle = dayL ? 'rgba(70,74,84,.9)' : 'rgba(10,10,14,.95)'; c.fillRect(xx - .1, top, ww + .2, .3); if (R() < .6) for (let k = 0; k < 2 + R() * 3; k++) { const bw = .6 + R() * 1.4; c.fillRect(xx + R() * (ww - bw), top + .3, bw, .4 + R() * .8); } }
+          if (R() < .12 || h > 34) { const mx = xx + ww * (.3 + R() * .4), mh = 2 + R() * (h > 34 ? 7 : 3); c.fillStyle = dayL ? 'rgba(70,74,84,.9)' : 'rgba(10,10,14,.95)'; c.fillRect(mx - .08, top, .16, mh); if (!dayL) { c.fillStyle = '#ff3a2a'; ell(c, mx, top + mh, .22, .22); c.fillStyle = 'rgba(255,60,40,.25)'; ell(c, mx, top + mh, .7, .7); } } };
+        // far (small, hazy), mid, near (big, detailed)
+        const layers = [{ base: HZ - 3, hmin: 2, hmax: 9, wmin: 1.6, wmax: 4, gap: .2, haze: dayL ? .55 : .35 }, { base: HZ - 12, hmin: 8, hmax: 22, wmin: 3, wmax: 7, gap: .6, haze: dayL ? .28 : .18 }, { base: FL - 4, hmin: 4, hmax: 14, wmin: 4, wmax: 9, gap: .3, haze: dayL ? .12 : .06 }, { base: FL - 4, hmin: 14, hmax: 50, wmin: 6, wmax: 13, gap: 1.6, haze: 0 }];
+        blur(c, .35 * ppu);   // the far layer a little soft
+        layers.forEach((L, li) => { for (let x = W0 - 4; x < W1;) { const w = L.wmin + R() * (L.wmax - L.wmin), h = L.hmin + Math.pow(R(), 1.6) * (L.hmax - L.hmin), kind = R() < (li === 3 ? .55 : .45) ? 'glass' : 'con';
+            if (!(li === 3 && R() < .35)) building(x, L.base, w, h + (L.base < HZ && li < 2 ? HZ - L.base : 0), kind, Math.min(li, 2));
+            x += w + L.gap + R() * L.gap * 2; }
+          if (L.haze) { const hc = dayL ? '220,232,244' : T === 'evening' ? '240,170,140' : '40,44,70', hk = T === 'evening' ? L.haze * .7 : L.haze;   // haze over what is behind: thick low, thinning upward (no edge)
+            c.fillStyle = lin(c, HZ + 34, FL - 2, [[0, `rgba(${hc},0)`], [.55, `rgba(${hc},${hk * .8})`], [1, `rgba(${hc},${hk})`]]); c.fillRect(W0, FL - 2, W1 - W0, HZ + 36 - FL); }
+          if (li === 0) blur(c, 0); });   // (the far layer drawn soft, the rest sharp)
+        if (!dayL) { blur(c, 1.4 * ppu); c.fillStyle = 'rgba(255,190,120,.14)'; c.fillRect(W0, FL, W1 - W0, 14); blur(c, 0); }   // the streets' glow from below
         c.fillStyle = '#121214'; for (let x = XL; x <= XR; x += 15) c.fillRect(x - .35, FL, .7, Y1 - FL); c.fillRect(W0, FL, W1 - W0, 1.4); c.fillRect(W0, Y1 - 1.6, W1 - W0, 1.6);   // mullions, sill, head
         c.fillStyle = 'rgba(255,255,255,.05)'; for (let x = XL; x < XR; x += 15) { c.beginPath(); c.moveTo(x + 2, Y1); c.lineTo(x + 6, Y1); c.lineTo(x + 1, FL); c.lineTo(x - 3, FL); c.fill(); }   // reflections on the glass
       },
