@@ -110,20 +110,20 @@
        up to the whole board. The button at the right edge switches it off (the whole board), remembered in atlas-senet-zoom. ---------- */
     let zoomPref = true; try { zoomPref = localStorage.getItem('atlas-senet-zoom') !== '0'; } catch (e) {}
     const tallNow = () => innerHeight > innerWidth * 1.15 && !isPL() && kit && !kit.fit0.roll;
-    let focusX = null;   // [x0, x1]: the stretch of the board (world x, along the rows) to keep in view
+    let focusX = null, focusZ = 0, focusFast = false;   // [x0, x1]: the stretch of the board (world x, along the rows) to keep in view
     function applyFocus() {
       if (!T3.fit || stopped || !kit) return;
       if (zoomBtn) { zoomBtn.hidden = !tallNow() || over; zoomBtn.classList.toggle('off', !zoomPref); }
       const F = kit.fit0;
-      if (!(zoomPref && tallNow() && focusX)) { curSpan = 0; T3.fit(Object.assign({}, F, { ease: true })); return; }
+      if (!(zoomPref && tallNow() && focusX)) { curSpan = 0; T3.fit(Object.assign({}, F, { ease: true }, tallNow() && focusZ ? { cz: focusZ } : {})); return; }
       const W = kit.U.W, span = Math.max(5.4, focusX[1] - focusX[0] + 2.2);
-      if (span >= F.w - .4) { curSpan = 0; T3.fit(Object.assign({}, F, { ease: true })); return; }
+      if (span >= F.w - .4) { curSpan = 0; T3.fit(Object.assign({}, F, { ease: true }, tallNow() && focusZ ? { cz: focusZ } : {})); return; }
       const lim = Math.max(0, W / 2 + .25 - span / 2), cx = Math.max(-lim, Math.min(lim, manX != null ? manX : (focusX[0] + focusX[1]) / 2));
       curSpan = span; curLim = lim; curCx = cx;
-      T3.fit({ w: span, d: F.d, y: F.y, pitch: F.pitch, up: F.up, cx, cz: 0, ease: true });
+      T3.fit({ w: span, d: F.d, y: F.y, pitch: F.pitch, up: F.up, cx, cz: focusZ, ease: true, ek: focusFast ? .2 : undefined });
     }
     const sqX = sq => sq >= 31 ? kit.U.W / 2 - .3 : kit.U.pt(sq)[0];
-    function focus(xs) { const f = xs && xs.length ? [Math.min(...xs), Math.max(...xs)] : null; if (JSON.stringify(f) !== JSON.stringify(focusX)) manX = null; focusX = f; applyFocus(); }
+    function focus(xs, fast) { if (!fast && focusZ && phase !== 'roll' && phase !== 'ai') focusZ = 0; focusFast = !!fast; const f = xs && xs.length ? [Math.min(...xs), Math.max(...xs)] : null; if (JSON.stringify(f) !== JSON.stringify(focusX)) manX = null; focusX = f; applyFocus(); }
     // a sideways swipe slides the board (until the focus moves on); the tap that ends a swipe is not a move
     let manX = null, curSpan = 0, curLim = 0, curCx = 0, sw = null, swiped = 0;
     const swDown = e => { if (!e.isPrimary || !(zoomPref && tallNow() && focusX && curSpan)) return; sw = { x: e.clientX, y: e.clientY, cx: curCx, on: false }; };
@@ -132,8 +132,8 @@
       const k = curSpan / (ctx.el.clientWidth || innerWidth); manX = Math.max(-curLim, Math.min(curLim, sw.cx - dx * k)); applyFocus(); };
     const swUp = () => { if (sw && sw.on) swiped = performance.now(); sw = null; };
     ctx.el.addEventListener('pointerdown', swDown); addEventListener('pointermove', swMove); addEventListener('pointerup', swUp); addEventListener('pointercancel', swUp);
-    const focusSticks = () => focus([-kit.U.W / 2 + .7, -kit.U.W / 2 + 2.6]);   // the sticks lie beside the start end
-    const focusMoves = ms => focus(ms.reduce((a, m) => a.concat([sqX(m.from), sqX(m.finish ? 31 : m.to)], m.water && m.dest ? [sqX(m.dest)] : []), []));
+    const focusSticks = side => { focusZ = side === 1 ? -1.05 : 0; focus([-kit.U.W / 2 + .7, -kit.U.W / 2 + 2.6]); };   // the sticks lie beside the start end; the opponent's on the far side: the view leans that way (clear of the bar at the top)
+    const focusMoves = (ms, fast) => focus(ms.reduce((a, m) => a.concat([sqX(m.from), sqX(m.finish ? 31 : m.to)], m.water && m.dest ? [sqX(m.dest)] : []), []), fast);
     let zoomBtn = null;
     {
       const ZL = { ja: ['手番に寄る', '盤全体を見る'], en: ['Zoom to the player', 'Whole board'], zh: ['聚焦当前玩家', '查看整个棋盘'], 'zh-TW': ['聚焦目前玩家', '查看整個棋盤'], ko: ['차례인 사람에게 확대', '판 전체 보기'], es: ['Acercar al turno', 'Tablero entero'], fr: ['Zoom sur le joueur', 'Plateau entier'], pt: ['Aproximar da vez', 'Tabuleiro inteiro'], de: ['Zum Spieler zoomen', 'Ganzes Brett'], ru: ['Приблизить к ходящему', 'Вся доска'], tr: ['Sıradakine yakınlaş', 'Tüm tahta'], id: ['Perbesar ke giliran', 'Seluruh papan'], hi: ['बारी वाले पर ज़ूम', 'पूरा बोर्ड'], ar: ['تقريب إلى صاحب الدور', 'اللوحة كاملة'] };
@@ -189,7 +189,7 @@
       if (sel >= 0) { const k = kOf(st.turn, sel); if (k >= 0) kit.lift(st.turn, k, false); }
       sel = from;
       if (sel >= 0) { const k = kOf(st.turn, sel); if (k >= 0) kit.lift(st.turn, k, true); }
-      showMarks(); say(sel >= 0 ? X.dest : X.pick); { const ms = legal(); focusMoves(sel >= 0 ? ms.filter(m => m.from === sel) : ms); }
+      showMarks(); say(sel >= 0 ? X.dest : X.pick); { const ms = legal(); focusMoves(sel >= 0 ? ms.filter(m => m.from === sel) : ms, sel >= 0); }
     }
 
     /* ---------- the flow ---------- */
@@ -236,8 +236,8 @@
       if (over || stopped) return;
       onTurn(st.turn);
       kit.restSticks(st.turn, null);
-      if (!pvp && st.turn === 1) { phase = 'ai'; say(L.think); showMarks(); focusSticks(); later(doAIRoll, 520); return; }
-      phase = 'roll'; showMarks(); say(pvp ? X.turnP.replace('{p}', X.n[st.turn]) : ''); focusSticks();
+      if (!pvp && st.turn === 1) { phase = 'ai'; say(L.think); showMarks(); focusSticks(1); later(doAIRoll, 520); return; }
+      phase = 'roll'; showMarks(); say(pvp ? X.turnP.replace('{p}', X.n[st.turn]) : ''); focusSticks(st.turn);
     }
     async function doAIRoll() {
       if (over || stopped) return;
@@ -321,7 +321,7 @@
       undo() {
         if (!api.canUndo()) return;
         const h = hist.pop(); st = E.clone(h.st); roll = null; sel = -1; hintMv = null; hintJ++; lastMv = null;
-        kit.sync(st); kit.marks.clear(); onTurn(st.turn); kit.restSticks(st.turn, null); phase = 'roll'; showMarks(); say(''); focusSticks();
+        kit.sync(st); kit.marks.clear(); onTurn(st.turn); kit.restSticks(st.turn, null); phase = 'roll'; showMarks(); say(''); focusSticks(st.turn);
       },
       canHint: () => !stopped && !over && !busy && phase === 'move' && mine() && legal().length > 0,
       hint() {
@@ -339,7 +339,7 @@
         ctx.el.removeEventListener('click', onClick); ctx.el.removeEventListener('pointerdown', swDown); removeEventListener('pointermove', swMove); removeEventListener('pointerup', swUp); removeEventListener('pointercancel', swUp); document.removeEventListener('click', onHud, true); document.removeEventListener('keydown', onKey);
         if (worker) worker.terminate(); worker = null; jobs.clear(); css.remove(); if (toastEl) toastEl.remove(); if (zoomBtn) zoomBtn.remove();
       },
-      _debug: { st: () => st && { pos: st.pos.map(a => a.slice()), turn: st.turn, winner: st.winner }, phase: () => phase, roll: () => roll, busy: () => busy, legal: () => E && st ? legal() : [], sel: () => sel, kit: () => kit,
+      _debug: { focusSticks: s => focusSticks(s), st: () => st && { pos: st.pos.map(a => a.slice()), turn: st.turn, winner: st.winner }, phase: () => phase, roll: () => roll, busy: () => busy, legal: () => E && st ? legal() : [], sel: () => sel, kit: () => kit,
         cell: sq => kit && kit.projCell(sq), piece: (s, k) => kit && kit.projPiece(s, k), sticks: s => kit && kit.projSticks(s) },
     };
     window.__senetTable = api;

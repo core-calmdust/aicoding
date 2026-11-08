@@ -1517,6 +1517,7 @@
   // fit(o): play view frames a board of o.w × o.d world units whose top is at o.y (null = default); cleared by show()
   //   o.up: shift the board up the screen by that many world units (a bottom HUD); o.roll: the camera is rolled 90° (screen up = world −x; roll: -1 the other way, screen up = world +x): o.w then runs along the screen height, o.d along its width
   //   o.cx, o.cz: the point of the board (world units, board space) to frame instead of its middle (a game's focus on the player to move);
+  //   o.ek: the easing rate (default .06; a quick move in on a chosen piece ~.2)
   //   o.ease: move there smoothly (pan and zoom on the camera's own pace) instead of a cut — Ludo's focus on the seat to move (phones)
   let fitTo = null, fitCur = null;
   const FIT_K = ['w', 'd', 'y', 'cx', 'cz', 'pitch'];
@@ -1525,7 +1526,7 @@
     const tv = k => k === 'pitch' ? (fitTo.pitch || 1.34) : (fitTo[k] || 0);
     if (!fitCur || !fitTo.ease) { fitCur = {}; FIT_K.forEach(k => { fitCur[k] = tv(k); }); return false; }
     let mv = false;
-    FIT_K.forEach(k => { const t = tv(k), d = t - fitCur[k]; if (Math.abs(d) > 1e-4) { fitCur[k] += d * ez(.06); mv = true; } else fitCur[k] = t; });
+    FIT_K.forEach(k => { const t = tv(k), d = t - fitCur[k]; if (Math.abs(d) > 1e-4) { fitCur[k] += d * ez(fitTo.ek || .06); mv = true; } else fitCur[k] = t; });
     return mv;
   }
   function fit(o) { const v = o || null; if (v === fitTo || (v && fitTo && JSON.stringify(v) === JSON.stringify(fitTo))) return; fitTo = v; kick(300); }
