@@ -335,27 +335,31 @@ function zTarget() {
   return [z, Math.max(W - Wz, Math.min(0, W / 2 - x))];
 }
 // Smooth and light (2026-11-09: animating the frame's height and the board's width every frame re-laid the page out and resized the
-// 3D canvas — sluggish in 2D, jerky with the 3D skin): while the focus is on, the frame keeps one height (the closest view's), the
-// board's size / place are laid out only when a move of the view ends, and in between the board (and the 3D canvas beside it) are
-// carried by a CSS transform — no layout, no canvas resize, a fixed-length ease.
-const zMaxOf = W => { const H0 = W * 584 / 1104; return Math.min(1.3, innerHeight * .46 / H0); };
+// 3D canvas — sluggish in 2D, jerky with the 3D skin; laying it out again when a move ended jolted the 3D view and the floor): while
+// the focus is on, the frame keeps one height and the board is laid out once at the closest view (the 3D canvas, its camera and the
+// floor are made for that size and stay); every view — the moves, the swipes, the whole board — is a CSS transform of it (scaled down
+// only, so it stays sharp), the board and the 3D canvas beside it with the same mapping. No layout, no canvas resize, ever.
+const zMaxOf = W => { const H0 = W * 584 / 1104; return Math.max(1, Math.min(1.3, innerHeight * .46 / H0)); };
 const zActive = () => Z2.on && zAble() && !!game && !special && !ken;
 const zTop = (W, z) => W * 584 / 1104 * (zMaxOf(W) - z) / 2;
 Z2.cz = 1; Z2.cL = 0;
-function zLayout() {   // lay the board out at the current view (and clear the transforms)
-  const fr = $('#frame'), wr = $('#board'), host = document.getElementById('atlasGL'), W = fr.clientWidth || 1, act = zActive();
-  const ar = act ? `1104 / ${(584 * zMaxOf(W)).toFixed(2)}` : '';
+function zLayout() {   // the board's layout: at the closest view while the focus is on (then zVisual shows the view), or as it was
+  const fr = $('#frame'), wr = $('#board'), host = document.getElementById('atlasGL'), W = fr.clientWidth || 1, act = zActive(), zm = zMaxOf(W);
+  const ar = act ? `1104 / ${(584 * zm).toFixed(2)}` : '';
   if (fr.style.aspectRatio !== ar) { fr.style.aspectRatio = ar; fr.style.overflow = act ? 'hidden' : ''; }
-  if (!act) { Z2.z = 1; Z2.L = 0; }
-  Z2.cz = Z2.z; Z2.cL = Z2.L;
-  [wr, host].forEach(e => { if (e) { e.style.transform = ''; e.style.willChange = ''; } });
-  if (wr) {
-    if (!act) ['width', 'height', 'left', 'top', 'right', 'bottom'].forEach(k => wr.style[k] = '');
-    else Object.assign(wr.style, { right: 'auto', bottom: 'auto', width: (W * Z2.z).toFixed(2) + 'px', height: (W * 584 / 1104 * Z2.z).toFixed(2) + 'px', left: Z2.L.toFixed(2) + 'px', top: zTop(W, Z2.z).toFixed(2) + 'px' });
+  if (!act) {
+    Z2.z = 1; Z2.L = 0; Z2.cz = 1; Z2.cL = 0;
+    [wr, host].forEach(e => { if (e) { e.style.transform = ''; e.style.willChange = ''; } });
+    if (wr) ['width', 'height', 'left', 'top', 'right', 'bottom'].forEach(k => wr.style[k] = '');
+  } else {
+    Z2.cz = zm; Z2.cL = 0;
+    if (wr) Object.assign(wr.style, { right: 'auto', bottom: 'auto', width: (W * zm).toFixed(2) + 'px', height: (W * 584 / 1104 * zm).toFixed(2) + 'px', left: '0px', top: '0px' });
+    zVisual();
   }
   if (window.Table3D && Table3D.kick) Table3D.kick(300);
 }
 function zVisual() {   // show the view (Z2.z, Z2.L) by a transform of the laid-out board (and the 3D canvas, the same mapping)
+  if (!zActive() || $('#frame').style.aspectRatio === '') return;
   const fr = $('#frame'), W = fr.clientWidth || 1, s = Z2.z / Z2.cz, X = Z2.L - s * Z2.cL, Y = zTop(W, Z2.z) - s * zTop(W, Z2.cz);
   [$('#board'), document.getElementById('atlasGL')].forEach(e => { if (!e) return;
     const tx = X - (1 - s) * e.offsetLeft, ty = Y - (1 - s) * e.offsetTop;
@@ -376,7 +380,7 @@ function zApply(snap) {
     const u = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - u, 3);
     Z2.z = z0 + (Z2.tz - z0) * e; Z2.L = L0 + (Z2.tL - L0) * e;
     if (u < 1) { zVisual(); Z2.raf = requestAnimationFrame(tick); }
-    else { Z2.raf = 0; zLayout(); dispatchEvent(new Event('resize')); }
+    else { Z2.raf = 0; zVisual(); }
   };
   Z2.raf = requestAnimationFrame(tick);
 }
@@ -394,11 +398,11 @@ function zApply(snap) {
     fr.addEventListener('pointermove', e => { if (!d0) return; const dx = e.clientX - d0.x, dy = e.clientY - d0.y;
       if (!d0.on && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.2) d0.on = true;
       if (!d0.on) return; const W = fr.clientWidth || 1; if (Z2.raf) { cancelAnimationFrame(Z2.raf); Z2.raf = 0; Z2.z = Z2.tz; } Z2.man = Math.max(W - W * Z2.z, Math.min(0, d0.L + dx)); Z2.L = Z2.tL = Z2.man; zVisual(); e.preventDefault(); }, { capture: true, passive: false });
-    const up = () => { if (d0 && d0.on) { swiped = performance.now(); zLayout(); dispatchEvent(new Event('resize')); } d0 = null; };
+    const up = () => { if (d0 && d0.on) swiped = performance.now(); d0 = null; };
     fr.addEventListener('pointerup', up, true); fr.addEventListener('pointercancel', up, true);
     fr.addEventListener('click', e => { if (performance.now() - swiped < 350) { e.stopPropagation(); e.preventDefault(); } }, true);
     fr.style.touchAction = 'pan-y'; }
-  let lastW = 0; addEventListener('resize', () => { const W = $('#frame').clientWidth; if (W !== lastW && !Z2.raf) { lastW = W; zApply(true); } });
+  let lastW = 0; addEventListener('resize', () => { const W = $('#frame').clientWidth; if (W !== lastW && !Z2.raf) { lastW = W; zApply(true); } requestAnimationFrame(() => requestAnimationFrame(zVisual)); });   // (the skin may have moved its canvas: its transform follows)
 })();
 function renderDice() {
   const r = curRoll(), st = curState(), dock = $('#diceDock');

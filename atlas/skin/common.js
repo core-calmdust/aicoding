@@ -33,7 +33,7 @@
       const b = box(), r = { width: b.w, height: b.h }; if (!b.w) return;
       const m = Math.round(Math.max(b.w, b.h) * (o.margin ?? .3));   // o.margin: a flat board with a short shadow needs less canvas (fewer pixels to draw)
       Object.assign(host.style, { left: (b.x - m) + 'px', top: (b.y - m) + 'px', width: (b.w + 2 * m) + 'px', height: (b.h + 2 * m) + 'px' });
-      boardDom.style.transform = TILT ? `perspective(${Math.round(b.h * PERSP)}px) rotateX(${TILT}deg)` : '';
+      if (TILT) boardDom.style.transform = `perspective(${Math.round(b.h * PERSP)}px) rotateX(${TILT}deg)`;   // (untilted: the board's transform is left to the game — senet's phone focus moves it)
       if (o.units) unitPx = r.height / o.units;
       paintFloor();
     };
