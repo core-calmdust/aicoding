@@ -174,13 +174,15 @@ const LEVELS = [null,
   { d: 6, noise: 26, blunder: 0.015, hand: 1 },   // 7級
   { d: 6, noise: 18, hand: 1 },                   // 6級
   { d: 7, noise: 12, hand: 1 },                   // 5級
-  { s: 1, d: 99, nk: 2 },                          // 4級  (about 2,000 positions per move, learned evaluation)
-  { s: 1, d: 99, nk: 5 },                          // 3級
-  { s: 1, d: 99, nk: 12 },                         // 2級
-  { s: 1, d: 99, nk: 30 },                         // 1級
-  { s: 1, d: 99, nk: 80, ms: 3000 },               // 初段
-  { s: 1, d: 99, nk: 200, ms: 3000 },              // 二段
-  { s: 1, d: 99, nk: 500, ms: 3000 },              // 三段
+  // 4級〜三段: positions per move (thousands), set so that each level is as strong as it was with the v1 net
+  // (NNUE net-43 since 2026-11-08: v1 had 2 / 5 / 12 / 30 / 80 / 200 / 500; MODEL_CARD.md「レベルの測り直し」)
+  { s: 1, d: 99, nk: 0.9 },                        // 4級  (about 900 positions per move, learned evaluation)
+  { s: 1, d: 99, nk: 1.7 },                        // 3級
+  { s: 1, d: 99, nk: 3.5 },                        // 2級
+  { s: 1, d: 99, nk: 8 },                          // 1級
+  { s: 1, d: 99, nk: 20, ms: 3000 },               // 初段
+  { s: 1, d: 99, nk: 50, ms: 3000 },               // 二段
+  { s: 1, d: 99, nk: 120, ms: 3000 },              // 三段
   { s: 1, d: 99, ms: 1000, book: 1 },              // 四段
   { s: 1, d: 99, ms: 2500, book: 1 },              // 五段
 ];
@@ -245,7 +247,7 @@ function think(start, moves, level, rand) {
     const vals = wList(), good = vals.filter(e => e.v >= vals[0].v - 8);
     return { move: good[Math.floor(rand() * good.length)].m, v: vals[0].v };
   }
-  WX.best(L.d || 99, L.ms || 0, L.nk || 0);
+  WX.best_n(L.d || 99, L.ms || 0, Math.round((L.nk || 0) * 1000));   // nk: thousands of positions (fractions allowed)
   const r = wIO();
   if (r[0] < 0) return { move: all[0] };
   return { move: wMove(r[0], r[1]), v: r[2], depth: r[3] };
@@ -295,7 +297,7 @@ const API = { P1, P2, WIN, WINT, DRAW_PLIES, NB, JP, RC, sqAt, bit, popc, bitsOf
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.CheckersEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  const V = 'v=20261107a';
+  const V = 'v=20261108n43';
   let readyP = null;
   if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
     const imp = { env: { now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } };
