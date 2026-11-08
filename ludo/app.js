@@ -153,7 +153,7 @@ function placeAll(skip) {
       if (n > 1) { const a = i / n * Math.PI * 2 - Math.PI / 2, r = .16; x += Math.cos(a) * r; y += Math.sin(a) * r; z = sc * .78; }
       if (p >= E.lastOf(s)) z = sc * (s.rule === 'pachisi' ? .62 : .55);
       el.setAttribute('transform', `translate(${x.toFixed(3)} ${y.toFixed(3)}) scale(${z})`);
-      el.dataset.x = x; el.dataset.y = y; el.dataset.z = z;
+      el.dataset.x = x; el.dataset.y = y; el.dataset.z = z; el.dataset.hy = 0;
       el.querySelector('.cnt').textContent = '';
       gPcs.appendChild(el);   // later on top
     });
@@ -179,7 +179,8 @@ function tween(el, path, stepMs, done) {
     const [x0, y0] = path[i], [x1, y1] = path[i + 1], t0 = performance.now(), dur = stepMs;
     (function f(now) {
       const k = Math.min(1, (now - t0) / dur), e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
-      const x = x0 + (x1 - x0) * e, y = y0 + (y1 - y0) * e - Math.sin(k * Math.PI) * .35;
+      const hy = Math.sin(k * Math.PI) * .35, x = x0 + (x1 - x0) * e, y = y0 + (y1 - y0) * e - hy;
+      el.dataset.hy = k < 1 ? hy.toFixed(3) : 0;   // (the hop's lift: the 3D skin lifts its piece instead of moving it up the board)
       el.setAttribute('transform', `translate(${x.toFixed(3)} ${y.toFixed(3)}) scale(${z})`);
       if (k < 1) requestAnimationFrame(f); else { sTick(); i++; hop(); }
     })(t0);
@@ -201,7 +202,7 @@ function animateMove(s, m) {
 function animateCaptures(s, caps) {
   return Promise.all((caps || []).map(c => new Promise(res => {
     const el = pcEls[c.seat + ',' + c.k], [x1, y1] = geo.yard(c.seat, c.k), x0 = +el.dataset.x, y0 = +el.dataset.y, t0 = performance.now(), dur = 520 * SPD(), z = +el.dataset.z || 1;
-    (function f(now) { const k = Math.min(1, (now - t0) / dur); el.setAttribute('transform', `translate(${x0 + (x1 - x0) * k} ${y0 + (y1 - y0) * k - Math.sin(k * Math.PI) * 1.4}) scale(${z}) rotate(${k * 360})`); if (k < 1) requestAnimationFrame(f); else res(); })(t0);
+    (function f(now) { const k = Math.min(1, (now - t0) / dur); el.dataset.hy = k < 1 ? (Math.sin(k * Math.PI) * 1.4).toFixed(3) : 0; el.setAttribute('transform', `translate(${x0 + (x1 - x0) * k} ${y0 + (y1 - y0) * k - Math.sin(k * Math.PI) * 1.4}) scale(${z}) rotate(${k * 360})`); if (k < 1) requestAnimationFrame(f); else res(); })(t0);
   })));
 }
 
@@ -456,7 +457,7 @@ function renderDialog() {
   $('#fOpts').classList.toggle('hidden', D.rule !== 'ludo' || rated);
   $('#levelRange').value = D.level; $('#levelName').textContent = 'Lv.' + D.level;
   $('#optAutoRoll').checked = D.autoRoll; $('#optAutoPick').checked = D.autoPick;
-  if (window.LudoHouse) { const HL = LudoHouse.T[LANG] || LudoHouse.T.en, n = LudoHouse.changed(); $('#hrLbl').textContent = HL.ui[0]; $('#hrSum').textContent = n ? HL.ui[9].replace('{n}', n) : HL.ui[1].split(/[。.]/)[0]; }
+  if (window.LudoHouse) { const HL = LudoHouse.T[LANG] || LudoHouse.T.en, n = LudoHouse.changed(); $('#hrLbl').textContent = HL.ui[0]; $('#hrSum').textContent = n ? HL.ui[9].replace('{n}', n) : ''; }   // (2026-11-09: a plain ハウスルール ⚙ button; a badge only when something is changed)
   $('#bdRow').innerHTML = ['classic', 'wood'].map(k => `<button type="button" data-v="${k}" class="${D.design[D.rule] === k ? 'on' : ''}">${miniArt(D.rule, k)}<span>${t('bd.' + k)}</span></button>`).join('');
 }
 function openNew() { draft = JSON.parse(JSON.stringify(settings)); if (G && G.rated) draft.mode = 'rated'; if (draft.mode === 'rated' && !window.LudoRated) draft.mode = 'ai'; renderDialog(); $('#newOverlay').classList.add('show'); }

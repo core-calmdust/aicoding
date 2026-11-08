@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <script src="../shared/latinfs.js?v=1l14"></script>
+<script>/* portal skin: show "loading" until the 3D board is ready */ if (/[?&]skin=atlas\b/.test(location.search)) { document.documentElement.classList.add('atlas-skin'); document.write('<style>html.atlas-skin{background:#fff6e2}html.atlas-skin body{opacity:0}html.atlas-skin.atlas-ready body{opacity:1;transition:opacity .2s}.atlas-load{visibility:hidden}</style><link rel="stylesheet" href="../atlas/skin/loading.css?v=2l14"><script src="../atlas/skin/loading.js?v=4l14"><\/script><script>AtlasLoading.show()<\/script>'); }</script>
 <meta name="theme-color" content="#130f22">
 <meta name="description" content="インド生まれの「パチーシ」と、そこから生まれた世界的な「ルドー」。2〜4人で遊べるすごろく。サイコロのルドーと、タカラガイを投げる十字盤のパチーシ。AI（Lv.1–20）と対戦。">
 <title>ルドー・パチーシ — 世界のボドゲ大百科</title>
@@ -128,19 +129,21 @@ html.hb-on .throw .shown:not(.cw){width:60px;height:60px}html.hb-on .throw .show
   .board-area{grid-area:board;position:sticky;top:12px}
   .side{grid-area:side}
   .frame{width:min(100%, calc(100vh - 110px), 860px)}
-  html.hb-on{--vh:calc(100vh - var(--hb-h, 56px));--bd:min(calc(var(--vh) - 40px), calc(100vw - var(--side) - 24px - 64px), 1040px)}
-  html.hb-on.ol-dock{--vh:calc(100vh - var(--hb-h, 56px) - 46px)}
-  @supports (height:100dvh){html.hb-on{--vh:calc(100dvh - var(--hb-h, 56px))}html.hb-on.ol-dock{--vh:calc(100dvh - var(--hb-h, 56px) - 46px)}}
-  html.hb-on body{overflow:hidden}
-  html.hb-on .top{display:none}
-  html.hb-on .app{max-width:none;margin:0;height:var(--vh);grid-template-columns:var(--bd) var(--side);grid-template-areas:"board side";justify-content:center;align-content:center;align-items:stretch;gap:0 24px;padding:20px 32px}
-  html.hb-on .board-area{position:static;padding:0;align-self:center}
-  html.hb-on .frame{width:var(--bd);min-width:0}
-  html.hb-on .side{height:var(--bd);max-height:var(--bd);align-self:center;overflow-y:auto;overscroll-behavior:contain}
-  html.hb-on .side > *{flex:none}
-  html.hb-on .side > :is(#coachCard, .review-card.show){flex:1 1 auto;min-height:140px;overflow-y:auto}
-  html.hb-on .kifu{max-height:96px}
-  html.hb-on .graph{height:40px}
+  html:is(.hb-on,.hb-atlas){--vh:calc(100vh - var(--hb-h, 56px));--bd:min(calc(var(--vh) - 40px), calc(100vw - var(--side) - 24px - 64px), 1040px)}
+  html:is(.hb-on,.hb-atlas).ol-dock{--vh:calc(100vh - var(--hb-h, 56px) - 46px)}
+  @supports (height:100dvh){html:is(.hb-on,.hb-atlas){--vh:calc(100dvh - var(--hb-h, 56px))}html:is(.hb-on,.hb-atlas).ol-dock{--vh:calc(100dvh - var(--hb-h, 56px) - 46px)}}
+  html:is(.hb-on,.hb-atlas) body{overflow:hidden}
+  html:is(.hb-on,.hb-atlas) .top{display:none}
+  html:is(.hb-on,.hb-atlas) .app{max-width:none;margin:0;height:var(--vh);grid-template-columns:var(--bd) var(--side);grid-template-areas:"board side";justify-content:center;align-content:center;align-items:stretch;gap:0 24px;padding:20px 32px}
+  html:is(.hb-on,.hb-atlas) .board-area{position:static;padding:0;align-self:center}
+  html:is(.hb-on,.hb-atlas) .frame{width:var(--bd);min-width:0}
+  html:is(.hb-on,.hb-atlas) .side{height:var(--bd);max-height:var(--bd);align-self:center;overflow-y:auto;overscroll-behavior:contain}
+  html:is(.hb-on,.hb-atlas) .side > *{flex:none}
+  html:is(.hb-on,.hb-atlas) .side > :is(#coachCard, .review-card.show){flex:1 1 auto;min-height:140px;overflow-y:auto}
+  html:is(.hb-on,.hb-atlas) .kifu{max-height:96px}
+  html:is(.hb-on,.hb-atlas) .graph{height:40px}
+  /* the portal skin (?skin=atlas): its bar is 64px, and the 3D board's wooden frame reaches a little past the SVG board */
+  html.hb-atlas{--hb-h:64px;--bd:min(calc(var(--vh) - 84px), calc(100vw - var(--side) - 24px - 120px), 1000px)}
 }
 /* ---------- the online dock (online-soon.js): 準備中 — a bar along the bottom off touch screens; phones: the オンライン tab ---------- */
 .dock{display:none}
@@ -221,7 +224,7 @@ html[dir=rtl] .ngt-gcard{text-align:right}
 .graph .zero{stroke:rgba(244,176,66,.35);stroke-dasharray:2 3}
 .graph .cur{stroke:var(--accent);stroke-width:1}
 .shown.two{display:flex;gap:4px;align-items:center}.shown.two .dd{display:block;width:44px;height:44px}.shown.two .dd svg{width:100%;height:100%}.shown.two .dd.used{opacity:.25;filter:grayscale(1)}
-#btnHouse{display:flex;align-items:center;gap:10px;width:100%;min-height:46px;padding:8px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);font:inherit;font-size:14px;font-weight:700;cursor:pointer;text-align:start}#btnHouse:hover{border-color:var(--accent)}#btnHouse svg{width:20px;height:20px;flex:none;color:var(--accent)}#btnHouse span{flex:1}#btnHouse .chev{width:16px;height:16px;color:var(--muted)}
+#btnHouse{display:flex;align-items:center;gap:10px;width:100%;min-height:46px;padding:8px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);font:inherit;font-size:14px;font-weight:700;cursor:pointer;text-align:start}#btnHouse:hover{border-color:var(--accent)}#btnHouse svg{width:20px;height:20px;flex:none;color:var(--accent)}#btnHouse span{flex:1}#btnHouse b{font-size:12px;padding:2px 9px;border-radius:99px;background:var(--accent);color:#2a1600}#btnHouse b:empty{display:none}
 .navbar{display:none;gap:6px;margin-top:8px}
 body:has(.review-card.show) .navbar, body.reviewing .navbar{display:flex}   /* (2026-11-09: only while reviewing — not during play) */
 .navbar button{flex:1;height:30px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--muted);display:flex;align-items:center;justify-content:center}
@@ -488,7 +491,7 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
     <div class="field" id="fRules" data-ng="game">
       <label data-i18n="ng.rule"></label>
       <div class="ngt-gcards few" id="ruleCards" style="--ngt-cols:2"></div>
-      <div class="field" id="fOpts" style="margin:14px 0 0"><label id="hrLbl"></label><button type="button" class="hr-btn" id="btnHouse"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg><span id="hrSum"></span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg></button></div>
+      <div class="field" id="fOpts" style="margin-top:16px!important"><button type="button" class="hr-btn" id="btnHouse"><span id="hrLbl"></span><b id="hrSum"></b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button></div>
     </div>
     <div class="field" id="fMode">
       <label data-i18n="ng.mode"></label>
@@ -573,7 +576,7 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
 <script src="../shared/mtworkers.js?v=3"></script>
 <script src="mt.js?v=2"></script>
 <script src="house.js?v=3"></script>
-<script src="app.js?v=12"></script>
+<script src="app.js?v=13"></script>
 <script src="review.js?v=3-mt"></script>
 <script src="../shared/placement.js?v=1l14"></script>
 <script src="rated.js?v=2"></script>
@@ -585,5 +588,18 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
 <script src="../shared/langsel.js?v=2l14" defer></script>
 <script src="online-soon.js?v=2"></script>
 <script src="../shared/infotabs.js?v=17l14" defer></script>
+<!-- World Board Game Atlas portal skin: ludo/?skin=atlas — the 3D board (atlas/models/ludo.js + atlas/skin/ludo.js), the SVG board stays on top for taps (all features kept) -->
+<script>
+(function () {
+  if (!/[?&]skin=atlas\b/.test(location.search)) return;
+  document.documentElement.classList.add('atlas-skin');
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=38l14'; document.head.appendChild(css);
+  const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
+  const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
+  if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=121')).then(() => load('../atlas/tables3d.js?v=24')).then(() => load('../atlas/skin/common.js?v=35l14r')).then(() => load('../atlas/models/ludo.js?v=3')).then(() => load('../atlas/skin/ludo.js?v=2'))
+    .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
+})();
+</script>
 </body>
 </html>
