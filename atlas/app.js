@@ -368,6 +368,9 @@
     const N = NEWS(), days = [];
     A_.UPDATES.forEach(u => { const w = updWhat(u); if (!w) return; const last = days[days.length - 1];
       if (last && last.d === u[0]) last.items.push([u, w]); else days.push({ d: u[0], items: [[u, w]] }); });
+    // a new title released that day takes the headline card (common rule 2026-11-08: 新作タイトルを一番大きく), the rest keep their order
+    const isRel = ([u, w]) => !!(w.g && w.g.released === u[0]);
+    days.forEach(d => { const r = d.items.filter(isRel); if (r.length) d.items = [...r, ...d.items.filter(x => !isRel(x))]; });
     const row = ([u, w], i) => { const tg = updTags(u).map(k => `<i class="utg t-${k}">${esc(nl(N.TAGS[k]))}</i>`).join('');
       return `<button type="button" class="usr${i ? '' : ' hl'}" ${w.g ? `data-g="${w.g.id}"` : `data-tab="${w.tab}"`} style="--c:${w.color}"><span class="usi">${w.art}</span><span class="ust"><span class="ush"><b>${esc(w.name)}</b></span>${tg ? `<span class="utgs">${tg}</span>` : ''}<span class="usp">${esc(utx(u))}</span></span></button>`; };
     const body = days.map(({ d, items }) => { const p = dParts(d), f = nl(N.FACTS[d.slice(5)]), fresh = A_.daysSince(d) <= 14;
