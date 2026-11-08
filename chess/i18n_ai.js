@@ -18,3 +18,8 @@ tr: {"lv": ["","Acemi 1","Acemi 2","Acemi 3","Başlangıç 1","Başlangıç 2","
 };
 for (const l in S) window.I18N[l] = Object.assign(window.I18N[l] || {}, S[l]);
 })();
+// 2026-11-08: Lv.21–25 above the old top level (time-limited, all threads). Lv.20 gets a new name; [names of 20–24], Lv.25 keeps the old top name
+(function () {
+const X = {"ja": ["伝説 1", "伝説 2", "伝説 3", "神域 1", "神域 2"], "en": ["Legend 1", "Legend 2", "Legend 3", "Mythic 1", "Mythic 2"], "zh": ["传说 1", "传说 2", "传说 3", "神域 1", "神域 2"], "zh-TW": ["傳說 1", "傳說 2", "傳說 3", "神域 1", "神域 2"], "ko": ["전설 1", "전설 2", "전설 3", "신화 1", "신화 2"], "es": ["Leyenda 1", "Leyenda 2", "Leyenda 3", "Mítico 1", "Mítico 2"], "fr": ["Légende 1", "Légende 2", "Légende 3", "Mythique 1", "Mythique 2"], "pt": ["Lenda 1", "Lenda 2", "Lenda 3", "Mítico 1", "Mítico 2"], "de": ["Legende 1", "Legende 2", "Legende 3", "Mythisch 1", "Mythisch 2"], "hi": ["किंवदंती 1", "किंवदंती 2", "किंवदंती 3", "मिथक 1", "मिथक 2"], "ar": ["أسطورة 1", "أسطورة 2", "أسطورة 3", "خرافي 1", "خرافي 2"], "ru": ["Легенда 1", "Легенда 2", "Легенда 3", "Миф 1", "Миф 2"], "tr": ["Efsane 1", "Efsane 2", "Efsane 3", "Mitik 1", "Mitik 2"], "id": ["Legenda 1", "Legenda 2", "Legenda 3", "Mitos 1", "Mitos 2"]};
+for (const l in window.I18N) { const d = window.I18N[l], x = X[l]; if (!x || !d.lv || d.lv.length !== 21) continue; d.lv = d.lv.slice(0, 20).concat(x, [d.lv[20]]); }
+})();

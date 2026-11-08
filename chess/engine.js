@@ -679,6 +679,12 @@ const LEVELS = {
   18: { d: 64, ms: 500, book: true },
   19: { d: 64, ms: 1500, book: true },
   20: { d: 64, ms: 4000, book: true },
+  // 2026-11-08: the top levels above Lv.20 (time only; the page runs them on every thread, rated games too; MODEL_CARD.md「最上位レベル」)
+  21: { d: 64, ms: 5500, book: true },
+  22: { d: 64, ms: 7500, book: true },
+  23: { d: 64, ms: 10500, book: true },
+  24: { d: 64, ms: 14500, book: true },
+  25: { d: 64, ms: 20000, book: true },
 };
 // saved settings / records from the 10-level era map onto these levels
 const OLD_LEVEL = [0, 3, 5, 8, 10, 12, 14, 16, 18, 19, 20];

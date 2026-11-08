@@ -194,7 +194,7 @@ function noteNps(nodes, ms) {
 }
 let jobId = 0;
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261108pro2'); w.jobs = new Map();
+  const w = new Worker('engine.js?v=20261108top'); w.jobs = new Map();
   w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (!j) return; if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; } w.jobs.delete(m.id); noteNps(m.nodes, performance.now() - j.t0); j.resolve(m); };
   return w;
 }
@@ -203,7 +203,7 @@ let aiW = makeWorker(), anaW = makeWorker();
 // timed AI levels outside rated games go to the pool of threads when it is free; rated games and the node-limited levels stay
 // on the one-thread workers (the same moves as before)
 const MTP = window.MTEngine ? MTEngine.use({
-  wasm: 'engine_mt.wasm?v=1', lead: 'engine.js?v=20261108pro2&mt=1', helper: 'mt-helper.js?v=1', slot: 2 << 20, initial: 512, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
+  wasm: 'engine_mt.wasm?v=1', lead: 'engine.js?v=20261108top&mt=1', helper: 'mt-helper.js?v=1', slot: 2 << 20, initial: 512, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => performance.now(), progress: () => {} } }),
   help: m => { const p = E.Pos.fromFEN(m.fen || E.START), u = []; for (const x of m.moves || []) { u.push(p.uci(x)); p.make(x); } return { setup: (m.fen || E.START) + (u.length ? ' moves ' + u.join(' ') : '') }; },
 }) : null;
@@ -214,6 +214,9 @@ function mtWants(which, msg) {
   const L = E.LEVELS[msg.level]; return !!L && !L.wnodes && L.noise === undefined && L.ms >= 500;
 }
 function request(which, msg, onProgress) {
+  // the AI's timed top levels (21–25) just after the page opened: wait for the threads once (up to 4 s) instead of one thread
+  if (which === 'ai' && MTP && !msg.cfg && !msg.mtWait && (E.LEVELS[msg.level] || {}).ms >= 5000 && mtWants(which, msg) && !MTP.pool('ai'))
+    return Promise.race([MTP.ready(), sleep(4000)]).then(() => request(which, { ...msg, mtWait: 1 }, onProgress));
   const mp = MTP && mtWants(which, msg) && MTP.pool(which === 'ai' ? 'ai' : null);
   if (mp) { const t0 = performance.now(), fen = startFen; return mp.run({ fen, ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, { fen, ...msg }, onProgress) : r; }); }
   return requestW(which, msg, onProgress);
@@ -1212,7 +1215,7 @@ function styleMove(ucis) {
 // player's rating (mostly close, sometimes clearly stronger or weaker). 10 min + 5 s per move; leaving a game in progress loses it.
 let rgame = null;
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_CLOCK = { base: 600000, inc: 5000 };
-const RT_LV = [0, 200, 350, 500, 650, 800, 1000, 1250, 1400, 1600, 1700, 1800, 1900, 2100, 2250, 2350, 2450, 2650, 3000, 3050, 3100];
+const RT_LV = [0, 200, 350, 500, 650, 800, 1000, 1250, 1400, 1600, 1700, 1800, 1900, 2100, 2250, 2350, 2450, 2650, 3000, 3050, 3100, 3140, 3180, 3220, 3260, 3300];   // 21–25 (2026-11-08): estimated from time-doubling matches (MODEL_CARD.md「最上位レベル」)
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };
