@@ -1,0 +1,46 @@
+<!doctype html>
+<!-- Dev tool: a 3D board seen straight from above on a transparent background, for the screenshots that show only the board
+     (the top page's images/<game>.webp and the game list's atlas/shots/<game>.webp). Open via a local server:
+     http://localhost:8000/atlas/tools/topdown.html?game=carrom&look=classic&px=1600 → window.SHOT (PNG data URL).
+     carrom: a game in progress is played out by the engine itself (the break and a few strokes, fixed seeds). -->
+<html><head><meta charset="utf-8"><style>html,body{margin:0;background:transparent}canvas{display:block}</style></head>
+<body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="../table3d.js"></script>
+<script src="../tables3d.js"></script>
+<script src="../../carrom/engine.js"></script>
+<script src="../models/carrom.js"></script>
+<script>
+(function () {
+  const q = new URLSearchParams(location.search), id = q.get('game') || 'carrom', look = q.get('look') || 'classic', S = +q.get('px') || 1600;
+  const X = window.Table3D; if (X.BOARDS[id]) X.BOARDS[id].set(look);
+  const R = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+  R.setPixelRatio(1); R.setSize(S, S); R.shadowMap.enabled = true; R.shadowMap.type = THREE.PCFSoftShadowMap;
+  R.outputEncoding = THREE.sRGBEncoding; R.toneMapping = THREE.ACESFilmicToneMapping; R.toneMappingExposure = .82;
+  R.physicallyCorrectLights = false;
+  document.body.appendChild(R.domElement);
+  const scene = new THREE.Scene();
+  scene.add(new THREE.HemisphereLight(0xfffaf0, 0x8a7060, .55));
+  const key = new THREE.DirectionalLight(0xffffff, .85); key.position.set(-4, 14, 6); key.castShadow = true;
+  key.shadow.mapSize.set(2048, 2048); Object.assign(key.shadow.camera, { left: -7, right: 7, top: 7, bottom: -7, near: 1, far: 40 }); key.shadow.bias = -.0004;
+  scene.add(key);
+  // a soft studio room for the reflections
+  const pm = new THREE.PMREMGenerator(R), env = new THREE.Scene();
+  const box = new THREE.Mesh(new THREE.BoxGeometry(30, 30, 30), new THREE.MeshBasicMaterial({ color: 0xf2ece2, side: THREE.BackSide })); env.add(box);
+  const lamp = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), new THREE.MeshBasicMaterial({ color: 0xffffff })); lamp.position.set(0, 14, 0); lamp.rotation.x = Math.PI / 2; env.add(lamp);
+  scene.environment = pm.fromScene(env, .04).texture;
+  const g = X.MODELS[id](true); scene.add(g);
+  if (id === 'carrom') {   // a game in progress
+    const E = window.CarromEngine, U = g.userData;
+    let s = E.newBoard(); const seq = [[0, -Math.PI / 2 + .02, 1], null, null, null, null];
+    seq.forEach((sh, i) => { const shot = sh ? { x: sh[0], ang: sh[1], v: E.VMAX * sh[2] } : E.perform(E.think(s, 9, 11 + i), 9, 23 + i); s = E.resolve(s, E.simulate(s, s.turn, shot)).s; });
+    s.pcs.forEach(m => { if (!m.on) return; const p = U.piece(m.c), [x, z] = U.xz(m.x, m.y); p.position.set(x, U.top, z); g.add(p); const sh = X.contact(U.R * 1.15, .4); sh.position.set(x, U.top + .002, z); g.add(sh); });
+    const st = U.striker(), [x, z] = U.xz(5, 25.26); st.position.set(x, U.top, z); g.add(st);
+  }
+  const bb = new THREE.Box3().setFromObject(g), c = bb.getCenter(new THREE.Vector3()), h = Math.max(bb.max.x - bb.min.x, bb.max.z - bb.min.z) / 2 * 1.02;
+  const cam = new THREE.OrthographicCamera(-h, h, h, -h, .1, 100); cam.position.set(c.x, 30, c.z); cam.up.set(0, 0, -1); cam.lookAt(c.x, 0, c.z);
+  let n = 0;
+  (function draw() { R.render(scene, cam); if (++n < 4) requestAnimationFrame(draw); else window.SHOT = R.domElement.toDataURL('image/png'); })();
+})();
+</script>
+</body></html>
