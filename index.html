@@ -973,7 +973,7 @@ function makeGallery(C) {
   // for 14 days after a changelog line; BETA first). Titles outside that registry, or before it loads, keep isNew.
   const ATLAS_ID = { 'speed-sudoku': 'speedsudoku' };
   const stat = g => { if (g.beta) return null; const A = window.Atlas, ag = A && A.GAMES.find(x => x.id === (ATLAS_ID[g.id] || g.id));
-    if (!ag) return g.isNew ? 'new' : null; const b = A.badges(ag)[0]; return b === 'new' || b === 'update' ? b : null; };
+    if (!ag) return g.isNew ? 'new' : null; const bs = A.badges(ag); return bs.includes('new') ? 'new' : bs.includes('update') ? 'update' : null; };
   const statHtml = (g, cls) => { const s = stat(g); return s === 'new' ? `<span class="${cls}">NEW</span>` : s === 'update' ? `<span class="${cls} upd">${esc(window.Atlas.badgeText('update', lang))}</span>` : ''; };
   document.addEventListener('atlasready', () => { if (cur) paint(byId(cur)); });
   function paint(g) {

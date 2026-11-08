@@ -8,7 +8,7 @@
   - **同じゲーム・同じ日は1行**にまとめる（その日の行があれば文を足す）。他のアカウントも同じ日に足すので、PRの直前に rebase して `UPDATES` の衝突を丁寧に解く。
   - `shared/atlas.js` を変えたら、読み込んでいる**全ページ**の `atlas.js?v=` を同じ新しい番号にそろえて上げる（トップページ `index.html` も読む）。
 - **アップデートしたゲームには一定期間 UPDATE バッジを付ける**：最新の `UPDATES` の行が更新（公開日 `released` より後の日付）で、**14日以内**なら UPDATE。公開日以前の行は公開の行とみなす（行にラベルを付けない）。
-  - **優先順は BETA ＞ NEW ＞ UPDATE で、出すのは1つだけ**：BETAの間はNEWもUPDATEも出さない。NEW（公開14日以内）の間はUPDATEを出さない。
+  - **優先順は BETA ＞ NEW ＞ UPDATE**：BETAの間はNEWもUPDATEも出さない（BETAだけ）。NEW（公開14日以内）の間はUPDATEを出さない（NEWだけ）。オリジナルタイトルは NEW の後 ORIGINAL と UPDATE が並ぶ（ORIGINAL が先。下の「大百科のORIGINALバッジ」）。1枠しかない場所（更新情報の列・アイコン一覧）は先頭のバッジだけ。
   - 出す場所はNEWと同じ：大百科の更新情報の列・アイコン一覧・ゲーム一覧・ゲームカード、トップページ `index.html` の詳細パネル（カテゴリ行とタグ）。判定は `shared/atlas.js` の `badges()` 1か所（トップページも同じものを読む）。
   - 文字：UPDATE は14言語（`badgeText()`。ja「アップデート」、en「UPDATE」、zh／zh-TW「更新」など）。NEW・BETA はどの言語もそのまま。色は大百科＝スカイ（NEW コーラル、BETA グレープ）、トップページ＝シアン（NEW はゴールド）。
 
