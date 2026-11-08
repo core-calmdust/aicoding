@@ -309,7 +309,7 @@
   function renderHome() {
     renderHero();
     $('hUpd').textContent = t('upd.h'); $('hIcons').textContent = t('upd.games');
-    const seen = new Set(), ups = A_.UPDATES.filter(u => !seen.has(u[1]) && seen.add(u[1]));
+    const ups = A_.news ? A_.news() : A_.UPDATES;
     $('updRow').innerHTML = ups.map(u => { const g = A_.GAMES.find(x => x.id === u[1]);
       if (!g) { const k = /^tab:(\w+)$/.exec(u[1]); if (!k || !FEAT[k[1]]) return '';   // a portal feature (tab:<page>): the card opens that tab
         const f = FEAT[k[1]], isNew = A_.daysSince(u[0]) <= 14;
@@ -336,7 +336,7 @@
   const headline = x => { let h = String(x).split(/(?<=[。！？!?])|(?<=\.)\s|[：:—–]\s?/)[0].trim(); const n = /^(ja|zh|ko)$/.test(lang) ? 26 : 52; const c = [...h]; return c.length > n ? c.slice(0, n - 1).join('').replace(/[、,，\s]+$/, '') + '…' : h; };
   function renderUpdLine() {
     const el = $('updLine'); if (!el) return;
-    const seen = new Set(), items = A_.UPDATES.filter(u => !seen.has(u[1]) && seen.add(u[1])).map(u => [u, updWhat(u)]).filter(x => x[1]).slice(0, 5);
+    const items = A_.news().map(u => [u, updWhat(u)]).filter(x => x[1]).slice(0, 5);
     if (!items.length) { el.hidden = true; return; }
     const fresh = updKey(A_.UPDATES[0]) !== updSeen(), sig = lang + '|' + items.map(x => updKey(x[0])).join() + '|' + fresh;
     if (sig !== updSig) { updSig = sig; el._w = 0;
