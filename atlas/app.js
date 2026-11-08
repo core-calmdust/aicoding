@@ -721,6 +721,22 @@
     // the board card's choices as our own UI (no system pickers): the side as a two-button toggle,
     // the level as a button that opens a list sheet with each level's name, meter and who it suits
     ['bvSide', 'bvSize'].forEach(sid => { if (!$(sid)) return;
+      // phones, many choices (ludo: rule × players): a picker button + a list sheet instead of a wrapping toggle (2026-11-09)
+      if (sid === 'bvSize' && $(sid).options.length > 3 && matchMedia('(max-width: 819px)').matches) {
+        const sel = $(sid), bt = document.createElement('button'); bt.type = 'button'; bt.className = 'lvpick'; sel.hidden = true; sel.after(bt);
+        const paint = () => { const o = sel.options[sel.selectedIndex]; bt.innerHTML = `<span>${esc(o ? o.textContent : '')}</span><i>▾</i>`; };
+        sel.addEventListener('change', paint); paint();
+        bt.onclick = () => {
+          const lab = sel.closest('label'), hd = lab ? [...lab.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim() : '';
+          const sh = document.createElement('div'); sh.className = 'lvsheet tcsheet'; sh.innerHTML = `<div class="lvs-in" role="listbox"><div class="lvs-h">${esc(hd)}<button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div><div class="lvs-l">` +
+            [...sel.options].map(o => `<button type="button" role="option" data-v="${esc(o.value)}" class="${o.value === sel.value ? 'on' : ''}"><span class="nm">${esc(o.textContent)}</span></button>`).join('') + `</div></div>`;
+          document.body.appendChild(sh); requestAnimationFrame(() => sh.classList.add('on'));
+          const close = () => { if (sh.classList.contains('out')) return; sh.classList.add('out'); sh.classList.remove('on'); setTimeout(() => sh.remove(), 240); };
+          sh.onclick = e => { const b = e.target.closest('[data-v]'); if (b) { sel.value = b.dataset.v; sel.dispatchEvent(new Event('change')); close(); return; } if (e.target === sh || e.target.closest('.lvs-x')) close(); };
+          if (window.AtlasSfx) try { AtlasSfx.tap(); } catch (x) {}
+        };
+        return;
+      }
       const sel = $(sid), tg = document.createElement('div'); tg.className = 'sidetg'; sel.hidden = true; sel.after(tg);
       const paint = () => { tg.innerHTML = [...sel.options].map(o => `<button type="button" data-v="${o.value}" class="${o.value === sel.value ? 'on' : ''}">${esc(o.textContent)}</button>`).join(''); };
       tg.onclick = e => { const b = e.target.closest('button'); if (!b) return; sel.value = b.dataset.v; sel.dispatchEvent(new Event('change')); paint(); if (window.AtlasSfx) try { AtlasSfx.tap(); } catch (x) {} };
@@ -730,7 +746,7 @@
     if ($('bvHouse') && ad && ad.house) {
       const hp = () => { const z = $('bvSize') ? +$('bvSize').value : 0; $('bvHouseL').hidden = !ad.house.show(z); $('bvHouse').firstChild.textContent = ad.house.summary(lang); };
       hp(); if ($('bvSize')) $('bvSize').addEventListener('change', hp);
-      $('bvHouse').onclick = () => { if (window.AtlasSfx) try { AtlasSfx.tap(); } catch (x) {} ad.house.open(lang, hp); };
+      $('bvHouse').onclick = () => { if (window.AtlasSfx) try { AtlasSfx.tap(); } catch (x) {} ad.house.open(lang, hp, 'atlas'); };
     }
     if ($('bvLv')) {
       const sel = $('bvLv'), bt = document.createElement('button'); bt.type = 'button'; bt.className = 'lvpick'; sel.hidden = true; sel.after(bt);
