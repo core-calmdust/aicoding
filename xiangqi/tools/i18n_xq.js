@@ -201,4 +201,6 @@ module.exports = {
   'pcs.west': ['絵柄（西洋式）', 'Icons (Western)', '图案（西式）', '그림(서양식)', 'Iconos (occidental)', 'Icônes (occidental)', 'Ícones (ocidental)', 'Symbole (westlich)', 'चित्र (पश्चिमी)', 'رموز (غربية)'],
   'rule.standard': ['標準ルール（アジア・WXFルール）', 'Standard rules (Asian / WXF)', '标准规则（亚洲／世界象联）', '표준 규칙(아시아·WXF)', 'Reglas estándar (asiáticas / WXF)', 'Règles standard (asiatiques / WXF)', 'Regras padrão (asiáticas / WXF)', 'Standardregeln (asiatisch / WXF)', 'मानक नियम (एशियाई / WXF)', 'القواعد القياسية (الآسيوية / WXF)'],
   'hb.kings': ['', '', '', '', '', '', '', '', '', ''],
+  'pro.btn': ['最強解析', 'Deep analysis', '深度分析', '심층 분석', 'Análisis profundo', 'Analyse approfondie', 'Análise profunda', 'Tiefenanalyse', 'गहन विश्लेषण', 'تحليل عميق'],
+  'pro.btn.title': ['複数のCPUコアで深く読む解析ページを開く（新しいタブ）', 'Open the multi-core analysis page (new tab)', '打开多核深度分析页面（新标签页）', '멀티코어 심층 분석 페이지 열기(새 탭)', 'Abrir el análisis con varios núcleos (nueva pestaña)', 'Ouvrir l’analyse multicœur (nouvel onglet)', 'Abrir a análise com vários núcleos (nova aba)', 'Mehrkern-Analyse öffnen (neuer Tab)', 'मल्टी-कोर विश्लेषण पेज खोलें (नया टैब)', 'فتح صفحة التحليل متعدد الأنوية (علامة تبويب جديدة)'],
 };

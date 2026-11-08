@@ -526,7 +526,9 @@
   "ls.e_pawn.goal": "Найдите лучший ход к мату.",
   "ls.e_pawn.hint": "Ходите подсвеченной фигурой.",
   "ls.e_pawn.why": "{m} быстрее всего ведёт к мату.",
-  "ls.e_pawn.ng": "Лучший ход: {m}."
+  "ls.e_pawn.ng": "Лучший ход: {m}.",
+  "pro.btn": "Глубокий анализ",
+  "pro.btn.title": "Открыть многоядерный анализ (новая вкладка)"
  },
  "zh-TW": {
   "series": "World Board Game Atlas",
@@ -1055,7 +1057,9 @@
   "ls.e_pawn.goal": "找出通往勝利的最佳著法。",
   "ls.e_pawn.hint": "走動發光的子。",
   "ls.e_pawn.why": "{m} 最快走向勝利。",
-  "ls.e_pawn.ng": "最佳著法是 {m}。"
+  "ls.e_pawn.ng": "最佳著法是 {m}。",
+  "pro.btn": "深度分析",
+  "pro.btn.title": "開啟多核心深度分析頁面（新分頁）"
  },
  "id": {
   "series": "World Board Game Atlas",
@@ -1584,7 +1588,9 @@
   "ls.e_pawn.goal": "Temukan langkah terbaik menuju mat.",
   "ls.e_pawn.hint": "Gerakkan bidak yang menyala.",
   "ls.e_pawn.why": "{m} paling cepat mendekatkan mat.",
-  "ls.e_pawn.ng": "Langkah terbaik adalah {m}."
+  "ls.e_pawn.ng": "Langkah terbaik adalah {m}.",
+  "pro.btn": "Analisis mendalam",
+  "pro.btn.title": "Buka analisis multi-inti (tab baru)"
  },
  "tr": {
   "series": "World Board Game Atlas",
@@ -2113,6 +2119,8 @@
   "ls.e_pawn.goal": "Mata giden en iyi hamleyi bulun.",
   "ls.e_pawn.hint": "Parlayan taşı oynatın.",
   "ls.e_pawn.why": "{m} matı en çok yaklaştırır.",
-  "ls.e_pawn.ng": "En iyi hamle {m} idi."
+  "ls.e_pawn.ng": "En iyi hamle {m} idi.",
+  "pro.btn": "Derin analiz",
+  "pro.btn.title": "Çok çekirdekli analizi aç (yeni sekme)"
  }
 }
