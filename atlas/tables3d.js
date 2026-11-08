@@ -1523,8 +1523,8 @@
       floor: M({ map: rep(TT, fz, (XR - XL) / 9, (ZF - ZB) / 9), roughness: .34, clearcoat: .4, clearcoatRoughness: .3, color: night ? 0x80809a : 0xe4dcd0, bumpScale: .002 }),
       back: c => wall(c, XL, XR, [-34, -12, 12, 34], 3), left: c => wall(c, -ZF, -ZB, [10, 32, 54], 5), right: c => wall(c, ZB, ZF, [-50, -28, -6], 7) });
     skyDome(o, T, 400, '#c8b8a0');
-    // the fountain (back right, beside the table — in view from the seat): an octagonal tiled basin, a carved marble bowl on a pedestal, a thin jet
-    { const Gf = grp(TT, g, 26, FL, -30), side = zellige(o, 'tbl8-basin', ['#ece4d4', '#2f6a6a', '#c8a060', '#2f6a6a'], 8), marble = M({ color: 0xeee8dc, roughness: .3, clearcoat: .4 });
+    // the fountain (straight behind the table, tall enough that its bowls and water rise over the board in the seat's view): an octagonal tiled basin, a carved marble bowl on a pedestal, a thin jet
+    { const Gf = grp(TT, g, 0, FL, -36), side = zellige(o, 'tbl8-basin', ['#ece4d4', '#2f6a6a', '#c8a060', '#2f6a6a'], 8), marble = M({ color: 0xeee8dc, roughness: .3, clearcoat: .4 }); Gf.scale.setScalar(1.2);
       at(Gf, new TT.Mesh(new TT.CylinderGeometry(9, 9.4, 3.4, 8), [M({ map: side, roughness: .25, clearcoat: .7 }), marble, marble]), 0, 1.7, 0, Math.PI / 8);
       const w = new TT.Mesh(new TT.CylinderGeometry(8.2, 8.2, .1, 8), M({ color: night ? 0x0c1a2a : 0x2a6a7a, roughness: .05, clearcoat: 1, transparent: true, opacity: .85 })); at(Gf, w, 0, 3.1, 0, Math.PI / 8, false);
       at(Gf, lathe(TT, [[0, 0], [1.6, 0], [1.1, .8], [.9, 9], [1.4, 10], [4.2, 11.4], [4.6, 12.4], [4.3, 12.5], [1.2, 12.1], [0, 12.1]], SEG(o, 24), marble), 0, 3, 0);   // (tall: the bowl and its jet show over the table)
@@ -1533,19 +1533,21 @@
       for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2, rr = new TT.Mesh(new TT.CylinderGeometry(.06, .06, 2.4, 4), new TT.MeshBasicMaterial({ color: 0xf0f8ff, transparent: true, opacity: .4 })); rr.rotation.set(Math.sin(a) * .5, 0, -Math.cos(a) * .5); at(Gf, rr, Math.cos(a) * 2.4, 17.2, Math.sin(a) * 2.4, 0, false); }
       [0, 1, 2, 3].forEach(i => { const p = new TT.Mesh(new TT.CircleGeometry(.9, 10), M({ color: 0xd84a5a, roughness: .7 })); p.rotation.x = -Math.PI / 2; at(Gf, p, Math.cos(i * 1.7) * 5.6, 3.16, Math.sin(i * 1.7) * 5.6, 0, false); });   // rose petals on the water
       // the running water (2026-11-09): a jet from the top bowl, eight arcs falling to the big bowl, its overflow sheet, droplets, rings on the basin
-      { const Gw = grp(TT, Gf, 0, 0, 0), wcol = night ? 0xb8c8e8 : 0xf4fbff;
+      { const Gw = grp(TT, Gf, 0, 0, 0), wcol = night ? 0x9ab8e0 : 0x8ccbe8;   // (a clear blue: plain white water vanished against the plaster)
         const stream = canvasTex('tbl8-stream', 32, 128, (c, W, H) => { c.clearRect(0, 0, W, H); for (let y = 0; y < H; y += 4) { c.fillStyle = `rgba(255,255,255,${.25 + Math.random() * .55})`; c.fillRect(Math.random() * W * .3, y, W * (.4 + Math.random() * .6), 2 + Math.random() * 3); } });
         stream.wrapS = stream.wrapT = TT.RepeatWrapping;
-        const wm = new TT.MeshBasicMaterial({ map: stream, color: wcol, transparent: true, opacity: .62, depthWrite: false, side: TT.DoubleSide });
-        const jet = new TT.Mesh(new TT.CylinderGeometry(.09, .2, 4.2, 8, 1, true), wm); at(Gw, jet, 0, 20.4, 0, 0, false);
+        const wm = new TT.MeshBasicMaterial({ map: stream, color: wcol, transparent: true, opacity: .9, depthWrite: false, side: TT.DoubleSide });
+        const jet = new TT.Mesh(new TT.CylinderGeometry(.16, .34, 6, 8, 1, true), wm); at(Gw, jet, 0, 21.3, 0, 0, false);
         const arcs = [], N = o.COARSE ? 6 : 8;
         for (let i = 0; i < N; i++) { const a = i / N * Math.PI * 2, c0 = Math.cos(a), s0 = Math.sin(a), pts = [];
           for (let k = 0; k <= 10; k++) { const t = k / 10; pts.push(new TT.Vector3(c0 * (1.8 + t * 2.6), 18.3 - t * t * 3.2 + t * .6, s0 * (1.8 + t * 2.6))); }   // from the top bowl's lip to the big bowl
-          const m = new TT.Mesh(new TT.TubeGeometry(new TT.CatmullRomCurve3(pts), 12, .07, 5), wm); arcs.push(m); at(Gw, m, 0, 0, 0, 0, false); }
-        const sheet = new TT.Mesh(new TT.CylinderGeometry(4.55, 5.1, 12.3, 24, 1, true), new TT.MeshBasicMaterial({ map: stream, color: wcol, transparent: true, opacity: .3, depthWrite: false, side: TT.DoubleSide })); at(Gw, sheet, 0, 9.25, 0, 0, false);   // the big bowl's overflow, a thin falling curtain
+          const m = new TT.Mesh(new TT.TubeGeometry(new TT.CatmullRomCurve3(pts), 12, .13, 5), wm); arcs.push(m); at(Gw, m, 0, 0, 0, 0, false); }
+        for (let i = 0, n = o.COARSE ? 14 : 24; i < n; i++) { const a = (i + .5) / n * Math.PI * 2, c0 = Math.cos(a), s0 = Math.sin(a), pts = [];   // the big bowl's overflow: thin strands falling from its lip
+          for (let k = 0; k <= 8; k++) { const t = k / 8; pts.push(new TT.Vector3(c0 * (4.6 + t * t * .9), 15.3 - t * 12.1, s0 * (4.6 + t * t * .9))); }
+          at(Gw, new TT.Mesh(new TT.TubeGeometry(new TT.CatmullRomCurve3(pts), 10, .06 + (i % 3) * .02, 4), wm), 0, 0, 0, 0, false); }
         const D = o.COARSE ? 40 : 90, dg = new TT.BufferGeometry(), dp = new Float32Array(D * 3), seeds = Array.from({ length: D }, (_, i) => [Math.random() * Math.PI * 2, Math.random(), .7 + Math.random() * .6]);
         dg.setAttribute('position', new TT.BufferAttribute(dp, 3));
-        const drops = new TT.Points(dg, new TT.PointsMaterial({ color: wcol, size: .22, transparent: true, opacity: .8, depthWrite: false })); drops.frustumCulled = false; Gw.add(drops);
+        const drops = new TT.Points(dg, new TT.PointsMaterial({ color: 0xe8f6ff, size: .32, transparent: true, opacity: .9, depthWrite: false })); drops.frustumCulled = false; Gw.add(drops);
         const rings = [0, 1, 2].map(i => { const r = new TT.Mesh(new TT.RingGeometry(.9, 1.05, 32), new TT.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .3, depthWrite: false })); r.rotation.x = -Math.PI / 2; at(Gw, r, Math.cos(i * 2.1) * 5.6, 3.17, Math.sin(i * 2.1) * 5.6, 0, false); return r; });
         o.tick && o.tick(t => {
           stream.offset.y = -(t * 1.6) % 1;
@@ -1557,7 +1559,7 @@
     }
     // orange trees in glazed pots, cushions on a low bench along the back
     const glazed = M({ color: 0x2f6a6a, roughness: .2, clearcoat: .8 }), orange = M({ color: 0xf08a24, roughness: .4, clearcoat: .3 });
-    [[-40, -44, 3], [48, -50, 9]].forEach(([x, z, sd]) => { const Gp = potPlant(o, g, x, z, FL, 1.5, glazed, leafTex('leaf-orange', '#4a7a32', '#2a5222'), sd); const R = rng(sd);
+    [[-38, -46, 3], [38, -46, 9]].forEach(([x, z, sd]) => { const Gp = potPlant(o, g, x, z, FL, 1.5, glazed, leafTex('leaf-orange', '#4a7a32', '#2a5222'), sd); const R = rng(sd);
       for (let i = 0; i < 14; i++) { const a = R() * 6.3, r = 3 + R() * 4; at(Gp, new TT.Mesh(new TT.SphereGeometry(.7, 10, 8), orange), Math.cos(a) * r, 22 + R() * 9, Math.sin(a) * r); } ao(o, x, FL, z, 14, 14, .4); });
     { const velvet = (col) => M({ map: X.cloth('tbl8-cush-' + col, col, 16, 128), roughness: .9, sheen: new TT.Color(0xffffff) });
       at(g, new TT.Mesh(RB(40, 4, 8, .6, 2), M({ color: 0xe2d4bc, roughness: .8 })), 0, FL + 2, ZB + 5);
