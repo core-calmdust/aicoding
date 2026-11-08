@@ -334,25 +334,49 @@ function zTarget() {
   const cc = (c0 + c1) / 2, Wz = W * z, x = Wz / 2 + (cc - 4.5) * 100 * Wz / 1104;
   return [z, Math.max(W - Wz, Math.min(0, W / 2 - x))];
 }
-function zPaint() {
-  const fr = $('#frame'), wr = fr.querySelector('.board-wrap'), on = Z2.z > 1.001;
-  fr.style.aspectRatio = on ? `1104 / ${(584 * Z2.z).toFixed(2)}` : ''; fr.style.overflow = on ? 'hidden' : '';
-  if (wr) { wr.style.width = on ? (Z2.z * 100).toFixed(3) + '%' : ''; wr.style.left = on ? Z2.L.toFixed(2) + 'px' : ''; wr.style.right = on ? 'auto' : ''; }
-  if (window.Table3D && Table3D.kick) Table3D.kick(200);
+// Smooth and light (2026-11-09: animating the frame's height and the board's width every frame re-laid the page out and resized the
+// 3D canvas — sluggish in 2D, jerky with the 3D skin): while the focus is on, the frame keeps one height (the closest view's), the
+// board's size / place are laid out only when a move of the view ends, and in between the board (and the 3D canvas beside it) are
+// carried by a CSS transform — no layout, no canvas resize, a fixed-length ease.
+const zMaxOf = W => { const H0 = W * 584 / 1104; return Math.min(1.3, innerHeight * .46 / H0); };
+const zActive = () => Z2.on && zAble() && !!game && !special && !ken;
+const zTop = (W, z) => W * 584 / 1104 * (zMaxOf(W) - z) / 2;
+Z2.cz = 1; Z2.cL = 0;
+function zLayout() {   // lay the board out at the current view (and clear the transforms)
+  const fr = $('#frame'), wr = $('#board'), host = document.getElementById('atlasGL'), W = fr.clientWidth || 1, act = zActive();
+  const ar = act ? `1104 / ${(584 * zMaxOf(W)).toFixed(2)}` : '';
+  if (fr.style.aspectRatio !== ar) { fr.style.aspectRatio = ar; fr.style.overflow = act ? 'hidden' : ''; }
+  if (!act) { Z2.z = 1; Z2.L = 0; }
+  Z2.cz = Z2.z; Z2.cL = Z2.L;
+  [wr, host].forEach(e => { if (e) { e.style.transform = ''; e.style.willChange = ''; } });
+  if (wr) {
+    if (!act) ['width', 'height', 'left', 'top', 'right', 'bottom'].forEach(k => wr.style[k] = '');
+    else Object.assign(wr.style, { right: 'auto', bottom: 'auto', width: (W * Z2.z).toFixed(2) + 'px', height: (W * 584 / 1104 * Z2.z).toFixed(2) + 'px', left: Z2.L.toFixed(2) + 'px', top: zTop(W, Z2.z).toFixed(2) + 'px' });
+  }
+  if (window.Table3D && Table3D.kick) Table3D.kick(300);
+}
+function zVisual() {   // show the view (Z2.z, Z2.L) by a transform of the laid-out board (and the 3D canvas, the same mapping)
+  const fr = $('#frame'), W = fr.clientWidth || 1, s = Z2.z / Z2.cz, X = Z2.L - s * Z2.cL, Y = zTop(W, Z2.z) - s * zTop(W, Z2.cz);
+  [$('#board'), document.getElementById('atlasGL')].forEach(e => { if (!e) return;
+    const tx = X - (1 - s) * e.offsetLeft, ty = Y - (1 - s) * e.offsetTop;
+    e.style.transformOrigin = '0 0'; e.style.willChange = 'transform'; e.style.transform = `translate(${tx.toFixed(2)}px,${ty.toFixed(2)}px) scale(${s.toFixed(5)})`; });
 }
 function zApply(snap) {
   { const key = JSON.stringify(zCols()); if (key !== Z2.key) { Z2.key = key; Z2.man = null; } }   // a new focus drops a swipe
   if (Z2.btn) { Z2.btn.hidden = !zAble() || !game || !!special || !!ken; Z2.btn.classList.toggle('off', !Z2.on); }
-  let [z, L] = zTarget(); if (Z2.man != null && z > 1.001) { const W = $('#frame').clientWidth || 1; L = Math.max(W - W * z, Math.min(0, Z2.man)); } Z2.tz = z; Z2.tL = L;
-  if (snap || !animOn()) { cancelAnimationFrame(Z2.raf); Z2.raf = 0; Z2.z = z; Z2.L = L; zPaint(); return; }
-  if (Z2.raf) return;
-  let last = performance.now();
+  let [z, L] = zTarget(); if (Z2.man != null && z > 1.001) { const W = $('#frame').clientWidth || 1; L = Math.max(W - W * z, Math.min(0, Z2.man)); }
+  const act = zActive(), frameOff = $('#frame').style.aspectRatio === '';
+  if (snap || !animOn() || act === frameOff) {   // (the focus switched on / off: laid out at once)
+    cancelAnimationFrame(Z2.raf); Z2.raf = 0; Z2.z = z; Z2.L = L; Z2.tz = z; Z2.tL = L; zLayout(); return;
+  }
+  if (Math.abs(z - Z2.tz) < .002 && Math.abs(L - Z2.tL) < .5 && (Z2.raf || (Math.abs(z - Z2.z) < .002 && Math.abs(L - Z2.L) < .5))) return;
+  Z2.tz = z; Z2.tL = L; cancelAnimationFrame(Z2.raf);
+  const z0 = Z2.z, L0 = Z2.L, t0 = performance.now(), dur = 360;
   const tick = now => {
-    const dt = Math.min(64, now - last); last = now; const k = 1 - Math.pow(1 - .1, dt / 16.7);
-    const dz = Z2.tz - Z2.z, dL = Z2.tL - Z2.L, done = Math.abs(dz) < .002 && Math.abs(dL) < .5;
-    if (done) { Z2.z = Z2.tz; Z2.L = Z2.tL; } else { Z2.z += dz * k; Z2.L += dL * k; }
-    zPaint(); Z2.raf = done ? 0 : requestAnimationFrame(tick);
-    if (done) dispatchEvent(new Event('resize'));
+    const u = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - u, 3);
+    Z2.z = z0 + (Z2.tz - z0) * e; Z2.L = L0 + (Z2.tL - L0) * e;
+    if (u < 1) { zVisual(); Z2.raf = requestAnimationFrame(tick); }
+    else { Z2.raf = 0; zLayout(); dispatchEvent(new Event('resize')); }
   };
   Z2.raf = requestAnimationFrame(tick);
 }
@@ -369,8 +393,8 @@ function zApply(snap) {
     fr.addEventListener('pointerdown', e => { if (Z2.z > 1.001 && e.isPrimary) d0 = { x: e.clientX, y: e.clientY, L: Z2.L, on: false }; }, true);
     fr.addEventListener('pointermove', e => { if (!d0) return; const dx = e.clientX - d0.x, dy = e.clientY - d0.y;
       if (!d0.on && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.2) d0.on = true;
-      if (!d0.on) return; const W = fr.clientWidth || 1; Z2.man = Math.max(W - W * Z2.z, Math.min(0, d0.L + dx)); Z2.L = Z2.tL = Z2.man; cancelAnimationFrame(Z2.raf); Z2.raf = 0; zPaint(); e.preventDefault(); }, { capture: true, passive: false });
-    const up = () => { if (d0 && d0.on) { swiped = performance.now(); dispatchEvent(new Event('resize')); } d0 = null; };
+      if (!d0.on) return; const W = fr.clientWidth || 1; if (Z2.raf) { cancelAnimationFrame(Z2.raf); Z2.raf = 0; Z2.z = Z2.tz; } Z2.man = Math.max(W - W * Z2.z, Math.min(0, d0.L + dx)); Z2.L = Z2.tL = Z2.man; zVisual(); e.preventDefault(); }, { capture: true, passive: false });
+    const up = () => { if (d0 && d0.on) { swiped = performance.now(); zLayout(); dispatchEvent(new Event('resize')); } d0 = null; };
     fr.addEventListener('pointerup', up, true); fr.addEventListener('pointercancel', up, true);
     fr.addEventListener('click', e => { if (performance.now() - swiped < 350) { e.stopPropagation(); e.preventDefault(); } }, true);
     fr.style.touchAction = 'pan-y'; }

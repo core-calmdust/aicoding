@@ -69,12 +69,16 @@
     }
     // another place / brightness chosen (the デザイン tab, or another tab of the series): the floor follows at once
     addEventListener('atlas-table', () => paintFloor(true));
+    let alignHooked = false;
     const alignTo = (units, top) => {
       o.units = units; placeHost();
       T3.align(() => { const b = box(); return { x: b.x - host.offsetLeft, y: b.y - host.offsetTop, w: b.w, h: b.h, tilt: TILT, persp: b.h * PERSP }; }, units, top);
-      addEventListener('resize', () => requestAnimationFrame(placeHost));
-      addEventListener('dockrelayout', placeHost);   // the online dock (shared/headerbar.js): the canvas follows the new layout at once
-      if (window.ResizeObserver) new ResizeObserver(() => requestAnimationFrame(placeHost)).observe(boardDom);
+      if (!alignHooked) {   // (once: a skin that re-aligns on a turn of the phone / a new board added these again every time — the page got slower)
+        alignHooked = true;
+        addEventListener('resize', () => requestAnimationFrame(placeHost));
+        addEventListener('dockrelayout', placeHost);   // the online dock (shared/headerbar.js): the canvas follows the new layout at once
+        if (window.ResizeObserver) new ResizeObserver(() => requestAnimationFrame(placeHost)).observe(boardDom);
+      }
       setTimeout(placeHost, 300); setTimeout(placeHost, 1200);
     };
 
