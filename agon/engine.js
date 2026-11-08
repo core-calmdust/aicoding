@@ -270,6 +270,11 @@ const LEVELS = [null,
   { s: 1, nk: 200 },                             // 三段
   { s: 1, ms: 1200 },                            // 四段
   { s: 1, ms: 2500 },                            // 五段
+  // the top levels (2026-11-09, common rule「最上位のレベルの追加」): twice the time per step up to 20 s, every thread of the
+  // page's pool (shared/mtsplit.js; the shared table on an isolated page) — one thread without the option
+  { s: 1, ms: 5000 },                            // Lv.21
+  { s: 1, ms: 10000 },                           // Lv.22
+  { s: 1, ms: 20000 },                           // Lv.23
 ];
 function gauss(rand) { let u = 0, v = 0; while (!u) u = rand(); while (!v) v = rand(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
 // ---------------------------------------------------------------- evaluation (side to move's view, ~100 = one tempo)
@@ -345,6 +350,10 @@ function terminal(pos, ply, hist) {
 }
 // ---------------------------------------------------------------- search (negamax alpha-beta, TT, quiescence on captures)
 const TT = new Map();
+// SH: the transposition table shared by the workers of shared/mtsplit.js (shared mode: a cross-origin isolated page —
+// shared/mttt.js, set by the 'mtshare' message; the one-thread worker never has it, so its levels play as before)
+let SH = null;
+const SALT = { std: 0, place: 0x5bd1e995 };
 let nodes = 0, nodeLimit = Infinity, tEnd = Infinity, stop = false, rootSide = 0;
 // contempt: a draw (repetition / move cap) is a little worse than equal for the side the AI plays, so it keeps trying
 const CONTEMPT = 30;
@@ -383,7 +392,7 @@ function orderMoves(pos, L, ttm, ply) {   // the same scores, then a stable inse
 }
 function qsearch(pos, a, b, ply, qd) {
   nodes++;
-  if ((nodes & 1023) === 0 && (Date.now() > tEnd || nodes > nodeLimit)) stop = true;
+  if ((nodes & 1023) === 0 && (Date.now() > tEnd || nodes > nodeLimit || (SH !== null && SH.stopped()))) stop = true;
   const tv = terminal(pos, ply); if (tv !== null) return tv;
   const stand = evaluate(pos);
   if (qd <= 0 || pos.phase() !== 'move') return stand;
@@ -400,11 +409,11 @@ function qsearch(pos, a, b, ply, qd) {
 }
 function search(pos, d, a, b, ply) {
   nodes++;
-  if ((nodes & 1023) === 0 && (Date.now() > tEnd || nodes > nodeLimit)) stop = true;
+  if ((nodes & 1023) === 0 && (Date.now() > tEnd || nodes > nodeLimit || (SH !== null && SH.stopped()))) stop = true;
   if (stop) return 0;
   const tv = terminal(pos, ply); if (tv !== null) return tv;
   if (ply > 0 && seenBefore(pos.h1, pos.h2)) return drawV(pos);
-  const key = pos.h1, e = TT.get(key);
+  const key = pos.h1, e = SH !== null ? SH.get(key, pos.h2) : TT.get(key);
   if (e && e.h2 === pos.h2 && e.d >= d && e.rs === rootSide) {
     if (e.f === 0) return e.v; if (e.f === 1 && e.v >= b) return e.v; if (e.f === 2 && e.v <= a) return e.v;
   }
@@ -426,6 +435,7 @@ function search(pos, d, a, b, ply) {
     if (v > best) { best = v; bm = m; if (v > a) { a = v; if (a >= b) { killers[ply] = m; break; } } }
   }
   rhN--;
+  if (SH !== null) { SH.put(key, pos.h2, d, best, best <= a0 ? 2 : best >= b ? 1 : 0, bm, rootSide); return best; }
   if (TT.size > 600000) TT.clear();
   TT.set(key, { h2: pos.h2, d, v: best, f: best <= a0 ? 2 : best >= b ? 1 : 0, m: bm, rs: rootSide });
   return best;
@@ -559,7 +569,8 @@ function pvOf(start, moves, m, plies) {
 // order; mtFin: the job's reply from the threads' raw result (the same as the one-thread worker's).
 let mtRule = null;
 function mtNode(m) {
-  if (mtRule !== RK) { TT.clear(); mtRule = RK; }
+  if (SH !== null) SH.salt = SALT[RK] | 0;
+  else if (mtRule !== RK) { TT.clear(); mtRule = RK; }
   const line = m.line || [], root = replay(m.start, m.moves).pos, { pos, hashes } = replay(m.start, m.moves.concat(line)); hashes.pop();
   rootSide = root.side;
   return { pos, hist: hashes, ply: line.length };
@@ -587,8 +598,37 @@ function mtKids(m) {
   const { pos, hist, ply } = mtNode(m);
   loadHist(hist);
   if (terminal(pos, ply) !== null || (ply > 0 && seenBefore(pos.h1, pos.h2))) return { kids: [] };
-  const e = TT.get(pos.h1);
+  const e = SH !== null ? SH.get(pos.h1, pos.h2) : TT.get(pos.h1);
   return { kids: orderMoves(pos, pos.moves(), e && e.h2 === pos.h2 && e.rs === rootSide ? e.m : -1, ply).map(x => ({ m: x, s: -1 })) };
+}
+function mtLazy(m) {   // (shared/tools/mtlazy.js: one Lazy SMP thread's search of the root to depth m.d, root order rotated by m.rot)
+  const { pos, hist } = mtNode(m);
+  nodes = 0; stop = false; tEnd = m.until || Infinity; nodeLimit = Infinity; loadHist(hist);
+  const e = SH !== null ? SH.get(pos.h1, pos.h2) : TT.get(pos.h1);
+  let L = orderMoves(pos, pos.moves(), e && e.h2 === pos.h2 ? e.m : -1, 0);
+  if (m.rot) { const k = m.rot % L.length; L = L.slice(k).concat(L.slice(0, k)); }
+  let a = -WIN - 1, best = -Infinity, bm = L[0];
+  RH1[rhN] = pos.h1; RH2[rhN] = pos.h2; rhN++;
+  for (let i = 0; i < L.length; i++) {
+    const q = pos.clone().play(L[i]);
+    let v = i === 0 ? -search(q, m.d - 1, -WIN - 1, -a, 1) : -search(q, m.d - 1, -a - 1, -a, 1);
+    if (i > 0 && v > a) v = -search(q, m.d - 1, -WIN - 1, -a, 1);
+    if (v > best) { best = v; bm = L[i]; if (v > a) a = v; }
+  }
+  rhN--;
+  if (SH !== null && !stop) SH.put(pos.h1, pos.h2, m.d, best, 0, bm, rootSide);
+  return { v: best, m: bm, nodes };
+}
+// a Lazy SMP helper (shared/mtsplit.js shared mode, 'mthelp'): iterative deepening of the root on the shared table — one ply
+// deeper every other helper (k), from a root order rotated by k >> 1 — until the page stops it (or m.until)
+function mtHelp(m) {
+  let total = 0;
+  for (let d = 1; d <= (m.maxD || 60); d++) {
+    const r = mtLazy(Object.assign({}, m, { d: d + (m.k & 1), rot: m.k >> 1 }));
+    total += r.nodes;
+    if (stop || Date.now() > (m.until || Infinity) || Math.abs(r.v) > WINT) break;
+  }
+  return { nodes: total, ok: false };
 }
 function mtFin(m) {
   const r = m.raw;
@@ -684,7 +724,7 @@ function duelReply(start, moves, n, rule) {
 }
 
 setRule('std');
-const API = { get nodes() { return nodes; }, P1, P2, WIN, WINT, PASS, RES, N, RULES, RULE_ORDER, setRule, get rule() { return RK; }, get R() { return R; },
+const API = { get nodes() { return nodes; }, set SH(t) { SH = t; }, get SH() { return SH; }, mtLazy, P1, P2, WIN, WINT, PASS, RES, N, RULES, RULE_ORDER, setRule, get rule() { return RK; }, get R() { return R; },
   Q, RR, RING, XC, YC, ROWS, RINGL, RPOS, NB, DIRS, CENTER, INNER, OUTER, START, at, sqName, sqParse, mv, mFrom, mTo, own, isQ,
   Pos, path, isJump, name, parse, replay, judge, kindOfMove, LEVELS, think, analyze, cands, duelGood, duelMin, duelReply, need,
   evaluate, hanging, kindOf, resist, mtPlan, mtV, mtKids, mtFin, pvOf };
@@ -693,8 +733,10 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
   let queueP = Promise.resolve();
   self.onmessage = e => {
     const m = e.data;
+    if (m && m.type === 'mtshare') { try { importScripts(m.lib); SH = self.MTTT.attach(m); } catch (err) { SH = null; } return; }   // (shared/mtsplit.js shared mode)
     queueP = queueP.then(() => {
       try {
+        if (SH !== null) SH.begin(m);
         setRule(m.rule || 'std');
         if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...(() => { PRO_CFG = m.cfg || null; try { return think(m.start, m.moves, m.level); } finally { PRO_CFG = null; } })() });
         else if (m.type === 'analyze') {
@@ -708,6 +750,8 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
         else if (m.type === 'mtv') self.postMessage({ id: m.id, type: 'result', ...mtV(m) });
         else if (m.type === 'mtkids') self.postMessage({ id: m.id, type: 'result', ...mtKids(m) });
         else if (m.type === 'mtpv') self.postMessage({ id: m.id, type: 'result', pv: pvOf(m.start, m.moves, m.m, m.plies) });
+        else if (m.type === 'mtlead') self.postMessage({ id: m.id, type: 'result', ...(() => { PRO_CFG = m.cfg || null; try { const r = think(m.start, m.moves, m.level); return Object.assign({}, r, { nodes }); } finally { PRO_CFG = null; } })() });   // (Lazy SMP: the job as one thread plays it, on the shared table)
+        else if (m.type === 'mthelp') self.postMessage({ id: m.id, type: 'result', ...mtHelp(m) });
         else if (m.type === 'mtfin') self.postMessage({ id: m.id, type: 'result', ...mtFin(m) });
       } catch (err) { self.postMessage({ id: m.id, type: 'result', error: String(err && err.stack || err) }); }
     });

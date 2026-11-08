@@ -23,7 +23,8 @@
 //   MTSplit.bestValue(X, o) — iterative deepening for the best move: the first move alone with the full window (Young Brothers
 //     Wait at the root); meanwhile the other workers test the other moves against the score of the previous depths (null
 //     window), then against the real alpha; a move that fails high is searched again with (alpha, ∞).
-//   MTSplit.ladder — drive() for the engines that speak 'mtplan' / 'mtv' / 'mtpv' / 'mtfin' (ugolki, agon, konane, mancala).
+//   MTSplit.ladder — drive() for the engines that speak 'mtplan' / 'mtv' / 'mtpv' / 'mtfin' (ugolki, agon, konane, mancala);
+//   in shared mode a plan with `lazy` (agon, konane) is searched Lazy SMP style instead ('mtlead' + 'mthelp').
 (function () {
   'use strict';
   if (window.MTSplit) return;
@@ -35,15 +36,27 @@
   const TOUCH = !matchMedia('(hover: hover) and (pointer: fine)').matches;
   const HC = navigator.hardwareConcurrency || 2;
   const CAN = typeof Worker === 'function' && HC >= 2;
+  // the shared table's size: 16 MB (phones / tablets, ≤ 2 GB), 32 MB (≤ 4 GB or unknown), 64 MB (more memory)
+  const ttBytes = () => { const dm = navigator.deviceMemory || 0; return (TOUCH || (dm && dm <= 2) ? 16 : dm >= 8 ? 64 : 32) << 20; };
   const helpers = () => CAN ? Math.max(0, Math.min(HC - 1, TOUCH ? 3 : 7)) : 0;
   const maxHelpers = () => CAN ? Math.max(0, HC - 1) : 0;
   // (the same choice and keys as shared/mtworkers.js: Chromium shares it with the mtengine.js games; elsewhere — Safari, Firefox,
   // where turning it on in a mtengine.js game means the COOP mode — these games keep their own key 'aicoding-mt-w')
   const DIP = !!((navigator.userAgentData && navigator.userAgentData.brands || []).some(b => /Chromium/.test(b.brand)) || /Chrome\/\d/.test(navigator.userAgent));
   const K_OWN = 'aicoding-mt-w', K_SET = DIP ? K_PREF : K_OWN;
-  const pref = () => { if (!DIP) { const w = LS.get(K_OWN); if (w !== null) return w; } return LS.get(K_PREF); };
+  // shared mode (init({ sw })): the game's sw.js isolates the page the way shared/mtengine.js does (its init({ light: true,
+  // opt: false }) — Document-Isolation-Policy on Chromium, COOP mode elsewhere only when the option is turned on) and the
+  // workers share one transposition table (shared/mttt.js). The choice is then mtengine.js's own ('aicoding-mt' in every
+  // browser), so turning it on in Safari / Firefox means the COOP mode, as in chess; without isolation (or with the option on
+  // automatic there) the workers run without a shared table, as before.
+  let SHG = false;
+  const ME = () => SHG && window.MTEngine ? window.MTEngine : null;
+  const pref = () => { const M = ME(); if (M) return M.pref(); if (!DIP) { const w = LS.get(K_OWN); if (w !== null) return w; } return LS.get(K_PREF); };
   const want = () => { const p = pref(); return p === '1' || (p !== '0' && !TOUCH); };
   const on = () => CAN && want() && helpers() > 0;
+  const SAB = typeof SharedArrayBuffer === 'function' && typeof Atomics === 'object' && !!self.crossOriginIsolated;
+  const shared = () => !!ME() && SAB;   // the workers share one table now
+  const TTLIB = (() => { try { return new URL('mttt.js?v=1', document.currentScript.src).href; } catch (e) { return '../shared/mttt.js?v=1'; } })();
 
   const T = {
     label: { ja: 'マルチスレッド', en: 'Multi-threading', zh: '多线程', 'zh-TW': '多執行緒', ko: '멀티스레드', es: 'Multihilo', fr: 'Multithread', pt: 'Multithread', de: 'Multithreading', ru: 'Многопоточность', tr: 'Çoklu iş parçacığı', id: 'Multi-thread', hi: 'मल्टी-थ्रेड', ar: 'تعدد المسارات' },
@@ -71,10 +84,18 @@
   const ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M10 10h4v4h-4zM9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></svg>';
   function addOpt() {
     if (opt || !window.HeaderBar || !HeaderBar.addOption) return;
-    opt = HeaderBar.addOption({ id: 'mt', icon: ICON, label: T.label, type: 'toggle', get: on, set: v => { LS.set(K_SET, v ? '1' : '0'); emit(); },
-      hidden: () => helpers() < 1, title: () => T.auto[lang()] || T.auto.en });
+    const M = ME();
+    // shared mode: off → on outside an isolated page asks mtengine.js (a reload: Document-Isolation-Policy, or the COOP mode)
+    const set = M ? v => { if (v && !M.isolated) M.set(true); else if (!v && M.flagged) M.set(false); else { LS.set(K_PREF, v ? '1' : '0'); emit(); } }
+      : v => { LS.set(K_SET, v ? '1' : '0'); emit(); };
+    const title = M ? () => M.tx(M.coi ? 'coiOff' : M.isolated || on() ? 'auto' : 'reload') : () => T.auto[lang()] || T.auto.en;
+    opt = HeaderBar.addOption({ id: 'mt', icon: ICON, label: T.label, type: 'toggle', get: on, set, hidden: () => helpers() < 1, title });
   }
-  function init() { if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', addOpt); else addOpt(); }
+  // init(): the option; init({ sw: 'sw.js?v=N' }): shared mode (load shared/mtengine.js first)
+  function init(o) {
+    if (o && o.sw && window.MTEngine && !SHG) { SHG = true; MTEngine.init({ sw: o.sw, light: true, opt: false }); MTEngine.onChange(emit); }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', addOpt); else addOpt();
+  }
   addEventListener('storage', e => { if (e.key === K_PREF || e.key === K_OWN) emit(); });   // (another tab changed the choice)
 
   // ------------------------------------------------------------------ the pool of workers
@@ -82,20 +103,35 @@
     const H = helpers(), HM = Math.max(H, maxHelpers());
     let dead = false, job = null, seq = 0, tid = 0;
     const W = [], queue = [];
-    const P = { threads: 1 + H, maxThreads: 1 + HM, ready: Promise.resolve(true), free: () => !dead && (!job || job.cancelled), run, cancel, close, preempt: t => { const j = job; if (j && !j.cancelled && j.tag !== t) cancel(); } };
+    // shared mode: one table for every worker (cfg.tt !== false; the bench passes false to compare) and the stop flags —
+    // ctl[0] the job's epoch (a new job / a cancel stops the tasks of the one before at once), ctl[16 + i] the task of worker
+    // i to abandon (a dropped task stops at once instead of running on unheard / restarting the worker)
+    const SHM = shared() && cfg.tt !== false;
+    let TT = null, CTL = null, age = 0;
+    if (SHM) { try { TT = new SharedArrayBuffer(cfg.ttBytes || ttBytes()); CTL = new Int32Array(new SharedArrayBuffer(4 * (16 + HM + 8))); } catch (e) { TT = null; } }
+    const P = { threads: 1 + H, maxThreads: 1 + HM, shared: !!TT, ttBytes: TT ? TT.byteLength : 0, ready: Promise.resolve(true), free: () => !dead && (!job || job.cancelled), run, cancel, close, preempt: t => { const j = job; if (j && !j.cancelled && j.tag !== t) cancel(); } };
     function spawn(i) {
-      const s = { w: new Worker(cfg.url), task: null, aff: new Set(), i };
+      const s = { w: new Worker(cfg.url), task: null, aff: new Set(), i, wd: 0 };
       s.w.onmessage = e => {
         const d = e.data, t = s.task; if (!t || !d || d.id !== t.id || d.type === 'progress') return;
-        s.task = null; if (t.aff !== undefined) { if (s.aff.size > 256) s.aff.clear(); s.aff.add(t.aff); }
+        s.task = null; clearTimeout(s.wd); if (t.aff !== undefined) { if (s.aff.size > 256) s.aff.clear(); s.aff.add(t.aff); }
         if (typeof d.nodes === 'number' && t.job) t.job.X.nodes += d.nodes;
         t.resolve(d.error ? null : d); pump();
       };
       s.w.onerror = e => { console.warn('[mtsplit]', e.message || e); const t = s.task; s.task = null; if (t && t.job) t.job.X.failed = true; restart(s); if (t) t.resolve(null); pump(); };
+      if (TT) s.w.postMessage({ type: 'mtshare', lib: TTLIB, tt: TT, ctl: CTL.buffer, idx: i });
       if (cfg.setup) cfg.setup(s.w);
       return s;
     }
-    function restart(s) { try { s.w.terminate(); } catch (e) {} if (!dead) W[s.i] = spawn(s.i); }
+    function restart(s) { clearTimeout(s.wd); try { s.w.terminate(); } catch (e) {} if (!dead) W[s.i] = spawn(s.i); }
+    // shared mode: ask the worker to stop its task (it answers within a moment and is free again; if not, it is restarted)
+    function halt(s) {
+      const t = s.task; if (!t) return;
+      t.resolve(null);
+      if (!TT) { s.task = null; restart(s); return; }
+      Atomics.store(CTL, 16 + s.i, t.id);
+      clearTimeout(s.wd); s.wd = setTimeout(() => { if (s.task === t) { s.task = null; restart(s); pump(); } }, 3000);
+    }
     for (let i = 0; i <= H; i++) W.push(spawn(i));
     function pump() {
       for (let k = 0; k < queue.length;) {
@@ -105,11 +141,11 @@
         const free = W.slice(0, j.X.n).filter(s => !s.task);
         if (!free.length) break;
         const s = (q.aff !== undefined && free.find(x => x.aff.has(q.aff))) || free.find(x => !x.aff.size) || free[0];
-        queue.splice(k, 1); s.task = q; s.w.postMessage(Object.assign({}, q.msg, { id: q.id }));
+        queue.splice(k, 1); s.task = q; s.w.postMessage(Object.assign({}, q.msg, TT ? { id: q.id, _ep: j.ep, _age: j.age } : { id: q.id }));
       }
     }
     function makeX(j, n) {
-      const X = { n, nodes: 0, cancelled: false, failed: false,
+      const X = { n, nodes: 0, cancelled: false, failed: false, shared: !!TT,
         exec(msg, aff, prio) {
           if (j.cancelled || dead) return Promise.resolve(null);
           let res; const p = new Promise(r => { res = r; });
@@ -122,6 +158,7 @@
         drop(p, hard) {   // abandon a task: a waiting one is taken off the queue; a running one finishes unheard (hard: its worker is restarted)
           const k = queue.findIndex(q => q.id === p.tid); if (k >= 0) { const q = queue.splice(k, 1)[0]; q.resolve(null); return; }
           const s = W.find(x => x.task && x.task.id === p.tid); if (!s) return;
+          if (TT) { halt(s); return; }
           if (hard) { const t = s.task; s.task = null; restart(s); t.resolve(null); pump(); } else s.task.resolve(null);
         },
       };
@@ -129,12 +166,13 @@
     }
     function run(msg, onProgress, tag) {
       const prev = job, j = { tag, cancelled: false, running: false, id: ++seq };
-      const out = new Promise(r => { j.resolve = v => { if (j.resolve) { const f = j.resolve0; j.resolve = null; f(v); } }; j.resolve0 = r; });
+      const out = new Promise(r => { j.resolve = v => { if (j.resolve0) { const f = j.resolve0; j.resolve0 = null; f(v); } }; j.resolve0 = r; });   // (once; later calls do nothing — a cancelled job's end used to throw here, and the next job then fell back to one thread)
       job = j;
       j.done = (async () => {
         if (prev) await prev.done;
         if (j.cancelled || dead) { j.resolve(j.cancelled ? null : undefined); return; }
         const n = msg.mtThreads > 0 ? Math.max(1, Math.min(1 + HM, msg.mtThreads)) : 1 + H;
+        if (TT) { j.ep = Atomics.add(CTL, 0, 1) + 1; age = age % 63 + 1; j.age = age; }   // (a new epoch: the tasks of the job before stop)
         j.X = makeX(j, n); j.running = true;
         const t0 = performance.now();
         const prog = d => { if (!j.cancelled && onProgress) onProgress(Object.assign({}, d, { nodes: j.X.nodes })); };
@@ -142,17 +180,18 @@
         try { r = await cfg.drive(msg, j.X, prog); } catch (e) { console.warn('[mtsplit]', e); r = undefined; }
         if (j.cancelled) r = null; else if (j.X.failed && !r) r = undefined;
         if (job === j) job = null;
-        j.resolve(r ? Object.assign({}, r, { nodes: j.X.nodes, threads: n, ms: performance.now() - t0 }) : r);
+        j.resolve(r ? Object.assign({}, r, { nodes: j.X.nodes, threads: n, shared: !!TT, ms: performance.now() - t0 }) : r);
       })().catch(e => { console.warn('[mtsplit]', e); j.resolve(undefined); }).finally(() => { if (job === j) job = null; });
       return out;
     }
     function cancel(tag) {
       const j = job; if (!j || j.cancelled || (tag !== undefined && j.tag !== tag)) return;
       j.cancelled = true; if (j.X) j.X.cancelled = true; j.resolve(null);
-      for (const s of W.slice()) if (s.task && s.task.job === j) { const t = s.task; s.task = null; restart(s); t.resolve(null); }
+      if (TT) Atomics.add(CTL, 0, 1);   // (every task of the job stops at once)
+      for (const s of W.slice()) if (s.task && s.task.job === j) { if (TT) halt(s); else { const t = s.task; s.task = null; restart(s); t.resolve(null); } }
       pump();
     }
-    function close() { dead = true; const j = job; if (j) { j.cancelled = true; if (j.X) j.X.cancelled = true; j.resolve(null); } W.forEach(s => { try { s.w.terminate(); } catch (e) {} if (s.task) s.task.resolve(null); }); W.length = 0; queue.splice(0).forEach(q => q.resolve(null)); }
+    function close() { dead = true; W.forEach(s => clearTimeout(s.wd)); const j = job; if (j) { j.cancelled = true; if (j.X) j.X.cancelled = true; j.resolve(null); } W.forEach(s => { try { s.w.terminate(); } catch (e) {} if (s.task) s.task.resolve(null); }); W.length = 0; queue.splice(0).forEach(q => q.resolve(null)); }
     return P;
   }
   function use(cfg) {
@@ -165,6 +204,7 @@
       ready() { return Promise.resolve(on() ? make() : null); },
       cancel(tag) { if (p) p.cancel(tag); },
       get threads() { return p ? p.threads : 1; },
+      get shared() { return p ? p.shared : shared() && cfg.tt !== false; },
     };
   }
 
@@ -326,6 +366,20 @@
       const win = v => !!p.win && Math.abs(v) > p.win;
       const kindOf = v => win(v) ? 'exact' : 'heur';
       let raw;
+      if (p.kind === 'best' && p.lazy && X.shared && X.n > 1) {
+        // Lazy SMP (shared mode, plan.lazy — agon, konane: faster to the same depth than splitting the tree there): the first
+        // worker plays the job as one thread does ('mtlead': the same search, the same reply) on the shared table, the others
+        // search the same root meanwhile ('mthelp': one ply deeper every other helper, from a rotated root order) and stop
+        // when it is done
+        const until = Date.now() + (p.ms || 600000) + 2000;
+        const lead = X.exec(Object.assign({}, base, { type: 'mtlead' }), undefined, 60), hs = [];
+        for (let k = 1; k < X.n; k++) hs.push(X.exec(Object.assign({}, base, { type: 'mthelp', k, until, maxD: p.maxD || 60 }), undefined, 50));
+        const r = await lead;
+        for (const h of hs) X.drop(h);
+        if (!r) return X.cancelled ? null : undefined;
+        const out = Object.assign({}, r); delete out.id; delete out.type; delete out.nodes;
+        return out;
+      }
       if (p.kind === 'best') {
         raw = await bestValue(S, { kids, maxD: p.maxD || 60, partialIfBetter: !!p.partialIfBetter, stop: (v, d, ex) => win(v) || (p.solved && ex) });
       } else {
@@ -349,5 +403,5 @@
     },
   };
 
-  window.MTSplit = { init, use, pool, on, helpers, maxHelpers, onChange: f => subs.push(f), touch: TOUCH, allValues, bestValue, ladder, T };
+  window.MTSplit = { init, use, pool, on, helpers, maxHelpers, onChange: f => subs.push(f), touch: TOUCH, allValues, bestValue, ladder, T, get shared() { return shared(); }, get sharedGame() { return SHG; } };
 })();

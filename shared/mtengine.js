@@ -21,6 +21,8 @@
 //   pool.free(), pool.run(job, onProgress, tag) → Promise<result (nodes = all threads) | null (cancelled) | undefined (the
 //   threads failed: do it the usual way)>, pool.cancel(tag)
 //   MTEngine.on() (threads in use now), .coi (COOP mode), .isolated, .helpers(), .onChange(fn)
+//   MTEngine.init({ sw, light: true, opt: false }): only the isolation (worker, reloads, COOP mode) — the page's own toggle
+//   (shared/mtsplit.js shared mode) calls MTEngine.set(v); .want() / .pref() are the same choice ('aicoding-mt')
 (function () {
   'use strict';
   if (window.MTEngine) return;
@@ -183,14 +185,16 @@
       emit();
     }
   }
+  let noToggle = false;   // (init({ opt: false }): the page's own toggle — shared/mtsplit.js in its shared mode — calls set())
   function addOpt() {
     if (opt || !window.HeaderBar || !HeaderBar.addOption) return;
-    opt = HeaderBar.addOption({ id: 'mt', icon: ICON, label: T.label, type: 'toggle', get: on, set,
+    opt = noToggle ? { sync() {} } : HeaderBar.addOption({ id: 'mt', icon: ICON, label: T.label, type: 'toggle', get: on, set,
       hidden: () => !CAN || helpers() < 1, title: () => tx(COI ? 'coiOff' : ISO && !FLAGGED ? 'auto' : 'reload') });
     if (COI) HeaderBar.addOption({ id: 'mtnote', icon: INFO, label: T.note, type: 'button', title: () => tx('coiOff'), onClick: () => alert(tx('reload')) });
   }
   function init(o) {
     o = o || {};
+    if (o.opt === false) noToggle = true;
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', addOpt); else addOpt();
     const go = () => boot(o.sw || 'sw.js', !!o.light);
     if (document.readyState === 'complete') setTimeout(go, 0); else addEventListener('load', () => setTimeout(go, 0));
@@ -287,5 +291,6 @@
       get threads() { return p ? p.threads : 1; },
     };
   }
-  window.MTEngine = { init, use, pool, on, helpers, maxHelpers, onChange: f => subs.push(f), isolated: ISO, coi: COI, touch: TOUCH, T };
+  window.MTEngine = { init, use, pool, on, helpers, maxHelpers, onChange: f => subs.push(f), isolated: ISO, coi: COI, flagged: FLAGGED, touch: TOUCH, T,
+    set, want, pref, can: CAN, tx };   // (set / want / pref / tx: for shared/mtsplit.js's shared mode, which keeps its own toggle)
 })();
