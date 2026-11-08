@@ -10,7 +10,7 @@
 (function () {
   'use strict';
   const RN = {   // rule names and the players label for the size select
-    ja: ['ルード', 'パチーシ', '{n}人', 'ルールと人数'], en: ['Ludo', 'Pachisi', '{n} players', 'Rules & players'], zh: ['飞行棋式鲁多', '帕棋西', '{n}人', '规则与人数'],
+    ja: ['ルドー', 'パチーシ', '{n}人', 'ルールと人数'], en: ['Ludo', 'Pachisi', '{n} players', 'Rules & players'], zh: ['飞行棋式鲁多', '帕棋西', '{n}人', '规则与人数'],
     'zh-TW': ['魯多', '帕奇西', '{n}人', '規則與人數'], ko: ['루도', '파치시', '{n}인', '규칙·인원'], es: ['Ludo', 'Parchís indio', '{n} jugadores', 'Reglas y jugadores'],
     fr: ['Ludo', 'Pachisi', '{n} joueurs', 'Règle et joueurs'], pt: ['Ludo', 'Pachisi', '{n} jogadores', 'Regras e jogadores'], de: ['Ludo', 'Pachisi', '{n} Spieler', 'Regel & Spieler'],
     ru: ['Лудо', 'Пачиси', '{n} игрока', 'Правила и игроки'], tr: ['Ludo', 'Pachisi', '{n} oyuncu', 'Kural ve oyuncu'], id: ['Ludo', 'Pachisi', '{n} pemain', 'Aturan & pemain'],

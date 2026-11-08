@@ -1,5 +1,5 @@
-/* ludo/rated.js — レート戦（ソロ、AIと：ルード・2人・標準ルール・待ったなし）。shared/placement.js の予備選つき。
-   RT_LV: AIの各レベルのレート（tools/ladder.js：Lv.10 相手の2人ルード自己対局 1200局からのElo を単調に均したもの。
+/* ludo/rated.js — レート戦（ソロ、AIと：ルドー・2人・標準ルール・待ったなし）。shared/placement.js の予備選つき。
+   RT_LV: AIの各レベルのレート（tools/ladder.js：Lv.10 相手の2人ルドー自己対局 1200局からのElo を単調に均したもの。
    運の要素が大きいので段差は小さい）。記録は aicoding-ludo-rated（{ r, n, w, l, d, hist, pl }）。
    Uses the globals of app.js: G, settings, newGame, save, toast, t, $ … */
 'use strict';
