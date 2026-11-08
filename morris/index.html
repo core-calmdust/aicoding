@@ -142,7 +142,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 .hintlbl{position:absolute;width:calc(var(--cell) * 7 / var(--S));height:calc(var(--cell) * 7 / var(--S));margin:calc(var(--cell) * 7 / var(--S) * -.5) 0 0 calc(var(--cell) * 7 / var(--S) * -.5);display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;z-index:9;font-family:'JetBrains Mono',monospace;line-height:1.05;text-shadow:0 1px 3px rgba(0,0,0,.9),0 0 6px rgba(0,0,0,.8)}
 .hintlbl b{font-size:calc(var(--cell) * 7 / var(--S) * .22);font-weight:700;background:rgba(14,9,26,.78);border-radius:6px;padding:0 .22em;box-shadow:0 0 0 1px rgba(255,255,255,.08)}
 .hintlbl small{font-size:calc(var(--cell) * 7 / var(--S) * .14);opacity:.95;background:rgba(14,9,26,.7);border-radius:4px;padding:0 .25em;margin-top:1px}
-.hintlbl.win{color:#9ff0c4}.hintlbl.loss{color:#ff9b90}.hintlbl.heur{color:rgba(255,255,255,.85)}.hintlbl.neg{color:#ffc2b8}
+.hintlbl.win{color:#9ff0c4}.hintlbl.loss{color:#ff9b90}.hintlbl.draw{color:#f3df9a}.hintlbl.heur{color:rgba(255,255,255,.85)}.hintlbl.neg{color:#ffc2b8}
 .hintlbl.best b{color:var(--accent)}
 .hintlbl.best::before{content:"";position:absolute;inset:12%;border-radius:50%;border:2px solid rgba(var(--hl2),.9);box-shadow:0 0 10px rgba(var(--hl2),.5)}
 .hintlbl.on-pc{color:#fff}
@@ -501,6 +501,8 @@ body.in-online .controls{grid-template-columns:repeat(8,1fr)}   /* + 引き分�
 .level-wrap input{width:100%;margin:0;accent-color:var(--brass);height:32px;touch-action:pan-y}
 .level-name{font-weight:700;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;min-height:22px}
 .level-name small{font-weight:400;font-size:11px;color:var(--dim)}
+.checks.pf-ch{margin-top:8px;display:flex!important;flex-direction:column;align-items:stretch;gap:4px;grid-template-columns:none!important}.checks.pf-ch.hidden{display:none!important}.checks.pf-ch label{width:100%;box-sizing:border-box}.pf-ch small{font-size:11.5px;color:var(--muted);line-height:1.5}.pf-ch small b{color:var(--accent)}
+.pf-res{color:var(--muted)}.pf-res.ok{color:var(--accent);font-weight:700}
 .checks{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px}
 .checks label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);cursor:pointer}
 .checks input{accent-color:var(--brass);width:16px;height:16px}
@@ -1200,6 +1202,7 @@ body.in-online #coachCard{display:none!important}
         <input type="range" min="1" max="10" step="1" id="levelRange">
         <div class="level-name" id="levelName"></div>
       </div>
+      <div class="checks pf-ch hidden" id="fPfCh"><label><input type="checkbox" id="optPfCh"><span data-i18n="pfx.ch"></span></label><small id="pfChInfo"></small></div>
     </div>
     <div class="field hidden" id="fLevel2">
       <label data-i18n="ng.level2"></label>
@@ -1331,6 +1334,7 @@ body.in-online #coachCard{display:none!important}
 
 <script src="i18n.js?v=20261107l14"></script>
 <script src="i18n_more.js?v=20261107l14"></script>
+<script src="i18n_perfect.js?v=1"></script>
 <script src="i18n_coach.js?v=5"></script>
 <script src="../shared/coachkit.js?v=16l14"></script>
 <script src="../shared/record.js?v=12l14"></script>
@@ -1347,7 +1351,7 @@ body.in-online #coachCard{display:none!important}
 <script src="../shared/resign.js?v=3l14"></script><script src="../shared/drawoffer.js?v=1l14"></script>
 <script src="../shared/tick.js?v=2l14"></script>
 <script src="../shared/ruletour.js?v=29l14"></script>
-<script src="engine.js?v=20261028rb-pro1"></script>
+<script src="engine.js?v=20261108pf1"></script>
 <script src="rvbox.js?v=20261107l14"></script><!-- 振り返りボックス (PC): 候補手・読み筋・検討 -->
 <script src="i18n-online.js?v=20261107l14-hb1"></script>
 <script src="firebase-config.js?v=ac1"></script>
@@ -1421,7 +1425,9 @@ let LANG = detectLang();
 const AIW = () => ({ ru: 'ИИ', tr: 'YZ' })[LANG] || 'AI';   // the word "AI" in displayed player labels (ru / tr use their own abbreviation; saved records keep 'AI')
 function t(k, v) { let x = (I18N[LANG] || I18N.en)[k]; if (x === undefined) x = I18N.en[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
 const pname = p => t(p === P1 ? 'p1' : 'p2');
-const LV = i => t('lv')[i], LVD = i => t('lvd')[i];
+const PF_LV = 11;   // 完全解析 (six men's morris only): engine.js LEVELS[11] = perfect.js + the solved database (six.mdb.gz)
+const LV = i => i === PF_LV ? t('pfx.lv') : t('lv')[i], LVD = i => i === PF_LV ? t('pfx.lvd') : t('lvd')[i];
+const lvMax = rule => rule === 'six' ? PF_LV : 10;
 function applyI18n() {
   document.documentElement.lang = LANG === 'zh' ? 'zh-CN' : LANG;
   document.querySelectorAll('[data-i18n]').forEach(e => { e.textContent = t(e.dataset.i18n); });
@@ -1440,6 +1446,7 @@ let busyToken = 0;
 let lesson = null, puzzle = null;
 let rtHold = false;   // a rated game restored on page load: its clock stays stopped (no beeps) until the first move is played
 let resignOver = null;   // a local game ended by 投了: { over, winner, loser, why: 'resign', mv } (mv: the moves array it belongs to)
+let pfGame = null;   // 完全解析 challenge game (six men's morris vs Lv.11 from the start, no hints / evaluation / coach / takebacks): { on: 1 }
 let rgame = null;   // rated game vs the AI: { id, lv, or, my, tag, ct: [ms, ms], t, over, done }
 let gameOverShown = false;
 let sel = null;          // human input in progress: { from, to, stage: 'pick' | 'remove', cands }
@@ -1454,11 +1461,12 @@ function load() {
     if (!d) return false;
     Object.assign(settings, d.settings || {});
     if (settings.mode === 'online') settings.mode = 'pvp';
-    if (settings.level > 10) settings.level = 10; if (settings.level2 > 10) settings.level2 = 10;
+    { const mx = lvMax(settings.rule); if (settings.level > mx) settings.level = mx; if (settings.level2 > mx) settings.level2 = mx; }
     if (Array.isArray(d.moves)) {
       setVariant(d.rule || settings.rule); startSpec = null;
       if (!validMoves(d.moves)) { setVariant(settings.rule); return false; }
       moves = d.moves; humanColor = d.humanColor || 1; evals = Array.isArray(d.evals) ? d.evals : [];
+      pfGame = d.pf && !d.pf.done ? d.pf : null;
       rgame = d.rated && d.rated.id ? d.rated : null; if (rgame && !rgame.over) { rgame.t = Date.now(); rtHold = true; }   // restored on load: the clock waits for the first move
       resignOver = d.resign && d.resign.draw ? { over: true, winner: 0, draw: true, why: 'agree', mv: moves } : d.resign && d.resign.loser ? { over: true, winner: d.resign.winner, loser: d.resign.loser, why: 'resign', mv: moves } : null;
       cur = moves.length; gameOverShown = statusAt(cur).over;
@@ -1470,13 +1478,13 @@ function load() {
 function save() {
   if (settings.mode === 'online') { try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); d.settings = Object.assign({}, settings, { mode: 'pvp' }); localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {} return; }   // an online game is not kept as the local game
   if (lesson || puzzle) { try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); d.settings = settings; localStorage.setItem(STORE, JSON.stringify(d)); } catch (e) {} return; }
-  try { localStorage.setItem(STORE, JSON.stringify({ settings, rule: gv, moves, humanColor, evals: evals.slice(0, moves.length + 1), rated: rgame, resign: resignOver && resignOver.mv === moves ? (resignOver.draw ? { draw: true } : { winner: resignOver.winner, loser: resignOver.loser }) : null })); } catch (e) {}
+  try { localStorage.setItem(STORE, JSON.stringify({ settings, rule: gv, moves, humanColor, evals: evals.slice(0, moves.length + 1), rated: rgame, pf: pfGame, resign: resignOver && resignOver.mv === moves ? (resignOver.draw ? { draw: true } : { winner: resignOver.winner, loser: resignOver.loser }) : null })); } catch (e) {}
 }
 
 // ====================================================================== engine workers
 let jobId = 0;
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261028rb-pro1');
+  const w = new Worker('engine.js?v=20261108pf1');
   w.jobs = new Map();
   w.onmessage = e => {
     const m = e.data, j = w.jobs.get(m.id); if (!j) return;
@@ -1749,7 +1757,11 @@ function renderPrompt() {
   el.textContent = s; el.classList.toggle('show', !!s);
 }
 // value label for an engine value (mover's view)
-function valLabel(v) {
+function valLabel(v, e) {
+  if (e && e.pf) {   // 完全解析 (six): win / draw / loss, with the plies until the next capture in the moving phase
+    const z = e.pf.z;
+    return e.pf.r > 0 ? { cls: 'win', big: t('h.win'), small: z ? t('pfx.take', { z }) : '' } : e.pf.r < 0 ? { cls: 'loss', big: t('h.loss'), small: z ? t('pfx.taken', { z }) : '' } : { cls: 'draw', big: t('res.draw'), small: '' };
+  }
   if (v > WINT) return { cls: 'win', big: t('h.win'), small: t('h.in', { n: (WIN - v + 1) >> 1 }) };
   if (v < -WINT) return { cls: 'loss', big: t('h.loss'), small: t('h.in', { n: (WIN + v) >> 1 }) };
   const x = v / 100; return { cls: 'heur' + (x < -0.05 ? ' neg' : ''), big: (x > 0.05 ? '+' : '') + (Math.abs(x) < 0.05 ? '0' : x.toFixed(1)), small: '' };
@@ -1767,7 +1779,7 @@ function drawHints(list, svg) {
   const g = hintGroups(list); if (!g.size) return;
   let best = -Infinity; for (const e of g.values()) best = Math.max(best, e.v);
   for (const [at, e] of g) {
-    const L = valLabel(e.v), d = fxDiv('hintlbl ' + L.cls + (e.v === best ? ' best' : '') + (pcEls.has(at) ? ' on-pc' : ''), at);
+    const L = valLabel(e.v, e), d = fxDiv('hintlbl ' + L.cls + (e.v === best ? ' best' : '') + (pcEls.has(at) ? ' on-pc' : ''), at);
     d.innerHTML = `<b>${L.big}</b>${L.small ? `<small>${L.small}</small>` : ''}`;
   }
   if (!sel) {   // arrow for the best move in the moving phase
@@ -1783,6 +1795,8 @@ function evalFromList(list, mover) {
   if (!list || !list.length) return null;
   let best = -Infinity; for (const e of list) best = Math.max(best, e.v);
   const sign = mover === P1 ? 1 : -1;
+  { let b = null; for (const e of list) if (e.pf && (!b || e.v > b.v)) b = e;   // 完全解析 (six): the exact verdict
+    if (b) return { s: b.pf.r ? sOfV(b.v) * sign : 0, kind: 'pf', r: b.pf.r, z: b.pf.z, side: b.pf.r > 0 ? mover : b.pf.r < 0 ? 3 - mover : 0 }; }
   if (best > WINT) return { s: sOfV(best) * sign, kind: 'win', side: mover, n: (WIN - best + 1) >> 1 };
   if (best < -WINT) return { s: sOfV(best) * sign, kind: 'win', side: 3 - mover, n: (WIN + best) >> 1 };
   return { s: sOfV(best) * sign, kind: 'heur' };
@@ -1790,6 +1804,7 @@ function evalFromList(list, mover) {
 function evalText(ev) {
   if (!ev) return '—';
   if (ev.kind === 'final') return ev.side ? t('ev.won', { c: pname(ev.side) }) : t('res.draw');
+  if (ev.kind === 'pf') return t('pfx.ev', { x: !ev.r ? t('res.draw') : ev.z ? t('pfx.win', { c: pname(ev.side), z: ev.z }) : t('pfx.winP', { c: pname(ev.side) }) });
   if (ev.kind === 'win') return ev.n ? t('ev.winIn', { c: pname(ev.side), n: ev.n }) : t('ev.winning', { c: pname(ev.side) });
   const a = Math.abs(ev.s), c = pname(ev.s > 0 ? P1 : P2);
   return a < 0.08 ? t('ev.even') : t(a < 0.25 ? 'ev.slight' : a < 0.5 ? 'ev.adv' : 'ev.sup', { c });
@@ -1833,7 +1848,7 @@ function renderInfo() {
     $('#status' + p).textContent = st.winner === p ? t('st.win') : thinking === p ? t('thinking') : (!st.over && tm === p ? phaseText(pos, p) : '');
   }
   $('#evalCard').classList.toggle('hidden', (!settings.eval && !rtLive()) || !!(window.olLive && olLive()));
-  document.body.classList.toggle('rated-live', rtLive());
+  document.body.classList.toggle('rated-live', rtLive() || pfLive());
   for (const p of [P1, P2]) { const c = $('#clk' + p); if (rgame && settings.mode === 'ai' && !lesson && !puzzle) { const ms = rtClockLeft(p - 1); c.textContent = fmtClock(ms); c.classList.toggle('low', ms < 30000 && rtLive()); } else c.textContent = ''; }
   let ev = st.over ? { s: st.winner === P1 ? 1 : st.winner === P2 ? -1 : 0, kind: 'final', side: st.winner } : evals[cur];
   if (!ev && cur > 0 && evals[cur - 1]) ev = evals[cur - 1];
@@ -1843,7 +1858,7 @@ function renderInfo() {
   $('#btnUndo').disabled = settings.mode === 'watch' || !canUndo();
   wpRender();
   $('#btnResign').disabled = !canResign();
-  $('#btnHint').disabled = rtLive() || settings.mode === 'online';
+  $('#btnHint').disabled = rtLive() || pfLive() || settings.mode === 'online';
   $('#btnHint').classList.toggle('on', settings.hint);
   $('#btnSound').classList.toggle('on', settings.sound);
   $('#reviewBar').classList.toggle('show', reviewing && !lesson && !puzzle);
@@ -1861,7 +1876,7 @@ function hbInfo(pos, st) {
   const tm = pos.side;
   let h = !st.over ? '' : `<span class="hb-chip"><i class="pdisc p${st.over ? (st.winner || tm) : tm}"></i><b>${escHb(st.over ? (st.winner ? t('hb.won', { c: pname(st.winner) }) : t('res.draw')) : t('hb.turn', { c: pname(tm) }))}</b>${st.over ? '' : `<small>${escHb(phaseText(pos, tm))}</small>`}</span>`;
   for (const p of [P1, P2]) h += `<span class="hb-chip"><i class="pdisc p${p}"></i><b>${pos.cnt[p]}</b><small>${escHb(t('onboard'))}</small>${pos.hand[p] > 0 ? `<b>${pos.hand[p]}</b><small>${escHb(t('hb.inHand'))}</small>` : ''}</span>`;
-  const evOn = settings.eval && !lesson && !puzzle && !rtLive() && !(window.olLive && olLive());
+  const evOn = settings.eval && !lesson && !puzzle && !rtLive() && !pfLive() && !(window.olLive && olLive());
   if (evOn && $('#evalText').textContent && $('#evalText').textContent !== '—') h += `<span class="hb-chip">${escHb(t('eval'))} <b>${escHb($('#evalText').textContent)}</b></span>`;
   if (puzzle) h += `<span class="hb-chip">${escHb(PZBook.t('movesLeft', { n: Math.max(0, puzzle.n - puzzle.used) }))}</span>`;
   else h += `<span class="hb-chip">${escHb(t('info.moves', { n: cur }))}</span>`;
@@ -2006,6 +2021,7 @@ function newGame(rated) {
   rgame = null;
   rtHold = false; settings.rsNoRec = false;
   if (rated) { settings.rule = 'nine'; rgame = Object.assign(rated, { ct: [RT_CLOCK.base, RT_CLOCK.base], t: Date.now() }); }
+  pfGame = !rated && settings.mode === 'ai' && settings.rule === 'six' && settings.level === PF_LV && settings.pfCh !== false ? { on: 1 } : null;
   setVariant(settings.rule); startSpec = null; drawLines();
   if (settings.mode === 'ai') humanColor = rated ? (Math.random() < 0.5 ? P1 : P2) : settings.color === 0 ? (Math.random() < 0.5 ? P1 : P2) : settings.color;
   moves = []; cur = 0; reviewing = false; evals = []; hintList = null; gameOverShown = false; sel = null;
@@ -2050,7 +2066,7 @@ async function maybeAI(tok) {
 async function analyzeCurrent(tok) {
   const idx = cur, key = keyOf(idx);
   if (gameOver(idx) || lesson || puzzle) { hintList = null; return; }
-  if (rtLive() || (window.olLive && olLive())) { hintList = null; return; }
+  if (rtLive() || pfLive() || (window.olLive && olLive())) { hintList = null; return; }
   const coachOn = window.MorrisCoach && MorrisCoach.active();
   if (!settings.eval && !settings.hint && !coachOn) return;
   const mover = toMoveAt(idx);
@@ -2075,7 +2091,7 @@ async function analyzeCurrent(tok) {
 const COACH_DEEP = 9;   // engine LEVELS: 1.5 s
 async function coachDeep(idx, key, apply) {
   const list = anaCache.get(key);
-  if (!list || !list.length || list.deep || !(window.MorrisCoach && MorrisCoach.active() && (settings.mode === 'pvp' || toMoveAt(idx) === humanColor))) return;
+  if (!list || !list.length || list.deep || list.some(e => e.pf) || !(window.MorrisCoach && MorrisCoach.active() && (settings.mode === 'pvp' || toMoveAt(idx) === humanColor))) return;
   const r = await request('ana', { type: 'think', moves: moves.slice(0, idx), level: COACH_DEEP });
   if (!r || r.error || r.book || r.move === undefined || r.move === null || r.move < 0 || keyOf(idx) !== key || anaCache.get(key) !== list) return;
   const out = deepTop(list, r.move, e => e.v > WINT); out.deep = true;
@@ -2091,6 +2107,7 @@ function deepTop(list, m, won) {
 function onGameEnd(st) {
   if (moves.length !== cur || gameOverShown) return;
   if (settings.mode === 'online') return;   // online: the result comes from online-ui.js
+  if (!statusAt(cur).over) return;   // a late call from a game that was already left (a new game started within the delay)
   gameOverShown = true;
   recordGame(st);
   const youWin = settings.mode === 'ai' && st.winner === humanColor;
@@ -2104,6 +2121,7 @@ function onGameEnd(st) {
     const rx = rtSettle(st);
     if (rx) sub += `<br>${rx.pl ? Placement.resHtml(rx.pl) : `<span class="rt-res">R ${rx.old} → <b>${rx.now}</b> (${rtD(rx.d)})</span>`} · ${rtRank(rx.now)}<br><small style="color:var(--muted)">${t('rt.opp', { lv: rtLvName(rgame.lv), r: rgame.or })}</small>`;
   } else if (settings.mode === 'ai') sub += '<br>' + t('res.vs', { name: LV(settings.level), lv: settings.level });
+  { const pf = pfSettle(st); if (pf) sub += `<br><span class="pf-res${pf.ok ? ' ok' : ''}">${pf.ok ? '★ ' : ''}${escHb(pf.text)}</span>`; }
   $('#resultSub').innerHTML = sub;
   setTimeout(() => showOverlay('#resultOverlay'), 700);
 }
@@ -2157,12 +2175,12 @@ async function playerDraw() {
   let ev = null; for (let i = n; i >= 0 && !ev; i--) ev = evals[i] || null;
   if (!ev || ev.kind === 'heur') { const r = await request('ana', { type: 'analyze', moves: moves.slice(0, n), time: 900 }); if (n !== moves.length || drawLiveKind() !== 'ai') return; if (r && r.list) ev = evalFromList(r.list, toMoveAt(n)) || ev; }
   const v = ev ? ev.s * (ai === P1 ? 1 : -1) : 0;   // the AI's view (-1 … 1)
-  if (n >= 24 && v <= 0.08) { toast(D('aiYes'), 1600); drawEnd(); } else toast(D('aiNo'), 2000);
+  if (n >= 24 && v <= 0.08 && !pfLive()) { toast(D('aiYes'), 1600); drawEnd(); } else toast(D('aiNo'), 2000);
 }
 window.drawLiveKind = drawLiveKind; window.playerDraw = playerDraw;
 window.drawAgree = () => { if (drawLiveKind() === 'pvp') drawEnd(); };
 function canUndo() {
-  if (lesson || puzzle || rgame || settings.mode === 'online') return false;
+  if (lesson || puzzle || rgame || pfLive() || settings.mode === 'online') return false;
   if (resignOver && resignOver.mv === moves) return false;
   if (settings.mode === 'pvp') return cur > 0;
   if (settings.mode === 'ai') { for (let i = cur - 1; i >= 0; i--) if (toMoveAt(i) === humanColor) return true; return false; }
@@ -2235,6 +2253,7 @@ $('#btnNew').onclick = () => (lesson || puzzle) ? openNewDialog() : rsOpen();
 $('#btnUndo').onclick = undo;
 $('#btnHint').onclick = () => {
   if (rtLive()) { toast(t('rt.noEval')); return; }
+  if (pfLive()) { toast(t('pfx.on'), 2200); return; }
   settings.hint = !settings.hint; save();
   if (!settings.hint) { hintList = null; renderFx(); renderInfo(); }
   else { const k = keyOf(cur); if (anaCache.has(k)) { hintList = anaCache.get(k); renderFx(); } else analyzeCurrent(busyToken); renderInfo(); }
@@ -2473,11 +2492,13 @@ function segSync() {
   $('#fInfoText').textContent = m === 'lesson' ? t('ls.desc') : m === 'puzzle' ? t('pz.desc') : '';
   $('#btnStart').textContent = m === 'lesson' ? t('ng.toLessons') : m === 'puzzle' ? t('ng.toPuzzles') : m === 'rated' ? t('rt.start') : t('start');
   $('#levelLabel').textContent = m === 'watch' ? t('ng.level1') : t('ng.level');
+  { const mx = lvMax(draft.rule); for (const id of ['#levelRange', '#levelRange2']) $(id).max = mx; if (draft.level > mx) draft.level = mx; if (draft.level2 > mx) draft.level2 = mx; }
+  { const on = m === 'ai' && draft.rule === 'six' && draft.level === PF_LV && !draft.resume; $('#fPfCh').classList.toggle('hidden', !on); if (on) { $('#optPfCh').checked = draft.pfCh !== false; $('#pfChInfo').innerHTML = pfInfoHtml(); } }
   $('#levelRange').value = draft.level; $('#levelName').innerHTML = levelLabelHTML(draft.level);
   $('#levelRange2').value = draft.level2; $('#levelName2').innerHTML = levelLabelHTML(draft.level2);
 }
 function openNewDialog(resume) {
-  draft = { mode: lesson ? 'lesson' : puzzle ? 'puzzle' : rgame && settings.mode === 'ai' ? 'rated' : settings.mode, rule: settings.rule, color: settings.color, level: settings.level, level2: settings.level2 };
+  draft = { mode: lesson ? 'lesson' : puzzle ? 'puzzle' : rgame && settings.mode === 'ai' ? 'rated' : settings.mode, rule: settings.rule, color: settings.color, level: settings.level, level2: settings.level2, pfCh: settings.pfCh };
   if (resume) { draft.resume = true; if (!['ai', 'pvp', 'watch'].includes(draft.mode)) draft.mode = 'ai'; draft.color = humanColor; }   // 「ここから再開」: the same dialog, only what fits going on from this position
   $('#optEval').checked = settings.eval; $('#optLast').checked = settings.last; $('#optAnim').checked = settings.anim; $('#optThreat').checked = settings.threat;
   if (window.ResumeNG) { if (resume) ResumeNG.open({ modes: ['ai', 'pvp', 'watch'], hide: '#fRules' }); else ResumeNG.close(); }
@@ -2489,7 +2510,8 @@ function resumeWith() {
   Object.assign(settings, { mode: draft.mode, color: draft.color, level: draft.level, level2: draft.level2, eval: $('#optEval').checked, last: $('#optLast').checked, anim: $('#optAnim').checked, threat: $('#optThreat').checked });
   if (typeof stopPlay === 'function') stopPlay(); busyToken++; cancelWorker('ai'); thinking = 0; animating = false; wpPaused = false; sel = null; 
   if (settings.mode === 'ai') humanColor = settings.color === 0 ? (Math.random() < 0.5 ? P1 : P2) : settings.color;
-  if (settings.mode === 'ai' && (pm !== 'ai' || ph !== humanColor)) settings.rsNoRec = true;   // taken over midway: not a game of the player's for the record
+  if (settings.mode === 'ai' && (pm !== 'ai' || ph !== humanColor)) settings.rsNoRec = true;
+  pfGame = null;   // taken over midway: not a 完全解析 challenge   // taken over midway: not a game of the player's for the record
   hideOverlay('#resultOverlay');
   if (reviewing) resumeHere(); else { gameOverShown = false; update(false); save(); afterPosition(); }
 }
@@ -2499,13 +2521,14 @@ $('#ruleCards').onclick = e => { const b = e.target.closest('.ngt-gcard'); if (b
 // the ルール button on each card (shared/ngtabs.js): that variant's rules tab (12 / 6 men: past the shared intro, at their own first page)
 $('#ruleCards').ngtRules = r => openRules(r, r === 'nine' ? 0 : 1);
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
+$('#optPfCh').onchange = e => { draft.pfCh = e.target.checked; };
 // PRO mode (shared/proset.js; common rule「対局設定の Pro モード」): advanced settings for the AI beside the level — vs the AI /
 // AI vs AI, never rated. The changed values make a level of the engine's own form (engine.js: cfg).
-var PRO = window.ProSet ? ProSet.init({ game: 'morris', lang: () => LANG, level: () => draft.level || settings.level, show: () => (draft.mode === 'ai' || draft.mode === 'watch'),
+var PRO = window.ProSet ? ProSet.init({ game: 'morris', lang: () => LANG, level: () => draft.level || settings.level, show: () => (draft.mode === 'ai' || draft.mode === 'watch') && !(draft.rule === 'six' && (draft.level === PF_LV || (draft.mode === 'watch' && draft.level2 === PF_LV))),
   store: { get: () => settings.pro, set: v => { settings.pro = v; } },
   defaults: lv => { const L = E.LEVELS[lv] || E.LEVELS[5]; return { limit: L.noise === undefined && L.ms ? { k: 'time', v: L.ms / 1000 } : { k: 'depth', v: L.d }, var: L.noise === undefined ? 0 : L.blunder ? 2 : 1 }; },
   params: [{ key: 'limit', kinds: { time: [0.1, 30], depth: [1, 40] } }, { key: 'var' }] }) : null;
-function proGet(lv) { if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; return PRO.get(lv); }
+function proGet(lv) { if (lv === PF_LV || !PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; return PRO.get(lv); }
 function proTag(lv) { return proCfg(lv) ? ' PRO' : ''; }
 function proCfg(lv) {
   const e = proGet(lv); if (!e) return null;
@@ -2525,7 +2548,7 @@ $('#btnStart').onclick = () => {
   if (draft.mode === 'rated') { rtStart(); return; }
   if (draft.resume) { resumeWith(); return; }
   exitSpecial();
-  Object.assign(settings, { mode: draft.mode, rule: draft.rule, color: draft.color, level: draft.level, level2: draft.level2,
+  Object.assign(settings, { mode: draft.mode, rule: draft.rule, color: draft.color, level: draft.level, level2: draft.level2, pfCh: draft.pfCh !== false,
     eval: $('#optEval').checked, last: $('#optLast').checked, anim: $('#optAnim').checked, threat: $('#optThreat').checked });
   newGame();
 };
@@ -2553,6 +2576,23 @@ function rtPick(r) {
   return { lv, or: RT_LV[lv], tag: diff > 150 ? 'up' : diff < -150 ? 'down' : 'even' };
 }
 function statusAtRaw(i) { const keep = rgame; rgame = null; try { return statusAt(i); } finally { rgame = keep; } }
+// ---------------------------------------------------------------- 完全解析 challenge (six men's morris vs Lv.11, not rated):
+// a game from the start without hints, evaluation, coach, takebacks or an agreed draw; a draw or a win earns the title
+const PF_STORE = STORE + '-perfect';
+function pfLive() { return !!(pfGame && !pfGame.done && settings.mode === 'ai' && gv === 'six' && !lesson && !puzzle && !startSpec && !statusAt(moves.length).over); }
+function pfLoad() { try { const o = JSON.parse(localStorage.getItem(PF_STORE) || 'null'); if (o && typeof o === 'object') return o; } catch (e) {} return { n: 0, d: 0, w: 0 }; }
+function pfInfoHtml() { const o = pfLoad(), T = escHb(t('pfx.title')); return o.d || o.w ? '★ ' + escHb(t('pfx.have', { t: '\u0000', d: o.d, w: o.w })).replace('\u0000', `<b>${T}</b>`) : escHb(t('pfx.none', { t: '\u0000' })).replace('\u0000', `<b>${T}</b>`); }
+// at the end of a challenge game: { ok, text } (null when this game is not a challenge)
+function pfSettle(st) {
+  if (!pfGame || pfGame.done || settings.mode !== 'ai' || gv !== 'six' || settings.level !== PF_LV || startSpec || settings.rsNoRec || lesson || puzzle) return null;
+  if (!statusAt(moves.length).over) return null;   // (a late call from a game already left)
+  pfGame.done = true;
+  const ok = !!((st.draw && st.why !== 'agree') || (st.winner && st.winner === humanColor)), o = pfLoad();
+  o.n = (o.n || 0) + 1; if (ok) { if (st.winner) o.w = (o.w || 0) + 1; else o.d = (o.d || 0) + 1; if (!o.t) o.t = Date.now(); }
+  try { localStorage.setItem(PF_STORE, JSON.stringify(o)); } catch (e) {}
+  save();
+  return { ok, text: t(ok ? 'pfx.got' : 'pfx.fail', { t: t('pfx.title') }) };
+}
 function rtLive() { return !!(rgame && !rgame.over && !statusAtRaw(moves.length).over && !lesson && !puzzle && settings.mode === 'ai'); }
 function rtClockLeft(c) {   // c: 0 first player, 1 second
   if (!rgame || !rgame.ct) return 0;
@@ -3452,14 +3492,14 @@ function rbRealOver() {
   const { pos, hashes } = E.replay(gv, startSpec, moves); let c = 0; for (const h of hashes) if (h === pos.h1) c++;
   return pos.status() !== 0 || c >= 3;
 }
-function rbActive() { return !lesson && !puzzle && rvOpen && !!rv && !rv.running && rv.key === gameKey() && !rtLive() && !(window.olLive && olLive()); }
+function rbActive() { return !lesson && !puzzle && rvOpen && !!rv && !rv.running && rv.key === gameKey() && !rtLive() && !pfLive() && !(window.olLive && olLive()); }
 function rbOn() { return !!(window.RvBox && RvBox.pc() && rbActive()); }
 function rbCancel() { if (rbW && rbBusy) { rbW.terminate(); rbW = null; } rbBusy = false; }
 function rbRows(list, lines) {
   const side = posAt(cur).pos.side, played = !rbCons() && cur < moves.length ? moves[cur] : -1;
   return list.slice().sort((a, b) => b.v - a.v).slice(0, 5).map(e => {
-    const L = valLabel(e.v), ln = lines && lines[e.m];
-    return { mv: e.m, move: mvName(e.m), score: L.big + (L.small ? ' ' + L.small : ''), cls: L.cls === 'win' || L.cls === 'loss' ? L.cls : '',
+    const L = valLabel(e.v, e), ln = lines && lines[e.m];
+    return { mv: e.m, move: mvName(e.m), score: L.big + (L.small ? ' ' + L.small : ''), cls: L.cls === 'win' || L.cls === 'loss' || L.cls === 'draw' ? L.cls : '',
       pv: ln ? ln.map((m, k) => `<span style="color:${(side === P1) === !(k & 1) ? 'var(--gold2)' : 'var(--plat2)'}">${mvName(m)}</span>`) : null, played: e.m === played };
   });
 }
@@ -3791,7 +3831,7 @@ window.addEventListener('resize', () => renderFx());
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=20261110rv1" defer></script>
+<script src="../shared/atlas.js?v=20261110mp1" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1l14" defer></script>
 <script src="../shared/atlas-account.js?v=20261101fa1l14" defer></script>
 <script src="../shared/infotabs.js?v=17l14" data-strips defer></script>

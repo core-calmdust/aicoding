@@ -1,5 +1,5 @@
 // Perfect-play database (made by tools/solve.c): pack the class files into one file, read it, and check it
-// against the site's own rules (engine.js). Study tool: the site does not load these files yet (see SOLVE.md).
+// against the site's own rules (engine.js). The site ships the six men's database as six.mdb.gz (pack + gzip -9), read by perfect.js.
 //
 //   node tools/solvedb.js pack  <dir from solve, e.g. out/six-q50> <out.mdb>
 //   node tools/solvedb.js check <file.mdb> [games=300] [random=20000]
