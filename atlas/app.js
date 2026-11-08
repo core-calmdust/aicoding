@@ -1326,7 +1326,9 @@
   const SG_SEL = '.plrow, .chips';
   function scrollGuide(row) {
     if (row._sg || row.closest('.hsc') || !row.parentNode) return; row._sg = 1;
-    const w = document.createElement('div'); w.className = 'sgw'; row.parentNode.insertBefore(w, row); w.appendChild(row);
+    // (moving a node resets its scroll: keep where the row was — a picker rebuilt on each choice restores its rows' scroll just before this runs)
+    const x0 = row.scrollLeft, w = document.createElement('div'); w.className = 'sgw'; row.parentNode.insertBefore(w, row); w.appendChild(row);
+    if (x0) { row.scrollLeft = x0; requestAnimationFrame(() => { if (Math.abs(row.scrollLeft - x0) > 1) row.scrollLeft = x0; }); }
     const mk = (side, d) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'sgn ' + side; b.tabIndex = -1; b.setAttribute('aria-hidden', 'true');
       b.innerHTML = `<svg viewBox="0 0 24 24"><path d="${side === 'l' ? 'M15 5 8 12l7 7' : 'M9 5l7 7-7 7'}"/></svg>`;
       b.onclick = e => { e.stopPropagation(); row.scrollBy({ left: d * Math.max(140, row.clientWidth * .7), behavior: 'smooth' }); }; w.appendChild(b); return b; };
