@@ -15,7 +15,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../mancala/', EV = '20261106wr1-pro1-mt1';   // same engine file (and cache key) as the full game
+  const BASE = '../mancala/', EV = '20261109wr1-pro1-mt2';   // same engine file (and cache key) as the full game
   let engLoad = null;
   function loadEngine() {   // the rules on the main thread (window.MancalaEngine: trace / legal)
     if (window.MancalaEngine) return Promise.resolve();

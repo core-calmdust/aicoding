@@ -5,8 +5,11 @@
 // for every game): automatic = on on a computer, off on phones / tablets (heat, battery) until it is turned on.
 //
 //   MTWorkers.init()                                   the option item (once per page; harmless when mtengine.js made it)
-//   const MW = MTWorkers.use({ url: 'worker.js?v=3', warm?: msg })   one pool per page (made a moment after load while on)
-//   MW.on()          threads may be used now        MW.threads   the number of workers (min(cores − 1, 7) + 1; phones 3 + 1)
+//   const MW = MTWorkers.use({ url: 'worker.js?v=3', warm?: msg, all?: true })   one pool per page (made a moment after load while on)
+//   MW.on()          threads may be used now        MW.threads   the number of workers (min(cores − 1, 7) + 1; phones 3 + 1;
+//                    all: every logical core on a computer, min(cores, 16) — 2026-11-09, the games whose tasks are independent
+//                    (ur, senet, backgammon, ludo): on the user's Mac (10 performance + 4 efficiency cores) 14 workers beat 8 by
+//                    25–55 % wherever the tasks are fine enough (go, checkers, the dots review), while a pool of 8 left 6 cores idle)
 //   MW.pool(prio)    a ready pool or null (off, busy). prio 'ai': a running job of another kind (analysis…) is cancelled
 //   pool.map(tasks, { tag, onEach(i, res) }) → Promise<results[] | null (cancelled) | undefined (a worker failed: do it the
 //                    usual way)>. Each task is a message for the worker; the worker answers { id, … } (or { id, error }).
@@ -27,6 +30,7 @@
   const HC = navigator.hardwareConcurrency || 2;
   const CAN = typeof Worker === 'function' && HC >= 2;
   const helpers = () => Math.max(0, Math.min(HC - 1, TOUCH ? 3 : 7));
+  const allHelpers = () => Math.max(0, Math.min(HC - 1, TOUCH ? 3 : 15));   // (use({ all: true }))
   // Chromium (Document-Isolation-Policy) shares the choice with mtengine.js games. Elsewhere (Safari, Firefox) turning it on
   // in a mtengine.js game means the COOP mode (no Google sign-in / online play), so these plain-Worker games — which need no
   // isolation — keep their own key there, and switching one of them on never moves chess & co. into the COOP mode.
@@ -81,7 +85,7 @@
 
   // ------------------------------------------------------------------ the pool
   function pool(cfg) {
-    const N = 1 + helpers();
+    const N = 1 + (cfg.all ? allHelpers() : helpers());
     let ws = [], job = null, seq = 0, dead = false;
     const P = { threads: N, free: () => !dead && !job, map, cancel, close, preempt: t => { if (job && job.tag !== t) cancel(); } };
     const spawn = () => {
@@ -128,7 +132,7 @@
       on,
       pool(prio) { if (!on()) return null; const q = make(); if (prio && q && !q.free()) q.preempt(prio); return q && q.free() ? q : null; },
       cancel(tag) { if (p) p.cancel(tag); },
-      get threads() { return on() ? 1 + helpers() : 1; },
+      get threads() { return on() ? 1 + (cfg.all ? allHelpers() : helpers()) : 1; },
     };
   }
   window.MTWorkers = { init, use, pool, on, helpers, onChange: f => subs.push(f), touch: TOUCH, T, get shared() { return shared() && on(); } };

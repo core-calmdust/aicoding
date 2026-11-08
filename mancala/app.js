@@ -99,7 +99,7 @@ function save() {
 
 // ====================================================================== workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=20261106wr1-pro1-mt1';
+const ENGINE_URL = 'engine.js?v=20261109wr1-pro1-mt2';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -117,11 +117,16 @@ function noteNps(nodes, ms) {
   const el = document.getElementById('infoLine'); if (el && el.dataset.base !== undefined) el.textContent = el.dataset.base + npsText();
 }
 // multi-threaded search (shared/mtsplit.js; common rule 2026-11-08「本編のマルチスレッド」全タイトル対応): several plain workers of this
-// engine share the root moves and the main line (Young Brothers Wait) — no shared memory, so no isolation, no reload, and sign-in /
-// online play are untouched. Analysis, hints, the coach, the review box and the levels that think by time (Lv.8–10)
-// go to the threads when they are free; the fixed-depth and the friendly levels stay on the one-thread workers.
+// engine. Analysis, hints, the coach, the review box and the levels that think by time (Lv.8–10) go to the threads when they
+// are free; the fixed-depth and the friendly levels stay on the one-thread workers.
+// Shared mode (2026-11-09, sw.js — as ugolki / agon / konane): on an isolated page (Chrome / Edge on a computer at once; Safari /
+// Firefox once the option is turned on — the COOP mode, without sign-in / online play, as in chess) the workers share one
+// transposition table (shared/mttt.js) and search Lazy SMP style (engine.js mtLead / mtHelp). Without it they share out the
+// root moves and the main line (Young Brothers Wait) as before — on the user's Mac that gave the AI's timed search only +0.3
+// plies at 8 threads (each worker with a table of its own), the reason for the change.
+if (window.MTSplit) MTSplit.init({ sw: 'sw.js?v=1' });
 const MTP = window.MTSplit ? MTSplit.use({ url: ENGINE_URL, drive: MTSplit.ladder.drive }) : null;
-if (window.MTSplit) MTSplit.init();
+if (window.MTEngine && MTEngine.coi && window.MancalaOnline) MancalaOnline.available = false;   // (the COOP mode: online play / sign-in switch back to one thread — shared/mtengine.js)
 const mtLevel = lv => { const L = E.LEVELS[lv]; return !!(L && L.kind === 'time'); };
 function mtWants(which, msg) {
   if (msg.type === 'analyze') return true;
