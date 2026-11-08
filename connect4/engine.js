@@ -549,21 +549,42 @@ function treeList(str) {
 // result list entries: {c, kind: 'exact'|'weak'|'heur', v}
 // exact v: Pons score; weak v: -1/0/1 (or Pons score when immediate); heur v: heuristic score
 function analyzePosition(str, timeMs, onProgress) {
+  const t0 = Date.now();
+  const pre = analyzePrep(str, timeMs);
+  if (pre.done) return pre.done;
+  const list = pre.list;
+  onProgress && onProgress(list.map(x => ({ ...x })), pre.depth);
+  // weak pass then strong pass, each per move under the deadline
+  for (const mode of ['weak', 'exact']) {
+    for (const e of list) {
+      if (e.kind === 'exact') continue;
+      if (mode === 'weak' && e.kind === 'weak') continue;
+      deadline = t0 + timeMs; aborted = false;
+      const v = solveMove(e.c, mode === 'weak');
+      deadline = Infinity;
+      if (v === null) { aborted = false; return { list, depth: pre.depth }; }
+      e.kind = (mode === 'weak' && Math.abs(v) <= 1) ? 'weak' : 'exact'; e.v = v;
+      onProgress && onProgress(list.map(x => ({ ...x })), pre.depth);
+    }
+  }
+  return { list, depth: pre.depth, solved: true };
+}
+// the analysis up to the solver: the tree / book answer ({ done }), else the moves with the heuristic pass' values
+function analyzePrep(str, timeMs) {
   loadMoves(str);
   const legal = ORDER.filter(c => canPlay(c));
-  const t0 = Date.now();
   const tl = treeList(str);
-  if (tl) return { list: tl, book: true };
+  if (tl) return { done: { list: tl, book: true } };
   loadMoves(str);
   const bk = bookLookup(str);
   if (bk && !bk.partial) {
     const list = legal.map(c => ({ c, kind: bk.kind, v: bk.sc[c] }));
-    return { list, book: true };
+    return { done: { list, book: true } };
   }
   // parent position in the book with the last move proven winning -> every move here loses
   if (str.length) {
     const pb = bookLookup(str.slice(0, -1)), lm = str.charCodeAt(str.length - 1) - 49;
-    if (pb && pb.sc[lm] === 1) return { list: legal.map(c => ({ c, kind: 'weak', v: -1 })), book: true };
+    if (pb && pb.sc[lm] === 1) return { done: { list: legal.map(c => ({ c, kind: 'weak', v: -1 })), book: true } };
   }
   // quick heuristic pass
   const hr = heurID(42, Math.max(60, timeMs * 0.25));
@@ -582,21 +603,7 @@ function analyzePosition(str, timeMs, onProgress) {
   // a Lv8 tree node: the stored move's value is known exactly (or weakly)
   const tn = treeLookup(str);
   if (tn) { const e = list.find(x => x.c === tn.mv); if (e && e.kind === 'heur') { e.kind = tn.kind; e.v = tn.v; } }
-  onProgress && onProgress(list.map(x => ({ ...x })), hr.depth);
-  // weak pass then strong pass, each per move under the deadline
-  for (const mode of ['weak', 'exact']) {
-    for (const e of list) {
-      if (e.kind === 'exact') continue;
-      if (mode === 'weak' && e.kind === 'weak') continue;
-      deadline = t0 + timeMs; aborted = false;
-      const v = solveMove(e.c, mode === 'weak');
-      deadline = Infinity;
-      if (v === null) { aborted = false; return { list, depth: hr.depth }; }
-      e.kind = (mode === 'weak' && Math.abs(v) <= 1) ? 'weak' : 'exact'; e.v = v;
-      onProgress && onProgress(list.map(x => ({ ...x })), hr.depth);
-    }
-  }
-  return { list, depth: hr.depth, solved: true };
+  return { list, depth: hr.depth };
 }
 // class value comparable across kinds (mover's view): higher is better
 function rankVal(e) {
@@ -631,11 +638,14 @@ function moveGE(c, s) {
 // Lv8 outside the tree: weak-solve the position once, then take the first move (heuristic order) that keeps
 // that value. A lost position is refined to the slowest loss while the normal budget lasts.
 // Solving continues up to cfg.hard ms rather than falling back to a guess; null only if even that runs out.
-function thinkPerfect(str, cfg) {
-  const t0 = Date.now();
+function perfectOrder(str, cfg) {
   const hr = heurID(cfg.depth, 120);
   loadMoves(str);
-  const order = (hr.list || ORDER.filter(c => canPlay(c)).map(c => ({ c, s: 0 }))).slice().sort((a, b) => b.s - a.s).map(x => x.c);
+  return (hr.list || ORDER.filter(c => canPlay(c)).map(c => ({ c, s: 0 }))).slice().sort((a, b) => b.s - a.s).map(x => x.c);
+}
+function thinkPerfect(str, cfg) {
+  const t0 = Date.now();
+  const order = perfectOrder(str, cfg);
   deadline = t0 + cfg.hard; aborted = false;
   const v = solve(true);
   if (v === null) { deadline = Infinity; aborted = false; return null; }
@@ -659,35 +669,52 @@ function thinkPerfect(str, cfg) {
       done.push({ c, kind: 'exact', v: sv, h: -order.indexOf(c) });
     }
     aborted = false;
-    // the slowest loss; among equals a natural resistance (block one of the enemy's fours, counter-threats)
-    const rp = done.length ? resistPick(done) : null;
-    if (rp) { move = rp.c; score = { kind: 'exact', v: rp.v }; }
-    else {   // out of time: any move that does not lose at once
-      const owl = winPos(cl ^ ml, ch ^ mh, ml, mh), owh = _wh;
-      move = order.find(c => !(((owl >>> 1) & moveBitsL(c)) | ((owh >>> 1) & moveBitsH(c)))) ?? order[0];
-    }
+    const r = perfectLoss(str, order, done); move = r.move; if (r.score) score = r.score;
   }
   deadline = Infinity; aborted = false;
   if (move < 0) return null;
   return { move, how: 'search', ms: Date.now() - t0, msProof, score };
 }
+// every move loses (done: the exact values found in time): the slowest loss; among equals a natural resistance (block one
+// of the enemy's fours, counter-threats); none in time: any move that does not lose at once
+function perfectLoss(str, order, done) {
+  loadMoves(str);
+  const rp = done.length ? resistPick(done) : null;
+  if (rp) return { move: rp.c, score: { kind: 'exact', v: rp.v } };
+  const owl = winPos(cl ^ ml, ch ^ mh, ml, mh), owh = _wh;
+  return { move: order.find(c => !(((owl >>> 1) & moveBitsL(c)) | ((owh >>> 1) & moveBitsH(c)))) ?? order[0] };
+}
 function think(str, level) {
   const cfg = LEVELS[level] || LEVELS[5];
+  const h = thinkHead(str, cfg);
+  if (h.result) return h.result;
+  if (h.perfect) { const r = thinkPerfect(str, cfg); if (r) return r; }
+  const b = thinkBody(str, cfg);
+  if (b.result) return b.result;
+  if (b.solve) solvePhase(b.list, cfg, b.t0);
+  return thinkTail(str, cfg, b.list, b.depth, b.t0);
+}
+// forced move, immediate win, Lv8's opening tree → { result }; Lv8 outside the tree → { perfect: true }
+function thinkHead(str, cfg) {
   loadMoves(str);
   const legal = ORDER.filter(c => canPlay(c));
-  if (legal.length === 1) return { move: legal[0], how: 'forced' };
+  if (legal.length === 1) return { result: { move: legal[0], how: 'forced' } };
   // immediate win
   for (const c of legal) if (isWinningMove(c)) {
-    if (!cfg.blunder || rnd() > cfg.blunder * 0.5) return { move: c, how: 'win' };
+    if (!cfg.blunder || rnd() > cfg.blunder * 0.5) return { result: { move: c, how: 'win' } };
   }
   // Lv8: opening tree (exact), then the exact solver with no heuristic fallback
   if (cfg.perfect) {
     const t = treeLookup(str);
-    if (t && canPlay(t.mv)) return { move: t.mv, how: 'book', score: { kind: t.kind, v: t.v } };
-    const r = thinkPerfect(str, cfg);
-    if (r) return r;
-    loadMoves(str);
+    if (t && canPlay(t.mv)) return { result: { move: t.mv, how: 'book', score: { kind: t.kind, v: t.v } } };
+    return { perfect: true };
   }
+  return {};
+}
+// the book, the weak levels' blunder, then the heuristic search → { result } | { list, depth, t0, solve (a solver phase follows) }
+function thinkBody(str, cfg) {
+  loadMoves(str);
+  const legal = ORDER.filter(c => canPlay(c));
   // book
   if (cfg.book && nm <= cfg.book) {
     const bk = bookLookup(str);
@@ -700,7 +727,7 @@ function think(str, level) {
       const known = c => { let k = 0; for (let r = 0; r < W; r++) if (inBook(str + (c + 1) + (r + 1))) k++; return k; };
       let move = cands[0], bestK = -1;
       for (const c of cands) { const k = known(c); if (k > bestK) { bestK = k; move = c; } }
-      return { move, how: 'book', score: { kind: bk.kind, v: bk.sc[move] } };
+      return { result: { move, how: 'book', score: { kind: bk.kind, v: bk.sc[move] } } };
       }
     }
   }
@@ -710,17 +737,20 @@ function think(str, level) {
   { const owl = winPos(cl ^ ml, ch ^ mh, ml, mh), owh = _wh; openFours = popc(owl & ((ml + BOT_L) & BOARD_L)) + popc(owh & ((mh + BOT_H) & BOARD_H)); }
   if (cfg.blunder && openFours < 2 && rnd() < cfg.blunder) {
     const c = legal[Math.floor(rnd() * legal.length)];
-    return { move: c, how: 'random' };
+    return { result: { move: c, how: 'random' } };
   }
   const t0 = Date.now();
   const early = nm < 8 && !cfg.perfect;   // too early for the exact solver: spend the time on the heuristic search
   const timeH = cfg.time ? (cfg.solve && !early ? cfg.time - cfg.solve : cfg.time * (cfg.solve ? 0.7 : 1)) : 3000;
   const hr = heurID(cfg.depth, Math.max(80, timeH));
   loadMoves(str);
-  let list = (hr.list || legal.map(c => ({ c, s: 0 }))).map(x => ({ c: x.c, kind: 'heur', v: x.s, h: x.s }));
+  const list = (hr.list || legal.map(c => ({ c, s: 0 }))).map(x => ({ c: x.c, kind: 'heur', v: x.s, h: x.s }));
   const exactLate = cfg.solveLate && nm >= cfg.solveLate;
-  if ((cfg.solve && !early) || exactLate) {
-    // weak (win/draw/loss) pass, then strong pass if time remains
+  return { list, depth: hr.depth, t0, solve: !!((cfg.solve && !early) || exactLate) };
+}
+// weak (win/draw/loss) pass, then strong pass if time remains (one thread; the threads: shared/mtsplit.js, connect4/mt.js)
+function solvePhase(list, cfg, t0) {
+  {
     const budget = cfg.solve || 400;
     const dl = Date.now() + budget;
     const sorted = list.slice().sort((a, b) => b.h - a.h);
@@ -747,6 +777,10 @@ function think(str, level) {
       }
     }
   }
+}
+// the choice from the values (heuristic and solved)
+function thinkTail(str, cfg, list, depth, t0) {
+  const hr = { depth };
   // every move a proven loss: no random pick — the slowest loss, then the natural-looking resistance
   loadMoves(str);
   if (list.length && list.every(e => lossDist(e) !== null)) {
@@ -780,7 +814,41 @@ function pvLine(str, c, plies, ms) {
   }
   return line;
 }
-const API = { decodeTree, treeLookup, treeList, setTree: m => { TREE = m; }, loadMoves, solve, solveMove, analyzePosition, mateList, defendList, pickDefence, resistPick, think, heurID, keyOf, bookLookup, setBook: b => { BOOK = b; }, ORDER, BIG,
+// ------------------------------------------------------------------ several threads (shared/mtsplit.js, connect4/mt.js)
+// plain workers solve the root moves at once: mtPlan (what a job needs: its answer, or the moves to solve), mtSolve (one move,
+// weak or exact, until a Date.now() deadline), mtFin (the choice from the solved values), mtPv (a line)
+function mtPlan(m) {
+  if (m.job === 'think') {
+    const cfg = LEVELS[m.level] || LEVELS[5];
+    const h = thinkHead(m.moves, cfg); if (h.result) return { result: h.result };
+    if (h.perfect) { const t0 = Date.now(); return { plan: { kind: 'perfect', order: perfectOrder(m.moves, cfg), t0, hard: t0 + cfg.hard, time: t0 + cfg.time } }; }
+    const b = thinkBody(m.moves, cfg); if (b.result) return { result: b.result };
+    if (!b.solve) return { result: thinkTail(m.moves, cfg, b.list, b.depth, b.t0) };
+    return { plan: { kind: 'solve', list: b.list, depth: b.depth, t0: b.t0, budget: cfg.solve || 400, perfect: !!cfg.perfect, hard: cfg.hard || 0 } };
+  }
+  const t0 = Date.now(), pre = analyzePrep(m.moves, m.time || 1000);
+  if (pre.done) return { result: pre.done };
+  return { plan: { kind: 'analyze', list: pre.list, depth: pre.depth, until: t0 + (m.time || 1000) } };
+}
+function mtSolve(m) {
+  loadMoves(m.moves); nodes = 0;
+  deadline = m.until || Infinity; aborted = false;
+  const v = solveMove(m.c, !!m.weak);
+  deadline = Infinity; aborted = false;
+  return { v, ok: v !== null, nodes };
+}
+function mtFin(m) {
+  const cfg = LEVELS[m.level] || LEVELS[5];
+  if (m.kind === 'perfect') {
+    if (m.move >= 0) return { result: { move: m.move, how: 'search', ms: Date.now() - m.t0, msProof: m.msProof, score: { kind: 'weak', v: m.cls } } };
+    const r = perfectLoss(m.moves, m.order, m.done);
+    return { result: { move: r.move, how: 'search', ms: Date.now() - m.t0, msProof: m.msProof, score: r.score || { kind: 'weak', v: m.cls } } };
+  }
+  if (m.kind === 'rank') return { result: { list: m.list.slice().sort((a, b) => rankVal(b) - rankVal(a)) } };
+  return { result: thinkTail(m.moves, cfg, m.list, m.depth, m.t0) };
+}
+
+const API = { decodeTree, treeLookup, treeList, setTree: m => { TREE = m; }, loadMoves, solve, solveMove, analyzePosition, mateList, defendList, pickDefence, resistPick, think, heurID, keyOf, mtPlan, mtSolve, mtFin, rankVal, LEVELS, bookLookup, setBook: b => { BOOK = b; }, ORDER, BIG,
   state: () => ({ nm }), setDeadline: d => { deadline = d; aborted = false; }, nodes: () => nodes, evaluate, EP, rootHeur, setDeadline2: () => { deadline = Infinity; aborted = false; }, clearHT: () => { htF.fill(0); } };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof postMessage === 'function' && typeof module === 'undefined') {
@@ -804,7 +872,11 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof postM
         postMessage({ type: 'cands', id: m.id, list, lines: Object.assign({}, lines) });
       }
       postMessage({ type: 'candsDone', id: m.id, list, lines });
-    } else if (m.type === 'mate') {
+    } else if (m.type === 'mtplan') postMessage({ type: 'result', id: m.id, ...mtPlan(m) });
+    else if (m.type === 'mtsolve') postMessage({ type: 'result', id: m.id, ...mtSolve(m) });
+    else if (m.type === 'mtfin') postMessage({ type: 'result', id: m.id, ...mtFin(m) });
+    else if (m.type === 'mtpv') postMessage({ type: 'result', id: m.id, line: pvLine(m.moves, m.c, m.plies || 8, m.ply || 120) });
+    else if (m.type === 'mate') {
       const list = m.defend ? defendList(m.moves, m.n) : mateList(m.moves, m.n);
       postMessage({ type: 'mate', id: m.id, list, pick: m.defend ? pickDefence(list) : undefined });
     }

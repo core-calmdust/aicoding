@@ -522,20 +522,30 @@ const kindOf = v => Math.abs(v) > WINT ? 'exact' : 'heur';
 // ---------------------------------------------------------------- WebAssembly search (engine.c), used by the worker when available
 let WX = null, wGeo = '', wProg = null;
 const wIO = () => new Int32Array(WX.memory.buffer, WX.io_ptr(), 8192);
-function wGeom(variant) {
-  if (wGeo === variant) return;
+function geoIO(variant) {   // the geometry buffer of engine.c set_geometry()
   const G = geom(variant), a = [G.n, G.pieces, G.fly ? 1 : 0, G.mills.length];
   for (const m of G.mills) a.push(...m);
   const inMills = (i, j) => G.mills.some(m => (m[0] === i && m[1] === j) || (m[1] === i && m[2] === j) || (m[0] === j && m[1] === i) || (m[1] === j && m[2] === i));
   const extra = []; for (let i = 0; i < G.n; i++) for (const j of G.adj[i]) if (j > i && !inMills(i, j)) extra.push(i, j);
-  a.push(extra.length / 2, ...extra); wIO().set(a); WX.set_geometry(); WX.new_game(); wGeo = variant;
+  a.push(extra.length / 2, ...extra);
+  return a;
 }
-function wSetup(variant, start, moves) {
-  wGeom(variant);
+// engine.c geo_key() of a variant (engine_mt.wasm: the page's helper threads wait until the lead has set the job's geometry)
+const geoKey = variant => { const a = geoIO(variant), nm = a[3]; return a[0] | a[1] << 5 | a[2] << 10 | nm << 11 | a[4 + 3 * nm] << 17; };
+function wGeom(variant) {
+  if (wGeo === variant) return;
+  wIO().set(geoIO(variant)); WX.set_geometry(); WX.new_game(); wGeo = variant;
+}
+// the setup buffer of engine.c setup(): b[n], hand1, hand2, side, quiet, nmoves, moves… (also the page's helper threads)
+function setupIO(variant, start, moves) {
   const G = geom(variant), p = Pos.from(G, start), a = [];
   for (let i = 0; i < G.n; i++) a.push(p.b[i]);
   a.push(p.hand[1], p.hand[2], p.side, p.quiet, moves.length, ...moves);
-  wIO().set(a); return WX.setup();
+  return a;
+}
+function wSetup(variant, start, moves) {
+  wGeom(variant);
+  wIO().set(setupIO(variant, start, moves)); return WX.setup();
 }
 function wList() { const r = wIO(), L = []; for (let i = 0; i < r[0]; i++) L.push({ m: r[2 + 2 * i], v: r[3 + 2 * i], kind: kindOf(r[3 + 2 * i]) }); return L; }
 // ---------------------------------------------------------------- perfect play (six men's morris, perfect.js in the worker)
@@ -565,7 +575,7 @@ function think(variant, start, moves, level, rand) {
   if (WX && L0.noise === undefined && moves.length < 1000) {
     if (!wSetup(variant, start, moves)) return { move: -1 };
     WX.best(L0.d, L0.ms || 0, 0); const r = wIO();
-    return { move: r[0], v: r[1], depth: r[2] };
+    return { move: r[0], v: r[1], depth: r[2], nodes: WX.last_nodes ? WX.last_nodes() : undefined };   // (nodes: the threads' build only)
   }
   rand = rand || Math.random;
   const { pos, hashes } = replay(variant, start, moves);
@@ -594,7 +604,7 @@ function analyze(variant, start, moves, ms, onProgress) {
     wProg = onProgress ? (d => onProgress(ann(wList()), d)) : null;
     WX.analyze(ms, 40); wProg = null;
     const list = ann(wList());
-    return { list, depth: wIO()[1], solved: pf || (list.length > 0 && list.every(e => Math.abs(e.v) > WINT)), pf };
+    return { list, depth: wIO()[1], solved: pf || (list.length > 0 && list.every(e => Math.abs(e.v) > WINT)), pf, nodes: WX.last_nodes ? WX.last_nodes() : undefined };
   }
   const { pos, hashes } = replay(variant, start, moves);
   const E = eng(); E.setHistory(hashes);
@@ -651,7 +661,7 @@ function mill(variant, start, moves, n, defend) {
   });
 }
 
-const API = { setPerfect: x => { PF = x; }, pfAnnotate, setNet, setEGDB, egdbProbe, egdbReady: () => egdbState === 2, mill, NONE, WIN, WINT, QUIET_DRAW, VARIANTS, LEVELS, geom, Pos, Engine, evaluate, replay, think, analyze, mate, mv, mFrom, mTo, mRm, kindOf };
+const API = { setPerfect: x => { PF = x; }, pfAnnotate, setNet, setEGDB, egdbProbe, egdbReady: () => egdbState === 2, mill, NONE, WIN, WINT, QUIET_DRAW, VARIANTS, LEVELS, geom, Pos, Engine, evaluate, replay, think, analyze, mate, mv, mFrom, mTo, mRm, kindOf, setupIO, geoKey };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.MorrisEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
@@ -665,10 +675,20 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
       .then(b => { if (!setEGDB(b)) egdbState = 0; }).catch(() => { egdbState = 0; });
   };
   // load the WebAssembly search; until it is ready (or if it fails) the JS search is used
+  // ?…&mt=1: the lead thread of the page's multi-thread pool (shared/mtengine.js): engine_mt.wasm on the shared memory sent with
+  // the first message ('mtinit'); the helpers (mt-helper.js) search the same root meanwhile (the network sits in the engine's own
+  // shared table). The rest is the usual API.
+  const MTL = /[?&]mt=1\b/.test(self.location.search || '');
+  let wReady = null, wDone = false;
   if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
     const imp = { env: { now: () => Date.now(), progress: d => { if (wProg) wProg(d); } } };
     const url = new URL('engine.wasm?v=20261019n', self.location.href);
-    (WebAssembly.instantiateStreaming ? WebAssembly.instantiateStreaming(fetch(url), imp) : fetch(url).then(r => r.arrayBuffer()).then(b => WebAssembly.instantiate(b, imp)))
+    wReady = (MTL ? new Promise(res => self.addEventListener('message', function f(e) { if (e.data && e.data.type === 'mtinit') { self.removeEventListener('message', f); res(e.data); } }))
+      .then(m => {
+        const x = new WebAssembly.Instance(m.module, { env: { memory: m.mem, now: () => Date.now(), progress: d => { if (wProg) wProg(d); } } }).exports;
+        x.mt_stack(m.top); x.mt_thread(m.tls, 0);
+        return { instance: { exports: Object.assign({}, x, { memory: m.mem }) } };   // (the memory is imported: X.memory as in the normal build)
+      }) : WebAssembly.instantiateStreaming ? WebAssembly.instantiateStreaming(fetch(url), imp) : fetch(url).then(r => r.arrayBuffer()).then(b => WebAssembly.instantiate(b, imp)))
       .then(r => {
         WX = r.instance.exports;
         // learned evaluation for nine men's morris (MNN1: H, then 71*H + 2*H + 1 float32)
@@ -677,7 +697,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
           const H = dv.getUint32(4, true), f = new Float32Array(b, 8, 71 * H + 2 * H + 1);
           new Float32Array(WX.memory.buffer, WX.net_ptr(), f.length).set(f); WX.net_on(H);
         }).catch(() => {});
-      }).catch(() => { WX = null; });
+      }).then(() => { wDone = true; if (MTL) self.postMessage({ type: 'mtready' }); }, err => { WX = null; wDone = true; if (MTL) self.postMessage({ type: 'mtready', error: String(err && err.message || err) }); });
   }
   // perfect play (six men's morris): perfect.js and the solved database (six.mdb.gz, about 0.57 MB), fetched the first time
   // a six men's position is analysed or the 完全解析 level is to move; until then (or if it fails) the search answers
@@ -689,6 +709,8 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
   }));
   self.onmessage = e => {
     const m = e.data;
+    if (m && m.type === 'mtinit') return;
+    if (MTL && !wDone && wReady) { wReady.then(() => self.onmessage(e)); return; }   // (the lead: answer with the threads' engine only)
     if (wantPF(m) && !PF) { loadPF().then(() => handle(m)); return; }
     handle(m);
   };
@@ -718,6 +740,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
         self.postMessage({ id: m.id, type: 'candsDone', list, lines });
       } else if (m.type === 'mill') self.postMessage({ id: m.id, type: 'result', list: mill(m.variant, m.start, m.moves, m.n, m.defend) });
       else if (m.type === 'mate') self.postMessage({ id: m.id, type: 'result', list: mate(m.variant, m.start, m.moves, m.n, m.defend, m.maxNodes) });
+      else if (m.type === 'newgame') { if (WX) WX.new_game(); self.postMessage({ id: m.id, type: 'result' }); }   // (an empty table: bench.html)
     } catch (err) { self.postMessage({ id: m.id, type: 'result', error: String(err && err.stack || err) }); }
   };
 }

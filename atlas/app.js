@@ -830,9 +830,9 @@
   const hudTop = window.__hudTop = function () { const h = $('hud'); if (!h || !h.childElementCount) return 0; const r = h.getBoundingClientRect(); return r.height && r.bottom < innerHeight * .3 ? Math.round(r.bottom + 6) : 0; };
   function hudFit() {
     if ($('bv').classList.contains('playing') && hudTop() !== hudTopV) { hudTopV = hudTop(); fitStage(); }
-    const hm = $('hud') && $('hud').querySelector('.hm'), old = document.getElementById('hudPop');
+    const hm = $('hud') && $('hud').querySelector('.hm, .hmsg'), old = document.getElementById('hudPop');
     const txt = hm ? hm.textContent.trim() : '';
-    if (!hm || !txt || !matchMedia('(max-width: 600px)').matches || hm.scrollWidth <= hm.clientWidth + 2) { if (old && txt !== hudPopTxt) { old.remove(); hudPopTxt = ''; } return; }
+    const hd = $('hud'); if (!hm || !txt || !matchMedia('(max-width: 600px)').matches || (hm.scrollWidth <= hm.clientWidth + 2 && hd.scrollWidth <= hd.clientWidth + 2)) { if (old && txt !== hudPopTxt) { old.remove(); hudPopTxt = ''; } return; }
     hm.textContent = '';
     if (old && txt === hudPopTxt) return;
     if (old) old.remove();
