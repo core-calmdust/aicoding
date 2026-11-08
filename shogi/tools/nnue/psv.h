@@ -70,7 +70,9 @@ static int psv_decode(const PSV *r, Pos *p) {
 }
 
 /* NNUE input features of the site engine (engine.c nueB / nueHd), from the point of view of colour persp */
+#ifndef NUE_IN
 #define NUE_IN 2534
+#endif
 static int pos_features(const Pos *p, int persp, uint16_t *f) {
   int n = 0;
   for (int s = 0; s < 81; s++) {
@@ -82,6 +84,13 @@ static int pos_features(const Pos *p, int persp, uint16_t *f) {
     for (int k = 1; k <= p->hand[hc * 8 + t] && k <= 19; k++)
       f[n++] = (uint16_t)(2268 + ((hc != persp) * 7 + t - 1) * 19 + k - 1);
   return n;
+}
+
+/* HalfKP-style features (engine.c built with -DNUE_KB, trainkp.c): the same 2534 features, offset by
+   bucket * 2534 where bucket = kmap[the perspective's own king square in its own frame (persp 1: 80 - s)] */
+static int pos_kbucket(const Pos *p, int persp, const uint8_t *kmap) {
+  for (int s = 0; s < 81; s++) if (p->board[s] == 8 + 16 * persp) return kmap[persp ? 80 - s : s];
+  return 0;
 }
 
 /* direction tables for the in-check test */

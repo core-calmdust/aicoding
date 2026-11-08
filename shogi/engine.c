@@ -122,7 +122,16 @@ static TLS float nnSt[NST * 2 * 32];
 #ifndef NUE_H
 #define NUE_H 256          /* hidden size; engine_simd512.wasm is built with -DNUE_H=512 */
 #endif
+#ifdef NUE_KB
+/* HalfKP-style test build (not shipped; tools/nnue/TRAIN.md): the first layer is chosen by the bucket of the perspective's own
+   king square (NUE_KB buckets, the map comes with the net, nueKMap), so the input is NUE_KB copies of the 2534 features.
+   Moving the king into another bucket refreshes that perspective's accumulator. The normal builds do not define NUE_KB. */
+#define NUE_IN (NUE_KB * 2534)
+#define NUEF i32
+#else
 #define NUE_IN 2534
+#define NUEF i16
+#endif
 #define NUE_QA 127
 #define NUE_QB 64
 static int nueOn = 0, nueSum32 = 0;
@@ -137,12 +146,21 @@ static inline int nueBucket(void) { if (nueNB == 1) return 0; int t = 0; for (in
    in one pass. Undo costs nothing (sp--), and moves whose position is never evaluated cost no accumulator work. */
 static TLS i16 nueAc[NST + 1][2][NUE_H];
 static TLS u8 nueOk[NST + 1];
-static TLS i16 nueDA[NST][2][2], nueDR[NST][2][2];   /* [level][persp][k]: features added / removed by the move at that level (-1: none) */
+static TLS NUEF nueDA[NST][2][2], nueDR[NST][2][2];   /* [level][persp][k]: features added / removed by the move at that level (-1: none) */
 static TLS u8 nueDN[NST];                           /* number of (add, remove) pairs: 0 (null move), 1, 2 (capture) */
 static i16 nueZero[NUE_H];
 #define nueA (nueAc[sp])
+#ifdef NUE_KB
+static u8 nueKMap[84];          /* own king square (the perspective's frame, 0..80) -> bucket */
+static i32 nueKOff[2][81];      /* [persp][king square] -> bucket * 2534 */
+static TLS u8 nueRF[NST];       /* [level]: bit c = the move at that level moved king c into another bucket */
+static inline int nueKO(int persp) { int k = king[persp]; return k < 0 ? 0 : nueKOff[persp][k]; }
+static inline int nueB(int persp, int p, int s) { return nueKO(persp) + ((colorOf(p) != persp) * 14 + typeOf(p) - 1) * 81 + (persp ? 80 - s : s); }
+static inline int nueHd(int persp, int hc, int t, int n) { return n > 19 ? -1 : nueKO(persp) + 2268 + ((hc != persp) * 7 + t - 1) * 19 + n - 1; }
+#else
 static inline int nueB(int persp, int p, int s) { return ((colorOf(p) != persp) * 14 + typeOf(p) - 1) * 81 + (persp ? 80 - s : s); }
 static inline int nueHd(int persp, int hc, int t, int n) { return n > 19 ? -1 : 2268 + ((hc != persp) * 7 + t - 1) * 19 + n - 1; }
+#endif
 static inline void nueAdd(int persp, int f) { if (f < 0) return; i16 *a = nueA[persp]; const i16 *w = nueW1 + f * NUE_H; for (int j = 0; j < NUE_H; j++) a[j] += w[j]; }
 static inline const i16 *nueRow(int f) { return f < 0 ? nueZero : nueW1 + f * NUE_H; }
 /* level i -> i + 1 */
@@ -158,11 +176,38 @@ static void nueStep(int i) {
   }
   nueOk[i + 1] = 1;
 }
+#ifdef NUE_KB
+static void nueRefreshC(int c, i16 *a);
+/* level i -> i + 1, one perspective */
+static void nueStepC(int i, int c) {
+  const int n = nueDN[i];
+  const i16 *src = nueAc[i][c]; i16 *dst = nueAc[i + 1][c];
+  if (n == 0) { memcpy(dst, src, sizeof(i16) * NUE_H); return; }
+  const i16 *a1 = nueRow(nueDA[i][c][0]), *r1 = nueRow(nueDR[i][c][0]);
+  if (n == 1) { for (int j = 0; j < NUE_H; j++) dst[j] = (i16)(src[j] + a1[j] - r1[j]); return; }
+  const i16 *a2 = nueRow(nueDA[i][c][1]), *r2 = nueRow(nueDR[i][c][1]);
+  for (int j = 0; j < NUE_H; j++) dst[j] = (i16)(src[j] + a1[j] - r1[j] + a2[j] - r2[j]);
+}
+/* a perspective whose king changed bucket on the way from the computed ancestor is refreshed from the current board
+   (the deltas recorded before the king move are in the old bucket's rows); the other one is rolled forward */
+static inline void nueSync(void) {
+  if (nueOk[sp]) return;
+  int k = sp - 1; while (k > 0 && !nueOk[k]) k--;
+  int rf = 0; for (int i = k; i < sp; i++) rf |= nueRF[i];
+  if (!rf) { for (int i = k; i < sp; i++) nueStep(i); return; }
+  for (int c = 0; c < 2; c++) {
+    if ((rf >> c) & 1) nueRefreshC(c, nueAc[sp][c]);
+    else for (int i = k; i < sp; i++) nueStepC(i, c);
+  }
+  nueOk[sp] = 1;
+}
+#else
 static inline void nueSync(void) {
   if (nueOk[sp]) return;
   int k = sp - 1; while (k > 0 && !nueOk[k]) k--;
   for (int i = k; i < sp; i++) nueStep(i);
 }
+#endif
 
 static void setKingCache(int c) {
   int k = king[c];
@@ -224,6 +269,13 @@ static double nnEval(void) {
   double v = o * NN_K;
   return v > 20000 ? 20000 : v < -20000 ? -20000 : (double)(i32)v;
 }
+#ifdef NUE_KB
+static void nueRefreshC(int c, i16 *a) {
+  for (int j = 0; j < NUE_H; j++) a[j] = (i16)nueB1[j];
+  for (int s = 0; s < 81; s++) if (board[s]) { const i16 *w = nueW1 + nueB(c, board[s], s) * NUE_H; for (int j = 0; j < NUE_H; j++) a[j] += w[j]; }
+  for (int hc = 0; hc < 2; hc++) for (int t = 1; t <= 7; t++) for (int n = 1; n <= hand[hc * 8 + t]; n++) { int f = nueHd(c, hc, t, n); if (f < 0) continue; const i16 *w = nueW1 + f * NUE_H; for (int j = 0; j < NUE_H; j++) a[j] += w[j]; }
+}
+#endif
 static void nueRefresh(void) {
   nueOk[sp] = 1;
   for (int c = 0; c < 2; c++) {
@@ -580,13 +632,16 @@ static void doMove(int m) {
   if (nn) memcpy(nnSt + s0 * 2 * nnH, nnA, sizeof(float) * 2 * nnH);
   int nue = nueOn, nk = 0, lin = !nn && !nue;   /* lin: the linear evaluation is in use (its accumulators are skipped otherwise) */
   if (nue) nueOk[s0 + 1] = 0;
+#ifdef NUE_KB
+  nueRF[s0] = 0;
+#endif
   chkC[s0 + 1] = -1;
   if (from > 80) {
     int t = from - 80, p = t + (us ? WF : 0), hi = us * 8 + t, n = hand[hi];
     l ^= ZHD_L[hi * 20 + n]; h ^= ZHD_H[hi * 20 + n];
     if (nn) { nnHand(0, us, t, n, -1); nnHand(1, us, t, n, -1); nnPiece(0, p, to, 1); nnPiece(1, p, to, 1); }
     else if (lin) { a0 -= hv_(0, us, t, n); a1 -= hv_(1, us, t, n); a0 += pv_(0, p, to); a1 += pv_(1, p, to); }
-    if (nue) { for (int c = 0; c < 2; c++) { nueDR[s0][c][0] = (i16)nueHd(c, us, t, n); nueDA[s0][c][0] = (i16)nueB(c, p, to); } nk = 1; }
+    if (nue) { for (int c = 0; c < 2; c++) { nueDR[s0][c][0] = (NUEF)nueHd(c, us, t, n); nueDA[s0][c][0] = (NUEF)nueB(c, p, to); } nk = 1; }
     hand[hi] = n - 1;
     board[to] = p; SETB(us, to); l ^= ZB_L[to * 32 + p]; h ^= ZB_H[to * 32 + p];
     stCap[s0] = 0;
@@ -600,7 +655,7 @@ static void doMove(int m) {
       int ct = UNPROMOTE[typeOf(cap)], hi = us * 8 + ct, n = hand[hi] + 1;
       hand[hi] = n;
       l ^= ZHD_L[hi * 20 + n]; h ^= ZHD_H[hi * 20 + n];
-      if (nue) { for (int c = 0; c < 2; c++) { nueDR[s0][c][1] = (i16)nueB(c, cap, to); nueDA[s0][c][1] = (i16)nueHd(c, us, ct, n); } nk = 2; }
+      if (nue) { for (int c = 0; c < 2; c++) { nueDR[s0][c][1] = (NUEF)nueB(c, cap, to); nueDA[s0][c][1] = (NUEF)nueHd(c, us, ct, n); } nk = 2; }
       if (typeOf(cap) != OU) {
         if (nn) {
           if (!(isKing && us == 0)) { nnPiece(0, cap, to, -1); nnHand(0, us, ct, n, 1); }
@@ -613,7 +668,10 @@ static void doMove(int m) {
     }
     l ^= ZB_L[from * 32 + p] ^ ZB_L[to * 32 + np]; h ^= ZB_H[from * 32 + p] ^ ZB_H[to * 32 + np];
     board[from] = 0; board[to] = np; CLRB(us, from); SETB(us, to); if (cap) CLRB(them, to);
-    if (nue) { for (int c = 0; c < 2; c++) { nueDR[s0][c][0] = (i16)nueB(c, p, from); nueDA[s0][c][0] = (i16)nueB(c, np, to); } if (!nk) nk = 1; }
+    if (nue) { for (int c = 0; c < 2; c++) { nueDR[s0][c][0] = (NUEF)nueB(c, p, from); nueDA[s0][c][0] = (NUEF)nueB(c, np, to); } if (!nk) nk = 1; }
+#ifdef NUE_KB
+    if (nue && isKing && nueKOff[us][from] != nueKOff[us][to]) nueRF[s0] = (u8)(1 << us);
+#endif
     if (nn) {
       if (isKing) { king[us] = to; nnRefresh(us); nnPiece(them, p, from, -1); nnPiece(them, np, to, 1); }
       else { nnPiece(0, p, from, -1); nnPiece(0, np, to, 1); nnPiece(1, p, from, -1); nnPiece(1, np, to, 1); }
@@ -652,6 +710,9 @@ static void doNull(void) {
   int s0 = sp;
   stMove[s0] = 0; ckS[s0] = -1; stHL[s0] = hl; stHH[s0] = hh; stA0[s0] = acc[0]; stA1[s0] = acc[1];
   nueDN[s0] = 0; nueOk[s0 + 1] = 0; chkC[s0 + 1] = -1;
+#ifdef NUE_KB
+  nueRF[s0] = 0;
+#endif
   hl ^= ZSIDE_L; hh ^= ZSIDE_H; side ^= 1; sp++;
   histL[hn] = 0x7fffffff; histH[hn] = 0; histChk[hn] = 0; hn++;
 }
@@ -1479,6 +1540,16 @@ EXPORT(nue_set_b2) void nue_set_b2(i32 b) { nueB2[0] = b; }
 EXPORT(nue_b2_ptr) i32 *nue_b2_ptr(void) { return nueB2; }
 EXPORT(nue_set_nb) void nue_set_nb(int n) { nueNB = n == NUE_NB ? NUE_NB : 1; }
 EXPORT(nue_h) int nue_h(void) { return NUE_H; }
+#ifdef NUE_KB
+/* the bucket map (81 bytes, the perspective's own king square -> bucket) is written here, then nue_kinit() */
+EXPORT(nue_kmap_ptr) u8 *nue_kmap_ptr(void) { return nueKMap; }
+EXPORT(nue_kb) int nue_kb(void) { return NUE_KB; }
+EXPORT(nue_kinit) int nue_kinit(void) {
+  for (int s = 0; s < 81; s++) if (nueKMap[s] >= NUE_KB) return 0;
+  for (int c = 0; c < 2; c++) for (int s = 0; s < 81; s++) nueKOff[c][s] = nueKMap[c ? 80 - s : s] * 2534;
+  return 1;
+}
+#endif
 EXPORT(nue_enable) void nue_enable(int on) {
   nueOn = on;
   /* nueEval may sum in int32 when every lane total stays below 2^31: (NUE_H * 2 / 4) products of at most QA^2 * max|w2| */
