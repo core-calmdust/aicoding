@@ -924,7 +924,7 @@
   // localStorage 'atlas-table' / 'atlas-bright2'; a change fires window 'atlas-table' (detail { table, bright }) for the labels / floors
   const say = () => { try { dispatchEvent(new CustomEvent('atlas-table', { detail: { table: tableStyle, bright } })); } catch (e) {} };
   function setTable(k) {   // switch the table design (0..5) and rebuild the room (no reload)
-    k = Math.max(0, Math.min(9, k | 0)); if (!TABLES[k] && k) k = 0;
+    k = Math.max(0, Math.min(11, k | 0)); if (!TABLES[k] && k) k = 0;
     const same = k === tableStyle; tableStyle = k;
     try { localStorage.setItem('atlas-table', String(k)); } catch (e) {}
     if (R && scene && !same) {
@@ -1290,7 +1290,8 @@
       rbCap = 4;
       const gid = () => (cur && cur.userData.gameId) || 'chess';
       // (tod: the time of day for the places that follow it — ダイニング, テラス; viewOnly objects such as a pendant over the table hide in play view)
-      try { tblInfo = ST({ TT, g, scene, LITE, COARSE, tod: mode, texScale: texScale(), game: gid(), css: v => { roomCss = v || ''; if (!museumOn) paintCss(roomCss); } }) || {}; } finally { rbCap = 9; }
+      roomTicks.length = 0;   // (tick: a place's per-frame motion — the riad's fountain, the camp's fire; obj is what must be in view for it to run)
+      try { tblInfo = ST({ TT, g, scene, LITE, COARSE, tod: mode, texScale: texScale(), game: gid(), tick: (fn, obj) => { if (obj) obj.userData.keep = true; roomTicks.push(Object.assign(fn, { obj })); }, css: v => { roomCss = v || ''; if (!museumOn) paintCss(roomCss); } }) || {}; } finally { rbCap = 9; }
       viewOnly = []; g.traverse(x => { if (x.userData.viewOnly) viewOnly.push(x); });
       keyLight = tblInfo.key || null;
       if (keyLight) { keyLight.castShadow = true; keyLight.shadow.mapSize.setScalar(LITE ? 512 : COARSE ? 1024 : 2048); keyLight.shadow.bias = keyLight.shadow.bias || -.0004; keyLight.shadow.normalBias = .02; }
