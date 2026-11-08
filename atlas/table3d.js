@@ -1497,7 +1497,12 @@
   // the board's own size (half of its larger footprint side, world units), measured once per board — the gallery frames it by it
   function boardR() {
     if (!cur) return 6.5; if (cur.userData._r) return cur.userData._r;
-    try { const bx = new (T().Box3)().setFromObject(cur), sz = bx.getSize(new (T().Vector3)()); if (!isFinite(sz.x) || sz.x <= 0) return 6.5;
+    // measured in the board's own frame: the turntable's yaw and the pop-in's scale/turn made a turned board's box wider (2026-11-09:
+    // the phone framing came back small after stepping between games)
+    const ry = root.rotation.y, cs = cur.scale.clone(), cr = cur.rotation.y, cp = cur.position.y;
+    root.rotation.y = 0; cur.scale.setScalar(1); cur.rotation.y = 0; cur.position.y = 0; root.updateMatrixWorld(true);
+    let bx; try { bx = new (T().Box3)().setFromObject(cur); } finally { root.rotation.y = ry; cur.scale.copy(cs); cur.rotation.y = cr; cur.position.y = cp; root.updateMatrixWorld(true); }
+    try { const sz = bx.getSize(new (T().Vector3)()); if (!isFinite(sz.x) || sz.x <= 0) return 6.5;
       cur.userData._h = Math.max(.3, Math.min(6, sz.y)); cur.userData._s = Math.max(sz.x, sz.z) / 2;
       return cur.userData._r = Math.max(2.5, Math.min(9, Math.max(sz.x, sz.z) / 2 * .7 + Math.hypot(sz.x, sz.z) / 2 * .3)); } catch (e) { return 6.5; }   // (between half its side and half its diagonal: the slow turntable only swings it a little)
   }
