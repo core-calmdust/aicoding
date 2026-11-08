@@ -66,6 +66,9 @@
 - ポータル登録：`shared/atlas.js`（GAMES・更新情報・進み具合）、`atlas/i18n.js`（about／hist）、3Dアイコン `atlas/icons3d.js` → `images/atlas/ludo.webp`、一覧の絵 `atlas/shots/ludo.webp`（`tools/shots.js`）、地図 `atlas/mapdata.js`、ヒストリア `atlas/historia/<言語>/ludo.json`・`s/ludo.json`（`python3 ludo/tools/gen_historia.py` で生成。盤の図は historia.js の `t:'ludo'`）。
 - トップページ：`index.html` のカード（key `ld`）・JSON-LD、アイコン `images/icons/ludo.svg`、サムネイル `images/ludo.webp`。
 
+## 5a. 終局（2026-11-08）
+- 終局時は勝敗演出と順位を出す。2D：勝ち（AI戦で自分の勝ち・対人戦）は盤に紙吹雪＋ファンファーレ、負けは盤が一瞬揺れて灰色に沈む＋下がる音。結果ダイアログに全員の順位（勝った側が1位、以降は上がった駒の割合→歩いた歩数の順。パチーシの組は同順位で1行）、自分の行を強調。3D卓：結果カードの文に「1位 緑 · 2位 赤（あなた）…」、負けたときの盤上の一言に自分の順位。
+
 ## 5b. 画面レイアウト（共通ルール準拠・2026-11-08）
 - PC（ヘッダーバー時）：盤は「画面の高さ（ヘッダーとオンライン欄を除く）」と「画面幅−右欄360px−余白」の小さいほうで最大化、盤＋右欄のまとまりを左右中央・上下中央に置き、右欄の高さ＝盤の高さ（中身は欄内スクロール）。
 - オンライン欄（`ludo/online-soon.js`）：Firebase プロジェクトができるまでは「準備中」の状態。PCは画面下の46pxのバー（● オンライン · 準備中 · 詳しく）、スマホは下部タブの「オンライン」。どちらも押すと準備中の説明（14言語）。`html.ol-dock.ol-soon`。
