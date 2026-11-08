@@ -220,8 +220,9 @@ const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 let cssDone = false;
 function addCss() { if (cssDone) return; cssDone = true; const st = document.createElement('style'); st.id = 'proSetCss'; st.textContent = CSS; document.head.appendChild(st); }
-// threads available on this page now (shared/mtengine.js): 1 = none
-function maxThreads() { const M = window.MTEngine; return M && M.on && M.on() ? 1 + (M.maxHelpers ? M.maxHelpers() : M.helpers()) : 1; }   // (every core the browser reports — no fixed cap, the user's own choice)
+// threads available on this page now (shared/mtengine.js, or shared/mtsplit.js for the plain-JavaScript engines): 1 = none
+const mtLib = () => window.MTEngine || window.MTSplit;
+function maxThreads() { const M = mtLib(); return M && M.on && M.on() ? 1 + (M.maxHelpers ? M.maxHelpers() : M.helpers()) : 1; }   // (every core the browser reports — no fixed cap, the user's own choice)
 
 function init(cfg) {
   const key = 'aicoding-pro:' + cfg.game;
@@ -282,7 +283,7 @@ function init(cfg) {
       ov.addEventListener('input', e => { if (!panel.contains(e.target)) later(); });
       ov.addEventListener('click', e => { if (!panel.contains(e.target)) later(); });
     }
-    if (window.MTEngine && MTEngine.onChange) MTEngine.onChange(() => render());
+    { const M = mtLib(); if (M && M.onChange) M.onChange(() => render()); }
     render();
   }
   api.commit = () => { if (draft) { saved = sanitize(draft); store.set({ v: saved }); } };
@@ -331,7 +332,7 @@ function init(cfg) {
     const binds = [];
     const segHtml = (k, list, cur, def) => `<div class="pro-seg" role="group">${list.map(o => `<button type="button" data-k="${k}" data-v="${esc(JSON.stringify(o.v))}" class="${same(o.v, cur) ? 'sel' : ''} ${same(o.v, def) ? 'def' : ''}"${same(o.v, def) ? ` title="${esc(tx('def'))}"` : ''}>${esc(pick(o.label, l))}</button>`).join('')}</div>`;
     const groups = { read: [], play: [], misc: [] };
-    const mtCan = () => { const M = window.MTEngine; return !!(M && M.maxHelpers && M.maxHelpers() > 0); };
+    const mtCan = () => { const M = mtLib(); return !!(M && M.maxHelpers && M.maxHelpers() > 0); };
     for (const p of params) {
       const thrOff = p.key === 'threads' && maxThreads() < 2;   // threads not running on this page: shown greyed with how to turn them on
       if (thrOff && !mtCan()) continue;

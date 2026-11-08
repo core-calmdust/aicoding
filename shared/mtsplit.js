@@ -1,0 +1,353 @@
+// Multi-threaded search for the plain-JavaScript engines (common rule 2026-11-08, addendum「本編のマルチスレッド」全タイトル対応):
+// several ordinary Web Workers of the game's own engine.js share the ROOT MOVES of one search. No shared memory, so no
+// cross-origin isolation, no service worker and no reload — it works the same in every browser, and Google sign-in / online
+// play are never affected. (The wasm engines use shared/mtengine.js instead: Lazy SMP on one shared table.)
+//
+// • The option "マルチスレッド" in the gear panel (HeaderBar.addOption id 'mt', 14 languages) and the choice itself are the same
+//   as shared/mtengine.js / mtworkers.js (localStorage 'aicoding-mt'; Safari / Firefox: 'aicoding-mt-w' — '1' on, '0' off, none =
+//   automatic: PC on, phones / tablets off).
+//   Turning it on / off takes effect at once.
+// • Threads: min(logical cores − 1, 7) helpers + 1 (phones / tablets: 3 helpers at most); PRO mode may ask for every core.
+// • MTSplit.use(cfg) → { pool(prio), ready(), cancel(tag), threads } (the same shape as MTEngine.use)
+//     cfg: { url (the engine worker), setup(worker)? (e.g. send it the opening book), drive(msg, X, onProgress) → Promise<result
+//            | undefined (not for threads: do it the usual way)> }
+//   pool.free(), pool.run(msg, onProgress, tag) → Promise<result (nodes = all threads, threads, ms) | null (cancelled) |
+//   undefined (failed / not for threads)>, pool.cancel(tag), pool.preempt(tag) — one job at a time.
+//   (msg.mtThreads: use only that many threads — PRO mode)
+// • X (inside drive): X.n (threads of this job), X.exec(msg, aff, prio) → Promise<reply | null (cancelled / failed)> runs one
+//   task on a free worker (higher prio first; preferring the worker that last searched `aff`, for its transposition table),
+//   X.drop(promise, hard) abandons a task (hard: its worker is restarted), X.nodes, X.cancelled, X.failed.
+// • Drivers for alpha-beta engines that answer { type: 'mtv', m, d, a, b, until, nl } with { v, ok, nodes, exact? } (the value
+//   of root move m searched to depth d in the window (a, b), mover's view, fail-soft; until = Date.now() deadline):
+//   MTSplit.allValues(X, o) — iterative deepening, every root move with the full window (analysis; near-linear speed-up)
+//   MTSplit.bestValue(X, o) — iterative deepening for the best move: the first move alone with the full window (Young Brothers
+//     Wait at the root); meanwhile the other workers test the other moves against the score of the previous depths (null
+//     window), then against the real alpha; a move that fails high is searched again with (alpha, ∞).
+//   MTSplit.ladder — drive() for the engines that speak 'mtplan' / 'mtv' / 'mtpv' / 'mtfin' (ugolki, agon, konane, mancala).
+(function () {
+  'use strict';
+  if (window.MTSplit) return;
+  const K_PREF = 'aicoding-mt';
+  const LS = {
+    get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} },
+  };
+  const TOUCH = !matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const HC = navigator.hardwareConcurrency || 2;
+  const CAN = typeof Worker === 'function' && HC >= 2;
+  const helpers = () => CAN ? Math.max(0, Math.min(HC - 1, TOUCH ? 3 : 7)) : 0;
+  const maxHelpers = () => CAN ? Math.max(0, HC - 1) : 0;
+  // (the same choice and keys as shared/mtworkers.js: Chromium shares it with the mtengine.js games; elsewhere — Safari, Firefox,
+  // where turning it on in a mtengine.js game means the COOP mode — these games keep their own key 'aicoding-mt-w')
+  const DIP = !!((navigator.userAgentData && navigator.userAgentData.brands || []).some(b => /Chromium/.test(b.brand)) || /Chrome\/\d/.test(navigator.userAgent));
+  const K_OWN = 'aicoding-mt-w', K_SET = DIP ? K_PREF : K_OWN;
+  const pref = () => { if (!DIP) { const w = LS.get(K_OWN); if (w !== null) return w; } return LS.get(K_PREF); };
+  const want = () => { const p = pref(); return p === '1' || (p !== '0' && !TOUCH); };
+  const on = () => CAN && want() && helpers() > 0;
+
+  const T = {
+    label: { ja: 'マルチスレッド', en: 'Multi-threading', zh: '多线程', 'zh-TW': '多執行緒', ko: '멀티스레드', es: 'Multihilo', fr: 'Multithread', pt: 'Multithread', de: 'Multithreading', ru: 'Многопоточность', tr: 'Çoklu iş parçacığı', id: 'Multi-thread', hi: 'मल्टी-थ्रेड', ar: 'تعدد المسارات' },
+    auto: { ja: '複数のCPUコアで同時に読みます（分析・ヒント・コーチ・時間で考える強いAI）。',
+      en: 'Searches on several CPU cores at once (analysis, hints, coach, the strongest timed AI levels).',
+      zh: '同时使用多个CPU核心搜索（分析、提示、教练、按时间思考的最强AI）。',
+      'zh-TW': '同時使用多個CPU核心搜尋（分析、提示、教練、按時間思考的最強AI）。',
+      ko: '여러 CPU 코어로 동시에 탐색합니다(분석·힌트·코치·시간제 최강 AI).',
+      es: 'Busca con varios núcleos de CPU a la vez (análisis, pistas, entrenador y los niveles de IA más fuertes por tiempo).',
+      fr: "Calcule sur plusieurs cœurs du processeur à la fois (analyse, indices, coach, niveaux d'IA les plus forts au temps).",
+      pt: 'Pesquisa com vários núcleos da CPU ao mesmo tempo (análise, dicas, treinador e os níveis de IA mais fortes por tempo).',
+      de: 'Rechnet auf mehreren CPU-Kernen gleichzeitig (Analyse, Tipps, Coach, die stärksten KI-Stufen mit Bedenkzeit).',
+      ru: 'Расчёт сразу на нескольких ядрах процессора (анализ, подсказки, тренер, сильнейшие уровни ИИ по времени).',
+      tr: 'Aynı anda birden çok CPU çekirdeğiyle arar (analiz, ipuçları, koç, süreye göre oynayan en güçlü yapay zekâ seviyeleri).',
+      id: 'Mencari dengan beberapa inti CPU sekaligus (analisis, petunjuk, pelatih, level AI terkuat berbasis waktu).',
+      hi: 'एक साथ कई CPU कोर पर खोज करता है (विश्लेषण, संकेत, कोच, समय वाले सबसे मज़बूत AI स्तर)।',
+      ar: 'يبحث باستخدام عدة أنوية للمعالج في آن واحد (التحليل والتلميحات والمدرّب وأقوى مستويات الذكاء الاصطناعي بالوقت).' },
+  };
+  const lang = () => { const s = document.getElementById('langSel'); let l = (s && s.value) || document.documentElement.lang || 'ja'; if (/^zh-(tw|hk|mo|hant)/i.test(l)) l = 'zh-TW'; else if (!T.label[l]) l = String(l).slice(0, 2); return T.label[l] ? l : 'en'; };
+
+  // ------------------------------------------------------------------ the option
+  const subs = [];
+  let opt = null;
+  const emit = () => { subs.forEach(f => { try { f(on()); } catch (e) { console.error(e); } }); if (opt) opt.sync(); };
+  const ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M10 10h4v4h-4zM9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></svg>';
+  function addOpt() {
+    if (opt || !window.HeaderBar || !HeaderBar.addOption) return;
+    opt = HeaderBar.addOption({ id: 'mt', icon: ICON, label: T.label, type: 'toggle', get: on, set: v => { LS.set(K_SET, v ? '1' : '0'); emit(); },
+      hidden: () => helpers() < 1, title: () => T.auto[lang()] || T.auto.en });
+  }
+  function init() { if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', addOpt); else addOpt(); }
+  addEventListener('storage', e => { if (e.key === K_PREF || e.key === K_OWN) emit(); });   // (another tab changed the choice)
+
+  // ------------------------------------------------------------------ the pool of workers
+  function pool(cfg) {
+    const H = helpers(), HM = Math.max(H, maxHelpers());
+    let dead = false, job = null, seq = 0, tid = 0;
+    const W = [], queue = [];
+    const P = { threads: 1 + H, maxThreads: 1 + HM, ready: Promise.resolve(true), free: () => !dead && (!job || job.cancelled), run, cancel, close, preempt: t => { const j = job; if (j && !j.cancelled && j.tag !== t) cancel(); } };
+    function spawn(i) {
+      const s = { w: new Worker(cfg.url), task: null, aff: new Set(), i };
+      s.w.onmessage = e => {
+        const d = e.data, t = s.task; if (!t || !d || d.id !== t.id || d.type === 'progress') return;
+        s.task = null; if (t.aff !== undefined) { if (s.aff.size > 256) s.aff.clear(); s.aff.add(t.aff); }
+        if (typeof d.nodes === 'number' && t.job) t.job.X.nodes += d.nodes;
+        t.resolve(d.error ? null : d); pump();
+      };
+      s.w.onerror = e => { console.warn('[mtsplit]', e.message || e); const t = s.task; s.task = null; if (t && t.job) t.job.X.failed = true; restart(s); if (t) t.resolve(null); pump(); };
+      if (cfg.setup) cfg.setup(s.w);
+      return s;
+    }
+    function restart(s) { try { s.w.terminate(); } catch (e) {} if (!dead) W[s.i] = spawn(s.i); }
+    for (let i = 0; i <= H; i++) W.push(spawn(i));
+    function pump() {
+      for (let k = 0; k < queue.length;) {
+        const q = queue[k], j = q.job;
+        if (j.cancelled || dead) { queue.splice(k, 1); q.resolve(null); continue; }
+        while (W.length < j.X.n) W.push(spawn(W.length));
+        const free = W.slice(0, j.X.n).filter(s => !s.task);
+        if (!free.length) break;
+        const s = (q.aff !== undefined && free.find(x => x.aff.has(q.aff))) || free.find(x => !x.aff.size) || free[0];
+        queue.splice(k, 1); s.task = q; s.w.postMessage(Object.assign({}, q.msg, { id: q.id }));
+      }
+    }
+    function makeX(j, n) {
+      const X = { n, nodes: 0, cancelled: false, failed: false,
+        exec(msg, aff, prio) {
+          if (j.cancelled || dead) return Promise.resolve(null);
+          let res; const p = new Promise(r => { res = r; });
+          const q = { id: ++tid, msg, aff, prio: prio || 0, job: j, resolve: v => { if (res) { const f = res; res = null; f(v); } } };
+          p.tid = q.id;
+          let k = queue.length; while (k > 0 && queue[k - 1].prio < q.prio) k--;   // (higher priority first, else in order)
+          queue.splice(k, 0, q); pump();
+          return p;
+        },
+        drop(p, hard) {   // abandon a task: a waiting one is taken off the queue; a running one finishes unheard (hard: its worker is restarted)
+          const k = queue.findIndex(q => q.id === p.tid); if (k >= 0) { const q = queue.splice(k, 1)[0]; q.resolve(null); return; }
+          const s = W.find(x => x.task && x.task.id === p.tid); if (!s) return;
+          if (hard) { const t = s.task; s.task = null; restart(s); t.resolve(null); pump(); } else s.task.resolve(null);
+        },
+      };
+      return X;
+    }
+    function run(msg, onProgress, tag) {
+      const prev = job, j = { tag, cancelled: false, running: false, id: ++seq };
+      const out = new Promise(r => { j.resolve = v => { if (j.resolve) { const f = j.resolve0; j.resolve = null; f(v); } }; j.resolve0 = r; });
+      job = j;
+      j.done = (async () => {
+        if (prev) await prev.done;
+        if (j.cancelled || dead) { j.resolve(j.cancelled ? null : undefined); return; }
+        const n = msg.mtThreads > 0 ? Math.max(1, Math.min(1 + HM, msg.mtThreads)) : 1 + H;
+        j.X = makeX(j, n); j.running = true;
+        const t0 = performance.now();
+        const prog = d => { if (!j.cancelled && onProgress) onProgress(Object.assign({}, d, { nodes: j.X.nodes })); };
+        let r;
+        try { r = await cfg.drive(msg, j.X, prog); } catch (e) { console.warn('[mtsplit]', e); r = undefined; }
+        if (j.cancelled) r = null; else if (j.X.failed && !r) r = undefined;
+        if (job === j) job = null;
+        j.resolve(r ? Object.assign({}, r, { nodes: j.X.nodes, threads: n, ms: performance.now() - t0 }) : r);
+      })().catch(e => { console.warn('[mtsplit]', e); j.resolve(undefined); }).finally(() => { if (job === j) job = null; });
+      return out;
+    }
+    function cancel(tag) {
+      const j = job; if (!j || j.cancelled || (tag !== undefined && j.tag !== tag)) return;
+      j.cancelled = true; if (j.X) j.X.cancelled = true; j.resolve(null);
+      for (const s of W.slice()) if (s.task && s.task.job === j) { const t = s.task; s.task = null; restart(s); t.resolve(null); }
+      pump();
+    }
+    function close() { dead = true; const j = job; if (j) { j.cancelled = true; if (j.X) j.X.cancelled = true; j.resolve(null); } W.forEach(s => { try { s.w.terminate(); } catch (e) {} if (s.task) s.task.resolve(null); }); W.length = 0; queue.splice(0).forEach(q => q.resolve(null)); }
+    return P;
+  }
+  function use(cfg) {
+    let p = null, timer = 0;
+    const make = () => { clearTimeout(timer); if (!p && on()) p = pool(cfg); return p; };
+    const sync = v => { if (v) { if (!p) timer = setTimeout(make, 1500); } else { clearTimeout(timer); if (p) { p.close(); p = null; } } };
+    subs.push(sync); sync(on());
+    return {
+      pool(prio) { if (!on()) return null; const q = make(); if (prio && q && !q.free()) q.preempt(prio); return q && q.free() ? q : null; },
+      ready() { return Promise.resolve(on() ? make() : null); },
+      cancel(tag) { if (p) p.cancel(tag); },
+      get threads() { return p ? p.threads : 1; },
+    };
+  }
+
+  // ------------------------------------------------------------------ drivers (alpha-beta: the root moves and the main line are split)
+  // The engine answers (all values from the side to move at the node, fail-soft; line = moves after the root):
+  //   { type: 'mtv', line, d, wa, wb, until, nl? } → { v, ok, nodes, exact? }   search(node, d, wa, wb) — ok false: out of time / nodes
+  //   { type: 'mtkids', line } → { kids: [{ m, s (−1: the opponent moves next, +1: the same side again), t? (a final value, parent's
+  //     view) }] } in the engine's own order (its table's move first); [] = a leaf (terminal / repetition: mtv gives its value)
+  // S: { X, base, inf, until, nodes (budget, 0 = none), splitMin (split a node only with this depth left or more), splitPly,
+  //      lmr: { d, i } (late-move reduction as the engine's own: a reduced null-window test from the i-th move at depth ≥ d) }
+  // Young Brothers Wait along the main line ("PV splitting"): a node's first kid is searched first (and split the same way),
+  // then its other kids in parallel; the root's other moves are meanwhile tested against the previous depths' score.
+  const DEAD = { dead: true };
+  const mkTok = parent => { const t = { dead: false, ps: new Set(), kids: new Set(), parent }; if (parent) parent.kids.add(t); return t; };
+  function kill(X, t) { if (t.dead) return; t.dead = true; for (const p of t.ps) X.drop(p); t.ps.clear(); for (const k of t.kids) kill(X, k); }
+  async function ask(S, msg, aff, prio, tok) {
+    const p = S.X.exec(msg, aff, prio); tok.ps.add(p);
+    const r = await p; tok.ps.delete(p);
+    if (tok.dead) return DEAD;
+    if (!r || r.ok === false) { S.timeout = true; return null; }
+    if (r.exact === false) S.allEx = false;
+    return r;
+  }
+  async function leafV(S, line, d, a, b, tok, prio) {
+    const msg = Object.assign({}, S.base, { type: 'mtv', line, d, wa: a, wb: b, until: S.until });
+    if (S.nodes) { if (S.X.nodes >= S.nodes) { S.timeout = true; return null; } msg.nl = Math.max(1000, S.nodes - S.X.nodes); }
+    const r = await ask(S, msg, line[0], prio, tok);
+    return r === null || r === DEAD ? r : r.v;
+  }
+  // the value of kid k of the node `line` for the node's side to move; d = the node's depth, (a, b) the node's window
+  async function kidV(S, line, k, d, a, b, tok, split, red, prio) {
+    if (k.t !== undefined) return k.t;
+    const l2 = line.concat([k.m]), dd = d - 1 - (red || 0), neg = k.s < 0;
+    const ca = neg ? -b : a, cb = neg ? -a : b;
+    const v = split ? await nodeV(S, l2, dd, ca, cb, tok) : await leafV(S, l2, dd, ca, cb, tok, prio);
+    return v === null || v === DEAD ? v : neg ? -v : v;
+  }
+  async function nodeV(S, line, d, a, b, tok) {
+    const prio = 10 + line.length;
+    if (d < S.splitMin || line.length >= S.splitPly) return leafV(S, line, d, a, b, tok, prio);
+    const K = await ask(S, Object.assign({}, S.base, { type: 'mtkids', line }), line[0], 100, tok);
+    if (K === null || K === DEAD) return K;
+    if (!K.kids || K.kids.length < 2) return leafV(S, line, d, a, b, tok, prio);
+    const r = await splitNode(S, line, K.kids, d, a, b, tok, null, false);
+    return r === null || r === DEAD ? r : r.v;
+  }
+  // one node searched by several workers → { v (fail-soft), i (the best kid, −1: none above a), st (the kids' bounds) } |
+  // null (time / nodes / cancelled: the search of this depth stops) | (root) { timeout: true, v, i, first, st }
+  function splitNode(S, line, kids, d, a, b, tok, spec, root) {
+    const X = S.X, n = kids.length, me = mkTok(tok);
+    const st = kids.map(() => ({ ub: Infinity, lb: -Infinity, ex: null, run: false, spec: false, red: false, fin: false }));
+    let alpha = a, best = -Infinity, bi = -1, firstDone = false, running = 0, over = false;
+    return new Promise(resolve => {
+      const end = v => { if (over) return; over = true; kill(X, me); if (tok) tok.kids.delete(me); resolve(v); };
+      const cut = () => end({ v: best, i: bi, st });
+      const take = (i, v) => { st[i].fin = true; if (v > best) best = v; if (v > alpha) { alpha = v; bi = i; } };
+      const lmrOf = i => S.lmr && line.length > 0 && d >= S.lmr.d && i >= S.lmr.i ? 1 : 0;
+      const launch = (i, wa, wb, split, red, prio) => {
+        const s = st[i]; s.run = true; running++;
+        kidV(S, line, kids[i], d, wa, wb, me, split, red, prio).then(v => {
+          running--; s.run = false;
+          if (over || v === DEAD) return;
+          if (v === null) { end(root ? { timeout: true, v: alpha, i: bi, first: firstDone, st } : null); return; }
+          if (i === 0) firstDone = true;
+          if (red) { if (v <= wa) { s.ub = Math.min(s.ub, v); take(i, v); } else s.red = true; }   // (a reduced test that fails high: the full depth)
+          else if (v <= wa) { s.ub = Math.min(s.ub, v); if (wa <= alpha || i === 0) take(i, v); }
+          else if (v >= wb) { s.lb = Math.max(s.lb, v); if (v >= b) { take(i, v); cut(); return; } }
+          else { s.ex = v; s.ub = s.lb = v; take(i, v); }
+          if (alpha >= b) { cut(); return; }
+          step();
+        });
+      };
+      const step = () => {
+        if (over) return;
+        if (X.cancelled || X.failed) { end(null); return; }
+        while (running < X.n) {
+          let pick = null;
+          if (!firstDone) {
+            if (!st[0].run) pick = [0, alpha, b, true, 0, 1];
+            else if (spec !== null && spec !== undefined && running < X.n - (S.specRes === undefined ? 1 : S.specRes)) {   // (speculative: keep a worker for the main line)
+              for (let i = 1; i < n; i++) { const s = st[i]; if (!s.run && !s.spec && kids[i].t === undefined) { s.spec = true; pick = [i, spec, spec + 1, false, 0, -5]; break; } }
+            }
+          } else for (let i = 1; i < n; i++) {
+            const s = st[i]; if (s.run || s.fin) continue;
+            if (kids[i].t !== undefined) { take(i, kids[i].t); if (alpha >= b) { cut(); return; } continue; }
+            if (s.ub <= alpha) { take(i, s.ub); continue; }
+            if (s.red || s.lb > alpha) pick = [i, alpha, b, true, 0, 0];
+            else pick = [i, alpha, alpha + 1, false, s.lb > -Infinity || s.ub < Infinity ? 0 : lmrOf(i), 0];
+            break;
+          }
+          if (!pick) break;
+          launch(pick[0], pick[1], pick[2], pick[3], pick[4], 10 + line.length + pick[5]);
+        }
+        if (!running && firstDone && st.every((s, i) => s.fin || i === 0)) end({ v: best, i: bi, st });
+      };
+      step();
+    });
+  }
+  // allValues: every root kid with the full window, depth by depth (analysis) — o = { kids, maxD, d0?, step?, onDepth?, stop? }
+  // → { list (best first: { m, v }), depth } (the last complete depth) | null (cancelled)
+  async function allValues(S, o) {
+    let list = null, depth = 0; const cost = new Map(), X = S.X;
+    for (let d = o.d0 || 1; d <= o.maxD; d += o.step || 1) {
+      if (S.until && Date.now() >= S.until) break;
+      const ks = o.kids.slice().sort((x, y) => (cost.get(y.m) || 0) - (cost.get(x.m) || 0));   // (the longest first: less waiting at the end of a depth)
+      const tok = mkTok(null);
+      S.timeout = false; S.allEx = true;
+      const one = async k => {   // (the full window: the same for either side)
+        if (k.t !== undefined) return { v: k.t, ex: true };
+        const t0 = Date.now(), r = await ask(S, Object.assign({}, S.base, { type: 'mtv', line: [k.m], d: d - 1, wa: -S.inf, wb: S.inf, until: S.until }), k.m, 10, tok);
+        cost.set(k.m, Date.now() - t0);
+        return r === null || r === DEAD ? null : { v: k.s < 0 ? -r.v : r.v, ex: r.exact !== false };
+      };
+      const vs = await Promise.all(ks.map(one));
+      if (X.cancelled || X.failed) return null;
+      if (S.timeout || vs.some(v => !v)) break;   // (out of time: the last complete depth stands)
+      list = ks.map((k, i) => ({ m: k.m, v: vs[i].v, exact: vs[i].ex })).sort((x, y) => y.v - x.v); depth = d;
+      if (o.onDepth) o.onDepth(list, d);
+      if (o.stop && o.stop(list, d, S.allEx)) { if (o.solved) o.solved(S.allEx); break; }
+    }
+    return { list, depth };
+  }
+  // bestValue: iterative deepening for the best root kid — o = { kids (likely best first), maxD, d0?, stop(v, d, allExact)?,
+  // partialIfBetter? } → { m, v, depth, exact } | null (cancelled)
+  async function bestValue(S, o) {
+    let kids = o.kids.slice(), best = { m: kids[0].m, v: 0, depth: 0 };
+    const hist = [], X = S.X;
+    for (let d = o.d0 || 1; d <= o.maxD; d++) {
+      if (S.until && Date.now() >= S.until) break;
+      if (S.nodes && X.nodes >= S.nodes) break;
+      S.timeout = false; S.allEx = true;
+      const spec = X.n > 1 && hist.length ? Math.min.apply(null, hist.slice(-2)) : null;
+      const r = await splitNode(S, [], kids, d, -S.inf, S.inf, null, spec, true);
+      if (X.cancelled) return null;
+      if (X.failed || !r) return best;
+      const ok = !r.timeout;
+      if (r.i >= 0 && (ok || (r.first && (!o.partialIfBetter || r.v >= best.v || d === 1)))) best = { m: kids[r.i].m, v: r.v, depth: d, exact: ok && S.allEx };
+      if (!ok) break;
+      hist.push(r.v);
+      if (o.stop && o.stop(r.v, d, S.allEx)) break;
+      const val = i => { const s = r.st[i]; return s.ex !== null ? s.ex : Math.min(s.ub, r.v); };
+      const idx = kids.map((k, i) => i).filter(i => i !== r.i).sort((x, y) => val(y) - val(x));
+      kids = [kids[r.i]].concat(idx.map(i => kids[i]));
+    }
+    return best;
+  }
+  // drive() for the engines that speak 'mtplan' (what to search: a ready result, or the root kids and limits), 'mtv', 'mtkids',
+  // 'mtpv' (the line after a root move) and 'mtfin' (the engine's own finishing touches and reply format).
+  const ladder = {
+    async drive(msg, X, onProgress) {
+      const base = Object.assign({}, msg); delete base.id; delete base.mtThreads;
+      const plan = await X.exec(Object.assign({}, base, { type: 'mtplan', job: msg.type }), undefined, 100);
+      if (!plan) return X.cancelled ? null : undefined;
+      if (plan.result) return plan.result;   // (book, a single move, a weak level…: nothing to search on threads)
+      if (!plan.plan) return undefined;
+      const p = plan.plan;
+      const S = { X, base, inf: p.inf, until: p.ms ? Date.now() + p.ms : 0, nodes: p.nodes || 0, splitMin: p.splitMin || 4, splitPly: p.splitPly || 8, lmr: p.lmr || null, specRes: p.specRes, timeout: false, allEx: true };
+      const kids = p.kids || p.moves.map(m => ({ m, s: -1 }));
+      const win = v => !!p.win && Math.abs(v) > p.win;
+      const kindOf = v => win(v) ? 'exact' : 'heur';
+      let raw;
+      if (p.kind === 'best') {
+        raw = await bestValue(S, { kids, maxD: p.maxD || 60, partialIfBetter: !!p.partialIfBetter, stop: (v, d, ex) => win(v) || (p.solved && ex) });
+      } else {
+        let solved = false;
+        raw = await allValues(S, { kids, maxD: p.maxD || 30, d0: p.d0, step: p.step, solved: ex => { solved = ex; },
+          onDepth: p.progress ? (list, d) => onProgress && onProgress({ type: 'progress', list: list.map(e => ({ m: e.m, v: e.v, kind: kindOf(e.v) })), depth: d }) : null,
+          stop: (list, d, ex) => (p.stopTop && list.length && win(list[0].v) && d > p.stopTop) || (p.stopAll && list.every(e => win(e.v))) || (p.solved && ex) });
+        if (raw) raw.exact = solved;
+        if (raw && raw.list && p.pv) {   // the lines after the best few moves, in parallel
+          const top = raw.list.slice(0, p.pvK || raw.list.length);
+          const pvs = await Promise.all(top.map(e => X.exec(Object.assign({}, base, { type: 'mtpv', m: e.m, plies: p.pv }), e.m, 50)));
+          if (X.cancelled) return null;
+          top.forEach((e, i) => { e.pv = pvs[i] ? pvs[i].pv : []; });
+          raw.list = top.concat(raw.list.slice(top.length));
+        }
+      }
+      if (!raw) return X.cancelled ? null : undefined;
+      const fin = await X.exec(Object.assign({}, base, { type: 'mtfin', job: msg.type, raw }), undefined, 100);
+      if (!fin) return X.cancelled ? null : undefined;
+      return fin.result;
+    },
+  };
+
+  window.MTSplit = { init, use, pool, on, helpers, maxHelpers, onChange: f => subs.push(f), touch: TOUCH, allValues, bestValue, ladder, T };
+})();
