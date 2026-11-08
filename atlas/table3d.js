@@ -939,6 +939,8 @@
   }
   // 明るさ: 0 暗い（やや抑えた明かり） · 1 標準 · 2 明るい — exposure × BRIGHT[b], the soft light on the board × BOARD_K + BOARD_ADD, a lift of the ambient.
   // Kept in 'atlas-bright2' (the earlier 'atlas-bright' 0 標準 · 1 明るい · 2 とても明るい is read once: 0 → 1, 1 / 2 → 2) (2026-11-07)
+  // the places (2..9) a little dimmer than they were built, to sit with the chabudai's balance; reflections' soft boxes capped (2026-11-09)
+  const ROOM_DIM = [1, 1, .76, .92, .76, 1, .86, 1, .76, 1], ENV_MAX = 1.6;   // (by place; the study and the lodge are already dim)
   const BRIGHT = [.8, 1, 1.2], BOARD_K = [.7, 1, 1], BOARD_ADD = [0, 0, .32], AMB_ADD = [0, 0, .14];
   let bright = (() => { try { const v = localStorage.getItem('atlas-bright2'); if (v !== null && +v >= 0 && +v <= 2) return +v | 0; const o = localStorage.getItem('atlas-bright'); return o === '1' || o === '2' ? 2 : 1; } catch (e) { return 1; } })();
   let baseExp = .78, boardLamp = null, boardLampI = 0, ambLift = null;
@@ -1296,7 +1298,7 @@
       keyLight = tblInfo.key || null;
       if (keyLight) { keyLight.castShadow = true; keyLight.shadow.mapSize.setScalar(LITE ? 512 : COARSE ? 1024 : 2048); keyLight.shadow.bias = keyLight.shadow.bias || -.0004; keyLight.shadow.normalBias = .02; }
       boardLight(TT, scene, tblInfo.board ?? .3, tblInfo.boardCol);
-      baseExp = Math.max(tblInfo.minExp || .72, tblInfo.exp || .8); if (R) R.toneMappingExposure = expo(baseExp);
+      baseExp = Math.max(tblInfo.minExp || .72, tblInfo.exp || .8) * (ROOM_DIM[tableStyle] || 1); if (R) R.toneMappingExposure = expo(baseExp);
       roomBg = tblInfo.bg === null ? null : new TT.Color(tblInfo.bg || '#000').convertSRGBToLinear(); scene.background = roomBg;
       if (!museumOn) paintCss(roomCss);
       roomMode = mode; return;
@@ -1412,11 +1414,11 @@
       const col = [], pos = sky.geometry.attributes.position, c = new TT.Color();
       // tinted by the hour (see LOOK): reflections and ambient follow morning / day / evening / night
       const EV = !opts.plain && tblInfo && tblInfo.env;
-      if (EV) {   // a table design's own reflections: a graded sky + its soft boxes
+      if (EV) {   // a table design's own reflections: a graded sky + its soft boxes (each capped at ENV_MAX: no white glare on glossy boards)
         const a = new TT.Color(EV.top).convertSRGBToLinear(), b = new TT.Color(EV.bottom).convertSRGBToLinear();
         for (let i = 0; i < pos.count; i++) { const y = (pos.getY(i) / 30 + 1) / 2; c.copy(b).lerp(a, y); col.push(c.r, c.g, c.b); }
         sky.geometry.setAttribute('color', new TT.Float32BufferAttribute(col, 3)); env.add(sky);
-        EV.panels.forEach(([x, y, z, w, h, hx, k]) => { const lc = new TT.Color(hx).convertSRGBToLinear().multiplyScalar(k); const p = new TT.Mesh(new TT.PlaneGeometry(w, h), new TT.MeshBasicMaterial({ color: lc, side: TT.DoubleSide })); p.position.set(x, y, z); p.lookAt(0, 0, 0); env.add(p); });
+        EV.panels.forEach(([x, y, z, w, h, hx, k]) => { const lc = new TT.Color(hx).convertSRGBToLinear().multiplyScalar(Math.min(k, ENV_MAX)); const p = new TT.Mesh(new TT.PlaneGeometry(w, h), new TT.MeshBasicMaterial({ color: lc, side: TT.DoubleSide })); p.position.set(x, y, z); p.lookAt(0, 0, 0); env.add(p); });
         const pm = new TT.PMREMGenerator(R); scene.environment = pm.fromScene(env, .03).texture; pm.dispose(); envOK = true; return;
       }
       const Lk = LOOK[opts.plain ? 'day' : curTod()], tint = new TT.Color(Lk.hemi[0]).convertSRGBToLinear(), sunC = new TT.Color(Lk.sun).convertSRGBToLinear(), amt = Lk.hemi[2] / .5;
