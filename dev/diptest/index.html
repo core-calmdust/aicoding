@@ -10,6 +10,7 @@
   L.push('UA: ' + (navigator.userAgentData ? navigator.userAgentData.brands.map(b => b.brand + ' ' + b.version).join(', ') : navigator.userAgent));
   try { new WebAssembly.Memory({ initial: 1, maximum: 2, shared: true }); L.push('shared memory: OK'); } catch (e) { L.push('shared memory: ' + e.message); }
   o.textContent = L.join('\n');
+  if (navigator.serviceWorker.controller) { navigator.serviceWorker.onmessage = e => { o.textContent += '\nSW userAgentData: ' + e.data.uad; }; navigator.serviceWorker.controller.postMessage('x'); }
   if (!navigator.serviceWorker.controller) { await navigator.serviceWorker.register('sw.js'); await navigator.serviceWorker.ready; if (!sessionStorage.getItem('r')) { sessionStorage.setItem('r', '1'); location.reload(); } else o.textContent += '\n(no controller after reload)'; }
 })();
 </script></html>
