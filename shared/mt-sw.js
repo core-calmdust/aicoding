@@ -23,7 +23,7 @@
   const readFlag = () => flag().then(v => (FLAG = v));
   readFlag();
   // Document-Isolation-Policy only matters in Chromium (Chrome / Edge); elsewhere a normal page is left alone entirely
-  const DIP_UA = !!(self.navigator && self.navigator.userAgentData);
+  const DIP_UA = !!(self.navigator && (self.navigator.userAgentData || /\bChrome\/\d/.test(self.navigator.userAgent || '')));   // (Chrome / Edge; userAgentData alone is not there in every service worker — then no header was added at all)
   function withHeaders(res, set) {
     if (!res || res.status === 0 || res.type === 'opaqueredirect') return res;   // opaque: nothing can be added
     const h = new Headers(res.headers);
