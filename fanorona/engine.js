@@ -301,14 +301,22 @@ function teloThink(pos, level, rand) {
 // ---------------------------------------------------------------- WebAssembly side
 let WX = null;
 const wIO = () => new Int32Array(WX.memory.buffer, WX.io_ptr(), 8192);
-function wSetup(start, moves) {
+// the setup buffer of engine.c setup(): [white lo, hi, black lo, hi, side, nmoves, (lo, hi) * nmoves] (null: an illegal move)
+// (also the page's helper threads, mt-helper.js)
+function setupIO(start, moves) {
   const p = Pos.from(start);
   let w0 = 0, w1 = 0, b0 = 0, b1 = 0;
   for (let i = 0; i < NP; i++) { const v = p.b[i]; if (!v) continue; if (i < 32) { if (v === P1) w0 |= 1 << i; else b0 |= 1 << i; } else { if (v === P1) w1 |= 1 << (i - 32); else b1 |= 1 << (i - 32); } }
+  const a = [w0, w1, b0, b1, p.side, moves.length];
+  for (const m of moves) { const w = toWire(p, m); if (!w) return null; a.push(w[0], w[1]); p.play(m); }
+  return a;
+}
+// engine.c rule_key() for the current rule (the helper threads wait for the lead to have set it)
+const ruleKey = () => GW | GH << 4 | (ALQF ? 2 : ALQ ? 1 : 0) << 8;
+function wSetup(start, moves) {
   if (WX.set_rule) WX.set_rule(GW, GH);
   if (WX.set_alq) WX.set_alq(ALQF ? 2 : ALQ ? 1 : 0);
-  const a = [w0, w1, b0, b1, p.side, moves.length];
-  for (const m of moves) { const w = toWire(p, m); if (!w) return 0; a.push(w[0], w[1]); p.play(m); }
+  const a = setupIO(start, moves); if (!a) return 0;
   wIO().set(a); return WX.setup();
 }
 function wList() { const r = wIO(), L = []; for (let i = 0; i < r[0]; i++) L.push({ m: fromWire(r[2 + 3 * i], r[3 + 3 * i]), v: r[4 + 3 * i] }); return L; }
@@ -347,7 +355,7 @@ function think(start, moves, level, rand) {
   WX.best(L.d || 99, L.ms || 0, L.nk || 0);
   const r = wIO();
   if (r[0] < 0) return { move: all[0] };
-  return { move: fromWire(r[0], r[1]), v: r[2], depth: r[3] };
+  return { move: fromWire(r[0], r[1]), v: r[2], depth: r[3], nodes: r[4] * 1000 };
 }
 function analyze(start, moves, ms, onProgress) {
   const { pos } = replay(start, moves);
@@ -356,7 +364,7 @@ function analyze(start, moves, ms, onProgress) {
   if (!wSetup(start, moves)) return { list: [], depth: 0 };
   progressCb = onProgress ? (d => onProgress(wList().map(e => ({ ...e, kind: kindOf(e.v) })), d)) : null;
   WX.analyze(ms, 60); progressCb = null;
-  return { list: wList().map(e => ({ ...e, kind: kindOf(e.v) })), depth: wIO()[1] };
+  return { list: wList().map(e => ({ ...e, kind: kindOf(e.v) })), depth: wIO()[1], nodes: WX.last_nodes ? WX.last_nodes() : undefined };   // (nodes: the threads' build only)
 }
 function cands(start, moves, ms, k, plies, onProgress) {
   const r = analyze(start, moves, ms, onProgress);
@@ -414,17 +422,27 @@ function loadEG(X, b) {
   return true;
 }
 
-const API = { P1, P2, WIN, WINT, DRAW_PLIES, NP, NB, RC, DR, DC, COLS, START, RULES, setRule, rule, dims, valid, line3, LINES3, teloVal, strong, ptAt, pname, pparse, dirOf, mFrom, mTo, isCap, Pos, path, capsOf, name, same, parse, replay, judge, toWire, fromWire, loadEG, loadNet, setBook, LEVELS, think, analyze, cands, puzzle, kindOf, attachWasm };
+const API = { P1, P2, WIN, WINT, DRAW_PLIES, NP, NB, RC, DR, DC, COLS, START, RULES, setRule, rule, dims, valid, line3, LINES3, teloVal, strong, ptAt, pname, pparse, dirOf, mFrom, mTo, isCap, Pos, path, capsOf, name, same, parse, replay, judge, toWire, fromWire, loadEG, loadNet, setBook, LEVELS, think, analyze, cands, puzzle, kindOf, attachWasm, setupIO, ruleKey };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.FanoronaEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
   const V = 'v=20261101h', GAMEQ = new URLSearchParams(self.location.search).get('g');
+  // ?…&mt=1: the lead thread of the page's multi-thread pool (shared/mtengine.js): engine_mt.wasm on the shared memory sent with
+  // the first message ('mtinit'); the helpers (mt-helper.js) search the same root meanwhile. The network and the endgame tables
+  // go into the shared memory above every thread's slot (the helpers read the same ones). The rest is the usual API.
+  const MTL = /[?&]mt=1\b/.test(self.location.search || '');
   let readyP = null;
   if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
     const imp = { env: { now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } };
     const simd = (() => { try { return WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11])); } catch (e) { return false; } })();
     const url = new URL((simd ? 'engine_simd.wasm?' : 'engine.wasm?') + V, self.location.href);   // (the same search; SIMD only speeds up the net)
-    readyP = (WebAssembly.instantiateStreaming ? WebAssembly.instantiateStreaming(fetch(url), imp) : fetch(url).then(r => r.arrayBuffer()).then(b => WebAssembly.instantiate(b, imp)))
+    readyP = (MTL ? new Promise(res => self.addEventListener('message', function f(e) { if (e.data && e.data.type === 'mtinit') { self.removeEventListener('message', f); res(e.data); } }))
+      .then(m => {
+        const x = new WebAssembly.Instance(m.module, { env: { memory: m.mem, now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } }).exports;
+        x.mt_stack(m.top); x.mt_thread(m.tls, 0);
+        egTop = Math.ceil(m.mem.buffer.byteLength / 65536) * 65536;   // (above the pool's slots: the tables never meet a thread's stack)
+        return { instance: { exports: Object.assign({}, x, { memory: m.mem }) } };   // (the memory is imported: X.memory as in the normal build)
+      }) : WebAssembly.instantiateStreaming ? WebAssembly.instantiateStreaming(fetch(url), imp) : fetch(url).then(r => r.arrayBuffer()).then(b => WebAssembly.instantiate(b, imp)))
       .then(async r => {
         const X = r.instance.exports;
         const gunzip = async u => { const res = await fetch(new URL(u + '?' + V, self.location.href)); if (!res.ok || typeof DecompressionStream !== 'function') return null; return new Response(res.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer(); };
@@ -439,11 +457,13 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
           } catch (e) {}
         }
         WX = X;
-      }).catch(() => { WX = null; });
+        if (MTL) self.postMessage({ type: 'mtready' });
+      }).catch(err => { WX = null; if (MTL) self.postMessage({ type: 'mtready', error: String(err && err.message || err) }); });
   }
   let queue = Promise.resolve();
   self.onmessage = e => {
     const m = e.data;
+    if (m && m.type === 'mtinit') return;
     queue = queue.then(() => readyP).catch(() => {}).then(() => {
       try {
         setRule(m.rule || 'sivy');

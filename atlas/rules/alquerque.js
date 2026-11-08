@@ -13,7 +13,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const GUIDE = '../images/atlas/g-gem.webp', ENG = '../fanorona/engine.js?v=fb5s';
+  const GUIDE = '../images/atlas/g-gem.webp', ENG = '../fanorona/engine.js?v=fb5s-pro1-mt1';
   const loadEngine = () => window.FanoronaEngine ? Promise.resolve(window.FanoronaEngine) : new Promise((res, rej) => { const s = document.createElement('script'); s.src = ENG; s.onload = () => window.FanoronaEngine ? res(window.FanoronaEngine) : rej(); s.onerror = rej; document.head.appendChild(s); });
 
   // g: rows top → bottom (row 5 … row 1); p: { w: [...], b: [...] }
