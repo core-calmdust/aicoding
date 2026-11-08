@@ -20,15 +20,12 @@
   de.classList.add('atlas-ludo3d');
   const st = document.createElement('style');
   st.textContent = `
-html.atlas-ludo3d #bsvg{filter:none!important;overflow:visible!important}
+html.atlas-ludo3d #bsvg{filter:none!important}
 html.atlas-ludo3d #bsvg > :not(#gMarks):not(#gPrev):not(#gPcs):not(#gCup){opacity:0}
 html.atlas-ludo3d #bsvg .pcg{opacity:0}
 html.atlas-ludo3d #gCup .cupb,html.atlas-ludo3d #gCup .cupd{opacity:0}
-html.atlas-ludo3d .zbtn{display:none!important}
 html.atlas-ludo3d #frame{background:none!important;box-shadow:none!important}`;
   document.head.appendChild(st);
-  // the phone zoom of the SVG board would slide it off the 3D board: the skin shows the whole board
-  try { Z2.on = false; } catch (e) {}
 
   const sizeQ = +new URLSearchParams(location.search).get('size') || 0;   // the portal's ルール choice: 4/3/2 ludo, 14/12 pachisi
   const skin = AtlasSkin.init({
@@ -65,10 +62,31 @@ html.atlas-ludo3d #frame{background:none!important;box-shadow:none!important}`;
     cup.reset();
     root = T3.MODELS.ludo(true, r); U = root.userData;
     T3.show(r === 'pachisi' ? 'pachisi' : 'ludo', root, { still: true });
-    skin.alignTo((U.n + .8) * U.u, U.top);
+    skin.alignTo((U.n + .8) * U.u, U.top); alignView();
     T3.kick(600);
   }
   const wx = (gx, gy) => U.xz(gx, gy);
+  /* the 2D game's focus zoom (phones: the seat to move, the pieces that can move, the walking piece — app.js Z2) changes the SVG's
+     viewBox; the camera follows it: the 3D board is aligned to where the whole board would stand at that zoom (a virtual box
+     round the frame), and the canvas is clipped to the frame meanwhile, as the SVG is (#frame.zoomed) */
+  const PERSP = 2.6;
+  function alignView() {
+    const host = document.getElementById('atlasGL'); if (!host || !U) return;
+    const full = U.n + .8;
+    const bx = () => { let x = 0, y = 0, e = frame; while (e && e !== host.parentElement) { x += e.offsetLeft; y += e.offsetTop; e = e.offsetParent; } return { x: x - host.offsetLeft, y: y - host.offsetTop, w: frame.offsetWidth, h: frame.offsetHeight }; };
+    T3.align(() => {
+      const b = bx(), vb = svgEl.viewBox && svgEl.viewBox.baseVal;
+      if (!vb || !vb.width || vb.width >= full - .02) return { x: b.x, y: b.y, w: b.w, h: b.h, tilt: 0, persp: b.h * PERSP };
+      const sc = b.w / vb.width;
+      return { x: b.x - (vb.x + .4) * sc, y: b.y - (vb.y + .4) * sc, w: full * sc, h: full * sc, tilt: 0, persp: full * sc * PERSP };
+    }, full * U.u, U.top);
+  }
+  function clipView() {
+    const host = document.getElementById('atlasGL'); if (!host) return;
+    if (!frame.classList.contains('zoomed')) { host.style.clipPath = ''; return; }
+    const h = host.getBoundingClientRect(), f = frame.getBoundingClientRect();
+    host.style.clipPath = `inset(${Math.round(f.top - h.top)}px ${Math.round(h.right - f.right)}px ${Math.round(h.bottom - f.bottom)}px ${Math.round(f.left - h.left)}px round 12px)`;
+  }
   function mkPiece(seat) {
     const g = U.piece(rule, +seat), sh = T3.contact(g.userData.r * 1.1, .45); sh.position.y = .002; g.add(sh);
     const R = g.userData.r || U.u * .3, key = R.toFixed(3);
@@ -92,11 +110,13 @@ html.atlas-ludo3d #frame{background:none!important;box-shadow:none!important}`;
       g.userData.ring.visible = can || hint; g.userData.ring.material = hint ? MAT.hint : MAT.can;
     }
     for (const key in pcs) if (!seen.has(key)) { const g = pcs[key]; if (g.parent) g.parent.remove(g); delete pcs[key]; }
-    T3.kick(120);
+    clipView(); T3.kick(120);
   }
   let raf = 0;
   const later = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; try { mirror(); } catch (e) {} }); };
-  new MutationObserver(later).observe(svgEl, { subtree: true, childList: true, attributes: true, attributeFilter: ['transform', 'class', 'data-hy'] });
+  new MutationObserver(later).observe(svgEl, { subtree: true, childList: true, attributes: true, attributeFilter: ['transform', 'class', 'data-hy', 'viewBox'] });
+  new MutationObserver(() => { clipView(); T3.kick(200); }).observe(frame, { attributes: true, attributeFilter: ['class'] });
+  addEventListener('resize', () => requestAnimationFrame(clipView));
 
   /* ---------- the dice cup (ludo) ---------- */
   const FACE = { 1: [0, 0, 0], 6: [Math.PI, 0, 0], 2: [-Math.PI / 2, 0, 0], 5: [Math.PI / 2, 0, 0], 3: [0, 0, Math.PI / 2], 4: [0, 0, -Math.PI / 2] };
@@ -104,7 +124,10 @@ html.atlas-ludo3d #frame{background:none!important;box-shadow:none!important}`;
     const CR0 = .58, CR1 = .48, CH = .72;
     let g = null, seatAt = -1, mode = null, shakeT = 0, tok = 0;
     const thrown = new THREE.Group();
-    const anim = (dur, f) => new Promise(res => { const my = ++tok, t0 = performance.now(); (function s(now) { if (my !== tok) return res(); const k = Math.min(1, Math.max(0, (now - t0) / dur)); f(k); T3.kick(120); if (k < 1) requestAnimationFrame(s); else res(); })(t0); });
+    // the cup keeps the 2D game's pace: durations follow its speed setting (K), and while modes are waiting in the queue the
+    // running move hurries (×3) so the 3D never lags behind the 2D throw panel
+    let pending = 0;
+    const anim = (dur, f) => new Promise(res => { const my = ++tok; let t = 0, last = performance.now(); (function s(now) { if (my !== tok) return res(); t += (now - last) * (pending ? 3 : 1); last = now; const k = Math.min(1, Math.max(0, t / dur)); f(k); T3.kick(120); if (k < 1) requestAnimationFrame(s); else res(); })(t0); });
     function mk() {
       g = new THREE.Group();
       const leather = new THREE.MeshStandardMaterial({ color: 0x4a2310, roughness: .58, side: THREE.DoubleSide });
@@ -141,12 +164,12 @@ html.atlas-ludo3d #frame{background:none!important;box-shadow:none!important}`;
       fs.forEach((v, i) => { const d = U.die(), h = d.userData.size / 2, sh = T3.contact(h * 1.4, .4), ox = fs.length > 1 ? (i ? .27 : -.27) : 0, oz = fs.length > 1 ? (i ? .05 : -.05) : 0;
         d.children[0].rotation.set(...FACE[v]); d.position.set(cx + ox, U.top + h + .003, cz + oz); d.rotation.y = ((v * 37 + i * 53) % 30 - 15) / 30; sh.position.set(cx + ox, U.top + .002, cz + oz); thrown.add(sh, d); });
     }
-    const K = () => { const v = parseFloat(svgEl.querySelector('#gCup') && svgEl.querySelector('#gCup').style.getPropertyValue('--k')); return v > 0 ? v : 1; };
+    const K = () => { try { return Math.max(.6, Math.sqrt(SPD())); } catch (e) { return 1; } };   // (the 2D game's speed: app.js SPD)
     // the modes come one after another (a queue): a glide or a scoop finishes before the shake that follows it
     let q = Promise.resolve();
     function set(s, m, thr) {
       if (!root || rule !== 'ludo' || m == null || s < 0) { tok++; q = Promise.resolve(); cancelAnimationFrame(shakeT); shakeT = 0; if (g) g.visible = false; clearDice(); mode = null; return; }
-      q = q.then(() => run(s, m, thr)).catch(() => {});
+      pending++; q = q.then(() => { pending--; return run(s, m, thr); }).catch(() => {});
     }
     async function scoop() {   // the cup comes beside the last dice, turns mouth up, and they hop in
       const ds = thrown.children.filter(o => o.userData && o.userData.size);
@@ -154,9 +177,9 @@ html.atlas-ludo3d #frame{background:none!important;box-shadow:none!important}`;
       thrown.children.filter(o => !ds.includes(o)).forEach(o => thrown.remove(o));
       let cx = 0, cz = 0; ds.forEach(d => { cx += d.position.x / ds.length; cz += d.position.z / ds.length; });
       const x0 = g.position.x, z0 = g.position.z, dx = x0 - cx, dz = z0 - cz, L = Math.hypot(dx, dz) || 1, tx = cx + dx / L * .8, tz = cz + dz / L * .8, u0 = upNow;
-      await anim(320, k => { const e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; g.position.set(x0 + (tx - x0) * e, U.top, z0 + (tz - z0) * e); pose(u0 + (1 - u0) * e, Math.sin(k * Math.PI) * .5); });
+      await anim(240 * K(), k => { const e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; g.position.set(x0 + (tx - x0) * e, U.top, z0 + (tz - z0) * e); pose(u0 + (1 - u0) * e, Math.sin(k * Math.PI) * .5); });
       const from = ds.map(d => [d.position.x, d.position.y, d.position.z, d.rotation.x, d.rotation.z]);
-      await anim(340, k => ds.forEach((d, i) => { const qq = Math.min(1, Math.max(0, k * 1.25 - i * .25)), e = qq * qq * (3 - 2 * qq), f = from[i];
+      await anim(260 * K(), k => ds.forEach((d, i) => { const qq = Math.min(1, Math.max(0, k * 1.25 - i * .25)), e = qq * qq * (3 - 2 * qq), f = from[i];
         d.position.set(f[0] + (tx - f[0]) * e, f[1] + (U.top + CH * .35 - f[1]) * e + Math.sin(qq * Math.PI) * .75, f[2] + (tz - f[2]) * e);
         d.rotation.x = f[3] + qq * 4; d.rotation.z = f[4] + qq * 2.5; d.scale.setScalar(1 - .3 * e); }));
       clearDice(); fill(true);
@@ -173,7 +196,7 @@ html.atlas-ludo3d #frame{background:none!important;box-shadow:none!important}`;
         if (!g.userData.dice.children.length) fill(true);
         const x0 = g.position.x, z0 = g.position.z, u0 = upNow; seatAt = s;
         if (Math.hypot(x - x0, z - z0) < .01) { pose(1, 0); T3.kick(120); return; }
-        await anim(440, qq => { const e = qq < .5 ? 2 * qq * qq : 1 - Math.pow(-2 * qq + 2, 2) / 2; g.position.set(x0 + (x - x0) * e, U.top, z0 + (z - z0) * e); pose(u0 + (1 - u0) * e, Math.sin(qq * Math.PI) * .7); });
+        await anim(340 * K(), qq => { const e = qq < .5 ? 2 * qq * qq : 1 - Math.pow(-2 * qq + 2, 2) / 2; g.position.set(x0 + (x - x0) * e, U.top, z0 + (z - z0) * e); pose(u0 + (1 - u0) * e, Math.sin(qq * Math.PI) * .7); });
         return;
       }
       const [cx, cz] = spot(s);
@@ -205,7 +228,7 @@ html.atlas-ludo3d #frame{background:none!important;box-shadow:none!important}`;
   ensure(); mirror();
   // the 2D game redraws its board for a new rule (drawBoard): the 3D board follows
   const oDraw = window.drawBoard;
-  if (typeof oDraw === 'function') window.drawBoard = function () { const r = oDraw.apply(this, arguments); try { try { Z2.on = false; } catch (e) {} ensure(); mirror(); } catch (e) {} return r; };
+  if (typeof oDraw === 'function') window.drawBoard = function () { const r = oDraw.apply(this, arguments); try { ensure(); mirror(); } catch (e) {} return r; };
   [700, 1600].forEach(ms => setTimeout(() => dispatchEvent(new Event('resize')), ms));
 
   // test hooks (Playwright)
