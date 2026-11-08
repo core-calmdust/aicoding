@@ -102,7 +102,41 @@
     const esc = x => String(x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     const bvEl = ctx.el.parentNode, isPL = () => !!(bvEl && bvEl.classList.contains('pland'));
     let plWas = null;
-    function frame() { if (stopped || !kit) return; if (T3.fit) T3.fit(isPL() ? { w: kit.U.W + .7, d: kit.U.D + 2.6, y: kit.Y, pitch: 1.5 } : kit.fit0); if (isPL() !== plWas) { plWas = isPL(); hud(); } }
+    function frame() { if (stopped || !kit) return; if (T3.fit) { if (isPL()) T3.fit({ w: kit.U.W + .7, d: kit.U.D + 2.6, y: kit.Y, pitch: 1.5 }); else applyFocus(); } if (isPL() !== plWas) { plWas = isPL(); hud(); } }
+
+    /* ---------- the focus (phones held upright, 2026-11-09 — as Ludo's): the long board seen whole is narrow, so the camera moves in
+       to the board's full width and pans along it to what matters now — the sticks before a throw, the pieces that can move and
+       where they go after it, the piece on its way while it walks — gliding (no cut); a span too long for the close view zooms out,
+       up to the whole board. The button at the right edge switches it off (the whole board), remembered in atlas-senet-zoom. ---------- */
+    let zoomPref = true; try { zoomPref = localStorage.getItem('atlas-senet-zoom') !== '0'; } catch (e) {}
+    const tallNow = () => innerHeight > innerWidth * 1.15 && !isPL() && kit && kit.fit0.roll;
+    let focusX = null;   // [x0, x1]: the stretch of the board (world x, along the track) to keep in view
+    function applyFocus() {
+      if (!T3.fit || stopped || !kit) return;
+      if (zoomBtn) { zoomBtn.hidden = !tallNow() || over; zoomBtn.classList.toggle('off', !zoomPref); }
+      const F = kit.fit0;
+      if (!(zoomPref && tallNow() && focusX)) { T3.fit(Object.assign({}, F, { ease: true })); return; }
+      const W = kit.U.W, w = kit.U.D + 1.9, d = Math.max(5.4, focusX[1] - focusX[0] + 2.4);
+      if (d >= F.d - .6) { T3.fit(Object.assign({}, F, { ease: true })); return; }
+      const el = ctx.el, asp = (el.clientHeight || innerHeight) / (el.clientWidth || innerWidth), vis = Math.max(d, w * asp * .78);   // (.78: the part of the height left between Quit and the HUD)
+      const lim = Math.max(0, W / 2 + .6 - vis / 2), cx = Math.max(-lim, Math.min(lim, (focusX[0] + focusX[1]) / 2));
+      T3.fit({ w, d, y: F.y, pitch: F.pitch, roll: F.roll, up: F.up, cx, cz: 0, ease: true });
+    }
+    const sqX = sq => sq >= 31 ? kit.U.W / 2 - .3 : kit.U.pt(sq)[0];
+    function focus(xs) { focusX = xs && xs.length ? [Math.min(...xs), Math.max(...xs)] : null; applyFocus(); }
+    const focusSticks = () => focus([-kit.U.W / 2 + .7, -kit.U.W / 2 + 2.6]);   // the sticks lie beside the start end
+    const focusMoves = ms => focus(ms.reduce((a, m) => a.concat([sqX(m.from), sqX(m.finish ? 31 : m.to)], m.water && m.dest ? [sqX(m.dest)] : []), []));
+    let zoomBtn = null;
+    {
+      const ZL = { ja: ['手番に寄る', '盤全体を見る'], en: ['Zoom to the player', 'Whole board'], zh: ['聚焦当前玩家', '查看整个棋盘'], 'zh-TW': ['聚焦目前玩家', '查看整個棋盤'], ko: ['차례인 사람에게 확대', '판 전체 보기'], es: ['Acercar al turno', 'Tablero entero'], fr: ['Zoom sur le joueur', 'Plateau entier'], pt: ['Aproximar da vez', 'Tabuleiro inteiro'], de: ['Zum Spieler zoomen', 'Ganzes Brett'], ru: ['Приблизить к ходящему', 'Вся доска'], tr: ['Sıradakine yakınlaş', 'Tüm tahta'], id: ['Perbesar ke giliran', 'Seluruh papan'], hi: ['बारी वाले पर ज़ूम', 'पूरा बोर्ड'], ar: ['تقريب إلى صاحب الدور', 'اللوحة كاملة'] };
+      const zl = ZL[ctx.lang] || ZL.en;
+      zoomBtn = document.createElement('button'); zoomBtn.type = 'button'; zoomBtn.className = 'ldzoom sn'; zoomBtn.hidden = true;
+      const paint = () => { const t2 = zoomPref ? zl[1] : zl[0]; zoomBtn.title = t2; zoomBtn.setAttribute('aria-label', t2);
+        zoomBtn.innerHTML = zoomPref ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>' : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5M10.5 8v5M8 10.5h5"/></svg>'; };
+      paint();
+      zoomBtn.onclick = e => { e.stopPropagation(); zoomPref = !zoomPref; try { localStorage.setItem('atlas-senet-zoom', zoomPref ? '1' : '0'); } catch (er) {} paint(); applyFocus(); };
+      (ctx.el.parentNode || document.body).appendChild(zoomBtn);
+    }
     const onPL = () => { frame(); setTimeout(frame, 350); };
     addEventListener('atlasland', onPL); addEventListener('resize', onPL);
 
@@ -120,7 +154,7 @@
     }
     let toastEl = null, toastT = 0;
     const css = document.createElement('style');
-    css.textContent = '.hud .urb{padding:8px 16px;font-size:15px;white-space:nowrap;box-shadow:0 3px 0 var(--coral2)}.hud .hmsg{font-size:13px;color:#6a7088;padding:0 8px;white-space:nowrap}.urtoast{position:fixed;left:50%;top:calc(76px + env(safe-area-inset-top));transform:translateX(-50%);z-index:90;max-width:min(92vw,520px);padding:9px 18px;border-radius:99px;background:rgba(255,253,247,.97);border:2px solid #fff;box-shadow:0 6px 18px -6px rgba(80,40,0,.45);font:800 14px var(--round,sans-serif);color:#2b3044;text-align:center;pointer-events:none;animation:sntIn .25s ease}@keyframes sntIn{from{opacity:0;transform:translate(-50%,-6px)}}';
+    css.textContent = '.ldzoom{position:absolute;z-index:4;right:12px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.92);color:#3a3f55;box-shadow:0 3px 10px rgba(0,0,0,.22);display:grid;place-items:center;cursor:pointer;padding:0}.ldzoom svg{width:22px;height:22px}.ldzoom[hidden]{display:none}.ldzoom.sn{top:72px;transform:none}.ldzoom.off{color:#e0662a}.hud .urb{padding:8px 16px;font-size:15px;white-space:nowrap;box-shadow:0 3px 0 var(--coral2)}.hud .hmsg{font-size:13px;color:#6a7088;padding:0 8px;white-space:nowrap}.urtoast{position:fixed;left:50%;top:calc(76px + env(safe-area-inset-top));transform:translateX(-50%);z-index:90;max-width:min(92vw,520px);padding:9px 18px;border-radius:99px;background:rgba(255,253,247,.97);border:2px solid #fff;box-shadow:0 6px 18px -6px rgba(80,40,0,.45);font:800 14px var(--round,sans-serif);color:#2b3044;text-align:center;pointer-events:none;animation:sntIn .25s ease}@keyframes sntIn{from{opacity:0;transform:translate(-50%,-6px)}}';
     document.head.appendChild(css);
     function toast(m) { if (toastEl) toastEl.remove(); clearTimeout(toastT); if (!m) return; toastEl = document.createElement('div'); toastEl.className = 'urtoast'; toastEl.textContent = m; document.body.appendChild(toastEl); const el = toastEl; toastT = setTimeout(() => el.remove(), 1600); }
     const say = m => { msg = m || ''; hud(); };
@@ -147,7 +181,7 @@
       if (sel >= 0) { const k = kOf(st.turn, sel); if (k >= 0) kit.lift(st.turn, k, false); }
       sel = from;
       if (sel >= 0) { const k = kOf(st.turn, sel); if (k >= 0) kit.lift(st.turn, k, true); }
-      showMarks(); say(sel >= 0 ? X.dest : X.pick);
+      showMarks(); say(sel >= 0 ? X.dest : X.pick); { const ms = legal(); focusMoves(sel >= 0 ? ms.filter(m => m.from === sel) : ms); }
     }
 
     /* ---------- the flow ---------- */
@@ -167,7 +201,7 @@
         return;
       }
       if (!pvp && st.turn === 1) { aiMove(ms); return; }
-      phase = 'move'; sel = -1; hintMv = null;
+      phase = 'move'; sel = -1; hintMv = null; focusMoves(ms);
       if (ms.length === 1) setSel(ms[0].from); else { showMarks(); say(X.pick); }
     }
     async function commit(m) {
@@ -176,7 +210,7 @@
       const s = st.turn, n = roll.n;
       if (m) {
         if (sel >= 0) { const k = kOf(s, sel); if (k >= 0) kit.lift(s, k, false); }
-        sel = -1; kit.marks.clear();
+        sel = -1; kit.marks.clear(); focusMoves([m]);
         await kit.move(s, m, { onStep: () => SND.hop(), onHit: () => SND.take(), onWater: () => SND.water(), onLand: () => (m.finish ? SND.home : SND.put)() });
         if (stopped) return;
       }
@@ -194,8 +228,8 @@
       if (over || stopped) return;
       onTurn(st.turn);
       kit.restSticks(st.turn, null);
-      if (!pvp && st.turn === 1) { phase = 'ai'; say(L.think); showMarks(); later(doAIRoll, 520); return; }
-      phase = 'roll'; showMarks(); say(pvp ? X.turnP.replace('{p}', X.n[st.turn]) : '');
+      if (!pvp && st.turn === 1) { phase = 'ai'; say(L.think); showMarks(); focusSticks(); later(doAIRoll, 520); return; }
+      phase = 'roll'; showMarks(); say(pvp ? X.turnP.replace('{p}', X.n[st.turn]) : ''); focusSticks();
     }
     async function doAIRoll() {
       if (over || stopped) return;
@@ -219,7 +253,7 @@
       say(''); commit(m);
     }
     function end(w) {
-      over = true; phase = 'over'; kit.marks.clear(); onTurn(-1);
+      over = true; phase = 'over'; kit.marks.clear(); onTurn(-1); focus(null);
       const wt = X.win.replace('{p}', X.n[w]);
       SND.home();
       if (pvp) { say(wt); return later(() => ctx.onEnd({ win: false, draw: false, level, score: wt, pvp: true, winnerText: wt }), 700); }
@@ -268,7 +302,7 @@
     /* ---------- 待った · ヒント · 投了 · time-out ---------- */
     function finish(loser, why) {
       if (over || !st) return;
-      over = true; phase = 'over'; busy = false; if (kit) kit.marks.clear(); onTurn(-1);
+      over = true; phase = 'over'; busy = false; if (kit) kit.marks.clear(); onTurn(-1); if (kit) focus(null);
       const r = t(why === 'time' ? 'act.timeout' : 'act.resigned');
       if (pvp) { const wt = X.win.replace('{p}', X.n[1 - loser]); say(wt); return later(() => ctx.onEnd({ win: false, draw: false, level, score: t('act.pvpEnd', { p: X.n[loser], r, w: wt }), pvp: true, winnerText: wt }), 200); }
       say(L.lose); later(() => ctx.onEnd({ win: false, draw: false, level, score: r }), 200);
@@ -279,7 +313,7 @@
       undo() {
         if (!api.canUndo()) return;
         const h = hist.pop(); st = E.clone(h.st); roll = null; sel = -1; hintMv = null; hintJ++; lastMv = null;
-        kit.sync(st); kit.marks.clear(); onTurn(st.turn); kit.restSticks(st.turn, null); phase = 'roll'; showMarks(); say('');
+        kit.sync(st); kit.marks.clear(); onTurn(st.turn); kit.restSticks(st.turn, null); phase = 'roll'; showMarks(); say(''); focusSticks();
       },
       canHint: () => !stopped && !over && !busy && phase === 'move' && mine() && legal().length > 0,
       hint() {
@@ -295,7 +329,7 @@
       stop() {
         stopped = true; if (kit) kit.stop(); timers.forEach(clearTimeout); removeEventListener('atlasland', onPL); removeEventListener('resize', onPL);
         ctx.el.removeEventListener('click', onClick); document.removeEventListener('click', onHud, true); document.removeEventListener('keydown', onKey);
-        if (worker) worker.terminate(); worker = null; jobs.clear(); css.remove(); if (toastEl) toastEl.remove();
+        if (worker) worker.terminate(); worker = null; jobs.clear(); css.remove(); if (toastEl) toastEl.remove(); if (zoomBtn) zoomBtn.remove();
       },
       _debug: { st: () => st && { pos: st.pos.map(a => a.slice()), turn: st.turn, winner: st.winner }, phase: () => phase, roll: () => roll, busy: () => busy, legal: () => E && st ? legal() : [], sel: () => sel, kit: () => kit,
         cell: sq => kit && kit.projCell(sq), piece: (s, k) => kit && kit.projPiece(s, k), sticks: s => kit && kit.projSticks(s) },
