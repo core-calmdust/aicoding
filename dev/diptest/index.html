@@ -1,0 +1,15 @@
+<!doctype html><html lang="ja"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>DIP test</title><style>body{font:16px/1.6 system-ui;background:#111;color:#eee;padding:20px}b{color:#e2c275}</style>
+<h1>DIP test</h1><pre id="o">…</pre>
+<script>
+(async () => {
+  const o = document.getElementById('o'), L = [];
+  L.push('crossOriginIsolated: ' + self.crossOriginIsolated);
+  L.push('SharedArrayBuffer: ' + (typeof SharedArrayBuffer));
+  L.push('controller: ' + !!navigator.serviceWorker.controller);
+  L.push('UA: ' + (navigator.userAgentData ? navigator.userAgentData.brands.map(b => b.brand + ' ' + b.version).join(', ') : navigator.userAgent));
+  try { new WebAssembly.Memory({ initial: 1, maximum: 2, shared: true }); L.push('shared memory: OK'); } catch (e) { L.push('shared memory: ' + e.message); }
+  o.textContent = L.join('\n');
+  if (!navigator.serviceWorker.controller) { await navigator.serviceWorker.register('sw.js'); await navigator.serviceWorker.ready; if (!sessionStorage.getItem('r')) { sessionStorage.setItem('r', '1'); location.reload(); } else o.textContent += '\n(no controller after reload)'; }
+})();
+</script></html>
