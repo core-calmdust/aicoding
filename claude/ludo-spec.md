@@ -57,7 +57,7 @@
 - 勝率：`LudoEngine.winProb`（ルール×人数ごとのロジスティック近似 `WP`、`node ludo/tools/fit_wp.js` で自己対局から当てはめ）。
 - 振り返り（`ludo/review.js`）：対局後に全手を評価し、形勢グラフ・手の質（好手〜悪手）・正確さ（100 − 平均損失×400）。←→↑↓で移動。PCは盤の高さに右欄を合わせる。
 - 戦績：`shared/record.js`（ルール×人数ごとの勝敗）。レート戦（`ludo/rated.js`）：Lv.1〜20 の AI 相手の段位戦、`RT_LV` の Elo 表、`aicoding-ludo-rated`。待った・ヒント・コーチなし、途中で離れると負け。
-- 情報タブ（`shared/infotabs.js`）：スマホは「対局・形勢・棋譜・コーチ」。オンラインはまだ無いので `body.no-online`。
+- 情報タブ（`shared/infotabs.js`）：スマホは「コーチ・形勢・記録・戦績・オンライン」。
 
 ## 5. 3D・ポータル
 - 3D モデル：`atlas/models/ludo.js`（`Table3D.MODELS.ludo(live, rule)`／`MODELS.pachisi`）。ルドーは2D盤の絵を貼った木枠の盤と挽き物の駒、パチーシは十字の布と蜂の巣形の駒。サイコロ、タカラガイ。
@@ -65,6 +65,10 @@
 - 3Dルールコース：`atlas/rules/ludo.js`。案内役はヨーヨーの得意なサルの「ルディ」（`images/atlas/av/monkey-1.webp`）。ルドーの8ページ（あいさつ・盤と出発マス・6で出発・目の数だけ進む・捕まえる・安全なマス・ゴール・勝ち）。各ページで3Dのサイコロを振って（目は仕込み）駒を動かす。台詞は全ページ・14言語ともルディの口調（ヨーヨーやバナナのひと言ボケ）。文字送りの声・黄色の課題札・正解後の自動送り（1.6秒＋文字数×45ms）・駒の差分配置は共通ルールどおり。
 - ポータル登録：`shared/atlas.js`（GAMES・更新情報・進み具合）、`atlas/i18n.js`（about／hist）、3Dアイコン `atlas/icons3d.js` → `images/atlas/ludo.webp`、一覧の絵 `atlas/shots/ludo.webp`（`tools/shots.js`）、地図 `atlas/mapdata.js`、ヒストリア `atlas/historia/<言語>/ludo.json`・`s/ludo.json`（`python3 ludo/tools/gen_historia.py` で生成。盤の図は historia.js の `t:'ludo'`）。
 - トップページ：`index.html` のカード（key `ld`）・JSON-LD、アイコン `images/icons/ludo.svg`、サムネイル `images/ludo.webp`。
+
+## 5b. 画面レイアウト（共通ルール準拠・2026-11-08）
+- PC（ヘッダーバー時）：盤は「画面の高さ（ヘッダーとオンライン欄を除く）」と「画面幅−右欄360px−余白」の小さいほうで最大化、盤＋右欄のまとまりを左右中央・上下中央に置き、右欄の高さ＝盤の高さ（中身は欄内スクロール）。
+- オンライン欄（`ludo/online-soon.js`）：Firebase プロジェクトができるまでは「準備中」の状態。PCは画面下の46pxのバー（● オンライン · 準備中 · 詳しく）、スマホは下部タブの「オンライン」。どちらも押すと準備中の説明（14言語）。`html.ol-dock.ol-soon`。
 
 ## 6. 未完了
 - オンライン対戦（Firebase の新しいプロジェクトと公開ルールの設定が必要）、フル機能スキン（`?skin=atlas`）。
