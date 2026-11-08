@@ -47,7 +47,7 @@ function drawBoard() {
   if (typeof paintTitle === 'function') paintTitle();
   const rule = G.state.rule, d = B.drawBoard(rule, settings.design[rule]); geo = B.geometry(rule);
   svg.setAttribute('viewBox', `-0.4 -0.4 ${d.n + .8} ${d.n + .8}`); Z2.cur = null; Z2.pts = null; $('#frame').classList.remove('zoomed');
-  svg.innerHTML = d.svg + '<g id="gMarks"></g><g id="gPrev"></g><g id="gPcs"></g>';
+  svg.innerHTML = d.svg + '<g id="gMarks"></g><g id="gPrev"></g><g id="gPcs"></g><g id="gCup"></g>';
   gPcs = svg.querySelector('#gPcs'); gMarks = svg.querySelector('#gMarks');
   pcEls = {};
   for (const seat of G.state.seats) for (let k = 0; k < 4; k++) {
@@ -58,6 +58,27 @@ function drawBoard() {
   placeAll();
 }
 let pcEls = {};
+
+/* ---------- the dice cup (ludo): it stands in the yard of the seat to throw; tap it (or 振る) — it shakes, lifts, and the dice lie
+   under it. The dice stay there until the next seat's turn, when the cup goes to that yard. Pachisi throws cowries (no cup). ---------- */
+const CUP = { seat: -1 };
+function cupSpot(seat) { const Y0 = [[0, 9], [0, 0], [9, 0], [9, 9]][seat]; return [Y0[0] + 3, Y0[1] + 3]; }
+const cupBody = col => `<g class="cupb"><ellipse cx="0" cy=".5" rx=".6" ry=".2" fill="rgba(0,0,0,.35)"/><path d="M-.5 .42L-.4 -.42Q0 -.56 .4 -.42L.5 .42Q0 .6 -.5 .42Z" fill="url(#cupG)" stroke="#3b210f" stroke-width=".03"/><path d="M-.47 .2Q0 .36 .47 .2L.46 .1Q0 .26 -.46 .1Z" fill="${col}" opacity=".95"/><path d="M-.43 -.22Q0 -.08 .43 -.22L.42 -.3Q0 -.16 -.42 -.3Z" fill="#d9b25a"/><ellipse cx="0" cy="-.43" rx=".4" ry=".12" fill="#8a5530" stroke="#3b210f" stroke-width=".025"/><path d="M-.3 -.3L-.36 .3" stroke="rgba(255,255,255,.22)" stroke-width=".07" stroke-linecap="round"/></g>`;
+const CUP_DEF = '<defs><linearGradient id="cupG" x1="0" x2="1"><stop offset="0" stop-color="#5a3016"/><stop offset=".35" stop-color="#9a5e30"/><stop offset="1" stop-color="#4a250f"/></linearGradient></defs>';
+function diceAt(vals) {   // the thrown dice on the board, in grid units round (0, 0)
+  const n = vals.length, sz = n > 2 ? .5 : n > 1 ? .6 : .78, gap = n > 2 ? .52 : .68;
+  return vals.map((v, i) => { const x = (i - (n - 1) / 2) * gap - sz / 2, y = -sz / 2 + (n > 2 && i === 1 ? -.18 : 0), a = ((v * 37 + i * 53) % 30) - 15;
+    return `<g transform="rotate(${a} ${x + sz / 2} ${y + sz / 2})">` + B.dieSVG(v).replace('<svg ', `<svg x="${x}" y="${y}" width="${sz}" height="${sz}" `) + '</g>'; }).join('');
+}
+function cupDraw(seat, mode, thr) {   // mode: 'ready' (tap me) · 'idle' · 'shake' · 'lift' (dice shown) · 'dice' (just the dice) · null (none)
+  const gC = svg.querySelector('#gCup'); if (!gC) return;
+  if (!G || SP || G.state.rule !== 'ludo' || mode == null || seat < 0) { gC.innerHTML = ''; CUP.seat = -1; return; }
+  const [x, y] = cupSpot(seat), col = B.COL.ludo[seat][0], moved = CUP.seat >= 0 && CUP.seat !== seat && (mode === 'ready' || mode === 'idle');
+  const dice = thr ? diceAt(thr.three6 ? [6, 6, 6] : thr.dice || [thr.v]) : '';
+  gC.innerHTML = CUP_DEF + `<g transform="translate(${x} ${y}) scale(1.25)">${dice ? `<g class="cupd">${dice}</g>` : ''}${mode === 'dice' ? '' : `<g class="cup ${mode}${moved ? ' slide' : ''}">${cupBody(col)}</g>`}</g>`;
+  if (moved) { const [x0, y0] = cupSpot(CUP.seat), c = gC.querySelector('.cup'); c.style.setProperty('--dx', (x0 - x) + 'px'); c.style.setProperty('--dy', (y0 - y) + 'px'); }
+  CUP.seat = seat;
+}
 
 /* ---------- the focus (phones): the board view moves in on the seat to move — its yard before the throw, the pieces that can move
    and where they go after it, the walking piece while it walks — and glides on to the next seat (a smooth pan and zoom of the
@@ -188,6 +209,12 @@ function showThrow(thr, rolling) {
   el.className = 'shown' + (rule === 'pachisi' ? ' cw' : '') + (rolling ? ' roll' : '');
   if (!thr) { el.innerHTML = rule === 'pachisi' ? B.cowriesSVG(null, 3) : B.dieSVG(6, '#efe8d8'); el.style.opacity = .35; $('#tval').textContent = '—'; $('#tsub').textContent = ''; return; }
   el.style.opacity = 1;
+  if (thr.dice) {   // two dice (house rule): the dice still to use bright, the used ones faded
+    const S0 = VIEW || G.state, left = (S0.left || thr.dice).slice(), shown = thr.three6 ? [6, 6, 6] : thr.dice;
+    el.innerHTML = shown.map(v => { const i = left.indexOf(v), on = i >= 0; if (on) left.splice(i, 1); return `<span class="dd${on ? '' : ' used'}">${B.dieSVG(v)}</span>`; }).join('');
+    el.classList.add('two'); $('#tval').textContent = (S0.left || thr.dice).join(' + ');
+    $('#tsub').textContent = thr.again ? t('st.again') : ''; return;
+  }
   el.innerHTML = rule === 'pachisi' ? B.cowriesSVG(thr.shells, (G.state.ply + 7) * 31) : B.dieSVG(thr.v);
   $('#tval').textContent = thr.v;
   $('#tsub').textContent = rule === 'pachisi' ? t('throw.cowrie', { u: thr.face, v: thr.v }) + (thr.grace ? ' ・ ' + t('st.grace') : '') : (thr.again ? t('st.again') : '');
@@ -217,7 +244,8 @@ let busy = false, token = 0, moves = [], selK = -1;
 function newGame(rated) {
   if (SP && window.LudoLearn) LudoLearn.exitSpecial(true);
   const players = settings.rule === 'pachisi' && settings.players === 3 ? 4 : settings.players;
-  const opts = { rule: settings.rule, players, blocks: settings.blocks, threeSixes: settings.three };
+  // Ludo: the house rules (ludo/house.js; ★ defaults). Pachisi: its traditional rules
+  const opts = settings.rule === 'ludo' && window.LudoHouse ? { rule: 'ludo', players, house: rated ? LudoHouse.DEF : LudoHouse.get() } : { rule: settings.rule, players, blocks: settings.blocks, threeSixes: settings.three };
   let st = E.newGame(opts);
   if (settings.first === 'r' || settings.mode === 'watch') st.turn = st.seats[Math.floor(Math.random() * st.seats.length)];
   G = { opts, mode: settings.mode === 'rated' ? 'ai' : settings.mode, level: settings.level, state: st, thr: null, log: [], hist: [], plies: [], id: Date.now().toString(36), rated: rated || null };
@@ -235,7 +263,7 @@ function step() {
   const seat = s.turn, human = humanSeat(seat);
   if (G.thr) { afterThrow(my); return; }
   zSeat(seat);
-  $('#btnRoll').disabled = !human;
+  $('#btnRoll').disabled = !human; cupDraw(seat, human ? 'ready' : 'idle');
   if (human) {
     setStatus(G.mode === 'pvp' ? t('st.turn', { p: seatName(seat) + '（' + colName(seat) + '）' }) + ' — ' + t(isPachisi() ? 'st.throwv' : 'st.rollv') : t('st.yourRoll', { b: t(isPachisi() ? 'st.throwv' : 'st.rollv') }));
     if (settings.autoRoll) setTimeout(() => { if (my === token) doRoll(); }, 350 * SPD());
@@ -249,11 +277,11 @@ function doRoll() {
   if (busy || !G || G.state.over || G.thr) return;
   if (VIEW && window.LudoRv) LudoRv.toLatest();
   const my = ++token; busy = true;
-  $('#btnRoll').disabled = true; sRattle();
-  let n = 0; const iv = setInterval(() => { showThrow(E.rollThrow(G.state.rule), true); if (++n >= 5) clearInterval(iv); }, 70);
+  $('#btnRoll').disabled = true; sRattle(); cupDraw(G.state.turn, 'shake');
+  let n = 0; const iv = setInterval(() => { showThrow(E.rollThrow(G.state), true); if (++n >= 5) clearInterval(iv); }, 70);
   setTimeout(() => {
     clearInterval(iv); if (my !== token || !G) return;
-    G.thr = E.rollThrow(G.state.rule); showThrow(G.thr); save(); busy = false;
+    G.thr = E.rollThrow(G.state); showThrow(G.thr); cupDraw(G.state.turn, 'lift', G.thr); save(); busy = false;
     afterThrow(my);
   }, 340 * Math.max(.6, SPD()));
 }
@@ -273,7 +301,7 @@ function afterThrow(my) {
     if (settings.autoPick && real.length === 1 && !moves.some(m => m.pass)) { setTimeout(() => { if (my === token) commit(real[0]); }, 260 * SPD()); return; }
     ks.forEach(k => pcEls[seat + ',' + k].classList.add('can')); zMoves(seat, real);
     $('#btnPass').classList.toggle('hidden', !moves.some(m => m.pass));
-    setStatus(t('st.pick', { v: thr.v }));
+    setStatus(t('st.pick', { v: thr.dice ? (G.state.left || thr.dice).join(' + ') : thr.v }));
     cRender();
   } else {
     const r = E.think(s, thr, G.level);
@@ -294,8 +322,8 @@ async function commit(m) {
   if (m && m.cap && m.cap.length) { sCap(); toast(t('st.cap')); await animateCaptures(s0, m.cap); }
   if (G !== g0) return;
   const r = E.apply(s0, m, thr);
-  G.state = r.state; G.thr = null;
-  G.plies.push({ seat, s: s0, thr: { v: thr.v, face: thr.face, p: thr.p, again: thr.again, grace: thr.grace }, m: m ? { k: m.k, from: m.from, to: m.to, enter: m.enter, home: m.home, pass: m.pass, forfeit: m.forfeit, one: m.one, cap: m.cap } : { pass: true } });
+  G.state = r.state; G.thr = r.cont ? thr : null;   // (two dice: the rest of this throw is played before the next roll)
+  G.plies.push({ seat, s: s0, thr: { v: thr.v, face: thr.face, p: thr.p, again: thr.again, grace: thr.grace, dice: thr.dice, three6: thr.three6 }, m: m ? { k: m.k, k2: m.k2, from: m.from, to: m.to, enter: m.enter, home: m.home, pass: m.pass, forfeit: m.forfeit, one: m.one, back: m.back, use: m.use, cap: m.cap } : { pass: true } });
   if (window.LudoRv) LudoRv.invalidate();
   G.log.push({ seat, v: thr.v, txt: m && m.pass ? (m.forfeit ? '6×3' : t('st.pass')) : E.moveText(s0, m, thr) + (m.one ? '¹' : '') });
   placeAll(); renderKifu(); renderPlayers();
@@ -303,7 +331,7 @@ async function commit(m) {
   else if (r.again && !G.state.over) toast(thr.grace && isPachisi() ? t('st.grace') : t('st.again'), 800);
   save(); busy = false;
   if (my !== token) return;
-  setTimeout(() => { if (my === token) step(); }, (r.again ? 300 : 170) * SPD());
+  setTimeout(() => { if (my === token) step(); }, (r.again ? 300 : r.cont ? 120 : 170) * SPD());
 }
 function pickPiece(seat, k) {
   if (VIEW) { if (window.LudoRv) LudoRv.toLatest(); return; }
@@ -314,10 +342,12 @@ function pickPiece(seat, k) {
   if (ms.length === 1) { commit(ms[0]); return; }
   // pachisi grace: the full throw or a single step — tap the destination
   selK = k; gMarks.innerHTML = '';
-  ms.forEach((m, i) => { const [x, y] = m.to >= E.lastOf(G.state) ? geo.home(seat, k) : geo.cellXY(seat, m.to); gMarks.insertAdjacentHTML('beforeend', `<g class="dest" data-i="${moves.indexOf(m)}"><circle cx="${x}" cy="${y}" r=".38" fill="${seatColor(seat)}" opacity=".85" stroke="#fff" stroke-width=".06"/><text x="${x}" y="${y + .14}" text-anchor="middle" style="font:700 .38px var(--font);fill:#fff">${m.to - m.from}</text></g>`); });
+  const seenD = {};
+  ms.forEach((m, i) => { let [x, y] = m.to >= E.lastOf(G.state) ? geo.home(seat, k) : geo.cellXY(seat, m.to); const dk = x + ',' + y, nd = seenD[dk] = (seenD[dk] || 0) + 1; if (nd > 1) { x += (nd - 1) * .5; y -= (nd - 1) * .35; } gMarks.insertAdjacentHTML('beforeend', `<g class="dest" data-i="${moves.indexOf(m)}"><circle cx="${x}" cy="${y}" r=".38" fill="${seatColor(seat)}" opacity=".85" stroke="#fff" stroke-width=".06"/><text x="${x}" y="${y + .14}" text-anchor="middle" style="font:700 .34px var(--font);fill:#fff">${(m.k2 != null ? '×2·' : '') + (m.back ? '↶' : '') + (m.use ? m.use.reduce((a, b) => a + b, 0) : m.to - m.from)}</text></g>`); });
 }
 svg.addEventListener('click', e => {
   const d = e.target.closest('.dest'); if (d) { commit(moves[+d.dataset.i]); return; }
+  if (e.target.closest('#gCup .cup.ready')) { if (G && humanSeat(G.state.turn) && !G.thr && !busy) doRoll(); return; }
   const g = e.target.closest('.pc'); if (g) pickPiece(+g.dataset.s, +g.dataset.k);
 });
 $('#btnRoll').onclick = () => { if (G && humanSeat(G.state.turn)) doRoll(); };
@@ -417,18 +447,20 @@ function renderDialog() {
   $('#fFirst').classList.toggle('hidden', D.mode === 'watch' || rated);
   $('#fOpts').classList.toggle('hidden', D.rule !== 'ludo' || rated);
   $('#levelRange').value = D.level; $('#levelName').textContent = 'Lv.' + D.level;
-  $('#optBlocks').checked = D.blocks; $('#optThree').checked = D.three; $('#optAutoRoll').checked = D.autoRoll; $('#optAutoPick').checked = D.autoPick;
+  $('#optAutoRoll').checked = D.autoRoll; $('#optAutoPick').checked = D.autoPick;
+  if (window.LudoHouse) { const HL = LudoHouse.T[LANG] || LudoHouse.T.en, n = LudoHouse.changed(); $('#hrLbl').textContent = HL.ui[0]; $('#hrSum').textContent = n ? HL.ui[9].replace('{n}', n) : HL.ui[1].split(/[。.]/)[0]; }
   $('#bdRow').innerHTML = ['classic', 'wood'].map(k => `<button type="button" data-v="${k}" class="${D.design[D.rule] === k ? 'on' : ''}">${miniArt(D.rule, k)}<span>${t('bd.' + k)}</span></button>`).join('');
 }
 function openNew() { draft = JSON.parse(JSON.stringify(settings)); if (G && G.rated) draft.mode = 'rated'; if (draft.mode === 'rated' && !window.LudoRated) draft.mode = 'ai'; renderDialog(); $('#newOverlay').classList.add('show'); }
 $('#btnNew').onclick = openNew;
 // the ルール button on each game card (shared/ngtabs.js): that rule's tutorial
+$('#btnHouse').onclick = () => { if (window.LudoHouse) LudoHouse.open({ lang: LANG, onClose: () => renderDialog() }); };
 $('#ruleCards').ngtRules = r => { if (window.LudoLearn) LudoLearn.openRules(r); };
 $('#ruleCards').onclick = e => { const b = e.target.closest('[data-v]'); if (!b) return; draft.rule = b.dataset.v; if (draft.rule === 'pachisi' && draft.players === 3) draft.players = 4; renderDialog(); };
 const segClick = (id, key, num) => { $(id).onclick = e => { const b = e.target.closest('button[data-v]'); if (!b || b.disabled) return; draft[key] = num ? +b.dataset.v : b.dataset.v; renderDialog(); }; };
 segClick('#segMode', 'mode'); segClick('#segPlayers', 'players', true); segClick('#segFirst', 'first');
 $('#levelRange').oninput = e => { draft.level = +e.target.value; $('#levelName').textContent = 'Lv.' + draft.level; };
-['Blocks:blocks', 'Three:three', 'AutoRoll:autoRoll', 'AutoPick:autoPick'].forEach(x => { const [id, k] = x.split(':'); $('#opt' + id).onchange = e => { draft[k] = e.target.checked; }; });
+['AutoRoll:autoRoll', 'AutoPick:autoPick'].forEach(x => { const [id, k] = x.split(':'); $('#opt' + id).onchange = e => { draft[k] = e.target.checked; }; });
 // design: applied at once (common rule) — even if the dialog is then closed
 $('#bdRow').onclick = e => { const b = e.target.closest('[data-v]'); if (!b) return; draft.design[draft.rule] = b.dataset.v; settings.design[draft.rule] = b.dataset.v; save(); if (G && G.state.rule === draft.rule) { drawBoard(); step(); } renderDialog(); };
 $('#btnCancelNew').onclick = () => $('#newOverlay').classList.remove('show');

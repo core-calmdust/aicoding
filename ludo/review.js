@@ -30,7 +30,7 @@ let cur = 0, R = null, ver = 0;   // cur: plies shown (0..n; n = the latest posi
 const n = () => G && G.plies ? G.plies.length : 0;
 const atLatest = () => cur >= n();
 const myTeam = () => { const s = G.state; const h = s.seats.find(x => s.ctrl[x] === 0); return s.team[h == null ? s.turn : h]; };
-const fullMove = (p, mv) => E.legalMoves(p.s, p.thr).find(x => mv.pass ? x.pass : !x.pass && x.k === mv.k && x.to === mv.to) || mv;
+const fullMove = (p, mv) => E.legalMoves(p.s, p.thr).find(x => mv.pass ? x.pass : !x.pass && x.k === mv.k && x.to === mv.to && x.k2 === mv.k2 && !!x.back === !!mv.back && String(x.use || '') === String(mv.use || '')) || mv;
 
 /* ---------- the position card: win chance bar, graph, navigation ---------- */
 function stateAt(i) { return i >= n() ? G.state : G.plies[i].s; }
@@ -84,7 +84,7 @@ function go(i) {
   cur = i;
   if (atLatest()) { VIEW = null; placeAll(); showThrow(G.thr); clearMarks(); if (typeof previewMove === 'function') previewMove(null); }
   else {
-    const p = G.plies[cur]; VIEW = p.s; placeAll(); showThrow(Object.assign({}, E.throwsOf(p.s.rule).find(x => x.v === p.thr.v)));
+    const p = G.plies[cur]; VIEW = p.s; placeAll(); showThrow(p.thr.dice ? p.thr : Object.assign({}, E.throwsOf(p.s.rule).find(x => x.v === p.thr.v)));
     if (typeof previewMove === 'function') { const keep = G.state; previewOf(p); void keep; }
   }
   document.body.classList.toggle('reviewing', !atLatest());

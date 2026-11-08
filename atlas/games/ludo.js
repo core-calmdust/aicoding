@@ -120,11 +120,13 @@
       const seat = s0.turn, g = pcs[seat + ',' + m.k], L0 = E.lastOf(s0);
       const pts = [[g.userData.gx, g.userData.gy]];
       if (m.enter) pts.push(geo.cellXY(seat, 0));
+      else if (m.to < m.from) for (let p = m.from - 1; p >= m.to; p--) pts.push(geo.cellXY(seat, p));   // (house rule: a step back)
       else for (let p = m.from + 1; p <= m.to; p++) pts.push(p >= L0 ? geo.home(seat, m.k) : geo.cellXY(seat, p));
+      const g2 = m.k2 != null ? pcs[seat + ',' + m.k2] : null;   // (house rule: a double moves as one)
       const steps = pts.length - 1, dur = steps > 12 ? 85 : 130, z0 = g.userData.z, z1 = m.to >= L0 ? (rule === 'pachisi' ? .62 : .55) : 1;
       for (let i = 1; i <= steps; i++) {
         const [ax, ay] = pts[i - 1], [bx, by] = pts[i];
-        await animP(dur, k => { const e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2, z = z0 + (z1 - z0) * (i - 1 + k) / steps; place(g, ax + (bx - ax) * e, ay + (by - ay) * e, z, Math.sin(k * Math.PI) * u * .45); });
+        await animP(dur, k => { const e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2, z = z0 + (z1 - z0) * (i - 1 + k) / steps; place(g, ax + (bx - ax) * e, ay + (by - ay) * e, z, Math.sin(k * Math.PI) * u * .45); if (g2) place(g2, ax + (bx - ax) * e + .18, ay + (by - ay) * e + .18, z * .9, Math.sin(k * Math.PI) * u * .45); });
         if (stopped) return; SND.hop();
       }
       SND.put();
@@ -142,8 +144,43 @@
     }
     const FACE = { 1: [0, 0, 0], 6: [Math.PI, 0, 0], 2: [-Math.PI / 2, 0, 0], 5: [Math.PI / 2, 0, 0], 3: [0, 0, Math.PI / 2], 4: [0, 0, -Math.PI / 2] };
     let dieG = null;
+    /* the dice cup (ludo): it stands mouth down in the yard of the seat to throw; the throw shakes it in the air, the dice tumble out
+       where it stood and it goes down beside them; on the next turn it glides to that seat's yard */
+    let cupG = null, cupSeat = -1;
+    function mkCup() {
+      const g = new TH.Group(), R0 = .44, R1 = .36, H = .62;
+      const leather = new TH.MeshStandardMaterial({ color: 0x4a2310, roughness: .58, metalness: 0, side: TH.DoubleSide });
+      const gold = new TH.MeshStandardMaterial({ color: 0xd2a24c, roughness: .35, metalness: .7 });
+      const body = new TH.Mesh(new TH.CylinderGeometry(R1, R0, H, 40, 1, true), leather); body.position.y = H / 2; body.castShadow = true;
+      const top = new TH.Mesh(new TH.CircleGeometry(R1, 40), leather); top.rotation.x = -Math.PI / 2; top.position.y = H;
+      const b1 = new TH.Mesh(new TH.TorusGeometry(R0 - .012, .022, 8, 40), gold); b1.rotation.x = Math.PI / 2; b1.position.y = .05;
+      const b2 = new TH.Mesh(new TH.TorusGeometry(R1 + .012, .02, 8, 40), gold); b2.rotation.x = Math.PI / 2; b2.position.y = H - .05;
+      const sh = T3.contact(R0 * 1.35, .45); sh.position.y = .002;
+      const inner = new TH.Group(); inner.add(body, top, b1, b2); g.add(sh, inner); g.userData = { inner, sh, mats: [leather, gold] };
+      return g;
+    }
+    const cupXZ = seat => { const [gx, gy] = throwSpot(seat); return wx(gx, gy); };
+    const parkXZ = seat => { const [gx, gy] = throwSpot(seat), d = gx < 7.5 ? 1 : -1; return wx(gx + d * 1.75, gy); };
+    function cupTo(seat, glide) {
+      if (rule !== 'ludo') return;
+      if (!cupG) { cupG = mkCup(); board.add(cupG); }
+      const [x, z] = cupXZ(seat), g = cupG, I = g.userData.inner;
+      if (!glide || cupSeat < 0) { g.position.set(x, Y, z); I.position.set(0, 0, 0); I.rotation.set(0, 0, 0); cupSeat = seat; if (T3.kick) T3.kick(200); return; }
+      const x0 = g.position.x, z0 = g.position.z; cupSeat = seat; I.rotation.set(0, 0, 0);
+      anim(420, k => { const e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; g.position.set(x0 + (x - x0) * e, Y, z0 + (z - z0) * e); I.position.y = Math.sin(k * Math.PI) * .7; });
+    }
+    async function cupShake(seat) {   // lift and shake (then throwAnim lets the dice out)
+      if (!cupG) cupTo(seat); const g = cupG, I = g.userData.inner;
+      if (cupSeat !== seat) cupTo(seat);
+      await animP(460, k => { const up = Math.min(1, k * 3) * .55; I.position.set(Math.sin(k * Math.PI * 7) * .07, up, 0); I.rotation.set(0, 0, Math.sin(k * Math.PI * 7) * .28 * Math.min(1, k * 3)); g.userData.sh.scale.setScalar(1 - up * .4); });
+    }
+    function cupPark(seat) {   // after the dice are out: tip over toward the side and stand down beside them
+      if (!cupG) return; const g = cupG, I = g.userData.inner, [x0, z0] = cupXZ(seat), [x1, z1] = parkXZ(seat), r0 = I.rotation.z, y0 = I.position.y;
+      anim(520, k => { const e = 1 - Math.pow(1 - k, 3); g.position.set(x0 + (x1 - x0) * e, Y, z0 + (z1 - z0) * e); I.position.set(0, y0 * (1 - e) + Math.sin(e * Math.PI) * .25, 0); I.rotation.set(0, 0, r0 * (1 - e) + Math.sin(e * Math.PI) * (x1 > x0 ? -.9 : .9)); g.userData.sh.scale.setScalar(1); });
+    }
     function restDie(seat, v) {
       while (thrown.children.length) thrown.remove(thrown.children[0]);
+      if (rule === 'ludo') { cupTo(seat); return; }   // (ludo: the cup stands in the yard, the dice under it)
       if (rule !== 'ludo') { if (v) return; return; }
       dieG = U.die(); const [gx, gy] = throwSpot(seat), [x, z] = wx(gx, gy), h = dieG.userData.size / 2;
       dieG.children[0].rotation.set(...FACE[v || 6]); dieG.position.set(x, Y + h, z); dieG.rotation.y = .5;
@@ -154,6 +191,15 @@
       SND.roll();
       while (thrown.children.length) thrown.remove(thrown.children[0]);
       const [gx, gy] = throwSpot(seat), [cx, cz] = wx(gx, gy);
+      if (rule === 'ludo') { await cupShake(seat); if (stopped) return; cupPark(seat); }
+      if (rule === 'ludo' && th.dice) {   // (house rule: two dice — 666 shows the double six)
+        const fs = th.three6 ? [6, 6] : th.dice, ds = fs.map((v, i) => { const d = U.die(), h = d.userData.size / 2, sh = T3.contact(h * 1.5, .4); thrown.add(sh, d); d.children[0].rotation.set(...FACE[v]);
+          const ox = (i ? .55 : -.55) * u, sx = (Math.random() < .5 ? -1 : 1) * (2 + Math.random() * 2) * Math.PI, sy = (Math.random() - .5) * 4 * Math.PI, sz2 = (Math.random() < .5 ? -1 : 1) * 2 * Math.PI, yaw = Math.random() * 6.28;
+          return { d, h, sh, x: cx + ox, z: cz + (Math.random() - .5) * u * .6, sx, sy, sz2, yaw }; });
+        dieG = ds[0].d;
+        await animP(720, k => ds.forEach(o => { const r = Math.pow(1 - k, 2), b = Math.abs(Math.sin(k * Math.PI * 2.5)) * (1 - k) * 1.3; o.d.rotation.set(o.sx * r, o.yaw + o.sy * r, o.sz2 * r); o.d.position.set(o.x, Y + o.h + b, o.z); o.sh.position.set(o.x, Y + .002, o.z); }));
+        return;
+      }
       if (rule === 'ludo') {
         dieG = U.die(); const h = dieG.userData.size / 2, sh = T3.contact(h * 1.5, .4); sh.position.set(cx, Y + .002, cz); thrown.add(sh, dieG);
         dieG.children[0].rotation.set(...FACE[th.v]);
@@ -257,7 +303,7 @@
       ctx.hud(st.seats.slice(0, half).map(pill).join('') + mid + st.seats.slice(half).map(pill).join(''));
     }
     const say = m => { msg = m || ''; hud(); };
-    const throwText = th => rule === 'pachisi' ? tx('throw.cowrie', { u: th.face, v: th.v }) : String(th.v);
+    const throwText = th => rule === 'pachisi' ? tx('throw.cowrie', { u: th.face, v: th.v }) : th.dice ? (st.left || th.dice).join(' + ') : String(th.v);
 
     /* ---------- the flow ---------- */
     function onTurn() { ply++; if (ctx.onTurn) ctx.onTurn(st.team[st.turn] === myTeam() ? 0 : 1, { human: human(st.turn), ply }); }
@@ -265,7 +311,7 @@
       if (over || stopped) return;
       thr = null; moves = []; selK = -1; hintMv = null; clearMarks(); onTurn();
       const seat = st.turn;
-      focusSeat(seat);
+      focusSeat(seat); cupTo(seat, true);
       if (human(seat)) {
         if (!pvp) hist.push(E.clone(st));
         phase = 'roll'; say(pvp ? tx('st.turn', { p: colName(seat) }) : tx('st.yourRoll', { b: tx(rule === 'pachisi' ? 'st.throwv' : 'st.rollv') }));
@@ -274,9 +320,12 @@
     async function doRoll() {
       if (over || stopped || busy || (phase !== 'roll' && phase !== 'ai')) return;
       const ai = phase === 'ai'; busy = true; phase = 'anim'; if (!ai) say('');
-      const seat = st.turn, th = E.rollThrow(rule);
+      const seat = st.turn, th = E.rollThrow(st);
       await throwAnim(seat, th); if (stopped) return;
-      thr = th; busy = false;
+      thr = th; busy = false; afterThrow(seat, th);
+    }
+    function afterThrow(seat, th) {   // the moves of a throw (two dice: again for the rest of it, without a new roll)
+      selK = -1; hintMv = null;
       const sub = throwText(th) + (rule === 'pachisi' && th.grace ? ' · ' + tx('st.grace') : '');
       moves = E.legalMoves(st, th); const real = moves.filter(m => !m.pass);
       const dz = rule === 'pachisi' ? '🐚 ' : '🎲 ';
@@ -294,6 +343,7 @@
       if (m && m.cap && m.cap.length) { SND.take(); toast(tx('st.cap')); await flyHome(m.cap); if (stopped) return; }
       const r = E.apply(s0, m, th);
       st = r.state; busy = false; placeAll();
+      if (r.cont && !st.over) { if (m && m.home) SND.home(); later(() => afterThrow(st.turn, th), 160); return; }   // (two dice: the rest of the throw)
       if (m && m.home) { SND.home(); toast(tx('st.home')); }
       else if (r.again && !st.over) { SND.again(); toast(rule === 'pachisi' && th.grace ? tx('st.grace') : tx('st.again')); }
       if (st.over) return end();
@@ -351,7 +401,8 @@
     document.addEventListener('keydown', onKey);
 
     /* ---------- go ---------- */
-    st = E.newGame({ rule, players, first: 0, blocks: false, threeSixes: true });
+    const LH = window.LudoHouse;   // the house rules (ludo/house.js — the same settings as the 2D game; pachisi keeps its traditional rules)
+    st = E.newGame(rule === 'ludo' && LH ? { rule, players, first: 0, house: LH.get() } : { rule, players, first: 0, blocks: false, threeSixes: true });
     build(); restDie(0, 6);
     loadTexts().then(I => {
       if (stopped) return;
@@ -388,7 +439,7 @@
         stopped = true; tok++; timers.forEach(clearTimeout); clearInterval(pulse);
         ctx.el.removeEventListener('click', onClick); document.removeEventListener('click', onHud, true); document.removeEventListener('keydown', onKey);
         css.remove(); if (toastEl) toastEl.remove(); if (zoomBtn) zoomBtn.remove(); removeEventListener('resize', onResize);
-        Object.values(MAT).forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose());
+        Object.values(MAT).forEach(m => m.dispose()); if (cupG) cupG.userData.mats.forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose());
       },
       _debug: { st: () => st, phase: () => phase, moves: () => moves, thr: () => thr, roll: () => doRoll(), commit: m => commit(m), at: (gx, gy) => { const [x, z] = wx(gx, gy); return T3.project(x, z, Y); }, piece: key => { const g = pcs[key]; return g && T3.project(g.position.x, g.position.z, Y); }, geo },
     };
@@ -397,5 +448,9 @@
   }
 
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.ludo = { levels: 20, sides: false, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], sizes: SIZES, size0: 4, sizeLabel, sizeName, levelInfo, start, SND };
+  window.Atlas3D.ludo = { levels: 20, sides: false, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], sizes: SIZES, size0: 4, sizeLabel, sizeName, levelInfo, start, SND,
+    house: window.LudoHouse && {   // the house rules (ludo/house.js — shared with the 2D game); ludo only, not pachisi
+      show: z => !(z > 10), label: lang => (LudoHouse.T[lang] || LudoHouse.T.en).ui[0],
+      summary: lang => { const H = LudoHouse.T[lang] || LudoHouse.T.en, n = LudoHouse.changed(); return n ? H.ui[9].replace('{n}', n) : H.ui[1].split(/[。.]/)[0]; },
+      open: (lang, cb) => LudoHouse.open({ lang, onClose: cb }) } };
 })();
