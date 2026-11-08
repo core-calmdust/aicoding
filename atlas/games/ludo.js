@@ -10,11 +10,11 @@
 (function () {
   'use strict';
   const RN = {   // rule names and the players label for the size select
-    ja: ['ルドー', 'パチーシ', '{n}人', 'ルール'], en: ['Ludo', 'Pachisi', '{n} players', 'Rules'], zh: ['飞行棋式鲁多', '帕棋西', '{n}人', '规则'],
-    'zh-TW': ['魯多', '帕奇西', '{n}人', '規則'], ko: ['루도', '파치시', '{n}인', '규칙'], es: ['Ludo', 'Parchís indio', '{n} jugadores', 'Reglas'],
-    fr: ['Ludo', 'Pachisi', '{n} joueurs', 'Règles'], pt: ['Ludo', 'Pachisi', '{n} jogadores', 'Regras'], de: ['Ludo', 'Pachisi', '{n} Spieler', 'Regeln'],
-    ru: ['Лудо', 'Пачиси', '{n} игрока', 'Правила'], tr: ['Ludo', 'Pachisi', '{n} oyuncu', 'Kurallar'], id: ['Ludo', 'Pachisi', '{n} pemain', 'Aturan'],
-    hi: ['लूडो', 'पचीसी', '{n} खिलाड़ी', 'नियम'], ar: ['لودو', 'باتشيسي', '{n} لاعبين', 'القواعد'],
+    ja: ['ルドー', 'パチーシ', '{n}人', 'ルールと人数'], en: ['Ludo', 'Pachisi', '{n} players', 'Rules & players'], zh: ['飞行棋式鲁多', '帕棋西', '{n}人', '规则与人数'],
+    'zh-TW': ['魯多', '帕奇西', '{n}人', '規則與人數'], ko: ['루도', '파치시', '{n}인', '규칙·인원'], es: ['Ludo', 'Parchís indio', '{n} jugadores', 'Reglas y jugadores'],
+    fr: ['Ludo', 'Pachisi', '{n} joueurs', 'Règle et joueurs'], pt: ['Ludo', 'Pachisi', '{n} jogadores', 'Regras e jogadores'], de: ['Ludo', 'Pachisi', '{n} Spieler', 'Regel & Spieler'],
+    ru: ['Лудо', 'Пачиси', '{n} игрока', 'Правила и игроки'], tr: ['Ludo', 'Pachisi', '{n} oyuncu', 'Kural ve oyuncu'], id: ['Ludo', 'Pachisi', '{n} pemain', 'Aturan & pemain'],
+    hi: ['लूडो', 'पचीसी', '{n} खिलाड़ी', 'नियम और खिलाड़ी'], ar: ['لودو', 'باتشيسي', '{n} لاعبين', 'القواعد واللاعبون'],
   };
   RN.zh[0] = '鲁多';
   const SIZES = [4, 3, 2, 14, 12];
@@ -225,7 +225,7 @@
       if (!g.userData.dice.children.length) cupDice(true);
       const DD = g.userData.dice.children;
       await animP(520, k => { const w = Math.sin(k * Math.PI * 8) * Math.min(1, k * 4) * (1 - Math.max(0, k - .85) / .15); cupPose(1, Math.min(1, k * 4) * .35, w * .22); g.position.x = cx + w * .06;
-        DD.forEach((d, i) => { const j = Math.abs(Math.sin(k * Math.PI * 9 + i * 1.7)) * Math.min(1, k * 4); d.position.y = d.userData.y0 - j * .09; d.rotation.x = Math.PI + j * 1.4 * (i ? -1 : 1); d.rotation.z = j * .8; }); });   // (the dice rattle inside)
+        DD.forEach((d, i) => { const j = Math.abs(Math.sin(k * Math.PI * 9 + i * 1.7)) * Math.min(1, k * 4); d.position.y = d.userData.y0 - j * .12; d.rotation.x = Math.PI + k * Math.PI * (7 + i) * (i ? -1 : 1) * Math.min(1, k * 4); d.rotation.z = k * Math.PI * (5 - i); d.rotation.y += .25; }); });   // (tumbling: the face on top keeps changing)   // (the dice rattle inside)
       if (stopped) return;
       g.position.x = cx;
       await animP(300, k => { const e = k * k; cupPose(1 - e, .35 * (1 - e) + Math.sin(k * Math.PI) * .45); });

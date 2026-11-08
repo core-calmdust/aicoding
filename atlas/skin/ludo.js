@@ -182,7 +182,7 @@ html.atlas-ludo3d #frame{background:none!important;box-shadow:none!important}`;
         const DD = g.userData.dice.children, t0 = performance.now();
         const f = now => { const t = (now - t0) / 1000, k4 = Math.min(1, t * 6), w = Math.sin(t * 30 / k) * k4;
           pose(1, k4 * .35, w * .22); g.position.x = cx + w * .06;
-          DD.forEach((d, i) => { const j = Math.abs(Math.sin(t * 34 / k + i * 1.7)) * k4; d.position.y = d.userData.y0 - j * .09; d.rotation.x = Math.PI + j * 1.4 * (i ? -1 : 1); d.rotation.z = j * .8; });
+          DD.forEach((d, i) => { const j = Math.abs(Math.sin(t * 34 / k + i * 1.7)) * k4; d.position.y = d.userData.y0 - j * .12; d.rotation.x = Math.PI + t * Math.PI * (4 + i) / k * (i ? -1 : 1) * k4; d.rotation.z = t * Math.PI * (3 - i) / k; d.rotation.y += .25; });   // (tumbling)
           T3.kick(80); shakeT = requestAnimationFrame(f); };
         shakeT = requestAnimationFrame(f); return;
       }
