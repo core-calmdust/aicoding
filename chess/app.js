@@ -194,7 +194,7 @@ function noteNps(nodes, ms) {
 }
 let jobId = 0;
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261108top'); w.jobs = new Map();
+  const w = new Worker('engine.js?v=20261108top2'); w.jobs = new Map();
   w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (!j) return; if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; } w.jobs.delete(m.id); noteNps(m.nodes, performance.now() - j.t0); j.resolve(m); };
   return w;
 }
@@ -203,7 +203,7 @@ let aiW = makeWorker(), anaW = makeWorker();
 // timed AI levels outside rated games go to the pool of threads when it is free; rated games and the node-limited levels stay
 // on the one-thread workers (the same moves as before)
 const MTP = window.MTEngine ? MTEngine.use({
-  wasm: 'engine_mt.wasm?v=1', lead: 'engine.js?v=20261108top&mt=1', helper: 'mt-helper.js?v=1', slot: 2 << 20, initial: 512, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
+  wasm: 'engine_mt.wasm?v=1', lead: 'engine.js?v=20261108top2&mt=1', helper: 'mt-helper.js?v=1', slot: 2 << 20, initial: 512, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => performance.now(), progress: () => {} } }),
   help: m => { const p = E.Pos.fromFEN(m.fen || E.START), u = []; for (const x of m.moves || []) { u.push(p.uci(x)); p.make(x); } return { setup: (m.fen || E.START) + (u.length ? ' moves ' + u.join(' ') : '') }; },
 }) : null;
@@ -211,11 +211,11 @@ function mtWants(which, msg) {
   if (msg.type === 'analyze' || msg.type === 'multipv' || msg.type === 'mpvLoop') return true;
   if (msg.type !== 'think') return false;   // (rated games too: the user's decision 2026-11-08, device differences accepted)
   if (msg.cfg) return msg.cfg.threads > 1;   // PRO: its own thread count with any limit (time, depth or nodes — the lead's limit; the helpers fill the shared table)   // PRO: its own thread count (mtThreads)
-  const L = E.LEVELS[msg.level]; return !!L && !L.wnodes && L.noise === undefined && L.ms >= 500;
+  const L = E.LEVELS[msg.level]; return !!L && !L.wnodes && L.noise === undefined && L.ms > 0;   // the timed levels 18–25
 }
 function request(which, msg, onProgress) {
-  // the AI's timed top levels (21–25) just after the page opened: wait for the threads once (up to 4 s) instead of one thread
-  if (which === 'ai' && MTP && !msg.cfg && !msg.mtWait && (E.LEVELS[msg.level] || {}).ms >= 5000 && mtWants(which, msg) && !MTP.pool('ai'))
+  // the AI's top levels (21–25, 1.25–20 s) just after the page opened: wait for the threads once (up to 4 s) instead of one thread
+  if (which === 'ai' && MTP && !msg.cfg && !msg.mtWait && msg.level >= 21 && mtWants(which, msg) && !MTP.pool('ai'))
     return Promise.race([MTP.ready(), sleep(4000)]).then(() => request(which, { ...msg, mtWait: 1 }, onProgress));
   const mp = MTP && mtWants(which, msg) && MTP.pool(which === 'ai' ? 'ai' : null);
   if (mp) { const t0 = performance.now(), fen = startFen; return mp.run({ fen, ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, { fen, ...msg }, onProgress) : r; }); }
@@ -766,7 +766,7 @@ async function analyzeCurrent(tok) {
 }
 // coach: a second, deeper pass. The all-moves analysis above is quick but shallow (its first choice lost to the
 // stronger AI levels), so the coach then runs the strongest AI's own search and puts that move at the top.
-const COACH_DEEP = 19;   // engine LEVELS: about 1.5 s
+const COACH_DEEP = 21;   // engine LEVELS: about 1.25 s (the old Lv.19 was 1.5 s)
 async function coachDeep(idx, key, apply) {
   const list = anaCache.get(key);
   if (!list || list.deep || !(window.ChessCoach && ChessCoach.active() && (settings.mode === 'pvp' || toMoveAt(idx) === humanColor))) return;
@@ -1132,7 +1132,7 @@ $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
 // games. The changed values make a level of their own (engine.js: think with cfg, the same keys as LEVELS).
 const PRO_DEF = lv => { const L = E.LEVELS[lv] || E.LEVELS[12];
   return { limit: L.noise !== undefined ? { k: 'depth', v: L.d } : L.wnodes ? { k: 'nodes', v: L.wnodes } : { k: 'time', v: L.ms / 1000 },
-    threads: !L.wnodes && L.noise === undefined && L.ms >= 500 ? ProSet.maxThreads() : 1, book: !!L.book, var: L.noise === undefined ? 0 : L.noise >= 100 ? 2 : 1, eval: 'nnue' }; };
+    threads: !L.wnodes && L.noise === undefined && L.ms > 0 ? ProSet.maxThreads() : 1, book: !!L.book, var: L.noise === undefined ? 0 : L.noise >= 100 ? 2 : 1, eval: 'nnue' }; };
 var PRO = window.ProSet ? ProSet.init({ game: 'chess', lang: () => LANG, level: () => draft.level || settings.level, show: () => draft.mode === 'ai' || draft.mode === 'watch',
   store: { get: () => settings.pro, set: v => { settings.pro = v; } }, defaults: PRO_DEF,
   params: [{ key: 'limit', kinds: { time: [0.1, 60], depth: [1, 30], nodes: [1000, 1e8] } }, { key: 'threads' },
@@ -1215,7 +1215,7 @@ function styleMove(ucis) {
 // player's rating (mostly close, sometimes clearly stronger or weaker). 10 min + 5 s per move; leaving a game in progress loses it.
 let rgame = null;
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_CLOCK = { base: 600000, inc: 5000 };
-const RT_LV = [0, 200, 350, 500, 650, 800, 1000, 1250, 1400, 1600, 1700, 1800, 1900, 2100, 2250, 2350, 2450, 2650, 3000, 3050, 3100, 3140, 3180, 3220, 3260, 3300];   // 21–25 (2026-11-08): estimated from time-doubling matches (MODEL_CARD.md「最上位レベル」)
+const RT_LV = [0, 200, 350, 500, 650, 800, 1000, 1250, 1400, 1600, 1700, 1800, 1900, 2100, 2250, 2350, 2450, 2650, 2830, 2930, 3020, 3110, 3190, 3260, 3330, 3400];   // 18–25 (2026-11-08, re-spaced to about twice the time per step): interpolated from the Stockfish measurements of Lv.17 / the old 0.5 s level, then the time-doubling matches (MODEL_CARD.md「最上位レベル」)
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };
