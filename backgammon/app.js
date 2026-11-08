@@ -150,19 +150,28 @@ function load() {
 // ====================================================================== workers
 let jobId = 0;
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261021op');
+  const w = new Worker('engine.js?v=20261108mt');
   w.jobs = new Map();
   w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (!j) return; w.jobs.delete(m.id); if (m.error) console.warn(m.error); j.resolve(m); };
   w.onerror = e => console.warn('worker error', e.message);
   return w;
 }
 let aiW = makeWorker(), anaW = makeWorker();
-function request(which, msg) {
-  const w = which === 'ai' ? aiW : which === 'ana' ? anaW : which;
+async function request(which, msg) {
   if (msg.pos) msg.pos = Array.from(msg.pos);
+  // the threads (mt.js): the candidates of a searched level / an analysis are valued side by side first (msg.pre)
+  if ((which === 'ai' || which === 'ana') && window.BGMT && (msg.type === 'move' || msg.type === 'analyze')) {
+    const gen = which === 'ai' ? aiGen : anaGen;
+    msg = await BGMT.prep(msg, which === 'ai' ? 'ai' : undefined);
+    if (gen !== (which === 'ai' ? aiGen : anaGen)) return null;   // (cancelled meanwhile)
+  }
+  const w = which === 'ai' ? aiW : which === 'ana' ? anaW : which;
   return new Promise(resolve => { const id = ++jobId; w.jobs.set(id, { resolve }); w.postMessage({ ...msg, id }); });
 }
+let aiGen = 0, anaGen = 0;
 function cancelWorker(which) {
+  if (which === 'ai') aiGen++; else anaGen++;
+  if (window.BGMT) BGMT.cancel(which === 'ai' ? 'ai' : 'ana');
   const w = which === 'ai' ? aiW : anaW;
   if (!w.jobs.size) return;
   w.terminate(); w.jobs.forEach(j => j.resolve(null));
@@ -1765,7 +1774,8 @@ $('#btnStart').onclick = () => {
 };
 
 // ====================================================================== post-game review
-const RV_WORKERS = Math.max(1, Math.min(2, (navigator.hardwareConcurrency || 2) - 1));
+const RV_WORKERS0 = Math.max(1, Math.min(2, (navigator.hardwareConcurrency || 2) - 1));
+const rvWorkers = () => window.BGMT && BGMT.on() ? Math.max(RV_WORKERS0, BGMT.threads) : RV_WORKERS0;   // (threads on: one per thread)
 let rv = null, rvOpen = false;
 function rvSig() { return match ? match.seed + '|' + match.games.map(gm => BG.encodeGame(gm.actions)).join('~') : ''; }
 function rvCancel() {
@@ -1798,7 +1808,7 @@ async function runReview() {
     });
   });
   const run = rv = { sig, items: new Map(), done: 0, total: jobs.length, running: true, ws: [] };
-  for (let k = 0; k < RV_WORKERS; k++) run.ws.push(makeWorker());
+  for (let k = 0, nw = rvWorkers(); k < nw; k++) run.ws.push(makeWorker());
   rvOpen = true; renderReview(); revealReview();
   let next = 0;
   const loop = async w => {

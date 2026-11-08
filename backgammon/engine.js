@@ -1,5 +1,5 @@
 // Backgammon V2 — AI / analysis worker
-importScripts('bg.js?v=20261021op', 'explain.js?v=20261021op');
+importScripts('bg.js?v=20261108mt', 'explain.js?v=20261021op');
 let ready = null;
 async function init() {
   try {
@@ -37,7 +37,7 @@ onmessage = async e => {
   try {
     if (m.type === 'move') {
       const t0 = now();
-      const pl = choosePlay(pos, m.side, m.dice, m.level, m.tag);
+      const pl = choosePlay(pos, m.side, m.dice, m.level, m.tag, m.pre);
       out.moves = pl.moves; out.ms = now() - t0;
     } else if (m.type === 'cube') {          // should side (on roll) double?
       const c = cubeFor(m.level, pos, m.side, m.ctx);
@@ -46,13 +46,13 @@ onmessage = async e => {
       const c = cubeFor(m.level, pos, m.side, m.ctx);
       out.take = c.take;
     } else if (m.type === 'analyze') {       // candidate plays with equities
-      const pl = BG.analyzePlays(pos, m.side, m.dice[0], m.dice[1], { ply: m.ply === undefined ? 1 : m.ply, keep1: m.keep || 8, margin1: 0.3, keep2: 3, margin2: 0.05, deadline: now() + (m.time || 1500) });
+      const pl = BG.analyzePlays(pos, m.side, m.dice[0], m.dice[1], { ply: m.ply === undefined ? 1 : m.ply, keep1: m.keep || 8, margin1: 0.3, keep2: 3, margin2: 0.05, deadline: m.pre ? 0 : now() + (m.time || 1500), pre: m.pre });
       out.list = pl.slice(0, m.max || 12).map(x => ({ moves: x.moves, e: x.e, v: x.v, ply: x.ply, key: BG.key(x.pos) }));
       if (m.played) {   // make sure the played move is valued at the same depth as the best
         const k = m.played, x = pl.find(y => BG.key(y.pos) === k);
         if (x) {
           const top = pl[0].ply;
-          if (x.ply < top) { x.v = BG.evalPly ? BG.evalPly(x.pos, 1 - m.side, top) : top >= 2 ? BG.eval2(x.pos, 1 - m.side) : BG.eval1(x.pos, 1 - m.side); x.e = BG.equity(x.v); x.ply = top; }
+          if (x.ply < top) { x.v = (m.pre && m.pre[k + ':' + top]) || BG.evalPly ? BG.evalPly(x.pos, 1 - m.side, top) : top >= 2 ? BG.eval2(x.pos, 1 - m.side) : BG.eval1(x.pos, 1 - m.side); x.e = BG.equity(x.v); x.ply = top; }
           out.played = { moves: x.moves, e: x.e, v: x.v, ply: x.ply, key: k };
           // commentary: why the best play beats the played one (features + templated reasons, see explain.js)
           if (m.explain && self.BGX) {
@@ -64,6 +64,12 @@ onmessage = async e => {
         }
       }
       out.n = pl.length;
+    } else if (m.type === 'plays0') {       // the threads (mt.js): every play valued at 0-ply, best first
+      const pl = BG.analyzePlays(pos, m.side, m.dice[0], m.dice[1], { ply: 0 });
+      out.list = pl.map(x => ({ pos: Array.from(x.pos), key: BG.key(x.pos), e: x.e, ply: 0 }));
+    } else if (m.type === 'ply') {          // the threads: one candidate (the position after it, o = the opponent on roll) at a depth
+      out.v = BG.evalPly(pos, m.o, m.ply);
+    } else if (m.type === 'ping') {
     } else if (m.type === 'eval') {          // pre-roll evaluation of a position (side on roll)
       const v = preRoll(pos, m.side, m.depth || 0);
       out.v = v;

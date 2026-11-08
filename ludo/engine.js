@@ -270,11 +270,25 @@
     return moves.map((m, i) => ({ move: m, v: scores[i], wp: wpOf(s, scores[i]), i })).sort((a, b) => b.v - a.v);
   }
 
+  /* ---------- rollouts (the threads: shared/mtworkers.js, ludo/mt.js — the win chance of the position card and the graph) ---------- */
+  // playout: from s, every seat plays Lv.20 (no randomness of its own), the throws come from a seeded generator; cut after `plies`
+  // throws and scored by winProb, or 1 / 0 when the game ends first → the chance that `team` wins.
+  const HALF = () => .5;
+  function mulberry32(a) { a = a >>> 0; return function () { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  function playout(s, team, seed, plies) {
+    const rng = mulberry32(seed); let st = s, n = 0;
+    while (!st.over && n < plies) { const t = rollThrow(st.rule, rng); st = apply(st, think(st, t, 20, HALF).move, t).state; n++; }
+    return st.over ? (st.winner === team ? 1 : 0) : winProb(st, team);
+  }
+  const PLIES = 3000;   // (to the end of the game)
+  // one task: `count` playouts (seeds seed0 … seed0+count−1) → their sum
+  function wpTask(s, team, seed0, count, plies) { let v = 0; for (let i = 0; i < count; i++) v += playout(s, team, seed0 + i, plies || PLIES); return v; }
+
   /* ---------- text ---------- */
   const COLORS = ['yellow', 'red', 'black', 'green'];   // pachisi pairs: 0+2 (yellow, black) vs 1+3 (red, green); ludo uses its own palette in the page
   function moveText(s, m, t) { if (!m || m.pass) return '—'; return (m.enter ? '▶' : (m.from + 1) + '→') + (m.home ? '⌂' : m.to + 1) + (m.cap && m.cap.length ? '×' : ''); }
 
-  const API = { RULES, N_PC, D6, COWRIE, throwsOf, rollThrow, cellOf, isSafe, sharedCell, PACHISI_CASTLE, LUDO_SAFE, newGame, clone, legalMoves, apply, evaluate, seatValue, threatProb, think, LEVELS, nextSeat, lastOf, moveText, COLORS, WP, wpOf, winProb, rank };
+  const API = { RULES, N_PC, D6, COWRIE, throwsOf, rollThrow, cellOf, isSafe, sharedCell, PACHISI_CASTLE, LUDO_SAFE, newGame, clone, legalMoves, apply, evaluate, seatValue, threatProb, think, LEVELS, nextSeat, lastOf, moveText, COLORS, WP, wpOf, winProb, rank, playout, wpTask, mulberry32, PLIES };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   else root.LudoEngine = API;
 })(typeof self !== 'undefined' ? self : this);

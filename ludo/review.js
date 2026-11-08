@@ -1,5 +1,6 @@
 /* ludo/review.js — 形勢・手順ナビ・振り返り（共通仕様：形勢カード＋◀▶、棋譜のクリック、［分析］で振り返りカード）
-   - 形勢カード（#evalCard）：あなた（二人以上の対戦では手番の色）の勝率のバーとグラフ（engine.js の winProb）、
+   - 形勢カード（#evalCard）：あなた（二人以上の対戦では手番の色）の勝率のバーとグラフ（engine.js の winProb。マルチスレッドが
+     オンなら各局面を Lv.20 同士で最後まで打ったロールアウトの勝率に順に置き換える：ludo/mt.js）、
      手順ナビ（|< < ▶ > >|、← → ↑ ↓ キー）。過去の局面を見ている間はその手の動きを盤に矢印で示す。
    - 振り返り（#reviewCard）：人の指した手を Lv.20 の評価で調べ、勝率の損失で ◎最善／○悪くない／△疑問手／✕悪手。
      正確さ・判定の数・表示中の手の解説（最善手つき）・疑問手と悪手の一覧（押すとその局面へ）。
@@ -33,9 +34,28 @@ const fullMove = (p, mv) => E.legalMoves(p.s, p.thr).find(x => mv.pass ? x.pass 
 
 /* ---------- the position card: win chance bar, graph, navigation ---------- */
 function stateAt(i) { return i >= n() ? G.state : G.plies[i].s; }
+// threads (ludo/mt.js): every position played out to the end on all cores; those win chances replace the fit as they come in
+let RW = { id: null, v: new Map() }, rwBusy = false, rwT = 0;
+function wpAt(i, tm) { if (RW.id === (G && G.id)) { const v = RW.v.get(i + ':' + tm); if (v !== undefined) return v; } return E.winProb(stateAt(i), tm); }
+function rwKick() {
+  if (!G || rwBusy || !window.LudoMT || !LudoMT.on()) return;
+  if (RW.id !== G.id) { LudoMT.cancel('review'); RW = { id: G.id, v: new Map() }; }
+  const pvp = G.mode === 'pvp', list = [], N = n();
+  for (let k = 0; k <= N; k++) {
+    const i = k === 0 ? N : k - 1, st = stateAt(i), tm = pvp ? st.team[st.turn] : myTeam();   // (the latest position first)
+    if (!RW.v.has(i + ':' + tm) && !st.over) list.push({ i, tm, state: st, team: tm });
+  }
+  if (!list.length) return;
+  list.length = Math.min(list.length, 2 * LudoMT.threads);   // (a few at a time: a new latest position goes first)
+  const my = RW; rwBusy = true;
+  LudoMT.wpMany(list, (j, wp) => {
+    if (RW !== my) return; RW.v.set(list[j].i + ':' + list[j].tm, wp);
+    if (!rwT) rwT = setTimeout(() => { rwT = 0; wpCache.k = ''; renderEval(); }, 250);
+  }).then(r => { rwBusy = false; if (RW === my && r) setTimeout(rwKick, 0); });
+}
 function wpSeries() {
   const tm = myTeam(), out = [];
-  for (let i = 0; i <= n(); i++) out.push(E.winProb(stateAt(i), G.mode === 'pvp' ? stateAt(i).team[stateAt(i).turn] : tm));
+  for (let i = 0; i <= n(); i++) out.push(wpAt(i, G.mode === 'pvp' ? stateAt(i).team[stateAt(i).turn] : tm));
   return out;
 }
 let wpCache = { k: '', v: [] };
@@ -43,7 +63,8 @@ function renderEval() {
   const card = $('#evalCard'); if (!card || !G) return;
   if (!VIEW) cur = n();
   const pvp = G.mode === 'pvp', st = stateAt(cur), tm = pvp ? st.team[st.turn] : myTeam();
-  const w = E.winProb(st, tm), seat = pvp ? st.turn : st.seats.find(x => st.ctrl[x] === 0);
+  const w = st.over ? E.winProb(st, tm) : wpAt(cur, tm), seat = pvp ? st.turn : st.seats.find(x => st.ctrl[x] === 0);
+  rwKick();
   $('#evalText').innerHTML = `<i class="ev-dot" style="background:${seatColor(seat == null ? st.turn : seat)}"></i>${esc(pvp ? colName(st.turn) : tr('you'))} ${Math.round(w * 100)}%`;
   $('#evalFill').style.width = (w * 100).toFixed(1) + '%';
   const key = G.id + ':' + n() + ':' + pvp; if (wpCache.k !== key) wpCache = { k: key, v: pvp ? [] : wpSeries() };
