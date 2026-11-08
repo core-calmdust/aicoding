@@ -580,17 +580,23 @@ function defenceCells(pos, a, d) {
 
 // ---------------------------------------------------------------- search
 const TT_BITS = 20, TT_SIZE = 1 << TT_BITS, TT_MASK = TT_SIZE - 1;
+const SPLIT_MAX = 32;   // (root moves shared among the threads at most: ctl has 128 slots)
 class Engine {
-  constructor() {
-    this.k1 = new Int32Array(TT_SIZE); this.k2 = new Int32Array(TT_SIZE); this.tv = new Int32Array(TT_SIZE);
-    this.td = new Int8Array(TT_SIZE); this.tf = new Int8Array(TT_SIZE); this.tm = new Int16Array(TT_SIZE);
+  // tt (the page's multi-thread search): the transposition table on the shared memory (engine_mt.wasm, mt.c) and the stop flag
+  // ctl (Int32Array, [0] = 1: stop) — every thread of the pool reads and writes one table (Lazy SMP); without it, its own table
+  constructor(tt) {
+    if (tt) { this.k1 = tt.k1; this.k2 = tt.k2; this.tv = tt.tv; this.td = tt.td; this.tf = tt.tf; this.tm = tt.tm; this.ctl = tt.ctl; }
+    else { this.k1 = new Int32Array(TT_SIZE); this.k2 = new Int32Array(TT_SIZE); this.tv = new Int32Array(TT_SIZE);
+    this.td = new Int8Array(TT_SIZE); this.tf = new Int8Array(TT_SIZE); this.tm = new Int16Array(TT_SIZE); }
     this.hist = new Int32Array(SIZE * 3);
     this.solver = new Solver();
     this.nodes = 0; this.stop = false; this.deadline = 0; this.rand = Math.random; this.noise = 0;
     this.ordS = new Int32Array(SIZE);
   }
+  // the shared table's age (0..31): the lead of the pool starts a new one for each search, the helpers take the lead's
+  newAge() { if (this.ctl) this.age = this.mtLead ? (Atomics.add(this.ctl, 12, 1) + 1) & 31 : Atomics.load(this.ctl, 12) & 31; }
   clear() { this.k1.fill(0); this.k2.fill(0); this.hist.fill(0); this.solver.clear(); }
-  timeUp() { if ((++this.nodes & 1023) === 0 && (now() > this.deadline || this.nodes > this.nodeLimit)) this.stop = true; return this.stop; }
+  timeUp() { if ((++this.nodes & 1023) === 0 && (now() > this.deadline || this.nodes > this.nodeLimit || (this.ctl && (Atomics.load(this.ctl, 0) || (this.splitG && Atomics.load(this.ctl, 13) !== this.splitG))))) this.stop = true; return this.stop; }
   evaluate(pos) {
     const me = pos.side, op = 3 - me;
     const nn = pos.nn && this.nnx ? this.nnx : pos.nn;      // nnx: a per-engine net (A/B tests)
@@ -660,7 +666,7 @@ class Engine {
       ttMove = this.tm[h];
       if (this.td[h] >= depth && ply > 0) {
         let v = this.tv[h]; if (v > WINT) v -= ply; else if (v < -WINT) v += ply;
-        const f = this.tf[h];
+        const f = this.tf[h] & 3;   // (the shared table keeps its search's age above the flag)
         if (f === 0 || (f === 1 && v >= beta) || (f === 2 && v <= alpha)) return v;
       }
     }
@@ -697,10 +703,12 @@ class Engine {
       if (v > alpha) alpha = v;
       if (alpha >= beta) { this.hist[i * 3 + me] += depth * depth; break; }
     }
-    if (!this.stop) {
+    // (the shared table of the threads keeps deeper entries of the same search: helpers searching other depths would
+    // otherwise overwrite them all the time; the age is the lead's search counter, ctl[12])
+    if (!this.stop && (!this.ctl || this.k1[h] === pos.h1 || (this.tf[h] >> 2) !== this.age || this.td[h] <= depth + 2)) {
       let sv = best; if (sv > WINT) sv += ply; else if (sv < -WINT) sv -= ply;
       this.k1[h] = pos.h1; this.k2[h] = key; this.tv[h] = sv; this.td[h] = depth; this.tm[h] = bestM;
-      this.tf[h] = best <= a0 ? 2 : best >= beta ? 1 : 0;
+      this.tf[h] = (best <= a0 ? 2 : best >= beta ? 1 : 0) | (this.ctl ? this.age << 2 : 0);
     }
     return best;
   }
@@ -748,10 +756,10 @@ class Engine {
     const th = opt.threats === false ? null : this.rootThreats(pos, opt);
     if (th && th.win !== undefined) return { i: th.win, v: WIN - 10, depth: 0, kind: th.kind };
     this.rootOnly = th && th.defend && th.defend.length ? new Set(th.defend) : null;
-    this.stop = false; this.nodes = 0; this.deadline = now() + (opt.ms || 1000); this.nodeLimit = opt.nodes || 1e12;
+    this.stop = false; this.nodes = 0; this.deadline = now() + (opt.ms || 1000); this.nodeLimit = opt.nodes || 1e12; this.newAge();
     this.solver.nodes = 0; this.solver.clear();
     let bestI = -1, bestV = 0, depth = 0;
-    for (let d = 1; d <= (opt.depth || 64); d++) {
+    for (let d = opt.d0 || 1; d <= (opt.depth || 64); d++) {   // (d0: a helper thread of the pool starting a ply deeper)
       this.rootBest = -1; this.rootVals = null;
       const v = this.search(pos, d, -WIN - 1, WIN + 1, 0);
       if (this.stop && d > 1) break;
@@ -791,9 +799,56 @@ class Engine {
     this.rootOnly = ro;
     return best;
   }
+  // ---- the root moves of rootList shared among the pool's threads (analysis, hints, the coach, the review box): every move
+  // gets a full-window search of its own, so the threads take the moves of one depth from an atomic counter (no shared memory
+  // of the search but the transposition table). ctl (shared/mtengine.js, [8…] free for the engine): [13] the iteration's
+  // number (a new one aborts the old searches), [14] its depth, [15] the next move, [16] the number of moves, [17 + k] the k-th
+  // move (cell), [17 + SPLIT_MAX + k] its value (the counter [15] = iteration << 6 | next move), [17 + 2 * SPLIT_MAX + k] the iteration it was done in.
+  moveVal(pos, i, d) { pos.make(I2M[i]); const v = pos.lastFive() ? WIN - 1 : -this.search(pos, d - 1, -WIN - 1, WIN + 1, 1); pos.unmake(); return v; }
+  splitTake(pos, g, d, n) {   // take moves of iteration g until none is left (or it was aborted / the search stopped)
+    const c = this.ctl;
+    for (;;) {
+      const x = Atomics.load(c, 15), k = x & 63;   // (the counter carries its iteration: a late thread of an old one takes nothing)
+      if ((x >>> 6) !== (g & 0x1ffffff) || k >= n || this.stop) return;
+      if (Atomics.compareExchange(c, 15, x, x + 1) !== x) continue;
+      const v = this.moveVal(pos, c[17 + k], d);
+      if (this.stop || Atomics.load(c, 13) !== g) return;
+      c[17 + SPLIT_MAX + k] = v; Atomics.store(c, 17 + 2 * SPLIT_MAX + k, g);
+    }
+  }
+  splitIter(pos, order, d, cur) {   // the lead: publish the iteration, search its share, wait for the helpers' moves
+    const c = this.ctl, n = order.length;
+    for (let k = 0; k < n; k++) c[17 + k] = order[k];
+    const g = Atomics.load(c, 13) + 1;
+    c[16] = n; c[14] = d; Atomics.store(c, 15, (g & 0x1ffffff) << 6);
+    Atomics.store(c, 13, g); Atomics.notify(c, 13);
+    this.splitG = g;
+    this.splitTake(pos, g, d, n);
+    for (let k = 0; k < n && !this.stop; k++) {
+      while (Atomics.load(c, 17 + 2 * SPLIT_MAX + k) !== g) {
+        if (now() > this.deadline || Atomics.load(c, 0)) { this.stop = true; break; }
+        Atomics.wait(c, 17 + 2 * SPLIT_MAX + k, Atomics.load(c, 17 + 2 * SPLIT_MAX + k), 2);
+      }
+      if (!this.stop) cur.set(order[k], c[17 + SPLIT_MAX + k]);
+    }
+    if (this.stop) { Atomics.add(c, 13, 1); Atomics.notify(c, 13); }   // (time is up: the helpers drop this iteration)
+    this.splitG = 0;
+  }
+  splitHelp(pos) {   // a helper: wait for the lead's iterations and take their moves until the pool stops
+    const c = this.ctl; let seen = Atomics.load(c, 13);
+    this.deadline = Infinity; this.nodeLimit = 1e12; this.nodes = 0; this.newAge();
+    while (!Atomics.load(c, 0)) {
+      const g = Atomics.load(c, 13);
+      if (g === seen) { Atomics.wait(c, 13, g, 20); continue; }
+      seen = g; this.splitG = g; this.stop = false;
+      this.splitTake(pos, g, c[14], c[16]);
+      this.splitG = 0;
+    }
+    this.stop = false;
+  }
   // values of the best candidate root moves (for hints / analysis)
-  rootList(pos, ms, onProgress, maxN) {
-    const t0 = now(); this.stop = false; this.nodes = 0; this.deadline = t0 + ms; this.nodeLimit = 1e12;
+  rootList(pos, ms, onProgress, maxN, maxD) {   // (maxD: a depth limit — bench.html)
+    const t0 = now(); this.stop = false; this.nodes = 0; this.deadline = t0 + ms; this.nodeLimit = 1e12; this.newAge();
     this.solver.nodes = 0; this.solver.clear();
     const me = pos.side;
     // forced cases first
@@ -803,10 +858,11 @@ class Engine {
     const cand = list.slice(0, maxN || 12);
     if (!cand.length) return { list: [], depth: 0 };
     let vals = new Map(cand.map(i => [i, 0])), depth = 0, last = null;
-    for (let d = 1; d <= 40; d++) {
+    for (let d = 1; d <= (maxD || 40); d++) {
       const cur = new Map();
       const order = last ? cand.slice().sort((p, q) => last.get(q) - last.get(p)) : cand;
-      for (const i of order) {
+      if (this.split && order.length > 1 && order.length <= SPLIT_MAX) this.splitIter(pos, order, d, cur);   // (the pool's lead: the threads share the moves)
+      else for (const i of order) {
         pos.make(I2M[i]);
         let v;
         if (pos.lastFive()) v = WIN - 1;
@@ -932,13 +988,14 @@ function thinkRaw(E, pos, L, level, rand) {
   }
   const r = E.best(pos, { ms: L.ms || 60000, nodes: L.nodes, depth: L.d, vct: L.vct, defend: L.defend, vctNodes: L.vctNodes });
   if (r.i < 0) { const lg = pos.legal(); return { move: lg.length ? lg[0] : -1 }; }
-  return { move: I2M[r.i], v: r.v, depth: r.depth };
+  return { move: I2M[r.i], v: r.v, depth: r.depth, nodes: E.nodes };
 }
-function analyze(rule, moves, ms, start, onProgress) {
+function analyze(rule, moves, ms, start, onProgress, maxD) {
   const pos = replay(rule, moves, start);
   if (pos.status().over) return { list: [], depth: 0 };
   const E = eng();
-  const r = E.rootList(pos, ms || 1000, onProgress, 12);
+  const r = E.rootList(pos, ms || 1000, onProgress, 12, maxD);
+  r.nodes = E.nodes;
   return r;
 }
 // review box (PC): the best k candidate moves with values, each with a line of up to `plies` further moves
@@ -961,7 +1018,7 @@ function cands(rule, moves, ms, start, k, plies, onProgress) {
     }
     while (made--) pos.unmake();
   }
-  return { list, depth: r.depth };
+  return { list, depth: r.depth, nodes: E.nodes };
 }
 // puzzle solver. attacker to move (defend=false): need per candidate move; defender to move (defend=true): need per reply
 function solve(rule, moves, start, n, defend, maxNodes) {
@@ -1007,19 +1064,58 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
     Promise.all([fetch('nn.wasm?v=1').then(r => r.ok ? r.arrayBuffer() : null), fetch('nn_std.bin.gz?v=2').then(r => r.ok ? gunzip(r) : null)])
       .then(([w, b]) => { if (w && b) setNN('std', w, b); }).catch(() => {}),
   ]);
+  // ?…&mt=1: the lead thread of the page's multi-thread pool (shared/mtengine.js), ?…&mt=2: a helper. Both get the shared memory
+  // of engine_mt.wasm (mt.c: the transposition table) with the first message ('mtinit') and search with one table (Lazy SMP); the
+  // lead serves the usual API, a helper searches the job's root position again and again ('help') until the page stops it.
+  const MTQ = (/[?&]mt=([12])\b/.exec(self.location.search || '') || [])[1];
+  let mtReady = null, mtCtl = null, mtCnt = null, mtId = 0;
+  if (MTQ) mtReady = new Promise(res => self.addEventListener('message', function f(e) {
+    const m = e.data; if (!m || m.type !== 'mtinit') return;
+    self.removeEventListener('message', f);
+    try {
+      const x = new WebAssembly.Instance(m.module, { env: { memory: m.mem } }).exports, B = m.mem.buffer, n = x.tt_size();
+      x.mt_stack(m.top); x.mt_thread(m.tls, m.id);
+      mtCtl = m.ctl; mtCnt = m.cnt; mtId = m.id;
+      ENG = new Engine({ k1: new Int32Array(B, x.tt_k1(), n), k2: new Int32Array(B, x.tt_k2(), n), tv: new Int32Array(B, x.tt_tv(), n), td: new Int8Array(B, x.tt_td(), n), tf: new Int8Array(B, x.tt_tf(), n), tm: new Int16Array(B, x.tt_tm(), n), ctl: m.ctl });
+      ENG.age = 0; ENG.mtLead = MTQ === '1';
+      ready.then(() => { self.postMessage({ type: 'mtready' }); res(); });
+    } catch (err) { self.postMessage({ type: 'mtready', error: String(err && err.message || err) }); res(); }
+  }));
+  // a helper's job: { rule, start, moves } — the same root, from a ply deeper every other helper, until the stop flag
+  function help(m) {
+    let nodes = 0;
+    try {
+      const pos = replay(m.rule, m.moves, m.start);
+      if (m.list && !pos.status().over) { const E = eng(); E.splitHelp(pos); nodes = E.nodes; mtCnt[mtId] = nodes; }
+      else if (!pos.status().over && pos.legal().length) {
+        const E = eng();
+        for (let k = 0; k < 200 && !Atomics.load(mtCtl, 0); k++) {
+          E.best(pos, { ms: 1e9, nodes: 1e12, depth: 64, threats: false, d0: 1 + (mtId & 1) });
+          nodes += E.nodes; mtCnt[mtId] = nodes;
+        }
+      }
+    } catch (err) { console.warn(err); }
+    self.postMessage({ type: 'done', job: m.job, nodes });
+  }
   self.onmessage = async e => {
+    const m0 = e.data;
+    if (m0 && m0.type === 'mtinit') return;
+    if (mtReady) await mtReady;
     await ready;
     const m = e.data;
+    if (m.type === 'help') { help(m); return; }
+    if (MTQ === '1') eng().split = m.type === 'analyze' || m.type === 'cands';   // (the lead: rootList shares its moves with the helpers)
     try {
       if (m.type === 'info') self.postMessage({ id: m.id, type: 'result', nnRenju: !!NNI.renju, nnStd: !!NNI.std, learnedStd: !!LW.std });
       else if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...(() => { PRO_CFG = m.cfg || null; try { return think(m.rule, m.moves, m.level, m.start); } finally { PRO_CFG = null; } })() });
       else if (m.type === 'analyze') {
         const prog = (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth });
-        self.postMessage({ id: m.id, type: 'result', ...analyze(m.rule, m.moves, m.time || 1000, m.start, prog) });
+        self.postMessage({ id: m.id, type: 'result', ...analyze(m.rule, m.moves, m.time || 1000, m.start, prog, m.depth) });
       } else if (m.type === 'cands') {
         const prog = (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth });
         self.postMessage({ id: m.id, type: 'result', ...cands(m.rule, m.moves, m.time || 1200, m.start, m.k, m.plies, prog) });
       } else if (m.type === 'solve') self.postMessage({ id: m.id, type: 'result', list: solve(m.rule, m.moves, m.start, m.n, m.defend, m.maxNodes) });
+      else if (m.type === 'newgame') { eng().clear(); self.postMessage({ id: m.id, type: 'result' }); }   // (an empty table: bench.html)
     } catch (err) { self.postMessage({ id: m.id, type: 'result', error: String(err && err.stack || err) }); }
   };
 }

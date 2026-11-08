@@ -117,17 +117,50 @@ function save() {
 
 // ====================================================================== workers
 let jobId = 0;
+const ENGINE_URL = 'engine.js?v=20261108p1-pro1-mt1';
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261108p1-pro1'); w.jobs = new Map();
-  w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (!j) return; if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; } w.jobs.delete(m.id); j.resolve(m); };
+  const w = new Worker(ENGINE_URL); w.jobs = new Map();
+  w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (!j) return; if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; } w.jobs.delete(m.id); noteNps(m.nodes, performance.now() - j.t0); j.resolve(m); };
   return w;
 }
+// search speed of the last engine search (positions per second, all threads), shown quietly at the end of the info line
+let lastNps = 0;
+const npsText = () => lastNps ? '  ·  ' + (lastNps >= 1e6 ? (lastNps / 1e6).toFixed(1) + 'M' : Math.round(lastNps / 1e3) + 'k') + ' nps' : '';
+function noteNps(nodes, ms) {
+  if (!(nodes > 20000 && ms > 20)) return;
+  lastNps = nodes / ms * 1000;
+  const el = document.getElementById('infoLine'); if (el && el.dataset.base !== undefined) el.textContent = el.dataset.base + npsText();
+}
 let aiW = makeWorker(), anaW = makeWorker(), coachW = null;
+// multi-threaded search (shared/mtengine.js; common rule 2026-11-08「本編のマルチスレッド」): the search is JavaScript (engine.js),
+// the threads share one transposition table on the shared memory of engine_mt.wasm (mt.c). The analysis (rootList: analysis,
+// hints, the coach's grading, the review box) shares out its candidate moves among the threads at every depth; a move search
+// (the coach's deeper pass, PRO's thread count) is Lazy SMP. Analysis, hints, the
+// coach (its quick grading and its deeper pass), the review box and PRO's thread count go to the pool when it is free (the lead
+// keeps the job's own limits; the helpers fill the table, so it reads deeper in the same time / positions). The AI's levels are
+// decided by positions per move and stay on the one-thread workers (rated games too).
+const MTP = window.MTEngine ? MTEngine.use({
+  wasm: 'engine_mt.wasm?v=1', lead: ENGINE_URL + '&mt=1', helper: ENGINE_URL + '&mt=2', slot: 1 << 20, initial: 512, maximum: 4096,   // slot: a thread's (tiny) wasm stack; maximum = engine_mt.wasm's (256 MiB)
+  imports: mem => ({ env: { memory: mem } }),
+  help: m => (m.type === 'think' || m.type === 'analyze' || m.type === 'cands') ? { rule: m.rule, start: m.start, moves: m.moves || [], list: m.type !== 'think' } : null,   // (list: the candidates of the analysis shared among the threads; think: Lazy SMP)
+}) : null;
+function mtWants(which, msg) {
+  if (msg.type === 'analyze' || msg.type === 'cands') return true;
+  if (msg.type !== 'think') return false;
+  if (msg.cfg) return msg.cfg.noise === undefined && msg.cfg.threads > 1;   // PRO: its own thread count with any limit of the search (not the weak levels' noisy root values)
+  return which === 'ana' && msg.level === COACH_DEEP;   // the coach's deeper pass (declared further down)
+}
 function request(which, msg, onProgress) {
+  const mp = MTP && mtWants(which, msg) && MTP.pool(which === 'ai' ? 'ai' : null);
+  if (mp) { const t0 = performance.now(), full = { rule, start: startPos, ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }; return mp.run(full, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full, onProgress) : r; }); }
+  return requestW(which, msg, onProgress);
+}
+function requestW(which, msg, onProgress) {   // (the one-thread workers)
   const w = which === 'ai' ? aiW : which === 'coach' ? (coachW || (coachW = makeWorker())) : anaW;
-  return new Promise(resolve => { const id = ++jobId; w.jobs.set(id, { resolve, onProgress }); w.postMessage({ rule, start: startPos, ...msg, id }); });
+  return new Promise(resolve => { const id = ++jobId; w.jobs.set(id, { resolve, onProgress, t0: performance.now() }); w.postMessage({ rule, start: startPos, ...msg, id }); });
 }
 function cancelWorker(which) {
+  if (MTP) MTP.cancel(which);
   const w = which === 'ai' ? aiW : anaW;
   if (!w.jobs.size) return;
   w.terminate(); w.jobs.forEach(j => j.resolve(null));
@@ -350,7 +383,7 @@ function renderInfo() {
   $('#btnNum').classList.toggle('on', !!settings.num);
   renderReview(); renderBrandSub();
   const mode = settings.mode === 'ai' ? AIW() + ' ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : '') : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : settings.mode === 'online' ? t('ol.title') : t('ng.pvp');
-  $('#infoLine').textContent = `${t('info.moves', { n: moves.length })}  ·  ${t('rule.' + rule)}  ·  ${mode}  ·  ← → ${t('info.browse')}`;
+  { const il = $('#infoLine'); il.dataset.base = `${t('info.moves', { n: moves.length })}  ·  ${t('rule.' + rule)}  ·  ${mode}  ·  ← → ${t('info.browse')}`; il.textContent = il.dataset.base + npsText(); }
   if (window.GomokuCoach) GomokuCoach.render();   // coach card (coach.js)
 }
 function evalAt(i) { const st = statusAt(i); if (st.over) return st.winner === P1 ? 1 : st.winner === P2 ? -1 : 0; return evals[i] ? evals[i].s : null; }
@@ -1039,9 +1072,9 @@ $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 // AI vs AI, never rated. The changed values make a level of the engine's own form (engine.js: cfg).
 var PRO = window.ProSet ? ProSet.init({ game: 'gomoku', lang: () => LANG, level: () => draft.level || settings.level, show: () => (draft.mode === 'ai' || draft.mode === 'watch'),
   store: { get: () => settings.pro, set: v => { settings.pro = v; } },
-  defaults: lv => { const L = E.LEVELS[lv] || E.LEVELS[5]; return L.noise !== undefined ? { limit: { k: 'time', v: L.ms / 1000 }, var: L.blunder ? 2 : 1, vct: 0 } : { limit: L.nodes ? { k: 'nodes', v: L.nodes } : { k: 'time', v: (L.ms || 1000) / 1000 }, var: 0, vct: L.vct || 0 }; },
+  defaults: lv => { const L = E.LEVELS[lv] || E.LEVELS[5]; return L.noise !== undefined ? { limit: { k: 'time', v: L.ms / 1000 }, var: L.blunder ? 2 : 1, vct: 0, threads: 1 } : { limit: L.nodes ? { k: 'nodes', v: L.nodes } : { k: 'time', v: (L.ms || 1000) / 1000 }, var: 0, vct: L.vct || 0, threads: 1 }; },
   params: [{ key: 'limit', kinds: { time: [0.1, 30], depth: [1, 20], nodes: [1000, 5000000] } }, { key: 'vct', type: 'int', group: 'read', min: 0, max: 21, step: 1, label: { ja: '勝ち筋の読み（VCT）', en: 'Threat search (VCT)', zh: '连续冲四活三计算（VCT）', 'zh-TW': '連續衝四活三計算（VCT）', ko: '승리 수순 탐색(VCT)', es: 'Búsqueda de amenazas (VCT)', fr: 'Recherche de menaces (VCT)', pt: 'Busca de ameaças (VCT)', de: 'Drohungssuche (VCT)', ru: 'Поиск угроз (VCT)', tr: 'Tehdit araması (VCT)', id: 'Pencarian ancaman (VCT)', hi: 'ख़तरा खोज (VCT)', ar: 'بحث التهديدات (VCT)' }, help: { ja: '四や三を続けて勝ち切る手順を何手先まで探すか。0 で探しません。', en: 'How many moves ahead to look for a forced win by fours and threes. 0 = off.', zh: '向前搜索多少步以冲四、活三连续取胜。0 为不搜索。', 'zh-TW': '向前搜尋多少步以衝四、活三連續取勝。0 為不搜尋。', ko: '4와 3을 이어 이기는 수순을 몇 수 앞까지 찾을지. 0이면 찾지 않음.', es: 'Cuántas jugadas por delante busca una victoria forzada con cuatros y treses. 0 = no.', fr: 'Jusqu’à combien de coups chercher une victoire forcée par des quatre et des trois. 0 = non.', pt: 'Quantos lances à frente procurar uma vitória forçada com quatros e três. 0 = não.', de: 'Wie viele Züge voraus ein erzwungener Gewinn mit Vierern und Dreiern gesucht wird. 0 = aus.', ru: 'На сколько ходов вперёд искать форсированную победу четвёрками и тройками. 0 — нет.', tr: 'Dörtlü ve üçlülerle zorlayıcı kazancın kaç hamle ileri aranacağı. 0 = kapalı.', id: 'Berapa langkah ke depan mencari kemenangan paksa dengan empat dan tiga. 0 = mati.', hi: 'चौकों और तिकड़ों से मजबूर जीत कितनी चाल आगे तक खोजें। 0 = बंद।', ar: 'كم نقلة إلى الأمام يبحث عن فوز إجباري بالرباعيات والثلاثيات. 0 = إيقاف.' }, unit: ProSet.T['u.ply'], when: e => !e.var },
-    { key: 'var', when: e => e.limit.k === 'time' }] }) : null;
+    { key: 'var', when: e => e.limit.k === 'time' }].concat(MTP ? [{ key: 'threads' }] : []) }) : null;
 function proGet(lv) { if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; return PRO.get(lv); }
 function proTag(lv) { return proCfg(lv) ? ' PRO' : ''; }
 function proCfg(lv) {
@@ -1054,6 +1087,7 @@ function proCfg(lv) {
   }
   const c = { vct: e.vct || 0, defend: e.vct ? L.defend || 3 : 0, vctNodes: L.vctNodes, ms: 600000 };
   if (e.limit.k === 'time') c.ms = Math.round(e.limit.v * 1000); else if (e.limit.k === 'nodes') c.nodes = e.limit.v; else c.d = e.limit.v;
+  if (MTP) c.threads = e.threads || 1;   // (本編のマルチスレッド: PRO's thread count with any limit of the search)
   return c;
 }
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
@@ -2210,7 +2244,8 @@ function rvbUpdate() {
   });
 }
 if (window.RvBox) BOX = RvBox.create({
-  app: '.app', frame: '#frame', lang: () => LANG, worker: () => 'engine.js?v=20261108p1-pro1',
+  app: '.app', frame: '#frame', lang: () => LANG, worker: () => ENGINE_URL,
+  pool: () => MTP && MTP.pool(), cancel: () => { if (MTP) MTP.cancel('rvb'); },   // (the threads when free)
   onHover: e => { rvbHov = e ? { e, k: kenSwap(() => keyOf(cur)) } : null; renderFx(); },
   onPick: e => kenPick(e), onKen: () => kenStart(), onBack: () => kenBack(), onReset: () => kenReset(),
   onGoto: i => viewAt(i), onLayout: () => { renderInfo(); renderFx(); }
