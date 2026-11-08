@@ -97,8 +97,13 @@
 .lhr-dd.open .lhr-ls{display:block}
 .lhr-ls button{display:flex;align-items:center;gap:8px;width:100%;padding:9px 12px;border:0;border-radius:9px;background:none;color:inherit;font:inherit;font-size:13.5px;text-align:start;cursor:pointer}
 .lhr-ls button:hover{background:var(--hov)}.lhr-ls button.sel{background:var(--sel);color:var(--selfg);font-weight:700}
-.lhr-st{color:var(--acc);width:1em;flex:none}
-.lhr-atlas .lhr-st{color:#e09a00}
+.lhr-st,.lhr-s{color:#ffc61a;text-shadow:0 0 1px rgba(90,60,0,.45)}.lhr-st{width:1em;flex:none}   /* every ★ the same yellow (2026-11-09) */
+.lhr-row .nm{display:flex;align-items:center;gap:9px;white-space:nowrap;min-width:0}
+.lhr-ic{width:30px;height:30px;flex:none;border-radius:9px;display:grid;place-items:center;background:var(--accbg);color:var(--acc);border:1px solid var(--ctlb)}
+.lhr-ic svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.lhr-ic svg .f{fill:currentColor;stroke:none}
+.lhr-row .ds{padding-inline-start:39px}
+@media (max-width:560px){.lhr-row{grid-template-columns:minmax(0,1fr) min(260px,52%)!important}.lhr-row .nm{font-size:14.5px;gap:8px}.lhr-ic{width:27px;height:27px;border-radius:8px}.lhr-ic svg{width:16px;height:16px}.lhr-row .ds{padding-inline-start:35px}}
 .lhr-note{margin:14px 0 4px;font-size:12px;color:var(--sub);line-height:1.6}
 .lhr-ft{display:flex;gap:10px;justify-content:flex-end;padding:14px 24px 18px;border-top:1px solid var(--rule)}
 .lhr-ft button{height:44px;padding:0 20px;border-radius:12px;font:inherit;font-weight:700;font-size:14px;cursor:pointer}
@@ -110,6 +115,21 @@
 @media (max-width:560px){.lhr{border-radius:18px}.lhr-hd,.lhr-bd,.lhr-ft{padding-left:16px;padding-right:16px}}`;
   const esc = x => String(x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const CHEV = '<svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>';
+  // one small line icon per rule (2026-11-09: easier on the eye than a page of text)
+  const IC = {
+    quick: '<path d="M13 2L4.5 13.5H11l-1 8.5 8.5-11.5H12z"/>',
+    safe: '<path d="M12 3l7.5 3v5.5c0 4.6-3.2 8-7.5 9.5-4.3-1.5-7.5-4.9-7.5-9.5V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/>',
+    start: '<path d="M5.5 21V3.5"/><path d="M5.5 4h11l-2.5 4 2.5 4h-11"/>',
+    block: '<rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M3 12h18M9 5v7M15 12v7"/>',
+    attack: '<path d="M4 4l10 10M14 14l2.5-1 1 1-1 2.5L20 20M20 4L10 14M10 14l-2.5-1-1 1 1 2.5L4 20"/>',
+    six: '<rect x="4" y="4" width="16" height="16" rx="3.5"/><circle class="f" cx="9" cy="8.5" r="1.3"/><circle class="f" cx="15" cy="8.5" r="1.3"/><circle class="f" cx="9" cy="12" r="1.3"/><circle class="f" cx="15" cy="12" r="1.3"/><circle class="f" cx="9" cy="15.5" r="1.3"/><circle class="f" cx="15" cy="15.5" r="1.3"/>',
+    goal: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle class="f" cx="12" cy="12" r="1.6"/>',
+    dbl: '<circle cx="9" cy="14" r="5"/><circle cx="15" cy="10" r="5"/>',
+    dd: '<rect x="3" y="8" width="11" height="11" rx="2.5"/><path d="M10 5.5l1-.3a2.5 2.5 0 0 1 3 1.7l2.3 7.5"/><rect x="11" y="3" width="10" height="10" rx="2.5" transform="rotate(15 16 8)"/><circle class="f" cx="8.5" cy="13.5" r="1.3"/>',
+    back: '<path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
+  };
+  const icon = k => `<span class="lhr-ic" aria-hidden="true"><svg viewBox="0 0 24 24">${IC[k] || ''}</svg></span>`;
+  const star = x => esc(x).replace(/★/g, '<span class="lhr-s">★</span>');   // every ★ in the texts in the same yellow
   function open(o = {}) {
     const lang = o.lang || document.documentElement.lang || 'en', L = Lof(lang);
     if (!document.getElementById('lhrCss')) { const st = document.createElement('style'); st.id = 'lhrCss'; st.textContent = CSS; document.head.appendChild(st); }
@@ -117,16 +137,16 @@
     const ov = document.createElement('div'); ov.className = 'lhr-ov' + (o.theme === 'atlas' ? ' lhr-atlas' : ''); ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true');
     const row = k => {
       const [nm, ds] = L.it[k];
-      if (k === 'quick' || k === 'safe') return `<div class="lhr-row"><div class="nm">${esc(nm)} <span class="lhr-st">★</span></div><div class="ds">${esc(ds)}</div><div class="ct"><button type="button" class="lhr-sw${h[k] ? ' on' : ''}" data-k="${k}" role="switch" aria-checked="${h[k]}" aria-label="${esc(nm)}"></button></div></div>`;
+      if (k === 'quick' || k === 'safe') return `<div class="lhr-row"><div class="nm">${icon(k)}<span>${esc(nm)} <span class="lhr-s">★</span></span></div><div class="ds">${star(ds)}</div><div class="ct"><button type="button" class="lhr-sw${h[k] ? ' on' : ''}" data-k="${k}" role="switch" aria-checked="${h[k]}" aria-label="${esc(nm)}"></button></div></div>`;
       const labs = L.op[k], cur = OPTS[k].indexOf(h[k]);
-      return `<div class="lhr-row"><div class="nm">${esc(nm)}</div><div class="ds">${esc(ds)}</div><div class="ct"><div class="lhr-dd${h[k] !== DEF[k] ? ' chg' : ''}" data-k="${k}"><button type="button" class="lhr-db" aria-haspopup="listbox"><span>${OPTS[k][cur] === DEF[k] ? '★ ' : ''}${esc(labs[cur])}</span>${CHEV}</button>` +
-        `<div class="lhr-ls" role="listbox">${OPTS[k].map((v, i) => `<button type="button" role="option" data-v="${v}" class="${v === h[k] ? 'sel' : ''}" aria-selected="${v === h[k]}"><span class="lhr-st">${v === DEF[k] ? '★' : ''}</span>${esc(labs[i])}</button>`).join('')}</div></div></div></div>`;
+      return `<div class="lhr-row"><div class="nm">${icon(k)}<span>${esc(nm)}</span></div><div class="ds">${star(ds)}</div><div class="ct"><div class="lhr-dd${h[k] !== DEF[k] ? ' chg' : ''}" data-k="${k}"><button type="button" class="lhr-db" aria-haspopup="listbox"><span>${OPTS[k][cur] === DEF[k] ? '<span class="lhr-s">★</span> ' : ''}${star(labs[cur])}</span>${CHEV}</button>` +
+        `<div class="lhr-ls" role="listbox">${OPTS[k].map((v, i) => `<button type="button" role="option" data-v="${v}" class="${v === h[k] ? 'sel' : ''}" aria-selected="${v === h[k]}"><span class="lhr-st">${v === DEF[k] ? '★' : ''}</span>${star(labs[i])}</button>`).join('')}</div></div></div></div>`;
     };
     const paint = () => {
       const bd0 = ov.querySelector('.lhr-bd'), top = bd0 ? bd0.scrollTop : 0;   // (a change keeps the place in the list)
-      ov.innerHTML = `<div class="lhr"><div class="lhr-hd"><h2>${esc(L.ui[0])}</h2><p>${L.ui[1].split(/(?<=[。．！？!?.])\s*/).filter(Boolean).map(esc).join('<br>')}</p></div><div class="lhr-bd">` +
+      ov.innerHTML = `<div class="lhr"><div class="lhr-hd"><h2>${esc(L.ui[0])}</h2><p>${L.ui[1].split(/(?<=[。．！？!?.])\s*/).filter(Boolean).map(star).join('<br>')}</p></div><div class="lhr-bd">` +
         `<div class="lhr-sec">${esc(L.ui[2])}</div>${BASIC.map(row).join('')}<div class="lhr-sec">${esc(L.ui[3])}</div>${ADV.map(row).join('')}<p class="lhr-note">${esc(L.ui[6])}</p></div>` +
-        `<div class="lhr-ft"><button type="button" class="lhr-rs">${esc(L.ui[4])}</button><button type="button" class="lhr-ok">${esc(L.ui[5])}</button></div></div>`;
+        `<div class="lhr-ft"><button type="button" class="lhr-rs">${star(L.ui[4])}</button><button type="button" class="lhr-ok">${esc(L.ui[5])}</button></div></div>`;
       const bd = ov.querySelector('.lhr-bd'); bd.scrollTop = top; bd.addEventListener('scroll', shut, { passive: true });
     };
     const shut = () => ov.querySelectorAll('.lhr-dd.open').forEach(x => x.classList.remove('open'));
