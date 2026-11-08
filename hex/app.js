@@ -107,23 +107,53 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=3-pro1';
+const ENGINE_URL = 'engine.js?v=3-pro1-mt1';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
   w.onmessage = e => {
     const m = e.data, j = w.jobs.get(m.id); if (!j) return;
     if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; }
-    w.jobs.delete(m.id); j.resolve(m);
+    w.jobs.delete(m.id); if (j.t0) notePs(m.nodes, performance.now() - j.t0); j.resolve(m);
   };
   return w;
 }
+// search speed of the last engine search (playouts per second, all threads), shown quietly at the end of the info line
+let lastPs = 0;
+const psText = () => lastPs ? '  ·  ' + (lastPs >= 1e6 ? (lastPs / 1e6).toFixed(1) + 'M' : Math.round(lastPs / 1e3) + 'k') + ' playouts/s' : '';
+function notePs(n, ms) {
+  if (!(n > 3000 && ms > 50)) return;
+  lastPs = n / ms * 1000;
+  const el = document.getElementById('infoLine'); if (el && el.dataset.base !== undefined) el.textContent = el.dataset.base + psText();
+}
 let aiW = makeWorker(), anaW = makeWorker();
+// multi-threaded search (shared/mtengine.js; common rule 2026-11-08「本編のマルチスレッド」): analysis, hints, the coach, the
+// review box and the levels with a time limit (四段・五段, rated games too) go to the pool of threads when it is free: the
+// threads grow one search tree together (engine.c: tree-parallel MCTS with virtual loss), so more playouts in the same time.
+// The levels decided by playouts (15級〜三段) stay on the one-thread workers (their strength is unchanged).
+const MTP = window.MTEngine ? MTEngine.use({
+  wasm: 'engine_mt.wasm?v=1', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=1', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
+  imports: mem => ({ env: { memory: mem, now: () => Date.now(), progress: () => {} } }),
+  help: m => (m.type === 'think' || m.type === 'analyze') ? {} : null,   // (the helpers join the trees the lead opens: nothing to send)
+}) : null;
+const mtLevel = lv => { const L = E.LEVELS[lv]; return !!(L && L.ms && !L.po); };   // a level with a time limit (四段・五段)
+function mtWants(which, msg) {
+  if (msg.type === 'analyze') return true;
+  if (msg.type !== 'think') return false;
+  if (msg.cfg) return msg.cfg.threads > 1;   // PRO: its own thread count with any limit
+  return mtLevel(msg.level);   // (rated games too: the user's decision 2026-11-08; the coach's deeper pass is Lv.19 = 1.5 s)
+}
 function request(which, msg, onProgress) {
+  const mp = MTP && mtWants(which, msg) && MTP.pool(which === 'ai' ? 'ai' : null);
+  if (mp) { const full = { start: startObj(), ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }; return mp.run(full, onProgress, which).then(r => { if (r) notePs(r.nodes, r.ms); return r === undefined ? requestW(which, full, onProgress) : r; }); }
+  return requestW(which, msg, onProgress);
+}
+function requestW(which, msg, onProgress) {   // (the one-thread workers)
   const w = which === 'ai' ? aiW : anaW;
-  return new Promise(resolve => { const id = ++jobId; w.jobs.set(id, { resolve, onProgress }); w.postMessage({ start: startObj(), ...msg, id }); });
+  return new Promise(resolve => { const id = ++jobId; w.jobs.set(id, { resolve, onProgress, t0: performance.now() }); w.postMessage({ start: startObj(), ...msg, id }); });
 }
 function cancelWorker(which) {
+  if (MTP) MTP.cancel(which);
   const w = which === 'ai' ? aiW : anaW;
   if (!w.jobs.size) return;
   w.terminate();
@@ -458,7 +488,7 @@ function renderInfo() {
   $('#reviewBar').classList.toggle('show', reviewing && !lesson && !puzzle);
   renderReview();
   const sz = `${pos.n}×${pos.n}${!startSpec && gSwap ? ' · ' + t('ng.swapShort') : ''}`;
-  $('#infoLine').textContent = `${sz}  ·  ${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? AIW() + ' ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : '') : settings.mode === 'watch' ? `${LV(settings.level)} vs ${LV(settings.level2)}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`;
+  { const il = $('#infoLine'); il.dataset.base = `${sz}  ·  ${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? AIW() + ' ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : '') : settings.mode === 'watch' ? `${LV(settings.level)} vs ${LV(settings.level2)}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`; il.textContent = il.dataset.base + psText(); }
   renderBrand();
   if (window.olAfterInfo) olAfterInfo();
   hbInfo(pos, st);
@@ -1024,8 +1054,8 @@ $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 // AI vs AI, never rated. The changed values make a level of the engine's own form (engine.js: cfg).
 var PRO = window.ProSet ? ProSet.init({ game: 'hex', lang: () => LANG, level: () => draft.level || settings.level, show: () => (draft.mode === 'ai' || draft.mode === 'watch'),
   store: { get: () => settings.pro, set: v => { settings.pro = v; } },
-  defaults: lv => { const L = E.LEVELS[lv] || E.LEVELS[10]; return { limit: L.po ? { k: 'nodes', v: L.po } : { k: 'time', v: L.ms / 1000 }, book: !!L.book, var: L.rnd ? 2 : L.temp ? 1 : 0, resign: lv >= 6 }; },
-  params: [{ key: 'limit', kinds: { time: [0.1, 30], nodes: [10, 2000000] }, klabel: { nodes: { ja: 'プレイアウト', en: 'Playouts', zh: '模拟次数', 'zh-TW': '模擬次數', ko: '플레이아웃', es: 'Simulaciones', fr: 'Simulations', pt: 'Simulações', de: 'Simulationen', ru: 'Симуляции', tr: 'Simülasyon', id: 'Simulasi', hi: 'सिमुलेशन', ar: 'المحاكاة' } }, kunit: { nodes: { ja: '回', en: 'playouts', zh: '次', 'zh-TW': '次', ko: '회', es: 'sim.', fr: 'sim.', pt: 'sim.', de: 'Sim.', ru: 'сим.', tr: 'sim.', id: 'sim.', hi: 'बार', ar: 'مرة' } } }, { key: 'book' }, { key: 'var' }, { key: 'resign' }] }) : null;
+  defaults: lv => { const L = E.LEVELS[lv] || E.LEVELS[10]; return { limit: L.po ? { k: 'nodes', v: L.po } : { k: 'time', v: L.ms / 1000 }, threads: mtLevel(lv) ? ProSet.maxThreads() : 1, book: !!L.book, var: L.rnd ? 2 : L.temp ? 1 : 0, resign: lv >= 6 }; },   // (threads: every thread for the levels with a time limit, else one)
+  params: [{ key: 'limit', kinds: { time: [0.1, 30], nodes: [10, 2000000] }, klabel: { nodes: { ja: 'プレイアウト', en: 'Playouts', zh: '模拟次数', 'zh-TW': '模擬次數', ko: '플레이아웃', es: 'Simulaciones', fr: 'Simulations', pt: 'Simulações', de: 'Simulationen', ru: 'Симуляции', tr: 'Simülasyon', id: 'Simulasi', hi: 'सिमुलेशन', ar: 'المحاكاة' } }, kunit: { nodes: { ja: '回', en: 'playouts', zh: '次', 'zh-TW': '次', ko: '회', es: 'sim.', fr: 'sim.', pt: 'sim.', de: 'Sim.', ru: 'сим.', tr: 'sim.', id: 'sim.', hi: 'बार', ar: 'مرة' } } }, { key: 'threads' }, { key: 'book' }, { key: 'var' }, { key: 'resign' }] }) : null;
 function proGet(lv) { if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; return PRO.get(lv); }
 function proTag(lv) { return proCfg(lv) ? ' PRO' : ''; }
 function proCfg(lv) {
@@ -1034,7 +1064,7 @@ function proCfg(lv) {
   if (e.limit.k === 'nodes') c.po = e.limit.v; else c.ms = Math.round(e.limit.v * 1000);
   if (e.book) c.book = 1;
   if (e.var && !e.changed.includes('var')) { if (L.temp) c.temp = L.temp; if (L.rnd) c.rnd = L.rnd; } else if (e.var) c.temp = e.var === 1 ? 150 : 500;
-  c.resign = !!e.resign;
+  c.resign = !!e.resign; c.threads = e.threads || 1;
   return c;
 }
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
@@ -1975,10 +2005,14 @@ function rbAnalyze(done) {
   if (pos.winner() || (!rbS && statusAt(cur).over)) { done([], true); return null; }
   const turn = pos.side, played = !rbS && cur < moves.length ? moves[cur] : -9;
   const list = rbS ? moves.slice(0, rbS.base).concat(rbS.mv) : moves.slice(0, cur);
-  if (!rbW) rbW = makeWorker();
-  const w = rbW, id = ++jobId;
-  new Promise(resolve => { w.jobs.set(id, { resolve }); w.postMessage({ type: 'analyze', start: startObj(), moves: list, time: 2000, max: 12, pv: 5, id }); }).then(r => {
-    if (w !== rbW || !r || r.error) { if (w === rbW) done([], true); return; }
+  const job = { type: 'analyze', start: startObj(), moves: list, time: 2000, max: 12, pv: 5 };
+  const mp = MTP && MTP.pool();   // (the threads when free: more playouts in the same 2 s)
+  if (!mp && !rbW) rbW = makeWorker();
+  const w = mp ? null : rbW, id = ++jobId;
+  let live = true;
+  (mp ? mp.run(job, null, 'rvb').then(r => { if (r) notePs(r.nodes, r.ms); return r; }) : new Promise(resolve => { w.jobs.set(id, { resolve, t0: performance.now() }); w.postMessage(Object.assign({ id }, job)); })).then(r => {
+    if (mp ? !live : w !== rbW) return;
+    if (!r || r.error) { done([], true); return; }
     const L = r.list || [], max = Math.max(1, ...L.map(e => e.n || 0));
     done(L.filter((e, k) => k < 3 || e.kind === 'exact' || (e.n || 0) >= max * .01).slice(0, 5).sort((a, b) => b.v - a.v).map(e => {
       let p = pos.clone(); const pv = [];
@@ -1987,6 +2021,7 @@ function rbAnalyze(done) {
       return { id: e.m, mv: mvIn(pos, e.m), val: V.big, sub: e.kind === 'exact' ? '' : RBox.t('visits', { n: e.n }), cls: wr >= .55 ? 'good' : wr <= .45 ? 'bad' : '', pv, played: e.m === played };
     }), true);
   });
+  if (mp) return () => { live = false; MTP.cancel('rvb'); };
   return () => { if (w === rbW && w.jobs.has(id)) { w.terminate(); w.jobs.forEach(j => j.resolve(null)); rbW = null; } };
 }
 function rbHoverFx() {

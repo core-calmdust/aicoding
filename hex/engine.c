@@ -15,6 +15,16 @@
 //   analyze: analyze(ms, maxPlayouts, maxList) → IO = [n, playouts, (move, v, visits) * n]   (v: -1000..1000 winrate for the
 //            side to move, or ±(WIN - plies) for a proven result; sorted by visits)
 //   puzzle:  puzzle(n, defend, budgetK) → IO = [n, (move, need) * n]
+// MT (engine_mt.wasm, tools/build.sh): several threads grow ONE search tree together on a shared memory (tree-parallel MCTS
+// with virtual loss: a visit counts as a loss from the moment a thread goes down a branch, so the others try elsewhere; the
+// node pool is taken with an atomic counter and a node is expanded by one thread only). The state of one descent / playout
+// and of the solver is thread-local (TLS); the tree, the root position and the geometry are shared. Without MT, TLS is nothing
+// and the normal build (engine.wasm) stays byte for byte as before.
+#ifdef MT
+#define TLS _Thread_local
+#else
+#define TLS
+#endif
 #ifndef NATIVE
 #define EXPORT(n) __attribute__((export_name(#n)))
 #define IMPORT(name) __attribute__((import_module("env"), import_name(#name)))
@@ -40,7 +50,7 @@ typedef unsigned char u8;
 #define WINT 29000
 
 static int N = 11, NC = 121;
-static int IO[8192];
+static TLS int IO[8192];
 EXPORT(io_ptr) int *io_ptr(void) { return IO; }
 
 // ---------------------------------------------------------------- geometry
@@ -70,7 +80,7 @@ static inline int onEdge(int c, int p, int e) {
 }
 
 // ---------------------------------------------------------------- random
-static u64 rs = 0x9E3779B97F4A7C15ULL;
+static TLS u64 rs = 0x9E3779B97F4A7C15ULL;
 static inline u32 rnd(void) { rs ^= rs << 13; rs ^= rs >> 7; rs ^= rs << 17; return (u32)(rs >> 16); }
 static inline int rndN(int n) { return (int)(((u64)rnd() * (u32)n) >> 32); }
 static inline float rndF(void) { return (rnd() & 0xFFFFFF) / 16777216.0f; }
@@ -110,8 +120,8 @@ static void play(Pos *p, int m) {
   p->last = m;
 }
 // winner of a position: 0 none, 1 red, 2 blue (flood fill)
-static int stk[MAXC + 8];
-static u8 seen[MAXC];
+static TLS int stk[MAXC + 8];
+static TLS u8 seen[MAXC];
 static int connected(const u8 *b, int p) {
   int sp = 0;
   for (int i = 0; i < NC; i++) seen[i] = 0;
@@ -149,7 +159,7 @@ EXPORT(setpos) int setpos(void) {
 
 // ---------------------------------------------------------------- groups: which empty cells win at once for player p
 // lab[c] = group id for p's stones; gE[g] = edges touched (bit 0 / 1)
-static short lab[MAXC]; static u8 gE[MAXC];
+static TLS short lab[MAXC]; static TLS u8 gE[MAXC];
 static void groups(const u8 *b, int p) {
   int ng = 0;
   for (int i = 0; i < NC; i++) lab[i] = -1;
@@ -182,8 +192,8 @@ static int winCells(const u8 *b, int p, int *out, int max) {
 // ---------------------------------------------------------------- playouts
 // fill the board at random; when the opponent's last stone intrudes into one of our bridges (two of our stones — or
 // a stone and our edge — with exactly two common empty neighbours), answer in the other cell of that bridge.
-static u8 PB[MAXC];
-static short EL[MAXC], EP[MAXC];
+static TLS u8 PB[MAXC];
+static TLS short EL[MAXC], EP[MAXC];
 static int edgeOwn(int v, int p) { return v == -1 ? p == RED : v == -2 ? p == BLUE : 0; }
 static inline int ownAt(const u8 *b, int v, int p) { return v >= 0 ? b[v] == p : edgeOwn(v, p); }
 static int saveBridge(const u8 *b, int last, int p) {
@@ -269,10 +279,27 @@ static int nNodes;
 static float RAVE_B = 0.0009f, UCT_C = 0.0f, PRIOR_N = 30.0f, LP_A = .45f, LP_B = .5f;
 static int LP_ON = 1;   // the learned prior (prior_w.h) instead of the hand-made one
 static int EXPAND_T = 1, expT = 1;   // expT: the threshold in use (raised during a long search so the node pool lasts)
-static double tStop; static int maxPO, totalPO;
-static int wc[MAXC];
+static TLS double tStop; static TLS int maxPO, totalPO;
+static TLS int wc[MAXC];
 
+#ifdef MT
+static volatile int gStop;     // shared: the page stops every thread (mt_stop)
+static volatile int gTree;     // shared: > 0 = the tree the helpers may join now (a new number for each search), 0 = closed
+static volatile int gActive;   // shared: helpers inside the open tree
+static volatile int gHPO;      // shared: the helpers' playouts in the open tree
+static int gTreeGen;
+static float VLOSS = 1;      // virtual loss (visits) per thread going down a branch
+static TLS int threadId;       // 0 = the lead (setup, time control, result), 1.. = helpers
+#define MT_HPO + __atomic_load_n(&gHPO, __ATOMIC_SEQ_CST)
+#define EXPD(nd) (__atomic_load_n(&(nd)->exp, __ATOMIC_SEQ_CST) == 1)
+#define NSEEN(nd) ((nd)->n - VLOSS)   // (the visit of this descent is counted already: virtual loss)
+static int newNodes(int k) { if (__atomic_load_n(&nNodes, __ATOMIC_SEQ_CST) + k > NODES) return -1; int f = __atomic_fetch_add(&nNodes, k, __ATOMIC_SEQ_CST); if (f + k > NODES) return -1; return f; }
+#else
+#define MT_HPO
+#define EXPD(nd) ((nd)->exp)
+#define NSEEN(nd) ((nd)->n)
 static int newNodes(int k) { if (nNodes + k > NODES) return -1; int f = nNodes; nNodes += k; return f; }
+#endif
 // prior knowledge: a few cheap features → virtual RAVE results
 static float prior(const u8 *b, int c, int p) {
   int r = c / N, cc = c % N, own = 0, opp = 0, br = 0;
@@ -298,14 +325,20 @@ static void expand(int ni, Pos *p) {
   int cnt = 0;
   for (int c = 0; c < NC; c++) if (!p->b[c]) cnt++;
   if (p->swapOk) cnt++;
+#ifdef MT
+  u8 z = 0; if (!__atomic_compare_exchange_n(&nd->exp, &z, 2, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)) return;   // (another thread expands it: 2 until done)
+  int f = newNodes(cnt); if (f < 0) { __atomic_store_n(&nd->exp, 0, __ATOMIC_SEQ_CST); return; }
+  nd->first = f; nd->nch = cnt;
+#else
   int f = newNodes(cnt); if (f < 0) return;
   nd->first = f; nd->nch = cnt; nd->exp = 1;
+#endif
   int k = 0, me = p->side, op = me ^ 3;
   // immediate wins / opponent threats
   int nw = winCells(p->b, me, wc, MAXC);
   int myWin = nw ? wc[0] : -1;
   int ow[4]; int no = winCells(p->b, op, ow, 4);
-  static float lp[MAXC];
+  static TLS float lp[MAXC];
   if (PW_ON && LP_ON) {   // learned prior: softmax over the empty cells, then pv = 0.5 + A·tanh(B·log(prob × cells))
     int fs[PF_MAX], m = 0; float mx = -1e30f, z = 0;
     for (int c = 0; c < NC; c++) { if (p->b[c]) continue; int kk = pfeat(p->b, c, me, p->last, fs); int s = 0; for (int j = 0; j < kk; j++) s += PW[fs[j]]; lp[c] = s / PW_SCALE; if (lp[c] > mx) mx = lp[c]; m++; }
@@ -325,16 +358,22 @@ static void expand(int ni, Pos *p) {
   if (p->swapOk) { Node *ch = &T[f + k++]; ch->first = 0; ch->nch = 0; ch->mv = SWAP; ch->n = 0; ch->w = 0; ch->exp = 0; ch->proof = 0; ch->rn = 0; ch->rw = 0; }
   if (myWin >= 0) nd->proof = -1;                  // the side to move here wins at once: whoever moved into this node loses
   else if (no >= 2) nd->proof = 1;
+#ifdef MT
+  __atomic_store_n(&nd->exp, 1, __ATOMIC_SEQ_CST);   // (the children are ready: other threads may go down now)
+#endif
 }
-static int pathN[256]; static int pathL;
+static TLS int pathN[256]; static TLS int pathL;
 static void iterate(void) {
   Pos p = ROOT; int ni = 0; pathL = 0; pathN[pathL++] = 0;
+#ifdef MT
+  T[0].n += 1;
+#endif
   int res = 0, didPO = 0;   // winner, a playout filled PB
   for (;;) {
     Node *nd = &T[ni];
     if (nd->proof) { res = nd->proof > 0 ? (p.side ^ 3) : p.side; break; }   // proven node: its result
-    if (!nd->exp) {
-      if (nd->n >= expT || ni == 0) { expand(ni, &p); if (nd->proof) continue; if (!nd->exp) { for (int i = 0; i < NC; i++) PB[i] = p.b[i]; res = playout(p.side, p.last); didPO = 1; break; } }
+    if (!EXPD(nd)) {
+      if (NSEEN(nd) >= expT || ni == 0) { expand(ni, &p); if (nd->proof) continue; if (!EXPD(nd)) { for (int i = 0; i < NC; i++) PB[i] = p.b[i]; res = playout(p.side, p.last); didPO = 1; break; } }
       else { for (int i = 0; i < NC; i++) PB[i] = p.b[i]; res = playout(p.side, p.last); didPO = 1; break; }
     }
     // select
@@ -356,6 +395,9 @@ static void iterate(void) {
     int ci = nd->first + best;
     play(&p, T[ci].mv);
     ni = ci; if (pathL < 255) pathN[pathL++] = ni;
+#ifdef MT
+    T[ci].n += VLOSS;   // virtual loss: counted as visits without a win until the playout's result comes back
+#endif
     if (T[ci].proof > 0) { res = p.side ^ 3; nd->proof = -1; break; }
   }
   // backup: node j was entered by the player who moved into it (= side to move at its parent)
@@ -364,15 +406,20 @@ static void iterate(void) {
   for (int k = 0; k < pathL; k++) {
     Node *nd = &T[pathN[k]];
     int mover = side ^ 3;   // who moved into nd
+#ifdef MT
+    if (k) nd->n -= VLOSS - 1;
+    if (res == mover) nd->w += 1;   // (n was counted on the way down)
+#else
     nd->n += 1; if (res == mover) nd->w += 1;
+#endif
     // proof propagation
-    if (nd->exp && !nd->proof) {
+    if (EXPD(nd) && !nd->proof) {
       Node *ch = &T[nd->first]; int all = 1, any = 0;
       for (int i = 0; i < nd->nch; i++) { if (ch[i].proof > 0) any = 1; if (ch[i].proof >= 0) all = 0; }
       if (any) nd->proof = -1; else if (all) nd->proof = 1;
     }
     // RAVE: children of nd whose cell ended up owned by the side to move at nd
-    if (nd->exp && didPO) {
+    if (EXPD(nd) && didPO) {
       Node *ch = &T[nd->first];
       float win = (res == side) ? 1.f : 0.f;
       for (int i = 0; i < nd->nch; i++) { int c = ch[i].mv; if (c != SWAP && PB[c] == side) { ch[i].rn += 1; ch[i].rw += win; } }
@@ -389,20 +436,35 @@ static void search(double ms, int playouts) {
   double t0 = now();
   tStop = ms > 0 ? t0 + ms : 1e300; maxPO = playouts > 0 ? playouts : 0x7fffffff; totalPO = 0;
   int lastProg = 0; expT = EXPAND_T;
+#ifdef MT
+  // the lead opens the tree to the helpers (mt_help); the playout budget counts every thread's playouts
+  __atomic_store_n(&gHPO, 0, __ATOMIC_SEQ_CST); __atomic_store_n(&gTree, ++gTreeGen, __ATOMIC_SEQ_CST);
+  while (totalPO MT_HPO < maxPO) {
+#else
   while (totalPO < maxPO) {
+#endif
     iterate(); totalPO++;
     if (T[0].proof) break;
     if ((totalPO & 255) == 0) {
+#ifdef MT
+      if (__atomic_load_n(&gStop, __ATOMIC_SEQ_CST)) break;
+#endif
       double t = now();
       if (t >= tStop) break;
       // keep the node pool from running out before the budget does: compare the pool used with the budget used
-      double fb = maxPO < 0x7fffffff ? (double)totalPO / maxPO : 0, ft = ms > 0 ? (t - t0) / ms : 0, f = fb > ft ? fb : ft;
+      double fb = maxPO < 0x7fffffff ? (double)(totalPO MT_HPO) / maxPO : 0, ft = ms > 0 ? (t - t0) / ms : 0, f = fb > ft ? fb : ft;
       if ((double)nNodes / NODES > f * .85 + .1 && expT < 256) expT += expT < 4 ? 1 : expT / 4;
 #ifndef NATIVE
-      if (t - t0 - lastProg > 400) { lastProg = (int)(t - t0); progress(totalPO); }
+      if (t - t0 - lastProg > 400) { lastProg = (int)(t - t0); progress(totalPO MT_HPO); }
 #endif
     }
   }
+#ifdef MT
+  // close the tree and wait until no helper is inside it (the lead then reads it, or starts the next search)
+  __atomic_store_n(&gTree, 0, __ATOMIC_SEQ_CST);
+  while (__atomic_load_n(&gActive, __ATOMIC_SEQ_CST)) {}
+  totalPO += gHPO;   // (every thread's playouts: the result, the page's playouts/s readout)
+#endif
 }
 // child value for the side to move at the root: -1000..1000, or ±(WIN - plies) when proven
 static int childV(const Node *c) {
@@ -412,7 +474,7 @@ static int childV(const Node *c) {
   int v = (int)((q - .5f) * 2000.f); return v > 999 ? 999 : v < -999 ? -999 : v;
 }
 static int rootBest(void) {
-  Node *r = &T[0]; if (!r->exp) return -1;
+  Node *r = &T[0]; if (!EXPD(r)) return -1;
   Node *ch = &T[r->first]; int best = -1; float bn = -1;
   for (int i = 0; i < r->nch; i++) if (ch[i].proof > 0) return i;
   for (int i = 0; i < r->nch; i++) { if (ch[i].proof < 0) continue; float s = ch[i].n + (ch[i].n > 0 ? ch[i].w / ch[i].n : 0) * .01f; if (s > bn) { bn = s; best = i; } }
@@ -430,10 +492,10 @@ static inline void sClr(Set *s) { s->w[0] = s->w[1] = s->w[2] = 0; }
 static inline void sAdd(Set *s, int c) { s->w[c >> 6] |= 1ULL << (c & 63); }
 static inline int sHas(const Set *s, int c) { return (int)((s->w[c >> 6] >> (c & 63)) & 1); }
 static inline void sOr(Set *a, const Set *b) { a->w[0] |= b->w[0]; a->w[1] |= b->w[1]; a->w[2] |= b->w[2]; }
-static u8 SB[MAXC];          // solver board
-static u64 budget; static int budOut;
+static TLS u8 SB[MAXC];          // solver board (the solver runs on the lead only: its table TT is shared)
+static TLS u64 budget; static TLS int budOut;
 static u64 ZK[MAXC][3];
-static u64 zh;
+static TLS u64 zh;
 static int zInit = 0;
 static void zSetup(void) { if (zInit) return; zInit = 1; u64 s = 0x1234567ULL; for (int i = 0; i < MAXC; i++) for (int k = 0; k < 3; k++) { s ^= s << 13; s ^= s >> 7; s ^= s << 17; ZK[i][k] = s; } }
 #define TTN (1 << 17)
@@ -451,8 +513,8 @@ static void ttPut(u64 key, int k, int who, int res, const Set *car) {
   TTE *e = &TT[i]; ttStamp[i] = ttGen; e->key = key; e->k = k; e->who = who; e->res = res; if (car) e->car = *car; else sClr(&e->car);
 }
 // 0-1 BFS distance (number of empty cells needed) from edge e of player p to every cell (the cell's own cost included)
-static short DA[MAXC], DB[MAXC];
-static short dq[16 * MAXC + 8];
+static TLS short DA[MAXC], DB[MAXC];
+static TLS short dq[16 * MAXC + 8];
 static void dist(const u8 *b, int p, int e, short *D) {
   int h = 8 * MAXC, t = 8 * MAXC;
   for (int i = 0; i < NC; i++) D[i] = 999;
@@ -691,3 +753,34 @@ EXPORT(set_param) void set_param(int k, int v) {
 }
 EXPORT(new_game) void new_game(void) {}
 EXPORT(winner_of) int winner_of(void) { return winner(ROOT.b); }
+
+#ifdef MT
+// ---------------------------------------------------------------- threads (engine_mt.wasm; shared/mtengine.js, mt-helper.js)
+extern unsigned char __heap_base;
+extern void __wasm_init_tls(void *);
+EXPORT(mt_heap_base) u32 mt_heap_base(void) { return (u32)&__heap_base; }
+EXPORT(mt_tls_size) u32 mt_tls_size(void) { return __builtin_wasm_tls_size(); }
+// every instance first: mt_stack (its own stack: the top address; a function without a frame of its own), then mt_thread
+// (its TLS block and thread number; each thread's random numbers differ)
+EXPORT(mt_stack) void mt_stack(u32 stackTop) { __asm__ volatile(".globaltype __stack_pointer, i32\n local.get %0\n global.set __stack_pointer" :: "r"(stackTop)); }
+EXPORT(mt_thread) void mt_thread(u32 tls, int id) { __wasm_init_tls((void *)tls); threadId = id; rs ^= (u64)(id + 1) * 0xD1B54A32D192ED03ULL; rnd(); }
+// the page: 1 = every thread stops; 0 = a new job (no tree open yet)
+EXPORT(mt_stop) void mt_stop(int v) { __atomic_store_n(&gStop, v, __ATOMIC_SEQ_CST); if (!v) __atomic_store_n(&gTree, 0, __ATOMIC_SEQ_CST); }
+EXPORT(mt_vloss) void mt_vloss(int v) { VLOSS = v > 0 ? (float)v : 1; }
+// a helper: join every tree the lead opens during the job (its searches) and grow it, until the page stops the threads.
+// Returns the playouts done (also counted in gHPO for the lead's budget).
+EXPORT(mt_help) int mt_help(void) {
+  int done = 0, last = 0;
+  while (!__atomic_load_n(&gStop, __ATOMIC_SEQ_CST)) {
+    int g = __atomic_load_n(&gTree, __ATOMIC_SEQ_CST);
+    if (g <= 0 || g == last) continue;   // (waiting: the lead is setting up or reading the tree)
+    __atomic_fetch_add(&gActive, 1, __ATOMIC_SEQ_CST);
+    if (__atomic_load_n(&gTree, __ATOMIC_SEQ_CST) == g) {
+      last = g;
+      while (__atomic_load_n(&gTree, __ATOMIC_SEQ_CST) == g && !__atomic_load_n(&gStop, __ATOMIC_SEQ_CST) && !T[0].proof) { iterate(); done++; __atomic_fetch_add(&gHPO, 1, __ATOMIC_SEQ_CST); }
+    }
+    __atomic_fetch_sub(&gActive, 1, __ATOMIC_SEQ_CST);
+  }
+  return done;
+}
+#endif
