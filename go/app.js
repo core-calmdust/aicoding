@@ -112,7 +112,7 @@ function save() {
 
 // ====================================================================== engine worker (one worker; newer jobs pre-empt older ones)
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=7';
+const ENGINE_URL = 'engine.js?v=8';
 const COARSE = matchMedia('(pointer: coarse)').matches;
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
@@ -120,19 +120,52 @@ function makeWorker() {
   w.onmessage = e => {
     const m = e.data, j = w.jobs.get(m.id); if (!j) return;
     if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; }
-    w.jobs.delete(m.id); j.resolve(m.superseded || m.error ? null : m);
+    w.jobs.delete(m.id); if (j.t0 && !m.superseded) noteVps(m.visits, performance.now() - j.t0); j.resolve(m.superseded || m.error ? null : m);
   };
   w.onerror = () => { w.jobs.forEach(j => j.resolve(null)); w.jobs.clear(); };
   return w;
 }
+// search speed of the last search (visits per second, all threads), shown quietly at the end of the info line
+let lastVps = 0;
+const vpsText = () => lastVps ? '  ·  ' + (lastVps >= 100 ? Math.round(lastVps) : lastVps.toFixed(1)) + ' visits/s' : '';
+function noteVps(v, ms) {
+  if (!(v >= 20 && ms > 100)) return;
+  lastVps = v / ms * 1000;
+  const el = document.getElementById('infoLine'); if (el && el.dataset.base !== undefined) el.textContent = el.dataset.base + vpsText();
+}
 let W = makeWorker();
 let W2 = null;            // a second worker only for the post-game review on PCs (whole-game pass, then the review box's searches; kept alive with its nets loaded)
 function jobBase(spec, list) { return { spec: spec || { n: game.n }, moves: list, komi: game.komi }; }
-function request(msg, onProgress, w) {
+// multi-threaded search (shared/mtengine.js; common rule 2026-11-08「本編のマルチスレッド」): the hints / evaluation, the coach
+// and the review box go to the pool of threads when it is free: the threads grow one search tree together (engine.c:
+// tree-parallel MCTS with virtual loss, both nets in the shared memory), so the same number of visits comes sooner. The AI
+// levels are decided by visits (21–27) or one net evaluation (1–20): they stay on the one-thread worker (strength unchanged);
+// a PRO search with more than one thread uses the pool. The whole-game review keeps its own worker (W2).
+const MTP = window.MTEngine ? MTEngine.use({
+  wasm: 'engine_mt.wasm?v=1', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=1', slot: 8 << 20, initial: 512, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB); slot: TLS ~0.3 MB + a deep stack (ladders)
+  imports: mem => ({ env: { memory: mem } }),
+  help: m => (m.type === 'think' || m.type === 'analyze') ? {} : null,   // (the helpers join the trees the lead opens: nothing to send)
+  isDone: m => m.type === 'done',
+}) : null;
+const mtWants = msg => msg.type === 'analyze' || (msg.type === 'think' && !!msg.params && msg.params.threads > 1);
+function request(msg, onProgress, w, tag) {
   w = w || W;
-  return new Promise(resolve => { const id = ++jobId; w.jobs.set(id, { resolve, onProgress }); w.postMessage({ ...msg, id }); });
+  if (MTP && msg.preempt && w === W) MTP.cancel('main');   // (a newer job on the main worker pre-empts the threads' one too, as before)
+  const mp = MTP && (w === W || tag) && mtWants(msg) && MTP.pool(msg.type === 'think' ? 'ai' : null);
+  if (mp) {
+    const full = { ...msg, ...(msg.params && msg.params.threads ? { mtThreads: msg.params.threads } : {}) };
+    return mp.run(full, onProgress, tag || 'main').then(r => {
+      if (r === undefined) return requestW(full, onProgress, w);   // (the threads failed: the usual worker)
+      if (!r || r.superseded || r.error) return null;
+      noteVps(r.visits, r.ms); return r;
+    });
+  }
+  return requestW(msg, onProgress, w);
 }
-function cancelWorker() { W.postMessage({ type: 'cancel' }); }
+function requestW(msg, onProgress, w) {   // (the one-thread workers)
+  return new Promise(resolve => { const id = ++jobId; w.jobs.set(id, { resolve, onProgress, t0: performance.now() }); w.postMessage({ ...msg, id }); });
+}
+function cancelWorker() { if (MTP) MTP.cancel('main'); W.postMessage({ type: 'cancel' }); }
 const anaCache = new Map();     // position key -> analysis {lead, wr, list}
 const rawCache = new Map();     // position key -> raw eval {lead, wr}
 const keyOf = i => baseKey() + '|' + game.komi + '|' + moves.slice(0, i).join(',');
@@ -452,7 +485,7 @@ function renderInfo() {
   $('#btnTerr').classList.toggle('on', settings.terr);
   $('#btnSound').classList.toggle('on', settings.sound);
   renderReview();
-  $('#infoLine').textContent = `${game.n}×${game.n} · ${t('rule.' + game.rule)} · ${t('komiShort', { k: game.komi })}${game.ha ? ' · ' + t('ha', { n: game.ha }) : ''}  ·  ${settings.mode === 'ai' ? AIW() + ' ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : '') : settings.mode === 'watch' ? `${LV(settings.level)} vs ${LV(settings.level2)}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`;
+  { const il = $('#infoLine'); il.dataset.base = `${game.n}×${game.n} · ${t('rule.' + game.rule)} · ${t('komiShort', { k: game.komi })}${game.ha ? ' · ' + t('ha', { n: game.ha }) : ''}  ·  ${settings.mode === 'ai' ? AIW() + ' ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : '') : settings.mode === 'watch' ? `${LV(settings.level)} vs ${LV(settings.level2)}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`; il.textContent = il.dataset.base + vpsText(); }
   renderBrand();
   if (window.olAfterInfo) olAfterInfo();
   hbInfo(pos, st);
@@ -1032,14 +1065,14 @@ $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 const PRO_GO = { 21: ['light', 3, 1200], 22: ['light', 6, 1500], 23: ['light', 12, 2000], 24: ['light', 20, 2500], 25: ['light', 32, 3000], 26: ['strong', 64, 4500], 27: ['strong', 160, 7000] };   // (= engine.js LEVELS)
 var PRO = window.ProSet ? ProSet.init({ game: 'go', lang: () => LANG, level: () => draft.level || settings.level, show: () => draft.mode === 'ai' || draft.mode === 'watch', stone: true,
   store: { get: () => settings.pro, set: v => { settings.pro = v; } },
-  defaults: lv => { const g = PRO_GO[lv]; return g ? { limit: { k: 'nodes', v: g[1] }, eval: g[0] } : { limit: { k: 'nodes', v: 1 }, eval: 'light' }; },
-  params: [{ key: 'limit', kinds: { time: [0.1, 60], nodes: [1, 20000] }, klabel: { nodes: { ja: '探索回数', en: 'Visits', zh: '访问次数', 'zh-TW': '訪問次數', ko: '방문 수', es: 'Visitas', fr: 'Visites', pt: 'Visitas', de: 'Besuche', ru: 'Визиты', tr: 'Ziyaret', id: 'Kunjungan', hi: 'विज़िट', ar: 'الزيارات' } }, kunit: { nodes: { ja: '回', en: 'visits', zh: '次', 'zh-TW': '次', ko: '회', es: 'visitas', fr: 'visites', pt: 'visitas', de: 'Besuche', ru: 'виз.', tr: 'ziyaret', id: 'kunjungan', hi: 'विज़िट', ar: 'زيارة' } } },
+  defaults: lv => { const g = PRO_GO[lv]; return g ? { limit: { k: 'nodes', v: g[1] }, threads: 1, eval: g[0] } : { limit: { k: 'nodes', v: 1 }, threads: 1, eval: 'light' }; },   // (threads: one by default — no level thinks by time)
+  params: [{ key: 'limit', kinds: { time: [0.1, 60], nodes: [1, 20000] }, klabel: { nodes: { ja: '探索回数', en: 'Visits', zh: '访问次数', 'zh-TW': '訪問次數', ko: '방문 수', es: 'Visitas', fr: 'Visites', pt: 'Visitas', de: 'Besuche', ru: 'Визиты', tr: 'Ziyaret', id: 'Kunjungan', hi: 'विज़िट', ar: 'الزيارات' } }, kunit: { nodes: { ja: '回', en: 'visits', zh: '次', 'zh-TW': '次', ko: '회', es: 'visitas', fr: 'visites', pt: 'visitas', de: 'Besuche', ru: 'виз.', tr: 'ziyaret', id: 'kunjungan', hi: 'विज़िट', ar: 'زيارة' } } }, { key: 'threads' },
     { key: 'eval', label: { ja: '評価ネット', en: 'Network', zh: '评估网络', 'zh-TW': '評估網路', ko: '평가 신경망', es: 'Red', fr: 'Réseau', pt: 'Rede', de: 'Netz', ru: 'Сеть', tr: 'Ağ', id: 'Jaringan', hi: 'नेटवर्क', ar: 'الشبكة' }, help: { ja: '形勢を判断するニューラルネット。強いネットは重いので、同じ時間で読める数が減ります。', en: 'The neural network that judges positions. The strong one is heavier, so it searches fewer positions in the same time.', zh: '判断形势的神经网络。强力网络较重，同样时间内搜索得更少。', 'zh-TW': '判斷形勢的神經網路。強力網路較重，同樣時間內搜尋得更少。', ko: '형세를 판단하는 신경망. 강력 신경망은 무거워서 같은 시간에 읽는 수가 줄어듭니다.', es: 'La red neuronal que juzga las posiciones. La fuerte es más pesada: en el mismo tiempo explora menos.', fr: 'Le réseau neuronal qui juge les positions. Le fort est plus lourd : il explore moins dans le même temps.', pt: 'A rede neural que julga as posições. A forte é mais pesada: no mesmo tempo explora menos.', de: 'Das neuronale Netz, das Stellungen bewertet. Das starke ist schwerer und durchsucht in gleicher Zeit weniger.', ru: 'Нейросеть, оценивающая позицию. Сильная тяжелее, поэтому за то же время просматривает меньше.', tr: 'Pozisyonu değerlendiren sinir ağı. Güçlü olan daha ağır; aynı sürede daha az arar.', id: 'Jaringan saraf yang menilai posisi. Yang kuat lebih berat, jadi dalam waktu sama mencari lebih sedikit.', hi: 'स्थिति आँकने वाला न्यूरल नेटवर्क। मज़बूत वाला भारी है, इसलिए उतने समय में कम खोजता है।', ar: 'الشبكة العصبية التي تقيّم المواقف. القوية أثقل، فتبحث أقل في الوقت نفسه.' }, opts: [{ v: 'light', label: { ja: '軽量', en: 'Light', zh: '轻量', 'zh-TW': '輕量', ko: '경량', es: 'Ligera', fr: 'Légère', pt: 'Leve', de: 'Leicht', ru: 'Лёгкая', tr: 'Hafif', id: 'Ringan', hi: 'हल्का', ar: 'خفيفة' } }, { v: 'strong', label: { ja: '強い', en: 'Strong', zh: '强力', 'zh-TW': '強力', ko: '강력', es: 'Fuerte', fr: 'Forte', pt: 'Forte', de: 'Stark', ru: 'Сильная', tr: 'Güçlü', id: 'Kuat', hi: 'मज़बूत', ar: 'قوية' } }] }] }) : null;
 // the PRO search for an AI side: engine.js think(job.params) or null (the level as it is; never rated)
 function proCfg(lv) {
   if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null;
   const e = PRO.get(lv); if (!e) return null;
-  return e.limit.k === 'nodes' ? { net: e.eval, visits: e.limit.v, time: 600000 } : { net: e.eval, visits: 1e7, time: Math.round(e.limit.v * 1000) };
+  return Object.assign(e.limit.k === 'nodes' ? { net: e.eval, visits: e.limit.v, time: 600000 } : { net: e.eval, visits: 1e7, time: Math.round(e.limit.v * 1000) }, { threads: e.threads || 1 });
 }
 function proTag(lv) { return proCfg(lv) ? ' PRO' : ''; }
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
@@ -1398,7 +1431,7 @@ function rbAnalyze(done, st) {
     while (live) {
       const tm = Math.min(3500 * (1 << k), LIMIT - spent), t0 = performance.now();
       // progress of the first round replaces the shown list once it has looked at more than what is already shown (seed)
-      const r = await request({ type: 'analyze', preempt: true, ...job, net: 'strong', visits: v0 * (1 << k), time: tm, pv: 5, prog0: 120 }, m => { if (live && !last && m.visits >= seedN) done(rbFmt(m, false), false); }, w);
+      const r = await request({ type: 'analyze', preempt: true, ...job, net: 'strong', visits: v0 * (1 << k), time: tm, pv: 5, prog0: 120 }, m => { if (live && !last && m.visits >= seedN) done(rbFmt(m, false), false); }, w, 'rvb');   // (rvb: the threads when free)
       if (!live) return;
       spent += performance.now() - t0; k++;
       if (r) last = rbFmt(r, true);
@@ -1407,7 +1440,7 @@ function rbAnalyze(done, st) {
       done(last, false, state);
     }
   })();
-  return () => { if (live) { live = false; w.postMessage({ type: 'cancel' }); } };
+  return () => { if (live) { live = false; w.postMessage({ type: 'cancel' }); if (MTP) MTP.cancel('rvb'); } };
 }
 function rbSeq() {
   const c = RBox.hovered(); if (!c) return null;
