@@ -360,6 +360,10 @@ function think(start, moves, level, rand, rule) {
     return { move: best, v: vals[0].v };
   }
   const r = bestMove(pos, L.dx || 60, L.ms || 0, L.nk || (L.ms ? 0 : 50));
+  return thinkFin(pos, r);
+}
+// the strong steps' answer from the search's result (also the end of a search on several threads, shared/mtsplit.js)
+function thinkFin(pos, r) {
   if (r.v < -WINT && r.depth > 0) {
     nodes = 0; stop = false; tEnd = Date.now() + 800; nodeLimit = Infinity;
     const vals = rootValues(pos, Math.max(1, r.depth));
@@ -388,18 +392,62 @@ function cands(start, moves, ms, k, plies, onProgress, rule) {
   if (rule) setRule(rule);
   const r = analyze(start, moves, ms, onProgress);
   const list = r.list.slice().sort((a, b) => b.v - a.v).slice(0, k || 5);
-  for (const e of list) {
-    e.pv = [];
-    const line = moves.concat([e.m]);
-    for (let d = 0; d < (plies || 7); d++) {
-      const { pos } = replay(start, line);
-      if (judge(pos).over) break;
-      const b = bestMove(pos, 5, 60, 0);
-      if (b.move == null || b.move < 0) break;
-      line.push(b.move); e.pv.push(b.move);
-    }
-  }
+  for (const e of list) e.pv = pvOf(start, moves, e.m, plies);
   return { list, depth: r.depth };
+}
+// the line after root move m (short searches, one per ply)
+function pvOf(start, moves, m, plies) {
+  const pv = [], line = moves.concat([m]);
+  for (let d = 0; d < (plies || 7); d++) {
+    const { pos } = replay(start, line);
+    if (judge(pos).over) break;
+    const b = bestMove(pos, 5, 60, 0);
+    if (b.move == null || b.move < 0) break;
+    line.push(b.move); pv.push(b.move);
+  }
+  return pv;
+}
+// ---------------------------------------------------------------- several threads (shared/mtsplit.js: plain workers share the root moves
+// and the main line). mtPlan: what a 'think' / 'analyze' / 'cands' job searches on the threads (or its answer at once); mtV: the
+// node after the root and m.line searched to depth m.d in the window (m.a, m.b); mtKids: that node's moves in this engine's
+// order; mtFin: the job's reply from the threads' raw result (the same as the one-thread worker's).
+let mtRule = null;
+function mtNode(m) {
+  if (mtRule !== RK) { TT.clear(); mtRule = RK; }
+  const line = m.line || [], { pos } = replay(m.start, m.moves.concat(line));
+  return { pos, ply: line.length };
+}
+function mtPlan(m) {
+  const { pos } = replay(m.start, m.moves), all = pos.moves(), inf = WIN + 1;
+  if (m.job === 'think') {
+    const L = m.cfg || LEVELS[m.level] || LEVELS[10];
+    if (all.length < 2 || !L.s) { PRO_CFG = m.cfg || null; try { return { result: think(m.start, m.moves, m.level) }; } finally { PRO_CFG = null; } }
+    killers.length = 0;
+    return { plan: { kind: 'best', moves: orderMoves(pos, all, -1, 0), inf, maxD: L.dx || 60, ms: L.ms || 0, nodes: (L.nk || (L.ms ? 0 : 50)) * 1000, win: WINT, partialIfBetter: true, splitMin: 99 } };   // (the root moves only: Kōnane leans on its table, a split main line costs more than it gives)
+  }
+  if (!all.length) return { result: { list: [], depth: 0 } };
+  const cands = m.job === 'cands';
+  return { plan: { kind: 'all', moves: orderMoves(pos, all, -1, 0), inf, maxD: 40, ms: m.time || (cands ? 1200 : 1000), win: WINT, stopAll: true, progress: true, pv: cands ? m.plies || 7 : 0, pvK: m.k || 5 } };
+}
+function mtV(m) {
+  const { pos, ply } = mtNode(m);
+  nodes = 0; stop = false; tEnd = m.until || Infinity; nodeLimit = m.nl || Infinity;
+  const v = search(pos, m.d, m.wa, m.wb, ply);
+  return { v, ok: !stop, nodes };
+}
+function mtKids(m) {
+  const { pos, ply } = mtNode(m);
+  const L = pos.moves(); if (!L.length) return { kids: [] };
+  const e = TT.get(pos.h1);
+  return { kids: orderMoves(pos, L, e && e.h2 === pos.h2 ? e.m : -1, ply).map(x => ({ m: x, s: -1 })) };
+}
+function mtFin(m) {
+  const r = m.raw;
+  if (m.job === 'think') { const { pos } = replay(m.start, m.moves); return { result: thinkFin(pos, { move: r.m, v: r.v, depth: r.depth }) }; }
+  let list = (r.list || []).map(e => Object.assign({ m: e.m, v: e.v, kind: kindOf(e.v) }, e.pv ? { pv: e.pv } : {}));
+  if (!list.length) { const { pos } = replay(m.start, m.moves); list = pos.moves().map(x => ({ m: x, v: 0, kind: 'heur' })); }
+  if (m.job === 'cands') list = list.slice(0, m.k || 5);
+  return { result: { list, depth: r.depth } };
 }
 // ---------------------------------------------------------------- "win in N" (puzzles, lessons, the coach)
 // duelW(pos, k, me): me (to move) leaves the opponent without a capture within k of its own moves, whatever the reply.
@@ -510,7 +558,7 @@ function winningMoves(start, moves, rule, budget) {
 setRule('s8');
 const API = { get nodes() { return nodes; }, P1, P2, WIN, WINT, PASS, RULES, RULE_ORDER, setRule, get rule() { return RK; }, get R() { return R; }, get N() { return N; }, get NN() { return NN; },
   get RC() { return RC; }, COLOR: () => COLOR, OPEN1: () => OPEN1, ADJ: () => ADJ, sqAt, sqName, mv, mFrom, mTo, isRemove, hops, Pos, path, captured, isJump, name, parse, replay, judge,
-  LEVELS, think, analyze, cands, duelGood, duelMin, duelReply, solve, winningMoves, evaluate, kindOf, EW };
+  LEVELS, think, analyze, cands, duelGood, duelMin, duelReply, solve, winningMoves, evaluate, kindOf, EW, mtPlan, mtV, mtKids, mtFin, pvOf };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') {
   let queueP = Promise.resolve();
@@ -528,6 +576,11 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
         else if (m.type === 'duelReply') self.postMessage({ id: m.id, type: 'result', ...duelReply(m.start, m.moves, m.n) });
         else if (m.type === 'win') self.postMessage({ id: m.id, type: 'result', list: winningMoves(m.start, m.moves) });
         else if (m.type === 'newgame') { TT.clear(); self.postMessage({ id: m.id, type: 'result' }); }
+        else if (m.type === 'mtplan') self.postMessage({ id: m.id, type: 'result', ...mtPlan(m) });
+        else if (m.type === 'mtv') self.postMessage({ id: m.id, type: 'result', ...mtV(m) });
+        else if (m.type === 'mtkids') self.postMessage({ id: m.id, type: 'result', ...mtKids(m) });
+        else if (m.type === 'mtpv') self.postMessage({ id: m.id, type: 'result', pv: pvOf(m.start, m.moves, m.m, m.plies) });
+        else if (m.type === 'mtfin') self.postMessage({ id: m.id, type: 'result', ...mtFin(m) });
       } catch (err) { self.postMessage({ id: m.id, type: 'result', error: String(err && err.stack || err) }); }
     });
   };

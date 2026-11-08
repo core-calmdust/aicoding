@@ -617,8 +617,73 @@ function chooseMove(b, side, rules, level, cfg) {
   return think(b, side, rules, { ms: L.ms });
 }
 
+// ---------------------------------------------------------------------------- several threads (shared/mtsplit.js)
+// Plain workers share the root moves and the main line. mtPlan: what a 'move' / 'analyze' job searches on the threads (or its
+// answer at once); mtV: the node after the root and m.line (pits, in turn: a move that sows into the own store moves again)
+// searched to depth m.d in the window (m.a, m.b), from that node's mover's view; mtKids: that node's moves in this engine's own
+// order (s +1: the same side moves again, t: a finished game's value); mtFin: the reply from the threads' raw result.
+function mtNode(m) {
+  let b = Int8Array.from(m.b), side = m.side; setup(b, m.rules);
+  for (const k of m.line || []) { const c = Int8Array.from(b), r = play(c, side, k, Rcur); b = c; if (!r.extra) side = 1 - side; }
+  return { b, side };
+}
+function mtPlan(m) {
+  const b = Int8Array.from(m.b); setup(b, m.rules);
+  const moves = legal(b, m.side, Rcur), inf = INF;
+  if (m.job === 'move') {
+    const L = m.cfg || LEVELS[Math.max(1, Math.min(10, m.level | 0))];
+    if (moves.length < 2 || (L.kind !== 'time' && !(m.cfg && L.kind === 'depth'))) { const r = chooseMove(b, m.side, m.rules, m.level, m.cfg); return { result: { type: 'move', move: r.move, value: r.value, exact: r.exact, depth: r.depth } }; }
+    if (L.kind === 'depth') return { plan: { kind: 'all', kids: mtKids({ b: m.b, side: m.side, rules: m.rules }).kids, inf, d0: L.depth, maxD: L.depth, solved: true } };   // (PRO: a depth on several threads, then the level's noise)
+    return { plan: { kind: 'best', kids: mtKids({ b: m.b, side: m.side, rules: m.rules }).kids, inf, maxD: 60, ms: L.ms, solved: true, splitMin: 6 } };
+  }
+  if (!moves.length) return { result: { type: 'analyze', list: [], depth: 0, exact: true } };
+  return { plan: { kind: 'all', kids: mtKids({ b: m.b, side: m.side, rules: m.rules }).kids, inf, maxD: m.maxDepth || 60, ms: m.ms || 1000, solved: true, pv: m.pv || 0 } };
+}
+function mtV(m) {
+  const { b, side } = mtNode(m), ply = (m.line || []).length;
+  nodes = 0; aborted = false; cut = false; deadline = m.until ? now() + (m.until - Date.now()) : Infinity;
+  const nl = m.nl || 0; let v, ok = true;
+  try { v = search(b, side, m.d, m.wa, m.wb, Math.max(1, ply)); } catch (e) { if (!(e instanceof Abort)) throw e; ok = false; v = 0; }
+  return { v, ok: ok && (!nl || nodes <= nl), exact: !cut, nodes };
+}
+function mtKids(m) {
+  const { b, side } = mtNode(m);
+  const ms = side ? 13 : 6, os = side ? 6 : 13, base = side ? 7 : 0;
+  let h1 = side ? ZS1 : 0, h2 = side ? ZS2 : 0;
+  for (let i = 0; i < 14; i++) { h1 ^= Z1[i * ZN + b[i]]; h2 ^= Z2[i * ZN + b[i]]; }
+  h1 ^= ZR1[ridx]; h2 ^= ZR2[ridx];
+  const ti = h1 & TT_MASK, ttMove = ttKey[ti] === h2 && ttInfo[ti] ? (ttInfo[ti] >> 10) - 1 : -1;
+  const must = Rcur.feed && sideSum(b, 1 - side) === 0, out = [];
+  for (let k = 0; k < 6; k++) {   // (the same moves and order as search())
+    if (!b[base + k] || (must && Rcur.oware && b[base + k] < 6 - k)) continue;
+    const c = Int8Array.from(b), r = play(c, side, k, Rcur);
+    if (must && !r.over && sideSum(c, 1 - side) === 0) continue;
+    let sc; const e = { m: k };
+    if (r.over) { sc = 1e6 + (c[ms] - c[os]) * 10; e.t = (c[ms] - c[os]) * SEED; }
+    else { sc = (r.extra ? 5000 : 0) + (c[ms] - b[ms]) * 100 - k; e.s = r.extra ? 1 : -1; }
+    if (k === ttMove) sc += 1e7;
+    e.sc = sc; out.push(e);
+  }
+  out.sort((x, y) => y.sc - x.sc); out.forEach(e => { delete e.sc; });
+  return { kids: out };
+}
+function mtFin(m) {
+  const r = m.raw;
+  if (m.job === 'move') {
+    if (r.list) {   // (PRO depth: the level's noise over the values)
+      const L = m.cfg || {};
+      const noisy = r.list.map(x => ({ m: x.m, v: x.v + (L.noise ? (seedRand() * 2 - 1) * L.noise : 0), raw: x.v, exact: x.exact })).sort((a, c) => c.v - a.v);
+      return { result: { type: 'move', move: noisy[0].m, value: noisy[0].raw / SEED, exact: noisy[0].exact, depth: r.depth } };
+    }
+    return { result: { type: 'move', move: r.m, value: r.v / SEED, exact: !!r.exact, depth: r.depth } };
+  }
+  const list = (r.list || []).map(x => Object.assign({ m: x.m, v: x.v / SEED, exact: !!x.exact }, x.pv ? { pv: x.pv } : {}));
+  return { result: { type: 'analyze', list, depth: r.depth, exact: list.every(x => x.exact) } };
+}
+function mtPv(m) { const b = Int8Array.from(m.b); setup(b, m.rules); return { pv: pvLine(b, m.side, m.m, m.plies) }; }
+
 const API = { RULES, RULE_IDS, initial, play, trace, replay, legal, isLegal, canFeed, stuck, sideSum, storeOf, baseOf, opposite, turnMax, turnMaxFirst,
-  evaluate, think, analyze, solve, chooseMove, LEVELS, W, WO, WG, ttClear, pvLine, setRandom: f => { seedRand = f; }, get nodes() { return nodes; } };
+  evaluate, think, analyze, solve, chooseMove, LEVELS, mtPlan, mtV, mtKids, mtFin, mtPv, W, WO, WG, ttClear, pvLine, setRandom: f => { seedRand = f; }, get nodes() { return nodes; } };
 
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else root.MancalaEngine = API;
@@ -628,7 +693,7 @@ if (typeof WorkerGlobalScope !== 'undefined' && root instanceof WorkerGlobalScop
   root.onmessage = ev => {
     const m = ev.data;
     try {
-      const b = Int8Array.from(m.b);
+      const b = Int8Array.from(m.b || []);
       if (m.type === 'move') {
         const r = chooseMove(b, m.side, m.rules, m.level, m.cfg);
         root.postMessage({ type: 'move', id: m.id, move: r.move, value: r.value, exact: r.exact, depth: r.depth });
@@ -636,7 +701,12 @@ if (typeof WorkerGlobalScope !== 'undefined' && root instanceof WorkerGlobalScop
         const r = analyze(b, m.side, m.rules, m.ms || 1000, m.maxDepth);
         if (m.pv) for (const x of r.list) x.pv = pvLine(b, m.side, x.m, m.pv);
         root.postMessage({ type: 'analyze', id: m.id, list: r.list, depth: r.depth, exact: r.exact });
-      } else if (m.type === 'solve') {
+      } else if (m.type === 'mtplan') root.postMessage(Object.assign({ id: m.id, type: 'result' }, mtPlan(m)));
+      else if (m.type === 'mtv') root.postMessage(Object.assign({ id: m.id, type: 'result' }, mtV(m)));
+      else if (m.type === 'mtkids') root.postMessage(Object.assign({ id: m.id, type: 'result' }, mtKids(m)));
+      else if (m.type === 'mtpv') root.postMessage(Object.assign({ id: m.id, type: 'result' }, mtPv(m)));
+      else if (m.type === 'mtfin') root.postMessage(Object.assign({ id: m.id, type: 'result' }, mtFin(m)));
+      else if (m.type === 'solve') {
         const r = solve(b, m.side, m.rules, m.ms || 8000) || analyze(b, m.side, m.rules, 1500);
         root.postMessage({ type: 'analyze', id: m.id, list: r.list, depth: r.depth, exact: r.exact });
       }
