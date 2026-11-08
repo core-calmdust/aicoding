@@ -3,7 +3,7 @@
 (() => {
   'use strict';
   const S = window.ShogiEngine;
-  const VER = '?v=2';
+  const VER = '?v=3';
   const LANG = (() => { try { return (localStorage.getItem('aicoding-lang') || 'ja') === 'ja' ? 'ja' : 'en'; } catch (e) { return 'ja'; } })();
   const T = {
     ja: { game: '将棋', back: '← 将棋', ttl: '最強解析', depth: '深さ', nps: '局面/秒', threads: 'スレッド', sel: 'スレッド数', ana: '解析', stop: '停止', play: 'AIに指させる',
@@ -101,7 +101,7 @@
   let FB = null;
   function goFB(ms) {
     if (!FB) {
-      FB = new Worker('../engine.js?v=20261108pro');
+      FB = new Worker('../engine.js?v=20261108s3');
       gunzip('../weights.bin.gz?v=20261018ol').then(w => FB.postMessage({ type: 'weights', buffer: w.buffer.slice(w.byteOffset, w.byteOffset + w.byteLength) })).catch(() => {});
     }
     return new Promise(res => { FB.onmessage = e => { if (e.data.type === 'result') res(e.data); }; FB.postMessage({ type: 'think', id: 1, sfen: startSfen, moves: line.slice(), opts: { time: ms } }); });

@@ -1494,7 +1494,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="../shared/placement.js?v=1l14"></script>
 <script src="../shared/export.js?v=9l14"></script>
 <script src="../shared/rulesoffer.js?v=16l14j"></script>
-<script src="engine.js?v=20261108pro"></script>
+<script src="engine.js?v=20261108s3"></script>
 <script src="strategy.js?v=20261107l14"></script>
 <script src="cpu-style.js?v=20261107l14"></script>
 <script src="lists-ui.js?v=20261107l14"></script>
@@ -1573,7 +1573,8 @@ const LEVELS = [{ depth: 2, noise: 95, greedy: 1 },   // 入門: 2-ply so it see
   { depth: 2, noise: 60, greedy: 1 }, { depth: 3, noise: 80 }, { depth: 3, noise: 55 }, { depth: 3, noise: 35 },
   { nodes: 8000, linear: 1 }, { nodes: 15000, linear: 1 }, { nodes: 27000, linear: 1 }, { nodes: 48000, linear: 1 },
   { nodes: 260 }, { nodes: 520 }, { nodes: 1000 }, { nodes: 2000 }, { nodes: 3100 }, { nodes: 5000 }, { nodes: 7700 }, { nodes: 10000 },
-  { nodes: 20000, time: 12000 }, { nodes: 36000, time: 15000 }, { nodes: 72000, time: 15000 }, { nodes: 150000, time: 15000 }, { nodes: 360000, time: 20000 }, { nodes: 2200000, time: 20000 }];
+  { nodes: 18000, time: 12000 }, { nodes: 29000, time: 15000 }, { nodes: 50000, time: 15000 }, { nodes: 100000, time: 15000 }, { nodes: 250000, time: 20000 }, { nodes: 1500000, time: 20000 }];
+// (2026-11-08 search v3: the steps from 18000 nodes up were rescaled to the nodes at which the new search equals the old one, MODEL_CARD.md)
 const COACH_MS = 2400, COACH_NODES = 1000000;          // coach card / hint: time cap and node budget (best move 75%, the alternatives the rest; a fast device stops at the nodes)
 // the coach / hint candidates: engine.js 'coach' (the full search of the strong levels); the variant worker only knows 'analyze'
 const coachMsg = (idx, n) => Variants.eng(game.variant) ? { type: 'analyze', sfen: game.start, moves: game.moves.slice(0, idx), opts: { time: 1500, top: n } }
@@ -1657,7 +1658,7 @@ const weightsReady = (async () => {
   return weights;
 })();
 function makeWorker(onmsg) {
-  const w = new Worker('engine.js?v=20261108pro');
+  const w = new Worker('engine.js?v=20261108s3');
   w.onmessage = onmsg;
   w.onerror = e => {
     console.warn('engine worker error', e.message);
@@ -1684,7 +1685,7 @@ aiWorker = makeWorker(aiMsg); anaWorker = makeWorker(anaMsg);
 // pool of threads when it is free (standard shogi only). The AI levels are node budgets (the same strength on every device),
 // so the AI and rated games stay on the one-thread workers.
 const MTP = window.MTEngine ? MTEngine.use({
-  wasm: 'engine_mt.wasm?v=1', lead: 'engine.js?v=20261108pro&mt=1', helper: 'mt-helper.js?v=1', slot: 8 << 20, initial: 1024, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
+  wasm: 'engine_mt.wasm?v=2', lead: 'engine.js?v=20261108s3&mt=1', helper: 'mt-helper.js?v=1', slot: 8 << 20, initial: 1024, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => Date.now(), progress: () => {}, aprogress: () => {} } }),
   after: async (X, mem, ws) => { const wt = await weightsReady; if (wt) ws[0].postMessage({ type: 'weights', buffer: wt.slice(0) }); },
   help: m => { const p = new E.Position(); p.setSfen(m.sfen); const board = Array.from(p.board), hand = Array.from(p.hand), side = p.side, moves = [];
