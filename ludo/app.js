@@ -413,7 +413,7 @@ function applyI18n() {
   if (window.GameRecord && GameRecord.relabel) GameRecord.relabel();
 }
 $('#langSel').onchange = e => { LANG = e.target.value; try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {} applyI18n(); if (G) step(); if ($('#newOverlay').classList.contains('show')) renderDialog(); if (HB) HB.relabel(); if (window.LudoLearn) LudoLearn.relang(); if (window.LudoCoach) LudoCoach.relabel(); };
-const paintSnd = () => $('#btnSound').classList.toggle('off', !settings.sound);
+const paintSnd = () => { const b = $('#btnSound'); b.classList.toggle('off', !settings.sound); b.classList.toggle('on', !!settings.sound); b.setAttribute('aria-pressed', settings.sound ? 'true' : 'false'); };   // (the gear menu reads on / aria-pressed)
 $('#btnSound').onclick = () => { settings.sound = !settings.sound; paintSnd(); save(); };
 
 /* ---------- start ---------- */
