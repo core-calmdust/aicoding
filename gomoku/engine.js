@@ -159,11 +159,13 @@ class Pos {
     this.pat = [null, new Uint16Array(SIZE), new Uint16Array(SIZE)];  // four direction patterns packed in nibbles
     this.CB = this.renju ? COMB_R : COMB_N;
     this.sc = [null, new Int32Array(SIZE), new Int32Array(SIZE)];
-    this.lw = LW[this.renju ? 'renju' : 'std']; this.lk = LK[this.renju ? 'renju' : 'std']; this.nn = this.renju ? NNI.renju : this.rule === 'standard' ? NNI.std : null;   // freestyle keeps the linear evaluation (the net did not beat it there)
+    this.nn = this.renju ? NNI.renju : this.rule === 'standard' ? NNI.std : null;   // freestyle keeps the linear evaluation (the net did not beat it there)
+    // the learned linear sums are only read by evaluate() when there is no net: with a net they are not kept (saves most of make / unmake)
+    this.lw = this.nn ? null : LW[this.renju ? 'renju' : 'std']; this.lk = LK[this.renju ? 'renju' : 'std'];
     this.cb = [null, new Int16Array(SIZE).fill(-1), new Int16Array(SIZE).fill(-1)];
     this.tA = [0, 0, 0]; this.tB = [0, 0, 0];   // learned sums: colour c as side to move / as opponent
     this.pk = new Int16Array(SIZE).fill(-1); this.tP = [0, 0, 0];   // cell class pairs, sums for black / white to move
-    this.lw2 = LW2[this.renju ? 'renju' : 'std']; this.LA = [0, 0, 0]; this.LB = [0, 0, 0];
+    this.lw2 = this.nn ? null : LW2[this.renju ? 'renju' : 'std']; this.LA = [0, 0, 0]; this.LB = [0, 0, 0];
     this.fb = new Int8Array(SIZE);          // black only: 0 ok, 1 forbidden for sure (overline / 4-4), 2 maybe (3-3, needs the exact test)
     this.tot = [0, 0, 0];
     this.near = new Int16Array(SIZE);
@@ -238,21 +240,25 @@ class Pos {
   // place / remove a stone: update the line codes and patterns of every cell that sees it
   _put(i, color, sign) {
     const cb = this.code[1], cw = this.code[2], vb = color === 1 ? sign : 2 * sign, vw = color === 2 ? sign : 2 * sign;
-    const TB = this.TB, TW = this.TW, pb = this.pat[1], pw = this.pat[2], b = this.b, L = this.lw2, LA = this.LA, LB = this.LB;
+    const TB = this.TB, TW = this.TW, pb = this.pat[1], pw = this.pat[2], b = this.b, L = this.lw2;
+    const A1 = L && L.A[1], A2 = L && L.A[2], B1 = L && L.B[1], B2 = L && L.B[2];
+    let dA1 = 0, dA2 = 0, dB1 = 0, dB2 = 0;   // (integer sums: adding them up at the end gives the same totals)
     for (let d = 0; d < 4; d++) {
       const D = DIRS[d], sh = 4 * d, mask = ~(15 << sh);
       for (let o = -5; o <= 5; o++) {
         if (!o) continue;
         const q = i - o * D;
         if (I2M[q] < 0) continue;
-        const k = o > 0 ? o + 4 : o + 5, x = q * 4 + d;
-        if (L && b[q] === EMPTY) { LA[1] -= L.A[1][cb[x]]; LB[1] -= L.B[1][cb[x]]; LA[2] -= L.A[2][cw[x]]; LB[2] -= L.B[2][cw[x]]; }
-        cb[x] += vb * POW3[k]; cw[x] += vw * POW3[k];
-        if (L && b[q] === EMPTY) { LA[1] += L.A[1][cb[x]]; LB[1] += L.B[1][cb[x]]; LA[2] += L.A[2][cw[x]]; LB[2] += L.B[2][cw[x]]; }
-        pb[q] = (pb[q] & mask) | (TB[cb[x]] << sh); pw[q] = (pw[q] & mask) | (TW[cw[x]] << sh);
-        if (b[q] === EMPTY) { this.cellUpd(q, 1); this.cellUpd(q, 2); }
+        const k = o > 0 ? o + 4 : o + 5, x = q * 4 + d, ob0 = cb[x], ow0 = cw[x], nb0 = ob0 + vb * POW3[k], nw0 = ow0 + vw * POW3[k];
+        cb[x] = nb0; cw[x] = nw0;
+        if (L && b[q] === EMPTY) { dA1 += A1[nb0] - A1[ob0]; dB1 += B1[nb0] - B1[ob0]; dA2 += A2[nw0] - A2[ow0]; dB2 += B2[nw0] - B2[ow0]; }
+        // a cell's class, score and learned sums depend only on its packed pattern: skip cellUpd when it did not change
+        const ob = pb[q], ow = pw[q], nb = (ob & mask) | (TB[nb0] << sh), nw = (ow & mask) | (TW[nw0] << sh);
+        pb[q] = nb; pw[q] = nw;
+        if (b[q] === EMPTY) { if (nb !== ob) this.cellUpd(q, 1); if (nw !== ow) this.cellUpd(q, 2); }
       }
     }
+    if (L) { this.LA[1] += dA1; this.LB[1] += dB1; this.LA[2] += dA2; this.LB[2] += dB2; }
   }
   _nearUpd(i, s) { for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) this.near[i + dy * S + dx] += s; }
   make(m) {

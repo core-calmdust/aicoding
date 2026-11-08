@@ -118,7 +118,7 @@ function save() {
 // ====================================================================== workers
 let jobId = 0;
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261104fb-pro1'); w.jobs = new Map();
+  const w = new Worker('engine.js?v=20261108p1-pro1'); w.jobs = new Map();
   w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (!j) return; if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; } w.jobs.delete(m.id); j.resolve(m); };
   return w;
 }
@@ -2210,7 +2210,7 @@ function rvbUpdate() {
   });
 }
 if (window.RvBox) BOX = RvBox.create({
-  app: '.app', frame: '#frame', lang: () => LANG, worker: () => 'engine.js?v=20261104fb-pro1',
+  app: '.app', frame: '#frame', lang: () => LANG, worker: () => 'engine.js?v=20261108p1-pro1',
   onHover: e => { rvbHov = e ? { e, k: kenSwap(() => keyOf(cur)) } : null; renderFx(); },
   onPick: e => kenPick(e), onKen: () => kenStart(), onBack: () => kenBack(), onReset: () => kenReset(),
   onGoto: i => viewAt(i), onLayout: () => { renderInfo(); renderFx(); }
