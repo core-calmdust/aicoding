@@ -12,7 +12,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const GUIDE = '../images/atlas/g-crab.webp', ENG = '../fanorona/engine.js?v=fb4';
+  const GUIDE = '../images/atlas/g-crab.webp', ENG = '../fanorona/engine.js?v=fb5s';
   const loadEngine = () => window.FanoronaEngine ? Promise.resolve(window.FanoronaEngine) : new Promise((res, rej) => { const s = document.createElement('script'); s.src = ENG; s.onload = () => window.FanoronaEngine ? res(window.FanoronaEngine) : rej(); s.onerror = rej; document.head.appendChild(s); });
 
   // the boards (rows top → bottom = row 5 … row 1); 'w' White (you), 'b' Black
