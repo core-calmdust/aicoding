@@ -25,7 +25,7 @@
   'use strict';
   if (window.MTEngine) return;
   const DIR = location.pathname.replace(/[^/]*$/, '');
-  const K_PREF = 'aicoding-mt', K_PREF0 = 'aicoding-mt:' + DIR, K_COI = 'aicoding-mt-coi:' + DIR, K_RELOAD = 'coi-reload:' + location.pathname, K_NODIP = 'aicoding-mt-nodip';
+  const K_PREF = 'aicoding-mt', K_PREF0 = 'aicoding-mt:' + DIR, K_COI = 'aicoding-mt-coi:' + DIR, K_RELOAD = 'coi-reload:' + location.pathname, K_NODIP = 'aicoding-mt-nodip', K_HEAL = 'aicoding-mt-heal:' + location.pathname;
   const LS = {
     get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } },
     set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} },
@@ -136,7 +136,11 @@
       try { const r = await navigator.serviceWorker.getRegistration('./'); if (r && new URL(r.scope).pathname === new URL('./', location.href).pathname) { try { await (await caches.open(FLAG_CACHE)).delete(FLAG_URL); } catch (e) {} await r.unregister(); } } catch (e) {}
       return;
     }
+    let hadReg = false; try { hadReg = !!((await navigator.serviceWorker.getRegistration('./')) || {}).active; } catch (e) {}
     try { await navigator.serviceWorker.register(swUrl, { scope: './' }); } catch (e) { return; }
+    // a reload that bypassed the worker (Shift+reload, or an extension's reload such as mouse-gesture tools): this page is not
+    // isolated although threads are on and the worker is there — load it once more the normal way, at once
+    if (!ISO && !CTRL0 && hadReg && (FLAGGED || (want() && dipLikely())) && !touched && !document.body.classList.contains('in-online') && Date.now() - (+LS.get(K_HEAL) || 0) > 10000) { LS.set(K_HEAL, String(Date.now())); location.reload(); return; }
     let cached = false; try { cached = !!(await (await caches.open(FLAG_CACHE)).match(FLAG_URL)); } catch (e) {}
     if (ISO) {
       if (!FLAGGED && cached) { await setFlag(false); if (!recently()) reload(); return; }   // (the worker gave COOP mode the page did not ask for)
