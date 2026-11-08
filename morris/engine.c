@@ -10,6 +10,16 @@
 //   setup: b[n], hand1, hand2, side, quiet, nmoves, moves...                  -> setup()
 //   results are written back to io as int32 values.
 #include <stdint.h>
+// MT (engine_mt.wasm, see the build line below): several threads search one root together on a shared memory ("Lazy SMP");
+// the state of one search is thread-local (TLS), the geometry, the evaluation weights, the endgame databases and the
+// transposition table are shared. Without it TLS is nothing and engine.wasm stays byte for byte as before.
+// Build (MT): clang --target=wasm32 -O3 -matomics -mbulk-memory -DMT -nostdlib -fno-builtin -Wl,--no-entry -Wl,--export-dynamic
+//        -Wl,--shared-memory -Wl,--import-memory -Wl,--max-memory=1073741824 -o engine_mt.wasm engine.c
+#ifdef MT
+#define TLS _Thread_local
+#else
+#define TLS
+#endif
 #define EXPORT(name) __attribute__((export_name(#name)))
 #define IMPORT(name) __attribute__((import_module("env"), import_name(#name)))
 IMPORT(now) double now(void);
@@ -33,7 +43,7 @@ typedef int32_t i32; typedef uint32_t u32; typedef int8_t i8; typedef uint8_t u8
 #define LMR_I2 8
 #endif
 
-static i32 IO[8192];
+static TLS i32 IO[8192];
 EXPORT(io_ptr) i32 *io_ptr(void) { return IO; }
 
 // ---------------------------------------------------------------- geometry
@@ -47,6 +57,10 @@ static u32 zp[3][24], zp2[3][24], zh[3][16], zh2[3][16], zs, zs2;
 static u32 rs = 0x9e3779b9u;
 static u32 rnd(void) { rs ^= rs << 13; rs ^= rs >> 17; rs ^= rs << 5; return rs; }
 static void link(int a, int b) { for (int k = 0; k < adjn[a]; k++) if (adjv[a][k] == b) return; adjv[a][adjn[a]++] = b; adjv[b][adjn[b]++] = a; }
+#ifdef MT
+static volatile int geoKey;   // the geometry in force (shared): a helper thread waits for the job's before it searches
+EXPORT(geo_key) int geo_key(void) { return __atomic_load_n(&geoKey, __ATOMIC_SEQ_CST); }
+#endif
 EXPORT(set_geometry) void set_geometry(void) {
   int k = 0; N = IO[k++]; PIECES = IO[k++]; FLY = IO[k++]; NM = IO[k++];
   for (int i = 0; i < N; i++) { adjn[i] = 0; prn[i] = 0; }
@@ -62,11 +76,14 @@ EXPORT(set_geometry) void set_geometry(void) {
   for (int s = 0; s < 3; s++) for (int i = 0; i < 24; i++) { zp[s][i] = rnd(); zp2[s][i] = rnd(); }
   for (int s = 0; s < 3; s++) for (int i = 0; i < 16; i++) { zh[s][i] = rnd(); zh2[s][i] = rnd(); }
   zs = rnd(); zs2 = rnd();
+#ifdef MT
+  __atomic_store_n(&geoKey, N | PIECES << 5 | FLY << 10 | NM << 11 | ne << 17, __ATOMIC_SEQ_CST);   // (last: the helpers wait for it)
+#endif
 }
 
 // ---------------------------------------------------------------- position
 typedef struct { i8 b[24]; u32 bb[3]; i8 hand[3], cnt[3]; int side, quiet; u32 h1, h2; int stk[MAXPLY + 1024]; int sp; } Pos;
-static Pos P;
+static TLS Pos P;
 static void rehash(Pos *p) {
   u32 a = 0, b = 0;
   for (int i = 0; i < N; i++) if (p->b[i]) { a ^= zp[(int)p->b[i]][i]; b ^= zp2[(int)p->b[i]][i]; }
@@ -229,11 +246,21 @@ static int evaluate(const Pos *p) {
 #define TT_SIZE (1 << TT_BITS)
 #define TT_MASK (TT_SIZE - 1)
 static u32 tk1[TT_SIZE], tk2[TT_SIZE]; static int16_t tv[TT_SIZE]; static i32 tmv[TT_SIZE]; static i8 td[TT_SIZE], tfl[TT_SIZE];
+#ifdef MT
+static TLS int (*buf)[MAXMV], (*scb)[MAXMV];   // each thread's move lists (1 MB): in its own slot, after its TLS block (mt_thread)
+#else
 static int buf[MAXPLY + 8][MAXMV], scb[MAXPLY + 8][MAXMV];
-static int killer[(MAXPLY + 8) * 2], histT[32 * 32];
-static u32 rep[4096]; static int repLen;
-static double nodes, maxNodes, deadline; static int aborted;
+#endif
+static TLS int killer[(MAXPLY + 8) * 2], histT[32 * 32];
+static TLS u32 rep[4096]; static TLS int repLen;
+static TLS double nodes, maxNodes, deadline; static TLS int aborted;
+#ifdef MT
+static volatile int gStop;            // shared: set when the main thread's search is over (the helpers stop)
+static TLS int threadId;              // 0 = the main thread (time control, result), 1.. = helpers
+static void checkAbort(void) { if (now() > deadline || nodes > maxNodes || gStop) aborted = 1; }
+#else
 static void checkAbort(void) { if (now() > deadline || nodes > maxNodes) aborted = 1; }
+#endif
 static int isRep(const Pos *p) {
   u32 h = p->h1; int lim = repLen - p->quiet - 1; if (lim < 0) lim = 0;
   for (int i = repLen - 3; i >= lim; i -= 2) if (rep[i] == h) return 1;
@@ -354,8 +381,8 @@ static int quickStatus(Pos *p, int ply) {   // returns INF+1 when the game goes 
 }
 
 // ---------------------------------------------------------------- host API
-static int rootMv[MAXMV], rootN;
-static int startQuiet;
+static TLS int rootMv[MAXMV], rootN;
+static TLS int startQuiet;
 EXPORT(setup) int setup(void) {
   // IO: b[N], hand1, hand2, side, quiet, nmoves, moves...
   int k = 0; Pos *p = &P;
@@ -403,7 +430,12 @@ EXPORT(best) void best(int maxDepth, double ms, double mn) {
   Pos *p = &P; limit(ms, mn);
   if (rootN == 1) { IO[0] = rootMv[0]; IO[1] = 0; IO[2] = 0; return; }
   int bestM = rootMv[0], bestV = 0, done = 0, ord[MAXMV];
+#ifdef MT
+  const int d0 = threadId ? 1 + (threadId & 1) : 1;   // helpers: every other one a ply ahead, so the threads fill the table with different depths
+  for (int d = d0; d <= maxDepth; d++) {
+#else
   for (int d = 1; d <= maxDepth; d++) {
+#endif
     int k = 0; ord[k++] = bestM; for (int i = 0; i < rootN; i++) if (rootMv[i] != bestM) ord[k++] = rootMv[i];
     int alpha = -INF, bm = bestM, bv = -INF;
     for (int i = 0; i < rootN; i++) {
@@ -422,6 +454,9 @@ EXPORT(best) void best(int maxDepth, double ms, double mn) {
     if (bv > WINT || bv < -WINT) break;
   }
   IO[0] = bestM; IO[1] = bestV; IO[2] = done;
+#ifdef MT
+  IO[3] = (i32)(nodes / 1000);   // (the nodes of this search, thousands: the helpers' counts, the page's nps)
+#endif
 }
 // analysis: all root moves, iterative deepening until time runs out; IO out: n, depth, (m, v)...
 EXPORT(analyze) void analyze(double ms, int maxDepth) {
@@ -445,3 +480,25 @@ EXPORT(analyze) void analyze(double ms, int maxDepth) {
   }
   if (!have) { IO[0] = 0; IO[1] = 0; }
 }
+
+#ifdef MT
+// ---------------------------------------------------------------- threads (engine_mt.wasm; shared/mtengine.js, mt-helper.js)
+extern void __wasm_init_tls(void *);
+EXPORT(mt_heap_base) u32 mt_heap_base(void) { return (u32)&__heap_base; }
+EXPORT(mt_tls_size) u32 mt_tls_size(void) { return __builtin_wasm_tls_size(); }
+// every instance first: mt_stack (its own stack: the top address; a function without a frame of its own), then mt_thread
+EXPORT(mt_stack) void mt_stack(u32 stackTop) { __asm__ volatile(".globaltype __stack_pointer, i32\n local.get %0\n global.set __stack_pointer" :: "r"(stackTop)); }
+// (the thread's own variables are set in a function of their own: in mt_thread itself the compiler reads the TLS base once,
+// before __wasm_init_tls has moved it, and the stores would land in the old block)
+static __attribute__((noinline)) void mtSelf(u32 tls, int id) {
+  threadId = id;
+  u32 a = (tls + __builtin_wasm_tls_size() + 63) & ~63u;   // (the stack grows down from the slot's top towards these)
+  buf = (int (*)[MAXMV])a; a += sizeof(int) * (MAXPLY + 8) * MAXMV;
+  scb = (int (*)[MAXMV])a;
+  for (int i = 0; i < (MAXPLY + 8) * 2; i++) killer[i] = -1;
+}
+EXPORT(mt_thread) void mt_thread(u32 tls, int id) { __wasm_init_tls((void *)tls); mtSelf(tls, id); }
+EXPORT(mt_id) int mt_id(void) { return threadId; }
+EXPORT(mt_stop) void mt_stop(int v) { __atomic_store_n(&gStop, v, __ATOMIC_SEQ_CST); }
+EXPORT(last_nodes) double last_nodes(void) { return nodes; }   // (this thread's last search: the page's nps readout)
+#endif

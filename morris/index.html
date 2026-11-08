@@ -1351,13 +1351,13 @@ body.in-online #coachCard{display:none!important}
 <script src="../shared/resign.js?v=3l14"></script><script src="../shared/drawoffer.js?v=1l14"></script>
 <script src="../shared/tick.js?v=2l14"></script>
 <script src="../shared/ruletour.js?v=29l14"></script>
-<script src="engine.js?v=20261108pf1"></script>
+<script src="engine.js?v=20261108pf1-mt1"></script>
 <script src="rvbox.js?v=20261107l14"></script><!-- 振り返りボックス (PC): 候補手・読み筋・検討 -->
 <script src="i18n-online.js?v=20261107l14-hb1"></script>
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2l14"></script>
 <script src="online.js?v=stale2pf"></script>
-<script src="../shared/proset.js?v=3t2svhxbf"></script><script>
+<script src="../shared/mtengine.js?v=6"></script><script>MTEngine.init({ sw: "sw.js?v=1", light: true }); if (MTEngine.coi && window.MorrisOnline) MorrisOnline.available = false;</script><script src="../shared/proset.js?v=3t2svhxbf"></script><script>
 'use strict';
 // ====================================================================== rules (shared with the engine)
 const E = window.MorrisEngine, NONE = E.NONE, WIN = E.WIN, WINT = E.WINT;
@@ -1483,22 +1483,54 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
+const ENGINE_URL = 'engine.js?v=20261108pf1-mt1';
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261108pf1');
+  const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
   w.onmessage = e => {
     const m = e.data, j = w.jobs.get(m.id); if (!j) return;
     if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; }
-    w.jobs.delete(m.id); j.resolve(m);
+    w.jobs.delete(m.id); noteNps(m.nodes, performance.now() - j.t0); j.resolve(m);
   };
   return w;
 }
+// search speed of the last engine search (nodes per second, all threads), shown quietly at the end of the info line
+let lastNps = 0;
+const npsText = () => lastNps ? '  ·  ' + (lastNps >= 1e6 ? (lastNps / 1e6).toFixed(1) + 'M' : Math.round(lastNps / 1e3) + 'k') + ' nps' : '';
+function noteNps(nodes, ms) {
+  if (!(nodes > 50000 && ms > 20)) return;
+  lastNps = nodes / ms * 1000;
+  const el = document.getElementById('infoLine'); if (el && el.dataset.base !== undefined) el.textContent = el.dataset.base + npsText();
+}
 let aiW = makeWorker(), anaW = makeWorker();
+// multi-threaded search (shared/mtengine.js; common rule 2026-11-08「本編のマルチスレッド」, 全タイトル対応): analysis, hints, the
+// coach, the review box and the levels that think by time (Lv.9・Lv.10, Lv.11 outside six men's; rated games too) go to the
+// pool of threads when it is free (Lazy SMP: the lead keeps the level's own limits, the helpers fill the shared table). The
+// levels decided by depth (Lv.1〜8) stay on the one-thread workers, as does the perfect play of six men's (the database).
+const MTP = window.MTEngine ? MTEngine.use({
+  wasm: 'engine_mt.wasm?v=1', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=1', slot: 4 << 20, initial: 512, maximum: 16384,   // slot: TLS + the 1 MB move lists + the stack; maximum = engine_mt.wasm's (1 GiB)
+  imports: mem => ({ env: { memory: mem, now: () => Date.now(), progress: () => {} } }),
+  help: m => ({ io: E.setupIO(m.variant, m.start, m.moves || []), gk: E.geoKey(m.variant) }),
+  isDone: m => m.type === 'result' || m.type === 'candsDone', isProg: m => m.type === 'progress' || m.type === 'cands',   // (the review box streams 'cands')
+}) : null;
+const mtLevel = lv => { const L = E.LEVELS[lv]; return !!(L && L.noise === undefined && L.ms && L.d >= 30); };   // a level that thinks by time (Lv.9〜11)
+function mtWants(which, msg) {
+  if (msg.type === 'analyze' || msg.type === 'cands') return true;
+  if (msg.type !== 'think') return false;
+  if (msg.cfg) return msg.cfg.noise === undefined && msg.cfg.threads > 1;   // PRO: its own thread count with any limit of the search
+  return mtLevel(msg.level);   // (rated games too; the coach's deeper pass COACH_DEEP is Lv.9)
+}
 function request(which, msg, onProgress) {
+  const mp = MTP && mtWants(which, msg) && MTP.pool(which === 'ai' ? 'ai' : null);
+  if (mp) { const t0 = performance.now(), full = { variant: gv, start: startSpec, ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }; return mp.run(full, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full, onProgress) : r; }); }
+  return requestW(which, msg, onProgress);
+}
+function requestW(which, msg, onProgress) {   // (the one-thread workers)
   const w = which === 'ai' ? aiW : anaW;
-  return new Promise(resolve => { const id = ++jobId; w.jobs.set(id, { resolve, onProgress }); w.postMessage({ variant: gv, start: startSpec, ...msg, id }); });
+  return new Promise(resolve => { const id = ++jobId; w.jobs.set(id, { resolve, onProgress, t0: performance.now() }); w.postMessage({ variant: gv, start: startSpec, ...msg, id }); });
 }
 function cancelWorker(which) {
+  if (MTP) MTP.cancel(which);
   const w = which === 'ai' ? aiW : anaW;
   if (!w.jobs.size) return;
   w.terminate();
@@ -1863,7 +1895,7 @@ function renderInfo() {
   $('#btnSound').classList.toggle('on', settings.sound);
   $('#reviewBar').classList.toggle('show', reviewing && !lesson && !puzzle);
   renderReview();
-  $('#infoLine').textContent = `${t('rule.' + gv)}  ·  ${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? AIW() + ' Lv.' + levelFor(0) + ' ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : '') : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`;
+  { const il = $('#infoLine'); il.dataset.base = `${t('rule.' + gv)}  ·  ${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? AIW() + ' Lv.' + levelFor(0) + ' ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : '') : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`; il.textContent = il.dataset.base + npsText(); }
   renderBrand();
   if (window.olAfterInfo) olAfterInfo();
   hbInfo(pos, st);
@@ -2526,14 +2558,15 @@ $('#optPfCh').onchange = e => { draft.pfCh = e.target.checked; };
 // AI vs AI, never rated. The changed values make a level of the engine's own form (engine.js: cfg).
 var PRO = window.ProSet ? ProSet.init({ game: 'morris', lang: () => LANG, level: () => draft.level || settings.level, show: () => (draft.mode === 'ai' || draft.mode === 'watch') && !(draft.rule === 'six' && (draft.level === PF_LV || (draft.mode === 'watch' && draft.level2 === PF_LV))),
   store: { get: () => settings.pro, set: v => { settings.pro = v; } },
-  defaults: lv => { const L = E.LEVELS[lv] || E.LEVELS[5]; return { limit: L.noise === undefined && L.ms ? { k: 'time', v: L.ms / 1000 } : { k: 'depth', v: L.d }, var: L.noise === undefined ? 0 : L.blunder ? 2 : 1 }; },
-  params: [{ key: 'limit', kinds: { time: [0.1, 30], depth: [1, 40] } }, { key: 'var' }] }) : null;
+  defaults: lv => { const L = E.LEVELS[lv] || E.LEVELS[5]; return { limit: L.noise === undefined && L.ms ? { k: 'time', v: L.ms / 1000 } : { k: 'depth', v: L.d }, var: L.noise === undefined ? 0 : L.blunder ? 2 : 1, threads: MTP && mtLevel(lv) ? ProSet.maxThreads() : 1 }; },
+  params: [{ key: 'limit', kinds: { time: [0.1, 30], depth: [1, 40] } }].concat(MTP ? [{ key: 'threads' }] : [], [{ key: 'var' }]) }) : null;   // (threads: 本編のマルチスレッド, any limit of the search; every thread by default for the levels that think by time)
 function proGet(lv) { if (lv === PF_LV || !PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; return PRO.get(lv); }
 function proTag(lv) { return proCfg(lv) ? ' PRO' : ''; }
 function proCfg(lv) {
   const e = proGet(lv); if (!e) return null;
   const L = E.LEVELS[lv] || E.LEVELS[5], c = e.limit.k === 'depth' ? { d: e.limit.v } : { d: 60, ms: Math.round(e.limit.v * 1000) };
   if (e.var) { if (!e.changed.includes('var') && L.noise !== undefined) { c.noise = L.noise; if (L.blunder) c.blunder = L.blunder; } else c.noise = e.var === 1 ? 14 : 90; }
+  if (MTP) c.threads = e.threads || 1;
   return c;
 }
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
@@ -3494,7 +3527,7 @@ function rbRealOver() {
 }
 function rbActive() { return !lesson && !puzzle && rvOpen && !!rv && !rv.running && rv.key === gameKey() && !rtLive() && !pfLive() && !(window.olLive && olLive()); }
 function rbOn() { return !!(window.RvBox && RvBox.pc() && rbActive()); }
-function rbCancel() { if (rbW && rbBusy) { rbW.terminate(); rbW = null; } rbBusy = false; }
+function rbCancel() { if (MTP) MTP.cancel('rvb'); if (rbW && rbBusy) { rbW.terminate(); rbW = null; } rbBusy = false; }
 function rbRows(list, lines) {
   const side = posAt(cur).pos.side, played = !rbCons() && cur < moves.length ? moves[cur] : -1;
   return list.slice().sort((a, b) => b.v - a.v).slice(0, 5).map(e => {
@@ -3510,6 +3543,7 @@ function rbStudyPlay(m) {
   animating = animOn(); setTimeout(() => { animating = false; renderInfo(); boardEl.classList.toggle('can', canHumanPlay()); }, d);
   update(true);
 }
+let rbTok = 0;   // (the review box's job on the threads: a newer one wins)
 if (window.RvBox) RvBox.init({
   active: rbActive, lang: () => LANG, key: () => shownKeyOf(cur), boardEl: () => $('#frame'),
   head() {
@@ -3523,18 +3557,24 @@ if (window.RvBox) RvBox.init({
     if (gameOver(cur)) { onUpdate([], true); return; }
     const pre = !rbCons() && rv && rv.list[cur];
     if (pre) onUpdate(rbRows(pre, null), false);
-    if (!rbW) rbW = makeWorker();
     rbBusy = true;
-    const w = rbW, id = ++jobId;
-    w.onmessage = e => {
-      const m = e.data; if (m.id !== id) return;
+    const job = { type: 'cands', variant: gv, start: startSpec, moves: seqAt(cur), time: 900, n: 5, plies: 8, ply: 110 };
+    const got = m => {
       if (m.type !== 'cands' && m.type !== 'candsDone') { if (m.error) { rbBusy = false; onUpdate(pre ? rbRows(pre, null) : [], true); } return; }
       const fin = m.type === 'candsDone'; if (fin) rbBusy = false;
       rbLines = m.lines || {};
       onUpdate(rbRows(m.list, m.lines), fin);
       if (rbHov !== null) renderFx();
     };
-    w.postMessage({ type: 'cands', id, variant: gv, start: startSpec, moves: seqAt(cur), time: 900, n: 5, plies: 8, ply: 110 });
+    const mp = MTP && MTP.pool();   // (the threads when free; cancelled by rbCancel)
+    if (mp) { const tok = ++rbTok; mp.run(job, got, 'rvb').then(r => { if (tok !== rbTok) return; if (r) got(r); else if (r === undefined) oneW(); else rbBusy = false; }); return; }
+    oneW();
+    function oneW() {
+    if (!rbW) rbW = makeWorker();
+    const w = rbW, id = ++jobId;
+    w.onmessage = e => { const m = e.data; if (m.id !== id) return; got(m); };
+    w.postMessage(Object.assign({ id }, job));
+    }
   },
   cancel: rbCancel,
   hover(mv) { rbHov = mv; renderFx(); },
@@ -3831,7 +3871,7 @@ window.addEventListener('resize', () => renderFx());
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=20261110mt8" defer></script>
+<script src="../shared/atlas.js?v=20261110mo1" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1l14" defer></script>
 <script src="../shared/atlas-account.js?v=20261101fa1l14" defer></script>
 <script src="../shared/infotabs.js?v=17l14" data-strips defer></script>
