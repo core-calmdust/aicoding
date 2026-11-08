@@ -1,4 +1,4 @@
-// node ludo/tools/gen_learn.js [games] → ludo/lessons.json + ludo/puzzles.json
+// node ludo/tools/gen_learn.js [games] → ludo/lessons.json   (the puzzles were retired 2026-11-09)
 // Positions come from AI self-play (Lv.6–14 mixed, 2–4 players). At each decision the throw is known; every legal
 // move is scored by the Lv.20 evaluation (with the look at the extra throw). A position is kept when the best move is
 // clearly better than every other (margin) and is of a teachable kind (capture, bring out, safe square / castle,
@@ -109,16 +109,5 @@ for (const [cid, rule, kinds] of CATS) {
   }
   lessons.cats.push(cat);
 }
-// puzzles: a theme per rule × kind, easy (big margin) first; stages of 10
-const puzzles = { version: 2, cats: [{ id: 'ludo' }, { id: 'pachisi' }], themes: [], daily: [] };
-for (const rule of ['ludo', 'pachisi']) for (const kind of KINDS) {
-  const pool = cands[rule].filter(c => c.kind === kind && !used.has(ukey(c))).sort((a, b) => b.margin - a.margin).slice(0, 50);
-  pool.forEach(c => used.add(ukey(c)));
-  const id = rule + '-' + kind;
-  puzzles.themes.push({ id, cat: rule, rule, kind, puzzles: pool.map(c => Object.assign(strip(c), { d: c.margin >= 14 ? 1 : c.margin >= 8 ? 2 : 3 })) });
-  puzzles.daily.push(id);
-}
 fs.writeFileSync(path.join(__dirname, '..', 'lessons.json'), JSON.stringify(lessons));
-fs.writeFileSync(path.join(__dirname, '..', 'puzzles.json'), JSON.stringify(puzzles));
 console.log('lessons', lessons.steps.map(l => l.id + ':' + l.problems.length).join(' '));
-console.log('puzzles', puzzles.themes.map(t => t.id + ':' + t.puzzles.length).join(' '));

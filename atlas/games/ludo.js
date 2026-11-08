@@ -63,7 +63,7 @@
   let i18nP = null;
   function loadTexts() {
     if (window.I18N && window.I18N.ja && window.I18N.ja['st.grace']) return Promise.resolve(window.I18N);
-    return i18nP || (i18nP = new Promise(res => { const s = document.createElement('script'); s.src = '../ludo/i18n.js?v=3'; s.onload = () => res(window.I18N || {}); s.onerror = () => { i18nP = null; res({}); }; document.head.appendChild(s); }));
+    return i18nP || (i18nP = new Promise(res => { const s = document.createElement('script'); s.src = '../ludo/i18n.js?v=4'; s.onload = () => res(window.I18N || {}); s.onerror = () => { i18nP = null; res({}); }; document.head.appendChild(s); }));
   }
 
   function start(ctx) {
@@ -279,10 +279,11 @@
       thr = th; busy = false;
       const sub = throwText(th) + (rule === 'pachisi' && th.grace ? ' · ' + tx('st.grace') : '');
       moves = E.legalMoves(st, th); const real = moves.filter(m => !m.pass);
-      if (!real.length) { const m = moves[0] || { pass: true }; phase = 'auto'; const w = m.forfeit ? tx('st.three') : tx('st.nomove'); say(sub + ' — ' + w); toast(w); later(() => commit(m), 1000); return; }
+      const dz = rule === 'pachisi' ? '🐚 ' : '🎲 ';
+      if (!real.length) { const m = moves[0] || { pass: true }; phase = 'auto'; const w = m.forfeit ? tx('st.three') : tx('st.nomove'); say(dz + sub); toast(w); later(() => commit(m), 560); return; }   // (the bar keeps a short status; the sentence goes up top)
       if (!human(seat)) { phase = 'auto'; const r = E.think(st, th, level); later(() => commit(r.move || real[0]), 380); return; }
-      if (real.length === 1 && !moves.some(m => m.pass)) { phase = 'auto'; say(sub); later(() => commit(real[0]), 420); return; }
-      phase = 'move'; say(tx('st.pick', { v: sub })); showMarks(); focusMoves(seat, real);
+      if (real.length === 1 && !moves.some(m => m.pass)) { phase = 'auto'; say(dz + sub); later(() => commit(real[0]), 420); return; }
+      phase = 'move'; say(dz + sub); showMarks(); focusMoves(seat, real);
     }
     async function commit(m) {
       if (over || stopped || busy) return;

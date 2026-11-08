@@ -48,7 +48,7 @@ function statsHtml() {
 }
 function live() { return !!(G && G.rated && !G.state.over && !SP); }
 // leaving a rated game in progress asks first (the game is then lost)
-const GUARD = '#btnNew, #btnLesson, #btnPuzzle, #btnRules';
+const GUARD = '#btnNew, #btnLesson, #btnRules';
 let pass = false;
 document.addEventListener('click', e => {
   if (pass || !live() || !G.plies.length) return;
