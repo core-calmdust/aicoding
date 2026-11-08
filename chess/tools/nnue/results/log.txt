@@ -1,0 +1,14 @@
+11-08 16:54 == build
+11-08 16:54 == Lichess evaluation database: download
+11-08 17:53 == Lichess: converting (quiet positions only, about 1-2 hours)
+11-08 18:09 Lichess: 284661950 positions (the .zst can be deleted now)
+11-08 18:09 == self-play: 13 processes x 13987 games, 5000 nodes per move (about 20000000 positions)
+11-08 20:12 self-play: 19610327 positions
+11-08 20:12 == teacher /opt/homebrew/bin/stockfish depth 10: re-scoring the self-play positions
+11-09 01:47 == training (8 epochs)
+train: epoch 8 valid 0.013520 lr 0.0001 384s 791k pos/s
+11-09 02:39 check: engine = trainer on 2000 positions (identical)
+11-09 02:39 == matches vs the current net
+/Users/core_tan/chess-nnue-work/net.bin vs /Users/core_tan/chess-nnue-work/base.bin (20000): +282 -111 =127  score 0.664  Elo +119 (+92 .. +146)
+/Users/core_tan/chess-nnue-work/net.bin vs /Users/core_tan/chess-nnue-work/base.bin (100ms): +127 -56 =77  score 0.637  Elo +97 (+62 .. +135)
+11-09 02:44 done: /Users/core_tan/chess-nnue-work/nnue-candidate.bin.gz (and log.txt, net.bin.log)

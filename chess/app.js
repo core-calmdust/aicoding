@@ -194,7 +194,7 @@ function noteNps(nodes, ms) {
 }
 let jobId = 0;
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261108top2'); w.jobs = new Map();
+  const w = new Worker('engine.js?v=20261109nn1'); w.jobs = new Map();
   w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (!j) return; if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; } w.jobs.delete(m.id); noteNps(m.nodes, performance.now() - j.t0); j.resolve(m); };
   return w;
 }
@@ -203,7 +203,7 @@ let aiW = makeWorker(), anaW = makeWorker();
 // timed AI levels outside rated games go to the pool of threads when it is free; rated games and the node-limited levels stay
 // on the one-thread workers (the same moves as before)
 const MTP = window.MTEngine ? MTEngine.use({
-  wasm: 'engine_mt.wasm?v=1', lead: 'engine.js?v=20261108top2&mt=1', helper: 'mt-helper.js?v=1', slot: 2 << 20, initial: 512, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
+  wasm: 'engine_mt.wasm?v=1', lead: 'engine.js?v=20261109nn1&mt=1', helper: 'mt-helper.js?v=1', slot: 2 << 20, initial: 512, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => performance.now(), progress: () => {} } }),
   help: m => { const p = E.Pos.fromFEN(m.fen || E.START), u = []; for (const x of m.moves || []) { u.push(p.uci(x)); p.make(x); } return { setup: (m.fen || E.START) + (u.length ? ' moves ' + u.join(' ') : '') }; },
 }) : null;
@@ -1215,7 +1215,7 @@ function styleMove(ucis) {
 // player's rating (mostly close, sometimes clearly stronger or weaker). 10 min + 5 s per move; leaving a game in progress loses it.
 let rgame = null;
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_CLOCK = { base: 600000, inc: 5000 };
-const RT_LV = [0, 200, 350, 500, 650, 800, 1000, 1250, 1400, 1600, 1700, 1800, 1900, 2100, 2250, 2350, 2450, 2650, 2830, 2930, 3020, 3110, 3190, 3260, 3330, 3400];   // 18–25 (2026-11-08, re-spaced to about twice the time per step): interpolated from the Stockfish measurements of Lv.17 / the old 0.5 s level, then the time-doubling matches (MODEL_CARD.md「最上位レベル」)
+const RT_LV = [0, 200, 350, 500, 650, 800, 1000, 1250, 1400, 1600, 1700, 1800, 1900, 2150, 2295, 2385, 2495, 2705, 2885, 2985, 3075, 3160, 3240, 3305, 3370, 3440];   // 13–25 raised 2026-11-09 for the new NNUE (about 0.5× its self-play gain over the old net; MODEL_CARD.md「評価関数 v2」). 18–25 (2026-11-08, re-spaced to about twice the time per step): interpolated from the Stockfish measurements of Lv.17 / the old 0.5 s level, then the time-doubling matches (MODEL_CARD.md「最上位レベル」)
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };
