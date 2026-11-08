@@ -2,7 +2,7 @@
 // Also makes the page cross-origin isolated for the multi-threaded search (shared/mt-sw.js: Document-Isolation-Policy, or
 // COOP / COEP when the option "マルチスレッド" asks for it). (pro/ has its own worker, pro/coi-sw.js, with the more specific scope.)
 importScripts('../shared/mt-sw.js?v=2');
-const CACHE = 'reversi-v4-82';
+const CACHE = 'reversi-v4-83';
 const CORE = ['./', 'index.html', 'i18n.js', 'engine.js', 'engine-wasm.js', 'online.js', 'rbox.js', 'firebase-config.js', '../shared/onlinesec.js', 'manifest.webmanifest', 'icon-192.png', '../shared/pzbook.js', '../shared/rulesoffer.js', '../shared/headerbar.js', '../shared/tick.js', '../shared/fischer.js', '../shared/ruletour.js', '../shared/resign.js', '../shared/mtengine.js', '../shared/proset.js', 'mt-worker.js'];
 const DATA = ['weights.bin.gz', 'weights.json', 'book.bin', 'lessons.json', 'puzzles.json'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE.concat(DATA))).then(() => self.skipWaiting())); });

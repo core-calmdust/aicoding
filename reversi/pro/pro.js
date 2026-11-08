@@ -2,7 +2,7 @@
 // The page is made cross-origin isolated by coi-sw.js (SharedArrayBuffer); without it, one thread (the normal engine).
 (() => {
   'use strict';
-  const VER = '?v=6';
+  const VER = '?v=7';
   const LANG = (() => { try { return (localStorage.getItem('aicoding-lang') || 'ja') === 'ja' ? 'ja' : 'en'; } catch (e) { return 'ja'; } })();
   const T = {
     ja: { back: '← リバーシ', ttl: '最強解析', depth: '深さ', nps: '局面/秒', threads: 'スレッド', sel: 'スレッド数', ana: '解析', stop: '停止', play: 'AIに指させる',
@@ -58,7 +58,7 @@
   // ------------------------------------------------------------------ the multi-thread engine
   const SLOT = 2 << 20;
   const HC = navigator.hardwareConcurrency || 4, MAXT = Math.max(1, Math.min(32, HC));
-  const MT = { X: null, mem: null, module: null, base: 0, workers: [], weights: null };
+  const MT = { X: null, mem: null, module: null, base: 0, workers: [], weights: null, ctl: null };
   const CFG = { depth: 60, exact: 22, wld: 24, mpc: 1 };   // like level 20, solving a little earlier (several threads)
   async function loadWeights() {
     const res = await fetch('../weights.bin.gz?v=4');
@@ -75,6 +75,7 @@
     if (need > MT.mem.buffer.byteLength) MT.mem.grow(Math.ceil((need - MT.mem.buffer.byteLength) / 65536));
     X.mt_stack(MT.base + MAXT * SLOT + SLOT - 16); X.mt_thread(MT.base + MAXT * SLOT);
     X.init();
+    MT.ctl = new Int32Array(new SharedArrayBuffer(512));   // [0]: 1 = stop; the root split of the endgame solve (engine.js rootSplit)
     MT.weights = await loadWeights();
     MT.X = X;
   }
@@ -85,7 +86,7 @@
       await new Promise((res, rej) => {
         w.onmessage = e => { if (e.data.type === 'mtready') res(); };
         w.onerror = rej;
-        w.postMessage({ type: 'mtinit', module: MT.module, mem: MT.mem, tls: MT.base + id * SLOT, top: MT.base + id * SLOT + SLOT - 16 });
+        w.postMessage({ type: 'mtinit', module: MT.module, mem: MT.mem, tls: MT.base + id * SLOT, top: MT.base + id * SLOT + SLOT - 16, ctl: MT.ctl });
       });
       w.postMessage({ type: 'weights', buffer: MT.weights.buffer.slice(0), nphase: MT.weights.nphase });
       MT.workers.push(w);
@@ -97,24 +98,24 @@
   function goMT(time, onProgress) {
     const { c, me } = replay(line);
     return new Promise(resolve => {
-      MT.X.mt_stop(0); let left = MT.workers.length, main = null, nodes = 0; const t0 = performance.now(), id = ++jid;
+      MT.X.mt_stop(0); Atomics.store(MT.ctl, 0, 0); let left = MT.workers.length, main = null, nodes = 0; const t0 = performance.now(), id = ++jid;
       MT.workers.forEach((w, i) => {
         w.onmessage = e => {
           const m = e.data; if (m.id !== id) return;
           if (m.type === 'progress') { if (i === 0) onProgress && onProgress(m); return; }
           if (m.type !== 'result') return;
           nodes += m.nodes || 0;
-          if (i === 0) { main = m; MT.X.mt_stop(1); }   // thread 0 decides; the helpers stop
+          if (i === 0) { main = m; Atomics.store(MT.ctl, 0, 1); MT.X.mt_stop(1); }   // thread 0 decides; the helpers stop
           if (--left === 0) resolve({ ...main, totalNodes: nodes, ms: performance.now() - t0, me });
         };
         w.postMessage({ type: 'think', id, cells: c, toMove: me, opts: { cfg: CFG, time: i === 0 ? time : 1e9, noBook: true, variety: false, rot: i } });   // helpers: another first move at the root (Lazy SMP diversity)
       });
     });
   }
-  const stopMT = () => { if (MT.X) MT.X.mt_stop(1); };
+  const stopMT = () => { if (MT.X) { Atomics.store(MT.ctl, 0, 1); MT.X.mt_stop(1); } };
   let FB = null;
   async function goFB(time) {
-    if (!FB) { FB = new Worker('../engine.js?v=53'); const wt = await loadWeights(); FB.postMessage({ type: 'weights', buffer: wt.buffer, nphase: wt.nphase }); }
+    if (!FB) { FB = new Worker('../engine.js?v=54'); const wt = await loadWeights(); FB.postMessage({ type: 'weights', buffer: wt.buffer, nphase: wt.nphase }); }
     const { c, me } = replay(line);
     return new Promise(res => { FB.onmessage = e => { if (e.data.type === 'result') res({ ...e.data, me }); }; FB.postMessage({ type: 'think', id: 1, cells: c, toMove: me, opts: { level: 20, time } }); });
   }

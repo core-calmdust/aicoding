@@ -778,6 +778,115 @@ function rootPVS(pos, moves, depth, mode, a0, b0) {
   return { move: best, score: mode === 'exact' ? bestScore * SCALE : bestScore };
 }
 
+// ---- root splitting of the exact / win-draw-loss solve over several threads (engine_mt.wasm, shared transposition table)
+// SPLIT: an Int32Array on a SharedArrayBuffer that every thread of the pool sees (mt-worker.js sets root.REVERSI_SPLIT to
+// the pool's control block; [0] = 1 when the page stops the threads). The lead (no opts.rot) announces its root position
+// when its think will solve; it searches the first root move itself with the window, then the other root moves are taken
+// one by one (an atomic counter) by the lead and the helpers: a null-window test against the shared best, a re-search on a
+// fail-high. While the lead is on the first move, the helpers solve its replies from the other end (they fill the shared
+// table). The result is the same exact value as rootPVS. Helpers (opts.rot > 0) join when the announced position is theirs.
+const SP = { GEN: 8, ST: 9, NEXT: 10, DONE: 11, BEST: 12, LO: 13, HI: 14, N: 15, FAIL: 16, POS: 17, MV: 24 };   // ST: 0 none, 1 announced, 2 first move, 3 open, 4 closed
+const splitArr = () => { const s = root.REVERSI_SPLIT; return s && s.length >= SP.MV + 40 ? s : null; };
+const spPack = (v, m) => ((v + 128) << 8) | m, spV = x => (x >> 8) - 128;
+function spBest(S, v, m) { for (;;) { const x = Atomics.load(S, SP.BEST); if (spV(x) >= v) return; if (Atomics.compareExchange(S, SP.BEST, x, spPack(v, m)) === x) return; } }
+function spSamePos(S, pos) { for (let i = 0; i < 4; i++) if (Atomics.load(S, SP.POS + i) !== (pos[i] | 0)) return false; return true; }
+function splitAnnounce(pos) {
+  const S = splitArr(); if (!S) return null;
+  for (let i = 0; i < 4; i++) Atomics.store(S, SP.POS + i, pos[i] | 0);
+  Atomics.store(S, SP.ST, 1); Atomics.notify(S, SP.ST);
+  return S;
+}
+function splitEnd(S) { if (S) { Atomics.store(S, SP.ST, 0); Atomics.notify(S, SP.ST); } }
+// take root moves of generation g until none is left (lead and helpers)
+function splitClaim(S, g, pos, empties) {
+  const [pl, ph, ol, oh] = pos, n = Atomics.load(S, SP.N), lo = Atomics.load(S, SP.LO), hi = Atomics.load(S, SP.HI);
+  for (;;) {
+    const x = Atomics.load(S, SP.NEXT);
+    if ((x >>> 8) !== g || (x & 255) >= n) return;
+    if (Atomics.compareExchange(S, SP.NEXT, x, x + 1) !== x) continue;
+    const m = Atomics.load(S, SP.MV + (x & 255)), [a, b, c, d] = childOf(pl, ph, ol, oh, m);
+    let fail = false;
+    try {
+      const al = Math.max(lo, spV(Atomics.load(S, SP.BEST)));
+      if (al < hi) {
+        let v = -solve(a, b, c, d, -(al + 1), -al, empties - 1, 1, false);
+        if (v > al) { const a2 = Math.max(lo, spV(Atomics.load(S, SP.BEST)), v - 1); if (v < hi) v = -solve(a, b, c, d, -hi, -a2, empties - 1, 1, false); }
+        spBest(S, v, m);
+      }
+    } catch (e) { if (e !== ABORT) throw e; fail = true; Atomics.store(S, SP.FAIL, 1); }
+    Atomics.add(S, SP.DONE, 1); Atomics.notify(S, SP.DONE);
+    if (fail) throw ABORT;
+  }
+}
+// the lead: rootPVS(pos, moves, 0, 'exact', lo, hi) on all the threads
+function rootSplit(S, pos, moves, lo, hi) {
+  const [pl, ph, ol, oh] = pos, empties = 64 - pc(pl | ol) - pc(ph | oh), n = moves.length;
+  if (n < 2) return rootPVS(pos, moves, 0, 'exact', lo, hi);
+  const g = (Atomics.add(S, SP.GEN, 1) + 1) & 0xffffff;
+  Atomics.store(S, SP.GEN, g);
+  for (let i = 0; i < n; i++) Atomics.store(S, SP.MV + i, moves[i]);
+  Atomics.store(S, SP.N, n); Atomics.store(S, SP.LO, lo); Atomics.store(S, SP.HI, hi); Atomics.store(S, SP.FAIL, 0); Atomics.store(S, SP.DONE, 0);
+  Atomics.store(S, SP.BEST, spPack(-127, moves[0])); Atomics.store(S, SP.NEXT, (g << 8) | 1);
+  Atomics.store(S, SP.ST, 2); Atomics.notify(S, SP.ST);
+  try {
+    const [a, b, c, d] = childOf(pl, ph, ol, oh, moves[0]);
+    const v0 = -solve(a, b, c, d, -hi, -lo, empties - 1, 1, false);
+    spBest(S, v0, moves[0]);
+    if (v0 < hi) {
+      Atomics.store(S, SP.ST, 3); Atomics.notify(S, SP.ST);
+      splitClaim(S, g, pos, empties);
+      for (;;) {   // the moves the helpers are still on
+        const dn = Atomics.load(S, SP.DONE);
+        if (dn >= n - 1) break;
+        if (Atomics.load(S, SP.FAIL) || Atomics.load(S, 0)) throw ABORT;
+        Atomics.wait(S, SP.DONE, dn, 20);
+      }
+      if (Atomics.load(S, SP.FAIL)) throw ABORT;
+    } else {   // fail-high on the first move: no more moves; wait for the ones already taken (they write into this generation)
+      const taken = (Atomics.exchange(S, SP.NEXT, (g << 8) | 255) & 255) - 1;
+      for (let dn; (dn = Atomics.load(S, SP.DONE)) < taken && !Atomics.load(S, 0);) Atomics.wait(S, SP.DONE, dn, 20);
+    }
+  } catch (e) {
+    Atomics.store(S, SP.NEXT, (g << 8) | 255);   // nothing more to take
+    if (e === ABORT && WX && WX.mt_stop && !Atomics.load(S, 0)) WX.mt_stop(1);   // (our own time is up: the helpers' searches stop too)
+    throw e;
+  } finally { Atomics.store(S, SP.ST, 4); Atomics.notify(S, SP.ST); }
+  const x = Atomics.load(S, SP.BEST);
+  return { move: x & 255, score: spV(x) * SCALE };
+}
+// a helper in the solve phase of its own think: help the lead while it solves this position (returns only by ABORT)
+function splitHelp(pos, empties, id) {
+  const S = splitArr(); if (!S) return false;
+  const t0 = Date.now();
+  while (!(Atomics.load(S, SP.ST) && spSamePos(S, pos))) {   // (the lead may announce a moment later)
+    if (Date.now() - t0 > 40 || Atomics.load(S, 0)) return false;
+    Atomics.wait(S, SP.ST, Atomics.load(S, SP.ST), 5);
+  }
+  let lastG = -1, gcG = -1, gcList = null, gcI = 0;
+  for (;;) {
+    if (Atomics.load(S, 0) || !spSamePos(S, pos)) throw ABORT;
+    const st = Atomics.load(S, SP.ST), g = Atomics.load(S, SP.GEN);
+    if (st === 0) throw ABORT;
+    if (st === 3 && g !== lastG) { lastG = g; splitClaim(S, g, pos, empties); continue; }
+    if (st === 2 && g !== lastG) {
+      // the lead is on the first move: solve its replies, starting from the other end
+      if (gcG !== g) {
+        gcG = g; gcI = 0;
+        const [a, b, c, d] = childOf(pos[0], pos[1], pos[2], pos[3], Atomics.load(S, SP.MV));
+        const rs = legalList(a, b, c, d);
+        const rr = rs.reverse(), k0 = rr.length ? (id - 1) % rr.length : 0;
+        gcList = { c: [a, b, c, d], rs: rr.slice(k0).concat(rr.slice(0, k0)), lo: Atomics.load(S, SP.LO), hi: Atomics.load(S, SP.HI) };
+      }
+      if (gcI < gcList.rs.length && empties >= 4) {
+        const [a, b, c, d] = gcList.c, [e, f, h, k] = childOf(a, b, c, d, gcList.rs[gcI++]);
+        solve(e, f, h, k, gcList.lo, gcList.hi, empties - 2, 2, false);
+        continue;
+      }
+    }
+    Atomics.wait(S, SP.ST, st, 10);
+  }
+}
+
 function orderRoot(moves, prev) {
   if (!prev) return moves;
   return moves.slice().sort((a, b) => (prev.get(b) ?? -1e9) - (prev.get(a) ?? -1e9));
@@ -945,6 +1054,8 @@ function think(cells, toMove, opts, onProgress) {
   let prev = null, depthDone = 0;
   const maxDepth = Math.min(lv.depth, empties);
   const doExact = empties <= lv.exact;
+  const wldNow = !doExact && lv.wld && empties <= lv.wld && !variety;
+  const SPL = !opts.rot && (doExact ? !variety : wldNow) ? splitAnnounce(pos) : null;   // (threads: the lead's solve is split at the root)
   try {
     const midMax = doExact ? Math.min(maxDepth, 10) : maxDepth;
     const startD = Math.min((doExact ? 2 : 1) + (opts.d0 || 0), midMax);   // d0: a helper thread starting a ply ahead (pro/)
@@ -985,8 +1096,9 @@ function think(cells, toMove, opts, onProgress) {
         // aspiration window around the midgame estimate
         const g = result ? Math.max(-60, Math.min(60, Math.round(result.score / SCALE))) : 0;
         let lo = g - 3, hi = g + 3;
+        if (opts.rot) splitHelp(pos, empties, opts.rot);   // a helper thread: join the lead's split solve (if it has one)
         for (;;) {
-          r = rootPVS(pos, ordered, 0, 'exact', lo, hi);
+          r = SPL ? rootSplit(SPL, pos, ordered, lo, hi) : rootPVS(pos, ordered, 0, 'exact', lo, hi);
           const v = r.score / SCALE;
           if (v <= lo && lo > -65) { hi = v + 1; lo = -65; }
           else if (v >= hi && hi < 65) { lo = v - 1; hi = 65; }
@@ -1000,12 +1112,14 @@ function think(cells, toMove, opts, onProgress) {
     // else a drawing one; a lost position keeps the midgame choice. Bounded by the same deadline as the exact solve.
     if (time) deadline = t0 + Math.max(hardTime, 2000);
     try {
-      const r = rootPVS(pos, orderRoot(moves, prev), 0, 'exact', -1, 1);
+      if (opts.rot) splitHelp(pos, empties, opts.rot);
+      const r = SPL ? rootSplit(SPL, pos, orderRoot(moves, prev), -1, 1) : rootPVS(pos, orderRoot(moves, prev), 0, 'exact', -1, 1);
       if (r.score > 0) result = { move: r.move, score: Math.max(result.score, SCALE) };
       else if (r.score === 0 && result.score < 0) result = { move: r.move, score: 0 };
     } catch (e) { if (e !== ABORT) throw e; }
   }
 
+  splitEnd(SPL);
   if (!result) result = { move: moves[0], score: 0 };
   // opening variety: pick randomly among near-best moves
   let move = result.move, score = result.score;

@@ -7,6 +7,7 @@ self.addEventListener('message', function boot(e) {
   const X = new WebAssembly.Instance(m.module, { env: { memory: m.mem, now: () => Date.now() } }).exports;
   X.mt_stack(m.top); X.mt_thread(m.tls);
   self.REVERSI_WX = Object.assign({}, X, { memory: m.mem });   // engine.js reads WX.memory
-  importScripts('../engine.js?v=53');
+  if (m.ctl) self.REVERSI_SPLIT = m.ctl;   // (the endgame solve is split at the root over the threads: engine.js rootSplit)
+  importScripts('../engine.js?v=54');
   self.postMessage({ type: 'mtready' });
 });

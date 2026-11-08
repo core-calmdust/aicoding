@@ -2,6 +2,7 @@
 // instance that shares the memory (weights, transposition table) with the other threads. Thread 0 is the lead: it gets
 // the page's jobs (think / analyze, engine.js's own worker API). The helpers (id 1, 2, …) search the same position
 // meanwhile, each starting from another root move (opts.rot, Lazy SMP diversity), until the page stops every thread.
+// In the exact / win-draw-loss solve of think the root moves are shared out instead (engine.js rootSplit / splitHelp).
 self.addEventListener('message', function boot(e) {
   const m = e.data; if (m.type !== 'mtinit') return;
   self.removeEventListener('message', boot);
@@ -9,7 +10,8 @@ self.addEventListener('message', function boot(e) {
     const X = new WebAssembly.Instance(m.module, { env: { memory: m.mem, now: () => Date.now() } }).exports;
     X.mt_stack(m.top); X.mt_thread(m.tls);
     self.REVERSI_WX = Object.assign({}, X, { memory: m.mem });   // engine.js reads WX.memory
-    importScripts('engine.js?v=53');
+    self.REVERSI_SPLIT = m.ctl;   // (the endgame solve is split at the root over the threads: engine.js rootSplit)
+    importScripts('engine.js?v=54');
   } catch (err) { self.postMessage({ type: 'mtready', error: String(err && err.message || err) }); return; }
   const id = m.id, ctl = m.ctl, cnt = m.cnt, R = self.ReversiEngine;
   if (id > 0) {
