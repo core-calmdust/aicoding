@@ -758,7 +758,8 @@ function analyzePlays(p, s, d1, d2, opts) {
     for (let i = 0; i < k1; i++) {
       if (i > 1 && plays[i].e < top - m1) break;
       if (opts.deadline && i > 1 && now() > opts.deadline) break;
-      plays[i].v = WB ? hyb1(plays[i].pos, 1 - s) : eval1(plays[i].pos, 1 - s); plays[i].e = equity(plays[i].v); plays[i].ply = 1;
+      const pre = opts.pre && opts.pre[key(plays[i].pos) + ':1'];   // (read by the threads beforehand: backgammon/mt.js)
+      plays[i].v = pre || (WB ? hyb1(plays[i].pos, 1 - s) : eval1(plays[i].pos, 1 - s)); plays[i].e = equity(plays[i].v); plays[i].ply = 1;
     }
     plays.sort((a, b) => (b.ply - a.ply) || (b.e - a.e));
     if (ply >= 2 && plays.length > 1) {
@@ -767,12 +768,26 @@ function analyzePlays(p, s, d1, d2, opts) {
         if (plays[i].ply < 1) break;
         if (i > 0 && plays[i].e < top2 - m2) break;
         if (opts.deadline && i > 0 && now() > opts.deadline) break;
-        plays[i].v = WB ? hyb2(plays[i].pos, 1 - s) : eval2(plays[i].pos, 1 - s); plays[i].e = equity(plays[i].v); plays[i].ply = 2;
+        const pre = opts.pre && opts.pre[key(plays[i].pos) + ':2'];
+        plays[i].v = pre || (WB ? hyb2(plays[i].pos, 1 - s) : eval2(plays[i].pos, 1 - s)); plays[i].e = equity(plays[i].v); plays[i].ply = 2;
       }
       plays.sort((a, b) => (b.ply - a.ply) || (b.e - a.e));
     }
   }
   return plays;
+}
+// the threads (backgammon/mt.js, shared/mtworkers.js): which candidates analyzePlays would value next at `ply`, given the
+// plays valued so far ([{ e, ply }], analyzePlays' order) — the same choice as its loops, without the deadline
+function planPly(plays, opts, ply) {
+  const out = [];
+  if (ply === 1) {
+    const k1 = Math.min(plays.length, opts.keep1 || 6), top = plays[0].e, m1 = opts.margin1 || 0.25;
+    for (let i = 0; i < k1; i++) { if (i > 1 && plays[i].e < top - m1) break; out.push(i); }
+  } else {
+    const k2 = Math.min(plays.length, opts.keep2 || 3), top2 = plays[0].e, m2 = opts.margin2 || 0.08;
+    for (let i = 0; i < k2; i++) { if (plays[i].ply < 1) break; if (i > 0 && plays[i].e < top2 - m2) break; out.push(i); }
+  }
+  return out;
 }
 // value of a position BEFORE the roll for the side on roll, at a given depth (0: static; 1: average over own rolls of best 0-ply play)
 function evalRoll(p, s, depth) {
@@ -921,7 +936,7 @@ function rng(seedStr) { const h = cyrb128(seedStr); let a = h[0], b = h[1]; retu
 function gauss(r) { let u = 0, v = 0; while (u === 0) u = r(); v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
 const NOISE = [0, 0, 0.5, 0.25, 0.12, 0.06, 0.025, 0, 0, 0, 0];
 // Levels: 1 random · 2–6 net with decreasing noise · 7 net 0-ply · 8 1-ply · 9 2-ply (narrow) · 10 2-ply (wide, ~1–2 s)
-function aiChoosePlay(pos, side, dice, level, tag) {
+function aiChoosePlay(pos, side, dice, level, tag, pre) {
   const r = rng(key(pos) + '|' + dice.join('') + '|' + level + '|' + (tag || ''));
   if (level <= 1) { const pl = genPlays(pos, side, dice[0], dice[1]); return pl[Math.floor(r() * pl.length)]; }
   if (level <= 7) {
@@ -932,10 +947,17 @@ function aiChoosePlay(pos, side, dice, level, tag) {
     for (const x of pl) { const e = x.e + NOISE[level] * gauss(r); if (e > be) { be = e; best = x; } }
     return best;
   }
-  if (level === 8) return analyzePlays(pos, side, dice[0], dice[1], { ply: 1, keep1: 6, margin1: 0.2 })[0];
-  if (level === 9) return analyzePlays(pos, side, dice[0], dice[1], { ply: 2, keep1: 8, margin1: 0.2, keep2: 2, margin2: 0.05, deadline: nowMs() + 900 })[0];
-  return analyzePlays(pos, side, dice[0], dice[1], { ply: 2, keep1: 10, margin1: 0.3, keep2: 4, margin2: 0.08, deadline: nowMs() + 1300 })[0];
+  const o = Object.assign({}, LEVEL_OPTS[Math.min(10, level)]);
+  if (o.time && !pre) o.deadline = nowMs() + o.time;   // (pre: the threads have read every candidate — no deadline)
+  if (pre) o.pre = pre;
+  return analyzePlays(pos, side, dice[0], dice[1], o)[0];
 }
+// the searched levels (8–10): analyzePlays' options; time = the deadline (ms) without threads
+const LEVEL_OPTS = {
+  8: { ply: 1, keep1: 6, margin1: 0.2 },
+  9: { ply: 2, keep1: 8, margin1: 0.2, keep2: 2, margin2: 0.05, time: 900 },
+  10: { ply: 2, keep1: 10, margin1: 0.3, keep2: 4, margin2: 0.08, time: 1300 },
+};
 // pre-roll cubeless probabilities for side on roll at a depth
 
 function aiCube(level, pos, side, ctx, takerView) {
@@ -956,7 +978,7 @@ function aiCube(level, pos, side, ctx, takerView) {
 
 
 Object.assign(BG, {
-  aiChoosePlay, aiCube, setNets, escapes, loadWildbg, wbEval, wbInputs, setWildbg: w => { WB = w; },
+  aiChoosePlay, aiCube, LEVEL_OPTS, planPly, setNets, escapes, loadWildbg, wbEval, wbInputs, setWildbg: w => { WB = w; },
   OFF, BAR, initial, clone, key, pips, onBoard, allHome, contact, winner, winKind, dest, apply, mvFrom, mvTo, mvHit,
   genPlays, maxUse, legalSteps, notation, ptName, cyrb128, DiceStream, randomSeed, sha256, replay, encodeGame, decodeGame,
   NIN, features, Net, sanitize, flip, equity, choose, BO_N, boIndex, boIndexPos, loadBearoff, boDist, isBearoffPos, bearoffEval,
