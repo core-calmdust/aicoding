@@ -1237,6 +1237,8 @@ body .info-line{font-size:12.5px}
 <script src="coach.js?v=8"></script>
 <script src="coach-i18n.js?v=6"></script>
 <script src="../shared/export.js?v=9l14"></script>
+<script src="../shared/mtsplit.js?v=1"></script>
+<script src="mt.js?v=1"></script>
 <script>
 'use strict';
 // ====================================================================== rules
@@ -1381,8 +1383,9 @@ const bookReady = fetch('book.json').then(r => r.ok ? r.json() : null).catch(() 
 let TREEBUF = null;
 const treeReady = fetch('tree.bin').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null).then(b => (TREEBUF = b));
 let jobId = 0;
+const ENGINE_URL = 'engine.js?v=20261104rs-mt1';
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261104rs');
+  const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
   w.onmessage = e => {
     const m = e.data, j = w.jobs.get(m.id); if (!j) return;
@@ -1395,11 +1398,33 @@ function makeWorker() {
   return w;
 }
 let aiW = makeWorker(), anaW = makeWorker();
+// search speed of the last job on several threads (nodes per second, all threads), shown quietly at the end of the info line
+let lastNps = 0;
+const npsText = () => lastNps ? '  ·  ' + (lastNps >= 1e6 ? (lastNps / 1e6).toFixed(1) + 'M' : Math.round(lastNps / 1e3) + 'k') + ' nps' : '';
+function noteNps(nodes, ms) {
+  if (!(nodes > 50000 && ms > 20)) return;
+  lastNps = nodes / ms * 1000;
+  const el = document.getElementById('infoLine'); if (el && el.dataset.base !== undefined) el.textContent = el.dataset.base + npsText();
+}
+// multi-threaded search (shared/mtsplit.js + mt.js; common rule 2026-11-08「本編のマルチスレッド」全タイトル対応): several plain workers
+// of the engine solve the columns at the same time — no shared memory, so no isolation, no reload, sign-in / online play untouched.
+// Analysis, hints, the coach, the review box and the solver of Lv.6–8 (rated games too) go to the threads when they are free;
+// Lv.1–5 (fixed depths) stay on the one-thread workers. The game is solved (first player wins): the threads only make it quicker.
+const MTP = window.MTSplit && window.C4MT ? MTSplit.use({ url: ENGINE_URL, drive: C4MT.drive,
+  setup: w => { if (BOOK) w.postMessage({ type: 'book', book: BOOK }); else bookReady.then(b => { if (b) w.postMessage({ type: 'book', book: b }); }); if (TREEBUF) w.postMessage({ type: 'tree', buf: TREEBUF }); else treeReady.then(buf => { if (buf) w.postMessage({ type: 'tree', buf }); }); } }) : null;
+if (MTP) MTSplit.init();
+function mtWants(which, msg) { return msg.type === 'analyze' || (msg.type === 'think' && msg.level >= 6); }
 function request(which, msg, onProgress) {
+  const mp = MTP && mtWants(which, msg) && MTP.pool(which === 'ai' ? 'ai' : null);
+  if (mp) { const t0 = performance.now(); return mp.run(msg, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, msg, onProgress) : r; }); }
+  return requestW(which, msg, onProgress);
+}
+function requestW(which, msg, onProgress) {   // (the one-thread workers)
   const w = which === 'ai' ? aiW : anaW;
   return new Promise(resolve => { const id = ++jobId; w.jobs.set(id, { resolve, onProgress }); w.postMessage({ ...msg, id }); });
 }
 function cancelWorker(which) {
+  if (MTP) MTP.cancel(which);
   const w = which === 'ai' ? aiW : anaW;
   if (!w.jobs.size) return;
   w.terminate();
@@ -1682,7 +1707,7 @@ function renderInfo() {
   if (reviewing) $('#reviewText').textContent = t('review.viewing', { n: cur, m: moves.length });
   renderReview();
   hbInfo(shown, st, tm, ev);
-  $('#infoLine').textContent = `${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? AIW() + ' Lv.' + settings.level + ' ' + LV(settings.level) : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`;
+  { const il = $('#infoLine'); il.dataset.base = `${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? AIW() + ' Lv.' + settings.level + ' ' + LV(settings.level) : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`; il.textContent = il.dataset.base + npsText(); }
   if (window.olAfterInfo) olAfterInfo();
   if (window.C4Coach) C4Coach.render();
 }
@@ -3028,7 +3053,8 @@ function shownMoves() { return moves.slice(0, cur) + (rbCons() ? csLine : ''); }
 // only after the game (or while stepping back through the record): never during a game in progress, rated or online
 function rbActive() { return !lesson && !puzzle && rvOpen && !!rv && !rv.running && rv.moves === moves && !document.body.classList.contains('rated-live') && !(window.olLive && olLive()); }
 function rbOn() { return !!(window.RvBox && RvBox.pc() && rbActive()); }
-function rbCancel() { if (rbW && rbBusy) { rbW.terminate(); rbW = null; } rbBusy = false; }
+let rbJob = 0;
+function rbCancel() { if (rbJob) { rbJob = 0; if (MTP) MTP.cancel('rvb'); } if (rbW && rbBusy) { rbW.terminate(); rbW = null; } rbBusy = false; }
 function rbRows(list, nm, played, lines) {
   const sorted = list.slice().sort((a, b) => rankOf(b) - rankOf(a)).slice(0, 5);
   return sorted.map(e => {
@@ -3053,8 +3079,27 @@ if (window.RvBox) RvBox.init({
     const played = !rbCons() && cur < moves.length ? moves.charCodeAt(cur) - 49 : -1;
     const pre = !rbCons() && rv && rv.list[cur];
     if (pre) onUpdate(rbRows(pre, nm, played, null), false);
-    if (!rbW) rbW = makeWorker();
     rbBusy = true;
+    // the review's own (longer) analysis of this position wins over a shorter heuristic value
+    const show = (m, fin) => {
+      rbLines = m.lines || {};
+      const list = pre ? m.list.map(e => { const o = pre.find(x => x.c === e.c); return o && e.kind === 'heur' && o.kind !== 'heur' ? o : e; }) : m.list;
+      onUpdate(rbRows(list, nm, played, m.lines), fin);
+      if (rbHov !== null) renderFx();
+    };
+    const mp = MTP && MTP.pool();   // (the threads when free, else the box's own worker)
+    if (mp) {
+      const job = rbJob = ++jobId;
+      mp.run({ type: 'cands', moves: s, time: 900, n: 7, plies: 8, ply: 100 }, m => { if (rbJob === job && m.type === 'cands') show(m, false); }, 'rvb').then(r => {
+        if (rbJob !== job) return;
+        rbJob = 0; rbBusy = false;
+        if (r) show(r, true); else if (r === undefined) { rbW = rbW || makeWorker(); rbBusy = true; viaW(); }
+      });
+      return;
+    }
+    if (!rbW) rbW = makeWorker();
+    viaW();
+    function viaW() {
     const w = rbW, id = ++jobId;
     w.jobs.set(id, { resolve: () => {}, onProgress: null });
     const prev = w.onmessage;
@@ -3062,14 +3107,11 @@ if (window.RvBox) RvBox.init({
       const m = e.data;
       if (m.id !== id) { prev && prev(e); return; }
       if (m.type !== 'cands' && m.type !== 'candsDone') return;
-      rbLines = m.lines || {};
       const fin = m.type === 'candsDone'; if (fin) { rbBusy = false; w.onmessage = prev; w.jobs.delete(id); }
-      // the review's own (longer) analysis of this position wins over a shorter heuristic value
-      const list = pre ? m.list.map(e => { const o = pre.find(x => x.c === e.c); return o && e.kind === 'heur' && o.kind !== 'heur' ? o : e; }) : m.list;
-      onUpdate(rbRows(list, nm, played, m.lines), fin);
-      if (rbHov !== null) renderFx();
+      show(m, fin);
     };
     w.postMessage({ type: 'cands', id, moves: s, time: 900, n: 7, plies: 8, ply: 100 });
+    }
   },
   cancel: rbCancel,
   hover(mv) { rbHov = mv; renderFx(); },
@@ -3336,7 +3378,7 @@ document.addEventListener('keydown', e => {
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=20261112ld6" defer></script>
+<script src="../shared/atlas.js?v=20261110mt8" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1l14" defer></script>
 <script src="../shared/atlas-account.js?v=20261101fa1l14" defer></script>
 <script src="../shared/infotabs.js?v=17l14" defer></script>
