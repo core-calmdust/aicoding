@@ -14,7 +14,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../checkers/', VER = '?v=rb4';   // same file / version as checkers/index.html → shared cache
+  const BASE = '../checkers/', VER = '?v=rb4-pro1-n43';   // same file / version as checkers/index.html → shared cache
   let engP = null;
   function loadEngine() {
     if (window.CheckersEngine) return Promise.resolve(window.CheckersEngine);
