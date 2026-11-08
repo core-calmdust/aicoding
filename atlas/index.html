@@ -1461,6 +1461,9 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 .bvi .opts:has(#bvHouseL){display:grid!important;grid-template-columns:max-content minmax(0,1fr);gap:8px 12px!important;align-items:center}
 .bvi .opts:has(#bvHouseL) > label{display:contents}
 .bvi .opts:has(#bvHouseL) > label[hidden]{display:none}
+.bvi .opts #bvHouse{grid-column:1 / -1;justify-content:center;gap:8px}.bvi .opts #bvHouse span{flex:none}
+.bvi .opts #bvHouse b{font-size:12px;padding:2px 9px;border-radius:99px;background:var(--coral);color:#fff}.bvi .opts #bvHouse b:empty{display:none}
+.bvi .opts #bvHouse i{font-style:normal;font-size:18px;line-height:1}
 .bvi .opts label:has(.sidetg){flex:none!important}.bvi .opts label:has(.lvpick){min-width:0;flex:1 1 auto!important}
 .bvi .sidetg{flex:none;overflow:hidden}.bvi .sidetg button{flex:none;padding-inline:12px}
 /* board size + time control on one row (go) */
@@ -1657,7 +1660,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 <script src="games/senet-kit.js?v=5"></script>
 <script src="games/senet.js?v=13"></script>
 <script src="games/agon.js?v=7"></script>
-<script src="games/ludo.js?v=13"></script>
+<script src="games/ludo.js?v=15"></script>
 <script>/* rules tours: after a solved step, the ▶ button fills up like a timer until the tour moves on by itself */
 window.AtlasRgdTimer = function (btn, ms, alive) {
   if (!btn) return; btn.classList.remove('rgd-auto'); void btn.offsetWidth; btn.style.setProperty('--rgt', ms + 'ms'); btn.classList.add('rgd-auto');
@@ -1702,6 +1705,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <link rel="stylesheet" href="worldmap.css?v=18">
 <script src="worldmap.js?v=28"></script>
 <script src="updnews.js?v=7"></script>
-<script src="app.js?v=227"></script>
+<script src="app.js?v=229"></script>
 </body>
 </html>

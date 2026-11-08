@@ -182,18 +182,43 @@
     const parkXZ = seat => { const [gx, gy] = throwSpot(seat), ox = gx < 7.5 ? -2.05 : 2.05; return wx(gx + ox, gy - 2.05); };   // the yard's far outer corner (clear of the pieces, behind them as seen)
     // the cup's pose: up = 1 mouth up (standing on its base), 0 mouth down; lift: height above the board
     function cupPose(up, lift, rz) { const I = cupG.userData.inner; I.rotation.set(Math.PI * up, 0, rz || 0); I.position.set(0, CH * up + (lift || 0), 0); cupG.userData.sh.scale.setScalar(Math.max(.4, 1 - (lift || 0) * .5)); }
+    let cupBusy = Promise.resolve(), cupUp = 1;
+    // the next turn: the cup (lying mouth down beside the last throw) comes over, turns mouth up beside the dice and they hop in
+    // (scooped up — no dice vanishing), then it carries them to the seat to throw (2026-11-09)
+    async function scoop() {
+      const ds = thrown.children.filter(o => o.userData && o.userData.size), g = cupG;
+      if (!ds.length || !g) return false;
+      thrown.children.filter(o => !ds.includes(o)).forEach(o => thrown.remove(o));   // (their shadows)
+      let cx = 0, cz = 0; ds.forEach(d => { cx += d.position.x / ds.length; cz += d.position.z / ds.length; });
+      const x0 = g.position.x, z0 = g.position.z, dx = x0 - cx, dz = z0 - cz, L = Math.hypot(dx, dz) || 1, tx = cx + dx / L * .8, tz = cz + dz / L * .8, up0 = cupUp;
+      await animP(320, k => { const e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; g.position.set(x0 + (tx - x0) * e, Y, z0 + (tz - z0) * e); cupPose(up0 + (1 - up0) * e, Math.sin(k * Math.PI) * .5); });
+      if (stopped) return true;
+      cupUp = 1;
+      const from = ds.map(d => [d.position.x, d.position.y, d.position.z, d.rotation.x, d.rotation.z]), hh = ds[0].userData.size / 2;
+      await animP(340, k => ds.forEach((d, i) => { const q = Math.min(1, Math.max(0, k * 1.25 - i * .25)), e = q * q * (3 - 2 * q), f = from[i];
+        d.position.set(f[0] + (tx - f[0]) * e, f[1] + (Y + CH * .35 - f[1]) * e + Math.sin(q * Math.PI) * .75, f[2] + (tz - f[2]) * e);
+        d.rotation.x = f[3] + q * 4; d.rotation.z = f[4] + q * 2.5; d.scale.setScalar(1 - .3 * e); }));
+      while (thrown.children.length) thrown.remove(thrown.children[0]);
+      cupDice(true); SND.hop(); void hh;
+      return true;
+    }
     function cupTo(seat, glide) {
       if (rule !== 'ludo') return;
       if (!cupG) { cupG = mkCup(); board.add(cupG); }
       const [x, z] = cupXZ(seat), g = cupG;
-      cupDice(true);
-      if (!glide || cupSeat < 0) { g.position.set(x, Y, z); cupPose(1, 0); cupSeat = seat; if (T3.kick) T3.kick(200); return; }
-      if (cupSeat === seat && g.position.x === x && g.position.z === z) { cupPose(1, 0); return; }
-      const x0 = g.position.x, z0 = g.position.z; cupSeat = seat;
-      anim(480, k => { const e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; g.position.set(x0 + (x - x0) * e, Y, z0 + (z - z0) * e); cupPose(e, Math.sin(k * Math.PI) * .8); });
+      if (!glide || cupSeat < 0) { cupDice(true); g.position.set(x, Y, z); cupPose(1, 0); cupUp = 1; cupSeat = seat; if (T3.kick) T3.kick(200); return; }
+      cupBusy = cupBusy.then(async () => {
+        await scoop(); if (stopped) return;
+        if (!g.userData.dice.children.length) cupDice(true);
+        const x0 = g.position.x, z0 = g.position.z, up0 = cupUp; cupSeat = seat;
+        if (Math.hypot(x - x0, z - z0) < .01) { cupPose(1, 0); cupUp = 1; return; }
+        await animP(440, k => { const e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; g.position.set(x0 + (x - x0) * e, Y, z0 + (z - z0) * e); cupPose(up0 + (1 - up0) * e, Math.sin(k * Math.PI) * .7); });
+        cupUp = 1;
+      });
     }
     // the throw: shake mouth up · turn over and come down · lift away (the dice are put under it as it lands)
     async function cupThrow(seat, th) {
+      await cupBusy; if (stopped) return;   // (the cup may still be scooping up the last dice / on its way)
       if (!cupG || cupSeat !== seat) cupTo(seat);
       const g = cupG, [cx, cz] = cupXZ(seat);
       g.position.set(cx, Y, cz); cupPose(1, 0);
@@ -205,7 +230,7 @@
       g.position.x = cx;
       await animP(300, k => { const e = k * k; cupPose(1 - e, .35 * (1 - e) + Math.sin(k * Math.PI) * .45); });
       if (stopped) return;
-      cupPose(0, 0); SND.put(); cupDice(false);   // (the dice now lie on the board under it)
+      cupPose(0, 0); cupUp = 0; SND.put(); cupDice(false);   // (the dice now lie on the board under it)
       // the dice, under the cup
       const fs = th.dice ? (th.three6 ? [6, 6] : th.dice) : [th.v];
       fs.forEach((v, i) => { const d = U.die(), h = d.userData.size / 2, sh = T3.contact(h * 1.4, .4), ox = fs.length > 1 ? (i ? .27 : -.27) : 0, oz = fs.length > 1 ? (i ? .05 : -.05) : 0;
@@ -229,7 +254,7 @@
     }
     async function throwAnim(seat, th) {
       SND.roll();
-      while (thrown.children.length) thrown.remove(thrown.children[0]);
+      if (rule !== 'ludo') while (thrown.children.length) thrown.remove(thrown.children[0]);   // (ludo: the cup scoops the last dice up first)
       const [gx, gy] = throwSpot(seat), [cx, cz] = wx(gx, gy);
       if (rule === 'ludo') { await cupThrow(seat, th); return; }   // (the cup: shake, over, lift — the dice under it)
       if (rule === 'ludo' && th.dice) {   // (house rule: two dice — 666 shows the double six)
@@ -491,6 +516,6 @@
   window.Atlas3D.ludo = { levels: 20, sides: false, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], sizes: SIZES, size0: 4, sizeLabel, sizeName, levelInfo, start, SND,
     house: window.LudoHouse && {   // the house rules (ludo/house.js — shared with the 2D game); ludo only, not pachisi
       show: z => !(z > 10), label: lang => (LudoHouse.T[lang] || LudoHouse.T.en).ui[0],
-      summary: lang => { const H = LudoHouse.T[lang] || LudoHouse.T.en, n = LudoHouse.changed(); return n ? H.ui[9].replace('{n}', n) : H.ui[1].split(/[。.]/)[0]; },
+      summary: lang => { const H = LudoHouse.T[lang] || LudoHouse.T.en, n = LudoHouse.changed(); return n ? H.ui[9].replace('{n}', n) : ''; },
       open: (lang, cb, theme) => LudoHouse.open({ lang, onClose: cb, theme }) } };
 })();
