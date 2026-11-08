@@ -1,5 +1,5 @@
 {
-"meta.title": "Go — du 5x5 au 19x19, IA à 27 niveaux",
+"meta.title": "Go — du 5x5 au 19x19, IA à 32 niveaux",
 "title": "Go",
 "sub": "",
 "series": "Atlas mondial des jeux de société",
@@ -16,13 +16,7 @@
 "lv.dan3": "3 dan",
 "lv.dan4": "4 dan",
 "lv.dan5": "5 dan",
-"lvd": [
-"Débutants au go",
-"Connaissent les règles",
-"Joueurs réguliers",
-"Joueurs forts",
-"Joueurs forts"
-],
+"lvd": ["Débutants au go", "Connaissent les règles", "Joueurs réguliers", "Joueurs forts", "Joueurs forts"],
 "u.pts": "{n} points",
 "u.pt": "{n} pts",
 "u.ro": "×",
@@ -377,7 +371,11 @@
 "lv.dan7": "7 dan",
 "lv.dan8": "8 dan",
 "lv.top1": "Amateur de pointe",
-"lv.top2": "Niveau pro",
-"lv.top3": "Le plus fort",
-"opt.coordAll": "Coordonnées sur les 4 côtés"
+"lv.top2": "Le plus fort I",
+"lv.top3": "Le plus fort II",
+"opt.coordAll": "Coordonnées sur les 4 côtés",
+"lv.top4": "Le plus fort III",
+"lv.top5": "Le plus fort IV",
+"lvd.t": "Tous les cœurs · {s} s/coup",
+"lv.top6": "Le plus fort V"
 }

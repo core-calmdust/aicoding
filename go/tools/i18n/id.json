@@ -1,5 +1,5 @@
 {
-"meta.title": "Go — papan 5x5 hingga 19x19, 27 level AI",
+"meta.title": "Go — papan 5x5 hingga 19x19, 32 level AI",
 "title": "Go",
 "sub": "",
 "series": "Atlas Permainan Papan Dunia",
@@ -16,13 +16,7 @@
 "lv.dan3": "3 dan",
 "lv.dan4": "4 dan",
 "lv.dan5": "5 dan",
-"lvd": [
-"Baru mengenal Go",
-"Sudah tahu aturan",
-"Pemain rutin",
-"Pemain kuat",
-"Dan tinggi"
-],
+"lvd": ["Baru mengenal Go", "Sudah tahu aturan", "Pemain rutin", "Pemain kuat", "Dan tinggi"],
 "u.pts": "{n} poin",
 "u.pt": "{n} poin",
 "u.ro": "×",
@@ -377,7 +371,11 @@
 "lv.dan7": "7 dan",
 "lv.dan8": "8 dan",
 "lv.top1": "Amatir top",
-"lv.top2": "Level pro",
-"lv.top3": "Terkuat",
-"opt.coordAll": "Koordinat di semua sisi"
+"lv.top2": "Terkuat I",
+"lv.top3": "Terkuat II",
+"opt.coordAll": "Koordinat di semua sisi",
+"lv.top4": "Terkuat III",
+"lv.top5": "Terkuat IV",
+"lvd.t": "Semua inti · {s} dtk/langkah",
+"lv.top6": "Terkuat V"
 }

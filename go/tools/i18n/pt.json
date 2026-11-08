@@ -1,5 +1,5 @@
 {
-"meta.title": "Go — de 5x5 a 19x19, IA com 27 níveis",
+"meta.title": "Go — de 5x5 a 19x19, IA com 32 níveis",
 "title": "Go",
 "sub": "",
 "series": "Atlas Mundial de Jogos de Tabuleiro",
@@ -16,13 +16,7 @@
 "lv.dan3": "3 dan",
 "lv.dan4": "4 dan",
 "lv.dan5": "5 dan",
-"lvd": [
-"Novos no Go",
-"Conhecem as regras",
-"Jogadores frequentes",
-"Jogadores fortes",
-"Jogadores fortes"
-],
+"lvd": ["Novos no Go", "Conhecem as regras", "Jogadores frequentes", "Jogadores fortes", "Jogadores fortes"],
 "u.pts": "{n} pontos",
 "u.pt": "{n} pts",
 "u.ro": "×",
@@ -377,7 +371,11 @@
 "lv.dan7": "7 dan",
 "lv.dan8": "8 dan",
 "lv.top1": "Amador de elite",
-"lv.top2": "Nível pro",
-"lv.top3": "O mais forte",
-"opt.coordAll": "Coordenadas nos 4 lados"
+"lv.top2": "O mais forte I",
+"lv.top3": "O mais forte II",
+"opt.coordAll": "Coordenadas nos 4 lados",
+"lv.top4": "O mais forte III",
+"lv.top5": "O mais forte IV",
+"lvd.t": "Todos os núcleos · {s} s/lance",
+"lv.top6": "O mais forte V"
 }

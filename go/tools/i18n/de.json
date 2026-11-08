@@ -1,5 +1,5 @@
 {
-"meta.title": "Go — 5x5 bis 19x19, KI mit 27 Stufen",
+"meta.title": "Go — 5x5 bis 19x19, KI mit 32 Stufen",
 "title": "Go",
 "sub": "",
 "series": "Welt-Brettspielatlas",
@@ -16,13 +16,7 @@
 "lv.dan3": "3 Dan",
 "lv.dan4": "4 Dan",
 "lv.dan5": "5 Dan",
-"lvd": [
-"Neu beim Go",
-"Kennen die Regeln",
-"Regelmäßige Spieler",
-"Starke Spieler",
-"Starke Spieler"
-],
+"lvd": ["Neu beim Go", "Kennen die Regeln", "Regelmäßige Spieler", "Starke Spieler", "Starke Spieler"],
 "u.pts": "{n} Punkte",
 "u.pt": "{n} Pkt.",
 "u.ro": "×",
@@ -377,7 +371,11 @@
 "lv.dan7": "7. Dan",
 "lv.dan8": "8. Dan",
 "lv.top1": "Spitzenamateur",
-"lv.top2": "Profiniveau",
-"lv.top3": "Stärkste Stufe",
-"opt.coordAll": "Koordinaten an allen Seiten"
+"lv.top2": "Stärkste Stufe I",
+"lv.top3": "Stärkste Stufe II",
+"opt.coordAll": "Koordinaten an allen Seiten",
+"lv.top4": "Stärkste Stufe III",
+"lv.top5": "Stärkste Stufe IV",
+"lvd.t": "Alle Kerne · {s} s/Zug",
+"lv.top6": "Stärkste Stufe V"
 }
