@@ -1,5 +1,5 @@
 // Backgammon V2 — AI / analysis worker
-importScripts('bg.js?v=20261108mt', 'explain.js?v=20261021op');
+importScripts('bg.js?v=20261109mt2', 'explain.js?v=20261021op');
 let ready = null;
 async function init() {
   try {
@@ -69,6 +69,8 @@ onmessage = async e => {
       out.list = pl.map(x => ({ pos: Array.from(x.pos), key: BG.key(x.pos), e: x.e, ply: 0 }));
     } else if (m.type === 'ply') {          // the threads: one candidate (the position after it, o = the opponent on roll) at a depth
       out.v = BG.evalPly(pos, m.o, m.ply);
+    } else if (m.type === 'plyr') {         // the threads: one opponent roll (m.i) of a candidate's 1・2-ply value (BG.plySum adds them)
+      if (BG.plyWhole(pos)) out.whole = BG.evalPly(pos, m.o, m.ply); else out.v = BG.plyRoll(pos, m.o, m.ply, m.i);
     } else if (m.type === 'ping') {
     } else if (m.type === 'eval') {          // pre-roll evaluation of a position (side on roll)
       const v = preRoll(pos, m.side, m.depth || 0);

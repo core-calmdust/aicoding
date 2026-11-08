@@ -379,6 +379,9 @@ let ttKey = null, ttVal, ttInfo;   // info: depth (8 bits) | flag (2 bits) << 8 
 function ttInit() { if (!ttKey) { ttKey = new Uint32Array(TT_SIZE); ttVal = new Int32Array(TT_SIZE); ttInfo = new Uint16Array(TT_SIZE); } }
 function ttClear() { if (ttKey) { ttKey.fill(0); ttInfo.fill(0); } }
 const EXACT = 1, LOWER = 2, UPPER = 3, SOLVED = 255;
+// the shared transposition table of the threads (shared/mttt.js, shared/mtsplit.js shared mode — 2026-11-09): set by the
+// 'mtshare' message on a cross-origin isolated page. The one-thread worker never has it: its levels play exactly as before.
+let SH = null;
 
 let nodes = 0, deadline = Infinity, aborted = false, cut = false, Rcur = RULES.kalah, ridx = 2, TOTAL = 48;
 const MAXPLY = 256;
@@ -387,7 +390,7 @@ const now = (typeof performance !== 'undefined' && performance.now) ? () => perf
 class Abort extends Error {}
 
 function search(b, side, depth, alpha, beta, ply) {
-  if ((++nodes & 4095) === 0 && now() > deadline) { aborted = true; throw new Abort(); }
+  if ((++nodes & 4095) === 0 && (now() > deadline || (SH !== null && SH.stopped()))) { aborted = true; throw new Abort(); }
   const ms = side ? 13 : 6, os = side ? 6 : 13;
   // bounds from the stores: the final margin lies in [2*mine - total, total - 2*theirs]
   const hi = (TOTAL - 2 * b[os]) * SEED, lo = (2 * b[ms] - TOTAL) * SEED;
@@ -406,7 +409,16 @@ function search(b, side, depth, alpha, beta, ply) {
   h1 ^= ZR1[ridx]; h2 ^= ZR2[ridx];
   const ti = h1 & TT_MASK;
   let ttMove = -1;
-  if (ttKey[ti] === h2 && ttInfo[ti]) {
+  if (SH !== null) {
+    const e = SH.get(h1, h2);
+    if (e !== undefined) {
+      ttMove = e.m;
+      if (e.d >= depth) {
+        const v = e.v, f = e.f, d = e.d;
+        if (f === EXACT || (f === LOWER && v >= beta) || (f === UPPER && v <= alpha)) { if (d !== SOLVED) cut = true; return v; }
+      }
+    }
+  } else if (ttKey[ti] === h2 && ttInfo[ti]) {
     const inf = ttInfo[ti], d = inf & 255, f = (inf >> 8) & 3;
     ttMove = (inf >> 10) - 1;
     if (d >= depth) {
@@ -447,7 +459,8 @@ function search(b, side, depth, alpha, beta, ply) {
   const subCut = cut; cut = prevCut || subCut;
   const f = best <= a0 ? UPPER : best >= beta ? LOWER : EXACT;
   const d = subCut ? Math.min(depth, 250) : SOLVED;
-  if (!ttInfo[ti] || (ttInfo[ti] & 255) <= d || ttKey[ti] !== h2) { ttKey[ti] = h2; ttVal[ti] = best; ttInfo[ti] = d | (f << 8) | ((bestK + 1) << 10); }
+  if (SH !== null) SH.put(h1, h2, d, best, f, bestK, 0);
+  else if (!ttInfo[ti] || (ttInfo[ti] & 255) <= d || ttKey[ti] !== h2) { ttKey[ti] = h2; ttVal[ti] = best; ttInfo[ti] = d | (f << 8) | ((bestK + 1) << 10); }
   return best;
 }
 function setup(b, rules) {
@@ -472,10 +485,11 @@ function rootValues(b, side, depth) {
   return out;
 }
 // principal-variation root search: best move only (faster than full root values)
-function rootBest(b, side, depth, prevBest) {
+function rootBest(b, side, depth, prevBest, rot) {
   const ms = side ? 13 : 6, os = side ? 6 : 13;
   let moves = legal(b, side, Rcur);
   if (prevBest >= 0 && moves.includes(prevBest)) moves = [prevBest].concat(moves.filter(x => x !== prevBest));
+  if (rot) { const k = rot % moves.length; moves = moves.slice(k).concat(moves.slice(0, k)); }   // (a Lazy SMP helper: mtHelp)
   let alpha = -INF, best = -INF, bestK = moves[0], anyCut = false;
   for (const k of moves) {
     const c = new Int8Array(14); c.set(b);
@@ -547,6 +561,7 @@ function ttMoveOf(b, side) {
   let h1 = side ? ZS1 : 0, h2 = side ? ZS2 : 0;
   for (let i = 0; i < 14; i++) { h1 ^= Z1[i * ZN + b[i]]; h2 ^= Z2[i * ZN + b[i]]; }
   h1 ^= ZR1[ridx]; h2 ^= ZR2[ridx];
+  if (SH !== null) { const e = SH.get(h1, h2); return e !== undefined ? e.m : -1; }
   const ti = h1 & TT_MASK;
   return ttKey[ti] === h2 && ttInfo[ti] ? (ttInfo[ti] >> 10) - 1 : -1;
 }
@@ -632,12 +647,15 @@ function mtPlan(m) {
   const moves = legal(b, m.side, Rcur), inf = INF;
   if (m.job === 'move') {
     const L = m.cfg || LEVELS[Math.max(1, Math.min(10, m.level | 0))];
-    if (moves.length < 2 || (L.kind !== 'time' && !(m.cfg && L.kind === 'depth'))) { const r = chooseMove(b, m.side, m.rules, m.level, m.cfg); return { result: { type: 'move', move: r.move, value: r.value, exact: r.exact, depth: r.depth } }; }
-    if (L.kind === 'depth') return { plan: { kind: 'all', kids: mtKids({ b: m.b, side: m.side, rules: m.rules }).kids, inf, d0: L.depth, maxD: L.depth, solved: true } };   // (PRO: a depth on several threads, then the level's noise)
-    return { plan: { kind: 'best', kids: mtKids({ b: m.b, side: m.side, rules: m.rules }).kids, inf, maxD: 60, ms: L.ms, solved: true, splitMin: 6 } };
+    if (moves.length < 2 || (L.kind !== 'time' && !(m.cfg && L.kind === 'depth'))) { const sh = SH; SH = null; let r; try { r = chooseMove(b, m.side, m.rules, m.level, m.cfg); } finally { SH = sh; } return { result: { type: 'move', move: r.move, value: r.value, exact: r.exact, depth: r.depth } }; }   // (a weak level: on its own table, as one thread)
+    // (lazy / lazyAll: on the shared table — an isolated page — Lazy SMP: the lead plays the job as one thread does, the others
+    // fill the table; without it the root moves and the main line are split as before. shared/tools: 8 threads ≈ ×3.7 to the
+    // same depth for the best move, ≈ ×4.5 for the analysis, where splitting the ≤ 6 root moves gave ≈ ×2.7 on the same table)
+    if (L.kind === 'depth') return { plan: { kind: 'all', kids: mtKids({ b: m.b, side: m.side, rules: m.rules }).kids, inf, d0: L.depth, maxD: L.depth, solved: true, lazyAll: SH !== null } };   // (PRO: a depth on several threads, then the level's noise)
+    return { plan: { kind: 'best', kids: mtKids({ b: m.b, side: m.side, rules: m.rules }).kids, inf, maxD: 60, ms: L.ms, solved: true, splitMin: 6, lazy: SH !== null } };
   }
   if (!moves.length) return { result: { type: 'analyze', list: [], depth: 0, exact: true } };
-  return { plan: { kind: 'all', kids: mtKids({ b: m.b, side: m.side, rules: m.rules }).kids, inf, maxD: m.maxDepth || 60, ms: m.ms || 1000, solved: true, pv: m.pv || 0 } };
+  return { plan: { kind: 'all', kids: mtKids({ b: m.b, side: m.side, rules: m.rules }).kids, inf, maxD: m.maxDepth || 60, ms: m.ms || 1000, solved: true, pv: m.pv || 0, lazyAll: SH !== null } };
 }
 function mtV(m) {
   const { b, side } = mtNode(m), ply = (m.line || []).length;
@@ -652,7 +670,8 @@ function mtKids(m) {
   let h1 = side ? ZS1 : 0, h2 = side ? ZS2 : 0;
   for (let i = 0; i < 14; i++) { h1 ^= Z1[i * ZN + b[i]]; h2 ^= Z2[i * ZN + b[i]]; }
   h1 ^= ZR1[ridx]; h2 ^= ZR2[ridx];
-  const ti = h1 & TT_MASK, ttMove = ttKey[ti] === h2 && ttInfo[ti] ? (ttInfo[ti] >> 10) - 1 : -1;
+  const ti = h1 & TT_MASK, e0 = SH !== null ? SH.get(h1, h2) : undefined;
+  const ttMove = SH !== null ? (e0 !== undefined ? e0.m : -1) : ttKey[ti] === h2 && ttInfo[ti] ? (ttInfo[ti] >> 10) - 1 : -1;
   const must = Rcur.feed && sideSum(b, 1 - side) === 0, out = [];
   for (let k = 0; k < 6; k++) {   // (the same moves and order as search())
     if (!b[base + k] || (must && Rcur.oware && b[base + k] < 6 - k)) continue;
@@ -681,9 +700,34 @@ function mtFin(m) {
   return { result: { type: 'analyze', list, depth: r.depth, exact: list.every(x => x.exact) } };
 }
 function mtPv(m) { const b = Int8Array.from(m.b); setup(b, m.rules); return { pv: pvLine(b, m.side, m.m, m.plies) }; }
+// Lazy SMP on the shared table (shared/mtsplit.js shared mode, plan.lazy): 'mtlead' plays the job exactly as one thread does
+// (the same search, the same reply), 'mthelp' searches the same root meanwhile — iterative deepening, one ply deeper every
+// other helper (k), the root moves rotated by k >> 1 — until the lead is done (the page stops it) or the root is solved
+function mtLead(m) {
+  const b = Int8Array.from(m.b);
+  if (m.job === 'move') { const r = chooseMove(b, m.side, m.rules, m.level, m.cfg); return { type: 'move', move: r.move, value: r.value, exact: r.exact, depth: r.depth, nodes }; }
+  const r = analyze(b, m.side, m.rules, m.ms || 1000, m.maxDepth);
+  const n0 = nodes;
+  if (m.pv) for (const x of r.list) x.pv = pvLine(b, m.side, x.m, m.pv);
+  return { type: 'analyze', list: r.list, depth: r.depth, exact: r.exact, nodes: n0 };
+}
+function mtHelp(m) {
+  const b = Int8Array.from(m.b); setup(b, m.rules);
+  nodes = 0; aborted = false; deadline = m.until ? now() + (m.until - Date.now()) : Infinity;
+  let prev = -1;
+  try {
+    for (let d = 1; d <= (m.maxD || 60); d++) {
+      const r = rootBest(b, m.side, d + (m.k & 1), prev, m.k >> 1);
+      prev = r.m;
+      if (r.exact) break;
+    }
+  } catch (e) { if (!(e instanceof Abort)) throw e; }
+  return { nodes, ok: false };
+}
 
 const API = { RULES, RULE_IDS, initial, play, trace, replay, legal, isLegal, canFeed, stuck, sideSum, storeOf, baseOf, opposite, turnMax, turnMaxFirst,
-  evaluate, think, analyze, solve, chooseMove, LEVELS, mtPlan, mtV, mtKids, mtFin, mtPv, W, WO, WG, ttClear, pvLine, setRandom: f => { seedRand = f; }, get nodes() { return nodes; } };
+  evaluate, think, analyze, solve, chooseMove, LEVELS, mtPlan, mtV, mtKids, mtFin, mtPv, mtLead, mtHelp, W, WO, WG,
+  setShared: t => { SH = t || null; }, get shared() { return SH; }, ttClear, pvLine, setRandom: f => { seedRand = f; }, get nodes() { return nodes; } };
 
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else root.MancalaEngine = API;
@@ -692,6 +736,8 @@ else root.MancalaEngine = API;
 if (typeof WorkerGlobalScope !== 'undefined' && root instanceof WorkerGlobalScope) {
   root.onmessage = ev => {
     const m = ev.data;
+    if (m && m.type === 'mtshare') { try { importScripts(m.lib); SH = root.MTTT.attach(m); } catch (err) { SH = null; } return; }   // (shared/mtsplit.js shared mode)
+    if (SH !== null) SH.begin(m);
     try {
       const b = Int8Array.from(m.b || []);
       if (m.type === 'move') {
@@ -706,6 +752,8 @@ if (typeof WorkerGlobalScope !== 'undefined' && root instanceof WorkerGlobalScop
       else if (m.type === 'mtkids') root.postMessage(Object.assign({ id: m.id, type: 'result' }, mtKids(m)));
       else if (m.type === 'mtpv') root.postMessage(Object.assign({ id: m.id, type: 'result' }, mtPv(m)));
       else if (m.type === 'mtfin') root.postMessage(Object.assign({ id: m.id, type: 'result' }, mtFin(m)));
+      else if (m.type === 'mtlead') root.postMessage(Object.assign({ id: m.id }, mtLead(m)));
+      else if (m.type === 'mthelp') root.postMessage(Object.assign({ id: m.id, type: 'result' }, mtHelp(m)));
       else if (m.type === 'solve') {
         const r = solve(b, m.side, m.rules, m.ms || 8000) || analyze(b, m.side, m.rules, 1500);
         root.postMessage({ type: 'analyze', id: m.id, list: r.list, depth: r.depth, exact: r.exact });

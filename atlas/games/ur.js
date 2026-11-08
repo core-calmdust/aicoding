@@ -56,7 +56,7 @@
      A Finkel game on the chabudai with the game's own rules and AI (../ur/engine.js on the page, ../ur/worker.js for the
      AI, levels 1..20, the same files as the full game). Two players on one device too. The board, pieces and tetrahedral
      dice are the full game's 3D set (atlas/models/ur.js, through atlas/games/ur-kit.js). Rated games: the full game. */
-  const BASE = '../ur/', EV = '?v=3';   // same files (and cache keys) as ur/index.html
+  const BASE = '../ur/', EV = '?v=4';   // same files (and cache keys) as ur/index.html
   let engP = null;
   function loadEngine() {
     if (window.UrEngine) return Promise.resolve(window.UrEngine);

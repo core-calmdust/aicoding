@@ -139,17 +139,17 @@ let aiW = null, jobSeq = 0;
 const jobs = new Map();
 function worker() {
   if (aiW === false) return null;
-  if (!aiW) { try { aiW = new Worker('worker.js?v=3'); aiW.onmessage = e => { const d = e.data, j = jobs.get(d.id); if (j) j(d); }; aiW.onerror = () => { aiW = false; }; } catch (e) { aiW = false; return null; } }
+  if (!aiW) { try { aiW = new Worker('worker.js?v=4'); aiW.onmessage = e => { const d = e.data, j = jobs.get(d.id); if (j) j(d); }; aiW.onerror = () => { aiW = false; }; } catch (e) { aiW = false; return null; } }
   return aiW;
 }
 // the threads (shared/mtworkers.js; common rule 2026-11-08「本編のマルチスレッド」): a pool of these workers shares out the
 // expectiminimax as "move × the next throw" tasks (E.splitEval — the same numbers as E.evaluate) and the review by position.
 // Used for the AI's levels that read 2+ throws (time-capped), the hint (one throw deeper than without threads) and the review.
-const MW = window.MTWorkers ? (MTWorkers.init(), MTWorkers).use({ url: 'worker.js?v=3' }) : null;
+const MW = window.MTWorkers ? (MTWorkers.init(), MTWorkers).use({ url: 'worker.js?v=4', all: true }) : null;
 async function mtEval(st, n, depth, tag, prio, until) {
   const P = MW && MW.pool(prio); if (!P) return null;
-  const sp = E.splitEval(st, n, depth);
-  const r = await P.map(sp.tasks.map(t => ({ type: 'roll', state: t.state, n: t.n, d: t.d, until })), { tag });
+  const sp = E.splitEval(st, n, depth, E.fineFor(depth, P.threads));   // (heavy positions: also by the moves of each throw)
+  const r = await P.map(sp.tasks.map(t => ({ type: 'roll', state: t.state, n: t.n, d: t.d, k: t.k, until })), { tag });
   return r ? sp.combine(r.map(x => x.v)) : null;
 }
 async function think(st, n, level) {
