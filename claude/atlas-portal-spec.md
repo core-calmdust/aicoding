@@ -29,7 +29,7 @@ URL: https://core-calmdust.github.io/aicoding/atlas/  ／ 詳細: repo の atlas
 - 旧2Dアイコン（i001…）は廃止。保存データからは消し、初期キャラ（ダイスン・ポトンウサ・ゴイシペン）を配り直す
 
 ## 共通ルール
-- バッジ（最大2）：NEW 公開14日以内 → UPDATE 更新7日以内 → BETA → PREMIUM
+- バッジ（2026-11-08、最大2・優先順）：**BETA**（`beta: true`、これだけ）→ **NEW**（公開 `released` から14日以内、これだけ）→ **ORIGINAL**（`original: true`、NEWの後）→ **UPDATE**（そのゲームの最新の `UPDATES` の行が公開日より後の日付＝更新で、14日以内）。公開日以前の行は「公開の行」とみなすので、行にラベルは要らない。判定は `shared/atlas.js` の `badges()`（`NEW_DAYS`・`UPDATE_DAYS`）、文字は `badgeText()`（NEW・BETA・ORIGINAL は全言語そのまま、UPDATE は14言語）。出る場所：更新情報の列・ゲームのアイコン一覧・ゲーム一覧・ゲームカード、トップページ `index.html` の詳細パネル（同じ `badges()` を読む）。色：NEW＝コーラル、UPDATE＝スカイ、BETA＝グレープ（PREMIUM は廃止）
 - タグ：ai / online / rated / netrank / daily / lessons / puzzles / openings / variants / mobile
 - 実績はゲームごとの記録（localStorage）から自動計算。銅50・銀120・金300・プラチナ800コイン
 - コイン＝実績＋ログインボーナス（毎日30・7日ごと+150）＋ガチャかぶり返金−使用分

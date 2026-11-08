@@ -112,3 +112,4 @@ UCI=$UCIS bash "$HERE/match.sh" "$NET" "$WORK/base.bin" $MNODES $MGAMES $P | tee
 [ -n "$MTIME" ] && UCI=$UCIS bash "$HERE/match.sh" "$NET" "$WORK/base.bin" $MTIME $((MGAMES / 2)) $P | tee -a "$WORK/log.txt"
 gzip -9 -c "$NET" > "$CAND"
 log "done: $CAND (and log.txt, ${NET##*/}.log)"
+log "send: attach these 3 files in the Claude chat, or commit them to chess/tools/nnue/results/ on a NEW branch with GitHub Desktop and tell Claude the branch name (not Hugging Face; TRAIN.md section 5)"

@@ -13,9 +13,10 @@
    cd /Users/core_tan/Documents/GitHub/aicoding/shogi
    caffeinate -i bash tools/nnue/run-kp.sh
    ```
-4. 終わったら `~/shogi-kp-work/` の **`log.txt`・`train.log`** を `shogi/tools/nnue/results/` にコピーして GitHub Desktop でコミット・Push、
-   **`kp-candidate.bin.gz`（約12〜25MB）は Hugging Face に** 上げる（下の「5. 送ってほしいもの」）
-5. Claude に「将棋の HalfKP 候補を上げた」と伝える
+4. 終わったら `~/shogi-kp-work/` の **`kp-candidate.bin.gz`（約12〜25MB）・`log.txt`・`train.log`** を送る。
+   **Claude のチャットに添付する**か、**GitHub Desktop で新しいブランチを作って `shogi/tools/nnue/results/` にコミット・Push** する（下の「5. 送ってほしいもの」）。
+   Claude の作業環境からは Hugging Face に届かないので、Hugging Face には上げない
+5. Claude に「将棋の HalfKP 候補を送った」と伝える（ブランチで送ったときはブランチ名も）
 
 ---
 
@@ -107,24 +108,22 @@ HalfKP vs current (300ms): +140 -100 =20  score 0.577  Elo +54 (+12 .. +97)
 
 ## 5. 送ってほしいもの
 
-**GitHub Desktop で（ログ）**：
+送るのは `~/shogi-kp-work/` の **`kp-candidate.bin.gz`（ネット本体、約12〜25MB）・`log.txt`・`train.log`** の3つ。どちらかの方法で：
+
+**A. Claude のチャットに添付する**（いちばん簡単）：3つのファイルをチャットにドラッグして「将棋の HalfKP 候補」と書いて送る。
+
+**B. GitHub Desktop で新しいブランチに入れる**：
 
 ```sh
 mkdir -p /Users/core_tan/Documents/GitHub/aicoding/shogi/tools/nnue/results
-cp ~/shogi-kp-work/log.txt ~/shogi-kp-work/train.log /Users/core_tan/Documents/GitHub/aicoding/shogi/tools/nnue/results/
+cp ~/shogi-kp-work/kp-candidate.bin.gz ~/shogi-kp-work/log.txt ~/shogi-kp-work/train.log \
+   /Users/core_tan/Documents/GitHub/aicoding/shogi/tools/nnue/results/
 ```
 
-GitHub Desktop で Summary に「shogi: HalfKP results」と書いて **Commit to main → Push origin**。
+GitHub Desktop で **Current Branch → New Branch**（例：`shogi-kp-results`）→ Summary に「shogi: HalfKP candidate」と書いて **Commit → Publish branch（Push）**。
+そのあと Claude に **ブランチ名** を伝える（main には直接コミットしない）。GitHub は1ファイル100MBまでなので、`kp-candidate.bin.gz` が100MBを超えるときは A にする。
 
-**Hugging Face で（ネット本体、約12〜25MB）**：
-
-```sh
-pip3 install huggingface_hub
-huggingface-cli login
-huggingface-cli upload corechan/shogi-nnue-kp ~/shogi-kp-work/kp-candidate.bin.gz candidates/kp9-512.bin.gz
-```
-
-（学習データは MIT ですが大きいので送らなくて大丈夫です。リポジトリに `kp-candidate.bin.gz` を入れてもかまいませんが、大きいので Hugging Face をおすすめします。）
+（Claude の作業環境からは Hugging Face に届かないので、Hugging Face には上げないでください。学習データは MIT ですが大きいので送らなくて大丈夫です。）
 
 ## より大きなネットにする場合
 
