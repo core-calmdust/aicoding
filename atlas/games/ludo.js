@@ -10,11 +10,11 @@
 (function () {
   'use strict';
   const RN = {   // rule names and the players label for the size select
-    ja: ['ルドー', 'パチーシ', '{n}人', 'ルールと人数'], en: ['Ludo', 'Pachisi', '{n} players', 'Rules & players'], zh: ['飞行棋式鲁多', '帕棋西', '{n}人', '规则与人数'],
-    'zh-TW': ['魯多', '帕奇西', '{n}人', '規則與人數'], ko: ['루도', '파치시', '{n}인', '규칙·인원'], es: ['Ludo', 'Parchís indio', '{n} jugadores', 'Reglas y jugadores'],
-    fr: ['Ludo', 'Pachisi', '{n} joueurs', 'Règle et joueurs'], pt: ['Ludo', 'Pachisi', '{n} jogadores', 'Regras e jogadores'], de: ['Ludo', 'Pachisi', '{n} Spieler', 'Regel & Spieler'],
-    ru: ['Лудо', 'Пачиси', '{n} игрока', 'Правила и игроки'], tr: ['Ludo', 'Pachisi', '{n} oyuncu', 'Kural ve oyuncu'], id: ['Ludo', 'Pachisi', '{n} pemain', 'Aturan & pemain'],
-    hi: ['लूडो', 'पचीसी', '{n} खिलाड़ी', 'नियम और खिलाड़ी'], ar: ['لودو', 'باتشيسي', '{n} لاعبين', 'القواعد واللاعبون'],
+    ja: ['ルドー', 'パチーシ', '{n}人', 'ルール'], en: ['Ludo', 'Pachisi', '{n} players', 'Rules'], zh: ['飞行棋式鲁多', '帕棋西', '{n}人', '规则'],
+    'zh-TW': ['魯多', '帕奇西', '{n}人', '規則'], ko: ['루도', '파치시', '{n}인', '규칙'], es: ['Ludo', 'Parchís indio', '{n} jugadores', 'Reglas'],
+    fr: ['Ludo', 'Pachisi', '{n} joueurs', 'Règles'], pt: ['Ludo', 'Pachisi', '{n} jogadores', 'Regras'], de: ['Ludo', 'Pachisi', '{n} Spieler', 'Regeln'],
+    ru: ['Лудо', 'Пачиси', '{n} игрока', 'Правила'], tr: ['Ludo', 'Pachisi', '{n} oyuncu', 'Kurallar'], id: ['Ludo', 'Pachisi', '{n} pemain', 'Aturan'],
+    hi: ['लूडो', 'पचीसी', '{n} खिलाड़ी', 'नियम'], ar: ['لودو', 'باتشيسي', '{n} لاعبين', 'القواعد'],
   };
   RN.zh[0] = '鲁多';
   const SIZES = [4, 3, 2, 14, 12];
@@ -144,39 +144,60 @@
     }
     const FACE = { 1: [0, 0, 0], 6: [Math.PI, 0, 0], 2: [-Math.PI / 2, 0, 0], 5: [Math.PI / 2, 0, 0], 3: [0, 0, Math.PI / 2], 4: [0, 0, -Math.PI / 2] };
     let dieG = null;
-    /* the dice cup (ludo): it stands mouth down in the yard of the seat to throw; the throw shakes it in the air, the dice tumble out
-       where it stood and it goes down beside them; on the next turn it glides to that seat's yard */
+    /* the dice cup (ludo, 2026-11-09 v2): it stands mouth UP in the yard of the seat to throw. The throw: it shakes (the dice
+       rattle inside), turns over and comes down mouth down on the board, then lifts away to the side — the dice lie where it
+       stood. On the next turn it goes, turning mouth up again, to that seat's yard. */
     let cupG = null, cupSeat = -1;
+    const CR0 = .58, CR1 = .48, CH = .72;
     function mkCup() {
-      const g = new TH.Group(), R0 = .44, R1 = .36, H = .62;
+      const g = new TH.Group();
       const leather = new TH.MeshStandardMaterial({ color: 0x4a2310, roughness: .58, metalness: 0, side: TH.DoubleSide });
+      const inside = new TH.MeshStandardMaterial({ color: 0x1e0f06, roughness: .9, metalness: 0, side: TH.BackSide });
       const gold = new TH.MeshStandardMaterial({ color: 0xd2a24c, roughness: .35, metalness: .7 });
-      const body = new TH.Mesh(new TH.CylinderGeometry(R1, R0, H, 40, 1, true), leather); body.position.y = H / 2; body.castShadow = true;
-      const top = new TH.Mesh(new TH.CircleGeometry(R1, 40), leather); top.rotation.x = -Math.PI / 2; top.position.y = H;
-      const b1 = new TH.Mesh(new TH.TorusGeometry(R0 - .012, .022, 8, 40), gold); b1.rotation.x = Math.PI / 2; b1.position.y = .05;
-      const b2 = new TH.Mesh(new TH.TorusGeometry(R1 + .012, .02, 8, 40), gold); b2.rotation.x = Math.PI / 2; b2.position.y = H - .05;
-      const sh = T3.contact(R0 * 1.35, .45); sh.position.y = .002;
-      const inner = new TH.Group(); inner.add(body, top, b1, b2); g.add(sh, inner); g.userData = { inner, sh, mats: [leather, gold] };
+      const body = new TH.Mesh(new TH.CylinderGeometry(CR1, CR0, CH, 40, 1, true), leather); body.position.y = CH / 2; body.castShadow = true;
+      const lin = new TH.Mesh(new TH.CylinderGeometry(CR1 - .02, CR0 - .02, CH - .01, 40, 1, true), inside); lin.position.y = CH / 2;
+      const top = new TH.Mesh(new TH.CircleGeometry(CR1, 40), leather); top.rotation.x = -Math.PI / 2; top.position.y = CH;
+      const b1 = new TH.Mesh(new TH.TorusGeometry(CR0 - .012, .026, 8, 40), gold); b1.rotation.x = Math.PI / 2; b1.position.y = .05;
+      const b2 = new TH.Mesh(new TH.TorusGeometry(CR1 + .012, .022, 8, 40), gold); b2.rotation.x = Math.PI / 2; b2.position.y = CH - .06;
+      const sh = T3.contact(CR0 * 1.35, .45); sh.position.y = .002;
+      const inner = new TH.Group(); inner.add(body, lin, top, b1, b2); g.add(sh, inner); g.userData = { inner, sh, mats: [leather, inside, gold] };
       return g;
     }
     const cupXZ = seat => { const [gx, gy] = throwSpot(seat); return wx(gx, gy); };
-    const parkXZ = seat => { const [gx, gy] = throwSpot(seat), d = gx < 7.5 ? 1 : -1; return wx(gx + d * 1.75, gy); };
+    const parkXZ = seat => { const [gx, gy] = throwSpot(seat), ox = gx < 7.5 ? -2.05 : 2.05; return wx(gx + ox, gy - 2.05); };   // the yard's far outer corner (clear of the pieces, behind them as seen)
+    // the cup's pose: up = 1 mouth up (standing on its base), 0 mouth down; lift: height above the board
+    function cupPose(up, lift, rz) { const I = cupG.userData.inner; I.rotation.set(Math.PI * up, 0, rz || 0); I.position.set(0, CH * up + (lift || 0), 0); cupG.userData.sh.scale.setScalar(Math.max(.4, 1 - (lift || 0) * .5)); }
     function cupTo(seat, glide) {
       if (rule !== 'ludo') return;
       if (!cupG) { cupG = mkCup(); board.add(cupG); }
-      const [x, z] = cupXZ(seat), g = cupG, I = g.userData.inner;
-      if (!glide || cupSeat < 0) { g.position.set(x, Y, z); I.position.set(0, 0, 0); I.rotation.set(0, 0, 0); cupSeat = seat; if (T3.kick) T3.kick(200); return; }
-      const x0 = g.position.x, z0 = g.position.z; cupSeat = seat; I.rotation.set(0, 0, 0);
-      anim(420, k => { const e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; g.position.set(x0 + (x - x0) * e, Y, z0 + (z - z0) * e); I.position.y = Math.sin(k * Math.PI) * .7; });
+      const [x, z] = cupXZ(seat), g = cupG;
+      if (!glide || cupSeat < 0) { g.position.set(x, Y, z); cupPose(1, 0); cupSeat = seat; if (T3.kick) T3.kick(200); return; }
+      if (cupSeat === seat && g.position.x === x && g.position.z === z) { cupPose(1, 0); return; }
+      const x0 = g.position.x, z0 = g.position.z; cupSeat = seat;
+      anim(480, k => { const e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; g.position.set(x0 + (x - x0) * e, Y, z0 + (z - z0) * e); cupPose(e, Math.sin(k * Math.PI) * .8); });
     }
-    async function cupShake(seat) {   // lift and shake (then throwAnim lets the dice out)
-      if (!cupG) cupTo(seat); const g = cupG, I = g.userData.inner;
-      if (cupSeat !== seat) cupTo(seat);
-      await animP(460, k => { const up = Math.min(1, k * 3) * .55; I.position.set(Math.sin(k * Math.PI * 7) * .07, up, 0); I.rotation.set(0, 0, Math.sin(k * Math.PI * 7) * .28 * Math.min(1, k * 3)); g.userData.sh.scale.setScalar(1 - up * .4); });
-    }
-    function cupPark(seat) {   // after the dice are out: tip over toward the side and stand down beside them
-      if (!cupG) return; const g = cupG, I = g.userData.inner, [x0, z0] = cupXZ(seat), [x1, z1] = parkXZ(seat), r0 = I.rotation.z, y0 = I.position.y;
-      anim(520, k => { const e = 1 - Math.pow(1 - k, 3); g.position.set(x0 + (x1 - x0) * e, Y, z0 + (z1 - z0) * e); I.position.set(0, y0 * (1 - e) + Math.sin(e * Math.PI) * .25, 0); I.rotation.set(0, 0, r0 * (1 - e) + Math.sin(e * Math.PI) * (x1 > x0 ? -.9 : .9)); g.userData.sh.scale.setScalar(1); });
+    // the throw: shake mouth up · turn over and come down · lift away (the dice are put under it as it lands)
+    async function cupThrow(seat, th) {
+      if (!cupG || cupSeat !== seat) cupTo(seat);
+      const g = cupG, [cx, cz] = cupXZ(seat);
+      g.position.set(cx, Y, cz); cupPose(1, 0);
+      await animP(520, k => { const w = Math.sin(k * Math.PI * 8) * Math.min(1, k * 4) * (1 - Math.max(0, k - .85) / .15); cupPose(1, Math.min(1, k * 4) * .35, w * .22); g.position.x = cx + w * .06; });
+      if (stopped) return;
+      g.position.x = cx;
+      await animP(300, k => { const e = k * k; cupPose(1 - e, .35 * (1 - e) + Math.sin(k * Math.PI) * .45); });
+      if (stopped) return;
+      cupPose(0, 0); SND.put();
+      // the dice, under the cup
+      const fs = th.dice ? (th.three6 ? [6, 6] : th.dice) : [th.v];
+      fs.forEach((v, i) => { const d = U.die(), h = d.userData.size / 2, sh = T3.contact(h * 1.4, .4), ox = fs.length > 1 ? (i ? .27 : -.27) : 0, oz = fs.length > 1 ? (i ? .05 : -.05) : 0;
+        d.children[0].rotation.set(...FACE[v]); d.position.set(cx + ox, Y + h + .003, cz + oz); d.rotation.y = (Math.random() - .5) * .9; sh.position.set(cx + ox, Y + .002, cz + oz); thrown.add(sh, d); if (!i) dieG = d; });
+      await animP(90, k => cupPose(0, Math.sin(k * Math.PI) * .03));
+      if (stopped) return;
+      await sleep(140); if (stopped) return;
+      // lift it away to the side, still mouth down
+      const [px, pz] = parkXZ(seat);
+      await animP(460, k => { const e = 1 - Math.pow(1 - k, 3); g.position.set(cx + (px - cx) * e, Y, cz + (pz - cz) * e); cupPose(0, Math.sin(e * Math.PI) * .9); });
+      cupPose(0, 0);
     }
     function restDie(seat, v) {
       while (thrown.children.length) thrown.remove(thrown.children[0]);
@@ -191,7 +212,7 @@
       SND.roll();
       while (thrown.children.length) thrown.remove(thrown.children[0]);
       const [gx, gy] = throwSpot(seat), [cx, cz] = wx(gx, gy);
-      if (rule === 'ludo') { await cupShake(seat); if (stopped) return; cupPark(seat); }
+      if (rule === 'ludo') { await cupThrow(seat, th); return; }   // (the cup: shake, over, lift — the dice under it)
       if (rule === 'ludo' && th.dice) {   // (house rule: two dice — 666 shows the double six)
         const fs = th.three6 ? [6, 6] : th.dice, ds = fs.map((v, i) => { const d = U.die(), h = d.userData.size / 2, sh = T3.contact(h * 1.5, .4); thrown.add(sh, d); d.children[0].rotation.set(...FACE[v]);
           const ox = (i ? .55 : -.55) * u, sx = (Math.random() < .5 ? -1 : 1) * (2 + Math.random() * 2) * Math.PI, sy = (Math.random() - .5) * 4 * Math.PI, sz2 = (Math.random() < .5 ? -1 : 1) * 2 * Math.PI, yaw = Math.random() * 6.28;

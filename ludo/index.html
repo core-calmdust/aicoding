@@ -68,12 +68,16 @@ button{font:inherit;color:inherit}
 #bsvg #gCup .cup.ready .cupb{filter:drop-shadow(0 0 .08px #fff) drop-shadow(0 0 .22px #ffd36b)}
 #bsvg #gCup .cup.slide{animation:cupSlide .38s cubic-bezier(.3,.7,.3,1)}
 #bsvg #gCup .cup.ready.slide{animation:cupSlide .38s cubic-bezier(.3,.7,.3,1),cupBob 1.1s ease-in-out .38s infinite}
-#bsvg #gCup .cup.shake{animation:cupShake .3s ease-in-out infinite}
-#bsvg #gCup .cup.lift{animation:cupLift .5s cubic-bezier(.3,.6,.3,1) forwards;pointer-events:none}
+#bsvg #gCup .cup.shake{animation:cupShake calc(.21s * var(--k,1)) ease-in-out infinite}
+#bsvg #gCup .cup.flip{transform-origin:50% 50%;animation:cupFlip calc(.26s * var(--k,1)) cubic-bezier(.5,0,.6,1) forwards}
+#bsvg #gCup .cup.down{animation:cupDown calc(.17s * var(--k,1)) ease-out}
+#bsvg #gCup .cup.lift{animation:cupLift calc(.45s * var(--k,1)) cubic-bezier(.3,.6,.3,1) forwards;pointer-events:none}
 #bsvg #gCup .cupd{animation:cupDice .35s ease-out}
 @keyframes cupBob{50%{transform:translateY(-.1px) scale(1.04)}}
 @keyframes cupSlide{from{transform:translate(var(--dx),var(--dy)) scale(.7);opacity:.4}}
 @keyframes cupShake{0%{transform:translateY(-.25px) rotate(0)}25%{transform:translate(-.12px,-.4px) rotate(-16deg)}50%{transform:translateY(-.3px) rotate(0)}75%{transform:translate(.12px,-.4px) rotate(16deg)}100%{transform:translateY(-.25px) rotate(0)}}
+@keyframes cupFlip{0%{transform:translateY(-.25px) rotate(0)}45%{transform:translateY(-.75px) rotate(100deg)}100%{transform:translateY(0) rotate(180deg)}}
+@keyframes cupDown{0%{transform:scale(1.08,.88)}60%{transform:scale(.97,1.04)}100%{transform:none}}
 @keyframes cupLift{0%{transform:translateY(-.25px)}100%{transform:translate(.75px,-1.05px) rotate(28deg) scale(.82);opacity:0}}
 @keyframes cupDice{from{transform:scale(.6);opacity:0}}
 #bsvg .dest{cursor:pointer}
@@ -329,6 +333,11 @@ body:is(.in-lesson,.in-puzzle) .cb-bar{padding-bottom:2px}
 /* rules / lessons / puzzles (tabbed list dialog, fixed size) */
 .ls-tabs{margin-bottom:16px}
 .ls-tabs button{font-size:13.5px;padding:9px 4px}
+/* phones: ルール（ルドー） did not fit — two lines: a small ルール over the name (app-learn.js tabLabels) */
+.ls-tabs button .tl{display:block;font-size:10.5px;font-weight:600;opacity:.75;line-height:1.2}.ls-tabs button .tn{display:block;line-height:1.25;white-space:nowrap}
+.ls-tabs button{min-width:0;overflow:hidden;text-overflow:ellipsis}
+/* phones held upright: the dialog's 閉じる and 対局開始 share the row equally (the short 閉じる is the landscape layout) */
+@media (max-width:640px){#newOverlay .modal-actions{justify-content:stretch}#newOverlay .modal-actions .mbtn{flex:1 1 0}}
 #rulesOverlay .modal, #lessonOverlay .modal, #puzzleOverlay .modal{display:flex;flex-direction:column}
 @media (min-width: 900px) and (min-height: 561px){
   #rulesOverlay .modal, #lessonOverlay .modal, #puzzleOverlay .modal{width:min(1000px,calc(100vw - 64px));height:min(880px,calc(100vh - 32px))!important;height:min(880px,calc(100dvh - 32px))!important;max-height:none!important}
@@ -478,6 +487,7 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
     <div class="field" id="fRules" data-ng="game">
       <label data-i18n="ng.rule"></label>
       <div class="ngt-gcards few" id="ruleCards" style="--ngt-cols:2"></div>
+      <div class="field" id="fOpts" style="margin:14px 0 0"><label id="hrLbl"></label><button type="button" class="hr-btn" id="btnHouse"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg><span id="hrSum"></span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg></button></div>
     </div>
     <div class="field" id="fMode">
       <label data-i18n="ng.mode"></label>
@@ -489,7 +499,6 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
       <div class="field" id="fFirst"><label data-i18n="ng.firstp"></label><div class="seg" id="segFirst"><button data-v="0" data-i18n="ng.you"></button><button data-v="r" data-i18n="ng.random"></button></div></div>
       <div class="field" id="fLevel"><label data-i18n="ng.level"></label><div class="level-wrap"><input type="range" min="1" max="20" step="1" id="levelRange"><div class="level-name" id="levelName"></div></div></div>
     </div><div class="ng-col">
-      <div class="field" id="fOpts"><label id="hrLbl"></label><button type="button" class="hr-btn" id="btnHouse"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg><span id="hrSum"></span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg></button></div>
       <div class="field" id="fDisplay"><label data-i18n="ng.display"></label><div class="checks"><label><input type="checkbox" id="optAutoRoll"><span data-i18n="opt.autoRoll"></span></label><label><input type="checkbox" id="optAutoPick"><span data-i18n="opt.autoPick"></span></label></div></div>
       <div class="field" id="fDesign" data-ng="design"><label data-i18n="bd.title"></label><div class="dsg" id="bdRow"></div></div>
     </div></div>
@@ -562,13 +571,13 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
 <script src="../shared/record.js?v=12l14"></script>
 <script src="../shared/mtworkers.js?v=3"></script>
 <script src="mt.js?v=2"></script>
-<script src="house.js?v=2"></script>
-<script src="app.js?v=11"></script>
+<script src="house.js?v=3"></script>
+<script src="app.js?v=12"></script>
 <script src="review.js?v=3-mt"></script>
 <script src="../shared/placement.js?v=1l14"></script>
 <script src="rated.js?v=2"></script>
 <script src="tour.js?v=2"></script>
-<script src="app-learn.js?v=4"></script>
+<script src="app-learn.js?v=5"></script>
 <script src="../shared/cardbar.js?v=7l14"></script>
 <script src="../shared/ngtabs.js?v=25l14"></script>
 <script src="../shared/atlas.js?v=20261110sh2" defer></script>

@@ -124,7 +124,7 @@
     };
     const paint = () => {
       const bd0 = ov.querySelector('.lhr-bd'), top = bd0 ? bd0.scrollTop : 0;   // (a change keeps the place in the list)
-      ov.innerHTML = `<div class="lhr"><div class="lhr-hd"><h2>${esc(L.ui[0])}</h2><p>${esc(L.ui[1])}</p></div><div class="lhr-bd">` +
+      ov.innerHTML = `<div class="lhr"><div class="lhr-hd"><h2>${esc(L.ui[0])}</h2><p>${L.ui[1].split(/(?<=[。．！？!?.])\s*/).filter(Boolean).map(esc).join('<br>')}</p></div><div class="lhr-bd">` +
         `<div class="lhr-sec">${esc(L.ui[2])}</div>${BASIC.map(row).join('')}<div class="lhr-sec">${esc(L.ui[3])}</div>${ADV.map(row).join('')}<p class="lhr-note">${esc(L.ui[6])}</p></div>` +
         `<div class="lhr-ft"><button type="button" class="lhr-rs">${esc(L.ui[4])}</button><button type="button" class="lhr-ok">${esc(L.ui[5])}</button></div></div>`;
       const bd = ov.querySelector('.lhr-bd'); bd.scrollTop = top; bd.addEventListener('scroll', shut, { passive: true });
