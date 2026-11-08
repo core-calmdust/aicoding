@@ -1458,9 +1458,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 /* board card: own pickers instead of the system ones */
 .bvi .sidetg{flex:1;display:flex;gap:4px;padding:4px;border-radius:14px;background:#f3ead8;min-width:0}
 /* a card with the house-rules row (ludo): the labels in one column and the pickers lined up in the next (2026-11-09) */
-.bvi .opts.hr > label{display:grid!important;grid-template-columns:var(--lw,6.6em) minmax(0,1fr) auto;align-items:center;gap:8px;flex:1 1 100%!important}
-.bvi .opts.hr > label > :last-child:not(#bvHouse){grid-column:2 / -1}
-.bvi .opts #bvHouse{display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 12px;border-radius:12px;border:2px solid var(--line);background:#fff;font:inherit;font-weight:900;font-size:13.5px;color:var(--ink);cursor:pointer;white-space:nowrap}
+.bvi .opts #bvHouse{flex:none;display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 12px;border-radius:12px;border:2px solid var(--line);background:#fff;font:inherit;font-weight:900;font-size:13.5px;color:var(--ink);cursor:pointer;white-space:nowrap}
 @media (min-width:820px){.bvi .opts #bvHouse{height:48px;padding:0 16px;font-size:15px;border-radius:14px}}
 .bvi .opts #bvHouse[hidden]{display:none}
 .bvi .opts #bvHouse b{font-size:11px;padding:1px 7px;border-radius:99px;background:var(--coral);color:#fff}.bvi .opts #bvHouse b:empty{display:none}
@@ -1706,6 +1704,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <link rel="stylesheet" href="worldmap.css?v=18">
 <script src="worldmap.js?v=28"></script>
 <script src="updnews.js?v=7"></script>
-<script src="app.js?v=231"></script>
+<script src="app.js?v=232"></script>
 </body>
 </html>
