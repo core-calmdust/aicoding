@@ -130,6 +130,9 @@
     faience: { ja: "青いファイアンス", en: "Blue faience", zh: "蓝色釉陶", ko: "푸른 파이앙스", es: "Fayenza azul", fr: "Faïence bleue", pt: "Faiança azul", de: "Blaue Fayence", hi: "नीली फ़ायंस", ar: "القاشاني الأزرق", ru: "Синий фаянс", 'zh-TW': "藍色彩陶", id: "Fayans biru", tr: "Mavi fayans" },
     papyrus: { ja: "墓の壁画", en: "Tomb painting", zh: "墓室壁画", ko: "무덤 벽화", es: "Pintura de tumba", fr: "Peinture de tombe", pt: "Pintura de túmulo", de: "Grabmalerei", hi: "मकबरे का चित्र", ar: "رسم المقبرة", ru: "Роспись гробницы", 'zh-TW': "墓室壁畫", id: "Lukisan makam", tr: "Mezar resmi" },
     night: { ja: "ナイルの夜", en: "Nile night", zh: "尼罗之夜", ko: "나일의 밤", es: "Noche del Nilo", fr: "Nuit du Nil", pt: "Noite do Nilo", de: "Nilnacht", hi: "नील की रात", ar: "ليل النيل", ru: "Ночь на Ниле", 'zh-TW': "尼羅河之夜", id: "Malam di Sungai Nil", tr: "Nil gecesi" },
+    // carrom (the 盤 names)
+    classic: { ja: '伝統の盤 3D', en: 'Classic 3D', zh: '经典 3D', ko: '클래식 3D', es: 'Clásico 3D', fr: 'Classique 3D', pt: 'Clássico 3D', de: 'Klassisch 3D', hi: 'क्लासिक 3D', ar: 'كلاسيكي ثلاثي', ru: 'Классическая 3D', 'zh-TW': '經典3D', id: '3D klasik', tr: 'Klasik 3D' },
+    modern: { ja: 'モダンアート 3D', en: 'Modern art 3D', zh: '现代艺术 3D', ko: '모던 아트 3D', es: 'Arte moderno 3D', fr: 'Art moderne 3D', pt: 'Arte moderna 3D', de: 'Moderne Kunst 3D', hi: 'मॉडर्न आर्ट 3D', ar: 'فن حديث ثلاثي', ru: 'Современное искусство 3D', 'zh-TW': '現代藝術3D', id: '3D seni modern', tr: 'Modern sanat 3D' },
   };
   const BOARDS = {
     // atlas/skin/chess.js: 'atlas-chess-pc' = the piece set ('1' lux · 'wood' · '0' the 2D pieces), '-bd' = the board's wood
@@ -153,6 +156,8 @@
       get: () => { try { const d = (JSON.parse(ls.get('aicoding-senet') || '{}').settings || {}).design; return ['faience', 'papyrus', 'night'].includes(d) ? d : 'tut'; } catch (e) { return 'tut'; } },
       set: k => { try { const o = JSON.parse(ls.get('aicoding-senet') || '{}') || {}; o.settings = o.settings || {}; o.settings.design = k; ls.set('aicoding-senet', JSON.stringify(o)); } catch (e) {} } },
     konane: { list: ['papamu', 'quilt'], get: () => ls.get('atlas-konane-look') === 'quilt' ? 'quilt' : 'papamu', set: k => ls.set('atlas-konane-look', k) },
+    // carrom (3D only): 'atlas-carrom-look' ('classic' the default | 'modern')
+    carrom: { list: ['classic', 'modern'], get: () => ls.get('atlas-carrom-look') === 'modern' ? 'modern' : 'classic', set: k => ls.set('atlas-carrom-look', k) },
   };
   X.BOARDS = BOARDS;
   X.boardName = (k, lang) => { const o = N3[k]; return o ? o[lang] || o.en : k; };
