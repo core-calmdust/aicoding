@@ -1686,7 +1686,7 @@ html.rb-study .frame{outline:3px solid var(--accent);outline-offset:3px}
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2l14"></script>
 <script src="online.js?v=stale2fis"></script>
-<script src="../shared/mtengine.js?v=5trgep"></script><script src="../shared/proset.js?v=3t2svhxbf"></script><script>MTEngine.init({ sw: 'sw.js' });</script>
+<script src="../shared/mtengine.js?v=5trgep2"></script><script src="../shared/proset.js?v=3t2svhxbf"></script><script>MTEngine.init({ sw: 'sw.js' });</script>
 <script src="rbox.js?v=3-rc2"></script>
 <script src="../shared/coachkit.js?v=16l14"></script>
 <script src="../shared/record.js?v=12l14"></script>
@@ -1808,7 +1808,7 @@ weightsReady = (async () => {
 let book = null;
 const bookReady = fetch('book.bin?v=1').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null).then(b => (book = b));   // (the opening book: tools/book-gen.js; each worker decodes it, engine.js decodeBook)
 function makeWorker(onmsg) {
-  const w = new Worker('engine.js?v=53');
+  const w = new Worker('engine.js?v=54');
   w.onmessage = onmsg;
   const send = wt => { if (wt) w.postMessage({ type: 'weights', buffer: wt.buffer.slice(0), nphase: wt.nphase }); };
   if (weights) send(weights); else weightsReady.then(send);
@@ -1847,7 +1847,7 @@ let jobId = 0;
 const MT_CFG = { 17: { exact: 18, wld: 20 }, 18: { exact: 18, wld: 21 }, 19: { exact: 19, wld: 21 }, 20: { exact: 20, wld: 22 },
   21: { exact: 21, wld: 23 }, 22: { exact: 22, wld: 23 }, 23: { exact: 22, wld: 24 }, 24: { exact: 23, wld: 24 }, 25: { exact: 23, wld: 25 } };   // the helpers' settings (engine.js LEVELS)
 const MTP = window.MTEngine ? MTEngine.use({
-  wasm: 'engine_mt.wasm?v=3', lead: 'mt-worker.js?v=6', helper: 'mt-worker.js?v=6', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
+  wasm: 'engine_mt.wasm?v=3', lead: 'mt-worker.js?v=7', helper: 'mt-worker.js?v=7', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => Date.now() } }),
   after: async (X, mem, ws) => {
     X.init();   // (the tables in the shared memory, once)
