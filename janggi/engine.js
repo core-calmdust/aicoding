@@ -271,12 +271,14 @@ let WX = null;
 function wNN() {}
 const wIO = () => new Int32Array(WX.memory.buffer, WX.io_ptr(), 8192);
 const toC = m => mFrom(m) | (mTo(m) << 7), fromC = x => mv(x & 127, (x >> 7) & 127);   // (a pass: from == to on both sides)
-function wSetup(start, moves, excl) {
+// the setup buffer of engine.c setup(): [90 point codes, side, nmoves, moves..., nexcl, excluded...] (also the page's helper threads)
+function setupIO(start, moves, excl) {
   const p = Pos.from(start), a = Array.from(p.b); a.push(p.side, moves.length);
   for (const m of moves) a.push(toC(m));
   a.push((excl || []).length); for (const m of excl || []) a.push(toC(m));
-  wIO().set(a); return WX.setup();
+  return a;
 }
+function wSetup(start, moves, excl) { wIO().set(setupIO(start, moves, excl)); return WX.setup(); }
 function wList() { const r = wIO(), L = []; for (let i = 0; i < r[0]; i++) L.push({ m: fromC(r[2 + 2 * i]), v: r[3 + 2 * i] }); return L; }
 const kindOf = v => Math.abs(v) > WINT ? 'exact' : 'heur';
 
@@ -316,7 +318,7 @@ function think(start, moves, level, rand) {
   WX.best(L.dx || 99, L.ms || 0, !L.nk ? 0 : L.nk < 10 ? -Math.round(L.nk * 10) : L.nk);   // (nk < 10: in hundreds of nodes, negative)
   const r = wIO();
   if (r[0] < 0) return { move: all[0] };
-  return { move: fromC(r[0]), v: r[1], depth: r[2] };
+  return { move: fromC(r[0]), v: r[1], depth: r[2], nodes: r[3] * 1000 };
 }
 function analyze(start, moves, ms, onProgress) {
   wNN(true);
@@ -326,7 +328,7 @@ function analyze(start, moves, ms, onProgress) {
   void hashes;
   progressCb = onProgress ? (d => onProgress(wList().map(e => ({ ...e, kind: kindOf(e.v) })), d)) : null;
   WX.analyze(ms, 60); progressCb = null;
-  return { list: wList().map(e => ({ ...e, kind: kindOf(e.v) })), depth: wIO()[1] };
+  return { list: wList().map(e => ({ ...e, kind: kindOf(e.v) })), depth: wIO()[1], nodes: WX.last_nodes ? WX.last_nodes() : undefined };   // (nodes: the threads' build only)
 }
 // puzzles: mate within n own moves (checks: every attacking move must give check). See engine.c puzzle().
 function puzzle(start, moves, n, defend, checks) {
@@ -393,13 +395,24 @@ function mpvLoop(start, moves, n, maxD, post) {
   post('result', { list: prev, depth: last, nodes });
 }
 
-const API = { P1, P2, WIN, WINT, DRAW_PLIES, KING, ADVISOR, ELEPHANT, HORSE, ROOK, CANNON, PAWN, START, SETUPS, startFen, PTS, RC, sqAt, colorOf, typeOf, mv, mFrom, mTo, isPass, Pos, name, parse, sqName, rc2, replay, judge, isChase, threats, losingRepMoves, LEVELS, think, analyze, puzzle, kindOf, NMOV, EMOV, RAYS, KMOV, palace, setWasm: x => { WX = x; }, toC, fromC };
+const API = { P1, P2, WIN, WINT, DRAW_PLIES, KING, ADVISOR, ELEPHANT, HORSE, ROOK, CANNON, PAWN, START, SETUPS, startFen, PTS, RC, sqAt, colorOf, typeOf, mv, mFrom, mTo, isPass, Pos, name, parse, sqName, rc2, replay, judge, isChase, threats, losingRepMoves, LEVELS, think, analyze, puzzle, kindOf, NMOV, EMOV, RAYS, KMOV, palace, setWasm: x => { WX = x; }, toC, fromC, setupIO };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.JanggiEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
   const V = 'v=2';
+  // ?…&mt=1: the lead thread of the page's multi-thread pool (shared/mtengine.js): engine_mt.wasm on the shared memory sent with
+  // the first message ('mtinit'); the helpers (mt-helper.js) search the same root meanwhile. The rest is the usual API.
+  const MTL = /[?&]mt=1\b/.test(self.location.search || '');
   let readyP = null;
-  if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
+  if (MTL) {
+    readyP = new Promise(res => self.addEventListener('message', function f(e) { if (e.data && e.data.type === 'mtinit') { self.removeEventListener('message', f); res(e.data); } }))
+      .then(m => {
+        const x = new WebAssembly.Instance(m.module, { env: { memory: m.mem, now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } }).exports;
+        x.mt_stack(m.top); x.mt_thread(m.tls, 0);
+        WX = Object.assign({}, x, { memory: m.mem });   // (the memory is imported: WX.memory as in the normal build)
+        self.postMessage({ type: 'mtready' });
+      }).catch(err => { WX = null; self.postMessage({ type: 'mtready', error: String(err && err.message || err) }); });
+  } else if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
     const imp = { env: { now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } };
     const url = new URL('engine.wasm?' + V, self.location.href);
     readyP = (WebAssembly.instantiateStreaming ? WebAssembly.instantiateStreaming(fetch(url), imp).catch(() => fetch(url).then(r => r.arrayBuffer()).then(b => WebAssembly.instantiate(b, imp))) : fetch(url).then(r => r.arrayBuffer()).then(b => WebAssembly.instantiate(b, imp)))
@@ -408,6 +421,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
   let queue = Promise.resolve();
   self.onmessage = e => {
     const m = e.data;
+    if (m && m.type === 'mtinit') return;
     queue = queue.then(() => readyP).catch(() => {}).then(() => {
       try {
         if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...(() => { PRO_CFG = m.cfg || null; try { return think(m.start, m.moves, m.level); } finally { PRO_CFG = null; } })() });

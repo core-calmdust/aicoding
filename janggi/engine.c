@@ -11,6 +11,17 @@
 // general in check; checkmate wins; a side with no legal move that is not in check passes (the null move).
 // In the search a repeated position counts as a draw (the host decides repetitions and long games by the points).
 #include <stdint.h>
+// MT (engine_mt.wasm, tools/build.sh): several threads search one root together on a shared memory ("Lazy SMP"); the state of
+// one search is thread-local (TLS), the tables, the evaluation weights and the transposition table are shared. (MT is also the
+// name of the move's to-point below: the build flag becomes JG_THREADS.) Without it TLS is nothing and the normal build stays
+// byte for byte as before.
+#ifdef MT
+#undef MT
+#define JG_THREADS 1
+#define TLS _Thread_local
+#else
+#define TLS
+#endif
 typedef int32_t i32; typedef uint32_t u32; typedef int8_t i8; typedef uint8_t u8; typedef int16_t i16; typedef uint16_t u16; typedef uint64_t u64; typedef int64_t i64;
 #ifdef NATIVE
 #include <stdio.h>
@@ -42,7 +53,7 @@ enum { EMPTY = 0, KING = 1, ADVISOR = 2, ELEPHANT = 3, HORSE = 4, ROOK = 5, CANN
 #define COLOR(p) ((p) >> 3)
 #define TYPE(p) ((p) & 7)
 
-static i32 IO[8192];
+static TLS i32 IO[8192];
 EXPORT(io_ptr) i32 *io_ptr(void) { return IO; }
 
 // ---------------------------------------------------------------- geometry
@@ -127,13 +138,13 @@ static void initGeo(void) {
 }
 
 // ---------------------------------------------------------------- position (one global board, make / unmake)
-static u8 B[90];
-static int side;
-static int KSQ[2];
-static u64 KEY;
+static TLS u8 B[90];
+static TLS int side;
+static TLS int KSQ[2];
+static TLS u64 KEY;
 // the points of each colour's pieces as a 90-bit set (BB[c][0]: points 0..63, BB[c][1]: 64..89), kept with B; walked in
 // increasing point order, so every loop below visits the pieces in the same order as a scan of B would.
-static u64 BB[2][2];
+static TLS u64 BB[2][2];
 #define BBFLIP(c, s) (BB[c][(s) >> 6] ^= 1ull << ((s) & 63))
 #define FOR_BITS(lo, hi, s) for (int _h = 0; _h < 2; _h++) for (u64 _b = _h ? (hi) : (lo); _b; _b &= _b - 1) { int s = (_h << 6) | __builtin_ctzll(_b);
 #define END_BITS }
@@ -282,19 +293,29 @@ static void ttStore(u64 key, int d, int flag, int v, Move m, int ply) {
 EXPORT(new_game) void new_game(void) { memset(TT, 0, sizeof(TT)); ttAge = 0; }
 
 // ---------------------------------------------------------------- search
-static u64 nodes; static double tEnd; static int stopFlag, nodeLimitOn; static u64 nodeLimit;
-static i32 hist[2][90][90];
-static Move killers[MAXPLY][2];
-static u64 HK[HIST_MAX + MAXPLY];     // hash of every position (game + search path)
-static u8 HC[HIST_MAX + MAXPLY];      // side to move was in check there
-static int hn, hirr;                  // stack size, index of the first position after the last capture
-static int seldepth;
+static TLS u64 nodes; static TLS double tEnd; static TLS int stopFlag, nodeLimitOn; static TLS u64 nodeLimit;
+static TLS i32 hist[2][90][90];
+static TLS Move killers[MAXPLY][2];
+static TLS u64 HK[HIST_MAX + MAXPLY];     // hash of every position (game + search path)
+static TLS u8 HC[HIST_MAX + MAXPLY];      // side to move was in check there
+static TLS int hn, hirr;                  // stack size, index of the first position after the last capture
+static TLS int seldepth;
 static const int PV_[8] = { 0, 0, 300, 300, 500, 1300, 700, 200 };   // ordering values (MVV-LVA)
+#ifdef JG_THREADS
+static volatile int gStop;            // shared: set when the main thread's search is over (the helpers stop)
+static TLS int threadId;              // 0 = the main thread (time control, result), 1.. = helpers
+static inline int timeUp(void) {
+  if (stopFlag) return 1;
+  if ((nodes & 1023) == 0) { if ((tEnd > 0 && now() > tEnd) || (nodeLimitOn && nodes > nodeLimit) || gStop) stopFlag = 1; }
+  return stopFlag;
+}
+#else
 static inline int timeUp(void) {
   if (stopFlag) return 1;
   if ((nodes & 1023) == 0) { if ((tEnd > 0 && now() > tEnd) || (nodeLimitOn && nodes > nodeLimit)) stopFlag = 1; }
   return stopFlag;
 }
+#endif
 // repetition of the current position (HK[hn-1]): 0 none, 1 draw, 2 the side to move wins (opponent checked perpetually), 3 it loses
 static int repState(void) {
   int cur = hn - 1; u64 k = HK[cur];
@@ -450,9 +471,9 @@ static int search(int depth, int alpha, int beta, int ply, int pv, int nullOk) {
 }
 
 // ---------------------------------------------------------------- root / host interface
-static u8 RB[90]; static int rootSide; static u64 rootKey;
-static Move rootL[MAXMV]; static int rootN; static int rootVal[MAXMV];
-static int rootHn, rootHirr;
+static TLS u8 RB[90]; static TLS int rootSide; static TLS u64 rootKey;
+static TLS Move rootL[MAXMV]; static TLS int rootN; static TLS int rootVal[MAXMV];
+static TLS int rootHn, rootHirr;
 static void loadRoot(void) { memcpy(B, RB, 90); side = rootSide; findKings(); KEY = rootKey; hn = rootHn; hirr = rootHirr; }
 // setup: IO = [90 point codes, side, nmoves, moves..., nexcl, excluded root moves...]. Returns 1 if all moves were legal.
 EXPORT(setup) int setup(void) {
@@ -504,7 +525,11 @@ static void sortRoot(void) {
 }
 static void beginSearch(int ms) {
   loadRoot();
-  stopFlag = 0; nodes = 0; tEnd = ms > 0 ? now() + ms : 0; ttAge++;
+  stopFlag = 0; nodes = 0; tEnd = ms > 0 ? now() + ms : 0;
+#ifdef JG_THREADS
+  if (threadId == 0)   // (only the main thread ages the shared table)
+#endif
+  ttAge++;
   for (int a = 0; a < 2; a++) for (int b = 0; b < 90; b++) for (int c = 0; c < 90; c++) hist[a][b][c] >>= 2;
   memset(killers, 0, sizeof(killers));
 }
@@ -517,8 +542,11 @@ EXPORT(best) void best(int maxDepth, int ms, int nodeK) {
   // order: captures first by a quick static look
   for (int i = 0; i < rootN; i++) rootVal[i] = B[MT(rootL[i])] ? PV_[TYPE(B[MT(rootL[i])])] : 0;
   sortRoot();
-  int prev = 0;
-  for (int d = 1; d <= maxDepth && d < MAXPLY - 10; d++) {
+  int prev = 0, d0 = 1;
+#ifdef JG_THREADS
+  if (threadId) d0 = 1 + (threadId & 1);   // helpers: every other one a ply ahead, so the threads fill the table with different depths
+#endif
+  for (int d = d0; d <= maxDepth && d < MAXPLY - 10; d++) {
     seldepth = 0;
     int a = d >= 4 ? prev - 35 : -INF, b = d >= 4 ? prev + 35 : INF, v;
     for (;;) {
@@ -538,10 +566,16 @@ EXPORT(best) void best(int maxDepth, int ms, int nodeK) {
     if (bi) { Move t = rootL[bi]; int tv = rootVal[bi]; for (int i = bi; i > 0; i--) { rootL[i] = rootL[i - 1]; rootVal[i] = rootVal[i - 1]; } rootL[0] = t; rootVal[0] = tv; }
     for (int i = 1; i < rootN; i++) rootVal[i] = -INF;
     bm = rootL[0]; bv = v; bd = d; prev = v;
+#ifdef JG_THREADS
+    IO[0] = bm; IO[1] = bv; IO[2] = bd; IO[3] = (i32)(nodes / 1000);   // (the result so far, for the progress readouts)
+#endif
     progress(d, 1);
     if (v > WINT && WIN - v <= d) break;
     if (v < -WINT && WIN + v <= d) break;
     if (ms > 0 && d > 1 && now() > tEnd - ms * 0.5) break;
+#ifdef JG_THREADS
+    if (gStop) break;
+#endif
   }
   loadRoot();
   IO[0] = bm; IO[1] = bv; IO[2] = bd; IO[3] = (i32)(nodes / 1000);
@@ -609,7 +643,7 @@ EXPORT(values) void values(int depth) {
 #define MT_BITS 18
 typedef struct { u64 key; i8 yes, no; } MTE;   // proven: mate in <= yes; disproven: no mate in <= no
 static MTE MTT[1 << MT_BITS];
-static u64 mBudget; static int mBudgetOut, mChecks;
+static TLS u64 mBudget; static TLS int mBudgetOut, mChecks;   // (the mate table MTT is shared: puzzles never run on the threads)
 static int mateDef(int k);
 static int mateAtt(int k) {     // attacker to move: 1 = mates within k, 0 = not, -1 = budget exhausted
   if (k <= 0) return 0;
@@ -683,3 +717,17 @@ EXPORT(mate_clear) void mate_clear(void) { memset(MTT, 0, sizeof(MTT)); }
 EXPORT(eval_root) int eval_root(void) { loadRoot(); return evaluate(); }
 EXPORT(set_evw) void set_evw(int i, int v) { if (i >= 0 && i < 16) evW[i] = v; }
 EXPORT(in_check_root) int in_check_root(void) { loadRoot(); return attackedKing(side); }
+
+#ifdef JG_THREADS
+// ---------------------------------------------------------------- threads (engine_mt.wasm; shared/mtengine.js, mt-helper.js)
+extern unsigned char __heap_base;
+extern void __wasm_init_tls(void *);
+EXPORT(mt_heap_base) u32 mt_heap_base(void) { return (u32)&__heap_base; }
+EXPORT(mt_tls_size) u32 mt_tls_size(void) { return __builtin_wasm_tls_size(); }
+// every instance first: mt_stack (its own stack: the top address; a function without a frame of its own), then mt_thread
+// (its TLS block and thread number; the first instance — the page's own — also fills the shared tables)
+EXPORT(mt_stack) void mt_stack(u32 stackTop) { __asm__ volatile(".globaltype __stack_pointer, i32\n local.get %0\n global.set __stack_pointer" :: "r"(stackTop)); }
+EXPORT(mt_thread) void mt_thread(u32 tls, int id) { __wasm_init_tls((void *)tls); threadId = id; initGeo(); initEval(); }
+EXPORT(mt_stop) void mt_stop(int v) { __atomic_store_n(&gStop, v, __ATOMIC_SEQ_CST); }
+EXPORT(last_nodes) double last_nodes(void) { return (double)nodes; }   // (this thread's last search: the page's nps readout)
+#endif
