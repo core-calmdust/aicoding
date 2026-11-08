@@ -12,7 +12,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../janggi/', VER = '?v=1';   // same file / version as janggi/index.html → shared cache
+  const BASE = '../janggi/', VER = '?v=2';   // same file / version as janggi/index.html → shared cache
   let engP = null;
   function loadEngine() {
     if (window.JanggiEngine) return Promise.resolve(window.JanggiEngine);

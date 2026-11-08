@@ -56,6 +56,8 @@ static i8 KMOV[90][8]; static u8 KNUM[90];          // general / guards: one ste
 static i8 PMOV[2][90][5]; static u8 PNUM[2][90];
 static i8 PATT[2][90][5]; static u8 PANUM[2][90];  // soldiers of colour c that attack a point
 static u8 INPALACE[90];
+static u8 ROWOF[90], COLOF[90];      // s / 9, s % 9
+static u64 PALM[2][2];               // palace points of the top (rows 0-2) / bottom (rows 7-9) half, as a 90-bit set (lo 64, hi 26)
 static u64 ZOB[16][90], ZSIDE;
 static int geoReady = 0;
 static u64 rs64 = 0x9E3779B97F4A7C15ull;
@@ -74,7 +76,8 @@ static void initGeo(void) {
   const int DR[8] = { -1, 1, 0, 0, -1, -1, 1, 1 }, DC[8] = { 0, 0, -1, 1, -1, 1, -1, 1 };
   for (int s = 0; s < 90; s++) {
     int r = s / 9, c = s % 9;
-    INPALACE[s] = (u8)palace(r, c);
+    INPALACE[s] = (u8)palace(r, c); ROWOF[s] = (u8)r; COLOF[s] = (u8)c;
+    if (palace(r, c)) PALM[r <= 2 ? 0 : 1][s >> 6] |= 1ull << (s & 63);
     for (int d = 0; d < 8; d++) {
       int k = 0, rr = r, cc = c;
       if (d < 4) { rr += DR[d]; cc += DC[d]; while (onb(rr, cc)) { RAYS[s][d][k++] = (i8)(rr * 9 + cc); rr += DR[d]; cc += DC[d]; } }
@@ -128,13 +131,22 @@ static u8 B[90];
 static int side;
 static int KSQ[2];
 static u64 KEY;
+// the points of each colour's pieces as a 90-bit set (BB[c][0]: points 0..63, BB[c][1]: 64..89), kept with B; walked in
+// increasing point order, so every loop below visits the pieces in the same order as a scan of B would.
+static u64 BB[2][2];
+#define BBFLIP(c, s) (BB[c][(s) >> 6] ^= 1ull << ((s) & 63))
+#define FOR_BITS(lo, hi, s) for (int _h = 0; _h < 2; _h++) for (u64 _b = _h ? (hi) : (lo); _b; _b &= _b - 1) { int s = (_h << 6) | __builtin_ctzll(_b);
+#define END_BITS }
 typedef u16 Move;                     // from | to << 7 (from == to: a pass)
 #define MV(f, t) ((Move)((f) | ((t) << 7)))
 #define MF(m) ((m) & 127)
 #define MT(m) (((m) >> 7) & 127)
 static inline u8 mkp(int col, int t) { return (u8)(t | (col << 3)); }
 static u64 hashBoard(void) { u64 k = 0; for (int s = 0; s < 90; s++) if (B[s]) k ^= ZOB[B[s]][s]; if (side) k ^= ZSIDE; return k; }
-static void findKings(void) { KSQ[0] = KSQ[1] = -1; for (int s = 0; s < 90; s++) if (TYPE(B[s]) == KING) KSQ[COLOR(B[s])] = s; }
+static void findKings(void) {   // also rebuilds BB from B
+  KSQ[0] = KSQ[1] = -1; BB[0][0] = BB[0][1] = BB[1][0] = BB[1][1] = 0;
+  for (int s = 0; s < 90; s++) if (B[s]) { BBFLIP(COLOR(B[s]), s); if (TYPE(B[s]) == KING) KSQ[COLOR(B[s])] = s; }
+}
 
 // is the general of colour c attacked?
 static int attackedKing(int c) {
@@ -162,6 +174,7 @@ static inline u8 makeMove(Move m) {
   u8 p = B[f], cap = B[t];
   KEY ^= ZOB[p][f] ^ ZOB[p][t] ^ ZSIDE; if (cap) KEY ^= ZOB[cap][t];
   B[t] = p; B[f] = 0;
+  BBFLIP(COLOR(p), f); BBFLIP(COLOR(p), t); if (cap) BBFLIP(COLOR(cap), t);
   if (TYPE(p) == KING) KSQ[COLOR(p)] = t;
   if (cap && TYPE(cap) == KING) KSQ[COLOR(cap)] = -1;
   side ^= 1;
@@ -173,6 +186,7 @@ static inline void unmakeMove(Move m, u8 cap) {
   u8 p = B[t];
   side ^= 1;
   B[f] = p; B[t] = cap;
+  BBFLIP(COLOR(p), f); BBFLIP(COLOR(p), t); if (cap) BBFLIP(COLOR(cap), t);
   if (TYPE(p) == KING) KSQ[COLOR(p)] = f;
   if (cap && TYPE(cap) == KING) KSQ[COLOR(cap)] = t;
   KEY ^= ZOB[p][f] ^ ZOB[p][t] ^ ZSIDE; if (cap) KEY ^= ZOB[cap][t];
@@ -182,8 +196,8 @@ static inline void unmakeMove(Move m, u8 cap) {
 static int gen(Move *L, int capsOnly) {
   int n = 0, me = side;
 #define ADD(s, t) do { u8 _q = B[t]; if (_q ? COLOR(_q) != me : !capsOnly) L[n++] = MV(s, t); } while (0)
-  for (int s = 0; s < 90; s++) {
-    u8 p = B[s]; if (!p || COLOR(p) != me) continue;
+  FOR_BITS(BB[me][0], BB[me][1], s)
+    u8 p = B[s];
     switch (TYPE(p)) {
       case KING: case ADVISOR: for (int i = 0; i < KNUM[s]; i++) { int t = KMOV[s][i]; ADD(s, t); } break;
       case ELEPHANT: for (int i = 0; i < ENUM_[s]; i++) { if (B[(int)EB1[s][i]] || B[(int)EB2[s][i]]) continue; int t = EMOV[s][i]; ADD(s, t); } break;
@@ -201,7 +215,7 @@ static int gen(Move *L, int capsOnly) {
         }
         break;
     }
-  }
+  END_BITS
 #undef ADD
   return n;
 }
@@ -220,28 +234,30 @@ static int hasLegal(void) {
 static const int VAL[8] = { 0, 0, 300, 300, 500, 1300, 700, 200 };
 static int evW[16] = { 10, 6, 4, 3, 2, 14, 30, 18, 25, 12, 0, 0, 0, 0, 0, 0 };   // tunable (tools): see evaluateCho
 static void initEval(void) {}
-static inline int relRow(int col, int s) { int r = s / 9; return col ? r : 9 - r; }   // 0 = own back rank .. 9 = enemy back rank
+static inline int relRow(int col, int s) { int r = ROWOF[s]; return col ? r : 9 - r; }   // 0 = own back rank .. 9 = enemy back rank
 // from Cho's view
 static int evaluateCho(void) {
-  int sc[2] = { 0, 0 }, big[2] = { 0, 0 }, cannons[2] = { 0, 0 }, total = 0;
-  for (int s = 0; s < 90; s++) { u8 p = B[s]; if (!p) continue; int t = TYPE(p); total++; if (t == ROOK || t == HORSE || t == CANNON) big[COLOR(p)]++; }
-  for (int s = 0; s < 90; s++) {
-    u8 p = B[s]; if (!p) continue;
-    int c = COLOR(p), t = TYPE(p), rr = relRow(c, s), col = s % 9, cf = col > 4 ? 8 - col : col, v = VAL[t];
+  int sc[2] = { 0, 0 }, total = __builtin_popcountll(BB[0][0] | BB[1][0]) + __builtin_popcountll(BB[0][1] | BB[1][1]);
+  FOR_BITS(BB[0][0] | BB[1][0], BB[0][1] | BB[1][1], s)
+    u8 p = B[s];
+    int c = COLOR(p), t = TYPE(p), rr = relRow(c, s), col = COLOF[s], cf = col > 4 ? 8 - col : col, v = VAL[t];
     switch (t) {
       case PAWN: v += (rr >= 4 ? (rr - 3) * evW[0] : 0) + (rr >= 7 && cf >= 3 ? evW[6] : 0) + (cf == 4 ? 6 : 0); break;
       case HORSE: { int mob = 0; for (int i = 0; i < NNUM[s]; i++) if (!B[(int)NLEG[s][i]]) { u8 q = B[(int)NMOV[s][i]]; if (!q || COLOR(q) != c) mob++; } v += mob * evW[1] + (rr >= 3 && rr <= 6 ? 12 : 0) - (cf == 0 ? 15 : 0); break; }
       case ELEPHANT: { int mob = 0; for (int i = 0; i < ENUM_[s]; i++) if (!B[(int)EB1[s][i]] && !B[(int)EB2[s][i]]) { u8 q = B[(int)EMOV[s][i]]; if (!q || COLOR(q) != c) mob++; } v += mob * evW[3]; break; }
       case ROOK: { int mob = 0; for (int d = 0; d < 8; d++) { const i8 *ray = RAYS[s][d]; int x; for (int i = 0; (x = ray[i]) >= 0; i++) { mob++; if (B[x]) break; } } v += mob * evW[2] + (rr >= 7 ? evW[5] : 0); break; }
-      case CANNON: { v -= (32 - total) * evW[4]; if (cannons[c]) v += 0; cannons[c]++; if (rr >= 6 && cf >= 3) v += evW[9]; break; }
-      case KING: v += (s % 9 == 4 ? evW[7] : 0) + (relRow(c, s) == 1 ? 6 : 0); break;
-      case ADVISOR: { int k = KSQ[c]; if (k >= 0) { int dr = s / 9 - k / 9, dc = s % 9 - k % 9; if (dr * dr + dc * dc <= 2) v += evW[8]; } break; }
+      case CANNON: { v -= (32 - total) * evW[4]; if (rr >= 6 && cf >= 3) v += evW[9]; break; }
+      case KING: v += (col == 4 ? evW[7] : 0) + (rr == 1 ? 6 : 0); break;
+      case ADVISOR: { int k = KSQ[c]; if (k >= 0) { int dr = ROWOF[s] - ROWOF[k], dc = col - COLOF[k]; if (dr * dr + dc * dc <= 2) v += evW[8]; } break; }
     }
     sc[c] += v;
+  END_BITS
+  // a general whose own palace holds enemy chariots / soldiers is in danger (enemy pieces on the palace points of the general's half)
+  for (int c = 0; c < 2; c++) {
+    int k = KSQ[c]; if (k < 0) continue; int danger = 0; const u64 *pm = PALM[ROWOF[k] <= 2 ? 0 : 1];
+    FOR_BITS(BB[c ^ 1][0] & pm[0], BB[c ^ 1][1] & pm[1], s) int t = TYPE(B[s]); danger += t == ROOK ? 3 : t == PAWN ? 1 : t == HORSE || t == CANNON ? 2 : 0; END_BITS
+    sc[c] -= danger * 25;
   }
-  // a general whose own palace holds enemy chariots / soldiers is in danger
-  for (int c = 0; c < 2; c++) { int k = KSQ[c]; if (k < 0) continue; int danger = 0; for (int s = 0; s < 90; s++) { u8 p = B[s]; if (!p || COLOR(p) == c || !INPALACE[s] || ((s / 9 <= 2) != (k / 9 <= 2))) continue; int t = TYPE(p); danger += t == ROOK ? 3 : t == PAWN ? 1 : t == HORSE || t == CANNON ? 2 : 0; } sc[c] -= danger * 25; }
-  (void)big;
   return sc[0] - sc[1];
 }
 static int evaluate(void) { int v = evaluateCho(); return (side ? -v : v) + 12; }
@@ -292,7 +308,7 @@ static int repState(void) {
   }
   return 0;
 }
-static int bigPieces(int c) { for (int s = 0; s < 90; s++) { u8 p = B[s]; if (p && COLOR(p) == c) { int t = TYPE(p); if (t == ROOK || t == HORSE || t == CANNON) return 1; } } return 0; }
+static int bigPieces(int c) { FOR_BITS(BB[c][0], BB[c][1], s) int t = TYPE(B[s]); if (t == ROOK || t == HORSE || t == CANNON) return 1; END_BITS return 0; }
 static inline int moveScore(Move m, Move ttm, int ply) {
   if (m == ttm) return 1 << 30;
   u8 v = B[MT(m)];
