@@ -77,16 +77,16 @@
 
 /* guide character + speech bubble */
 .hs-guide{position:absolute;bottom:-14px;inset-inline-start:10px;display:flex;align-items:flex-end;gap:2px;pointer-events:auto;cursor:pointer;z-index:2;max-width:calc(100% - 20px)}
-.hs-guide img{width:86px;height:86px;flex:none;filter:drop-shadow(0 6px 6px rgba(60,30,0,.28));animation:hsBob 3.2s ease-in-out infinite;transform-origin:50% 100%}
+.hs-guide img{width:104px;height:104px;flex:none;filter:drop-shadow(0 6px 6px rgba(60,30,0,.28));animation:hsBob 3.2s ease-in-out infinite;transform-origin:50% 100%}
 .hs-guide.hop img{animation:hsHop .6s cubic-bezier(.3,1.6,.5,1),hsBob 3.2s .6s ease-in-out infinite}
-.hs-bub{position:relative;margin-bottom:44px;max-width:250px;min-height:20px;padding:9px 13px;border-radius:16px;background:#fffdf7;border:2px solid color-mix(in srgb,var(--gc) 45%,#efe3c8);box-shadow:0 3px 0 color-mix(in srgb,var(--gc) 30%,#efe3c8),0 10px 22px -12px rgba(80,40,0,.45);font:700 13px/1.5 var(--font,inherit);opacity:0;transform:scale(.6);transform-origin:0 100%}
+.hs-bub{position:relative;margin-bottom:53px;max-width:290px;min-height:20px;padding:10px 15px;border-radius:16px;background:#fffdf7;border:2px solid color-mix(in srgb,var(--gc) 45%,#efe3c8);box-shadow:0 3px 0 color-mix(in srgb,var(--gc) 30%,#efe3c8),0 10px 22px -12px rgba(80,40,0,.45);font:700 14.5px/1.5 var(--font,inherit);opacity:0;transform:scale(.6);transform-origin:0 100%}
 [dir=rtl] .hs-bub{transform-origin:100% 100%}
 .hs-bub::before{content:'';position:absolute;bottom:10px;inset-inline-start:-8px;width:12px;height:12px;background:#fffdf7;border-inline-start:2px solid color-mix(in srgb,var(--gc) 45%,#efe3c8);border-bottom:2px solid color-mix(in srgb,var(--gc) 45%,#efe3c8);transform:rotate(45deg)}
 [dir=rtl] .hs-bub::before{transform:rotate(-45deg)}
 /* phones, reading chapters: the page takes ~62% of the screen; the stage (and the guide) shrink above it */
-@media (max-width:819px){#hist.hs.read{--hs-st:clamp(150px,30vh,250px)}#hist.hs.read .hs-guide img{width:66px;height:66px}#hist.hs.read .hs-bub{margin-bottom:26px;font-size:12px;padding:7px 11px}.hs-stage{transition:height .45s cubic-bezier(.3,.9,.3,1)}}
+@media (max-width:819px){#hist.hs.read{--hs-st:clamp(150px,30vh,250px)}#hist.hs.read .hs-guide img{width:80px;height:80px}#hist.hs.read .hs-bub{margin-bottom:32px;font-size:13px;padding:8px 12px}.hs-stage{transition:height .45s cubic-bezier(.3,.9,.3,1)}}
 /* phones, top-down board view: the bubble sits beside the guide (not above it), so the strip they need stays low */
-@media (max-width:819px){#hist.hs.top .hs-bub{margin-bottom:8px;max-width:min(260px,calc(100vw - 120px))}}
+@media (max-width:819px){#hist.hs.top .hs-bub{margin-bottom:8px;max-width:min(300px,calc(100vw - 132px))}}
 .hs-bub{display:grid}.hs-bub>span,.hs-bub>.ghost{grid-area:1/1}.hs-bub>.ghost{visibility:hidden;font-style:normal}
 .hs-bub.on{animation:hsPop .45s cubic-bezier(.3,1.6,.5,1) forwards}
 .hs-bub .typing::after{content:'';display:inline-block;width:2px;height:1em;margin-inline-start:2px;vertical-align:-2px;background:var(--gc);animation:hsBlink .5s steps(2) infinite}
@@ -280,8 +280,8 @@
   [dir=ltr] .hs-panel{left:16px}[dir=rtl] .hs-panel{right:16px}
   #hist.hs.on .hs-panel{animation-name:hsPanInX}#hist.hs.out .hs-panel{animation-name:hsPanOutX}
   .hs-guide{bottom:max(20px,calc(50vh - 470px));inset-inline-start:24px}
-  .hs-guide img{width:clamp(130px,calc(15 * var(--hs-v)),190px);height:clamp(130px,calc(15 * var(--hs-v)),190px)}
-  .hs-bub{max-width:clamp(360px,28vw,520px);font-size:max(16px,calc(var(--hs-fs) * .95));line-height:1.6;padding:13px 18px;margin-bottom:clamp(76px,calc(9 * var(--hs-v)),110px);border-radius:20px}
+  .hs-guide img{width:clamp(160px,calc(18.5 * var(--hs-v)),236px);height:clamp(160px,calc(18.5 * var(--hs-v)),236px)}
+  .hs-bub{max-width:clamp(420px,33vw,640px);font-size:max(18px,calc(var(--hs-fs) * 1.1));line-height:1.6;padding:16px 22px;margin-bottom:clamp(94px,calc(11 * var(--hs-v)),136px);border-radius:24px}
   .hs-hd{padding:20px 28px 6px}
   .hs-gi img{width:44px;height:44px}.hs-gn{font-size:max(16px,calc(var(--hs-fs) * .95))}.hs-no{font-size:14px}
   /* chapter content is centred in the page height (scrolls normally when taller) and scales with the window height */
@@ -320,7 +320,7 @@
 }
 @media (max-height:620px) and (max-width:819px){
   :root{--hs-st:clamp(170px,34vh,240px)}
-  .hs-guide img{width:66px;height:66px}.hs-bub{margin-bottom:30px;font-size:12px;padding:7px 11px}
+  .hs-guide img{width:78px;height:78px}.hs-bub{margin-bottom:36px;font-size:12.5px;padding:8px 12px}
   .hs-h{font-size:20px}.hk-h{font-size:22px}.hk-num b{font-size:50px}.hk-art{width:90px;height:90px}
 }
 
