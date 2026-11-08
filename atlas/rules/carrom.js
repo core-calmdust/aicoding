@@ -203,7 +203,7 @@
     /* ---------- the men: kept from page to page; only the new ones drop in ---------- */
     let meshes = [];   // { c, x, y, g }
     let striker = null;
-    function mk(c) { const g = c === 's' ? U.striker() : U.piece(c), sh = T3.contact((c === 's' ? U.RS : U.R) * 1.15, .42); sh.position.y = .002; g.add(sh); board.add(g); return g; }
+    function mk(c) { const g = c === 's' ? U.striker() : U.piece(c), sh = T3.contact((c === 's' ? U.RS : U.R) * 1.15, .42); sh.position.y = .004; g.add(sh); board.add(g); return g; }
     function put(g, x, y, h) { const [a, b] = wx(x, y); g.position.set(a, Y + (h || 0), b); }
     function stage0(pg) {   // the engine state for the page
       const s = E.newBoard(); s.brk.done = true;

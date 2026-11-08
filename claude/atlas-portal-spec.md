@@ -47,4 +47,4 @@ URL: https://core-calmdust.github.io/aicoding/atlas/  ／ 詳細: repo の atlas
 - 進捗系のキーは合算マージ、対局中データや設定は新しい方を採用
 
 ## ゲーム追加の手順
-GAMES に追加（store 含む）→ i18n.js に hist.<id>（歴史・雑学、14言語）→ READ に進捗読み取り → UPDATES に1行 → icons3d.js にアイコンシーン＋書き出し → table3d.js に盤モデル → 3D対局は games/<id>.js → ゲームページに `HeaderBar.init` を入れておけば、ポータル版でもロゴ横のゲーム名・メニューが自動で出る
+GAMES に追加（store 含む）→ i18n.js に hist.<id>（歴史・雑学、14言語）→ READ に進捗読み取り → UPDATES に1行 → icons3d.js にアイコンシーン＋書き出し（書き出したら `atlas/app.js` の `R3` に id を足す。足さないとポータルに3Dアイコンが出ない）→ table3d.js に盤モデル → 3D対局は games/<id>.js → ゲームページに `HeaderBar.init` を入れておけば、ポータル版でもロゴ横のゲーム名・メニューが自動で出る
