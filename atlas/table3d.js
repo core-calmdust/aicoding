@@ -1500,12 +1500,17 @@
   }
   // play view: the framed rectangle (fit's w × d at its height y), as the tilted camera draws it, is centred between the top and the
   // bottom of the free view with a vertical lens shift (vsh px) — framing the look point alone left boards sitting low (2026-11-09)
-  const ctrV = [];
+  // The box: the board model as built (its height from the table to the tallest piece; cached per framing), cut to the framed w × d
+  const ctrV = []; let ctrB = null, ctrFor = null, ctrCur = null;
   function centreBoard(F, k) {
-    if (!ctrV.length) for (let i = 0; i < 4; i++) ctrV.push(new (T().Vector3)());
+    const TT = T();
+    if (!ctrV.length) for (let i = 0; i < 8; i++) ctrV.push(new TT.Vector3());
+    if (ctrFor !== fitTo || ctrCur !== cur) { ctrFor = fitTo; ctrCur = cur; ctrB = null; try { if (cur) { const b = new TT.Box3().setFromObject(cur); if (isFinite(b.min.y) && b.max.y > b.min.y) ctrB = b; } } catch (e) {} }
+    const y0 = ctrB ? Math.max(ctrB.min.y, F.y - 4) : F.y, y1 = ctrB ? Math.min(ctrB.max.y, F.y + 3) : F.y;
+    const x0 = ctrB ? Math.max(-F.w / 2, ctrB.min.x) : -F.w / 2, x1 = ctrB ? Math.min(F.w / 2, ctrB.max.x) : F.w / 2, z0 = ctrB ? Math.max(-F.d / 2, ctrB.min.z) : -F.d / 2, z1 = ctrB ? Math.min(F.d / 2, ctrB.max.z) : F.d / 2;
     cam.updateMatrixWorld();
     let lo = 9, hi = -9;
-    for (let i = 0; i < 4; i++) { const v = ctrV[i].set(i & 1 ? F.w / 2 : -F.w / 2, F.y, i & 2 ? F.d / 2 : -F.d / 2).project(cam); if (v.y < lo) lo = v.y; if (v.y > hi) hi = v.y; }
+    for (let i = 0; i < 8; i++) { const v = ctrV[i].set(i & 1 ? x1 : x0, i & 4 ? y1 : y0, i & 2 ? z1 : z0).project(cam); if (v.y < lo) lo = v.y; if (v.y > hi) hi = v.y; }
     const free = Math.max(120, ch - inset - insetT), m = (lo + hi) / 2, band = insetT + free / 2;   // (NDC spans the canvas, ch)
     if (!(hi - lo > .05)) return;
     const want = Math.max(-.3 * free, Math.min(.3 * free, vsh + ch / 2 * (1 - m) - band)) * Math.min(1, k * 1.2);
