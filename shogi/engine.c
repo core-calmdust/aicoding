@@ -366,6 +366,7 @@ static inline int discAtk(int k, int from, int to, int by) {
   int p = board[x]; return colorOf(p) == by && SLIDE[p * 8 + OPPD[d]];
 }
 static TLS i32 stMove[NST];
+static TLS i16 ckS[NST];   /* continuation-history key of the move made at that level: (type after the move - 1) * 81 + to; -1 for a null move */
 /* the move m just made (by side ^ 1) checks the side to move: the moved piece attacks the king, or it opened a line. Exact
    when that king was not attacked before m (true in any position reached by legal moves; chkFast is off otherwise). */
 static TLS int chkFast;
@@ -572,6 +573,7 @@ static void doMove(int m) {
   int us = side, them = us ^ 1, s0 = sp;
   stMove[s0] = m; stHL[s0] = hl; stHH[s0] = hh; stA0[s0] = acc[0]; stA1[s0] = acc[1];
   int from = m & 127, to = (m >> 7) & 127;
+  ckS[s0] = (i16)(((from > 80 ? from - 80 : typeOf(board[from]) + (((m >> 14) & 1) << 3)) - 1) * 81 + to);
   i32 l = hl ^ ZSIDE_L, h = hh ^ ZSIDE_H;
   i32 a0 = acc[0], a1 = acc[1];
   int nn = nnOn;
@@ -648,7 +650,7 @@ static void undoMove(void) {
 }
 static void doNull(void) {
   int s0 = sp;
-  stMove[s0] = 0; stHL[s0] = hl; stHH[s0] = hh; stA0[s0] = acc[0]; stA1[s0] = acc[1];
+  stMove[s0] = 0; ckS[s0] = -1; stHL[s0] = hl; stHH[s0] = hh; stA0[s0] = acc[0]; stA1[s0] = acc[1];
   nueDN[s0] = 0; nueOk[s0 + 1] = 0; chkC[s0 + 1] = -1;
   hl ^= ZSIDE_L; hh ^= ZSIDE_H; side ^= 1; sp++;
   histL[hn] = 0x7fffffff; histH[hn] = 0; histChk[hn] = 0; hn++;
@@ -908,16 +910,40 @@ static TLS i32 nodes; static TLS int stopFlag; static TLS double deadline; stati
 static TLS i32 pvTable[MAXPLY * MAXPLY], pvLen[MAXPLY];
 static TLS int rootDepth = 1;
 /* tunables (same defaults as engine.js) */
-static int useMate1 = 1, rfpDepth = 3, rfpMargin = 90, nullAdapt = 1, histMalus = 0;   /* (2026-11: margin 120 -> 90, adaptive null move on, LMP count P[12] 6 -> 4: +190 Elo at 200k nodes) */
-static int P[32] = {[5] = 1, [7] = 1, [12] = 4, [14] = 1, [16] = 100};
+static int useMate1 = 1, rfpDepth = 6, rfpMargin = 90, nullAdapt = 1, histMalus = 0;   /* (2026-11: margin 120 -> 90, adaptive null move on, LMP count P[12] 6 -> 4: +190 Elo at 200k nodes) */
+static int P[32] = {[5] = 1, [7] = 1, [12] = 4, [14] = 1, [16] = 100, [22] = 1, [23] = 200};   /* (2026-11-08 search v3: [22] history v2, [23] ProbCut, rfpDepth 3 -> 6) */
 static void lmrInit(double div);
 EXPORT(set_param) void set_param(int k, int v) { if (k == 0) useMate1 = v; else if (k == 1) rfpDepth = v; else if (k == 2) rfpMargin = v; else if (k == 3) nullAdapt = v; else if (k == 4) histMalus = v; if (k >= 0 && k < 32) P[k] = v; if (k == 17 && v > 0) lmrInit(v / 100.0); }
 /* experimental features (all off by default):
-   P5 log-LMR, P6 counter-move ordering, P7 quiet checks in first qsearch ply, P10 razoring, P11 extend all checks, P12 LMP base */
+   P5 log-LMR, P6 counter-move ordering, P7 quiet checks in first qsearch ply, P10 razoring, P11 extend all checks, P12 LMP base;
+   search v3 (2026-11-08, MODEL_CARD.md): P22 history v2 (gravity, malus, continuation history; on), P23 ProbCut margin (200, on),
+   P9 its LMR history divisor; tried and left off: P19/P20/P21 singular extension (min depth / margin / multi-cut, negative ext),
+   P24 "improving", P25 table score as static eval, P26 LMP max depth, P27 aspiration window */
 static double ln_(double x) { int k = 0; while (x > 1.5) { x *= 0.5; k++; } double z = (x - 1) / (x + 1), z2 = z * z, t = z, r = 0; for (int i = 1; i < 40; i += 2) { r += t / i; t *= z2; } return 2 * r + k * 0.6931471805599453; }
 static i8 LMRT[64][64];
 static void lmrInit(double div) { for (int d = 1; d < 64; d++) for (int n = 1; n < 64; n++) LMRT[d][n] = (i8)(0.6 + ln_(d) * ln_(n) / div); }
 static TLS i32 counterMv[32 * 81];
+/* continuation history (the previous move and the one before, by type after the move and destination, times this move):
+   shared by the threads (a lost update does no harm) */
+#define CK 1134
+static i16 contH[2][CK * CK];
+static TLS i32 exclM[NBUF];       /* the move left out at that ply (singular extension test), 0: none */
+static TLS double evSt[NBUF];     /* static evaluation at that ply (-INF: in check) */
+static inline int hIdx(int us, int m) { return ((us * 88 + (m & 127)) * 81 + ((m >> 7) & 127)) * 2 + ((m >> 14) & 1); }
+static inline int mKey(int m) { int f = m & 127; return ((f > 80 ? f - 80 : typeOf(board[f]) + (((m >> 14) & 1) << 3)) - 1) * 81 + ((m >> 7) & 127); }
+static inline void gravI(i32 *h, int b) { *h += b - *h * (b < 0 ? -b : b) / 16384; }
+static inline void gravS(i16 *h, int b) { int v = *h; v += b - v * (b < 0 ? -b : b) / 16384; *h = (i16)v; }
+static inline int quietHist(int us, int m) {
+  int v = history[hIdx(us, m)];
+  if (P[22]) { int k = mKey(m); if (sp >= 1 && ckS[sp - 1] >= 0) v += contH[0][ckS[sp - 1] * CK + k]; if (sp >= 2 && ckS[sp - 2] >= 0) v += contH[1][ckS[sp - 2] * CK + k]; }
+  return v;
+}
+static inline void histUpd(int us, int m, int b) {
+  gravI(&history[hIdx(us, m)], b);
+  int k = mKey(m);
+  if (sp >= 1 && ckS[sp - 1] >= 0) gravS(&contH[0][ckS[sp - 1] * CK + k], b);
+  if (sp >= 2 && ckS[sp - 2] >= 0) gravS(&contH[1][ckS[sp - 2] * CK + k], b);
+}
 
 static inline int timeUp(void) {
   if ((nodes & 1023) == 0) {
@@ -965,7 +991,7 @@ static void orderMoves(i32 *moves, i32 *scores, int n, int ttm, int ply) {
     else if (m == k0) sc = 80000002;
     else if (m == k1) sc = 80000001;
     else if (P[6] && sp > 0 && stMove[sp - 1] && m == counterMv[board[(stMove[sp - 1] >> 7) & 127] * 81 + ((stMove[sp - 1] >> 7) & 127)]) sc = 79000000;
-    else sc = history[((us * 88 + f) * 81 + t) * 2 + ((m >> 14) & 1)];
+    else sc = quietHist(us, m);
     scores[i] = sc;
   }
 }
@@ -1077,8 +1103,8 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
     if (alpha >= beta) return alpha;
   }
   if (ply >= MAXPLY - 1) return evaluate();
-  int ti = hl & TT_MASK, ttm = 0;
-  if (tt[ti].key == hh) {
+  int ti = hl & TT_MASK, ttm = 0, ex = exclM[ply], ttD = -1, ttF = 0, ttS = 0;
+  if (!ex && tt[ti].key == hh) {
     ttm = tt[ti].move;
     int d = tt[ti].data, td = (d >> 16) & 255, fl = (d >> 24) & 3;
     int ts = (i32)((u32)d << 16) >> 16;
@@ -1086,22 +1112,26 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
     if (!pvNode && td >= depth && ply > 0) {
       if (fl == F_EXACT || (fl == F_LOWER && ts >= beta) || (fl == F_UPPER && ts <= alpha)) return ts;
     }
+    ttD = td; ttF = fl; ttS = ts;
   }
-  if (!inChk && useMate1) {
+  if (!inChk && useMate1 && !ex) {
     int mm = mate1(mateBuf[ply]);
     if (mm) { double v = MATE - ply - 1; store(depth, v, F_EXACT, mm, ply); pvTable[ply * MAXPLY + ply] = mm; pvLen[ply] = ply + 1; return v; }
   }
-  if (P[13] && !inChk && depth >= P[13]) {
+  if (P[13] && !inChk && !ex && depth >= P[13]) {
     int mm = mate3();
     if (mm) { double v = MATE - ply - 3; store(depth, v, F_EXACT, mm, ply); pvTable[ply * MAXPLY + ply] = mm; pvLen[ply] = ply + 1; return v; }
   }
-  double staticEval = inChk ? -INF : evaluate();
-  if (!pvNode && !inChk && depth <= rfpDepth && staticEval - rfpMargin * depth >= beta && (beta < 0 ? -beta : beta) < MATE - MAXPLY) return staticEval;
-  if (P[10] && !pvNode && !inChk && depth <= 2 && staticEval + P[10] * depth < alpha) {
+  double rawEval = inChk ? -INF : evaluate(), staticEval = rawEval;
+  evSt[ply] = rawEval;
+  int improving = P[24] && !inChk && ply >= 2 && (evSt[ply - 2] == -INF || rawEval > evSt[ply - 2]);
+  if (P[25] && !inChk && ttD >= 0 && ((ttF == F_LOWER && ttS > staticEval) || (ttF == F_UPPER && ttS < staticEval) || ttF == F_EXACT) && (ttS < 0 ? -ttS : ttS) < MATE - MAXPLY) staticEval = ttS;
+  if (!pvNode && !inChk && !ex && depth <= rfpDepth && staticEval - rfpMargin * (depth - improving) >= beta && (beta < 0 ? -beta : beta) < MATE - MAXPLY) return staticEval;
+  if (P[10] && !pvNode && !inChk && !ex && depth <= 2 && staticEval + P[10] * depth < alpha) {
     double v = qsearch(alpha, beta, ply, 0);
     if (v < alpha) return v;
   }
-  if (!pvNode && !inChk && allowNull && depth >= 3 && staticEval >= beta) {
+  if (!pvNode && !inChk && !ex && allowNull && depth >= 3 && staticEval >= beta) {
     int R;
     if (nullAdapt) { int x = (int)((staticEval - beta) / 250); R = 3 + depth / 5 + (x < 2 ? x : 2); }
     else R = 2 + (depth >= 7 ? 1 : 0);
@@ -1110,6 +1140,22 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
     undoNull();
     if (stopFlag) return 0;
     if (v >= beta && v < MATE - MAXPLY) return v;
+  }
+  if (P[23] && !pvNode && !inChk && !ex && depth >= 5 && (beta < 0 ? -beta : beta) < MATE - MAXPLY) {   /* ProbCut */
+    double rb = beta + P[23];
+    i32 *pm = moveBuf[ply], *ps = scoreBuf[ply];
+    int n = gen(pm, 1); orderMoves(pm, ps, n, ttm, ply);
+    for (int i = 0; i < n; i++) {
+      int m = pick(pm, ps, n, i), cap = board[(m >> 7) & 127];
+      if (!cap || see(m) < rb - staticEval) continue;
+      doMove(m);
+      if (!legalAfter(m, 0)) { undoMove(); continue; }
+      double v = -qsearch(-rb, -rb + 1, ply + 1, 0);
+      if (v >= rb) v = -search(depth - 4, -rb, -rb + 1, ply + 1, 0, 1);
+      undoMove();
+      if (stopFlag) return 0;
+      if (v >= rb) { store(depth - 3, v, F_LOWER, m, ply); return v; }
+    }
   }
   if (!ttm && pvNode && depth >= 4) {
     search(depth - 2, alpha, beta, ply, 1, 0);
@@ -1154,9 +1200,21 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
       undoMove();
       if (!chk) continue;
     }
-    if (!pvNode && !inChk && quiet && depth <= 3 && legal > (P[12] ? P[12] : 6) + depth * depth * 3) {
+    if (m == ex) continue;
+    if (!pvNode && !inChk && quiet && depth <= (P[26] ? P[26] : 3) && legal > ((P[12] ? P[12] : 6) + depth * depth * 3) * (P[24] && !improving ? 2 : 3) / 3) {
       if (!givesCheckPre(m)) continue;
       if (!chkFast) { doMove(m); int chk = inCheck(); undoMove(); if (!chk) continue; }   /* (else givesCheckPre was exact) */
+    }
+    int sext = 0;
+    if (P[19] && m == ttm && ply > 0 && !ex && depth >= P[19] && ttD >= depth - 3 && (ttF == F_LOWER || ttF == F_EXACT) && (ttS < 0 ? -ttS : ttS) < MATE - MAXPLY && ply < rootDepth * 2) {
+      double sb = ttS - (P[20] ? P[20] : 2) * depth;   /* singular extension: is the table move the only good one? */
+      exclM[ply] = m;
+      double sv = search((depth - 1) / 2, sb - 1, sb, ply, 0, 0);
+      exclM[ply] = 0; pk->nb = 0;   /* (the test used this ply's buffers) */
+      if (stopFlag) return 0;
+      if (sv < sb) sext = 1;
+      else if ((P[21] & 1) && sb >= beta) return sb;   /* multi-cut */
+      else if ((P[21] & 2) && ttS >= beta) sext = -1;
     }
     if (inChk) {
       int lg = evOK(&ev, m) ? evLegal(&ev, m) : 0; if (!lg) continue;
@@ -1169,6 +1227,7 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
     legal++;
     int givesChk = inCheck();
     int ext = givesChk && ply < rootDepth * 2 && (P[11] || seeAfterCheck(m) >= 0) ? 1 : 0;
+    if (sext > 0) ext = 1; else if (sext < 0 && !ext) ext = -1;
     double v;
     int nd = depth - 1 + ext;
     if (legal == 1) v = -search(nd, -beta, -alpha, ply + 1, pvNode, 1);
@@ -1178,8 +1237,9 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
         if (P[5]) {
           r = LMRT[depth < 63 ? depth : 63][legal < 63 ? legal : 63];
           if (m == killers[ply * 2] || m == killers[ply * 2 + 1]) r--;
-          i32 hv = history[((us * 88 + (m & 127)) * 81 + to) * 2 + ((m >> 14) & 1)];
-          if (hv > 2000) r--; else if (hv == 0) r++;
+          if (P[22]) { undoMove(); int hv = quietHist(us, m); doMove(m); r -= hv / (P[9] ? P[9] : 6000); }
+          else { i32 hv = history[((us * 88 + (m & 127)) * 81 + to) * 2 + ((m >> 14) & 1)]; if (hv > 2000) r--; else if (hv == 0) r++; }
+          if (P[24] && !improving) r++;
         } else r = 1 + (legal > 8 ? 1 : 0) + (depth >= 8 ? 1 : 0);
         if (pvNode) r--;
         if (r < 0) r = 0;
@@ -1203,18 +1263,24 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
           if (quiet) {
             if (killers[ply * 2] != m) { killers[ply * 2 + 1] = killers[ply * 2]; killers[ply * 2] = m; }
             if (P[6] && sp > 0 && stMove[sp - 1]) { int pt = (stMove[sp - 1] >> 7) & 127; counterMv[board[pt] * 81 + pt] = m; }
+            if (P[22]) {
+              int b = depth * depth * 16; if (b > 1600) b = 1600;
+              histUpd(us, m, b);
+              for (int k = 0; k < nq; k++) if (tq[k] != m) histUpd(us, tq[k], -b);
+            } else {
             int hi = ((us * 88 + (m & 127)) * 81 + to) * 2 + ((m >> 14) & 1);
             history[hi] += depth * depth;
             if (history[hi] > 1000000) for (int k = 0; k < (int)(sizeof history / 4); k++) history[k] >>= 1;
             if (histMalus) for (int k = 0; k < nq; k++) { int x = tq[k]; if (x == m) continue; int hx = ((us * 88 + (x & 127)) * 81 + ((x >> 7) & 127)) * 2 + ((x >> 14) & 1); history[hx] -= depth * depth; if (history[hx] < -1000000) history[hx] = -1000000; }
+            }
           }
           break;
         }
       }
     }
   }
-  if (!legal) return -MATE + ply;
-  store(depth, best, best >= beta ? F_LOWER : best > origAlpha ? F_EXACT : F_UPPER, bestMove, ply);
+  if (!legal) return ex ? alpha : -MATE + ply;
+  if (!ex) store(depth, best, best >= beta ? F_LOWER : best > origAlpha ? F_EXACT : F_UPPER, bestMove, ply);
   return best;
 }
 
@@ -1303,7 +1369,7 @@ EXPORT(root_search) int root_search(double timeMs, int maxDepth, int nodeLim) {
 #endif
   for (int depth = d0; depth <= maxDepth; depth++) {
     rootDepth = depth;
-    double alpha = -INF, beta = INF, delta = 60, score;
+    double alpha = -INF, beta = INF, delta = P[27] ? P[27] : 60, score;
     if (depth >= 4) { alpha = prevScore - delta; beta = prevScore + delta; }
     for (;;) {
       score = searchRoot(depth, alpha, beta);
@@ -1484,7 +1550,7 @@ EXPORT(init) void init(void) {
   for (int i = 0; i < 2 * 8 * 20; i++) { ZHD_L[i] = rnd32(); ZHD_H[i] = rnd32(); }
   ZSIDE_L = rnd32(); ZSIDE_H = rnd32();
 }
-EXPORT(reset_search) void reset_search(void) { memset(history, 0, sizeof history); memset(killers, 0, sizeof killers); }
+EXPORT(reset_search) void reset_search(void) { memset(history, 0, sizeof history); memset(killers, 0, sizeof killers); memset(contH, 0, sizeof contH); }
 
 #ifdef MT
 /* ------------------------------------------------------------------ threads (engine_mt.wasm, see pro/) */

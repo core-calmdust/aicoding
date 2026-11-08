@@ -2,11 +2,11 @@
 # Measure the site's shogi AI against Gikou (技巧2, GPL-3.0; used only here as a ruler, nothing of it goes into the site).
 # Gikou's README: DepthLimit 1–5 ≈ Shogi Club 24 8級 / 5級 / 2級 / 初段 / 二段.
 #   bash shogi/tools/match/run-gikou.sh
-# Settings: NET (default shogi/nnue.bin.gz of the repo), NODES (our nodes per move, default 2200000 = 四段, the strongest),
+# Settings: NET (default shogi/nnue.bin.gz of the repo), NODES (our nodes per move, default 1500000 = 四段, the strongest),
 #   DEPTHS (Gikou depth limits, default "5 6 7"), GAMES (per depth, default 40), WORK (default ~/shogi-gikou-work)
 set -e
 HERE=$(cd "$(dirname "$0")" && pwd); REPO=$(cd "$HERE/../../.." && pwd)
-WORK=${WORK:-$HOME/shogi-gikou-work}; NODES=${NODES:-2200000}; DEPTHS=${DEPTHS:-"5 6 7"}; GAMES=${GAMES:-40}
+WORK=${WORK:-$HOME/shogi-gikou-work}; NODES=${NODES:-1500000}; DEPTHS=${DEPTHS:-"5 6 7"}; GAMES=${GAMES:-40}
 NET=${NET:-$REPO/shogi/nnue.bin.gz}
 mkdir -p "$WORK"; cd "$WORK"
 gunzip -c "$NET" > net.bin 2>/dev/null || cp "$NET" net.bin
