@@ -342,6 +342,12 @@ function rootValues(pos, d, hist) {
   }
   return out.sort((x, y) => y.v - x.v);
 }
+// Lazy SMP (shared mode): the root's exact result a helper has finished ('mthelp' stores it), when it is at least depth d —
+// the lead then goes on from there (a lead on a slower core, e.g. an efficiency core, no longer holds the job up)
+function helperDone(pos, L, d) {
+  const e = SH.get(pos.h1, pos.h2);
+  return e && e.f === 0 && e.d >= d && e.ply === pos.ply && L.indexOf(e.m) >= 0 ? { move: e.m, v: e.v, depth: e.d } : null;
+}
 function bestMove(pos, hist, maxD, ms, nk) {
   nodes = 0; stop = false; tEnd = ms ? Date.now() + ms : Infinity; nodeLimit = nk ? nk * 1000 : Infinity; killers.length = 0;
   const L = pos.moves(); if (L.length === 1) return { move: L[0], v: 0, depth: 0 };
@@ -349,18 +355,22 @@ function bestMove(pos, hist, maxD, ms, nk) {
   for (let d = 1; d <= (maxD || 60); d++) {
     let a = -WIN - 1, bm = null, bv = -Infinity;
     const ttE = TT.get(pos.h1), order = orderMoves(pos, L, best.move, 0);
+    let hd = null;
     for (const m of order) {
       const q = pos.clone().play(m);
       loadHist(hist); const v = -search(q, d - 1, -WIN - 1, -a, 1);
       if (stop) break;
       if (v > bv) { bv = v; bm = m; if (v > a) a = v; }
+      if (SH !== null && (hd = helperDone(pos, L, d)) !== null) break;   // (a helper has finished this depth or a deeper one)
     }
+    if (hd !== null) { best = hd; if (hd.depth >= (maxD || 60) || Math.abs(hd.v) > WINT) break; d = hd.depth; continue; }
     if (stop && !bm) break;
     if (bm !== null) best = { move: bm, v: bv, depth: d };
     if (stop) break;
     if (Math.abs(bv) > WINT) break;
     void ttE;
   }
+  if (SH !== null) { const hd = helperDone(pos, L, best.depth + 1); if (hd !== null) best = hd; }
   return best;
 }
 const histOf = (start, moves) => { const { hashes } = replay(start, moves); hashes.pop(); return hashes; };
@@ -450,12 +460,15 @@ function pvOf(start, moves, m, plies) {
 // mtPlan: what a 'think' / 'analyze' / 'cands' job searches on the threads (or its answer at once); mtV: one root move to depth d
 // in the window (a, b); mtFin: the job's reply from the threads' raw result (the same as the one-thread worker's).
 let mtRule = null;
+// Lazy SMP on the shared table for a 'think' (time / depth only: with a node budget the threads split the tree, so that the
+// budget is all the threads' together); m.lazy (0 / 1) overrides the game's choice (the bench compares both)
+const lazyOf = (m, L, dflt) => SH !== null && !L.nk && (L.ms || L.dx) ? (m.lazy !== undefined ? !!m.lazy : dflt) : false;
 function mtPlan(m) {
   const { pos } = replay(m.start, m.moves), all = pos.moves(), inf = WIN + 1;
   if (m.job === 'think') {
     const L = m.cfg || LEVELS[m.level] || LEVELS[10];
     if (all.length < 2 || !L.s || (L.book && m.moves.length < 6 && !m.start)) { PRO_CFG = m.cfg || null; try { return { result: think(m.start, m.moves, m.level) }; } finally { PRO_CFG = null; } }
-    return { plan: { kind: 'best', moves: orderMoves(pos, all, -1, 0), inf, maxD: L.dx || 60, ms: L.ms || 3000, nodes: L.nk ? L.nk * 1000 : 0, win: WINT, lmr: { d: 3, i: 6 }, splitMin: 5 } };
+    return { plan: { kind: 'best', moves: orderMoves(pos, all, -1, 0), inf, maxD: L.dx || 60, ms: L.ms || 3000, nodes: L.nk ? L.nk * 1000 : 0, win: WINT, lmr: { d: 3, i: 6 }, splitMin: 5, lazy: lazyOf(m, L, false) } };   // (Young Brothers Wait on the shared table; lazy: Lazy SMP, for the bench)
   }
   if (!all.length) return { result: { list: [], depth: 0 } };
   const cands = m.job === 'cands';
@@ -484,7 +497,7 @@ function mtKids(m) {
 }
 function mtLazy(m) {   // (shared/tools/mtsim.js: one Lazy SMP thread's search of the root to depth m.d, root order rotated by m.rot)
   const { pos, hist } = mtNode(m);
-  nodes = 0; stop = false; tEnd = Infinity; nodeLimit = Infinity; loadHist(hist);
+  nodes = 0; stop = false; tEnd = m.until || Infinity; nodeLimit = Infinity; loadHist(hist);
   const e = SH !== null ? SH.get(pos.h1, pos.h2) : TT.get(pos.h1);
   let L = orderMoves(pos, pos.moves(), e && e.h2 === pos.h2 ? e.m : -1, 0);
   if (m.rot) { const k = m.rot % L.length; L = L.slice(k).concat(L.slice(0, k)); }
@@ -497,8 +510,19 @@ function mtLazy(m) {   // (shared/tools/mtsim.js: one Lazy SMP thread's search o
     if (v > best) { best = v; bm = L[i]; if (v > a) a = v; }
   }
   rhN--;
-  if (SH !== null) SH.put(pos.h1, pos.h2, m.d, best, 0, bm, pos.ply);
+  if (SH !== null && !stop) SH.put(pos.h1, pos.h2, m.d, best, 0, bm, pos.ply);
   return { v: best, m: bm, nodes };
+}
+// a Lazy SMP helper (shared/mtsplit.js shared mode, 'mthelp'): iterative deepening of the root on the shared table — one ply
+// deeper every other helper (k), from a root order rotated by k >> 1 — until the page stops it (or m.until)
+function mtHelp(m) {
+  let total = 0;
+  for (let d = 1; d <= (m.maxD || 60); d++) {
+    const r = mtLazy(Object.assign({}, m, { d: d + (m.k & 1), rot: m.k >> 1 }));
+    total += r.nodes;
+    if (stop || Date.now() > (m.until || Infinity) || Math.abs(r.v) > WINT) break;
+  }
+  return { nodes: total, ok: false };
 }
 function mtFin(m) {
   const r = m.raw;
@@ -655,6 +679,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
       try {
         if (SH !== null) SH.begin(m);
         setRule(m.rule || 'c33');
+        if (SH !== null) SH.salt = SALT[RK] | 0;   // (every task on the shared table, the Lazy SMP lead's 'think' too)
         if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...(() => { PRO_CFG = m.cfg || null; try { return think(m.start, m.moves, m.level); } finally { PRO_CFG = null; } })() });
         else if (m.type === 'analyze') {
           const r = analyze(m.start, m.moves, m.time || 1000, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth }));
@@ -665,6 +690,8 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
         else if (m.type === 'duelReply') self.postMessage({ id: m.id, type: 'result', ...duelReply(m.start, m.moves, m.n) });
         else if (m.type === 'newgame') { TT.clear(); self.postMessage({ id: m.id, type: 'result' }); }
         else if (m.type === 'mtplan') self.postMessage({ id: m.id, type: 'result', ...mtPlan(m) });
+        else if (m.type === 'mtlead') self.postMessage({ id: m.id, type: 'result', ...(() => { PRO_CFG = m.cfg || null; try { const r = think(m.start, m.moves, m.level); return Object.assign({}, r, { nodes }); } finally { PRO_CFG = null; } })() });   // (Lazy SMP: the job as one thread plays it, on the shared table)
+        else if (m.type === 'mthelp') self.postMessage({ id: m.id, type: 'result', ...mtHelp(m) });
         else if (m.type === 'mtv') self.postMessage({ id: m.id, type: 'result', ...mtV(m) });
         else if (m.type === 'mtkids') self.postMessage({ id: m.id, type: 'result', ...mtKids(m) });
         else if (m.type === 'mtpv') self.postMessage({ id: m.id, type: 'result', pv: pvOf(m.start, m.moves, m.m, m.plies) });

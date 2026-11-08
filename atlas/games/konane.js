@@ -14,7 +14,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../konane/', VER = '?v=3-sh1';   // same file / version as konane/index.html → shared cache
+  const BASE = '../konane/', VER = '?v=3-sh2';   // same file / version as konane/index.html → shared cache
   let engP = null;
   function loadEngine() {
     if (window.KonaneEngine) return Promise.resolve(window.KonaneEngine);
@@ -321,7 +321,7 @@
     id: ['Pemula: hanya melihat langkah di depannya', 'Dasar–menengah: menghitung beberapa langkah ke depan', 'Mahir: tahu kapan berhenti dan kapan lanjut', 'Ahli: membaca akhir permainan secara dalam'],
     tr: ['Başlangıç: yalnızca önündeki hamleyi görür', 'Acemi–orta: birkaç hamle ileriyi sayar', 'İleri: ne zaman durup ne zaman devam edeceğini bilir', 'Uzman: oyunsonlarını derin okur'],
   };
-  const RATING = [0, 450, 575, 700, 825, 950, 1075, 1200, 1325, 1450, 1575, 1700, 1825, 1950, 2030, 2090, 2150, 2200, 2250, 2300, 2350, 2470, 2590, 2710];   // konane RT_LV (rated games)
+  const RATING = [0, 450, 575, 700, 825, 950, 1075, 1200, 1325, 1450, 1575, 1700, 1825, 1950, 2030, 2090, 2150, 2200, 2250, 2300, 2350, 2470, 2590, 2615];   // konane RT_LV (rated games)
   const W7 = (a, b, c, d, e, f) => [a, a, a, a, b, b, b, b, b, c, c, c, c, c, c, d, d, d, e, f];
   const WHO = {
     ja: W7('はじめての人に', 'ルールを覚えた人に', '慣れてきた人に', '強い人に', '上級者でも手ごわい', '最強レベル'),

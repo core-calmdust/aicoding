@@ -537,6 +537,7 @@ async function allShared(p, ms, pool) {
   const ctl = new Int32Array(new SharedArrayBuffer(4 * (8 + moves.length)));
   const edges = []; for (let e = 0; e < G.E; e++) if (p.drawn[e]) edges.push(e);
   const until = Date.now() + ms, msg = { type: 'xall', R: G.R, C: G.C, edges, until, ms, tt, ctl: ctl.buffer, moves };
+  if (pool.ready) await pool.ready(Math.min(3000, ms / 4));   // (new helpers: their script loads through this worker, which then blocks)
   const hs = []; for (let i = 0; i < pool.size; i++) hs.push(pool.run(i, msg));
   await new Promise(r => setTimeout(r, 0));   // (let the helpers start)
   const mine = allShare(Object.assign({ lead: 1 }, msg));
@@ -545,13 +546,13 @@ async function allShared(p, ms, pool) {
   if (Atomics.load(ctl, 1)) return null;
   const out = [];
   for (let i = 0; i < moves.length; i++) { const v = Atomics.load(ctl, 8 + i); if (!v) return null; out.push({ m: moves[i], v: v - 1000 }); }
-  out.nodes = nodes;
+  out.nodes = nodes; out.hn = [mine.nodes].concat(rs.map(r => r ? r.nodes || 0 : -1));   // (each worker's nodes: the bench)
   return out;
 }
 async function analyzeShared(p, ms, pool) {
   if (!x4Ok(p) && (p.G.E <= 24 || countSafe(p) <= (p.G.R <= 4 ? 20 : 15))) {
     const ex = await allShared(p, ms * 0.7, pool);
-    if (ex) return { exact: true, list: ex.sort((a, b) => b.v - a.v), nodes: ex.nodes };
+    if (ex) return { exact: true, list: ex.sort((a, b) => b.v - a.v), nodes: ex.nodes, hn: ex.hn };
   }
   if (x4Ok(p)) return analyze(p, ms);
   return analyzeEst(p, ms);
@@ -1020,6 +1021,7 @@ async function chooseMoveAsync(p, level, rand, pool, lead, hist) {
   const cfg = LEVELS[level] || LEVELS[8];
   if (cfg.kind === 'v2' && p.G.R === 4 && p.G.C === 4) { const rd = x4Ready(); if (rd && rd.then) await rd; if (X4.st === 2) return chooseMove(p, level, rand, lead, hist); }
   if (cfg.kind !== 'v2' || !pool || !pool.size) return chooseMove(p, level, rand, lead, hist);
+  if (pool.ready) await pool.ready(1500);   // (new helpers start only while this worker is free)
   const legal = p.legal();
   if (legal.length === 1) return { move: legal[0], exact: false };
   const cap = p.hasCapture() ? captureMoves(p) : null;
@@ -1408,10 +1410,15 @@ if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof
         const w = new Worker('engine.js' + ((self.location && self.location.search) || '')), cb = new Map();   // same version as this worker
         w.onmessage = ev => { const f = cb.get(ev.data.id); if (f) { cb.delete(ev.data.id); f(ev.data.type === 'error' ? null : ev.data.r); } };
         w.onerror = ev => { ev.preventDefault && ev.preventDefault(); cb.forEach(f => f(null)); cb.clear(); };
-        pool.ws.push({ w, cb });
+        // ready: the helper has loaded and answered (a nested worker's script is loaded through this worker: while this worker
+        // searches synchronously a new helper cannot start — the user's Mac, 2026-11-09: the shared analysis gained nothing)
+        const id = ++pool.seq, ready = new Promise(r => cb.set(id, () => r(true)));
+        w.postMessage({ type: 'ping', id });
+        pool.ws.push({ w, cb, ready });
       }
     } catch (e) { pool.dead = true; }
-    return { size: Math.min(k, pool.ws.length), run: pool.run };
+    const size = Math.min(k, pool.ws.length);
+    return { size, run: pool.run, ready: ms => Promise.race([Promise.all(pool.ws.slice(0, size).map(h => h.ready)), new Promise(r => setTimeout(r, ms))]) };
   };
   // the analysis on the shared table: the page asks for it (msg.mt > 0 only when its page is isolated — shared/mtworkers.js
   // shared mode) and this worker can share memory with its helpers
@@ -1421,6 +1428,7 @@ if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof
   const ponderLoop = tok => { if (tok !== pondering) return; if (DotsEngine.ponderStep(40)) setTimeout(() => ponderLoop(tok), 0); };
   self.onmessage = async ev => {
     const d = ev.data;
+    if (d.type === 'ping') { self.postMessage({ type: 'ping', id: d.id, r: 1 }); return; }   // (a helper: loaded)
     pondering++; DotsEngine.ponderStop();
     try {
       if (d.type === 'xall') { self.postMessage({ type: d.type, id: d.id, r: DotsEngine.allShare(d) }); return; }   // (a helper's share of the shared-table analysis)
@@ -1442,7 +1450,7 @@ if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof
         }
       } else if (d.type === 'analyze') {
         const r = shOn(d) ? await DotsEngine.analyzeShared(p, d.ms || 1500, getPool(d.mt)) : DotsEngine.analyze(p, d.ms || 1500);
-        self.postMessage({ type: 'analyze', id: d.id, list: r.list, exact: r.exact });
+        self.postMessage({ type: 'analyze', id: d.id, list: r.list, exact: r.exact, hn: r.hn });
       } else if (d.type === 'solve') {
         let list = null;
         if (d.R === 4 && d.C === 4 && DotsEngine.X4.st === 2) list = DotsEngine.x4All(p, d.ms || 8000);
