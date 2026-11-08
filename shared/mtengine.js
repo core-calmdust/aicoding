@@ -144,7 +144,8 @@
     }
     if (FLAGGED) {   // COOP mode asked for but not isolated: make sure the worker knows, reload once; still not → back to normal
       if (!cached) await setFlag(true);
-      if (recently()) { await setFlag(false); LS.del(K_PREF); emit(); return; }
+      if (recently() && CTRL0 && await ping()) { await setFlag(false); LS.del(K_PREF); emit(); return; }   // (gave up only when the page really came through our worker: a reload that bypassed it — Shift+reload — proves nothing)
+      if (recently()) return;
       await navigator.serviceWorker.ready; reload(); return;
     }
     if (cached) await setFlag(false);
@@ -152,7 +153,8 @@
     const toCoop = async () => { if (touched || document.body.classList.contains('in-online')) return; await setFlag(true); await navigator.serviceWorker.ready; reload(); };
     if (pref() === '1' && !dipLikely()) { await toCoop(); return; }
     if (!want() || !dipLikely()) return;
-    if (recently() || (CTRL0 && await ping())) { LS.set(K_NODIP, navigator.userAgent); if (pref() === '1') await toCoop(); return; }   // the page came through our worker and still no isolation: no DIP here
+    if (CTRL0 && await ping()) { LS.set(K_NODIP, navigator.userAgent); if (pref() === '1') await toCoop(); return; }   // (only when the page came through our worker and still is not isolated)
+    if (recently()) return;   // the page came through our worker and still no isolation: no DIP here
     await navigator.serviceWorker.ready;
     if (!navigator.serviceWorker.controller) await new Promise(res => { navigator.serviceWorker.addEventListener('controllerchange', res, { once: true }); setTimeout(res, 4000); });
     if (!touched && performance.now() < 20000 && !document.body.classList.contains('in-online')) reload();   // (not once the player has started using the page: then from the next visit)
