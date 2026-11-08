@@ -249,6 +249,15 @@
     update: 'UPDATE',
   };
   const badgeText = (b, l) => { const t = BADGE_TEXT[b]; return !t ? '' : typeof t === 'string' ? t : t[l] || t.en; };
+  // the news (portal updates row + phone ticker): one line per game/feature, newest first — except the lead (the first,
+  // biggest slot) always goes to the newest NEW title (released within NEW_DAYS, BETA included) while there is one
+  // (common rule 2026-11-08: NEWで一番大きく取り上げるのは新作タイトル)
+  function news() {
+    const seen = new Set(), ups = UPDATES.filter(u => !seen.has(u[1]) && seen.add(u[1]));
+    let lead = -1, best = '';
+    ups.forEach((u, i) => { const g = GAMES.find(x => x.id === u[1]); if (g && g.released && daysSince(g.released) <= NEW_DAYS && g.released > best) { best = g.released; lead = i; } });
+    return lead > 0 ? [ups[lead], ...ups.slice(0, lead), ...ups.slice(lead + 1)] : ups;
+  }
   // games ordered by the changelog (UPDATES is newest first); games without entries keep registry order
   function byUpdate() {
     const rank = id => { const k = UPDATES.findIndex(u => u[1] === id); return k < 0 ? 1e9 : k; };
@@ -513,7 +522,7 @@
     };
     addEventListener('pagehide', back); document.addEventListener('visibilitychange', () => { if (document.hidden) back(); });
   })();
-  window.Atlas = { LANGS, GAMES, CATS, sfxOn, UPDATES, updText, TAGS, TIER_COINS, GACHA, SHOP_PRICE, badges, badgeText, updatedOn, byUpdate, recordPlay, shareName, lastUpdate, progress, allProgress, achievements, load, save, coins, claimLogin, pull, shop, buy, ymd, daysSince };
+  window.Atlas = { LANGS, GAMES, CATS, sfxOn, UPDATES, updText, TAGS, TIER_COINS, GACHA, SHOP_PRICE, badges, badgeText, updatedOn, news, byUpdate, recordPlay, shareName, lastUpdate, progress, allProgress, achievements, load, save, coins, claimLogin, pull, shop, buy, ymd, daysSince };
 })();
 
 /* =====================================================================
