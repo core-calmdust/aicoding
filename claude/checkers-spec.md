@@ -16,6 +16,11 @@ URL: https://core-calmdust.github.io/aicoding/checkers/ ／ 旧版 checker.html 
 - 学習：Mac で強化学習（tools/nn/loop.sh、自己対局＋6駒DB、3手バロット）。新しいネットは `checkers/nnue-candidate.nnue` でコミット → 強さ確認（サイト条件＝4駒DB・ブラウザの速さの比）・レベル再調整のうえ evalnet.bin.gz を差し替え、engine.js の `V` と各ページのキャッシュ番号を上げる。強さの比較は tools/nn/match.sh（3手バロット532局、同じ持ち時間）。
 - キングが一周して元のマスに戻る取り（f＝t）は駒が残る（2026-11 修正）。
 
+## 本編のマルチスレッド（2026-11-08、addendum「本編のマルチスレッド」、手本：ファノロナ）
+- `engine.c` を `-DMT` で作った `engine_mt.wasm`（`tools/build.sh`）。置換表・学習評価の重み・終盤DB・盤の表は共有、局面・履歴・キラー手・NNUE の累積などはスレッドごと（`TLS`）の Lazy SMP。NNUE の累積（`ACC2`・`ACC`、約400KB）は TLS の雛形に入れると wasm が膨らむので各スレッドの枠（`slot` 4MB）の TLS の直後に置き、スレッド番号と一緒に別関数 `mtSelf` で代入する（`mt_thread` の中で書くと古い TLS 基底に書かれる）。補助の奇数番は1手深く読み始め、置換表の世代は主スレッドだけが進める。**通常版 `engine.wasm`・`engine_simd.wasm` は1バイトも変わらない**（レベルの指し手は不変）。終盤DBは主スレッドが全スレッドの枠より上に読み込む。
+- 対局ページ：`shared/mtengine.js`＋`sw.js`（light）。主スレッドは `engine.js?…&mt=1`、補助は `mt-helper.js`（`setupIO` の局面で `best()` を繰り返す）。対象は分析・ヒント・コーチ（深読み＝四段）・検討ボックス（`rvbox.js` は `pool()`／`cancel()`）と、時間で考える四段・五段（1秒／2.5秒、レート戦も）。15級〜三段は1スレッド。PRO のスレッド数は探索で読むどの制限でも効く（既定は四段・五段が全スレッド）。情報行に「· NNN nps」（全スレッドの合計）。
+- 計測ページ `checkers/bench.html`（noindex・リンクなし）。最上位レベルは足さない（完全解析で引き分け、1級より上は隣との差が誤差の範囲。checkers/MODEL_CARD.md）。
+
 ## AIの強さ（20段階）
 - 15級〜1級、初段〜五段。engine.js の LEVELS と tools/native.c の LVS を同じ値に保つ（native の lv コマンドで隣接レベルを対戦させて調整）。
 - 15級〜5級：手作り評価・固定深さ＋ノイズ＋一定確率の悪手。4級〜三段：学習評価・1手の局面数で区切る（net-43 で 900〜12万。v1 のときの 2千〜50万と同じ強さになるよう測り直し済み、端末の速さによらない。nk は千単位で小数可）。ネットを替えたらこの局面数を測り直す（RT_LV は変えない）。四段・五段：1秒／2.5秒、序盤8手は互角の手からランダム。

@@ -207,11 +207,13 @@ function jsValues(p, depth, ms) { const tEnd = Date.now() + (ms || 2000); return
 // ---------------------------------------------------------------- WebAssembly side
 let WX = null;
 const wIO = () => new Int32Array(WX.memory.buffer, WX.io_ptr(), 8192);
-function wSetup(start, moves) {
+// the setup buffer of engine.c setup(): [black, white, kings, side, nmoves, (ft, cap) * nmoves] (also the page's helper threads, mt-helper.js)
+function setupIO(start, moves) {
   const p = Pos.from(start), a = [p.b | 0, p.w | 0, p.k | 0, p.side, moves.length];
   for (const m of moves) { a.push(mFrom(m) | (mTo(m) << 5), mCap(m) | 0); }
-  wIO().set(a); return WX.setup();
+  return a;
 }
+function wSetup(start, moves) { wIO().set(setupIO(start, moves)); return WX.setup(); }
 const wMove = (ft, cap) => mv(ft & 31, (ft >> 5) & 31, cap >>> 0);
 function wList() { const r = wIO(), L = []; for (let i = 0; i < r[0]; i++) L.push({ m: wMove(r[2 + 3 * i], r[3 + 3 * i]), v: r[4 + 3 * i] }); return L; }
 const kindOf = v => Math.abs(v) > WINT ? 'exact' : 'heur';
@@ -245,12 +247,12 @@ function think(start, moves, level, rand) {
   if (L.book && moves.length < 8 && !start) {
     WX.analyze(Math.max(300, (L.ms || 500) * 0.8), 40);
     const vals = wList(), good = vals.filter(e => e.v >= vals[0].v - 8);
-    return { move: good[Math.floor(rand() * good.length)].m, v: vals[0].v };
+    return { move: good[Math.floor(rand() * good.length)].m, v: vals[0].v, nodes: WX.last_nodes ? WX.last_nodes() : undefined };
   }
   WX.best_n(L.d || 99, L.ms || 0, Math.round((L.nk || 0) * 1000));   // nk: thousands of positions (fractions allowed)
   const r = wIO();
   if (r[0] < 0) return { move: all[0] };
-  return { move: wMove(r[0], r[1]), v: r[2], depth: r[3] };
+  return { move: wMove(r[0], r[1]), v: r[2], depth: r[3], nodes: r[4] * 1000 };
 }
 function analyze(start, moves, ms, onProgress) {
   const { pos } = replay(start, moves);
@@ -258,7 +260,7 @@ function analyze(start, moves, ms, onProgress) {
   if (!wSetup(start, moves)) return { list: [], depth: 0 };
   progressCb = onProgress ? (d => onProgress(wList().map(e => ({ ...e, kind: kindOf(e.v) })), d)) : null;
   WX.analyze(ms, 60); progressCb = null;
-  return { list: wList().map(e => ({ ...e, kind: kindOf(e.v) })), depth: wIO()[1] };
+  return { list: wList().map(e => ({ ...e, kind: kindOf(e.v) })), depth: wIO()[1], nodes: WX.last_nodes ? WX.last_nodes() : undefined };   // (nodes: the threads' build only)
 }
 // review box (PC): the best k candidate moves with values, each with a line of up to `plies` further moves
 // (each move of the line is the engine's choice after a short search; the transposition table of the analysis helps)
@@ -293,18 +295,28 @@ function puzzle(start, moves, n, defend, goal, base) {
 }
 let progressCb = null;
 
-const API = { P1, P2, WIN, WINT, DRAW_PLIES, NB, JP, RC, sqAt, bit, popc, bitsOf, mv, mFrom, mTo, mCap, Pos, path, name, parse, replay, judge, LEVELS, think, analyze, cands, puzzle, kindOf };
+const API = { P1, P2, WIN, WINT, DRAW_PLIES, NB, JP, RC, sqAt, bit, popc, bitsOf, mv, mFrom, mTo, mCap, Pos, path, name, parse, replay, judge, LEVELS, think, analyze, cands, puzzle, kindOf, setupIO };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.CheckersEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
   const V = 'v=20261108n43';
-  let readyP = null;
+  // ?…&mt=1: the lead thread of the page's multi-thread pool (shared/mtengine.js): engine_mt.wasm on the shared memory sent with
+  // the first message ('mtinit'); the helpers (mt-helper.js) search the same root meanwhile. The network sits in the engine's
+  // own (shared) tables; the endgame databases go into the shared memory above every thread's slot. The rest is the usual API.
+  const MTL = /[?&]mt=1\b/.test(self.location.search || '');
+  let readyP = null, egTop = 0;
   if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
     const imp = { env: { now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } };
     // SIMD build when the browser supports it (about 1.8x faster with the learned evaluation)
     let simd = false; try { simd = WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11])); } catch (e) {}
     const url = new URL((simd ? 'engine_simd.wasm?' : 'engine.wasm?') + V, self.location.href);
-    readyP = (WebAssembly.instantiateStreaming ? WebAssembly.instantiateStreaming(fetch(url), imp) : fetch(url).then(r => r.arrayBuffer()).then(b => WebAssembly.instantiate(b, imp)))
+    readyP = (MTL ? new Promise(res => self.addEventListener('message', function f(e) { if (e.data && e.data.type === 'mtinit') { self.removeEventListener('message', f); res(e.data); } }))
+      .then(m => {
+        const x = new WebAssembly.Instance(m.module, { env: { memory: m.mem, now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } }).exports;
+        x.mt_stack(m.top); x.mt_thread(m.tls, 0);
+        egTop = Math.ceil(m.mem.buffer.byteLength / 65536) * 65536;   // (above the pool's slots: the tables never meet a thread's stack)
+        return { instance: { exports: Object.assign({}, x, { memory: m.mem }) } };   // (the memory is imported: X.memory as in the normal build)
+      }) : WebAssembly.instantiateStreaming ? WebAssembly.instantiateStreaming(fetch(url), imp) : fetch(url).then(r => r.arrayBuffer()).then(b => WebAssembly.instantiate(b, imp)))
       .then(async r => {
         const X = r.instance.exports;
         const gunzip = async u => { const res = await fetch(new URL(u, self.location.href)); if (!res.ok) throw 0; return typeof DecompressionStream === 'function' ? new Response(res.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer() : null; };
@@ -321,7 +333,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
         try {
           const b = await gunzip('egdb4.bin.gz?' + V);
           if (b) {
-            const dv = new DataView(b), nc = dv.getUint32(4, true); let o = 8 + nc * 8, base = X.heap_base(), need = b.byteLength;
+            const dv = new DataView(b), nc = dv.getUint32(4, true); let o = 8 + nc * 8, base = egTop || X.heap_base(), need = b.byteLength;
             const cur = X.memory.buffer.byteLength; if (base + need + 65536 > cur) X.memory.grow(Math.ceil((base + need + 65536 - cur) / 65536));
             new Uint8Array(X.memory.buffer, base, b.byteLength - o).set(new Uint8Array(b, o));
             let off = base;
@@ -329,11 +341,13 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
           }
         } catch (e) {}
         WX = X;
-      }).catch(() => { WX = null; });
+        if (MTL) self.postMessage({ type: 'mtready' });
+      }).catch(err => { WX = null; if (MTL) self.postMessage({ type: 'mtready', error: String(err && err.message || err) }); });
   }
   let queue = Promise.resolve();
   self.onmessage = e => {
     const m = e.data;
+    if (m && m.type === 'mtinit') return;
     queue = queue.then(() => readyP).catch(() => {}).then(() => {
       try {
         if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...(() => { PRO_CFG = m.cfg || null; try { return think(m.start, m.moves, m.level); } finally { PRO_CFG = null; } })() });
