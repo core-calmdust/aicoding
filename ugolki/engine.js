@@ -238,6 +238,11 @@ const LEVELS = [null,
   { s: 1, nk: 220 },                     // 三段
   { s: 1, ms: 1200, book: 1 },           // 四段
   { s: 1, ms: 2500, book: 1 },           // 五段
+  // the top levels (2026-11-09, common rule「最上位のレベルの追加」): twice the time per step up to 20 s, every thread of the
+  // page's pool (shared/mtsplit.js; the shared table on an isolated page) — one thread without the option
+  { s: 1, ms: 5000, book: 1 },           // Lv.21
+  { s: 1, ms: 10000, book: 1 },          // Lv.22
+  { s: 1, ms: 20000, book: 1 },          // Lv.23
 ];
 function gauss(rand) { let u = 0, v = 0; while (!u) u = rand(); while (!v) v = rand(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
 // ---------------------------------------------------------------- evaluation (side to move's view, ~100 = one tempo)
@@ -270,6 +275,10 @@ function terminal(pos, ply) {
 }
 // ---------------------------------------------------------------- search (negamax alpha-beta, TT, iterative deepening)
 const TT = new Map();
+// SH: the transposition table shared by the workers of shared/mtsplit.js (shared mode: a cross-origin isolated page —
+// shared/mttt.js, set by the 'mtshare' message; the one-thread worker never has it, so its levels play as before)
+let SH = null;
+const SALT = { c33: 0, c34: 0x5bd1e995, c44: 0x27d4eb2f, diag: 0x165667b1 };
 let nodes = 0, nodeLimit = Infinity, tEnd = Infinity, stop = false;
 const killers = [];
 // the positions of the game so far and of the line being searched ("h1:h2" in hist ⇔ the same pair here), for repetitions
@@ -290,10 +299,10 @@ function orderMoves(pos, L, ttm, ply) {
 }
 function search(pos, d, a, b, ply) {
   nodes++;
-  if ((nodes & 1023) === 0 && (Date.now() > tEnd || nodes > nodeLimit)) stop = true;
+  if ((nodes & 1023) === 0 && (Date.now() > tEnd || nodes > nodeLimit || (SH !== null && SH.stopped()))) stop = true;
   if (stop) return 0;
   const tv = terminal(pos, ply); if (tv !== null) return tv;
-  const key = pos.h1, e = TT.get(key);
+  const key = pos.h1, e = SH !== null ? SH.get(key, pos.h2) : TT.get(key);
   // repetition inside the line = draw
   if (ply > 0 && seenBefore(pos.h1, pos.h2)) return 0;
   if (e && e.h2 === pos.h2 && e.d >= d && e.ply === pos.ply) {
@@ -318,6 +327,7 @@ function search(pos, d, a, b, ply) {
     if (v > best) { best = v; bm = m; if (v > a) { a = v; if (a >= b) { killers[ply] = m; break; } } }
   }
   rhN--;
+  if (SH !== null) { SH.put(key, pos.h2, d, best, best <= a0 ? 2 : best >= b ? 1 : 0, bm, pos.ply); return best; }
   if (TT.size > 600000) TT.clear();
   TT.set(key, { h2: pos.h2, d, v: best, f: best <= a0 ? 2 : best >= b ? 1 : 0, m: bm, ply: pos.ply });
   return best;
@@ -453,7 +463,8 @@ function mtPlan(m) {
 }
 // the node after the root and m.line: its position, the earlier positions (repetitions) and its ply from the root
 function mtNode(m) {
-  if (mtRule !== RK) { TT.clear(); mtRule = RK; }
+  if (SH !== null) SH.salt = SALT[RK] | 0;
+  else if (mtRule !== RK) { TT.clear(); mtRule = RK; }
   const line = m.line || [], { pos, hashes } = replay(m.start, m.moves.concat(line)); hashes.pop();
   return { pos, hist: hashes, ply: line.length };
 }
@@ -468,8 +479,26 @@ function mtKids(m) {
   const { pos, hist, ply } = mtNode(m);
   loadHist(hist);
   if (terminal(pos, ply) !== null || (ply > 0 && seenBefore(pos.h1, pos.h2))) return { kids: [] };
-  const e = TT.get(pos.h1);
+  const e = SH !== null ? SH.get(pos.h1, pos.h2) : TT.get(pos.h1);
   return { kids: orderMoves(pos, pos.moves(), e && e.h2 === pos.h2 && e.ply === pos.ply ? e.m : -1, ply).map(x => ({ m: x, s: -1 })) };
+}
+function mtLazy(m) {   // (shared/tools/mtsim.js: one Lazy SMP thread's search of the root to depth m.d, root order rotated by m.rot)
+  const { pos, hist } = mtNode(m);
+  nodes = 0; stop = false; tEnd = Infinity; nodeLimit = Infinity; loadHist(hist);
+  const e = SH !== null ? SH.get(pos.h1, pos.h2) : TT.get(pos.h1);
+  let L = orderMoves(pos, pos.moves(), e && e.h2 === pos.h2 ? e.m : -1, 0);
+  if (m.rot) { const k = m.rot % L.length; L = L.slice(k).concat(L.slice(0, k)); }
+  let a = -WIN - 1, best = -Infinity, bm = L[0];
+  RH1[rhN] = pos.h1; RH2[rhN] = pos.h2; rhN++;
+  for (let i = 0; i < L.length; i++) {
+    const q = pos.clone().play(L[i]);
+    let v = i === 0 ? -search(q, m.d - 1, -WIN - 1, -a, 1) : -search(q, m.d - 1, -a - 1, -a, 1);
+    if (i > 0 && v > a) v = -search(q, m.d - 1, -WIN - 1, -a, 1);
+    if (v > best) { best = v; bm = L[i]; if (v > a) a = v; }
+  }
+  rhN--;
+  if (SH !== null) SH.put(pos.h1, pos.h2, m.d, best, 0, bm, pos.ply);
+  return { v: best, m: bm, nodes };
 }
 function mtFin(m) {
   const r = m.raw;
@@ -615,14 +644,16 @@ function duelReply(start, moves, n, rule) {
 function puzzle(start, moves, n, defend, goal, base, rule) { return soloGood(start, moves, n, rule).map(m => ({ m, need: n })); }
 
 setRule('c33');
-const API = { get nodes() { return nodes; }, P1, P2, WIN, WINT, PASS, RULES, RULE_ORDER, setRule, get rule() { return RK; }, get R() { return R; }, HOME: () => HOME, HOMEL: () => HOMEL, DIST: () => DIST, target, RC, sqAt, sqName, mv, mFrom, mTo, mCap, Pos, path, isJump, name, parse, replay, judge, LEVELS, think, analyze, cands, puzzle, mtPlan, mtV, mtKids, mtFin, pvOf, soloGood, soloMin, soloNeed, duelGood, duelMin, duelReply, evaluate, kindOf, bitsOf: () => [], popc: () => 0, bit: () => 0 };
+const API = { get nodes() { return nodes; }, set SH(t) { SH = t; }, get SH() { return SH; }, P1, P2, WIN, WINT, PASS, RULES, RULE_ORDER, setRule, get rule() { return RK; }, get R() { return R; }, HOME: () => HOME, HOMEL: () => HOMEL, DIST: () => DIST, target, RC, sqAt, sqName, mv, mFrom, mTo, mCap, Pos, path, isJump, name, parse, replay, judge, LEVELS, think, analyze, cands, puzzle, mtPlan, mtV, mtKids, mtFin, mtLazy, pvOf, soloGood, soloMin, soloNeed, duelGood, duelMin, duelReply, evaluate, kindOf, bitsOf: () => [], popc: () => 0, bit: () => 0 };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') {
   let queueP = Promise.resolve();
   self.onmessage = e => {
     const m = e.data;
+    if (m && m.type === 'mtshare') { try { importScripts(m.lib); SH = self.MTTT.attach(m); } catch (err) { SH = null; } return; }   // (shared/mtsplit.js shared mode)
     queueP = queueP.then(() => {
       try {
+        if (SH !== null) SH.begin(m);
         setRule(m.rule || 'c33');
         if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...(() => { PRO_CFG = m.cfg || null; try { return think(m.start, m.moves, m.level); } finally { PRO_CFG = null; } })() });
         else if (m.type === 'analyze') {

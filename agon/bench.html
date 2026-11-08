@@ -40,7 +40,7 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);ma
 <body>
 <main>
 <h1>アゴン マルチスレッド ベンチマーク</h1>
-<p class="sub">対局ページと同じ方式（shared/mtsplit.js：ふつうの Worker がルートの手と本筋（最初の手の先）を分担する Young Brothers Wait）で、スレッド数ごとの速さを測ります。PC の Chrome / Safari で開き、終わったら「結果をコピー」を押して貼り付けてください。</p>
+<p class="sub">対局ページと同じ方式（shared/mtsplit.js：ふつうの Worker がルートの手と本筋（最初の手の先）を分担する Young Brothers Wait）で、スレッド数ごとの速さを測ります。<b>共有</b>＝ページが分離されているとき（Chrome / Edge は自動、Safari・Firefox は対局ページでマルチスレッドをオン）の置換表を共有する方式、<b>非共有</b>＝各スレッドが自分の置換表を持つ方式（分離できないときの方式）。両方を測ります。PC の Chrome / Safari で開き、終わったら「結果をコピー」を押して貼り付けてください。</p>
 
 <div class="card"><div class="kv" id="env"></div></div>
 
@@ -56,10 +56,11 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);ma
   <div id="st">準備中…</div>
 </div>
 
-<div class="card"><h2>結果</h2><div class="tw"><table id="tbl"><thead><tr><th>測定</th><th>スレッド</th><th>時間</th><th>1スレッド比</th><th>効率</th><th>nps（合計）</th><th>1スレッドと一致</th></tr></thead><tbody></tbody></table></div><pre id="log"></pre></div>
+<div class="card"><h2>結果</h2><div class="tw"><table id="tbl"><thead><tr><th>測定</th><th>方式</th><th>スレッド</th><th>時間</th><th>1スレッド比</th><th>効率</th><th>nps（合計）</th><th>1スレッドと一致</th></tr></thead><tbody></tbody></table></div><pre id="log"></pre></div>
 </main>
-<script src="engine.js?v=4-pro1-mt1"></script>
-<script src="../shared/mtsplit.js?v=1"></script>
+<script src="engine.js?v=5-sh1"></script>
+<script src="../shared/mtengine.js?v=7"></script><script src="../shared/mtsplit.js?v=2"></script>
+<script>MTSplit.init({ sw: 'sw.js?v=1' });</script>
 
 <script>
 'use strict';
@@ -69,7 +70,7 @@ const COUNTS = (() => { const a = []; for (let t = 1; t < HC; t *= 2) a.push(t);
 const ua = (() => { const d = navigator.userAgentData; const b = d && (d.brands || []).filter(x => !/Not/.test(x.brand)).map(x => x.brand + ' ' + x.version).join(', '); return (b ? b + ' / ' + (d.platform || '') : '') || navigator.userAgent; })();
 let lines = [], started = 0;
 function env() {
-  $('#env').innerHTML = [['hardwareConcurrency', HC], ['測るスレッド数', COUNTS.join(', ')], ['起動できたスレッド', started || '—'], ['ブラウザ', ua.replace(/</g, '&lt;')]]
+  $('#env').innerHTML = [['hardwareConcurrency', HC], ['測るスレッド数', COUNTS.join(', ')], ['置換表の共有', MTSplit.shared ? '<span class="y">できる（crossOriginIsolated）</span>' : '<span class="n">できない（非共有だけ測ります）</span>'], ['起動できたスレッド', started || '—'], ['ブラウザ', ua.replace(/</g, '&lt;')]]
     .map(([k, v]) => `<b>${k}</b><span>${v}</span>`).join('');
 }
 env();
@@ -78,7 +79,7 @@ env();
 const E = window.AgonEngine;
 const RULE = 'std', D = { light: 6, normal: 7, heavy: 8 }, TA = { light: 1000, normal: 2000, heavy: 4000 };
 const G = {
-  url: 'engine.js?v=4-pro1-mt1', drive: MTSplit.ladder.drive,
+  url: 'engine.js?v=5-sh1', drive: MTSplit.ladder.drive,
   positions() {   // two games of Lv.6 vs Lv.6 (a fixed random seed), every 10 plies from ply 10
     const out = []; let seed = 7; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
     E.setRule(RULE);
@@ -99,8 +100,9 @@ const G = {
 };
 
 // a fresh pool for every run (no table left over from the run before), warmed up first
-async function once(t, msg) {
-  const pool = MTSplit.pool({ url: G.url, setup: G.setup, drive: G.drive });
+const MODES = () => MTSplit.shared ? ['sh', 'ns'] : ['ns'], MODE_NAME = { sh: '共有', ns: '非共有' };
+async function once(t, msg, mode) {
+  const pool = MTSplit.pool({ url: G.url, setup: G.setup, drive: G.drive, tt: mode === 'sh' });
   await new Promise(r => setTimeout(r, 400));
   if (G.warm) await pool.run(Object.assign({ mtThreads: t }, G.warm));
   const t0 = performance.now();
@@ -114,17 +116,17 @@ async function once(t, msg) {
 async function run() {
   $('#btnRun').disabled = true; $('#btnCopy').disabled = true;
   const w = $('#selW').value, P = G.positions(w);
-  const total = P.length * G.tests.length * COUNTS.length; let done = 0;
-  lines = [`agon bench ${new Date().toISOString()} | ${ua} | hc ${HC} | weight ${w}`];
+  const total = P.length * G.tests.length * COUNTS.length * MODES().length; let done = 0;
+  lines = [`agon bench ${new Date().toISOString()} | ${ua} | hc ${HC} | weight ${w} | shared ${MTSplit.shared ? 'yes' : 'no'}`];
   const R = {};
   try {
-    for (const p of P) for (const T of G.tests) {
-      let ref = null; const row = [`${p.name} ${T.key}`];
+    for (const p of P) for (const T of G.tests) for (const M of MODES()) {
+      let ref = null; const row = [`${p.name} ${T.key} ${M}`];
       for (const t of COUNTS) {
-        $('#st').textContent = `${p.name}：${T.label}・${t}スレッド`;
-        const { r, ms } = await once(t, T.msg(p, w));
+        $('#st').textContent = `${p.name}：${T.label}・${MODE_NAME[M]}・${t}スレッド`;
+        const { r, ms } = await once(t, T.msg(p, w), M);
         const ans = T.cmp(r); if (t === 1) ref = ans;
-        const a = R[T.key + '|' + t] || (R[T.key + '|' + t] = { ms: 0, nodes: 0, agree: 0, cnt: 0, extra: 0 });
+        const a = R[T.key + '|' + M + '|' + t] || (R[T.key + '|' + M + '|' + t] = { ms: 0, nodes: 0, agree: 0, cnt: 0, extra: 0 });
         a.ms += ms; a.nodes += r.nodes || 0; a.cnt++; if (ans === ref) a.agree++; if (T.extra) a.extra += T.extra(r);
         row.push(`t${t}(${r.threads || 1}) ${Math.round(ms)}ms ${ans}${T.extra ? ' ' + T.extraName + T.extra(r) : ''}`);
         $('#bar i').style.width = (++done / total * 100) + '%';
@@ -140,14 +142,14 @@ async function run() {
 }
 function render(R) {
   const tb = $('#tbl tbody'), out = []; tb.innerHTML = '';
-  for (const T of G.tests) {
-    const b = R[T.key + '|1']; if (!b) continue;
+  for (const T of G.tests) for (const M of ['sh', 'ns']) {
+    const b = R[T.key + '|' + M + '|1']; if (!b) continue;
     for (const t of COUNTS) {
-      const a = R[T.key + '|' + t]; if (!a) continue;
+      const a = R[T.key + '|' + M + '|' + t]; if (!a) continue;
       const sp = T.more ? (a.extra / a.cnt) / (b.extra / b.cnt) : b.ms / a.ms, nps = a.nodes / a.ms * 1000;
       const spTxt = T.more ? `${(a.extra / a.cnt).toFixed(1)}${T.extraName}` : `${sp.toFixed(2)}×`;
-      tb.insertAdjacentHTML('beforeend', `<tr><td>${T.label}</td><td>${t}</td><td>${(a.ms / a.cnt / 1000).toFixed(2)}s</td><td>${spTxt}</td><td>${T.more ? '—' : (sp / t * 100).toFixed(0) + '%'}</td><td>${Math.round(nps / 1000)}k</td><td>${a.agree}/${a.cnt}</td></tr>`);
-      out.push(`${T.key} threads ${t}: ${(a.ms / a.cnt).toFixed(0)} ms, ${T.more ? 'avg ' + (a.extra / a.cnt).toFixed(2) + ' ' + T.extraName : 'x' + sp.toFixed(2) + ' vs 1, eff ' + (sp / t * 100).toFixed(0) + '%'}, ${Math.round(nps / 1000)}k nps, agree ${a.agree}/${a.cnt}`);
+      tb.insertAdjacentHTML('beforeend', `<tr><td>${T.label}</td><td>${MODE_NAME[M]}</td><td>${t}</td><td>${(a.ms / a.cnt / 1000).toFixed(2)}s</td><td>${spTxt}</td><td>${T.more ? '—' : (sp / t * 100).toFixed(0) + '%'}</td><td>${Math.round(nps / 1000)}k</td><td>${a.agree}/${a.cnt}</td></tr>`);
+      out.push(`${T.key} ${M === 'sh' ? 'shared' : 'split'} threads ${t}: ${(a.ms / a.cnt).toFixed(0)} ms, ${T.more ? 'avg ' + (a.extra / a.cnt).toFixed(2) + ' ' + T.extraName : 'x' + sp.toFixed(2) + ' vs 1, eff ' + (sp / t * 100).toFixed(0) + '%'}, ${Math.round(nps / 1000)}k nps, agree ${a.agree}/${a.cnt}`);
     }
   }
   return out;
