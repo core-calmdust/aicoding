@@ -20,6 +20,17 @@
 //
 // Build (wasm): see tools/build.sh. Host protocol: everything goes through the i32 buffer at io_ptr() (EXPORTs at the end).
 #include <stdint.h>
+// MT (engine_mt.wasm, tools/build.sh): several threads search one root together on a shared memory ("Lazy SMP"); the state of
+// one search is thread-local (TLS), the tables, the evaluation weights, the network and the transposition table are shared.
+// (MT is also the name of the move's to-point below: the build flag becomes XQ_THREADS.) Without it TLS is nothing and the
+// normal builds stay byte for byte as before.
+#ifdef MT
+#undef MT
+#define XQ_THREADS 1
+#define TLS _Thread_local
+#else
+#define TLS
+#endif
 typedef int32_t i32; typedef uint32_t u32; typedef int8_t i8; typedef uint8_t u8; typedef int16_t i16; typedef uint16_t u16; typedef uint64_t u64; typedef int64_t i64;
 #ifdef __wasm_simd128__
 #include <wasm_simd128.h>
@@ -54,7 +65,7 @@ enum { EMPTY = 0, KING = 1, ADVISOR = 2, ELEPHANT = 3, HORSE = 4, ROOK = 5, CANN
 #define COLOR(p) ((p) >> 3)
 #define TYPE(p) ((p) & 7)
 
-static i32 IO[8192];
+static TLS i32 IO[8192];
 EXPORT(io_ptr) i32 *io_ptr(void) { return IO; }
 
 // ---------------------------------------------------------------- geometry
@@ -115,16 +126,16 @@ static void initGeo(void) {
 }
 
 // ---------------------------------------------------------------- position (one global board, make / unmake)
-static u8 B[90];
-static int side;                      // 0 red, 1 black to move
+static TLS u8 B[90];
+static TLS int side;                      // 0 red, 1 black to move
 #define XQ_ST 400
-static int xqOn = 0, xqTop = 0;         // NNUE (see below): on, accumulator stack top
-static u8 xqOk[XQ_ST];
-static int KSQ[2];
-static u64 KEY;
+static TLS int xqOn = 0, xqTop = 0;         // NNUE (see below): on, accumulator stack top
+static TLS u8 xqOk[XQ_ST];
+static TLS int KSQ[2];
+static TLS u64 KEY;
 // the points of each colour's pieces as a 90-bit set (BB[c][0]: points 0..63, BB[c][1]: 64..89), kept with B; walked in
 // increasing point order, so every loop below visits the pieces in the same order as a scan of B would.
-static u64 BB[2][2];
+static TLS u64 BB[2][2];
 #define BBFLIP(c, s) (BB[c][(s) >> 6] ^= 1ull << ((s) & 63))
 #define FOR_BITS(lo, hi, s) for (int _h = 0; _h < 2; _h++) for (u64 _b = _h ? (hi) : (lo); _b; _b &= _b - 1) { int s = (_h << 6) | __builtin_ctzll(_b);
 #define END_BITS }
@@ -156,8 +167,8 @@ static void findKings(void) {   // also rebuilds BB from B
 #define XQ_K 220                       // engine points per logit unit (fitted to the linear evaluation's scale)
 static i16 xqW1[XQ_IN * XQ_H], xqW2[2 * XQ_H];
 static i32 xqB1[XQ_H], xqB2;
-static i16 xqAcc[XQ_ST + 1][2][XQ_H];   // (slot XQ_ST: scratch for positions deeper than the stack)
-static u8 xqMv[XQ_ST][4];              // from, to, piece, captured
+static TLS i16 xqAcc[XQ_ST + 1][2][XQ_H];   // (slot XQ_ST: scratch for positions deeper than the stack)
+static TLS u8 xqMv[XQ_ST][4];              // from, to, piece, captured
 static inline int xqF(int c, int p, int s) { return ((COLOR(p) != c) * 7 + TYPE(p) - 1) * 90 + (c ? 89 - s : s); }
 static inline void xqAdd(i16 *a, int f) { const i16 *w = xqW1 + f * XQ_H; for (int j = 0; j < XQ_H; j++) a[j] += w[j]; }
 static inline void xqSub(i16 *a, int f) { const i16 *w = xqW1 + f * XQ_H; for (int j = 0; j < XQ_H; j++) a[j] -= w[j]; }
@@ -328,9 +339,9 @@ static int phaseOf(void) {
   int ph = 0; FOR_BITS(ALL_LO, ALL_HI, s) int t = TYPE(B[s]); if (t == ROOK) ph += 2; else if (t == HORSE || t == CANNON) ph += 1; END_BITS
   return ph > 16 ? 16 : ph;
 }
-static int featFlag = 0; static int FI[256], FV[256], FN;
+static TLS int featFlag = 0; static TLS int FI[256], FV[256], FN;
 #define ADDF(idx, val) do { int _i = (idx), _v = (val); if (featFlag) { FI[FN] = _i; FV[FN] = _v; FN++; } mg += W_[_i] * _v; eg += W_[NF + _i] * _v; } while (0)
-static int cnt[2][8];
+static TLS int cnt[2][8];
 static int evaluateRed(int *phOut) {
   int mg = 0, eg = 0; FN = 0;
   for (int c = 0; c < 2; c++) for (int t = 0; t < 8; t++) cnt[c][t] = 0;
@@ -412,19 +423,29 @@ static void ttStore(u64 key, int d, int flag, int v, Move m, int ply) {
 EXPORT(new_game) void new_game(void) { memset(TT, 0, sizeof(TT)); ttAge = 0; }
 
 // ---------------------------------------------------------------- search
-static u64 nodes; static double tEnd; static int stopFlag, nodeLimitOn; static u64 nodeLimit;
-static i32 hist[2][90][90];
-static Move killers[MAXPLY][2];
-static u64 HK[HIST_MAX + MAXPLY];     // hash of every position (game + search path)
-static u8 HC[HIST_MAX + MAXPLY];      // side to move was in check there
-static int hn, hirr;                  // stack size, index of the first position after the last capture
-static int seldepth;
+static TLS u64 nodes; static TLS double tEnd; static TLS int stopFlag, nodeLimitOn; static TLS u64 nodeLimit;
+static TLS i32 hist[2][90][90];
+static TLS Move killers[MAXPLY][2];
+static TLS u64 HK[HIST_MAX + MAXPLY];     // hash of every position (game + search path)
+static TLS u8 HC[HIST_MAX + MAXPLY];      // side to move was in check there
+static TLS int hn, hirr;                  // stack size, index of the first position after the last capture
+static TLS int seldepth;
 static const int PV_[8] = { 0, 0, 120, 120, 450, 900, 450, 100 };   // ordering values (MVV-LVA)
+#ifdef XQ_THREADS
+static volatile int gStop;            // shared: set when the main thread's search is over (the helpers stop)
+static TLS int threadId;              // 0 = the main thread (time control, result), 1.. = helpers
+static inline int timeUp(void) {
+  if (stopFlag) return 1;
+  if ((nodes & 1023) == 0) { if ((tEnd > 0 && now() > tEnd) || (nodeLimitOn && nodes > nodeLimit) || gStop) stopFlag = 1; }
+  return stopFlag;
+}
+#else
 static inline int timeUp(void) {
   if (stopFlag) return 1;
   if ((nodes & 1023) == 0) { if ((tEnd > 0 && now() > tEnd) || (nodeLimitOn && nodes > nodeLimit)) stopFlag = 1; }
   return stopFlag;
 }
+#endif
 // repetition of the current position (HK[hn-1]): 0 none, 1 draw, 2 the side to move wins (opponent checked perpetually), 3 it loses
 static int repState(void) {
   int cur = hn - 1; u64 k = HK[cur];
@@ -573,9 +594,9 @@ static int search(int depth, int alpha, int beta, int ply, int pv, int nullOk) {
 }
 
 // ---------------------------------------------------------------- root / host interface
-static u8 RB[90]; static int rootSide; static u64 rootKey;
-static Move rootL[MAXMV]; static int rootN; static int rootVal[MAXMV];
-static int rootHn, rootHirr;
+static TLS u8 RB[90]; static TLS int rootSide; static TLS u64 rootKey;
+static TLS Move rootL[MAXMV]; static TLS int rootN; static TLS int rootVal[MAXMV];
+static TLS int rootHn, rootHirr;
 static void loadRoot(void) { memcpy(B, RB, 90); side = rootSide; findKings(); KEY = rootKey; hn = rootHn; hirr = rootHirr; }
 // setup: IO = [90 point codes, side, nmoves, moves..., nexcl, excluded root moves...]. Returns 1 if all moves were legal.
 EXPORT(setup) int setup(void) {
@@ -625,7 +646,11 @@ static void sortRoot(void) {
 }
 static void beginSearch(int ms) {
   loadRoot();
-  stopFlag = 0; nodes = 0; tEnd = ms > 0 ? now() + ms : 0; ttAge++;
+  stopFlag = 0; nodes = 0; tEnd = ms > 0 ? now() + ms : 0;
+#ifdef XQ_THREADS
+  if (threadId == 0)   // (only the main thread ages the shared table)
+#endif
+  ttAge++;
   for (int a = 0; a < 2; a++) for (int b = 0; b < 90; b++) for (int c = 0; c < 90; c++) hist[a][b][c] >>= 2;
   memset(killers, 0, sizeof(killers));
 }
@@ -638,8 +663,11 @@ EXPORT(best) void best(int maxDepth, int ms, int nodeK) {
   // order: captures first by a quick static look
   for (int i = 0; i < rootN; i++) rootVal[i] = B[MT(rootL[i])] ? PV_[TYPE(B[MT(rootL[i])])] : 0;
   sortRoot();
-  int prev = 0;
-  for (int d = 1; d <= maxDepth && d < MAXPLY - 10; d++) {
+  int prev = 0, d0 = 1;
+#ifdef XQ_THREADS
+  if (threadId) d0 = 1 + (threadId & 1);   // helpers: every other one a ply ahead, so the threads fill the table with different depths
+#endif
+  for (int d = d0; d <= maxDepth && d < MAXPLY - 10; d++) {
     seldepth = 0;
     int a = d >= 4 ? prev - 35 : -INF, b = d >= 4 ? prev + 35 : INF, v;
     for (;;) {
@@ -659,10 +687,16 @@ EXPORT(best) void best(int maxDepth, int ms, int nodeK) {
     if (bi) { Move t = rootL[bi]; int tv = rootVal[bi]; for (int i = bi; i > 0; i--) { rootL[i] = rootL[i - 1]; rootVal[i] = rootVal[i - 1]; } rootL[0] = t; rootVal[0] = tv; }
     for (int i = 1; i < rootN; i++) rootVal[i] = -INF;
     bm = rootL[0]; bv = v; bd = d; prev = v;
+#ifdef XQ_THREADS
+    IO[0] = bm; IO[1] = bv; IO[2] = bd; IO[3] = (i32)(nodes / 1000);   // (the result so far, for the progress readouts)
+#endif
     progress(d, 1);
     if (v > WINT && WIN - v <= d) break;
     if (v < -WINT && WIN + v <= d) break;
     if (ms > 0 && d > 1 && now() > tEnd - ms * 0.5) break;
+#ifdef XQ_THREADS
+    if (gStop) break;
+#endif
   }
   loadRoot();
   IO[0] = bm; IO[1] = bv; IO[2] = bd; IO[3] = (i32)(nodes / 1000);
@@ -729,7 +763,7 @@ EXPORT(values) void values(int depth) {
 #define MT_BITS 18
 typedef struct { u64 key; i8 yes, no; } MTE;   // proven: mate in <= yes; disproven: no mate in <= no
 static MTE MTT[1 << MT_BITS];
-static u64 mBudget; static int mBudgetOut, mChecks;
+static TLS u64 mBudget; static TLS int mBudgetOut, mChecks;   // (the mate table MTT is shared: puzzles never run on the threads)
 static int mateDef(int k);
 static int mateAtt(int k) {     // attacker to move: 1 = mates within k, 0 = not, -1 = budget exhausted
   if (k <= 0) return 0;
@@ -801,3 +835,17 @@ EXPORT(puzzle) void puzzle(int n, int defend, int checksOnly, int budgetK) {
 EXPORT(mate_clear) void mate_clear(void) { memset(MTT, 0, sizeof(MTT)); }
 EXPORT(eval_root) int eval_root(void) { loadRoot(); return evaluate(); }
 EXPORT(in_check_root) int in_check_root(void) { loadRoot(); return attackedKing(side); }
+
+#ifdef XQ_THREADS
+// ---------------------------------------------------------------- threads (engine_mt.wasm; shared/mtengine.js, mt-helper.js)
+extern unsigned char __heap_base;
+extern void __wasm_init_tls(void *);
+EXPORT(mt_heap_base) u32 mt_heap_base(void) { return (u32)&__heap_base; }
+EXPORT(mt_tls_size) u32 mt_tls_size(void) { return __builtin_wasm_tls_size(); }
+// every instance first: mt_stack (its own stack: the top address; a function without a frame of its own), then mt_thread
+// (its TLS block and thread number; the first instance — the page's own — also fills the shared tables)
+EXPORT(mt_stack) void mt_stack(u32 stackTop) { __asm__ volatile(".globaltype __stack_pointer, i32\n local.get %0\n global.set __stack_pointer" :: "r"(stackTop)); }
+EXPORT(mt_thread) void mt_thread(u32 tls, int id) { __wasm_init_tls((void *)tls); threadId = id; initGeo(); initEval(); }
+EXPORT(mt_stop) void mt_stop(int v) { __atomic_store_n(&gStop, v, __ATOMIC_SEQ_CST); }
+EXPORT(last_nodes) double last_nodes(void) { return (double)nodes; }   // (this thread's last search: the page's nps readout)
+#endif
