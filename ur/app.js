@@ -139,10 +139,25 @@ let aiW = null, jobSeq = 0;
 const jobs = new Map();
 function worker() {
   if (aiW === false) return null;
-  if (!aiW) { try { aiW = new Worker('worker.js?v=2'); aiW.onmessage = e => { const d = e.data, j = jobs.get(d.id); if (j) j(d); }; aiW.onerror = () => { aiW = false; }; } catch (e) { aiW = false; return null; } }
+  if (!aiW) { try { aiW = new Worker('worker.js?v=3'); aiW.onmessage = e => { const d = e.data, j = jobs.get(d.id); if (j) j(d); }; aiW.onerror = () => { aiW = false; }; } catch (e) { aiW = false; return null; } }
   return aiW;
 }
-function think(st, n, level) {
+// the threads (shared/mtworkers.js; common rule 2026-11-08「本編のマルチスレッド」): a pool of these workers shares out the
+// expectiminimax as "move × the next throw" tasks (E.splitEval — the same numbers as E.evaluate) and the review by position.
+// Used for the AI's levels that read 2+ throws (time-capped), the hint (one throw deeper than without threads) and the review.
+const MW = window.MTWorkers ? (MTWorkers.init(), MTWorkers).use({ url: 'worker.js?v=3' }) : null;
+async function mtEval(st, n, depth, tag, prio, until) {
+  const P = MW && MW.pool(prio); if (!P) return null;
+  const sp = E.splitEval(st, n, depth);
+  const r = await P.map(sp.tasks.map(t => ({ type: 'roll', state: t.state, n: t.n, d: t.d, until })), { tag });
+  return r ? sp.combine(r.map(x => x.v)) : null;
+}
+async function think(st, n, level) {
+  const lv = E.LEVELS[Math.max(1, Math.min(20, level))];
+  if (MW && lv.depth >= 2 && E.legalMoves(st, n).length > 1) {
+    const ev = await mtEval(st, n, lv.depth, 'ai', 'ai');
+    if (ev) { const m = E.think(st, n, level, { ev }); return m ? { from: m.from, to: m.to } : null; }
+  }
   return new Promise(res => {
     const w = worker();
     if (!w) { setTimeout(() => { const m = E.think(st, n, level); res(m ? { from: m.from, to: m.to } : null); }, 30); return; }
@@ -150,7 +165,18 @@ function think(st, n, level) {
     w.postMessage({ id, type: 'think', state: E.clone(st), n, level });
   });
 }
-function reviewJob(list, onProg) {
+let rvGen = 0;
+async function reviewJob(list, onProg) {
+  const gen = ++rvGen, P = MW && (MW.cancel('review'), MW.pool());
+  if (P) {   // (the AI's move may take the threads meanwhile: the rest then goes to the one worker below)
+    const got = new Set(), r = await P.map(list.map(q => ({ type: 'review1', state: q.state, n: q.n })), { tag: 'review', onEach: (i, d) => { got.add(i); onProg(i, d.res); } });
+    if (r || gen !== rvGen) return;
+    const idx = list.map((q, i) => i).filter(i => !got.has(i));
+    return reviewJob1(idx.map(i => list[i]), (k, res) => onProg(idx[k], res));
+  }
+  return reviewJob1(list, onProg);
+}
+function reviewJob1(list, onProg) {
   return new Promise(res => {
     const w = worker();
     if (!w) { list.forEach((q, i) => onProg(i, { ev: q.n ? E.evaluate(q.state, q.n).map(x => ({ from: x.move.from, to: x.move.to, wp: x.wp })) : [], wp0: E.winProb(q.state) })); res(); return; }
@@ -739,11 +765,13 @@ function wpRender() { if (!window.WatchPause) return; const on = wpActive() && !
 function wpToggle() { if (!wpActive() || overNow()) return; wpPaused = !wpPaused; if (wpPaused) { busyToken++; thinking = 0; renderInfo(); } else { cur = game.plies.length; reviewing = false; update(); afterPosition(); } }
 // ---- hint
 function canHint() { return settings.mode !== 'online' && !special && !ken && !!game && !rgame && atLatest() && !overNow() && myTurnHuman() && !animating; }
-function hint() {
+async function hint() {
   if (!canHint()) return;
   const st = curState(), r = curRoll();
   if (!r) { toast(t('hint.roll')); return; }
-  const ev = r.n ? E.evaluate(st, r.n) : [];
+  const tok = busyToken;
+  const ev = (r.n && E.legalMoves(st, r.n).length > 1 && await mtEval(st, r.n, 3, 'hint')) || (r.n ? E.evaluate(st, r.n) : []);   // (threads: 3 throws ahead)
+  if (tok !== busyToken || curRoll() !== r || E.key(curState()) !== E.key(st)) return;
   if (!ev.length) { toast(t('hint.none')); return; }
   hintMove = ev[0].move; renderBoard();
   toast(t('hint.best', { m: plyText(st, { s: st.turn, n: r.n, m: ev[0].move }, false), p: Math.round(ev[0].wp * 100) }), 2600);
