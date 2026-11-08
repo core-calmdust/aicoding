@@ -1468,10 +1468,11 @@
   let hshift = 0, hshiftTo = 0;
   // insetT px at the top: a band kept free above the board (the portal's phone-landscape game bar, app.js landSync)
   let insetT = 0, insetTTo = 0;
+  let vsh = 0;   // px: the play view's vertical lens shift (centreBoard)
   function frame() {
     const free = Math.max(120, ch - inset - insetT);
     cam.aspect = cw / free;
-    if (inset > .5 || insetT > .5 || Math.abs(hshift) > .5) cam.setViewOffset(cw, free, -hshift, -insetT, cw, ch); else cam.clearViewOffset();
+    if (inset > .5 || insetT > .5 || Math.abs(hshift) > .5 || Math.abs(vsh) > .5) cam.setViewOffset(cw, free, -hshift, -insetT + vsh, cw, ch); else cam.clearViewOffset();
     cam.updateProjectionMatrix();
   }
   function setShift(px) { const v = px || 0; if (v === hshiftTo) return; hshiftTo = v; kick(900); }
@@ -1499,6 +1500,21 @@
     try { const bx = new (T().Box3)().setFromObject(cur), sz = bx.getSize(new (T().Vector3)()); if (!isFinite(sz.x) || sz.x <= 0) return 6.5;
       cur.userData._h = Math.max(.3, Math.min(6, sz.y));
       return cur.userData._r = Math.max(2.5, Math.min(9, Math.max(sz.x, sz.z) / 2 * .7 + Math.hypot(sz.x, sz.z) / 2 * .3)); } catch (e) { return 6.5; }   // (between half its side and half its diagonal: the slow turntable only swings it a little)
+  }
+  // play view: the framed rectangle (fit's w × d at its height y), as the tilted camera draws it, is centred between the top and the
+  // bottom of the free view with a vertical lens shift (vsh px) — framing the look point alone left boards sitting low (2026-11-09)
+  // fit.cy: the height of that rectangle when it is not y (a board framed round a point below its top: the legged goban)
+  const ctrV = [];
+  function centreBoard(F, k) {
+    if (!ctrV.length) for (let i = 0; i < 4; i++) ctrV.push(new (T().Vector3)());
+    cam.updateMatrixWorld();
+    const yy = fitTo && fitTo.cy != null ? fitTo.cy : F.y;
+    let lo = 9, hi = -9;
+    for (let i = 0; i < 4; i++) { const v = ctrV[i].set(i & 1 ? F.w / 2 : -F.w / 2, yy, i & 2 ? F.d / 2 : -F.d / 2).project(cam); if (v.y < lo) lo = v.y; if (v.y > hi) hi = v.y; }
+    const free = Math.max(120, ch - inset - insetT), m = (lo + hi) / 2, band = insetT + free / 2;   // (NDC spans the canvas, ch)
+    if (!(hi - lo > .05)) return;
+    const want = Math.max(-.3 * free, Math.min(.3 * free, vsh + ch / 2 * (1 - m) - band)) * Math.min(1, k * 1.2);
+    if (Math.abs(want - vsh) > .5) { vsh = want; frame(); }
   }
   function camPose(k) {
     // the free part of the view: the shift lens (Historia's page beside the board) leaves (width − 2·shift) for the board
@@ -1904,7 +1920,10 @@
     { const m0 = cur && cur.children[0], vy = (m0 && m0.userData.viewY) || .4;   // a tall board (legged goban) asks to be framed around its own middle
       const F = fitCur || fitTo, ly = F ? vy + (F.y - vy) * camK : vy, fcx = F && F.cx ? F.cx * camK : 0, fcz = F && F.cz ? F.cz * camK : 0; cam.position.y += ly - .4; const rl = fitTo && fitTo.roll ? camK : 0, rs = fitTo && fitTo.roll === -1 ? -1 : 1; cam.up.set(-rl * rs, 1 - rl, 0);
       const sh = fitTo && fitTo.up ? fitTo.up * camK : 0, ux = rl ? -rs : 0, uz = rl ? 0 : -1;   // fit.up: the board sits this far (world units) above the middle of the view (clear of a HUD at the bottom)
-      cam.position.x += fcx - ux * sh; cam.position.z += fcz - uz * sh; cam.lookAt(fcx - ux * sh, ly, fcz - uz * sh); camLook = ly; }   // fit.roll: the view is turned 90° (a landscape view on a portrait screen held sideways)   // the canvas itself is kept clear of the info card (app.js fitStage)
+      cam.position.x += fcx - ux * sh; cam.position.z += fcz - uz * sh; cam.lookAt(fcx - ux * sh, ly, fcz - uz * sh); camLook = ly;
+      // play view: centre the board itself (its bounding box as drawn) between the top and the bottom of the free view — with the
+      // camera tilted, framing the look point left boards sitting low (2026-11-09). Not with a focus point (cx/cz), fit.up or a roll.
+      if (F && k > .01 && !rl && !sh && !fcx && !fcz && !orthoWant) centreBoard(F, k); else if (vsh) { vsh = 0; frame(); } }   // fit.roll: the view is turned 90° (a landscape view on a portrait screen held sideways)   // the canvas itself is kept clear of the info card (app.js fitStage)
     // the near plane follows the camera's distance (a far camera — the gallery's showcase — with near .1 had too little depth
     // precision left at the board: inlays and piece faces a few thousandths above a surface flickered as it turned)
     { const nn = Math.min(2, Math.max(.1, d * .05)); if (Math.abs(cam.near - nn) > .01) { cam.near = nn; cam.updateProjectionMatrix(); dirty = true; } }

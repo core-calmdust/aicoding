@@ -149,7 +149,7 @@ function listFor(st, th) {
   const v = E.rank(st, th); S.lists.set(key, v); if (S.lists.size > 200) S.lists.delete(S.lists.keys().next().value);
   return v;
 }
-const same = (a, b) => !!a && !!b && (a.pass ? !!b.pass : !b.pass && a.k === b.k && a.to === b.to);
+const same = (a, b) => !!a && !!b && (a.pass ? !!b.pass : !b.pass && a.k === b.k && a.to === b.to && a.k2 === b.k2 && !!a.back === !!b.back && String(a.use || '') === String(b.use || ''));
 function gapOf(d, i) { return i === 0 ? ['gap.best', 'g0'] : d <= .01 ? ['gap.eq', 'g1'] : d <= .04 ? ['gap.lt', 'g2'] : ['gap.bad', 'g3']; }
 const CCLS = { home: 'c-mat', cap: 'c-atk', enter: 'c-dev', column: 'c-mat', safe: 'c-def', escape: 'c-def', pair: 'c-def', adv: 'c-dev', pass: '' };
 function qOf(loss, only) { return only || loss < .005 ? 0 : loss < .03 ? 1 : loss < .08 ? 2 : 3; }
