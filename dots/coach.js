@@ -317,7 +317,7 @@ function ask(i) {
   });
   const id = ++jobId, edges = game.moves.slice(0, i);
   S0.job = { id, key, i };
-  S0.w.postMessage({ type: 'analyze', id, R: game.n, C: game.n, edges, ms: game.n === 3 ? 500 : game.n === 4 ? 900 : 1500 });
+  S0.w.postMessage({ type: 'analyze', id, R: game.n, C: game.n, edges, ms: game.n === 3 ? 500 : game.n === 4 ? 900 : 1500, mt: window.MTWorkers && MTWorkers.shared ? MTWorkers.helpers() : 0 });   // (mt: the shared-table analysis on an isolated page)
 }
 // a second, deeper pass when the analysis is not exact (5x5, early 4x4): its heuristic first choice lost every game to
 // the strong AI levels, so the coach then runs the Lv9 AI's own search (exact solver from much earlier) and puts that move first

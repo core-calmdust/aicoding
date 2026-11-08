@@ -12,6 +12,8 @@
 //                    usual way)>. Each task is a message for the worker; the worker answers { id, … } (or { id, error }).
 //                    Tasks go to whichever worker is free (dynamic: a slow task does not hold the others up).
 //   MW.cancel(tag)   stops the running job (its busy workers are replaced)   MTWorkers.on(), .helpers(), .onChange(fn)
+//   MTWorkers.init({ sw }) — shared mode (see below); MTWorkers.shared: the page is isolated and threads are on (the game's
+//                    workers may then share memory, e.g. a transposition table in a SharedArrayBuffer)
 (function () {
   'use strict';
   if (window.MTWorkers) return;
@@ -31,7 +33,13 @@
   const DIP = !!((navigator.userAgentData && navigator.userAgentData.brands || []).some(b => /Chromium/.test(b.brand)) || /Chrome\/\d/.test(navigator.userAgent));
   const K_OWN = 'aicoding-mt-w';
   const K_SET = DIP ? K_PREF : K_OWN;
-  const pref = () => { if (!DIP) { const w = LS.get(K_OWN); if (w !== null) return w; } const v = LS.get(K_PREF); return v !== null ? v : LS.get(K_PREF0); };
+  // shared mode (init({ sw }), 2026-11-09 — dots: the exact solver's table in shared memory): the game's sw.js isolates the page
+  // as shared/mtengine.js does (its init({ light: true, opt: false })) and the choice is then mtengine.js's own ('aicoding-mt' in
+  // every browser: turning it on in Safari / Firefox = the COOP mode, as in chess); without isolation the workers run as before
+  let SHG = false;
+  const ME = () => SHG && window.MTEngine ? window.MTEngine : null;
+  const pref = () => { const M = ME(); if (M) return M.pref(); if (!DIP) { const w = LS.get(K_OWN); if (w !== null) return w; } const v = LS.get(K_PREF); return v !== null ? v : LS.get(K_PREF0); };
+  const shared = () => !!ME() && typeof SharedArrayBuffer === 'function' && !!self.crossOriginIsolated;
   const want = () => { const p = pref(); return p === '1' || (p !== '0' && !TOUCH); };
   const on = () => CAN && want() && helpers() > 0;
   const T = {
@@ -58,10 +66,18 @@
   const ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M10 10h4v4h-4zM9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></svg>';
   function addOpt() {
     if (opt || !window.HeaderBar || !HeaderBar.addOption) return;
-    opt = HeaderBar.addOption({ id: 'mt', icon: ICON, label: T.label, type: 'toggle', get: on, set: v => { LS.set(K_SET, v ? '1' : '0'); emit(); },
-      hidden: () => !CAN || helpers() < 1, title: () => T.title[lang()] || T.title.en });
+    const M = ME();
+    // shared mode: off → on outside an isolated page asks mtengine.js (a reload: Document-Isolation-Policy, or the COOP mode)
+    const set = M ? v => { if (v && !M.isolated) M.set(true); else if (!v && M.flagged) M.set(false); else { LS.set(K_PREF, v ? '1' : '0'); emit(); } }
+      : v => { LS.set(K_SET, v ? '1' : '0'); emit(); };
+    const title = M ? () => M.coi ? M.tx('coiOff') : M.isolated || on() ? T.title[lang()] || T.title.en : M.tx('reload') : () => T.title[lang()] || T.title.en;
+    opt = HeaderBar.addOption({ id: 'mt', icon: ICON, label: T.label, type: 'toggle', get: on, set, hidden: () => !CAN || helpers() < 1, title });
   }
-  function init() { if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', addOpt); else addOpt(); setTimeout(addOpt, 0); }
+  // init(): the option; init({ sw: 'sw.js?v=N' }): shared mode (load shared/mtengine.js first)
+  function init(o) {
+    if (o && o.sw && window.MTEngine && !SHG) { SHG = true; MTEngine.init({ sw: o.sw, light: true, opt: false }); MTEngine.onChange(emit); }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', addOpt); else addOpt(); setTimeout(addOpt, 0);
+  }
 
   // ------------------------------------------------------------------ the pool
   function pool(cfg) {
@@ -115,5 +131,5 @@
       get threads() { return on() ? 1 + helpers() : 1; },
     };
   }
-  window.MTWorkers = { init, use, pool, on, helpers, onChange: f => subs.push(f), touch: TOUCH, T };
+  window.MTWorkers = { init, use, pool, on, helpers, onChange: f => subs.push(f), touch: TOUCH, T, get shared() { return shared() && on(); } };
 })();

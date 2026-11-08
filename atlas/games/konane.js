@@ -14,7 +14,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../konane/', VER = '?v=2-pro1-mt1';   // same file / version as konane/index.html → shared cache
+  const BASE = '../konane/', VER = '?v=3-sh1';   // same file / version as konane/index.html → shared cache
   let engP = null;
   function loadEngine() {
     if (window.KonaneEngine) return Promise.resolve(window.KonaneEngine);
@@ -321,7 +321,7 @@
     id: ['Pemula: hanya melihat langkah di depannya', 'Dasar–menengah: menghitung beberapa langkah ke depan', 'Mahir: tahu kapan berhenti dan kapan lanjut', 'Ahli: membaca akhir permainan secara dalam'],
     tr: ['Başlangıç: yalnızca önündeki hamleyi görür', 'Acemi–orta: birkaç hamle ileriyi sayar', 'İleri: ne zaman durup ne zaman devam edeceğini bilir', 'Uzman: oyunsonlarını derin okur'],
   };
-  const RATING = [0, 450, 575, 700, 825, 950, 1075, 1200, 1325, 1450, 1575, 1700, 1825, 1950, 2030, 2090, 2150, 2200, 2250, 2300, 2350];   // konane RT_LV (rated games)
+  const RATING = [0, 450, 575, 700, 825, 950, 1075, 1200, 1325, 1450, 1575, 1700, 1825, 1950, 2030, 2090, 2150, 2200, 2250, 2300, 2350, 2470, 2590, 2710];   // konane RT_LV (rated games)
   const W7 = (a, b, c, d, e, f) => [a, a, a, a, b, b, b, b, b, c, c, c, c, c, c, d, d, d, e, f];
   const WHO = {
     ja: W7('はじめての人に', 'ルールを覚えた人に', '慣れてきた人に', '強い人に', '上級者でも手ごわい', '最強レベル'),
@@ -339,10 +339,11 @@
     id: W7('untuk pemula', 'setelah tahu aturannya', 'mulai terbiasa', 'untuk pemain kuat', 'sulit bahkan bagi ahli', 'yang terkuat'),
     tr: W7('ilk kez oynayanlar için', 'kuralları bilince', 'alışmaya başlayınca', 'güçlü oyuncular için', 'uzmanlar için bile zor', 'en güçlüsü'),
   };
+  const LVD_TOP = { ja: '最強：全CPUコアで長時間、深く読む', en: 'Strongest: long, deep search on every CPU core', zh: '最强：用所有CPU核心长时间深入计算', 'zh-TW': '最強：用所有CPU核心長時間深入計算', ko: '최강: 모든 CPU 코어로 오래, 깊이 읽음', es: 'Máximo: búsqueda larga y profunda con todos los núcleos', fr: 'Ultime : calcul long et profond sur tous les cœurs', pt: 'Máximo: busca longa e profunda com todos os núcleos', de: 'Höchststufe: lange, tiefe Suche auf allen CPU-Kernen', ru: 'Сильнейший: долгий глубокий расчёт на всех ядрах', tr: 'En güçlü: tüm CPU çekirdekleriyle uzun, derin arama', id: 'Terkuat: pencarian panjang dan dalam dengan semua inti CPU', hi: 'सबसे मज़बूत: सभी CPU कोर पर लंबी, गहरी खोज', ar: 'الأقوى: بحث طويل وعميق بكل أنوية المعالج' };   // (Lv.21〜23, 2026-11-09)
   function levelInfo(n, lang) {
     const D = LVD[lang] || LVD.en, W = WHO[lang] || WHO.en;
-    return { name: '', desc: D[n <= 4 ? 0 : n <= 9 ? 1 : n <= 15 ? 2 : 3], rating: RATING[n], who: W[n - 1] };
+    return { name: '', desc: n > 20 ? LVD_TOP[lang] || LVD_TOP.en : D[n <= 4 ? 0 : n <= 9 ? 1 : n <= 15 ? 2 : 3], rating: RATING[n], who: W[Math.min(n, 20) - 1] };
   }
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.konane = { levels: 20, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', levelInfo, start };
+  window.Atlas3D.konane = { levels: 23, sides: true, modes: ['ai', 'rated', 'pvp'], table: true, tableModes: ['ai', 'pvp'], clock: 'fis', levelInfo, start };
 })();
