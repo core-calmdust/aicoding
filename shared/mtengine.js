@@ -6,7 +6,7 @@
 //   worker has just been installed (only where the header can work; `coi-reload:<path>` in localStorage, 15 s window).
 // • Other browsers: the option "マルチスレッド" (gear panel, HeaderBar.addOption) — on = reload in COOP / COEP mode (the
 //   worker adds them; flag in the Cache API + localStorage). In that mode Google sign-in and online play are off
-//   (Online.available = false, html.mt-coi hides the buttons). Off = reload back to normal.
+//   (Online.available = false; a click on online play / sign-in asks to switch back to one thread and reopens it). Off = reload back to normal.
 // • Phones / tablets: threads stay off unless the option is turned on (heat, battery), even when the page is isolated.
 // • MTEngine.use(cfg) keeps a pool of threads while threads are on: one "lead" worker (the game's engine worker, on the
 //   multi-thread build engine_mt.wasm and a shared memory) and helpers that search the same root position meanwhile (Lazy SMP:
@@ -93,22 +93,48 @@
       id: 'Jika dimatikan, halaman dimuat ulang dan masuk Google serta bermain online kembali tersedia.',
       hi: 'बंद करने पर पेज फिर से लोड होगा और Google साइन-इन व ऑनलाइन खेल वापस मिलेंगे।',
       ar: 'عند الإيقاف يُعاد تحميل الصفحة ويعود تسجيل الدخول عبر Google واللعب عبر الإنترنت.' },
+    olSwitch: { ja: 'オンライン対戦とGoogleログインは1スレッドで使います。マルチスレッドをオフにして再読み込みしますか？（続きはそのまま開きます）',
+      en: 'Online play and Google sign-in run single-threaded. Turn multithreading off and reload? (What you clicked opens right after.)',
+      zh: '在线对战和Google登录需在单线程下使用。要关闭多线程并重新载入吗？（之后会直接打开）',
+      'zh-TW': '線上對戰與Google登入需在單執行緒下使用。要關閉多執行緒並重新載入嗎？（之後會直接開啟）',
+      ko: '온라인 대전과 Google 로그인은 단일 스레드에서 사용합니다. 멀티스레드를 끄고 다시 불러올까요? (누른 항목이 바로 열립니다)',
+      es: 'El juego en línea y el inicio de sesión con Google funcionan con un solo hilo. ¿Desactivar el multihilo y recargar? (Lo que pulsaste se abrirá enseguida.)',
+      fr: 'Le jeu en ligne et la connexion Google fonctionnent sur un seul fil. Désactiver le multithread et recharger ? (Ce que vous avez choisi s’ouvrira ensuite.)',
+      pt: 'O jogo online e o login com Google funcionam com uma só thread. Desativar o multithread e recarregar? (O que você tocou abre em seguida.)',
+      de: 'Online-Spiel und Google-Anmeldung laufen mit einem Thread. Multithreading ausschalten und neu laden? (Das Gewählte öffnet sich danach.)',
+      ru: 'Онлайн-игра и вход через Google работают в одном потоке. Выключить многопоточность и перезагрузить? (Выбранное откроется сразу после.)',
+      tr: 'Çevrim içi oyun ve Google ile giriş tek iş parçacığıyla çalışır. Çoklu iş parçacığı kapatılıp sayfa yeniden yüklensin mi? (Seçtiğiniz hemen açılır.)',
+      id: 'Bermain online dan masuk Google berjalan dengan satu thread. Matikan multithread dan muat ulang? (Yang Anda pilih langsung terbuka.)',
+      hi: 'ऑनलाइन खेल और Google साइन-इन एक थ्रेड पर चलते हैं। मल्टीथ्रेड बंद करके पेज फिर से लोड करें? (आपका चुना हुआ तुरंत खुलेगा।)',
+      ar: 'اللعب عبر الإنترنت وتسجيل الدخول عبر Google يعملان بخيط واحد. هل نوقف تعدد الخيوط ونعيد التحميل؟ (سيُفتح ما اخترته مباشرةً.)' },
     note: { ja: 'ログイン・オンライン対戦は停止中', en: 'Sign-in & online play paused', zh: '登录与在线对战已暂停', 'zh-TW': '登入與線上對戰已暫停', ko: '로그인·온라인 대전 일시 중지', es: 'Sesión y juego en línea en pausa', fr: 'Connexion et jeu en ligne en pause', pt: 'Login e jogo online pausados', de: 'Anmeldung & Online-Spiel pausiert', ru: 'Вход и онлайн-игра отключены', tr: 'Giriş ve çevrim içi oyun duraklatıldı', id: 'Masuk & main online dijeda', hi: 'साइन-इन और ऑनलाइन खेल रुके हैं', ar: 'تسجيل الدخول واللعب عبر الإنترنت متوقفان' },
   };
   const lang = () => { const s = document.getElementById('langSel'); let l = (s && s.value) || document.documentElement.lang || 'ja'; if (/^zh-(tw|hk|mo|hant)/i.test(l)) l = 'zh-TW'; else if (!T.label[l]) l = String(l).slice(0, 2); return T.label[l] ? l : 'en'; };
   const tx = k => T[k][lang()] || T[k].en;
 
-  // ------------------------------------------------------------------ COOP mode: no sign-in, no online play
+  // ------------------------------------------------------------------ COOP mode: online play / sign-in switch back to one thread
+  // (2026-11-09) The COOP / COEP headers keep the Google sign-in popup and App Check's reCAPTCHA frame out, so online play can't
+  // run in this mode. The buttons stay: a click on one asks to turn multithreading off, reloads the page normally and then
+  // clicks the same button again (sessionStorage K_GO) — online play and sign-in just work, one thread (a human opponent).
+  const OL_SEL = '#dock .dock-bar,.dock-bar,.ol-only,#btnOnline,[data-mode=online],[data-v=online],.ng-online,[data-t=online],.gbtn,.atlas-acc,#olBtn,.dk-btn';
+  const K_GO = 'aicoding-mt-go:' + location.pathname;
+  const selOf = el => { if (el.id) return '#' + CSS.escape(el.id); for (const a of ['data-mode', 'data-v', 'data-t']) if (el.getAttribute(a) === 'online') return `[${a}=online]`; const c = [...el.classList].find(x => /^(ol-only|ng-online|gbtn|atlas-acc|dock-bar|dk-btn)$/.test(x)); return c ? '.' + c : ''; };
   if (COI) {
     document.documentElement.classList.add('mt-coi');
-    const st = document.createElement('style');
-    st.textContent = 'html.mt-coi .gbtn,html.mt-coi .ol-only,html.mt-coi #btnOnline,html.mt-coi .atlas-acc,html.mt-coi [data-mode=online],html.mt-coi [data-v=online],html.mt-coi .ng-online{display:none!important}';
-    document.head.appendChild(st);
     const offline = () => { if (window.Online && Online.available) { try { Online.available = false; } catch (e) {} } };
     offline();
-    const guardAcc = () => { const A = window.AtlasAccount; if (A && !A.__mt) { A.__mt = 1; A.signIn = async () => { alert(tx('reload')); }; } };
+    const toOne = sel => { if (!confirm(tx('olSwitch'))) return; try { if (sel) sessionStorage.setItem(K_GO, sel); } catch (e) {} LS.set(K_PREF, '0'); setFlag(false).then(reload); };
+    addEventListener('click', e => {
+      const el = e.target && e.target.closest && e.target.closest(OL_SEL); if (!el) return;
+      e.preventDefault(); e.stopImmediatePropagation(); toOne(selOf(el));
+    }, true);
+    const guardAcc = () => { const A = window.AtlasAccount; if (A && !A.__mt) { A.__mt = 1; A.signIn = async () => { toOne(''); }; } };
     document.addEventListener('DOMContentLoaded', () => { offline(); guardAcc(); });
     addEventListener('load', guardAcc);
+  } else {
+    // back in the normal mode after that switch: open what was clicked
+    let go = null; try { go = sessionStorage.getItem(K_GO); sessionStorage.removeItem(K_GO); } catch (e) {}
+    if (go) addEventListener('load', () => setTimeout(() => { try { const el = [...document.querySelectorAll(go)].find(x => x.offsetParent || x.getClientRects().length); if (el) el.click(); } catch (e) {} }, 1200));
   }
 
   // ------------------------------------------------------------------ the flag (COOP mode) and the reloads
