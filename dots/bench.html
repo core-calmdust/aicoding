@@ -39,13 +39,14 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);ma
 <body>
 <main>
 <h1>ドット＆ボックス マルチスレッド ベンチマーク</h1>
-<p class="sub">対局ページと同じ方式（エンジンの Worker が補助の Worker を起動して分担。共有メモリなし）で、スレッド数ごとの速さを測ります。①Lv.10 の AI（5×5、時間で考える。補助が勝敗の読み切りを分担）：1手の時間・読み切れた割合・1スレッドと同じ手。②終局後の振り返り（局面ごとに Worker で並列）：全部の局面の時間。Chrome（PC）で開き、終わったら「結果をコピー」を押して貼り付けてください。</p>
+<p class="sub">対局ページと同じ方式（エンジンの Worker が補助の Worker を起動して分担。共有メモリなし）で、スレッド数ごとの速さを測ります。①Lv.10 の AI（5×5、時間で考える。補助が勝敗の読み切りを分担）：1手の時間・読み切れた割合・1スレッドと同じ手。②終局後の振り返り（局面ごとに Worker で並列）：全部の局面の時間。③解析（ヒント・形勢・コーチ・検討ボックス）：5×5 の終盤の全部の手の正確な値を出すまでの時間。<b>共有</b>＝ページが分離されているとき（Chrome / Edge は自動）の、補助と置換表を共有して手を分担する方式。<b>非共有</b>＝分離できないときの方式（解析は1スレッド）。Chrome（PC）で開き、終わったら「結果をコピー」を押して貼り付けてください。</p>
 
 <div class="card"><div class="kv" id="env"></div></div>
 
 <div class="card">
   <div class="row">
     <label>振り返り <select id="selA"><option value="1" selected>あり</option><option value="0">なし</option></select></label>
+    <label>解析 <select id="selX"><option value="1" selected>あり</option><option value="0">なし</option></select></label>
   </div>
   <div class="row" style="margin-top:12px">
     <button id="btnRun">開始</button>
@@ -55,29 +56,40 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);ma
   <div id="st">「開始」を押してください。</div>
 </div>
 
-<div class="card"><h2>結果</h2><div class="tw"><table id="tbl"><thead><tr><th>スレッド</th><th>AI：1手の平均</th><th>AI：読み切り</th><th>AI：1スレッドと同じ手</th><th>振り返り（合計）</th><th>1スレッド比</th></tr></thead><tbody></tbody></table></div><pre id="log"></pre></div>
+<div class="card"><h2>結果</h2><div class="tw"><table id="tbl"><thead><tr><th>スレッド</th><th>AI：1手の平均</th><th>AI：読み切り</th><th>AI：1スレッドと同じ手</th><th>振り返り（合計）</th><th>1スレッド比</th><th>解析（共有）</th><th>非共有比</th><th>解析：同じ値</th></tr></thead><tbody></tbody></table></div><pre id="log"></pre></div>
 </main>
+<script src="engine.js?v=20261109sh1"></script><script src="../shared/mtengine.js?v=7"></script>
 <script>
 'use strict';
 // positions: [n, safe moves left, edges] (random safe-phase 5x5 positions, no box taken yet). AI: Lv.10 (5 s, its helpers race
 // the outcome searches of the wasm solver); the review: the last 8 moves of each of the REV records, one reviewMove each.
 const AI = [[5,24,[12,47,15,44,25,10,41,18,50,39,24,9,1,31,0,59,53,21]],[5,22,[30,58,41,0,40,24,28,7,32,15,18,39,42,48,27,3,37,34,25,21]],[5,20,[17,23,32,30,22,54,4,27,33,59,37,13,46,35,11,5,28,55,16]],[5,18,[31,28,59,37,21,46,27,22,14,18,5,25,41,12,1,20,23,7,11,35,8]],[5,15,[30,26,18,45,59,33,11,32,38,25,42,20,51,53,15,19,14,58,31,35,39,50]],[5,14,[55,10,46,6,27,48,33,2,53,22,17,45,0,8,28,43,35,58,40,31,21,4,16]]];
 const REV = [[5,[30,26,18,45,59,33,11,32,38,25,42,20,51,53,15,19,14,58,31,35,39,50]],[5,[55,10,46,6,27,48,33,2,53,22,17,45,0,8,28,43,35,58,40,31,21,4,16]],[5,[57,29,19,27,31,48,50,11,53,21,7,40,13,14,59,43,20,4,45,37,51,26,42,28,12]],[5,[22,23,46,38,30,0,7,58,29,32,13,52,34,47,43,42,1,17,44,27,53,26,21,40]],[4,[26,1,7,4,27,10,37,16,18,32,3,34,2]],[4,[27,33,36,19,12,18,5,2,11,32,24,25,21,6]]];
-const ENG = 'engine.js?v=20261108mt1';
+const ENG = 'engine.js?v=20261109sh1';
+MTEngine.init({ sw: 'sw.js?v=1', light: true, opt: false });   // (the page isolated like the game page: the shared table needs it)
+const SHARED = !!self.crossOriginIsolated && typeof SharedArrayBuffer === 'function';
+// ③ the analysis: each 5x5 record of REV (played on by Lv.6, seeded) at its first position with at most 15 safe moves left — where the analysis tries the exact solver
+const ANA = (() => { const out = [], G = DotsEngine.geom(5, 5); let g = 0;
+  for (const [n, ed] of REV) { if (n !== 5) continue; let sd = 1234 + 7919 * g++; const rnd = () => { sd = (sd * 16807) % 2147483647; return sd / 2147483647; };
+    const p = DotsEngine.Pos.from(G, []), edges = [];
+    while (p.undrawn > 0) { let safe = 0; for (let e = 0; e < G.E; e++) if (!p.drawn[e] && p.gives(e) === 0) safe++;
+      if (safe <= 15 && !p.hasCapture()) { out.push(edges); break; }
+      const m = edges.length < ed.length ? ed[edges.length] : DotsEngine.chooseMove(p, 6, rnd).move; p.play(m); edges.push(m); } }
+  return out; })();
 const $ = s => document.querySelector(s);
 const HC = navigator.hardwareConcurrency || 1;
 const COUNTS = (() => { const a = []; for (let t = 1; t < HC; t *= 2) a.push(t); a.push(HC); return [...new Set(a)]; })();
 const ua = (() => { const d = navigator.userAgentData; const b = d && (d.brands || []).filter(x => !/Not/.test(x.brand)).map(x => x.brand + ' ' + x.version).join(', '); return (b ? b + ' / ' + (d.platform || '') : '') || navigator.userAgent; })();
 let lines = [];
-$('#env').innerHTML = [['hardwareConcurrency', HC], ['測るスレッド数', COUNTS.join(', ')], ['deviceMemory', navigator.deviceMemory || '—'], ['ブラウザ', ua.replace(/</g, '&lt;')]].map(([k, v]) => `<b>${k}</b><span>${v}</span>`).join('');
+$('#env').innerHTML = [['hardwareConcurrency', HC], ['測るスレッド数', COUNTS.join(', ')], ['置換表の共有', SHARED ? '<span class="y">できる（crossOriginIsolated）</span>' : '<span class="n">できない（解析は非共有＝1スレッドだけ）</span>'], ['deviceMemory', navigator.deviceMemory || '—'], ['ブラウザ', ua.replace(/</g, '&lt;')]].map(([k, v]) => `<b>${k}</b><span>${v}</span>`).join('');
 let seq = 0;
 function mk() { const w = new Worker(ENG), cb = new Map(); w.onmessage = e => { const f = cb.get(e.data.id); if (f) { cb.delete(e.data.id); f(e.data); } }; w.ask = msg => new Promise((res, rej) => { const id = ++seq, t0 = performance.now(); cb.set(id, m => m.type === 'error' ? rej(new Error(m.msg)) : res(Object.assign({ ms: performance.now() - t0 }, m))); w.postMessage(Object.assign({ id }, msg)); }); return w; }
 async function run() {
   $('#btnRun').disabled = true; $('#btnCopy').disabled = true;
-  const withRev = $('#selA').value === '1';
-  lines = [`dots bench ${new Date().toISOString()} | ${ua} | hc ${HC} | dm ${navigator.deviceMemory || '-'}`];
-  const R = {}, m1 = [];
-  const total = COUNTS.length * (AI.length * 5 + (withRev ? 20 : 0)); let done = 0;
+  const withRev = $('#selA').value === '1', withAna = $('#selX').value === '1';
+  lines = [`dots bench ${new Date().toISOString()} | ${ua} | hc ${HC} | dm ${navigator.deviceMemory || '-'} | shared ${SHARED ? 'yes' : 'no'}`];
+  const R = {}, m1 = [], a1 = [];
+  const total = COUNTS.length * (AI.length * 5 + (withRev ? 20 : 0) + (withAna ? 10 : 0)); let done = 0;
   const tick = (add, msg) => { done += add; $('#bar i').style.width = Math.min(100, done / total * 100) + '%'; if (msg) $('#st').textContent = msg; };
   try {
     for (const t of COUNTS) {
@@ -103,6 +115,19 @@ async function run() {
         a.rms = performance.now() - t0; a.rcnt = items.length; ws.forEach(x => x.terminate()); tick(20);
         row.push(`review ${items.length} ${Math.round(a.rms)}ms`);
       }
+      if (withAna && (t === 1 || SHARED)) {   // the analysis: exact values of every move (one worker; its t − 1 helpers share its table)
+        a.ams = 0; a.asame = 0; a.acnt = 0; a.aex = 0;
+        for (let i = 0; i < ANA.length; i++) {
+          tick(0, `${t}スレッド：解析 ${i + 1}/${ANA.length}`);
+          const x = mk(); await x.ask({ type: 'analyze', R: 5, C: 5, edges: ANA[i].slice(0, 2), ms: 300, mt: t - 1 });   // (start the helpers)
+          const r = await x.ask({ type: 'analyze', R: 5, C: 5, edges: ANA[i], ms: 120000, mt: t - 1 }); x.terminate();
+          const key = r.exact ? r.list.map(e => e.m + ':' + e.v).sort().join(',') : 'x';
+          if (t === 1) a1[i] = key;
+          a.ams += r.ms; a.acnt++; if (r.exact) a.aex++; if (key === a1[i]) a.asame++;
+          row.push(`ana${i + 1} ${Math.round(r.ms)}ms${r.exact ? ' exact' : ''}`);
+        }
+        tick(10);
+      } else tick(10);
       lines.push(row.join(' | ')); render(R);
     }
     tick(total, '完了。「結果をコピー」を押して、Claude に貼り付けてください。');
@@ -116,9 +141,9 @@ function render(R) {
   const b = R[1];
   for (const t of COUNTS) {
     const a = R[t]; if (!a) continue;
-    const sp = a.rms && b && b.rms ? b.rms / a.rms : 0;
-    tb.insertAdjacentHTML('beforeend', `<tr><td>${t}</td><td>${a.icnt ? (a.ims / a.icnt / 1000).toFixed(2) + '秒' : '—'}</td><td>${a.iex}/${a.icnt}</td><td>${a.isame}/${a.icnt}</td><td>${a.rms ? (a.rms / 1000).toFixed(1) + '秒' : '—'}</td><td>${sp ? sp.toFixed(2) + '×' : '—'}</td></tr>`);
-    out.push(`threads ${t}: AI Lv.10 ${a.icnt ? (a.ims / a.icnt / 1000).toFixed(2) : '-'} s/move, exact ${a.iex}/${a.icnt}, same move ${a.isame}/${a.icnt}; review ${a.rms ? (a.rms / 1000).toFixed(1) : '-'} s x${sp.toFixed(2)} vs 1`);
+    const sp = a.rms && b && b.rms ? b.rms / a.rms : 0, xa = a.acnt && b && b.acnt ? b.ams / a.ams : 0;
+    tb.insertAdjacentHTML('beforeend', `<tr><td>${t}</td><td>${a.icnt ? (a.ims / a.icnt / 1000).toFixed(2) + '秒' : '—'}</td><td>${a.iex}/${a.icnt}</td><td>${a.isame}/${a.icnt}</td><td>${a.rms ? (a.rms / 1000).toFixed(1) + '秒' : '—'}</td><td>${sp ? sp.toFixed(2) + '×' : '—'}</td><td>${a.acnt ? (a.ams / a.acnt / 1000).toFixed(2) + '秒' + (t === 1 ? '（非共有）' : '') : '—'}</td><td>${xa ? xa.toFixed(2) + '×' : '—'}</td><td>${a.acnt ? a.asame + '/' + a.acnt : '—'}</td></tr>`);
+    out.push(`threads ${t}: AI Lv.10 ${a.icnt ? (a.ims / a.icnt / 1000).toFixed(2) : '-'} s/move, exact ${a.iex}/${a.icnt}, same move ${a.isame}/${a.icnt}; review ${a.rms ? (a.rms / 1000).toFixed(1) : '-'} s x${sp.toFixed(2)} vs 1; analysis${t === 1 ? ' (not shared)' : ' shared'} ${a.acnt ? (a.ams / a.acnt / 1000).toFixed(2) : '-'} s x${xa.toFixed(2)} vs 1, exact ${a.aex || 0}/${a.acnt || 0}, same ${a.asame || 0}/${a.acnt || 0}`);
   }
   return out;
 }

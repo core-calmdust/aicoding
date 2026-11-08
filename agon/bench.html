@@ -40,7 +40,7 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);ma
 <body>
 <main>
 <h1>アゴン マルチスレッド ベンチマーク</h1>
-<p class="sub">対局ページと同じ方式（shared/mtsplit.js：ふつうの Worker がルートの手と本筋（最初の手の先）を分担する Young Brothers Wait）で、スレッド数ごとの速さを測ります。<b>共有</b>＝ページが分離されているとき（Chrome / Edge は自動、Safari・Firefox は対局ページでマルチスレッドをオン）の置換表を共有する方式、<b>非共有</b>＝各スレッドが自分の置換表を持つ方式（分離できないときの方式）。両方を測ります。PC の Chrome / Safari で開き、終わったら「結果をコピー」を押して貼り付けてください。</p>
+<p class="sub">対局ページと同じ方式（shared/mtsplit.js：ふつうの Worker がルートの手と本筋（最初の手の先）を分担する Young Brothers Wait）で、スレッド数ごとの速さを測ります。<b>共有</b>＝ページが分離されているとき（Chrome / Edge は自動、Safari・Firefox は対局ページでマルチスレッドをオン）の置換表を共有する方式（最善手は Lazy SMP：1つの Worker が1スレッドと同じ探索、残りは同じ局面を読み続けて置換表を埋める）、<b>非共有</b>＝各スレッドが自分の置換表を持つ方式（分離できないときの方式）。両方を測ります。PC の Chrome / Safari で開き、終わったら「結果をコピー」を押して貼り付けてください。</p>
 
 <div class="card"><div class="kv" id="env"></div></div>
 

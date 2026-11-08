@@ -426,6 +426,137 @@ class Solver {
   }
 }
 
+// ---------------------------------------------------------------- the exact solver on a shared table (2026-11-09)
+// The page's option 「マルチスレッド」 on an isolated page (shared/mtworkers.js shared mode): the analysis (hints, the coach's
+// values, the review box) solves every move exactly on several workers at once, ONE transposition table in a SharedArrayBuffer
+// (moves of the same position share most of their trees, so separate tables gained only 1.03–1.42×). Lockless entries of 4
+// Int32 [a1 ^ dt, a2 ^ dt, dt, 0], dt = 1 << 24 | bm << 16 | hi << 8 | lo (8 bits each): an entry torn by two workers writing at
+// once fails the check. Exact values (the bounds only ever narrow the window), so the list is the one-thread S.all's.
+// A job: ctl (Int32Array on a SharedArrayBuffer) [0] the next move to take, [1] 1 = stop (out of time somewhere), [8 + i]
+// the value of move i + 1000 (0 = not done).
+const SH_ENTRIES = 1 << 22;   // 64 MB
+class SharedSolver extends Solver {
+  constructor(G, buf) { super(G, 8); this.sh = new Int32Array(buf); this.shMask = (this.sh.length >> 2) - 1; this.prune = true; this.ctl = null; }
+  checkAbort() {
+    if (this.nodes > this.maxNodes || ((this.nodes & 2047) === 0 && (Date.now() > this.deadline || (this.ctl && Atomics.load(this.ctl, 1))))) this.aborted = true;
+    return this.aborted;
+  }
+  search(p, alpha, beta, ply) {
+    this.nodes++;
+    if (this.aborted || this.checkAbort()) return 0;
+    const G = this.G, rem = G.B - p.filled;
+    if (rem === 0) return 0;
+    if (alpha >= rem) return rem;
+    if (beta <= -rem) return -rem;
+    const cap = p.hasCapture() ? captureMoves(p) : null;
+    if (cap && cap.forced !== undefined) {
+      const e = cap.forced, k = p.play(e);
+      const v = k + this.search(p, alpha - k, beta - k, ply + 1);
+      p.undo(e); return v;
+    }
+    if (!cap) { const lv = simpleLoony(p); if (lv !== null) return lv; }
+    const s = this.canon(p), a1 = p.h1[s] | 0, a2 = p.h2[s] | 0, T = this.sh, j = (a2 & this.shMask) << 2;
+    let ttMove = -1, lo0 = -INF, hi0 = INF;
+    { const dt = T[j + 2];
+      if (dt !== 0 && (T[j] ^ dt) === a1 && (T[j + 1] ^ dt) === a2) {
+        const lo = (dt << 24) >> 24, hi = (dt << 16) >> 24, bm = (dt << 8) >> 24;
+        if (lo === hi) return lo;
+        if (lo >= beta) return lo;
+        if (hi <= alpha) return hi;
+        if (lo > alpha) alpha = lo;
+        if (hi < beta) beta = hi;
+        lo0 = lo; hi0 = hi;
+        if (bm >= 0) ttMove = G.inv[s][bm];
+      } }
+    const alpha0 = alpha, beta0 = beta;
+    const mv = this.mbuf[ply]; let nm = 0;
+    if (cap) {
+      for (const e of cap.moves) mv[nm++] = e;
+      for (const e of cap.declines) mv[nm++] = e;
+    } else {
+      const sc = this.sbuf[ply];
+      const ord = this.order, skip = this.skip;
+      let tag = -1;
+      if (this.prune) { tag = ++this.tag; markRedundant(p, skip, tag); }
+      for (let i = 0; i < G.E; i++) {
+        const e = ord[i]; if (p.drawn[e] || skip[e] === tag) continue;
+        const gv = p.gives(e);
+        mv[nm] = e; sc[nm] = e === ttMove ? -1e9 : gv * 10; nm++;
+      }
+      for (let i = 1; i < nm; i++) { const e = mv[i], k = sc[i]; let jj = i - 1; while (jj >= 0 && sc[jj] > k) { mv[jj + 1] = mv[jj]; sc[jj + 1] = sc[jj]; jj--; } mv[jj + 1] = e; sc[jj + 1] = k; }
+    }
+    if (cap && ttMove >= 0) { for (let i = 1; i < nm; i++) if (mv[i] === ttMove) { mv[i] = mv[0]; mv[0] = ttMove; break; } }
+    let best = -INF, bestMove = -1;
+    for (let i = 0; i < nm; i++) {
+      const e = mv[i], k = p.play(e);
+      const v = k > 0 ? k + this.search(p, alpha - k, beta - k, ply + 1) : -this.search(p, -beta, -alpha, ply + 1);
+      p.undo(e);
+      if (this.aborted) return 0;
+      if (v > best) { best = v; bestMove = e; }
+      if (v > alpha) alpha = v;
+      if (alpha >= beta) break;
+    }
+    let lo = -INF, hi = INF;
+    { const dt = T[j + 2]; if (dt !== 0 && (T[j] ^ dt) === a1 && (T[j + 1] ^ dt) === a2) { lo = (dt << 24) >> 24; hi = (dt << 16) >> 24; } else { lo = lo0; hi = hi0; } }
+    if (best <= alpha0) hi = Math.min(hi, best);
+    else if (best >= beta0) lo = Math.max(lo, best);
+    else { lo = best; hi = best; }
+    if (lo > hi) { lo = best; hi = best; }
+    const bm = bestMove >= 0 ? G.perms[s][bestMove] : -1;
+    const dt = (1 << 24) | ((bm & 0xFF) << 16) | ((hi & 0xFF) << 8) | (lo & 0xFF);
+    T[j] = a1 ^ dt; T[j + 1] = a2 ^ dt; T[j + 2] = dt;
+    return best;
+  }
+}
+// one worker's share of a job: take moves from the counter until none is left (or the time is up)
+const shSolvers = new Map();
+function sharedSolver(G, buf) { const k = G.R + 'x' + G.C; let S = shSolvers.get(k); if (!S || S.sh.buffer !== buf) { S = new SharedSolver(G, buf); shSolvers.set(k, S); } return S; }
+function allShare(d) {
+  const G = geom(d.R, d.C), p = Pos.from(G, d.edges), S = sharedSolver(G, d.tt), ctl = new Int32Array(d.ctl), moves = d.moves;
+  S.ctl = ctl; let nodes = 0;
+  if (d.lead) {   // the main worker first finds the best move's value (as S.all does: its bounds make the full-window solves cheap)
+    S.limit(0, Math.max(5, d.until - Date.now()));
+    const b = S.best(p); nodes += S.nodes;
+    if (!b) { Atomics.store(ctl, 1, 1); return { nodes }; }
+  }
+  for (;;) {
+    const i = Atomics.add(ctl, 0, 1); if (i >= moves.length || Atomics.load(ctl, 1)) break;
+    S.limit(0, Math.max(5, d.until - Date.now()));
+    const v = S.moveValue(p, moves[i]); nodes += S.nodes;
+    if (v === null) { Atomics.store(ctl, 1, 1); break; }
+    Atomics.store(ctl, 8 + i, v + 1000);
+  }
+  return { nodes };
+}
+// exact values of every legal move (S.all's list), solved on the shared table by this worker and the pool's helpers;
+// null when cut off by the time (the caller then falls back to the estimate, as with one thread)
+const shTables = {};
+async function allShared(p, ms, pool) {
+  const G = p.G, k = G.R + 'x' + G.C, moves = p.legal();
+  const tt = shTables[k] || (shTables[k] = new SharedArrayBuffer(SH_ENTRIES * 16));
+  const ctl = new Int32Array(new SharedArrayBuffer(4 * (8 + moves.length)));
+  const edges = []; for (let e = 0; e < G.E; e++) if (p.drawn[e]) edges.push(e);
+  const until = Date.now() + ms, msg = { type: 'xall', R: G.R, C: G.C, edges, until, ms, tt, ctl: ctl.buffer, moves };
+  const hs = []; for (let i = 0; i < pool.size; i++) hs.push(pool.run(i, msg));
+  await new Promise(r => setTimeout(r, 0));   // (let the helpers start)
+  const mine = allShare(Object.assign({ lead: 1 }, msg));
+  const rs = await Promise.all(hs);
+  let nodes = mine.nodes; for (const r of rs) if (r) nodes += r.nodes || 0;
+  if (Atomics.load(ctl, 1)) return null;
+  const out = [];
+  for (let i = 0; i < moves.length; i++) { const v = Atomics.load(ctl, 8 + i); if (!v) return null; out.push({ m: moves[i], v: v - 1000 }); }
+  out.nodes = nodes;
+  return out;
+}
+async function analyzeShared(p, ms, pool) {
+  if (!x4Ok(p) && (p.G.E <= 24 || countSafe(p) <= (p.G.R <= 4 ? 20 : 15))) {
+    const ex = await allShared(p, ms * 0.7, pool);
+    if (ex) return { exact: true, list: ex.sort((a, b) => b.v - a.v), nodes: ex.nodes };
+  }
+  if (x4Ok(p)) return analyze(p, ms);
+  return analyzeEst(p, ms);
+}
+
 // ---------------------------------------------------------------- heuristic evaluation (long-chain parity)
 // Play out the safe phase greedily a few times, then score the loony endgame for whoever must move then.
 const STEPS = [7, 11, 13, 17, 19, 23];
@@ -1173,6 +1304,10 @@ function analyze(p, ms) {
     const ex = S.all(p);
     if (ex) return { exact: true, list: ex.sort((a, b) => b.v - a.v) };
   }
+  return analyzeEst(p, ms);
+}
+// the estimate (when the exact solve did not finish in time)
+function analyzeEst(p, ms) {
   const H = hsFor(p.G, 3, true);
   const list = H.root(p, 12, ms * 0.3 + 150);
   const bk = x4Book(p);   // 4x4 opening: the book's exactly optimal move goes first
@@ -1245,7 +1380,7 @@ function candLine(p, first, plies, ms) {
   }
   return line;
 }
-return { candLine, x5Ready, setX5, X5, ponderStart, ponderStep, ponderStop, chooseMoveAsync, helperTask, chooseV2, bookMove, canonKey, setBook, x4Ready, x4Choose, x4Values, x4Book, x4All, X4, geom, Pos, Solver, HSearch, captureMoves, simpleLoony, loonyValue, components, evalH, chooseMove, analyze, reviewMove, solverFor, fastSolverFor, markRedundant, sacrificeSize, captureEdge, LEVELS, xorshift };
+return { allShare, allShared, analyzeShared, SharedSolver, candLine, x5Ready, setX5, X5, ponderStart, ponderStep, ponderStop, chooseMoveAsync, helperTask, chooseV2, bookMove, canonKey, setBook, x4Ready, x4Choose, x4Values, x4Book, x4All, X4, geom, Pos, Solver, HSearch, captureMoves, simpleLoony, loonyValue, components, evalH, chooseMove, analyze, reviewMove, solverFor, fastSolverFor, markRedundant, sacrificeSize, captureEdge, LEVELS, xorshift };
 })();
 
 // ---------------------------------------------------------------- worker glue
@@ -1278,6 +1413,9 @@ if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof
     } catch (e) { pool.dead = true; }
     return { size: Math.min(k, pool.ws.length), run: pool.run };
   };
+  // the analysis on the shared table: the page asks for it (msg.mt > 0 only when its page is isolated — shared/mtworkers.js
+  // shared mode) and this worker can share memory with its helpers
+  const shOn = d => d.mt > 0 && typeof SharedArrayBuffer === 'function' && !!self.crossOriginIsolated && !(d.R === 4 && d.C === 4 && DotsEngine.X4.st === 2);
   // pondering between moves (5x5 Lv9+ with the wasm solver): short steps, so that a new request is served at once
   let pondering = 0;
   const ponderLoop = tok => { if (tok !== pondering) return; if (DotsEngine.ponderStep(40)) setTimeout(() => ponderLoop(tok), 0); };
@@ -1285,6 +1423,7 @@ if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof
     const d = ev.data;
     pondering++; DotsEngine.ponderStop();
     try {
+      if (d.type === 'xall') { self.postMessage({ type: d.type, id: d.id, r: DotsEngine.allShare(d) }); return; }   // (a helper's share of the shared-table analysis)
       if (d.type === 'xpart') {
         if (d.R === 5 && d.C === 5 && d.x5) { const rd = DotsEngine.x5Ready(d.bits); if (rd && rd.then) await rd; }
         self.postMessage({ type: d.type, id: d.id, r: DotsEngine.helperTask(d) }); return;
@@ -1302,7 +1441,7 @@ if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof
           if (!k && DotsEngine.ponderStart(p, -(d.lead || 0), d.level)) { const tok = ++pondering; setTimeout(() => ponderLoop(tok), 0); }
         }
       } else if (d.type === 'analyze') {
-        const r = DotsEngine.analyze(p, d.ms || 1500);
+        const r = shOn(d) ? await DotsEngine.analyzeShared(p, d.ms || 1500, getPool(d.mt)) : DotsEngine.analyze(p, d.ms || 1500);
         self.postMessage({ type: 'analyze', id: d.id, list: r.list, exact: r.exact });
       } else if (d.type === 'solve') {
         let list = null;
@@ -1310,7 +1449,7 @@ if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof
         else { const S = DotsEngine.fastSolverFor(G); S.limit(0, d.ms || 8000); list = S.all(p); }
         self.postMessage({ type: 'solve', id: d.id, list });
       } else if (d.type === 'cands') {
-        const r = DotsEngine.analyze(p, d.ms || 900), top = r.list.slice(0, d.n || 5), lines = {};
+        const r = shOn(d) ? await DotsEngine.analyzeShared(p, d.ms || 900, getPool(d.mt)) : DotsEngine.analyze(p, d.ms || 900), top = r.list.slice(0, d.n || 5), lines = {};
         self.postMessage({ type: 'cands', id: d.id, list: r.list, exact: r.exact, lines: {} });
         for (const x of top) { lines[x.m] = DotsEngine.candLine(p, x.m, d.plies || 8, d.ply || 70); self.postMessage({ type: 'cands', id: d.id, list: r.list, exact: r.exact, lines: Object.assign({}, lines) }); }
         self.postMessage({ type: 'candsDone', id: d.id, list: r.list, exact: r.exact, lines });

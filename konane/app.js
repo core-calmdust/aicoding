@@ -48,9 +48,10 @@ const AIW = () => ({ ru: 'ИИ', tr: 'YZ' })[LANG] || 'AI';   // the word "AI" i
 function t(k, v) { let x = (I18N[LANG] || I18N.en)[k]; if (x === undefined) x = I18N.en[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
 const pname = p => t(p === P1 ? 'p1' : 'p2');
 // AI strength: 20 steps, Lv.1 … Lv.20
-const LV_MAX = 20;
+const LV_MAX = 23;   // (Lv.21〜23: the top levels on every thread, 2026-11-09)
 const LV = i => 'Lv.' + i;   // levels 1 … 20 (kyu / dan names are kept for the Japanese games: shogi, go, gomoku)
-const LVD = i => t('lvd')[i <= 4 ? 0 : i <= 9 ? 1 : i <= 15 ? 2 : 3];
+const LVD_TOP = { ja: '最強：全CPUコアで長時間、深く読む', en: 'Strongest: long, deep search on every CPU core', zh: '最强：用所有CPU核心长时间深入计算', 'zh-TW': '最強：用所有CPU核心長時間深入計算', ko: '최강: 모든 CPU 코어로 오래, 깊이 읽음', es: 'Máximo: búsqueda larga y profunda con todos los núcleos', fr: 'Ultime : calcul long et profond sur tous les cœurs', pt: 'Máximo: busca longa e profunda com todos os núcleos', de: 'Höchststufe: lange, tiefe Suche auf allen CPU-Kernen', ru: 'Сильнейший: долгий глубокий расчёт на всех ядрах', tr: 'En güçlü: tüm CPU çekirdekleriyle uzun, derin arama', id: 'Terkuat: pencarian panjang dan dalam dengan semua inti CPU', hi: 'सबसे मज़बूत: सभी CPU कोर पर लंबी, गहरी खोज', ar: 'الأقوى: بحث طويل وعميق بكل أنوية المعالج' };
+const LVD = i => i > 20 ? LVD_TOP[LANG] || LVD_TOP.en : t('lvd')[i <= 4 ? 0 : i <= 9 ? 1 : i <= 15 ? 2 : 3];
 function applyI18n() {
   document.documentElement.lang = LANG === 'zh' ? 'zh-CN' : LANG;
   document.querySelectorAll('[data-i18n]').forEach(e => { e.textContent = t(e.dataset.i18n); });
@@ -106,7 +107,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=2-pro1-mt1';
+const ENGINE_URL = 'engine.js?v=3-sh1';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -130,8 +131,11 @@ let aiW = makeWorker(), anaW = makeWorker();
 // engine share the root moves and the main line (Young Brothers Wait) — no shared memory, so no isolation, no reload, and sign-in /
 // online play are untouched. Analysis, hints, the coach, the review box and the levels that think by time (Lv.19・20, rated games
 // too) go to the threads when they are free; the levels decided by depth / positions stay on the one-thread workers.
+// Shared mode (2026-11-09): on a cross-origin isolated page (sw.js: Document-Isolation-Policy on Chromium; elsewhere the COOP mode
+// once the option is turned on, without sign-in / online play — the same choice as the mtengine.js games) the workers share one
+// transposition table (shared/mttt.js); otherwise they run as before, each with its own.
+if (window.MTSplit) MTSplit.init({ sw: 'sw.js?v=1' });
 const MTP = window.MTSplit ? MTSplit.use({ url: ENGINE_URL, drive: MTSplit.ladder.drive }) : null;
-if (window.MTSplit) MTSplit.init();
 const mtLevel = lv => { const L = E.LEVELS[lv]; return !!(L && L.s && L.ms && !L.nk); };   // a level that thinks by time
 function mtWants(which, msg) {
   if (msg.type === 'analyze' || msg.type === 'cands') return true;
@@ -140,6 +144,10 @@ function mtWants(which, msg) {
   return mtLevel(msg.level) || (which === 'ana' && msg.level === 19);   // (rated games too: the user's decision 2026-11-08; 19 = COACH_DEEP, the coach's deeper pass)
 }
 function request(which, msg, onProgress) {
+  // a top level (Lv.21〜) right after the page has opened: wait up to 4 s for the threads rather than start on one
+  if (MTP && which === 'ai' && msg.type === 'think' && msg.level > 20 && MTSplit.on() && !msg.waited) {
+    return (async () => { const t0 = Date.now(); while (!MTP.pool('ai') && Date.now() - t0 < 4000) await new Promise(r => setTimeout(r, 100)); return request(which, Object.assign({}, msg, { waited: 1 }), onProgress); })();
+  }
   const mp = MTP && mtWants(which, msg) && MTP.pool(which === 'ai' ? 'ai' : null);
   if (mp) { const t0 = performance.now(), full = { start: startSpec, rule: gv, ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }; return mp.run(full, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full, onProgress) : r; }); }
   return requestW(which, msg, onProgress);
@@ -635,7 +643,7 @@ async function maybeAI(tok) {
   if (!isAIColor(p)) return;
   thinking = p; renderInfo(); boardEl.classList.remove('can');
   const t0 = Date.now(), shown = moves.slice(0, cur);
-  const res = await request('ai', { type: 'think', moves: shown, level: levelFor(p), cfg: proCfg(levelFor(p)) });
+  const res = await request('ai', { type: 'think', moves: shown, level: levelFor(p), cfg: proCfg(levelFor(p)) || rtCap(levelFor(p)) });
   if (!res || tok !== busyToken) { if (tok === busyToken) { thinking = 0; renderInfo(); } return; }
   const prevDur = cur > 0 ? moveDur(moves[cur - 1], posAt(cur - 1).pos) : 0;
   const wait = (settings.mode === 'watch' ? Math.max(700, prevDur + 120) : animating ? prevDur : 0) - (Date.now() - t0);   // AIの着手は即時：前の手のアニメが終わるのを待つだけ（観戦だけ間を取る）
@@ -1139,6 +1147,13 @@ var PRO = PRO_L ? ProSet.init({ game: 'konane', lang: () => LANG, level: () => d
   // think by time, else one
   defaults: MTP ? lv => Object.assign(PRO_L.defaults(lv), { threads: mtLevel(lv) ? ProSet.maxThreads() : 1 }) : PRO_L.defaults,
   params: MTP ? [PRO_L.params[0], { key: 'threads' }].concat(PRO_L.params.slice(1)) : PRO_L.params }) : null;
+// a rated game (5 min + 3 s): the timed top levels (Lv.21〜) never think longer than the clock allows — about a twentieth of the
+// time left plus most of the increment (on every thread, as without the cap)
+function rtCap(lv) {
+  const L = E.LEVELS[lv]; if (!rgame || lv <= 20 || !L || !L.ms) return null;
+  const left = rtClockLeft(toMoveAt(moves.length) - 1), ms = Math.min(L.ms, Math.max(800, left / 20 + RT_CLOCK.inc * 0.8));
+  return ms >= L.ms ? null : Object.assign({}, L, { ms, threads: MTP && MTSplit.on() ? 1 + MTSplit.helpers() : 1 });
+}
 function proCfg(lv) { if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; const e = PRO.get(lv); return e ? Object.assign(PRO_L.cfg(e, lv), MTP ? { threads: e.threads || 1 } : {}) : null; }
 function proTag(lv) { return proCfg(lv) ? ' PRO' : ''; }
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
@@ -1161,7 +1176,7 @@ $('#btnStart').onclick = () => {
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_CLOCK = { base: 300000, inc: 3000 };
 // rating of each AI step on the kyu / dan scale (100 points per kyu: 15級 = 450 … 1級 = 1850, then 200 per dan)
 // measured: adjacent levels played each other (tools/native.c lv, see MODEL_CARD.md); about +125 per step up to 3級, smaller above
-const RT_LV = [0, 450, 575, 700, 825, 950, 1075, 1200, 1325, 1450, 1575, 1700, 1825, 1950, 2030, 2090, 2150, 2200, 2250, 2300, 2350];
+const RT_LV = [0, 450, 575, 700, 825, 950, 1075, 1200, 1325, 1450, 1575, 1700, 1825, 1950, 2030, 2090, 2150, 2200, 2250, 2300, 2350, 2470, 2590, 2710];   // (Lv.21〜23: measured steps, see the spec「最上位レベル」)
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };
