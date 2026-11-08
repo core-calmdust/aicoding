@@ -228,6 +228,11 @@ const LEVELS = [null,
   { s: 1, nk: 100 },                     // 18
   { s: 1, ms: 1200 },                    // 19
   { s: 1, ms: 2500 },                    // 20
+  // the top levels (2026-11-09, common rule「最上位のレベルの追加」): twice the time per step up to 20 s, every thread of the
+  // page's pool (shared/mtsplit.js; the shared table on an isolated page) — one thread without the option
+  { s: 1, ms: 5000 },                    // 21
+  { s: 1, ms: 10000 },                   // 22
+  { s: 1, ms: 20000 },                   // 23
 ];
 function gauss(rand) { let u = 0, v = 0; while (!u) u = rand(); while (!v) v = rand(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
 // ---------------------------------------------------------------- evaluation (side to move's view, ~100 = one spare move)
@@ -245,6 +250,10 @@ function evaluate(pos) {
 const kindOf = v => Math.abs(v) > WINT ? 'exact' : 'heur';
 // ---------------------------------------------------------------- search (negamax alpha-beta, TT, iterative deepening)
 const TT = new Map();
+// SH: the transposition table shared by the workers of shared/mtsplit.js (shared mode: a cross-origin isolated page —
+// shared/mttt.js, set by the 'mtshare' message; the one-thread worker never has it, so its levels play as before)
+let SH = null;
+const SALT = { s8: 0, s6: 0x5bd1e995, s10: 0x27d4eb2f };
 let nodes = 0, nodeLimit = Infinity, tEnd = Infinity, stop = false;
 const killers = [];
 // reusable positions for the search (a child is only used while its parent's loop is on it): no clone per move.
@@ -271,9 +280,9 @@ function orderMoves(pos, L, ttm, ply) {
 }
 function search(pos, d, a, b, ply) {
   nodes++;
-  if ((nodes & 1023) === 0 && (Date.now() > tEnd || nodes > nodeLimit)) stop = true;
+  if ((nodes & 1023) === 0 && (Date.now() > tEnd || nodes > nodeLimit || (SH !== null && SH.stopped()))) stop = true;
   if (stop) return 0;
-  const key = pos.h1, e = TT.get(key);
+  const key = pos.h1, e = SH !== null ? SH.get(key, pos.h2) : TT.get(key);
   if (e && e.h2 === pos.h2 && e.d >= d) {
     const v = e.v > WINT ? e.v - ply : e.v < -WINT ? e.v + ply : e.v;
     if (e.f === 0) return v; if (e.f === 1 && v >= b) return v; if (e.f === 2 && v <= a) return v;
@@ -296,8 +305,9 @@ function search(pos, d, a, b, ply) {
     if (stop) return best === -Infinity ? 0 : best;
     if (v > best) { best = v; bm = m; if (v > a) { a = v; if (a >= b) { killers[ply] = m; break; } } }
   }
-  if (TT.size > 700000) TT.clear();
   const sv = best > WINT ? best + ply : best < -WINT ? best - ply : best;   // mate scores stored relative to this node
+  if (SH !== null) { SH.put(key, pos.h2, d, sv, best <= a0 ? 2 : best >= b ? 1 : 0, bm, 0); return best; }
+  if (TT.size > 700000) TT.clear();
   TT.set(key, { h2: pos.h2, d, v: sv, f: best <= a0 ? 2 : best >= b ? 1 : 0, m: bm });
   return best;
 }
@@ -413,7 +423,8 @@ function pvOf(start, moves, m, plies) {
 // order; mtFin: the job's reply from the threads' raw result (the same as the one-thread worker's).
 let mtRule = null;
 function mtNode(m) {
-  if (mtRule !== RK) { TT.clear(); mtRule = RK; }
+  if (SH !== null) SH.salt = SALT[RK] | 0;
+  else if (mtRule !== RK) { TT.clear(); mtRule = RK; }
   const line = m.line || [], { pos } = replay(m.start, m.moves.concat(line));
   return { pos, ply: line.length };
 }
@@ -423,7 +434,7 @@ function mtPlan(m) {
     const L = m.cfg || LEVELS[m.level] || LEVELS[10];
     if (all.length < 2 || !L.s) { PRO_CFG = m.cfg || null; try { return { result: think(m.start, m.moves, m.level) }; } finally { PRO_CFG = null; } }
     killers.length = 0;
-    return { plan: { kind: 'best', moves: orderMoves(pos, all, -1, 0), inf, maxD: L.dx || 60, ms: L.ms || 0, nodes: (L.nk || (L.ms ? 0 : 50)) * 1000, win: WINT, partialIfBetter: true, splitMin: 99 } };   // (the root moves only: Kōnane leans on its table, a split main line costs more than it gives)
+    return { plan: { kind: 'best', moves: orderMoves(pos, all, -1, 0), inf, maxD: L.dx || 60, ms: L.ms || 0, nodes: (L.nk || (L.ms ? 0 : 50)) * 1000, win: WINT, partialIfBetter: true, splitMin: 99, lazy: SH !== null } };   // (the root moves only: Kōnane leans on its table, a split main line costs more than it gives; lazy: the shared table — Lazy SMP, 2026-11-09)
   }
   if (!all.length) return { result: { list: [], depth: 0 } };
   const cands = m.job === 'cands';
@@ -438,8 +449,36 @@ function mtV(m) {
 function mtKids(m) {
   const { pos, ply } = mtNode(m);
   const L = pos.moves(); if (!L.length) return { kids: [] };
-  const e = TT.get(pos.h1);
+  const e = SH !== null ? SH.get(pos.h1, pos.h2) : TT.get(pos.h1);
   return { kids: orderMoves(pos, L, e && e.h2 === pos.h2 ? e.m : -1, ply).map(x => ({ m: x, s: -1 })) };
+}
+function mtLazy(m) {   // (shared/tools/mtlazy.js: one Lazy SMP thread's search of the root to depth m.d, root order rotated by m.rot)
+  const { pos } = mtNode(m);
+  nodes = 0; stop = false; tEnd = m.until || Infinity; nodeLimit = Infinity;
+  const e = SH !== null ? SH.get(pos.h1, pos.h2) : TT.get(pos.h1);
+  let L = orderMoves(pos, pos.moves(), e && e.h2 === pos.h2 ? e.m : -1, 0);
+  if (m.rot) { const k = m.rot % L.length; L = L.slice(k).concat(L.slice(0, k)); }
+  let a = -WIN - 1, best = -Infinity, bm = L[0];
+  for (let i = 0; i < L.length; i++) {
+    const q = pos.clone().play(L[i]);
+    let v = i === 0 ? -search(q, m.d - 1, -WIN - 1, -a, 1) : -search(q, m.d - 1, -a - 1, -a, 1);
+    if (i > 0 && v > a) v = -search(q, m.d - 1, -WIN - 1, -a, 1);
+    if (v > best) { best = v; bm = L[i]; if (v > a) a = v; }
+  }
+  rhN--;
+  if (SH !== null && !stop) SH.put(pos.h1, pos.h2, m.d, best, 0, bm, 0);
+  return { v: best, m: bm, nodes };
+}
+// a Lazy SMP helper (shared/mtsplit.js shared mode, 'mthelp'): iterative deepening of the root on the shared table — one ply
+// deeper every other helper (k), from a root order rotated by k >> 1 — until the page stops it (or m.until)
+function mtHelp(m) {
+  let total = 0;
+  for (let d = 1; d <= (m.maxD || 60); d++) {
+    const r = mtLazy(Object.assign({}, m, { d: d + (m.k & 1), rot: m.k >> 1 }));
+    total += r.nodes;
+    if (stop || Date.now() > (m.until || Infinity) || Math.abs(r.v) > WINT) break;
+  }
+  return { nodes: total, ok: false };
 }
 function mtFin(m) {
   const r = m.raw;
@@ -556,7 +595,7 @@ function winningMoves(start, moves, rule, budget) {
 }
 
 setRule('s8');
-const API = { get nodes() { return nodes; }, P1, P2, WIN, WINT, PASS, RULES, RULE_ORDER, setRule, get rule() { return RK; }, get R() { return R; }, get N() { return N; }, get NN() { return NN; },
+const API = { get nodes() { return nodes; }, set SH(t) { SH = t; }, get SH() { return SH; }, mtLazy, P1, P2, WIN, WINT, PASS, RULES, RULE_ORDER, setRule, get rule() { return RK; }, get R() { return R; }, get N() { return N; }, get NN() { return NN; },
   get RC() { return RC; }, COLOR: () => COLOR, OPEN1: () => OPEN1, ADJ: () => ADJ, sqAt, sqName, mv, mFrom, mTo, isRemove, hops, Pos, path, captured, isJump, name, parse, replay, judge,
   LEVELS, think, analyze, cands, duelGood, duelMin, duelReply, solve, winningMoves, evaluate, kindOf, EW, mtPlan, mtV, mtKids, mtFin, pvOf };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
@@ -564,8 +603,10 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
   let queueP = Promise.resolve();
   self.onmessage = e => {
     const m = e.data;
+    if (m && m.type === 'mtshare') { try { importScripts(m.lib); SH = self.MTTT.attach(m); } catch (err) { SH = null; } return; }   // (shared/mtsplit.js shared mode)
     queueP = queueP.then(() => {
       try {
+        if (SH !== null) SH.begin(m);
         setRule(m.rule || 's8');
         if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...(() => { PRO_CFG = m.cfg || null; try { return think(m.start, m.moves, m.level); } finally { PRO_CFG = null; } })() });
         else if (m.type === 'analyze') {
@@ -580,6 +621,8 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
         else if (m.type === 'mtv') self.postMessage({ id: m.id, type: 'result', ...mtV(m) });
         else if (m.type === 'mtkids') self.postMessage({ id: m.id, type: 'result', ...mtKids(m) });
         else if (m.type === 'mtpv') self.postMessage({ id: m.id, type: 'result', pv: pvOf(m.start, m.moves, m.m, m.plies) });
+        else if (m.type === 'mtlead') self.postMessage({ id: m.id, type: 'result', ...(() => { PRO_CFG = m.cfg || null; try { const r = think(m.start, m.moves, m.level); return Object.assign({}, r, { nodes }); } finally { PRO_CFG = null; } })() });   // (Lazy SMP: the job as one thread plays it, on the shared table)
+        else if (m.type === 'mthelp') self.postMessage({ id: m.id, type: 'result', ...mtHelp(m) });
         else if (m.type === 'mtfin') self.postMessage({ id: m.id, type: 'result', ...mtFin(m) });
       } catch (err) { self.postMessage({ id: m.id, type: 'result', error: String(err && err.stack || err) }); }
     });
