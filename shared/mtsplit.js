@@ -161,6 +161,8 @@
           if (TT) { halt(s); return; }
           if (hard) { const t = s.task; s.task = null; restart(s); t.resolve(null); pump(); } else s.task.resolve(null);
         },
+        // shared mode: wait (at most ms) until the dropped tasks of this job have stopped and reported their nodes
+        settle(ms) { const t0 = Date.now(); return new Promise(r => { const chk = () => { if (!W.some(s => s.task && s.task.job === j) || Date.now() - t0 >= ms) r(); else setTimeout(chk, 1); }; chk(); }); },
       };
       return X;
     }
@@ -376,6 +378,7 @@
         for (let k = 1; k < X.n; k++) hs.push(X.exec(Object.assign({}, base, { type: 'mthelp', k, until, maxD: p.maxD || 60 }), undefined, 50));
         const r = await lead;
         for (const h of hs) X.drop(h);
+        if (r) await X.settle(30);   // (the helpers stop within a moment: their nodes count in the job's total)
         if (!r) return X.cancelled ? null : undefined;
         const out = Object.assign({}, r); delete out.id; delete out.type; delete out.nodes;
         return out;
@@ -403,5 +406,7 @@
     },
   };
 
-  window.MTSplit = { init, use, pool, on, helpers, maxHelpers, onChange: f => subs.push(f), touch: TOUCH, allValues, bestValue, ladder, T, get shared() { return shared(); }, get sharedGame() { return SHG; } };
+  // autoThreads(): the threads a job uses unless it asks (msg.mtThreads) — min(cores − 1, 7) + 1 (phones 3 + 1), 1 when off
+  const autoThreads = () => on() ? 1 + helpers() : 1;
+  window.MTSplit = { init, use, pool, on, helpers, maxHelpers, autoThreads, onChange: f => subs.push(f), touch: TOUCH, allValues, bestValue, ladder, T, get shared() { return shared(); }, get sharedGame() { return SHG; } };
 })();

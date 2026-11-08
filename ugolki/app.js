@@ -108,7 +108,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=5-sh1';
+const ENGINE_URL = 'engine.js?v=5-sh2';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -1143,9 +1143,9 @@ $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 const PRO_L = window.ProSet ? ProSet.ladder(E.LEVELS, { dmax: 20, nmax: 20000000 }) : null;
 var PRO = PRO_L ? ProSet.init({ game: 'ugolki', lang: () => LANG, level: () => draft.level || settings.level, show: () => draft.mode === 'ai' || draft.mode === 'watch',
   store: { get: () => settings.pro, set: v => { settings.pro = v; } },
-  // threads (本編のマルチスレッド, shared/mtsplit.js): with any limit of the search; the default is every thread for the levels that
-  // think by time, else one
-  defaults: MTP ? lv => Object.assign(PRO_L.defaults(lv), { threads: mtLevel(lv) ? ProSet.maxThreads() : 1 }) : PRO_L.defaults,
+  // threads (本編のマルチスレッド, shared/mtsplit.js): with any limit of the search; the default is the levels' own count for the
+  // levels that think by time, else one
+  defaults: MTP ? lv => Object.assign(PRO_L.defaults(lv), { threads: mtLevel(lv) ? Math.min(ProSet.maxThreads(), MTSplit.autoThreads()) : 1 }) : PRO_L.defaults,   // (threads: the levels' own count, min(cores − 1, 7) + 1 — on the user's Mac 14 threads were slower than 8, 2026-11-09)
   params: MTP ? [PRO_L.params[0], { key: 'threads' }].concat(PRO_L.params.slice(1)) : PRO_L.params }) : null;
 // a rated game (5 min + 3 s): the timed top levels (Lv.21〜) never think longer than the clock allows — about a twentieth of the
 // time left plus most of the increment (on every thread, as without the cap)
@@ -1176,7 +1176,7 @@ $('#btnStart').onclick = () => {
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_CLOCK = { base: 300000, inc: 3000 };
 // rating of each AI step on the kyu / dan scale (100 points per kyu: 15級 = 450 … 1級 = 1850, then 200 per dan)
 // measured: adjacent levels played each other (tools/native.c lv, see MODEL_CARD.md); about +125 per step up to 3級, smaller above
-const RT_LV = [0, 450, 575, 700, 825, 950, 1075, 1200, 1325, 1450, 1575, 1700, 1825, 1950, 2030, 2090, 2150, 2200, 2250, 2300, 2350, 2410, 2470, 2530];   // (Lv.21〜23: measured steps, see the spec「最上位レベル」)
+const RT_LV = [0, 450, 575, 700, 825, 950, 1075, 1200, 1325, 1450, 1575, 1700, 1825, 1950, 2030, 2090, 2150, 2200, 2250, 2300, 2350, 2410, 2455, 2470];   // (Lv.21〜23: measured steps, see the spec「最上位レベル」)
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };

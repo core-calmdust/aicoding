@@ -15,7 +15,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../agon/', VER = '?v=5-sh1';   // same file / version as agon/index.html → shared cache
+  const BASE = '../agon/', VER = '?v=5-sh2';   // same file / version as agon/index.html → shared cache
   let engP = null;
   function loadEngine() {
     if (window.AgonEngine) return Promise.resolve(window.AgonEngine);
@@ -360,7 +360,7 @@
     id: ['Pemula: menuju takhta tapi melewatkan tangkapan', 'Dasar–menengah: melihat tangkapan beberapa langkah ke depan', 'Mahir: memperhitungkan pemindahan dan cincin sekitar takhta', 'Ahli: pencarian mendalam yang membuka jalan sang ratu'],
     tr: ['Başlangıç: tahta yönelir ama almaları kaçırır', 'Acemi–orta: birkaç hamle ilerideki almaları görür', 'İleri: yeniden yerleştirmeleri ve taht çevresini hesaplar', 'Uzman: kraliçenin yolunu açan derin arama'],
   };
-  const RATING = [0, 450, 575, 700, 825, 950, 1075, 1200, 1325, 1450, 1575, 1700, 1825, 1950, 2030, 2090, 2150, 2200, 2250, 2300, 2350, 2380, 2410, 2440];   // agon RT_LV (rated games)
+  const RATING = [0, 450, 575, 700, 825, 950, 1075, 1200, 1325, 1450, 1575, 1700, 1825, 1950, 2030, 2090, 2150, 2200, 2250, 2300, 2350, 2380, 2395, 2405];   // agon RT_LV (rated games)
   const W7 = (a, b, c, d, e, f) => [a, a, a, a, b, b, b, b, b, c, c, c, c, c, c, d, d, d, e, f];
   const WHO = {
     ja: W7('はじめての人に', 'ルールを覚えた人に', '慣れてきた人に', '強い人に', '上級者でも手ごわい', '最強レベル'),

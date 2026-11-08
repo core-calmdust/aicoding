@@ -451,6 +451,12 @@ function rootValues(pos, d, hist) {
   }
   return out.sort((x, y) => y.v - x.v);
 }
+// Lazy SMP (shared mode): the root's exact result a helper has finished ('mthelp' stores it), when it is at least depth d —
+// the lead then goes on from there (a lead on a slower core, e.g. an efficiency core, no longer holds the job up)
+function helperDone(pos, L, d) {
+  const e = SH.get(pos.h1, pos.h2);
+  return e && e.f === 0 && e.d >= d && e.rs === rootSide && L.indexOf(e.m) >= 0 ? { move: e.m, v: e.v, depth: e.d } : null;
+}
 function bestMove(pos, hist, maxD, ms, nk) {
   rootSide = pos.side;
   nodes = 0; stop = false; tEnd = ms ? Date.now() + ms : Infinity; nodeLimit = nk ? nk * 1000 : Infinity; killers.length = 0;
@@ -459,17 +465,21 @@ function bestMove(pos, hist, maxD, ms, nk) {
   for (let d = 1; d <= (maxD || 60); d++) {
     let a = -WIN - 1, bm = null, bv = -Infinity;
     const order = orderMoves(pos, L, best.move, 0);
+    let hd = null;
     for (const m of order) {
       const q = pos.clone().play(m);
       loadHist(hist); const v = -search(q, d - 1, -WIN - 1, -a, 1);
       if (stop) break;
       if (v > bv) { bv = v; bm = m; if (v > a) a = v; }
+      if (SH !== null && (hd = helperDone(pos, L, d)) !== null) break;   // (a helper has finished this depth or a deeper one)
     }
+    if (hd !== null) { best = hd; if (hd.depth >= (maxD || 60) || Math.abs(hd.v) > WINT) break; d = hd.depth; continue; }
     if (stop && !bm) break;
     if (bm !== null) best = { move: bm, v: bv, depth: d };
     if (stop) break;
     if (Math.abs(bv) > WINT) break;
   }
+  if (SH !== null) { const hd = helperDone(pos, L, best.depth + 1); if (hd !== null) best = hd; }
   return best;
 }
 const histOf = (start, moves) => { const { hashes } = replay(start, moves); hashes.pop(); return hashes; };
@@ -575,13 +585,16 @@ function mtNode(m) {
   rootSide = root.side;
   return { pos, hist: hashes, ply: line.length };
 }
+// Lazy SMP on the shared table for a 'think' (time / depth only: with a node budget the threads split the tree, so that the
+// budget is all the threads' together); m.lazy (0 / 1) overrides the game's choice (the bench compares both)
+const lazyOf = (m, L, dflt) => SH !== null && !L.nk && (L.ms || L.dx) ? (m.lazy !== undefined ? !!m.lazy : dflt) : false;
 function mtPlan(m) {
   const { pos } = replay(m.start, m.moves), all = pos.moves(), inf = WIN + 1;
   rootSide = pos.side;
   if (m.job === 'think') {
     const L = m.cfg || LEVELS[m.level] || LEVELS[10];
     if (all.length < 2 || !L.s) { PRO_CFG = m.cfg || null; try { return { result: think(m.start, m.moves, m.level) }; } finally { PRO_CFG = null; } }
-    return { plan: { kind: 'best', moves: orderMoves(pos, all, -1, 0), inf, maxD: L.dx || 60, ms: L.ms || 3000, nodes: L.nk ? L.nk * 1000 : 0, win: WINT, lmr: { d: 3, i: 8 }, splitMin: 5 } };
+    return { plan: { kind: 'best', moves: orderMoves(pos, all, -1, 0), inf, maxD: L.dx || 60, ms: L.ms || 3000, nodes: L.nk ? L.nk * 1000 : 0, win: WINT, lmr: { d: 3, i: 8 }, splitMin: 5, lazy: lazyOf(m, L, true) } };   // (lazy: Lazy SMP on the shared table, 2026-11-09)
   }
   if (!all.length) return { result: { list: [], depth: 0 } };
   const cands = m.job === 'cands';
@@ -738,6 +751,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
       try {
         if (SH !== null) SH.begin(m);
         setRule(m.rule || 'std');
+        if (SH !== null) SH.salt = SALT[RK] | 0;   // (every task on the shared table, the Lazy SMP lead's 'think' too)
         if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...(() => { PRO_CFG = m.cfg || null; try { return think(m.start, m.moves, m.level); } finally { PRO_CFG = null; } })() });
         else if (m.type === 'analyze') {
           const r = analyze(m.start, m.moves, m.time || 1000, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth }));
