@@ -96,7 +96,7 @@
     /* ---------- the men and the striker ---------- */
     const pcs = [];   // index = engine id
     let striker = null;
-    function mk(c, r) { const g = c === 's' ? U.striker() : U.piece(c), sh = T3.contact(r * 1.15, .42); sh.position.y = .002; g.add(sh); board.add(g); return g; }
+    function mk(c, r) { const g = c === 's' ? U.striker() : U.piece(c), sh = T3.contact(r * 1.15, .42); sh.position.y = .004; g.add(sh); board.add(g); return g; }
     function placeMesh(g, x, y, h) { const [a, b] = wx(x, y); g.position.set(a, Y + (h || 0), b); }
     function build() {
       pcs.forEach(g => board.remove(g)); pcs.length = 0;

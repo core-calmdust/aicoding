@@ -16,18 +16,18 @@
   const X = window.Table3D; if (X.BOARDS[id]) X.BOARDS[id].set(look);
   const R = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
   R.setPixelRatio(1); R.setSize(S, S); R.shadowMap.enabled = true; R.shadowMap.type = THREE.PCFSoftShadowMap;
-  R.outputEncoding = THREE.sRGBEncoding; R.toneMapping = THREE.ACESFilmicToneMapping; R.toneMappingExposure = .82;
+  R.outputEncoding = THREE.sRGBEncoding; R.toneMapping = THREE.ACESFilmicToneMapping; R.toneMappingExposure = .7;
   R.physicallyCorrectLights = false;
   document.body.appendChild(R.domElement);
   const scene = new THREE.Scene();
-  scene.add(new THREE.HemisphereLight(0xfffaf0, 0x8a7060, .55));
-  const key = new THREE.DirectionalLight(0xffffff, .85); key.position.set(-4, 14, 6); key.castShadow = true;
+  scene.add(new THREE.HemisphereLight(0xfffaf0, 0x8a7060, .45));
+  const key = new THREE.DirectionalLight(0xffffff, .72); key.position.set(-4, 14, 6); key.castShadow = true;
   key.shadow.mapSize.set(2048, 2048); Object.assign(key.shadow.camera, { left: -7, right: 7, top: 7, bottom: -7, near: 1, far: 40 }); key.shadow.bias = -.0004;
   scene.add(key);
   // a soft studio room for the reflections
   const pm = new THREE.PMREMGenerator(R), env = new THREE.Scene();
-  const box = new THREE.Mesh(new THREE.BoxGeometry(30, 30, 30), new THREE.MeshBasicMaterial({ color: 0xf2ece2, side: THREE.BackSide })); env.add(box);
-  const lamp = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), new THREE.MeshBasicMaterial({ color: 0xffffff })); lamp.position.set(0, 14, 0); lamp.rotation.x = Math.PI / 2; env.add(lamp);
+  const box = new THREE.Mesh(new THREE.BoxGeometry(30, 30, 30), new THREE.MeshBasicMaterial({ color: 0x9a948c, side: THREE.BackSide })); env.add(box);
+  const lamp = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), new THREE.MeshBasicMaterial({ color: 0x8c8c8c })); lamp.position.set(0, 14, 0); lamp.rotation.x = Math.PI / 2; env.add(lamp);
   scene.environment = pm.fromScene(env, .04).texture;
   const g = X.MODELS[id](true); scene.add(g);
   if (id === 'carrom') {   // a game in progress

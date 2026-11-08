@@ -716,30 +716,27 @@
       g.add(at(pawn(0xe2403a, 1.6), -.15, 1.85, .1, .38, 0, -.3));
       return g;
     },
-    carrom() {   // a corner of a carrom board: honey plywood, a black pocket at the far corner with the arrow pointing to it, the base
-      // line with its red circle; a white and a black man near the pocket, the striker with its red star, the red queen hopping in
+    carrom() {   // a corner of a carrom board (honey plywood, a deep pocket, the arrow pointing into it, the base line with its red circle);
+      // a white and a black man and the striker (its red star) on the board, the big red queen leaping high over it
       const U = v => (v - .5) * 3.1;   // texture → board (the face is 3.1 across)
-      const top = M({ map: X.canvasTex('iccr2', 512, 512, (g, W) => {
+      const top = M({ map: X.canvasTex('iccr3', 512, 512, (g, W) => {
         g.translate(W, 0); g.scale(-1, 1);   // (mirrored: the pocket at the far corner of the diamond)
         const gr = g.createLinearGradient(0, 0, W, W); gr.addColorStop(0, '#f2dba8'); gr.addColorStop(1, '#e4c283'); g.fillStyle = gr; g.fillRect(0, 0, W, W);
         g.globalAlpha = .12; g.strokeStyle = '#8a5a26'; g.lineWidth = 3; for (let y = 8; y < W; y += 22) { g.beginPath(); g.moveTo(0, y); g.bezierCurveTo(W * .3, y + 9, W * .6, y - 9, W, y + 4); g.stroke(); } g.globalAlpha = 1;
-        g.fillStyle = '#121010'; g.beginPath(); g.arc(W * .13, W * .13, W * .1, 0, 7); g.fill();   // the pocket
-        g.strokeStyle = '#1d140e'; g.lineWidth = 8; g.lineCap = 'round'; g.beginPath(); g.moveTo(W * .33, W * .33); g.lineTo(W * .68, W * .68); g.stroke();
-        g.fillStyle = '#1d140e'; g.beginPath(); g.moveTo(W * .29, W * .29); g.lineTo(W * .4, W * .34); g.lineTo(W * .34, W * .4); g.closePath(); g.fill();
-        g.lineWidth = 6; g.beginPath(); g.moveTo(W * .58, W * .86); g.lineTo(W, W * .86); g.moveTo(W * .58, W * .96); g.lineTo(W, W * .96); g.stroke();
-        g.fillStyle = '#c3271f'; g.lineWidth = 5; g.beginPath(); g.arc(W * .56, W * .91, W * .05, 0, 7); g.fill(); g.stroke();
-        g.lineWidth = 6; g.beginPath(); g.arc(W * .9, W * .45, W * .07, Math.PI * .7, Math.PI * 1.9); g.stroke();
-      }), roughness: .28 });
+        g.fillStyle = '#121010'; g.beginPath(); g.arc(W * .17, W * .17, W * .13, 0, 7); g.fill();   // the pocket
+        g.strokeStyle = '#1d140e'; g.lineWidth = 9; g.lineCap = 'round'; g.beginPath(); g.moveTo(W * .38, W * .38); g.lineTo(W * .7, W * .7); g.stroke();
+        g.fillStyle = '#1d140e'; g.beginPath(); g.moveTo(W * .33, W * .33); g.lineTo(W * .46, W * .39); g.lineTo(W * .39, W * .46); g.closePath(); g.fill();
+        g.lineWidth = 7; g.beginPath(); g.moveTo(W * .6, W * .84); g.lineTo(W, W * .84); g.moveTo(W * .6, W * .95); g.lineTo(W, W * .95); g.stroke();
+        g.fillStyle = '#c3271f'; g.lineWidth = 5; g.beginPath(); g.arc(W * .57, W * .895, W * .055, 0, 7); g.fill(); g.stroke();
+      }), roughness: .3 });
       const g = boardChunk(4, 3.6, top, C(0x6a2717, { roughness: .32 }));
-      const man = (hex, r, h, ring) => { const P = []; for (let k = 0; k <= 6; k++) { const a = -Math.PI / 2 + k / 6 * Math.PI; P.push(new T.Vector2(r - h / 2 + Math.cos(a) * h / 2, h / 2 + Math.sin(a) * h / 2)); } P.unshift(new T.Vector2(0, 0)); P.push(new T.Vector2(0, h));
-        const d = new T.Group(); d.add(mesh(new T.LatheGeometry(P, 48), C(hex, { roughness: .26 })));
-        if (ring) { const t = mesh(new T.TorusGeometry(r * .6, r * .055, 8, 40), C(ring, { roughness: .35 })); t.rotation.x = Math.PI / 2; t.position.y = h + .002; d.add(t); }
-        return d; };
-      g.add(at(man(0xf3e6c8, .4, .17, 0xc4a06a), U(.5), .5, U(.2)));
-      g.add(at(man(0x2a1f19, .4, .17, 0x6a5240), U(.8), .5, U(.52)));
-      const st = man(0xf7f4ee, .5, .19); const star = mesh(new T.CircleGeometry(.24, 5), C(0xc3271f, { roughness: .4 })); star.rotation.x = -Math.PI / 2; star.position.y = .196; st.add(star);
-      g.add(at(st, U(.24), .5, U(.74)));
-      g.add(at(man(0xc8262b, .56, .22, 0x7a1210), U(.3), 1.25, U(.62), .55, 0, .2));
+      const disc = (hex, r, h, ring) => { const d = new T.Group(); d.add(puck(r, h, C(hex, { roughness: .3 }), .42)); if (ring) { const t = mesh(new T.TorusGeometry(r * .62, r * .07, 10, 40), C(ring, { roughness: .3 })); t.rotation.x = Math.PI / 2; t.position.y = h; d.add(t); } return d; };
+      g.add(at(disc(0xf3e6c8, .46, .24, 0xd8bf8e), U(.5), .5, U(.22)));
+      g.add(at(disc(0x2a1f19, .46, .24, 0x4a3a2e), U(.82), .5, U(.5)));
+      const st = disc(0xf7f4ee, .56, .22); const star = mesh(new T.CircleGeometry(.26, 5), C(0xc3271f, { roughness: .4 })); star.rotation.x = -Math.PI / 2; star.position.y = .226; st.add(star);
+      g.add(at(st, U(.3), .5, U(.74)));
+      // the queen: a fat red puck with a turned ring, leaping
+      const q = disc(0xc8262b, .6, .34, 0xe04a4a); q.scale.setScalar(1.45); g.add(at(q, .25, 1.95, -.25, .45, 0, -.3));
       return g;
     },
     ur() {   // a corner of the Ur board: shell plaques (a rosette, eyes, five circles) on a lapis grid in a black frame with a

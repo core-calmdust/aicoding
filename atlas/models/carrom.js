@@ -136,7 +136,7 @@
       const N = X.makeNoise(kind.length * 7 + kind.charCodeAt(0));
       if (kind === 'w' || kind === 'b' || kind === 'q') {   // grain + turned rings
         const img = g.getImageData(0, 0, W, W), d = img.data;
-        for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) { const n = N(x / W * 3, y / W * 22, 3), i = (y * W + x) * 4, k = (n - .5) * (kind === 'w' ? 34 : kind === 'b' ? 26 : 22); d[i] += k; d[i + 1] += k; d[i + 2] += k; }
+        for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) { const n = N(x / W * 2, y / W * 9, 2), i = (y * W + x) * 4, k = (n - .5) * (kind === 'w' ? 14 : kind === 'b' ? 12 : 10); /* soft grain: fine contrast shimmered on small men */ d[i] += k; d[i + 1] += k; d[i + 2] += k; }
         g.putImageData(img, 0, 0);
         g.strokeStyle = kind === 'b' ? 'rgba(255,230,200,.18)' : 'rgba(60,30,10,.32)';
         for (const r of [.88, .62, .36]) { g.lineWidth = W * .018; g.beginPath(); g.arc(c, c, c * r, 0, 7); g.stroke(); }
@@ -148,7 +148,7 @@
         g.closePath(); g.fill();
       } else {   // modern: matte, a brass pip (men) or a brass ring (striker)
         const img = g.getImageData(0, 0, W, W), d = img.data;
-        for (let i = 0; i < d.length; i += 4) { const r = (Math.random() - .5) * 10; d[i] += r; d[i + 1] += r; d[i + 2] += r; }
+        for (let i = 0; i < d.length; i += 4) { const r = (Math.random() - .5) * 3; d[i] += r; d[i + 1] += r; d[i + 2] += r; }
         g.putImageData(img, 0, 0);
         g.strokeStyle = kind === 'mb' ? 'rgba(255,255,255,.12)' : 'rgba(0,0,0,.12)'; g.lineWidth = W * .012; g.beginPath(); g.arc(c, c, c * .72, 0, 7); g.stroke();
         g.fillStyle = '#c69a45';
@@ -226,7 +226,7 @@
     return mat('pc' + m, () => {
       const t = faceTex(m), side = { w: '#e7d3ad', b: '#211813', q: '#a91f22', s: '#ece8de', mw: '#e3dccb', mb: '#26252a', mq: '#d55d45', ms: '#e7dcc5' }[m];
       const glossy = look === 'classic';
-      const top = phys({ map: t, color: '#ffffff', roughness: glossy ? (c === 's' ? .22 : .32) : .62, clearcoat: glossy ? .6 : undefined, clearcoatRoughness: glossy ? .2 : undefined, envMapIntensity: glossy ? 1 : .6, bumpMap: t, bumpScale: .002 });
+      const top = phys({ map: t, color: '#ffffff', roughness: glossy ? (c === 's' ? .3 : .38) : .62, clearcoat: glossy ? .35 : undefined, clearcoatRoughness: glossy ? .35 : undefined, envMapIntensity: glossy ? .85 : .6 });   // (no bump map: on discs this small it sparkled as the camera moved)
       return { top, side: phys({ color: side, roughness: glossy ? .34 : .6, clearcoat: glossy ? .5 : undefined, clearcoatRoughness: glossy ? .25 : undefined, envMapIntensity: glossy ? .9 : .55 }) };
     });
   }
@@ -234,7 +234,7 @@
   // the rim keeps the face's colour from the texture's border — the face map is a solid base colour at its edges
   function pieceGroup(look, c) {
     const TT = T(), striker = c === 's', r = striker ? RS : RM, h = striker ? HS : HM, M2 = pieceMat(look, c);
-    const g = new TT.Group(), body = new TT.Mesh(discGeo(r, h), M2.top); body.castShadow = body.receiveShadow = true; g.add(body);
+    const g = new TT.Group(), body = new TT.Mesh(discGeo(r, h), M2.top); body.castShadow = true; body.receiveShadow = false; g.add(body);   // (no self-shadow: thin discs flickered with shadow acne)
     if (look === 'modern' && striker) { const ring = new TT.Mesh(geos.ring || (geos.ring = (() => { const q = new TT.TorusGeometry(r - .004, .006, 6, 36); q.rotateX(Math.PI / 2); if (X.share) X.share(q); return q; })()), boardMats('modern').brass); ring.position.y = h * .55; g.add(ring); }
     g.userData = { c, r, h };
     return g;
@@ -279,9 +279,9 @@
     pcs.forEach(p => {
       const c = p.c, m = U.piece(c), [dx, dy] = nudge[p.id] || [0, 0], mv = moved[p.id], [x, z] = mv ? U.xz(mv[0], mv[1]) : U.xz(p.x + dx, p.y + dy);
       m.position.set(x, TOP, z); g.add(m);
-      const sh = X.contact(RM * 1.15, .4); sh.position.set(x, TOP + .002, z); g.add(sh);
+      const sh = X.contact(RM * 1.15, .4); sh.position.set(x, TOP + .004, z); g.add(sh);
     });
-    const st = U.striker(), [x, z] = U.xz(-6, 25.26); st.position.set(x, TOP, z); g.add(st); const sh = X.contact(RS * 1.15, .45); sh.position.set(x, TOP + .002, z); g.add(sh);
+    const st = U.striker(), [x, z] = U.xz(-6, 25.26); st.position.set(x, TOP, z); g.add(st); const sh = X.contact(RS * 1.15, .45); sh.position.set(x, TOP + .004, z); g.add(sh);
     return g;
   };
   X.carrom = { board, LOOKS, K };
