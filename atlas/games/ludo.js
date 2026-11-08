@@ -304,10 +304,17 @@
       const winSeats = st.seats.filter(x => st.team[x] === st.winner), names = [...new Set(winSeats.map(colName))].join('・');
       const wt = tx('res.lose', { p: names });
       SND.home();
-      if (pvp) { say(wt); return later(() => ctx.onEnd({ win: false, draw: false, level, score: wt, pvp: true, winnerText: wt }), 900); }
-      const won = st.winner === myTeam(), L0 = E.lastOf(st), mine = st.seats.filter(x => st.team[x] === myTeam()).reduce((a, x) => a + st.pos[x].filter(p => p >= L0).length, 0);
-      say(won ? L.win : wt);
-      later(() => ctx.onEnd({ win: won, draw: false, level, score: won ? wt : `${mine} / ${4 * st.seats.filter(x => st.team[x] === myTeam()).length}` }), 900);
+      // the places (as the full game's result): the winning side first, then by pieces home, then by steps walked
+      const RK = { ja: n => n + '位', en: n => n + (['th', 'st', 'nd', 'rd'][n % 10 < 4 && (n % 100 < 11 || n % 100 > 13) ? n % 10 : 0]), zh: n => '第' + n + '名', 'zh-TW': n => '第' + n + '名', ko: n => n + '위', es: n => n + '.º', fr: n => n + (n === 1 ? 'er' : 'e'), pt: n => n + 'º', de: n => n + '.', ru: n => n + '-е', tr: n => n + '.', id: n => '#' + n, hi: n => n + '.', ar: n => '#' + n };
+      const rk = RK[ctx.lang] || RK.en, L0 = E.lastOf(st);
+      const places = [...new Set(st.seats.map(x => st.team[x]))].map(tm => { const ss = st.seats.filter(x => st.team[x] === tm), pcs = ss.flatMap(x => st.pos[x]);
+        return { tm, ss, home: pcs.filter(p => p >= L0).length / pcs.length, steps: pcs.reduce((a, p) => a + Math.max(0, Math.min(p, L0) + 1), 0) }; })
+        .sort((a, b) => (b.tm === st.winner) - (a.tm === st.winner) || b.home - a.home || b.steps - a.steps);
+      const line = places.map((r, i) => `${rk(i + 1)} ${[...new Set(r.ss.map(colName))].join('・')}${!pvp && r.tm === myTeam() ? '（' + tx('p.you') + '）' : ''}`).join(' · ');
+      if (pvp) { say(wt); return later(() => ctx.onEnd({ win: false, draw: false, level, score: line, pvp: true, winnerText: wt }), 900); }
+      const won = st.winner === myTeam(), myPlace = places.findIndex(r => r.tm === myTeam()) + 1;
+      say(won ? L.win : wt + ' · ' + rk(myPlace));
+      later(() => ctx.onEnd({ win: won, draw: false, level, score: line }), 900);
     }
 
     /* ---------- taps ---------- */

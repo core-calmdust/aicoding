@@ -354,13 +354,45 @@ function recordGame() {
   try { GameRecord.add({ mode: G.rated ? 'rated' : 'ai', res: s.winner === me ? 'w' : 'l', side: G.plies[0] && humanSeat(G.plies[0].seat) ? 0 : 1, opp: 'AI Lv.' + G.level, key: 'ai:' + G.level, n: G.plies.length, why: '' }); } catch (e) {}
   if (G.rated && window.LudoRated) LudoRated.settle(s.winner === me);
 }
+/* the final places (common: every finish shows who came where): the winning side first, the others by pieces home, then by the
+   steps they have walked; Pachisi's partners share a place */
+const RANK = { ja: n => n + '位', en: n => n + (['th', 'st', 'nd', 'rd'][(n % 100 > 10 && n % 100 < 14) ? 0 : n % 10 < 4 ? n % 10 : 0]), zh: n => '第' + n + '名', 'zh-TW': n => '第' + n + '名', ko: n => n + '위',
+  es: n => n + '.º', fr: n => n + (n === 1 ? 'er' : 'e'), pt: n => n + 'º', de: n => n + '.', ru: n => n + '-е', tr: n => n + '.', id: n => '#' + n, hi: n => n + '.', ar: n => '#' + n };
+function placesOf(s) {
+  const L0 = E.lastOf(s), teams = [...new Set(s.seats.map(x => s.team[x]))];
+  return teams.map(tm => { const seats = s.seats.filter(x => s.team[x] === tm), pcs = seats.flatMap(x => s.pos[x]);
+    return { tm, seats, home: pcs.filter(p => p >= L0).length, of: pcs.length, steps: pcs.reduce((a, p) => a + Math.max(0, Math.min(p, L0) + 1), 0) }; })
+    .sort((a, b) => (b.tm === s.winner) - (a.tm === s.winner) || b.home / b.of - a.home / a.of || b.steps - a.steps)
+    .map((r, i) => Object.assign(r, { place: i + 1 }));
+}
+// the finish effect: a win throws confetti over the board and plays a fanfare; a loss dims the board for a moment with a falling tone
+function finishFx(won) {
+  const fr = $('#frame'); if (!fr) return;
+  if (won) {
+    [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => tone(f, .32, 'triangle', .07), i * 110));
+    const c = document.createElement('canvas'), r = fr.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1);
+    c.className = 'fx-cf'; c.width = r.width * dpr; c.height = r.height * dpr; fr.appendChild(c);
+    const x = c.getContext('2d'), cols = G.state.seats.map(seatColor).concat(['#ffd84a', '#ffffff']), P = [];
+    for (let i = 0; i < 140; i++) P.push({ x: r.width / 2 + (Math.random() - .5) * 60, y: r.height * .55, vx: (Math.random() - .5) * 9, vy: -6 - Math.random() * 9, s: 4 + Math.random() * 6, a: Math.random() * 6, va: (Math.random() - .5) * .4, c: cols[i % cols.length] });
+    const t0 = performance.now();
+    (function f(now) { const k = (now - t0) / 2600; x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, r.width, r.height);
+      P.forEach(p => { p.vy += .32; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.a += p.va; x.save(); x.globalAlpha = Math.max(0, 1 - k * k); x.translate(p.x, p.y); x.rotate(p.a); x.fillStyle = p.c; x.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); x.restore(); });
+      if (k < 1 && c.isConnected) requestAnimationFrame(f); else c.remove(); })(t0);
+  } else {
+    [392, 330, 262].forEach((f, i) => setTimeout(() => tone(f, .34, 'sine', .06), i * 170));
+    fr.classList.remove('fx-lose'); void fr.offsetWidth; fr.classList.add('fx-lose'); setTimeout(() => fr.classList.remove('fx-lose'), 1700);
+  }
+}
 function showResult() {
   const s = G.state, winSeats = s.seats.filter(x => s.team[x] === s.winner);
   const meWon = G.mode === 'ai' && winSeats.some(x => s.ctrl[x] === 0);
   $('#resultDots').innerHTML = winSeats.map(x => `<i style="background:${seatColor(x)}"></i>`).join('');
   $('#resultTitle').textContent = meWon ? t('res.win') : t('res.lose', { p: winSeats.map(x => (G.mode === 'ai' ? seatName(x) + '（' + colName(x) + '）' : colName(x))).filter((v, i, a) => a.indexOf(v) === i).join('・') });
   $('#resultSub').textContent = t('res.sub', { n: G.log.length }) + (G.rated && G.rated.done ? ' · ' + t('rt.after', { o: G.rated.done.old, n: G.rated.done.now, d: (G.rated.done.d >= 0 ? '+' : '−') + Math.abs(G.rated.done.d) }) : '');
-  if (meWon) sHome();
+  // the places: every side with its place, colour(s), name and pieces home; yours stands out
+  const rk = RANK[LANG] || RANK.en, mine = r => G.mode === 'ai' && r.seats.some(x => s.ctrl[x] === 0);
+  $('#resultRank').innerHTML = placesOf(s).map(r => `<li class="${mine(r) ? 'me' : ''}${r.place === 1 ? ' first' : ''}"><b class="pl">${rk(r.place)}</b><span class="dots">${r.seats.map(x => `<i style="background:${seatColor(x)}"></i>`).join('')}</span><span class="nm">${[...new Set(r.seats.map(x => G.mode === 'ai' && s.ctrl[x] !== 0 ? seatName(x) + '（' + colName(x) + '）' : G.mode === 'ai' ? seatName(x) : colName(x)))].join('・')}</span><span class="hm">${t('p.home', { n: r.home, m: r.of })}</span></li>`).join('');
+  if (G.mode === 'ai') finishFx(meWon); else finishFx(true);
   const ref = G; setTimeout(() => { if (G === ref && !SP) $('#resultOverlay').classList.add('show'); }, 500);
 }
 $('#btnResClose').onclick = () => $('#resultOverlay').classList.remove('show');

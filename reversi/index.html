@@ -1669,7 +1669,7 @@ html.rb-study .frame{outline:3px solid var(--accent);outline-offset:3px}
   </div>
 </div>
 
-<script src="i18n.js?v=20261108lv25"></script>
+<script src="i18n.js?v=20261108lv25b"></script>
 <script src="../shared/pzbook.js?v=3l14"></script>
 <script src="../shared/placement.js?v=1l14"></script>
 <script src="../shared/rulesoffer.js?v=17l14j"></script>
@@ -1808,7 +1808,7 @@ weightsReady = (async () => {
 let book = null;
 const bookReady = fetch('book.bin?v=2').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null).then(b => (book = b));   // (the opening book: tools/book-gen.js; each worker decodes it, engine.js decodeBook)
 function makeWorker(onmsg) {
-  const w = new Worker('engine.js?v=54');
+  const w = new Worker('engine.js?v=55');
   w.onmessage = onmsg;
   const send = wt => { if (wt) w.postMessage({ type: 'weights', buffer: wt.buffer.slice(0), nphase: wt.nphase }); };
   if (weights) send(weights); else weightsReady.then(send);
@@ -1847,7 +1847,7 @@ let jobId = 0;
 const MT_CFG = { 17: { exact: 18, wld: 20 }, 18: { exact: 18, wld: 21 }, 19: { exact: 19, wld: 21 }, 20: { exact: 20, wld: 22 },
   21: { exact: 21, wld: 23 }, 22: { exact: 22, wld: 23 }, 23: { exact: 22, wld: 24 }, 24: { exact: 23, wld: 24 }, 25: { exact: 23, wld: 25 } };   // the helpers' settings (engine.js LEVELS)
 const MTP = window.MTEngine ? MTEngine.use({
-  wasm: 'engine_mt.wasm?v=3', lead: 'mt-worker.js?v=7', helper: 'mt-worker.js?v=7', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
+  wasm: 'engine_mt.wasm?v=3', lead: 'mt-worker.js?v=8', helper: 'mt-worker.js?v=8', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => Date.now() } }),
   after: async (X, mem, ws) => {
     X.init();   // (the tables in the shared memory, once)
@@ -1877,7 +1877,7 @@ function think(cells, toMove, level, onProgress, pc) {
 // Root moves are split across several workers (no shared memory): the first move is searched with a full window,
 // the rest with a null window around the current best, re-searching on fail-high.
 const PAR_LEVELS = { 17: { exact: 18, time: 1500 }, 18: { exact: 18, time: 2200 }, 19: { exact: 19, time: 3000 }, 20: { exact: 20, time: 5000 },
-  21: { exact: 21, time: 7000, max: 17500 }, 22: { exact: 22, time: 9000, max: 20000 }, 23: { exact: 22, time: 11000, max: 20000 }, 24: { exact: 23, time: 14000, max: 20000 }, 25: { exact: 23, time: 18000, max: 20000 } };   // same as engine.js LEVELS
+  21: { exact: 21, time: 6000, use: 0.6, max: 12000 }, 22: { exact: 22, time: 8000, use: 0.65, max: 15000 }, 23: { exact: 22, time: 11000, use: 0.7, max: 18000 }, 24: { exact: 23, time: 14000, use: 0.75, max: 20000 }, 25: { exact: 23, time: 18000, use: 0.8, max: 20000 } };   // same as engine.js LEVELS
 const NPAR = Math.max(1, Math.min(4, (navigator.hardwareConcurrency || 2) - 1));
 let pool = null;
 function makePool() {
@@ -1930,7 +1930,7 @@ async function parallelThink(cells, toMove, level, onProgress) {
     result = { move: r.move, score: r.score / 100 }; depthDone = d;
     order = moves.slice().sort((x, y) => (x === r.move ? -1 : y === r.move ? 1 : (r.scores.get(y) ?? -1e9) - (r.scores.get(x) ?? -1e9)));
     onProgress && onProgress({ depth: d, score: result.score });
-    if (Date.now() - t0 > cfg.time * 0.45 && !doExact) break;
+    if (Date.now() - t0 > cfg.time * (cfg.use || 0.45) && !doExact) break;
   }
   let exact = false;
   if (doExact) {
@@ -2627,7 +2627,7 @@ setInterval(clockTick, 250);
 // Each AI level has a fixed rating (ladder in MODEL_CARD.md); the opponent is picked around the player's rating
 // (mostly close, sometimes clearly stronger or weaker) and the result moves the rating (Elo).
 const RT_STORE = 'reversi-rated-v1', RT_START = 1000;
-const RT_LV = [0, 50, 210, 310, 400, 530, 690, 780, 870, 960, 1030, 1150, 1260, 1340, 1440, 1530, 1590, 1630, 1690, 1780, 1810, 1820, 1827, 1833, 1837, 1840];   // index = level 1..25: 50 + 0.77 × the measured level Elo (MODEL_CARD.md; 21–25: estimated from time-doubling matches), so the old 10 levels keep roughly their old ratings
+const RT_LV = [0, 50, 210, 310, 400, 530, 690, 780, 870, 960, 1030, 1150, 1260, 1340, 1440, 1530, 1590, 1630, 1690, 1780, 1810, 1833, 1852, 1871, 1886, 1902];   // index = level 1..25: 50 + 0.77 × the measured level Elo (MODEL_CARD.md; 21–25: estimated from time-doubling matches), so the old 10 levels keep roughly their old ratings
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };
@@ -2810,11 +2810,11 @@ const LEVELS_UI = [   // (= engine.js LEVELS: the defaults the PRO panel shows)
   { depth: 60, exact: 18, wld: 21, time: 2200, mpc: 1 },     // 18
   { depth: 60, exact: 19, wld: 21, time: 3000, mpc: 1 },     // 19 (old Lv.9)
   { depth: 60, exact: 20, wld: 22, time: 5000, mpc: 1 },     // 20 (old Lv.10)
-  { depth: 60, exact: 21, wld: 23, time: 7000, max: 17500, mpc: 1 },    // 21
-  { depth: 60, exact: 22, wld: 23, time: 9000, max: 20000, mpc: 1 },    // 22
-  { depth: 60, exact: 22, wld: 24, time: 11000, max: 20000, mpc: 1 },   // 23
-  { depth: 60, exact: 23, wld: 24, time: 14000, max: 20000, mpc: 1 },   // 24
-  { depth: 60, exact: 23, wld: 25, time: 18000, max: 20000, mpc: 1 },   // 25
+  { depth: 60, exact: 21, wld: 23, time: 6000, use: 0.6, max: 12000, mpc: 1 },    // 21
+  { depth: 60, exact: 22, wld: 23, time: 8000, use: 0.65, max: 15000, mpc: 1 },   // 22
+  { depth: 60, exact: 22, wld: 24, time: 11000, use: 0.7, max: 18000, mpc: 1 },   // 23
+  { depth: 60, exact: 23, wld: 24, time: 14000, use: 0.75, max: 20000, mpc: 1 },  // 24
+  { depth: 60, exact: 23, wld: 25, time: 18000, use: 0.8, max: 20000, mpc: 1 },   // 25
 ];
 
 const PRO_T = {
@@ -2865,6 +2865,7 @@ function proCfg(lv) {
   const L = LEVELS_UI[lv] || LEVELS_UI[15], c = { depth: 60, exact: e.exact, mpc: L.mpc ? 1 : 0 }, o = { cfg: c };
   if (e.wld > e.exact) c.wld = e.wld;
   if (e.limit.k === 'depth') c.depth = e.limit.v; else if (e.limit.k === 'nodes') c.nodes = e.limit.v; else c.time = Math.round(e.limit.v * 1000);
+  if (c.time && c.time === L.time && L.max) { c.max = L.max; c.use = L.use; }   // (Lv.21-25 with their own time: the same hard limit and time use)
   if (e.var && !e.changed.includes('var') && L.noise) { c.noise = L.noise; c.depth = e.limit.k === 'depth' ? e.limit.v : L.depth; }   // (the level's own randomness: a fixed depth)
   else if (e.var) { o.variety = true; o.varietyMargin = e.var === 1 ? 150 : 400; }
   if (e.book) o.book = true; else o.noBook = true;
@@ -5699,7 +5700,7 @@ accRender();
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=20261110nw2" defer></script>
+<script src="../shared/atlas.js?v=20261110rv1" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1l14" defer></script>
 <script src="../shared/atlas-account.js?v=20261101fa1l14" defer></script>
 <script src="../shared/infotabs.js?v=17l14" defer></script>

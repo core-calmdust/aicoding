@@ -177,6 +177,16 @@ html.hb-on .throw .shown:not(.cw){width:60px;height:60px}html.hb-on .throw .show
 .result-big{font-family:'Shippori Mincho B1','Cormorant Garamond',serif;font-size:30px;text-align:center;margin:6px 0 4px}
 .result-sub{text-align:center;color:var(--muted);margin-bottom:10px}
 .result-dots{display:flex;justify-content:center;gap:8px;margin-bottom:4px}
+.result-rank{list-style:none;margin:2px auto 14px;padding:0;max-width:380px;display:grid;gap:6px}
+.result-rank li{display:grid;grid-template-columns:3.2em auto minmax(0,1fr) auto;align-items:center;gap:10px;padding:7px 12px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid var(--line)}
+.result-rank li.first{background:linear-gradient(90deg,rgba(255,206,84,.18),rgba(255,206,84,.04));border-color:rgba(255,206,84,.55)}
+.result-rank li.me{box-shadow:0 0 0 2px var(--accent)}
+.result-rank .pl{font-family:'Shippori Mincho B1','Cormorant Garamond',serif;font-size:18px;color:var(--accent);text-align:center}
+.result-rank .dots{display:flex;gap:3px}.result-rank .dots i{width:14px;height:14px;border-radius:50%;box-shadow:inset 0 -2px 0 rgba(0,0,0,.25)}
+.result-rank .nm{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.result-rank .hm{font-size:12.5px;color:var(--muted);white-space:nowrap}
+.fx-cf{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:6}
+.frame.fx-lose,#frame.fx-lose{animation:fxLose 1.6s ease}
+@keyframes fxLose{0%{filter:none;transform:none}12%{transform:translateX(-6px)}24%{transform:translateX(5px)}36%{transform:translateX(-3px)}48%{transform:none;filter:grayscale(.85) brightness(.7)}80%{filter:grayscale(.85) brightness(.7)}100%{filter:none}}
 .result-dots i{width:26px;height:26px;border-radius:50%;box-shadow:inset 0 -3px 0 rgba(0,0,0,.25)}
 #resultOverlay .modal{width:min(440px,100%)}
 html[dir=rtl] .ngt-gcard{text-align:right}
@@ -549,6 +559,7 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
     <div class="result-dots" id="resultDots"></div>
     <div class="result-big" id="resultTitle"></div>
     <div class="result-sub" id="resultSub"></div>
+    <ol class="result-rank" id="resultRank"></ol>
     <div class="modal-actions" style="justify-content:center;flex-wrap:wrap"><button class="mbtn" id="btnResClose" data-i18n="close"></button><button class="mbtn" id="btnResAnalyze" data-rv="btn"></button><button class="mbtn go" id="btnAgain" data-i18n="res.again"></button></div>
   </div>
 </div>
@@ -565,7 +576,7 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
 <script src="coach.js?v=2"></script>
 <script src="coach-i18n.js?v=1"></script>
 <script src="../shared/record.js?v=12l14"></script>
-<script src="app.js?v=7-aim"></script>
+<script src="app.js?v=8-aim"></script>
 <script src="review.js?v=1"></script>
 <script src="../shared/placement.js?v=1l14"></script>
 <script src="rated.js?v=2"></script>
@@ -573,7 +584,7 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
 <script src="app-learn.js?v=4"></script>
 <script src="../shared/cardbar.js?v=7l14"></script>
 <script src="../shared/ngtabs.js?v=25l14"></script>
-<script src="../shared/atlas.js?v=20261110nw2" defer></script>
+<script src="../shared/atlas.js?v=20261110rv1" defer></script>
 <script src="../shared/langsel.js?v=2l14" defer></script>
 <script src="online-soon.js?v=1"></script>
 <script src="../shared/infotabs.js?v=17l14" defer></script>
