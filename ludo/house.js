@@ -99,7 +99,9 @@
 .lhr-ls button:hover{background:var(--hov)}.lhr-ls button.sel{background:var(--sel);color:var(--selfg);font-weight:700}
 .lhr-st,.lhr-s{color:#ffc61a;text-shadow:0 0 1px rgba(90,60,0,.45)}.lhr-st{width:1em;flex:none}   /* every ★ the same yellow (2026-11-09) */
 .lhr-row .nm{display:flex;align-items:center;gap:9px;white-space:nowrap;min-width:0}
-.lhr-ic{width:30px;height:30px;flex:none;border-radius:9px;display:grid;place-items:center;background:var(--accbg);color:var(--acc);border:1px solid var(--ctlb)}
+.lhr-ic{--ic:#5cc8ff;width:30px;height:30px;flex:none;border-radius:9px;display:grid;place-items:center;color:var(--ic);background:color-mix(in srgb,var(--ic) 14%,transparent);border:1px solid color-mix(in srgb,var(--ic) 40%,transparent)}
+.lhr-ic.adv{--ic:#ff6b5e}   /* basic rules blue, advanced red (2026-11-09) */
+.lhr-atlas .lhr-ic{--ic:#1f97d0}.lhr-atlas .lhr-ic.adv{--ic:#e5463c}
 .lhr-ic svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 .lhr-ic svg .f{fill:currentColor;stroke:none}
 .lhr-row .ds{padding-inline-start:39px}
@@ -128,7 +130,7 @@
     dd: '<rect x="3" y="8" width="11" height="11" rx="2.5"/><path d="M10 5.5l1-.3a2.5 2.5 0 0 1 3 1.7l2.3 7.5"/><rect x="11" y="3" width="10" height="10" rx="2.5" transform="rotate(15 16 8)"/><circle class="f" cx="8.5" cy="13.5" r="1.3"/>',
     back: '<path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
   };
-  const icon = k => `<span class="lhr-ic" aria-hidden="true"><svg viewBox="0 0 24 24">${IC[k] || ''}</svg></span>`;
+  const icon = k => `<span class="lhr-ic${ADV.includes(k) ? ' adv' : ''}" aria-hidden="true"><svg viewBox="0 0 24 24">${IC[k] || ''}</svg></span>`;
   const star = x => esc(x).replace(/★/g, '<span class="lhr-s">★</span>');   // every ★ in the texts in the same yellow
   function open(o = {}) {
     const lang = o.lang || document.documentElement.lang || 'en', L = Lof(lang);
