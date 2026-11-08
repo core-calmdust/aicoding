@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>ウル MT ベンチ</title>
+<style>
+:root{--bg:#f6f1e7;--fg:#2a2118;--mut:#7a6a58;--card:#fffaf0;--line:#e2d6c2;--acc:#a8562a;--ok:#2f7d4a;--ng:#b23b2e}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1d1915;--fg:#efe6d8;--mut:#a89884;--card:#28221c;--line:#3d342a;--acc:#e08a55;--ok:#6cc58a;--ng:#ef7b6c}}
+:root[data-theme="dark"]{--bg:#1d1915;--fg:#efe6d8;--mut:#a89884;--card:#28221c;--line:#3d342a;--acc:#e08a55;--ok:#6cc58a;--ng:#ef7b6c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif}
+main{max-width:860px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:22px;margin:0 0 4px}
+.sub{color:var(--mut);margin:0 0 16px;font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:0 0 14px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 14px;font-size:14px}
+.kv b{font-weight:600}
+.y{color:var(--ok);font-weight:600}.n{color:var(--ng);font-weight:600}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+label{font-size:14px}
+select,button{font:inherit}
+select{padding:4px 6px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg)}
+button{padding:8px 16px;border-radius:999px;border:0;background:var(--acc);color:#fff;font-weight:600;cursor:pointer}
+button.sec{background:transparent;color:var(--acc);border:1.5px solid var(--acc)}
+button:disabled{opacity:.45;cursor:default}
+#bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden;margin:10px 0 4px}
+#bar i{display:block;height:100%;width:0;background:var(--acc);transition:width .3s}
+#st{font-size:13px;color:var(--mut);min-height:1.5em}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--mut);font-weight:600;font-size:12px}
+h2{font-size:15px;margin:4px 0 8px}
+pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);margin:8px 0 0;max-height:200px;overflow:auto}
+</style>
+</head>
+<body>
+<main>
+<h1 id="h1">ウル王朝のゲーム マルチスレッド ベンチマーク</h1>
+<p class="sub" id="lead">対局ページと同じ方式（shared/mtworkers.js：ふつうの Worker を並べ、期待値探索を「手 × 次の出目」の仕事に分けて配る）で、スレッド数ごとの読みの速さを測ります。共有メモリを使わないので分離は不要です。PC の Chrome で開き、終わったら「結果をコピー」を押して貼り付けてください。</p>
+
+<div class="card"><div class="kv" id="env"></div></div>
+
+<div class="card">
+  <div class="row">
+    <label>読みの深さ <select id="selD"></select></label>
+    <label>局面数 <select id="selP"><option value="12">12</option><option value="24" selected>24</option><option value="48">48</option></select></label>
+  </div>
+  <div class="row" style="margin-top:12px">
+    <button id="btnRun">開始</button>
+    <button id="btnCopy" class="sec" disabled>結果をコピー</button>
+  </div>
+  <div id="bar"><i></i></div>
+  <div id="st">「開始」を押してください。</div>
+</div>
+
+<div class="card"><h2>結果</h2><div class="tw"><table id="tbl"><thead><tr><th>スレッド</th><th>局面/秒</th><th>仕事/秒</th><th>1スレッド比</th><th>効率</th><th>最善手の一致</th></tr></thead><tbody></tbody></table></div><pre id="log"></pre></div>
+</main>
+<script src="engine.js?v=3"></script>
+<script>
+'use strict';
+// ---- the game's part (the same page for senet/: G changes) ----
+const G = {
+  id: 'ur', E: window.UrEngine, worker: 'worker.js?v=3', depths: [[3, '3（ヒント）'], [4, '4（重い）'], [2, '2（Lv.20）']],
+  positions(k) {   // positions with a throw and 2+ moves, from Lv.16 self-play (seeded)
+    const E = this.E, rng = E.mulberry32(20261108), out = [];
+    for (let g = 0; out.length < k && g < 200; g++) {
+      const rule = ['finkel', 'masters', 'blitz'][g % 3]; let s = E.newGame(rule, g & 1);
+      for (let p = 0; s.winner < 0 && p < 300; p++) {
+        const r = E.rollDice(rng, rule), ms = E.legalMoves(s, r.n);
+        if (ms.length > 1 && p % 7 === 3 && out.length < k) out.push({ s: E.clone(s), n: r.n });
+        s = E.apply(s, ms.length ? E.think(s, r.n, 16, { rng }) : null).state;
+      }
+    }
+    return out;
+  },
+  split(q, d) { return this.E.splitEval(q.s, q.n, d); },
+  task(t) { return { type: 'roll', state: t.state, n: t.n, d: t.d }; },
+  best(ev) { return ev[0].move.from; },
+};
+// ---- the common part ----
+const $ = s => document.querySelector(s);
+const HC = navigator.hardwareConcurrency || 1;
+const COUNTS = (() => { const a = []; for (let t = 1; t < HC; t *= 2) a.push(t); a.push(HC); return [...new Set(a)]; })();
+const ua = (() => { const d = navigator.userAgentData; const b = d && (d.brands || []).filter(x => !/Not/.test(x.brand)).map(x => x.brand + ' ' + x.version).join(', '); return (b ? b + ' / ' + (d.platform || '') : '') || navigator.userAgent; })();
+let lines = [];
+G.depths.forEach(([v, l], i) => $('#selD').insertAdjacentHTML('beforeend', `<option value="${v}"${i ? '' : ' selected'}>${l}</option>`));
+function env() {
+  $('#env').innerHTML = [['hardwareConcurrency', HC], ['測るスレッド数', COUNTS.join(', ')], ['ブラウザ', ua.replace(/</g, '&lt;')]].map(([k, v]) => `<b>${k}</b><span>${v}</span>`).join('');
+}
+env();
+// t plain workers; tasks handed to whichever is free (as shared/mtworkers.js)
+function runPool(ws, tasks) {
+  return new Promise((res, rej) => {
+    const out = new Array(tasks.length); let next = 0, left = tasks.length, id = 0;
+    if (!left) { res(out); return; }
+    const feed = w => { if (next >= tasks.length) return; const i = next++, my = ++id; w.onmessage = e => { if (e.data.error) { rej(new Error(e.data.error)); return; } out[i] = e.data; if (--left === 0) res(out); else feed(w); }; w.onerror = e => rej(new Error(e.message || 'worker')); w.postMessage(Object.assign({}, tasks[i], { id: my })); };
+    ws.forEach(feed);
+  });
+}
+async function spawn(t) {
+  const ws = []; for (let i = 0; i < t; i++) ws.push(new Worker(G.worker));
+  await Promise.all(ws.map(w => new Promise(r => { w.onmessage = () => r(); w.postMessage(Object.assign({ id: 0 }, G.warm || { type: 'roll', state: G.E.newGame(), n: 1, d: 1 })); })));   // (loaded and warm)
+  return ws;
+}
+async function run() {
+  $('#btnRun').disabled = true; $('#btnCopy').disabled = true;
+  const d = +$('#selD').value, P = G.positions(+$('#selP').value);
+  lines = [`${G.id} bench ${new Date().toISOString()} | ${ua} | hc ${HC} | depth ${d} | ${P.length} positions`];
+  const tb = $('#tbl tbody'); tb.innerHTML = '';
+  let base = 0, ref = null, step = 0;
+  try {
+    for (const t of COUNTS) {
+      $('#st').textContent = `${t}スレッド：起動中…`;
+      const ws = await spawn(t);
+      $('#st').textContent = `${t}スレッド：読んでいます…`;
+      const t0 = performance.now(), bests = []; let nt = 0;
+      for (const q of P) { const sp = await G.split(q, d, ws); nt += sp.tasks.length; const r = await runPool(ws, sp.tasks.map(x => G.task(x))); bests.push(G.best(sp.combine(r.map(x => x.v)))); }
+      const ms = performance.now() - t0; ws.forEach(w => w.terminate());
+      const pps = P.length / ms * 1000, tps = nt / ms * 1000; if (!base) { base = pps; ref = bests; }
+      const agree = bests.filter((b, i) => b === ref[i]).length, sp = pps / base;
+      tb.insertAdjacentHTML('beforeend', `<tr><td>${t}</td><td>${pps.toFixed(2)}</td><td>${tps.toFixed(0)}</td><td>${sp.toFixed(2)}×</td><td>${(sp / t * 100).toFixed(0)}%</td><td>${agree}/${P.length}</td></tr>`);
+      lines.push(`threads ${t}: ${pps.toFixed(2)} pos/s, ${tps.toFixed(0)} tasks/s, x${sp.toFixed(2)} vs 1, eff ${(sp / t * 100).toFixed(0)}%, agree ${agree}/${P.length}, ${(ms / 1000).toFixed(1)} s`);
+      $('#bar i').style.width = (++step / COUNTS.length * 100) + '%';
+    }
+    $('#st').textContent = '完了。「結果をコピー」を押して、Claude に貼り付けてください。';
+  } catch (e) { $('#st').innerHTML = '<span class="n">エラー：' + String(e.message || e).replace(/</g, '&lt;') + '</span>'; lines.push('error ' + (e.message || e)); }
+  $('#log').textContent = lines.join('\n');
+  $('#btnRun').disabled = false; $('#btnCopy').disabled = false;
+}
+$('#btnRun').onclick = run;
+$('#btnCopy').onclick = async () => {
+  const txt = lines.join('\n');
+  try { await navigator.clipboard.writeText(txt); $('#btnCopy').textContent = 'コピーしました'; }
+  catch (e) { const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); $('#btnCopy').textContent = 'コピーしました'; } catch (e2) {} ta.remove(); }
+  setTimeout(() => { $('#btnCopy').textContent = '結果をコピー'; }, 2000);
+};
+</script>
+</body>
+</html>

@@ -65,6 +65,7 @@ evaluate(state, n) → [{ move, wp }]（良い順。wp＝その手を指した�
 think(state, n, level 1..20, opts) → move     // 弱いレベルはわざと誤る（確率的）。強いレベルは期待値探索
 resist：負けが確定的な局面でもいちばん粘る手（相手の取りを避ける・ロゼットを守る）を選ぶ
 ```
+マルチスレッド（2026-11-08、`shared/mtworkers.js`、addendum「本編のマルチスレッド」）：`splitEval(state, n, depth)` が `evaluate` を「手 × 次の出目」の仕事 `{ state, n, d }` に分け、`worker.js` の `'roll'`（`rollTask`）を Worker のプールで並べて読み、`combine` で `evaluate` と同じ数値に戻す（Node で 1,188 手を照合して一致）。使う所：Lv.20 の AI の手（2投先。1スレッドでは 80 ミリ秒で打ち切る上限つき）、ヒント（スレッドがあると3投先、なしは2投先）、振り返り（`'review1'` で局面ごと）。`think(…, { ev })` はスレッドで読んだ評価から選ぶ（乱数・粘りは同じ）。Lv.1〜19 は一瞬で終わるので1スレッド、最上位の追加はしない（Lv.20 が完全解析表に対し平均損失 約0.01%／手）。計測：`ur/bench.html`（どこからもリンクしない）。
 AI：期待値最大化探索（expectiminimax）＋よく調整した評価関数。レベル20は可能ならほぼ最善（RoyalUr.net の強いAI相当）。軽量であること（スマホで1手0.5秒以内が目安）。可能ならオフラインで強化した評価表（数百KB以内、gz）を使ってよい。
 
 ### 4.2 2D描画API（`window.UrBoard2D`）

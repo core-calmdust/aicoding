@@ -34,6 +34,7 @@
 - AI：expectiminimax ＋ TD(0) 学習の価値ネット（64入力・48隠れ、leaky ReLU。`tools/train_td.js` で15万局、`tools/embed_net.js` で engine.js に埋め込み）。
 - レベル1〜20：ランダム手の混ぜ率で強さを作る（L1 100% … L17以上 0%）、深さ 1（L1–12）／2（L13–18）／3（L19–20、L20 は時間を長く）。温度式（softmax）は弱くなったので不採用。深さ4は3より強くならなかった。
 - 投了寸前（最善でも勝率 3% 未満、L4以上）は「粘る手」（評価の logit 最大）を選ぶ。
+- マルチスレッド（2026-11-08、`shared/mtworkers.js`、ウルと同じ方式）：`splitEval(s, n, depth)` が `evaluate` を「手 × 次の投げ」の仕事に分け、`worker.js` の `'roll'`（`rollTask`、時間の上限 `until` つき）をプールで読み、`combine` で同じ数値に戻す（Node で照合）。使う所：Lv.19・20 の AI の手（3投先、上限 0.7／1.5 秒 = `timeLimitOf`）、ヒント（スレッドがあると3投先、なしは2投先）、振り返り（局面ごと）。最上位の追加はしない（深さ4は3より強くならない・Lv.17〜20 の差は 1段階 約4 Elo）。計測：`senet/bench.html`。
 - レート表 `RT_LV`（app.js）は `tools/ladder.js` で L10 相手に測った値から。強さ・探索を変えたら自己対局で確認してから。
 
 ## 4. 画面（ウルと同じ構成）

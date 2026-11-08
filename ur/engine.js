@@ -24,6 +24,9 @@
  * winProb(state, opts) → 手番側（これから振る側）の勝率 0..1（opts.depth 既定1）
  * evaluate(state, n, opts) → [{ move, wp }]  良い順。wp=指した後の自分の勝率（opts.depth 既定2）
  * think(state, n, level=20, opts) → move|null  opts.rng（既定 Math.random）、opts.timeLimit（ms、既定80。L20 の深さ2探索の打ち切り）
+ *                             opts.ev（[{ move, wp }]：スレッドで読んだ評価。あれば探索せずにそこから選ぶ）
+ * splitEval(state, n, depth) → { moves, tasks:[{ state, n, d }], combine(vals) → [{ move, wp }] }  並列用（手 × 出目）
+ * rollTask(state, n, d) → 出目 n の後の手番側の最善の勝率（splitEval の仕事1つ）
  * hitRisk(state, side) → [prob per piece]   次の相手の1回の手番（ロゼットの追加手番は含まない）で各駒が取られる確率
  * raceCount(state) → { pips:[s0,s1], diff }   各側のゴールまでの残り歩数（diff = s1 − s0）
  * LEVELS[1..20]              各レベルの設定 { depth, temp, noise, capPref }
@@ -314,8 +317,8 @@
     level = Math.max(1, Math.min(20, Math.round(level || 20)));
     const cfg = LEVELS[level];
     // 反復深化：浅い結果を先に得て、深い探索は opts.timeLimit（ms、既定 80）を超えたら打ち切る
-    let sc = ms.map(m => ({ m, wp: wpAfter(s, m, Math.min(cfg.depth, 1)) }));
-    if (cfg.depth >= 2) {
+    let sc = opts.ev ? opts.ev.map(x => ({ m: ms.find(y => y.from === x.move.from) || x.move, wp: x.wp })) : ms.map(m => ({ m, wp: wpAfter(s, m, Math.min(cfg.depth, 1)) }));
+    if (cfg.depth >= 2 && !opts.ev) {
       deadline = now() + (opts.timeLimit != null ? opts.timeLimit : 80);
       try { sc = ms.map(m => ({ m, wp: wpAfter(s, m, cfg.depth) })); } catch (e) { if (e !== ABORT) throw e; }
       deadline = Infinity;
@@ -348,6 +351,27 @@
     return bm;
   }
 
+  // ---------- 並列（shared/mtworkers.js、2026-11-08）----------
+  // evaluate(s, n, {depth: d}) を「手 × 次の出目」の独立な仕事に分ける。仕事 { state, n, d } の値は rollTask(state, n, d)
+  // （worker.js の 'roll'）。combine(値の配列) → evaluate と同じ [{ move, wp }]（同じ数値）。d ≤ 0 の手は仕事なしで静的評価。
+  function splitEval(s, n, d) {
+    const ms = legalMoves(s, n), me = s.turn, items = [], tasks = [], pr = R(s.rule).probs;
+    for (const m of ms) {
+      const ns = apply(s, m).state;
+      if (ns.winner >= 0) { items.push({ move: m, fixed: ns.winner === me ? 1 : 0 }); continue; }
+      if (d <= 0) { const v = staticEval(ns); items.push({ move: m, fixed: ns.turn === me ? v : 1 - v }); continue; }
+      const it = { move: m, flip: ns.turn !== me, parts: [] }; items.push(it);
+      for (let r = 0; r <= 4; r++) if (pr[r] > 0) { it.parts.push([tasks.length, pr[r]]); tasks.push({ state: ns, n: r, d }); }
+    }
+    const combine = vals => items.map(it => {
+      if (it.fixed != null) return { move: it.move, wp: it.fixed };
+      let v = 0; for (const [k, p] of it.parts) v += p * vals[k];
+      return { move: it.move, wp: it.flip ? 1 - v : v };
+    }).sort((a, b) => b.wp - a.wp);
+    return { moves: ms, tasks, combine };
+  }
+  function rollTask(state, n, d) { deadline = Infinity; return bestAfterRoll(state, n, d); }
+
   // 任意：別の評価ネット（ur/tools/net-<rule>.json と同形式）を非同期で差し替える。失敗しても内蔵ネットで動く
   function loadNet(rule, url) {
     if (typeof fetch !== 'function') return Promise.resolve(false);
@@ -360,7 +384,7 @@
   const API = {
     RULES, PROB: P4.slice(), ROSETTES_RC, LEVELS, probs,
     newGame, clone, coords, pathOf, isRosette, isSafe, rollDice, mulberry32,
-    legalMoves, apply, key, moveText, winProb, evaluate, think, hitRisk, raceCount, staticEval, loadNet,
+    legalMoves, apply, key, moveText, winProb, evaluate, think, hitRisk, raceCount, staticEval, loadNet, splitEval, rollTask,
     _valueToRoll: valueToRoll, _features: features, _hasNet: id => !!getNet(id),
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
