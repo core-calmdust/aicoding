@@ -246,7 +246,7 @@
   // badge labels: NEW, BETA and ORIGINAL read the same in every language; UPDATE is localized (14 languages)
   const BADGE_TEXT = {
     new: 'NEW', beta: 'BETA', original: 'ORIGINAL',
-    update: { ja: 'アップデート', en: 'UPDATE', zh: '更新', 'zh-TW': '更新', ko: '업데이트', es: 'ACTUALIZADO', fr: 'MISE À JOUR', pt: 'ATUALIZADO', de: 'UPDATE', hi: 'अपडेट', ar: 'تحديث', ru: 'ОБНОВЛЕНО', id: 'DIPERBARUI', tr: 'GÜNCELLENDİ' },
+    update: 'UPDATE',
   };
   const badgeText = (b, l) => { const t = BADGE_TEXT[b]; return !t ? '' : typeof t === 'string' ? t : t[l] || t.en; };
   // games ordered by the changelog (UPDATES is newest first); games without entries keep registry order
