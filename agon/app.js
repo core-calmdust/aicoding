@@ -108,7 +108,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=4-pro1';
+const ENGINE_URL = 'engine.js?v=4-pro1-mt1';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -119,12 +119,39 @@ function makeWorker() {
   };
   return w;
 }
+// search speed of the last search on several threads (nodes per second, all threads), shown quietly at the end of the info line
+let lastNps = 0;
+const npsText = () => lastNps ? '  ·  ' + (lastNps >= 1e6 ? (lastNps / 1e6).toFixed(1) + 'M' : Math.round(lastNps / 1e3) + 'k') + ' nps' : '';
+function noteNps(nodes, ms) {
+  if (!(nodes > 20000 && ms > 20)) return;
+  lastNps = nodes / ms * 1000;
+  const el = document.getElementById('infoLine'); if (el && el.dataset.base !== undefined) el.textContent = el.dataset.base + npsText();
+}
 let aiW = makeWorker(), anaW = makeWorker();
+// multi-threaded search (shared/mtsplit.js; common rule 2026-11-08「本編のマルチスレッド」全タイトル対応): several plain workers of this
+// engine share the root moves and the main line (Young Brothers Wait) — no shared memory, so no isolation, no reload, and sign-in /
+// online play are untouched. Analysis, hints, the coach, the review box and the levels that think by time (四段・五段, rated games
+// too) go to the threads when they are free; the levels decided by depth / positions stay on the one-thread workers.
+const MTP = window.MTSplit ? MTSplit.use({ url: ENGINE_URL, drive: MTSplit.ladder.drive }) : null;
+if (window.MTSplit) MTSplit.init();
+const mtLevel = lv => { const L = E.LEVELS[lv]; return !!(L && L.s && L.ms && !L.nk); };   // a level that thinks by time
+function mtWants(which, msg) {
+  if (msg.type === 'analyze' || msg.type === 'cands') return true;
+  if (msg.type !== 'think') return false;
+  if (msg.cfg) return !!msg.cfg.s && msg.cfg.threads > 1;   // PRO: its own thread count with any limit of the search (not the weak steps' root values)
+  return mtLevel(msg.level) || (which === 'ana' && msg.level === 19);   // (rated games too: the user's decision 2026-11-08; 19 = COACH_DEEP, the coach's deeper pass)
+}
 function request(which, msg, onProgress) {
+  const mp = MTP && mtWants(which, msg) && MTP.pool(which === 'ai' ? 'ai' : null);
+  if (mp) { const t0 = performance.now(), full = { start: startSpec, rule: gv, ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }; return mp.run(full, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full, onProgress) : r; }); }
+  return requestW(which, msg, onProgress);
+}
+function requestW(which, msg, onProgress) {   // (the one-thread workers)
   const w = which === 'ai' ? aiW : anaW;
   return new Promise(resolve => { const id = ++jobId; w.jobs.set(id, { resolve, onProgress }); w.postMessage({ start: startSpec, rule: gv, ...msg, id }); });
 }
 function cancelWorker(which) {
+  if (MTP) MTP.cancel(which);
   const w = which === 'ai' ? aiW : anaW;
   if (!w.jobs.size) return;
   w.terminate();
@@ -437,7 +464,7 @@ function renderInfo() {
   $('#btnSound').classList.toggle('on', settings.sound);
   $('#reviewBar').classList.toggle('show', reviewing && !lesson && !puzzle);
   renderReview();
-  $('#infoLine').textContent = `${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? AIW() + ' ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : '') : settings.mode === 'watch' ? `${LV(settings.level)} vs ${LV(settings.level2)}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`;
+  { const il = $('#infoLine'); il.dataset.base = `${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? AIW() + ' ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : '') : settings.mode === 'watch' ? `${LV(settings.level)} vs ${LV(settings.level2)}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`; il.textContent = il.dataset.base + npsText(); }
   renderBrand();
   if (window.olAfterInfo) olAfterInfo();
   hbInfo(pos, st);
@@ -1144,8 +1171,12 @@ $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 // AI vs AI, never rated. ProSet.ladder() turns the changed values into a step of this engine's ladder (engine.js think: cfg).
 const PRO_L = window.ProSet ? ProSet.ladder(E.LEVELS, { dmax: 20, nmax: 20000000 }) : null;
 var PRO = PRO_L ? ProSet.init({ game: 'agon', lang: () => LANG, level: () => draft.level || settings.level, show: () => draft.mode === 'ai' || draft.mode === 'watch',
-  store: { get: () => settings.pro, set: v => { settings.pro = v; } }, defaults: PRO_L.defaults, params: PRO_L.params }) : null;
-function proCfg(lv) { if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; const e = PRO.get(lv); return e ? PRO_L.cfg(e, lv) : null; }
+  store: { get: () => settings.pro, set: v => { settings.pro = v; } },
+  // threads (本編のマルチスレッド, shared/mtsplit.js): with any limit of the search; the default is every thread for the levels that
+  // think by time, else one
+  defaults: MTP ? lv => Object.assign(PRO_L.defaults(lv), { threads: mtLevel(lv) ? ProSet.maxThreads() : 1 }) : PRO_L.defaults,
+  params: MTP ? [PRO_L.params[0], { key: 'threads' }].concat(PRO_L.params.slice(1)) : PRO_L.params }) : null;
+function proCfg(lv) { if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; const e = PRO.get(lv); return e ? Object.assign(PRO_L.cfg(e, lv), MTP ? { threads: e.threads || 1 } : {}) : null; }
 function proTag(lv) { return proCfg(lv) ? ' PRO' : ''; }
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
@@ -2154,6 +2185,7 @@ function rvbUpdate() {
 }
 if (window.RvBox) BOX = RvBox.create({
   app: '.app', frame: '#frame', lang: () => LANG, worker: () => ENGINE_URL,
+  pool: () => MTP && MTP.pool(), cancel: () => { if (MTP) MTP.cancel('rvb'); },   // (the threads when free)
   onHover: e => { rvbHov = e ? { e, k: kenSwap(() => keyOf(cur)) } : null; renderFx(); },
   onPick: e => kenPick(e), onKen: () => kenStart(), onBack: () => kenBack(), onReset: () => kenReset(),
   onGoto: i => viewAt(i), onLayout: () => { renderInfo(); renderFx(); }

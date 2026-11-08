@@ -397,8 +397,10 @@ function think(start, moves, level, rand, rule) {
     return { move: good[Math.floor(rand() * good.length)].m, v: vals[0].v };
   }
   const r = bestMove(pos, hist, L.dx || 60, L.ms || 3000, L.nk || 0);
-  return { move: r.move, v: r.v, depth: r.depth };
+  return thinkFin(pos, hist, r);
 }
+// the strong steps' answer from the search's result (also the end of a search on several threads, shared/mtsplit.js)
+function thinkFin(pos, hist, r) { return { move: r.move, v: r.v, depth: r.depth }; }
 const kindOf = v => Math.abs(v) > WINT ? 'exact' : 'heur';
 function analyze(start, moves, ms, onProgress, rule) {
   if (rule) setRule(rule);
@@ -419,18 +421,63 @@ function cands(start, moves, ms, k, plies, onProgress, rule) {
   if (rule) setRule(rule);
   const r = analyze(start, moves, ms, onProgress);
   const list = r.list.slice().sort((a, b) => b.v - a.v).slice(0, k || 5);
-  for (const e of list) {
-    e.pv = [];
-    const line = moves.concat([e.m]);
-    for (let d = 0; d < (plies || 7); d++) {
-      const { pos, hashes } = replay(start, line);
-      if (judge(pos, hashes).over) break;
-      const b = bestMove(pos, hashes.slice(0, -1), 4, 60, 0);
-      if (b.move == null || b.move < 0) break;
-      line.push(b.move); e.pv.push(b.move);
-    }
-  }
+  for (const e of list) e.pv = pvOf(start, moves, e.m, plies);
   return { list, depth: r.depth };
+}
+// the line after root move m (short searches, one per ply)
+function pvOf(start, moves, m, plies) {
+  const pv = [], line = moves.concat([m]);
+  for (let d = 0; d < (plies || 7); d++) {
+    const { pos, hashes } = replay(start, line);
+    if (judge(pos, hashes).over) break;
+    const b = bestMove(pos, hashes.slice(0, -1), 4, 60, 0);
+    if (b.move == null || b.move < 0) break;
+    line.push(b.move); pv.push(b.move);
+  }
+  return pv;
+}
+// ---------------------------------------------------------------- several threads (shared/mtsplit.js: plain workers share the root moves)
+// mtPlan: what a 'think' / 'analyze' / 'cands' job searches on the threads (or its answer at once); mtV: one root move to depth d
+// in the window (a, b); mtFin: the job's reply from the threads' raw result (the same as the one-thread worker's).
+let mtRule = null;
+function mtPlan(m) {
+  const { pos } = replay(m.start, m.moves), all = pos.moves(), inf = WIN + 1;
+  if (m.job === 'think') {
+    const L = m.cfg || LEVELS[m.level] || LEVELS[10];
+    if (all.length < 2 || !L.s || (L.book && m.moves.length < 6 && !m.start)) { PRO_CFG = m.cfg || null; try { return { result: think(m.start, m.moves, m.level) }; } finally { PRO_CFG = null; } }
+    return { plan: { kind: 'best', moves: orderMoves(pos, all, -1, 0), inf, maxD: L.dx || 60, ms: L.ms || 3000, nodes: L.nk ? L.nk * 1000 : 0, win: WINT, lmr: { d: 3, i: 6 }, splitMin: 5 } };
+  }
+  if (!all.length) return { result: { list: [], depth: 0 } };
+  const cands = m.job === 'cands';
+  return { plan: { kind: 'all', moves: orderMoves(pos, all, -1, 0), inf, maxD: 30, ms: m.time || (cands ? 1200 : 1000), win: WINT, progress: true, pv: cands ? m.plies || 7 : 0, pvK: m.k || 5 } };
+}
+// the node after the root and m.line: its position, the earlier positions (repetitions) and its ply from the root
+function mtNode(m) {
+  if (mtRule !== RK) { TT.clear(); mtRule = RK; }
+  const line = m.line || [], { pos, hashes } = replay(m.start, m.moves.concat(line)); hashes.pop();
+  return { pos, hist: hashes, ply: line.length };
+}
+function mtV(m) {
+  const { pos, hist, ply } = mtNode(m);
+  nodes = 0; stop = false; tEnd = m.until || Infinity; nodeLimit = m.nl || Infinity;
+  loadHist(hist);
+  const v = search(pos, m.d, m.wa, m.wb, ply);
+  return { v, ok: !stop, nodes };
+}
+function mtKids(m) {
+  const { pos, hist, ply } = mtNode(m);
+  loadHist(hist);
+  if (terminal(pos, ply) !== null || (ply > 0 && seenBefore(pos.h1, pos.h2))) return { kids: [] };
+  const e = TT.get(pos.h1);
+  return { kids: orderMoves(pos, pos.moves(), e && e.h2 === pos.h2 && e.ply === pos.ply ? e.m : -1, ply).map(x => ({ m: x, s: -1 })) };
+}
+function mtFin(m) {
+  const r = m.raw;
+  if (m.job === 'think') { const { pos } = replay(m.start, m.moves); return { result: thinkFin(pos, histOf(m.start, m.moves), { move: r.m, v: r.v, depth: r.depth }) }; }
+  let list = (r.list || []).map(e => Object.assign({ m: e.m, v: e.v, kind: kindOf(e.v) }, e.pv ? { pv: e.pv } : {}));
+  if (!list.length) { const { pos } = replay(m.start, m.moves); list = pos.moves().map(x => ({ m: x, v: 0, kind: 'heur' })); }
+  if (m.job === 'cands') list = list.slice(0, m.k || 5);
+  return { result: { list, depth: r.depth } };
 }
 // ---------------------------------------------------------------- one-player puzzles: fill the target corner in n moves
 // (Black does not move: PASS). Lower bound = White pieces outside the corner (each needs a move of its own).
@@ -568,7 +615,7 @@ function duelReply(start, moves, n, rule) {
 function puzzle(start, moves, n, defend, goal, base, rule) { return soloGood(start, moves, n, rule).map(m => ({ m, need: n })); }
 
 setRule('c33');
-const API = { get nodes() { return nodes; }, P1, P2, WIN, WINT, PASS, RULES, RULE_ORDER, setRule, get rule() { return RK; }, get R() { return R; }, HOME: () => HOME, HOMEL: () => HOMEL, DIST: () => DIST, target, RC, sqAt, sqName, mv, mFrom, mTo, mCap, Pos, path, isJump, name, parse, replay, judge, LEVELS, think, analyze, cands, puzzle, soloGood, soloMin, soloNeed, duelGood, duelMin, duelReply, evaluate, kindOf, bitsOf: () => [], popc: () => 0, bit: () => 0 };
+const API = { get nodes() { return nodes; }, P1, P2, WIN, WINT, PASS, RULES, RULE_ORDER, setRule, get rule() { return RK; }, get R() { return R; }, HOME: () => HOME, HOMEL: () => HOMEL, DIST: () => DIST, target, RC, sqAt, sqName, mv, mFrom, mTo, mCap, Pos, path, isJump, name, parse, replay, judge, LEVELS, think, analyze, cands, puzzle, mtPlan, mtV, mtKids, mtFin, pvOf, soloGood, soloMin, soloNeed, duelGood, duelMin, duelReply, evaluate, kindOf, bitsOf: () => [], popc: () => 0, bit: () => 0 };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') {
   let queueP = Promise.resolve();
@@ -586,6 +633,11 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
         else if (m.type === 'duel') { const g = duelGood(m.start, m.moves, m.n); self.postMessage({ id: m.id, type: 'result', list: g ? g.map(x => ({ m: x, need: m.n })) : null }); }
         else if (m.type === 'duelReply') self.postMessage({ id: m.id, type: 'result', ...duelReply(m.start, m.moves, m.n) });
         else if (m.type === 'newgame') { TT.clear(); self.postMessage({ id: m.id, type: 'result' }); }
+        else if (m.type === 'mtplan') self.postMessage({ id: m.id, type: 'result', ...mtPlan(m) });
+        else if (m.type === 'mtv') self.postMessage({ id: m.id, type: 'result', ...mtV(m) });
+        else if (m.type === 'mtkids') self.postMessage({ id: m.id, type: 'result', ...mtKids(m) });
+        else if (m.type === 'mtpv') self.postMessage({ id: m.id, type: 'result', pv: pvOf(m.start, m.moves, m.m, m.plies) });
+        else if (m.type === 'mtfin') self.postMessage({ id: m.id, type: 'result', ...mtFin(m) });
       } catch (err) { self.postMessage({ id: m.id, type: 'result', error: String(err && err.stack || err) }); }
     });
   };
