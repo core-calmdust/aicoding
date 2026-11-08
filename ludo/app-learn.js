@@ -3,16 +3,18 @@
    - レッスン（lessons.json）：カテゴリのタブ（アイコン＋名前＋合格数）→ カテゴリの見出しカード → ミニ盤付きのカード（PC 2列）。
      開くと説明（ミニ盤）→ 準備 2（考え方：盤に矢印と印／例題：採点なし）→ 採点問題5（満点20、ヒント3段階：考え方 → 見るところ → 答え、
      誤答はやり直し）→ 合格75。終わりの画面は「レッスンに戻る」「もう一度」「次のステップ」。
-   - パズル（puzzles.json）：shared/pzbook.js の一覧ホーム（進捗リング・今日の一問・カテゴリ＝ルール・テーマカード）→ ステージの一覧
+   - （パズルは 2026-11-09 に廃止）
      → 問題（★：ヒントなし・まちがいなし3、ヒント／やり直し2、答えを見たら1）。
    問題は本体の盤で解く（SP＝特別モード：G を一時的に差し替え。app.js の commit は SP_commit へ）。
    Shares the globals of app.js (classic scripts): G, SP, SP_commit, settings, LANG, t, E, B, drawBoard, showThrow, placeAll, pcEls, geo, gMarks … */
 'use strict';
 (function () {
-  const LS_STORE = STORE + '-lessons', PZ_STORE = STORE + '-puzzles', PZ_LAST = STORE + '-pz-last', PZ_TAB = STORE + '-pz-tab', LS_CAT = STORE + '-ls-cat', DAILY = STORE + '-daily';
-  let LESSONS = null, PUZZLES = null;
-  const lessonsReady = fetch('lessons.json?v=2').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null);
-  const puzzlesReady = fetch('puzzles.json?v=2').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
+  const LS_STORE = STORE + '-lessons', LS_CAT = STORE + '-ls-cat';
+  let LESSONS = null;
+  // 2026-11-09: shorter steps — a basics step (lb / pb) is the rule's explanation and ONE question; a tactics step (lt / pt) three questions
+  const lessonsReady = fetch('lessons.json?v=2').then(r => r.json()).then(d => {
+    d.steps.forEach(st => { const basic = /^(lb|pb)$/.test(st.cat); if (basic) st.ramp = st.ramp.filter(r => r.k === 'explain'); st.problems = st.problems.slice(0, basic ? 1 : 3); });
+    return (LESSONS = d); }).catch(() => null);
   const $$ = s => [...document.querySelectorAll(s)];
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const prog = k => { try { return JSON.parse(localStorage.getItem(k) || '{}') || {}; } catch (e) { return {}; } };
@@ -90,17 +92,16 @@
   function exitSpecial(silent) {
     if (window.CardBar) CardBar.cancelAuto();
     if (!SP) return;
-    G = SP.saved; SP = null; lesson = null; puzzle = null;
-    document.body.classList.remove('in-lesson', 'in-puzzle');
+    G = SP.saved; SP = null; lesson = null;
+    document.body.classList.remove('in-lesson');
     token++; busy = false;
     if (!silent && G) { drawBoard(); rollLabel(); showThrow(G.thr); renderKifu(); step(); }
   }
-  let lesson = null, puzzle = null;
+  let lesson = null;
   // a move tapped on the special board
   SP_commit = async function (m) {
     if (busy || !SP) return;
     if (lesson) return lessonMove(m);
-    if (puzzle) return puzzleMove(m);
   };
   async function playMove(m) {   // the right answer: the piece walks there (captures fly home)
     busy = true; clearMarks(); $('#btnPass').classList.add('hidden');
@@ -112,13 +113,16 @@
   }
 
   /* ---------------- tabs of the list dialogs: switching tabs shows the new dialog at once on top of the old one ---------------- */
-  function selTab(v) { $$('.ls-tabs').forEach(g => g.querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.v === v))); }
-  const LIST_OV = ['#rulesOverlay', '#lessonOverlay', '#puzzleOverlay'];
+  // the tabs: ルール（ルドー） · ルール（パチーシ） · レッスン (2026-11-09: the rule picks moved up into the tabs; puzzles retired)
+  function tabLabels() { const [o, c] = /^(ja|zh)/.test(LANG) ? ['（', '）'] : [' (', ')'];
+    $$('.ls-tabs').forEach(g => g.querySelectorAll('button').forEach(b => { const v = b.dataset.v; b.textContent = v === 'lesson' ? t('tab.lesson') : t('tab.rules') + o + t('rule.' + v.slice(6)) + c; })); }
+  function selTab(v) { tabLabels(); $$('.ls-tabs').forEach(g => g.querySelectorAll('button').forEach(b => { const on = b.dataset.v === v; b.classList.toggle('sel', on); b.classList.toggle('on', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); })); }
+  const LIST_OV = ['#rulesOverlay', '#lessonOverlay'];
   $$('.ls-tabs').forEach(g => g.addEventListener('click', async e => {
     const b = e.target.closest('button'); if (!b || b.classList.contains('sel')) return;
-    const v = b.dataset.v, want = v === 'rules' ? '#rulesOverlay' : v === 'lesson' ? '#lessonOverlay' : '#puzzleOverlay';
+    const v = b.dataset.v, want = v === 'lesson' ? '#lessonOverlay' : '#rulesOverlay';
     const was = LIST_OV.filter(s => s !== want && $(s).classList.contains('show'));
-    if (v === 'rules') openRules(); else if (v === 'lesson') await openLessons(); else await openPuzzles();
+    if (v === 'lesson') await openLessons(); else openRules(v.slice(6));
     requestAnimationFrame(() => was.forEach(s => { if (s === '#rulesOverlay') closeRules(); else hideOv(s); }));
   }));
   function setHtml(el, html) { if (el.__h !== html) { el.__h = html; el.innerHTML = html; } }
@@ -127,15 +131,13 @@
   let rrule = null;
   function openRules(rule) {
     rrule = rule || rrule || (G ? G.state.rule : settings.rule);
-    selTab('rules'); showOv('#rulesOverlay');
-    $$('#learnRule button').forEach(b => { b.classList.toggle('on', b.dataset.v === rrule); b.textContent = t('rule.' + b.dataset.v); });
+    selTab('rules-' + rrule); showOv('#rulesOverlay');
     try { localStorage.setItem('aicoding-ludo-rules-seen', '1'); } catch (e) {}
     LudoTour.open({ mount: '#rulesBody', rule: rrule, lang: () => LANG, design: settings.design,
       sound: k => { if (k === 'step') sTick(); else if (k === 'cap') sCap(); else if (k === 'ok') tone(880, .12); else if (k === 'roll') sRattle(); },
       onClose: () => closeRules(), onPlay: () => { closeRules(); openNew(); }, onLessons: () => { closeRules(); openLessons(); } });
   }
   function closeRules() { try { LudoTour.stop(); } catch (e) {} hideOv('#rulesOverlay'); }
-  $('#learnRule').onclick = e => { const b = e.target.closest('button[data-v]'); if (b) openRules(b.dataset.v); };
   $('#btnRules').onclick = () => openRules();
 
   /* ---------------- lessons ---------------- */
@@ -182,7 +184,6 @@
   function startLesson(id) {
     const s = LESSONS.steps.find(x => x.id === id); if (!s) return;
     hideOv('#lessonOverlay');
-    puzzle = null; document.body.classList.remove('in-puzzle');
     lesson = { id, step: s, phase: 'ramp', i: 0, scores: [], hint: 0, done: false, wrong: false };
     document.body.classList.add('in-lesson');
     loadItem();
@@ -255,7 +256,7 @@
     finishLesson();
   };
   function finishLesson() {
-    const D = LESSONS, s = lesson.step, tot = lesson.scores.reduce((a, b) => a + (b || 0), 0), pass = tot >= D.score.pass;
+    const D = LESSONS, s = lesson.step, tot = Math.round(lesson.scores.reduce((a, b) => a + (b || 0), 0) / (D.score.per * s.problems.length) * 100), pass = tot >= D.score.pass;   // (out of 100 whatever the number of questions)
     const pr = prog(LS_STORE), old = lsRec(pr, s.id) || { best: 0, pass: false };
     pr[s.id] = { best: Math.max(old.best, tot), pass: old.pass || pass }; progSet(LS_STORE, pr);
     $('#ldTitle').textContent = pass ? t('ls.pass') : t('ls.notYet');
@@ -273,115 +274,15 @@
   $('#lsList').onclick = () => backToList(lesson && lesson.id);
   $('#lsQuit').onclick = () => exitSpecial();
 
-  /* ---------------- puzzles (PZBook) ---------------- */
-  const pzKey = (id, j) => id + '-' + j;
-  function pzRecs(T, pr) { pr = pr || prog(PZ_STORE); return T.puzzles.map((_, j) => +pr[pzKey(T.id, j)] || 0); }
-  const KTIER = { enter: 0, cap: 1, home: 1, safe: 3, escape: 4 };
-  const themeTier = T => KTIER[T.kind] || 0;
-  const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  function dailyPick() {
-    const P = PUZZLES; if (!P.daily || !P.daily.length) return null;
-    const date = ymd(new Date()); let h = 0; for (const c of date) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-    const id = P.daily[h % P.daily.length], L = P.themes.findIndex(T => T.id === id); if (L < 0) return null;
-    return { L, j: (h >>> 8) % Math.min(20, P.themes[L].puzzles.length), date };
-  }
-  const PZ_IC = { ludo: 'grid', pachisi: 'crown' };
-  const pzBoard = P => miniSVG(unpack(P.s), [], { focus: P.look });
-  async function openPuzzles() {
-    const d = await puzzlesReady; selTab('puzzle');
-    if (!d) { toast(t('ls.fail')); return; }
-    PZBook.setLang(LANG);
-    const pr = prog(PZ_STORE), Ts = d.themes, idx = Ts.map((_, i) => i), cats = d.cats.map(c => c.id);
-    let cur = ''; try { cur = localStorage.getItem(PZ_TAB) || ''; } catch (e) {} if (!cats.includes(cur)) cur = G ? G.state.rule : cats[0];
-    const cont = PZBook.resume(idx.map(i => ({ key: String(i), recs: pzRecs(Ts[i], pr), cat: Ts[i].cat })), PZ_LAST);
-    const dl = dailyPick(), dd = prog(DAILY);
-    const th = (T, j) => { if (j < 0) j = T.puzzles.length - 1; const P = T.puzzles[j]; return P ? pzBoard(P) : ''; };
-    setHtml($('#pzLevels'), PZBook.home({
-      title: t('pz.title'), lead: t('pz.desc'), all: idx.map(i => pzRecs(Ts[i], pr)),
-      cont: cont && { key: cont.key + ':' + cont.j, no: cont.j + 1, name: kTitle(Ts[+cont.key].kind, Ts[+cont.key].rule) + ' · ' + t('rule.' + Ts[+cont.key].rule) },
-      daily: dl ? [{ key: '1', board: th(Ts[dl.L], dl.j), title: '★ ' + t('daily.title'), date: dl.date.slice(5).replace('-', '/'), done: !!(dd.days && dd.days[dl.date]), go: t('daily.go'), sub: t('rule.' + Ts[dl.L].rule) + ' · ' + kTitle(Ts[dl.L].kind, Ts[dl.L].rule) + (dd.streak && dd.last ? ' · 🔥' + dd.streak : '') }] : [],
-      cats: d.cats.map(c => { const r = idx.filter(i => Ts[i].cat === c.id).map(i => pzRecs(Ts[i], pr)).flat(); return { key: c.id, icon: PZBook.icon(PZ_IC[c.id] || 'theme'), name: t('rule.' + c.id), done: r.filter(x => x > 0).length, total: r.length }; }),
-      cur,
-      cards: idx.filter(i => Ts[i].cat === cur).map(i => { const T = Ts[i], r = pzRecs(T, pr); return { key: i, badge: '', name: kTitle(T.kind, T.rule), desc: kTip(T.kind, T.rule), recs: r, tier: themeTier(T), board: th(T, PZBook.nextIndex(r)) }; }),
-    }));
-    PZBook.bindHome($('#pzLevels'), {
-      cat: k => { try { localStorage.setItem(PZ_TAB, k); } catch (e) {} openPuzzles(); },
-      cont: x => { const [i, j] = x.split(':'); startPuzzle(+i, +j); },
-      daily: () => { const dl = dailyPick(); if (dl) startPuzzle(dl.L, dl.j, dl.date); },
-      card: i => openPzGrid(+i),
-    });
-    showPzView('pzListView'); showOv('#puzzleOverlay');
-  }
-  function showPzView(v) { ['pzListView', 'pzGridView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
-  let pzLevel = 0;
-  function openPzGrid(i, cur) {
-    pzLevel = i; const T = PUZZLES.themes[i]; PZBook.setLang(LANG);
-    $('#pzLevelHead').innerHTML = PZBook.ghead({ badge: '', name: kTitle(T.kind, T.rule), desc: kTip(T.kind, T.rule), chips: [t('rule.' + T.rule), PZBook.t('count', { n: T.puzzles.length })], tier: themeTier(T) });
-    $('#pzGrid').innerHTML = PZBook.grid({ recs: pzRecs(T), cur });
-    $('#pzGrid').querySelectorAll('.pb-tile[data-j]').forEach(el => { const P = T.puzzles[+el.dataset.j]; if (P) el.insertAdjacentHTML('afterbegin', `<span class="th">${pzBoard(P)}</span>`); });
-    showPzView('pzGridView'); showOv('#puzzleOverlay');
-  }
-  $('#pzGrid').onclick = e => { const b = e.target.closest('button[data-j]'); if (!b) return; if (b.getAttribute('aria-disabled')) { toast(PZBook.t('locked')); return; } startPuzzle(pzLevel, +b.dataset.j); };
-  $('#pzBack').onclick = () => openPuzzles();
-  $('#pzClose').onclick = () => hideOv('#puzzleOverlay');
-  $('#btnPuzzle').onclick = () => openPuzzles();
-  function startPuzzle(L, j, daily, keep) {
-    hideOv('#puzzleOverlay');
-    const T = PUZZLES.themes[L], P = T.puzzles[j]; if (!P) return;
-    lesson = null; document.body.classList.remove('in-lesson');
-    if (!daily) PZBook.lastSet(PZ_LAST, L);
-    puzzle = Object.assign({ L, j, T, P, daily: daily || null, hinted: false, failed: false, answered: false, solved: false, hint: 0 }, keep || {});
-    document.body.classList.add('in-puzzle');
-    enterSpecial({ s: P.s, t: P.t, marks: [], canMove: true, title: kTitle(T.kind, T.rule) });
-    renderPuzzleCard(); pzStatus(esc(t('ls.task', { c: t('c.' + T.rule + '.0'), v: throwText(T.rule, G.thr) })));
-  }
-  async function puzzleMove(m) {
-    const Pz = puzzle; if (Pz.solved) return;
-    if (isOk(Pz.P, m)) {
-      Pz.solved = true; SP.canMove = false; sOk();
-      const ok = await playMove(m); if (!ok || puzzle !== Pz) return;
-      const pr = prog(PZ_STORE), k = pzKey(Pz.T.id, Pz.j), before = pzRecs(Pz.T, pr), stars = PZBook.starsFor(Pz);
-      if (!Pz.daily) pr[k] = Math.max(+pr[k] || 0, stars); progSet(PZ_STORE, pr);
-      if (Pz.daily) { const dd = prog(DAILY); dd.days = dd.days || {};
-        if (!dd.days[Pz.daily]) { const y = new Date(Pz.daily + 'T12:00:00'); y.setDate(y.getDate() - 1); dd.streak = dd.last === ymd(y) ? (dd.streak || 0) + 1 : 1; dd.best = Math.max(dd.best || 0, dd.streak); dd.days[Pz.daily] = 1; dd.last = Pz.daily; }
-        progSet(DAILY, dd); }
-      const after = pzRecs(Pz.T, pr); PZBook.setLang(LANG);
-      pzStatus(`<b class="ok">${esc(t('ls.right'))}</b> ${esc(t('kw.' + Pz.T.kind))}` + (Pz.daily ? '' : PZBook.solved({ stars, recs: after, j: Pz.j, events: PZBook.events(before, after, Pz.j) })));
-      renderPuzzleCard(); return;
-    }
-    Pz.failed = true; sNg();
-    pzStatus(`<b class="ng">${esc(t('ls.ng'))}</b>`);
-    renderPuzzleCard();
-  }
-  function pzStatus(h) { $('#pzStatus').innerHTML = h; }
-  function renderPuzzleCard() {
-    const Pz = puzzle; if (!Pz) return;
-    $('#pzStep').textContent = Pz.daily ? `★ ${t('daily.title')} · ${Pz.daily.slice(5).replace('-', '/')}` : `${t('rule.' + Pz.T.rule)} · ${kTitle(Pz.T.kind, Pz.T.rule)} · ${PZBook.t('stage', { n: Math.floor(Pz.j / PZBook.STAGE) + 1 })} · No.${Pz.j + 1}`;
-    $('#pzTitle').textContent = t('pz.head');
-    $('#pzGoal').innerHTML = `<span class="pz-dot" style="background:${B.COL[Pz.T.rule][0][0]}"></span><span>${esc(t('pz.goal'))} · ${'★'.repeat(Pz.P.d || 1)}</span>`;
-    $('#pzNext').disabled = !!Pz.daily || Pz.j + 1 >= Pz.T.puzzles.length || !PZBook.isOpen(pzRecs(Pz.T), Pz.j + 1);
-    $('#pzHint').disabled = Pz.solved; $('#pzAnswer').disabled = Pz.solved; $('#pzRetry').disabled = !Pz.solved && !Pz.failed;
-  }
-  $('#pzHint').onclick = () => { const Pz = puzzle; if (!Pz || Pz.solved) return; Pz.hinted = true; Pz.hint++;
-    if (Pz.hint === 1) pzStatus(`💡 ${esc(t('lh.' + Pz.T.kind))}`); else { pzStatus(`💡 ${esc(t('ls.look'))}`); SP.marks = Pz.P.look || []; gMarks.innerHTML = marksSVG(SP.marks); } };
-  $('#pzAnswer').onclick = () => { const Pz = puzzle; if (!Pz || Pz.solved) return; Pz.answered = true;
-    const bm = E.legalMoves(G.state, G.thr).find(x => !x.pass && x.k === Pz.P.best[0] && x.to === Pz.P.best[1]); SP.marks = answerMarks(bm); gMarks.innerHTML = marksSVG(SP.marks);
-    pzStatus(`${esc(t('ls.ans', { m: bm ? E.moveText(G.state, bm) : '' }))} — ${esc(t('kw.' + Pz.T.kind))}`); };
-  $('#pzRetry').onclick = () => { const Pz = puzzle; if (!Pz) return; startPuzzle(Pz.L, Pz.j, Pz.daily, { hinted: Pz.hinted, failed: Pz.failed || Pz.solved, answered: Pz.answered }); };
-  $('#pzNext').onclick = () => { const Pz = puzzle; if (Pz && Pz.j + 1 < Pz.T.puzzles.length) startPuzzle(Pz.L, Pz.j + 1); };
-  $('#pzList').onclick = () => { const L = puzzle ? puzzle.L : 0; exitSpecial(); openPzGrid(L); };
-  $('#pzQuit').onclick = () => exitSpecial();
-
   window.LudoLearn = {
-    openRules, openLessons, openPuzzles, quit: () => exitSpecial(), exitSpecial, startLesson, startPuzzle, lessonsReady, puzzlesReady, miniSVG, marksSVG,
+    openRules, openLessons, quit: () => exitSpecial(), exitSpecial, startLesson, lessonsReady, miniSVG, marksSVG,
     get active() { return !!SP; },
     relang() {
       if ($('#rulesOverlay').classList.contains('show')) openRules();
-      if (lesson) renderLessonCard(); if (puzzle) renderPuzzleCard();
+      if (lesson) renderLessonCard(); tabLabels();
       if ($('#lessonOverlay').classList.contains('show') && !$('#lessonListView').classList.contains('hidden')) openLessons();
-      if ($('#puzzleOverlay').classList.contains('show')) { if (!$('#pzListView').classList.contains('hidden')) openPuzzles(); else openPzGrid(pzLevel); }
     },
-    open(which) { if (which === 'lesson') openLessons(); else if (which === 'puzzle') openPuzzles(); else openRules(); },
+    open(which) { if (which === 'lesson') openLessons(); else openRules(); },
   };
   void mvName; void moveText;
 })();

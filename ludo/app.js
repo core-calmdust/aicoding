@@ -44,6 +44,7 @@ const isPachisi = () => G && G.state.rule === 'pachisi';
 /* ---------- board drawing ---------- */
 const svg = $('#bsvg'); let geo = null, gPcs = null, gMarks = null;
 function drawBoard() {
+  if (typeof paintTitle === 'function') paintTitle();
   const rule = G.state.rule, d = B.drawBoard(rule, settings.design[rule]); geo = B.geometry(rule);
   svg.setAttribute('viewBox', `-0.4 -0.4 ${d.n + .8} ${d.n + .8}`); Z2.cur = null; Z2.pts = null; $('#frame').classList.remove('zoomed');
   svg.innerHTML = d.svg + '<g id="gMarks"></g><g id="gPrev"></g><g id="gPcs"></g>';
@@ -145,7 +146,7 @@ const cRender = () => { if (window.LudoCoach) LudoCoach.render(); };
 function clearMarks() { previewMove(null);  if (gMarks) gMarks.innerHTML = ''; Object.values(pcEls).forEach(el => el.classList.remove('can', 'hint')); }
 
 /* ---------- animation ---------- */
-const SPD = () => [0, 1.6, 1, .55][settings.speed] || 1;
+const SPD = () => [0, 2.4, 1.6, 1][settings.speed] || 1.6;   // ゆっくり · ふつう · はやい (2026-11-09: the old ふつう is now はやい, the old ゆっくり ふつう, and a slower ゆっくり)
 const wait = ms => new Promise(r => setTimeout(r, ms * SPD()));
 function tween(el, path, stepMs, done) {
   // path: [[x, y], …] (first = current place); one hop per step
@@ -264,7 +265,7 @@ function afterThrow(my) {
   if (!real.length) {   // forced pass (or three sixes)
     const m = moves[0] || { pass: true };
     setStatus(m.forfeit ? t('st.three') : t('st.nomove')); toast(m.forfeit ? t('st.three') : t('st.nomove'), 900);
-    setTimeout(() => { if (my === token) commit(m); }, 900 * SPD());
+    setTimeout(() => { if (my === token) commit(m); }, 420 * Math.sqrt(SPD()));   // (2026-11-09: on to the next turn sooner)
     return;
   }
   if (humanSeat(seat)) {
@@ -406,7 +407,7 @@ function renderDialog() {
   const D = draft;
   $('#ruleCards').innerHTML = ['ludo', 'pachisi'].map(r => `<button type="button" class="ngt-gcard${D.rule === r ? ' sel' : ''}" data-v="${r}"><span class="gart">${miniArt(r, D.design[r])}</span><b>${t('rule.' + r)}</b><p>${t('rule.' + r + '.d')}</p></button>`).join('');
   const seg = (id, v) => document.querySelectorAll(id + ' button').forEach(b => b.classList.toggle('on', b.dataset.v === String(v)));
-  seg('#segMode', D.mode); seg('#segPlayers', D.rule === 'pachisi' && D.players === 3 ? 4 : D.players); seg('#segFirst', D.first); seg('#segSpeed', D.speed);
+  seg('#segMode', D.mode); seg('#segPlayers', D.rule === 'pachisi' && D.players === 3 ? 4 : D.players); seg('#segFirst', D.first);
   document.querySelectorAll('#segPlayers button').forEach(b => { b.textContent = t('ng.pl', { n: b.dataset.v }); b.disabled = D.rule === 'pachisi' && b.dataset.v === '3'; });
   const rated = D.mode === 'rated';
   $('#fRatedInfo').classList.toggle('hidden', !rated); if (rated && window.LudoRated) $('#rtStats').innerHTML = LudoRated.statsHtml();
@@ -421,9 +422,11 @@ function renderDialog() {
 }
 function openNew() { draft = JSON.parse(JSON.stringify(settings)); if (G && G.rated) draft.mode = 'rated'; if (draft.mode === 'rated' && !window.LudoRated) draft.mode = 'ai'; renderDialog(); $('#newOverlay').classList.add('show'); }
 $('#btnNew').onclick = openNew;
+// the ルール button on each game card (shared/ngtabs.js): that rule's tutorial
+$('#ruleCards').ngtRules = r => { if (window.LudoLearn) LudoLearn.openRules(r); };
 $('#ruleCards').onclick = e => { const b = e.target.closest('[data-v]'); if (!b) return; draft.rule = b.dataset.v; if (draft.rule === 'pachisi' && draft.players === 3) draft.players = 4; renderDialog(); };
 const segClick = (id, key, num) => { $(id).onclick = e => { const b = e.target.closest('button[data-v]'); if (!b || b.disabled) return; draft[key] = num ? +b.dataset.v : b.dataset.v; renderDialog(); }; };
-segClick('#segMode', 'mode'); segClick('#segPlayers', 'players', true); segClick('#segFirst', 'first'); segClick('#segSpeed', 'speed', true);
+segClick('#segMode', 'mode'); segClick('#segPlayers', 'players', true); segClick('#segFirst', 'first');
 $('#levelRange').oninput = e => { draft.level = +e.target.value; $('#levelName').textContent = 'Lv.' + draft.level; };
 ['Blocks:blocks', 'Three:three', 'AutoRoll:autoRoll', 'AutoPick:autoPick'].forEach(x => { const [id, k] = x.split(':'); $('#opt' + id).onchange = e => { draft[k] = e.target.checked; }; });
 // design: applied at once (common rule) — even if the dialog is then closed
@@ -433,7 +436,11 @@ $('#btnStart').onclick = () => { Object.assign(settings, draft); $('#newOverlay'
 document.querySelectorAll('.overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); }));
 
 /* ---------- language, sound ---------- */
+// the title: only the rule being played (ルドー or パチーシ), not both
+function paintTitle() { const el = $('#ttlName'); if (el) el.textContent = t('rule.' + ((G && G.state && G.state.rule) || settings.rule)); }
 function applyI18n() {
+  paintTitle();
+  if (window.__ldSpeedOpt) __ldSpeedOpt.sync();
   if (Z2.paint) Z2.paint();
   if (window.LudoRv) LudoRv.relabel();
   document.documentElement.lang = LANG; document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
@@ -457,7 +464,14 @@ if (window.RulesOffer) RulesOffer.init({ game: 'ludo', lang: () => LANG, open: (
 const VARS = ['ludo4', 'ludo3', 'ludo2', 'pachisi4', 'pachisi2'];
 const varName = k => t('rule.' + k.replace(/\d/, '')) + ' · ' + t('ng.pl', { n: k.slice(-1) });
 if (window.GameRecord) GameRecord.init({ game: 'ludo', lang: () => LANG, menu: '.controls', sides: () => [t('rec.first'), t('rec.later')], variant: () => { const k = G ? G.state.rule + G.state.players : 'ludo4'; return { k, n: varName(k) }; }, variants: () => VARS, variantName: k => varName(k), defVariant: 'ludo4' });
-const HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson', '#btnPuzzle'], lang: () => LANG }) : null;
+// the pieces' speed lives in the options (gear) panel: one row that steps ゆっくり → ふつう → はやい
+if (window.HeaderBar && HeaderBar.addOption) {
+  const spH = HeaderBar.addOption({ id: 'ldspeed', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 18a8 8 0 1 1 14 0"/><path d="M12 14l4-5"/><circle cx="12" cy="14" r="1.3"/></svg>',
+    label: () => t('ng.speed') + ' : ' + t(['', 'sp.slow', 'sp.normal', 'sp.fast'][settings.speed] || 'sp.normal'),
+    type: 'button', onClick: () => { settings.speed = settings.speed % 3 + 1; if (draft) draft.speed = settings.speed; save(); spH && spH.sync(); } });
+  window.__ldSpeedOpt = spH;
+}
+const HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson'], lang: () => LANG }) : null;
 applyI18n(); paintSnd();
 if (saved.game && saved.game.state && saved.game.state.pos) {
   const sg = saved.game;
