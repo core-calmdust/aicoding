@@ -99,19 +99,47 @@ function save() {
 
 // ====================================================================== workers
 let jobId = 0;
+const ENGINE_URL = 'engine.js?v=20261106wr1-pro1-mt1';
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261106wr1-pro1');
+  const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
   w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (m.type === 'error') console.warn(m.msg); if (!j) return; w.jobs.delete(m.id); j.resolve(m.type === 'error' ? null : m); };
   w.onerror = e => console.warn('worker', e.message);
   return w;
 }
 let aiW = makeWorker(), anaW = makeWorker();
+// search speed of the last search on several threads (nodes per second, all threads), shown quietly at the end of the info line
+let lastNps = 0;
+const npsText = () => lastNps ? ' · ' + (lastNps >= 1e6 ? (lastNps / 1e6).toFixed(1) + 'M' : Math.round(lastNps / 1e3) + 'k') + ' nps' : '';
+function noteNps(nodes, ms) {
+  if (!(nodes > 20000 && ms > 20)) return;
+  lastNps = nodes / ms * 1000;
+  const el = document.getElementById('infoLine'); if (el && el.dataset.base !== undefined) el.textContent = el.dataset.base + npsText();
+}
+// multi-threaded search (shared/mtsplit.js; common rule 2026-11-08「本編のマルチスレッド」全タイトル対応): several plain workers of this
+// engine share the root moves and the main line (Young Brothers Wait) — no shared memory, so no isolation, no reload, and sign-in /
+// online play are untouched. Analysis, hints, the coach, the review box and the levels that think by time (Lv.8–10)
+// go to the threads when they are free; the fixed-depth and the friendly levels stay on the one-thread workers.
+const MTP = window.MTSplit ? MTSplit.use({ url: ENGINE_URL, drive: MTSplit.ladder.drive }) : null;
+if (window.MTSplit) MTSplit.init();
+const mtLevel = lv => { const L = E.LEVELS[lv]; return !!(L && L.kind === 'time'); };
+function mtWants(which, msg) {
+  if (msg.type === 'analyze') return true;
+  if (msg.type !== 'move') return false;
+  if (msg.cfg) return msg.cfg.threads > 1 && (msg.cfg.kind === 'time' || msg.cfg.kind === 'depth');   // PRO: its own thread count
+  return mtLevel(msg.level);
+}
 function request(which, msg) {
+  const mp = MTP && mtWants(which, msg) && MTP.pool(which === 'ai' ? 'ai' : null);
+  if (mp) { const t0 = performance.now(), full = { ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }; return mp.run(full, null, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full) : r; }); }
+  return requestW(which, msg);
+}
+function requestW(which, msg) {   // (the one-thread workers)
   const w = which === 'ai' ? aiW : anaW;
   return new Promise(resolve => { const id = ++jobId; w.jobs.set(id, { resolve }); w.postMessage({ ...msg, id }); });
 }
 function cancelWorker(which) {
+  if (MTP) MTP.cancel(which);
   const w = which === 'ai' ? aiW : anaW;
   if (!w.jobs.size) return;
   w.terminate(); w.jobs.forEach(j => j.resolve(null));
@@ -764,7 +792,7 @@ function renderInfo() {
   const nav = $('#navBar'); nav.querySelector('[data-n=first]').disabled = nav.querySelector('[data-n=prev]').disabled = cur === 0;
   nav.querySelector('[data-n=next]').disabled = nav.querySelector('[data-n=last]').disabled = cur >= game.moves.length;
   const mode = settings.mode === 'ai' ? `${AIW()} Lv.${settings.level} ${LV(settings.level)}` : settings.mode === 'watch' ? `Lv.${settings.level} vs Lv.${settings.level2}` : t('ng.pvp');
-  $('#infoLine').textContent = `${t('rule.' + game.rules)} · ${t('ng.seedsN', { n: game.seeds })} · ${mode} · ${t('info.moves', { n: game.moves.length })}`;
+  { const il = $('#infoLine'); il.dataset.base = `${t('rule.' + game.rules)} · ${t('ng.seedsN', { n: game.seeds })} · ${mode} · ${t('info.moves', { n: game.moves.length })}`; il.textContent = il.dataset.base + npsText(); }
   hbInfo(p, ev);
   if (window.olAfterInfo) olAfterInfo();
 }
@@ -1246,15 +1274,17 @@ $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 // AI vs AI, never rated. The changed values make a level of the engine's own form (engine.js: cfg).
 var PRO = window.ProSet ? ProSet.init({ game: 'mancala', lang: () => LANG, level: () => draft.level || settings.level, show: () => (draft.mode === 'ai' || draft.mode === 'watch'),
   store: { get: () => settings.pro, set: v => { settings.pro = v; } },
-  defaults: lv => { const L = E.LEVELS[lv] || E.LEVELS[5]; return L.kind === 'time' ? { limit: { k: 'time', v: L.ms / 1000 }, var: 0 } : L.kind === 'depth' ? { limit: { k: 'depth', v: L.depth }, var: !L.noise ? 0 : L.noise >= 100 ? 2 : 1 } : { limit: { k: 'depth', v: 1 }, var: 2 }; },
-  params: [{ key: 'limit', kinds: { time: [0.1, 30], depth: [1, 30] } }, { key: 'var', when: e => e.limit.k === 'depth' }] }) : null;
+  defaults: lv => { const L = E.LEVELS[lv] || E.LEVELS[5]; const d = L.kind === 'time' ? { limit: { k: 'time', v: L.ms / 1000 }, var: 0 } : L.kind === 'depth' ? { limit: { k: 'depth', v: L.depth }, var: !L.noise ? 0 : L.noise >= 100 ? 2 : 1 } : { limit: { k: 'depth', v: 1 }, var: 2 }; if (MTP) d.threads = L.kind === 'time' ? ProSet.maxThreads() : 1; return d; },
+  // threads (本編のマルチスレッド, shared/mtsplit.js): with a time or a depth; the default is every thread for the levels that think by time
+  params: [{ key: 'limit', kinds: { time: [0.1, 30], depth: [1, 30] } }].concat(MTP ? [{ key: 'threads' }] : [], [{ key: 'var', when: e => e.limit.k === 'depth' }]) }) : null;
 function proGet(lv) { if (!PRO || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; return PRO.get(lv); }
 function proTag(lv) { return proCfg(lv) ? ' PRO' : ''; }
 function proCfg(lv) {
   const e = proGet(lv); if (!e) return null;
   const L = E.LEVELS[lv] || E.LEVELS[5];
-  if (e.limit.k === 'time') return { kind: 'time', ms: Math.round(e.limit.v * 1000) };
-  return { kind: 'depth', depth: e.limit.v, noise: !e.var ? 0 : !e.changed.includes('var') && L.kind === 'depth' ? L.noise : e.var === 1 ? 30 : 140 };
+  const th = MTP ? { threads: e.threads || 1 } : {};
+  if (e.limit.k === 'time') return Object.assign({ kind: 'time', ms: Math.round(e.limit.v * 1000) }, th);
+  return Object.assign({ kind: 'depth', depth: e.limit.v, noise: !e.var ? 0 : !e.changed.includes('var') && L.kind === 'depth' ? L.noise : e.var === 1 ? 30 : 140 }, th);
 }
 document.querySelectorAll('.lvbtn').forEach(b => b.onclick = () => { const k = b.dataset.t, d = +b.dataset.d; draft[k] = Math.max(1, Math.min(10, draft[k] + d)); segSync(); sTick(); });
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
@@ -2428,7 +2458,7 @@ const BX_T = {
 function bxT(k, v) { let s = (BX_T[LANG] || BX_T.en)[k]; if (s === undefined) s = BX_T.en[k]; return v ? s.replace(/\{(\w+)\}/g, (_, x) => v[x] !== undefined ? v[x] : '') : s; }
 const bxEsc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const bxCache = new Map();  // position key → analysis list with lines
-let bxW = null, bxPending = '';
+let bxW = null, bxPending = '', bxJob = 0;
 function bxAllowed() {
   return !!(HB && HB.on && !lesson && !puzzle && rvOpen && rv && rv.key === rvKey() && !(settings.mode === 'online' && window.olNoAna && olNoAna()));   // 分析を押したら手数・対局中かどうかに関係なく下の検討ボックスを出す（共通・2026-11-06）
 }
@@ -2467,11 +2497,15 @@ function studyExit() {
 function bxAnalyze(p) {
   const key = bxKey(p);
   if (bxCache.has(key) || bxPending === key || p.over) return;
-  if (bxW) { bxW.terminate(); bxW.jobs.forEach(j => j.resolve(null)); }
-  bxW = makeWorker(); bxPending = key;
-  const w = bxW, id = ++jobId, at = inStudy() ? -1 : cur, run = rv;
-  new Promise(resolve => { w.jobs.set(id, { resolve }); w.postMessage({ type: 'analyze', ...posMsg(p, game.rules), ms: 800, pv: 8, id }); }).then(res => {
-    if (bxW === w) { w.terminate(); bxW = null; bxPending = ''; }
+  bxStop(); bxPending = key;
+  const id = ++jobId, at = inStudy() ? -1 : cur, run = rv, msg = { type: 'analyze', ...posMsg(p, game.rules), ms: 800, pv: 8 };
+  // the threads when free (shared/mtsplit.js), else a worker of its own
+  const viaW = () => { const w = bxW = makeWorker(); return new Promise(resolve => { w.jobs.set(id, { resolve }); w.postMessage({ ...msg, id }); }).then(r => { if (bxW === w) { w.terminate(); bxW = null; } return r; }); };
+  const mp = MTP && MTP.pool();
+  bxJob = id;
+  (mp ? mp.run(msg, null, 'rvb').then(r => r === undefined && bxJob === id ? viaW() : r) : viaW()).then(res => {
+    if (bxJob !== id) return;
+    bxJob = 0; bxPending = '';
     if (!res) return;
     const list = res.list.slice().sort((a, b) => b.v - a.v);
     bxCache.set(key, list); if (bxCache.size > 300) bxCache.delete(bxCache.keys().next().value);
@@ -2485,7 +2519,7 @@ function bxAnalyze(p) {
     renderInfo(); renderFx();
   });
 }
-function bxStop() { if (bxW) { bxW.terminate(); bxW.jobs.forEach(j => j.resolve(null)); bxW = null; bxPending = ''; } }
+function bxStop() { if (bxJob && MTP) MTP.cancel('rvb'); bxJob = 0; if (bxW) { bxW.terminate(); bxW.jobs.forEach(j => j.resolve(null)); bxW = null; } bxPending = ''; }
 const bxMv = (side, k, extra) => `<span class="bx-m"><i class="p${side}"></i>${k + 1}${extra ? '<sup>+</sup>' : ''}</span>`;
 function bxPV(p, line) {
   let b = Int8Array.from(p.b), out = '';
