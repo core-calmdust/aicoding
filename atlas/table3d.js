@@ -1501,10 +1501,45 @@
     // the phone framing came back small after stepping between games)
     const ry = root.rotation.y, cs = cur.scale.clone(), cr = cur.rotation.y, cp = cur.position.y;
     root.rotation.y = 0; cur.scale.setScalar(1); cur.rotation.y = 0; cur.position.y = 0; root.updateMatrixWorld(true);
-    let bx; try { bx = new (T().Box3)().setFromObject(cur); } finally { root.rotation.y = ry; cur.scale.copy(cs); cur.rotation.y = cr; cur.position.y = cp; root.updateMatrixWorld(true); }
+    let bx, bb; try { bx = new (T().Box3)().setFromObject(cur); bb = boardBox(); } finally { root.rotation.y = ry; cur.scale.copy(cs); cur.rotation.y = cr; cur.position.y = cp; root.updateMatrixWorld(true); }
     try { const sz = bx.getSize(new (T().Vector3)()); if (!isFinite(sz.x) || sz.x <= 0) return 6.5;
-      cur.userData._h = Math.max(.3, Math.min(6, sz.y)); cur.userData._s = Math.max(sz.x, sz.z) / 2;
+      cur.userData._h = Math.max(.3, Math.min(6, sz.y));
+      { const z2 = (bb || bx).getSize(new (T().Vector3)()); cur.userData._s = Math.max(z2.x, z2.z) / 2; cur.userData._rb = Math.max(2.5, Math.min(9, cur.userData._s * .7 + Math.hypot(z2.x, z2.z) / 2 * .3)); }
       return cur.userData._r = Math.max(2.5, Math.min(9, Math.max(sz.x, sz.z) / 2 * .7 + Math.hypot(sz.x, sz.z) / 2 * .3)); } catch (e) { return 6.5; }   // (between half its side and half its diagonal: the slow turntable only swings it a little)
+  }
+  // the board alone (no komadai, go bowls or pieces set aside) — the phone framing sizes by this (2026-11-09). Meshes are merged
+  // (one mesh may hold a board and its bowls), so it works on the drawn footprint: every visible triangle's x–z box is filled into a
+  // fine grid (3 cm cells: the komadai stand ~10 cm off the shogi board), and the largest connected patch is the board
+  function boardBox() {
+    const V = T().Vector3, tris = [], p = [new V(), new V(), new V()];
+    let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9;
+    cur.traverse(o => {
+      if (!o.isMesh || !o.visible || !o.geometry || !o.geometry.attributes.position || o.isInstancedMesh) return;
+      if (o.material && (o.material.visible === false || o.material.colorWrite === false)) return;
+      const P = o.geometry.attributes.position, I = o.geometry.index, n = I ? I.count : P.count, M = o.matrixWorld;
+      for (let i = 0; i + 2 < n; i += 3) {
+        let a = 1e9, b = -1e9, c = 1e9, d = -1e9;
+        for (let j = 0; j < 3; j++) { const k = I ? I.getX(i + j) : i + j; p[j].fromBufferAttribute(P, k).applyMatrix4(M); a = Math.min(a, p[j].x); b = Math.max(b, p[j].x); c = Math.min(c, p[j].z); d = Math.max(d, p[j].z); }
+        tris.push(a, b, c, d); x0 = Math.min(x0, a); x1 = Math.max(x1, b); z0 = Math.min(z0, c); z1 = Math.max(z1, d);
+      }
+    });
+    if (!tris.length) return null;
+    const cs = .03, W = Math.ceil((x1 - x0) / cs) + 1, H = Math.ceil((z1 - z0) / cs) + 1; if (W * H > 4e6) return null;
+    const G = new Uint8Array(W * H);
+    for (let i = 0; i < tris.length; i += 4) {
+      const ia = Math.floor((tris[i] - x0) / cs), ib = Math.floor((tris[i + 1] - x0) / cs), ja = Math.floor((tris[i + 2] - z0) / cs), jb = Math.floor((tris[i + 3] - z0) / cs);
+      for (let j = ja; j <= jb; j++) G.fill(1, j * W + ia, j * W + ib + 1);
+    }
+    // the largest 4-connected patch
+    const lab = new Int32Array(W * H), st = new Int32Array(W * H); let best = 0, bb = null, id = 0;
+    for (let s0 = 0; s0 < W * H; s0++) {
+      if (!G[s0] || lab[s0]) continue; id++; let top = 0, cnt = 0, ia = W, ib = 0, ja = H, jb = 0; st[top++] = s0; lab[s0] = id;
+      while (top) { const c = st[--top], i = c % W, j = (c - i) / W; cnt++; if (i < ia) ia = i; if (i > ib) ib = i; if (j < ja) ja = j; if (j > jb) jb = j;
+        if (i > 0 && G[c - 1] && !lab[c - 1]) { lab[c - 1] = id; st[top++] = c - 1; } if (i < W - 1 && G[c + 1] && !lab[c + 1]) { lab[c + 1] = id; st[top++] = c + 1; }
+        if (j > 0 && G[c - W] && !lab[c - W]) { lab[c - W] = id; st[top++] = c - W; } if (j < H - 1 && G[c + W] && !lab[c + W]) { lab[c + W] = id; st[top++] = c + W; } }
+      if (cnt > best) { best = cnt; bb = [ia, ib, ja, jb]; }
+    }
+    const B = new (T().Box3)(); B.min.set(x0 + bb[0] * cs, 0, z0 + bb[2] * cs); B.max.set(x0 + (bb[1] + 1) * cs, 1, z0 + (bb[3] + 1) * cs); return B;
   }
   // play view: the framed rectangle (fit's w × d at its height y), as the tilted camera draws it, is centred between the top and the
   // bottom of the free view with a vertical lens shift (vsh px) — framing the look point alone left boards sitting low (2026-11-09)
@@ -1532,7 +1567,7 @@
     const mr = museumOn && !k ? boardR() / .9 : 0, mh = mr ? (boardR() * .5 + ((cur && cur.userData._h) || 1) * .7) / .9 : 0;
     // phones (a narrow view): the showcase frames the board by its own size, so it reads ~1.45× larger than the fixed ~11-unit frame
     // (a chess board fills ~60% of the width); never further than that frame (big boards such as the legged goban stay as they were)
-    const pr = !k && !mr && cw && cw < 700 ? Math.min(6.5, Math.max(boardR() * .92, ((cur && cur.userData._s) || 0) * 1.06)) : 0;   // (a long board such as Ur's: its long side kept clear of the edges)
+    const pr = !k && !mr && cw && cw < 700 ? Math.min(6.5, Math.max((boardR(), (cur && cur.userData._rb) || 6.5) * .92, ((cur && cur.userData._s) || 0) * 1.06)) : 0;   // (a long board such as Ur's: its long side kept clear of the edges)
     const needW = (k ? fw : mr || pr || 6.5) / (th * a), needH = (k ? fd : mh || (pr ? 6.8 * pr / 6.5 : 6.8)) / th;
     const dist = Math.max(needW, needH) * (k ? 1 : mr ? 1 : 1.08) * (1 + ((mr ? 1 : zoom) - 1) * (1 - k)) * (orthoWant ? 1 + .14 * k : 1);   // ortho plan: the whole depth shows unforeshortened, so a little more room   // zoom applies to the showcase view only
     const pitch = .52 + k * ((orthoWant ? 1.5703 : F && F.pitch ? F.pitch : 1.34) - .52);   // ortho (Historia's diagram view): straight down   // play: nearly top-down (fit can ask for straight down)                       // view: low 3/4 so the room shows · play: nearly top-down
