@@ -17,6 +17,14 @@
 //               -Wl,--initial-memory=67108864 -Wl,--max-memory=268435456 -o engine[_simd].wasm engine.c   (see tools/build.sh)
 // Host protocol: everything goes through the shared i32 buffer at io_ptr() (see the EXPORTs at the end).
 #include <stdint.h>
+// MT (engine_mt.wasm, tools/build.sh): several threads search one root together on a shared memory ("Lazy SMP"); the state of
+// one search is thread-local (TLS), the geometry, the evaluation weights, the endgame databases and the transposition table
+// are shared. Without it TLS is nothing and the normal builds stay byte for byte as before.
+#ifdef MT
+#define TLS _Thread_local
+#else
+#define TLS
+#endif
 typedef int32_t i32; typedef uint32_t u32; typedef int8_t i8; typedef uint8_t u8; typedef int16_t i16; typedef uint16_t u16; typedef uint64_t u64;
 #ifdef NATIVE
 #include <stdio.h>
@@ -42,7 +50,7 @@ void *memcpy(void *d, const void *s, unsigned long n) { u8 *p = (u8 *)d; const u
 #define MAXMV 64
 #define DRAW_PLIES 80
 
-static i32 IO[8192];
+static TLS i32 IO[8192];
 EXPORT(io_ptr) i32 *io_ptr(void) { return IO; }
 
 // ---------------------------------------------------------------- geometry
@@ -372,7 +380,11 @@ static inline int n2Bucket(int npc, int nb) { int b = (24 - npc) * nb / 24; retu
 #ifdef __wasm_simd128__
 #include <wasm_simd128.h>
 #endif
+#ifdef MT
+static TLS i16 (*ACC2)[2][N2_HMAX];   // each thread's accumulators: in its own slot, after its TLS block (mt_thread)
+#else
 static i16 ACC2[MAXPLY + 4][2][N2_HMAX] __attribute__((aligned(16)));
+#endif
 // a = b - w0 + w1 (w1 / w0 may be 0), H a multiple of 8
 static inline void n2Row(i16 *a, const i16 *b, const i16 *w0, const i16 *w1, int H) {
 #ifdef __wasm_simd128__
@@ -385,7 +397,7 @@ static inline void n2Row(i16 *a, const i16 *b, const i16 *w0, const i16 *w1, int
   else for (int k = 0; k < H; k++) a[k] = (i16)(b[k] - w0[k]);
 #endif
 }
-static u8 ACC2B[MAXPLY + 4];   // feature bucket the accumulators of this ply were built with
+static TLS u8 ACC2B[MAXPLY + 4];   // feature bucket the accumulators of this ply were built with
 static void acc2Full(const Pos *p, int ply) {
   const int H = N2H, fb = n2Bucket(pc(p->p[0] | p->p[1]), N2FB);
   ACC2B[ply] = (u8)fb;
@@ -468,10 +480,14 @@ static int net2Out(const Pos *p, const i16 *am, const i16 *ao) {   // accumulato
 }
 static int net2Eval(const Pos *p) { acc2Full(p, MAXPLY + 3); return net2Out(p, ACC2[MAXPLY + 3][p->side], ACC2[MAXPLY + 3][p->side ^ 1]); }
 
-static int useNet = 1;
+static int useNet = 1;   // (shared under MT: values(), which turns it off, never runs on the threads)
 static inline int evaluate(const Pos *p) { return useNet && N2 ? net2Eval(p) : (NH && useNet) ? netEval(p) : hand(p); }
 // incremental first layer: ACC[ply][c] = the first-layer sums seen from side c (c = 0 Black, 1 White), updated move by move
+#ifdef MT
+static TLS float (*ACC)[2][NH_MAX];
+#else
 static float ACC[MAXPLY + 4][2][NH_MAX];
+#endif
 static inline int sqOf(int c, int i) { return c ? 31 - i : i; }
 static void accFull(const Pos *p, int ply) {
   const int H = NH;
@@ -539,19 +555,29 @@ static void ttStore(u64 key, int d, int flag, int v, const Move *m, int ply) {
 EXPORT(new_game) void new_game(void) { memset(TT, 0, sizeof(TT)); ttAge = 0; }
 
 // ---------------------------------------------------------------- search
-static u64 nodes; static double tEnd; static int stopFlag, nodeLimit_on; static u64 nodeLimit, nodeMask = 2047;   // small node limits are checked every 128 nodes
+static TLS u64 nodes; static TLS double tEnd; static TLS int stopFlag, nodeLimit_on; static TLS u64 nodeLimit, nodeMask = 2047;   // small node limits are checked every 128 nodes
 EXPORT(nodes_k) int nodes_k(void) { return (int)(nodes / 1000); }   // nodes of the last search, in thousands (speed checks)
-static int hist[2][32][32];
-static Move killers[MAXPLY][2];
-static u64 hkeys[1024 + MAXPLY]; static int hn, hirr;   // hash history (game + search) and index after the last irreversible move
-static int rootPly;   // plies since the last irreversible move at the root (40-move rule)
-static int seldepth;
+static TLS int hist[2][32][32];
+static TLS Move killers[MAXPLY][2];
+static TLS u64 hkeys[1024 + MAXPLY]; static TLS int hn, hirr;   // hash history (game + search) and index after the last irreversible move
+static TLS int rootPly;   // plies since the last irreversible move at the root (40-move rule)
+static TLS int seldepth;
 static inline int sameMove(const Move *a, const Move *b) { return a->f == b->f && a->t == b->t && a->cap == b->cap; }
+#ifdef MT
+static volatile int gStop;            // shared: set when the main thread's search is over (the helpers stop)
+static TLS int threadId;              // 0 = the main thread (time control, result), 1.. = helpers
+static inline int timeUp(void) {
+  if (stopFlag) return 1;
+  if ((nodes & nodeMask) == 0) { if ((tEnd > 0 && now() > tEnd) || (nodeLimit_on && nodes > nodeLimit) || gStop) stopFlag = 1; }
+  return stopFlag;
+}
+#else
 static inline int timeUp(void) {
   if (stopFlag) return 1;
   if ((nodes & nodeMask) == 0) { if ((tEnd > 0 && now() > tEnd) || (nodeLimit_on && nodes > nodeLimit)) stopFlag = 1; }
   return stopFlag;
 }
+#endif
 static int isRep(u64 key, int from) {   // the position occurred before since the last irreversible move
   for (int i = hn - 2; i >= from; i -= 2) if (hkeys[i] == key) return 1;
   return 0;
@@ -652,9 +678,9 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, u64 key, int 
 }
 
 // ---------------------------------------------------------------- root / host interface
-static Pos ROOT; static u64 rootKey;
-static Move rootL[MAXMV]; static int rootN;
-static int rootVal[MAXMV];
+static TLS Pos ROOT; static TLS u64 rootKey;
+static TLS Move rootL[MAXMV]; static TLS int rootN;
+static TLS int rootVal[MAXMV];
 // setup: IO = [black, white, kings, side, nmoves, (ft, cap) * nmoves]; ft = f | t << 5. Returns 1 if all moves were legal.
 static int findMove(const Pos *p, int ft, u32 cap, Move *out) {
   Move L[MAXMV]; int n = gen(p, L);
@@ -702,7 +728,11 @@ static void sortRoot(void) {   // by value, stable
   for (int i = 1; i < rootN; i++) { Move m = rootL[i]; int v = rootVal[i], j = i - 1; while (j >= 0 && rootVal[j] < v) { rootL[j + 1] = rootL[j]; rootVal[j + 1] = rootVal[j]; j--; } rootL[j + 1] = m; rootVal[j + 1] = v; }
 }
 static void beginSearch(int ms) {
-  stopFlag = 0; nodes = 0; tEnd = ms > 0 ? now() + ms : 0; ttAge++;
+  stopFlag = 0; nodes = 0; tEnd = ms > 0 ? now() + ms : 0;
+#ifdef MT
+  if (threadId == 0)   // (only the main thread ages the shared table)
+#endif
+  ttAge++;
   for (int a = 0; a < 2; a++) for (int b = 0; b < 32; b++) for (int c = 0; c < 32; c++) hist[a][b][c] >>= 2;
   memset(killers, 0, sizeof(killers));
 }
@@ -717,8 +747,11 @@ static void bestN(int maxDepth, int ms, u64 nodeLim) {
   Move bm = rootL[0]; int bv = 0, bd = 0;
   if (rootN == 1) { writeMove(IO, &bm); IO[2] = 0; IO[3] = 0; IO[4] = 0; return; }
   for (int i = 0; i < rootN; i++) rootVal[i] = -INF;
-  int prev = 0;
-  for (int d = 1; d <= maxDepth && d < MAXPLY - 8; d++) {
+  int prev = 0, d0 = 1;
+#ifdef MT
+  if (threadId) d0 = 1 + (threadId & 1);   // helpers: every other one a ply ahead, so the threads fill the table with different depths
+#endif
+  for (int d = d0; d <= maxDepth && d < MAXPLY - 8; d++) {
     seldepth = 0;
     int a = d >= 4 ? prev - 40 : -INF, b = d >= 4 ? prev + 40 : INF, v;
     for (;;) {
@@ -736,10 +769,16 @@ static void bestN(int maxDepth, int ms, u64 nodeLim) {
     if (bi) { Move t = rootL[bi]; int tv = rootVal[bi]; for (int i = bi; i > 0; i--) { rootL[i] = rootL[i - 1]; rootVal[i] = rootVal[i - 1]; } rootL[0] = t; rootVal[0] = tv; }
     for (int i = 1; i < rootN; i++) rootVal[i] = -INF;
     bm = rootL[0]; bv = v; bd = d; prev = v;
+#ifdef MT
+    IO[4] = (i32)(nodes / 1000);   // (the nodes so far, for the helpers' progress readouts)
+#endif
     progress(d, 1);
     if (v > WINT && WIN - v <= d) break;   // a forced win found
     if (v < -WINT && WIN + v <= d) break;
     if (ms > 0 && d > 1 && now() > tEnd - ms * 0.45) break;   // the next iteration would most likely not finish
+#ifdef MT
+    if (gStop) break;
+#endif
   }
   writeMove(IO, &bm); IO[2] = bv; IO[3] = bd; IO[4] = (i32)(nodes / 1000);
 }
@@ -797,7 +836,7 @@ static int winAtt(const Pos *p, int k, u64 *budget) {
 }
 // material gain ("shot"): within k own moves reach a position where the defender is to move, has no capture,
 // and the attacker's piece lead (kings count 1) grew by at least g compared with the start (or the defender cannot move).
-static int gBase, gNeed;
+static TLS int gBase, gNeed;
 static inline int lead(const Pos *p, int att) { return pc(p->p[att]) - pc(p->p[att ^ 1]); }
 static int shotAtt(const Pos *p, int k, int att, u64 *budget);
 static int shotDef(const Pos *p, int k, int att, u64 *budget) {
@@ -845,3 +884,25 @@ EXPORT(heap_base) u8 *heap_base(void) {
   extern unsigned char __heap_base; return &__heap_base;
 #endif
 }
+
+#ifdef MT
+// ---------------------------------------------------------------- threads (engine_mt.wasm; shared/mtengine.js, mt-helper.js)
+extern void __wasm_init_tls(void *);
+EXPORT(mt_heap_base) u32 mt_heap_base(void) { extern unsigned char __heap_base; return (u32)&__heap_base; }
+EXPORT(mt_tls_size) u32 mt_tls_size(void) { return __builtin_wasm_tls_size(); }
+// every instance first: mt_stack (its own stack: the top address; a function without a frame of its own), then mt_thread
+// (its TLS block, accumulators and thread number; the first instance — the page's own — also fills the shared tables)
+EXPORT(mt_stack) void mt_stack(u32 stackTop) { __asm__ volatile(".globaltype __stack_pointer, i32\n local.get %0\n global.set __stack_pointer" :: "r"(stackTop)); }
+// (the thread's own variables are set in a function of their own: in mt_thread itself the compiler reads the TLS base once,
+// before __wasm_init_tls has moved it, and the stores would land in the old block)
+static __attribute__((noinline)) void mtSelf(u32 tls, int id) {
+  threadId = id;
+  u32 a = (tls + __builtin_wasm_tls_size() + 63) & ~63u;   // (the stack grows down from the slot's top towards these)
+  ACC2 = (i16 (*)[2][N2_HMAX])a; a += sizeof(i16) * (MAXPLY + 4) * 2 * N2_HMAX;
+  ACC = (float (*)[2][NH_MAX])a;
+}
+EXPORT(mt_thread) void mt_thread(u32 tls, int id) { __wasm_init_tls((void *)tls); mtSelf(tls, id); initGeo(); initCB(); }
+EXPORT(mt_id) int mt_id(void) { return threadId; }
+EXPORT(mt_stop) void mt_stop(int v) { __atomic_store_n(&gStop, v, __ATOMIC_SEQ_CST); }
+EXPORT(last_nodes) double last_nodes(void) { return (double)nodes; }   // (this thread's last search: the page's nps readout)
+#endif

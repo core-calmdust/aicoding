@@ -111,9 +111,10 @@ html.rvb-on .rvb-badge.on{font-size:13.5px}
     let shown = false, state = null, rows = [], hov = -1, hovE = null, lastL = '', lastR = '', lastC = '';
     const hover = e => { if (e === hovE) return; hovE = e; if (o.onHover) o.onHover(e); };
     // ---- the candidate worker: one job at a time; a new position stops the old job (the worker is restarted)
-    let W = null, busy = false, jobKey = '', timer = 0, seq = 0, wantKey = '';
+    // (o.pool(): the page's pool of threads when free — shared/mtengine.js — else the worker; o.cancel() stops it)
+    let W = null, busy = false, jobKey = '', timer = 0, seq = 0, wantKey = '', mtJob = 0;
     const cache = new Map();
-    function kill() { if (W && busy) { W.terminate(); W = null; } busy = false; jobKey = ''; }
+    function kill() { if (mtJob) { mtJob = 0; if (o.cancel) o.cancel(); } else if (W && busy) { W.terminate(); W = null; } busy = false; jobKey = ''; }
     function want(key, msg) {
       wantKey = key || '';
       if (!key || !msg) { clearTimeout(timer); kill(); return; }
@@ -122,17 +123,27 @@ html.rvb-on .rvb-badge.on{font-size:13.5px}
       clearTimeout(timer); if (busy) kill();
       timer = setTimeout(() => start(key, msg), c ? 0 : 160);
     }
-    function start(key, msg) {
+    function start(key, msg, noPool) {
       if (wantKey !== key) return;
-      if (!W) W = new Worker(o.worker());
       const id = ++seq; busy = true; jobKey = key;
-      W.onmessage = e => {
-        const d = e.data; if (!d || d.id !== id) return;
-        if (d.type === 'progress') { if (d.list && d.list.length) { const c = cache.get(key); if (!c || !c.done) cache.set(key, { list: d.list, done: false }); if (key === wantKey) paint(); } return; }
+      const prog = d => { if (d.list && d.list.length) { const c = cache.get(key); if (!c || !c.done) cache.set(key, { list: d.list, done: false }); if (key === wantKey) paint(); } };
+      const fin = d => {
         busy = false; jobKey = '';
         cache.set(key, { list: d.error ? ((cache.get(key) || {}).list || []) : (d.list || []), done: true });
         if (cache.size > 400) cache.delete(cache.keys().next().value);
         if (key === wantKey) paint();
+      };
+      const mp = !noPool && o.pool && o.pool();
+      if (mp) {
+        mtJob = id;
+        mp.run(Object.assign({}, msg, { type: 'cands' }), prog, 'rvb').then(r => { if (mtJob !== id) return; mtJob = 0; if (r) { fin(r); return; } busy = false; jobKey = ''; if (r === undefined) start(key, msg, true); });
+        return;
+      }
+      if (!W) W = new Worker(o.worker());
+      W.onmessage = e => {
+        const d = e.data; if (!d || d.id !== id) return;
+        if (d.type === 'progress') { prog(d); return; }
+        fin(d);
       };
       W.postMessage(Object.assign({}, msg, { type: 'cands', id }));
     }
