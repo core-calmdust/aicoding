@@ -28,7 +28,39 @@ async function gunzip(buf) {
   const s = new Blob([buf]).stream().pipeThrough(ds);
   return new Uint8Array(await new Response(s).arrayBuffer());
 }
+// ?…&mt=1: the lead thread of the page's multi-thread pool (shared/mtengine.js): ONE instance of engine_mt.wasm on the shared
+// memory sent with the first message ('mtinit'), both nets loaded into it (net_sel); the helpers (mt-helper.js) grow the same
+// search tree meanwhile (engine.c mt_help). The rest is the usual API.
+const MTL = /[?&]mt=1\b/.test(self.location.search || '');
+let MTX = null, mtTop = 0;
+const mtReady = MTL ? new Promise(res => self.addEventListener('message', function f(e) { if (e.data && e.data.type === 'mtinit') { self.removeEventListener('message', f); res(e.data); } }))
+  .then(m => {
+    try {
+      const x = new WebAssembly.Instance(m.module, { env: { memory: m.mem } }).exports;
+      x.mt_stack(m.top); x.mt_thread(m.tls, 0); mtTop = m.top;
+      MTX = Object.assign({}, x, { memory: m.mem });   // (the memory is imported: E.memory as in the normal build)
+      self.postMessage({ type: 'mtready' });
+    } catch (err) { self.postMessage({ type: 'mtready', error: String(err && err.message || err) }); }
+  }) : null;
+const mtNet = {};   // net name -> loaded into the shared instance
+async function getNetMT(name) {
+  await mtReady;
+  const E = MTX, i = name === 'strong' ? 1 : 0;
+  E.net_sel(i);
+  if (!mtNet[name]) {
+    let raw = netBytes[name];
+    if (!raw) { raw = new Uint8Array(await (await fetch(NETS[name])).arrayBuffer()); if (raw[0] === 0x1f && raw[1] === 0x8b) raw = await gunzip(raw); netBytes[name] = raw; }
+    E.net_sel(i);
+    const p = E.galloc(raw.length);
+    new Uint8Array(E.memory.buffer).set(raw, p);
+    const r = E.net_load(p, raw.length);
+    if (r < 0) throw new Error('net load ' + r);
+    mtNet[name] = true;
+  }
+  return { E, name };
+}
 async function getNet(name) {
+  if (MTL) return getNetMT(name);
   if (inst[name]) return inst[name];
   if (loading[name]) return loading[name];
   return (loading[name] = (async () => {
@@ -90,14 +122,15 @@ async function search(I, job, o) {
   while (done < maxV) {
     const k = Math.min(o.slice || 4, maxV - done);
     const got = E.search_run(k);
-    done += got;
-    if (!got) break;
+    if (MTL) { done = E.mt_visits(); if (!got && E.mt_full()) break; if (E.mt_stopped()) { E.mt_close(); return null; } }   // (threads: every thread's visits count; the page cancelled)
+    else { done += got; if (!got) break; }
     const now = performance.now();
     if (now - t0 > maxT && done >= (o.minVisits || 1)) break;
     if (o.progress && now - lastP > gap) { lastP = now; gap = 280; o.progress(results(I, n, 24)); }
     await yieldNow();
-    if (curJob !== my) return null;
+    if (curJob !== my) { if (MTL) E.mt_close(); return null; }
   }
+  if (MTL) E.mt_close();   // (the helpers leave the tree before it is read)
   return results(I, n, 362);
 }
 
@@ -204,7 +237,7 @@ async function analyze(job, post) {
     lead: res.sc, wr: (res.wl + 1) / 2, visits: res.visits,
     list: res.list.filter(c => c.n > 0).map(c => ({ m: c.m, lead: c.sc, wr: (c.wl + 1) / 2, n: c.n, p: c.p })),
   });
-  const res = await search(I, job, { visits: job.visits || 60, time: job.time || 2000, slice: 3, prog0: job.prog0, progress: r => post({ type: 'progress', id: job.id, ...fmt(r) }) });
+  const res = await search(I, job, { visits: job.visits || 60, time: job.time || 2000, nodes: job.nodes, slice: 3, prog0: job.prog0, progress: r => post({ type: 'progress', id: job.id, ...fmt(r) }) });
   if (!res) return null;
   const out = fmt(res);
   if (job.pv) addPV(I, job, out.list.slice(0, job.pv));
@@ -293,7 +326,7 @@ async function pump() {
       if (out === null && curJob !== job.id) out = { superseded: true };
       postMessage(Object.assign({ type: 'done', id: job.id }, out || { error: 'none' }));
     } catch (e) {
-      if (e instanceof WebAssembly.RuntimeError) resetEngines();
+      if (e instanceof WebAssembly.RuntimeError) { if (MTL) { try { MTX.mt_stack(mtTop); MTX.mt_close(); } catch (e2) {} } else resetEngines(); }   // (threads: the shared instance stays, only its stack is reset)
       postMessage({ type: 'done', id: job.id, error: String(e && e.message || e) });
     }
   }
@@ -301,6 +334,7 @@ async function pump() {
 }
 onmessage = e => {
   const m = e.data;
+  if (m && m.type === 'mtinit') return;
   if (m.type === 'cancel') { curJob = -1; for (const j of queue.splice(0)) postMessage({ type: 'done', id: j.id, superseded: true }); return; }
   if (m.preempt) { curJob = -1; for (const j of queue.splice(0)) postMessage({ type: 'done', id: j.id, superseded: true }); }
   queue.push(m);

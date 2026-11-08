@@ -8,6 +8,17 @@
  * Coordinates: pos = y*19 + x (x,y < n), always on a 19x19 tensor with the board in the
  * top-left corner (that is how the nets were trained for every board size). PASS = 361.
  */
+/* MT (engine_mt.wasm, tools/build.sh): several threads grow ONE search tree together on a shared memory (tree-parallel
+ * MCTS with virtual loss: a thread going down a branch counts it as a visit with a loss until its net evaluation comes back,
+ * so the other threads look elsewhere; a leaf is expanded (evaluated) by one thread only, the node pool is taken with an
+ * atomic counter and the node sums are added atomically). The state of one descent, the features and the net's work
+ * buffers are thread-local (TLS); the nets, the tree and the root position are shared. Without MT, TLS is nothing and the
+ * normal builds (engine.wasm, engine_simd.wasm) stay byte for byte as before. */
+#ifdef MT
+#define TLS _Thread_local
+#else
+#define TLS
+#endif
 #ifdef NATIVE
 #include <math.h>
 #include <string.h>
@@ -88,8 +99,8 @@ static void nb_init(int n) {
     }
 }
 
-static int mark[NP], markGen = 1;
-static short gstk[NP], gstones[NP];
+static TLS int mark[NP], markGen = 1;
+static TLS short gstk[NP], gstones[NP];
 
 /* flood fill group at p; fills gstones (count returned), libs count into *nl,
  * first liberties into libs[] (up to maxl). */
@@ -172,7 +183,7 @@ static void board_clear(Board *b, int n) {
 }
 
 /* ---- ladders (port of KataGo's python reference, as in vibego) ---- */
-static int lad_nodes;
+static TLS int lad_nodes;
 static int ladder(Board *b, int lp, int def, int defToMove, int depth);
 
 static int ladder_captured(const Board *b0, int p, int defFirst) {
@@ -198,7 +209,7 @@ static int ladder(Board *b, int lp, int def, int defToMove, int depth) {
     short moves[64]; int nm = 0;
     short stones[NP]; int ns = group_info(b, lp, &nl, libs, 4);
     for (int i = 0; i < ns; i++) stones[i] = gstones[i];
-    static int seenGen = 0; static int seen[NP];
+    static TLS int seenGen = 0; static TLS int seen[NP];
     seenGen++;
     for (int i = 0; i < ns && nm < 60; i++) {
       int q = stones[i];
@@ -270,7 +281,7 @@ typedef struct {
   BN bn1, bnp, bn2; Conv creg, cpool, c2; float *fcw, *fcb; /* fc: [C][2gc] */
 } Block;
 
-static struct {
+typedef struct {
   int ok, C, B, hc, gc, bc;
   Conv stem; float *gfw, *gfb; float *emb; /* [K][C] */
   Block blk[16];
@@ -278,7 +289,13 @@ static struct {
   float *pcw; BN pbn; float *pow_, pob, *ppw, ppb;
   float *vcw; BN vbn; float *v1w, *v1b, *vvw, *vvb, *vsw, vsb;
   float *ocw; BN obn; float *oow, oob;
-} net;
+} NetT;
+#ifdef MT
+static NetT NETS[2]; static int netSel;   /* the threads' build: both nets in the shared memory, netSel = the one in use (net_sel) */
+#define net NETS[netSel]
+#else
+static NetT net;
+#endif
 
 static u16 canon3[19683];
 static int canonK = 0;
@@ -289,6 +306,25 @@ static unsigned char *heapTop = 0;
 #ifndef NATIVE
 extern unsigned char __heap_base;
 #endif
+#ifdef MT
+/* the threads' build: one bump allocator for every thread (atomic). It starts at the end of the memory as it is at the first
+ * call — above the page's thread slots (TLS + stack), which shared/mtengine.js lays out right after __heap_base first. */
+static unsigned long heapTopU = 0;
+static void *halloc(int n) {
+  unsigned long old = __atomic_load_n(&heapTopU, __ATOMIC_SEQ_CST), a, need;
+  for (;;) {
+    unsigned long base = old ? old : __builtin_wasm_memory_size(0) * 65536UL;
+    a = (base + 15) & ~15UL; need = a + n;
+    if (__atomic_compare_exchange_n(&heapTopU, &old, need, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)) break;
+  }
+  for (;;) {
+    unsigned long have = __builtin_wasm_memory_size(0) * 65536UL;
+    if (need <= have) break;
+    if (__builtin_wasm_memory_grow(0, (need - have + 65535) / 65536) < 0 && __builtin_wasm_memory_size(0) * 65536UL < need) return 0;
+  }
+  return (void *)a;
+}
+#else
 static void *halloc(int n) {
 #ifdef NATIVE
   return calloc(1, n + 16);
@@ -304,6 +340,7 @@ static void *halloc(int n) {
   return (void *)a;
 #endif
 }
+#endif
 EXPORT void *galloc(int n) { return halloc(n); }
 
 static float h2f(u16 h) {
@@ -492,10 +529,17 @@ static void conv_run(const Conv *c, const float *in, float *out, int accum) {
 /* ---- winograd F(4x4,3x3) ---- */
 #define NT 25      /* 5x5 tiles of 4x4 cover the 19x19 board */
 #define NTP 28     /* padded to a multiple of 4 */
-static float *WV, *WM; /* V[36][NTP][maxCin], M[36][NTP][maxCop] */
+static TLS float *WV, *WM; /* V[36][NTP][maxCin], M[36][NTP][maxCop] */
+#ifdef MT
+static TLS int wvCin, wvCop;   /* (each thread's buffers; made larger when a bigger net is loaded later) */
+#endif
 static void wino_run(const Conv *c, const float *in, float *out, int accum) {
   int cin = c->cin, cop = c->cop;
+#ifdef MT
+  if (!WV || wvCin < maxCin || wvCop < maxCop) { wvCin = maxCin; wvCop = maxCop; WV = halloc(36 * NTP * maxCin * 4); WM = halloc(36 * NTP * maxCop * 4); }
+#else
   if (!WV) { WV = halloc(36 * NTP * maxCin * 4); WM = halloc(36 * NTP * maxCop * 4); }
+#endif
   /* input transform */
   for (int ci = 0; ci < cin; ci++) {
     const float *pl = in + ci * PP;
@@ -609,9 +653,17 @@ static void gpool(const float *a, int c, float *out) { /* mean (over 361) and ma
   }
 }
 
-static float *X, *A1, *H1, *H2, *H3;
+static TLS float *X, *A1, *H1, *H2, *H3;
+#ifdef MT
+static TLS int bufC;
+#endif
 static void ensure_bufs(void) {
+#ifdef MT
+  if (X && bufC >= net.C) return;
+  bufC = net.C;
+#else
   if (X) return;
+#endif
   int C = net.C;
   X = halloc(C * PP * 4); A1 = halloc(C * PP * 4); H1 = halloc(C * PP * 4); H2 = halloc(C * PP * 4); H3 = halloc(C * PP * 4);
 }
@@ -660,7 +712,7 @@ static void net_forward(const float *spatial, const float *glob, const u16 *pat,
   }
   bnrelu(&net.trunk, X, A1, C);
   /* heads: 1x1 convs (hc x C) done with plain loops over interior */
-  static float hp[3][64 * NP];
+  static TLS float hp[3][64 * NP];
   float *heads[3] = {net.pcw, net.vcw, net.ocw}; BN *bns[3] = {&net.pbn, &net.vbn, &net.obn};
   for (int h = 0; h < 3; h++) {
     float *dst = hp[h];
@@ -695,8 +747,8 @@ static void net_forward(const float *spatial, const float *glob, const u16 *pat,
 /* ======================================================================== */
 /* Features + symmetric evaluation                                          */
 /* ======================================================================== */
-static float FEAT[NSP * NP];
-static u16 PAT[NP];
+static TLS float FEAT[NSP * NP];
+static TLS u16 PAT[NP];
 
 static int symPos(int p, int sym, int n) { /* transform within the n x n board */
   if (p == PASS || p < 0) return p;
@@ -713,12 +765,12 @@ static float komiG = 7.5f;
 static void encode(const Board *b, int sym) {
   int n = b->n, pla = b->tomove, opp = OPP(pla);
   memset(FEAT, 0, sizeof FEAT);
-  static u8 lg[NP]; static int solvedGen = 0; static int solvedMark[NP]; static u8 solvedRes[NP];
-  static short wm[NP][2]; static u8 nwm[NP];
+  static TLS u8 lg[NP]; static TLS int solvedGen = 0; static TLS int solvedMark[NP]; static TLS u8 solvedRes[NP];
+  static TLS short wm[NP][2]; static TLS u8 nwm[NP];
   solvedGen++;
   for (int p = 0; p < NP; p++) lg[p] = 0;
   /* liberties */
-  static int seen[NP]; static int sg = 0; sg++;
+  static TLS int seen[NP]; static TLS int sg = 0; sg++;
   for (int y = 0; y < n; y++) for (int x = 0; x < n; x++) {
     int p = y * PL + x;
     if (b->st[p] == EMPTY || seen[p] == sg) continue;
@@ -727,7 +779,7 @@ static void encode(const Board *b, int sym) {
     for (int i = 0; i < ns; i++) { lg[gstones[i]] = L; seen[gstones[i]] = sg; }
   }
   /* ladder per group (keyed by smallest stone) */
-  static int gkey[NP];
+  static TLS int gkey[NP];
   for (int y = 0; y < n; y++) for (int x = 0; x < n; x++) {
     int p = y * PL + x;
     if (b->st[p] == EMPTY || (lg[p] != 1 && lg[p] != 2)) continue;
@@ -788,9 +840,9 @@ static void encode(const Board *b, int sym) {
   }
 }
 
-static float GLOB[2];
-static NNOut nnTmp;
-static int nnEvals = 0;
+static TLS float GLOB[2];
+static TLS NNOut nnTmp;
+static TLS int nnEvals = 0;
 
 /* evaluate b with symmetry sym; outputs mapped back to board coordinates */
 static void evaluate(const Board *b, int sym, NNOut *o) {
@@ -827,7 +879,7 @@ typedef struct {
 
 static Node *nodes; static int nodeCap = 0, nodeCnt = 0;
 static Board rootB;
-static unsigned int rng = 12345;
+static TLS unsigned int rng = 12345;
 static unsigned int rnd(void) { rng ^= rng << 13; rng ^= rng >> 17; rng ^= rng << 5; return rng; }
 EXPORT void set_seed(int s) { rng = s ? (unsigned)s : 1; }
 
@@ -850,7 +902,7 @@ static float score_util(float s, int mover) {
   return TWO_OVER_PI * (SP.ssf * ATAN(s / (SP.sss * sqrtArea)) + SP.dsf * ATAN((s - c) / (SP.dss * sqrtArea)));
 }
 
-static NNOut evTmp;
+static TLS NNOut evTmp;
 static int expand(Node *nd, const Board *b) {
   int sym = SP.symMode ? 0 : (int)(rnd() & 7);
   evaluate(b, sym, &evTmp);
@@ -860,7 +912,7 @@ static int expand(Node *nd, const Board *b) {
   /* children: legal moves */
   int n = b->n, cnt = 0;
   float mx = -1e30f;
-  static float lg[NP + 1]; static short mv[NP + 1];
+  static TLS float lg[NP + 1]; static TLS short mv[NP + 1];
   for (int y = 0; y < n; y++) for (int x = 0; x < n; x++) {
     int p = y * PL + x;
     if (b->st[p] != EMPTY || p == b->ko) continue;
@@ -868,6 +920,22 @@ static int expand(Node *nd, const Board *b) {
     mv[cnt] = p; lg[cnt] = evTmp.pol[p] / SP.polTemp; if (lg[cnt] > mx) mx = lg[cnt]; cnt++;
   }
   if (SP.allowPass || cnt == 0) { mv[cnt] = PASS; lg[cnt] = evTmp.pol[NP] / SP.polTemp; if (lg[cnt] > mx) mx = lg[cnt]; cnt++; }
+#ifdef MT
+  if (__atomic_load_n(&nodeCnt, __ATOMIC_SEQ_CST) + cnt > nodeCap) return 0;
+  int f0 = __atomic_fetch_add(&nodeCnt, cnt, __ATOMIC_SEQ_CST);
+  if (f0 + cnt > nodeCap) return 0;
+  float den = 0;
+  for (int i = 0; i < cnt; i++) { lg[i] = EXPF(lg[i] - mx); den += lg[i]; }
+  for (int i = 0; i < cnt; i++) {
+    Node *c = &nodes[f0 + i];
+    memset(c, 0, sizeof *c);
+    c->move = mv[i]; c->P = lg[i] / den; c->pla = OPP(b->tomove);
+  }
+  nd->first = f0; nd->nch = cnt;
+  __atomic_store_n(&nd->expanded, 1, __ATOMIC_SEQ_CST);   /* (the children are ready: the other threads may go down now) */
+  return 1;
+}
+#else
   if (nodeCnt + cnt > nodeCap) return 0;
   float den = 0;
   for (int i = 0; i < cnt; i++) { lg[i] = EXPF(lg[i] - mx); den += lg[i]; }
@@ -880,6 +948,7 @@ static int expand(Node *nd, const Board *b) {
   nd->expanded = 1;
   return 1;
 }
+#endif
 
 static NNOut rootOut;
 static int rootSym = 0;
@@ -913,14 +982,32 @@ static Node *select_child(Node *nd, int isRoot) {
   return best;
 }
 
-static Node *pathN[1024];
-static Board simB;
-static int lastTerminalDepth;
+static TLS Node *pathN[1024];
+static TLS Board simB;
+static TLS int lastTerminalDepth;
+#ifdef MT
+static volatile int gStop;     /* shared: the page stops every thread (mt_stop) */
+static volatile int gTree;     /* shared: > 0 = the tree the helpers may join now (a new number for each search), 0 = closed */
+static volatile int gActive;   /* shared: helpers inside the open tree */
+static int gTreeGen, oomFlag;
+static double VLOSS = 1.0;     /* virtual loss: the utility counted for a visit on its way (a loss for the parent's choice) */
+static TLS int threadId;       /* 0 = the lead (position, time control, result), 1.. = helpers */
+#define EXPANDED(nd) (__atomic_load_n(&(nd)->expanded, __ATOMIC_SEQ_CST) == 1)
+static inline void addD(double *p, double v) {   /* atomic double += */
+  unsigned long long *q = (unsigned long long *)p, o = __atomic_load_n(q, __ATOMIC_SEQ_CST), n;
+  do { union { unsigned long long u; double d; } a, b; a.u = o; b.d = a.d + v; n = b.u; } while (!__atomic_compare_exchange_n(q, &o, n, 1, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST));
+}
+static void unvisit(int d) {   /* take back the visits (and virtual losses) of a descent that did not finish */
+  for (int i = 0; i < d; i++) { __atomic_fetch_sub(&pathN[i]->N, 1, __ATOMIC_SEQ_CST); if (i) addD(&pathN[i]->W, -VLOSS); }
+}
+#else
+#define EXPANDED(nd) ((nd)->expanded)
+#endif
 
 /* Tromp-Taylor style final scoring (black - white - komi) on b */
 static float tt_score(const Board *b) {
   int n = b->n; float s = 0;
-  static int seen[NP]; static int g = 0; g++;
+  static TLS int seen[NP]; static TLS int g = 0; g++;
   for (int y = 0; y < n; y++) for (int x = 0; x < n; x++) {
     int p = y * PL + x;
     if (b->st[p] == BLACK) s += 1; else if (b->st[p] == WHITE) s -= 1;
@@ -938,14 +1025,20 @@ static float tt_score(const Board *b) {
   return s - komiG;
 }
 
-/* one playout. returns 0 if out of memory */
+/* one playout. returns 0 if out of memory (threads' build: 2 = the leaf is being expanded by another thread, nothing done) */
 static int playout(Node *root) {
   simB = rootB;
   int d = 0; Node *nd = root;
   pathN[d++] = nd;
+#ifdef MT
+  __atomic_fetch_add(&root->N, 1, __ATOMIC_SEQ_CST);
+#endif
   int passes = rootB.hmv[0] == PASS ? 1 : 0;
-  while (nd->expanded && nd->nch > 0 && d < 1000) {
+  while (EXPANDED(nd) && nd->nch > 0 && d < 1000) {
     Node *c = select_child(nd, nd == root);
+#ifdef MT
+    __atomic_fetch_add(&c->N, 1, __ATOMIC_SEQ_CST); addD(&c->W, VLOSS);   /* virtual loss until the value comes back */
+#endif
     play(&simB, OPP(c->pla), c->move);
     passes = c->move == PASS ? passes + 1 : 0;
     pathN[d++] = c;
@@ -962,7 +1055,15 @@ static int playout(Node *root) {
     util = SP.wlf * wl + score_util(sc, mover);
     nd->rawU = util; nd->rawV = wl; nd->rawS = sc;
   } else {
+#ifdef MT
+    if (!EXPANDED(nd)) {
+      u8 z = 0;
+      if (!__atomic_compare_exchange_n(&nd->expanded, &z, 2, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)) { unvisit(d); return 2; }   /* (another thread evaluates it) */
+      if (!expand(nd, &simB)) { __atomic_store_n(&nd->expanded, 0, __ATOMIC_SEQ_CST); unvisit(d); return 0; }
+    }
+#else
     if (!nd->expanded) { if (!expand(nd, &simB)) return 0; }
+#endif
     mover = simB.tomove;
     util = nd->rawU; wl = nd->rawV; sc = nd->rawS;
   }
@@ -971,14 +1072,24 @@ static int playout(Node *root) {
     /* node stats are from the perspective of the player to move at that node;
        path[i] is (d-1-i) plies above the leaf */
     float sign = ((d - 1 - i) & 1) ? -1.f : 1.f;
+#ifdef MT
+    addD(&x->W, sign * util - (i ? VLOSS : 0)); addD(&x->Wsq, util * util); addD(&x->Wwl, sign * wl); addD(&x->Wsc, sign * sc);   /* (N was counted on the way down) */
+#else
     x->N++; x->W += sign * util; x->Wsq += util * util; x->Wwl += sign * wl; x->Wsc += sign * sc;
+#endif
   }
   (void)mover;
   return 1;
 }
 
 static Node *rootN;
+#ifdef MT
+static void mt_close_wait(void) { __atomic_store_n(&gTree, 0, __ATOMIC_SEQ_CST); while (__atomic_load_n(&gActive, __ATOMIC_SEQ_CST)) {} }
+#endif
 EXPORT int search_init(int maxNodes) {
+#ifdef MT
+  mt_close_wait(); oomFlag = 0;
+#endif
   if (maxNodes > nodeCap) {
     nodes = halloc(maxNodes * (int)sizeof(Node));
     if (!nodes) return 0;
@@ -998,14 +1109,26 @@ EXPORT int search_init(int maxNodes) {
   rootN->rawU = SP.wlf * rootN->rawV + score_util(rootN->rawS, rootB.tomove);
   root_noise(rootN);
   rootN->N = 1; rootN->W = rootN->rawU; rootN->Wsq = rootN->rawU * rootN->rawU; rootN->Wwl = rootN->rawV; rootN->Wsc = rootN->rawS;
+#ifdef MT
+  __atomic_store_n(&gTree, ++gTreeGen, __ATOMIC_SEQ_CST);   /* the helpers (mt_help) may join this tree now */
+#endif
   return rootN->nch;
 }
 
+#ifdef MT
+/* the lead's playouts (a leaf another thread is evaluating: tried again elsewhere); 0 with mt_full() = out of nodes */
+EXPORT int search_run(int visits) {
+  int done = 0, tries = 0;
+  while (done < visits) { int r = playout(rootN); if (!r) { oomFlag = 1; break; } if (r == 1) done++; else if (++tries > 100000) break; }
+  return done;
+}
+#else
 EXPORT int search_run(int visits) {
   int done = 0;
   for (int i = 0; i < visits; i++) { if (!playout(rootN)) break; done++; }
   return done;
 }
+#endif
 
 /* ======================================================================== */
 /* JS API                                                                   */
@@ -1117,4 +1240,44 @@ Board *native_root(void) { return &rootB; }
 float *native_feat(void) { return FEAT; }
 u16 *native_pat(void) { return PAT; }
 void native_encode(int sym) { encode(&rootB, sym); }
+#endif
+
+#ifdef MT
+/* ======================================================================== */
+/* threads (engine_mt.wasm; shared/mtengine.js, mt-helper.js)               */
+/* ======================================================================== */
+extern void __wasm_init_tls(void *);
+EXPORT unsigned mt_heap_base(void) { return (unsigned)(unsigned long)&__heap_base; }
+EXPORT unsigned mt_tls_size(void) { return __builtin_wasm_tls_size(); }
+/* every instance first: mt_stack (its own stack: the top address; a function without a frame of its own), then mt_thread
+ * (its TLS block and thread number; each thread's random symmetries differ) */
+EXPORT void mt_stack(unsigned stackTop) { __asm__ volatile(".globaltype __stack_pointer, i32\n local.get %0\n global.set __stack_pointer" :: "r"(stackTop)); }
+EXPORT void mt_thread(unsigned tls, int id) { __wasm_init_tls((void *)(unsigned long)tls); threadId = id; rng = 12345u ^ (unsigned)(id + 1) * 2654435761u; if (!rng) rng = 1; }
+/* the page: 1 = every thread stops; 0 = a new job (no tree open yet) */
+EXPORT void mt_stop(int v) { __atomic_store_n(&gStop, v, __ATOMIC_SEQ_CST); if (!v) __atomic_store_n(&gTree, 0, __ATOMIC_SEQ_CST); }
+EXPORT int mt_stopped(void) { return __atomic_load_n(&gStop, __ATOMIC_SEQ_CST); }
+EXPORT void mt_close(void) { mt_close_wait(); }   /* the lead after its search: the helpers leave the tree (then it is read) */
+EXPORT int mt_visits(void) { return rootN ? __atomic_load_n(&rootN->N, __ATOMIC_SEQ_CST) : 0; }   /* every thread's visits */
+EXPORT int mt_full(void) { return oomFlag; }
+EXPORT void mt_vloss(float v) { VLOSS = v; }
+EXPORT void net_sel(int i) { netSel = i ? 1 : 0; }   /* the lead, between searches: the net to load / use */
+/* a helper: join every tree the lead opens during the job and grow it, until the lead closes it or the page stops the
+ * threads. Returns the playouts done. */
+static TLS int inTree;
+EXPORT int mt_help(void) {
+  int done = 0, last = 0;
+  while (!__atomic_load_n(&gStop, __ATOMIC_SEQ_CST)) {
+    int g = __atomic_load_n(&gTree, __ATOMIC_SEQ_CST);
+    if (g <= 0 || g == last) continue;   /* (waiting: the lead is setting up or reading the tree) */
+    __atomic_fetch_add(&gActive, 1, __ATOMIC_SEQ_CST); inTree = 1;
+    if (__atomic_load_n(&gTree, __ATOMIC_SEQ_CST) == g) {
+      last = g;
+      while (__atomic_load_n(&gTree, __ATOMIC_SEQ_CST) == g && !__atomic_load_n(&gStop, __ATOMIC_SEQ_CST)) { int r = playout(rootN); if (!r) break; if (r == 1) done++; }
+    }
+    inTree = 0; __atomic_fetch_sub(&gActive, 1, __ATOMIC_SEQ_CST);
+  }
+  return done;
+}
+/* a helper after a trap inside mt_help: leave the tree, so the lead does not wait for it */
+EXPORT void mt_trapped(void) { if (inTree) { inTree = 0; __atomic_fetch_sub(&gActive, 1, __ATOMIC_SEQ_CST); } }
 #endif

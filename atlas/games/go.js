@@ -15,7 +15,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../go/', RULES = BASE + 'rules.js?v=2', ENGINE = BASE + 'engine.js?v=7';   // same files / versions as go/index.html + go/app.js → shared cache
+  const BASE = '../go/', RULES = BASE + 'rules.js?v=2', ENGINE = BASE + 'engine.js?v=8';   // same files / versions as go/index.html + go/app.js → shared cache
   let rulesP = null;
   function loadRules() {
     if (window.GoRules) return Promise.resolve(window.GoRules);
