@@ -116,7 +116,7 @@
       if (zoomBtn) { zoomBtn.hidden = !tallNow() || over; zoomBtn.classList.toggle('off', !zoomPref); }
       const F = kit.fit0;
       if (!(zoomPref && tallNow() && focusX)) { curSpan = 0; T3.fit(Object.assign({}, F, { ease: true }, tallNow() && focusZ ? { cz: focusZ } : {})); return; }
-      const W = kit.U.W, span = Math.max(5.4, focusX[1] - focusX[0] + 2.2);
+      const W = kit.U.W, span = Math.max(8.4, focusX[1] - focusX[0] + 3.6);
       if (span >= F.w - .4) { curSpan = 0; T3.fit(Object.assign({}, F, { ease: true }, tallNow() && focusZ ? { cz: focusZ } : {})); return; }
       const lim = Math.max(0, W / 2 + .25 - span / 2), cx = Math.max(-lim, Math.min(lim, manX != null ? manX : (focusX[0] + focusX[1]) / 2));
       curSpan = span; curLim = lim; curCx = cx;
