@@ -1,6 +1,6 @@
 /* usimatch: the site's shogi AI (engine.c + an NNUE file, native build) against a USI engine (e.g. Gikou with DepthLimit).
    build: cc -O3 -DNATIVE -o usimatch usimatch.c            (add -DNUE_H=512 for a 512-wide net)
-   usage: usimatch <nnue.bin> <our nodes> <usi engine path> <engine dir> <games> [--opt "Name=Value"]... [--byoyomi ms] [--openings file]
+   usage: usimatch <nnue.bin> <our nodes | Nms> <usi engine path> <engine dir> <games> [--opt "Name=Value"]... [--byoyomi ms] [--openings file]
    The engine runs with its folder as the working directory (Gikou reads params.bin etc. from there).
    Games come in pairs: the same opening (a line of openings.txt, from book.json) with colours swapped; games end by mate, resignation, 4-fold repetition (draw) or 320 plies (draw). */
 #include "../../engine.c"
@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
   init();
   if (!loadNet(argv[1])) return 1;
   nue_enable(1);
-  int ourNodes = atoi(argv[2]), games = atoi(argv[5]), byo = 10000; char *opts[32]; int nopt = 0; const char *opf = NULL;
+  int ourNodes = atoi(argv[2]), ourMs = strstr(argv[2], "ms") ? ourNodes : 0, games = atoi(argv[5]), byo = 10000; char *opts[32]; int nopt = 0; const char *opf = NULL;
   for (int a = 6; a + 1 < argc; a++) {
     if (!strcmp(argv[a], "--opt") && nopt < 32) opts[nopt++] = argv[++a];
     else if (!strcmp(argv[a], "--byoyomi")) byo = atoi(argv[++a]);
@@ -113,7 +113,7 @@ int main(int argc, char **argv) {
       if (!n) { result = ours ? -1 : 1; break; }
       int m;
       if (ours) {
-        m = root_search(0, 0, ourNodes);
+        m = ourMs ? root_search(ourMs, 0, 0) : root_search(0, 0, ourNodes);
         if (!m) { result = -1; break; }
       } else {
         char mv[16]; int r = eMove(byo, mv);

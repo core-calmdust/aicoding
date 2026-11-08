@@ -1,5 +1,7 @@
 # 将棋 NNUE 学習ツール（Mac / Linux）
 
+> 玉の位置 × 駒の位置（HalfKP 方式）のネットを学習する手順は [`../TRAIN.md`](../TRAIN.md)（`run-kp.sh`・`trainkp.c`・`kptool.c`）。このページは今のサイトの形（区分なし）の学習です。
+
 将棋AIの評価関数 `shogi/nnue.bin.gz` を、公開されている強いエンジンの教師データで学習し直すための一式です。
 
 - 学習データ: [nodchip/tanuki-.nnue-pytorch-2024-07-30.1](https://huggingface.co/datasets/nodchip/tanuki-.nnue-pytorch-2024-07-30.1)（MIT、深さ9、YaneuraOu PackedSfenValue 形式）
