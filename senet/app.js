@@ -329,8 +329,8 @@ function zTarget() {
   const fr = $('#frame'), W = fr.clientWidth || 1, cs = zCols();
   if (!cs) return [1, 0];
   const c0 = Math.min(...cs), c1 = Math.max(...cs), H0 = W * 584 / 1104;
-  const zMax = Math.min(1.8, innerHeight * .46 / H0), z = Math.min(zMax, 11.04 / (c1 - c0 + 2.6));
-  if (z < 1.12) return [1, 0];
+  const zMax = Math.min(1.3, innerHeight * .46 / H0), z = Math.min(zMax, 11.04 / (c1 - c0 + 4));
+  if (z < 1.08) return [1, 0];
   const cc = (c0 + c1) / 2, Wz = W * z, x = Wz / 2 + (cc - 4.5) * 100 * Wz / 1104;
   return [z, Math.max(W - Wz, Math.min(0, W / 2 - x))];
 }
