@@ -62,6 +62,20 @@ button{font:inherit;color:inherit}
 #bsvg .pc.can .pcg{animation:bob 1s ease-in-out infinite}
 #bsvg .pc.hint .pcg{filter:drop-shadow(0 0 .25px #fff) drop-shadow(0 0 .35px var(--accent))}
 @keyframes bob{50%{transform:translateY(-.12px)}}
+/* the dice cup (app.js cupDraw) */
+#bsvg #gCup .cup{transform-box:fill-box;transform-origin:50% 90%}
+#bsvg #gCup .cup.ready{cursor:pointer;animation:cupBob 1.1s ease-in-out infinite}
+#bsvg #gCup .cup.ready .cupb{filter:drop-shadow(0 0 .08px #fff) drop-shadow(0 0 .22px #ffd36b)}
+#bsvg #gCup .cup.slide{animation:cupSlide .38s cubic-bezier(.3,.7,.3,1)}
+#bsvg #gCup .cup.ready.slide{animation:cupSlide .38s cubic-bezier(.3,.7,.3,1),cupBob 1.1s ease-in-out .38s infinite}
+#bsvg #gCup .cup.shake{animation:cupShake .3s ease-in-out infinite}
+#bsvg #gCup .cup.lift{animation:cupLift .5s cubic-bezier(.3,.6,.3,1) forwards;pointer-events:none}
+#bsvg #gCup .cupd{animation:cupDice .35s ease-out}
+@keyframes cupBob{50%{transform:translateY(-.1px) scale(1.04)}}
+@keyframes cupSlide{from{transform:translate(var(--dx),var(--dy)) scale(.7);opacity:.4}}
+@keyframes cupShake{0%{transform:translateY(-.25px) rotate(0)}25%{transform:translate(-.12px,-.4px) rotate(-16deg)}50%{transform:translateY(-.3px) rotate(0)}75%{transform:translate(.12px,-.4px) rotate(16deg)}100%{transform:translateY(-.25px) rotate(0)}}
+@keyframes cupLift{0%{transform:translateY(-.25px)}100%{transform:translate(.75px,-1.05px) rotate(28deg) scale(.82);opacity:0}}
+@keyframes cupDice{from{transform:scale(.6);opacity:0}}
 #bsvg .dest{cursor:pointer}
 #bsvg .dest circle{animation:pulse 1s ease-in-out infinite}
 @keyframes pulse{50%{opacity:.45}}
@@ -202,6 +216,8 @@ html[dir=rtl] .ngt-gcard{text-align:right}
 .graph{margin-top:8px;width:100%;height:clamp(44px, 9vh, 96px);display:block;cursor:pointer;touch-action:none}
 .graph .zero{stroke:rgba(244,176,66,.35);stroke-dasharray:2 3}
 .graph .cur{stroke:var(--accent);stroke-width:1}
+.shown.two{display:flex;gap:4px;align-items:center}.shown.two .dd{display:block;width:44px;height:44px}.shown.two .dd svg{width:100%;height:100%}.shown.two .dd.used{opacity:.25;filter:grayscale(1)}
+#btnHouse{display:flex;align-items:center;gap:10px;width:100%;min-height:46px;padding:8px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);font:inherit;font-size:14px;font-weight:700;cursor:pointer;text-align:start}#btnHouse:hover{border-color:var(--accent)}#btnHouse svg{width:20px;height:20px;flex:none;color:var(--accent)}#btnHouse span{flex:1}#btnHouse .chev{width:16px;height:16px;color:var(--muted)}
 .navbar{display:none;gap:6px;margin-top:8px}
 body:has(.review-card.show) .navbar, body.reviewing .navbar{display:flex}   /* (2026-11-09: only while reviewing — not during play) */
 .navbar button{flex:1;height:30px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.2);color:var(--muted);display:flex;align-items:center;justify-content:center}
@@ -473,7 +489,7 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
       <div class="field" id="fFirst"><label data-i18n="ng.firstp"></label><div class="seg" id="segFirst"><button data-v="0" data-i18n="ng.you"></button><button data-v="r" data-i18n="ng.random"></button></div></div>
       <div class="field" id="fLevel"><label data-i18n="ng.level"></label><div class="level-wrap"><input type="range" min="1" max="20" step="1" id="levelRange"><div class="level-name" id="levelName"></div></div></div>
     </div><div class="ng-col">
-      <div class="field" id="fOpts"><label data-i18n="ng.opts"></label><div class="checks"><label><input type="checkbox" id="optBlocks"><span data-i18n="opt.blocks"></span></label><label><input type="checkbox" id="optThree"><span data-i18n="opt.three"></span></label></div></div>
+      <div class="field" id="fOpts"><label id="hrLbl"></label><button type="button" class="hr-btn" id="btnHouse"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg><span id="hrSum"></span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg></button></div>
       <div class="field" id="fDisplay"><label data-i18n="ng.display"></label><div class="checks"><label><input type="checkbox" id="optAutoRoll"><span data-i18n="opt.autoRoll"></span></label><label><input type="checkbox" id="optAutoPick"><span data-i18n="opt.autoPick"></span></label></div></div>
       <div class="field" id="fDesign" data-ng="design"><label data-i18n="bd.title"></label><div class="dsg" id="bdRow"></div></div>
     </div></div>
@@ -538,16 +554,17 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
 <script src="../shared/headerbar.js?v=50l14r"></script>
 <script src="../shared/resign.js?v=3l14"></script>
 <script src="../shared/ruletour.js?v=29l14"></script>
-<script src="engine.js?v=2"></script>
+<script src="engine.js?v=3"></script>
 <script src="board2d.js?v=1"></script>
 <script src="../shared/coachkit.js?v=16l14"></script>
-<script src="coach.js?v=2"></script>
+<script src="coach.js?v=3"></script>
 <script src="coach-i18n.js?v=1"></script>
 <script src="../shared/record.js?v=12l14"></script>
 <script src="../shared/mtworkers.js?v=2"></script>
-<script src="mt.js?v=1"></script>
-<script src="app.js?v=9-aim"></script>
-<script src="review.js?v=2-mt"></script>
+<script src="mt.js?v=2"></script>
+<script src="house.js?v=1"></script>
+<script src="app.js?v=11"></script>
+<script src="review.js?v=3-mt"></script>
 <script src="../shared/placement.js?v=1l14"></script>
 <script src="rated.js?v=2"></script>
 <script src="tour.js?v=2"></script>
@@ -556,7 +573,7 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
 <script src="../shared/ngtabs.js?v=25l14"></script>
 <script src="../shared/atlas.js?v=20261112ld6" defer></script>
 <script src="../shared/langsel.js?v=2l14" defer></script>
-<script src="online-soon.js?v=1"></script>
+<script src="online-soon.js?v=2"></script>
 <script src="../shared/infotabs.js?v=17l14" defer></script>
 </body>
 </html>

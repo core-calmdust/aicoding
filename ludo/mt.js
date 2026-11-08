@@ -6,7 +6,7 @@
      LudoMT.wpMany([{ state, team }], onEach(i, wp), { count, tag }) → Promise<wps | null (cancelled) | undefined (busy / failed)>
      LudoMT.on(), .threads, .cancel(tag), .rate (playouts / s of the last job, all threads) */
 window.LudoMT = (function () {
-  const MW = window.MTWorkers ? (MTWorkers.init(), MTWorkers).use({ url: 'worker.js?v=1', warm: { type: 'ping' } }) : null;
+  const MW = window.MTWorkers ? (MTWorkers.init(), MTWorkers).use({ url: 'worker.js?v=2', warm: { type: 'ping' } }) : null;
   let rate = 0;
   async function wpMany(list, onEach, o) {
     o = o || {};
