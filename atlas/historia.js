@@ -6,7 +6,7 @@
    app.js calls Historia.sync(game, lang) when a board opens, and defers its stage framing to Historia.fit() while open. */
 (function () {
   'use strict';
-  const V = 15;                     // data version (bump when historia/*.json change)
+  const V = 16;                     // data version (bump when historia/*.json change)
   const BGM_SRC = 'historia/bgm.mp3', BGM_VOL = .28;
   const LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];   // (a game without text in a language falls back to English)
   const UI = {
@@ -29,7 +29,7 @@
   const GUIDE = { shogi: 'm-shogi', chess: 'm-knight', reversi: 'm-disc', sudoku: 'm-tile', speedsudoku: 'av/tile-2', samegame: 'av/hippo-0', jailbreak: 'av/mole-0',
     poker: 'av/joker-0', baccarat: 'av/joker-1', blackjack: 'av/joker-2', solitaire: 'av/ghost-0', checkers: 'm-crab', ugolki: 'av/daruma-0', agon: 'av/teddy-0', fanorona: 'av/monkey-0',
     alquerque: 'av/camel-0', xiangqi: 'av/ryuou-0', tafl: 'av/seal-0', go: 'av/goke-0', gomoku: 'm-stone', dots: 'm-dot', connect4: 'm-plop', mancala: 'm-gem',
-    backgammon: 'm-dice', morris: 'm-owl', hex: 'av/bee-0', ur: 'av/goat-0', konane: 'av/hermit-0', senet: 'av/camel-2', janggi: 'av/ryuou-0', ludo: 'av/monkey-1' };
+    backgammon: 'm-dice', morris: 'm-owl', hex: 'av/bee-0', ur: 'av/goat-0', konane: 'av/hermit-0', senet: 'av/camel-2', janggi: 'av/ryuou-0', ludo: 'av/monkey-1', carrom: 'av/otter-1' };
   const guideSrc = id => '../images/atlas/' + (GUIDE[id] || 'm-tile') + '.webp';
   const BOOK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v15H5.5A1.5 1.5 0 0 0 4 20.5z"/><path d="M20 5.5c0-.8-.7-1.5-1.5-1.5H13v15h5.5c.8 0 1.5.7 1.5 1.5z"/><path d="M7 8h2M15 8h2M7 11h2M15 11h2"/></svg>';
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -50,7 +50,7 @@
 
   /* ---------- entry button (in the board view, top-left of the 3D scene) ---------- */
   // the games that have a history (historia/s/<id>.json); a newer game without one shows no ヒストリア button
-  const IDS = new Set('agon alquerque baccarat backgammon blackjack checkers chess connect4 dots fanorona go gomoku hex jailbreak konane mancala morris poker reversi samegame shogi solitaire speedsudoku sudoku tafl ugolki ur xiangqi senet janggi ludo'.split(' ')), has = id => IDS.has(id);
+  const IDS = new Set('agon alquerque baccarat backgammon blackjack checkers chess connect4 dots fanorona go gomoku hex jailbreak konane mancala morris poker reversi samegame shogi solitaire speedsudoku sudoku tafl ugolki ur xiangqi senet janggi ludo carrom'.split(' ')), has = id => IDS.has(id);
   function sync(g, l, c) {
     game = g; lang = LANGS.includes(l) ? l : 'en'; if (c) ctx = c;
     const b = $('bvHist'); if (!b) return;
@@ -815,6 +815,22 @@
       (s.boxes || []).forEach(([i, j, c], k) => out.push(`<rect class="pc" style="--d:${dd + 600 + k * 200}ms" x="${X(i) + 3}" y="${Y(j) + 3}" width="${S - 6}" height="${S - 6}" rx="4" fill="${(COL[c] || COL.r)[0]}" opacity=".55"/>`));
       (s.lines || []).forEach(([a, b, c2, d2, c], k) => out.push(`<path class="ar dl" pathLength="1" style="--d:${dd + k * 110}ms;stroke:${(COL[c] || COL.u)[0]}" d="M${X(a)} ${Y(b)}L${X(c2)} ${Y(d2)}"/>`));
       for (let j = 0; j < m; j++) for (let i = 0; i < n; i++) out.push(`<circle cx="${X(i)}" cy="${Y(j)}" r="3.6" fill="#2b3044"/>`);
+    } else if (T === 'carrom') {   // carrom: the 74 cm board (ICF markings), men at cm positions "x,y,c" (c: w | b | q red queen | s striker)
+      const k = 3, F = 7 * k, B = 74 * k; W = H = B + F * 2 + PD * 2 - 20; const o = PD - 10 + F, X = v => o + (v + 37) * k;
+      body += `<rect x="${PD - 10}" y="${PD - 10}" width="${B + F * 2}" height="${B + F * 2}" rx="8" fill="${s.frame || '#6a2c1a'}"/><rect x="${o}" y="${o}" width="${B}" height="${B}" rx="6" fill="${s.bg || '#ecd29c'}"/>`;
+      const ink = s.ln || '#1d140e', red = s.red || '#c3271f';
+      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => { body += `<circle cx="${X(a * 34.775)}" cy="${X(b * 34.775)}" r="${2.4 * k}" fill="#141210"/>`; });
+      for (let r = 0; r < 4; r++) {
+        const g = [];
+        g.push(ln(X(-21.9), X(26.85), X(21.9), X(26.85), 'gl', r * 80), ln(X(-21.9), X(23.67), X(21.9), X(23.67), 'gl', r * 80));
+        [-21.9, 21.9].forEach(x => g.push(`<circle cx="${X(x)}" cy="${X(25.26)}" r="${1.59 * k}" fill="${red}" stroke="${ink}" stroke-width="1"/>`));
+        g.push(ln(X(9.2), X(9.2), X(28.5), X(28.5), 'gl', 300 + r * 80));
+        body += `<g transform="rotate(${r * 90} ${X(0)} ${X(0)})">${g.join('')}</g>`;
+      }
+      body += `<circle cx="${X(0)}" cy="${X(0)}" r="${8.5 * k}" fill="none" stroke="${ink}" stroke-width="1.2"/><circle cx="${X(0)}" cy="${X(0)}" r="${1.59 * k}" fill="${red}"/>`;
+      const PC = { w: ['#f2e6c8', '#a8885a'], b: ['#2a1f19', '#000'], q: ['#c3271f', '#7a1210'], s: ['#f7f4ec', '#9a9a9a'] };
+      pcs(s.pcs).forEach(([x, y, c], i) => { const [f, st2] = PC[c] || PC.w, R = (c === 's' ? 2.065 : 1.59) * k; body += `<g class="pc" style="--d:${dd + i * 70}ms"><circle cx="${X(x)}" cy="${X(y)}" r="${R}" fill="${f}" stroke="${st2}" stroke-width="1.2"/><circle cx="${X(x)}" cy="${X(y)}" r="${R * .55}" fill="none" stroke="${st2}" stroke-width=".7" opacity=".6"/></g>`; });
+      (s.arrows || []).forEach(([a, b, c2, d2], i) => { body += `<path class="ar" pathLength="1" style="--d:${dd + (s.pcs || []).length * 70 + 200 + i * 300}ms" d="M${X(a)} ${X(b)}L${X(c2)} ${X(d2)}" marker-end="url(#hsArr2)"/>`; });
     } else if (T === 'c4') {
       const n = s.w || 7, m = s.h || 6, S = 30; W = n * S + PD * 2; H = m * S + PD * 2;
       body += `<rect x="${PD - 6}" y="${PD - 6}" width="${n * S + 12}" height="${m * S + 12}" rx="10" fill="#2f6fd8"/>`;
