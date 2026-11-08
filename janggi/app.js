@@ -116,23 +116,53 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=2-pro1';
+const ENGINE_URL = 'engine.js?v=2-pro1-mt1';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
   w.onmessage = e => {
     const m = e.data, j = w.jobs.get(m.id); if (!j) return;
     if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; }
-    w.jobs.delete(m.id); j.resolve(m);
+    w.jobs.delete(m.id); noteNps(m.nodes, performance.now() - j.t0); j.resolve(m);
   };
   return w;
 }
+// search speed of the last engine search (nodes per second, all threads), shown quietly at the end of the info line
+let lastNps = 0;
+const npsText = () => lastNps ? '  ·  ' + (lastNps >= 1e6 ? (lastNps / 1e6).toFixed(1) + 'M' : Math.round(lastNps / 1e3) + 'k') + ' nps' : '';
+function noteNps(nodes, ms) {
+  if (!(nodes > 50000 && ms > 20)) return;
+  lastNps = nodes / ms * 1000;
+  const el = document.getElementById('infoLine'); if (el && el.dataset.base !== undefined) el.textContent = el.dataset.base + npsText();
+}
 let aiW = makeWorker(), anaW = makeWorker();
+// multi-threaded search (shared/mtengine.js; common rule 2026-11-08「本編のマルチスレッド」): analysis, hints, the coach, the
+// review box and the levels with a time limit (Lv.19・20, rated games too) go to the pool of threads when it is free (the
+// lead keeps the level's own limits; the helpers fill the shared table, so it reads deeper in the same time). The levels
+// decided by depth / positions only (Lv.1–18) stay on the one-thread workers.
+const MTP = window.MTEngine ? MTEngine.use({
+  wasm: 'engine_mt.wasm?v=1', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=1', slot: 2 << 20, initial: 512, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
+  imports: mem => ({ env: { memory: mem, now: () => Date.now(), progress: () => {} } }),
+  help: m => ({ io: E.setupIO(m.start, m.moves || [], []) }),
+}) : null;
+const mtLevel = lv => { const L = E.LEVELS[lv]; return !!(L && L.s && L.ms); };   // a level with a time limit (Lv.19・20)
+function mtWants(which, msg) {
+  if (msg.type === 'analyze' || msg.type === 'multipv' || msg.type === 'mpvLoop') return true;
+  if (msg.type !== 'think') return false;
+  if (msg.cfg) return msg.cfg.threads > 1;   // PRO: its own thread count with any limit
+  return mtLevel(msg.level) || (which === 'ana' && msg.level === COACH_DEEP);   // (rated games too: the user's decision 2026-11-08; the coach's deeper pass)
+}
 function request(which, msg, onProgress) {
+  const mp = MTP && mtWants(which, msg) && MTP.pool(which === 'ai' ? 'ai' : null);
+  if (mp) { const t0 = performance.now(), full = { start: startSpec, ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }; return mp.run(full, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full, onProgress) : r; }); }
+  return requestW(which, msg, onProgress);
+}
+function requestW(which, msg, onProgress) {   // (the one-thread workers)
   const w = which === 'ai' ? aiW : anaW;
-  return new Promise(resolve => { const id = ++jobId; w.jobs.set(id, { resolve, onProgress }); w.postMessage({ start: startSpec, ...msg, id }); });
+  return new Promise(resolve => { const id = ++jobId; w.jobs.set(id, { resolve, onProgress, t0: performance.now() }); w.postMessage({ start: startSpec, ...msg, id }); });
 }
 function cancelWorker(which) {
+  if (MTP) MTP.cancel(which);
   const w = which === 'ai' ? aiW : anaW;
   if (!w.jobs.size) return;
   w.terminate();
@@ -448,7 +478,7 @@ function renderInfo() {
   $('#reviewBar').classList.toggle('show', reviewing && !lesson && !puzzle);
   renderReview(); rvbRender();
   if (window.XqCoach) XqCoach.render();
-  $('#infoLine').textContent = `${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? AIW() + ' ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : '') : settings.mode === 'watch' ? `${LV(settings.level)} vs ${LV(settings.level2)}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`;
+  { const il = $('#infoLine'); il.dataset.base = `${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? AIW() + ' ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : '') : settings.mode === 'watch' ? `${LV(settings.level)} vs ${LV(settings.level2)}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`; il.textContent = il.dataset.base + npsText(); }
   renderBrand();
   if (window.olAfterInfo) olAfterInfo();
   hbInfo(pos, st);
@@ -1119,9 +1149,11 @@ $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 // PRO mode (shared/proset.js; common rule「対局設定の Pro モード」): advanced settings for the AI beside the level — vs the AI /
 // AI vs AI, never rated. ProSet.ladder() turns the changed values into a step of this engine's ladder (engine.js think: cfg).
 const PRO_L = window.ProSet ? ProSet.ladder(E.LEVELS, { dmax: 30, nmax: 50000000 }) : null;
+// threads (本編のマルチスレッド): with any limit; the default is every thread for the levels with a time limit, else one
 var PRO = PRO_L ? ProSet.init({ game: 'janggi', lang: () => LANG, level: () => draft.level || settings.level, show: () => draft.mode === 'ai' || draft.mode === 'watch',
-  store: { get: () => settings.pro, set: v => { settings.pro = v; } }, defaults: PRO_L.defaults, params: PRO_L.params }) : null;
-function proCfg(lv) { if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; const e = PRO.get(lv); return e ? PRO_L.cfg(e, lv) : null; }
+  store: { get: () => settings.pro, set: v => { settings.pro = v; } }, defaults: lv => Object.assign(PRO_L.defaults(lv), { threads: mtLevel(lv) ? ProSet.maxThreads() : 1 }),
+  params: [PRO_L.params[0], { key: 'threads' }].concat(PRO_L.params.slice(1)) }) : null;
+function proCfg(lv) { if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; const e = PRO.get(lv); return e ? Object.assign(PRO_L.cfg(e, lv), { threads: e.threads || 1 }) : null; }
 function proTag(lv) { return proCfg(lv) ? ' PRO' : ''; }
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
@@ -2042,6 +2074,12 @@ function drawReviewFx(svg) {
 $('#rvBody').addEventListener('click', e => { const b = e.target.closest('button[data-i]'); if (b) viewAt(+b.dataset.i); });
 $('#rvClose').onclick = () => { rvOpen = false; if (rv && rv.running) rvCancel(); renderReview(); renderFx(); renderKifu(); rvbRender(); };   // (閉じる also closes the box under the board, as in every game)
 $('#btnAnalyze').onclick = () => runReview();
+// strongest analysis (pro/, several threads): the displayed position in a new tab (that page is cross-origin isolated)
+$('#btnPro').onclick = () => {
+  if (rtLive() || settings.mode === 'online') return;
+  const q = new URLSearchParams(); if (startSpec) q.set('start', startSpec); if (cur) q.set('moves', moves.slice(0, cur).join(','));
+  window.open('pro/' + (q.toString() ? '?' + q : ''), '_blank', 'noopener');
+};
 $('#btnResAnalyze').onclick = () => { hideOverlay('#resultOverlay'); runReview(); };
 
 // ---------------------------------------------------------------- PC review box (rvbox.js): commentary, candidate moves with lines, study mode
@@ -2093,6 +2131,11 @@ function rvbCands(push, done) {
     return { id: e.m, move: `<bdi>${escHb(names[0] || '')}</bdi>`, val: lb.big + (lb.small ? ' ' + lb.small : ''), cls: e.v > 25 ? 'pos' : e.v < -25 ? 'neg' : '', pv: names.slice(1).map(x => `<bdi>${escHb(x)}</bdi>`).join(' '), played: e.m === played, ref: { m: e.m, pv: e.pv, key: keyOf(idx) } };
   });
   const info = m => ({ depth: m.depth || 0, nodes: m.nodes || 0, partial: !!m.partial });
+  const mp = MTP && MTP.pool();   // (the threads when free)
+  if (mp) {
+    mp.run({ type: 'mpvLoop', start: st0, moves: mv, n: 4, depth: 40 }, m => push(conv(m.list), info(m)), 'rvb').then(r => done(r && r.list ? conv(r.list) : null, r ? info(r) : {}));
+    return () => MTP.cancel('rvb');
+  }
   w.jobs.set(id, { resolve: r => done(r && r.list ? conv(r.list) : null, r ? info(r) : {}), onProgress: m => push(conv(m.list), info(m)) });
   w.postMessage({ type: 'mpvLoop', start: st0, moves: mv, n: 4, depth: 40, id });   // continuous analysis: RVB terminates it to stop
   return () => { if (rvbW === w) { w.terminate(); w.jobs.forEach(j => j.resolve(null)); rvbW = null; } };
