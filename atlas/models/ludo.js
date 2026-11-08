@@ -146,7 +146,9 @@
     if (B && E) {
       const geo = B.geometry(U.rule), P = U.rule === 'pachisi' ? [[0, [3, 20, -1, -1]], [1, [12, -1, -1, -1]], [2, [40, -1, -1, -1]], [3, [-1, -1, -1, -1]]] : [[0, [5, 30, -1, -1]], [1, [12, -1, -1, -1]], [2, [-1, 44, -1, -1]], [3, [0, -1, -1, -1]]];
       P.forEach(([seat, ps]) => ps.forEach((p, k) => { const [gx, gy] = p < 0 ? geo.yard(seat, k) : geo.cellXY(seat, p); const [x, z] = U.xz(gx, gy); const pc = piece(U.rule, seat); pc.position.set(x, U.top, z); g.add(pc); const sh = X.contact(pc.userData.r * 1.1, .45); sh.position.set(x, U.top + .002, z); g.add(sh); }));
-      const d = die(); d.position.set(U.xz(7.5, 7.5)[0] + 4.2 * U.u, U.top + .25, U.xz(7.5, 7.5)[1] + 5.6 * U.u); d.rotation.set(.3, .7, .1); if (U.rule === 'ludo') g.add(d);
+      // the die: flat in the middle of blue's yard, clear of the pieces (2026-11-09: it was tilted into the board beside a piece)
+      const d = die(), [dx, dz] = U.xz(12, 12); d.position.set(dx, U.top + d.userData.size / 2 + .002, dz); d.rotation.set(0, .6, 0); d.children[0].rotation.set(0, 0, 0);
+      if (U.rule === 'ludo') { g.add(d); const ds = X.contact && X.contact(d.userData.size * .75, .4); if (ds) { ds.position.set(dx, U.top + .002, dz); g.add(ds); } }
     }
     return g;
   };

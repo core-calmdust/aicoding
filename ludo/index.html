@@ -335,7 +335,8 @@ body:is(.in-lesson,.in-puzzle) .cb-bar{padding-bottom:2px}
 .ls-tabs button{font-size:13.5px;padding:9px 4px}
 /* phones: ルール（ルドー） did not fit — two lines: a small ルール over the name (app-learn.js tabLabels) */
 .ls-tabs button .tl{display:block;font-size:10.5px;font-weight:600;opacity:.75;line-height:1.2}.ls-tabs button .tn{display:block;line-height:1.25;white-space:nowrap}
-.ls-tabs button{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.ls-tabs button{min-width:0;overflow:hidden;text-overflow:ellipsis;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;line-height:1.25}
+.ls-tabs button .tl,.ls-tabs button .tn{width:100%;text-align:center}
 /* phones held upright: the dialog's 閉じる and 対局開始 share the row equally (the short 閉じる is the landscape layout) */
 @media (max-width:640px){#newOverlay .modal-actions{justify-content:stretch}#newOverlay .modal-actions .mbtn{flex:1 1 0}}
 #rulesOverlay .modal, #lessonOverlay .modal, #puzzleOverlay .modal{display:flex;flex-direction:column}

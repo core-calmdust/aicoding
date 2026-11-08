@@ -160,8 +160,23 @@
       const b1 = new TH.Mesh(new TH.TorusGeometry(CR0 - .012, .026, 8, 40), gold); b1.rotation.x = Math.PI / 2; b1.position.y = .05;
       const b2 = new TH.Mesh(new TH.TorusGeometry(CR1 + .012, .022, 8, 40), gold); b2.rotation.x = Math.PI / 2; b2.position.y = CH - .06;
       const sh = T3.contact(CR0 * 1.35, .45); sh.position.y = .002;
-      const inner = new TH.Group(); inner.add(body, lin, top, b1, b2); g.add(sh, inner); g.userData = { inner, sh, mats: [leather, inside, gold] };
+      const dice = new TH.Group();   // the dice inside (seen through the mouth while it stands mouth up)
+      const inner = new TH.Group(); inner.add(body, lin, top, b1, b2, dice); g.add(sh, inner); g.userData = { inner, sh, dice, mats: [leather, inside, gold] };
       return g;
+    }
+    // fill the cup: one die, two with the two-dice house rule. (Inner coordinates are mouth down: the base is at y = CH, so the
+    // dice lie against it — the bottom when the cup stands mouth up.)
+    function cupDice(show) {
+      const D = cupG.userData.dice;
+      while (D.children.length) D.remove(D.children[0]);
+      D.visible = !!show; if (!show) return;
+      const h = st && st.opt && st.opt.h, n = h && h.dd && h.dd !== 'none' ? 2 : 1, sc = .7;
+      for (let i = 0; i < n; i++) {
+        const d = U.die(), hh = d.userData.size / 2 * sc; d.scale.setScalar(sc);
+        d.children[0].rotation.set(...FACE[1 + Math.floor(Math.random() * 6)]);
+        d.position.set(n > 1 ? (i ? .19 : -.19) : 0, CH - hh - .012, n > 1 ? (i ? .06 : -.06) : 0); d.rotation.set(Math.PI, Math.random() * 6.28, 0);
+        d.userData.y0 = d.position.y; D.add(d);
+      }
     }
     const cupXZ = seat => { const [gx, gy] = throwSpot(seat); return wx(gx, gy); };
     const parkXZ = seat => { const [gx, gy] = throwSpot(seat), ox = gx < 7.5 ? -2.05 : 2.05; return wx(gx + ox, gy - 2.05); };   // the yard's far outer corner (clear of the pieces, behind them as seen)
@@ -171,6 +186,7 @@
       if (rule !== 'ludo') return;
       if (!cupG) { cupG = mkCup(); board.add(cupG); }
       const [x, z] = cupXZ(seat), g = cupG;
+      cupDice(true);
       if (!glide || cupSeat < 0) { g.position.set(x, Y, z); cupPose(1, 0); cupSeat = seat; if (T3.kick) T3.kick(200); return; }
       if (cupSeat === seat && g.position.x === x && g.position.z === z) { cupPose(1, 0); return; }
       const x0 = g.position.x, z0 = g.position.z; cupSeat = seat;
@@ -181,12 +197,15 @@
       if (!cupG || cupSeat !== seat) cupTo(seat);
       const g = cupG, [cx, cz] = cupXZ(seat);
       g.position.set(cx, Y, cz); cupPose(1, 0);
-      await animP(520, k => { const w = Math.sin(k * Math.PI * 8) * Math.min(1, k * 4) * (1 - Math.max(0, k - .85) / .15); cupPose(1, Math.min(1, k * 4) * .35, w * .22); g.position.x = cx + w * .06; });
+      if (!g.userData.dice.children.length) cupDice(true);
+      const DD = g.userData.dice.children;
+      await animP(520, k => { const w = Math.sin(k * Math.PI * 8) * Math.min(1, k * 4) * (1 - Math.max(0, k - .85) / .15); cupPose(1, Math.min(1, k * 4) * .35, w * .22); g.position.x = cx + w * .06;
+        DD.forEach((d, i) => { const j = Math.abs(Math.sin(k * Math.PI * 9 + i * 1.7)) * Math.min(1, k * 4); d.position.y = d.userData.y0 - j * .09; d.rotation.x = Math.PI + j * 1.4 * (i ? -1 : 1); d.rotation.z = j * .8; }); });   // (the dice rattle inside)
       if (stopped) return;
       g.position.x = cx;
       await animP(300, k => { const e = k * k; cupPose(1 - e, .35 * (1 - e) + Math.sin(k * Math.PI) * .45); });
       if (stopped) return;
-      cupPose(0, 0); SND.put();
+      cupPose(0, 0); SND.put(); cupDice(false);   // (the dice now lie on the board under it)
       // the dice, under the cup
       const fs = th.dice ? (th.three6 ? [6, 6] : th.dice) : [th.v];
       fs.forEach((v, i) => { const d = U.die(), h = d.userData.size / 2, sh = T3.contact(h * 1.4, .4), ox = fs.length > 1 ? (i ? .27 : -.27) : 0, oz = fs.length > 1 ? (i ? .05 : -.05) : 0;
