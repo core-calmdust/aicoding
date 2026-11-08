@@ -114,10 +114,11 @@ async function search(I, job, o) {
   setPos(I, job);
   E.set_param(4, o.noise || 0);
   E.set_param(3, o.temp || 1);
-  const nch = E.search_init(o.nodes || 400000);
+  let nch = E.search_init(o.nodes || 400000);
+  if (!nch && o.nodes > 400000) nch = E.search_init(400000);   // (a big tree for a long search did not fit: the usual size)
   if (!nch) return null;
   const t0 = performance.now();
-  let done = 1, lastP = t0, gap = o.prog0 || 280;   // first progress report after prog0 ms (quick first display), then every ~280 ms
+  let done = 1, lastE = t0, lastP = t0, gap = o.prog0 || 280;   // first progress report after prog0 ms (quick first display), then every ~280 ms
   const maxV = o.visits || 100, maxT = o.time || 1e9;
   while (done < maxV) {
     const k = Math.min(o.slice || 4, maxV - done);
@@ -127,6 +128,8 @@ async function search(I, job, o) {
     const now = performance.now();
     if (now - t0 > maxT && done >= (o.minVisits || 1)) break;
     if (o.progress && now - lastP > gap) { lastP = now; gap = 280; o.progress(results(I, n, 24)); }
+    // the timed levels: stop once the most visited move cannot be overtaken in the time left (an obvious move, a decided small board)
+    if (o.early && now - lastE > 150 && now - t0 > 300) { lastE = now; const L = results(I, n, 2).list, rest = done / (now - t0) * (maxT - (now - t0)); if (L.length && L[0].n - (L.length > 1 ? L[1].n : 0) > rest) break; }
     await yieldNow();
     if (curJob !== my) { if (MTL) E.mt_close(); return null; }
   }
@@ -140,11 +143,11 @@ function legalFor(job, m) {
   return m === PASS || rp.pos.legal(m);
 }
 
-// ---------------------------------------------------------------- strength levels (27): 18級 … 1級 (1–18), 初段 … 八段 (19–26), 最強 (27)
+// ---------------------------------------------------------------- strength levels (32): 18級 … 1級 (1–18), 初段 … 八段 (19–26), アマ最強 (27), 最強 I–V (28–32)
 // measured on 19x19 against KataGo's human-like model (b18c384nbt-humanv0, one evaluation per move) at rank_10k … rank_9d
 // (see MODEL_CARD.md): the labels in app.js / atlas/games/go.js (RANKS) follow those results.
 // levels 1–20: one net evaluation per move, a move drawn from the policy (temperature) with some looser picks;
-// levels 21–27: search (visits) with the light / strong net.
+// levels 21–27: search (visits) with the light / strong net; 28–32: the strong net for a time (every thread on the page's pool).
 const LEVELS = [null,
   { T: 2.1, slip: 0.55, top: 80 }, { T: 2.03, slip: 0.5, top: 72 }, { T: 1.97, slip: 0.46, top: 66 }, { T: 1.9, slip: 0.42, top: 60 },
   { T: 1.75, slip: 0.33, top: 45 }, { T: 1.7, slip: 0.31, top: 42 }, { T: 1.7, slip: 0.30, top: 40 }, { T: 1.65, slip: 0.275, top: 38 }, { T: 1.6, slip: 0.25, top: 36 },
@@ -153,6 +156,8 @@ const LEVELS = [null,
   { T: 0.5, slip: 0.01, top: 6 }, { T: 0.3, slip: 0, top: 4 }, { net: 'light', visits: 3, time: 1200 }, { net: 'light', visits: 6, time: 1500 },
   { net: 'light', visits: 12, time: 2000 }, { net: 'light', visits: 20, time: 2500 }, { net: 'light', visits: 32, time: 3000 }, { net: 'strong', visits: 64, time: 4500 },
   { net: 'strong', visits: 160, time: 7000 },
+  // 28–32 (最強 I–V): time with every thread (the page sends them to the pool; rated games too); each step doubles the time
+  { net: 'strong', timed: 1250 }, { net: 'strong', timed: 2500 }, { net: 'strong', timed: 5000 }, { net: 'strong', timed: 10000 }, { net: 'strong', timed: 20000 },
 ];
 function rng() { return Math.random(); }
 // own single-point eye (all neighbours own colour): weak levels never fill it
@@ -217,7 +222,11 @@ async function think(job) {
   const I = await getNet(L.net);
   // small boards are cheap to search deeply: more visits within the same time
   const boost = n <= 9 ? 2 : n <= 13 ? 1.4 : 1;
-  const res = await search(I, job, { visits: Math.round(L.visits * boost), time: job.time || L.time, minVisits: Math.min(8, L.visits), slice: 4 });
+  // timed levels: the level's time (half on boards under 9×9; a rated game's clock may shorten it), no visit limit, an early stop
+  // when the choice is settled; job.nodes = the tree size the page expects for its threads
+  const tm = L.timed ? Math.min(job.time || 1e9, n < 9 ? L.timed / 2 : L.timed) : 0;
+  const res = L.timed ? await search(I, job, { visits: 1e7, time: tm, nodes: job.nodes, minVisits: 8, slice: 1, early: true })   // (slice 1: the time limit is checked after every playout)
+    : await search(I, job, { visits: Math.round(L.visits * boost), time: job.time || L.time, nodes: job.nodes, minVisits: Math.min(8, L.visits), slice: 4 });
   if (!res) return null;
   let b = bestOf(res);
   // no early pass (see mayPass): take the best real move instead

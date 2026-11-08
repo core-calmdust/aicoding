@@ -1,5 +1,5 @@
 {
-"meta.title": "Go — 5x5'ten 19x19'a, 27 YZ seviyesi",
+"meta.title": "Go — 5x5'ten 19x19'a, 32 YZ seviyesi",
 "title": "Go",
 "sub": "",
 "series": "Dünya Masa Oyunları Atlası",
@@ -16,13 +16,7 @@
 "lv.dan3": "3 dan",
 "lv.dan4": "4 dan",
 "lv.dan5": "5 dan",
-"lvd": [
-"Go'ya yeni başlayanlar",
-"Kuralları bilenler",
-"Düzenli oynayanlar",
-"Güçlü oyuncular",
-"Yüksek danlar"
-],
+"lvd": ["Go'ya yeni başlayanlar", "Kuralları bilenler", "Düzenli oynayanlar", "Güçlü oyuncular", "Yüksek danlar"],
 "u.pts": "{n} puan",
 "u.pt": "{n} puan",
 "u.ro": "×",
@@ -377,7 +371,11 @@
 "lv.dan7": "7 dan",
 "lv.dan8": "8 dan",
 "lv.top1": "Üst düzey amatör",
-"lv.top2": "Profesyonel seviye",
-"lv.top3": "En güçlü",
-"opt.coordAll": "Her kenarda koordinat"
+"lv.top2": "En güçlü I",
+"lv.top3": "En güçlü II",
+"opt.coordAll": "Her kenarda koordinat",
+"lv.top4": "En güçlü III",
+"lv.top5": "En güçlü IV",
+"lvd.t": "Tüm çekirdekler · hamle başı {s} sn",
+"lv.top6": "En güçlü V"
 }

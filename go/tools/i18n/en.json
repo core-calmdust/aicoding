@@ -1,5 +1,5 @@
 {
-"meta.title": "Go — 5x5 to 19x19, 27 AI levels",
+"meta.title": "Go — 5x5 to 19x19, 32 AI levels",
 "title": "Go",
 "sub": "",
 "series": "World Board Game Atlas",
@@ -16,13 +16,7 @@
 "lv.dan3": "3 dan",
 "lv.dan4": "4 dan",
 "lv.dan5": "5 dan",
-"lvd": [
-"New to Go",
-"Know the rules",
-"Regular players",
-"Strong players",
-"Strong players"
-],
+"lvd": ["New to Go", "Know the rules", "Regular players", "Strong players", "Strong players"],
 "u.pts": "{n} points",
 "u.pt": "{n} pts",
 "u.ro": "×",
@@ -377,7 +371,11 @@
 "lv.dan7": "7 dan",
 "lv.dan8": "8 dan",
 "lv.top1": "Top amateur",
-"lv.top2": "Pro level",
-"lv.top3": "Strongest",
-"opt.coordAll": "Coordinates on all sides"
+"lv.top2": "Strongest I",
+"lv.top3": "Strongest II",
+"opt.coordAll": "Coordinates on all sides",
+"lv.top4": "Strongest III",
+"lv.top5": "Strongest IV",
+"lvd.t": "All cores · {s} s/move",
+"lv.top6": "Strongest V"
 }

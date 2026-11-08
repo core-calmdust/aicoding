@@ -48,12 +48,13 @@ const LL = o => o ? (typeof o === 'string' ? o : o[LANG] !== undefined ? o[LANG]
 const pname = p => t(p === P1 ? 'p1' : 'p2');
 // AI strength: 25 steps labelled with the ranks measured on 19x19 against KataGo's human-like model (MODEL_CARD.md):
 // 18級 … 1級, 初段 … 八段, then the strongest. 11級 and 8級 sit halfway between their neighbours' settings (not measured).
-const RANKS = [null, 'k18', 'k17', 'k16', 'k15', 'k14', 'k13', 'k12', 'k11', 'k10', 'k9', 'k8', 'k7', 'k6', 'k5', 'k4', 'k3', 'k2', 'k1', 'd1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8', 't1'];
+const RANKS = [null, 'k18', 'k17', 'k16', 'k15', 'k14', 'k13', 'k12', 'k11', 'k10', 'k9', 'k8', 'k7', 'k6', 'k5', 'k4', 'k3', 'k2', 'k1', 'd1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8', 't1', 't2', 't3', 't4', 't5', 't6'];   // t2–t6 = 最強 I–V (28–32): time with every thread
 const LV_MAX = RANKS.length - 1;
 // rank as a number: 18級 = -17 … 1級 = 0, 初段 = 1 … 八段 = 8, beyond = 9+
 const rankVal = i => { const r = RANKS[Math.max(1, Math.min(LV_MAX, i))]; const v = +r.slice(1); return r[0] === 'k' ? 1 - v : r[0] === 'd' ? v : 8 + v; };
 const LV = i => { const r = RANKS[Math.max(1, Math.min(LV_MAX, i))], v = +r.slice(1); return r[0] === 'k' ? t('lv.kyu', { n: v }) : r[0] === 'd' ? t('lv.dan' + v) : t('lv.top' + v); };
-const LVD = i => { const v = rankVal(i); return t('lvd')[v <= -12 ? 0 : v <= -6 ? 1 : v <= 0 ? 2 : v <= 5 ? 3 : 4]; };
+const LV_TIME = { 28: 1.25, 29: 2.5, 30: 5, 31: 10, 32: 20 };   // seconds per move of the timed levels (= engine.js LEVELS timed)
+const LVD = i => { if (LV_TIME[i]) return t('lvd.t', { s: LV_TIME[i] }); const v = rankVal(i); return t('lvd')[v <= -12 ? 0 : v <= -6 ? 1 : v <= 0 ? 2 : v <= 5 ? 3 : 4]; };
 // points: 3.5 → "3目半" / "3.5"
 function pts(x) { x = Math.abs(Math.round(x * 2) / 2); return t('u.pts', { n: LANG === 'ja' ? (x % 1 ? Math.floor(x) + '目半' : x + '目') : (x % 1 ? x.toFixed(1) : String(x)) }).replace('目目', '目'); }
 const fmtLead = v => (v >= 0 ? '+' : '−') + (Math.round(Math.abs(v) * 10) / 10).toFixed(1);
@@ -112,7 +113,7 @@ function save() {
 
 // ====================================================================== engine worker (one worker; newer jobs pre-empt older ones)
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=8';
+const ENGINE_URL = 'engine.js?v=10';
 const COARSE = matchMedia('(pointer: coarse)').matches;
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
@@ -139,21 +140,29 @@ function jobBase(spec, list) { return { spec: spec || { n: game.n }, moves: list
 // multi-threaded search (shared/mtengine.js; common rule 2026-11-08「本編のマルチスレッド」): the hints / evaluation, the coach
 // and the review box go to the pool of threads when it is free: the threads grow one search tree together (engine.c:
 // tree-parallel MCTS with virtual loss, both nets in the shared memory), so the same number of visits comes sooner. The AI
-// levels are decided by visits (21–27) or one net evaluation (1–20): they stay on the one-thread worker (strength unchanged);
-// a PRO search with more than one thread uses the pool. The whole-game review keeps its own worker (W2).
+// levels 1–27 are decided by visits (21–27) or one net evaluation (1–20): they stay on the one-thread worker (strength
+// unchanged); the timed levels 28–32 (rated games too) and a PRO search with more than one thread use the pool. The whole-game review keeps its own worker (W2).
 const MTP = window.MTEngine ? MTEngine.use({
   wasm: 'engine_mt.wasm?v=1', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=1', slot: 8 << 20, initial: 512, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB); slot: TLS ~0.3 MB + a deep stack (ladders)
   imports: mem => ({ env: { memory: mem } }),
   help: m => (m.type === 'think' || m.type === 'analyze') ? {} : null,   // (the helpers join the trees the lead opens: nothing to send)
   isDone: m => m.type === 'done',
 }) : null;
-const mtWants = msg => msg.type === 'analyze' || (msg.type === 'think' && !!msg.params && msg.params.threads > 1);
+// the timed levels 28–32 (最強 I–V, rated games too) use every thread. The visit levels 1–27 stay on one thread: with the same
+// visits in all, the tree-parallel search plays weaker (virtual loss; equal-visit matches in MODEL_CARD.md), so threads there
+// would change their measured strength. PRO: its own thread count.
+const allThreads = () => window.MTEngine && !MTEngine.touch ? 1 + MTEngine.maxHelpers() : undefined;   // (every core the browser reports; phones: the pool's own number)
+const mtWants = msg => msg.type === 'analyze' || (msg.type === 'think' && (msg.params ? msg.params.threads > 1 : msg.level >= 28));
+// the tree the engine allocates for a long search: about 60 visits/s per thread at most, n²·0.8 nodes per visit (4M nodes = 256 MB at most)
+const treeNodes = (sec, thr, n) => Math.round(Math.min(4e6, Math.max(4e5, sec * 60 * (thr || 1) * n * n * 0.8)));
 function request(msg, onProgress, w, tag) {
   w = w || W;
   if (MTP && msg.preempt && w === W) MTP.cancel('main');   // (a newer job on the main worker pre-empts the threads' one too, as before)
   const mp = MTP && (w === W || tag) && mtWants(msg) && MTP.pool(msg.type === 'think' ? 'ai' : null);
   if (mp) {
-    const full = { ...msg, ...(msg.params && msg.params.threads ? { mtThreads: msg.params.threads } : {}) };
+    const thr = msg.params ? msg.params.threads : msg.type === 'think' ? allThreads() : 0;
+    const full = { ...msg, ...(thr ? { mtThreads: thr } : {}) };
+    if (msg.type === 'think' && (msg.level >= 28 || msg.params)) { const th = thr || mp.threads, P = msg.params; full.nodes = treeNodes(P ? (P.visits < 1e7 ? P.visits / 60 / th : P.time / 1000) : Math.min(msg.time || 1e9, LV_TIME[msg.level] * 1000 || 7000) / 1000, th, msg.spec.n); }
     return mp.run(full, onProgress, tag || 'main').then(r => {
       if (r === undefined) return requestW(full, onProgress, w);   // (the threads failed: the usual worker)
       if (!r || r.superseded || r.error) return null;
@@ -613,7 +622,9 @@ async function maybeAI(tok) {
   if (!isAIColor(p)) return;
   thinking = p; renderInfo(); svg.classList.remove('can');
   const t0 = Date.now(), lv = levelFor(p);
-  const job = () => request({ type: 'think', preempt: true, ...jobBase(startSpec, moves.slice(0, cur)), level: lv, time: rtLive() ? rtAiTime() : undefined, params: proCfg(lv) || undefined });
+  // the timed levels just after the page opened: wait for the threads once (up to 4 s) instead of starting on one thread
+  if (lv >= 28 && MTP && !proCfg(lv) && !MTP.pool('ai')) { await Promise.race([MTP.ready(), new Promise(r => setTimeout(r, 4000))]); if (tok !== busyToken) return; }
+  const job = () => request({ type: 'think', preempt: true, ...jobBase(startSpec, moves.slice(0, cur)), level: lv, time: rtLive() ? (lv >= 28 ? rtTimedBudget() : rtAiTime()) : undefined, params: proCfg(lv) || undefined });
   let res = await job();
   if (res && res.error && tok === busyToken) res = await job();   // the engine rebuilds itself after a crash: try once more
   if (!res || tok !== busyToken) { if (tok === busyToken) { thinking = 0; renderInfo(); } return; }
@@ -1061,11 +1072,11 @@ $('#selTap').onchange = e => { draft.tap = e.target.value; };
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 // PRO mode (shared/proset.js; common rule「対局設定の Pro モード」): advanced settings for the AI beside the level — vs the AI /
 // AI vs AI, never rated. The changed values make a level of the engine's own form (engine.js: cfg).
-// Go: the searching levels (engine.js LEVELS 21–27: net / visits / time); a change on the policy levels (1–20) makes a searching AI.
-const PRO_GO = { 21: ['light', 3, 1200], 22: ['light', 6, 1500], 23: ['light', 12, 2000], 24: ['light', 20, 2500], 25: ['light', 32, 3000], 26: ['strong', 64, 4500], 27: ['strong', 160, 7000] };   // (= engine.js LEVELS)
+// Go: the searching levels (engine.js LEVELS 21–27: net / visits / time; 28–31: time with every thread); a change on the policy levels (1–20) makes a searching AI.
+const PRO_GO = { 21: ['light', 3, 1200], 22: ['light', 6, 1500], 23: ['light', 12, 2000], 24: ['light', 20, 2500], 25: ['light', 32, 3000], 26: ['strong', 64, 4500], 27: ['strong', 160, 7000], 28: ['strong', 0, 1250], 29: ['strong', 0, 2500], 30: ['strong', 0, 5000], 31: ['strong', 0, 10000], 32: ['strong', 0, 20000] };   // (= engine.js LEVELS; visits 0 = a timed level)
 var PRO = window.ProSet ? ProSet.init({ game: 'go', lang: () => LANG, level: () => draft.level || settings.level, show: () => draft.mode === 'ai' || draft.mode === 'watch', stone: true,
   store: { get: () => settings.pro, set: v => { settings.pro = v; } },
-  defaults: lv => { const g = PRO_GO[lv]; return g ? { limit: { k: 'nodes', v: g[1] }, threads: 1, eval: g[0] } : { limit: { k: 'nodes', v: 1 }, threads: 1, eval: 'light' }; },   // (threads: one by default — no level thinks by time)
+  defaults: lv => { const g = PRO_GO[lv]; return !g ? { limit: { k: 'nodes', v: 1 }, threads: 1, eval: 'light' } : g[1] ? { limit: { k: 'nodes', v: g[1] }, threads: 1, eval: g[0] } : { limit: { k: 'time', v: g[2] / 1000 }, threads: ProSet.maxThreads(), eval: g[0] }; },   // (threads: one for the visit levels, every thread for the timed levels 28–32)
   params: [{ key: 'limit', kinds: { time: [0.1, 60], nodes: [1, 20000] }, klabel: { nodes: { ja: '探索回数', en: 'Visits', zh: '访问次数', 'zh-TW': '訪問次數', ko: '방문 수', es: 'Visitas', fr: 'Visites', pt: 'Visitas', de: 'Besuche', ru: 'Визиты', tr: 'Ziyaret', id: 'Kunjungan', hi: 'विज़िट', ar: 'الزيارات' } }, kunit: { nodes: { ja: '回', en: 'visits', zh: '次', 'zh-TW': '次', ko: '회', es: 'visitas', fr: 'visites', pt: 'visitas', de: 'Besuche', ru: 'виз.', tr: 'ziyaret', id: 'kunjungan', hi: 'विज़िट', ar: 'زيارة' } } }, { key: 'threads' },
     { key: 'eval', label: { ja: '評価ネット', en: 'Network', zh: '评估网络', 'zh-TW': '評估網路', ko: '평가 신경망', es: 'Red', fr: 'Réseau', pt: 'Rede', de: 'Netz', ru: 'Сеть', tr: 'Ağ', id: 'Jaringan', hi: 'नेटवर्क', ar: 'الشبكة' }, help: { ja: '形勢を判断するニューラルネット。強いネットは重いので、同じ時間で読める数が減ります。', en: 'The neural network that judges positions. The strong one is heavier, so it searches fewer positions in the same time.', zh: '判断形势的神经网络。强力网络较重，同样时间内搜索得更少。', 'zh-TW': '判斷形勢的神經網路。強力網路較重，同樣時間內搜尋得更少。', ko: '형세를 판단하는 신경망. 강력 신경망은 무거워서 같은 시간에 읽는 수가 줄어듭니다.', es: 'La red neuronal que juzga las posiciones. La fuerte es más pesada: en el mismo tiempo explora menos.', fr: 'Le réseau neuronal qui juge les positions. Le fort est plus lourd : il explore moins dans le même temps.', pt: 'A rede neural que julga as posições. A forte é mais pesada: no mesmo tempo explora menos.', de: 'Das neuronale Netz, das Stellungen bewertet. Das starke ist schwerer und durchsucht in gleicher Zeit weniger.', ru: 'Нейросеть, оценивающая позицию. Сильная тяжелее, поэтому за то же время просматривает меньше.', tr: 'Pozisyonu değerlendiren sinir ağı. Güçlü olan daha ağır; aynı sürede daha az arar.', id: 'Jaringan saraf yang menilai posisi. Yang kuat lebih berat, jadi dalam waktu sama mencari lebih sedikit.', hi: 'स्थिति आँकने वाला न्यूरल नेटवर्क। मज़बूत वाला भारी है, इसलिए उतने समय में कम खोजता है।', ar: 'الشبكة العصبية التي تقيّم المواقف. القوية أثقل، فتبحث أقل في الوقت نفسه.' }, opts: [{ v: 'light', label: { ja: '軽量', en: 'Light', zh: '轻量', 'zh-TW': '輕量', ko: '경량', es: 'Ligera', fr: 'Légère', pt: 'Leve', de: 'Leicht', ru: 'Лёгкая', tr: 'Hafif', id: 'Ringan', hi: 'हल्का', ar: 'خفيفة' } }, { v: 'strong', label: { ja: '強い', en: 'Strong', zh: '强力', 'zh-TW': '強力', ko: '강력', es: 'Fuerte', fr: 'Forte', pt: 'Forte', de: 'Stark', ru: 'Сильная', tr: 'Güçlü', id: 'Kuat', hi: 'मज़बूत', ar: 'قوية' } }] }] }) : null;
 // the PRO search for an AI side: engine.js think(job.params) or null (the level as it is; never rated)
@@ -1095,7 +1106,9 @@ $('#btnStart').onclick = () => {
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_SIZE = 9, RT_CLOCK = { base: 300000, byo: 20000 };
 // rating of each AI step on the kyu / dan scale (100 per kyu: 15級 = 450 … 1級 = 1850, then about 100 per dan)
 // AI ratings on the EGF scale (GoR): 1級 2000, 初段 2100, 100 per rank up to 五段 2500, then 50 per rank (六段 2550 … 八段 2650), top amateur 2700
-const egfOf = i => { const v = rankVal(i); return v <= 5 ? 2000 + 100 * v : Math.min(2700, 2500 + 50 * (v - 5)); };
+// アマ最強 2700; the timed levels 最強 I–V above it by their measured steps (Elo, extrapolated: MODEL_CARD.md「最上位レベル」)
+const TOP_RT = [2700, 2800, 2900, 3000, 3100, 3200];
+const egfOf = i => { const v = rankVal(i); return v <= 5 ? 2000 + 100 * v : v <= 8 ? 2500 + 50 * (v - 5) : TOP_RT[v - 9]; };
 const RT_LV = [0].concat(Array.from({ length: LV_MAX }, (_, i) => egfOf(i + 1)));
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
@@ -1127,6 +1140,8 @@ const rtInByo = (c, ms) => ms <= 0;
 function rtClockText(c, ms) { if (ms > 0) return fmtClock(ms); const b = Math.max(0, RT_CLOCK.byo + ms); return t('byo', { s: Math.ceil(b / 1000) }); }
 function rtLow(c, ms) { return ms <= 0 ? RT_CLOCK.byo + ms < 10000 : ms < 30000; }
 function rtCharge() { const side = toMoveAt(moves.length) - 1, now = Date.now(); let v = rgame.ct[side] - (now - rgame.t); if (v < 0) v = 0; /* in byo-yomi the period resets each move */ rgame.ct[side] = v; rgame.t = now; }
+// the timed levels in a rated game: their own time while the main time lasts, never more than 3/4 of a byo-yomi period after it
+function rtTimedBudget() { const side = toMoveAt(moves.length) - 1, left = rtClockLeft(side); return Math.round(Math.max(0, left) / 10 + RT_CLOCK.byo * 0.75); }
 function rtAiTime() { const side = toMoveAt(moves.length) - 1, left = rtClockLeft(side); return left > 60000 ? undefined : Math.max(800, (left > 0 ? left : RT_CLOCK.byo + left) / 6); }
 function fmtClock(ms) { const s = Math.ceil(ms / 1000), m = Math.floor(s / 60); return m + ':' + String(s % 60).padStart(2, '0'); }
 setInterval(() => {
