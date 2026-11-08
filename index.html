@@ -236,6 +236,7 @@ section{padding:56px 0}
 .tag.online::before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:#4fe08f;box-shadow:0 0 8px #4fe08f;margin-right:6px;vertical-align:1px}
 .gx-icon .ol{position:absolute;left:-6px;top:-6px;height:18px;padding:0 6px;border-radius:9px;display:flex;align-items:center;gap:3px;font:700 9.5px/1 'Unbounded',sans-serif;letter-spacing:.04em;color:#06210f;background:linear-gradient(135deg,#9ff5c4,#3fd27f);box-shadow:0 0 0 2.5px var(--bg),0 0 10px rgba(80,220,140,.6)}
 .tag.new{border-color:rgba(242,207,122,.55);color:var(--gold)}
+.tag.new.upd{border-color:rgba(48,230,255,.5);color:var(--cyan)}
 .tag.ai{border-color:rgba(139,92,255,.55);color:#c8b6ff}
 .tag.rated{border-color:rgba(255,200,90,.55);color:#ffd98a}
 .tag.daily{border-color:rgba(255,120,120,.55);color:#ffb0b0}
@@ -270,7 +271,7 @@ section{padding:56px 0}
 .gx-panel.swap .shot{opacity:0;transform:scale(1.03)}
 .gx-panel.swap .gx-info > *{opacity:0;transform:translateY(8px)}
 .gx-cat{font-size:11px;letter-spacing:.16em;color:var(--dim)}
-.gx-cat .nw{color:var(--gold)}
+.gx-cat .nw{color:var(--gold);white-space:nowrap}.gx-cat .nw.upd{color:var(--cyan)}
 .gx-info h3{font-size:clamp(26px,3vw,38px);font-weight:900;line-height:1.25;margin-top:4px}
 .gx-desc{margin-top:10px;font-size:14px;color:var(--muted);line-height:1.8}
 .gx-more{display:none}
@@ -968,16 +969,23 @@ function makeGallery(C) {
   }
 
   /* ---- detail panel ---- */
+  // NEW / UPDATE follow the series rule in shared/atlas.js (Atlas.badges: NEW for 14 days after release, then UPDATE
+  // for 14 days after a changelog line; BETA first). Titles outside that registry, or before it loads, keep isNew.
+  const ATLAS_ID = { 'speed-sudoku': 'speedsudoku' };
+  const stat = g => { if (g.beta) return null; const A = window.Atlas, ag = A && A.GAMES.find(x => x.id === (ATLAS_ID[g.id] || g.id));
+    if (!ag) return g.isNew ? 'new' : null; const b = A.badges(ag)[0]; return b === 'new' || b === 'update' ? b : null; };
+  const statHtml = (g, cls) => { const s = stat(g); return s === 'new' ? `<span class="${cls}">NEW</span>` : s === 'update' ? `<span class="${cls} upd">${esc(window.Atlas.badgeText('update', lang))}</span>` : ''; };
+  document.addEventListener('atlasready', () => { if (cur) paint(byId(cur)); });
   function paint(g) {
     const i = C.games.indexOf(g), t = title(g);
     $(C.p + '-shot').src = g.thumb; $(C.p + '-shot').alt = plain(t);
     $(C.p + '-bg').src = g.thumb;
     $(C.p + '-media').href = g.href;
     $(C.p + '-count').textContent = String(i + 1).padStart(2, '0') + ' / ' + String(C.games.length).padStart(2, '0');
-    $(C.p + '-cat').innerHTML = (g.tags.includes('mobile') ? '<span class="mbk"><svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.4"/><path d="M10.5 18.5h3"/></svg> ' + tr('tag.mobile') + '</span> · ' : '<span class="mbk pc"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.8"/><path d="M8 20h8M12 16v4"/></svg> ' + tr('gx.pc') + '</span> · ') + esc(g.kind) + (C.cats ? ' · ' + tr('sub.' + g.cat) : '') + (g.isNew && !g.beta ? ' · <span class="nw">NEW</span>' : '');
+    $(C.p + '-cat').innerHTML = (g.tags.includes('mobile') ? '<span class="mbk"><svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.4"/><path d="M10.5 18.5h3"/></svg> ' + tr('tag.mobile') + '</span> · ' : '<span class="mbk pc"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.8"/><path d="M8 20h8M12 16v4"/></svg> ' + tr('gx.pc') + '</span> · ') + esc(g.kind) + (C.cats ? ' · ' + tr('sub.' + g.cat) : '') + (stat(g) ? ' · ' + statHtml(g, 'nw') : '');
     $(C.p + '-title').innerHTML = t;
     $(C.p + '-desc').innerHTML = desc(g);
-    $(C.p + '-tags').innerHTML = (g.isNew && !g.beta ? '<span class="tag new">NEW</span>' : '') + (g.beta ? '<span class="tag new">' + (g.beta > 1 ? (tr('tag.beta') === 'β版' ? 'β' + g.beta + '版' : tr('tag.beta') + g.beta) : tr('tag.beta')) + '</span>' : '') + (g.alpha === 'pre' ? '<span class="tag prealpha">' + tr('tag.prealpha') + '</span>' : g.alpha ? '<span class="tag alpha">' + tr('tag.alpha') + '</span>' : '') + g.tags.filter(k => k !== 'mobile').map(k => `<span class="tag ${k}">${k === 'original' ? ORIGINAL_SVG : ''}${k === 'classic' ? CLASSIC_SVG : ''}${tr('tag.' + k)}</span>`).join('');
+    $(C.p + '-tags').innerHTML = statHtml(g, 'tag new') + (g.beta ? '<span class="tag new">' + (g.beta > 1 ? (tr('tag.beta') === 'β版' ? 'β' + g.beta + '版' : tr('tag.beta') + g.beta) : tr('tag.beta')) + '</span>' : '') + (g.alpha === 'pre' ? '<span class="tag prealpha">' + tr('tag.prealpha') + '</span>' : g.alpha ? '<span class="tag alpha">' + tr('tag.alpha') + '</span>' : '') + g.tags.filter(k => k !== 'mobile').map(k => `<span class="tag ${k}">${k === 'original' ? ORIGINAL_SVG : ''}${k === 'classic' ? CLASSIC_SVG : ''}${tr('tag.' + k)}</span>`).join('');
     const f = g.facts || {};
     $(C.p + '-facts').innerHTML = C.facts.filter(k => f[k] != null)
       .map(k => { const v = k === 'ai' ? (tr(g.key + '.str') || tr('gx.levels').replace('{n}', f[k])) : f[k]; return `<div${k === 'ai' ? ' class="str"' : ''}><dt>${tr('gx.' + k)}</dt><dd>${esc(v)}</dd></div>`; }).join('');
@@ -1179,5 +1187,7 @@ makeGallery({ p: 'nx', games: ARCADE, cats: null, store: 'aicoding-arcade', hash
 })();
 </script>
 <script src="shared/langsel.js?v=2" defer></script>
+<script>window.ATLAS_NO_ACH = 1;   // the top page reads only the badge rule from shared/atlas.js (no achievement banners here)</script>
+<script src="shared/atlas.js?v=20261110up2" defer onload="document.dispatchEvent(new Event('atlasready'))"></script>
 </body>
 </html>

@@ -70,3 +70,4 @@ bash "$HERE/match-kp.sh" kp.bin $MNODES $MGAMES $P | tee -a log.txt
 [ -n "$MTIME" ] && bash "$HERE/match-kp.sh" kp.bin $MTIME $MGAMES $P | tee -a log.txt
 gzip -9 -c kp.bin > kp-candidate.bin.gz
 log "done: $WORK/kp-candidate.bin.gz ($(wc -c < kp-candidate.bin.gz) bytes)  (and log.txt, train.log)"
+log "send: attach these 3 files in the Claude chat, or commit them to shogi/tools/nnue/results/ on a NEW branch with GitHub Desktop and tell Claude the branch name (not Hugging Face; TRAIN.md section 5)"

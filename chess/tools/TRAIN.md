@@ -13,8 +13,8 @@
    source ~/chess-nnue-venv/bin/activate
    caffeinate -i bash tools/nnue/run.sh
    ```
-4. 終わったら `~/chess-nnue-work/` の **`nnue-candidate.bin.gz`・`log.txt`・`net.bin.log`** の3つを `chess/tools/nnue/results/` にコピーして、GitHub Desktop でコミット・Push（下の「5. 送ってほしいもの」）
-5. Claude に「チェスの NNUE 候補を上げた」と伝える
+4. 終わったら `~/chess-nnue-work/` の **`nnue-candidate.bin.gz`・`log.txt`・`net.bin.log`** の3つを、Claude のチャットに添付するか、`chess/tools/nnue/results/` にコピーして GitHub Desktop で新しいブランチにコミット・Push（下の「5. 送ってほしいもの」。Hugging Face には上げない）
+5. Claude に「チェスの NNUE 候補を送った」と伝える（ブランチで送ったときはブランチ名も）
 
 ---
 
@@ -104,7 +104,9 @@ caffeinate -i bash tools/nnue/run.sh
 
 ## 5. 送ってほしいもの
 
-**GitHub Desktop で（おすすめ）**：
+**A. Claude のチャットに添付する**（いちばん簡単）：3つのファイルをチャットにドラッグして「チェスの NNUE 候補」と書いて送る。
+
+**B. GitHub Desktop で新しいブランチに入れる**：
 
 ```sh
 mkdir -p /Users/core_tan/Documents/GitHub/aicoding/chess/tools/nnue/results
@@ -112,18 +114,11 @@ cp ~/chess-nnue-work/nnue-candidate.bin.gz ~/chess-nnue-work/log.txt ~/chess-nnu
    /Users/core_tan/Documents/GitHub/aicoding/chess/tools/nnue/results/
 ```
 
-GitHub Desktop に3つのファイルが出るので、Summary に「chess: NNUE candidate」と書いて **Commit to main → Push origin**。
-（`nnue-candidate.bin.gz` は約400KB。学習データや `~/chess-nnue-work/` の中身はコミットしないでください。）
+GitHub Desktop に3つのファイルが出るので、**Current Branch → New Branch**（例：`chess-nnue-results`）→ Summary に「chess: NNUE candidate」と書いて **Commit → Publish branch（Push）**。
+そのあと Claude に **ブランチ名** を伝える（main には直接コミットしない）。
+（`nnue-candidate.bin.gz` は約400KBで、GitHub の1ファイル100MBの上限より十分小さい。学習データや `~/chess-nnue-work/` の中身はコミットしないでください。）
 
-**Hugging Face で送る場合**（ネットだけ。Lichess のデータは CC0 なので再配布も可能ですが、大きいので不要です）：
-
-```sh
-pip install huggingface_hub
-huggingface-cli login
-huggingface-cli upload corechan/chess-nnue ~/chess-nnue-work/nnue-candidate.bin.gz candidates/nnue-candidate.bin.gz
-```
-
-そのうえで `log.txt` の最後の数行を Claude に貼ってください。
+Claude の作業環境からは Hugging Face に届かないので、Hugging Face には上げないでください。
 
 反映は Claude 側で行います：ブラウザ（wasm）で同じ結果になるかの確認 → `nnue.bin.gz` の差し替えとキャッシュ番号 → Stockfish の強さ制限モードとの対局でレベル（`LEVELS`）とレーティング戦の基準（`RT_LV`）を測り直し → `MODEL_CARD.md` の更新。
 
