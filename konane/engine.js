@@ -247,16 +247,27 @@ const kindOf = v => Math.abs(v) > WINT ? 'exact' : 'heur';
 const TT = new Map();
 let nodes = 0, nodeLimit = Infinity, tEnd = Infinity, stop = false;
 const killers = [];
+// reusable positions for the search (a child is only used while its parent's loop is on it): no clone per move.
+// slot 0 scores the moves in orderMoves, slot ply + 1 holds the child being searched at ply
+const SP = [];
+function child(k, src, m) {
+  let q = SP[k];
+  if (!q || q.sq.length !== src.sq.length) q = SP[k] = src.clone();
+  else { q.sq.set(src.sq); q.side = src.side; q.ply = src.ply; q.h1 = src.h1; q.h2 = src.h2; }
+  return q.play(m);
+}
+const OSC = new Float64Array(1024);
 function orderMoves(pos, L, ttm, ply) {
   if (L.length < 2) return L;
-  const k = killers[ply] || -1, me = pos.side + 1, op = 3 - me;
-  const sc = L.map(m => {
-    if (m === ttm) return 1e9; if (m === k) return 1e8;
-    const q = pos.clone().play(m);
-    return -q.mobility(op) * 10 + q.mobility(me) * 6 + hops(m);
-  });
-  const idx = L.map((_, i) => i).sort((a, b) => sc[b] - sc[a]);
-  return idx.map(i => L[i]);
+  const k = killers[ply] || -1, me = pos.side + 1, op = 3 - me, n = L.length, out = L.slice();
+  // the same scores, then a stable insertion sort (best first) = the order of the former stable index sort
+  for (let i = 0; i < n; i++) {
+    const m = out[i];
+    let v; if (m === ttm) v = 1e9; else if (m === k) v = 1e8; else { const q = child(0, pos, m); v = -q.mobility(op) * 10 + q.mobility(me) * 6 + hops(m); }
+    let j = i; while (j > 0 && OSC[j - 1] < v) { OSC[j] = OSC[j - 1]; out[j] = out[j - 1]; j--; }
+    OSC[j] = v; out[j] = m;
+  }
+  return out;
 }
 function search(pos, d, a, b, ply) {
   nodes++;
@@ -274,7 +285,7 @@ function search(pos, d, a, b, ply) {
   let best = -Infinity, bm = L[0];
   const a0 = a;
   for (let i = 0; i < L.length; i++) {
-    const m = L[i], q = pos.clone().play(m);
+    const m = L[i], q = child(ply + 1, pos, m);
     let v;
     if (i === 0) v = -search(q, d - 1, -b, -a, ply + 1);
     else {
@@ -497,7 +508,7 @@ function winningMoves(start, moves, rule, budget) {
 }
 
 setRule('s8');
-const API = { P1, P2, WIN, WINT, PASS, RULES, RULE_ORDER, setRule, get rule() { return RK; }, get R() { return R; }, get N() { return N; }, get NN() { return NN; },
+const API = { get nodes() { return nodes; }, P1, P2, WIN, WINT, PASS, RULES, RULE_ORDER, setRule, get rule() { return RK; }, get R() { return R; }, get N() { return N; }, get NN() { return NN; },
   get RC() { return RC; }, COLOR: () => COLOR, OPEN1: () => OPEN1, ADJ: () => ADJ, sqAt, sqName, mv, mFrom, mTo, isRemove, hops, Pos, path, captured, isJump, name, parse, replay, judge,
   LEVELS, think, analyze, cands, duelGood, duelMin, duelReply, solve, winningMoves, evaluate, kindOf, EW };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;

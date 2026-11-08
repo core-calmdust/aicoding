@@ -133,6 +133,16 @@ class Pos {
     if (!out.length && this.free) out.push(PASS);
     return out;
   }
+  // moves().length > 0 without listing them: a step to an empty neighbour, or the first hop of a jump
+  hasMove() {
+    if (this.free) return true;
+    const p = this.side + 1, sq = this.sq;
+    for (let i = 0; i < 64; i++) if (sq[i] === p) {
+      const nb = NBR[i]; for (let k = 0; k < nb.length; k++) if (!sq[nb[k]]) return true;
+      const jp = JMP[i]; for (let k = 0; k < jp.length; k++) if (sq[jp[k][0]] && !sq[jp[k][1]]) return true;
+    }
+    return false;
+  }
   hasCaps() { return false; }
   caps() { return []; }
   promotes() { return false; }
@@ -199,7 +209,7 @@ function judge(pos, hashes) {
   } else if (n & 1) {
     // Black already in while White has not finished: Black's arrival was decided at its own move; nothing to do here
   }
-  if (!pos.moves().length) return countResult(pos, 'block');
+  if (!pos.hasMove()) return countResult(pos, 'block');
   if (hashes) { const h = pos.h1 + ':' + pos.h2; let c = 0; for (const x of hashes) if (x === h) c++; if (c >= 3) return { over: true, winner: 0, draw: true, why: 'rep' }; }
   return { over: false };
 }
@@ -262,20 +272,30 @@ function terminal(pos, ply) {
 const TT = new Map();
 let nodes = 0, nodeLimit = Infinity, tEnd = Infinity, stop = false;
 const killers = [];
+// the positions of the game so far and of the line being searched ("h1:h2" in hist ⇔ the same pair here), for repetitions
+const RH1 = new Float64Array(4096), RH2 = new Float64Array(4096); let rhN = 0;
+function loadHist(hist) { rhN = 0; for (const x of hist) { const k = x.indexOf(':'); RH1[rhN] = +x.slice(0, k); RH2[rhN] = +x.slice(k + 1); rhN++; } }
+function seenBefore(h1, h2) { for (let i = 0; i < rhN; i++) if (RH1[i] === h1 && RH2[i] === h2) return true; return false; }
+const OSC = new Float64Array(1024);
 function orderMoves(pos, L, ttm, ply) {
-  const D = DIST[pos.side + 1], k = killers[ply] || -1;
-  const sc = L.map(m => { if (m === ttm) return 1e9; if (m === k) return 1e8; const f = m % 64, t = (m / 64) | 0; return (D[f] - D[t]) * 100 + (target(pos.side + 1)[t] ? 30 : 0) - (HOME[pos.side + 1][f] ? -15 : 0); });
-  const idx = L.map((_, i) => i).sort((a, b) => sc[b] - sc[a]);
-  return idx.map(i => L[i]);
+  const D = DIST[pos.side + 1], k = killers[ply] || -1, T = target(pos.side + 1), H = HOME[pos.side + 1], n = L.length, out = L.slice();
+  // the same scores, then a stable insertion sort (best first) = the order of the former stable index sort
+  for (let i = 0; i < n; i++) {
+    const m = out[i];
+    let v; if (m === ttm) v = 1e9; else if (m === k) v = 1e8; else { const f = m % 64, t = (m / 64) | 0; v = (D[f] - D[t]) * 100 + (T[t] ? 30 : 0) - (H[f] ? -15 : 0); }
+    let j = i; while (j > 0 && OSC[j - 1] < v) { OSC[j] = OSC[j - 1]; out[j] = out[j - 1]; j--; }
+    OSC[j] = v; out[j] = m;
+  }
+  return out;
 }
-function search(pos, d, a, b, ply, hist) {
+function search(pos, d, a, b, ply) {
   nodes++;
   if ((nodes & 1023) === 0 && (Date.now() > tEnd || nodes > nodeLimit)) stop = true;
   if (stop) return 0;
   const tv = terminal(pos, ply); if (tv !== null) return tv;
   const key = pos.h1, e = TT.get(key);
   // repetition inside the line = draw
-  const hk = pos.h1 + ':' + pos.h2; if (ply > 0 && hist.includes(hk)) return 0;
+  if (ply > 0 && seenBefore(pos.h1, pos.h2)) return 0;
   if (e && e.h2 === pos.h2 && e.d >= d && e.ply === pos.ply) {
     if (e.f === 0) return e.v; if (e.f === 1 && e.v >= b) return e.v; if (e.f === 2 && e.v <= a) return e.v;
   }
@@ -284,20 +304,20 @@ function search(pos, d, a, b, ply, hist) {
   L = orderMoves(pos, L, e && e.h2 === pos.h2 ? e.m : -1, ply);
   let best = -Infinity, bm = L[0];
   const a0 = a;
-  hist.push(hk);
+  RH1[rhN] = pos.h1; RH2[rhN] = pos.h2; rhN++;
   for (let i = 0; i < L.length; i++) {
     const m = L[i], q = pos.clone().play(m);
     let v;
-    if (i === 0) v = -search(q, d - 1, -b, -a, ply + 1, hist);
+    if (i === 0) v = -search(q, d - 1, -b, -a, ply + 1);
     else {
       const red = (d >= 3 && i >= 6) ? 1 : 0;
-      v = -search(q, d - 1 - red, -a - 1, -a, ply + 1, hist);
-      if (v > a && (red || v < b)) v = -search(q, d - 1, -b, -a, ply + 1, hist);
+      v = -search(q, d - 1 - red, -a - 1, -a, ply + 1);
+      if (v > a && (red || v < b)) v = -search(q, d - 1, -b, -a, ply + 1);
     }
-    if (stop) { hist.pop(); return best === -Infinity ? 0 : best; }
+    if (stop) { rhN--; return best === -Infinity ? 0 : best; }
     if (v > best) { best = v; bm = m; if (v > a) { a = v; if (a >= b) { killers[ply] = m; break; } } }
   }
-  hist.pop();
+  rhN--;
   if (TT.size > 600000) TT.clear();
   TT.set(key, { h2: pos.h2, d, v: best, f: best <= a0 ? 2 : best >= b ? 1 : 0, m: bm, ply: pos.ply });
   return best;
@@ -306,7 +326,7 @@ function rootValues(pos, d, hist) {
   const L = orderMoves(pos, pos.moves(), -1, 0), out = [];
   for (const m of L) {
     const q = pos.clone().play(m);
-    const v = -search(q, d - 1, -WIN - 1, WIN + 1, 1, hist.slice());
+    loadHist(hist); const v = -search(q, d - 1, -WIN - 1, WIN + 1, 1);
     if (stop) break;
     out.push({ m, v });
   }
@@ -321,7 +341,7 @@ function bestMove(pos, hist, maxD, ms, nk) {
     const ttE = TT.get(pos.h1), order = orderMoves(pos, L, best.move, 0);
     for (const m of order) {
       const q = pos.clone().play(m);
-      const v = -search(q, d - 1, -WIN - 1, -a, 1, hist.slice());
+      loadHist(hist); const v = -search(q, d - 1, -WIN - 1, -a, 1);
       if (stop) break;
       if (v > bv) { bv = v; bm = m; if (v > a) a = v; }
     }
@@ -548,7 +568,7 @@ function duelReply(start, moves, n, rule) {
 function puzzle(start, moves, n, defend, goal, base, rule) { return soloGood(start, moves, n, rule).map(m => ({ m, need: n })); }
 
 setRule('c33');
-const API = { P1, P2, WIN, WINT, PASS, RULES, RULE_ORDER, setRule, get rule() { return RK; }, get R() { return R; }, HOME: () => HOME, HOMEL: () => HOMEL, DIST: () => DIST, target, RC, sqAt, sqName, mv, mFrom, mTo, mCap, Pos, path, isJump, name, parse, replay, judge, LEVELS, think, analyze, cands, puzzle, soloGood, soloMin, soloNeed, duelGood, duelMin, duelReply, evaluate, kindOf, bitsOf: () => [], popc: () => 0, bit: () => 0 };
+const API = { get nodes() { return nodes; }, P1, P2, WIN, WINT, PASS, RULES, RULE_ORDER, setRule, get rule() { return RK; }, get R() { return R; }, HOME: () => HOME, HOMEL: () => HOMEL, DIST: () => DIST, target, RC, sqAt, sqName, mv, mFrom, mTo, mCap, Pos, path, isJump, name, parse, replay, judge, LEVELS, think, analyze, cands, puzzle, soloGood, soloMin, soloNeed, duelGood, duelMin, duelReply, evaluate, kindOf, bitsOf: () => [], popc: () => 0, bit: () => 0 };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') {
   let queueP = Promise.resolve();

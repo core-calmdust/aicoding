@@ -12,7 +12,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const GUIDE = '../images/atlas/g-gold.webp', ENG = '../agon/engine.js?v=3';
+  const GUIDE = '../images/atlas/g-gold.webp', ENG = '../agon/engine.js?v=4';
   const loadEngine = () => window.AgonEngine ? Promise.resolve(window.AgonEngine) : new Promise((res, rej) => { const s = document.createElement('script'); s.src = ENG; s.onload = () => window.AgonEngine ? res(window.AgonEngine) : rej(); s.onerror = rej; document.head.appendChild(s); });
   // p: the pieces (W / B queen, w / b guards, x captured); act: what the task accepts; glow: soft gold cells; ok / ng: green / red cells;
   // dest: a piece whose possible steps are shown (green) next to the forbidden ones (red)

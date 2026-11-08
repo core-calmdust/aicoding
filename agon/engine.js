@@ -309,14 +309,31 @@ function hanging(pos, p) {
   }
   return { n, q, list };
 }
+// hanging(pos, p).n without the allocations (the search's evaluation): the same walk, "seen" kept by a stamp
+const HSEEN = new Int32Array(256); let hStamp = 0;
+function hangN(pos, p) {
+  const o = 3 - p, sq = pos.sq, cap = pos.cap; let n = 0;
+  if (++hStamp > 2e9) { HSEEN.fill(0); hStamp = 1; }
+  const st = hStamp;
+  for (let f = 0; f < N; f++) {
+    if (own(sq[f]) !== o || cap[f]) continue;
+    const rf = RING[f], qf = isQ(sq[f]);
+    for (let d = 0; d < 6; d++) {
+      const t = NB[f][d]; if (t < 0 || sq[t] || RING[t] > rf || (t === CENTER && !qf)) continue;
+      if (pos.trapped(t, o)) continue;
+      for (let e = 0; e < 6; e++) { const a = NB[t][e]; if (a < 0 || own(sq[a]) !== p || cap[a] || HSEEN[a] === st) continue; const b = NB[a][e]; if (b >= 0 && b !== f && own(sq[b]) === o) { HSEEN[a] = st; n++; } }
+    }
+  }
+  return n;
+}
 function evaluate(pos) {
   const me = pos.side + 1, op = 3 - me;
   let v = sideScore(pos, me) - sideScore(pos, op) + 40;
   if (!pos.inPlace()) {
-    const h = hanging(pos, me);           // I am to move: my hanging pieces can still be saved (only one per move)
-    if (h.n > 1) v -= (h.n - 1) * W.hang * 2;
-    const g = hanging(pos, op);
-    if (g.n) v += W.hang * 0.5;
+    const hn = hangN(pos, me);           // I am to move: my hanging pieces can still be saved (only one per move)
+    if (hn > 1) v -= (hn - 1) * W.hang * 2;
+    const gn = hangN(pos, op);
+    if (gn) v += W.hang * 0.5;
   }
   return v;
 }
@@ -333,6 +350,10 @@ let nodes = 0, nodeLimit = Infinity, tEnd = Infinity, stop = false, rootSide = 0
 const CONTEMPT = 30;
 const drawV = pos => pos.side === rootSide ? -CONTEMPT : CONTEMPT;
 const killers = [];
+// the positions of the game so far and of the line being searched ("h1:h2" in hist ⇔ the same pair here), for repetitions
+const RH1 = new Float64Array(4096), RH2 = new Float64Array(4096); let rhN = 0;
+function loadHist(hist) { rhN = 0; for (const x of hist) { const k = x.indexOf(':'); RH1[rhN] = +x.slice(0, k); RH2[rhN] = +x.slice(k + 1); rhN++; } }
+function seenBefore(h1, h2) { for (let i = 0; i < rhN; i++) if (RH1[i] === h1 && RH2[i] === h2) return true; return false; }
 function moveScore(pos, m, ttm, k) {
   if (m === ttm) return 1e9; if (m === k) return 1e8; if (m === PASS) return -1e6;
   const f = mFrom(m), t = mTo(m);
@@ -342,11 +363,23 @@ function moveScore(pos, m, ttm, k) {
   if (RING[t] === 1) s += 60;
   return s;
 }
-function orderMoves(pos, L, ttm, ply) {
-  const k = killers[ply] || -1;
-  const sc = L.map(m => moveScore(pos, m, ttm, k));
-  const idx = L.map((_, i) => i).sort((a, b) => sc[b] - sc[a]);
-  return idx.map(i => L[i]);
+const OSC = new Float64Array(1024);
+// one reusable child position per ply for the search (a child is only used while its parent's loop is on it): no clone per move
+const SP = [];
+function child(ply, src, m) {
+  let q = SP[ply];
+  if (!q) q = SP[ply] = src.clone();
+  else { q.sq.set(src.sq); q.cap.set(src.cap); q.res[0] = src.res[0]; q.res[1] = src.res[1]; q.res[2] = src.res[2]; q.side = src.side; q.ply = src.ply; q.free = src.free; q.h1 = src.h1; q.h2 = src.h2; }
+  return q.play(m);
+}
+function orderMoves(pos, L, ttm, ply) {   // the same scores, then a stable insertion sort (best first) = the former stable index sort
+  const k = killers[ply] || -1, n = L.length, out = L.slice();
+  for (let i = 0; i < n; i++) {
+    const m = out[i], v = moveScore(pos, m, ttm, k);
+    let j = i; while (j > 0 && OSC[j - 1] < v) { OSC[j] = OSC[j - 1]; out[j] = out[j - 1]; j--; }
+    OSC[j] = v; out[j] = m;
+  }
+  return out;
 }
 function qsearch(pos, a, b, ply, qd) {
   nodes++;
@@ -359,18 +392,18 @@ function qsearch(pos, a, b, ply, qd) {
   let best = stand;
   for (const m of pos.moves()) {
     if (m === PASS || !pos.capsOf(m).length) continue;
-    const v = -qsearch(pos.clone().play(m), -b, -a, ply + 1, qd - 1);
+    const v = -qsearch(child(ply + 1, pos, m), -b, -a, ply + 1, qd - 1);
     if (stop) return best;
     if (v > best) { best = v; if (v > a) { a = v; if (a >= b) break; } }
   }
   return best;
 }
-function search(pos, d, a, b, ply, hist) {
+function search(pos, d, a, b, ply) {
   nodes++;
   if ((nodes & 1023) === 0 && (Date.now() > tEnd || nodes > nodeLimit)) stop = true;
   if (stop) return 0;
   const tv = terminal(pos, ply); if (tv !== null) return tv;
-  const hk = pos.h1 + ':' + pos.h2; if (ply > 0 && hist.includes(hk)) return drawV(pos);
+  if (ply > 0 && seenBefore(pos.h1, pos.h2)) return drawV(pos);
   const key = pos.h1, e = TT.get(key);
   if (e && e.h2 === pos.h2 && e.d >= d && e.rs === rootSide) {
     if (e.f === 0) return e.v; if (e.f === 1 && e.v >= b) return e.v; if (e.f === 2 && e.v <= a) return e.v;
@@ -379,20 +412,20 @@ function search(pos, d, a, b, ply, hist) {
   let L = orderMoves(pos, pos.moves(), e && e.h2 === pos.h2 ? e.m : -1, ply);
   let best = -Infinity, bm = L[0];
   const a0 = a;
-  hist.push(hk);
+  RH1[rhN] = pos.h1; RH2[rhN] = pos.h2; rhN++;
   for (let i = 0; i < L.length; i++) {
-    const m = L[i], q = pos.clone().play(m);
+    const m = L[i], q = child(ply + 1, pos, m);
     let v;
-    if (i === 0) v = -search(q, d - 1, -b, -a, ply + 1, hist);
+    if (i === 0) v = -search(q, d - 1, -b, -a, ply + 1);
     else {
       const red = (d >= 3 && i >= 8) ? 1 : 0;
-      v = -search(q, d - 1 - red, -a - 1, -a, ply + 1, hist);
-      if (v > a && (red || v < b)) v = -search(q, d - 1, -b, -a, ply + 1, hist);
+      v = -search(q, d - 1 - red, -a - 1, -a, ply + 1);
+      if (v > a && (red || v < b)) v = -search(q, d - 1, -b, -a, ply + 1);
     }
-    if (stop) { hist.pop(); return best === -Infinity ? 0 : best; }
+    if (stop) { rhN--; return best === -Infinity ? 0 : best; }
     if (v > best) { best = v; bm = m; if (v > a) { a = v; if (a >= b) { killers[ply] = m; break; } } }
   }
-  hist.pop();
+  rhN--;
   if (TT.size > 600000) TT.clear();
   TT.set(key, { h2: pos.h2, d, v: best, f: best <= a0 ? 2 : best >= b ? 1 : 0, m: bm, rs: rootSide });
   return best;
@@ -402,7 +435,7 @@ function rootValues(pos, d, hist) {
   const L = orderMoves(pos, pos.moves(), -1, 0), out = [];
   for (const m of L) {
     const q = pos.clone().play(m);
-    const v = -search(q, d - 1, -WIN - 1, WIN + 1, 1, hist.slice());
+    loadHist(hist); const v = -search(q, d - 1, -WIN - 1, WIN + 1, 1);
     if (stop) break;
     out.push({ m, v });
   }
@@ -418,7 +451,7 @@ function bestMove(pos, hist, maxD, ms, nk) {
     const order = orderMoves(pos, L, best.move, 0);
     for (const m of order) {
       const q = pos.clone().play(m);
-      const v = -search(q, d - 1, -WIN - 1, -a, 1, hist.slice());
+      loadHist(hist); const v = -search(q, d - 1, -WIN - 1, -a, 1);
       if (stop) break;
       if (v > bv) { bv = v; bm = m; if (v > a) a = v; }
     }
@@ -600,7 +633,7 @@ function duelReply(start, moves, n, rule) {
 }
 
 setRule('std');
-const API = { P1, P2, WIN, WINT, PASS, RES, N, RULES, RULE_ORDER, setRule, get rule() { return RK; }, get R() { return R; },
+const API = { get nodes() { return nodes; }, P1, P2, WIN, WINT, PASS, RES, N, RULES, RULE_ORDER, setRule, get rule() { return RK; }, get R() { return R; },
   Q, RR, RING, XC, YC, ROWS, RINGL, RPOS, NB, DIRS, CENTER, INNER, OUTER, START, at, sqName, sqParse, mv, mFrom, mTo, own, isQ,
   Pos, path, isJump, name, parse, replay, judge, kindOfMove, LEVELS, think, analyze, cands, duelGood, duelMin, duelReply, need,
   evaluate, hanging, kindOf, resist };

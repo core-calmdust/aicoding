@@ -11,7 +11,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const GUIDE = '../images/atlas/g-crab.webp', ENG = '../konane/engine.js?v=1', N = 6;
+  const GUIDE = '../images/atlas/g-crab.webp', ENG = '../konane/engine.js?v=2', N = 6;
   const loadEngine = () => window.KonaneEngine ? Promise.resolve(window.KonaneEngine) : new Promise((res, rej) => { const s = document.createElement('script'); s.src = ENG; s.onload = () => window.KonaneEngine ? res(window.KonaneEngine) : rej(); s.onerror = rej; document.head.appendChild(s); });
   const FULL = (() => { const o = { b: [], w: [] }; for (let r = 1; r <= N; r++) for (let c = 0; c < N; c++) o[(c + r - 1) % 2 === 0 ? 'b' : 'w'].push('abcdef'[c] + r); return o; })();
   const minus = (L, x) => L.filter(s => !x.includes(s));
