@@ -25,7 +25,8 @@
     const tall = innerHeight > innerWidth * 1.15;
     const PT = opts.top ? 1.5703 : 0;
     const FAR = tall || PT ? 0 : .85;   // seen at a slant, the tall box hides what lies right behind it: the far player's sticks and borne-off pieces sit further out
-    const fit0 = tall ? { w: U.D + 2.6, d: U.W + 3.3, up: .95, y: Y, pitch: 1.5703, roll: -1 } : { w: U.W + .6, d: U.D + 2.9 + 2 * FAR, y: Y, pitch: PT || 1.15 };   // phone: straight down, the long board between the Quit button and the HUD
+    const fit0 = tall && opts.stage ? { w: U.D + 2.6, d: U.W + 3.3, up: .95, y: Y, pitch: 1.5703, roll: -1 } : tall ? { w: U.W + .5, d: U.D + 2.6, up: .6, y: Y, pitch: 1.5703 } :   // (phone table play: the board lying across, straight down — the game pans along it, atlas/games/senet.js)
+       { w: U.W + .6, d: U.D + 2.9 + 2 * FAR, y: Y, pitch: PT || 1.15 };   // phone: straight down, the long board between the Quit button and the HUD
     if (T3.fit) T3.fit(fit0);
     let stopped = false;
     const anim = (dur, f) => new Promise(res => { const t0 = performance.now(); (function s(n) { if (stopped) return res(); const k = Math.min(1, Math.max(0, (n - t0) / dur)); f(k); T3.kick(150); if (k < 1) requestAnimationFrame(s); else res(); })(t0); });

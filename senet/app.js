@@ -304,7 +304,78 @@ function renderBoard() {
   view.render(st, opt);
   skinSync();
   placeDice();
+  zApply();
 }
+// ====================================================================== the focus (phones held upright, the board lying across — 2026-11-09,
+// as Ludo's): the whole board is small there, so it is shown larger (taller frame, the board wider than the screen) and slides along
+// to what matters now — the pieces of the side to move before the throw, the pieces that can move and where they go after it, the
+// piece on its way while it walks; a span too wide for the close view zooms out (up to the whole board). Smooth, never a cut; the 3D
+// skin follows the board element. The corner button switches it off (the whole board), remembered in aicoding-senet-zoom.
+const Z2 = { on: true, z: 1, L: 0, tz: 1, tL: 0, raf: 0, btn: null, mv: null, man: null, key: '' };
+window.__snZ = Z2;
+try { Z2.on = localStorage.getItem('aicoding-senet-zoom') !== '0'; } catch (e) {}
+const zAble = () => !!view && mqV.matches && view.orient() !== 'v' && !document.documentElement.classList.contains('sn-land') && !mqPC.matches;
+function zCols() {   // the columns (0–9, the tray 9.6) to keep in view, or null (the whole board)
+  if (!Z2.on || !zAble() || special || ken || !game || reviewing || !atLatest() || overNow()) return null;
+  const st = curState(); if (!st || st.winner >= 0) return null;
+  const rl = E.RULES[st.rule], col = (side, p) => p >= rl.goal ? 9.6 : p > 0 ? (E.coords(st.rule, side, p) || [0, 0])[1] : null, out = [];
+  if (Z2.mv) { const { side, from, to, dest } = Z2.mv; [from, to, dest].forEach(p => { const c = p != null ? col(side, p) : null; if (c != null) out.push(c); }); return out.length ? out : null; }
+  const r = curRoll();
+  if (r && r.n) { E.legalMoves(st, r.n).forEach(m => { out.push(col(st.turn, m.from)); out.push(col(st.turn, m.to)); }); }
+  else st.pos[st.turn].forEach(p => { const c = col(st.turn, p); if (c != null && p < rl.goal) out.push(c); });
+  return out.filter(c => c != null).length ? out.filter(c => c != null) : null;
+}
+function zTarget() {
+  const fr = $('#frame'), W = fr.clientWidth || 1, cs = zCols();
+  if (!cs) return [1, 0];
+  const c0 = Math.min(...cs), c1 = Math.max(...cs), H0 = W * 584 / 1104;
+  const zMax = Math.min(1.8, innerHeight * .46 / H0), z = Math.min(zMax, 11.04 / (c1 - c0 + 2.6));
+  if (z < 1.12) return [1, 0];
+  const cc = (c0 + c1) / 2, Wz = W * z, x = Wz / 2 + (cc - 4.5) * 100 * Wz / 1104;
+  return [z, Math.max(W - Wz, Math.min(0, W / 2 - x))];
+}
+function zPaint() {
+  const fr = $('#frame'), wr = fr.querySelector('.board-wrap'), on = Z2.z > 1.001;
+  fr.style.aspectRatio = on ? `1104 / ${(584 * Z2.z).toFixed(2)}` : ''; fr.style.overflow = on ? 'hidden' : '';
+  if (wr) { wr.style.width = on ? (Z2.z * 100).toFixed(3) + '%' : ''; wr.style.left = on ? Z2.L.toFixed(2) + 'px' : ''; wr.style.right = on ? 'auto' : ''; }
+  if (window.Table3D && Table3D.kick) Table3D.kick(200);
+}
+function zApply(snap) {
+  { const key = JSON.stringify(zCols()); if (key !== Z2.key) { Z2.key = key; Z2.man = null; } }   // a new focus drops a swipe
+  if (Z2.btn) { Z2.btn.hidden = !zAble() || !game || !!special || !!ken; Z2.btn.classList.toggle('off', !Z2.on); }
+  let [z, L] = zTarget(); if (Z2.man != null && z > 1.001) { const W = $('#frame').clientWidth || 1; L = Math.max(W - W * z, Math.min(0, Z2.man)); } Z2.tz = z; Z2.tL = L;
+  if (snap || !animOn()) { cancelAnimationFrame(Z2.raf); Z2.raf = 0; Z2.z = z; Z2.L = L; zPaint(); return; }
+  if (Z2.raf) return;
+  let last = performance.now();
+  const tick = now => {
+    const dt = Math.min(64, now - last); last = now; const k = 1 - Math.pow(1 - .1, dt / 16.7);
+    const dz = Z2.tz - Z2.z, dL = Z2.tL - Z2.L, done = Math.abs(dz) < .002 && Math.abs(dL) < .5;
+    if (done) { Z2.z = Z2.tz; Z2.L = Z2.tL; } else { Z2.z += dz * k; Z2.L += dL * k; }
+    zPaint(); Z2.raf = done ? 0 : requestAnimationFrame(tick);
+    if (done) dispatchEvent(new Event('resize'));
+  };
+  Z2.raf = requestAnimationFrame(tick);
+}
+(function () {
+  const ZL = { ja: ['手番に寄る', '盤全体を見る'], en: ['Zoom to the player', 'Whole board'], zh: ['聚焦当前玩家', '查看整个棋盘'], 'zh-TW': ['聚焦目前玩家', '查看整個棋盤'], ko: ['차례인 사람에게 확대', '판 전체 보기'], es: ['Acercar al turno', 'Tablero entero'], fr: ['Zoom sur le joueur', 'Plateau entier'], pt: ['Aproximar da vez', 'Tabuleiro inteiro'], de: ['Zum Spieler zoomen', 'Ganzes Brett'], ru: ['Приблизить к ходящему', 'Вся доска'], tr: ['Sıradakine yakınlaş', 'Tüm tahta'], id: ['Perbesar ke giliran', 'Seluruh papan'], hi: ['बारी वाले पर ज़ूम', 'पूरा बोर्ड'], ar: ['تقريب إلى صاحب الدور', 'اللوحة كاملة'] };
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'zbtn'; Z2.btn = b; b.hidden = true;
+  Z2.paint = () => { const zl = ZL[LANG] || ZL.en, tt = Z2.on ? zl[1] : zl[0]; b.title = tt; b.setAttribute('aria-label', tt);
+    b.innerHTML = Z2.on ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>' : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5M10.5 8v5M8 10.5h5"/></svg>'; };
+  Z2.paint();
+  b.onclick = e => { e.stopPropagation(); Z2.on = !Z2.on; try { localStorage.setItem('aicoding-senet-zoom', Z2.on ? '1' : '0'); } catch (er) {} Z2.paint(); zApply(); };
+  $('#frame').appendChild(b);
+  // a sideways swipe on the board slides it (until the focus moves on); the tap that ends a swipe is not a move
+  { const fr = $('#frame'); let d0 = null, swiped = 0;
+    fr.addEventListener('pointerdown', e => { if (Z2.z > 1.001 && e.isPrimary) d0 = { x: e.clientX, y: e.clientY, L: Z2.L, on: false }; }, true);
+    fr.addEventListener('pointermove', e => { if (!d0) return; const dx = e.clientX - d0.x, dy = e.clientY - d0.y;
+      if (!d0.on && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.2) d0.on = true;
+      if (!d0.on) return; const W = fr.clientWidth || 1; Z2.man = Math.max(W - W * Z2.z, Math.min(0, d0.L + dx)); Z2.L = Z2.tL = Z2.man; cancelAnimationFrame(Z2.raf); Z2.raf = 0; zPaint(); e.preventDefault(); }, { capture: true, passive: false });
+    const up = () => { if (d0 && d0.on) { swiped = performance.now(); dispatchEvent(new Event('resize')); } d0 = null; };
+    fr.addEventListener('pointerup', up, true); fr.addEventListener('pointercancel', up, true);
+    fr.addEventListener('click', e => { if (performance.now() - swiped < 350) { e.stopPropagation(); e.preventDefault(); } }, true);
+    fr.style.touchAction = 'pan-y'; }
+  let lastW = 0; addEventListener('resize', () => { const W = $('#frame').clientWidth; if (W !== lastW && !Z2.raf) { lastW = W; zApply(true); } });
+})();
 function renderDice() {
   const r = curRoll(), st = curState(), dock = $('#diceDock');
   { const bd = band();
@@ -606,8 +677,10 @@ async function commit(m) {
   if (m && !fm) return;
   if (OL() && !olRemote && !olSend(st, fm)) return;   // online: my move is written to the record (the other side's plies come with olRemote)
   const tok = ++busyToken; animating = true; hoverMove = null; hintMove = null; coachHover = null;
+  if (fm) Z2.mv = { side: st.turn, from: fm.from, to: fm.to, dest: fm.water ? fm.dest : null };
   renderBoard();
   if (fm) { await SenetSkinHooks.animateMove(st.turn, fm.from, fm.to, { capture: fm.capture, dest: fm.water ? fm.dest : undefined, speed: SPD() }); snd(fm.capture ? 'cap' : fm.finish ? 'home' : fm.water ? 'water' : 'place'); }
+  Z2.mv = null;
   if (tok !== busyToken) { animating = false; return; }
   const res = E.apply(st, fm, r.n);
   animating = false;

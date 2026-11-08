@@ -107,7 +107,7 @@ html.atlas-sn .sn3dnote b{display:block;font-size:14px;color:#2b3044;margin-bott
 
   const skin = AtlasSkin.init({
     margin: 0.12,
-    board: frameEl,
+    board: document.getElementById('board') || frameEl,   // (the board itself: when the phone focus slides it inside the frame, the 3D box follows — senet/app.js Z2)
     outer: r => ({ top: r.top, height: r.height }),
     guide: '../images/atlas/g-dice.webp', guideFallback: '../images/atlas/senet.webp',
     bubbles: [['lsPrompt', 'lsFb'], ['pzGoal', 'pzStatus']],
