@@ -30,11 +30,11 @@
       name: N('リバーシ V4', 'Reversi V4', '黑白棋 V4', '리버시 V4', 'Reversi V4', 'Reversi V4', 'Reversi V4', 'Reversi V4', 'रिवर्सी V4', 'ريفيرسي V4', 'Реверси V4', '黑白棋 V4', 'Reversi V4', 'Reversi V4') },
     { id: 'sudoku', cat: 'puzzle', store: ['mainichi-sudoku-v1'], href: 'sudoku/', color: '#ff8fc7', released: '2025-06-10', tags: ['daily', 'puzzles', 'variants', 'netrank', 'mobile'], total: { pz: 1300 },
       name: N('まいにち数独', 'Daily Sudoku', '每日数独', '매일 스도쿠', 'Sudoku Diario', 'Sudoku du jour', 'Sudoku Diário', 'Tägliches Sudoku', 'रोज़ का सुडोकू', 'سودوكو كل يوم', 'Судоку дня', '每日數獨', 'Sudoku Harian', 'Günlük Sudoku') },
-    { id: 'speedsudoku', cat: 'puzzle', store: ['mainichi-sudoku-v1'], href: 'speed-sudoku/', color: '#ff7a3d', released: '2026-10-21', tags: ['daily', 'puzzles', 'variants', 'netrank', 'mobile'], total: { pz: 500 },
+    { id: 'speedsudoku', original: true, cat: 'puzzle', store: ['mainichi-sudoku-v1'], href: 'speed-sudoku/', color: '#ff7a3d', released: '2026-10-21', tags: ['daily', 'puzzles', 'variants', 'netrank', 'mobile'], total: { pz: 500 },
       name: N('すぴーど数独', 'Speed Sudoku', '速度数独', '스피드 스도쿠', 'Sudoku Veloz', 'Sudoku Express', 'Sudoku Veloz', 'Speed-Sudoku', 'स्पीड सुडोकू', 'سودوكو السرعة', 'Скоростное судоку', '極速數獨', 'Sudoku Kilat', 'Hızlı Sudoku') },
-    { id: 'samegame', cat: 'puzzle', store: ['samegame-pop-v1'], href: 'samegame/', color: '#2e6f8e', released: '2026-10-21', tags: ['daily', 'puzzles', 'netrank', 'mobile'], total: { pz: 750 },
+    { id: 'samegame', original: true, cat: 'puzzle', store: ['samegame-pop-v1'], href: 'samegame/', color: '#2e6f8e', released: '2026-10-21', tags: ['daily', 'puzzles', 'netrank', 'mobile'], total: { pz: 750 },
       name: N('さめが〜め POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!', 'SameGame POP!') },
-    { id: 'jailbreak', cat: 'puzzle', store: ['jailbreak-slide-v1'], href: 'jailbreak/', color: '#f26b1d', released: '2026-10-25', tags: ['daily', 'puzzles', 'variants', 'netrank', 'mobile'], total: { pz: 1000 },
+    { id: 'jailbreak', original: true, cat: 'puzzle', store: ['jailbreak-slide-v1'], href: 'jailbreak/', color: '#f26b1d', released: '2026-10-25', tags: ['daily', 'puzzles', 'variants', 'netrank', 'mobile'], total: { pz: 1000 },
       name: N('だつごくスライダー！', 'Jailbreak Slider!', '越狱滑块！', '탈옥 슬라이더!', '¡Fuga Slider!', 'Évasion Slider !', 'Fuga Slider!', 'Ausbruch-Slider!', 'जेलब्रेक स्लाइडर!', 'الهروب سلايدر!', 'Побег-слайдер!', '越獄滑塊！', 'Slider Kabur!', 'Firar Kaydırmaca!') },
     { id: 'poker', cat: 'card', store: ['aicoding-poker'], href: 'poker/', color: '#b9b4aa', released: '2026-10-29', tags: ['classic', 'card', 'ai', 'lessons', 'variants', 'mobile'], total: { ls: 18 },
       name: N('ポーカー', 'Poker', '扑克', '포커', 'Póker', 'Poker', 'Pôquer', 'Poker', 'पोकर', 'بوكر', 'Покер', '撲克', 'Poker', 'Poker') },
@@ -221,6 +221,7 @@
   const lastUpdate = id => (UPDATES.find(u => u[1] === id) || [])[0] || null;
   // Badges (max 2 shown, in this priority):
   //   BETA    g.beta (first; it takes the place of NEW)
+  //   ORIGINAL g.original (our own titles — ORIGINAL on the top page) once the NEW days are over
   //   NEW     released within 14 days (not for a beta title)
   //   UPDATE  changelog entry within 7 days (and not within the 14 days after release)
   //   (no PREMIUM badge any more: nearly every title had it, so it told players nothing)
@@ -228,7 +229,7 @@
     const out = [];
     if (g.beta) out.push('beta');   // a beta title shows BETA in place of NEW (common rule 2026-11-08: new titles are beta until the owner says)
     if (g.released && daysSince(g.released) <= 14) { if (!g.beta) out.push('new'); }
-    else { const u = lastUpdate(g.id); if (u && daysSince(u) <= 7) out.push('update'); }
+    else { if (g.original) out.push('original'); const u = lastUpdate(g.id); if (u && daysSince(u) <= 7) out.push('update'); }   // an original title: NEW at first, then ORIGINAL (common rule 2026-11-08)
     return out.slice(0, 2);
   }
   // games ordered by the changelog (UPDATES is newest first); games without entries keep registry order
