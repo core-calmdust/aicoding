@@ -65,7 +65,7 @@
     const board = T3.MODELS.go(true, { n }); T3.show('go', board);
     const U = board.userData, Y = U.top, c = U.cell;
     const tall = innerHeight > innerWidth * 1.15;   // phones held upright: the width decides, so frame a little wider and keep the board centred
-    if (T3.fit) T3.fit(tall ? { w: U.W + 1.9, d: U.W + 3.4, y: Y - 1.3, pitch: 1.0 } : { w: U.W + .6, d: U.W + 3.4, y: Y - 2.4, pitch: 1.0 });   // the whole board from the player's side: the near side and the legs show
+    if (T3.fit) T3.fit(tall ? { w: U.W + 1.9, d: U.W + 3.4, y: Y - 1.3, cy: Y, pitch: 1.0 } : { w: U.W + .6, d: U.W + 3.4, y: Y - 2.4, cy: Y, pitch: 1.0 });   // the whole board from the player's side: the near side and the legs show
     const pvp = ctx.mode === 'pvp', human = pvp ? 1 : ctx.side === 2 ? 2 : 1, ai = 3 - human;
     const pname = col => col === 1 ? X.p1 : X.p2, fmt = (s, o) => s.replace(/\{(\w+)\}/g, (_, k) => o[k] !== undefined ? o[k] : '');
     const pts = v => { v = Math.abs(Math.round(v * 2) / 2); return lang === 'ja' ? (v % 1 ? Math.floor(v) + '目半' : v + '目') : fmt(X.pts, { n: v % 1 ? v.toFixed(1) : String(v) }); };
