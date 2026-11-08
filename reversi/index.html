@@ -1806,7 +1806,7 @@ weightsReady = (async () => {
 })();
 
 let book = null;
-const bookReady = fetch('book.bin?v=1').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null).then(b => (book = b));   // (the opening book: tools/book-gen.js; each worker decodes it, engine.js decodeBook)
+const bookReady = fetch('book.bin?v=2').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null).then(b => (book = b));   // (the opening book: tools/book-gen.js; each worker decodes it, engine.js decodeBook)
 function makeWorker(onmsg) {
   const w = new Worker('engine.js?v=54');
   w.onmessage = onmsg;
