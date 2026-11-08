@@ -452,5 +452,5 @@
     house: window.LudoHouse && {   // the house rules (ludo/house.js — shared with the 2D game); ludo only, not pachisi
       show: z => !(z > 10), label: lang => (LudoHouse.T[lang] || LudoHouse.T.en).ui[0],
       summary: lang => { const H = LudoHouse.T[lang] || LudoHouse.T.en, n = LudoHouse.changed(); return n ? H.ui[9].replace('{n}', n) : H.ui[1].split(/[。.]/)[0]; },
-      open: (lang, cb) => LudoHouse.open({ lang, onClose: cb }) } };
+      open: (lang, cb, theme) => LudoHouse.open({ lang, onClose: cb, theme }) } };
 })();
