@@ -17,7 +17,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../fanorona/', VER = '?v=fb5s';   // same file / version as fanorona/index.html → shared cache
+  const BASE = '../fanorona/', VER = '?v=fb5s-pro1-mt1';   // same file / version as fanorona/index.html → shared cache
   let engP = null;
   function loadEngine() {
     if (window.FanoronaEngine) return Promise.resolve(window.FanoronaEngine);

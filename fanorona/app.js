@@ -132,23 +132,55 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = GM.engine || 'engine.js?v=fb5s-pro1';
+const ENGINE_URL = GM.engine || 'engine.js?v=fb5s-pro1-mt1';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
   w.onmessage = e => {
     const m = e.data, j = w.jobs.get(m.id); if (!j) return;
     if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; }
-    w.jobs.delete(m.id); j.resolve(m);
+    w.jobs.delete(m.id); noteNps(m.nodes, performance.now() - j.t0); j.resolve(m);
   };
   return w;
 }
+// search speed of the last engine search (nodes per second, all threads), shown quietly at the end of the info line
+let lastNps = 0;
+const npsText = () => lastNps ? '  ·  ' + (lastNps >= 1e6 ? (lastNps / 1e6).toFixed(1) + 'M' : Math.round(lastNps / 1e3) + 'k') + ' nps' : '';
+function noteNps(nodes, ms) {
+  if (!(nodes > 50000 && ms > 20)) return;
+  lastNps = nodes / ms * 1000;
+  const el = document.getElementById('infoLine'); if (el && el.dataset.base !== undefined) el.textContent = el.dataset.base + npsText();
+}
 let aiW = makeWorker(), anaW = makeWorker();
+// multi-threaded search (shared/mtengine.js; common rule 2026-11-08「本編のマルチスレッド」, Fanorona's page only — Alquerque runs
+// this script without it): analysis, hints, the coach, the review box and the levels that think by time (四段・五段, rated
+// games too) go to the pool of threads when it is free (the lead keeps the level's own limits; the helpers fill the shared
+// table, so it reads deeper in the same time). The levels decided by depth / positions (15級〜三段) stay on the one-thread
+// workers, as does Fanoron-Telo (solved in JavaScript).
+const MTP = window.MTEngine && GID === 'fanorona' ? MTEngine.use({
+  wasm: 'engine_mt.wasm?v=1', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=1', slot: 4 << 20, initial: 512, maximum: 16384,   // slot: TLS + the 1 MB move stack + the stack; maximum = engine_mt.wasm's (1 GiB)
+  imports: mem => ({ env: { memory: mem, now: () => Date.now(), progress: () => {} } }),
+  help: m => m.rule === 'telo' ? null : { io: E.setupIO(m.start, m.moves || []), rk: E.ruleKey() },   // (the page's rule is the job's: gv)
+}) : null;
+const mtLevel = lv => { const L = E.LEVELS[lv]; return !!(L && L.s && L.ms && !L.nk); };   // a level that thinks by time (四段・五段)
+function mtWants(which, msg) {
+  if (gv === 'telo') return false;
+  if (msg.type === 'analyze' || msg.type === 'cands') return true;
+  if (msg.type !== 'think') return false;
+  if (msg.cfg) return !!msg.cfg.s && msg.cfg.threads > 1;   // PRO: its own thread count with any limit of the search (not the weak steps' root values)
+  return mtLevel(msg.level) || (which === 'ana' && msg.level === 19);   // (rated games too: the user's decision 2026-11-08; 19 = COACH_DEEP, the coach's deeper pass — declared further down)
+}
 function request(which, msg, onProgress) {
+  const mp = MTP && mtWants(which, msg) && MTP.pool(which === 'ai' ? 'ai' : null);
+  if (mp) { const t0 = performance.now(), full = { start: startSpec, rule: gv, ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }; return mp.run(full, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full, onProgress) : r; }); }
+  return requestW(which, msg, onProgress);
+}
+function requestW(which, msg, onProgress) {   // (the one-thread workers)
   const w = which === 'ai' ? aiW : anaW;
-  return new Promise(resolve => { const id = ++jobId; w.jobs.set(id, { resolve, onProgress }); w.postMessage({ start: startSpec, rule: gv, ...msg, id }); });
+  return new Promise(resolve => { const id = ++jobId; w.jobs.set(id, { resolve, onProgress, t0: performance.now() }); w.postMessage({ start: startSpec, rule: gv, ...msg, id }); });
 }
 function cancelWorker(which) {
+  if (MTP) MTP.cancel(which);
   const w = which === 'ai' ? aiW : anaW;
   if (!w.jobs.size) return;
   w.terminate();
@@ -517,7 +549,7 @@ function renderInfo() {
   $('#btnSound').classList.toggle('on', settings.sound);
   $('#reviewBar').classList.toggle('show', reviewing && !lesson && !puzzle);
   renderReview();
-  $('#infoLine').textContent = `${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? AIW() + ' ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : '') : settings.mode === 'watch' ? `${LV(settings.level)} vs ${LV(settings.level2)}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`;
+  { const il = $('#infoLine'); il.dataset.base = `${t('info.moves', { n: moves.length })}  ·  ${settings.mode === 'ai' ? AIW() + ' ' + LV(levelFor(0)) + (rgame ? ' · ' + t('ng.rated') : '') : settings.mode === 'watch' ? `${LV(settings.level)} vs ${LV(settings.level2)}` : t('ng.pvp')}  ·  ← → ${t('info.browse')}`; il.textContent = il.dataset.base + npsText(); }
   renderBrand();
   if (window.olAfterInfo) olAfterInfo();
   hbInfo(pos, st);
@@ -1215,9 +1247,13 @@ $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 // PRO mode (shared/proset.js; common rule「対局設定の Pro モード」): advanced settings for the AI beside the level — vs the AI /
 // AI vs AI, never rated. ProSet.ladder() turns the changed values into a step of this engine's ladder (engine.js think: cfg).
 const PRO_L = window.ProSet ? ProSet.ladder(E.LEVELS, { dmax: 30, nmax: 50000000, book: GID !== 'alquerque', bookFrom: 15 }) : null;   // (the book: Fanorona's own rule, from Lv.15)
+// threads (本編のマルチスレッド, Fanorona's page): with any limit of the search; the default is every thread for the levels that
+// think by time, else one
 var PRO = PRO_L ? ProSet.init({ game: GID, lang: () => LANG, level: () => draft.level || settings.level, show: () => draft.mode === 'ai' || draft.mode === 'watch',
-  store: { get: () => settings.pro, set: v => { settings.pro = v; } }, defaults: PRO_L.defaults, params: PRO_L.params }) : null;
-function proCfg(lv) { if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; const e = PRO.get(lv); return e ? PRO_L.cfg(e, lv) : null; }
+  store: { get: () => settings.pro, set: v => { settings.pro = v; } },
+  defaults: MTP ? lv => Object.assign(PRO_L.defaults(lv), { threads: mtLevel(lv) ? ProSet.maxThreads() : 1 }) : PRO_L.defaults,
+  params: MTP ? [PRO_L.params[0], { key: 'threads' }].concat(PRO_L.params.slice(1)) : PRO_L.params }) : null;
+function proCfg(lv) { if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; const e = PRO.get(lv); return e ? Object.assign(PRO_L.cfg(e, lv), MTP ? { threads: e.threads || 1 } : {}) : null; }
 function proTag(lv) { return proCfg(lv) ? ' PRO' : ''; }
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
@@ -2200,7 +2236,7 @@ function rvbUpdate() {
     const playedM = !ken && cur < moves.length ? moves[cur] : -1;
     BOX.update({
       key, over, k: 5,
-      req: { start: startSpec, moves: moves.slice(0, cur), time: 1200, k: 5, plies: 7 },
+      req: { start: startSpec, rule: gv, moves: moves.slice(0, cur), time: 1200, k: 5, plies: 7 },
       seed: !ken && rv.list[at] ? rv.list[at] : null,
       sub: over ? '' : t('hb.turn', { c: pname(me) }),
       left: ken ? () => kenSwap(() => rvbKenLeft(key)) : () => rvbLeft(),
@@ -2211,6 +2247,7 @@ function rvbUpdate() {
 }
 if (window.RvBox) BOX = RvBox.create({
   app: '.app', frame: '#frame', lang: () => LANG, worker: () => ENGINE_URL,
+  pool: () => MTP && gv !== 'telo' && MTP.pool(), cancel: () => { if (MTP) MTP.cancel('rvb'); },   // (the threads when free)
   onHover: e => { rvbHov = e ? { e, k: kenSwap(() => keyOf(cur)) } : null; renderFx(); },
   onPick: e => kenPick(e), onKen: () => kenStart(), onBack: () => kenBack(), onReset: () => kenReset(),
   onGoto: i => viewAt(i), onLayout: () => { renderInfo(); renderFx(); }
