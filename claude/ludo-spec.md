@@ -61,6 +61,7 @@
 
 ## 5. 3D・ポータル
 - 3D モデル：`atlas/models/ludo.js`（`Table3D.MODELS.ludo(live, rule)`／`MODELS.pachisi`）。ルドーは2D盤の絵を貼った木枠の盤と挽き物の駒、パチーシは十字の布と蜂の巣形の駒。サイコロ、タカラガイ。
+- 駒のポリゴン：ろくろ駒は周方向24分割（軽量16）、ルドーの頭の球は縦8段。ルドー駒864・パチーシ駒672三角形（30分割の頃と見た目はほぼ同じ）。子安貝は16×10。
 - ちゃぶ台で遊ぶ：`atlas/games/ludo.js`。カードの「ルールと人数」でルドー 4/3/2人・パチーシ 4人（2対2）/2人（1人2色）。AI 戦（あなたは赤／黄、ほかは全部 AI。4人パチーシの味方の黒も AI）と二人以上で対戦（全色を順にタップ）。待った（自分の番の初めへ）・ヒント（Lv.20 の手）・投了。時計なし。スマホでは2D版と同じ手番フォーカス：カメラが手番の色の陣地・動かせる駒・動く駒へ寄り、次の手番へなめらかにパン・ズーム（`Table3D.fit({cx, cz, ease:true})`、`atlas/table3d.js` に追加した中心指定となめらか移動）。画面右端のボタンで全体表示に切り替え（`atlas-ludo-zoom`）。テキストは `ludo/i18n.js` を読み込んで使う。
 - 3Dルールコース：`atlas/rules/ludo.js`。案内役はヨーヨーの得意なサルの「ルディ」（`images/atlas/av/monkey-1.webp`）。ルドーの8ページ（あいさつ・盤と出発マス・6で出発・目の数だけ進む・捕まえる・安全なマス・ゴール・勝ち）。各ページで3Dのサイコロを振って（目は仕込み）駒を動かす。台詞は全ページ・14言語ともルディの口調（ヨーヨーやバナナのひと言ボケ）。文字送りの声・黄色の課題札・正解後の自動送り（1.6秒＋文字数×45ms）・駒の差分配置は共通ルールどおり。
 - ポータル登録：`shared/atlas.js`（GAMES・更新情報・進み具合）、`atlas/i18n.js`（about／hist）、3Dアイコン `atlas/icons3d.js` → `images/atlas/ludo.webp`、一覧の絵 `atlas/shots/ludo.webp`（`tools/shots.js`）、地図 `atlas/mapdata.js`、ヒストリア `atlas/historia/<言語>/ludo.json`・`s/ludo.json`（`python3 ludo/tools/gen_historia.py` で生成。盤の図は historia.js の `t:'ludo'`）。
