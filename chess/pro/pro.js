@@ -3,7 +3,7 @@
 (() => {
   'use strict';
   const E = window.ChessEngine;
-  const VER = '?v=1';
+  const VER = '?v=2';
   const LANG = (() => { try { return (localStorage.getItem('aicoding-lang') || 'ja') === 'ja' ? 'ja' : 'en'; } catch (e) { return 'ja'; } })();
   const T = {
     ja: { ttl: '最強解析', depth: '深さ', nps: '局面/秒', threads: 'スレッド', sel: 'スレッド数', ana: '解析', stop: '停止', play: 'AIに指させる',
@@ -98,7 +98,7 @@
   // single-thread fallback: the normal chess worker, with the chosen time (PRO-style cfg; the old fixed level 20 was 4 s)
   let FB = null;
   function goFB(fen, uciMoves, ms) {
-    if (!FB) FB = new Worker('../engine.js?v=20261108top2');
+    if (!FB) FB = new Worker('../engine.js?v=20261109nn1');
     const pos = E.Pos.fromFEN(fen), mv = []; for (const u of uciMoves) { const m = pos.fromUci(u); mv.push(m); pos.make(m); }
     return new Promise(res => { FB.onmessage = e => { if (e.data.type === 'result') res(e.data); }; FB.postMessage({ type: 'think', id: 1, fen, moves: mv, level: 25, cfg: { d: 64, ms: ms || 5000 } }); });
   }

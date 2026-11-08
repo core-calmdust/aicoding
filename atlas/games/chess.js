@@ -12,7 +12,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../chess/', VER = '?v=20261108top2';   // same file / version as chess/index.html → shared cache
+  const BASE = '../chess/', VER = '?v=20261109nn1';   // same file / version as chess/index.html → shared cache
   let engP = null;
   function loadEngine() {
     if (window.ChessEngine) return Promise.resolve(window.ChessEngine);
@@ -450,7 +450,7 @@
     const X = {"ja": ["伝説 1", "伝説 2", "伝説 3", "神域 1", "神域 2"], "en": ["Legend 1", "Legend 2", "Legend 3", "Mythic 1", "Mythic 2"], "zh": ["传说 1", "传说 2", "传说 3", "神域 1", "神域 2"], "zh-TW": ["傳說 1", "傳說 2", "傳說 3", "神域 1", "神域 2"], "ko": ["전설 1", "전설 2", "전설 3", "신화 1", "신화 2"], "es": ["Leyenda 1", "Leyenda 2", "Leyenda 3", "Mítico 1", "Mítico 2"], "fr": ["Légende 1", "Légende 2", "Légende 3", "Mythique 1", "Mythique 2"], "pt": ["Lenda 1", "Lenda 2", "Lenda 3", "Mítico 1", "Mítico 2"], "de": ["Legende 1", "Legende 2", "Legende 3", "Mythisch 1", "Mythisch 2"], "hi": ["किंवदंती 1", "किंवदंती 2", "किंवदंती 3", "मिथक 1", "मिथक 2"], "ar": ["أسطورة 1", "أسطورة 2", "أسطورة 3", "خرافي 1", "خرافي 2"], "ru": ["Легенда 1", "Легенда 2", "Легенда 3", "Миф 1", "Миф 2"], "tr": ["Efsane 1", "Efsane 2", "Efsane 3", "Mitik 1", "Mitik 2"], "id": ["Legenda 1", "Legenda 2", "Legenda 3", "Mitos 1", "Mitos 2"]}, SEC = [0.15, 0.3, 0.6, 1.25, 2.5, 5, 10, 20];
     for (const l in LVN) { const L = LVN[l], x = X[l] || X.en, top = L[0][19], d20 = L[1][19]; if (L[0].length !== 20) continue;
       L[0] = L[0].slice(0, 19).concat(x, [top]); L[1] = L[1].slice(0, 17).concat(SEC.map(n => d20.replace('4', n.toLocaleString(l === 'ar' || l === 'hi' ? 'en' : l)))); } }
-  const RATING = [200, 350, 500, 650, 800, 1000, 1250, 1400, 1600, 1700, 1800, 1900, 2100, 2250, 2350, 2450, 2650, 2830, 2930, 3020, 3110, 3190, 3260, 3330, 3400];   // chess RT_LV (rated games)
+  const RATING = [200, 350, 500, 650, 800, 1000, 1250, 1400, 1600, 1700, 1800, 1900, 2150, 2295, 2385, 2495, 2705, 2885, 2985, 3075, 3160, 3240, 3305, 3370, 3440];   // chess RT_LV (rated games)
   const W5 = (a, b, c, d, e, f, g) => [a, a, a, b, b, b, c, c, c, d, d, d, e, e, e, f, f, f, f, g, g, g, g, g, g];
   const WHO = {
     ja: W5('はじめての人に', '駒の動きを覚えた人に', '少し慣れてきた人に', '中級者に', '上級者に', '強豪向け', '最強レベル'),
