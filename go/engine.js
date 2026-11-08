@@ -237,7 +237,7 @@ async function analyze(job, post) {
     lead: res.sc, wr: (res.wl + 1) / 2, visits: res.visits,
     list: res.list.filter(c => c.n > 0).map(c => ({ m: c.m, lead: c.sc, wr: (c.wl + 1) / 2, n: c.n, p: c.p })),
   });
-  const res = await search(I, job, { visits: job.visits || 60, time: job.time || 2000, slice: 3, prog0: job.prog0, progress: r => post({ type: 'progress', id: job.id, ...fmt(r) }) });
+  const res = await search(I, job, { visits: job.visits || 60, time: job.time || 2000, nodes: job.nodes, slice: 3, prog0: job.prog0, progress: r => post({ type: 'progress', id: job.id, ...fmt(r) }) });
   if (!res) return null;
   const out = fmt(res);
   if (job.pv) addPV(I, job, out.list.slice(0, job.pv));

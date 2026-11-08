@@ -51,6 +51,7 @@ URL: https://core-calmdust.github.io/aicoding/go/ （2026-10-22 main に公開�
 
 ## 本編のマルチスレッド（2026-11-08）
 - `engine_mt.wasm`（engine.c を `-DMT`、tools/build.sh）：全スレッドで1本の木を育てる tree-parallel MCTS（virtual loss、葉の評価は1スレッドだけ、両方のネットを共有メモリに `net_sel`）。通常版の wasm は1バイトも変わらない。`sw.js`（light）、`mt-helper.js`、`engine.js?…&mt=1`。
+- ベンチマーク `go/bench.html`（noindex・どこからもリンクしない）：本編と同じ分離（sw.js の DIP）と `engine_mt.wasm` で、9路・19路の各5局面をスレッド数 1, 2, 4, 8, …, `hardwareConcurrency` で一定時間読み、visits/s・1スレッド比・効率・1スレッド長時間の基準との最善手一致を表にする。「結果をコピー」で文字列に。`engine.js` の analyze は `job.nodes`（木のノード数の上限）を受け取る。
 - スレッドを使う：ヒント・形勢の分析・コーチ・検討ボックス。AI のレベル（1〜27、レート戦も）は1スレッドのまま（訪問数・1回評価で決まり、時間で考えるレベルはない）。PRO のスレッド数（既定1）を2以上にすると AI の手もスレッドで。情報行に「visits/s」（全スレッドの合計）。測定は MODEL_CARD.md。
 
 ## 対局設定の Pro モード（2026-11-08）
