@@ -15,7 +15,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../morris/', VER = '?v=20261028rb';   // same file / version as morris/index.html → shared cache
+  const BASE = '../morris/', VER = '?v=20261108pf1';   // same file / version as morris/index.html → shared cache
   const RULE = 'nine';
   let engP = null;
   function loadEngine() {

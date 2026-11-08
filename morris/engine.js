@@ -504,6 +504,7 @@ const LEVELS = {
   8: { d: 8, ms: 700 },
   9: { d: 30, ms: 1500 },
   10: { d: 40, ms: 3000 },
+  11: { d: 40, ms: 3000, perfect: true },   // 完全解析 (six men's morris only): perfect.js + the solved database; elsewhere / until it loads = Lv.10
 };
 function gauss(rand) { let u = 0, v = 0; while (!u) u = rand(); while (!v) v = rand(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
 
@@ -537,9 +538,30 @@ function wSetup(variant, start, moves) {
   wIO().set(a); return WX.setup();
 }
 function wList() { const r = wIO(), L = []; for (let i = 0; i < r[0]; i++) L.push({ m: r[2 + 2 * i], v: r[3 + 2 * i], kind: kindOf(r[3 + 2 * i]) }); return L; }
+// ---------------------------------------------------------------- perfect play (six men's morris, perfect.js in the worker)
+let PF = null;   // MorrisPerfect once loaded
+const pfOn = variant => variant === 'six' && PF && PF.ready();
+// exact values from the database on an analysis list (each entry gets pf: { r, z }; v becomes win WIN - z / loss -(WIN - z) /
+// draw a small value from the search, so every list consumer — hints, evaluation, coach, review — sorts and grades exactly)
+function pfAnnotate(variant, start, moves, list) {
+  if (!pfOn(variant) || !list || !list.length) return list;
+  const { pos, hashes } = replay(variant, start, moves);
+  if (pos.status() !== 0) return list;
+  const vals = PF.moveVals(pos, hashes, list.map(e => e.m)), pl = pos.placing();
+  return list.map((e, i) => {
+    const x = vals[i], z = Math.min(x.z, 900);
+    const v = x.r > 0 ? WIN - z : x.r < 0 ? -(WIN - z) : Math.max(-120, Math.min(120, Math.round(e.v / 8)));
+    return Object.assign({}, e, { v, kind: x.r ? 'exact' : 'heur', pf: { r: x.r, z: pl ? 0 : x.z } });
+  });
+}
 let PRO_CFG = null;   // a step of the page's PRO mode for the current 'think' message (shared/proset.js)
 function think(variant, start, moves, level, rand) {
   const L0 = PRO_CFG || LEVELS[level] || LEVELS[5];   // (PRO_CFG: { d, ms, noise, blunder } as LEVELS)
+  if (L0.perfect && pfOn(variant)) {
+    const { pos, hashes } = replay(variant, start, moves);
+    const r = PF.choose(pos, hashes, eng(), rand);
+    return { move: r.move, pf: { r: r.r, z: r.z } };
+  }
   if (WX && L0.noise === undefined && moves.length < 1000) {
     if (!wSetup(variant, start, moves)) return { move: -1 };
     WX.best(L0.d, L0.ms || 0, 0); const r = wIO();
@@ -565,17 +587,20 @@ function think(variant, start, moves, level, rand) {
   return { move: r.m, v: r.v, depth: r.depth };
 }
 function analyze(variant, start, moves, ms, onProgress) {
+  const ann = l => pfAnnotate(variant, start, moves, l), pf = pfOn(variant);
+  if (pf) ms = Math.min(ms, 300);   // the database decides; the search only orders the drawn moves
   if (WX && moves.length < 1000) {
     if (!wSetup(variant, start, moves)) return { list: [], depth: 0, solved: false };
-    wProg = onProgress ? (d => onProgress(wList(), d)) : null;
+    wProg = onProgress ? (d => onProgress(ann(wList()), d)) : null;
     WX.analyze(ms, 40); wProg = null;
-    const list = wList();
-    return { list, depth: wIO()[1], solved: list.length > 0 && list.every(e => Math.abs(e.v) > WINT) };
+    const list = ann(wList());
+    return { list, depth: wIO()[1], solved: pf || (list.length > 0 && list.every(e => Math.abs(e.v) > WINT)), pf };
   }
   const { pos, hashes } = replay(variant, start, moves);
   const E = eng(); E.setHistory(hashes);
-  const res = E.analyze(pos, ms, 40, (vals, d) => onProgress && onProgress(vals.map(e => ({ m: e.m, v: e.v, kind: kindOf(e.v) })), d));
-  return { list: res.list.map(e => ({ m: e.m, v: e.v, kind: kindOf(e.v) })), depth: res.depth, solved: res.list.length > 0 && res.list.every(e => Math.abs(e.v) > WINT) };
+  const res = E.analyze(pos, ms, 40, (vals, d) => onProgress && onProgress(ann(vals.map(e => ({ m: e.m, v: e.v, kind: kindOf(e.v) }))), d));
+  const list = ann(res.list.map(e => ({ m: e.m, v: e.v, kind: kindOf(e.v) })));
+  return { list, depth: res.depth, solved: pf || (res.list.length > 0 && res.list.every(e => Math.abs(e.v) > WINT)), pf };
 }
 // forced win within n of the attacker's moves.
 // attacker to move (defend = false): need = attacker moves to win after each move (0 = no forced win within n)
@@ -626,7 +651,7 @@ function mill(variant, start, moves, n, defend) {
   });
 }
 
-const API = { setNet, setEGDB, egdbProbe, egdbReady: () => egdbState === 2, mill, NONE, WIN, WINT, QUIET_DRAW, VARIANTS, LEVELS, geom, Pos, Engine, evaluate, replay, think, analyze, mate, mv, mFrom, mTo, mRm, kindOf };
+const API = { setPerfect: x => { PF = x; }, pfAnnotate, setNet, setEGDB, egdbProbe, egdbReady: () => egdbState === 2, mill, NONE, WIN, WINT, QUIET_DRAW, VARIANTS, LEVELS, geom, Pos, Engine, evaluate, replay, think, analyze, mate, mv, mFrom, mTo, mRm, kindOf };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.MorrisEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
@@ -654,15 +679,28 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
         }).catch(() => {});
       }).catch(() => { WX = null; });
   }
+  // perfect play (six men's morris): perfect.js and the solved database (six.mdb.gz, about 0.57 MB), fetched the first time
+  // a six men's position is analysed or the 完全解析 level is to move; until then (or if it fails) the search answers
+  let pfP = null;
+  const wantPF = m => m.variant === 'six' && (m.type === 'pfload' || m.type === 'analyze' || m.type === 'cands' || (m.type === 'think' && LEVELS[m.level] && LEVELS[m.level].perfect));
+  const loadPF = () => pfP || (pfP = new Promise(res => {
+    try { importScripts(new URL('perfect.js?v=1', self.location.href).href); } catch (e) { res(false); return; }
+    self.MorrisPerfect.load(self.location.href).then(ok => { if (ok) PF = self.MorrisPerfect; res(ok); });
+  }));
   self.onmessage = e => {
     const m = e.data;
+    if (wantPF(m) && !PF) { loadPF().then(() => handle(m)); return; }
+    handle(m);
+  };
+  const handle = m => {
     if (m.type === 'think' || m.type === 'analyze' || m.type === 'cands') wantDB(m);
     try {
       if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...(() => { PRO_CFG = m.cfg || null; try { return think(m.variant, m.start, m.moves, m.level); } finally { PRO_CFG = null; } })() });
       else if (m.type === 'analyze') {
         const r = analyze(m.variant, m.start, m.moves, m.time || 1000, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth }));
         self.postMessage({ id: m.id, type: 'result', ...r });
-      } else if (m.type === 'cands') {   // review box (rvbox.js): the top moves and a short line after each
+      } else if (m.type === 'pfload') self.postMessage({ id: m.id, type: 'result', ok: !!PF, ms: PF ? PF.loadMs() : 0 });
+      else if (m.type === 'cands') {   // review box (rvbox.js): the top moves and a short line after each
         const r = analyze(m.variant, m.start, m.moves, m.time || 1000), list = r.list.slice().sort((a, b) => b.v - a.v), lines = {};
         self.postMessage({ id: m.id, type: 'cands', list, lines: {} });
         for (const e of list.slice(0, m.n || 5)) {
