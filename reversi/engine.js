@@ -755,6 +755,7 @@ function scoreAllMoves(pos, moves, mode, depth) {
 }
 
 /** principal-variation search at root, returns {move, score} */
+let PART = null;   // the root move of the depth being searched that is known best so far (think: kept when the deadline cuts the depth)
 function rootPVS(pos, moves, depth, mode, a0, b0) {
   const [pl, ph, ol, oh] = pos;
   const empties = 64 - pc(pl | ol) - pc(ph | oh);
@@ -773,7 +774,7 @@ function rootPVS(pos, moves, depth, mode, a0, b0) {
       v = S(alpha, alpha + 1);
       if (v > alpha) v = S(v - 1 > alpha ? v - 1 : alpha, beta);
     }
-    if (v > bestScore) { bestScore = v; best = s; if (v > alpha) { alpha = v; if (alpha >= beta) break; } }
+    if (v > bestScore) { bestScore = v; best = s; if (PART) { PART.move = s; PART.score = v; PART.n = i; } if (v > alpha) { alpha = v; if (alpha >= beta) break; } }
   }
   return { move: best, score: mode === 'exact' ? bestScore * SCALE : bestScore };
 }
@@ -893,7 +894,7 @@ function orderRoot(moves, prev) {
 }
 
 // 25 strength levels (v4.1: 20, 2026-11-08: +21-25). noise: random jitter added to every move's score (eval units, 100 = 1 disc);
-// mpc: Multi-ProbCut + opening book; time: soft time per move in ms (levels 17-20 also split the root over several workers in the page).
+// mpc: Multi-ProbCut + opening book; time: soft time per move in ms (levels 17-25 also split the root over several workers in the page).
 // The old 10 levels are the same settings as new 4, 7, 9 (≈ old 3), 11, 13, 14, 16, 17, 19, 20. Measured Elo of each level: MODEL_CARD.md.
 const LEVELS = [
   null,
@@ -917,12 +918,14 @@ const LEVELS = [
   { depth: 60, exact: 18, wld: 21, time: 2200, mpc: 1 },     // 18
   { depth: 60, exact: 19, wld: 21, time: 3000, mpc: 1 },     // 19 (old Lv.9)
   { depth: 60, exact: 20, wld: 22, time: 5000, mpc: 1 },     // 20 (old Lv.10)
-  // 21-25 (2026-11-08): longer thinking on all threads (page: MT_CFG); max = the hard limit per move in ms (else 2.5 × time)
-  { depth: 60, exact: 21, wld: 23, time: 7000, max: 17500, mpc: 1 },    // 21
-  { depth: 60, exact: 22, wld: 23, time: 9000, max: 20000, mpc: 1 },    // 22
-  { depth: 60, exact: 22, wld: 24, time: 11000, max: 20000, mpc: 1 },   // 23
-  { depth: 60, exact: 23, wld: 24, time: 14000, max: 20000, mpc: 1 },   // 24
-  { depth: 60, exact: 23, wld: 25, time: 18000, max: 20000, mpc: 1 },   // 25
+  // 21-25 (2026-11-08, rebuilt the same day): longer thinking on all threads (page: MT_CFG). max = the hard limit per move in ms
+  // (else 2.5 × time); use = start a new depth until this share of time (else 0.45), and a depth cut by max still counts
+  // when another root move was already proved better there (think: PART). The levels' thinking time grows ×1.4–1.6 a step.
+  { depth: 60, exact: 21, wld: 23, time: 6000, use: 0.6, max: 12000, mpc: 1 },    // 21
+  { depth: 60, exact: 22, wld: 23, time: 8000, use: 0.65, max: 15000, mpc: 1 },   // 22
+  { depth: 60, exact: 22, wld: 24, time: 11000, use: 0.7, max: 18000, mpc: 1 },   // 23
+  { depth: 60, exact: 23, wld: 24, time: 14000, use: 0.75, max: 20000, mpc: 1 },  // 24
+  { depth: 60, exact: 23, wld: 25, time: 18000, use: 0.8, max: 20000, mpc: 1 },   // 25
 ];
 const NLEVELS = LEVELS.length - 1, DEF_LEVEL = 15;
 
@@ -1069,15 +1072,20 @@ function think(cells, toMove, opts, onProgress) {
         all.sort((a, b) => b.score - a.score);
         r = { move: all[0].move, score: all[0].score, all };
       } else {
-        r = rootPVS(pos, ordered, d, 'mid');
+        PART = lv.max ? { d, move: -1, score: 0, n: -1 } : null;   // (Lv.21-25: a depth cut by the deadline still counts when another move has already been proved better)
+        r = rootPVS(pos, ordered, d, 'mid'); PART = null;
         prev = prev || new Map();
         prev.set(r.move, 1e8 + d);
       }
       result = r; depthDone = d;
       onProgress && onProgress({ depth: d, move: r.move, score: r.score / SCALE, nodes, ms: Date.now() - t0 });
-      if (Date.now() - t0 > softTime * 0.45 && !doExact) break;
+      if (Date.now() - t0 > softTime * (lv.use || 0.45) && !doExact) break;   // (lv.use: Lv.21-25 start a new depth later and use more of their time)
     }
-  } catch (e) { if (e !== ABORT) throw e; }
+  } catch (e) {
+    if (e !== ABORT) throw e;
+    if (PART && PART.n > 0 && result && PART.move !== result.move) { result = { move: PART.move, score: PART.score }; depthDone = PART.d; }
+    PART = null;
+  }
 
   let exactDone = false;
   if (doExact) {
