@@ -1458,6 +1458,9 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 /* board card: own pickers instead of the system ones */
 .bvi .sidetg{flex:1;display:flex;gap:4px;padding:4px;border-radius:14px;background:#f3ead8;min-width:0}
 /* a card with the house-rules row (ludo): the labels in one column and the pickers lined up in the next (2026-11-09) */
+/* a card whose rule / players row stands below the mode's box (ludo): the two-player note no taller than the level row,
+   so the box doesn't open a gap under the level row (the card's 14px rhythm) */
+@media (max-width:819px){.bvi .R:has(#bvSzRow) .mbody > .mnote{padding-top:6px;padding-bottom:6px;min-height:0!important}}
 .bvi .opts #bvHouse{flex:none;display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 12px;border-radius:12px;border:2px solid var(--line);background:#fff;font:inherit;font-weight:900;font-size:13.5px;color:var(--ink);cursor:pointer;white-space:nowrap}
 @media (min-width:820px){.bvi .opts #bvHouse{height:48px;padding:0 16px;font-size:15px;border-radius:14px}}
 .bvi .opts #bvHouse[hidden]{display:none}
@@ -1704,6 +1707,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <link rel="stylesheet" href="worldmap.css?v=18">
 <script src="worldmap.js?v=28"></script>
 <script src="updnews.js?v=7"></script>
-<script src="app.js?v=232"></script>
+<script src="app.js?v=233"></script>
 </body>
 </html>
