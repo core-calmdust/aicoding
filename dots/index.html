@@ -1153,7 +1153,7 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
 <script src="../shared/tick.js?v=2l14"></script>
 <script src="../shared/ruletour.js?v=29l14"></script><!-- only RuleTour.intro() for the rules intro page -->
 <link rel="stylesheet" href="learn.css?v=20261028sk"><!-- learn-ui -->
-<script src="engine.js?v=20261028rb"></script>
+<script src="engine.js?v=20261108mt1"></script><script src="../shared/mtworkers.js?v=2"></script><script>MTWorkers.init();</script>
 <script src="rvbox.js?v=20261107l14"></script><!-- 振り返りボックス (PC): 候補手・読み筋・検討 -->
 <script src="learn.js?v=20261101fl"></script>
 <script src="i18n-online.js?v=20261107l14"></script>
@@ -1291,7 +1291,13 @@ function edgeName(e) {
 }
 
 // ====================================================================== workers
-function makeWorker(onmsg) { const w = new Worker('engine.js?v=20261028rb'); w.onmessage = onmsg; w.onerror = ev => console.warn('worker error', ev.message); return w; }
+// threads (shared/mtworkers.js; common rule 2026-11-08「本編のマルチスレッド」, the option 「マルチスレッド」): the engine worker
+// starts that many helper workers of its own — Lv9・Lv10 (they think by time; rated games too) split the solver's root moves;
+// the post-game review runs that many workers (one position each). Off: one thread. The analysis (hints, 形勢, the review box)
+// stays on one worker: the exact values of the moves share most of their tree, so sharing out the moves gains little
+// (CPU time: ×1.03 with 2 workers, ×1.42 with 8 — dots/RATING.md「本編のマルチスレッド」).
+const mtN = () => window.MTWorkers && MTWorkers.on() ? MTWorkers.helpers() : 0;
+function makeWorker(onmsg) { const w = new Worker('engine.js?v=20261108mt1'); w.onmessage = onmsg; w.onerror = ev => console.warn('worker error', ev.message); return w; }
 let aiWorker, anaWorker, aiJob = null, anaJob = null, jobId = 0, aiPending = false;
 function aiMsg(ev) { const m = ev.data; if (m.type === 'error') console.warn(m.msg); if (!aiJob || m.id !== aiJob.id) return; const j = aiJob; aiJob = null; j.resolve(m); }
 function anaMsg(ev) { const m = ev.data; if (m.type === 'error') console.warn(m.msg); if (!anaJob || m.id !== anaJob.id) return; const j = anaJob; anaJob = null; j.resolve(m); }
@@ -1300,7 +1306,7 @@ function cancelAI() { if (aiJob) { aiWorker.terminate(); aiWorker = makeWorker(a
 function cancelAna() { if (anaJob) { anaWorker.terminate(); anaWorker = makeWorker(anaMsg); anaJob = null; } }
 function allEdges() { return (game.setup ? game.setup.edges : []).concat(game.moves); }
 function askAI(level) {
-  return new Promise(resolve => { aiJob = { id: ++jobId, resolve }; aiWorker.postMessage({ type: 'move', id: aiJob.id, R: game.n, C: game.n, edges: allEdges(), level, lead: S.scores[S.turn] - S.scores[1 - S.turn] }); });
+  return new Promise(resolve => { aiJob = { id: ++jobId, resolve }; aiWorker.postMessage({ type: 'move', id: aiJob.id, R: game.n, C: game.n, edges: allEdges(), level, lead: S.scores[S.turn] - S.scores[1 - S.turn], mt: mtN() }); });
 }
 function askAna(type, ms) {
   cancelAna();
@@ -1809,7 +1815,7 @@ function finalFromValue(v) { const rem = S.G.B - S.p.filled; return [S.scores[0]
 // ====================================================================== post-game review
 let rv = null;        // { key, n, items[], mover[], sc[][], done, total, running, ws[] }
 let rvOpen = true;
-const RV_WORKERS = Math.max(1, Math.min(3, (navigator.hardwareConcurrency || 2) - 1));
+const rvWorkers = () => Math.max(1, mtN());   // (the option 「マルチスレッド」: min(cores − 1, 7) workers, off: one)
 function canReview() { return !lesson && !puzzle && !!SF && game.moves.length > 0 && !game.setup && !document.body.classList.contains('rated-live') && !(window.olLive && olLive()) && (SF.over || settings.mode !== 'watch' || wpPaused); }   // 分析はいつでも（AI同士は一時停止中）。2026-11-06   // AI同士: the record can be browsed while paused
 function rvCancel() { if (rv && rv.running) { rv.ws.forEach(w => w.terminate()); rv = null; } }
 function rvOnce(w, n, edges, played, ms) {
@@ -1840,7 +1846,7 @@ async function runReview(silent) {
   }
   todo.reverse();   // the end first: its exact results warm the solver's table for earlier positions
   const ms = n === 3 ? 1500 : n === 4 ? 600 : 750;   // a cap: late positions are solved in a few ms
-  const ws = []; for (let k = 0; k < RV_WORKERS; k++) ws.push(makeWorker(() => {}));
+  const ws = []; for (let k = rvWorkers(); k > 0; k--) ws.push(makeWorker(() => {}));
   const run = rv = { key: moves.join(','), n, items, mover, sc, done: 0, total: todo.length, running: true, ws };
   if (!silent) rvOpen = true; renderReview(); renderInfo();
   let nx = 0;
