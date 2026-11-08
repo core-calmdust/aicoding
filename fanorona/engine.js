@@ -422,7 +422,8 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
   let readyP = null;
   if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
     const imp = { env: { now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } };
-    const url = new URL('engine.wasm?' + V, self.location.href);
+    const simd = (() => { try { return WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11])); } catch (e) { return false; } })();
+    const url = new URL((simd ? 'engine_simd.wasm?' : 'engine.wasm?') + V, self.location.href);   // (the same search; SIMD only speeds up the net)
     readyP = (WebAssembly.instantiateStreaming ? WebAssembly.instantiateStreaming(fetch(url), imp) : fetch(url).then(r => r.arrayBuffer()).then(b => WebAssembly.instantiate(b, imp)))
       .then(async r => {
         const X = r.instance.exports;
