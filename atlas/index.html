@@ -1553,11 +1553,14 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 .ps-tx{display:flex;flex-direction:column;min-width:0}.ps-tx b{font-size:16px;font-weight:900}.ps-tx small{font-size:11px;font-weight:700;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ps-pg{display:flex;flex-direction:column;align-items:flex-end;gap:4px;width:84px}.ps-pg .bar{width:100%}.ps-pg em{font-style:normal;font-weight:800;font-size:12px;color:var(--ink2)}
 .ps-cv{width:8px;height:8px;border-right:2.5px solid var(--ink2);border-top:2.5px solid var(--ink2);transform:rotate(45deg);margin-inline-end:4px;opacity:.7}
-.bvi .row .inhd{position:static!important;inset:auto!important;flex:none;box-sizing:border-box;width:47px;min-width:47px;height:47px;margin:0 0 0 6px;padding:0;border-radius:50%;border:2px solid var(--line);background:#fff;box-shadow:0 3px 0 var(--line);display:grid;place-items:center;transform:translateY(-1.5px);cursor:pointer}   /* ヒストリア / 戦績 in the card's title row (with the あそぶ sheet; app.js headIcons) (2026-11-10) */
-.bvi .row .inhd:active{transform:translateY(.5px);box-shadow:0 1px 0 var(--line)}
-.bvi .row .inhd .hb-tx{display:none}.bvi .row .inhd .hb-ic{width:33px;height:33px}.bvi .row .inhd .hb-ic svg{width:19px;height:19px}
-[dir=rtl] .bvi .row .inhd{margin:0 6px 0 0}
-@media (max-width:420px){.bvi .row .inhd{width:42px;min-width:42px;height:42px;margin-inline-start:5px}.bvi .row .inhd .hb-ic{width:30px;height:30px}}
+.bvi .row .hdcol{margin-inline-start:auto;flex:none;display:flex;flex-direction:column;align-items:stretch;gap:7px}   /* ルール over 戦績 + ヒストリア (with the あそぶ sheet; app.js headIcons) (2026-11-10) */
+.bvi .row .hdcol .rulesb{margin:0;width:100%;height:40px;transform:none;justify-content:center;box-shadow:0 2px 0 var(--line)}
+.bvi .row .hdsub{display:flex;gap:7px}
+.bvi .row .inhd{position:static!important;inset:auto!important;flex:none;box-sizing:border-box;height:40px;margin:0;border:2px solid var(--line);background:#fff;box-shadow:0 2px 0 var(--line);cursor:pointer}
+.bvi .row .inhd:active{transform:translateY(1px);box-shadow:none}
+.bvi .row .bvrecb.inhd{width:40px;min-width:40px;padding:0;border-radius:50%;display:grid;place-items:center}
+.bvi .row .bvhist.inhd{flex:1;min-width:0;padding:0 12px 0 4px;border-radius:20px;display:flex;align-items:center;gap:6px}
+.bvi .row .bvhist.inhd .hb-tx small{display:none}.bvi .row .bvhist.inhd .hb-tx b{font-size:13px;white-space:nowrap}
 .bvi .act.act2{display:grid;grid-template-columns:1.6fr 1fr;gap:10px}.bvi .act.act2 > *{min-width:0;max-width:none;justify-content:center}
 .lvsheet{position:fixed;inset:0;z-index:120;background:rgba(40,30,10,0);display:flex;align-items:flex-end;justify-content:center;transition:background .2s}
 .lvsheet.on{background:rgba(40,30,10,.35)}
@@ -1890,6 +1893,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=31"></script>
 <script src="updnews.js?v=7"></script>
 <script src="npc/npc.js?v=15"></script>
-<script src="app.js?v=256"></script>
+<script src="app.js?v=258"></script>
 </body>
 </html>
