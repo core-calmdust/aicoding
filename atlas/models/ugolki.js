@@ -116,9 +116,9 @@
   function pieceGeo() {
     const k = LO() ? 'lo' : 'hi'; if (geos[k]) return geos[k];
     const TT = T(), p = [[0, 0], [R - .05, 0], [R - .015, .012], [R, .045], [R + .006, PH * .5], [R - .004, PH - .055]];
-    const st = LO() ? 4 : 6; for (let i = 1; i <= st; i++) { const a = i / st * Math.PI / 2; p.push([R - .05 + Math.cos(a) * .046, PH - .055 + Math.sin(a) * .055]); }
+    const st = LO() ? 3 : 4; for (let i = 1; i <= st; i++) { const a = i / st * Math.PI / 2; p.push([R - .05 + Math.cos(a) * .046, PH - .055 + Math.sin(a) * .055]); }
     p.push([R * .82, PH + .004], [R * .5, PH + .008], [0, PH + .009]);
-    const g = new TT.LatheGeometry(p.map(([a, b]) => new TT.Vector2(a, b)), LO() ? 24 : 40); if (X.share) X.share(g); return (geos[k] = g);
+    const g = new TT.LatheGeometry((X.lp || (a => a))(p, .003).map(([a, b]) => new TT.Vector2(a, b)), LO() ? 18 : 24); if (X.share) X.share(g); return (geos[k] = g);
   }
   function decalGeo() { if (geos.decal) return geos.decal; const g = new (T().CircleGeometry)(R * .8, LO() ? 24 : 40); g.rotateX(-Math.PI / 2); if (X.share) X.share(g); return (geos.decal = g); }
   // the painted face: an eight-petal flower with small inner petals, a dotted ring and a fine rim line (cobalt on white / white on cobalt)

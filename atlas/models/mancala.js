@@ -160,7 +160,7 @@
     STORES.forEach(([x, z]) => { const b = new TT.Mesh(bowl(x, z, SL, SR, SDEP, n + 8, rings), m.cup); b.receiveShadow = true; g.add(b); });
     // gold rings round the hollows, lying on the rounded edge
     const tube = .022, ry = TOP - BT * .35, rad = BS * .55;
-    const ringG = new TT.TorusGeometry(PR + rad, tube, X.coarse ? 4 : 6, n); ringG.rotateX(Math.PI / 2);
+    const ringG = new TT.TorusGeometry(PR + rad, tube, 4, n); ringG.rotateX(Math.PI / 2);
     PITS.forEach(([x, z]) => { const r = new TT.Mesh(ringG, m.gold); r.position.set(x, ry, z); r.castShadow = false; r.receiveShadow = true; g.add(r); });
     STORES.forEach(([x, z]) => {
       const o = outline(x, z, SL, SR + rad, n + 8).map(([a, b]) => new TT.Vector3(a, ry, b));
