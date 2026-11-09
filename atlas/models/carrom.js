@@ -343,11 +343,24 @@
   }
   // a piece: the lathe disc with the face material on top (the texture is planar, so the top and rim share one material);
   // the rim keeps the face's colour from the texture's border — the face map is a solid base colour at its edges
+  // the night board breathes: every NEON_P ms a wave of light runs through its tubes (k 0→1→0 over NEON_D ms, with a flicker at
+  // the start). The model reads the clock as it is drawn; the game asks for frames during the wave (Table3D.carrom.neonWave)
+  const NEON_P = 6500, NEON_D = 1500;
+  function neonK(now) { const t = now % NEON_P; if (t >= NEON_D) return 0; const k = Math.sin(Math.PI * t / NEON_D); return t < 140 ? k + (t % 70 < 35 ? .5 : 0) : k; }
   function pieceGroup(look, c) {
     const TT = T(), striker = c === 's', r = striker ? RS : RM, h = striker ? HS : HM, M2 = pieceMat(look, c);
-    const g = new TT.Group(), body = new TT.Mesh(discGeo(r, h), M2.top); body.castShadow = true; body.receiveShadow = false; g.add(body);   // (no self-shadow: thin discs flickered with shadow acne)
+    const neon = look === 'neon', top = neon ? M2.top.clone() : M2.top;   // (neon: a material of its own, so one man can flash alone)
+    const g = new TT.Group(), body = new TT.Mesh(discGeo(r, h), top); body.castShadow = true; body.receiveShadow = false; g.add(body);   // (no self-shadow: thin discs flickered with shadow acne)
     if (look === 'modern' && striker) { const ring = new TT.Mesh(geos.ring || (geos.ring = (() => { const q = new TT.TorusGeometry(r - .004, .006, 6, 36); q.rotateX(Math.PI / 2); if (X.share) X.share(q); return q; })()), boardMats('modern').brass); ring.position.y = h * .55; g.add(ring); }
     g.userData = { c, r, h };
+    if (neon) {   // a hit lights the man up: its face glows hard and a halo flares round it (flash(k), k 1 → 0)
+      const col = { w: '#3ce6ff', b: '#ff3fb4', q: '#ff4fbd', s: '#9ff4ff' }[c];
+      const hm = new TT.MeshBasicMaterial({ color: lin(col), transparent: true, opacity: 0, blending: TT.AdditiveBlending, depthWrite: false });
+      const halo = new TT.Mesh(geos.halo || (geos.halo = (() => { const q = new TT.RingGeometry(.5, 1, LO() ? 24 : 40); q.rotateX(-Math.PI / 2); if (X.share) X.share(q); return q; })()), hm);
+      halo.position.y = h + .002; halo.visible = false; halo.renderOrder = 3; g.add(halo);
+      const e0 = top.emissive.clone();
+      g.userData.flash = k => { k = Math.max(0, Math.min(1, k)); top.emissive.copy(e0).multiplyScalar(1 + 3.5 * k); halo.visible = k > .01; hm.opacity = k; const sc = r * (1.25 + (1 - k) * 1.3); halo.scale.set(sc, 1, sc); };
+    }
     return g;
   }
 
@@ -357,6 +370,10 @@
     const TT = T(), g = new TT.Group(), BM = boardMats(look);
     const frame = new TT.Mesh(frameGeo(look), BM.frame); frame.castShadow = frame.receiveShadow = true; g.add(frame);
     const surf = new TT.Mesh(surfaceGeo(), BM.surf); surf.position.y = TOP; surf.receiveShadow = true; g.add(surf);
+    if (look === 'neon') {   // the breathing light, read from the clock as the surface is drawn (kept out of the showcase's merge)
+      surf.userData.keep = true; const s0 = BM.surf.emissive.r;
+      surf.onBeforeRender = () => { const k = neonK(performance.now()); BM.surf.emissive.setScalar(s0 * (.7 + 1.1 * k)); BM.edge.emissiveIntensity = BM.rim.emissiveIntensity = 1.2 * (1 + 1.6 * k); };   // (a little dimmer at rest, so the wave stands out)
+    }
     // a base under the surface (seen through the pockets' rims) and the pocket cups with their nets
     const base = new TT.Mesh(new TT.BoxGeometry(2 * S, .04, 2 * S), BM.cup); base.position.y = .03; g.add(base);
     const cupG = geos.cup || (geos.cup = (() => { const q = new TT.CylinderGeometry(RP, RP * .92, TOP - .05, LO() ? 16 : 28, 1, true); if (X.share) X.share(q); return q; })());
@@ -396,5 +413,6 @@
     const st = U.striker(), [x, z] = U.xz(-6, 25.26); st.position.set(x, TOP, z); g.add(st); const sh = X.contact(RS * 1.15, .45); sh.position.set(x, TOP + .004, z); g.add(sh);
     return g;
   };
-  X.carrom = { board, LOOKS, K };
+  // ms until the next wave and how long it lasts (the game asks for frames then; nothing is drawn between waves)
+  X.carrom = { board, LOOKS, K, neonWave: now => { const t = now % NEON_P; return t < NEON_D ? { wait: 0, left: NEON_D - t } : { wait: NEON_P - t, left: NEON_D }; } };
 })();
