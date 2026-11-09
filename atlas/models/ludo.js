@@ -73,21 +73,60 @@
     return g;
   }
   /* ---------- the die and the cowries ---------- */
-  function dieTex(v) {
-    return X.canvasTex('ld-die' + v, 128, 128, (c, W) => {
-      c.fillStyle = '#fbf7ee'; c.fillRect(0, 0, W, W);
-      const P = { 1: [[0, 0]], 2: [[-1, -1], [1, 1]], 3: [[-1, -1], [0, 0], [1, 1]], 4: [[-1, -1], [1, -1], [-1, 1], [1, 1]], 5: [[-1, -1], [1, -1], [0, 0], [-1, 1], [1, 1]], 6: [[-1, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [1, 1]] }[v];
-      c.fillStyle = v === 1 ? '#d7302a' : '#1d1b18';
-      P.forEach(([x, y]) => { c.beginPath(); c.arc(W / 2 + x * W * .26, W / 2 + y * W * .26, W * (v === 1 ? .12 : .09), 0, 7); c.fill(); });
+  // (2026-11-09 v2) the die: a cube with softly rounded edges and corners, the pips drilled into it — each face has holes (an
+  // alpha map, alphaTest) and under each hole a small painted bowl (the inside of a sphere cap), so the light falls into the
+  // dimples from any side
+  const PIPS = { 1: [[0, 0]], 2: [[-1, -1], [1, 1]], 3: [[-1, -1], [0, 0], [1, 1]], 4: [[-1, -1], [1, -1], [-1, 1], [1, 1]], 5: [[-1, -1], [1, -1], [0, 0], [-1, 1], [1, 1]], 6: [[-1, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [1, 1]] };
+  const pipR = v => v === 1 ? .12 : .085, PIP_D = .26;
+  function dieHoles(v) {   // white = the face, black = a hole
+    return X.canvasTex('ld-dieh-' + v, 256, 256, (c, W) => {
+      c.fillStyle = '#fff'; c.fillRect(0, 0, W, W); c.fillStyle = '#000';
+      PIPS[v].forEach(([x, y]) => { c.beginPath(); c.arc(W / 2 + x * W * PIP_D, W / 2 + y * W * PIP_D, W * pipR(v), 0, 7); c.fill(); });
     });
+  }
+  // a rounded box that keeps BoxGeometry's six face groups (one material per face): each vertex is pulled onto a rounded
+  // shell round the inner box, its normal points away from the inner box (smooth edges)
+  function roundDieGeo(s, r) {
+    if (geos.die) return geos.die;
+    const TT = T(), N = 16, g = new TT.BoxGeometry(s, s, s, N, N, N), P = g.attributes.position, Nm = g.attributes.normal, h = s / 2 - r, v = new TT.Vector3(), q = new TT.Vector3();
+    for (let i = 0; i < P.count; i++) {
+      v.fromBufferAttribute(P, i); q.set(Math.max(-h, Math.min(h, v.x)), Math.max(-h, Math.min(h, v.y)), Math.max(-h, Math.min(h, v.z)));
+      const d = v.clone().sub(q); if (d.lengthSq() < 1e-12) continue;
+      d.normalize(); P.setXYZ(i, q.x + d.x * r, q.y + d.y * r, q.z + d.z * r); Nm.setXYZ(i, d.x, d.y, d.z);
+    }
+    P.needsUpdate = Nm.needsUpdate = true; g.computeBoundingSphere(); if (X.share) X.share(g);
+    return (geos.die = g);
+  }
+  // per face of the (unrounded) box: where its uv square lies — origin and the u / v directions — to place the pips
+  function faceFrames(s) {
+    if (geos.dieF) return geos.dieF;
+    const TT = T(), g = new TT.BoxGeometry(s, s, s), P = g.attributes.position, UV = g.attributes.uv, NM = g.attributes.normal, F = [];
+    g.groups.forEach(gr => { const ix = []; for (let k = gr.start; k < gr.start + gr.count; k++) ix.push(g.index ? g.index.getX(k) : k);
+      const at = (u, v) => { const i = ix.find(i => Math.abs(UV.getX(i) - u) < 1e-6 && Math.abs(UV.getY(i) - v) < 1e-6); return new TT.Vector3().fromBufferAttribute(P, i); };
+      const o = at(0, 0), U = at(1, 0).sub(o), V = at(0, 1).sub(o), n = new TT.Vector3().fromBufferAttribute(NM, ix[0]);
+      F.push({ o, U, V, n }); });
+    g.dispose();
+    return (geos.dieF = F);
+  }
+  function bowlGeo(pr) {   // the inside of the bottom cap of a sphere; rim radius pr at y = 0, sinking to −depth
+    const k = 'dieBowl' + pr; if (geos[k]) return geos[k];
+    const TT = T(), th = Math.PI / 3, Rs = pr / Math.sin(th), g = new TT.SphereGeometry(Rs, 18, 6, 0, Math.PI * 2, Math.PI - th, th);
+    g.translate(0, Rs * Math.cos(th), 0); if (X.share) X.share(g);
+    return (geos[k] = g);
   }
   function die() {
     const TT = T(), s = .5;
-    const geo = X.roundBox ? X.roundBox(s, s, s, .08) : new TT.BoxGeometry(s, s, s);
+    const geo = roundDieGeo(s, .07);
     // BoxGeometry faces: +x, −x, +y, −y, +z, −z → 1..6 with opposite faces summing to 7
     const order = [3, 4, 1, 6, 2, 5];
-    const ms = order.map(v => mat('die' + v, () => phys({ map: dieTex(v), color: 0xffffff, roughness: .35, clearcoat: .6, clearcoatRoughness: .2 })));
-    const m = new TT.Mesh(geo, geo.groups && geo.groups.length >= 6 ? ms : ms[2]); m.castShadow = true;
+    const ms = order.map(v => mat('die2-' + v, () => phys({ color: 0xfbf7ee, alphaMap: dieHoles(v), alphaTest: .5, roughness: .3, clearcoat: .55, clearcoatRoughness: .18 })));
+    const m = new TT.Mesh(geo, ms); m.castShadow = true;
+    const pipM = [mat('diePip', () => phys({ color: 0x1b1916, roughness: .45, clearcoat: .4, side: TT.BackSide })), mat('diePip1', () => phys({ color: 0xc8261f, roughness: .4, clearcoat: .4, side: TT.BackSide }))];
+    const up = new TT.Vector3(0, 1, 0);
+    faceFrames(s).forEach((f, i) => { const v = order[i], pr = pipR(v) * s;
+      PIPS[v].forEach(([x, y]) => { const u = .5 + x * PIP_D, w = .5 - y * PIP_D;   // (canvas y down, uv v up)
+        const b = new TT.Mesh(bowlGeo(pr), pipM[v === 1 ? 1 : 0]);
+        b.position.copy(f.o).addScaledVector(f.U, u).addScaledVector(f.V, w).addScaledVector(f.n, -.0005); b.quaternion.setFromUnitVectors(up, f.n); m.add(b); }); });
     const g = new TT.Group(); g.add(m); g.userData = { size: s, faces: order };
     return g;
   }
