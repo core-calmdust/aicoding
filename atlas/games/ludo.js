@@ -187,15 +187,13 @@
     const parkXZ = seat => { const [gx, gy] = throwSpot(seat), ox = gx < 7.5 ? -2.05 : 2.05; return wx(gx + ox, gy - 2.05); };   // the yard's far outer corner (clear of the pieces, behind them as seen)
     // the cup's pose: up = 1 mouth up (standing on its base), 0 mouth down; lift: height above the board
     function cupPose(up, lift, rz) { const I = cupG.userData.inner; I.rotation.set(Math.PI * up, 0, rz || 0); I.position.set(0, CH * up + (lift || 0), 0); cupG.userData.sh.scale.setScalar(Math.max(.4, 1 - (lift || 0) * .5)); }
-    // a move across the board: straight up above the pieces, across, straight down (2026-11-09: a cup sliding low passed
-    // through the pawns — it is wider than the gap between two yard slots). Returns [x, z, lift] at k ∈ [0, 1].
-    const HOP = .82;   // above a pawn (.87 × .66 ≈ .57)
+    // a move across the board in one arc (2026-11-09 v2: up-across-down read as separate steps): the cup rises fast and stays above
+    // the pawns (.87 × .66 ≈ .57) while it is over the yard's pieces — it is wider than the gap between two yard slots.
+    // Returns [x, z, lift] at k ∈ [0, 1].
+    const HOP = .92;
     function hop(x0, z0, x1, z1, k) {
-      const sm = t => t * t * (3 - 2 * t), R = .24, F = .24;
-      if (k < R) return [x0, z0, HOP * sm(k / R)];
-      if (k > 1 - F) return [x1, z1, HOP * (1 - sm((k - 1 + F) / F))];
-      const q = (k - R) / (1 - R - F), e = q < .5 ? 2 * q * q : 1 - Math.pow(-2 * q + 2, 2) / 2;
-      return [x0 + (x1 - x0) * e, z0 + (z1 - z0) * e, HOP];
+      const e = k * k * (3 - 2 * k), l = HOP * Math.pow(Math.max(0, Math.sin(Math.PI * k)), .4);
+      return [x0 + (x1 - x0) * e, z0 + (z1 - z0) * e, l];
     }
     let cupBusy = Promise.resolve(), cupUp = 1;
     // the next turn: the cup (lying mouth down beside the last throw) comes over, turns mouth up beside the dice and they hop in

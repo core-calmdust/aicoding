@@ -152,15 +152,13 @@ html.atlas-ludo3d #frame{background:none!important;box-shadow:none!important}`;
     const park = s => { const [gx, gy] = cupSpot(s), ox = gx < 7.5 ? -2.05 : 2.05; return wx(gx + ox, gy - 2.05); };
     let upNow = 1;
     function pose(up, lift, rz) { upNow = up; const I = g.userData.inner; I.rotation.set(Math.PI * up, 0, rz || 0); I.position.set(0, CH * up + (lift || 0), 0); g.userData.sh.scale.setScalar(Math.max(.4, 1 - (lift || 0) * .5)); }
-    // a move across the board: straight up above the pieces, across, straight down (2026-11-09: a cup sliding low passed
-    // through the pawns — it is wider than the gap between two yard slots). Returns [x, z, lift] at k ∈ [0, 1].
-    const HOP = .82;   // above a pawn (.87 × .66 ≈ .57)
+    // a move across the board in one arc (2026-11-09 v2: up-across-down read as separate steps): the cup rises fast and stays above
+    // the pawns (.87 × .66 ≈ .57) while it is over the yard's pieces — it is wider than the gap between two yard slots.
+    // Returns [x, z, lift] at k ∈ [0, 1].
+    const HOP = .92;
     function hop(x0, z0, x1, z1, k) {
-      const sm = t => t * t * (3 - 2 * t), R = .24, F = .24;
-      if (k < R) return [x0, z0, HOP * sm(k / R)];
-      if (k > 1 - F) return [x1, z1, HOP * (1 - sm((k - 1 + F) / F))];
-      const q = (k - R) / (1 - R - F), e = q < .5 ? 2 * q * q : 1 - Math.pow(-2 * q + 2, 2) / 2;
-      return [x0 + (x1 - x0) * e, z0 + (z1 - z0) * e, HOP];
+      const e = k * k * (3 - 2 * k), l = HOP * Math.pow(Math.max(0, Math.sin(Math.PI * k)), .4);
+      return [x0 + (x1 - x0) * e, z0 + (z1 - z0) * e, l];
     }
     function fill(show) {   // the dice inside (seen while it stands mouth up): two with the two-dice house rule
       const D = g.userData.dice; while (D.children.length) D.remove(D.children[0]);
