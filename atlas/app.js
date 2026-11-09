@@ -1190,6 +1190,14 @@
     const rows = [...root.querySelectorAll('.plrow')].map(r => r.scrollLeft), top = root.scrollTop;
     root.innerHTML = placeHtml(big); bindPlace(root);
     root.querySelectorAll('.plrow').forEach((r, i) => { if (rows[i]) r.scrollLeft = rows[i]; }); if (top) root.scrollTop = top;
+    if (!rows.length) revealSel(root);
+  }
+  // opening a panel brings the chosen place (and board) into view: the rows used to open at their start (2026-11-09)
+  function revealSel(root) {
+    if (!root || root.hidden || !root.offsetParent) return;
+    root.querySelectorAll('.plrow').forEach((r, i) => { const b = r.querySelector('[aria-pressed="true"]'); if (!b) return; const rr = r.getBoundingClientRect(), br = b.getBoundingClientRect();
+      if (r.scrollWidth > r.clientWidth + 1) r.scrollLeft += (br.left + br.width / 2) - (rr.left + rr.width / 2);
+      if (!i && root.scrollHeight > root.clientHeight + 1) { const qr = root.getBoundingClientRect(), b2 = b.getBoundingClientRect(); if (b2.top < qr.top || b2.bottom > qr.bottom) root.scrollTop += (b2.top + b2.height / 2) - (qr.top + qr.height / 2); } });
   }
   function bindPlace(root) {
     root.querySelectorAll('.plcb').forEach(b => b.onclick = e => { e.stopPropagation(); if (b.dataset.bd) setBoard(b.dataset.bd); else setPlace(+b.dataset.k); });
@@ -1218,7 +1226,7 @@
       const B = X.placeUi('b', lang), b = X.bright();
       pb.setAttribute('aria-label', X.placeUi('bright', lang));
       pb.innerHTML = '<i aria-hidden="true"></i>' + B.map((n, i) => `<button type="button" data-b="${i}" aria-pressed="${i === b}">${esc(n)}</button>`).join(''); }
-    btn.onclick = e => { e.stopPropagation(); const open = m.hidden; if (open) { m.innerHTML = placeHtml(); bindPlace(m); const tm = $('bvTodMenu'); if (tm) tm.hidden = true; } m.hidden = !open; btn.setAttribute('aria-expanded', String(open)); aside(open); };
+    btn.onclick = e => { e.stopPropagation(); const open = m.hidden; if (open) { m.innerHTML = placeHtml(); bindPlace(m); const tm = $('bvTodMenu'); if (tm) tm.hidden = true; } m.hidden = !open; btn.setAttribute('aria-expanded', String(open)); aside(open); if (open) revealSel(m); };
     if (!renderPlace.bound) { renderPlace.bound = 1;
       const close = () => { if (!m.hidden) { m.hidden = true; btn.setAttribute('aria-expanded', 'false'); aside(false); } };
       renderPlace.close = close;
