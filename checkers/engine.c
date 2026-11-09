@@ -539,20 +539,63 @@ typedef struct { u64 key; u32 cap; i16 v; u8 ft[2]; i8 d; u8 flag; u8 age; u8 pa
 #else
 #define TT_BITS 20
 #endif
+#ifndef MT
 static TTE TT[1 << TT_BITS];
+#endif
 static u8 ttAge = 0;
 #define TT_EXACT 3
 #define TT_LOWER 1
 #define TT_UPPER 2
 static inline int vToTT(int v, int ply) { return v > WINT ? v + ply : v < -WINT ? v - ply : v; }
 static inline int vFromTT(int v, int ply) { return v > WINT ? v - ply : v < -WINT ? v + ply : v; }
+#ifndef MT
 static void ttStore(u64 key, int d, int flag, int v, const Move *m, int ply) {
   TTE *e = &TT[key & ((1 << TT_BITS) - 1)];
   if (e->key != key && e->age == ttAge && e->d > d + 2) return;   // keep deeper entries of this search
   if (e->key == key && !m) { /* keep the old move */ } else if (m) { e->cap = m->cap; e->ft[0] = m->f; e->ft[1] = m->t | (m->promo << 7); } else { e->cap = 0; e->ft[0] = 255; }
   e->key = key; e->d = (i8)(d > 120 ? 120 : d); e->flag = (u8)flag; e->v = (i16)vToTT(v, ply); e->age = ttAge;
 }
+#endif
+#ifdef MT
+// engine_mt.wasm: the threads' shared table (2026-11-09, after the Mac bench). The plain TT above (one slot per key, the
+// fields written one by one) is not used: with up to 14 threads a slot is often half written by one thread while another
+// reads it, and one slot per key was overwritten so often (10x the nodes in the same time) that the deep entries were lost.
+// Here: buckets of two entries, each entry 3 x u64 { key ^ a ^ b, a, b } (a = cap | v | ft, b = d | flag | age), so a
+// torn entry fails the key check and is never used ("lockless", as in Stockfish / Crafty); store = the same key's entry,
+// else the shallower / older one of the bucket (depth − 8 if from an earlier search). 2^TTM_BITS buckets x 48 bytes.
+#ifndef TTM_BITS
+#define TTM_BITS 20
+#endif
+typedef struct { u64 kx, a, b; } TTX;
+static TTX TTM[(1 << TTM_BITS) * 2];
+static inline void ttLoad(u64 key, TTE *e) {
+  const TTX *bk = &TTM[(key & ((1 << TTM_BITS) - 1)) * 2];
+  for (int j = 0; j < 2; j++) {
+    u64 kx = bk[j].kx, a = bk[j].a, b = bk[j].b;
+    if ((kx ^ a ^ b) == key) {
+      e->key = key; e->cap = (u32)a; e->v = (i16)(a >> 32); e->ft[0] = (u8)(a >> 48); e->ft[1] = (u8)(a >> 56);
+      e->d = (i8)b; e->flag = (u8)(b >> 8); e->age = (u8)(b >> 16); return;
+    }
+  }
+  e->key = ~key;
+}
+static void ttStore(u64 key, int d, int flag, int v, const Move *m, int ply) {
+  TTX *bk = &TTM[(key & ((1 << TTM_BITS) - 1)) * 2];
+  int j = -1, age = ttAge;
+  for (int i = 0; i < 2; i++) if ((bk[i].kx ^ bk[i].a ^ bk[i].b) == key) { j = i; break; }
+  if (j < 0) {   // replace the less valuable entry
+    int q[2];
+    for (int i = 0; i < 2; i++) { u64 b = bk[i].b; q[i] = (int)(i8)b - (((b >> 16) & 255) != (u64)age ? 8 : 0); }
+    j = q[1] < q[0];
+  }
+  u64 a = (u64)m->cap | (u64)(u16)(i16)vToTT(v, ply) << 32 | (u64)m->f << 48 | (u64)(u8)(m->t | (m->promo << 7)) << 56;
+  u64 b = (u64)(u8)(i8)(d > 120 ? 120 : d) | (u64)flag << 8 | (u64)age << 16;
+  bk[j].a = a; bk[j].b = b; bk[j].kx = key ^ a ^ b;
+}
+EXPORT(new_game) void new_game(void) { u64 *p = (u64 *)TTM; for (unsigned long i = 0; i < sizeof(TTM) / 8; i++) p[i] = 0; ttAge = 0; }
+#else
 EXPORT(new_game) void new_game(void) { memset(TT, 0, sizeof(TT)); ttAge = 0; }
+#endif
 
 // ---------------------------------------------------------------- search
 static TLS u64 nodes; static TLS double tEnd; static TLS int stopFlag, nodeLimit_on; static TLS u64 nodeLimit, nodeMask = 2047;   // small node limits are checked every 128 nodes
@@ -566,9 +609,16 @@ static inline int sameMove(const Move *a, const Move *b) { return a->f == b->f &
 #ifdef MT
 static volatile int gStop;            // shared: set when the main thread's search is over (the helpers stop)
 static TLS int threadId;              // 0 = the main thread (time control, result), 1.. = helpers
+// (2026-11-09) every thread's last finished iteration on the current root: { key ^ x, x }, x = depth | value | move index
+// (in gen() order) — the main thread answers with the deepest one, and a helper that finishes the main thread's depth
+// limit ends the search (gHit = the root's key). The main thread clears them when its search begins.
+#define MT_SLOTS 64
+static u64 gRes[MT_SLOTS][2];
+static volatile u64 gGoalKey, gHit; static volatile int gGoal;
+static TLS u64 rootKey;
 static inline int timeUp(void) {
   if (stopFlag) return 1;
-  if ((nodes & nodeMask) == 0) { if ((tEnd > 0 && now() > tEnd) || (nodeLimit_on && nodes > nodeLimit) || gStop) stopFlag = 1; }
+  if ((nodes & nodeMask) == 0) { if ((tEnd > 0 && now() > tEnd) || (nodeLimit_on && nodes > nodeLimit) || gStop || (threadId == 0 && gHit == rootKey)) stopFlag = 1; }
   return stopFlag;
 }
 #else
@@ -613,7 +663,11 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, u64 key, int 
   nodes++;
   if (ply > seldepth) seldepth = ply;
   // transposition table
+#ifdef MT
+  TTE te, *e = &te; ttLoad(key, &te);
+#else
   TTE *e = &TT[key & ((1 << TT_BITS) - 1)];
+#endif
   Move ttm = { 0, 255, 0, 0, 0 };
   if (e->key == key) {
     if (e->ft[0] != 255) { ttm.f = e->ft[0]; ttm.t = e->ft[1] & 31; ttm.promo = e->ft[1] >> 7; ttm.cap = e->cap; }
@@ -741,6 +795,21 @@ static void bestN(int maxDepth, int ms, u64 nodeLim);
 // nodeK: node limit in thousands (0 = none); best_n takes it in nodes (the weak levels need less than 1,000)
 EXPORT(best) void best(int maxDepth, int ms, int nodeK) { bestN(maxDepth, ms, nodeK > 0 ? (u64)nodeK * 1000 : 0); }
 EXPORT(best_n) void best_n(int maxDepth, int ms, int nodeLim) { bestN(maxDepth, ms, nodeLim > 0 ? (u64)nodeLim : 0); }
+#ifdef MT
+// (helpers: every thread iterates 1, 2, 3, … like the main one. Tried 2026-11-09: Stockfish's pattern of skipped depths per
+// helper — slower to the main thread's depth in the simulation.)
+static int moveIndex(const Move *m) {   // the move's index in gen() order of the root
+  Move L[MAXMV]; int n = gen(&ROOT, L);
+  for (int i = 0; i < n; i++) if (sameMove(&L[i], m)) return i;
+  return -1;
+}
+static void mtPublish(int d, int v, const Move *m) {   // a finished iteration of this thread
+  int k = moveIndex(m); if (k < 0 || threadId >= MT_SLOTS) return;
+  u64 x = (u64)(d & 255) | (u64)(u16)(i16)v << 8 | (u64)k << 24 | 1ull << 40;
+  __atomic_store_n(&gRes[threadId][1], x, __ATOMIC_SEQ_CST); __atomic_store_n(&gRes[threadId][0], rootKey ^ x, __ATOMIC_SEQ_CST);
+  if (threadId && d >= gGoal && gGoalKey == rootKey) gHit = rootKey;
+}
+#endif
 static void bestN(int maxDepth, int ms, u64 nodeLim) {
   beginSearch(ms); nodeLimit_on = nodeLim > 0; nodeLimit = nodeLim; nodeMask = nodeLimit_on && nodeLim < 100000 ? 127 : 2047;
   if (rootN == 0) { IO[0] = -1; IO[1] = 0; IO[2] = -WIN; IO[3] = 0; return; }
@@ -749,7 +818,10 @@ static void bestN(int maxDepth, int ms, u64 nodeLim) {
   for (int i = 0; i < rootN; i++) rootVal[i] = -INF;
   int prev = 0, d0 = 1;
 #ifdef MT
-  if (threadId) d0 = 1 + (threadId & 1);   // helpers: every other one a ply ahead, so the threads fill the table with different depths
+  if (threadId == 0) {   // a new search: forget the threads' results of the last one, set the depth goal
+    for (int i = 0; i < MT_SLOTS; i++) { __atomic_store_n(&gRes[i][0], 0, __ATOMIC_SEQ_CST); __atomic_store_n(&gRes[i][1], 0, __ATOMIC_SEQ_CST); }
+    gHit = 0; gGoal = maxDepth < MAXPLY - 8 ? maxDepth : MAXPLY; gGoalKey = rootKey;
+  }
 #endif
   for (int d = d0; d <= maxDepth && d < MAXPLY - 8; d++) {
     seldepth = 0;
@@ -771,6 +843,7 @@ static void bestN(int maxDepth, int ms, u64 nodeLim) {
     bm = rootL[0]; bv = v; bd = d; prev = v;
 #ifdef MT
     IO[4] = (i32)(nodes / 1000);   // (the nodes so far, for the helpers' progress readouts)
+    mtPublish(d, v, &bm);
 #endif
     progress(d, 1);
     if (v > WINT && WIN - v <= d) break;   // a forced win found
@@ -780,6 +853,22 @@ static void bestN(int maxDepth, int ms, u64 nodeLim) {
     if (gStop) break;
 #endif
   }
+#ifdef MT
+  if (threadId == 0) {   // the deepest finished iteration of all the threads (the main thread's on a tie)
+    int bt = -1, bdep = bd;
+    for (int i = 1; i < MT_SLOTS; i++) {
+      u64 x = __atomic_load_n(&gRes[i][1], __ATOMIC_SEQ_CST), kx = __atomic_load_n(&gRes[i][0], __ATOMIC_SEQ_CST);
+      if (!(x >> 40) || (kx ^ x) != rootKey) continue;
+      int dd = (int)(x & 255); if (dd > bdep) { bdep = dd; bt = i; }
+    }
+    if (bt > 0) {
+      u64 x = __atomic_load_n(&gRes[bt][1], __ATOMIC_SEQ_CST), kx = __atomic_load_n(&gRes[bt][0], __ATOMIC_SEQ_CST);
+      Move L[MAXMV]; int n = gen(&ROOT, L), k = (int)((x >> 24) & 255);
+      if ((kx ^ x) == rootKey && k < n) { bm = L[k]; bv = (i16)(u16)(x >> 8); bd = (int)(x & 255); }
+    }
+    gGoalKey = 0; gHit = 0;
+  }
+#endif
   writeMove(IO, &bm); IO[2] = bv; IO[3] = bd; IO[4] = (i32)(nodes / 1000);
 }
 // analysis: exact values of all root moves. IO[0] = n, IO[1] = depth, then (ft, cap, v) * n, best first

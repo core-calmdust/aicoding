@@ -257,7 +257,47 @@ static TLS double nodes, maxNodes, deadline; static TLS int aborted;
 #ifdef MT
 static volatile int gStop;            // shared: set when the main thread's search is over (the helpers stop)
 static TLS int threadId;              // 0 = the main thread (time control, result), 1.. = helpers
-static void checkAbort(void) { if (now() > deadline || nodes > maxNodes || gStop) aborted = 1; }
+// (2026-11-09, after the Mac bench) the threads' shared table. The plain one above (one slot per key, always replace, six
+// arrays written one by one) is not used: the threads write several times the entries of one thread, and "always replace"
+// let the many shallow ones push out the deep ones, so each thread searched again what another had already done (in the
+// simulation with the table as full as on the Mac, 2 and 4 threads needed as many main-thread nodes to the same depth as 1);
+// and an entry written by two threads at once could pair one position's key with another's value. Here: buckets of four
+// entries { key ^ w, w } (w = value, move, depth, flag, age, in use), so a torn entry fails the key check ("lockless");
+// store = the same key's entry, else the shallowest / oldest of the bucket (depth − 16 if from an earlier search).
+// 2^TTM_BITS buckets x 64 bytes (64 MB: 4M entries, the plain one has 1M).
+#ifndef TTM_BITS
+#define TTM_BITS 20
+#endif
+typedef unsigned long long u64;
+static u64 TTM[(1 << TTM_BITS) * 8];
+static u8 ttAge;
+static inline int ttLoad(const Pos *p, int *m, int *d, int *v, int *f) {
+  const u64 key = (u64)p->h1 << 32 | p->h2, *bk = &TTM[(p->h1 & ((1u << TTM_BITS) - 1)) * 8];
+  for (int j = 0; j < 4; j++) {
+    u64 kx = bk[2 * j], w = bk[2 * j + 1];
+    if ((kx ^ w) == key && (w >> 56)) { *v = (int16_t)(w & 0xFFFF); *m = (int)((w >> 16) & 0x7FFF); *d = (i8)(w >> 32); *f = (int)((w >> 40) & 3); return 1; }
+  }
+  return 0;
+}
+static void ttSave(const Pos *p, int sv, int m, int d, int f) {
+  const u64 key = (u64)p->h1 << 32 | p->h2; u64 *bk = &TTM[(p->h1 & ((1u << TTM_BITS) - 1)) * 8];
+  int j = -1, q = 1 << 30;
+  for (int i = 0; i < 4; i++) {
+    u64 kx = bk[2 * i], w = bk[2 * i + 1];
+    if ((kx ^ w) == key && (w >> 56)) { j = i; break; }
+    int s = !(w >> 56) ? -1000 : (int)(i8)(w >> 32) - (((w >> 48) & 255) != ttAge ? 16 : 0);
+    if (s < q) { q = s; j = i; }
+  }
+  u64 w = (u64)(uint16_t)(int16_t)sv | (u64)(m & 0x7FFF) << 16 | (u64)(u8)(i8)d << 32 | (u64)(f & 3) << 40 | (u64)ttAge << 48 | 1ull << 56;
+  bk[2 * j + 1] = w; bk[2 * j] = key ^ w;
+}
+// every thread's last finished iteration on the current root: { key ^ x, x }, x = depth | value | move | in use — the main
+// thread answers with the deepest one, and a helper that finishes the main thread's depth limit ends the search (gHit)
+#define MT_SLOTS 64
+static u64 gRes[MT_SLOTS][2];
+static volatile u64 gGoalKey, gHit; static volatile int gGoal;
+static TLS u64 rootK;
+static void checkAbort(void) { if (now() > deadline || nodes > maxNodes || gStop || (threadId == 0 && rootK && gHit == rootK)) aborted = 1; }
 #else
 static void checkAbort(void) { if (now() > deadline || nodes > maxNodes) aborted = 1; }
 #endif
@@ -317,6 +357,17 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply) {
     if (egOn && !p->hand[1] && !p->hand[2]) { int dv = egProbe(p); if (dv >= 0) return egScore(dv, ply); }
   }
   if (depth <= 0 || ply >= MAXPLY) return qsearch(p, alpha, beta, ply, 6);
+#ifdef MT
+  int ttm = -1;
+  { int tm, tdd, tvv, tf;
+    if (ttLoad(p, &tm, &tdd, &tvv, &tf)) {
+      ttm = tm;
+      if (ply > 0 && tdd >= depth) {
+        int v = tvv; if (v > WINT) v -= ply; else if (v < -WINT) v += ply;
+        if (tf == 0 || (tf == 1 && v >= beta) || (tf == 2 && v <= alpha)) return v;
+      }
+    } }
+#else
   u32 idx = p->h1 & TT_MASK; int ttm = -1;
   if (tk1[idx] == p->h1 && tk2[idx] == p->h2) {
     ttm = tmv[idx];
@@ -326,6 +377,7 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply) {
       if (f == 0 || (f == 1 && v >= beta) || (f == 2 && v <= alpha)) return v;
     }
   }
+#endif
   int *mv = buf[ply], n = gen(p, mv);
   if (n == 0) return p->cnt[1] + p->cnt[2] == N ? 0 : -(WIN - ply);
   int *sc = scb[ply];
@@ -362,8 +414,12 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply) {
     }
   }
   int sv = best; if (sv > WINT) sv += ply; else if (sv < -WINT) sv -= ply;
+#ifdef MT
+  ttSave(p, sv, bm, depth, best >= beta ? 1 : best <= a0 ? 2 : 0);
+#else
   tk1[idx] = p->h1; tk2[idx] = p->h2; tv[idx] = (int16_t)sv; tmv[idx] = bm; td[idx] = (i8)depth;
   tfl[idx] = best >= beta ? 1 : best <= a0 ? 2 : 0;
+#endif
   return best;
 }
 static int quickStatus(Pos *p, int ply) {   // returns INF+1 when the game goes on
@@ -398,11 +454,21 @@ EXPORT(setup) int setup(void) {
   return rootN;
 }
 EXPORT(new_game) void new_game(void) {
+#ifdef MT
+  for (unsigned i = 0; i < sizeof(TTM) / 8; i++) TTM[i] = 0;
+  ttAge = 0;
+#else
   for (int i = 0; i < TT_SIZE; i++) { tk1[i] = 0; tk2[i] = 0; td[i] = 0; tfl[i] = 0; }
+#endif
   for (int i = 0; i < 32 * 32; i++) histT[i] = 0;
   for (int i = 0; i < (MAXPLY + 8) * 2; i++) killer[i] = -1;
 }
-static void limit(double ms, double mn) { nodes = 0; aborted = 0; deadline = ms > 0 ? now() + ms : 1e300; maxNodes = mn > 0 ? mn : 1e300; }
+static void limit(double ms, double mn) {
+  nodes = 0; aborted = 0; deadline = ms > 0 ? now() + ms : 1e300; maxNodes = mn > 0 ? mn : 1e300;
+#ifdef MT
+  if (threadId == 0) ttAge++;   // (a new search: only the main thread ages the shared table)
+#endif
+}
 // values of every root move at a fixed depth; IO out: n, (m, v)...
 static int rootValues(int depth, int *mv, int n, int *out) {
   Pos *p = &P;
@@ -431,8 +497,14 @@ EXPORT(best) void best(int maxDepth, double ms, double mn) {
   if (rootN == 1) { IO[0] = rootMv[0]; IO[1] = 0; IO[2] = 0; return; }
   int bestM = rootMv[0], bestV = 0, done = 0, ord[MAXMV];
 #ifdef MT
-  const int d0 = threadId ? 1 + (threadId & 1) : 1;   // helpers: every other one a ply ahead, so the threads fill the table with different depths
-  for (int d = d0; d <= maxDepth; d++) {
+  const u64 rk = ((u64)p->h1 << 32 | p->h2) ^ (u64)rootN << 20;
+  if (threadId == 0) {   // a new search: forget the threads' results of the last one, set the depth goal
+    for (int i = 0; i < MT_SLOTS; i++) { __atomic_store_n(&gRes[i][0], 0, __ATOMIC_SEQ_CST); __atomic_store_n(&gRes[i][1], 0, __ATOMIC_SEQ_CST); }
+    gHit = 0; gGoal = maxDepth; gGoalKey = rk; rootK = rk;
+  }
+  // (helpers: every thread iterates 1, 2, 3, … like the main one. Tried 2026-11-09: Stockfish's pattern of skipped depths
+  // per helper — slower to the main thread's depth in the simulation.)
+  for (int d = 1; d <= maxDepth; d++) {
 #else
   for (int d = 1; d <= maxDepth; d++) {
 #endif
@@ -451,8 +523,32 @@ EXPORT(best) void best(int maxDepth, double ms, double mn) {
     }
     if (aborted) break;
     bestM = bm; bestV = bv; done = d;
+#ifdef MT
+    if (threadId < MT_SLOTS) {   // publish the finished iteration
+      u64 x = (u64)(d & 255) | (u64)(uint16_t)(int16_t)bv << 8 | (u64)(bm & 0x7FFF) << 24 | 1ull << 40;
+      __atomic_store_n(&gRes[threadId][1], x, __ATOMIC_SEQ_CST); __atomic_store_n(&gRes[threadId][0], rk ^ x, __ATOMIC_SEQ_CST);
+      if (threadId && d >= gGoal && gGoalKey == rk) gHit = rk;
+    }
+#endif
     if (bv > WINT || bv < -WINT) break;
   }
+#ifdef MT
+  if (threadId == 0) {   // the deepest finished iteration of all the threads (the main thread's on a tie)
+    int bt = -1, bdep = done;
+    for (int i = 1; i < MT_SLOTS; i++) {
+      u64 x = __atomic_load_n(&gRes[i][1], __ATOMIC_SEQ_CST), kx = __atomic_load_n(&gRes[i][0], __ATOMIC_SEQ_CST);
+      if (!(x >> 40) || (kx ^ x) != rk) continue;
+      int dd = (int)(x & 255); if (dd > bdep) { bdep = dd; bt = i; }
+    }
+    if (bt > 0) {
+      u64 x = __atomic_load_n(&gRes[bt][1], __ATOMIC_SEQ_CST), kx = __atomic_load_n(&gRes[bt][0], __ATOMIC_SEQ_CST);
+      int m = (int)((x >> 24) & 0x7FFF), ok = 0;
+      for (int i = 0; i < rootN; i++) if (rootMv[i] == m) ok = 1;
+      if ((kx ^ x) == rk && ok) { bestM = m; bestV = (int16_t)(uint16_t)(x >> 8); done = (int)(x & 255); }
+    }
+    gGoalKey = 0; gHit = 0; rootK = 0;
+  }
+#endif
   IO[0] = bestM; IO[1] = bestV; IO[2] = done;
 #ifdef MT
   IO[3] = (i32)(nodes / 1000);   // (the nodes of this search, thousands: the helpers' counts, the page's nps)
