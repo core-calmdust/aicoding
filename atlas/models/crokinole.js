@@ -4,7 +4,7 @@
               fibres, a few pores), lacquered; the 5 / 10 / 15 lines and the quadrant lines in black, a red ring round the 20 hole;
               eight brass pegs with black rubber sleeves on the 15 line; a green felt ditch and a round walnut rail. Discs of
               red- and black-stained maple with turned rings.
-   · 'marq'    marquetry (寄木細工): sixteen radial wedges of maple and cherry between the 15 and 5 lines, a field of small
+   · 'marq'    (the default) marquetry (寄木細工): sixteen radial wedges of maple and cherry between the 15 and 5 lines, a field of small
               triangles of maple, cherry and walnut inside the 15 and in a band outside the 5; walnut lines, maple pegs, a walnut
               rail with a maple stringer, a brown suede ditch. Discs of cherry and ebony with a maple inlay ring.
    · 'winter'  Canadian winter: a pale ice surface with frost and hairline cracks, faint snowflakes, a red maple leaf under
@@ -14,7 +14,7 @@
               an atomic-age motif in each quarter (a Sputnik, boomerangs, atomic orbits, an Eames dot cluster) and sparkles in
               cream, mustard, burnt orange, teal and olive; a dark teak rail with a brass ring, a mustard felt ditch. Discs of
               burnt orange and charcoal with atomic orbits.
-   · 'modern'  (the default) modern art: warm paper printed with colour fields (terracotta, saffron, teal, ink) in the four quarters, a ring
+   · 'modern'  modern art: warm paper printed with colour fields (terracotta, saffron, teal, ink) in the four quarters, a ring
               of arcs and a flower of circles round the hole, risograph grain; ink lines; a matte ink-blue rail with a brass ring,
               a terracotta ditch. Matte coral and ink discs with a brass pip.
    · 'neon'      the night board of carrom carried over: black lacquer with the lines glowing in a flowing rainbow (gaming RGB),
@@ -37,7 +37,7 @@
   const RB = 13 * IN, R5 = 12 * IN, R10 = 8 * IN, R15 = 4 * IN, RH = 1.375 * IN / 2, RD = 1.25 * IN / 2, RP = .55;
   const DW = 2 * IN, RR = RB + DW, RO = RR + 2.2;   // the ditch (2 in), the rail (2.2 cm thick)
   const TOP = .26, DY = TOP - 1.3 * K, RAIL_H = TOP + 2.4 * K, HD = .9 * K, PEG_H = 1.6 * K;
-  const LOOKS = ['modern', 'classic', 'marq', 'mcm', 'winter', 'neon'];
+  const LOOKS = ['marq', 'classic', 'modern', 'mcm', 'winter', 'neon'];
   const lin = c => new (T().Color)(c).convertSRGBToLinear();
   function phys(o) {
     const TT = T(), p = Object.assign({}, o);
@@ -47,7 +47,7 @@
     return new TT[p.clearcoat !== undefined ? 'MeshPhysicalMaterial' : 'MeshStandardMaterial'](p);
   }
   const mats = {}, mat = (k, f) => mats[k] || (mats[k] = f());
-  const lookNow = () => X.BOARDS && X.BOARDS.crokinole ? X.BOARDS.crokinole.get() : 'modern';
+  const lookNow = () => X.BOARDS && X.BOARDS.crokinole ? X.BOARDS.crokinole.get() : 'marq';
 
   /* ---------- gaming RGB (the neon board): the glow's hue flows with the clock (as carrom's night board) ---------- */
   const RGB = { uT: { value: 0 } };
@@ -98,13 +98,13 @@
       // the ring — a triangle lattice bent round the board (two rows between the stringers), each piece its own wood, tone
       // and grain direction, glue seams between them
       const W3 = [WOOD.maple, WOOD.cherry, WOOD.walnut], O = { cx: 0, by: -40, asp: .08, sp: .45, wp: 1.4, ring: .5, fib: .4, drift: .25 }, SEAM = [40, 24, 14];
-      const woodOf = h => W3[h < .42 ? 0 : h < .76 ? 1 : 2];
+      const woodOf = (h, up) => up && h < .34 ? W3[2] : W3[hash(h * 37, 5, 1) < .52 ? 0 : 1];   // walnut only on upward pieces: two never share an edge
       const grain = (x, y, dir, h, w) => { const c = Math.cos(dir), sn = Math.sin(dir), t = woodT(N, x * c + y * sn, -x * sn + y * c, Object.assign({}, O, { off: h * 40 })); return mix(w[0], w[1], .1 + t * .5 + (hash(h * 91, 3, 7) - .5) * .12); };
       const B0 = R5 + .7, ROWS = 2, BW = (RB - B0) / ROWS, NB = Math.round(2 * Math.PI * (B0 + RB) / 2 / (BW / .866));
       return (x, y) => {
         const r = Math.hypot(x, y);
         if (r < R15 - .35) {
-          const T = triTile(x, y, 1.7), col = grain(x, y, T.dir, T.h, woodOf(T.h));
+          const T = triTile(x, y, 1.7), col = grain(x, y, T.dir, T.h, woodOf(T.h, T.up));
           return T.e < .035 ? mix(col, SEAM, .55) : col;
         }
         if (r > B0) {
@@ -112,7 +112,7 @@
           const a = (th + Math.PI) / (2 * Math.PI) * NB + row * .5 - t * .5, ia = Math.floor(a), fa = a - ia, up = fa + t < 1 ? 1 : 0;
           const e = up ? Math.min(fa, t, 1 - fa - t) : Math.min(1 - fa, 1 - t, fa + t - 1);
           const h = hash(ia, row, up), dir = th + Math.PI / 2 + (Math.floor(hash(row, ia, up + 3) * 3)) * Math.PI / 3;
-          const col = grain(x, y, dir, h, woodOf(h));
+          const col = grain(x, y, dir, h, woodOf(h, up));
           return e < .045 ? mix(col, SEAM, .6) : e < .08 ? mix(col, SEAM, .2) : col;
         }
         const n = 16, th = Math.atan2(y, x), k = Math.floor((th + Math.PI) / (2 * Math.PI / n)), thc = -Math.PI + (k + .5) * 2 * Math.PI / n;
