@@ -1,5 +1,5 @@
 /* =====================================================================
-   Carrom on the 3D table — two boards (Table3D.BOARDS.carrom, chosen in the portal's 盤 row):
+   Carrom on the 3D table — five boards (Table3D.BOARDS.carrom, chosen in the portal's 盤 row):
    · 'classic' the board of every Indian home and club: a honey-coloured birch plywood surface, lacquered and
               powdered, the ICF markings in black with red base circles and a red centre, arrows to the pockets and a rosette in
               the centre circle; a deep rosewood frame with curved inner corners, black netted pockets. Men of boxwood and ebony
@@ -8,6 +8,16 @@
               rosette of overlapping circles, in terracotta, saffron, teal and ink on warm paper, with a fine risograph grain; the
               markings in ink and gold. A matte ink-blue lacquered frame with brass edging and brass-ringed pockets. Men in matte
               ivory and charcoal with a brass pip, a coral queen, a cream striker with a brass ring.
+   · 'neon'      night: a black lacquered board with a faint grid, the markings drawn as glowing tubes (cyan, magenta,
+              violet); a neon tube along the frame's inner edge and round the pockets. Men of acrylic: ice-white and smoked
+              violet with glowing rings, a hot-pink queen, a clear striker with a cyan ring.
+   · 'rajasthan' a painted miniature: a saffron field strewn with little paisleys (buta), a crimson border band with gold dots,
+              a lotus mandala in the centre and lotus fans in the corners, markings in maroon and gold. A dark sheesham frame
+              with brass inlay. Men painted like lacquerware: ivory with a red-dot ring, ebony with gold dots, a vermilion queen
+              with a gold lotus, an ivory striker with a lotus.
+   · 'bauhaus'   geometry in primaries on off-white paper: a red circle, a blue square, a yellow triangle and black bars, the
+              markings in black. A matte black frame with a sharp edge. Men in matte white and black, a red queen, a yellow
+              striker with a black ring.
    Real proportions (ICF laws): surface 74 cm, frame 7 cm, pockets 4.45 cm, men 3.18 cm, striker 4.13 cm.
    Registers into Table3D:
      Table3D.MODELS.carrom(live)   board (+ the opening arrangement and a striker unless live)
@@ -23,7 +33,8 @@
   const SZ = v => Math.round(v * (X.texScale ? X.texScale() : 1));
   const K = 10 / 88, S = 37 * K, FW = 7 * K, FH = 2.2 * K, TOP = .26, RP = 2.225 * K, PC = (37 - 2.225) * K;
   const RM = 1.59 * K, RS = 2.065 * K, HM = .8 * K, HS = .9 * K;
-  const LOOKS = ['classic', 'modern'];
+  const LOOKS = ['classic', 'modern', 'neon', 'rajasthan', 'bauhaus'];
+  const PRE = { classic: '', modern: 'm', neon: 'n', rajasthan: 'r', bauhaus: 'h' };   // the piece-face kinds of each look
   const lin = c => new (T().Color)(c).convertSRGBToLinear();
   function phys(o) {
     const TT = T(), p = Object.assign({}, o);
@@ -39,11 +50,15 @@
   const PAL = {
     classic: { ink: '#16110d', red: '#c3271f', gold: null },
     modern: { ink: '#1d2340', red: '#d0563c', gold: '#b8893a' },
+    neon: { ink: '#3ce6ff', red: '#ff3fb4', gold: '#b47bff', glow: 1.1 },
+    rajasthan: { ink: '#5a1414', red: '#c7262c', gold: '#8a1c1c' },
+    bauhaus: { ink: '#111111', red: '#d6332a', gold: null },
   };
   function markings(g, W, look) {
     const P = PAL[look], u = W / 74, X0 = cm => (cm + 37) * u;
-    const line = (x0, y0, x1, y1, w, c) => { g.strokeStyle = c; g.lineWidth = w * u; g.beginPath(); g.moveTo(X0(x0), X0(y0)); g.lineTo(X0(x1), X0(y1)); g.stroke(); };
-    const circ = (x, y, r, fill, stroke, w) => { g.beginPath(); g.arc(X0(x), X0(y), r * u, 0, Math.PI * 2); if (fill) { g.fillStyle = fill; g.fill(); } if (stroke) { g.strokeStyle = stroke; g.lineWidth = w * u; g.stroke(); } };
+    const glow = c => { if (P.glow) { g.shadowColor = c; g.shadowBlur = P.glow * u; } };
+    const line = (x0, y0, x1, y1, w, c) => { glow(c); g.strokeStyle = c; g.lineWidth = w * u; g.beginPath(); g.moveTo(X0(x0), X0(y0)); g.lineTo(X0(x1), X0(y1)); g.stroke(); };
+    const circ = (x, y, r, fill, stroke, w) => { glow(stroke || fill); g.beginPath(); g.arc(X0(x), X0(y), r * u, 0, Math.PI * 2); if (fill) { g.fillStyle = fill; g.fill(); } if (stroke) { g.strokeStyle = stroke; g.lineWidth = w * u; g.stroke(); } };
     const accent = P.gold || P.ink;
     g.lineCap = 'round';
     for (let side = 0; side < 4; side++) {
@@ -58,23 +73,77 @@
       const d0 = 34.775 * Math.SQRT2 - 2.225 - 5, d1 = d0 - 25.7, ux = sx / Math.SQRT2, uy = sy / Math.SQRT2;
       line(ux * d1, uy * d1, ux * d0, uy * d0, .2, P.ink);
       const hx = ux * d0, hy = uy * d0, px = -uy, py = ux, hl = 1.6, hw = .75;
-      g.fillStyle = P.ink; g.beginPath(); g.moveTo(X0(hx + ux * .4), X0(hy + uy * .4)); g.lineTo(X0(hx - ux * hl + px * hw), X0(hy - uy * hl + py * hw)); g.lineTo(X0(hx - ux * hl - px * hw), X0(hy - uy * hl - py * hw)); g.closePath(); g.fill();
+      glow(P.ink); g.fillStyle = P.ink; g.beginPath(); g.moveTo(X0(hx + ux * .4), X0(hy + uy * .4)); g.lineTo(X0(hx - ux * hl + px * hw), X0(hy - uy * hl + py * hw)); g.lineTo(X0(hx - ux * hl - px * hw), X0(hy - uy * hl - py * hw)); g.closePath(); g.fill();
       const a = Math.atan2(uy, ux); g.strokeStyle = accent; g.lineWidth = .22 * u; g.beginPath(); g.arc(X0(ux * (d1 + 3.18)), X0(uy * (d1 + 3.18)), 3.18 * u, a + Math.PI * .28, a + Math.PI * 1.72, false); g.stroke();
     }
     // the centre: outer circle (17 cm), a rosette, the red centre circle (3.18 cm)
     circ(0, 0, 8.5, null, P.ink, .28);
     g.save(); g.translate(X0(0), X0(0));
-    g.strokeStyle = accent; g.lineWidth = .16 * u;
+    glow(accent); g.strokeStyle = accent; g.lineWidth = .16 * u;
     for (let k = 0; k < 8; k++) { g.rotate(Math.PI / 4); g.beginPath(); g.ellipse(0, -3.9 * u, 1.35 * u, 3.6 * u, 0, 0, Math.PI * 2); g.stroke(); }
     g.restore();
     circ(0, 0, 7.6, null, accent, .14);
     circ(0, 0, 1.59, P.red, P.ink, .16);
+    g.shadowBlur = 0;
   }
   function surfaceTex(look) {
     const W = SZ(2048);
     const t = X.canvasTex('crSurf' + look + W, W, W, (g) => {
-      const N = X.makeNoise(look === 'modern' ? 41 : 17), img = g.createImageData(W, W), d = img.data;
-      if (look === 'classic') {
+      const N = X.makeNoise({ classic: 17, modern: 41, neon: 5, rajasthan: 29, bauhaus: 53 }[look]), img = g.createImageData(W, W), d = img.data;
+      const u = W / 74, X0 = cm => (cm + 37) * u;
+      const paper = (r, gg, b, amp, f) => { for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) { const n = N(x / W * f, y / W * f, 2), i = (y * W + x) * 4; d[i] = r - n * amp; d[i + 1] = gg - n * amp; d[i + 2] = b - n * amp; d[i + 3] = 255; } g.putImageData(img, 0, 0); };
+      const grain = a => { const im = g.getImageData(0, 0, W, W), q = im.data; for (let i = 0; i < q.length; i += 4) { const r = (Math.random() - .5) * a; q[i] += r; q[i + 1] += r; q[i + 2] += r; } g.putImageData(im, 0, 0); };
+      const quad = f => { for (let side = 0; side < 4; side++) { g.save(); g.translate(W / 2, W / 2); g.rotate(side * Math.PI / 2); g.translate(-W / 2, -W / 2); f(side); g.restore(); } };
+      if (look === 'neon') {
+        // black lacquer, a faint blue grid, a violet bloom in the middle and glowing quarter rings behind the pockets
+        paper(12, 13, 26, 8, 30);
+        g.strokeStyle = 'rgba(70,90,200,.16)'; g.lineWidth = .08 * u;
+        for (let c = -36; c <= 36; c += 4) { g.beginPath(); g.moveTo(X0(c), 0); g.lineTo(X0(c), W); g.stroke(); g.beginPath(); g.moveTo(0, X0(c)); g.lineTo(W, X0(c)); g.stroke(); }
+        const rg = g.createRadialGradient(X0(0), X0(0), 0, X0(0), X0(0), 22 * u); rg.addColorStop(0, 'rgba(150,70,255,.32)'); rg.addColorStop(1, 'rgba(150,70,255,0)'); g.fillStyle = rg; g.fillRect(0, 0, W, W);
+        quad(side => {
+          const c = side % 2 ? '#ff3fb4' : '#3ce6ff'; g.shadowColor = c; g.shadowBlur = 1.4 * u; g.strokeStyle = c;
+          for (const [r, w, a] of [[12, .32, .9], [15.5, .16, .55], [19, .1, .35]]) { g.globalAlpha = a; g.lineWidth = w * u; g.beginPath(); g.arc(X0(37), X0(37), r * u, Math.PI * 1.04, Math.PI * 1.46); g.stroke(); }
+          g.globalAlpha = 1; g.shadowBlur = 0;
+        });
+      } else if (look === 'rajasthan') {
+        // saffron paper, little paisleys in rows, a crimson border band with gold dots, a lotus mandala, lotus fans in the corners
+        paper(236, 168, 70, 22, 36);
+        const buta = (x, y, s, a, c) => { g.save(); g.translate(X0(x), X0(y)); g.rotate(a); g.scale(s * u, s * u); g.fillStyle = c; g.beginPath(); g.moveTo(0, 1); g.bezierCurveTo(-1.1, .9, -1.1, -.4, 0, -.9); g.bezierCurveTo(.5, -1.2, .9, -1.5, .7, -1.9); g.bezierCurveTo(1.3, -1.2, 1.1, .8, 0, 1); g.fill(); g.fillStyle = 'rgba(255,240,200,.75)'; g.beginPath(); g.arc(0, .05, .28, 0, 7); g.fill(); g.restore(); };
+        g.globalAlpha = .42;
+        for (let r = 0, y = -30; y <= 30; y += 5, r++) for (let x = -30 + (r % 2) * 2.5; x <= 30; x += 5) if (Math.hypot(x, y) > 10.5) buta(x, y, .85, (r % 2 ? .4 : -.4), r % 3 === 1 ? '#2f6b3a' : '#9e1f27');
+        g.globalAlpha = 1;
+        // the border band (inside the base lines' reach: along the edge)
+        const b0 = 35.6, b1 = 33.3; g.fillStyle = '#a8222b'; g.fillRect(X0(-b0), X0(-b0), (2 * b0) * u, (b0 - b1) * u); g.fillRect(X0(-b0), X0(b1), (2 * b0) * u, (b0 - b1) * u); g.fillRect(X0(-b0), X0(-b0), (b0 - b1) * u, (2 * b0) * u); g.fillRect(X0(b1), X0(-b0), (b0 - b1) * u, (2 * b0) * u);
+        g.fillStyle = '#e6c25a'; for (let t = -34.5; t <= 34.5; t += 1.5) for (const [x, y] of [[t, -(b0 + b1) / 2], [t, (b0 + b1) / 2], [-(b0 + b1) / 2, t], [(b0 + b1) / 2, t]]) { g.beginPath(); g.arc(X0(x), X0(y), .28 * u, 0, 7); g.fill(); }
+        g.strokeStyle = '#c99a2e'; g.lineWidth = .14 * u; g.strokeRect(X0(-b1 + .3), X0(-b1 + .3), (2 * b1 - .6) * u, (2 * b1 - .6) * u);
+        // lotus petals (a ring of n pointed petals between radii r0 and r1)
+        const petals = (cx, cy, n, r0, r1, wd, fill, stroke, a0 = 0, a1 = Math.PI * 2) => {
+          for (let k = 0; k < n; k++) { const a = a0 + (a1 - a0) * (k + .5) / n, ca = Math.cos(a), sa = Math.sin(a), px = -sa, py = ca;
+            g.beginPath(); g.moveTo(X0(cx + ca * r0), X0(cy + sa * r0)); const m = (r0 + r1) / 2;
+            g.quadraticCurveTo(X0(cx + ca * m + px * wd), X0(cy + sa * m + py * wd), X0(cx + ca * r1), X0(cy + sa * r1));
+            g.quadraticCurveTo(X0(cx + ca * m - px * wd), X0(cy + sa * m - py * wd), X0(cx + ca * r0), X0(cy + sa * r0));
+            g.fillStyle = fill; g.fill(); if (stroke) { g.strokeStyle = stroke; g.lineWidth = .12 * u; g.stroke(); } } };
+        g.fillStyle = '#f6dfa8'; g.beginPath(); g.arc(X0(0), X0(0), 8.3 * u, 0, 7); g.fill();
+        petals(0, 0, 16, 3.2, 8.2, 1.25, '#b3262e', '#7a1418');
+        petals(0, 0, 8, 1.6, 5.6, 1.15, '#2f6b3a', '#1c4424', Math.PI / 8, Math.PI * 2 + Math.PI / 8);
+        quad(() => { petals(37, 37, 7, 4.5, 13, 1.6, 'rgba(179,38,46,.85)', '#7a1418', Math.PI, Math.PI * 1.5); petals(37, 37, 5, 4.5, 8.5, 1.1, 'rgba(47,107,58,.85)', '#1c4424', Math.PI, Math.PI * 1.5); });
+        grain(10);
+      } else if (look === 'bauhaus') {
+        // off-white paper; a red circle, a blue square, a yellow triangle, black bars; a small target in the centre
+        paper(240, 235, 222, 10, 44);
+        g.globalCompositeOperation = 'multiply';
+        const sh = (c, a, f) => { g.globalAlpha = a; g.fillStyle = c; g.beginPath(); f(); g.fill(); };
+        sh('#d6332a', .9, () => g.arc(X0(-17), X0(-16), 10.5 * u, 0, 7));
+        sh('#1f4fa3', .88, () => { g.save(); g.translate(X0(17), X0(-17)); g.rotate(.18); g.rect(-8 * u, -8 * u, 16 * u, 16 * u); g.restore(); });
+        sh('#f2c230', .92, () => { g.moveTo(X0(-28), X0(26)); g.lineTo(X0(-6), X0(26)); g.lineTo(X0(-17), X0(7)); g.closePath(); });
+        sh('#1f4fa3', .5, () => g.arc(X0(17), X0(17), 9 * u, Math.PI, Math.PI * 1.5, false) || g.lineTo(X0(17), X0(17)));
+        sh('#d6332a', .85, () => { g.rect(X0(10), X0(19), 16 * u, 3.2 * u); });
+        sh('#111111', .9, () => { g.rect(X0(-31), X0(-3.2), 10 * u, 1.4 * u); g.rect(X0(22), X0(1.8), 9 * u, 1.4 * u); g.rect(X0(-1.4), X0(-31), 1.4 * u, 9 * u); });
+        sh('#f2c230', .9, () => g.arc(X0(0), X0(0), 6 * u, 0, 7));
+        sh('#d6332a', .9, () => g.arc(X0(0), X0(0), 3.2 * u, 0, 7));
+        g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1;
+        grain(8);
+      } else if (look === 'classic') {
         // birch plywood: pale honey, long soft grain along x, a slow colour drift; lacquered (the gloss is the material's)
         for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) {
           const u = x / W, v = y / W, warp = N(u * 1.6, v * 4, 3) * 1.4;
@@ -93,7 +162,6 @@
           d[i] = 239 - n * 14; d[i + 1] = 228 - n * 14; d[i + 2] = 208 - n * 14; d[i + 3] = 255;
         }
         g.putImageData(img, 0, 0);
-        const u = W / 74, X0 = cm => (cm + 37) * u;
         g.globalCompositeOperation = 'multiply';
         const fill = (c, a, f) => { g.globalAlpha = a; g.fillStyle = c; g.beginPath(); f(); g.fill(); };
         // four Mughal arches, one rising from each base line (pointed ogee tops), in the four colours
@@ -128,13 +196,35 @@
     const t = X.canvasTex('crNet', 128, 128, (g, W) => { g.fillStyle = '#0b0b0b'; g.fillRect(0, 0, W, W); g.strokeStyle = '#3a3a3a'; g.lineWidth = 2; for (let i = -W; i < W * 2; i += 12) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i + W, W); g.stroke(); g.beginPath(); g.moveTo(i, W); g.lineTo(i + W, 0); g.stroke(); } }, 2);
     return t;
   }
-  // the piece's face: turned rings (wood men), a star (striker), a brass pip (modern)
+  // the piece's face: turned rings (wood men), a star (striker), a brass pip (modern), glowing rings (neon), painted lotus
+  // and dots (rajasthan), one clean ring (bauhaus)
+  const FACE = { w: '#efe0c0', b: '#2b201a', q: '#c0262a', s: '#f4f1ea', mw: '#ece5d6', mb: '#2c2b2e', mq: '#e1694f', ms: '#efe6d2',
+    nw: '#d8f6ff', nb: '#2a1f48', nq: '#ff4fbd', ns: '#eefcff', rw: '#f1e4c4', rb: '#2a1a12', rq: '#c7262c', rs: '#f3e8cc',
+    hw: '#f2efe6', hb: '#161616', hq: '#d6332a', hs: '#f2c230' };
+  const SIDE = { w: '#e7d3ad', b: '#211813', q: '#a91f22', s: '#ece8de', mw: '#e3dccb', mb: '#26252a', mq: '#d55d45', ms: '#e7dcc5',
+    nw: '#bfeeff', nb: '#3a2a66', nq: '#ff2fa8', ns: '#d9f7ff', rw: '#e6d4ac', rb: '#1f130d', rq: '#a91f22', rs: '#e8d9b4',
+    hw: '#e8e4d8', hb: '#111111', hq: '#c42a22', hs: '#e3b322' };
   function faceTex(kind) {
     const t = X.canvasTex('crFace' + kind, SZ(256), SZ(256), (g, W) => {
-      const c = W / 2, base = { w: '#efe0c0', b: '#2b201a', q: '#c0262a', s: '#f4f1ea', mw: '#ece5d6', mb: '#2c2b2e', mq: '#e1694f', ms: '#efe6d2' }[kind];
+      const c = W / 2, base = FACE[kind];
       g.fillStyle = base; g.fillRect(0, 0, W, W);
-      const N = X.makeNoise(kind.length * 7 + kind.charCodeAt(0));
-      if (kind === 'w' || kind === 'b' || kind === 'q') {   // grain + turned rings
+      const N = X.makeNoise(kind.length * 7 + kind.charCodeAt(0) + (kind.charCodeAt(1) || 0));
+      const ring = (r, w, col, blur) => { g.save(); if (blur) { g.shadowColor = col; g.shadowBlur = W * blur; } g.strokeStyle = col; g.lineWidth = W * w; g.beginPath(); g.arc(c, c, c * r, 0, 7); g.stroke(); g.restore(); };
+      const dotRing = (r, n, rr, col) => { g.fillStyle = col; for (let k = 0; k < n; k++) { const a = k / n * Math.PI * 2; g.beginPath(); g.arc(c + Math.cos(a) * c * r, c + Math.sin(a) * c * r, c * rr, 0, 7); g.fill(); } };
+      const lotus = (n, r0, r1, wd, col) => { g.fillStyle = col; for (let k = 0; k < n; k++) { const a = k / n * Math.PI * 2 - Math.PI / 2, ca = Math.cos(a), sa = Math.sin(a), m = (r0 + r1) / 2; g.beginPath(); g.moveTo(c + ca * c * r0, c + sa * c * r0); g.quadraticCurveTo(c + (ca * m - sa * wd) * c, c + (sa * m + ca * wd) * c, c + ca * c * r1, c + sa * c * r1); g.quadraticCurveTo(c + (ca * m + sa * wd) * c, c + (sa * m - ca * wd) * c, c + ca * c * r0, c + sa * c * r0); g.fill(); } };
+      if (kind[0] === 'n') {   // neon acrylic: a smooth face, glowing rings (the material makes them glow)
+        ring(.8, .05, { nw: '#3ce6ff', nb: '#ff3fb4', nq: '#ffffff', ns: '#3ce6ff' }[kind], .06);
+        ring(.5, .025, { nw: 'rgba(60,230,255,.6)', nb: 'rgba(255,63,180,.6)', nq: 'rgba(255,255,255,.7)', ns: 'rgba(60,230,255,.6)' }[kind], .04);
+        if (kind === 'ns') ring(.18, .05, '#3ce6ff', .05);
+      } else if (kind[0] === 'r') {   // painted like lacquerware
+        if (kind === 'rw') { dotRing(.74, 14, .07, '#b3262e'); g.fillStyle = '#2f6b3a'; lotus(6, .08, .42, .18, '#2f6b3a'); g.fillStyle = '#b3262e'; g.beginPath(); g.arc(c, c, c * .1, 0, 7); g.fill(); }
+        else if (kind === 'rb') { dotRing(.74, 14, .065, '#d9ad45'); lotus(6, .08, .42, .18, '#c99a2e'); }
+        else if (kind === 'rq') { ring(.8, .035, '#e6c25a'); lotus(8, .1, .62, .22, '#e6c25a'); }
+        else { ring(.84, .04, '#b3262e'); lotus(8, .12, .66, .2, '#b3262e'); lotus(8, .1, .4, .14, '#c99a2e'); }
+      } else if (kind[0] === 'h') {   // bauhaus: flat colour, one clean ring
+        ring(.62, .06, { hw: '#111111', hb: '#f0ece2', hq: '#f2c230', hs: '#111111' }[kind]);
+        if (kind === 'hs') { g.fillStyle = '#1f4fa3'; g.beginPath(); g.arc(c, c, c * .24, 0, 7); g.fill(); }
+      } else if (kind === 'w' || kind === 'b' || kind === 'q') {   // grain + turned rings
         const img = g.getImageData(0, 0, W, W), d = img.data;
         for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) { const n = N(x / W * 2, y / W * 9, 2), i = (y * W + x) * 4, k = (n - .5) * (kind === 'w' ? 14 : kind === 'b' ? 12 : 10); /* soft grain: fine contrast shimmered on small men */ d[i] += k; d[i + 1] += k; d[i + 2] += k; }
         g.putImageData(img, 0, 0);
@@ -180,7 +270,7 @@
     const sh = new TT.Shape(); { const r = ro, a = -o, b = o; sh.moveTo(a + r, a); sh.lineTo(b - r, a); sh.quadraticCurveTo(b, a, b, a + r); sh.lineTo(b, b - r); sh.quadraticCurveTo(b, b, b - r, b); sh.lineTo(a + r, b); sh.quadraticCurveTo(a, b, a, b - r); sh.lineTo(a, a + r); sh.quadraticCurveTo(a, a, a + r, a); }
     const hole = new TT.Path(); { const r = ri, a = -S, b = S; hole.moveTo(a + r, a); hole.lineTo(b - r, a); hole.quadraticCurveTo(b, a, b, a + r); hole.lineTo(b, b - r); hole.quadraticCurveTo(b, b, b - r, b); hole.lineTo(a + r, b); hole.quadraticCurveTo(a, b, a, b - r); hole.lineTo(a, a + r); hole.quadraticCurveTo(a, a, a + r, a); }
     sh.holes.push(hole);
-    const bev = look === 'modern' ? .02 : .045;
+    const bev = { modern: .02, bauhaus: .012, neon: .03 }[look] || .045;
     const g = new TT.ExtrudeGeometry(sh, { depth: TOP + FH - bev * 2, bevelEnabled: true, bevelThickness: bev, bevelSize: bev, bevelSegments: LO() ? 2 : 3, curveSegments: LO() ? 4 : 8 });
     g.rotateX(-Math.PI / 2); g.translate(0, bev, 0);
     // UVs along the rails (wood grain runs along each rail)
@@ -203,10 +293,30 @@
   /* ---------- materials ---------- */
   function boardMats(look) {
     const TT = T();
+    if (look === 'neon') return mat('bm' + look, () => {
+      const glowM = c => { const m = phys({ color: '#000000', roughness: .4, metalness: 0 }); m.emissive = lin(c); m.emissiveIntensity = 1.6; return m; };
+      const st = surfaceTex(look), surf = phys({ map: st, color: '#ffffff', roughness: .25, metalness: 0, clearcoat: .9, clearcoatRoughness: .1, envMapIntensity: .5 });
+      surf.emissiveMap = st; surf.emissive = new TT.Color(.75, .75, .75);   // the drawn tubes glow; the black stays black
+      return { surf, frame: phys({ color: '#0b0c14', roughness: .22, metalness: 0, clearcoat: 1, clearcoatRoughness: .08, envMapIntensity: 1 }),
+        edge: glowM('#3ce6ff'), rim: glowM('#ff3fb4'), cup: phys({ color: '#05050a', roughness: .9 }), net: phys({ map: netTex(), color: '#ffffff', roughness: 1 }) };
+    });
+    if (look === 'rajasthan') return mat('bm' + look, () => {
+      const fw = X.wood('crSheesham', '#5a3418', '#1e0e05', SZ(1024), SZ(256), 1.2); fw.wrapS = fw.wrapT = TT.RepeatWrapping;
+      const brass = phys({ color: '#d4a64e', roughness: .28, metalness: 1, envMapIntensity: 1.2 }); brass.emissive = new TT.Color(0x2a1a06);
+      return { surf: phys({ map: surfaceTex(look), color: '#ffffff', roughness: .32, metalness: 0, clearcoat: .7, clearcoatRoughness: .2, envMapIntensity: .75 }),
+        frame: phys({ map: fw, color: '#ffffff', roughness: .32, clearcoat: .8, clearcoatRoughness: .2, envMapIntensity: 1 }),
+        brass, edge: brass, rim: brass, cup: phys({ color: '#0f0b08', roughness: .9 }), net: phys({ map: netTex(), color: '#ffffff', roughness: 1 }) };
+    });
+    if (look === 'bauhaus') return mat('bm' + look, () => ({
+      surf: phys({ map: surfaceTex(look), color: '#ffffff', roughness: .62, metalness: 0, envMapIntensity: .55 }),
+      frame: phys({ color: '#141414', roughness: .55, metalness: 0, envMapIntensity: .6 }),
+      edge: null, rim: null, cup: phys({ color: '#111111', roughness: .9 }), net: phys({ map: netTex(), color: '#ffffff', roughness: 1 }),
+    }));
     if (look === 'modern') return mat('bm' + look, () => ({
       surf: phys({ map: surfaceTex(look), color: '#ffffff', roughness: .5, metalness: 0, clearcoat: .55, clearcoatRoughness: .3, envMapIntensity: .7 }),
       frame: phys({ color: '#1e2544', roughness: .42, metalness: 0, clearcoat: .7, clearcoatRoughness: .35, envMapIntensity: .9 }),
       brass: phys({ color: '#c79a48', roughness: .3, metalness: 1, envMapIntensity: 1.2 }),
+      get edge() { return this.brass; }, get rim() { return this.brass; },
       cup: phys({ color: '#141414', roughness: .9 }),
       net: phys({ map: netTex(), color: '#ffffff', roughness: 1 }),
     }));
@@ -215,18 +325,19 @@
       return {
         surf: phys({ map: surfaceTex(look), color: '#ffffff', roughness: .22, metalness: 0, clearcoat: .9, clearcoatRoughness: .12, envMapIntensity: .85 }),
         frame: phys({ map: fw, color: '#ffffff', roughness: .3, clearcoat: .8, clearcoatRoughness: .18, envMapIntensity: 1 }),
-        brass: null,
+        brass: null, edge: null, rim: null,
         cup: phys({ color: '#0f0d0c', roughness: .9 }),
         net: phys({ map: netTex(), color: '#ffffff', roughness: 1 }),
       };
     });
   }
   function pieceMat(look, c) {
-    const m = look === 'modern' ? 'm' + c : c;
+    const m = (PRE[look] || '') + c;
     return mat('pc' + m, () => {
-      const t = faceTex(m), side = { w: '#e7d3ad', b: '#211813', q: '#a91f22', s: '#ece8de', mw: '#e3dccb', mb: '#26252a', mq: '#d55d45', ms: '#e7dcc5' }[m];
-      const glossy = look === 'classic';
+      const t = faceTex(m), side = SIDE[m];
+      const glossy = look === 'classic' || look === 'rajasthan' || look === 'neon';
       const top = phys({ map: t, color: '#ffffff', roughness: glossy ? (c === 's' ? .3 : .38) : .62, clearcoat: glossy ? .35 : undefined, clearcoatRoughness: glossy ? .35 : undefined, envMapIntensity: glossy ? .85 : .6 });   // (no bump map: on discs this small it sparkled as the camera moved)
+      if (look === 'neon') { top.emissiveMap = t; top.emissive = new (T().Color)(.55, .55, .55); }   // acrylic lit from inside: the rings glow, the smoked men stay dark
       return { top, side: phys({ color: side, roughness: glossy ? .34 : .6, clearcoat: glossy ? .5 : undefined, clearcoatRoughness: glossy ? .25 : undefined, envMapIntensity: glossy ? .9 : .55 }) };
     });
   }
@@ -253,10 +364,10 @@
     for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
       const cup = new TT.Mesh(cupG, new TT.MeshStandardMaterial({ color: 0x0c0b0a, roughness: 1, side: TT.BackSide })); cup.position.set(sx * PC, (TOP + .05) / 2, sz * PC); g.add(cup);
       const net = new TT.Mesh(netG, BM.net); net.position.set(sx * PC, .07, sz * PC); g.add(net);
-      if (BM.brass) { const rg = geos.prim || (geos.prim = (() => { const q = new TT.TorusGeometry(RP + .012, .014, 6, LO() ? 20 : 36); q.rotateX(Math.PI / 2); if (X.share) X.share(q); return q; })()); const rim = new TT.Mesh(rg, BM.brass); rim.position.set(sx * PC, TOP + .004, sz * PC); g.add(rim); }
+      if (BM.rim) { const rg = geos.prim || (geos.prim = (() => { const q = new TT.TorusGeometry(RP + .012, .014, 6, LO() ? 20 : 36); q.rotateX(Math.PI / 2); if (X.share) X.share(q); return q; })()); const rim = new TT.Mesh(rg, BM.rim); rim.position.set(sx * PC, TOP + .004, sz * PC); g.add(rim); }
     }
-    if (BM.brass) {   // brass edging along the frame's top inner edge
-      const e = new TT.Mesh(new TT.BoxGeometry(2 * (S + FW) - .02, .012, .03), BM.brass);
+    if (BM.edge) {   // brass edging (a neon tube on the night board) along the frame's top outer edge
+      const e = new TT.Mesh(new TT.BoxGeometry(2 * (S + FW) - .02, .012, .03), BM.edge);
       for (const [x, z, ry] of [[0, -(S + FW) + .03, 0], [0, S + FW - .03, 0], [-(S + FW) + .03, 0, Math.PI / 2], [S + FW - .03, 0, Math.PI / 2]]) { const m = e.clone(); m.position.set(x, TOP + FH + .006, z); m.rotation.y = ry; g.add(m); }
     }
     const U = g.userData;
