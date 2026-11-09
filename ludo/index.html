@@ -185,9 +185,10 @@ html.hb-on .throw .shown:not(.cw){width:60px;height:60px}html.hb-on .throw .show
 .ngt-gcard .gart{height:96px;border-radius:10px;overflow:hidden;background:#0d0a18;display:grid;place-items:center}
 .ngt-gcard .gart svg{width:78%;height:auto;max-height:100%}
 .ngt-gcard b{font-size:16px}.ngt-gcard p{margin:0;font-size:12.5px;line-height:1.6;color:var(--muted)}
-.level-wrap{display:flex;align-items:center;gap:12px}
-.level-wrap input{flex:1;accent-color:var(--accent)}
-.level-name{min-width:64px;text-align:right;font-weight:700;color:var(--accent)}
+.level-wrap{display:flex;flex-direction:column-reverse;gap:6px}
+.level-wrap input{width:100%;margin:0;accent-color:var(--accent);height:32px;touch-action:pan-y}
+.level-name{font-weight:700;color:var(--accent);display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;min-height:22px}
+.level-name small{font-weight:400;font-size:11px;color:var(--dim)}
 .checks{display:flex;flex-direction:column;gap:7px;font-size:13.5px;color:var(--muted)}
 .checks label{display:flex;gap:8px;align-items:flex-start;cursor:pointer;line-height:1.5}
 .checks input{accent-color:var(--accent);margin-top:3px}
@@ -568,7 +569,7 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
 <script src="../shared/resign.js?v=3l14"></script>
 <script src="../shared/ruletour.js?v=29l14"></script>
 <script src="engine.js?v=3"></script>
-<script src="board2d.js?v=1"></script>
+<script src="board2d.js?v=4"></script>
 <script src="../shared/coachkit.js?v=16l14"></script>
 <script src="coach.js?v=3"></script>
 <script src="coach-i18n.js?v=1"></script>
@@ -576,7 +577,7 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
 <script src="../shared/mtworkers.js?v=4"></script>
 <script src="mt.js?v=3"></script>
 <script src="house.js?v=5"></script>
-<script src="app.js?v=14"></script>
+<script src="app.js?v=15"></script>
 <script src="review.js?v=3-mt"></script>
 <script src="../shared/placement.js?v=1l14"></script>
 <script src="rated.js?v=2"></script>
@@ -598,7 +599,7 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=124')).then(() => load('../atlas/tables3d.js?v=31')).then(() => load('../atlas/skin/common.js?v=39npc')).then(() => load('../atlas/models/ludo.js?v=4')).then(() => load('../atlas/skin/ludo.js?v=8'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=125')).then(() => load('../atlas/tables3d.js?v=31')).then(() => load('../atlas/skin/common.js?v=41npc')).then(() => load('../atlas/models/ludo.js?v=4')).then(() => load('../atlas/skin/ludo.js?v=9'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>

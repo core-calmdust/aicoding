@@ -752,17 +752,18 @@
     }
     if ($('bvLv')) {
       const sel = $('bvLv'), bt = document.createElement('button'); bt.type = 'button'; bt.className = 'lvpick'; sel.hidden = true; sel.after(bt);
-      const paint = () => { const o = sel.options[sel.selectedIndex]; bt.innerHTML = `<span>${esc(o ? o.textContent : '')}</span><i>▾</i>`; };
+      const paint = () => { const o = sel.options[sel.selectedIndex]; bt.innerHTML = `<span>${esc(o ? o.textContent : '')}</span>${bossImg(id, +sel.value)}<i>▾</i>`; };
       sel.addEventListener('change', paint); paint();
       bt.onclick = () => {
         const max = ad.levels, cur = +sel.value;
         const sh = document.createElement('div'); sh.className = 'lvsheet'; sh.innerHTML = `<div class="lvs-in" role="listbox"><div class="lvs-h">${esc(t('bv.level'))}<button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div><div class="lvs-l">${[...sel.options].map(o => {
           const n = +o.value, x = ad.levelInfo ? ad.levelInfo(n, lang) : null;
-          return `<button type="button" role="option" data-v="${n}" class="${n === cur ? 'on' : ''}"><b>Lv.${n}</b><span class="nm">${esc(lvNm(x, n, lang, max))}</span><span class="meter">${Array.from({ length: max }, (_, i) => `<i class="${i < n ? 'on' : ''}" style="height:${Math.round(4 + 12 * (i + 1) / max)}px"></i>`).join('')}</span>${x ? `<small><em>${esc(x.who)}</em>${x.desc ? ` · ${esc(x.desc)}` : ''}${x.rating ? ` · ${t('bv.rating')} ${x.rating}` : ''}</small>` : ''}</button>`; }).join('')}</div></div>`;
+          return bossHead(id, n, cur) + `<button type="button" role="option" data-v="${n}" class="${n === cur ? 'on' : ''}"><b>Lv.${n}</b><span class="nm">${bossRw(id, n)}${esc(lvNm(x, n, lang, max))}</span><span class="meter">${Array.from({ length: max }, (_, i) => `<i class="${i < n ? 'on' : ''}" style="height:${Math.round(4 + 12 * (i + 1) / max)}px"></i>`).join('')}</span>${x ? `<small><em>${esc(x.who)}</em>${x.desc ? ` · ${esc(x.desc)}` : ''}${x.rating ? ` · ${t('bv.rating')} ${x.rating}` : ''}</small>` : ''}</button>`; }).join('')}</div></div>`;
         document.body.appendChild(sh); requestAnimationFrame(() => sh.classList.add('on'));
         const close = () => { if (sh.classList.contains('out')) return; sh.classList.add('out'); sh.classList.remove('on'); setTimeout(() => sh.remove(), 240); };
         sh.onclick = e => { const b = e.target.closest('[data-v]'); if (b) { sel.value = b.dataset.v; sel.dispatchEvent(new Event('change')); close(); return; } if (e.target === sh || e.target.closest('.lvs-x')) close(); };
         const onB = sh.querySelector('.on'); if (onB) onB.scrollIntoView({ block: 'center' });
+        bossTitles(sh, id);
       };
     }
     if ($('bvTc')) {   // time control for table play: a picker button + a list sheet (same UI as the level)
@@ -798,6 +799,27 @@
     es: ['Iniciación', 'Principiante', 'Intermedio', 'Avanzado', 'Experto'], fr: ['Initiation', 'Débutant', 'Intermédiaire', 'Avancé', 'Expert'],
     pt: ['Iniciação', 'Iniciante', 'Intermediário', 'Avançado', 'Especialista'], de: ['Einstieg', 'Anfänger', 'Mittelstufe', 'Fortgeschritten', 'Experte'],
     hi: ['परिचय', 'शुरुआती', 'मध्यम', 'उन्नत', 'विशेषज्ञ'], ar: ['تمهيدي', 'مبتدئ', 'متوسط', 'متقدم', 'خبير'], ru: ['Начальный', 'Новичок', 'Средний', 'Продвинутый', 'Эксперт'], 'zh-TW': ['入門', '初級', '中級', '高級', '最高級'], id: ['Pemula', 'Dasar', 'Menengah', 'Mahir', 'Ahli'], tr: ['Başlangıç', 'Acemi', 'Orta', 'İleri', 'Uzman'] };
+  // the AI boss of a level band (npc/roster.js): a header above the band's first level in the level sheet
+  function bossHead(g, n, cur) {
+    const N = window.AtlasNPC, L = N && N.BOSSES && N.BOSSES[g];
+    if (!L || (n - 1) % 3) return '';
+    const i = N.band(g, n), b = L[i], top = i === L.length - 1, on = N.band(g, cur) === i;
+    return `<div class="lvs-boss${top ? ' ur' : ''}${on ? ' on' : ''}" data-bi="${i}"><img src="../images/atlas/av/${N.bossId(g, i)}-${top ? 3 : 2}.webp?v=1" alt="" loading="lazy"><div><span>${esc(N.range(g, i))}${top ? ' <i>UR</i>' : ''}</span><b>${esc(b.n[lang] || b.n.en)}</b><small></small></div></div>`;
+  }
+  function bossImg(g, n) {   // the level's boss, small, in the level button (the N / R / SR a win there gives)
+    const N = window.AtlasNPC; if (!N || !N.tier || !(N.BOSSES || {})[g] || !n) return '';
+    return `<img class="lvb" src="../images/atlas/av/${N.bossId(g, N.band(g, n))}-${N.tier(g, n)}.webp?v=1" alt="">`;
+  }
+  function bossRw(g, n) {   // what a win at this level gives: the boss's N / R / SR (✓ once owned)
+    const N = window.AtlasNPC; if (!N || !N.tier || !(N.BOSSES || {})[g]) return '';
+    const t = N.tier(g, n), own = (W.owned || []).includes(`av-${N.bossId(g, N.band(g, n))}-${t}`);
+    return `<i class="rw r${t}${own ? ' got' : ''}">${own ? '✓' : ''}${['N', 'R', 'SR'][t]}</i>`;
+  }
+  function bossTitles(sh, g) {   // the bosses' titles live in the talk's language files (npc/t/<lang>.js), loaded on demand
+    const N = window.AtlasNPC; if (!N || !N.ensure || !sh.querySelector('.lvs-boss')) return;
+    N.ensure(N.lang()).then(() => { const T = N.T && (N.T[N.lang()] || N.T.en), L = T && T.bosses && T.bosses[g]; if (!L) return;
+      sh.querySelectorAll('.lvs-boss').forEach(h => { const s = h.querySelector('small'); if (s) s.textContent = L[+h.dataset.bi] || ''; }); }).catch(() => {});
+  }
   function lvNm(x, n, lang, max) {
     if (!x || !x.name) return '';
     if (x.name !== 'Lv.' + n) return x.name;
@@ -868,7 +890,7 @@
       onEnd: res => {
         if (session === sess) TB.end();
         if (!res.pvp) A_.recordPlay(W, g.id, res); refresh();   // two players on one device: no win / loss for the player's record
-        if (npcT && session === sess && !res.pvp) { npcT.end(res); W = A_.load(); refresh(); }   // (a boss beaten: its SR was added to the saved wallet)
+        if (npcT && session === sess && !res.pvp) { npcT.end(res); W = A_.load(); refresh(); }   // (a boss beaten: its N / R / SR was added to the saved wallet)
         setTimeout(() => {
           if (session !== sess) return;
           TB.hide();
@@ -1512,6 +1534,7 @@
 
   /* ---------- DRESS ---------- */
   let dKind = 'icon', dSort = (() => { try { return localStorage.getItem('atlas-dsort') || 'own'; } catch (e) { return 'own'; } })();
+  let dRar = (() => { try { const v = localStorage.getItem('atlas-drar'); return v == null ? -1 : +v; } catch (e) { return -1; } })();   // −1 = every rarity
   // the dress-up character as an HTML image over the SVG frame: CSS animations on SVG <image> don't run on iOS Safari.
   // The wrapper keeps the same clip as the SVG's pop clip (the frame's circle + everything above its middle).
   function popChar(av, S) {
@@ -1577,7 +1600,7 @@
     $('dseg').innerHTML = kinds.map(k => `<button aria-pressed="${dKind === k}" data-k="${k}">${k === 'table' ? esc(P3().placeUi('table', lang)) : t('kind.' + k)}</button>`).join('');
     $('dseg').querySelectorAll('button').forEach(b => b.onclick = () => { dKind = b.dataset.k; renderDress(); });
     dsegPos();
-    $('dsort').style.display = dKind === 'table' ? 'none' : '';
+    $('dsort').style.display = $('drar').style.display = dKind === 'table' ? 'none' : '';
     if (dKind === 'table') { $('dItems').classList.remove('grouped'); placeInto($('dItems'), true); return; }
     const slot = dKind;
     // 'own': only the owned items (by rarity) · 'rarD' / 'rarA': every item in sections by rarity (owned first in each section)
@@ -1585,7 +1608,13 @@
     $('dsort').querySelectorAll('button').forEach(b => b.onclick = () => { dSort = b.dataset.s; try { localStorage.setItem('atlas-dsort', dSort); } catch (e) {} renderDress(); });
     const ownd = it => W.owned.includes(it.id) ? 1 : 0, idx = new Map(ART.items.map((it, i) => [it.id, i]));
     const all = ART.items.filter(it => it.kind === dKind);
-    const list = (dSort === 'own' ? all.filter(ownd) : all).sort((a, b) => (dSort === 'rarD' ? b.rar - a.rar : a.rar - b.rar) || (ownd(b) - ownd(a)) || idx.get(a.id) - idx.get(b.id));
+    // the rarity chips: only one rarity (with its owned / all count), or every one
+    const rars = [...new Set(all.map(it => it.rar))].sort((a, b) => a - b); if (dRar >= 0 && !rars.includes(dRar)) dRar = -1;
+    $('drar').setAttribute('aria-label', t('dress.rar.h'));
+    $('drar').innerHTML = [-1].concat(rars).map(r => { const of = r < 0 ? all : all.filter(it => it.rar === r);
+      return `<button type="button" class="${r < 0 ? '' : 'r' + r}" aria-pressed="${dRar === r}" data-r="${r}">${r < 0 ? esc(t('dress.rar.all')) : ART.RAR[r]}<small>${of.filter(ownd).length}/${of.length}</small></button>`; }).join('');
+    $('drar').querySelectorAll('button').forEach(b => b.onclick = () => { dRar = +b.dataset.r; try { localStorage.setItem('atlas-drar', dRar); } catch (e) {} renderDress(); });
+    const list = (dSort === 'own' ? all.filter(ownd) : all).filter(it => dRar < 0 || it.rar === dRar).sort((a, b) => (dSort === 'rarD' ? b.rar - a.rar : a.rar - b.rar) || (ownd(b) - ownd(a)) || idx.get(a.id) - idx.get(b.id));
     const sec = r => { const of = all.filter(it => it.rar === r); return `<div class="dsec r${r}"><span class="rar r${r}">${ART.RAR[r]}</span><span class="dsn">${of.filter(ownd).length} / ${of.length}</span></div>`; };
     const cell = it => { const own = W.owned.includes(it.id), on = W.av[slot] === it.id;
       return `<button type="button" class="dic r${it.rar}${own ? '' : ' locked'}${on ? ' sel' : ''}" data-kind="${it.kind}" data-id="${it.id}" title="${esc(iname(it))}" aria-label="${esc(iname(it))} (${ART.RAR[it.rar]})" aria-pressed="${on}"><span class="art">${ART.svg(it.id)}</span><span class="rl">${ART.RAR[it.rar]}</span>${own ? '' : '<span class="lk" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5" fill="currentColor"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" fill="none" stroke="currentColor" stroke-width="2.6"/></svg></span>'}</button>`; };
