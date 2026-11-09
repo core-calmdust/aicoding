@@ -2,8 +2,9 @@
    Backgammon on the portal.
    • The board card (levels, modes). フル機能 opens the full game with the portal
      skin (backgammon/?skin=atlas); level names / descriptions come from the game
-     (backgammon/i18n.js 'lv' / 'lvd'). Who starts is decided by the opening roll,
-     so there is no side to pick (ctx.side 2 = play the second colour); no rated mode.
+     (backgammon/i18n.js 'lv' / 'lvd'). 手番 (sides): 先手 = your die wins the opening
+     roll, 後手 = the AI's (the opening dice are dealt so; colours stay as they are,
+     2026-11-09); no rated mode.
    • ちゃぶ台で遊ぶ (table: true): a single game vs the AI on the 3D chabudai, with
      the game's own rules (../backgammon/bg.js) and AI worker (../backgammon/engine.js:
      the same nets, bear-off database and level 1..10 search as the full game).
@@ -57,7 +58,7 @@
       look = v === 'scarlet' ? 'scarlet' : v === 'marq' ? 'marq' : st.skin === 'scarlet' ? 'scarlet' : 'marq';
       if (st.ck && M3.CKL[st.ck[0]] && M3.CKL[st.ck[1]] && st.ck[0] !== st.ck[1]) ck = st.ck.slice();
     } catch (e) {}
-    const CID = ctx.side === 2 && !PVP ? [ck[1], ck[0]] : [ck[0], ck[1]];
+    const CID = [ck[0], ck[1]];
     const cname = s => (CN[ctx.lang] || CN.en)[CID[s]] || CID[s], pname = s => PVP ? cname(s) : s ? L.ai : L.you;   // engine side 0 = you (bottom, 24 → 1), side 1 = the AI
 
     // the case (H = 12; the phone-landscape layout gives it the full game's flatter landscape height, see reshape) inside a holder
@@ -501,7 +502,7 @@
       pos = BG.initial(); seed = BG.randomSeed(); stream = new BG.DiceStream(seed, 0); hud();
       await sleep(900 + 30 * 14);
       // the opening roll: one die each; the higher one starts and plays both
-      const d = nextRoll();
+      let d = nextRoll(); if (!PVP && (ctx.side === 1 || ctx.side === 2) && (d[0] > d[1] ? 0 : 1) !== (ctx.side === 2 ? 1 : 0)) d = [d[1], d[0]];   // 手番: the chosen starter's die is the higher
       await throwDice([{ id: CID[0], v: d[0], x: halfX(0), y: Y + .4, z: 0, size: .8, dir: 1 }, { id: CID[1], v: d[1], x: halfX(1), y: Y + .4, z: 0, size: .8, dir: -1 }]);
       if (stopped) return;
       const s = d[0] > d[1] ? 0 : 1; toMove = s;
@@ -604,5 +605,5 @@
     return { name: L[0][n - 1], desc: L[1][n - 1], who: Wh[n - 1] };
   }
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.backgammon = { levels: 10, sides: false, modes: ['ai', 'pvp'], table: true, land: 'pill', tableModes: ['ai', 'pvp'], clock: 'bg', levelInfo, start: tableStart };   // table: start() plays on the chabudai itself
+  window.Atlas3D.backgammon = { levels: 10, sides: true, modes: ['ai', 'pvp'], table: true, land: 'pill', tableModes: ['ai', 'pvp'], clock: 'bg', levelInfo, start: tableStart };   // table: start() plays on the chabudai itself
 })();

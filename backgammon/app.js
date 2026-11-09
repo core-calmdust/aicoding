@@ -65,7 +65,11 @@ function inStudy() { return !!(study && study.m === match && match && study.ng =
 const liveTurn = () => !!turn && (inStudy() || (isLatest() && !reviewing));
 
 function newMatch(seed, len, cube) {
-  return { seed: seed || BG.randomSeed(), len: len || 0, cube: cube !== false, games: [{ actions: [], start: [0, 0], crawford: false }] };
+  // the portal card's 手番 (atlas/skin/backgammon.js sets __bgFirst = the side that should start): a seed whose opening roll makes it so
+  let sd = seed || BG.randomSeed();
+  if (!seed && window.__bgFirst != null) { const want = window.__bgFirst; window.__bgFirst = null;
+    for (let i = 0; i < 200; i++) { const d = new BG.DiceStream(sd, 0).get(0); if (d[0] !== d[1] && (d[0] > d[1] ? 0 : 1) === want) break; sd = BG.randomSeed(); } }
+  return { seed: sd, len: len || 0, cube: cube !== false, games: [{ actions: [], start: [0, 0], crawford: false }] };
 }
 function stream(g) {
   const k = match.seed + '|' + g;
