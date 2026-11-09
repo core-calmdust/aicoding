@@ -250,15 +250,15 @@
       const opts = { ready: () => onReady(p), moved: (u, info) => onMoved(p, u, info) };
       if (!sess) {
         sess = ad.start({ el: ctx.el, Table3D: ctx.Table3D, lang: ctx.lang, t: ctx.t, mode: 'pz', level: 20, side: 1, bar: false, hud: () => {}, onTurn: () => {}, onEnd: () => {},
-          pz: Object.assign({ fen: p.fen, sfen: p.sfen }, { ready: () => cur && cur.ready && cur.ready(), moved: (u, i) => cur && cur.moved && cur.moved(u, i) }) });
+          pz: Object.assign({ fen: p.fen, sfen: p.sfen, sol: p.P.sol }, { ready: () => cur && cur.ready && cur.ready(), moved: (u, i) => cur && cur.moved && cur.moved(u, i) }) });
         ctx.Table3D.play(true);   // (after start(): the adapter's show() puts its board on the table in the showcase view)
-      } else pz().load(p.fen || p.sfen);
+      } else pz().load(p.fen || p.sfen, p.P.sol);
       cur.ready = opts.ready; cur.moved = opts.moved;
       say((first ? X.hi[id] + ' ' : '') + goal(p)); first = false;
     }
     async function onReady(p) {
       if (p !== cur || stopped) return;
-      if (p.kind === 'tac') { p.state = 'busy'; buttons(); await sleep(450); if (p !== cur) return; await pz().play(p.P.line[0]); if (p !== cur) return; }
+      if (p.kind === 'tac') { p.state = 'busy'; buttons(); await sleep(250); if (p !== cur) return; await pz().play(p.P.line[0]); if (p !== cur) return; }
       p.state = 'play'; pz().wait(); buttons();
     }
     function expected(p) {   // the move the stored answer plays now ('' when the line is left / unknown)
@@ -279,7 +279,7 @@
         if (info.over) return wrong(p, 0, '', X.wrongNo);
         if (p.used >= p.n) return wrong(p, 0, '', fill(X.out, { n: p.n }));
         say(fill(X.left, { n: p.n - p.used }));
-        await sleep(350); if (p !== cur) return;
+        await sleep(120); if (p !== cur) return;
         const r = await pz().best(20); if (p !== cur) return;
         if (!r) return wrong(p, 0, '', X.wrongNo);
         await pz().play(r); if (p !== cur) return;
@@ -291,7 +291,7 @@
         p.used++;
         if (p.k + 1 >= p.P.line.length) return solved(p);
         say(pick(X.good) + ' ' + fill(X.left, { n: p.n - p.used }));
-        await sleep(350); if (p !== cur) return;
+        await sleep(120); if (p !== cur) return;
         await pz().play(p.P.line[p.k + 1]); if (p !== cur) return;
         p.k += 2; if (p.k >= p.P.line.length) return solved(p);
         p.state = 'play'; pz().wait(); buttons(); return;
@@ -304,7 +304,7 @@
       if (!reply) { const r = await pz().defend(remain); if (p !== cur) return; reply = r && r.reply; }
       if (!reply) return wrong(p, 0, '', X.wrongNo);
       say(fill(X.left, { n: Math.ceil((remain - 1) / 2) }));
-      await sleep(350); if (p !== cur) return;
+      await sleep(120); if (p !== cur) return;
       await pz().play(reply); if (p !== cur) return;
       p.state = 'play'; pz().wait(); buttons();
     }
