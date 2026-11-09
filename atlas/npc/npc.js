@@ -16,7 +16,7 @@
   const A = window.AtlasNPC = window.AtlasNPC || {};
   if (A.skin) return;
   const SRC = (document.currentScript && document.currentScript.src) || location.href;
-  const BASE = new URL('./', SRC).href, ATLAS = new URL('../', BASE).href, IMG = new URL('../images/atlas/', ATLAS).href, V = '2';
+  const BASE = new URL('./', SRC).href, ATLAS = new URL('../', BASE).href, IMG = new URL('../images/atlas/', ATLAS).href, V = '3';
   const LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
   const loaded = {};
   const load = src => loaded[src] || (loaded[src] = new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); }));
@@ -30,8 +30,16 @@
     const need = [];
     if (!A.BOSSES) need.push(load(BASE + 'roster.js?v=' + V));
     if (!window.AtlasArt) need.push(load(ATLAS + 'art.js?v=8').catch(() => {}));
-    return Promise.all(need).then(() => load(BASE + 't/' + lang + '.js?v=' + V).catch(() => load(BASE + 't/en.js?v=' + V)));
+    return Promise.all(need).then(() => load(BASE + 't/' + lang + '.js?v=' + V).catch(() => load(BASE + 't/en.js?v=' + V)))
+      .then(() => load(BASE + 't2/' + lang + '.js?v=' + V).catch(() => {}));   // more lines + the watchers' own ways of talking (t2/, where there is one)
   }
+  // t2/<lang>.js: more lines for the bosses' voices (added to t/<lang>.js) and the watchers' lines by their voice (fanv)
+  A.more = function (lang, o) {
+    const T = A.T && A.T[lang]; if (!T || T.__more) return; T.__more = true;
+    Object.keys(o.voice || {}).forEach(v => { const d = T.voice[v] = T.voice[v] || {}; Object.keys(o.voice[v]).forEach(k => { d[k] = (d[k] || []).concat(o.voice[v][k]); }); });
+    Object.keys(o.fan || {}).forEach(k => { T.fan[k] = (T.fan[k] || []).concat(o.fan[k]); });
+    if (o.fanv) T.fanv = o.fanv;
+  };
   A.ensure = ensure; A.lang = () => langNow();
   const TX = () => (A.T && (A.T[langNow()] || A.T.en || A.T.ja)) || null;
   const avUrl = id => IMG + 'av/' + id + '.webp?v=1';
@@ -96,8 +104,8 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
       try { const W = window.Atlas && Atlas.load ? Atlas.load() : null; owned = (W && W.owned || []).filter(id => /^av-(?!boss-)[a-z]+-\d$/.test(id)); } catch (e) {}
       const all = window.AtlasArt ? AtlasArt.items.filter(it => it.kind === 'icon' && !it.boss).map(it => it.id) : [];
       const pool = owned.length >= 3 && Math.random() < .7 ? owned : all.length ? all : ['av-dice-0', 'av-plop-0', 'av-stone-0'];
-      const id = pick(pool), it = window.AtlasArt && AtlasArt.byId(id);
-      return { id, img: avUrl(id.slice(3)), name: () => strip(it ? (it.name[langNow()] || it.name.en) : '') };
+      const id = pick(pool), it = window.AtlasArt && AtlasArt.byId(id), sp = (id.match(/^av-([a-z]+)-/) || [])[1];
+      return { id, v: (A.VOICE && A.VOICE[sp]) || 'cute', img: avUrl(id.slice(3)), name: () => strip(it ? (it.name[langNow()] || it.name.en) : '') };
     }
     function setLevel(lv) {
       lv = lv | 0; const bi = A.band(game, lv); if (bi < 0) return false;
@@ -112,7 +120,8 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
       ui.say('boss', esc(line.replace('{me}', m.name)), m);
     }
     function fan(key) {
-      const X = TX(); if (!X || !S.fan) return; const m = fanMeta(false), line = fresh(X.fan[key]); if (!line) return;
+      const X = TX(); if (!X || !S.fan) return; const fv = X.fanv && X.fanv[S.fan.v], own = fv && fv[key];
+      const m = fanMeta(false), line = fresh(own && own.length && (Math.random() < .8 || !X.fan[key]) ? own : X.fan[key]); if (!line) return;
       ui.say('fan', esc(line.replace('{me}', m.name)), m);
     }
     function trivia() {
@@ -141,7 +150,10 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
       if (since < Math.max(2, Math.round(1.5 * S.pace))) return;
       const hh = S.hNow, swing = hh == null ? 0 : hh - S.hAt;
       let said = false;
-      if (hh != null && Math.abs(swing) >= .26) { boss(swing > 0 ? 'slip' : 'gain'); said = true; }
+      if (hh != null && Math.abs(swing) >= .26) {
+        boss(swing > 0 ? 'slip' : 'gain'); said = true;
+        if (Math.random() < .4) { const k = swing > 0 ? 'nice' : 'oops'; later(() => { if (!S.over) fan(k); }, 4200); }   // the watcher reacts too
+      }
       else if (ply >= S.next) {
         const calm = hh == null || Math.abs(hh) < .3;
         if (ply <= S.early * S.pace && calm && S.triv < 4 && Math.random() < .6 && trivia()) said = true;
@@ -160,7 +172,7 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
       if (S.over || !S.boss) return; S.over = true;
       S.timers.forEach(clearTimeout); S.timers = [];
       boss(res === 'w' ? 'lose' : res === 'l' ? 'win' : 'draw');
-      if (res !== 'd') later(() => fan(res === 'w' ? 'win' : 'lose'), 3600);
+      later(() => fan(res === 'w' ? 'win' : res === 'l' ? 'lose' : 'draw'), 3600);
       if (res === 'w') grant();
     }
     // beating a boss: the 1st / 2nd / 3rd level of its three gives its N / R / SR avatar (once each)

@@ -640,7 +640,7 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
     // AI games: the boss of the level and a watching creature talk now and then (atlas/npc/npc.js, common rule 2026-11-09)
     (function npc() {
       if (o.npc === false || !GAME) return;
-      const s = document.createElement('script'); s.src = BASE + 'npc/npc.js?v=4'; s.onload = () => { try { window.AtlasNPC.skin(GAME); } catch (e) {} };
+      const s = document.createElement('script'); s.src = BASE + 'npc/npc.js?v=5'; s.onload = () => { try { window.AtlasNPC.skin(GAME); } catch (e) {} };
       setTimeout(() => document.head.appendChild(s), 1500);   // after the board and the first frames
     })();
     return { T3, ready, alignTo, view };
