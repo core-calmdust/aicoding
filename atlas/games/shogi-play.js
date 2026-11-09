@@ -185,7 +185,9 @@
           if (sel && sel.hand === ty) return deselect(); if (legal.some(m => E.isDrop(m) && E.mFrom(m) - 80 === ty)) select({ hand: ty, who: 0 }); }); }
       const row = (who, lb) => { const c = who ? ac : hc, items = HANDS.map(ty => [ty, P.hand[c * 8 + ty]]).filter(x => x[1]);
         return `<div class="r${who ? ' op' : ''}"><span class="lb">${lb}</span>${items.length ? items.map(([ty, n]) => who ? `<span class="c">${HK[ty]}${n > 1 ? `<i>${n}</i>` : ''}</span>` : `<button type="button" class="c${sel && sel.hand === ty ? ' on' : ''}" data-t="${ty}">${HK[ty]}${n > 1 ? `<i>${n}</i>` : ''}</button>`).join('') : '<span class="nil">—</span>'}</div>`; };
-      strip.innerHTML = row(1, S.hOpp || STR.en.hOpp) + row(0, S.hMe || STR.en.hMe);
+      // composed 詰将棋 (no attacker king on the board): the defender holds every remaining piece by convention, so only the
+      // player's own hand is shown; the practical mates from real games (the attacker's king is on the board) show both (2026-11-10)
+      strip.innerHTML = (P.king[hc] >= 0 ? row(1, S.hOpp || STR.en.hOpp) : '') + row(0, S.hMe || STR.en.hMe);
     }
     function buildBoard(fallIn) {
       Object.values(pcs).forEach(g => board.remove(g)); pcs = {}; let i = 0;
