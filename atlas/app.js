@@ -684,7 +684,7 @@
     [60, 600, 1000].forEach(ms => setTimeout(fitStage, ms));   // (the camera glides back by itself: no snapping)
     if (window.ResizeObserver && !window.__bvRO) { window.__bvRO = new ResizeObserver(() => fitStage()); window.__bvRO.observe($('bvi')); }
     // table play: やめる and the action bar's buttons take the HUD pill's height (--hudh), so the three read as one set (2026-11-09)
-    if (window.ResizeObserver && !window.__hudRO) { window.__hudRO = new ResizeObserver(() => { const h = $('hud').offsetHeight; if (h) $('bv').style.setProperty('--hudh', h + 'px'); }); window.__hudRO.observe($('hud')); }
+    if (window.ResizeObserver && !window.__hudRO) { window.__hudRO = new ResizeObserver(() => { const h = $('hud').offsetHeight; if (h >= 36) $('bv').style.setProperty('--hudh', h + 'px'); }); window.__hudRO.observe($('hud')); }
     document.body.style.overflow = 'hidden';
     if (push) history.replaceState(null, '', '#' + page + '/' + id);
     if (initGL()) {
@@ -749,7 +749,8 @@
       setTimeout(() => window.__bvModeRz && window.__bvModeRz(), 0); if (document.fonts) document.fonts.ready.then(() => window.__bvModeRz && window.__bvModeRz());
     }
     if ($('bvRules')) $('bvRules').onclick = startRules;
-    $('bvRec').setAttribute('aria-label', t('rec.btn')); $('bvRec').title = t('rec.btn'); $('bvRec').onclick = () => { try { SFX.tap && SFX.tap(); } catch (e) {} openRec(g); };   // (the cup beside the place chip, top right)
+    $('bvRec').setAttribute('aria-label', t('rec.btn')); $('bvRec').title = t('rec.btn'); $('bvRec').onclick = () => { try { SFX.tap && SFX.tap(); } catch (e) {} openRec(g); };   // (the cup: phones right of the ヒストリア pill, PC beside the place chip)
+    placeRec();
     // phones: a grab handle on the card — swipe down (or tap) folds away the tags and progress, leaving the game settings; swipe up opens it again
     if (matchMedia('(max-width: 819px)').matches) {
       // phones: tags + progress live in a drawer above the settings; it follows the finger (swipe up opens, down closes)
@@ -926,6 +927,10 @@
   const homeMark = () => { try { sessionStorage.setItem('aicoding-home', location.pathname + '#' + page); } catch (e) {} };
   homeMark(); addEventListener('pagehide', homeMark);
   // games that have the full portal skin open the complete game (lessons, puzzles, online …) on the 3D table
+  // 戦績 (the cup): on phones it sits right of the ヒストリア pill, top left; on PC (the pill lives in the card there) beside the place chip
+  function placeRec() { const r = $('bvRec'), hw = $('bvHistW'), td = $('bvTodW'); if (!r || !hw || !td) return;
+    if (matchMedia('(hover:hover) and (pointer:fine) and (min-width:820px)').matches) { if (r.parentNode !== td) $('bvPlBtn').after(r); } else if (r.parentNode !== hw) hw.appendChild(r); }
+  addEventListener('resize', placeRec);
   const FULL_SKIN = { ludo: true, reversi: true, shogi: true, chess: true, backgammon: true, gomoku: true, go: true, morris: true, connect4: true, checkers: true, mancala: true, dots: true, xiangqi: true, janggi: true, hex: true, tafl: true, ur: true, senet: true, fanorona: true, ugolki: true, agon: true, alquerque: true, konane: true };
   let lastKind;
   function startPlay(kind) {
