@@ -2,7 +2,9 @@
  * The shared memory of the page's multi-threaded search (engine_mt.wasm, shared/mtengine.js) for the JavaScript engine
  * (engine.js): the search itself stays in JavaScript; this module only holds the transposition table that every thread reads
  * and writes (Lazy SMP) and gives shared/mtengine.js the thread exports it expects (each thread's slot, the stop flag).
- * The table has the layout of engine.js Engine (k1, k2, tv: Int32; td, tf: Int8; tm: Int16; 2^20 entries each).
+ * The table has the layout of engine.js Engine (k1, k2, tv: Int32; td, tf: Int8; tm: Int16; 2^20 entries each), and the move
+ * ordering's history (HIST: Int32, engine.js Engine.hist) is shared too (2026-11-09: with a history of its own every thread
+ * searched other moves of the width-limited search, and the threads did not speed one another up).
  *
  * Build: clang --target=wasm32 -O2 -matomics -mbulk-memory -nostdlib -Wl,--no-entry -Wl,--export-dynamic -Wl,--shared-memory
  *        -Wl,--import-memory -Wl,--max-memory=268435456 -o engine_mt.wasm mt.c
@@ -13,6 +15,8 @@ typedef int i32; typedef unsigned int u32; typedef signed char i8; typedef short
 static i32 K1[TT_SIZE], K2[TT_SIZE], TV[TT_SIZE];
 static i16 TM[TT_SIZE];
 static i8 TD[TT_SIZE], TF[TT_SIZE];
+#define HIST_SIZE 2048   /* >= engine.js SIZE * 3 (1560) */
+static i32 HIST[HIST_SIZE];
 static volatile int gStop;
 static _Thread_local int threadId;
 EXPORT(tt_size) i32 tt_size(void) { return TT_SIZE; }
@@ -22,6 +26,7 @@ EXPORT(tt_tv) u32 tt_tv(void) { return (u32)TV; }
 EXPORT(tt_tm) u32 tt_tm(void) { return (u32)TM; }
 EXPORT(tt_td) u32 tt_td(void) { return (u32)TD; }
 EXPORT(tt_tf) u32 tt_tf(void) { return (u32)TF; }
+EXPORT(tt_hist) u32 tt_hist(void) { return (u32)HIST; }
 extern unsigned char __heap_base;
 extern void __wasm_init_tls(void *);
 EXPORT(mt_heap_base) u32 mt_heap_base(void) { return (u32)&__heap_base; }
