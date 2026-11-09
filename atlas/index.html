@@ -1553,8 +1553,8 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 .ps-tx{display:flex;flex-direction:column;min-width:0}.ps-tx b{font-size:16px;font-weight:900}.ps-tx small{font-size:11px;font-weight:700;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ps-pg{display:flex;flex-direction:column;align-items:flex-end;gap:4px;width:84px}.ps-pg .bar{width:100%}.ps-pg em{font-style:normal;font-weight:800;font-size:12px;color:var(--ink2)}
 .ps-cv{width:8px;height:8px;border-right:2.5px solid var(--ink2);border-top:2.5px solid var(--ink2);transform:rotate(45deg);margin-inline-end:4px;opacity:.7}
-.bvi .row .hdcol{margin-inline-start:auto;flex:none;display:flex;flex-direction:column;align-items:stretch;gap:7px}   /* ルール over 戦績 + ヒストリア (with the あそぶ sheet; app.js headIcons) (2026-11-10) */
-.bvi .row .hdcol .rulesb{margin:0;width:100%;height:40px;transform:none;justify-content:center;box-shadow:0 2px 0 var(--line)}
+.bvi .row .hdcol{margin-inline-start:auto;flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:8px}   /* ルール over 戦績 + ヒストリア (with the あそぶ sheet; app.js headIcons) (2026-11-10) */
+.bvi .row .hdcol .rulesb{margin:0;align-self:flex-end}   /* (its own size, as before) */
 .bvi .row .hdsub{display:flex;gap:7px}
 .bvi .row .inhd{position:static!important;inset:auto!important;flex:none;box-sizing:border-box;height:40px;margin:0;border:2px solid var(--line);background:#fff;box-shadow:0 2px 0 var(--line);cursor:pointer}
 .bvi .row .inhd:active{transform:translateY(1px);box-shadow:none}
