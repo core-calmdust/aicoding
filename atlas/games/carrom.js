@@ -164,6 +164,7 @@
         else { mode = 'aim-m'; setAim(q, e); }
       } else { mode = 'touch'; ref = vref = q; sx0 = o.striker(); gains(e); }
       id = e.pointerId; try { o.el.setPointerCapture(id); } catch (er) {}
+      document.documentElement.classList.add('hand-drag');   // the talk bubbles let the pointer through while you pull (CSS in index.html)
       e.preventDefault();
     }
     function pm(e) {
@@ -186,14 +187,20 @@
     function pu(e) {
       if (id === null || e.pointerId !== id) return;
       const m = mode; try { o.el.releasePointerCapture(id); } catch (er) {}
-      id = null; mode = '';
+      id = null; mode = ''; document.documentElement.classList.remove('hand-drag');
       if ((m === 'aim-m' || m === 'aim-t') && pow >= .04 && o.canAim()) { o.aim(null); o.shoot(ang, pow); return; }
       o.aim(null);
     }
-    function cancel() { if (id !== null) { try { o.el.releasePointerCapture(id); } catch (er) {} } id = null; mode = ''; o.aim(null); }
+    function cancel() { if (id !== null) { try { o.el.releasePointerCapture(id); } catch (er) {} } id = null; mode = ''; document.documentElement.classList.remove('hand-drag'); o.aim(null); }
+    // the drag is followed on the window too: a pointer let go over something laid on the board (a talk bubble, a toast) still
+    // ends the pull (pu ignores a pointer it is not following, so the element's own event and this one never both act)
+    const wm = e => { if (id !== null && e.pointerId === id && e.target !== o.el && !o.el.contains(e.target)) pm(e); };
+    const wu = e => { if (id !== null && e.pointerId === id) pu(e); };
     o.el.addEventListener('pointerdown', pd); o.el.addEventListener('pointermove', pm);
     o.el.addEventListener('pointerup', pu); o.el.addEventListener('pointercancel', pu);
-    return { stop() { o.el.removeEventListener('pointerdown', pd); o.el.removeEventListener('pointermove', pm); o.el.removeEventListener('pointerup', pu); o.el.removeEventListener('pointercancel', pu); }, cancel, active: () => id !== null && /^aim/.test(mode) };
+    addEventListener('pointermove', wm, true); addEventListener('pointerup', wu, true); addEventListener('pointercancel', wu, true);
+    return { stop() { o.el.removeEventListener('pointerdown', pd); o.el.removeEventListener('pointermove', pm); o.el.removeEventListener('pointerup', pu); o.el.removeEventListener('pointercancel', pu);
+      removeEventListener('pointermove', wm, true); removeEventListener('pointerup', wu, true); removeEventListener('pointercancel', wu, true); document.documentElement.classList.remove('hand-drag'); }, cancel, active: () => id !== null && /^aim/.test(mode) };
   }
 
   function start(ctx) {
