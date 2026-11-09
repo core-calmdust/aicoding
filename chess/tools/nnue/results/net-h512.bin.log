@@ -1,0 +1,9 @@
+epoch 0 valid 0.072875
+epoch 1 valid 0.014337 lr 0.001 514s 592k pos/s
+epoch 2 valid 0.014145 lr 0.001 498s 611k pos/s
+epoch 3 valid 0.013790 lr 0.001 498s 610k pos/s
+epoch 4 valid 0.013858 lr 0.001 498s 610k pos/s
+epoch 5 valid 0.013451 lr 0.0003 498s 610k pos/s
+epoch 6 valid 0.013178 lr 0.0003 498s 611k pos/s
+epoch 7 valid 0.013214 lr 0.0001 498s 610k pos/s
+epoch 8 valid 0.013105 lr 0.0001 498s 610k pos/s
