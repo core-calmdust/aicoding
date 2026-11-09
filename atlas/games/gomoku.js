@@ -13,7 +13,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../gomoku/', VER = '?v=20261108p1-pro1-mt1';   // same file / version as gomoku/index.html → shared cache
+  const BASE = '../gomoku/', VER = '?v=20261109p1-pro1-mt2';   // same file / version as gomoku/index.html → shared cache
   const RULE = 'renju';
   let engP = null;
   function loadEngine() {

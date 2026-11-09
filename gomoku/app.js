@@ -117,7 +117,7 @@ function save() {
 
 // ====================================================================== workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=20261108p1-pro1-mt1';
+const ENGINE_URL = 'engine.js?v=20261109p1-pro1-mt2';
 function makeWorker() {
   const w = new Worker(ENGINE_URL); w.jobs = new Map();
   w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (!j) return; if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; } w.jobs.delete(m.id); noteNps(m.nodes, performance.now() - j.t0); j.resolve(m); };
@@ -140,7 +140,7 @@ let aiW = makeWorker(), anaW = makeWorker(), coachW = null;
 // keeps the job's own limits; the helpers fill the table, so it reads deeper in the same time / positions). The AI's levels are
 // decided by positions per move and stay on the one-thread workers (rated games too).
 const MTP = window.MTEngine ? MTEngine.use({
-  wasm: 'engine_mt.wasm?v=1', lead: ENGINE_URL + '&mt=1', helper: ENGINE_URL + '&mt=2', slot: 1 << 20, initial: 512, maximum: 4096,   // slot: a thread's (tiny) wasm stack; maximum = engine_mt.wasm's (256 MiB)
+  wasm: 'engine_mt.wasm?v=2', lead: ENGINE_URL + '&mt=1', helper: ENGINE_URL + '&mt=2', slot: 1 << 20, initial: 512, maximum: 4096,   // slot: a thread's (tiny) wasm stack; maximum = engine_mt.wasm's (256 MiB)
   imports: mem => ({ env: { memory: mem } }),
   help: m => (m.type === 'think' || m.type === 'analyze' || m.type === 'cands') ? { rule: m.rule, start: m.start, moves: m.moves || [], list: m.type !== 'think' } : null,   // (list: the candidates of the analysis shared among the threads; think: Lazy SMP)
 }) : null;
