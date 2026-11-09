@@ -262,6 +262,17 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
      PC: centred on the window, half-way between the board's lower edge and the online dock's bar (2026-11-09; never on the bar,
      on the board's edge when the gap is too small); phones: just above the bottom tab bar (cards in the info column pushed the
      boxes around) */
+  // the board on screen: the 3D board as drawn (the DOM board + its measured overhang, common.js __atlasPcFit), else the DOM board
+  function boardBox() {
+    const vis = e => e && e.getClientRects().length && getComputedStyle(e).display !== 'none';
+    let top = Infinity, bottom = -Infinity;
+    const add = (t, b) => { top = Math.min(top, t); bottom = Math.max(bottom, b); };
+    try { const pf = window.__atlasPcFit, bd = pf && pf.board && pf.board(); if (bd && vis(bd)) { const r = bd.getBoundingClientRect(), k = !document.documentElement.classList.contains('atlas-2d') && pf.K && pf.K();
+      const kb = k && isFinite(k.b) ? Math.max(0, k.b) : 0, kt = k && isFinite(k.t) ? Math.max(0, k.t) : 0; add(r.top - kt * r.height, r.bottom + kb * r.height); } } catch (e) {}
+    const bd = ['#frame', '#boardWrap', '.board-wrap', '#board', '.board'].map(q => document.querySelector(q)).find(vis);   // (and the DOM board / the 3D frame, a little past it)
+    if (bd) { const r = bd.getBoundingClientRect(); add(r.top - 8, r.bottom + 8); }
+    return isFinite(top) ? { top, bottom } : null;
+  }
   function skinUI() {
     const PC = matchMedia((window.HeaderBar && HeaderBar.MEDIA) || '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4)');
     const vis = e => e && e.getClientRects().length && getComputedStyle(e).display !== 'none';
@@ -272,14 +283,21 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
           const d = document.getElementById('dock') || document.querySelector('.dock'), yd = vis(d) ? d.getBoundingClientRect().top : innerHeight - 10;
           let b = innerHeight - yd + 6;   // (just above the bar: the lowest it may go)
           // the board's lower edge: the 3D board as drawn (the DOM board + its measured overhang, common.js __atlasPcFit), else the DOM board
-          let yb = null;
-          try { const pf = window.__atlasPcFit, bd = pf && pf.board && pf.board(); if (bd && vis(bd)) { const r = bd.getBoundingClientRect(), k = !document.documentElement.classList.contains('atlas-2d') && pf.K && pf.K(); yb = r.bottom + (k && isFinite(k.b) ? Math.max(0, k.b) * r.height : 0); } } catch (e) {}
-          if (yb == null) { const bd = ['#frame', '#boardWrap', '.board-wrap', '#board', '.board'].map(q => document.querySelector(q)).find(vis); if (bd) yb = bd.getBoundingClientRect().bottom + 8; }   // (a skin without the PC fit: its DOM board, the 3D frame a little past it)
+          const bx = boardBox(), yb = bx && bx.bottom;
           const h = el ? el.offsetHeight : 0;
           if (yb != null && yd > yb) b = Math.max(b, innerHeight - (yb + yd) / 2 - h / 2 - 10);   // (the float sits at --npc-bot + 10px)
           return b;
         }
-        const t = [...document.querySelectorAll('.mtabs, #mtabs')].find(e => vis(e) && getComputedStyle(e).position === 'fixed'); return t ? innerHeight - t.getBoundingClientRect().top + 4 : 12;
+        // phones: just above the bottom tab bar — unless the bubble would then cover the board: then just under the board
+        // (over the boxes and, if need be, the tab bar), or, with no room there either, just above the board
+        const t = [...document.querySelectorAll('.mtabs, #mtabs')].find(e => vis(e) && getComputedStyle(e).position === 'fixed');
+        let b = t ? innerHeight - t.getBoundingClientRect().top + 4 : 12;
+        const bx = boardBox(), h = el ? el.offsetHeight : 0;
+        if (bx && h && innerHeight - b - 10 - h < bx.bottom) {
+          if (bx.bottom + 4 + h <= innerHeight - 4) b = innerHeight - (bx.bottom + 4) - h - 10;
+          else if (bx.top - 4 - h >= 0) b = innerHeight - (bx.top - 4) - 10;
+        }
+        return b;
       },
       left: () => null });   // centred on the whole window, as on the portal's 3D table
     fl.el.classList.add('npc-skin');
