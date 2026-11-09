@@ -479,7 +479,7 @@
     function pzFit() {
       if (!zoomOn || !region || !T3.fit) return false;
       const a = SG.cell(region.c0, region.r0), b = SG.cell(region.c1, region.r1);
-      const w = Math.abs(b[0] - a[0]) + CW * 1.25, d = Math.abs(b[1] - a[1]) + CH * 1.25;
+      const w = Math.abs(b[0] - a[0]) + CW * 1.9, d = Math.abs(b[1] - a[1]) + CH * 1.9;
       const lim = v => Math.max(-FW / 2 * SC, Math.min(FW / 2 * SC, v));
       const cx = ((a[0] + b[0]) / 2) * SC + board.position.x, cz = ((a[1] + b[1]) / 2) * SC + board.position.z;
       pan[0] = lim(cx + pan[0]) - cx; pan[1] = lim(cz + pan[1]) - cz;   // (the frame's middle stays over the board)
