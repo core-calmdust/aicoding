@@ -1282,9 +1282,9 @@
     const rtl = document.documentElement.dir === 'rtl', d = (e.key === 'ArrowRight') !== rtl ? 1 : -1;
     if ($('bv').classList.contains('on') && !$('bv').classList.contains('playing')) { e.preventDefault(); stepBoard(d); }
   });
-  (function swipe() {   // a quick horizontal flick (a slow drag still spins the board)
+  (function swipe() {   // a quick horizontal flick with a finger (a slow drag still spins the board); a mouse drag never steps (PC, 2026-11-09)
     let s0 = null;
-    $('bv').addEventListener('pointerdown', e => { if (e.target.closest('select,button,a,input')) return; s0 = { x: e.clientX, y: e.clientY, t: performance.now(), id: e.pointerId }; }, true);
+    $('bv').addEventListener('pointerdown', e => { if (e.pointerType === 'mouse' || e.target.closest('select,button,a,input')) return; s0 = { x: e.clientX, y: e.clientY, t: performance.now(), id: e.pointerId }; }, true);
     $('bv').addEventListener('pointerup', e => {
       if (!s0 || e.pointerId !== s0.id) return; const dx = e.clientX - s0.x, dy = e.clientY - s0.y, dt = performance.now() - s0.t; s0 = null;
       if (dt < 650 && Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.8) { const rtl = document.documentElement.dir === 'rtl'; stepBoard((dx < 0) !== rtl ? 1 : -1); }
