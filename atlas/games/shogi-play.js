@@ -397,6 +397,7 @@
       const tile = tileAt(to, 0x2f8bd1, .55); tile.userData.promo = 1; T3.kick(150);
     }
     function onClick(e) {
+      if (PZ && pmoved >= 8) { pmoved = 0; return; }   // (the end of a slide of the zoomed board)
       if (busy || over || !P || (!pvp && P.side !== hc) || T3.wasDrag() || (PZ && !pzOn)) return;
       if (popup) { deselect(); return; }
       const h = hit(e); if (!h) { deselect(); return; }
@@ -450,7 +451,19 @@
     }
     // 詰将棋 in a corner of the board: the camera frames the part the problem uses (its pieces and the solution's squares,
     // a square of room around, at least 5 × 5), with a button to see the whole board (2026-11-10)
-    let zoomOn = true, region = null, zbtn = null, pzSol = PZ ? PZ.sol || [] : [];
+    let zoomOn = true, region = null, zbtn = null, pzSol = PZ ? PZ.sol || [] : [], pan = [0, 0];
+    // zoomed in: a finger (or the mouse) slides the board around (2026-11-10); a slide is not a tap on a square
+    let pdrag = null, pmoved = 0, pts = 0;
+    const onPDown = e => { pts++; if (!PZ || !zoomOn || !region || pts > 1) { pdrag = null; return; } pdrag = { id: e.pointerId, x: e.clientX, y: e.clientY }; pmoved = 0; };
+    const onPMove = e => {
+      if (!pdrag || e.pointerId !== pdrag.id) return;
+      const a = T3.pick({ clientX: pdrag.x, clientY: pdrag.y }, Y * SC), b = T3.pick(e, Y * SC);
+      pmoved += Math.abs(e.clientX - pdrag.x) + Math.abs(e.clientY - pdrag.y); pdrag.x = e.clientX; pdrag.y = e.clientY;
+      if (!a || !b || pmoved < 8) return;
+      pan[0] += a.x - b.x; pan[1] += a.z - b.z; pzFit(); T3.kick(120);
+    };
+    const onPUp = () => { pts = Math.max(0, pts - 1); pdrag = null; };
+    ctx.el.addEventListener('pointerdown', onPDown); addEventListener('pointermove', onPMove); addEventListener('pointerup', onPUp); addEventListener('pointercancel', onPUp);
     const ZT = { ja: ['全体を見る', '拡大する'], en: ['Whole board', 'Zoom in'], zh: ['看全盘', '放大'], 'zh-TW': ['看全盤', '放大'], ko: ['전체 보기', '확대'], es: ['Tablero entero', 'Ampliar'], fr: ['Tout le plateau', 'Zoomer'], pt: ['Tabuleiro todo', 'Ampliar'], de: ['Ganzes Brett', 'Vergrößern'], hi: ['पूरा बोर्ड', 'बड़ा करें'], ar: ['اللوحة كاملة', 'تكبير'], ru: ['Вся доска', 'Приблизить'], id: ['Seluruh papan', 'Perbesar'], tr: ['Tüm tahta', 'Yakınlaştır'] };
     function pzRegion() {
       const cs = [], rs = [], add = sq => { const [c, r] = disp(sq); cs.push(c); rs.push(r); };
@@ -466,17 +479,20 @@
       if (!zoomOn || !region || !T3.fit) return false;
       const a = SG.cell(region.c0, region.r0), b = SG.cell(region.c1, region.r1);
       const w = Math.abs(b[0] - a[0]) + CW * 1.25, d = Math.abs(b[1] - a[1]) + CH * 1.25;
-      T3.fit({ w: w * SC, d: d * SC, y: Y * SC, pitch: 1.53, cx: ((a[0] + b[0]) / 2) * SC + board.position.x, cz: ((a[1] + b[1]) / 2) * SC + board.position.z });
+      const lim = v => Math.max(-FW / 2 * SC, Math.min(FW / 2 * SC, v));
+      const cx = ((a[0] + b[0]) / 2) * SC + board.position.x, cz = ((a[1] + b[1]) / 2) * SC + board.position.z;
+      pan[0] = lim(cx + pan[0]) - cx; pan[1] = lim(cz + pan[1]) - cz;   // (the frame's middle stays over the board)
+      T3.fit({ w: w * SC, d: d * SC, y: Y * SC, pitch: 1.53, cx: cx + pan[0], cz: cz + pan[1] });
       return true;
     }
     function zoomBtn() {
       const L = ZT[ctx.lang] || ZT.en;
       if (!region) { if (zbtn) { zbtn.remove(); zbtn = null; } return; }
       if (!zbtn) { zbtn = document.createElement('button'); zbtn.type = 'button'; zbtn.className = 'sgzoom'; (document.body).appendChild(zbtn);
-        zbtn.onclick = e => { e.stopPropagation(); zoomOn = !zoomOn; zoomBtn(); layout(); }; }
+        zbtn.onclick = e => { e.stopPropagation(); zoomOn = !zoomOn; pan = [0, 0]; zoomBtn(); layout(); }; }
       zbtn.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${zoomOn ? '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>' : '<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5M8 10.5h5M10.5 8v5"/>'}</svg>${zoomOn ? L[0] : L[1]}`;
     }
-    function pzZoom() { region = pzRegion(); zoomOn = true; zoomBtn(); layout(); }
+    function pzZoom() { region = pzRegion(); zoomOn = true; pan = [0, 0]; zoomBtn(); layout(); }
     const pz = {
       play: usi => new Promise(res => { const m = P.fromUsi(usi); if (!m) return res(false); busy = true; pzOn = false; play(m, () => { if (stopped) return; res(true); }); }),
       wait() { legal = P.legalMoves(true); busy = false; pzOn = true; drawMarks(); },   // the player's turn again
@@ -526,6 +542,7 @@
         if (worker) worker.terminate(); worker = null; if (hintW) hintW.terminate(); hintW = null;
         if (window.__shogiTable === dbg) delete window.__shogiTable;
         if (strip) strip.remove(); if (zbtn) zbtn.remove();
+        ctx.el.removeEventListener('pointerdown', onPDown); removeEventListener('pointermove', onPMove); removeEventListener('pointerup', onPUp); removeEventListener('pointercancel', onPUp);
       },
     };
     // test hooks (Playwright): screen positions of squares / the player's hand pieces, and the state
