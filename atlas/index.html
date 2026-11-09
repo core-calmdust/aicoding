@@ -297,6 +297,15 @@ html[lang=ar] .badge,html[lang=hi] .badge{letter-spacing:0}
 /* 明るさ during table play (app.js renderPlace): a small segmented pill at the top left, only while playing */
 .bvbrp{display:none;position:absolute;top:calc(12px + env(safe-area-inset-top));inset-inline-start:12px;z-index:6;align-items:center;gap:2px;padding:3px;border-radius:20px;border:2px solid var(--line);background:#fff;box-shadow:0 2px 0 var(--line)}
 .bv.playing .bvbrp{display:flex}.bv.playing.pland .bvbrp,.bv.hist .bvbrp,.bv.rules .bvbrp{display:none}
+/* phones, while playing (2026-11-09): the room's brightness is set in the room, not at the table — no switch; the turn HUD takes its place
+   at the top left (clear of やめる at the top right), and the creatures' talk below is a size smaller */
+@media (max-width:560px){
+  .bv.playing .bvbrp{display:none!important}
+  .bv.playing:not(.land) .hud{top:calc(12px + env(safe-area-inset-top))!important;bottom:auto!important;left:calc(12px + env(safe-area-inset-left))!important;right:auto!important;transform:none!important;max-width:calc(100% - 112px - env(safe-area-inset-left) - env(safe-area-inset-right))!important;overflow:hidden;gap:4px!important;padding:4px!important}
+  .bv.playing:not(.land) .hud .hs{padding:5px 8px!important;font-size:12px!important}.bv.playing .hud .hm{font-size:11.5px!important}
+  [dir=rtl] .bv.playing:not(.land) .hud{left:auto!important;right:calc(12px + env(safe-area-inset-right))!important}
+  .npc-float{width:min(360px,calc(100vw - 32px))!important}.npc-float .npc-pic{width:38px!important;height:38px!important}.npc-float .npc-bub{padding:5px 10px 6px!important}.npc-float .npc-tx{font-size:12px!important;line-height:1.45!important}.npc-float .npc-nm b{font-size:11.5px!important}
+}
 .bvbrp i{width:22px;height:22px;margin-inline:5px 2px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e09a00' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='4'/%3E%3Cpath d='M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4'/%3E%3C/svg%3E") center/contain no-repeat}
 .bvbrp button{height:30px;padding:0 11px;border:0;border-radius:15px;background:none;color:var(--ink);font:800 12.5px var(--round,inherit);cursor:pointer;opacity:.6}
 .bvbrp button[aria-pressed=true]{background:#fff3cf;box-shadow:inset 0 0 0 2px #f1c24b;opacity:1}
@@ -484,6 +493,7 @@ html[lang=ar] .badge,html[lang=hi] .badge{letter-spacing:0}
 @media (max-width:420px){.lb-sky{height:190px}.lb-ch{width:148px;height:148px;left:10px}.lb-bub{width:calc(100% - 160px);font-size:13px;right:12px}}
 .sfxb.off{color:var(--ink2)}
 .sfxb.off svg path:first-child{opacity:.6}
+.npcb svg{width:22px;height:22px}
 
 /* ---------- game cards ---------- */
 .ring{flex:none;margin-left:auto;width:52px;height:52px;position:relative;display:grid;place-items:center;font-family:var(--round);font-weight:700;font-size:13px}
@@ -1477,6 +1487,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 .bvi .opts label:has(.sidetg){flex:none!important}.bvi .opts label:has(.lvpick){min-width:0;flex:1 1 auto!important}
 .bvi #bvOpts:has(> label .lvpick):has(> label .sidetg):not(:has(.sidetg button:nth-child(3))):not(:has(#bvSize)){flex-wrap:nowrap}.bvi #bvOpts:has(> label .sidetg):not(:has(#bvSize)) > label:has(.lvpick){flex:1 1 0!important}   /* AIの強さ + 手番(2つ) always on one line, whatever the level's name/avatar (2026-11-09) */
 .bvi .sidetg{flex:none;overflow:hidden}.bvi .sidetg button{flex:none;padding-inline:12px}
+.bvi #bvOpts:has(#bvSize) > label:has(.lvpick){flex:1 1 0!important;min-width:0}.bvi #bvOpts:has(#bvSize) > label:has(.lvpick) .lvpick span{overflow:hidden;text-overflow:ellipsis}.bvi #bvOpts:has(#bvSize) > label:has(.sidetg):not(:has(#bvSize)){flex:none!important}.bvi #bvOpts > label:has(#bvSize){flex:1 1 100%!important}.bvi #bvOpts > label:has(#bvSize) .sidetg{flex:1 1 auto}.bvi #bvOpts > label:has(#bvSize) .sidetg button{flex:1 1 0}   /* the game length (carrom, crokinole…) on a line of its own: the toggle fills the row */
 /* board size + time control on one row (go) */
 .bvi .tcrow:has(#bvSize){flex-wrap:nowrap!important;gap:10px!important}.bvi .tcrow:has(#bvSize) label{gap:6px}
 @media (max-width:819px){.bvi .tcrow label:has(#bvSize){font-size:0;gap:0}.bvi .tcrow:has(#bvSize) .sidetg button{padding-inline:7px;font-size:14px}.bvi .tcrow:has(#bvSize) .lvpick{padding:0 8px}}   /* phones: the 9×9 / 13×13 / 19×19 toggle speaks for itself */
@@ -1532,6 +1543,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
     <span class="sp"></span>
     <span class="coin" id="coinPill"><i>¢</i><span id="coinN">0</span></span>
     <button type="button" class="icbtn sfxb" id="sfxBtn" aria-pressed="true" aria-label="Sound"></button>
+    <button type="button" class="icbtn sfxb npcb" id="npcBtn" aria-pressed="true" aria-label="Character talk"></button>
     <button type="button" class="lbtn" id="langBtn" aria-haspopup="listbox" aria-expanded="false" aria-label="Language"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg><b id="langCode">JA</b></button>
     <div class="lpop" id="langPop" role="listbox" hidden></div>
     <select id="langSel" aria-hidden="true" tabindex="-1" hidden><option value="ja">日本語</option><option value="en">English</option><option value="zh">简体中文</option><option value="zh-TW">繁體中文</option><option value="ko">한국어</option><option value="es">Español</option><option value="fr">Français</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="ru">Русский</option><option value="tr">Türkçe</option><option value="id">Indonesian</option><option value="hi">हिन्दी</option><option value="ar">العربية</option></select>
@@ -1627,15 +1639,15 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 <script src="texgen.js?v=1"></script>
 <script src="npc/roster.js?v=2"></script>
 <script src="art.js?v=8"></script>
-<script src="../shared/atlas.js?v=20261109cr9"></script>
+<script src="../shared/atlas.js?v=20261109ld1"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261101fa1"></script>
-<script src="i18n.js?v=60n"></script>
+<script src="i18n.js?v=61n"></script>
 <script src="gamelist-i18n.js?v=10n"></script>
-<script src="table3d.js?v=129"></script>
-<script src="tables3d.js?v=36"></script>
+<script src="table3d.js?v=130"></script>
+<script src="tables3d.js?v=39"></script>
 <script src="models/shogi.js?v=23"></script>
-<script src="models/chess.js?v=14"></script>
+<script src="models/chess.js?v=16"></script>
 <script src="models/backgammon.js?v=118"></script>
 <script src="models/goban.js?v=14"></script>
 <script src="models/hex.js?v=2"></script>
@@ -1691,7 +1703,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 <script src="games/senet.js?v=15"></script>
 <script src="games/agon.js?v=9"></script>
 <script src="games/ludo.js?v=24"></script>
-<script src="games/carrom.js?v=16"></script>
+<script src="games/carrom.js?v=17"></script>
 <script src="games/crokinole.js?v=1"></script>
 <script>/* rules tours: after a solved step, the ▶ button fills up like a timer until the tour moves on by itself */
 window.AtlasRgdTimer = function (btn, ms, alive) {
@@ -1735,11 +1747,11 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="gacha3d.js?v=7"></script>
 <script src="../shared/resign.js?v=3"></script><script src="../shared/drawoffer.js?v=1"></script>
 <script src="../shared/tick.js?v=2"></script>
-<script src="gamelist.js?v=24"></script>
+<script src="gamelist.js?v=25"></script>
 <link rel="stylesheet" href="worldmap.css?v=18">
 <script src="worldmap.js?v=30"></script>
 <script src="updnews.js?v=7"></script>
-<script src="npc/npc.js?v=12"></script>
-<script src="app.js?v=241"></script>
+<script src="npc/npc.js?v=13"></script>
+<script src="app.js?v=243"></script>
 </body>
 </html>

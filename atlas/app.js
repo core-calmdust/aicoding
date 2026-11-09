@@ -77,6 +77,14 @@
     b.setAttribute('aria-pressed', SFX.on); b.classList.toggle('off', !SFX.on); b.setAttribute('aria-label', t(SFX.on ? 'sfx.on' : 'sfx.off')); b.title = t(SFX.on ? 'sfx.on' : 'sfx.off');
   }
   $('sfxBtn').onclick = () => { SFX.set(!SFX.on); sfxIcon(); toast(t(SFX.on ? 'sfx.on' : 'sfx.off')); if (SFX.on) SFX.coin(); };
+  // 「キャラ会話」 on / off (the AI games' boss and watcher talk, atlas/npc/npc.js — the same switch as the full versions' options)
+  function npcIcon() {
+    const b = $('npcBtn'), N = window.AtlasNPC; if (!b || !N || !N.on) return;
+    const on = N.on(), l = (N.LABEL[lang] || N.LABEL.en) + ' : ' + t(on ? 'npc.on' : 'npc.off');
+    b.innerHTML = N.ICON.replace('</svg>', on ? '</svg>' : '<path d="M4 4l16 16" stroke-width="2.2"/></svg>');
+    b.setAttribute('aria-pressed', on); b.classList.toggle('off', !on); b.setAttribute('aria-label', l); b.title = l;
+  }
+  if ($('npcBtn')) $('npcBtn').onclick = () => { const N = window.AtlasNPC; if (!N || !N.on) return; N.setOn(!N.on()); npcIcon(); toast($('npcBtn').title); };
 
   /* ---------- tabs ---------- */
   const ICO = {
@@ -872,6 +880,7 @@
   let hudTopV = 0;
   const hudTop = window.__hudTop = function () { const h = $('hud'); if (!h || !h.childElementCount) return 0; const r = h.getBoundingClientRect(); return r.height && r.bottom < innerHeight * .3 ? Math.round(r.bottom + 6) : 0; };
   function hudFit() {
+    { const hd0 = $('hud'); if (hd0) { hd0.style.zoom = ''; hd0.style.removeProperty('max-width'); const A = hd0.clientWidth, Wn = hd0.scrollWidth; if (matchMedia('(max-width: 560px)').matches && !$('bv').classList.contains('land') && A && Wn > A + 2) { const z = Math.max(.72, A / Wn); hd0.style.zoom = z.toFixed(3); hd0.style.setProperty('max-width', Math.floor(A / z) + 'px', 'important'); } } }   // (phones: the HUD at the top left, beside やめる — a long one is scaled down to fit)
     if ($('bv').classList.contains('playing') && hudTop() !== hudTopV) { hudTopV = hudTop(); fitStage(); }
     const hm = $('hud') && $('hud').querySelector('.hm, .hmsg'), old = document.getElementById('hudPop');
     const txt = hm ? hm.textContent.trim() : '';
@@ -880,7 +889,7 @@
     if (old && txt === hudPopTxt) return;
     if (old) old.remove();
     const el = document.createElement('div'); el.id = 'hudPop'; el.className = 'hudpop'; el.textContent = txt; el.setAttribute('role', 'status');
-    const r = $('hud').getBoundingClientRect(); el.style.bottom = Math.round(innerHeight - r.top + 10) + 'px';
+    const r = $('hud').getBoundingClientRect(); if (r.top < innerHeight * .3) { el.style.top = Math.round(r.bottom + 8) + 'px'; el.style.bottom = 'auto'; } else el.style.bottom = Math.round(innerHeight - r.top + 10) + 'px';   // (below a HUD at the top)
     el.onclick = () => el.remove(); document.body.appendChild(el); hudPopTxt = txt;
     clearTimeout(hudPopT); hudPopT = setTimeout(() => { el.classList.add('out'); setTimeout(() => { el.remove(); if (hudPopTxt === txt) hudPopTxt = ''; }, 300); }, Math.max(3500, txt.length * 120));
   }
@@ -1818,7 +1827,7 @@
   { const hb = $('homeBtn'); if (hb) hb.addEventListener('click', e => { if (document.querySelector('#bv.on,#hist.on') || document.documentElement.classList.contains('hs-open')) return;
     e.preventDefault(); if (page !== 'home') go('home'); scrollTo({ top: 0, behavior: 'smooth' }); }); }
   function render(k) {
-    sfxIcon();
+    sfxIcon(); npcIcon();
     renderUpdLine();
     if (k === 'home') renderHome(); else if (k === 'games') renderGames(); else if (k === 'map') renderMap(); else if (k === 'ach') renderAch();
     else if (k === 'gacha') { renderGacha(); renderShop(); } else if (k === 'dress') renderDress();
