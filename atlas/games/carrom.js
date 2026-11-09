@@ -133,11 +133,11 @@
     // pull like a slingshot round the striker: the aim points from your pointer back through the striker, and the further you
     // pull, the harder (so pulling down shoots up the board, pulling up shoots down it). Coming back round the striker
     // (within DEAD cm, "the striker's own spot") gives the aim up and you are placing again.
-    const AIM_IN = 1.6, DEAD_M = 3.2, DEAD_T = 1.6, POWMAX = 20;
+    const AIM_IN = 1.6, AIM_IN_T = 2.4, DEAD_M = 3.2, DEAD_T = 1.6, POWMAX = 20;
     // on a small screen the board is small, so a finger's moves are magnified less: full power wants a pull of about
     // TOUCH_PULL px and the base line spans about TOUCH_SPAN px, however small the board is drawn (gt, gp ≤ 1: never coarser)
     const TOUCH_PULL = 210, TOUCH_SPAN = 320;
-    let mode = '', id = null, ref = null, anchor = null, dead = DEAD_M, sx0 = 0, ang = 0, pow = 0, gt = 1, gp = 1;
+    let mode = '', id = null, ref = null, vref = null, anchor = null, dead = DEAD_M, sx0 = 0, ang = 0, pow = 0, gt = 1, gp = 1;
     const down = (q, a) => (q.y - a.y) * o.sign();
     function gains(e) {   // cm per screen px round the finger
       const a = o.toCm(e), b = o.toCm({ clientX: e.clientX + 40, clientY: e.clientY }), c = o.toCm({ clientX: e.clientX, clientY: e.clientY + 40 });
@@ -153,7 +153,7 @@
       o.aim({ ang, pow, e });
       return true;
     }
-    function toPlace(q) { mode = mode === 'aim-m' ? 'held' : 'touch'; ref = q; sx0 = o.striker(); anchor = null; pow = 0; o.aim(null); }
+    function toPlace(q) { mode = mode === 'aim-m' ? 'held' : 'touch'; ref = vref = q; sx0 = o.striker(); anchor = null; pow = 0; o.aim(null); }
     function pd(e) {
       if (!o.canAim()) { if (o.tap) o.tap(e); return; }
       const q = o.toCm(e); if (!q) return;
@@ -162,7 +162,7 @@
         anchor = o.home(); dead = DEAD_M; pow = 0;
         if (Math.hypot(q.x - anchor.x, q.y - anchor.y) < dead) mode = 'arm-m';   // pressed on the striker: aiming starts once you pull away
         else { mode = 'aim-m'; setAim(q, e); }
-      } else { mode = 'touch'; ref = q; sx0 = o.striker(); gains(e); }
+      } else { mode = 'touch'; ref = vref = q; sx0 = o.striker(); gains(e); }
       id = e.pointerId; try { o.el.setPointerCapture(id); } catch (er) {}
       e.preventDefault();
     }
@@ -175,9 +175,11 @@
       if (mode === 'aim-m' || mode === 'aim-t') { if (!setAim(q, e)) toPlace(q); return; }
       if (mode === 'held') { o.place(q.x); return; }
       if (mode === 'touch') {
-        const d = down(q, ref);
-        if (d < 0) ref = { x: ref.x, y: q.y };   // measure "down" from the highest point
-        if (d * gt > AIM_IN) { mode = 'aim-t'; dead = DEAD_T; anchor = { x: q.x, y: q.y - o.sign() * (AIM_IN - .2) / gt }; setAim(q, e); return; }
+        // "down" is measured from vref, which follows the finger while it moves mostly sideways (placing): a slide that drifts a
+        // little downwards stays a slide; only a clearly downward pull (≥ AIM_IN_T, steeper than 55°) starts the aim
+        const d = down(q, vref), side = Math.abs(q.x - vref.x);
+        if (d < 0 || (side > .3 && side > Math.max(0, d) * .7)) vref = q;
+        if (d * gt > AIM_IN_T && d > side * 1.45) { mode = 'aim-t'; dead = DEAD_T; anchor = { x: q.x, y: q.y - o.sign() * (AIM_IN_T - .2) / gt }; setAim(q, e); return; }
         o.place(sx0 + (q.x - ref.x) * gp);
       }
     }

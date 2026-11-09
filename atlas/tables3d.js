@@ -136,6 +136,8 @@
     neon: { ja: 'ネオン 3D', en: 'Neon 3D', zh: '霓虹 3D', ko: '네온 3D', es: 'Neón 3D', fr: 'Néon 3D', pt: 'Neon 3D', de: 'Neon 3D', hi: 'नियॉन 3D', ar: 'نيون ثلاثي', ru: 'Неон 3D', 'zh-TW': '霓虹 3D', id: '3D neon', tr: 'Neon 3D' },
     rajasthan: { ja: 'ラジャスタン 3D', en: 'Rajasthani 3D', zh: '拉贾斯坦 3D', ko: '라자스탄 3D', es: 'Rajastán 3D', fr: 'Rajasthan 3D', pt: 'Rajastão 3D', de: 'Rajasthan 3D', hi: 'राजस्थानी 3D', ar: 'راجستان ثلاثي', ru: 'Раджастхан 3D', 'zh-TW': '拉賈斯坦 3D', id: '3D Rajasthan', tr: 'Racastan 3D' },
     bauhaus: { ja: 'バウハウス 3D', en: 'Bauhaus 3D', zh: '包豪斯 3D', ko: '바우하우스 3D', es: 'Bauhaus 3D', fr: 'Bauhaus 3D', pt: 'Bauhaus 3D', de: 'Bauhaus 3D', hi: 'बाउहाउस 3D', ar: 'باوهاوس ثلاثي', ru: 'Баухаус 3D', 'zh-TW': '包浩斯 3D', id: '3D Bauhaus', tr: 'Bauhaus 3D' },
+    winter: { ja: 'カナダの冬 3D', en: 'Canadian winter 3D', zh: '加拿大之冬 3D', ko: '캐나다의 겨울 3D', es: 'Invierno canadiense 3D', fr: 'Hiver canadien 3D', pt: 'Inverno canadense 3D', de: 'Kanadischer Winter 3D', hi: 'कनाडाई सर्दी 3D', ar: 'شتاء كندي ثلاثي', ru: 'Канадская зима 3D', 'zh-TW': '加拿大之冬 3D', id: '3D musim dingin Kanada', tr: 'Kanada kışı 3D' },
+    mcm: { ja: 'ミッドセンチュリー 3D', en: 'Mid-century 3D', zh: '中世纪现代 3D', ko: '미드센추리 3D', es: 'Mid-century 3D', fr: 'Mid-century 3D', pt: 'Mid-century 3D', de: 'Mid-Century 3D', hi: 'मिड-सेंचुरी 3D', ar: 'منتصف القرن ثلاثي', ru: 'Мид-сенчури 3D', 'zh-TW': '中世紀現代 3D', id: '3D mid-century', tr: 'Mid-century 3D' },
     tycoon: { ja: '大富豪 3D', en: 'Tycoon 3D', zh: '大富豪 3D', ko: '대부호 3D', es: 'Magnate 3D', fr: 'Magnat 3D', pt: 'Magnata 3D', de: 'Tycoon 3D', hi: 'रईस 3D', ar: 'الثري ثلاثي', ru: 'Магнат 3D', 'zh-TW': '大富豪 3D', id: '3D Konglomerat', tr: 'Milyoner 3D' },
   };
   const BOARDS = {
@@ -162,12 +164,12 @@
     konane: { list: ['papamu', 'quilt'], get: () => ls.get('atlas-konane-look') === 'quilt' ? 'quilt' : 'papamu', set: k => ls.set('atlas-konane-look', k) },
     // carrom (3D only): 'atlas-carrom-look' ('neon' the default | 'modern' | 'classic' | 'rajasthan' | 'bauhaus' | 'tycoon')
     carrom: { list: ['neon', 'modern', 'classic', 'rajasthan', 'bauhaus', 'tycoon'], get: () => { const v = ls.get('atlas-carrom-look'); return ['modern', 'classic', 'rajasthan', 'bauhaus', 'tycoon'].includes(v) ? v : 'neon'; }, set: k => ls.set('atlas-carrom-look', k) },
-    // crokinole (3D only): 'atlas-crokinole-look' ('classic' the default | 'neon')
-    crokinole: { list: ['classic', 'neon'], get: () => ls.get('atlas-crokinole-look') === 'neon' ? 'neon' : 'classic', set: k => ls.set('atlas-crokinole-look', k) },
+    // crokinole (3D only): 'atlas-crokinole-look' ('classic' the default | 'neon' | 'marq' | 'winter' | 'mcm' | 'modern')
+    crokinole: { list: ['classic', 'neon', 'marq', 'winter', 'mcm', 'modern'], get: () => { const v = ls.get('atlas-crokinole-look'); return ['neon', 'marq', 'winter', 'mcm', 'modern'].includes(v) ? v : 'classic'; }, set: k => ls.set('atlas-crokinole-look', k) },
   };
   X.BOARDS = BOARDS;
   X.boardName = (k, lang) => { const o = N3[k]; return o ? o[lang] || o.en : k; };
-  X.boardThumb = (id, k) => new URL('img/board-' + id + '-' + k + '.webp?v=' + (id === 'senet' ? 3 : id === 'carrom' ? 5 : id === 'konane' ? 2 : 1), ME).href;
+  X.boardThumb = (id, k) => new URL('img/board-' + id + '-' + k + '.webp?v=' + (id === 'senet' ? 3 : id === 'carrom' ? 5 : id === 'crokinole' ? 2 : id === 'konane' ? 2 : 1), ME).href;
   // choose a board for a game: the shared key is written and the showcase board (if it is that game's) is rebuilt at once
   X.setBoard = (id, k) => { const B = BOARDS[id]; if (!B || !B.list.includes(k)) return; B.set(k); try { dispatchEvent(new CustomEvent('atlas-board', { detail: { id, look: k } })); } catch (e) {} };
   PLACES.ui.board = { ja: '盤', en: 'Board', zh: '棋盘', ko: '판', es: 'Tablero', fr: 'Plateau', pt: 'Tabuleiro', de: 'Brett', hi: 'बोर्ड', ar: 'اللوحة', ru: 'Доска', 'zh-TW': '棋盤', id: 'Papan', tr: 'Tahta' };
