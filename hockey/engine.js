@@ -13,7 +13,7 @@
 (function (root) {
   'use strict';
   const W = 40, L = 62, GW = 13, RP = 2, RM = 3.1, CREASE = 0;
-  const VMAX = 260, VSMASH = 380, DAMP = .22, E_WALL = .9, E_MAL = .92, MALLET_V = 900;
+  const VMAX = 185, VSMASH = 265, DAMP = .3, E_WALL = .88, E_MAL = .9, MALLET_V = 800;   // (2026-11-09: slowed — it was too fast to follow)
   const DIM = { W, L, GW, RP, RM, VMAX };
   const MODES = ['classic', 'block', 'monster', 'items', 'bumper', 'warp', 'multi', 'chaos'];
   const ITEMS = ['speed', 'split', 'giant', 'shield', 'freeze'];

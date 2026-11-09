@@ -293,7 +293,7 @@
             if (s.score[0] > 0) { ok('hit.ok'); return; }
             if (s.score[1] > tries || still > 5) { tries = s.score[1]; still = 0; msg(`<span>${T('hit.ng')}</span>`); s.pucks.length = 0; s.pucks.push({ x: 0, y: 8, vx: 0, vy: 0, fire: 0, id: (s.pid = (s.pid || 1) + 1), wait: 0 }); s.pause = 0; }
           } });
-      } else if (pg.id === 'edge') { scene('classic', [0, 8]); setMal(0, -14, 10.5); }
+      } else if (pg.id === 'edge') { scene('classic', [0, 8]); setMal(0, -14, 10); }
       else if (pg.id === 'goal') { scene('classic', [-6, 4]); setMal(0, -9, 12); }
       else if (pg.id === 'modes') { scene('chaos', [0, 9]); }
       say(`<b>${T(pg.id + '.t')}</b>　${T(pg.id + '.b')}`);
@@ -315,9 +315,9 @@
       const pg = P(), t0 = performance.now();
       if (pg.id === 'edge') {
         // a fast sideways sweep that catches the puck with the mallet's rim (a glancing contact) — it flies into the far goal
-        setMal(0, -14, 10.5);
+        setMal(0, -14, 10);
         let tt = 0;
-        run({ input: dt => { tt += dt; const k = Math.min(1, tt / .22); return [{ tx: -14 + k * 32, ty: 10.5 - k * 5 }, park]; }, check: () => { if (tt > 1.4 || s.score[0] > 0 && tt > .9) { halt(); ok('edge.ok'); } } });
+        run({ input: dt => { tt += dt; const k = Math.min(1, tt / .14); return [{ tx: -14 + k * 32, ty: 10 - k * 5 }, park]; }, check: () => { if (tt > 1.4 || s.score[0] > 0 && tt > .9) { halt(); ok('edge.ok'); } } });
       } else if (pg.id === 'goal') {
         let tt = 0;
         run({ input: dt => { tt += dt; return [{ tx: -9 + Math.min(1, tt / .2) * 9, ty: 12 - Math.min(1, tt / .2) * 14 }, park]; }, check: () => { if (s.score[0] > 0 || tt > 4) { halt(); later(() => ok('goal.ok'), 400); } } });
