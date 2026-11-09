@@ -82,7 +82,7 @@
 .sgpromo .y{background:#d8321c;color:#fff}.sgpromo .n{background:#ece5d6;color:#3a3226}
 @keyframes sgpIn{from{transform:translate(-50%,calc(-100% - 6px)) scale(.8)}}
 .hud .sgk{font-style:normal;font-size:18px;line-height:1}
-.sghs{position:fixed;z-index:30;top:calc(10px + env(safe-area-inset-top));left:max(12px,env(safe-area-inset-left));right:104px;display:flex;flex-direction:column;gap:5px;pointer-events:none}
+.sghs{position:fixed;z-index:75;top:calc(10px + env(safe-area-inset-top));left:max(12px,env(safe-area-inset-left));right:104px;display:flex;flex-direction:column;gap:5px;pointer-events:none}
 .sghs .r{display:flex;align-items:center;flex-wrap:wrap;gap:4px;pointer-events:auto}
 .sghs .lb{font:800 11px/1 var(--round,system-ui,sans-serif);color:#fff;background:rgba(60,36,16,.72);padding:5px 8px;border-radius:999px;margin-inline-end:2px}
 .sghs .op .lb{background:rgba(150,40,30,.78)}
@@ -176,7 +176,7 @@
     // 詰将棋 (ctx.pz): the pieces in hand as readable chips at the top of the screen — the defender's (often every piece left)
     // and the player's own (tap one to drop it) — the 3D rows beside the board are too small to read on a phone (2026-11-10)
     let strip = null;
-    const HK = { 1: '歩', 2: '香', 3: '桂', 4: '銀', 5: '金', 6: '角', 7: '飛' };
+    const HK = { 1: '歩', 2: '香', 3: '桂', 4: '銀', 5: '角', 6: '飛', 7: '金' };   // (engine types: HANDS order 飛 角 金 銀 桂 香 歩)
     function handStrip() {
       if (!PZ || !P) return;
       if (!strip) { strip = document.createElement('div'); strip.className = 'sghs'; (ctx.panelHost || document.body).appendChild(strip);
