@@ -76,7 +76,7 @@ function diceAt(vals) {   // the thrown dice on the board, in grid units round (
 function cupDraw(seat, mode, thr) {   // mode: mouth up — 'ready' (tap me) · 'idle' · 'shake' · 'flip' (turning over); mouth down — 'down' · 'lift' (dice shown) · 'dice' (just the dice) · null (none)
   const gC = svg.querySelector('#gCup'); if (!gC) return;
   if (!G || SP || G.state.rule !== 'ludo' || mode == null || seat < 0) { gC.innerHTML = ''; CUP.seat = -1; CUP.mode = null; return; }
-  CUP.mode = mode; CUP.thr = thr;   // (kept: drawBoard rebuilds the SVG and draws the cup again — cupRedraw)
+  CUP.mode = mode; CUP.thr = thr; if (CUP.k) gC.style.setProperty('--k', CUP.k);   // (kept: drawBoard rebuilds the SVG and draws the cup again — cupRedraw)
   const [x, y] = cupSpot(seat), col = B.COL.ludo[seat][0], moved = CUP.seat >= 0 && CUP.seat !== seat && (mode === 'ready' || mode === 'idle');
   const dice = thr ? diceAt(thr.three6 ? [6, 6, 6] : thr.dice || [thr.v]) : '';
   gC.innerHTML = CUP_DEF + `<g transform="translate(${x} ${y}) scale(1.25)">${dice ? `<g class="cupd">${dice}</g>` : ''}${mode === 'dice' ? '' : `<g class="cup ${mode}${moved ? ' slide' : ''}">${/^(ready|idle|shake|flip)$/.test(mode) ? cupUp(col) : cupBody(col)}</g>`}</g>`;
@@ -296,7 +296,7 @@ function doRoll() {
   $('#btnRoll').disabled = true; sRattle();
   // ludo: the cup — shakes mouth up, turns over onto the board, then lifts away from the dice (2026-11-09 v2)
   const cup = G.state.rule === 'ludo', k = Math.max(.6, Math.sqrt(SPD())), seat = G.state.turn, gC = svg.querySelector('#gCup');
-  if (gC) gC.style.setProperty('--k', k);
+  CUP.k = k; if (gC) gC.style.setProperty('--k', k);
   if (cup) cupDraw(seat, 'shake');
   let n = 0; const iv = setInterval(() => { showThrow(E.rollThrow(G.state), true); if (++n >= 5) clearInterval(iv); }, 70);
   const T1 = cup ? 420 * k : 0, T2 = cup ? 260 * k : 0, T3 = cup ? 170 * k : 340 * Math.max(.6, SPD());
@@ -508,7 +508,7 @@ function levelLabelHTML(n) { const b = n <= 3 ? 0 : n <= 8 ? 1 : n <= 14 ? 2 : 3
 $('#levelRange').oninput = e => { draft.level = +e.target.value; $('#levelName').innerHTML = levelLabelHTML(draft.level); };
 ['AutoRoll:autoRoll', 'AutoPick:autoPick'].forEach(x => { const [id, k] = x.split(':'); $('#opt' + id).onchange = e => { draft[k] = e.target.checked; }; });
 // design: applied at once (common rule) — even if the dialog is then closed
-$('#bdRow').onclick = e => { const b = e.target.closest('[data-v]'); if (!b) return; draft.design[draft.rule] = b.dataset.v; settings.design[draft.rule] = b.dataset.v; save(); if (G && G.state.rule === draft.rule) { drawBoard(); step(); } renderDialog(); };
+$('#bdRow').onclick = e => { const b = e.target.closest('[data-v]'); if (!b) return; draft.design[draft.rule] = b.dataset.v; settings.design[draft.rule] = b.dataset.v; save(); if (G && G.state.rule === draft.rule) { drawBoard(); if (!busy) step(); } renderDialog(); };   // (mid-throw or mid-move: just the new board — step() would cut the running throw off, the game then stood still)
 $('#btnCancelNew').onclick = () => $('#newOverlay').classList.remove('show');
 $('#btnStart').onclick = () => { Object.assign(settings, draft); $('#newOverlay').classList.remove('show'); save(); if (settings.mode === 'rated' && window.LudoRated) LudoRated.start(); else newGame(); };
 document.querySelectorAll('.overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); }));
