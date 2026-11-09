@@ -82,7 +82,7 @@
   function fitTitleNow(el) {
     if (!el || !el.isConnected) return;
     el.classList.remove('tf2'); el.style.fontSize = '';
-    const base = parseFloat(getComputedStyle(el).fontSize), min = Math.max(12, base * .66);
+    const base = parseFloat(getComputedStyle(el).fontSize), min = Math.max(11, base * .48);   // (one line down to about half size: シャンチー（中国象棋） stays on one line on phones)
     if (!(el.clientWidth > 0)) return;
     let f = base;
     while (el.scrollWidth > el.clientWidth + 1 && f > min) { f = Math.max(min, f - Math.max(1, base * .05)); el.style.fontSize = f + 'px'; }
