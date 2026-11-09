@@ -170,14 +170,14 @@
     konane: { list: ['papamu', 'quilt'], get: () => ls.get('atlas-konane-look') === 'quilt' ? 'quilt' : 'papamu', set: k => ls.set('atlas-konane-look', k) },
     // carrom (3D only): 'atlas-carrom-look' ('neon' the default | 'modern' | 'classic' | 'rajasthan' | 'bauhaus' | 'tycoon')
     carrom: { list: ['neon', 'modern', 'classic', 'rajasthan', 'bauhaus', 'tycoon'], get: () => { const v = ls.get('atlas-carrom-look'); return ['modern', 'classic', 'rajasthan', 'bauhaus', 'tycoon'].includes(v) ? v : 'neon'; }, set: k => ls.set('atlas-carrom-look', k) },
-    // crokinole (3D only): 'atlas-crokinole-look' ('classic' the default | 'neon' | 'marq' | 'winter' | 'mcm' | 'modern')
-    crokinole: { list: ['classic', 'neon', 'marq', 'winter', 'mcm', 'modern'], get: () => { const v = ls.get('atlas-crokinole-look'); return ['neon', 'marq', 'winter', 'mcm', 'modern'].includes(v) ? v : 'classic'; }, set: k => ls.set('atlas-crokinole-look', k) },
+    // crokinole (3D only): 'atlas-crokinole-look' ('modern' the default | 'classic' | 'marq' | 'mcm' | 'winter' | 'neon')
+    crokinole: { list: ['modern', 'classic', 'marq', 'mcm', 'winter', 'neon'], get: () => { const v = ls.get('atlas-crokinole-look'); return ['classic', 'marq', 'mcm', 'winter', 'neon'].includes(v) ? v : 'modern'; }, set: k => ls.set('atlas-crokinole-look', k) },
     // ludo (atlas/models/ludo.js, atlas/skin/ludo.js): 'atlas-ludo-look' ('classic' the default | 'marble' | 'street' | 'peg' | 'mondrian' | 'cutout'); pachisi keeps its cloth
     ludo: { list: ['classic', 'marble', 'street', 'peg', 'mondrian', 'cutout'], get: () => { const v = ls.get('atlas-ludo-look'); return ['marble', 'street', 'peg', 'mondrian', 'cutout'].includes(v) ? v : 'classic'; }, set: k => ls.set('atlas-ludo-look', k) },
   };
   X.BOARDS = BOARDS;
   X.boardName = (k, lang) => { const o = N3[k]; return o ? o[lang] || o.en : k; };
-  X.boardThumb = (id, k) => new URL('img/board-' + id + '-' + k + '.webp?v=' + (id === 'senet' ? 3 : id === 'carrom' ? 5 : id === 'crokinole' ? 2 : id === 'konane' ? 2 : id === 'ludo' ? 2 : 1), ME).href;
+  X.boardThumb = (id, k) => new URL('img/board-' + id + '-' + k + '.webp?v=' + (id === 'senet' ? 3 : id === 'carrom' ? 5 : id === 'crokinole' ? 3 : id === 'konane' ? 2 : id === 'ludo' ? 2 : 1), ME).href;
   // choose a board for a game: the shared key is written and the showcase board (if it is that game's) is rebuilt at once
   X.setBoard = (id, k) => { const B = BOARDS[id]; if (!B || !B.list.includes(k)) return; B.set(k); try { dispatchEvent(new CustomEvent('atlas-board', { detail: { id, look: k } })); } catch (e) {} };
   PLACES.ui.board = { ja: '盤', en: 'Board', zh: '棋盘', ko: '판', es: 'Tablero', fr: 'Plateau', pt: 'Tabuleiro', de: 'Brett', hi: 'बोर्ड', ar: 'اللوحة', ru: 'Доска', 'zh-TW': '棋盤', id: 'Papan', tr: 'Tahta' };
