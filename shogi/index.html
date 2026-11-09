@@ -420,6 +420,11 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
 .ts-compact .cb-bar .cb-q{font-size:0!important;width:42px!important;height:42px!important;padding:0!important;margin-inline-start:0!important;justify-content:center;gap:0!important;border-radius:14px!important}
 .ts-compact .cb-bar .cb-q::before{width:18px;height:18px}
 .ts-compact .cb-bar{flex-wrap:nowrap!important}
+/* icon + a small caption under it (2026-11-10) */
+.ts-compact .cb-bar :is(.cb-ic,.cb-q)[data-cap]{flex-direction:column!important;justify-content:center!important;gap:3px!important;height:50px!important;width:auto!important;min-width:44px!important;padding:0 5px!important}
+.ts-compact .cb-bar :is(.cb-ic,.cb-q)[data-cap]::after{content:attr(data-cap);font-size:10px;line-height:1;font-weight:700;letter-spacing:0;white-space:nowrap}
+.ts-compact .cb-bar .cb-t{height:50px!important}
+html.atlas-skin .lesson-card.ts-compact .cb-bar .cb-q{border-radius:14px!important;background:#fff!important;box-shadow:0 3px 0 #ead9b6!important}
 /* phones: a compact card head (2026-11-10) — the step on one line (cut with …) beside a small progress pill, a smaller
    title, the prompt tighter and the tsume rule note as a small line of its own */
 @media (max-width:600px){
@@ -4465,6 +4470,11 @@ function keepBoardPos(fn) {
 // 詰将棋: a compact card bar (2026-11-10) — ヒント (もう一度 after a miss) as an icon among the tools, 詰将棋をやめる as an icon at
 // the end of the same row (shared/cardbar.js built the bar; this only rearranges it while a tsume is on)
 const TSB_I = { hint: '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2h5c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3z"/>', retry: '<path d="M4 4v6h6"/><path d="M5.5 15a7 7 0 1 0 1.6-7.3L4 10"/>' };
+const TSB_CAP = {   // small captions under the icons (like the game's toolbar): list, play, hint, retry, quit
+  ja: ['一覧', '再生', 'ヒント', 'もう一度', 'やめる'], en: ['List', 'Play', 'Hint', 'Retry', 'Quit'], zh: ['列表', '播放', '提示', '重试', '退出'], 'zh-TW': ['列表', '播放', '提示', '重試', '退出'],
+  ko: ['목록', '재생', '힌트', '다시', '그만'], es: ['Lista', 'Ver', 'Pista', 'Otra vez', 'Salir'], fr: ['Liste', 'Lire', 'Indice', 'Rejouer', 'Quitter'], pt: ['Lista', 'Ver', 'Dica', 'De novo', 'Sair'],
+  de: ['Liste', 'Zeigen', 'Tipp', 'Nochmal', 'Beenden'], hi: ['सूची', 'चलाएँ', 'संकेत', 'फिर से', 'छोड़ें'], ar: ['القائمة', 'تشغيل', 'تلميح', 'أعد', 'خروج'], ru: ['Список', 'Показ', 'Подсказка', 'Ещё раз', 'Выйти'],
+  id: ['Daftar', 'Putar', 'Petunjuk', 'Ulangi', 'Keluar'], tr: ['Liste', 'Oynat', 'İpucu', 'Tekrar', 'Çık'] };
 function tsBar() {
   const card = $('#lessonCard'), bar = card && card.querySelector('.cb-bar'), h = $('#lsHint'); if (!bar || !h) return;
   const on = !!(lesson && lesson.endless && lesson.cur && lesson.cur.kind === 'tsume'), tools = bar.querySelector('.cb-tools'), main = bar.querySelector('.cb-main');
@@ -4475,9 +4485,12 @@ function tsBar() {
     h.classList.add('cb-ic'); h.classList.remove('cb-t');
     if (h.dataset.tsi !== k) { h.dataset.tsi = k; h.style.setProperty('--cb-i', `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>${TSB_I[k].replace(/"/g, "'")}</svg>`)}")`); }
     const l = h.textContent.trim(); if (l) { h.title = l; h.setAttribute('aria-label', l); }
+    const C = TSB_CAP[LANG] || TSB_CAP.en, cap = (id, v) => { const e = $('#' + id); if (e) e.dataset.cap = v; };
+    cap('lsList', C[0]); cap('lsToList', C[0]); cap('lsAuto', C[1]); cap('lsHint', lesson.retry ? C[3] : C[2]); cap('lsQuit', C[4]);
   } else if (h.parentElement === tools) {
     const nx = $('#lsNext'); main.insertBefore(h, nx && main.contains(nx) ? nx : null);
     h.classList.remove('cb-ic'); h.classList.add('cb-t'); h.style.removeProperty('--cb-i'); delete h.dataset.tsi; h.removeAttribute('title'); h.removeAttribute('aria-label');
+    ['lsList', 'lsToList', 'lsAuto', 'lsHint', 'lsQuit'].forEach(id => { const e = $('#' + id); if (e) delete e.dataset.cap; });
   }
 }
 function renderLesson() { keepBoardPos(renderLesson0); tsBar(); stSync(); hbInfo(); $('#lsBackOp').classList.toggle('hidden', !(lesson && (lesson.study || lesson.opening))); }
