@@ -1269,7 +1269,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=132')).then(() => load('../atlas/tables3d.js?v=47')).then(() => load('../atlas/skin/common.js?v=51npc')).then(() => load('../atlas/models/checkers.js?v=16l14')).then(() => load('../atlas/skin/checkers.js?v=7l14'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=132')).then(() => load('../atlas/tables3d.js?v=48')).then(() => load('../atlas/skin/common.js?v=51npc')).then(() => load('../atlas/models/checkers.js?v=16l14')).then(() => load('../atlas/skin/checkers.js?v=7l14'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
