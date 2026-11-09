@@ -447,7 +447,7 @@ function mtPlan(m) {
     const L = m.cfg || LEVELS[m.level] || LEVELS[10];
     if (all.length < 2 || !L.s) { PRO_CFG = m.cfg || null; try { return { result: think(m.start, m.moves, m.level) }; } finally { PRO_CFG = null; } }
     killers.length = 0;
-    return { plan: { kind: 'best', moves: orderMoves(pos, all, -1, 0), inf, maxD: L.dx || 60, ms: L.ms || 0, nodes: (L.nk || (L.ms ? 0 : 50)) * 1000, win: WINT, partialIfBetter: true, splitMin: 99, lazy: lazyOf(m, L, true) } };   // (the root moves only: Kōnane leans on its table, a split main line costs more than it gives; lazy: the shared table — Lazy SMP, 2026-11-09)
+    return { plan: { kind: 'best', moves: orderMoves(pos, all, -1, 0), inf, maxD: L.dx || 60, ms: L.ms || 0, nodes: (L.nk || (L.ms ? 0 : 50)) * 1000, win: WINT, partialIfBetter: true, splitMin: 99, lazy: lazyOf(m, L, false) } };   // (the root moves only: Kōnane leans on its table, a split main line costs more than it gives; Young Brothers Wait on the shared table — on the user's Mac 8 threads ×2.4 vs Lazy SMP ×1.5, 2026-11-09; lazy: Lazy SMP, for the bench)
   }
   if (!all.length) return { result: { list: [], depth: 0 } };
   const cands = m.job === 'cands';

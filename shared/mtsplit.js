@@ -24,7 +24,7 @@
 //     Wait at the root); meanwhile the other workers test the other moves against the score of the previous depths (null
 //     window), then against the real alpha; a move that fails high is searched again with (alpha, ∞).
 //   MTSplit.ladder — drive() for the engines that speak 'mtplan' / 'mtv' / 'mtpv' / 'mtfin' (ugolki, agon, konane, mancala);
-//   in shared mode a plan with `lazy` (agon, konane, mancala) is searched Lazy SMP style instead ('mtlead' + 'mthelp'), and
+//   in shared mode a plan with `lazy` (mancala; agon / konane only on their bench, 2026-11-09) is searched Lazy SMP style instead ('mtlead' + 'mthelp'), and
 //   so is an analysis plan with `lazyAll` (mancala, 2026-11-09: 6 root moves at most, so splitting them left threads idle);
 //   'mtlead' carries `job` (the page's message type).
 (function () {
@@ -371,7 +371,7 @@
       const kindOf = v => win(v) ? 'exact' : 'heur';
       let raw;
       if ((p.kind === 'best' ? p.lazy : p.lazyAll) && X.shared && X.n > 1) {
-        // Lazy SMP (shared mode, plan.lazy — agon, konane: faster to the same depth than splitting the tree there): the first
+        // Lazy SMP (shared mode, plan.lazy — mancala; on the user's Mac agon / konane were faster with Young Brothers Wait): the first
         // worker plays the job as one thread does ('mtlead': the same search, the same reply) on the shared table, the others
         // search the same root meanwhile ('mthelp': one ply deeper every other helper, from a rotated root order) and stop
         // when it is done
