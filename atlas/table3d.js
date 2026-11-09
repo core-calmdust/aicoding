@@ -963,7 +963,7 @@
   // a place may show the page's own CSS behind a transparent canvas (2D準拠): the canvas container carries it
   let roomCss = '';
   function paintCss(css) { if (!el || mountOpts.local) return; el.style.background = css || ''; }
-  let roomMode = '', alignFn = null, alignSize = 0, alignTop = 0, zoom = 1, zoomTo = 1, envOK = false, vel = 0, tilt = 0, dragEnd = 0, idleT = 0;
+  let roomMode = '', alignFn = null, alignSize = 0, alignTop = 0, zoom = 1, zoomTo = 1, pzoom = 1, pzoomTo = 1, envOK = false, vel = 0, tilt = 0, dragEnd = 0, idleT = 0;
   let R, scene, cam, root, cur = null, el = null, drag = null, yaw = 0, spin = true, mode = 'view', camK = 0, camTo = 0;
   // 盤面反転 on the skin pages (AtlasSkin): the table turned round its own centre — tYaw / tS set from outside each frame (turn())
   let tYaw = null, tS = 1, rootDirty = false;
@@ -1443,7 +1443,10 @@
     root = new (T().Group)(); scene.add(root);
     // touch / mouse: drag to spin the board (any mode). A drag longer than a few px is not a click.
     // zoom (view mode): mouse wheel, or pinch with two fingers
-    container.addEventListener('wheel', e => { if (mode === 'play') return; e.preventDefault(); zoomTo = Math.max(.55, Math.min(1.7, zoomTo * Math.exp(e.deltaY * .0012))); }, { passive: false });
+    // … and while playing (2026-11-09): the wheel moves the camera in / out along its own line (pzoom, kept for the game)
+    container.addEventListener('wheel', e => { if (e.ctrlKey) return; e.preventDefault();
+      if (mode === 'play') { pzoomTo = Math.max(.6, Math.min(1.5, pzoomTo * Math.exp(e.deltaY * .0012))); kick(400); return; }
+      zoomTo = Math.max(.55, Math.min(1.7, zoomTo * Math.exp(e.deltaY * .0012))); }, { passive: false });
     const pts = new Map(); let pinch0 = 0, zoom0 = 1;
     const pdist = () => { const a = [...pts.values()]; return Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y); };
     container.addEventListener('pointerdown', e => { pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (pts.size === 2 && mode !== 'play') { pinch0 = pdist(); zoom0 = zoomTo; drag = null; } }, true);
@@ -1574,7 +1577,7 @@
     // (a chess board fills ~60% of the width); never further than that frame (big boards such as the legged goban stay as they were)
     const pr = !k && !mr && cw && cw < 700 ? Math.min(6.5, Math.max((boardR(), (cur && cur.userData._rb) || 6.5) * .92, ((cur && cur.userData._s) || 0) * 1.06)) : 0;   // (a long board such as Ur's: its long side kept clear of the edges)
     const needW = (k ? fw : mr || pr || 6.5) / (th * a), needH = (k ? fd : mh || (pr ? 6.8 * pr / 6.5 : 6.8)) / th;
-    const dist = Math.max(needW, needH) * (k ? 1 : mr ? 1 : 1.08) * (1 + ((mr ? 1 : zoom) - 1) * (1 - k)) * (orthoWant ? 1 + .14 * k : 1);   // ortho plan: the whole depth shows unforeshortened, so a little more room   // zoom applies to the showcase view only
+    const dist = Math.max(needW, needH) * (k ? 1 : mr ? 1 : 1.08) * (1 + ((mr ? 1 : zoom) - 1) * (1 - k)) * (1 + (pzoom - 1) * k) * (orthoWant ? 1 + .14 * k : 1);   // ortho plan: the whole depth shows unforeshortened, so a little more room   // zoom applies to the showcase view only
     const pitch = .52 + k * ((orthoWant ? 1.5703 : F && F.pitch ? F.pitch : 1.34) - .52);   // ortho (Historia's diagram view): straight down   // play: nearly top-down (fit can ask for straight down)                       // view: low 3/4 so the room shows · play: nearly top-down
     return [0, dist * Math.sin(pitch), dist * Math.cos(pitch)];
   }
@@ -1646,7 +1649,7 @@
   function take(id) { const p = prepared[id]; delete prepared[id]; return p && p.st === stamp() ? p : null; }
   function show(id, model, opts = {}) {
     if (!R) return null;
-    mode = 'view'; camTo = 0; spin = true; yaw = 0; vel = 0; tilt = 0; idleT = performance.now(); zoomTo = 1; fitTo = null; kick(400);
+    mode = 'view'; camTo = 0; spin = true; yaw = 0; vel = 0; tilt = 0; idleT = performance.now(); zoomTo = 1; pzoomTo = 1; fitTo = null; kick(400);
     const old = cur;
     const back = !model && takeKept(id);
     if (old) root.remove(old);
@@ -1907,6 +1910,7 @@
       moving = true;
     } else if (Math.abs(camTo - camK) > 1e-5) { camK += (camTo - camK) * ez(.07); moving = true; } else camK = camTo;
     if (Math.abs(zoomTo - zoom) > 1e-5) { zoom += (zoomTo - zoom) * ez(.18); moving = true; } else zoom = zoomTo;
+    if (Math.abs(pzoomTo - pzoom) > 1e-5) { pzoom += (pzoomTo - pzoom) * ez(.18); moving = true; } else pzoom = pzoomTo;
     if (fitStep(ez)) moving = true;
     if (glide) {} else if (Math.abs(insetTo - inset) > .5) { inset += (insetTo - inset) * ez(.07); frame(); moving = true; }   // same pace as the camera, frame-rate independent
     else if (inset !== insetTo) { inset = insetTo; frame(); moving = true; }
@@ -2081,7 +2085,7 @@
   function turn(a, s) { if (a == null) { tYaw = null; tS = 1; yaw = 0; } else { tYaw = a; tS = s || 1; } rootDirty = true; kick(250); }
   function project(x, z, y) { const v = new (T().Vector3)(x, y || 0, z); cur.localToWorld(v); v.project(cam); const r = el.getBoundingClientRect(); return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height }; }
   // snap the camera to where it is heading (after a game: the showcase view at once, framed above the info card)
-  function snap() { camK = camTo; zoom = zoomTo = 1; tilt = 0; vel = 0; inset = insetTo; insetT = insetTTo; frame(); kick(300); }
+  function snap() { camK = camTo; zoom = zoomTo = 1; pzoom = pzoomTo; tilt = 0; vel = 0; inset = insetTo; insetT = insetTTo; frame(); kick(300); }
   const _dbg = () => ({ camK, camTo, inset, insetTo, insetT, zoom, zoomTo, yaw, tilt, mode, fitTo, orthoW, museum: museumOn, aspect: cam && cam.aspect });
   const _scene = () => scene;
   window.Table3D = { TABLES, setTable, table: () => tableStyle, setBright, bright: () => bright, turn, museum, setShift, quiet, setTimeOfDay, timeOfDayPick: todPick, share, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, rvDisc, rvMats, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
