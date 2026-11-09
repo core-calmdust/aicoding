@@ -229,9 +229,6 @@
         let ax = gp.axes[0] || 0, ay = gp.axes[1] || 0; const dz = .16; if (Math.hypot(ax, ay) < dz) { ax = 0; ay = 0; }
         const b = gp.buttons || []; if (b[14] && b[14].pressed) ax = -1; if (b[15] && b[15].pressed) ax = 1; if (b[12] && b[12].pressed) ay = -1; if (b[13] && b[13].pressed) ay = 1;
         if (ax || ay) { vel[side][0] += ax; vel[side][1] += ay; }
-        if (phase !== 'play' && b[0] && b[0].pressed && menuEl && !padHeld) { padHeld = true; begin(); }
-        if (!(b[0] && b[0].pressed)) padHeld = false;
-        if (phase === 'menu' && menuEl && (Math.abs(ay) > .6 || Math.abs(ax) > .6) && performance.now() - padNav > 220) { padNav = performance.now(); const i0 = E.MODES.indexOf(menuSel), n = E.MODES.length, d = Math.abs(ay) > .6 ? (ay > 0 ? 2 : -2) : (ax > 0 ? 1 : -1); pickMode(E.MODES[(i0 + d + n) % n]); }
       });
       for (let side = 0; side < 2; side++) {
         const [vx, vy] = vel[side]; if (!vx && !vy) continue;
@@ -240,7 +237,17 @@
         tgt[side] = { tx: m.x + fx / l * k, ty: m.y + fy / l * k };
       }
     }
-    let padHeld = false, padNav = 0;
+    // the mode menu with a gamepad: stick / d-pad to choose, A (or Start) to begin
+    let padHeld = true, padNav = 0, padRaf = 0;
+    function padMenu() {
+      if (stopped || phase !== 'menu' || !menuEl) return;
+      padRaf = requestAnimationFrame(padMenu);
+      let pads = []; try { pads = [...(navigator.getGamepads ? navigator.getGamepads() : [])].filter(Boolean); } catch (e) { return; }
+      let ax = 0, ay = 0, go = false;
+      pads.forEach(gp => { const b = gp.buttons || []; let x = gp.axes[0] || 0, y = gp.axes[1] || 0; if (b[14] && b[14].pressed) x = -1; if (b[15] && b[15].pressed) x = 1; if (b[12] && b[12].pressed) y = -1; if (b[13] && b[13].pressed) y = 1; if (Math.abs(x) > Math.abs(ax)) ax = x; if (Math.abs(y) > Math.abs(ay)) ay = y; if ((b[0] && b[0].pressed) || (b[9] && b[9].pressed)) go = true; });
+      if (!go) padHeld = false; else if (!padHeld) { padHeld = true; begin(); return; }
+      if ((Math.abs(ay) > .6 || Math.abs(ax) > .6) && performance.now() - padNav > 220) { padNav = performance.now(); const i0 = E.MODES.indexOf(menuSel), n = E.MODES.length, d = Math.abs(ay) > .6 ? (ay > 0 ? 2 : -2) : (ax > 0 ? 1 : -1); pickMode(E.MODES[(i0 + d + n) % n]); }
+    }
 
     /* ---------- the mode menu ---------- */
     let menuEl = null, menuSel = (() => { try { const v = localStorage.getItem('atlas-hockey-mode'); return E.MODES.includes(v) ? v : 'classic'; } catch (e) { return 'classic'; } })();
@@ -254,6 +261,7 @@
       document.body.appendChild(el);
       el.querySelectorAll('[data-m]').forEach(b => { b.onclick = () => pickMode(b.dataset.m); b.ondblclick = () => { pickMode(b.dataset.m); begin(); }; });
       el.querySelector('.go').onclick = begin;
+      padHeld = true; padRaf = requestAnimationFrame(padMenu);
     }
     function begin() {
       if (!menuEl) return;
@@ -309,7 +317,7 @@
       resign() { if (over) return; over = true; cancelAnimationFrame(raf); if (menuEl) { menuEl.remove(); menuEl = null; } const sc = s ? `${s.score[0]} − ${s.score[1]}` : '0 − 0'; ctx.onEnd(pvp ? { win: false, draw: false, level, score: sc, pvp: true, winnerText: tr('win', lang).replace('{p}', names[1]) } : { win: false, draw: false, level, score: sc }); },
       timeout() {},
       stop() {
-        stopped = true; cancelAnimationFrame(raf); timers.forEach(clearTimeout);
+        stopped = true; cancelAnimationFrame(raf); cancelAnimationFrame(padRaf); timers.forEach(clearTimeout);
         ctx.el.removeEventListener('pointerdown', onDown); ctx.el.removeEventListener('pointermove', onMove); removeEventListener('pointerup', onUp, true); removeEventListener('pointercancel', onUp, true);
         removeEventListener('keydown', onKey); removeEventListener('keyup', onKey); removeEventListener('resize', onResize); document.removeEventListener('visibilitychange', onVis); removeEventListener('blur', onVis);
         ctx.el.style.touchAction = prevTouch; css.remove(); if (toastEl) toastEl.remove(); if (menuEl) menuEl.remove(); document.querySelectorAll('.hkbig,.hkfx').forEach(e => e.remove());

@@ -12,6 +12,8 @@
 <script src="../models/carrom.js"></script>
 <script src="../../crokinole/engine.js"></script>
 <script src="../models/crokinole.js"></script>
+<script src="../../hockey/engine.js"></script>
+<script src="../models/hockey.js"></script>
 <script>
 (function () {
   const q = new URLSearchParams(location.search), id = q.get('game') || 'carrom', look = q.get('look') || 'neon', S = +q.get('px') || 1600;
@@ -38,6 +40,10 @@
     seq.forEach((sh, i) => { const shot = sh ? { x: sh[0], ang: sh[1], v: E.VMAX * sh[2] } : E.perform(E.think(s, 9, 11 + i), 9, 23 + i); s = E.resolve(s, E.simulate(s, s.turn, shot)).s; });
     s.pcs.forEach(m => { if (!m.on) return; const p = U.piece(m.c), [x, z] = U.xz(m.x, m.y); p.position.set(x, U.top, z); g.add(p); const sh = X.contact(U.R * 1.15, .4); sh.position.set(x, U.top + .002, z); g.add(sh); });
     const st = U.striker(), [x, z] = U.xz(5, 25.26); st.position.set(x, U.top, z); g.add(st);
+  }
+  if (id === 'hockey') {   // a rally: both mallets and the puck on its way
+    const U = g.userData, put = (m, x, y) => { const [a, b] = U.xz(x, y); m.position.set(a, U.top, b); g.add(m); };
+    put(U.mallet(0), -5, 19); put(U.mallet(1), 7, -17); put(U.puck(), 4, 3);
   }
   if (id === 'crokinole') {   // a round in progress: a few shots by the engine itself (fixed seeds)
     const E = window.CrokinoleEngine, U = g.userData;
