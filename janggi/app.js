@@ -1151,7 +1151,7 @@ $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 const PRO_L = window.ProSet ? ProSet.ladder(E.LEVELS, { dmax: 30, nmax: 50000000 }) : null;
 // threads (本編のマルチスレッド): with any limit; the default is every thread for the levels with a time limit, else one
 var PRO = PRO_L ? ProSet.init({ game: 'janggi', lang: () => LANG, level: () => draft.level || settings.level, show: () => draft.mode === 'ai' || draft.mode === 'watch',
-  store: { get: () => settings.pro, set: v => { settings.pro = v; } }, defaults: lv => Object.assign(PRO_L.defaults(lv), { threads: mtLevel(lv) ? ProSet.maxThreads() : 1 }),
+  store: { get: () => settings.pro, set: v => { settings.pro = v; } }, defaults: lv => Object.assign(PRO_L.defaults(lv), { threads: mtLevel(lv) ? ProSet.defThreads() : 1 }),
   params: [PRO_L.params[0], { key: 'threads' }].concat(PRO_L.params.slice(1)) }) : null;
 function proCfg(lv) { if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; const e = PRO.get(lv); return e ? Object.assign(PRO_L.cfg(e, lv), { threads: e.threads || 1 }) : null; }
 function proTag(lv) { return proCfg(lv) ? ' PRO' : ''; }

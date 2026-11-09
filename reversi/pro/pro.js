@@ -182,7 +182,8 @@
   }
 
   [[1000, '1'], [3000, '3'], [5000, '5'], [10000, '10'], [30000, '30']].forEach(([v, l]) => { const o = document.createElement('option'); o.value = v; o.textContent = l + ' ' + tr('sec'); if (v === 5000) o.selected = true; $('#selTime').appendChild(o); });
-  const AUTO = Math.max(1, HC - 1), thrOpts = [...new Set([AUTO, 1, 2, 4, 6, 8, 12, 16, HC].filter(n => n >= 1 && n <= MAXT))].sort((a, b) => a - b);
+  // (AUTO: the performance cores at most — shared/mtengine.js perfThreads, 2026-11-09)
+  const AUTO = window.MTEngine && MTEngine.perfThreads ? Math.max(1, Math.min(HC - 1, MTEngine.perfThreads())) : Math.max(1, HC - 1), thrOpts = [...new Set([AUTO, 1, 2, 4, 6, 8, 12, 16, HC].filter(n => n >= 1 && n <= MAXT))].sort((a, b) => a - b);
   thrOpts.forEach(n => { const o = document.createElement('option'); o.value = n; o.textContent = n === AUTO ? n + '（' + tr('auto') + '）' : String(n); if (n === AUTO) o.selected = true; $('#selThr').appendChild(o); });
   $('#selThr').onchange = async () => { if (!threaded) return; const was = analysing; await stopAnalysis(); await setThreads(+$('#selThr').value); if (was) startAnalysis(); };
   $('#btnAna').onclick = () => analysing ? stopAnalysis() : startAnalysis();

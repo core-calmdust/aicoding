@@ -1132,7 +1132,7 @@ $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
 // games. The changed values make a level of their own (engine.js: think with cfg, the same keys as LEVELS).
 const PRO_DEF = lv => { const L = E.LEVELS[lv] || E.LEVELS[12];
   return { limit: L.noise !== undefined ? { k: 'depth', v: L.d } : L.wnodes ? { k: 'nodes', v: L.wnodes } : { k: 'time', v: L.ms / 1000 },
-    threads: !L.wnodes && L.noise === undefined && L.ms > 0 ? ProSet.maxThreads() : 1, book: !!L.book, var: L.noise === undefined ? 0 : L.noise >= 100 ? 2 : 1, eval: 'nnue' }; };
+    threads: !L.wnodes && L.noise === undefined && L.ms > 0 ? ProSet.defThreads() : 1, book: !!L.book, var: L.noise === undefined ? 0 : L.noise >= 100 ? 2 : 1, eval: 'nnue' }; };
 var PRO = window.ProSet ? ProSet.init({ game: 'chess', lang: () => LANG, level: () => draft.level || settings.level, show: () => draft.mode === 'ai' || draft.mode === 'watch',
   store: { get: () => settings.pro, set: v => { settings.pro = v; } }, defaults: PRO_DEF,
   params: [{ key: 'limit', kinds: { time: [0.1, 60], depth: [1, 30], nodes: [1000, 1e8] } }, { key: 'threads' },

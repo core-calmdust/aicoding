@@ -1357,7 +1357,7 @@ body.in-online #coachCard{display:none!important}
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2l14"></script>
 <script src="online.js?v=stale2pf"></script>
-<script src="../shared/mtengine.js?v=8"></script><script>MTEngine.init({ sw: "sw.js?v=1", light: true }); if (MTEngine.coi && window.MorrisOnline) MorrisOnline.available = false;</script><script src="../shared/proset.js?v=3t2svhxbf"></script><script>
+<script src="../shared/mtengine.js?v=9"></script><script>MTEngine.init({ sw: "sw.js?v=1", light: true }); if (MTEngine.coi && window.MorrisOnline) MorrisOnline.available = false;</script><script src="../shared/proset.js?v=3t2svhxbf-pt1"></script><script>
 'use strict';
 // ====================================================================== rules (shared with the engine)
 const E = window.MorrisEngine, NONE = E.NONE, WIN = E.WIN, WINT = E.WINT;
@@ -2558,7 +2558,7 @@ $('#optPfCh').onchange = e => { draft.pfCh = e.target.checked; };
 // AI vs AI, never rated. The changed values make a level of the engine's own form (engine.js: cfg).
 var PRO = window.ProSet ? ProSet.init({ game: 'morris', lang: () => LANG, level: () => draft.level || settings.level, show: () => (draft.mode === 'ai' || draft.mode === 'watch') && !(draft.rule === 'six' && (draft.level === PF_LV || (draft.mode === 'watch' && draft.level2 === PF_LV))),
   store: { get: () => settings.pro, set: v => { settings.pro = v; } },
-  defaults: lv => { const L = E.LEVELS[lv] || E.LEVELS[5]; return { limit: L.noise === undefined && L.ms ? { k: 'time', v: L.ms / 1000 } : { k: 'depth', v: L.d }, var: L.noise === undefined ? 0 : L.blunder ? 2 : 1, threads: MTP && mtLevel(lv) ? ProSet.maxThreads() : 1 }; },
+  defaults: lv => { const L = E.LEVELS[lv] || E.LEVELS[5]; return { limit: L.noise === undefined && L.ms ? { k: 'time', v: L.ms / 1000 } : { k: 'depth', v: L.d }, var: L.noise === undefined ? 0 : L.blunder ? 2 : 1, threads: MTP && mtLevel(lv) ? ProSet.defThreads() : 1 }; },
   params: [{ key: 'limit', kinds: { time: [0.1, 30], depth: [1, 40] } }].concat(MTP ? [{ key: 'threads' }] : [], [{ key: 'var' }]) }) : null;   // (threads: 本編のマルチスレッド, any limit of the search; every thread by default for the levels that think by time)
 function proGet(lv) { if (lv === PF_LV || !PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; return PRO.get(lv); }
 function proTag(lv) { return proCfg(lv) ? ' PRO' : ''; }
