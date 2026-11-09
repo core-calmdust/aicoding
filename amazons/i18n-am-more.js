@@ -1,6 +1,7 @@
 // Game of the Amazons: zh / zh-TW / ko / es / fr / pt / de / ru / tr / id / hi / ar (same keys as i18n-am.js; overrides checkers/i18n.js)
 (function (A) { for (const l in A) if (window.I18N) I18N[l] = Object.assign(I18N[l] || {}, A[l]); })({
 zh: {
+  'tab.game': '对局',
   'meta.title': '亚马逊棋 — 世界桌游大百科', 'title': '亚马逊棋', 'sub': 'Amazons', 'p1': '白', 'p2': '黑',
   'pcs': '可走 {m}', 'hb.mob': '可走{n}', 'hb.arrows': '箭 {n}支',
   'rsv.terr': '领地 {n}', 'rsv.mob': '可走 {n}', 'rsv.mobT': '亚马逊现在能走到的格数（轮到自己时为0就输）', 'rsv.title': '{c}：领地 {a} · 可走 {b} 格',
@@ -39,6 +40,7 @@ zh: {
   'tr.terr.t': '扩大领地', 'tr.terr.b': '棋盘被箭隔开后，<b>自己专属的房间更大的一方</b>能走到最后并获胜。这张图里白方的房间更大。',
 },
 'zh-TW': {
+  'tab.game': '對局',
   'meta.title': '亞馬遜棋 — 世界桌遊大百科', 'title': '亞馬遜棋', 'sub': 'Amazons', 'p1': '白', 'p2': '黑',
   'pcs': '可走 {m}', 'hb.mob': '可走{n}', 'hb.arrows': '箭 {n}支',
   'rsv.terr': '領地 {n}', 'rsv.mob': '可走 {n}', 'rsv.mobT': '亞馬遜現在能走到的格數（輪到自己時為0就輸）', 'rsv.title': '{c}：領地 {a} · 可走 {b} 格',
@@ -77,6 +79,7 @@ zh: {
   'tr.terr.t': '擴大領地', 'tr.terr.b': '棋盤被箭隔開後，<b>自己專屬的房間更大的一方</b>能走到最後並獲勝。這張圖裡白方的房間更大。',
 },
 ko: {
+  'tab.game': '대국',
   'meta.title': '아마존스 — 세계 보드게임 대백과', 'title': '아마존스', 'sub': 'Amazons', 'p1': '백', 'p2': '흑',
   'pcs': '이동 {m}', 'hb.mob': '이동{n}', 'hb.arrows': '화살 {n}개',
   'rsv.terr': '영역 {n}', 'rsv.mob': '이동 {n}', 'rsv.mobT': '아마존이 지금 갈 수 있는 칸 수 (내 차례에 0이면 패배)', 'rsv.title': '{c}: 영역 {a} · 이동 가능 {b}칸',
@@ -115,6 +118,7 @@ ko: {
   'tr.terr.t': '영역을 넓게', 'tr.terr.b': '화살로 판이 나뉘면 <b>나만의 방이 넓은 쪽</b>이 끝까지 움직여 이깁니다. 이 그림에서는 백의 방이 넓네요.',
 },
 es: {
+  'tab.game': 'Partida',
   'meta.title': 'Amazons — Atlas Mundial de Juegos de Mesa', 'title': 'Amazons', 'sub': 'Argentina · 1988', 'p1': 'Blancas', 'p2': 'Negras',
   'pcs': '{m} movs.', 'hb.mob': '{n} movs.', 'hb.arrows': '{n} flechas',
   'rsv.terr': 'territorio {n}', 'rsv.mob': 'movs. {n}', 'rsv.mobT': 'Casillas a las que tus amazonas pueden moverse ahora (ninguna en tu turno = pierdes)', 'rsv.title': '{c}: territorio {a} · {b} casillas a las que moverse',
@@ -153,6 +157,7 @@ es: {
   'tr.terr.t': 'Gana territorio', 'tr.terr.b': 'Cuando las flechas dividen el tablero en salas, <b>el bando con más espacio propio</b> puede moverse más tiempo y gana. Aquí la sala blanca es mayor.',
 },
 fr: {
+  'tab.game': 'Partie',
   'meta.title': 'Amazons — Atlas mondial des jeux de société', 'title': 'Amazons', 'sub': 'jeu des Amazones', 'p1': 'Blancs', 'p2': 'Noirs',
   'pcs': '{m} cases', 'hb.mob': '{n} cases', 'hb.arrows': '{n} flèches',
   'rsv.terr': 'territoire {n}', 'rsv.mob': 'cases {n}', 'rsv.mobT': 'Cases où vos amazones peuvent aller maintenant (aucune à votre tour = vous perdez)', 'rsv.title': '{c} : territoire {a} · {b} cases accessibles',
@@ -191,6 +196,7 @@ fr: {
   'tr.terr.t': 'Gagner du territoire', 'tr.terr.b': 'Quand les flèches découpent le plateau en pièces, <b>le camp qui a le plus de place à lui</b> bouge le plus longtemps et gagne. Ici la pièce blanche est plus grande.',
 },
 pt: {
+  'tab.game': 'Partida',
   'meta.title': 'Amazons — Atlas Mundial de Jogos de Tabuleiro', 'title': 'Amazons', 'sub': 'jogo das amazonas', 'p1': 'Brancas', 'p2': 'Pretas',
   'pcs': '{m} movs.', 'hb.mob': '{n} movs.', 'hb.arrows': '{n} flechas',
   'rsv.terr': 'território {n}', 'rsv.mob': 'movs. {n}', 'rsv.mobT': 'Casas para onde suas amazonas podem ir agora (nenhuma na sua vez = você perde)', 'rsv.title': '{c}: território {a} · {b} casas para mover',
@@ -229,6 +235,7 @@ pt: {
   'tr.terr.t': 'Conquiste território', 'tr.terr.b': 'Quando as flechas dividem o tabuleiro em salas, <b>o lado com mais espaço próprio</b> se move por mais tempo e vence. Aqui a sala das brancas é maior.',
 },
 de: {
+  'tab.game': 'Partie',
   'meta.title': 'Amazons — Weltatlas der Brettspiele', 'title': 'Amazons', 'sub': 'Amazonenspiel', 'p1': 'Weiß', 'p2': 'Schwarz',
   'pcs': '{m} Züge', 'hb.mob': '{n} Züge', 'hb.arrows': '{n} Pfeile',
   'rsv.terr': 'Gebiet {n}', 'rsv.mob': 'Züge {n}', 'rsv.mobT': 'Felder, auf die deine Amazonen jetzt ziehen können (keins am Zug = verloren)', 'rsv.title': '{c}: Gebiet {a} · {b} erreichbare Felder',
@@ -267,6 +274,7 @@ de: {
   'tr.terr.t': 'Gebiet sichern', 'tr.terr.b': 'Haben Pfeile das Brett in Räume geteilt, kann <b>die Seite mit mehr eigenem Raum</b> am längsten ziehen und gewinnt. Hier ist der weiße Raum größer.',
 },
 ru: {
+  'tab.game': 'Партия',
   'meta.title': 'Амазонки — Мировой атлас настольных игр', 'title': 'Амазонки', 'sub': 'Amazons', 'p1': 'Белые', 'p2': 'Чёрные',
   'pcs': 'ходов {m}', 'hb.mob': 'ходов {n}', 'hb.arrows': 'стрел {n}',
   'rsv.terr': 'территория {n}', 'rsv.mob': 'ходов {n}', 'rsv.mobT': 'Сколько полей доступно вашим амазонкам сейчас (0 в свой ход = поражение)', 'rsv.title': '{c}: территория {a} · доступно полей {b}',
@@ -305,6 +313,7 @@ ru: {
   'tr.terr.t': 'Захватывайте территорию', 'tr.terr.b': 'Когда стрелы разделят доску на комнаты, <b>сторона с большей собственной комнатой</b> дольше сможет ходить и победит. Здесь комната белых больше.',
 },
 tr: {
+  'tab.game': 'Oyun',
   'meta.title': 'Amazons — Dünya Masa Oyunları Atlası', 'title': 'Amazons', 'sub': 'Amazonlar oyunu', 'p1': 'Beyaz', 'p2': 'Siyah',
   'pcs': '{m} hamle', 'hb.mob': '{n} hamle', 'hb.arrows': '{n} ok',
   'rsv.terr': 'bölge {n}', 'rsv.mob': 'hamle {n}', 'rsv.mobT': 'Amazonlarının şu an gidebileceği kare sayısı (sıra sendeyken 0 = kaybedersin)', 'rsv.title': '{c}: bölge {a} · gidilebilir {b} kare',
@@ -343,6 +352,7 @@ tr: {
   'tr.terr.t': 'Bölge kazan', 'tr.terr.b': 'Oklar tahtayı odalara bölünce <b>kendine ait daha büyük odası olan taraf</b> en uzun süre hamle yapar ve kazanır. Burada Beyaz’ın odası daha büyük.',
 },
 id: {
+  'tab.game': 'Permainan',
   'meta.title': 'Amazons — Atlas Dunia Permainan Papan', 'title': 'Amazons', 'sub': 'permainan Amazon', 'p1': 'Putih', 'p2': 'Hitam',
   'pcs': '{m} langkah', 'hb.mob': '{n} langkah', 'hb.arrows': '{n} panah',
   'rsv.terr': 'wilayah {n}', 'rsv.mob': 'langkah {n}', 'rsv.mobT': 'Petak yang bisa dituju amazonmu sekarang (0 saat giliranmu = kalah)', 'rsv.title': '{c}: wilayah {a} · {b} petak bisa dituju',
@@ -381,6 +391,7 @@ id: {
   'tr.terr.t': 'Rebut wilayah', 'tr.terr.b': 'Saat panah membagi papan menjadi ruang-ruang, <b>pihak dengan ruang sendiri yang lebih luas</b> bisa bergerak paling lama dan menang. Di sini ruang Putih lebih besar.',
 },
 hi: {
+  'tab.game': 'खेल',
   'meta.title': 'अमेज़न्स — विश्व बोर्ड गेम एटलस', 'title': 'अमेज़न्स', 'sub': 'Amazons', 'p1': 'सफ़ेद', 'p2': 'काला',
   'pcs': '{m} चालें', 'hb.mob': '{n} चालें', 'hb.arrows': '{n} तीर',
   'rsv.terr': 'क्षेत्र {n}', 'rsv.mob': 'चालें {n}', 'rsv.mobT': 'आपकी अमेज़न अभी कितने खानों में जा सकती हैं (अपनी बारी पर 0 = हार)', 'rsv.title': '{c}: क्षेत्र {a} · {b} खानों में जा सकती हैं',
@@ -419,6 +430,7 @@ hi: {
   'tr.terr.t': 'क्षेत्र बढ़ाएँ', 'tr.terr.b': 'जब तीर बोर्ड को कमरों में बाँट दें, तो <b>जिसका अपना कमरा बड़ा हो</b> वह सबसे देर तक चलता है और जीतता है। यहाँ सफ़ेद का कमरा बड़ा है।',
 },
 ar: {
+  'tab.game': 'المباراة',
   'meta.title': 'الأمازونات — الأطلس العالمي لألعاب الطاولة', 'title': 'الأمازونات', 'sub': 'Amazons', 'p1': 'الأبيض', 'p2': 'الأسود',
   'pcs': '{m} حركة', 'hb.mob': '{n} حركة', 'hb.arrows': '{n} سهم',
   'rsv.terr': 'المنطقة {n}', 'rsv.mob': 'الحركات {n}', 'rsv.mobT': 'عدد المربعات التي تستطيع أمازوناتك الانتقال إليها الآن (صفر في دورك = خسارة)', 'rsv.title': '{c}: المنطقة {a} · {b} مربعات متاحة',

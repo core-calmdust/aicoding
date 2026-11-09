@@ -6,6 +6,7 @@
 // Olympiad tournaments; simple endgames NP-hard, generalized Amazons PSPACE-complete).
 (function (A) { for (const l in A) if (window.I18N && I18N[l]) Object.assign(I18N[l], A[l]); })({
 ja: {
+  'tab.game': '対局',
   'meta.title': 'アマゾンズ — 世界のボドゲ大百科', 'title': 'アマゾンズ', 'sub': 'Amazons', 'p1': '白', 'p2': '黒',
   'pcs': '動ける {m}', 'hb.mob': '動ける{n}', 'hb.arrows': '矢 {n}本',
   'rsv.terr': '陣地 {n}', 'rsv.mob': '動ける {n}', 'rsv.mobT': 'アマゾンがいま動けるマスの数（自分の番に0なら負け）', 'rsv.title': '{c}：陣地 {a}・動けるマス {b}',
@@ -44,6 +45,7 @@ ja: {
   'tr.terr.t': '陣地を広く', 'tr.terr.b': '矢で盤が区切られたら、<b>自分だけの部屋が広い方</b>が最後まで動けて勝ちます。この図では白の部屋が広いですね。',
 },
 en: {
+  'tab.game': 'Game',
   'meta.title': 'Amazons — World Board Game Atlas', 'title': 'Amazons', 'sub': 'Game of the Amazons', 'p1': 'White', 'p2': 'Black',
   'pcs': '{m} moves', 'hb.mob': '{n} moves', 'hb.arrows': '{n} arrows',
   'rsv.terr': 'territory {n}', 'rsv.mob': 'moves {n}', 'rsv.mobT': 'Squares your amazons can move to now (none on your turn = you lose)', 'rsv.title': '{c}: territory {a} · {b} squares to move to',
