@@ -140,7 +140,10 @@
 .hkmodes b{display:block;font-size:15px;font-weight:900}.hkmodes small{display:block;font-size:12px;font-weight:700;color:#5b6074;line-height:1.35;margin-top:2px}
 .hkmenu .go{display:block;width:100%;margin-top:14px;padding:13px;border:0;border-radius:99px;background:#ff5d5d;color:#fff;font:inherit;font-size:19px;font-weight:900;cursor:pointer;box-shadow:0 4px 0 #c94040}
 .hkmenu .how{margin:12px 2px 0;padding:10px 12px;border-radius:14px;background:#f4efe3;font-size:12.5px;font-weight:700;color:#4a4f63;line-height:1.5}
-@media (max-width:560px){.hkmodes{grid-template-columns:1fr;gap:7px}.hkmodes button{padding:8px 10px}.hkmodes .ic{width:36px;height:36px;font-size:20px}.hkmenu h2{font-size:19px;margin-bottom:10px}}
+
+.hkmenu .sel{display:none;margin:10px 2px 0;font-size:13px;font-weight:800;color:#2f6fd0;text-align:center;min-height:2.6em}
+@media (max-width:560px){.hkmenu-c{padding:14px 12px 12px}.hkmodes{gap:6px}.hkmodes button{padding:7px 8px;gap:7px}.hkmodes .ic{width:32px;height:32px;font-size:18px;border-radius:10px}.hkmodes b{font-size:13.5px}.hkmodes small{display:none}.hkmenu h2{font-size:19px;margin-bottom:10px}.hkmenu .sel{display:block}.hkmenu .how{font-size:11.5px;padding:8px 10px}}
+.hkmenu .go{position:sticky;bottom:0}
 .hktoast{position:fixed;left:50%;top:calc(80px + env(safe-area-inset-top));transform:translateX(-50%);z-index:90;padding:9px 20px;border-radius:99px;background:#fff;color:#1d2133;font-weight:900;font-size:16px;box-shadow:0 0 0 2.5px #2f6fd0,0 8px 20px rgba(0,0,0,.3);pointer-events:none;white-space:nowrap;-webkit-user-select:none;user-select:none}
 .hkbig{position:fixed;left:50%;top:42%;transform:translate(-50%,-50%);z-index:90;font-weight:900;font-size:min(16vw,92px);color:#fff;text-shadow:0 4px 0 rgba(0,0,0,.25),0 0 24px rgba(255,255,255,.6);pointer-events:none;animation:hkPop .6s cubic-bezier(.2,1.6,.4,1);-webkit-user-select:none;user-select:none;white-space:nowrap}
 .hkbig.g{color:#ffd23a;-webkit-text-stroke:2px #b5651d}@keyframes hkPop{from{transform:translate(-50%,-50%) scale(.3);opacity:0}}
@@ -252,12 +255,12 @@
     /* ---------- the mode menu ---------- */
     let menuEl = null, menuSel = (() => { try { const v = localStorage.getItem('atlas-hockey-mode'); return E.MODES.includes(v) ? v : 'classic'; } catch (e) { return 'classic'; } })();
     let howOff = false; try { howOff = localStorage.getItem('atlas-hockey-howto') === 'off'; } catch (e) {}
-    function pickMode(m) { menuSel = m; if (menuEl) menuEl.querySelectorAll('[data-m]').forEach(b => b.setAttribute('aria-pressed', b.dataset.m === m)); SND.click(); }
+    function pickMode(m) { menuSel = m; if (menuEl) { menuEl.querySelectorAll('[data-m]').forEach(b => b.setAttribute('aria-pressed', b.dataset.m === m)); const d = menuEl.querySelector('.sel'); if (d) d.textContent = modeName(m, lang)[1]; } SND.click(); }
     function showMenu() {
       phase = 'menu';
       const el = document.createElement('div'); el.className = 'hkmenu'; menuEl = el;
       const how = howOff ? '' : `<div class="how">${(HOW[lang] || HOW.en).map(esc).join('<br>')}<label style="display:flex;gap:6px;align-items:center;margin-top:6px;cursor:pointer"><input type="checkbox" id="hkNever"> ${esc((HOWK.never[li(lang)]) || HOWK.never[1])}</label></div>`;
-      el.innerHTML = `<div class="hkmenu-c" role="dialog" aria-label="${esc(tr('pick', lang))}"><h2>${esc(tr('pick', lang))}</h2><div class="hkmodes">${E.MODES.map(m => { const [n, d] = modeName(m, lang); return `<button type="button" data-m="${m}" aria-pressed="${m === menuSel}"><span class="ic">${ICON[m]}</span><span><b>${esc(n)}</b><small>${esc(d)}</small></span></button>`; }).join('')}</div>${how}<button type="button" class="go">${esc(tr('play', lang))} ▶</button></div>`;
+      el.innerHTML = `<div class="hkmenu-c" role="dialog" aria-label="${esc(tr('pick', lang))}"><h2>${esc(tr('pick', lang))}</h2><div class="hkmodes">${E.MODES.map(m => { const [n, d] = modeName(m, lang); return `<button type="button" data-m="${m}" aria-pressed="${m === menuSel}"><span class="ic">${ICON[m]}</span><span><b>${esc(n)}</b><small>${esc(d)}</small></span></button>`; }).join('')}</div><div class="sel">${esc(modeName(menuSel, lang)[1])}</div>${how}<button type="button" class="go">${esc(tr('play', lang))} ▶</button></div>`;
       document.body.appendChild(el);
       el.querySelectorAll('[data-m]').forEach(b => { b.onclick = () => pickMode(b.dataset.m); b.ondblclick = () => { pickMode(b.dataset.m); begin(); }; });
       el.querySelector('.go').onclick = begin;
