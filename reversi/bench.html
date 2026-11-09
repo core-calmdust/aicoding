@@ -111,7 +111,7 @@ async function setup() {
   const wt = await loadWeights();
   // the same pool as the game page (index.html MTP): lead and helpers are mt-worker.js on a shared engine_mt.wasm
   pool = MTEngine.pool({
-    wasm: 'engine_mt.wasm?v=3', lead: 'mt-worker.js?v=8', helper: 'mt-worker.js?v=8', slot: 2 << 20, initial: 1024, maximum: 16384,
+    wasm: 'engine_mt.wasm?v=4', lead: 'mt-worker.js?v=9', helper: 'mt-worker.js?v=9', slot: 2 << 20, initial: 1024, maximum: 16384,
     imports: mem => ({ env: { memory: mem, now: () => Date.now() } }),
     after: async (X, mem, ws) => { if (!PX) { PX = X; X.init(); } ws.forEach(w => w.postMessage({ type: 'weights', buffer: wt.buffer.slice(0), nphase: wt.nphase })); },
     help: m => { const o = m.opts || {}, ex = o.cfg.exact; return { cells: m.cells, toMove: m.toMove, cfg: { depth: 60, exact: ex, wld: o.cfg.wld || ex + 2, mpc: 1 } }; },   // (= index.html MTP.help with opts.cfg)
@@ -138,7 +138,7 @@ async function run() {
   const t00 = performance.now(); let doneW = 0;
   const totalW = COUNTS.length * (MP.length * T + EP.length * 6000) + 1500;   // (rough weights for the bar)
   const tick = (add, msg) => { doneW += add; $('#bar i').style.width = Math.min(100, doneW / totalW * 100) + '%'; if (msg) $('#st').textContent = msg + `　経過 ${Math.round((performance.now() - t00) / 1000)}秒`; };
-  lines = [`reversi bench ${new Date().toISOString()} | ${ua} | isolated ${ISO} | hc ${HC} | mid ${MP.length}x${T}ms (36 empties) | end ${EP.length}x24 empties exact`];
+  lines = [`reversi bench (mt v2, 2026-11-09) ${new Date().toISOString()} | ${ua} | isolated ${ISO} | hc ${HC} | mid ${MP.length}x${T}ms (36 empties) | end ${EP.length}x24 empties exact`];
   const M = {}, E = {};   // per thread count
   // midgame: iterative deepening for T ms (use 1.0: a new depth may start until T, cut at T); per depth the time and move
   const midCfg = { depth: 60, exact: 0, time: T, use: 1, max: T, mpc: 1 };
@@ -183,8 +183,10 @@ function renderM(M) {
   const ts = COUNTS.filter(t => M[t] && M[t].per.length === MID.length); if (!ts.length) return out;
   const b = M[ts[0]], base = b.nodes / b.ms;
   const common = MID.map((_, i) => Math.min(...ts.map(t => Math.max(0, ...Object.keys(M[t].per[i]).map(Number)))));
-  const ttd = t => MID.reduce((a, _, i) => a + ((M[t].per[i][common[i]] || {}).ms || 0), 0);
-  const agree = t => MID.filter((_, i) => (M[t].per[i][common[i]] || {}).move === (b.per[i][common[i]] || {}).move).length;
+  // (the first depth at or past the common one: the lead may take a helper's deeper result and skip depths, 2026-11-09)
+  const at = (m, i) => { const ks = Object.keys(m.per[i]).map(Number).filter(d => d >= common[i]).sort((x, y) => x - y); return m.per[i][ks[0]] || {}; };
+  const ttd = t => MID.reduce((a, _, i) => a + (at(M[t], i).ms || 0), 0);
+  const agree = t => MID.filter((_, i) => at(M[t], i).move === at(b, i).move).length;
   const t1 = ttd(ts[0]);
   for (const t of ts) {
     const m = M[t], nps = m.nodes / m.ms * 1000, sp = m.nodes / m.ms / base, avgD = m.depth.reduce((a, x) => a + x, 0) / m.depth.length, tt = ttd(t);

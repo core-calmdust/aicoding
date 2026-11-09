@@ -146,7 +146,7 @@
       await ready();
       if (stopped) return;
       if (!worker) {
-        worker = new Worker(BASE + 'engine.js?v=55');
+        worker = new Worker(BASE + 'engine.js?v=56');
         if (weights) worker.postMessage({ type: 'weights', buffer: weights.buffer.slice(0), nphase: weights.nphase });
         if (book) worker.postMessage({ type: 'book', book });
       }
@@ -219,7 +219,7 @@
         const j = ++hintJ, c0 = cells.slice(), me = turn;
         return ready().then(() => new Promise(res => {
           if (stopped || j !== hintJ) return res(true);
-          if (!hintW) { hintW = new Worker(BASE + 'engine.js?v=55'); if (weights) hintW.postMessage({ type: 'weights', buffer: weights.buffer.slice(0), nphase: weights.nphase }); if (book) hintW.postMessage({ type: 'book', book }); }
+          if (!hintW) { hintW = new Worker(BASE + 'engine.js?v=56'); if (weights) hintW.postMessage({ type: 'weights', buffer: weights.buffer.slice(0), nphase: weights.nphase }); if (book) hintW.postMessage({ type: 'book', book }); }
           hintW.onmessage = e => {
             const m = e.data; if (m.type !== 'result') return;
             if (stopped || j !== hintJ || turn !== me || over) return res(true);
