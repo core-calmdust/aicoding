@@ -69,8 +69,15 @@
 @media (max-width:520px){.npc-card{min-height:70px;gap:8px;padding:8px 10px 8px 8px!important}.npc-pic{width:50px;height:50px}.npc-tx{font-size:13.5px;line-height:1.55}}
 html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
 /* the portal's own table: a bubble just above the action bar (left), gone again after a while */
-.npc-float{position:fixed;z-index:30;left:max(12px,env(safe-area-inset-left));bottom:calc(var(--npc-bot,96px) + 8px);width:min(420px,calc(100vw - 24px));display:flex;align-items:flex-end;gap:10px;pointer-events:none;opacity:0;transform:translateY(12px);transition:opacity .3s,transform .4s cubic-bezier(.3,1.3,.5,1)}
-.npc-float.on{opacity:1;transform:none}
+.npc-float{position:fixed;z-index:30;left:50%;bottom:calc(var(--npc-bot,96px) + 10px);width:min(600px,calc(100vw - 24px));display:flex;align-items:flex-end;gap:12px;pointer-events:none;opacity:0;transform:translate(-50%,14px);transition:opacity .3s,transform .4s cubic-bezier(.3,1.3,.5,1)}
+.npc-float .npc-pic{width:88px;height:88px}
+.npc-float .npc-bub{padding:10px 16px 12px;border-radius:20px}
+.npc-float .npc-nm b{font-size:16px}
+.npc-float .npc-tag{font-size:12px}
+.npc-float .npc-ttl{font-size:12.5px}
+.npc-float .npc-tx{font-size:18px;line-height:1.55}
+@media (max-width:520px){.npc-float .npc-pic{width:62px;height:62px}.npc-float .npc-tx{font-size:15px}.npc-float .npc-nm b{font-size:14px}}
+.npc-float.on{opacity:1;transform:translate(-50%,0)}
 .bv > .npc-float{position:absolute;z-index:3}
 .npc-float.npc-skin{z-index:45}
 .npc-float .npc-bub{box-shadow:0 4px 0 #f0e2c4,0 14px 24px -14px rgba(80,40,0,.5)}
@@ -121,14 +128,14 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
       ui.say('fan', esc(L[i]), fanMeta(true)); return true;
     }
     function greet() {
-      S.greeted = true; S.over = false; S.last = S.ply; S.hAt = 0; S.next = S.ply + Math.round((3 + Math.random() * 2) * S.pace);
+      S.greeted = true; S.over = false; S.last = S.ply; S.hAt = 0; S.next = S.ply + Math.round((2 + Math.random() * 2) * S.pace);
       boss('greet');
     }
     function newGame(ply) {
       S.timers.forEach(clearTimeout); S.timers = [];
       S.ply = ply; S.over = false; S.triv = 0; S.told = []; S.joined = false; S.fan = chooseFan(); S.fanTurn = 0;
       greet();
-      later(() => { if (!S.over && !S.joined) { S.joined = true; fan('join'); S.last = S.ply; } }, 5200);
+      later(() => { if (!S.over && !S.joined) { S.joined = true; fan('join'); S.last = S.ply; } }, 8500);
     }
     // the position moved on: decide whether somebody says something (h = the human's outlook −1 … 1, or null)
     function step(ply, h) {
@@ -137,13 +144,13 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
       if (ply === S.ply) { if (h != null) S.hNow = h; return; }
       S.ply = ply; if (h != null) S.hNow = h;
       const since = ply - S.last;
-      if (since < Math.max(2, Math.round(2 * S.pace))) return;
+      if (since < Math.max(2, Math.round(1.5 * S.pace))) return;
       const hh = S.hNow, swing = hh == null ? 0 : hh - S.hAt;
       let said = false;
-      if (hh != null && Math.abs(swing) >= .32) { boss(swing > 0 ? 'slip' : 'gain'); said = true; }
+      if (hh != null && Math.abs(swing) >= .26) { boss(swing > 0 ? 'slip' : 'gain'); said = true; }
       else if (ply >= S.next) {
         const calm = hh == null || Math.abs(hh) < .3;
-        if (ply <= S.early * S.pace && calm && S.triv < 3 && Math.random() < .6 && trivia()) said = true;
+        if (ply <= S.early * S.pace && calm && S.triv < 4 && Math.random() < .6 && trivia()) said = true;
         else if (hh != null && S.fanTurn < 1 && Math.random() < .3) { fan(hh > .3 ? 'cheer' : hh < -.3 ? 'worry' : 'close'); S.fanTurn++; said = true; }
         else {
           S.fanTurn = 0;
@@ -152,7 +159,7 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
           said = true;
         }
       }
-      if (said) { S.last = ply; if (S.hNow != null) S.hAt = S.hNow; S.next = ply + Math.round((4 + Math.random() * 3) * S.pace); }
+      if (said) { S.last = ply; if (S.hNow != null) S.hAt = S.hNow; S.next = ply + Math.round((2 + Math.random() * 2) * S.pace); }
     }
     // the game ended: res = 'w' (the human won) | 'l' | 'd'
     function end(res) {
@@ -227,7 +234,7 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
         if (img.getAttribute('src') !== m.img) img.src = m.img;
         nm.textContent = m.name; tag.textContent = m.tag; tag.classList.toggle('tv', !!m.tv); ttl.textContent = m.title || ''; tx.innerHTML = html;
         el.classList.add('on'); pic.classList.remove('talk'); void pic.offsetWidth; pic.classList.add('talk');
-        clearTimeout(hideT); hideT = setTimeout(() => el.classList.remove('on'), Math.max(4200, tx.textContent.length * 110));
+        clearTimeout(hideT); hideT = setTimeout(() => el.classList.remove('on'), Math.max(7500, tx.textContent.length * 170));
       },
       hide() { clearTimeout(hideT); el.classList.remove('on'); },
       remove() { clearTimeout(hideT); el.remove(); },
