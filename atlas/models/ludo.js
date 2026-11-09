@@ -27,7 +27,7 @@
   const u = .66;   // one grid cell in world units (ludo 15 × .66 = 9.9; pachisi 19 × .55)
   const UP = { ludo: .66, pachisi: .54 };
   const ME = (() => { try { const c = document.currentScript; return c && c.src ? c.src : location.href; } catch (e) { return ''; } })();
-  const LOOKS = ['classic', 'street', 'peg', 'mondrian', 'cutout'];   // (2026-11-09) the ludo boards: Table3D.BOARDS.ludo, 'atlas-ludo-look'
+  const LOOKS = ['classic', 'street', 'peg', 'mondrian', 'cutout', 'marble'];   // (2026-11-09) the ludo boards: Table3D.BOARDS.ludo, 'atlas-ludo-look'
   const lookNow = () => { try { const B = X.BOARDS && X.BOARDS.ludo; const k = B ? B.get() : 'classic'; return LOOKS.includes(k) ? k : 'classic'; } catch (e) { return 'classic'; } };
 
   /* ---------- the board's picture: the 2D SVG drawn into a canvas ---------- */
@@ -66,13 +66,12 @@
     const g = new TT.LatheGeometry((X.lp || (a => a))(P, .003), LO() ? 16 : 20); if (X.share) X.share(g);
     return (geos[rule] = g);
   }
-  // (2026-11-09) the pieces of the art boards: the peg board's pegs (a pin under a turned body with a dome — it stands in the hole),
+  // (2026-11-09) the pieces of the art boards: the peg board's pegs (a plain cylinder on a pin — the pin stands in the hole),
   // the modern boards' plain geometric men (a cylinder and a ball, matt paint)
   function pegGeo() {
     if (geos.peg) return geos.peg;
     const TT = T(), s = UP.ludo, P = [];
-    [[0, -.25], [.18, -.25], [.19, -.23], [.19, 0], [.29, 0], [.31, .03], [.3, .07], [.24, .14], [.2, .26], [.19, .35], [.23, .39], [.24, .43], [.2, .46]].forEach(([r, y]) => P.push(new TT.Vector2(r * s, y * s)));
-    for (let k = 0; k <= 8; k++) { const a = -Math.PI / 2 + .35 + k / 8 * (Math.PI - .35); P.push(new TT.Vector2(Math.max(0, Math.cos(a) * .2 * s), (.55 + Math.sin(a) * .12) * s)); }
+    [[0, -.25], [.18, -.25], [.19, -.23], [.19, 0], [.285, 0], [.3, .012], [.305, .035], [.305, .4], [.3, .422], [.285, .434], [.24, .44], [0, .44]].forEach(([r, y]) => P.push(new TT.Vector2(r * s, y * s)));
     const g = new TT.LatheGeometry((X.lp || (a => a))(P, .003), LO() ? 16 : 24); if (X.share) X.share(g);
     return (geos.peg = g);
   }
@@ -84,19 +83,28 @@
     const g = new TT.LatheGeometry((X.lp || (a => a))(P, .003), LO() ? 16 : 24); if (X.share) X.share(g);
     return (geos.mod = g);
   }
+  const STONES = [0xb23a22, 0x116f42, 0xdc951c, 0x22409a];   // carnelian, malachite, amber, lapis (the marble board)
   const ART = { mondrian: [0xd6382c, 0x2a8a4c, 0xf3c623, 0x1f4fa0], cutout: [0xe0473a, 0x2f9a62, 0xf0b92c, 0x2559b8] };
   function piece(rule, seat, look) {
     const TT = T(), g = new TT.Group();
     if (rule === 'ludo' && look === 'peg') {
       const m = mat('pcpeg' + seat, () => phys({ color: COLS.ludo[seat], roughness: .28, clearcoat: .9, clearcoatRoughness: .12 }));
       const b = new TT.Mesh(pegGeo(), m); b.castShadow = true; b.receiveShadow = true; g.add(b);
-      g.userData = { seat, rule, look, r: .31 * UP.ludo, h: .67 * UP.ludo };
+      g.userData = { seat, rule, look, r: .305 * UP.ludo, h: .44 * UP.ludo };
       return g;
     }
     if (rule === 'ludo' && ART[look]) {
       const m = mat('pc' + look + seat, () => phys({ color: ART[look][seat], roughness: look === 'cutout' ? .7 : .45, clearcoat: look === 'cutout' ? undefined : .35, clearcoatRoughness: .4 }));
       const b = new TT.Mesh(modGeo(), m); b.castShadow = true; b.receiveShadow = true; g.add(b);
       g.userData = { seat, rule, look, r: .335 * UP.ludo, h: .62 * UP.ludo };
+      return g;
+    }
+    if (rule === 'ludo' && look === 'marble') {   // the marble board: the turned pawn in polished stone, a fine brass band at the collar
+      const m = mat('pcstone' + seat, () => phys({ color: STONES[seat], roughness: .16, clearcoat: 1, clearcoatRoughness: .06 }));
+      const b = new TT.Mesh(pawnGeo('ludo'), m); b.castShadow = true; b.receiveShadow = true; g.add(b);
+      const band = new TT.Mesh(geos.band || (geos.band = new TT.TorusGeometry(.2 * UP.ludo, .014 * UP.ludo, 6, LO() ? 18 : 28).rotateX(Math.PI / 2)), mat('pcbrass', () => phys({ color: 0xc9a04a, metalness: 1, roughness: .28 })));
+      band.position.y = .515 * UP.ludo; g.add(band);
+      g.userData = { seat, rule, look, r: .4 * UP.ludo, h: .87 * UP.ludo };
       return g;
     }
     const col = COLS[rule][seat];
@@ -212,6 +220,18 @@
       });
       return mat('ldfr-stijl', () => phys({ map: tex, color: 0xffffff, roughness: .28, clearcoat: .8, clearcoatRoughness: .15 }));
     }
+    if (look === 'marble') {   // black marble (Nero Marquina): white veins, a brass strip along the top edge
+      const tex = X.canvasTex('ldFrMarble', 2048, 68, (c, W, H) => {
+        let sd = 77; const R = () => { sd = (sd * 16807) % 2147483647; return sd / 2147483647; };
+        const gr = c.createLinearGradient(0, 0, W, 0); gr.addColorStop(0, '#151417'); gr.addColorStop(.5, '#1d1c20'); gr.addColorStop(1, '#141316'); c.fillStyle = gr; c.fillRect(0, 0, W, H);
+        c.lineCap = 'round';
+        for (let i = 0; i < 46; i++) { let x = R() * W, y = R() * H, a = (R() - .5) * 1.2; c.strokeStyle = `rgba(225,220,210,${.12 + R() * .4})`; c.lineWidth = .6 + R() * 1.6; c.beginPath(); c.moveTo(x, y);
+          for (let k = 0; k < 30; k++) { a += (R() - .5) * .5; x += Math.cos(a) * 6; y += Math.sin(a) * 2; c.lineTo(x, y); } c.stroke(); }
+        const b = c.createLinearGradient(0, 0, 0, 7); b.addColorStop(0, '#f1d58a'); b.addColorStop(1, '#8a6a24'); c.fillStyle = b; c.fillRect(0, 0, W, 7);
+        c.fillStyle = '#8a6a24'; c.fillRect(0, H - 4, W, 4);
+      });
+      return mat('ldfr-marble', () => phys({ map: tex, color: 0xffffff, roughness: .14, clearcoat: 1, clearcoatRoughness: .05 }));
+    }
     if (look === 'cutout') {   // a light ash tray
       const wood = X.wood ? X.wood('ldAsh', '#e6d3ad', '#b99766', 512, 256, 2.2) : null;
       return mat('ldfr-ash', () => phys({ map: wood || undefined, color: wood ? 0xffffff : 0xd8c29a, roughness: .55, clearcoat: .3, clearcoatRoughness: .4 }));
@@ -309,7 +329,7 @@
       const pad = .32, W = (n + 2 * pad) * s, H = .34;
       const frame = frameMat(design);
       // the art boards: the street board in gloss over the paint, the modern ones softer (paper / lacquer)
-      const face = mat('ldface' + design, () => phys({ map: boardTex(rule, design), color: 0xffffff, roughness: design === 'cutout' ? .78 : design === 'street' ? .4 : .35, clearcoat: design === 'cutout' ? undefined : .7, clearcoatRoughness: .2 }));
+      const face = mat('ldface' + design, () => phys({ map: boardTex(rule, design), color: 0xffffff, roughness: design === 'cutout' ? .78 : design === 'street' ? .4 : design === 'marble' ? .18 : .35, clearcoat: design === 'cutout' ? undefined : .7, clearcoatRoughness: .2 }));
       const block = new TT.Mesh(new TT.BoxGeometry(W + .3, H, W + .3), [frame, frame, frame, frame, frame, frame]);
       block.position.y = H / 2; block.castShadow = true; block.receiveShadow = true; base.add(block);
       const pic = new TT.Mesh(new TT.PlaneGeometry(W, W), face); pic.rotation.x = -Math.PI / 2; pic.position.y = H + .003; pic.receiveShadow = true; base.add(pic);

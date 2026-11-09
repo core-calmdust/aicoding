@@ -137,6 +137,7 @@
     rajasthan: { ja: 'ラジャスタン 3D', en: 'Rajasthani 3D', zh: '拉贾斯坦 3D', ko: '라자스탄 3D', es: 'Rajastán 3D', fr: 'Rajasthan 3D', pt: 'Rajastão 3D', de: 'Rajasthan 3D', hi: 'राजस्थानी 3D', ar: 'راجستان ثلاثي', ru: 'Раджастхан 3D', 'zh-TW': '拉賈斯坦 3D', id: '3D Rajasthan', tr: 'Racastan 3D' },
     bauhaus: { ja: 'バウハウス 3D', en: 'Bauhaus 3D', zh: '包豪斯 3D', ko: '바우하우스 3D', es: 'Bauhaus 3D', fr: 'Bauhaus 3D', pt: 'Bauhaus 3D', de: 'Bauhaus 3D', hi: 'बाउहाउस 3D', ar: 'باوهاوس ثلاثي', ru: 'Баухаус 3D', 'zh-TW': '包浩斯 3D', id: '3D Bauhaus', tr: 'Bauhaus 3D' },
     // ludo (the 3D boards: classic + the art boards, 2026-11-09)
+    marble: { ja: '大理石の象嵌 3D', en: 'Marble inlay 3D', zh: '大理石镶嵌 3D', ko: '대리석 상감 3D', es: 'Taracea de mármol 3D', fr: 'Marbre marqueté 3D', pt: 'Mármore marchetado 3D', de: 'Marmor-Intarsie 3D', hi: 'संगमरमर जड़ाई 3D', ar: 'رخام مطعّم ثلاثي', ru: 'Мраморная инкрустация 3D', 'zh-TW': '大理石鑲嵌 3D', id: '3D marmer bertatah', tr: 'Mermer kakma 3D' },
     street: { ja: 'ストリートアート 3D', en: 'Street art 3D', zh: '街头艺术 3D', ko: '스트리트 아트 3D', es: 'Arte urbano 3D', fr: 'Street art 3D', pt: 'Arte urbana 3D', de: 'Street-Art 3D', hi: 'स्ट्रीट आर्ट 3D', ar: 'فن الشارع ثلاثي', ru: 'Стрит-арт 3D', 'zh-TW': '街頭藝術 3D', id: '3D seni jalanan', tr: 'Sokak sanatı 3D' },
     peg: { ja: '木のペグ盤 3D', en: 'Wooden peg board 3D', zh: '木制插孔盘 3D', ko: '나무 페그 판 3D', es: 'Tablero de clavijas 3D', fr: 'Plateau à chevilles 3D', pt: 'Tabuleiro de pinos 3D', de: 'Holz-Steckbrett 3D', hi: 'लकड़ी का पेग बोर्ड 3D', ar: 'لوح أوتاد خشبي ثلاثي', ru: 'Доска с колышками 3D', 'zh-TW': '木製插孔盤 3D', id: '3D papan pasak kayu', tr: 'Ahşap çivili tahta 3D' },
     mondrian: { ja: 'コンポジション 3D', en: 'Composition 3D', zh: '构成 3D', ko: '컴포지션 3D', es: 'Composición 3D', fr: 'Composition 3D', pt: 'Composição 3D', de: 'Komposition 3D', hi: 'कंपोज़िशन 3D', ar: 'تكوين ثلاثي', ru: 'Композиция 3D', 'zh-TW': '構成 3D', id: '3D komposisi', tr: 'Kompozisyon 3D' },
@@ -169,12 +170,12 @@
     carrom: { list: ['neon', 'modern', 'classic', 'rajasthan', 'bauhaus', 'tycoon'], get: () => { const v = ls.get('atlas-carrom-look'); return ['modern', 'classic', 'rajasthan', 'bauhaus', 'tycoon'].includes(v) ? v : 'neon'; }, set: k => ls.set('atlas-carrom-look', k) },
     // crokinole (3D only): 'atlas-crokinole-look' ('classic' the default | 'neon')
     crokinole: { list: ['classic', 'neon'], get: () => ls.get('atlas-crokinole-look') === 'neon' ? 'neon' : 'classic', set: k => ls.set('atlas-crokinole-look', k) },
-    // ludo (atlas/models/ludo.js, atlas/skin/ludo.js): 'atlas-ludo-look' ('classic' the default | 'street' | 'peg' | 'mondrian' | 'cutout'); pachisi keeps its cloth
-    ludo: { list: ['classic', 'street', 'peg', 'mondrian', 'cutout'], get: () => { const v = ls.get('atlas-ludo-look'); return ['street', 'peg', 'mondrian', 'cutout'].includes(v) ? v : 'classic'; }, set: k => ls.set('atlas-ludo-look', k) },
+    // ludo (atlas/models/ludo.js, atlas/skin/ludo.js): 'atlas-ludo-look' ('classic' the default | 'marble' | 'street' | 'peg' | 'mondrian' | 'cutout'); pachisi keeps its cloth
+    ludo: { list: ['classic', 'marble', 'street', 'peg', 'mondrian', 'cutout'], get: () => { const v = ls.get('atlas-ludo-look'); return ['marble', 'street', 'peg', 'mondrian', 'cutout'].includes(v) ? v : 'classic'; }, set: k => ls.set('atlas-ludo-look', k) },
   };
   X.BOARDS = BOARDS;
   X.boardName = (k, lang) => { const o = N3[k]; return o ? o[lang] || o.en : k; };
-  X.boardThumb = (id, k) => new URL('img/board-' + id + '-' + k + '.webp?v=' + (id === 'senet' ? 3 : id === 'carrom' ? 5 : id === 'konane' ? 2 : 1), ME).href;
+  X.boardThumb = (id, k) => new URL('img/board-' + id + '-' + k + '.webp?v=' + (id === 'senet' ? 3 : id === 'carrom' ? 5 : id === 'konane' ? 2 : id === 'ludo' ? 2 : 1), ME).href;
   // choose a board for a game: the shared key is written and the showcase board (if it is that game's) is rebuilt at once
   X.setBoard = (id, k) => { const B = BOARDS[id]; if (!B || !B.list.includes(k)) return; B.set(k); try { dispatchEvent(new CustomEvent('atlas-board', { detail: { id, look: k } })); } catch (e) {} };
   PLACES.ui.board = { ja: '盤', en: 'Board', zh: '棋盘', ko: '판', es: 'Tablero', fr: 'Plateau', pt: 'Tabuleiro', de: 'Brett', hi: 'बोर्ड', ar: 'اللوحة', ru: 'Доска', 'zh-TW': '棋盤', id: 'Papan', tr: 'Tahta' };
