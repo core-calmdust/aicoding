@@ -90,7 +90,10 @@
     const Y = board.userData.top;
     if (T3.fit) T3.fit({ w: CS.OW + .2, d: CS.OW + .7, y: Y + .35, pitch: 1.0 });   // the whole board, large, from the player's side
     const pvp = ctx.mode === 'pvp', PX = PV[ctx.lang] || PV.en;   // pvp: both colours are tapped in turn, White at the bottom, no AI
-    const human = pvp ? 0 : ctx.side === 2 ? 1 : 0, flip = human === 1;   // engine colours: 0 = White, 1 = Black; the player's side is at the bottom
+    // ctx.pz: a puzzle driven by atlas/puzzles.js — the position is ctx.pz.fen, the side to move plays (at the bottom), no AI:
+    // after each of the player's moves ctx.pz.moved(uci, info) decides; replies come through api.pz.play (2026-11-10)
+    const PZ = ctx.pz || null;
+    let human = PZ ? (PZ.fen.split(' ')[1] === 'b' ? 1 : 0) : pvp ? 0 : ctx.side === 2 ? 1 : 0, flip = human === 1;   // engine colours: 0 = White, 1 = Black; the player's side is at the bottom
     const mover = () => pvp && pos ? pos.side : human, mcol = () => mover() ? 'b' : 'w';   // the side whose taps count now
     // 0x88 square ↔ screen cell (f: 0 = left column, r: 0 = top row)
     const scr = sq => { const f = sq & 7, r = sq >> 4; return flip ? [7 - f, r] : [f, 7 - r]; };
@@ -253,7 +256,7 @@
     }
     function commit(m) {
       busy = true; closePromo();
-      play(m, () => { busy = false; next(); });
+      play(m, () => { busy = false; if (PZ) pzAfter(); else next(); });
     }
     function next() {
       if (stopped) return;
@@ -329,7 +332,7 @@
       return f < 0 || f > 7 || r < 0 || r > 7 ? -1 : sqAt(f, r);
     }
     function onClick(e) {
-      if (over || busy || !pos || pos.side !== mover() || promoEl || T3.wasDrag()) return;
+      if (over || busy || !pos || pos.side !== mover() || promoEl || T3.wasDrag() || (PZ && !pzOn)) return;
       const q = cellOf(e); if (q < 0) { deselect(); return; }
       if (sel >= 0) {
         const cands = legal.filter(m => (m & 127) === sel && ((m >> 7) & 127) === q);
@@ -352,7 +355,7 @@
       later(() => { busy = false; showMarks(); next(); }, wait + 200);
     }
     hud('');
-    loadEngine().then(e => { if (stopped) return; E = e; if (!pvp) worker = new Worker(BASE + 'engine.js' + VER); begin(null); }).catch(() => hud('⚠'));
+    loadEngine().then(e => { if (stopped) return; E = e; if (!pvp) worker = new Worker(BASE + 'engine.js' + VER); if (PZ) pzLoad(PZ.fen); else begin(null); }).catch(() => hud('⚠'));
 
     // test hooks (positions on screen, state, a set-up position)
     const dbg = {
@@ -382,8 +385,42 @@
       board.children.filter(g => g.userData && g.userData.type && (g.userData.color === 'w' || g.userData.color === 'b') && !Object.values(pcs).includes(g)).forEach(g => board.remove(g));   // a toppled king, a fading capture
       if (T3.kick) T3.kick(300);
     }
+    /* ---------- puzzle mode (ctx.pz) ---------- */
+    let pzOn = false;
+    const uciOf = m => E.sqName(m & 127) + E.sqName((m >> 7) & 127) + (((m >> 14) & 7) ? ' pnbrqk'[(m >> 14) & 7] : '');
+    function pzWait() { const st = status(); legal = st.legal || []; busy = false; pzOn = true; showMarks(); if (!imgs && legal.some(m => (m >> 14) & 7)) loadImgs(); }
+    function pzAfter() {
+      pzOn = false; const st = status(); legal = [];
+      PZ.moved(uciOf(moves[moves.length - 1]), { mate: st.over && st.why === 'mate', over: st.over, why: st.why, check: pos.inCheck(), n: moves.length });
+    }
+    function pzLoad(fen) {   // a new puzzle: the side to move is put at the bottom, the pieces drop in
+      timers.forEach(clearTimeout); timers.length = 0; closePromo(); clear(mv); clear(hl);
+      human = fen.split(' ')[1] === 'b' ? 1 : 0; flip = human === 1;
+      startFen = fen; moves = []; over = false; busy = true; sel = -1; thinking = false; jid++; pzOn = false;
+      refresh(); const wait = setup();
+      later(() => { showMarks(); pzWait(); if (PZ.ready) PZ.ready(); }, wait + 200);
+    }
+    const pz = {
+      play: u => new Promise(res => { let m = 0; try { m = pos.fromUci(u); } catch (e) {} if (!m) return res(false); busy = true; pzOn = false; play(m, () => { if (!stopped) res(true); }); }),
+      wait: pzWait,
+      undo(n = 1) { timers.forEach(clearTimeout); timers.length = 0; deselect(); moves.splice(Math.max(0, moves.length - n)); refresh(); rebuild(); showMarks(); },
+      mark(u) {   // the move to look at: rings on its two squares
+        clear(hl); showMarks(); if (!u) return;
+        let m = 0; try { m = pos.fromUci(u); } catch (e) {} if (!m) return;
+        const a = mark(hl, GEO.ring, MAT.hint, m & 127, .035), b = mark(hl, GEO.ring, MAT.hint, (m >> 7) & 127, .035); mark(hl, GEO.tile, MAT.hintT, (m >> 7) & 127, .011);
+        anim(560, k => { const s = 1 + Math.sin(k * Math.PI * 2) * .16 * (1 - k); a.scale.set(s, s, s); b.scale.set(s, s, s); });
+      },
+      best: level => new Promise(res => {   // the engine's best move here (the defender's reply in a mate puzzle)
+        const id = ++jid, w = worker || (worker = new Worker(BASE + 'engine.js' + VER));
+        w.onmessage = e => { const r = e.data; if (r.id !== id || r.type !== 'result' || stopped) return; res(r.error || !r.move ? null : uciOf(r.move)); };
+        w.onerror = () => { worker = null; res(null); };
+        w.postMessage({ type: 'think', id, fen: startFen, moves: moves.slice(), level: level || 20 });
+      }),
+      load: pzLoad,
+      moves: () => moves.map(uciOf),
+    };
     const api = {
-      human,
+      human, pz,
       canUndo: () => myTurn() && moves.length >= undoN() && (pvp || moves.length - undoN() >= (human === 1 ? 1 : 0)),
       undo() {
         if (!api.canUndo()) return;
