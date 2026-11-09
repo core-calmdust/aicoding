@@ -488,6 +488,33 @@
       qn.scale.setScalar(1.5); g.add(at(qn, .15, 1.85, .05, .32, 0, -.22));
       return g;
     },
+    amazons() {   // a corner of the jungle board (jade and sage squares): a burnt square with an arrow stuck in it, a black amazon, and the big ivory amazon gliding in with its arrow flying off
+      const g = boardChunk(3, 3.6, gridMat('icam', '#e2ecd0', '#e2ecd0', 3, { check: '#3f8a5c' }), C(0x24502f, { roughness: .45 }));
+      const S = 3.3 / 3, p = i => -1.65 + S * (i + .5);
+      // an amazon: a fat lathed body (skirt, waist, collar) with a gold crown
+      const amazon = (light, s) => {
+        const mat = light ? C(0xf4ead2, { roughness: .32 }) : C(0x2b2220, { roughness: .3 }), a = new T.Group(), pts = [];
+        [[0, 0], [.62, 0], [.66, .1], [.58, .2], [.44, .3], [.34, .62], [.3, .92], [.42, 1.0], [.4, 1.08], [.28, 1.12], [0, 1.12]].forEach(([x, y]) => pts.push(new T.Vector2(x, y)));
+        a.add(mesh(new T.LatheGeometry(pts, 40), mat));
+        const cr = crown(gloss(0xf2c94c), gloss(light ? 0x2f8a56 : 0xb2342a), .82); cr.position.y = 1.1; a.add(cr);
+        a.scale.setScalar(s); return a;
+      };
+      // a burnt square: a dark inlaid tile with the arrow stuck at a slant
+      const tile = rbox(.92, .1, .92, .12, C(0x4a3420, { roughness: .6 }), true); g.add(at(tile, p(2), .5, p(2)));
+      const shaft = (len) => { const a = new T.Group(), wood = C(0xd9b26a, { roughness: .5 });
+        const sh = mesh(new T.CylinderGeometry(.045, .045, len, 12), wood); sh.position.y = len / 2; a.add(sh);
+        const hd = mesh(new T.ConeGeometry(.12, .3, 16), C(0x9aa3ab, { roughness: .3, metalness: .5 })); hd.position.y = len + .14; a.add(hd);
+        for (let k = 0; k < 3; k++) { const f = mesh(new T.BoxGeometry(.02, .32, .2), C(0xe0503a, { roughness: .6 })); f.position.set(Math.cos(k * 2.1) * .07, .2, Math.sin(k * 2.1) * .07); f.rotation.y = k * 2.1; a.add(f); }
+        return a; };
+      const stuck = shaft(1.0); stuck.rotation.set(-Math.PI, 0, .35); stuck.position.set(p(2) + .12, 1.45, p(2) - .05); g.add(stuck);
+      g.add(at(amazon(false, .62), p(0), .5, p(2)));
+      // the big ivory amazon gliding in; its arrow flying off to the right, a trail of jade dots behind it
+      g.add(at(amazon(true, 1.15), p(1) - .25, 1.15, p(0) + .25, .18, 0, -.12));
+      const fly = shaft(1.1); fly.rotation.set(0, 0, -1.25); fly.position.set(p(1) + .35, 2.15, p(0) + .1); g.add(fly);
+      const dotM = gloss(0x3f9a62);
+      for (let i = 0; i < 5; i++) { const t = (i + .5) / 5, d = ball(.07, dotM); d.position.set(p(0) + (p(1) - .25 - p(0)) * t, .62 + t * .55, p(2) + (p(0) + .25 - p(2)) * t); g.add(d); }
+      return g;
+    },
     tafl() {   // a corner of the hnefatafl board: the king steps onto the knotted corner square, attackers too late
       const top = M({ map: X.canvasTex('ictf', 512, 512, (c, W) => {
         c.drawImage(X.wood('ictfw', '#d4a66a', '#8a5e34').image, 0, 0, W, W); const s = W / 3;

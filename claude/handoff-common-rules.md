@@ -44,7 +44,7 @@
 | AI学習 | ユーザーの Mac mini（メモリ64GB）で実行。数千万局面規模で本格的に学習してよい（約2000万局面で目に見える効果、という経験則） |
 
 ### 主なフォルダ
-- ボードゲーム：`shogi/ chess/ reversi/ gomoku/ checkers/ go/ xiangqi/ morris/ dots/ connect4/ mancala/ backgammon/ tafl/ hex/ fanorona/ alquerque/ ugolki/ agon/ ur/ konane/`
+- ボードゲーム：`shogi/ chess/ reversi/ gomoku/ checkers/ go/ xiangqi/ morris/ dots/ connect4/ mancala/ backgammon/ tafl/ hex/ fanorona/ alquerque/ ugolki/ agon/ ur/ konane/ amazons/`（アマゾンズは2026-11-10 BETA、`claude/amazons-spec.md`）
 - カードゲーム（2D専用）：`poker/ blackjack/ baccarat/ solitaire/`、麻雀：`mahjong/`
 - パズル系ポータル（別ルール）：`sudoku/`（まいにち数独）`speed-sudoku/` `samegame/` `jailbreak/`
 - 3D専用（2D版なし、大百科の3D卓が本体）：`carrom/` `crokinole/` `hockey/`（engine.js・worker.js のみ。画面は `atlas/games/<id>.js`）

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <!-- Amazons: a crowned ivory amazon on the jade-and-sage board, an arrow flying from it and one stuck in a burnt square -->
+  <defs>
+    <clipPath id="am-c"><rect width="96" height="96" rx="20"/></clipPath>
+    <linearGradient id="am-q" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#b99d6c"/><stop offset=".32" stop-color="#fffaf0"/><stop offset=".6" stop-color="#efe2c4"/><stop offset="1" stop-color="#a88a58"/></linearGradient>
+    <radialGradient id="am-p" cx=".35" cy=".35" r=".7"><stop offset="0" stop-color="#fff"/><stop offset=".45" stop-color="#e8c46a"/><stop offset="1" stop-color="#8a6420"/></radialGradient>
+  </defs>
+  <g clip-path="url(#am-c)">
+    <rect width="96" height="96" fill="#e2ecd0"/>
+    <g fill="#3f8a5c"><rect x="0" y="0" width="24" height="24"/><rect x="48" y="0" width="24" height="24"/><rect x="24" y="24" width="24" height="24"/><rect x="72" y="24" width="24" height="24"/><rect x="0" y="48" width="24" height="24"/><rect x="48" y="48" width="24" height="24"/><rect x="24" y="72" width="24" height="24"/><rect x="72" y="72" width="24" height="24"/></g>
+    <rect x="74" y="74" width="20" height="20" rx="3" fill="#4a3420"/>
+    <path d="M78 90 L90 78" stroke="#e4c27a" stroke-width="2.6" stroke-linecap="round"/><path d="M92 76 l-6 1.4 4.6 4.6z" fill="#e4c27a"/>
+    <path d="M60 38 L86 12" stroke="#7a5a2a" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="1 4"/>
+    <path d="M70 28 L86 12" stroke="#f0d79a" stroke-width="2.6" stroke-linecap="round"/><path d="M89 9 l-8.5 2 6.5 6.5z" fill="#c7cdd2" stroke="#55606a" stroke-width=".8"/><path d="M70 28 l-4 1 2-3.6z M71 31 l-1 4 3.4-2z" fill="#e0503a"/>
+    <ellipse cx="38" cy="83" rx="22" ry="4" fill="#000" fill-opacity=".22"/>
+    <g stroke="#6b5434" stroke-width="1.6" stroke-linejoin="round" transform="translate(-12 0)">
+      <path d="M33 47 L29 25 L41 37 L47 19 L53 35 L59 19 L65 37 L77 25 L73 47 Z" fill="url(#am-q)"/>
+      <path d="M27 82 Q27 75 34 73 L37 69 Q43 62 43 54 Q41 50 37 47 L69 47 Q65 50 63 54 Q63 62 69 69 L72 73 Q79 75 79 82 Q79 87 53 87 Q27 87 27 82 Z" fill="url(#am-q)"/>
+      <ellipse cx="53" cy="47" rx="17" ry="4" fill="url(#am-q)"/>
+    </g>
+    <g stroke="#6b5434" stroke-width=".8"><circle cx="17" cy="25" r="3.4" fill="url(#am-p)"/><circle cx="35" cy="19" r="3.4" fill="url(#am-p)"/><circle cx="47" cy="19" r="3.4" fill="url(#am-p)"/><circle cx="65" cy="25" r="3.4" fill="url(#am-p)"/></g>
+  </g>
+</svg>
