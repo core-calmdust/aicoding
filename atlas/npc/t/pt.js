@@ -49,6 +49,7 @@
     konane: ['Descansando na praia', 'Tartaruga viajante do mar', 'Ave-símbolo do Havaí', 'O semideus porco', 'Contadora de histórias do hula', 'Falcão, símbolo da realeza', 'O rei que unificou o Havaí', 'Deusa do vulcão'],
     ludo: ['Companheiro de pátio na Índia', 'Comerciante da feira do deserto', 'Joga num tabuleiro de pano', 'Transformou-o em «Ludo» na Inglaterra', 'Guardião do jardim do palácio', 'Elefante de guerra mogol', 'O imperador que, dizem, usava pessoas como peças'],
     carrom: ['Junto ao tabuleiro do beco', 'Frequentador da varanda', 'Mestre do peteleco', 'Batedor de um tiro só', 'O atirador silencioso', 'Caçador da Rainha vermelha', 'Rei de um jogo que teria nascido em palácios'],
+    crokinole: ['Filhote da cabana', 'Freguês de raquetes de neve', 'Travesso do bosque de bordos', 'Árbitro implicante', 'Direto para o buraco do 20', 'Mestre calado do lago', 'Autor do tabuleiro mais antigo'],
     alquerque: ['Criança de um pátio andaluz', 'Vendedor de tapetes como o tabuleiro', 'Autor do Livro das Canções', 'Caçador do céu do deserto', 'Cavaleiro castelhano', 'Dama do jardim do palácio', 'O rei que mandou fazer o Livro dos Jogos'],
   },
   trivia: {
@@ -75,6 +76,7 @@
     konane: ['O kōnane é um jogo tradicional do Havaí.', 'Era jogado em tabuleiros de pedra com seixos de coral branco e lava preta.', 'Cada lance é um salto sobre uma peça adversária, que é capturada.', 'Quem não consegue mover perde — guarde lances para o final!'],
     ludo: ['O ludo vem do jogo indiano pachisi.', 'Conta a lenda que o imperador mogol Akbar jogava num pátio com pessoas como peças.', 'Foi patenteado na Inglaterra com o nome «Ludo» em 1896.', 'Em muitas regras, um seis deixa você sair com uma peça e jogar de novo.'],
     carrom: ['O carrom vem do sul da Ásia e é muito popular na Índia e no Sri Lanka.', 'A peça vermelha é a Rainha: depois de encaçapá-la, é preciso «cobri-la» com uma sua.', 'O striker que você peteleca é maior e mais pesado que as outras peças.', 'Espalha-se pó no tabuleiro para as peças deslizarem.'],
+    crokinole: ['O crokinole nasceu no Canadá: o tabuleiro mais antigo conhecido foi feito em Ontário em 1876.', 'Acerte o buraco central e são 20! O disco sai do tabuleiro na hora.', 'Se há um disco do rival no tabuleiro, você precisa tocar um ou é falta.', 'Um disco que toca uma linha vale o valor menor.'],
     alquerque: ['O alquerque aparece no «Livro das Canções» árabe do século X.', 'Também está no Livro dos Jogos feito para Afonso X no século XIII.', 'É chamado de antepassado das damas — ambos capturam saltando.', 'O tabuleiro é feito de linhas e pontos; as peças vão de ponto a ponto pelas linhas.'],
   },
 } });

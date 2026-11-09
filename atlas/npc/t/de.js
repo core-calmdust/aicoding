@@ -49,6 +49,7 @@
     konane: ['Pause am Strand', 'Meeresreisende Schildkröte', 'Hawaiis Staatsvogel', 'Der Schweine-Halbgott', 'Hula-Erzählerin', 'Falke, Zeichen der Könige', 'Der König, der Hawaii einte', 'Göttin des Vulkans'],
     ludo: ['Hof-Spielgefährte in Indien', 'Händler vom Wüstenmarkt', 'Spielt auf einem Stoffbrett', 'Machte es in England zu »Ludo«', 'Wächter des Palastgartens', 'Mogul-Kriegselefant', 'Der Kaiser, der Menschen als Figuren nahm'],
     carrom: ['Am Brett in der Gasse', 'Stammgast der Veranda', 'Meister des Schnippens', 'Ein-Schuss-Striker', 'Der stille Scharfschütze', 'Jäger der roten Königin', 'König eines Spiels, angeblich aus Palästen'],
+    crokinole: ['Junges aus der Blockhütte', 'Stammgast auf Schneeschuhen', 'Schelm aus dem Ahornwald', 'Pingeliger Schiedsrichter', 'Schnurstracks ins 20er-Loch', 'Stiller Meister vom See', 'Erbauer des ältesten Bretts'],
     alquerque: ['Kind eines andalusischen Innenhofs', 'Teppichverkäufer mit Brettmuster', 'Autor des Buchs der Lieder', 'Jäger des Wüstenhimmels', 'Kastilischer Ritter', 'Dame des Palastgartens', 'Der König, der das Buch der Spiele schaffen ließ'],
   },
   trivia: {
@@ -75,6 +76,7 @@
     konane: ['Kōnane ist ein traditionelles Spiel aus Hawaii.', 'Gespielt wurde auf Steinbrettern mit Kieseln aus weißer Koralle und schwarzer Lava.', 'Jeder Zug ist ein Sprung über einen gegnerischen Stein, der geschlagen wird.', 'Wer nicht mehr ziehen kann, verliert – spar dir Züge fürs Ende auf!'],
     ludo: ['Ludo stammt vom indischen Pachisi ab.', 'Der Legende nach spielte Mogulkaiser Akbar auf einem Hof mit Menschen als Figuren.', '1896 wurde es in England unter dem Namen »Ludo« patentiert.', 'Bei vielen Regeln bringt eine Sechs eine Figur ins Spiel – und du würfelst nochmal.'],
     carrom: ['Carrom stammt aus Südasien und ist in Indien und Sri Lanka sehr beliebt.', 'Der rote Stein ist die Königin: Nach dem Einlochen musst du sie mit einem eigenen »decken«.', 'Der Striker, den du schnippst, ist größer und schwerer als die anderen Steine.', 'Man streut Pulver aufs Brett, damit die Steine gleiten.'],
+    crokinole: ['Crokinole stammt aus Kanada: Das älteste bekannte Brett wurde 1876 in Ontario gebaut.', 'Eine Scheibe im Mittelloch zählt 20! Sie kommt sofort vom Brett.', 'Liegt eine gegnerische Scheibe auf dem Brett, musst du eine treffen – sonst ist es ein Foul.', 'Eine Scheibe auf einer Linie zählt den niedrigeren Wert.'],
     alquerque: ['Alquerque erscheint im arabischen »Buch der Lieder« aus dem 10. Jahrhundert.', 'Es steht auch im Buch der Spiele, das im 13. Jahrhundert für Alfons X. entstand.', 'Es gilt als Vorfahr des Damespiels – beide schlagen durch Springen.', 'Das Brett besteht aus Linien und Punkten; die Steine ziehen entlang der Linien von Punkt zu Punkt.'],
   },
 } });

@@ -49,6 +49,7 @@
     konane: ['Bersantai di pantai', 'Penyu penjelajah laut', 'Burung negara bagian Hawaii', 'Setengah dewa babi', 'Pendongeng hula', 'Elang lambang kerajaan', 'Raja yang menyatukan Hawaii', 'Dewi gunung berapi'],
     ludo: ['Teman main di halaman India', 'Pedagang pasar gurun', 'Bermain di papan kain', 'Menjadikannya «Ludo» di Inggris', 'Penjaga taman istana', 'Gajah perang Mughal', 'Kaisar yang konon menjadikan orang sebagai bidak'],
     carrom: ['Di dekat papan di gang', 'Pelanggan tetap beranda', 'Ahli sentilan', 'Pemukul sekali tembak', 'Penembak jitu yang tenang', 'Pemburu Ratu merah', 'Raja permainan yang konon lahir di istana'],
+    crokinole: ['Anak dari pondok kayu', 'Langganan bersepatu salju', 'Jahil dari hutan maple', 'Wasit yang cerewet', 'Langsung ke lubang 20', 'Ahli tenang dari danau', 'Pembuat papan tertua'],
     alquerque: ['Anak halaman Andalusia', 'Penjual karpet bermotif papan', 'Penulis Kitab Lagu', 'Pemburu langit gurun', 'Ksatria Kastilia', 'Nyonya taman istana', 'Raja yang memesan Kitab Permainan'],
   },
   trivia: {
@@ -75,6 +76,7 @@
     konane: ['Kōnane adalah permainan tradisional Hawaii.', 'Dulu dimainkan di papan batu dengan kerikil karang putih dan lava hitam.', 'Setiap langkah adalah lompatan melewati bidak lawan yang langsung ditangkap.', 'Yang tak bisa bergerak kalah — simpan langkah untuk akhir!'],
     ludo: ['Ludo berasal dari permainan India, pachisi.', 'Konon kaisar Mughal Akbar bermain di halaman dengan manusia sebagai bidak.', 'Permainan ini dipatenkan di Inggris dengan nama «Ludo» tahun 1896.', 'Di banyak aturan, angka enam membuat bidak bisa keluar dan kamu melempar lagi.'],
     carrom: ['Karambol berasal dari Asia Selatan dan sangat populer di India dan Sri Lanka.', 'Bidak merah adalah Ratu: setelah memasukkannya, kamu harus «menutupnya» dengan bidakmu.', 'Striker yang disentil lebih besar dan berat dari bidak lain.', 'Papan ditaburi bedak supaya bidak meluncur.'],
+    crokinole: ['Crokinole lahir di Kanada: papan tertua yang diketahui dibuat di Ontario pada 1876.', 'Masukkan keping ke lubang tengah untuk 20! Keping itu langsung diangkat dari papan.', 'Kalau ada keping lawan di papan, kamu harus mengenai salah satunya atau pelanggaran.', 'Keping yang menyentuh garis dihitung nilai yang lebih rendah.'],
     alquerque: ['Alquerque muncul dalam «Kitab Lagu» Arab abad ke-10.', 'Ia juga ada di Kitab Permainan yang dibuat untuk Alfonso X pada abad ke-13.', 'Disebut leluhur dam — keduanya menangkap dengan melompat.', 'Papannya garis dan titik; bidak bergerak dari titik ke titik di sepanjang garis.'],
   },
 } });
