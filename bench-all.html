@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>全部まとめて MT ベンチ</title>
+<style>
+:root{--bg:#f6f1e7;--fg:#2a2118;--mut:#7a6a58;--card:#fffaf0;--line:#e2d6c2;--acc:#a8562a;--ok:#2f7d4a;--ng:#b23b2e}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1d1915;--fg:#efe6d8;--mut:#a89884;--card:#28221c;--line:#3d342a;--acc:#e08a55;--ok:#6cc58a;--ng:#ef7b6c}}
+:root[data-theme="dark"]{--bg:#1d1915;--fg:#efe6d8;--mut:#a89884;--card:#28221c;--line:#3d342a;--acc:#e08a55;--ok:#6cc58a;--ng:#ef7b6c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif}
+main{max-width:860px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:22px;margin:0 0 4px}
+.sub{color:var(--mut);margin:0 0 16px;font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:0 0 14px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 14px;font-size:14px}
+.kv b{font-weight:600}
+.y{color:var(--ok);font-weight:600}.n{color:var(--ng);font-weight:600}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+button{font:inherit;padding:8px 16px;border-radius:999px;border:0;background:var(--acc);color:#fff;font-weight:600;cursor:pointer}
+button.sec{background:transparent;color:var(--acc);border:1.5px solid var(--acc)}
+button.sm{padding:3px 10px;font-size:13px}
+button:disabled{opacity:.45;cursor:default}
+#bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden;margin:10px 0 4px}
+#bar i{display:block;height:100%;width:0;background:var(--acc);transition:width .3s}
+#st{font-size:13px;color:var(--mut);min-height:1.5em}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+th{color:var(--mut);font-weight:600;font-size:12px}
+td label{display:flex;gap:6px;align-items:center;cursor:pointer}
+h2{font-size:15px;margin:4px 0 8px}
+pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);margin:8px 0 0;max-height:320px;overflow:auto}
+</style>
+</head>
+<body>
+<main>
+<h1>マルチスレッド ベンチマーク（全部まとめて）</h1>
+<p class="sub">各ゲームの計測ページ（&lt;game&gt;/bench.html）を、このタブで1つずつ自動で開いて既定の設定のまま測り、結果を1つにまとめます。分離（Service Worker）・スレッド数は手で開いたときと同じです。PC の Chrome で開き、終わるまでタブを前面に出したままにしてください（途中で閉じても、もう一度開けば続きから測ります）。</p>
+
+<div class="card"><div class="kv" id="env"></div></div>
+
+<div class="card">
+  <div class="row" style="justify-content:space-between">
+    <h2 style="margin:0">測るゲーム</h2>
+    <div class="row"><button class="sec sm" id="btnAll">全部選ぶ</button><button class="sec sm" id="btnNone">全部外す</button></div>
+  </div>
+  <div class="tw"><table id="tbl"><thead><tr><th>ゲーム</th><th>状態</th><th>目安</th><th>かかった時間</th></tr></thead><tbody></tbody></table></div>
+  <div class="row" style="margin-top:12px">
+    <button id="btnRun">全部測る</button>
+    <button id="btnCont" class="sec" hidden>続きから</button>
+    <button id="btnStop" class="sec" hidden>止める</button>
+    <button id="btnCopy" class="sec" disabled>結果をコピー</button>
+    <button id="btnClear" class="sec" hidden>結果を消す</button>
+  </div>
+  <div id="bar"><i></i></div>
+  <div id="st"></div>
+</div>
+
+<div class="card"><h2>結果</h2><pre id="log">（まだありません）</pre></div>
+</main>
+<script>
+'use strict';
+// The games' own measuring pages, in this order. est: minutes on the user's Mac (14 logical cores) with the default settings
+// (a guide; replaced by the time of the last run on this browser once there is one).
+const GAMES = [
+  ['go', '囲碁', 6], ['reversi', 'リバーシ', 6], ['checkers', 'チェッカー', 6], ['morris', 'ナイン・メンズ・モリス', 7],
+  ['gomoku', '五目並べ', 6], ['mancala', 'マンカラ', 6], ['connect4', 'コネクトフォー', 8], ['ur', 'ウル王朝のゲーム', 1],
+  ['senet', 'セネト', 1], ['backgammon', 'バックギャモン', 2], ['ludo', 'ルドー', 2], ['ugolki', 'ウゴルキ', 6],
+  ['agon', 'アゴン', 6], ['konane', 'コナネ', 6], ['dots', 'ドット＆ボックス', 8], ['tafl', 'タフル', 7],
+  ['hex', 'ヘックス', 5], ['chess', 'チェス', 7], ['shogi', '将棋', 7], ['xiangqi', 'シャンチー', 7],
+  ['janggi', 'チャンギ', 7], ['fanorona', 'ファノロナ', 7],
+].map(([id, name, est]) => ({ id, name, est }));
+const KEY = 'aicoding-bench-all', KEY_SEL = 'aicoding-bench-all-sel', KEY_TIME = 'aicoding-bench-all-time';
+const QUICK = new URLSearchParams(location.search).has('quick');   // (a check of the mechanism: 2 threads, the lightest settings)
+const $ = s => document.querySelector(s);
+const HC = navigator.hardwareConcurrency || 1;
+const ua = (() => { const d = navigator.userAgentData; const b = d && (d.brands || []).filter(x => !/Not/.test(x.brand)).map(x => x.brand + ' ' + x.version).join(', '); return (b ? b + ' / ' + (d.platform || '') : '') || navigator.userAgent; })();
+const LS = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
+const load = () => LS.get(KEY, null), save = s => LS.set(KEY, s);
+const fmt = ms => ms == null ? '—' : ms < 60000 ? Math.round(ms / 1000) + '秒' : Math.floor(ms / 60000) + '分' + String(Math.round(ms / 1000) % 60).padStart(2, '0') + '秒';
+const estMs = g => { const t = LS.get(KEY_TIME, {})[HC + '|' + g.id]; return t || (QUICK ? 60000 : g.est * 60000); };
+const estTxt = g => { const t = LS.get(KEY_TIME, {})[HC + '|' + g.id]; return t ? '前回 ' + fmt(t) : '約' + g.est + '分'; };
+let S = load(), timer = null, wake = null;
+
+$('#env').innerHTML = [['hardwareConcurrency', HC + (QUICK ? '（短縮モード：2スレッドまで・いちばん軽い設定）' : '')], ['ブラウザ', ua.replace(/</g, '&lt;')]].map(([k, v]) => `<b>${k}</b><span>${v}</span>`).join('');
+
+function selected() { return GAMES.filter(g => $('#c-' + g.id).checked).map(g => g.id); }
+function build() {
+  const sel = LS.get(KEY_SEL, null);
+  $('#tbl tbody').innerHTML = GAMES.map(g => `<tr><td><label><input type="checkbox" id="c-${g.id}"${!sel || sel.includes(g.id) ? ' checked' : ''}>${g.name}</label></td><td id="s-${g.id}">—</td><td>${estTxt(g)}</td><td id="t-${g.id}">—</td></tr>`).join('')
+    + `<tr><td><b>合計</b></td><td></td><td id="estAll"></td><td id="tAll"></td></tr>`;
+  GAMES.forEach(g => $('#c-' + g.id).onchange = () => { LS.set(KEY_SEL, selected()); total(); });
+}
+function total() {
+  const ids = S && S.running ? S.queue : selected();
+  const m = GAMES.filter(g => ids.includes(g.id)).reduce((a, g) => a + estMs(g), 0);
+  $('#estAll').textContent = '約' + Math.max(1, Math.round(m / 60000)) + '分';
+}
+$('#btnAll').onclick = () => { GAMES.forEach(g => $('#c-' + g.id).checked = true); LS.set(KEY_SEL, selected()); total(); };
+$('#btnNone').onclick = () => { GAMES.forEach(g => $('#c-' + g.id).checked = false); LS.set(KEY_SEL, selected()); total(); };
+
+const ST = { ok: '<span class="y">完了</span>', error: '<span class="n">失敗</span>', timeout: '<span class="n">時間切れ</span>' };
+function render() {
+  S = load();
+  const R = S ? S.results || {} : {}, q = S ? S.queue : [];
+  let doneMs = 0, allMs = 0, tSum = 0;
+  GAMES.forEach(g => {
+    const r = R[g.id], inQ = q.includes(g.id);
+    $('#s-' + g.id).innerHTML = r ? ST[r.status] || r.status : inQ ? (S.running && S.cur === g.id ? '実行中' : '待ち') : '—';
+    $('#t-' + g.id).textContent = r && r.ms ? fmt(r.ms) : '—';
+    if (inQ) { allMs += estMs(g); if (r) { doneMs += estMs(g); tSum += r.ms || 0; } }
+    $('#c-' + g.id).disabled = !!(S && S.running);
+  });
+  $('#tAll').textContent = tSum ? fmt(tSum) : '—';
+  total();
+  $('#bar i').style.width = (allMs ? doneMs / allMs * 100 : 0) + '%';
+  const unfinished = S && q.some(id => !R[id]);
+  $('#btnRun').disabled = !!(S && S.running);
+  $('#btnCont').hidden = !(S && !S.running && unfinished);
+  $('#btnStop').hidden = !(S && S.running);
+  $('#btnClear').hidden = !S || !!S.running;
+  const txt = report();
+  $('#log').textContent = txt || '（まだありません）';
+  $('#btnCopy').disabled = !txt;
+}
+// all the copied texts in one, as each page copies it
+function report() {
+  if (!S || !S.results || !Object.keys(S.results).length) return '';
+  const R = S.results, out = [`bench-all ${new Date(S.started).toISOString()} | ${S.ua} | hc ${S.hc}${S.quick ? ' | QUICK (2 threads, lightest)' : ''} | ${S.queue.length} games`];
+  for (const id of S.queue) {
+    const r = R[id]; if (!r) { out.push('', `===== ${id}: not run`); continue; }
+    out.push('', `===== ${id}: ${r.status}, ${(r.ms / 60000).toFixed(1)} min, isolated ${r.iso}, hc ${r.hc} =====`, r.text || '');
+  }
+  return out.join('\n');
+}
+async function lock() { try { if ('wakeLock' in navigator && document.visibilityState === 'visible') wake = await navigator.wakeLock.request('screen'); } catch (e) {} }
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') lock(); });
+
+function next(delay) {
+  S = load(); render();
+  if (!S || !S.running) return;
+  const id = S.queue.find(x => !S.results[x]);
+  if (!id) { done(); return; }
+  const g = GAMES.find(x => x.id === id);
+  let left = delay;
+  const tick = () => {
+    if (!load() || !load().running) { $('#st').textContent = '止めました。'; render(); return; }
+    if (left <= 0) { S = load(); S.cur = id; save(S); location.href = id + '/bench.html?auto=1' + (S.quick ? '&quick=1' : ''); return; }
+    $('#st').textContent = `次は ${g.name}（${S.queue.indexOf(id) + 1}/${S.queue.length}）。${left}秒後に開きます…`;
+    left--; timer = setTimeout(tick, 1000);
+  };
+  tick();
+}
+function done() {
+  S.running = false; S.cur = null; S.finished = Date.now(); save(S);
+  const T = LS.get(KEY_TIME, {});
+  for (const [id, r] of Object.entries(S.results)) if (r.status === 'ok' && r.ms && !S.quick) T[S.hc + '|' + id] = r.ms;
+  LS.set(KEY_TIME, T);
+  build(); render();
+  const bad = S.queue.filter(id => S.results[id] && S.results[id].status !== 'ok');
+  $('#st').innerHTML = `完了（${fmt(S.finished - S.started)}）。「結果をコピー」を押して、Claude に貼り付けてください。` + (bad.length ? `<span class="n">失敗・時間切れ：${bad.join(', ')}</span>` : '');
+  document.title = '完了 — 全部まとめて MT ベンチ';
+  beep();
+}
+function beep() {
+  try {
+    const A = new (window.AudioContext || window.webkitAudioContext)(), t = A.currentTime;
+    [[880, 0], [1175, 0.18], [1568, 0.36]].forEach(([f, d]) => { const o = A.createOscillator(), v = A.createGain(); o.frequency.value = f; v.gain.setValueAtTime(0.0001, t + d); v.gain.exponentialRampToValueAtTime(0.25, t + d + 0.02); v.gain.exponentialRampToValueAtTime(0.0001, t + d + 0.3); o.connect(v).connect(A.destination); o.start(t + d); o.stop(t + d + 0.32); });
+  } catch (e) {}
+}
+$('#btnRun').onclick = () => {
+  const q = selected(); if (!q.length) { $('#st').textContent = '測るゲームを選んでください。'; return; }
+  const limit = {}; GAMES.forEach(g => { if (q.includes(g.id)) limit[g.id] = QUICK ? 15 * 60000 : Math.max(30 * 60000, estMs(g) * 4); });
+  S = { running: true, quick: QUICK, queue: q, results: {}, attempts: {}, isoTried: {}, limit, cur: null, started: Date.now(), ua, hc: HC };
+  save(S); lock(); next(1);
+};
+$('#btnCont').onclick = () => { S = load(); if (!S) return; S.running = true; S.cur = null; save(S); lock(); next(1); };
+$('#btnStop').onclick = () => { clearTimeout(timer); S = load(); if (S) { S.running = false; S.cur = null; save(S); } $('#st').textContent = '止めました。「続きから」で再開できます。'; render(); };
+$('#btnClear').onclick = () => { if (!confirm('結果を消しますか？')) return; try { localStorage.removeItem(KEY); } catch (e) {} S = null; $('#st').textContent = ''; render(); };
+$('#btnCopy').onclick = async () => {
+  const txt = report();
+  try { await navigator.clipboard.writeText(txt); $('#btnCopy').textContent = 'コピーしました'; }
+  catch (e) { const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); $('#btnCopy').textContent = 'コピーしました'; } catch (e2) {} ta.remove(); }
+  setTimeout(() => { $('#btnCopy').textContent = '結果をコピー'; }, 2000);
+};
+
+build(); render();
+if (S && S.running) {   // came back from a game (or reopened during a run): go on
+  if (S.cur && !S.results[S.cur]) { S.cur = null; save(S); }   // (the page was left without a result: it is opened again, as an attempt)
+  lock(); next(S.results && Object.keys(S.results).length ? 3 : 1);
+} else if (S && S.queue && S.queue.some(id => !S.results[id])) $('#st').textContent = '前回の計測が途中です。「続きから」で残りを測れます。';
+else if (S && S.finished) $('#st').textContent = `前回の結果（${new Date(S.finished).toLocaleString()}）。`;
+else $('#st').textContent = `「全部測る」を押してください。合計 ${$('#estAll').textContent}（目安）。`;
+</script>
+</body>
+</html>
