@@ -1528,6 +1528,36 @@
       floor: M({ map: rep(TT, fz, (XR - XL) / 9, (ZF - ZB) / 9), roughness: .34, clearcoat: .4, clearcoatRoughness: .3, color: night ? 0x80809a : 0xe4dcd0, bumpScale: .002 }),
       back: c => wall(c, XL, XR, [-34, -12, 12, 34], 3), left: c => wall(c, -ZF, -ZB, [10, 32, 54], 5), right: c => wall(c, ZB, ZF, [-50, -28, -6], 7) });
     skyDome(o, T, 400, '#c8b8a0');
+    // the arcade (2026-11-09): marble columns in front of the walls — a zellige-clad foot, a slim shaft with rings, a capital of stepped
+    // muqarnas cells under a cedar abacus — carrying horseshoe arches cut through panels of carved stucco (arabesque and an epigraphic band)
+    { const stuccoT = canvasTex('tbl8-stucco', 512, 512, (c, W) => { c.fillStyle = '#efe4d0'; c.fillRect(0, 0, W, W); const R = rng(12);
+        c.strokeStyle = 'rgba(150,120,90,.55)'; c.lineWidth = 2;   // arabesque: interlacing scrolls on a lattice of circles
+        for (let i = 0; i <= 8; i++) for (let j = 0; j <= 8; j++) { const x = i * W / 8, y = j * W / 8; c.beginPath(); c.arc(x, y, W / 16, 0, 7); c.stroke(); c.beginPath(); c.arc(x + W / 16, y + W / 16, W / 26, 0, 7); c.stroke();
+          for (let k = 0; k < 4; k++) { c.beginPath(); c.arc(x + Math.cos(k * 1.57) * W / 16, y + Math.sin(k * 1.57) * W / 16, W / 40, k * 1.57, k * 1.57 + 3.4); c.stroke(); } }
+        c.fillStyle = 'rgba(120,90,60,.18)'; for (let i = 0; i < 900; i++) c.fillRect(R() * W, R() * W, 1.5, 1.5);
+        c.fillStyle = '#e4d6bc'; c.fillRect(0, 0, W, W * .1); c.strokeStyle = 'rgba(110,80,50,.7)'; c.lineWidth = 3;   // the epigraphic band along the top
+        for (let x = 8; x < W; x += 22) { c.beginPath(); c.moveTo(x, W * .085); c.lineTo(x, W * .03); c.quadraticCurveTo(x + 8, W * .02, x + 12, W * .06); c.lineTo(x + 16, W * .085); c.stroke(); } c.fillStyle = 'rgba(110,80,50,.5)'; c.fillRect(0, W * .1, W, 3); });
+      stuccoT.wrapS = stuccoT.wrapT = TT.RepeatWrapping;
+      const stucco = M({ map: stuccoT, roughness: .8, bumpScale: .03, color: night ? 0x9a98b0 : 0xffffff }), marbleC = M({ color: 0xf0ebe2, roughness: .25, clearcoat: .5 }), cedarB = M({ map: wood('tbl8-cedar', '#9a6a3e', '#5a3418', 256, 512, 1.2), roughness: .5 });
+      const zc = zellige(o, 'tbl8-colz', ['#ece4d4', '#2f6a6a', '#c8a060', '#9a4a32'], 4); zc.wrapS = TT.RepeatWrapping;
+      const SPR = FL + 24;   // the springing of the arches
+      const column = (x, z) => { const G = grp(TT, g, x, FL, z);
+        at(G, new TT.Mesh(new TT.CylinderGeometry(1.45, 1.6, 6, 8), [M({ map: zc, roughness: .25, clearcoat: .7 }), marbleC, marbleC]), 0, 3, 0, Math.PI / 8);   // the zellige-clad foot
+        at(G, lathe(TT, [[0, 6], [1.3, 6], [1.3, 6.3], [1, 6.6], [.85, 7], [.78, 21], [.95, 21.3], [.78, 21.6], [.8, 21.9], [0, 21.9]], SEG(o, 16), marbleC), 0, 0, 0);
+        [10.5, 15].forEach(y => at(G, new TT.Mesh(new TT.TorusGeometry(.84, .1, 6, 16), marbleC), 0, y, 0, 0, false).rotation.x = Math.PI / 2);
+        for (let k = 0; k < 3; k++) { const w = 1.7 + k * .5; at(G, new TT.Mesh(RB(w, .7, w, .08, 1), stucco), 0, 22.2 + k * .65, 0, k * Math.PI / 8); }   // muqarnas tiers
+        at(G, new TT.Mesh(RB(3.4, .8, 3.4, .1, 1), cedarB), 0, 24.4, 0); return G; };
+      // one horseshoe arch panel between two columns: a slab of stucco with the arch cut through it, a moulded edge round the opening
+      const archPanel = (cx, cz, span, ry) => { const hw = span / 2, r = hw - 1.8, cyA = SPR + r * .6, top = Y1 - 14, a0 = Math.PI * 1.17, a1 = -Math.PI * .17, xr = Math.cos(-a1) * r, sh = new TT.Shape();
+        sh.moveTo(-hw, SPR); sh.lineTo(-xr, SPR); sh.lineTo(Math.cos(a0) * r, cyA + Math.sin(a0) * r); sh.absarc(0, cyA, r, a0, a1, true); sh.lineTo(xr, SPR); sh.lineTo(hw, SPR); sh.lineTo(hw, top); sh.lineTo(-hw, top); sh.lineTo(-hw, SPR);   // the horseshoe opening notched up from the springing line
+        const geo = new TT.ExtrudeGeometry(sh, { depth: 1.8, bevelEnabled: true, bevelThickness: .2, bevelSize: .2, bevelSegments: 1, curveSegments: 24 }); geo.translate(0, -FL, -.9);
+        const P = geo.attributes.position, U = geo.attributes.uv; for (let i = 0; i < P.count; i++) U.setXY(i, P.getX(i) / 22, P.getY(i) / 22);
+        const m = new TT.Mesh(geo, stucco); const Ga = grp(TT, g, cx, FL, cz, ry); at(Ga, m, 0, 0, 0);
+        const mould = new TT.Mesh(new TT.TorusGeometry(r + .5, .28, 6, 32, Math.PI * 1.34), marbleC); mould.rotation.z = -Math.PI * .17; at(Ga, mould, 0, cyA - FL, 1.05, 0, false);
+        return Ga; };
+      const backXs = [-45, -23, 0, 23, 45], sideZs = [1, -21, -43];
+      backXs.forEach(x => column(x, ZB + 3.2)); for (let i = 0; i < 4; i++) archPanel((backXs[i] + backXs[i + 1]) / 2, ZB + 3.2, backXs[i + 1] - backXs[i], 0);
+      [-1, 1].forEach(sd => { sideZs.forEach(z => column(sd * (XR - 3.2), z)); for (let i = 0; i < 2; i++) archPanel(sd * (XR - 3.2), (sideZs[i] + sideZs[i + 1]) / 2, sideZs[i] - sideZs[i + 1], Math.PI / 2); }); }
     // the fountain (straight behind the table, tall enough that its bowls and water rise over the board in the seat's view): an octagonal tiled basin, a carved marble bowl on a pedestal, a thin jet
     { const Gf = grp(TT, g, 0, FL, -42), side = zellige(o, 'tbl8-basin', ['#ece4d4', '#2f6a6a', '#c8a060', '#2f6a6a'], 8), marble = M({ color: 0xeee8dc, roughness: .3, clearcoat: .4 }); Gf.scale.set(1.25, .62, 1.25);   // (a low, wide fountain: its bowls and the water fit in the seat's view over the board)
       at(Gf, new TT.Mesh(new TT.CylinderGeometry(9, 9.4, 3.4, 8), [M({ map: side, roughness: .25, clearcoat: .7 }), marble, marble]), 0, 1.7, 0, Math.PI / 8);
@@ -1593,18 +1623,67 @@
       at(Gl, lathe(TT, [[0, -3], [1.2, -2.6], [2.2, -1], [2.4, 1], [1.6, 3], [.6, 4], [.4, 5], [0, 5]], 12, M({ color: 0xb89048, metalness: 1, roughness: .35, emissive: new TT.Color(lit ? 0xffa040 : 0), emissiveMap: pierced, emissiveIntensity: lit ? 1.4 : 0 })), 0, 0, 0, 0, false);
       at(Gl, new TT.Mesh(new TT.CylinderGeometry(.05, .05, 20, 4), brass), 0, 15, 0, 0, false);
       if (lit) { halo(o, Gl, 0, 0, 0, 12); const L = new TT.PointLight(0xffb060, .9, 40, 2); Gl.add(L); } });
-    // the table of the hour: mint tea in a silver pot and gilded glasses on a brass tray; dates, oranges and gazelle horns
+    // the table of the hour (2026-11-09, more detail): mint tea from an engraved Moroccan berrad — a pot-bellied silver teapot with a long
+    // swan spout and a domed lid with a tiered finial — and gilded tea glasses on an engraved brass tray on little feet; Fez pottery with
+    // dates, oranges with a cut one showing its segments, kaab el ghazal (gazelle horns) dusted with sugar; a pierced lantern after dark
     const silver = M({ color: 0xd8dadc, metalness: 1, roughness: .22 });
-    { const Gt = grp(TT, g, -11.2, 0, -6); at(Gt, lathe(TT, [[0, 0], [3.4, 0], [3.6, .15], [3.7, .4], [3.5, .42], [3.3, .16], [0, .16]], SEG(o, 32), brass), 0, 0, 0);
-      const pot = teapot(o, Gt, -.6, -.6, -.8, silver, .62); pot.position.y = .16; at(pot, new TT.Mesh(new TT.ConeGeometry(.9, 2.6, 12), silver), 0, 4.6, 0);
-      [[1.6, 1.2, 0x8a3a1e], [2, -1.2, 0x2a6a3a]].forEach(([x, z, col]) => { const Gg = tumbler(o, Gt, x, z, [T === 'night' ? 0x8a4a1a : 0xa8701e, .72], 2.4, .62); Gg.position.y = .16; at(Gg, new TT.Mesh(new TT.CylinderGeometry(.66, .64, .5, 16, 1, true), M({ color: col, roughness: .1, clearcoat: 1, transparent: true, opacity: .75 })), 0, 1.4, 0, 0, false); at(Gg, new TT.Mesh(new TT.TorusGeometry(.66, .05, 4, 18), brass), 0, 2.3, 0, 0, false).rotation.x = Math.PI / 2;
-        for (let k = 0; k < 3; k++) { const l = new TT.Mesh(new TT.SphereGeometry(.22, 6, 4), M({ color: 0x3a8a3a, roughness: .5 })); l.scale.set(1, .3, .6); at(Gg, l, Math.cos(k * 2) * .3, 2.2 + k * .15, Math.sin(k * 2) * .3, k, false); } }); }
-    tumbler(o, g, -9.4, -2.6, [0xa8701e, .7], 2.4, .62);
-    { const Gb = grp(TT, g, 11, 0, -6.4), clay = M({ color: 0xe8dcc4, roughness: .4, clearcoat: .4 }); at(Gb, lathe(TT, [[0, 0], [1.6, 0], [2.8, .9], [3.1, 1.3], [2.9, 1.35], [2.4, .9], [0, .4]], SEG(o, 28), clay), 0, 0, 0);
-      const date = M({ color: 0x4a1e10, roughness: .3, clearcoat: .6 }); for (let i = 0; i < 9; i++) { const a = i * 2.4, r = Math.sqrt(i) * .6; const d = new TT.Mesh(new TT.SphereGeometry(.42, 10, 8), date); d.scale.set(1.7, .8, .9); d.rotation.y = a; at(Gb, d, Math.cos(a) * r, .8 + (i > 5 ? .35 : 0), Math.sin(a) * r); } }
-    { const Gp = grp(TT, g, 11.6, 0, 1.6); plate(o, Gp, 0, 0, 2.2, M({ color: 0xf2ece0, roughness: .3, clearcoat: .5 })); [[-.7, -.3], [.6, .4], [0, .9]].forEach(([x, z], i) => { const f = new TT.Mesh(new TT.SphereGeometry(.85, 14, 10), orange); at(Gp, f, x, .95, z); if (!i) { const h = new TT.Mesh(new TT.SphereGeometry(.84, 14, 8, 0, Math.PI), M({ color: 0xf6b050, roughness: .5 })); h.rotation.x = -Math.PI / 2; at(Gp, h, 1.5, .2, -.8, 0, false); } }); }
-    { const sugar = M({ color: 0xf4ece0, roughness: .9 }); [[6.6, -9.4, .3], [7.8, -8.4, 1.9]].forEach(([x, z, r]) => croissant(o, g, x, .1, z, r, sugar).scale.setScalar(.6)); }
-    if (lit) { const Gc = grp(TT, g, -6.4, 0, -9); at(Gc, new TT.Mesh(new TT.CylinderGeometry(1, 1.1, .3, 8), brass), 0, .15, 0); at(Gc, lathe(TT, [[0, .3], [.9, .3], [1, 2], [.6, 2.8], [0, 3.2]], 8, M({ color: 0xc8a050, metalness: 1, roughness: .35, emissive: new TT.Color(0xffa040), emissiveMap: pierced, emissiveIntensity: 1.2 })), 0, 0, 0, 0, false); halo(o, Gc, 0, 1.6, 0, 5); }
+    const engraveT = canvasTex('tbl8-engrave', 256, 128, (c, W, H) => { c.fillStyle = '#808080'; c.fillRect(0, 0, W, H); c.strokeStyle = '#ffffff'; c.lineWidth = 1.4;
+      for (let x = 0; x < W; x += 32) { c.beginPath(); c.arc(x + 16, H / 2, 12, 0, 7); c.stroke(); c.beginPath(); c.arc(x + 16, H / 2, 6, 0, 7); c.stroke(); for (let k = 0; k < 8; k++) { const a = k * .785; c.beginPath(); c.moveTo(x + 16 + Math.cos(a) * 6, H / 2 + Math.sin(a) * 6); c.lineTo(x + 16 + Math.cos(a) * 12, H / 2 + Math.sin(a) * 12); c.stroke(); } }
+      c.beginPath(); c.moveTo(0, H * .2); c.lineTo(W, H * .2); c.moveTo(0, H * .8); c.lineTo(W, H * .8); c.stroke(); for (let x = 0; x < W; x += 8) { c.beginPath(); c.moveTo(x, H * .2); c.lineTo(x + 4, H * .1); c.lineTo(x + 8, H * .2); c.stroke(); } });
+    engraveT.wrapS = TT.RepeatWrapping; engraveT.repeat.set(3, 1);
+    const silverE = M({ color: 0xd8dadc, metalness: 1, roughness: .24, bumpMap: engraveT, bumpScale: .05 }), brassE = M({ color: 0xc8a050, metalness: 1, roughness: .3, bumpMap: engraveT, bumpScale: .04 });
+    { const trayT = canvasTex('tbl8-tray', 256, 256, (c, W) => { c.fillStyle = '#808080'; c.fillRect(0, 0, W, W); c.strokeStyle = '#fff'; c.lineWidth = 2; const C = W / 2;   // the tray's engraved star rosette
+        for (let r = 20; r < C; r += 24) { c.beginPath(); c.arc(C, C, r, 0, 7); c.stroke(); } for (let k = 0; k < 16; k++) { const a = k * Math.PI / 8; c.beginPath(); c.moveTo(C, C); c.lineTo(C + Math.cos(a) * C, C + Math.sin(a) * C); c.stroke(); }
+        c.beginPath(); for (let i = 0; i < 17; i++) { const a = i * Math.PI / 8, rr = i % 2 ? 40 : 70; c.lineTo(C + Math.cos(a) * rr, C + Math.sin(a) * rr); } c.stroke(); });
+      const Gt = grp(TT, g, -11.2, 0, -5.6, .2);
+      [0, 2.1, 4.2].forEach(a => at(Gt, new TT.Mesh(new TT.SphereGeometry(.28, 10, 8), brassE), Math.cos(a) * 3, .2, Math.sin(a) * 3, 0, false));
+      at(Gt, lathe(TT, [[0, .3], [3.4, .3], [3.6, .45], [3.75, .75], [3.55, .78], [3.35, .48], [0, .46]], SEG(o, 40), brassE), 0, 0, 0);
+      const top = new TT.Mesh(new TT.CircleGeometry(3.36, SEG(o, 40)), M({ color: 0xc8a050, metalness: 1, roughness: .28, bumpMap: trayT, bumpScale: .05 })); top.rotation.x = -Math.PI / 2; at(Gt, top, 0, .47, 0, 0, false);
+      // the berrad
+      const Gp = grp(TT, Gt, -1, .47, -.7, -.8);
+      at(Gp, lathe(TT, [[0, 0], [.75, 0], [.8, .12], [.62, .22], [.95, .45], [1.45, 1], [1.62, 1.6], [1.5, 2.2], [1.05, 2.6], [.72, 2.8], [.68, 3.05], [.8, 3.12], [0, 3.12]], SEG(o, 32), silverE), 0, 0, 0);
+      at(Gp, lathe(TT, [[0, 3.1], [.82, 3.1], [.78, 3.3], [.55, 3.75], [.3, 4], [.24, 4.15], [.36, 4.3], [.2, 4.45], [.3, 4.6], [.14, 4.75], [.2, 4.95], [0, 5.15]], SEG(o, 24), silver), 0, 0, 0);   // the domed lid, the finial in tiers
+      { const sp = new TT.CatmullRomCurve3([new TT.Vector3(1.3, .9, 0), new TT.Vector3(2.1, 1.1, 0), new TT.Vector3(2.6, 1.9, 0), new TT.Vector3(2.9, 3.1, 0), new TT.Vector3(3.3, 3.6, 0)]);
+        const geo = new TT.TubeGeometry(sp, 24, .28, 10, false), P = geo.attributes.position; for (let i = 0; i < P.count; i++) { const k = Math.min(1, Math.max(0, (P.getX(i) - 1.3) / 2)); const cx = P.getX(i), cy = P.getY(i); P.setZ(i, P.getZ(i) * (1 - .55 * k)); } geo.computeVertexNormals(); at(Gp, new TT.Mesh(geo, silver), 0, 0, 0); }   // the swan spout, tapering
+      { const hd = new TT.Mesh(new TT.TorusGeometry(1.05, .13, 8, 20, Math.PI * 1.2), silver); hd.rotation.z = Math.PI / 2 + .3; at(Gp, hd, -1.7, 2, 0); [1.2, 2.9].forEach(y => at(Gp, new TT.Mesh(new TT.SphereGeometry(.16, 8, 6), M({ color: 0x1a1a1a, roughness: .4 })), -1.62 - (y > 2 ? .1 : 0), y, 0, 0, false)); }   // the handle and its insulators
+      // gilded tea glasses: a coloured band painted in gold, amber tea with a little foam, a sprig of mint
+      const glassBand = (col) => canvasTex('tbl8-band-' + col, 128, 64, (c, W, H) => { c.fillStyle = col; c.fillRect(0, 0, W, H); c.strokeStyle = '#e8c060'; c.lineWidth = 2; c.strokeRect(0, 3, W, H - 6);
+        for (let x = 0; x < W; x += 16) { c.beginPath(); c.moveTo(x, H - 4); c.lineTo(x + 8, 6); c.lineTo(x + 16, H - 4); c.stroke(); c.fillStyle = '#e8c060'; c.beginPath(); c.arc(x + 8, H / 2 + 6, 2.4, 0, 7); c.fill(); } });
+      const mintM = M({ color: 0x3a8a3a, roughness: .45, side: TT.DoubleSide });
+      const teaGlass = (G0, x, z, col) => { const G = grp(TT, G0, x, 0, z);
+        at(G, lathe(TT, [[0, 0], [.52, 0], [.55, .1], [.62, 1], [.72, 2.4], [.66, 2.4], [.56, 1], [.48, .25], [0, .22]], SEG(o, 24), M({ color: 0xffffff, roughness: .02, clearcoat: 1, transparent: true, opacity: .3, depthWrite: false })), 0, 0, 0, 0, false);
+        at(G, new TT.Mesh(new TT.CylinderGeometry(.66, .6, .62, SEG(o, 24), 1, true), M({ map: glassBand(col), roughness: .1, clearcoat: 1, transparent: true, opacity: .85, metalnessMap: null })), 0, 1.25, 0, 0, false);
+        at(G, new TT.Mesh(new TT.CylinderGeometry(.62, .5, 1.75, SEG(o, 24)), M({ color: T === 'night' ? 0x8a4a1a : 0xb8781e, roughness: .02, clearcoat: 1, transparent: true, opacity: .6, depthWrite: false })), 0, 1.1, 0, 0, false);
+        const foam = new TT.Mesh(new TT.CircleGeometry(.62, 18), M({ color: 0xe8c890, roughness: .7 })); foam.rotation.x = -Math.PI / 2; at(G, foam, 0, 1.98, 0, 0, false);
+        at(G, new TT.Mesh(new TT.TorusGeometry(.69, .04, 4, 22), M({ color: 0xe8c060, metalness: 1, roughness: .25 })), 0, 2.4, 0, 0, false).rotation.x = Math.PI / 2;
+        for (let k = 0; k < 4; k++) { const l = new TT.Mesh(new TT.SphereGeometry(.2, 8, 4), mintM); l.scale.set(.5, .12, 1.1); l.rotation.set(.4, k * 1.6, 0); at(G, l, Math.cos(k * 1.6) * .2, 2.05 + k * .12, Math.sin(k * 1.6) * .2, 0, false); }
+        return G; };
+      [[1.5, 1.3, '#8a2a1e'], [2.2, -.6, '#1f5a4a'], [.4, 2.2, '#2a3a8a']].forEach(([x, z, col]) => teaGlass(Gt, x, z, col).position.y = .47);
+      teaGlass(g, -8.6, -1.4, '#8a6a1a'); }
+    // Fez pottery: blue and white with a cobalt rosette, dates glossy and wrinkled
+    const fezT = canvasTex('tbl8-fez', 256, 256, (c, W) => { const C = W / 2; c.fillStyle = '#f2ecdf'; c.fillRect(0, 0, W, W); c.strokeStyle = '#1e3a8a'; c.fillStyle = '#1e3a8a'; c.lineWidth = 4;
+      [C * .95, C * .62, C * .3].forEach(r => { c.beginPath(); c.arc(C, C, r, 0, 7); c.stroke(); }); for (let k = 0; k < 12; k++) { const a = k * Math.PI / 6; c.save(); c.translate(C + Math.cos(a) * C * .78, C + Math.sin(a) * C * .78); c.rotate(a); ell(c, 0, 0, 12, 5); c.restore(); }
+      for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4; c.beginPath(); c.moveTo(C, C); c.lineTo(C + Math.cos(a) * C * .3, C + Math.sin(a) * C * .3); c.stroke(); } c.fillStyle = '#2a6a4a'; for (let k = 0; k < 24; k++) { const a = k * Math.PI / 12; ell(c, C + Math.cos(a) * C * .47, C + Math.sin(a) * C * .47, 3, 3); } });
+    const fez = M({ map: fezT, roughness: .2, clearcoat: .8, bump: false });
+    { const Gb = grp(TT, g, 11, 0, -6.2); const bw = lathe(TT, [[0, 0], [1.6, 0], [2.8, .9], [3.1, 1.3], [2.9, 1.35], [2.4, .9], [0, .4]], SEG(o, 32), fez); { const U = bw.geometry.attributes.uv, P = bw.geometry.attributes.position; for (let i = 0; i < P.count; i++) U.setXY(i, P.getX(i) / 6.4 + .5, .5 - P.getZ(i) / 6.4); } at(Gb, bw, 0, 0, 0);
+      const dateT = canvasTex('tbl8-date2', 128, 64, (c, W, H) => { c.fillStyle = '#5a2412'; c.fillRect(0, 0, W, H); for (let i = 0; i < 160; i++) { const x = Math.random() * W, y = Math.random() * H, l = 4 + Math.random() * 10; c.strokeStyle = Math.random() > .5 ? 'rgba(20,6,2,.55)' : 'rgba(150,70,30,.35)'; c.lineWidth = .8 + Math.random(); c.beginPath(); c.moveTo(x, y); c.quadraticCurveTo(x + l * .5, y + (Math.random() - .5) * 6, x + l, y + (Math.random() - .5) * 4); c.stroke(); } });   // crinkled skin
+      const date = M({ map: dateT, roughness: .25, clearcoat: .7, bumpScale: .03 }); for (let i = 0; i < 11; i++) { const a = i * 2.4, r = Math.sqrt(i) * .58; const d = new TT.Mesh(new TT.SphereGeometry(.42, 14, 10), date); d.scale.set(1.75, .78, .88); d.rotation.set(0, a, (i % 3) * .2); at(Gb, d, Math.cos(a) * r, .8 + (i > 6 ? .35 : 0), Math.sin(a) * r); } }
+    // oranges with a cut one, on a Fez plate; the orange peel dimpled, the cut face in segments
+    { const Gp = grp(TT, g, 11.4, 0, 1.8); const pl = plate(o, Gp, 0, 0, 2.3, fez); { const U = pl.geometry.attributes.uv, P = pl.geometry.attributes.position; for (let i = 0; i < P.count; i++) U.setXY(i, P.getX(i) / 4.6 + .5, .5 - P.getZ(i) / 4.6); }
+      const peelT = canvasTex('tbl8-peel', 128, 64, (c, W, H) => { c.fillStyle = '#f08a24'; c.fillRect(0, 0, W, H); for (let i = 0; i < 700; i++) { c.fillStyle = Math.random() > .5 ? 'rgba(255,190,90,.45)' : 'rgba(180,80,10,.35)'; c.beginPath(); c.arc(Math.random() * W, Math.random() * H, .8, 0, 7); c.fill(); } });
+      const orangeM = M({ map: peelT, roughness: .45, clearcoat: .3, bumpScale: .03 });
+      const cutT = canvasTex('tbl8-orange-cut', 128, 128, (c, W) => { const C = W / 2; c.fillStyle = '#f6e6c0'; c.fillRect(0, 0, W, W); c.fillStyle = '#f08a24'; c.beginPath(); c.arc(C, C, C - 1, 0, 7); c.fill(); c.fillStyle = '#fbf2dc'; c.beginPath(); c.arc(C, C, C - 7, 0, 7); c.fill();
+        for (let k = 0; k < 10; k++) { const a0 = k * Math.PI / 5 + .04, a1 = (k + 1) * Math.PI / 5 - .04; c.fillStyle = rad(c, C, C, C - 9, [[0, '#f8b040'], [1, '#f07a14']]); c.beginPath(); c.moveTo(C + Math.cos((a0 + a1) / 2) * 5, C + Math.sin((a0 + a1) / 2) * 5); c.arc(C, C, C - 10, a0, a1); c.closePath(); c.fill();
+          c.strokeStyle = 'rgba(255,230,160,.6)'; c.lineWidth = .8; for (let r = 12; r < C - 12; r += 6) { c.beginPath(); c.arc(C, C, r, a0 + .08, a1 - .08); c.stroke(); } } c.fillStyle = '#fbf2dc'; c.beginPath(); c.arc(C, C, 5, 0, 7); c.fill(); });
+      [[-.8, -.4], [.7, .5]].forEach(([x, z], i) => { const f = new TT.Mesh(new TT.SphereGeometry(.88, 20, 14), orangeM); f.scale.y = .94; at(Gp, f, x, .95, z); if (!i) { at(Gp, new TT.Mesh(new TT.CylinderGeometry(.05, .06, .2, 5), M({ color: 0x4a5a2a })), x, 1.86, z, 0, false); const lf = new TT.Mesh(new TT.SphereGeometry(.4, 10, 4), M({ color: 0x2f6a2a, roughness: .35, clearcoat: .6, side: TT.DoubleSide })); lf.scale.set(.42, .08, 1.1); lf.rotation.set(.3, .8, 0); at(Gp, lf, x + .3, 1.82, z + .2, 0, false); } });
+      { const Gf = grp(TT, Gp, -.1, .95, 1.25, .6); Gf.rotation.x = .3; const half = new TT.Mesh(new TT.SphereGeometry(.86, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), orangeM); half.rotation.x = Math.PI; at(Gf, half, 0, 0, 0);   // the cut half, face up and tipped toward the player
+        const face = new TT.Mesh(new TT.CircleGeometry(.86, 24), M({ map: cutT, roughness: .35, clearcoat: .5, bump: false })); face.rotation.x = -Math.PI / 2; at(Gf, face, 0, .01, 0, 0, false); } }
+    // kaab el ghazal: crescents of pastry dusted with icing sugar, on a small brass plate
+    { const Gk = grp(TT, g, 7.6, 0, -8.8, .3); at(Gk, lathe(TT, [[0, 0], [1.4, 0], [1.9, .25], [1.85, .3], [1.3, .1], [0, .1]], SEG(o, 28), brassE), 0, 0, 0);
+      const sugarT = canvasTex('tbl8-sugar', 64, 64, (c, W) => { c.fillStyle = '#f2e8d4'; c.fillRect(0, 0, W, W); for (let i = 0; i < 300; i++) { c.fillStyle = Math.random() > .3 ? 'rgba(255,255,255,.9)' : 'rgba(210,170,110,.6)'; c.fillRect(Math.random() * W, Math.random() * W, 1.5, 1.5); } });
+      const pastry = M({ map: sugarT, roughness: .9, bumpScale: .03 });
+      [[-.6, -.2, .3], [.6, .3, 2.4], [0, -.9, 4.4]].forEach(([x, z, r]) => { const cr = new TT.Mesh(new TT.TorusGeometry(.7, .26, 10, 20, Math.PI * 1.1), pastry); const P = cr.geometry.attributes.position; for (let i = 0; i < P.count; i++) { const a = Math.atan2(P.getY(i), P.getX(i)), t = Math.abs(a - Math.PI * .55) / (Math.PI * .55), k = 1 - .55 * t * t; const cx = Math.cos(a) * .7, cy = Math.sin(a) * .7; P.setXYZ(i, cx + (P.getX(i) - cx) * k, cy + (P.getY(i) - cy) * k, P.getZ(i) * k); } cr.geometry.computeVertexNormals(); cr.rotation.set(-Math.PI / 2, 0, r); at(Gk, cr, x, .38, z); }); }
+    if (lit) { const Gc = grp(TT, g, -7, 0, -7.8); at(Gc, new TT.Mesh(new TT.CylinderGeometry(1, 1.1, .3, 8), brass), 0, .15, 0); at(Gc, lathe(TT, [[0, .3], [.9, .3], [1, 2], [.6, 2.8], [0, 3.2]], 8, M({ color: 0xc8a050, metalness: 1, roughness: .35, emissive: new TT.Color(0xffa040), emissiveMap: pierced, emissiveIntensity: 1.2 })), 0, 0, 0, 0, false); halo(o, Gc, 0, 1.6, 0, 5); }
     const { key, H } = hourLights(o, T, T === 'night' ? [10, 40, -8] : T === 'evening' ? [-34, 18, -20] : [-12, 40, -16], 0xc8a878, .95);
     try { X.mergeStatic(g); } catch (e) {}
     return { bg: SKY[T][1], exp: H.exp, board: H.board, boardCol: night ? 0xffe0b8 : undefined, key, env: { top: SKY[T][1], bottom: '#c8b090', panels: [[0, 22, -10, 22, 10, night ? '#6070a0' : '#ffffff', night ? .5 : 1.4], [-20, 8, -20, 6, 8, lit ? '#ffb060' : '#ffe8d0', lit ? 1.4 : .5], [0, 10, 18, 20, 5, '#f0dcc0', .5]] } };
@@ -1813,6 +1892,9 @@
     const ground = canvasTex('tbl10-ground', sz(o, 1024), sz(o, 1024), (c, W) => { const N = makeNoise(13), img = c.createImageData(W, W), d = img.data;
       for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) { const u = x / W, v = y / W, n = N(u * 4, v * 4, 4), dirt = Math.min(1, Math.max(0, (n - .64) / .14)) * .8, k = (Math.random() - .5) * 30 + (N(u * 40, v * 40, 2) - .5) * 30, i = (y * W + x) * 4;
         d[i] = 92 + k * .6 + (138 - 92) * dirt; d[i + 1] = 116 + k + (108 - 116) * dirt; d[i + 2] = 58 + k * .4 + (76 - 58) * dirt; d[i + 3] = 255; }
+      { const H2 = W >> 1, src = new Uint8ClampedArray(d), tmp = new Uint8ClampedArray(d.length);   // (2026-11-09) made seamless: each row, then each column, cross-faded with itself shifted half a tile, so the repeats show no join
+        for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) { const w = Math.sin(Math.PI * x / W) ** 2, i = (y * W + x) * 4, j = (y * W + ((x + H2) % W)) * 4; for (let ch = 0; ch < 3; ch++) tmp[i + ch] = src[i + ch] * w + src[j + ch] * (1 - w); tmp[i + 3] = 255; }
+        for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) { const w = Math.sin(Math.PI * y / W) ** 2, i = (y * W + x) * 4, j = (((y + H2) % W) * W + x) * 4; for (let ch = 0; ch < 3; ch++) d[i + ch] = tmp[i + ch] * w + tmp[j + ch] * (1 - w); d[i + 3] = 255; } }
       c.putImageData(img, 0, 0); const R = rng(2); for (let i = 0; i < 1400; i++) { c.fillStyle = ['rgba(255,255,255,.7)', 'rgba(250,220,60,.7)', 'rgba(170,120,220,.6)'][i % 3]; c.fillRect(R() * W, R() * W, 1.6, 1.6); }   // wildflowers
       for (let i = 0; i < 900; i++) { c.strokeStyle = `rgba(${120 + R() * 50 | 0},${80 + R() * 30 | 0},40,.5)`; c.lineWidth = 1; const x = R() * W, y = R() * W, a = R() * 6; c.beginPath(); c.moveTo(x, y); c.lineTo(x + Math.cos(a) * 9, y + Math.sin(a) * 9); c.stroke(); } });
     { const gm = new TT.Mesh(new TT.PlaneGeometry(800, 800), M({ map: rep(TT, ground, 22, 22), roughness: .95, bumpScale: .012, color: night ? 0x5a6488 : T === 'evening' ? 0xf0d0c0 : 0xffffff })); gm.rotation.x = -Math.PI / 2; gm.position.set(0, FL, 0); gm.receiveShadow = true; g.add(gm); }
@@ -1931,29 +2013,61 @@
       { const sp = new TT.Mesh(new TT.TubeGeometry(new TT.CatmullRomCurve3([new TT.Vector3(1.7, 1.3, 0), new TT.Vector3(2.6, 2, 0), new TT.Vector3(3, 2.9, 0)]), 8, .2, 6), ket); at(Gf, sp, 0, 4.8, 0); const hd = new TT.Mesh(new TT.TorusGeometry(1.6, .06, 4, 16, Math.PI), kStand); at(Gf, hd, 0, 7.6, 0, 0, false); }
       ao(o, FX, FL, FZ, 16, 16, .5);
       [[-10, 6, 1.1], [9, 8, -.5]].forEach(([x, z, r]) => { const lg = new TT.Mesh(new TT.CylinderGeometry(1.6, 1.7, 12, 12), [barkM, endM, endM]); lg.rotation.set(0, r, Math.PI / 2); at(Gf, lg, x, 1.6, z); }); }
-    // a dog trotting about the clearing (2026-11-09): a golden retriever — legs in a trot, the tail wagging, the head bobbing; it pauses
-    // now and then to sit and look about
-    { const furT = canvasTex('tbl10-fur', 128, 128, (c, W) => { c.fillStyle = '#c88a44'; c.fillRect(0, 0, W, W); for (let i = 0; i < 900; i++) { c.strokeStyle = `rgba(${Math.random() > .5 ? '120,70,30' : '240,190,120'},.35)`; c.lineWidth = 1; const x = Math.random() * W, y = Math.random() * W; c.beginPath(); c.moveTo(x, y); c.lineTo(x + 1, y + 4 + Math.random() * 4); c.stroke(); } });
-      const fur = M({ map: furT, roughness: .85, sheen: new TT.Color(0xffd8a0), sheenRoughness: .5, bumpScale: .02 }), cream = M({ color: 0xe8c890, roughness: .9 }), blackM = M({ color: 0x141010, roughness: .3, clearcoat: .6 });
-      const Dg = grp(TT, g, 0, FL, 0), body = grp(TT, Dg, 0, 0, 0); Dg.userData.keep = 1; Dg.scale.setScalar(1.05);
-      const tor = new TT.Mesh(new TT.SphereGeometry(1, 18, 12), fur); tor.scale.set(4.4, 2.4, 2.2); at(body, tor, 0, 7, 0);
-      const chest = new TT.Mesh(new TT.SphereGeometry(1, 14, 10), cream); chest.scale.set(1.8, 2.1, 1.9); at(body, chest, 3, 6.8, 0);
-      const neck = new TT.Mesh(new TT.CylinderGeometry(1.1, 1.5, 3.2, 12), fur); neck.rotation.z = -.85; at(body, neck, 4.4, 8.8, 0);
-      const head = grp(TT, body, 5.6, 10.2, 0); const sk = new TT.Mesh(new TT.SphereGeometry(1.45, 16, 12), fur); sk.scale.set(1.15, 1, 1); at(head, sk, 0, 0, 0);
-      const muz = new TT.Mesh(new TT.CylinderGeometry(.62, .85, 2, 12), fur); muz.rotation.z = Math.PI / 2; at(head, muz, 1.6, -.45, 0); at(head, new TT.Mesh(new TT.SphereGeometry(.34, 10, 8), blackM), 2.6, -.32, 0);
-      [-1, 1].forEach(s2 => { const e = new TT.Mesh(new TT.SphereGeometry(.2, 8, 6), blackM); at(head, e, .95, .35, s2 * .7, 0, false); const ear = new TT.Mesh(new TT.SphereGeometry(1, 10, 8), fur); ear.scale.set(.7, 1.15, .28); ear.rotation.x = s2 * .35; at(head, ear, -.25, -.4, s2 * 1.35); });
-      const tg = new TT.Mesh(new TT.SphereGeometry(.3, 8, 6), M({ color: 0xd85a6a, roughness: .4 })); tg.scale.set(1, .3, .7); at(head, tg, 2.2, -1.05, 0, 0, false);
-      const collar = new TT.Mesh(new TT.TorusGeometry(1.15, .16, 6, 16), M({ color: 0xc8282a, roughness: .5 })); collar.rotation.set(0, Math.PI / 2, -.85); at(body, collar, 4.6, 9.2, 0, 0, false);
-      const legs = [[3, 1], [3, -1], [-3.1, 1], [-3.1, -1]].map(([x, s2]) => { const L = grp(TT, body, x, 6.2, s2 * 1.15); const up = new TT.Mesh(new TT.CylinderGeometry(.62, .45, 3.4, 10), fur); at(L, up, 0, -1.7, 0); const lo = new TT.Mesh(new TT.CylinderGeometry(.42, .38, 2.8, 8), x > 0 ? fur : fur); at(L, lo, 0, -4.4, 0); const paw = new TT.Mesh(new TT.SphereGeometry(.5, 8, 6), cream); paw.scale.set(1.3, .6, 1); at(L, paw, .25, -5.85, 0); return L; });
-      const tail = grp(TT, body, -4.2, 7.8, 0); { const tl = new TT.Mesh(new TT.ConeGeometry(.55, 4.6, 10), fur); tl.rotation.z = Math.PI / 2 + .9; at(tail, tl, -1.4, 1.1, 0); }
+    // a dog trotting about the clearing (2026-11-09, made real): a golden retriever modelled in shape — a deep chest and a tucked waist, a
+    // neck that runs into the shoulders, a broad skull with a stop and a long muzzle, a wet nose, dark eyes under the brow, soft drop ears,
+    // jointed legs (shoulder-elbow-pastern in front; thigh, hock and pastern behind), feathering on the legs, a plumed tail. It trots with a
+    // diagonal gait, the tail swinging and the ears bouncing, breathes, and every so often sits down and looks about
+    { const furT = canvasTex('tbl10-fur2', 256, 256, (c, W) => { c.fillStyle = '#c8873e'; c.fillRect(0, 0, W, W);
+        for (let i = 0; i < 5000; i++) { const x = Math.random() * W, y = Math.random() * W, l = 3 + Math.random() * 7, k = Math.random(); c.strokeStyle = k < .45 ? `rgba(110,62,22,${.18 + Math.random() * .2})` : `rgba(246,200,130,${.18 + Math.random() * .25})`; c.lineWidth = .8 + Math.random() * .7; c.beginPath(); c.moveTo(x, y); c.quadraticCurveTo(x + 1.5, y + l * .5, x + (Math.random() - .5) * 2, y + l); c.stroke(); } });
+      furT.wrapS = furT.wrapT = TT.RepeatWrapping;
+      const creamT = canvasTex('tbl10-fur3', 128, 128, (c, W) => { c.fillStyle = '#e6c088'; c.fillRect(0, 0, W, W); for (let i = 0; i < 1600; i++) { const x = Math.random() * W, y = Math.random() * W; c.strokeStyle = Math.random() < .5 ? 'rgba(190,140,80,.3)' : 'rgba(255,236,200,.35)'; c.lineWidth = .8; c.beginPath(); c.moveTo(x, y); c.lineTo(x + (Math.random() - .5) * 2, y + 4 + Math.random() * 5); c.stroke(); } });
+      const fur = M({ map: furT, roughness: .82, sheen: new TT.Color(0xffcf8a), sheenRoughness: .45, bumpScale: .06 }), cream = M({ map: creamT, roughness: .85, sheen: new TT.Color(0xffe6b8), sheenRoughness: .5, bumpScale: .05 });
+      const noseM = M({ color: 0x18110e, roughness: .28, clearcoat: .9, clearcoatRoughness: .2 }), eyeM = M({ color: 0x1a0e08, roughness: .05, clearcoat: 1 }), lipM = M({ color: 0x2a1a14, roughness: .5 }), padM = M({ color: 0x2a201c, roughness: .7 });
+      const SG = (n) => o.COARSE ? Math.max(8, n >> 1) : n;
+      const shaped = (wS, hS, f) => { const geo = new TT.SphereGeometry(1, SG(wS), SG(hS)), P = geo.attributes.position; for (let i = 0; i < P.count; i++) { const v = f(P.getX(i), P.getY(i), P.getZ(i)); P.setXYZ(i, v[0], v[1], v[2]); } geo.computeVertexNormals(); return geo; };
+      const smooth = (a, b, t) => { const k = Math.min(1, Math.max(0, (t - a) / (b - a))); return k * k * (3 - 2 * k); };
+      const Dg = grp(TT, g, 0, FL, 0); Dg.userData.keep = 1; Dg.scale.setScalar(1.1);
+      const body = grp(TT, Dg, 0, 0, 0);
+      // the torso: x along the body (+x the head end); deep at the chest, tucked up at the loin, the rump rounded
+      const torso = new TT.Mesh(shaped(48, 30, (x, y, z) => { const t = x, depth = 1.12 - .42 * smooth(-.1, -.75, t) + .1 * smooth(.2, .6, t), up = y > 0 ? 1 : depth, wd = 1 - .14 * smooth(.1, -.6, t) + .05 * smooth(-.6, -.95, t);
+        return [x * 4.6, y * (y > 0 ? 1.95 : 2.15 * up) + .25 * smooth(-.4, -1, t) * (y > 0 ? 1 : 0), z * 1.75 * wd]; }), fur);
+      at(body, torso, 0, 7.4, 0);
+      const chest = new TT.Mesh(shaped(24, 16, (x, y, z) => [x * 1.9, y * 2, z * 1.55]), cream); at(body, chest, 3.1, 6.7, 0, 0, false);   // the cream bib
+      const neck = new TT.Mesh(new TT.CylinderGeometry(1.45, 1.95, 3.4, SG(20), 4), fur); neck.rotation.z = -.8; at(body, neck, 4.2, 9, 0);
+      // the head: a broad skull, a clear stop, the muzzle, a black nose with nostrils, the lips, eyes, brows and the soft ears
+      const head = grp(TT, body, 5.5, 10.6, 0); head.scale.setScalar(1.12);
+      at(head, new TT.Mesh(shaped(32, 22, (x, y, z) => [x * 1.6, y * 1.35 + (y > 0 ? .1 * x : 0), z * 1.35 * (1 - .1 * Math.max(0, x))]), fur), 0, 0, 0);
+      at(head, new TT.Mesh(shaped(28, 18, (x, y, z) => { const t = (x + 1) / 2; return [x * 1.3, y * (.95 - .2 * t) - .05 * t, z * (1 - .22 * t)]; }), fur), 1.6, -.5, 0);   // the muzzle
+      at(head, new TT.Mesh(shaped(16, 10, (x, y, z) => [x * .6, y * .25, z * .78]), lipM), 1.95, -1.15, 0, 0, false);   // the mouth line
+      { const nose = new TT.Mesh(shaped(20, 14, (x, y, z) => [x * .42, y * .34 + (y > 0 ? .05 : 0), z * .5]), noseM); at(head, nose, 2.86, -.3, 0, 0, false);
+        [-1, 1].forEach(sd => { const ns = new TT.Mesh(new TT.SphereGeometry(.09, 8, 6), M({ color: 0x050302 })); ns.scale.set(.5, 1, 1.2); at(head, ns, 3.24, -.32, sd * .17, 0, false); }); }
+      [-1, 1].forEach(sd => { const e = new TT.Mesh(new TT.SphereGeometry(.24, 14, 10), eyeM); at(head, e, 1.02, .38, sd * .78, 0, false);
+        const rimE = new TT.Mesh(new TT.TorusGeometry(.25, .05, 6, 14), lipM); rimE.rotation.y = Math.PI / 2 - sd * .5; at(head, rimE, 1.05, .38, sd * .8, 0, false);
+        const brow = new TT.Mesh(shaped(12, 8, (x, y, z) => [x * .45, y * .2, z * .32]), fur); at(head, brow, .95, .66, sd * .74, 0, false); });
+      const ears = [-1, 1].map(sd => { const E = grp(TT, head, -.25, .62, sd * 1.4); const ear = new TT.Mesh(shaped(20, 16, (x, y, z) => { const t = (1 - y) / 2; return [x * (.95 - .3 * t * t), y * 1.45 - 1.1, z * .26 + sd * .18 * (1 - y * y)]; }), fur); ear.rotation.x = sd * .22; at(E, ear, 0, 0, 0); return E; });
+      const collar = new TT.Mesh(new TT.TorusGeometry(1.32, .16, 8, 28), M({ color: 0xc8282a, roughness: .5 })); collar.rotation.set(0, Math.PI / 2, -.95); at(body, collar, 4.9, 9.9, 0, 0, false);
+      at(body, new TT.Mesh(new TT.CylinderGeometry(.32, .32, .08, 14), M({ color: 0xd8b84a, metalness: 1, roughness: .3 })), 5.25, 8.7, 0, 0, false).rotation.x = Math.PI / 2;   // the tag
+      // legs: a joint is a group; each bone hangs down from it
+      const bone = (G, r0, r1, L, mat, feather) => { const m = new TT.Mesh(new TT.CylinderGeometry(r0, r1, L, SG(14), 3), mat); at(G, m, 0, -L / 2, 0); if (feather) { const f = new TT.Mesh(shaped(10, 8, (x, y, z) => [x * .25, y * L * .45, z * .45]), fur); at(G, f, -r0 * .9, -L * .45, 0, 0, false); } };
+      const paw = (G, mat) => { at(G, new TT.Mesh(shaped(18, 10, (x, y, z) => [x * .62 + (x > 0 ? .12 : 0), y * (y > 0 ? .4 : .22), z * .5]), mat), .18, -.12, 0); [-1, 0, 1].forEach(k => at(G, new TT.Mesh(new TT.SphereGeometry(.17, 8, 6), mat), .62, -.12, k * .26, 0, false)); };
+      const fore = [1, -1].map(sd => { const S = grp(TT, body, 3.3, 6.3, sd * 1.15); const shoulder = new TT.Mesh(shaped(16, 12, (x, y, z) => [x * 1, y * 1.6, z * .6]), fur); at(S, shoulder, 0, -.6, 0);
+        bone(S, .62, .5, 3, fur, true); const E = grp(TT, S, 0, -3, 0); bone(E, .46, .36, 3, fur, false); const P = grp(TT, E, 0, -3, 0); paw(P, cream); return { S, E }; });
+      const hind = [1, -1].map(sd => { const S = grp(TT, body, -3.4, 7.65, sd * 1.15); const thigh = new TT.Mesh(shaped(18, 14, (x, y, z) => [x * 1.25, y * 1.9, z * .8]), fur); at(S, thigh, -.1, -1, 0);
+        const K = grp(TT, S, -.3, -2.6, 0); K.rotation.z = .55; bone(K, .55, .4, 2.6, fur, true); const H = grp(TT, K, 0, -2.6, 0); H.rotation.z = -.95; bone(H, .38, .33, 2.75, fur, false); const P = grp(TT, H, 0, -2.75, 0); P.rotation.z = .4; paw(P, cream); return { S, K, H }; });
+      // the tail: a chain of segments, the feathering hanging under them
+      const tail = []; { let parent = grp(TT, body, -4.5, 8.8, 0); parent.rotation.z = 1.9; for (let k = 0; k < 6; k++) { const L = 1.05, r0 = .48 - k * .06, seg = grp(TT, parent, 0, k ? L : 0, 0); const m = new TT.Mesh(new TT.CylinderGeometry(r0 * .85, r0, L, SG(10)), fur); at(seg, m, 0, L / 2, 0);
+          const fth = new TT.Mesh(shaped(10, 8, (x, y, z) => [x * (.65 - k * .06), y * .7, z * .22]), fur); at(seg, fth, -.45, L / 2, 0, 0, false); seg.rotation.z = -.12; tail.push(seg); parent = seg; } }
       // the path: a loop between the table and the fire; pause to sit every so often
       const path = t => { const a = t * .14; return [8 + Math.cos(a) * 20, -46 + Math.sin(a) * 9, a]; };
-      o.tick && o.tick(t => { const cyc = t % 26, sit = cyc > 20, tt = sit ? t - (cyc - 20) : t; const [x, z, a] = path(tt); Dg.position.x = x; Dg.position.z = z; const dx = -20 * Math.sin(a), dz = 9 * Math.cos(a); Dg.rotation.y = Math.atan2(-dz, dx);
-        const sitK = sit ? Math.min(1, (cyc - 20) * 3, (26 - cyc) * 3) : 0, ph = t * 9;
-        legs.forEach((L, i) => { const ph2 = ph + (i === 0 || i === 3 ? 0 : Math.PI); L.rotation.z = (1 - sitK) * Math.sin(ph2) * .45; });
-        legs[2].rotation.z += sitK * 1.2; legs[3].rotation.z += sitK * 1.2; body.rotation.z = sitK * .55; body.position.y = -sitK * 1.4 + (1 - sitK) * Math.abs(Math.sin(ph)) * .25; body.position.x = -sitK * .8;
-        head.rotation.z = Math.sin(ph) * .05 * (1 - sitK) - sitK * .45; head.rotation.y = sitK * Math.sin(t * 1.3) * .6;
-        tail.rotation.y = Math.sin(t * (sit ? 10 : 14)) * .6; tail.rotation.z = sitK * -.6; }, Dg); }
+      const pose = t => { const cyc = t % 26, sit = cyc > 20, tt = sit ? t - (cyc - 20) : t; const [x, z, a] = path(tt); Dg.position.x = x; Dg.position.z = z; const dx = -20 * Math.sin(a), dz = 9 * Math.cos(a); Dg.rotation.y = Math.atan2(-dz, dx);
+        const sk = sit ? Math.min(1, (cyc - 20) * 2.5, (26 - cyc) * 2.5) : 0, w = 1 - sk, ph = t * 8.5;
+        fore.forEach((L, i) => { const p = ph + (i ? Math.PI : 0), s = Math.sin(p); L.S.rotation.z = w * s * .5 + sk * .15; L.E.rotation.z = w * Math.max(0, -Math.cos(p)) * .9; });   // diagonal pairs: left fore with right hind
+        hind.forEach((L, i) => { const p = ph + (i ? 0 : Math.PI), s = Math.sin(p); L.S.rotation.z = w * s * .45 + sk * 1.35; L.K.rotation.z = .55 + w * Math.max(0, Math.cos(p)) * .35 - sk * .2; L.H.rotation.z = -.95 - sk * .6; });
+        body.rotation.z = sk * .5; body.position.y = -sk * 2.6 + w * Math.abs(Math.cos(ph)) * .22; body.position.x = -sk * 1.2;
+        torso.scale.y = 1 + Math.sin(t * (sit ? 5 : 3)) * .015; head.rotation.z = w * Math.sin(ph * 2) * .04 - sk * .4; head.rotation.y = sk * Math.sin(t * 1.1) * .55 + w * Math.sin(t * .7) * .12;
+        ears.forEach((E, i) => { E.rotation.z = Math.sin(ph * 2 + i) * .12 * w + .05; E.rotation.x = (i ? 1 : -1) * (.06 + Math.abs(Math.sin(ph)) * .08 * w); });
+        tail.forEach((seg, k) => { seg.rotation.x = Math.sin(t * (sit ? 9 : 12) - k * .5) * (.12 + k * .03); seg.rotation.z = -.12 - sk * .06; }); tail[0].parent.rotation.z = 1.9 - sk * .9; };
+      pose(3.2); o.tick && o.tick(pose, Dg); }
     // a lantern on a pole by the table, string lights at dusk
     { const Gl = grp(TT, g, -19, FL, -6), pole = M({ color: 0x3a2a1a, roughness: .7 }), tin = M({ color: 0x2a3a30, roughness: .45, metalness: .5 });
       at(Gl, new TT.Mesh(new TT.CylinderGeometry(.3, .35, 26, 6), pole), 0, 13, 0); const arm = new TT.Mesh(new TT.CylinderGeometry(.2, .2, 4, 6), pole); arm.rotation.z = Math.PI / 2; at(Gl, arm, 2, 25.4, 0, 0, false);
@@ -2162,12 +2276,12 @@
         for (let i = 0; i < 4; i++) { const x = (i + .5 + k * .3) / 4 * W % W, yy = y + Math.sin(x / W * 6.283 * 2 + k) * H * .05; c.fillStyle = B; for (let p = 0; p < 6; p++) { const a = p * 1.05; ell(c, x + Math.cos(a) * 7, yy + Math.sin(a) * 7, 6, 3, a); } c.fillStyle = '#f4f2ec'; c.beginPath(); c.arc(x, yy, 3, 0, 7); c.fill();
           c.fillStyle = 'rgba(34,64,138,.8)'; for (let l = 0; l < 3; l++) ell(c, x + 14 + l * 5, yy - 8 + R() * 16, 4, 1.6, R() * 3); } } });
     const bwM = M({ map: bwT, roughness: .12, clearcoat: 1, clearcoatRoughness: .05, bump: false });
-    { const Gt = grp(TT, g, -10.4, .04, -2.4, .12); at(Gt, new TT.Mesh(RB(7.4, .7, 5, .3, 2), rw), 0, .35, 0); for (let i = 0; i < 11; i++) at(Gt, new TT.Mesh(RB(6.6, .1, .26, .05, 1), M({ color: 0x3a140c, roughness: .5 })), 0, .72, -2 + i * .4, 0, false);
+    { const Gt = grp(TT, g, -11.55, .04, -2.2, Math.PI / 2 + .04); at(Gt, new TT.Mesh(RB(7.4, .7, 5, .3, 2), rw), 0, .35, 0); for (let i = 0; i < 11; i++) at(Gt, new TT.Mesh(RB(6.6, .1, .26, .05, 1), M({ color: 0x3a140c, roughness: .5 })), 0, .72, -2 + i * .4, 0, false);   // (turned lengthwise along the table's end: it stood into the board)
       const pot = teapot(o, Gt, -1.7, -.3, .4, clay, .52); pot.position.y = .75;
       [[.9, -1.1], [2.2, -1.1], [.9, .4], [2.2, .4], [1.55, 1.75]].forEach(([x, z], i) => { const Gc = grp(TT, Gt, x, .75, z);
         at(Gc, lathe(TT, [[0, 0], [.26, 0], [.28, .06], [.24, .1], [.5, .55], [.58, .68], [.55, .7], [.46, .58], [.2, .16], [0, .14]], SEG(o, 18), white), 0, 0, 0);
         const tea = new TT.Mesh(new TT.CircleGeometry(.43, SEG(o, 16)), teaM); tea.rotation.x = -Math.PI / 2; at(Gc, tea, 0, .5, 0, 0, false); }); }
-    { const Gj = grp(TT, g, -11.8, 0, -7.6, .4);   // the tea jar (where the blue tin stood alone in the middle of the table)
+    { const Gj = grp(TT, g, -12, 0, -8.1, .4);   // the tea jar (where the blue tin stood alone in the middle of the table)
       at(Gj, lathe(TT, [[0, 0], [.75, 0], [.8, .1], [1.15, .9], [1.3, 1.7], [1.15, 2.4], [.7, 2.8], [.6, 2.95], [0, 2.95]], SEG(o, 24), bwM), 0, 0, 0);
       at(Gj, lathe(TT, [[0, 2.85], [.72, 2.85], [.75, 3.05], [.5, 3.35], [.2, 3.4], [.24, 3.6], [0, 3.7]], SEG(o, 20), bwM), 0, 0, 0); }
     // dim sum in a bamboo steamer, nearer (2026-11-09, rebuilt): a ring of bamboo strips lashed with rattan, a woven floor, three pleated
@@ -2182,7 +2296,7 @@
       for (let i = 0; i < W / s2; i++) for (let j = 0; j < W / s2; j++) { const o2 = (i + j) % 2, x = i * s2, y = j * s2, g2 = o2 ? c.createLinearGradient(x, y, x + s2, y) : c.createLinearGradient(x, y, x, y + s2);
         g2.addColorStop(0, '#b89458'); g2.addColorStop(.5, '#ead2a0'); g2.addColorStop(1, '#b89458'); c.fillStyle = g2; c.fillRect(x + .6, y + .6, s2 - 1.2, s2 - 1.2); } });
     const bandM = M({ map: bandT, roughness: .6, side: TT.DoubleSide, bumpScale: .01 }), weaveM = M({ map: weaveT, roughness: .7, bumpScale: .02 }), rimM = M({ color: 0xe0c890, roughness: .6 });
-    { const Gs = grp(TT, g, 10.2, .04, -.6, .3), RS = 2.6;
+    { const Gs = grp(TT, g, 11.1, .04, -.6, .3), RS = 2.6;
       at(Gs, new TT.Mesh(new TT.CylinderGeometry(RS, RS, 1.8, SEG(o, 40), 1, true), bandM), 0, .9, 0);
       at(Gs, new TT.Mesh(new TT.CylinderGeometry(RS - .14, RS - .14, 1.7, SEG(o, 40), 1, true), M({ color: 0xe6cc96, roughness: .65, side: TT.BackSide })), 0, .9, 0);   // the inner ring
       [1.8, .02].forEach(y => { const r2 = new TT.Mesh(new TT.TorusGeometry(RS - .07, .09, 6, SEG(o, 40)), rimM); r2.rotation.x = Math.PI / 2; at(Gs, r2, 0, y, 0, 0, false); });
@@ -2194,7 +2308,7 @@
       bunG.computeVertexNormals();
       const bun = M({ color: 0xf4ecda, roughness: .72, sheen: new TT.Color(0xfff6e8), sheenRoughness: .6 });
       [[-1.05, -.65, .2], [1.05, -.6, 1.4], [0, 1.15, 2.6]].forEach(([x, z, r]) => { const b = new TT.Mesh(bunG, bun); b.scale.setScalar(1.08); b.rotation.y = r; at(Gs, b, x, .62, z); });
-      const piv = grp(TT, Gs, 0, 0, 0, -.45 - .3), lid = new TT.Group(); lid.position.set(0, 2.69, -2.8); lid.rotation.x = -1.15; piv.add(lid);
+      const piv = grp(TT, Gs, 0, 0, 0, -.3), lid = new TT.Group(); lid.position.set(0, 2.69, -2.8); lid.rotation.x = -1.15; piv.add(lid);
       at(lid, new TT.Mesh(new TT.CylinderGeometry(RS + .12, RS + .12, 1.1, SEG(o, 40), 1, false), [M({ map: bandT, roughness: .6 }), weaveM, weaveM]), 0, 0, 0);
       [.55, -.55].forEach(y => { const r2 = new TT.Mesh(new TT.TorusGeometry(RS + .12, .08, 6, SEG(o, 40)), rimM); r2.rotation.x = Math.PI / 2; at(lid, r2, 0, y, 0, 0, false); }); }
     // a small tea cup on its saucer before the right-hand seat (it was a coffee cup)
