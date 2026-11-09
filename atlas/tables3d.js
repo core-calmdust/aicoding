@@ -1545,7 +1545,7 @@
       yunomi(10.4, 3.6, raku, 0xb8c86a);
     } else {
       bon(-10.6, -5.9, 2.7); kyusu(-10.6, .13, -5.9, Math.PI - .6, T === 'evening' ? raku : M({ color: 0x9a4a2a, roughness: .45, clearcoat: .3 })); yunomi(-10.8, -.9, glaze('cel', '#9ab8a4', '#b8946a'));
-      yunomi(10.6, 3.4, glaze('ame', '#6a3a1a', '#c8a47a')); wagashi(11, -4.4).scale.setScalar(.86); vase(12.2, -8.1);
+      yunomi(10.6, 3.4, glaze('ame', '#6a3a1a', '#c8a47a')); wagashi(-10.4, 6.4).scale.setScalar(.86); vase(11.8, -5.4);   // the sweets at the front left, the vase a little forward (2026-11-09)
       if (T === 'morning') { const fanT = canvasTex('tbl6-sensu', 256, 128, (c, W, H) => { c.fillStyle = '#efe6d0'; c.fillRect(0, 0, W, H); for (let i = 0; i < 24; i++) { c.fillStyle = i % 2 ? 'rgba(0,0,0,.08)' : 'rgba(255,255,255,.2)'; c.fillRect(i * W / 24, 0, W / 24, H); } c.fillStyle = '#c8a050'; ell(c, W * .3, H * .55, 18, 18); c.strokeStyle = '#3a5a8a'; c.lineWidth = 3; for (let k = 0; k < 3; k++) { c.beginPath(); for (let x = 0; x <= W; x += 6) c.lineTo(x, H * .75 + k * 8 + Math.sin(x / 14) * 4); c.stroke(); } });
         const G = grp(TT, g, 9.6, .12, 10.4, 0), fan = new TT.Mesh(new TT.RingGeometry(.9, 3.2, 24, 1, Math.PI / 2 - 1.05, 2.1), M({ map: fanT, roughness: .7, side: TT.DoubleSide, bump: false })); fan.rotation.x = -Math.PI / 2; at(G, fan, 0, 0, 0, 0, false);
         [-1.05, 1.05].forEach(a => { const s = new TT.Mesh(RB(.18, .08, 3.3, .03, 1), M({ color: 0x3a2214, roughness: .3, clearcoat: .6 })); s.position.set(-Math.sin(a) * 1.65, .05, -Math.cos(a) * 1.65); s.rotation.y = a; G.add(s); }); }
