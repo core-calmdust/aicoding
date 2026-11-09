@@ -178,6 +178,12 @@
     }
     // fill the cup: one die, two with the two-dice house rule. (Inner coordinates are mouth down: the base is at y = CH, so the
     // dice lie against it — the bottom when the cup stands mouth up.)
+    // (2026-11-09) the dice run round the inside of the cup while it shakes (not tumbling on one spot): rev = revolutions so far,
+    // m = how far into the swirl (from where they lay); two dice keep to opposite sides
+    function swirl(d, i, rev, m) {
+      const u = d.userData, a = i * Math.PI + .7 + rev * Math.PI * 2, r = .19 + .03 * Math.sin(rev * Math.PI * 5 + i * 2);
+      d.position.x = u.x0 + (Math.cos(a) * r - u.x0) * m; d.position.z = u.z0 + (Math.sin(a) * r - u.z0) * m;
+    }
     function cupDice(show) {
       const D = cupG.userData.dice;
       while (D.children.length) D.remove(D.children[0]);
@@ -187,7 +193,7 @@
         const d = U.die(), hh = d.userData.size / 2 * sc; d.scale.setScalar(sc);
         d.children[0].rotation.set(...FACE[1 + Math.floor(Math.random() * 6)]);
         d.position.set(n > 1 ? (i ? .19 : -.19) : 0, CH - hh - .012, n > 1 ? (i ? .06 : -.06) : 0); d.rotation.set(Math.PI, Math.random() * 6.28, 0);
-        d.userData.y0 = d.position.y; D.add(d);
+        d.userData.y0 = d.position.y; d.userData.x0 = d.position.x; d.userData.z0 = d.position.z; D.add(d);
       }
     }
     const cupXZ = seat => { const [gx, gy] = throwSpot(seat); return wx(gx, gy); };
@@ -249,7 +255,7 @@
       const DD = g.userData.dice.children;
       SND.shake(D2.shake / 1000);   // (the rattle starts with the shake — not while the cup is still scooping up the last dice)
       await animP(D2.shake / PACE, k => { const w = Math.sin(k * Math.PI * 8) * Math.min(1, k * 4) * (1 - Math.max(0, k - .85) / .15); cupPose(1, Math.min(1, k * 4) * .35, w * .22); g.position.x = cx + w * .06;
-        DD.forEach((d, i) => { const j = Math.abs(Math.sin(k * Math.PI * 9 + i * 1.7)) * Math.min(1, k * 4); d.position.y = d.userData.y0 - j * .12; d.rotation.x = Math.PI + k * Math.PI * (7 + i) * (i ? -1 : 1) * Math.min(1, k * 4); d.rotation.z = k * Math.PI * (5 - i); d.rotation.y += .25; }); });   // (tumbling: the face on top keeps changing)   // (the dice rattle inside)
+        DD.forEach((d, i) => { const j = Math.abs(Math.sin(k * Math.PI * 9 + i * 1.7)) * Math.min(1, k * 4); d.position.y = d.userData.y0 - j * .12; swirl(d, i, k * 2.6, Math.min(1, k * 4)); d.rotation.x = Math.PI + k * Math.PI * (7 + i) * (i ? -1 : 1) * Math.min(1, k * 4); d.rotation.z = k * Math.PI * (5 - i); d.rotation.y += .25; }); });   // (tumbling: the face on top keeps changing)   // (the dice rattle inside)
       if (stopped) return;
       g.position.x = cx;
       await animP(D2.flip / PACE, k => { const e = k * k; cupPose(1 - e, .35 * (1 - e) + Math.sin(k * Math.PI) * .45); });

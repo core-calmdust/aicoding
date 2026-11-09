@@ -160,6 +160,12 @@ html.atlas-ludo3d #frame{background:none!important;box-shadow:none!important}`;
       const e = k * k * (3 - 2 * k), l = HOP * Math.pow(Math.max(0, Math.sin(Math.PI * k)), .4);
       return [x0 + (x1 - x0) * e, z0 + (z1 - z0) * e, l];
     }
+    // (2026-11-09) the dice run round the inside of the cup while it shakes (not tumbling on one spot): rev = revolutions so far,
+    // m = how far into the swirl (from where they lay); two dice keep to opposite sides
+    function swirl(d, i, rev, m) {
+      const u = d.userData, a = i * Math.PI + .7 + rev * Math.PI * 2, r = .19 + .03 * Math.sin(rev * Math.PI * 5 + i * 2);
+      d.position.x = u.x0 + (Math.cos(a) * r - u.x0) * m; d.position.z = u.z0 + (Math.sin(a) * r - u.z0) * m;
+    }
     function fill(show) {   // the dice inside (seen while it stands mouth up): two with the two-dice house rule
       const D = g.userData.dice; while (D.children.length) D.remove(D.children[0]);
       D.visible = !!show; if (!show) return;
@@ -168,7 +174,7 @@ html.atlas-ludo3d #frame{background:none!important;box-shadow:none!important}`;
         const d = U.die(), hh = d.userData.size / 2 * sc; d.scale.setScalar(sc);
         d.children[0].rotation.set(...FACE[1 + Math.floor(Math.random() * 6)]);
         d.position.set(n > 1 ? (i ? .19 : -.19) : 0, CH - hh - .012, n > 1 ? (i ? .06 : -.06) : 0); d.rotation.set(Math.PI, Math.random() * 6.28, 0);
-        d.userData.y0 = d.position.y; D.add(d);
+        d.userData.y0 = d.position.y; d.userData.x0 = d.position.x; d.userData.z0 = d.position.z; D.add(d);
       }
     }
     function clearDice() { while (thrown.children.length) thrown.remove(thrown.children[0]); }
@@ -222,7 +228,7 @@ html.atlas-ludo3d #frame{background:none!important;box-shadow:none!important}`;
         const DD = g.userData.dice.children, t0 = performance.now();
         const f = now => { const t = (now - t0) / 1000, k4 = Math.min(1, t * 6), w = Math.sin(t * 30 / k) * k4;
           pose(1, k4 * .35, w * .22); g.position.x = cx + w * .06;
-          DD.forEach((d, i) => { const j = Math.abs(Math.sin(t * 34 / k + i * 1.7)) * k4; d.position.y = d.userData.y0 - j * .12; d.rotation.x = Math.PI + t * Math.PI * (4 + i) / k * (i ? -1 : 1) * k4; d.rotation.z = t * Math.PI * (3 - i) / k; d.rotation.y += .25; });   // (tumbling)
+          DD.forEach((d, i) => { const j = Math.abs(Math.sin(t * 34 / k + i * 1.7)) * k4; d.position.y = d.userData.y0 - j * .12; swirl(d, i, t * 4.9 / k, k4); d.rotation.x = Math.PI + t * Math.PI * (4 + i) / k * (i ? -1 : 1) * k4; d.rotation.z = t * Math.PI * (3 - i) / k; d.rotation.y += .25; });   // (tumbling)
           T3.kick(80); shakeT = requestAnimationFrame(f); };
         shakeT = requestAnimationFrame(f); return;
       }
@@ -241,6 +247,14 @@ html.atlas-ludo3d #frame{background:none!important;box-shadow:none!important}`;
   })();
   const oCup = window.cupDraw;
   window.cupDraw = function (seat, mode, thr) { const r = oCup.apply(this, arguments); try { ensure(); cup.set(seat, mode, thr); } catch (e) {} return r; };
+  // lessons / puzzles (SP): the page draws no cup and sets the throw itself — show that throw's dice in the yard, the cup put
+  // aside (2026-11-09: the cup stayed mouth up with the last game's die in it, not the lesson's number)
+  const oShow = window.showThrow;
+  if (typeof oShow === 'function') window.showThrow = function (thr) {
+    const r = oShow.apply(this, arguments);
+    try { if (typeof SP !== 'undefined' && SP && G && G.state) { ensure(); if (G.state.rule === 'ludo' && thr) cup.set(G.state.turn, 'dice', thr); else cup.set(-1, null); } } catch (e) {}
+    return r;
+  };
 
   ensure(); mirror();
   // the 2D game redraws its board for a new rule (drawBoard): the 3D board follows
