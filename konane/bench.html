@@ -59,7 +59,7 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);ma
 
 <div class="card"><h2>結果</h2><div class="tw"><table id="tbl"><thead><tr><th>測定</th><th>方式</th><th>スレッド</th><th>時間</th><th>1スレッド比</th><th>効率</th><th>nps（合計）</th><th>1スレッドと一致</th></tr></thead><tbody></tbody></table></div><pre id="log"></pre></div>
 </main>
-<script src="engine.js?v=3-sh3"></script>
+<script src="engine.js?v=4-wa2"></script>
 <script src="../shared/mtengine.js?v=8"></script><script src="../shared/mtsplit.js?v=3"></script>
 <script>MTSplit.init({ sw: 'sw.js?v=1' });</script>
 
@@ -70,8 +70,9 @@ const HC = navigator.hardwareConcurrency || 1;
 const COUNTS = (() => { const a = []; for (let t = 1; t < HC; t *= 2) a.push(t); a.push(HC); return [...new Set(a)]; })();
 const ua = (() => { const d = navigator.userAgentData; const b = d && (d.brands || []).filter(x => !/Not/.test(x.brand)).map(x => x.brand + ' ' + x.version).join(', '); return (b ? b + ' / ' + (d.platform || '') : '') || navigator.userAgent; })();
 let lines = [], started = 0;
+const cores = new Set(), coreTxt = () => cores.size ? [...cores].sort().reverse().join('+') : '?';   // (the search core the threads' engine loaded: wasm = core-wasm.js in the worker, js = its fallback)
 function env() {
-  $('#env').innerHTML = [['hardwareConcurrency', HC], ['測るスレッド数', COUNTS.join(', ')], ['置換表の共有', MTSplit.shared ? '<span class="y">できる（crossOriginIsolated）</span>' : '<span class="n">できない（非共有だけ測ります）</span>'], ['起動できたスレッド', started || '—'], ['ブラウザ', ua.replace(/</g, '&lt;')]]
+  $('#env').innerHTML = [['hardwareConcurrency', HC], ['測るスレッド数', COUNTS.join(', ')], ['置換表の共有', MTSplit.shared ? '<span class="y">できる（crossOriginIsolated）</span>' : '<span class="n">できない（非共有だけ測ります）</span>'], ['起動できたスレッド', started || '—'], ['探索のコア（Worker）', cores.size ? '<span class="' + (cores.has('js') ? 'n' : 'y') + '">' + coreTxt() + '</span>' : '—'], ['ブラウザ', ua.replace(/</g, '&lt;')]]
     .map(([k, v]) => `<b>${k}</b><span>${v}</span>`).join('');
 }
 env();
@@ -80,7 +81,7 @@ env();
 const E = window.KonaneEngine;
 const RULE = 's8', D = { light: 11, normal: 13, heavy: 14 }, TA = { light: 1000, normal: 2000, heavy: 4000 };
 const G = {
-  url: 'engine.js?v=3-sh3', drive: MTSplit.ladder.drive,
+  url: 'engine.js?v=4-wa2', drive: MTSplit.ladder.drive,
   positions() {   // two games of Lv.6 vs Lv.6 (a fixed random seed), every 10 plies from ply 10
     const out = []; let seed = 7; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
     E.setRule(RULE);
@@ -115,7 +116,7 @@ async function once(t, msg, mode) {
   const ms = performance.now() - t0;
   pool.close();
   if (!r) throw new Error('the search failed');
-  started = Math.max(started, r.threads || 1);
+  started = Math.max(started, r.threads || 1); if (r.core) cores.add(r.core);
   return { r, ms };
 }
 async function run() {
@@ -141,6 +142,7 @@ async function run() {
     $('#st').textContent = '完了。「結果をコピー」を押して、Claude に貼り付けてください。';
   } catch (e) { $('#st').innerHTML = '<span class="n">エラー：' + String(e.message || e).replace(/</g, '&lt;') + '</span>'; lines.push('error ' + (e.message || e)); }
   env();
+  lines[0] += ' | core ' + coreTxt();
   lines.splice(1, 0, ...render(R));
   $('#log').textContent = lines.join('\n');
   $('#btnRun').disabled = false; $('#btnCopy').disabled = false;
