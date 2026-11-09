@@ -60,7 +60,7 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);ma
 
 <div class="card"><h2>結果</h2><div class="tw"><table id="tbl"><thead><tr><th>スレッド</th><th>局面数/秒</th><th>1スレッド比</th><th>平均の深さ</th><th>同じ深さまで</th><th>速さ（深さ）</th><th>基準と一致</th><th>起動</th></tr></thead><tbody></tbody></table></div><pre id="log"></pre></div>
 </main>
-<script src="../shared/mtengine.js?v=8"></script>
+<script src="../shared/mtengine.js?v=9"></script>
 <script src="engine.js?v=20261108p1-l14-pro1-mt1"></script>
 <script>
 'use strict';
@@ -86,7 +86,9 @@ const mvName = m => String(m);
 const $ = s => document.querySelector(s);
 const HC = navigator.hardwareConcurrency || 1;
 const ISO = !!self.crossOriginIsolated && typeof SharedArrayBuffer === 'function';
-const COUNTS = (() => { const a = []; for (let t = 1; t < HC; t *= 2) a.push(t); a.push(HC); return [...new Set(a)]; })();
+// (+ the performance cores, shared/mtengine.js perfThreads — e.g. 10 of a Mac's 14 — the default of PRO's thread count, 2026-11-09)
+const PERF = window.MTEngine && MTEngine.perfThreads ? MTEngine.perfThreads() : HC;
+const COUNTS = (() => { const a = []; for (let t = 1; t < HC; t *= 2) a.push(t); if (PERF > 1 && PERF < HC) a.push(PERF); a.push(HC); return [...new Set(a)].sort((x, y) => x - y); })();
 const ua = (() => { const d = navigator.userAgentData; const b = d && (d.brands || []).filter(x => !/Not/.test(x.brand)).map(x => x.brand + ' ' + x.version).join(', '); return (b ? b + ' / ' + (d.platform || '') : '') || navigator.userAgent; })();
 let started = 0, lines = [];
 function env() {
@@ -151,7 +153,7 @@ async function run() {
         tick(0, `局面 ${i + 1}/${POS.length}：${t}スレッド（深さ ${D} まで）`);
         const r = await job(think(p, { s: 1, d: D, ms: 0 }, t)); tick(ms * 0.6);
         if (t === 1) d1ms = r.ms;
-        R[t].dms += r.ms; R[t].dms1 += d1ms;
+        R[t].dms += r.ms; R[t].dms1 += d1ms; if (d1ms >= 50) { R[t].lg = (R[t].lg || 0) + Math.log(d1ms / Math.max(1, r.ms)); R[t].lc = (R[t].lc || 0) + 1; }
         row.push(`D${D} t${t} ${Math.round(r.ms)}ms`);
       }
       lines.push(row.join(' | '));
@@ -171,10 +173,10 @@ function render(R, rf) {
   const base = b.n / b.ms;
   for (const t of COUNTS) {
     const a = R[t]; if (!a) continue;
-    const nps = a.n / a.ms * 1000, sp = a.n / a.ms / base, dsp = a.dms ? a.dms1 / a.dms : 0;
+    const nps = a.n / a.ms * 1000, sp = a.n / a.ms / base, dsp = a.dms ? a.dms1 / a.dms : 0, geo = a.lc ? Math.exp(a.lg / a.lc) : 0;   // (geo: the geometric mean over the positions — one slow position does not decide it)
     const ag = rf ? `${a.agree}/${a.cnt}` : '—';
     tb.insertAdjacentHTML('beforeend', `<tr><td>${t}</td><td>${Math.round(nps).toLocaleString()}</td><td>${sp.toFixed(2)}×</td><td>${(a.d / a.cnt).toFixed(2)}</td><td>${a.dms ? (a.dms / 1000).toFixed(1) + '秒' : '—'}</td><td>${dsp ? dsp.toFixed(2) + '×' : '—'}</td><td>${ag}</td><td>${a.thr}</td></tr>`);
-    out.push(`threads ${t}: ${Math.round(nps)} nps, x${sp.toFixed(2)} vs 1, depth ${(a.d / a.cnt).toFixed(2)}, time-to-depth x${dsp.toFixed(2)}, agree ${ag}, started ${a.thr}`);
+    out.push(`threads ${t}: ${Math.round(nps)} nps, x${sp.toFixed(2)} vs 1, depth ${(a.d / a.cnt).toFixed(2)}, time-to-depth x${dsp.toFixed(2)} (geomean x${geo.toFixed(2)}), agree ${ag}, started ${a.thr}`);
   }
   return out;
 }

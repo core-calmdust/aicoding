@@ -136,6 +136,7 @@
     neon: { ja: 'ネオン 3D', en: 'Neon 3D', zh: '霓虹 3D', ko: '네온 3D', es: 'Neón 3D', fr: 'Néon 3D', pt: 'Neon 3D', de: 'Neon 3D', hi: 'नियॉन 3D', ar: 'نيون ثلاثي', ru: 'Неон 3D', 'zh-TW': '霓虹 3D', id: '3D neon', tr: 'Neon 3D' },
     rajasthan: { ja: 'ラジャスタン 3D', en: 'Rajasthani 3D', zh: '拉贾斯坦 3D', ko: '라자스탄 3D', es: 'Rajastán 3D', fr: 'Rajasthan 3D', pt: 'Rajastão 3D', de: 'Rajasthan 3D', hi: 'राजस्थानी 3D', ar: 'راجستان ثلاثي', ru: 'Раджастхан 3D', 'zh-TW': '拉賈斯坦 3D', id: '3D Rajasthan', tr: 'Racastan 3D' },
     bauhaus: { ja: 'バウハウス 3D', en: 'Bauhaus 3D', zh: '包豪斯 3D', ko: '바우하우스 3D', es: 'Bauhaus 3D', fr: 'Bauhaus 3D', pt: 'Bauhaus 3D', de: 'Bauhaus 3D', hi: 'बाउहाउस 3D', ar: 'باوهاوس ثلاثي', ru: 'Баухаус 3D', 'zh-TW': '包浩斯 3D', id: '3D Bauhaus', tr: 'Bauhaus 3D' },
+    tycoon: { ja: '大富豪 3D', en: 'Tycoon 3D', zh: '大富豪 3D', ko: '대부호 3D', es: 'Magnate 3D', fr: 'Magnat 3D', pt: 'Magnata 3D', de: 'Tycoon 3D', hi: 'रईस 3D', ar: 'الثري ثلاثي', ru: 'Магнат 3D', 'zh-TW': '大富豪 3D', id: '3D Konglomerat', tr: 'Milyoner 3D' },
   };
   const BOARDS = {
     // atlas/skin/chess.js: 'atlas-chess-pc' = the piece set ('1' lux · 'wood' · '0' the 2D pieces), '-bd' = the board's wood
@@ -159,12 +160,12 @@
       get: () => { try { const d = (JSON.parse(ls.get('aicoding-senet') || '{}').settings || {}).design; return ['faience', 'papyrus', 'night'].includes(d) ? d : 'tut'; } catch (e) { return 'tut'; } },
       set: k => { try { const o = JSON.parse(ls.get('aicoding-senet') || '{}') || {}; o.settings = o.settings || {}; o.settings.design = k; ls.set('aicoding-senet', JSON.stringify(o)); } catch (e) {} } },
     konane: { list: ['papamu', 'quilt'], get: () => ls.get('atlas-konane-look') === 'quilt' ? 'quilt' : 'papamu', set: k => ls.set('atlas-konane-look', k) },
-    // carrom (3D only): 'atlas-carrom-look' ('modern' the default | 'classic' | 'neon' | 'rajasthan' | 'bauhaus')
-    carrom: { list: ['modern', 'classic', 'neon', 'rajasthan', 'bauhaus'], get: () => { const v = ls.get('atlas-carrom-look'); return ['classic', 'neon', 'rajasthan', 'bauhaus'].includes(v) ? v : 'modern'; }, set: k => ls.set('atlas-carrom-look', k) },
+    // carrom (3D only): 'atlas-carrom-look' ('neon' the default | 'modern' | 'classic' | 'rajasthan' | 'bauhaus' | 'tycoon')
+    carrom: { list: ['neon', 'modern', 'classic', 'rajasthan', 'bauhaus', 'tycoon'], get: () => { const v = ls.get('atlas-carrom-look'); return ['modern', 'classic', 'rajasthan', 'bauhaus', 'tycoon'].includes(v) ? v : 'neon'; }, set: k => ls.set('atlas-carrom-look', k) },
   };
   X.BOARDS = BOARDS;
   X.boardName = (k, lang) => { const o = N3[k]; return o ? o[lang] || o.en : k; };
-  X.boardThumb = (id, k) => new URL('img/board-' + id + '-' + k + '.webp?v=' + (id === 'senet' ? 3 : id === 'carrom' ? 3 : id === 'konane' ? 2 : 1), ME).href;
+  X.boardThumb = (id, k) => new URL('img/board-' + id + '-' + k + '.webp?v=' + (id === 'senet' ? 3 : id === 'carrom' ? 5 : id === 'konane' ? 2 : 1), ME).href;
   // choose a board for a game: the shared key is written and the showcase board (if it is that game's) is rebuilt at once
   X.setBoard = (id, k) => { const B = BOARDS[id]; if (!B || !B.list.includes(k)) return; B.set(k); try { dispatchEvent(new CustomEvent('atlas-board', { detail: { id, look: k } })); } catch (e) {} };
   PLACES.ui.board = { ja: '盤', en: 'Board', zh: '棋盘', ko: '판', es: 'Tablero', fr: 'Plateau', pt: 'Tabuleiro', de: 'Brett', hi: 'बोर्ड', ar: 'اللوحة', ru: 'Доска', 'zh-TW': '棋盤', id: 'Papan', tr: 'Tahta' };

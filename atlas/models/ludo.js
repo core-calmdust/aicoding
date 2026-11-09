@@ -121,13 +121,18 @@
     const order = [3, 4, 1, 6, 2, 5];
     const ms = order.map(v => mat('die2-' + v, () => phys({ color: 0xfbf7ee, alphaMap: dieHoles(v), alphaTest: .5, roughness: .3, clearcoat: .55, clearcoatRoughness: .18 })));
     const m = new TT.Mesh(geo, ms); m.castShadow = true;
-    const pipM = [mat('diePip', () => phys({ color: 0x1b1916, roughness: .45, clearcoat: .4, side: TT.BackSide })), mat('diePip1', () => phys({ color: 0xc8261f, roughness: .4, clearcoat: .4, side: TT.BackSide }))];
+    // (2026-11-09) matt paint in the pips: a glossy coat mirrored the room at the dimple's steep walls — the red 1 read as a white ring
+    const pipM = [mat('diePip2', () => phys({ color: 0x1b1916, roughness: .75, envMapIntensity: .25, side: TT.BackSide })), mat('diePip12', () => phys({ color: 0xc8261f, roughness: .7, envMapIntensity: .25, side: TT.BackSide }))];
+    // (2026-11-09) the cube and its pips side by side in one turning group (children[0] — the face up is set on it): the
+    // showcase merges static meshes and hides the originals, and a pip that was the cube's child vanished with it (the lone
+    // red 1 is not merged — the 1 showed a hole through the die)
+    const body = new TT.Group(); body.add(m);
     const up = new TT.Vector3(0, 1, 0);
     faceFrames(s).forEach((f, i) => { const v = order[i], pr = pipR(v) * s;
       PIPS[v].forEach(([x, y]) => { const u = .5 + x * PIP_D, w = .5 - y * PIP_D;   // (canvas y down, uv v up)
         const b = new TT.Mesh(bowlGeo(pr), pipM[v === 1 ? 1 : 0]);
-        b.position.copy(f.o).addScaledVector(f.U, u).addScaledVector(f.V, w).addScaledVector(f.n, -.0005); b.quaternion.setFromUnitVectors(up, f.n); m.add(b); }); });
-    const g = new TT.Group(); g.add(m); g.userData = { size: s, faces: order };
+        b.position.copy(f.o).addScaledVector(f.U, u).addScaledVector(f.V, w).addScaledVector(f.n, -.0005); b.quaternion.setFromUnitVectors(up, f.n); body.add(b); }); });
+    const g = new TT.Group(); g.add(body); g.userData = { size: s, faces: order };
     return g;
   }
   // a cowrie: an egg-shaped shell; mouth up shows the toothed slit

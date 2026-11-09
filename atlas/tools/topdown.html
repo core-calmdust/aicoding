@@ -12,7 +12,7 @@
 <script src="../models/carrom.js"></script>
 <script>
 (function () {
-  const q = new URLSearchParams(location.search), id = q.get('game') || 'carrom', look = q.get('look') || 'modern', S = +q.get('px') || 1600;
+  const q = new URLSearchParams(location.search), id = q.get('game') || 'carrom', look = q.get('look') || 'neon', S = +q.get('px') || 1600;
   const X = window.Table3D; if (X.BOARDS[id]) X.BOARDS[id].set(look);
   const R = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
   R.setPixelRatio(1); R.setSize(S, S); R.shadowMap.enabled = true; R.shadowMap.type = THREE.PCFSoftShadowMap;

@@ -177,5 +177,19 @@
       ov.querySelectorAll('.lhr-dd.open').forEach(x => x.classList.remove('open'));
     });
   }
-  window.LudoHouse = { DEF, OPTS, get, set, open, changed, summary, T };
+  // the changed rules as short tags (2026-11-09): [{ k, text, adv }] — 'name: choice' (a switch: 'name: Off'), the choice without
+  // its bracketed explanation; adv = an advanced rule (drawn red, as its icon)
+  function tags(lang, h = get()) {
+    const L = Lof(lang), cut = x => { const t = String(x).replace(/\s*[（(][^（）()]*[）)]\s*$/, ''); return t.length >= 2 ? t : String(x); };
+    return Object.keys(DEF).filter(k => h[k] !== DEF[k]).map(k => {
+      const nm = (L.it[k] || [k])[0], v = typeof DEF[k] === 'boolean' ? L.ui[h[k] ? 7 : 8] : cut(((L.op || {})[k] || [])[OPTS[k].indexOf(h[k])] || h[k]);
+      return { k, text: nm + (/^(ja|zh|zh-TW)$/.test(lang) ? '：' : ': ') + v, adv: ADV.includes(k) };
+    });
+  }
+  // the tags as HTML, with the rule's icon (for the new-game dialogs)
+  function tagsHTML(lang, h = get()) {
+    const e = x => String(x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    return tags(lang, h).map(t => `<span class="lhr-tag${t.adv ? ' adv' : ''}">${IC[t.k] ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[t.k]}</svg>` : ''}${e(t.text)}</span>`).join('');
+  }
+  window.LudoHouse = { DEF, OPTS, get, set, open, changed, summary, tags, tagsHTML, T };
 })();

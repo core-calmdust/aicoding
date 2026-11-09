@@ -223,6 +223,9 @@ function addCss() { if (cssDone) return; cssDone = true; const st = document.cre
 // threads available on this page now (shared/mtengine.js, or shared/mtsplit.js for the plain-JavaScript engines): 1 = none
 const mtLib = () => window.MTEngine || window.MTSplit;
 function maxThreads() { const M = mtLib(); return M && M.on && M.on() ? 1 + (M.maxHelpers ? M.maxHelpers() : M.helpers()) : 1; }   // (every core the browser reports — no fixed cap, the user's own choice)
+// the default of a timed level's thread count (2026-11-09): every core up to the performance cores (shared/mtengine.js
+// perfThreads: the Mac's efficiency cores made the Lazy SMP searches no faster or slower) — more can still be chosen up to maxThreads()
+function defThreads() { const mx = maxThreads(), M = window.MTEngine; return M && M.perfThreads ? Math.max(1, Math.min(mx, M.perfThreads())) : mx; }
 
 function init(cfg) {
   const key = 'aicoding-pro:' + cfg.game;
@@ -419,5 +422,5 @@ function ladder(LEVELS, o) {
     },
   };
 }
-window.ProSet = { init, T, maxThreads, ladder };
+window.ProSet = { init, T, maxThreads, defThreads, ladder };
 })();

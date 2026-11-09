@@ -1686,7 +1686,7 @@ html.rb-study .frame{outline:3px solid var(--accent);outline-offset:3px}
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2l14"></script>
 <script src="online.js?v=stale2fis"></script>
-<script src="../shared/mtengine.js?v=8"></script><script src="../shared/proset.js?v=3t2svhxbf"></script><script>MTEngine.init({ sw: 'sw.js' });</script>
+<script src="../shared/mtengine.js?v=9"></script><script src="../shared/proset.js?v=3t2svhxbf-pt1"></script><script>MTEngine.init({ sw: 'sw.js' });</script>
 <script src="rbox.js?v=3-rc2"></script>
 <script src="../shared/coachkit.js?v=16l14"></script>
 <script src="../shared/record.js?v=12l14"></script>
@@ -2850,7 +2850,7 @@ const PRO_T = {
   book: { ja: '定石' },
 };
 const PRO_DEF = lv => { const L = LEVELS_UI[lv] || LEVELS_UI[15];
-  return { limit: L.time ? { k: 'time', v: L.time / 1000 } : { k: 'depth', v: L.depth }, threads: MT_CFG[lv] ? ProSet.maxThreads() : 1, book: !!L.mpc,
+  return { limit: L.time ? { k: 'time', v: L.time / 1000 } : { k: 'depth', v: L.depth }, threads: MT_CFG[lv] ? ProSet.defThreads() : 1, book: !!L.mpc,
     var: !L.noise ? 0 : L.noise >= 400 ? 2 : 1, exact: L.exact, wld: L.wld || 0 }; };
 var PRO = window.ProSet ? ProSet.init({ game: 'reversi', lang: () => LANG, level: () => draft.level || settings.level, show: () => draft.mode === 'ai' || draft.mode === 'watch', stone: true,
   store: { get: () => settings.pro, set: v => { settings.pro = v; } }, defaults: PRO_DEF,
@@ -5695,7 +5695,7 @@ accRender();
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=125')).then(() => load('../atlas/tables3d.js?v=31')).then(() => load('../atlas/skin/common.js?v=43npc')).then(() => load('../atlas/skin/reversi.js?v=23l14'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=125')).then(() => load('../atlas/tables3d.js?v=31')).then(() => load('../atlas/skin/common.js?v=46npc')).then(() => load('../atlas/skin/reversi.js?v=23l14'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>

@@ -117,7 +117,7 @@ function save() {
 
 // ====================================================================== workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=20261109p1-pro1-mt2';
+const ENGINE_URL = 'engine.js?v=20261109p1-pro1-mt3';
 function makeWorker() {
   const w = new Worker(ENGINE_URL); w.jobs = new Map();
   w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (!j) return; if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; } w.jobs.delete(m.id); noteNps(m.nodes, performance.now() - j.t0); j.resolve(m); };

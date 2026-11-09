@@ -20,7 +20,7 @@
 //   (job.mtThreads: use only that many threads, lead included — PRO mode)
 //   pool.free(), pool.run(job, onProgress, tag) → Promise<result (nodes = all threads) | null (cancelled) | undefined (the
 //   threads failed: do it the usual way)>, pool.cancel(tag)
-//   MTEngine.on() (threads in use now), .coi (COOP mode), .isolated, .helpers(), .onChange(fn)
+//   MTEngine.on() (threads in use now), .coi (COOP mode), .isolated, .helpers(), .perfThreads() (the performance cores), .onChange(fn)
 //   MTEngine.init({ sw, light: true, opt: false }): only the isolation (worker, reloads, COOP mode) — the page's own toggle
 //   (shared/mtsplit.js shared mode) calls MTEngine.set(v); .want() / .pref() are the same choice ('aicoding-mt')
 (function () {
@@ -43,6 +43,41 @@
   const CAN = 'serviceWorker' in navigator && !!window.isSecureContext && typeof WebAssembly === 'object' && HC >= 2;   // (no Atomics test: Safari exposes Atomics / SharedArrayBuffer only once the page is isolated)
   const helpers = () => Math.max(0, Math.min(HC - 1, TOUCH ? 3 : 7));   // the default (automatic) number of helper threads
   const maxHelpers = () => Math.max(0, HC - 1);                            // PRO mode may use every core the browser reports (at the user's own risk)
+  // perfThreads(): the cores worth a search thread by default — the performance cores (2026-11-09, the user's Mac: M4 Pro =
+  // 10 performance + 4 efficiency cores; on 14 threads the Lazy SMP searches (reversi, chess, fanorona, gomoku) were no faster or
+  // slower than on 8: a thread on an efficiency core runs at about 0.3–0.4 of the speed, and the lead (time control, the answer)
+  // may be one of them). The browser tells only the logical cores, so on a Mac the chip's name (WebGL's renderer, e.g.
+  // "ANGLE Metal Renderer: Apple M4 Pro") gives the efficiency cores; an Apple chip not in the list: 4 of 10 or more cores (2 of
+  // 8 or fewer: half). Other computers (and Intel Macs): every core. Kept in localStorage (aicoding-cpu), one WebGL context once.
+  // Used as the default of PRO's thread count and of the deep-analysis pages, and as one of the counts on the bench pages; the
+  // automatic count (min(cores − 1, 7) + 1) and what PRO lets one choose (every core) do not change.
+  let PERF = 0;
+  const perfThreads = () => {
+    if (PERF) return PERF;
+    const mac = /Mac/.test(navigator.platform || '') || /Macintosh/.test(navigator.userAgent || '') || (navigator.userAgentData && navigator.userAgentData.platform === 'macOS');
+    if (!mac || TOUCH || HC < 4) return (PERF = HC);
+    let gpu = '';
+    const KC = 'aicoding-cpu', c = LS.get(KC);
+    if (c && c.startsWith(HC + '|')) gpu = c.slice(String(HC).length + 1);
+    else {
+      try {
+        const cv = document.createElement('canvas'), g = cv.getContext('webgl');
+        if (g) { const x = g.getExtension('WEBGL_debug_renderer_info'); gpu = String(g.getParameter(x ? x.UNMASKED_RENDERER_WEBGL : g.RENDERER) || ''); const l = g.getExtension('WEBGL_lose_context'); if (l) l.loseContext(); }
+      } catch (e) {}
+      LS.set(KC, HC + '|' + gpu);
+    }
+    if (/Intel|AMD|Radeon|NVIDIA|GeForce/i.test(gpu)) return (PERF = HC);   // (an Intel Mac: no efficiency cores)
+    const m = /Apple M(\d+)(?: (Pro|Max|Ultra))?/.exec(gpu), gen = m ? +m[1] : 0, tier = m ? m[2] || '' : '';
+    let e = HC >= 10 ? 4 : Math.floor(HC / 2);   // (unknown: the usual 4 efficiency cores)
+    if (m) {
+      if (!tier) e = gen >= 4 ? (HC >= 9 ? 6 : 4) : 4;          // M1–M3: 4 + 4; M4 / M5: 4 + 6 (3 + 6 binned), 4 + 4 (8 cores)
+      else if (tier === 'Ultra') e = gen === 1 ? 4 : 8;
+      else if (gen === 1) e = 2;                                // M1 Pro / Max: 6 or 8 + 2
+      else if (gen === 3 && tier === 'Pro') e = 6;              // M3 Pro: 5 or 6 + 6
+      else e = 4;                                               // M2 Pro / Max, M3 Max, M4 Pro / Max: … + 4
+    }
+    return (PERF = Math.max(Math.min(HC, 2), HC - e));
+  };
   const pref = () => { const v = LS.get(K_PREF); return v !== null ? v : LS.get(K_PREF0); };   // '1' on, '0' off, none: automatic (PC on, phones / tablets off) — one choice for all games (older: per game)
   const want = () => { const p = pref(); return p === '1' || (p !== '0' && !TOUCH); };
   const on = () => ISO && want() && helpers() > 0;
@@ -317,6 +352,6 @@
       get threads() { return p ? p.threads : 1; },
     };
   }
-  window.MTEngine = { init, use, pool, on, helpers, maxHelpers, onChange: f => subs.push(f), isolated: ISO, coi: COI, flagged: FLAGGED, touch: TOUCH, T,
+  window.MTEngine = { init, use, pool, on, helpers, maxHelpers, perfThreads, onChange: f => subs.push(f), isolated: ISO, coi: COI, flagged: FLAGGED, touch: TOUCH, T,
     set, want, pref, can: CAN, tx };   // (set / want / pref / tx: for shared/mtsplit.js's shared mode, which keeps its own toggle)
 })();

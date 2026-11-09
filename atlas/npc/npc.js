@@ -97,15 +97,16 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
   /* ---------------- the conversation (shared by both hosts) ---------------- */
   // ui: { say(who, html, meta), clear() }   who: 'boss' | 'fan'
   function Talk(game, ui, o) {
-    const S = { game, level: 0, bi: -1, boss: null, fan: null, ply: -1, last: -99, next: 3, hAt: 0, hNow: null, triv: 0, told: [], over: false, greeted: false, joined: false, fanTurn: 0, pace: o.pace || 1, early: o.early || 12, timers: [] };
+    const S = { game, level: 0, bi: -1, boss: null, fan: null, fans: [], here: 0, lastFan: null, ply: -1, last: -99, next: 3, hAt: 0, hNow: null, triv: 0, told: [], over: false, greeted: false, joined: false, fanTurn: 0, pace: o.pace || 1, early: o.early || 12, timers: [] };
     const later = (f, ms) => { S.timers.push(setTimeout(f, ms)); };
-    function chooseFan() {
+    function chooseFan(not = []) {
       let owned = [];
       try { const W = window.Atlas && Atlas.load ? Atlas.load() : null; owned = (W && W.owned || []).filter(id => /^av-(?!boss-)[a-z]+-\d$/.test(id)); } catch (e) {}
       const all = window.AtlasArt ? AtlasArt.items.filter(it => it.kind === 'icon' && !it.boss).map(it => it.id) : [];
       const pool = owned.length >= 3 && Math.random() < .7 ? owned : all.length ? all : ['av-dice-0', 'av-plop-0', 'av-stone-0'];
-      const id = pick(pool), it = window.AtlasArt && AtlasArt.byId(id), sp = (id.match(/^av-([a-z]+)-/) || [])[1];
-      return { id, v: (A.VOICE && A.VOICE[sp]) || 'cute', img: avUrl(id.slice(3)), name: () => strip(it ? (it.name[langNow()] || it.name.en) : '') };
+      const spOf = x => (x.match(/^av-([a-z]+)-/) || [])[1], left = pool.filter(x => !not.includes(spOf(x)));   // (several watchers: not two of one kind)
+      const id = pick(left.length ? left : pool), it = window.AtlasArt && AtlasArt.byId(id), sp = spOf(id);
+      return { id, sp, v: (A.VOICE && A.VOICE[sp]) || 'cute', img: avUrl(id.slice(3)), name: () => strip(it ? (it.name[langNow()] || it.name.en) : '') };
     }
     function setLevel(lv) {
       lv = lv | 0; const bi = A.band(game, lv); if (bi < 0) return false;
@@ -114,21 +115,43 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
     }
     const bossMeta = () => { const n = A.BOSSES[game].length; return { name: bossName(S.boss, langNow()), img: avUrl(A.bossId(game, S.bi) + '-' + (S.bi === n - 1 ? 3 : 2)), tag: (TX().ui.boss) + ' ' + A.range(game, S.bi), ur: S.bi === n - 1, title: ((TX().bosses || {})[game] || [])[S.bi] || '' }; };
     const fanMeta = tv => ({ name: S.fan.name(), img: S.fan.img, tag: tv ? TX().ui.trivia : TX().ui.watch, tv });
+    // what is being said, as (where, key, index) — the lists are the same in every language, so a language change mid-game
+    // can put the same line in the new language on the bubble at once (2026-11-09: it stayed in the old one)
+    const lists = {
+      boss: key => { const X = TX(); return X && S.boss ? (X.voice[S.boss.v] || X.voice.cool)[key] : null; },
+      fanv: key => { const X = TX(), fv = X && S.fan && X.fanv && X.fanv[S.fan.v]; return fv ? fv[key] : null; },
+      fan: key => { const X = TX(); return X ? X.fan[key] : null; },
+      triv: () => { const X = TX(); return (X && X.trivia[game]) || null; },
+    };
+    const lineOf = c => { const L = lists[c.src](c.key); return L && L.length ? L[Math.min(c.i, L.length - 1)] : ''; };
+    const metaOf = c => { if (c.src !== 'boss' && S.fans[c.f]) S.fan = S.fans[c.f]; return c.src === 'boss' ? bossMeta() : fanMeta(c.src === 'triv'); };
+    function speak(c) {
+      if (c.src !== 'boss') c.f = S.fans.indexOf(S.fan);
+      const m = metaOf(c), line = lineOf(c); if (!line) return;
+      S.cur = c; ui.say(c.src === 'boss' ? 'boss' : 'fan', esc(line.replace('{me}', m.name)), m);
+    }
+    // several watchers (2026-11-09): two or three come to watch, one after another; whoever speaks is one of those who are
+    // here, not the one who spoke last if another is here
+    function nextFan() { const here = S.fans.slice(0, S.here); if (!here.length) return false; const c = here.filter(f => f !== S.lastFan); S.fan = pick(c.length ? c : here); S.lastFan = S.fan; return true; }
     function boss(key) {
-      const X = TX(); if (!X || !S.boss) return; const vv = X.voice[S.boss.v] || X.voice.cool;
-      const m = bossMeta(), line = fresh(vv[key]); if (!line) return;
-      ui.say('boss', esc(line.replace('{me}', m.name)), m);
+      const L = lists.boss(key); if (!L) return; const line = fresh(L); if (!line) return;
+      speak({ src: 'boss', key, i: L.indexOf(line) });
     }
     function fan(key) {
-      const X = TX(); if (!X || !S.fan) return; const fv = X.fanv && X.fanv[S.fan.v], own = fv && fv[key];
-      const m = fanMeta(false), line = fresh(own && own.length && (Math.random() < .8 || !X.fan[key]) ? own : X.fan[key]); if (!line) return;
-      ui.say('fan', esc(line.replace('{me}', m.name)), m);
+      const X = TX(); if (!X || !(key === 'join' || nextFan())) return; const own = lists.fanv(key), useOwn = own && own.length && (Math.random() < .8 || !X.fan[key]);
+      const L = useOwn ? own : X.fan[key], line = fresh(L); if (!line) return;
+      speak({ src: useOwn ? 'fanv' : 'fan', key, i: L.indexOf(line) });
     }
     function trivia() {
-      const X = TX(), L = (X && X.trivia[game]) || []; if (!L.length || !S.fan) return false;
+      const X = TX(), L = (X && X.trivia[game]) || []; if (!L.length || !nextFan()) return false;
       const left = L.map((_, i) => i).filter(i => !S.told.includes(i)); if (!left.length) return false;
       const i = pick(left); S.told.push(i); S.triv++;
-      ui.say('fan', esc(L[i]), fanMeta(true)); return true;
+      speak({ src: 'triv', key: '', i }); return true;
+    }
+    // the language changed: the bubble on screen now says its line in the new language (same place, same time left)
+    function relang() {
+      const c = S.cur; if (!c || !ui.showing || !ui.showing()) return;
+      const m = metaOf(c), line = lineOf(c); if (line && ui.retext) ui.retext(esc(line.replace('{me}', m.name)), m);
     }
     function greet() {
       S.greeted = true; S.over = false; S.last = S.ply; S.hAt = 0; S.next = S.ply + Math.round((2 + Math.random() * 2) * S.pace);
@@ -136,9 +159,14 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
     }
     function newGame(ply) {
       S.timers.forEach(clearTimeout); S.timers = [];
-      S.ply = ply; S.over = false; S.triv = 0; S.told = []; S.joined = false; S.fan = chooseFan(); S.fanTurn = 0;
+      S.ply = ply; S.over = false; S.triv = 0; S.told = []; S.joined = false; S.fanTurn = 0; S.here = 0; S.lastFan = null;
+      S.fans = []; const n = Math.random() < .45 ? 3 : 2; for (let i = 0; i < n; i++) S.fans.push(chooseFan(S.fans.map(f => f.sp)));
+      S.fan = S.fans[0];
       greet();
-      later(() => { if (!S.over && !S.joined) { S.joined = true; fan('join'); S.last = S.ply; } }, 8500);
+      // they arrive one by one (each says hello as it comes)
+      [8500, 32000, 62000].slice(0, S.fans.length).forEach((ms, i) => later(() => {
+        if (S.over || S.here > i) return; S.here = i + 1; S.joined = true; S.fan = S.fans[i]; S.lastFan = S.fan; fan('join'); S.last = S.ply;
+      }, ms));
     }
     // the position moved on: decide whether somebody says something (h = the human's outlook −1 … 1, or null)
     function step(ply, h) {
@@ -173,6 +201,7 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
       S.timers.forEach(clearTimeout); S.timers = [];
       boss(res === 'w' ? 'lose' : res === 'l' ? 'win' : 'draw');
       later(() => fan(res === 'w' ? 'win' : res === 'l' ? 'lose' : 'draw'), 3600);
+      if (S.here > 1) later(() => fan(res === 'w' ? 'win' : res === 'l' ? 'lose' : 'draw'), 7600);   // (a second watcher has its say too)
       if (res === 'w') grant();
     }
     // beating a boss: the 1st / 2nd / 3rd level of its three gives its N / R / SR avatar (once each)
@@ -185,7 +214,7 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
         later(() => toast(id, bossName(S.boss, langNow()), t), 1200);
       } catch (e) {}
     }
-    return { S, setLevel, step, end, newGame, relabel: () => ui.relabel && ui.relabel() };
+    return { S, setLevel, step, end, newGame, relang, relabel: () => ui.relabel && ui.relabel() };
   }
   function toast(id, name, t) {
     const R = ['N', 'R', 'SR'][t] || 'SR';
@@ -210,34 +239,48 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
     return {
       el,
       say(who, html, m) {
-        try { const b = o.bottom ? o.bottom() : window.__tbar && __tbar.band; if (b) el.style.setProperty('--npc-bot', Math.round(b) + 'px'); } catch (e) {}
         try { const l = o.left && o.left(); el.style.left = l ? Math.round(l[0]) + 'px' : ''; el.style.width = l ? `min(600px, ${Math.round(l[1] - 24)}px)` : ''; } catch (e) {}
         el.dataset.who = who; el.classList.toggle('npc-ur', !!m.ur);
         if (img.getAttribute('src') !== m.img) img.src = m.img;
         nm.textContent = m.name; tag.textContent = m.tag; tag.classList.toggle('tv', !!m.tv); ttl.textContent = m.title || ''; tx.innerHTML = html;
+        // (after the text: the place may depend on the bubble's height — the skins centre it between the board and the bar)
+        try { const b = o.bottom ? o.bottom(el) : window.__tbar && __tbar.band; if (b) el.style.setProperty('--npc-bot', Math.round(b) + 'px'); } catch (e) {}
         el.classList.add('on'); pic.classList.remove('talk'); void pic.offsetWidth; pic.classList.add('talk');
         clearTimeout(hideT); hideT = setTimeout(() => el.classList.remove('on'), Math.max(7500, tx.textContent.length * 170));
       },
       hide() { clearTimeout(hideT); el.classList.remove('on'); },
+      showing: () => el.classList.contains('on'),
+      retext(html, m) { nm.textContent = m.name; tag.textContent = m.tag; ttl.textContent = m.title || ''; tx.innerHTML = html; },
       remove() { clearTimeout(hideT); el.remove(); },
     };
   }
 
   /* ---------------- UI on the skins: the same bubble as the portal's, stepping away again after a few seconds ----------------
-     PC: centred on the window, just above the online dock's bar; phones: just above the bottom tab bar (cards in the
-     info column pushed the boxes around) */
+     PC: centred on the window, half-way between the board's lower edge and the online dock's bar (2026-11-09; never on the bar,
+     on the board's edge when the gap is too small); phones: just above the bottom tab bar (cards in the info column pushed the
+     boxes around) */
   function skinUI() {
     const PC = matchMedia((window.HeaderBar && HeaderBar.MEDIA) || '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4)');
     const vis = e => e && e.getClientRects().length && getComputedStyle(e).display !== 'none';
     const fl = floatUI({ body: true,
       // PC: just above the online dock's bar (centred on the window); phones: just above the bottom tab bar
-      bottom: () => {
-        if (PC.matches) { const d = document.getElementById('dock') || document.querySelector('.dock'); return vis(d) ? innerHeight - d.getBoundingClientRect().top + 6 : 16; }
+      bottom: el => {
+        if (PC.matches) {
+          const d = document.getElementById('dock') || document.querySelector('.dock'), yd = vis(d) ? d.getBoundingClientRect().top : innerHeight - 10;
+          let b = innerHeight - yd + 6;   // (just above the bar: the lowest it may go)
+          // the board's lower edge: the 3D board as drawn (the DOM board + its measured overhang, common.js __atlasPcFit), else the DOM board
+          let yb = null;
+          try { const pf = window.__atlasPcFit, bd = pf && pf.board && pf.board(); if (bd && vis(bd)) { const r = bd.getBoundingClientRect(), k = !document.documentElement.classList.contains('atlas-2d') && pf.K && pf.K(); yb = r.bottom + (k && isFinite(k.b) ? Math.max(0, k.b) * r.height : 0); } } catch (e) {}
+          if (yb == null) { const bd = ['#frame', '#boardWrap', '.board-wrap', '#board', '.board'].map(q => document.querySelector(q)).find(vis); if (bd) yb = bd.getBoundingClientRect().bottom + 8; }   // (a skin without the PC fit: its DOM board, the 3D frame a little past it)
+          const h = el ? el.offsetHeight : 0;
+          if (yb != null && yd > yb) b = Math.max(b, innerHeight - (yb + yd) / 2 - h / 2 - 10);   // (the float sits at --npc-bot + 10px)
+          return b;
+        }
         const t = [...document.querySelectorAll('.mtabs, #mtabs')].find(e => vis(e) && getComputedStyle(e).position === 'fixed'); return t ? innerHeight - t.getBoundingClientRect().top + 4 : 12;
       },
       left: () => null });   // centred on the whole window, as on the portal's 3D table
     fl.el.classList.add('npc-skin');
-    return { say: fl.say, hide: fl.hide };
+    return { say: fl.say, hide: fl.hide, showing: fl.showing, retext: fl.retext };
   }
 
   /* ---------------- reading the game's own state (skins) ----------------
@@ -329,7 +372,7 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
       };
       setInterval(tick, 700); tick();
       // the language changed (the page's language menu): load its lines
-      new MutationObserver(() => { const l = langNow(); ensure(l); }).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+      new MutationObserver(() => { const l = langNow(); ensure(l).then(() => T.relang()).catch(() => {}); }).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
     }).catch(() => {});
   };
 
@@ -340,6 +383,9 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
       if (dead || !A.BOSSES || !A.BOSSES[o.game]) return;
       ui = floatUI(); T = Talk(o.game, ui, { pace: PACE[o.game], early: EARLY[o.game] });
       T.setLevel(o.level); T.newGame(0);
+      // the portal's language menu mid-game: the lines in the new language (the bubble on screen too)
+      const mo = new MutationObserver(() => { if (dead) { mo.disconnect(); return; } ensure(langNow()).then(() => T && T.relang()).catch(() => {}); });
+      mo.observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
     }).catch(() => {});
     return {
       turn(ply) { if (T && ply != null) T.step(ply, null); },

@@ -41,7 +41,7 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);ma
 <body>
 <main>
 <h1>コナネ マルチスレッド ベンチマーク</h1>
-<p class="sub">対局ページと同じ方式（shared/mtsplit.js：ふつうの Worker がルートの手と本筋（最初の手の先）を分担する Young Brothers Wait）で、スレッド数ごとの速さを測ります。<b>共有</b>＝ページが分離されているとき（Chrome / Edge は自動、Safari・Firefox は対局ページでマルチスレッドをオン）の置換表を共有する方式（最善手は Lazy SMP：1つの Worker が1スレッドと同じ探索、残りは同じ局面を読み続けて置換表を埋める）、<b>非共有</b>＝各スレッドが自分の置換表を持つ方式（分離できないときの方式）。両方を測ります。最善手は比べるため、共有の置換表でもう一方の方式（Young Brothers Wait）も測ります（2026-11-09、深さを前より2手深くしました）。PC の Chrome / Safari で開き、終わったら「結果をコピー」を押して貼り付けてください。</p>
+<p class="sub">対局ページと同じ方式（shared/mtsplit.js：ふつうの Worker がルートの手と本筋（最初の手の先）を分担する Young Brothers Wait）で、スレッド数ごとの速さを測ります。<b>共有</b>＝ページが分離されているとき（Chrome / Edge は自動、Safari・Firefox は対局ページでマルチスレッドをオン）の置換表を共有する方式、<b>非共有</b>＝各スレッドが自分の置換表を持つ方式（分離できないときの方式）。両方を測ります。最善手は比べるため、共有の置換表でもう一方の方式（Lazy SMP）も測ります（2026-11-09、深さを前より2手深くしました）。PC の Chrome / Safari で開き、終わったら「結果をコピー」を押して貼り付けてください。</p>
 
 <div class="card"><div class="kv" id="env"></div></div>
 
@@ -59,7 +59,7 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);ma
 
 <div class="card"><h2>結果</h2><div class="tw"><table id="tbl"><thead><tr><th>測定</th><th>方式</th><th>スレッド</th><th>時間</th><th>1スレッド比</th><th>効率</th><th>nps（合計）</th><th>1スレッドと一致</th></tr></thead><tbody></tbody></table></div><pre id="log"></pre></div>
 </main>
-<script src="engine.js?v=3-sh2"></script>
+<script src="engine.js?v=3-sh3"></script>
 <script src="../shared/mtengine.js?v=8"></script><script src="../shared/mtsplit.js?v=3"></script>
 <script>MTSplit.init({ sw: 'sw.js?v=1' });</script>
 
@@ -80,7 +80,7 @@ env();
 const E = window.KonaneEngine;
 const RULE = 's8', D = { light: 11, normal: 13, heavy: 14 }, TA = { light: 1000, normal: 2000, heavy: 4000 };
 const G = {
-  url: 'engine.js?v=3-sh2', drive: MTSplit.ladder.drive,
+  url: 'engine.js?v=3-sh3', drive: MTSplit.ladder.drive,
   positions() {   // two games of Lv.6 vs Lv.6 (a fixed random seed), every 10 plies from ply 10
     const out = []; let seed = 7; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
     E.setRule(RULE);
@@ -101,10 +101,10 @@ const G = {
 };
 
 // a fresh pool for every run (no table left over from the run before), warmed up first
-// sh = the shared table with the game's own way for the best move (共有・Lazy), alt = the shared table with the other way (msg.lazy),
+// sh = the shared table with the game's own way for the best move (共有・YBW), alt = the shared table with the other way (msg.lazy),
 // ns = no shared table; the analysis has one way (alt is not run for it)
-const MODES = T => MTSplit.shared ? (T && T.key === 'best' ? ['sh', 'alt', 'ns'] : ['sh', 'ns']) : ['ns'], MODE_NAME = { sh: '共有・Lazy', alt: '共有・YBW', ns: '非共有' }, MODE_KEY = { sh: 'shared', alt: 'shared-ybw', ns: 'split' };
-const ALT_LAZY = 0;
+const MODES = T => MTSplit.shared ? (T && T.key === 'best' ? ['sh', 'alt', 'ns'] : ['sh', 'ns']) : ['ns'], MODE_NAME = { sh: '共有・YBW', alt: '共有・Lazy', ns: '非共有' }, MODE_KEY = { sh: 'shared', alt: 'shared-lazy', ns: 'split' };
+const ALT_LAZY = 1;
 async function once(t, msg, mode) {
   const pool = MTSplit.pool({ url: G.url, setup: G.setup, drive: G.drive, tt: mode !== 'ns' });
   if (mode === 'alt') msg = Object.assign({}, msg, { lazy: ALT_LAZY });

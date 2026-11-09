@@ -319,21 +319,20 @@
     const flashing = new Set(); let flashRaf = 0;
     function flash(g, v) {
       if (!g || !g.userData.flash) return;
-      g.userData.ft = performance.now(); g.userData.fk = Math.min(1, .45 + v / 260); flashing.add(g);
+      g.userData.ft = performance.now(); g.userData.fk = Math.min(.85, .3 + v / 420); flashing.add(g);
       if (!flashRaf) flashRaf = requestAnimationFrame(flashStep);
     }
     function flashStep() {
       flashRaf = 0; if (stopped) return; const now = performance.now();
-      flashing.forEach(g => { const k = g.userData.fk * Math.max(0, 1 - (now - g.userData.ft) / 520); g.userData.flash(k * k); if (k <= 0) flashing.delete(g); });
+      flashing.forEach(g => { const k = g.userData.fk * Math.max(0, 1 - (now - g.userData.ft) / 420); g.userData.flash(k * k); if (k <= 0) flashing.delete(g); });
       kick(80); if (flashing.size) flashRaf = requestAnimationFrame(flashStep);
     }
     let waveT = 0;
-    function neonTick() {   // frames only while a wave runs, and only while the window is in front
-      clearTimeout(waveT); if (stopped || !board || board.userData.look !== 'neon' || !T3.carrom || !T3.carrom.neonWave) return;
-      const w = T3.carrom.neonWave(performance.now());
-      if (!w.wait) { if (!document.hidden && document.hasFocus()) kick(w.left + 60); waveT = setTimeout(neonTick, w.left + 80); }
-      else waveT = setTimeout(neonTick, w.wait + 5);
+    function neonTick() {   // the RGB keeps flowing for the whole game (frames all along, but only while the window is in front)
+      clearInterval(waveT); if (stopped || !board || board.userData.look !== 'neon') return;
+      waveT = setInterval(() => { if (stopped) return clearInterval(waveT); if (!document.hidden && document.hasFocus()) kick(160); }, 100);
     }
+
 
     /* ---------- playing a stroke back: the simulated frames at their own pace (a tap speeds it up) ---------- */
     function playback(sim) {
@@ -360,9 +359,9 @@
             const e = sim.events[ev++];
             if (e.k === 'hit' && e.v > 8) SND.hit(e.v); else if (e.k === 'cush' && e.v > 25) SND.cush(e.v); else if (e.k === 'pocket') SND.pocket();
             const pg = i => i == null ? null : i === N ? striker : pcs[i];   // (neon: everything a man touches lights it up)
-            if (e.k === 'hit' && e.v > 4) { flash(pg(e.a), e.v); flash(pg(e.b), e.v); }
-            else if (e.k === 'cush' && e.v > 6) flash(pg(e.i), e.v);
-            else if (e.k === 'pocket') flash(pg(e.i), 200);
+            if (e.k === 'hit' && e.v > 25) { flash(pg(e.a), e.v); flash(pg(e.b), e.v); }   // (only real knocks: the soft touches stay quiet)
+            else if (e.k === 'cush' && e.v > 40) flash(pg(e.i), e.v);
+            else if (e.k === 'pocket') flash(pg(e.i), 160);
           }
           kick(120);
           if (fi < F.length - 1 || Object.values(sinks).some(s => el - s.t < .22)) requestAnimationFrame(step);
@@ -578,7 +577,7 @@
         hand.stop();
         document.removeEventListener('keydown', onKey); removeEventListener('resize', onResize); ctx.el.style.touchAction = prevTouch;
         css.remove(); powEl.remove(); if (toastEl) toastEl.remove(); if (cardEl) cardEl.remove(); if (worker) worker.terminate();
-        cancelAnimationFrame(viewRaf); clearTimeout(waveT); cancelAnimationFrame(flashRaf); flipBtn.remove(); viewBtn.remove(); document.removeEventListener('keydown', onFlipKey); if (T3.turn) T3.turn(null);
+        cancelAnimationFrame(viewRaf); clearInterval(waveT); cancelAnimationFrame(flashRaf); flipBtn.remove(); viewBtn.remove(); document.removeEventListener('keydown', onFlipKey); if (T3.turn) T3.turn(null);
         Object.values(MAT).forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose());
       },
       _debug: { st: () => st, phase: () => phase, shoot: (x, ang, pw) => { if (phase !== 'place') return false; sx = E.nearestFree(st, st.turn, x); stroke({ x: sx, ang, v: 40 + pw * (E.VMAX - 40) }); return true; }, setStriker: x => { moveStriker(x); showGuides(); }, at: (x, y) => { const [a, b] = wx(x, y); return T3.project(a, b, Y); }, striker: () => sx, pc: i => i === st.pcs.length ? striker : pcs[i] },
