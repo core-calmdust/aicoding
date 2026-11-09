@@ -50,6 +50,7 @@
     ludo: ['Teman main di halaman India', 'Pedagang pasar gurun', 'Bermain di papan kain', 'Menjadikannya «Ludo» di Inggris', 'Penjaga taman istana', 'Gajah perang Mughal', 'Kaisar yang konon menjadikan orang sebagai bidak'],
     carrom: ['Di dekat papan di gang', 'Pelanggan tetap beranda', 'Ahli sentilan', 'Pemukul sekali tembak', 'Penembak jitu yang tenang', 'Pemburu Ratu merah', 'Raja permainan yang konon lahir di istana'],
     crokinole: ['Anak dari pondok kayu', 'Langganan bersepatu salju', 'Jahil dari hutan maple', 'Wasit yang cerewet', 'Langsung ke lubang 20', 'Ahli tenang dari danau', 'Pembuat papan tertua'],
+    hockey: ['Tidur siang di arena', 'Langganan arena permainan', 'Jago menggiring keping', 'Kiper tembok baja', 'Tembakan keras', 'Peneliti meja udara', 'Bapak hoki meja'],
     alquerque: ['Anak halaman Andalusia', 'Penjual karpet bermotif papan', 'Penulis Kitab Lagu', 'Pemburu langit gurun', 'Ksatria Kastilia', 'Nyonya taman istana', 'Raja yang memesan Kitab Permainan'],
   },
   trivia: {
@@ -77,6 +78,7 @@
     ludo: ['Ludo berasal dari permainan India, pachisi.', 'Konon kaisar Mughal Akbar bermain di halaman dengan manusia sebagai bidak.', 'Permainan ini dipatenkan di Inggris dengan nama «Ludo» tahun 1896.', 'Di banyak aturan, angka enam membuat bidak bisa keluar dan kamu melempar lagi.'],
     carrom: ['Karambol berasal dari Asia Selatan dan sangat populer di India dan Sri Lanka.', 'Bidak merah adalah Ratu: setelah memasukkannya, kamu harus «menutupnya» dengan bidakmu.', 'Striker yang disentil lebih besar dan berat dari bidak lain.', 'Papan ditaburi bedak supaya bidak meluncur.'],
     crokinole: ['Crokinole lahir di Kanada: papan tertua yang diketahui dibuat di Ontario pada 1876.', 'Masukkan keping ke lubang tengah untuk 20! Keping itu langsung diangkat dari papan.', 'Kalau ada keping lawan di papan, kamu harus mengenai salah satunya atau pelanggaran.', 'Keping yang menyentuh garis dihitung nilai yang lebih rendah.'],
+    hockey: ['Hoki meja pertama adalah papan yang dibuat untuk anak-anak di Toronto pada 1932.', 'Air hockey meniupkan udara lewat lubang kecil di meja sehingga keping mengapung.', 'Sambar keping dengan tepi pemukul yang cepat, maka keping melesat.', 'Jaga gawangmu dan cari tembakan miring lewat dinding.'],
     alquerque: ['Alquerque muncul dalam «Kitab Lagu» Arab abad ke-10.', 'Ia juga ada di Kitab Permainan yang dibuat untuk Alfonso X pada abad ke-13.', 'Disebut leluhur dam — keduanya menangkap dengan melompat.', 'Papannya garis dan titik; bidak bergerak dari titik ke titik di sepanjang garis.'],
   },
 } });

@@ -1,0 +1,207 @@
+/* =====================================================================
+   Table hockey on the 3D table — boards (Table3D.BOARDS.hockey, chosen in the portal's 盤 row):
+   · 'classic' (the default) a tabletop rink: a navy felt field with white markings (the middle line and circle, the goal
+              creases, a score track along each end), a birch plywood frame with the goal slots cut in the end walls, the
+              tray standing on two U-shaped plywood feet. Mallets: a black stick on a black base with a coloured ball on top
+              (red for you, yellow for the far player); a white puck.
+   · 'neon'    night arcade: a black field with glowing cyan / magenta markings, a black lacquer frame with a light strip,
+              glowing mallet balls and a puck with a light ring.
+   Everything the special modes add (atlas/games/hockey.js shows / hides them): the turning bar (block), monsters,
+   item tokens, bumpers, portals, goal shields.
+   Units: K world units per cm (the 66 cm tray ≈ 9.2 world units long). Field coordinates as in hockey/engine.js.
+   userData: { top, K, look, xz(x, y), mallet(side), puck(), monster(i), item(kind), bar(), bumper(), portal(k), shield(),
+               dot(side) → css colour }
+   ===================================================================== */
+(function () {
+  'use strict';
+  const X = window.Table3D; if (!X) return;
+  const T = () => window.THREE;
+  const LO = () => !!(X.coarse || X.lite);
+  const SZ = v => Math.round(v * (X.texScale ? X.texScale() : 1));
+  const K = 10 / 72, W = 40, L = 62, GW = 13, RP = 2, RM = 3.1, FR = 2.2, WH = 3.2;   // frame thickness, wall height (cm)
+  const TOP = .7, LOOKS = ['classic', 'neon'];
+  const lin = c => new (T().Color)(c).convertSRGBToLinear();
+  function phys(o) {
+    const TT = T(), p = Object.assign({}, o);
+    if (p.color !== undefined) p.color = lin(p.color);
+    Object.keys(p).forEach(k => p[k] === undefined && delete p[k]);
+    if (X.lite) { delete p.clearcoat; delete p.clearcoatRoughness; return new TT.MeshStandardMaterial(p); }
+    return new TT[p.clearcoat !== undefined ? 'MeshPhysicalMaterial' : 'MeshStandardMaterial'](p);
+  }
+  const mats = {}, mat = (k, f) => mats[k] || (mats[k] = f());
+  const geos = {}, share = g => { if (X.share) X.share(g); return g; }, geo = (k, f) => geos[k] || (geos[k] = share(f()));
+  const lookNow = () => X.BOARDS && X.BOARDS.hockey ? X.BOARDS.hockey.get() : 'classic';
+  const COL = { classic: ['#e2402f', '#f2c230'], neon: ['#ff3fb4', '#3ce6ff'] };
+
+  /* ---------- the field: felt and markings, in field centimetres (W × L) ---------- */
+  function fieldTex(look) {
+    const S = SZ(1024), H = Math.round(S * L / W);
+    return X.canvasTex('hkField' + look + S, S, H, (g) => {
+      const u = S / W, X0 = cm => (cm + W / 2) * u, Y0 = cm => (cm + L / 2) * u, neon = look === 'neon';
+      const N = X.makeNoise(neon ? 5 : 19), img = g.createImageData(S, H), d = img.data;
+      const base = neon ? [10, 11, 22] : [36, 74, 140];
+      for (let y = 0; y < H; y++) for (let x = 0; x < S; x++) { const k = (Math.random() - .5) * (neon ? 6 : 14) + (N(x / 3, y / 3, 2) - .5) * (neon ? 8 : 20) + (N(x / 60, y / 60, 3) - .5) * 14, i = (y * S + x) * 4; d[i] = base[0] + k; d[i + 1] = base[1] + k; d[i + 2] = base[2] + k * 1.1; d[i + 3] = 255; }
+      g.putImageData(img, 0, 0);
+      const ink = neon ? '#3ce6ff' : 'rgba(250,250,255,.92)', ink2 = neon ? '#ff3fb4' : 'rgba(250,250,255,.92)';
+      const glow = c => { if (neon) { g.shadowColor = c; g.shadowBlur = .8 * u; } else g.shadowBlur = 0; };
+      const line = (x0, y0, x1, y1, w, c) => { glow(c); g.strokeStyle = c; g.lineWidth = w * u; g.beginPath(); g.moveTo(X0(x0), Y0(y0)); g.lineTo(X0(x1), Y0(y1)); g.stroke(); };
+      const arc = (x, y, r, a0, a1, w, c) => { glow(c); g.strokeStyle = c; g.lineWidth = w * u; g.beginPath(); g.arc(X0(x), Y0(y), r * u, a0, a1); g.stroke(); };
+      line(-W / 2, 0, W / 2, 0, .3, ink); arc(0, 0, 6, 0, Math.PI * 2, .25, ink); g.fillStyle = ink; g.beginPath(); g.arc(X0(0), Y0(0), .5 * u, 0, 7); g.fill();
+      for (const sg of [1, -1]) {
+        const c = sg > 0 ? ink2 : ink;
+        arc(0, sg * L / 2, 8.5, sg > 0 ? Math.PI : 0, sg > 0 ? Math.PI * 2 : Math.PI, .25, c);
+        // a score track along the end: 0…6 ticks (the players can count on it, like the real tabletop games)
+        g.font = `700 ${1.5 * u}px "Fredoka", system-ui, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+        const ty = sg * (L / 2 - 1.6);
+        line(-W / 2 + .8, sg * (L / 2 - 3.2), -GW / 2 - .6, sg * (L / 2 - 3.2), .12, c); line(GW / 2 + .6, sg * (L / 2 - 3.2), W / 2 - .8, sg * (L / 2 - 3.2), .12, c);
+        for (let k = 0; k < 6; k++) { for (const sd of [-1, 1]) { const x = sd * (GW / 2 + 3.4 + k * 1.55); glow(c); g.fillStyle = c; g.save(); g.translate(X0(x), Y0(ty)); if (sg < 0) g.rotate(Math.PI); g.fillText(String(sd < 0 ? 6 - k : k + 1), 0, 0); g.restore(); } }
+        // dots where the pucks are put down
+        g.fillStyle = c; for (const x of [-5, 5]) { g.beginPath(); g.arc(X0(x), Y0(sg * 9), .35 * u, 0, 7); g.fill(); }
+      }
+      g.shadowBlur = 0;
+    });
+  }
+
+  /* ---------- materials ---------- */
+  function boardMats(look) {
+    return mat('bm' + look, () => {
+      const TT = T(), neon = look === 'neon';
+      const field = phys({ map: fieldTex(look), color: '#ffffff', roughness: neon ? .5 : .95, metalness: 0 });
+      if (neon) { field.emissiveMap = field.map; field.emissive = new TT.Color(.75, .75, .75); }
+      let frame;
+      if (neon) frame = phys({ color: '#0d0e18', roughness: .25, clearcoat: 1, clearcoatRoughness: .1 });
+      else { const w = X.wood('hkBirch', '#e8d4b0', '#c9ad80', SZ(1024), SZ(256), .7); w.wrapS = w.wrapT = TT.RepeatWrapping; frame = phys({ map: w, color: '#ffffff', roughness: .55 }); }
+      const ply = phys({ color: neon ? '#16182a' : '#d8bf94', roughness: .7 });
+      const strip = neon ? (() => { const m = phys({ color: '#000000' }); m.emissive = new TT.Color(neon ? 0x3ce6ff : 0); m.emissiveIntensity = 1.6; return m; })() : null;
+      const hole = new TT.MeshBasicMaterial({ color: 0x050508 });
+      const black = phys({ color: '#141416', roughness: .35, clearcoat: .6 });
+      const puck = phys({ color: neon ? '#e8f8ff' : '#f6f4ee', roughness: .3, clearcoat: .8 });
+      const ring = neon ? (() => { const m = phys({ color: '#000000' }); m.emissive = new TT.Color(0xffffff); m.emissiveIntensity = 1.4; return m; })() : phys({ color: '#d0d0d4', roughness: .3, metalness: .6 });
+      return { field, frame, ply, strip, hole, black, puck, ring };
+    });
+  }
+  const ballMat = (look, side) => mat('ball' + look + side, () => { const m = phys({ color: COL[look][side], roughness: .25, clearcoat: 1, clearcoatRoughness: .1 }); if (look === 'neon') { m.emissive = lin(COL[look][side]); m.emissiveIntensity = .7; } return m; });
+
+  /* ---------- pieces ---------- */
+  function mallet(look, side) {
+    const TT = T(), BM = boardMats(look), g = new TT.Group(), r = RM * K, seg = LO() ? 20 : 32;
+    const base = new TT.Mesh(geo('mbase', () => new TT.CylinderGeometry(r, r * 1.04, .9 * K, seg)), BM.black); base.position.y = .45 * K; base.castShadow = true; g.add(base);
+    const felt = new TT.Mesh(geo('mfelt', () => new TT.CylinderGeometry(r * .78, r * .78, .05 * K, seg)), ballMat(look, side)); felt.position.y = .92 * K; g.add(felt);
+    const stick = new TT.Mesh(geo('mstick', () => new TT.CylinderGeometry(.42 * K, .55 * K, 5.2 * K, 14)), BM.black); stick.position.y = .9 * K + 2.6 * K; stick.castShadow = true; g.add(stick);
+    const ball = new TT.Mesh(geo('mball', () => new TT.SphereGeometry(1.05 * K, 20, 14)), ballMat(look, side)); ball.position.y = 6.3 * K; ball.castShadow = true; g.add(ball);
+    g.userData = { side, r: RM };
+    return g;
+  }
+  function puck(look) {
+    const TT = T(), BM = boardMats(look), g = new TT.Group(), r = RP * K;
+    const b = new TT.Mesh(geo('puck', () => new TT.CylinderGeometry(r, r, .7 * K, LO() ? 18 : 28)), BM.puck); b.position.y = .35 * K; b.castShadow = true; g.add(b);
+    const ring = new TT.Mesh(geo('pring', () => { const q = new TT.TorusGeometry(r * .62, .05 * K, 6, 28); q.rotateX(Math.PI / 2); return q; }), BM.ring); ring.position.y = .71 * K; g.add(ring);
+    return g;
+  }
+  // a little round creature: a squashed ball with eyes and feet (the colour per monster)
+  const MONC = ['#8a5cd8', '#3fae6a', '#e0743a'];
+  function monster(look, i) {
+    const TT = T(), g = new TT.Group(), c = MONC[i % MONC.length], r = 2.6 * K;
+    const bodyM = mat('mon' + i + look, () => { const m = phys({ color: c, roughness: .55, clearcoat: .3 }); if (look === 'neon') { m.emissive = lin(c); m.emissiveIntensity = .35; } return m; });
+    const body = new TT.Mesh(geo('monb', () => new TT.SphereGeometry(r, 22, 16)), bodyM); body.scale.set(1, .8, 1); body.position.y = r * .8; body.castShadow = true; g.add(body);
+    const white = mat('monw', () => phys({ color: '#ffffff', roughness: .3 })), pupil = mat('monp', () => phys({ color: '#141418', roughness: .2 }));
+    for (const sx of [-1, 1]) {
+      const e = new TT.Mesh(geo('mone', () => new TT.SphereGeometry(r * .3, 14, 10)), white); e.position.set(sx * r * .36, r * 1.05, r * .72); g.add(e);
+      const p = new TT.Mesh(geo('monpp', () => new TT.SphereGeometry(r * .15, 10, 8)), pupil); p.position.set(sx * r * .36, r * 1.05, r * .98); g.add(p);
+      const f = new TT.Mesh(geo('monf', () => new TT.SphereGeometry(r * .28, 12, 8)), bodyM); f.scale.set(1, .5, 1.3); f.position.set(sx * r * .5, r * .12, r * .25); g.add(f);
+    }
+    const horn = new TT.Mesh(geo('monh', () => new TT.ConeGeometry(r * .18, r * .45, 10)), bodyM); horn.position.set(0, r * 1.55, 0); g.add(horn);
+    g.userData = { body, r: 2.6 };
+    return g;
+  }
+  // item tokens: a floating coin with its symbol on both faces
+  const ITEMC = { speed: '#ff5a2a', split: '#36b4ff', giant: '#2fbf6a', shield: '#8a5cd8', freeze: '#5ad8ff' };
+  const ITEMS = { speed: '⚡', split: '✦', giant: '⬤', shield: '▮', freeze: '❄' };
+  function itemTex(k) {
+    return X.canvasTex('hkItem' + k, 128, 128, (g, S) => {
+      g.fillStyle = ITEMC[k]; g.beginPath(); g.arc(S / 2, S / 2, S / 2, 0, 7); g.fill();
+      g.strokeStyle = 'rgba(255,255,255,.9)'; g.lineWidth = S * .06; g.beginPath(); g.arc(S / 2, S / 2, S * .42, 0, 7); g.stroke();
+      g.fillStyle = '#fff'; g.font = `900 ${S * .5}px system-ui, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(ITEMS[k], S / 2, S * .53);
+    });
+  }
+  function item(look, k) {
+    const TT = T(), g = new TT.Group(), r = 2 * K;
+    const m = mat('item' + k, () => { const q = phys({ map: itemTex(k), color: '#ffffff', roughness: .3, clearcoat: .8 }); q.emissive = lin(ITEMC[k]); q.emissiveIntensity = .35; return q; });
+    const edge = mat('itemE' + k, () => phys({ color: ITEMC[k], roughness: .3, metalness: .3 }));
+    const coin = new TT.Mesh(geo('coin', () => { const q = new TT.CylinderGeometry(r, r, .45 * K, 28); q.rotateX(Math.PI / 2); return q; }), [edge, m, m]); coin.position.y = 2.4 * K; coin.castShadow = true; g.add(coin);
+    g.userData = { coin, kind: k };
+    return g;
+  }
+  // block mode: a chrome bar (capsule) turning round a hub
+  function bar(look) {
+    const TT = T(), g = new TT.Group(), BAR = 9, r = 1 * K, chrome = mat('chrome' + look, () => { const m = phys({ color: look === 'neon' ? '#c8f4ff' : '#dfe3ea', roughness: .12, metalness: 1, envMapIntensity: 1.3 }); if (look === 'neon') { m.emissive = lin('#3ce6ff'); m.emissiveIntensity = .4; } return m; });
+    const rod = new TT.Mesh(geo('barRod', () => { const q = new TT.CylinderGeometry(r, r, 2 * BAR * K, 18); q.rotateZ(Math.PI / 2); return q; }), chrome); rod.position.y = r * 1.1; rod.castShadow = true; g.add(rod);
+    for (const sx of [-1, 1]) { const e = new TT.Mesh(geo('barEnd', () => new TT.SphereGeometry(r, 16, 12)), chrome); e.position.set(sx * BAR * K, r * 1.1, 0); g.add(e); }
+    const hub = new TT.Mesh(geo('barHub', () => new TT.CylinderGeometry(r * 1.8, r * 2.1, r * 2.6, 22)), boardMats(look).black); hub.position.y = r * 1.3; g.add(hub);
+    return g;
+  }
+  function bumper(look) {
+    const TT = T(), g = new TT.Group(), r = 2.2 * K;
+    const body = new TT.Mesh(geo('bump', () => new TT.CylinderGeometry(r, r * 1.05, 1.6 * K, 26)), mat('bumpM' + look, () => phys({ color: look === 'neon' ? '#1b1d30' : '#c83a4a', roughness: .4, clearcoat: .6 }))); body.position.y = .8 * K; body.castShadow = true; g.add(body);
+    const cap = new TT.Mesh(geo('bumpCap', () => new TT.CylinderGeometry(r * .6, r * .7, .4 * K, 22)), mat('bumpCap' + look, () => { const m = phys({ color: '#ffffff', roughness: .3 }); m.emissive = lin(look === 'neon' ? '#ff3fb4' : '#ffd65a'); m.emissiveIntensity = .3; return m; })); cap.position.y = 1.75 * K; g.add(cap);
+    g.userData = { cap };
+    return g;
+  }
+  function portal(look, k) {
+    const TT = T(), g = new TT.Group(), c = k ? '#ff7a2a' : '#36b4ff', r = 2.8 * K;
+    const m = mat('portal' + k, () => { const q = phys({ color: '#000000' }); q.emissive = lin(c); q.emissiveIntensity = 1.6; return q; });
+    const ring = new TT.Mesh(geo('portalR', () => { const q = new TT.TorusGeometry(r, .22 * K, 8, 36); q.rotateX(Math.PI / 2); return q; }), m); ring.position.y = .12 * K; g.add(ring);
+    const disc = new TT.Mesh(geo('portalD', () => { const q = new TT.CircleGeometry(r * .95, 36); q.rotateX(-Math.PI / 2); return q; }), mat('portalD' + k, () => new TT.MeshBasicMaterial({ color: lin(c), transparent: true, opacity: .35, depthWrite: false }))); disc.position.y = .06 * K; g.add(disc);
+    g.userData = { ring };
+    return g;
+  }
+  function shield(look) {
+    const TT = T(), g = new TT.Group();
+    const m = mat('shield', () => { const q = new TT.MeshBasicMaterial({ color: lin('#8a5cd8'), transparent: true, opacity: .45, depthWrite: false }); return q; });
+    const b = new TT.Mesh(geo('shield', () => new TT.BoxGeometry((GW + 1) * K, 2.6 * K, .5 * K)), m); b.position.y = 1.3 * K; g.add(b);
+    return g;
+  }
+
+  /* ---------- the tray ---------- */
+  function board(look) {
+    look = LOOKS.includes(look) ? look : lookNow();
+    const TT = T(), g = new TT.Group(), BM = boardMats(look), OW = W + 2 * FR, OL = L + 2 * FR;
+    // the field
+    const f = new TT.Mesh(geo('field', () => { const q = new TT.PlaneGeometry(W * K, L * K); q.rotateX(-Math.PI / 2); return q; }), BM.field); f.position.y = TOP; f.receiveShadow = true; g.add(f);
+    // the tray's floor slab under it
+    const slab = new TT.Mesh(geo('slab', () => new TT.BoxGeometry(OW * K, .6 * K, OL * K)), BM.ply); slab.position.y = TOP - .3 * K - .002; slab.castShadow = slab.receiveShadow = true; g.add(slab);
+    // walls: the sides whole, the ends split by the goal slot (the slot opens onto a dark pocket box behind)
+    const wall = (w, d, x, z) => { const m = new TT.Mesh(new TT.BoxGeometry(w * K, WH * K, d * K), BM.frame); m.position.set(x * K, TOP + WH * K / 2 - .6 * K, z * K); m.castShadow = m.receiveShadow = true; g.add(m); return m; };
+    wall(FR, OL, -(W / 2 + FR / 2), 0); wall(FR, OL, W / 2 + FR / 2, 0);
+    for (const sg of [1, -1]) {
+      const seg = (W - GW) / 2; wall(seg, FR, -(GW / 2 + seg / 2), sg * (L / 2 + FR / 2)); wall(seg, FR, GW / 2 + seg / 2, sg * (L / 2 + FR / 2));
+      // the goal: an open slot in the end wall, a dark pocket behind it (a box with a black floor) that catches the puck
+      const hole = new TT.Mesh(new TT.BoxGeometry(GW * K, .1 * K, (FR + 4) * K), BM.hole); hole.position.set(0, TOP + .004, sg * (L / 2 + FR / 2 + 2) * K); g.add(hole);
+      for (const sx of [-1, 1]) { const w = new TT.Mesh(new TT.BoxGeometry(.8 * K, 1.4 * K, 4 * K), BM.frame); w.position.set(sx * (GW / 2 + .4) * K, TOP - .1 * K, sg * (L / 2 + FR + 2) * K); w.castShadow = true; g.add(w); }
+      const back = new TT.Mesh(new TT.BoxGeometry((GW + 1.6) * K, 1.4 * K, .8 * K), BM.frame); back.position.set(0, TOP - .1 * K, sg * (L / 2 + FR + 4) * K); back.castShadow = true; g.add(back);
+    }
+    if (BM.strip) for (const sg of [1, -1]) { const s = new TT.Mesh(new TT.BoxGeometry(.25 * K, .25 * K, OL * K), BM.strip); s.position.set(sg * (W / 2 + FR) * K, TOP + (WH - .6) * K, 0); g.add(s); }
+    // two U-shaped plywood feet (the classic look; the neon tray sits on black blocks)
+    for (const sg of [1, -1]) {
+      const foot = new TT.Mesh(new TT.BoxGeometry(OW * .78 * K, 1.2 * K, 3 * K), BM.ply); foot.position.set(0, TOP - 1.2 * K, sg * OL * .3 * K); foot.castShadow = true; g.add(foot);
+    }
+    const U = g.userData;
+    U.top = TOP; U.K = K; U.look = look; U.W = W; U.L = L; U.OW = OW; U.OL = OL;
+    U.xz = (x, y) => [x * K, y * K];
+    U.mallet = side => mallet(look, side); U.puck = () => puck(look); U.monster = i => monster(look, i); U.item = k => item(look, k);
+    U.bar = () => bar(look); U.bumper = () => bumper(look); U.portal = k => portal(look, k); U.shield = () => shield(look);
+    U.dot = side => COL[look][side];
+    return g;
+  }
+
+  X.MODELS.hockey = function (live, look) {
+    const g = board(look);
+    if (live) return g;
+    // the showcase: both mallets and a puck in play
+    const U = g.userData;
+    const put = (m, x, y) => { const [a, b] = U.xz(x, y); m.position.set(a, TOP, b); g.add(m); };
+    put(U.mallet(0), 4, 20); put(U.mallet(1), -6, -21); put(U.puck(), 7, -4);
+    return g;
+  };
+  X.hockey = { board, LOOKS, K };
+})();
