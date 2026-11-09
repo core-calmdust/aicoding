@@ -136,6 +136,11 @@
     neon: { ja: 'ネオン 3D', en: 'Neon 3D', zh: '霓虹 3D', ko: '네온 3D', es: 'Neón 3D', fr: 'Néon 3D', pt: 'Neon 3D', de: 'Neon 3D', hi: 'नियॉन 3D', ar: 'نيون ثلاثي', ru: 'Неон 3D', 'zh-TW': '霓虹 3D', id: '3D neon', tr: 'Neon 3D' },
     rajasthan: { ja: 'ラジャスタン 3D', en: 'Rajasthani 3D', zh: '拉贾斯坦 3D', ko: '라자스탄 3D', es: 'Rajastán 3D', fr: 'Rajasthan 3D', pt: 'Rajastão 3D', de: 'Rajasthan 3D', hi: 'राजस्थानी 3D', ar: 'راجستان ثلاثي', ru: 'Раджастхан 3D', 'zh-TW': '拉賈斯坦 3D', id: '3D Rajasthan', tr: 'Racastan 3D' },
     bauhaus: { ja: 'バウハウス 3D', en: 'Bauhaus 3D', zh: '包豪斯 3D', ko: '바우하우스 3D', es: 'Bauhaus 3D', fr: 'Bauhaus 3D', pt: 'Bauhaus 3D', de: 'Bauhaus 3D', hi: 'बाउहाउस 3D', ar: 'باوهاوس ثلاثي', ru: 'Баухаус 3D', 'zh-TW': '包浩斯 3D', id: '3D Bauhaus', tr: 'Bauhaus 3D' },
+    // ludo (the 3D boards: classic + the art boards, 2026-11-09)
+    street: { ja: 'ストリートアート 3D', en: 'Street art 3D', zh: '街头艺术 3D', ko: '스트리트 아트 3D', es: 'Arte urbano 3D', fr: 'Street art 3D', pt: 'Arte urbana 3D', de: 'Street-Art 3D', hi: 'स्ट्रीट आर्ट 3D', ar: 'فن الشارع ثلاثي', ru: 'Стрит-арт 3D', 'zh-TW': '街頭藝術 3D', id: '3D seni jalanan', tr: 'Sokak sanatı 3D' },
+    peg: { ja: '木のペグ盤 3D', en: 'Wooden peg board 3D', zh: '木制插孔盘 3D', ko: '나무 페그 판 3D', es: 'Tablero de clavijas 3D', fr: 'Plateau à chevilles 3D', pt: 'Tabuleiro de pinos 3D', de: 'Holz-Steckbrett 3D', hi: 'लकड़ी का पेग बोर्ड 3D', ar: 'لوح أوتاد خشبي ثلاثي', ru: 'Доска с колышками 3D', 'zh-TW': '木製插孔盤 3D', id: '3D papan pasak kayu', tr: 'Ahşap çivili tahta 3D' },
+    mondrian: { ja: 'コンポジション 3D', en: 'Composition 3D', zh: '构成 3D', ko: '컴포지션 3D', es: 'Composición 3D', fr: 'Composition 3D', pt: 'Composição 3D', de: 'Komposition 3D', hi: 'कंपोज़िशन 3D', ar: 'تكوين ثلاثي', ru: 'Композиция 3D', 'zh-TW': '構成 3D', id: '3D komposisi', tr: 'Kompozisyon 3D' },
+    cutout: { ja: '切り絵 3D', en: 'Paper cut-outs 3D', zh: '剪纸拼贴 3D', ko: '종이 오리기 3D', es: 'Papeles recortados 3D', fr: 'Papiers découpés 3D', pt: 'Recortes de papel 3D', de: 'Scherenschnitte 3D', hi: 'कागज़ की कटिंग 3D', ar: 'قصاصات ورق ثلاثي', ru: 'Вырезки из бумаги 3D', 'zh-TW': '剪紙拼貼 3D', id: '3D potongan kertas', tr: 'Kâğıt kesik 3D' },
     tycoon: { ja: '大富豪 3D', en: 'Tycoon 3D', zh: '大富豪 3D', ko: '대부호 3D', es: 'Magnate 3D', fr: 'Magnat 3D', pt: 'Magnata 3D', de: 'Tycoon 3D', hi: 'रईस 3D', ar: 'الثري ثلاثي', ru: 'Магнат 3D', 'zh-TW': '大富豪 3D', id: '3D Konglomerat', tr: 'Milyoner 3D' },
   };
   const BOARDS = {
@@ -164,6 +169,8 @@
     carrom: { list: ['neon', 'modern', 'classic', 'rajasthan', 'bauhaus', 'tycoon'], get: () => { const v = ls.get('atlas-carrom-look'); return ['modern', 'classic', 'rajasthan', 'bauhaus', 'tycoon'].includes(v) ? v : 'neon'; }, set: k => ls.set('atlas-carrom-look', k) },
     // crokinole (3D only): 'atlas-crokinole-look' ('classic' the default | 'neon')
     crokinole: { list: ['classic', 'neon'], get: () => ls.get('atlas-crokinole-look') === 'neon' ? 'neon' : 'classic', set: k => ls.set('atlas-crokinole-look', k) },
+    // ludo (atlas/models/ludo.js, atlas/skin/ludo.js): 'atlas-ludo-look' ('classic' the default | 'street' | 'peg' | 'mondrian' | 'cutout'); pachisi keeps its cloth
+    ludo: { list: ['classic', 'street', 'peg', 'mondrian', 'cutout'], get: () => { const v = ls.get('atlas-ludo-look'); return ['street', 'peg', 'mondrian', 'cutout'].includes(v) ? v : 'classic'; }, set: k => ls.set('atlas-ludo-look', k) },
   };
   X.BOARDS = BOARDS;
   X.boardName = (k, lang) => { const o = N3[k]; return o ? o[lang] || o.en : k; };

@@ -26,6 +26,9 @@
   const mats = {}, mat = (k, f) => mats[k] || (mats[k] = f());
   const u = .66;   // one grid cell in world units (ludo 15 × .66 = 9.9; pachisi 19 × .55)
   const UP = { ludo: .66, pachisi: .54 };
+  const ME = (() => { try { const c = document.currentScript; return c && c.src ? c.src : location.href; } catch (e) { return ''; } })();
+  const LOOKS = ['classic', 'street', 'peg', 'mondrian', 'cutout'];   // (2026-11-09) the ludo boards: Table3D.BOARDS.ludo, 'atlas-ludo-look'
+  const lookNow = () => { try { const B = X.BOARDS && X.BOARDS.ludo; const k = B ? B.get() : 'classic'; return LOOKS.includes(k) ? k : 'classic'; } catch (e) { return 'classic'; } };
 
   /* ---------- the board's picture: the 2D SVG drawn into a canvas ---------- */
   const pics = {};
@@ -63,12 +66,44 @@
     const g = new TT.LatheGeometry((X.lp || (a => a))(P, .003), LO() ? 16 : 20); if (X.share) X.share(g);
     return (geos[rule] = g);
   }
-  function piece(rule, seat) {
-    const TT = T(), col = COLS[rule][seat];
+  // (2026-11-09) the pieces of the art boards: the peg board's pegs (a pin under a turned body with a dome — it stands in the hole),
+  // the modern boards' plain geometric men (a cylinder and a ball, matt paint)
+  function pegGeo() {
+    if (geos.peg) return geos.peg;
+    const TT = T(), s = UP.ludo, P = [];
+    [[0, -.25], [.18, -.25], [.19, -.23], [.19, 0], [.29, 0], [.31, .03], [.3, .07], [.24, .14], [.2, .26], [.19, .35], [.23, .39], [.24, .43], [.2, .46]].forEach(([r, y]) => P.push(new TT.Vector2(r * s, y * s)));
+    for (let k = 0; k <= 8; k++) { const a = -Math.PI / 2 + .35 + k / 8 * (Math.PI - .35); P.push(new TT.Vector2(Math.max(0, Math.cos(a) * .2 * s), (.55 + Math.sin(a) * .12) * s)); }
+    const g = new TT.LatheGeometry((X.lp || (a => a))(P, .003), LO() ? 16 : 24); if (X.share) X.share(g);
+    return (geos.peg = g);
+  }
+  function modGeo() {
+    if (geos.mod) return geos.mod;
+    const TT = T(), s = UP.ludo, P = [];
+    [[0, 0], [.31, 0], [.33, .015], [.335, .04], [.335, .25], [.32, .275], [.29, .285], [.07, .29]].forEach(([r, y]) => P.push(new TT.Vector2(r * s, y * s)));
+    for (let k = 0; k <= 10; k++) { const a = -Math.PI / 2 + .42 + k / 10 * (Math.PI - .42); P.push(new TT.Vector2(Math.max(0, Math.cos(a) * .17 * s), (.45 + Math.sin(a) * .17) * s)); }
+    const g = new TT.LatheGeometry((X.lp || (a => a))(P, .003), LO() ? 16 : 24); if (X.share) X.share(g);
+    return (geos.mod = g);
+  }
+  const ART = { mondrian: [0xd6382c, 0x2a8a4c, 0xf3c623, 0x1f4fa0], cutout: [0xe0473a, 0x2f9a62, 0xf0b92c, 0x2559b8] };
+  function piece(rule, seat, look) {
+    const TT = T(), g = new TT.Group();
+    if (rule === 'ludo' && look === 'peg') {
+      const m = mat('pcpeg' + seat, () => phys({ color: COLS.ludo[seat], roughness: .28, clearcoat: .9, clearcoatRoughness: .12 }));
+      const b = new TT.Mesh(pegGeo(), m); b.castShadow = true; b.receiveShadow = true; g.add(b);
+      g.userData = { seat, rule, look, r: .31 * UP.ludo, h: .67 * UP.ludo };
+      return g;
+    }
+    if (rule === 'ludo' && ART[look]) {
+      const m = mat('pc' + look + seat, () => phys({ color: ART[look][seat], roughness: look === 'cutout' ? .7 : .45, clearcoat: look === 'cutout' ? undefined : .35, clearcoatRoughness: .4 }));
+      const b = new TT.Mesh(modGeo(), m); b.castShadow = true; b.receiveShadow = true; g.add(b);
+      g.userData = { seat, rule, look, r: .335 * UP.ludo, h: .62 * UP.ludo };
+      return g;
+    }
+    const col = COLS[rule][seat];
     const m = mat('pc' + rule + seat, () => rule === 'pachisi'
       ? phys({ color: col, roughness: .42, clearcoat: .5, clearcoatRoughness: .35 })
       : phys({ color: col, roughness: .3, clearcoat: .8, clearcoatRoughness: .2 }));
-    const g = new TT.Group(), b = new TT.Mesh(pawnGeo(rule), m); b.castShadow = true; b.receiveShadow = true; g.add(b);
+    const b = new TT.Mesh(pawnGeo(rule), m); b.castShadow = true; b.receiveShadow = true; g.add(b);
     g.userData = { seat, rule, r: (rule === 'pachisi' ? .42 : .4) * UP[rule], h: (rule === 'pachisi' ? .74 : .87) * UP[rule] };
     return g;
   }
@@ -151,6 +186,109 @@
     return g;
   }
 
+  /* ---------- the art boards' frames (2026-11-09) ---------- */
+  // the sides of the block (a box face is long and thin — 10.5 × .34 — so these canvases are long and thin too)
+  function frameMat(look) {
+    const TT = T();
+    if (look === 'street') {   // black lacquer splashed with house paint: drips running down, splatter, a few marker tags
+      const tex = X.canvasTex('ldFrStreet', 2048, 68, (c, W, H) => {
+        let sd = 31; const R = () => { sd = (sd * 16807) % 2147483647; return sd / 2147483647; };
+        c.fillStyle = '#121212'; c.fillRect(0, 0, W, H);
+        const P = ['#f2c12e', '#2f7ad8', '#e2403a', '#2fa65a', '#f08a2e', '#7cc6c4', '#efe6cf'];
+        for (let i = 0; i < 90; i++) { c.fillStyle = P[Math.floor(R() * P.length)]; c.globalAlpha = .55 + R() * .4; const x = R() * W, y = R() * H * .5, r = 1 + R() * 4; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); }
+        for (let i = 0; i < 26; i++) { c.fillStyle = P[Math.floor(R() * P.length)]; c.globalAlpha = .9; const x = R() * W, w = 3 + R() * 5, L = 8 + R() * (H - 10); c.fillRect(x - w / 2, 0, w, L); c.beginPath(); c.arc(x, L, w * .7, 0, 7); c.fill(); }
+        c.globalAlpha = .8; c.strokeStyle = '#efe6cf'; c.lineWidth = 2.5; c.lineCap = 'round';
+        for (let i = 0; i < 14; i++) { const x = R() * W, y = 20 + R() * 34; c.beginPath(); c.moveTo(x, y); for (let k = 0; k < 6; k++) c.lineTo(x + k * 7 + R() * 4, y + (k % 2 ? -8 : 6) * (R() * .6 + .4)); c.stroke(); }
+        c.globalAlpha = 1;
+      });
+      return mat('ldfr-street', () => phys({ map: tex, color: 0xffffff, roughness: .32, clearcoat: .9, clearcoatRoughness: .12 }));
+    }
+    if (look === 'mondrian') {   // white lacquer cut by black bars, here and there a block of primary colour
+      const tex = X.canvasTex('ldFrStijl', 2048, 68, (c, W, H) => {
+        c.fillStyle = '#f4f1e8'; c.fillRect(0, 0, W, H);
+        const xs = [0, 170, 300, 610, 700, 1010, 1180, 1350, 1640, 1760, 2048], fills = ['#d6382c', null, '#f3c623', null, '#1f4fa0', null, null, '#d6382c', null, '#f3c623'];
+        for (let i = 0; i < xs.length - 1; i++) if (fills[i]) { c.fillStyle = fills[i]; c.fillRect(xs[i], 0, xs[i + 1] - xs[i], H); }
+        c.fillStyle = '#121212'; xs.forEach(x => c.fillRect(x - 5, 0, 10, H)); c.fillRect(0, 0, W, 7); c.fillRect(0, H - 7, W, 7);
+      });
+      return mat('ldfr-stijl', () => phys({ map: tex, color: 0xffffff, roughness: .28, clearcoat: .8, clearcoatRoughness: .15 }));
+    }
+    if (look === 'cutout') {   // a light ash tray
+      const wood = X.wood ? X.wood('ldAsh', '#e6d3ad', '#b99766', 512, 256, 2.2) : null;
+      return mat('ldfr-ash', () => phys({ map: wood || undefined, color: wood ? 0xffffff : 0xd8c29a, roughness: .55, clearcoat: .3, clearcoatRoughness: .4 }));
+    }
+    if (look === 'peg') {   // the plank's own edges: the board's maple
+      const wood = X.wood ? X.wood('ldPegSide', '#dcb47e', '#a9773f', 512, 256, 2.6) : null;
+      return mat('ldfr-peg', () => phys({ map: wood || undefined, color: wood ? 0xffffff : 0xcfa36b, roughness: .5, clearcoat: .45, clearcoatRoughness: .3 }));
+    }
+    const wood = X.wood ? X.wood('ldFrame', '#5a3418', '#2e1a0c', 512, 256, 2.4) : null;
+    return mat('ldframe', () => phys({ map: wood || undefined, color: wood ? 0xffffff : 0x4a2c16, roughness: .45, clearcoat: .6, clearcoatRoughness: .25 }));
+  }
+
+  /* ---------- the peg board (2026-11-09): a plank of maple, the colours painted on, a hole drilled for every place ----------
+     The top is one plane whose alpha map cuts the holes; under it, inside the block (its own top left out), each hole has a
+     wall (an open cylinder seen from inside) and the plane of the holes' floor. The plank's top reaches to its edges (no rim). */
+  const HOLE = .235;   // hole radius in cells (the peg's pin is .19)
+  const pegPic = {};
+  function pegTex(Wt, W, pad) {
+    if (pegPic.map) return pegPic;
+    const TT = T(), S = X.texScale ? Math.round(2048 * X.texScale()) : 2048, B = window.LudoBoard2D, A = window.LudoBoardArt;
+    const mc = document.createElement('canvas'), ac = document.createElement('canvas'); mc.width = mc.height = ac.width = ac.height = S;
+    const map = new TT.CanvasTexture(mc); map.encoding = TT.sRGBEncoding; map.anisotropy = 8;
+    const alpha = new TT.CanvasTexture(ac);
+    pegPic.map = map; pegPic.alpha = alpha;
+    const k = S / Wt, u = UP.ludo, o0 = (Wt - W) / 2;   // world → px; the board picture's square starts at o0
+    const cell = (gx, gy) => [(o0 + (gx + pad) * u) * k, (o0 + (gy + pad) * u) * k], cpx = u * k;
+    const holes = A ? A.holes() : [];
+    // the alpha map: white plank, black holes
+    { const g = ac.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, S, S); g.fillStyle = '#000'; holes.forEach(([x, y]) => { const [px, py] = cell(x, y); g.beginPath(); g.arc(px, py, HOLE * cpx, 0, 7); g.fill(); }); alpha.needsUpdate = true; }
+    let wood = null, paint = null;
+    const draw = () => {
+      const g = mc.getContext('2d');
+      if (wood) g.drawImage(wood, 0, 0, S, S); else { g.fillStyle = '#d9b07a'; g.fillRect(0, 0, S, S); }
+      if (paint) g.drawImage(paint, o0 * k, o0 * k, W * k, W * k);
+      if (wood) { g.save(); g.globalCompositeOperation = 'multiply'; g.globalAlpha = .22; g.drawImage(wood, 0, 0, S, S); g.restore(); }   // the grain through the thin paint
+      // each hole: a turned chamfer (darker, then a light lip catching the light) and a fine cut ring round it
+      holes.forEach(([x, y]) => { const [px, py] = cell(x, y), r = HOLE * cpx;
+        const gr = g.createRadialGradient(px - r * .15, py - r * .2, r * .9, px, py, r * 1.38);
+        gr.addColorStop(0, 'rgba(70,38,12,.55)'); gr.addColorStop(.55, 'rgba(110,64,24,.25)'); gr.addColorStop(1, 'rgba(110,64,24,0)');
+        g.fillStyle = gr; g.beginPath(); g.arc(px, py, r * 1.4, 0, 7); g.fill();
+        g.strokeStyle = 'rgba(255,240,210,.35)'; g.lineWidth = Math.max(1, r * .08); g.beginPath(); g.arc(px, py + r * .06, r * 1.05, .2, Math.PI - .2); g.stroke();
+        g.strokeStyle = 'rgba(80,44,14,.4)'; g.lineWidth = Math.max(1, r * .05); g.beginPath(); g.arc(px, py, r * 1.62, 0, 7); g.stroke(); });
+      // the plank's rounded edge: a soft darkening round the border
+      const e = .16 * k, sh = (x0, y0, x1, y1) => { const gr = g.createLinearGradient(x0, y0, x1, y1); gr.addColorStop(0, 'rgba(60,30,8,.45)'); gr.addColorStop(1, 'rgba(60,30,8,0)'); return gr; };
+      g.fillStyle = sh(0, 0, 0, e); g.fillRect(0, 0, S, e); g.fillStyle = sh(0, S, 0, S - e); g.fillRect(0, S - e, S, e);
+      g.fillStyle = sh(0, 0, e, 0); g.fillRect(0, 0, e, S); g.fillStyle = sh(S, 0, S - e, 0); g.fillRect(S - e, 0, e, S);
+      // a gentle oiled sheen
+      const v = g.createLinearGradient(0, 0, S, S); v.addColorStop(0, 'rgba(255,255,255,.08)'); v.addColorStop(.5, 'rgba(255,255,255,0)'); v.addColorStop(1, 'rgba(0,0,0,.06)'); g.fillStyle = v; g.fillRect(0, 0, S, S);
+      map.needsUpdate = true; if (X.kick) X.kick(300);
+    };
+    draw();
+    const wi = new Image(); wi.onload = () => { wood = wi; draw(); }; wi.src = new URL('../../ludo/img/wood-board.webp?v=2', ME).href;
+    if (B && A) { const d = A.peg(), n = 15, svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-pad} ${-pad} ${n + 2 * pad} ${n + 2 * pad}" width="${S}" height="${S}">${d}</svg>`;
+      const pi = new Image(); pi.onload = () => { paint = pi; draw(); }; pi.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg); }
+    return pegPic;
+  }
+  function pegBoard(base, W, H, pad) {
+    const TT = T(), Wt = W + .3, u = UP.ludo, d = .2;
+    const side = frameMat('peg'), none = mat('ldnone', () => new TT.MeshBasicMaterial({ visible: false }));
+    const block = new TT.Mesh(new TT.BoxGeometry(Wt, H, Wt), [side, side, none, side, side, side]);
+    block.position.y = H / 2; block.castShadow = true; block.receiveShadow = true; base.add(block);
+    const P = pegTex(Wt, W, pad);
+    const top = new TT.Mesh(new TT.PlaneGeometry(Wt, Wt), mat('ldpegtop', () => phys({ map: P.map, alphaMap: P.alpha, alphaTest: .5, color: 0xffffff, roughness: .42, clearcoat: .45, clearcoatRoughness: .3 })));
+    top.rotation.x = -Math.PI / 2; top.position.y = H; top.receiveShadow = true; top.castShadow = true; base.add(top);
+    const floor = new TT.Mesh(new TT.PlaneGeometry(Wt - .02, Wt - .02), mat('ldpegfloor', () => phys({ color: 0x3a2210, roughness: .95 })));
+    floor.rotation.x = -Math.PI / 2; floor.position.y = H - d; floor.receiveShadow = true; base.add(floor);
+    const A = window.LudoBoardArt, holes = A ? A.holes() : [];
+    if (holes.length) {
+      const wg = new TT.CylinderGeometry(HOLE * u, HOLE * u, d, LO() ? 14 : 22, 1, true);
+      const wm = mat('ldpegwall', () => phys({ color: 0x8a5a2c, roughness: .9, side: TT.BackSide }));
+      const im = new TT.InstancedMesh(wg, wm, holes.length), M = new TT.Matrix4();
+      holes.forEach(([x, y], i) => { M.makeTranslation((x - 7.5) * u, H - d / 2, (y - 7.5) * u); im.setMatrixAt(i, M); });
+      im.instanceMatrix.needsUpdate = true; im.receiveShadow = true; base.add(im);
+    }
+    return H;
+  }
+
   /* ---------- boards ---------- */
   function board(rule = 'ludo', design = 'classic') {
     const TT = T(), g = new TT.Group(), base = new TT.Group(); g.add(base);
@@ -164,32 +302,35 @@
       // a faint shadow under the cloth so it sits on the table
       const sh = X.contact ? X.contact(W * .48, .25) : null; if (sh) { sh.position.y = .002; base.add(sh); }
       top = .02;
+    } else if (design === 'peg') {
+      const pad = .32, W = (n + 2 * pad) * s;
+      top = pegBoard(base, W, .42, pad) + .001;
     } else {
       const pad = .32, W = (n + 2 * pad) * s, H = .34;
-      const wood = X.wood ? X.wood('ldFrame', '#5a3418', '#2e1a0c', 512, 256, 2.4) : null;
-      const frame = mat('ldframe', () => phys({ map: wood || undefined, color: wood ? 0xffffff : 0x4a2c16, roughness: .45, clearcoat: .6, clearcoatRoughness: .25 }));
-      const face = mat('ldface' + design, () => phys({ map: boardTex(rule, design), color: 0xffffff, roughness: .35, clearcoat: .7, clearcoatRoughness: .2 }));
+      const frame = frameMat(design);
+      // the art boards: the street board in gloss over the paint, the modern ones softer (paper / lacquer)
+      const face = mat('ldface' + design, () => phys({ map: boardTex(rule, design), color: 0xffffff, roughness: design === 'cutout' ? .78 : design === 'street' ? .4 : .35, clearcoat: design === 'cutout' ? undefined : .7, clearcoatRoughness: .2 }));
       const block = new TT.Mesh(new TT.BoxGeometry(W + .3, H, W + .3), [frame, frame, frame, frame, frame, frame]);
       block.position.y = H / 2; block.castShadow = true; block.receiveShadow = true; base.add(block);
       const pic = new TT.Mesh(new TT.PlaneGeometry(W, W), face); pic.rotation.x = -Math.PI / 2; pic.position.y = H + .003; pic.receiveShadow = true; base.add(pic);
       top = H + .004;
     }
-    const pad = rule === 'pachisi' ? .25 : .32;
+    const pad = rule === 'pachisi' ? .25 : .32, look = rule === 'pachisi' ? 'classic' : design;
     g.userData = {
-      top, u: s, n, rule,
+      top, u: s, n, rule, look,
       xz: (gx, gy) => [(gx - n / 2) * s, (gy - n / 2) * s],
-      piece: (r, seat) => piece(r || rule, seat), die, cowrie, pad,
+      piece: (r, seat) => piece(r || rule, seat, look), die, cowrie, pad,
     };
     return g;
   }
-  X.MODELS.ludo = function (live, rule) {
-    const g = board(rule || 'ludo', 'classic');
+  X.MODELS.ludo = function (live, rule, look) {
+    const r = rule || 'ludo', g = board(r, r === 'pachisi' ? 'classic' : LOOKS.includes(look) ? look : lookNow());
     if (live) return g;
     // a few pieces on their way (the shelf / thumbnail picture)
     const B = window.LudoBoard2D, E = window.LudoEngine, U = g.userData;
     if (B && E) {
       const geo = B.geometry(U.rule), P = U.rule === 'pachisi' ? [[0, [3, 20, -1, -1]], [1, [12, -1, -1, -1]], [2, [40, -1, -1, -1]], [3, [-1, -1, -1, -1]]] : [[0, [5, 30, -1, -1]], [1, [12, -1, -1, -1]], [2, [-1, 44, -1, -1]], [3, [0, -1, -1, -1]]];
-      P.forEach(([seat, ps]) => ps.forEach((p, k) => { const [gx, gy] = p < 0 ? geo.yard(seat, k) : geo.cellXY(seat, p); const [x, z] = U.xz(gx, gy); const pc = piece(U.rule, seat); pc.position.set(x, U.top, z); g.add(pc); const sh = X.contact(pc.userData.r * 1.1, .45); sh.position.set(x, U.top + .002, z); g.add(sh); }));
+      P.forEach(([seat, ps]) => ps.forEach((p, k) => { const [gx, gy] = p < 0 ? geo.yard(seat, k) : geo.cellXY(seat, p); const [x, z] = U.xz(gx, gy); const pc = U.piece(U.rule, seat); pc.position.set(x, U.top, z); g.add(pc); const sh = X.contact(pc.userData.r * 1.1, .45); sh.position.set(x, U.top + .002, z); g.add(sh); }));
       // the die: flat in the middle of blue's yard, clear of the pieces (2026-11-09: it was tilted into the board beside a piece)
       const d = die(), [dx, dz] = U.xz(12, 12); d.position.set(dx, U.top + d.userData.size / 2 + .002, dz); d.rotation.set(0, .6, 0); d.children[0].rotation.set(0, 0, 0);
       if (U.rule === 'ludo') { g.add(d); const ds = X.contact && X.contact(d.userData.size * .75, .4); if (ds) { ds.position.set(dx, U.top + .002, dz); g.add(ds); } }
@@ -197,5 +338,5 @@
     return g;
   };
   X.MODELS.pachisi = live => X.MODELS.ludo(live, 'pachisi');
-  X.ludo = { board, piece, die, cowrie, UP, COLS };
+  X.ludo = { board, piece, die, cowrie, UP, COLS, LOOKS };
 })();

@@ -477,7 +477,7 @@ function renderDialog() {
   $('#levelRange').value = D.level; $('#levelName').innerHTML = levelLabelHTML(D.level);
   $('#optAutoRoll').checked = D.autoRoll; $('#optAutoPick').checked = D.autoPick;
   if (window.LudoHouse) { const HL = LudoHouse.T[LANG] || LudoHouse.T.en, n = LudoHouse.changed(); ['', '2'].forEach(k => { $('#hrLbl' + k).textContent = HL.ui[0]; $('#hrSum' + k).textContent = n ? HL.ui[9].replace('{n}', n) : ''; const tg = $('#hrTags' + k); if (tg) tg.innerHTML = LudoHouse.tagsHTML ? LudoHouse.tagsHTML(LANG) : ''; }); }   // (+ the changed rules as tags)   // (2026-11-09: a plain ハウスルール ⚙ button; a badge only when something is changed)
-  $('#bdRow').innerHTML = ['classic', 'wood'].map(k => `<button type="button" data-v="${k}" class="${D.design[D.rule] === k ? 'on' : ''}">${miniArt(D.rule, k)}<span>${t('bd.' + k)}</span></button>`).join('');
+  $('#bdRow').innerHTML = (D.rule === 'ludo' && window.LudoBoardArt ? ['classic', 'wood', 'mondrian', 'cutout'] : ['classic', 'wood']).map(k => `<button type="button" data-v="${k}" class="${D.design[D.rule] === k ? 'on' : ''}">${miniArt(D.rule, k)}<span>${t('bd.' + k)}</span></button>`).join('');
 }
 function openNew() { draft = JSON.parse(JSON.stringify(settings)); if (G && G.rated) draft.mode = 'rated'; if (draft.mode === 'rated' && !window.LudoRated) draft.mode = 'ai'; renderDialog(); $('#newOverlay').classList.add('show'); }
 $('#btnNew').onclick = openNew;

@@ -38,6 +38,8 @@ k('opt.autoPick','動かせる駒が1つなら自動で動かす','Move automati
 k('bd.title','盤','Board','棋盘','棋盤','판','Tablero','Plateau','Tabuleiro','Brett','Доска','Tahta','Papan','बोर्ड','اللوحة')
 k('bd.classic','クラシック','Classic','经典','經典','클래식','Clásico','Classique','Clássico','Klassisch','Классика','Klasik','Klasik','क्लासिक','كلاسيكي')
 k('bd.wood','木目','Wood','木纹','木紋','나무','Madera','Bois','Madeira','Holz','Дерево','Ahşap','Kayu','लकड़ी','خشب')
+k('bd.mondrian','コンポジション','Composition','构成','構成','컴포지션','Composición','Composition','Composição','Komposition','Композиция','Kompozisyon','Komposisi','कंपोज़िशन','تكوين')
+k('bd.cutout','切り絵','Paper cut-outs','剪纸拼贴','剪紙拼貼','종이 오리기','Papeles recortados','Papiers découpés','Recortes de papel','Scherenschnitte','Вырезки из бумаги','Kâğıt kesik','Potongan kertas','कागज़ की कटिंग','قصاصات ورق')
 k('close','閉じる','Close','关闭','關閉','닫기','Cerrar','Fermer','Fechar','Schließen','Закрыть','Kapat','Tutup','बंद करें','إغلاق')
 k('start','対局開始','Start','开始对局','開始對局','대국 시작','Empezar','Commencer','Começar','Starten','Начать','Başla','Mulai','शुरू करें','ابدأ')
 k('rule.ludo','ルドー','Ludo','鲁多','魯多','루도','Ludo','Ludo','Ludo','Ludo','Лудо','Ludo','Ludo','लूडो','لودو')
