@@ -363,6 +363,7 @@ function renderFx() {
   if (labelList) drawLabels(labelList);
   else if (!(rvbHov && BOX && BOX.shown) && !drawReviewFx(svg) && hintList && !st.over) drawHints(hintList, svg);
   rvbFx(svg, pos);
+  if (window.AmazonsCoach && !labelList && !lessonMarks.length) AmazonsCoach.fx(svg, pos);
   renderPrompt();
 }
 // the two steps of a move are told under the board (where the amazon goes, then where the arrow flies)
@@ -475,6 +476,7 @@ function renderInfo() {
   renderBrand();
   if (window.olAfterInfo) olAfterInfo();
   hbInfo(pos, st);
+  if (window.AmazonsCoach) AmazonsCoach.render();
 }
 // PC header bar: whose turn, each side's territory and freedom, arrows shot, evaluation (when shown), move number
 const escHb = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -1587,6 +1589,7 @@ flip = flipFor(); drawLines();
 // PC header bar: title left, menu (new > undo > resign > hint > rules) + icons right, game info in between
 // 勝敗記録 (shared/record.js) and the coach's switch (coach.js): before the header bar takes the menu / icons
 if (window.GameRecord) GameRecord.init({ game: 'amazons', lang: () => LANG, menu: '.controls', sides: () => [pname(P1), pname(P2)] });
+if (window.AmazonsCoach) AmazonsCoach.init();
 HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules'], lang: () => LANG }) : null;
 
 if (HB) HB.onChange(() => { renderInfo(); renderFx(); });
@@ -1598,6 +1601,7 @@ $('#langSel').onchange = e => {
   if ($('#newOverlay').classList.contains('show')) { segSync(); designPickers(); }
   if ($('#rulesOverlay').classList.contains('show')) renderRules();
   if (HB) HB.relabel();
+  if (window.AmazonsCoach) AmazonsCoach.relabel();
   if (window.GameRecord) GameRecord.relabel();
 };
 if (loadFromHash()) { /* shared game opened */ }
