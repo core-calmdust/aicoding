@@ -422,6 +422,9 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
 .ts-compact #tsNo{display:inline}
 html.atlas-skin .ts-compact #tsNo{color:#9a7a3a}
 .ts-compact > .lh .dots{display:none!important}
+.lesson-card.ts-compact > .lh{display:flex;flex-wrap:nowrap;align-items:center;gap:10px}
+.lesson-card.ts-compact > .lh .lt{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lesson-card.ts-compact > .lh #lsQuit{margin-inline-start:auto!important}
 /* the quit button in the head row: a small pill, icon + 「やめる」 */
 .lesson-card.ts-compact > .lh #lsQuit{flex:none;display:inline-flex!important;align-items:center;gap:4px;height:28px!important;width:auto!important;padding:0 10px 0 8px!important;font-size:0!important;border-radius:99px!important;margin:0!important}
 .lesson-card.ts-compact > .lh #lsQuit::after{content:attr(data-cap);font-size:11.5px;font-weight:800;line-height:1}
