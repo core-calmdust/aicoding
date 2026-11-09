@@ -461,7 +461,7 @@ function renderDialog() {
   $('#fLevel').classList.toggle('hidden', D.mode === 'pvp' || rated);
   $('#fFirst').classList.toggle('hidden', D.mode === 'watch' || rated);
   $('#fOpts').classList.toggle('hidden', D.rule !== 'ludo' || rated);
-  $('#levelRange').value = D.level; $('#levelName').textContent = 'Lv.' + D.level;
+  $('#levelRange').value = D.level; $('#levelName').innerHTML = levelLabelHTML(D.level);
   $('#optAutoRoll').checked = D.autoRoll; $('#optAutoPick').checked = D.autoPick;
   if (window.LudoHouse) { const HL = LudoHouse.T[LANG] || LudoHouse.T.en, n = LudoHouse.changed(); $('#hrLbl').textContent = HL.ui[0]; $('#hrSum').textContent = n ? HL.ui[9].replace('{n}', n) : ''; }   // (2026-11-09: a plain ハウスルール ⚙ button; a badge only when something is changed)
   $('#bdRow').innerHTML = ['classic', 'wood'].map(k => `<button type="button" data-v="${k}" class="${D.design[D.rule] === k ? 'on' : ''}">${miniArt(D.rule, k)}<span>${t('bd.' + k)}</span></button>`).join('');
@@ -474,7 +474,25 @@ $('#ruleCards').ngtRules = r => { if (window.LudoLearn) LudoLearn.openRules(r); 
 $('#ruleCards').onclick = e => { const b = e.target.closest('[data-v]'); if (!b) return; draft.rule = b.dataset.v; if (draft.rule === 'pachisi' && draft.players === 3) draft.players = 4; renderDialog(); };
 const segClick = (id, key, num) => { $(id).onclick = e => { const b = e.target.closest('button[data-v]'); if (!b || b.disabled) return; draft[key] = num ? +b.dataset.v : b.dataset.v; renderDialog(); }; };
 segClick('#segMode', 'mode'); segClick('#segPlayers', 'players', true); segClick('#segFirst', 'first');
-$('#levelRange').oninput = e => { draft.level = +e.target.value; $('#levelName').textContent = 'Lv.' + draft.level; };
+// the AI level's comment under its name (as the other games, 2026-11-09): four bands — the same words as the atlas card
+// (atlas/games/ludo.js LVD)
+const LVD = {
+  ja: ['入門：目に任せて動かす', '初級：取りと安全マスを考える', '中級：危険と得点を比べる', '上級：次の一投まで読む'],
+  en: ['Beginner: moves at random', 'Novice: looks for captures and safe squares', 'Intermediate: weighs risk against progress', 'Expert: looks ahead to the next throw'],
+  zh: ['入门：随便走', '初级：会吃子、找安全格', '中级：权衡风险与前进', '高级：会算下一掷'], 'zh-TW': ['入門：隨便走', '初級：會吃子、找安全格', '中級：權衡風險與前進', '高級：會算下一擲'],
+  ko: ['입문: 아무렇게나 움직인다', '초급: 잡기와 안전 칸을 노린다', '중급: 위험과 전진을 저울질한다', '상급: 다음 던지기까지 읽는다'],
+  es: ['Inicial: mueve al azar', 'Principiante: busca capturas y casillas seguras', 'Intermedio: sopesa riesgo y avance', 'Experto: piensa en la próxima tirada'],
+  fr: ['Débutant : joue au hasard', 'Novice : cherche prises et cases sûres', 'Intermédiaire : pèse risque et progrès', 'Expert : pense au lancer suivant'],
+  pt: ['Iniciante: move ao acaso', 'Básico: procura capturas e casas seguras', 'Intermediário: pesa risco e avanço', 'Especialista: pensa no próximo lance'],
+  de: ['Einsteiger: zieht zufällig', 'Anfänger: sucht Schlagen und sichere Felder', 'Mittel: wägt Risiko gegen Fortschritt ab', 'Experte: denkt an den nächsten Wurf'],
+  ru: ['Начальный: ходит наугад', 'Новичок: ищет взятия и безопасные клетки', 'Средний: взвешивает риск и продвижение', 'Эксперт: думает о следующем броске'],
+  tr: ['Başlangıç: rastgele oynar', 'Acemi: alma ve güvenli kare arar', 'Orta: riski ilerlemeyle tartar', 'Uzman: sonraki atışı düşünür'],
+  id: ['Pemula: bergerak acak', 'Dasar: mencari tangkapan dan petak aman', 'Menengah: menimbang risiko dan kemajuan', 'Ahli: memikirkan lemparan berikutnya'],
+  hi: ['शुरुआती: बेतरतीब चलता है', 'नौसिखिया: पकड़ और सुरक्षित खाने देखता है', 'मध्यम: जोखिम और बढ़त तौलता है', 'विशेषज्ञ: अगली चाल तक सोचता है'],
+  ar: ['مبتدئ: يتحرك عشوائيًا', 'مبتدئ: يبحث عن الأسر والمربعات الآمنة', 'متوسط: يوازن الخطر والتقدم', 'خبير: يفكر في الرمية التالية'],
+};
+function levelLabelHTML(n) { const b = n <= 3 ? 0 : n <= 8 ? 1 : n <= 14 ? 2 : 3; return `Lv.${n}<small>${(LVD[LANG] || LVD.en)[b]}</small>`; }
+$('#levelRange').oninput = e => { draft.level = +e.target.value; $('#levelName').innerHTML = levelLabelHTML(draft.level); };
 ['AutoRoll:autoRoll', 'AutoPick:autoPick'].forEach(x => { const [id, k] = x.split(':'); $('#opt' + id).onchange = e => { draft[k] = e.target.checked; }; });
 // design: applied at once (common rule) — even if the dialog is then closed
 $('#bdRow').onclick = e => { const b = e.target.closest('[data-v]'); if (!b) return; draft.design[draft.rule] = b.dataset.v; settings.design[draft.rule] = b.dataset.v; save(); if (G && G.state.rule === draft.rule) { drawBoard(); step(); } renderDialog(); };

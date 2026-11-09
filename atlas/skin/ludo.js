@@ -49,6 +49,9 @@ html.atlas-ludo3d #frame{background:none!important;box-shadow:none!important}`;
     },
   });
   if (!skin) return;
+  // 3D board or the page's own 2D board (the デザイン tab: a 3D tile first in the 盤 row, as checkers etc. — 2026-11-09)
+  if (skin.view) skin.view({ key: 'atlas-ludo-view', row: document.getElementById('bdRow'), img: '../images/atlas/ludo.webp', cls: ['atlas-ludo3d'],
+    on() { setTimeout(() => { try { if (typeof drawBoard === 'function' && G) drawBoard(); } catch (e) {} dispatchEvent(new Event('resize')); }, 0); } });
 
   /* ---------- the board ---------- */
   let root = null, U = null, rule = '';
