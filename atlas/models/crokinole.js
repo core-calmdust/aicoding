@@ -99,7 +99,15 @@
       // and grain direction, glue seams between them
       const W3 = [WOOD.maple, WOOD.cherry, WOOD.walnut], O = { cx: 0, by: -40, asp: .08, sp: .45, wp: 1.4, ring: .5, fib: .4, drift: .25 }, SEAM = [40, 24, 14];
       const woodOf = (h, up) => up && h < .34 ? W3[2] : W3[hash(h * 37, 5, 1) < .52 ? 0 : 1];   // walnut only on upward pieces: two never share an edge
-      const grain = (x, y, dir, h, w) => { const c = Math.cos(dir), sn = Math.sin(dir), t = woodT(N, x * c + y * sn, -x * sn + y * c, Object.assign({}, O, { off: h * 40 })); return mix(w[0], w[1], .1 + t * .5 + (hash(h * 91, 3, 7) - .5) * .12); };
+      // (2026-11-10) every piece cut from a different spot of the plank: its own shift, a slight turn, ring spacing and figure
+      // (kept close to the base look — only enough that no two pieces read as copies)
+      const grain = (x, y, dir, h, w) => {
+        const q = k => hash(h * 131 + k * 17, k, 11);
+        dir += (q(1) - .5) * .38;
+        const c = Math.cos(dir), sn = Math.sin(dir), a = x * c + y * sn + (q(2) - .5) * 60, b = -x * sn + y * c + (q(3) - .5) * 60;
+        const t = woodT(N, a, b, Object.assign({}, O, { off: h * 40, cx: (q(4) - .5) * 30, sp: O.sp * (.78 + q(5) * .5), asp: O.asp * (.6 + q(6) * .9), ring: O.ring * (.8 + q(7) * .4), wp: O.wp * (.75 + q(8) * .6) }));
+        return mix(w[0], w[1], .1 + t * .5 + (hash(h * 91, 3, 7) - .5) * .12);
+      };
       const B0 = R5 + .7, ROWS = 2, BW = (RB - B0) / ROWS, NB = Math.round(2 * Math.PI * (B0 + RB) / 2 / (BW / .866));
       return (x, y) => {
         const r = Math.hypot(x, y);
@@ -117,7 +125,8 @@
         }
         const n = 16, th = Math.atan2(y, x), k = Math.floor((th + Math.PI) / (2 * Math.PI / n)), thc = -Math.PI + (k + .5) * 2 * Math.PI / n;
         const tan = r * Math.sin(th - thc), w = k % 2 ? WOOD.cherry : WOOD.maple;
-        const col = mix(w[0], w[1], .12 + woodT(N, tan, r, Object.assign({}, O, { off: k * 9.7, by: -30 })) * .5);
+        const q = j => hash(k * 29 + j * 7, j, 13);   // each wedge its own cut (shift, spacing, ring centre)
+        const col = mix(w[0], w[1], .12 + woodT(N, tan + (q(1) - .5) * 40, r + (q(2) - .5) * 40, Object.assign({}, O, { off: k * 9.7, by: -30 + (q(3) - .5) * 30, cx: (q(4) - .5) * 20, sp: O.sp * (.8 + q(5) * .45), wp: O.wp * (.8 + q(6) * .5) })) * .5);
         const seam = Math.min(Math.abs(r * Math.sin(th - (-Math.PI + k * 2 * Math.PI / n))), Math.abs(r * Math.sin(th - (-Math.PI + (k + 1) * 2 * Math.PI / n))));
         return seam < .05 ? mix(col, SEAM, .5) : col;
       };
