@@ -98,6 +98,8 @@
 
 - サイコロ（3D、2026-11-09 v2）：角と辺を少し丸めた立方体（`atlas/models/ludo.js` の `roundDieGeo`：半径0.07、面ごとの材質はそのまま）。目は彫った穴：面の材質に穴の alphaMap（alphaTest）を付け、穴の下に球の一部を内側から見たお椀（黒、1の目は赤）を置く。光の向きに合わせて穴の中に陰ができる（どの向きに転がっても正しい）。
 
+- 3D卓のテンポ（2026-11-09）：`atlas/games/ludo.js` のアニメーションと間（`anim`・`later`）はすべて ×0.7（`PACE`）。手番フォーカスのカメラは `T3.fit` の `ek: .12`（既定 .06 の倍の速さで寄る）。
+
 ## 4e. フル機能版（`ludo/?skin=atlas`・2026-11-09）
 - 大百科のカードの「フル機能版」（`atlas/app.js` の FULL_SKIN に ludo）。2D版の全機能（AI・レート戦・レッスン・コーチ・振り返り・ハウスルール）をそのまま、盤だけ3D。
 - 読み込み：`ludo/index.html` の末尾（three.js → table3d → tables3d → skin/common.js → models/ludo.js → `atlas/skin/ludo.js`）。失敗したら2D版のまま。
