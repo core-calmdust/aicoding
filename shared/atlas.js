@@ -84,6 +84,8 @@
       name: N('キャロム', 'Carrom', '克朗棋', '캐롬', 'Carrom', 'Carrom', 'Carrom', 'Carrom', 'कैरम', 'كيرم', 'Карром', '克朗棋', 'Karambol', 'Carrom') },
     { id: 'crokinole', cat: 'action', store: ['aicoding-crokinole'], href: 'atlas/#games/crokinole', only3d: true, color: '#b8742a', released: '2026-11-09', tags: ['classic', 'ai', 'mobile'], total: {},
       name: N('クロキノール', 'Crokinole', '克罗基诺', '크로키놀', 'Crokinole', 'Crokinole', 'Crokinole', 'Crokinole', 'क्रोकिनोल', 'كروكينول', 'Крокинол', '克羅基諾', 'Crokinole', 'Crokinole') },
+    { id: 'hockey', cat: 'action', store: ['aicoding-hockey'], href: 'atlas/#games/hockey', only3d: true, color: '#2f6fd0', beta: true, released: '2026-11-09', tags: ['ai', 'mobile'], total: {},
+      name: N('テーブルホッケー', 'Table Hockey', '桌上冰球', '테이블 하키', 'Hockey de mesa', 'Hockey de table', 'Hóquei de mesa', 'Tischhockey', 'टेबल हॉकी', 'هوكي الطاولة', 'Настольный хоккей', '桌上冰球', 'Hoki meja', 'Masa hokeyi') },
     { id: 'morris', cat: 'line', store: ['aicoding-morris', 'morris-online-name'], href: 'morris/', color: '#7552e0', released: '2026-10-18', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'variants', 'mobile'], total: { pz: 1781, ls: 41 },
       name: N('ナイン・メンズ・モリス', "Nine Men's Morris", '九子棋', '나인 멘스 모리스', 'Molino', 'Jeu du moulin', 'Trilha', 'Mühle', 'नाइन मेन्स मोरिस', 'الطاحونة', 'Мельница', '九子棋', 'Nine Men\'s Morris', 'Dokuz Taş') },
     { id: 'hex', cat: 'line', store: ['aicoding-hex', 'hex-online-name'], href: 'hex/', color: '#4f86e8', released: '2026-10-25', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'variants', 'mobile'], total: { pz: 403, ls: 13 },

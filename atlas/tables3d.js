@@ -185,6 +185,8 @@
     konane: { list: ['papamu', 'quilt'], get: () => ls.get('atlas-konane-look') === 'quilt' ? 'quilt' : 'papamu', set: k => ls.set('atlas-konane-look', k) },
     // carrom (3D only): 'atlas-carrom-look' ('neon' the default | 'modern' | 'classic' | 'rajasthan' | 'bauhaus' | 'tycoon')
     carrom: { list: ['neon', 'modern', 'classic', 'rajasthan', 'bauhaus', 'tycoon'], get: () => { const v = ls.get('atlas-carrom-look'); return ['modern', 'classic', 'rajasthan', 'bauhaus', 'tycoon'].includes(v) ? v : 'neon'; }, set: k => ls.set('atlas-carrom-look', k) },
+    // table hockey (3D only): 'atlas-hockey-look' ('classic' the default | 'neon')
+    hockey: { list: ['classic', 'neon'], get: () => ls.get('atlas-hockey-look') === 'neon' ? 'neon' : 'classic', set: k => ls.set('atlas-hockey-look', k) },
     // crokinole (3D only): 'atlas-crokinole-look' ('marq' the default | 'classic' | 'modern' | 'mcm' | 'winter' | 'neon')
     crokinole: { list: ['marq', 'classic', 'modern', 'mcm', 'winter', 'neon'], get: () => { const v = ls.get('atlas-crokinole-look'); return ['classic', 'modern', 'mcm', 'winter', 'neon'].includes(v) ? v : 'marq'; }, set: k => ls.set('atlas-crokinole-look', k) },
     // ludo (atlas/models/ludo.js, atlas/skin/ludo.js): 'atlas-ludo-look' ('classic' the default | 'marble' | 'street' | 'peg' | 'mondrian' | 'cutout'); pachisi keeps its cloth
