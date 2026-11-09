@@ -83,7 +83,7 @@
     const tx = (k, o) => { let s = (S[k] != null ? S[k] : k); if (o) for (const q in o) s = s.split('{' + q + '}').join(o[q]); return s; };
     const L = { you: t('p.you'), ai: t('p.ai'), think: t('p.think'), win: t('res.win'), lose: t('res.lose') };
     let st = null, thr = null, moves = [], phase = 'wait', over = false, stopped = false, busy = false, selK = -1, hintMv = null, ply = 0, tok = 0, msg = '';
-    const hist = [], timers = [];
+    const hist = [], timers = []; let tapHint = false;
     // (2026-11-09) the table keeps the 2D game's ふつう tempo: the piece steps and the cup's shake / turn-over take the 2D ふつう
     // durations (ludo/app.js × SPD 1.6 / √1.6, written as N / PACE below); everything else × PACE
     const PACE = .85, D2 = { step: 160, stepLong: 104, shake: 531, flip: 329 };
@@ -380,9 +380,22 @@
 
     /* ---------- HUD ---------- */
     const css = document.createElement('style');
-    css.textContent = '.ldhr{position:absolute;z-index:4;left:12px;top:calc(var(--ldhr-top,72px));max-width:min(560px,calc(100% - 24px));display:flex;flex-wrap:wrap;gap:6px;pointer-events:none;--lhr-tag-bg:rgba(255,253,246,.94);--lhr-tag-bd:#efe3c8;--lhr-tag-fg:#2b3044}.ldhr .lhr-tag{box-shadow:0 2px 0 #efe3c8}' + '.ldzoom{position:absolute;z-index:4;right:12px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.92);color:#3a3f55;box-shadow:0 3px 10px rgba(0,0,0,.22);display:grid;place-items:center;cursor:pointer;padding:0}.ldzoom svg{width:22px;height:22px}.ldzoom[hidden]{display:none}.ldzoom.off{color:#e0662a}' + '.hud .ldb{padding:8px 16px;font-size:15px;white-space:nowrap}.hud .lds{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:99px;font-weight:800;font-size:13px;opacity:.6;white-space:nowrap}.hud .lds.on{opacity:1;background:rgba(255,255,255,.9);box-shadow:0 2px 8px rgba(0,0,0,.15)}.hud .lds i{width:14px;height:14px;border-radius:50%;display:inline-block;flex:none;box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.25)}.hud .ldm{font-weight:800;font-size:13px;max-width:46vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ldtoast{position:fixed;left:50%;top:calc(76px + env(safe-area-inset-top));transform:translateX(-50%);z-index:90;max-width:min(92vw,520px);padding:9px 18px;border-radius:99px;background:rgba(255,253,246,.97);color:#2b3044;border:1.5px solid #efe3c8;font-weight:900;font-size:14px;box-shadow:0 6px 18px rgba(60,40,10,.18);pointer-events:none;white-space:nowrap}@media (max-width:560px){.hud .ldb{padding:7px 11px;font-size:13px}.hud .lds{padding:3px 6px;font-size:12px}.hud .lds .nm{display:none}}';
+    css.textContent = '.ldhr{position:absolute;z-index:4;left:12px;top:calc(var(--ldhr-top,72px));max-width:min(560px,calc(100% - 24px));display:flex;flex-wrap:wrap;gap:6px;pointer-events:none;--lhr-tag-bg:rgba(255,253,246,.94);--lhr-tag-bd:#efe3c8;--lhr-tag-fg:#2b3044}.ldhr .lhr-tag{box-shadow:0 2px 0 #efe3c8}' + '.ldzoom{position:absolute;z-index:4;right:12px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.92);color:#3a3f55;box-shadow:0 3px 10px rgba(0,0,0,.22);display:grid;place-items:center;cursor:pointer;padding:0}.ldzoom svg{width:22px;height:22px}.ldzoom[hidden]{display:none}.ldzoom.off{color:#e0662a}' + '.hud .ldb{padding:8px 16px;font-size:15px;white-space:nowrap}.hud .lds{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:99px;font-weight:800;font-size:13px;opacity:.6;white-space:nowrap}.hud .lds.on{opacity:1;background:rgba(255,255,255,.9);box-shadow:0 2px 8px rgba(0,0,0,.15)}.hud .lds i{width:14px;height:14px;border-radius:50%;display:inline-block;flex:none;box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.25)}.hud .ldm{font-weight:800;font-size:13px;max-width:46vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ldhint{position:fixed;z-index:60;pointer-events:none;transform:translate(-50%,-100%)}.ldhint span{display:block;padding:8px 16px;border-radius:99px;background:#fffdf6;color:#3a2a10;border:2px solid #f0b43c;font-weight:900;font-size:15px;white-space:nowrap;box-shadow:0 6px 16px rgba(60,40,10,.25);animation:ldhIn .35s cubic-bezier(.3,1.4,.5,1) both,ldhFloat 1.8s ease-in-out .35s infinite;position:relative}.ldhint span::after{content:"";position:absolute;left:50%;bottom:-8px;width:12px;height:12px;background:#fffdf6;border-right:2px solid #f0b43c;border-bottom:2px solid #f0b43c;transform:translateX(-50%) rotate(45deg)}@keyframes ldhIn{from{transform:translateY(10px) scale(.6);opacity:0}}@keyframes ldhFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}.ldtoast{position:fixed;left:50%;top:calc(76px + env(safe-area-inset-top));transform:translateX(-50%);z-index:90;max-width:min(92vw,520px);padding:9px 18px;border-radius:99px;background:rgba(255,253,246,.97);color:#2b3044;border:1.5px solid #efe3c8;font-weight:900;font-size:14px;box-shadow:0 6px 18px rgba(60,40,10,.18);pointer-events:none;white-space:nowrap}@media (max-width:560px){.hud .ldb{padding:7px 11px;font-size:13px}.hud .lds{padding:3px 6px;font-size:12px}.hud .lds .nm{display:none}}';
     document.head.appendChild(css);
     let toastEl = null, toastT = 0;
+    // the first throw's bubble: 「サイコロをクリック！」 (タップ on touch screens) floating over the cup, following it on screen (the camera
+    // glides) until the player throws
+    let hintEl = null, hintRaf = 0;
+    function showHint() {
+      hideHint(); if (stopped || !cupG) return;
+      hintEl = document.createElement('div'); hintEl.className = 'ldhint'; hintEl.innerHTML = '<span></span>';
+      hintEl.firstChild.textContent = tx(matchMedia('(pointer: coarse)').matches ? 'st.tapT' : 'st.tapC'); document.body.appendChild(hintEl);
+      const f = () => { if (!hintEl) return; if (phase !== 'roll' || !cupG) { hideHint(); return; }
+        try { const p = T3.project(cupG.position.x, cupG.position.z, Y + .95); hintEl.style.left = p.x + 'px'; hintEl.style.top = p.y + 'px'; } catch (e) {}
+        hintRaf = requestAnimationFrame(f); };
+      f();
+    }
+    function hideHint() { cancelAnimationFrame(hintRaf); if (hintEl) hintEl.remove(); hintEl = null; }
     function toast(m) { if (toastEl) toastEl.remove(); clearTimeout(toastT); if (!m || stopped) return; toastEl = document.createElement('div'); toastEl.className = 'ldtoast'; toastEl.textContent = m; document.body.appendChild(toastEl); const el = toastEl; toastT = setTimeout(() => { el.remove(); if (toastEl === el) toastEl = null; }, 1500); }
     const esc = x => String(x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     const dot = seat => B2.COL[rule][seat][0];
@@ -410,6 +423,7 @@
       if (human(seat)) {
         if (!pvp) hist.push(E.clone(st));
         phase = 'roll'; say(pvp ? tx('st.turn', { p: colName(seat) }) : tx('st.yourRoll', { b: tx(rule === 'pachisi' ? 'st.throwv' : 'st.rollv') }));
+        if (!tapHint && rule === 'ludo') { tapHint = true; showHint(); }   // (2026-11-09: the first throw — a bubble floats over the cup until the throw)
       } else { phase = 'ai'; say(tx('st.think', { p: colName(seat) })); later(doRoll, 450); }
     }
     async function doRoll() {
@@ -539,7 +553,7 @@
       stop() {
         stopped = true; tok++; timers.forEach(clearTimeout); clearInterval(pulse);
         ctx.el.removeEventListener('click', onClick); document.removeEventListener('click', onHud, true); document.removeEventListener('keydown', onKey);
-        css.remove(); if (toastEl) toastEl.remove(); if (zoomBtn) zoomBtn.remove(); if (hrEl) hrEl.remove(); removeEventListener('resize', onResize);
+        css.remove(); hideHint(); if (toastEl) toastEl.remove(); if (zoomBtn) zoomBtn.remove(); if (hrEl) hrEl.remove(); removeEventListener('resize', onResize);
         Object.values(MAT).forEach(m => m.dispose()); if (cupG) cupG.userData.mats.forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose());
       },
       _debug: { st: () => st, phase: () => phase, moves: () => moves, thr: () => thr, roll: () => doRoll(), commit: m => commit(m), at: (gx, gy) => { const [x, z] = wx(gx, gy); return T3.project(x, z, Y); }, piece: key => { const g = pcs[key]; return g && T3.project(g.position.x, g.position.z, Y); }, geo },
