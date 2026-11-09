@@ -417,6 +417,18 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
 .lesson-prompt{font-size:17px;line-height:1.75}
 .lesson-fb{font-size:16px;line-height:1.85;color:#d9c9b2}
 .ts-compact .cb-bar .cb-br{display:none!important}
+#tsHead{display:flex;align-items:baseline;gap:10px}#tsHead h3{flex:1 1 auto;min-width:0}
+#tsNo{display:none;flex:none;font-size:12px;font-weight:700;color:var(--brass);white-space:nowrap}
+.ts-compact #tsNo{display:inline}
+html.atlas-skin .ts-compact #tsNo{color:#9a7a3a}
+.ts-compact > .lh .dots{display:none!important}
+/* the quit button in the head row: a small pill, icon + 「やめる」 */
+.lesson-card.ts-compact > .lh #lsQuit{flex:none;display:inline-flex!important;align-items:center;gap:4px;height:28px!important;width:auto!important;padding:0 10px 0 8px!important;font-size:0!important;border-radius:99px!important;margin:0!important}
+.lesson-card.ts-compact > .lh #lsQuit::after{content:attr(data-cap);font-size:11.5px;font-weight:800;line-height:1}
+.lesson-card.ts-compact > .lh #lsQuit::before{content:'';flex:none;width:15px;height:15px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27black%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M14%204h4a2%202%200%200%201%202%202v12a2%202%200%200%201-2%202h-4%27/%3E%3Cpath%20d%3D%27M9%208l-4%204%204%204%27/%3E%3Cpath%20d%3D%27M5%2012h10%27/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27black%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M14%204h4a2%202%200%200%201%202%202v12a2%202%200%200%201-2%202h-4%27/%3E%3Cpath%20d%3D%27M9%208l-4%204%204%204%27/%3E%3Cpath%20d%3D%27M5%2012h10%27/%3E%3C/svg%3E") center/contain no-repeat}
+.lesson-card.ts-compact > .lh #lsQuit{background:rgba(0,0,0,.2);border:1px solid var(--line);color:var(--muted);cursor:pointer}
+html.atlas-skin .lesson-card.ts-compact > .lh #lsQuit{background:#fff!important;border:2px solid #ead9b6!important;color:#4a5068!important;box-shadow:0 2px 0 #ead9b6!important}
+body.ts-noopp .hand.top{visibility:hidden;height:0!important;min-height:0!important;padding:0!important;margin:0!important;border:0!important;overflow:hidden}
 .ts-compact .cb-bar .cb-q{font-size:0!important;width:42px!important;height:42px!important;padding:0!important;margin-inline-start:0!important;justify-content:center;gap:0!important;border-radius:14px!important}
 .ts-compact .cb-bar .cb-q::before{width:18px;height:18px}
 .ts-compact .cb-bar{flex-wrap:nowrap!important}
@@ -424,7 +436,12 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
 .ts-compact .cb-bar :is(.cb-ic,.cb-q)[data-cap]{flex-direction:column!important;justify-content:center!important;gap:3px!important;height:50px!important;width:auto!important;min-width:44px!important;padding:0 5px!important}
 .ts-compact .cb-bar :is(.cb-ic,.cb-q)[data-cap]::after{content:attr(data-cap);font-size:10px;line-height:1;font-weight:700;letter-spacing:0;white-space:nowrap}
 .ts-compact .cb-bar .cb-t{height:50px!important}
-html.atlas-skin .lesson-card.ts-compact .cb-bar .cb-q{border-radius:14px!important;background:#fff!important;box-shadow:0 3px 0 #ead9b6!important}
+#lessonCard.ts-compact .cb-bar :is(.cb-ic,.cb-q)[data-cap]{height:52px!important;min-width:50px!important;width:auto!important;padding:0 6px!important;overflow:visible!important}
+#lessonCard.ts-compact .cb-bar :is(.cb-ic,.cb-q)[data-cap]::after{font-size:10px!important}
+#lessonCard.ts-compact .cb-bar .cb-t{height:52px!important;flex:1 1 auto!important}
+#lessonCard.ts-compact #lsAuto{color:inherit!important;border-color:var(--line)!important;background:rgba(0,0,0,.2)!important;font-weight:700}
+#lessonCard.ts-compact #lsAuto svg{width:18px;height:18px}
+html.atlas-skin #lessonCard.ts-compact #lsAuto{background:#fff!important;border:2px solid #ead9b6!important;color:#4a5068!important;box-shadow:0 3px 0 #ead9b6!important}
 /* phones: a compact card head (2026-11-10) — the step on one line (cut with …) beside a small progress pill, a smaller
    title, the prompt tighter and the tsume rule note as a small line of its own */
 @media (max-width:600px){
@@ -4479,6 +4496,17 @@ function tsBar() {
   const card = $('#lessonCard'), bar = card && card.querySelector('.cb-bar'), h = $('#lsHint'); if (!bar || !h) return;
   const on = !!(lesson && lesson.endless && lesson.cur && lesson.cur.kind === 'tsume'), tools = bar.querySelector('.cb-tools'), main = bar.querySelector('.cb-main');
   card.classList.toggle('ts-compact', on);
+  // the title row: 「創作 3手詰 …… 18/120問目」; the head row's right end: the quit button (2026-11-10)
+  let th = $('#tsHead'); const ti = $('#lsTitle');
+  if (!th && ti) { th = document.createElement('div'); th.id = 'tsHead'; ti.before(th); th.appendChild(ti); const n = document.createElement('span'); n.id = 'tsNo'; th.appendChild(n); }
+  const q = $('#lsQuit'), lh = card.querySelector(':scope > .lh');
+  if (on) {
+    const NO = { ja: '{k}/{n}問目', zh: '第{k}/{n}题', 'zh-TW': '第{k}/{n}題', ko: '{k}/{n}번째' }, n = lesson.g ? lesson.g.problems.length : 0;
+    $('#tsNo').textContent = n ? (NO[LANG] || '{k}/{n}').replace('{k}', lesson.k + 1).replace('{n}', n) : '';
+    if (q && lh && q.parentElement !== lh) lh.appendChild(q);
+  } else if (q && q.parentElement !== bar) { bar.appendChild(q); }
+  // composed tsume: the defender holds every remaining piece by convention — its stand is not shown
+  document.body.classList.toggle('ts-noopp', on && !!(lesson.cur && lesson.cur.conv));
   if (on) {
     const k = lesson.retry ? 'retry' : 'hint';
     if (h.parentElement !== tools) tools.appendChild(h);
