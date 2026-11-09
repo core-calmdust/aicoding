@@ -55,6 +55,7 @@
       openNewDialog();
       draft.mode = mode === 'pvp' ? 'pvp' : 'ai';
       if (lv >= 1 && lv <= 10) draft.level = lv;
+      if (draft.mode === 'ai' && (side === 1 || side === 2)) window.__bgFirst = side === 2 ? 1 - (draft.side | 0) : (draft.side | 0);   // 手番 from the card: who wins the opening roll (app.js newMatch deals the seed)
       segSync(); document.getElementById('btnStart').click();
       return true;
     },

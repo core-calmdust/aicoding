@@ -634,7 +634,12 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
         if (pop.hidden) lbtn.click(); } });
     // coins: same numbers as the portal (shared/atlas.js)
     const coins = () => { try { const A = window.Atlas; if (!A) return; const W = A.load(); bar.querySelector('.coinN').textContent = A.coins(W, A.achievements(A.allProgress(), W)).balance.toLocaleString(); } catch (e) {} };
+    // re-read whenever the shared account's sync lands (it can pull the portal's wallet and other games' progress after the page
+    // opened), another tab changes the store, or the page comes back — the bar then always shows the portal's number (2026-11-09)
     setTimeout(coins, 300); document.addEventListener('visibilitychange', () => { if (!document.hidden) coins(); });
+    addEventListener('storage', e => { if (!e.key || e.key === 'atlas-v1' || e.key === 'atlas-sync-meta') coins(); });
+    { let tries = 0; const hook = () => { if (window.AtlasAccount && AtlasAccount.on) { AtlasAccount.on(st => { if (!st.syncing) coins(); }); return; } if (++tries < 40) setTimeout(hook, 250); }; hook(); }
+    [2500, 8000].forEach(ms => setTimeout(coins, ms));
     document.querySelectorAll('a.snd.home, .brand a.series').forEach(a => { a.href = BASE; });
     placeField();
     // AI games: the boss of the level and a watching creature talk now and then (atlas/npc/npc.js, common rule 2026-11-09)
