@@ -308,7 +308,7 @@
         showGuides(); pulse();
         return;
       }
-      phase = 'ai'; say(tx('think', { p: nameOf(p) }));
+      phase = 'ai'; say(tx(matchMedia('(max-width:560px)').matches ? 'turn' : 'think', { p: nameOf(p) }));   // phones: just "AI's turn" (the longer line wraps)
       const x0 = E.nearestFree(st, p, 0); placeMesh(hand1, x0, by(p, x0));
       const my = tok;
       const shot = await think(E.clone(st), level);
