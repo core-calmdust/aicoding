@@ -1527,6 +1527,16 @@
       { const sh = new TT.Shape(); for (let i = 0; i <= 14; i++) { const t = Math.PI / 2 + i / 14 * Math.PI * 2, r = i % 2 ? .38 : 1; (i ? sh.lineTo : sh.moveTo).call(sh, Math.cos(t) * r, Math.sin(t) * r); }
         const lf = new TT.Mesh(new TT.ExtrudeGeometry(sh, { depth: .3, bevelEnabled: true, bevelThickness: .2, bevelSize: .14, bevelSegments: 2 }), M({ color: 0xd8582a, roughness: .7 })); lf.rotation.x = -Math.PI / 2; at(G, lf, .9, .5, .5).scale.setScalar(.95); }
       const km = new TT.Mesh(new TT.CylinderGeometry(.06, .07, 3.2, 6), M({ color: 0xd8c09a, roughness: .7 })); km.rotation.set(Math.PI / 2, 0, .3); at(G, km, 1.2, .5, -1.4, 0, false); const kb = new TT.Mesh(new TT.CylinderGeometry(.075, .075, 1, 6), M({ color: 0x5a4a2e, roughness: .8 })); kb.rotation.set(Math.PI / 2, 0, .3); at(G, kb, 1.65, .5, -2.7, 0, false); return G; };
+    // a second tea sweet by the right-hand cup (2026-11-09): two slices of kuri-yokan — glossy bean jelly with chestnuts in the cut face —
+    // on kaishi paper on a round shino dish, with its own kuromoji pick
+    const yokan = (x, z) => { const G = grp(TT, g, x, 0, z, .5);
+      at(G, lathe(TT, [[0, 0], [1.5, 0], [2.1, .22], [2.25, .34], [2.12, .38], [1.45, .2], [0, .2]], SEG(o, 32), shino), 0, 0, 0);
+      [[0, 0], [.22, .1]].forEach(([r, y]) => { const k = new TT.Mesh(new TT.PlaneGeometry(2.8, 2.8), M({ color: 0xfbfaf6, roughness: .9, side: TT.DoubleSide })); k.rotation.set(-Math.PI / 2, 0, .5 + r); at(G, k, r * .5, .23 + y * .1, 0, 0, false); });
+      const cut = canvasTex('tbl6-yokan', 128, 128, (c, W) => { c.fillStyle = '#3a1210'; c.fillRect(0, 0, W, W); const R = rng(12); for (let i = 0; i < 40; i++) { c.fillStyle = 'rgba(90,30,24,.5)'; c.fillRect(R() * W, R() * W, 2, 2); }
+        [[.3, .4, .16], [.7, .62, .13], [.55, .22, .1]].forEach(([a, b, r]) => { c.fillStyle = '#e8b840'; c.beginPath(); for (let k = 0; k <= 12; k++) { const t = k / 12 * 6.283, rr = r * W * (1 + .15 * Math.sin(t * 3 + a * 9)); c.lineTo(a * W + Math.cos(t) * rr, b * W + Math.sin(t) * rr); } c.fill(); c.fillStyle = 'rgba(255,230,150,.5)'; ell(c, a * W - r * W * .3, b * W - r * W * .3, r * W * .3, r * W * .2); }); });
+      const body = M({ color: 0x3a1210, roughness: .12, clearcoat: 1, clearcoatRoughness: .1 }), face = M({ map: cut, roughness: .25, clearcoat: .8, bumpScale: .01 });
+      [[-.35, -.45, 0, 0], [.35, .3, .14, .12]].forEach(([dx, dz, lift, tilt]) => { const sl = new TT.Mesh(RB(1.9, 1.1, .62, .06, 2), [body, body, body, body, face, face]); sl.rotation.set(-Math.PI / 2 + tilt, .15, 0); at(G, sl, dx, .52 + lift, dz); });   // lying cut face up, the second resting on the first
+      const km = new TT.Mesh(new TT.CylinderGeometry(.06, .07, 2.3, 6), M({ color: 0xd8c09a, roughness: .7 })); km.rotation.set(0, 0, Math.PI / 2); at(G, km, .25, .3, 1.4, 0, false); const kb = new TT.Mesh(new TT.CylinderGeometry(.075, .075, .6, 6), M({ color: 0x5a4a2e, roughness: .8 })); kb.rotation.set(0, 0, Math.PI / 2); at(G, kb, -1.2, .3, 1.4, 0, false); return G; };
     // a bamboo vase (ichirin-zashi) with a sprig of maple
     const vase = (x, z) => { const G = grp(TT, g, x, 0, z), bm = M({ color: 0xb8a464, roughness: .4, clearcoat: .4 });
       at(G, new TT.Mesh(new TT.CylinderGeometry(.75, .8, 6, SEG(o, 16)), bm), 0, 3, 0); [1.6, 4.6].forEach(y => at(G, new TT.Mesh(new TT.TorusGeometry(.78, .08, 5, SEG(o, 16)), bm), 0, y, 0, 0, false).rotation.x = Math.PI / 2);
@@ -1545,9 +1555,9 @@
       yunomi(10.4, 3.6, raku, 0xb8c86a);
     } else {
       bon(-10.6, -5.9, 2.7); kyusu(-10.6, .13, -5.9, Math.PI - .6, T === 'evening' ? raku : M({ color: 0x9a4a2a, roughness: .45, clearcoat: .3 })); yunomi(-10.8, -.9, glaze('cel', '#9ab8a4', '#b8946a'));
-      yunomi(10.6, 3.4, glaze('ame', '#6a3a1a', '#c8a47a')); wagashi(-10.4, 6.4).scale.setScalar(.86); vase(11.8, -5.4);   // the sweets at the front left, the vase a little forward (2026-11-09)
+      yunomi(10.6, 3.4, glaze('ame', '#6a3a1a', '#c8a47a')); yokan(10.8, 7.3); wagashi(-10.4, 6.4).scale.setScalar(.86); vase(11.8, -5.4);   // the sweets at the front left, the vase a little forward (2026-11-09)
       if (T === 'morning') { const fanT = canvasTex('tbl6-sensu', 256, 128, (c, W, H) => { c.fillStyle = '#efe6d0'; c.fillRect(0, 0, W, H); for (let i = 0; i < 24; i++) { c.fillStyle = i % 2 ? 'rgba(0,0,0,.08)' : 'rgba(255,255,255,.2)'; c.fillRect(i * W / 24, 0, W / 24, H); } c.fillStyle = '#c8a050'; ell(c, W * .3, H * .55, 18, 18); c.strokeStyle = '#3a5a8a'; c.lineWidth = 3; for (let k = 0; k < 3; k++) { c.beginPath(); for (let x = 0; x <= W; x += 6) c.lineTo(x, H * .75 + k * 8 + Math.sin(x / 14) * 4); c.stroke(); } });
-        const G = grp(TT, g, 9.6, .12, 10.4, 0), fan = new TT.Mesh(new TT.RingGeometry(.9, 3.2, 24, 1, Math.PI / 2 - 1.05, 2.1), M({ map: fanT, roughness: .7, side: TT.DoubleSide, bump: false })); fan.rotation.x = -Math.PI / 2; at(G, fan, 0, 0, 0, 0, false);
+        const G = grp(TT, g, -4.8, .12, 10.8, 0), fan = new TT.Mesh(new TT.RingGeometry(.9, 3.2, 24, 1, Math.PI / 2 - 1.05, 2.1), M({ map: fanT, roughness: .7, side: TT.DoubleSide, bump: false })); fan.rotation.x = -Math.PI / 2; at(G, fan, 0, 0, 0, 0, false);
         [-1.05, 1.05].forEach(a => { const s = new TT.Mesh(RB(.18, .08, 3.3, .03, 1), M({ color: 0x3a2214, roughness: .3, clearcoat: .6 })); s.position.set(-Math.sin(a) * 1.65, .05, -Math.cos(a) * 1.65); s.rotation.y = a; G.add(s); }); }
     }
     if (lampLit(T)) { const Ga = grp(TT, g, -20, FL, -10.4, .2), fr = M({ color: 0x2a1a10, roughness: .4, clearcoat: .5 });
