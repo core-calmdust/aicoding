@@ -368,10 +368,6 @@
   }
   // a piece: the lathe disc with the face material on top (the texture is planar, so the top and rim share one material);
   // the rim keeps the face's colour from the texture's border — the face map is a solid base colour at its edges
-  // the night board breathes: every NEON_P ms a wave of light runs through its tubes (k 0→1→0 over NEON_D ms, with a flicker at
-  // the start). The model reads the clock as it is drawn; the game asks for frames during the wave (Table3D.carrom.neonWave)
-  const NEON_P = 6500, NEON_D = 1500;
-  function neonK(now) { const t = now % NEON_P; if (t >= NEON_D) return 0; const k = Math.sin(Math.PI * t / NEON_D); return t < 140 ? k + (t % 70 < 35 ? .5 : 0) : k; }
   function pieceGroup(look, c) {
     const TT = T(), striker = c === 's', r = striker ? RS : RM, h = striker ? HS : HM, M2 = pieceMat(look, c);
     const neon = look === 'neon', top = neon ? M2.top.clone() : M2.top;   // (neon: a material of its own, so one man can flash alone)
@@ -404,9 +400,9 @@
     const TT = T(), g = new TT.Group(), BM = boardMats(look);
     const frame = new TT.Mesh(frameGeo(look), BM.frame); frame.castShadow = frame.receiveShadow = true; g.add(frame);
     const surf = new TT.Mesh(surfaceGeo(), BM.surf); surf.position.y = TOP; surf.receiveShadow = true; g.add(surf);
-    if (look === 'neon') {   // the breathing light, read from the clock as the surface is drawn (kept out of the showcase's merge)
-      surf.userData.keep = true; const s0 = BM.surf.emissive.r;
-      surf.onBeforeRender = () => { const k = neonK(performance.now()); RGB.uT.value = performance.now() / 1000; BM.surf.emissive.setScalar(s0 * (.7 + 1.1 * k)); BM.edge.emissiveIntensity = BM.rim.emissiveIntensity = 1.2 * (1 + 1.6 * k); };   // (a little dimmer at rest, so the wave stands out)
+    if (look === 'neon') {   // the RGB clock, set as the surface is drawn (kept out of the showcase's merge)
+      surf.userData.keep = true;
+      surf.onBeforeRender = () => { RGB.uT.value = performance.now() / 1000; };
     }
     // a base under the surface (seen through the pockets' rims) and the pocket cups with their nets
     const base = new TT.Mesh(new TT.BoxGeometry(2 * S, .04, 2 * S), BM.cup); base.position.y = .03; g.add(base);
@@ -447,6 +443,5 @@
     const st = U.striker(), [x, z] = U.xz(-6, 25.26); st.position.set(x, TOP, z); g.add(st); const sh = X.contact(RS * 1.15, .45); sh.position.set(x, TOP + .004, z); g.add(sh);
     return g;
   };
-  // ms until the next wave and how long it lasts (the game asks for frames then; nothing is drawn between waves)
-  X.carrom = { board, LOOKS, K, neonWave: now => { const t = now % NEON_P; return t < NEON_D ? { wait: 0, left: NEON_D - t } : { wait: NEON_P - t, left: NEON_D }; } };
+  X.carrom = { board, LOOKS, K };
 })();
