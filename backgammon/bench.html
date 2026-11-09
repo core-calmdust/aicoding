@@ -59,12 +59,12 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);ma
 
 <div class="card"><h2>結果</h2><div class="tw"><table id="tbl"><thead><tr><th>スレッド</th><th>局面/秒</th><th>候補手/秒</th><th>1スレッド比</th><th>効率</th><th>最善手の一致</th></tr></thead><tbody></tbody></table></div><pre id="log"></pre></div>
 </main>
-<script src="bg.js?v=20261108mt"></script>
+<script src="bg.js?v=20261109mt2"></script>
 <script>
 'use strict';
 // ---- the game's part (the same page for senet/: G changes) ----
 const G = {
-  id: 'backgammon', worker: 'engine.js?v=20261108mt', warm: { type: 'ping' }, depths: [[2, '2-ply・候補8手（Lv.9・10、コーチ）'], [1, '1-ply・候補8手（ヒント）']],
+  id: 'backgammon', worker: 'engine.js?v=20261109mt2', warm: { type: 'ping' }, depths: [[2, '2-ply・候補8手（Lv.9・10、コーチ）'], [1, '1-ply・候補8手（ヒント）']],
   positions(k) {   // contact positions from seeded random play (the bench page has no nets: the plays are random)
     const rng = (a => () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; })(20261108);
     const out = [];
@@ -78,12 +78,14 @@ const G = {
     }
     return out;
   },
-  async split(q, d, ws) {   // the 0-ply list on the first worker, then the best 8 candidates at the depth, one task each
+  async split(q, d, ws) {   // the 0-ply list on the first worker, then the best 8 candidates at the depth — as backgammon/mt.js: by the opponent's 21 rolls at 2-ply (and at 1-ply when fewer than 2 candidates a thread), else one task each
     const r = await runPool(ws.slice(0, 1), [{ type: 'plays0', pos: q.pos, side: q.side, dice: q.dice }]);
-    const c = r[0].list.slice(0, 8);
-    return { tasks: c.map(x => ({ pos: x.pos, o: 1 - q.side, ply: d, key: x.key })), combine: vs => c.map((x, i) => ({ key: x.key, e: BG.equity(vs[i]) })).sort((a, b) => b.e - a.e) };
+    const c = r[0].list.slice(0, 8), o = 1 - q.side, roll = d >= 2 || c.length < 2 * ws.length, R = BG.ROLLS.length;
+    const tasks = []; c.forEach(x => { if (roll) for (let i = 0; i < R; i++) tasks.push({ type: 'plyr', pos: x.pos, o, ply: d, i }); else tasks.push({ type: 'ply', pos: x.pos, o, ply: d }); });
+    const val = (vs, rs, k) => { if (!roll) return vs[k]; const part = rs.slice(k * R, k * R + R), w = part.find(y => y.whole); return w ? w.whole : BG.plySum(part.map(y => y.v)); };
+    return { tasks, work: c.length, combine: (vs, rs) => c.map((x, k) => ({ key: x.key, e: BG.equity(val(vs, rs, k)) })).sort((a, b) => b.e - a.e) };
   },
-  task(t) { return { type: 'ply', pos: t.pos, o: t.o, ply: t.ply }; },
+  task(t) { return t; },
   best(ev) { return ev[0].key; },
 };
 // ---- the common part ----
@@ -123,7 +125,7 @@ async function run() {
       const ws = await spawn(t);
       $('#st').textContent = `${t}スレッド：読んでいます…`;
       const t0 = performance.now(), bests = []; let nt = 0;
-      for (const q of P) { const sp = await G.split(q, d, ws); nt += sp.tasks.length; const r = await runPool(ws, sp.tasks.map(x => G.task(x))); bests.push(G.best(sp.combine(r.map(x => x.v)))); }
+      for (const q of P) { const sp = await G.split(q, d, ws); nt += sp.work || sp.tasks.length; const r = await runPool(ws, sp.tasks.map(x => G.task(x))); bests.push(G.best(sp.combine(r.map(x => x.v), r))); }
       const ms = performance.now() - t0; ws.forEach(w => w.terminate());
       const pps = P.length / ms * 1000, tps = nt / ms * 1000; if (!base) { base = pps; ref = bests; }
       const agree = bests.filter((b, i) => b === ref[i]).length, sp = pps / base;

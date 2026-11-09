@@ -744,6 +744,27 @@ function hyb2(q, o) {
   }
   return acc;
 }
+// the threads (backgammon/mt.js, 2026-11-09): evalPly(q, o, ply) for ply 1・2 split by the opponent's roll. plyRoll → the
+// term of ROLLS[i] (o's perspective, as the loops of eval1 / hyb1 / eval2 / hyb2 compute it), plySum → the value from the 21
+// terms (the same additions in the same order: the same numbers). plyWhole(q): evalPly does not roll here (the game is over or
+// a bear-off position) — then evalPly(q, o, ply) itself is the value.
+const plyWhole = q => winner(q) >= 0 || !!isBearoffPos(q);
+function plyRoll(q, o, ply, i) {
+  const [a, b] = ROLLS[i];
+  if (ply >= 2) {
+    if (WB) { const r = hybReply(q, o, a, b, HYB_K); return winner(r.pos) >= 0 || isBearoffPos(r.pos) ? r.v : hyb1(r.pos, 1 - o); }
+    const plays = genPlays(q, o, a, b);
+    let best = null, be = -1e9;
+    for (const pl of plays) { const e = equity(evalAfter(pl.pos, o)); if (e > be) { be = e; best = pl; } }
+    return eval1(best.pos, 1 - o);
+  }
+  return WB ? hybReply(q, o, a, b, HYB_K).v : bestPlay0(q, o, a, b).v;
+}
+function plySum(vs) {
+  const acc = [0, 0, 0, 0, 0];
+  for (let i = 0; i < ROLLS.length; i++) { const pr = ROLLS[i][2], v = vs[i]; acc[0] += pr * (1 - v[0]); acc[1] += pr * v[3]; acc[2] += pr * v[4]; acc[3] += pr * v[1]; acc[4] += pr * v[2]; }
+  return acc;
+}
 // rank plays: returns [{pos, moves, v, e, ply}] sorted by equity (mover's perspective, cubeless money)
 // opts: {ply: 0|1|2, keep1: n candidates for 1-ply, keep2: n for 2-ply, margin1, margin2, deadline}
 function analyzePlays(p, s, d1, d2, opts) {
@@ -982,7 +1003,7 @@ Object.assign(BG, {
   OFF, BAR, initial, clone, key, pips, onBoard, allHome, contact, winner, winKind, dest, apply, mvFrom, mvTo, mvHit,
   genPlays, maxUse, legalSteps, notation, ptName, cyrb128, DiceStream, randomSeed, sha256, replay, encodeGame, decodeGame,
   NIN, features, Net, sanitize, flip, equity, choose, BO_N, boIndex, boIndexPos, loadBearoff, boDist, isBearoffPos, bearoffEval,
-  boExpected, setNet, evalPos, heurEval, evalAfter, ROLLS, bestPlay0, eval1, eval2, analyzePlays, hyb1, hyb2, evalFast, evalPly, hasWildbg, evalRoll, buildMET, mwc,
+  boExpected, setNet, evalPos, heurEval, evalAfter, ROLLS, bestPlay0, eval1, eval2, analyzePlays, hyb1, hyb2, evalFast, evalPly, plyWhole, plyRoll, plySum, hasWildbg, evalRoll, buildMET, mwc,
   janowski, cubeDecision, cubeAvailable,
   get NET() { return NET; }, get NETR() { return NETR; }, get BO() { return BO; }
 });

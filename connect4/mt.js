@@ -13,11 +13,44 @@
     if (e.kind === 'weak') return e.v > 0 ? 1e6 : e.v < 0 ? -1e6 : 0;
     return Math.max(-9e5, Math.min(9e5, e.h !== undefined ? e.h : e.v));
   };
-  const solve = (X, moves, c, weak, until) => X.exec({ type: 'mtsolve', moves, c, weak, until }, c, 10);
+  const solve = (X, moves, c, weak, until, k) => X.exec({ type: 'mtsolve', moves, c, weak, until, k: k || 0 }, c, 10);
   const off = X => X.cancelled ? null : undefined;
+  // shared mode (X.shared: the workers solve on one table in shared memory, 2026-11-09): every column at once, and a worker left
+  // without a column of its own joins the column with the fewest workers on it (a variant: another move order near the top,
+  // engine.js negaS) — the first answer counts and the others on that column stop at once. Without the shared table each
+  // column is one worker's (the copies would only redo the same work). → Promise<[{ v, ok } | null per column]>
+  function solveAll(X, moves, cs, weak, until, onEach) {
+    return new Promise(resolve => {
+      const out = cs.map(() => undefined), runs = cs.map(() => []), hits = cs.map(() => 0), late = cs.map(() => false);
+      let busy = 0, left = cs.length;
+      if (!left) { resolve(out); return; }
+      const launch = i => {
+        const k = hits[i]++, q = solve(X, moves, cs[i], weak, until, k); runs[i].push(q); busy++;
+        q.then(r => {
+          busy--; q.over = true;
+          if (out[i] === undefined) {
+            if (r && r.ok) { out[i] = r; left--; runs[i].forEach(x => { if (!x.over) X.drop(x); }); if (onEach) onEach(i, r); }
+            else { late[i] = true; if (runs[i].every(x => x.over)) { out[i] = r || null; left--; } }   // (out of time / failed: no new copy; the answer once no other worker is on it)
+          }
+          if (left === 0) { resolve(out); return; }
+          fill();
+        });
+      };
+      const fill = () => {
+        if (X.cancelled) return;
+        while (busy < X.n) {
+          let bi = -1;
+          for (let i = 0; i < cs.length; i++) if (out[i] === undefined && !late[i] && (bi < 0 || runs[i].filter(x => !x.over).length < runs[bi].filter(x => !x.over).length)) bi = i;
+          if (bi < 0 || (!X.shared && runs[bi].length)) break;
+          launch(bi);
+        }
+      };
+      fill();
+    });
+  }
 
   async function analyze(X, msg, onProgress) {
-    const pre = await X.exec({ type: 'mtplan', job: 'analyze', moves: msg.moves, time: msg.time || 1000 }, undefined, 100);
+    const pre = await X.exec({ type: 'mtplan', job: 'analyze', moves: msg.moves, time: msg.time || 1000, htime: msg.htime }, undefined, 100);
     if (!pre) return off(X);
     if (pre.result) return Object.assign({ type: 'analysis' }, pre.result);
     const p = pre.plan, list = p.list;
@@ -26,10 +59,12 @@
     let timeout = false;
     for (const mode of ['weak', 'exact']) {   // (engine.js analyzePosition: the weak pass, then the exact pass)
       const todo = list.filter(e => e.kind !== 'exact' && !(mode === 'weak' && e.kind === 'weak'));
-      await Promise.all(todo.map(e => solve(X, msg.moves, e.c, mode === 'weak', p.until).then(r => {
+      const take = (e, r) => {
         if (!r || !r.ok) { timeout = true; return; }
         e.kind = mode === 'weak' && Math.abs(r.v) <= 1 ? 'weak' : 'exact'; e.v = r.v; prog();
-      })));
+      };
+      if (X.shared) { const rs = await solveAll(X, msg.moves, todo.map(e => e.c), mode === 'weak', p.until); todo.forEach((e, i) => take(e, rs[i])); }
+      else await Promise.all(todo.map(e => solve(X, msg.moves, e.c, mode === 'weak', p.until).then(r => take(e, r))));
       if (X.cancelled) return null;
       if (timeout) return { type: 'analysis', list, depth: p.depth };
     }

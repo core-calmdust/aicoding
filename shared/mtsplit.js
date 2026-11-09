@@ -24,7 +24,9 @@
 //     Wait at the root); meanwhile the other workers test the other moves against the score of the previous depths (null
 //     window), then against the real alpha; a move that fails high is searched again with (alpha, ∞).
 //   MTSplit.ladder — drive() for the engines that speak 'mtplan' / 'mtv' / 'mtpv' / 'mtfin' (ugolki, agon, konane, mancala);
-//   in shared mode a plan with `lazy` (agon, konane) is searched Lazy SMP style instead ('mtlead' + 'mthelp').
+//   in shared mode a plan with `lazy` (agon, konane, mancala) is searched Lazy SMP style instead ('mtlead' + 'mthelp'), and
+//   so is an analysis plan with `lazyAll` (mancala, 2026-11-09: 6 root moves at most, so splitting them left threads idle);
+//   'mtlead' carries `job` (the page's message type).
 (function () {
   'use strict';
   if (window.MTSplit) return;
@@ -161,6 +163,8 @@
           if (TT) { halt(s); return; }
           if (hard) { const t = s.task; s.task = null; restart(s); t.resolve(null); pump(); } else s.task.resolve(null);
         },
+        // shared mode: wait (at most ms) until the dropped tasks of this job have stopped and reported their nodes
+        settle(ms) { const t0 = Date.now(); return new Promise(r => { const chk = () => { if (!W.some(s => s.task && s.task.job === j) || Date.now() - t0 >= ms) r(); else setTimeout(chk, 1); }; chk(); }); },
       };
       return X;
     }
@@ -366,16 +370,17 @@
       const win = v => !!p.win && Math.abs(v) > p.win;
       const kindOf = v => win(v) ? 'exact' : 'heur';
       let raw;
-      if (p.kind === 'best' && p.lazy && X.shared && X.n > 1) {
+      if ((p.kind === 'best' ? p.lazy : p.lazyAll) && X.shared && X.n > 1) {
         // Lazy SMP (shared mode, plan.lazy — agon, konane: faster to the same depth than splitting the tree there): the first
         // worker plays the job as one thread does ('mtlead': the same search, the same reply) on the shared table, the others
         // search the same root meanwhile ('mthelp': one ply deeper every other helper, from a rotated root order) and stop
         // when it is done
         const until = Date.now() + (p.ms || 600000) + 2000;
-        const lead = X.exec(Object.assign({}, base, { type: 'mtlead' }), undefined, 60), hs = [];
+        const lead = X.exec(Object.assign({}, base, { type: 'mtlead', job: msg.type }), undefined, 60), hs = [];
         for (let k = 1; k < X.n; k++) hs.push(X.exec(Object.assign({}, base, { type: 'mthelp', k, until, maxD: p.maxD || 60 }), undefined, 50));
         const r = await lead;
         for (const h of hs) X.drop(h);
+        if (r) await X.settle(30);   // (the helpers stop within a moment: their nodes count in the job's total)
         if (!r) return X.cancelled ? null : undefined;
         const out = Object.assign({}, r); delete out.id; delete out.type; delete out.nodes;
         return out;
@@ -403,5 +408,7 @@
     },
   };
 
-  window.MTSplit = { init, use, pool, on, helpers, maxHelpers, onChange: f => subs.push(f), touch: TOUCH, allValues, bestValue, ladder, T, get shared() { return shared(); }, get sharedGame() { return SHG; } };
+  // autoThreads(): the threads a job uses unless it asks (msg.mtThreads) — min(cores − 1, 7) + 1 (phones 3 + 1), 1 when off
+  const autoThreads = () => on() ? 1 + helpers() : 1;
+  window.MTSplit = { init, use, pool, on, helpers, maxHelpers, autoThreads, onChange: f => subs.push(f), touch: TOUCH, allValues, bestValue, ladder, T, get shared() { return shared(); }, get sharedGame() { return SHG; } };
 })();

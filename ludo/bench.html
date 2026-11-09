@@ -59,12 +59,12 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);ma
 
 <div class="card"><h2>結果</h2><div class="tw"><table id="tbl"><thead><tr><th>スレッド</th><th>局面/秒</th><th>プレイアウト/秒</th><th>1スレッド比</th><th>効率</th><th>1スレッドと同じ値</th></tr></thead><tbody></tbody></table></div><pre id="log"></pre></div>
 </main>
-<script src="engine.js?v=2"></script>
+<script src="engine.js?v=3"></script>
 <script>
 'use strict';
 // ---- the game's part (the same page for senet/: G changes) ----
 const G = {
-  id: 'ludo', E: window.LudoEngine, worker: 'worker.js?v=1', warm: { type: 'ping' }, unit: 'playouts', depths: [[128, '128（形勢カード）'], [32, '32'], [256, '256']],
+  id: 'ludo', E: window.LudoEngine, worker: 'worker.js?v=3', warm: { type: 'ping' }, unit: 'playouts', depths: [[128, '128（形勢カード）'], [32, '32'], [256, '256']],
   positions(k) {   // positions with a throw and 2+ moves, from Lv.18 self-play (2-player ludo, 4-player ludo, pachisi)
     const E = this.E, out = []; let rs = 20261108; const rng = () => { rs = (Math.imul(rs, 1103515245) + 12345) & 0x7fffffff; return rs / 0x7fffffff; };
     const SET = [{ rule: 'ludo', players: 2 }, { rule: 'ludo', players: 4 }, { rule: 'pachisi', players: 2 }];
@@ -78,10 +78,10 @@ const G = {
     }
     return out;
   },
-  async split(q, d) {   // d playouts to the end from the position, 4 per task (the seeds fixed: the same result for any number of threads)
-    const tasks = [], team = q.s.team[q.s.turn];
-    for (let i = 0; i < d; i += 4) tasks.push({ type: 'wp', state: q.s, team, seed: 1000 + i, count: 4 });
-    return { tasks, work: d, combine: rs => rs.reduce((a, x) => a + x, 0) / d };
+  async split(q, d, ws) {   // d playouts to the end from the position, cut as ludo/mt.js cuts one position (about 4 tasks a thread; the seeds fixed: the same result for any number of threads)
+    const tasks = [], team = q.s.team[q.s.turn], per = Math.ceil(d / Math.max(1, Math.min(d, 4 * ws.length)));
+    for (let i = 0; i < d; i += per) tasks.push({ type: 'wp', state: q.s, team, seed: 1000 + i, count: Math.min(per, d - i), each: true });
+    return { tasks, work: d, combine: (vs, rs) => { let s = 0; for (const x of rs) for (const v of x.vals) s += v; return s / d; } };
   },
   task(t) { return t; },
   best(wp) { return wp.toFixed(12); },
@@ -123,7 +123,7 @@ async function run() {
       const ws = await spawn(t);
       $('#st').textContent = `${t}スレッド：読んでいます…`;
       const t0 = performance.now(), bests = []; let nt = 0;
-      for (const q of P) { const sp = await G.split(q, d, ws); nt += sp.work || sp.tasks.length; const r = await runPool(ws, sp.tasks.map(x => G.task(x))); bests.push(G.best(sp.combine(r.map(x => x.v !== undefined ? x.v : x.sum)))); }
+      for (const q of P) { const sp = await G.split(q, d, ws); nt += sp.work || sp.tasks.length; const r = await runPool(ws, sp.tasks.map(x => G.task(x))); bests.push(G.best(sp.combine(r.map(x => x.v !== undefined ? x.v : x.sum), r))); }
       const ms = performance.now() - t0; ws.forEach(w => w.terminate());
       const pps = P.length / ms * 1000, tps = nt / ms * 1000; if (!base) { base = pps; ref = bests; }
       const agree = bests.filter((b, i) => b === ref[i]).length, sp = pps / base;

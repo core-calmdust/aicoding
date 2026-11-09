@@ -1237,8 +1237,8 @@ body .info-line{font-size:12.5px}
 <script src="coach.js?v=8"></script>
 <script src="coach-i18n.js?v=6"></script>
 <script src="../shared/export.js?v=9l14"></script>
-<script src="../shared/mtsplit.js?v=2"></script>
-<script src="mt.js?v=1"></script>
+<script src="../shared/mtengine.js?v=8"></script><script src="../shared/mtsplit.js?v=3"></script>
+<script src="mt.js?v=2"></script>
 <script>
 'use strict';
 // ====================================================================== rules
@@ -1383,7 +1383,7 @@ const bookReady = fetch('book.json').then(r => r.ok ? r.json() : null).catch(() 
 let TREEBUF = null;
 const treeReady = fetch('tree.bin').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null).then(b => (TREEBUF = b));
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=20261104rs-mt1';
+const ENGINE_URL = 'engine.js?v=20261109rs-sh1';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -1407,12 +1407,15 @@ function noteNps(nodes, ms) {
   const el = document.getElementById('infoLine'); if (el && el.dataset.base !== undefined) el.textContent = el.dataset.base + npsText();
 }
 // multi-threaded search (shared/mtsplit.js + mt.js; common rule 2026-11-08「本編のマルチスレッド」全タイトル対応): several plain workers
-// of the engine solve the columns at the same time — no shared memory, so no isolation, no reload, sign-in / online play untouched.
+// of the engine solve the columns at the same time. Shared mode (2026-11-09): sw.js isolates the page as shared/mtengine.js does
+// (Chrome / Edge on a computer: Document-Isolation-Policy, sign-in / online play untouched; Safari / Firefox: the COOP mode only
+// when the option is turned on) and the workers then solve on one table in shared memory, several on the hardest column at
+// the end (mt.js solveAll); without isolation each column is one worker's with its own table, as before.
 // Analysis, hints, the coach, the review box and the solver of Lv.6–8 (rated games too) go to the threads when they are free;
 // Lv.1–5 (fixed depths) stay on the one-thread workers. The game is solved (first player wins): the threads only make it quicker.
 const MTP = window.MTSplit && window.C4MT ? MTSplit.use({ url: ENGINE_URL, drive: C4MT.drive,
   setup: w => { if (BOOK) w.postMessage({ type: 'book', book: BOOK }); else bookReady.then(b => { if (b) w.postMessage({ type: 'book', book: b }); }); if (TREEBUF) w.postMessage({ type: 'tree', buf: TREEBUF }); else treeReady.then(buf => { if (buf) w.postMessage({ type: 'tree', buf }); }); } }) : null;
-if (MTP) MTSplit.init();
+if (MTP) MTSplit.init({ sw: 'sw.js?v=1' });
 function mtWants(which, msg) { return msg.type === 'analyze' || (msg.type === 'think' && msg.level >= 6); }
 function request(which, msg, onProgress) {
   const mp = MTP && mtWants(which, msg) && MTP.pool(which === 'ai' ? 'ai' : null);
@@ -3373,12 +3376,12 @@ document.addEventListener('keydown', e => {
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=124')).then(() => load('../atlas/tables3d.js?v=26')).then(() => load('../atlas/skin/common.js?v=37l14r')).then(() => load('../atlas/models/connect4.js?v=5l14')).then(() => load('../atlas/games/connect4-tiles.js?v=1l14')).then(() => load('../atlas/skin/connect4.js?v=6l14-aim'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=124')).then(() => load('../atlas/tables3d.js?v=27')).then(() => load('../atlas/skin/common.js?v=37l14r')).then(() => load('../atlas/models/connect4.js?v=5l14')).then(() => load('../atlas/games/connect4-tiles.js?v=1l14')).then(() => load('../atlas/skin/connect4.js?v=6l14-aim'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=20261110ch1" defer></script>
+<script src="../shared/atlas.js?v=20261110cr2" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1l14" defer></script>
 <script src="../shared/atlas-account.js?v=20261101fa1l14" defer></script>
 <script src="../shared/infotabs.js?v=17l14" defer></script>

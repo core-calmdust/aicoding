@@ -70,7 +70,7 @@ const MVL = new Int32Array(SZ * 8 + 16), MVH = new Int32Array(SZ * 8 + 16), SC =
 let nodes = 0, deadline = Infinity, aborted = false;
 function checkTime() { if ((++nodes & 2047) === 0 && Date.now() > deadline) aborted = true; return aborted; }
 
-function negamax(alpha, beta) { return nega(cl, ch, ml, mh, nm, alpha, beta); }
+function negamax(alpha, beta) { return ST !== null ? negaS(cl, ch, ml, mh, nm, alpha, beta) : nega(cl, ch, ml, mh, nm, alpha, beta); }
 // pure version (state passed as arguments: faster in V8 than module-level variables)
 function nega(pcl, pch, pml, pmh, n, alpha, beta) {
   if ((++nodes & 2047) === 0 && Date.now() > deadline) aborted = true;
@@ -115,6 +115,58 @@ function nega(pcl, pch, pml, pmh, n, alpha, beta) {
     if (s > alpha) alpha = s;
   }
   ttL[idx] = kl; ttH[idx] = kh; ttV[idx] = alpha - MINS + 1;
+  return alpha;
+}
+// ---- the shared table (shared/mtsplit.js shared mode, 2026-11-09): the workers of a cross-origin isolated page solve on one
+// table in a SharedArrayBuffer (the 'mtshare' message; the one-thread worker never has it, so nega() above is untouched).
+// Entry = Int32 ×4 [kl ^ v, kh ^ v, v, 0] (v = the same bound code as ttV, never 0; a torn entry fails the XOR check). The
+// bounds are the position's own (whatever the window), so a solve on the shared table gives exactly the one-thread value.
+// SHT: shared/mttt.js (the stop signals: a new job / a dropped task stops at once). vk / vn: a helper's variant — the move
+// order rotated by vk in the nodes before ply vn (a second worker on the same column searches another part of the tree first).
+let ST = null, SBITS = 0, SHT = null, vk = 0, vn = 0;
+function negaS(pcl, pch, pml, pmh, n, alpha, beta) {
+  if ((++nodes & 2047) === 0 && (Date.now() > deadline || SHT.stopped())) aborted = true;
+  if (aborted) return 0;
+  let pl = (pml + BOT_L) & BOARD_L, ph = (pmh + BOT_H) & BOARD_H;
+  const owl = winPos(pcl ^ pml, pch ^ pmh, pml, pmh), owh = _wh;
+  const fl = pl & owl, fh = ph & owh;
+  if (fl | fh) {
+    if (popc(fl) + popc(fh) > 1) return -((SZ - n) >> 1);
+    pl = fl; ph = fh;
+  }
+  pl &= ~(owl >>> 1); ph &= ~(owh >>> 1);
+  if ((pl | ph) === 0) return -((SZ - n) >> 1);
+  if (n >= SZ - 2) return 0;
+  let min = -((SZ - 2 - n) >> 1);
+  if (alpha < min) { alpha = min; if (alpha >= beta) return alpha; }
+  let max = (SZ - 1 - n) >> 1;
+  const kl = pcl + pml, kh = pch + pmh, si = ((Math.imul(kl, 0x9E3779B1) ^ Math.imul(kh + 0x7f4a7c15, 0x85EBCA77)) >>> (32 - SBITS)) << 2;
+  const sv = ST[si + 2];
+  if (sv !== 0 && (ST[si] ^ sv) === kl && (ST[si + 1] ^ sv) === kh) {
+    if (sv > MAXS - MINS + 1) { min = sv + 2 * MINS - MAXS - 2; if (alpha < min) { alpha = min; if (alpha >= beta) return alpha; } }
+    else { max = sv + MINS - 1; if (beta > max) { beta = max; if (alpha >= beta) return beta; } }
+  }
+  const base = n * 8;
+  let cnt = 0;
+  for (let i = W - 1; i >= 0; i--) {
+    const c = ORDER[i], vl = pl & CML[c], vh = ph & CMH[c];
+    if (vl | vh) {
+      const wl = winPos(pcl | vl, pch | vh, pml, pmh);
+      const sc = popc(wl) + popc(_wh);
+      let j = cnt++;
+      for (; j > 0 && SC[base + j - 1] > sc; j--) { MVL[base + j] = MVL[base + j - 1]; MVH[base + j] = MVH[base + j - 1]; SC[base + j] = SC[base + j - 1]; }
+      MVL[base + j] = vl; MVH[base + j] = vh; SC[base + j] = sc;
+    }
+  }
+  const ncl = pcl ^ pml, nch = pch ^ pmh, rot = vk !== 0 && n < vn ? vk % cnt : 0;
+  for (let j = 0; j < cnt; j++) {
+    const i = cnt - 1 - (rot === 0 ? j : (j + rot) % cnt);
+    const s = -negaS(ncl, nch, pml | MVL[base + i], pmh | MVH[base + i], n + 1, -beta, -alpha);
+    if (aborted) return 0;
+    if (s >= beta) { const v = s + MAXS - 2 * MINS + 2; ST[si] = kl ^ v; ST[si + 1] = kh ^ v; ST[si + 2] = v; return s; }
+    if (s > alpha) alpha = s;
+  }
+  const v = alpha - MINS + 1; ST[si] = kl ^ v; ST[si + 1] = kh ^ v; ST[si + 2] = v;
   return alpha;
 }
 const half = x => (x / 2) | 0;   // C-style truncating division
@@ -570,7 +622,7 @@ function analyzePosition(str, timeMs, onProgress) {
   return { list, depth: pre.depth, solved: true };
 }
 // the analysis up to the solver: the tree / book answer ({ done }), else the moves with the heuristic pass' values
-function analyzePrep(str, timeMs) {
+function analyzePrep(str, timeMs, hMs) {
   loadMoves(str);
   const legal = ORDER.filter(c => canPlay(c));
   const tl = treeList(str);
@@ -587,7 +639,7 @@ function analyzePrep(str, timeMs) {
     if (pb && pb.sc[lm] === 1) return { done: { list: legal.map(c => ({ c, kind: 'weak', v: -1 })), book: true } };
   }
   // quick heuristic pass
-  const hr = heurID(42, Math.max(60, timeMs * 0.25));
+  const hr = heurID(42, hMs || Math.max(60, timeMs * 0.25));   // (hMs: the bench's short heuristic pass before a long solve)
   loadMoves(str);
   const heur = new Map((hr.list || []).map(x => [x.c, x.s]));
   const list = legal.map(c => {
@@ -826,15 +878,16 @@ function mtPlan(m) {
     if (!b.solve) return { result: thinkTail(m.moves, cfg, b.list, b.depth, b.t0) };
     return { plan: { kind: 'solve', list: b.list, depth: b.depth, t0: b.t0, budget: cfg.solve || 400, perfect: !!cfg.perfect, hard: cfg.hard || 0 } };
   }
-  const t0 = Date.now(), pre = analyzePrep(m.moves, m.time || 1000);
+  const t0 = Date.now(), pre = analyzePrep(m.moves, m.time || 1000, m.htime);
   if (pre.done) return { result: pre.done };
   return { plan: { kind: 'analyze', list: pre.list, depth: pre.depth, until: t0 + (m.time || 1000) } };
 }
 function mtSolve(m) {
   loadMoves(m.moves); nodes = 0;
   deadline = m.until || Infinity; aborted = false;
+  if (ST !== null) { vk = m.k | 0; vn = nm + 1 + 3; }   // (a helper's variant: the first 3 plies after the column's move)
   const v = solveMove(m.c, !!m.weak);
-  deadline = Infinity; aborted = false;
+  deadline = Infinity; aborted = false; vk = 0;
   return { v, ok: v !== null, nodes };
 }
 function mtFin(m) {
@@ -854,6 +907,11 @@ if (typeof module !== 'undefined' && module.exports) module.exports = API;
 if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof postMessage === 'function' && typeof module === 'undefined') {
   self.onmessage = e => {
     const m = e.data;
+    if (m.type === 'mtshare') {   // (shared/mtsplit.js shared mode: the table in shared memory, see negaS)
+      try { importScripts(m.lib); SHT = self.MTTT.attach(m); ST = new Int32Array(m.tt); SBITS = Math.round(Math.log2(ST.length >> 2)); } catch (err) { ST = null; SHT = null; }
+      return;
+    }
+    if (SHT !== null) SHT.begin(m);
     if (m.type === 'book') BOOK = m.book;
     else if (m.type === 'tree') { try { TREE = decodeTree(m.buf); } catch (err) { TREE = null; } }
     else if (m.type === 'think') {

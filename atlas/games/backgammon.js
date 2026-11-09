@@ -14,7 +14,7 @@
 (function () {
   'use strict';
   /* ================= table play (ちゃぶ台で遊ぶ) ================= */
-  const BASE = '../backgammon/', BV = '20261108mt';   // same files (and cache keys) as the full game
+  const BASE = '../backgammon/', BV = '20261109mt2';   // same files (and cache keys) as the full game
   let bgLoad = null;
   function loadBG() {   // the game's rules on the main thread (legal moves, pips, winner) — window.BG
     if (window.BG && window.BG.genPlays) return Promise.resolve();

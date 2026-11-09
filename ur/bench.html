@@ -59,12 +59,12 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);ma
 
 <div class="card"><h2>結果</h2><div class="tw"><table id="tbl"><thead><tr><th>スレッド</th><th>局面/秒</th><th>仕事/秒</th><th>1スレッド比</th><th>効率</th><th>最善手の一致</th></tr></thead><tbody></tbody></table></div><pre id="log"></pre></div>
 </main>
-<script src="engine.js?v=3"></script>
+<script src="engine.js?v=4"></script>
 <script>
 'use strict';
 // ---- the game's part (the same page for senet/: G changes) ----
 const G = {
-  id: 'ur', E: window.UrEngine, worker: 'worker.js?v=3', depths: [[3, '3（ヒント）'], [4, '4（重い）'], [2, '2（Lv.20）']],
+  id: 'ur', E: window.UrEngine, worker: 'worker.js?v=4', depths: [[3, '3（ヒント）'], [4, '4（重い）'], [2, '2（Lv.20）']],
   positions(k) {   // positions with a throw and 2+ moves, from Lv.16 self-play (seeded)
     const E = this.E, rng = E.mulberry32(20261108), out = [];
     for (let g = 0; out.length < k && g < 200; g++) {
@@ -77,8 +77,8 @@ const G = {
     }
     return out;
   },
-  split(q, d) { return this.E.splitEval(q.s, q.n, d); },
-  task(t) { return { type: 'roll', state: t.state, n: t.n, d: t.d }; },
+  split(q, d, ws) { return this.E.splitEval(q.s, q.n, d, this.E.fineFor(d, ws.length)); },   // (as the game: heavy positions also by the moves of each throw)
+  task(t) { return { type: 'roll', state: t.state, n: t.n, d: t.d, k: t.k }; },
   best(ev) { return ev[0].move.from; },
 };
 // ---- the common part ----
