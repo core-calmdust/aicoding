@@ -303,7 +303,7 @@
 
     /* ---------- the AI (a worker; the page thinks itself if workers are unavailable) ---------- */
     let worker = null, wid = 0; const pend = {};
-    try { worker = new Worker('../carrom/worker.js?v=2'); worker.onmessage = e => { const d = e.data || {}, f = pend[d.id]; if (f) { delete pend[d.id]; f(d.shot || null); } }; worker.onerror = () => { worker = null; Object.keys(pend).forEach(k => { const f = pend[k]; delete pend[k]; f(null); }); }; } catch (e) { worker = null; }
+    try { worker = new Worker('../carrom/worker.js?v=3'); worker.onmessage = e => { const d = e.data || {}, f = pend[d.id]; if (f) { delete pend[d.id]; f(d.shot || null); } }; worker.onerror = () => { worker = null; Object.keys(pend).forEach(k => { const f = pend[k]; delete pend[k]; f(null); }); }; } catch (e) { worker = null; }
     function think(s, lv) {
       const seed = (Math.random() * 1e9) | 0;
       return new Promise(res => {
@@ -485,7 +485,7 @@
         powEl.hidden = false; powEl.textContent = Math.round(aimPow * 100) + '%'; powEl.style.left = a.e.clientX + 'px'; powEl.style.top = a.e.clientY + 'px';
         say('💪 ' + Math.round(aimPow * 100) + '%'); showGuides();
       },
-      shoot: (ang, pw) => stroke({ x: sx, ang, v: 40 + pw * (E.VMAX - 40) }),
+      shoot: (ang, pw) => stroke(E.wobble({ x: sx, ang, v: 40 + pw * (E.VMAX - 40) }, (Math.random() * 1e9) | 0)),
       tap: () => { if (phase === 'anim' && !stopped) speedUp = 3; },   // a tap while the men roll: fast-forward
     });
     /* ---------- 盤面反転: a round button at the lower left (and the F key) turns the table round 180°, remembered per game.
