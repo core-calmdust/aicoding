@@ -582,6 +582,10 @@ function defenceCells(pos, a, d) {
 const TT_BITS = 20, TT_SIZE = 1 << TT_BITS, TT_MASK = TT_SIZE - 1;
 const SPLIT_MAX = 40;   // (moves shared among the threads at most: ctl has 128 slots)
 const SP_MV = 17, SP_DW = SP_MV + SPLIT_MAX, SP_PL = SP_DW + SPLIT_MAX, SP_PATH = 128 - SP_PL;   // (17…56 the moves, 57…96 their done words, 97…127 the path to the split node)
+// a move's done word: tag << 18 | value + 131072 when done, tag << 18 (value field 0) while still pending in split tag (2026-11-09:
+// only that pending word may be replaced, so a slow thread still finishing a move of an older split cannot mark the new split's
+// move as "not done" — the lead then gave up the whole depth: Mac 8 / 14 threads, depth 2 in 26 ms)
+const spDone = (w, T) => (w >>> 18) === T && (w & 0x3ffff) !== 0;
 class Engine {
   // tt (the page's multi-thread search): the transposition table on the shared memory (engine_mt.wasm, mt.c) and the stop flag
   // ctl (Int32Array, [0] = 1: stop) — every thread of the pool reads and writes one table (and the moves are shared out: nodeSplit, splitIter); without it, its own table
@@ -598,7 +602,7 @@ class Engine {
   // the shared table's age (0..31): the lead of the pool starts a new one for each search, the helpers take the lead's
   newAge() { if (this.ctl) this.age = this.mtLead ? (Atomics.add(this.ctl, 12, 1) + 1) & 31 : Atomics.load(this.ctl, 12) & 31; }
   clear() { this.k1.fill(0); this.k2.fill(0); this.hist.fill(0); this.solver.clear(); }
-  timeUp() { if ((++this.nodes & 1023) === 0 && (now() > this.deadline || this.nodes > this.nodeLimit || (this.ctl && (Atomics.load(this.ctl, 0) || (this.splitG && (Atomics.load(this.ctl, 13) !== this.splitG || (this.dupK >= 0 && (Atomics.load(this.ctl, SP_DW + this.dupK) >>> 18) === this.splitT))))))) this.stop = true; return this.stop; }
+  timeUp() { if ((++this.nodes & 1023) === 0 && (now() > this.deadline || this.nodes > this.nodeLimit || (this.ctl && (Atomics.load(this.ctl, 0) || (this.splitG && (Atomics.load(this.ctl, 13) !== this.splitG || (this.dupK >= 0 && spDone(Atomics.load(this.ctl, SP_DW + this.dupK), this.splitT)))))))) this.stop = true; return this.stop; }
   evaluate(pos) {
     const me = pos.side, op = 3 - me;
     const nn = pos.nn && this.nnx ? this.nnx : pos.nn;      // nnx: a per-engine net (A/B tests)
@@ -668,7 +672,7 @@ class Engine {
     if (this.ctl) {   // the threads' shared table (see ttGet)
       const s = this.ttGet(pos.h1, key);
       if (s >= 0) {
-        ttMove = this.tm[s]; const w = this.tv[s];
+        ttMove = this.tm[s]; const w = this.ttw;   // (the word ttGet checked: another thread may have written the slot since)
         if (((w >>> 18) & 127) >= depth && ply > 0) {
           let v = (w & 0x3ffff) - 131072; if (v > WINT) v -= ply; else if (v < -WINT) v += ply;
           const f = (w >>> 25) & 3;
@@ -742,8 +746,10 @@ class Engine {
   // search counter ctl[12]), the second takes the rest. (td / tf are not used here.)
   ttGet(h1, key) {
     const b = h1 & (TT_MASK - 1);
-    if (this.k1[b] === h1 && (this.k2[b] ^ this.tv[b]) === key) return b;
-    if (this.k1[b + 1] === h1 && (this.k2[b + 1] ^ this.tv[b + 1]) === key) return b + 1;
+    let w = this.tv[b];
+    if (this.k1[b] === h1 && (this.k2[b] ^ w) === key) { this.ttw = w; return b; }
+    w = this.tv[b + 1];
+    if (this.k1[b + 1] === h1 && (this.k2[b + 1] ^ w) === key) { this.ttw = w; return b + 1; }
     return -1;
   }
   ttPut(h1, key, v, depth, f, m) {
@@ -861,6 +867,9 @@ class Engine {
   moveVal(pos, i, d) { pos.make(I2M[i]); const v = pos.lastFive() ? WIN - 1 : -this.search(pos, d - 1, -WIN - 1, WIN + 1, 1); pos.unmake(); return v; }
   splitOne(pos, k, d) {   // one move of the current split (this.splitT): its value, or undefined when stopped
     const c = this.ctl, i = c[SP_MV + k], T = this.splitT, S = this.sp;
+    // (a helper: the lead may have published the next split since this one's numbers were read — then the cell may be another
+    // position's move, even an occupied one, and playing it would spoil this thread's board and fill the table with nonsense)
+    if (!this.mtLead && (Atomics.load(c, 13) !== this.splitG || !pos.legalIdx(i))) { this.stop = true; return undefined; }
     if (!S.kind) { const v = this.moveVal(pos, i, d); return this.stop ? undefined : v; }
     const x = Atomics.load(c, 8); if ((x >>> 18) !== T) { this.stop = true; return undefined; }   // (the split is over)
     const a = (x & 0x3ffff) - 131072, beta = S.beta, ply = S.ply;
@@ -875,8 +884,8 @@ class Engine {
     return v;
   }
   splitFinish(k, v) {
-    const c = this.ctl, o = Atomics.load(c, SP_DW + k);
-    if ((o >>> 18) !== this.splitT) Atomics.compareExchange(c, SP_DW + k, o, this.splitT << 18 | (v + 131072));
+    const c = this.ctl, T = this.splitT;   // (only while pending in this split: see spDone)
+    Atomics.compareExchange(c, SP_DW + k, T << 18, T << 18 | (v + 131072));
   }
   splitTake(pos, g, d, n) {   // take moves of split g until none is left, then join the unfinished ones; false: aborted
     const c = this.ctl, T = this.splitT, lost = () => now() > this.deadline || Atomics.load(c, 0) || Atomics.load(c, 13) !== g;
@@ -892,7 +901,7 @@ class Engine {
     const s0 = this.mtLead ? 0 : ((this.mtId | 0) * 5) % n;
     for (let j = 0; j < n; j++) {
       const k = (s0 + j) % n;
-      if ((Atomics.load(c, SP_DW + k) >>> 18) === T) continue;
+      if (spDone(Atomics.load(c, SP_DW + k), T)) continue;
       this.dupK = k;
       const v = this.splitOne(pos, k, d);
       this.dupK = -1;
@@ -903,9 +912,9 @@ class Engine {
   }
   splitRun(pos, moves, d, kind, alpha, beta, ply, opp) {   // the lead: publish one split, search it with the helpers; the values (or null: stopped)
     const c = this.ctl, n = moves.length;
-    for (let k = 0; k < n; k++) { c[SP_MV + k] = moves[k]; c[SP_DW + k] = 0; }
-    for (let p = 0; p < ply; p++) c[SP_PL + p] = this.path[p];
     const g = Atomics.load(c, 13) + 1, T = g % 16383 + 1;
+    for (let k = 0; k < n; k++) { c[SP_MV + k] = moves[k]; Atomics.store(c, SP_DW + k, T << 18); }   // (pending in split T)
+    for (let p = 0; p < ply; p++) c[SP_PL + p] = this.path[p];
     c[8] = T << 18 | ((alpha | 0) + 131072); c[9] = opp ? 1 : 0; c[10] = kind | ply << 4; c[11] = beta | 0; c[16] = n; c[14] = d; Atomics.store(c, 15, (g & 0x1ffffff) << 6);
     Atomics.store(c, 13, g); Atomics.notify(c, 13);
     this.splitG = g; this.splitT = T; this.inSplit = true; this.sp = { kind, beta: beta | 0, ply, opp: !!opp };
@@ -914,7 +923,7 @@ class Engine {
       out = [];
       for (let k = 0; k < n; k++) {
         const w = Atomics.load(c, SP_DW + k);
-        if ((w >>> 18) !== this.splitT) { this.stop = true; break; }   // (cannot happen: every move is done when splitTake returns)
+        if (!spDone(w, this.splitT)) { this.stop = true; break; }   // (cannot happen: every move is done when splitTake returns)
         out.push((w & 0x3ffff) - 131072);
       }
     } else this.stop = true;
