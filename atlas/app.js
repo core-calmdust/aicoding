@@ -954,7 +954,7 @@
     const old = $('bvPS'); if (old) old.remove();
     if (!PS_GAMES[g.id] || !ad || !FULL_SKIN[g.id] || !matchMedia('(max-width: 819px)').matches) return;
     const act = $('bvi').querySelector('.R .act'); if (!act || !$('bvFull')) return;
-    headIcons(true);
+    // headIcons(true);   // (ヒストリア / 戦績 in the card: tried, back to the top left for now — 2026-11-10)
     const row = (k, ic, lb, a, b) => `<button type="button" class="ps-row" data-k="${k}"><span class="ps-ic" style="--c:${g.color}">${ic}</span><span class="ps-tx"><b>${esc(lb)}</b><small>${esc(t('ps.full'))}</small></span>${b ? `<span class="ps-pg"><span class="bar" style="--c:${g.color}"><i style="width:${Math.min(100, a / b * 100)}%"></i></span><em>${Math.min(a, b).toLocaleString()}/${b.toLocaleString()}</em></span>` : ''}<i class="ps-cv"></i></button>`;
     const PZI = '<svg viewBox="0 0 24 24"><path d="M10 3h4v2.2a1.8 1.8 0 1 0 3.6 0V3H21v6h-2.2a1.8 1.8 0 1 0 0 3.6H21V21h-6v-2.2a1.8 1.8 0 1 0-3.6 0V21H3v-6h2.2a1.8 1.8 0 1 0 0-3.6H3V3h7z"/></svg>';
     const LSI = '<svg viewBox="0 0 24 24"><path d="M3 9.5 12 5l9 4.5-9 4.5z"/><path d="M7 11.6V16c0 1.4 2.2 2.6 5 2.6s5-1.2 5-2.6v-4.4M21 9.5V15"/></svg>';
