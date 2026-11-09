@@ -401,7 +401,7 @@
     const T3 = ctx.Table3D, TH = window.THREE, E = window.CarromEngine, D = E.DIM;
     const L = Object.assign({}, UI.en, UI[ctx.lang] || {}), VO = Object.assign({}, VOICE.en, VOICE[ctx.lang] || {}, VOICE2.en, VOICE2[ctx.lang] || {});
     const AC3 = window.Atlas3D && Atlas3D.carrom, HW = AC3 && AC3.how ? AC3.how(ctx.lang) : { place: '', pull: '', lr: '', rel: '' };
-    const T = k => VO[k] != null ? VO[k].replace(/\{(place|pull|lr|rel)\}/g, (m, w) => HW[w] || '') : '';
+    const T = k => { if (VO[k] == null) return ''; let s = VO[k].replace(/\{(place|pull|lr|rel)\}/g, (m, w) => HW[w] || ''); if (k === 'flick.b' && HW.pad) s += '<br><small>💻 ' + HW.pad + '</small>'; return s; };   // (a mouse: the laptop touchpad's click mode)
     try { localStorage.setItem('aicoding-carrom-rules-seen', '1'); } catch (e) {}
     const SND = (window.Atlas3D && Atlas3D.carrom && Atlas3D.carrom.SND) || { flick() {}, hit() {}, cush() {}, pocket() {}, place() {}, good() {}, bad() {}, win() {} };
     const board = T3.MODELS.carrom(true); T3.show('carrom', board); if (T3.play) T3.play(true);
