@@ -128,7 +128,8 @@
       stands.forEach((k, i) => { k.position.set(ST[i].x, 0, ST[i].z); k.rotation.y = 0; k.visible = !tall; });
       // wide: the player's stand sits a little nearer the bottom — shift the scene so the HUD stays clear
       board.position.z = tall ? 0 : .25;
-      if (T3.fit) T3.fit(tall ? { w: (FW + 1.8) * SC, d: (FH + 1 + 2 * 1.45) * SC, y: Y * SC, pitch: 1.53 } : { w: 16.4 * SC, d: 13.1 * SC, y: Y * SC, pitch: 1.53 });
+      // 詰将棋 (ctx.pz) on phones: the defender's pieces in hand (the row above the board) must be read — more room at the top
+      if (T3.fit) T3.fit(tall ? { w: (FW + 1.8) * SC, d: (FH + 1 + 2 * 1.45 + (PZ ? 1.6 : 0)) * SC, y: Y * SC, pitch: 1.53, cz: PZ ? -.8 * SC : 0 } : { w: 16.4 * SC, d: 13.1 * SC, y: Y * SC, pitch: 1.53 });
       T3.kick(400);
     }
     const slotXZ = (who, t) => {   // who: 0 = player, 1 = AI

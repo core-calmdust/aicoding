@@ -272,12 +272,13 @@
       p.state = 'busy'; buttons(); pz().mark(null);
       const mv = pz().moves();
       if (info.mate) return solved(p);
+      // mate puzzles (chess mate in N, 詰将棋): any move may be played — nothing is judged until the N moves are used up;
+      // the defender answers each move, and mating within N clears it (the user's rule, 2026-11-10: no "wrong move")
       if (p.kind === 'mate') {
         p.used++;
-        if (p.used === 1 && u !== p.P.answer) return wrong(p, 1, p.P.answer, X.wrong);
-        if (info.over) return wrong(p, 1, p.used === 1 ? p.P.answer : '', X.wrongNo);
+        if (info.over) return wrong(p, 0, '', X.wrongNo);
         if (p.used >= p.n) return wrong(p, 0, '', fill(X.out, { n: p.n }));
-        say(pick(X.good) + ' ' + fill(X.left, { n: p.n - p.used }));
+        say(fill(X.left, { n: p.n - p.used }));
         await sleep(350); if (p !== cur) return;
         const r = await pz().best(20); if (p !== cur) return;
         if (!r) return wrong(p, 0, '', X.wrongNo);
@@ -295,18 +296,16 @@
         p.k += 2; if (p.k >= p.P.line.length) return solved(p);
         p.state = 'play'; pz().wait(); buttons(); return;
       }
-      // 詰将棋
+      // 詰将棋 (same rule: no move is judged on the way, only mating within the count clears it)
       const sol = p.P.sol, onLine = mv.every((x, i) => x === sol[i]);
-      if (!info.check) return wrong(p, 1, onLine || mv.slice(0, -1).every((x, i) => x === sol[i]) ? sol[mv.length - 1] : '', p.n > 1 ? X.notCheck : X.wrong);
       const remain = p.n - mv.length;
       if (remain <= 0) return wrong(p, 0, '', fill(X.out, { n: p.n }));
       let reply = onLine && p.P.u && sol[mv.length] ? sol[mv.length] : null;
       if (!reply) { const r = await pz().defend(remain); if (p !== cur) return; reply = r && r.reply; }
       if (!reply) return wrong(p, 0, '', X.wrongNo);
-      say(pick(X.good) + ' ' + fill(X.left, { n: Math.ceil((remain - 1) / 2) }));
+      say(fill(X.left, { n: Math.ceil((remain - 1) / 2) }));
       await sleep(350); if (p !== cur) return;
       await pz().play(reply); if (p !== cur) return;
-      if (!pz().hasCheck()) return wrong(p, 0, '', X.escaped);
       p.state = 'play'; pz().wait(); buttons();
     }
     async function wrong(p, back, ans, msg) {
@@ -327,6 +326,7 @@
     async function hint() {
       const p = cur; if (!p || p.state !== 'play') return;
       let u = expected(p);
+      if (!u && p.kind === 'tsume') { p.hinted = true; if (sess.canHint && sess.canHint()) { sess.hint(); say(X.hintSay); } return; }   // off the stored line: the engine's move
       if (!u && p.kind === 'mate') { p.state = 'busy'; buttons(); u = await pz().best(20); if (p !== cur) return; p.state = 'play'; pz().wait(); buttons(); }
       if (!u) return;
       p.hinted = true; pz().mark(u); say(X.hintSay);
