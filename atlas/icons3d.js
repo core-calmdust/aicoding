@@ -739,6 +739,29 @@
       const q = disc(0xc8262b, .6, .34, 0xe04a4a); q.scale.setScalar(1.45); g.add(at(q, .25, 1.95, -.25, .45, 0, -.3));
       return g;
     },
+    crokinole() {   // the middle of a crokinole board (honey maple, the 20 hole with its red ring, the 15 circle and its eight pegs, the 10
+      // circle), a black disc beside a peg, a red disc by the hole, and a red disc leaping high over it all
+      const U = v => (v - .5) * 3.1;
+      const top = M({ map: X.canvasTex('icck2', 512, 512, (g, W) => {
+        const gr = g.createLinearGradient(0, 0, W, W); gr.addColorStop(0, '#f3dcaa'); gr.addColorStop(1, '#e6c487'); g.fillStyle = gr; g.fillRect(0, 0, W, W);
+        g.globalAlpha = .12; g.strokeStyle = '#8a5a26'; g.lineWidth = 3; for (let y = 8; y < W; y += 22) { g.beginPath(); g.moveTo(0, y); g.bezierCurveTo(W * .3, y + 9, W * .6, y - 9, W, y + 4); g.stroke(); } g.globalAlpha = 1;
+        const c = W / 2; g.strokeStyle = '#1d140e'; g.lineWidth = 8;
+        g.beginPath(); g.arc(c, c, W * .3, 0, 7); g.stroke();      // the 15 circle
+        g.beginPath(); g.arc(c, c, W * .6, 0, 7); g.stroke();      // the 10 circle (runs off the face)
+        for (let k = 0; k < 4; k++) { const a = Math.PI / 4 + k * Math.PI / 2; g.beginPath(); g.moveTo(c + Math.cos(a) * W * .6, c + Math.sin(a) * W * .6); g.lineTo(c + Math.cos(a) * W * .9, c + Math.sin(a) * W * .9); g.stroke(); }
+        g.fillStyle = '#c0281f'; g.beginPath(); g.arc(c, c, W * .095, 0, 7); g.fill();
+        g.fillStyle = '#121010'; g.beginPath(); g.arc(c, c, W * .062, 0, 7); g.fill();   // the 20 hole
+      }), roughness: .3 });
+      const g = boardChunk(4, 3.6, top, C(0x5a3a1e, { roughness: .32 }));
+      const brass = C(0xd4a64e, { roughness: .25, metalness: 1 }), rub = C(0x161616, { roughness: .8 });
+      for (let k = 0; k < 8; k++) { const a = (k + .5) * Math.PI / 4, r = 3.1 * .3; const p = new T.Group(); p.add(at(mesh(new T.CylinderGeometry(.07, .07, .36, 16), brass), 0, .18, 0)); p.add(at(mesh(new T.CylinderGeometry(.11, .11, .16, 18), rub), 0, .1, 0)); g.add(at(p, Math.cos(a) * r, .5, Math.sin(a) * r)); }
+      const disc = (hex, ring) => { const d = new T.Group(); d.add(puck(.34, .2, C(hex, { roughness: .3 }), .42)); const t = mesh(new T.TorusGeometry(.34 * .62, .025, 10, 40), C(ring, { roughness: .3 })); t.rotation.x = Math.PI / 2; t.position.y = .2; d.add(t); return d; };
+      g.add(at(disc(0x231d1a, 0x4a3a2e), U(.8), .5, U(.36)));
+      g.add(at(disc(0xb3312a, 0x7a1d18), U(.62), .5, U(.63)));
+      // the flicked disc, leaping
+      const q = disc(0xb3312a, 0x7a1d18); q.scale.setScalar(1.75); g.add(at(q, .1, 1.95, -.15, .42, 0, -.28));
+      return g;
+    },
     ur() {   // a corner of the Ur board: shell plaques (a rosette, eyes, five circles) on a lapis grid in a black frame with a
       // shell diamond band; a shale piece on the rosette, a shell piece hopping in, a tetrahedral die with its white tip up
       const top = M({ map: X.canvasTex('icur', 512, 512, (g, W) => {

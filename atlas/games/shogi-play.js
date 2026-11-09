@@ -90,7 +90,7 @@
     const L = { you: t('p.you'), ai: t('p.ai'), turn: t('p.turn'), think: t('p.think'), win: t('res.win'), lose: t('res.lose'), draw: t('res.draw') };
     injectCss();
     const board = T3.MODELS.shogi(true); board.scale.setScalar(SC); T3.show('shogi', board);
-    const Y = board.userData.top, KH = Y, CW = SG.CW, CH = SG.CH, FW = SG.FW, FH = SG.FH;
+    const Y = board.userData.top, CW = SG.CW, CH = SG.CH, FW = SG.FW, FH = SG.FH;
     const pvp = ctx.mode === 'pvp', PX = PV[ctx.lang] || PV.en;   // pvp: both sides are tapped in turn (sente at the bottom), no AI
     const hc = pvp ? 0 : ctx.side === 2 ? 1 : 0, ac = hc ^ 1;         // engine colours: 0 = sente (black), 1 = gote
     const lvIdx = Math.max(0, Math.min(LEVELS.length - 1, (ctx.level || 8) - 1)), LV = LEVELS[lvIdx];
@@ -106,22 +106,25 @@
     const sqAt = (c, r) => hc ? (8 - r) * 9 + (8 - c) : r * 9 + c;
     const cellXZ = sq => SG.cell(...disp(sq));
 
-    /* ---------- piece stands: beside the board on wide screens, above / below it on tall ones ---------- */
+    /* ---------- piece stands beside the board on wide screens; on tall ones the pieces in hand lie in a row above / below it ---------- */
     const wood = T3.M({ map: T3.wood('komadai', '#d9a764', '#a06c30', 256, 256, 1.6), roughness: .55, bumpScale: .002 });
-    const stands = [SG.komadai(wood, KH), SG.komadai(wood, KH)]; stands.forEach(k => board.add(k));   // [0] = the player's, [1] = the AI's
-    let tall = false, ST = [];
+    const stands = [SG.komadai(wood, Y), SG.komadai(wood, Y)]; stands.forEach(k => board.add(k));   // [0] = the player's, [1] = the AI's
+    let tall = false, ST = [], KH = Y;   // KH: the height the pieces in hand rest at (the stand's top; on the table when tall)
     const GRID_W = [[-.8, -1], [0, -1], [.8, -1], [-.8, 0], [0, 0], [.8, 0], [0, 1]];          // 3 × 3 on the upright plate
-    const GRID_T = [[-1.17, -.55], [-.39, -.55], [.39, -.55], [1.17, -.55], [-.78, .55], [0, .55], [.78, .55]];   // 4 + 3 on the turned plate
+    const GRID_T = [[-3.3, 0], [-2.2, 0], [-1.1, 0], [0, 0], [1.1, 0], [2.2, 0], [3.3, 0]];   // tall screens: one row on the table along the board's edge (no stands, 2026-11-09)
     function layout() {
       const r = ctx.el.getBoundingClientRect();
       tall = r.width < r.height * .95;
       const BWd = FW + 1, BDd = FH + 1;
-      ST = tall ? [{ x: BWd / 2 - 1.55, z: BDd / 2 + 1.6 }, { x: -(BWd / 2 - 1.55), z: -(BDd / 2 + 1.6) }]
+      // phones (tall): no stands — the pieces in hand lie in a row on the table just below (yours) / above (the AI's) the board, so
+      // the board itself can be framed much larger (2026-11-09)
+      ST = tall ? [{ x: 0, z: BDd / 2 + .72 }, { x: 0, z: -(BDd / 2 + .72) }]
         : [{ x: FW / 2 + 1.95, z: 3.9 }, { x: -FW / 2 - 1.95, z: -3.9 }];
-      stands.forEach((k, i) => { k.position.set(ST[i].x, 0, ST[i].z); k.rotation.y = tall ? Math.PI / 2 : 0; });
-      // the player's stand sits a little nearer the bottom: shift the scene so the HUD (top on PC, bottom on phones) stays clear
-      board.position.z = tall ? -.55 : .25;
-      if (T3.fit) T3.fit(tall ? { w: (FW + 1.5) * SC, d: (FH + 1 + 2 * 2.95 + 2.2) * SC, y: Y * SC, pitch: 1.53 } : { w: 16.4 * SC, d: 13.1 * SC, y: Y * SC, pitch: 1.53 });
+      KH = tall ? .01 : Y;
+      stands.forEach((k, i) => { k.position.set(ST[i].x, 0, ST[i].z); k.rotation.y = 0; k.visible = !tall; });
+      // wide: the player's stand sits a little nearer the bottom — shift the scene so the HUD stays clear
+      board.position.z = tall ? 0 : .25;
+      if (T3.fit) T3.fit(tall ? { w: (FW + 1.8) * SC, d: (FH + 1 + 2 * 1.45) * SC, y: Y * SC, pitch: 1.53 } : { w: 16.4 * SC, d: 13.1 * SC, y: Y * SC, pitch: 1.53 });
       T3.kick(400);
     }
     const slotXZ = (who, t) => {   // who: 0 = player, 1 = AI

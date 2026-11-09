@@ -121,7 +121,7 @@
   }
 
   /* ---------- common renderers ---------- */
-  const R3 = new Set(['reversi', 'shogi', 'chess', 'gomoku', 'dots', 'connect4', 'mancala', 'backgammon', 'morris', 'sudoku', 'speedsudoku', 'checkers', 'samegame', 'go', 'hex', 'tafl', 'xiangqi', 'jailbreak', 'solitaire', 'poker', 'baccarat', 'blackjack', 'fanorona', 'alquerque', 'ur', 'ugolki', 'agon', 'konane', 'senet', 'janggi', 'ludo', 'carrom']);   // images/atlas/<id>.webp exists
+  const R3 = new Set(['reversi', 'shogi', 'chess', 'gomoku', 'dots', 'connect4', 'mancala', 'backgammon', 'morris', 'sudoku', 'speedsudoku', 'checkers', 'samegame', 'go', 'hex', 'tafl', 'xiangqi', 'jailbreak', 'solitaire', 'poker', 'baccarat', 'blackjack', 'fanorona', 'alquerque', 'ur', 'ugolki', 'agon', 'konane', 'senet', 'janggi', 'ludo', 'carrom', 'crokinole']);   // images/atlas/<id>.webp exists
   const artSrc = g => R3.has(g.id) ? `../images/atlas/${g.id}.webp?v=${g.id === 'fanorona' || g.id === 'janggi' ? 11 : 10}` : `../${g.icon}`;
   const artImg = (g, extra = '') => `<img src="${artSrc(g)}" alt="" loading="lazy" decoding="async"${R3.has(g.id) ? '' : ' class="flat"'}${extra}>`;
   const g3 = g => `<span class="g3" style="--c:${g.color}">${artImg(g)}</span>`;
@@ -610,6 +610,8 @@
     // scheduled first so it also runs if anything below fails
     [60, 600, 1000].forEach(ms => setTimeout(fitStage, ms));   // (the camera glides back by itself: no snapping)
     if (window.ResizeObserver && !window.__bvRO) { window.__bvRO = new ResizeObserver(() => fitStage()); window.__bvRO.observe($('bvi')); }
+    // table play: やめる and the action bar's buttons take the HUD pill's height (--hudh), so the three read as one set (2026-11-09)
+    if (window.ResizeObserver && !window.__hudRO) { window.__hudRO = new ResizeObserver(() => { const h = $('hud').offsetHeight; if (h) $('bv').style.setProperty('--hudh', h + 'px'); }); window.__hudRO.observe($('hud')); }
     document.body.style.overflow = 'hidden';
     if (push) history.replaceState(null, '', '#' + page + '/' + id);
     if (initGL()) {

@@ -163,9 +163,9 @@
   // v: 0 the smooth pebble (quilt board); 1..4 rough beach stones for the papamū — each a different, uneven shape
   function pebbleGeo(v = 0) {
     const k = (LO() ? 'lo' : 'hi') + v; if (geos[k]) return geos[k];
-    const TT = T(), st = LO() ? 8 : 12, pts = [], rough = v > 0, o = v * 17.3;
+    const TT = T(), st = LO() ? 6 : 8, pts = [], rough = v > 0, o = v * 17.3;
     for (let i = 0; i <= st; i++) { const a = -Math.PI / 2 + Math.PI * i / st, r = Math.cos(a), y = Math.sin(a); pts.push(new TT.Vector2(Math.max(0, r * R * (1 + .05 * Math.cos(a * 2))), (y * .5 + .5) * PH * (rough ? .9 : 1))); }
-    const g = new TT.LatheGeometry(pts, LO() ? 16 : 22);   // (64 pebbles ≈ 34k triangles + the slab ≈ 3k)
+    const g = new TT.LatheGeometry(pts, LO() ? 12 : 16);   // (64 pebbles ≈ 16k triangles + the slab ≈ 3k; was 22 × 12)
     const P = g.attributes.position;   // a pebble, not a lathe: a lumpy wobble (strong and uneven on the papamū's stones)
     const A = rough ? .3 : .09, B = rough ? .35 : .08, F = rough ? 3.2 : 5;
     for (let i = 0; i < P.count; i++) {

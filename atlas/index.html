@@ -1033,6 +1033,12 @@ button.nct[data-go]:hover{transform:translateY(-1px);box-shadow:0 3px 0 var(--li
   .bgbub{font-size:14.5px!important}
 }
 .tbar.col button{width:60px;height:56px;font-size:12px}
+/* phones: やめる as tall as the HUD pill, the action bar's buttons the same height (icon + label kept) (2026-11-09) */
+@media (max-width:819px){
+  .bv.playing .quit{height:var(--hudh,auto);padding-block:0;align-items:center;box-sizing:border-box}
+  .bv.playing .tbar:not(.col) button{height:var(--hudh,52px);min-width:54px;gap:1px;font-size:12px}.bv.playing .tbar:not(.col) button svg{width:19px;height:19px}
+  .bv.playing .tbar:not(.col) .tclk{height:calc(var(--hudh,48px) - 6px)}
+}
 .hud .hs.col{font-size:12.5px!important}.hud .hs.col b{font-size:20px!important}.hud .hs.col .bgk{width:16px!important;height:16px!important}
 .bv.land .bgbub,.bv.bgwide .bgbub{font-size:13.5px!important}
 .bv.rules .hud{display:none}
@@ -1488,6 +1494,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 .bvi #bvOpts:has(> label .lvpick):has(> label .sidetg):not(:has(.sidetg button:nth-child(3))):not(:has(#bvSize)){flex-wrap:nowrap}.bvi #bvOpts:has(> label .sidetg):not(:has(#bvSize)) > label:has(.lvpick){flex:1 1 0!important}   /* AIの強さ + 手番(2つ) always on one line, whatever the level's name/avatar (2026-11-09) */
 .bvi .sidetg{flex:none;overflow:hidden}.bvi .sidetg button{flex:none;padding-inline:12px}
 .bvi #bvOpts:has(#bvSize) > label:has(.lvpick){flex:1 1 0!important;min-width:0}.bvi #bvOpts:has(#bvSize) > label:has(.lvpick) .lvpick span{overflow:hidden;text-overflow:ellipsis}.bvi #bvOpts:has(#bvSize) > label:has(.sidetg):not(:has(#bvSize)){flex:none!important}.bvi #bvOpts > label:has(#bvSize){flex:1 1 100%!important}.bvi #bvOpts > label:has(#bvSize) .sidetg{flex:1 1 auto}.bvi #bvOpts > label:has(#bvSize) .sidetg button{flex:1 1 0}   /* the game length (carrom, crokinole…) on a line of its own: the toggle fills the row */
+@media (max-width:480px){.bvi #bvOpts:has(#bvSize) > label:has(.sidetg):not(:has(#bvSize)){font-size:0;gap:0}.bvi #bvOpts:has(#bvSize) > label:has(.sidetg):not(:has(#bvSize)) .sidetg button{font-size:14px;padding-inline:9px}}   /* phones: 先手/後手 speaks for itself, so the AI-strength picker keeps its room (2026-11-09) */
 /* board size + time control on one row (go) */
 .bvi .tcrow:has(#bvSize){flex-wrap:nowrap!important;gap:10px!important}.bvi .tcrow:has(#bvSize) label{gap:6px}
 @media (max-width:819px){.bvi .tcrow label:has(#bvSize){font-size:0;gap:0}.bvi .tcrow:has(#bvSize) .sidetg button{padding-inline:7px;font-size:14px}.bvi .tcrow:has(#bvSize) .lvpick{padding:0 8px}}   /* phones: the 9×9 / 13×13 / 19×19 toggle speaks for itself */
@@ -1639,13 +1646,13 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 <script src="texgen.js?v=1"></script>
 <script src="npc/roster.js?v=2"></script>
 <script src="art.js?v=8"></script>
-<script src="../shared/atlas.js?v=20261109gc1"></script>
+<script src="../shared/atlas.js?v=20261109ck2"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261109ac1"></script>
-<script src="i18n.js?v=60n"></script>
+<script src="i18n.js?v=61n"></script>
 <script src="gamelist-i18n.js?v=10n"></script>
-<script src="table3d.js?v=130"></script>
-<script src="tables3d.js?v=40"></script>
+<script src="table3d.js?v=132"></script>
+<script src="tables3d.js?v=41"></script>
 <script src="models/shogi.js?v=23"></script>
 <script src="models/chess.js?v=16"></script>
 <script src="models/backgammon.js?v=118"></script>
@@ -1653,30 +1660,32 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 <script src="models/hex.js?v=2"></script>
 <script src="models/xiangqi.js?v=4"></script>
 <script src="models/janggi.js?v=3"></script>
-<script src="models/checkers.js?v=16"></script>
-<script src="models/morris.js?v=6"></script>
+<script src="models/checkers.js?v=17"></script>
+<script src="models/morris.js?v=7"></script>
 <script src="models/connect4.js?v=5"></script>
-<script src="models/mancala.js?v=4"></script>
+<script src="models/mancala.js?v=5"></script>
 <script src="models/dots.js?v=4"></script>
 <script src="models/ur-dice.js?v=2"></script>
 <script src="models/ur.js?v=4"></script>
-<script src="models/fanorona.js?v=3"></script>
-<script src="models/ugolki.js?v=3"></script>
-<script src="models/konane.js?v=6"></script>
-<script src="models/senet.js?v=9"></script>
-<script src="models/agon.js?v=3"></script>
-<script src="models/alquerque.js?v=2"></script>
+<script src="models/fanorona.js?v=4"></script>
+<script src="models/ugolki.js?v=4"></script>
+<script src="models/konane.js?v=7"></script>
+<script src="models/senet.js?v=10"></script>
+<script src="models/agon.js?v=4"></script>
+<script src="models/alquerque.js?v=3"></script>
 <script src="../ludo/engine.js?v=3"></script>
 <script src="../ludo/house.js?v=7"></script>
 <script src="../ludo/board2d.js?v=6"></script>
 <script src="../ludo/board-art.js?v=1"></script>
-<script src="models/ludo.js?v=7"></script>
-<script src="../carrom/engine.js?v=2"></script>
+<script src="models/ludo.js?v=8"></script>
+<script src="../carrom/engine.js?v=3"></script>
 <script src="models/carrom.js?v=12"></script>
+<script src="../crokinole/engine.js?v=2"></script>
+<script src="models/crokinole.js?v=1"></script>
 <script src="models/cardtables.js?v=4"></script>
-<script src="icons3d.js?v=34"></script>
+<script src="icons3d.js?v=35"></script>
 <script src="games/reversi.js?v=31"></script>
-<script src="games/shogi-play.js?v=18"></script>
+<script src="games/shogi-play.js?v=19"></script>
 <script src="games/shogi.js?v=14"></script>
 <script src="games/chess.js?v=12"></script>
 <script src="games/backgammon.js?v=21"></script>
@@ -1702,7 +1711,8 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 <script src="games/senet.js?v=15"></script>
 <script src="games/agon.js?v=9"></script>
 <script src="games/ludo.js?v=24"></script>
-<script src="games/carrom.js?v=17"></script>
+<script src="games/carrom.js?v=18"></script>
+<script src="games/crokinole.js?v=3"></script>
 <script>/* rules tours: after a solved step, the ▶ button fills up like a timer until the tour moves on by itself */
 window.AtlasRgdTimer = function (btn, ms, alive) {
   if (!btn) return; btn.classList.remove('rgd-auto'); void btn.offsetWidth; btn.style.setProperty('--rgt', ms + 'ms'); btn.classList.add('rgd-auto');
@@ -1737,18 +1747,19 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="rules/dots.js?v=2"></script>
 <script src="rules/ludo.js?v=2"></script>
 <script src="rules/carrom.js?v=6"></script>
+<script src="rules/crokinole.js?v=1"></script>
 <link rel="stylesheet" href="historia.css?v=15">
-<script src="historia.js?v=34"></script>
+<script src="historia.js?v=35"></script>
 <link rel="stylesheet" href="skin/loading.css?v=2">
 <script src="skin/loading.js?v=5"></script>
 <script src="gacha3d.js?v=7"></script>
 <script src="../shared/resign.js?v=3"></script><script src="../shared/drawoffer.js?v=1"></script>
 <script src="../shared/tick.js?v=2"></script>
-<script src="gamelist.js?v=25"></script>
+<script src="gamelist.js?v=26"></script>
 <link rel="stylesheet" href="worldmap.css?v=18">
-<script src="worldmap.js?v=29"></script>
+<script src="worldmap.js?v=30"></script>
 <script src="updnews.js?v=7"></script>
 <script src="npc/npc.js?v=13"></script>
-<script src="app.js?v=243"></script>
+<script src="app.js?v=244"></script>
 </body>
 </html>

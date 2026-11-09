@@ -115,7 +115,7 @@
     const TT = T(), pts = [];
     const prof = [[0, 0], [.2, 0], [.24, .05], [.2, .12], [.13, .2], [.11, .32], [.12, .45], [.1, .55], [.13, .6], [.13, .66], [0, .66]];
     for (const [r, y] of prof) pts.push(new TT.Vector2(r, y));
-    const g = new TT.LatheGeometry(pts, LO() ? 12 : 20); if (X.share) X.share(g); return (geos.leg = g);
+    const g = new TT.LatheGeometry(pts, LO() ? 10 : 14); if (X.share) X.share(g); return (geos.leg = g);
   }
   function stand(design) {
     const TT = T(), g = new TT.Group(), B = BOX[design];
@@ -153,7 +153,7 @@
     const dr = new TT.Mesh(new TT.BoxGeometry(.03, H * .56, D * .6), body); dr.position.set(W / 2 + .016, H * .48, 0); g.add(dr);
     const fr = (w, h, y, z) => { const m = new TT.Mesh(new TT.BoxGeometry(.035, h, w), gold); m.position.set(W / 2 + .03, y, z); g.add(m); };
     fr(D * .62, .025, H * .48 + H * .28, 0); fr(D * .62, .025, H * .48 - H * .28, 0); fr(.025, H * .56, H * .48, -D * .31); fr(.025, H * .56, H * .48, D * .31);
-    const knob = new TT.Mesh(new TT.SphereGeometry(.07, 12, 10), gold); knob.position.set(W / 2 + .08, H * .48, 0); g.add(knob);
+    const knob = new TT.Mesh(new TT.SphereGeometry(.07, 10, 7), gold); knob.position.set(W / 2 + .08, H * .48, 0); g.add(knob);
     const st = stand(design); st.position.y = 0; g.add(st);
     // the box stands on its stand: lift everything so the sledge rests on the table (y = 0)
     const LIFT = .66 + .12; g.children.forEach(ch => { ch.position.y += LIFT; });
@@ -166,7 +166,7 @@
     if (geos.spool) return geos.spool;
     const TT = T(), pts = [], P = [[0, 0], [.33, 0], [.34, .03], [.33, .1], [.26, .14], [.18, .22], [.15, .31], [.18, .4], [.26, .48], [.33, .52], [.34, .58], [.32, .615], [0, .62]];
     for (const [r, y] of P) pts.push(new TT.Vector2(r, y));
-    const g = new TT.LatheGeometry(pts, LO() ? 18 : 30); if (X.share) X.share(g); return (geos.spool = g);
+    const g = new TT.LatheGeometry(pts, LO() ? 14 : 20); if (X.share) X.share(g); return (geos.spool = g);
   }
   function coneGeo() {
     if (geos.cone) return geos.cone;
@@ -174,7 +174,7 @@
     for (const [r, y] of P) pts.push(new TT.Vector2(r, y));
     for (let i = 0; i <= 8; i++) { const a = -Math.PI / 2 + .55 + i / 8 * (Math.PI - .55); pts.push(new TT.Vector2(Math.max(0, Math.cos(a) * .12), .66 + Math.sin(a) * .1)); }
     pts.push(new TT.Vector2(0, .76));
-    const g = new TT.LatheGeometry(pts, LO() ? 18 : 30); if (X.share) X.share(g); return (geos.cone = g);
+    const g = new TT.LatheGeometry((X.lp || (a => a))(pts, .003), LO() ? 14 : 20); if (X.share) X.share(g); return (geos.cone = g);
   }
   const PIECES = {
     tut: [{ color: '#ecdab2', roughness: .4, clearcoat: .35, tex: 'ivory' }, { color: '#2a1a0f', roughness: .3, clearcoat: .7, tex: 'ebony' }],

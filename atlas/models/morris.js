@@ -206,7 +206,7 @@
   const GEO = {};
   function lathe(key, prof, seg) {
     const k = key + '@' + seg; if (GEO[k]) return GEO[k];
-    const TT = T(), g = new TT.LatheGeometry(prof.map(([r, y]) => new TT.Vector2(r, y)), seg);
+    const TT = T(), g = new TT.LatheGeometry((X.lp || (a => a))(prof, .003).map(([r, y]) => new TT.Vector2(r, y)), Math.round(seg * .75));
     X.share && X.share(g); return (GEO[k] = g);
   }
   // a piece: rounded rim, an engraved V-ring, a gently domed centre with a small boss (base at y = 0)
