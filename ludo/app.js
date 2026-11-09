@@ -81,16 +81,21 @@ function cupDraw(seat, mode, thr) {   // mode: mouth up — 'ready' (tap me) · 
   const dice = thr ? diceAt(thr.three6 ? [6, 6, 6] : thr.dice || [thr.v]) : '';
   gC.innerHTML = CUP_DEF + `<g transform="translate(${x} ${y}) scale(1.25)">${dice ? `<g class="cupd">${dice}</g>` : ''}${mode === 'dice' ? '' : `<g class="cup ${mode}${moved ? ' slide' : ''}">${/^(ready|idle|shake|flip)$/.test(mode) ? cupUp(col) : cupBody(col)}</g>`}</g>`;
   if (moved) { const [x0, y0] = cupSpot(CUP.seat), c = gC.querySelector('.cup'); c.style.setProperty('--dx', (x0 - x) + 'px'); c.style.setProperty('--dy', (y0 - y) + 'px'); }
-  if (mode === 'ready' && CUP.hint) cupHint(gC, x, y); else if (mode !== 'ready') CUP.hint = false;
+  if (mode === 'ready' && CUP.hint) cupHint(gC, x, y); else if (mode !== 'ready') { CUP.hint = false; CUP.hintT = 0; }
   CUP.seat = seat;
 }
 // the bubble over the cup (the first throw): white, rounded, a little tail to the cup, floating up and down
 function cupHint(gC, x, y) {
   const txt = t(matchMedia('(pointer: coarse)').matches ? 'st.tapT' : 'st.tapC');
-  const g = document.createElementNS('http://www.w3.org/2000/svg', 'g'); g.setAttribute('class', 'cuphint'); g.setAttribute('transform', `translate(${x} ${y - 1.12})`);
-  g.innerHTML = `<g class="chb"><rect class="chr" x="-1" y="-.36" width="2" height=".62" rx=".31"/><path class="cht" d="M-.13 .24L0 .42L.13 .24Z"/><text class="chx" x="0" y=".07" text-anchor="middle">${txt}</text></g>`;
+  const g = document.createElementNS('http://www.w3.org/2000/svg', 'g'); g.setAttribute('class', 'cuphint'); g.setAttribute('transform', `translate(${x} ${y - 1.25})`);
+  // a cloud: puffs all round the words, and two little puffs trailing down to the cup
+  g.innerHTML = `<g class="chb"><path class="chr" d=""/><circle class="chr" cx=".05" cy=".52" r=".09"/><circle class="chr" cx="-.02" cy=".7" r=".055"/><text class="chx" x="0" y=".11" text-anchor="middle">${txt}</text></g>`;
   gC.appendChild(g);
-  try { const w = g.querySelector('text').getComputedTextLength() + .5; const r = g.querySelector('rect'); r.setAttribute('x', -w / 2); r.setAttribute('width', w); } catch (e) {}
+  let w = 2.2; try { w = g.querySelector('text').getComputedTextLength() + .5; } catch (e) {}
+  g.querySelector('path').setAttribute('d', B.cloudPath(w, .66));
+  // the cup is drawn again now and then (the board redrawn, a resize): the float goes on where it was — not from the start
+  const el = (performance.now() - (CUP.hintT || (CUP.hintT = performance.now()))) / 1000;
+  g.querySelector('.chb').style.animationDelay = `${-el}s, ${.35 - el}s`;
 }
 // (2026-11-09) drawBoard rebuilds the whole SVG, #gCup with it: the cup as it was is drawn again (no slide; the page's own
 // function, not the full board's wrapper — the 3D cup is not told twice). Before, after a reload / a design change / the
