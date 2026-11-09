@@ -201,7 +201,7 @@
     const L = Object.assign({}, UI.en, UI[ctx.lang] || {}), VO = Object.assign({}, VOICE.en, VOICE[ctx.lang] || {});
     const AC = window.Atlas3D && Atlas3D.carrom, CK = window.Atlas3D && Atlas3D.crokinole;
     const HW = CK && CK.howFor ? CK.howFor(ctx.lang) : { place: '', pull: '', lr: '', rel: '' };
-    const T = k => VO[k] != null ? VO[k].replace(/\{(place|pull|lr|rel)\}/g, (m, w) => HW[w] || '') : '';
+    const T = k => { if (VO[k] == null) return ''; let s = VO[k].replace(/\{(place|pull|lr|rel)\}/g, (m, w) => HW[w] || ''); if (k === 'open.b' && HW.pad) s += '<br><small>💻 ' + HW.pad + '</small>'; return s; };   // (a mouse: the laptop touchpad's click mode)
     try { localStorage.setItem('aicoding-crokinole-rules-seen', '1'); } catch (e) {}
     const SND = (AC && AC.SND) || { flick() {}, hit() {}, cush() {}, pocket() {}, place() {}, good() {}, bad() {}, win() {} };
     const board = T3.MODELS.crokinole(true); T3.show('crokinole', board); if (T3.play) T3.play(true);

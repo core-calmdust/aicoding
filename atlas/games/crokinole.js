@@ -169,7 +169,7 @@
     function howtoCard(done) {
       const H = howtoFor(lang), steps = H[mousey() ? 'm' : 't'], ic = ['↔', '↓', '↔', '☝'];
       const d = document.createElement('div'); d.className = 'ckhow'; d.dir = lang === 'ar' ? 'rtl' : 'ltr';
-      d.innerHTML = `<div class="ckhow-c" role="dialog" aria-modal="true"><h2>${esc(H.title)}</h2><ol>${steps.map((x, i) => `<li><i>${ic[i]}</i><span>${esc(x)}</span></li>`).join('')}</ol><p class="u">${esc(H.undo)}</p><label><input type="checkbox"> ${esc(H.never)}</label><p class="n">${esc(H.note.replace('{r}', t('bv.rules')))}</p><button type="button">${esc(H.ok)}</button></div>`;
+      d.innerHTML = `<div class="ckhow-c" role="dialog" aria-modal="true"><h2>${esc(H.title)}</h2><ol>${steps.map((x, i) => `<li><i>${ic[i]}</i><span>${esc(x)}</span></li>`).join('')}</ol>${mousey() && H.pad ? `<p class="u" style="margin-top:10px">💻 ${esc(H.pad)}</p>` : ''}<p class="u">${esc(H.undo)}</p><label><input type="checkbox"> ${esc(H.never)}</label><p class="n">${esc(H.note.replace('{r}', t('bv.rules')))}</p><button type="button">${esc(H.ok)}</button></div>`;
       const close = () => { if (d.querySelector('input').checked) { try { localStorage.setItem(HK, 'off'); } catch (e) {} } d.remove(); cardEl = null; done && done(); };
       d.querySelector('button').onclick = close;
       ['pointerdown', 'pointermove', 'pointerup'].forEach(k => d.addEventListener(k, e => e.stopPropagation()));
