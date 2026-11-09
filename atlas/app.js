@@ -929,9 +929,9 @@
   const homeMark = () => { try { sessionStorage.setItem('aicoding-home', location.pathname + '#' + page); } catch (e) {} };
   homeMark(); addEventListener('pagehide', homeMark);
   // games that have the full portal skin open the complete game (lessons, puzzles, online …) on the 3D table
-  // 戦績 (the cup): on phones it sits right of the ヒストリア pill, top left; on PC (the pill lives in the card there) beside the place chip
-  function placeRec() { const r = $('bvRec'), hw = $('bvHistW'), td = $('bvTodW'); if (!r || !hw || !td || r.classList.contains('inhd')) return;
-    if (matchMedia('(hover:hover) and (pointer:fine) and (min-width:820px)').matches) { if (r.parentNode !== td) $('bvPlBtn').after(r); } else if (r.parentNode !== hw) hw.appendChild(r); }
+  // 戦績 (the cup): on phones under the ✕ (top right); on PC beside the place chip
+  function placeRec() { const r = $('bvRec'), td = $('bvTodW'); if (!r || !td || r.classList.contains('inhd')) return;
+    if (r.parentNode !== td) $('bvPlBtn').after(r); }   // phones: CSS drops it under ✕ (2026-11-10); PC: beside the place chip
   addEventListener('resize', placeRec);
   /* ---------- phones: the 「あそぶ」 sheet (2026-11-09) ----------
      A game whose full version has puzzles / lessons playable on the 3D table (PS_GAMES) keeps the card short: one 「あそぶ ▶」

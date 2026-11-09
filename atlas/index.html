@@ -250,6 +250,7 @@ html[lang=ar] .badge,html[lang=hi] .badge{letter-spacing:0}
 .bvhw{position:absolute;z-index:4;top:calc(12px + env(safe-area-inset-top));inset-inline-start:max(14px,env(safe-area-inset-left));display:flex;gap:8px;align-items:center}.bvhw .bvhist{position:static;inset:auto}.bv.playing .bvhw{display:none!important}.bv.hist .bvhw .bvrecb{opacity:0!important;pointer-events:none!important}   /* phones: 戦績 right of the ヒストリア pill (app.js placeRec; PC keeps it by the place chip) (2026-11-09) */
 /* time-of-day picker (own UI), left of the × */
 .bvtod{position:absolute;top:calc(12px + env(safe-area-inset-top));inset-inline-end:62px;z-index:4;display:flex;gap:8px;align-items:center}
+@media (max-width:819px){.bvtod .bvrecb{position:absolute;top:calc(100% + 10px);inset-inline-end:-48px}}   /* phones: 戦績 under the ✕ (2026-11-10) */
 .bvtod #bvTodBtn,.bvtod #bvTodMenu{display:none!important}   /* 時間帯 lives in the place panel now (one chip for the place, 明るさ and 時間帯) */
 .plp .plbr + .pltodh{margin-top:14px}
 .plbr.pltod button i{box-shadow:0 0 0 1px rgba(0,0,0,.1)!important}
@@ -1893,6 +1894,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=31"></script>
 <script src="updnews.js?v=7"></script>
 <script src="npc/npc.js?v=15"></script>
-<script src="app.js?v=259"></script>
+<script src="app.js?v=260"></script>
 </body>
 </html>
