@@ -72,7 +72,8 @@
     let alignHooked = false;
     const alignTo = (units, top) => {
       o.units = units; placeHost();
-      T3.align(() => { const b = box(); return { x: b.x - host.offsetLeft, y: b.y - host.offsetTop, w: b.w, h: b.h, tilt: TILT, persp: b.h * PERSP }; }, units, top);
+      // window.__boardZoom {s, tx, ty}: the game scales its DOM board with a CSS transform (shogi's 詰将棋 zoom) — the camera follows it
+      T3.align(() => { const b = box(), z = window.__boardZoom; if (z && z.s > 1) { b.x += z.tx; b.y += z.ty; b.w *= z.s; b.h *= z.s; } return { x: b.x - host.offsetLeft, y: b.y - host.offsetTop, w: b.w, h: b.h, tilt: TILT, persp: b.h * PERSP }; }, units, top);
       if (!alignHooked) {   // (once: a skin that re-aligns on a turn of the phone / a new board added these again every time — the page got slower)
         alignHooked = true;
         addEventListener('resize', () => requestAnimationFrame(placeHost));
