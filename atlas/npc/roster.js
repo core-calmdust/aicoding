@@ -5,6 +5,7 @@
      AtlasNPC.LEVELS[game]   the game's AI levels (as on the portal's board card)
      AtlasNPC.BOSSES[game]   [{ v: voice, m: 3D model spec (avatars/sp-boss.js), n: names }]
      AtlasNPC.band(game, lv) → index of the boss for that level (0 = Lv.1–3)
+     AtlasNPC.tier(game, lv) → the avatar a win gives: 0 N / 1 R / 2 SR (Lv.1 N, Lv.2 R, Lv.3 SR, Lv.4 N …)
      AtlasNPC.VOICE[species] the voice of the 50 gacha creatures when they talk at the table
    Titles, lines and trivia (14 languages) live in npc/t/<lang>.js; the talk itself in npc/npc.js.
    Names: 'ja|en|zh|zh-TW|ko|ru|hi|ar' (es fr pt de id tr use the English name).
@@ -237,6 +238,8 @@
   // a game's boss for an AI level (levels beyond the roster count as the last boss)
   A.band = (g, lv) => { const L = A.BOSSES[g]; if (!L) return -1; return Math.max(0, Math.min(L.length - 1, Math.floor((Math.max(1, lv | 0) - 1) / 3))); };
   A.bossId = (g, i) => `boss-${g}-${i + 1}`;
+  // the avatar tier a win at this level gives: 0 = N, 1 = R, 2 = SR (Lv.1 N, 2 R, 3 SR, 4 N …; levels past the roster: SR)
+  A.tier = (g, lv) => { const i = A.band(g, lv); return i < 0 ? 2 : Math.max(0, Math.min(2, (Math.max(1, lv | 0) - 1) - i * 3)); };
   A.range = (g, i) => { const lo = i * 3 + 1, hi = Math.min((A.LEVELS[g] || 20), i * 3 + 3); return lo === hi ? 'Lv.' + lo : `Lv.${lo}–${hi}`; };
   // the 50 gacha creatures: how they talk when they come to watch (default: cute)
   A.VOICE = { shogi: 'samurai', knight: 'knight', disc: 'sleepy', tile: 'scholar', stone: 'cool', dot: 'cute', plop: 'cute', gem: 'merchant', dice: 'hothead', owl: 'trickster', crab: 'pirate',

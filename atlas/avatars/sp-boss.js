@@ -190,7 +190,9 @@
     // stern brows: the strong bosses look a little tougher (still cute)
     if (rank >= .55 || m.brow) [-1, 1].forEach(s => { const p = surf(s * .28, eyeV + .2), b = mesh(new T.SphereGeometry(1, 16, 10), fixed(INK)); b.scale.set(.1, .028, .02); b.position.copy(p.p).addScaledVector(p.n, .008); b.lookAt(b.position.clone().add(p.n)); b.rotateZ(-s * .32); g.add(b); });
     // extras
-    const X = (A.x || []).concat(m.ex || []);
+    // N (tier 0) = the bare plush with its prop, R (1) = + the hat, SR (2) and up = + the outfit
+    const OUTFIT = ['glasses', 'monocle', 'cape', 'cape?', 'ruff', 'scarf', 'necklace', 'collar', 'belt', 'robe', 'armor'];
+    const X = (A.x || []).concat((m.ex || []).filter(x => tier >= 2 || !OUTFIT.includes(x)));
     X.forEach(x => {
       if (x === 'mane') for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; blob(g, pl(c[2] || 0xd8823a), [Math.cos(a) * .82, 1.45 + Math.sin(a) * .7, -.12], [.26, .26, .2]); }
       else if (x === 'horsemane') for (let i = 0; i < 5; i++) blob(g, acc, [0, 2.1 - i * .18, -.3 - i * .1], [.14, .16, .14]);
@@ -231,7 +233,7 @@
     else if (TL === 'dragon') { [0, 1, 2].forEach(i => blob(g, B, [.15 + i * .18, .3 + i * .04, -.45 - i * .16], [.16 - i * .03, .14 - i * .03, .2])); put(g, cone(.08, .18, acc, 8), [.7, .4, -.88], [-1.2, 0, 0]); }
     else if (TL === 'flat') blob(g, dark, [0, .2, -.6], [.24, .06, .3]);
     // hat
-    const hg = new T.Group(), hk = m.hat || 'none', hcol = m.hc || Object.assign([c[2]], { auto: true }); (HATS[hk] || HATS.none)(hg, hcol, L);
+    const hg = new T.Group(), hk = tier >= 1 && m.hat || 'none', hcol = m.hc || Object.assign([c[2]], { auto: true }); (HATS[hk] || HATS.none)(hg, hcol, L);
     const hy = E === 'long' ? 2.04 : E === 'frog' ? 2.12 : 2.06;
     if (hk !== 'none') { hg.position.set(0, hy, -.04); hg.rotation.set(-.08, 0, hk === 'crown' || hk === 'beret' ? -.12 : 0); g.add(hg); }
     if (L && m.hat2) { const h2 = new T.Group(); HATS[m.hat2](h2, hcol, L); h2.position.set(0, hy + .12, -.04); g.add(h2); }
@@ -244,7 +246,7 @@
     g.userData.head = [1.55, .95, .05]; g.userData.top = [0, hy + .2, -.04, 0];
     return alive(g, eyes);
   }
-  // register every boss as an avatar species (ids boss-<game>-<n>; tiers 2 and 3 are the ones that exist as items)
+  // register every boss as an avatar species (ids boss-<game>-<n>; tiers 0–2 = N / R / SR won at the AI levels, 3 = SSR / UR in the gacha)
   const B = AtlasNPC.BOSSES;
   Object.keys(B).forEach(gid => B[gid].forEach((sp, i) => {
     const n = B[gid].length; sp.rank = n > 1 ? i / (n - 1) : 1;
