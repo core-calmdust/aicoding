@@ -91,7 +91,7 @@
 .sghs button.c{cursor:pointer}.sghs button.c.on{background:#bdf0d2;border-color:#2fa864;box-shadow:0 2px 0 #1f7a46}
 .sghs .c i{position:absolute;right:-6px;top:-6px;min-width:17px;height:17px;border-radius:9px;background:#2a1a0e;color:#fff;font:800 11px/17px system-ui,sans-serif;font-style:normal;text-align:center;padding:0 3px}
 .sgzoom{position:fixed;z-index:75;top:calc(12px + env(safe-area-inset-top));right:106px;display:grid;place-items:center;width:44px;height:44px;padding:0;border-radius:50%;border:2px solid var(--line,#eadfcb);background:#fff;box-shadow:0 3px 0 var(--line,#eadfcb);font:800 13px/1 var(--round,system-ui,sans-serif);color:#3a2e24;cursor:pointer}
-.sgzoom.in-rgd{position:absolute;top:auto;right:auto;bottom:calc(100% + 10px)}
+.sgzoom.in-rgd{position:absolute;top:auto;right:auto}
 .sgzoom svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .sghs .nil{color:rgba(255,255,255,.8);font-weight:800;text-shadow:0 1px 2px rgba(0,0,0,.4)}`;
     document.head.appendChild(s);
@@ -495,7 +495,7 @@
       // above the guide character of the puzzle panel (atlas/puzzles.js .rgd.pzg), else top right (2026-11-10)
       const host = document.querySelector('.rgd.pzg'), pic = host && host.querySelector('.pic');
       if (host && zbtn.parentElement !== host) { host.appendChild(zbtn); zbtn.classList.add('in-rgd'); }
-      if (pic) zbtn.style.left = Math.round(pic.offsetLeft + pic.offsetWidth / 2 - 22) + 'px';
+      if (pic) { const pr = pic.getBoundingClientRect(), hr = host.getBoundingClientRect(); zbtn.style.left = Math.round(pr.left - hr.left + pr.width / 2 - 22) + 'px'; zbtn.style.bottom = Math.round(hr.bottom - pr.top + 10) + 'px'; }
       zbtn.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${zoomOn ? '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>' : '<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5M8 10.5h5M10.5 8v5"/>'}</svg>`;   // (icon only, 2026-11-10)
       zbtn.setAttribute('aria-label', zoomOn ? L[0] : L[1]); zbtn.title = zoomOn ? L[0] : L[1];
     }
