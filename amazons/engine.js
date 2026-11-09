@@ -149,11 +149,11 @@ class Pos {
   spec() { let s = ''; for (let i = 0; i < NN; i++) s += '.wbx'[this.sq[i]]; return { b: s, side: this.side ? P2 : P1, n: this.ply }; }
   // territory by queen distance (who reaches each empty square in fewer queen moves): { a: White's, b: Black's, n: neutral, sep: no square both reach }
   terr() {
-    distQ(this.sq, this.q, 0, DA); distQ(this.sq, this.q, 4, DB);
+    padFrom(this.sq, this.q); distQ(0, DA); distQ(4, DB);
     let a = 0, b = 0, n = 0, both = 0;
     for (let i = 0; i < NN; i++) {
       if (this.sq[i]) continue;
-      const x = DA[i], y = DB[i];
+      const x = DA[PI[i]], y = DB[PI[i]];
       if (x < y) a++; else if (y < x) b++; else if (x < INF) n++;
       if (x < INF && y < INF) both++;
     }
@@ -169,33 +169,43 @@ function clearLine(sq, f, t, skip) {
   for (;;) { const i = r * N + c; if (sq[i] && i !== skip) return false; if (i === t) return true; r += dr; c += dc; }
 }
 // ---------------------------------------------------------------- distances (the evaluation's core)
-const DA = new Uint8Array(NN), DB = new Uint8Array(NN), KA = new Uint8Array(NN), KB = new Uint8Array(NN);
-const QU = new Int8Array(NN + 8);
-// queen-move distance from the amazons q[k0 … k0+3] to every empty square (INF = unreachable)
-function distQ(sq, q, k0, D) {
+// The searches run on a padded 12×12 copy of the board (a wall of blocked squares around it): a line is followed by adding
+// its offset until a blocked square, with no bounds checks and no per-square ray tables.
+const PW = 12, PN = PW * PW, PI = new Uint8Array(NN), OFF = [-PW, PW, -1, 1, -PW - 1, -PW + 1, PW - 1, PW + 1];
+for (let i = 0; i < NN; i++) PI[i] = (((i / N) | 0) + 1) * PW + (i % N) + 1;
+const PB = new Int8Array(PN), PQ = new Uint8Array(8);
+const DA = new Uint8Array(PN), DB = new Uint8Array(PN), KA = new Uint8Array(PN), KB = new Uint8Array(PN);
+const QU = new Uint8Array(PN + 8);
+function padFrom(sq, q) {
+  PB.fill(1);
+  for (let i = 0; i < NN; i++) PB[PI[i]] = sq[i];
+  for (let k = 0; k < 8; k++) PQ[k] = q[k] >= 0 ? PI[q[k]] : 0;
+}
+// queen-move distance from the amazons PQ[k0 … k0+3] to every empty square (INF = unreachable)
+function distQ(k0, D) {
   D.fill(INF);
   let h = 0, tl = 0;
-  for (let k = k0; k < k0 + 4; k++) { const f = q[k]; if (f >= 0) { D[f] = 0; QU[tl++] = f; } }
+  for (let k = k0; k < k0 + 4; k++) { const f = PQ[k]; if (f) { D[f] = 0; QU[tl++] = f; } }
   while (h < tl) {
-    const s = QU[h++], nd = D[s] + 1, rays = RAYS[s];
+    const s = QU[h++], nd = D[s] + 1;
     for (let d = 0; d < 8; d++) {
-      const ray = rays[d];
-      for (let j = 0; j < ray.length; j++) {
-        const t = ray[j]; if (sq[t]) break;
-        if (D[t] > nd) { D[t] = nd; QU[tl++] = t; }
-        else if (D[t] < nd) continue;
+      const o = OFF[d];
+      for (let t = s + o; PB[t] === 0; t += o) {
+        const dt = D[t];
+        if (dt > nd) { D[t] = nd; QU[tl++] = t; }
+        else if (dt < nd) break;   // (t is expanded itself: the squares beyond it are no nearer through this line)
       }
     }
   }
 }
 // king-move distance (one step at a time)
-function distK(sq, q, k0, D) {
+function distK(k0, D) {
   D.fill(INF);
   let h = 0, tl = 0;
-  for (let k = k0; k < k0 + 4; k++) { const f = q[k]; if (f >= 0) { D[f] = 0; QU[tl++] = f; } }
+  for (let k = k0; k < k0 + 4; k++) { const f = PQ[k]; if (f) { D[f] = 0; QU[tl++] = f; } }
   while (h < tl) {
-    const s = QU[h++], nd = D[s] + 1, nb = NB[s];
-    for (let j = 0; j < nb.length; j++) { const t = nb[j]; if (!sq[t] && D[t] > nd) { D[t] = nd; QU[tl++] = t; } }
+    const s = QU[h++], nd = D[s] + 1;
+    for (let d = 0; d < 8; d++) { const t = s + OFF[d]; if (PB[t] === 0 && D[t] > nd) { D[t] = nd; QU[tl++] = t; } }
   }
 }
 const P2N = new Float64Array(INF + 2); for (let i = 0; i <= INF + 1; i++) P2N[i] = i >= INF ? 0 : Math.pow(2, -i);
@@ -209,26 +219,35 @@ let evals = 0;
 function evalFor(pos, me, toMove) {
   evals++;
   const sq = pos.sq, q = pos.q;
-  distQ(sq, q, 0, DA); distQ(sq, q, 4, DB); distK(sq, q, 0, KA); distK(sq, q, 4, KB);
+  padFrom(sq, q);
+  distQ(0, DA); distQ(4, DB);
   const kap = toMove === P1 ? EW.tempo : -EW.tempo;
   let t1 = 0, t2 = 0, c1 = 0, c2 = 0, w = 0;
-  for (let i = 0; i < NN; i++) {
-    if (sq[i]) continue;
+  for (let j = 0; j < NN; j++) {
+    const i = PI[j];
+    if (PB[i]) continue;
     const a = DA[i], b = DB[i];
     if (a < b) t1 += 1; else if (b < a) t1 -= 1; else if (a < INF) t1 += kap;
-    const ka = KA[i], kb = KB[i];
-    if (ka < kb) t2 += 1; else if (kb < ka) t2 -= 1; else if (ka < INF) t2 += kap;
     c1 += P2N[a] - P2N[b];
-    if (ka < INF || kb < INF) { const x = (kb - ka) / 6; c2 += x > 1 ? 1 : x < -1 ? -1 : x; }
     if (a < INF && b < INF) w += P2N[a > b ? a - b : b - a];
   }
   const e = w > 40 ? 1 : w / 40;   // 1 = open (opening / middle game), 0 = separated
+  if (e > 0) {   // the king-distance terms count only while the board is open (separated: no need to measure them)
+    distK(0, KA); distK(4, KB);
+    for (let j = 0; j < NN; j++) {
+      const i = PI[j];
+      if (PB[i]) continue;
+      const ka = KA[i], kb = KB[i];
+      if (ka < kb) t2 += 1; else if (kb < ka) t2 -= 1; else if (ka < INF) t2 += kap;
+      if (ka < INF || kb < INF) { const x = (kb - ka) / 6; c2 += x > 1 ? 1 : x < -1 ? -1 : x; }
+    }
+  }
   // the amazons' freedom: squares each can reach in one move (few = in danger of being boxed in)
   let mob = 0;
   for (let k = 0; k < 8; k++) {
-    const f = q[k]; if (f < 0) continue;
-    let n = 0; const rays = RAYS[f];
-    for (let d = 0; d < 8; d++) { const ray = rays[d]; for (let j = 0; j < ray.length; j++) { if (sq[ray[j]]) break; n++; } }
+    const f = PQ[k]; if (!f) continue;
+    let n = 0;
+    for (let d = 0; d < 8; d++) { const o = OFF[d]; for (let t = f + o; PB[t] === 0; t += o) n++; }
     const pen = n === 0 ? 10 : n < 5 ? (5 - n) * 1.4 : 0;   // (weighs less once the board has closed up)
     mob += (k < 4 ? -1 : 1) * pen * (0.25 + 0.75 * e);
   }
@@ -241,7 +260,23 @@ const kindOf = v => Math.abs(v) > WINT ? 'exact' : 'heur';
 // ---------------------------------------------------------------- candidate moves (two stages: the queen move, then the arrow)
 // Every queen move is valued (the arrow not yet shot); the best few are then tried with every arrow. The children are
 // valued by the full evaluation from the mover's view; a move after which the opponent cannot move wins at once.
-const QKEEP_BASE = 14;
+const QKEEP_BASE = 14, CK = 10;
+// the search's cache of candidate lists (the top CK moves of a position for a qkeep): iterative deepening visits the same
+// nodes again, and the list is most of a node's cost (win scores are kept relative to the node, like the table's)
+const CC = new Map();
+function candsC(pos, K, ply, qkeep) {
+  const key = pos.h1 * 32 + qkeep, e = CC.get(key);
+  let L;
+  if (e && e.h2 === pos.h2) L = e.L;
+  else {
+    L = cands(pos, CK, 0, qkeep);
+    if (CC.size > 120000) CC.clear();
+    CC.set(key, { h2: pos.h2, L });
+  }
+  const n = Math.min(K, L.length), out = new Array(n);
+  for (let i = 0; i < n; i++) { const c = L[i]; out[i] = c.s > WINT ? { m: c.m, s: c.s - ply } : c; }
+  return out;
+}
 function cands(pos, K, ply, qkeep, extra) {
   const me = pos.turn, op = 3 - me, sq = pos.sq, out = [];
   const Q = pos.qmoves(me, []);
@@ -281,24 +316,38 @@ function scoreMove(pos, m, me, op, out, ply) {
 }
 // ---------------------------------------------------------------- search (negamax alpha-beta, PVS, TT, iterative deepening)
 const TT = new Map();
+// SH: the transposition table shared by the workers of shared/mtsplit.js (shared mode: a cross-origin isolated page —
+// shared/mttt.js, set by the 'mtshare' message; the one-thread worker never has it). Its entries keep 16 bits of a move and
+// 16 more in the "extra" part: a move here is 21 bits.
+let SH = null;
+const TE = { h2: 0, d: 0, v: 0, f: 0, m: -1 };
+function ttGet(pos) {
+  if (SH !== null) {
+    const e = SH.get(pos.h1, pos.h2); if (!e) return null;
+    TE.h2 = pos.h2; TE.d = e.d; TE.v = e.v; TE.f = e.f; const lo = (e.m + 2) & 0xFFFF; TE.m = lo || e.x ? lo | (e.x << 16) : -1;
+    return TE;
+  }
+  const e = TT.get(pos.h1); return e && e.h2 === pos.h2 ? e : null;
+}
 let nodes = 0, evalLimit = Infinity, tEnd = Infinity, stop = false;
 const KW = [0, 1, 8, 9, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10];   // moves searched at each remaining depth
-function timeUp() { if (Date.now() > tEnd || evals > evalLimit) stop = true; return stop; }
+function timeUp() { if (Date.now() > tEnd || evals > evalLimit || (SH !== null && SH.stopped())) stop = true; return stop; }
 function search(pos, d, a, b, ply) {
   nodes++;
   if ((nodes & 31) === 0 && timeUp()) return 0;
   if (stop) return 0;
   if (!pos.canMove(pos.turn)) return -(WIN - ply);
-  const key = pos.h1, e = TT.get(key), hit = e && e.h2 === pos.h2;
+  const e = ttGet(pos), hit = e !== null;
   if (hit && e.d >= d) {
     const v = e.v > WINT ? e.v - ply : e.v < -WINT ? e.v + ply : e.v;
     if (e.f === 0) return v; if (e.f === 1 && v >= b) return v; if (e.f === 2 && v <= a) return v;
   }
   if (d <= 0) return evaluate(pos);
-  const C = cands(pos, d >= 2 ? KW[Math.min(d, KW.length - 1)] : 1, ply, d >= 3 ? QKEEP_BASE : 10);
+  const C = candsC(pos, d >= 2 ? KW[Math.min(d, KW.length - 1)] : 1, ply, d >= 3 ? QKEEP_BASE : 10);
   if (!C.length) return -(WIN - ply);
   if (d === 1) { const v = C[0].s; store(pos, d, v, 0, C[0].m, ply); return v; }
-  if (hit && e.m >= 0) { const i = C.findIndex(x => x.m === e.m); if (i > 0) { const x = C[i]; C.splice(i, 1); C.unshift(x); } else if (i < 0 && pos.isLegal(e.m)) C.unshift({ m: e.m, s: 0 }); }
+  const em = hit ? e.m : -1;
+  if (em >= 0) { const i = C.findIndex(x => x.m === em); if (i > 0) { const x = C[i]; C.splice(i, 1); C.unshift(x); } else if (i < 0 && pos.isLegal(em)) C.unshift({ m: em, s: 0 }); }
   const a0 = a; let best = -Infinity, bm = C[0].m;
   for (let i = 0; i < C.length; i++) {
     const m = C[i].m;
@@ -316,6 +365,7 @@ function search(pos, d, a, b, ply) {
 }
 function store(pos, d, v, f, m, ply) {
   const sv = v > WINT ? v + ply : v < -WINT ? v - ply : v;
+  if (SH !== null) { SH.put(pos.h1, pos.h2, d, sv, f, m >= 0 ? (m & 0xFFFF) - 2 : -2, m >= 0 ? m >>> 16 : 0); return; }
   if (TT.size > 400000) TT.clear();
   TT.set(pos.h1, { h2: pos.h2, d, v: sv, f, m });
 }
@@ -356,8 +406,8 @@ function bestMove(pos, maxD, ms, ek, rootK) {
   return best;
 }
 // ---------------------------------------------------------------- AI levels (20 steps, Lv.1 … Lv.20)
-// weak steps: one ply, the candidates' values with noise (and fewer queen moves looked at); middle: two plies; strong: a
-// budget of evaluations (thousands); the top two a time budget.
+// weak steps: one ply, the candidates' values with noise (and fewer queen moves looked at); strong: a budget of evaluated
+// positions (nk, thousands — the PRO mode's "positions"); Lv.19〜23 a time budget.
 const LEVELS = [null,
   { d: 1, noise: 420, qk: 3 },          // 1
   { d: 1, noise: 300, qk: 4 },          // 2
@@ -367,18 +417,23 @@ const LEVELS = [null,
   { d: 1, noise: 70, qk: 10 },          // 6
   { d: 1, noise: 45, qk: 12 },          // 7
   { d: 1, noise: 25, qk: 14 },          // 8
-  { s: 1, ek: 2 },                      // 9
-  { s: 1, ek: 3 },                      // 10
-  { s: 1, ek: 4.5 },                    // 11
-  { s: 1, ek: 6 },                      // 12  (about 6,000 evaluations per move)
-  { s: 1, ek: 10 },                     // 13
-  { s: 1, ek: 16 },                     // 14
-  { s: 1, ek: 24 },                     // 15
-  { s: 1, ek: 36 },                    // 16
-  { s: 1, ek: 52 },                    // 17
-  { s: 1, ek: 75 },                    // 18
+  { s: 1, nk: 2 },                      // 9
+  { s: 1, nk: 3 },                      // 10
+  { s: 1, nk: 4.5 },                    // 11
+  { s: 1, nk: 6 },                      // 12  (about 6,000 evaluations per move)
+  { s: 1, nk: 10 },                     // 13
+  { s: 1, nk: 16 },                     // 14
+  { s: 1, nk: 24 },                     // 15
+  { s: 1, nk: 36 },                    // 16
+  { s: 1, nk: 52 },                    // 17
+  { s: 1, nk: 75 },                    // 18
   { s: 1, ms: 1500 },                   // 19
   { s: 1, ms: 3000 },                   // 20
+  // the top levels (common rule「最上位のレベルの追加」): twice the time per step up to 20 s, on every thread of the page's pool
+  // (shared/mtsplit.js; the shared table on an isolated page) — one thread without the option
+  { s: 1, ms: 6000 },                   // 21
+  { s: 1, ms: 12000 },                  // 22
+  { s: 1, ms: 20000 },                  // 23
 ];
 function gauss(rand) { let u = 0, v = 0; while (!u) u = rand(); while (!v) v = rand(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
 function replay(start, moves) {
@@ -415,13 +470,17 @@ function think(start, moves, level, rand, rule, cfg) {
     for (const e of vals) { const x = e.v + (Math.abs(e.v) > WINT ? 0 : gauss(rand) * L.noise); if (x > bv) { bv = x; best = e.m; } }
     return { move: best, v: vals[0].v };
   }
-  const r = bestMove(pos, L.dx || 40, L.ms || 0, L.ek || (L.ms ? 0 : 60));
+  const r = bestMove(pos, L.dx || 40, L.ms || 0, L.nk || (L.ms ? 0 : 60));
+  return thinkFin(pos, r);
+}
+// the strong steps' answer from the search's result (also the end of a search on several threads, shared/mtsplit.js)
+function thinkFin(pos, r) {
   if (r.v < -WINT && r.depth > 1) {
     stop = false; tEnd = Date.now() + 600; evalLimit = Infinity;
     const vals = rootValues(pos, cands(pos, 12, 0, 14), Math.min(3, r.depth));
     if (!stop && vals.length) return { move: resist(pos, vals), v: r.v, depth: r.depth };
   }
-  return { move: r.move, v: r.v, depth: r.depth, evals };
+  return { move: r.move, v: r.v, depth: r.depth, evals: r.evals !== undefined ? r.evals : evals };
 }
 // all-candidates analysis for hints / the review: the root candidates (and the move(s) in extra) valued, deeper as time allows
 function analyze(start, moves, ms, onProgress, rule, extra) {
@@ -459,6 +518,52 @@ function pvOf(start, moves, m, plies) {
   }
   return pv;
 }
+// ---------------------------------------------------------------- several threads (shared/mtsplit.js: plain workers share the root moves
+// and the main line, Young Brothers Wait). mtPlan: what a 'think' / 'analyze' / 'cands' job searches on the threads (or its
+// answer at once); mtV: the node after the root and m.line searched to depth m.d in the window (m.wa, m.wb); mtKids: that node's
+// candidates in this engine's order; mtFin: the job's reply from the threads' raw result (the same as the one-thread worker's).
+// A thread's "nodes" are its evaluations (the levels' and PRO's budget counts evaluated positions).
+function mtNode(m) {
+  if (SH !== null) SH.salt = 0;
+  const line = m.line || [], { pos } = replay(m.start, (m.moves || []).concat(line));
+  return { pos, ply: line.length };
+}
+function mtPlan(m) {
+  const { pos } = replay(m.start, m.moves), inf = WIN + 1;
+  if (!pos.canMove(pos.turn)) return { result: m.job === 'think' ? { move: -1 } : { list: [], depth: 0 } };
+  nodes = 0; evals = 0; stop = false; tEnd = Infinity; evalLimit = Infinity;
+  if (m.job === 'think') {
+    const L = m.cfg || LEVELS[m.level] || LEVELS[10];
+    if (!L.s) return { result: think(m.start, m.moves, m.level, null, null, m.cfg) };
+    const C = cands(pos, 16, 0, 20);
+    if (C.length === 1 || C[0].s > WINT) return { result: { move: C[0].m, v: C[0].s, depth: 1 } };
+    return { plan: { kind: 'best', kids: C.map(c => ({ m: c.m, s: -1 })), inf, maxD: L.dx || 40, ms: L.ms || 0, nodes: (L.nk || (L.ms ? 0 : 60)) * 1000, win: WINT, partialIfBetter: true, splitMin: 4 } };
+  }
+  const C = cands(pos, 14, 0, 18, m.extra), cj = m.job === 'cands';
+  return { plan: { kind: 'all', kids: C.map(c => c.s > WINT ? { m: c.m, s: -1, t: c.s } : { m: c.m, s: -1 }), inf, maxD: 30, ms: m.time || (cj ? 1200 : 1000), win: WINT, stopAll: true, progress: true, pv: cj ? m.plies || 5 : 0, pvK: m.k || 5 } };
+}
+function mtV(m) {
+  const { pos, ply } = mtNode(m);
+  nodes = 0; evals = 0; stop = false; tEnd = m.until || Infinity; evalLimit = m.nl || Infinity;
+  const v = search(pos, m.d, m.wa, m.wb, ply);
+  return { v, ok: !stop, nodes: evals };
+}
+function mtKids(m) {
+  const { pos, ply } = mtNode(m);
+  if (!pos.canMove(pos.turn)) return { kids: [] };
+  nodes = 0; evals = 0; stop = false; tEnd = Infinity; evalLimit = Infinity;
+  const C = candsC(pos, CK, ply, QKEEP_BASE), e = ttGet(pos), em = e ? e.m : -1;
+  if (em >= 0) { const i = C.findIndex(x => x.m === em); if (i > 0) { const x = C[i]; C.splice(i, 1); C.unshift(x); } }
+  return { kids: C.map(c => c.s > WINT ? { m: c.m, s: -1, t: c.s } : { m: c.m, s: -1 }), nodes: evals };
+}
+function mtFin(m) {
+  const r = m.raw;
+  if (m.job === 'think') { const { pos } = replay(m.start, m.moves); return { result: thinkFin(pos, { move: r.m, v: r.v, depth: r.depth }) }; }
+  let list = (r.list || []).map(e => Object.assign({ m: e.m, v: e.v, kind: kindOf(e.v) }, e.pv ? { pv: e.pv } : {}));
+  if (!list.length) { const { pos } = replay(m.start, m.moves); list = cands(pos, 14, 0, 18).map(c => ({ m: c.m, v: c.s, kind: kindOf(c.s) })); }
+  if (m.job === 'cands') list = list.slice(0, m.k || 5);
+  return { result: { list, depth: r.depth } };
+}
 // ---------------------------------------------------------------- notation
 function name(pos, m) { if (m < 0) return '—'; return sqName(mFrom(m)) + '-' + sqName(mTo(m)) + '/' + sqName(mArrow(m)); }
 function parse(pos, s) {
@@ -476,20 +581,27 @@ const hops = () => 1;
 
 const API = { get nodes() { return nodes; }, get evals() { return evals; }, P1, P2, WIN, WINT, ARROW, RULES, RULE_ORDER, setRule, get rule() { return 'std'; }, N, NN, RC, RAYS, NB, START,
   sqAt, sqName, sqIdx, mv, mFrom, mTo, mArrow, isRemove, hops, Pos, path, arrowPath, captured, name, parse, replay, judge, clearLine,
-  LEVELS, think, analyze, cands: candsJob, candList: cands, evaluate, evalFor, kindOf, EW, pvOf, bestMove };
+  LEVELS, think, analyze, cands: candsJob, candList: cands, evaluate, evalFor, kindOf, EW, pvOf, bestMove, mtPlan, mtV, mtKids, mtFin, set SH(t) { SH = t; }, get SH() { return SH; } };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') {
   let queueP = Promise.resolve();
   self.onmessage = e => {
     const m = e.data;
+    if (m && m.type === 'mtshare') { try { importScripts(m.lib); SH = self.MTTT.attach(m); } catch (err) { SH = null; } return; }   // (shared/mtsplit.js shared mode)
     queueP = queueP.then(() => {
       try {
+        if (SH !== null) { SH.begin(m); SH.salt = 0; }
         if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...think(m.start, m.moves, m.level, null, null, m.cfg) });
         else if (m.type === 'analyze') {
           const r = analyze(m.start, m.moves, m.time || 1000, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth }), null, m.extra);
           self.postMessage({ id: m.id, type: 'result', ...r });
         } else if (m.type === 'cands') self.postMessage({ id: m.id, type: 'result', ...candsJob(m.start, m.moves, m.time || 1200, m.k, m.plies, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth })) });
-        else if (m.type === 'newgame') { TT.clear(); self.postMessage({ id: m.id, type: 'result' }); }
+        else if (m.type === 'newgame') { TT.clear(); CC.clear(); self.postMessage({ id: m.id, type: 'result' }); }
+        else if (m.type === 'mtplan') self.postMessage({ id: m.id, type: 'result', ...mtPlan(m) });
+        else if (m.type === 'mtv') self.postMessage({ id: m.id, type: 'result', ...mtV(m) });
+        else if (m.type === 'mtkids') self.postMessage({ id: m.id, type: 'result', ...mtKids(m) });
+        else if (m.type === 'mtpv') self.postMessage({ id: m.id, type: 'result', pv: pvOf(m.start, m.moves, m.m, m.plies) });
+        else if (m.type === 'mtfin') self.postMessage({ id: m.id, type: 'result', ...mtFin(m) });
       } catch (err) { self.postMessage({ id: m.id, type: 'result', error: String(err && err.stack || err) }); }
     });
   };
