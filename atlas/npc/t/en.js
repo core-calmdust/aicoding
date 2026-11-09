@@ -50,6 +50,7 @@
     ludo: ['Courtyard playmate in India', 'Trader of the desert fair', 'Plays on a cloth board', 'Made it "Ludo" in England', 'Guardian of the palace garden', 'Mughal war elephant', 'The emperor said to use people as pieces'],
     carrom: ['By the alley board', 'Regular on the veranda', 'Master of the flick', 'One-shot striker', 'The quiet sharpshooter', 'Hunter of the red Queen', 'King of a game said to be born in palaces'],
     crokinole: ['Kit from the log cabin', 'Regular on snowshoes', 'Prankster of the maple woods', 'Stickler of a referee', 'Straight for the 20 hole', 'Quiet master of the lake', 'Maker of the oldest board'],
+    hockey: ['Napping on the rink', 'Arcade regular', 'Puckhandling ace', 'Brick-wall goalie', 'Slapshot powerhouse', 'Air-table researcher', 'Father of table hockey'],
     alquerque: ['Child of an Andalusian courtyard', 'Seller of carpets like the board', 'Author of the Book of Songs', 'Hunter of the desert sky', 'Castilian knight', 'Lady of the palace garden', 'The king who commissioned the Book of Games'],
   },
   trivia: {
@@ -77,6 +78,7 @@
     ludo: ['Ludo comes from the Indian game pachisi.', 'Legend says the Mughal emperor Akbar played on a courtyard board with people as pieces.', 'It was patented in England under the name "Ludo" in 1896.', 'In many rules, a six lets you start a piece and roll again.'],
     carrom: ['Carrom comes from South Asia and is hugely popular in India and Sri Lanka.', 'The red piece is the Queen: after pocketing it you must "cover" it with one of your own.', 'The striker you flick is bigger and heavier than the other pieces.', 'Players sprinkle powder on the board so the pieces glide.'],
     crokinole: ['Crokinole was born in Canada: the oldest known board was made in Ontario in 1876.', 'Sink a disc in the centre hole for 20! It comes straight off the board.', 'If an opponent’s disc is on the board, you must hit one or it’s a foul.', 'A disc touching a line scores the lower value.'],
+    hockey: ['The first table hockey was a board made for children in Toronto in 1932.', 'Air hockey blows air through tiny holes in the table so the puck floats.', 'Catch the puck with the rim of a fast mallet and it speeds right up.', 'Guard your goal, and look for an angled shot off a wall.'],
     alquerque: ['Alquerque appears in the 10th-century Arabic "Book of Songs".', 'It is also in the Book of Games made for Alfonso X of Spain in the 13th century.', 'It\'s called the ancestor of checkers — both capture by jumping.', 'The board is lines and points; pieces move along the lines from point to point.'],
   },
 } });

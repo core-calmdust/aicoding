@@ -14,7 +14,7 @@
   'use strict';
   const A = window.AtlasNPC = window.AtlasNPC || {};
   A.LEVELS = { chess: 25, shogi: 26, go: 32, reversi: 25, gomoku: 20, checkers: 20, xiangqi: 20, janggi: 20, tafl: 25, ur: 20, senet: 20, morris: 10,
-    connect4: 8, dots: 10, mancala: 10, backgammon: 10, hex: 20, fanorona: 20, ugolki: 23, agon: 23, konane: 23, ludo: 20, carrom: 20, crokinole: 20, alquerque: 20 };
+    connect4: 8, dots: 10, mancala: 10, backgammon: 10, hex: 20, fanorona: 20, ugolki: 23, agon: 23, konane: 23, ludo: 20, carrom: 20, crokinole: 20, hockey: 20, alquerque: 20 };
   const N = s => { const p = s.split('|'), k = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'ru', 'hi', 'ar'], o = {}; k.forEach((l, i) => { o[l] = p[i] || p[1]; }); ['es', 'fr', 'pt', 'de', 'id', 'tr'].forEach(l => { o[l] = o.en; }); return o; };
   const b = (v, m, n) => ({ v, m, n: N(n) });
   // colours: [body, belly / face, accent]
@@ -224,6 +224,15 @@
       b('cool', { a: 'cat', c: [0xf0c060, 0xfff4e0, 0x2a2a38], held: 'striker', ex: ['scarf'], sc: 0x2a2a38 }, 'ヒョウの名手|Leopard Ace|豹子高手|豹子高手|표범고수|Леопард-ас|तेंदुआ उस्ताद|الفهد البارع'),
       b('lady', { a: 'bird', c: [0x2a6ad8, 0xc8e0ff, 0x46c890], beak: 0x5a5a6a, hat: 'tiara', held: 'fan', ex: ['crest', 'necklace'] }, 'クイーンクジャク|Queen Peacock|女王孔雀|女王孔雀|여왕공작|Павлиниха-королева|रानी मोरनी|الطاووسة الملكة'),
       b('king', { a: 'lion', c: [0xf0c070, 0xfff4e0, 0xd83a4a], hat: 'turban', hc: [0xd83a4a, 0xffd65a], held: 'striker', ex: ['cape', 'necklace'], cape: 0x6a3ad8 }, 'マハラジャライオン|Maharaja Lion|王公狮|王公獅|마하라자사자|Лев-махараджа|महाराजा शेर|أسد المهراجا'),
+    ],
+    hockey: [
+      b('sleepy', { a: 'penguin', c: [0x2a2f3a, 0xffffff, 0x2f6fd0], held: 'disc', ex: ['scarf'], sc: 0x2f6fd0 }, 'リンクのペンギン|Rink Penguin|冰场企鹅|冰場企鵝|링크펭귄|Пингвин с катка|रिंक पेंगुइन|بطريق الحلبة'),
+      b('merchant', { a: 'otter', c: [0x9a6a48, 0xf4e2c8, 0xff6b3a], hat: 'cap', hc: [0xff6b3a], held: 'disc' }, 'ゲーセンのカワウソ|Arcade Otter|游戏厅水獭|遊樂場水獺|오락실수달|Выдра из автоматов|आर्केड ऊदबिलाव|ثعلب الماء في الصالة'),
+      b('trickster', { a: 'fox', c: [0xff9a4a, 0xfff4e6, 0x2f6fd0], hat: 'cap', hc: [0x2f6fd0], held: 'disc', mouth: 'w' }, 'パックさばきギツネ|Puckhandler Fox|控球狐|控球狐|퍽다루기여우|Лис-дриблёр|पक लोमड़ी|ثعلب القرص'),
+      b('cool', { a: 'wolf', c: [0x8a94a8, 0xeef0f6, 0xd83a4a], hat: 'helmet', hc: [0xd83a4a, 0xffffff], held: 'shield' }, 'ゴーリーウルフ|Goalie Wolf|守门狼|守門狼|골리늑대|Волк-вратарь|गोलकीपर भेड़िया|الذئب الحارس'),
+      b('hothead', { a: 'bull', c: [0x6a4a3a, 0xf0dcc8, 0xd83a4a], hat: 'helmet', hc: [0x2f6fd0, 0xffffff], held: 'disc', ex: ['necklace'] }, 'スラップショットうし|Slapshot Bull|大力抽射牛|大力抽射牛|슬랩샷소|Бык-щелчок|स्लैपशॉट बैल|ثور الضربة'),
+      b('scholar', { a: 'owl', c: [0xb08a68, 0xf6e6cc, 0x2f6fd0], held: 'book', ex: ['glasses'] }, 'エアテーブル博士|Dr. Air-Table|空气台博士|空氣台博士|에어테이블박사|Доктор Аэростол|डॉ. एयर-टेबल|الدكتور طاولة الهواء'),
+      b('king', { a: 'bear', c: [0x8a6a50, 0xf4e2cc, 0xd83a4a], hat: 'crown', held: 'disc', ex: ['cape', 'scarf'], cape: 0xd83a4a, sc: 0xffffff }, 'マンロー大王グマ|Munro the Great Bear|芒罗大王熊|芒羅大王熊|먼로대왕곰|Медведь Манро Великий|महान मुनरो भालू|الدب مونرو العظيم'),
     ],
     crokinole: [
       b('sleepy', { a: 'beaver', c: [0x8a5a3a, 0xf0dcc0, 0xc8282e], hat: 'cap', hc: [0xc8282e], held: 'disc' }, 'ログハウスビーバー|Cabin Beaver|小木屋河狸|小木屋河狸|통나무집비버|Бобр из хижины|केबिन ऊदबिलाव|قندس الكوخ'),

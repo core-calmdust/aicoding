@@ -739,6 +739,28 @@
       const q = disc(0xc8262b, .6, .34, 0xe04a4a); q.scale.setScalar(1.45); g.add(at(q, .25, 1.95, -.25, .45, 0, -.3));
       return g;
     },
+    hockey() {   // a corner of the rink (navy felt, the middle line and circle, a birch rail with the goal slot), a mallet (black
+      // stick, red ball) and a white puck flying off it
+      const U = v => (v - .5) * 3.1;
+      const top = M({ map: X.canvasTex('ichk', 512, 512, (g, W) => {
+        g.fillStyle = '#2a5aa0'; g.fillRect(0, 0, W, W);
+        g.globalAlpha = .1; for (let i = 0; i < 900; i++) { g.fillStyle = Math.random() < .5 ? '#fff' : '#000'; g.fillRect(Math.random() * W, Math.random() * W, 2, 2); } g.globalAlpha = 1;
+        g.strokeStyle = 'rgba(255,255,255,.92)'; g.lineWidth = 9;
+        g.beginPath(); g.moveTo(0, W * .32); g.lineTo(W, W * .32); g.stroke();
+        g.beginPath(); g.arc(W * .5, W * .32, W * .17, 0, 7); g.stroke();
+        g.beginPath(); g.arc(W * .5, W * 1.02, W * .3, Math.PI, 0); g.stroke();
+      }), roughness: .9 });
+      const g = boardChunk(4, 3.6, top, C(0xe3cfa6, { roughness: .5 }));
+      const black = C(0x141416, { roughness: .35 }), red = C(0xe2402f, { roughness: .25 });
+      const mal = new T.Group();
+      mal.add(at(mesh(new T.CylinderGeometry(.46, .48, .16, 32), black), 0, .08, 0));
+      mal.add(at(mesh(new T.CylinderGeometry(.36, .36, .02, 32), red), 0, .17, 0));
+      mal.add(at(mesh(new T.CylinderGeometry(.07, .09, .8, 16), black), 0, .56, 0));
+      mal.add(at(mesh(new T.SphereGeometry(.16, 24, 16), red), 0, 1.0, 0));
+      g.add(at(mal, U(.66), .5, U(.7)));
+      const pk = puck(.3, .12, C(0xf6f4ee, { roughness: .3 }), .4); g.add(at(pk, -.35, 1.1, -.25, .3, 0, -.2));
+      return g;
+    },
     crokinole() {   // the middle of a crokinole board (honey maple, the 20 hole with its red ring, the 15 circle and its eight pegs, the 10
       // circle), a black disc beside a peg, a red disc by the hole, and a red disc leaping high over it all
       const U = v => (v - .5) * 3.1;
