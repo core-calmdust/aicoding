@@ -28,6 +28,8 @@
     skip: 'squares|\\.pc|\\.hl|\\.dot|fxsvg|hintlbl|reserve|\\.cp|promo|frame',
     start(lv, side, mode) {
       if (typeof openNewDialog !== 'function' || typeof draft !== 'object' || typeof segSync !== 'function' || !document.getElementById('btnStart')) return null;
+      if (mode === 'puzzle') { openPuzzles(); return true; }   // the portal's 「あそぶ」 sheet (2026-11-09)
+      if (mode === 'lesson') { openLessons(); return true; }
       openNewDialog();
       draft.mode = mode === 'rated' || mode === 'pvp' ? mode : 'ai';
       if (side === 1 || side === 2) draft.color = side;

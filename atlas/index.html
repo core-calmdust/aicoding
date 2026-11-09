@@ -1532,6 +1532,28 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 .bvi .lvpick{flex:1;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:6px;height:38px;border-radius:12px;border:2px solid var(--line);background:#fff;padding:0 12px;font:inherit;font-weight:900;color:var(--ink);cursor:pointer}
 .bvi .lvpick span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bvi .lvpick .lvb{flex:none;width:34px;height:34px;margin:-4px 0;object-fit:contain;transform:scale(1.2);pointer-events:none}.bvi .lvpick:has(.lvb) i{margin-inline-start:auto}.bvi .lvpick i{font-style:normal;color:var(--ink2);font-size:13px}
 @media (min-width:820px){.bvi .lvpick{height:48px;font-size:17px;padding:0 16px;border-radius:14px}.bvi .lvpick .lvb{width:44px;height:44px}.bvi .sidetg button{font-size:16px;padding:10px 8px}}
+/* phones: the 「あそぶ」 sheet (app.js playSheet) — 対局 (the card's mode / level / side / time, moved in) + パズル + レッスン.
+   Its panel carries .bvi so the moved controls keep the card's styles; the card's own position / slide is undone here (2026-11-09) */
+.psheet{position:absolute;inset:0;z-index:40;display:flex;align-items:flex-end;justify-content:center;background:rgba(40,30,10,0);visibility:hidden;transition:background .2s,visibility 0s .26s}
+.psheet.on{visibility:visible;background:rgba(40,30,10,.35);transition:background .2s}
+.psheet .ps-in.bvi{position:relative!important;left:auto!important;bottom:auto!important;width:100%!important;max-height:88%;overflow:auto;overscroll-behavior:contain;transform:translateY(105%)!important;opacity:1!important;pointer-events:auto!important;border-radius:24px 24px 0 0;border:0;padding:4px 16px calc(18px + env(safe-area-inset-bottom));transition:transform .26s cubic-bezier(.3,1.15,.5,1)!important}
+.psheet.on .ps-in.bvi{transform:none!important}
+.bv.playing .psheet{display:none}
+.ps-h{display:flex;align-items:center;justify-content:space-between;padding:12px 2px 8px;font-weight:900;font-size:17px;color:var(--ink)}
+.ps-sec{border:2px solid var(--line);border-radius:18px;padding:10px 12px 14px;background:#fff}
+.ps-t{font-weight:900;font-size:13px;color:var(--ink2);letter-spacing:.06em;margin:0 2px 8px}
+.ps-sec .act3,.ps-act{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.ps-act .pk{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:0;max-width:none;padding:11px 8px;text-align:center;line-height:1.2}
+.ps-act .pk b{font-size:15px;white-space:nowrap}.ps-act .pk small{font-size:11px;font-weight:700;opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.ps-act #bvTable{background:#ffeccc;color:#7a4a12;box-shadow:0 4px 0 #f0cf98;border:2px solid #f6dcae}.ps-act .pk:disabled{opacity:.45;filter:grayscale(.6)}
+.ps-row{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:4px 12px;width:100%;margin-top:10px;text-align:start;border:2px solid var(--line);background:#fff;border-radius:18px;padding:10px 12px;font:inherit;color:var(--ink);cursor:pointer;box-shadow:0 3px 0 var(--line)}
+.ps-row:active{transform:translateY(2px);box-shadow:none}
+.ps-ic{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:#fff;background:linear-gradient(150deg,color-mix(in srgb,var(--c) 80%,#fff),var(--c));box-shadow:inset 0 -2px 0 rgba(0,0,0,.15)}
+.ps-ic svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linejoin:round;stroke-linecap:round}
+.ps-tx{display:flex;flex-direction:column;min-width:0}.ps-tx b{font-size:16px;font-weight:900}.ps-tx small{font-size:11px;font-weight:700;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ps-pg{display:flex;flex-direction:column;align-items:flex-end;gap:4px;width:84px}.ps-pg .bar{width:100%}.ps-pg em{font-style:normal;font-weight:800;font-size:12px;color:var(--ink2)}
+.ps-cv{width:8px;height:8px;border-right:2.5px solid var(--ink2);border-top:2.5px solid var(--ink2);transform:rotate(45deg);margin-inline-end:4px;opacity:.7}
+.bvi .act.act2{display:grid;grid-template-columns:1.6fr 1fr;gap:10px}.bvi .act.act2 > *{min-width:0;max-width:none;justify-content:center}
 .lvsheet{position:fixed;inset:0;z-index:120;background:rgba(40,30,10,0);display:flex;align-items:flex-end;justify-content:center;transition:background .2s}
 .lvsheet.on{background:rgba(40,30,10,.35)}
 .lvs-in{width:min(520px,100%);max-height:min(76vh,640px);display:flex;flex-direction:column;background:#fffdf7;border-radius:24px 24px 0 0;box-shadow:0 -10px 40px rgba(60,40,10,.25);transform:translateY(100%);transition:transform .24s cubic-bezier(.3,1.2,.5,1);padding-bottom:env(safe-area-inset-bottom)}
@@ -1748,7 +1770,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 <script src="../shared/atlas.js?v=20261109hk1"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261109ac2"></script>
-<script src="i18n.js?v=62nr"></script>
+<script src="i18n.js?v=63nr"></script>
 <script src="gamelist-i18n.js?v=12n"></script>
 <script src="table3d.js?v=136"></script>
 <script src="tables3d.js?v=51"></script>
@@ -1863,6 +1885,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=31"></script>
 <script src="updnews.js?v=7"></script>
 <script src="npc/npc.js?v=15"></script>
-<script src="app.js?v=254"></script>
+<script src="app.js?v=255"></script>
 </body>
 </html>

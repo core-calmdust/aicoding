@@ -876,6 +876,7 @@
     $('bvQuit').textContent = t('bv.quit'); $('bvClose').setAttribute('aria-label', t('bv.close')); renderTod(); renderPlace();
     if (window.Historia) Historia.sync(g, lang, { art: artSrc, name: gname, fit: fitStage });   // the ヒストリア button (atlas/historia.js) opens this game's history
     if (window.AtlasGameList && AtlasGameList.sheetActions) { AtlasGameList.sheetActions($('bvi'), t); fitStage(); }   // PC: ヒストリア under ルール + ring; tags on one quiet line
+    playSheet(g, ad, r);
   }
   // in view mode the canvas only covers the area not taken by the info card (below it on phones, beside it on wide screens)
   // a level's name: kyu / dan for the Japanese games (shogi, go, gomoku); the games numbered Lv.1 … Lv.N (their name is 'Lv.N')
@@ -931,14 +932,46 @@
   function placeRec() { const r = $('bvRec'), hw = $('bvHistW'), td = $('bvTodW'); if (!r || !hw || !td) return;
     if (matchMedia('(hover:hover) and (pointer:fine) and (min-width:820px)').matches) { if (r.parentNode !== td) $('bvPlBtn').after(r); } else if (r.parentNode !== hw) hw.appendChild(r); }
   addEventListener('resize', placeRec);
+  /* ---------- phones: the 「あそぶ」 sheet (2026-11-09) ----------
+     A game whose full version has puzzles / lessons playable on the 3D table (PS_GAMES) keeps the card short: one 「あそぶ ▶」
+     button (+ 2D). It opens a sheet from the bottom with three ways to play: 対局 (the mode tabs, level, side and time control —
+     the card's own nodes, moved in, so startPlay reads them as before — and the full / chabudai buttons), パズル and レッスン
+     (the full game in the 3D skin, opened straight at its puzzle / lesson list). Analysis and the other deep features stay in
+     the full version only. PC keeps the card as it is (its layout is on hold). */
+  const PS_GAMES = { shogi: true, chess: true };
+  function playSheet(g, ad, r) {
+    const old = $('bvPS'); if (old) old.remove();
+    if (!PS_GAMES[g.id] || !ad || !FULL_SKIN[g.id] || !matchMedia('(max-width: 819px)').matches) return;
+    const act = $('bvi').querySelector('.R .act'); if (!act || !$('bvFull')) return;
+    const row = (k, ic, lb, a, b) => `<button type="button" class="ps-row" data-k="${k}"><span class="ps-ic" style="--c:${g.color}">${ic}</span><span class="ps-tx"><b>${esc(lb)}</b><small>${esc(t('ps.full'))}</small></span>${b ? `<span class="ps-pg"><span class="bar" style="--c:${g.color}"><i style="width:${Math.min(100, a / b * 100)}%"></i></span><em>${Math.min(a, b).toLocaleString()}/${b.toLocaleString()}</em></span>` : ''}<i class="ps-cv"></i></button>`;
+    const PZI = '<svg viewBox="0 0 24 24"><path d="M10 3h4v2.2a1.8 1.8 0 1 0 3.6 0V3H21v6h-2.2a1.8 1.8 0 1 0 0 3.6H21V21h-6v-2.2a1.8 1.8 0 1 0-3.6 0V21H3v-6h2.2a1.8 1.8 0 1 0 0-3.6H3V3h7z"/></svg>';
+    const LSI = '<svg viewBox="0 0 24 24"><path d="M3 9.5 12 5l9 4.5-9 4.5z"/><path d="M7 11.6V16c0 1.4 2.2 2.6 5 2.6s5-1.2 5-2.6v-4.4M21 9.5V15"/></svg>';
+    const ps = document.createElement('div'); ps.className = 'psheet'; ps.id = 'bvPS';
+    ps.innerHTML = `<div class="ps-in bvi" role="dialog" aria-label="${esc(t('ps.h'))}"><div class="ps-h">${esc(t('ps.h'))}<button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div>
+      <div class="ps-sec"><div class="ps-t">${esc(t('ps.vs'))}</div><div class="ps-body"></div><div class="ps-act"></div></div>
+      ${g.total.pz ? row('puzzle', PZI, t('pg.pz'), r.pz || 0, g.total.pz) : ''}${g.total.ls ? row('lesson', LSI, t('pg.ls'), r.ls || 0, g.total.ls) : ''}</div>`;
+    $('bv').appendChild(ps);
+    const body = ps.querySelector('.ps-body'), pa = ps.querySelector('.ps-act');
+    ['bvMode', 'bvMBody', 'bvSzRow'].forEach(i => { if ($(i)) body.appendChild($(i)); });
+    pa.append($('bvFull')); if ($('bvTable')) pa.append($('bvTable'));
+    const cls = $('bvi').querySelector('.R .act > a.btn');   // 2Dで遊ぶ stays on the card
+    act.className = 'act act2';
+    const go = document.createElement('button'); go.className = 'btn big'; go.id = 'bvGo'; go.textContent = t('ps.go') + ' ▶'; act.prepend(go);
+    if (cls) { cls.querySelectorAll('small').forEach(x => x.remove()); cls.classList.remove('pk'); }
+    const close = () => ps.classList.remove('on');
+    go.onclick = () => { ps.classList.add('on'); if (window.__bvModeRz) window.__bvModeRz(); try { SFX.tap && SFX.tap(); } catch (e) {} };
+    ps.onclick = e => { const b = e.target.closest('.ps-row'); if (b) { try { SFX.tap && SFX.tap(); } catch (x) {} startPlay('full', b.dataset.k); return; } if (e.target === ps || e.target.closest('.lvs-x')) close(); };
+    if (window.__bvModeRz) setTimeout(window.__bvModeRz, 0);
+  }
   const FULL_SKIN = { ludo: true, reversi: true, shogi: true, chess: true, backgammon: true, gomoku: true, go: true, morris: true, connect4: true, checkers: true, mancala: true, dots: true, xiangqi: true, janggi: true, hex: true, tafl: true, ur: true, senet: true, fanorona: true, ugolki: true, agon: true, alquerque: true, konane: true };
   let lastKind;
-  function startPlay(kind) {
+  function startPlay(kind, over) {   // over: 'puzzle' | 'lesson' — the 「あそぶ」 sheet opens the full game straight at its puzzles / lessons
     if (renderPlace.close) renderPlace.close();
+    if ($('bvPS')) $('bvPS').classList.remove('on');
     const g = bvGame, ad = Atlas3D[g.id];
     if (FULL_SKIN[g.id] && !(kind === 'table' && ad.table)) {
-      const lv = $('bvLv') ? +$('bvLv').value : 0, side = $('bvSide') ? +$('bvSide').value : 1, mode = $('bvMode') ? $('bvMode').dataset.v : 'ai', size = $('bvSize') ? +$('bvSize').value : 0;
-      pref[g.id + ':lv'] = lv; pref[g.id + ':side'] = side; pref[g.id + ':mode'] = mode; if (size) pref[g.id + ':size'] = size; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {}
+      const lv = $('bvLv') ? +$('bvLv').value : 0, side = $('bvSide') ? +$('bvSide').value : 1, mode = over || ($('bvMode') ? $('bvMode').dataset.v : 'ai'), size = $('bvSize') ? +$('bvSize').value : 0;
+      if (!over) pref[g.id + ':mode'] = mode; pref[g.id + ':lv'] = lv; pref[g.id + ':side'] = side; if (size) pref[g.id + ':size'] = size; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {}
       if (window.AtlasLoading) AtlasLoading.show(lang);   // straight to the loading screen (no camera move behind it)
       setTimeout(() => { location.href = '../' + g.href + '?skin=atlas' + (mode !== 'ai' ? '&mode=' + mode : (lv ? '&lv=' + lv : '') + '&side=' + side + (size ? '&size=' + size : '')); }, 420);
       return;
