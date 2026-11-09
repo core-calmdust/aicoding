@@ -92,7 +92,11 @@
     const board = T3.MODELS.shogi(true); board.scale.setScalar(SC); T3.show('shogi', board);
     const Y = board.userData.top, CW = SG.CW, CH = SG.CH, FW = SG.FW, FH = SG.FH;
     const pvp = ctx.mode === 'pvp', PX = PV[ctx.lang] || PV.en;   // pvp: both sides are tapped in turn (sente at the bottom), no AI
-    const hc = pvp ? 0 : ctx.side === 2 ? 1 : 0, ac = hc ^ 1;         // engine colours: 0 = sente (black), 1 = gote
+    // ctx.pz: a puzzle (詰将棋) driven by atlas/puzzles.js — the position is ctx.pz.sfen, the side to move plays, no AI: after
+    // each of the player's moves ctx.pz.moved(usi, info) decides, and the replies come through api.pzPlay (2026-11-10)
+    const PZ = ctx.pz || null;
+    let SF = PZ ? PZ.sfen : START;
+    let hc = PZ ? (SF.split(' ')[1] === 'w' ? 1 : 0) : pvp ? 0 : ctx.side === 2 ? 1 : 0, ac = hc ^ 1;         // engine colours: 0 = sente (black), 1 = gote
     const lvIdx = Math.max(0, Math.min(LEVELS.length - 1, (ctx.level || 8) - 1)), LV = LEVELS[lvIdx];
     let E = null, P = null, moves = [], legal = [], sel = null, over = null, stopped = false, busy = true, worker = null, book = null, jobId = 0, popup = null, last = null;
     let ply = 0, hintW = null, hintJ = 0, hint = null;
@@ -328,7 +332,7 @@
         }, 0 /* AIの着手は即時（前の手のアニメは終わっている） */);
       };
       worker.onerror = () => { if (stopped) return; worker.terminate(); worker = newWorker(); later(() => go(null), 50); };
-      worker.postMessage({ type: 'think', id, sfen: START, moves: moves.slice(), opts: LV });
+      worker.postMessage({ type: 'think', id, sfen: SF, moves: moves.slice(), opts: LV });
     }
     let weights = null;
     function newWorker() { const w = new Worker(BASE + 'engine.js' + EV); if (weights) w.postMessage({ type: 'weights', buffer: weights.slice(0) }); return w; }
@@ -350,7 +354,7 @@
       if (pro && non) { askPromo(to, pro, non); return true; }
       commit(pro || non); return true;
     }
-    function commit(m) { busy = true; closePopup(); play(m, next); }
+    function commit(m) { busy = true; closePopup(); play(m, PZ ? pzAfter : next); }
     function askPromo(to, pro, non) {
       closePopup();
       const [x, z] = cellXZ(to), q = T3.project(x * SC + board.position.x, z * SC + board.position.z, (Y + .3) * SC);
@@ -363,7 +367,7 @@
       const tile = tileAt(to, 0x2f8bd1, .55); tile.userData.promo = 1; T3.kick(150);
     }
     function onClick(e) {
-      if (busy || over || !P || (!pvp && P.side !== hc) || T3.wasDrag()) return;
+      if (busy || over || !P || (!pvp && P.side !== hc) || T3.wasDrag() || (PZ && !pzOn)) return;
       if (popup) { deselect(); return; }
       const h = hit(e); if (!h) { deselect(); return; }
       if (h.sq != null && sel && tryMove(h.sq)) return;
@@ -382,9 +386,10 @@
     load().then(r => {
       if (stopped) return;
       E = r.E; book = r.book; weights = r.weights;
-      P = new E.Position(); P.setSfen(START);
+      P = new E.Position(); P.setSfen(SF);
       if (!pvp) worker = newWorker();
       buildBoard(true); buildHands();
+      if (PZ) { later(pzReady, 80 + 40 * 14 + 300); return; }
       hud(plyTag());
       later(next, 80 + 40 * 14 + 400);
     }).catch(() => { if (!stopped) hud('⚠'); });
@@ -393,13 +398,43 @@
     const myTurn = () => !!P && !over && !busy && !popup && (pvp || P.side === hc);
     const undoN = () => pvp ? 1 : 2;
     function replay(n) {   // the position after the first n moves (待った), the 3D board rebuilt to match
-      const keep = moves.slice(0, n); P = new E.Position(); P.setSfen(START); last = null;
+      const keep = moves.slice(0, n); P = new E.Position(); P.setSfen(SF); last = null;
       for (const u of keep) { const m = P.fromUsi(u); P.doMove(m); P.histChk[P.hn - 1] = P.inCheck() ? 1 : 0; P.sp = 0; last = { from: E.isDrop(m) ? -1 : E.mFrom(m), to: E.mTo(m) }; }
       moves = keep; sel = null; hint = null; hintJ++;
       buildBoard(false); verify(); drawMarks(); T3.kick(300);
     }
+    /* ---------- puzzle mode (ctx.pz) ---------- */
+    let pzOn = false;
+    function pzReady() { if (stopped) return; legal = P.legalMoves(true); busy = false; pzOn = true; drawMarks(); if (PZ.ready) PZ.ready(); }
+    function pzAfter() {   // the player's move has landed: the puzzle decides what happens next
+      legal = []; pzOn = false; drawMarks();
+      PZ.moved(moves[moves.length - 1], { check: P.inCheck(), mate: !P.legalMoves(false).length, n: moves.length });
+    }
+    const hasCheck = () => P.legalMoves(true).some(m => { P.doMove(m); const c = P.inCheck(); P.undoMove(); return c; });
+    function pzLoad(sfen) {   // the next puzzle: a new position, the pieces drop in again
+      timers.forEach(clearTimeout); timers.length = 0; jobId++; closePopup();
+      SF = sfen; hc = SF.split(' ')[1] === 'w' ? 1 : 0; ac = hc ^ 1;
+      P = new E.Position(); P.setSfen(SF); moves = []; last = null; sel = null; hint = null; hintJ++; over = null; busy = true; pzOn = false;
+      buildBoard(true); buildHands(); drawMarks();
+      later(pzReady, 80 + 40 * 14 + 300);
+    }
+    const pz = {
+      play: usi => new Promise(res => { const m = P.fromUsi(usi); if (!m) return res(false); busy = true; pzOn = false; play(m, () => { if (stopped) return; res(true); }); }),
+      wait() { legal = P.legalMoves(true); busy = false; pzOn = true; drawMarks(); },   // the player's turn again
+      undo(n = 1) { timers.forEach(clearTimeout); timers.length = 0; replay(Math.max(0, moves.length - n)); },
+      mark(usi) { const m = usi && P.fromUsi(usi); hint = m ? { from: E.isDrop(m) ? -1 : E.mFrom(m), drop: E.isDrop(m) ? E.mFrom(m) - 80 : -1, to: E.mTo(m), usi } : null; drawMarks(); },
+      hasCheck: () => hasCheck(),
+      defend: remain => new Promise(res => {   // the defender's longest reply (or an escape): the engine's tsumeDefend
+        const id = ++jobId, w = worker || (worker = newWorker());
+        w.onmessage = e => { const r = e.data; if (r.id !== id || stopped) return; res(r.type === 'tsume' ? { reply: r.reply, mate: !!r.mate } : null); };
+        w.onerror = () => res(null);
+        w.postMessage({ type: 'tsumeDefend', id, sfen: SF, moves: moves.slice(), remain });
+      }),
+      load: pzLoad,
+      moves: () => moves.slice(),
+    };
     const api = {
-      human: hc,
+      human: hc, pz,
       canUndo: () => myTurn() && moves.length >= undoN() + (pvp || hc === 0 ? 0 : 1),
       undo() {
         if (!api.canUndo()) return;
@@ -420,7 +455,7 @@
             drawMarks(); res(true);
           };
           hintW.onerror = () => { if (hintW) hintW.terminate(); hintW = null; res(false); };
-          hintW.postMessage({ type: 'think', id: j, sfen: START, moves: moves.slice(), opts: LEVELS[Math.max(12, Math.min(14, lvIdx + 2))] });
+          hintW.postMessage({ type: 'think', id: j, sfen: SF, moves: moves.slice(), opts: LEVELS[Math.max(12, Math.min(14, lvIdx + 2))] });
         });
       },
       canResign: () => !!P && !over,

@@ -955,7 +955,7 @@
     if (!PS_GAMES[g.id] || !ad || !FULL_SKIN[g.id] || !matchMedia('(max-width: 819px)').matches) return;
     const act = $('bvi').querySelector('.R .act'); if (!act || !$('bvFull')) return;
     // headIcons(true);   // (ヒストリア / 戦績 in the card: tried, back to the top left for now — 2026-11-10)
-    const row = (k, ic, lb, a, b) => `<button type="button" class="ps-row" data-k="${k}"><span class="ps-ic" style="--c:${g.color}">${ic}</span><span class="ps-tx"><b>${esc(lb)}</b><small>${esc(t('ps.full'))}</small></span>${b ? `<span class="ps-pg"><span class="bar" style="--c:${g.color}"><i style="width:${Math.min(100, a / b * 100)}%"></i></span><em>${Math.min(a, b).toLocaleString()}/${b.toLocaleString()}</em></span>` : ''}<i class="ps-cv"></i></button>`;
+    const row = (k, ic, lb, a, b) => `<button type="button" class="ps-row" data-k="${k}"><span class="ps-ic" style="--c:${g.color}">${ic}</span><span class="ps-tx"><b>${esc(lb)}</b><small>${esc(t(k === 'puzzle' && window.AtlasPuzzles && AtlasPuzzles.has(g.id) && ad.table ? 'ps.here' : 'ps.full'))}</small></span>${b ? `<span class="ps-pg"><span class="bar" style="--c:${g.color}"><i style="width:${Math.min(100, a / b * 100)}%"></i></span><em>${Math.min(a, b).toLocaleString()}/${b.toLocaleString()}</em></span>` : ''}<i class="ps-cv"></i></button>`;
     const PZI = '<svg viewBox="0 0 24 24"><path d="M10 3h4v2.2a1.8 1.8 0 1 0 3.6 0V3H21v6h-2.2a1.8 1.8 0 1 0 0 3.6H21V21h-6v-2.2a1.8 1.8 0 1 0-3.6 0V21H3v-6h2.2a1.8 1.8 0 1 0 0-3.6H3V3h7z"/></svg>';
     const LSI = '<svg viewBox="0 0 24 24"><path d="M3 9.5 12 5l9 4.5-9 4.5z"/><path d="M7 11.6V16c0 1.4 2.2 2.6 5 2.6s5-1.2 5-2.6v-4.4M21 9.5V15"/></svg>';
     const ps = document.createElement('div'); ps.className = 'psheet'; ps.id = 'bvPS';
@@ -972,7 +972,7 @@
     if (cls) { cls.querySelectorAll('small').forEach(x => x.remove()); cls.classList.remove('pk'); }
     const close = () => ps.classList.remove('on');
     go.onclick = () => { ps.classList.add('on'); if (window.__bvModeRz) window.__bvModeRz(); try { SFX.tap && SFX.tap(); } catch (e) {} };
-    ps.onclick = e => { const b = e.target.closest('.ps-row'); if (b) { try { SFX.tap && SFX.tap(); } catch (x) {} startPlay('full', b.dataset.k); return; } if (e.target === ps || e.target.closest('.lvs-x')) close(); };
+    ps.onclick = e => { const b = e.target.closest('.ps-row'); if (b) { try { SFX.tap && SFX.tap(); } catch (x) {} if (b.dataset.k === 'puzzle' && window.AtlasPuzzles && AtlasPuzzles.has(g.id) && ad.table) startPuzzle(); else startPlay('full', b.dataset.k); return; } if (e.target === ps || e.target.closest('.lvs-x')) close(); };
     if (window.__bvModeRz) setTimeout(window.__bvModeRz, 0);
   }
   const FULL_SKIN = { ludo: true, reversi: true, shogi: true, chess: true, backgammon: true, gomoku: true, go: true, morris: true, connect4: true, checkers: true, mancala: true, dots: true, xiangqi: true, janggi: true, hex: true, tafl: true, ur: true, senet: true, fanorona: true, ugolki: true, agon: true, alquerque: true, konane: true };
@@ -1259,6 +1259,17 @@
     if (window.AtlasLoading) AtlasLoading.hide();
     if (bvGame && $('bv').classList.contains('on')) { stopSession(); openBoard(bvGame.id); }
   });
+  // puzzles on the 3D table with the guide character (atlas/puzzles.js; chess, shogi — 2026-11-10)
+  function startPuzzle() {
+    if (renderPlace.close) renderPlace.close();
+    if ($('bvPS')) $('bvPS').classList.remove('on');
+    if (pend3d) { pend3d.then(() => startPuzzle()); return; }   // the board isn't on the table yet
+    const g = bvGame; stopSession();
+    $('bv').classList.add('playing', 'rules'); $('endc').classList.remove('on');
+    session = AtlasPuzzles.start({ id: g.id, el: $('gl'), Table3D, lang, t, panel: $('bv'), adapter: Atlas3D[g.id], onExit: () => openBoard(g.id) });
+    if (session.panel && window.ResizeObserver) new ResizeObserver(fitStage).observe(session.panel);
+    fitStage(); Table3D.play(true);
+  }
   // character-guided rules on the 3D table (atlas/rules/<id>.js)
   let rulesFromList = false;
   function startRules(fromList) {
@@ -1841,6 +1852,7 @@
   // confetti: light on the GPU — a half-resolution canvas (scaled up by CSS), no save/restore per piece,
   // time-based motion (same speed at any frame rate), fewer pieces on phones; a new burst joins the running one
   const CF = { ps: [], run: false };
+  window.AtlasConfetti = n => confetti(n);
   function confetti(n) {
     const cv = $('confetti'), g = cv.getContext('2d'), K = .5, W0 = Math.round(innerWidth * K), H0 = Math.round(innerHeight * K);
     if (cv.width !== W0 || cv.height !== H0) { cv.width = W0; cv.height = H0; }
