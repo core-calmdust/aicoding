@@ -74,6 +74,48 @@ const ZC1 = [], ZC2 = []; for (let i = 0; i < N; i++) { ZC1.push(zr()); ZC2.push
 const ZR1 = [], ZR2 = []; for (let i = 0; i < 16; i++) { ZR1.push(zr()); ZR2.push(zr()); }
 const ZS1 = zr(), ZS2 = zr();
 
+// ---------------------------------------------------------------- the WebAssembly search (core.c → core-wasm.js, tools/build-core.sh)
+// search() / qsearch() run in core.c — the same algorithm, order, table, repetitions and counters (tools/check_wasm.js),
+// several times faster. Loaded synchronously in a worker and in Node; the page itself and any failure use the JS search below.
+let WA = null;
+function loadCore() {
+  try {
+    let b64 = null;
+    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('core-wasm.js?v=1'); b64 = self.AG_WASM; }
+    else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') { const g = globalThis, had = 'self' in g, old = g.self; g.self = g; try { require(require('path').join(__dirname, 'core-wasm.js')); b64 = g.AG_WASM; } finally { if (had) g.self = old; else delete g.self; } }
+    if (!b64 || (typeof process !== 'undefined' && process.env && process.env.AG_NOWASM)) return;
+    const bin = typeof atob === 'function' ? Uint8Array.from(atob(b64), c => c.charCodeAt(0)) : Buffer.from(b64, 'base64');
+    let io = null;
+    const env = {
+      poll: () => (Date.now() > tEnd || (SH !== null && SH.stopped())) ? 1 : 0,
+      shget: (h1, h2) => { const e = SH.get(h1 >>> 0, h2 >>> 0); if (!e) return 0; io[0] = e.d; io[1] = e.f; io[2] = e.v; io[3] = e.m; io[4] = e.rs; return 1; },
+      shput: (h1, h2, d, v, f, m, rs) => { SH.put(h1 >>> 0, h2 >>> 0, d, v, f, m, rs); },
+    };
+    const x = new WebAssembly.Instance(new WebAssembly.Module(bin), { env }).exports, buf = x.memory.buffer;
+    io = new Int32Array(buf, x.iop(), 32);
+    const geo = new Int32Array(buf, x.geop(), N * 6 + N + 37), zt = new Uint32Array(buf, x.ztp(), 12 * N + 34);
+    let k = 0;
+    for (let i = 0; i < N; i++) for (let d = 0; d < 6; d++) geo[k++] = NB[i][d];
+    for (let i = 0; i < N; i++) geo[k++] = RING[i];
+    for (const i of OUTER) geo[k++] = i;
+    for (const i of INNER) geo[k++] = i;
+    geo[k++] = CENTER;
+    for (let kk = 0; kk < 5; kk++) for (let i = 0; i < N; i++) { zt[kk * N + i] = Z1[kk][i]; zt[5 * N + kk * N + i] = Z2[kk][i]; }
+    for (let i = 0; i < N; i++) { zt[10 * N + i] = ZC1[i]; zt[11 * N + i] = ZC2[i]; }
+    for (let i = 0; i < 16; i++) { zt[12 * N + i] = ZR1[i]; zt[12 * N + 16 + i] = ZR2[i]; }
+    zt[12 * N + 32] = ZS1; zt[12 * N + 33] = ZS2;
+    x.setup();
+    WA = { x, io, sq: new Int8Array(buf, x.sqp(), N), cap: new Int8Array(buf, x.capp(), N), rh1: new Uint32Array(buf, x.rh1p(), 4096), rh2: new Uint32Array(buf, x.rh2p(), 4096) };
+  } catch (e) { WA = null; }
+}
+function kreset() { killers.length = 0; if (WA) WA.x.kclear(); }
+function ttClear() { TT.clear(); if (WA) WA.x.ttclear(); }
+function ttGet(pos) {   // the one-thread table's entry for pos (or the shared table's)
+  if (SH !== null) return SH.get(pos.h1, pos.h2);
+  if (WA) return WA.x.ttprobe(pos.h1, pos.h2) ? { h2: pos.h2, d: WA.io[0], f: WA.io[1], v: WA.io[2], m: WA.io[3], rs: WA.io[4] } : undefined;
+  const e = TT.get(pos.h1); return e && e.h2 === pos.h2 ? e : undefined;
+}
+
 class Pos {
   constructor() { this.sq = new Int8Array(N); this.cap = new Int8Array(N); this.side = 0; this.ply = 0; this.res = [0, 0, 0]; this.free = false; this.reset(); }
   reset() {
@@ -382,7 +424,7 @@ function child(ply, src, m) {
   return q.play(m);
 }
 function orderMoves(pos, L, ttm, ply) {   // the same scores, then a stable insertion sort (best first) = the former stable index sort
-  const k = killers[ply] || -1, n = L.length, out = L.slice();
+  const k = (WA ? WA.x.killer(ply) : killers[ply]) || -1, n = L.length, out = L.slice();
   for (let i = 0; i < n; i++) {
     const m = out[i], v = moveScore(pos, m, ttm, k);
     let j = i; while (j > 0 && OSC[j - 1] < v) { OSC[j] = OSC[j - 1]; out[j] = out[j - 1]; j--; }
@@ -408,6 +450,15 @@ function qsearch(pos, a, b, ply, qd) {
   return best;
 }
 function search(pos, d, a, b, ply) {
+  if (WA && !stop) {
+    WA.sq.set(pos.sq); WA.cap.set(pos.cap); const io = WA.io;
+    io[8] = pos.side; io[9] = pos.ply; io[10] = pos.h1 | 0; io[11] = pos.h2 | 0; io[12] = pos.free ? 1 : 0; io[13] = rhN; io[14] = pos.res[1]; io[15] = pos.res[2]; io[16] = rootSide; io[17] = R.cap;
+    for (let i = 0; i < rhN; i++) { WA.rh1[i] = RH1[i]; WA.rh2[i] = RH2[i]; }
+    WA.x.setn(nodes, nodeLimit === Infinity ? 1e300 : nodeLimit, SH !== null ? 1 : 0);
+    const v = WA.x.search(d, a, b, ply);
+    nodes = WA.x.getn(); if (WA.x.stopped()) stop = true;
+    return v;
+  }
   nodes++;
   if ((nodes & 1023) === 0 && (Date.now() > tEnd || nodes > nodeLimit || (SH !== null && SH.stopped()))) stop = true;
   if (stop) return 0;
@@ -459,7 +510,7 @@ function helperDone(pos, L, d) {
 }
 function bestMove(pos, hist, maxD, ms, nk) {
   rootSide = pos.side;
-  nodes = 0; stop = false; tEnd = ms ? Date.now() + ms : Infinity; nodeLimit = nk ? nk * 1000 : Infinity; killers.length = 0;
+  nodes = 0; stop = false; tEnd = ms ? Date.now() + ms : Infinity; nodeLimit = nk ? nk * 1000 : Infinity; kreset();
   const L = pos.moves(); if (L.length === 1) return { move: L[0], v: 0, depth: 0 };
   let best = { move: orderMoves(pos, L, -1, 0)[0], v: 0, depth: 0 };
   for (let d = 1; d <= (maxD || 60); d++) {
@@ -580,7 +631,7 @@ function pvOf(start, moves, m, plies) {
 let mtRule = null;
 function mtNode(m) {
   if (SH !== null) SH.salt = SALT[RK] | 0;
-  else if (mtRule !== RK) { TT.clear(); mtRule = RK; }
+  else if (mtRule !== RK) { ttClear(); mtRule = RK; }
   const line = m.line || [], root = replay(m.start, m.moves).pos, { pos, hashes } = replay(m.start, m.moves.concat(line)); hashes.pop();
   rootSide = root.side;
   return { pos, hist: hashes, ply: line.length };
@@ -611,13 +662,13 @@ function mtKids(m) {
   const { pos, hist, ply } = mtNode(m);
   loadHist(hist);
   if (terminal(pos, ply) !== null || (ply > 0 && seenBefore(pos.h1, pos.h2))) return { kids: [] };
-  const e = SH !== null ? SH.get(pos.h1, pos.h2) : TT.get(pos.h1);
+  const e = ttGet(pos);
   return { kids: orderMoves(pos, pos.moves(), e && e.h2 === pos.h2 && e.rs === rootSide ? e.m : -1, ply).map(x => ({ m: x, s: -1 })) };
 }
 function mtLazy(m) {   // (shared/tools/mtlazy.js: one Lazy SMP thread's search of the root to depth m.d, root order rotated by m.rot)
   const { pos, hist } = mtNode(m);
   nodes = 0; stop = false; tEnd = m.until || Infinity; nodeLimit = Infinity; loadHist(hist);
-  const e = SH !== null ? SH.get(pos.h1, pos.h2) : TT.get(pos.h1);
+  const e = ttGet(pos);
   let L = orderMoves(pos, pos.moves(), e && e.h2 === pos.h2 ? e.m : -1, 0);
   if (m.rot) { const k = m.rot % L.length; L = L.slice(k).concat(L.slice(0, k)); }
   let a = -WIN - 1, best = -Infinity, bm = L[0];
@@ -736,8 +787,9 @@ function duelReply(start, moves, n, rule) {
   return { move: best, need: bk };
 }
 
+loadCore();
 setRule('std');
-const API = { get nodes() { return nodes; }, set SH(t) { SH = t; }, get SH() { return SH; }, mtLazy, P1, P2, WIN, WINT, PASS, RES, N, RULES, RULE_ORDER, setRule, get rule() { return RK; }, get R() { return R; },
+const API = { get wasm() { return !!WA; }, get nodes() { return nodes; }, set SH(t) { SH = t; }, get SH() { return SH; }, mtLazy, P1, P2, WIN, WINT, PASS, RES, N, RULES, RULE_ORDER, setRule, get rule() { return RK; }, get R() { return R; },
   Q, RR, RING, XC, YC, ROWS, RINGL, RPOS, NB, DIRS, CENTER, INNER, OUTER, START, at, sqName, sqParse, mv, mFrom, mTo, own, isQ,
   Pos, path, isJump, name, parse, replay, judge, kindOfMove, LEVELS, think, analyze, cands, duelGood, duelMin, duelReply, need,
   evaluate, hanging, kindOf, resist, mtPlan, mtV, mtKids, mtFin, pvOf };
@@ -759,7 +811,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
         } else if (m.type === 'cands') self.postMessage({ id: m.id, type: 'result', ...cands(m.start, m.moves, m.time || 1200, m.k, m.plies, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth })) });
         else if (m.type === 'duel') { const g = duelGood(m.start, m.moves, m.n); self.postMessage({ id: m.id, type: 'result', list: g ? g.map(x => ({ m: x, need: m.n })) : null }); }
         else if (m.type === 'duelReply') self.postMessage({ id: m.id, type: 'result', ...duelReply(m.start, m.moves, m.n) });
-        else if (m.type === 'newgame') { TT.clear(); self.postMessage({ id: m.id, type: 'result' }); }
+        else if (m.type === 'newgame') { ttClear(); self.postMessage({ id: m.id, type: 'result' }); }
         else if (m.type === 'mtplan') self.postMessage({ id: m.id, type: 'result', ...mtPlan(m) });
         else if (m.type === 'mtv') self.postMessage({ id: m.id, type: 'result', ...mtV(m) });
         else if (m.type === 'mtkids') self.postMessage({ id: m.id, type: 'result', ...mtKids(m) });

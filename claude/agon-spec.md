@@ -10,7 +10,7 @@ URL: https://core-calmdust.github.io/aicoding/agon/ ／ トップはアルケル
 - 引き分け（本サイトの設定）：同一局面3回、300手。
 - 種目：std（標準）、place（1842年原典の配置：女王だけ角、ガード12枚を交互に配置してから開始、配置は捕獲なし）。
 
-## エンジン（engine.js、純JS、Worker）
+## エンジン（engine.js、Worker。探索は WebAssembly＝下の節）
 - 盤 Int8Array(91)（1白ガード 2白女王 3黒ガード 4黒女王）＋ cap フラグ。手 m = from + 92×to（from 91＝手持ちから配置）、PASS=92²。
 - 表記：輪.番号（左上の角から時計回り、王座は T）。例 5.12-4.10x、2.4>5.17（置き直し）、+2.5（配置）、Q は女王。
 - 評価：歩数（女王→王座、ガード→1の輪）、王座・内周、敵の内周ブロック、捕獲待ち、はさまれる駒。negamax＋TT＋捕獲の静止探索、引き分けに contempt 30。負け確は Engine.resist。
@@ -47,6 +47,10 @@ URL: https://core-calmdust.github.io/aicoding/agon/ ／ トップはアルケル
 
 ## 対局設定の Pro モード（2026-11-08）
 対局設定の「AIの強さ」の PRO ボタン（`shared/proset.js` の `ProSet.ladder()`、addendum「対局設定の Pro モード」）。項目：思考の制限（時間／深さ／局面数）、手のばらつき（深さで読むときだけ。弱い段の既定はその段のノイズ、変えると 小＝いちばん弱いノイズ／大＝弱い段の中ほどのノイズ）。変えた値は engine.js `think` の `cfg`（LEVELS と同じキー。強い段の最大深さは `dx`）で渡す。レート戦では使わない。戦績のキーは `ai:pro<レベル>`、相手名に「PRO」。
+
+## WebAssembly の探索（2026-11-10）
+- `search()`・`qsearch()`（αβ・置換表・手の並べ替え・キラー・LMR・千日手・終局判定・取りの静止探索・評価）を `core.c` に移植（`tools/build-core.sh` → `core-wasm.js`＝base64。盤の形と乱数キーはページから渡す。ワーカーと Node は同期で読み込み、ページ本体と失敗時は JS のまま）。置換表は前の Map と同じ規則（h1 をキー、60万件を超えたら全部消す、rootSide 付き）を C で再現し、**1スレッドの結果は JS と完全に一致**（`node tools/check_wasm.js`：2ルール・5レベルの280探索で手・評価値・深さ・局面数が一致）。共有の置換表は import 経由で `shared/mttt.js` の表を使う。
+- 速さ：同じ時間の局面数 約2.3倍（作業機、Lv.20 で 133万→303万）。局面数・深さで決めるレベルの手は変わらず速くなるだけ、時間で考えるレベルは強くなる（RT_LV の見直しが要る）。
 
 ## 本編のマルチスレッド（2026-11-08、`shared/mtsplit.js`）
 - エンジンが JavaScript だけなので、**ふつうの Worker の組**（同じ `engine.js` を複数）で読む。**ページが分離されているときは置換表を1つ共有する**（2026-11-09、`shared/mtsplit.js` の共有モード＋`shared/mttt.js`：SharedArrayBuffer、ロックなしの XOR 照合、端末のメモリで 16〜64MB、探索ごとの年齢、止める合図も共有メモリ）。分離は `agon/sw.js`（mtengine.js と同じ軽い方式：Chrome / Edge の PC は Document-Isolation-Policy で自動・初回だけ再読み込み、ログイン・オンライン対戦はそのまま。Safari・Firefox はオプションをオンにしたときだけ COOP モード＝ログイン・オンライン対戦は止まる。スマホはオンにするまで Service Worker を入れない）。分離できないとき（Safari・Firefox で自動のまま等）は今まで通り各 Worker が自分の置換表を持つ（非共有）。オプション（歯車）の「マルチスレッド」は mtengine.js のゲームと同じ選択（全ブラウザで `aicoding-mt`。PC は自動でオン、スマホ・タブレットはオンにするまで1スレッド）。1スレッドの Worker（局面数・深さで決めるレベル）は今まで通りの置換表で、指し手・局面数は前と同じ（確認済み）。
