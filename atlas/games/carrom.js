@@ -117,10 +117,20 @@
     // pull, the harder (so pulling down shoots up the board, pulling up shoots down it). Coming back round the striker
     // (within DEAD cm, "the striker's own spot") gives the aim up and you are placing again.
     const AIM_IN = 1.6, DEAD_M = 3.2, DEAD_T = 1.6, POWMAX = 20;
-    let mode = '', id = null, ref = null, anchor = null, dead = DEAD_M, sx0 = 0, ang = 0, pow = 0;
+    // on a small screen the board is small, so a finger's moves are magnified less: full power wants a pull of about
+    // TOUCH_PULL px and the base line spans about TOUCH_SPAN px, however small the board is drawn (gt, gp ≤ 1: never coarser)
+    const TOUCH_PULL = 210, TOUCH_SPAN = 320;
+    let mode = '', id = null, ref = null, anchor = null, dead = DEAD_M, sx0 = 0, ang = 0, pow = 0, gt = 1, gp = 1;
     const down = (q, a) => (q.y - a.y) * o.sign();
+    function gains(e) {   // cm per screen px round the finger
+      const a = o.toCm(e), b = o.toCm({ clientX: e.clientX + 40, clientY: e.clientY }), c = o.toCm({ clientX: e.clientX, clientY: e.clientY + 40 });
+      if (!a || !b || !c) { gt = gp = 1; return; }
+      const k = (Math.hypot(b.x - a.x, b.y - a.y) + Math.hypot(c.x - a.x, c.y - a.y)) / 80;
+      gt = Math.min(1, (POWMAX + DEAD_T) / (TOUCH_PULL * k)); gp = Math.min(1, 43.8 / (TOUCH_SPAN * k));
+    }
+    const amp = q => anchor && mode === 'aim-t' ? { x: anchor.x + (q.x - anchor.x) * gt, y: anchor.y + (q.y - anchor.y) * gt } : q;
     function setAim(q, e) {
-      const dx = anchor.x - q.x, dy = anchor.y - q.y, d = Math.hypot(dx, dy);
+      q = amp(q); const dx = anchor.x - q.x, dy = anchor.y - q.y, d = Math.hypot(dx, dy);
       if (d < dead) return false;
       pow = Math.max(0, Math.min(1, (d - dead) / POWMAX)); ang = Math.atan2(dy, dx);
       o.aim({ ang, pow, e });
@@ -135,7 +145,7 @@
         anchor = o.home(); dead = DEAD_M; pow = 0;
         if (Math.hypot(q.x - anchor.x, q.y - anchor.y) < dead) mode = 'arm-m';   // pressed on the striker: aiming starts once you pull away
         else { mode = 'aim-m'; setAim(q, e); }
-      } else { mode = 'touch'; ref = q; sx0 = o.striker(); }
+      } else { mode = 'touch'; ref = q; sx0 = o.striker(); gains(e); }
       id = e.pointerId; try { o.el.setPointerCapture(id); } catch (er) {}
       e.preventDefault();
     }
@@ -150,8 +160,8 @@
       if (mode === 'touch') {
         const d = down(q, ref);
         if (d < 0) ref = { x: ref.x, y: q.y };   // measure "down" from the highest point
-        if (d > AIM_IN) { mode = 'aim-t'; dead = DEAD_T; anchor = { x: q.x, y: q.y - o.sign() * (AIM_IN - .2) }; setAim(q, e); return; }
-        o.place(sx0 + (q.x - ref.x));
+        if (d * gt > AIM_IN) { mode = 'aim-t'; dead = DEAD_T; anchor = { x: q.x, y: q.y - o.sign() * (AIM_IN - .2) / gt }; setAim(q, e); return; }
+        o.place(sx0 + (q.x - ref.x) * gp);
       }
     }
     function pu(e) {
@@ -203,6 +213,7 @@
 
     /* ---------- the guides: the base line glow, the aim arrow, the dotted path to the first man, the ghost striker ---------- */
     const gd = new TH.Group(); board.add(gd);
+    const COARSE = !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);
     const basic = (c, o) => new TH.MeshBasicMaterial({ color: c, transparent: true, opacity: o, toneMapped: false, depthWrite: false });
     const MAT = { arrow: basic(0xffffff, .95), path: basic(0xffffff, .85), ghost: basic(0xffffff, .9), hint: basic(0xff3d7f, .95), man: basic(0x3df59a, .95), base: basic(0x3df59a, .35), ring: basic(0xffd34d, .95) };
     const GEO = { bar: new TH.BoxGeometry(1, .006, 1), ring: new TH.TorusGeometry(D.RS * K, .012, 6, 40), cone: new TH.ConeGeometry(.08, .2, 3) };
@@ -219,7 +230,7 @@
       clearGuides();
       if (phase !== 'place' || !st || !human(st.turn)) return;
       const p = st.turn, by = E.baseY(p);
-      bar(-D.BX, by, D.BX, by, D.LINE + .4, MAT.base, .012);   // where the striker may stand
+      bar(-D.BX, by, D.BX, by, COARSE ? 2 * D.RS + .8 : D.LINE + .4, MAT.base, .012);   // where the striker may stand (as wide as the striker on touch screens)
       const ang = drag && drag.kind === 'aim' ? aimAng : hintShot ? hintShot.ang : null;
       const mt = hintShot && !(drag && drag.kind === 'aim') ? MAT.hint : MAT.path;
       if (ang != null) {
@@ -230,7 +241,7 @@
         if (drag && drag.kind === 'aim') {   // the power arrow out of the striker
           const L0 = D.RS + 2 + aimPow * 18, ex = sx + Math.cos(ang) * L0, ey = by + Math.sin(ang) * L0;
           const col = new TH.Color().setHSL(.33 - aimPow * .33, .9, .55); MAT.arrow.color.copy(col);
-          bar(sx + Math.cos(ang) * D.RS, by + Math.sin(ang) * D.RS, ex, ey, .9, MAT.arrow, .045);
+          bar(sx + Math.cos(ang) * D.RS, by + Math.sin(ang) * D.RS, ex, ey, COARSE ? 1.5 : .9, MAT.arrow, .045);
           const c = new TH.Mesh(GEO.cone, MAT.arrow), [a, b] = wx(ex, ey); c.position.set(a, Y + .05, b); c.rotation.y = -ang + Math.PI / 2; c.renderOrder = 5; gd.add(c);
         }
       }
