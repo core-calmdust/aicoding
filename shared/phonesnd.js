@@ -2,7 +2,7 @@
 //
 // Every page that makes sound includes this early in <head> (before any AudioContext / <audio> starts):
 //     <script src="../shared/phonesnd.js?v=1"></script>
-// It does three things:
+// It does four things:
 //   1. navigator.audioSession.type = 'ambient' (iOS 17+): Web Audio and media elements follow the silent switch
 //      and mix with other apps' audio — on every device, PC included (no effect where unsupported).
 //   2. On touch devices — matchMedia('(hover: none) and (pointer: coarse)') — the sound / BGM toggle buttons of
@@ -16,6 +16,37 @@
 'use strict';
 if (window.PhoneSnd) return;
 try { if (navigator.audioSession) navigator.audioSession.type = 'ambient'; } catch (e) {}
+// 4. Sound comes back after an interruption (every device). Phones put Web Audio into 'suspended' /
+//    'interrupted' (iOS) after the screen locks, the tab goes to the background, a call or another app's
+//    audio — and after that only a resume() from a user gesture brings it back. Every AudioContext the page
+//    makes is tracked; on each tap / key (and when the page comes back) any that is not running is resumed.
+//    iOS can also leave a context 'running' but silent after an interruption: the first gesture after the page
+//    was hidden does suspend() → resume() to restart its output.
+(function () {
+  const Base = window.AudioContext || window.webkitAudioContext;
+  if (!Base || Base.__keep) return;
+  const all = [];
+  let stale = false;
+  function Keep(...a) { const c = new Base(...a); all.push(c); return c; }
+  Keep.prototype = Base.prototype; Keep.__keep = true;
+  try { Object.setPrototypeOf(Keep, Base); } catch (e) {}
+  window.AudioContext = Keep; if (window.webkitAudioContext) window.webkitAudioContext = Keep;
+  const fix = gesture => {
+    const restart = stale && gesture; if (gesture) stale = false;
+    for (const c of all) {
+      try {
+        if (c.state === 'closed') continue;
+        if (c.state !== 'running') c.resume().catch(() => {});
+        else if (restart) c.suspend().then(() => c.resume()).catch(() => {});
+      } catch (e) {}
+    }
+  };
+  ['pointerdown', 'touchend', 'click', 'keydown'].forEach(t => addEventListener(t, () => fix(true), { capture: true, passive: true }));
+  document.addEventListener('visibilitychange', () => { if (document.hidden) stale = true; else fix(false); });
+  addEventListener('pagehide', () => { stale = true; });
+  addEventListener('pageshow', () => fix(false));
+  addEventListener('focus', () => fix(false));
+})();
 let phone = false;
 try { phone = matchMedia('(hover: none) and (pointer: coarse)').matches; } catch (e) {}
 window.PhoneSnd = { phone };
