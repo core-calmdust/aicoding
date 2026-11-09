@@ -250,6 +250,8 @@ html.atlas-ludo3d #frame{background:none!important;box-shadow:none!important}`;
   })();
   const oCup = window.cupDraw;
   window.cupDraw = function (seat, mode, thr) { const r = oCup.apply(this, arguments); try { ensure(); cup.set(seat, mode, thr); } catch (e) {} return r; };
+  // the page may have drawn its cup before this skin loaded (a reload mid-game): the 3D cup takes that state now (2026-11-09)
+  try { if (typeof CUP !== 'undefined' && CUP.mode && CUP.seat >= 0 && typeof G !== 'undefined' && G) { ensure(); cup.set(CUP.seat, CUP.mode, CUP.thr); } } catch (e) {}
   // lessons / puzzles (SP): the page draws no cup and sets the throw itself — show that throw's dice in the yard, the cup put
   // aside (2026-11-09: the cup stayed mouth up with the last game's die in it, not the lesson's number)
   const oShow = window.showThrow;
