@@ -189,7 +189,7 @@
 
     /* ---------- the AI ---------- */
     let worker = null, wid = 0; const pend = {};
-    try { worker = new Worker('../crokinole/worker.js?v=1'); worker.onmessage = e => { const d = e.data || {}, f = pend[d.id]; if (f) { delete pend[d.id]; f(d.shot || null); } }; worker.onerror = () => { worker = null; Object.keys(pend).forEach(k => { const f = pend[k]; delete pend[k]; f(null); }); }; } catch (e) { worker = null; }
+    try { worker = new Worker('../crokinole/worker.js?v=2'); worker.onmessage = e => { const d = e.data || {}, f = pend[d.id]; if (f) { delete pend[d.id]; f(d.shot || null); } }; worker.onerror = () => { worker = null; Object.keys(pend).forEach(k => { const f = pend[k]; delete pend[k]; f(null); }); }; } catch (e) { worker = null; }
     function think(s, lv) {
       const seed = (Math.random() * 1e9) | 0;
       return new Promise(res => {
@@ -349,7 +349,7 @@
         powEl.hidden = false; powEl.textContent = Math.round(aimPow * 100) + '%'; powEl.style.left = a.e.clientX + 'px'; powEl.style.top = a.e.clientY + 'px';
         say('💪 ' + Math.round(aimPow * 100) + '%'); showGuides();
       },
-      shoot: (ang, pw) => shoot({ x: sx, ang, v: vOf(pw) }),
+      shoot: (ang, pw) => shoot(E.wobble({ x: sx, ang, v: vOf(pw) }, (Math.random() * 1e9) | 0)),   // the hand wobbles a little (engine wobble)
       tap: () => { if (phase === 'anim' && !stopped) speedUp = 3; },
     });
 

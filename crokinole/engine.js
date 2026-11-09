@@ -284,6 +284,12 @@
     return { x: c.x, ang: c.ang, v: c.v, kind: c.kind || '', val: pick.v };
   }
   function perform(shot, level, seed) { return jitter(shot, skill(level), rng(seed || 7)); }
+  // a human flick is never quite the same twice: a small wobble in angle and strength, larger for hard shots
+  // (1 s.d.: soft draws ±0.8° / ±4% — a perfectly aimed open 20 drops about 4 times in 5 — a full-power takeout ±1.6° / ±7%)
+  function wobble(shot, seed) {
+    const R = rng(seed || 11), k = Math.min(1, shot.v / VMAX), k2 = k * k;
+    return { x: shot.x, ang: shot.ang + gauss(R) * (.8 + .8 * k2) * Math.PI / 180, v: Math.max(15, shot.v * (1 + gauss(R) * (.04 + .03 * k2))) };
+  }
 
   // first contact along an aim (for the aiming guide): a disc, a peg, or the edge
   function aimTrace(s, p, x, ang) {
@@ -308,7 +314,7 @@
     return { k: wall, gx: x + dx * wall, gy: y + dy * wall, man: -1 };
   }
 
-  const API = { DIM, DECEL, VMAX, newRound, newBoard, nextRound, nextBoard, matchOver, clone, baseY, onBoard, startFree, nearestFree, simulate, resolve, think, perform, skill, aimTrace, value, tally, rng, evaluate };
+  const API = { DIM, DECEL, VMAX, newRound, newBoard, nextRound, nextBoard, matchOver, clone, baseY, onBoard, startFree, nearestFree, simulate, resolve, think, perform, wobble, skill, aimTrace, value, tally, rng, evaluate };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   root.CrokinoleEngine = API;
 })(typeof self !== 'undefined' ? self : this);
