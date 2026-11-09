@@ -80,7 +80,9 @@
     const L = { you: t('p.you'), ai: t('p.ai'), think: t('p.think'), win: t('res.win'), lose: t('res.lose') };
     let st = null, thr = null, moves = [], phase = 'wait', over = false, stopped = false, busy = false, selK = -1, hintMv = null, ply = 0, tok = 0, msg = '';
     const hist = [], timers = [];
-    const PACE = .7;   // (2026-11-09) the table's tempo: every animation and pause × .7 (it felt slow)
+    // (2026-11-09) the table keeps the 2D game's ふつう tempo: the piece steps and the cup's shake / turn-over take the 2D ふつう
+    // durations (ludo/app.js × SPD 1.6 / √1.6, written as N / PACE below); everything else × PACE
+    const PACE = .85, D2 = { step: 160, stepLong: 104, shake: 531, flip: 329 };
     const later = (f, ms) => { const my = tok; timers.push(setTimeout(() => { if (!stopped && my === tok) f(); }, ms * PACE)); };
     const sleep = ms => new Promise(r => later(r, ms));
     const human = seat => st && (pvp || st.ctrl[seat] === 0);
@@ -124,7 +126,7 @@
       else if (m.to < m.from) for (let p = m.from - 1; p >= m.to; p--) pts.push(geo.cellXY(seat, p));   // (house rule: a step back)
       else for (let p = m.from + 1; p <= m.to; p++) pts.push(p >= L0 ? geo.home(seat, m.k) : geo.cellXY(seat, p));
       const g2 = m.k2 != null ? pcs[seat + ',' + m.k2] : null;   // (house rule: a double moves as one)
-      const steps = pts.length - 1, dur = steps > 12 ? 85 : 130, z0 = g.userData.z, z1 = m.to >= L0 ? (rule === 'pachisi' ? .62 : .55) : 1;
+      const steps = pts.length - 1, dur = (steps > 12 ? D2.stepLong : D2.step) / PACE, z0 = g.userData.z, z1 = m.to >= L0 ? (rule === 'pachisi' ? .62 : .55) : 1;
       for (let i = 1; i <= steps; i++) {
         const [ax, ay] = pts[i - 1], [bx, by] = pts[i];
         await animP(dur, k => { const e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2, z = z0 + (z1 - z0) * (i - 1 + k) / steps; place(g, ax + (bx - ax) * e, ay + (by - ay) * e, z, Math.sin(k * Math.PI) * u * .45); if (g2) place(g2, ax + (bx - ax) * e + .18, ay + (by - ay) * e + .18, z * .9, Math.sin(k * Math.PI) * u * .45); });
@@ -240,11 +242,11 @@
       g.position.set(cx, Y, cz); cupPose(1, 0);
       if (!g.userData.dice.children.length) cupDice(true);
       const DD = g.userData.dice.children;
-      await animP(520, k => { const w = Math.sin(k * Math.PI * 8) * Math.min(1, k * 4) * (1 - Math.max(0, k - .85) / .15); cupPose(1, Math.min(1, k * 4) * .35, w * .22); g.position.x = cx + w * .06;
+      await animP(D2.shake / PACE, k => { const w = Math.sin(k * Math.PI * 8) * Math.min(1, k * 4) * (1 - Math.max(0, k - .85) / .15); cupPose(1, Math.min(1, k * 4) * .35, w * .22); g.position.x = cx + w * .06;
         DD.forEach((d, i) => { const j = Math.abs(Math.sin(k * Math.PI * 9 + i * 1.7)) * Math.min(1, k * 4); d.position.y = d.userData.y0 - j * .12; d.rotation.x = Math.PI + k * Math.PI * (7 + i) * (i ? -1 : 1) * Math.min(1, k * 4); d.rotation.z = k * Math.PI * (5 - i); d.rotation.y += .25; }); });   // (tumbling: the face on top keeps changing)   // (the dice rattle inside)
       if (stopped) return;
       g.position.x = cx;
-      await animP(300, k => { const e = k * k; cupPose(1 - e, .35 * (1 - e) + Math.sin(k * Math.PI) * .45); });
+      await animP(D2.flip / PACE, k => { const e = k * k; cupPose(1 - e, .35 * (1 - e) + Math.sin(k * Math.PI) * .45); });
       if (stopped) return;
       cupPose(0, 0); cupUp = 0; SND.put(); cupDice(false);   // (the dice now lie on the board under it)
       // the dice, under the cup
