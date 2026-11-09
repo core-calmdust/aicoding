@@ -83,8 +83,7 @@ button{font:inherit;color:inherit}
 @keyframes cupDice{from{transform:scale(.6);opacity:0}}
 #bsvg #gCup .cuphint{pointer-events:none}
 #bsvg #gCup .cuphint .chb{transform-box:fill-box;transform-origin:50% 100%;animation:chIn .35s cubic-bezier(.3,1.4,.5,1) both,chFloat 1.8s ease-in-out .35s infinite}
-#bsvg #gCup .cuphint .chr,#bsvg #gCup .cuphint .cht{fill:#fffdf6;stroke:#f0b43c;stroke-width:.035}
-#bsvg #gCup .cuphint .cht{stroke-dasharray:.15 .15}
+#bsvg #gCup .cuphint .chr{fill:#fffdf6;stroke:#f0b43c;stroke-width:.035;stroke-linejoin:round}
 #bsvg #gCup .cuphint .chb{filter:drop-shadow(0 .05px .08px rgba(60,40,10,.35))}
 #bsvg #gCup .cuphint .chx{font-size:.33px;font-weight:900;fill:#3a2a10;font-family:inherit}
 @keyframes chIn{from{transform:translateY(.2px) scale(.6);opacity:0}}
@@ -581,7 +580,7 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
 <script src="../shared/resign.js?v=3l14"></script>
 <script src="../shared/ruletour.js?v=29l14"></script>
 <script src="engine.js?v=3"></script>
-<script src="board2d.js?v=6"></script>
+<script src="board2d.js?v=7"></script>
 <script src="board-art.js?v=3"></script>
 <script src="../shared/coachkit.js?v=16l14"></script>
 <script src="coach.js?v=3"></script>
@@ -590,7 +589,7 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
 <script src="../shared/mtworkers.js?v=4"></script>
 <script src="mt.js?v=3"></script>
 <script src="house.js?v=7"></script>
-<script src="app.js?v=23"></script>
+<script src="app.js?v=24"></script>
 <script src="review.js?v=3-mt"></script>
 <script src="../shared/placement.js?v=1l14"></script>
 <script src="rated.js?v=2"></script>

@@ -186,5 +186,19 @@
       return `<g transform="translate(${x} ${y}) rotate(${a})"><ellipse cx="2" cy="4" rx="17" ry="11" fill="rgba(0,0,0,.3)"/>${body}</g>`;
     }).join('') + `</svg>`;
   }
-  window.LudoBoard2D = { COL, geometry, drawBoard, pieceSVG, dieSVG, cowriesSVG, LUDO_TRACK, pachisiXY };
+  // (2026-11-09) a cloud outline round a box w × h centred on (0, 0): puffs (outward arcs) all round a stadium — the 「サイコロをクリック！」 bubble
+  function cloudPath(w, h, puff = .5) {
+    const r = h / 2, a = Math.max(0, w / 2 - r), L = 4 * a + Math.PI * h, n = Math.max(6, Math.round(L / (h * puff))), P = [];
+    const at = d => { d = ((d % L) + L) % L;
+      if (d < 2 * a) return [-a + d, -r]; d -= 2 * a;
+      if (d < Math.PI * r) { const t = -Math.PI / 2 + d / r; return [a + Math.cos(t) * r, Math.sin(t) * r]; } d -= Math.PI * r;
+      if (d < 2 * a) return [a - d, r]; d -= 2 * a;
+      const t = Math.PI / 2 + d / r; return [-a + Math.cos(t) * r, Math.sin(t) * r]; };
+    for (let i = 0; i < n; i++) P.push(at(i * L / n + L / n * .3));
+    const f = v => (Math.round(v * 1000) / 1000);
+    let d = `M${f(P[0][0])} ${f(P[0][1])}`;
+    for (let i = 1; i <= n; i++) { const [x0, y0] = P[i - 1], [x1, y1] = P[i % n], c = Math.hypot(x1 - x0, y1 - y0), rr = c * (.51 + (i % 3) * .04); d += `A${f(rr)} ${f(rr)} 0 0 1 ${f(x1)} ${f(y1)}`; }
+    return d + 'Z';
+  }
+  window.LudoBoard2D = { COL, geometry, drawBoard, pieceSVG, dieSVG, cowriesSVG, cloudPath, LUDO_TRACK, pachisiXY };
 })();
