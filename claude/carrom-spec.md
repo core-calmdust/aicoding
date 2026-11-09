@@ -7,11 +7,11 @@
 |---|---|
 | `carrom/engine.js` | ルール・物理・AI（DOMなし。ポータル・ルールコース・ワーカーで共用） |
 | `carrom/worker.js` | AIの思考（`CarromEngine.think` をワーカーで） |
-| `atlas/models/carrom.js` | 3D盤5種（モダンアート `modern`＝既定・クラシック `classic`・ネオン `neon`・ラジャスタン `rajasthan`・バウハウス `bauhaus`）と駒・クイーン・ストライカー。盤ごとに駒の顔も変わる（`PRE`／`FACE`／`SIDE`） |
+| `atlas/models/carrom.js` | 3D盤6種（ネオン `neon`＝既定・モダンアート `modern`・クラシック `classic`・ラジャスタン `rajasthan`・バウハウス `bauhaus`・大富豪 `tycoon`）と駒・クイーン・ストライカー。盤ごとに駒の顔も変わる（`PRE`／`FACE`／`SIDE`） |
 | `atlas/games/carrom.js` | 3D卓での対局（`Atlas3D.carrom`） |
 | `atlas/rules/carrom.js` | ルールコース（案内役：カワウソのオットー、`images/atlas/av/otter-1.webp`） |
 | `atlas/historia/s/carrom.json`・`atlas/historia/<lang>/carrom.json` | ヒストリア（14言語）。図は historia.js の `carrom` 型 |
-| `atlas/tools/topdown.html` | 3D盤を真上から透明背景で撮る道具（トップページ `images/carrom.webp` と一覧 `atlas/shots/carrom.webp` はこれで既定のモダンアート盤を撮る） |
+| `atlas/tools/topdown.html` | 3D盤を真上から透明背景で撮る道具（トップページ `images/carrom.webp` と一覧 `atlas/shots/carrom.webp` はこれで既定のネオン盤を撮る） |
 
 - 台帳：`shared/atlas.js` の GAMES に `only3d: true`（ポータルの「2Dで遊ぶ」リンクを出さない）、`href: 'atlas/#games/carrom'`（トップページからは大百科の3Dビューへ直接開く）。カテゴリは新設の `action`（アクション・おはじき、14言語）。テーマ色 #c23a7a（ラニピンク）。
 - トップページ：GAMES に `cat:'action'`・`beta:1`、`GX_CATS` に `action`、アイコン `images/icons/carrom.svg`。
@@ -46,8 +46,8 @@
 - 盤面反転：画面左下の丸ボタン（と F キー）で盤を180°回す（アニメーション、`atlas-flip-carrom` に記憶）。2人対戦の手番での回転に重ねる。反転中は自分のベースラインが画面の上になり、引く向きは盤の上で「的から離れる向き」のまま（画面では上へ引く）。対局が終わったら隠す。
 - カメラ：既定は斜めから見下ろす視点（pitch 0.82、パースあり）。反転ボタンの右の丸ボタンで「上から見る」（ほぼ真上、縦長1.36／横長1.3）と切り替え（`atlas-carrom-view`=`top`/`angle` に記憶）。
 - 描画：ウィンドウが前面にない（blur）・タブが隠れている間は、ストライカーの輪の点滅を止めて描画を止める（共通ルールのオンデマンド描画）。
-- 盤の名前：「モダンアート 3D」「クラシック 3D」「ネオン 3D」「ラジャスタン 3D」「バウハウス 3D」（`N3`、14言語）。選択は `atlas-carrom-look`、盤のサムネイルは `atlas/img/board-carrom-<look>.webp`（tools/boards.html で撮る）。
-- 盤の中身：ネオン＝黒漆に光る線（表面の emissiveMap）、枠の内縁とポケットに光る管、アクリル風の駒（顔が光る）。ラジャスタン＝サフランの地に小さなペイズリー、赤い縁取り帯と金の点、中央に蓮の曼荼羅、四隅に蓮の扇、シーシャム材の枠に真鍮。バウハウス＝生成りの紙に赤い円・青い正方形・黄色い三角・黒い棒、マットな黒枠。
+- 盤の名前：「ネオン 3D」（既定・一覧の先頭）「モダンアート 3D」「クラシック 3D」「ラジャスタン 3D」「バウハウス 3D」「大富豪 3D」（`N3`、14言語）。選択は `atlas-carrom-look`、盤のサムネイルは `atlas/img/board-carrom-<look>.webp`（tools/boards.html で撮る）。
+- 盤の中身：ネオン＝黒漆に光る線（表面の emissiveMap）、枠の内縁とポケットに光る管、アクリル風の駒（顔が光る）。ラジャスタン＝サフランの地に小さなペイズリー、赤い縁取り帯と金の点、中央に蓮の曼荼羅、四隅に蓮の扇、シーシャム材の枠に真鍮。バウハウス＝生成りの紙に赤い円・青い正方形・黄色い三角・黒い棒、マットな黒枠。大富豪＝4cm角の金箔を張った盤面（槌目）、彫りの印と放射線、ルビーの丸、磨いた金の枠にルビー・サファイア・エメラルドのカボション（各辺5つ）と四隅のダイヤ。駒は真珠と縞瑪瑙に金の縁、ルビーのクイーン、王冠を刻んだ金貨のストライカー。
 - ネオンの演出（ゲーミングRGB）：盤面の線・枠の縁・ポケットの輪・駒の縁のLEDリングが、時間とともに流れる虹色で光る（シェーダーで発光の色相だけを置き換える `rgbify`、明るさは素材のまま）。駒が駒・クッションに当たる・ポケットに落ちると、その駒の顔とLEDが強く光り、虹色の光の輪と広がる衝撃波の輪が0.5秒で消える（`userData.flash(k)`、エンジンのクッションの出来事に駒の番号 `i`）。ネオン盤の対局中は虹が途切れないよう描画し続ける（ウィンドウが前面のときだけ。背面・非表示では止める）。
 - 盤の切り替え：`atlas-carrom-look` を table3d.js の `stamp()` に入れる（入れないと、作り置き・取っておいた別の盤が出る）。
 - クラシックの枠：木目は各辺1枚で貼る（繰り返しの継ぎ目を出さない）。
