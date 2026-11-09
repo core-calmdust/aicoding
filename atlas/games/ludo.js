@@ -80,13 +80,14 @@
     const L = { you: t('p.you'), ai: t('p.ai'), think: t('p.think'), win: t('res.win'), lose: t('res.lose') };
     let st = null, thr = null, moves = [], phase = 'wait', over = false, stopped = false, busy = false, selK = -1, hintMv = null, ply = 0, tok = 0, msg = '';
     const hist = [], timers = [];
-    const later = (f, ms) => { const my = tok; timers.push(setTimeout(() => { if (!stopped && my === tok) f(); }, ms)); };
+    const PACE = .7;   // (2026-11-09) the table's tempo: every animation and pause × .7 (it felt slow)
+    const later = (f, ms) => { const my = tok; timers.push(setTimeout(() => { if (!stopped && my === tok) f(); }, ms * PACE)); };
     const sleep = ms => new Promise(r => later(r, ms));
     const human = seat => st && (pvp || st.ctrl[seat] === 0);
     const myTeam = () => st ? st.team[0] : 0;
     const colName = seat => tx('c.' + rule + '.' + seat);
     const seatName = seat => pvp ? colName(seat) : st.ctrl[seat] === 0 ? (rule === 'pachisi' && players === 2 && seat !== 0 ? L.you + '（' + colName(seat) + '）' : L.you) : colName(seat);
-    const anim = (dur, f, done) => { const t0 = performance.now(); (function s(nw) { if (stopped) return; const k = Math.min(1, Math.max(0, (nw - t0) / dur)); f(k); if (T3.kick) T3.kick(120); if (k < 1) requestAnimationFrame(s); else if (done) done(); })(t0); };
+    const anim = (dur, f, done) => { const t0 = performance.now(); dur *= PACE; (function s(nw) { if (stopped) return; const k = Math.min(1, Math.max(0, (nw - t0) / dur)); f(k); if (T3.kick) T3.kick(120); if (k < 1) requestAnimationFrame(s); else if (done) done(); })(t0); };
     const animP = (dur, f) => new Promise(r => anim(dur, f, r));
     const wx = (gx, gy) => U.xz(gx, gy);
 
@@ -331,16 +332,16 @@
       if (!T3.fit || stopped) return;
       const on = zoomPref && small() && focusPts && focusPts.length;
       if (zoomBtn) { zoomBtn.hidden = !small() || over; zoomBtn.classList.toggle('off', !zoomPref); }
-      if (!on) { T3.fit(Object.assign(baseFit(), { ease: true })); return; }
+      if (!on) { T3.fit(Object.assign(baseFit(), { ease: true, ek: .12 })); return; }
       let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
       focusPts.forEach(([x, y]) => { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); });
       const pad = 1.4, sw = Math.max(8, x1 - x0 + pad * 2), sd = Math.max(8, y1 - y0 + pad * 2);
-      if (Math.max(sw, sd) > n - 2) { T3.fit(Object.assign(baseFit(), { ease: true })); return; }   // spread over the board: the whole board
+      if (Math.max(sw, sd) > n - 2) { T3.fit(Object.assign(baseFit(), { ease: true, ek: .12 })); return; }   // spread over the board: the whole board
       // the view is wider or taller than the box (the screen's shape): keep what it really shows inside the board, no table at the edge
       const asp = (ctx.el.clientWidth || innerWidth) / (ctx.el.clientHeight || innerHeight), vw = Math.min(n, Math.max(sw, sd * asp)), vd = Math.min(n, Math.max(sd, sw / asp * .82));
       const cl = (c, h) => Math.max(h, Math.min(n - h, c));
       const gx = cl((x0 + x1) / 2, vw / 2 - .4), gy = cl((y0 + y1) / 2, vd / 2 - .4), [cx, cz] = wx(gx, gy), B0 = baseFit();
-      T3.fit({ w: sw * u, d: sd * u + (B0.d - W), y: Y + .2, pitch: B0.pitch, cx, cz, ease: true });
+      T3.fit({ w: sw * u, d: sd * u + (B0.d - W), y: Y + .2, pitch: B0.pitch, cx, cz, ease: true, ek: .12 });
     }
     function focus(pts) { focusPts = pts; applyFocus(); }
     const focusSeat = seat => focus(yardPts(seat).concat([throwSpot(seat)]));
