@@ -1706,7 +1706,7 @@
     };
     if (opts.soft) {            // back from a game on the table: the showcase board settles in without a bounce — a short ease-out
       root.add(c); const t0 = performance.now();   // (from a hair above, with the camera's glide) (2026-11-09: the drop's squash read as a bounce)
-      (function anim(now) { const k = Math.min(1, (now - t0) / 420), e = ease.out3(k); c.position.y = (1 - e) * .35; kick(120);
+      (function anim(now) { const k = Math.min(1, (now - t0) / 340), e = ease.out3(k); c.position.y = (1 - e) * .35; kick(120);
         if (k < 1 && cur === c) requestAnimationFrame(anim); else c.position.y = 0; })(t0);
       dirty = shadowDirty = true; return g;
     }
