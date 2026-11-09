@@ -315,6 +315,26 @@
       });
     }
 
+    /* ---------- the night board: men flash when they are hit; a wave of light runs through the board now and then ---------- */
+    const flashing = new Set(); let flashRaf = 0;
+    function flash(g, v) {
+      if (!g || !g.userData.flash) return;
+      g.userData.ft = performance.now(); g.userData.fk = Math.min(1, .45 + v / 260); flashing.add(g);
+      if (!flashRaf) flashRaf = requestAnimationFrame(flashStep);
+    }
+    function flashStep() {
+      flashRaf = 0; if (stopped) return; const now = performance.now();
+      flashing.forEach(g => { const k = g.userData.fk * Math.max(0, 1 - (now - g.userData.ft) / 520); g.userData.flash(k * k); if (k <= 0) flashing.delete(g); });
+      kick(80); if (flashing.size) flashRaf = requestAnimationFrame(flashStep);
+    }
+    let waveT = 0;
+    function neonTick() {   // frames only while a wave runs, and only while the window is in front
+      clearTimeout(waveT); if (stopped || !board || board.userData.look !== 'neon' || !T3.carrom || !T3.carrom.neonWave) return;
+      const w = T3.carrom.neonWave(performance.now());
+      if (!w.wait) { if (!document.hidden && document.hasFocus()) kick(w.left + 60); waveT = setTimeout(neonTick, w.left + 80); }
+      else waveT = setTimeout(neonTick, w.wait + 5);
+    }
+
     /* ---------- playing a stroke back: the simulated frames at their own pace (a tap speeds it up) ---------- */
     function playback(sim) {
       return new Promise(done => {
@@ -339,6 +359,7 @@
           while (ev < sim.events.length && sim.events[ev].t <= el) {
             const e = sim.events[ev++];
             if (e.k === 'hit' && e.v > 8) SND.hit(e.v); else if (e.k === 'cush' && e.v > 25) SND.cush(e.v); else if (e.k === 'pocket') SND.pocket();
+            if (e.k === 'hit' && e.v > 4) { flash(e.a === N ? striker : pcs[e.a], e.v); flash(e.b === N ? striker : pcs[e.b], e.v); }
           }
           kick(120);
           if (fi < F.length - 1 || Object.values(sinks).some(s => el - s.t < .22)) requestAnimationFrame(step);
@@ -491,7 +512,7 @@
     function flip() { if (stopped) return; flipped = !flipped; try { localStorage.setItem(FK, flipped ? '1' : '0'); } catch (e) {} flipSync(); hand.cancel(); viewTo(); }
     flipBtn.addEventListener('click', e => { e.preventDefault(); flip(); });
     ['pointerdown', 'pointermove', 'pointerup'].forEach(k => flipBtn.addEventListener(k, e => e.stopPropagation()));
-    flipSync(); (document.getElementById('bv') || document.body).appendChild(flipBtn);   // (inside the board view's own layer, over its canvas) viewTo(0, true);
+    neonTick(); flipSync(); (document.getElementById('bv') || document.body).appendChild(flipBtn);   // (inside the board view's own layer, over its canvas) viewTo(0, true);
     const VIEWT = { ja: ['上から見る', '斜めから見る'], en: ['View from above', 'View at an angle'], zh: ['从上方看', '斜着看'], 'zh-TW': ['從上方看', '斜著看'], ko: ['위에서 보기', '비스듬히 보기'], es: ['Vista desde arriba', 'Vista en ángulo'], fr: ['Vue de dessus', 'Vue en biais'], pt: ['Ver de cima', 'Ver em ângulo'], de: ['Von oben', 'Schräg von oben'], ru: ['Вид сверху', 'Вид под углом'], tr: ['Üstten bak', 'Açılı bak'], id: ['Lihat dari atas', 'Lihat miring'], hi: ['ऊपर से देखें', 'तिरछा देखें'], ar: ['عرض من الأعلى', 'عرض مائل'] };
     const viewBtn = document.createElement('button'); viewBtn.type = 'button'; viewBtn.className = 'crflip crview';
     const ICO_TOP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="5" y="5" width="14" height="14" rx="1.5"/><circle cx="12" cy="12" r="2.2"/></svg>';
@@ -554,10 +575,10 @@
         hand.stop();
         document.removeEventListener('keydown', onKey); removeEventListener('resize', onResize); ctx.el.style.touchAction = prevTouch;
         css.remove(); powEl.remove(); if (toastEl) toastEl.remove(); if (cardEl) cardEl.remove(); if (worker) worker.terminate();
-        cancelAnimationFrame(viewRaf); flipBtn.remove(); viewBtn.remove(); document.removeEventListener('keydown', onFlipKey); if (T3.turn) T3.turn(null);
+        cancelAnimationFrame(viewRaf); clearTimeout(waveT); cancelAnimationFrame(flashRaf); flipBtn.remove(); viewBtn.remove(); document.removeEventListener('keydown', onFlipKey); if (T3.turn) T3.turn(null);
         Object.values(MAT).forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose());
       },
-      _debug: { st: () => st, phase: () => phase, shoot: (x, ang, pw) => { if (phase !== 'place') return false; sx = E.nearestFree(st, st.turn, x); stroke({ x: sx, ang, v: 40 + pw * (E.VMAX - 40) }); return true; }, setStriker: x => { moveStriker(x); showGuides(); }, at: (x, y) => { const [a, b] = wx(x, y); return T3.project(a, b, Y); }, striker: () => sx },
+      _debug: { st: () => st, phase: () => phase, shoot: (x, ang, pw) => { if (phase !== 'place') return false; sx = E.nearestFree(st, st.turn, x); stroke({ x: sx, ang, v: 40 + pw * (E.VMAX - 40) }); return true; }, setStriker: x => { moveStriker(x); showGuides(); }, at: (x, y) => { const [a, b] = wx(x, y); return T3.project(a, b, Y); }, striker: () => sx, pc: i => i === st.pcs.length ? striker : pcs[i] },
     };
     window.__carromTable = api;
     return api;
