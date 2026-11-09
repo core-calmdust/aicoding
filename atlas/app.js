@@ -305,7 +305,7 @@
     sync(); setTimeout(sync, 300);
   }
   // portal features that can appear in the recent-updates row (UPDATES lines with the id tab:<page>)
-  const FEAT = { map: { color: '#2f86d6', art: 'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20120%20100%22%3E%3Cdefs%3E%3CradialGradient%20id%3D%22o%22%20cx%3D%22.38%22%20cy%3D%22.32%22%20r%3D%22.8%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%238fd3ff%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%232f86d6%22/%3E%3C/radialGradient%3E%3CclipPath%20id%3D%22c%22%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%2254%22%20r%3D%2238%22/%3E%3C/clipPath%3E%3C/defs%3E%3Cellipse%20cx%3D%2260%22%20cy%3D%2295%22%20rx%3D%2230%22%20ry%3D%224%22%20fill%3D%22%23000%22%20opacity%3D%22.18%22/%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%2254%22%20r%3D%2238%22%20fill%3D%22url%28%23o%29%22/%3E%3Cg%20clip-path%3D%22url%28%23c%29%22%20fill%3D%22%23f6e3b0%22%3E%3Cpath%20d%3D%22M20%2030c8-6%2020-8%2026-2%204%204%200%2010%206%2014%205%203%204%2010-2%2012-7%203-8%2012-14%2012-6%200-6-8-12-10-6-2-10-8-8-14%201-5%201-9%204-12z%22/%3E%3Cpath%20d%3D%22M62%2020c10-3%2026%200%2034%208%206%206%204%2014-2%2016-6%202-8%208-14%208s-6-8-12-8-10-4-10-10%200-12%204-14z%22/%3E%3Cpath%20d%3D%22M70%2062c6-2%2014%202%2016%208%202%207-4%2014-10%2016-6%201-8-6-10-12-2-5-1-10%204-12z%22/%3E%3C/g%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%2254%22%20r%3D%2238%22%20fill%3D%22none%22%20stroke%3D%22%231f5fa0%22%20stroke-width%3D%222.4%22/%3E%3Cpath%20d%3D%22M44%2030a26%2026%200%200%201%2012-8%22%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%224%22%20stroke-linecap%3D%22round%22%20opacity%3D%22.55%22/%3E%3Cg%3E%3Cpath%20d%3D%22M38%2044c0-6%204-10%209-10s9%204%209%2010c0%207-9%2014-9%2014s-9-7-9-14z%22%20fill%3D%22%23ff5d5d%22%20stroke%3D%22%23fff%22%20stroke-width%3D%222.2%22/%3E%3Ccircle%20cx%3D%2247%22%20cy%3D%2244%22%20r%3D%223.2%22%20fill%3D%22%23fff%22/%3E%3C/g%3E%3Cg%3E%3Cpath%20d%3D%22M72%2030c0-5%203.5-8.5%207.5-8.5S87%2025%2087%2030c0%206-7.5%2012-7.5%2012S72%2036%2072%2030z%22%20fill%3D%22%23ffc928%22%20stroke%3D%22%23fff%22%20stroke-width%3D%222%22/%3E%3Ccircle%20cx%3D%2279.5%22%20cy%3D%2230%22%20r%3D%222.6%22%20fill%3D%22%23fff%22/%3E%3C/g%3E%3Cg%3E%3Cpath%20d%3D%22M70%2066c0-4.5%203-7.5%206.5-7.5S83%2061.5%2083%2066c0%205-6.5%2010.5-6.5%2010.5S70%2071%2070%2066z%22%20fill%3D%22%233ccf91%22%20stroke%3D%22%23fff%22%20stroke-width%3D%222%22/%3E%3Ccircle%20cx%3D%2276.5%22%20cy%3D%2266%22%20r%3D%222.3%22%20fill%3D%22%23fff%22/%3E%3C/g%3E%3C/svg%3E' } };
+  const FEAT = { gacha: { color: '#e0567a', art: '../images/atlas/av/boss-chess-9-3.webp?v=1' }, map: { color: '#2f86d6', art: 'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20120%20100%22%3E%3Cdefs%3E%3CradialGradient%20id%3D%22o%22%20cx%3D%22.38%22%20cy%3D%22.32%22%20r%3D%22.8%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%238fd3ff%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%232f86d6%22/%3E%3C/radialGradient%3E%3CclipPath%20id%3D%22c%22%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%2254%22%20r%3D%2238%22/%3E%3C/clipPath%3E%3C/defs%3E%3Cellipse%20cx%3D%2260%22%20cy%3D%2295%22%20rx%3D%2230%22%20ry%3D%224%22%20fill%3D%22%23000%22%20opacity%3D%22.18%22/%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%2254%22%20r%3D%2238%22%20fill%3D%22url%28%23o%29%22/%3E%3Cg%20clip-path%3D%22url%28%23c%29%22%20fill%3D%22%23f6e3b0%22%3E%3Cpath%20d%3D%22M20%2030c8-6%2020-8%2026-2%204%204%200%2010%206%2014%205%203%204%2010-2%2012-7%203-8%2012-14%2012-6%200-6-8-12-10-6-2-10-8-8-14%201-5%201-9%204-12z%22/%3E%3Cpath%20d%3D%22M62%2020c10-3%2026%200%2034%208%206%206%204%2014-2%2016-6%202-8%208-14%208s-6-8-12-8-10-4-10-10%200-12%204-14z%22/%3E%3Cpath%20d%3D%22M70%2062c6-2%2014%202%2016%208%202%207-4%2014-10%2016-6%201-8-6-10-12-2-5-1-10%204-12z%22/%3E%3C/g%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%2254%22%20r%3D%2238%22%20fill%3D%22none%22%20stroke%3D%22%231f5fa0%22%20stroke-width%3D%222.4%22/%3E%3Cpath%20d%3D%22M44%2030a26%2026%200%200%201%2012-8%22%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%224%22%20stroke-linecap%3D%22round%22%20opacity%3D%22.55%22/%3E%3Cg%3E%3Cpath%20d%3D%22M38%2044c0-6%204-10%209-10s9%204%209%2010c0%207-9%2014-9%2014s-9-7-9-14z%22%20fill%3D%22%23ff5d5d%22%20stroke%3D%22%23fff%22%20stroke-width%3D%222.2%22/%3E%3Ccircle%20cx%3D%2247%22%20cy%3D%2244%22%20r%3D%223.2%22%20fill%3D%22%23fff%22/%3E%3C/g%3E%3Cg%3E%3Cpath%20d%3D%22M72%2030c0-5%203.5-8.5%207.5-8.5S87%2025%2087%2030c0%206-7.5%2012-7.5%2012S72%2036%2072%2030z%22%20fill%3D%22%23ffc928%22%20stroke%3D%22%23fff%22%20stroke-width%3D%222%22/%3E%3Ccircle%20cx%3D%2279.5%22%20cy%3D%2230%22%20r%3D%222.6%22%20fill%3D%22%23fff%22/%3E%3C/g%3E%3Cg%3E%3Cpath%20d%3D%22M70%2066c0-4.5%203-7.5%206.5-7.5S83%2061.5%2083%2066c0%205-6.5%2010.5-6.5%2010.5S70%2071%2070%2066z%22%20fill%3D%22%233ccf91%22%20stroke%3D%22%23fff%22%20stroke-width%3D%222%22/%3E%3Ccircle%20cx%3D%2276.5%22%20cy%3D%2266%22%20r%3D%222.3%22%20fill%3D%22%23fff%22/%3E%3C/g%3E%3C/svg%3E' } };
   function renderHome() {
     renderHero();
     $('hUpd').textContent = t('upd.h'); $('hIcons').textContent = t('upd.games');
@@ -841,6 +841,9 @@
     $('bv').classList.add('playing'); $('endc').classList.remove('on');
     LAND.game(ad.land || ''); fitStage();
     let sess = null, tbOn = false;
+    // AI games: the level's boss and a watching creature talk now and then (atlas/npc/npc.js); beating the boss gives its SR avatar
+    if (npcT) npcT.kill();
+    npcT = pmode === 'ai' && window.AtlasNPC && AtlasNPC.portal ? AtlasNPC.portal({ game: g.id, level }) : null;
   // phones: a HUD message too long for its slot moves to a popup just above the HUD (the slot is left empty) — 2026-11-07
   let hudPopT = 0, hudPopTxt = '';
   // the game's own bar along the top (the players / whose turn): the board is framed below it as well (2026-11-09: boards sat low)
@@ -861,10 +864,11 @@
   }
 
     session = sess = ad.start({ el: $('gl'), Table3D, lang, t, level, side, size, mode: pmode, bar: true, hud: h => { $('hud').innerHTML = h; hudFit(); if (tbOn && session === sess) TB.sync(); },   // (the bar's buttons follow every state change at once)
-      onTurn: (s, info) => { if (tbOn && session === sess) TB.turn(s, info); },
+      onTurn: (s, info) => { if (tbOn && session === sess) TB.turn(s, info); if (npcT && session === sess && info) npcT.turn(info.ply); },
       onEnd: res => {
         if (session === sess) TB.end();
         if (!res.pvp) A_.recordPlay(W, g.id, res); refresh();   // two players on one device: no win / loss for the player's record
+        if (npcT && session === sess && !res.pvp) { npcT.end(res); W = A_.load(); refresh(); }   // (a boss beaten: its SR was added to the saved wallet)
         setTimeout(() => {
           if (session !== sess) return;
           TB.hide();
@@ -882,7 +886,8 @@
     LAND.sync();
     Table3D.play(true);   // after start(): the adapter puts its own board on the table
   }
-  function stopSession() { TB.off(); if (session) { session.stop(); session = null; } LAND.game(''); $('hud').innerHTML = ''; $('bv').classList.remove('rules'); }
+  let npcT = null;
+  function stopSession() { if (npcT) { npcT.kill(); npcT = null; } TB.off(); if (session) { session.stop(); session = null; } LAND.game(''); $('hud').innerHTML = ''; $('bv').classList.remove('rules'); }
 
   /* ---------- table play: time controls, clocks and the action bar (待った · 投了 · ヒント), one implementation for every game ----------
      Adapter session API (atlas/games/*.js): undo() canUndo() · hint() → Promise canHint() · resign() canResign() · timeout(side).

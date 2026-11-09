@@ -1,0 +1,43 @@
+<!doctype html>
+<!-- Dev tool: renders the AI bosses' avatar images (atlas/avatars/sp-boss.js, roster atlas/npc/roster.js) in one page, the same
+     camera / lights as icons.html?kind=av (640 px) → images/atlas/av/boss-<game>-<n>-<tier>.webp after a resize to 256 px.
+     Open via a local server: http://localhost:8000/atlas/tools/bosses.html — then window.render('boss-chess-1-3') → PNG data URL
+     (headless Chromium: call it for every id; tiers 2 = SR, 3 = SSR / UR). -->
+<html><head><meta charset="utf-8"><style>html,body{margin:0;background:transparent}canvas{display:block}</style></head>
+<body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="../table3d.js"></script>
+<script src="../icons3d.js"></script>
+<script src="../avatars3d.js"></script>
+<script src="../npc/roster.js"></script>
+<script src="../avatars/sp-boss.js"></script>
+<script>
+(function () {
+  const S = 640, R = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+  R.setPixelRatio(1); R.setSize(S, S); R.shadowMap.enabled = true; R.shadowMap.type = THREE.PCFSoftShadowMap;
+  R.outputEncoding = THREE.sRGBEncoding; R.toneMapping = THREE.ACESFilmicToneMapping; R.toneMappingExposure = 1.1;
+  document.body.appendChild(R.domElement);
+  window.render = function (id) {
+    const scene = new THREE.Scene();
+    scene.add(new THREE.HemisphereLight(0xfff6e8, 0x7a5a40, .75));
+    const key = new THREE.DirectionalLight(0xffffff, 1.1); key.position.set(-7, 16, 9); key.castShadow = true;
+    key.shadow.mapSize.set(2048, 2048); Object.assign(key.shadow.camera, { left: -9, right: 9, top: 9, bottom: -9, near: 1, far: 40 }); key.shadow.bias = -.0005;
+    scene.add(key);
+    const rim = new THREE.DirectionalLight(0xcfe6ff, .55); rim.position.set(9, 5, -9); scene.add(rim);
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.ShadowMaterial({ opacity: .28 }));
+    floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+    const m = id.match(/^(.+)-(\d)$/), g = Avatars3D.make(m[1], +m[2]); scene.add(g);
+    g.rotation.y = .45; g.updateMatrixWorld(true);
+    const box = new THREE.Box3(); g.children.forEach(ch => { if (!ch.userData.fx) box.expandByObject(ch); });
+    const c = box.getCenter(new THREE.Vector3()), r = box.getBoundingSphere(new THREE.Sphere()).radius;
+    const cam = new THREE.PerspectiveCamera(24, 1, .1, 200), dist = r / Math.sin(13 * Math.PI / 180) * .84;
+    cam.position.set(c.x + dist * .04, c.y + dist * .3, c.z + dist * .95); cam.lookAt(c.x, c.y, c.z);
+    R.render(scene, cam);
+    const url = R.domElement.toDataURL('image/png');
+    scene.traverse(o => { if (o.geometry) o.geometry.dispose(); });
+    return url;
+  };
+  window.READY = true;
+})();
+</script>
+</body></html>

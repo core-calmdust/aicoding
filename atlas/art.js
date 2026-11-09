@@ -185,6 +185,17 @@
       items.push({ id: `av-${sp}-${t}`, kind: 'icon', rar, d: { sp, t }, name });
     }
   });
+  // the AI bosses (atlas/npc/roster.js, 2026-11-09): SR = beat the boss (not in the gacha or the shop),
+  // SSR / UR (the strongest boss of each game) = gacha only. Images: images/atlas/av/boss-<game>-<n>-<2|3>.webp
+  const NPC = window.AtlasNPC && AtlasNPC.BOSSES;
+  if (NPC) Object.keys(NPC).forEach(g => NPC[g].forEach((b, i) => {
+    const sp = `boss-${g}-${i + 1}`, top = i === NPC[g].length - 1;
+    [2, 3].forEach(t => {
+      const rar = t === 2 ? 2 : top ? 4 : 3, name = {};
+      Object.keys(b.n).forEach(l => { const w = t === 3 && (TIER_NAME[l] || TIER_NAME.en)[3]; name[l] = w ? (l === 'ja' ? `${b.n[l]}（${w}）` : `${b.n[l]} (${w})`) : b.n[l]; });
+      items.push({ id: `av-${sp}-${t}`, kind: 'icon', rar, d: { sp, t }, name, boss: { g, i }, nogacha: t === 2 });
+    });
+  }));
   BGS.forEach((o, i) => {
     const pn = BG_NAME[o.p], c = BGCOL[o.c];
     items.push({ id: 'b' + String(i + 1).padStart(3, '0'), kind: 'bg', rar: o.r, d: o, name: { ja: c[2] + 'の' + pn[0], en: c[3] + ' ' + pn[1] } });
