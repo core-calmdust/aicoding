@@ -217,11 +217,11 @@
   // the piece's face: turned rings (wood men), a star (striker), a brass pip (modern), glowing rings (neon), painted lotus
   // and dots (rajasthan), one clean ring (bauhaus)
   const FACE = { w: '#efe0c0', b: '#2b201a', q: '#c0262a', s: '#f4f1ea', mw: '#ece5d6', mb: '#2c2b2e', mq: '#e1694f', ms: '#efe6d2',
-    nw: '#d8f6ff', nb: '#2a1f48', nq: '#ff4fbd', ns: '#eefcff', rw: '#f1e4c4', rb: '#2a1a12', rq: '#c7262c', rs: '#f3e8cc',
+    nw: '#d8f6ff', nb: '#1c1430', nq: '#ff3a3a', ns: '#eefcff', rw: '#f1e4c4', rb: '#2a1a12', rq: '#c7262c', rs: '#f3e8cc',
     hw: '#f2efe6', hb: '#161616', hq: '#d6332a', hs: '#f2c230' };
   Object.assign(FACE, { tw: '#f3eee4', tb: '#151317', tq: '#a3122c', ts: '#d9ad55' });
   const SIDE = { w: '#e7d3ad', b: '#211813', q: '#a91f22', s: '#ece8de', mw: '#e3dccb', mb: '#26252a', mq: '#d55d45', ms: '#e7dcc5',
-    nw: '#bfeeff', nb: '#3a2a66', nq: '#ff2fa8', ns: '#d9f7ff', rw: '#e6d4ac', rb: '#1f130d', rq: '#a91f22', rs: '#e8d9b4',
+    nw: '#bfeeff', nb: '#3a2a66', nq: '#e82828', ns: '#d9f7ff', rw: '#e6d4ac', rb: '#1f130d', rq: '#a91f22', rs: '#e8d9b4',
     hw: '#e8e4d8', hb: '#111111', hq: '#c42a22', hs: '#e3b322', tw: '#d9b866', tb: '#d9b866', tq: '#d9b866', ts: '#c99a45' };
   function faceTex(kind) {
     const t = X.canvasTex('crFace' + kind, SZ(256), SZ(256), (g, W) => {
@@ -233,8 +233,14 @@
       const lotus = (n, r0, r1, wd, col) => { g.fillStyle = col; for (let k = 0; k < n; k++) { const a = k / n * Math.PI * 2 - Math.PI / 2, ca = Math.cos(a), sa = Math.sin(a), m = (r0 + r1) / 2; g.beginPath(); g.moveTo(c + ca * c * r0, c + sa * c * r0); g.quadraticCurveTo(c + (ca * m - sa * wd) * c, c + (sa * m + ca * wd) * c, c + ca * c * r1, c + sa * c * r1); g.quadraticCurveTo(c + (ca * m + sa * wd) * c, c + (sa * m - ca * wd) * c, c + ca * c * r0, c + sa * c * r0); g.fill(); } };
       if (kind[0] === 'n') {   // neon acrylic: a smooth face, glowing rings (the material makes them glow)
         ring(.8, .05, { nw: '#3ce6ff', nb: '#ff3fb4', nq: '#ffffff', ns: '#3ce6ff' }[kind], .06);
-        ring(.5, .025, { nw: 'rgba(60,230,255,.6)', nb: 'rgba(255,63,180,.6)', nq: 'rgba(255,255,255,.7)', ns: 'rgba(60,230,255,.6)' }[kind], .04);
-        if (kind === 'ns') ring(.18, .05, '#3ce6ff', .05);
+        if (kind === 'ns') { ring(.5, .025, 'rgba(60,230,255,.6)', .04); ring(.18, .05, '#3ce6ff', .05); }
+        else {   // (2026-11-10) a bold emblem on each colour so the sides tell apart at a glance even on a phone:
+          // white = a cyan star, black = a magenta diamond, queen = a white crown
+          const poly = (pts, col, blur) => { g.save(); g.shadowColor = col; g.shadowBlur = W * blur; g.fillStyle = col; g.beginPath(); pts.forEach(([x, y], i) => i ? g.lineTo(c + x * c, c + y * c) : g.moveTo(c + x * c, c + y * c)); g.closePath(); g.fill(); g.restore(); };
+          if (kind === 'nw') { const P = []; for (let k = 0; k < 10; k++) { const a = Math.PI / 2 + k * Math.PI / 5, r = k % 2 ? .25 : .6; P.push([Math.cos(a) * r, Math.sin(a) * r]); } poly(P, '#18b8e0', .05); }
+          else if (kind === 'nb') poly([[0, -.58], [.46, 0], [0, .58], [-.46, 0]], '#ff3fb4', .07);
+          else poly([[-.5, -.34], [-.54, .3], [-.26, .04], [0, .46], [.26, .04], [.54, .3], [.5, -.34]], '#ffffff', .06);   // (the face UVs run with y flipped: drawn upside down so it reads upright)
+        }
       } else if (kind[0] === 'r') {   // painted like lacquerware
         if (kind === 'rw') { dotRing(.74, 14, .07, '#b3262e'); g.fillStyle = '#2f6b3a'; lotus(6, .08, .42, .18, '#2f6b3a'); g.fillStyle = '#b3262e'; g.beginPath(); g.arc(c, c, c * .1, 0, 7); g.fill(); }
         else if (kind === 'rb') { dotRing(.74, 14, .065, '#d9ad45'); lotus(6, .08, .42, .18, '#c99a2e'); }

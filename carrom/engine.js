@@ -7,9 +7,9 @@
    ===================================================================== */
 (function (root) {
   'use strict';
-  // Phone version (2026-11-10): on phones the board is small on screen, so the carrom men and the striker are 1.25×
+  // Phone version (2026-11-10): on phones the board is small on screen, so the carrom men and the striker are 1.35×
   // larger (the board, pockets and lines stay real size). The page decides once at load; the AI worker gets k.
-  const PHONE_K = 1.25;
+  const PHONE_K = 1.35;
   const phone = () => { try { return typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 600; } catch (e) { return false; } };
   let RM = 1.59, RS = 2.065;    // carrom man (3.18 cm), striker (4.13 cm) — × K on phones
   const H = 37,                 // half the playing surface (74 cm)
