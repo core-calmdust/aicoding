@@ -610,6 +610,8 @@
     // scheduled first so it also runs if anything below fails
     [60, 600, 1000].forEach(ms => setTimeout(fitStage, ms));   // (the camera glides back by itself: no snapping)
     if (window.ResizeObserver && !window.__bvRO) { window.__bvRO = new ResizeObserver(() => fitStage()); window.__bvRO.observe($('bvi')); }
+    // table play: やめる and the action bar's buttons take the HUD pill's height (--hudh), so the three read as one set (2026-11-09)
+    if (window.ResizeObserver && !window.__hudRO) { window.__hudRO = new ResizeObserver(() => { const h = $('hud').offsetHeight; if (h) $('bv').style.setProperty('--hudh', h + 'px'); }); window.__hudRO.observe($('hud')); }
     document.body.style.overflow = 'hidden';
     if (push) history.replaceState(null, '', '#' + page + '/' + id);
     if (initGL()) {

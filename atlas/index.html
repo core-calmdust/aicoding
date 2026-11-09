@@ -1033,6 +1033,12 @@ button.nct[data-go]:hover{transform:translateY(-1px);box-shadow:0 3px 0 var(--li
   .bgbub{font-size:14.5px!important}
 }
 .tbar.col button{width:60px;height:56px;font-size:12px}
+/* phones: やめる as tall as the HUD pill, the action bar's buttons the same height (icon + label kept) (2026-11-09) */
+@media (max-width:819px){
+  .bv.playing .quit{height:var(--hudh,auto);padding-block:0;align-items:center;box-sizing:border-box}
+  .bv.playing .tbar:not(.col) button{height:var(--hudh,52px);min-width:54px;gap:1px;font-size:12px}.bv.playing .tbar:not(.col) button svg{width:19px;height:19px}
+  .bv.playing .tbar:not(.col) .tclk{height:calc(var(--hudh,48px) - 6px)}
+}
 .hud .hs.col{font-size:12.5px!important}.hud .hs.col b{font-size:20px!important}.hud .hs.col .bgk{width:16px!important;height:16px!important}
 .bv.land .bgbub,.bv.bgwide .bgbub{font-size:13.5px!important}
 .bv.rules .hud{display:none}
@@ -1748,6 +1754,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=29"></script>
 <script src="updnews.js?v=7"></script>
 <script src="npc/npc.js?v=13"></script>
-<script src="app.js?v=243"></script>
+<script src="app.js?v=244"></script>
 </body>
 </html>
