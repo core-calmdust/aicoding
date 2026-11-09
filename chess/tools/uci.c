@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "../engine.c"
 static void prog(i32 d, i32 s, double n, i32 *pv, i32 l) { double t = js_now() - tStart; printf("info depth %d seldepth %d score %s %d nodes %.0f nps %.0f time %.0f pv", d, selDepth, abs(s) >= MATE_IN_MAX ? "mate" : "cp", abs(s) >= MATE_IN_MAX ? (s > 0 ? (MATE - s + 1) / 2 : -(MATE + s) / 2) : s, n, n / (t > 1 ? t : 1) * 1000, t); for (int i = 0; i < l; i++) { char b[8]; move_to_uci(pv[i], b); printf(" %s", b); } printf("\n"); fflush(stdout); }
-static int loadnet(const char *f) { FILE *fp = fopen(f, "rb"); if (!fp) return 0; static u8 buf[4 << 20]; size_t n = fread(buf, 1, sizeof buf, fp); fclose(fp); if ((int)n != nn_size()) { fprintf(stderr, "net size %zu != %d\n", n, nn_size()); return 0; } nn_load_blob(buf); return 1; }
+static int loadnet(const char *f) { FILE *fp = fopen(f, "rb"); if (!fp) return 0; static u8 buf[sizeof NN + 1]; size_t n = fread(buf, 1, sizeof buf, fp); fclose(fp); if (!nn_load_blob(buf, (int)n)) { fprintf(stderr, "net size %zu: not a net for this build (H=%d, up to %d king buckets)\n", n, NN_H, NN_KB); return 0; } return 1; }
 int main(int argc, char **argv) {
   init(); progress_cb = prog; new_game();
   const char *net = getenv("NNUE"); if (net && *net) { if (!loadnet(net)) { fprintf(stderr, "failed to load net\n"); return 1; } }

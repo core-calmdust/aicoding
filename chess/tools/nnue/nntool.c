@@ -1,5 +1,6 @@
 /* nntool: native helpers for retraining the chess NNUE (chess/engine.c, the site's engine, built natively).
-   build: tools/nnue/build.sh  (cc -O3 [-DNN_H=512] -o nntool tools/nnue/nntool.c; the hidden size must match the net)
+   build: tools/nnue/build.sh  (cc -O3 -DNN_KB=32 [-DNN_H=512] -o nntool tools/nnue/nntool.c; the hidden size must match
+   the net; NN_KB=32 reads nets with any number of king buckets and without)
 
    Record format (32 bytes with alignment, the same as tools/convert.c and tools/train.c):
      u64 occ; u8 pcs[16] (4 bits per piece, in the order of the occ bits, piece = colour*6 + type);
@@ -16,6 +17,8 @@
    nntool evalpos <net.bin|-> <data.bin> <n>
        prints the engine's static evaluation (side to move, cp) of the first n records, one per line
        (the trainer's --check prints the same numbers from Python: they must be identical).
+   nntool bench <net.bin> <data.bin> <positions> <nodes>
+       speed: the same searches (positions spread over the data file, table cleared, node limit) -> nodes per second
    nntool match <uci binary[,binary for B]> <netA> <netB> <nodes|Nms> <games> <seed>
        netA vs netB, both as the native UCI engine (tools/uci.c) in child processes; pairs of games from the same random
        opening with colours swapped. Prints "+W -L =D" for netA and the score. "-" for a net = hand-made evaluation. */
@@ -36,13 +39,13 @@ static u64 xr(void) { xs ^= xs << 13; xs ^= xs >> 7; xs ^= xs << 17; return xs; 
 static int loadnet(const char *f) {
   if (!f || !strcmp(f, "-")) { nn_enable(0); return 1; }
   FILE *fp = fopen(f, "rb"); if (!fp) { perror(f); return 0; }
-  static u8 buf[4 << 20]; size_t n = fread(buf, 1, sizeof buf, fp); fclose(fp);
-  if ((int)n != nn_size()) { fprintf(stderr, "%s: size %zu, the engine (H=%d) needs %d bytes\n", f, n, NN_H, nn_size()); return 0; }
-  nn_load_blob(buf); return 1;
+  static u8 buf[sizeof NN + 1]; size_t n = fread(buf, 1, sizeof buf, fp); fclose(fp);
+  if (!nn_load_blob(buf, (int)n)) { fprintf(stderr, "%s: %zu bytes is not a net for this engine (H=%d, up to %d king buckets: %d bytes without)\n", f, n, NN_H, NN_KB, nn_size()); return 0; }
+  return 1;
 }
 static const char *START = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 static void setfen(const char *f) { strcpy(setupBuf, f); set_position(); }
-static void play(int m) { if (histLen < HIST_MAX) keyHist[histLen++] = P.key; make_move(&P, m); sp = 0; accDirty[0] = 1; }
+static void play(int m) { if (histLen < HIST_MAX) keyHist[histLen++] = P.key; make_move(&P, m); sp = 0; accDirty[0] = ACC_ALL; }
 static int legal(int *out) { int ml[256], n = gen_moves(&P, ml, 0), k = 0; for (int i = 0; i < n; i++) if (is_legal(&P, ml[i])) out[k++] = ml[i]; return k; }
 static int reps(void) { int c = 0; for (int i = histLen - 2; i >= 0 && i >= histLen - P.half; i -= 2) if (keyHist[i] == P.key) c++; return c; }
 static void torec(Rec *r, int score) {
@@ -164,6 +167,20 @@ static int cmd_evalpos(int argc, char **argv) {
   return 0;
 }
 
+static int cmd_bench(int argc, char **argv) {
+  if (argc < 6) { fprintf(stderr, "usage: nntool bench net.bin data.bin positions nodes\n"); return 1; }
+  if (!loadnet(argv[2])) return 1;
+  FILE *in = fopen(argv[3], "rb"); if (!in) { perror(argv[3]); return 1; }
+  fseek(in, 0, SEEK_END); long n = ftell(in) / (long)sizeof(Rec); int np = atoi(argv[4]); double nl = atof(argv[5]), tn = 0, tt = 0;
+  for (int i = 0; i < np && n > 0; i++) {
+    Rec r; char fen[128]; fseek(in, (long)((i + 0.5) * n / np) * (long)sizeof(Rec), SEEK_SET); if (fread(&r, sizeof r, 1, in) != 1) break;
+    recfen(&r, fen); setfen(fen); new_game();
+    double t0 = js_now(); think(0, 0, 0, nl); tt += js_now() - t0; tn += resNodes;
+  }
+  printf("%s: %.0f knps (%d positions x %.0f nodes, king buckets %d)\n", argv[2], tn / (tt > 1 ? tt : 1), np, nl, nnOn ? nnKB : 0);
+  return 0;
+}
+
 static int cmd_match(int argc, char **argv) {
   if (argc < 8) { fprintf(stderr, "usage: nntool match <uci binary> netA netB <nodes|Nms> games seed\n"); return 1; }
   signal(SIGPIPE, SIG_IGN);
@@ -206,6 +223,7 @@ int main(int argc, char **argv) {
   if (argc > 1 && !strcmp(argv[1], "rescore")) return cmd_rescore(argc, argv);
   if (argc > 1 && !strcmp(argv[1], "evalpos")) return cmd_evalpos(argc, argv);
   if (argc > 1 && !strcmp(argv[1], "match")) return cmd_match(argc, argv);
-  fprintf(stderr, "usage: nntool gen|rescore|evalpos|match ... (see the top of tools/nnue/nntool.c)\n");
+  if (argc > 1 && !strcmp(argv[1], "bench")) return cmd_bench(argc, argv);
+  fprintf(stderr, "usage: nntool gen|rescore|evalpos|bench|match ... (see the top of tools/nnue/nntool.c)\n");
   return 1;
 }

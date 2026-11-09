@@ -1,7 +1,8 @@
 /*
  * Chess engine core in C for WebAssembly (and native builds for testing).
  * Bitboards, PVS alpha-beta with the usual pruning, NNUE evaluation
- * (768 -> H)x2 -> 1 with SCReLU and material output buckets.
+ * (768 -> H)x2 -> 1 with SCReLU and material output buckets; optionally king buckets (the first layer per zone of the
+ * own king, HalfKA-style; NN_KB below).
  *
  * Copyright 2026 core-calmdust — Apache License 2.0
  */
@@ -105,33 +106,85 @@ static void init_zobrist(void) { for (int p = 0; p < 12; p++) for (int s = 0; s 
 #ifndef NN_H
 #define NN_H 384
 #endif
+/* NN_KB: room for this many king buckets (the first layer has one 768 x H block per bucket of the own king's square).
+   A net file says how many it uses: 1 = the v1 / v2 nets without king buckets (read as before, same evaluation), or 4 / 8 /
+   16 / 32: the own king's square (seen from its side) picks the block (nn_setmap). */
+#ifndef NN_KB
+#define NN_KB 4
+#endif
 #define NN_IN 768
 #define NN_BUCKETS 8
 #define QA 255
 #define QB 64
 #define NN_SCALE 400
-/* all weights in one block so the file can be copied in with a single memcpy (layout: W1, B1, W2, B2) */
-static struct { i16 W1[NN_IN * NN_H]; i16 B1[NN_H]; i16 W2[NN_BUCKETS][2 * NN_H]; i32 B2[NN_BUCKETS]; } NN __attribute__((aligned(16)));
+/* all weights in one block so the file can be copied in with a single memcpy (layout: W1, B1, W2, B2; a king-bucket net
+   has W1 for every bucket and a 16-byte trailer "CKB1", buckets, H, 0 after B2) */
+static struct { i16 W1[NN_KB * NN_IN * NN_H]; i16 B1[NN_H]; i16 W2[NN_BUCKETS][2 * NN_H]; i32 B2[NN_BUCKETS]; u8 tail[16]; } NN __attribute__((aligned(16)));
 #define nnW1 NN.W1
 #define nnB1 NN.B1
 #define nnW2 NN.W2
 #define nnB2 NN.B2
+#define NN_REST ((NN_H + NN_BUCKETS * 2 * NN_H) * 2 + NN_BUCKETS * 4)   /* bytes of B1, W2, B2 */
+#define NN_LEGACY (NN_IN * NN_H * 2 + NN_REST)                          /* a net without king buckets */
 static int nnOn = 0, nnW2small = 0;   /* nnW2small: every |W2| <= 128, so clamp(acc)*W2 fits int16 (SIMD eval) */
+static int nnKB = 1, nnFmt = 0, nnGen = 1;   /* buckets of the loaded net; nnFmt 0 = nothing parsed yet; nnGen: refresh caches */
+static u8 nnKc[64];   /* own king square (seen from its side) -> king code: bucket * 2 + mirror */
 static void nn_check(void) { nnW2small = 1; for (int b = 0; b < NN_BUCKETS; b++) for (int i = 0; i < 2 * NN_H; i++) if (nnW2[b][i] > 128 || nnW2[b][i] < -128) nnW2small = 0; }
+/* the king buckets (the own king's square seen from its side: r = rank 0-7, f = file 0-7; the same table as train.py kb_table):
+     4:  ranks 1-2 f-h (castled short) | ranks 1-2 a-c (castled long) | ranks 1-2 d-e | ranks 3-8
+     8:  rank 1 f-h | rank 1 a-c | rank 1 d-e | rank 2 f-h | rank 2 a-c | rank 2 d-e | ranks 3-4 | ranks 5-8
+     16: rank 1 a-b, c, d, e, f, g-h | rank 2 f-h, a-c, d-e | rank 3 a-d, e-h | ranks 4, 5, 6, 7, 8
+     32: every square, mirrored to files a-d (HalfKA with mirroring; the pieces' files are mirrored with the king)
+   4 / 8 / 16 are not mirrored, so copying a net without buckets into every bucket gives exactly its evaluation (the
+   start of the training), and the usual king moves of the middle game (Kg1-h1-g2-f1 ...) stay in one bucket of 4: the
+   accumulator is computed from scratch only when the king leaves its zone. */
+static void nn_setmap(int kb) {
+  for (int r = 0; r < 8; r++) for (int f = 0; f < 8; f++) {
+    int z = f >= 5 ? 0 : f <= 2 ? 1 : 2, b = 0, m = 0;   /* z: f-h / a-c / d-e */
+    if (kb == 4) b = r <= 1 ? z : 3;
+    else if (kb == 8) b = r == 0 ? z : r == 1 ? 3 + z : r <= 3 ? 6 : 7;
+    else if (kb == 16) b = r == 0 ? (f <= 1 ? 0 : f >= 6 ? 5 : f - 1) : r == 1 ? 6 + z : r == 2 ? 9 + (f >= 4) : 8 + r;
+    else if (kb == 32) { m = f >= 4; b = r * 4 + (m ? 7 - f : f); }
+    nnKc[r * 8 + f] = (u8)(b * 2 + m);
+  }
+}
+static void nn_move(u8 *d, const u8 *s, int n) { if (d > s) while (n--) d[n] = s[n]; else for (int i = 0; i < n; i++) d[i] = s[i]; }
+/* the file is at nn_ptr() (len bytes): put B1 / W2 / B2 where this build keeps them. Returns 1 if it is a net for this build. */
+EXPORT(nn_load) int nn_load(int len) {
+  u8 *b = (u8 *)&NN; int kb;
+  if (len == NN_LEGACY) kb = 1;
+  else {
+    if (len < 16) return 0;
+    const u8 *t = b + len - 16;
+    if (t[0] != 'C' || t[1] != 'K' || t[2] != 'B' || t[3] != '1') return 0;
+    kb = t[4] | t[5] << 8; int h = t[8] | t[9] << 8;
+    if (h != NN_H || (kb != 4 && kb != 8 && kb != 16 && kb != 32) || kb > NN_KB || len != kb * NN_IN * NN_H * 2 + NN_REST + 16) return 0;
+  }
+  nn_move((u8 *)NN.B1, b + kb * NN_IN * NN_H * 2, NN_REST);
+  nnKB = kb; nnFmt = 1; nnGen++; nn_setmap(kb); nn_check(); nnOn = 1;
+  return 1;
+}
 EXPORT(nn_ptr) i16 *nn_ptr(void) { return NN.W1; }
-EXPORT(nn_size) int nn_size(void) { return (int)sizeof NN; }
-EXPORT(nn_enable) void nn_enable(int on) { nnOn = on; if (on) nn_check(); }
+EXPORT(nn_size) int nn_size(void) { return NN_LEGACY; }               /* the v1 / v2 net (the pages copy it in and call nn_enable) */
+EXPORT(nn_cap) int nn_cap(void) { return (int)sizeof NN; }            /* the largest file nn_load can take */
+EXPORT(nn_buckets) int nn_buckets(void) { return nnKB; }
+EXPORT(nn_enable) void nn_enable(int on) { if (on && !nnFmt) nn_load(NN_LEGACY); nnOn = on; if (on) nn_check(); }
 #ifndef __wasm__
-static void nn_load_blob(const u8 *p) { memcpy(&NN, p, sizeof NN); nnOn = 1; nn_check(); }
+static int nn_load_blob(const u8 *p, int n) { if (n > (int)sizeof NN) return 0; memcpy(&NN, p, n); return nn_load(n); }
 #endif
 #ifdef __wasm_simd128__
 #include <wasm_simd128.h>
 #endif
 typedef struct { i16 v[2][NN_H] __attribute__((aligned(16))); } Acc;
-static inline int nn_index(int persp, int pc, int sq) {
+/* king code of a perspective: bucket * 2 + mirror (0 for a net without king buckets) */
+static inline int nn_kcode(int persp, int ksq) {
+  return nnKB == 1 ? 0 : nnKc[persp == 1 ? ksq ^ 56 : ksq];
+}
+static inline const i16 *nn_w(int persp, int kc, int pc, int sq) {
   int c = COLOR(pc), t = TYPE(pc);
-  if (persp == BLACK) { sq ^= 56; c ^= 1; }
-  return (c * 6 + t) * 64 + sq;
+  if (persp == 1) { sq ^= 56; c ^= 1; }
+  sq ^= (kc & 1) * 7;
+  return nnW1 + ((kc >> 1) * NN_IN + (c * 6 + t) * 64 + sq) * NN_H;
 }
 
 /* ------------------------------------------------------------------ position */
@@ -150,7 +203,9 @@ static TLS u64 keyHist[HIST_MAX + MAXPLY + 8];
 static TLS int histLen;   /* positions before the current one */
 static TLS Undo undoStack[MAXPLY + 8];
 static TLS Acc accStack[MAXPLY + 8];
-static TLS int accDirty[MAXPLY + 8];
+static TLS int accDirty[MAXPLY + 8];   /* bit c: perspective c is not computed yet (ACC_ALL = both) */
+static TLS u8 accKc[MAXPLY + 8][2];    /* the king code (nn_kcode) of each perspective at that ply */
+#define ACC_ALL 3
 static TLS int sp;   /* search ply: accStack[sp] belongs to the current position */
 static int CASTLE_MASK[64];
 
@@ -175,41 +230,89 @@ static inline int attacked(const Pos *p, int s, int by) {
 }
 static inline int in_check(const Pos *p) { return attacked(p, p->ksq[p->side], p->side ^ 1); }
 
-static void nn_refresh(const Pos *p, Acc *a) {
-  for (int c = 0; c < 2; c++) {
-    for (int i = 0; i < NN_H; i++) a->v[c][i] = nnB1[i];
-    u64 b = p->all;
-    while (b) { int s = lsb(b); b &= b - 1; const i16 *w = nnW1 + nn_index(c, p->board[s], s) * NN_H; for (int i = 0; i < NN_H; i++) a->v[c][i] += w[i]; }
-  }
-}
-/* update dst from src with up to 2 adds and 2 subs */
-static void nn_update(Acc *dst, const Acc *src, int na, const int *ap, const int *as, int ns, const int *sp_, const int *ss) {
-  for (int c = 0; c < 2; c++) {
-    const i16 *a0 = na > 0 ? nnW1 + nn_index(c, ap[0], as[0]) * NN_H : 0, *a1 = na > 1 ? nnW1 + nn_index(c, ap[1], as[1]) * NN_H : 0;
-    const i16 *s0 = ns > 0 ? nnW1 + nn_index(c, sp_[0], ss[0]) * NN_H : 0, *s1 = ns > 1 ? nnW1 + nn_index(c, sp_[1], ss[1]) * NN_H : 0;
-    const i16 *x = src->v[c]; i16 *y = dst->v[c];
-#ifdef __wasm_simd128__
-    if (na == 1 && ns == 1) { for (int i = 0; i < NN_H; i += 8) wasm_v128_store(y + i, wasm_i16x8_sub(wasm_i16x8_add(wasm_v128_load(x + i), wasm_v128_load(a0 + i)), wasm_v128_load(s0 + i))); continue; }
-    if (na == 1 && ns == 2) { for (int i = 0; i < NN_H; i += 8) wasm_v128_store(y + i, wasm_i16x8_sub(wasm_i16x8_sub(wasm_i16x8_add(wasm_v128_load(x + i), wasm_v128_load(a0 + i)), wasm_v128_load(s0 + i)), wasm_v128_load(s1 + i))); continue; }
-    if (na == 2 && ns == 2) { for (int i = 0; i < NN_H; i += 8) wasm_v128_store(y + i, wasm_i16x8_sub(wasm_i16x8_sub(wasm_i16x8_add(wasm_i16x8_add(wasm_v128_load(x + i), wasm_v128_load(a0 + i)), wasm_v128_load(a1 + i)), wasm_v128_load(s0 + i)), wasm_v128_load(s1 + i))); continue; }
-#endif
-    if (na == 1 && ns == 1) for (int i = 0; i < NN_H; i++) y[i] = x[i] + a0[i] - s0[i];
-    else if (na == 1 && ns == 2) for (int i = 0; i < NN_H; i++) y[i] = x[i] + a0[i] - s0[i] - s1[i];
-    else if (na == 2 && ns == 2) for (int i = 0; i < NN_H; i++) y[i] = x[i] + a0[i] + a1[i] - s0[i] - s1[i];
-    else { for (int i = 0; i < NN_H; i++) { int v = x[i]; if (a0) v += a0[i]; if (a1) v += a1[i]; if (s0) v -= s0[i]; if (s1) v -= s1[i]; y[i] = (i16)v; } }
-  }
-}
 /* pending accumulator change for the move just made at ply sp (applied lazily) */
 static TLS struct { int na, ns, ap[2], as[2], spc[2], ss[2]; } accDelta[MAXPLY + 8];
+/* a perspective from scratch, through a cache of the last accumulator for each king code ("Finny table": only the pieces
+   that differ from the cached position are added / removed; the int16 sums wrap the same way, so the result is exact) */
+typedef struct { i16 v[NN_H] __attribute__((aligned(16))); u64 bb[12]; int gen; } NnCache;
+static TLS NnCache nnCache[2][NN_KB * 2];
+static void nn_refresh1(const Pos *p, i16 *a, int c, int kc) {
+  NnCache *e = &nnCache[c][kc];
+  if (e->gen != nnGen) { for (int i = 0; i < NN_H; i++) e->v[i] = nnB1[i]; for (int k = 0; k < 12; k++) e->bb[k] = 0; e->gen = nnGen; }
+  /* the pieces that differ from the cached position */
+  const i16 *ad[32], *sb[32]; int na = 0, ns = 0;
+  for (int pc = 0; pc < 12; pc++) {
+    u64 add = p->bb[pc] & ~e->bb[pc], sub = e->bb[pc] & ~p->bb[pc];
+    while (add && na < 32) { int s = lsb(add); add &= add - 1; ad[na++] = nn_w(c, kc, pc, s); }
+    while (sub && ns < 32) { int s = lsb(sub); sub &= sub - 1; sb[ns++] = nn_w(c, kc, pc, s); }
+    e->bb[pc] = p->bb[pc];
+  }
+  /* in passes of one add and one sub (as nn_update1), on the cached accumulator, then copied out */
+  i16 *v = e->v; int k = 0;
+  for (; k < na && k < ns; k++) { const i16 *x = ad[k], *y = sb[k];
+#ifdef __wasm_simd128__
+    for (int i = 0; i < NN_H; i += 8) wasm_v128_store(v + i, wasm_i16x8_sub(wasm_i16x8_add(wasm_v128_load(v + i), wasm_v128_load(x + i)), wasm_v128_load(y + i)));
+#else
+    for (int i = 0; i < NN_H; i++) v[i] = (i16)(v[i] + x[i] - y[i]);
+#endif
+  }
+  for (int j = k; j < na; j++) { const i16 *x = ad[j];
+#ifdef __wasm_simd128__
+    for (int i = 0; i < NN_H; i += 8) wasm_v128_store(v + i, wasm_i16x8_add(wasm_v128_load(v + i), wasm_v128_load(x + i)));
+#else
+    for (int i = 0; i < NN_H; i++) v[i] = (i16)(v[i] + x[i]);
+#endif
+  }
+  for (int j = k; j < ns; j++) { const i16 *y = sb[j];
+#ifdef __wasm_simd128__
+    for (int i = 0; i < NN_H; i += 8) wasm_v128_store(v + i, wasm_i16x8_sub(wasm_v128_load(v + i), wasm_v128_load(y + i)));
+#else
+    for (int i = 0; i < NN_H; i++) v[i] = (i16)(v[i] - y[i]);
+#endif
+  }
+#ifdef __wasm_simd128__
+  for (int i = 0; i < NN_H; i += 8) wasm_v128_store(a + i, wasm_v128_load(v + i));
+#else
+  for (int i = 0; i < NN_H; i++) a[i] = v[i];
+#endif
+}
+/* update perspective c of dst from src with up to 2 adds and 2 subs (king code kc) */
+static void nn_update1(i16 *y, const i16 *x, int c, int kc, int na, const int *ap, const int *as, int ns, const int *sp_, const int *ss) {
+  const i16 *a0 = na > 0 ? nn_w(c, kc, ap[0], as[0]) : 0, *a1 = na > 1 ? nn_w(c, kc, ap[1], as[1]) : 0;
+  const i16 *s0 = ns > 0 ? nn_w(c, kc, sp_[0], ss[0]) : 0, *s1 = ns > 1 ? nn_w(c, kc, sp_[1], ss[1]) : 0;
+#ifdef __wasm_simd128__
+  if (na == 1 && ns == 1) { for (int i = 0; i < NN_H; i += 8) wasm_v128_store(y + i, wasm_i16x8_sub(wasm_i16x8_add(wasm_v128_load(x + i), wasm_v128_load(a0 + i)), wasm_v128_load(s0 + i))); return; }
+  if (na == 1 && ns == 2) { for (int i = 0; i < NN_H; i += 8) wasm_v128_store(y + i, wasm_i16x8_sub(wasm_i16x8_sub(wasm_i16x8_add(wasm_v128_load(x + i), wasm_v128_load(a0 + i)), wasm_v128_load(s0 + i)), wasm_v128_load(s1 + i))); return; }
+  if (na == 2 && ns == 2) { for (int i = 0; i < NN_H; i += 8) wasm_v128_store(y + i, wasm_i16x8_sub(wasm_i16x8_sub(wasm_i16x8_add(wasm_i16x8_add(wasm_v128_load(x + i), wasm_v128_load(a0 + i)), wasm_v128_load(a1 + i)), wasm_v128_load(s0 + i)), wasm_v128_load(s1 + i))); return; }
+#endif
+  if (na == 1 && ns == 1) for (int i = 0; i < NN_H; i++) y[i] = x[i] + a0[i] - s0[i];
+  else if (na == 1 && ns == 2) for (int i = 0; i < NN_H; i++) y[i] = x[i] + a0[i] - s0[i] - s1[i];
+  else if (na == 2 && ns == 2) for (int i = 0; i < NN_H; i++) y[i] = x[i] + a0[i] + a1[i] - s0[i] - s1[i];
+  else { for (int i = 0; i < NN_H; i++) { int v = x[i]; if (a0) v += a0[i]; if (a1) v += a1[i]; if (s0) v -= s0[i]; if (s1) v -= s1[i]; y[i] = (i16)v; } }
+}
 
 static int nn_eval(const Pos *p) {
   Acc *a = &accStack[sp];
-  if (accDirty[sp]) {
-    /* find the last clean ancestor and roll forward */
-    int k = sp; while (k > 0 && accDirty[k]) k--;
-    if (accDirty[k]) { nn_refresh(p, &accStack[sp]); accDirty[sp] = 0; }
-    else for (int j = k + 1; j <= sp; j++) { nn_update(&accStack[j], &accStack[j - 1], accDelta[j].na, accDelta[j].ap, accDelta[j].as, accDelta[j].ns, accDelta[j].spc, accDelta[j].ss); accDirty[j] = 0; }
+  for (int c = 0; c < 2 && accDirty[sp]; c++) {
+    int bit = 1 << c; if (!(accDirty[sp] & bit)) continue;
+    /* the last ancestor with this perspective computed; roll forward from it while the own king keeps its code
+       (a move of the king to another bucket or across the middle = the perspective from scratch) */
+    int k = sp; while (k > 0 && (accDirty[k] & bit)) k--;
+    int kc = nn_kcode(c, p->ksq[c]);
+    if ((accDirty[k] & bit) || accKc[k][c] != kc) { nn_refresh1(p, a->v[c], c, kc); accKc[sp][c] = (u8)kc; accDirty[sp] &= ~bit; continue; }
+    for (int j = k + 1; j <= sp; j++) {
+      nn_update1(accStack[j].v[c], accStack[j - 1].v[c], c, kc, accDelta[j].na, accDelta[j].ap, accDelta[j].as, accDelta[j].ns, accDelta[j].spc, accDelta[j].ss);
+      if (accKc[j][c] == kc) accDirty[j] &= ~bit;   /* (a ply in between with the king elsewhere stays to be computed) */
+    }
   }
+#ifdef NN_VERIFY   /* test builds (tools/nnue/build.sh VERIFY=1): every evaluation against a fresh sum of the weights */
+  for (int c = 0; c < 2; c++) {
+    int kc = nn_kcode(c, p->ksq[c]); i16 t[NN_H];
+    for (int i = 0; i < NN_H; i++) t[i] = nnB1[i];
+    for (u64 b = p->all; b; b &= b - 1) { int s = lsb(b); const i16 *w = nn_w(c, kc, p->board[s], s); for (int i = 0; i < NN_H; i++) t[i] += w[i]; }
+    for (int i = 0; i < NN_H; i++) if (t[i] != a->v[c][i]) { fprintf(stderr, "NN_VERIFY: accumulator differs (ply %d, perspective %d)\n", sp, c); abort(); }
+  }
+#endif
   int bucket = (popcount(p->all) - 2) / 4; if (bucket > 7) bucket = 7; if (bucket < 0) bucket = 0;
   const i16 *us = a->v[p->side], *them = a->v[p->side ^ 1], *w = nnW2[bucket];
   /* sum is in QA*QA*QB units; 16-wide i32 partial sums cannot overflow, the total is kept in 64 bits */
@@ -301,7 +404,7 @@ static void make_move(Pos *p, int m) {
   if (TYPE(pc) == KING) p->ksq[us] = to;
   p->side = them; p->ply++;
   sp++;
-  accDirty[sp] = 1;
+  accDirty[sp] = ACC_ALL; accKc[sp][0] = (u8)nn_kcode(0, p->ksq[0]); accKc[sp][1] = (u8)nn_kcode(1, p->ksq[1]);
   accDelta[sp].na = na; accDelta[sp].ns = ns;
   for (int i = 0; i < na; i++) { accDelta[sp].ap[i] = ap[i]; accDelta[sp].as[i] = as[i]; }
   for (int i = 0; i < ns; i++) { accDelta[sp].spc[i] = spp[i]; accDelta[sp].ss[i] = ss[i]; }
@@ -327,7 +430,7 @@ static void make_null(Pos *p) {
   if (p->ep >= 0) p->key ^= ZEP[p->ep & 7];
   p->ep = -1; p->key ^= ZSIDE; p->side ^= 1; p->half++; p->ply++;
   sp++;
-  accDirty[sp] = 1; accDelta[sp].na = 0; accDelta[sp].ns = 0;
+  accDirty[sp] = ACC_ALL; accKc[sp][0] = (u8)nn_kcode(0, p->ksq[0]); accKc[sp][1] = (u8)nn_kcode(1, p->ksq[1]); accDelta[sp].na = 0; accDelta[sp].ns = 0;
 }
 static void unmake_null(Pos *p) { sp--; Undo *u = &undoStack[sp]; p->side ^= 1; p->ply--; p->ep = u->ep; p->half = u->half; p->key = u->key; }
 
@@ -804,7 +907,7 @@ EXPORT(set_position) int set_position(void) {
     if (histLen < HIST_MAX) keyHist[histLen++] = P.key;
     make_move(&P, m); sp = 0;
   }
-  accDirty[0] = 1;
+  accDirty[0] = ACC_ALL;
   return ok;
 }
 
@@ -826,7 +929,7 @@ EXPORT(think) int think(double softMs, double hardMs, int maxDepth, double nodeL
   if (maxDepth <= 0 || maxDepth > MAXPLY - 4) maxDepth = MAXPLY - 4;
   memset(killers, 0, sizeof killers);
   for (int i = 0; i < 64; i++) for (int j = 0; j < 64; j++) { history[0][i][j] /= 2; history[1][i][j] /= 2; }
-  accDirty[0] = 1; sp = 0;
+  accDirty[0] = ACC_ALL; sp = 0;
   int bestMove = 0, bestScore = 0, lastDepth = 0, pv[MAXPLY], pvl = 0;
   /* fallback move: first legal */
   { int ml[256], n = gen_moves(&P, ml, 0); for (int i = 0; i < n; i++) { if (is_legal(&P, ml[i])) { int skip = 0; for (int k = 0; k < nExcluded; k++) if (excludedRoot[k] == ml[i]) skip = 1; if (!skip) { bestMove = ml[i]; break; } } } }
@@ -909,7 +1012,7 @@ EXPORT(think) int think(double softMs, double hardMs, int maxDepth, double nodeL
 }
 EXPORT(exclude_ptr) i32 *exclude_ptr(void) { return excludedRoot; }
 EXPORT(set_excluded) void set_excluded(int n) { nExcluded = n; }
-EXPORT(static_eval) int static_eval(void) { sp = 0; accDirty[0] = 1; return evaluate(&P); }
+EXPORT(static_eval) int static_eval(void) { sp = 0; accDirty[0] = ACC_ALL; return evaluate(&P); }
 EXPORT(side_to_move) int side_to_move(void) { return P.side; }
 EXPORT(move_uci) char *move_uci(int m) { static TLS char b[8]; move_to_uci(m, b); return b; }
 
@@ -944,7 +1047,7 @@ EXPORT(ana_begin) void ana_begin(double hardMs, double nodeLim) {
 #ifdef MT
   rootK = 0; if (!threadId) ttAge++;
 #endif
-  tStart = js_now(); tHard = hardMs; nodeLimit = nodeLim; nodes = 0; stopFlag = 0; memset(killers, 0, sizeof killers); accDirty[0] = 1; sp = 0; }
+  tStart = js_now(); tHard = hardMs; nodeLimit = nodeLim; nodes = 0; stopFlag = 0; memset(killers, 0, sizeof killers); accDirty[0] = ACC_ALL; sp = 0; }
 EXPORT(analyze_depth) int analyze_depth(int n, int depth, int margin) {
   int best = -INF;
   for (int i = 0; i < n; i++) {

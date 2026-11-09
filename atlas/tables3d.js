@@ -1867,17 +1867,15 @@
       { const sp = new TT.CatmullRomCurve3([new TT.Vector3(1.3, .9, 0), new TT.Vector3(2.1, 1.1, 0), new TT.Vector3(2.6, 1.9, 0), new TT.Vector3(2.9, 3.1, 0), new TT.Vector3(3.3, 3.6, 0)]);
         const geo = new TT.TubeGeometry(sp, 24, .28, 10, false), P = geo.attributes.position; for (let i = 0; i < P.count; i++) { const k = Math.min(1, Math.max(0, (P.getX(i) - 1.3) / 2)); const cx = P.getX(i), cy = P.getY(i); P.setZ(i, P.getZ(i) * (1 - .55 * k)); } geo.computeVertexNormals(); at(Gp, new TT.Mesh(geo, silver), 0, 0, 0); }   // the swan spout, tapering
       { const hd = new TT.Mesh(new TT.TorusGeometry(1.05, .13, 8, 20, Math.PI * 1.2), silver); hd.rotation.z = Math.PI / 2 + .3; at(Gp, hd, -1.7, 2, 0); [1.2, 2.9].forEach(y => at(Gp, new TT.Mesh(new TT.SphereGeometry(.16, 8, 6), M({ color: 0x1a1a1a, roughness: .4 })), -1.62 - (y > 2 ? .1 : 0), y, 0, 0, false)); }   // the handle and its insulators
-      // gilded tea glasses: a coloured band painted in gold, amber tea with a little foam, a sprig of mint
+      // gilded tea glasses: a coloured band painted in gold, amber tea with a little foam (no floating mint: it read as beans)
       const glassBand = (col) => canvasTex('tbl8-band-' + col, 128, 64, (c, W, H) => { c.fillStyle = col; c.fillRect(0, 0, W, H); c.strokeStyle = '#e8c060'; c.lineWidth = 2; c.strokeRect(0, 3, W, H - 6);
         for (let x = 0; x < W; x += 16) { c.beginPath(); c.moveTo(x, H - 4); c.lineTo(x + 8, 6); c.lineTo(x + 16, H - 4); c.stroke(); c.fillStyle = '#e8c060'; c.beginPath(); c.arc(x + 8, H / 2 + 6, 2.4, 0, 7); c.fill(); } });
-      const mintM = M({ color: 0x3a8a3a, roughness: .45, side: TT.DoubleSide });
       const teaGlass = (G0, x, z, col) => { const G = grp(TT, G0, x, 0, z);
         at(G, lathe(TT, [[0, 0], [.52, 0], [.55, .1], [.62, 1], [.72, 2.4], [.66, 2.4], [.56, 1], [.48, .25], [0, .22]], SEG(o, 24), M({ color: 0xffffff, roughness: .02, clearcoat: 1, transparent: true, opacity: .3, depthWrite: false })), 0, 0, 0, 0, false);
         at(G, new TT.Mesh(new TT.CylinderGeometry(.66, .6, .62, SEG(o, 24), 1, true), M({ map: glassBand(col), roughness: .1, clearcoat: 1, transparent: true, opacity: .85, metalnessMap: null })), 0, 1.25, 0, 0, false);
         at(G, new TT.Mesh(new TT.CylinderGeometry(.62, .5, 1.75, SEG(o, 24)), M({ color: T === 'night' ? 0x8a4a1a : 0xb8781e, roughness: .02, clearcoat: 1, transparent: true, opacity: .6, depthWrite: false })), 0, 1.1, 0, 0, false);
         const foam = new TT.Mesh(new TT.CircleGeometry(.62, 18), M({ color: 0xe8c890, roughness: .7 })); foam.rotation.x = -Math.PI / 2; at(G, foam, 0, 1.98, 0, 0, false);
         at(G, new TT.Mesh(new TT.TorusGeometry(.69, .04, 4, 22), M({ color: 0xe8c060, metalness: 1, roughness: .25 })), 0, 2.4, 0, 0, false).rotation.x = Math.PI / 2;
-        for (let k = 0; k < 4; k++) { const l = new TT.Mesh(new TT.SphereGeometry(.2, 8, 4), mintM); l.scale.set(.5, .12, 1.1); l.rotation.set(.4, k * 1.6, 0); at(G, l, Math.cos(k * 1.6) * .2, 2.05 + k * .12, Math.sin(k * 1.6) * .2, 0, false); }
         return G; };
       [[1.5, 1.3, '#8a2a1e'], [2.2, -.6, '#1f5a4a'], [.4, 2.2, '#2a3a8a']].forEach(([x, z, col]) => teaGlass(Gt, x, z, col).position.y = .47);
       teaGlass(g, -8.6, -1.4, '#8a6a1a'); }
