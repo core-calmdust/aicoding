@@ -1,6 +1,6 @@
 /* =====================================================================
    Crokinole on the 3D table — six boards (Table3D.BOARDS.crokinole, chosen in the portal's 盤 row):
-   · 'classic' (the default) the Ontario parlour board: a honey maple veneer, flat-sawn (soft cathedral arches, latewood lines,
+   · 'classic' the Ontario parlour board: a honey maple veneer, flat-sawn (soft cathedral arches, latewood lines,
               fibres, a few pores), lacquered; the 5 / 10 / 15 lines and the quadrant lines in black, a red ring round the 20 hole;
               eight brass pegs with black rubber sleeves on the 15 line; a green felt ditch and a round walnut rail. Discs of
               red- and black-stained maple with turned rings.
@@ -10,9 +10,11 @@
    · 'winter'  Canadian winter: a pale ice surface with frost and hairline cracks, faint snowflakes, a red maple leaf under
               the hole, the lines in aurora colours (teal → green → violet); a white birch rail, a navy felt ditch, chrome pegs
               with red sleeves. Glossy red and navy-black discs with a white ring.
-   · 'mcm'     mid-century: a teak surface in satin oil, cream lines, atomic starbursts, boomerangs and rings in turquoise,
-              mustard and orange; a teak rail with a brass ring, a turquoise felt ditch. Discs of orange and charcoal.
-   · 'modern'  modern art: warm paper printed with colour fields (terracotta, saffron, teal, ink) in the four quarters, a ring
+   · 'mcm'     mid-century: a dark oiled teak surface, cream lines, a sunburst clock round the hole and tick marks inside the 10,
+              an atomic-age motif in each quarter (a Sputnik, boomerangs, atomic orbits, an Eames dot cluster) and sparkles in
+              cream, mustard, burnt orange, teal and olive; a dark teak rail with a brass ring, a mustard felt ditch. Discs of
+              burnt orange and charcoal with atomic orbits.
+   · 'modern'  (the default) modern art: warm paper printed with colour fields (terracotta, saffron, teal, ink) in the four quarters, a ring
               of arcs and a flower of circles round the hole, risograph grain; ink lines; a matte ink-blue rail with a brass ring,
               a terracotta ditch. Matte coral and ink discs with a brass pip.
    · 'neon'      the night board of carrom carried over: black lacquer with the lines glowing in a flowing rainbow (gaming RGB),
@@ -35,7 +37,7 @@
   const RB = 13 * IN, R5 = 12 * IN, R10 = 8 * IN, R15 = 4 * IN, RH = 1.375 * IN / 2, RD = 1.25 * IN / 2, RP = .55;
   const DW = 2 * IN, RR = RB + DW, RO = RR + 2.2;   // the ditch (2 in), the rail (2.2 cm thick)
   const TOP = .26, DY = TOP - 1.3 * K, RAIL_H = TOP + 2.4 * K, HD = .9 * K, PEG_H = 1.6 * K;
-  const LOOKS = ['classic', 'neon', 'marq', 'winter', 'mcm', 'modern'];
+  const LOOKS = ['modern', 'classic', 'marq', 'mcm', 'winter', 'neon'];
   const lin = c => new (T().Color)(c).convertSRGBToLinear();
   function phys(o) {
     const TT = T(), p = Object.assign({}, o);
@@ -45,7 +47,7 @@
     return new TT[p.clearcoat !== undefined ? 'MeshPhysicalMaterial' : 'MeshStandardMaterial'](p);
   }
   const mats = {}, mat = (k, f) => mats[k] || (mats[k] = f());
-  const lookNow = () => X.BOARDS && X.BOARDS.crokinole ? X.BOARDS.crokinole.get() : 'classic';
+  const lookNow = () => X.BOARDS && X.BOARDS.crokinole ? X.BOARDS.crokinole.get() : 'modern';
 
   /* ---------- gaming RGB (the neon board): the glow's hue flows with the clock (as carrom's night board) ---------- */
   const RGB = { uT: { value: 0 } };
@@ -80,7 +82,7 @@
     return Math.max(-.3, Math.min(1, t));
   }
   const mix = (A, B, t) => [A[0] + (B[0] - A[0]) * t, A[1] + (B[1] - A[1]) * t, A[2] + (B[2] - A[2]) * t];
-  const WOOD = { maple: [hx('#ecd3a2'), hx('#c39663')], cherry: [hx('#c98a5c'), hx('#8c4a2a')], walnut: [hx('#7a5134'), hx('#3e2514')], teak: [hx('#c27d48'), hx('#7a4220')] };
+  const WOOD = { maple: [hx('#ecd3a2'), hx('#c39663')], cherry: [hx('#c98a5c'), hx('#8c4a2a')], walnut: [hx('#7a5134'), hx('#3e2514')], teak: [hx('#7c4524'), hx('#3a1d0b')] };
   const hash = (i, j, k) => { const v = Math.sin(i * 127.1 + j * 311.7 + k * 74.7) * 43758.5453; return v - Math.floor(v); };
   // a triangle tiling (寄木): which tile, its wood, its grain direction and how close to its edge
   function triTile(x, y, s) {
@@ -92,19 +94,35 @@
     classic: (N) => { const O = { cx: 4, by: -46, asp: .11, sp: .62, wp: 2.2, ring: .55, fib: .34, drift: .32 }, A = hx('#ebd09d'), B = hx('#b8864f');
       return (x, y) => mix(A, B, .14 + woodT(N, x, y, O) * .66); },
     marq: (N) => {
-      const W3 = [WOOD.maple, WOOD.cherry, WOOD.walnut], O = { cx: 0, by: -40, asp: .08, sp: .45, wp: 1.4, ring: .5, fib: .4, drift: .25 };
+      // every piece is cut to its place: the fields are rings of polar cells between the stringers, each cell split into
+      // triangles (a sawtooth band outside the 5 line; inside the 15 a sixteen-ray star, a sawtooth ring and a ring of
+      // diamonds), each piece its own wood with the grain along the cell, glue seams between pieces
+      const O = { cx: 0, by: -40, asp: .08, sp: .45, wp: 1.4, ring: .5, fib: .4, drift: .25 }, SEAM = [40, 24, 14];
+      const piece = (w, tan, rad, off, along) => mix(w[0], w[1], .14 + woodT(N, along ? tan : rad, along ? rad : tan, Object.assign({}, O, { off, by: -30 })) * .5);
+      const seamed = (col, d) => d < .045 ? mix(col, SEAM, .6) : d < .08 ? mix(col, SEAM, .2) : col;
+      // a ring r0..r1 cut into n cells; kind: 'saw' (one diagonal), 'dia' (both diagonals: four triangles), 'ray' (no split)
+      const ringPx = (r, th, r0, r1, n, kind, woods, seed) => {
+        const t = (r - r0) / (r1 - r0), a = (th + Math.PI) / (2 * Math.PI) * n, ia = Math.floor(a), fa = a - ia, arc = 2 * Math.PI * r / n, wd = r1 - r0;
+        const tan = (fa - .5) * arc; let k, dd = Math.min(fa, 1 - fa) * arc, along = true;
+        if (kind === 'saw') { const up = fa < t; k = up ? 0 : 1; dd = Math.min(dd, Math.abs(fa - t) * Math.min(arc, wd) * .7); along = up; }
+        else if (kind === 'dia') { const u = fa - .5, v = t - .5, q = Math.abs(u) * arc > Math.abs(v) * wd; k = q ? (u < 0 ? 0 : 2) : (v < 0 ? 1 : 3); k = k % 2; dd = Math.min(dd, Math.abs(Math.abs(u) * arc - Math.abs(v) * wd) * .7); along = !q; }
+        else k = ia % 2;
+        const w = woods[(k + (kind === 'ray' ? 0 : ia % 2) * (woods.length > 2 ? 1 : 0)) % woods.length];
+        return seamed(piece(w, tan, r, seed + ia * 7.3 + k * 3.1, along), dd);
+      };
       return (x, y) => {
-        const r = Math.hypot(x, y);
-        if (r < R15 - .35 || r > R5 + .45) {
-          const T = triTile(x, y, r < R15 ? 1.7 : 1.25), w = W3[T.h < .42 ? 0 : T.h < .76 ? 1 : 2], c = Math.cos(T.dir), sn = Math.sin(T.dir);
-          const t = woodT(N, x * c + y * sn, -x * sn + y * c, Object.assign({}, O, { off: T.h * 40 })), col = mix(w[0], w[1], .15 + t * .5);
-          return T.e < .035 ? mix(col, [40, 24, 14], .55) : col;
+        const r = Math.hypot(x, y), th = Math.atan2(y, x);
+        if (r > R5 + .7) return ringPx(r, th, R5 + .7, RB, 64, 'saw', [WOOD.maple, WOOD.walnut], 11);
+        if (r < R15 - .6) {
+          if (r < 4.4) return ringPx(r, th, 0, 4.4, 16, 'ray', [WOOD.cherry, WOOD.maple], 3);
+          if (r < 6.9) return ringPx(r, th, 4.4, 6.9, 24, 'saw', [WOOD.walnut, WOOD.maple, WOOD.cherry], 5);
+          return ringPx(r, th, 6.9, R15 - .6, 28, 'dia', [WOOD.maple, WOOD.cherry], 7);
         }
-        const n = 16, th = Math.atan2(y, x), k = Math.floor((th + Math.PI) / (2 * Math.PI / n)), thc = -Math.PI + (k + .5) * 2 * Math.PI / n;
+        const n = 16, k = Math.floor((th + Math.PI) / (2 * Math.PI / n)), thc = -Math.PI + (k + .5) * 2 * Math.PI / n;
         const tan = r * Math.sin(th - thc), w = k % 2 ? WOOD.cherry : WOOD.maple;
         const col = mix(w[0], w[1], .12 + woodT(N, tan, r, Object.assign({}, O, { off: k * 9.7, by: -30 })) * .5);
-        const seam = Math.abs(r * Math.sin(th - (-Math.PI + k * 2 * Math.PI / n)));
-        return seam < .05 || Math.abs(r * Math.sin(th - (-Math.PI + (k + 1) * 2 * Math.PI / n))) < .05 ? mix(col, [40, 24, 14], .5) : col;
+        const seam = Math.min(Math.abs(r * Math.sin(th - (-Math.PI + k * 2 * Math.PI / n))), Math.abs(r * Math.sin(th - (-Math.PI + (k + 1) * 2 * Math.PI / n))));
+        return seamed(col, seam);
       };
     },
     winter: (N) => { const A = hx('#eef6fb'), B = hx('#b9d2e4');
@@ -119,16 +137,16 @@
         return col;
       };
     },
-    mcm: (N) => { const O = { cx: 60, by: -10, asp: .03, sp: .5, wp: 3, ring: .55, fib: .45, drift: .35 }, w = WOOD.teak;
-      return (x, y) => mix(w[0], w[1], .18 + woodT(N, y, x, O) * .55); },
+    mcm: (N) => { const O = { cx: 60, by: -10, asp: .03, sp: .55, wp: 3, ring: .6, fib: .5, drift: .4 }, w = WOOD.teak;
+      return (x, y) => mix(w[0], w[1], .2 + woodT(N, y, x, O) * .6); },
     modern: (N) => (x, y) => { const n = N(x * .6, y * .6, 2); return [239 - n * 14, 228 - n * 14, 208 - n * 14]; },
   };
   // the ink of the lines, the red of the hole's ring, and what each look paints over its field
-  const INK = { classic: ['#17110c', '#b8241c'], neon: ['#3ce6ff', '#ff3fb4'], marq: ['#2b1a0f', '#7c2a19'], winter: ['aurora', '#c8202a'], mcm: ['#f5e8cc', '#e0602c'], modern: ['#1d2340', '#d0563c'] };
+  const INK = { classic: ['#17110c', '#b8241c'], neon: ['#3ce6ff', '#ff3fb4'], marq: ['#2b1a0f', '#7c2a19'], winter: ['aurora', '#c8202a'], mcm: ['#f2e3c2', '#d25a26'], modern: ['#1d2340', '#d0563c'] };
   function decorate(g, look, u, X0) {
     const at = (x, y) => [X0(x), X0(y)];
     if (look === 'marq') {   // maple and walnut stringers round the triangle fields
-      for (const [r, c, w] of [[R15 - .35, '#e9cf9c', .22], [R15 - .6, '#3a2414', .1], [R5 + .45, '#e9cf9c', .22], [R5 + .7, '#3a2414', .1]]) { g.strokeStyle = c; g.lineWidth = w * u; g.beginPath(); g.arc(X0(0), X0(0), r * u, 0, Math.PI * 2); g.stroke(); }
+      for (const [r, c, w] of [[R15 - .38, '#e9cf9c', .36], [R15 - .6, '#3a2414', .08], [R5 + .48, '#e9cf9c', .36], [R5 + .7, '#3a2414', .08], [6.9, '#3a2414', .12], [4.4, '#e9cf9c', .2], [4.4 + .14, '#3a2414', .06], [RB - .06, '#3a2414', .14]]) { g.strokeStyle = c; g.lineWidth = w * u; g.beginPath(); g.arc(X0(0), X0(0), r * u, 0, Math.PI * 2); g.stroke(); }
     } else if (look === 'winter') {
       // a soft aurora veil, a red maple leaf under the hole, snowflakes
       g.save(); g.globalCompositeOperation = 'multiply';
@@ -145,15 +163,31 @@
       [[14, -18, 2.2, .2], [-19, -12, 1.6, .5], [-15, 18, 2.4, .1], [20, 14, 1.7, .7], [3, 24, 1.3, .3], [-3, -25, 1.4, .9], [25, -4, 1.2, .4], [-25, 3, 1.3, .6]].forEach(f => flake(...f));
       g.restore();
     } else if (look === 'mcm') {
-      const TQ = '#2fa39a', MU = '#e3aa2e', OR = '#e0602c', CR = '#f5e8cc';
-      const star = (x, y, s, c) => { g.strokeStyle = c; g.lineWidth = .16 * u; g.lineCap = 'round'; for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4, l = k % 2 ? s * .55 : s; g.beginPath(); g.moveTo(X0(x + Math.cos(a) * s * .18), X0(y + Math.sin(a) * s * .18)); g.lineTo(X0(x + Math.cos(a) * l), X0(y + Math.sin(a) * l)); g.stroke(); } g.fillStyle = c; g.beginPath(); g.arc(X0(x), X0(y), s * .14 * u, 0, 7); g.fill(); };
-      const boom = (x, y, s, a, c) => { g.save(); g.translate(X0(x), X0(y)); g.rotate(a); g.scale(s * u, s * u); g.fillStyle = c; g.beginPath(); g.moveTo(-1, .2); g.quadraticCurveTo(-.2, -.9, 1, .1); g.quadraticCurveTo(1.15, .35, .9, .4); g.quadraticCurveTo(-.1, -.35, -.8, .55); g.quadraticCurveTo(-1.15, .5, -1, .2); g.fill(); g.restore(); };
-      const ring = (x, y, r, c, w) => { g.strokeStyle = c; g.lineWidth = w * u; g.beginPath(); g.arc(X0(x), X0(y), r * u, 0, 7); g.stroke(); };
-      g.globalAlpha = .9;
-      for (let q = 0; q < 4; q++) { const a = q * Math.PI / 2, R = (R10 + R5) / 2, c = Math.cos(a), s = Math.sin(a), p = (dx, dy) => [c * dx - s * dy, s * dx + c * dy];
-        const [x1, y1] = p(R, -5), [x2, y2] = p(R - 3.5, 6.5), [x3, y3] = p(R + 2, 7.5);
-        star(x1, y1, 2.6, [MU, TQ, OR, CR][q]); boom(x2, y2, 2.4, a + .6, [TQ, OR, MU, TQ][q]); ring(x3, y3, 1.3, [OR, MU, TQ, OR][q], .35); }
-      for (let k = 0; k < 8; k++) { const a = (k + .5) * Math.PI / 4 + Math.PI / 8, R = (R15 + R10) / 2; g.fillStyle = [TQ, MU, OR, CR][k % 4]; g.beginPath(); g.arc(X0(Math.cos(a) * R), X0(Math.sin(a) * R), .55 * u, 0, 7); g.fill(); }
+      // 1950s: a sunburst clock round the hole, a ring of tick marks, and an atomic-age motif in each quarter (a Sputnik,
+      // boomerangs, atomic orbits, a cluster of dots) in cream, mustard, burnt orange, teal and olive
+      const CR = '#f2e3c2', MU = '#dba32c', OR = '#d25a26', TQ = '#2a8a86', OL = '#86913a', CH = '#2a2420';
+      const P = (q, dx, dy) => { const a = q * Math.PI / 2 + Math.PI / 2, c = Math.cos(a), sn = Math.sin(a); return [c * dx - sn * dy, sn * dx + c * dy]; };
+      const line = (x0, y0, x1, y1, c, w) => { g.strokeStyle = c; g.lineWidth = w * u; g.lineCap = 'round'; g.beginPath(); g.moveTo(X0(x0), X0(y0)); g.lineTo(X0(x1), X0(y1)); g.stroke(); };
+      const dot = (x, y, r, c) => { g.fillStyle = c; g.beginPath(); g.arc(X0(x), X0(y), r * u, 0, 7); g.fill(); };
+      g.globalAlpha = .92;
+      // the sunburst clock: 24 rays from the hole's ring to near the pegs, long and short, a ball on each long one
+      for (let k = 0; k < 24; k++) { const a = k * Math.PI / 12, L = k % 2 ? 6.2 : 8.2, c = Math.cos(a), sn = Math.sin(a);
+        line(c * 2.6, sn * 2.6, c * L, sn * L, k % 2 ? MU : CR, k % 2 ? .14 : .2); if (!(k % 2)) dot(c * L, sn * L, .32, k % 4 ? OR : MU); }
+      // tick marks round the 10 line's inside
+      for (let k = 0; k < 64; k++) { const a = k * Math.PI / 32, c = Math.cos(a), sn = Math.sin(a), l = k % 4 ? .7 : 1.4; line(c * (R10 - .7), sn * (R10 - .7), c * (R10 - .7 - l), sn * (R10 - .7 - l), k % 4 ? 'rgba(242,227,194,.55)' : CR, .12); }
+      const R = (R10 + R5) / 2;
+      // q0: a Sputnik — a ball with spiked rays tipped with small balls
+      { const [cx, cy] = P(0, 0, R); for (let k = 0; k < 10; k++) { const a = k * Math.PI / 5 + .2, l = k % 2 ? 3.4 : 4.6, ex = cx + Math.cos(a) * l, ey = cy + Math.sin(a) * l; line(cx, cy, ex, ey, CR, .14); dot(ex, ey, .34, k % 3 ? MU : OR); } dot(cx, cy, 1.05, MU); dot(cx - .3, cy - .3, .35, 'rgba(255,240,200,.6)'); }
+      // q1: three boomerangs, overlapping
+      const boom = (x, y, sc, a, c) => { g.save(); g.translate(X0(x), X0(y)); g.rotate(a); g.scale(sc * u, sc * u); g.fillStyle = c; g.beginPath(); g.moveTo(-1, .2); g.quadraticCurveTo(-.2, -.9, 1, .1); g.quadraticCurveTo(1.15, .35, .9, .4); g.quadraticCurveTo(-.1, -.35, -.8, .55); g.quadraticCurveTo(-1.15, .5, -1, .2); g.fill(); g.restore(); };
+      { const [cx, cy] = P(1, 0, R); boom(cx - 1.2, cy - 1.4, 3.2, .3, TQ); boom(cx + 1.4, cy + .4, 2.8, 2.4, OR); boom(cx - .6, cy + 1.8, 2.4, 4.4, MU); }
+      // q2: atomic orbits — three ellipses round a nucleus, an electron on each
+      { const [cx, cy] = P(2, 0, R); g.strokeStyle = CR; g.lineWidth = .16 * u; for (let k = 0; k < 3; k++) { const a = k * Math.PI / 3; g.beginPath(); g.ellipse(X0(cx), X0(cy), 4.2 * u, 1.5 * u, a, 0, 7); g.stroke(); dot(cx + Math.cos(a) * 4.2, cy + Math.sin(a) * 4.2, .38, [OR, TQ, MU][k]); } dot(cx, cy, .75, OR); }
+      // q3: a cluster of dots (an Eames hang-it-all)
+      { const [cx, cy] = P(3, 0, R); [[0, 0, 1.1, OR], [2.4, -1.5, .8, TQ], [-2.3, -1.2, .75, MU], [1.6, 1.9, .6, OL], [-1.8, 1.9, .9, TQ], [3.6, .8, .5, MU], [-3.7, .4, .55, OR]].forEach(([dx, dy, r, c]) => { line(cx, cy + 2.6, cx + dx, cy + dy, CR, .1); dot(cx + dx, cy + dy, r, c); }); }
+      // little four-point sparkles scattered between
+      const spark = (x, y, l, c) => { line(x - l, y, x + l, y, c, .1); line(x, y - l, x, y + l, c, .1); line(x - l * .45, y - l * .45, x + l * .45, y + l * .45, c, .07); line(x - l * .45, y + l * .45, x + l * .45, y - l * .45, c, .07); };
+      for (let q = 0; q < 4; q++) for (const [dx, dy, l] of [[-7.5, -.5, .9], [7, 1.5, .7], [-4, 4.4, .6]]) { const [x, y] = P(q, dx, R + dy); spark(x, y, l, q % 2 ? MU : CR); }
       g.globalAlpha = 1;
     } else if (look === 'modern') {
       g.save(); g.globalCompositeOperation = 'multiply';
@@ -196,14 +230,14 @@
       for (let k = 0; k < 4; k++) { const a = Math.PI / 4 + k * Math.PI / 2, c = Math.cos(a), s = Math.sin(a); g.beginPath(); g.moveTo(X0(c * R10), X0(s * R10)); g.lineTo(X0(c * R5), X0(s * R5)); g.stroke(); }
       // the ring round the 20 hole and a fine inner ring (decoration)
       g.fillStyle = red; glow(red); g.beginPath(); g.arc(X0(0), X0(0), (RH + .9) * u, 0, Math.PI * 2); g.arc(X0(0), X0(0), RH * u, Math.PI * 2, 0, true); g.fill();
-      circ(R15 - 1.1, .1, neon ? '#b47bff' : look === 'modern' ? '#b8893a' : look === 'mcm' ? 'rgba(245,232,204,.6)' : look === 'winter' ? 'rgba(80,120,170,.4)' : 'rgba(23,17,12,.55)');
+      circ(R15 - 1.1, .1, neon ? '#b47bff' : look === 'modern' ? '#b8893a' : look === 'mcm' ? 'rgba(242,227,194,.5)' : look === 'winter' ? 'rgba(80,120,170,.4)' : 'rgba(23,17,12,.55)');
       g.shadowBlur = 0;
     });
   }
 
   /* ---------- the discs' faces: [colour, style] per look (wood = turned rings, inlay = a maple ring, ice = a white ring, pip = a brass pip) ---------- */
   const FACES = { classic: [['#b3312a', 'wood'], ['#211c19', 'wood']], marq: [['#9c3324', 'inlay'], ['#1c1512', 'inlay']], winter: [['#c62a30', 'ice'], ['#1d2433', 'ice']],
-    mcm: [['#d4552a', 'wood'], ['#2b2826', 'wood']], modern: [['#cf5a40', 'pip'], ['#272a35', 'pip']] };
+    mcm: [['#d25a26', 'atom'], ['#2a2420', 'atom']], modern: [['#cf5a40', 'pip'], ['#272a35', 'pip']] };
   const NEONF = { n0: '#d8f6ff', n1: '#2a1f48' };
   function faceTex(look, c) {
     const kind = look === 'neon' ? 'n' + c : look + c;
@@ -213,13 +247,14 @@
       if (look === 'neon') { g.fillStyle = NEONF[kind]; g.fillRect(0, 0, W, W); ring(.8, .05, c === 0 ? '#3ce6ff' : '#ff3fb4', .06); ring(.5, .025, c === 0 ? 'rgba(60,230,255,.6)' : 'rgba(255,63,180,.6)', .04); return; }
       const [col, st] = (FACES[look] || FACES.classic)[c];
       g.fillStyle = col; g.fillRect(0, 0, W, W);
-      if (st === 'wood' || st === 'inlay') {
+      if (st === 'wood' || st === 'inlay' || st === 'atom') {
         const N = X.makeNoise(c === 0 ? 3 : 5), img = g.getImageData(0, 0, W, W), d = img.data;
         for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) { const n = N(x / W * 2, y / W * 9, 2), i = (y * W + x) * 4, k = (n - .5) * 14; d[i] += k; d[i + 1] += k; d[i + 2] += k; }
         g.putImageData(img, 0, 0);
       }
       if (st === 'wood') { const rc = c === 0 ? 'rgba(60,10,5,.35)' : 'rgba(255,230,200,.16)'; for (const r of [.86, .58]) ring(r, .02, rc); }
       else if (st === 'inlay') { ring(.66, .07, '#e6c793'); ring(.66, .012, 'rgba(60,30,10,.5)'); }
+      else if (st === 'atom') { g.strokeStyle = c === 0 ? 'rgba(242,227,194,.85)' : '#dba32c'; g.lineWidth = W * .022; for (let k = 0; k < 3; k++) { g.beginPath(); g.ellipse(cc, cc, cc * .62, cc * .22, k * Math.PI / 3, 0, 7); g.stroke(); } g.fillStyle = c === 0 ? '#f2e3c2' : '#d25a26'; g.beginPath(); g.arc(cc, cc, cc * .13, 0, 7); g.fill(); }
       else if (st === 'ice') { ring(.74, .05, 'rgba(255,255,255,.92)'); g.fillStyle = 'rgba(255,255,255,.9)'; g.beginPath(); g.arc(cc, cc, cc * .14, 0, 7); g.fill(); }
       else if (st === 'pip') { g.fillStyle = '#c99a45'; g.beginPath(); g.arc(cc, cc, cc * .2, 0, 7); g.fill(); ring(.2, .015, 'rgba(90,60,20,.6)');
         const im = g.getImageData(0, 0, W, W), q = im.data; for (let i = 0; i < q.length; i += 4) { const r = (Math.random() - .5) * 12; q[i] += r; q[i + 1] += r; q[i + 2] += r; } g.putImageData(im, 0, 0); }
@@ -286,9 +321,9 @@
           rail: phys({ map: rw, color: '#ffffff', roughness: .3, clearcoat: .9, clearcoatRoughness: .12 }), ditch: phys({ color: '#1b2b4a', roughness: 1 }),
           peg: phys({ color: '#e8edf2', roughness: .14, metalness: 1, envMapIntensity: 1.3 }), sleeve: phys({ color: '#b3202a', roughness: .7 }), base: phys({ map: rw, color: '#e6ebee', roughness: .5 }), trim: phys({ color: '#c8202a', roughness: .4, clearcoat: .8 }) });
       } else if (look === 'mcm') {
-        const rw = wood('ckTeakR', '#8a5028', '#3d200c');
-        Object.assign(M, { surf: phys({ map: surfaceTex(look), color: '#ffffff', roughness: .38, clearcoat: .35, clearcoatRoughness: .4, envMapIntensity: .7 }), edge: phys({ color: '#8a4f26', roughness: .5 }),
-          rail: phys({ map: rw, color: '#ffffff', roughness: .45, clearcoat: .3, clearcoatRoughness: .4 }), ditch: phys({ color: '#2a8c86', roughness: 1 }),
+        const rw = wood('ckTeakR', '#6a3a1c', '#2a1508');
+        Object.assign(M, { surf: phys({ map: surfaceTex(look), color: '#ffffff', roughness: .38, clearcoat: .35, clearcoatRoughness: .4, envMapIntensity: .7 }), edge: phys({ color: '#6a3a1c', roughness: .5 }),
+          rail: phys({ map: rw, color: '#ffffff', roughness: .45, clearcoat: .3, clearcoatRoughness: .4 }), ditch: phys({ color: '#b5862a', roughness: 1 }),
           peg: brassM(), sleeve: phys({ color: '#1a1a1a', roughness: .85 }), base: phys({ map: rw, color: '#d8c8b8', roughness: .5 }), trim: brassM() });
       } else if (look === 'modern') {
         Object.assign(M, { surf: phys({ map: surfaceTex(look), color: '#ffffff', roughness: .78, metalness: 0, envMapIntensity: .5 }), edge: phys({ color: '#1d2340', roughness: .6 }),
