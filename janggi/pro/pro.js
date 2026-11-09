@@ -3,7 +3,7 @@
 (() => {
   'use strict';
   const E = window.JanggiEngine;
-  const VER = '?v=1', ENG = '../engine.js?v=2-pro1-mt1';
+  const VER = '?v=2', ENG = '../engine.js?v=2-pro1-mt1';
   const LANG = (() => { try { return (localStorage.getItem('aicoding-lang') || 'ja') === 'ja' ? 'ja' : 'en'; } catch (e) { return 'ja'; } })();
   const T = {
     ja: { back: '← チャンギ', gname: 'チャンギ', ttl: '最強解析', depth: '深さ', nps: '局面/秒', threads: 'スレッド', sel: 'スレッド数', ana: '解析', stop: '停止', play: 'AIに指させる',
@@ -51,7 +51,7 @@
   const MT = { X: null, mem: null, module: null, base: 0, workers: [] };
   async function initMT() {
     MT.module = await WebAssembly.compileStreaming(fetch('../engine_mt.wasm' + VER));
-    MT.mem = new WebAssembly.Memory({ initial: 512, maximum: 16384, shared: true });   // maximum = engine_mt.wasm's (1 GiB)
+    MT.mem = new WebAssembly.Memory({ initial: 1152, maximum: 16384, shared: true });   // maximum = engine_mt.wasm's (1 GiB)
     const X = (await WebAssembly.instantiate(MT.module, { env: { memory: MT.mem, now: () => Date.now(), progress: () => {} } })).exports;
     MT.base = Math.ceil(X.mt_heap_base() / 65536) * 65536;
     const need = MT.base + (MAXT + 1) * SLOT;

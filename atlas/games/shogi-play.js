@@ -7,7 +7,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../shogi/', EV = '?v=20261108s3';   // the full game's engine version (shogi/index.html)
+  const BASE = '../shogi/', EV = '?v=20261109s4';   // the full game's engine version (shogi/index.html)
   // the full game's AI steps (shogi/index.html LEVELS), index = level - 1
   const LEVELS = [{ depth: 2, noise: 95, greedy: 1 },
     { depth: 2, noise: 60, greedy: 1 }, { depth: 3, noise: 80 }, { depth: 3, noise: 55 }, { depth: 3, noise: 35 },

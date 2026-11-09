@@ -1494,7 +1494,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="../shared/placement.js?v=1l14"></script>
 <script src="../shared/export.js?v=9l14"></script>
 <script src="../shared/rulesoffer.js?v=17l14j"></script>
-<script src="engine.js?v=20261108s3"></script>
+<script src="engine.js?v=20261109s4"></script>
 <script src="strategy.js?v=20261107l14"></script>
 <script src="cpu-style.js?v=20261107l14"></script>
 <script src="lists-ui.js?v=20261107l14"></script>
@@ -1659,7 +1659,7 @@ const weightsReady = (async () => {
   return weights;
 })();
 function makeWorker(onmsg) {
-  const w = new Worker('engine.js?v=20261108s3');
+  const w = new Worker('engine.js?v=20261109s4');
   w.onmessage = onmsg;
   w.onerror = e => {
     console.warn('engine worker error', e.message);
@@ -1687,7 +1687,7 @@ aiWorker = makeWorker(aiMsg); anaWorker = makeWorker(anaMsg);
 // device) and stay on the one-thread workers; the timed top steps 七段〜九段 (rated games too: the user's decision 2026-11-08,
 // device differences accepted) and PRO time limits use the pool.
 const MTP = window.MTEngine ? MTEngine.use({
-  wasm: 'engine_mt.wasm?v=2', lead: 'engine.js?v=20261108s3&mt=1', helper: 'mt-helper.js?v=1', slot: 8 << 20, initial: 1024, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
+  wasm: 'engine_mt.wasm?v=3', lead: 'engine.js?v=20261109s4&mt=1', helper: 'mt-helper.js?v=1', slot: 8 << 20, initial: 1536, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => Date.now(), progress: () => {}, aprogress: () => {} } }),
   after: async (X, mem, ws) => { const wt = await weightsReady; if (wt) ws[0].postMessage({ type: 'weights', buffer: wt.slice(0) }); },
   help: m => { const p = new E.Position(); p.setSfen(m.sfen); const board = Array.from(p.board), hand = Array.from(p.hand), side = p.side, moves = [];

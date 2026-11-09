@@ -911,6 +911,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
       } else if (m.type === 'multipv') self.postMessage({ id: m.id, type: 'result', list: multiPV(m) });
       else if (m.type === 'mpvLoop') mpvLoop(m);
       else if (m.type === 'mate') self.postMessage({ id: m.id, type: 'result', list: mate(m.fen, m.moves, m.n, m.defend, m.maxNodes) });
+      else if (m.type === 'newgame') { if (X) X.new_game(); self.postMessage({ id: m.id, type: 'result' }); }   // (bench.html: a fresh table for every search)
     } catch (err) { self.postMessage({ id: m.id, type: 'result', error: String(err && err.stack || err) }); }
   };
 }
