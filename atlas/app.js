@@ -143,6 +143,68 @@
       <div class="t2"><span class="bar"><i style="width:${a.have / a.need * 100}%;--c:${a.done ? 'var(--mint)' : 'var(--sun)'}"></i></span>${a.have.toLocaleString()}/${a.need.toLocaleString()}</div></div>
       <span class="rw"><i></i>${A_.TIER_COINS[a.tier]}</span></div>`;
   }
+  /* ---------- 戦績 (records): every game's record page, opened from its card ----------
+     The full games keep their finished games in localStorage 'atlas-rec-<id>' (shared/record.js GameRecord); the portal's 3D
+     table adds to the same list (via: '3d'). The page shows the totals, the win rate, streaks, the record by opponent, the recent
+     games, the game's other progress (puzzles, lessons…) and its achievements (2026-11-09). */
+  const recLoad = id => { try { const a = JSON.parse(localStorage.getItem('atlas-rec-' + id) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } };
+  function recPush(id, r) { try { const a = recLoad(id); a.push(Object.assign({ t: Date.now() }, r)); localStorage.setItem('atlas-rec-' + id, JSON.stringify(a.slice(-500))); } catch (e) {} }
+  let recMode = 'all';
+  function openRec(g) {
+    let ov = $('recOv');
+    if (!ov) { ov = document.createElement('div'); ov.id = 'recOv'; ov.className = 'recov'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); document.body.appendChild(ov);
+      ov.addEventListener('click', e => { if (e.target === ov) closeRec(); });
+      addEventListener('keydown', e => { if (e.key === 'Escape' && ov.classList.contains('on')) closeRec(); }); }
+    recMode = 'all'; renderRec(g); requestAnimationFrame(() => ov.classList.add('on'));
+  }
+  function closeRec() { const ov = $('recOv'); if (ov) ov.classList.remove('on'); }
+  function renderRec(g) {
+    const ov = $('recOv'), all = recLoad(g.id).filter(r => r && r.res && r.mode !== 'pvp');
+    const versus = all.length || (g.tags || []).some(x => x === 'ai' || x === 'online' || x === 'rated') || !!(window.Atlas3D && Atlas3D[g.id]);   // a game with opponents (puzzles / solo games: no empty record box)
+    const has = { ai: all.some(r => r.mode === 'ai'), rated: all.some(r => r.mode === 'rated'), online: all.some(r => r.mode === 'online'), t3d: all.some(r => r.via === '3d') };
+    const L = recMode === 'all' ? all : recMode === 't3d' ? all.filter(r => r.via === '3d') : all.filter(r => r.mode === recMode);
+    const n = { w: 0, l: 0, d: 0 }; L.forEach(r => { n[r.res] = (n[r.res] || 0) + 1; });
+    const tot = n.w + n.l + n.d, wr = tot ? Math.round(n.w / Math.max(1, n.w + n.l) * 100) : 0;
+    let cur = 0, best = 0, run = 0; L.forEach(r => { if (r.res === 'w') { run++; best = Math.max(best, run); } else if (r.res === 'l') run = 0; }); cur = run;
+    // by opponent (AI levels in order, then rated, online)
+    const by = new Map(); L.forEach(r => { const k = r.key || r.opp || '?'; const e = by.get(k) || { k, opp: r.opp || k, w: 0, l: 0, d: 0, t: 0 }; e[r.res]++; e.opp = r.opp || e.opp; e.t = r.t; by.set(k, e); });
+    const ord = k => { const m = /^(ai|rt|ol):(\d+)/.exec(k); return (k.startsWith('ai') ? 0 : k.startsWith('rt') ? 1e4 : 2e4) + (m ? +m[2] : 999); };
+    const opps = [...by.values()].sort((a, b) => ord(a.k) - ord(b.k)).slice(0, 30);
+    const R = 34, C = 2 * Math.PI * R;
+    const chip = (k, on) => `<button type="button" class="chip" aria-pressed="${recMode === k}" data-m="${k}" ${on ? '' : 'hidden'}>${esc(t('rec.m.' + k))}</button>`;
+    const resChip = r => `<span class="rres ${r}">${esc(t('rec.' + r))}</span>`;
+    const dt = ts => { const d = new Date(ts); return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+    const pr = P[g.id] || {}, tiles = [];
+    if (g.total.pz) tiles.push([t('pg.pz'), (pr.pz || 0).toLocaleString(), '/ ' + g.total.pz.toLocaleString()]);
+    if (g.total.ls) tiles.push([t('pg.ls'), pr.ls || 0, '/ ' + g.total.ls]);
+    if (pr.rt && pr.rt.n) tiles.push([t('pg.rt'), pr.rt.r != null ? pr.rt.r : pr.rt.n, pr.rt.r != null ? t('rec.games', { n: pr.rt.n }) : '']);
+    if (pr.dl && pr.dl.days) tiles.push([t('pg.dl'), t('pg.days', { n: pr.dl.days }), pr.dl.best ? t('rec.bestRun', { n: pr.dl.best }) : '']);
+    if (pr.hd) tiles.push([t('rec.hands'), pr.hd.toLocaleString(), '']);
+    if (pr.sw) tiles.push([t('rec.solved'), pr.sw.toLocaleString(), '']);
+    if (pr.p3 && pr.p3.n) tiles.push([t('rec.m.t3d'), t('rec.wins', { n: pr.p3.w }), pr.p3.best ? t('rec.bestLv', { n: pr.p3.best }) : '']);
+    const achs = ACH.filter(a => a.gid === g.id).sort((a, b) => (b.done - a.done) || (a.done ? b.tier - a.tier : (b.have / b.need) - (a.have / a.need)));
+    const ad = achs.filter(a => a.done).length;
+    ov.innerHTML = `<div class="recp" style="--c:${g.color}">
+      <div class="rhd">${g3(g)}<div class="rtt"><small>${esc(t('rec.title'))}</small><h3>${esc(gname(g))}</h3></div><button type="button" class="rx" aria-label="${esc(t('bv.close'))}">×</button></div>
+      <div class="rbd">
+        ${all.length ? `<div class="rchips">${chip('all', 1)}${chip('ai', has.ai)}${chip('rated', has.rated)}${chip('online', has.online)}${chip('t3d', has.t3d)}</div>
+        <section class="rsum card">
+          <span class="rring"><svg viewBox="0 0 80 80"><circle cx="40" cy="40" r="${R}" fill="none" stroke="#efe8d6" stroke-width="9"/><circle cx="40" cy="40" r="${R}" fill="none" stroke="${g.color}" stroke-width="9" stroke-linecap="round" stroke-dasharray="${C * wr / 100} ${C}" transform="rotate(-90 40 40)"/></svg><b>${wr}<i>%</i></b><em>${esc(t('rec.rate'))}</em></span>
+          <div class="rnums"><div class="w"><b>${n.w}</b><span>${esc(t('rec.w'))}</span></div><div class="l"><b>${n.l}</b><span>${esc(t('rec.l'))}</span></div><div class="d"><b>${n.d}</b><span>${esc(t('rec.d'))}</span></div></div>
+          <div class="rmeta"><span>${esc(t('rec.games', { n: tot }))}</span><span>🔥 ${esc(t('rec.streak', { n: cur }))}</span><span>👑 ${esc(t('rec.best', { n: best }))}</span></div>
+          <div class="rform">${L.slice(-15).map(r => `<i class="${r.res}"></i>`).join('')}</div>
+        </section>
+        <h4>${esc(t('rec.byOpp'))}</h4>
+        <div class="ropps card">${opps.map(e => { const s = e.w + e.l + e.d; return `<div class="ro"><span class="rn">${esc(e.opp)}</span><span class="rbar"><i class="w" style="flex:${e.w}"></i><i class="d" style="flex:${e.d}"></i><i class="l" style="flex:${e.l}"></i></span><span class="rc"><b>${e.w}</b>-${e.l}${e.d ? '-' + e.d : ''}</span></div>`; }).join('')}</div>
+        <h4>${esc(t('rec.recent'))}</h4>
+        <div class="rlist card">${L.slice(-20).reverse().map(r => `<div class="rr">${resChip(r.res)}<span class="ro2"><b>${esc(r.opp || '')}</b><small>${esc([r.vn, r.why, r.n ? t('rec.moves', { n: r.n }) : ''].filter(Boolean).join(' · '))}</small></span><span class="rm">${r.via === '3d' ? '🎲 ' : ''}${esc(t('rec.m.' + (r.mode === 'rated' ? 'rated' : r.mode === 'online' ? 'online' : 'ai')))}<small>${dt(r.t)}</small></span></div>`).join('')}</div>`
+        : versus ? `<div class="rempty card"><span>🏆</span><p>${esc(t('rec.none'))}</p></div>` : ''}
+        ${tiles.length ? `<h4>${esc(t('rec.play'))}</h4><div class="rtiles">${tiles.map(([k, v, s]) => `<div class="card rt"><small>${esc(k)}</small><b>${esc(String(v))}</b><span>${esc(String(s || ''))}</span></div>`).join('')}</div>` : ''}
+        ${achs.length ? `<h4>${esc(t('rec.ach'))} <em>${ad} / ${achs.length}</em></h4><div class="rach">${achs.map(achHtml).join('')}</div>` : ''}
+      </div></div>`;
+    ov.querySelector('.rx').onclick = closeRec;
+    ov.querySelectorAll('.rchips .chip').forEach(b => b.onclick = () => { recMode = b.dataset.m; renderRec(g); });
+  }
   function itemCard(it, foot, extraCls = '') {
     return `<div class="card item r${it.rar} ${extraCls}" data-kind="${it.kind}" data-id="${it.id}"><span class="rar">${ART.RAR[it.rar]}</span>
       <div class="art">${ART.svg(it.id)}</div><div class="nm">${esc(iname(it))}</div><div class="kd">${t('kind.' + it.kind)}</div>${foot || ''}</div>`;
@@ -636,7 +698,7 @@
     const mode = ad && ad.modes && ad.modes.includes(pref[id + ':mode']) ? pref[id + ':mode'] : 'ai';
     // board size (go): on the same row as the time control when there is one
     const sizeHtml = ad && ad.sizes ? `<label>${esc(ad.sizeLabel ? ad.sizeLabel(lang) : '')}<select id="bvSize">${ad.sizes.map(z => `<option value="${z}" ${z === bsz ? 'selected' : ''}>${ad.sizeName ? esc(ad.sizeName(z, lang)) : z + '×' + z}</option>`).join('')}</select></label>` : '';
-    $('bvi').innerHTML = `<div class="cols"><div class="L"><div class="row">${g3(g)}<div style="min-width:0;flex:1"><h3>${esc(gname(g))}</h3><div class="bd">${A_.badges(g).map(badgeHtml).join('')}</div></div>${glOK && window.AtlasRules && AtlasRules[id] ? `<button type="button" class="rulesb" id="bvRules"><span>📖</span><b>${t('bv.rules')}</b></button>` : ''}${ring(r.pct, g.color)}</div>
+    $('bvi').innerHTML = `<div class="cols"><div class="L"><div class="row">${g3(g)}<div style="min-width:0;flex:1"><h3>${esc(gname(g))}</h3><div class="bd">${A_.badges(g).map(badgeHtml).join('')}</div></div>${glOK && window.AtlasRules && AtlasRules[id] ? `<button type="button" class="rulesb" id="bvRules"><span>📖</span><b>${t('bv.rules')}</b></button>` : ''}<button type="button" class="rulesb recb" id="bvRec"><span>🏆</span><b>${t('rec.btn')}</b></button>${ring(r.pct, g.color)}</div>
       <div class="tags">${g.tags.filter(k => k !== 'mobile').map(tagHtml).join('')}</div>
       <p class="bvab">${esc(t('about.' + id))}</p>
       ${rows.length ? `<div class="pgl">${rows.map(([l, a, b]) => `<span>${l}</span><span class="bar" style="--c:${g.color}"><i style="width:${Math.min(100, a / b * 100)}%"></i></span><b>${Math.min(a, b)}/${b}</b>`).join('')}</div>` : ''}
@@ -676,6 +738,7 @@
       setTimeout(() => window.__bvModeRz && window.__bvModeRz(), 0); if (document.fonts) document.fonts.ready.then(() => window.__bvModeRz && window.__bvModeRz());
     }
     if ($('bvRules')) $('bvRules').onclick = startRules;
+    $('bvRec').onclick = () => { try { SFX.tap && SFX.tap(); } catch (e) {} openRec(g); };
     // phones: a grab handle on the card — swipe down (or tap) folds away the tags and progress, leaving the game settings; swipe up opens it again
     if (matchMedia('(max-width: 819px)').matches) {
       // phones: tags + progress live in a drawer above the settings; it follows the finger (swipe up opens, down closes)
@@ -727,7 +790,8 @@
       grab.onclick = () => to(st === 0 ? 1 : 0);   // tap the handle: settings ↔ open, and from mini back to settings
     }
     // phones: the title needs the width — the rules button joins the end of the feature tags as a small pill
-    if ($('bvRules') && matchMedia('(max-width: 819px)').matches) { const rw = $('bvi').querySelector('.row'); if (rw) { $('bvRules').classList.add('ph'); rw.appendChild($('bvRules')); } }   // phones: right of the progress ring
+    if ($('bvRules') && matchMedia('(max-width: 819px)').matches) { const rw = $('bvi').querySelector('.row'); if (rw) { $('bvRules').classList.add('ph'); rw.appendChild($('bvRules')); } }   // phones
+    if ($('bvRec') && matchMedia('(max-width: 819px)').matches) { const rw = $('bvi').querySelector('.row'); if (rw) { $('bvRec').classList.add('ph'); rw.appendChild($('bvRec')); } }   // (and the record button beside it): right of the progress ring
     // the board card's choices as our own UI (no system pickers): the side as a two-button toggle,
     // the level as a button that opens a list sheet with each level's name, meter and who it suits
     ['bvSide', 'bvSize'].forEach(sid => { if (!$(sid)) return;
@@ -900,7 +964,8 @@
       onTurn: (s, info) => { if (tbOn && session === sess) TB.turn(s, info); if (npcT && session === sess && info) npcT.turn(info.ply); },
       onEnd: res => {
         if (session === sess) TB.end();
-        if (!res.pvp) A_.recordPlay(W, g.id, res); refresh();   // two players on one device: no win / loss for the player's record
+        if (!res.pvp) { A_.recordPlay(W, g.id, res); recPush(g.id, { mode: pmode === 'rated' ? 'rated' : 'ai', res: res.draw ? 'd' : res.win ? 'w' : 'l', side: side === 2 ? 1 : 0, opp: 'AI Lv.' + (res.level || level), key: (pmode === 'rated' ? 'rt:' : 'ai:') + (res.level || level), why: String(res.score || '').replace(/<[^>]*>/g, '').slice(0, 60), via: '3d' }); }
+        refresh();   // two players on one device: no win / loss for the player's record
         if (npcT && session === sess && !res.pvp) { npcT.end(res); W = A_.load(); refresh(); }   // (a boss beaten: its N / R / SR was added to the saved wallet)
         setTimeout(() => {
           if (session !== sess) return;
