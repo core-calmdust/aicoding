@@ -1892,7 +1892,7 @@ function tzTarget() {
   const cx = (g.c0 + g.c1 + 1) / 2 * cw, cy = (g.r0 + g.r1 + 1) / 2 * ch;
   let tx = W / 2 - s * cx + TZ.pan[0], ty = (H - RB) / 2 - s * cy + TZ.pan[1];
   const ctx0 = tx, cty0 = ty;
-  tx = Math.max(W - s * W, Math.min(0, tx)); ty = Math.max(H - s * H, Math.min(0, ty));
+  tx = Math.max(W - s * W, Math.min(0, tx)); ty = Math.max(H - s * H - RB, Math.min(0, ty));   // (a problem on the bottom edge: the board stops RB above the view's bottom, the button sits below it)
   TZ.pan[0] += tx - ctx0; TZ.pan[1] += ty - cty0;   // (the pan stops at the board's edges)
   return { s, tx, ty };
 }
@@ -1901,7 +1901,7 @@ function tzStyle() {
   boardEl.style.transformOrigin = on ? '0 0' : '';
   boardEl.style.transform = on ? `translate(${tx.toFixed(2)}px,${ty.toFixed(2)}px) scale(${s.toFixed(4)})` : '';
   // the part of the (unscaled) board that lands inside its own box
-  boardEl.style.clipPath = on ? `inset(${(-ty / s).toFixed(2)}px ${(W - (W - tx) / s).toFixed(2)}px ${(H - (H - ty) / s).toFixed(2)}px ${(-tx / s).toFixed(2)}px)` : '';
+  boardEl.style.clipPath = on ? `inset(${(-ty / s).toFixed(2)}px ${(W - (W - tx) / s).toFixed(2)}px ${Math.max(0, H - (H - ty) / s).toFixed(2)}px ${(-tx / s).toFixed(2)}px)` : '';
   document.body.classList.toggle('tz-on', on);
   window.__boardZoom = on ? { s, tx, ty } : null;
   const host = document.getElementById('atlasGL');
