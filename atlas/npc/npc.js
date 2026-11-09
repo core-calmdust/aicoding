@@ -53,20 +53,26 @@
 [dir=rtl] .npc-bub::before,[dir=rtl] .npc-bub::after{left:auto;right:-11px;border-right:0;border-left:9px solid #f0e2c4;border-top-color:transparent;border-bottom-color:transparent}
 [dir=rtl] .npc-bub::after{right:-7px;border-left:8px solid #fff}
 .npc-nm{display:flex;align-items:baseline;gap:8px;margin-bottom:2px;min-width:0}
-.npc-nm b{font-weight:900;font-size:13px;color:#b5651d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.npc-nm b{flex:none;max-width:60%;font-weight:900;font-size:13px;color:#b5651d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .npc-card[data-who=fan] .npc-nm b{color:#3a7ac8}
 .npc-tag{flex:none;margin-inline-start:auto;font:800 10.5px/1.6 'Fredoka','Zen Maru Gothic',system-ui,sans-serif;letter-spacing:.04em;padding:0 8px;border-radius:99px;background:#f6ead2;color:#8a6a3a;white-space:nowrap}
 .npc-card[data-who=boss] .npc-tag{background:#ffe1d6;color:#b04a2a}
 .npc-card[data-who=fan] .npc-tag.tv{background:#dff0ff;color:#2a6aa8}
 .npc-ttl{font-size:11px;line-height:1.5;font-weight:700;color:#9a8a70;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:-1px 0 2px}
 .npc-ttl:empty{display:none}
-.npc-tx{font-size:14.5px;line-height:1.6;font-weight:700;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;min-height:3.2em}
-.npc-ttl:empty + .npc-tx{min-height:calc(3.2em + 17px)}   /* the watcher has no title line: the bubble keeps its height */
+.npc-card .npc-ttl{display:none}
+.npc-card .npc-nm small{flex:1 1 0;min-width:0;font-size:11px;font-weight:700;color:#9a8a70;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.npc-tx{font-size:14.5px;line-height:1.6;font-weight:700;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;min-height:3.1em}
+.npc-float .npc-ttl:empty + .npc-tx{min-height:calc(3.1em + 17px)}   /* the watcher has no title line: the bubble keeps its height */
+.npc-card .npc-tx{font-size:13.5px;line-height:1.55}
+.npc-card .npc-pic{width:52px;height:52px}
 @media (max-width:520px){.npc-card{min-height:70px;gap:8px;padding:8px 10px 8px 8px!important}.npc-pic{width:50px;height:50px}.npc-tx{font-size:13.5px;line-height:1.55}}
 html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
 /* the portal's own table: a bubble just above the action bar (left), gone again after a while */
 .npc-float{position:fixed;z-index:30;left:max(12px,env(safe-area-inset-left));bottom:calc(var(--npc-bot,96px) + 8px);width:min(420px,calc(100vw - 24px));display:flex;align-items:flex-end;gap:10px;pointer-events:none;opacity:0;transform:translateY(12px);transition:opacity .3s,transform .4s cubic-bezier(.3,1.3,.5,1)}
 .npc-float.on{opacity:1;transform:none}
+.bv > .npc-float{position:absolute;z-index:3}
+.npc-float.npc-skin{z-index:45}
 .npc-float .npc-bub{box-shadow:0 4px 0 #f0e2c4,0 14px 24px -14px rgba(80,40,0,.5)}
 /* SR won */
 .npc-toast{position:fixed;z-index:9000;left:50%;top:calc(14px + env(safe-area-inset-top));transform:translate(-50%,-140%);display:flex;align-items:center;gap:12px;padding:10px 18px 10px 10px;border-radius:20px;background:#fffdf6;border:2px solid #ffd27a;box-shadow:0 6px 0 #f0c868,0 18px 30px -12px rgba(80,40,0,.5);transition:transform .5s cubic-bezier(.3,1.3,.5,1);max-width:calc(100vw - 24px);box-sizing:border-box}
@@ -181,8 +187,8 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
   function cardUI() {
     addCss();
     const el = document.createElement('div'); el.className = 'card npc-card'; el.hidden = true; el.setAttribute('aria-live', 'polite');
-    el.innerHTML = '<div class="npc-pic"><img alt=""></div><div class="npc-bub"><div class="npc-nm"><b></b><span class="npc-tag"></span></div><div class="npc-ttl"></div><div class="npc-tx"></div></div>';
-    const img = el.querySelector('img'), nm = el.querySelector('.npc-nm b'), tag = el.querySelector('.npc-tag'), tx = el.querySelector('.npc-tx'), pic = el.querySelector('.npc-pic'), ttl = el.querySelector('.npc-ttl');
+    el.innerHTML = '<div class="npc-pic"><img alt=""></div><div class="npc-bub"><div class="npc-nm"><b></b><small></small><span class="npc-tag"></span></div><div class="npc-tx"></div></div>';
+    const img = el.querySelector('img'), nm = el.querySelector('.npc-nm b'), tag = el.querySelector('.npc-tag'), tx = el.querySelector('.npc-tx'), pic = el.querySelector('.npc-pic'), ttl = el.querySelector('.npc-nm small');
     let meta = null;
     const place = () => {
       const app = document.querySelector('.app'), side = app && (app.querySelector(':scope > .side > .side-in') || app.querySelector(':scope > .side') || app.querySelector('.side'));
@@ -205,17 +211,18 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
     };
   }
   /* ---------------- UI: the floating bubble (portal table) ---------------- */
-  function floatUI() {
+  // o.bottom() → px from the bottom of the window (default: over the portal's action bar)
+  function floatUI(o = {}) {
     addCss();
     const el = document.createElement('div'); el.className = 'npc-float'; el.setAttribute('aria-live', 'polite');
     el.innerHTML = '<div class="npc-pic"><img alt=""></div><div class="npc-bub"><div class="npc-nm"><b></b><span class="npc-tag"></span></div><div class="npc-ttl"></div><div class="npc-tx"></div></div>';
     const img = el.querySelector('img'), nm = el.querySelector('.npc-nm b'), tag = el.querySelector('.npc-tag'), tx = el.querySelector('.npc-tx'), pic = el.querySelector('.npc-pic'), ttl = el.querySelector('.npc-ttl');
-    document.body.appendChild(el);
+    (o.body ? document.body : document.getElementById('bv') || document.body).appendChild(el);   // (inside the portal's 3D view: over the table, under its end-of-game card)
     let hideT = 0;
     return {
       el,
       say(who, html, m) {
-        try { const b = window.__tbar && __tbar.band; if (b) document.documentElement.style.setProperty('--npc-bot', Math.round(b) + 'px'); } catch (e) {}
+        try { const b = o.bottom ? o.bottom() : window.__tbar && __tbar.band; if (b) el.style.setProperty('--npc-bot', Math.round(b) + 'px'); } catch (e) {}
         el.dataset.who = who; el.classList.toggle('npc-ur', !!m.ur);
         if (img.getAttribute('src') !== m.img) img.src = m.img;
         nm.textContent = m.name; tag.textContent = m.tag; tag.classList.toggle('tv', !!m.tv); ttl.textContent = m.title || ''; tx.innerHTML = html;
@@ -227,6 +234,22 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
     };
   }
 
+  /* ---------------- UI on the skins: the card in the info column on PC, a bubble over the bottom tabs on phones ----------------
+     (phones: the boxes under the board are the coach / 形勢 … tabs — a card there would push them down, so the
+     guide speaks in a bubble just above the bottom tab bar instead and steps away again after a few seconds) */
+  function skinUI() {
+    const PC = matchMedia((window.HeaderBar && HeaderBar.MEDIA) || '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4)');
+    const card = cardUI(), fl = floatUI({ body: true, bottom: () => { const t = [...document.querySelectorAll('.mtabs, #mtabs')].find(e => e.getClientRects().length && getComputedStyle(e).position === 'fixed'); return t ? innerHeight - t.getBoundingClientRect().top + 4 : 12; } });
+    fl.el.classList.add('npc-skin');
+    let last = null;
+    const route = () => { if (!last) return; if (PC.matches) { fl.hide(); card.say(...last); } else { card.hide(); } };
+    PC.addEventListener('change', route);
+    return {
+      say(who, html, m) { last = [who, html, m]; if (PC.matches) card.say(who, html, m); else { card.hide(); fl.say(who, html, m); } },
+      hide() { last = null; card.hide(); fl.hide(); },
+    };
+  }
+
   /* ---------------- reading the game's own state (skins) ----------------
      Every probe returns null (not ready / not an AI game) or { gid, level, ply, h, live }:
        gid = the game object (a new one = a new game), h = the human's outlook −1 … 1 (null = unknown), live = the latest position on view */
@@ -234,7 +257,7 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
   const th = Math.tanh;
   function tpl(game) {   // the shared template (chess, gomoku, go, morris, connect4, checkers, xiangqi, janggi, hex, tafl, fanorona, ugolki, agon, konane, alquerque)
     const st = G('settings'); if (!st || st.mode !== 'ai' || G('lesson') || G('puzzle') || G('net') || G('rgame')) return null;
-    const mv = G('moves'); if (!Array.isArray(mv)) return null;
+    const mv = G('moves'); if (!Array.isArray(mv) && typeof mv !== 'string') return null;   // (connect4: the record is a string of column digits)
     const ply = mv.length, evalAt = G('evalAt'), hc = G('humanColor');
     let ev = null;
     if (typeof evalAt === 'function') for (let i = ply; i >= Math.max(0, ply - 2) && ev == null; i--) { try { ev = evalAt(i); } catch (e) {} }
@@ -293,7 +316,7 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
     const lang0 = langNow();
     ensure(lang0).then(() => {
       if (!A.BOSSES || !A.BOSSES[game]) return;
-      const ui = cardUI(), T = Talk(game, ui, { pace: PACE[game], early: EARLY[game] });
+      const ui = skinUI(), T = Talk(game, ui, { pace: PACE[game], early: EARLY[game] });
       A.active = T;
       let gid = null, lastPly = -1, shown = false, ended = false, started = false;
       // the end of a game: every game reports it to the shared record (shared/record.js)
