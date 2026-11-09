@@ -202,7 +202,10 @@
     const youFirst = (+ctx.side || 1) === 1;
     const board = T3.MODELS.carrom(true); T3.show('carrom', board);
     const U = board.userData, Y = U.top, K = U.K, W = 2 * (U.S + 7 * K);
-    const baseFit = () => innerHeight > innerWidth * 1.1 ? { w: W + .25, d: W + .25, y: Y, pitch: .82 } : { w: W + .3, d: W + .35, y: Y, pitch: .82 };   // a 3/4 view with perspective (was 1.36 / 1.3 nearly top-down, then 1.0)
+    // the camera: a 3/4 view with perspective by default; the button beside the flip switches to the near top-down view (remembered)
+    const VK = 'atlas-carrom-view';
+    let topView = false; try { topView = localStorage.getItem(VK) === 'top'; } catch (e) {}
+    const baseFit = () => { const port = innerHeight > innerWidth * 1.1, pitch = topView ? (port ? 1.36 : 1.3) : .82; return port ? { w: W + .25, d: W + .25, y: Y, pitch } : { w: W + .3, d: W + .35, y: Y, pitch }; };
     if (T3.fit) T3.fit(baseFit());
     const onResize = () => { if (T3.fit) T3.fit(baseFit()); };
     addEventListener('resize', onResize);
@@ -266,11 +269,11 @@
       kick(120);
     }
     let pulseT = 0;
-    function pulse() { clearInterval(pulseT); const t0 = performance.now(); pulseT = setInterval(() => { if (stopped) return; let any = false; gd.children.forEach(m => { if (m.userData.pulse) { m.scale.setScalar(1.12 + Math.sin((performance.now() - t0) / 230) * .1); any = true; } }); if (any) kick(80); }, 60); }
+    function pulse() { clearInterval(pulseT); const t0 = performance.now(); pulseT = setInterval(() => { if (stopped || document.hidden || !document.hasFocus()) return;   /* (the ring stands still while the window is not in front: no frames then) */ let any = false; gd.children.forEach(m => { if (m.userData.pulse) { m.scale.setScalar(1.12 + Math.sin((performance.now() - t0) / 230) * .1); any = true; } }); if (any) kick(80); }, 60); }
 
     /* ---------- HUD ---------- */
     const css = document.createElement('style');
-    css.textContent = '.hud .crp{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;font-weight:800;font-size:13px;opacity:.62;white-space:nowrap}.hud .crp.on{opacity:1;background:rgba(255,255,255,.92);box-shadow:0 2px 8px rgba(0,0,0,.15)}.hud .crp i{width:15px;height:15px;border-radius:50%;display:inline-block;flex:none;box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.3)}.hud .crp b{font-size:14px}.hud .crp .q{width:11px;height:11px;background:#c3271f}.hud .crm{font-weight:800;font-size:13px;max-width:44vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.crtoast{position:fixed;left:50%;top:calc(76px + env(safe-area-inset-top));transform:translateX(-50%);z-index:90;max-width:min(92vw,560px);padding:11px 22px;border-radius:22px;background:#fff;color:#1d2133;font-weight:900;font-size:16px;box-shadow:0 0 0 3px #c23a7a,0 10px 26px rgba(0,0,0,.4);pointer-events:none;text-align:center;line-height:1.45;white-space:pre-line}.crtoast.good{background:#fff;color:#12684a;box-shadow:0 0 0 3px #1f7a55,0 10px 26px rgba(0,0,0,.4)}.crtoast.bad{background:#fff;color:#a8323a;box-shadow:0 0 0 3px #a8323a,0 10px 26px rgba(0,0,0,.4)}.crpow{position:fixed;z-index:6;pointer-events:none;padding:4px 10px;border-radius:99px;background:rgba(20,22,34,.82);color:#fff;font-weight:900;font-size:14px;transform:translate(-50%,-150%);white-space:nowrap}.crhow{position:fixed;inset:0;z-index:95;display:flex;align-items:center;justify-content:center;background:rgba(10,12,22,.55);padding:16px}.crhow-c{background:#fff;color:#1d2133;border-radius:24px;box-shadow:0 0 0 4px #c23a7a,0 18px 50px rgba(0,0,0,.45);padding:22px 22px 18px;width:min(440px,100%);max-height:100%;overflow:auto}.crhow h2{margin:0 0 14px;font-size:24px;font-weight:900;text-align:center;color:#c23a7a}.crhow ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}.crhow li{display:flex;align-items:center;gap:12px;font-size:18px;font-weight:800;line-height:1.35}.crhow li i{flex:none;width:40px;height:40px;border-radius:50%;background:#fbe3ee;color:#c23a7a;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:22px;font-weight:900}.crhow .u{margin:12px 0 0;font-size:14px;font-weight:700;color:#5b6074;text-align:center}.crhow label{display:flex;align-items:center;justify-content:center;gap:8px;margin:16px 0 6px;font-size:16px;font-weight:800;cursor:pointer}.crhow label input{width:20px;height:20px;accent-color:#c23a7a}.crhow .n{margin:0 0 14px;font-size:13px;font-weight:700;color:#6b7083;text-align:center}.crhow button{display:block;width:100%;padding:13px;border:0;border-radius:99px;background:#c23a7a;color:#fff;font:inherit;font-size:18px;font-weight:900;cursor:pointer}.crflip{position:fixed;left:calc(16px + env(safe-area-inset-left));bottom:calc(22px + env(safe-area-inset-bottom));z-index:40;width:54px;height:54px;border-radius:50%;border:0;background:rgba(255,255,255,.94);color:#2b3044;box-shadow:0 4px 14px rgba(0,0,0,.22);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}.crflip svg{width:28px;height:28px}.crflip.on{background:#c23a7a;color:#fff}@media (max-width:560px){.hud .crp{padding:3px 7px;font-size:12px}.hud .crp .nm{display:none}.crtoast{font-size:14px;padding:9px 16px;border-radius:18px}}';
+    css.textContent = '.hud .crp{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;font-weight:800;font-size:13px;opacity:.62;white-space:nowrap}.hud .crp.on{opacity:1;background:rgba(255,255,255,.92);box-shadow:0 2px 8px rgba(0,0,0,.15)}.hud .crp i{width:15px;height:15px;border-radius:50%;display:inline-block;flex:none;box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.3)}.hud .crp b{font-size:14px}.hud .crp .q{width:11px;height:11px;background:#c3271f}.hud .crm{font-weight:800;font-size:13px;max-width:44vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.crtoast{position:fixed;left:50%;top:calc(76px + env(safe-area-inset-top));transform:translateX(-50%);z-index:90;max-width:min(92vw,560px);padding:11px 22px;border-radius:22px;background:#fff;color:#1d2133;font-weight:900;font-size:16px;box-shadow:0 0 0 3px #c23a7a,0 10px 26px rgba(0,0,0,.4);pointer-events:none;text-align:center;line-height:1.45;white-space:pre-line}.crtoast.good{background:#fff;color:#12684a;box-shadow:0 0 0 3px #1f7a55,0 10px 26px rgba(0,0,0,.4)}.crtoast.bad{background:#fff;color:#a8323a;box-shadow:0 0 0 3px #a8323a,0 10px 26px rgba(0,0,0,.4)}.crpow{position:fixed;z-index:6;pointer-events:none;padding:4px 10px;border-radius:99px;background:rgba(20,22,34,.82);color:#fff;font-weight:900;font-size:14px;transform:translate(-50%,-150%);white-space:nowrap}.crhow{position:fixed;inset:0;z-index:95;display:flex;align-items:center;justify-content:center;background:rgba(10,12,22,.55);padding:16px}.crhow-c{background:#fff;color:#1d2133;border-radius:24px;box-shadow:0 0 0 4px #c23a7a,0 18px 50px rgba(0,0,0,.45);padding:22px 22px 18px;width:min(440px,100%);max-height:100%;overflow:auto}.crhow h2{margin:0 0 14px;font-size:24px;font-weight:900;text-align:center;color:#c23a7a}.crhow ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}.crhow li{display:flex;align-items:center;gap:12px;font-size:18px;font-weight:800;line-height:1.35}.crhow li i{flex:none;width:40px;height:40px;border-radius:50%;background:#fbe3ee;color:#c23a7a;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:22px;font-weight:900}.crhow .u{margin:12px 0 0;font-size:14px;font-weight:700;color:#5b6074;text-align:center}.crhow label{display:flex;align-items:center;justify-content:center;gap:8px;margin:16px 0 6px;font-size:16px;font-weight:800;cursor:pointer}.crhow label input{width:20px;height:20px;accent-color:#c23a7a}.crhow .n{margin:0 0 14px;font-size:13px;font-weight:700;color:#6b7083;text-align:center}.crhow button{display:block;width:100%;padding:13px;border:0;border-radius:99px;background:#c23a7a;color:#fff;font:inherit;font-size:18px;font-weight:900;cursor:pointer}.crflip{position:fixed;left:calc(16px + env(safe-area-inset-left));bottom:calc(22px + env(safe-area-inset-bottom));z-index:40;width:54px;height:54px;border-radius:50%;border:0;background:rgba(255,255,255,.94);color:#2b3044;box-shadow:0 4px 14px rgba(0,0,0,.22);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}.crflip svg{width:28px;height:28px}.crflip.on{background:#c23a7a;color:#fff}.crview{left:calc(80px + env(safe-area-inset-left))}@media (max-width:560px){.hud .crp{padding:3px 7px;font-size:12px}.hud .crp .nm{display:none}.crtoast{font-size:14px;padding:9px 16px;border-radius:18px}}';
     document.head.appendChild(css);
     const HK = 'atlas-carrom-howto';
     const howtoOn = () => { try { return localStorage.getItem(HK) !== 'off'; } catch (e) { return true; } };
@@ -435,7 +438,7 @@
         later(() => { boardNo++; st = E.nextBoard(st); build(); syncAll(); toast(tx('next', { n: boardNo })); hist.length = 0; later(next, 900); }, 2200);
         return;
       }
-      over = true; phase = 'over'; clearGuides(); if (ctx.onTurn) ctx.onTurn(-1); flipBtn.hidden = true; if (pvp) viewTo(0);
+      over = true; phase = 'over'; clearGuides(); if (ctx.onTurn) ctx.onTurn(-1); flipBtn.hidden = viewBtn.hidden = true; if (pvp) viewTo(0);
       SND.win();
       const score = target ? tx('score', { a: st.score[0], b: st.score[1] }) : txtB;
       const won = target ? st.score[0] > st.score[1] : w === 0;
@@ -489,6 +492,15 @@
     flipBtn.addEventListener('click', e => { e.preventDefault(); flip(); });
     ['pointerdown', 'pointermove', 'pointerup'].forEach(k => flipBtn.addEventListener(k, e => e.stopPropagation()));
     flipSync(); (document.getElementById('bv') || document.body).appendChild(flipBtn);   // (inside the board view's own layer, over its canvas) viewTo(0, true);
+    const VIEWT = { ja: ['上から見る', '斜めから見る'], en: ['View from above', 'View at an angle'], zh: ['从上方看', '斜着看'], 'zh-TW': ['從上方看', '斜著看'], ko: ['위에서 보기', '비스듬히 보기'], es: ['Vista desde arriba', 'Vista en ángulo'], fr: ['Vue de dessus', 'Vue en biais'], pt: ['Ver de cima', 'Ver em ângulo'], de: ['Von oben', 'Schräg von oben'], ru: ['Вид сверху', 'Вид под углом'], tr: ['Üstten bak', 'Açılı bak'], id: ['Lihat dari atas', 'Lihat miring'], hi: ['ऊपर से देखें', 'तिरछा देखें'], ar: ['عرض من الأعلى', 'عرض مائل'] };
+    const viewBtn = document.createElement('button'); viewBtn.type = 'button'; viewBtn.className = 'crflip crview';
+    const ICO_TOP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="5" y="5" width="14" height="14" rx="1.5"/><circle cx="12" cy="12" r="2.2"/></svg>';
+    const ICO_ANG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M7.5 6h9L21 18H3z"/><ellipse cx="12" cy="12" rx="2.6" ry="1.8"/></svg>';
+    const viewSync = () => { const L = VIEWT[lang] || VIEWT.en, lab = topView ? L[1] : L[0]; viewBtn.innerHTML = topView ? ICO_ANG : ICO_TOP; viewBtn.title = lab; viewBtn.setAttribute('aria-label', lab); };
+    function toggleView() { if (stopped) return; topView = !topView; try { localStorage.setItem(VK, topView ? 'top' : 'angle'); } catch (e) {} viewSync(); hand.cancel(); if (T3.fit) T3.fit(baseFit()); kick(800); }
+    viewBtn.addEventListener('click', e => { e.preventDefault(); toggleView(); });
+    ['pointerdown', 'pointermove', 'pointerup'].forEach(k => viewBtn.addEventListener(k, e => e.stopPropagation()));
+    viewSync(); (document.getElementById('bv') || document.body).appendChild(viewBtn);
     const onFlipKey = e => { if ((e.key === 'f' || e.key === 'F') && !e.ctrlKey && !e.metaKey && !e.altKey && !/^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || '')) flip(); };
     document.addEventListener('keydown', onFlipKey);
     const onKey = e => {
@@ -508,7 +520,7 @@
     const myTurn = () => !stopped && !over && !busy && st && human(st.turn) && phase === 'place';
     function finish(why) {
       if (over || !st) return;
-      tok++; over = true; phase = 'over'; busy = false; clearGuides(); if (ctx.onTurn) ctx.onTurn(-1); flipBtn.hidden = true; if (pvp) viewTo(0);
+      tok++; over = true; phase = 'over'; busy = false; clearGuides(); if (ctx.onTurn) ctx.onTurn(-1); flipBtn.hidden = viewBtn.hidden = true; if (pvp) viewTo(0);
       const r = t(why === 'time' ? 'act.timeout' : 'act.resigned');
       say(t('res.lose')); setTimeout(() => { if (!stopped) ctx.onEnd(pvp ? { win: false, draw: false, level, score: r, pvp: true, winnerText: r } : { win: false, draw: false, level, score: r }); }, 200);
     }
@@ -542,7 +554,7 @@
         hand.stop();
         document.removeEventListener('keydown', onKey); removeEventListener('resize', onResize); ctx.el.style.touchAction = prevTouch;
         css.remove(); powEl.remove(); if (toastEl) toastEl.remove(); if (cardEl) cardEl.remove(); if (worker) worker.terminate();
-        cancelAnimationFrame(viewRaf); flipBtn.remove(); document.removeEventListener('keydown', onFlipKey); if (T3.turn) T3.turn(null);
+        cancelAnimationFrame(viewRaf); flipBtn.remove(); viewBtn.remove(); document.removeEventListener('keydown', onFlipKey); if (T3.turn) T3.turn(null);
         Object.values(MAT).forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose());
       },
       _debug: { st: () => st, phase: () => phase, shoot: (x, ang, pw) => { if (phase !== 'place') return false; sx = E.nearestFree(st, st.turn, x); stroke({ x: sx, ang, v: 40 + pw * (E.VMAX - 40) }); return true; }, setStriker: x => { moveStriker(x); showGuides(); }, at: (x, y) => { const [a, b] = wx(x, y); return T3.project(a, b, Y); }, striker: () => sx },
