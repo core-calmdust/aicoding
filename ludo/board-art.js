@@ -162,9 +162,9 @@
   function mondrian() {
     const o = [], T = track(), K = '#121212', LW = .1;
     o.push(`<rect x="-.3" y="-.3" width="15.6" height="15.6" fill="#f5f2e9"/>`);
-    // each yard: a composition of bars — a block of the seat's colour, a small block of another primary, grey and white fields
-    const comp = [   // [x, y, w, h, fill: 'S' seat · 'P' another primary · 'G' grey · 'K' black · 'W' white] in yard cells (0..6), mirrored per seat
-      [0, 0, 3.9, 1.05, 'S'], [3.9, 0, 2.1, 1.05, 'W'], [0, 1.05, 1.05, 3.1, 'W'], [0, 4.15, 1.05, 1.85, 'P'], [4.95, 1.05, 1.05, 2.0, 'G'], [4.95, 3.05, 1.05, 2.95, 'S'],
+    // each yard: a composition of bars — blocks of the seat's colour only (2026-11-09: no other primary beside a seat), grey and white fields
+    const comp = [   // [x, y, w, h, fill: 'S' seat · 'G' grey · 'K' black · 'W' white] in yard cells (0..6), mirrored per seat
+      [0, 0, 3.9, 1.05, 'S'], [3.9, 0, 2.1, 1.05, 'W'], [0, 1.05, 1.05, 3.1, 'W'], [0, 4.15, 1.05, 1.85, 'S'], [4.95, 1.05, 1.05, 2.0, 'G'], [4.95, 3.05, 1.05, 2.95, 'S'],
       [1.05, 4.95, 2.6, 1.05, 'W'], [3.65, 4.95, 1.3, 1.05, 'K'],
     ];
     for (let s = 0; s < 4; s++) {
@@ -278,5 +278,79 @@
     return o.join('');
   }
 
-  window.LudoBoardArt = { street, mondrian, cutout, peg, holes, COLS: { mondrian: MC, cutout: CC } };
+  /* ---------- 5 · marble inlay (pietra dura, 3D) ----------
+     White veined marble; the colours are inlaid stones — carnelian (red), malachite (green), amber (yellow), lapis lazuli
+     (blue, with flecks of pyrite) —, the lines and the safe stars are brass let into the stone, the four places of a yard
+     black marble ringed in brass. The stones' patterns are SVG noise (feTurbulence), one filter per stone over all its pieces. */
+  const STONE = [
+    { base: '#a8321f', vein: '#e2774a', id: 'mbR', bf: '.55 .55', type: 'fractalNoise', oct: 4, tbl: '0 .1 .5 .9 1', a: .75 },     // carnelian: cloudy
+    { base: '#0f6b3f', vein: '#05301b', id: 'mbG', bf: '.22 .22', type: 'turbulence', oct: 3, tbl: '0 1 0 1 0 1 0 1 0 1 0 1', a: .7, disc: 1 },   // malachite: banded
+    { base: '#d99018', vein: '#f7cf6a', id: 'mbY', bf: '.35 .5', type: 'fractalNoise', oct: 4, tbl: '0 0 .3 .8 1', a: .8 },         // amber: warm clouds
+    { base: '#1d3790', vein: '#4f74d0', id: 'mbB', bf: '.6 .6', type: 'fractalNoise', oct: 4, tbl: '0 0 .2 .7 1', a: .55, gold: 1 },  // lapis lazuli
+  ];
+  function stoneFilter(S) {
+    return `<filter id="${S.id}" x="-.02" y="-.02" width="1.04" height="1.04" color-interpolation-filters="sRGB">`
+      + `<feTurbulence type="${S.type}" baseFrequency="${S.bf}" numOctaves="${S.oct}" seed="${S.id.charCodeAt(2)}" result="n"/>`
+      + `<feComponentTransfer in="n" result="t"><feFuncR type="${S.disc ? 'discrete' : 'table'}" tableValues="${S.tbl}"/></feComponentTransfer>`
+      + `<feColorMatrix in="t" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ${S.a} 0 0 0 0" result="a"/>`
+      + `<feFlood flood-color="${S.vein}"/><feComposite in2="a" operator="in" result="v"/>`
+      + (S.gold ? `<feTurbulence type="fractalNoise" baseFrequency="6" numOctaves="2" seed="7" result="g0"/><feComponentTransfer in="g0" result="g1"><feFuncR type="discrete" tableValues="0 0 0 0 0 0 0 0 1 1"/></feComponentTransfer><feColorMatrix in="g1" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0" result="ga"/><feFlood flood-color="#e8c768"/><feComposite in2="ga" operator="in" result="gv"/><feMerge result="v2"><feMergeNode in="v"/><feMergeNode in="gv"/></feMerge>` : '')
+      + `<feComposite in="${S.gold ? 'v2' : 'v'}" in2="SourceAlpha" operator="in" result="vc"/>`
+      + `<feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="vc"/></feMerge></filter>`;
+  }
+  function marble() {
+    const o = [], T = track(), BR = '#c9a04a', BRd = '#8a6a24';
+    o.push('<defs>' + STONE.map(stoneFilter).join('')
+      // white marble: soft grey clouds and thin veins (ridges of turbulence)
+      + `<filter id="mbW" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".09 .16" numOctaves="5" seed="11" result="n"/>`
+      + `<feComponentTransfer in="n" result="r"><feFuncR type="table" tableValues="0 0 0 .15 1 .15 0 0 0"/></feComponentTransfer><feColorMatrix in="r" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .55 0 0 0 0" result="va"/>`
+      + `<feFlood flood-color="#8d8a86"/><feComposite in2="va" operator="in" result="v"/>`
+      + `<feColorMatrix in="n" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .5 0 0 0 -.18" result="ca"/><feFlood flood-color="#b9b4ac"/><feComposite in2="ca" operator="in" result="c"/>`
+      + `<feComposite in="v" in2="SourceAlpha" operator="in" result="v1"/><feComposite in="c" in2="SourceAlpha" operator="in" result="c1"/>`
+      + `<feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="c1"/><feMergeNode in="v1"/></feMerge></filter>`
+      // black marble (the places): white veins
+      + `<filter id="mbK" x="-.05" y="-.05" width="1.1" height="1.1" color-interpolation-filters="sRGB"><feTurbulence type="turbulence" baseFrequency=".9 .35" numOctaves="3" seed="5" result="n"/><feComponentTransfer in="n" result="r"><feFuncR type="table" tableValues="0 .1 .5 .9 1"/></feComponentTransfer><feColorMatrix in="r" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .7 0 0 0 0" result="a"/><feFlood flood-color="#d8d4cc"/><feComposite in2="a" operator="in" result="v"/><feComposite in="v" in2="SourceAlpha" operator="in" result="vc"/><feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="vc"/></feMerge></filter>`
+      + `<linearGradient id="mbBr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f1d58a"/><stop offset=".45" stop-color="${BR}"/><stop offset="1" stop-color="${BRd}"/></linearGradient>`
+      + '</defs>');
+    o.push(`<g filter="url(#mbW)"><rect x="-.3" y="-.3" width="15.6" height="15.6" fill="#f3f0ea"/></g>`);
+    // the veins: long wandering grey threads, a soft blurred one beside some, branching here and there (Carrara)
+    { const R = rng(2027), V = [], Vs = [];
+      for (let i = 0; i < 9; i++) {
+        let x = R() * 15.6 - .3, y = -.3, a = Math.PI / 2 + (R() - .5) * 1.4; const P = [[x, y]];
+        if (R() < .5) { x = -.3; y = R() * 15.6 - .3; a = (R() - .5) * 1.4; P[0] = [x, y]; }
+        while (x > -.5 && x < 15.5 && y > -.5 && y < 15.5 && P.length < 160) { a += (R() - .5) * .28 + Math.sin(P.length * .21 + i) * .06; x += Math.cos(a) * .18; y += Math.sin(a) * .18; P.push([x, y]); if (R() < .018) { const b = P.slice(-1)[0]; let bx = b[0], by = b[1], ba = a + (R() < .5 ? .8 : -.8); const Q = [[bx, by]]; for (let k = 0; k < 18; k++) { ba += (R() - .5) * .6; bx += Math.cos(ba) * .15; by += Math.sin(ba) * .15; Q.push([bx, by]); } V.push([Q, .012 + R() * .012]); } }
+        V.push([P, .015 + R() * .03]); if (R() < .6) Vs.push([P, .12 + R() * .15]);
+      }
+      const pd = P => 'M' + P.map(([x, y]) => f(x) + ' ' + f(y)).join('L');
+      o.push(`<defs><filter id="mbBl" x="-.1" y="-.1" width="1.2" height="1.2"><feGaussianBlur stdDeviation=".08"/></filter></defs>`);
+      o.push(`<g filter="url(#mbBl)" opacity=".28">` + Vs.map(([P, w]) => `<path d="${pd(P)}" stroke="#9a958e" stroke-width="${f(w)}" fill="none" stroke-linecap="round"/>`).join('') + '</g>');
+      o.push(`<g opacity=".32">` + V.map(([P, w]) => `<path d="${pd(P)}" stroke="#7b7670" stroke-width="${f(w)}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`).join('') + '</g>'); }
+    // the stones: each stone's pieces in one filtered group (yard band, start square, home lane, centre triangle)
+    for (let s = 0; s < 4; s++) {
+      const [x0, y0] = YARD[s], [tx, ty] = T[s * 13], [ax, ay] = TRI[s][0], [bx, by] = TRI[s][1];
+      let d = `M${x0 + .1} ${y0 + .1}h5.8v5.8h-5.8zM${x0 + .78} ${y0 + .78}v4.44h4.44v-4.44z`;
+      d += `M${tx} ${ty}h1v1h-1z`;
+      for (let p = 0; p < 5; p++) { const [x, y] = HOME[s](p); d += `M${x} ${y}h1v1h-1z`; }
+      d += `M${ax} ${ay}L${bx} ${by}L7.5 7.5z`;
+      o.push(`<g filter="url(#${STONE[s].id})"><path d="${d}" fill="${STONE[s].base}" fill-rule="evenodd"/></g>`);
+    }
+    // brass: the yard's inner frame, the four places' rings (on black marble), the lines of the track, the stars, the centre boss
+    const bl = [];
+    for (let s = 0; s < 4; s++) { const [x0, y0] = YARD[s]; bl.push(`<rect x="${x0 + .1}" y="${y0 + .1}" width="5.8" height="5.8" fill="none" stroke="url(#mbBr)" stroke-width=".07"/><rect x="${x0 + .78}" y="${y0 + .78}" width="4.44" height="4.44" fill="none" stroke="url(#mbBr)" stroke-width=".08"/>`); }
+    o.push(`<g filter="url(#mbK)">` + [0, 1, 2, 3].map(s => slots(s).map(([px, py]) => `<circle cx="${f(px)}" cy="${f(py)}" r=".56" fill="#1b1a1c"/>`).join('')).join('') + '</g>');
+    for (let s = 0; s < 4; s++) slots(s).forEach(([px, py]) => bl.push(`<circle cx="${f(px)}" cy="${f(py)}" r=".58" fill="none" stroke="url(#mbBr)" stroke-width=".07"/><circle cx="${f(px)}" cy="${f(py)}" r=".44" fill="none" stroke="${BR}" stroke-opacity=".5" stroke-width=".02"/>`));
+    T.forEach(([x, y], i) => {
+      bl.push(`<rect x="${x}" y="${y}" width="1" height="1" fill="none" stroke="url(#mbBr)" stroke-width=".045"/>`);
+      if (i % 13 === 8) bl.push(`<path d="${star(x + .5, y + .5, .36, .42)}" fill="url(#mbBr)" stroke="${BRd}" stroke-width=".02"/><path d="${star(x + .5, y + .5, .16, .42)}" fill="#f6e3a6" fill-opacity=".6"/>`);
+      if (i % 13 === 0) bl.push(arrowD(x + .5, y + .5, i / 13) + ` stroke="url(#mbBr)" stroke-width=".09"/>`);
+    });
+    for (let s = 0; s < 4; s++) for (let p = 0; p < 5; p++) { const [x, y] = HOME[s](p); bl.push(`<rect x="${x}" y="${y}" width="1" height="1" fill="none" stroke="url(#mbBr)" stroke-width=".045"/>`); }
+    TRI.forEach(([[ax, ay], [bx, by]]) => bl.push(`<path d="M${ax} ${ay}L${bx} ${by}L7.5 7.5z" fill="none" stroke="url(#mbBr)" stroke-width=".05" stroke-linejoin="round"/>`));
+    bl.push(`<circle cx="7.5" cy="7.5" r=".42" fill="url(#mbBr)" stroke="${BRd}" stroke-width=".03"/><path d="${star(7.5, 7.5, .3, .42)}" fill="#f3dc96" stroke="${BRd}" stroke-width=".015"/>`);
+    bl.push(`<rect x="0" y="0" width="15" height="15" fill="none" stroke="url(#mbBr)" stroke-width=".1"/><rect x="-.18" y="-.18" width="15.36" height="15.36" fill="none" stroke="url(#mbBr)" stroke-width=".04"/>`);
+    o.push(bl.join(''));
+    return o.join('');
+  }
+
+  window.LudoBoardArt = { street, mondrian, cutout, peg, marble, holes, COLS: { mondrian: MC, cutout: CC } };
 })();
