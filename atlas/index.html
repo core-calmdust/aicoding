@@ -1464,7 +1464,10 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 .bvi .opts #bvHouse{flex:none;display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 12px;border-radius:12px;border:2px solid var(--line);background:#fff;font:inherit;font-weight:900;font-size:13.5px;color:var(--ink);cursor:pointer;white-space:nowrap}
 @media (min-width:820px){.bvi .opts #bvHouse{height:48px;padding:0 16px;font-size:15px;border-radius:14px}}
 .bvi .opts #bvHouse[hidden]{display:none}
-.bvi .opts #bvHouse b{font-size:11px;padding:1px 7px;border-radius:99px;background:var(--coral);color:#fff}.bvi .opts #bvHouse b:empty{display:none}
+.bvi .opts #bvHouse:disabled{opacity:.42;cursor:default}
+.bvi .opts:has(> #bvHouse){flex-wrap:nowrap}.bvi .opts:has(> #bvHouse) .lvpick{min-width:0}.bvi .opts:has(> #bvHouse) .lvpick span{overflow:hidden;text-overflow:ellipsis}   /* (the house-rules button stays beside the level, with its 変更 n badge too) */
+@media (max-width:819px){.bvi .opts #bvHouse{gap:5px;padding:0 10px}}
+.bvi .opts #bvHouse b{font-size:11px;min-width:18px;height:18px;box-sizing:border-box;display:inline-grid;place-items:center;padding:0 5px;border-radius:99px;background:var(--coral);color:#fff;line-height:1}.bvi .opts #bvHouse b:empty{display:none}
 .bvi .opts #bvHouse i{font-style:normal;font-size:17px;line-height:1}
 .bvi .opts label:has(.sidetg){flex:none!important}.bvi .opts label:has(.lvpick){min-width:0;flex:1 1 auto!important}
 .bvi .sidetg{flex:none;overflow:hidden}.bvi .sidetg button{flex:none;padding-inline:12px}
@@ -1664,7 +1667,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 <script src="games/senet-kit.js?v=5"></script>
 <script src="games/senet.js?v=15"></script>
 <script src="games/agon.js?v=8"></script>
-<script src="games/ludo.js?v=17"></script>
+<script src="games/ludo.js?v=18"></script>
 <script src="games/carrom.js?v=2"></script>
 <script>/* rules tours: after a solved step, the ▶ button fills up like a timer until the tour moves on by itself */
 window.AtlasRgdTimer = function (btn, ms, alive) {
@@ -1711,6 +1714,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <link rel="stylesheet" href="worldmap.css?v=18">
 <script src="worldmap.js?v=29"></script>
 <script src="updnews.js?v=7"></script>
-<script src="app.js?v=235"></script>
+<script src="app.js?v=236"></script>
 </body>
 </html>

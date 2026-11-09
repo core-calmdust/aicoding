@@ -63,10 +63,11 @@ let pcEls = {};
    under it. The dice stay there until the next seat's turn, when the cup goes to that yard. Pachisi throws cowries (no cup). ---------- */
 const CUP = { seat: -1 };
 function cupSpot(seat) { const Y0 = [[0, 9], [0, 0], [9, 0], [9, 9]][seat]; return [Y0[0] + 3, Y0[1] + 3]; }
-const cupBody = col => `<g class="cupb"><ellipse cx="0" cy=".5" rx=".6" ry=".2" fill="rgba(0,0,0,.35)"/><path d="M-.5 .42L-.4 -.42Q0 -.56 .4 -.42L.5 .42Q0 .6 -.5 .42Z" fill="url(#cupG)" stroke="#3b210f" stroke-width=".03"/><path d="M-.47 .2Q0 .36 .47 .2L.46 .1Q0 .26 -.46 .1Z" fill="${col}" opacity=".95"/><path d="M-.43 -.22Q0 -.08 .43 -.22L.42 -.3Q0 -.16 -.42 -.3Z" fill="#d9b25a"/><ellipse cx="0" cy="-.43" rx=".4" ry=".12" fill="#8a5530" stroke="#3b210f" stroke-width=".025"/><path d="M-.3 -.3L-.36 .3" stroke="rgba(255,255,255,.22)" stroke-width=".07" stroke-linecap="round"/></g>`;
+// (2026-11-09 v3) a black leather cup lined with red felt: a rolled rim with a stitch line, a stitched band at the base
+const cupBody = col => `<g class="cupb"><ellipse cx="0" cy=".5" rx=".6" ry=".2" fill="rgba(0,0,0,.35)"/><path d="M-.5 .42L-.4 -.42Q0 -.56 .4 -.42L.5 .42Q0 .6 -.5 .42Z" fill="url(#cupG)" stroke="#000" stroke-width=".03"/><path d="M-.42 -.27Q0 -.13 .42 -.27L.4 -.42Q0 -.28 -.4 -.42Z" fill="#1d1d21"/><path d="M-.415 -.3Q0 -.16 .415 -.3" stroke="#6b6b72" stroke-width=".018" stroke-dasharray=".05 .035" fill="none"/><path d="M-.485 .3Q0 .47 .485 .3" stroke="#6b6b72" stroke-width=".018" stroke-dasharray=".05 .035" fill="none"/><path d="M-.5 .42Q0 .6 .5 .42" stroke="#26262b" stroke-width=".07" fill="none" stroke-linecap="round"/><ellipse cx="0" cy="-.43" rx=".4" ry=".12" fill="#26262b" stroke="#000" stroke-width=".025"/><path d="M-.3 -.2L-.36 .28" stroke="rgba(255,255,255,.16)" stroke-width=".07" stroke-linecap="round"/></g>`;
 // mouth up (waiting / shaking): narrow at the foot, the open mouth an ellipse at the top with the dark inside
-const cupUp = col => `<g class="cupb"><ellipse cx="0" cy=".5" rx=".55" ry=".18" fill="rgba(0,0,0,.35)"/><path d="M-.4 .44L-.5 -.38Q0 -.24 .5 -.38L.4 .44Q0 .58 -.4 .44Z" fill="url(#cupG)" stroke="#3b210f" stroke-width=".03"/><path d="M-.43 .2Q0 .34 .43 .2L.44 .1Q0 .24 -.44 .1Z" fill="${col}" opacity=".95"/><path d="M-.48 -.22Q0 -.08 .48 -.22L.49 -.3Q0 -.16 -.49 -.3Z" fill="#d9b25a"/><ellipse cx="0" cy="-.38" rx=".5" ry=".15" fill="#241208" stroke="#d9b25a" stroke-width=".035"/><ellipse cx="0" cy="-.34" rx=".38" ry=".08" fill="#120803"/><path d="M-.32 -.18L-.27 .3" stroke="rgba(255,255,255,.2)" stroke-width=".07" stroke-linecap="round"/></g>`;
-const CUP_DEF = '<defs><linearGradient id="cupG" x1="0" x2="1"><stop offset="0" stop-color="#5a3016"/><stop offset=".35" stop-color="#9a5e30"/><stop offset="1" stop-color="#4a250f"/></linearGradient></defs>';
+const cupUp = col => `<g class="cupb"><ellipse cx="0" cy=".5" rx=".55" ry=".18" fill="rgba(0,0,0,.35)"/><path d="M-.4 .44L-.5 -.38Q0 -.24 .5 -.38L.4 .44Q0 .58 -.4 .44Z" fill="url(#cupG)" stroke="#000" stroke-width=".03"/><path d="M-.415 .3Q0 .44 .415 .3L.4 .44Q0 .58 -.4 .44Z" fill="#1d1d21"/><path d="M-.415 .3Q0 .44 .415 .3" stroke="#6b6b72" stroke-width=".018" stroke-dasharray=".05 .035" fill="none"/><path d="M-.485 -.26Q0 -.12 .485 -.26" stroke="#6b6b72" stroke-width=".018" stroke-dasharray=".05 .035" fill="none"/><ellipse cx="0" cy="-.38" rx=".5" ry=".15" fill="#a3131c" stroke="#26262b" stroke-width=".06"/><path d="M-.44 -.36Q0 -.18 .44 -.36Q0 -.27 -.44 -.36Z" fill="#6e0a11"/><path d="M-.32 -.14L-.27 .26" stroke="rgba(255,255,255,.16)" stroke-width=".07" stroke-linecap="round"/></g>`;
+const CUP_DEF = '<defs><linearGradient id="cupG" x1="0" x2="1"><stop offset="0" stop-color="#0c0c0e"/><stop offset=".35" stop-color="#3c3c42"/><stop offset="1" stop-color="#09090b"/></linearGradient></defs>';
 function diceAt(vals) {   // the thrown dice on the board, in grid units round (0, 0)
   const n = vals.length, sz = n > 2 ? .5 : n > 1 ? .6 : .78, gap = n > 2 ? .52 : .68;
   return vals.map((v, i) => { const x = (i - (n - 1) / 2) * gap - sz / 2, y = -sz / 2 + (n > 2 && i === 1 ? -.18 : 0), a = ((v * 37 + i * 53) % 30) - 15;
@@ -357,6 +358,11 @@ function pickPiece(seat, k) {
 svg.addEventListener('click', e => {
   const d = e.target.closest('.dest'); if (d) { commit(moves[+d.dataset.i]); return; }
   if (e.target.closest('#gCup .cup.ready')) { if (G && humanSeat(G.state.turn) && !G.thr && !busy) doRoll(); return; }
+  // (2026-11-09) a tap near the waiting cup throws too (the 3D cup of the full board stands up off the SVG footprint)
+  if (svg.querySelector('#gCup .cup.ready') && G && humanSeat(G.state.turn) && !G.thr && !busy && !e.target.closest('.pc')) {
+    const m = svg.getScreenCTM(); if (m) { const pt = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse()), [cx, cy] = cupSpot(G.state.turn);
+      if (Math.hypot(pt.x - cx, pt.y - cy) < 1.35) { doRoll(); return; } }
+  }
   const g = e.target.closest('.pc'); if (g) pickPiece(+g.dataset.s, +g.dataset.k);
 });
 $('#btnRoll').onclick = () => { if (G && humanSeat(G.state.turn)) doRoll(); };
@@ -505,11 +511,12 @@ if (window.RulesOffer) RulesOffer.init({ game: 'ludo', lang: () => LANG, open: (
 const VARS = ['ludo4', 'ludo3', 'ludo2', 'pachisi4', 'pachisi2'];
 const varName = k => t('rule.' + k.replace(/\d/, '')) + ' · ' + t('ng.pl', { n: k.slice(-1) });
 if (window.GameRecord) GameRecord.init({ game: 'ludo', lang: () => LANG, menu: '.controls', sides: () => [t('rec.first'), t('rec.later')], variant: () => { const k = G ? G.state.rule + G.state.players : 'ludo4'; return { k, n: varName(k) }; }, variants: () => VARS, variantName: k => varName(k), defVariant: 'ludo4' });
-// the pieces' speed lives in the options (gear) panel: one row that steps ゆっくり → ふつう → はやい
+// the pieces' speed lives in the options (gear) panel: a pulldown (ゆっくり · ふつう · はやい, 2026-11-09 — it was a row that stepped)
 if (window.HeaderBar && HeaderBar.addOption) {
   const spH = HeaderBar.addOption({ id: 'ldspeed', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 18a8 8 0 1 1 14 0"/><path d="M12 14l4-5"/><circle cx="12" cy="14" r="1.3"/></svg>',
-    label: () => t('ng.speed') + ' : ' + t(['', 'sp.slow', 'sp.normal', 'sp.fast'][settings.speed] || 'sp.normal'),
-    type: 'button', onClick: () => { settings.speed = settings.speed % 3 + 1; if (draft) draft.speed = settings.speed; save(); spH && spH.sync(); } });
+    label: () => t('ng.speed'), type: 'select',
+    options: () => [1, 2, 3].map(v => ({ v, label: () => t(['', 'sp.slow', 'sp.normal', 'sp.fast'][v]) })),
+    get: () => settings.speed, set: v => { settings.speed = +v; if (draft) draft.speed = settings.speed; save(); } });
   window.__ldSpeedOpt = spH;
 }
 const HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson'], lang: () => LANG }) : null;

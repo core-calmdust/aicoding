@@ -721,8 +721,9 @@
     // the board card's choices as our own UI (no system pickers): the side as a two-button toggle,
     // the level as a button that opens a list sheet with each level's name, meter and who it suits
     ['bvSide', 'bvSize'].forEach(sid => { if (!$(sid)) return;
-      // phones, many choices (ludo: rule × players): a picker button + a list sheet instead of a wrapping toggle (2026-11-09)
-      if (sid === 'bvSize' && $(sid).options.length > 3 && matchMedia('(max-width: 819px)').matches) {
+      // many choices (ludo: rule × players): a picker button + a list sheet instead of a wrapping toggle — phones (2026-11-09),
+      // and on every screen for a game with house rules (its own row under the level: the same pulldown as the level)
+      if (sid === 'bvSize' && $(sid).options.length > 3 && (ad.house || matchMedia('(max-width: 819px)').matches)) {
         const sel = $(sid), bt = document.createElement('button'); bt.type = 'button'; bt.className = 'lvpick'; sel.hidden = true; sel.after(bt);
         const paint = () => { const o = sel.options[sel.selectedIndex]; bt.innerHTML = `<span>${esc(o ? o.textContent : '')}</span><i>▾</i>`; };
         sel.addEventListener('change', paint); paint();
@@ -742,10 +743,10 @@
       tg.onclick = e => { const b = e.target.closest('button'); if (!b) return; sel.value = b.dataset.v; sel.dispatchEvent(new Event('change')); paint(); if (window.AtlasSfx) try { AtlasSfx.tap(); } catch (x) {} };
       paint();
     });
-    // house rules (adapter.house — ludo): a button that opens the game's own house-rules popup; hidden for sizes it does not apply to
+    // house rules (adapter.house — ludo): a button that opens the game's own house-rules popup; disabled for sizes it does not apply to
     if ($('bvHouse') && ad && ad.house) {
       // (2026-11-09) the house-rules button sits in the level row; the rule / players choice is a row of its own (the card's 14px rhythm)
-      const hp = () => { const z = $('bvSize') ? +$('bvSize').value : 0; $('bvHouse').hidden = !ad.house.show(z); $('bvHouse').querySelector('b').textContent = ad.house.summary(lang); };
+      const hp = () => { const z = $('bvSize') ? +$('bvSize').value : 0, on = ad.house.show(z); $('bvHouse').disabled = !on; const sm = on ? ad.house.summary(lang) : ''; $('bvHouse').querySelector('b').textContent = sm.replace(/\D+/g, ''); $('bvHouse').title = sm; };   // (the card: just the count — the level picker keeps its room)   // (pachisi: shown but off — the row keeps its shape)
       hp(); if ($('bvSize')) $('bvSize').addEventListener('change', hp);
       $('bvHouse').onclick = () => { if (window.AtlasSfx) try { AtlasSfx.tap(); } catch (x) {} ad.house.open(lang, hp, 'atlas'); };
     }
