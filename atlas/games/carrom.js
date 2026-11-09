@@ -319,12 +319,12 @@
     const flashing = new Set(); let flashRaf = 0;
     function flash(g, v) {
       if (!g || !g.userData.flash) return;
-      g.userData.ft = performance.now(); g.userData.fk = Math.min(1, .45 + v / 260); flashing.add(g);
+      g.userData.ft = performance.now(); g.userData.fk = Math.min(.85, .3 + v / 420); flashing.add(g);
       if (!flashRaf) flashRaf = requestAnimationFrame(flashStep);
     }
     function flashStep() {
       flashRaf = 0; if (stopped) return; const now = performance.now();
-      flashing.forEach(g => { const k = g.userData.fk * Math.max(0, 1 - (now - g.userData.ft) / 520); g.userData.flash(k * k); if (k <= 0) flashing.delete(g); });
+      flashing.forEach(g => { const k = g.userData.fk * Math.max(0, 1 - (now - g.userData.ft) / 420); g.userData.flash(k * k); if (k <= 0) flashing.delete(g); });
       kick(80); if (flashing.size) flashRaf = requestAnimationFrame(flashStep);
     }
     let waveT = 0;
@@ -359,9 +359,9 @@
             const e = sim.events[ev++];
             if (e.k === 'hit' && e.v > 8) SND.hit(e.v); else if (e.k === 'cush' && e.v > 25) SND.cush(e.v); else if (e.k === 'pocket') SND.pocket();
             const pg = i => i == null ? null : i === N ? striker : pcs[i];   // (neon: everything a man touches lights it up)
-            if (e.k === 'hit' && e.v > 4) { flash(pg(e.a), e.v); flash(pg(e.b), e.v); }
-            else if (e.k === 'cush' && e.v > 6) flash(pg(e.i), e.v);
-            else if (e.k === 'pocket') flash(pg(e.i), 200);
+            if (e.k === 'hit' && e.v > 25) { flash(pg(e.a), e.v); flash(pg(e.b), e.v); }   // (only real knocks: the soft touches stay quiet)
+            else if (e.k === 'cush' && e.v > 40) flash(pg(e.i), e.v);
+            else if (e.k === 'pocket') flash(pg(e.i), 160);
           }
           kick(120);
           if (fi < F.length - 1 || Object.values(sinks).some(s => el - s.t < .22)) requestAnimationFrame(step);
