@@ -50,13 +50,14 @@
     s.t += dt;
     const n = Math.max(1, Math.ceil(dt / (1 / 240))), h = dt / n;
     // targets
-    for (let i = 0; i < 2; i++) { const m = s.mal[i], q = inputs && inputs[i]; if (q) { m.tx = q.tx; m.ty = q.ty; } clampMal(m, i); }
+    // (the target is spread over the sub-steps: a low frame rate does not turn a smooth swing into jerks)
+    for (let i = 0; i < 2; i++) { const m = s.mal[i], q = inputs && inputs[i]; m.px = m.tx; m.py = m.ty; if (q) { m.tx = q.tx; m.ty = q.ty; } clampMal(m, i); m.ex = m.tx; m.ey = m.ty; }
     // timers
     for (let i = 0; i < 2; i++) { const m = s.mal[i]; if (m.big > 0) { m.big -= dt; if (m.big <= 0) s.ev.push({ k: 'end', what: 'giant', side: i }); } m.r = m.big > 0 ? RM * 1.6 : RM; if (m.slow > 0) m.slow -= dt; if (s.shield[i] > 0) { s.shield[i] -= dt; if (s.shield[i] <= 0) s.ev.push({ k: 'end', what: 'shield', side: i }); } }
     if (has(s, 'block')) s.bar = (s.bar + dt * 1.15) % (Math.PI * 2);
     if (has(s, 'items')) { s.nextItem -= dt; if (s.nextItem <= 0 && s.items.length < 2) { s.items.push({ k: ITEMS[Math.floor(s.R() * ITEMS.length)], x: (s.R() - .5) * (W - 10), y: (s.R() - .5) * 14, t: 0 }); s.nextItem = 5 + s.R() * 4; s.ev.push({ k: 'item' }); } s.items.forEach(it => it.t += dt); s.items = s.items.filter(it => it.t < 12); }
     if (s.pause > 0) { s.pause -= dt; if (s.pause <= 0 && !s.pucks.length) { serve(s, s.serveTo); if (s.mode === 'multi') serve(s, 1 - s.serveTo, true); } }
-    for (let k = 0; k < n; k++) sub(s, h);
+    for (let k = 0; k < n; k++) { const f = (k + 1) / n; for (const m of s.mal) { m.tx = m.px + (m.ex - m.px) * f; m.ty = m.py + (m.ey - m.py) * f; } sub(s, h); }
     // a puck left still out of reach (2.5 s) is given a small nudge
     for (const p of s.pucks) { if (p.wait > 0) continue; if (Math.hypot(p.vx, p.vy) < 6) { p.still = (p.still || 0) + dt; if (p.still > 2.5) { const a = s.R() * Math.PI * 2; p.vx = Math.cos(a) * 40; p.vy = Math.sin(a) * 40 + (p.y > 0 ? 25 : -25); p.still = 0; s.ev.push({ k: 'nudge' }); } } else p.still = 0; }
     return s;
