@@ -108,6 +108,7 @@
     // each of the player's moves ctx.pz.moved(usi, info) decides, and the replies come through api.pzPlay (2026-11-10)
     const PZ = ctx.pz || null;
     let SF = PZ ? PZ.sfen : START;
+    let zoomOn = true, region = null, zbtn = null, pzSol = PZ ? PZ.sol || [] : [], pan = [0, 0];   // (詰将棋 zoom: declared before layout() first runs)
     let hc = PZ ? (SF.split(' ')[1] === 'w' ? 1 : 0) : pvp ? 0 : ctx.side === 2 ? 1 : 0, ac = hc ^ 1;         // engine colours: 0 = sente (black), 1 = gote
     const lvIdx = Math.max(0, Math.min(LEVELS.length - 1, (ctx.level || 8) - 1)), LV = LEVELS[lvIdx];
     let E = null, P = null, moves = [], legal = [], sel = null, over = null, stopped = false, busy = true, worker = null, book = null, jobId = 0, popup = null, last = null;
@@ -451,7 +452,6 @@
     }
     // 詰将棋 in a corner of the board: the camera frames the part the problem uses (its pieces and the solution's squares,
     // a square of room around, at least 5 × 5), with a button to see the whole board (2026-11-10)
-    let zoomOn = true, region = null, zbtn = null, pzSol = PZ ? PZ.sol || [] : [], pan = [0, 0];
     // zoomed in: a finger (or the mouse) slides the board around (2026-11-10); a slide is not a tap on a square
     let pdrag = null, pmoved = 0, pts = 0;
     const onPDown = e => { pts++; if (!PZ || !zoomOn || !region || pts > 1) { pdrag = null; return; } pdrag = { id: e.pointerId, x: e.clientX, y: e.clientY }; pmoved = 0; };
