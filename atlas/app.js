@@ -749,7 +749,7 @@
       setTimeout(() => window.__bvModeRz && window.__bvModeRz(), 0); if (document.fonts) document.fonts.ready.then(() => window.__bvModeRz && window.__bvModeRz());
     }
     if ($('bvRules')) $('bvRules').onclick = startRules;
-    $('bvRec').setAttribute('aria-label', t('rec.btn')); $('bvRec').title = t('rec.btn'); $('bvRec').onclick = () => { try { SFX.tap && SFX.tap(); } catch (e) {} openRec(g); };   // (the cup beside the place chip, top right)
+    $('bvRec').style.setProperty('--gc', g.color || '#c48a4a'); $('bvRec').setAttribute('aria-label', t('rec.btn')); $('bvRec').title = t('rec.btn'); $('bvRec').onclick = () => { try { SFX.tap && SFX.tap(); } catch (e) {} openRec(g); };   // (the cup beside the place chip, top right)
     // phones: a grab handle on the card — swipe down (or tap) folds away the tags and progress, leaving the game settings; swipe up opens it again
     if (matchMedia('(max-width: 819px)').matches) {
       // phones: tags + progress live in a drawer above the settings; it follows the finger (swipe up opens, down closes)
@@ -757,7 +757,8 @@
       const more = document.createElement('div'); more.className = 'more';
       [...L.querySelectorAll(':scope > .tags, :scope > .bvab, :scope > .pgl')].forEach(n => more.appendChild(n)); L.appendChild(more);
       { const pg = more.querySelector('.pgl'), rg = L.querySelector('.row .ring');   // the % ring sits right of the progress bars
-        if (pg && rg) { const pr = document.createElement('div'); pr.className = 'pgrow'; pg.before(pr); pr.append(pg, rg); } }
+        if (pg && rg) { const pr = document.createElement('div'); pr.className = 'pgrow'; pg.before(pr); pr.append(pg, rg); }
+        else if (rg) { const pr = document.createElement('div'); pr.className = 'pgrow solo'; more.appendChild(pr); pr.append(rg); } }   // (no progress bars — e.g. Ur: the ring alone, still only in the open drawer)
       // the level hint folds away with them (wrapped so its height can animate)
       const lvi = $('bvLvInfo'), D = [more];
       if (lvi) { const w = document.createElement('div'); w.className = 'more lvw'; lvi.before(w); w.appendChild(lvi); D.push(w); }
