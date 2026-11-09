@@ -423,7 +423,8 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
 html.atlas-skin .ts-compact #tsNo{color:#9a7a3a}
 .ts-compact > .lh .dots{display:none!important}
 .lesson-card.ts-compact > .lh{display:flex!important;flex-wrap:nowrap!important;align-items:center!important;gap:10px}
-.lesson-card.ts-compact > .lh .lt{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lesson-card.ts-compact > .lh .lt{flex:1 1 auto;min-width:0;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;font-size:11.5px!important;letter-spacing:.01em!important;line-height:1.35}   /* never cut: smaller, tighter (2026-11-10) */
+.lesson-card.ts-compact > .lh,.lesson-card.ts-compact #tsHead{padding-inline-end:0!important;margin-inline-end:0!important}   /* やめる and 「n問目」 share one right edge */
 .lesson-card.ts-compact > .lh #lsQuit{margin-inline-start:auto!important}
 /* the quit button in the head row: a small pill, icon + 「やめる」 */
 .lesson-card.ts-compact > .lh #lsQuit{flex:none;display:inline-flex!important;align-items:center;gap:4px;height:28px!important;width:auto!important;padding:0 10px 0 8px!important;font-size:0!important;border-radius:99px!important;margin:0!important}
@@ -4541,7 +4542,7 @@ function renderLesson0() {
     $('#lsTitle').textContent = L(g.title);
     $('#lsDots').innerHTML = chips();
   } else if (lesson.endless) {
-    $('#lsStep').textContent = lesson.daily ? `${t(lesson.dailyEasy ? 'daily.titleEasy' : 'daily.title')} ${lesson.daily.slice(5).replace('-', '/')} ・ ${L(g.label)}` : `${t('ts.title')} ・ ${L(g.label)} ・ ${PZBook.t('stage', { n: Math.floor(lesson.k / PZBook.STAGE) + 1 })} ・ No.${lesson.k + 1}`;
+    $('#lsStep').textContent = (lesson.daily ? `${t(lesson.dailyEasy ? 'daily.titleEasy' : 'daily.title')} ${lesson.daily.slice(5).replace('-', '/')} ・ ${L(g.label)}` : `${t('ts.title')} ・ ${L(g.label)} ・ ${PZBook.t('stage', { n: Math.floor(lesson.k / PZBook.STAGE) + 1 })} ・ No.${lesson.k + 1}`).replace(/ ・ /g, '・');
     $('#lsTitle').textContent = L(g.title);
     const recs = tsRecs(g), k = recs.filter(x => x > 0).length, st = tstars[pr.id] || 0;
     $('#lsDots').innerHTML = `<span style="font-size:12px;color:var(--muted)">${t('ts.solved', { k, n: g.problems.length })}${st ? ' ・ ' + '★'.repeat(st) : ''}</span>`;
