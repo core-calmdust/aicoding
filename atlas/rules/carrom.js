@@ -476,7 +476,7 @@
       kick(120);
     }
     let pulseT = 0;
-    { const t0 = performance.now(); pulseT = setInterval(() => { if (stopped) return; let any = false; gd.children.forEach(m => { if (m.userData.pulse) { m.scale.setScalar(m.userData.pulse * (1.06 + Math.sin((performance.now() - t0) / 230) * .08)); any = true; } }); if (any) kick(80); }, 60); }
+    { const t0 = performance.now(); pulseT = setInterval(() => { if (stopped || document.hidden || !document.hasFocus()) return; let any = false; gd.children.forEach(m => { if (m.userData.pulse) { m.scale.setScalar(m.userData.pulse * (1.06 + Math.sin((performance.now() - t0) / 230) * .08)); any = true; } }); if (any) kick(80); }, 60); }
 
     /* ---------- a stroke: simulate and play it back ---------- */
     function playback(sim) {

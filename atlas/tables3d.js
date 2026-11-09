@@ -131,7 +131,7 @@
     papyrus: { ja: "墓の壁画", en: "Tomb painting", zh: "墓室壁画", ko: "무덤 벽화", es: "Pintura de tumba", fr: "Peinture de tombe", pt: "Pintura de túmulo", de: "Grabmalerei", hi: "मकबरे का चित्र", ar: "رسم المقبرة", ru: "Роспись гробницы", 'zh-TW': "墓室壁畫", id: "Lukisan makam", tr: "Mezar resmi" },
     night: { ja: "ナイルの夜", en: "Nile night", zh: "尼罗之夜", ko: "나일의 밤", es: "Noche del Nilo", fr: "Nuit du Nil", pt: "Noite do Nilo", de: "Nilnacht", hi: "नील की रात", ar: "ليل النيل", ru: "Ночь на Ниле", 'zh-TW': "尼羅河之夜", id: "Malam di Sungai Nil", tr: "Nil gecesi" },
     // carrom (the 盤 names)
-    classic: { ja: '伝統の盤 3D', en: 'Classic 3D', zh: '经典 3D', ko: '클래식 3D', es: 'Clásico 3D', fr: 'Classique 3D', pt: 'Clássico 3D', de: 'Klassisch 3D', hi: 'क्लासिक 3D', ar: 'كلاسيكي ثلاثي', ru: 'Классическая 3D', 'zh-TW': '經典3D', id: '3D klasik', tr: 'Klasik 3D' },
+    classic: { ja: 'クラシック 3D', en: 'Classic 3D', zh: '经典 3D', ko: '클래식 3D', es: 'Clásico 3D', fr: 'Classique 3D', pt: 'Clássico 3D', de: 'Klassisch 3D', hi: 'क्लासिक 3D', ar: 'كلاسيكي ثلاثي', ru: 'Классическая 3D', 'zh-TW': '經典3D', id: '3D klasik', tr: 'Klasik 3D' },
     modern: { ja: 'モダンアート 3D', en: 'Modern art 3D', zh: '现代艺术 3D', ko: '모던 아트 3D', es: 'Arte moderno 3D', fr: 'Art moderne 3D', pt: 'Arte moderna 3D', de: 'Moderne Kunst 3D', hi: 'मॉडर्न आर्ट 3D', ar: 'فن حديث ثلاثي', ru: 'Современное искусство 3D', 'zh-TW': '現代藝術3D', id: '3D seni modern', tr: 'Modern sanat 3D' },
   };
   const BOARDS = {
