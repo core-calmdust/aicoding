@@ -49,21 +49,71 @@ html.atlas-ludo3d #frame{background:none!important;box-shadow:none!important}`;
     },
   });
   if (!skin) return;
-  // 3D board or the page's own 2D board (the デザイン tab: a 3D tile first in the 盤 row, as checkers etc. — 2026-11-09)
-  if (skin.view) skin.view({ key: 'atlas-ludo-view', row: document.getElementById('bdRow'), img: '../images/atlas/ludo.webp', cls: ['atlas-ludo3d'],
-    on() { setTimeout(() => { try { if (typeof drawBoard === 'function' && G) drawBoard(); } catch (e) {} dispatchEvent(new Event('resize')); }, 0); } });
+  // 3D board or the page's own 2D board. The デザイン tab (2026-11-09, the konane pattern — the standard for a game with several 3D
+  // boards): the 2D boards in the 盤 row, under them a 「3D盤」 box with the 3D boards (Table3D.BOARDS.ludo, 'atlas-ludo-look').
+  // A 3D board picked: the 3D view with that board; a 2D board picked: the 2D page. Exactly one tile of the two rows is selected.
+  const V = skin.view && skin.view({ key: 'atlas-ludo-view', cls: ['atlas-ludo3d'],
+    on() { setTimeout(() => { try { if (typeof drawBoard === 'function' && G) drawBoard(); } catch (e) {} dispatchEvent(new Event('resize')); paint3(); }, 0); } });
+  const T3L = { ja: '3D盤', en: '3D boards', zh: '3D棋盘', ko: '3D 판', es: 'Tableros 3D', fr: 'Plateaux 3D', pt: 'Tabuleiros 3D', de: '3D-Bretter', hi: '3D बोर्ड', ar: 'رقع ثلاثية الأبعاد', ru: '3D-доски', 'zh-TW': '3D棋盤', id: 'Papan 3D', tr: '3D tahtalar' };
+  const lng = () => (l => /^zh-(tw|hk|mo|hant)/i.test(l) ? 'zh-TW' : String(l).slice(0, 2))((document.getElementById('langSel') || {}).value || (typeof LANG !== 'undefined' ? LANG : 'ja'));
+  const BL = () => T3.BOARDS && T3.BOARDS.ludo;
+  function setLook(k) {
+    if (!BL()) return;
+    if (T3.setBoard) T3.setBoard('ludo', k); else BL().set(k);
+    if (V && !V.is3d()) V.set(true);
+    relook(); paint3();
+  }
+  let f3 = null;
+  function paint3() {
+    const B = BL(); if (!f3 || !B) return;
+    const pach = (() => { try { return (typeof draft !== 'undefined' && draft ? draft.rule : G && G.state.rule) === 'pachisi'; } catch (e) { return false; } })();
+    f3.classList.toggle('hidden', pach);   // (pachisi: its cloth only — the 3D view is switched with the view button)
+    const l = lng(), cur = B.get(), on = !V || V.is3d();
+    f3.querySelector('label').textContent = T3L[l] || T3L.en;
+    const row = f3.querySelector('.bdrow');
+    if (!row.children.length) B.list.forEach(k => {
+      const bt = document.createElement('button'); bt.type = 'button'; bt.dataset.look = k;
+      const im = document.createElement('img'); im.src = T3.boardThumb ? T3.boardThumb('ludo', k) : ''; im.alt = ''; im.draggable = false;
+      bt.append(im, document.createElement('span')); bt.onclick = () => setLook(k); row.appendChild(bt);
+    });
+    row.querySelectorAll('button').forEach(bt => { const k = bt.dataset.look, sel = on && cur === k; bt.querySelector('span').textContent = T3.boardName ? T3.boardName(k, l) : k; bt.classList.toggle('sel', sel); bt.setAttribute('aria-pressed', String(sel)); });
+    const r2 = document.getElementById('bdRow');   // 3D chosen: no 2D board shows as selected
+    if (r2 && on && !pach) r2.querySelectorAll('button.on').forEach(b => b.classList.remove('on'));
+  }
+  const fd = document.getElementById('fDesign');
+  if (fd) {
+    f3 = document.createElement('div'); f3.id = 'f3D';   // inside the 盤 box, under the 2D boards
+    f3.innerHTML = '<label></label><div class="bdrow"></div>'; fd.appendChild(f3);
+    const ls = document.getElementById('langSel'); if (ls) ls.addEventListener('change', () => setTimeout(paint3, 30));
+    const r2 = document.getElementById('bdRow');
+    if (r2) r2.addEventListener('click', e => { if (e.target.closest('button') && V) { V.set(false); setTimeout(paint3, 0); } }, true);   // a 2D board: the 2D page
+    if (typeof window.renderDialog === 'function') { const od = window.renderDialog; window.renderDialog = function () { const r = od.apply(this, arguments); try { paint3(); } catch (e) {} return r; }; }
+  }
+  addEventListener('storage', e => { if (e.key === 'atlas-ludo-look') { relook(); paint3(); } });
+  addEventListener('atlas-board', e => { if (e.detail && e.detail.id === 'ludo') relook(); });
+  const st3 = document.createElement('style');
+  st3.textContent = `
+html.atlas-skin #f3D{margin:12px 0 0;padding:10px 12px 12px;border-radius:14px;background:#fff6e6;border:2px solid #f1dcb4}
+html.atlas-skin #f3D.hidden{display:none}
+html.atlas-skin #f3D > label{display:block;font-weight:700;font-size:13px;color:#8a5a1c;margin:0 0 8px}
+html.atlas-skin #f3D .bdrow{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+html.atlas-skin #f3D .bdrow button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border-radius:12px;border:2px solid #ead9b8;background:#fffdf7;cursor:pointer;font:inherit;font-size:12px;font-weight:700;color:#4a3a22}
+html.atlas-skin #f3D .bdrow button.sel{border-color:#ff8a1f;box-shadow:0 0 0 2px rgba(255,138,31,.25)}
+html.atlas-skin #f3D .bdrow button img{display:block;width:100%;aspect-ratio:3/2;object-fit:cover;border-radius:8px}
+html.atlas-skin #f3D .bdrow button span{line-height:1.2;text-align:center}`;
+  document.head.appendChild(st3);
 
   /* ---------- the board ---------- */
-  let root = null, U = null, rule = '';
+  let root = null, U = null, rule = '', look = '';
   const pcs = {};   // 'seat,k' → 3D piece
   const ringGeo = {}, MAT = { can: new THREE.MeshBasicMaterial({ color: 0xffa000, toneMapped: false }), hint: new THREE.MeshBasicMaterial({ color: 0xff3d7f, toneMapped: false }) };
   function ensure() {
-    const r = (typeof G !== 'undefined' && G && G.state && G.state.rule) || 'ludo';
-    if (r === rule && root) return;
-    rule = r;
+    const r = (typeof G !== 'undefined' && G && G.state && G.state.rule) || 'ludo', lk = r === 'pachisi' ? 'classic' : (BL() ? BL().get() : 'classic');
+    if (r === rule && lk === look && root) return;
+    rule = r; look = lk;
     Object.values(pcs).forEach(g => g.parent && g.parent.remove(g)); for (const k in pcs) delete pcs[k];
     cup.reset();
-    root = T3.MODELS.ludo(true, r); U = root.userData;
+    root = T3.MODELS.ludo(true, r, lk); U = root.userData;
     T3.show(r === 'pachisi' ? 'pachisi' : 'ludo', root, { still: true });
     skin.alignTo((U.n + .8) * U.u, U.top); alignView();
     T3.kick(600);
@@ -261,7 +311,11 @@ html.atlas-ludo3d #frame{background:none!important;box-shadow:none!important}`;
     return r;
   };
 
-  ensure(); mirror();
+  // a 3D board chosen (the 3D盤 row, the portal card, another tab): the board is built again, the pieces and the cup come back where they were
+  function relook() {
+    try { ensure(); mirror(); if (typeof CUP !== 'undefined' && CUP.mode && CUP.seat >= 0 && typeof G !== 'undefined' && G) cup.set(CUP.seat, CUP.mode, CUP.thr); } catch (e) {}
+  }
+  ensure(); mirror(); paint3();
   // the 2D game redraws its board for a new rule (drawBoard): the 3D board follows
   const oDraw = window.drawBoard;
   if (typeof oDraw === 'function') window.drawBoard = function () { const r = oDraw.apply(this, arguments); try { ensure(); mirror(); } catch (e) {} return r; };
