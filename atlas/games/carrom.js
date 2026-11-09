@@ -72,6 +72,101 @@
     };
   })();
 
+  /* ---------- the hand (the same in the game and the rules tour) ----------
+     Mouse: move left / right to place the striker; press and hold, pull down for power, left / right for the angle, let go to
+     strike. Coming back round the striker gives up the aim: you are placing again.
+     Touch: slide left / right to place; then slide down for power, left / right for the angle; lift the finger to strike.
+     Coming back to where the pull began gives up the aim, as with the mouse. */
+  const HOW = {
+    ja: { m: { place: 'マウスを左右に動かして', pull: 'クリックしたまま下へ引き', lr: 'マウスを左右に動かす', rel: 'ボタンを離して', how: 'マウスの左右で位置を決め、クリックしたまま下へ引くと力、左右で角度。離して打つ（ストライカーのそばに戻すとやり直し）' },
+      t: { place: '指を左右にスライドして', pull: 'そのまま下へスライドし', lr: '指を左右に動かす', rel: '指を離して', how: '左右にスライドで位置、そのまま下へスライドで力、左右で角度。指を離して打つ（ストライカーのそばに戻すとやり直し）' } },
+    en: { m: { place: 'move the mouse left and right', pull: 'hold the button and pull down', lr: 'move the mouse left or right', rel: 'let go', how: 'Move the mouse to place, hold and pull down for power, left/right to aim, let go to strike (back to the striker to cancel)' },
+      t: { place: 'slide left and right', pull: 'slide down', lr: 'move your finger left or right', rel: 'lift your finger', how: 'Slide sideways to place, then down for power, left/right to aim, lift to strike (back to the striker to cancel)' } },
+    zh: { m: { place: '左右移动鼠标', pull: '按住鼠标往下拉', lr: '再左右移动鼠标', rel: '松开按键', how: '左右移动鼠标定位置，按住往下拉蓄力，左右调角度，松开就打（移回击子旁可重来）' },
+      t: { place: '左右滑动手指', pull: '接着往下滑', lr: '再左右移动手指', rel: '松开手指', how: '左右滑动定位置，往下滑蓄力，左右调角度，松手就打（移回击子旁可重来）' } },
+    'zh-TW': { m: { place: '左右移動滑鼠', pull: '按住滑鼠往下拉', lr: '再左右移動滑鼠', rel: '放開按鍵', how: '左右移動滑鼠定位置，按住往下拉蓄力，左右調角度，放開就打（移回擊子旁可重來）' },
+      t: { place: '左右滑動手指', pull: '接著往下滑', lr: '再左右移動手指', rel: '放開手指', how: '左右滑動定位置，往下滑蓄力，左右調角度，放手就打（移回擊子旁可重來）' } },
+    ko: { m: { place: '마우스를 좌우로 움직여', pull: '클릭한 채 아래로 당기고', lr: '그대로 마우스를 좌우로 움직여', rel: '버튼을 놓아', how: '마우스 좌우로 위치, 클릭한 채 아래로 당기면 힘, 좌우로 각도. 놓으면 발사 (스트라이커 근처로 되돌리면 다시)' },
+      t: { place: '손가락을 좌우로 밀어', pull: '그대로 아래로 밀고', lr: '그대로 손가락을 좌우로 움직여', rel: '손가락을 떼어', how: '좌우로 밀어 위치, 아래로 밀면 힘, 좌우로 각도. 손을 떼면 발사 (스트라이커 근처로 되돌리면 다시)' } },
+    es: { m: { place: 'mueve el ratón a izquierda y derecha', pull: 'mantén pulsado y tira hacia abajo', lr: 'mueve el ratón a los lados', rel: 'suelta', how: 'Mueve el ratón para colocar; mantén pulsado y tira abajo para la fuerza, a los lados para el ángulo; suelta para tirar (vuelve al striker para cancelar)' },
+      t: { place: 'desliza a izquierda y derecha', pull: 'desliza hacia abajo', lr: 'mueve el dedo a los lados', rel: 'levanta el dedo', how: 'Desliza a los lados para colocar, abajo para la fuerza, a los lados para el ángulo; levanta para tirar (vuelve al striker para cancelar)' } },
+    fr: { m: { place: 'déplace la souris à gauche et à droite', pull: 'garde le bouton enfoncé et tire vers le bas', lr: 'déplace la souris sur les côtés', rel: 'relâche', how: 'Souris à gauche/droite pour placer ; bouton enfoncé, tire vers le bas pour la force, sur les côtés pour l’angle ; relâche pour tirer (reviens au striker pour annuler)' },
+      t: { place: 'glisse à gauche et à droite', pull: 'glisse vers le bas', lr: 'bouge le doigt sur les côtés', rel: 'lève le doigt', how: 'Glisse sur les côtés pour placer, vers le bas pour la force, sur les côtés pour l’angle ; lève le doigt pour tirer (reviens au striker pour annuler)' } },
+    pt: { m: { place: 'mova o mouse para os lados', pull: 'segure o botão e puxe para baixo', lr: 'mova o mouse para os lados', rel: 'solte', how: 'Mouse para os lados para posicionar; segure e puxe para baixo para a força, para os lados para o ângulo; solte para tacar (volte ao striker para cancelar)' },
+      t: { place: 'deslize para os lados', pull: 'deslize para baixo', lr: 'mova o dedo para os lados', rel: 'tire o dedo', how: 'Deslize para os lados para posicionar, para baixo para a força, para os lados para o ângulo; tire o dedo para tacar (volte ao striker para cancelar)' } },
+    de: { m: { place: 'bewege die Maus nach links und rechts', pull: 'halte die Taste und zieh nach unten', lr: 'bewege die Maus zur Seite', rel: 'lass los', how: 'Maus links/rechts zum Setzen; Taste halten und nach unten ziehen für Kraft, seitlich für den Winkel; loslassen zum Stoßen (zurück zum Striker zum Abbrechen)' },
+      t: { place: 'wische nach links und rechts', pull: 'wische nach unten', lr: 'bewege den Finger zur Seite', rel: 'heb den Finger', how: 'Seitlich wischen zum Setzen, nach unten für Kraft, seitlich für den Winkel; Finger heben zum Stoßen (zurück zum Striker zum Abbrechen)' } },
+    ru: { m: { place: 'двигай мышь влево-вправо', pull: 'зажми кнопку и тяни вниз', lr: 'двигай мышь в стороны', rel: 'отпусти', how: 'Мышь влево-вправо — место; зажми и тяни вниз — сила, в стороны — угол; отпусти — удар (назад к страйкеру — отмена)' },
+      t: { place: 'проведи пальцем влево-вправо', pull: 'проведи вниз', lr: 'двигай палец в стороны', rel: 'отпусти палец', how: 'Влево-вправо — место, вниз — сила, в стороны — угол; отпусти палец — удар (назад к страйкеру — отмена)' } },
+    tr: { m: { place: 'fareyi sağa sola oynat', pull: 'tuşa basılı tutup aşağı çek', lr: 'fareyi yanlara oynat', rel: 'bırak', how: 'Fareyle sağa sola yerleştir; basılı tutup aşağı çek: güç, yanlara: açı; bırak: atış (vurucuya dön: iptal)' },
+      t: { place: 'parmağını sağa sola kaydır', pull: 'aşağı kaydır', lr: 'parmağını yanlara oynat', rel: 'parmağını kaldır', how: 'Sağa sola kaydırarak yerleştir, aşağı: güç, yanlara: açı; parmağını kaldır: atış (vurucuya dön: iptal)' } },
+    id: { m: { place: 'gerakkan mouse ke kiri dan kanan', pull: 'tahan tombol dan tarik ke bawah', lr: 'gerakkan mouse ke samping', rel: 'lepas', how: 'Mouse kiri/kanan untuk posisi; tahan dan tarik ke bawah untuk tenaga, ke samping untuk sudut; lepas untuk menyentil (kembali ke striker untuk batal)' },
+      t: { place: 'geser ke kiri dan kanan', pull: 'geser ke bawah', lr: 'gerakkan jari ke samping', rel: 'angkat jari', how: 'Geser ke samping untuk posisi, ke bawah untuk tenaga, ke samping untuk sudut; angkat jari untuk menyentil (kembali ke striker untuk batal)' } },
+    hi: { m: { place: 'माउस को दाएँ-बाएँ घुमाओ', pull: 'बटन दबाए रखकर नीचे खींचो', lr: 'माउस को दाएँ-बाएँ करो', rel: 'छोड़ दो', how: 'माउस दाएँ-बाएँ से जगह; दबाकर नीचे खींचो तो ताक़त, दाएँ-बाएँ से कोण; छोड़ो तो वार (स्ट्राइकर के पास लौटो तो रद्द)' },
+      t: { place: 'उँगली दाएँ-बाएँ सरकाओ', pull: 'नीचे सरकाओ', lr: 'उँगली दाएँ-बाएँ करो', rel: 'उँगली उठाओ', how: 'दाएँ-बाएँ सरकाकर जगह, नीचे से ताक़त, दाएँ-बाएँ से कोण; उँगली उठाओ तो वार (स्ट्राइकर के पास लौटो तो रद्द)' } },
+    ar: { m: { place: 'حرّك الفأرة يمينًا ويسارًا', pull: 'اضغط مع الإمساك واسحب للأسفل', lr: 'حرّك الفأرة إلى الجانبين', rel: 'أفلت', how: 'حرّك الفأرة للتموضع؛ اضغط واسحب للأسفل للقوة وللجانبين للزاوية؛ أفلت لتضرب (عُد إلى الضارب للإلغاء)' },
+      t: { place: 'اسحب إصبعك يمينًا ويسارًا', pull: 'اسحب للأسفل', lr: 'حرّك إصبعك إلى الجانبين', rel: 'ارفع إصبعك', how: 'اسحب جانبيًا للتموضع، وللأسفل للقوة، وللجانبين للزاوية؛ ارفع إصبعك لتضرب (عُد إلى الضارب للإلغاء)' } },
+  };
+  const mousey = () => { try { return matchMedia('(hover: hover) and (pointer: fine)').matches; } catch (e) { return false; } };
+  const how = lang => ((HOW[lang] || HOW.en)[mousey() ? 'm' : 't']);
+  // Hand(o): o = { el, toCm(e) → {x, y} board cm, sign() → +1 when "down" on screen is +y for the player striking (−1 on the
+  //   turned board), canAim() → it is your stroke, place(x) (striker to x), striker() → its x, aim({ ang, pow, e }) (null = no aim),
+  //   shoot(ang, pow), tap(e) (a tap when you cannot aim: e.g. to speed up the roll) }
+  function Hand(o) {
+    // pull like a slingshot round the striker: the aim points from your pointer back through the striker, and the further you
+    // pull, the harder (so pulling down shoots up the board, pulling up shoots down it). Coming back round the striker
+    // (within DEAD cm, "the striker's own spot") gives the aim up and you are placing again.
+    const AIM_IN = 1.6, DEAD_M = 3.2, DEAD_T = 1.6, POWMAX = 20;
+    let mode = '', id = null, ref = null, anchor = null, dead = DEAD_M, sx0 = 0, ang = 0, pow = 0;
+    const down = (q, a) => (q.y - a.y) * o.sign();
+    function setAim(q, e) {
+      const dx = anchor.x - q.x, dy = anchor.y - q.y, d = Math.hypot(dx, dy);
+      if (d < dead) return false;
+      pow = Math.max(0, Math.min(1, (d - dead) / POWMAX)); ang = Math.atan2(dy, dx);
+      o.aim({ ang, pow, e });
+      return true;
+    }
+    function toPlace(q) { mode = mode === 'aim-m' ? 'held' : 'touch'; ref = q; sx0 = o.striker(); anchor = null; pow = 0; o.aim(null); }
+    function pd(e) {
+      if (!o.canAim()) { if (o.tap) o.tap(e); return; }
+      const q = o.toCm(e); if (!q) return;
+      if (e.pointerType === 'mouse') {
+        if (e.button !== 0) return;
+        anchor = o.home(); dead = DEAD_M; pow = 0;
+        if (Math.hypot(q.x - anchor.x, q.y - anchor.y) < dead) mode = 'arm-m';   // pressed on the striker: aiming starts once you pull away
+        else { mode = 'aim-m'; setAim(q, e); }
+      } else { mode = 'touch'; ref = q; sx0 = o.striker(); }
+      id = e.pointerId; try { o.el.setPointerCapture(id); } catch (er) {}
+      e.preventDefault();
+    }
+    function pm(e) {
+      const q = o.toCm(e); if (!q) return;
+      if (id === null) { if (e.pointerType === 'mouse' && !e.buttons && o.canAim()) o.place(q.x); return; }
+      if (e.pointerId !== id) return;
+      if (!o.canAim()) return cancel();
+      if (mode === 'arm-m') { if (Math.hypot(q.x - anchor.x, q.y - anchor.y) >= dead) { mode = 'aim-m'; setAim(q, e); } return; }
+      if (mode === 'aim-m' || mode === 'aim-t') { if (!setAim(q, e)) toPlace(q); return; }
+      if (mode === 'held') { o.place(q.x); return; }
+      if (mode === 'touch') {
+        const d = down(q, ref);
+        if (d < 0) ref = { x: ref.x, y: q.y };   // measure "down" from the highest point
+        if (d > AIM_IN) { mode = 'aim-t'; dead = DEAD_T; anchor = { x: q.x, y: q.y - o.sign() * (AIM_IN - .2) }; setAim(q, e); return; }
+        o.place(sx0 + (q.x - ref.x));
+      }
+    }
+    function pu(e) {
+      if (id === null || e.pointerId !== id) return;
+      const m = mode; try { o.el.releasePointerCapture(id); } catch (er) {}
+      id = null; mode = '';
+      if ((m === 'aim-m' || m === 'aim-t') && pow >= .04 && o.canAim()) { o.aim(null); o.shoot(ang, pow); return; }
+      o.aim(null);
+    }
+    function cancel() { if (id !== null) { try { o.el.releasePointerCapture(id); } catch (er) {} } id = null; mode = ''; o.aim(null); }
+    o.el.addEventListener('pointerdown', pd); o.el.addEventListener('pointermove', pm);
+    o.el.addEventListener('pointerup', pu); o.el.addEventListener('pointercancel', pu);
+    return { stop() { o.el.removeEventListener('pointerdown', pd); o.el.removeEventListener('pointermove', pm); o.el.removeEventListener('pointerup', pu); o.el.removeEventListener('pointercancel', pu); }, cancel, active: () => id !== null && /^aim/.test(mode) };
+  }
+
   function start(ctx) {
     const T3 = ctx.Table3D, TH = window.THREE, t = ctx.t, E = window.CarromEngine, D = E.DIM;
     const lang = ctx.lang, L = TXT[lang] || TXT.en;
@@ -272,7 +367,8 @@
         phase = 'place';
         // the HUD keeps a short status; the how-to goes up top once (and for every break)
         say(pvp ? tx('turn', { p: nameOf(p) }) : t('p.turn'));
-        if (!st.brk.done) toast(tx('brk')); else if (!told) { told = true; toast(tx('place')); }
+        if (!st.brk.done) toast(tx('brk') + (told ? '' : ' — ' + how(lang).how)); else if (!told) toast(how(lang).how);
+        told = true;
         showGuides(); pulse();
         return;
       }
@@ -306,50 +402,30 @@
       later(() => ctx.onEnd({ win: won, draw: false, level, score }), 1200);
     }
 
-    /* ---------- your hand: slide the striker on the base line, then pull back from it and let go ---------- */
+    /* ---------- your hand (Hand above: the same in the rules tour) ---------- */
     const toCm = e => { const q = T3.pick(e, Y + .03); return q ? { x: q.x / K, y: q.z / K } : null; };
-    function down(e) {
-      if (stopped || over || busy || phase !== 'place' || !st || !human(st.turn)) {
-        if (phase === 'anim' && !stopped) speedUp = 3;   // a tap while the men roll: fast-forward
-        return;
-      }
-      const q = toCm(e); if (!q) return;
-      const p = st.turn, by = E.baseY(p), dS = Math.hypot(q.x - sx, q.y - by);
-      if (dS < D.RS + 2.6) drag = { kind: 'aim', id: e.pointerId, x0: q.x, y0: q.y };
-      else if (Math.abs(q.y - by) < 6 && Math.abs(q.x) < D.BX + 4) { drag = { kind: 'slide', id: e.pointerId }; moveStriker(q.x); }
-      else return;
-      hintShot = drag.kind === 'slide' ? null : hintShot;
-      try { ctx.el.setPointerCapture(e.pointerId); } catch (er) {}
-      e.preventDefault(); showGuides();
-    }
     function moveStriker(x) { const nx = E.nearestFree(st, st.turn, x); if (Math.abs(nx - sx) > .001) { sx = nx; placeMesh(striker, sx, E.baseY(st.turn)); kick(100); } }
-    function move(e) {
-      if (!drag || e.pointerId !== drag.id || stopped) return;
-      const q = toCm(e); if (!q) return;
-      if (drag.kind === 'slide') { moveStriker(q.x); showGuides(); return; }
-      const by = E.baseY(st.turn), dx = sx - q.x, dy = by - q.y, d = Math.hypot(dx, dy);
-      if (d < 1.2) { aimPow = 0; powEl.hidden = true; showGuides(); return; }
-      aimAng = Math.atan2(dy, dx); aimPow = Math.min(1, Math.max(0, (d - 1.2) / 22));
-      powEl.hidden = false; powEl.textContent = Math.round(aimPow * 100) + '%'; powEl.style.left = e.clientX + 'px'; powEl.style.top = e.clientY + 'px';
-      say('💪 ' + Math.round(aimPow * 100) + '%');
-      showGuides();
-    }
-    function up(e) {
-      if (!drag || e.pointerId !== drag.id) return;
-      const k = drag.kind; drag = null; powEl.hidden = true;
-      try { ctx.el.releasePointerCapture(e.pointerId); } catch (er) {}
-      if (k === 'aim' && aimPow >= .04 && phase === 'place') { stroke({ x: sx, ang: aimAng, v: 40 + aimPow * (E.VMAX - 40) }); return; }
-      say(pvp ? tx('turn', { p: nameOf(st.turn) }) : t('p.turn')); showGuides();
-    }
+    const canAim = () => !stopped && !over && !busy && phase === 'place' && !!st && human(st.turn);
+    const hand = Hand({
+      el: ctx.el, toCm, canAim,
+      sign: () => st && st.turn === 1 ? -1 : 1,
+      striker: () => sx, home: () => ({ x: sx, y: E.baseY(st.turn) }),
+      place: x => { hintShot = null; moveStriker(x); showGuides(); },
+      aim: a => {
+        if (!a) { drag = null; powEl.hidden = true; if (canAim()) { say(pvp ? tx('turn', { p: nameOf(st.turn) }) : t('p.turn')); showGuides(); } return; }
+        drag = { kind: 'aim' }; aimAng = a.ang; aimPow = a.pow; hintShot = null;
+        powEl.hidden = false; powEl.textContent = Math.round(aimPow * 100) + '%'; powEl.style.left = a.e.clientX + 'px'; powEl.style.top = a.e.clientY + 'px';
+        say('💪 ' + Math.round(aimPow * 100) + '%'); showGuides();
+      },
+      shoot: (ang, pw) => stroke({ x: sx, ang, v: 40 + pw * (E.VMAX - 40) }),
+      tap: () => { if (phase === 'anim' && !stopped) speedUp = 3; },   // a tap while the men roll: fast-forward
+    });
     const onKey = e => {
       if (stopped || phase !== 'place' || !st || !human(st.turn) || drag) return;
       if (/^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || '')) return;
       const d = e.key === 'ArrowLeft' ? -1 : e.key === 'ArrowRight' ? 1 : 0; if (!d) return;
       e.preventDefault(); moveStriker(sx + d * (e.shiftKey ? .25 : 1) * (st.turn === 1 && pvp ? -1 : 1)); showGuides();
     };
-    ctx.el.addEventListener('pointerdown', down);
-    ctx.el.addEventListener('pointermove', move);
-    ctx.el.addEventListener('pointerup', up); ctx.el.addEventListener('pointercancel', up);
     document.addEventListener('keydown', onKey);
     const prevTouch = ctx.el.style.touchAction; ctx.el.style.touchAction = 'none';
 
@@ -392,7 +468,7 @@
       timeout() { finish('time'); },
       stop() {
         stopped = true; tok++; timers.forEach(clearTimeout); clearInterval(pulseT);
-        ctx.el.removeEventListener('pointerdown', down); ctx.el.removeEventListener('pointermove', move); ctx.el.removeEventListener('pointerup', up); ctx.el.removeEventListener('pointercancel', up);
+        hand.stop();
         document.removeEventListener('keydown', onKey); removeEventListener('resize', onResize); ctx.el.style.touchAction = prevTouch;
         css.remove(); powEl.remove(); if (toastEl) toastEl.remove(); if (worker) worker.terminate();
         if (T3.turn) T3.turn(null);
@@ -405,5 +481,5 @@
   }
 
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.carrom = { levels: 20, sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], sizes: SIZES, size0: 1, sizeLabel, sizeName, levelInfo, start, SND, TXT };
+  window.Atlas3D.carrom = { levels: 20, sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], sizes: SIZES, size0: 1, sizeLabel, sizeName, levelInfo, start, SND, TXT, Hand, HOW, how };
 })();
