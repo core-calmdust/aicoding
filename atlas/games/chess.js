@@ -151,7 +151,7 @@
     // lift — glide — set down. hop: a higher arc (knight, castling rook)
     function glide(g, to, hop, done) {
       const x0 = g.position.x, z0 = g.position.z, [x1, z1] = xz(to), d = Math.hypot(x1 - x0, z1 - z0);
-      const h0 = hOf(g), H = hop ? .75 : .42, A = .2, B = .8, dur = 300 + d * 55;
+      const h0 = hOf(g), H = hop ? .75 : .42, A = .2, B = .8, dur = (300 + d * 55) * (PZ ? .55 : 1);   // (puzzles: quick, 2026-11-10)
       anim(dur, k => {
         let h, e;
         if (k < A) { e = 0; h = h0 + (H - h0) * io(k / A); }

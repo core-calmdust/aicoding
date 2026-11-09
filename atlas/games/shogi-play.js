@@ -90,6 +90,8 @@
 .sghs .op .c{transform:none}
 .sghs button.c{cursor:pointer}.sghs button.c.on{background:#bdf0d2;border-color:#2fa864;box-shadow:0 2px 0 #1f7a46}
 .sghs .c i{position:absolute;right:-6px;top:-6px;min-width:17px;height:17px;border-radius:9px;background:#2a1a0e;color:#fff;font:800 11px/17px system-ui,sans-serif;font-style:normal;text-align:center;padding:0 3px}
+.sgzoom{position:fixed;z-index:75;top:calc(66px + env(safe-area-inset-top));right:14px;display:flex;align-items:center;gap:5px;padding:7px 12px 7px 9px;border-radius:999px;border:2px solid var(--line,#eadfcb);background:#fff;box-shadow:0 3px 0 var(--line,#eadfcb);font:800 13px/1 var(--round,system-ui,sans-serif);color:#3a2e24;cursor:pointer}
+.sgzoom svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .sghs .nil{color:rgba(255,255,255,.8);font-weight:800;text-shadow:0 1px 2px rgba(0,0,0,.4)}`;
     document.head.appendChild(s);
   }
@@ -139,7 +141,8 @@
       // wide: the player's stand sits a little nearer the bottom — shift the scene so the HUD stays clear
       board.position.z = tall ? 0 : .25;
       // 詰将棋 (ctx.pz) on phones: the defender's pieces in hand (the row above the board) must be read — more room at the top
-      if (T3.fit) T3.fit(tall ? { w: (FW + 1.8) * SC, d: (FH + 1 + 2 * 1.45 + (PZ ? 1.6 : 0)) * SC, y: Y * SC, pitch: 1.53, cz: PZ ? -.8 * SC : 0 } : { w: 16.4 * SC, d: 13.1 * SC, y: Y * SC, pitch: 1.53 });
+      if (PZ && pzFit()) { T3.kick(400); return; }
+      if (T3.fit) T3.fit(tall ? { w: (PZ ? FW + .7 : FW + 1.8) * SC, d: (PZ ? FH + 1.9 : FH + 1 + 2 * 1.45) * SC, y: Y * SC, pitch: 1.53, cz: PZ ? -.3 * SC : 0 } : { w: 16.4 * SC, d: 13.1 * SC, y: Y * SC, pitch: 1.53 });
       T3.kick(400);
     }
     const slotXZ = (who, t) => {   // who: 0 = player, 1 = AI
@@ -268,7 +271,7 @@
         y0 = g.position.y;
       } else { g = pcs[from]; delete pcs[from]; y0 = g.position.y; }
       const vg = victim ? pcs[to] : null; pcs[to] = g;
-      const x0 = g.position.x, z0 = g.position.z, s0 = g.scale.x, d = Math.hypot(x1 - x0, z1 - z0), H = drop ? 1.6 : .9 + Math.min(.6, d * .06), dur = drop ? 520 : 380 + Math.min(240, d * 26);
+      const x0 = g.position.x, z0 = g.position.z, s0 = g.scale.x, d = Math.hypot(x1 - x0, z1 - z0), H = drop ? 1.6 : .9 + Math.min(.6, d * .06), dur = (drop ? 520 : 380 + Math.min(240, d * 26)) * (PZ ? .5 : 1);   // (puzzles: quick, 2026-11-10)
       let capStarted = false;
       anim(dur, k => {
         const e = io(k); g.position.x = x0 + (x1 - x0) * e; g.position.z = z0 + (z1 - z0) * e;
@@ -292,7 +295,7 @@
       const r0 = vg.rotation.y, r1 = c === hc ? 0 : Math.PI; let swapped = base === ty0;
       const dr = ((r1 - r0 + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
       vg.userData.c = c; flying.add(vg);
-      anim(640, k => { const e = io(k); vg.position.x = x0 + (x1 - x0) * e; vg.position.z = z0 + (z1 - z0) * e; vg.position.y = Y + Math.sin(k * Math.PI) * 2.0; vg.rotation.y = r0 + dr * e; vg.scale.setScalar(1 - .18 * e);
+      anim(PZ ? 380 : 640, k => { const e = io(k); vg.position.x = x0 + (x1 - x0) * e; vg.position.z = z0 + (z1 - z0) * e; vg.position.y = Y + Math.sin(k * Math.PI) * 2.0; vg.rotation.y = r0 + dr * e; vg.scale.setScalar(1 - .18 * e);
         if (!swapped) { vg.rotation.z = k < .5 ? k * Math.PI : (k - 1) * Math.PI; if (k >= .5) { swapped = true; swapType(vg, base); } } },
         () => { vg.rotation.z = 0; vg.position.y = KH; tok(.5); flying.delete(vg); strays.push(vg); });
     }
@@ -432,19 +435,48 @@
     }
     /* ---------- puzzle mode (ctx.pz) ---------- */
     let pzOn = false;
-    function pzReady() { if (stopped) return; legal = P.legalMoves(true); busy = false; pzOn = true; drawMarks(); if (PZ.ready) PZ.ready(); }
+    function pzReady() { if (stopped) return; if (!region && zoomOn) pzZoom(); legal = P.legalMoves(true); busy = false; pzOn = true; drawMarks(); if (PZ.ready) PZ.ready(); }
     function pzAfter() {   // the player's move has landed: the puzzle decides what happens next
       legal = []; pzOn = false; drawMarks();
       PZ.moved(moves[moves.length - 1], { check: P.inCheck(), mate: !P.legalMoves(false).length, n: moves.length });
     }
     const hasCheck = () => P.legalMoves(true).some(m => { P.doMove(m); const c = P.inCheck(); P.undoMove(); return c; });
-    function pzLoad(sfen) {   // the next puzzle: a new position, the pieces drop in again
+    function pzLoad(sfen, sol) {   // the next puzzle: a new position, the pieces drop in again
       timers.forEach(clearTimeout); timers.length = 0; jobId++; closePopup();
-      SF = sfen; hc = SF.split(' ')[1] === 'w' ? 1 : 0; ac = hc ^ 1;
+      SF = sfen; hc = SF.split(' ')[1] === 'w' ? 1 : 0; ac = hc ^ 1; pzSol = sol || []; region = null;
       P = new E.Position(); P.setSfen(SF); moves = []; last = null; sel = null; hint = null; hintJ++; over = null; busy = true; pzOn = false;
       buildBoard(true); buildHands(); drawMarks();
       later(pzReady, 80 + 40 * 14 + 300);
     }
+    // 詰将棋 in a corner of the board: the camera frames the part the problem uses (its pieces and the solution's squares,
+    // a square of room around, at least 5 × 5), with a button to see the whole board (2026-11-10)
+    let zoomOn = true, region = null, zbtn = null, pzSol = PZ ? PZ.sol || [] : [];
+    const ZT = { ja: ['全体を見る', '拡大する'], en: ['Whole board', 'Zoom in'], zh: ['看全盘', '放大'], 'zh-TW': ['看全盤', '放大'], ko: ['전체 보기', '확대'], es: ['Tablero entero', 'Ampliar'], fr: ['Tout le plateau', 'Zoomer'], pt: ['Tabuleiro todo', 'Ampliar'], de: ['Ganzes Brett', 'Vergrößern'], hi: ['पूरा बोर्ड', 'बड़ा करें'], ar: ['اللوحة كاملة', 'تكبير'], ru: ['Вся доска', 'Приблизить'], id: ['Seluruh papan', 'Perbesar'], tr: ['Tüm tahta', 'Yakınlaştır'] };
+    function pzRegion() {
+      const cs = [], rs = [], add = sq => { const [c, r] = disp(sq); cs.push(c); rs.push(r); };
+      for (let sq = 0; sq < 81; sq++) if (P.board[sq]) add(sq);
+      const Q = new E.Position(); Q.setSfen(SF);
+      for (const u of pzSol) { const m = Q.fromUsi(u); if (!m) break; if (!E.isDrop(m)) add(E.mFrom(m)); add(E.mTo(m)); Q.doMove(m); }
+      if (!cs.length) return null;
+      const span = (a, b) => { a = Math.max(0, a - 1); b = Math.min(8, b + 1); while (b - a < 4) { if (a > 0) a--; if (b - a < 4 && b < 8) b++; } return [a, b]; };
+      const [c0, c1] = span(Math.min(...cs), Math.max(...cs)), [r0, r1] = span(Math.min(...rs), Math.max(...rs));
+      return c1 - c0 >= 7 && r1 - r0 >= 7 ? null : { c0, c1, r0, r1 };
+    }
+    function pzFit() {
+      if (!zoomOn || !region || !T3.fit) return false;
+      const a = SG.cell(region.c0, region.r0), b = SG.cell(region.c1, region.r1);
+      const w = Math.abs(b[0] - a[0]) + CW * 1.25, d = Math.abs(b[1] - a[1]) + CH * 1.25;
+      T3.fit({ w: w * SC, d: d * SC, y: Y * SC, pitch: 1.53, cx: ((a[0] + b[0]) / 2) * SC + board.position.x, cz: ((a[1] + b[1]) / 2) * SC + board.position.z });
+      return true;
+    }
+    function zoomBtn() {
+      const L = ZT[ctx.lang] || ZT.en;
+      if (!region) { if (zbtn) { zbtn.remove(); zbtn = null; } return; }
+      if (!zbtn) { zbtn = document.createElement('button'); zbtn.type = 'button'; zbtn.className = 'sgzoom'; (document.body).appendChild(zbtn);
+        zbtn.onclick = e => { e.stopPropagation(); zoomOn = !zoomOn; zoomBtn(); layout(); }; }
+      zbtn.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${zoomOn ? '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>' : '<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5M8 10.5h5M10.5 8v5"/>'}</svg>${zoomOn ? L[0] : L[1]}`;
+    }
+    function pzZoom() { region = pzRegion(); zoomOn = true; zoomBtn(); layout(); }
     const pz = {
       play: usi => new Promise(res => { const m = P.fromUsi(usi); if (!m) return res(false); busy = true; pzOn = false; play(m, () => { if (stopped) return; res(true); }); }),
       wait() { legal = P.legalMoves(true); busy = false; pzOn = true; drawMarks(); },   // the player's turn again
@@ -493,7 +525,7 @@
         ctx.el.removeEventListener('click', onClick); removeEventListener('resize', onResize);
         if (worker) worker.terminate(); worker = null; if (hintW) hintW.terminate(); hintW = null;
         if (window.__shogiTable === dbg) delete window.__shogiTable;
-        if (strip) strip.remove();
+        if (strip) strip.remove(); if (zbtn) zbtn.remove();
       },
     };
     // test hooks (Playwright): screen positions of squares / the player's hand pieces, and the state
