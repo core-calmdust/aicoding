@@ -171,12 +171,226 @@
       'win.t': 'أنت جاهز!', 'win.b': '<b>أدخل البيضات التسع والملكة مغطاة</b> فتكون اللوحة لك. تحسب قطع الخصم الباقية، و+3 لملكة غطيتها أنت. هيا ننزلق!',
     },
   };
+  // the control tutorial pages (the same hand as the game; {place} {pull} {lr} {rel} are the device's words from Atlas3D.carrom.HOW)
+  const VOICE2 = {
+    "ja": {
+    "slide.t": "位置を決める",
+    "slide.b": "まずは打つ場所。{place}、ストライカーを<b>ベースラインの上で左右に</b>動かそう。ぼくもお昼寝の場所はよ〜く探すよ。",
+    "slide.k": "ストライカーを光る印まで動かそう",
+    "flick.t": "引いて、離して、打つ",
+    "flick.b": "つぎは力。{pull}、<b>下へ行くほど強く</b>なるよ。{rel}打つ！ ストライカーのそばに戻すとやり直しになるから安心してね。",
+    "flick.k": "まっすぐ引いて、白い駒に当てよう",
+    "flick.ok": "コツン！ いい力加減！",
+    "flick.ng": "当たらなかった〜。まっすぐ下へ引いてみて",
+    "aim.t": "角度をつけて入れる",
+    "aim.b": "力をためたまま{lr}と、<b>狙う向きが変わる</b>よ。点線の先の輪を駒に合わせて、緑の線がポケットを向いたら打ちどき！",
+    "aim.k": "角度をつけて、白い駒をポケットへ",
+    "aim.ok": "スポーン！ ナイスショット！",
+    "aim.ng": "惜しい！ 点線の先の輪を白い駒に合わせてみて"
+    },
+    "en": {
+    "slide.t": "Choose your spot",
+    "slide.b": "First, where to strike from: {place} to slide the striker <b>along the base line</b>. I hunt for nap spots the same way.",
+    "slide.k": "Move the striker to the glowing mark",
+    "flick.t": "Pull, let go, strike",
+    "flick.b": "Now power: {pull} — <b>the further down, the harder</b>. Then {rel} to strike! Bring it back to the striker and it starts over, no harm done.",
+    "flick.k": "Pull straight down and hit the white man",
+    "flick.ok": "Clack! Nice touch!",
+    "flick.ng": "Missed! Pull straight down this time",
+    "aim.t": "Aim at an angle",
+    "aim.b": "Still holding, {lr} to <b>turn your aim</b>. Put the ring at the end of the dotted line on a man; when the green line points at a pocket, strike!",
+    "aim.k": "Angle it and sink the white man",
+    "aim.ok": "Plop! Nice shot!",
+    "aim.ng": "Close! Put the ring at the end of the line on the white man"
+    },
+    "zh": {
+    "slide.t": "决定位置",
+    "slide.b": "先选好位置：{place}，让击子<b>沿着底线左右</b>移动。我找午睡的地方也这么认真。",
+    "slide.k": "把击子移到发光的记号",
+    "flick.t": "拉、放、打",
+    "flick.b": "接着是力度：{pull}，<b>越往下越用力</b>。然后{rel}就打出去！移回击子旁边就能重来，别担心。",
+    "flick.k": "笔直往下拉，打中白子",
+    "flick.ok": "咔！力道刚好！",
+    "flick.ng": "没打中～这次笔直往下拉",
+    "aim.t": "调角度打进",
+    "aim.b": "保持蓄力，{lr}就能<b>改变方向</b>。把虚线前端的圈对准棋子，绿线指向球袋时就打！",
+    "aim.k": "调好角度，把白子打进袋",
+    "aim.ok": "扑通！好球！",
+    "aim.ng": "可惜！把虚线前端的圈对准白子"
+    },
+    "zh-TW": {
+    "slide.t": "決定位置",
+    "slide.b": "先選好位置：{place}，讓擊子<b>沿著底線左右</b>移動。我找午睡的地方也這麼認真。",
+    "slide.k": "把擊子移到發光的記號",
+    "flick.t": "拉、放、打",
+    "flick.b": "接著是力道：{pull}，<b>越往下越用力</b>。然後{rel}就打出去！移回擊子旁邊就能重來，別擔心。",
+    "flick.k": "筆直往下拉，打中白子",
+    "flick.ok": "咔！力道剛好！",
+    "flick.ng": "沒打中～這次筆直往下拉",
+    "aim.t": "調角度打進",
+    "aim.b": "保持蓄力，{lr}就能<b>改變方向</b>。把虛線前端的圈對準棋子，綠線指向球袋時就打！",
+    "aim.k": "調好角度，把白子打進袋",
+    "aim.ok": "噗通！好球！",
+    "aim.ng": "可惜！把虛線前端的圈對準白子"
+    },
+    "ko": {
+    "slide.t": "위치 정하기",
+    "slide.b": "먼저 칠 자리야. {place} 스트라이커를 <b>베이스라인 위에서 좌우로</b> 옮겨 봐. 나도 낮잠 자리는 꼼꼼히 찾거든.",
+    "slide.k": "스트라이커를 빛나는 표시까지 옮겨",
+    "flick.t": "당기고, 놓고, 친다",
+    "flick.b": "다음은 힘. {pull} <b>아래로 갈수록 세져</b>. {rel} 쳐! 스트라이커 근처로 되돌리면 다시 할 수 있으니 걱정 마.",
+    "flick.k": "똑바로 당겨서 흰 말을 맞혀",
+    "flick.ok": "딱! 힘 조절 좋아!",
+    "flick.ng": "안 맞았어~ 똑바로 아래로 당겨 봐",
+    "aim.t": "각도를 줘서 넣기",
+    "aim.b": "힘을 모은 채 {lr} <b>노리는 방향이 바뀌어</b>. 점선 끝의 고리를 말에 맞추고, 초록 선이 포켓을 향하면 쳐!",
+    "aim.k": "각도를 줘서 흰 말을 포켓에",
+    "aim.ok": "퐁! 나이스 샷!",
+    "aim.ng": "아깝다! 점선 끝의 고리를 흰 말에 맞춰 봐"
+    },
+    "es": {
+    "slide.t": "Elige tu sitio",
+    "slide.b": "Primero, desde dónde tirar: {place} para mover el striker <b>por la línea base</b>. Yo busco así mi sitio para la siesta.",
+    "slide.k": "Lleva el striker a la marca brillante",
+    "flick.t": "Tira, suelta, golpea",
+    "flick.b": "Ahora la fuerza: {pull} — <b>cuanto más abajo, más fuerte</b>. Luego {rel} para tirar. Si vuelves junto al striker, empiezas de nuevo, sin problema.",
+    "flick.k": "Tira recto hacia abajo y toca la ficha blanca",
+    "flick.ok": "¡Toc! ¡Buen toque!",
+    "flick.ng": "¡Fallo! Tira recto hacia abajo esta vez",
+    "aim.t": "Apunta con ángulo",
+    "aim.b": "Sin soltar, {lr} para <b>girar la puntería</b>. Pon el aro del final de la línea sobre una ficha; cuando la línea verde apunte a una tronera, ¡tira!",
+    "aim.k": "Dale ángulo y mete la ficha blanca",
+    "aim.ok": "¡Plop! ¡Buen tiro!",
+    "aim.ng": "¡Casi! Pon el aro del final de la línea sobre la ficha blanca"
+    },
+    "fr": {
+    "slide.t": "Choisis ta place",
+    "slide.b": "D’abord, d’où tirer : {place} pour faire glisser le striker <b>le long de la ligne de base</b>. Moi, je cherche ma place de sieste pareil.",
+    "slide.k": "Amène le striker jusqu’à la marque",
+    "flick.t": "Tire, lâche, frappe",
+    "flick.b": "Ensuite la force : {pull} — <b>plus bas, plus fort</b>. Puis {rel} pour tirer ! Reviens près du striker et tout recommence, sans souci.",
+    "flick.k": "Tire tout droit vers le bas et touche le pion blanc",
+    "flick.ok": "Toc ! Bien dosé !",
+    "flick.ng": "Raté ! Tire bien droit vers le bas",
+    "aim.t": "Viser en biais",
+    "aim.b": "Toujours en tirant, {lr} pour <b>tourner ta visée</b>. Mets l’anneau au bout des pointillés sur un pion ; quand la ligne verte vise une poche, tire !",
+    "aim.k": "Vise en biais et empoche le pion blanc",
+    "aim.ok": "Plouf ! Joli coup !",
+    "aim.ng": "Presque ! Mets l’anneau au bout de la ligne sur le pion blanc"
+    },
+    "pt": {
+    "slide.t": "Escolha o lugar",
+    "slide.b": "Primeiro, de onde tacar: {place} para mover o striker <b>pela linha de base</b>. Eu procuro assim meu lugar de soneca.",
+    "slide.k": "Leve o striker até a marca brilhante",
+    "flick.t": "Puxe, solte, taque",
+    "flick.b": "Agora a força: {pull} — <b>quanto mais para baixo, mais forte</b>. Depois {rel} para tacar! Voltou para perto do striker, recomeça, sem problema.",
+    "flick.k": "Puxe reto para baixo e acerte a peça branca",
+    "flick.ok": "Toc! Boa força!",
+    "flick.ng": "Errou! Puxe reto para baixo desta vez",
+    "aim.t": "Mire com ângulo",
+    "aim.b": "Ainda segurando, {lr} para <b>virar a mira</b>. Ponha o anel do fim da linha numa peça; quando a linha verde apontar a caçapa, taque!",
+    "aim.k": "Dê ângulo e encaçape a peça branca",
+    "aim.ok": "Plop! Bela tacada!",
+    "aim.ng": "Quase! Ponha o anel do fim da linha na peça branca"
+    },
+    "de": {
+    "slide.t": "Den Platz wählen",
+    "slide.b": "Zuerst der Platz: {place}, um den Striker <b>auf der Grundlinie</b> zu verschieben. So suche ich mir auch meinen Schlafplatz.",
+    "slide.k": "Schieb den Striker zur leuchtenden Marke",
+    "flick.t": "Ziehen, loslassen, stoßen",
+    "flick.b": "Jetzt die Kraft: {pull} — <b>je weiter unten, desto kräftiger</b>. Dann {rel} zum Stoßen! Zurück zum Striker, und alles beginnt neu.",
+    "flick.k": "Zieh gerade nach unten und triff den weißen Stein",
+    "flick.ok": "Klack! Gut dosiert!",
+    "flick.ng": "Daneben! Zieh diesmal gerade nach unten",
+    "aim.t": "Mit Winkel zielen",
+    "aim.b": "Weiter festhalten: {lr}, um <b>die Richtung zu drehen</b>. Leg den Ring am Ende der Punktlinie auf einen Stein; zeigt die grüne Linie auf eine Tasche — stoß!",
+    "aim.k": "Mit Winkel den weißen Stein versenken",
+    "aim.ok": "Plopp! Schöner Stoß!",
+    "aim.ng": "Knapp! Setz den Ring am Linienende auf den weißen Stein"
+    },
+    "ru": {
+    "slide.t": "Выбери место",
+    "slide.b": "Сначала откуда бить: {place}, чтобы двигать страйкер <b>по базовой линии</b>. Я так же ищу место для сна.",
+    "slide.k": "Передвинь страйкер к светящейся отметке",
+    "flick.t": "Оттяни, отпусти, бей",
+    "flick.b": "Теперь сила: {pull} — <b>чем ниже, тем сильнее</b>. Потом {rel}, и удар! Вернёшься к страйкеру — начнёшь заново, не страшно.",
+    "flick.k": "Тяни прямо вниз и попади в белую фишку",
+    "flick.ok": "Щёлк! Хорошая сила!",
+    "flick.ng": "Мимо! Тяни прямо вниз",
+    "aim.t": "Удар под углом",
+    "aim.b": "Не отпуская, {lr}, чтобы <b>повернуть прицел</b>. Наведи кольцо на конце пунктира на фишку; когда зелёная линия смотрит в лузу — бей!",
+    "aim.k": "Под углом забей белую фишку",
+    "aim.ok": "Бульк! Отличный удар!",
+    "aim.ng": "Почти! Наведи кольцо на конце линии на белую фишку"
+    },
+    "tr": {
+    "slide.t": "Yerini seç",
+    "slide.b": "Önce nereden vuracağın: {place}, vurucuyu <b>taban çizgisinde</b> kaydır. Ben de uyku yerimi böyle seçerim.",
+    "slide.k": "Vurucuyu parlayan işarete getir",
+    "flick.t": "Çek, bırak, vur",
+    "flick.b": "Şimdi güç: {pull} — <b>ne kadar aşağı, o kadar sert</b>. Sonra {rel} ve vur! Vurucunun yanına dönersen baştan başlar, sorun yok.",
+    "flick.k": "Dümdüz aşağı çek ve beyaz taşa değ",
+    "flick.ok": "Tak! Güzel ayar!",
+    "flick.ng": "Iska! Bu sefer dümdüz aşağı çek",
+    "aim.t": "Açıyla nişan al",
+    "aim.b": "Bırakmadan {lr}: <b>nişan yönü döner</b>. Noktalı çizginin ucundaki halkayı taşa getir; yeşil çizgi cebe bakınca vur!",
+    "aim.k": "Açı ver ve beyaz taşı cebe sok",
+    "aim.ok": "Plop! Güzel atış!",
+    "aim.ng": "Az kaldı! Çizginin ucundaki halkayı beyaz taşa getir"
+    },
+    "id": {
+    "slide.t": "Pilih posisimu",
+    "slide.b": "Pertama, dari mana menyentil: {place} untuk menggeser striker <b>di garis dasar</b>. Aku juga begitu memilih tempat tidur siang.",
+    "slide.k": "Geser striker ke tanda yang menyala",
+    "flick.t": "Tarik, lepas, sentil",
+    "flick.b": "Sekarang tenaga: {pull} — <b>makin ke bawah, makin kuat</b>. Lalu {rel} untuk menyentil! Kembali ke dekat striker berarti ulang, tak apa.",
+    "flick.k": "Tarik lurus ke bawah dan kenai biji putih",
+    "flick.ok": "Tak! Tenaganya pas!",
+    "flick.ng": "Meleset! Tarik lurus ke bawah",
+    "aim.t": "Bidik dengan sudut",
+    "aim.b": "Sambil menahan, {lr} untuk <b>memutar bidikan</b>. Taruh cincin di ujung garis titik pada biji; saat garis hijau mengarah ke kantong, sentil!",
+    "aim.k": "Beri sudut dan masukkan biji putih",
+    "aim.ok": "Plung! Tembakan bagus!",
+    "aim.ng": "Hampir! Taruh cincin di ujung garis pada biji putih"
+    },
+    "hi": {
+    "slide.t": "जगह चुनो",
+    "slide.b": "पहले, कहाँ से मारना है: {place} और स्ट्राइकर को <b>बेस लाइन पर</b> खिसकाओ। मैं भी सोने की जगह ऐसे ही ढूँढता हूँ।",
+    "slide.k": "स्ट्राइकर को चमकते निशान तक ले जाओ",
+    "flick.t": "खींचो, छोड़ो, मारो",
+    "flick.b": "अब ताक़त: {pull} — <b>जितना नीचे, उतना ज़ोर</b>। फिर {rel} और वार! स्ट्राइकर के पास लौटोगे तो फिर से शुरू, कोई बात नहीं।",
+    "flick.k": "सीधा नीचे खींचो और सफ़ेद गोटी पर लगाओ",
+    "flick.ok": "टक! सही ज़ोर!",
+    "flick.ng": "चूक गए! इस बार सीधा नीचे खींचो",
+    "aim.t": "कोण से निशाना",
+    "aim.b": "पकड़े रहते हुए {lr} और <b>निशाने की दिशा बदलो</b>। बिंदुदार रेखा के सिरे का छल्ला गोटी पर रखो; हरी रेखा पॉकेट की ओर हो तो मारो!",
+    "aim.k": "कोण देकर सफ़ेद गोटी पॉकेट में डालो",
+    "aim.ok": "टप! बढ़िया शॉट!",
+    "aim.ng": "करीब! रेखा के सिरे का छल्ला सफ़ेद गोटी पर रखो"
+    },
+    "ar": {
+    "slide.t": "اختر مكانك",
+    "slide.b": "أولًا من أين تضرب: {place} لتحريك الضارب <b>على خط القاعدة</b>. هكذا أختار مكان قيلولتي أيضًا.",
+    "slide.k": "حرّك الضارب إلى العلامة المضيئة",
+    "flick.t": "اسحب، أفلت، اضرب",
+    "flick.b": "الآن القوة: {pull} — <b>كلما نزلت أكثر زادت القوة</b>. ثم {rel} لتضرب! إن عدت قرب الضارب تبدأ من جديد، لا بأس.",
+    "flick.k": "اسحب للأسفل مباشرة وأصب القطعة البيضاء",
+    "flick.ok": "طق! قوة مناسبة!",
+    "flick.ng": "لم تُصب! اسحب للأسفل مباشرة هذه المرة",
+    "aim.t": "صوّب بزاوية",
+    "aim.b": "وأنت ممسك، {lr} لـ<b>تدير التصويب</b>. ضع الحلقة في نهاية الخط المنقّط على قطعة؛ وحين يشير الخط الأخضر إلى جيب، اضرب!",
+    "aim.k": "أعطِ زاوية وأدخل القطعة البيضاء",
+    "aim.ok": "بلوب! ضربة رائعة!",
+    "aim.ng": "قريب! ضع الحلقة في نهاية الخط على القطعة البيضاء"
+    }
+    };
   // the pages: the men staged on the board (cm; c, x, y), the striker's place, the task
   const PAGES = [
     { id: 'intro' },
     { id: 'board', kind: 'tap', open: true },
     { id: 'slide', kind: 'slide', open: true, sx: -8, goal: 14 },
-    { id: 'flick', kind: 'shot', sx: 8, men: [['w', 22.7, -7.8], ['b', -10, -5], ['b', -21, 9], ['w', -15, -20], ['b', 6, -26]], need: 'w' },
+    { id: 'flick', kind: 'hit', sx: 6, men: [['w', 6, -9], ['b', -14, -6], ['b', 21, 8], ['w', -22, -20]], need: 'w' },
+    { id: 'aim', kind: 'shot', sx: 8, men: [['w', 22.7, -7.8], ['b', -10, -5], ['b', -21, 9], ['w', -15, -20], ['b', 6, -26]], need: 'w' },
     { id: 'cut', kind: 'shot', sx: 0, men: [['w', -28.5, -24.5], ['b', 5, -10], ['b', 20, 4], ['w', 14, -24]], need: 'w' },
     { id: 'queen', kind: 'queen', sx: -6, men: [['q', -20.4, -4.8], ['w', 22.7, -7.8], ['b', 3, -14], ['b', -2, 8]], pk: 1 },
     { id: 'foul', kind: 'demo', sx: 20, men: [['b', -12, -10], ['w', 6, -16], ['b', -26, 12]], pk: 2 },
@@ -185,8 +399,9 @@
 
   function start(ctx) {
     const T3 = ctx.Table3D, TH = window.THREE, E = window.CarromEngine, D = E.DIM;
-    const L = Object.assign({}, UI.en, UI[ctx.lang] || {}), VO = Object.assign({}, VOICE.en, VOICE[ctx.lang] || {});
-    const T = k => VO[k] != null ? VO[k] : '';
+    const L = Object.assign({}, UI.en, UI[ctx.lang] || {}), VO = Object.assign({}, VOICE.en, VOICE[ctx.lang] || {}, VOICE2.en, VOICE2[ctx.lang] || {});
+    const AC3 = window.Atlas3D && Atlas3D.carrom, HW = AC3 && AC3.how ? AC3.how(ctx.lang) : { place: '', pull: '', lr: '', rel: '' };
+    const T = k => VO[k] != null ? VO[k].replace(/\{(place|pull|lr|rel)\}/g, (m, w) => HW[w] || '') : '';
     try { localStorage.setItem('aicoding-carrom-rules-seen', '1'); } catch (e) {}
     const SND = (window.Atlas3D && Atlas3D.carrom && Atlas3D.carrom.SND) || { flick() {}, hit() {}, cush() {}, pocket() {}, place() {}, good() {}, bad() {}, win() {} };
     const board = T3.MODELS.carrom(true); T3.show('carrom', board); if (T3.play) T3.play(true);
@@ -243,7 +458,7 @@
       clearGuides();
       const pg = P();
       if (pg.kind === 'tap' && !played) D.POCKETS.forEach(([x, y]) => ring(x, y, GEO.pring, MAT.pocket, 1, true));
-      if ((pg.kind === 'slide' || pg.kind === 'shot' || pg.kind === 'queen') && !played && !busy) {
+      if ((pg.kind === 'slide' || pg.kind === 'hit' || pg.kind === 'shot' || pg.kind === 'queen') && !played && !busy) {
         bar(-D.BX, BY, D.BX, BY, D.LINE + .4, MAT.base, .012);
         if (pg.kind === 'slide') ring(pg.goal, BY, GEO.ring, MAT.ring, 1.25, true);
         else {
@@ -395,6 +610,10 @@
       if (!res || stopped) return;
       const pg = P(), { sim, r } = res;
       const inIds = sim.pocketed.map(e => st.pcs[e.id].c);
+      if (pg.kind === 'hit') {
+        if (!sim.strikerIn && sim.firstHit >= 0 && st.pcs[sim.firstHit].c === pg.need) { st = r.s; ok('flick.ok'); return; }
+        ng('flick.ng'); later(() => go(step), 1500); return;
+      }
       if (pg.kind === 'shot') {
         if (!sim.strikerIn && inIds.includes(pg.need)) { st = r.s; ok(pg.id + '.ok'); return; }
         ng(pg.id + '.ng'); later(() => go(step), 1500); return;
@@ -421,48 +640,42 @@
       ok('foul.ok');
     }
 
-    /* ---------- the hand ---------- */
+    /* ---------- the hand: the game's own controls (Atlas3D.carrom.Hand), so the tour is also the controls tutorial ---------- */
     const toCm = e => { const q = T3.pick(e, Y + .03); return q ? { x: q.x / K, y: q.z / K } : null; };
-    function down(e) {
-      if (stopped || busy || played || e.target.closest('.rgd')) return;
-      const pg = P(); if (pg.id === 'intro' || pg.last) return;
-      const q = toCm(e); if (!q) return;
-      if (pg.kind === 'tap') { if (D.POCKETS.some(([x, y]) => Math.hypot(q.x - x, q.y - y) < 5.5)) ok('board.ok'); else ng('board.ng'); return; }
-      if (pg.kind === 'demo') { demo(); return; }
-      const dS = Math.hypot(q.x - sx, q.y - BY);
-      if (pg.kind !== 'slide' && dS < D.RS + 2.6) drag = { kind: 'aim', id: e.pointerId };
-      else if (Math.abs(q.y - BY) < 6) { drag = { kind: 'slide', id: e.pointerId }; slideTo(q.x); }
-      else return;
-      try { ctx.el.setPointerCapture(e.pointerId); } catch (er) {}
-      e.preventDefault(); guides();
-    }
     function slideTo(x) {
       sx = E.nearestFree(st, 0, x); put(striker, sx, BY); kick(100);
       const pg = P();
-      if (pg.kind === 'slide' && Math.abs(sx - pg.goal) < 1.3) { sx = pg.goal; put(striker, sx, BY); drag = null; ok('slide.ok'); }
+      if (pg.kind === 'slide' && Math.abs(sx - pg.goal) < 1.3) { sx = pg.goal; put(striker, sx, BY); drag = null; if (hand) hand.cancel(); ok('slide.ok'); }
     }
-    function move(e) {
-      if (!drag || e.pointerId !== drag.id || stopped) return;
-      const q = toCm(e); if (!q) return;
-      if (drag.kind === 'slide') { slideTo(q.x); if (drag) guides(); return; }
-      const dx = sx - q.x, dy = BY - q.y, d = Math.hypot(dx, dy);
-      if (d < 1.2) { aimPow = 0; guides(); return; }
-      aimAng = Math.atan2(dy, dx); aimPow = Math.min(1, Math.max(0, (d - 1.2) / 22)); guides();
+    // the help for the straight hit: an aim within 9° of the white man is set on it, hard enough to reach it
+    function assistedHit(shot) {
+      const m = st.pcs.find(x => x.on && x.c === P().need); if (!m) return shot;
+      const a = Math.atan2(m.y - BY, m.x - shot.x); let da = Math.abs(a - shot.ang); if (da > Math.PI) da = 2 * Math.PI - da;
+      return da < 9 * Math.PI / 180 ? { x: shot.x, ang: a, v: Math.max(shot.v, 170) } : shot;
     }
-    async function up(e) {
-      if (!drag || e.pointerId !== drag.id) return;
-      const k = drag.kind; drag = null;
-      try { ctx.el.releasePointerCapture(e.pointerId); } catch (er) {}
-      if (k === 'aim' && aimPow >= .04 && !busy && !played) {
-        const pg = P(), want = pg.kind === 'queen' ? (stage === 0 ? 'q' : 'w') : pg.need;
-        const shot = assisted({ x: sx, ang: aimAng, v: 40 + aimPow * (E.VMAX - 40) }, want);
-        shotDone(await strike(shot)); return;
-      }
-      guides();
-    }
-    ctx.el.addEventListener('pointerdown', down);
-    ctx.el.addEventListener('pointermove', move);
-    ctx.el.addEventListener('pointerup', up); ctx.el.addEventListener('pointercancel', up);
+    const pageAims = () => ['slide', 'hit', 'shot', 'queen'].includes(P().kind);
+    const HandF = AC3 && AC3.Hand;
+    const hand = HandF ? HandF({
+      el: ctx.el, toCm, sign: () => 1, striker: () => sx, home: () => ({ x: sx, y: BY }),
+      canAim: () => !stopped && !busy && !played && pageAims(),
+      place: x => { if (P().kind === 'slide' || P().kind === 'hit' || P().kind === 'shot' || P().kind === 'queen') { slideTo(x); if (!played) guides(); } },
+      aim: a => { if (!a || P().kind === 'slide') { drag = null; guides(); return; } drag = { kind: 'aim' }; aimAng = a.ang; aimPow = a.pow; guides(); },
+      shoot: async (ang, pw) => {
+        const pg = P(); if (pg.kind === 'slide' || busy || played) return;
+        const raw = { x: sx, ang, v: 40 + pw * (E.VMAX - 40) };
+        if (pg.kind === 'hit') { shotDone(await strike(assistedHit(raw))); return; }
+        const want = pg.kind === 'queen' ? (stage === 0 ? 'q' : 'w') : pg.need;
+        shotDone(await strike(assisted(raw, want)));
+      },
+      tap: e => {
+        if (stopped || busy || played) return;
+        const pg = P();
+        if (pg.kind === 'demo') { demo(); return; }
+        if (pg.kind !== 'tap') return;
+        const q = toCm(e); if (!q) return;
+        if (D.POCKETS.some(([x, y]) => Math.hypot(q.x - x, q.y - y) < 5.5)) ok('board.ok'); else ng('board.ng');
+      },
+    }) : null;
     const prevTouch = ctx.el.style.touchAction; ctx.el.style.touchAction = 'none';
     $('[data-a=next]').onclick = () => { if (P().last) ctx.onStart(); else if (P().kind === 'demo' && !played) demo(); else go(step + 1); };
     $('[data-a=back]').onclick = () => { if (step) go(step - 1); else if (ctx.onExit) ctx.onExit(); };
@@ -476,9 +689,9 @@
     say('…'); buttons();
     later(() => go(0), 300);
     const sess = {
-      stop() { stopped = true; clearInterval(typeT); clearInterval(pulseT); timers.forEach(clearTimeout); ctx.el.removeEventListener('pointerdown', down); ctx.el.removeEventListener('pointermove', move); ctx.el.removeEventListener('pointerup', up); ctx.el.removeEventListener('pointercancel', up); ctx.el.style.touchAction = prevTouch; removeEventListener('resize', lockH); removeEventListener('resize', onResizeF); document.removeEventListener('keydown', onKey, true); el.remove(); css.remove(); Object.values(MAT).forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose()); },
+      stop() { stopped = true; clearInterval(typeT); clearInterval(pulseT); timers.forEach(clearTimeout); if (hand) hand.stop(); ctx.el.style.touchAction = prevTouch; removeEventListener('resize', lockH); removeEventListener('resize', onResizeF); document.removeEventListener('keydown', onKey, true); el.remove(); css.remove(); Object.values(MAT).forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose()); },
       panel: el,
-      _debug: { step: () => step, played: () => played, stage: () => stage, go, st: () => st, at: (x, y) => { const [a, b] = wx(x, y); return T3.project(a, b, Y); }, shoot: async (ang, pw) => { const pg = P(), want = pg.kind === 'queen' ? (stage === 0 ? 'q' : 'w') : pg.need; shotDone(await strike(assisted({ x: sx, ang, v: 40 + pw * (E.VMAX - 40) }, want))); }, sx: () => sx },
+      _debug: { step: () => step, played: () => played, stage: () => stage, go, st: () => st, at: (x, y) => { const [a, b] = wx(x, y); return T3.project(a, b, Y); }, sx: () => sx },
     };
     window.__rulesSess = sess;   // (tests)
     return sess;

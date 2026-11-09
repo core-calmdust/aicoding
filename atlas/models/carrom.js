@@ -1,10 +1,10 @@
 /* =====================================================================
    Carrom on the 3D table — two boards (Table3D.BOARDS.carrom, chosen in the portal's 盤 row):
-   · 'classic' (the default) the board of every Indian home and club: a honey-coloured birch plywood surface, lacquered and
+   · 'classic' the board of every Indian home and club: a honey-coloured birch plywood surface, lacquered and
               powdered, the ICF markings in black with red base circles and a red centre, arrows to the pockets and a rosette in
               the centre circle; a deep rosewood frame with curved inner corners, black netted pockets. Men of boxwood and ebony
               with turned rings, a red lacquer queen, a white acrylic striker with a printed star.
-   · 'modern' an art board: the surface is a print of colour fields — four Mughal arches rising from the base lines round a
+   · 'modern' (the default) an art board: the surface is a print of colour fields — four Mughal arches rising from the base lines round a
               rosette of overlapping circles, in terracotta, saffron, teal and ink on warm paper, with a fine risograph grain; the
               markings in ink and gold. A matte ink-blue lacquered frame with brass edging and brass-ringed pockets. Men in matte
               ivory and charcoal with a brass pip, a coral queen, a cream striker with a brass ring.
@@ -33,7 +33,7 @@
     return new TT[p.clearcoat !== undefined ? 'MeshPhysicalMaterial' : 'MeshStandardMaterial'](p);
   }
   const mats = {}, mat = (k, f) => mats[k] || (mats[k] = f());
-  const lookNow = () => X.BOARDS && X.BOARDS.carrom ? X.BOARDS.carrom.get() : 'classic';
+  const lookNow = () => X.BOARDS && X.BOARDS.carrom ? X.BOARDS.carrom.get() : 'modern';
 
   /* ---------- the playing surface: a canvas in board centimetres ---------- */
   const PAL = {
@@ -273,7 +273,8 @@
     // the showcase: the opening arrangement just after a gentle break, the striker on the near base line
     const U = g.userData, E = window.CarromEngine;
     const pcs = E ? E.layout() : [];
-    const nudge = { 1: [.6, .3], 4: [-.3, .5], 9: [1.2, -.4], 14: [-1.4, .8], 17: [.9, 1.1] };
+    // (no nudges inside the arrangement: the men touch there, and an overlap made the centre flicker)
+    const nudge = {};
     // a few men already round the board, as in a game (taken from the outer ring)
     const moved = { 7: [12, 14], 11: [-18, 20], 13: [24, -9], 15: [-30.5, -30] };
     pcs.forEach(p => {

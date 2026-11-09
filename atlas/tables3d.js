@@ -156,8 +156,8 @@
       get: () => { try { const d = (JSON.parse(ls.get('aicoding-senet') || '{}').settings || {}).design; return ['faience', 'papyrus', 'night'].includes(d) ? d : 'tut'; } catch (e) { return 'tut'; } },
       set: k => { try { const o = JSON.parse(ls.get('aicoding-senet') || '{}') || {}; o.settings = o.settings || {}; o.settings.design = k; ls.set('aicoding-senet', JSON.stringify(o)); } catch (e) {} } },
     konane: { list: ['papamu', 'quilt'], get: () => ls.get('atlas-konane-look') === 'quilt' ? 'quilt' : 'papamu', set: k => ls.set('atlas-konane-look', k) },
-    // carrom (3D only): 'atlas-carrom-look' ('classic' the default | 'modern')
-    carrom: { list: ['classic', 'modern'], get: () => ls.get('atlas-carrom-look') === 'modern' ? 'modern' : 'classic', set: k => ls.set('atlas-carrom-look', k) },
+    // carrom (3D only): 'atlas-carrom-look' ('modern' the default | 'classic')
+    carrom: { list: ['modern', 'classic'], get: () => ls.get('atlas-carrom-look') === 'classic' ? 'classic' : 'modern', set: k => ls.set('atlas-carrom-look', k) },
   };
   X.BOARDS = BOARDS;
   X.boardName = (k, lang) => { const o = N3[k]; return o ? o[lang] || o.en : k; };
