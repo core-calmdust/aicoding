@@ -482,7 +482,7 @@
       surf.onBeforeRender = () => { RGB.uT.value = performance.now() / 1000; };
     }
     // a base under the surface (seen through the pockets' rims) and the pocket cups with their nets
-    const base = new TT.Mesh(new TT.BoxGeometry(2 * S, .04, 2 * S), BM.cup); base.position.y = .03; g.add(base);
+    const base = new TT.Mesh(new TT.BoxGeometry(2 * S, .04, 2 * S), BM.cup); base.position.y = .03; base.castShadow = true; g.add(base);   // (2026-11-09: it casts the board's shadow — the floor showed only the frame's outline)
     const cupG = geos.cup || (geos.cup = (() => { const q = new TT.CylinderGeometry(RP, RP * .92, TOP - .05, LO() ? 16 : 28, 1, true); if (X.share) X.share(q); return q; })());
     const netG = geos.net || (geos.net = (() => { const q = new TT.CircleGeometry(RP * .92, LO() ? 16 : 28); q.rotateX(-Math.PI / 2); if (X.share) X.share(q); return q; })());
     for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {

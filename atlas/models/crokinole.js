@@ -372,7 +372,7 @@
     look = LOOKS.includes(look) ? look : lookNow();
     const TT = T(), g = new TT.Group(), BM = boardMats(look);
     // the body under it all (a low drum the size of the rail)
-    const body = new TT.Mesh(geos.body || (geos.body = share(new TT.CylinderGeometry(RO * K, RO * K, DY - .02, LO() ? 48 : 96))), BM.base); body.position.y = (DY - .02) / 2; body.receiveShadow = true; g.add(body);
+    const body = new TT.Mesh(geos.body || (geos.body = share(new TT.CylinderGeometry(RO * K, RO * K, DY - .02, LO() ? 48 : 96))), BM.base); body.position.y = (DY - .02) / 2; body.receiveShadow = true; body.castShadow = true; g.add(body);   // (2026-11-09: it casts too — the floor showed only the rail's ring)
     // the ditch's floor
     const df = new TT.Mesh(geos.ditch || (geos.ditch = share((() => { const q = new TT.RingGeometry(RB * K - .01, RR * K + .01, LO() ? 48 : 96, 1); q.rotateX(-Math.PI / 2); return q; })())), BM.ditch); df.position.y = DY; df.receiveShadow = true; g.add(df);
     // the playing surface and its edge (it stands up out of the ditch)
