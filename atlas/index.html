@@ -1498,6 +1498,20 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 .lvs-l button .nm{font-weight:900;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lvs-l button small{grid-column:2 / 4;font-size:12px;font-weight:700;color:var(--ink2);line-height:1.45}.lvs-l button small em{font-style:normal;color:var(--ink)}
 .lvs-l button .meter{display:flex;align-items:flex-end;gap:2px}.lvs-l button .meter i{width:3px;border-radius:2px;background:#e6dcc6}.lvs-l button .meter i.on{background:linear-gradient(#ffb03a,#ff6a3d)}
+.lvsheet:not(.tcsheet) .lvs-in{width:min(640px,100%);max-height:min(88vh,860px)}
+.lvs-boss{display:flex;align-items:center;gap:12px;margin:10px 0 0;padding:6px 12px 6px 6px;border-radius:16px;background:linear-gradient(100deg,#fff1d8,#fffaf0 70%);border:2px solid #f3e2bf}
+.lvs-boss:first-child{margin-top:0}
+.lvs-boss img{width:84px;height:84px;margin:-4px 0;flex:none;object-fit:contain;transform:scale(1.2);filter:drop-shadow(0 3px 4px rgba(90,60,20,.18))}
+.lvs-boss div{min-width:0;display:flex;flex-direction:column;gap:1px}
+.lvs-boss span{font-size:12px;font-weight:800;color:var(--ink2);display:flex;align-items:center;gap:6px}
+.lvs-boss span i{font-style:normal;font-size:10px;font-weight:900;color:#fff;background:linear-gradient(90deg,#ff6a8a,#ffb03a,#5ad0ff);border-radius:6px;padding:1px 6px;letter-spacing:.04em}
+.lvs-boss b{font-size:17px;font-weight:900;color:var(--ink);line-height:1.25}
+.lvs-boss small{font-size:12px;font-weight:700;color:#a07a3a;line-height:1.35;min-height:1.35em}
+.lvs-l button .nm .rw{display:inline-block;vertical-align:2px;margin-inline-end:6px;padding:0 7px;border-radius:99px;font:800 10.5px/1.6 var(--round,system-ui);font-style:normal;color:#fff;background:linear-gradient(180deg,#b8bcc8,#8a90a0)}
+.lvs-l button .nm .rw.r1{background:linear-gradient(180deg,#5ab8ff,#2a7ad8)}.lvs-l button .nm .rw.r2{background:linear-gradient(180deg,#c07aff,#8a4ad8)}.lvs-l button .nm .rw.got{opacity:.55}
+.lvs-boss.on{border-color:#ffb27a;background:linear-gradient(100deg,#ffe4cc,#fff6ee 70%)}
+.lvs-boss.ur{background:linear-gradient(100deg,#f3e6ff,#fff6e0 55%,#e6f6ff);border-color:#e0cdfa}
+@media (max-width:520px){.lvs-boss img{width:68px;height:68px}.lvs-boss b{font-size:16px}}
 .lvs-l button.on{border-color:var(--coral,#ff5d5d);background:#fff4f0;box-shadow:0 0 0 2px rgba(255,93,93,.15)}
 .bvi.mini .R{pointer-events:none}.bvi.mini{padding-bottom:12px!important}
 </style>
@@ -1605,8 +1619,8 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="texgen.js?v=1"></script>
-<script src="npc/roster.js?v=1"></script>
-<script src="art.js?v=7"></script>
+<script src="npc/roster.js?v=2"></script>
+<script src="art.js?v=8"></script>
 <script src="../shared/atlas.js?v=20261109npc"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261101fa1"></script>
@@ -1715,7 +1729,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <link rel="stylesheet" href="worldmap.css?v=18">
 <script src="worldmap.js?v=29"></script>
 <script src="updnews.js?v=7"></script>
-<script src="npc/npc.js?v=2"></script>
+<script src="npc/npc.js?v=4"></script>
 <script src="app.js?v=238"></script>
 </body>
 </html>
