@@ -14,7 +14,7 @@
   'use strict';
   const A = window.AtlasNPC = window.AtlasNPC || {};
   A.LEVELS = { chess: 25, shogi: 26, go: 32, reversi: 25, gomoku: 20, checkers: 20, xiangqi: 20, janggi: 20, tafl: 25, ur: 20, senet: 20, morris: 10,
-    connect4: 8, dots: 10, mancala: 10, backgammon: 10, hex: 20, fanorona: 20, ugolki: 23, agon: 23, konane: 23, ludo: 20, carrom: 20, alquerque: 20 };
+    connect4: 8, dots: 10, mancala: 10, backgammon: 10, hex: 20, fanorona: 20, ugolki: 23, agon: 23, konane: 23, ludo: 20, carrom: 20, crokinole: 20, alquerque: 20 };
   const N = s => { const p = s.split('|'), k = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'ru', 'hi', 'ar'], o = {}; k.forEach((l, i) => { o[l] = p[i] || p[1]; }); ['es', 'fr', 'pt', 'de', 'id', 'tr'].forEach(l => { o[l] = o.en; }); return o; };
   const b = (v, m, n) => ({ v, m, n: N(n) });
   // colours: [body, belly / face, accent]
@@ -224,6 +224,15 @@
       b('cool', { a: 'cat', c: [0xf0c060, 0xfff4e0, 0x2a2a38], held: 'striker', ex: ['scarf'], sc: 0x2a2a38 }, 'ヒョウの名手|Leopard Ace|豹子高手|豹子高手|표범고수|Леопард-ас|तेंदुआ उस्ताद|الفهد البارع'),
       b('lady', { a: 'bird', c: [0x2a6ad8, 0xc8e0ff, 0x46c890], beak: 0x5a5a6a, hat: 'tiara', held: 'fan', ex: ['crest', 'necklace'] }, 'クイーンクジャク|Queen Peacock|女王孔雀|女王孔雀|여왕공작|Павлиниха-королева|रानी मोरनी|الطاووسة الملكة'),
       b('king', { a: 'lion', c: [0xf0c070, 0xfff4e0, 0xd83a4a], hat: 'turban', hc: [0xd83a4a, 0xffd65a], held: 'striker', ex: ['cape', 'necklace'], cape: 0x6a3ad8 }, 'マハラジャライオン|Maharaja Lion|王公狮|王公獅|마하라자사자|Лев-махараджа|महाराजा शेर|أسد المهراجا'),
+    ],
+    crokinole: [
+      b('sleepy', { a: 'beaver', c: [0x8a5a3a, 0xf0dcc0, 0xc8282e], hat: 'cap', hc: [0xc8282e], held: 'disc' }, 'ログハウスビーバー|Cabin Beaver|小木屋河狸|小木屋河狸|통나무집비버|Бобр из хижины|केबिन ऊदबिलाव|قندس الكوخ'),
+      b('merchant', { a: 'rabbit', c: [0xf4f0ea, 0xffffff, 0x2a6ad8], held: 'disc', ex: ['scarf'], sc: 0xc8282e }, 'カンジキウサギ|Snowshoe Hare|雪鞋兔|雪鞋兔|눈신토끼|Заяц-беляк|स्नोशू खरगोश|أرنب الثلج'),
+      b('trickster', { a: 'fox', c: [0xe8742a, 0xfff4e6, 0xc8282e], hat: 'cap', hc: [0xc8282e], held: 'disc', mouth: 'w' }, 'メープルギツネ|Maple Fox|枫叶狐|楓葉狐|단풍여우|Кленовый лис|मेपल लोमड़ी|ثعلب القيقب'),
+      b('scholar', { a: 'owl', c: [0xf4f4f0, 0xffffff, 0x2a2a38], held: 'book', ex: ['glasses'] }, 'シロフクロウ審判|Snowy Owl Referee|雪鸮裁判|雪鴞裁判|흰올빼미심판|Полярная сова-судья|हिम उल्लू रेफ़री|البومة الثلجية الحكم'),
+      b('hothead', { a: 'deer', c: [0x6a4a30, 0xd8c0a0, 0x3a2a1a], hat: 'antlers', held: 'disc' }, 'ヘラジカ|Moose|驼鹿|駝鹿|무스|Лось|मूस|الموظ'),
+      b('cool', { a: 'bird', c: [0x1a1a22, 0xf4f4f4, 0xc8282e], beak: 0x2a2a30, held: 'disc', ex: ['necklace'] }, 'ハシグロアビ|Common Loon|普通潜鸟|普通潛鳥|아비|Полярная гагара|लून पक्षी|الغواص'),
+      b('king', { a: 'bear', c: [0x7a5a3a, 0xf0dcc0, 0xc8282e], hat: 'tophat', hc: [0x2a2a38, 0xc8282e], held: 'hammer', ex: ['longbeard', 'cape'], bc: 0xd8d0c8, cape: 0xc8282e }, 'ウェットラウファーグマ|Wettlaufer Bear|韦特劳弗熊|韋特勞弗熊|베틀라우퍼곰|Медведь Ветлауфер|वेटलॉफ़र भालू|دب فيتلاوفر'),
     ],
     alquerque: [
       b('sleepy', { a: 'cat', c: [0xf0dcc0, 0xfff8ee, 0x3a6ad8], held: 'piece', ex: ['scarf'], sc: 0x3a6ad8 }, '中庭のこねこ|Courtyard Kitten|庭院小猫|庭院小貓|안뜰새끼고양이|Котёнок из патио|आँगन का बिलौटा|قطيطة الفناء'),

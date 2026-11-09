@@ -49,6 +49,7 @@
     konane: ['Repos sur la plage', 'Tortue voyageuse des mers', 'Oiseau emblème d\'Hawaï', 'Le demi-dieu cochon', 'Conteuse de hula', 'Faucon, symbole royal', 'Le roi qui unifia Hawaï', 'Déesse du volcan'],
     ludo: ['Compagnon de cour en Inde', 'Marchand de la foire du désert', 'Joue sur un plateau en tissu', 'En a fait le « Ludo » en Angleterre', 'Gardien du jardin du palais', 'Éléphant de guerre moghol', 'L\'empereur qui jouait avec des gens comme pions'],
     carrom: ['Près du plateau de la ruelle', 'Habitué de la véranda', 'Maître de la pichenette', 'Frappeur d\'un seul coup', 'Le tireur silencieux', 'Chasseur de la Reine rouge', 'Roi d\'un jeu qui serait né dans les palais'],
+    crokinole: ['Petit de la cabane en rondins', 'Habitué en raquettes', 'Farceur de l’érablière', 'Arbitre pointilleux', 'Droit vers le trou du 20', 'Maître discret du lac', 'Auteur du plus vieux plateau'],
     alquerque: ['Enfant d\'un patio andalou', 'Vendeur de tapis comme le plateau', 'Auteur du Livre des chansons', 'Chasseur du ciel du désert', 'Chevalier castillan', 'Dame du jardin du palais', 'Le roi qui fit faire le Livre des jeux'],
   },
   trivia: {
@@ -75,6 +76,7 @@
     konane: ['Le kōnane est un jeu traditionnel d\'Hawaï.', 'On y jouait sur des plateaux de pierre avec des galets de corail blanc et de lave noire.', 'Chaque coup est un saut par-dessus une pièce adverse, qui est capturée.', 'Celui qui ne peut plus bouger perd : garde des coups pour la fin !'],
     ludo: ['Le ludo vient du pachisi indien.', 'La légende dit que l\'empereur moghol Akbar jouait dans une cour avec des personnes comme pions.', 'Il a été breveté en Angleterre sous le nom de « Ludo » en 1896.', 'Dans beaucoup de règles, un six permet de sortir un pion et de rejouer.'],
     carrom: ['Le carrom vient d\'Asie du Sud et est très populaire en Inde et au Sri Lanka.', 'La pièce rouge est la Reine : après l\'avoir empochée, il faut la « couvrir » avec une des siennes.', 'Le striker qu\'on pichenette est plus grand et plus lourd que les autres pièces.', 'On saupoudre le plateau pour que les pièces glissent.'],
+    crokinole: ['Le crokinole est né au Canada : le plus ancien plateau connu a été fait en Ontario en 1876.', 'Un palet dans le trou central vaut 20 ! Il sort aussitôt du plateau.', 'S’il y a un palet adverse sur le plateau, il faut en toucher un, sinon c’est une faute.', 'Un palet qui touche une ligne compte la valeur la plus basse.'],
     alquerque: ['L\'alquerque apparaît dans le « Livre des chansons » arabe du Xe siècle.', 'Il figure aussi dans le Livre des jeux réalisé pour Alphonse X au XIIIe siècle.', 'On l\'appelle l\'ancêtre des dames : tous deux capturent en sautant.', 'Le plateau est fait de lignes et de points ; les pièces vont de point en point le long des lignes.'],
   },
 } });

@@ -16,6 +16,9 @@
 - トップページ：GAMES に `key:'ck'`・`beta:1`、アイコン `images/icons/crokinole.svg`、サムネイル `images/crokinole.webp`（topdown.html でクラシック盤を撮る。エンジン同士の数打で途中局面を作る）。一覧 `atlas/shots/crokinole.webp`、ポータルのアイコン `images/atlas/crokinole.webp`（icons3d.js）。
 - 地図：`atlas/mapdata.js` にカナダ（オンタリオ州）とドイツ系移民の起源。
 
+- 一覧のひとこと（`tl.crokinole`、atlas/gamelist-i18n.js、14言語）：「カナダ生まれのおはじき」。
+- AIのボス（atlas/npc/roster.js、3レベルごと7体）：ログハウスビーバー・カンジキウサギ・メープルギツネ・シロフクロウ審判・ヘラジカ・ハシグロアビ・ウェットラウファーグマ（1876年の最古の盤の作者がモチーフ）。肩書きとまめちしきは npc/t/<lang>.js（14言語）、アバター画像は images/atlas/av/boss-crokinole-<n>-<tier>.webp（tools/bosses.html）。
+
 ## ルール（NCA／世界選手権のシングルス）
 - 盤：直径26インチの盤面（cm で計算）。線は 24／16／8 インチ（5・10・15 の円）、中央に 1⅜ インチの穴（20点）、15の線上に8本のペグ（(k+½)·45°）。盤面の外は溝（ditch）。ディスク 1¼ インチ。
 - 各ラウンド8枚ずつ、交互に1枚ずつ打つ。打つ位置は自分の四分円の5の線上（ディスクの中心が線上）。
