@@ -77,6 +77,14 @@
     b.setAttribute('aria-pressed', SFX.on); b.classList.toggle('off', !SFX.on); b.setAttribute('aria-label', t(SFX.on ? 'sfx.on' : 'sfx.off')); b.title = t(SFX.on ? 'sfx.on' : 'sfx.off');
   }
   $('sfxBtn').onclick = () => { SFX.set(!SFX.on); sfxIcon(); toast(t(SFX.on ? 'sfx.on' : 'sfx.off')); if (SFX.on) SFX.coin(); };
+  // 「キャラ会話」 on / off (the AI games' boss and watcher talk, atlas/npc/npc.js — the same switch as the full versions' options)
+  function npcIcon() {
+    const b = $('npcBtn'), N = window.AtlasNPC; if (!b || !N || !N.on) return;
+    const on = N.on(), l = (N.LABEL[lang] || N.LABEL.en) + ' : ' + t(on ? 'npc.on' : 'npc.off');
+    b.innerHTML = N.ICON.replace('</svg>', on ? '</svg>' : '<path d="M4 4l16 16" stroke-width="2.2"/></svg>');
+    b.setAttribute('aria-pressed', on); b.classList.toggle('off', !on); b.setAttribute('aria-label', l); b.title = l;
+  }
+  if ($('npcBtn')) $('npcBtn').onclick = () => { const N = window.AtlasNPC; if (!N || !N.on) return; N.setOn(!N.on()); npcIcon(); toast($('npcBtn').title); };
 
   /* ---------- tabs ---------- */
   const ICO = {
@@ -1819,7 +1827,7 @@
   { const hb = $('homeBtn'); if (hb) hb.addEventListener('click', e => { if (document.querySelector('#bv.on,#hist.on') || document.documentElement.classList.contains('hs-open')) return;
     e.preventDefault(); if (page !== 'home') go('home'); scrollTo({ top: 0, behavior: 'smooth' }); }); }
   function render(k) {
-    sfxIcon();
+    sfxIcon(); npcIcon();
     renderUpdLine();
     if (k === 'home') renderHome(); else if (k === 'games') renderGames(); else if (k === 'map') renderMap(); else if (k === 'ach') renderAch();
     else if (k === 'gacha') { renderGacha(); renderShop(); } else if (k === 'dress') renderDress();
