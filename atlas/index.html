@@ -130,6 +130,7 @@ html[lang=ar] .badge,html[lang=hi] .badge{letter-spacing:0}
    — a long press while aiming on a phone otherwise selects the HUD's words (2026-11-09) */
 #bv,#bv *,.crtoast,.crpow,.crhow,.crhow *,.crflip,.cktask,.cktoast,.ckpow,.ckhow,.ckhow *,.ckflip,[class^=npc],[class^=npc] *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 #bv input,#bv textarea{-webkit-user-select:text;user-select:text}
+html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation}html.hand-on #gl,html.hand-on #gl *{touch-action:pinch-zoom}html.hand-on input,html.hand-on textarea{-webkit-user-select:text;user-select:text}   /* carrom / crokinole in play: no loupe, double-tap zoom or text selection (the Hand adds the class) */
 .hand-drag .npc-float,.hand-drag .npc-float *,.hand-drag .crtoast,.hand-drag .cktoast,.hand-drag .cktask,.hand-drag #tbar,.hand-drag #tbar *,.hand-drag .crflip,.hand-drag .ckflip,.hand-drag #hud,.hand-drag #hud *{pointer-events:none!important}   /* pulling a striker / disc: the talk, the play bar, the flip / view buttons and the HUD pass the pointer through (a release over them still strikes) */
 .props .pp img{display:block;width:100%;filter:drop-shadow(0 12px 10px rgba(0,0,0,.16));transition:filter .2s;-webkit-user-drag:none;user-select:none}
 .props .pp:hover img{filter:drop-shadow(0 18px 14px rgba(0,0,0,.22)) brightness(1.04)}
@@ -1842,7 +1843,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 <script src="games/senet.js?v=15"></script>
 <script src="games/agon.js?v=9"></script>
 <script src="games/ludo.js?v=28"></script>
-<script src="games/carrom.js?v=25"></script>
+<script src="games/carrom.js?v=28"></script>
 <script src="games/crokinole.js?v=7"></script>
 <script src="games/hockey.js?v=2"></script>
 <script>/* rules tours: after a solved step, the ▶ button fills up like a timer until the tour moves on by itself */

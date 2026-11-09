@@ -211,7 +211,22 @@
     o.el.addEventListener('pointerdown', pd); o.el.addEventListener('pointermove', pm);
     o.el.addEventListener('pointerup', pu); o.el.addEventListener('pointercancel', pu);
     addEventListener('pointermove', wm, true); addEventListener('pointerup', wu, true); addEventListener('pointercancel', wu, true);
-    return { stop() { o.el.removeEventListener('pointerdown', pd); o.el.removeEventListener('pointermove', pm); o.el.removeEventListener('pointerup', pu); o.el.removeEventListener('pointercancel', pu);
+    // (2026-11-10) no magnifier / zoom / text selection while playing: a double click or double tap (and a long press) would
+    // bring up the loupe or zoom the page on phones and select text on PCs. Buttons and inputs keep working; a two-finger pinch still zooms.
+    const H = document.documentElement; H.classList.add('hand-on');
+    const isUI = t => t && t.closest && t.closest('button,a,input,textarea,select,label,[role=button]');
+    let lastTap = 0;
+    const onBoard = t => t && (o.el.contains(t) || (t.closest && t.closest('#gl')));
+    const nz = e => { if (!isUI(e.target)) e.preventDefault(); };
+    const te = e => { if (!onBoard(e.target)) return; const now = performance.now(); if (now - lastTap < 350) e.preventDefault(); lastTap = now; };
+    const ss = e => { if (!isUI(e.target)) e.preventDefault(); };
+    // iOS still showed the loupe, so a one-finger touch has its default cancelled at touchstart (pointer events still
+    // arrive; a two-finger pinch is left alone)
+    const ts = e => { if (e.touches.length === 1 && onBoard(e.target)) e.preventDefault(); };   // (only on the 3D board: cards, bubbles and backdrops keep their clicks)
+    const NZ = [['dblclick', nz], ['selectstart', ss], ['contextmenu', nz], ['touchend', te], ['touchstart', ts]];   // (pinch zoom stays allowed)
+    NZ.forEach(([t, f]) => document.addEventListener(t, f, { capture: true, passive: false }));
+    const unNZ = () => { NZ.forEach(([t, f]) => document.removeEventListener(t, f, { capture: true })); H.classList.remove('hand-on'); try { getSelection().removeAllRanges(); } catch (er) {} };
+    return { stop() { unNZ(); o.el.removeEventListener('pointerdown', pd); o.el.removeEventListener('pointermove', pm); o.el.removeEventListener('pointerup', pu); o.el.removeEventListener('pointercancel', pu);
       removeEventListener('pointermove', wm, true); removeEventListener('pointerup', wu, true); removeEventListener('pointercancel', wu, true); document.documentElement.classList.remove('hand-drag'); }, cancel, active: () => (id !== null && /^aim/.test(mode)) || clickAim };
   }
 
