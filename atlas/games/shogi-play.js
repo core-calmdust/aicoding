@@ -21,20 +21,20 @@
   const BASET = [0, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6];   // promoted → original
 
   const STR = {
-    ja: { mate: 'まで{n}手で詰み', resign: 'まで{n}手で投了', sen: '千日手', perp: '連続王手の千日手', decl: '入玉宣言', max: '512手で引き分け', yes: '成る', no: '成らない', check: '王手！', ply: '{n}手目', book: '定跡' },
-    en: { mate: 'Checkmate in {n} moves', resign: 'Resigned at move {n}', sen: 'Repetition (sennichite)', perp: 'Perpetual check', decl: 'Entering-king declaration', max: 'Draw at move 512', yes: 'Promote', no: 'Keep', check: 'Check!', ply: 'Move {n}', book: 'Book' },
-    zh: { mate: '第{n}手将死', resign: '第{n}手认输', sen: '千日手', perp: '连续将军的千日手', decl: '入玉宣言', max: '512手和棋', yes: '升变', no: '不升变', check: '将军！', ply: '第{n}手', book: '定式' },
-    ko: { mate: '{n}수 만에 외통', resign: '{n}수 만에 기권', sen: '천일수', perp: '연속 장군 천일수', decl: '입옥 선언', max: '512수 무승부', yes: '승격', no: '승격 안 함', check: '장군!', ply: '{n}수째', book: '정석' },
-    es: { mate: 'Jaque mate en {n} jugadas', resign: 'Abandono en la jugada {n}', sen: 'Repetición (sennichite)', perp: 'Jaque perpetuo', decl: 'Declaración de rey entrado', max: 'Tablas en la jugada 512', yes: 'Promocionar', no: 'No', check: '¡Jaque!', ply: 'Jugada {n}', book: 'Libro' },
-    fr: { mate: 'Mat en {n} coups', resign: 'Abandon au coup {n}', sen: 'Répétition (sennichite)', perp: 'Échec perpétuel', decl: 'Déclaration du roi entré', max: 'Nulle au coup 512', yes: 'Promouvoir', no: 'Garder', check: 'Échec !', ply: 'Coup {n}', book: 'Théorie' },
-    pt: { mate: 'Xeque-mate em {n} lances', resign: 'Desistência no lance {n}', sen: 'Repetição (sennichite)', perp: 'Xeque perpétuo', decl: 'Declaração de rei infiltrado', max: 'Empate no lance 512', yes: 'Promover', no: 'Manter', check: 'Xeque!', ply: 'Lance {n}', book: 'Livro' },
-    de: { mate: 'Matt nach {n} Zügen', resign: 'Aufgabe nach Zug {n}', sen: 'Wiederholung (Sennichite)', perp: 'Dauerschach', decl: 'Eingedrungener König', max: 'Remis nach Zug 512', yes: 'Befördern', no: 'Nicht', check: 'Schach!', ply: 'Zug {n}', book: 'Buch' },
-    hi: { mate: '{n} चालों में मात', resign: 'चाल {n} पर हार मानी', sen: 'दोहराव (सेन्निचिते)', perp: 'लगातार शह', decl: 'राजा प्रवेश घोषणा', max: 'चाल 512 पर ड्रॉ', yes: 'प्रमोट', no: 'नहीं', check: 'शह!', ply: 'चाल {n}', book: 'ओपनिंग' },
-    ar: { mate: 'كش مات في {n} نقلة', resign: 'استسلام عند النقلة {n}', sen: 'تكرار (سينّيتشيتي)', perp: 'كش دائم', decl: 'إعلان دخول الملك', max: 'تعادل عند النقلة 512', yes: 'رقِّ', no: 'أبقِ', check: 'كش!', ply: 'النقلة {n}', book: 'افتتاح' },
-    ru: { mate: 'Мат на {n}-м ходу', resign: 'Сдача на {n}-м ходу', sen: 'Повторение (сэннитэ)', perp: 'Вечный шах', decl: 'Объявление вошедшего короля', max: 'Ничья на 512-м ходу', yes: 'Превратить', no: 'Оставить', check: 'Шах!', ply: 'Ход {n}', book: 'Дебют' },
-    'zh-TW': { mate: '第{n}手將死', resign: '第{n}手認輸', sen: '千日手', perp: '連續將軍千日手', decl: '入玉宣言', max: '第512手和局', yes: '升變', no: '不升變', check: '將軍！', ply: '第{n}手', book: '定跡' },
-    id: { mate: 'Skakmat di langkah {n}', resign: 'Menyerah di langkah {n}', sen: 'Pengulangan (sennichite)', perp: 'Skak abadi', decl: 'Deklarasi raja masuk', max: 'Seri di langkah 512', yes: 'Promosi', no: 'Tetap', check: 'Skak!', ply: 'Langkah {n}', book: 'Buku' },
-    tr: { mate: '{n}. hamlede mat', resign: '{n}. hamlede terk', sen: 'Tekrar (sennichite)', perp: 'Sürekli şah', decl: 'Giren kral beyanı', max: '512. hamlede berabere', yes: 'Terfi et', no: 'Kalsın', check: 'Şah!', ply: '{n}. hamle', book: 'Kitap' },
+    ja: { hOpp: '相手の持ち駒', hMe: '持ち駒', mate: 'まで{n}手で詰み', resign: 'まで{n}手で投了', sen: '千日手', perp: '連続王手の千日手', decl: '入玉宣言', max: '512手で引き分け', yes: '成る', no: '成らない', check: '王手！', ply: '{n}手目', book: '定跡' },
+    en: { hOpp: 'Their hand', hMe: 'Your hand', mate: 'Checkmate in {n} moves', resign: 'Resigned at move {n}', sen: 'Repetition (sennichite)', perp: 'Perpetual check', decl: 'Entering-king declaration', max: 'Draw at move 512', yes: 'Promote', no: 'Keep', check: 'Check!', ply: 'Move {n}', book: 'Book' },
+    zh: { hOpp: '对方持驹', hMe: '我的持驹', mate: '第{n}手将死', resign: '第{n}手认输', sen: '千日手', perp: '连续将军的千日手', decl: '入玉宣言', max: '512手和棋', yes: '升变', no: '不升变', check: '将军！', ply: '第{n}手', book: '定式' },
+    ko: { hOpp: '상대 손 패', hMe: '내 손 패', mate: '{n}수 만에 외통', resign: '{n}수 만에 기권', sen: '천일수', perp: '연속 장군 천일수', decl: '입옥 선언', max: '512수 무승부', yes: '승격', no: '승격 안 함', check: '장군!', ply: '{n}수째', book: '정석' },
+    es: { hOpp: 'Mano rival', hMe: 'Tu mano', mate: 'Jaque mate en {n} jugadas', resign: 'Abandono en la jugada {n}', sen: 'Repetición (sennichite)', perp: 'Jaque perpetuo', decl: 'Declaración de rey entrado', max: 'Tablas en la jugada 512', yes: 'Promocionar', no: 'No', check: '¡Jaque!', ply: 'Jugada {n}', book: 'Libro' },
+    fr: { hOpp: 'Main adverse', hMe: 'Ta main', mate: 'Mat en {n} coups', resign: 'Abandon au coup {n}', sen: 'Répétition (sennichite)', perp: 'Échec perpétuel', decl: 'Déclaration du roi entré', max: 'Nulle au coup 512', yes: 'Promouvoir', no: 'Garder', check: 'Échec !', ply: 'Coup {n}', book: 'Théorie' },
+    pt: { hOpp: 'Mão rival', hMe: 'Sua mão', mate: 'Xeque-mate em {n} lances', resign: 'Desistência no lance {n}', sen: 'Repetição (sennichite)', perp: 'Xeque perpétuo', decl: 'Declaração de rei infiltrado', max: 'Empate no lance 512', yes: 'Promover', no: 'Manter', check: 'Xeque!', ply: 'Lance {n}', book: 'Livro' },
+    de: { hOpp: 'Gegner-Hand', hMe: 'Deine Hand', mate: 'Matt nach {n} Zügen', resign: 'Aufgabe nach Zug {n}', sen: 'Wiederholung (Sennichite)', perp: 'Dauerschach', decl: 'Eingedrungener König', max: 'Remis nach Zug 512', yes: 'Befördern', no: 'Nicht', check: 'Schach!', ply: 'Zug {n}', book: 'Buch' },
+    hi: { hOpp: 'विरोधी के हाथ', hMe: 'आपके हाथ', mate: '{n} चालों में मात', resign: 'चाल {n} पर हार मानी', sen: 'दोहराव (सेन्निचिते)', perp: 'लगातार शह', decl: 'राजा प्रवेश घोषणा', max: 'चाल 512 पर ड्रॉ', yes: 'प्रमोट', no: 'नहीं', check: 'शह!', ply: 'चाल {n}', book: 'ओपनिंग' },
+    ar: { hOpp: 'يد الخصم', hMe: 'يدك', mate: 'كش مات في {n} نقلة', resign: 'استسلام عند النقلة {n}', sen: 'تكرار (سينّيتشيتي)', perp: 'كش دائم', decl: 'إعلان دخول الملك', max: 'تعادل عند النقلة 512', yes: 'رقِّ', no: 'أبقِ', check: 'كش!', ply: 'النقلة {n}', book: 'افتتاح' },
+    ru: { hOpp: 'В руке соперника', hMe: 'У тебя в руке', mate: 'Мат на {n}-м ходу', resign: 'Сдача на {n}-м ходу', sen: 'Повторение (сэннитэ)', perp: 'Вечный шах', decl: 'Объявление вошедшего короля', max: 'Ничья на 512-м ходу', yes: 'Превратить', no: 'Оставить', check: 'Шах!', ply: 'Ход {n}', book: 'Дебют' },
+    'zh-TW': { hOpp: '對方持駒', hMe: '我的持駒', mate: '第{n}手將死', resign: '第{n}手認輸', sen: '千日手', perp: '連續將軍千日手', decl: '入玉宣言', max: '第512手和局', yes: '升變', no: '不升變', check: '將軍！', ply: '第{n}手', book: '定跡' },
+    id: { hOpp: 'Tangan lawan', hMe: 'Tanganmu', mate: 'Skakmat di langkah {n}', resign: 'Menyerah di langkah {n}', sen: 'Pengulangan (sennichite)', perp: 'Skak abadi', decl: 'Deklarasi raja masuk', max: 'Seri di langkah 512', yes: 'Promosi', no: 'Tetap', check: 'Skak!', ply: 'Langkah {n}', book: 'Buku' },
+    tr: { hOpp: 'Rakibin elinde', hMe: 'Elindeki', mate: '{n}. hamlede mat', resign: '{n}. hamlede terk', sen: 'Tekrar (sennichite)', perp: 'Sürekli şah', decl: 'Giren kral beyanı', max: '512. hamlede berabere', yes: 'Terfi et', no: 'Kalsın', check: 'Şah!', ply: '{n}. hamle', book: 'Kitap' },
   };
 
   // two players on one device (ctx.mode 'pvp'): the sides' names, whose turn, who won
@@ -74,13 +74,23 @@
   }
 
   function injectCss() {
+    // (詰将棋 hand chips: see handStrip)
     if (document.getElementById('sgPlayCss')) return;
     const s = document.createElement('style'); s.id = 'sgPlayCss';
     s.textContent = `.sgpromo{position:fixed;z-index:1000;display:flex;gap:6px;padding:6px;border-radius:16px;background:rgba(255,253,247,.97);border:2px solid #fff;box-shadow:0 10px 26px -10px rgba(80,40,0,.55);transform:translate(-50%,calc(-100% - 18px));animation:sgpIn .22s cubic-bezier(.3,1.4,.5,1)}
 .sgpromo button{font:900 16px/1 var(--round,system-ui,sans-serif);padding:12px 16px;border-radius:12px;border:0;cursor:pointer;white-space:nowrap;box-shadow:0 3px 0 rgba(0,0,0,.18)}
 .sgpromo .y{background:#d8321c;color:#fff}.sgpromo .n{background:#ece5d6;color:#3a3226}
 @keyframes sgpIn{from{transform:translate(-50%,calc(-100% - 6px)) scale(.8)}}
-.hud .sgk{font-style:normal;font-size:18px;line-height:1}`;
+.hud .sgk{font-style:normal;font-size:18px;line-height:1}
+.sghs{position:fixed;z-index:75;top:calc(10px + env(safe-area-inset-top));left:max(12px,env(safe-area-inset-left));right:104px;display:flex;flex-direction:column;gap:5px;pointer-events:none}
+.sghs .r{display:flex;align-items:center;flex-wrap:wrap;gap:4px;pointer-events:auto}
+.sghs .lb{font:800 11px/1 var(--round,system-ui,sans-serif);color:#fff;background:rgba(60,36,16,.72);padding:5px 8px;border-radius:999px;margin-inline-end:2px}
+.sghs .op .lb{background:rgba(150,40,30,.78)}
+.sghs .c{position:relative;display:inline-grid;place-items:center;min-width:30px;height:30px;padding:0 4px;border-radius:9px;background:#f6e2b8;border:2px solid #b98a4e;box-shadow:0 2px 0 #8a6232;font:900 16px/1 "Hiragino Mincho ProN","Yu Mincho",serif;color:#2a1a0e}
+.sghs .op .c{transform:none}
+.sghs button.c{cursor:pointer}.sghs button.c.on{background:#bdf0d2;border-color:#2fa864;box-shadow:0 2px 0 #1f7a46}
+.sghs .c i{position:absolute;right:-6px;top:-6px;min-width:17px;height:17px;border-radius:9px;background:#2a1a0e;color:#fff;font:800 11px/17px system-ui,sans-serif;font-style:normal;text-align:center;padding:0 3px}
+.sghs .nil{color:rgba(255,255,255,.8);font-weight:800;text-shadow:0 1px 2px rgba(0,0,0,.4)}`;
     document.head.appendChild(s);
   }
 
@@ -128,7 +138,8 @@
       stands.forEach((k, i) => { k.position.set(ST[i].x, 0, ST[i].z); k.rotation.y = 0; k.visible = !tall; });
       // wide: the player's stand sits a little nearer the bottom — shift the scene so the HUD stays clear
       board.position.z = tall ? 0 : .25;
-      if (T3.fit) T3.fit(tall ? { w: (FW + 1.8) * SC, d: (FH + 1 + 2 * 1.45) * SC, y: Y * SC, pitch: 1.53 } : { w: 16.4 * SC, d: 13.1 * SC, y: Y * SC, pitch: 1.53 });
+      // 詰将棋 (ctx.pz) on phones: the defender's pieces in hand (the row above the board) must be read — more room at the top
+      if (T3.fit) T3.fit(tall ? { w: (FW + 1.8) * SC, d: (FH + 1 + 2 * 1.45 + (PZ ? 1.6 : 0)) * SC, y: Y * SC, pitch: 1.53, cz: PZ ? -.8 * SC : 0 } : { w: 16.4 * SC, d: 13.1 * SC, y: Y * SC, pitch: 1.53 });
       T3.kick(400);
     }
     const slotXZ = (who, t) => {   // who: 0 = player, 1 = AI
@@ -160,7 +171,21 @@
           hand[who].push({ t: ty, g, badge: b });
         }
       }
-      T3.kick(200);
+      if (PZ && tall) { hand.forEach(l => l.forEach(h => { h.g.visible = false; if (h.badge) h.badge.visible = false; })); strays.forEach(g => { g.visible = false; }); }   // (詰将棋 on phones: the chips at the top show them)
+      T3.kick(200); handStrip();
+    }
+    // 詰将棋 (ctx.pz): the pieces in hand as readable chips at the top of the screen — the defender's (often every piece left)
+    // and the player's own (tap one to drop it) — the 3D rows beside the board are too small to read on a phone (2026-11-10)
+    let strip = null;
+    const HK = { 1: '歩', 2: '香', 3: '桂', 4: '銀', 5: '角', 6: '飛', 7: '金' };   // (engine types: HANDS order 飛 角 金 銀 桂 香 歩)
+    function handStrip() {
+      if (!PZ || !P) return;
+      if (!strip) { strip = document.createElement('div'); strip.className = 'sghs'; (ctx.panelHost || document.body).appendChild(strip);
+        strip.addEventListener('click', e => { const b = e.target.closest('button[data-t]'); if (!b || busy || over || !pzOn) return; e.stopPropagation(); const ty = +b.dataset.t;
+          if (sel && sel.hand === ty) return deselect(); if (legal.some(m => E.isDrop(m) && E.mFrom(m) - 80 === ty)) select({ hand: ty, who: 0 }); }); }
+      const row = (who, lb) => { const c = who ? ac : hc, items = HANDS.map(ty => [ty, P.hand[c * 8 + ty]]).filter(x => x[1]);
+        return `<div class="r${who ? ' op' : ''}"><span class="lb">${lb}</span>${items.length ? items.map(([ty, n]) => who ? `<span class="c">${HK[ty]}${n > 1 ? `<i>${n}</i>` : ''}</span>` : `<button type="button" class="c${sel && sel.hand === ty ? ' on' : ''}" data-t="${ty}">${HK[ty]}${n > 1 ? `<i>${n}</i>` : ''}</button>`).join('') : '<span class="nil">—</span>'}</div>`; };
+      strip.innerHTML = row(1, S.hOpp || STR.en.hOpp) + row(0, S.hMe || STR.en.hMe);
     }
     function buildBoard(fallIn) {
       Object.values(pcs).forEach(g => board.remove(g)); pcs = {}; let i = 0;
@@ -214,9 +239,9 @@
     function select(s) {
       const old = selPiece(); if (old) lift(old, false, sel.sq != null ? Y : KH);
       sel = s; const g = selPiece(); if (g) lift(g, true, s.sq != null ? Y : KH);
-      closePopup(); drawMarks();
+      closePopup(); drawMarks(); handStrip();
     }
-    function deselect() { if (!sel) return; const old = selPiece(); if (old) lift(old, false, sel.sq != null ? Y : KH); sel = null; closePopup(); drawMarks(); }
+    function deselect() { if (!sel) return; const old = selPiece(); if (old) lift(old, false, sel.sq != null ? Y : KH); sel = null; closePopup(); drawMarks(); handStrip(); }
 
     /* ---------- hud ---------- */
     function hud(msg) {
@@ -466,6 +491,7 @@
         ctx.el.removeEventListener('click', onClick); removeEventListener('resize', onResize);
         if (worker) worker.terminate(); worker = null; if (hintW) hintW.terminate(); hintW = null;
         if (window.__shogiTable === dbg) delete window.__shogiTable;
+        if (strip) strip.remove();
       },
     };
     // test hooks (Playwright): screen positions of squares / the player's hand pieces, and the state
