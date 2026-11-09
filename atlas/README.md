@@ -13,6 +13,7 @@
 | `icons3d.js` | デフォルメした3Dのコマとアイコン用シーン（`tools/icons.html` で `images/atlas/*.webp` に書き出す。`<id>.webp`＝ゲームアイコン、`p-<name>.webp`＝タイトル画面に浮かぶコマ） |
 | `table3d.js` | 3D盤（three.js r128）。全ゲームの盤モデルと、表示/対局のカメラ |
 | `games/<id>.js` | 3D盤で遊べるゲームのアダプタ（いまは reversi） |
+| `npc/roster.js` / `npc/npc.js` / `npc/t/<lang>.js` | AI戦のボス（3レベルごと、全167体）と観戦キャラの会話。名簿・会話の動き・14言語のセリフ／称号／まめちしき。3Dは `avatars/sp-boss.js`、画像は `tools/bosses.html` で書き出す |
 | `i18n.js` / `app.js` / `index.html` | ポータル画面（10言語） |
 
 ## ゲームを追加するとき

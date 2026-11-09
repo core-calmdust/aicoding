@@ -637,6 +637,12 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
     setTimeout(coins, 300); document.addEventListener('visibilitychange', () => { if (!document.hidden) coins(); });
     document.querySelectorAll('a.snd.home, .brand a.series').forEach(a => { a.href = BASE; });
     placeField();
+    // AI games: the boss of the level and a watching creature talk now and then (atlas/npc/npc.js, common rule 2026-11-09)
+    (function npc() {
+      if (o.npc === false || !GAME) return;
+      const s = document.createElement('script'); s.src = BASE + 'npc/npc.js?v=1'; s.onload = () => { try { window.AtlasNPC.skin(GAME); } catch (e) {} };
+      setTimeout(() => document.head.appendChild(s), 1500);   // after the board and the first frames
+    })();
     return { T3, ready, alignTo, view };
   }
   /* ---------- 場所 (the table design, shared with the portal) and 明るさ: the first row of the new-game dialog's デザイン tab ---------- */
