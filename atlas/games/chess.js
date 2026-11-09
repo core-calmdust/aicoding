@@ -394,6 +394,7 @@
       PZ.moved(uciOf(moves[moves.length - 1]), { mate: st.over && st.why === 'mate', over: st.over, why: st.why, check: pos.inCheck(), n: moves.length });
     }
     function pzLoad(fen) {   // a new puzzle: the side to move is put at the bottom, the pieces drop in
+      if (!E) { PZ.fen = fen; return; }   // (the engine is still loading: it starts from PZ.fen)
       timers.forEach(clearTimeout); timers.length = 0; closePromo(); clear(mv); clear(hl);
       human = fen.split(' ')[1] === 'b' ? 1 : 0; flip = human === 1;
       startFen = fen; moves = []; over = false; busy = true; sel = -1; thinking = false; jid++; pzOn = false;

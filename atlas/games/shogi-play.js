@@ -446,6 +446,7 @@
     function pzLoad(sfen, sol) {   // the next puzzle: a new position, the pieces drop in again
       timers.forEach(clearTimeout); timers.length = 0; jobId++; closePopup();
       SF = sfen; hc = SF.split(' ')[1] === 'w' ? 1 : 0; ac = hc ^ 1; pzSol = sol || []; region = null;
+      if (!E) return;   // (the engine is still loading: load() starts from SF)
       P = new E.Position(); P.setSfen(SF); moves = []; last = null; sel = null; hint = null; hintJ++; over = null; busy = true; pzOn = false;
       buildBoard(true); buildHands(); drawMarks();
       later(pzReady, 80 + 40 * 14 + 300);
