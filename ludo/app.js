@@ -467,15 +467,16 @@ function renderDialog() {
   $('#fLevel').classList.toggle('hidden', D.mode === 'pvp' || rated);
   $('#fFirst').classList.toggle('hidden', D.mode === 'watch' || rated);
   $('#fOpts').classList.toggle('hidden', D.rule !== 'ludo' || rated);
+  $('#fHouse2').classList.toggle('hidden', D.rule !== 'ludo' || rated);
   $('#levelRange').value = D.level; $('#levelName').innerHTML = levelLabelHTML(D.level);
   $('#optAutoRoll').checked = D.autoRoll; $('#optAutoPick').checked = D.autoPick;
-  if (window.LudoHouse) { const HL = LudoHouse.T[LANG] || LudoHouse.T.en, n = LudoHouse.changed(); $('#hrLbl').textContent = HL.ui[0]; $('#hrSum').textContent = n ? HL.ui[9].replace('{n}', n) : ''; }   // (2026-11-09: a plain ハウスルール ⚙ button; a badge only when something is changed)
+  if (window.LudoHouse) { const HL = LudoHouse.T[LANG] || LudoHouse.T.en, n = LudoHouse.changed(); ['', '2'].forEach(k => { $('#hrLbl' + k).textContent = HL.ui[0]; $('#hrSum' + k).textContent = n ? HL.ui[9].replace('{n}', n) : ''; const tg = $('#hrTags' + k); if (tg) tg.innerHTML = LudoHouse.tagsHTML ? LudoHouse.tagsHTML(LANG) : ''; }); }   // (+ the changed rules as tags)   // (2026-11-09: a plain ハウスルール ⚙ button; a badge only when something is changed)
   $('#bdRow').innerHTML = ['classic', 'wood'].map(k => `<button type="button" data-v="${k}" class="${D.design[D.rule] === k ? 'on' : ''}">${miniArt(D.rule, k)}<span>${t('bd.' + k)}</span></button>`).join('');
 }
 function openNew() { draft = JSON.parse(JSON.stringify(settings)); if (G && G.rated) draft.mode = 'rated'; if (draft.mode === 'rated' && !window.LudoRated) draft.mode = 'ai'; renderDialog(); $('#newOverlay').classList.add('show'); }
 $('#btnNew').onclick = openNew;
 // the ルール button on each game card (shared/ngtabs.js): that rule's tutorial
-$('#btnHouse').onclick = () => { if (window.LudoHouse) LudoHouse.open({ lang: LANG, onClose: () => renderDialog() }); };
+$('#btnHouse').onclick = $('#btnHouse2').onclick = () => { if (window.LudoHouse) LudoHouse.open({ lang: LANG, theme: document.documentElement.classList.contains('atlas-skin') ? 'atlas' : '', onClose: () => renderDialog() }); };   // (the full board: the portal's cream colours, 2026-11-09)
 $('#ruleCards').ngtRules = r => { if (window.LudoLearn) LudoLearn.openRules(r); };
 $('#ruleCards').onclick = e => { const b = e.target.closest('[data-v]'); if (!b) return; draft.rule = b.dataset.v; if (draft.rule === 'pachisi' && draft.players === 3) draft.players = 4; renderDialog(); };
 const segClick = (id, key, num) => { $(id).onclick = e => { const b = e.target.closest('button[data-v]'); if (!b || b.disabled) return; draft[key] = num ? +b.dataset.v : b.dataset.v; renderDialog(); }; };
