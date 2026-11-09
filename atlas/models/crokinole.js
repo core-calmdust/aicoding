@@ -88,7 +88,8 @@
   function triTile(x, y, s) {
     const b = y / (s * .8660254), a = x / s - b * .5, ia = Math.floor(a), ib = Math.floor(b), fa = a - ia, fb = b - ib, up = fa + fb < 1 ? 1 : 0;
     const e = up ? Math.min(fa, fb, 1 - fa - fb) : Math.min(1 - fa, 1 - fb, fa + fb - 1);
-    return { h: hash(ia, ib, up), up, e, dir: (Math.floor(hash(ib, ia, up + 3) * 3)) * Math.PI / 3 + Math.PI / 6 };
+    const ca = ia + (up ? 1 / 3 : 2 / 3), cb = ib + (up ? 1 / 3 : 2 / 3);
+    return { px: (ca + cb * .5) * s, py: cb * s * .8660254, h: hash(ia, ib, up), up, e, dir: (Math.floor(hash(ib, ia, up + 3) * 3)) * Math.PI / 3 + Math.PI / 6 };
   }
   const SURF = {
     classic: (N) => { const O = { cx: 4, by: -46, asp: .11, sp: .62, wp: 2.2, ring: .55, fib: .34, drift: .32 }, A = hx('#ebd09d'), B = hx('#b8864f');
@@ -99,20 +100,21 @@
       // and grain direction, glue seams between them
       const W3 = [WOOD.maple, WOOD.cherry, WOOD.walnut], O = { cx: 0, by: -40, asp: .08, sp: .45, wp: 1.4, ring: .5, fib: .4, drift: .25 }, SEAM = [40, 24, 14];
       const woodOf = (h, up) => up && h < .34 ? W3[2] : W3[hash(h * 37, 5, 1) < .52 ? 0 : 1];   // walnut only on upward pieces: two never share an edge
-      // (2026-11-10) every piece cut from a different spot of the plank: its own shift, a slight turn, ring spacing and figure
-      // (kept close to the base look — only enough that no two pieces read as copies)
-      const grain = (x, y, dir, h, w) => {
+      // (2026-11-10) every piece cut from a different spot of the plank, and (later the same day) showing its growth rings: the
+      // grain is laid out round the piece's own centre (px, py) — a ring centre just off the piece, stretched along the grain,
+      // so each piece shows a few soft arcs of a year ring (cathedral figure) rather than straight lines. Kept faint.
+      const grain = (x, y, dir, h, w, px, py) => {
         const q = k => hash(h * 131 + k * 17, k, 11);
-        dir += (q(1) - .5) * .38;
-        const c = Math.cos(dir), sn = Math.sin(dir), a = x * c + y * sn + (q(2) - .5) * 60, b = -x * sn + y * c + (q(3) - .5) * 60;
-        const t = woodT(N, a, b, Object.assign({}, O, { off: h * 40, cx: (q(4) - .5) * 30, sp: O.sp * (.78 + q(5) * .5), asp: O.asp * (.6 + q(6) * .9), ring: O.ring * (.8 + q(7) * .4), wp: O.wp * (.75 + q(8) * .6) }));
+        dir += (q(1) - .5) * .5;
+        const c = Math.cos(dir), sn = Math.sin(dir), dx = x - px, dy = y - py, a = dx * c + dy * sn, b = -dx * sn + dy * c;
+        const t = woodT(N, a, b, Object.assign({}, O, { off: h * 40, cx: (q(4) - .5) * 1.2, by: -(1.4 + q(2) * 3.2) * (q(3) < .5 ? 1 : -1), asp: .32 + q(6) * .3, sp: .34 + q(5) * .2, ring: O.ring * (.75 + q(7) * .3), wp: .5 + q(8) * .5 }));
         return mix(w[0], w[1], .1 + t * .5 + (hash(h * 91, 3, 7) - .5) * .12);
       };
       const B0 = R5 + .7, ROWS = 2, BW = (RB - B0) / ROWS, NB = Math.round(2 * Math.PI * (B0 + RB) / 2 / (BW / .866));
       return (x, y) => {
         const r = Math.hypot(x, y);
         if (r < R15 - .35) {
-          const T = triTile(x, y, 1.7), col = grain(x, y, T.dir, T.h, woodOf(T.h, T.up));
+          const T = triTile(x, y, 1.7), col = grain(x, y, T.dir, T.h, woodOf(T.h, T.up), T.px, T.py);
           return T.e < .035 ? mix(col, SEAM, .55) : col;
         }
         if (r > B0) {
@@ -120,13 +122,14 @@
           const a = (th + Math.PI) / (2 * Math.PI) * NB + row * .5 - t * .5, ia = Math.floor(a), fa = a - ia, up = fa + t < 1 ? 1 : 0;
           const e = up ? Math.min(fa, t, 1 - fa - t) : Math.min(1 - fa, 1 - t, fa + t - 1);
           const h = hash(ia, row, up), dir = th + Math.PI / 2 + (Math.floor(hash(row, ia, up + 3) * 3)) * Math.PI / 3;
-          const col = grain(x, y, dir, h, woodOf(h, up));
+          const tc = ((ia + .5) - row * .5 + .25) / NB * 2 * Math.PI - Math.PI, rc = B0 + (row + .5) * BW;   // the piece's centre (near enough)
+          const col = grain(x, y, dir, h, woodOf(h, up), Math.cos(tc) * rc, Math.sin(tc) * rc);
           return e < .045 ? mix(col, SEAM, .6) : e < .08 ? mix(col, SEAM, .2) : col;
         }
         const n = 16, th = Math.atan2(y, x), k = Math.floor((th + Math.PI) / (2 * Math.PI / n)), thc = -Math.PI + (k + .5) * 2 * Math.PI / n;
         const tan = r * Math.sin(th - thc), w = k % 2 ? WOOD.cherry : WOOD.maple;
-        const q = j => hash(k * 29 + j * 7, j, 13);   // each wedge its own cut (shift, spacing, ring centre)
-        const col = mix(w[0], w[1], .12 + woodT(N, tan + (q(1) - .5) * 40, r + (q(2) - .5) * 40, Object.assign({}, O, { off: k * 9.7, by: -30 + (q(3) - .5) * 30, cx: (q(4) - .5) * 20, sp: O.sp * (.8 + q(5) * .45), wp: O.wp * (.8 + q(6) * .5) })) * .5);
+        const q = j => hash(k * 29 + j * 7, j, 13);   // each wedge its own cut: soft cathedral arcs of the year rings running along it
+        const col = mix(w[0], w[1], .12 + woodT(N, tan + (q(1) - .5) * 3, r, Object.assign({}, O, { off: k * 9.7, cx: 0, by: R15 - 3 - q(3) * 9, asp: .2 + q(4) * .12, sp: .55 + q(5) * .3, wp: .7 + q(6) * .6, ring: O.ring * .85 })) * .5);
         const seam = Math.min(Math.abs(r * Math.sin(th - (-Math.PI + k * 2 * Math.PI / n))), Math.abs(r * Math.sin(th - (-Math.PI + (k + 1) * 2 * Math.PI / n))));
         return seam < .05 ? mix(col, SEAM, .5) : col;
       };
