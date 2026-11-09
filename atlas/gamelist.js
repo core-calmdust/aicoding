@@ -4,8 +4,8 @@
 (function () {
   'use strict';
   const SHOTS = new Set(['shogi', 'chess', 'checkers', 'ugolki', 'fanorona', 'alquerque', 'xiangqi', 'janggi', 'tafl', 'reversi', 'go', 'gomoku', 'dots', 'connect4', 'morris', 'hex',
-    'mancala', 'backgammon', 'sudoku', 'speedsudoku', 'samegame', 'jailbreak', 'poker', 'baccarat', 'blackjack', 'solitaire', 'ur', 'agon', 'konane', 'senet', 'ludo', 'carrom']);
-  const SHOT_V = 11;                                   // bump after regenerating the thumbnails
+    'mancala', 'backgammon', 'sudoku', 'speedsudoku', 'samegame', 'jailbreak', 'poker', 'baccarat', 'blackjack', 'solitaire', 'ur', 'agon', 'konane', 'senet', 'ludo', 'carrom', 'crokinole']);
+  const SHOT_V = 12;                                   // bump after regenerating the thumbnails
   const FX = ['ai', 'online', 'lessons', 'puzzles'];  // the feature icons shown on a card (labels come from the tag.* strings)
 
   const IC = {   // small line icons for the footer buttons

@@ -2,7 +2,7 @@
    Crokinole on the 3D table — two boards (Table3D.BOARDS.crokinole, chosen in the portal's 盤 row):
    · 'classic' (the default) the Ontario parlour board: a honey maple playing surface, lacquered, the 5 / 10 / 15 lines and the
               quadrant lines in black, a red ring round the 20 hole; eight brass pegs with black rubber sleeves on the 15 line;
-              a green felt ditch and a round walnut rail. Discs of natural maple and black-stained maple with turned rings.
+              a green felt ditch and a round walnut rail. Discs of red- and black-stained maple with turned rings.
    · 'neon'      the night board of carrom carried over: black lacquer with the lines glowing in a flowing rainbow (gaming RGB),
               the rail's top edge and the pegs lit, discs of acrylic with an RGB ring that flash when they knock.
    Real proportions (NCA): a 26-inch playing surface, lines at 8 / 16 / 24 inches, a 1⅜-inch hole, a 2-inch ditch, 1¼-inch discs.
@@ -82,14 +82,14 @@
       glow(ink); g.strokeStyle = ink; g.lineWidth = .26 * u;
       for (let k = 0; k < 4; k++) { const a = Math.PI / 4 + k * Math.PI / 2, c = Math.cos(a), s = Math.sin(a); g.beginPath(); g.moveTo(X0(c * R10), X0(s * R10)); g.lineTo(X0(c * R5), X0(s * R5)); g.stroke(); }
       // the ring round the 20 hole and a fine inner ring (decoration)
-      g.fillStyle = red; glow(red); g.beginPath(); g.arc(X0(0), X0(0), (RH + .9) * u, 0, 7); g.arc(X0(0), X0(0), RH * u, 0, 7, true); g.fill();
+      g.fillStyle = red; glow(red); g.beginPath(); g.arc(X0(0), X0(0), (RH + .9) * u, 0, Math.PI * 2); g.arc(X0(0), X0(0), RH * u, Math.PI * 2, 0, true); g.fill();
       circ(R15 - 1.1, .1, neon ? '#b47bff' : 'rgba(23,17,12,.55)');
       g.shadowBlur = 0;
     });
   }
 
   /* ---------- the discs' faces ---------- */
-  const FACE = { 0: '#e9d3a8', 1: '#211c19', n0: '#d8f6ff', n1: '#2a1f48' };
+  const FACE = { 0: '#b3312a', 1: '#211c19', n0: '#d8f6ff', n1: '#2a1f48' };
   function faceTex(kind) {
     return X.canvasTex('ckFace' + kind, SZ(256), SZ(256), (g, W) => {
       const c = W / 2; g.fillStyle = FACE[kind]; g.fillRect(0, 0, W, W);
@@ -98,7 +98,7 @@
       const N = X.makeNoise(kind === 0 ? 3 : 5), img = g.getImageData(0, 0, W, W), d = img.data;
       for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) { const n = N(x / W * 2, y / W * 9, 2), i = (y * W + x) * 4, k = (n - .5) * 14; d[i] += k; d[i + 1] += k; d[i + 2] += k; }
       g.putImageData(img, 0, 0);
-      const col = kind === 0 ? 'rgba(90,50,20,.32)' : 'rgba(255,230,200,.16)';
+      const col = kind === 0 ? 'rgba(60,10,5,.35)' : 'rgba(255,230,200,.16)';
       for (const r of [.86, .58]) ring(r, .02, col);
     });
   }
@@ -217,7 +217,7 @@
     U.top = TOP; U.K = K; U.look = look; U.RO = RO * K; U.RDITCH = (RB + DW / 2) * K; U.DITCHY = DY; U.R = RD * K;
     U.xz = (x, y) => [x * K, y * K];
     U.piece = c => pieceGroup(look, c);
-    U.dot = c => look === 'neon' ? (c === 0 ? '#bff0ff' : '#ff3fb4') : (c === 0 ? '#e9d3a8' : '#211c19');
+    U.dot = c => look === 'neon' ? (c === 0 ? '#bff0ff' : '#ff3fb4') : (c === 0 ? '#b3312a' : '#211c19');
     return g;
   }
 

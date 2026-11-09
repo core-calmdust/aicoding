@@ -10,6 +10,8 @@
 <script src="../tables3d.js"></script>
 <script src="../../carrom/engine.js"></script>
 <script src="../models/carrom.js"></script>
+<script src="../../crokinole/engine.js"></script>
+<script src="../models/crokinole.js"></script>
 <script>
 (function () {
   const q = new URLSearchParams(location.search), id = q.get('game') || 'carrom', look = q.get('look') || 'neon', S = +q.get('px') || 1600;
@@ -36,6 +38,13 @@
     seq.forEach((sh, i) => { const shot = sh ? { x: sh[0], ang: sh[1], v: E.VMAX * sh[2] } : E.perform(E.think(s, 9, 11 + i), 9, 23 + i); s = E.resolve(s, E.simulate(s, s.turn, shot)).s; });
     s.pcs.forEach(m => { if (!m.on) return; const p = U.piece(m.c), [x, z] = U.xz(m.x, m.y); p.position.set(x, U.top, z); g.add(p); const sh = X.contact(U.R * 1.15, .4); sh.position.set(x, U.top + .002, z); g.add(sh); });
     const st = U.striker(), [x, z] = U.xz(5, 25.26); st.position.set(x, U.top, z); g.add(st);
+  }
+  if (id === 'crokinole') {   // a round in progress: a few shots by the engine itself (fixed seeds)
+    const E = window.CrokinoleEngine, U = g.userData;
+    let s = E.newRound({ first: 0 });
+    for (let i = 0; i < 11; i++) { const shot = E.perform(E.think(s, 7, 31 + i), 7, 47 + i); s = E.resolve(s, E.simulate(s, s.turn, shot)).s; }
+    s.pcs.forEach(m => { if (!m.on) return; const p = U.piece(m.c), [x, z] = U.xz(m.x, m.y); p.position.set(x, U.top, z); g.add(p); const sh = X.contact(U.R * 1.15, .4); sh.position.set(x, U.top + .002, z); g.add(sh); });
+    const p = U.piece(0), [x, z] = U.xz(-4, E.baseY(0, -4)); p.position.set(x, U.top, z); g.add(p);
   }
   const bb = new THREE.Box3().setFromObject(g), c = bb.getCenter(new THREE.Vector3()), h = Math.max(bb.max.x - bb.min.x, bb.max.z - bb.min.z) / 2 * 1.02;
   const cam = new THREE.OrthographicCamera(-h, h, h, -h, .1, 100); cam.position.set(c.x, 30, c.z); cam.up.set(0, 0, -1); cam.lookAt(c.x, 0, c.z);

@@ -839,7 +839,7 @@
       for (let q = 0; q < 4; q++) { const a = Math.PI / 4 + q * Math.PI / 2; body += ln(X(Math.cos(a) * 20.32), X(Math.sin(a) * 20.32), X(Math.cos(a) * 30.48), X(Math.sin(a) * 30.48), 'gl', 380 + q * 60); }
       for (let q = 0; q < 8; q++) { const a = (q + .5) * Math.PI / 4; body += `<circle cx="${X(Math.cos(a) * 10.16)}" cy="${X(Math.sin(a) * 10.16)}" r="${.75 * k}" fill="#2b2420"/>`; }
       body += `<circle cx="${o}" cy="${o}" r="${2.65 * k}" fill="${s.red || '#b8241c'}"/><circle cx="${o}" cy="${o}" r="${1.75 * k}" fill="#141210"/>`;
-      const PC = { a: ['#ead6ad', '#a8885a'], b: ['#221d1a', '#000'], s: ['#ead6ad', '#d8423a'] };
+      const PC = { a: ['#b3312a', '#6a1410'], b: ['#221d1a', '#000'], s: ['#b3312a', '#ffd34d'] };
       pcs(s.pcs).forEach(([x, y, c], i) => { const [f, st2] = PC[c] || PC.a, R = 1.5875 * k; body += `<g class="pc" style="--d:${dd + 500 + i * 90}ms"><circle cx="${X(x)}" cy="${X(y)}" r="${R}" fill="${f}" stroke="${st2}" stroke-width="${c === 's' ? 2 : 1.2}"/><circle cx="${X(x)}" cy="${X(y)}" r="${R * .55}" fill="none" stroke="${st2}" stroke-width=".7" opacity=".6"/></g>`; });
       (s.arrows || []).forEach(([a, b, c2, d2], i) => { body += `<path class="ar" pathLength="1" style="--d:${dd + (s.pcs || []).length * 90 + 700 + i * 300}ms" d="M${X(a)} ${X(b)}L${X(c2)} ${X(d2)}" marker-end="url(#hsArr2)"/>`; });
     } else if (T === 'c4') {
