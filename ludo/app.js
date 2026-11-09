@@ -522,7 +522,9 @@ function applyI18n() {
   if (G) { rollLabel(); renderPlayers(); renderKifu(); showThrow(G.thr); }
   if (window.GameRecord && GameRecord.relabel) GameRecord.relabel();
 }
-$('#langSel').onchange = e => { LANG = e.target.value; try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {} applyI18n(); if (G) step(); if ($('#newOverlay').classList.contains('show')) renderDialog(); if (HB) HB.relabel(); if (window.LudoLearn) LudoLearn.relang(); if (window.LudoCoach) LudoCoach.relabel(); };
+// (2026-11-09) mid-throw or mid-move (busy) the turn is not restarted: step() bumps the token and the throw's timers then never
+// land — the dice froze and the game stopped. The labels follow; the status follows at the next step.
+$('#langSel').onchange = e => { LANG = e.target.value; try { localStorage.setItem('aicoding-lang', LANG); } catch (_) {} applyI18n(); if (G) { if (busy) renderPlayers(); else step(); } if ($('#newOverlay').classList.contains('show')) renderDialog(); if (HB) HB.relabel(); if (window.LudoLearn) LudoLearn.relang(); if (window.LudoCoach) LudoCoach.relabel(); };
 const paintSnd = () => { const b = $('#btnSound'); b.classList.toggle('off', !settings.sound); b.classList.toggle('on', !!settings.sound); b.setAttribute('aria-pressed', settings.sound ? 'true' : 'false'); };   // (the gear menu reads on / aria-pressed)
 $('#btnSound').onclick = () => { settings.sound = !settings.sound; paintSnd(); save(); };
 
