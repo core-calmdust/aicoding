@@ -224,18 +224,18 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
   }
 
   /* ---------------- UI on the skins: the same bubble as the portal's, stepping away again after a few seconds ----------------
-     PC: centred on the board, just above the online dock's bar; phones: just above the bottom tab bar (cards in the
+     PC: centred on the window, just above the online dock's bar; phones: just above the bottom tab bar (cards in the
      info column pushed the boxes around) */
   function skinUI() {
     const PC = matchMedia((window.HeaderBar && HeaderBar.MEDIA) || '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4)');
     const vis = e => e && e.getClientRects().length && getComputedStyle(e).display !== 'none';
     const fl = floatUI({ body: true,
-      // PC: just above the online dock's bar, over the board's lower edge; phones: just above the bottom tab bar
+      // PC: just above the online dock's bar (centred on the window); phones: just above the bottom tab bar
       bottom: () => {
         if (PC.matches) { const d = document.getElementById('dock') || document.querySelector('.dock'); return vis(d) ? innerHeight - d.getBoundingClientRect().top + 6 : 16; }
         const t = [...document.querySelectorAll('.mtabs, #mtabs')].find(e => vis(e) && getComputedStyle(e).position === 'fixed'); return t ? innerHeight - t.getBoundingClientRect().top + 4 : 12;
       },
-      left: () => { if (!PC.matches) return null; const h = document.getElementById('atlasGL'); if (!vis(h)) return null; const r = h.getBoundingClientRect(); return [r.left + r.width / 2, r.width]; } });
+      left: () => null });   // centred on the whole window, as on the portal's 3D table
     fl.el.classList.add('npc-skin');
     return { say: fl.say, hide: fl.hide };
   }
