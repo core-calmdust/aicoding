@@ -216,10 +216,14 @@
     const H = document.documentElement; H.classList.add('hand-on');
     const isUI = t => t && t.closest && t.closest('button,a,input,textarea,select,label,[role=button]');
     let lastTap = 0;
+    const onBoard = t => t && (o.el.contains(t) || (t.closest && t.closest('#gl')));
     const nz = e => { if (!isUI(e.target)) e.preventDefault(); };
-    const te = e => { const now = performance.now(); if (now - lastTap < 350 && !isUI(e.target)) e.preventDefault(); lastTap = now; };
+    const te = e => { if (!onBoard(e.target)) return; const now = performance.now(); if (now - lastTap < 350) e.preventDefault(); lastTap = now; };
     const ss = e => { if (!isUI(e.target)) e.preventDefault(); };
-    const NZ = [['dblclick', nz], ['selectstart', ss], ['contextmenu', nz], ['touchend', te]];   // (pinch zoom stays allowed)
+    // iOS still showed the loupe, so a one-finger touch has its default cancelled at touchstart (pointer events still
+    // arrive; a two-finger pinch is left alone)
+    const ts = e => { if (e.touches.length === 1 && onBoard(e.target)) e.preventDefault(); };   // (only on the 3D board: cards, bubbles and backdrops keep their clicks)
+    const NZ = [['dblclick', nz], ['selectstart', ss], ['contextmenu', nz], ['touchend', te], ['touchstart', ts]];   // (pinch zoom stays allowed)
     NZ.forEach(([t, f]) => document.addEventListener(t, f, { capture: true, passive: false }));
     const unNZ = () => { NZ.forEach(([t, f]) => document.removeEventListener(t, f, { capture: true })); H.classList.remove('hand-on'); try { getSelection().removeAllRanges(); } catch (er) {} };
     return { stop() { unNZ(); o.el.removeEventListener('pointerdown', pd); o.el.removeEventListener('pointermove', pm); o.el.removeEventListener('pointerup', pu); o.el.removeEventListener('pointercancel', pu);
