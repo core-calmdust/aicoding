@@ -171,6 +171,7 @@
           hand[who].push({ t: ty, g, badge: b });
         }
       }
+      if (PZ && tall) { hand.forEach(l => l.forEach(h => { h.g.visible = false; if (h.badge) h.badge.visible = false; })); strays.forEach(g => { g.visible = false; }); }   // (詰将棋 on phones: the chips at the top show them)
       T3.kick(200); handStrip();
     }
     // 詰将棋 (ctx.pz): the pieces in hand as readable chips at the top of the screen — the defender's (often every piece left)
