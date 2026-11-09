@@ -82,9 +82,9 @@ html:not(.atlas-skin) .board-area > .hand.bottom{position:relative;left:0}
 @keyframes hintGlow{0%,100%{box-shadow:inset 0 0 0 2px var(--accent),0 0 10px 2px rgba(226,194,117,.7)}50%{box-shadow:inset 0 0 0 2px var(--accent),0 0 22px 8px rgba(226,194,117,.95)}}
 .hslot.hint{background:rgba(226,194,117,.4);animation:hintGlow 1.1s ease-in-out infinite;border-radius:8px}
 .hslot .pc{position:relative;width:var(--cw);height:var(--ch)}
-.tz-wrap{display:contents}.tz-wrap[hidden]{display:none}
-.lesson-actions .tz-zm,.cb-bar .tz-zm{flex:none!important;width:40px;padding:0}
-.tz-zm::before{content:'';display:block;width:20px;height:20px;margin:auto;background:currentColor;-webkit-mask:var(--cb-i) center/contain no-repeat;mask:var(--cb-i) center/contain no-repeat}
+.tz-btn{position:absolute;z-index:6;width:40px;height:40px;border-radius:50%;border:2px solid rgba(0,0,0,.12);background:rgba(255,255,255,.94);box-shadow:0 3px 0 rgba(0,0,0,.15);display:grid;place-items:center;padding:0;cursor:pointer;color:#3a2e24}
+.tz-btn svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.tz-btn[hidden]{display:none}
 body.tz-on .coords{opacity:0;transition:opacity .2s}   /* 詰将棋 zoom (tzStyle) */
 .frame{position:relative;padding:var(--fp) var(--fp) calc(var(--cw)*0.16) calc(var(--cw)*0.16);border-radius:10px;
   background:linear-gradient(145deg,#2a2018 0%,#16100b 55%,#22190f 100%);
@@ -1886,10 +1886,11 @@ function tzRegion(pr) {
 function tzTarget() {
   const W = boardEl.offsetWidth, H = boardEl.offsetHeight;
   if (!TZ.on || !TZ.reg || !tzActive() || !W) return { s: 1, tx: 0, ty: 0 };
-  const g = TZ.reg, cw = W / 9, ch = H / 9, pad = .45;
-  const s = Math.min(2.6, W / ((g.c1 - g.c0 + 1 + pad) * cw), H / ((g.r1 - g.r0 + 1 + pad) * ch));
+  // a little air around the problem, and the bottom strip (the zoom button in the corner) kept free (2026-11-10)
+  const g = TZ.reg, cw = W / 9, ch = H / 9, pad = .8, RB = 52;
+  const s = Math.min(2.4, W / ((g.c1 - g.c0 + 1 + pad) * cw), (H - RB) / ((g.r1 - g.r0 + 1 + pad) * ch));
   const cx = (g.c0 + g.c1 + 1) / 2 * cw, cy = (g.r0 + g.r1 + 1) / 2 * ch;
-  let tx = W / 2 - s * cx + TZ.pan[0], ty = H / 2 - s * cy + TZ.pan[1];
+  let tx = W / 2 - s * cx + TZ.pan[0], ty = (H - RB) / 2 - s * cy + TZ.pan[1];
   const ctx0 = tx, cty0 = ty;
   tx = Math.max(W - s * W, Math.min(0, tx)); ty = Math.max(H - s * H, Math.min(0, ty));
   TZ.pan[0] += tx - ctx0; TZ.pan[1] += ty - cty0;   // (the pan stops at the board's edges)
@@ -1914,22 +1915,19 @@ function tzApply(snap) {
   const a = { s: TZ.s, tx: TZ.tx, ty: TZ.ty }, t0 = performance.now(), D = 340, ez = k => 1 - Math.pow(1 - k, 3);
   (function st(n) { const k = Math.min(1, (n - t0) / D), e = ez(k); TZ.s = a.s + (T.s - a.s) * e; TZ.tx = a.tx + (T.tx - a.tx) * e; TZ.ty = a.ty + (T.ty - a.ty) * e; tzStyle(); if (k < 1) TZ.raf = requestAnimationFrame(st); else TZ.raf = 0; })(t0);
 }
-function tzBtn() {   // an icon button in the tsume card, at the start of the quit row (left of 詰将棋をやめる) — never over the board (2026-11-10)
+function tzBtn() {   // a round icon button on the board's bottom-right corner (the zoom keeps that strip free) — 2026-11-10
   const show = tzActive() && !!TZ.reg;
-  const mk = d => `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'>${d}</svg>`)}")`;
   if (!TZ.btn) {
     if (!show) return;
-    const w = TZ.btn = document.createElement('span'); w.className = 'tz-wrap';   // (a span: shared/cardbar.js only gathers buttons that are children of its bar)
-    const b = document.createElement('button'); b.type = 'button'; b.className = 'cb-ic tz-zm'; w.appendChild(b);
+    const b = TZ.btn = document.createElement('button'); b.type = 'button'; b.className = 'tz-btn';
     b.onclick = e => { e.stopPropagation(); TZ.on = !TZ.on; TZ.pan = [0, 0]; tzApply(); };
+    boardEl.parentElement.appendChild(b);
   }
-  const w = TZ.btn, b = w.firstChild, q = $('#lsQuit');
-  if (q && w.nextSibling !== q) q.before(w);
-  w.hidden = !show; if (!show) return;
+  const b = TZ.btn; b.hidden = !show; if (!show) return;
+  b.style.left = (boardEl.offsetLeft + boardEl.offsetWidth - 46) + 'px'; b.style.top = (boardEl.offsetTop + boardEl.offsetHeight - 46) + 'px';
   const zin = TZ.on && TZ.s > 1.001, k = zin ? 'all' : 'in';
   if (b.dataset.k !== k) {
-    b.dataset.k = k;
-    b.style.setProperty('--cb-i', mk(zin ? '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>' : '<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5M8 10.5h5M10.5 8v5"/>'));
+    b.dataset.k = k; b.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${zin ? '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>' : '<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5M8 10.5h5M10.5 8v5"/>'}</svg>`;
     const L = { ja: ['全体を見る', '拡大する'], en: ['Whole board', 'Zoom in'] }[LANG] || ['Whole board', 'Zoom in'];
     b.title = zin ? L[0] : L[1]; b.setAttribute('aria-label', b.title);
   }
