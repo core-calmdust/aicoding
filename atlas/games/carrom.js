@@ -202,7 +202,7 @@
     const youFirst = (+ctx.side || 1) === 1;
     const board = T3.MODELS.carrom(true); T3.show('carrom', board);
     const U = board.userData, Y = U.top, K = U.K, W = 2 * (U.S + 7 * K);
-    const baseFit = () => innerHeight > innerWidth * 1.1 ? { w: W + .25, d: W + .25, y: Y, pitch: 1.0 } : { w: W + .3, d: W + .35, y: Y, pitch: 1.0 };   // (trying a 3/4 view with perspective; was 1.36 / 1.3, nearly top-down)
+    const baseFit = () => innerHeight > innerWidth * 1.1 ? { w: W + .25, d: W + .25, y: Y, pitch: .82 } : { w: W + .3, d: W + .35, y: Y, pitch: .82 };   // a 3/4 view with perspective (was 1.36 / 1.3 nearly top-down, then 1.0)
     if (T3.fit) T3.fit(baseFit());
     const onResize = () => { if (T3.fit) T3.fit(baseFit()); };
     addEventListener('resize', onResize);
