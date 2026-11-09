@@ -163,6 +163,9 @@ function request(msg, onProgress, w, tag) {
     const thr = msg.params ? msg.params.threads : msg.type === 'think' ? allThreads() : 0;
     const full = { ...msg, ...(thr ? { mtThreads: thr } : {}) };
     if (msg.type === 'think' && (msg.level >= 28 || msg.params)) { const th = thr || mp.threads, P = msg.params; full.nodes = treeNodes(P ? (P.visits < 1e7 ? P.visits / 60 / th : P.time / 1000) : Math.min(msg.time || 1e9, LV_TIME[msg.level] * 1000 || 7000) / 1000, th, msg.spec.n); }
+    // (2026-11-09) the analyses too (review box: 600·2^k visits): with the engine's usual 400k nodes the threads filled the
+    // tree after about 1,400 visits on 19x19 and the search stopped there (mt_full), so the deeper rounds did not go deeper
+    else if (msg.type === 'analyze') { const th = mp.threads, sec = Math.min((msg.time || 2000) / 1000, (msg.visits || 60) / 60 / th); full.nodes = treeNodes(sec, th, msg.spec.n); }
     return mp.run(full, onProgress, tag || 'main').then(r => {
       if (r === undefined) return requestW(full, onProgress, w);   // (the threads failed: the usual worker)
       if (!r || r.superseded || r.error) return null;
