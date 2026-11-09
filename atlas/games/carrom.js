@@ -514,7 +514,8 @@
     function flip() { if (stopped) return; flipped = !flipped; try { localStorage.setItem(FK, flipped ? '1' : '0'); } catch (e) {} flipSync(); hand.cancel(); viewTo(); }
     flipBtn.addEventListener('click', e => { e.preventDefault(); flip(); });
     ['pointerdown', 'pointermove', 'pointerup'].forEach(k => flipBtn.addEventListener(k, e => e.stopPropagation()));
-    neonTick(); flipSync(); (document.getElementById('bv') || document.body).appendChild(flipBtn);   // (inside the board view's own layer, over its canvas) viewTo(0, true);
+    neonTick(); flipSync(); (document.getElementById('bv') || document.body).appendChild(flipBtn);   // (inside the board view's own layer, over its canvas)
+    viewTo(0, true);   // (a flip chosen last time shows at once)
     const VIEWT = { ja: ['上から見る', '斜めから見る'], en: ['View from above', 'View at an angle'], zh: ['从上方看', '斜着看'], 'zh-TW': ['從上方看', '斜著看'], ko: ['위에서 보기', '비스듬히 보기'], es: ['Vista desde arriba', 'Vista en ángulo'], fr: ['Vue de dessus', 'Vue en biais'], pt: ['Ver de cima', 'Ver em ângulo'], de: ['Von oben', 'Schräg von oben'], ru: ['Вид сверху', 'Вид под углом'], tr: ['Üstten bak', 'Açılı bak'], id: ['Lihat dari atas', 'Lihat miring'], hi: ['ऊपर से देखें', 'तिरछा देखें'], ar: ['عرض من الأعلى', 'عرض مائل'] };
     const viewBtn = document.createElement('button'); viewBtn.type = 'button'; viewBtn.className = 'crflip crview';
     const ICO_TOP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="5" y="5" width="14" height="14" rx="1.5"/><circle cx="12" cy="12" r="2.2"/></svg>';
