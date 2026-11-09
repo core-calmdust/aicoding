@@ -1600,7 +1600,7 @@
     $('dseg').innerHTML = kinds.map(k => `<button aria-pressed="${dKind === k}" data-k="${k}">${k === 'table' ? esc(P3().placeUi('table', lang)) : t('kind.' + k)}</button>`).join('');
     $('dseg').querySelectorAll('button').forEach(b => b.onclick = () => { dKind = b.dataset.k; renderDress(); });
     dsegPos();
-    $('dsort').style.display = $('drar').style.display = dKind === 'table' ? 'none' : '';
+    $('dsort').parentNode.style.display = dKind === 'table' ? 'none' : '';
     if (dKind === 'table') { $('dItems').classList.remove('grouped'); placeInto($('dItems'), true); return; }
     const slot = dKind;
     // 'own': only the owned items (by rarity) · 'rarD' / 'rarA': every item in sections by rarity (owned first in each section)
@@ -1608,12 +1608,12 @@
     $('dsort').querySelectorAll('button').forEach(b => b.onclick = () => { dSort = b.dataset.s; try { localStorage.setItem('atlas-dsort', dSort); } catch (e) {} renderDress(); });
     const ownd = it => W.owned.includes(it.id) ? 1 : 0, idx = new Map(ART.items.map((it, i) => [it.id, i]));
     const all = ART.items.filter(it => it.kind === dKind);
-    // the rarity chips: only one rarity (with its owned / all count), or every one
+    // the rarity pulldown (left of the sort): only one rarity, or every one
     const rars = [...new Set(all.map(it => it.rar))].sort((a, b) => a - b); if (dRar >= 0 && !rars.includes(dRar)) dRar = -1;
-    $('drar').setAttribute('aria-label', t('dress.rar.h'));
-    $('drar').innerHTML = [-1].concat(rars).map(r => { const of = r < 0 ? all : all.filter(it => it.rar === r);
-      return `<button type="button" class="${r < 0 ? '' : 'r' + r}" aria-pressed="${dRar === r}" data-r="${r}">${r < 0 ? esc(t('dress.rar.all')) : ART.RAR[r]}<small>${of.filter(ownd).length}/${of.length}</small></button>`; }).join('');
-    $('drar').querySelectorAll('button').forEach(b => b.onclick = () => { dRar = +b.dataset.r; try { localStorage.setItem('atlas-drar', dRar); } catch (e) {} renderDress(); });
+    $('drar').setAttribute('aria-label', t('dress.rar.h')); $('drar').title = t('dress.rar.h');
+    $('drar').innerHTML = [-1].concat(rars).map(r => `<option value="${r}"${dRar === r ? ' selected' : ''}>${r < 0 ? esc(t('dress.rar.all')) : ART.RAR[r]}</option>`).join('');
+    $('drar').className = dRar < 0 ? '' : 'r' + dRar;
+    $('drar').onchange = e => { dRar = +e.target.value; try { localStorage.setItem('atlas-drar', dRar); } catch (x) {} renderDress(); };
     const list = (dSort === 'own' ? all.filter(ownd) : all).filter(it => dRar < 0 || it.rar === dRar).sort((a, b) => (dSort === 'rarD' ? b.rar - a.rar : a.rar - b.rar) || (ownd(b) - ownd(a)) || idx.get(a.id) - idx.get(b.id));
     const sec = r => { const of = all.filter(it => it.rar === r); return `<div class="dsec r${r}"><span class="rar r${r}">${ART.RAR[r]}</span><span class="dsn">${of.filter(ownd).length} / ${of.length}</span></div>`; };
     const cell = it => { const own = W.owned.includes(it.id), on = W.av[slot] === it.id;

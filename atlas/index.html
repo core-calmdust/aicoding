@@ -548,12 +548,11 @@ html[lang=ar] .badge,html[lang=hi] .badge{letter-spacing:0}
 .item.sel{outline:4px solid var(--sky);outline-offset:-2px}
 .dbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.dbar .seg{margin:0}
 .dsort{display:flex;gap:4px;padding:4px;border-radius:99px;background:#fff;border:2px solid var(--line)}.dsort button{border:0;background:none;font:inherit;font-weight:800;font-size:13px;color:var(--ink2);padding:6px 12px;border-radius:99px;cursor:pointer}.dsort button[aria-pressed=true]{background:var(--ink);color:#fff}
-.drar{display:flex;gap:5px;flex-wrap:wrap;flex-basis:100%}.drar button{display:inline-flex;align-items:baseline;gap:5px;border:2px solid var(--line);background:#fff;font:inherit;font-weight:900;font-size:13px;color:var(--ink2);padding:4px 11px;border-radius:99px;cursor:pointer}
-.drar button small{font-size:10.5px;font-weight:800;opacity:.75}
-@media (max-width:520px){.drar{gap:4px}.drar button{font-size:12px;padding:3px 9px;gap:3px}.drar button small{font-size:9.5px}}
-.drar button.r0{color:#7a8090}.drar button.r1{color:#2a7ad8}.drar button.r2{color:#8a4ad8}.drar button.r3{color:#d8607a}.drar button.r4{color:#c88a00}
-.drar button[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:#fff}
-.drar button.r0[aria-pressed=true]{background:#8a90a0;border-color:#8a90a0}.drar button.r1[aria-pressed=true]{background:#2a7ad8;border-color:#2a7ad8}.drar button.r2[aria-pressed=true]{background:#8a4ad8;border-color:#8a4ad8}.drar button.r3[aria-pressed=true]{background:linear-gradient(90deg,#ff7a9a,#d85aa8);border-color:#d8607a}.drar button.r4[aria-pressed=true]{background:linear-gradient(90deg,#ffb83a,#ff6a8a,#5ab8ff);border-color:#ffb83a}
+.dsr{display:flex;align-items:center;gap:8px;min-width:0}
+.drar{position:relative;flex:none;display:block}.drar::after{content:'▾';position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--ink2);pointer-events:none}
+.drar select{appearance:none;-webkit-appearance:none;height:40px;border-radius:99px;border:2px solid var(--line);background:#fff;font:inherit;font-weight:800;font-size:13px;color:var(--ink);padding:0 28px 0 14px;cursor:pointer}
+.drar select.r0{color:#7a8090}.drar select.r1{color:#2a7ad8}.drar select.r2{color:#8a4ad8}.drar select.r3{color:#d8607a}.drar select.r4{color:#c88a00}
+@media (max-width:520px){.dsr{width:100%;gap:6px}.drar select{height:38px;font-size:12px;padding:0 24px 0 10px}.drar::after{right:9px}.dsr .dsort{flex:1;min-width:0;justify-content:space-between}.dsr .dsort{gap:2px;padding:3px}.dsr .dsort button{font-size:12px;padding:6px 6px;white-space:nowrap}}@media (max-width:370px){.dsr .dsort button{font-size:11px;padding:6px 5px}.drar select{padding:0 22px 0 9px}}
 .price{display:inline-flex;align-items:center;gap:4px}
 .price i{width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3a8,#ffc928 45%,#e09a00)}
 .shophead{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:22px 0 12px}.shophead h2.h{margin-block:0}   /* 「品ぞろえは…」は見出しの上下中央に */
@@ -1595,7 +1594,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 
   <!-- DRESS -->
   <section class="pg" id="pg-dress">
-    <div class="dtop"><h2 class="h" id="hDress"></h2><div class="dbar"><div class="seg" id="dseg"></div><div class="dsort" id="dsort" role="group"></div><div class="drar" id="drar" role="group"></div></div></div>
+    <div class="dtop"><h2 class="h" id="hDress"></h2><div class="dbar"><div class="seg" id="dseg"></div><div class="dsr"><label class="drar"><select id="drar"></select></label><div class="dsort" id="dsort" role="group"></div></div></div></div>
     <div class="dress">
       <div class="card dprev" id="dprev"></div>
       <div class="dgrid" id="dItems"></div>
@@ -1656,7 +1655,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 <script src="models/alquerque.js?v=2"></script>
 <script src="../ludo/engine.js?v=3"></script>
 <script src="../ludo/house.js?v=5"></script>
-<script src="../ludo/board2d.js?v=4"></script>
+<script src="../ludo/board2d.js?v=5"></script>
 <script src="models/ludo.js?v=4"></script>
 <script src="../carrom/engine.js?v=2"></script>
 <script src="models/carrom.js?v=7"></script>
@@ -1735,7 +1734,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <link rel="stylesheet" href="worldmap.css?v=18">
 <script src="worldmap.js?v=29"></script>
 <script src="updnews.js?v=7"></script>
-<script src="npc/npc.js?v=5"></script>
-<script src="app.js?v=239"></script>
+<script src="npc/npc.js?v=6"></script>
+<script src="app.js?v=240"></script>
 </body>
 </html>
