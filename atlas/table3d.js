@@ -940,7 +940,8 @@
   // 明るさ: 0 暗い（やや抑えた明かり） · 1 標準 · 2 明るい — exposure × BRIGHT[b], the soft light on the board × BOARD_K + BOARD_ADD, a lift of the ambient.
   // Kept in 'atlas-bright2' (the earlier 'atlas-bright' 0 標準 · 1 明るい · 2 とても明るい is read once: 0 → 1, 1 / 2 → 2) (2026-11-07)
   // the places (2..9) a little dimmer than they were built, to sit with the chabudai's balance; reflections' soft boxes capped (2026-11-09)
-  const ROOM_DIM = [1, 1, .76, .92, .76, 1, .86, 1, .76, 1], ENV_MAX = 1.6;   // (by place; the study and the lodge are already dim)
+  const OLD_DIM = { exp: .78, board: .5, key: .74 };   // ちゃぶ台〜書斎 (places 0..5) in the portal: × exposure, the soft board light, the key light
+  const ROOM_DIM = [1, .9, .76, .92, .76, 1, .86, 1, .76, 1], ENV_MAX = 1.6;   // (by place; the study and the lodge are already dim)
   const BRIGHT = [.8, 1, 1.2], BOARD_K = [.7, 1, 1], BOARD_ADD = [0, 0, .32], AMB_ADD = [0, 0, .14];
   let bright = (() => { try { const v = localStorage.getItem('atlas-bright2'); if (v !== null && +v >= 0 && +v <= 2) return +v | 0; const o = localStorage.getItem('atlas-bright'); return o === '1' || o === '2' ? 2 : 1; } catch (e) { return 1; } })();
   let baseExp = .78, boardLamp = null, boardLampI = 0, ambLift = null;
@@ -1297,8 +1298,11 @@
       viewOnly = []; g.traverse(x => { if (x.userData.viewOnly) viewOnly.push(x); });
       keyLight = tblInfo.key || null;
       if (keyLight) { keyLight.castShadow = true; keyLight.shadow.mapSize.setScalar(LITE ? 512 : COARSE ? 1024 : 2048); keyLight.shadow.bias = keyLight.shadow.bias || -.0004; keyLight.shadow.normalBias = .02; }
-      boardLight(TT, scene, tblInfo.board ?? .3, tblInfo.boardCol);
-      baseExp = Math.max(tblInfo.minExp || .72, tblInfo.exp || .8) * (ROOM_DIM[tableStyle] || 1); if (R) R.toneMappingExposure = expo(baseExp);
+      // the first places (2D準拠〜書斎, made before 2026-11-07) lit the board harder than the later ones: toned down to sit with them (2026-11-09)
+      const OD = tableStyle <= 5 ? OLD_DIM : null;
+      boardLight(TT, scene, (tblInfo.board ?? .3) * (OD ? OD.board : 1), tblInfo.boardCol);
+      if (OD && keyLight) keyLight.intensity *= OD.key;
+      baseExp = Math.max(tblInfo.minExp || .72, tblInfo.exp || .8) * (ROOM_DIM[tableStyle] || 1) * (OD ? OD.exp : 1); if (R) R.toneMappingExposure = expo(baseExp);
       roomBg = tblInfo.bg === null ? null : new TT.Color(tblInfo.bg || '#000').convertSRGBToLinear(); scene.background = roomBg;
       if (!museumOn) paintCss(roomCss);
       roomMode = mode; return;
@@ -1387,8 +1391,9 @@
     const fill = new TT.DirectionalLight(0xfff0d8, { morning: .3, day: .35, evening: .18, night: .06 }[mode]); fill.position.set(6, 14, 10); scene.add(fill);
     if (L.lamp) { const lamp = new TT.PointLight(0xffc98a, L.lamp, 40, 1.6); lamp.position.set(0, 13, 2); lamp.castShadow = false;   // a point-light shadow is 6 extra shadow passes per frame scene.add(lamp);
       const shade = new TT.Mesh(new TT.ConeGeometry(2.2, 1.6, 20, 1, true), new TT.MeshBasicMaterial({ color: 0xffe2b0, side: TT.DoubleSide })); shade.position.set(0, 14, 2); shade.visible = camTo < .5; lampShade = shade; scene.add(shade); }
-    boardLight(TT, scene, plain ? .12 : mode === 'night' ? .38 : mode === 'evening' ? .3 : .2);
-    baseExp = PL && PL.exp ? PL.exp : L.exp * (plain ? .8 : 1); if (R) R.toneMappingExposure = expo(baseExp);
+    boardLight(TT, scene, (plain ? .12 : mode === 'night' ? .38 : mode === 'evening' ? .3 : .2) * (plain ? 1 : OLD_DIM.board));   // (the chabudai: toned down like the other first places)
+    if (!plain) key.intensity *= OLD_DIM.key;
+    baseExp = PL && PL.exp ? PL.exp : L.exp * (plain ? .8 : OLD_DIM.exp); if (R) R.toneMappingExposure = expo(baseExp);
     scene.background = plain && localFloor ? null : new TT.Color(plain === 'tatami' ? '#6f6a40' : plain ? '#8a5226' : L.sky[1]).convertSRGBToLinear();
     roomBg = scene.background; roomMode = mode;
   }

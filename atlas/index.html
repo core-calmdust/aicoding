@@ -548,6 +548,12 @@ html[lang=ar] .badge,html[lang=hi] .badge{letter-spacing:0}
 .item.sel{outline:4px solid var(--sky);outline-offset:-2px}
 .dbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.dbar .seg{margin:0}
 .dsort{display:flex;gap:4px;padding:4px;border-radius:99px;background:#fff;border:2px solid var(--line)}.dsort button{border:0;background:none;font:inherit;font-weight:800;font-size:13px;color:var(--ink2);padding:6px 12px;border-radius:99px;cursor:pointer}.dsort button[aria-pressed=true]{background:var(--ink);color:#fff}
+.drar{display:flex;gap:5px;flex-wrap:wrap;flex-basis:100%}.drar button{display:inline-flex;align-items:baseline;gap:5px;border:2px solid var(--line);background:#fff;font:inherit;font-weight:900;font-size:13px;color:var(--ink2);padding:4px 11px;border-radius:99px;cursor:pointer}
+.drar button small{font-size:10.5px;font-weight:800;opacity:.75}
+@media (max-width:520px){.drar{gap:4px}.drar button{font-size:12px;padding:3px 9px;gap:3px}.drar button small{font-size:9.5px}}
+.drar button.r0{color:#7a8090}.drar button.r1{color:#2a7ad8}.drar button.r2{color:#8a4ad8}.drar button.r3{color:#d8607a}.drar button.r4{color:#c88a00}
+.drar button[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:#fff}
+.drar button.r0[aria-pressed=true]{background:#8a90a0;border-color:#8a90a0}.drar button.r1[aria-pressed=true]{background:#2a7ad8;border-color:#2a7ad8}.drar button.r2[aria-pressed=true]{background:#8a4ad8;border-color:#8a4ad8}.drar button.r3[aria-pressed=true]{background:linear-gradient(90deg,#ff7a9a,#d85aa8);border-color:#d8607a}.drar button.r4[aria-pressed=true]{background:linear-gradient(90deg,#ffb83a,#ff6a8a,#5ab8ff);border-color:#ffb83a}
 .price{display:inline-flex;align-items:center;gap:4px}
 .price i{width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3a8,#ffc928 45%,#e09a00)}
 .shophead{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:22px 0 12px}.shophead h2.h{margin-block:0}   /* 「品ぞろえは…」は見出しの上下中央に */
@@ -1479,8 +1485,8 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 /* many choices (ludo: rule × players): the toggle takes the row and wraps */
 .bvi .opts label:has(.sidetg button:nth-child(5)){flex:1 1 100%!important;flex-wrap:wrap}.bvi .sidetg:has(button:nth-child(5)){flex:1 1 100%;flex-wrap:wrap}.bvi .sidetg:has(button:nth-child(5)) button{flex:1 1 30%;padding-inline:6px}
 .bvi .lvpick{flex:1;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:6px;height:38px;border-radius:12px;border:2px solid var(--line);background:#fff;padding:0 12px;font:inherit;font-weight:900;color:var(--ink);cursor:pointer}
-.bvi .lvpick span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bvi .lvpick i{font-style:normal;color:var(--ink2);font-size:13px}
-@media (min-width:820px){.bvi .lvpick{height:48px;font-size:17px;padding:0 16px;border-radius:14px}.bvi .sidetg button{font-size:16px;padding:10px 8px}}
+.bvi .lvpick span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bvi .lvpick .lvb{flex:none;width:34px;height:34px;margin:-4px 0;object-fit:contain;transform:scale(1.2);pointer-events:none}.bvi .lvpick:has(.lvb) i{margin-inline-start:auto}.bvi .lvpick i{font-style:normal;color:var(--ink2);font-size:13px}
+@media (min-width:820px){.bvi .lvpick{height:48px;font-size:17px;padding:0 16px;border-radius:14px}.bvi .lvpick .lvb{width:44px;height:44px}.bvi .sidetg button{font-size:16px;padding:10px 8px}}
 .lvsheet{position:fixed;inset:0;z-index:120;background:rgba(40,30,10,0);display:flex;align-items:flex-end;justify-content:center;transition:background .2s}
 .lvsheet.on{background:rgba(40,30,10,.35)}
 .lvs-in{width:min(520px,100%);max-height:min(76vh,640px);display:flex;flex-direction:column;background:#fffdf7;border-radius:24px 24px 0 0;box-shadow:0 -10px 40px rgba(60,40,10,.25);transform:translateY(100%);transition:transform .24s cubic-bezier(.3,1.2,.5,1);padding-bottom:env(safe-area-inset-bottom)}
@@ -1589,7 +1595,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 
   <!-- DRESS -->
   <section class="pg" id="pg-dress">
-    <div class="dtop"><h2 class="h" id="hDress"></h2><div class="dbar"><div class="seg" id="dseg"></div><div class="dsort" id="dsort" role="group"></div></div></div>
+    <div class="dtop"><h2 class="h" id="hDress"></h2><div class="dbar"><div class="seg" id="dseg"></div><div class="dsort" id="dsort" role="group"></div><div class="drar" id="drar" role="group"></div></div></div>
     <div class="dress">
       <div class="card dprev" id="dprev"></div>
       <div class="dgrid" id="dItems"></div>
@@ -1624,9 +1630,9 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 <script src="../shared/atlas.js?v=20261109npc"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261101fa1"></script>
-<script src="i18n.js?v=58n"></script>
+<script src="i18n.js?v=59n"></script>
 <script src="gamelist-i18n.js?v=10n"></script>
-<script src="table3d.js?v=124"></script>
+<script src="table3d.js?v=125"></script>
 <script src="tables3d.js?v=32"></script>
 <script src="models/shogi.js?v=23"></script>
 <script src="models/chess.js?v=14"></script>
@@ -1730,6 +1736,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=29"></script>
 <script src="updnews.js?v=7"></script>
 <script src="npc/npc.js?v=5"></script>
-<script src="app.js?v=238"></script>
+<script src="app.js?v=239"></script>
 </body>
 </html>
