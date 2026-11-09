@@ -459,7 +459,7 @@
       const pg = P();
       if (pg.kind === 'tap' && !played) D.POCKETS.forEach(([x, y]) => ring(x, y, GEO.pring, MAT.pocket, 1, true));
       if ((pg.kind === 'slide' || pg.kind === 'hit' || pg.kind === 'shot' || pg.kind === 'queen') && !played && !busy) {
-        bar(-D.BX, BY, D.BX, BY, matchMedia('(pointer: coarse)').matches ? 2 * D.RS + .8 : D.LINE + .4, MAT.base, .012);
+        bar(-D.BX, BY, D.BX, BY, matchMedia('(pointer: coarse)').matches ? 2 * D.RS + 2.6 : D.LINE + .4, MAT.base, .012);
         if (pg.kind === 'slide') ring(pg.goal, BY, GEO.ring, MAT.ring, 1.25, true);
         else {
           if (drag && drag.kind === 'aim') {

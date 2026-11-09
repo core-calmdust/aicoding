@@ -107,6 +107,23 @@
     ar: { m: { place: 'حرّك الفأرة يمينًا ويسارًا', pull: 'اضغط مع الإمساك واسحب للأسفل', lr: 'حرّك الفأرة إلى الجانبين', rel: 'أفلت', how: 'حرّك الفأرة للتموضع؛ اضغط واسحب للأسفل للقوة وللجانبين للزاوية؛ أفلت لتضرب (عُد إلى الضارب للإلغاء)' },
       t: { place: 'اسحب إصبعك يمينًا ويسارًا', pull: 'اسحب للأسفل', lr: 'حرّك إصبعك إلى الجانبين', rel: 'ارفع إصبعك', how: 'اسحب جانبيًا للتموضع، وللأسفل للقوة، وللجانبين للزاوية؛ ارفع إصبعك لتضرب (عُد إلى الضارب للإلغاء)' } },
   };
+  // the first-turn how-to card: steps for a mouse (m) or a finger (t), a "don't show again" box and where to find it later
+  const HOWTO = {
+    ja: { title: '操作のしかた', m: ['マウスを左右に動かして位置を決める', 'クリックしたまま下へ引く。引くほど強い', '引いたまま左右で角度を調整', 'ボタンを離して打つ'], t: ['左右にスライドして位置を決める', 'そのまま下へスライド。引くほど強い', '指をつけたまま左右で角度を調整', '指を離して打つ'], undo: 'ストライカーのそばに戻すとやり直し', never: 'もう表示しない', note: '操作のしかたは「{r}」からいつでも見られます', ok: 'わかった' },
+    en: { title: 'How to play', m: ['Move the mouse left/right to place the striker', 'Hold the button and pull down — further is harder', 'Still holding, move left/right to aim', 'Let go to strike'], t: ['Slide left/right to place the striker', 'Keep going and slide down — further is harder', 'Finger still down, move left/right to aim', 'Lift your finger to strike'], undo: 'Back to the striker to cancel', never: "Don't show again", note: 'You can always see the controls in "{r}"', ok: 'Got it' },
+    zh: { title: '操作方法', m: ['左右移动鼠标决定位置', '按住鼠标向下拉，拉得越远越用力', '按住时左右移动调整角度', '松开按键击出'], t: ['左右滑动决定位置', '接着向下滑，拉得越远越用力', '手指不离开，左右移动调整角度', '松开手指击出'], undo: '移回击子旁边即可重来', never: '不再显示', note: '随时可在「{r}」中查看操作方法', ok: '知道了' },
+    'zh-TW': { title: '操作方法', m: ['左右移動滑鼠決定位置', '按住滑鼠往下拉，拉得越遠越用力', '按住時左右移動調整角度', '放開按鍵擊出'], t: ['左右滑動決定位置', '接著往下滑，拉得越遠越用力', '手指不離開，左右移動調整角度', '放開手指擊出'], undo: '移回擊子旁邊即可重來', never: '不再顯示', note: '隨時可在「{r}」中查看操作方法', ok: '知道了' },
+    ko: { title: '조작 방법', m: ['마우스를 좌우로 움직여 위치를 정한다', '버튼을 누른 채 아래로 당긴다. 많이 당길수록 세게', '누른 채 좌우로 각도를 조절', '버튼을 놓으면 튕긴다'], t: ['좌우로 밀어서 위치를 정한다', '그대로 아래로 민다. 많이 당길수록 세게', '손가락을 댄 채 좌우로 각도를 조절', '손가락을 떼면 튕긴다'], undo: '스트라이커 옆으로 되돌리면 다시', never: '다시 표시하지 않기', note: '조작 방법은 「{r}」에서 언제든 볼 수 있어요', ok: '알겠어' },
+    es: { title: 'Cómo jugar', m: ['Mueve el ratón a los lados para colocar el striker', 'Mantén pulsado y tira hacia abajo: cuanto más, más fuerte', 'Sin soltar, mueve a los lados para apuntar', 'Suelta para lanzar'], t: ['Desliza a los lados para colocar el striker', 'Sigue y desliza hacia abajo: cuanto más, más fuerte', 'Con el dedo apoyado, muévelo a los lados para apuntar', 'Levanta el dedo para lanzar'], undo: 'Vuelve junto al striker para cancelar', never: 'No volver a mostrar', note: 'Puedes ver los controles cuando quieras en «{r}»', ok: 'Entendido' },
+    fr: { title: 'Comment jouer', m: ['Bouge la souris à gauche/droite pour placer le striker', 'Maintiens le bouton et tire vers le bas : plus loin, plus fort', 'Toujours appuyé, gauche/droite pour viser', 'Lâche pour tirer'], t: ['Glisse à gauche/droite pour placer le striker', 'Continue vers le bas : plus loin, plus fort', 'Doigt posé, gauche/droite pour viser', 'Lève le doigt pour tirer'], undo: 'Reviens près du striker pour annuler', never: 'Ne plus afficher', note: 'Les commandes restent visibles à tout moment dans « {r} »', ok: "C'est parti" },
+    pt: { title: 'Como jogar', m: ['Mova o mouse para os lados para posicionar o striker', 'Segure o botão e puxe para baixo: quanto mais, mais forte', 'Ainda segurando, mova para os lados para mirar', 'Solte para tacar'], t: ['Deslize para os lados para posicionar o striker', 'Continue e deslize para baixo: quanto mais, mais forte', 'Com o dedo na tela, mova para os lados para mirar', 'Levante o dedo para tacar'], undo: 'Volte para perto do striker para cancelar', never: 'Não mostrar de novo', note: 'Veja os controles quando quiser em "{r}"', ok: 'Entendi' },
+    de: { title: 'So spielst du', m: ['Maus nach links/rechts: Striker platzieren', 'Taste halten und nach unten ziehen – je weiter, desto fester', 'Weiter halten, links/rechts zum Zielen', 'Loslassen zum Schnippen'], t: ['Nach links/rechts wischen: Striker platzieren', 'Weiter nach unten wischen – je weiter, desto fester', 'Finger liegen lassen, links/rechts zum Zielen', 'Finger heben zum Schnippen'], undo: 'Zurück zum Striker bricht ab', never: 'Nicht mehr anzeigen', note: 'Die Steuerung findest du jederzeit unter „{r}“', ok: 'Verstanden' },
+    ru: { title: 'Управление', m: ['Двигай мышь влево-вправо, чтобы поставить страйкер', 'Зажми кнопку и тяни вниз — чем дальше, тем сильнее', 'Не отпуская, влево-вправо — прицел', 'Отпусти — удар'], t: ['Проведи влево-вправо, чтобы поставить страйкер', 'Продолжи вниз — чем дальше, тем сильнее', 'Не отрывая палец, влево-вправо — прицел', 'Убери палец — удар'], undo: 'Вернись к страйкеру, чтобы отменить', never: 'Больше не показывать', note: 'Управление всегда можно посмотреть в разделе «{r}»', ok: 'Понятно' },
+    tr: { title: 'Nasıl oynanır', m: ['Fareyi sağa sola oynatıp vurucuyu yerleştir', 'Tuşa basılı tutup aşağı çek: ne kadar çok, o kadar güçlü', 'Basılı tutarken sağa sola nişan al', 'Bırakınca vurur'], t: ['Sağa sola kaydırıp vurucuyu yerleştir', 'Sonra aşağı kaydır: ne kadar çok, o kadar güçlü', 'Parmağın ekrandayken sağa sola nişan al', 'Parmağını kaldırınca vurur'], undo: 'Vurucunun yanına dönersen iptal olur', never: 'Bir daha gösterme', note: 'Kontrolleri istediğin zaman "{r}" bölümünde görebilirsin', ok: 'Tamam' },
+    id: { title: 'Cara bermain', m: ['Gerakkan mouse ke kiri/kanan untuk menaruh striker', 'Tahan tombol dan tarik ke bawah — makin jauh makin kuat', 'Sambil menahan, kiri/kanan untuk membidik', 'Lepas untuk menyentil'], t: ['Geser ke kiri/kanan untuk menaruh striker', 'Lanjut geser ke bawah — makin jauh makin kuat', 'Jari tetap menempel, kiri/kanan untuk membidik', 'Angkat jari untuk menyentil'], undo: 'Kembali ke dekat striker untuk batal', never: 'Jangan tampilkan lagi', note: 'Kontrol bisa dilihat kapan saja di "{r}"', ok: 'Mengerti' },
+    hi: { title: 'कैसे खेलें', m: ['माउस दाएँ-बाएँ करके स्ट्राइकर रखो', 'बटन दबाए रखकर नीचे खींचो — जितना ज़्यादा, उतना ज़ोर', 'दबाए रखते हुए दाएँ-बाएँ से निशाना', 'छोड़ो तो वार'], t: ['दाएँ-बाएँ सरकाकर स्ट्राइकर रखो', 'फिर नीचे सरकाओ — जितना ज़्यादा, उतना ज़ोर', 'उँगली टिकाए दाएँ-बाएँ से निशाना', 'उँगली उठाओ तो वार'], undo: 'स्ट्राइकर के पास लौटाओ तो रद्द', never: 'फिर मत दिखाना', note: 'नियंत्रण कभी भी "{r}" में देख सकते हो', ok: 'समझ गया' },
+    ar: { title: 'طريقة اللعب', m: ['حرّك الفأرة يمينًا ويسارًا لوضع الضارب', 'اضغط مع الإمساك واسحب للأسفل — كلما زاد السحب زادت القوة', 'وأنت ممسك، حرّك للجانبين للتصويب', 'أفلت لتنقر'], t: ['اسحب يمينًا ويسارًا لوضع الضارب', 'تابع السحب للأسفل — كلما زاد السحب زادت القوة', 'وإصبعك على الشاشة، حرّك للجانبين للتصويب', 'ارفع إصبعك لتنقر'], undo: 'عد إلى جانب الضارب للإلغاء', never: 'لا تعرض مرة أخرى', note: 'يمكنك رؤية طريقة التحكم في أي وقت من «{r}»', ok: 'فهمت' },
+  };
   const mousey = () => { try { return matchMedia('(hover: hover) and (pointer: fine)').matches; } catch (e) { return false; } };
   const how = lang => ((HOW[lang] || HOW.en)[mousey() ? 'm' : 't']);
   // Hand(o): o = { el, toCm(e) → {x, y} board cm, sign() → +1 when "down" on screen is +y for the player striking (−1 on the
@@ -230,7 +247,7 @@
       clearGuides();
       if (phase !== 'place' || !st || !human(st.turn)) return;
       const p = st.turn, by = E.baseY(p);
-      bar(-D.BX, by, D.BX, by, COARSE ? 2 * D.RS + .8 : D.LINE + .4, MAT.base, .012);   // where the striker may stand (as wide as the striker on touch screens)
+      bar(-D.BX, by, D.BX, by, COARSE ? 2 * D.RS + 2.6 : D.LINE + .4, MAT.base, .012);   // where the striker may stand (as wide as the striker on touch screens)
       const ang = drag && drag.kind === 'aim' ? aimAng : hintShot ? hintShot.ang : null;
       const mt = hintShot && !(drag && drag.kind === 'aim') ? MAT.hint : MAT.path;
       if (ang != null) {
@@ -253,8 +270,20 @@
 
     /* ---------- HUD ---------- */
     const css = document.createElement('style');
-    css.textContent = '.hud .crp{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;font-weight:800;font-size:13px;opacity:.62;white-space:nowrap}.hud .crp.on{opacity:1;background:rgba(255,255,255,.92);box-shadow:0 2px 8px rgba(0,0,0,.15)}.hud .crp i{width:15px;height:15px;border-radius:50%;display:inline-block;flex:none;box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.3)}.hud .crp b{font-size:14px}.hud .crp .q{width:11px;height:11px;background:#c3271f}.hud .crm{font-weight:800;font-size:13px;max-width:44vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.crtoast{position:fixed;left:50%;top:calc(76px + env(safe-area-inset-top));transform:translateX(-50%);z-index:90;max-width:min(92vw,560px);padding:11px 22px;border-radius:22px;background:#fff;color:#1d2133;font-weight:900;font-size:16px;box-shadow:0 0 0 3px #c23a7a,0 10px 26px rgba(0,0,0,.4);pointer-events:none;text-align:center;line-height:1.45;white-space:pre-line}.crtoast.good{background:#fff;color:#12684a;box-shadow:0 0 0 3px #1f7a55,0 10px 26px rgba(0,0,0,.4)}.crtoast.bad{background:#fff;color:#a8323a;box-shadow:0 0 0 3px #a8323a,0 10px 26px rgba(0,0,0,.4)}.crpow{position:fixed;z-index:6;pointer-events:none;padding:4px 10px;border-radius:99px;background:rgba(20,22,34,.82);color:#fff;font-weight:900;font-size:14px;transform:translate(-50%,-150%);white-space:nowrap}@media (max-width:560px){.hud .crp{padding:3px 7px;font-size:12px}.hud .crp .nm{display:none}.crtoast{font-size:14px;padding:9px 16px;border-radius:18px}}';
+    css.textContent = '.hud .crp{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;font-weight:800;font-size:13px;opacity:.62;white-space:nowrap}.hud .crp.on{opacity:1;background:rgba(255,255,255,.92);box-shadow:0 2px 8px rgba(0,0,0,.15)}.hud .crp i{width:15px;height:15px;border-radius:50%;display:inline-block;flex:none;box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.3)}.hud .crp b{font-size:14px}.hud .crp .q{width:11px;height:11px;background:#c3271f}.hud .crm{font-weight:800;font-size:13px;max-width:44vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.crtoast{position:fixed;left:50%;top:calc(76px + env(safe-area-inset-top));transform:translateX(-50%);z-index:90;max-width:min(92vw,560px);padding:11px 22px;border-radius:22px;background:#fff;color:#1d2133;font-weight:900;font-size:16px;box-shadow:0 0 0 3px #c23a7a,0 10px 26px rgba(0,0,0,.4);pointer-events:none;text-align:center;line-height:1.45;white-space:pre-line}.crtoast.good{background:#fff;color:#12684a;box-shadow:0 0 0 3px #1f7a55,0 10px 26px rgba(0,0,0,.4)}.crtoast.bad{background:#fff;color:#a8323a;box-shadow:0 0 0 3px #a8323a,0 10px 26px rgba(0,0,0,.4)}.crpow{position:fixed;z-index:6;pointer-events:none;padding:4px 10px;border-radius:99px;background:rgba(20,22,34,.82);color:#fff;font-weight:900;font-size:14px;transform:translate(-50%,-150%);white-space:nowrap}.crhow{position:fixed;inset:0;z-index:95;display:flex;align-items:center;justify-content:center;background:rgba(10,12,22,.55);padding:16px}.crhow-c{background:#fff;color:#1d2133;border-radius:24px;box-shadow:0 0 0 4px #c23a7a,0 18px 50px rgba(0,0,0,.45);padding:22px 22px 18px;width:min(440px,100%);max-height:100%;overflow:auto}.crhow h2{margin:0 0 14px;font-size:24px;font-weight:900;text-align:center;color:#c23a7a}.crhow ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}.crhow li{display:flex;align-items:center;gap:12px;font-size:18px;font-weight:800;line-height:1.35}.crhow li i{flex:none;width:40px;height:40px;border-radius:50%;background:#fbe3ee;color:#c23a7a;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:22px;font-weight:900}.crhow .u{margin:12px 0 0;font-size:14px;font-weight:700;color:#5b6074;text-align:center}.crhow label{display:flex;align-items:center;justify-content:center;gap:8px;margin:16px 0 6px;font-size:16px;font-weight:800;cursor:pointer}.crhow label input{width:20px;height:20px;accent-color:#c23a7a}.crhow .n{margin:0 0 14px;font-size:13px;font-weight:700;color:#6b7083;text-align:center}.crhow button{display:block;width:100%;padding:13px;border:0;border-radius:99px;background:#c23a7a;color:#fff;font:inherit;font-size:18px;font-weight:900;cursor:pointer}@media (max-width:560px){.hud .crp{padding:3px 7px;font-size:12px}.hud .crp .nm{display:none}.crtoast{font-size:14px;padding:9px 16px;border-radius:18px}}';
     document.head.appendChild(css);
+    const HK = 'atlas-carrom-howto';
+    const howtoOn = () => { try { return localStorage.getItem(HK) !== 'off'; } catch (e) { return true; } };
+    let cardEl = null;
+    function howtoCard(done) {   // a big card on the first turn: the steps for this device; "don't show again" turns it off for good
+      const H = HOWTO[lang] || HOWTO.en, steps = H[mousey() ? 'm' : 't'], ic = ['↔', '↓', '↔', '☝'];
+      const d = document.createElement('div'); d.className = 'crhow'; d.dir = lang === 'ar' ? 'rtl' : 'ltr';
+      d.innerHTML = `<div class="crhow-c" role="dialog" aria-modal="true"><h2>${esc(H.title)}</h2><ol>${steps.map((x, i) => `<li><i>${ic[i]}</i><span>${esc(x)}</span></li>`).join('')}</ol><p class="u">${esc(H.undo)}</p><label><input type="checkbox"> ${esc(H.never)}</label><p class="n">${esc(H.note.replace('{r}', t('bv.rules')))}</p><button type="button">${esc(H.ok)}</button></div>`;
+      const close = () => { if (d.querySelector('input').checked) { try { localStorage.setItem(HK, 'off'); } catch (e) {} } d.remove(); cardEl = null; done && done(); };
+      d.querySelector('button').onclick = close;
+      ['pointerdown', 'pointermove', 'pointerup'].forEach(k => d.addEventListener(k, e => e.stopPropagation()));
+      document.body.appendChild(d); cardEl = d;
+    }
     let toastEl = null, toastT = 0;
     function toast(m, kind) { if (toastEl) toastEl.remove(); clearTimeout(toastT); if (!m || stopped) return; toastEl = document.createElement('div'); toastEl.className = 'crtoast' + (kind ? ' ' + kind : ''); toastEl.textContent = m; document.body.appendChild(toastEl); const el = toastEl; toastT = setTimeout(() => { el.remove(); if (toastEl === el) toastEl = null; }, Math.max(1700, m.length * 70)); }
     const powEl = document.createElement('div'); powEl.className = 'crpow'; powEl.hidden = true; document.body.appendChild(powEl);
@@ -378,7 +407,8 @@
         phase = 'place';
         // the HUD keeps a short status; the how-to goes up top once (and for every break)
         say(pvp ? tx('turn', { p: nameOf(p) }) : t('p.turn'));
-        if (!st.brk.done) toast(tx('brk') + (told ? '' : '\n' + how(lang).how)); else if (!told) toast(how(lang).how);
+        if (!told && howtoOn()) howtoCard(() => { if (!stopped && !st.brk.done) toast(tx('brk')); });
+        else if (!st.brk.done) toast(tx('brk'));
         told = true;
         showGuides(); pulse();
         return;
@@ -416,7 +446,7 @@
     /* ---------- your hand (Hand above: the same in the rules tour) ---------- */
     const toCm = e => { const q = T3.pick(e, Y + .03); return q ? { x: q.x / K, y: q.z / K } : null; };
     function moveStriker(x) { const nx = E.nearestFree(st, st.turn, x); if (Math.abs(nx - sx) > .001) { sx = nx; placeMesh(striker, sx, E.baseY(st.turn)); kick(100); } }
-    const canAim = () => !stopped && !over && !busy && phase === 'place' && !!st && human(st.turn);
+    const canAim = () => !cardEl && !stopped && !over && !busy && phase === 'place' && !!st && human(st.turn);
     const hand = Hand({
       el: ctx.el, toCm, canAim,
       sign: () => st && st.turn === 1 ? -1 : 1,
@@ -481,7 +511,7 @@
         stopped = true; tok++; timers.forEach(clearTimeout); clearInterval(pulseT);
         hand.stop();
         document.removeEventListener('keydown', onKey); removeEventListener('resize', onResize); ctx.el.style.touchAction = prevTouch;
-        css.remove(); powEl.remove(); if (toastEl) toastEl.remove(); if (worker) worker.terminate();
+        css.remove(); powEl.remove(); if (toastEl) toastEl.remove(); if (cardEl) cardEl.remove(); if (worker) worker.terminate();
         if (T3.turn) T3.turn(null);
         Object.values(MAT).forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose());
       },
@@ -492,5 +522,5 @@
   }
 
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.carrom = { levels: 20, sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], sizes: SIZES, size0: 1, sizeLabel, sizeName, levelInfo, start, SND, TXT, Hand, HOW, how };
+  window.Atlas3D.carrom = { levels: 20, sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], sizes: SIZES, size0: 1, sizeLabel, sizeName, levelInfo, start, SND, TXT, Hand, HOW, HOWTO, how };
 })();
