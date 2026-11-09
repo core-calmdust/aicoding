@@ -82,6 +82,8 @@
       name: N('ルドー・パチーシ', 'Ludo & Pachisi', '鲁多与帕棋西', '루도 & 파치시', 'Ludo y Pachisi', 'Ludo et Pachisi', 'Ludo e Pachisi', 'Ludo & Pachisi', 'लूडो और पचीसी', 'لودو وباتشيسي', 'Лудо и Пачиси', '魯多與帕奇西', 'Ludo & Pachisi', 'Ludo ve Pachisi') },
     { id: 'carrom', cat: 'action', store: ['aicoding-carrom'], href: 'atlas/#games/carrom', only3d: true, color: '#c23a7a', released: '2026-11-09', tags: ['classic', 'ai', 'mobile'], total: {},
       name: N('キャロム', 'Carrom', '克朗棋', '캐롬', 'Carrom', 'Carrom', 'Carrom', 'Carrom', 'कैरम', 'كيرم', 'Карром', '克朗棋', 'Karambol', 'Carrom') },
+    { id: 'crokinole', cat: 'action', store: ['aicoding-crokinole'], href: 'atlas/#games/crokinole', only3d: true, color: '#b8742a', beta: true, released: '2026-11-09', tags: ['classic', 'ai', 'mobile'], total: {},
+      name: N('クロキノール', 'Crokinole', '克罗基诺', '크로키놀', 'Crokinole', 'Crokinole', 'Crokinole', 'Crokinole', 'क्रोकिनोल', 'كروكينول', 'Крокинол', '克羅基諾', 'Crokinole', 'Crokinole') },
     { id: 'morris', cat: 'line', store: ['aicoding-morris', 'morris-online-name'], href: 'morris/', color: '#7552e0', released: '2026-10-18', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'variants', 'mobile'], total: { pz: 1781, ls: 41 },
       name: N('ナイン・メンズ・モリス', "Nine Men's Morris", '九子棋', '나인 멘스 모리스', 'Molino', 'Jeu du moulin', 'Trilha', 'Mühle', 'नाइन मेन्स मोरिस', 'الطاحونة', 'Мельница', '九子棋', 'Nine Men\'s Morris', 'Dokuz Taş') },
     { id: 'hex', cat: 'line', store: ['aicoding-hex', 'hex-online-name'], href: 'hex/', color: '#4f86e8', released: '2026-10-25', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'variants', 'mobile'], total: { pz: 403, ls: 13 },
