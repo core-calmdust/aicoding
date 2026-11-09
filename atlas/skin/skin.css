@@ -396,3 +396,4 @@ html.atlas-gomoku #segSkin{flex-wrap:wrap}
 html.atlas-gomoku .st-nav button{background:#fff!important;border:2px solid #ead9b6!important;color:#2b3044!important}
 /* the side column is fitted to the 3D board (taller than the page's frame): anchor it at the top of the row, so its new height doesn't re-centre it */
 html.atlas-gomoku .side{align-self:start!important}
+html.atlas-skin :is(#lessonListView,#pzListView,#pzGridView,#lessonIntroView) > .modal-actions{background:linear-gradient(180deg,rgba(255,253,247,0),#fffdf7 34%)!important}   /* (2026-11-09: the sticky footer of the lesson / puzzle lists kept the dark theme — dark under the 戻る button) */
