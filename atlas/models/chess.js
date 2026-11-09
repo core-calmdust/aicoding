@@ -207,11 +207,20 @@
   // the full 3D chess page keeps the fine ones
   const PORTAL = /\/atlas\//.test(location.pathname), small = () => MID || PORTAL;
   let LOW = false, MID = false;   // LOW: building the faint mirror image in the lacquer: a coarser lathe is enough · MID: the small showcase pieces on the chabudai
+  // Douglas–Peucker on a lathe profile ([r, y] points): keeps the ends and every point that bends the outline by more than tol
+  function simplify(pts, tol) {
+    if (pts.length < 4) return pts;
+    const keep = new Uint8Array(pts.length); keep[0] = keep[pts.length - 1] = 1;
+    const rec = (a, b) => { const [x1, y1] = pts[a], [x2, y2] = pts[b], dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy) || 1e-9; let m = -1, mi = -1;
+      for (let i = a + 1; i < b; i++) { const d = Math.abs((pts[i][0] - x1) * dy - (pts[i][1] - y1) * dx) / L; if (d > m) { m = d; mi = i; } }
+      if (m > tol) { keep[mi] = 1; rec(a, mi); rec(mi, b); } };
+    rec(0, pts.length - 1); return pts.filter((p, i) => keep[i]);
+  }
   function lathe(key, pts, seg) {   // phones: fewer segments round the lathe
     const sm = small();
-    seg = Math.min(seg || 99, LOW ? (sm ? 8 : 14) : sm ? 14 : X.coarse ? 24 : 36); key += '@' + seg + (sm || LOW ? 'd' : '');
+    seg = Math.min(seg || 99, LOW ? (sm ? 8 : 14) : sm ? 14 : X.coarse ? 24 : 28); key += '@' + seg + (sm || LOW ? 'd' : '');
     if (geoCache[key]) return geoCache[key];
-    if (sm || LOW) pts = pts.filter((p, i) => i < 2 || i > pts.length - 3 || i % 2 === 0);   // small pieces: every other profile point (the turned shape stays, at half the rings)
+    pts = simplify(pts, LOW ? .008 : sm ? .0035 : X.coarse ? .0035 : .0022);   // drop profile points that sit on the line of their neighbours (small / mirror pieces: a looser outline; was every other point)   // the fine pieces: drop profile points that sit on the line of their neighbours (the outline stays within ~2 mm at a piece's scale)
     const TT = T(), g = new TT.LatheGeometry(pts.map(([r, y]) => new TT.Vector2(Math.max(0, r), y)), seg);
     return (geoCache[key] = g);
   }
@@ -326,11 +335,11 @@
     pr.felt.forEach((p, i) => add(lathe(tp + 'f' + i, p, 32), m.felt).castShadow = false);
     if (pr.merlons) {   // rook: crenellated metal top
       const q = pr.merlons, key = 'merlon';
-      let geo = geoCache[key];
+      const key2 = key + (small() || LOW ? 'S' : ''); let geo = geoCache[key2];
       if (!geo) {
         const s = new TT.Shape(), a = TAU / q.n * .56;
         s.absarc(0, 0, q.r1, -a / 2, a / 2, false); s.absarc(0, 0, q.r0, a / 2, -a / 2, true);
-        geo = geoCache[key] = new TT.ExtrudeGeometry(s, { depth: q.y1 - q.y0 - .016, bevelEnabled: true, bevelThickness: .008, bevelSize: .008, bevelSegments: 2, curveSegments: 6 });
+        geo = geoCache[key2] = new TT.ExtrudeGeometry(s, { depth: q.y1 - q.y0 - .016, bevelEnabled: true, bevelThickness: .008, bevelSize: .008, bevelSegments: small() || LOW ? 1 : 2, curveSegments: small() || LOW ? 3 : 6 });
         geo.rotateX(-Math.PI / 2);
       }
       for (let i = 0; i < q.n; i++) add(geo, m.metal, { p: [0, q.y0 + .008, 0], r: [0, i * TAU / q.n + TAU / q.n / 2, 0] });
