@@ -564,6 +564,128 @@ function mtFin(m) {
   if (m.job === 'cands') list = list.slice(0, m.k || 5);
   return { result: { list, depth: r.depth } };
 }
+// ---------------------------------------------------------------- puzzles (exact answers from the rules: tools/gen_puzzles.js and the page)
+// emptyAround(pos, p): the empty squares next to p's amazons (each once). A side is stuck when there are none; one move of the
+// other side fills at most two of them (its amazon's new square and its arrow) and may open its old square.
+const EA = new Uint8Array(NN);
+let eaMark = 1;
+function emptyAround(pos, p) {
+  if (++eaMark > 250) { EA.fill(0); eaMark = 1; }
+  const sq = pos.sq, k0 = p === P1 ? 0 : 4, out = [];
+  for (let k = k0; k < k0 + 4; k++) { const f = pos.q[k]; if (f < 0) continue; const nb = NB[f]; for (let j = 0; j < nb.length; j++) { const t = nb[j]; if (!sq[t] && EA[t] !== eaMark) { EA[t] = eaMark; out.push(t); } } }
+  return out;
+}
+// the moves after which the opponent cannot move at all (only tried when two squares or fewer are left around it)
+function win1(pos) {
+  const me = pos.turn, op = 3 - me;
+  if (emptyAround(pos, op).length > 2) return [];
+  const out = [];
+  for (const m of pos.moves()) { pos.play(m); const r = !pos.canMove(op); pos.unplay(m); if (r) out.push(m); }
+  return out;
+}
+let duelBudget = Infinity;
+// the side to move leaves the opponent without a move within k of its own moves, whatever the replies
+function canWin(pos, k) {
+  if (--duelBudget < 0) return false;
+  const me = pos.turn, op = 3 - me;
+  if (win1(pos).length) return true;
+  if (k <= 1) return false;
+  for (const m of pos.moves()) {
+    pos.play(m);
+    const ok = pos.canMove(op) && allLose(pos, k - 1);
+    pos.unplay(m);
+    if (ok) return true;
+    if (duelBudget < 0) return false;
+  }
+  return false;
+}
+// every reply of the side to move (the defender) still loses within k moves of the other side
+function allLose(pos, k) {
+  const me = pos.turn, op = 3 - me, R = pos.moves();
+  if (!R.length) return true;
+  if (k === 1) {   // (fast: a reply that leaves three or more empty squares around the defender escapes)
+    for (const r of R) { pos.play(r); const n = emptyAround(pos, me).length; pos.unplay(r); if (n > 2) return false; }
+  }
+  // the replies that leave the defender most room first
+  const sc = R.map(r => { pos.play(r); const n = emptyAround(pos, me).length; pos.unplay(r); return n; });
+  const idx = R.map((_, i) => i).sort((x, y) => sc[y] - sc[x]);
+  for (const i of idx) { pos.play(R[i]); const ok = canWin(pos, k); pos.unplay(R[i]); if (!ok) return false; if (duelBudget < 0) return false; }
+  return true;
+}
+// the first moves that win within n (null: out of budget)
+function duelGood(start, moves, n, budget) {
+  const { pos } = replay(start, moves), me = pos.turn, op = 3 - me;
+  duelBudget = budget || 4e6;
+  const w = win1(pos); if (w.length || n <= 1) return w;
+  const out = [];
+  for (const m of pos.moves()) { pos.play(m); if (pos.canMove(op) && allLose(pos, n - 1)) out.push(m); pos.unplay(m); if (duelBudget < 0) return null; }
+  return out;
+}
+// the defender's most stubborn reply: one that still escapes if there is one, else the one leaving it the most room
+function duelReply(start, moves, n) {
+  const { pos } = replay(start, moves), me = pos.turn, R = pos.moves();
+  if (!R.length) return { move: -1 };
+  duelBudget = 2e6;
+  let best = R[0], bs = -Infinity;
+  for (const r of R) {
+    pos.play(r);
+    const room = emptyAround(pos, me).length, esc = n >= 1 && !canWin(pos, n);
+    pos.unplay(r);
+    const s = (esc ? 1000 : 0) + room;
+    if (s > bs) { bs = s; best = r; }
+  }
+  return { move: best };
+}
+// trap: the moves after which the amazon on e has no empty square next to it (it may still be the defender's turn to move)
+function trapGood(start, moves, e) {
+  const { pos } = replay(start, moves), out = [];
+  for (const m of pos.moves()) { pos.play(m); let n = 0; for (const t of NB[e]) if (!pos.sq[t]) n++; pos.unplay(m); if (!n && pos.sq[e] && pos.sq[e] !== ARROW) out.push(m); }
+  return out;
+}
+// separated endgames: every amazon alone in its own room (a king-connected area of empty squares, closed by arrows and the
+// edge). room(pos, f): its squares; fillMax: the most moves the amazon can still make there (exact, memo on the room's
+// filling as a bitmask). The side to move wins when its moves outnumber the opponent's: W > B before its move.
+function roomOf(pos, f) {
+  const sq = pos.sq, seen = new Uint8Array(NN), R = [f]; seen[f] = 1;
+  for (let h = 0; h < R.length; h++) for (const t of NB[R[h]]) if (!seen[t] && (!sq[t] || t === f)) { seen[t] = 1; if (sq[t]) return null; R.push(t); }
+  return R;   // (null: another amazon shares the room)
+}
+function fillMax(pos, f, budget) {
+  const R = roomOf(pos, f); if (!R) return -1;
+  const n = R.length, idx = new Int8Array(NN).fill(-1); R.forEach((x, i) => { idx[x] = i; });
+  if (n > 22) return -1;
+  const memo = new Map(); let calls = 0;
+  const rec = (mask, a) => {   // mask: the room's squares filled by arrows (bit i = R[i]); a: the amazon's square (index in R)
+    const key = mask * 32 + a, c = memo.get(key); if (c !== undefined) return c;
+    if (++calls > (budget || 2e6)) return 0;
+    const free = n - 1 - popc(mask);   // (each move fills one more square: never more moves than empty squares)
+    let best = 0;
+    outer: for (let d = 0; d < 8; d++) for (const t of RAYS[R[a]][d]) {
+      const ti = idx[t]; if (ti < 0 || (mask >> ti) & 1) break;
+      for (let e = 0; e < 8; e++) for (const ar of RAYS[t][e]) {   // (the old square is empty now: the arrow may cross or hit it)
+        const ai = idx[ar]; if (ai < 0 || (mask >> ai) & 1) break;
+        const v = 1 + rec(mask | (1 << ai), ti);
+        if (v > best) { best = v; if (best >= free) break outer; }
+      }
+    }
+    memo.set(key, best); return best;
+  };
+  return rec(0, idx[f]);
+}
+function popc(x) { let c = 0; while (x) { x &= x - 1; c++; } return c; }
+function sideMoves(pos, p) { let s = 0; const k0 = p === P1 ? 0 : 4; for (let k = k0; k < k0 + 4; k++) { const f = pos.q[k]; if (f < 0) continue; const v = fillMax(pos, f); if (v < 0) return -1; s += v; } return s; }
+function endGood(start, moves) {
+  const { pos } = replay(start, moves), me = pos.turn, op = 3 - me, B = sideMoves(pos, op), out = [];
+  if (B < 0) return null;
+  for (const m of pos.moves()) { pos.play(m); const W = sideMoves(pos, me); pos.unplay(m); if (W >= B) out.push(m); }
+  return out;
+}
+// the page's puzzle questions: the good moves from the shown position for a puzzle of kind k
+function pzGood(m) {
+  if (m.kind === 'trap') return trapGood(m.start, m.moves, m.e);
+  if (m.kind === 'end') return endGood(m.start, m.moves);
+  return duelGood(m.start, m.moves, m.n);
+}
 // ---------------------------------------------------------------- notation
 function name(pos, m) { if (m < 0) return '—'; return sqName(mFrom(m)) + '-' + sqName(mTo(m)) + '/' + sqName(mArrow(m)); }
 function parse(pos, s) {
@@ -581,7 +703,7 @@ const hops = () => 1;
 
 const API = { get nodes() { return nodes; }, get evals() { return evals; }, P1, P2, WIN, WINT, ARROW, RULES, RULE_ORDER, setRule, get rule() { return 'std'; }, N, NN, RC, RAYS, NB, START,
   sqAt, sqName, sqIdx, mv, mFrom, mTo, mArrow, isRemove, hops, Pos, path, arrowPath, captured, name, parse, replay, judge, clearLine,
-  LEVELS, think, analyze, cands: candsJob, candList: cands, evaluate, evalFor, kindOf, EW, pvOf, bestMove, mtPlan, mtV, mtKids, mtFin, set SH(t) { SH = t; }, get SH() { return SH; } };
+  LEVELS, think, analyze, cands: candsJob, candList: cands, evaluate, evalFor, kindOf, EW, pvOf, bestMove, mtPlan, mtV, mtKids, mtFin, win1, canWin, duelGood, duelReply, trapGood, endGood, fillMax, roomOf, sideMoves, emptyAround, pzGood, set SH(t) { SH = t; }, get SH() { return SH; } };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') {
   let queueP = Promise.resolve();
@@ -597,6 +719,8 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
           self.postMessage({ id: m.id, type: 'result', ...r });
         } else if (m.type === 'cands') self.postMessage({ id: m.id, type: 'result', ...candsJob(m.start, m.moves, m.time || 1200, m.k, m.plies, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth })) });
         else if (m.type === 'newgame') { TT.clear(); CC.clear(); self.postMessage({ id: m.id, type: 'result' }); }
+        else if (m.type === 'pzgood') { const g = pzGood(m); self.postMessage({ id: m.id, type: 'result', list: g }); }
+        else if (m.type === 'duelReply') self.postMessage({ id: m.id, type: 'result', ...duelReply(m.start, m.moves, m.n) });
         else if (m.type === 'mtplan') self.postMessage({ id: m.id, type: 'result', ...mtPlan(m) });
         else if (m.type === 'mtv') self.postMessage({ id: m.id, type: 'result', ...mtV(m) });
         else if (m.type === 'mtkids') self.postMessage({ id: m.id, type: 'result', ...mtKids(m) });
