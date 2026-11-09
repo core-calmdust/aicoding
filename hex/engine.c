@@ -275,7 +275,16 @@ typedef struct { int first; u16 nch; short mv; float n, w, rn, rw; i8 proof; u8 
 #define NODES 1200000
 #endif
 static Node T[NODES];
+#ifdef MT
+// the variables every thread writes (or reads while another writes) each on a cache line of its own: no false sharing with the
+// read-only parameters next to them (2026-11-09, MODEL_CARD「スレッドが伸びない問題」)
+typedef struct { volatile int v; int pad[15]; } __attribute__((aligned(64))) LineV;
+typedef struct { int v; int pad[15]; } __attribute__((aligned(64))) LineI;
+static LineI nNodes_;
+#define nNodes nNodes_.v
+#else
 static int nNodes;
+#endif
 static float RAVE_B = 0.0009f, UCT_C = 0.0f, PRIOR_N = 30.0f, LP_A = .45f, LP_B = .5f;
 static int LP_ON = 1;   // the learned prior (prior_w.h) instead of the hand-made one
 static int EXPAND_T = 1, expT = 1;   // expT: the threshold in use (raised during a long search so the node pool lasts)
@@ -283,10 +292,15 @@ static TLS double tStop; static TLS int maxPO, totalPO;
 static TLS int wc[MAXC];
 
 #ifdef MT
-static volatile int gStop;     // shared: the page stops every thread (mt_stop)
-static volatile int gTree;     // shared: > 0 = the tree the helpers may join now (a new number for each search), 0 = closed
-static volatile int gActive;   // shared: helpers inside the open tree
-static volatile int gHPO;      // shared: the helpers' playouts in the open tree
+static LineV gStop_;     // shared: the page stops every thread (mt_stop)
+static LineV gTree_;     // shared: > 0 = the tree the helpers may join now (a new number for each search), 0 = closed
+static LineV gActive_;   // shared: helpers inside the open tree
+static LineV gHPO_;      // shared: the helpers' playouts in the open tree (added in batches of HPO_BATCH)
+#define gStop gStop_.v
+#define gTree gTree_.v
+#define gActive gActive_.v
+#define gHPO gHPO_.v
+#define HPO_BATCH 32
 static int gTreeGen;
 static float VLOSS = 1;      // virtual loss (visits) per thread going down a branch
 static TLS int threadId;       // 0 = the lead (setup, time control, result), 1.. = helpers
@@ -294,6 +308,58 @@ static TLS int threadId;       // 0 = the lead (setup, time control, result), 1.
 #define EXPD(nd) (__atomic_load_n(&(nd)->exp, __ATOMIC_SEQ_CST) == 1)
 #define NSEEN(nd) ((nd)->n - VLOSS)   // (the visit of this descent is counted already: virtual loss)
 static int newNodes(int k) { if (__atomic_load_n(&nNodes, __ATOMIC_SEQ_CST) + k > NODES) return -1; int f = __atomic_fetch_add(&nNodes, k, __ATOMIC_SEQ_CST); if (f + k > NODES) return -1; return f; }
+// Batched results of the busy nodes (2026-11-09, MODEL_CARD「スレッドが伸びない問題」). A playout adds a RAVE result to about
+// half of the children of EVERY node on its path, and a visit (virtual loss on the way down, the win on the way up) to the
+// child it went through; near the root all threads share those nodes, so each playout wrote ~50 cache lines per level that
+// every other thread was reading (the children of the root alone are ~3.4KB), and on the user's Mac 14 threads made only
+// 2.6× the playouts of 1 (a playout is ~6 µs here, ~3000× shorter than a go network evaluation, so the tree's shared writes
+// were most of the time). A thread now keeps the results of a node with many visits in a slot of its own — the RAVE
+// results of its children and the visits / wins through each child — chooses with them added, and adds the visits / wins
+// to the tree every `lim` visits of that node (lim = visits / (16 × threads), ≤ 2048: all threads together hold back at
+// most ~1/16 of them; a few lines, the children gone through) and the RAVE results every 4 × lim (~1/4; about all the
+// children's lines; RAVE is an average over many playouts, a delay that size does not move it). Under such a node there is
+// no virtual loss (one visit in ≥ 64 × threads moves the choice by < 1/1000; the threads spread out lower down, where the
+// visits are few). Nodes with fewer visits (lim < 4) are written at once as before. With one thread in the tree nothing
+// is batched (the same search as before). tools/mtsim.c counts the line transfers per playout (11×11, 14 threads in step:
+// 663 → 51).
+#define RB_SLOTS 16
+#define RB_THREADS 32
+typedef struct { int key, first, nch, cnt, cntR, lim, use; float rn[MAXC + 1], rw[MAXC + 1], dn[MAXC + 1], dw[MAXC + 1]; } __attribute__((aligned(64))) RBuf;   // key = node + 1, 0 = free
+static RBuf RBS[RB_THREADS][RB_SLOTS];   // (each thread's own; not thread-local storage, so they are not in the file)
+static TLS RBuf *RB;                     // this thread's (mt_thread), 0 = none
+static TLS int rbClock, rbThreads;    // rbThreads: threads in the tree (looked up every 64 playouts)
+static TLS float rootN, rootW;        // the root's own visits and wins (nothing chooses by them; added every 64 playouts)
+#ifndef MTSIM_W
+#define MTSIM_W(i)
+#endif
+// add the slot's visits / wins to the tree (a few children), and with rave also its RAVE results (about all children)
+static void rbFlush(RBuf *s, int rave) {   // (the slot stays this node's)
+  Node *ch = &T[s->first];
+  for (int i = 0; i < s->nch; i++) {
+    if (rave && s->rn[i] != 0) { ch[i].rn += s->rn[i]; ch[i].rw += s->rw[i]; s->rn[i] = 0; s->rw[i] = 0; MTSIM_W(s->first + i); }
+    if (s->dn[i] != 0) { ch[i].n += s->dn[i]; ch[i].w += s->dw[i]; s->dn[i] = 0; s->dw[i] = 0; MTSIM_W(s->first + i); }
+  }
+  s->cnt = 0; if (rave) s->cntR = 0;
+}
+static void rbRoot(void) { if (rootN != 0) { T[0].n += rootN; T[0].w += rootW; rootN = rootW = 0; } }
+static void rbFlushAll(void) {
+  if (RB) for (int i = 0; i < RB_SLOTS; i++) if (RB[i].key) { rbFlush(&RB[i], 1); RB[i].key = 0; }
+  rbRoot();
+}
+// the slot for node ni (nd), or 0 = write at once
+static RBuf *rbSlot(int ni, const Node *nd) {
+  if (rbThreads < 2 || !RB) return 0;
+  int l = (int)(nd->n / (16.f * rbThreads)); if (l < 4) return 0; if (l > 2048) l = 2048;
+  RBuf *s = 0, *old = &RB[0];
+  for (int i = 0; i < RB_SLOTS; i++) { if (RB[i].key == ni + 1) { s = &RB[i]; break; } if (old->key && (!RB[i].key || RB[i].use < old->use)) old = &RB[i]; }   // (a free slot, else the least recently used)
+  if (!s) {
+    s = old; if (s->key && s->use == rbClock) return 0;   // (every slot is on this playout's path)
+    if (s->key) rbFlush(s, 1);
+    s->key = ni + 1; s->first = nd->first; s->nch = nd->nch; s->cnt = s->cntR = 0;
+  }
+  s->use = rbClock; s->lim = l;
+  return s;
+}
 #else
 #define MT_HPO
 #define EXPD(nd) ((nd)->exp)
@@ -363,11 +429,83 @@ static void expand(int ni, Pos *p) {
 #endif
 }
 static TLS int pathN[256]; static TLS int pathL;
+#ifdef MT
+// (the multi-thread form: the same search; a busy node's results go through this thread's slot, see RBuf)
+static TLS RBuf *pathS[256];   // the slot of path node k (its children's results), 0 = written at once
+static TLS u8 pathI[256];      // the child index of path node k at its parent
+static void iterate(void) {
+  Pos p = ROOT; int ni = 0; pathL = 0; pathS[0] = 0; pathN[pathL++] = 0;
+  if ((++rbClock & 63) == 0) { rbThreads = 1 + __atomic_load_n(&gActive, __ATOMIC_RELAXED); rbRoot(); }
+  if (rbThreads > 1) rootN += 1; else T[0].n += 1;
+  int res = 0, didPO = 0;   // winner, a playout filled PB
+  for (;;) {
+    Node *nd = &T[ni];
+    if (nd->proof) { res = nd->proof > 0 ? (p.side ^ 3) : p.side; break; }   // proven node: its result
+    if (!EXPD(nd)) {
+      float seen = pathL > 1 && pathS[pathL - 2] ? nd->n : NSEEN(nd);   // (no virtual loss under a busy node)
+      if (seen >= expT || ni == 0) { expand(ni, &p); if (nd->proof) continue; if (!EXPD(nd)) { for (int i = 0; i < NC; i++) PB[i] = p.b[i]; res = playout(p.side, p.last); didPO = 1; break; } }
+      else { for (int i = 0; i < NC; i++) PB[i] = p.b[i]; res = playout(p.side, p.last); didPO = 1; break; }
+    }
+    // select (with this thread's results not yet in the tree)
+    RBuf *s = rbSlot(ni, nd); pathS[pathL - 1] = s;
+    Node *ch = &T[nd->first]; int best = -1, allLost = 1; float bv = -1e9f;
+    float lg = UCT_C > 0 ? flog(nd->n + 1) : 0;
+    for (int i = 0; i < nd->nch; i++) {
+      Node *c = &ch[i];
+      if (c->proof > 0) { best = i; allLost = 0; bv = 1e9f; break; }
+      if (c->proof < 0) continue;
+      allLost = 0;
+      float cn = c->n, cw = c->w, crn = c->rn, crw = c->rw;
+      if (s) { cn += s->dn[i]; cw += s->dw[i]; crn += s->rn[i]; crw += s->rw[i]; }
+      float q = cn > 0 ? cw / cn : .5f, rq = crn > 0 ? crw / crn : .5f;
+      float beta = crn / (crn + cn + RAVE_B * crn * cn + 1e-6f);
+      float v = (1 - beta) * q + beta * rq;
+      if (UCT_C > 0) v += UCT_C * __builtin_sqrtf(lg / (cn + 1));
+      v += rndF() * 1e-4f;
+      if (v > bv) { bv = v; best = i; }
+    }
+    if (allLost) { nd->proof = 1; res = p.side ^ 3; break; }   // every move loses for the side to move
+    int ci = nd->first + best;
+    play(&p, T[ci].mv);
+    ni = ci; if (pathL < 255) { pathS[pathL] = 0; pathI[pathL] = (u8)best; pathN[pathL++] = ni; }
+    // virtual loss: counted as visits without a win until the playout's result comes back. Under a busy node it would move
+    // the choice by < 1/1000 and only cost a shared write, so the visit waits in the slot with its result.
+    if (!s) T[ci].n += VLOSS;
+    if (T[ci].proof > 0) { res = p.side ^ 3; nd->proof = -1; break; }
+  }
+#ifdef MTSIM_HOOK
+  MTSIM_HOOK(res, didPO);   // (tools/mtsim.c: the other threads go down before this one goes back up)
+#endif
+  // backup: node j was entered by the player who moved into it (= side to move at its parent)
+  // the side to move at path[k] alternates; recompute from ROOT
+  int side = ROOT.side;   // side to move at path[0]
+  for (int k = 0; k < pathL; k++) {
+    Node *nd = &T[pathN[k]];
+    int mover = side ^ 3;   // who moved into nd
+    if (!k) { if (res == mover) { if (rbThreads > 1) rootW += 1; else nd->w += 1; } }
+    else if (pathS[k - 1]) { RBuf *ps = pathS[k - 1]; int i = pathI[k]; ps->dn[i] += 1; if (res == mover) ps->dw[i] += 1; }
+    else { if (VLOSS != 1) nd->n -= VLOSS - 1; if (res == mover) nd->w += 1; }   // (n was counted on the way down)
+    // proof propagation
+    if (EXPD(nd) && !nd->proof) {
+      Node *ch = &T[nd->first]; int all = 1, any = 0;
+      for (int i = 0; i < nd->nch; i++) { if (ch[i].proof > 0) any = 1; if (ch[i].proof >= 0) all = 0; }
+      if (any) nd->proof = -1; else if (all) nd->proof = 1;
+    }
+    // RAVE: children of nd whose cell ended up owned by the side to move at nd
+    RBuf *s = pathS[k];
+    if (EXPD(nd) && didPO) {
+      Node *ch = &T[nd->first];
+      float win = (res == side) ? 1.f : 0.f;
+      if (s) { for (int i = 0; i < nd->nch; i++) { int c = ch[i].mv; if (c != SWAP && PB[c] == side) { s->rn[i] += 1; s->rw[i] += win; } } }
+      else for (int i = 0; i < nd->nch; i++) { int c = ch[i].mv; if (c != SWAP && PB[c] == side) { ch[i].rn += 1; ch[i].rw += win; } }
+    }
+    if (s && ++s->cnt >= s->lim) { s->cntR += s->cnt; rbFlush(s, s->cntR >= 4 * s->lim); }
+    side ^= 3;
+  }
+}
+#else
 static void iterate(void) {
   Pos p = ROOT; int ni = 0; pathL = 0; pathN[pathL++] = 0;
-#ifdef MT
-  T[0].n += 1;
-#endif
   int res = 0, didPO = 0;   // winner, a playout filled PB
   for (;;) {
     Node *nd = &T[ni];
@@ -395,9 +533,6 @@ static void iterate(void) {
     int ci = nd->first + best;
     play(&p, T[ci].mv);
     ni = ci; if (pathL < 255) pathN[pathL++] = ni;
-#ifdef MT
-    T[ci].n += VLOSS;   // virtual loss: counted as visits without a win until the playout's result comes back
-#endif
     if (T[ci].proof > 0) { res = p.side ^ 3; nd->proof = -1; break; }
   }
   // backup: node j was entered by the player who moved into it (= side to move at its parent)
@@ -406,12 +541,7 @@ static void iterate(void) {
   for (int k = 0; k < pathL; k++) {
     Node *nd = &T[pathN[k]];
     int mover = side ^ 3;   // who moved into nd
-#ifdef MT
-    if (k) nd->n -= VLOSS - 1;
-    if (res == mover) nd->w += 1;   // (n was counted on the way down)
-#else
     nd->n += 1; if (res == mover) nd->w += 1;
-#endif
     // proof propagation
     if (EXPD(nd) && !nd->proof) {
       Node *ch = &T[nd->first]; int all = 1, any = 0;
@@ -427,6 +557,7 @@ static void iterate(void) {
     side ^= 3;
   }
 }
+#endif
 
 static void treeInit(void) {
   nNodes = 1; T[0].first = 0; T[0].nch = 0; T[0].mv = -1; T[0].n = 0; T[0].w = 0; T[0].rn = 0; T[0].rw = 0; T[0].proof = 0; T[0].exp = 0;
@@ -439,7 +570,8 @@ static void search(double ms, int playouts) {
 #ifdef MT
   // the lead opens the tree to the helpers (mt_help); the playout budget counts every thread's playouts
   __atomic_store_n(&gHPO, 0, __ATOMIC_SEQ_CST); __atomic_store_n(&gTree, ++gTreeGen, __ATOMIC_SEQ_CST);
-  while (totalPO MT_HPO < maxPO) {
+  rbThreads = 0;
+  while (totalPO + (maxPO < 0x7fffffff ? __atomic_load_n(&gHPO, __ATOMIC_RELAXED) : 0) < maxPO) {   // (a time limit reads no shared count)
 #else
   while (totalPO < maxPO) {
 #endif
@@ -460,7 +592,9 @@ static void search(double ms, int playouts) {
     }
   }
 #ifdef MT
-  // close the tree and wait until no helper is inside it (the lead then reads it, or starts the next search)
+  // close the tree and wait until no helper is inside it (the lead then reads it, or starts the next search); every thread
+  // adds its batched results first
+  rbFlushAll();
   __atomic_store_n(&gTree, 0, __ATOMIC_SEQ_CST);
   while (__atomic_load_n(&gActive, __ATOMIC_SEQ_CST)) {}
   totalPO += gHPO;   // (every thread's playouts: the result, the page's playouts/s readout)
@@ -756,6 +890,7 @@ EXPORT(winner_of) int winner_of(void) { return winner(ROOT.b); }
 
 #ifdef MT
 // ---------------------------------------------------------------- threads (engine_mt.wasm; shared/mtengine.js, mt-helper.js)
+#ifndef NATIVE
 extern unsigned char __heap_base;
 extern void __wasm_init_tls(void *);
 EXPORT(mt_heap_base) u32 mt_heap_base(void) { return (u32)&__heap_base; }
@@ -763,7 +898,10 @@ EXPORT(mt_tls_size) u32 mt_tls_size(void) { return __builtin_wasm_tls_size(); }
 // every instance first: mt_stack (its own stack: the top address; a function without a frame of its own), then mt_thread
 // (its TLS block and thread number; each thread's random numbers differ)
 EXPORT(mt_stack) void mt_stack(u32 stackTop) { __asm__ volatile(".globaltype __stack_pointer, i32\n local.get %0\n global.set __stack_pointer" :: "r"(stackTop)); }
-EXPORT(mt_thread) void mt_thread(u32 tls, int id) { __wasm_init_tls((void *)tls); threadId = id; rs ^= (u64)(id + 1) * 0xD1B54A32D192ED03ULL; rnd(); }
+EXPORT(mt_thread) void mt_thread(u32 tls, int id) { __wasm_init_tls((void *)tls); threadId = id; rs ^= (u64)(id + 1) * 0xD1B54A32D192ED03ULL; rnd(); RB = id >= 0 && id < RB_THREADS ? RBS[id] : 0; }
+#else
+static void mt_thread_native(int id) { threadId = id; rs ^= (u64)(id + 1) * 0xD1B54A32D192ED03ULL; rnd(); RB = id >= 0 && id < RB_THREADS ? RBS[id] : 0; }   // (tools/mtbench.c, mtsim.c: pthreads)
+#endif
 // the page: 1 = every thread stops; 0 = a new job (no tree open yet)
 EXPORT(mt_stop) void mt_stop(int v) { __atomic_store_n(&gStop, v, __ATOMIC_SEQ_CST); if (!v) __atomic_store_n(&gTree, 0, __ATOMIC_SEQ_CST); }
 EXPORT(mt_vloss) void mt_vloss(int v) { VLOSS = v > 0 ? (float)v : 1; }
@@ -776,8 +914,13 @@ EXPORT(mt_help) int mt_help(void) {
     if (g <= 0 || g == last) continue;   // (waiting: the lead is setting up or reading the tree)
     __atomic_fetch_add(&gActive, 1, __ATOMIC_SEQ_CST);
     if (__atomic_load_n(&gTree, __ATOMIC_SEQ_CST) == g) {
-      last = g;
-      while (__atomic_load_n(&gTree, __ATOMIC_SEQ_CST) == g && !__atomic_load_n(&gStop, __ATOMIC_SEQ_CST) && !T[0].proof) { iterate(); done++; __atomic_fetch_add(&gHPO, 1, __ATOMIC_SEQ_CST); }
+      last = g; rbThreads = 0; int k = 0;
+      // (the shared flags and the root are looked at every 8 playouts, the playouts counted every HPO_BATCH)
+      while (__atomic_load_n(&gTree, __ATOMIC_SEQ_CST) == g && !__atomic_load_n(&gStop, __ATOMIC_SEQ_CST) && !T[0].proof) {
+        for (int j = 0; j < 8; j++) { iterate(); done++; if (++k == HPO_BATCH) { __atomic_fetch_add(&gHPO, k, __ATOMIC_SEQ_CST); k = 0; } }
+      }
+      rbFlushAll();
+      if (k) __atomic_fetch_add(&gHPO, k, __ATOMIC_SEQ_CST);
     }
     __atomic_fetch_sub(&gActive, 1, __ATOMIC_SEQ_CST);
   }
