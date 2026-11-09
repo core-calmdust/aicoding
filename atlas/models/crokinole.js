@@ -73,7 +73,8 @@
   function woodT(N, a, b, o) {
     const ox = o.off || 0;
     const wob = (N(a * .06 + ox, b * .022, 3) - .5) * o.wp + (N(a * .45 + ox, b * .1, 2) - .5) * o.wp * .18;
-    const r = Math.sqrt((a - o.cx) * (a - o.cx) + (b - o.by) * (b - o.by) * o.asp * o.asp) + wob;
+    let r = Math.sqrt((a - o.cx) * (a - o.cx) + (b - o.by) * (b - o.by) * o.asp * o.asp) + wob;
+    if (o.irr) r += (N(r / o.sp * .21 + ox * .3, 7.3, 2) - .5) * o.irr * o.sp * 6;   // uneven growth: some years wide, some narrow
     const f = ((r / o.sp) % 1 + 1) % 1;
     const late = Math.exp(-Math.pow((f - .8) / .05, 2)) + .4 * Math.exp(-Math.pow((f - .8) / .17, 2));
     const fib = N(a * 2.4 + ox, b * .05, 2), fine = N(a * 16 + ox, b * .3, 1);
@@ -99,6 +100,9 @@
       // the ring — a triangle lattice bent round the board (two rows between the stringers), each piece its own wood, tone
       // and grain direction, glue seams between them
       const W3 = [WOOD.maple, WOOD.cherry, WOOD.walnut], O = { cx: 0, by: -40, asp: .08, sp: .45, wp: 1.4, ring: .5, fib: .4, drift: .25 }, SEAM = [40, 24, 14];
+      // (2026-11-10) each wood its own character: maple fine, tight, pale rings; cherry medium, smooth and even; walnut
+      // broad, wavy, uneven and dark-contrasted
+      const SP = new Map([[WOOD.maple, { sp: .2, ring: .3, wp: .35, fib: .28, irr: .25, asp: 1.15 }], [WOOD.cherry, { sp: .36, ring: .48, wp: .55, fib: .3, irr: .45, asp: 1 }], [WOOD.walnut, { sp: .62, ring: .72, wp: 1.1, fib: .42, irr: .9, asp: .8 }]]);
       const woodOf = (h, up) => up && h < .34 ? W3[2] : W3[hash(h * 37, 5, 1) < .52 ? 0 : 1];   // walnut only on upward pieces: two never share an edge
       // (2026-11-10) every piece cut from a different spot of the plank, and (later the same day) showing its growth rings: the
       // grain is laid out round the piece's own centre (px, py) — a ring centre just off the piece, stretched along the grain,
@@ -107,7 +111,8 @@
         const q = k => hash(h * 131 + k * 17, k, 11);
         dir += (q(1) - .5) * .5;
         const c = Math.cos(dir), sn = Math.sin(dir), dx = x - px, dy = y - py, a = dx * c + dy * sn, b = -dx * sn + dy * c;
-        const t = woodT(N, a, b, Object.assign({}, O, { off: h * 40, cx: (q(4) - .5) * 1.2, by: -(1.4 + q(2) * 3.2) * (q(3) < .5 ? 1 : -1), asp: .32 + q(6) * .3, sp: .34 + q(5) * .2, ring: O.ring * (.75 + q(7) * .3), wp: .5 + q(8) * .5 }));
+        const P = SP.get(w) || SP.get(WOOD.cherry);
+        const t = woodT(N, a, b, Object.assign({}, O, { off: h * 40, cx: (q(4) - .5) * 1.2, by: -(1.4 + q(2) * 3.2) * (q(3) < .5 ? 1 : -1), asp: (.32 + q(6) * .3) * P.asp, sp: P.sp * (.8 + q(5) * .45), ring: P.ring * (.85 + q(7) * .3), wp: P.wp * (.8 + q(8) * .5), fib: P.fib, irr: P.irr }));
         return mix(w[0], w[1], .1 + t * .5 + (hash(h * 91, 3, 7) - .5) * .12);
       };
       const B0 = R5 + .7, ROWS = 2, BW = (RB - B0) / ROWS, NB = Math.round(2 * Math.PI * (B0 + RB) / 2 / (BW / .866));
@@ -129,7 +134,8 @@
         const n = 16, th = Math.atan2(y, x), k = Math.floor((th + Math.PI) / (2 * Math.PI / n)), thc = -Math.PI + (k + .5) * 2 * Math.PI / n;
         const tan = r * Math.sin(th - thc), w = k % 2 ? WOOD.cherry : WOOD.maple;
         const q = j => hash(k * 29 + j * 7, j, 13);   // each wedge its own cut: soft cathedral arcs of the year rings running along it
-        const col = mix(w[0], w[1], .12 + woodT(N, tan + (q(1) - .5) * 3, r, Object.assign({}, O, { off: k * 9.7, cx: 0, by: R15 - 3 - q(3) * 9, asp: .2 + q(4) * .12, sp: .55 + q(5) * .3, wp: .7 + q(6) * .6, ring: O.ring * .85 })) * .5);
+        const P = SP.get(w), wsp = P.sp * 1.6;   // (wedges are large: the same species character, a little more open)
+        const col = mix(w[0], w[1], .12 + woodT(N, tan + (q(1) - .5) * 3, r, Object.assign({}, O, { off: k * 9.7, cx: 0, by: R15 - 3 - q(3) * 9, asp: (.2 + q(4) * .12) * P.asp, sp: wsp * (.8 + q(5) * .45), wp: P.wp * 1.4 * (.8 + q(6) * .5), ring: P.ring * .95, fib: P.fib, irr: P.irr })) * .5);
         const seam = Math.min(Math.abs(r * Math.sin(th - (-Math.PI + k * 2 * Math.PI / n))), Math.abs(r * Math.sin(th - (-Math.PI + (k + 1) * 2 * Math.PI / n))));
         return seam < .05 ? mix(col, SEAM, .5) : col;
       };
