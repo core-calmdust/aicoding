@@ -44,6 +44,7 @@ function setRule(k) {
   const h = N / 2, cand = [0, N - 1, NN - N, NN - 1, (h - 1) * N + h - 1, (h - 1) * N + h, h * N + h - 1, h * N + h];
   OPEN1 = cand.filter(i => COLOR[i] === P1).sort((a, b) => a - b);
   initZobrist();
+  waRule();
 }
 // ---------------------------------------------------------------- geometry helpers (the page uses these)
 const FILES = 'abcdefghij';
@@ -60,6 +61,42 @@ function initZobrist() {
   Z1 = [[], []]; Z2 = [[], []];
   for (let k = 0; k < 2; k++) for (let i = 0; i < NN; i++) { Z1[k].push(zr()); Z2[k].push(zr()); }
   ZS1 = zr(); ZS2 = zr();
+}
+
+// ---------------------------------------------------------------- the WebAssembly search (core.c → core-wasm.js, tools/build-core.sh)
+// search() runs in core.c — the same algorithm, order, table and counters (tools/check_wasm.js), several times faster.
+// Loaded synchronously in a worker and in Node; the page itself and any failure use the JS search below.
+let WA = null;
+function loadCore() {
+  try {
+    let b64 = null;
+    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('core-wasm.js?v=1'); b64 = self.KN_WASM; }
+    else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') { const g = globalThis, had = 'self' in g, old = g.self; g.self = g; try { require(require('path').join(__dirname, 'core-wasm.js')); b64 = g.KN_WASM; } finally { if (had) g.self = old; else delete g.self; } }
+    if (!b64 || (typeof process !== 'undefined' && process.env && process.env.KN_NOWASM)) return;
+    const bin = typeof atob === 'function' ? Uint8Array.from(atob(b64), c => c.charCodeAt(0)) : Buffer.from(b64, 'base64');
+    let io = null;
+    const env = {
+      poll: () => (Date.now() > tEnd || (SH !== null && SH.stopped())) ? 1 : 0,
+      shget: (h1, h2) => { const e = SH.get(h1 >>> 0, h2 >>> 0); if (!e) return 0; io[0] = e.d; io[1] = e.f; io[2] = e.v; io[3] = e.m; return 1; },
+      shput: (h1, h2, d, v, f, m) => { SH.put(h1 >>> 0, h2 >>> 0, d, v, f, m, 0); },
+    };
+    const x = new WebAssembly.Instance(new WebAssembly.Module(bin), { env }).exports, buf = x.memory.buffer;
+    io = new Int32Array(buf, x.iop(), 16);
+    WA = { x, io, sq: new Int8Array(buf, x.sqp(), 100), zt: new Uint32Array(buf, x.ztp(), 402) };
+  } catch (e) { WA = null; }
+}
+function waRule() {   // (setRule: the board size and the zobrist keys)
+  if (!WA) return;
+  for (let k = 0; k < 2; k++) for (let i = 0; i < NN; i++) { WA.zt[k * 100 + i] = Z1[k][i]; WA.zt[200 + k * 100 + i] = Z2[k][i]; }
+  WA.zt[400] = ZS1; WA.zt[401] = ZS2;
+  WA.x.setup(N);
+}
+function kreset() { killers.length = 0; if (WA) WA.x.kclear(); }
+function ttClear() { TT.clear(); if (WA) WA.x.ttclear(); }
+function ttGet(pos) {   // the one-thread table's entry for pos (or the shared table's)
+  if (SH !== null) return SH.get(pos.h1, pos.h2);
+  if (WA) return WA.x.ttprobe(pos.h1, pos.h2) ? { h2: pos.h2, d: WA.io[0], f: WA.io[1], v: WA.io[2], m: WA.io[3] } : undefined;
+  const e = TT.get(pos.h1); return e && e.h2 === pos.h2 ? e : undefined;
 }
 
 class Pos {
@@ -268,7 +305,7 @@ function child(k, src, m) {
 const OSC = new Float64Array(1024);
 function orderMoves(pos, L, ttm, ply) {
   if (L.length < 2) return L;
-  const k = killers[ply] || -1, me = pos.side + 1, op = 3 - me, n = L.length, out = L.slice();
+  const k = (WA ? WA.x.killer(ply) : killers[ply]) || -1, me = pos.side + 1, op = 3 - me, n = L.length, out = L.slice();
   // the same scores, then a stable insertion sort (best first) = the order of the former stable index sort
   for (let i = 0; i < n; i++) {
     const m = out[i];
@@ -279,6 +316,13 @@ function orderMoves(pos, L, ttm, ply) {
   return out;
 }
 function search(pos, d, a, b, ply) {
+  if (WA && !stop) {
+    WA.sq.set(pos.sq); const io = WA.io; io[8] = pos.side; io[9] = pos.ply; io[10] = pos.h1 | 0; io[11] = pos.h2 | 0;
+    WA.x.setn(nodes, nodeLimit === Infinity ? 1e300 : nodeLimit, SH !== null ? 1 : 0);
+    const v = WA.x.search(d, a, b, ply);
+    nodes = WA.x.getn(); if (WA.x.stopped()) stop = true;
+    return v;
+  }
   nodes++;
   if ((nodes & 1023) === 0 && (Date.now() > tEnd || nodes > nodeLimit || (SH !== null && SH.stopped()))) stop = true;
   if (stop) return 0;
@@ -328,7 +372,7 @@ function helperDone(pos, L, d) {
   return e && e.f === 0 && e.d >= d && true && L.indexOf(e.m) >= 0 ? { move: e.m, v: e.v, depth: e.d } : null;
 }
 function bestMove(pos, maxD, ms, nk) {
-  nodes = 0; stop = false; tEnd = ms ? Date.now() + ms : Infinity; nodeLimit = nk ? nk * 1000 : Infinity; killers.length = 0;
+  nodes = 0; stop = false; tEnd = ms ? Date.now() + ms : Infinity; nodeLimit = nk ? nk * 1000 : Infinity; kreset();
   const L = pos.moves(); if (L.length === 1) return { move: L[0], v: 0, depth: 0 };
   let best = { move: orderMoves(pos, L, -1, 0)[0], v: 0, depth: 0 };
   for (let d = 1; d <= (maxD || 60); d++) {
@@ -372,7 +416,7 @@ function think(start, moves, level, rand, rule) {
   // the opening removals: weak levels pick any, strong levels look ahead like any other move
   if (pos.opening && !L.s && level <= 8) return { move: all[Math.floor(rand() * all.length)], v: 0 };
   if (!L.s) {
-    nodes = 0; stop = false; tEnd = Date.now() + 2500; nodeLimit = Infinity; killers.length = 0;
+    nodes = 0; stop = false; tEnd = Date.now() + 2500; nodeLimit = Infinity; kreset();
     const vals = rootValues(pos, L.d);
     if (vals[0].v < -WINT) return { move: resist(pos, vals), v: vals[0].v };
     let best = vals[0].m, bv = -Infinity;
@@ -394,7 +438,7 @@ function thinkFin(pos, r) {
 function analyze(start, moves, ms, onProgress, rule) {
   if (rule) setRule(rule);
   const { pos } = replay(start, moves);
-  nodes = 0; stop = false; tEnd = Date.now() + (ms || 1000); nodeLimit = Infinity; killers.length = 0;
+  nodes = 0; stop = false; tEnd = Date.now() + (ms || 1000); nodeLimit = Infinity; kreset();
   let list = [], depth = 0;
   const n = pos.moves().length;
   for (let d = 1; d <= 40; d++) {
@@ -434,7 +478,7 @@ function pvOf(start, moves, m, plies) {
 let mtRule = null;
 function mtNode(m) {
   if (SH !== null) SH.salt = SALT[RK] | 0;
-  else if (mtRule !== RK) { TT.clear(); mtRule = RK; }
+  else if (mtRule !== RK) { ttClear(); mtRule = RK; }
   const line = m.line || [], { pos } = replay(m.start, m.moves.concat(line));
   return { pos, ply: line.length };
 }
@@ -446,7 +490,7 @@ function mtPlan(m) {
   if (m.job === 'think') {
     const L = m.cfg || LEVELS[m.level] || LEVELS[10];
     if (all.length < 2 || !L.s) { PRO_CFG = m.cfg || null; try { return { result: think(m.start, m.moves, m.level) }; } finally { PRO_CFG = null; } }
-    killers.length = 0;
+    kreset();
     return { plan: { kind: 'best', moves: orderMoves(pos, all, -1, 0), inf, maxD: L.dx || 60, ms: L.ms || 0, nodes: (L.nk || (L.ms ? 0 : 50)) * 1000, win: WINT, partialIfBetter: true, splitMin: 99, lazy: lazyOf(m, L, false) } };   // (the root moves only: Kōnane leans on its table, a split main line costs more than it gives; Young Brothers Wait on the shared table — on the user's Mac 8 threads ×2.4 vs Lazy SMP ×1.5, 2026-11-09; lazy: Lazy SMP, for the bench)
   }
   if (!all.length) return { result: { list: [], depth: 0 } };
@@ -462,13 +506,13 @@ function mtV(m) {
 function mtKids(m) {
   const { pos, ply } = mtNode(m);
   const L = pos.moves(); if (!L.length) return { kids: [] };
-  const e = SH !== null ? SH.get(pos.h1, pos.h2) : TT.get(pos.h1);
+  const e = ttGet(pos);
   return { kids: orderMoves(pos, L, e && e.h2 === pos.h2 ? e.m : -1, ply).map(x => ({ m: x, s: -1 })) };
 }
 function mtLazy(m) {   // (shared/tools/mtlazy.js: one Lazy SMP thread's search of the root to depth m.d, root order rotated by m.rot)
   const { pos } = mtNode(m);
   nodes = 0; stop = false; tEnd = m.until || Infinity; nodeLimit = Infinity;
-  const e = SH !== null ? SH.get(pos.h1, pos.h2) : TT.get(pos.h1);
+  const e = ttGet(pos);
   let L = orderMoves(pos, pos.moves(), e && e.h2 === pos.h2 ? e.m : -1, 0);
   if (m.rot) { const k = m.rot % L.length; L = L.slice(k).concat(L.slice(0, k)); }
   let a = -WIN - 1, best = -Infinity, bm = L[0];
@@ -606,8 +650,9 @@ function winningMoves(start, moves, rule, budget) {
   solveBudget = Infinity; return out;
 }
 
+loadCore();
 setRule('s8');
-const API = { get nodes() { return nodes; }, set SH(t) { SH = t; }, get SH() { return SH; }, mtLazy, P1, P2, WIN, WINT, PASS, RULES, RULE_ORDER, setRule, get rule() { return RK; }, get R() { return R; }, get N() { return N; }, get NN() { return NN; },
+const API = { get wasm() { return !!WA; }, get nodes() { return nodes; }, set SH(t) { SH = t; }, get SH() { return SH; }, mtLazy, P1, P2, WIN, WINT, PASS, RULES, RULE_ORDER, setRule, get rule() { return RK; }, get R() { return R; }, get N() { return N; }, get NN() { return NN; },
   get RC() { return RC; }, COLOR: () => COLOR, OPEN1: () => OPEN1, ADJ: () => ADJ, sqAt, sqName, mv, mFrom, mTo, isRemove, hops, Pos, path, captured, isJump, name, parse, replay, judge,
   LEVELS, think, analyze, cands, duelGood, duelMin, duelReply, solve, winningMoves, evaluate, kindOf, EW, mtPlan, mtV, mtKids, mtFin, pvOf };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
@@ -629,7 +674,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
         else if (m.type === 'duel') { const g = duelGood(m.start, m.moves, m.n); self.postMessage({ id: m.id, type: 'result', list: g ? g.map(x => ({ m: x, need: m.n })) : null }); }
         else if (m.type === 'duelReply') self.postMessage({ id: m.id, type: 'result', ...duelReply(m.start, m.moves, m.n) });
         else if (m.type === 'win') self.postMessage({ id: m.id, type: 'result', list: winningMoves(m.start, m.moves) });
-        else if (m.type === 'newgame') { TT.clear(); self.postMessage({ id: m.id, type: 'result' }); }
+        else if (m.type === 'newgame') { ttClear(); self.postMessage({ id: m.id, type: 'result' }); }
         else if (m.type === 'mtplan') self.postMessage({ id: m.id, type: 'result', ...mtPlan(m) });
         else if (m.type === 'mtv') self.postMessage({ id: m.id, type: 'result', ...mtV(m) });
         else if (m.type === 'mtkids') self.postMessage({ id: m.id, type: 'result', ...mtKids(m) });
