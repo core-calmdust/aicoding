@@ -16,7 +16,8 @@
   const LG = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
   // [ja, en, zh, zh-TW, ko, es, fr, pt, de, ru, tr, id, hi, ar]
   const S = {
-    len: ['ゲームの長さ', 'Game length', '对局长度', '對局長度', '게임 길이', 'Duración', 'Durée', 'Duração', 'Spiellänge', 'Длина игры', 'Oyun uzunluğu', 'Panjang permainan', 'खेल की लंबाई', 'طول اللعبة'],
+    len: ['何点先取', 'Goals to win', '先得分数', '先得分數', '선취 점수', 'Goles para ganar', 'Buts pour gagner', 'Gols para vencer', 'Tore zum Sieg', 'Голов до победы', 'Kazanmak için gol', 'Gol untuk menang', 'जीत के लिए गोल', 'أهداف للفوز'],
+    npt: ['{n}点', '{n}', '{n}分', '{n}分', '{n}점', '{n}', '{n}', '{n}', '{n}', '{n}', '{n}', '{n}', '{n}', '{n}'],
     first: ['{n}点先取', 'First to {n}', '先得{n}分', '先得{n}分', '{n}점 선취', 'A {n} goles', 'En {n} buts', 'Até {n} gols', 'Bis {n} Tore', 'До {n} голов', '{n} gole kadar', 'Sampai {n} gol', '{n} गोल तक', 'حتى {n} أهداف'],
     pick: ['モードを選ぶ', 'Choose a mode', '选择模式', '選擇模式', '모드 선택', 'Elige un modo', 'Choisis un mode', 'Escolha um modo', 'Modus wählen', 'Выбери режим', 'Mod seç', 'Pilih mode', 'मोड चुनो', 'اختر نمطًا'],
     play: ['スタート', 'Start', '开始', '開始', '시작', 'Empezar', 'Jouer', 'Começar', 'Los', 'Старт', 'Başla', 'Mulai', 'शुरू', 'ابدأ'],
@@ -80,7 +81,7 @@
   const modeName = (m, l) => ((M[m] || M.classic)[li(l)] || M[m][1]);
   function levelInfo(n, lang) { const b = n <= 3 ? 0 : n <= 8 ? 1 : n <= 14 ? 2 : 3; return { name: 'Lv.' + n, desc: (LVD[lang] || LVD.en)[b], who: (WHO[lang] || WHO.en)[b] }; }
   const SIZES = [5, 7, 10];
-  const sizeName = (z, l) => tr('first', l).replace('{n}', z);
+  const sizeName = (z, l) => tr('npt', l).replace('{n}', z);
   const sizeLabel = l => tr('len', l);
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -111,6 +112,9 @@
     const T3 = ctx.Table3D, E = window.HockeyEngine, D = E.DIM, lang = ctx.lang;
     const pvp = ctx.mode === 'pvp', level = Math.max(1, Math.min(20, +ctx.level || 6)), target = SIZES.includes(+ctx.size) ? +ctx.size : 7;
     const board = T3.MODELS.hockey(true); T3.show('hockey', board);
+    document.documentElement.classList.add('hk-on');
+    const barFit = () => { const b = document.getElementById('tbar'); if (b && b.offsetHeight) { const r = b.getBoundingClientRect(); document.documentElement.style.setProperty('--hk-bar', Math.round(innerHeight - r.top + 6) + 'px'); } };
+    setTimeout(barFit, 400); addEventListener('resize', barFit);
     const U = board.userData, Y = U.top, K = U.K, TH = window.THREE;
     const port = () => innerHeight > innerWidth * 1.05;
     const sideways = () => pvp && !port();   // two players on a wide screen: the table across the screen, red on the left
@@ -147,6 +151,16 @@
 .hktoast{position:fixed;left:50%;top:calc(80px + env(safe-area-inset-top));transform:translateX(-50%);z-index:90;padding:9px 20px;border-radius:99px;background:#fff;color:#1d2133;font-weight:900;font-size:16px;box-shadow:0 0 0 2.5px #2f6fd0,0 8px 20px rgba(0,0,0,.3);pointer-events:none;white-space:nowrap;-webkit-user-select:none;user-select:none}
 .hkbig{position:fixed;left:50%;top:42%;transform:translate(-50%,-50%);z-index:90;font-weight:900;font-size:min(16vw,92px);color:#fff;text-shadow:0 4px 0 rgba(0,0,0,.25),0 0 24px rgba(255,255,255,.6);pointer-events:none;animation:hkPop .6s cubic-bezier(.2,1.6,.4,1);-webkit-user-select:none;user-select:none;white-space:nowrap}
 .hkbig.g{color:#ffd23a;-webkit-text-stroke:2px #b5651d}@keyframes hkPop{from{transform:translate(-50%,-50%) scale(.3);opacity:0}}
+/* the boss / watcher talk: kept down in the action bar's row, never over the rink (PC: beside the bar; phones: a slim strip just above it) */
+html.hk-on #bv > .npc-float{left:calc(50% + 145px)!important;right:auto!important;width:min(440px,calc(50% - 165px))!important;bottom:calc(14px + env(safe-area-inset-bottom))!important;transform:translateY(10px);gap:8px!important;align-items:center!important}
+html.hk-on #bv > .npc-float.on{transform:none}
+html.hk-on #bv > .npc-float .npc-pic{width:58px!important;height:58px!important}
+html.hk-on #bv > .npc-float .npc-bub{padding:6px 12px 7px!important;border-radius:16px!important;max-height:74px;overflow:hidden}
+html.hk-on #bv > .npc-float .npc-bub::before,html.hk-on #bv > .npc-float .npc-bub::after{bottom:auto!important;top:50%;margin-top:-9px}
+html.hk-on #bv > .npc-float .npc-nm b{font-size:13px!important}html.hk-on #bv > .npc-float .npc-tag{font-size:10.5px!important}html.hk-on #bv > .npc-float .npc-ttl{display:none}
+html.hk-on #bv > .npc-float .npc-tx{font-size:14px!important;line-height:1.4!important;min-height:0!important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+@media (max-width:760px){html.hk-on #bv > .npc-float{left:10px!important;right:10px!important;width:auto!important;bottom:calc(env(safe-area-inset-bottom) + var(--hk-bar,76px))!important}
+html.hk-on #bv > .npc-float .npc-pic{width:36px!important;height:36px!important}html.hk-on #bv > .npc-float .npc-bub{padding:4px 10px 5px!important;max-height:46px}html.hk-on #bv > .npc-float .npc-nm{display:none}html.hk-on #bv > .npc-float .npc-tx{font-size:12.5px!important;line-height:1.35!important}}
 .hkfx{position:fixed;z-index:80;pointer-events:none;font-weight:900;font-size:15px;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.35),0 0 10px rgba(255,120,40,.9);transform:translate(-50%,-50%);animation:hkUp .8s ease-out forwards;white-space:nowrap;-webkit-user-select:none;user-select:none}@keyframes hkUp{to{transform:translate(-50%,-180%);opacity:0}}`;
     document.head.appendChild(css);
     let toastEl = null, toastT = 0;
@@ -270,7 +284,7 @@
       if (!menuEl) return;
       const nv = menuEl.querySelector('#hkNever'); if (nv && nv.checked) { howOff = true; try { localStorage.setItem('atlas-hockey-howto', 'off'); } catch (e) {} }
       menuEl.remove(); menuEl = null; mode = menuSel; try { localStorage.setItem('atlas-hockey-mode', mode); } catch (e) {}
-      s = E.newMatch({ mode, target, first: 0 }); setupMode(); hud(); sync(performance.now()); kick(300);
+      s = E.newMatch({ mode, target, first: 0 }); setupMode(); hud(); sync(performance.now()); kick(300); barFit();
       phase = 'count'; let n = 3;
       const tick = () => { if (stopped) return; if (n > 0) { big(String(n)); SND.beep(false); n--; later(tick, 600); } else { big('GO!', 'g', 600); SND.beep(true); phase = 'play'; last = performance.now(); loop(last); } };
       tick();
@@ -325,6 +339,7 @@
         removeEventListener('keydown', onKey); removeEventListener('keyup', onKey); removeEventListener('resize', onResize); document.removeEventListener('visibilitychange', onVis); removeEventListener('blur', onVis);
         ctx.el.style.touchAction = prevTouch; css.remove(); if (toastEl) toastEl.remove(); if (menuEl) menuEl.remove(); document.querySelectorAll('.hkbig,.hkfx').forEach(e => e.remove());
         if (T3.turn) T3.turn(null);
+        document.documentElement.classList.remove('hk-on'); removeEventListener('resize', barFit);
       },
       _debug: { st: () => s, phase: () => phase, begin: m => { if (m) pickMode(m); begin(); }, at: (x, y) => { const [a, b] = U.xz(x, y); return T3.project(a, b, Y); } },
     };
