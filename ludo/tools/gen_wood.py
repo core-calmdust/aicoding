@@ -9,8 +9,8 @@ from scipy.ndimage import gaussian_filter, map_coordinates
 W, H = 1600, 1600
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'img')
 DESIGNS = {   # light, mid, dark, pore (RGB)
-    'board': ((238, 206, 156), (214, 172, 116), (150, 102, 58), (108, 68, 34)),
-    'frame': ((150, 104, 68), (108, 70, 44), (52, 32, 20), (28, 16, 9)),
+    'board': ((240, 212, 166), (222, 186, 134), (190, 148, 96), (150, 110, 66)),   # (2026-11-09: no deep browns on the board)
+    'frame': ((184, 134, 88), (156, 108, 66), (118, 78, 44), (84, 54, 30)),   # a mid teak, not near-black
 }
 
 def noise(rng, sy, sx):
@@ -36,13 +36,14 @@ def render(key, seed):
     fib = warp(noise(rng, 0.45, 26)) * 0.5 + warp(noise(rng, 0.7, 70)) * 0.5
     t = np.clip(0.42 + 0.17 * s + 0.07 * fib, 0, 1)
     base = np.where(t[..., None] < 0.5, light + (mid - light) * (t[..., None] / 0.5), mid + (dark - mid) * ((t[..., None] - 0.5) / 0.5))
-    img = base * (1 - 0.72 * band[..., None]) + dark * 0.72 * band[..., None]
+    BW = 0.3 if key == 'board' else 0.45   # the heartwood bands: faint on the light board
+    img = base * (1 - BW * band[..., None]) + dark * BW * band[..., None]
     # thin dark lines along the edges of the heartwood bands (the visible seam)
-    edge = np.exp(-((hw - 0.55) / 0.07) ** 2) * 0.35
+    edge = np.exp(-((hw - 0.55) / 0.07) ** 2) * (0.15 if key == 'board' else 0.35)
     img = img * (1 - edge[..., None]) + pore * edge[..., None]
     # pores: short dashes along the grain
     pr = (rng.random((H, W)) > 0.9962).astype(np.float64)
-    pr = np.clip(warp(gaussian_filter(pr, (0.45, 4.5)) * 10), 0, 1) * 0.6
+    pr = np.clip(warp(gaussian_filter(pr, (0.45, 4.5)) * 10), 0, 1) * (0.35 if key == 'board' else 0.6)
     img = img * (1 - pr[..., None]) + pore * pr[..., None]
     # soft oiled sheen
     sh = noise(rng, 160, 380)

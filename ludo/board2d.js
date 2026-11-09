@@ -68,7 +68,7 @@
   const WOOD = {};
   function woodTex(kind) {
     if (WOOD[kind]) return WOOD[kind];
-    const url = BASE + 'img/wood-' + kind + '.webp?v=1';
+    const url = BASE + 'img/wood-' + kind + '.webp?v=2';
     if (!WOOD['_' + kind] && typeof Image !== 'undefined') {
       WOOD['_' + kind] = 1; const im = new Image();
       im.onload = () => { try { const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight; c.getContext('2d').drawImage(im, 0, 0); WOOD[kind] = c.toDataURL('image/jpeg', .9); } catch (e) {} };
@@ -80,7 +80,7 @@
   /* ---------- designs ---------- */
   const DESIGN = {
     classic: { bg: '#fbf7ec', line: '#3b3326', frame: '#2a2218' },
-    wood: { bg: '#e0b47a', line: '#4f3015', frame: '#5a3313' },
+    wood: { bg: '#e0b47a', line: '#6b4524', frame: '#9a6a3e' },
   };
   function drawLudo(dz) {
     const D = DESIGN[dz] || DESIGN.classic, C = COL.ludo, o = [];
@@ -91,7 +91,7 @@
       o.push(`<image href="${fr}" x="-.3" y="-.3" width="15.6" height="15.6" preserveAspectRatio="none" clip-path="url(#ldFrC)"/>`);
       o.push(`<rect x="-.3" y="-.3" width="15.6" height="15.6" rx=".5" fill="none" stroke="rgba(0,0,0,.35)" stroke-width=".06"/>`);
       o.push(`<image href="${bd}" x="0" y="0" width="15" height="15" preserveAspectRatio="none"/>`);
-      o.push(`<rect x="0" y="0" width="15" height="15" fill="none" stroke="rgba(30,14,4,.55)" stroke-width=".05"/>`);
+      o.push(`<rect x="0" y="0" width="15" height="15" fill="none" stroke="rgba(60,34,14,.4)" stroke-width=".05"/>`);
     } else {
       o.push(`<rect x="-.3" y="-.3" width="15.6" height="15.6" rx=".5" fill="${D.frame}"/>`);
       o.push(`<rect x="0" y="0" width="15" height="15" fill="${D.bg}"/>`);
@@ -115,7 +115,7 @@
       const start = i % 13 === 0 ? i / 13 : -1;
       const fill = start >= 0 ? C[start][0] : bg;
       o.push(`<rect x="${x}" y="${y}" width="1" height="1" fill="${fill}"${start >= 0 ? PO : ''} stroke="${D.line}" stroke-width=".035"${W ? ' stroke-opacity=".75"' : ''}/>`);
-      if (i % 13 === 8) o.push(star(cx(x), cx(y), .36, W ? '#5a3417' : '#9a8f78'));
+      if (i % 13 === 8) o.push(star(cx(x), cx(y), .36, W ? '#7d5531' : '#9a8f78'));
       if (start >= 0) o.push(arrowIn(cx(x), cx(y), start));
     });
     // home columns
@@ -125,7 +125,7 @@
     tri.forEach(([[ax, ay], [bx, by]], s) => o.push(`<path d="M${ax} ${ay}L${bx} ${by}L7.5 7.5z" fill="${C[s][0]}"${PO} stroke="${D.line}" stroke-width=".035"/>`));
     // the grain through the paint (the same wood, multiplied — the paint is thin), and a soft sheen of the varnish
     if (W) {
-      o.push(`<image href="${woodTex('board')}" x="0" y="0" width="15" height="15" preserveAspectRatio="none" style="mix-blend-mode:multiply" opacity=".28" pointer-events="none"/>`);
+      o.push(`<image href="${woodTex('board')}" x="0" y="0" width="15" height="15" preserveAspectRatio="none" style="mix-blend-mode:multiply" opacity=".2" pointer-events="none"/>`);
       o.push(`<rect x="0" y="0" width="15" height="15" fill="url(#ldVarnish)" pointer-events="none"/>`);
     }
     return o.join('');
@@ -155,7 +155,7 @@
   }
   function drawBoard(rule, design) {
     const n = rule === 'pachisi' ? 19 : 15;
-    const defs = `<defs><radialGradient id="ldSlot" cx=".42" cy=".38" r=".7"><stop offset="0" stop-color="#5a3010" stop-opacity=".08"/><stop offset=".75" stop-color="#4a250a" stop-opacity=".22"/><stop offset="1" stop-color="#2e1504" stop-opacity=".42"/></radialGradient>`
+    const defs = `<defs><radialGradient id="ldSlot" cx=".42" cy=".38" r=".7"><stop offset="0" stop-color="#5a3010" stop-opacity=".08"/><stop offset=".75" stop-color="#5a3412" stop-opacity=".12"/><stop offset="1" stop-color="#4a2a10" stop-opacity=".26"/></radialGradient>`
       + `<linearGradient id="ldVarnish" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".16"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".08"/></linearGradient></defs>`;
     return { n, svg: defs + (rule === 'pachisi' ? drawPachisi(design) : drawLudo(design)) };
   }
