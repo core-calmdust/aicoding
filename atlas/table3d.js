@@ -1448,11 +1448,17 @@
     container.addEventListener('wheel', e => { if (e.ctrlKey) return; e.preventDefault();
       if (mode === 'play') { pzoomTo = Math.max(.6, Math.min(1.5, pzoomTo * Math.exp(e.deltaY * .0012))); kick(400); return; }
       zoomTo = Math.max(.55, Math.min(1.7, zoomTo * Math.exp(e.deltaY * .0012))); }, { passive: false });
-    const pts = new Map(); let pinch0 = 0, zoom0 = 1;
+    // … and while playing on a phone (2026-11-09): pinch moves the camera in / out (pzoom, as the wheel); the tap a finger of the
+    // pinch would make is swallowed, so pinching never moves a piece
+    const pts = new Map(); let pinch0 = 0, zoom0 = 1, pinchEnd = 0;
     const pdist = () => { const a = [...pts.values()]; return Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y); };
-    container.addEventListener('pointerdown', e => { pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (pts.size === 2 && mode !== 'play') { pinch0 = pdist(); zoom0 = zoomTo; drag = null; } }, true);
-    container.addEventListener('pointermove', e => { if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (pts.size === 2 && pinch0 && mode !== 'play') { zoomTo = Math.max(.55, Math.min(1.7, zoom0 * pinch0 / Math.max(10, pdist()))); dragEnd = performance.now(); } }, true);
-    const pup = e => { pts.delete(e.pointerId); if (pts.size < 2) pinch0 = 0; };
+    container.addEventListener('pointerdown', e => { pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (pts.size === 2) { pinch0 = pdist(); zoom0 = mode === 'play' ? pzoomTo : zoomTo; drag = null; } }, true);
+    container.addEventListener('pointermove', e => { if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pts.size === 2 && pinch0) { const z = zoom0 * pinch0 / Math.max(10, pdist());
+        if (mode === 'play') { pzoomTo = Math.max(.6, Math.min(1.5, z)); kick(400); } else zoomTo = Math.max(.55, Math.min(1.7, z));
+        dragEnd = performance.now(); } }, true);
+    const pup = e => { if (pinch0 || pts.size > 1) pinchEnd = performance.now(); pts.delete(e.pointerId); if (pts.size < 2) pinch0 = 0; };
+    addEventListener('click', e => { if (performance.now() - pinchEnd < 450 && container.parentNode && container.parentNode.contains(e.target)) { e.stopPropagation(); e.preventDefault(); } }, true);
     container.addEventListener('pointerup', pup, true); container.addEventListener('pointercancel', pup, true);
     container.addEventListener('pointerdown', e => { if (mode === 'play' || pts.size > 1) return; drag = { x: e.clientX, y: e.clientY, lx: e.clientX, ly: e.clientY, t: performance.now(), moved: false }; vel = 0; });
     container.addEventListener('pointermove', e => {
