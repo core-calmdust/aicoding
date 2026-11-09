@@ -251,6 +251,7 @@
       if (!sess) {
         sess = ad.start({ el: ctx.el, Table3D: ctx.Table3D, lang: ctx.lang, t: ctx.t, mode: 'pz', level: 20, side: 1, bar: false, hud: () => {}, onTurn: () => {}, onEnd: () => {},
           pz: Object.assign({ fen: p.fen, sfen: p.sfen }, { ready: () => cur && cur.ready && cur.ready(), moved: (u, i) => cur && cur.moved && cur.moved(u, i) }) });
+        ctx.Table3D.play(true);   // (after start(): the adapter's show() puts its board on the table in the showcase view)
       } else pz().load(p.fen || p.sfen);
       cur.ready = opts.ready; cur.moved = opts.moved;
       say((first ? X.hi[id] + ' ' : '') + goal(p)); first = false;
