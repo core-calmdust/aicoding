@@ -202,7 +202,7 @@
     const youFirst = (+ctx.side || 1) === 1;
     const board = T3.MODELS.carrom(true); T3.show('carrom', board);
     const U = board.userData, Y = U.top, K = U.K, W = 2 * (U.S + 7 * K);
-    const baseFit = () => innerHeight > innerWidth * 1.1 ? { w: W + .25, d: W + .25, y: Y, pitch: 1.36 } : { w: W + .3, d: W + .35, y: Y, pitch: 1.3 };
+    const baseFit = () => innerHeight > innerWidth * 1.1 ? { w: W + .25, d: W + .25, y: Y, pitch: 1.0 } : { w: W + .3, d: W + .35, y: Y, pitch: 1.0 };   // (trying a 3/4 view with perspective; was 1.36 / 1.3, nearly top-down)
     if (T3.fit) T3.fit(baseFit());
     const onResize = () => { if (T3.fit) T3.fit(baseFit()); };
     addEventListener('resize', onResize);
@@ -270,7 +270,7 @@
 
     /* ---------- HUD ---------- */
     const css = document.createElement('style');
-    css.textContent = '.hud .crp{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;font-weight:800;font-size:13px;opacity:.62;white-space:nowrap}.hud .crp.on{opacity:1;background:rgba(255,255,255,.92);box-shadow:0 2px 8px rgba(0,0,0,.15)}.hud .crp i{width:15px;height:15px;border-radius:50%;display:inline-block;flex:none;box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.3)}.hud .crp b{font-size:14px}.hud .crp .q{width:11px;height:11px;background:#c3271f}.hud .crm{font-weight:800;font-size:13px;max-width:44vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.crtoast{position:fixed;left:50%;top:calc(76px + env(safe-area-inset-top));transform:translateX(-50%);z-index:90;max-width:min(92vw,560px);padding:11px 22px;border-radius:22px;background:#fff;color:#1d2133;font-weight:900;font-size:16px;box-shadow:0 0 0 3px #c23a7a,0 10px 26px rgba(0,0,0,.4);pointer-events:none;text-align:center;line-height:1.45;white-space:pre-line}.crtoast.good{background:#fff;color:#12684a;box-shadow:0 0 0 3px #1f7a55,0 10px 26px rgba(0,0,0,.4)}.crtoast.bad{background:#fff;color:#a8323a;box-shadow:0 0 0 3px #a8323a,0 10px 26px rgba(0,0,0,.4)}.crpow{position:fixed;z-index:6;pointer-events:none;padding:4px 10px;border-radius:99px;background:rgba(20,22,34,.82);color:#fff;font-weight:900;font-size:14px;transform:translate(-50%,-150%);white-space:nowrap}.crhow{position:fixed;inset:0;z-index:95;display:flex;align-items:center;justify-content:center;background:rgba(10,12,22,.55);padding:16px}.crhow-c{background:#fff;color:#1d2133;border-radius:24px;box-shadow:0 0 0 4px #c23a7a,0 18px 50px rgba(0,0,0,.45);padding:22px 22px 18px;width:min(440px,100%);max-height:100%;overflow:auto}.crhow h2{margin:0 0 14px;font-size:24px;font-weight:900;text-align:center;color:#c23a7a}.crhow ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}.crhow li{display:flex;align-items:center;gap:12px;font-size:18px;font-weight:800;line-height:1.35}.crhow li i{flex:none;width:40px;height:40px;border-radius:50%;background:#fbe3ee;color:#c23a7a;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:22px;font-weight:900}.crhow .u{margin:12px 0 0;font-size:14px;font-weight:700;color:#5b6074;text-align:center}.crhow label{display:flex;align-items:center;justify-content:center;gap:8px;margin:16px 0 6px;font-size:16px;font-weight:800;cursor:pointer}.crhow label input{width:20px;height:20px;accent-color:#c23a7a}.crhow .n{margin:0 0 14px;font-size:13px;font-weight:700;color:#6b7083;text-align:center}.crhow button{display:block;width:100%;padding:13px;border:0;border-radius:99px;background:#c23a7a;color:#fff;font:inherit;font-size:18px;font-weight:900;cursor:pointer}@media (max-width:560px){.hud .crp{padding:3px 7px;font-size:12px}.hud .crp .nm{display:none}.crtoast{font-size:14px;padding:9px 16px;border-radius:18px}}';
+    css.textContent = '.hud .crp{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;font-weight:800;font-size:13px;opacity:.62;white-space:nowrap}.hud .crp.on{opacity:1;background:rgba(255,255,255,.92);box-shadow:0 2px 8px rgba(0,0,0,.15)}.hud .crp i{width:15px;height:15px;border-radius:50%;display:inline-block;flex:none;box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.3)}.hud .crp b{font-size:14px}.hud .crp .q{width:11px;height:11px;background:#c3271f}.hud .crm{font-weight:800;font-size:13px;max-width:44vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.crtoast{position:fixed;left:50%;top:calc(76px + env(safe-area-inset-top));transform:translateX(-50%);z-index:90;max-width:min(92vw,560px);padding:11px 22px;border-radius:22px;background:#fff;color:#1d2133;font-weight:900;font-size:16px;box-shadow:0 0 0 3px #c23a7a,0 10px 26px rgba(0,0,0,.4);pointer-events:none;text-align:center;line-height:1.45;white-space:pre-line}.crtoast.good{background:#fff;color:#12684a;box-shadow:0 0 0 3px #1f7a55,0 10px 26px rgba(0,0,0,.4)}.crtoast.bad{background:#fff;color:#a8323a;box-shadow:0 0 0 3px #a8323a,0 10px 26px rgba(0,0,0,.4)}.crpow{position:fixed;z-index:6;pointer-events:none;padding:4px 10px;border-radius:99px;background:rgba(20,22,34,.82);color:#fff;font-weight:900;font-size:14px;transform:translate(-50%,-150%);white-space:nowrap}.crhow{position:fixed;inset:0;z-index:95;display:flex;align-items:center;justify-content:center;background:rgba(10,12,22,.55);padding:16px}.crhow-c{background:#fff;color:#1d2133;border-radius:24px;box-shadow:0 0 0 4px #c23a7a,0 18px 50px rgba(0,0,0,.45);padding:22px 22px 18px;width:min(440px,100%);max-height:100%;overflow:auto}.crhow h2{margin:0 0 14px;font-size:24px;font-weight:900;text-align:center;color:#c23a7a}.crhow ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}.crhow li{display:flex;align-items:center;gap:12px;font-size:18px;font-weight:800;line-height:1.35}.crhow li i{flex:none;width:40px;height:40px;border-radius:50%;background:#fbe3ee;color:#c23a7a;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:22px;font-weight:900}.crhow .u{margin:12px 0 0;font-size:14px;font-weight:700;color:#5b6074;text-align:center}.crhow label{display:flex;align-items:center;justify-content:center;gap:8px;margin:16px 0 6px;font-size:16px;font-weight:800;cursor:pointer}.crhow label input{width:20px;height:20px;accent-color:#c23a7a}.crhow .n{margin:0 0 14px;font-size:13px;font-weight:700;color:#6b7083;text-align:center}.crhow button{display:block;width:100%;padding:13px;border:0;border-radius:99px;background:#c23a7a;color:#fff;font:inherit;font-size:18px;font-weight:900;cursor:pointer}.crflip{position:fixed;left:calc(16px + env(safe-area-inset-left));bottom:calc(22px + env(safe-area-inset-bottom));z-index:40;width:54px;height:54px;border-radius:50%;border:0;background:rgba(255,255,255,.94);color:#2b3044;box-shadow:0 4px 14px rgba(0,0,0,.22);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}.crflip svg{width:28px;height:28px}.crflip.on{background:#c23a7a;color:#fff}@media (max-width:560px){.hud .crp{padding:3px 7px;font-size:12px}.hud .crp .nm{display:none}.crtoast{font-size:14px;padding:9px 16px;border-radius:18px}}';
     document.head.appendChild(css);
     const HK = 'atlas-carrom-howto';
     const howtoOn = () => { try { return localStorage.getItem(HK) !== 'off'; } catch (e) { return true; } };
@@ -399,7 +399,7 @@
       if (over || stopped) return;
       hintShot = null; clearGuides(); onTurn();
       const p = st.turn;
-      if (pvp) { if (T3.turn) T3.turn(p === 1 ? Math.PI : null); }
+      if (pvp) viewTo();
       if (human(p)) {
         if (!pvp) hist.push({ st: E.clone(st), boardNo });
         sx = E.nearestFree(st, p, sx || 0);
@@ -407,8 +407,9 @@
         phase = 'place';
         // the HUD keeps a short status; the how-to goes up top once (and for every break)
         say(pvp ? tx('turn', { p: nameOf(p) }) : t('p.turn'));
-        if (!told && howtoOn()) howtoCard(() => { if (!stopped && !st.brk.done) toast(tx('brk')); });
-        else if (!st.brk.done) toast(tx('brk'));
+        const brk = () => tx('brk').replace(/([!！¡])\s*/, '$1\n');   // 「ブレイク！」 on a line of its own
+        if (!told && howtoOn()) howtoCard(() => { if (!stopped && !st.brk.done) toast(brk()); });
+        else if (!st.brk.done) toast(brk());
         told = true;
         showGuides(); pulse();
         return;
@@ -434,7 +435,7 @@
         later(() => { boardNo++; st = E.nextBoard(st); build(); syncAll(); toast(tx('next', { n: boardNo })); hist.length = 0; later(next, 900); }, 2200);
         return;
       }
-      over = true; phase = 'over'; clearGuides(); if (ctx.onTurn) ctx.onTurn(-1); if (T3.turn && pvp) T3.turn(null);
+      over = true; phase = 'over'; clearGuides(); if (ctx.onTurn) ctx.onTurn(-1); flipBtn.hidden = true; if (pvp) viewTo(0);
       SND.win();
       const score = target ? tx('score', { a: st.score[0], b: st.score[1] }) : txtB;
       const won = target ? st.score[0] > st.score[1] : w === 0;
@@ -461,11 +462,40 @@
       shoot: (ang, pw) => stroke({ x: sx, ang, v: 40 + pw * (E.VMAX - 40) }),
       tap: () => { if (phase === 'anim' && !stopped) speedUp = 3; },   // a tap while the men roll: fast-forward
     });
+    /* ---------- 盤面反転: a round button at the lower left (and the F key) turns the table round 180°, remembered per game.
+       Two-player games also turn the table to whoever strikes; the flip goes on top of that. The pull stays "away from the
+       target" on the board (flipped, you pull up the screen towards your own edge). ---------- */
+    const FK = 'atlas-flip-carrom';
+    let flipped = false; try { flipped = localStorage.getItem(FK) === '1'; } catch (e) {}
+    let viewA = 0, viewRaf = 0;
+    function viewTo(base, now) {   // base: the two-player turn (π for the far side); the flip adds π
+      if (base == null) base = pvp && st && st.turn === 1 && !over ? Math.PI : 0;
+      let to = base + (flipped ? Math.PI : 0); to = ((to % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+      if (!T3.turn) return;
+      cancelAnimationFrame(viewRaf);
+      let from = viewA; if (to - from > Math.PI + 1e-6) from += 2 * Math.PI; else if (from - to > Math.PI + 1e-6) from -= 2 * Math.PI;
+      const D = now || Math.abs(to - from) < 1e-3 ? 0 : 750, t0 = performance.now(), ease = k => k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+      const set = (a, sc) => { viewA = a; const m = ((a % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI); if (Math.abs(m) < 1e-4 && sc === 1) T3.turn(null); else T3.turn(a, sc); };
+      if (!D) { set(to, 1); return; }
+      const step = () => { if (stopped) return; const k = Math.min(1, (performance.now() - t0) / D), e = ease(k); set(from + (to - from) * e, 1 - .16 * Math.sin(Math.PI * e)); if (k < 1) viewRaf = requestAnimationFrame(step); else set(to, 1); };
+      viewRaf = requestAnimationFrame(step);
+    }
+    const FLIPT = { ja: '盤面を反転', en: 'Flip the board', zh: '翻转棋盘', ko: '판 뒤집기', es: 'Girar el tablero', fr: 'Retourner le plateau', pt: 'Girar o tabuleiro', de: 'Brett drehen', hi: 'बोर्ड पलटें', ar: 'قلب اللوحة', ru: 'Перевернуть доску', 'zh-TW': '翻轉棋盤', id: 'Balik papan', tr: 'Tahtayı çevir' };
+    const flipBtn = document.createElement('button'); flipBtn.type = 'button'; flipBtn.className = 'crflip';
+    flipBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9a8 8 0 0 1 14.3-3.3"/><path d="M18.6 2.6v3.3h-3.3"/><path d="M20 15a8 8 0 0 1-14.3 3.3"/><path d="M5.4 21.4v-3.3h3.3"/><path d="M9.5 9.5h5v5h-5z"/></svg>';
+    flipBtn.title = FLIPT[lang] || FLIPT.en; flipBtn.setAttribute('aria-label', flipBtn.title);
+    const flipSync = () => { flipBtn.classList.toggle('on', flipped); flipBtn.setAttribute('aria-pressed', flipped ? 'true' : 'false'); };
+    function flip() { if (stopped) return; flipped = !flipped; try { localStorage.setItem(FK, flipped ? '1' : '0'); } catch (e) {} flipSync(); hand.cancel(); viewTo(); }
+    flipBtn.addEventListener('click', e => { e.preventDefault(); flip(); });
+    ['pointerdown', 'pointermove', 'pointerup'].forEach(k => flipBtn.addEventListener(k, e => e.stopPropagation()));
+    flipSync(); (document.getElementById('bv') || document.body).appendChild(flipBtn);   // (inside the board view's own layer, over its canvas) viewTo(0, true);
+    const onFlipKey = e => { if ((e.key === 'f' || e.key === 'F') && !e.ctrlKey && !e.metaKey && !e.altKey && !/^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || '')) flip(); };
+    document.addEventListener('keydown', onFlipKey);
     const onKey = e => {
       if (stopped || phase !== 'place' || !st || !human(st.turn) || drag) return;
       if (/^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || '')) return;
       const d = e.key === 'ArrowLeft' ? -1 : e.key === 'ArrowRight' ? 1 : 0; if (!d) return;
-      e.preventDefault(); moveStriker(sx + d * (e.shiftKey ? .25 : 1) * (st.turn === 1 && pvp ? -1 : 1)); showGuides();
+      e.preventDefault(); moveStriker(sx + d * (e.shiftKey ? .25 : 1) * (st.turn === 1 && pvp ? -1 : 1) * (flipped ? -1 : 1)); showGuides();
     };
     document.addEventListener('keydown', onKey);
     const prevTouch = ctx.el.style.touchAction; ctx.el.style.touchAction = 'none';
@@ -478,7 +508,7 @@
     const myTurn = () => !stopped && !over && !busy && st && human(st.turn) && phase === 'place';
     function finish(why) {
       if (over || !st) return;
-      tok++; over = true; phase = 'over'; busy = false; clearGuides(); if (ctx.onTurn) ctx.onTurn(-1); if (T3.turn && pvp) T3.turn(null);
+      tok++; over = true; phase = 'over'; busy = false; clearGuides(); if (ctx.onTurn) ctx.onTurn(-1); flipBtn.hidden = true; if (pvp) viewTo(0);
       const r = t(why === 'time' ? 'act.timeout' : 'act.resigned');
       say(t('res.lose')); setTimeout(() => { if (!stopped) ctx.onEnd(pvp ? { win: false, draw: false, level, score: r, pvp: true, winnerText: r } : { win: false, draw: false, level, score: r }); }, 200);
     }
@@ -512,7 +542,7 @@
         hand.stop();
         document.removeEventListener('keydown', onKey); removeEventListener('resize', onResize); ctx.el.style.touchAction = prevTouch;
         css.remove(); powEl.remove(); if (toastEl) toastEl.remove(); if (cardEl) cardEl.remove(); if (worker) worker.terminate();
-        if (T3.turn) T3.turn(null);
+        cancelAnimationFrame(viewRaf); flipBtn.remove(); document.removeEventListener('keydown', onFlipKey); if (T3.turn) T3.turn(null);
         Object.values(MAT).forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose());
       },
       _debug: { st: () => st, phase: () => phase, shoot: (x, ang, pw) => { if (phase !== 'place') return false; sx = E.nearestFree(st, st.turn, x); stroke({ x: sx, ang, v: 40 + pw * (E.VMAX - 40) }); return true; }, setStriker: x => { moveStriker(x); showGuides(); }, at: (x, y) => { const [a, b] = wx(x, y); return T3.project(a, b, Y); }, striker: () => sx },
