@@ -416,6 +416,10 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
 .lesson-card h3{font-size:23px}
 .lesson-prompt{font-size:17px;line-height:1.75}
 .lesson-fb{font-size:16px;line-height:1.85;color:#d9c9b2}
+.ts-compact .cb-bar .cb-br{display:none!important}
+.ts-compact .cb-bar .cb-q{font-size:0!important;width:42px!important;height:42px!important;padding:0!important;margin-inline-start:0!important;justify-content:center;gap:0!important;border-radius:14px!important}
+.ts-compact .cb-bar .cb-q::before{width:18px;height:18px}
+.ts-compact .cb-bar{flex-wrap:nowrap!important}
 /* phones: a compact card head (2026-11-10) — the step on one line (cut with …) beside a small progress pill, a smaller
    title, the prompt tighter and the tsume rule note as a small line of its own */
 @media (max-width:600px){
@@ -4458,7 +4462,25 @@ function keepBoardPos(fn) {
   const d = el.getBoundingClientRect().top - y0;
   if (Math.abs(d) > 1 && document.documentElement.scrollHeight > innerHeight + 4) window.scrollBy(0, d);
 }
-function renderLesson() { keepBoardPos(renderLesson0); stSync(); hbInfo(); $('#lsBackOp').classList.toggle('hidden', !(lesson && (lesson.study || lesson.opening))); }
+// 詰将棋: a compact card bar (2026-11-10) — ヒント (もう一度 after a miss) as an icon among the tools, 詰将棋をやめる as an icon at
+// the end of the same row (shared/cardbar.js built the bar; this only rearranges it while a tsume is on)
+const TSB_I = { hint: '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2h5c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3z"/>', retry: '<path d="M4 4v6h6"/><path d="M5.5 15a7 7 0 1 0 1.6-7.3L4 10"/>' };
+function tsBar() {
+  const card = $('#lessonCard'), bar = card && card.querySelector('.cb-bar'), h = $('#lsHint'); if (!bar || !h) return;
+  const on = !!(lesson && lesson.endless && lesson.cur && lesson.cur.kind === 'tsume'), tools = bar.querySelector('.cb-tools'), main = bar.querySelector('.cb-main');
+  card.classList.toggle('ts-compact', on);
+  if (on) {
+    const k = lesson.retry ? 'retry' : 'hint';
+    if (h.parentElement !== tools) tools.appendChild(h);
+    h.classList.add('cb-ic'); h.classList.remove('cb-t');
+    if (h.dataset.tsi !== k) { h.dataset.tsi = k; h.style.setProperty('--cb-i', `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>${TSB_I[k].replace(/"/g, "'")}</svg>`)}")`); }
+    const l = h.textContent.trim(); if (l) { h.title = l; h.setAttribute('aria-label', l); }
+  } else if (h.parentElement === tools) {
+    const nx = $('#lsNext'); main.insertBefore(h, nx && main.contains(nx) ? nx : null);
+    h.classList.remove('cb-ic'); h.classList.add('cb-t'); h.style.removeProperty('--cb-i'); delete h.dataset.tsi; h.removeAttribute('title'); h.removeAttribute('aria-label');
+  }
+}
+function renderLesson() { keepBoardPos(renderLesson0); tsBar(); stSync(); hbInfo(); $('#lsBackOp').classList.toggle('hidden', !(lesson && (lesson.study || lesson.opening))); }
 function renderLesson0() {
   if (lesson.study) { showStudy(); return; }
   if (lesson.ramp) { renderRamp(); return; }
@@ -4489,7 +4511,8 @@ function renderLesson0() {
   }
   const side = pr.sfen.split(' ')[1] === 'w' ? 1 : 0;
   const tag = pr.kind === 'tsume' ? t('mateIn', { n: pr.n }) : '';
-  $('#lsPrompt').innerHTML = `${tag ? `<span class="tag">${tag}</span>` : ''}<b>${cname(side)}</b> — ${L(pr.q) || L(g.prompt) || t('ts.prompt')}${pr.kind === 'tsume' && lesson.endless && pr.conv ? `<span class="ts-conv" style="font-size:12px;color:var(--dim)"><br>${t('ts.conv')}</span>` : ''}`;
+  const tsP = pr.kind === 'tsume' && lesson.endless;   // 詰将棋: no 「3手詰」 tag (the title says it) and no 「先手 —」 (always the attacker) — 2026-11-10
+  $('#lsPrompt').innerHTML = `${tag && !tsP ? `<span class="tag">${tag}</span>` : ''}${tsP ? '' : `<b>${cname(side)}</b> — `}${L(pr.q) || L(g.prompt) || t('ts.prompt')}${pr.kind === 'tsume' && lesson.endless && pr.conv ? `<span class="ts-conv" style="font-size:12px;color:var(--dim)"><br>${t('ts.conv')}</span>` : ''}`;
   $('#lsFb').innerHTML = lesson.fbHtml || '';
   if (lesson.retry) { $('#lsHint').textContent = t('ts.retry'); $('#lsHint').disabled = false; $('#lsNext').textContent = t('ls.answer'); $('#lsQuit').textContent = t('ls.quit'); return; }
   $('#lsHint').textContent = lesson.answered ? t('ls.answer') : t('ls.hint');
