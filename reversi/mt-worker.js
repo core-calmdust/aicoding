@@ -1,7 +1,8 @@
 // One thread of the main page's multi-thread search (shared/mtengine.js): engine.js (the root search) on an engine_mt.wasm
 // instance that shares the memory (weights, transposition table) with the other threads. Thread 0 is the lead: it gets
 // the page's jobs (think / analyze, engine.js's own worker API). The helpers (id 1, 2, …) search the same position
-// meanwhile, each starting from another root move (opts.rot, Lazy SMP diversity), until the page stops every thread.
+// meanwhile (opts.rot = id: engine.js helperPlan — odd ids another first root move, even ids other replies one ply
+// below; a deeper finished depth is shared with the lead, 2026-11-09), until the page stops every thread.
 // In the exact / win-draw-loss solve of think the root moves are shared out instead (engine.js rootSplit / splitHelp).
 self.addEventListener('message', function boot(e) {
   const m = e.data; if (m.type !== 'mtinit') return;
@@ -11,7 +12,7 @@ self.addEventListener('message', function boot(e) {
     X.mt_stack(m.top); X.mt_thread(m.tls);
     self.REVERSI_WX = Object.assign({}, X, { memory: m.mem });   // engine.js reads WX.memory
     self.REVERSI_SPLIT = m.ctl;   // (the endgame solve is split at the root over the threads: engine.js rootSplit)
-    importScripts('engine.js?v=55');
+    importScripts('engine.js?v=56');
   } catch (err) { self.postMessage({ type: 'mtready', error: String(err && err.message || err) }); return; }
   const id = m.id, ctl = m.ctl, cnt = m.cnt, R = self.ReversiEngine;
   if (id > 0) {

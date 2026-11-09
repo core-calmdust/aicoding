@@ -267,22 +267,87 @@ static inline void checkTime(void) {
   if (nodeMax > 0 && nodes >= nodeMax) aborted = 1;
 }
 
+#ifndef MT
 #define TT_SIZE (1 << 20)
 #define TT_MASK (TT_SIZE - 1)
 static u64 TKP[TT_SIZE], TKO[TT_SIZE]; static i16 T_LO[TT_SIZE], T_HI[TT_SIZE]; static i8 T_D[TT_SIZE], T_M[TT_SIZE];
+#endif
 #define ET_SIZE (1 << 19)
 #define ET_MASK (ET_SIZE - 1)
+#ifndef MT
 static u64 EKP[ET_SIZE], EKO[ET_SIZE]; static i8 E_LO[ET_SIZE], E_HI[ET_SIZE], E_M[ET_SIZE]; static u8 E_V[ET_SIZE];
+#else
+/* MT (2026-11-09): the tables are written by many threads at once, so an entry is three 64-bit words checked against
+   each other (k1 = P ^ data, k2 = O ^ data: an entry half written by another thread no longer matches and is a miss —
+   before, the key of one position could be read with the bounds of another). The midgame table: buckets of 4 entries
+   (the deepest / of this search kept, the shallowest / oldest replaced; before: one entry, always replaced, so the helpers'
+   leaves wiped the lead's deep entries), 4M entries (96 MB) placed above the threads' slots by init(), and an age per
+   search (tt_new). data: lo (16) | hi (16) | depth + 1 (8) | move (8) | age (8). */
+typedef struct { u64 k1, k2, dt; } TTE;
+static TTE *TTB; static u32 TTM; static u32 TT_AGE = 1; static int TT_LOG;
+#define TT_LOG_MAX 20   /* buckets: 2^20 × 4 entries × 24 bytes */
+static TTE ETB[ET_SIZE];   /* the endgame table: dt = empties (8, 0 = free) | move (8) | hi + 128 (8) | lo + 128 (8), low to high */
+#define DT_LO(d) ((int)((d) & 0xFFFF) - 32768)
+#define DT_HI(d) ((int)(((d) >> 16) & 0xFFFF) - 32768)
+#define DT_D(d) ((int)(((d) >> 32) & 0xFF) - 1)
+#define DT_M(d) ((int)(i8)(((d) >> 40) & 0xFF))
+#define DT_A(d) ((u32)(((d) >> 48) & 0xFF))
+static inline TTE *ttFind(u64 P, u64 O, u32 h, u64 *out) {
+  TTE *b = TTB + ((h & TTM) << 2);
+  for (int i = 0; i < 4; i++) { const u64 d = b[i].dt; if ((b[i].k1 ^ d) == P && (b[i].k2 ^ d) == O) { *out = d; return b + i; } }
+  return 0;
+}
+static void ttStore(u64 P, u64 O, u32 h, int depth, int move, int lo, int hi) {
+  TTE *b = TTB + ((h & TTM) << 2), *r = b; int rs = 1 << 30;
+  const u64 nd = (u64)(u32)(lo + 32768) | (u64)(u32)(hi + 32768) << 16 | (u64)(u32)(depth + 1) << 32 | (u64)(u8)move << 40 | (u64)TT_AGE << 48;
+  for (int i = 0; i < 4; i++) {
+    const u64 d = b[i].dt;
+    if ((b[i].k1 ^ d) == P && (b[i].k2 ^ d) == O) {   /* the same position: as the one-entry table (keep a deeper one of this search) */
+      if (DT_D(d) > depth && DT_A(d) == TT_AGE) return;
+      r = b + i; break;
+    }
+    const int s = DT_D(d) + (DT_A(d) == TT_AGE ? 128 : 0);
+    if (s < rs) { rs = s; r = b + i; }
+  }
+  r->dt = nd; r->k1 = P ^ nd; r->k2 = O ^ nd;
+}
+static TLS int ROT1;
+EXPORT(set_rot1) void set_rot1(int k) { ROT1 = k; }
+EXPORT(tt_new) void tt_new(void) { u32 a = TT_AGE + 1; if (a > 255) a = 1; TT_AGE = a; }   /* the lead, at the start of each search */
+EXPORT(tt_bits) int tt_bits(int n) { if (n > 0 && n <= TT_LOG) TTM = (1u << n) - 1; return TT_LOG; }   /* (tools/mt-sim.js: a smaller table) */
+static inline int etGet(u64 P, u64 O, int i, int *lo, int *hi, int *mv) {
+  for (int k = 0; k < 2; k++) {
+    const u64 d = ETB[i + k].dt;
+    if ((d & 0xFF) && (ETB[i + k].k1 ^ d) == P && (ETB[i + k].k2 ^ d) == O) { *lo = (int)((d >> 24) & 0xFF) - 128; *hi = (int)((d >> 16) & 0xFF) - 128; *mv = (i8)((d >> 8) & 0xFF); return i + k; }
+  }
+  return -1;
+}
+#endif
 static u32 hash(u64 P, u64 O) {   // = engine.js hash on the four 32-bit halves
   u32 pl = (u32)P, ph = (u32)(P >> 32), ol = (u32)O, oh = (u32)(O >> 32);
   u32 h = ((pl ^ 0x9E3779B9u) * 0x85EBCA6Bu) ^ ((ph + 0x7F4A7C15u) * 0xC2B2AE35u) ^ ((ol ^ 0x165667B1u) * 0x27D4EB2Fu) ^ ((oh + 0x61C88647u) * 0x9E3779B1u);
   h ^= h >> 15; h *= 0x2C1B3C6Du; h ^= h >> 12; h *= 0x297A2D39u; h ^= h >> 15;
   return h;
 }
+#ifndef MT
 EXPORT(clear_tt) void clear_tt(void) {
   for (int i = 0; i < TT_SIZE; i++) { T_D[i] = -1; T_M[i] = -1; }
   for (int i = 0; i < ET_SIZE; i++) { E_V[i] = 0; E_M[i] = -1; }
 }
+#else
+static void ttAlloc(void) {   /* once (init): the midgame table above everything the page has placed (the threads' slots) */
+  if (TTB) return;
+  for (int lg = TT_LOG_MAX; lg >= 16; lg--) {
+    const u32 pages = (u32)(((sizeof(TTE) << 2) << lg) >> 16), at = (u32)__builtin_wasm_memory_size(0);
+    if (__builtin_wasm_memory_grow(0, pages) != (__SIZE_TYPE__)-1) { TTB = (TTE *)(at << 16); TT_LOG = lg; TTM = (1u << lg) - 1; return; }
+  }
+  static TTE small[4 << 12]; TTB = small; TT_LOG = 12; TTM = (1u << 12) - 1;   /* (no memory left: a small table) */
+}
+EXPORT(clear_tt) void clear_tt(void) {
+  if (TTB) __builtin_memset(TTB, 0, (sizeof(TTE) << 2) << TT_LOG);
+  __builtin_memset(ETB, 0, sizeof ETB);
+}
+#endif
 static const i16 SQV[64] = {
   100, -20, 10, 5, 5, 10, -20, 100, -20, -50, -2, -2, -2, -2, -50, -20, 10, -2, 1, 1, 1, 1, -2, 10, 5, -2, 1, 0, 0, 1, -2, 5,
   5, -2, 1, 0, 0, 1, -2, 5, 10, -2, 1, 1, 1, 1, -2, 10, -20, -50, -2, -2, -2, -2, -50, -20, 100, -20, 10, 5, 5, 10, -20, 100 };
@@ -301,11 +366,19 @@ static void sortMoves(int base, int n) {   // descending by SC, MF along
 static int searchI(u64 P, u64 O, int depth, int alpha, int beta, int ply, int passed) {
   if (((long long)(++nodes) & 4095) == 0) { checkTime(); if (aborted) return 0; }
   if (depth <= 0) return evalAt(ply, P, O);
+#ifndef MT
   u32 h = hash(P, O); int ti = h & TT_MASK, ttMove = -1;
   if (TKP[ti] == P && TKO[ti] == O && T_D[ti] >= 0) {
     ttMove = T_M[ti];
     if (T_D[ti] >= depth) {
       int lo = T_LO[ti], hi = T_HI[ti];
+#else
+  u32 h = hash(P, O); int ttMove = -1; u64 td;
+  if (ttFind(P, O, h, &td)) {
+    ttMove = DT_M(td);
+    if (DT_D(td) >= depth) {
+      int lo = DT_LO(td), hi = DT_HI(td);
+#endif
       if (lo >= beta) return lo;
       if (hi <= alpha) return hi;
       if (lo == hi) return lo;
@@ -343,7 +416,11 @@ static int searchI(u64 P, u64 O, int depth, int alpha, int beta, int ply, int pa
   int ordDepth = MPC_ON ? (depth >= 18 ? 3 : depth >= 12 ? 2 : depth >= 8 ? 1 : depth >= 3 ? 0 : -1)
     : depth >= 9 ? 3 : depth >= 6 ? 2 : depth >= 4 ? 1 : depth >= 3 ? 0 : -1;
   int alpha0 = alpha, best = -32767, bestMove = -1, first = 0;
+#ifdef MT
+  if (MPC_ON && ordDepth >= 0 && ttMove >= 0 && ((m >> ttMove) & 1) && !(ply == 1 && ROT1)) {
+#else
   if (MPC_ON && ordDepth >= 0 && ttMove >= 0 && ((m >> ttMove) & 1)) {
+#endif
     const int s = ttMove; const u64 f = flips(s, P, O), nP = P | f | (1ULL << s), nO = O & ~f;
     childIdx(ply, s, f);
     const int v = -searchI(nO, nP, depth - 1, -beta, -alpha, ply + 1, 0);
@@ -368,6 +445,13 @@ static int searchI(u64 P, u64 O, int depth, int alpha, int beta, int ply, int pa
     SC[base + i] = sc;
   }
   sortMoves(base, n);
+#ifdef MT
+  if (ply == 1 && ROT1 && n > 1) {   /* a helper: the replies to the root moves from another one (Lazy SMP diversity, rot1) */
+    const int k = ROT1 % n; i8 tm[36]; int ts[36]; u64 tf[36];
+    for (int i = 0; i < n; i++) { tm[i] = MV[base + (i + k) % n]; ts[i] = SC[base + (i + k) % n]; tf[i] = MF[base + (i + k) % n]; }
+    for (int i = 0; i < n; i++) { MV[base + i] = tm[i]; SC[base + i] = ts[i]; MF[base + i] = tf[i]; }
+  }
+#endif
   if (bestMove < 0) bestMove = MV[base];
   for (int i = 0; i < n; i++) {
     int s = MV[base + i];
@@ -384,10 +468,14 @@ static int searchI(u64 P, u64 O, int depth, int alpha, int beta, int ply, int pa
     if (v > best) { best = v; bestMove = s; if (v > alpha) { alpha = v; if (alpha >= beta) break; } }
   }
 store:
+#ifndef MT
   if (T_D[ti] <= depth || !(TKP[ti] == P && TKO[ti] == O)) {
     TKP[ti] = P; TKO[ti] = O; T_D[ti] = (i8)depth; T_M[ti] = (i8)bestMove;
     T_LO[ti] = (i16)(best > alpha0 ? best : -32767); T_HI[ti] = (i16)(best < beta ? best : 32767);
   }
+#else
+  ttStore(P, O, h, depth, bestMove, best > alpha0 ? best : -32767, best < beta ? best : 32767);
+#endif
   return best;
 }
 static int searchE(u64 P, u64 O, int depth, int alpha, int beta, int ply, int passed) { initIdx(ply, P, O); return searchI(P, O, depth, alpha, beta, ply, passed); }
@@ -528,25 +616,38 @@ EXPORT(set_stab) void set_stab(int on, int mn) { STAB_ON = on; (void)mn; }
    of this solve can never be reached again and counts as free). E_V = the empties of the entry (0 = free) */
 static TLS int gRootE = 64;
 #define ET_MIN 8
+#ifndef MT
 static inline int etFind(u64 P, u64 O, int i) {
   if (E_V[i] && EKP[i] == P && EKO[i] == O) return i;
   if (E_V[i + 1] && EKP[i + 1] == P && EKO[i + 1] == O) return i + 1;
   return -1;
 }
+#endif
 static int solve(u64 P, u64 O, int alpha, int beta, int empties, int ply, int passed) {
   if (empties <= SMALL) return solveSmall(P, O, alpha, beta, empties, passed);
   if (((long long)(++nodes) & 16383) == 0) { checkTime(); if (aborted) return 0; }
   int ti = -1, hb = -1, ttMove = -1;
   if (empties >= ET_MIN) {
-    hb = hash(P, O) & ET_MASK & ~1; ti = etFind(P, O, hb);
+    hb = hash(P, O) & ET_MASK & ~1;
+#ifndef MT
+    ti = etFind(P, O, hb);
     if (ti >= 0) {
       int lo = E_LO[ti], hi = E_HI[ti];
+#else
+    int lo, hi, em;
+    ti = etGet(P, O, hb, &lo, &hi, &em);
+    if (ti >= 0) {
+#endif
       if (lo >= beta) return lo;
       if (hi <= alpha) return hi;
       if (lo == hi) return lo;
       if (lo > alpha) alpha = lo;
       if (hi < beta) beta = hi;
+#ifndef MT
       ttMove = E_M[ti];
+#else
+      ttMove = em;
+#endif
     }
   }
   if (STAB_ON && alpha >= STAB_T[empties]) {   // the opponent's stable discs bound our score from above
@@ -570,8 +671,13 @@ static int solve(u64 P, u64 O, int alpha, int beta, int empties, int ply, int pa
     MF[base + i] = f;
     if (n == 1) break;
     if (etc) {
+#ifndef MT
       int ci = etFind(nO, nP, hash(nO, nP) & ET_MASK & ~1);
       if (ci >= 0 && -E_HI[ci] >= beta) return -E_HI[ci];
+#else
+      int clo, chi, cm;
+      if (etGet(nO, nP, hash(nO, nP) & ET_MASK & ~1, &clo, &chi, &cm) >= 0 && -chi >= beta) return -chi;
+#endif
     }
     if (s == ttMove) { SC[base + i] = 1 << 29; continue; }
     u64 om = genMoves(nO, nP);
@@ -600,10 +706,19 @@ static int solve(u64 P, u64 O, int alpha, int beta, int empties, int ply, int pa
     if (v > best) { best = v; bestMove = s; if (v > alpha) { alpha = v; if (alpha >= beta) break; } }
   }
   if (hb >= 0) {
+#ifndef MT
     ti = etFind(P, O, hb);
     if (ti < 0) { const int v0 = E_V[hb] > gRootE ? 0 : E_V[hb], v1 = E_V[hb + 1] > gRootE ? 0 : E_V[hb + 1]; ti = v0 <= v1 ? hb : hb + 1; }
     EKP[ti] = P; EKO[ti] = O; E_V[ti] = (u8)empties; E_M[ti] = (i8)bestMove;
     E_LO[ti] = (i8)(best > alpha0 ? best : -99); E_HI[ti] = (i8)(best < beta ? best : 99);
+#else
+    int x0, x1, x2;
+    ti = etGet(P, O, hb, &x0, &x1, &x2);
+    if (ti < 0) { const int e0 = (int)(ETB[hb].dt & 0xFF), e1 = (int)(ETB[hb + 1].dt & 0xFF), v0 = e0 > gRootE ? 0 : e0, v1 = e1 > gRootE ? 0 : e1; ti = v0 <= v1 ? hb : hb + 1; }
+    const int lo = best > alpha0 ? best : -99, hi = best < beta ? best : 99;
+    const u64 nd = (u64)(u8)empties | (u64)(u8)bestMove << 8 | (u64)(u32)(hi + 128) << 16 | (u64)(u32)(lo + 128) << 24;
+    ETB[ti].dt = nd; ETB[ti].k1 = P ^ nd; ETB[ti].k2 = O ^ nd;
+#endif
   }
   return best;
 }
@@ -617,6 +732,9 @@ EXPORT(init) void init(void) {
   initRays(); initRayM(); initRayV(); initDiag(); initCnt();
   for (int s = 0; s < 64; s++) NEIGH[s] = neighbours(1ULL << s);
   for (int s = 0; s < 64; s++) QUAD[s] = (i8)(((s >> 5) << 1) | ((s & 7) >> 2));
+#ifdef MT
+  ttAlloc();
+#endif
   clear_tt();
 }
 
