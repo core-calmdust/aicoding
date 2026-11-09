@@ -126,6 +126,10 @@ html[lang=ar] .badge,html[lang=hi] .badge{letter-spacing:0}
 .props{position:absolute;inset:0}
 /* the moving layer is the span; the image (with its shadow) is painted into it once, so the GPU doesn't redo a drop-shadow blur per piece every frame */
 .props .pp{position:absolute;width:var(--w);left:var(--x);top:var(--y);transform:translate(-50%,-50%) rotate(var(--r));will-change:transform;cursor:pointer;padding:0;line-height:0}
+/* the board view and the play overlays (toasts, task pill, power, how-to card, buttons, NPC talk): no text selection or long-press callout
+   — a long press while aiming on a phone otherwise selects the HUD's words (2026-11-09) */
+#bv,#bv *,.crtoast,.crpow,.crhow,.crhow *,.crflip,.cktask,.cktoast,.ckpow,.ckhow,.ckhow *,.ckflip,[class^=npc],[class^=npc] *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#bv input,#bv textarea{-webkit-user-select:text;user-select:text}
 .props .pp img{display:block;width:100%;filter:drop-shadow(0 12px 10px rgba(0,0,0,.16));transition:filter .2s;-webkit-user-drag:none;user-select:none}
 .props .pp:hover img{filter:drop-shadow(0 18px 14px rgba(0,0,0,.22)) brightness(1.04)}
 @keyframes float{from{transform:translate(-50%,-50%) rotate(var(--r)) translateY(0)}to{transform:translate(-50%,-50%) rotate(calc(var(--r) + 6deg)) translateY(-12px)}}
