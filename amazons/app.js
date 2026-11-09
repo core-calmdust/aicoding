@@ -832,6 +832,7 @@ function confetti() {
 // ====================================================================== controls
 $('#btnNew').onclick = () => (lesson || puzzle) ? openNewDialog() : rsOpen();
 $('#btnUndo').onclick = undo;
+$('#btnLesson').onclick = () => openLessons();
 $('#btnHint').onclick = () => {
   if (rtLive()) { toast(t('rt.noEval')); return; }
   settings.hint = !settings.hint; save();
@@ -1044,7 +1045,7 @@ function tourFor() {
     sound: k => { if (k === 'ok') sCrown(); },
   }));
 }
-function openRules(r, page) { showOverlay('#rulesOverlay'); if (page != null) tourFor().page = page; renderRules(); }
+function openRules(r, page) { selTab('rules'); showOverlay('#rulesOverlay'); if (page != null) tourFor().page = page; renderRules(); }
 function closeRules() { if (TOUR) TOUR.stop(); hideOverlay('#rulesOverlay'); }
 function renderRules() { const tour = tourFor(); tour.open(tour.page); }
 $('#rulesClose').onclick = () => closeRules();
@@ -1235,15 +1236,255 @@ function rtConfirm(after) {
   $('#rtConfirmYes').onclick = () => { hideOverlay('#rtConfirm'); const x = rtForfeit(); renderInfo(); if (x) after(); };
 }
 
-// ====================================================================== lessons / puzzles: not yet (the menu has no buttons for them; the stubs keep the
-// shared flow of the page — the lesson / puzzle state is always null)
-let LESSONS = null, PUZZLES = null, savedGame = null, introIdx = 0, openChoiceIdx = -1, pzLevel = 0;
-const lessonsReady = Promise.resolve(null), puzzlesReady = Promise.resolve(null);
-function exitSpecial() {}
-function quitSpecial() { update(false); afterPosition(); }
-function openLessons() {} function openPuzzles() {} function openOpenings() {} function openIntro() {} function openPzGrid() {} function openOpeningChoice() {}
-function renderLessonCard() {} function renderPuzzleCard() {} function showStudy() {} function stSync() {} function stGo() {}
-function startLesson() {} function startPuzzle() {} function lessonAnswer() {} function puzzleMove() {}
+// ====================================================================== lessons (20 points per problem, 75 to pass; tools/gen_lessons.js → lessons.json)
+// Every right answer was computed from the rules (no engine opinion). Each step opens with a warm-up ramp (考え方 → 例題, not scored).
+// Texts are i18n keys (i18n-am-ls.js): ls.<step>.*, rp.<ramp>.*, ru.*, course.*.
+let LESSONS = null, PUZZLES = null, introIdx = 0, openChoiceIdx = -1, pzLevel = 0;
+const lessonsReady = fetch('lessons.json?v=1').then(r => r.json()).then(d => (LESSONS = d)).catch(() => null), puzzlesReady = Promise.resolve(null);
+const LS_STORE = STORE + '-lessons';
+function lsProgress() { try { return JSON.parse(localStorage.getItem(LS_STORE) || '{}') || {}; } catch (e) { return {}; } }
+const LL = o => !o ? '' : typeof o === 'string' ? t(o) : (o[LANG] !== undefined ? o[LANG] : o.en !== undefined ? o.en : o.ja);
+let savedGame = null;
+function stashGame() { if (!lesson && !puzzle) savedGame = { moves, cur, evals: evals.slice(), humanColor }; }
+function exitSpecial() {
+  if (!lesson && !puzzle) return;
+  lesson = null; puzzle = null; lessonMarks = []; labelList = null; sel = null;
+  document.body.classList.remove('in-lesson', 'in-puzzle');
+  busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = 0; animating = false;
+  startSpec = null;
+  if (savedGame) { moves = savedGame.moves; cur = savedGame.cur; evals = savedGame.evals; humanColor = savedGame.humanColor; savedGame = null; }
+  else { moves = []; cur = 0; evals = []; }
+  reviewing = cur !== moves.length; hintList = null;
+  gameOverShown = gameOver(moves.length);
+}
+function quitSpecial() { exitSpecial(); update(false); afterPosition(); }
+function showLessonView(v) { ['lessonListView', 'lessonIntroView', 'lessonDoneView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); if (v === 'lessonDoneView') { const q = $('#btnLessonQuit2'); q.dataset.i18n = 'ls.toList'; q.textContent = t('ls.toList'); } }
+const LS_ICON = {
+  basics: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3" fill="#2f6b46"/><path d="M7 17 17 7" stroke="#d6ec86" stroke-width="2.2" stroke-linecap="round"/><path d="M17 7l-5 1 4 4z" fill="#d6ec86"/><circle cx="7" cy="17" r="3" fill="#f2ead8" stroke="#6b5d44"/></svg>',
+  strategy: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3" fill="#2f6b46"/><path d="M3 12h7M14 12h7M12 3v7M12 14v7" stroke="#e08a5a" stroke-width="2.6"/><circle cx="7" cy="7" r="2.6" fill="#f2ead8"/><circle cx="17" cy="17" r="2.6" fill="#2a2420" stroke="#000"/></svg>',
+};
+const lsIcon = k => `<span class="ic sv">${LS_ICON[k] || '●'}</span>`;
+const plainText = html => String(html || '').replace(/<br\s*\/?>|<\/p>/g, ' ').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+const lxBar = (p, cls) => `<span class="lx-bar ${cls || ''}"><i style="width:${Math.round(Math.max(0, Math.min(1, p)) * 100)}%"></i></span>`;
+const lxSt = r => r ? (r.clear ? `<span class="lx-st ok">✓ ${t('ls.clear')} ${t('u.pt', { n: r.best })}</span>` : `<span class="lx-st">${t('u.pt', { n: r.best })}</span>`) : `<span class="lx-st new">${t('ls.notyet')}</span>`;
+const MK_CLS = { s_escape: 'ng' };
+// the picture of a step: its warm-up's first position (with its marks and the idea drawn), else the first problem
+function stepPic(s, cls) {
+  const R = s.ramp && s.ramp[0];
+  if (R) {
+    const o = { cls, marks: {}, arrows: [], shots: [] };
+    for (const [q, c] of R.marks || []) o.marks[q - 1] = c;
+    let p = E.Pos.from(R.s); for (const nm of R.seq || []) { const m = rampByName(p, nm); if (m === undefined) break; o.arrows.push([mFrom(m), mTo(m)]); o.shots.push([mTo(m), mArrow(m)]); p = p.clone().play(m); }
+    return miniSVG(R.s, o);
+  }
+  const P = s.problems[0]; return P ? miniSVG(P.s, { cls }) : '';
+}
+const lsCourseSel = {};
+const cOf = s => s.course || 'basics';
+async function openLessons(v, course) {
+  const d = await lessonsReady; selTab('lesson');
+  if (!d) { toast(t('ls.fail')); return; }
+  $('#btnLessonStart').classList.remove('hidden');
+  $('#lsListTitle').textContent = t('ls.title'); $('#lsListDesc').textContent = t('ls.desc');
+  const pr = lsProgress(), courses = [...new Set(LESSONS.steps.map(cOf))];
+  const stat = c => { const st = LESSONS.steps.filter(s => cOf(s) === c); return { n: st.length, ok: st.filter(s => { const r = pr[s.id]; return r && r.clear; }).length }; };
+  if (course) lsCourseSel.c = course;
+  let c = lsCourseSel.c;
+  if (!courses.includes(c)) c = lsCourseSel.c = courses.find(k => { const q = stat(k); return q.ok < q.n; }) || courses[0];
+  const q = stat(c);
+  const cards = LESSONS.steps.map((s, i) => {
+    if (cOf(s) !== c) return '';
+    const r = pr[s.id];
+    return `<button class="lx-card${r && r.clear ? ' clear' : ''}" data-i="${i}"><span class="lx-th">${stepPic(s, 'lxb')}</span><span class="lx-tx">` +
+      `<span class="lx-top"><span class="lx-no">STEP ${stepNo(i)}</span>${lxSt(r)}</span><b class="lx-t">${t('ls.' + s.id + '.title')}</b><small class="lx-sub">${t('ls.' + s.id + '.sub')}</small>` +
+      `<span class="lx-desc">${plainText(t('ls.' + s.id + '.intro'))}</span>${lxBar(r ? r.best / 100 : 0, r && r.clear ? 'ok' : '')}</span></button>`;
+  }).join('');
+  $('#lessonList').innerHTML = `<div class="lx">` +
+    `<div class="lx-tabs">${courses.map(k => { const z = stat(k); return `<button data-course="${k}" class="${k === c ? 'sel' : ''}">${lsIcon(k)}<span class="nm">${t('course.' + k)}</span><span class="ct${z.ok === z.n ? ' ok' : ''}">${z.ok}/${z.n}</span></button>`; }).join('')}</div>` +
+    `<div class="lx-banner">${lsIcon(c)}<span class="tx"><b>${t('course.' + c)}</b><small>${t('course.' + c + '.sub')}</small></span><span class="pg">${t('lx.cleared', { a: q.ok, b: q.n })}${lxBar(q.ok / q.n, 'ok')}</span></div>` +
+    `<div class="lx-grid">${cards}</div></div>`;
+  showLessonView('lessonListView'); showOverlay('#lessonOverlay');
+}
+$('#lessonList').onclick = e => {
+  const tb = e.target.closest('[data-course]'); if (tb) { openLessons(null, tb.dataset.course); return; }
+  const b = e.target.closest('.lx-card[data-i]'); if (b) openIntro(+b.dataset.i);
+};
+function stepNo(i) { const c = cOf(LESSONS.steps[i]); let n = 0; for (let k = 0; k <= i; k++) if (cOf(LESSONS.steps[k]) === c) n++; return n; }
+function openIntro(i) {
+  introIdx = i; $('#btnLessonStart').classList.remove('hidden'); const s = LESSONS.steps[i];
+  $('#liStep').textContent = t('course.' + cOf(s)) + ' · STEP ' + stepNo(i);
+  $('#liTitle').textContent = t('ls.' + s.id + '.title');
+  $('#liBody').innerHTML = stepPic(s, 'mini') + t('ls.' + s.id + '.intro');
+  showLessonView('lessonIntroView');
+}
+$('#btnLessonBack').onclick = () => openLessons(null, LESSONS.steps[introIdx] && cOf(LESSONS.steps[introIdx]));
+$('#btnLessonClose').onclick = () => hideOverlay('#lessonOverlay');
+$('#btnLessonStart').onclick = () => startLesson(introIdx);
+function lsReveal(sel) { const el = $('#lessonList').querySelector(sel); if (el) el.scrollIntoView({ block: 'center' }); }
+$('#btnLessonQuit2').onclick = async () => {
+  const L = lesson; quitSpecial();
+  const st = L && LESSONS.steps[L.step]; await openLessons(null, st && cOf(st)); if (L) lsReveal(`[data-i="${L.step}"]`);
+};
+$('#btnLessonRetry').onclick = () => startLesson(lesson ? lesson.step : introIdx);
+$('#btnLessonNextStep').onclick = () => { const n = (lesson ? lesson.step : introIdx) + 1; if (n < LESSONS.steps.length) openIntro(n); else { hideOverlay('#lessonOverlay'); quitSpecial(); } };
+function enterSpecial(spec) {
+  busyToken++; cancelWorker('ai'); cancelWorker('ana'); thinking = 0; animating = false; if (typeof stopPlay === 'function') stopPlay();
+  startSpec = spec;
+  moves = []; cur = 0; reviewing = false; hintList = null; lessonMarks = []; labelList = null; evals = []; sel = null;
+}
+function startLesson(step) {
+  hideOverlay('#lessonOverlay');
+  stashGame(); puzzle = null; document.body.classList.remove('in-puzzle');
+  lesson = { step, i: 0, results: [], answered: false, hinted: false };
+  document.body.classList.add('in-lesson');
+  const R = LESSONS.steps[step].ramp;
+  if (R && R.length) { lesson.ramp = R; lesson.ri = 0; loadRamp(); return; }
+  loadLessonProblem();
+}
+// ---- warm-up ramp: explain = a position with the idea drawn (the queen's line, then the arrow's flight) and marks; try = a guided move
+//      (any move in ok is right; hints go idea → where to look → the answer)
+const RU = (k, v) => t('ru.' + k, v);
+const rampItem = () => lesson.ramp[lesson.ri];
+const rampByName = (pos, s) => pos.moves().find(m => E.name(pos, m) === s);
+function moveMarks(m, cls) { return [{ arrow: [mFrom(m), mTo(m)], cls }, { arrow: [mTo(m), mArrow(m)], cls: cls + ' shot' }, { at: mArrow(m), cls }]; }
+function rampMarks(it) {
+  const out = [];
+  if (it.seq) { let p = E.Pos.from(it.s); it.seq.forEach((nm, k) => { const m = rampByName(p, nm); if (m === undefined) return; out.push(...moveMarks(m, k % 2 ? 'ng' : 'ok')); p = p.clone().play(m); }); }
+  for (const [q, c] of it.marks || []) out.push({ at: q - 1, cls: c });
+  return out;
+}
+function loadRamp() {
+  const it = rampItem();
+  lesson.me = it.s.side;
+  enterSpecial(it.s);
+  lesson.rh = 0; lesson.rok = false; lesson.answered = it.k === 'explain';
+  lessonMarks = it.k === 'explain' ? rampMarks(it) : [];
+  update(false); renderLessonCard();
+  $('#lsFb').innerHTML = it.k === 'explain' ? '' : `<small style="color:var(--dim)">${RU('note')}</small>`;
+}
+function renderRampCard() {
+  const it = rampItem(), n = lesson.ramp.length, last = lesson.ri + 1 >= n;
+  $('#lsStep').textContent = RU('step', { i: lesson.ri + 1, n });
+  $('#lsTitle').textContent = t('ls.' + curStep().id + '.title');
+  const skip = `<button type="button" class="ls-skip" style="margin-top:6px;font-size:12px;background:none;border:0;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0">${RU('skip')} »</button>`;
+  $('#lsPrompt').innerHTML = it.k === 'explain'
+    ? `<div class="ls-goal"><span>💡</span><span><b>${LL(it.t)}</b></span></div><div class="ls-explain">${LL(it.body)}</div>${skip}`
+    : `<div class="ls-goal"><span class="pdisc p${lesson.me}"></span><span>${t('ls.turn', { c: pname(lesson.me) })} ${LL(it.g)}</span></div>${skip}`;
+  const sk = $('#lsPrompt').querySelector('.ls-skip'); if (sk) sk.onclick = rampDone;
+  $('#lsDots').innerHTML = lesson.ramp.map((_, i) => `<i class="${i < lesson.ri ? 'ok' : ''} ${i === lesson.ri ? 'cur' : ''}"></i>`).join('');
+  $('#lsHint').textContent = t('ls.hint'); $('#lsHint').disabled = it.k === 'explain' || lesson.answered;
+  $('#lsNext').textContent = last ? RU('main') : RU('next');
+  $('#lsNext').disabled = !(it.k === 'explain' || lesson.rok);
+}
+function rampDone() { if (!lesson || !lesson.ramp) return; lesson.ramp = null; lesson.i = 0; lesson.results = []; loadLessonProblem(); }
+function rampHint() {
+  const it = rampItem(); if (it.k !== 'try' || lesson.answered) return;
+  lesson.rh = Math.min(3, lesson.rh + 1);
+  const pos = E.Pos.from(it.s), best = rampByName(pos, it.ok[0]);
+  if (lesson.rh === 1) { $('#lsFb').innerHTML = LL(it.h); lessonMarks = []; }
+  else if (lesson.rh === 2) { $('#lsFb').innerHTML = LL(it.h) + '<br>' + RU('look'); lessonMarks = (it.look || []).map(q => ({ at: q - 1, cls: 'ok' })); }
+  else { $('#lsFb').innerHTML = RU('ans', { m: it.ok[0] }); lessonMarks = best === undefined ? [] : moveMarks(best, 'ok'); }
+  sel = null; renderFx();
+}
+function rampMove(m) {
+  const L = lesson, it = rampItem(), ri = L.ri, pos0 = posAt(0).pos;
+  if (L.answered) return;
+  L.answered = true;
+  const good = it.ok.includes(E.name(pos0, m));
+  $('#lsFb').innerHTML = good ? `<b class="ok">✓</b> ${LL(it.y)}` : `<b class="ng">✗</b> ${RU('ng')}`;
+  L.rok = good; playChime(good); lessonMarks = []; playMove2(m); renderLessonCard();
+  if (good) return;
+  const tok = busyToken;
+  setTimeout(() => {
+    if (lesson !== L || !L.ramp || L.ri !== ri || tok !== busyToken) return;
+    moves = []; cur = 0; sel = null; L.answered = false; update(false); renderLessonCard();
+  }, moveDur(m, pos0) + 1100);
+}
+const curStep = () => LESSONS.steps[lesson.step];
+function lessonProblem() { return curStep().problems[lesson.i]; }
+function problemMarks(P) { const c = MK_CLS[curStep().id] || 'ok'; return (P.mk || []).map(at => ({ at, cls: c })); }
+function loadLessonProblem() {
+  const P = lessonProblem();
+  lesson.me = P.s.side;
+  enterSpecial(P.s);
+  lesson.answered = false; lesson.hinted = false;
+  lessonMarks = problemMarks(P);
+  update(false); renderLessonCard();
+  $('#lsFb').innerHTML = '';
+}
+function renderLessonCard() {
+  if (!lesson) return;
+  if (lesson.ramp) return renderRampCard();
+  const s = curStep(), n = s.problems.length, P = lessonProblem();
+  $('#lsStep').textContent = t('ls.stepq', { s: stepNo(lesson.step), i: lesson.i + 1, n });
+  $('#lsTitle').textContent = t('ls.' + s.id + '.title');
+  const me = P.s.side;
+  $('#lsPrompt').innerHTML = `<div class="ls-goal"><span class="pdisc p${me}"></span><span>${t('ls.turn', { c: pname(me) })} ${t('ls.' + s.id + '.goal')}</span></div>`;
+  $('#lsHint').textContent = t('ls.hint');
+  $('#lsDots').innerHTML = s.problems.map((_, i) => { const r = lesson.results[i]; return `<i class="${r === undefined ? '' : r >= 16 ? 'ok' : r >= 10 ? 'mid' : 'ng'} ${i === lesson.i ? 'cur' : ''}"></i>`; }).join('');
+  $('#lsNext').textContent = lesson.i + 1 < n ? t('ls.next') : t('ls.result');
+  $('#lsNext').disabled = !lesson.answered;
+  $('#lsHint').disabled = lesson.answered;
+}
+function playMove2(m) { moves = moves.slice(0, cur); moves.push(m); cur = moves.length; hintList = null; sel = null; update(true); }
+// a solved problem moves on by itself after a short success beat (shared/cardbar.js; any tap cancels it); the last one keeps 結果
+function lsAuto(good, ms) {
+  const L = lesson; if (!good || !L || !window.CardBar || !CardBar.autoNext) return;
+  const i = L.i; if (i + 1 >= curStep().problems.length) return;
+  CardBar.autoNext({ ms: Math.max(1300, ms || 0), ok: () => lesson === L && L.i === i && L.answered });
+}
+function lessonAnswer(m) {
+  if (lesson.ramp) return rampMove(m);
+  const P = lessonProblem(), s = curStep(), pos0 = posAt(0).pos;
+  lesson.answered = true;
+  const pts = P.ok.includes(m) ? 20 : 0;
+  lesson.results[lesson.i] = pts; renderLessonCard();
+  const best = pts ? m : P.best;
+  $('#lsFb').innerHTML = `<span class="pts ${pts ? 'ok' : 'ng'}">+${t('u.pt', { n: pts })}</span> <b class="${pts ? 'ok' : 'ng'}">${t(pts ? 'fb.perfect' : 'fb.bad')}</b> ` + (pts ? t('ls.' + s.id + '.why', { m: mvIn(pos0, m) }) : t('ls.' + s.id + '.ng', { m: mvIn(pos0, best), x: mvIn(pos0, m) }));
+  playChime(!!pts); lessonMarks = []; playMove2(m);
+  lsAuto(!!pts, moveDur(m, pos0) + 1100);
+  const tok = busyToken, L = lesson;
+  setTimeout(() => {
+    if (lesson !== L || tok !== busyToken) return;
+    // back to the problem: the answer (gold) and, if it was wrong, your move (red)
+    moves = []; cur = 0; sel = null; lessonMarks = moveMarks(best, 'ok'); if (!pts) lessonMarks.push(...moveMarks(m, 'ng'));
+    update(false);
+  }, moveDur(m, pos0) + 900);
+}
+$('#lsHint').onclick = () => {
+  if (lesson && lesson.ramp) { rampHint(); return; }
+  if (!lesson || lesson.answered) return;
+  lesson.hinted = true;
+  const s = curStep(), P = lessonProblem();
+  lessonMarks = problemMarks(P);
+  for (const f of new Set(P.ok.map(mFrom))) lessonMarks.push({ at: f, cls: 'ok' });
+  $('#lsFb').innerHTML = t('ls.' + s.id + '.hint');
+  sel = null; renderFx();
+};
+$('#lsNext').onclick = () => {
+  if (lesson && lesson.ramp) { if (!(rampItem().k === 'explain' || lesson.rok)) return; if (lesson.ri + 1 < lesson.ramp.length) { lesson.ri++; loadRamp(); } else rampDone(); return; }
+  if (!lesson || !lesson.answered) return;
+  const s = curStep();
+  if (lesson.i + 1 < s.problems.length) { lesson.i++; loadLessonProblem(); return; }
+  const n = lesson.results.reduce((a, b) => a + b, 0), pass = n >= 75;
+  const score = `<div class="ld-score ${pass ? 'ok' : 'ng'}">${t('u.pt', { n })}<small> / ${s.problems.length * 20}</small></div>` + lesson.results.map((x, k) => `${k + 1}: ${t('u.pt', { n: x })}`).join('　') + (pass ? '' : `<br>${t('ls.needPass')}`);
+  const pr = lsProgress(), old = pr[s.id] || { best: 0, clear: false };
+  pr[s.id] = { best: Math.max(old.best, n), clear: old.clear || pass };
+  try { localStorage.setItem(LS_STORE, JSON.stringify(pr)); } catch (e) {}
+  $('#ldTitle').textContent = t(pass ? 'ls.passed' : 'ls.failed');
+  $('#ldSub').innerHTML = score;
+  $('#btnLessonNextStep').classList.toggle('hidden', lesson.step + 1 >= LESSONS.steps.length);
+  const nx = LESSONS.steps[lesson.step + 1];
+  if (pass && cOf(s) === 'basics' && !(nx && cOf(nx) === 'basics')) $('#ldSub').innerHTML += `<p class="ls-grad">${t('course.graduate')}</p>`;
+  showLessonView('lessonDoneView'); showOverlay('#lessonOverlay');
+  if (pass) confetti();
+};
+$('#lsQuit').onclick = () => quitSpecial();
+$('#lsList').onclick = () => { if (!lesson) return; openLessons(null, cOf(curStep())); };
+// puzzles / openings: not yet (no buttons; the stubs keep the shared flow of the page)
+function openPuzzles() {} function openOpenings() {} function openPzGrid() {} function openOpeningChoice() {}
+function renderPuzzleCard() {} function showStudy() {} function stSync() {} function stGo() {}
+function startPuzzle() {} function puzzleMove() {}
 
 // ====================================================================== post-game review
 const RV_WORKERS = Math.max(1, Math.min(3, (navigator.hardwareConcurrency || 2) - 1));
@@ -1590,7 +1831,7 @@ flip = flipFor(); drawLines();
 // 勝敗記録 (shared/record.js) and the coach's switch (coach.js): before the header bar takes the menu / icons
 if (window.GameRecord) GameRecord.init({ game: 'amazons', lang: () => LANG, menu: '.controls', sides: () => [pname(P1), pname(P2)] });
 if (window.AmazonsCoach) AmazonsCoach.init();
-HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules'], lang: () => LANG }) : null;
+HB = window.HeaderBar ? HeaderBar.init({ order: ['#btnNew', '#btnUndo', '#btnResign', '#btnHint', '#btnRules', '#btnLesson'], lang: () => LANG }) : null;
 
 if (HB) HB.onChange(() => { renderInfo(); renderFx(); });
 if (window.CountTick) CountTick.setMuted(() => !settings.sound);

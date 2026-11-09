@@ -27,15 +27,20 @@ URL: https://core-calmdust.github.io/aicoding/amazons/ ／ トップは「囲碁
 - 対局設定：ルールが1つなので「ゲーム」タブなし（ルール｜デザイン）。
 - コーチ（coach.js ＋ coach-i18n.js、14言語）：要約チップ（形勢・陣地・動けるマス）、推奨方針、分かれ道（方針：勝ち筋／動けなくする／閉じ込める／逃げる／道をふさぐ／壁を作る／中央へ／陣地を広げる、各候補の手のあとの陣地）、考え方のヒント（閉じ込めのチャンス・囲まれそうなアマゾン・部屋の分かれ方・中央・元のマスへの矢…）、前の手の評価。出典は coach.js の冒頭。
 - スマホ下タブ：コーチ｜形勢｜棋譜｜戦績（オンラインなし。#mtabs を index.html に置く）。
+- レッスン（tools/gen_lessons.js → lessons.json、文章は i18n-am-ls.js（ja/en）・i18n-am-ls-more.js（zh/zh-TW/ko/es/fr/pt/de）・i18n-am-ls-more2.js（ru/tr/id/hi/ar））：
+  - コース「はじめてのアマゾンズ」b_queen（クイーンの動き）・b_arrow（矢を放つ）・b_block（飛び越えられない）・b_win（動けなくしたら勝ち）、「作戦」s_trap（閉じ込める）・s_escape（囲まれる前に逃げる）・s_wall（壁でいちばん大きい部屋を取る）・s_fill（部屋を無駄なく埋める）。
+  - 各ステップ：準備（考え方の説明 explain＋例題 try、採点なし。ヒントは 考え方→見るマス→答え）→ 本番5問（白番、1問20点、75点以上で合格、保存 aicoding-amazons-lessons）。正解手（ok）はすべてルールから計算（エンジンの評価は使わない）。問題の印 mk（目標マス・閉じ込める相手・逃がす自分のアマゾン（赤）・壁のすき間）。
+  - 準備の局面とマス名は手作り（文章のマス名と一致させる）。生成は約90秒（s_fill の全探索）。
+  - 入口：ボタン「レッスン」（ヘッダーではルールの右）、新規対局の「レッスン」、ルールとレッスンの上のタブ（ルール｜レッスン。パズルは未実装なのでタブなし）。
 
 ## 未実装（今後）
-- レッスン・詰めパズル・今日の一問・オンライン対戦・本編のマルチスレッド／PRO。
+- 詰めパズル・今日の一問・オンライン対戦・本編のマルチスレッド／PRO。
 - 大百科の3D（盤モデル・フル機能版スキン・ちゃぶ台対局・ルールコース・ヒストリア・地図）。今は大百科の盤シートから2D版へ飛ぶ（atlas/app.js の専用ページ扱い）。
 
 ## ポータル・トップ
-- shared/atlas.js の GAMES（beta: true、released 2026-11-10）、READ（レート戦・ルール既読）、UPDATES に1行。
+- shared/atlas.js の GAMES（beta: true、released 2026-11-10、total.ls 8）、READ（レッスン合格数・レート戦・ルール既読）、UPDATES。
 - アイコン：atlas/icons3d.js の amazons()（ジャングル盤の角、焼けたマスに刺さった矢、黒のアマゾン、矢を放ちながら滑り込む象牙のアマゾン）→ images/atlas/amazons.webp。トップのアイコン images/icons/amazons.svg、サムネイル images/amazons.webp。
 - 大百科の一言（gamelist-i18n.js の tl.amazons）、about.amazons・hist.amazons（atlas/i18n.js）。
 
 ## 保存キー
-- aicoding-amazons（設定・対局）、-rated、-rules、aicoding-amazons-rules-seen。
+- aicoding-amazons（設定・対局）、-rated、-rules、-lessons、aicoding-amazons-rules-seen。
