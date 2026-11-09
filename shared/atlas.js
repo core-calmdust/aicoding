@@ -80,7 +80,7 @@
       name: N('セネト', 'Senet', '塞尼特', '세네트', 'Senet', 'Senet', 'Senet', 'Senet', 'सेनेट', 'سينيت', 'Сенет', '塞尼特', 'Senet', 'Senet') },
     { id: 'ludo', cat: 'race', also: ['hist'], store: ['aicoding-ludo'], href: 'ludo/', color: '#d9473b', beta: true, released: '2026-11-08', tags: ['classic', 'ai', 'rated', 'lessons', 'variants', 'mobile'], total: { ls: 10 },
       name: N('ルドー・パチーシ', 'Ludo & Pachisi', '鲁多与帕棋西', '루도 & 파치시', 'Ludo y Pachisi', 'Ludo et Pachisi', 'Ludo e Pachisi', 'Ludo & Pachisi', 'लूडो और पचीसी', 'لودو وباتشيسي', 'Лудо и Пачиси', '魯多與帕奇西', 'Ludo & Pachisi', 'Ludo ve Pachisi') },
-    { id: 'carrom', cat: 'action', store: ['aicoding-carrom'], href: 'atlas/#games/carrom', only3d: true, color: '#c23a7a', beta: true, released: '2026-11-09', tags: ['classic', 'ai', 'mobile'], total: {},
+    { id: 'carrom', cat: 'action', store: ['aicoding-carrom'], href: 'atlas/#games/carrom', only3d: true, color: '#c23a7a', released: '2026-11-09', tags: ['classic', 'ai', 'mobile'], total: {},
       name: N('キャロム', 'Carrom', '克朗棋', '캐롬', 'Carrom', 'Carrom', 'Carrom', 'Carrom', 'कैरम', 'كيرم', 'Карром', '克朗棋', 'Karambol', 'Carrom') },
     { id: 'morris', cat: 'line', store: ['aicoding-morris', 'morris-online-name'], href: 'morris/', color: '#7552e0', released: '2026-10-18', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'variants', 'mobile'], total: { pz: 1781, ls: 41 },
       name: N('ナイン・メンズ・モリス', "Nine Men's Morris", '九子棋', '나인 멘스 모리스', 'Molino', 'Jeu du moulin', 'Trilha', 'Mühle', 'नाइन मेन्स मोरिस', 'الطاحونة', 'Мельница', '九子棋', 'Nine Men\'s Morris', 'Dokuz Taş') },
