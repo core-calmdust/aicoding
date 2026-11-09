@@ -209,6 +209,22 @@ function distK(k0, D) {
   }
 }
 const P2N = new Float64Array(INF + 2); for (let i = 0; i <= INF + 1; i++) P2N[i] = i >= INF ? 0 : Math.pow(2, -i);
+
+// the WebAssembly core (core.c → core-wasm.js, tools/build.sh): the same evaluation and candidate list, several times faster.
+// Loaded synchronously in a worker and in Node; on the page itself (no need there) and when anything fails, the JS below.
+let WA = null;
+(function loadCore() {
+  try {
+    let b64 = null;
+    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('core-wasm.js?v=1'); b64 = self.AMZ_WASM; }
+    else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') { const g = typeof globalThis !== 'undefined' ? globalThis : global, had = 'self' in g, old = g.self; g.self = g; try { require(require('path').join(__dirname, 'core-wasm.js')); b64 = g.AMZ_WASM; } finally { if (had) g.self = old; else delete g.self; } }
+    if (!b64 || (typeof process !== 'undefined' && process.env && process.env.AMZ_NOWASM)) return;
+    const bin = typeof atob === 'function' ? Uint8Array.from(atob(b64), c => c.charCodeAt(0)) : Buffer.from(b64, 'base64');
+    const x = new WebAssembly.Instance(new WebAssembly.Module(bin), {}).exports, buf = x.memory.buffer;
+    WA = { x, sq: new Int8Array(buf, x.sqp(), NN), q: new Int8Array(buf, x.qp(), 8), om: new Int32Array(buf, x.omp(), 8192), os: new Int32Array(buf, x.osp(), 8192) };
+  } catch (e) { WA = null; }
+})();
+function waLoad(pos) { WA.sq.set(pos.sq); WA.q.set(pos.q); }
 // ---------------------------------------------------------------- evaluation (~100 = one square of territory)
 // The classic terms (Lieberum, "An evaluation function for the game of Amazons", 2005): t1 / t2 = territory by queen /
 // king distance (equal distances lean to the side to move), c1 / c2 = position terms, w = how open the board still is
@@ -216,31 +232,62 @@ const P2N = new Float64Array(INF + 2); for (let i = 0; i <= INF + 1; i++) P2N[i]
 // lost piece.
 const EW = { t1: 1.0, t2: 0.45, c1: 0.5, c2: 0.35, mob: 1.0, tempo: 0.05 };
 let evals = 0;
+// The distance terms are summed from counts (how many empty squares White reaches in i moves and Black in j), in a fixed
+// order: core.c (bit boards) builds the same counts and does the same arithmetic, so both give the same value.
+const ML = 99, CQ = new Int32Array(ML * ML), OA = new Int32Array(ML), OB = new Int32Array(ML);
+const clamp6 = d => { const x = d / 6; return x > 1 ? 1 : x < -1 ? -1 : x; };
+// counts → [tt (territory), cc (position), ww (openness, queen only)] — kind 0 queen (c1 = Σ 2^-a − 2^-b), 1 king (c2)
+const CS = [0, 0, 0];
+function fromCounts(La, Lb, kap, kind) {
+  let nA = 0, nB = 0, nT = 0, cc = 0, ww = 0;
+  for (let i = 0; i <= La; i++) for (let j = 0; j <= Lb; j++) { const c = CQ[i * ML + j]; if (!c) continue; if (i < j) nA += c; else if (j < i) nB += c; else nT += c; }
+  let sa = 0, sb = 0;
+  for (let i = 0; i <= La; i++) sa += OA[i];
+  for (let j = 0; j <= Lb; j++) sb += OB[j];
+  nA += sa; nB += sb;
+  if (kind === 0) {
+    const L = La > Lb ? La : Lb;
+    for (let k = 0; k <= L; k++) {
+      let ra = k <= La ? OA[k] : 0, cb = k <= Lb ? OB[k] : 0;
+      if (k <= La) for (let j = 0; j <= Lb; j++) ra += CQ[k * ML + j];
+      if (k <= Lb) for (let i = 0; i <= La; i++) cb += CQ[i * ML + k];
+      cc += (ra - cb) * P2N[k];
+    }
+    for (let i = 0; i <= La; i++) for (let j = 0; j <= Lb; j++) { const c = CQ[i * ML + j]; if (c) ww += c * P2N[i > j ? i - j : j - i]; }
+  } else {
+    for (let i = 0; i <= La; i++) for (let j = 0; j <= Lb; j++) { const c = CQ[i * ML + j]; if (c) cc += c * clamp6(j - i); }
+    cc += sa; cc -= sb;
+  }
+  CS[0] = (nA - nB) + kap * nT; CS[1] = cc; CS[2] = ww;
+  for (let i = 0; i <= La; i++) { OA[i] = 0; for (let j = 0; j <= Lb; j++) CQ[i * ML + j] = 0; }
+  for (let j = 0; j <= Lb; j++) OB[j] = 0;
+}
+function countDist(DX, DY) {   // the empty squares' distances (DX White's, DY Black's) → CQ / OA / OB; returns [La, Lb]
+  let La = 0, Lb = 0;
+  for (let j = 0; j < NN; j++) {
+    const i = PI[j]; if (PB[i]) continue;
+    const a = DX[i], b = DY[i];
+    if (a < INF && a > La) La = a; if (b < INF && b > Lb) Lb = b;
+    if (a < INF && b < INF) CQ[a * ML + b]++; else if (a < INF) OA[a]++; else if (b < INF) OB[b]++;
+  }
+  return La * 128 + Lb;
+}
 function evalFor(pos, me, toMove) {
   evals++;
   const sq = pos.sq, q = pos.q;
   padFrom(sq, q);
   distQ(0, DA); distQ(4, DB);
   const kap = toMove === P1 ? EW.tempo : -EW.tempo;
-  let t1 = 0, t2 = 0, c1 = 0, c2 = 0, w = 0;
-  for (let j = 0; j < NN; j++) {
-    const i = PI[j];
-    if (PB[i]) continue;
-    const a = DA[i], b = DB[i];
-    if (a < b) t1 += 1; else if (b < a) t1 -= 1; else if (a < INF) t1 += kap;
-    c1 += P2N[a] - P2N[b];
-    if (a < INF && b < INF) w += P2N[a > b ? a - b : b - a];
-  }
+  let L = countDist(DA, DB);
+  fromCounts(L >> 7, L & 127, kap, 0);
+  const t1 = CS[0], c1 = CS[1], w = CS[2];
+  let t2 = 0, c2 = 0;
   const e = w > 40 ? 1 : w / 40;   // 1 = open (opening / middle game), 0 = separated
   if (e > 0) {   // the king-distance terms count only while the board is open (separated: no need to measure them)
     distK(0, KA); distK(4, KB);
-    for (let j = 0; j < NN; j++) {
-      const i = PI[j];
-      if (PB[i]) continue;
-      const ka = KA[i], kb = KB[i];
-      if (ka < kb) t2 += 1; else if (kb < ka) t2 -= 1; else if (ka < INF) t2 += kap;
-      if (ka < INF || kb < INF) { const x = (kb - ka) / 6; c2 += x > 1 ? 1 : x < -1 ? -1 : x; }
-    }
+    L = countDist(KA, KB);
+    fromCounts(L >> 7, L & 127, kap, 1);
+    t2 = CS[0]; c2 = CS[1];
   }
   // the amazons' freedom: squares each can reach in one move (few = in danger of being boxed in)
   let mob = 0;
@@ -255,7 +302,7 @@ function evalFor(pos, me, toMove) {
   const s = Math.round(v * 100);
   return me === P1 ? s : -s;
 }
-const evaluate = pos => evalFor(pos, pos.turn, pos.turn);
+const evaluate = pos => { if (WA) { waLoad(pos); const t = pos.turn, v = WA.x.ev(t, t); evals++; WA.x.evals_taken(); return v; } return evalFor(pos, pos.turn, pos.turn); };
 const kindOf = v => Math.abs(v) > WINT ? 'exact' : 'heur';
 // ---------------------------------------------------------------- candidate moves (two stages: the queen move, then the arrow)
 // Every queen move is valued (the arrow not yet shot); the best few are then tried with every arrow. The children are
@@ -279,6 +326,16 @@ function candsC(pos, K, ply, qkeep) {
 }
 function cands(pos, K, ply, qkeep, extra) {
   const me = pos.turn, op = 3 - me, sq = pos.sq, out = [];
+  if (WA) {
+    waLoad(pos);
+    const n = WA.x.cand(me, qkeep || QKEEP_BASE, ply), om = WA.om, os = WA.os;
+    evals += WA.x.evals_taken();
+    for (let i = 0; i < n; i++) out.push({ m: om[i], s: os[i] });
+    if (extra) for (const m of extra) { if (!out.some(e => e.m === m) && pos.isLegal(m)) { const r = []; scoreMove(pos, m, me, op, r, ply); out.push(r[0]); } }
+    out.sort((x, y) => y.s - x.s);
+    if (K && out.length > K) out.length = K;
+    return out;
+  }
   const Q = pos.qmoves(me, []);
   if (!Q.length) return out;
   const qs = [];
@@ -703,7 +760,7 @@ const hops = () => 1;
 
 const API = { get nodes() { return nodes; }, get evals() { return evals; }, P1, P2, WIN, WINT, ARROW, RULES, RULE_ORDER, setRule, get rule() { return 'std'; }, N, NN, RC, RAYS, NB, START,
   sqAt, sqName, sqIdx, mv, mFrom, mTo, mArrow, isRemove, hops, Pos, path, arrowPath, captured, name, parse, replay, judge, clearLine,
-  LEVELS, think, analyze, cands: candsJob, candList: cands, evaluate, evalFor, kindOf, EW, pvOf, bestMove, mtPlan, mtV, mtKids, mtFin, win1, canWin, duelGood, duelReply, trapGood, endGood, fillMax, roomOf, sideMoves, emptyAround, pzGood, set SH(t) { SH = t; }, get SH() { return SH; } };
+  get wasm() { return !!WA; }, LEVELS, think, analyze, cands: candsJob, candList: cands, evaluate, evalFor, kindOf, EW, pvOf, bestMove, mtPlan, mtV, mtKids, mtFin, win1, canWin, duelGood, duelReply, trapGood, endGood, fillMax, roomOf, sideMoves, emptyAround, pzGood, set SH(t) { SH = t; }, get SH() { return SH; } };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') {
   let queueP = Promise.resolve();
