@@ -210,6 +210,14 @@
     let stopped = false, B = null, sess = null, cur = null, first = true, typeT = 0;
     const timers = [], later = (f, ms) => timers.push(setTimeout(() => { if (!stopped) f(); }, ms));
     const sleep = ms => new Promise(r => later(r, ms));
+    // the guide's own lines (atlas/puzzle-lines.js): this language, else English, else the plain text here; never the same twice in a row
+    const LN = (window.AtlasPuzzleLines || {})[id] || {}, lastL = {};
+    function line(k, v) {
+      let a = (LN[ctx.lang] && LN[ctx.lang][k]) || (LN.en && LN.en[k]); if (!a) return '';
+      if (a.length > 1) a = a.filter(x => x !== lastL[k]);
+      const x = pick(a); lastL[k] = x; return fill(x, v || {});
+    }
+    let streak = 0;
 
     /* ---------- the guide's panel (the rules tour's .rgd) ---------- */
     const el = document.createElement('div'); el.className = 'rgd pzg';
@@ -254,7 +262,7 @@
         ctx.Table3D.play(true);   // (after start(): the adapter's show() puts its board on the table in the showcase view)
       } else pz().load(p.fen || p.sfen, p.P.sol);
       cur.ready = opts.ready; cur.moved = opts.moved;
-      say((first ? X.hi[id] + ' ' : '') + goal(p)); first = false;
+      say((first ? (line('hi') || X.hi[id]) : line('intro')) + ' ' + goal(p)); first = false;
     }
     async function onReady(p) {
       if (p !== cur || stopped) return;
@@ -276,21 +284,21 @@
       // the defender answers each move, and mating within N clears it (the user's rule, 2026-11-10: no "wrong move")
       if (p.kind === 'mate') {
         p.used++;
-        if (info.over) return wrong(p, 0, '', X.wrongNo);
-        if (p.used >= p.n) return wrong(p, 0, '', fill(X.out, { n: p.n }));
-        say(fill(X.left, { n: p.n - p.used }));
+        if (info.over) return wrong(p, 0, '', line('stuck') || X.wrongNo);
+        if (p.used >= p.n) return wrong(p, 0, '', line('out', { n: p.n }) || fill(X.out, { n: p.n }));
         await sleep(120); if (p !== cur) return;
         const r = await pz().best(20); if (p !== cur) return;
-        if (!r) return wrong(p, 0, '', X.wrongNo);
+        if (!r) return wrong(p, 0, '', line('stuck') || X.wrongNo);
         await pz().play(r); if (p !== cur) return;
+        say(line('mid') + ' ' + fill(X.left, { n: p.n - p.used }));
         p.state = 'play'; pz().wait(); buttons(); return;
       }
       if (p.kind === 'tac') {
         const exp = p.P.line[p.k];
-        if (u !== exp) return wrong(p, 1, exp, X.wrong);
+        if (u !== exp) return wrong(p, 1, exp, line('tacWrong') || X.wrong);
         p.used++;
         if (p.k + 1 >= p.P.line.length) return solved(p);
-        say(pick(X.good) + ' ' + fill(X.left, { n: p.n - p.used }));
+        say(pick(X.good) + ' ' + fill(X.left, { n: p.n - p.used }));   // (tactics: the stored line)
         await sleep(120); if (p !== cur) return;
         await pz().play(p.P.line[p.k + 1]); if (p !== cur) return;
         p.k += 2; if (p.k >= p.P.line.length) return solved(p);
@@ -299,18 +307,18 @@
       // 詰将棋 (same rule: no move is judged on the way, only mating within the count clears it)
       const sol = p.P.sol, onLine = mv.every((x, i) => x === sol[i]);
       const remain = p.n - mv.length;
-      if (remain <= 0) return wrong(p, 0, '', fill(X.out, { n: p.n }));
+      if (remain <= 0) return wrong(p, 0, '', line('out', { n: p.n }) || fill(X.out, { n: p.n }));
       let reply = onLine && p.P.u && sol[mv.length] ? sol[mv.length] : null;
       if (!reply) { const r = await pz().defend(remain); if (p !== cur) return; reply = r && r.reply; }
-      if (!reply) return wrong(p, 0, '', X.wrongNo);
-      say(fill(X.left, { n: Math.ceil((remain - 1) / 2) }));
+      if (!reply) return wrong(p, 0, '', line('stuck') || X.wrongNo);
       await sleep(120); if (p !== cur) return;
       await pz().play(reply); if (p !== cur) return;
+      say(line('mid') + ' ' + fill(X.left, { n: Math.ceil((remain - 1) / 2) }));
       p.state = 'play'; pz().wait(); buttons();
     }
     async function wrong(p, back, ans, msg) {
       p.failed = true; p.state = 'busy'; buttons(); chime(false);
-      say(msg + ' ' + X.retry);
+      say(msg + ' ' + (line('retry') || X.retry)); streak = 0;
       await sleep(700); if (p !== cur) return;
       if (back) pz().undo(back);
       if (ans) pz().mark(ans);
@@ -319,27 +327,28 @@
     function solved(p) {
       const n = p.hinted || p.failed ? 2 : 3;
       p.state = 'solved'; B.save(p, n); chime(true); stars(n);
-      say(n === 3 ? pick(X.solved) : X.solvedHelp);
+      streak = n === 3 ? streak + 1 : 0;
+      say(n === 3 ? (streak >= 3 && line('streak', { n: streak })) || line('solved') || pick(X.solved) : line('help') || X.solvedHelp);
       buttons();
       if (window.AtlasConfetti) try { AtlasConfetti(60); } catch (e) {}
     }
     async function hint() {
       const p = cur; if (!p || p.state !== 'play') return;
       let u = expected(p);
-      if (!u && p.kind === 'tsume') { p.hinted = true; if (sess.canHint && sess.canHint()) { sess.hint(); say(X.hintSay); } return; }   // off the stored line: the engine's move
+      if (!u && p.kind === 'tsume') { p.hinted = true; if (sess.canHint && sess.canHint()) { sess.hint(); say(line('hint') || X.hintSay); } return; }   // off the stored line: the engine's move
       if (!u && p.kind === 'mate') { p.state = 'busy'; buttons(); u = await pz().best(20); if (p !== cur) return; p.state = 'play'; pz().wait(); buttons(); }
       if (!u) return;
-      p.hinted = true; pz().mark(u); say(X.hintSay);
+      p.hinted = true; pz().mark(u); say(line('hint') || X.hintSay);
     }
     function nextPuzzle() {
       const sets = B.sets(), p = cur;
       if (p) { const s = sets[p.i], j = p.j + 1; if (j < s.recs.length && stageOpen(s.recs, j) && !s.recs[j]) return begin(B.problem(p.i, j, X, ctx.lang), true); }
       const r = resume(sets, p ? p.i : store.raw(B.LAST));
-      if (!r) { say(X.allDone); if (p) { p.state = 'solved'; buttons(); } return; }
+      if (!r) { say(line('allDone') || X.allDone); if (p) { p.state = 'solved'; buttons(); } return; }
       begin(B.problem(r.key, r.j, X, ctx.lang), true);
     }
     $('[data-a=hint]').onclick = hint;
-    $('[data-a=again]').onclick = () => { if (cur) begin(B.problem(cur.i, cur.j, X, ctx.lang), false); };
+    $('[data-a=again]').onclick = () => { if (!cur) return; begin(B.problem(cur.i, cur.j, X, ctx.lang), false); const a = line('again'); if (a) say(a + ' ' + goal(cur)); };
     $('[data-a=next]').onclick = () => nextPuzzle();
 
     requestAnimationFrame(() => el.classList.add('on'));
