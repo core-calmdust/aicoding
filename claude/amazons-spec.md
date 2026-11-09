@@ -33,16 +33,23 @@ URL: https://core-calmdust.github.io/aicoding/amazons/ ／ トップは「囲碁
   - コース「はじめてのアマゾンズ」b_queen（クイーンの動き）・b_arrow（矢を放つ）・b_block（飛び越えられない）・b_win（動けなくしたら勝ち）、「作戦」s_trap（閉じ込める）・s_escape（囲まれる前に逃げる）・s_wall（壁でいちばん大きい部屋を取る）・s_fill（部屋を無駄なく埋める）。
   - 各ステップ：準備（考え方の説明 explain＋例題 try、採点なし。ヒントは 考え方→見るマス→答え）→ 本番5問（白番、1問20点、75点以上で合格、保存 aicoding-amazons-lessons）。正解手（ok）はすべてルールから計算（エンジンの評価は使わない）。問題の印 mk（目標マス・閉じ込める相手・逃がす自分のアマゾン（赤）・壁のすき間）。
   - 準備の局面とマス名は手作り（文章のマス名と一致させる）。生成は約90秒（s_fill の全探索）。
-  - 入口：ボタン「レッスン」（ヘッダーではルールの右）、新規対局の「レッスン」、ルールとレッスンの上のタブ（ルール｜レッスン。パズルは未実装なのでタブなし）。
+  - 入口：ボタン「レッスン」（ヘッダーではルールの右）、新規対局の「レッスン」、ルール｜レッスン｜パズルのタブ。
+
+- パズル（tools/gen_puzzles.js → puzzles.json、PZBook v2。文章は i18n-am-pz.js、14言語）：
+  - 「動けなくせ」w1（1手）・w2（2手。相手は最善の粘り＝engine.js `duelReply`）、「閉じ込め」t1（光っている相手のアマゾンの隣の空きマスをなくす。ゲームは続く）、「終盤」e1（盤が部屋に分かれ、どのアマゾンも1体ずつの部屋。白の手数は黒よりちょうど1多く、1マスでも無駄にすると負け）。各30問、易しい順（正解手の割合が多い順）。
+  - 正解はすべてルールから完全に計算：`win1`（相手の周りの空きマスが2以下のときだけ全部の手を試す）・`canWin`／`allLose`（2手。逃げ道が3マス以上残る応手で即打ち切り）・`trapGood`・`endGood`（部屋ごとの最大手数 `fillMax`：部屋の埋まり方をビットで持つ全探索）。ページは `pzgood`（kind / n / e）と `duelReply` をワーカーに聞く。
+  - 局面：w1・w2・e1 は組み立て（守り手を小さな袋に、攻め手を近くに／十字の矢で4区画に部屋を彫る）、t1 は Lv.4〜10 同士の対局から。乱数は `Math.imul` の線形合同法（ふつうの掛け算は下位ビットが落ちて短い周期になる）。
+  - 今日の一問：曜日で w1→t1→e1→w2 を回し、日付のハッシュで問題を選ぶ（保存 aicoding-amazons-daily）。ヒント：考え方 → 始めるアマゾン → 答え。不正解は局面を戻して正解（金）と自分の手（赤）を表示。
+  - 入口：ボタン「パズル」（レッスンの右）、新規対局の「パズル」、ルール｜レッスン｜パズルのタブ。
 
 ## 未実装（今後）
-- 詰めパズル・今日の一問・オンライン対戦。計測ページ（bench.html）。
+- オンライン対戦。計測ページ（bench.html）。3手以上の「動けなくせ」。
 - 大百科の3D（盤モデル・フル機能版スキン・ちゃぶ台対局・ルールコース・ヒストリア・地図）。今は大百科の盤シートから2D版へ飛ぶ（atlas/app.js の専用ページ扱い）。
 
 ## ポータル・トップ
-- shared/atlas.js の GAMES（beta: true、released 2026-11-10、total.ls 8）、READ（レッスン合格数・レート戦・ルール既読）、UPDATES。
+- shared/atlas.js の GAMES（beta: true、released 2026-11-10、total.pz 120・ls 8）、READ（パズル・星・今日の一問・レッスン合格数・レート戦・ルール既読）、UPDATES。
 - アイコン：atlas/icons3d.js の amazons()（ジャングル盤の角、焼けたマスに刺さった矢、黒のアマゾン、矢を放ちながら滑り込む象牙のアマゾン）→ images/atlas/amazons.webp。トップのアイコン images/icons/amazons.svg、サムネイル images/amazons.webp。
 - 大百科の一言（gamelist-i18n.js の tl.amazons）、about.amazons・hist.amazons（atlas/i18n.js）。
 
 ## 保存キー
-- aicoding-amazons（設定・対局）、-rated、-rules、-lessons、aicoding-amazons-rules-seen。
+- aicoding-amazons（設定・対局）、-rated、-rules、-lessons、-puzzles、-pz-last、-pz-tab、-daily、aicoding-amazons-rules-seen。
