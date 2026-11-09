@@ -149,13 +149,13 @@
      games, the game's other progress (puzzles, lessons…) and its achievements (2026-11-09). */
   const recLoad = id => { try { const a = JSON.parse(localStorage.getItem('atlas-rec-' + id) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } };
   function recPush(id, r) { try { const a = recLoad(id); a.push(Object.assign({ t: Date.now() }, r)); localStorage.setItem('atlas-rec-' + id, JSON.stringify(a.slice(-500))); } catch (e) {} }
-  let recMode = 'all';
+  let recMode = 'all', recTab = 'rec';
   function openRec(g) {
     let ov = $('recOv');
     if (!ov) { ov = document.createElement('div'); ov.id = 'recOv'; ov.className = 'recov'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); document.body.appendChild(ov);
       ov.addEventListener('click', e => { if (e.target === ov) closeRec(); });
       addEventListener('keydown', e => { if (e.key === 'Escape' && ov.classList.contains('on')) closeRec(); }); }
-    recMode = 'all'; renderRec(g); requestAnimationFrame(() => ov.classList.add('on'));
+    recMode = 'all'; recTab = 'rec'; renderRec(g); requestAnimationFrame(() => ov.classList.add('on'));
   }
   function closeRec() { const ov = $('recOv'); if (ov) ov.classList.remove('on'); }
   function renderRec(g) {
@@ -184,10 +184,11 @@
     if (pr.p3 && pr.p3.n) tiles.push([t('rec.m.t3d'), t('rec.wins', { n: pr.p3.w }), pr.p3.best ? t('rec.bestLv', { n: pr.p3.best }) : '']);
     const achs = ACH.filter(a => a.gid === g.id).sort((a, b) => (b.done - a.done) || (a.done ? b.tier - a.tier : (b.have / b.need) - (a.have / a.need)));
     const ad = achs.filter(a => a.done).length;
-    ov.innerHTML = `<div class="recp" style="--c:${g.color}">
-      <div class="rhd">${g3(g)}<div class="rtt"><small>${esc(t('rec.title'))}</small><h3>${esc(gname(g))}</h3></div><button type="button" class="rx" aria-label="${esc(t('bv.close'))}">×</button></div>
-      <div class="rbd">
-        ${all.length ? `<div class="rchips">${chip('all', 1)}${chip('ai', has.ai)}${chip('rated', has.rated)}${chip('online', has.online)}${chip('t3d', has.t3d)}</div>
+    // three tabs along the bottom: 戦績 (the games) · あそびの記録 (progress) · 実績 (achievements) — only those with something to show
+    const tabs = [['rec', '🏆', t('rec.title'), versus], ['play', '📊', t('rec.play'), tiles.length], ['ach', '🏅', t('tab.ach'), achs.length]].filter(x => x[3]);
+    if (!tabs.some(x => x[0] === recTab)) recTab = tabs.length ? tabs[0][0] : 'rec';
+    const modes = [['all', 1], ['ai', has.ai], ['rated', has.rated], ['online', has.online], ['t3d', has.t3d]].filter(x => x[1]).map(x => x[0]);
+    const recHtml = all.length ? `${modes.length > 1 ? `<div class="rdd"><button type="button" class="rddb" aria-haspopup="listbox" aria-expanded="false"><span>${esc(t('rec.m.' + recMode))}</span><i>▾</i></button><div class="rddl" role="listbox" hidden>${modes.map(k => `<button type="button" role="option" data-m="${k}" class="${k === recMode ? 'on' : ''}">${esc(t('rec.m.' + k))}</button>`).join('')}</div></div>` : ''}
         <section class="rsum card">
           <span class="rring"><svg viewBox="0 0 80 80"><circle cx="40" cy="40" r="${R}" fill="none" stroke="#efe8d6" stroke-width="9"/><circle cx="40" cy="40" r="${R}" fill="none" stroke="${g.color}" stroke-width="9" stroke-linecap="round" stroke-dasharray="${C * wr / 100} ${C}" transform="rotate(-90 40 40)"/></svg><b>${wr}<i>%</i></b><em>${esc(t('rec.rate'))}</em></span>
           <div class="rnums"><div class="w"><b>${n.w}</b><span>${esc(t('rec.w'))}</span></div><div class="l"><b>${n.l}</b><span>${esc(t('rec.l'))}</span></div><div class="d"><b>${n.d}</b><span>${esc(t('rec.d'))}</span></div></div>
@@ -195,15 +196,25 @@
           <div class="rform">${L.slice(-15).map(r => `<i class="${r.res}"></i>`).join('')}</div>
         </section>
         <h4>${esc(t('rec.byOpp'))}</h4>
-        <div class="ropps card">${opps.map(e => { const s = e.w + e.l + e.d; return `<div class="ro"><span class="rn">${esc(e.opp)}</span><span class="rbar"><i class="w" style="flex:${e.w}"></i><i class="d" style="flex:${e.d}"></i><i class="l" style="flex:${e.l}"></i></span><span class="rc"><b>${e.w}</b>-${e.l}${e.d ? '-' + e.d : ''}</span></div>`; }).join('')}</div>
+        <div class="ropps card">${opps.map(e => `<div class="ro"><span class="rn">${esc(e.opp)}</span><span class="rbar"><i class="w" style="flex:${e.w}"></i><i class="d" style="flex:${e.d}"></i><i class="l" style="flex:${e.l}"></i></span><span class="rc"><b>${e.w}</b>-${e.l}${e.d ? '-' + e.d : ''}</span></div>`).join('')}</div>
         <h4>${esc(t('rec.recent'))}</h4>
         <div class="rlist card">${L.slice(-20).reverse().map(r => `<div class="rr">${resChip(r.res)}<span class="ro2"><b>${esc(r.opp || '')}</b><small>${esc([r.vn, r.why, r.n ? t('rec.moves', { n: r.n }) : ''].filter(Boolean).join(' · '))}</small></span><span class="rm">${r.via === '3d' ? '🎲 ' : ''}${esc(t('rec.m.' + (r.mode === 'rated' ? 'rated' : r.mode === 'online' ? 'online' : 'ai')))}<small>${dt(r.t)}</small></span></div>`).join('')}</div>`
-        : versus ? `<div class="rempty card"><span>🏆</span><p>${esc(t('rec.none'))}</p></div>` : ''}
-        ${tiles.length ? `<h4>${esc(t('rec.play'))}</h4><div class="rtiles">${tiles.map(([k, v, s]) => `<div class="card rt"><small>${esc(k)}</small><b>${esc(String(v))}</b><span>${esc(String(s || ''))}</span></div>`).join('')}</div>` : ''}
-        ${achs.length ? `<h4>${esc(t('rec.ach'))} <em>${ad} / ${achs.length}</em></h4><div class="rach">${achs.map(achHtml).join('')}</div>` : ''}
-      </div></div>`;
+      : `<div class="rempty card"><span>🏆</span><p>${esc(t('rec.none'))}</p></div>`;
+    const body = recTab === 'rec' ? recHtml
+      : recTab === 'play' ? `<div class="rtiles">${tiles.map(([k, v, s2]) => `<div class="card rt"><small>${esc(k)}</small><b>${esc(String(v))}</b><span>${esc(String(s2 || ''))}</span></div>`).join('')}</div>`
+      : `<div class="rachs"><b>${ad}</b> / ${achs.length}<span class="bar"><i style="width:${achs.length ? ad / achs.length * 100 : 0}%;--c:var(--mint)"></i></span></div><div class="rach">${achs.map(achHtml).join('')}</div>`;
+    ov.innerHTML = `<div class="recp" style="--c:${g.color}">
+      <div class="rhd">${g3(g)}<div class="rtt"><small>${esc(t('rec.title'))}</small><h3>${esc(gname(g))}</h3></div><button type="button" class="rx" aria-label="${esc(t('bv.close'))}">×</button></div>
+      <div class="rbd">${body}</div>
+      ${tabs.length > 1 ? `<nav class="rtabs" role="tablist">${tabs.map(([k, ic, lb]) => `<button type="button" role="tab" aria-selected="${k === recTab}" data-tab="${k}"><span>${ic}</span><b>${esc(lb)}</b></button>`).join('')}</nav>` : ''}
+    </div>`;
     ov.querySelector('.rx').onclick = closeRec;
-    ov.querySelectorAll('.rchips .chip').forEach(b => b.onclick = () => { recMode = b.dataset.m; renderRec(g); });
+    ov.querySelectorAll('.rtabs [data-tab]').forEach(b => b.onclick = () => { if (recTab === b.dataset.tab) return; recTab = b.dataset.tab; try { SFX.tap && SFX.tap(); } catch (e) {} renderRec(g); });
+    const dd = ov.querySelector('.rdd');
+    if (dd) { const bt = dd.querySelector('.rddb'), ls = dd.querySelector('.rddl');
+      bt.onclick = e => { e.stopPropagation(); const op = ls.hidden; ls.hidden = !op; bt.setAttribute('aria-expanded', String(op)); };
+      ls.onclick = e => { const b = e.target.closest('[data-m]'); if (b) { recMode = b.dataset.m; renderRec(g); } };
+      ov.querySelector('.recp').addEventListener('click', e => { if (!dd.contains(e.target)) { ls.hidden = true; bt.setAttribute('aria-expanded', 'false'); } }); }
   }
   function itemCard(it, foot, extraCls = '') {
     return `<div class="card item r${it.rar} ${extraCls}" data-kind="${it.kind}" data-id="${it.id}"><span class="rar">${ART.RAR[it.rar]}</span>
@@ -791,7 +802,7 @@
     }
     // phones: the title needs the width — the rules button joins the end of the feature tags as a small pill
     if ($('bvRules') && matchMedia('(max-width: 819px)').matches) { const rw = $('bvi').querySelector('.row'); if (rw) { $('bvRules').classList.add('ph'); rw.appendChild($('bvRules')); } }   // phones
-    if ($('bvRec') && matchMedia('(max-width: 819px)').matches) { const rw = $('bvi').querySelector('.row'); if (rw) { $('bvRec').classList.add('ph'); rw.appendChild($('bvRec')); } }   // (and the record button beside it): right of the progress ring
+    if ($('bvRec') && matchMedia('(max-width: 819px)').matches) { const rw = $('bvi').querySelector('.row'); if (rw) { $('bvRec').classList.add('ph'); $('bvRec').setAttribute('aria-label', t('rec.btn')); rw.insertBefore($('bvRec'), $('bvRules') && $('bvRules').parentNode === rw ? $('bvRules') : null); } }   // (phones: the cup alone, before ルール): right of the progress ring
     // the board card's choices as our own UI (no system pickers): the side as a two-button toggle,
     // the level as a button that opens a list sheet with each level's name, meter and who it suits
     ['bvSide', 'bvSize'].forEach(sid => { if (!$(sid)) return;
@@ -826,7 +837,7 @@
     }
     if ($('bvLv')) {
       const sel = $('bvLv'), bt = document.createElement('button'); bt.type = 'button'; bt.className = 'lvpick'; sel.hidden = true; sel.after(bt);
-      const paint = () => { const o = sel.options[sel.selectedIndex]; bt.innerHTML = `<span>${esc(o ? o.textContent : '')}</span>${bossImg(id, +sel.value)}<i>▾</i>`; };
+      const paint = () => { const o = sel.options[sel.selectedIndex]; bt.innerHTML = `<span>${esc(matchMedia('(max-width: 819px)').matches ? 'Lv.' + sel.value : o ? o.textContent : '')}</span>${bossImg(id, +sel.value)}<i>▾</i>`; };   // (phones: just Lv.N + the opponent's face)
       sel.addEventListener('change', paint); paint();
       bt.onclick = () => {
         const max = ad.levels, cur = +sel.value;

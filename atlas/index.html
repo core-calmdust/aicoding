@@ -1563,7 +1563,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 .bvi.mini .R{pointer-events:none}.bvi.mini{padding-bottom:12px!important}
 
 /* 戦績 (records) page — opened from a game's card (2026-11-09) */
-.bvi .recb{margin-left:8px}.bvi .rulesb.ph + .recb.ph{margin-left:6px!important}
+.bvi .recb{margin-left:8px}.bvi .rulesb.ph + .recb.ph{margin-left:6px!important}.bvi .recb.ph{margin-left:auto!important}
 [dir=rtl] .bvi .recb{margin-left:0;margin-right:8px}
 .recov{position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;padding:max(14px,env(safe-area-inset-top)) 14px max(14px,env(safe-area-inset-bottom));background:rgba(30,26,40,.42);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .22s}
 .recov.on{opacity:1;pointer-events:auto}
@@ -1576,6 +1576,21 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 .recp .rx{flex:none;width:44px;height:44px;border-radius:50%;border:2px solid var(--line);background:#fff;box-shadow:0 3px 0 var(--line);font-size:26px;line-height:1;color:var(--ink2);cursor:pointer}
 .recp .rbd{overflow:auto;padding:14px 18px 22px;-webkit-overflow-scrolling:touch}
 .recp h4{margin:18px 4px 8px;font-family:var(--round);font-size:15px;color:var(--ink2);display:flex;align-items:center;gap:8px}.recp h4 em{font-style:normal;font-size:13px;color:var(--mint2)}
+.recp .rdd{position:relative;display:inline-block;margin-bottom:12px;z-index:2}
+.recp .rddb{display:inline-flex;align-items:center;gap:10px;height:42px;padding:0 16px 0 18px;border-radius:99px;border:2px solid var(--line);background:#fff;box-shadow:0 3px 0 var(--line);font-weight:900;font-size:15px;color:var(--ink);cursor:pointer}
+.recp .rddb i{font-style:normal;font-size:12px;color:var(--ink2)}
+.recp .rddl{position:absolute;top:calc(100% + 6px);inset-inline-start:0;min-width:180px;padding:6px;background:#fff;border:2px solid var(--line);border-radius:18px;box-shadow:0 4px 0 var(--line),0 16px 30px -12px rgba(80,40,0,.35);display:flex;flex-direction:column;gap:2px}
+.recp .rddl[hidden]{display:none}
+.recp .rddl button{text-align:start;border:0;background:none;border-radius:12px;padding:10px 12px;font-weight:800;font-size:15px;color:var(--ink);cursor:pointer}
+.recp .rddl button.on{background:color-mix(in srgb,var(--c) 16%,#fff);color:var(--ink)}
+.recp .rtabs{flex:none;display:flex;gap:6px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));border-top:2px dashed var(--line);background:#fffdf7}
+.recp .rtabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;border:0;background:none;border-radius:16px;padding:7px 4px;cursor:pointer;color:var(--ink2);font-weight:800}
+.recp .rtabs button span{font-size:21px;line-height:1;filter:grayscale(.7);opacity:.75}
+.recp .rtabs button b{font-size:12px}
+.recp .rtabs button[aria-selected=true]{background:color-mix(in srgb,var(--c) 15%,#fff);color:var(--ink)}
+.recp .rtabs button[aria-selected=true] span{filter:none;opacity:1}
+.recp .rachs{display:flex;align-items:center;gap:10px;margin:2px 4px 12px;font-family:var(--round);font-size:15px;color:var(--ink2)}.recp .rachs b{font-size:22px;color:var(--mint2)}.recp .rachs .bar{flex:1}
+@media (max-width:819px){.bvi .recb.ph{padding:0 12px}.bvi .recb.ph b{display:none}.bvi .recb.ph span{font-size:19px}.bvi .recb.ph + .rulesb.ph{margin-left:6px!important}}
 .recp .rchips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .recp .rchips .chip{border:2px solid var(--line);background:#fff;border-radius:99px;padding:7px 14px;font-weight:800;font-size:14px;color:var(--ink2);cursor:pointer;box-shadow:0 2px 0 var(--line)}
 .recp .rchips .chip[aria-pressed=true]{background:var(--c);border-color:transparent;color:#fff;box-shadow:0 3px 0 color-mix(in srgb,var(--c) 70%,#000)}
@@ -1840,6 +1855,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=30"></script>
 <script src="updnews.js?v=7"></script>
 <script src="npc/npc.js?v=14"></script>
-<script src="app.js?v=248"></script>
+<script src="app.js?v=249"></script>
 </body>
 </html>
