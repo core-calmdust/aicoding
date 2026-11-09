@@ -346,7 +346,7 @@
     say(X.loading); buttons();
     loadBook(id).then(b => { if (stopped) return; B = b; nextPuzzle(); }).catch(() => { if (!stopped) say('⚠'); });
 
-    const dbg = { state: () => cur && { kind: cur.kind, i: cur.i, j: cur.j, state: cur.state, used: cur.used, k: cur.k, answer: cur.P.answer || cur.P.line || cur.P.sol, moves: pz() ? pz().moves() : [], say: $('.tx').textContent } };
+    const dbg = { state: () => cur && { kind: cur.kind, i: cur.i, j: cur.j, state: cur.state, used: cur.used, k: cur.k, answer: cur.P.answer || cur.P.line || cur.P.sol, moves: pz() ? pz().moves() : [], say: $('.tx').textContent }, go: (i, j) => begin(B.problem(i, j, X, ctx.lang), true) };
     window.__atlasPz = dbg;   // (test hook)
     return {
       stop() { stopped = true; if (window.__atlasPz === dbg) delete window.__atlasPz; clearInterval(typeT); timers.forEach(clearTimeout); if (sess) sess.stop(); sess = null; el.remove(); },
