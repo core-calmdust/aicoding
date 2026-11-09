@@ -60,7 +60,7 @@
       prof.forEach(([r, y]) => P.push(new TT.Vector2(r * s, y * s)));
       for (let k = 0; k <= 8; k++) { const a = -Math.PI / 2 + k / 8 * Math.PI; P.push(new TT.Vector2(Math.max(0, Math.cos(a) * .16 * s), (.71 + Math.sin(a) * .16) * s)); }
     }
-    const g = new TT.LatheGeometry(P, LO() ? 16 : 24); if (X.share) X.share(g);
+    const g = new TT.LatheGeometry((X.lp || (a => a))(P, .003), LO() ? 16 : 20); if (X.share) X.share(g);
     return (geos[rule] = g);
   }
   function piece(rule, seat) {
@@ -138,7 +138,7 @@
   // a cowrie: an egg-shaped shell; mouth up shows the toothed slit
   function cowrie(up) {
     const TT = T(), g = new TT.Group();
-    const geo = geos.cow || (geos.cow = (() => { const q = new TT.SphereGeometry(.13, LO() ? 12 : 16, LO() ? 8 : 10); q.scale(1, .55, .72); return q; })());
+    const geo = geos.cow || (geos.cow = (() => { const q = new TT.SphereGeometry(.13, LO() ? 10 : 12, LO() ? 7 : 8); q.scale(1, .55, .72); return q; })());
     const shell = mat('cow', () => phys({ color: 0xf1e2c0, roughness: .25, clearcoat: .9, clearcoatRoughness: .15 }));
     const m = new TT.Mesh(geo, shell); m.castShadow = true; m.position.y = .07; g.add(m);
     if (up) {   // the mouth: a dark slit with little white teeth

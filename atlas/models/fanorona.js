@@ -242,7 +242,7 @@
 
   /* ---------- the balls ---------- */
   const geos = {};
-  function ballGeo() { const k = LO() ? 'lo' : 'hi'; if (geos[k]) return geos[k]; const g = new (T().SphereGeometry)(1, LO() ? 16 : 22, LO() ? 10 : 14); if (X.share) X.share(g); return (geos[k] = g); }
+  function ballGeo() { const k = LO() ? 'lo' : 'hi'; if (geos[k]) return geos[k]; const g = new (T().SphereGeometry)(1, LO() ? 14 : 16, LO() ? 9 : 11); if (X.share) X.share(g); return (geos[k] = g); }
   function ballMat(col) {
     return mat('b' + col, () => {
       const TT = T(), dark = col === 2, t = simpleTex(dark ? 'fnBallD' : 'fnBallL', SZ(256), SZ(128), 'ball', { dark });

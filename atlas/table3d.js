@@ -991,6 +991,16 @@
   const rbCache = {};
   // cached geometries shared by many boards (rounded boxes, goban legs / stones / bowls): dispose() leaves them on the GPU
   const SHARED = new WeakSet(), share = g => { SHARED.add(g); return g; };
+  // a lathe profile without the points that sit on the line of their neighbours (Douglas–Peucker; [r, y] pairs or Vector2s,
+  // tol in board units) — the turned outline stays, at far fewer rings (2026-11-09: the full games' pieces)
+  function lp(pts, tol = .003) {
+    const P = pts.map(p => Array.isArray(p) ? p : [p.x, p.y]); if (P.length < 4) return pts;
+    const keep = new Uint8Array(P.length); keep[0] = keep[P.length - 1] = 1;
+    const rec = (a, b) => { const [x1, y1] = P[a], [x2, y2] = P[b], dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy) || 1e-9; let m = -1, mi = -1;
+      for (let i = a + 1; i < b; i++) { const d = Math.abs((P[i][0] - x1) * dy - (P[i][1] - y1) * dx) / L; if (d > m) { m = d; mi = i; } }
+      if (m > tol) { keep[mi] = 1; rec(a, mi); rec(mi, b); } };
+    rec(0, P.length - 1); return pts.filter((p, i) => keep[i]);
+  }
   let rbCap = 9;   // the room is built with rbCap = 1: its rounded boxes get a single chamfer step (smooth normals keep them looking round)
   function RB(w, h, d, r, m = 3) {
     if (r == null) r = Math.min(.25, Math.min(w, h, d) * .2);
@@ -2159,5 +2169,5 @@
   try { if (sessionStorage.getItem('t3d-debug')) setTimeout(() => R && dbgToggle(true), 500); } catch (e) {}
   setInterval(() => { if (dbgOn && performance.now() - dbgT > 1000) { dbgFps = 0; dbgT = performance.now(); dbgPaint(); } }, 1000);   // (the loop sleeps when nothing moves: keep the numbers fresh)
 
-  window.Table3D = { debug: dbgToggle, TABLES, setTable, table: () => tableStyle, setBright, bright: () => bright, turn, museum, setShift, quiet, setTimeOfDay, timeOfDayPick: todPick, share, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, rvDisc, rvMats, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
+  window.Table3D = { debug: dbgToggle, TABLES, setTable, table: () => tableStyle, setBright, bright: () => bright, turn, museum, setShift, quiet, setTimeOfDay, timeOfDayPick: todPick, share, lp, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, rvDisc, rvMats, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
 })();

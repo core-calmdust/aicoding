@@ -170,7 +170,7 @@
     if (turned) {   // the face: a raised rim, two V rings, a dished centre and a small boss
       p.push([R * .86, GH], [R * .8, GH - .012], [R * .74, GH], [R * .56, GH], [R * .5, GH - .014], [R * .44, GH], [R * .3, GH - .004], [R * .16, GH - .016], [R * .1, GH - .006], [R * .06, GH + .004], [0, GH + .006]);
     } else p.push([R * .9, GH + .002], [R * .5, GH + .004], [0, GH + .004]);
-    const g = new TT.LatheGeometry(p.map(([a, b]) => new TT.Vector2(a, b)), LO() ? 28 : 48); if (X.share) X.share(g); return (geos[key] = g);
+    const g = new TT.LatheGeometry((X.lp || (a => a))(p, .003).map(([a, b]) => new TT.Vector2(a, b)), LO() ? 20 : 28); if (X.share) X.share(g); return (geos[key] = g);
   }
   // the queen: a hexagonal block (pointy-top, as the cells) with a bevelled top
   function queenGeo() {

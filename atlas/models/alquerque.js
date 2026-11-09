@@ -265,9 +265,9 @@
   function discGeo() {   // unit radius (scaled by the piece's radius), centred on its middle
     const key = LO() ? 'lo' : 'hi'; if (geos[key]) return geos[key];
     const TT = T(), hU = PH / R, p = [[0, -hU / 2], [.9, -hU / 2], [.97, -hU / 2 + .05], [1, -hU / 2 + .14], [1, hU / 2 - .16]];
-    const st = LO() ? 3 : 5; for (let i = 1; i <= st; i++) { const t = i / st * Math.PI / 2; p.push([.9 + Math.cos(t) * .1, hU / 2 - .16 + Math.sin(t) * .14]); }
+    const st = LO() ? 3 : 4; for (let i = 1; i <= st; i++) { const t = i / st * Math.PI / 2; p.push([.9 + Math.cos(t) * .1, hU / 2 - .16 + Math.sin(t) * .14]); }
     p.push([.88, hU / 2 - .02], [.84, hU / 2 - .05], [.78, hU / 2 - .02], [0, hU / 2 - .02]);
-    const g = new TT.LatheGeometry(p.map(([a, b]) => new TT.Vector2(a, b)), LO() ? 28 : 44); if (X.share) X.share(g); return (geos[key] = g);
+    const g = new TT.LatheGeometry((X.lp || (a => a))(p, .004).map(([a, b]) => new TT.Vector2(a, b)), LO() ? 20 : 28); if (X.share) X.share(g); return (geos[key] = g);
   }
   function faceGeo() { const key = 'f' + (LO() ? 'lo' : 'hi'); if (geos[key]) return geos[key]; const g = new (T().CircleGeometry)(.78, LO() ? 28 : 44); g.rotateX(-Math.PI / 2); g.translate(0, PH / R / 2 - .006, 0); if (X.share) X.share(g); return (geos[key] = g); }
   // the face: an eight-pointed star in a ring of small lobes — engraved in brass / gold cloisonné wires in cobalt enamel
