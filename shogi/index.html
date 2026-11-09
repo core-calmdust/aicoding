@@ -422,6 +422,9 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
 .ts-compact #tsNo{display:inline}
 html.atlas-skin .ts-compact #tsNo{color:#9a7a3a}
 .ts-compact > .lh .dots{display:none!important}
+.lesson-card.ts-compact > .lh{display:flex!important;flex-wrap:nowrap!important;align-items:center!important;gap:10px}
+.lesson-card.ts-compact > .lh .lt{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lesson-card.ts-compact > .lh #lsQuit{margin-inline-start:auto!important}
 /* the quit button in the head row: a small pill, icon + 「やめる」 */
 .lesson-card.ts-compact > .lh #lsQuit{flex:none;display:inline-flex!important;align-items:center;gap:4px;height:28px!important;width:auto!important;padding:0 10px 0 8px!important;font-size:0!important;border-radius:99px!important;margin:0!important}
 .lesson-card.ts-compact > .lh #lsQuit::after{content:attr(data-cap);font-size:11.5px;font-weight:800;line-height:1}
@@ -440,7 +443,9 @@ body.ts-noopp .hand.top{visibility:hidden;height:0!important;min-height:0!import
 #lessonCard.ts-compact .cb-bar :is(.cb-ic,.cb-q)[data-cap]::after{font-size:10px!important}
 #lessonCard.ts-compact .cb-bar .cb-t{height:52px!important;flex:1 1 auto!important}
 #lessonCard.ts-compact #lsAuto{color:inherit!important;border-color:var(--line)!important;background:rgba(0,0,0,.2)!important;font-weight:700}
-#lessonCard.ts-compact #lsAuto svg{width:18px;height:18px}
+#lessonCard.ts-compact #lsAuto > svg{display:none!important}
+#lessonCard.ts-compact #lsAuto::before{content:'';display:block;flex:none;width:20px;height:20px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27black%27%20stroke%3D%27black%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M8%205v14l11-7z%27/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27black%27%20stroke%3D%27black%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M8%205v14l11-7z%27/%3E%3C/svg%3E") center/contain no-repeat}
+#lessonCard.ts-compact #lsAuto.on::before{-webkit-mask-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27black%27%20stroke%3D%27black%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M8%205v14M16%205v14%27/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27black%27%20stroke%3D%27black%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M8%205v14M16%205v14%27/%3E%3C/svg%3E")}
 html.atlas-skin #lessonCard.ts-compact #lsAuto{background:#fff!important;border:2px solid #ead9b6!important;color:#4a5068!important;box-shadow:0 3px 0 #ead9b6!important}
 /* phones: a compact card head (2026-11-10) — the step on one line (cut with …) beside a small progress pill, a smaller
    title, the prompt tighter and the tsume rule note as a small line of its own */
@@ -687,6 +692,9 @@ html[lang=ar] :is(.ru-txt, .ru-win p, .ls-gh, .ls-note){text-align:right}
 .rank-badge{margin:6px auto 0;width:max-content;padding:4px 14px;border-radius:20px;border:1px solid var(--brass2);color:var(--accent);font-size:13px}
 .mark{position:absolute;inset:4%;border-radius:10%;z-index:5;pointer-events:none;border:3px solid}
 .mark.best{border-color:var(--accent);box-shadow:0 0 12px rgba(226,194,117,.6)}
+/* the lesson / tsume hint: clearly lit — a bright filled square that pulses (2026-11-10) */
+@keyframes hintSq{0%,100%{box-shadow:0 0 0 2px #fff6d8,0 0 14px 4px rgba(255,190,40,.85);background:rgba(255,200,60,.38)}50%{box-shadow:0 0 0 3px #fffbe8,0 0 28px 10px rgba(255,190,40,1);background:rgba(255,205,70,.6)}}
+.mark.best.hintsq{inset:0;border-radius:6%;border:3px solid #ffd34d;animation:hintSq 1s ease-in-out infinite;z-index:4}
 .mark.ng{border-color:#ff6b5b}
 /* ---------------------------------------------------------------- responsive */
 /* phone layout (common spec): everything that is not the PC layout (shared/headerbar.js MEDIA) — phones, tablets, and narrow / tall PC windows —
@@ -4751,7 +4759,7 @@ $('#lsHint').onclick = () => {
     if (!lesson || lesson.cur !== pr) return;
     if (E.isDrop(m)) {
       lesson.hintDrop = { tp: E.dropType(m), at: cur }; renderHands();   // the piece in hand only lights up (not picked up)
-    } else { const mk = document.createElement('div'); mk.className = 'mark best'; sqEls[sqToDisp(E.mFrom(m))].appendChild(mk); }
+    } else { const mk = document.createElement('div'); mk.className = 'mark best hintsq'; sqEls[sqToDisp(E.mFrom(m))].appendChild(mk); }
   }, 0);
 };
 $('#lsNext').onclick = () => {
