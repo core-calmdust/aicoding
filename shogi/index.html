@@ -1511,7 +1511,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2l14"></script>
 <script src="online.js?v=stale2fis"></script>
-<script src="../shared/mtengine.js?v=8"></script><script src="../shared/proset.js?v=3t2svhxbf"></script><script>MTEngine.init({ sw: 'sw.js?v=2', light: true });</script>
+<script src="../shared/mtengine.js?v=9"></script><script src="../shared/proset.js?v=3t2svhxbf-pt1"></script><script>MTEngine.init({ sw: 'sw.js?v=2', light: true });</script>
 <script src="variants/search.js?v=20261030sv"></script>
 <script src="variants/vshogi.js?v=20261030sv"></script>
 <script src="variants/vtext.js?v=20261107l14"></script>
@@ -2909,7 +2909,7 @@ $('#rngLevel').oninput = updDialog; $('#rngLevel2').oninput = updDialog;
 // PRO mode (shared/proset.js; common rule「対局設定の Pro モード」): advanced settings for the AI beside the level — standard shogi
 // (and ランダム将棋, which keeps these levels) against the AI / AI vs AI, never rated. The changed values make engine opts of their own.
 const PRO_DEF = lv => { const L = LEVELS[lv] || LEVELS[LV_DEFAULT];
-  return { limit: L.noise ? { k: 'depth', v: L.depth } : L.nodes ? { k: 'nodes', v: L.nodes } : { k: 'time', v: (L.time || 1000) / 1000 }, threads: L.mt ? ProSet.maxThreads() : 1,
+  return { limit: L.noise ? { k: 'depth', v: L.depth } : L.nodes ? { k: 'nodes', v: L.nodes } : { k: 'time', v: (L.time || 1000) / 1000 }, threads: L.mt ? ProSet.defThreads() : 1,
     book: lv >= 2, var: !L.noise ? 0 : L.noise >= 60 ? 2 : 1, eval: L.noise || L.linear ? 'hand' : 'nnue', resign: !L.noise }; };
 const proVariantEng = () => { const c = document.querySelector('#newOverlay .ngt-gcard.sel[data-v]'); return !!(c && c.dataset.v && window.Variants && Variants.eng(c.dataset.v)); };
 var PRO = window.ProSet ? ProSet.init({ game: 'shogi', lang: () => LANG, level: () => +$('#rngLevel').value, show: () => (dlg.mode === 'ai' || dlg.mode === 'watch') && !proVariantEng(),

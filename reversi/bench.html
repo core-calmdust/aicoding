@@ -61,7 +61,7 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);ma
 <div class="card"><h2>中盤（残り36マス ×8局面、時間で区切る反復深化）</h2><div class="tw"><table id="tblM"><thead><tr><th>スレッド</th><th>nps（合計）</th><th>1スレッド比</th><th>到達した深さ（平均）</th><th>共通の深さまでの時間</th><th>速さ</th><th>最善手の一致</th><th>起動</th></tr></thead><tbody></tbody></table></div></div>
 <div class="card"><h2>終盤（残り24マスの完全読み、ルート分割）</h2><div class="tw"><table id="tblE"><thead><tr><th>スレッド</th><th>合計時間</th><th>1スレッド比</th><th>nps（合計）</th><th>局面数（1スレッド比）</th><th>石差の一致</th><th>起動</th></tr></thead><tbody></tbody></table></div><pre id="log"></pre></div>
 </main>
-<script src="../shared/mtengine.js?v=8"></script>
+<script src="../shared/mtengine.js?v=9"></script>
 <script>
 'use strict';
 // Fixed positions (self-play from seeded 8-ply random openings, as tools/mt-bench.js): 64 cells (0 empty, 1 black, 2 white) + side to move.
@@ -71,7 +71,9 @@ const dec = s => ({ cells: s.slice(0, 64).split('').map(Number), toMove: s[64] =
 const $ = s => document.querySelector(s);
 const HC = navigator.hardwareConcurrency || 1;
 const ISO = !!self.crossOriginIsolated && typeof SharedArrayBuffer === 'function';
-const COUNTS = (() => { const a = []; for (let t = 1; t < HC; t *= 2) a.push(t); a.push(HC); return [...new Set(a)]; })();
+// (+ the performance cores, shared/mtengine.js perfThreads — e.g. 10 of a Mac's 14 — the default of PRO's thread count, 2026-11-09)
+const PERF = window.MTEngine && MTEngine.perfThreads ? MTEngine.perfThreads() : HC;
+const COUNTS = (() => { const a = []; for (let t = 1; t < HC; t *= 2) a.push(t); if (PERF > 1 && PERF < HC) a.push(PERF); a.push(HC); return [...new Set(a)].sort((x, y) => x - y); })();
 const sq = m => m < 0 ? 'pass' : 'abcdefgh'[m & 7] + ((m >> 3) + 1);
 const ua = (() => { const d = navigator.userAgentData; const b = d && (d.brands || []).filter(x => !/Not/.test(x.brand)).map(x => x.brand + ' ' + x.version).join(', '); return (b ? b + ' / ' + (d.platform || '') : '') || navigator.userAgent; })();
 let started = 0, lines = [], pool = null, PX = null;

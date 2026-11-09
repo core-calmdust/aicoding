@@ -1686,7 +1686,7 @@ html.rb-study .frame{outline:3px solid var(--accent);outline-offset:3px}
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2l14"></script>
 <script src="online.js?v=stale2fis"></script>
-<script src="../shared/mtengine.js?v=8"></script><script src="../shared/proset.js?v=3t2svhxbf"></script><script>MTEngine.init({ sw: 'sw.js' });</script>
+<script src="../shared/mtengine.js?v=9"></script><script src="../shared/proset.js?v=3t2svhxbf-pt1"></script><script>MTEngine.init({ sw: 'sw.js' });</script>
 <script src="rbox.js?v=3-rc2"></script>
 <script src="../shared/coachkit.js?v=16l14"></script>
 <script src="../shared/record.js?v=12l14"></script>
@@ -2850,7 +2850,7 @@ const PRO_T = {
   book: { ja: '定石' },
 };
 const PRO_DEF = lv => { const L = LEVELS_UI[lv] || LEVELS_UI[15];
-  return { limit: L.time ? { k: 'time', v: L.time / 1000 } : { k: 'depth', v: L.depth }, threads: MT_CFG[lv] ? ProSet.maxThreads() : 1, book: !!L.mpc,
+  return { limit: L.time ? { k: 'time', v: L.time / 1000 } : { k: 'depth', v: L.depth }, threads: MT_CFG[lv] ? ProSet.defThreads() : 1, book: !!L.mpc,
     var: !L.noise ? 0 : L.noise >= 400 ? 2 : 1, exact: L.exact, wld: L.wld || 0 }; };
 var PRO = window.ProSet ? ProSet.init({ game: 'reversi', lang: () => LANG, level: () => draft.level || settings.level, show: () => draft.mode === 'ai' || draft.mode === 'watch', stone: true,
   store: { get: () => settings.pro, set: v => { settings.pro = v; } }, defaults: PRO_DEF,
