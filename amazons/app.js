@@ -50,7 +50,7 @@ const AIW = () => ({ ru: 'ИИ', tr: 'YZ' })[LANG] || 'AI';   // the word "AI" i
 function t(k, v) { let x = (I18N[LANG] || I18N.en)[k]; if (x === undefined) x = I18N.en[k]; if (x === undefined) x = I18N.ja[k]; if (x === undefined) return k; if (v && typeof x === 'string') x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] !== undefined ? v[y] : ''); return x; }
 const pname = p => t(p === P1 ? 'p1' : 'p2');
 // AI strength: 20 steps, Lv.1 … Lv.20
-const LV_MAX = 20;
+const LV_MAX = 23;   // (Lv.21〜23: the top levels on every thread)
 const LV = i => 'Lv.' + i;   // levels 1 … 20 (kyu / dan names are kept for the Japanese games: shogi, go, gomoku)
 const LVD = i => t('lvd')[i <= 4 ? 0 : i <= 9 ? 1 : i <= 15 ? 2 : 3];
 function applyI18n() {
@@ -108,7 +108,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=1';
+const ENGINE_URL = 'engine.js?v=2';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -128,8 +128,13 @@ function noteNps(nodes, ms) {
   const el = document.getElementById('infoLine'); if (el && el.dataset.base !== undefined) el.textContent = el.dataset.base + npsText();
 }
 let aiW = makeWorker(), anaW = makeWorker();
-const MTP = null;   // (one search thread: shared/mtsplit.js is not wired to this engine yet)
-const mtLevel = () => false;
+// multi-threaded search (shared/mtsplit.js; common rule「本編のマルチスレッド」): several plain workers of this engine share the
+// root moves and the main line (Young Brothers Wait). Analysis, hints, the coach, the review box and the levels that think by
+// time (Lv.19〜23, rated games too) go to the threads when they are free; the levels decided by evaluations stay on one thread.
+// Shared mode: on a cross-origin isolated page (sw.js) the workers share one transposition table (shared/mttt.js).
+if (window.MTSplit) MTSplit.init({ sw: 'sw.js?v=1' });
+const MTP = window.MTSplit ? MTSplit.use({ url: ENGINE_URL, drive: MTSplit.ladder.drive }) : null;
+const mtLevel = lv => { const L = E.LEVELS[lv]; return !!(L && L.s && L.ms && !L.nk); };   // a level that thinks by time
 function mtWants(which, msg) {
   if (msg.type === 'analyze' || msg.type === 'cands') return true;
   if (msg.type !== 'think') return false;
@@ -1136,7 +1141,7 @@ $('#btnStart').onclick = () => {
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_CLOCK = { base: 300000, inc: 3000 };
 // rating of each AI step (a first estimate from short matches of neighbouring levels on the work machine; to be measured on the
 // user's Mac): about +110 per step at the bottom, smaller at the top
-const RT_LV = [0, 350, 460, 570, 680, 790, 900, 1000, 1100, 1200, 1300, 1390, 1480, 1560, 1640, 1710, 1780, 1840, 1900, 1970, 2040];
+const RT_LV = [0, 350, 460, 570, 680, 790, 900, 1000, 1100, 1200, 1300, 1390, 1480, 1560, 1640, 1710, 1780, 1840, 1900, 1970, 2040, 2100, 2150, 2190];   // (Lv.21〜23: provisional, +60 / +50 / +40)
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };
