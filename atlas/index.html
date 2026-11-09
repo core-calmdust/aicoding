@@ -560,9 +560,12 @@ html[lang=ar] .badge,html[lang=hi] .badge{letter-spacing:0}
 .dsort{display:flex;gap:4px;padding:4px;border-radius:99px;background:#fff;border:2px solid var(--line)}.dsort button{border:0;background:none;font:inherit;font-weight:800;font-size:13px;color:var(--ink2);padding:6px 12px;border-radius:99px;cursor:pointer}.dsort button[aria-pressed=true]{background:var(--ink);color:#fff}
 .dsr{display:flex;align-items:center;gap:8px;min-width:0}
 .drar{position:relative;flex:none;display:block}.drar::after{content:'▾';position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--ink2);pointer-events:none}
-.drar select{appearance:none;-webkit-appearance:none;height:40px;border-radius:99px;border:2px solid var(--line);background:#fff;font:inherit;font-weight:800;font-size:13px;color:var(--ink);padding:0 28px 0 14px;cursor:pointer}
-.drar select.r0{color:#7a8090}.drar select.r1{color:#2a7ad8}.drar select.r2{color:#8a4ad8}.drar select.r3{color:#d8607a}.drar select.r4{color:#c88a00}
-@media (max-width:520px){.dsr{width:100%;gap:6px}.drar select{height:38px;font-size:12px;padding:0 24px 0 10px}.drar::after{right:9px}.dsr .dsort{flex:1;min-width:0;justify-content:space-between}.dsr .dsort{gap:2px;padding:3px}.dsr .dsort button{font-size:12px;padding:6px 6px;white-space:nowrap}}@media (max-width:370px){.dsr .dsort button{font-size:11px;padding:6px 5px}.drar select{padding:0 22px 0 9px}}
+.drar>button{height:40px;border-radius:99px;border:2px solid var(--line);background:#fff;font:inherit;font-weight:800;font-size:13px;color:var(--ink);padding:0 28px 0 14px;cursor:pointer}
+.drar>button.r0{color:#7a8090}.drar>button.r1{color:#2a7ad8}.drar>button.r2{color:#8a4ad8}.drar>button.r3{color:#d8607a}.drar>button.r4{color:#c88a00}
+.drarpop{position:absolute;left:0;top:calc(100% + 6px);z-index:60;min-width:100%;padding:6px;border-radius:18px;background:#fff;border:2px solid var(--line);box-shadow:0 10px 26px rgba(40,30,10,.18);display:flex;flex-direction:column;gap:2px}.drarpop[hidden]{display:none}
+.drarpop button{display:flex;align-items:center;gap:8px;border:0;background:none;font:inherit;font-weight:900;font-size:14px;color:var(--ink);padding:8px 14px 8px 10px;border-radius:12px;cursor:pointer;text-align:left;white-space:nowrap}.drarpop button:hover{background:#fbf3e2}.drarpop button[aria-selected=true]{background:#fff3d6}
+.drarpop button i{flex:none;width:14px;font-style:normal;font-size:12px;color:var(--ink2)}.drarpop button b{display:inline-block;min-width:38px;padding:2px 8px;border-radius:99px;font-size:12px;text-align:center;color:#fff;background:#7a8090}.drarpop button b.r1{background:#2a7ad8}.drarpop button b.r2{background:#8a4ad8}.drarpop button b.r3{background:#d8607a}.drarpop button b.r4{background:linear-gradient(135deg,#f0b81a,#c88a00)}.drarpop button b.all{background:none;color:var(--ink);padding:2px 0;text-align:left}
+@media (max-width:520px){.dsr{width:100%;gap:6px}.drar>button{height:38px;font-size:12px;padding:0 24px 0 10px}.drar::after{right:9px}.dsr .dsort{flex:1;min-width:0;justify-content:space-between}.dsr .dsort{gap:2px;padding:3px}.dsr .dsort button{font-size:12px;padding:6px 6px;white-space:nowrap}}@media (max-width:370px){.dsr .dsort button{font-size:11px;padding:6px 5px}.drar>button{padding:0 22px 0 9px}}
 .price{display:inline-flex;align-items:center;gap:4px}
 .price i{width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3a8,#ffc928 45%,#e09a00)}
 .shophead{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:22px 0 12px}.shophead h2.h{margin-block:0}   /* 「品ぞろえは…」は見出しの上下中央に */
@@ -952,32 +955,45 @@ button.nct[data-go]:hover{transform:translateY(-1px);box-shadow:0 3px 0 var(--li
 /* SSR / UR: a rarity effect of their own round the icon's frame and its rarity plate (2026-11-08)
    UR  — a rainbow running round the frame, a warm glow breathing behind it, four twinkling stars, a sheen over the plate
    SSR — a white light running round the violet frame, a violet glow, two twinkles, a sheen over the plate (locked: the same, quieter) */
-@property --dang{syntax:'<angle>';inherits:false;initial-value:0deg}
-@keyframes dicSpin{to{--dang:360deg}}
-@keyframes dicGlow{0%,100%{opacity:.35;transform:scale(.97)}50%{opacity:.85;transform:scale(1.03)}}
+/* (2026-11-09, lighter) the running light round the frame is a child (.rfx) masked to the frame's ring, whose big conic square
+   turns by transform (on the compositor: no repaint per frame); the glow is static; cells off screen pause (.vis, app.js);
+   locked cells have no effect at all. The same .rfx runs round the name card when an SSR / UR is worn. */
+@keyframes rfxSpin{to{transform:rotate(360deg)}}
 @keyframes dicTw{0%,100%{opacity:0;transform:scale(.4) rotate(0)}45%,55%{opacity:1;transform:scale(1) rotate(45deg)}}
-@keyframes dicSheen{0%{background-position:160% 0,0 0}55%,100%{background-position:-60% 0,0 0}}
+.rfx{position:absolute;inset:0;border-radius:inherit;padding:3px;overflow:hidden;pointer-events:none;z-index:3;
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.rfx::before{content:"";position:absolute;left:50%;top:50%;width:250%;aspect-ratio:1;margin:-125% 0 0 -125%;animation:rfxSpin 3.2s linear infinite;will-change:transform}
+.rfx.u::before{background:conic-gradient(#ff7fbe,#ffb21e,#fff2a0,#36b4ff,#b46bff,#ff7fbe)}
+.rfx.s::before{background:conic-gradient(#b46bff 0deg,#b46bff 250deg,#e6ccff 290deg,#fff 305deg,#e6ccff 320deg,#b46bff 360deg);animation-duration:2.6s}
 .dic.r3,.dic.r4{isolation:isolate}
-.dic.r4{background:conic-gradient(from var(--dang),#ff7fbe,#ffb21e,#fff2a0,#36b4ff,#b46bff,#ff7fbe);animation:dicSpin 3.2s linear infinite}
-.dic.r3{background:conic-gradient(from var(--dang),#b46bff 0deg,#b46bff 250deg,#e6ccff 290deg,#fff 305deg,#e6ccff 320deg,#b46bff 360deg);animation:dicSpin 2.6s linear infinite}
-.dic.r3::before,.dic.r4::before{content:"";position:absolute;inset:-4px;border-radius:20px;z-index:-1;pointer-events:none;filter:blur(7px);animation:dicGlow 2.4s ease-in-out infinite}
+.dic.r4{background:#ffb21e}.dic.r3{background:#b46bff}
+.dic.r3:not(.locked)::before,.dic.r4:not(.locked)::before{content:"";position:absolute;inset:-4px;border-radius:20px;z-index:-1;pointer-events:none;filter:blur(7px);opacity:.6}
 .dic.r4::before{background:conic-gradient(from 30deg,#ff7fbe,#ffb21e,#36b4ff,#b46bff,#ff7fbe)}
-.dic.r3::before{background:#b46bff;animation-duration:2.8s}
-.dic.r3::after,.dic.r4::after{content:"";position:absolute;width:16px;height:16px;pointer-events:none;z-index:2;
+.dic.r3::before{background:#b46bff}
+.dic.r3:not(.locked)::after,.dic.r4:not(.locked)::after{content:"";position:absolute;width:16px;height:16px;pointer-events:none;z-index:4;
   background:conic-gradient(from 45deg,transparent 0 10%,#fff 12.5%,transparent 15% 35%,#fff 37.5%,transparent 40% 60%,#fff 62.5%,transparent 65% 85%,#fff 87.5%,transparent 90%);
-  -webkit-mask:radial-gradient(circle,#000 0 18%,transparent 60%);mask:radial-gradient(circle,#000 0 18%,transparent 60%);filter:drop-shadow(0 0 3px #fff)}
-.dic.r4::after{top:-6px;right:-6px;animation:dicTw 1.9s ease-in-out infinite;box-shadow:none}
+  -webkit-mask:radial-gradient(circle,#000 0 18%,transparent 60%);mask:radial-gradient(circle,#000 0 18%,transparent 60%)}
+.dic.r4::after{top:-6px;right:-6px;animation:dicTw 1.9s ease-in-out infinite}
 .dic.r3::after{top:-5px;right:-5px;width:13px;height:13px;animation:dicTw 2.6s ease-in-out infinite}
-.dic.r4 .art::after,.dic.r3 .art::after{content:"";position:absolute;width:11px;height:11px;pointer-events:none;
+.dic.r4:not(.locked) .art::after,.dic.r3:not(.locked) .art::after{content:"";position:absolute;width:11px;height:11px;pointer-events:none;
   background:radial-gradient(circle,#fff 0 22%,rgba(255,255,255,.0) 70%);animation:dicTw 2.3s ease-in-out .9s infinite}
 .dic.r4 .art{position:relative}.dic.r3 .art{position:relative}
 .dic.r4 .art::after{left:10%;top:14%}.dic.r3 .art::after{left:12%;top:18%;animation-duration:3s}
-.dic.r4 .art::before{content:"";position:absolute;right:16%;bottom:22%;width:9px;height:9px;pointer-events:none;background:radial-gradient(circle,#fffbe0 0 22%,transparent 70%);animation:dicTw 2.1s ease-in-out 1.5s infinite}
-.dic.r3 .rl,.dic.r4 .rl{z-index:1;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.9) 50%,transparent 65%) no-repeat,var(--rc);background-size:220% 100%,100% 100%;animation:dicSheen 2.8s ease-in-out infinite}
+.dic.r4:not(.locked) .art::before{content:"";position:absolute;right:16%;bottom:22%;width:9px;height:9px;pointer-events:none;background:radial-gradient(circle,#fffbe0 0 22%,transparent 70%);animation:dicTw 2.1s ease-in-out 1.5s infinite}
+.dic.r3 .rl,.dic.r4 .rl{z-index:1;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.55) 50%,transparent 70%) no-repeat,var(--rc)}
 .dic.r4 .rl{box-shadow:0 0 6px 1px rgba(255,190,60,.85),0 0 0 1px rgba(255,255,255,.7)}
 .dic.r3 .rl{box-shadow:0 0 6px 1px rgba(180,107,255,.75),0 0 0 1px rgba(255,255,255,.55)}
-.dic.locked.r3::before,.dic.locked.r4::before{opacity:.3;animation:none}
-.dic.locked.r3::after,.dic.locked.r4::after,.dic.locked .art::after,.dic.locked .art::before{display:none}
+.dic.locked.r3::before,.dic.locked.r4::before{content:none}
+.dic:not(.vis) .rfx::before,.dic:not(.vis)::after,.dic:not(.vis) .art::after,.dic:not(.vis) .art::before{animation-play-state:paused}
+@media (prefers-reduced-motion:reduce){.rfx::before,.dic::after,.dic .art::after,.dic .art::before{animation:none!important}}
+/* the name card wearing an SSR / UR: the same running light round its edge, a soft glow, a twinkle in the corner */
+.dprev.nr3,.dprev.nr4{position:relative}
+.dprev.nr4{box-shadow:0 0 0 1px rgba(255,255,255,.6),0 0 26px 4px rgba(255,170,60,.45),0 10px 24px rgba(60,40,10,.14)}
+.dprev.nr3{box-shadow:0 0 0 1px rgba(255,255,255,.6),0 0 26px 4px rgba(180,107,255,.4),0 10px 24px rgba(60,40,10,.14)}
+.dprev > .rfx{position:absolute;z-index:6;padding:3.5px}
+.dprev > .ntw{position:absolute;top:8px;right:10px;width:18px;height:18px;z-index:7;pointer-events:none;
+  background:conic-gradient(from 45deg,transparent 0 10%,#fff 12.5%,transparent 15% 35%,#fff 37.5%,transparent 40% 60%,#fff 62.5%,transparent 65% 85%,#fff 87.5%,transparent 90%);
+  -webkit-mask:radial-gradient(circle,#000 0 18%,transparent 60%);mask:radial-gradient(circle,#000 0 18%,transparent 60%);animation:dicTw 2.2s ease-in-out infinite}
 .dic.sel::after{content:'✓';position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:var(--sky);color:#fff;font-weight:900;font-size:13px;display:grid;place-items:center;border:2px solid #fff}
 .dic:not(.locked):not(.sel):hover{transform:translateY(-3px)}.dic:active{transform:scale(.94)}
 @media (max-width:760px){.dic{border-radius:13px;padding:2.5px}.dic .art{border-radius:11px}.dic .rl{font-size:8px}.dic .lk{width:15px;height:15px;right:3px;top:3px}.dic .lk svg{width:9px;height:9px}}
@@ -1614,7 +1630,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 
   <!-- DRESS -->
   <section class="pg" id="pg-dress">
-    <div class="dtop"><h2 class="h" id="hDress"></h2><div class="dbar"><div class="seg" id="dseg"></div><div class="dsr"><label class="drar"><select id="drar"></select></label><div class="dsort" id="dsort" role="group"></div></div></div></div>
+    <div class="dtop"><h2 class="h" id="hDress"></h2><div class="dbar"><div class="seg" id="dseg"></div><div class="dsr"><div class="drar"><button type="button" id="drar" aria-haspopup="listbox" aria-expanded="false"></button><div class="drarpop" id="drarPop" role="listbox" hidden></div></div><div class="dsort" id="dsort" role="group"></div></div></div></div>
     <div class="dress">
       <div class="card dprev" id="dprev"></div>
       <div class="dgrid" id="dItems"></div>
@@ -1760,6 +1776,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=30"></script>
 <script src="updnews.js?v=7"></script>
 <script src="npc/npc.js?v=14"></script>
-<script src="app.js?v=244"></script>
+<script src="app.js?v=245"></script>
 </body>
 </html>
