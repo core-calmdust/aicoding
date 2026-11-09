@@ -611,11 +611,19 @@ typedef struct { u64 key; i16 v; u8 f, t; i8 d; u8 flag; u8 age; u8 pad; } TTE;
 #else
 #define TT_BITS 21
 #endif
+#ifndef MT
 static TTE TT[1 << TT_BITS];
+#endif
 static u8 ttAge = 0;
 #ifdef MT
 static volatile int gStop;          /* shared: set when the main thread's search is over (the helpers stop) */
 static TLS int threadId;            /* 0 = the main thread (time control, result), 1.. = helpers */
+/* every thread's last finished iteration on the current root: { key ^ x, x }, x = depth | value | move | in use — the main
+   thread answers with the deepest one, and a helper that finishes the main thread's depth limit ends the search (gHit) */
+#define MT_SLOTS 64
+static u64 gRes[MT_SLOTS][2];
+static volatile u64 gGoalKey, gHit; static volatile int gGoal;
+static TLS u64 rootK;
 #endif
 static u64 ttSalt = 0;   // native tools: separate table regions for two players
 #define TT_EXACT 3
@@ -623,6 +631,41 @@ static u64 ttSalt = 0;   // native tools: separate table regions for two players
 #define TT_UPPER 2
 static inline int vToTT(int v, int ply) { return v > WINT ? v + ply : v < -WINT ? v - ply : v; }
 static inline int vFromTT(int v, int ply) { return v > WINT ? v - ply : v < -WINT ? v + ply : v; }
+#ifdef MT
+/* (2026-11-09, the audit after checkers / morris, addendum "wasm の Lazy SMP の置換表") the threads' shared table. The plain
+   one above (one entry per key, a 16-byte struct written field by field) is not used: two threads writing one slot at once
+   could leave one position's key with another's value / depth / bound, and the one slot per key let the threads' many
+   shallow entries push out the deep ones. Here: buckets of four entries { key ^ w, w } (w = value, move, depth, bound, age,
+   in use), so a torn entry fails the key check ("lockless"); store = the same key's entry, else the shallowest / oldest of
+   the bucket (depth − 16 if from an earlier search). 2^TTM_BITS buckets x 64 bytes (64 MB: 4M entries, the plain one 2M). */
+#ifndef TTM_BITS
+#define TTM_BITS 20
+#endif
+static u64 TTM[(1 << TTM_BITS) * 8];
+typedef struct { i16 v; u8 f, t; i8 d; u8 flag; } TTR;
+static inline int ttProbe(u64 key, TTR *r) {
+  const u64 *bk = &TTM[(key & ((1u << TTM_BITS) - 1)) * 8];
+  for (int j = 0; j < 4; j++) {
+    u64 w = bk[2 * j + 1], kx = bk[2 * j];
+    if ((kx ^ w) == key && (w >> 58)) { r->v = (i16)(w & 0xFFFF); r->f = (u8)(w >> 16); r->t = (u8)(w >> 24); r->d = (i8)(w >> 32); r->flag = (u8)((w >> 40) & 3); return 1; }
+  }
+  return 0;
+}
+static void ttStore(u64 key, int d, int flag, int v, const Move *m, int ply) {
+  u64 *bk = &TTM[(key & ((1u << TTM_BITS) - 1)) * 8];
+  int j = -1, q = 1 << 30; u64 old = 0;
+  for (int i = 0; i < 4; i++) {
+    u64 w = bk[2 * i + 1], kx = bk[2 * i];
+    if ((kx ^ w) == key && (w >> 58)) { j = i; old = w; break; }
+    int s = !(w >> 58) ? -1000 : (int)(i8)(w >> 32) - (((w >> 48) & 255) != ttAge ? 16 : 0);
+    if (s < q) { q = s; j = i; }
+  }
+  u64 mv = m && m->f ? ((u64)m->f << 16 | (u64)m->t << 24) : old ? (old & 0xFFFF0000ull) : 0;   // (no move: keep the entry's own)
+  u64 w = (u64)(u16)(i16)vToTT(v, ply) | mv | (u64)(u8)(i8)(d > 120 ? 120 : d) << 32 | (u64)(flag & 3) << 40 | (u64)ttAge << 48 | 1ull << 58;
+  bk[2 * j + 1] = w; bk[2 * j] = key ^ w;
+}
+EXPORT(new_game) void new_game(void) { memset(TTM, 0, sizeof(TTM)); ttAge = 0; }
+#else
 static void ttStore(u64 key, int d, int flag, int v, const Move *m, int ply) {
   TTE *e = &TT[key & ((1 << TT_BITS) - 1)];
   if (e->key != key && e->age == ttAge && e->d > d + 2) return;
@@ -630,6 +673,7 @@ static void ttStore(u64 key, int d, int flag, int v, const Move *m, int ply) {
   e->key = key; e->d = (i8)(d > 120 ? 120 : d); e->flag = (u8)flag; e->v = (i16)vToTT(v, ply); e->age = ttAge;
 }
 EXPORT(new_game) void new_game(void) { memset(TT, 0, sizeof(TT)); ttAge = 0; }
+#endif
 
 // ---------------------------------------------------------------- search
 static TLS u64 nodes; static TLS double tEnd; static TLS int stopFlag, nodeLimit_on; static TLS u64 nodeLimit;
@@ -644,7 +688,7 @@ static inline int sameMove(const Move *a, const Move *b) { return a->f == b->f &
 static inline int timeUp(void) {
   if (stopFlag) return 1;
 #ifdef MT
-  if ((nodes & 1023) == 0 && gStop) stopFlag = 1;
+  if ((nodes & 1023) == 0 && (gStop || (rootK && gHit == rootK))) stopFlag = 1;
 #endif
   if (nodeLimit_on && nodes > nodeLimit) stopFlag = 1;   // checked at every node (the weak levels read a few hundred nodes)
   if ((nodes & 1023) == 0 && tEnd > 0 && now() > tEnd) stopFlag = 1;
@@ -745,9 +789,16 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, int pv, int q
   if (depth <= 0) { nodes++; return leafValue(p, alpha, beta, ply); }
   nodes++;
   // the transposition table first (before the move generation)
-  u64 tkey = key ^ ttSalt; TTE *e = &TT[tkey & ((1 << TT_BITS) - 1)];
+  u64 tkey = key ^ ttSalt;
+#ifdef MT
+  TTR er, *e = &er;
+  Move ttm = { 0, 0 }; int hasTT = 0, ttv = 0, ttf = 0;
+  if (ttProbe(tkey, e)) {
+#else
+  TTE *e = &TT[tkey & ((1 << TT_BITS) - 1)];
   Move ttm = { 0, 0 }; int hasTT = 0, ttv = 0, ttf = 0;
   if (e->key == tkey) {
+#endif
     if (e->f) { ttm.f = e->f; ttm.t = e->t; hasTT = 1; }
     ttv = vFromTT(e->v, ply); ttf = e->flag;
     if (!pv && e->d >= depth && ply > 0) {
@@ -926,6 +977,7 @@ static void orderRoot(void) {   // a cheap first ordering: one-ply values
 static void beginSearch(int ms) {
   stopFlag = 0; nodes = 0; tEnd = ms > 0 ? now() + ms : 0;
 #ifdef MT
+  rootK = 0;   /* (bestN sets it on the main thread: the depth goal a helper may reach first) */
   if (!threadId)
 #endif
   ttAge++;
@@ -953,7 +1005,14 @@ static void bestN(int maxDepth, int ms, u64 nodeLim) {
   for (int i = 0; i < rootN; i++) rootVal[i] = -INF;
   int prev = 0, d0 = 1;
 #ifdef MT
-  if (threadId) d0 = 1 + (threadId & 1);   /* helpers: every other one a ply ahead */
+  /* (2026-11-09) every thread iterates 1, 2, 3, … like the main one: the helpers' start a ply ahead (every other one) was
+     slower to the main thread's depth in the measurement (MODEL_CARD.md). The root key: the position, its history length
+     and the rules. */
+  const u64 rk = (ROOT.h ^ (u64)hn << 40 ^ (u64)(VAR + 1) << 56 ^ (u64)rootN << 20) | 1;
+  if (!threadId) {   /* a new search: forget the threads' results of the last one, set the depth goal */
+    for (int i = 0; i < MT_SLOTS; i++) { __atomic_store_n(&gRes[i][0], 0, __ATOMIC_SEQ_CST); __atomic_store_n(&gRes[i][1], 0, __ATOMIC_SEQ_CST); }
+    gHit = 0; gGoal = maxDepth; gGoalKey = rk; rootK = rk;
+  }
 #endif
   for (int d = d0; d <= maxDepth && d < MAXPLY - 8; d++) {
     seldepth = 0;
@@ -975,6 +1034,11 @@ static void bestN(int maxDepth, int ms, u64 nodeLim) {
     for (int i = 1; i < rootN; i++) rootVal[i] = -INF;
     bm = rootL[0]; bv = v; bd = d; prev = v;
 #ifdef MT
+    if (threadId < MT_SLOTS) {   /* publish the finished iteration */
+      u64 x = (u64)(d & 255) | (u64)(u16)(i16)bv << 8 | (u64)bm.f << 24 | (u64)bm.t << 32 | 1ull << 40;
+      __atomic_store_n(&gRes[threadId][1], x, __ATOMIC_SEQ_CST); __atomic_store_n(&gRes[threadId][0], rk ^ x, __ATOMIC_SEQ_CST);
+      if (threadId && d >= gGoal && gGoalKey == rk) gHit = rk;
+    }
     writeMove(IO, &bm); IO[2] = rep(bv); IO[3] = bd; IO[4] = (i32)(nodes / 1000);   /* the page reads the result so far */
 #endif
     progress(d, 1);
@@ -985,6 +1049,23 @@ static void bestN(int maxDepth, int ms, u64 nodeLim) {
     if (v < -WINT && WIN + v <= d) break;
     if (ms > 0 && d > 1 && now() > tEnd - ms * 0.55) break;
   }
+#ifdef MT
+  if (!threadId) {   /* the deepest finished iteration of all the threads (the main thread's on a tie) */
+    int bt = -1, bdep = bd;
+    for (int i = 1; i < MT_SLOTS; i++) {
+      u64 x = __atomic_load_n(&gRes[i][1], __ATOMIC_SEQ_CST), kx = __atomic_load_n(&gRes[i][0], __ATOMIC_SEQ_CST);
+      if (!(x >> 40) || (kx ^ x) != rk) continue;
+      int dd = (int)(x & 255); if (dd > bdep) { bdep = dd; bt = i; }
+    }
+    if (bt > 0) {
+      u64 x = __atomic_load_n(&gRes[bt][1], __ATOMIC_SEQ_CST), kx = __atomic_load_n(&gRes[bt][0], __ATOMIC_SEQ_CST);
+      Move m = { (u8)(x >> 24), (u8)(x >> 32) }; int ok = 0;
+      for (int i = 0; i < rootN; i++) if (sameMove(&rootL[i], &m)) ok = 1;
+      if ((kx ^ x) == rk && ok) { bm = m; bv = (i16)(u16)(x >> 8); bd = (int)(x & 255); }
+    }
+    gGoalKey = 0; gHit = 0; rootK = 0;
+  }
+#endif
   writeMove(IO, &bm); IO[2] = rep(bv); IO[3] = bd; IO[4] = (i32)(nodes / 1000);
 }
 EXPORT(best) void best(int maxDepth, int ms, int nodeK) { bestN(maxDepth, ms, nodeK > 0 ? (u64)nodeK * 1000 : 0); }
