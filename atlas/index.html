@@ -1559,6 +1559,63 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 @media (max-width:520px){.lvs-boss img{width:68px;height:68px}.lvs-boss b{font-size:16px}}
 .lvs-l button.on{border-color:var(--coral,#ff5d5d);background:#fff4f0;box-shadow:0 0 0 2px rgba(255,93,93,.15)}
 .bvi.mini .R{pointer-events:none}.bvi.mini{padding-bottom:12px!important}
+
+/* 戦績 (records) page — opened from a game's card (2026-11-09) */
+.bvi .recb{margin-left:8px}.bvi .rulesb.ph + .recb.ph{margin-left:6px!important}
+[dir=rtl] .bvi .recb{margin-left:0;margin-right:8px}
+.recov{position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;padding:max(14px,env(safe-area-inset-top)) 14px max(14px,env(safe-area-inset-bottom));background:rgba(30,26,40,.42);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .22s}
+.recov.on{opacity:1;pointer-events:auto}
+.recp{width:min(760px,100%);max-height:100%;display:flex;flex-direction:column;background:var(--paper);border:3px solid var(--line);border-radius:30px;box-shadow:0 8px 0 var(--line),0 30px 70px rgba(30,20,10,.3);overflow:hidden;transform:translateY(14px) scale(.98);transition:transform .26s cubic-bezier(.2,.9,.3,1.2);color:var(--ink)}
+.recov.on .recp{transform:none}
+.recp .rhd{display:flex;align-items:center;gap:14px;padding:16px 18px 14px;background:linear-gradient(180deg,color-mix(in srgb,var(--c) 18%,#fff),var(--paper));border-bottom:2px dashed var(--line)}
+.recp .rhd .g3{width:62px;height:62px;flex:none}
+.recp .rtt{flex:1;min-width:0}.recp .rtt small{display:block;font-family:var(--round);font-weight:800;font-size:13px;letter-spacing:.12em;color:var(--c)}
+.recp .rtt h3{margin:2px 0 0;font-family:var(--round);font-size:26px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.recp .rx{flex:none;width:44px;height:44px;border-radius:50%;border:2px solid var(--line);background:#fff;box-shadow:0 3px 0 var(--line);font-size:26px;line-height:1;color:var(--ink2);cursor:pointer}
+.recp .rbd{overflow:auto;padding:14px 18px 22px;-webkit-overflow-scrolling:touch}
+.recp h4{margin:18px 4px 8px;font-family:var(--round);font-size:15px;color:var(--ink2);display:flex;align-items:center;gap:8px}.recp h4 em{font-style:normal;font-size:13px;color:var(--mint2)}
+.recp .rchips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.recp .rchips .chip{border:2px solid var(--line);background:#fff;border-radius:99px;padding:7px 14px;font-weight:800;font-size:14px;color:var(--ink2);cursor:pointer;box-shadow:0 2px 0 var(--line)}
+.recp .rchips .chip[aria-pressed=true]{background:var(--c);border-color:transparent;color:#fff;box-shadow:0 3px 0 color-mix(in srgb,var(--c) 70%,#000)}
+.recp .card{background:#fff;border:2px solid var(--line);border-radius:22px;box-shadow:0 4px 0 var(--line)}
+.recp .rsum{display:grid;grid-template-columns:auto 1fr;gap:6px 18px;align-items:center;padding:16px 18px}
+.recp .rring{grid-row:span 3;position:relative;width:118px;height:118px;display:grid;place-items:center}
+.recp .rring svg{position:absolute;inset:0;width:100%;height:100%}
+.recp .rring b{font-family:var(--round);font-size:32px;line-height:1;margin-top:-6px}.recp .rring b i{font-style:normal;font-size:16px}
+.recp .rring em{position:absolute;bottom:26px;font-style:normal;font-size:11px;font-weight:800;color:var(--ink2)}
+.recp .rnums{display:flex;gap:10px}
+.recp .rnums>div{flex:1;text-align:center;border-radius:16px;padding:6px 4px 8px;background:#f6f8ff}
+.recp .rnums b{display:block;font-family:var(--round);font-size:34px;line-height:1.1}.recp .rnums span{font-size:12px;font-weight:800;color:var(--ink2)}
+.recp .rnums .w{background:color-mix(in srgb,var(--mint) 14%,#fff)}.recp .rnums .w b{color:var(--mint2)}
+.recp .rnums .l{background:color-mix(in srgb,var(--coral) 12%,#fff)}.recp .rnums .l b{color:var(--coral2)}
+.recp .rnums .d{background:#f3f1ea}.recp .rnums .d b{color:var(--ink2)}
+.recp .rmeta{display:flex;gap:6px 14px;flex-wrap:wrap;font-size:13px;font-weight:800;color:var(--ink2)}
+.recp .rform{display:flex;gap:4px;flex-wrap:wrap}.recp .rform i{width:14px;height:14px;border-radius:5px;background:#e6e1d4}
+.recp .rform i.w{background:var(--mint)}.recp .rform i.l{background:var(--coral)}
+.recp .ropps{padding:6px 14px}
+.recp .ro{display:grid;grid-template-columns:minmax(90px,34%) 1fr auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px dashed var(--line)}.recp .ro:last-child{border-bottom:0}
+.recp .ro .rn{font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.recp .rbar{display:flex;height:12px;border-radius:99px;overflow:hidden;background:#eee8da}.recp .rbar i{display:block}
+.recp .rbar .w{background:var(--mint)}.recp .rbar .l{background:var(--coral)}.recp .rbar .d{background:#c9c2b2}
+.recp .ro .rc{font-family:var(--round);font-size:14px;color:var(--ink2);min-width:58px;text-align:end}.recp .ro .rc b{color:var(--mint2)}
+.recp .rlist{padding:4px 14px}
+.recp .rr{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px dashed var(--line)}.recp .rr:last-child{border-bottom:0}
+.recp .rres{flex:none;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-family:var(--round);font-size:17px;color:#fff}
+.recp .rres.w{background:var(--mint);box-shadow:0 3px 0 var(--mint2)}.recp .rres.l{background:var(--coral);box-shadow:0 3px 0 var(--coral2)}.recp .rres.d{background:#b7b0a2;box-shadow:0 3px 0 #958e80}
+.recp .ro2{flex:1;min-width:0}.recp .ro2 b{display:block;font-size:14px}.recp .ro2 small{display:block;font-size:12px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.recp .rm{flex:none;text-align:end;font-size:12px;font-weight:800;color:var(--ink2)}.recp .rm small{display:block;font-weight:600;opacity:.8}
+.recp .rempty{text-align:center;padding:22px 18px}.recp .rempty span{font-size:40px}.recp .rempty p{margin:6px 0 0;color:var(--ink2);font-weight:700;line-height:1.6}
+.recp .rtiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.recp .rt{padding:12px 14px}.recp .rt small{display:block;font-size:12px;font-weight:800;color:var(--ink2)}.recp .rt b{display:block;font-family:var(--round);font-size:24px;margin:2px 0}.recp .rt span{font-size:12px;color:var(--ink2);font-weight:700}
+.recp .rach{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.recp .rach .ach{background:#fff;border:2px solid var(--line);box-shadow:0 3px 0 var(--line)}.recp .rach .ach.todo{background:#fbf7ee}
+@media (max-width:560px){
+  .recov{padding:0;align-items:flex-end}.recp{border-radius:26px 26px 0 0;max-height:92%;border-bottom:0}
+  .recp .rhd .g3{width:50px;height:50px}.recp .rtt h3{font-size:21px}
+  .recp .rsum{grid-template-columns:1fr;justify-items:center;text-align:center}.recp .rring{grid-row:auto;width:110px;height:110px}.recp .rnums{width:100%}.recp .rmeta,.recp .rform{justify-content:center}
+  .recp .rach{grid-template-columns:1fr}
+  .bvi .recb.ph{margin-left:4px}
+}
 </style>
 </head>
 <body>
@@ -1669,8 +1726,8 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 <script src="art.js?v=8"></script>
 <script src="../shared/atlas.js?v=20261109gs1"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
-<script src="../shared/atlas-account.js?v=20261109ac1"></script>
-<script src="i18n.js?v=61n"></script>
+<script src="../shared/atlas-account.js?v=20261109ac2"></script>
+<script src="i18n.js?v=61nr"></script>
 <script src="gamelist-i18n.js?v=11n"></script>
 <script src="table3d.js?v=135"></script>
 <script src="tables3d.js?v=49"></script>
@@ -1781,6 +1838,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=30"></script>
 <script src="updnews.js?v=7"></script>
 <script src="npc/npc.js?v=14"></script>
-<script src="app.js?v=247"></script>
+<script src="app.js?v=248"></script>
 </body>
 </html>
