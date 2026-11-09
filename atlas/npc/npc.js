@@ -16,7 +16,7 @@
   const A = window.AtlasNPC = window.AtlasNPC || {};
   if (A.skin) return;
   const SRC = (document.currentScript && document.currentScript.src) || location.href;
-  const BASE = new URL('./', SRC).href, ATLAS = new URL('../', BASE).href, IMG = new URL('../images/atlas/', ATLAS).href, V = '1';
+  const BASE = new URL('./', SRC).href, ATLAS = new URL('../', BASE).href, IMG = new URL('../images/atlas/', ATLAS).href, V = '2';
   const LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
   const loaded = {};
   const load = src => loaded[src] || (loaded[src] = new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); }));
@@ -29,9 +29,10 @@
   function ensure(lang) {
     const need = [];
     if (!A.BOSSES) need.push(load(BASE + 'roster.js?v=' + V));
-    if (!window.AtlasArt) need.push(load(ATLAS + 'art.js?v=7').catch(() => {}));
+    if (!window.AtlasArt) need.push(load(ATLAS + 'art.js?v=8').catch(() => {}));
     return Promise.all(need).then(() => load(BASE + 't/' + lang + '.js?v=' + V).catch(() => load(BASE + 't/en.js?v=' + V)));
   }
+  A.ensure = ensure; A.lang = () => langNow();
   const TX = () => (A.T && (A.T[langNow()] || A.T.en || A.T.ja)) || null;
   const avUrl = id => IMG + 'av/' + id + '.webp?v=1';
   const bossName = (b, l) => (b.n[l] || b.n.en);
@@ -39,11 +40,9 @@
 
   /* ---------------- look ---------------- */
   const CSS = `
-.npc-card{position:relative;display:flex;align-items:flex-end;gap:10px;min-height:74px;box-sizing:border-box;padding:9px 12px 9px 10px!important;margin:0!important;flex:none}
-.npc-card[hidden]{display:none!important}
 .npc-pic{flex:none;width:60px;height:60px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff,#ffe9b0);box-shadow:0 3px 0 rgba(0,0,0,.08);display:grid;place-items:center;overflow:hidden}
-.npc-card[data-who=boss] .npc-pic{background:radial-gradient(circle at 40% 35%,#fff,#ffd2c2)}
-.npc-card[data-who=boss].npc-ur .npc-pic{background:radial-gradient(circle at 40% 35%,#fff7d6,#ffb84a)}
+[data-who=boss] .npc-pic{background:radial-gradient(circle at 40% 35%,#fff,#ffd2c2)}
+[data-who=boss].npc-ur .npc-pic{background:radial-gradient(circle at 40% 35%,#fff7d6,#ffb84a)}
 .npc-pic img{width:122%;height:122%;object-fit:contain;transform:translateY(7%)}
 .npc-pic.talk{animation:npcTalk .42s ease-in-out 2}
 @keyframes npcTalk{50%{transform:translateY(-5px) scale(1.05,.95)}}
@@ -54,19 +53,14 @@
 [dir=rtl] .npc-bub::after{right:-7px;border-left:8px solid #fff}
 .npc-nm{display:flex;align-items:baseline;gap:8px;margin-bottom:2px;min-width:0}
 .npc-nm b{flex:none;max-width:60%;font-weight:900;font-size:13px;color:#b5651d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-.npc-card[data-who=fan] .npc-nm b{color:#3a7ac8}
+[data-who=fan] .npc-nm b{color:#3a7ac8}
 .npc-tag{flex:none;margin-inline-start:auto;font:800 10.5px/1.6 'Fredoka','Zen Maru Gothic',system-ui,sans-serif;letter-spacing:.04em;padding:0 8px;border-radius:99px;background:#f6ead2;color:#8a6a3a;white-space:nowrap}
-.npc-card[data-who=boss] .npc-tag{background:#ffe1d6;color:#b04a2a}
-.npc-card[data-who=fan] .npc-tag.tv{background:#dff0ff;color:#2a6aa8}
+[data-who=boss] .npc-tag{background:#ffe1d6;color:#b04a2a}
+[data-who=fan] .npc-tag.tv{background:#dff0ff;color:#2a6aa8}
 .npc-ttl{font-size:11px;line-height:1.5;font-weight:700;color:#9a8a70;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:-1px 0 2px}
 .npc-ttl:empty{display:none}
-.npc-card .npc-ttl{display:none}
-.npc-card .npc-nm small{flex:1 1 0;min-width:0;font-size:11px;font-weight:700;color:#9a8a70;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .npc-tx{font-size:14.5px;line-height:1.6;font-weight:700;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;min-height:3.1em}
 .npc-float .npc-ttl:empty + .npc-tx{min-height:calc(3.1em + 17px)}   /* the watcher has no title line: the bubble keeps its height */
-.npc-card .npc-tx{font-size:13.5px;line-height:1.55}
-.npc-card .npc-pic{width:52px;height:52px}
-@media (max-width:520px){.npc-card{min-height:70px;gap:8px;padding:8px 10px 8px 8px!important}.npc-pic{width:50px;height:50px}.npc-tx{font-size:13.5px;line-height:1.55}}
 html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
 /* the portal's own table: a bubble just above the action bar (left), gone again after a while */
 .npc-float{position:fixed;z-index:30;left:50%;bottom:calc(var(--npc-bot,96px) + 10px);width:min(600px,calc(100vw - 24px));display:flex;align-items:flex-end;gap:12px;pointer-events:none;opacity:0;transform:translate(-50%,14px);transition:opacity .3s,transform .4s cubic-bezier(.3,1.3,.5,1)}
@@ -87,7 +81,7 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
 .npc-toast img{width:64px;height:64px;flex:none;object-fit:contain}
 .npc-toast b{display:block;font-size:15px;color:#b5651d;font-weight:900}
 .npc-toast small{display:block;font-size:12px;color:#6a6a7a;font-weight:700;margin-top:2px}
-.npc-toast .sr{display:inline-block;margin-inline-end:6px;padding:0 7px;border-radius:99px;background:linear-gradient(180deg,#c07aff,#8a4ad8);color:#fff;font:800 11px/1.6 'Fredoka',system-ui,sans-serif}
+.npc-toast .sr{display:inline-block;margin-inline-end:6px;padding:0 7px;border-radius:99px;background:linear-gradient(180deg,#c07aff,#8a4ad8);color:#fff;font:800 11px/1.6 'Fredoka',system-ui,sans-serif}.npc-toast .sr.r0{background:linear-gradient(180deg,#b8bcc8,#8a90a0)}.npc-toast .sr.r1{background:linear-gradient(180deg,#5ab8ff,#2a7ad8)}
 `;
   let cssDone = false;
   const addCss = () => { if (cssDone) return; cssDone = true; const s = document.createElement('style'); s.textContent = CSS; document.head.appendChild(s); };
@@ -169,54 +163,29 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
       if (res !== 'd') later(() => fan(res === 'w' ? 'win' : 'lose'), 3600);
       if (res === 'w') grant();
     }
-    // beating a boss: its SR avatar (once)
+    // beating a boss: the 1st / 2nd / 3rd level of its three gives its N / R / SR avatar (once each)
     function grant() {
-      const id = 'av-' + A.bossId(game, S.bi) + '-2';
+      const t = A.tier(game, S.level), id = 'av-' + A.bossId(game, S.bi) + '-' + t;
       try {
         if (!window.Atlas || !Atlas.load) return;
         const W = Atlas.load(); if (!W || W.owned.includes(id)) return;
         W.owned.push(id); Atlas.save(W);
-        later(() => toast(id, bossName(S.boss, langNow())), 1200);
+        later(() => toast(id, bossName(S.boss, langNow()), t), 1200);
       } catch (e) {}
     }
     return { S, setLevel, step, end, newGame, relabel: () => ui.relabel && ui.relabel() };
   }
-  function toast(id, name) {
+  function toast(id, name, t) {
+    const R = ['N', 'R', 'SR'][t] || 'SR';
     addCss(); const X = TX(); if (!X) return;
     const el = document.createElement('div'); el.className = 'npc-toast'; el.setAttribute('role', 'status');
-    el.innerHTML = `<img src="${avUrl(id.slice(3))}" alt=""><div><b>${esc(X.ui.beat.replace('{name}', name))}</b><small><span class="sr">SR</span>${esc(X.ui.got.replace('{name}', name))}</small><small>${esc(X.ui.gacha.replace('{name}', name))}</small></div>`;
+    el.innerHTML = `<img src="${avUrl(id.slice(3))}" alt=""><div><b>${esc(X.ui.beat.replace('{name}', name))}</b><small><span class="sr r${t}">${R}</span>${esc(X.ui.got.replace('{name}', name).replace('SR', R))}</small><small>${esc(X.ui.gacha.replace('{name}', name))}</small></div>`;
     document.body.appendChild(el); requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('on')));
     setTimeout(() => { el.classList.remove('on'); setTimeout(() => el.remove(), 600); }, 5200);
     try { if (window.SFX && SFX.win) SFX.win(); } catch (e) {}
   }
 
   /* ---------------- UI: the card in the info column (skins) ---------------- */
-  function cardUI() {
-    addCss();
-    const el = document.createElement('div'); el.className = 'card npc-card'; el.hidden = true; el.setAttribute('aria-live', 'polite');
-    el.innerHTML = '<div class="npc-pic"><img alt=""></div><div class="npc-bub"><div class="npc-nm"><b></b><small></small><span class="npc-tag"></span></div><div class="npc-tx"></div></div>';
-    const img = el.querySelector('img'), nm = el.querySelector('.npc-nm b'), tag = el.querySelector('.npc-tag'), tx = el.querySelector('.npc-tx'), pic = el.querySelector('.npc-pic'), ttl = el.querySelector('.npc-nm small');
-    let meta = null;
-    const place = () => {
-      const app = document.querySelector('.app'), side = app && (app.querySelector(':scope > .side > .side-in') || app.querySelector(':scope > .side') || app.querySelector('.side'));
-      if (side && el.parentElement !== side) { side.prepend(el); const cs = getComputedStyle(side), gp = parseFloat(cs.rowGap) || 0; el.style.setProperty('margin-bottom', /flex|grid/.test(cs.display) && gp > 0 ? '0' : '12px', 'important'); }
-      return !!side;
-    };
-    return {
-      el, place,
-      say(who, html, m) {
-        if (!place()) return;
-        meta = m; el.dataset.who = who; el.classList.toggle('npc-ur', !!m.ur);
-        if (img.getAttribute('src') !== m.img) img.src = m.img;
-        nm.textContent = m.name; tag.textContent = m.tag; tag.classList.toggle('tv', !!m.tv); ttl.textContent = m.title || '';
-        tx.innerHTML = html;
-        el.hidden = false;
-        pic.classList.remove('talk'); void pic.offsetWidth; pic.classList.add('talk');
-      },
-      hide() { el.hidden = true; },
-      relabel() { /* language changed: names follow on the next line */ },
-    };
-  }
   /* ---------------- UI: the floating bubble (portal table) ---------------- */
   // o.bottom() → px from the bottom of the window (default: over the portal's action bar)
   function floatUI(o = {}) {
@@ -230,6 +199,7 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
       el,
       say(who, html, m) {
         try { const b = o.bottom ? o.bottom() : window.__tbar && __tbar.band; if (b) el.style.setProperty('--npc-bot', Math.round(b) + 'px'); } catch (e) {}
+        try { const l = o.left && o.left(); el.style.left = l ? Math.round(l[0]) + 'px' : ''; el.style.width = l ? `min(600px, ${Math.round(l[1] - 24)}px)` : ''; } catch (e) {}
         el.dataset.who = who; el.classList.toggle('npc-ur', !!m.ur);
         if (img.getAttribute('src') !== m.img) img.src = m.img;
         nm.textContent = m.name; tag.textContent = m.tag; tag.classList.toggle('tv', !!m.tv); ttl.textContent = m.title || ''; tx.innerHTML = html;
@@ -241,20 +211,21 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
     };
   }
 
-  /* ---------------- UI on the skins: the card in the info column on PC, a bubble over the bottom tabs on phones ----------------
-     (phones: the boxes under the board are the coach / 形勢 … tabs — a card there would push them down, so the
-     guide speaks in a bubble just above the bottom tab bar instead and steps away again after a few seconds) */
+  /* ---------------- UI on the skins: the same bubble as the portal's, stepping away again after a few seconds ----------------
+     PC: centred on the board, just above the online dock's bar; phones: just above the bottom tab bar (cards in the
+     info column pushed the boxes around) */
   function skinUI() {
     const PC = matchMedia((window.HeaderBar && HeaderBar.MEDIA) || '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4)');
-    const card = cardUI(), fl = floatUI({ body: true, bottom: () => { const t = [...document.querySelectorAll('.mtabs, #mtabs')].find(e => e.getClientRects().length && getComputedStyle(e).position === 'fixed'); return t ? innerHeight - t.getBoundingClientRect().top + 4 : 12; } });
+    const vis = e => e && e.getClientRects().length && getComputedStyle(e).display !== 'none';
+    const fl = floatUI({ body: true,
+      // PC: just above the online dock's bar, over the board's lower edge; phones: just above the bottom tab bar
+      bottom: () => {
+        if (PC.matches) { const d = document.getElementById('dock') || document.querySelector('.dock'); return vis(d) ? innerHeight - d.getBoundingClientRect().top + 6 : 16; }
+        const t = [...document.querySelectorAll('.mtabs, #mtabs')].find(e => vis(e) && getComputedStyle(e).position === 'fixed'); return t ? innerHeight - t.getBoundingClientRect().top + 4 : 12;
+      },
+      left: () => { if (!PC.matches) return null; const h = document.getElementById('atlasGL'); if (!vis(h)) return null; const r = h.getBoundingClientRect(); return [r.left + r.width / 2, r.width]; } });
     fl.el.classList.add('npc-skin');
-    let last = null;
-    const route = () => { if (!last) return; if (PC.matches) { fl.hide(); card.say(...last); } else { card.hide(); } };
-    PC.addEventListener('change', route);
-    return {
-      say(who, html, m) { last = [who, html, m]; if (PC.matches) card.say(who, html, m); else { card.hide(); fl.say(who, html, m); } },
-      hide() { last = null; card.hide(); fl.hide(); },
-    };
+    return { say: fl.say, hide: fl.hide };
   }
 
   /* ---------------- reading the game's own state (skins) ----------------
