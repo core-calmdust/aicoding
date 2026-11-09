@@ -290,15 +290,40 @@
     return (geos.surf = g);
   }
 
+  /* ---------- the gaming RGB of the night board ----------
+     rgbify(material, mode): the glow is redrawn in a rainbow that flows with the clock (RGB.uT, seconds; set as the board is drawn).
+     'uv' the surface (hue by the angle round the centre + the distance out), 'local' a tube / ring (hue along its own x, or round
+     its own centre for a ring), 'halo' the flash ring of a man (a MeshBasicMaterial: the whole colour). The brightness stays the
+     material's own: only the hue is replaced. */
+  const RGB = { uT: { value: 0 } };
+  const HUE = 'vec3 crHue(float h){return clamp(abs(mod(h*6.0+vec3(0.0,4.0,2.0),6.0)-3.0)-1.0,0.0,1.0);}\n';
+  function rgbify(m, mode) {
+    m.customProgramCacheKey = () => 'crRGB' + mode;
+    m.onBeforeCompile = sh => {
+      sh.uniforms.uT = RGB.uT;
+      if (mode !== 'uv') {
+        sh.vertexShader = 'varying vec3 vCrP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvCrP = position;');
+      }
+      sh.fragmentShader = 'uniform float uT;\n' + (mode !== 'uv' ? 'varying vec3 vCrP;\n' : '') + HUE + sh.fragmentShader;
+      const hue = mode === 'uv' ? 'vec2 crp = vUv - 0.5; float crh = atan(crp.y, crp.x) / 6.2831853 + length(crp) * 0.9 - uT * 0.16;'
+        : mode === 'ring' ? 'float crh = atan(vCrP.z, vCrP.x) / 6.2831853 - uT * 0.5;'
+        : mode === 'halo' ? 'float crh = atan(vCrP.z, vCrP.x) / 6.2831853 + uT * 1.4;'
+        : 'float crh = vCrP.x * 0.12 - uT * 0.3;';
+      if (mode === 'halo') sh.fragmentShader = sh.fragmentShader.replace('gl_FragColor = vec4( outgoingLight, diffuseColor.a );', '{ ' + hue + ' outgoingLight = crHue(fract(crh)) * 1.15; }\ngl_FragColor = vec4( outgoingLight, diffuseColor.a );');
+      else sh.fragmentShader = sh.fragmentShader.replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n{ ' + hue + ' float crL = max(max(totalEmissiveRadiance.r, totalEmissiveRadiance.g), totalEmissiveRadiance.b); totalEmissiveRadiance = crHue(fract(crh)) * crL * 1.2; }');
+    };
+    return m;
+  }
+
   /* ---------- materials ---------- */
   function boardMats(look) {
     const TT = T();
     if (look === 'neon') return mat('bm' + look, () => {
-      const glowM = c => { const m = phys({ color: '#000000', roughness: .4, metalness: 0 }); m.emissive = lin(c); m.emissiveIntensity = 1.6; return m; };
-      const st = surfaceTex(look), surf = phys({ map: st, color: '#ffffff', roughness: .25, metalness: 0, clearcoat: .9, clearcoatRoughness: .1, envMapIntensity: .5 });
-      surf.emissiveMap = st; surf.emissive = new TT.Color(.75, .75, .75);   // the drawn tubes glow; the black stays black
+      const glowM = (c, mode) => { const m = phys({ color: '#000000', roughness: .4, metalness: 0 }); m.emissive = lin(c); m.emissiveIntensity = 1.6; return rgbify(m, mode); };
+      const st = surfaceTex(look), surf = phys({ map: st, color: '#4a4a4a', roughness: .25, metalness: 0, clearcoat: .9, clearcoatRoughness: .1, envMapIntensity: .5 });
+      surf.emissiveMap = st; surf.emissive = new TT.Color(.95, .95, .95); rgbify(surf, 'uv');   // (a dim base colour under it: the glow's rainbow stays saturated)   // the drawn tubes glow in a flowing rainbow; the black stays black
       return { surf, frame: phys({ color: '#0b0c14', roughness: .22, metalness: 0, clearcoat: 1, clearcoatRoughness: .08, envMapIntensity: 1 }),
-        edge: glowM('#3ce6ff'), rim: glowM('#ff3fb4'), cup: phys({ color: '#05050a', roughness: .9 }), net: phys({ map: netTex(), color: '#ffffff', roughness: 1 }) };
+        edge: glowM('#ffffff', 'local'), rim: glowM('#ffffff', 'ring'), cup: phys({ color: '#05050a', roughness: .9 }), net: phys({ map: netTex(), color: '#ffffff', roughness: 1 }) };
     });
     if (look === 'rajasthan') return mat('bm' + look, () => {
       const fw = X.wood('crSheesham', '#5a3418', '#1e0e05', SZ(1024), SZ(256), 1.2); fw.wrapS = fw.wrapT = TT.RepeatWrapping;
@@ -354,12 +379,21 @@
     if (look === 'modern' && striker) { const ring = new TT.Mesh(geos.ring || (geos.ring = (() => { const q = new TT.TorusGeometry(r - .004, .006, 6, 36); q.rotateX(Math.PI / 2); if (X.share) X.share(q); return q; })()), boardMats('modern').brass); ring.position.y = h * .55; g.add(ring); }
     g.userData = { c, r, h };
     if (neon) {   // a hit lights the man up: its face glows hard and a halo flares round it (flash(k), k 1 → 0)
-      const col = { w: '#3ce6ff', b: '#ff3fb4', q: '#ff4fbd', s: '#9ff4ff' }[c];
-      const hm = new TT.MeshBasicMaterial({ color: lin(col), transparent: true, opacity: 0, blending: TT.AdditiveBlending, depthWrite: false });
+      // an RGB LED ring round the rim (dim at rest), and a rainbow halo that spins out from the man when it is hit
+      const lm = rgbify(phys({ color: '#000000', roughness: .4, metalness: 0 }), 'ring'); lm.emissive = new TT.Color(1, 1, 1); lm.emissiveIntensity = .55;
+      const led = new TT.Mesh(geos['led' + c] || (geos['led' + c] = (() => { const q = new TT.TorusGeometry(r + .002, .007, 6, LO() ? 28 : 44); q.rotateX(Math.PI / 2); if (X.share) X.share(q); return q; })()), lm);
+      led.position.y = h * .5; g.add(led);
+      const hm = rgbify(new TT.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, blending: TT.AdditiveBlending, depthWrite: false }), 'halo');
+      const wm = rgbify(new TT.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, blending: TT.AdditiveBlending, depthWrite: false }), 'halo');
       const halo = new TT.Mesh(geos.halo || (geos.halo = (() => { const q = new TT.RingGeometry(.5, 1, LO() ? 24 : 40); q.rotateX(-Math.PI / 2); if (X.share) X.share(q); return q; })()), hm);
       halo.position.y = h + .002; halo.visible = false; halo.renderOrder = 3; g.add(halo);
+      const wave = new TT.Mesh(geos.halo, wm); wave.position.y = .006; wave.visible = false; wave.renderOrder = 3; g.add(wave);   // a thin shock ring on the board
       const e0 = top.emissive.clone();
-      g.userData.flash = k => { k = Math.max(0, Math.min(1, k)); top.emissive.copy(e0).multiplyScalar(1 + 3.5 * k); halo.visible = k > .01; hm.opacity = k; const sc = r * (1.25 + (1 - k) * 1.3); halo.scale.set(sc, 1, sc); };
+      g.userData.flash = k => {
+        k = Math.max(0, Math.min(1, k)); top.emissive.copy(e0).multiplyScalar(1 + 3.5 * k); lm.emissiveIntensity = .55 + 4 * k;
+        halo.visible = wave.visible = k > .01; hm.opacity = k; wm.opacity = .7 * k * k;
+        const sc = r * (1.25 + (1 - k) * 1.3), sw = r * (1.4 + (1 - k) * 3.2); halo.scale.set(sc, 1, sc); wave.scale.set(sw, 1, sw);
+      };
     }
     return g;
   }
@@ -372,7 +406,7 @@
     const surf = new TT.Mesh(surfaceGeo(), BM.surf); surf.position.y = TOP; surf.receiveShadow = true; g.add(surf);
     if (look === 'neon') {   // the breathing light, read from the clock as the surface is drawn (kept out of the showcase's merge)
       surf.userData.keep = true; const s0 = BM.surf.emissive.r;
-      surf.onBeforeRender = () => { const k = neonK(performance.now()); BM.surf.emissive.setScalar(s0 * (.7 + 1.1 * k)); BM.edge.emissiveIntensity = BM.rim.emissiveIntensity = 1.2 * (1 + 1.6 * k); };   // (a little dimmer at rest, so the wave stands out)
+      surf.onBeforeRender = () => { const k = neonK(performance.now()); RGB.uT.value = performance.now() / 1000; BM.surf.emissive.setScalar(s0 * (.7 + 1.1 * k)); BM.edge.emissiveIntensity = BM.rim.emissiveIntensity = 1.2 * (1 + 1.6 * k); };   // (a little dimmer at rest, so the wave stands out)
     }
     // a base under the surface (seen through the pockets' rims) and the pocket cups with their nets
     const base = new TT.Mesh(new TT.BoxGeometry(2 * S, .04, 2 * S), BM.cup); base.position.y = .03; g.add(base);

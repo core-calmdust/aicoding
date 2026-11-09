@@ -303,7 +303,7 @@
 
     /* ---------- the AI (a worker; the page thinks itself if workers are unavailable) ---------- */
     let worker = null, wid = 0; const pend = {};
-    try { worker = new Worker('../carrom/worker.js?v=1'); worker.onmessage = e => { const d = e.data || {}, f = pend[d.id]; if (f) { delete pend[d.id]; f(d.shot || null); } }; worker.onerror = () => { worker = null; Object.keys(pend).forEach(k => { const f = pend[k]; delete pend[k]; f(null); }); }; } catch (e) { worker = null; }
+    try { worker = new Worker('../carrom/worker.js?v=2'); worker.onmessage = e => { const d = e.data || {}, f = pend[d.id]; if (f) { delete pend[d.id]; f(d.shot || null); } }; worker.onerror = () => { worker = null; Object.keys(pend).forEach(k => { const f = pend[k]; delete pend[k]; f(null); }); }; } catch (e) { worker = null; }
     function think(s, lv) {
       const seed = (Math.random() * 1e9) | 0;
       return new Promise(res => {
@@ -359,7 +359,10 @@
           while (ev < sim.events.length && sim.events[ev].t <= el) {
             const e = sim.events[ev++];
             if (e.k === 'hit' && e.v > 8) SND.hit(e.v); else if (e.k === 'cush' && e.v > 25) SND.cush(e.v); else if (e.k === 'pocket') SND.pocket();
-            if (e.k === 'hit' && e.v > 4) { flash(e.a === N ? striker : pcs[e.a], e.v); flash(e.b === N ? striker : pcs[e.b], e.v); }
+            const pg = i => i == null ? null : i === N ? striker : pcs[i];   // (neon: everything a man touches lights it up)
+            if (e.k === 'hit' && e.v > 4) { flash(pg(e.a), e.v); flash(pg(e.b), e.v); }
+            else if (e.k === 'cush' && e.v > 6) flash(pg(e.i), e.v);
+            else if (e.k === 'pocket') flash(pg(e.i), 200);
           }
           kick(120);
           if (fi < F.length - 1 || Object.values(sinks).some(s => el - s.t < .22)) requestAnimationFrame(step);
