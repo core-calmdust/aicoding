@@ -1580,6 +1580,10 @@
     el.querySelector('[data-go=ach]').onclick = () => go('ach');
     el.querySelector('[data-wk]').onclick = e => { ncWk = !ncWk; el.classList.toggle('wk', ncWk); e.currentTarget.setAttribute('aria-expanded', ncWk); };
     $('dpName').onchange = e => setName(e.target.value);
+    // wearing an SSR / UR (icon, background or frame): the name card gets the same running light and glow
+    const top = Math.max(-1, ...['icon', 'bg', 'frame'].map(k => { const it = ART.byId(W.av[k]); return it ? it.rar : -1; }));
+    el.classList.toggle('nr3', top === 3); el.classList.toggle('nr4', top === 4);
+    if (top >= 3) el.insertAdjacentHTML('beforeend', `<i class="rfx ${top === 4 ? 'u' : 's'}"></i><i class="ntw"></i>`);
     renderAcc();
     renderMini();
   }
@@ -1621,14 +1625,21 @@
     const all = ART.items.filter(it => it.kind === dKind);
     // the rarity pulldown (left of the sort): only one rarity, or every one
     const rars = [...new Set(all.map(it => it.rar))].sort((a, b) => a - b); if (dRar >= 0 && !rars.includes(dRar)) dRar = -1;
-    $('drar').setAttribute('aria-label', t('dress.rar.h')); $('drar').title = t('dress.rar.h');
-    $('drar').innerHTML = [-1].concat(rars).map(r => `<option value="${r}"${dRar === r ? ' selected' : ''}>${r < 0 ? esc(t('dress.rar.all')) : ART.RAR[r]}</option>`).join('');
-    $('drar').className = dRar < 0 ? '' : 'r' + dRar;
-    $('drar').onchange = e => { dRar = +e.target.value; try { localStorage.setItem('atlas-drar', dRar); } catch (x) {} renderDress(); };
+    const rName = r => r < 0 ? esc(t('dress.rar.all')) : ART.RAR[r], btn = $('drar'), pop = $('drarPop');
+    btn.setAttribute('aria-label', t('dress.rar.h')); btn.title = t('dress.rar.h');
+    btn.innerHTML = rName(dRar); btn.className = dRar < 0 ? '' : 'r' + dRar;
+    const openRar = on => { pop.hidden = !on; btn.setAttribute('aria-expanded', on);
+      if (on) { pop.innerHTML = [-1].concat(rars).map(r => `<button type="button" role="option" data-r="${r}" aria-selected="${dRar === r}"><i>${dRar === r ? '✓' : ''}</i><b class="${r < 0 ? 'all' : 'r' + r}">${rName(r)}</b></button>`).join('');
+        pop.querySelectorAll('[data-r]').forEach(b => b.onclick = e => { e.stopPropagation(); openRar(false); const v = +b.dataset.r; if (v !== dRar) { dRar = v; try { localStorage.setItem('atlas-drar', dRar); } catch (x) {} renderDress(); } }); } };
+    btn.onclick = e => { e.stopPropagation(); openRar(pop.hidden); };
+    if (!renderDress.rarDoc) { renderDress.rarDoc = 1;   // close on a tap elsewhere / Esc
+      document.addEventListener('click', e => { const p = $('drarPop'); if (p && !p.hidden && !p.contains(e.target)) { p.hidden = true; $('drar').setAttribute('aria-expanded', false); } });
+      document.addEventListener('keydown', e => { const p = $('drarPop'); if (e.key === 'Escape' && p && !p.hidden) { p.hidden = true; $('drar').setAttribute('aria-expanded', false); } }); }
+    openRar(false);
     const list = (dSort === 'own' ? all.filter(ownd) : all).filter(it => dRar < 0 || it.rar === dRar).sort((a, b) => (dSort === 'rarD' ? b.rar - a.rar : a.rar - b.rar) || (ownd(b) - ownd(a)) || idx.get(a.id) - idx.get(b.id));
     const sec = r => { const of = all.filter(it => it.rar === r); return `<div class="dsec r${r}"><span class="rar r${r}">${ART.RAR[r]}</span><span class="dsn">${of.filter(ownd).length} / ${of.length}</span></div>`; };
     const cell = it => { const own = W.owned.includes(it.id), on = W.av[slot] === it.id;
-      return `<button type="button" class="dic r${it.rar}${own ? '' : ' locked'}${on ? ' sel' : ''}" data-kind="${it.kind}" data-id="${it.id}" title="${esc(iname(it))}" aria-label="${esc(iname(it))} (${ART.RAR[it.rar]})" aria-pressed="${on}"><span class="art">${ART.svg(it.id)}</span><span class="rl">${ART.RAR[it.rar]}</span>${own ? '' : '<span class="lk" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5" fill="currentColor"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" fill="none" stroke="currentColor" stroke-width="2.6"/></svg></span>'}</button>`; };
+      return `<button type="button" class="dic r${it.rar}${own ? '' : ' locked'}${on ? ' sel' : ''}" data-kind="${it.kind}" data-id="${it.id}" title="${esc(iname(it))}" aria-label="${esc(iname(it))} (${ART.RAR[it.rar]})" aria-pressed="${on}">${own && it.rar >= 3 ? `<i class="rfx ${it.rar === 4 ? 'u' : 's'}"></i>` : ''}<span class="art">${ART.svg(it.id)}</span><span class="rl">${ART.RAR[it.rar]}</span>${own ? '' : '<span class="lk" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5" fill="currentColor"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" fill="none" stroke="currentColor" stroke-width="2.6"/></svg></span>'}</button>`; };
     // rarity sorts: one rounded box per rarity, tinted in its colour, its heading (badge · owned / all) on the box's top edge
     const groups = []; if (dSort !== 'own') list.forEach(it => { const g = groups[groups.length - 1]; if (g && g.r === it.rar) g.items.push(it); else groups.push({ r: it.rar, items: [it] }); });
     $('dItems').classList.toggle('grouped', dSort !== 'own' && !!list.length);
@@ -1640,6 +1651,11 @@
       if (!W.owned.includes(id)) c.onclick = () => dressInfo(ART.byId(id));
       else if (W.av[slot] === id) c.onclick = () => pokeAvatar();
       else c.onclick = () => { W.av[slot] = id; A_.save(W); renderDress(); pokeAvatar(true); }; });
+    // SSR / UR cells animate only while on screen (hundreds of them otherwise run at once)
+    if (renderDress.io) renderDress.io.disconnect();
+    const fx = $('dItems').querySelectorAll('.dic.r3:not(.locked),.dic.r4:not(.locked)');
+    if (fx.length && window.IntersectionObserver) { renderDress.io = new IntersectionObserver(es => es.forEach(e => e.target.classList.toggle('vis', e.isIntersecting)), { rootMargin: '80px' }); fx.forEach(c => renderDress.io.observe(c)); }
+    else fx.forEach(c => c.classList.add('vis'));
   }
   // phone: keep the fixed kind tabs (#dseg) sitting right on top of the bottom tab bar, whatever its height
   function dsegPos() {
