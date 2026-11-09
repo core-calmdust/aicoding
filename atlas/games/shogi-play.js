@@ -90,8 +90,8 @@
 .sghs .op .c{transform:none}
 .sghs button.c{cursor:pointer}.sghs button.c.on{background:#bdf0d2;border-color:#2fa864;box-shadow:0 2px 0 #1f7a46}
 .sghs .c i{position:absolute;right:-6px;top:-6px;min-width:17px;height:17px;border-radius:9px;background:#2a1a0e;color:#fff;font:800 11px/17px system-ui,sans-serif;font-style:normal;text-align:center;padding:0 3px}
-.sgzoom{position:fixed;z-index:75;top:calc(66px + env(safe-area-inset-top));right:14px;display:flex;align-items:center;gap:5px;padding:7px 12px 7px 9px;border-radius:999px;border:2px solid var(--line,#eadfcb);background:#fff;box-shadow:0 3px 0 var(--line,#eadfcb);font:800 13px/1 var(--round,system-ui,sans-serif);color:#3a2e24;cursor:pointer}
-.sgzoom svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.sgzoom{position:fixed;z-index:75;top:calc(66px + env(safe-area-inset-top));right:14px;display:grid;place-items:center;width:44px;height:44px;padding:0;border-radius:50%;border:2px solid var(--line,#eadfcb);background:#fff;box-shadow:0 3px 0 var(--line,#eadfcb);font:800 13px/1 var(--round,system-ui,sans-serif);color:#3a2e24;cursor:pointer}
+.sgzoom svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .sghs .nil{color:rgba(255,255,255,.8);font-weight:800;text-shadow:0 1px 2px rgba(0,0,0,.4)}`;
     document.head.appendChild(s);
   }
@@ -491,7 +491,8 @@
       if (!region) { if (zbtn) { zbtn.remove(); zbtn = null; } return; }
       if (!zbtn) { zbtn = document.createElement('button'); zbtn.type = 'button'; zbtn.className = 'sgzoom'; (document.body).appendChild(zbtn);
         zbtn.onclick = e => { e.stopPropagation(); zoomOn = !zoomOn; pan = [0, 0]; zoomBtn(); layout(); }; }
-      zbtn.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${zoomOn ? '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>' : '<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5M8 10.5h5M10.5 8v5"/>'}</svg>${zoomOn ? L[0] : L[1]}`;
+      zbtn.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${zoomOn ? '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>' : '<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5M8 10.5h5M10.5 8v5"/>'}</svg>`;   // (icon only, 2026-11-10)
+      zbtn.setAttribute('aria-label', zoomOn ? L[0] : L[1]); zbtn.title = zoomOn ? L[0] : L[1];
     }
     function pzZoom() { region = pzRegion(); zoomOn = true; pan = [0, 0]; zoomBtn(); layout(); }
     const pz = {
