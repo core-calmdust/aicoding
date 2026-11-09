@@ -1475,6 +1475,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 .bvi .opts #bvHouse b{font-size:11px;min-width:18px;height:18px;box-sizing:border-box;display:inline-grid;place-items:center;padding:0 5px;border-radius:99px;background:var(--coral);color:#fff;line-height:1}.bvi .opts #bvHouse b:empty{display:none}
 .bvi .opts #bvHouse i{font-style:normal;font-size:17px;line-height:1}
 .bvi .opts label:has(.sidetg){flex:none!important}.bvi .opts label:has(.lvpick){min-width:0;flex:1 1 auto!important}
+.bvi #bvOpts:has(> label .lvpick):has(> label .sidetg):not(:has(.sidetg button:nth-child(3))){flex-wrap:nowrap}.bvi #bvOpts:has(> label .sidetg) > label:has(.lvpick){flex:1 1 0!important}   /* AIの強さ + 手番(2つ) always on one line, whatever the level's name/avatar (2026-11-09) */
 .bvi .sidetg{flex:none;overflow:hidden}.bvi .sidetg button{flex:none;padding-inline:12px}
 /* board size + time control on one row (go) */
 .bvi .tcrow:has(#bvSize){flex-wrap:nowrap!important;gap:10px!important}.bvi .tcrow:has(#bvSize) label{gap:6px}
@@ -1626,7 +1627,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 <script src="texgen.js?v=1"></script>
 <script src="npc/roster.js?v=2"></script>
 <script src="art.js?v=8"></script>
-<script src="../shared/atlas.js?v=20261109npc"></script>
+<script src="../shared/atlas.js?v=20261109cr9"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261101fa1"></script>
 <script src="i18n.js?v=59n"></script>
@@ -1665,7 +1666,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 <script src="games/shogi-play.js?v=18"></script>
 <script src="games/shogi.js?v=14"></script>
 <script src="games/chess.js?v=12"></script>
-<script src="games/backgammon.js?v=20"></script>
+<script src="games/backgammon.js?v=21"></script>
 <script src="games/gomoku.js?v=11"></script>
 <script src="games/morris-pieces.js?v=2"></script>
 <script src="games/morris.js?v=6"></script>
