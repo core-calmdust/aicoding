@@ -238,7 +238,13 @@ function renderPlayers() {
     const home = s.pos[seat].filter(p => p >= LAST).length;
     const team = s.rule === 'pachisi' ? `<span class="tm">${t('p.team')} ${s.team[seat] ? 'B' : 'A'}</span>` : '';
     return `<div class="seat${seat === s.turn && !s.over ? ' on' : ''}"><span class="dot" style="background:${seatColor(seat)}"></span><div style="min-width:0"><div class="nm">${seatName(seat)}${team}</div><div class="sb">${colName(seat)}</div></div><span class="hm">${t('p.home', { n: home, m: 4 })}</span></div>`;
-  }).join('');
+  }).join('') + houseTagsInPlay();
+}
+// the house rules of the game being played (ludo, changed from the usual) as tags under the players (2026-11-09)
+function houseTagsInPlay() {
+  const s = G && G.state, h = s && s.rule === 'ludo' && s.opt && s.opt.h;
+  if (!h || !window.LudoHouse || !LudoHouse.tagsHTML) return '';
+  const x = LudoHouse.tagsHTML(LANG, Object.assign({}, LudoHouse.DEF, h)); return x ? `<div class="hr-tags">${x}</div>` : '';
 }
 function setStatus(s) { $('#status').textContent = s || ''; }
 function renderKifu() {

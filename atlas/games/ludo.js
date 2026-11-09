@@ -380,7 +380,7 @@
 
     /* ---------- HUD ---------- */
     const css = document.createElement('style');
-    css.textContent = '.ldzoom{position:absolute;z-index:4;right:12px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.92);color:#3a3f55;box-shadow:0 3px 10px rgba(0,0,0,.22);display:grid;place-items:center;cursor:pointer;padding:0}.ldzoom svg{width:22px;height:22px}.ldzoom[hidden]{display:none}.ldzoom.off{color:#e0662a}' + '.hud .ldb{padding:8px 16px;font-size:15px;white-space:nowrap}.hud .lds{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:99px;font-weight:800;font-size:13px;opacity:.6;white-space:nowrap}.hud .lds.on{opacity:1;background:rgba(255,255,255,.9);box-shadow:0 2px 8px rgba(0,0,0,.15)}.hud .lds i{width:14px;height:14px;border-radius:50%;display:inline-block;flex:none;box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.25)}.hud .ldm{font-weight:800;font-size:13px;max-width:46vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ldtoast{position:fixed;left:50%;top:calc(76px + env(safe-area-inset-top));transform:translateX(-50%);z-index:90;max-width:min(92vw,520px);padding:9px 18px;border-radius:99px;background:#2b3044;color:#fff;font-weight:900;font-size:14px;box-shadow:0 8px 22px rgba(0,0,0,.3);pointer-events:none;white-space:nowrap}@media (max-width:560px){.hud .ldb{padding:7px 11px;font-size:13px}.hud .lds{padding:3px 6px;font-size:12px}.hud .lds .nm{display:none}}';
+    css.textContent = '.ldhr{position:absolute;z-index:4;left:12px;top:calc(var(--ldhr-top,72px));max-width:min(560px,calc(100% - 24px));display:flex;flex-wrap:wrap;gap:6px;pointer-events:none;--lhr-tag-bg:rgba(255,253,246,.94);--lhr-tag-bd:#efe3c8;--lhr-tag-fg:#2b3044}.ldhr .lhr-tag{box-shadow:0 2px 0 #efe3c8}' + '.ldzoom{position:absolute;z-index:4;right:12px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.92);color:#3a3f55;box-shadow:0 3px 10px rgba(0,0,0,.22);display:grid;place-items:center;cursor:pointer;padding:0}.ldzoom svg{width:22px;height:22px}.ldzoom[hidden]{display:none}.ldzoom.off{color:#e0662a}' + '.hud .ldb{padding:8px 16px;font-size:15px;white-space:nowrap}.hud .lds{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:99px;font-weight:800;font-size:13px;opacity:.6;white-space:nowrap}.hud .lds.on{opacity:1;background:rgba(255,255,255,.9);box-shadow:0 2px 8px rgba(0,0,0,.15)}.hud .lds i{width:14px;height:14px;border-radius:50%;display:inline-block;flex:none;box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.25)}.hud .ldm{font-weight:800;font-size:13px;max-width:46vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ldtoast{position:fixed;left:50%;top:calc(76px + env(safe-area-inset-top));transform:translateX(-50%);z-index:90;max-width:min(92vw,520px);padding:9px 18px;border-radius:99px;background:#2b3044;color:#fff;font-weight:900;font-size:14px;box-shadow:0 8px 22px rgba(0,0,0,.3);pointer-events:none;white-space:nowrap}@media (max-width:560px){.hud .ldb{padding:7px 11px;font-size:13px}.hud .lds{padding:3px 6px;font-size:12px}.hud .lds .nm{display:none}}';
     document.head.appendChild(css);
     let toastEl = null, toastT = 0;
     function toast(m) { if (toastEl) toastEl.remove(); clearTimeout(toastT); if (!m || stopped) return; toastEl = document.createElement('div'); toastEl.className = 'ldtoast'; toastEl.textContent = m; document.body.appendChild(toastEl); const el = toastEl; toastT = setTimeout(() => { el.remove(); if (toastEl === el) toastEl = null; }, 1500); }
@@ -499,6 +499,12 @@
     const LH = window.LudoHouse;   // the house rules (ludo/house.js — the same settings as the 2D game; pachisi keeps its traditional rules)
     st = E.newGame(rule === 'ludo' && LH ? { rule, players, first: 0, house: LH.get() } : { rule, players, first: 0, blocks: false, threeSixes: true });
     build(); restDie(0, 6);
+    // the house rules in play (changed from the usual) as tags at the top-left of the table (2026-11-09)
+    let hrEl = null;
+    try {
+      const h = rule === 'ludo' && LH && LH.tagsHTML && st.opt && st.opt.h, x = h ? LH.tagsHTML(ctx.lang, Object.assign({}, LH.DEF, h)) : '';
+      if (x) { hrEl = document.createElement('div'); hrEl.className = 'ldhr'; hrEl.innerHTML = x; (ctx.el.parentNode || document.body).appendChild(hrEl); }
+    } catch (e) {}
     loadTexts().then(I => {
       if (stopped) return;
       S = Object.assign({}, I.en || {}, I[ctx.lang] || {});
@@ -533,7 +539,7 @@
       stop() {
         stopped = true; tok++; timers.forEach(clearTimeout); clearInterval(pulse);
         ctx.el.removeEventListener('click', onClick); document.removeEventListener('click', onHud, true); document.removeEventListener('keydown', onKey);
-        css.remove(); if (toastEl) toastEl.remove(); if (zoomBtn) zoomBtn.remove(); removeEventListener('resize', onResize);
+        css.remove(); if (toastEl) toastEl.remove(); if (zoomBtn) zoomBtn.remove(); if (hrEl) hrEl.remove(); removeEventListener('resize', onResize);
         Object.values(MAT).forEach(m => m.dispose()); if (cupG) cupG.userData.mats.forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose());
       },
       _debug: { st: () => st, phase: () => phase, moves: () => moves, thr: () => thr, roll: () => doRoll(), commit: m => commit(m), at: (gx, gy) => { const [x, z] = wx(gx, gy); return T3.project(x, z, Y); }, piece: key => { const g = pcs[key]; return g && T3.project(g.position.x, g.position.z, Y); }, geo },
