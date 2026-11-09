@@ -781,6 +781,8 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 // A game adds its own items with
 //   const h = HeaderBar.addOption({ id: 'mt', icon: '<svg…>', label: { ja: 'マルチスレッド', en: 'Multi-thread', … },
 //     type: 'toggle', get: () => on, set: v => { on = v; } });      // or type: 'button', onClick: () => …
+//     or type: 'select', options: [{ v, label: {…} }, …] (or a function), get: () => v, set: v => …  — a pulldown at the row's end
+//     (the language row's look; the list opens under it, upward when there is no room)
 //   h.sync() (redraw its state), h.remove();   optional: hidden: () => true to leave it out for now, title: {…} (tooltip)
 const OT = {
   opts: { ja: 'オプション', en: 'Options', zh: '选项', 'zh-TW': '選項', ko: '옵션', es: 'Opciones', fr: 'Options', pt: 'Opções', de: 'Optionen', ru: 'Параметры', tr: 'Seçenekler', id: 'Opsi', hi: 'विकल्प', ar: 'خيارات' },
@@ -825,6 +827,19 @@ html[dir=rtl] .hbo-row.on .hbo-sw::after,html[lang=ar] .hbo-row.on .hbo-sw::afte
 .hbo-pop .hbo-end .lsel-btn > svg:first-child{display:none}
 .hbo-pop .hbo-end .lsel-btn .lsel-n{display:inline!important}.hbo-pop .hbo-end .lsel-btn .lsel-c{display:none!important}
 .hbo-pop .hbo-end select{height:34px;max-width:none}
+.hbo-x.sel{cursor:default}
+.hbo-sbtn{display:inline-flex;align-items:center;gap:6px;height:34px;box-sizing:border-box;padding:0 10px;border:1px solid var(--line,rgba(127,127,127,.35));border-radius:9px;background:none;color:inherit;font:inherit;font-size:13.5px;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.hbo-sbtn svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;opacity:.6;transition:transform .15s}
+.hbo-sbtn[aria-expanded=true] svg{transform:rotate(180deg)}
+.hbo-spop{position:fixed;z-index:1001;min-width:150px;box-sizing:border-box;padding:6px;border-radius:14px;background:var(--panel2,var(--panel,#1b1d22));color:var(--text,#eee);border:1px solid var(--line,rgba(255,255,255,.14));box-shadow:0 18px 44px rgba(0,0,0,.5),0 2px 8px rgba(0,0,0,.3);animation:hboIn .14s ease}
+.hbo-spop button{display:flex;align-items:center;justify-content:space-between;gap:14px;width:100%;padding:9px 12px;border:0;border-radius:9px;background:none;color:inherit;font:inherit;font-size:14px;text-align:start;cursor:pointer}
+.hbo-spop button:hover,.hbo-spop button:focus-visible{background:color-mix(in srgb,currentColor 8%,transparent);outline:none}
+.hbo-spop button.on{background:color-mix(in srgb,currentColor 12%,transparent);font-weight:700}
+.hbo-spop button.on::after{content:'✓';opacity:.8}
+.hbo-atlas .hbo-sbtn{height:36px;padding:0 12px;border:2px solid #efe3c8;border-radius:12px;background:#fff;box-shadow:0 2px 0 #efe3c8;font-weight:900}
+.hbo-atlas .hbo-spop{background:#fffdf7;color:#2b3044;border:2px solid #efe3c8;border-radius:16px;box-shadow:0 6px 0 #efe3c8,0 24px 40px -18px rgba(80,40,0,.5)}
+.hbo-atlas .hbo-spop button{font-weight:800;border-radius:12px}
+.hbo-atlas .hbo-spop button.on{background:#f6efdd}
 html[dir=rtl] .hbo-pop,html[lang=ar] .hbo-pop{direction:rtl}
 /* the portal look (3D full version) */
 .hbo-pop.hbo-atlas{padding:8px;border-radius:22px;background:#fffdf7;color:#2b3044;border:2px solid #efe3c8;box-shadow:0 6px 0 #efe3c8,0 24px 40px -18px rgba(80,40,0,.5);font-family:'Zen Maru Gothic',sans-serif;font-size:15px}
@@ -889,7 +904,31 @@ function options(o) {
     }, true);
     rows.set(u, r); return r;
   }
+  // a 'select' item (2026-11-09, ludo's 速さ): the row with a pulldown button at the end (the language row's look) and its list
+  let spop = null;
+  const spClose = () => { if (!spop) return; const b = spop._btn; spop.remove(); spop = null; if (b) b.setAttribute('aria-expanded', 'false'); };
+  function spOpen(x, btn) {
+    if (spop && spop._btn === btn) { spClose(); return; }
+    spClose();
+    const cur = safe(x.get), l = document.createElement('div'); l.className = 'hbo-spop'; l.setAttribute('role', 'listbox'); l._btn = btn;
+    (typeof x.options === 'function' ? x.options() : x.options).forEach(o => { const b = document.createElement('button'); b.type = 'button'; b.setAttribute('role', 'option');
+      b.className = String(o.v) === String(cur) ? 'on' : ''; b.textContent = pickL(o.label);
+      b.addEventListener('click', e => { e.stopPropagation(); try { x.set(o.v); } catch (err) { console.error(err); } spClose(); syncAll(); }); l.appendChild(b); });
+    pop.appendChild(l); spop = l; btn.setAttribute('aria-expanded', 'true');
+    const r = btn.getBoundingClientRect(), w = l.offsetWidth, h = l.offsetHeight, M = 8, rtl = getComputedStyle(pop).direction === 'rtl';
+    let left = rtl ? r.left : r.right - w; left = Math.max(M, Math.min(left, innerWidth - w - M));
+    const top = r.bottom + 6 + h <= innerHeight - M ? r.bottom + 6 : Math.max(M, r.top - 6 - h);   // (no room below: it opens upward)
+    l.style.left = left + 'px'; l.style.top = top + 'px';
+  }
+  document.addEventListener('pointerdown', e => { if (spop && !spop.contains(e.target) && !spop._btn.contains(e.target)) spClose(); }, true);
   function xRow(x) {
+    if (x.type === 'select') {
+      const r = document.createElement('div'); r.className = 'hbo-row hbo-x sel'; r.setAttribute('role', 'menuitem'); r.dataset.x = x.id;
+      r.innerHTML = `<span class="hbo-ic"><span aria-hidden="true">${x.icon || ''}</span></span><span class="hbo-lb"></span><span class="hbo-end"><button type="button" class="hbo-sbtn" aria-haspopup="listbox" aria-expanded="false"><span></span><svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button></span>`;
+      const btn = r.querySelector('.hbo-sbtn');
+      r.addEventListener('click', e => { e.stopPropagation(); spOpen(x, btn); });
+      return r;
+    }
     const r = document.createElement('button'); r.type = 'button'; r.className = 'hbo-row hbo-x' + (x.type === 'toggle' ? ' tg' : ''); r.setAttribute('role', x.type === 'toggle' ? 'menuitemcheckbox' : 'menuitem'); r.dataset.x = x.id;
     r.innerHTML = `<span class="hbo-ic"><span aria-hidden="true">${x.icon || ''}</span></span><span class="hbo-lb"></span><span class="hbo-sw" aria-hidden="true"></span>`;
     r.addEventListener('click', e => { e.stopPropagation();
@@ -935,6 +974,7 @@ function options(o) {
       const lbe = r.querySelector('.hbo-lb'); if (lbe.textContent !== lb) lbe.textContent = lb;
       r.classList.toggle('on', on); if (x.type === 'toggle') r.setAttribute('aria-checked', on ? 'true' : 'false');
       const t = pickL(x.title) || (x.type === 'toggle' ? lb + ': ' + (on ? onT : offT) : ''); if (t) r.title = t; else r.removeAttribute('title');
+      if (x.type === 'select') { const cur = safe(x.get), o = (typeof x.options === 'function' ? x.options() : x.options).find(e => String(e.v) === String(cur)), sp = r.querySelector('.hbo-sbtn > span'), tx = o ? pickL(o.label) : ''; if (sp && sp.textContent !== tx) sp.textContent = tx; }
       const hid = !!(x.hidden && safe(x.hidden)); if (r.hidden !== hid) r.hidden = hid;
     }
     const any = [...list.children].some(r => !r.hidden), gt = ot('opts', l);
@@ -957,7 +997,7 @@ function options(o) {
   }
   function show() { sort(); open = true; pop.classList.add('on'); gear.setAttribute('aria-expanded', 'true'); place();
     const f = pop.querySelector('.hbo-row:not([hidden])'); if (f && matchMedia('(hover: hover)').matches) { const t = f.querySelector('button, a') || f; try { t.focus({ preventScroll: true }); } catch (e) {} } }
-  function close(focus) { if (!open) return; open = false; pop.classList.remove('on'); gear.setAttribute('aria-expanded', 'false'); if (focus) try { gear.focus({ preventScroll: true }); } catch (e) {} }
+  function close(focus) { spClose(); if (!open) return; open = false; pop.classList.remove('on'); gear.setAttribute('aria-expanded', 'false'); if (focus) try { gear.focus({ preventScroll: true }); } catch (e) {} }
   gear.addEventListener('click', e => { e.stopPropagation(); open ? close() : show(); });
   // (the language lists — shared/langsel.js .lsel-pop, the portal's .atlas-lpop — count as inside)
   document.addEventListener('pointerdown', e => { if (open && !pop.contains(e.target) && !gear.contains(e.target) && !(e.target.closest && e.target.closest('.lsel-pop, .atlas-lpop'))) close(); }, true);
@@ -980,7 +1020,7 @@ function syncAll() { INST.forEach(i => { try { i.sort(); } catch (e) {} }); }
 function addOption(x) {
   if (!x || !x.id) return null;
   const old = EXTRA.findIndex(e => e.id === x.id); if (old >= 0) EXTRA.splice(old, 1);
-  x.alive = true; x.type = x.type === 'toggle' ? 'toggle' : 'button'; EXTRA.push(x); syncAll();
+  x.alive = true; x.type = x.type === 'toggle' || x.type === 'select' ? x.type : 'button'; EXTRA.push(x); syncAll();
   return { sync: syncAll, remove() { x.alive = false; const i = EXTRA.indexOf(x); if (i >= 0) EXTRA.splice(i, 1); syncAll(); } };
 }
 // the 2D pages: the icon set .brand-r (moved into the PC header bar or not) — 盤面反転, 縦横 / 横画面 and home stay outside

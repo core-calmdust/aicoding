@@ -148,20 +148,25 @@
        rattle inside), turns over and comes down mouth down on the board, then lifts away to the side — the dice lie where it
        stood. On the next turn it goes, turning mouth up again, to that seat's yard. */
     let cupG = null, cupSeat = -1;
-    const CR0 = .58, CR1 = .48, CH = .72;
+    const CR0 = .58, CR1 = .54, CH = .72;
     function mkCup() {
       const g = new TH.Group();
-      const leather = new TH.MeshStandardMaterial({ color: 0x4a2310, roughness: .58, metalness: 0, side: TH.DoubleSide });
-      const inside = new TH.MeshStandardMaterial({ color: 0x1e0f06, roughness: .9, metalness: 0, side: TH.BackSide });
-      const gold = new TH.MeshStandardMaterial({ color: 0xd2a24c, roughness: .35, metalness: .7 });
+      // (2026-11-09 v3) a black leather cup lined with red felt: a rolled rim with a stitch line, a stitched band at the base
+      const leather = new TH.MeshStandardMaterial({ color: 0x18181b, roughness: .52, metalness: 0 });
+      const inside = new TH.MeshStandardMaterial({ color: 0xa8141d, roughness: 1, metalness: 0, side: TH.BackSide });
+      const felt = new TH.MeshStandardMaterial({ color: 0x8e1018, roughness: 1, metalness: 0 });
+      const seam = new TH.MeshStandardMaterial({ color: 0x4a4a50, roughness: .7, metalness: 0 });
       const body = new TH.Mesh(new TH.CylinderGeometry(CR1, CR0, CH, 40, 1, true), leather); body.position.y = CH / 2; body.castShadow = true;
-      const lin = new TH.Mesh(new TH.CylinderGeometry(CR1 - .02, CR0 - .02, CH - .01, 40, 1, true), inside); lin.position.y = CH / 2;
-      const top = new TH.Mesh(new TH.CircleGeometry(CR1, 40), leather); top.rotation.x = -Math.PI / 2; top.position.y = CH;
-      const b1 = new TH.Mesh(new TH.TorusGeometry(CR0 - .012, .026, 8, 40), gold); b1.rotation.x = Math.PI / 2; b1.position.y = .05;
-      const b2 = new TH.Mesh(new TH.TorusGeometry(CR1 + .012, .022, 8, 40), gold); b2.rotation.x = Math.PI / 2; b2.position.y = CH - .06;
+      const lin = new TH.Mesh(new TH.CylinderGeometry(CR1 - .03, CR0 - .03, CH - .01, 40, 1, true), inside); lin.position.y = CH / 2;
+      const top = new TH.Mesh(new TH.CircleGeometry(CR1, 40), leather); top.rotation.x = -Math.PI / 2; top.position.y = CH;   // the base, outside
+      const floor = new TH.Mesh(new TH.CircleGeometry(CR1 - .03, 40), felt); floor.rotation.x = Math.PI / 2; floor.position.y = CH - .012;   // the base, inside (felt)
+      const rim = new TH.Mesh(new TH.TorusGeometry(CR0 - .015, .032, 10, 48), leather); rim.rotation.x = Math.PI / 2; rim.position.y = .012;   // the rolled rim (the mouth)
+      const s1 = new TH.Mesh(new TH.TorusGeometry(CR0 - .004, .006, 4, 64), seam); s1.rotation.x = Math.PI / 2; s1.position.y = .1;
+      const band = new TH.Mesh(new TH.CylinderGeometry(CR1 + .022, CR1 + .026, .13, 40, 1, true), leather); band.position.y = CH - .065;   // the band at the base
+      const s2 = new TH.Mesh(new TH.TorusGeometry(CR1 + .025, .006, 4, 64), seam); s2.rotation.x = Math.PI / 2; s2.position.y = CH - .13;
       const sh = T3.contact(CR0 * 1.35, .45); sh.position.y = .002;
       const dice = new TH.Group();   // the dice inside (seen through the mouth while it stands mouth up)
-      const inner = new TH.Group(); inner.add(body, lin, top, b1, b2, dice); g.add(sh, inner); g.userData = { inner, sh, dice, mats: [leather, inside, gold] };
+      const inner = new TH.Group(); inner.add(body, lin, top, floor, rim, s1, band, s2, dice); g.add(sh, inner); g.userData = { inner, sh, dice, mats: [leather, inside, felt, seam] };
       return g;
     }
     // fill the cup: one die, two with the two-dice house rule. (Inner coordinates are mouth down: the base is at y = CH, so the
@@ -182,6 +187,16 @@
     const parkXZ = seat => { const [gx, gy] = throwSpot(seat), ox = gx < 7.5 ? -2.05 : 2.05; return wx(gx + ox, gy - 2.05); };   // the yard's far outer corner (clear of the pieces, behind them as seen)
     // the cup's pose: up = 1 mouth up (standing on its base), 0 mouth down; lift: height above the board
     function cupPose(up, lift, rz) { const I = cupG.userData.inner; I.rotation.set(Math.PI * up, 0, rz || 0); I.position.set(0, CH * up + (lift || 0), 0); cupG.userData.sh.scale.setScalar(Math.max(.4, 1 - (lift || 0) * .5)); }
+    // a move across the board: straight up above the pieces, across, straight down (2026-11-09: a cup sliding low passed
+    // through the pawns — it is wider than the gap between two yard slots). Returns [x, z, lift] at k ∈ [0, 1].
+    const HOP = .82;   // above a pawn (.87 × .66 ≈ .57)
+    function hop(x0, z0, x1, z1, k) {
+      const sm = t => t * t * (3 - 2 * t), R = .24, F = .24;
+      if (k < R) return [x0, z0, HOP * sm(k / R)];
+      if (k > 1 - F) return [x1, z1, HOP * (1 - sm((k - 1 + F) / F))];
+      const q = (k - R) / (1 - R - F), e = q < .5 ? 2 * q * q : 1 - Math.pow(-2 * q + 2, 2) / 2;
+      return [x0 + (x1 - x0) * e, z0 + (z1 - z0) * e, HOP];
+    }
     let cupBusy = Promise.resolve(), cupUp = 1;
     // the next turn: the cup (lying mouth down beside the last throw) comes over, turns mouth up beside the dice and they hop in
     // (scooped up — no dice vanishing), then it carries them to the seat to throw (2026-11-09)
@@ -190,13 +205,15 @@
       if (!ds.length || !g) return false;
       thrown.children.filter(o => !ds.includes(o)).forEach(o => thrown.remove(o));   // (their shadows)
       let cx = 0, cz = 0; ds.forEach(d => { cx += d.position.x / ds.length; cz += d.position.z / ds.length; });
-      const x0 = g.position.x, z0 = g.position.z, dx = x0 - cx, dz = z0 - cz, L = Math.hypot(dx, dz) || 1, tx = cx + dx / L * .8, tz = cz + dz / L * .8, up0 = cupUp;
-      await animP(320, k => { const e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; g.position.set(x0 + (tx - x0) * e, Y, z0 + (tz - z0) * e); cupPose(up0 + (1 - up0) * e, Math.sin(k * Math.PI) * .5); });
+      // (2026-11-09) it turns mouth up where it lies (the yard's corner, clear of the pieces) and the dice hop over into it —
+      // moving it beside the dice put it on top of a piece in the yard
+      const tx = g.position.x, tz = g.position.z, up0 = cupUp;
+      await animP(320, k => { const e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; cupPose(up0 + (1 - up0) * e, Math.sin(k * Math.PI) * .5); });
       if (stopped) return true;
       cupUp = 1;
       const from = ds.map(d => [d.position.x, d.position.y, d.position.z, d.rotation.x, d.rotation.z]), hh = ds[0].userData.size / 2;
       await animP(340, k => ds.forEach((d, i) => { const q = Math.min(1, Math.max(0, k * 1.25 - i * .25)), e = q * q * (3 - 2 * q), f = from[i];
-        d.position.set(f[0] + (tx - f[0]) * e, f[1] + (Y + CH * .35 - f[1]) * e + Math.sin(q * Math.PI) * .75, f[2] + (tz - f[2]) * e);
+        d.position.set(f[0] + (tx - f[0]) * e, f[1] + (Y + CH * .35 - f[1]) * e + Math.sin(q * Math.PI) * 1.1, f[2] + (tz - f[2]) * e);
         d.rotation.x = f[3] + q * 4; d.rotation.z = f[4] + q * 2.5; d.scale.setScalar(1 - .3 * e); }));
       while (thrown.children.length) thrown.remove(thrown.children[0]);
       cupDice(true); SND.hop(); void hh;
@@ -212,7 +229,7 @@
         if (!g.userData.dice.children.length) cupDice(true);
         const x0 = g.position.x, z0 = g.position.z, up0 = cupUp; cupSeat = seat;
         if (Math.hypot(x - x0, z - z0) < .01) { cupPose(1, 0); cupUp = 1; return; }
-        await animP(440, k => { const e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; g.position.set(x0 + (x - x0) * e, Y, z0 + (z - z0) * e); cupPose(up0 + (1 - up0) * e, Math.sin(k * Math.PI) * .7); });
+        await animP(520, k => { const [hx, hz, hl] = hop(x0, z0, x, z, k); g.position.set(hx, Y, hz); cupPose(up0 + (1 - up0) * Math.min(1, k * 2), hl); });
         cupUp = 1;
       });
     }
@@ -240,7 +257,7 @@
       await sleep(140); if (stopped) return;
       // lift it away to the side, still mouth down
       const [px, pz] = parkXZ(seat);
-      await animP(460, k => { const e = 1 - Math.pow(1 - k, 3); g.position.set(cx + (px - cx) * e, Y, cz + (pz - cz) * e); cupPose(0, Math.sin(e * Math.PI) * .9); });
+      await animP(520, k => { const [hx, hz, hl] = hop(cx, cz, px, pz, k); g.position.set(hx, Y, hz); cupPose(0, hl); });
       cupPose(0, 0);
     }
     function restDie(seat, v) {

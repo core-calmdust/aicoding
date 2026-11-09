@@ -121,25 +121,30 @@ html.atlas-ludo3d #frame{background:none!important;box-shadow:none!important}`;
   /* ---------- the dice cup (ludo) ---------- */
   const FACE = { 1: [0, 0, 0], 6: [Math.PI, 0, 0], 2: [-Math.PI / 2, 0, 0], 5: [Math.PI / 2, 0, 0], 3: [0, 0, Math.PI / 2], 4: [0, 0, -Math.PI / 2] };
   const cup = (function () {
-    const CR0 = .58, CR1 = .48, CH = .72;
+    const CR0 = .58, CR1 = .54, CH = .72;
     let g = null, seatAt = -1, mode = null, shakeT = 0, tok = 0;
     const thrown = new THREE.Group();
     // the cup keeps the 2D game's pace: durations follow its speed setting (K), and while modes are waiting in the queue the
     // running move hurries (×3) so the 3D never lags behind the 2D throw panel
     let pending = 0;
-    const anim = (dur, f) => new Promise(res => { const my = ++tok; let t = 0, last = performance.now(); (function s(now) { if (my !== tok) return res(); t += (now - last) * (pending ? 3 : 1); last = now; const k = Math.min(1, Math.max(0, t / dur)); f(k); T3.kick(120); if (k < 1) requestAnimationFrame(s); else res(); })(t0); });
+    const anim = (dur, f) => new Promise(res => { const my = ++tok; let t = 0, last = performance.now(); (function s(now) { if (my !== tok) return res(); t += (now - last) * (pending ? 3 : 1); last = now; const k = Math.min(1, Math.max(0, t / dur)); f(k); T3.kick(120); if (k < 1) requestAnimationFrame(s); else res(); })(last); });   // (2026-11-09: was (t0) — undefined, so every glide / scoop / flip / lift threw and the cup stayed where it was)
     function mk() {
       g = new THREE.Group();
-      const leather = new THREE.MeshStandardMaterial({ color: 0x4a2310, roughness: .58, side: THREE.DoubleSide });
-      const inside = new THREE.MeshStandardMaterial({ color: 0x1e0f06, roughness: .9, side: THREE.BackSide });
-      const gold = new THREE.MeshStandardMaterial({ color: 0xd2a24c, roughness: .35, metalness: .7 });
+      // (2026-11-09 v3) a black leather cup lined with red felt: a rolled rim with a stitch line, a stitched band at the base
+      const leather = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: .52, metalness: 0 });
+      const inside = new THREE.MeshStandardMaterial({ color: 0xa8141d, roughness: 1, metalness: 0, side: THREE.BackSide });
+      const felt = new THREE.MeshStandardMaterial({ color: 0x8e1018, roughness: 1, metalness: 0 });
+      const seam = new THREE.MeshStandardMaterial({ color: 0x4a4a50, roughness: .7, metalness: 0 });
       const body = new THREE.Mesh(new THREE.CylinderGeometry(CR1, CR0, CH, 40, 1, true), leather); body.position.y = CH / 2; body.castShadow = true;
-      const lin = new THREE.Mesh(new THREE.CylinderGeometry(CR1 - .02, CR0 - .02, CH - .01, 40, 1, true), inside); lin.position.y = CH / 2;
-      const top = new THREE.Mesh(new THREE.CircleGeometry(CR1, 40), leather); top.rotation.x = -Math.PI / 2; top.position.y = CH;
-      const b1 = new THREE.Mesh(new THREE.TorusGeometry(CR0 - .012, .026, 8, 40), gold); b1.rotation.x = Math.PI / 2; b1.position.y = .05;
-      const b2 = new THREE.Mesh(new THREE.TorusGeometry(CR1 + .012, .022, 8, 40), gold); b2.rotation.x = Math.PI / 2; b2.position.y = CH - .06;
+      const lin = new THREE.Mesh(new THREE.CylinderGeometry(CR1 - .03, CR0 - .03, CH - .01, 40, 1, true), inside); lin.position.y = CH / 2;
+      const top = new THREE.Mesh(new THREE.CircleGeometry(CR1, 40), leather); top.rotation.x = -Math.PI / 2; top.position.y = CH;   // the base, outside
+      const floor = new THREE.Mesh(new THREE.CircleGeometry(CR1 - .03, 40), felt); floor.rotation.x = Math.PI / 2; floor.position.y = CH - .012;   // the base, inside (felt)
+      const rim = new THREE.Mesh(new THREE.TorusGeometry(CR0 - .015, .032, 10, 48), leather); rim.rotation.x = Math.PI / 2; rim.position.y = .012;   // the rolled rim (the mouth)
+      const s1 = new THREE.Mesh(new THREE.TorusGeometry(CR0 - .004, .006, 4, 64), seam); s1.rotation.x = Math.PI / 2; s1.position.y = .1;
+      const band = new THREE.Mesh(new THREE.CylinderGeometry(CR1 + .022, CR1 + .026, .13, 40, 1, true), leather); band.position.y = CH - .065;   // the band at the base
+      const s2 = new THREE.Mesh(new THREE.TorusGeometry(CR1 + .025, .006, 4, 64), seam); s2.rotation.x = Math.PI / 2; s2.position.y = CH - .13;
       const sh = T3.contact(CR0 * 1.35, .45); sh.position.y = .002;
-      const dice = new THREE.Group(), inner = new THREE.Group(); inner.add(body, lin, top, b1, b2, dice); g.add(sh, inner);
+      const dice = new THREE.Group(), inner = new THREE.Group(); inner.add(body, lin, top, floor, rim, s1, band, s2, dice); g.add(sh, inner);
       g.userData = { inner, sh, dice };
       root.add(g); root.add(thrown);
     }
@@ -147,6 +152,16 @@ html.atlas-ludo3d #frame{background:none!important;box-shadow:none!important}`;
     const park = s => { const [gx, gy] = cupSpot(s), ox = gx < 7.5 ? -2.05 : 2.05; return wx(gx + ox, gy - 2.05); };
     let upNow = 1;
     function pose(up, lift, rz) { upNow = up; const I = g.userData.inner; I.rotation.set(Math.PI * up, 0, rz || 0); I.position.set(0, CH * up + (lift || 0), 0); g.userData.sh.scale.setScalar(Math.max(.4, 1 - (lift || 0) * .5)); }
+    // a move across the board: straight up above the pieces, across, straight down (2026-11-09: a cup sliding low passed
+    // through the pawns — it is wider than the gap between two yard slots). Returns [x, z, lift] at k ∈ [0, 1].
+    const HOP = .82;   // above a pawn (.87 × .66 ≈ .57)
+    function hop(x0, z0, x1, z1, k) {
+      const sm = t => t * t * (3 - 2 * t), R = .24, F = .24;
+      if (k < R) return [x0, z0, HOP * sm(k / R)];
+      if (k > 1 - F) return [x1, z1, HOP * (1 - sm((k - 1 + F) / F))];
+      const q = (k - R) / (1 - R - F), e = q < .5 ? 2 * q * q : 1 - Math.pow(-2 * q + 2, 2) / 2;
+      return [x0 + (x1 - x0) * e, z0 + (z1 - z0) * e, HOP];
+    }
     function fill(show) {   // the dice inside (seen while it stands mouth up): two with the two-dice house rule
       const D = g.userData.dice; while (D.children.length) D.remove(D.children[0]);
       D.visible = !!show; if (!show) return;
@@ -176,11 +191,13 @@ html.atlas-ludo3d #frame{background:none!important;box-shadow:none!important}`;
       if (!ds.length) return;
       thrown.children.filter(o => !ds.includes(o)).forEach(o => thrown.remove(o));
       let cx = 0, cz = 0; ds.forEach(d => { cx += d.position.x / ds.length; cz += d.position.z / ds.length; });
-      const x0 = g.position.x, z0 = g.position.z, dx = x0 - cx, dz = z0 - cz, L = Math.hypot(dx, dz) || 1, tx = cx + dx / L * .8, tz = cz + dz / L * .8, u0 = upNow;
-      await anim(240 * K(), k => { const e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; g.position.set(x0 + (tx - x0) * e, U.top, z0 + (tz - z0) * e); pose(u0 + (1 - u0) * e, Math.sin(k * Math.PI) * .5); });
+      // (2026-11-09) the cup turns mouth up where it lies (the yard's corner, clear of the pieces) and the dice hop over into it —
+      // moving it beside the dice put it on top of a piece in the yard
+      const tx = g.position.x, tz = g.position.z, u0 = upNow;
+      await anim(240 * K(), k => { const e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; pose(u0 + (1 - u0) * e, Math.sin(k * Math.PI) * .5); });
       const from = ds.map(d => [d.position.x, d.position.y, d.position.z, d.rotation.x, d.rotation.z]);
-      await anim(260 * K(), k => ds.forEach((d, i) => { const qq = Math.min(1, Math.max(0, k * 1.25 - i * .25)), e = qq * qq * (3 - 2 * qq), f = from[i];
-        d.position.set(f[0] + (tx - f[0]) * e, f[1] + (U.top + CH * .35 - f[1]) * e + Math.sin(qq * Math.PI) * .75, f[2] + (tz - f[2]) * e);
+      await anim(320 * K(), k => ds.forEach((d, i) => { const qq = Math.min(1, Math.max(0, k * 1.25 - i * .25)), e = qq * qq * (3 - 2 * qq), f = from[i];
+        d.position.set(f[0] + (tx - f[0]) * e, f[1] + (U.top + CH * .35 - f[1]) * e + Math.sin(qq * Math.PI) * 1.1, f[2] + (tz - f[2]) * e);
         d.rotation.x = f[3] + qq * 4; d.rotation.z = f[4] + qq * 2.5; d.scale.setScalar(1 - .3 * e); }));
       clearDice(); fill(true);
     }
@@ -196,7 +213,7 @@ html.atlas-ludo3d #frame{background:none!important;box-shadow:none!important}`;
         if (!g.userData.dice.children.length) fill(true);
         const x0 = g.position.x, z0 = g.position.z, u0 = upNow; seatAt = s;
         if (Math.hypot(x - x0, z - z0) < .01) { pose(1, 0); T3.kick(120); return; }
-        await anim(340 * K(), qq => { const e = qq < .5 ? 2 * qq * qq : 1 - Math.pow(-2 * qq + 2, 2) / 2; g.position.set(x0 + (x - x0) * e, U.top, z0 + (z - z0) * e); pose(u0 + (1 - u0) * e, Math.sin(qq * Math.PI) * .7); });
+        await anim(440 * K(), qq => { const [hx, hz, hl] = hop(x0, z0, x, z, qq); g.position.set(hx, U.top, hz); pose(u0 + (1 - u0) * Math.min(1, qq * 2), hl); });
         return;
       }
       const [cx, cz] = spot(s);
@@ -216,7 +233,7 @@ html.atlas-ludo3d #frame{background:none!important;box-shadow:none!important}`;
         fill(false);
         const [px, pz] = park(s);
         if (m === 'dice' || prev !== 'down') { tok++; g.position.set(px, U.top, pz); pose(0, 0); T3.kick(200); return; }
-        await anim(450 * k, qq => { const e = 1 - Math.pow(1 - qq, 3); g.position.set(cx + (px - cx) * e, U.top, cz + (pz - cz) * e); pose(0, Math.sin(e * Math.PI) * .9); });
+        await anim(520 * k, qq => { const [hx, hz, hl] = hop(cx, cz, px, pz, qq); g.position.set(hx, U.top, hz); pose(0, hl); });
       }
     }
     function reset() { q = Promise.resolve(); tok++; cancelAnimationFrame(shakeT); shakeT = 0; g = null; seatAt = -1; mode = null; clearDice(); }
