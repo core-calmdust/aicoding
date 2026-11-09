@@ -73,7 +73,7 @@ html.atlas-ludo3d #frame{background:none!important;box-shadow:none!important}`;
     const row = f3.querySelector('.bdrow');
     if (!row.children.length) B.list.forEach(k => {
       const bt = document.createElement('button'); bt.type = 'button'; bt.dataset.look = k;
-      const im = document.createElement('img'); im.src = T3.boardThumb ? T3.boardThumb('ludo', k) : ''; im.alt = ''; im.draggable = false;
+      const im = document.createElement('img'); im.src = T3.boardIcon ? T3.boardIcon('ludo', k) : T3.boardThumb ? T3.boardThumb('ludo', k) : ''; im.alt = ''; im.draggable = false;
       bt.append(im, document.createElement('span')); bt.onclick = () => setLook(k); row.appendChild(bt);
     });
     row.querySelectorAll('button').forEach(bt => { const k = bt.dataset.look, sel = on && cur === k; bt.querySelector('span').textContent = T3.boardName ? T3.boardName(k, l) : k; bt.classList.toggle('sel', sel); bt.setAttribute('aria-pressed', String(sel)); });
@@ -95,11 +95,16 @@ html.atlas-ludo3d #frame{background:none!important;box-shadow:none!important}`;
   st3.textContent = `
 html.atlas-skin #f3D{margin:12px 0 0;padding:10px 12px 12px;border-radius:14px;background:#fff6e6;border:2px solid #f1dcb4}
 html.atlas-skin #f3D.hidden{display:none}
+html.atlas-skin body .toast{background:rgba(255,253,246,.97)!important;color:#2b3044!important;border:1.5px solid #efe3c8!important;box-shadow:0 6px 18px rgba(60,40,10,.18)!important}   /* (white like the rest of the UI, 2026-11-09) */
 html.atlas-skin #f3D > label{display:block;font-weight:700;font-size:13px;color:#8a5a1c;margin:0 0 8px}
-html.atlas-skin #f3D .bdrow{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+html.atlas-skin #newOverlay #f3D .bdrow,html.atlas-skin #newOverlay #bdRow.dsg{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:8px!important}
+html.atlas-skin #bdRow.dsg > button{width:auto!important;max-width:none!important;min-width:0}
+html.atlas-skin #bdRow.dsg > button svg{width:100%!important;height:auto!important;aspect-ratio:1/1}
+@media (max-width:600px){html.atlas-skin #newOverlay #f3D .bdrow{grid-template-columns:repeat(3,minmax(0,1fr))!important}html.atlas-skin #newOverlay #bdRow.dsg{grid-template-columns:repeat(4,minmax(0,1fr))!important}}
+/* (2026-11-09: the 2D and the 3D boards in the same grid of tiles, as the places above) */
 html.atlas-skin #f3D .bdrow button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border-radius:12px;border:2px solid #ead9b8;background:#fffdf7;cursor:pointer;font:inherit;font-size:12px;font-weight:700;color:#4a3a22}
 html.atlas-skin #f3D .bdrow button.sel{border-color:#ff8a1f;box-shadow:0 0 0 2px rgba(255,138,31,.25)}
-html.atlas-skin #f3D .bdrow button img{display:block;width:100%;aspect-ratio:3/2;object-fit:cover;border-radius:8px}
+html.atlas-skin #f3D .bdrow button img{display:block;width:100%;aspect-ratio:1/1;object-fit:contain;border-radius:8px;background:radial-gradient(circle at 50% 45%,#fffaf0,#f1e6d0)}
 html.atlas-skin #f3D .bdrow button span{line-height:1.2;text-align:center}`;
   document.head.appendChild(st3);
 

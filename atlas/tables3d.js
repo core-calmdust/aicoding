@@ -173,10 +173,12 @@
     // crokinole (3D only): 'atlas-crokinole-look' ('classic' the default | 'neon' | 'marq' | 'winter' | 'mcm' | 'modern')
     crokinole: { list: ['classic', 'neon', 'marq', 'winter', 'mcm', 'modern'], get: () => { const v = ls.get('atlas-crokinole-look'); return ['neon', 'marq', 'winter', 'mcm', 'modern'].includes(v) ? v : 'classic'; }, set: k => ls.set('atlas-crokinole-look', k) },
     // ludo (atlas/models/ludo.js, atlas/skin/ludo.js): 'atlas-ludo-look' ('classic' the default | 'marble' | 'street' | 'peg' | 'mondrian' | 'cutout'); pachisi keeps its cloth
-    ludo: { list: ['classic', 'marble', 'street', 'peg', 'mondrian', 'cutout'], get: () => { const v = ls.get('atlas-ludo-look'); return ['marble', 'street', 'peg', 'mondrian', 'cutout'].includes(v) ? v : 'classic'; }, set: k => ls.set('atlas-ludo-look', k) },
+    ludo: { list: ['classic', 'peg', 'street', 'mondrian', 'cutout', 'marble'], get: () => { const v = ls.get('atlas-ludo-look'); return ['marble', 'street', 'peg', 'mondrian', 'cutout'].includes(v) ? v : 'classic'; }, set: k => ls.set('atlas-ludo-look', k) },
   };
   X.BOARDS = BOARDS;
   X.boardName = (k, lang) => { const o = N3[k]; return o ? o[lang] || o.en : k; };
+  // the full games' 「3D盤」 tiles: the board alone, from above at an angle, no room (atlas/tools/boardicon.html, 2026-11-09)
+  X.boardIcon = (id, k) => new URL('img/boardic-' + id + '-' + k + '.webp?v=1', ME).href;
   X.boardThumb = (id, k) => new URL('img/board-' + id + '-' + k + '.webp?v=' + (id === 'senet' ? 3 : id === 'carrom' ? 5 : id === 'crokinole' ? 2 : id === 'konane' ? 2 : id === 'ludo' ? 2 : 1), ME).href;
   // choose a board for a game: the shared key is written and the showcase board (if it is that game's) is rebuilt at once
   X.setBoard = (id, k) => { const B = BOARDS[id]; if (!B || !B.list.includes(k)) return; B.set(k); try { dispatchEvent(new CustomEvent('atlas-board', { detail: { id, look: k } })); } catch (e) {} };

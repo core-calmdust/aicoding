@@ -125,7 +125,7 @@ html.atlas-skin #f3D .bdrow button img{display:block;width:100%;aspect-ratio:1/1
     const row = f3.querySelector('.bdrow');
     if (!row.children.length) B.list.forEach(k => {
       const bt = document.createElement('button'); bt.type = 'button'; bt.dataset.look = k;
-      const im = document.createElement('img'); im.src = T3.boardThumb ? T3.boardThumb('konane', k) : ''; im.alt = ''; im.draggable = false;
+      const im = document.createElement('img'); im.src = T3.boardIcon ? T3.boardIcon('konane', k) : T3.boardThumb ? T3.boardThumb('konane', k) : ''; im.alt = ''; im.draggable = false;
       bt.append(im, document.createElement('span')); bt.onclick = () => setLook(k); row.appendChild(bt);
     });
     row.querySelectorAll('button').forEach(bt => { const k = bt.dataset.look, sel = on && cur === k; bt.querySelector('span').textContent = T3.boardName ? T3.boardName(k, l) : k; bt.classList.toggle('sel', sel); bt.setAttribute('aria-pressed', String(sel)); });
