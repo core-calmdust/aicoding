@@ -1256,6 +1256,7 @@ if (typeof self !== 'undefined' && typeof window === 'undefined' && typeof modul
       else { const w = new Int16Array(d.buffer); if (w.length === NFEAT) { W = w; if (X) new Int16Array(MEM.buffer, X.weights_ptr(), NFEAT).set(W); } }
       return;
     }
+    if (d.type === 'newgame') { wReady.then(() => { if (X) X.tt_clear(); self.postMessage({ type: 'result', id: d.id }); }); return; }   // (bench.html: a fresh table for every search)
     if (d.type === 'think') {
       setup(d);
       const o = d.opts || {};

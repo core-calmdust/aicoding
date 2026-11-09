@@ -277,13 +277,52 @@ static int noAttackers(void) { return 0; }
 // ---------------------------------------------------------------- transposition table
 #define TT_BITS 20
 typedef struct { u64 key; i16 v; u16 m; i8 d; u8 flag, age, pad; } TTE;
+#ifndef JG_THREADS
 static TTE TT[1 << TT_BITS];
+#endif
 static u8 ttAge = 0;
 #define TT_EXACT 3
 #define TT_LOWER 1
 #define TT_UPPER 2
 static inline int vToTT(int v, int ply) { return v > WINT ? v + ply : v < -WINT ? v - ply : v; }
 static inline int vFromTT(int v, int ply) { return v > WINT ? v - ply : v < -WINT ? v + ply : v; }
+#ifdef JG_THREADS
+// (2026-11-09, addendum "wasm の Lazy SMP の置換表", the audit after checkers / morris / tafl) the threads' shared table. The plain
+// one (one 16-byte entry per key, written field by field) is not used: two threads writing one slot at once could leave one
+// position's key with another's value / depth / bound, and the one slot per key let the threads' many shallow entries push out
+// the deep ones. Here: buckets of four entries { key ^ w, w } (w = value, move, depth, bound, age, in use), so a torn entry
+// fails the key check ("lockless"); store = the same key's entry, else the shallowest / oldest of the bucket (depth − 16 if from
+// an earlier search). 2^TTM_BITS buckets x 64 bytes (64 MB: 4M entries, the plain one 1M). A probe copies the entry into a TTE
+// (the same fields as the plain table), so the search reads it as before.
+#ifndef TTM_BITS
+#define TTM_BITS 20
+#endif
+static u64 TTM[(1u << TTM_BITS) * 8];
+static inline void ttGet(u64 key, TTE *e) {
+  const u64 *bk = &TTM[(key & ((1u << TTM_BITS) - 1)) * 8];
+  for (int j = 0; j < 4; j++) {
+    u64 w = bk[2 * j + 1], kx = bk[2 * j];
+    if ((kx ^ w) == key && (w >> 58)) { e->key = key; e->v = (i16)(w & 0xFFFF); e->m = (u16)(w >> 16); e->d = (i8)(w >> 32); e->flag = (u8)((w >> 40) & 3); e->age = (u8)(w >> 48); return; }
+  }
+  e->key = ~key; e->v = 0; e->m = 0; e->d = -1; e->flag = 0; e->age = 0;
+}
+static void ttStore(u64 key, int d, int flag, int v, Move m, int ply) {
+  u64 *bk = &TTM[(key & ((1u << TTM_BITS) - 1)) * 8];
+  int j = -1, q = 1 << 30; u64 old = 0;
+  for (int i = 0; i < 4; i++) {
+    u64 w = bk[2 * i + 1], kx = bk[2 * i];
+    if ((kx ^ w) == key && (w >> 58)) { j = i; old = w; break; }
+    int sc = !(w >> 58) ? -1000 : (int)(i8)(w >> 32) - (((w >> 48) & 255) != ttAge ? 16 : 0);
+    if (sc < q) { q = sc; j = i; }
+  }
+  u64 mv = m ? (u64)m << 16 : old ? (old & 0xFFFF0000ull) : 0;   // (no move: keep the entry's own)
+  u64 w = (u64)(u16)(i16)vToTT(v, ply) | mv | (u64)(u8)(i8)(d > 120 ? 120 : d < -1 ? -1 : d) << 32 | (u64)(flag & 3) << 40 | (u64)ttAge << 48 | 1ull << 58;
+  bk[2 * j + 1] = w; bk[2 * j] = key ^ w;
+}
+EXPORT(new_game) void new_game(void) { memset(TTM, 0, sizeof(TTM)); ttAge = 0; }
+#define TT_PROBE(k) TTE e_, *e = &e_; ttGet((k), e)
+#else
+#define TT_PROBE(k) TTE *e = &TT[(k) & ((1 << TT_BITS) - 1)]
 static void ttStore(u64 key, int d, int flag, int v, Move m, int ply) {
   TTE *e = &TT[key & ((1 << TT_BITS) - 1)];
   if (e->key != key && e->age == ttAge && e->d > d + 2) return;
@@ -291,6 +330,7 @@ static void ttStore(u64 key, int d, int flag, int v, Move m, int ply) {
   e->key = key; e->d = (i8)(d > 120 ? 120 : d < -1 ? -1 : d); e->flag = (u8)flag; e->v = (i16)vToTT(v, ply); e->age = ttAge;
 }
 EXPORT(new_game) void new_game(void) { memset(TT, 0, sizeof(TT)); ttAge = 0; }
+#endif
 
 // ---------------------------------------------------------------- search
 static TLS u64 nodes; static TLS double tEnd; static TLS int stopFlag, nodeLimitOn; static TLS u64 nodeLimit;
@@ -304,9 +344,15 @@ static const int PV_[8] = { 0, 0, 300, 300, 500, 1300, 700, 200 };   // ordering
 #ifdef JG_THREADS
 static volatile int gStop;            // shared: set when the main thread's search is over (the helpers stop)
 static TLS int threadId;              // 0 = the main thread (time control, result), 1.. = helpers
+// every thread's last finished iteration on the current root: { key ^ x, x }, x = depth | value | move | in use — the main
+// thread answers with the deepest one, and a helper that finishes the main thread's depth limit ends the search (gHit)
+#define MT_SLOTS 64
+static u64 gRes[MT_SLOTS][2];
+static volatile u64 gGoalKey, gHit; static volatile int gGoal;
+static TLS u64 rootK;
 static inline int timeUp(void) {
   if (stopFlag) return 1;
-  if ((nodes & 1023) == 0) { if ((tEnd > 0 && now() > tEnd) || (nodeLimitOn && nodes > nodeLimit) || gStop) stopFlag = 1; }
+  if ((nodes & 1023) == 0) { if ((tEnd > 0 && now() > tEnd) || (nodeLimitOn && nodes > nodeLimit) || gStop || (rootK && gHit == rootK)) stopFlag = 1; }
   return stopFlag;
 }
 #else
@@ -387,7 +433,7 @@ static int search(int depth, int alpha, int beta, int ply, int pv, int nullOk) {
   if (ply >= MAXPLY - 4) return evaluate();
   nodes++;
   if (ply > seldepth) seldepth = ply;
-  TTE *e = &TT[KEY & ((1 << TT_BITS) - 1)];
+  TT_PROBE(KEY);
   Move ttm = 0;
   if (e->key == KEY) {
     ttm = e->m;
@@ -527,6 +573,7 @@ static void beginSearch(int ms) {
   loadRoot();
   stopFlag = 0; nodes = 0; tEnd = ms > 0 ? now() + ms : 0;
 #ifdef JG_THREADS
+  rootK = 0;   // (best sets it on the main thread: the depth goal a helper may reach first)
   if (threadId == 0)   // (only the main thread ages the shared table)
 #endif
   ttAge++;
@@ -544,7 +591,16 @@ EXPORT(best) void best(int maxDepth, int ms, int nodeK) {
   sortRoot();
   int prev = 0, d0 = 1;
 #ifdef JG_THREADS
-  if (threadId) d0 = 1 + (threadId & 1);   // helpers: every other one a ply ahead, so the threads fill the table with different depths
+  // (2026-11-09) every thread iterates 1, 2, 3, … like the main one: the helpers' start a ply ahead (every other one) was slower
+  // to the main thread's depth in the measurement (MODEL_CARD.md). The root key: the position, its history length and the root
+  // moves (the excluded ones are left out of rootL: the count and the moves).
+  u64 rk = rootKey ^ (u64)rootHn << 40 ^ (u64)rootN << 52;
+  for (int i = 0; i < rootN; i++) rk += (u64)rootL[i] * 0x9E3779B97F4A7C15ull;
+  rk |= 1;
+  if (!threadId) {   // a new search: forget the threads' results of the last one, set the depth goal
+    for (int i = 0; i < MT_SLOTS; i++) { __atomic_store_n(&gRes[i][0], 0, __ATOMIC_SEQ_CST); __atomic_store_n(&gRes[i][1], 0, __ATOMIC_SEQ_CST); }
+    gHit = 0; gGoal = maxDepth; gGoalKey = rk; rootK = rk;
+  }
 #endif
   for (int d = d0; d <= maxDepth && d < MAXPLY - 10; d++) {
     seldepth = 0;
@@ -567,6 +623,11 @@ EXPORT(best) void best(int maxDepth, int ms, int nodeK) {
     for (int i = 1; i < rootN; i++) rootVal[i] = -INF;
     bm = rootL[0]; bv = v; bd = d; prev = v;
 #ifdef JG_THREADS
+    if (threadId < MT_SLOTS) {   // publish the finished iteration
+      u64 x = (u64)(d & 255) | (u64)(u16)(i16)bv << 8 | (u64)bm << 24 | 1ull << 40;
+      __atomic_store_n(&gRes[threadId][1], x, __ATOMIC_SEQ_CST); __atomic_store_n(&gRes[threadId][0], rk ^ x, __ATOMIC_SEQ_CST);
+      if (threadId && d >= gGoal && gGoalKey == rk) gHit = rk;
+    }
     IO[0] = bm; IO[1] = bv; IO[2] = bd; IO[3] = (i32)(nodes / 1000);   // (the result so far, for the progress readouts)
 #endif
     progress(d, 1);
@@ -577,6 +638,23 @@ EXPORT(best) void best(int maxDepth, int ms, int nodeK) {
     if (gStop) break;
 #endif
   }
+#ifdef JG_THREADS
+  if (!threadId) {   // the deepest finished iteration of all the threads (the main thread's on a tie)
+    int bt = -1, bdep = bd;
+    for (int i = 1; i < MT_SLOTS; i++) {
+      u64 x = __atomic_load_n(&gRes[i][1], __ATOMIC_SEQ_CST), kx = __atomic_load_n(&gRes[i][0], __ATOMIC_SEQ_CST);
+      if (!(x >> 40) || (kx ^ x) != rk) continue;
+      int dd = (int)(x & 255); if (dd > bdep) { bdep = dd; bt = i; }
+    }
+    if (bt > 0) {
+      u64 x = __atomic_load_n(&gRes[bt][1], __ATOMIC_SEQ_CST), kx = __atomic_load_n(&gRes[bt][0], __ATOMIC_SEQ_CST);
+      Move m = (Move)(x >> 24); int ok = 0;
+      for (int i = 0; i < rootN; i++) if (rootL[i] == m) ok = 1;
+      if ((kx ^ x) == rk && ok) { bm = m; bv = (i16)(u16)(x >> 8); bd = (int)(x & 255); }
+    }
+    gGoalKey = 0; gHit = 0; rootK = 0;
+  }
+#endif
   loadRoot();
   IO[0] = bm; IO[1] = bv; IO[2] = bd; IO[3] = (i32)(nodes / 1000);
 }
@@ -622,7 +700,7 @@ EXPORT(pv_line) int pv_line(int m0, int maxLen) {
     IO[1 + n++] = m;
     int rep = 0; for (int i = hn - 3; i >= 0; i--) if (HK[i] == KEY) { rep = 1; break; }
     if (rep) break;
-    TTE *e = &TT[KEY & ((1 << TT_BITS) - 1)];
+    TT_PROBE(KEY);
     if (e->key != KEY || !e->m) break;
     m = e->m;
   }

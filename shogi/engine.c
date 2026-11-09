@@ -952,7 +952,9 @@ static int mate3(void) {
 #define TT_SIZE (1 << TT_BITS)
 #define TT_MASK (TT_SIZE - 1)
 typedef struct { i32 key, move, data; } TTEntry;   /* one entry in one place: a probe touches one cache line */
+#ifndef MT
 static TTEntry tt[TT_SIZE];
+#endif
 #ifdef MT
 static volatile int gStop;          /* shared: set when the main thread's search is over (the helpers stop) */
 static TLS int threadId;            /* 0 = the main thread (time control, result), 1.. = helpers */
@@ -961,7 +963,33 @@ static int ttAge = 0;
 #define F_EXACT 1
 #define F_LOWER 2
 #define F_UPPER 3
+#ifdef MT
+/* (2026-11-09, addendum "wasm の Lazy SMP の置換表", the audit after checkers / morris / tafl) the threads' shared table. The
+   plain one (one 12-byte entry per key, its key / move / data written one after another) is not used: two threads writing one
+   slot at once could leave one position's key with another's move or value / depth / bound, and the one slot per key let the
+   threads' many shallow entries push out the deep ones. Here: buckets of four entries { key ^ w, w } (key = the whole 64-bit
+   hash hl | hh; w = value, move, depth, bound, age, in use), so a torn entry fails the key check ("lockless"); store = the same
+   key's entry, else the shallowest / oldest of the bucket (depth − 16 if from an earlier search). 2^TTM_BITS buckets x 64 bytes
+   (64 MB: 4M entries, the plain one 1M). A probe copies the entry into a TTEntry (key = hh on a hit), so the search reads it
+   as before. */
+typedef unsigned long long u64;
+#ifndef TTM_BITS
+#define TTM_BITS 20
+#endif
+static u64 ttm[(1u << TTM_BITS) * 8];
+static inline u64 ttKey(void) { return (u64)(u32)hl | (u64)(u32)hh << 32; }
+static inline void ttGet(TTEntry *e) {
+  u64 key = ttKey(); const u64 *bk = &ttm[((u32)hl & ((1u << TTM_BITS) - 1)) * 8];
+  for (int j = 0; j < 4; j++) {
+    u64 w = bk[2 * j + 1], kx = bk[2 * j];
+    if ((kx ^ w) == key && (w >> 63)) { e->key = hh; e->move = (i32)((w >> 16) & 0x7FFF); e->data = (i32)((w & 0xFFFF) | ((w >> 32) & 255) << 16 | ((w >> 40) & 3) << 24 | ((w >> 42) & 31) << 26); return; }
+  }
+  e->key = ~hh; e->move = 0; e->data = 0;
+}
+EXPORT(tt_clear) void tt_clear(void) { memset(ttm, 0, sizeof ttm); }
+#else
 EXPORT(tt_clear) void tt_clear(void) { memset(tt, 0, sizeof tt); }
+#endif
 
 #define NBUF (MAXPLY + 32)
 static TLS i32 moveBuf[NBUF][1000], scoreBuf[NBUF][1000], quietBuf[NBUF][1000], quietScore[NBUF][1000], triedQ[NBUF][1000], mateBuf[NBUF][1000];
@@ -1006,16 +1034,40 @@ static inline void histUpd(int us, int m, int b) {
   if (sp >= 2 && ckS[sp - 2] >= 0) gravS(&contH[1][ckS[sp - 2] * CK + k], b);
 }
 
+#ifdef MT
+/* every thread's last finished iteration on the current root: { key ^ x, x }, x = depth | value | move | in use — the main
+   thread answers with the deepest one, and a helper that finishes the main thread's depth limit ends the search (gHit) */
+#define MT_SLOTS 64
+static u64 gRes[MT_SLOTS][2];
+static volatile u64 gGoalKey, gHit; static volatile int gGoal;
+static TLS u64 rootK;
+#endif
 static inline int timeUp(void) {
   if ((nodes & 1023) == 0) {
 #ifdef MT
-    if (gStop) stopFlag = 1;
+    if (gStop || (rootK && gHit == rootK)) stopFlag = 1;
 #endif
     if (deadline > 0 && js_now() > deadline) stopFlag = 1;
     if (nodeLimit && nodes > nodeLimit) stopFlag = 1;
   }
   return stopFlag;
 }
+#ifdef MT
+static void store(int depth, double score, int flag, int move, int ply) {
+  u64 key = ttKey(), *bk = &ttm[((u32)hl & ((1u << TTM_BITS) - 1)) * 8];
+  int j = 0, q = 1 << 30; u64 old = 0;
+  for (int i = 0; i < 4; i++) {
+    u64 w = bk[2 * i + 1], kx = bk[2 * i];
+    if ((kx ^ w) == key && (w >> 63)) { j = i; old = w; break; }
+    int sc = !(w >> 63) ? -1000 : (int)((w >> 32) & 255) - (((w >> 42) & 31) != (u64)(ttAge & 31) ? 16 : 0);
+    if (sc < q) { q = sc; j = i; }
+  }
+  if (score > MATE - MAXPLY) score += ply; else if (score < -MATE + MAXPLY) score -= ply;
+  if (!move && old) move = (int)((old >> 16) & 0x7FFF);
+  u64 w = (u64)((i32)score & 0xffff) | (u64)(move & 0x7FFF) << 16 | (u64)(depth & 255) << 32 | (u64)(flag & 3) << 40 | (u64)(ttAge & 31) << 42 | 1ull << 63;
+  bk[2 * j + 1] = w; bk[2 * j] = key ^ w;
+}
+#else
 static void store(int depth, double score, int flag, int move, int ply) {
   int i = hl & TT_MASK;
   if (tt[i].key == hh || ((tt[i].data >> 16) & 255) <= depth + 2 || (((u32)tt[i].data >> 26) != (u32)ttAge)) {
@@ -1025,6 +1077,7 @@ static void store(int depth, double score, int flag, int move, int ply) {
     tt[i].data = ((i32)score & 0xffff) | ((depth & 255) << 16) | (flag << 24) | (ttAge << 26);
   }
 }
+#endif
 /* returns 1 and sets *out when repetition found */
 static int repetition(int ply, double *out) {
   int lim = hn - 1 - 32; if (lim < 0) lim = 0;
@@ -1165,9 +1218,15 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
   }
   if (ply >= MAXPLY - 1) return evaluate();
   int ti = hl & TT_MASK, ttm = 0, ex = exclM[ply], ttD = -1, ttF = 0, ttS = 0;
-  if (!ex && tt[ti].key == hh) {
-    ttm = tt[ti].move;
-    int d = tt[ti].data, td = (d >> 16) & 255, fl = (d >> 24) & 3;
+#ifdef MT
+  TTEntry tx; ttGet(&tx);
+#define TTI tx
+#else
+#define TTI tt[ti]
+#endif
+  if (!ex && TTI.key == hh) {
+    ttm = TTI.move;
+    int d = TTI.data, td = (d >> 16) & 255, fl = (d >> 24) & 3;
     int ts = (i32)((u32)d << 16) >> 16;
     if (ts > MATE - MAXPLY) ts -= ply; else if (ts < -MATE + MAXPLY) ts += ply;
     if (!pvNode && td >= depth && ply > 0) {
@@ -1220,7 +1279,11 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
   }
   if (!ttm && pvNode && depth >= 4) {
     search(depth - 2, alpha, beta, ply, 1, 0);
-    if (tt[ti].key == hh) ttm = tt[ti].move;
+#ifdef MT
+    ttGet(&tx);
+#endif
+    if (TTI.key == hh) ttm = TTI.move;
+#undef TTI
   }
   i32 *moves = moveBuf[ply], *scores = scoreBuf[ply], *qmoves = quietBuf[ply], *qscores = quietScore[ply], *tq = triedQ[ply];
   double best = -INF; int bestMove = 0, legal = 0, nq = 0;
@@ -1426,7 +1489,17 @@ EXPORT(root_search) int root_search(double timeMs, int maxDepth, int nodeLim) {
   double prevScore = 0;
   int d0 = 1;
 #ifdef MT
-  if (threadId) d0 = 1 + (threadId & 1);   /* helpers: every other one a ply ahead */
+  /* (2026-11-09) every thread iterates 1, 2, 3, … like the main one: the helpers' start a ply ahead (every other one) was slower
+     to the main thread's depth in the measurement (MODEL_CARD.md). The root key: the position, its history length and the root
+     moves (a helper reads every legal move: not the main thread's root when moves are excluded). */
+  u64 rk = ttKey() ^ (u64)hn << 40 ^ (u64)nRoot << 52;
+  for (int i = 0; i < nRoot; i++) rk += (u64)(u32)rootM[i] * 0x9E3779B97F4A7C15ull;
+  rk |= 1;
+  rootK = 0;
+  if (!threadId) {   /* a new search: forget the threads' results of the last one, set the depth goal */
+    for (int i = 0; i < MT_SLOTS; i++) { __atomic_store_n(&gRes[i][0], 0, __ATOMIC_SEQ_CST); __atomic_store_n(&gRes[i][1], 0, __ATOMIC_SEQ_CST); }
+    gHit = 0; gGoal = maxDepth; gGoalKey = rk; rootK = rk;
+  }
 #endif
   for (int depth = d0; depth <= maxDepth; depth++) {
     rootDepth = depth;
@@ -1450,6 +1523,13 @@ EXPORT(root_search) int root_search(double timeMs, int maxDepth, int nodeLim) {
     if (!pl || pvTable[0] != rootM[0]) { pl = 1; res[4] = rootM[0]; }
     else for (int j = 0; j < pl; j++) res[4 + j] = pvTable[j];
     res[0] = rootM[0]; res[1] = depth; res[2] = nodes; res[3] = pl; resScore = score;
+#ifdef MT
+    if (threadId < MT_SLOTS) {   /* publish the finished iteration */
+      u64 x = (u64)(depth & 255) | (u64)((i32)score & 0xFFFF) << 8 | (u64)(rootM[0] & 0x7FFF) << 24 | 1ull << 40;
+      __atomic_store_n(&gRes[threadId][1], x, __ATOMIC_SEQ_CST); __atomic_store_n(&gRes[threadId][0], rk ^ x, __ATOMIC_SEQ_CST);
+      if (threadId && depth >= gGoal && gGoalKey == rk) gHit = rk;
+    }
+#endif
     js_progress(depth, score, nodes, res + 4, pl);
     if ((score < 0 ? -score : score) > MATE - MAXPLY && depth > 3) break;
     if (deadline > 0 && js_now() - t0 > (deadline - t0) * (P[15] ? P[15] / 100.0 : 0.55)) break;
@@ -1458,6 +1538,26 @@ EXPORT(root_search) int root_search(double timeMs, int maxDepth, int nodeLim) {
     if (gStop) break;
 #endif
   }
+#ifdef MT
+  if (!threadId) {   /* the deepest finished iteration of all the threads (the main thread's on a tie) */
+    int bt = -1, bdep = res[1];
+    for (int i = 1; i < MT_SLOTS; i++) {
+      u64 x = __atomic_load_n(&gRes[i][1], __ATOMIC_SEQ_CST), kx = __atomic_load_n(&gRes[i][0], __ATOMIC_SEQ_CST);
+      if (!(x >> 40) || (kx ^ x) != rk) continue;
+      int dd = (int)(x & 255); if (dd > bdep) { bdep = dd; bt = i; }
+    }
+    if (bt > 0) {
+      u64 x = __atomic_load_n(&gRes[bt][1], __ATOMIC_SEQ_CST), kx = __atomic_load_n(&gRes[bt][0], __ATOMIC_SEQ_CST);
+      int m = (int)((x >> 24) & 0x7FFF), ok = 0;
+      for (int i = 0; i < nRoot; i++) if (rootM[i] == m) ok = 1;
+      if ((kx ^ x) == rk && ok) {
+        if (m != res[0]) { res[3] = 1; res[4] = m; }   /* (the helper's line is not known: its first move) */
+        res[0] = m; res[1] = (int)(x & 255); resScore = (i16)(x >> 8);
+      }
+    }
+    gGoalKey = 0; gHit = 0; rootK = 0;
+  }
+#endif
   res[2] = nodes;
   return res[0];
 }
@@ -1473,6 +1573,10 @@ EXPORT(analyze) int analyze(double timeMs, int maxDepth, int nodeLim) {
   for (int i = 0; i < nRoot; i++) { rootM[i] = legal[i]; rootS[i] = 0; anaD[i] = 0; }
   if (!maxDepth) maxDepth = 30;
   stopFlag = 0; nodes = 0; deadline = timeMs > 0 ? t0 + timeMs : 0; nodeLimit = nodeLim;
+#ifdef MT
+  rootK = 0;
+  if (!threadId)
+#endif
   ttAge = (ttAge + 1) & 31;
   for (int depth = 1; depth <= maxDepth; depth++) {
     rootDepth = depth;

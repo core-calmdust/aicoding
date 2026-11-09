@@ -3,7 +3,7 @@
 (() => {
   'use strict';
   const S = window.ShogiEngine;
-  const VER = '?v=3';
+  const VER = '?v=4';
   const LANG = (() => { try { return (localStorage.getItem('aicoding-lang') || 'ja') === 'ja' ? 'ja' : 'en'; } catch (e) { return 'ja'; } })();
   const T = {
     ja: { game: '将棋', back: '← 将棋', ttl: '最強解析', depth: '深さ', nps: '局面/秒', threads: 'スレッド', sel: 'スレッド数', ana: '解析', stop: '停止', play: 'AIに指させる',
@@ -45,7 +45,7 @@
   const gunzip = async url => { const res = await fetch(url); return new Uint8Array(await new Response(res.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer()); };
   async function initMT() {
     MT.module = await WebAssembly.compileStreaming(fetch('../engine_mt.wasm' + VER));
-    MT.mem = new WebAssembly.Memory({ initial: 1024, maximum: 16384, shared: true });   // maximum = engine_mt.wasm's (1 GiB)
+    MT.mem = new WebAssembly.Memory({ initial: 1536, maximum: 16384, shared: true });   // maximum = engine_mt.wasm's (1 GiB)
     const X = (await WebAssembly.instantiate(MT.module, { env: { memory: MT.mem, now: () => Date.now(), progress: () => {}, aprogress: () => {} } })).exports;
     MT.base = Math.ceil(X.mt_heap_base() / 65536) * 65536;
     const need = MT.base + (MAXT + 1) * SLOT;
@@ -101,7 +101,7 @@
   let FB = null;
   function goFB(ms) {
     if (!FB) {
-      FB = new Worker('../engine.js?v=20261108s3');
+      FB = new Worker('../engine.js?v=20261109s4');
       gunzip('../weights.bin.gz?v=20261018ol').then(w => FB.postMessage({ type: 'weights', buffer: w.buffer.slice(w.byteOffset, w.byteOffset + w.byteLength) })).catch(() => {});
     }
     return new Promise(res => { FB.onmessage = e => { if (e.data.type === 'result') res(e.data); }; FB.postMessage({ type: 'think', id: 1, sfen: startSfen, moves: line.slice(), opts: { time: ms } }); });
