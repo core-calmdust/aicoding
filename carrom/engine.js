@@ -7,8 +7,12 @@
    ===================================================================== */
 (function (root) {
   'use strict';
+  // Phone version (2026-11-10): on phones the board is small on screen, so the carrom men and the striker are 1.25×
+  // larger (the board, pockets and lines stay real size). The page decides once at load; the AI worker gets k.
+  const PHONE_K = 1.25;
+  const phone = () => { try { return typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 600; } catch (e) { return false; } };
+  let RM = 1.59, RS = 2.065;    // carrom man (3.18 cm), striker (4.13 cm) — × K on phones
   const H = 37,                 // half the playing surface (74 cm)
-    RM = 1.59, RS = 2.065,      // carrom man (3.18 cm), striker (4.13 cm)
     MM = 5.5, MS = 15,          // grams
     RP = 2.225,                 // pocket (4.45 cm)
     PC = H - RP,                // pocket centre (touching both cushions)
@@ -21,7 +25,7 @@
     E_MM = .93, E_CUSH = .74, T_CUSH = .96,
     DT = 1 / 480, TMAX = 14, FPS = 60;
   const POCKETS = [[-PC, -PC], [PC, -PC], [-PC, PC], [PC, PC]];
-  const DIM = { H, RM, RS, MM, MS, RP, PC, BY, BX, OUT, CC, VMAX, POCKETS, LINE: 3.18, LINE_IN: 10.15, BASE_LEN: 47 };
+  const DIM = { K: 1, H, RM, RS, MM, MS, RP, PC, BY, BX, OUT, CC, VMAX, POCKETS, LINE: 3.18, LINE_IN: 10.15, BASE_LEN: 47 };
 
   /* ---------- the opening arrangement: the queen in the centre, a ring of six (alternating), a ring of twelve
      where three whites carry on the inner whites' lines (the "Y") and the gaps alternate black, white, black ---------- */
@@ -366,7 +370,9 @@
     return { k: wall, gx: x + dx * wall, gy: y + dy * wall, man: -1 };
   }
 
-  const API = { DIM, DECEL, VMAX, newBoard, nextBoard, matchOver, clone, colOf, other, baseY, onBoard, strikerFree, nearestFree, simulate, resolve, think, perform, wobble, skill, aimTrace, layout, rng, evaluate };
+  function setScale(k) { k = +k || 1; RM = 1.59 * k; RS = 2.065 * k; DIM.K = k; DIM.RM = RM; DIM.RS = RS; }
+  setScale(phone() ? PHONE_K : 1);
+  const API = { setScale, DIM, DECEL, VMAX, newBoard, nextBoard, matchOver, clone, colOf, other, baseY, onBoard, strikerFree, nearestFree, simulate, resolve, think, perform, wobble, skill, aimTrace, layout, rng, evaluate };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   root.CarromEngine = API;
 })(typeof self !== 'undefined' ? self : this);

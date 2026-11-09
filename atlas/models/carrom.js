@@ -35,7 +35,8 @@
   const LO = () => !!(X.coarse || X.lite);
   const SZ = v => Math.round(v * (X.texScale ? X.texScale() : 1));
   const K = 10 / 88, S = 37 * K, FW = 7 * K, FH = 2.2 * K, TOP = .26, RP = 2.225 * K, PC = (37 - 2.225) * K;
-  const RM = 1.59 * K, RS = 2.065 * K, HM = .8 * K, HS = .9 * K;
+  const PK = (window.CarromEngine && window.CarromEngine.DIM.K) || 1;   // phone version: larger men and striker (engine decides)
+  const RM = 1.59 * PK * K, RS = 2.065 * PK * K, HM = .8 * K, HS = .9 * K;
   const LOOKS = ['classic', 'modern', 'neon', 'rajasthan', 'bauhaus', 'tycoon'];
   const PRE = { classic: '', modern: 'm', neon: 'n', rajasthan: 'r', bauhaus: 'h', tycoon: 't' };   // the piece-face kinds of each look
   const lin = c => new (T().Color)(c).convertSRGBToLinear();
