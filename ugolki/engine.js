@@ -57,6 +57,7 @@ function setRule(k) {
     }
     NBR.push(nb); JMP.push(jp);
   }
+  waRule();
 }
 let NBR = [], JMP = [];
 const target = p => HOME[3 - p];
@@ -73,6 +74,39 @@ const Z1 = [[], []], Z2 = [[], []]; for (let k = 0; k < 2; k++) for (let i = 0; 
 const ZS1 = zr(), ZS2 = zr();
 const stamp = new Int32Array(64); let stampN = 1;
 const queue = new Int8Array(64), parent = new Int8Array(64);
+
+// ---------------------------------------------------------------- the WebAssembly search (core.c → core-wasm.js, tools/build-core.sh)
+// search() runs in core.c — the same algorithm, order, table, repetitions and counters (tools/check_wasm.js), several times
+// faster. Loaded synchronously in a worker and in Node; the page itself and any failure use the JS search below.
+let WA = null;
+function loadCore() {
+  try {
+    let b64 = null;
+    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('core-wasm.js?v=1'); b64 = self.UG_WASM; }
+    else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') { const g = globalThis, had = 'self' in g, old = g.self; g.self = g; try { require(require('path').join(__dirname, 'core-wasm.js')); b64 = g.UG_WASM; } finally { if (had) g.self = old; else delete g.self; } }
+    if (!b64 || (typeof process !== 'undefined' && process.env && process.env.UG_NOWASM)) return;
+    const bin = typeof atob === 'function' ? Uint8Array.from(atob(b64), c => c.charCodeAt(0)) : Buffer.from(b64, 'base64');
+    let io = null;
+    const env = {
+      poll: () => (Date.now() > tEnd || (SH !== null && SH.stopped())) ? 1 : 0,
+      shget: (h1, h2) => { const e = SH.get(h1 >>> 0, h2 >>> 0); if (!e) return 0; io[0] = e.d; io[1] = e.f; io[2] = e.v; io[3] = e.m; io[4] = e.ply; return 1; },
+      shput: (h1, h2, d, v, f, m, ply) => { SH.put(h1 >>> 0, h2 >>> 0, d, v, f, m, ply); },
+    };
+    const x = new WebAssembly.Instance(new WebAssembly.Module(bin), { env }).exports, buf = x.memory.buffer;
+    io = new Int32Array(buf, x.iop(), 32);
+    WA = { x, io, sq: new Int8Array(buf, x.sqp(), 64), zt: new Uint32Array(buf, x.ztp(), 258), rh1: new Uint32Array(buf, x.rh1p(), 4096), rh2: new Uint32Array(buf, x.rh2p(), 4096) };
+    for (let k = 0; k < 2; k++) for (let i = 0; i < 64; i++) { WA.zt[k * 64 + i] = Z1[k][i]; WA.zt[128 + k * 64 + i] = Z2[k][i]; }
+    WA.zt[256] = ZS1; WA.zt[257] = ZS2;
+  } catch (e) { WA = null; }
+}
+function waRule() { if (WA) WA.x.setup(R.rows, R.cols, R.diag ? 1 : 0, R.limit, R.cap); }
+function kreset() { killers.length = 0; if (WA) WA.x.kclear(); }
+function ttClear() { TT.clear(); if (WA) WA.x.ttclear(); }
+function ttGet(pos) {   // the one-thread table's entry for pos (or the shared table's)
+  if (SH !== null) return SH.get(pos.h1, pos.h2);
+  if (WA) return WA.x.ttprobe(pos.h1, pos.h2) ? { h2: pos.h2, d: WA.io[0], f: WA.io[1], v: WA.io[2], m: WA.io[3], ply: WA.io[4] } : undefined;
+  const e = TT.get(pos.h1); return e && e.h2 === pos.h2 ? e : undefined;
+}
 
 class Pos {
   constructor() { this.sq = new Int8Array(64); this.side = 0; this.ply = 0; this.free = false; this.reset(); }
@@ -287,7 +321,7 @@ function loadHist(hist) { rhN = 0; for (const x of hist) { const k = x.indexOf('
 function seenBefore(h1, h2) { for (let i = 0; i < rhN; i++) if (RH1[i] === h1 && RH2[i] === h2) return true; return false; }
 const OSC = new Float64Array(1024);
 function orderMoves(pos, L, ttm, ply) {
-  const D = DIST[pos.side + 1], k = killers[ply] || -1, T = target(pos.side + 1), H = HOME[pos.side + 1], n = L.length, out = L.slice();
+  const D = DIST[pos.side + 1], k = (WA ? WA.x.killer(ply) : killers[ply]) || -1, T = target(pos.side + 1), H = HOME[pos.side + 1], n = L.length, out = L.slice();
   // the same scores, then a stable insertion sort (best first) = the order of the former stable index sort
   for (let i = 0; i < n; i++) {
     const m = out[i];
@@ -298,6 +332,14 @@ function orderMoves(pos, L, ttm, ply) {
   return out;
 }
 function search(pos, d, a, b, ply) {
+  if (WA && !stop) {
+    WA.sq.set(pos.sq); const io = WA.io; io[8] = pos.side; io[9] = pos.ply; io[10] = pos.h1 | 0; io[11] = pos.h2 | 0; io[12] = pos.free ? 1 : 0; io[13] = rhN;
+    for (let i = 0; i < rhN; i++) { WA.rh1[i] = RH1[i]; WA.rh2[i] = RH2[i]; }
+    WA.x.setn(nodes, nodeLimit === Infinity ? 1e300 : nodeLimit, SH !== null ? 1 : 0);
+    const v = WA.x.search(d, a, b, ply);
+    nodes = WA.x.getn(); if (WA.x.stopped()) stop = true;
+    return v;
+  }
   nodes++;
   if ((nodes & 1023) === 0 && (Date.now() > tEnd || nodes > nodeLimit || (SH !== null && SH.stopped()))) stop = true;
   if (stop) return 0;
@@ -349,7 +391,7 @@ function helperDone(pos, L, d) {
   return e && e.f === 0 && e.d >= d && e.ply === pos.ply && L.indexOf(e.m) >= 0 ? { move: e.m, v: e.v, depth: e.d } : null;
 }
 function bestMove(pos, hist, maxD, ms, nk) {
-  nodes = 0; stop = false; tEnd = ms ? Date.now() + ms : Infinity; nodeLimit = nk ? nk * 1000 : Infinity; killers.length = 0;
+  nodes = 0; stop = false; tEnd = ms ? Date.now() + ms : Infinity; nodeLimit = nk ? nk * 1000 : Infinity; kreset();
   const L = pos.moves(); if (L.length === 1) return { move: L[0], v: 0, depth: 0 };
   let best = { move: orderMoves(pos, L, -1, 0)[0], v: 0, depth: 0 };
   for (let d = 1; d <= (maxD || 60); d++) {
@@ -477,7 +519,7 @@ function mtPlan(m) {
 // the node after the root and m.line: its position, the earlier positions (repetitions) and its ply from the root
 function mtNode(m) {
   if (SH !== null) SH.salt = SALT[RK] | 0;
-  else if (mtRule !== RK) { TT.clear(); mtRule = RK; }
+  else if (mtRule !== RK) { ttClear(); mtRule = RK; }
   const line = m.line || [], { pos, hashes } = replay(m.start, m.moves.concat(line)); hashes.pop();
   return { pos, hist: hashes, ply: line.length };
 }
@@ -492,13 +534,13 @@ function mtKids(m) {
   const { pos, hist, ply } = mtNode(m);
   loadHist(hist);
   if (terminal(pos, ply) !== null || (ply > 0 && seenBefore(pos.h1, pos.h2))) return { kids: [] };
-  const e = SH !== null ? SH.get(pos.h1, pos.h2) : TT.get(pos.h1);
+  const e = ttGet(pos);
   return { kids: orderMoves(pos, pos.moves(), e && e.h2 === pos.h2 && e.ply === pos.ply ? e.m : -1, ply).map(x => ({ m: x, s: -1 })) };
 }
 function mtLazy(m) {   // (shared/tools/mtsim.js: one Lazy SMP thread's search of the root to depth m.d, root order rotated by m.rot)
   const { pos, hist } = mtNode(m);
   nodes = 0; stop = false; tEnd = m.until || Infinity; nodeLimit = Infinity; loadHist(hist);
-  const e = SH !== null ? SH.get(pos.h1, pos.h2) : TT.get(pos.h1);
+  const e = ttGet(pos);
   let L = orderMoves(pos, pos.moves(), e && e.h2 === pos.h2 ? e.m : -1, 0);
   if (m.rot) { const k = m.rot % L.length; L = L.slice(k).concat(L.slice(0, k)); }
   let a = -WIN - 1, best = -Infinity, bm = L[0];
@@ -667,8 +709,9 @@ function duelReply(start, moves, n, rule) {
 }
 function puzzle(start, moves, n, defend, goal, base, rule) { return soloGood(start, moves, n, rule).map(m => ({ m, need: n })); }
 
+loadCore();
 setRule('c33');
-const API = { get nodes() { return nodes; }, set SH(t) { SH = t; }, get SH() { return SH; }, P1, P2, WIN, WINT, PASS, RULES, RULE_ORDER, setRule, get rule() { return RK; }, get R() { return R; }, HOME: () => HOME, HOMEL: () => HOMEL, DIST: () => DIST, target, RC, sqAt, sqName, mv, mFrom, mTo, mCap, Pos, path, isJump, name, parse, replay, judge, LEVELS, think, analyze, cands, puzzle, mtPlan, mtV, mtKids, mtFin, mtLazy, pvOf, soloGood, soloMin, soloNeed, duelGood, duelMin, duelReply, evaluate, kindOf, bitsOf: () => [], popc: () => 0, bit: () => 0 };
+const API = { get wasm() { return !!WA; }, get nodes() { return nodes; }, set SH(t) { SH = t; }, get SH() { return SH; }, P1, P2, WIN, WINT, PASS, RULES, RULE_ORDER, setRule, get rule() { return RK; }, get R() { return R; }, HOME: () => HOME, HOMEL: () => HOMEL, DIST: () => DIST, target, RC, sqAt, sqName, mv, mFrom, mTo, mCap, Pos, path, isJump, name, parse, replay, judge, LEVELS, think, analyze, cands, puzzle, mtPlan, mtV, mtKids, mtFin, mtLazy, pvOf, soloGood, soloMin, soloNeed, duelGood, duelMin, duelReply, evaluate, kindOf, bitsOf: () => [], popc: () => 0, bit: () => 0 };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') {
   let queueP = Promise.resolve();
@@ -688,7 +731,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
         else if (m.type === 'puzzle') self.postMessage({ id: m.id, type: 'result', list: puzzle(m.start, m.moves, m.n) });
         else if (m.type === 'duel') { const g = duelGood(m.start, m.moves, m.n); self.postMessage({ id: m.id, type: 'result', list: g ? g.map(x => ({ m: x, need: m.n })) : null }); }
         else if (m.type === 'duelReply') self.postMessage({ id: m.id, type: 'result', ...duelReply(m.start, m.moves, m.n) });
-        else if (m.type === 'newgame') { TT.clear(); self.postMessage({ id: m.id, type: 'result' }); }
+        else if (m.type === 'newgame') { ttClear(); self.postMessage({ id: m.id, type: 'result' }); }
         else if (m.type === 'mtplan') self.postMessage({ id: m.id, type: 'result', ...mtPlan(m) });
         else if (m.type === 'mtlead') self.postMessage({ id: m.id, type: 'result', ...(() => { PRO_CFG = m.cfg || null; try { const r = think(m.start, m.moves, m.level); return Object.assign({}, r, { nodes }); } finally { PRO_CFG = null; } })() });   // (Lazy SMP: the job as one thread plays it, on the shared table)
         else if (m.type === 'mthelp') self.postMessage({ id: m.id, type: 'result', ...mtHelp(m) });
