@@ -786,7 +786,7 @@ function rootPVS(pos, moves, depth, mode, a0, b0) {
 // one by one (an atomic counter) by the lead and the helpers: a null-window test against the shared best, a re-search on a
 // fail-high. While the lead is on the first move, the helpers solve its replies from the other end (they fill the shared
 // table). The result is the same exact value as rootPVS. Helpers (opts.rot > 0) join when the announced position is theirs.
-const SP = { GEN: 8, ST: 9, NEXT: 10, DONE: 11, BEST: 12, LO: 13, HI: 14, N: 15, FAIL: 16, POS: 17, MV: 24 };   // ST: 0 none, 1 announced, 2 first move, 3 open, 4 closed
+const SP = { GEN: 8, ST: 9, NEXT: 10, DONE: 11, BEST: 12, LO: 13, HI: 14, N: 15, FAIL: 16, POS: 17, MV: 24, ACT: 64 };   // ACT + i: the generation while root move i is being solved (2026-11-09)   // ST: 0 none, 1 announced, 2 first move, 3 open, 4 closed
 const splitArr = () => { const s = root.REVERSI_SPLIT; return s && s.length >= SP.MV + 40 ? s : null; };
 const spPack = (v, m) => ((v + 128) << 8) | m, spV = x => (x >> 8) - 128;
 function spBest(S, v, m) { for (;;) { const x = Atomics.load(S, SP.BEST); if (spV(x) >= v) return; if (Atomics.compareExchange(S, SP.BEST, x, spPack(v, m)) === x) return; } }
@@ -805,8 +805,9 @@ function splitClaim(S, g, pos, empties) {
     const x = Atomics.load(S, SP.NEXT);
     if ((x >>> 8) !== g || (x & 255) >= n) return;
     if (Atomics.compareExchange(S, SP.NEXT, x, x + 1) !== x) continue;
-    const m = Atomics.load(S, SP.MV + (x & 255)), [a, b, c, d] = childOf(pl, ph, ol, oh, m);
+    const m = Atomics.load(S, SP.MV + (x & 255)), [a, b, c, d] = childOf(pl, ph, ol, oh, m), act = SP.ACT + Math.min(35, x & 255);
     let fail = false;
+    Atomics.store(S, act, g);
     try {
       const al = Math.max(lo, spV(Atomics.load(S, SP.BEST)));
       if (al < hi) {
@@ -815,6 +816,7 @@ function splitClaim(S, g, pos, empties) {
         spBest(S, v, m);
       }
     } catch (e) { if (e !== ABORT) throw e; fail = true; Atomics.store(S, SP.FAIL, 1); }
+    Atomics.store(S, act, 0);
     Atomics.add(S, SP.DONE, 1); Atomics.notify(S, SP.DONE);
     if (fail) throw ABORT;
   }
@@ -863,12 +865,32 @@ function splitHelp(pos, empties, id) {
     if (Date.now() - t0 > 40 || Atomics.load(S, 0)) return false;
     Atomics.wait(S, SP.ST, Atomics.load(S, SP.ST), 5);
   }
-  let lastG = -1, gcG = -1, gcList = null, gcI = 0;
+  let lastG = -1, gcG = -1, gcList = null, gcI = 0, idle = null, helped = 0;
   for (;;) {
     if (Atomics.load(S, 0) || !spSamePos(S, pos)) throw ABORT;
     const st = Atomics.load(S, SP.ST), g = Atomics.load(S, SP.GEN);
     if (st === 0) throw ABORT;
-    if (st === 3 && g !== lastG) { lastG = g; splitClaim(S, g, pos, empties); continue; }
+    if (st === 3 && g !== lastG) { lastG = g; splitClaim(S, g, pos, empties); idle = null; helped = 0; continue; }
+    if (st === 3 && g === lastG && empties >= 6 && LAZY.idle) {
+      // no root move left to take: help a move another thread is still solving (its replies, from the other end, with
+      // the null window it is tested with; they fill the shared table), until it is done (2026-11-09)
+      if (idle && (Atomics.load(S, idle.act) !== g || idle.j >= idle.rs.length)) idle = null;
+      if (!idle) {   // (each move once: helped = the moves done)
+        const n = Math.min(32, Atomics.load(S, SP.N));
+        for (let t = 0; t < n && !idle; t++) {
+          const i = 1 + (t + id) % Math.max(1, n - 1);
+          if (i >= n || (helped >>> i) & 1 || Atomics.load(S, SP.ACT + i) !== g) continue;
+          helped |= 1 << i;
+          const c = childOf(pos[0], pos[1], pos[2], pos[3], Atomics.load(S, SP.MV + i)), rs = legalList(c[0], c[1], c[2], c[3]).reverse();
+          if (rs.length > 1) { const k0 = (id >> 1) % rs.length; idle = { act: SP.ACT + i, c, rs: rs.slice(k0).concat(rs.slice(0, k0)), j: 0 }; }
+        }
+      }
+      if (idle) {
+        const al = Math.max(Atomics.load(S, SP.LO), spV(Atomics.load(S, SP.BEST))), [a, b, c, d] = idle.c, [e, f, h, k] = childOf(a, b, c, d, idle.rs[idle.j++]);
+        if (al < Atomics.load(S, SP.HI)) solve(e, f, h, k, al, al + 1, empties - 2, 2, false);
+        continue;
+      }
+    }
     if (st === 2 && g !== lastG) {
       // the lead is on the first move: solve its replies, starting from the other end
       if (gcG !== g) {
@@ -886,6 +908,35 @@ function splitHelp(pos, empties, id) {
     }
     Atomics.wait(S, SP.ST, st, 10);
   }
+}
+
+// ---- Lazy SMP of the midgame (2026-11-09): the helpers publish the deepest root result they have finished in the shared
+// control block ([100] the position's key, set by the lead; [101] depth << 24 | move << 18 | score + 2^17). The lead takes
+// a deeper one at the end of each of its depths (and when its time is up) and goes on from there; a helper that falls
+// behind it skips ahead. Without helpers nothing changes (one thread: the same moves and nodes as before).
+const LZ_KEY = 100, LZ_BEST = 101;
+const lzArr = () => { const s = root.REVERSI_SPLIT; return s && s.length >= 104 ? s : null; };
+const lzKey = pos => (Math.imul(pos[0] ^ 0x9E3779B9, 0x85EBCA6B) ^ Math.imul(pos[1] + 0x7F4A7C15, 0xC2B2AE35) ^ Math.imul(pos[2] ^ 0x165667B1, 0x27D4EB2F) ^ Math.imul(pos[3] + 0x61C88647, 0x9E3779B1)) | 1;
+function lzPut(L, k, d, mv, sc) {
+  if (Atomics.load(L, LZ_KEY) !== k || mv < 0 || d > 127) return;
+  const x = (d << 24) | (mv << 18) | (Math.max(-131000, Math.min(131000, sc)) + 131072);
+  for (;;) { const c = Atomics.load(L, LZ_BEST); if ((c >>> 24) >= d) return; if (Atomics.compareExchange(L, LZ_BEST, c, x) === c) return; }
+}
+function lzGet(L, k) {
+  if (Atomics.load(L, LZ_KEY) !== k) return null;
+  const x = Atomics.load(L, LZ_BEST);
+  return x ? { depth: x >>> 24, move: (x >> 18) & 63, score: (x & 0x3FFFF) - 131072 } : null;
+}
+
+// how helper thread `id` (1, 2, …) differs from the lead in the midgame. 'rot' (before 2026-11-09): root moves rotated by id.
+// 'mix': odd helpers rotate the root moves, even ones keep the lead's root order and rotate the replies one ply below
+// (engine_mt.wasm set_rot1), so the lead's first (most expensive) move is shared out too.
+const LAZY = { plan: 'mix', idle: true };   // (idle: splitHelp's help on the root moves still being solved)
+function helperPlan(id) {
+  if (LAZY.plan === 'rot') return { rk: id, r1: 0, d0: 0 };
+  if (LAZY.plan === 'r1') return { rk: 0, r1: id, d0: 0 };
+  if (LAZY.plan === 'mixd') return id & 1 ? { rk: (id + 1) >> 1, r1: 0, d0: 0 } : { rk: 0, r1: id >> 1, d0: (id >> 1) & 1 };
+  return id & 1 ? { rk: (id + 1) >> 1, r1: 0, d0: 0 } : { rk: 0, r1: id >> 1, d0: 0 };
 }
 
 function orderRoot(moves, prev) {
@@ -1022,6 +1073,7 @@ function think(cells, toMove, opts, onProgress) {
     }
   }
   const empties = 64 - pc(pl | ol) - pc(ph | oh);
+  if (!opts.rot && WON && WX.tt_new) WX.tt_new();   // (engine_mt.wasm: a new age for the shared table's entries)
   const time = opts.time ?? lv.time;
   nodeMax = lv.nodes || 0;   // (PRO: a node limit — the search stops like at a deadline and keeps the last finished depth)
   const rand = opts.random || Math.random;
@@ -1059,12 +1111,17 @@ function think(cells, toMove, opts, onProgress) {
   const doExact = empties <= lv.exact;
   const wldNow = !doExact && lv.wld && empties <= lv.wld && !variety;
   const SPL = !opts.rot && (doExact ? !variety : wldNow) ? splitAnnounce(pos) : null;   // (threads: the lead's solve is split at the root)
+  const LZ = !variety && lzArr(), lzk = LZ ? lzKey(pos) : 0;   // (threads: the helpers' deeper midgame results)
+  const HP = opts.rot ? helperPlan(opts.rot) : null;   // (a helper thread: how it differs from the lead)
+  if (WON && WX.set_rot1) WX.set_rot1(HP ? HP.r1 : 0);
+  if (LZ && !opts.rot) { Atomics.store(LZ, LZ_KEY, lzk); Atomics.store(LZ, LZ_BEST, 0); }
+  let partial = false;
   try {
     const midMax = doExact ? Math.min(maxDepth, 10) : maxDepth;
-    const startD = Math.min((doExact ? 2 : 1) + (opts.d0 || 0), midMax);   // d0: a helper thread starting a ply ahead (pro/)
+    const startD = Math.min((doExact ? 2 : 1) + (opts.d0 ?? (HP ? HP.d0 : 0)), midMax);   // d0: a helper thread starting a ply ahead (pro/)
     for (let d = startD; d <= midMax; d++) {
       let ordered = orderRoot(moves, prev);
-      if (opts.rot && ordered.length > 1) { const k = opts.rot % ordered.length; ordered = ordered.slice(k).concat(ordered.slice(0, k)); }   // pro/ helper threads: another first move (Lazy SMP diversity)
+      if (HP && HP.rk && ordered.length > 1) { const k = HP.rk % ordered.length; ordered = ordered.slice(k).concat(ordered.slice(0, k)); }   // helper threads: another first move (Lazy SMP diversity)
       let r;
       if (variety && !doExact) {
         const all = scoreAllMoves(pos, ordered, 'mid', d);
@@ -1078,13 +1135,25 @@ function think(cells, toMove, opts, onProgress) {
         prev.set(r.move, 1e8 + d);
       }
       result = r; depthDone = d;
+      if (LZ && !(variety && !doExact)) {
+        if (opts.rot) lzPut(LZ, lzk, d, r.move, r.score);
+        const h = lzGet(LZ, lzk);
+        if (h && h.depth > d) {
+          if (!opts.rot) { result = r = { move: h.move, score: h.score }; depthDone = d = h.depth; prev.set(h.move, 1e8 + d); }
+          else d = Math.max(d, h.depth + ((opts.d0 ?? HP.d0) ? 1 : 0));   // (a helper behind the others: on to their next depth, + d0)
+        }
+      }
       onProgress && onProgress({ depth: d, move: r.move, score: r.score / SCALE, nodes, ms: Date.now() - t0 });
       if (Date.now() - t0 > softTime * (lv.use || 0.45) && !doExact) break;   // (lv.use: Lv.21-25 start a new depth later and use more of their time)
     }
   } catch (e) {
     if (e !== ABORT) throw e;
-    if (PART && PART.n > 0 && result && PART.move !== result.move) { result = { move: PART.move, score: PART.score }; depthDone = PART.d; }
+    if (PART && PART.n > 0 && result && PART.move !== result.move) { result = { move: PART.move, score: PART.score }; depthDone = PART.d; partial = true; }
     PART = null;
+  }
+  if (LZ && !opts.rot && !doExact) {   // (the time is up: a deeper depth finished by a helper)
+    const h = lzGet(LZ, lzk);
+    if (h && (h.depth > depthDone || (partial && h.depth >= depthDone))) { result = { move: h.move, score: h.score }; depthDone = h.depth; }
   }
 
   let exactDone = false;
@@ -1177,6 +1246,7 @@ function analyze(cells, toMove, opts, onProgress) {
   const moves = legalList(pl, ph, ol, oh);
   const empties = 64 - pc(pl | ol) - pc(ph | oh);
   const t0 = Date.now(); nodes = 0; nodeMax = 0;
+  if (WON && WX.tt_new) WX.tt_new();
   const time = opts.time || 1500;
   let out = null;
   if (empties <= (opts.exact ?? 18)) {
@@ -1220,7 +1290,7 @@ function searchMove(cells, toMove, move, depth, alpha, beta, mode, dl) {
   } catch (e) { if (e === ABORT) return null; throw e; }
 }
 const API = {
-  think, analyze, searchMove, setWeights, setBook, bookLookup, bookCanon, decodeBook, clearTT, toBits, legalList, childOf, featureIndices,
+  LAZY, think, analyze, searchMove, setWeights, setBook, bookLookup, bookCanon, decodeBook, clearTT, toBits, legalList, childOf, featureIndices,
   evalHand, evaluate: (a, b, c, d) => evaluate(a, b, c, d), search, solve, finalScore, pc,
   get nodes() { return nodes; }, set deadline(v) { deadline = v; },
   TUNE, MPC, get NINST() { return NINST; }, NEXT, get PS_V1() { return PS_V1; }, get PS_V2() { return PS_V2; }, get PHASE_SIZE() { return PHASE_SIZE; }, get PATTERNS() { return PATTERNS; }, get PATTERN_SET() { return PATTERN_SET; }, useSet: k => setupPatterns(SETS[k], k), LEVELS, NLEVELS, SCALE,
