@@ -463,9 +463,9 @@
       const wave = new TT.Mesh(geos.halo, wm); wave.position.y = .006; wave.visible = false; wave.renderOrder = 3; g.add(wave);   // a thin shock ring on the board
       const e0 = top.emissive.clone();
       g.userData.flash = k => {
-        k = Math.max(0, Math.min(1, k)); top.emissive.copy(e0).multiplyScalar(1 + 3.5 * k); lm.emissiveIntensity = .55 + 4 * k;
-        halo.visible = wave.visible = k > .01; hm.opacity = k; wm.opacity = .7 * k * k;
-        const sc = r * (1.25 + (1 - k) * 1.3), sw = r * (1.4 + (1 - k) * 3.2); halo.scale.set(sc, 1, sc); wave.scale.set(sw, 1, sw);
+        k = Math.max(0, Math.min(1, k)); top.emissive.copy(e0).multiplyScalar(1 + 1.8 * k); lm.emissiveIntensity = .55 + 2.2 * k;
+        halo.visible = wave.visible = k > .01; hm.opacity = .55 * k; wm.opacity = .3 * k * k;   // (kept modest: a break lights many men at once)
+        const sc = r * (1.2 + (1 - k) * .9), sw = r * (1.3 + (1 - k) * 2.2); halo.scale.set(sc, 1, sc); wave.scale.set(sw, 1, sw);
       };
     }
     return g;
@@ -491,7 +491,7 @@
       if (BM.rim) { const rg = geos.prim || (geos.prim = (() => { const q = new TT.TorusGeometry(RP + .012, .014, 6, LO() ? 20 : 36); q.rotateX(Math.PI / 2); if (X.share) X.share(q); return q; })()); const rim = new TT.Mesh(rg, BM.rim); rim.position.set(sx * PC, TOP + .004, sz * PC); g.add(rim); }
     }
     if (BM.ruby) {   // cabochons along the frame (ruby · sapphire · emerald · sapphire · ruby …) and a diamond at each corner
-      const cab = gemGeo(.15, 12), dia = gemGeo(.22, 16);
+      const cab = gemGeo(.22, 12), dia = gemGeo(.3, 16);
       const collar = (r) => geos['col' + r] || (geos['col' + r] = (() => { const q = new TT.CylinderGeometry(r * 1.04, r * 1.14, r * .82, LO() ? 16 : 28, 1, true); if (X.share) X.share(q); return q; })());
       // a stone raised in a gold collar: its inner facets (back faces), a dark heart, the crown; kept out of the showcase's merge
       const stone = (geo, r, mt, back, core, x, y, z, ry) => {
@@ -501,15 +501,15 @@
         const b = new TT.Mesh(geo, back); b.renderOrder = 1; gs.add(b);
         const m = new TT.Mesh(geo, mt); m.castShadow = true; m.renderOrder = 2; gs.add(m); g.add(gs);
       };
-      const set = geos.bez || (geos.bez = (() => { const q = new TT.TorusGeometry(.16, .022, 6, LO() ? 16 : 24); q.rotateX(Math.PI / 2); if (X.share) X.share(q); return q; })());
+      const set = geos.bez || (geos.bez = (() => { const q = new TT.TorusGeometry(.235, .026, 6, LO() ? 16 : 24); q.rotateX(Math.PI / 2); if (X.share) X.share(q); return q; })());
       const ym = TOP + FH, mid = S + FW / 2, order = [BM.ruby, BM.sapphire, BM.emerald, BM.sapphire, BM.ruby];
       for (let side = 0; side < 4; side++) for (let k = 0; k < 5; k++) {
         const t = (k - 2) * S * .42, x = side < 2 ? t : (side === 2 ? -mid : mid), z = side < 2 ? (side === 0 ? -mid : mid) : t;
         const nm = ['ruby', 'sapphire', 'emerald', 'sapphire', 'ruby'][k];
-        stone(cab, .15, order[k], BM.back[nm], BM.core[nm], x, ym, z, k * .4);
+        stone(cab, .22, order[k], BM.back[nm], BM.core[nm], x, ym, z, k * .4);
         const bz = new TT.Mesh(set, BM.frame); bz.position.set(x, ym + .004, z); g.add(bz);
       }
-      for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { const bz = new TT.Mesh(geos.bez, BM.frame); bz.scale.setScalar(1.45); bz.position.set(sx * mid, ym + .004, sz * mid); g.add(bz); stone(dia, .22, BM.diamond, BM.back.diamond, null, sx * mid, ym, sz * mid, Math.PI / 16); }
+      for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { const bz = new TT.Mesh(geos.bez, BM.frame); bz.scale.setScalar(1.36); bz.position.set(sx * mid, ym + .004, sz * mid); g.add(bz); stone(dia, .3, BM.diamond, BM.back.diamond, null, sx * mid, ym, sz * mid, Math.PI / 16); }
     }
     if (BM.edge) {   // brass edging (a neon tube on the night board) along the frame's top outer edge
       const e = new TT.Mesh(new TT.BoxGeometry(2 * (S + FW) - .02, .012, .03), BM.edge);

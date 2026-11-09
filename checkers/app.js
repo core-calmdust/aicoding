@@ -1146,7 +1146,7 @@ const PRO_L = window.ProSet ? ProSet.ladder(E.LEVELS, { dmax: 30, nmax: 50000000
 // threads (本編のマルチスレッド): with any limit of the search; the default is every thread for the levels that think by time, else one
 var PRO = PRO_L ? ProSet.init({ game: 'checkers', lang: () => LANG, level: () => draft.level || settings.level, show: () => draft.mode === 'ai' || draft.mode === 'watch',
   store: { get: () => settings.pro, set: v => { settings.pro = v; } },
-  defaults: MTP ? lv => Object.assign(PRO_L.defaults(lv), { threads: mtLevel(lv) ? ProSet.maxThreads() : 1 }) : PRO_L.defaults,
+  defaults: MTP ? lv => Object.assign(PRO_L.defaults(lv), { threads: mtLevel(lv) ? ProSet.defThreads() : 1 }) : PRO_L.defaults,
   params: MTP ? [PRO_L.params[0], { key: 'threads' }].concat(PRO_L.params.slice(1)) : PRO_L.params }) : null;
 function proCfg(lv) { if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; const e = PRO.get(lv); return e ? Object.assign(PRO_L.cfg(e, lv), MTP ? { threads: e.threads || 1 } : {}) : null; }
 function proTag(lv) { return proCfg(lv) ? ' PRO' : ''; }
