@@ -185,7 +185,7 @@
     g.rotateX(-Math.PI / 2); g.translate(0, bev, 0);
     // UVs along the rails (wood grain runs along each rail)
     const P = g.attributes.position, UV = g.attributes.uv;
-    for (let i = 0; i < UV.count; i++) { const x = P.getX(i), z = P.getZ(i), y = P.getY(i); const along = Math.abs(x) > Math.abs(z) ? z : x; UV.setXY(i, along / 3 + .5, (Math.max(Math.abs(x), Math.abs(z)) + y) / 1.4); }
+    for (let i = 0; i < UV.count; i++) { const x = P.getX(i), z = P.getZ(i), y = P.getY(i); const along = Math.abs(x) > Math.abs(z) ? z : x; UV.setXY(i, (along + o) / (2 * o) * .999, (Math.max(Math.abs(x), Math.abs(z)) + y) / 1.4); }   // one span of the texture along each rail: no repeat, so no seam (only the mitres at the corners)
     g.computeVertexNormals(); if (X.share) X.share(g);
     return (geos[key] = g);
   }
