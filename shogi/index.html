@@ -1982,6 +1982,7 @@ function tzBtn() {   // a round icon button on the board's bottom-right corner (
 }
 // a new problem: its region; anything else (a game, a lesson): the whole board
 function tzSync() {
+  document.body.classList.toggle('ts-noopp', tzActive() && !!lesson.cur.conv);   // (the defender's stand hidden only while a composed tsume is on — back to a game, it shows again)
   const pr = tzActive() ? lesson.cur : null;
   if (pr !== TZ.pr) { TZ.pr = pr; TZ.reg = pr ? tzRegion(pr) : null; TZ.on = true; TZ.pan = [0, 0]; tzApply(!pr); return; }
   if (TZ.s > 1.001 || TZ.reg) { const T = tzTarget(); if (Math.abs(T.s - TZ.s) > .001 || Math.abs(T.tx - TZ.tx) > .5 || Math.abs(T.ty - TZ.ty) > .5) tzApply(true); }
