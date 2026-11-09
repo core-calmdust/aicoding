@@ -82,6 +82,10 @@ html:not(.atlas-skin) .board-area > .hand.bottom{position:relative;left:0}
 @keyframes hintGlow{0%,100%{box-shadow:inset 0 0 0 2px var(--accent),0 0 10px 2px rgba(226,194,117,.7)}50%{box-shadow:inset 0 0 0 2px var(--accent),0 0 22px 8px rgba(226,194,117,.95)}}
 .hslot.hint{background:rgba(226,194,117,.4);animation:hintGlow 1.1s ease-in-out infinite;border-radius:8px}
 .hslot .pc{position:relative;width:var(--cw);height:var(--ch)}
+.tz-btn{position:absolute;z-index:6;width:40px;height:40px;border-radius:50%;border:2px solid rgba(0,0,0,.12);background:rgba(255,255,255,.92);box-shadow:0 3px 0 rgba(0,0,0,.15);display:grid;place-items:center;padding:0;cursor:pointer;color:#3a2e24}
+.tz-btn svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.tz-btn[hidden]{display:none}
+body.tz-on .coords{opacity:0;transition:opacity .2s}   /* 詰将棋 zoom (tzStyle) */
 .frame{position:relative;padding:var(--fp) var(--fp) calc(var(--cw)*0.16) calc(var(--cw)*0.16);border-radius:10px;
   background:linear-gradient(145deg,#2a2018 0%,#16100b 55%,#22190f 100%);
   box-shadow:0 40px 80px -30px rgba(0,0,0,.85),0 0 0 1px rgba(201,169,97,.25)}
@@ -1863,6 +1867,89 @@ function renderCoords() {
   for (let r = 0; r < h; r++) right += `<span>${KAN[flip ? h - r : r + 1]}</span>`;
   $('#coordTop').innerHTML = top; $('#coordRight').innerHTML = right;
 }
+// ---- 詰将棋: zoom onto the part of the board the problem uses (2026-11-10, same as the portal's 3D table) ----
+// The DOM board is scaled with a CSS transform (clipped to its own box, so it never covers the coordinates or the stands);
+// with the 3D skin, the camera follows the same mapping (window.__boardZoom, read by atlas/skin/common.js) and the canvas is
+// clipped to the board. A round button on the board's corner switches zoom / whole board; while zoomed, a slide pans.
+const TZ = { on: true, reg: null, pr: null, s: 1, tx: 0, ty: 0, pan: [0, 0], raf: 0, btn: null };
+function tzActive() { return !!(lesson && lesson.endless && lesson.cur && lesson.cur.kind === 'tsume'); }
+function tzRegion(pr) {
+  const Q = new E.Position(); Q.setSfen(pr.sfen); const cs = [], rs = [];
+  const add = sq => { const d = sqToDisp(sq); cs.push(d % 9); rs.push((d / 9) | 0); };
+  for (let sq = 0; sq < 81; sq++) if (Q.board[sq]) add(sq);
+  for (const u of pr.sol || []) { const m = Q.fromUsi(u); if (!m) break; if (!E.isDrop(m)) add(E.mFrom(m)); add(E.mTo(m)); Q.doMove(m); }
+  if (!cs.length) return null;
+  const span = (a, b) => { a = Math.max(0, a - 1); b = Math.min(8, b + 1); while (b - a < 4) { if (a > 0) a--; if (b - a < 4 && b < 8) b++; } return [a, b]; };
+  const [c0, c1] = span(Math.min(...cs), Math.max(...cs)), [r0, r1] = span(Math.min(...rs), Math.max(...rs));
+  return c1 - c0 >= 7 && r1 - r0 >= 7 ? null : { c0, c1, r0, r1 };
+}
+function tzTarget() {
+  const W = boardEl.offsetWidth, H = boardEl.offsetHeight;
+  if (!TZ.on || !TZ.reg || !tzActive() || !W) return { s: 1, tx: 0, ty: 0 };
+  const g = TZ.reg, cw = W / 9, ch = H / 9, pad = .45;
+  const s = Math.min(2.6, W / ((g.c1 - g.c0 + 1 + pad) * cw), H / ((g.r1 - g.r0 + 1 + pad) * ch));
+  const cx = (g.c0 + g.c1 + 1) / 2 * cw, cy = (g.r0 + g.r1 + 1) / 2 * ch;
+  let tx = W / 2 - s * cx + TZ.pan[0], ty = H / 2 - s * cy + TZ.pan[1];
+  const ctx0 = tx, cty0 = ty;
+  tx = Math.max(W - s * W, Math.min(0, tx)); ty = Math.max(H - s * H, Math.min(0, ty));
+  TZ.pan[0] += tx - ctx0; TZ.pan[1] += ty - cty0;   // (the pan stops at the board's edges)
+  return { s, tx, ty };
+}
+function tzStyle() {
+  const { s, tx, ty } = TZ, on = s > 1.001, W = boardEl.offsetWidth, H = boardEl.offsetHeight;
+  boardEl.style.transformOrigin = on ? '0 0' : '';
+  boardEl.style.transform = on ? `translate(${tx.toFixed(2)}px,${ty.toFixed(2)}px) scale(${s.toFixed(4)})` : '';
+  // the part of the (unscaled) board that lands inside its own box
+  boardEl.style.clipPath = on ? `inset(${(-ty / s).toFixed(2)}px ${(W - (W - tx) / s).toFixed(2)}px ${(H - (H - ty) / s).toFixed(2)}px ${(-tx / s).toFixed(2)}px)` : '';
+  document.body.classList.toggle('tz-on', on);
+  window.__boardZoom = on ? { s, tx, ty } : null;
+  const host = document.getElementById('atlasGL');
+  if (host) host.style.clipPath = on ? `inset(${boardEl.offsetTop - host.offsetTop}px ${host.offsetLeft + host.offsetWidth - boardEl.offsetLeft - W}px ${host.offsetTop + host.offsetHeight - boardEl.offsetTop - H}px ${boardEl.offsetLeft - host.offsetLeft}px)` : '';
+  if (window.Table3D && Table3D.kick) Table3D.kick(200);
+  tzBtn();
+}
+function tzApply(snap) {
+  const T = tzTarget(); cancelAnimationFrame(TZ.raf); TZ.raf = 0;
+  if (snap || REDUCED_MOTION.matches) { Object.assign(TZ, T); tzStyle(); return; }
+  const a = { s: TZ.s, tx: TZ.tx, ty: TZ.ty }, t0 = performance.now(), D = 340, ez = k => 1 - Math.pow(1 - k, 3);
+  (function st(n) { const k = Math.min(1, (n - t0) / D), e = ez(k); TZ.s = a.s + (T.s - a.s) * e; TZ.tx = a.tx + (T.tx - a.tx) * e; TZ.ty = a.ty + (T.ty - a.ty) * e; tzStyle(); if (k < 1) TZ.raf = requestAnimationFrame(st); else TZ.raf = 0; })(t0);
+}
+function tzBtn() {
+  const show = tzActive() && !!TZ.reg;
+  if (!TZ.btn) {
+    if (!show) return;
+    const b = TZ.btn = document.createElement('button'); b.type = 'button'; b.className = 'tz-btn';
+    b.onclick = e => { e.stopPropagation(); TZ.on = !TZ.on; TZ.pan = [0, 0]; tzApply(); };
+    boardEl.parentElement.appendChild(b);
+  }
+  const b = TZ.btn; b.hidden = !show; if (!show) return;
+  b.style.left = (boardEl.offsetLeft + boardEl.offsetWidth - 46) + 'px'; b.style.top = (boardEl.offsetTop + 6) + 'px';
+  const zin = TZ.on && TZ.s > 1.001, k = zin ? 'all' : 'in';
+  if (b.dataset.k !== k) { b.dataset.k = k; b.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${zin ? '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>' : '<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5M8 10.5h5M10.5 8v5"/>'}</svg>`; }
+}
+// a new problem: its region; anything else (a game, a lesson): the whole board
+function tzSync() {
+  const pr = tzActive() ? lesson.cur : null;
+  if (pr !== TZ.pr) { TZ.pr = pr; TZ.reg = pr ? tzRegion(pr) : null; TZ.on = true; TZ.pan = [0, 0]; tzApply(!pr); return; }
+  if (TZ.s > 1.001 || TZ.reg) { const T = tzTarget(); if (Math.abs(T.s - TZ.s) > .001 || Math.abs(T.tx - TZ.tx) > .5 || Math.abs(T.ty - TZ.ty) > .5) tzApply(true); }
+}
+addEventListener('resize', () => requestAnimationFrame(() => { if (TZ.reg) tzApply(true); }));
+// zoomed: a slide that does not start on one of your own pieces pans the board
+{ let pd = null;
+  boardEl.addEventListener('pointerdown', e => {
+    if (TZ.s <= 1.001 || (e.pointerType === 'mouse' && e.button)) return;
+    const s = sqFromPoint(e.clientX, e.clientY); if (s >= 0 && P.board[s] && E.colorOf(P.board[s]) === P.side) return;
+    pd = { id: e.pointerId, x: e.clientX, y: e.clientY, m: 0 };
+  });
+  addEventListener('pointermove', e => {
+    if (!pd || e.pointerId !== pd.id) return;
+    const dx = e.clientX - pd.x, dy = e.clientY - pd.y; pd.m += Math.abs(dx) + Math.abs(dy); pd.x = e.clientX; pd.y = e.clientY;
+    if (pd.m < 8) return;
+    TZ.pan[0] += dx; TZ.pan[1] += dy; const T = tzTarget(); Object.assign(TZ, T); tzStyle(); suppressClick = Date.now();
+  });
+  const up = () => { if (pd && pd.m >= 8) suppressClick = Date.now(); pd = null; };
+  addEventListener('pointerup', up); addEventListener('pointercancel', up);
+}
 function renderBoard(anim) {
   if (window.Variants && Variants.geom(P).changed) renderCoords();
   const lm = cur > 0 ? P.fromUsi(game.moves[cur - 1]) : 0;
@@ -1911,6 +1998,7 @@ function renderBoard(anim) {
   if (sel) showTargets();
   drawArrows();
   if (lesson && lesson.ramp) rampFx();
+  tzSync();
 }
 function renderHands() {
   const bottomCol = flip ? 1 : 0;
@@ -5599,7 +5687,7 @@ if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStar
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=136')).then(() => load('../atlas/tables3d.js?v=51')).then(() => load('../atlas/skin/common.js?v=51npc')).then(() => load('../atlas/models/shogi.js?v=22l14')).then(() => load('../atlas/skin/shogi.js?v=14l14'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=136')).then(() => load('../atlas/tables3d.js?v=51')).then(() => load('../atlas/skin/common.js?v=52tz')).then(() => load('../atlas/models/shogi.js?v=22l14')).then(() => load('../atlas/skin/shogi.js?v=14l14'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
