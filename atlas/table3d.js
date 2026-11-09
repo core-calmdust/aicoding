@@ -1962,7 +1962,7 @@
         cam.setViewOffset(W, H, W / 2 - (r.x + r.w / 2), H / 2 - (r.y + r.h / 2) - sh * unit, W, H); cam.updateProjectionMatrix();
         autoInstance(cur);
         if (!R.shadowMap.autoUpdate) { R.shadowMap.needsUpdate = shadowDirty || now <= kickUntil; shadowDirty = false; }
-        R.render(scene, cam); lastDraw = now; return more();
+        R.render(scene, cam); lastDraw = now; dbgTick(now); return more();
       }
     }
     const q = camPose(0), r2 = camPose(1), k = camK;
@@ -1990,7 +1990,7 @@
       if (kq === quietKey && now > kickUntil && !dirty) return more();
       quietKey = kq; dirty = false;
     } else if (!moving && !dirty && now > kickUntil) return more();   // nothing changed: no frame (the showcase's turntable counts as moving)
-    R.render(scene, cam); lastDraw = now; if (now > kickUntil) dirty = false;
+    R.render(scene, cam); lastDraw = now; dbgTick(now); if (now > kickUntil) dirty = false;
     if (DOF_OK && mode === 'view' && !museumOn && !quietOn) dof();
     return more();
   }
@@ -2089,5 +2089,69 @@
   function snap() { camK = camTo; zoom = zoomTo = 1; pzoom = pzoomTo; tilt = 0; vel = 0; inset = insetTo; insetT = insetTTo; frame(); kick(300); }
   const _dbg = () => ({ camK, camTo, inset, insetTo, insetT, zoom, zoomTo, yaw, tilt, mode, fitTo, orthoW, museum: museumOn, aspect: cam && cam.aspect });
   const _scene = () => scene;
-  window.Table3D = { TABLES, setTable, table: () => tableStyle, setBright, bright: () => bright, turn, museum, setShift, quiet, setTimeOfDay, timeOfDayPick: todPick, share, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, rvDisc, rvMats, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
+  /* ---------- I key: the debug overlay (2026-11-09) ----------
+     Scene / board / room triangles, meshes, draw calls, lights, textures, the place / time / brightness, camera and renderer.
+     Toggled by I (not while typing); remembered for the tab (sessionStorage). Updated twice a second from the last frame drawn. */
+  let dbgEl = null, dbgOn = false, dbgT = 0, dbgFrames = 0, dbgFps = 0, dbgLast = 0;
+  const PLACE_N = () => { try { const X = window.Table3D, l = (document.documentElement.lang || 'ja').slice(0, 2); return X.PLACES ? (X.PLACES.name[l] || X.PLACES.name.en)[tableStyle] : String(tableStyle); } catch (e) { return String(tableStyle); } };
+  function dbgCount(obj) {   // visible triangles / meshes under obj (instances counted; hidden and merged-away meshes skipped)
+    let tri = 0, mesh = 0, inst = 0, pts = 0;
+    obj && obj.traverse(o => { let v = true; for (let p = o; p; p = p.parent) if (!p.visible) { v = false; break; } if (!v) return;
+      if ((o.isMesh || o.isPoints || o.isLine) && o.geometry) { const g = o.geometry, n = g.index ? g.index.count : g.attributes.position ? g.attributes.position.count : 0, k = o.isInstancedMesh ? o.count : 1;
+        if (o.isMesh) { tri += n / 3 * k; mesh++; if (o.isInstancedMesh) inst += k; } else pts += n * k; } });
+    return { tri: Math.round(tri), mesh, inst, pts };
+  }
+  const fmt = n => n >= 1e6 ? (n / 1e6).toFixed(2) + 'M' : n >= 1e4 ? (n / 1e3).toFixed(1) + 'k' : String(n);
+  function dbgPaint() {
+    if (!dbgOn || !dbgEl || !R || !scene) return;
+    const info = R.info, room = { tri: 0, mesh: 0, inst: 0, pts: 0 }, board = cur ? dbgCount(cur) : { tri: 0, mesh: 0, inst: 0, pts: 0 }, all = dbgCount(scene);
+    roomObjs.forEach(o => { const c = dbgCount(o); room.tri += c.tri; room.mesh += c.mesh; room.inst += c.inst; room.pts += c.pts; });
+    let lights = 0, shadows = 0; scene.traverse(o => { if (o.isLight && o.visible) { lights++; if (o.castShadow) shadows++; } });
+    const BUD = { room: 60000, board: cur && cur.userData.gameId === 'chess' ? 120000 : 80000 }, warn = (v, b) => v > b ? ' style="color:#ff8a7a"' : '';
+    const gl = R.getContext(), dpr = R.getPixelRatio(), sz = R.getSize(new (T().Vector2)());
+    const rows = [
+      ['place', mountOpts.plain ? `${tableStyle} · ${PLACE_N()} (page floor)` : `${tableStyle} · ${PLACE_N()}`],
+      ['time / bright', `${roomMode || '-'} (${todPick()}) · ${['暗い', '標準', '明るい'][bright] || bright}`],
+      ['board', (cur && cur.userData.gameId) || '-'],
+      ['mode', `${mode}${museumOn ? ' · museum' : ''}${alignFn ? ' · skin' : ''}${LITE ? ' · lite' : ''}${COARSE ? ' · coarse' : ''}`],
+      ['', ''],
+      ['tris · scene', `<b>${fmt(all.tri)}</b>  (drawn ${fmt(info.render.triangles)})`],
+      ['tris · room', `<b${warn(room.tri, BUD.room)}>${fmt(room.tri)}</b> / ${fmt(BUD.room)}`],
+      ['tris · board', `<b${warn(board.tri, BUD.board)}>${fmt(board.tri)}</b> / ${fmt(BUD.board)}`],
+      ['meshes', `scene ${all.mesh} · room ${room.mesh} · board ${board.mesh}` + (all.inst ? ` · inst ${all.inst}` : '')],
+      ['points / lines', fmt(all.pts)],
+      ['draw calls', String(info.render.calls)],
+      ['lights', `${lights} (${shadows} with shadow)`],
+      ['geom / tex', `${info.memory.geometries} / ${info.memory.textures}`],
+      ['programs', String((info.programs || []).length)],
+      ['', ''],
+      ['fps', dbgFps ? dbgFps.toFixed(0) : '-'],
+      ['canvas', `${Math.round(sz.x)}×${Math.round(sz.y)} @${dpr.toFixed(2)}x · exp ${R.toneMappingExposure.toFixed(2)}`],
+      ['camera', cam ? `fov ${cam.fov.toFixed(1)} · zoom ${zoom.toFixed(2)} · tilt ${tilt.toFixed(2)} · yaw ${(yaw % 6.283).toFixed(2)}` : '-'],
+      ['gpu', (() => { try { const e = gl.getExtension('WEBGL_debug_renderer_info'); return e ? String(gl.getParameter(e.UNMASKED_RENDERER_WEBGL)).slice(0, 48) : 'webgl' + (R.capabilities.isWebGL2 ? '2' : '1'); } catch (e) { return '-'; } })()],
+    ];
+    dbgEl.innerHTML = '<div class="t3dbg-h">3D DEBUG <span>I で閉じる</span></div>' + rows.map(([k, v]) => k ? `<div><i>${k}</i><span>${v}</span></div>` : '<hr>').join('');
+  }
+  function dbgTick(now) {   // called from the loop after each drawn frame
+    if (!dbgOn) return; dbgFrames++;
+    if (now - dbgT > 500) { dbgFps = dbgFrames * 1000 / (now - dbgT); dbgFrames = 0; dbgT = now; dbgPaint(); }
+  }
+  function dbgToggle(on) {
+    dbgOn = on === undefined ? !dbgOn : !!on; try { sessionStorage.setItem('t3d-debug', dbgOn ? '1' : ''); } catch (e) {}
+    if (dbgOn && !dbgEl) {
+      const st = document.createElement('style'); st.textContent = '.t3dbg{position:fixed;left:10px;bottom:10px;z-index:2147483000;min-width:300px;max-width:min(440px,calc(100vw - 20px));padding:10px 12px;border-radius:10px;background:rgba(14,16,22,.82);color:#e8ecf4;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;pointer-events:none;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);box-shadow:0 4px 18px rgba(0,0,0,.3)}.t3dbg div{display:flex;gap:10px;justify-content:space-between}.t3dbg i{font-style:normal;color:#9aa6bc;white-space:nowrap}.t3dbg span{text-align:right}.t3dbg b{color:#fff}.t3dbg hr{border:0;border-top:1px solid rgba(255,255,255,.14);margin:5px 0}.t3dbg .t3dbg-h{font-weight:700;letter-spacing:.08em;color:#ffd27a;margin-bottom:4px}.t3dbg .t3dbg-h span{font-weight:400;color:#8a94a8;letter-spacing:0}';
+      document.head.appendChild(st); dbgEl = document.createElement('div'); dbgEl.className = 't3dbg'; document.body.appendChild(dbgEl);
+    }
+    if (dbgEl) dbgEl.hidden = !dbgOn;
+    if (dbgOn) { dbgT = performance.now(); dbgFrames = 0; dbgPaint(); kick(1200); }
+  }
+  addEventListener('keydown', e => {
+    if (e.repeat || e.ctrlKey || e.metaKey || e.altKey || (e.key !== 'i' && e.key !== 'I')) return;
+    const t = e.target; if (t && t.closest && t.closest('input,textarea,select,[contenteditable],[contenteditable=""]')) return;
+    if (!R) return; dbgToggle();
+  });
+  try { if (sessionStorage.getItem('t3d-debug')) setTimeout(() => R && dbgToggle(true), 500); } catch (e) {}
+  setInterval(() => { if (dbgOn && performance.now() - dbgT > 1000) { dbgFps = 0; dbgT = performance.now(); dbgPaint(); } }, 1000);   // (the loop sleeps when nothing moves: keep the numbers fresh)
+
+  window.Table3D = { debug: dbgToggle, TABLES, setTable, table: () => tableStyle, setBright, bright: () => bright, turn, museum, setShift, quiet, setTimeOfDay, timeOfDayPick: todPick, share, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, rvDisc, rvMats, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
 })();
