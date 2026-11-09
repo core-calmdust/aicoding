@@ -24,7 +24,7 @@
   /* ---------- names and labels (10 languages): name = the picker, go = 「〜へ」 (today's card), play = 「〜で遊ぶ」 (the board card) ---------- */
   const PLACES = {
     name: {
-      ja: ['ちゃぶ台', '2D準拠', 'ダイニング', 'フェルト卓', 'テラス', '書斎', '縁側', '山小屋', 'ゲームセンター', 'スカイラウンジ', 'キャンプ場', '茶館'],
+      ja: ['ちゃぶ台', '2D準拠', 'ダイニング', 'フェルト卓', 'テラス', '書斎', '縁側', '山小屋', 'ゲーセン', 'スカイラウンジ', 'キャンプ場', '茶館'],
       en: ['Chabudai', 'Like 2D', 'Dining table', 'Green felt', 'Terrace', 'Study', 'Engawa', 'Mountain lodge', 'Arcade', 'Sky lounge', 'Campsite', 'Teahouse'],
       zh: ['矮桌', '2D风格', '餐桌', '绿色绒布', '露台', '书房', '缘侧', '山间小屋', '游戏厅', '空中酒廊', '露营地', '茶馆'],
       ko: ['밥상', '2D 스타일', '식탁', '초록 펠트', '테라스', '서재', '툇마루', '산장', '오락실', '스카이 라운지', '캠핑장', '찻집'],
@@ -40,7 +40,7 @@
       tr: ['Alçak masa', '2D gibi', 'Yemek masası', 'Yeşil çuha', 'Teras', 'Çalışma odası', 'Engawa', 'Dağ evi', 'Oyun salonu', 'Sky lounge', 'Kamp alanı', 'Çay evi'],
     },
     go: {
-      ja: ['ちゃぶ台へ', '盤へ', 'ダイニングへ', 'フェルト卓へ', 'テラスへ', '書斎へ', '縁側へ', '山小屋へ', 'ゲームセンターへ', 'スカイラウンジへ', 'キャンプ場へ', '茶館へ'],
+      ja: ['ちゃぶ台へ', '盤へ', 'ダイニングへ', 'フェルト卓へ', 'テラスへ', '書斎へ', '縁側へ', '山小屋へ', 'ゲーセンへ', 'スカイラウンジへ', 'キャンプ場へ', '茶館へ'],
       en: ['To the table', 'To the board', 'To the dining table', 'To the felt table', 'To the terrace', 'To the study', 'To the engawa', 'To the lodge', 'To the arcade', 'To the sky lounge', 'To the campsite', 'To the teahouse'],
       zh: ['前往棋桌', '前往棋盘', '前往餐桌', '前往牌桌', '前往露台', '前往书房', '前往缘侧', '前往山间小屋', '前往游戏厅', '前往空中酒廊', '前往露营地', '前往茶馆'],
       ko: ['판으로 가기', '보드로 가기', '식탁으로 가기', '펠트 테이블로 가기', '테라스로 가기', '서재로 가기', '툇마루로 가기', '산장으로 가기', '오락실로 가기', '스카이 라운지로 가기', '캠핑장으로 가기', '찻집으로 가기'],
@@ -56,7 +56,7 @@
       tr: ['Masaya', 'Tahtaya', 'Yemek masasına', 'Çuha masaya', 'Terasa', 'Çalışma odasına', 'Engawa\'ya', 'Dağ evine', 'Oyun salonuna', 'Sky lounge’a', 'Kamp alanına', 'Çay evine'],
     },
     play: {
-      ja: ['ちゃぶ台で遊ぶ', '盤で遊ぶ', 'ダイニングで遊ぶ', 'フェルト卓で遊ぶ', 'テラスで遊ぶ', '書斎で遊ぶ', '縁側で遊ぶ', '山小屋で遊ぶ', 'ゲームセンターで遊ぶ', 'スカイラウンジで遊ぶ', 'キャンプ場で遊ぶ', '茶館で遊ぶ'],
+      ja: ['ちゃぶ台で遊ぶ', '盤で遊ぶ', 'ダイニングで遊ぶ', 'フェルト卓で遊ぶ', 'テラスで遊ぶ', '書斎で遊ぶ', '縁側で遊ぶ', '山小屋で遊ぶ', 'ゲーセンで遊ぶ', 'スカイラウンジで遊ぶ', 'キャンプ場で遊ぶ', '茶館で遊ぶ'],
       en: ['Play on the table', 'Play on the board', 'Play at the dining table', 'Play on the felt', 'Play on the terrace', 'Play in the study', 'Play on the engawa', 'Play in the lodge', 'Play at the arcade', 'Play in the sky lounge', 'Play at the campsite', 'Play in the teahouse'],
       zh: ['在矮桌上玩', '在棋盘上玩', '在餐桌上玩', '在牌桌上玩', '在露台上玩', '在书房里玩', '在缘侧上玩', '在山间小屋里玩', '在游戏厅玩', '在空中酒廊里玩', '在露营地玩', '在茶馆里玩'],
       ko: ['밥상에서 플레이', '보드에서 플레이', '식탁에서 플레이', '펠트 테이블에서 플레이', '테라스에서 플레이', '서재에서 플레이', '툇마루에서 플레이', '산장에서 플레이', '오락실에서 플레이', '스카이 라운지에서 플레이', '캠핑장에서 플레이', '찻집에서 플레이'],
@@ -73,7 +73,7 @@
     },
     // the updates list (shared/atlas.js) says ちゃぶ台 / chabudai for the portal's own 3D play: the word that replaces it
     news: {
-      ja: ['ちゃぶ台', '盤', 'ダイニング', 'フェルト卓', 'テラス', '書斎', '縁側', '山小屋', 'ゲームセンター', 'スカイラウンジ', 'キャンプ場', '茶館'],
+      ja: ['ちゃぶ台', '盤', 'ダイニング', 'フェルト卓', 'テラス', '書斎', '縁側', '山小屋', 'ゲーセン', 'スカイラウンジ', 'キャンプ場', '茶館'],
       en: ['chabudai', 'table', 'table', 'table', 'table', 'table', 'table', 'table', 'table', 'table', 'table', 'table'],
       hi: ['चाबुदाई', 'मेज़', 'मेज़', 'मेज़', 'मेज़', 'मेज़', 'मेज़', 'मेज़', 'मेज़', 'मेज़', 'मेज़', 'मेज़'],
     },
@@ -87,12 +87,27 @@
     },
   };
   const pick = (o, l) => o[l] || o.en;
+  // the Atlas Mon about each place, as in the chabudai room (2026-11-09): [id, height, x, z, turn, y (default: the floor)] — low-poly
+  // figures (Table3D.placeMon), on the floor round the table or up on the furniture, kept clear of where the board is
+  const MONS_AT = {
+    2: [['plop', 6, -21, 7, .7], ['owl', 5.5, 22, 7, -.7], ['puffin', 6.5, -27, -22, .4], ['dot', 3.6, 27, -23, -.4]],
+    3: [['dice', 5.5, -21, 8, .6], ['gem', 5, 22, 7, -.6], ['gold', 4.5, -27, -22, .4], ['knight', 7, 27, -22, -.4]],
+    4: [['puffin', 6.5, -21, 8, .7], ['crab', 4.5, 22, 7, -.7], ['plop', 6, -28, -22, .4], ['stone', 6.5, 28, -24, -.4]],
+    5: [['owl', 5.5, -25, 12, .7], ['knight', 7, 22, 7, -.7], ['shogi', 6, -27, -20, .4], ['tile', 6.5, 27, -22, -.4]],
+    6: [['stone', 4.6, -22, 4, .7], ['shogi', 4.6, 22, 4, -.7], ['puffin', 6, 16, -46, -.3, -16.4], ['dot', 3.4, -12, -36, .3, -16.4]],
+    7: [['owl', 5.5, -21, 8, .7], ['plop', 6, 22, 7, -.7], ['stone', 6.5, -28, -22, .4], ['crab', 4.5, 28, -22, -.4]],
+    8: [['disc', 6, -22, 8, .7], ['tile', 6.5, 22, 6, -.7], ['dice', 5, -36, -8, .9], ['gem', 4.5, 34, -2, -.9]],
+    9: [['gold', 4.5, -21, 8, .7], ['gem', 5, 22, 7, -.7], ['knight', 7, -28, -22, .4], ['owl', 5.5, 28, -24, -.4]],
+    10: [['crab', 4.5, -20, 10, .7], ['puffin', 6.5, 22, 8, -.7], ['stone', 6.5, -34, -20, .4], ['plop', 6, 36, -18, -.4]],
+    11: [['shogi', 6, -21, 8, .7], ['dot', 3.6, 22, 7, -.7], ['tile', 6.5, -27, -22, .4], ['gold', 4.5, 27, -22, -.4]],
+  };
+  const mons = (o, k, FL) => { if (!X.placeMon || !MONS_AT[k]) return; MONS_AT[k].forEach(([id, h, x, z, ry, y]) => { try { X.placeMon(o.g, id, h * (k === 6 ? 1 : 1.5), x, y === undefined ? FL : y, z, ry); } catch (e) {} }); };
   X.PLACES = PLACES;
   X.placeText = (kind, lang, k = X.table()) => { const o = kind === 'news' ? PLACES.news[lang] : pick(PLACES[kind], lang); return o ? o[k] ?? o[0] : ''; };
   X.placeUi = (key, lang) => pick(PLACES.ui[key], lang);
   // the thumbnails (small real renders, atlas/img/place-k.webp), next to this script whichever page loads it
   const ME = (document.currentScript && document.currentScript.src) || location.href;
-  X.placeThumb = k => new URL('img/place-' + k + '.webp?v=' + (k === 8 ? 4 : k >= 2 ? 3 : 1), ME).href;   // (8: the game centre, 2026-11-09)
+  X.placeThumb = k => new URL('img/place-' + k + '.webp?v=' + (k === 8 ? 5 : k >= 2 ? 3 : 1), ME).href;   // (8: the game centre, 2026-11-09)
 
   const lin = (c, y0, y1, stops) => { const g = c.createLinearGradient(0, y0, 0, y1); stops.forEach(([k, col]) => g.addColorStop(k, col)); return g; };
   const rad = (c, x, y, r, stops) => { const g = c.createRadialGradient(x, y, 0, x, y, r); stops.forEach(([k, col]) => g.addColorStop(k, col)); return g; };
@@ -715,6 +730,7 @@
       const fill = new TT.DirectionalLight(0xb8c4ee, .12); fill.position.set(-20, 14, -10); scene.add(fill); }
     else { key = dirLight(TT, D.key[0], D.key[1], D.key[2], 17); const fill = new TT.DirectionalLight(0xeef2ff, T === 'evening' ? .14 : .22); fill.position.set(9, 10, 16); scene.add(fill); }
     scene.add(key);
+    mons(o, 2, FL);
     try { X.mergeStatic(g); } catch (e) {}
     const env = T === 'night' ? { top: '#4a3c30', bottom: '#14100c', panels: [[0, 18, 0, 10, 10, '#ffd8a8', 3], [-14, 8, -10, 8, 10, '#3a4a70', .5], [0, 8, 18, 20, 5, '#806650', .5]] }
       : { top: T === 'evening' ? '#f0d0b0' : '#f4efe6', bottom: '#b4936a', panels: [[-14, 12, -10, 14, 10, T === 'evening' ? '#ffd0a0' : '#ffffff', 1.7], [12, 8, 10, 10, 6, '#fff3e4', .6], [0, 18, 4, 20, 6, '#ffffff', .5]] };
@@ -855,6 +871,7 @@
       at(Gp, lathe(TT, [[0, 0], [7.2, 0], [7, .4], [5.4, 2.4], [1.4, 4.2], [.5, 4.6], [0, 4.6]], SEG(o, 32), M({ color: 0x0f4a2a, roughness: .2, clearcoat: 1, side: TT.DoubleSide, emissive: new TT.Color(0x031a0c) })), 0, 32, 0, 0, false);
       const dif = new TT.Mesh(new TT.CircleGeometry(7, SEG(o, 32)), new TT.MeshBasicMaterial({ color: 0xfff2d8, toneMapped: false })); dif.rotation.x = Math.PI / 2; at(Gp, dif, 0, 32.05, 0, 0, false);
       at(Gp, new TT.Mesh(new TT.CylinderGeometry(.08, .08, Y1 - 36.6, 5), M({ color: 0xb08850, metalness: 1, roughness: .3 })), 0, 36.6 + (Y1 - 36.6) / 2, 0, 0, false); }
+    mons(o, 3, FL);
     try { X.mergeStatic(g); } catch (e) {}
     scene.add(new TT.HemisphereLight(day ? 0xdde6f4 : T === 'evening' ? 0xd8a888 : 0x8a96a8, 0x0a0a0a, day ? .3 : T === 'evening' ? .17 : .1));
     if (day || T === 'evening') { const wl = new TT.DirectionalLight(day ? 0xeef2ff : 0xffb888, day ? .5 : .3); wl.position.set(-40, 20, -10); scene.add(wl); }   // daylight through the window
@@ -1053,6 +1070,7 @@
     scene.add(new TT.HemisphereLight(D.hemi[0], D.hemi[1], D.hemi[2]));
     const key = dirLight(TT, D.key[0], D.key[1], D.key[2], 17); scene.add(key);
     const fill = new TT.DirectionalLight(T === 'night' ? 0xffc890 : 0xffe4dc, T === 'night' ? .2 : .32); fill.position.set(5, 12, 16); scene.add(fill);
+    mons(o, 4, FL);
     try { X.mergeStatic(g); } catch (e) {}
     const env = { top: D.sky[1], bottom: T === 'night' ? '#141010' : '#f0d8c0', panels: [[-12, 3, -20, 10, 4, T === 'night' ? '#c8d0f0' : '#ffe8c8', T === 'night' ? .6 : 3], [0, 16, -8, 26, 8, D.sky[1], .8], [0, 6, 18, 20, 5, '#ffe2d4', .55]] };
     return { bg: D.sky[1], exp: D.exp, board: D.board, boardCol: T === 'night' ? 0xffe6cc : 0xfff0e6, key, env };
@@ -1242,6 +1260,7 @@
         at(G, new TT.Mesh(RB(1.6, 1.2, 6.2, .3, 1), frame), 0, 10.4, 2.2); }
       [-1, 1].forEach(s => { at(G, new TT.Mesh(RB(.8, 6, 1, .2, 1), frame), s * 5.4, 13, .6); at(G, new TT.Mesh(RB(1.5, .7, 6, .3, 1), frame), s * 5.4, 16.2, -.6); at(G, new TT.Mesh(RB(1.2, .6, 3, .2, 1), frame), s * 4.8, 10.4, .6); }); }
     ao(o, -22.5, FL, 13.2, 15, 15, .45);
+    mons(o, 5, FL);
     try { X.mergeStatic(g); } catch (e) {}
     // the lamp carries the mood (and the one shadow); the board also gets an even warm light from above: never a dark corner on the board
     scene.add(new TT.HemisphereLight(day ? 0xe4ecf8 : T === 'evening' ? 0xd8b0a0 : 0x8a90b8, 0x2a170c, day ? .48 : T === 'evening' ? .36 : .3));
@@ -1580,6 +1599,7 @@
       at(Ga, new TT.Mesh(RB(4.8, .4, 4.8, .1, 1), fr), 0, 11.6, 0); at(Ga, new TT.Mesh(RB(4.8, .4, 4.8, .1, 1), fr), 0, 3.4, 0);
       halo(o, Ga, 0, 7.6, 0, 16); const L = new TT.PointLight(0xffb868, T === 'night' ? 1.4 : .8, 48, 2); L.position.set(0, 8, 1); Ga.add(L); }
     const { key, H } = hourLights(o, T, T === 'night' ? [-20, 30, -30] : T === 'evening' ? [-30, 10, -26] : [-16, 28, -22], 0x8a6a48, .92);
+    mons(o, 6, FL);
     try { X.mergeStatic(g); } catch (e) {}
     return { bg: SKY[T][1], exp: H.exp, board: H.board, boardCol: T === 'night' ? 0xffe2c0 : undefined, key, env: { top: SKY[T][1], bottom: '#3a2a1a', panels: [[0, 10, -24, 26, 8, T === 'night' ? '#6070a0' : '#ffffff', T === 'night' ? .5 : 1.6], [0, 18, 8, 22, 6, '#e8d8c0', .5]] } };
   };
@@ -1720,6 +1740,7 @@
       const ck = M({ map: ckT, roughness: .8, bumpScale: .03 }); for (let i = 0; i < 5; i++) { const b = new TT.Mesh(new TT.CylinderGeometry(.68, .7, .22, 16), [ck, ck, ck]); const P2 = b.geometry.attributes.position; for (let k = 0; k < P2.count; k++) { const a = Math.atan2(P2.getZ(k), P2.getX(k)); const f = 1 + .05 * Math.sin(a * 5 + i); P2.setX(k, P2.getX(k) * f); P2.setZ(k, P2.getZ(k) * f); } b.rotation.set(.2, i, .1 * i); at(Gp, b, Math.cos(i * 1.3) * .7, .3 + i * .1, Math.sin(i * 1.3) * .7); } }
 
     const { key, H } = hourLights(o, T, [40, 26, 6], 0x5a3a1e, .55);
+    mons(o, 7, FL);
     try { X.mergeStatic(g); } catch (e) {}
     return { bg: '#24160c', exp: day ? .84 : .98, board: day ? .3 : .5, boardCol: 0xffe2c0, key, env: { top: '#5a3a24', bottom: '#140a04', panels: [[FX, 2, FZ, 10, 6, '#ff9a50', 3], [30, 10, 0, 8, 10, day ? '#ffffff' : '#506080', day ? 1.4 : .3], [0, 16, 8, 20, 6, '#d8b890', .5]] } };
   };
@@ -1822,10 +1843,9 @@
     const glassT = canvasTex('tbl8-ctop', sz(o, 1024), sz(o, 768), (c, W, H) => { c.fillStyle = '#05050c'; c.fillRect(0, 0, W, H);
       c.fillStyle = rad(c, W / 2, H / 2, W * .36, [[0, 'rgba(40,90,200,.5)'], [.7, 'rgba(20,40,120,.2)'], [1, 'rgba(0,0,0,0)']]); c.fillRect(0, 0, W, H);   // the tube's glow under the glass
       c.strokeStyle = 'rgba(46,230,255,.35)'; c.lineWidth = 2; c.strokeRect(W * .2, H * .12, W * .6, H * .76); c.strokeStyle = 'rgba(255,58,168,.6)'; c.lineWidth = 3; c.strokeRect(W * .03, H * .04, W * .94, H * .92);
-      c.fillStyle = 'rgba(255,58,168,.9)'; c.font = `bold ${H * .05 | 0}px monospace`; c.textAlign = 'center';
-      [[H * .975, 0, '1P  ◀ INSERT COIN ▶'], [H * .025, Math.PI, '2P  ◀ INSERT COIN ▶']].forEach(([y, a, s]) => { c.save(); c.translate(W / 2, y); c.rotate(a); c.fillText(s, 0, -H * .012); c.restore(); });
-      const inv = (x, y, s, col) => { c.fillStyle = col; [[1, 0, 1, 0, 0, 0, 1, 0, 1], [0, 1, 1, 1, 1, 1, 1, 1, 0], [1, 1, 0, 1, 1, 1, 0, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1], [0, 1, 0, 1, 0, 1, 0, 1, 0]].forEach((row, j) => row.forEach((v, i) => v && c.fillRect(x + i * s, y + j * s, s, s))); };
-      [[W * .07, H * .1, '#3aff9a'], [W * .86, H * .1, '#ffe03a'], [W * .07, H * .82, '#2ee6ff'], [W * .86, H * .82, '#ff3aa8']].forEach(([x, y, col]) => inv(x, y, W * .0075, col)); });
+      c.strokeStyle = 'rgba(120,90,255,.16)'; c.lineWidth = 1.2; const hr = W * .022; for (let row = 0; row * hr * 1.5 < H + hr; row++) for (let col = 0; col * hr * 1.732 < W + hr; col++) { const cx = col * hr * 1.732 + (row % 2) * hr * .866, cy = row * hr * 1.5; c.beginPath(); for (let k = 0; k <= 6; k++) { const a = Math.PI / 6 + k * Math.PI / 3; c.lineTo(cx + Math.cos(a) * hr, cy + Math.sin(a) * hr); } c.stroke(); }   // a hexagon mesh under the glass
+      c.fillStyle = rad(c, W / 2, H / 2, W * .5, [[.55, 'rgba(0,0,0,0)'], [1, 'rgba(0,0,0,.75)']]); c.fillRect(0, 0, W, H);
+      [[.04, '#ff3aa8'], [.055, '#2ee6ff']].forEach(([m, col]) => { c.strokeStyle = col; c.lineWidth = 3; c.shadowColor = col; c.shadowBlur = 12; c.strokeRect(W * m, H * m * 1.33, W * (1 - 2 * m), H * (1 - 2 * m * 1.33)); }); c.shadowBlur = 0; });
     const topM = M({ map: glassT, emissive: new TT.Color(0xffffff), emissiveMap: glassT, emissiveIntensity: .55, roughness: .06, clearcoat: 1, clearcoatRoughness: .03, bump: false });
     const blk = M({ color: 0x121218, roughness: .4, clearcoat: .4 });
     at(g, new TT.Mesh(RB(28, 1, 21, .3, 3), [blk, blk, topM, blk, blk, blk]), 0, -.5, Z0, 0, false).receiveShadow = true;
@@ -1838,6 +1858,21 @@
       at(P, new TT.Mesh(new TT.CylinderGeometry(.13, .13, 1.8, 6), M({ color: 0x202020, metalness: .8, roughness: .3 })), -3.6, 1.5, 0, 0, false); at(P, new TT.Mesh(new TT.SphereGeometry(.6, 14, 10), M({ color: 0xe8203a, roughness: .2, clearcoat: 1 })), -3.6, 2.4, 0, 0, false);
       [[0xffd030, 0], [0x3ad06a, 1.5], [0xffffff, 3]].forEach(([col, dx]) => at(P, new TT.Mesh(new TT.CylinderGeometry(.5, .5, .4, 14), M({ color: col, roughness: .25, clearcoat: 1 })), dx, .8, 0, 0, false));
       const cd = grp(TT, g, 0, FL + 5, Z0 + sd * 9.05, sd > 0 ? 0 : Math.PI); at(cd, new TT.Mesh(RB(5, 5, .3, .1, 1), M({ color: 0x2a2a30, metalness: .7, roughness: .35 })), 0, 0, 0, 0, false); [-.9, .9].forEach(dx => at(cd, new TT.Mesh(RB(.8, 1.6, .2, .05, 1), M({ color: 0xff9a2a, emissive: new TT.Color(0xff7a10), emissiveIntensity: 1.5 })), dx, .6, .2, 0, false)); });
+    // the gaming lights (2026-11-09): an RGB strip running round the top's edge and up the cabinet's corners, the colours flowing; an
+    // underglow on the carpet; LED rings round the levers and the buttons lit, all cycling through the hues
+    { const rainbow = canvasTex('tbl8-rgb', 256, 4, (c, W, H) => { for (let x = 0; x < W; x++) { c.fillStyle = `hsl(${x / W * 360},100%,58%)`; c.fillRect(x, 0, 1, H); } }); rainbow.wrapS = TT.RepeatWrapping;
+      const strips = [], strip = (w, h, x, y, z, ry, rx = 0, u = 1) => { const t = rainbow.clone(); t.needsUpdate = true; t.wrapS = TT.RepeatWrapping; t.repeat.set(u, 1); const m = new TT.Mesh(new TT.PlaneGeometry(w, h), new TT.MeshBasicMaterial({ map: t, toneMapped: false })); m.position.set(x, y, z); m.rotation.set(rx, ry, 0); g.add(m); strips.push(t); return m; };
+      [[28.2, 0, Z0 + 10.56, 0], [28.2, 0, Z0 - 10.56, Math.PI], [21.2, 14.06, Z0, Math.PI / 2], [21.2, -14.06, Z0, -Math.PI / 2]].forEach(([w, x, z, ry]) => strip(w, .34, x, -.5, z, ry, 0, w / 14));   // round the edge of the top
+      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => { const m = strip(13, .28, a * 12.56, FL + 7.4, Z0 + b * 9.06, b > 0 ? 0 : Math.PI, 0, 1); m.rotation.z = Math.PI / 2; });   // up the cabinet's corners
+      [-1, 1].forEach(sd => strip(24, .3, 0, FL + 1.2, Z0 + sd * 9.06, sd > 0 ? 0 : Math.PI, 0, 2));   // along the kick plate
+      const ug = new TT.Mesh(new TT.PlaneGeometry(40, 32), new TT.MeshBasicMaterial({ map: canvasTex('tbl8-underglow', 256, 256, (c, W) => { const gr = c.createRadialGradient(W / 2, W / 2, W * .15, W / 2, W / 2, W / 2); gr.addColorStop(0, 'rgba(255,255,255,.75)'); gr.addColorStop(.45, 'rgba(255,255,255,.35)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = gr; c.fillRect(0, 0, W, W); }), color: 0xff3aa8, transparent: true, depthWrite: false, blending: TT.AdditiveBlending, toneMapped: false }));
+      ug.rotation.x = -Math.PI / 2; ug.position.set(0, FL + .06, Z0); ug.userData.keep = 1; g.add(ug);
+      const leds = []; [-1, 1].forEach(sd => { const P = grp(TT, g, 0, -1.6, Z0 + sd * 11.4, sd > 0 ? 0 : Math.PI); P.rotation.x = .3; P.userData.keep = 1;
+        const rm = new TT.MeshBasicMaterial({ color: 0xff3aa8, toneMapped: false }); leds.push([rm, 0]); at(P, new TT.Mesh(new TT.TorusGeometry(1.05, .09, 6, 24), rm), -3.6, .66, 0, 0, false).rotation.x = Math.PI / 2;
+        [0, 1.5, 3].forEach((dx, i) => { const bm = new TT.MeshBasicMaterial({ color: 0xffffff, toneMapped: false }); leds.push([bm, .2 + i * .25]); at(P, new TT.Mesh(new TT.TorusGeometry(.56, .07, 5, 18), bm), dx, .66, 0, 0, false).rotation.x = Math.PI / 2; });
+        [-6, 6].forEach(dx => { at(P, new TT.Mesh(new TT.CylinderGeometry(.62, .62, .1, 16), M({ color: 0x1a1a20, roughness: .9 })), dx, .64, 0, 0, false); at(P, new TT.Mesh(new TT.TorusGeometry(.62, .06, 4, 16), M({ color: 0xc0c0c8, metalness: 1, roughness: .25 })), dx, .7, 0, 0, false).rotation.x = Math.PI / 2; }); });   // the speaker grilles
+      const ugc = new TT.Color();
+      o.tick && o.tick(t => { strips.forEach(tx => tx.offset.x = (-t * .25) % 1); leds.forEach(([m, k]) => m.color.setHSL((t * .15 + k) % 1, 1, .55)); ugc.setHSL((t * .15 + .5) % 1, 1, .5); ug.material.color.copy(ugc); }, ug); }
     // the room: a starry carpet, dark walls with neon strips and posters, the glass front on the street (left), the prize wall (right)
     const XL = -60, XR = 60, ZB = -58, ZF = 150, Y1 = 34;
     roomBox(o, { key: 'tbl8-arc-' + T, xl: XL, xr: XR, zb: ZB, zf: ZF, y0: FL, y1: Y1, px: 2048, pxs: 1024,
@@ -1869,7 +1904,7 @@
     [[-30, 0xff3aa8], [-10, 0x2ee6ff], [10, 0xff3aa8], [30, 0x2ee6ff]].forEach(([x, col]) => { const tb = new TT.Mesh(new TT.CylinderGeometry(.3, .3, 100, 6), new TT.MeshBasicMaterial({ color: col, toneMapped: false })); tb.rotation.x = Math.PI / 2; at(g, tb, x, Y1 - 1.2, ZB + 50, 0, false); });
     { const sg = canvasTex('tbl8-sign', 1024, 256, (c, W, H) => { c.clearRect(0, 0, W, H); c.textAlign = 'center'; c.textBaseline = 'middle';
         const neon = (s, y, px, col) => { c.font = `900 ${px}px sans-serif`; c.lineJoin = 'round'; c.shadowColor = col; for (const [b, w, st] of [[40, px * .14, col], [16, px * .09, col], [4, px * .04, '#ffffff']]) { c.shadowBlur = b; c.lineWidth = w; c.strokeStyle = st; c.strokeText(s, W / 2, y); } c.shadowBlur = 0; };
-        neon('GAME CENTER', H * .42, 118, '#ff3aa8'); neon('★ ゲームセンター ★', H * .84, 58, '#2ee6ff'); });
+        neon('GAME CENTER', H * .42, 118, '#ff3aa8'); neon('★ ゲーセン ★', H * .84, 64, '#2ee6ff'); });
       const sm = new TT.Mesh(new TT.PlaneGeometry(64, 16), new TT.MeshBasicMaterial({ map: sg, transparent: true, depthWrite: false, toneMapped: false })); at(g, sm, 0, FL + 41, ZB + .4, 0, false); }
     // the cabinets along the back, the crane games (left), the music game, the drinks machine and the change machine (right)
     const cabs = [];
@@ -1934,6 +1969,7 @@
     const down = new TT.SpotLight(0xfff4ea, 1.6, 70, .55, .8, 1.1); down.position.set(0, Y1 - 1, Z0 + 2); down.target.position.set(0, 0, Z0); scene.add(down); scene.add(down.target);
     [[-40, 8, -34, 0xff3aa8], [40, 8, -34, 0x2ee6ff], [0, 12, -48, 0x8a5aff]].forEach(([x, y, z, col]) => { const L = new TT.PointLight(col, 1.1, 90, 2); L.position.set(x, y, z); scene.add(L); });
     if (!night) { const sun = new TT.DirectionalLight(T === 'evening' ? 0xffb080 : 0xf4f8ff, T === 'evening' ? .3 : .45); sun.position.set(-60, 20, 0); scene.add(sun); }
+    mons(o, 8, FL);
     try { X.mergeStatic(g); } catch (e) {}
     return { bg: '#0c0818', exp: .9, board: .42, key, env: { top: '#2a1a40', bottom: '#08060c', panels: [[-30, 10, -30, 10, 8, '#ff3aa8', 1.2], [30, 10, -30, 10, 8, '#2ee6ff', 1.2], [0, 20, 2, 8, 8, '#ffffff', 2.4], [0, 8, 18, 20, 5, '#3a2a50', .6]] } };
   };
@@ -2119,6 +2155,7 @@
     const key = new TT.DirectionalLight(T === 'day' || T === 'morning' ? 0xf4f6ff : T === 'evening' ? 0xffb080 : 0x8090c0, T === 'day' || T === 'morning' ? 1.1 : T === 'evening' ? .8 : .3); key.position.set(-24, 22, -40); key.castShadow = true; key.shadow.mapSize.set(1024, 1024);   // (from the back-left: its mirror image falls off the table, not as white glare on the board) Object.assign(key.shadow.camera, { left: -30, right: 30, top: 30, bottom: -30, near: 1, far: 120 }); key.shadow.bias = -.0004; scene.add(key);
     const down = new TT.SpotLight(0xffd8a8, lit ? 2.6 : 1.2, 70, .55, .8, 1.1); down.position.set(0, Y1 - 1, Z0 + 2); down.target.position.set(0, 0, Z0); scene.add(down); scene.add(down.target);
     const bar = new TT.PointLight(0xffb070, .5, 80, 2); bar.position.set(XL + 6, 4, -24); scene.add(bar);
+    mons(o, 9, FL);
     try { X.mergeStatic(g); } catch (e) {}
     return { bg: S.sky[1], exp: lit ? .98 : .8, board: lit ? .46 : .28, boardCol: lit ? 0xffe4c4 : undefined, key, env: { top: '#3a3036', bottom: '#0a0808', panels: [[0, 10, -30, 40, 14, T === 'day' || T === 'morning' ? '#ffffff' : night ? '#4a5a90' : '#ff9a70', T === 'day' || T === 'morning' ? 1.6 : .7], [0, 20, 2, 6, 6, '#ffd8a8', 3], [-24, 4, -6, 6, 8, '#ffb070', .8], [0, 8, 18, 20, 5, '#6a5040', .6]] } };
   };
@@ -2274,7 +2311,7 @@
       const creamT = canvasTex('tbl10-fur3', 128, 128, (c, W) => { c.fillStyle = '#e6c088'; c.fillRect(0, 0, W, W); for (let i = 0; i < 1600; i++) { const x = Math.random() * W, y = Math.random() * W; c.strokeStyle = Math.random() < .5 ? 'rgba(190,140,80,.3)' : 'rgba(255,236,200,.35)'; c.lineWidth = .8; c.beginPath(); c.moveTo(x, y); c.lineTo(x + (Math.random() - .5) * 2, y + 4 + Math.random() * 5); c.stroke(); } });
       creamT.wrapS = creamT.wrapT = TT.RepeatWrapping;
       const fur = M({ map: furT, roughness: .82, sheen: new TT.Color(0xffcf8a), sheenRoughness: .45, bumpScale: .06 }), cream = M({ map: creamT, roughness: .85, sheen: new TT.Color(0xffe6b8), sheenRoughness: .5, bumpScale: .05 });
-      const footM = M({ map: furT, color: 0xffe8c8, roughness: .85, sheen: new TT.Color(0xffe6b8), sheenRoughness: .5, bumpScale: .05 }), noseM = M({ color: 0x18110e, roughness: .28, clearcoat: .9, clearcoatRoughness: .2 }), eyeM = M({ color: 0x2e170a, roughness: .04, clearcoat: 1 }), lipM = M({ color: 0x2a1a14, roughness: .5 }), mouthM = M({ color: 0x5a2228, roughness: .6 }), tongueM = M({ color: 0xd8707a, roughness: .35, clearcoat: .5 }), padM = M({ color: 0x2a201c, roughness: .7 });
+      const noseM = M({ color: 0x18110e, roughness: .28, clearcoat: .9, clearcoatRoughness: .2 }), eyeM = M({ color: 0x2e170a, roughness: .04, clearcoat: 1 }), lipM = M({ color: 0x2a1a14, roughness: .5 }), mouthM = M({ color: 0x5a2228, roughness: .6 }), tongueM = M({ color: 0xd8707a, roughness: .35, clearcoat: .5 }), padM = M({ color: 0x2a201c, roughness: .7 });
       const SG = (n) => o.COARSE ? Math.max(8, n >> 1) : n, V3 = TT.Vector3;
       const shaped = (wS, hS, f) => { const geo = new TT.SphereGeometry(1, SG(wS), SG(hS)), P = geo.attributes.position; for (let i = 0; i < P.count; i++) { const v = f(P.getX(i), P.getY(i), P.getZ(i)); P.setXYZ(i, v[0], v[1], v[2]); } geo.computeVertexNormals(); return geo; };
       const smooth = (a, b, t) => { const k = Math.min(1, Math.max(0, (t - a) / (b - a))); return k * k * (3 - 2 * k); };
@@ -2285,9 +2322,6 @@
           for (let j = 0; j <= nR; j++) { const th = -Math.PI / 2 + j / nR * Math.PI * 2, u = Math.sin(th), v = Math.cos(th), r = (u > 0 ? bt : bb) * rf; pos.push(P.x - Tn.y * u * r, P.y + Tn.x * u * r, a * rf * v); uv.push(j / nR * 2, s * 3); } }
         for (let i = 0; i < nS; i++) for (let j = 0; j < nR; j++) { const A = i * (nR + 1) + j, B = A + nR + 1; idx.push(A, B, A + 1, B, B + 1, A + 1); }
         const geo = new TT.BufferGeometry(); geo.setAttribute('position', new TT.Float32BufferAttribute(pos, 3)); geo.setAttribute('uv', new TT.Float32BufferAttribute(uv, 2)); geo.setIndex(idx); geo.computeVertexNormals(); return geo; };
-      // a limb segment: a lathe, rounded at both ends (it overlaps the next at the joint), a little flattened side to side
-      const limb = (G, L, r0, r1, mat, bulge = 1.05) => { const m = lathe(TT, [[0, -L - r1 * .78], [r1 * .72, -L - r1 * .52], [r1, -L], [r1 * 1.04, -L * .78], [(r0 + r1) / 2 * bulge, -L * .45], [r0 * bulge, -L * .14], [r0, 0], [r0 * .72, r0 * .55], [0, r0 * .78]], SG(14), mat); m.scale.z = .84; at(G, m, 0, 0, 0); return m; };
-      const fin = (G, L, r0) => at(G, new TT.Mesh(shaped(10, 8, (x, y, z) => [x * .34 * (1 - .3 * y), y * L * .36, z * .26]), fur), -r0 * .62, -L * .42, 0, 0, false);   // the feathering behind
       const paw = (G, mat) => { at(G, new TT.Mesh(shaped(18, 10, (x, y, z) => [x * .78 + (x > 0 ? .12 : 0), y * (y > 0 ? .44 : .24), z * .62]), mat), .2, -.2, 0); [-1, 0, 1].forEach(k => at(G, new TT.Mesh(new TT.SphereGeometry(.23, 8, 6), mat), .82, -.24, k * .32, 0, false)); };
       const Dg = grp(TT, g, 0, FL, 0); Dg.userData.keep = 1; Dg.name = 'dog';
       const HX = -3.6, HY = 7.6, piv = grp(TT, Dg, HX, HY, 0), bodyG = grp(TT, piv, -HX, -HY, 0);   // the pivot is the hip: it sits by tipping up about it
@@ -2315,10 +2349,24 @@
       at(jaw, new TT.Mesh(shaped(14, 8, (x, y, z) => [x * .95, y * .2, z * .48]), mouthM), .95, .1, 0, 0, false);
       const tongue = grp(TT, jaw, .3, .14, 0); at(tongue, new TT.Mesh(shaped(16, 8, (x, y, z) => [x * 1.05, y * .12 - .04 * x * x, z * .42]), tongueM), .95, 0, 0, false);
       // the legs: joints are groups, each segment hangs down from its joint (+rotation.z swings it forward)
-      const fore = [1, -1].map(sd => { const S = grp(TT, bodyG, 3.4, 6.67, sd * 1.1); limb(S, 2.6, 1.0, .7, fur, 1.06); const E = grp(TT, S, 0, -2.6, 0); limb(E, 3, .68, .48, fur); fin(E, 3, .68);
-        const C = grp(TT, E, 0, -3, 0); limb(C, .9, .46, .42, fur); const P = grp(TT, C, 0, -.9, 0); paw(P, footM); return { S, E, C, P }; });
-      const hind = [1, -1].map(sd => { const S = grp(TT, bodyG, -3.6, 7.63, sd * 1.02); limb(S, 3, 1.22, .76, fur, 1.06); const K = grp(TT, S, 0, -3, 0); limb(K, 3.1, .74, .46, fur); fin(K, 3.1, .74);
-        const Hk = grp(TT, K, 0, -3.1, 0); limb(Hk, 2, .44, .4, fur); const P = grp(TT, Hk, 0, -2, 0); paw(P, footM); return { S, K, Hk, P }; });
+      // a leg: one tube through its joints (top, shoulder or hip, elbow or stifle, wrist or hock, paw), its radius and the feathering at the
+      // back given along its length; worked out again every frame, so the leg bends as one piece of fur
+      const LR = 16, LRad = SG(12), lp = new V3(), lt = new V3(), lz = new V3(), lb = new V3(), jw = new V3();
+      const prof = (tb, u) => { let i = 0; while (i < tb.length - 2 && u > tb[i + 1][0]) i++; const [u0, a] = tb[i], [u1, b] = tb[i + 1]; return a + (b - a) * smooth(u0, u1, u); };
+      const mkLeg = (rad, feath) => { const pos = new Float32Array(LR * (LRad + 1) * 3), uvs = [], ix = [];
+        for (let i = 0; i < LR; i++) for (let j = 0; j <= LRad; j++) uvs.push(j / LRad, i / LR * 2);
+        for (let i = 0; i < LR - 1; i++) for (let j = 0; j < LRad; j++) { const A = i * (LRad + 1) + j, B = A + LRad + 1; ix.push(A, A + 1, B, B, A + 1, B + 1); }
+        const geo = new TT.BufferGeometry(); geo.setAttribute('position', new TT.BufferAttribute(pos, 3)); geo.setAttribute('uv', new TT.Float32BufferAttribute(uvs, 2)); geo.setIndex(ix);
+        const m = new TT.Mesh(geo, fur); m.frustumCulled = false; at(bodyG, m, 0, 0, 0); return { geo, pos, rad, feath, curve: new TT.CatmullRomCurve3([0, 1, 2, 3, 4].map(() => new V3())) }; };
+      const legUpdate = (L, js) => { const C = L.tube.curve; C.points[0].copy(L.top); js.forEach((G, i) => { jw.setFromMatrixPosition(G.matrixWorld); bodyG.worldToLocal(jw); C.points[i + 1].copy(jw); }); C.points[4].y -= .12; C.updateArcLengths();
+        const p = L.tube.pos; let n = 0;
+        for (let i = 0; i < LR; i++) { const u = i / (LR - 1); C.getPointAt(u, lp); C.getTangentAt(u, lt); lz.set(0, 0, 1).addScaledVector(lt, -lt.z).normalize(); lb.crossVectors(lt, lz).normalize(); const r = prof(L.tube.rad, u), f = prof(L.tube.feath, u);
+          for (let j = 0; j <= LRad; j++) { const th = j / LRad * Math.PI * 2, c = Math.cos(th), sn = Math.sin(th), d = sn > 0 ? r + f * sn : r; p[n++] = lp.x + lz.x * c * r * .86 + lb.x * sn * d; p[n++] = lp.y + lz.y * c * r * .86 + lb.y * sn * d; p[n++] = lp.z + lz.z * c * r * .86 + lb.z * sn * d; } }
+        L.tube.geo.attributes.position.needsUpdate = true; L.tube.geo.computeVertexNormals(); };
+      const fore = [1, -1].map(sd => { const S = grp(TT, bodyG, 3.4, 6.67, sd * 1.1); const E = grp(TT, S, 0, -2.6, 0);
+        const C = grp(TT, E, 0, -3, 0); const P = grp(TT, C, 0, -.9, 0); paw(P, fur); return { S, E, C, P, tube: mkLeg([[0, 1.15], [.18, 1.02], [.36, .7], [.46, .62], [.62, .55], [.8, .45], [.9, .42], [1, .44]], [[0, 0], [.4, 0], [.5, .22], [.72, .26], [.86, 0], [1, 0]]), top: new V3(3.6, 8.1, sd * 1.05) }; });
+      const hind = [1, -1].map(sd => { const S = grp(TT, bodyG, -3.6, 7.63, sd * 1.02); const K = grp(TT, S, 0, -3, 0);
+        const Hk = grp(TT, K, 0, -3.1, 0); const P = grp(TT, Hk, 0, -2, 0); paw(P, fur); return { S, K, Hk, P, tube: mkLeg([[0, 1.35], [.2, 1.24], [.34, 1.0], [.44, .72], [.56, .62], [.72, .46], [.84, .42], [1, .44]], [[0, 0], [.12, .25], [.34, .2], [.5, .26], [.66, .1], [.75, 0], [1, 0]]), top: new V3(-3.2, 8.8, sd * .98) }; });
       // the tail: rings round a chain of points, worked out afresh every frame (deeper on the side that hangs: the plume)
       const TK = 10, TR = SG(12), tpos = new Float32Array(TK * (TR + 1) * 3), tidx = [], tuv = [];
       for (let i = 0; i < TK; i++) for (let j = 0; j <= TR; j++) tuv.push(j / TR * 2, i / TK * 2);
@@ -2334,20 +2382,22 @@
         tgeo.attributes.position.needsUpdate = true; tgeo.computeVertexNormals(); };
       // the route round the clearing, and what it does along it
       const route = new TT.CatmullRomCurve3([[-12, -42], [4, -34], [24, -38], [32, -52], [18, -63], [-2, -59], [-16, -52]].map(([x, z]) => new V3(x, 0, z)), true), RL = route.getLength();
-      const PLAN = [['trot', 7], ['walk', 3], ['sniff', 4.5], ['walk', 2.5], ['trot', 6], ['walk', 1.6], ['sit', 8], ['stand', 2.6]], PT = PLAN.reduce((a, p) => a + p[1], 0), SPD = { trot: 6.4, walk: 2.5, sniff: .25, sit: 0, stand: 0 };
+      const PLAN = [['trot', 7], ['walk', 3], ['sniff', 4.5], ['walk', 2.5], ['trot', 6], ['walk', 1.6], ['sit', 8], ['stand', 2.6]], PT = PLAN.reduce((a, p) => a + p[1], 0), SPD = { trot: 20, walk: 9, sniff: .7, sit: 0, stand: 0 };
+      const strideF = v => .5 + v * .07;   // strides a second: a walk at 9 → 1.1, a trot at 20 → 1.9
       const doing = t => { let u = ((t % PT) + PT) % PT; for (const [n, d] of PLAN) { if (u < d) return n; u -= d; } return 'trot'; };
       const st = { s: 0, v: 0, ph: 0, sk: 0, sn: 0, pant: 0, look: 0, yaw: 0, yr: 0, wag: 0, bob: 0, ear: [0, 0], earV: [0, 0] }, rp = new V3(), rt = new V3();
       const live = (t, dt) => { const S = doing(t), ease = a => Math.min(1, dt * a);
         st.v += (SPD[S] - st.v) * ease(1.8); st.sk += ((S === 'sit' ? 1 : 0) - st.sk) * ease(2.4); st.sn += ((S === 'sniff' ? 1 : 0) - st.sn) * ease(2.6);
         st.pant += ((S === 'sit' || S === 'stand' || S === 'trot' ? 1 : 0) - st.pant) * ease(1.4); st.look += ((S === 'sit' || S === 'stand' ? 1 : 0) - st.look) * ease(2);
-        st.s = (st.s + st.v * dt) % RL; st.ph = (st.ph + dt * (.85 + st.v * .22)) % 1; st.wag += dt * (S === 'sniff' ? 15 : S === 'sit' ? 6 : S === 'stand' ? 10 : 8 + st.v * .4);
+        st.s = (st.s + st.v * dt) % RL; st.ph = (st.ph + dt * strideF(st.v)) % 1; st.wag += dt * (S === 'sniff' ? 15 : S === 'sit' ? 6 : S === 'stand' ? 10 : 8 + st.v * .4);
         route.getPointAt(st.s / RL, rp); route.getTangentAt(st.s / RL, rt); let dy = Math.atan2(-rt.z, rt.x) - st.yaw; while (dy > Math.PI) dy -= Math.PI * 2; while (dy < -Math.PI) dy += Math.PI * 2;
         const turn = dy * ease(3.5); st.yaw += turn; st.yr += (turn / Math.max(dt, 1e-3) - st.yr) * ease(4); Dg.position.set(rp.x, FL, rp.z); Dg.rotation.y = st.yaw; };
-      const pose = (t, dt) => { const v = st.v, k = Math.min(1, v / 6.4), w = 1 - st.sk, gt = smooth(2.6, 6.2, v), mk = Math.min(1, v / 1.2) * w, A = .1 + .34 * k, ph = st.ph, sk = st.sk, sn = st.sn;
+      const pose = (t, dt) => { const v = st.v, k = Math.min(1, v / 20), w = 1 - st.sk, gt = smooth(10, 17, v), mk = Math.min(1, v / 1.2) * w, ph = st.ph, sk = st.sk, sn = st.sn;
+        const Af = Math.min(.55, v * .6 * .5 / (strideF(v) * 6.7)), Ah = Math.min(.55, v * .6 * .5 / (strideF(v) * 7.4));   // planted for .6 of a stride: the sweep of the leg matches the ground going by
         const off = [[0, .5, .5, 0], [0, .5, .75, .25]], o4 = i => off[0][i] * gt + off[1][i] * (1 - gt);   // left fore, right fore, left hind, right hind: a trot pairs the diagonals; a walk is four beats
         const cyc = q => { q = ((q % 1) + 1) % 1; if (q < .6) return [1 - 2 * q / .6, 0]; const u = (q - .6) / .4; return [-1 + 2 * smooth(0, 1, u), Math.sin(Math.PI * u)]; };   // stance: the paw planted, the leg sweeping back; swing: lifted, folded, carried forward
-        fore.forEach((L, i) => { const [sw, f] = cyc(ph + o4(i)), fl = f * mk; L.S.rotation.z = -.45 + sw * A * mk - sk * .57 - sn * .1; L.E.rotation.z = .45 - fl * 1.2 + sn * .16; L.C.rotation.z = .15 - fl * .85; L.P.rotation.z = -.15 + fl * .55; });
-        hind.forEach((L, i) => { const [sw, f] = cyc(ph + o4(i + 2)), fl = f * mk; L.S.rotation.z = .5 + sw * A * mk * .9 + sk * .5; L.K.rotation.z = -1.1 - fl * .55 - sk * .85; L.Hk.rotation.z = .75 + fl * .85 + sk * 1.0; L.P.rotation.z = -.15 - fl * .35 - sk * 1.2; });
+        fore.forEach((L, i) => { const [sw, f] = cyc(ph + o4(i)), fl = f * mk; L.S.rotation.z = -.45 + sw * Af - sk * .57 - sn * .1; L.E.rotation.z = .45 - fl * 1.2 + sn * .16; L.C.rotation.z = .15 - fl * .85; L.P.rotation.z = -.15 + fl * .55; });
+        hind.forEach((L, i) => { const [sw, f] = cyc(ph + o4(i + 2)), fl = f * mk; L.S.rotation.z = .5 + sw * Ah + sk * .5; L.K.rotation.z = -1.1 - fl * .55 - sk * .85; L.Hk.rotation.z = .75 + fl * .85 + sk * 1.0; L.P.rotation.z = -.15 - fl * .35 - sk * 1.2; });
         const bob = mk * (gt * .26 * Math.abs(Math.sin(ph * Math.PI * 2)) + (1 - gt) * .12 * Math.abs(Math.sin(ph * Math.PI * 4))), bv = (bob - st.bob) / Math.max(dt, 1e-3); st.bob = bob;
         piv.position.y = HY - sk * 3.85 + bob - .1 * mk; piv.rotation.z = sk * .55 - sn * .05 + mk * .025 * Math.sin(ph * Math.PI * 4); piv.rotation.x = Math.max(-.14, Math.min(.14, -st.yr * .06)) + mk * .035 * Math.sin(ph * Math.PI * 2);
         torso.scale.y = 1 + Math.sin(t * (st.pant > .5 ? 15 : 2.6)) * (.012 + .012 * st.pant);
@@ -2359,7 +2409,8 @@
         ears.forEach((E, i) => { const tgt = -bv * .05; st.earV[i] += ((tgt - st.ear[i]) * 70 - st.earV[i] * 9) * dt; st.ear[i] += st.earV[i] * dt;
           E.rotation.z = .06 + st.ear[i] + sn * .25 + st.look * .1 * Math.sin(t * .9 + i); E.rotation.x = (i ? 1 : -1) * (.05 + Math.abs(st.ear[i]) * .4) + st.yr * .05; });
         const carriage = .18 * gt * k + .05 * (1 - gt) * mk + sn * .6 + (1 - mk) * w * .12 * (1 - sn) - sk * 1.7, wagA = (.22 + .22 * k + sn * .25) * (1 - sk * .35);
-        tailUpdate(carriage, wagA, st.wag, .12 * (1 - sk) - sn * .06 - sk * .2, piv.rotation.z); };
+        tailUpdate(carriage, wagA, st.wag, .12 * (1 - sk) - sn * .06 - sk * .2, piv.rotation.z);
+        Dg.updateMatrixWorld(true); fore.forEach(L => legUpdate(L, [L.S, L.E, L.C, L.P])); hind.forEach(L => legUpdate(L, [L.S, L.K, L.Hk, L.P])); };
       Dg.userData.at = T1 => { st.s = st.v = st.ph = st.sk = st.sn = st.pant = st.look = st.yr = 0; for (let tt = 0; tt < T1; tt += 1 / 30) live(tt, 1 / 30); pose(T1, 1 / 30); };   // (debug: the dog as it is T1 seconds into its loop)
       let lastT = null; for (let i = 0; i < 180; i++) live(i / 30, 1 / 30); pose(6, 1 / 30);
       o.tick && o.tick(t => { if (lastT === null || t < lastT || t - lastT > 1) lastT = t - 1 / 60; const dt = Math.min(.05, t - lastT); lastT = t; live(t, dt); pose(t, dt); }, Dg); }
@@ -2435,6 +2486,7 @@
     { const Gb2 = grp(TT, g, 11.7, 0, -2.6, .9), rub = M({ color: 0x2a2e2a, roughness: .7 }); [-1, 1].forEach(s2 => { const t = new TT.Mesh(new TT.CylinderGeometry(.6, .7, 2.6, 14), rub); t.rotation.z = Math.PI / 2; at(Gb2, t, 0, .7, s2 * .75); const ln = new TT.Mesh(new TT.CircleGeometry(.55, 14), M({ color: 0x4a6a8a, roughness: .05, clearcoat: 1 })); ln.rotation.y = Math.PI / 2; at(Gb2, ln, 1.31, .7, s2 * .75, 0, false); });
       at(Gb2, new TT.Mesh(RB(1.2, .4, .7, .1, 1), rub), 0, 1.1, 0, 0, false); }
     const { key, H } = hourLights(o, T, night ? [-14, 36, -10] : T === 'evening' ? [-26, 22, -8] : [-14, 34, -6], 0x5a6a3a, .95);   // (high enough that the tent and the pines never shade the board)
+    mons(o, 10, FL);
     try { X.mergeStatic(g); } catch (e) {}
     return { bg: SKY[T][1], exp: H.exp, board: H.board, boardCol: night ? 0xffd8b0 : undefined, key, env: { top: SKY[T][1], bottom: '#2a3a20', panels: [[0, 22, -10, 26, 10, night ? '#506090' : '#ffffff', night ? .4 : 1.5], [FX * .4, 3, FZ * .4, 6, 5, '#ff9040', T === 'day' ? 0 : 1.6], [0, 8, 18, 20, 5, '#d8c8a8', .5]] } };
   };
@@ -2654,6 +2706,7 @@
     scene.add(new TT.HemisphereLight(day ? 0xf2ece0 : 0x6a5060, 0x2a1008, day ? .46 : .28));
     const key = dirLight(TT, day ? 0xfff2e0 : T === 'evening' ? 0xffb080 : 0xffc890, day ? 1.05 : T === 'evening' ? .7 : .45, [-30, 30, -24], 17); scene.add(key);
     const over = new TT.SpotLight(0xffe0b8, lit ? 2.2 : 1, 70, .6, .8, 1.1); over.position.set(0, Y1 - 2, Z0 + 2); over.target.position.set(0, 0, Z0); scene.add(over); scene.add(over.target);
+    mons(o, 11, FL);
     try { X.mergeStatic(g); } catch (e) {}
     return { bg: '#2a0e08', exp: day ? .8 : .96, board: day ? .28 : .48, boardCol: lit ? 0xffdcb8 : undefined, key, env: { top: '#5a2a1a', bottom: '#140604', panels: [[0, 10, -28, 20, 14, day ? '#fff4e0' : '#ffb070', day ? 1.4 : .9], [-30, 10, -20, 10, 8, '#ff7040', lit ? 1.2 : .2], [0, 20, 2, 8, 6, '#ffe0b8', 2], [0, 8, 18, 20, 5, '#6a3020', .6]] } };
   };
