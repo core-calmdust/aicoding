@@ -341,7 +341,8 @@
   // the hand: the shot as it is really played (the level's error)
   function perform(shot, level, seed) { return jitter(shot, skill(level), rng(seed || 7)); }
   // a human flick is never quite the same twice: a small wobble in angle and strength, larger for hard shots
-  function wobble(shot, seed, a0 = .5, a1 = .6, v0 = .03, v1 = .025)   // 1 s.d.: soft ±0.5° / ±3%, full ±1.1° / ±5.5% (a perfectly aimed pot drops about 4 times in 5) {
+  // 1 s.d.: soft ±0.5° / ±3%, full ±1.1° / ±5.5% (a perfectly aimed pot drops about 4 times in 5)
+  function wobble(shot, seed, a0 = .5, a1 = .6, v0 = .03, v1 = .025) {
     const R = rng(seed || 11), k = Math.min(1, shot.v / VMAX), k2 = k * k;
     return { x: shot.x, ang: shot.ang + gauss(R) * (a0 + a1 * k2) * Math.PI / 180, v: Math.max(30, shot.v * (1 + gauss(R) * (v0 + v1 * k2))) };
   }
