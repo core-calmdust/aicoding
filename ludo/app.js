@@ -55,7 +55,7 @@ function drawBoard() {
     g.innerHTML = B.pieceSVG(rule, seat) + '<text class="cnt" text-anchor="middle" x=".26" y="-.2"></text>';
     gPcs.appendChild(g); pcEls[seat + ',' + k] = g;
   }
-  placeAll();
+  placeAll(); cupRedraw();
 }
 let pcEls = {};
 
@@ -75,13 +75,19 @@ function diceAt(vals) {   // the thrown dice on the board, in grid units round (
 }
 function cupDraw(seat, mode, thr) {   // mode: mouth up — 'ready' (tap me) · 'idle' · 'shake' · 'flip' (turning over); mouth down — 'down' · 'lift' (dice shown) · 'dice' (just the dice) · null (none)
   const gC = svg.querySelector('#gCup'); if (!gC) return;
-  if (!G || SP || G.state.rule !== 'ludo' || mode == null || seat < 0) { gC.innerHTML = ''; CUP.seat = -1; return; }
+  if (!G || SP || G.state.rule !== 'ludo' || mode == null || seat < 0) { gC.innerHTML = ''; CUP.seat = -1; CUP.mode = null; return; }
+  CUP.mode = mode; CUP.thr = thr;   // (kept: drawBoard rebuilds the SVG and draws the cup again — cupRedraw)
   const [x, y] = cupSpot(seat), col = B.COL.ludo[seat][0], moved = CUP.seat >= 0 && CUP.seat !== seat && (mode === 'ready' || mode === 'idle');
   const dice = thr ? diceAt(thr.three6 ? [6, 6, 6] : thr.dice || [thr.v]) : '';
   gC.innerHTML = CUP_DEF + `<g transform="translate(${x} ${y}) scale(1.25)">${dice ? `<g class="cupd">${dice}</g>` : ''}${mode === 'dice' ? '' : `<g class="cup ${mode}${moved ? ' slide' : ''}">${/^(ready|idle|shake|flip)$/.test(mode) ? cupUp(col) : cupBody(col)}</g>`}</g>`;
   if (moved) { const [x0, y0] = cupSpot(CUP.seat), c = gC.querySelector('.cup'); c.style.setProperty('--dx', (x0 - x) + 'px'); c.style.setProperty('--dy', (y0 - y) + 'px'); }
   CUP.seat = seat;
 }
+// (2026-11-09) drawBoard rebuilds the whole SVG, #gCup with it: the cup as it was is drawn again (no slide; the page's own
+// function, not the full board's wrapper — the 3D cup is not told twice). Before, after a reload / a design change / the
+// 3D ⇄ 2D switch the cup was gone, and tapping where it stood did not throw (the tap looks for #gCup .cup.ready).
+const cupDraw0 = cupDraw;
+function cupRedraw() { if (CUP.mode && CUP.seat >= 0) { const s = CUP.seat; CUP.seat = -1; cupDraw0(s, CUP.mode, CUP.thr); } }
 
 /* ---------- the focus (phones): the board view moves in on the seat to move — its yard before the throw, the pieces that can move
    and where they go after it, the walking piece while it walks — and glides on to the next seat (a smooth pan and zoom of the
@@ -265,7 +271,7 @@ function step() {
   const s = G.state;
   if (s.over) { setStatus(''); $('#btnRoll').disabled = true; zFocus(null); gameOver(); cRender(); return; }
   const seat = s.turn, human = humanSeat(seat);
-  if (G.thr) { afterThrow(my); return; }
+  if (G.thr) { if (!CUP.mode) cupDraw(seat, 'dice', G.thr); afterThrow(my); return; }   // (a reload after the throw: its dice by the cup put aside)
   zSeat(seat);
   $('#btnRoll').disabled = !human; cupDraw(seat, human ? 'ready' : 'idle');
   if (human) {
