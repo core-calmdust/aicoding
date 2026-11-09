@@ -94,35 +94,32 @@
     classic: (N) => { const O = { cx: 4, by: -46, asp: .11, sp: .62, wp: 2.2, ring: .55, fib: .34, drift: .32 }, A = hx('#ebd09d'), B = hx('#b8864f');
       return (x, y) => mix(A, B, .14 + woodT(N, x, y, O) * .66); },
     marq: (N) => {
-      // every piece is cut to its place: the fields are rings of polar cells between the stringers, each cell split into
-      // triangles (a sawtooth band outside the 5 line; inside the 15 a sixteen-ray star, a sawtooth ring and a ring of
-      // diamonds), each piece its own wood with the grain along the cell, glue seams between pieces
-      const O = { cx: 0, by: -40, asp: .08, sp: .45, wp: 1.4, ring: .5, fib: .4, drift: .25 }, SEAM = [40, 24, 14];
-      const piece = (w, tan, rad, off, along) => mix(w[0], w[1], .14 + woodT(N, along ? tan : rad, along ? rad : tan, Object.assign({}, O, { off, by: -30 })) * .5);
-      const seamed = (col, d) => d < .045 ? mix(col, SEAM, .6) : d < .08 ? mix(col, SEAM, .2) : col;
-      // a ring r0..r1 cut into n cells; kind: 'saw' (one diagonal), 'dia' (both diagonals: four triangles), 'ray' (no split)
-      const ringPx = (r, th, r0, r1, n, kind, woods, seed) => {
-        const t = (r - r0) / (r1 - r0), a = (th + Math.PI) / (2 * Math.PI) * n, ia = Math.floor(a), fa = a - ia, arc = 2 * Math.PI * r / n, wd = r1 - r0;
-        const tan = (fa - .5) * arc; let k, dd = Math.min(fa, 1 - fa) * arc, along = true;
-        if (kind === 'saw') { const up = fa < t; k = up ? 0 : 1; dd = Math.min(dd, Math.abs(fa - t) * Math.min(arc, wd) * .7); along = up; }
-        else if (kind === 'dia') { const u = fa - .5, v = t - .5, q = Math.abs(u) * arc > Math.abs(v) * wd; k = q ? (u < 0 ? 0 : 2) : (v < 0 ? 1 : 3); k = k % 2; dd = Math.min(dd, Math.abs(Math.abs(u) * arc - Math.abs(v) * wd) * .7); along = !q; }
-        else k = ia % 2;
-        const w = woods[(k + (kind === 'ray' ? 0 : ia % 2) * (woods.length > 2 ? 1 : 0)) % woods.length];
-        return seamed(piece(w, tan, r, seed + ia * 7.3 + k * 3.1, along), dd);
-      };
+      // inside the 15: small triangles of maple, cherry and walnut. Outside the 5: the same three woods, but every piece cut to
+      // the ring — a triangle lattice bent round the board (two rows between the stringers), each piece its own wood, tone
+      // and grain direction, glue seams between them
+      const W3 = [WOOD.maple, WOOD.cherry, WOOD.walnut], O = { cx: 0, by: -40, asp: .08, sp: .45, wp: 1.4, ring: .5, fib: .4, drift: .25 }, SEAM = [40, 24, 14];
+      const woodOf = h => W3[h < .42 ? 0 : h < .76 ? 1 : 2];
+      const grain = (x, y, dir, h, w) => { const c = Math.cos(dir), sn = Math.sin(dir), t = woodT(N, x * c + y * sn, -x * sn + y * c, Object.assign({}, O, { off: h * 40 })); return mix(w[0], w[1], .1 + t * .5 + (hash(h * 91, 3, 7) - .5) * .12); };
+      const B0 = R5 + .7, ROWS = 2, BW = (RB - B0) / ROWS, NB = Math.round(2 * Math.PI * (B0 + RB) / 2 / (BW / .866));
       return (x, y) => {
-        const r = Math.hypot(x, y), th = Math.atan2(y, x);
-        if (r > R5 + .7) return ringPx(r, th, R5 + .7, RB, 64, 'saw', [WOOD.maple, WOOD.walnut], 11);
-        if (r < R15 - .6) {
-          if (r < 4.4) return ringPx(r, th, 0, 4.4, 16, 'ray', [WOOD.cherry, WOOD.maple], 3);
-          if (r < 6.9) return ringPx(r, th, 4.4, 6.9, 24, 'saw', [WOOD.walnut, WOOD.maple, WOOD.cherry], 5);
-          return ringPx(r, th, 6.9, R15 - .6, 28, 'dia', [WOOD.maple, WOOD.cherry], 7);
+        const r = Math.hypot(x, y);
+        if (r < R15 - .35) {
+          const T = triTile(x, y, 1.7), col = grain(x, y, T.dir, T.h, woodOf(T.h));
+          return T.e < .035 ? mix(col, SEAM, .55) : col;
         }
-        const n = 16, k = Math.floor((th + Math.PI) / (2 * Math.PI / n)), thc = -Math.PI + (k + .5) * 2 * Math.PI / n;
+        if (r > B0) {
+          const th = Math.atan2(y, x), rr = (r - B0) / BW, row = Math.min(ROWS - 1, Math.floor(rr)), t = rr - row;
+          const a = (th + Math.PI) / (2 * Math.PI) * NB + row * .5 - t * .5, ia = Math.floor(a), fa = a - ia, up = fa + t < 1 ? 1 : 0;
+          const e = up ? Math.min(fa, t, 1 - fa - t) : Math.min(1 - fa, 1 - t, fa + t - 1);
+          const h = hash(ia, row, up), dir = th + Math.PI / 2 + (Math.floor(hash(row, ia, up + 3) * 3)) * Math.PI / 3;
+          const col = grain(x, y, dir, h, woodOf(h));
+          return e < .045 ? mix(col, SEAM, .6) : e < .08 ? mix(col, SEAM, .2) : col;
+        }
+        const n = 16, th = Math.atan2(y, x), k = Math.floor((th + Math.PI) / (2 * Math.PI / n)), thc = -Math.PI + (k + .5) * 2 * Math.PI / n;
         const tan = r * Math.sin(th - thc), w = k % 2 ? WOOD.cherry : WOOD.maple;
         const col = mix(w[0], w[1], .12 + woodT(N, tan, r, Object.assign({}, O, { off: k * 9.7, by: -30 })) * .5);
         const seam = Math.min(Math.abs(r * Math.sin(th - (-Math.PI + k * 2 * Math.PI / n))), Math.abs(r * Math.sin(th - (-Math.PI + (k + 1) * 2 * Math.PI / n))));
-        return seamed(col, seam);
+        return seam < .05 ? mix(col, SEAM, .5) : col;
       };
     },
     winter: (N) => { const A = hx('#eef6fb'), B = hx('#b9d2e4');
@@ -146,7 +143,7 @@
   function decorate(g, look, u, X0) {
     const at = (x, y) => [X0(x), X0(y)];
     if (look === 'marq') {   // maple and walnut stringers round the triangle fields
-      for (const [r, c, w] of [[R15 - .38, '#e9cf9c', .36], [R15 - .6, '#3a2414', .08], [R5 + .48, '#e9cf9c', .36], [R5 + .7, '#3a2414', .08], [6.9, '#3a2414', .12], [4.4, '#e9cf9c', .2], [4.4 + .14, '#3a2414', .06], [RB - .06, '#3a2414', .14]]) { g.strokeStyle = c; g.lineWidth = w * u; g.beginPath(); g.arc(X0(0), X0(0), r * u, 0, Math.PI * 2); g.stroke(); }
+      for (const [r, c, w] of [[R15 - .35, '#e9cf9c', .22], [R15 - .6, '#3a2414', .1], [R5 + .45, '#e9cf9c', .22], [R5 + .7, '#3a2414', .1], [R5 + .7 + (RB - R5 - .7) / 2, 'rgba(40,24,14,.7)', .05], [RB - .06, '#3a2414', .14]]) { g.strokeStyle = c; g.lineWidth = w * u; g.beginPath(); g.arc(X0(0), X0(0), r * u, 0, Math.PI * 2); g.stroke(); }
     } else if (look === 'winter') {
       // a soft aurora veil, a red maple leaf under the hole, snowflakes
       g.save(); g.globalCompositeOperation = 'multiply';
