@@ -1060,6 +1060,7 @@
     mg.setIndex(new TT.BufferAttribute(m > 65535 ? idx : (idx instanceof Uint16Array ? idx : Uint16Array.from(idx)), 1));
   }
   function mergeStatic(g) {
+    if (window.__t3NoMerge) return;   // a debug switch: keep the meshes apart (to check what sits where)
     const TT = T(); g.updateMatrixWorld(true);
     const inv = new TT.Matrix4().copy(g.matrixWorld).invert(), buckets = new Map(), drop = [];
     const animated = o => { for (let x = o; x && x !== g; x = x.parent) if (x.userData.keep) return true; return false; };
