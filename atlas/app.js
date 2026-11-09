@@ -615,9 +615,9 @@
     document.body.style.overflow = 'hidden';
     if (push) history.replaceState(null, '', '#' + page + '/' + id);
     if (initGL()) {
-      // back from a game on the table: the board drops in again and the camera snaps back quickly (ease-out) to the showcase view
+      // back from a game on the table: the board settles in softly and the camera glides back (ease-in-out) to the showcase view
       const show3d = () => {
-        if (back) { Table3D.show(id); Table3D.play(false, { glide: 420 }); }
+        if (back) { Table3D.show(id, null, { soft: true }); Table3D.play(false, { glide: 520 }); }
         else { Table3D.show(id, null, flown ? { magic: true, hold: true } : {}); Table3D.play(false); }
       };
       if (TG && !back) try { warm(id); } catch (e) {}   // (built now, so its textures are under way)
