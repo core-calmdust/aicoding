@@ -78,7 +78,9 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
 .npc-float .npc-tag{font-size:12px}
 .npc-float .npc-ttl{font-size:12.5px}
 .npc-float .npc-tx{font-size:18px;line-height:1.55}
-@media (max-width:520px){.npc-float .npc-pic{width:62px;height:62px}.npc-float .npc-tx{font-size:15px}.npc-float .npc-nm b{font-size:14px}}
+/* phones: smaller, so it does not get in the way of play (and a tap on it puts it away) */
+@media (max-width:520px){.npc-float{width:min(420px,calc(100vw - 24px));gap:7px}.npc-float .npc-pic{width:46px;height:46px}.npc-float .npc-bub{padding:6px 11px 8px;border-radius:15px}.npc-float .npc-nm b{font-size:12.5px}.npc-float .npc-tag{font-size:10px}.npc-float .npc-ttl{font-size:10.5px}.npc-float .npc-tx{font-size:13px;line-height:1.5}.npc-float .npc-ttl:empty + .npc-tx{min-height:0}}
+.npc-float.on .npc-pic,.npc-float.on .npc-bub{pointer-events:auto;cursor:pointer}
 .npc-float.on{opacity:1;transform:translate(-50%,0)}
 .bv > .npc-float{position:absolute;z-index:3}
 .npc-float.npc-skin{z-index:45}
@@ -236,6 +238,7 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
     const img = el.querySelector('img'), nm = el.querySelector('.npc-nm b'), tag = el.querySelector('.npc-tag'), tx = el.querySelector('.npc-tx'), pic = el.querySelector('.npc-pic'), ttl = el.querySelector('.npc-ttl');
     (o.body ? document.body : document.getElementById('bv') || document.body).appendChild(el);   // (inside the portal's 3D view: over the table, under its end-of-game card)
     let hideT = 0;
+    el.addEventListener('click', e => { e.stopPropagation(); clearTimeout(hideT); el.classList.remove('on'); });   // tap the guide or the bubble: it steps away
     return {
       el,
       say(who, html, m) {
