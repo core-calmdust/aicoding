@@ -157,7 +157,8 @@
     const n = rule === 'pachisi' ? 19 : 15;
     const defs = `<defs><radialGradient id="ldSlot" cx=".42" cy=".38" r=".7"><stop offset="0" stop-color="#5a3010" stop-opacity=".08"/><stop offset=".75" stop-color="#5a3412" stop-opacity=".12"/><stop offset="1" stop-color="#4a2a10" stop-opacity=".26"/></radialGradient>`
       + `<linearGradient id="ldVarnish" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".16"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".08"/></linearGradient></defs>`;
-    return { n, svg: defs + (rule === 'pachisi' ? drawPachisi(design) : drawLudo(design)) };
+    const art = rule !== 'pachisi' && window.LudoBoardArt && typeof window.LudoBoardArt[design] === 'function' ? window.LudoBoardArt[design] : null;   // the art boards (ludo/board-art.js)
+    return { n, svg: defs + (rule === 'pachisi' ? drawPachisi(design) : art ? art() : drawLudo(design)) };
   }
   /* ---------- pieces ---------- */
   function pieceSVG(rule, seat, opts = {}) {

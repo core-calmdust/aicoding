@@ -138,6 +138,11 @@
     bauhaus: { ja: 'バウハウス 3D', en: 'Bauhaus 3D', zh: '包豪斯 3D', ko: '바우하우스 3D', es: 'Bauhaus 3D', fr: 'Bauhaus 3D', pt: 'Bauhaus 3D', de: 'Bauhaus 3D', hi: 'बाउहाउस 3D', ar: 'باوهاوس ثلاثي', ru: 'Баухаус 3D', 'zh-TW': '包浩斯 3D', id: '3D Bauhaus', tr: 'Bauhaus 3D' },
     winter: { ja: 'カナダの冬 3D', en: 'Canadian winter 3D', zh: '加拿大之冬 3D', ko: '캐나다의 겨울 3D', es: 'Invierno canadiense 3D', fr: 'Hiver canadien 3D', pt: 'Inverno canadense 3D', de: 'Kanadischer Winter 3D', hi: 'कनाडाई सर्दी 3D', ar: 'شتاء كندي ثلاثي', ru: 'Канадская зима 3D', 'zh-TW': '加拿大之冬 3D', id: '3D musim dingin Kanada', tr: 'Kanada kışı 3D' },
     mcm: { ja: 'ミッドセンチュリー 3D', en: 'Mid-century 3D', zh: '中世纪现代 3D', ko: '미드센추리 3D', es: 'Mid-century 3D', fr: 'Mid-century 3D', pt: 'Mid-century 3D', de: 'Mid-Century 3D', hi: 'मिड-सेंचुरी 3D', ar: 'منتصف القرن ثلاثي', ru: 'Мид-сенчури 3D', 'zh-TW': '中世紀現代 3D', id: '3D mid-century', tr: 'Mid-century 3D' },
+    // ludo (the 3D boards: classic + the art boards, 2026-11-09)
+    street: { ja: 'ストリートアート 3D', en: 'Street art 3D', zh: '街头艺术 3D', ko: '스트리트 아트 3D', es: 'Arte urbano 3D', fr: 'Street art 3D', pt: 'Arte urbana 3D', de: 'Street-Art 3D', hi: 'स्ट्रीट आर्ट 3D', ar: 'فن الشارع ثلاثي', ru: 'Стрит-арт 3D', 'zh-TW': '街頭藝術 3D', id: '3D seni jalanan', tr: 'Sokak sanatı 3D' },
+    peg: { ja: '木のペグ盤 3D', en: 'Wooden peg board 3D', zh: '木制插孔盘 3D', ko: '나무 페그 판 3D', es: 'Tablero de clavijas 3D', fr: 'Plateau à chevilles 3D', pt: 'Tabuleiro de pinos 3D', de: 'Holz-Steckbrett 3D', hi: 'लकड़ी का पेग बोर्ड 3D', ar: 'لوح أوتاد خشبي ثلاثي', ru: 'Доска с колышками 3D', 'zh-TW': '木製插孔盤 3D', id: '3D papan pasak kayu', tr: 'Ahşap çivili tahta 3D' },
+    mondrian: { ja: 'コンポジション 3D', en: 'Composition 3D', zh: '构成 3D', ko: '컴포지션 3D', es: 'Composición 3D', fr: 'Composition 3D', pt: 'Composição 3D', de: 'Komposition 3D', hi: 'कंपोज़िशन 3D', ar: 'تكوين ثلاثي', ru: 'Композиция 3D', 'zh-TW': '構成 3D', id: '3D komposisi', tr: 'Kompozisyon 3D' },
+    cutout: { ja: '切り絵 3D', en: 'Paper cut-outs 3D', zh: '剪纸拼贴 3D', ko: '종이 오리기 3D', es: 'Papeles recortados 3D', fr: 'Papiers découpés 3D', pt: 'Recortes de papel 3D', de: 'Scherenschnitte 3D', hi: 'कागज़ की कटिंग 3D', ar: 'قصاصات ورق ثلاثي', ru: 'Вырезки из бумаги 3D', 'zh-TW': '剪紙拼貼 3D', id: '3D potongan kertas', tr: 'Kâğıt kesik 3D' },
     tycoon: { ja: '大富豪 3D', en: 'Tycoon 3D', zh: '大富豪 3D', ko: '대부호 3D', es: 'Magnate 3D', fr: 'Magnat 3D', pt: 'Magnata 3D', de: 'Tycoon 3D', hi: 'रईस 3D', ar: 'الثري ثلاثي', ru: 'Магнат 3D', 'zh-TW': '大富豪 3D', id: '3D Konglomerat', tr: 'Milyoner 3D' },
   };
   const BOARDS = {
@@ -166,6 +171,8 @@
     carrom: { list: ['neon', 'modern', 'classic', 'rajasthan', 'bauhaus', 'tycoon'], get: () => { const v = ls.get('atlas-carrom-look'); return ['modern', 'classic', 'rajasthan', 'bauhaus', 'tycoon'].includes(v) ? v : 'neon'; }, set: k => ls.set('atlas-carrom-look', k) },
     // crokinole (3D only): 'atlas-crokinole-look' ('classic' the default | 'neon' | 'marq' | 'winter' | 'mcm' | 'modern')
     crokinole: { list: ['classic', 'neon', 'marq', 'winter', 'mcm', 'modern'], get: () => { const v = ls.get('atlas-crokinole-look'); return ['neon', 'marq', 'winter', 'mcm', 'modern'].includes(v) ? v : 'classic'; }, set: k => ls.set('atlas-crokinole-look', k) },
+    // ludo (atlas/models/ludo.js, atlas/skin/ludo.js): 'atlas-ludo-look' ('classic' the default | 'street' | 'peg' | 'mondrian' | 'cutout'); pachisi keeps its cloth
+    ludo: { list: ['classic', 'street', 'peg', 'mondrian', 'cutout'], get: () => { const v = ls.get('atlas-ludo-look'); return ['street', 'peg', 'mondrian', 'cutout'].includes(v) ? v : 'classic'; }, set: k => ls.set('atlas-ludo-look', k) },
   };
   X.BOARDS = BOARDS;
   X.boardName = (k, lang) => { const o = N3[k]; return o ? o[lang] || o.en : k; };
@@ -2252,60 +2259,107 @@
       { const sp = new TT.Mesh(new TT.TubeGeometry(new TT.CatmullRomCurve3([new TT.Vector3(1.7, 1.3, 0), new TT.Vector3(2.6, 2, 0), new TT.Vector3(3, 2.9, 0)]), 8, .2, 6), ket); at(Gf, sp, 0, 4.8, 0); const hd = new TT.Mesh(new TT.TorusGeometry(1.6, .06, 4, 16, Math.PI), kStand); at(Gf, hd, 0, 7.6, 0, 0, false); }
       ao(o, FX, FL, FZ, 16, 16, .5);
       [[-10, 6, 1.1], [9, 8, -.5]].forEach(([x, z, r]) => { const lg = new TT.Mesh(new TT.CylinderGeometry(1.6, 1.7, 12, 12), [barkM, endM, endM]); lg.rotation.set(0, r, Math.PI / 2); at(Gf, lg, x, 1.6, z); }); }
-    // a dog trotting about the clearing (2026-11-09, made real): a golden retriever modelled in shape — a deep chest and a tucked waist, a
-    // neck that runs into the shoulders, a broad skull with a stop and a long muzzle, a wet nose, dark eyes under the brow, soft drop ears,
-    // jointed legs (shoulder-elbow-pastern in front; thigh, hock and pastern behind), feathering on the legs, a plumed tail. It trots with a
-    // diagonal gait, the tail swinging and the ears bouncing, breathes, and every so often sits down and looks about
+    // a dog about the clearing (2026-11-09, more real and more alive): a golden retriever whose trunk is lofted along its spine (a deep
+    // chest falling to a tucked loin, a level back, the rump rounding off), a neck that bends to put the nose to the grass, a head with a stop,
+    // cheeks and flews, a jaw that drops to pant with the tongue out, soft ears that bounce on a spring, legs turned as smooth tapering limbs
+    // (feathered behind), a plumed tail rebuilt every frame from its wag. It goes round a loop in the clearing — trots, slows to a walk (a
+    // four-beat gait), stops to sniff, sits and pants looking about, stands and looks — each leg with its stance and its swing (the joints
+    // folding as it lifts), the body bobbing and leaning into the turns, the ears and the tail answering
     { const furT = canvasTex('tbl10-fur2', 256, 256, (c, W) => { c.fillStyle = '#c8873e'; c.fillRect(0, 0, W, W);
         for (let i = 0; i < 5000; i++) { const x = Math.random() * W, y = Math.random() * W, l = 3 + Math.random() * 7, k = Math.random(); c.strokeStyle = k < .45 ? `rgba(110,62,22,${.18 + Math.random() * .2})` : `rgba(246,200,130,${.18 + Math.random() * .25})`; c.lineWidth = .8 + Math.random() * .7; c.beginPath(); c.moveTo(x, y); c.quadraticCurveTo(x + 1.5, y + l * .5, x + (Math.random() - .5) * 2, y + l); c.stroke(); } });
       furT.wrapS = furT.wrapT = TT.RepeatWrapping;
       const creamT = canvasTex('tbl10-fur3', 128, 128, (c, W) => { c.fillStyle = '#e6c088'; c.fillRect(0, 0, W, W); for (let i = 0; i < 1600; i++) { const x = Math.random() * W, y = Math.random() * W; c.strokeStyle = Math.random() < .5 ? 'rgba(190,140,80,.3)' : 'rgba(255,236,200,.35)'; c.lineWidth = .8; c.beginPath(); c.moveTo(x, y); c.lineTo(x + (Math.random() - .5) * 2, y + 4 + Math.random() * 5); c.stroke(); } });
+      creamT.wrapS = creamT.wrapT = TT.RepeatWrapping;
       const fur = M({ map: furT, roughness: .82, sheen: new TT.Color(0xffcf8a), sheenRoughness: .45, bumpScale: .06 }), cream = M({ map: creamT, roughness: .85, sheen: new TT.Color(0xffe6b8), sheenRoughness: .5, bumpScale: .05 });
-      const noseM = M({ color: 0x18110e, roughness: .28, clearcoat: .9, clearcoatRoughness: .2 }), eyeM = M({ color: 0x1a0e08, roughness: .05, clearcoat: 1 }), lipM = M({ color: 0x2a1a14, roughness: .5 }), padM = M({ color: 0x2a201c, roughness: .7 });
-      const SG = (n) => o.COARSE ? Math.max(8, n >> 1) : n;
+      const footM = M({ map: furT, color: 0xffe8c8, roughness: .85, sheen: new TT.Color(0xffe6b8), sheenRoughness: .5, bumpScale: .05 }), noseM = M({ color: 0x18110e, roughness: .28, clearcoat: .9, clearcoatRoughness: .2 }), eyeM = M({ color: 0x2e170a, roughness: .04, clearcoat: 1 }), lipM = M({ color: 0x2a1a14, roughness: .5 }), mouthM = M({ color: 0x5a2228, roughness: .6 }), tongueM = M({ color: 0xd8707a, roughness: .35, clearcoat: .5 }), padM = M({ color: 0x2a201c, roughness: .7 });
+      const SG = (n) => o.COARSE ? Math.max(8, n >> 1) : n, V3 = TT.Vector3;
       const shaped = (wS, hS, f) => { const geo = new TT.SphereGeometry(1, SG(wS), SG(hS)), P = geo.attributes.position; for (let i = 0; i < P.count; i++) { const v = f(P.getX(i), P.getY(i), P.getZ(i)); P.setXYZ(i, v[0], v[1], v[2]); } geo.computeVertexNormals(); return geo; };
       const smooth = (a, b, t) => { const k = Math.min(1, Math.max(0, (t - a) / (b - a))); return k * k * (3 - 2 * k); };
-      const Dg = grp(TT, g, 0, FL, 0); Dg.userData.keep = 1; Dg.scale.setScalar(1.1);
-      const body = grp(TT, Dg, 0, 0, 0);
-      // the torso: x along the body (+x the head end); deep at the chest, tucked up at the loin, the rump rounded
-      const torso = new TT.Mesh(shaped(48, 30, (x, y, z) => { const t = x, depth = 1.12 - .42 * smooth(-.1, -.75, t) + .1 * smooth(.2, .6, t), up = y > 0 ? 1 : depth, wd = 1 - .14 * smooth(.1, -.6, t) + .05 * smooth(-.6, -.95, t);
-        return [x * 4.6, y * (y > 0 ? 1.95 : 2.15 * up) + .25 * smooth(-.4, -1, t) * (y > 0 ? 1 : 0), z * 1.75 * wd]; }), fur);
-      at(body, torso, 0, 7.4, 0);
-      const chest = new TT.Mesh(shaped(24, 16, (x, y, z) => [x * 1.9, y * 2, z * 1.55]), cream); at(body, chest, 3.1, 6.7, 0, 0, false);   // the cream bib
-      const neck = new TT.Mesh(new TT.CylinderGeometry(1.45, 1.95, 3.4, SG(20), 4), fur); neck.rotation.z = -.8; at(body, neck, 4.2, 9, 0);
-      // the head: a broad skull, a clear stop, the muzzle, a black nose with nostrils, the lips, eyes, brows and the soft ears
-      const head = grp(TT, body, 5.5, 10.6, 0); head.scale.setScalar(1.12);
-      at(head, new TT.Mesh(shaped(32, 22, (x, y, z) => [x * 1.6, y * 1.35 + (y > 0 ? .1 * x : 0), z * 1.35 * (1 - .1 * Math.max(0, x))]), fur), 0, 0, 0);
-      at(head, new TT.Mesh(shaped(28, 18, (x, y, z) => { const t = (x + 1) / 2; return [x * 1.3, y * (.95 - .2 * t) - .05 * t, z * (1 - .22 * t)]; }), fur), 1.6, -.5, 0);   // the muzzle
-      at(head, new TT.Mesh(shaped(16, 10, (x, y, z) => [x * .6, y * .25, z * .78]), lipM), 1.95, -1.15, 0, 0, false);   // the mouth line
-      { const nose = new TT.Mesh(shaped(20, 14, (x, y, z) => [x * .42, y * .34 + (y > 0 ? .05 : 0), z * .5]), noseM); at(head, nose, 2.86, -.3, 0, 0, false);
-        [-1, 1].forEach(sd => { const ns = new TT.Mesh(new TT.SphereGeometry(.09, 8, 6), M({ color: 0x050302 })); ns.scale.set(.5, 1, 1.2); at(head, ns, 3.24, -.32, sd * .17, 0, false); }); }
-      [-1, 1].forEach(sd => { const e = new TT.Mesh(new TT.SphereGeometry(.24, 14, 10), eyeM); at(head, e, 1.02, .38, sd * .78, 0, false);
-        const rimE = new TT.Mesh(new TT.TorusGeometry(.25, .05, 6, 14), lipM); rimE.rotation.y = Math.PI / 2 - sd * .5; at(head, rimE, 1.05, .38, sd * .8, 0, false);
-        const brow = new TT.Mesh(shaped(12, 8, (x, y, z) => [x * .45, y * .2, z * .32]), fur); at(head, brow, .95, .66, sd * .74, 0, false); });
-      const ears = [-1, 1].map(sd => { const E = grp(TT, head, -.25, .62, sd * 1.4); const ear = new TT.Mesh(shaped(20, 16, (x, y, z) => { const t = (1 - y) / 2; return [x * (.95 - .3 * t * t), y * 1.45 - 1.1, z * .26 + sd * .18 * (1 - y * y)]; }), fur); ear.rotation.x = sd * .22; at(E, ear, 0, 0, 0); return E; });
-      const collar = new TT.Mesh(new TT.TorusGeometry(1.32, .16, 8, 28), M({ color: 0xc8282a, roughness: .5 })); collar.rotation.set(0, Math.PI / 2, -.95); at(body, collar, 4.9, 9.9, 0, 0, false);
-      at(body, new TT.Mesh(new TT.CylinderGeometry(.32, .32, .08, 14), M({ color: 0xd8b84a, metalness: 1, roughness: .3 })), 5.25, 8.7, 0, 0, false).rotation.x = Math.PI / 2;   // the tag
-      // legs: a joint is a group; each bone hangs down from it
-      const bone = (G, r0, r1, L, mat, feather) => { const m = new TT.Mesh(new TT.CylinderGeometry(r0, r1, L, SG(14), 3), mat); at(G, m, 0, -L / 2, 0); if (feather) { const f = new TT.Mesh(shaped(10, 8, (x, y, z) => [x * .25, y * L * .45, z * .45]), fur); at(G, f, -r0 * .9, -L * .45, 0, 0, false); } };
-      const paw = (G, mat) => { at(G, new TT.Mesh(shaped(18, 10, (x, y, z) => [x * .62 + (x > 0 ? .12 : 0), y * (y > 0 ? .4 : .22), z * .5]), mat), .18, -.12, 0); [-1, 0, 1].forEach(k => at(G, new TT.Mesh(new TT.SphereGeometry(.17, 8, 6), mat), .62, -.12, k * .26, 0, false)); };
-      const fore = [1, -1].map(sd => { const S = grp(TT, body, 3.3, 6.3, sd * 1.15); const shoulder = new TT.Mesh(shaped(16, 12, (x, y, z) => [x * 1, y * 1.6, z * .6]), fur); at(S, shoulder, 0, -.6, 0);
-        bone(S, .62, .5, 3, fur, true); const E = grp(TT, S, 0, -3, 0); bone(E, .46, .36, 3, fur, false); const P = grp(TT, E, 0, -3, 0); paw(P, cream); return { S, E }; });
-      const hind = [1, -1].map(sd => { const S = grp(TT, body, -3.4, 7.65, sd * 1.15); const thigh = new TT.Mesh(shaped(18, 14, (x, y, z) => [x * 1.25, y * 1.9, z * .8]), fur); at(S, thigh, -.1, -1, 0);
-        const K = grp(TT, S, -.3, -2.6, 0); K.rotation.z = .55; bone(K, .55, .4, 2.6, fur, true); const H = grp(TT, K, 0, -2.6, 0); H.rotation.z = -.95; bone(H, .38, .33, 2.75, fur, false); const P = grp(TT, H, 0, -2.75, 0); P.rotation.z = .4; paw(P, cream); return { S, K, H }; });
-      // the tail: a chain of overlapping furry segments, deeper on the underside (the feathering)
-      const tail = []; { let parent = grp(TT, body, -4.5, 8.8, 0); parent.rotation.z = 1.9; for (let k = 0; k < 6; k++) { const L = 1.05, r0 = .48 - k * .06, seg = grp(TT, parent, 0, k ? L : 0, 0); const m = new TT.Mesh(shaped(12, 8, (x, y, z) => [x * (r0 * 1.5 + .12), y * 1.02, z * r0 * 1.1]), fur); at(seg, m, -.12 - k * .02, L / 2, 0, 0, k < 2); seg.rotation.z = -.12; tail.push(seg); parent = seg; } }
-      // the path: a loop between the table and the fire; pause to sit every so often
-      const path = t => { const a = t * .14; return [8 + Math.cos(a) * 20, -46 + Math.sin(a) * 9, a]; };
-      const pose = t => { const cyc = t % 26, sit = cyc > 20, tt = sit ? t - (cyc - 20) : t; const [x, z, a] = path(tt); Dg.position.x = x; Dg.position.z = z; const dx = -20 * Math.sin(a), dz = 9 * Math.cos(a); Dg.rotation.y = Math.atan2(-dz, dx);
-        const sk = sit ? Math.min(1, (cyc - 20) * 2.5, (26 - cyc) * 2.5) : 0, w = 1 - sk, ph = t * 8.5;
-        fore.forEach((L, i) => { const p = ph + (i ? Math.PI : 0), s = Math.sin(p); L.S.rotation.z = w * s * .5 + sk * .15; L.E.rotation.z = w * Math.max(0, -Math.cos(p)) * .9; });   // diagonal pairs: left fore with right hind
-        hind.forEach((L, i) => { const p = ph + (i ? 0 : Math.PI), s = Math.sin(p); L.S.rotation.z = w * s * .45 + sk * 1.35; L.K.rotation.z = .55 + w * Math.max(0, Math.cos(p)) * .35 - sk * .2; L.H.rotation.z = -.95 - sk * .6; });
-        body.rotation.z = sk * .5; body.position.y = -sk * 2.6 + w * Math.abs(Math.cos(ph)) * .22; body.position.x = -sk * 1.2;
-        torso.scale.y = 1 + Math.sin(t * (sit ? 5 : 3)) * .015; head.rotation.z = w * Math.sin(ph * 2) * .04 - sk * .4; head.rotation.y = sk * Math.sin(t * 1.1) * .55 + w * Math.sin(t * .7) * .12;
-        ears.forEach((E, i) => { E.rotation.z = Math.sin(ph * 2 + i) * .12 * w + .05; E.rotation.x = (i ? 1 : -1) * (.06 + Math.abs(Math.sin(ph)) * .08 * w); });
-        tail.forEach((seg, k) => { seg.rotation.x = Math.sin(t * (sit ? 9 : 12) - k * .5) * (.12 + k * .03); seg.rotation.z = -.12 - sk * .06; }); tail[0].parent.rotation.z = 1.9 - sk * .9; };
-      pose(3.2); o.tick && o.tick(pose, Dg); }
+      // a loft: elliptical sections (top radius, bottom radius, half-width) along a curve in the x-y plane, the seam underneath, ends rounded
+      const loft = (pts, keys, nS, nR) => { const cur = new TT.CatmullRomCurve3(pts.map(p => new V3(p[0], p[1], 0))), pos = [], uv = [], idx = []; nS = SG(nS); nR = SG(nR);
+        const prof = s => { let i = 0; while (i < keys.length - 2 && s > keys[i + 1][0]) i++; const [s0, ...a] = keys[i], [s1, ...b] = keys[i + 1], k = smooth(s0, s1, s); return a.map((v, j) => v + (b[j] - v) * k); };
+        for (let i = 0; i <= nS; i++) { const s = i / nS, P = cur.getPointAt(s), Tn = cur.getTangentAt(s), e = .08, rf = (s < e ? Math.sqrt(1 - Math.pow(1 - s / e, 2)) : 1) * (s > 1 - e ? Math.sqrt(1 - Math.pow(1 - (1 - s) / e, 2)) : 1), [bt, bb, a] = prof(s);
+          for (let j = 0; j <= nR; j++) { const th = -Math.PI / 2 + j / nR * Math.PI * 2, u = Math.sin(th), v = Math.cos(th), r = (u > 0 ? bt : bb) * rf; pos.push(P.x - Tn.y * u * r, P.y + Tn.x * u * r, a * rf * v); uv.push(j / nR * 2, s * 3); } }
+        for (let i = 0; i < nS; i++) for (let j = 0; j < nR; j++) { const A = i * (nR + 1) + j, B = A + nR + 1; idx.push(A, B, A + 1, B, B + 1, A + 1); }
+        const geo = new TT.BufferGeometry(); geo.setAttribute('position', new TT.Float32BufferAttribute(pos, 3)); geo.setAttribute('uv', new TT.Float32BufferAttribute(uv, 2)); geo.setIndex(idx); geo.computeVertexNormals(); return geo; };
+      // a limb segment: a lathe, rounded at both ends (it overlaps the next at the joint), a little flattened side to side
+      const limb = (G, L, r0, r1, mat, bulge = 1.05) => { const m = lathe(TT, [[0, -L - r1 * .78], [r1 * .72, -L - r1 * .52], [r1, -L], [r1 * 1.04, -L * .78], [(r0 + r1) / 2 * bulge, -L * .45], [r0 * bulge, -L * .14], [r0, 0], [r0 * .72, r0 * .55], [0, r0 * .78]], SG(14), mat); m.scale.z = .84; at(G, m, 0, 0, 0); return m; };
+      const fin = (G, L, r0) => at(G, new TT.Mesh(shaped(10, 8, (x, y, z) => [x * .34 * (1 - .3 * y), y * L * .36, z * .26]), fur), -r0 * .62, -L * .42, 0, 0, false);   // the feathering behind
+      const paw = (G, mat) => { at(G, new TT.Mesh(shaped(18, 10, (x, y, z) => [x * .78 + (x > 0 ? .12 : 0), y * (y > 0 ? .44 : .24), z * .62]), mat), .2, -.2, 0); [-1, 0, 1].forEach(k => at(G, new TT.Mesh(new TT.SphereGeometry(.23, 8, 6), mat), .82, -.24, k * .32, 0, false)); };
+      const Dg = grp(TT, g, 0, FL, 0); Dg.userData.keep = 1; Dg.name = 'dog';
+      const HX = -3.6, HY = 7.6, piv = grp(TT, Dg, HX, HY, 0), bodyG = grp(TT, piv, -HX, -HY, 0);   // the pivot is the hip: it sits by tipping up about it
+      const torso = new TT.Mesh(loft([[-6.2, 7.75], [-4.6, 8.05], [-2.4, 7.95], [0, 7.75], [2.4, 7.7], [4.3, 8.0], [5.5, 8.4]],
+        [[0, .3, .3, .3], [.08, 1.5, 1.7, 1.6], [.2, 1.78, 2.0, 1.92], [.38, 1.66, 1.78, 1.66], [.55, 1.72, 2.5, 1.8], [.72, 1.78, 3.05, 1.95], [.86, 1.72, 2.7, 1.8], [.95, 1.5, 2.1, 1.58], [1, 1.05, 1.4, 1.12]], 44, 24), fur);
+      at(bodyG, torso, 0, 0, 0); at(bodyG, new TT.Mesh(shaped(20, 14, (x, y, z) => [x * 1.3, y * 1.9, z * 1.25]), cream), 4.3, 6.6, 0, 0, false);   // the cream bib
+      // the neck (bends at its root, inside the chest) and the head at its end
+      const neckG = grp(TT, bodyG, 4.3, 8.5, 0); neckG.rotation.z = .62;
+      at(neckG, new TT.Mesh(loft([[-1.4, 0], [.6, 0], [2.2, 0], [3.7, 0]], [[0, 1.35, 2.0, 1.55], [.35, 1.45, 1.7, 1.34], [.75, 1.28, 1.36, 1.14], [1, 1.12, 1.2, 1.06]], 20, 18), fur), 0, 0, 0);
+      const collar = new TT.Mesh(new TT.TorusGeometry(1.5, .16, 8, SG(28)), M({ color: 0xc8282a, roughness: .5 })); collar.rotation.y = Math.PI / 2; at(neckG, collar, 1.0, 0, 0, 0, false); collar.scale.set(1, 1.12, 1.02);
+      at(neckG, new TT.Mesh(new TT.CylinderGeometry(.3, .3, .08, 14), M({ color: 0xd8b84a, metalness: 1, roughness: .3 })), 1.2, -1.95, 0, 0, false).rotation.x = Math.PI / 2;
+      const headG = grp(TT, neckG, 3.4, 0, 0); headG.rotation.z = -.62; headG.scale.setScalar(1.14);
+      at(headG, new TT.Mesh(shaped(32, 22, (x, y, z) => [x * 1.6, y * 1.32 + (y > 0 ? .12 * x : 0), z * 1.34 * (1 - .1 * Math.max(0, x))]), fur), .7, .6, 0);   // the skull, rising to the stop
+      at(headG, new TT.Mesh(shaped(28, 18, (x, y, z) => { const t = (x + 1) / 2; return [x * 1.36, y * (.95 - .22 * t) - .05 * t, z * (1 - .24 * t)]; }), fur), 2.28, .1, 0);   // the muzzle
+      [-1, 1].forEach(sd => { at(headG, new TT.Mesh(shaped(14, 10, (x, y, z) => [x * .72, y * .56, z * .4]), fur), 1.35, -.05, sd * .86, 0, false);   // the cheeks
+        const fl = new TT.Mesh(shaped(14, 8, (x, y, z) => [x * .95, y * .34, z * .22]), fur); fl.rotation.z = -.08; at(headG, fl, 2.42, -.42, sd * .52, 0, false); });   // the flews
+      { const nose = new TT.Mesh(shaped(20, 14, (x, y, z) => [x * .42, y * .34 + (y > 0 ? .05 : 0), z * .5]), noseM); at(headG, nose, 3.6, .26, 0, 0, false);
+        [-1, 1].forEach(sd => { const ns = new TT.Mesh(new TT.SphereGeometry(.09, 8, 6), M({ color: 0x050302 })); ns.scale.set(.5, 1, 1.2); at(headG, ns, 3.98, .24, sd * .17, 0, false); }); }
+      const eyes = [-1, 1].map(sd => { const e = new TT.Mesh(new TT.SphereGeometry(.25, 14, 10), eyeM); at(headG, e, 1.74, .98, sd * .77, 0, false);
+        const lid = new TT.Mesh(new TT.TorusGeometry(.26, .06, 6, 14), lipM); lid.rotation.y = Math.PI / 2 - sd * .5; at(headG, lid, 1.76, .98, sd * .79, 0, false);
+        at(headG, new TT.Mesh(shaped(12, 8, (x, y, z) => [x * .46, y * .2, z * .32]), fur), 1.66, 1.27, sd * .74, 0, false); return e; });
+      const ears = [-1, 1].map(sd => { const E = grp(TT, headG, .35, 1.1, sd * 1.3); const ear = new TT.Mesh(shaped(20, 16, (x, y, z) => { const t = (1 - y) / 2; return [x * (1 - .32 * t * t), y * 1.6 - 1.25, z * .26 + sd * .2 * (1 - y * y)]; }), fur); ear.rotation.x = sd * .22; at(E, ear, 0, 0, 0); return E; });
+      // the jaw (it drops to pant), the mouth, the tongue
+      const jaw = grp(TT, headG, 1.55, -.42, 0); at(jaw, new TT.Mesh(shaped(18, 10, (x, y, z) => [x * 1.08, y * .3, z * .6 * (1 - .25 * Math.max(0, x))]), cream), .9, -.12, 0);
+      at(jaw, new TT.Mesh(shaped(14, 8, (x, y, z) => [x * .95, y * .2, z * .48]), mouthM), .95, .1, 0, 0, false);
+      const tongue = grp(TT, jaw, .3, .14, 0); at(tongue, new TT.Mesh(shaped(16, 8, (x, y, z) => [x * 1.05, y * .12 - .04 * x * x, z * .42]), tongueM), .95, 0, 0, false);
+      // the legs: joints are groups, each segment hangs down from its joint (+rotation.z swings it forward)
+      const fore = [1, -1].map(sd => { const S = grp(TT, bodyG, 3.4, 6.67, sd * 1.1); limb(S, 2.6, 1.0, .7, fur, 1.06); const E = grp(TT, S, 0, -2.6, 0); limb(E, 3, .68, .48, fur); fin(E, 3, .68);
+        const C = grp(TT, E, 0, -3, 0); limb(C, .9, .46, .42, fur); const P = grp(TT, C, 0, -.9, 0); paw(P, footM); return { S, E, C, P }; });
+      const hind = [1, -1].map(sd => { const S = grp(TT, bodyG, -3.6, 7.63, sd * 1.02); limb(S, 3, 1.22, .76, fur, 1.06); const K = grp(TT, S, 0, -3, 0); limb(K, 3.1, .74, .46, fur); fin(K, 3.1, .74);
+        const Hk = grp(TT, K, 0, -3.1, 0); limb(Hk, 2, .44, .4, fur); const P = grp(TT, Hk, 0, -2, 0); paw(P, footM); return { S, K, Hk, P }; });
+      // the tail: rings round a chain of points, worked out afresh every frame (deeper on the side that hangs: the plume)
+      const TK = 10, TR = SG(12), tpos = new Float32Array(TK * (TR + 1) * 3), tidx = [], tuv = [];
+      for (let i = 0; i < TK; i++) for (let j = 0; j <= TR; j++) tuv.push(j / TR * 2, i / TK * 2);
+      for (let i = 0; i < TK - 1; i++) for (let j = 0; j < TR; j++) { const A = i * (TR + 1) + j, B = A + TR + 1; tidx.push(A, B, A + 1, B, B + 1, A + 1); }
+      const tgeo = new TT.BufferGeometry(); tgeo.setAttribute('position', new TT.BufferAttribute(tpos, 3)); tgeo.setAttribute('uv', new TT.Float32BufferAttribute(tuv, 2)); tgeo.setIndex(tidx);
+      const tailM = new TT.Mesh(tgeo, fur); tailM.frustumCulled = false; at(bodyG, tailM, 0, 0, 0);
+      const tp = Array.from({ length: TK }, () => new V3()), tT = new V3(), tN = new V3(), tB = new V3(), grav = new V3();
+      const tailUpdate = (carriage, wagA, wagPh, droop, pitch) => { tp[0].set(-5.85, 8.4, 0); grav.set(-Math.sin(pitch), -Math.cos(pitch), 0);
+        for (let i = 1; i < TK; i++) { const e = carriage - i * droop, w = wagA * Math.sin(wagPh - i * .5) * (.35 + i * .1), L = .62; tp[i].set(tp[i - 1].x - Math.cos(e) * Math.cos(w) * L, tp[i - 1].y + Math.sin(e) * L, tp[i - 1].z + Math.cos(e) * Math.sin(w) * L); }
+        let n = 0; for (let i = 0; i < TK; i++) { tT.subVectors(tp[Math.min(TK - 1, i + 1)], tp[Math.max(0, i - 1)]).normalize(); tN.copy(grav).addScaledVector(tT, -grav.dot(tT)); if (tN.lengthSq() < 1e-4) tN.set(0, -1, 0); tN.normalize(); tB.crossVectors(tT, tN);
+          const s = i / (TK - 1), r = .62 * Math.pow(1 - s, .7) + .08, f = .85 * Math.sin(Math.PI * Math.min(1, (i + .6) / TK));
+          for (let j = 0; j <= TR; j++) { const th = j / TR * Math.PI * 2, c = Math.cos(th), sn = Math.sin(th), d = sn > 0 ? r + f * sn : r; tpos[n++] = tp[i].x + tB.x * c * r + tN.x * sn * d; tpos[n++] = tp[i].y + tB.y * c * r + tN.y * sn * d; tpos[n++] = tp[i].z + tB.z * c * r + tN.z * sn * d; } }
+        tgeo.attributes.position.needsUpdate = true; tgeo.computeVertexNormals(); };
+      // the route round the clearing, and what it does along it
+      const route = new TT.CatmullRomCurve3([[-12, -42], [4, -34], [24, -38], [32, -52], [18, -63], [-2, -59], [-16, -52]].map(([x, z]) => new V3(x, 0, z)), true), RL = route.getLength();
+      const PLAN = [['trot', 7], ['walk', 3], ['sniff', 4.5], ['walk', 2.5], ['trot', 6], ['walk', 1.6], ['sit', 8], ['stand', 2.6]], PT = PLAN.reduce((a, p) => a + p[1], 0), SPD = { trot: 6.4, walk: 2.5, sniff: .25, sit: 0, stand: 0 };
+      const doing = t => { let u = ((t % PT) + PT) % PT; for (const [n, d] of PLAN) { if (u < d) return n; u -= d; } return 'trot'; };
+      const st = { s: 0, v: 0, ph: 0, sk: 0, sn: 0, pant: 0, look: 0, yaw: 0, yr: 0, wag: 0, bob: 0, ear: [0, 0], earV: [0, 0] }, rp = new V3(), rt = new V3();
+      const live = (t, dt) => { const S = doing(t), ease = a => Math.min(1, dt * a);
+        st.v += (SPD[S] - st.v) * ease(1.8); st.sk += ((S === 'sit' ? 1 : 0) - st.sk) * ease(2.4); st.sn += ((S === 'sniff' ? 1 : 0) - st.sn) * ease(2.6);
+        st.pant += ((S === 'sit' || S === 'stand' || S === 'trot' ? 1 : 0) - st.pant) * ease(1.4); st.look += ((S === 'sit' || S === 'stand' ? 1 : 0) - st.look) * ease(2);
+        st.s = (st.s + st.v * dt) % RL; st.ph = (st.ph + dt * (.85 + st.v * .22)) % 1; st.wag += dt * (S === 'sniff' ? 15 : S === 'sit' ? 6 : S === 'stand' ? 10 : 8 + st.v * .4);
+        route.getPointAt(st.s / RL, rp); route.getTangentAt(st.s / RL, rt); let dy = Math.atan2(-rt.z, rt.x) - st.yaw; while (dy > Math.PI) dy -= Math.PI * 2; while (dy < -Math.PI) dy += Math.PI * 2;
+        const turn = dy * ease(3.5); st.yaw += turn; st.yr += (turn / Math.max(dt, 1e-3) - st.yr) * ease(4); Dg.position.set(rp.x, FL, rp.z); Dg.rotation.y = st.yaw; };
+      const pose = (t, dt) => { const v = st.v, k = Math.min(1, v / 6.4), w = 1 - st.sk, gt = smooth(2.6, 6.2, v), mk = Math.min(1, v / 1.2) * w, A = .1 + .34 * k, ph = st.ph, sk = st.sk, sn = st.sn;
+        const off = [[0, .5, .5, 0], [0, .5, .75, .25]], o4 = i => off[0][i] * gt + off[1][i] * (1 - gt);   // left fore, right fore, left hind, right hind: a trot pairs the diagonals; a walk is four beats
+        const cyc = q => { q = ((q % 1) + 1) % 1; if (q < .6) return [1 - 2 * q / .6, 0]; const u = (q - .6) / .4; return [-1 + 2 * smooth(0, 1, u), Math.sin(Math.PI * u)]; };   // stance: the paw planted, the leg sweeping back; swing: lifted, folded, carried forward
+        fore.forEach((L, i) => { const [sw, f] = cyc(ph + o4(i)), fl = f * mk; L.S.rotation.z = -.45 + sw * A * mk - sk * .57 - sn * .1; L.E.rotation.z = .45 - fl * 1.2 + sn * .16; L.C.rotation.z = .15 - fl * .85; L.P.rotation.z = -.15 + fl * .55; });
+        hind.forEach((L, i) => { const [sw, f] = cyc(ph + o4(i + 2)), fl = f * mk; L.S.rotation.z = .5 + sw * A * mk * .9 + sk * .5; L.K.rotation.z = -1.1 - fl * .55 - sk * .85; L.Hk.rotation.z = .75 + fl * .85 + sk * 1.0; L.P.rotation.z = -.15 - fl * .35 - sk * 1.2; });
+        const bob = mk * (gt * .26 * Math.abs(Math.sin(ph * Math.PI * 2)) + (1 - gt) * .12 * Math.abs(Math.sin(ph * Math.PI * 4))), bv = (bob - st.bob) / Math.max(dt, 1e-3); st.bob = bob;
+        piv.position.y = HY - sk * 3.85 + bob - .1 * mk; piv.rotation.z = sk * .55 - sn * .05 + mk * .025 * Math.sin(ph * Math.PI * 4); piv.rotation.x = Math.max(-.14, Math.min(.14, -st.yr * .06)) + mk * .035 * Math.sin(ph * Math.PI * 2);
+        torso.scale.y = 1 + Math.sin(t * (st.pant > .5 ? 15 : 2.6)) * (.012 + .012 * st.pant);
+        neckG.rotation.z = .8 - sn * 1.7 - gt * k * .18 + mk * .04 * Math.sin(ph * Math.PI * 4 + 1);
+        headG.rotation.z = -.8 + sn * .5 - sk * .55 + gt * k * .1 - mk * .05 * Math.sin(ph * Math.PI * 4 + 1);
+        headG.rotation.y = st.look * (Math.sin(t * .55) * .55 + Math.sin(t * 1.7) * .12) + sn * Math.sin(t * 13) * .07 - st.yr * .12; headG.rotation.x = st.look * Math.sin(t * .4 + 1) * .12;
+        jaw.rotation.z = -st.pant * (.3 + .06 * Math.sin(t * 15)); tongue.scale.x = .8 + st.pant * .55; tongue.rotation.z = -st.pant * .22 + st.pant * .05 * Math.sin(t * 15);
+        const bl = (t % 4.3) < .13 ? .12 : 1; eyes.forEach(e => e.scale.y = bl);
+        ears.forEach((E, i) => { const tgt = -bv * .05; st.earV[i] += ((tgt - st.ear[i]) * 70 - st.earV[i] * 9) * dt; st.ear[i] += st.earV[i] * dt;
+          E.rotation.z = .06 + st.ear[i] + sn * .25 + st.look * .1 * Math.sin(t * .9 + i); E.rotation.x = (i ? 1 : -1) * (.05 + Math.abs(st.ear[i]) * .4) + st.yr * .05; });
+        const carriage = .18 * gt * k + .05 * (1 - gt) * mk + sn * .6 + (1 - mk) * w * .12 * (1 - sn) - sk * 1.7, wagA = (.22 + .22 * k + sn * .25) * (1 - sk * .35);
+        tailUpdate(carriage, wagA, st.wag, .12 * (1 - sk) - sn * .06 - sk * .2, piv.rotation.z); };
+      Dg.userData.at = T1 => { st.s = st.v = st.ph = st.sk = st.sn = st.pant = st.look = st.yr = 0; for (let tt = 0; tt < T1; tt += 1 / 30) live(tt, 1 / 30); pose(T1, 1 / 30); };   // (debug: the dog as it is T1 seconds into its loop)
+      let lastT = null; for (let i = 0; i < 180; i++) live(i / 30, 1 / 30); pose(6, 1 / 30);
+      o.tick && o.tick(t => { if (lastT === null || t < lastT || t - lastT > 1) lastT = t - 1 / 60; const dt = Math.min(.05, t - lastT); lastT = t; live(t, dt); pose(t, dt); }, Dg); }
     // a lantern on a pole by the table, string lights at dusk
     { const Gl = grp(TT, g, -19, FL, -6), pole = M({ color: 0x3a2a1a, roughness: .7 }), tin = M({ color: 0x2a3a30, roughness: .45, metalness: .5 });
       at(Gl, new TT.Mesh(new TT.CylinderGeometry(.3, .35, 26, 6), pole), 0, 13, 0); const arm = new TT.Mesh(new TT.CylinderGeometry(.2, .2, 4, 6), pole); arm.rotation.z = Math.PI / 2; at(Gl, arm, 2, 25.4, 0, 0, false);

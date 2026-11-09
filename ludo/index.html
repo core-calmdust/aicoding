@@ -192,10 +192,11 @@ html.hb-on .throw .shown:not(.cw){width:60px;height:60px}html.hb-on .throw .show
 .checks{display:flex;flex-direction:column;gap:7px;font-size:13.5px;color:var(--muted)}
 .checks label{display:flex;gap:8px;align-items:flex-start;cursor:pointer;line-height:1.5}
 .checks input{accent-color:var(--accent);margin-top:3px}
-.dsg{display:flex;gap:10px}
+.dsg{display:flex;flex-wrap:wrap;gap:10px}
 .dsg button{width:92px;padding:6px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.03);cursor:pointer;display:flex;flex-direction:column;gap:5px;align-items:center;font-size:12.5px;color:var(--muted)}
 .dsg button.on{border-color:var(--accent);color:var(--text)}
 .dsg button svg{width:76px;height:76px;border-radius:8px}
+@media (max-width:520px){.dsg{gap:8px}.dsg button{width:calc(25% - 6px);padding:5px 3px;font-size:11.5px}.dsg button svg{width:100%;height:auto;aspect-ratio:1}}   /* (4 boards in a row on phones) */
 .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
 .mbtn{height:44px;min-width:120px;padding:0 18px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.05);cursor:pointer;font-size:15px;font-weight:600}
 .mbtn.go{background:linear-gradient(180deg,#f6c25c,#e09a2a);border-color:#f8d07e;color:#2a1600;font-weight:800}
@@ -566,13 +567,14 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
   </div>
 </div>
 
-<script src="i18n.js?v=4"></script>
+<script src="i18n.js?v=5"></script>
 <script src="../shared/rulesoffer.js?v=18l14k"></script>
 <script src="../shared/headerbar.js?v=51l14r"></script>
 <script src="../shared/resign.js?v=3l14"></script>
 <script src="../shared/ruletour.js?v=29l14"></script>
 <script src="engine.js?v=3"></script>
-<script src="board2d.js?v=5"></script>
+<script src="board2d.js?v=6"></script>
+<script src="board-art.js?v=1"></script>
 <script src="../shared/coachkit.js?v=16l14"></script>
 <script src="coach.js?v=3"></script>
 <script src="coach-i18n.js?v=1"></script>
@@ -580,7 +582,7 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
 <script src="../shared/mtworkers.js?v=4"></script>
 <script src="mt.js?v=3"></script>
 <script src="house.js?v=7"></script>
-<script src="app.js?v=21"></script>
+<script src="app.js?v=22"></script>
 <script src="review.js?v=3-mt"></script>
 <script src="../shared/placement.js?v=1l14"></script>
 <script src="rated.js?v=2"></script>
@@ -604,7 +606,7 @@ body:is(.in-lesson,.in-puzzle) .side > :is(.lesson-card,.puzzle-card){order:-1}
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=131')).then(() => load('../atlas/tables3d.js?v=41')).then(() => load('../atlas/skin/common.js?v=50npc')).then(() => load('../atlas/models/ludo.js?v=7')).then(() => load('../atlas/skin/ludo.js?v=10'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=132')).then(() => load('../atlas/tables3d.js?v=43')).then(() => load('../atlas/skin/common.js?v=50npc')).then(() => load('../atlas/models/ludo.js?v=8')).then(() => load('../atlas/skin/ludo.js?v=11'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
