@@ -235,7 +235,7 @@
   const daysSince = s => Math.floor((Date.parse(ymd(Date.now())) - Date.parse(s)) / DAY);
   // the portal's own 3D play is named after the place chosen for it (localStorage 'atlas-table', atlas/tables3d.js):
   // the changelog's ちゃぶ台 / chabudai become that place (ja) or a plain "table" (the other languages)
-  const PLACE_JA = ['ちゃぶ台', '盤', 'ダイニング', 'フェルト卓', 'テラス', '書斎', '縁側', '山小屋', 'リヤド', 'スカイラウンジ', 'キャンプ場', '茶館'];
+  const PLACE_JA = ['ちゃぶ台', '盤', 'ダイニング', 'フェルト卓', 'テラス', '書斎', '縁側', '山小屋', 'ゲームセンター', 'スカイラウンジ', 'キャンプ場', '茶館'];
   const PLACE_W = { en: [/chabudai/g, 'table'], hi: [/चाबुदाई/g, 'मेज़'], zh: [/矮桌/g, '棋桌'], ko: [/밥상/g, '테이블'], 'zh-TW': [/矮桌/g, '棋桌'] };
   const placeK = () => { try { const k = +localStorage.getItem('atlas-table'); return k >= 1 && k <= 11 ? k | 0 : 0; } catch (e) { return 0; } };
   function placeWord(s, l) {
@@ -388,9 +388,19 @@
   /* ---------------- achievements ---------------- */
   // tier 0 bronze · 1 silver · 2 gold · 3 platinum  → coins
   const TIER_COINS = [50, 120, 300, 800];
+  // what only the portal loads (the 3D-table adapters' level counts, the gacha's item count) is remembered in 'atlas-ach-meta', so a
+  // game page builds the same achievement list — and shows the same coins — as the portal (2026-11-09)
+  function achMeta() {
+    let m = {}; try { m = JSON.parse(localStorage.getItem('atlas-ach-meta') || '{}') || {}; } catch (e) {}
+    m.l3 = m.l3 || {}; let ch = false;
+    if (window.Atlas3D) GAMES.forEach(g => { const a = window.Atlas3D[g.id]; if (a && a.levels && m.l3[g.id] !== a.levels) { m.l3[g.id] = a.levels; ch = true; } });
+    if (window.AtlasArt && AtlasArt.items && m.art !== AtlasArt.items.length) { m.art = AtlasArt.items.length; ch = true; }
+    if (ch) try { localStorage.setItem('atlas-ach-meta', JSON.stringify(m)); } catch (e) {}
+    m.art = m.art || 0; return m;
+  }
   function achievements(P, W) {
     P = P || allProgress(); W = W || load();
-    const A = [];
+    const A = [], META = achMeta();
     const add = (gid, key, n, tier, have, need) => A.push({ id: (gid || 'all') + ':' + key + (n != null ? ':' + n : ''), gid, key, n, tier, have: Math.min(have, need), need, done: have >= need });
     const ladder = (gid, key, have, steps, all, allKey) => {
       steps.filter(s => !all || s < all).forEach((s, i) => add(gid, key, s, Math.min(i, 2), have, s));
@@ -410,9 +420,9 @@
       if (g.total.ls) { add(id, 'ls1', null, 0, r.ls, 1); add(id, 'lsAll', null, 2, r.ls, g.total.ls); }
       if (g.tags.includes('openings')) ladder(id, 'op', r.op || 0, [1, 10]);
       if (g.tags.includes('daily')) { ladder(id, 'dd', r.dl.days, [1, 7, 30]); add(id, 'st', 7, 2, r.dl.best, 7); }
-      if (window.Atlas3D && window.Atlas3D[id]) {          // played on the portal's 3D table
+      if (META.l3[id]) {          // played on the portal's 3D table (the level count: the portal's adapter, or remembered from it)
         ladder(id, 'pw', r.p3.w, [1, 10]);
-        const L = window.Atlas3D[id].levels; [Math.ceil(L / 2), L - 2, L].forEach((lv, i) => add(id, 'pv', lv, i + 1, r.p3.best >= lv ? 1 : 0, 1));
+        const L = META.l3[id]; [Math.ceil(L / 2), L - 2, L].forEach((lv, i) => add(id, 'pv', lv, i + 1, r.p3.best >= lv ? 1 : 0, 1));
       }
       if (g.tags.includes('rated')) {
         const rt = r.rt || { n: 0, w: 0, r: 0, placed: false };
@@ -425,7 +435,7 @@
     const touched = GAMES.filter(g => P[g.id].touched).length;
     ladder(null, 'gg', touched, [1, 3, 5], GAMES.length, 'ggAll');
     const owned = (W.owned || []).length;
-    ladder(null, 'gi', owned, [10, 30, 60], window.AtlasArt ? AtlasArt.items.length : 0, 'giAll');
+    ladder(null, 'gi', owned, [10, 30, 60], META.art, 'giAll');
     ladder(null, 'gp', W.pulls || 0, [1, 10, 50, 100]);
     const doneN = A.filter(a => a.done).length;
     ladder(null, 'ga', doneN, [10, 30, 60, 100]);
