@@ -226,7 +226,8 @@
     // the camera: a 3/4 view with perspective by default; the button beside the flip switches to the near top-down view (remembered)
     const VK = 'atlas-carrom-view';
     let topView = false; try { topView = localStorage.getItem(VK) === 'top'; } catch (e) {}
-    const baseFit = () => { const port = innerHeight > innerWidth * 1.1, pitch = topView ? (port ? 1.36 : 1.3) : .82; return port ? { w: W + .25, d: W + .25, y: Y, pitch } : { w: W + .3, d: W + .35, y: Y, pitch }; };
+    const baseFit = () => { const port = innerHeight > innerWidth * 1.1, pitch = topView ? (port ? 1.36 : 1.3) : .82; if (port && D.K > 1) { const w = 2 * (U.S + 4 * K); return { w, d: w, y: Y, pitch }; }   // phone version: frame mostly off screen, the surface fills the width
+      return port ? { w: W + .25, d: W + .25, y: Y, pitch } : { w: W + .3, d: W + .35, y: Y, pitch }; };
     if (T3.fit) T3.fit(baseFit());
     const onResize = () => { if (T3.fit) T3.fit(baseFit()); };
     addEventListener('resize', onResize);
@@ -324,14 +325,14 @@
 
     /* ---------- the AI (a worker; the page thinks itself if workers are unavailable) ---------- */
     let worker = null, wid = 0; const pend = {};
-    try { worker = new Worker('../carrom/worker.js?v=4'); worker.onmessage = e => { const d = e.data || {}, f = pend[d.id]; if (f) { delete pend[d.id]; f(d.shot || null); } }; worker.onerror = () => { worker = null; Object.keys(pend).forEach(k => { const f = pend[k]; delete pend[k]; f(null); }); }; } catch (e) { worker = null; }
+    try { worker = new Worker('../carrom/worker.js?v=5'); worker.onmessage = e => { const d = e.data || {}, f = pend[d.id]; if (f) { delete pend[d.id]; f(d.shot || null); } }; worker.onerror = () => { worker = null; Object.keys(pend).forEach(k => { const f = pend[k]; delete pend[k]; f(null); }); }; } catch (e) { worker = null; }
     function think(s, lv) {
       const seed = (Math.random() * 1e9) | 0;
       return new Promise(res => {
         const local = () => setTimeout(() => res(E.think(s, lv, seed)), 30);
         if (!worker) return local();
         const id = ++wid; pend[id] = r => r ? res(r) : local();
-        worker.postMessage({ id, s, level: lv, seed });
+        worker.postMessage({ id, s, level: lv, seed, k: D.K });
         setTimeout(() => { if (pend[id]) { delete pend[id]; local(); } }, 9000);
       });
     }
