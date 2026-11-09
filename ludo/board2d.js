@@ -61,13 +61,12 @@
   /* ---------- designs ---------- */
   const DESIGN = {
     classic: { bg: '#fbf7ec', line: '#3b3326', frame: '#2a2218' },
-    wood: { bg: '#e8c992', line: '#5a3a18', frame: '#4a2e14' },
+    wood: { bg: '#e0b47a', line: '#4f3015', frame: '#5a3313' },
   };
   function drawLudo(dz) {
     const D = DESIGN[dz] || DESIGN.classic, C = COL.ludo, o = [];
     o.push(`<rect x="-.3" y="-.3" width="15.6" height="15.6" rx=".5" fill="${D.frame}"/>`);
     o.push(`<rect x="0" y="0" width="15" height="15" fill="${D.bg}"/>`);
-    if (dz === 'wood') o.push(`<rect x="0" y="0" width="15" height="15" fill="url(#ldGrain)" opacity=".5"/>`);
     // yards
     LUDO_YARD.forEach(([x, y], s) => {
       o.push(`<rect x="${x + .05}" y="${y + .05}" width="5.9" height="5.9" rx=".35" fill="${C[s][0]}"/>`);
@@ -87,6 +86,14 @@
     // centre: four triangles
     const tri = [[[6, 9], [9, 9]], [[6, 6], [6, 9]], [[9, 6], [6, 6]], [[9, 9], [9, 6]]];
     tri.forEach(([[ax, ay], [bx, by]], s) => o.push(`<path d="M${ax} ${ay}L${bx} ${by}L7.5 7.5z" fill="${C[s][0]}" stroke="${D.line}" stroke-width=".035"/>`));
+    // 木目 (2026-11-09 v2): real grain over the whole board — long streaks along the planks (turbulence stretched across x), laid
+    // over the squares and the painted colours alike (multiply), three planks with faint seams, and the frame in darker grain
+    if (dz === 'wood') {
+      o.push(`<rect x="0" y="0" width="15" height="15" filter="url(#ldWoodF)" style="mix-blend-mode:multiply" opacity=".38" pointer-events="none"/>`);
+      o.push(`<rect x="0" y="0" width="15" height="15" filter="url(#ldWoodF2)" style="mix-blend-mode:multiply" opacity=".28" pointer-events="none"/>`);
+      [5, 10].forEach(y => o.push(`<path d="M0 ${y}H15" stroke="#3d2410" stroke-width=".025" opacity=".35" pointer-events="none"/>`));
+      o.push(`<path d="M-.3 -.3H15.3V15.3H-.3ZM0 0V15H15V0Z" fill-rule="evenodd" fill="#2a1608" filter="url(#ldWoodF)" opacity=".7" pointer-events="none"/>`);
+    }
     return o.join('');
   }
   const star = (x, y, r, c) => { let d = ''; for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? r * .45 : r; d += (k ? 'L' : 'M') + (x + Math.cos(a) * rr).toFixed(3) + ' ' + (y + Math.sin(a) * rr).toFixed(3); } return `<path d="${d}z" fill="none" stroke="${c}" stroke-width=".06" stroke-linejoin="round"/>`; };
@@ -114,7 +121,9 @@
   }
   function drawBoard(rule, design) {
     const n = rule === 'pachisi' ? 19 : 15;
-    const defs = `<defs><pattern id="ldGrain" width="3" height="3" patternUnits="userSpaceOnUse"><path d="M0 .4C1 .2 2 .7 3 .4M0 1.5C1 1.3 2 1.8 3 1.5M0 2.6C1 2.4 2 2.9 3 2.6" stroke="#8a5a28" stroke-width=".05" fill="none" opacity=".5"/></pattern></defs>`;
+    // wood grain: brown streaks whose alpha follows the noise (long along x, fine across y); a second, wider layer for the figure
+    const grain = (id, f, oct, seed, k, b) => `<filter id="${id}" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB"><feTurbulence type="turbulence" baseFrequency="${f}" numOctaves="${oct}" seed="${seed}"/><feColorMatrix type="matrix" values="0 0 0 0 .42 0 0 0 0 .24 0 0 0 0 .09 ${k} 0 0 0 ${b}"/></filter>`;
+    const defs = `<defs>${grain('ldWoodF', '.03 3.2', 3, 11, 1.9, -.42)}${grain('ldWoodF2', '.02 .32', 2, 4, 1.8, -.45)}</defs>`;
     return { n, svg: defs + (rule === 'pachisi' ? drawPachisi(design) : drawLudo(design)) };
   }
   /* ---------- pieces ---------- */
