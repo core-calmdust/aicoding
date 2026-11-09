@@ -111,10 +111,10 @@
         if (!ON[i]) continue;
         // cushions
         const r = R[i];
-        if (X[i] > H - r) { X[i] = H - r; if (VX[i] > 0) { events.push({ t, k: 'cush', v: VX[i] }); VX[i] = -VX[i] * E_CUSH; VY[i] *= T_CUSH; } }
-        else if (X[i] < -H + r) { X[i] = -H + r; if (VX[i] < 0) { events.push({ t, k: 'cush', v: -VX[i] }); VX[i] = -VX[i] * E_CUSH; VY[i] *= T_CUSH; } }
-        if (Y[i] > H - r) { Y[i] = H - r; if (VY[i] > 0) { events.push({ t, k: 'cush', v: VY[i] }); VY[i] = -VY[i] * E_CUSH; VX[i] *= T_CUSH; } }
-        else if (Y[i] < -H + r) { Y[i] = -H + r; if (VY[i] < 0) { events.push({ t, k: 'cush', v: -VY[i] }); VY[i] = -VY[i] * E_CUSH; VX[i] *= T_CUSH; } }
+        if (X[i] > H - r) { X[i] = H - r; if (VX[i] > 0) { events.push({ t, k: 'cush', v: VX[i], i }); VX[i] = -VX[i] * E_CUSH; VY[i] *= T_CUSH; } }
+        else if (X[i] < -H + r) { X[i] = -H + r; if (VX[i] < 0) { events.push({ t, k: 'cush', v: -VX[i], i }); VX[i] = -VX[i] * E_CUSH; VY[i] *= T_CUSH; } }
+        if (Y[i] > H - r) { Y[i] = H - r; if (VY[i] > 0) { events.push({ t, k: 'cush', v: VY[i], i }); VY[i] = -VY[i] * E_CUSH; VX[i] *= T_CUSH; } }
+        else if (Y[i] < -H + r) { Y[i] = -H + r; if (VY[i] < 0) { events.push({ t, k: 'cush', v: -VY[i], i }); VY[i] = -VY[i] * E_CUSH; VX[i] *= T_CUSH; } }
       }
       // knocks: every pair with a mover
       for (let i = 0; i < N; i++) {
