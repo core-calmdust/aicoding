@@ -939,14 +939,15 @@
      the card's own nodes, moved in, so startPlay reads them as before — and the full / chabudai buttons), パズル and レッスン
      (the full game in the 3D skin, opened straight at its puzzle / lesson list). Analysis and the other deep features stay in
      the full version only. PC keeps the card as it is (its layout is on hold). */
-  // with the sheet the card's title row has room: ヒストリア and 戦績 sit there as round icons, after ルール (2026-11-10)
+  // with the sheet the card's title row has room: ルール on top, 戦績 and ヒストリア under it (2026-11-10)
   function headIcons(on) {
     const hb = $('bvHist'), rb = $('bvRec'), hw = $('bvHistW');
     if (!on) { if (hb && hw && hb.parentNode !== hw) hw.prepend(hb); [hb, rb].forEach(b => b && b.classList.remove('inhd')); placeRec(); return; }
-    const row = $('bvi').querySelector('.L .row'); if (!row) return;
-    const at = row.querySelector('.rulesb') || row.querySelector('.ring');
-    [hb, rb].forEach(b => { if (!b) return; b.classList.add('inhd'); if (at) at.after(b); else row.appendChild(b); });
-    if (rb && hb && hb.parentNode === row) hb.after(rb);
+    const row = $('bvi').querySelector('.L .row'), ru = row && row.querySelector('.rulesb'); if (!row || !ru) return;
+    // two rows on the right: ルール, then 戦績 → ヒストリア (with its label) under it (2026-11-10)
+    const col = document.createElement('div'); col.className = 'hdcol'; ru.before(col);
+    const sub = document.createElement('div'); sub.className = 'hdsub'; col.append(ru, sub);
+    [rb, hb].forEach(b => { if (b) { b.classList.add('inhd'); sub.appendChild(b); } });
   }
   const PS_GAMES = { shogi: true, chess: true };
   function playSheet(g, ad, r) {
