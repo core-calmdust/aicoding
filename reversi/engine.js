@@ -920,7 +920,8 @@ const lzKey = pos => (Math.imul(pos[0] ^ 0x9E3779B9, 0x85EBCA6B) ^ Math.imul(pos
 function lzPut(L, k, d, mv, sc) {
   if (Atomics.load(L, LZ_KEY) !== k || mv < 0 || d > 127) return;
   const x = (d << 24) | (mv << 18) | (Math.max(-131000, Math.min(131000, sc)) + 131072);
-  for (;;) { const c = Atomics.load(L, LZ_BEST); if ((c >>> 24) >= d) return; if (Atomics.compareExchange(L, LZ_BEST, c, x) === c) return; }
+  for (;;) { const c = Atomics.load(L, LZ_BEST); if ((c >>> 24) >= d) return; if (Atomics.compareExchange(L, LZ_BEST, c, x) === c) break; }
+  if (WX && WX.mt_jump_set && Atomics.load(L, LZ_KEY) === k) WX.mt_jump_set(d);   // (the lead's search of depth d stops at once: engine.c jumpAt)
 }
 function lzGet(L, k) {
   if (Atomics.load(L, LZ_KEY) !== k) return null;
@@ -1114,7 +1115,8 @@ function think(cells, toMove, opts, onProgress) {
   const LZ = !variety && lzArr(), lzk = LZ ? lzKey(pos) : 0;   // (threads: the helpers' deeper midgame results)
   const HP = opts.rot ? helperPlan(opts.rot) : null;   // (a helper thread: how it differs from the lead)
   if (WON && WX.set_rot1) WX.set_rot1(HP ? HP.r1 : 0);
-  if (LZ && !opts.rot) { Atomics.store(LZ, LZ_KEY, lzk); Atomics.store(LZ, LZ_BEST, 0); }
+  if (LZ && !opts.rot) { Atomics.store(LZ, LZ_KEY, lzk); Atomics.store(LZ, LZ_BEST, 0); if (WX && WX.mt_jump_reset) WX.mt_jump_reset(); }
+  const JMP = LZ && !opts.rot && !variety && WX && WX.mt_jump_at ? WX.mt_jump_at : null;   // (the lead: a depth a helper has finished is given up at once, 2026-11-09)
   let partial = false;
   try {
     const midMax = doExact ? Math.min(maxDepth, 10) : maxDepth;
@@ -1130,7 +1132,23 @@ function think(cells, toMove, opts, onProgress) {
         r = { move: all[0].move, score: all[0].score, all };
       } else {
         PART = lv.max ? { d, move: -1, score: 0, n: -1 } : null;   // (Lv.21-25: a depth cut by the deadline still counts when another move has already been proved better)
-        r = rootPVS(pos, ordered, d, 'mid'); PART = null;
+        if (JMP) {
+          JMP(d);
+          try { r = rootPVS(pos, ordered, d, 'mid'); }
+          catch (e) {   // (stopped because a helper finished this depth — not the deadline: take its result, on to the next depth)
+            JMP(0);
+            const h = e === ABORT && Date.now() <= deadline && !(nodeMax && nodes >= nodeMax) ? lzGet(LZ, lzk) : null;
+            if (!h || h.depth < d) throw e;
+            aborted = false; PART = null;
+            result = r = { move: h.move, score: h.score }; depthDone = d = h.depth;
+            prev = prev || new Map(); prev.set(h.move, 1e8 + d);
+            onProgress && onProgress({ depth: d, move: r.move, score: r.score / SCALE, nodes, ms: Date.now() - t0 });
+            if (Date.now() - t0 > softTime * (lv.use || 0.45) && !doExact) break;
+            continue;
+          }
+          JMP(0);
+        } else r = rootPVS(pos, ordered, d, 'mid');
+        PART = null;
         prev = prev || new Map();
         prev.set(r.move, 1e8 + d);
       }

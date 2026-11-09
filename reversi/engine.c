@@ -14,6 +14,12 @@ typedef short i16;
 #ifdef MT
 #define TLS _Thread_local
 static volatile int gStop;          /* shared: set when the main thread's search is over (the helpers stop) */
+/* (2026-11-09) the deepest midgame depth a helper has finished on the lead's root (engine.js lzPut → mt_jump_set); the lead
+   gives up the depth it is searching as soon as a helper has finished it (jumpAt; engine.js takes the helper's result and goes
+   on from the next depth) — before, it looked only at the end of its own depth, and on a slow core (Apple's efficiency cores)
+   or in a long first move the whole pool waited for it */
+static volatile int gJump;
+static TLS int jumpAt;
 #else
 #define TLS
 #endif
@@ -262,6 +268,7 @@ EXPORT(get_aborted) int get_aborted(void) { return aborted; }
 static inline void checkTime(void) {
 #ifdef MT
   if (gStop) { aborted = 1; return; }
+  if (jumpAt && gJump >= jumpAt) { aborted = 1; return; }
 #endif
   if (deadline > 0 && now() > deadline) aborted = 1;
   if (nodeMax > 0 && nodes >= nodeMax) aborted = 1;
@@ -747,4 +754,7 @@ EXPORT(mt_heap_base) u32 mt_heap_base(void) { return (u32)&__heap_base; }
 EXPORT(mt_stack) void mt_stack(u32 stackTop) { __asm__ volatile(".globaltype __stack_pointer, i32\n local.get %0\n global.set __stack_pointer" :: "r"(stackTop)); }
 EXPORT(mt_thread) void mt_thread(u32 tls) { __wasm_init_tls((void *)tls); }
 EXPORT(mt_stop) void mt_stop(int v) { __atomic_store_n(&gStop, v, __ATOMIC_SEQ_CST); }
+EXPORT(mt_jump_reset) void mt_jump_reset(void) { __atomic_store_n(&gJump, 0, __ATOMIC_SEQ_CST); }   /* the lead: a new root */
+EXPORT(mt_jump_set) void mt_jump_set(int d) { int c = __atomic_load_n(&gJump, __ATOMIC_SEQ_CST); while (c < d && !__atomic_compare_exchange_n(&gJump, &c, d, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)) {} }   /* a helper finished depth d */
+EXPORT(mt_jump_at) void mt_jump_at(int d) { jumpAt = d; }   /* the lead: stop the depth d search once a helper has finished d (0: never) */
 #endif
