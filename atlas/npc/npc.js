@@ -231,6 +231,12 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
   /* ---------------- UI: the card in the info column (skins) ---------------- */
   /* ---------------- UI: the floating bubble (portal table) ---------------- */
   // o.bottom() → px from the bottom of the window (default: over the portal's action bar)
+  // the options' 「キャラ会話」 on / off (one switch for the portal and the full versions; the boss's avatar is still given)
+  const KEY = 'atlas-npc';
+  A.on = () => { try { return localStorage.getItem(KEY) !== '0'; } catch (e) { return true; } };
+  A.setOn = v => { try { localStorage.setItem(KEY, v ? '1' : '0'); } catch (e) {} if (!v) document.querySelectorAll('.npc-float.on').forEach(e => e.classList.remove('on')); };
+  A.LABEL = { ja: 'キャラ会話', en: 'Character talk', zh: '角色对话', 'zh-TW': '角色對話', ko: '캐릭터 대화', es: 'Charla de personajes', fr: 'Bavardage des personnages', pt: 'Conversa dos personagens', de: 'Figuren-Gespräche', ru: 'Реплики персонажей', tr: 'Karakter sohbeti', id: 'Obrolan karakter', hi: 'पात्रों की बातचीत', ar: 'حديث الشخصيات' };
+  A.ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5h16v10H10l-4.5 4v-4H4z"/><path d="M8 10.5h.01M12 10.5h.01M16 10.5h.01" stroke-width="2.6"/></svg>';
   // phones: in landscape the board comes first — no bubble at all (portrait: it stays)
   const PCQ = matchMedia((window.HeaderBar && HeaderBar.MEDIA) || '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4)');
   const phoneLand = () => !PCQ.matches && innerWidth > innerHeight && innerHeight < 600;
@@ -246,7 +252,7 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
     return {
       el,
       say(who, html, m) {
-        if (phoneLand()) { clearTimeout(hideT); el.classList.remove('on'); return; }
+        if (phoneLand() || !A.on()) { clearTimeout(hideT); el.classList.remove('on'); return; }
         try { const l = o.left && o.left(); el.style.left = l ? Math.round(l[0]) + 'px' : ''; el.style.width = l ? `min(600px, ${Math.round(l[1] - 24)}px)` : ''; } catch (e) {}
         el.dataset.who = who; el.classList.toggle('npc-ur', !!m.ur);
         if (img.getAttribute('src') !== m.img) img.src = m.img;
@@ -370,6 +376,8 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
       if (!A.BOSSES || !A.BOSSES[game]) return;
       const ui = skinUI(), T = Talk(game, ui, { pace: PACE[game], early: EARLY[game] });
       A.active = T;
+      // the options (gear) panel: 「キャラ会話」 on / off
+      try { if (window.HeaderBar && HeaderBar.addOption) HeaderBar.addOption({ id: 'npc', icon: A.ICON, label: A.LABEL, type: 'toggle', get: A.on, set: v => A.setOn(v) }); } catch (e) {}
       let gid = null, lastPly = -1, shown = false, ended = false, started = false;
       // the end of a game: every game reports it to the shared record (shared/record.js)
       if (window.GameRecord && GameRecord.add && !GameRecord.add.__npc) {
