@@ -1117,6 +1117,27 @@
     nonIdx.forEach(gm => gm.dispose()); multis.forEach(o => drop.push(o));
     drop.forEach(o => { o.visible = false; o.userData.merged = true; });   // hidden, not removed: groups and their children stay intact
   }
+  // the Atlas Mon (the portal's creatures) as small figures in a room: low-poly, breathing and blinking on PC (2026-11-09: every place has some)
+    // phones: build the room's figures with far fewer segments (they are small in the background; ~370k → ~60k triangles)
+  function lowPoly(make, f = .38) {
+      const TT = T();
+      const sg = (n, d, lo) => Math.max(lo, Math.round((n || d) * f)), keep = {};
+      const patch = (name, fn) => { const B = TT[name]; keep[name] = B; TT[name] = class extends B { constructor(...a) { super(...fn(a)); } }; };
+      patch('SphereGeometry', a => { a[1] = sg(a[1], 32, 8); a[2] = sg(a[2], 16, 6); return a; });
+      patch('TorusGeometry', a => { a[2] = sg(a[2], 16, 4); a[3] = sg(a[3], 48, 8); return a; });
+      patch('LatheGeometry', a => { a[1] = sg(a[1], 12, 8); return a; });
+      patch('CylinderGeometry', a => { a[3] = sg(a[3], 8, 6); return a; });
+      try { return make(); } finally { Object.assign(TT, keep); }
+  }
+  function placeMon(par, id, h, x, y, z, ry = 0) {
+        const TT = T(), MON = window.Icons3D && Icons3D.MONS; if (!MON) return null;
+        if (!MON[id]) return null; let m; try { m = lowPoly(MON[id], COARSE ? .2 : .26); } catch (e) { return null; }   // small figures in the background: ~12×8 spheres (they were ~100k of the room's ~200k triangles)
+        const bb = new TT.Box3().setFromObject(m), s = h / Math.max(.01, bb.max.y - bb.min.y);
+        const w = new TT.Group(); w.add(m); m.position.y = -bb.min.y; w.scale.setScalar(s); w.position.set(x, y, z); w.rotation.y = ry; par.add(w);
+        m.traverse(o => { if (o.isMesh) o.castShadow = !COARSE; });   // phones: tiny far-away figures, no shadow pass
+        if (m.userData.tick && !COARSE) { w.userData.keep = true; try { mergeStatic(m); } catch (e) {} roomTicks.push(Object.assign(t => m.userData.tick(t), { obj: w })); }   // PC: it breathes and blinks, but as a few meshes (the eyes stay separate)   // phones: the room's characters stand still and get merged (far fewer draw calls)
+        return w;
+  }
   function decorate(g, FLOOR, mode) {
     const TT = T(), F = FLOOR;
     roomTicks.length = 0;
@@ -1216,26 +1237,9 @@
     const cable = new TT.Mesh(new TT.TubeGeometry(curve, 20, .05, 4), M({ color: 0x2b3044, roughness: .6 })); g.add(cable);
 
     // --- the Atlas Mon live here ---
-    // phones: build the room's figures with far fewer segments (they are small in the background; ~370k → ~60k triangles)
-    const lowPoly = (make, f = .38) => {
-      const sg = (n, d, lo) => Math.max(lo, Math.round((n || d) * f)), keep = {};
-      const patch = (name, fn) => { const B = TT[name]; keep[name] = B; TT[name] = class extends B { constructor(...a) { super(...fn(a)); } }; };
-      patch('SphereGeometry', a => { a[1] = sg(a[1], 32, 8); a[2] = sg(a[2], 16, 6); return a; });
-      patch('TorusGeometry', a => { a[2] = sg(a[2], 16, 4); a[3] = sg(a[3], 48, 8); return a; });
-      patch('LatheGeometry', a => { a[1] = sg(a[1], 12, 8); return a; });
-      patch('CylinderGeometry', a => { a[3] = sg(a[3], 8, 6); return a; });
-      try { return make(); } finally { Object.assign(TT, keep); }
-    };
     const MON = window.Icons3D && Icons3D.MONS;
     if (MON) {
-      const place = (id, h, x, y, z, ry, par = g) => {
-        if (!MON[id]) return; let m; try { m = lowPoly(MON[id], COARSE ? .2 : .26); } catch (e) { return; }   // small figures in the background: ~12×8 spheres (they were ~100k of the room's ~200k triangles)
-        const bb = new TT.Box3().setFromObject(m), s = h / Math.max(.01, bb.max.y - bb.min.y);
-        const w = new TT.Group(); w.add(m); m.position.y = -bb.min.y; w.scale.setScalar(s); w.position.set(x, y, z); w.rotation.y = ry; par.add(w);
-        m.traverse(o => { if (o.isMesh) o.castShadow = !COARSE; });   // phones: tiny far-away figures, no shadow pass
-        if (m.userData.tick && !COARSE) { w.userData.keep = true; try { mergeStatic(m); } catch (e) {} roomTicks.push(Object.assign(t => m.userData.tick(t), { obj: w })); }   // PC: it breathes and blinks, but as a few meshes (the eyes stay separate)   // phones: the room's characters stand still and get merged (far fewer draw calls)
-        return w;
-      };
+      const place = (id, h, x, y, z, ry, par = g) => placeMon(par, id, h, x, y, z, ry);
       place('plop', 2.2, -.4, CH - .9, .2, .1, chest);                 // peeking out of the toy chest
       place('tile', 2.6, -16.2, F, -6.5, .9);                         // robot by the chest
       place('knight', 2.6, 10.6, F, -9.4, -.6);                        // guarding the castle gate
@@ -2169,5 +2173,5 @@
   try { if (sessionStorage.getItem('t3d-debug')) setTimeout(() => R && dbgToggle(true), 500); } catch (e) {}
   setInterval(() => { if (dbgOn && performance.now() - dbgT > 1000) { dbgFps = 0; dbgT = performance.now(); dbgPaint(); } }, 1000);   // (the loop sleeps when nothing moves: keep the numbers fresh)
 
-  window.Table3D = { debug: dbgToggle, TABLES, setTable, table: () => tableStyle, setBright, bright: () => bright, turn, museum, setShift, quiet, setTimeOfDay, timeOfDayPick: todPick, share, lp, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, rvDisc, rvMats, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
+  window.Table3D = { debug: dbgToggle, TABLES, placeMon, setTable, table: () => tableStyle, setBright, bright: () => bright, turn, museum, setShift, quiet, setTimeOfDay, timeOfDayPick: todPick, share, lp, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, rvDisc, rvMats, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
 })();
