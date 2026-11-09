@@ -344,6 +344,42 @@
     return m;
   }
 
+  /* ---------- gems (the tycoon board) ----------
+     A brilliant cut (a lathe of a few sides, flat-shaded: every facet catches its own light), see-through (the stone shows its
+     dark core inside), and a shader that lights each facet by how it faces the eye: a deep body colour that changes facet by
+     facet, bright glints where a facet mirrors the light, and on the diamond a fire of spectral colours at the edges. As the
+     camera turns, the glints run from facet to facet. */
+  function gemMat(c, e, fire, back) {
+    const TT = T(), m = phys({ color: c, roughness: .02, metalness: .05, clearcoat: back ? undefined : 1, clearcoatRoughness: back ? undefined : 0, envMapIntensity: 3, transparent: true, opacity: back ? .9 : fire ? .42 : .55, flatShading: true, side: back ? TT.BackSide : TT.FrontSide, depthWrite: !!back });
+    m.emissive = lin(e); m.emissiveIntensity = back ? 1.3 : 1;
+    m.customProgramCacheKey = () => 'crGem' + (fire ? 'D' : 'C') + (back ? 'b' : 'f');
+    m.onBeforeCompile = sh => {
+      sh.fragmentShader = HUE + sh.fragmentShader.replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+        { vec3 gn = normalize(normal), gv = normalize(vViewPosition);
+          float ndv = abs(dot(gn, gv)), fr = pow(1.0 - ndv, 2.0);
+          float fh = fract(sin(dot(floor(gn * 5.0 + 0.5), vec3(12.9898, 78.233, 37.719))) * 43758.5453);
+          vec3 L1 = normalize(vec3(0.35, 0.85, 0.4)), L2 = normalize(vec3(-0.6, 0.5, 0.6));
+          vec3 rf = reflect(-gv, gn);
+          float gl = pow(max(dot(rf, L1), 0.0), 40.0) * 3.0 + pow(max(dot(rf, L2), 0.0), 60.0) * 2.0;
+          // the mirrored room, broken into facets: the reflected direction falls into cells, light or dark — it changes as the eye moves
+          vec3 rc = floor(rf * 3.5 + fh * 2.0); float mh = fract(sin(dot(rc, vec3(7.13, 157.1, 113.7))) * 43758.5453);
+          float mir = smoothstep(0.62, 0.95, mh);
+          vec3 body = totalEmissiveRadiance * (0.1 + 0.8 * fh * fh) * (0.3 + 0.7 * ndv) * (0.55 + 0.9 * mh);
+          totalEmissiveRadiance = body + vec3(gl + mir * 0.9) * ${fire ? '1.2' : '0.8'};
+          ${fire ? 'totalEmissiveRadiance += crHue(fract(fh * 1.7 + ndv * 2.3 + mh)) * (0.35 + fr) * 1.1;' : 'totalEmissiveRadiance += totalEmissiveRadiance * fr * 0.6;'} }`);
+    };
+    return m;
+  }
+  const gemCore = c => new (T().MeshBasicMaterial)({ color: lin(c) });
+  // a round brilliant: table, crown, girdle, pavilion down to the culet (y 0 = the girdle)
+  function gemGeo(r, sides) {
+    const key = 'gem' + r + sides; if (geos[key]) return geos[key];
+    const TT = T(), V = TT.Vector2;
+    const q = new TT.LatheGeometry([new V(0.0001, -r * .86), new V(r * .55, -r * .42), new V(r, -r * .02), new V(r, r * .04), new V(r * .84, r * .24), new V(r * .62, r * .4), new V(r * .5, r * .44), new V(0.0001, r * .44)], sides);
+    q.computeVertexNormals(); if (X.share) X.share(q);
+    return (geos[key] = q);
+  }
+
   /* ---------- materials ---------- */
   function boardMats(look) {
     const TT = T();
@@ -363,11 +399,13 @@
     });
     if (look === 'tycoon') return mat('bm' + look, () => {
       const gold = phys({ color: '#f2c766', roughness: .16, metalness: 1, envMapIntensity: 1.6 }); gold.emissive = new TT.Color(0x5a3c0c);   // (a warm glow of its own: the rooms are too dim for polished metal)
-      const gem = (c, e) => { const m = phys({ color: c, roughness: .04, metalness: 0, clearcoat: 1, clearcoatRoughness: .02, envMapIntensity: 2.2 }); m.emissive = lin(e); return m; };
+      const gem = (c, e, fire) => gemMat(c, e, fire);
       const st = surfaceTex(look), surf = phys({ map: st, color: '#ffffff', roughness: .28, metalness: .3, clearcoat: .7, clearcoatRoughness: .12, envMapIntensity: 1.2 }); surf.emissiveMap = st; surf.emissive = new TT.Color(.16, .13, .08);
       return { surf,
         frame: gold, brass: gold, edge: null, rim: gold, cup: phys({ color: '#120d06', roughness: .9 }), net: phys({ map: netTex(), color: '#ffffff', roughness: 1 }),
-        ruby: gem('#b5102e', '#3a0310'), sapphire: gem('#1d3fb0', '#06103a'), emerald: gem('#11895a', '#032a18'), diamond: gem('#f4f8ff', '#3a4250') };
+        ruby: gem('#c4122f', '#e01838'), sapphire: gem('#2148c8', '#2a5cff'), emerald: gem('#10a066', '#18d08a'), diamond: gem('#f4f8ff', '#cfe0ff', true),
+        back: { ruby: gemMat('#c4122f', '#ff2848', false, true), sapphire: gemMat('#2148c8', '#3a6cff', false, true), emerald: gemMat('#10a066', '#20e898', false, true), diamond: gemMat('#f4f8ff', '#e0ecff', true, true) },
+        core: { ruby: gemCore('#5a0414'), sapphire: gemCore('#0a1c5a'), emerald: gemCore('#04452a'), diamond: gemCore('#8a96a8') } };
     });
     if (look === 'bauhaus') return mat('bm' + look, () => ({
       surf: phys({ map: surfaceTex(look), color: '#ffffff', roughness: .62, metalness: 0, envMapIntensity: .55 }),
@@ -453,16 +491,25 @@
       if (BM.rim) { const rg = geos.prim || (geos.prim = (() => { const q = new TT.TorusGeometry(RP + .012, .014, 6, LO() ? 20 : 36); q.rotateX(Math.PI / 2); if (X.share) X.share(q); return q; })()); const rim = new TT.Mesh(rg, BM.rim); rim.position.set(sx * PC, TOP + .004, sz * PC); g.add(rim); }
     }
     if (BM.ruby) {   // cabochons along the frame (ruby · sapphire · emerald · sapphire · ruby …) and a diamond at each corner
-      const cab = geos.cab || (geos.cab = (() => { const q = new TT.SphereGeometry(.15, LO() ? 12 : 20, LO() ? 6 : 10, 0, Math.PI * 2, 0, Math.PI / 2); q.scale(1, .55, 1); if (X.share) X.share(q); return q; })());
-      const dia = geos.dia || (geos.dia = (() => { const q = new TT.OctahedronGeometry(.21, 0); q.scale(1, .8, 1); if (X.share) X.share(q); return q; })());
+      const cab = gemGeo(.15, 12), dia = gemGeo(.22, 16);
+      const collar = (r) => geos['col' + r] || (geos['col' + r] = (() => { const q = new TT.CylinderGeometry(r * 1.04, r * 1.14, r * .82, LO() ? 16 : 28, 1, true); if (X.share) X.share(q); return q; })());
+      // a stone raised in a gold collar: its inner facets (back faces), a dark heart, the crown; kept out of the showcase's merge
+      const stone = (geo, r, mt, back, core, x, y, z, ry) => {
+        const gs = new TT.Group(); gs.position.set(x, y + r * .76, z); gs.rotation.y = ry || 0; gs.userData.keep = true;
+        const cl = new TT.Mesh(collar(r), BM.frame); cl.position.y = -r * .41; gs.add(cl);
+        if (core) { const c = new TT.Mesh(geo, core); c.scale.setScalar(.45); gs.add(c); }   // (the diamond has none: it is clear right through)
+        const b = new TT.Mesh(geo, back); b.renderOrder = 1; gs.add(b);
+        const m = new TT.Mesh(geo, mt); m.castShadow = true; m.renderOrder = 2; gs.add(m); g.add(gs);
+      };
       const set = geos.bez || (geos.bez = (() => { const q = new TT.TorusGeometry(.16, .022, 6, LO() ? 16 : 24); q.rotateX(Math.PI / 2); if (X.share) X.share(q); return q; })());
       const ym = TOP + FH, mid = S + FW / 2, order = [BM.ruby, BM.sapphire, BM.emerald, BM.sapphire, BM.ruby];
       for (let side = 0; side < 4; side++) for (let k = 0; k < 5; k++) {
         const t = (k - 2) * S * .42, x = side < 2 ? t : (side === 2 ? -mid : mid), z = side < 2 ? (side === 0 ? -mid : mid) : t;
-        const st = new TT.Mesh(cab, order[k]); st.position.set(x, ym, z); st.castShadow = true; g.add(st);
+        const nm = ['ruby', 'sapphire', 'emerald', 'sapphire', 'ruby'][k];
+        stone(cab, .15, order[k], BM.back[nm], BM.core[nm], x, ym, z, k * .4);
         const bz = new TT.Mesh(set, BM.frame); bz.position.set(x, ym + .004, z); g.add(bz);
       }
-      for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { const dm = new TT.Mesh(dia, BM.diamond); dm.position.set(sx * mid, ym + .1, sz * mid); dm.rotation.y = Math.PI / 4; dm.castShadow = true; g.add(dm); }
+      for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { const bz = new TT.Mesh(geos.bez, BM.frame); bz.scale.setScalar(1.45); bz.position.set(sx * mid, ym + .004, sz * mid); g.add(bz); stone(dia, .22, BM.diamond, BM.back.diamond, null, sx * mid, ym, sz * mid, Math.PI / 16); }
     }
     if (BM.edge) {   // brass edging (a neon tube on the night board) along the frame's top outer edge
       const e = new TT.Mesh(new TT.BoxGeometry(2 * (S + FW) - .02, .012, .03), BM.edge);
