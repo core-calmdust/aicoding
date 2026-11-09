@@ -416,6 +416,19 @@ body.in-lesson .players,body.in-lesson #evalCard,body.in-lesson .kifu-card,body.
 .lesson-card h3{font-size:23px}
 .lesson-prompt{font-size:17px;line-height:1.75}
 .lesson-fb{font-size:16px;line-height:1.85;color:#d9c9b2}
+/* phones: a compact card head (2026-11-10) — the step on one line (cut with …) beside a small progress pill, a smaller
+   title, the prompt tighter and the tsume rule note as a small line of its own */
+@media (max-width:600px){
+  .lesson-card .lh{align-items:center;gap:10px}
+  .lesson-card .lt{flex:1 1 auto;min-width:0;font-size:12px;letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lesson-card .lh .dots{flex:none;white-space:nowrap}
+  .lesson-card .lh .dots > span{font-size:11px!important;padding:2px 8px;border-radius:99px;background:rgba(201,169,97,.14);color:var(--brass)!important;font-weight:700}
+  html.atlas-skin .lesson-card .lh .dots > span{background:#f6ecd6;color:#9a7a3a!important}
+  .lesson-card h3{font-size:19px;margin:3px 0 6px;line-height:1.25}
+  .lesson-prompt{font-size:15px;line-height:1.55}
+  .lesson-prompt .ts-conv{display:block;font-size:11.5px!important;line-height:1.45;margin-top:5px}.lesson-prompt .ts-conv br{display:none}
+  .lesson-fb{font-size:14.5px;line-height:1.6;min-height:0}
+}
 .ls-play{display:block;width:100%;margin-top:8px;padding:9px;border-radius:10px;border:1px solid rgba(201,169,97,.45);color:var(--accent);background:rgba(201,169,97,.08);font-size:14px}
 .ls-back{color:var(--muted);border-color:var(--line);background:none}
 .ls-play:hover{background:rgba(201,169,97,.18)}
@@ -4476,7 +4489,7 @@ function renderLesson0() {
   }
   const side = pr.sfen.split(' ')[1] === 'w' ? 1 : 0;
   const tag = pr.kind === 'tsume' ? t('mateIn', { n: pr.n }) : '';
-  $('#lsPrompt').innerHTML = `${tag ? `<span class="tag">${tag}</span>` : ''}<b>${cname(side)}</b> — ${L(pr.q) || L(g.prompt) || t('ts.prompt')}${pr.kind === 'tsume' && lesson.endless && pr.conv ? `<br><span style="font-size:12px;color:var(--dim)">${t('ts.conv')}</span>` : ''}`;
+  $('#lsPrompt').innerHTML = `${tag ? `<span class="tag">${tag}</span>` : ''}<b>${cname(side)}</b> — ${L(pr.q) || L(g.prompt) || t('ts.prompt')}${pr.kind === 'tsume' && lesson.endless && pr.conv ? `<span class="ts-conv" style="font-size:12px;color:var(--dim)"><br>${t('ts.conv')}</span>` : ''}`;
   $('#lsFb').innerHTML = lesson.fbHtml || '';
   if (lesson.retry) { $('#lsHint').textContent = t('ts.retry'); $('#lsHint').disabled = false; $('#lsNext').textContent = t('ls.answer'); $('#lsQuit').textContent = t('ls.quit'); return; }
   $('#lsHint').textContent = lesson.answered ? t('ls.answer') : t('ls.hint');
