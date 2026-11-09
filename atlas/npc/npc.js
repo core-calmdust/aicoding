@@ -231,6 +231,9 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
   /* ---------------- UI: the card in the info column (skins) ---------------- */
   /* ---------------- UI: the floating bubble (portal table) ---------------- */
   // o.bottom() → px from the bottom of the window (default: over the portal's action bar)
+  // phones: in landscape the board comes first — no bubble at all (portrait: it stays)
+  const PCQ = matchMedia((window.HeaderBar && HeaderBar.MEDIA) || '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4)');
+  const phoneLand = () => !PCQ.matches && innerWidth > innerHeight && innerHeight < 600;
   function floatUI(o = {}) {
     addCss();
     const el = document.createElement('div'); el.className = 'npc-float'; el.setAttribute('aria-live', 'polite');
@@ -238,10 +241,12 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
     const img = el.querySelector('img'), nm = el.querySelector('.npc-nm b'), tag = el.querySelector('.npc-tag'), tx = el.querySelector('.npc-tx'), pic = el.querySelector('.npc-pic'), ttl = el.querySelector('.npc-ttl');
     (o.body ? document.body : document.getElementById('bv') || document.body).appendChild(el);   // (inside the portal's 3D view: over the table, under its end-of-game card)
     let hideT = 0;
+    addEventListener('resize', () => { if (phoneLand()) { clearTimeout(hideT); el.classList.remove('on'); } });   // (turned sideways while talking)
     el.addEventListener('click', e => { e.stopPropagation(); clearTimeout(hideT); el.classList.remove('on'); });   // tap the guide or the bubble: it steps away
     return {
       el,
       say(who, html, m) {
+        if (phoneLand()) { clearTimeout(hideT); el.classList.remove('on'); return; }
         try { const l = o.left && o.left(); el.style.left = l ? Math.round(l[0]) + 'px' : ''; el.style.width = l ? `min(600px, ${Math.round(l[1] - 24)}px)` : ''; } catch (e) {}
         el.dataset.who = who; el.classList.toggle('npc-ur', !!m.ur);
         if (img.getAttribute('src') !== m.img) img.src = m.img;
@@ -277,7 +282,7 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
     const PC = matchMedia((window.HeaderBar && HeaderBar.MEDIA) || '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4)');
     const vis = e => e && e.getClientRects().length && getComputedStyle(e).display !== 'none';
     const fl = floatUI({ body: true,
-      // PC: just above the online dock's bar (centred on the window); phones: just above the bottom tab bar
+      // PC: just above the online dock's bar (centred on the window); phones: over the bottom tab bar (landscape: none)
       bottom: el => {
         if (PC.matches) {
           const d = document.getElementById('dock') || document.querySelector('.dock'), yd = vis(d) ? d.getBoundingClientRect().top : innerHeight - 10;
@@ -288,16 +293,9 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
           if (yb != null && yd > yb) b = Math.max(b, innerHeight - (yb + yd) / 2 - h / 2 - 10);   // (the float sits at --npc-bot + 10px)
           return b;
         }
-        // phones: just above the bottom tab bar — unless the bubble would then cover the board: then just under the board
-        // (over the boxes and, if need be, the tab bar), or, with no room there either, just above the board
+        // phones (portrait): on the bottom tab bar itself, for a few seconds (a tap puts it away) — the one place that stays put
         const t = [...document.querySelectorAll('.mtabs, #mtabs')].find(e => vis(e) && getComputedStyle(e).position === 'fixed');
-        let b = t ? innerHeight - t.getBoundingClientRect().top + 4 : 12;
-        const bx = boardBox(), h = el ? el.offsetHeight : 0;
-        if (bx && h && innerHeight - b - 10 - h < bx.bottom) {
-          if (bx.bottom + 4 + h <= innerHeight - 4) b = innerHeight - (bx.bottom + 4) - h - 10;
-          else if (bx.top - 4 - h >= 0) b = innerHeight - (bx.top - 4) - 10;
-        }
-        return b;
+        return t ? Math.max(0, innerHeight - t.getBoundingClientRect().bottom) - 4 : 2;
       },
       left: () => null });   // centred on the whole window, as on the portal's 3D table
     fl.el.classList.add('npc-skin');
