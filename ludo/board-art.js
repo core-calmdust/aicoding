@@ -310,7 +310,10 @@
       + `<feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="c1"/><feMergeNode in="v1"/></feMerge></filter>`
       // black marble (the places): white veins
       + `<filter id="mbK" x="-.05" y="-.05" width="1.1" height="1.1" color-interpolation-filters="sRGB"><feTurbulence type="turbulence" baseFrequency=".9 .35" numOctaves="3" seed="5" result="n"/><feComponentTransfer in="n" result="r"><feFuncR type="table" tableValues="0 .1 .5 .9 1"/></feComponentTransfer><feColorMatrix in="r" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .7 0 0 0 0" result="a"/><feFlood flood-color="#d8d4cc"/><feComposite in2="a" operator="in" result="v"/><feComposite in="v" in2="SourceAlpha" operator="in" result="vc"/><feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="vc"/></feMerge></filter>`
-      + `<linearGradient id="mbBr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f1d58a"/><stop offset=".45" stop-color="${BR}"/><stop offset="1" stop-color="${BRd}"/></linearGradient>`
+      // brass: the lines in one gradient across the whole board (per shape, each square's edge had its own light — the lines looked
+      // pieced together, 2026-11-09); the stars and the boss in their own (per shape) for a raised, polished look
+      + `<linearGradient id="mbBr" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="15" y2="15"><stop offset="0" stop-color="#e2bf6a"/><stop offset=".3" stop-color="${BR}"/><stop offset=".55" stop-color="#dcb862"/><stop offset=".8" stop-color="${BR}"/><stop offset="1" stop-color="#b38a3a"/></linearGradient>`
+      + `<linearGradient id="mbBrO" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f1d58a"/><stop offset=".45" stop-color="${BR}"/><stop offset="1" stop-color="${BRd}"/></linearGradient>`
       + '</defs>');
     o.push(`<g filter="url(#mbW)"><rect x="-.3" y="-.3" width="15.6" height="15.6" fill="#f3f0ea"/></g>`);
     // the veins: long wandering grey threads, a soft blurred one beside some, branching here and there (Carrara)
@@ -339,14 +342,16 @@
     for (let s = 0; s < 4; s++) { const [x0, y0] = YARD[s]; bl.push(`<rect x="${x0 + .1}" y="${y0 + .1}" width="5.8" height="5.8" fill="none" stroke="url(#mbBr)" stroke-width=".07"/><rect x="${x0 + .78}" y="${y0 + .78}" width="4.44" height="4.44" fill="none" stroke="url(#mbBr)" stroke-width=".08"/>`); }
     o.push(`<g filter="url(#mbK)">` + [0, 1, 2, 3].map(s => slots(s).map(([px, py]) => `<circle cx="${f(px)}" cy="${f(py)}" r=".56" fill="#1b1a1c"/>`).join('')).join('') + '</g>');
     for (let s = 0; s < 4; s++) slots(s).forEach(([px, py]) => bl.push(`<circle cx="${f(px)}" cy="${f(py)}" r=".58" fill="none" stroke="url(#mbBr)" stroke-width=".07"/><circle cx="${f(px)}" cy="${f(py)}" r=".44" fill="none" stroke="${BR}" stroke-opacity=".5" stroke-width=".02"/>`));
+    const grid = new Set();
     T.forEach(([x, y], i) => {
-      bl.push(`<rect x="${x}" y="${y}" width="1" height="1" fill="none" stroke="url(#mbBr)" stroke-width=".045"/>`);
-      if (i % 13 === 8) bl.push(`<path d="${star(x + .5, y + .5, .36, .42)}" fill="url(#mbBr)" stroke="${BRd}" stroke-width=".02"/><path d="${star(x + .5, y + .5, .16, .42)}" fill="#f6e3a6" fill-opacity=".6"/>`);
+      grid.add(`M${x} ${y}h1`).add(`M${x} ${y + 1}h1`).add(`M${x} ${y}v1`).add(`M${x + 1} ${y}v1`);
+      if (i % 13 === 8) bl.push(`<path d="${star(x + .5, y + .5, .36, .42)}" fill="url(#mbBrO)" stroke="${BRd}" stroke-width=".02"/><path d="${star(x + .5, y + .5, .16, .42)}" fill="#f6e3a6" fill-opacity=".6"/>`);
       if (i % 13 === 0) bl.push(arrowD(x + .5, y + .5, i / 13) + ` stroke="url(#mbBr)" stroke-width=".09"/>`);
     });
-    for (let s = 0; s < 4; s++) for (let p = 0; p < 5; p++) { const [x, y] = HOME[s](p); bl.push(`<rect x="${x}" y="${y}" width="1" height="1" fill="none" stroke="url(#mbBr)" stroke-width=".045"/>`); }
+    for (let s = 0; s < 4; s++) for (let p = 0; p < 5; p++) { const [x, y] = HOME[s](p); grid.add(`M${x} ${y}h1`).add(`M${x} ${y + 1}h1`).add(`M${x} ${y}v1`).add(`M${x + 1} ${y}v1`); }
+    bl.push(`<path d="${[...grid].join('')}" fill="none" stroke="url(#mbBr)" stroke-width=".045" stroke-linecap="square"/>`);
     TRI.forEach(([[ax, ay], [bx, by]]) => bl.push(`<path d="M${ax} ${ay}L${bx} ${by}L7.5 7.5z" fill="none" stroke="url(#mbBr)" stroke-width=".05" stroke-linejoin="round"/>`));
-    bl.push(`<circle cx="7.5" cy="7.5" r=".42" fill="url(#mbBr)" stroke="${BRd}" stroke-width=".03"/><path d="${star(7.5, 7.5, .3, .42)}" fill="#f3dc96" stroke="${BRd}" stroke-width=".015"/>`);
+    bl.push(`<circle cx="7.5" cy="7.5" r=".42" fill="url(#mbBrO)" stroke="${BRd}" stroke-width=".03"/><path d="${star(7.5, 7.5, .3, .42)}" fill="#f3dc96" stroke="${BRd}" stroke-width=".015"/>`);
     bl.push(`<rect x="0" y="0" width="15" height="15" fill="none" stroke="url(#mbBr)" stroke-width=".1"/><rect x="-.18" y="-.18" width="15.36" height="15.36" fill="none" stroke="url(#mbBr)" stroke-width=".04"/>`);
     o.push(bl.join(''));
     return o.join('');

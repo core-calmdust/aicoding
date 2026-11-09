@@ -659,7 +659,7 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
       // (#newOverlay #fPlace…: above nglux's auto-fill tiles — the six places stay in one row; their names show when the row is wide enough)
       st.textContent = `#newOverlay #fPlace.atlas-place{container-type:inline-size}
 #newOverlay #fPlace.atlas-place .atlas-plrow.dsg{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:6px!important}
-#newOverlay #fPlace.atlas-place .atlas-plrow.dsg > button{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0;padding:3px 3px 3px!important;border-radius:10px!important;cursor:pointer;font:inherit;font-size:14px;font-weight:700}
+#newOverlay #fPlace.atlas-place .atlas-plrow.dsg > button{width:auto!important;max-width:none!important;display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0;padding:3px 3px 3px!important;border-radius:10px!important;cursor:pointer;font:inherit;font-size:14px;font-weight:700}
 #newOverlay #fPlace.atlas-place .atlas-plrow img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:7px;background:#efe6d6}
 #newOverlay #fPlace.atlas-place .atlas-plrow .nm{display:none;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @container (min-width:600px){#newOverlay #fPlace.atlas-place .atlas-plrow img{aspect-ratio:3/2}#newOverlay #fPlace.atlas-place .atlas-plrow .nm{display:block}#newOverlay #fPlace.atlas-place .atlas-plrow.dsg > button{padding:4px 4px 7px!important}}
