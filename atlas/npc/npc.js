@@ -210,11 +210,12 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
     return {
       el,
       say(who, html, m) {
-        try { const b = o.bottom ? o.bottom() : window.__tbar && __tbar.band; if (b) el.style.setProperty('--npc-bot', Math.round(b) + 'px'); } catch (e) {}
         try { const l = o.left && o.left(); el.style.left = l ? Math.round(l[0]) + 'px' : ''; el.style.width = l ? `min(600px, ${Math.round(l[1] - 24)}px)` : ''; } catch (e) {}
         el.dataset.who = who; el.classList.toggle('npc-ur', !!m.ur);
         if (img.getAttribute('src') !== m.img) img.src = m.img;
         nm.textContent = m.name; tag.textContent = m.tag; tag.classList.toggle('tv', !!m.tv); ttl.textContent = m.title || ''; tx.innerHTML = html;
+        // (after the text: the place may depend on the bubble's height — the skins centre it between the board and the bar)
+        try { const b = o.bottom ? o.bottom(el) : window.__tbar && __tbar.band; if (b) el.style.setProperty('--npc-bot', Math.round(b) + 'px'); } catch (e) {}
         el.classList.add('on'); pic.classList.remove('talk'); void pic.offsetWidth; pic.classList.add('talk');
         clearTimeout(hideT); hideT = setTimeout(() => el.classList.remove('on'), Math.max(7500, tx.textContent.length * 170));
       },
@@ -224,15 +225,26 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
   }
 
   /* ---------------- UI on the skins: the same bubble as the portal's, stepping away again after a few seconds ----------------
-     PC: centred on the window, just above the online dock's bar; phones: just above the bottom tab bar (cards in the
-     info column pushed the boxes around) */
+     PC: centred on the window, half-way between the board's lower edge and the online dock's bar (2026-11-09; never on the bar,
+     on the board's edge when the gap is too small); phones: just above the bottom tab bar (cards in the info column pushed the
+     boxes around) */
   function skinUI() {
     const PC = matchMedia((window.HeaderBar && HeaderBar.MEDIA) || '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4)');
     const vis = e => e && e.getClientRects().length && getComputedStyle(e).display !== 'none';
     const fl = floatUI({ body: true,
       // PC: just above the online dock's bar (centred on the window); phones: just above the bottom tab bar
-      bottom: () => {
-        if (PC.matches) { const d = document.getElementById('dock') || document.querySelector('.dock'); return vis(d) ? innerHeight - d.getBoundingClientRect().top + 6 : 16; }
+      bottom: el => {
+        if (PC.matches) {
+          const d = document.getElementById('dock') || document.querySelector('.dock'), yd = vis(d) ? d.getBoundingClientRect().top : innerHeight - 10;
+          let b = innerHeight - yd + 6;   // (just above the bar: the lowest it may go)
+          // the board's lower edge: the 3D board as drawn (the DOM board + its measured overhang, common.js __atlasPcFit), else the DOM board
+          let yb = null;
+          try { const pf = window.__atlasPcFit, bd = pf && pf.board && pf.board(); if (bd && vis(bd)) { const r = bd.getBoundingClientRect(), k = !document.documentElement.classList.contains('atlas-2d') && pf.K && pf.K(); yb = r.bottom + (k && isFinite(k.b) ? Math.max(0, k.b) * r.height : 0); } } catch (e) {}
+          if (yb == null) { const bd = ['#frame', '#boardWrap', '.board-wrap', '#board', '.board'].map(q => document.querySelector(q)).find(vis); if (bd) yb = bd.getBoundingClientRect().bottom + 8; }   // (a skin without the PC fit: its DOM board, the 3D frame a little past it)
+          const h = el ? el.offsetHeight : 0;
+          if (yb != null && yd > yb) b = Math.max(b, innerHeight - (yb + yd) / 2 - h / 2 - 10);   // (the float sits at --npc-bot + 10px)
+          return b;
+        }
         const t = [...document.querySelectorAll('.mtabs, #mtabs')].find(e => vis(e) && getComputedStyle(e).position === 'fixed'); return t ? innerHeight - t.getBoundingClientRect().top + 4 : 12;
       },
       left: () => null });   // centred on the whole window, as on the portal's 3D table
