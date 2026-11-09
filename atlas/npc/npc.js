@@ -114,21 +114,39 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
     }
     const bossMeta = () => { const n = A.BOSSES[game].length; return { name: bossName(S.boss, langNow()), img: avUrl(A.bossId(game, S.bi) + '-' + (S.bi === n - 1 ? 3 : 2)), tag: (TX().ui.boss) + ' ' + A.range(game, S.bi), ur: S.bi === n - 1, title: ((TX().bosses || {})[game] || [])[S.bi] || '' }; };
     const fanMeta = tv => ({ name: S.fan.name(), img: S.fan.img, tag: tv ? TX().ui.trivia : TX().ui.watch, tv });
+    // what is being said, as (where, key, index) — the lists are the same in every language, so a language change mid-game
+    // can put the same line in the new language on the bubble at once (2026-11-09: it stayed in the old one)
+    const lists = {
+      boss: key => { const X = TX(); return X && S.boss ? (X.voice[S.boss.v] || X.voice.cool)[key] : null; },
+      fanv: key => { const X = TX(), fv = X && S.fan && X.fanv && X.fanv[S.fan.v]; return fv ? fv[key] : null; },
+      fan: key => { const X = TX(); return X ? X.fan[key] : null; },
+      triv: () => { const X = TX(); return (X && X.trivia[game]) || null; },
+    };
+    const lineOf = c => { const L = lists[c.src](c.key); return L && L.length ? L[Math.min(c.i, L.length - 1)] : ''; };
+    const metaOf = c => c.src === 'boss' ? bossMeta() : fanMeta(c.src === 'triv');
+    function speak(c) {
+      const m = metaOf(c), line = lineOf(c); if (!line) return;
+      S.cur = c; ui.say(c.src === 'boss' ? 'boss' : 'fan', esc(line.replace('{me}', m.name)), m);
+    }
     function boss(key) {
-      const X = TX(); if (!X || !S.boss) return; const vv = X.voice[S.boss.v] || X.voice.cool;
-      const m = bossMeta(), line = fresh(vv[key]); if (!line) return;
-      ui.say('boss', esc(line.replace('{me}', m.name)), m);
+      const L = lists.boss(key); if (!L) return; const line = fresh(L); if (!line) return;
+      speak({ src: 'boss', key, i: L.indexOf(line) });
     }
     function fan(key) {
-      const X = TX(); if (!X || !S.fan) return; const fv = X.fanv && X.fanv[S.fan.v], own = fv && fv[key];
-      const m = fanMeta(false), line = fresh(own && own.length && (Math.random() < .8 || !X.fan[key]) ? own : X.fan[key]); if (!line) return;
-      ui.say('fan', esc(line.replace('{me}', m.name)), m);
+      const X = TX(); if (!X || !S.fan) return; const own = lists.fanv(key), useOwn = own && own.length && (Math.random() < .8 || !X.fan[key]);
+      const L = useOwn ? own : X.fan[key], line = fresh(L); if (!line) return;
+      speak({ src: useOwn ? 'fanv' : 'fan', key, i: L.indexOf(line) });
     }
     function trivia() {
       const X = TX(), L = (X && X.trivia[game]) || []; if (!L.length || !S.fan) return false;
       const left = L.map((_, i) => i).filter(i => !S.told.includes(i)); if (!left.length) return false;
       const i = pick(left); S.told.push(i); S.triv++;
-      ui.say('fan', esc(L[i]), fanMeta(true)); return true;
+      speak({ src: 'triv', key: '', i }); return true;
+    }
+    // the language changed: the bubble on screen now says its line in the new language (same place, same time left)
+    function relang() {
+      const c = S.cur; if (!c || !ui.showing || !ui.showing()) return;
+      const m = metaOf(c), line = lineOf(c); if (line && ui.retext) ui.retext(esc(line.replace('{me}', m.name)), m);
     }
     function greet() {
       S.greeted = true; S.over = false; S.last = S.ply; S.hAt = 0; S.next = S.ply + Math.round((2 + Math.random() * 2) * S.pace);
@@ -185,7 +203,7 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
         later(() => toast(id, bossName(S.boss, langNow()), t), 1200);
       } catch (e) {}
     }
-    return { S, setLevel, step, end, newGame, relabel: () => ui.relabel && ui.relabel() };
+    return { S, setLevel, step, end, newGame, relang, relabel: () => ui.relabel && ui.relabel() };
   }
   function toast(id, name, t) {
     const R = ['N', 'R', 'SR'][t] || 'SR';
@@ -220,6 +238,8 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
         clearTimeout(hideT); hideT = setTimeout(() => el.classList.remove('on'), Math.max(7500, tx.textContent.length * 170));
       },
       hide() { clearTimeout(hideT); el.classList.remove('on'); },
+      showing: () => el.classList.contains('on'),
+      retext(html, m) { nm.textContent = m.name; tag.textContent = m.tag; ttl.textContent = m.title || ''; tx.innerHTML = html; },
       remove() { clearTimeout(hideT); el.remove(); },
     };
   }
@@ -249,7 +269,7 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
       },
       left: () => null });   // centred on the whole window, as on the portal's 3D table
     fl.el.classList.add('npc-skin');
-    return { say: fl.say, hide: fl.hide };
+    return { say: fl.say, hide: fl.hide, showing: fl.showing, retext: fl.retext };
   }
 
   /* ---------------- reading the game's own state (skins) ----------------
@@ -341,7 +361,7 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
       };
       setInterval(tick, 700); tick();
       // the language changed (the page's language menu): load its lines
-      new MutationObserver(() => { const l = langNow(); ensure(l); }).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+      new MutationObserver(() => { const l = langNow(); ensure(l).then(() => T.relang()).catch(() => {}); }).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
     }).catch(() => {});
   };
 
@@ -352,6 +372,9 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
       if (dead || !A.BOSSES || !A.BOSSES[o.game]) return;
       ui = floatUI(); T = Talk(o.game, ui, { pace: PACE[o.game], early: EARLY[o.game] });
       T.setLevel(o.level); T.newGame(0);
+      // the portal's language menu mid-game: the lines in the new language (the bubble on screen too)
+      const mo = new MutationObserver(() => { if (dead) { mo.disconnect(); return; } ensure(langNow()).then(() => T && T.relang()).catch(() => {}); });
+      mo.observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
     }).catch(() => {});
     return {
       turn(ply) { if (T && ply != null) T.step(ply, null); },
