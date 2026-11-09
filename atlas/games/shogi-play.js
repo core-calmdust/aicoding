@@ -108,7 +108,7 @@
     // each of the player's moves ctx.pz.moved(usi, info) decides, and the replies come through api.pzPlay (2026-11-10)
     const PZ = ctx.pz || null;
     let SF = PZ ? PZ.sfen : START;
-    let zoomOn = true, region = null, zbtn = null, pzSol = PZ ? PZ.sol || [] : [], pan = [0, 0];   // (詰将棋 zoom: declared before layout() first runs)
+    let zoomOn = true, region = null, zbtn = null, pzSol = PZ ? PZ.sol || [] : [], pan = [0, 0], zEase = false;   // zEase: zoom in / out glides (≈0.4 s) instead of cutting (2026-11-10)   // (詰将棋 zoom: declared before layout() first runs)
     let hc = PZ ? (SF.split(' ')[1] === 'w' ? 1 : 0) : pvp ? 0 : ctx.side === 2 ? 1 : 0, ac = hc ^ 1;         // engine colours: 0 = sente (black), 1 = gote
     const lvIdx = Math.max(0, Math.min(LEVELS.length - 1, (ctx.level || 8) - 1)), LV = LEVELS[lvIdx];
     let E = null, P = null, moves = [], legal = [], sel = null, over = null, stopped = false, busy = true, worker = null, book = null, jobId = 0, popup = null, last = null;
@@ -143,7 +143,7 @@
       board.position.z = tall ? 0 : .25;
       // 詰将棋 (ctx.pz) on phones: the defender's pieces in hand (the row above the board) must be read — more room at the top
       if (PZ && pzFit()) { T3.kick(400); return; }
-      if (T3.fit) T3.fit(tall ? { w: (PZ ? FW + .7 : FW + 1.8) * SC, d: (PZ ? FH + 1.9 : FH + 1 + 2 * 1.45) * SC, y: Y * SC, pitch: 1.53, cz: PZ ? -.3 * SC : 0 } : { w: 16.4 * SC, d: 13.1 * SC, y: Y * SC, pitch: 1.53 });
+      if (T3.fit) T3.fit(Object.assign(tall ? { w: (PZ ? FW + .7 : FW + 1.8) * SC, d: (PZ ? FH + 1.9 : FH + 1 + 2 * 1.45) * SC, y: Y * SC, pitch: 1.53, cz: PZ ? -.3 * SC : 0 } : { w: 16.4 * SC, d: 13.1 * SC, y: Y * SC, pitch: 1.53 }, PZ && zEase ? { ease: true, ek: .14 } : {}));
       T3.kick(400);
     }
     const slotXZ = (who, t) => {   // who: 0 = player, 1 = AI
@@ -483,18 +483,18 @@
       const lim = v => Math.max(-FW / 2 * SC, Math.min(FW / 2 * SC, v));
       const cx = ((a[0] + b[0]) / 2) * SC + board.position.x, cz = ((a[1] + b[1]) / 2) * SC + board.position.z;
       pan[0] = lim(cx + pan[0]) - cx; pan[1] = lim(cz + pan[1]) - cz;   // (the frame's middle stays over the board)
-      T3.fit({ w: w * SC, d: d * SC, y: Y * SC, pitch: 1.53, cx: cx + pan[0], cz: cz + pan[1] });
+      T3.fit(Object.assign({ w: w * SC, d: d * SC, y: Y * SC, pitch: 1.53, cx: cx + pan[0], cz: cz + pan[1] }, zEase ? { ease: true, ek: .14 } : {}));
       return true;
     }
     function zoomBtn() {
       const L = ZT[ctx.lang] || ZT.en;
       if (!region) { if (zbtn) { zbtn.remove(); zbtn = null; } return; }
       if (!zbtn) { zbtn = document.createElement('button'); zbtn.type = 'button'; zbtn.className = 'sgzoom'; (document.body).appendChild(zbtn);
-        zbtn.onclick = e => { e.stopPropagation(); zoomOn = !zoomOn; pan = [0, 0]; zoomBtn(); layout(); }; }
+        zbtn.onclick = e => { e.stopPropagation(); zoomOn = !zoomOn; pan = [0, 0]; zoomBtn(); zEase = true; layout(); zEase = false; }; }
       zbtn.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${zoomOn ? '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>' : '<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5M8 10.5h5M10.5 8v5"/>'}</svg>`;   // (icon only, 2026-11-10)
       zbtn.setAttribute('aria-label', zoomOn ? L[0] : L[1]); zbtn.title = zoomOn ? L[0] : L[1];
     }
-    function pzZoom() { region = pzRegion(); zoomOn = true; pan = [0, 0]; zoomBtn(); layout(); }
+    function pzZoom() { region = pzRegion(); zoomOn = true; pan = [0, 0]; zoomBtn(); zEase = true; layout(); zEase = false; }
     const pz = {
       play: usi => new Promise(res => { const m = P.fromUsi(usi); if (!m) return res(false); busy = true; pzOn = false; play(m, () => { if (stopped) return; res(true); }); }),
       wait() { legal = P.legalMoves(true); busy = false; pzOn = true; drawMarks(); },   // the player's turn again
