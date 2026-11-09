@@ -142,6 +142,8 @@
     peg: { ja: '木のペグ盤 3D', en: 'Wooden peg board 3D', zh: '木制插孔盘 3D', ko: '나무 페그 판 3D', es: 'Tablero de clavijas 3D', fr: 'Plateau à chevilles 3D', pt: 'Tabuleiro de pinos 3D', de: 'Holz-Steckbrett 3D', hi: 'लकड़ी का पेग बोर्ड 3D', ar: 'لوح أوتاد خشبي ثلاثي', ru: 'Доска с колышками 3D', 'zh-TW': '木製插孔盤 3D', id: '3D papan pasak kayu', tr: 'Ahşap çivili tahta 3D' },
     mondrian: { ja: 'コンポジション 3D', en: 'Composition 3D', zh: '构成 3D', ko: '컴포지션 3D', es: 'Composición 3D', fr: 'Composition 3D', pt: 'Composição 3D', de: 'Komposition 3D', hi: 'कंपोज़िशन 3D', ar: 'تكوين ثلاثي', ru: 'Композиция 3D', 'zh-TW': '構成 3D', id: '3D komposisi', tr: 'Kompozisyon 3D' },
     cutout: { ja: '切り絵 3D', en: 'Paper cut-outs 3D', zh: '剪纸拼贴 3D', ko: '종이 오리기 3D', es: 'Papeles recortados 3D', fr: 'Papiers découpés 3D', pt: 'Recortes de papel 3D', de: 'Scherenschnitte 3D', hi: 'कागज़ की कटिंग 3D', ar: 'قصاصات ورق ثلاثي', ru: 'Вырезки из бумаги 3D', 'zh-TW': '剪紙拼貼 3D', id: '3D potongan kertas', tr: 'Kâğıt kesik 3D' },
+    winter: { ja: 'カナダの冬 3D', en: 'Canadian winter 3D', zh: '加拿大之冬 3D', ko: '캐나다의 겨울 3D', es: 'Invierno canadiense 3D', fr: 'Hiver canadien 3D', pt: 'Inverno canadense 3D', de: 'Kanadischer Winter 3D', hi: 'कनाडाई सर्दी 3D', ar: 'شتاء كندي ثلاثي', ru: 'Канадская зима 3D', 'zh-TW': '加拿大之冬 3D', id: '3D musim dingin Kanada', tr: 'Kanada kışı 3D' },
+    mcm: { ja: 'ミッドセンチュリー 3D', en: 'Mid-century 3D', zh: '中世纪现代 3D', ko: '미드센추리 3D', es: 'Mid-century 3D', fr: 'Mid-century 3D', pt: 'Mid-century 3D', de: 'Mid-Century 3D', hi: 'मिड-सेंचुरी 3D', ar: 'منتصف القرن ثلاثي', ru: 'Мид-сенчури 3D', 'zh-TW': '中世紀現代 3D', id: '3D mid-century', tr: 'Mid-century 3D' },
     tycoon: { ja: '大富豪 3D', en: 'Tycoon 3D', zh: '大富豪 3D', ko: '대부호 3D', es: 'Magnate 3D', fr: 'Magnat 3D', pt: 'Magnata 3D', de: 'Tycoon 3D', hi: 'रईस 3D', ar: 'الثري ثلاثي', ru: 'Магнат 3D', 'zh-TW': '大富豪 3D', id: '3D Konglomerat', tr: 'Milyoner 3D' },
   };
   const BOARDS = {
@@ -168,14 +170,14 @@
     konane: { list: ['papamu', 'quilt'], get: () => ls.get('atlas-konane-look') === 'quilt' ? 'quilt' : 'papamu', set: k => ls.set('atlas-konane-look', k) },
     // carrom (3D only): 'atlas-carrom-look' ('neon' the default | 'modern' | 'classic' | 'rajasthan' | 'bauhaus' | 'tycoon')
     carrom: { list: ['neon', 'modern', 'classic', 'rajasthan', 'bauhaus', 'tycoon'], get: () => { const v = ls.get('atlas-carrom-look'); return ['modern', 'classic', 'rajasthan', 'bauhaus', 'tycoon'].includes(v) ? v : 'neon'; }, set: k => ls.set('atlas-carrom-look', k) },
-    // crokinole (3D only): 'atlas-crokinole-look' ('classic' the default | 'neon')
-    crokinole: { list: ['classic', 'neon'], get: () => ls.get('atlas-crokinole-look') === 'neon' ? 'neon' : 'classic', set: k => ls.set('atlas-crokinole-look', k) },
+    // crokinole (3D only): 'atlas-crokinole-look' ('classic' the default | 'neon' | 'marq' | 'winter' | 'mcm' | 'modern')
+    crokinole: { list: ['classic', 'neon', 'marq', 'winter', 'mcm', 'modern'], get: () => { const v = ls.get('atlas-crokinole-look'); return ['neon', 'marq', 'winter', 'mcm', 'modern'].includes(v) ? v : 'classic'; }, set: k => ls.set('atlas-crokinole-look', k) },
     // ludo (atlas/models/ludo.js, atlas/skin/ludo.js): 'atlas-ludo-look' ('classic' the default | 'marble' | 'street' | 'peg' | 'mondrian' | 'cutout'); pachisi keeps its cloth
     ludo: { list: ['classic', 'marble', 'street', 'peg', 'mondrian', 'cutout'], get: () => { const v = ls.get('atlas-ludo-look'); return ['marble', 'street', 'peg', 'mondrian', 'cutout'].includes(v) ? v : 'classic'; }, set: k => ls.set('atlas-ludo-look', k) },
   };
   X.BOARDS = BOARDS;
   X.boardName = (k, lang) => { const o = N3[k]; return o ? o[lang] || o.en : k; };
-  X.boardThumb = (id, k) => new URL('img/board-' + id + '-' + k + '.webp?v=' + (id === 'senet' ? 3 : id === 'carrom' ? 5 : id === 'konane' ? 2 : id === 'ludo' ? 2 : 1), ME).href;
+  X.boardThumb = (id, k) => new URL('img/board-' + id + '-' + k + '.webp?v=' + (id === 'senet' ? 3 : id === 'carrom' ? 5 : id === 'crokinole' ? 2 : id === 'konane' ? 2 : id === 'ludo' ? 2 : 1), ME).href;
   // choose a board for a game: the shared key is written and the showcase board (if it is that game's) is rebuilt at once
   X.setBoard = (id, k) => { const B = BOARDS[id]; if (!B || !B.list.includes(k)) return; B.set(k); try { dispatchEvent(new CustomEvent('atlas-board', { detail: { id, look: k } })); } catch (e) {} };
   PLACES.ui.board = { ja: '盤', en: 'Board', zh: '棋盘', ko: '판', es: 'Tablero', fr: 'Plateau', pt: 'Tabuleiro', de: 'Brett', hi: 'बोर्ड', ar: 'اللوحة', ru: 'Доска', 'zh-TW': '棋盤', id: 'Papan', tr: 'Tahta' };
