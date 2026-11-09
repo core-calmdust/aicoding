@@ -463,9 +463,9 @@
       const wave = new TT.Mesh(geos.halo, wm); wave.position.y = .006; wave.visible = false; wave.renderOrder = 3; g.add(wave);   // a thin shock ring on the board
       const e0 = top.emissive.clone();
       g.userData.flash = k => {
-        k = Math.max(0, Math.min(1, k)); top.emissive.copy(e0).multiplyScalar(1 + 3.5 * k); lm.emissiveIntensity = .55 + 4 * k;
-        halo.visible = wave.visible = k > .01; hm.opacity = k; wm.opacity = .7 * k * k;
-        const sc = r * (1.25 + (1 - k) * 1.3), sw = r * (1.4 + (1 - k) * 3.2); halo.scale.set(sc, 1, sc); wave.scale.set(sw, 1, sw);
+        k = Math.max(0, Math.min(1, k)); top.emissive.copy(e0).multiplyScalar(1 + 1.8 * k); lm.emissiveIntensity = .55 + 2.2 * k;
+        halo.visible = wave.visible = k > .01; hm.opacity = .55 * k; wm.opacity = .3 * k * k;   // (kept modest: a break lights many men at once)
+        const sc = r * (1.2 + (1 - k) * .9), sw = r * (1.3 + (1 - k) * 2.2); halo.scale.set(sc, 1, sc); wave.scale.set(sw, 1, sw);
       };
     }
     return g;
