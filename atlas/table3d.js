@@ -1607,7 +1607,7 @@
   //   o.cx, o.cz: the point of the board (world units, board space) to frame instead of its middle (a game's focus on the player to move);
   //   o.ek: the easing rate (default .06; a quick move in on a chosen piece ~.2)
   //   o.ease: move there smoothly (pan and zoom on the camera's own pace) instead of a cut — Ludo's focus on the seat to move (phones)
-  let fitTo = null, fitCur = null;
+  let fitTo = null, fitCur = null, fitRelease = false;
   const FIT_K = ['w', 'd', 'y', 'cx', 'cz', 'pitch'];
   function fitStep(ez) {   // fitCur: the framing as drawn; it eases toward fitTo when fitTo.ease, else it is fitTo
     if (!fitTo) { fitCur = null; return false; }
@@ -1617,7 +1617,7 @@
     FIT_K.forEach(k => { const t = tv(k), d = t - fitCur[k]; if (Math.abs(d) > 1e-4) { fitCur[k] += d * ez(fitTo.ek || .06); mv = true; } else fitCur[k] = t; });
     return mv;
   }
-  function fit(o) { const v = o || null; if (v === fitTo || (v && fitTo && JSON.stringify(v) === JSON.stringify(fitTo))) return; fitTo = v; kick(300); }
+  function fit(o) { fitRelease = false; const v = o || null; if (v === fitTo || (v && fitTo && JSON.stringify(v) === JSON.stringify(fitTo))) return; fitTo = v; kick(300); }
   // show a board. opts.intro = a small "icon" model: it spins up first, then bursts into the board,
   // which lands with squash & stretch. opts.onSwap fires at the burst (for 2D effects).
   const ease = { outBack: k => 1 + 2.7 * Math.pow(k - 1, 3) + 1.7 * Math.pow(k - 1, 2), out3: k => 1 - Math.pow(1 - k, 3), in2: k => k * k };
@@ -1670,7 +1670,10 @@
   function take(id) { const p = prepared[id]; delete prepared[id]; return p && p.st === stamp() ? p : null; }
   function show(id, model, opts = {}) {
     if (!R) return null;
-    mode = 'view'; camTo = 0; spin = true; yaw = 0; vel = 0; tilt = 0; idleT = performance.now(); zoomTo = 1; pzoomTo = 1; fitTo = null; kick(400);
+    // (soft = back from a game: the play framing stays until the camera's glide has left it — clearing it here made the camera
+    // jump to an un-framed play pose first and then glide down: the 'bounce', 2026-11-09)
+    mode = 'view'; camTo = 0; spin = true; yaw = 0; vel = 0; tilt = 0; idleT = performance.now(); zoomTo = 1; pzoomTo = 1;
+    if (opts.soft && fitTo) fitRelease = true; else fitTo = null; kick(400);
     const old = cur;
     const back = !model && takeKept(id);
     if (old) root.remove(old);
@@ -1701,6 +1704,12 @@
         if (t < 560 && cur === c) requestAnimationFrame(anim); else c.scale.set(1, 1, 1);
       })(t0);
     };
+    if (opts.soft) {            // back from a game on the table: the showcase board settles in without a bounce — a short ease-out
+      root.add(c); const t0 = performance.now();   // (from a hair above, with the camera's glide) (2026-11-09: the drop's squash read as a bounce)
+      (function anim(now) { const k = Math.min(1, (now - t0) / 420), e = ease.out3(k); c.position.y = (1 - e) * .35; kick(120);
+        if (k < 1 && cur === c) requestAnimationFrame(anim); else c.position.y = 0; })(t0);
+      dirty = shadowDirty = true; return g;
+    }
     if (opts.magic) {           // materialise: grows out of the smoke with a little twist and overshoot
       root.add(c); c.visible = false; c.scale.setScalar(.02);
       const go = () => { if (cur !== c || c.visible) return; c.visible = true; const t0 = performance.now();
@@ -1738,7 +1747,7 @@
   let orthoWant = false, orthoW = 0, camLook = 0;
   function play(on, o) {   // (the ceiling lamp's shade hides while the camera looks down at a game: see loop)
     if (on) orthoWant = !!(o && o.ortho);
-    if (o && o.glide) glide = { t: 0, dur: o.glide, k0: camK, i0: inset, i1: insetTo };
+    if (o && o.glide) glide = { t: 0, dur: o.glide, k0: camK, i0: inset, i1: insetTo, v0: vsh, t0: insetT };   // (t0: the top band glides on the same curve — it used to snap away first)
     mode = on ? 'play' : 'view'; camTo = on ? 1 : 0; spin = !on; idleT = 0; drag = null; vel = 0; tilt = 0; kick(400); }
   const wasDrag = () => performance.now() - dragEnd < 250;
   // pointer → point on the horizontal plane at height y, in the current model's local space
@@ -1926,8 +1935,8 @@
     const ez = r => 1 - Math.pow(1 - r, dt / 16.7);   // per-60fps-frame easing → same speed on slow devices
     if (glide) {
       glide.t += Math.min(dt, 50); const k = Math.min(1, glide.t / glide.dur), e = ioC(k);   // one ease-in-out for everything that moves   // (a frame advances at most 50 ms: smooth steps, and a stall never makes it jump)   // quick out, soft landing; time advances at most 2 frames per frame, so a stall (building the board) never makes it jump
-      camK = glide.k0 + (camTo - glide.k0) * e; inset = glide.i0 + (glide.i1 - glide.i0) * e; frame();   // the framing reaches its end on the same curve   // the framing follows smoothly even if the card changes size meanwhile
-      if (k >= 1) { camK = camTo; inset = glide.i1; glide = null; frame(); }
+      camK = glide.k0 + (camTo - glide.k0) * e; inset = glide.i0 + (glide.i1 - glide.i0) * e; if (fitRelease && glide.v0 != null) vsh = glide.v0 * (1 - e); if (glide.t0 != null) insetT = glide.t0 + (insetTTo - glide.t0) * e; frame();   // the framing reaches its end on the same curve   // the framing follows smoothly even if the card changes size meanwhile
+      if (k >= 1) { camK = camTo; inset = glide.i1; insetT = insetTTo; glide = null; if (fitRelease) { fitRelease = false; vsh = 0; if (camTo === 0) fitTo = null; } frame(); }
       moving = true;
     } else if (Math.abs(camTo - camK) > 1e-5) { camK += (camTo - camK) * ez(.07); moving = true; } else camK = camTo;
     if (Math.abs(zoomTo - zoom) > 1e-5) { zoom += (zoomTo - zoom) * ez(.18); moving = true; } else zoom = zoomTo;
@@ -1935,7 +1944,7 @@
     if (fitStep(ez)) moving = true;
     if (glide) {} else if (Math.abs(insetTo - inset) > .5) { inset += (insetTo - inset) * ez(.07); frame(); moving = true; }   // same pace as the camera, frame-rate independent
     else if (inset !== insetTo) { inset = insetTo; frame(); moving = true; }
-    if (Math.abs(insetTTo - insetT) > .5) { insetT += (insetTTo - insetT) * ez(.12); frame(); moving = true; } else if (insetT !== insetTTo) { insetT = insetTTo; frame(); moving = true; }
+    if (glide) {} else if (Math.abs(insetTTo - insetT) > .5) { insetT += (insetTTo - insetT) * ez(.12); frame(); moving = true; } else if (insetT !== insetTTo) { insetT = insetTTo; frame(); moving = true; }
     if (Math.abs(hshiftTo - hshift) > .5) { hshift += (hshiftTo - hshift) * ez(.09); frame(); moving = true; } else if (hshift !== hshiftTo) { hshift = hshiftTo; frame(); moving = true; }
     if (lampShade) lampShade.visible = !museumOn && mode !== 'play' && camK < .5;   // the ceiling lamp only shows once the camera is back down in the room
     if (viewOnly.length) { const on = !museumOn && mode !== 'play' && camK < .5; if (viewOnly[0].visible !== on) { viewOnly.forEach(x => { x.visible = on; }); dirty = true; } }   // (a place's lamp over the table: never between the play camera and the board)
@@ -1996,7 +2005,7 @@
       cam.position.x += fcx - ux * sh; cam.position.z += fcz - uz * sh; cam.lookAt(fcx - ux * sh, ly, fcz - uz * sh); camLook = ly;
       // play view: centre the board itself (its bounding box as drawn) between the top and the bottom of the free view — with the
       // camera tilted, framing the look point left boards sitting low (2026-11-09). Not with a focus point (cx/cz), fit.up or a roll.
-      if (F && k > .01 && !rl && !sh && !fcx && !fcz && !orthoWant) centreBoard(F, k); else if (vsh) { vsh = 0; frame(); } }   // fit.roll: the view is turned 90° (a landscape view on a portrait screen held sideways)   // the canvas itself is kept clear of the info card (app.js fitStage)
+      if (fitRelease) {} else if (F && k > .01 && !rl && !sh && !fcx && !fcz && !orthoWant) centreBoard(F, k); else if (vsh) { vsh = 0; frame(); } }   // (fitRelease: the glide back eases vsh to 0 itself)   // fit.roll: the view is turned 90° (a landscape view on a portrait screen held sideways)   // the canvas itself is kept clear of the info card (app.js fitStage)
     // the near plane follows the camera's distance (a far camera — the gallery's showcase — with near .1 had too little depth
     // precision left at the board: inlays and piece faces a few thousandths above a surface flickered as it turned)
     { const nn = Math.min(2, Math.max(.1, d * .05)); if (Math.abs(cam.near - nn) > .01) { cam.near = nn; cam.updateProjectionMatrix(); dirty = true; } }
@@ -2107,7 +2116,7 @@
   function project(x, z, y) { const v = new (T().Vector3)(x, y || 0, z); cur.localToWorld(v); v.project(cam); const r = el.getBoundingClientRect(); return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height }; }
   // snap the camera to where it is heading (after a game: the showcase view at once, framed above the info card)
   function snap() { camK = camTo; zoom = zoomTo = 1; pzoom = pzoomTo; tilt = 0; vel = 0; inset = insetTo; insetT = insetTTo; frame(); kick(300); }
-  const _dbg = () => ({ camK, camTo, inset, insetTo, insetT, zoom, zoomTo, yaw, tilt, mode, fitTo, orthoW, museum: museumOn, aspect: cam && cam.aspect });
+  const _dbg = () => ({ camK, camTo, inset, insetTo, insetT, vsh, zoom, zoomTo, yaw, tilt, mode, fitTo, orthoW, museum: museumOn, aspect: cam && cam.aspect });
   const _scene = () => scene;
   /* ---------- I key: the debug overlay (2026-11-09) ----------
      Scene / board / room triangles, meshes, draw calls, lights, textures, the place / time / brightness, camera and renderer.
