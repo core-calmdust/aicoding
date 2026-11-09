@@ -1,0 +1,23 @@
+11-08 16:54 == build
+11-08 16:54 == Lichess evaluation database: download
+11-08 17:53 == Lichess: converting (quiet positions only, about 1-2 hours)
+11-08 18:09 Lichess: 284661950 positions (the .zst can be deleted now)
+11-08 18:09 == self-play: 13 processes x 13987 games, 5000 nodes per move (about 20000000 positions)
+11-08 20:12 self-play: 19610327 positions
+11-08 20:12 == teacher /opt/homebrew/bin/stockfish depth 10: re-scoring the self-play positions
+11-09 01:47 == training (8 epochs)
+train: epoch 8 valid 0.013520 lr 0.0001 384s 791k pos/s
+11-09 02:39 check: engine = trainer on 2000 positions (identical)
+11-09 02:39 == matches vs the current net
+/Users/core_tan/chess-nnue-work/net.bin vs /Users/core_tan/chess-nnue-work/base.bin (20000): +282 -111 =127  score 0.664  Elo +119 (+92 .. +146)
+/Users/core_tan/chess-nnue-work/net.bin vs /Users/core_tan/chess-nnue-work/base.bin (100ms): +127 -56 =77  score 0.637  Elo +97 (+62 .. +135)
+11-09 02:44 done: /Users/core_tan/chess-nnue-work/nnue-candidate.bin.gz (and log.txt, net.bin.log)
+11-09 09:24 == build
+11-09 09:24 == training (H 512, 8 epochs)
+train: epoch 8 valid 0.013105 lr 0.0001 498s 610k pos/s
+11-09 10:31 check: engine = trainer on 2000 positions (identical, H 512)
+11-09 10:31 == matches vs the current net (H 512 vs 384)
+/Users/core_tan/chess-nnue-work/net-h512.bin vs /Users/core_tan/chess-nnue-work/base.bin (20000): +296 -90 =134  score 0.698  Elo +146 (+119 .. +174)
+/Users/core_tan/chess-nnue-work/net-h512.bin vs /Users/core_tan/chess-nnue-work/base.bin (100ms): +130 -53 =77  score 0.648  Elo +106 (+71 .. +144)
+11-09 10:35 done: /Users/core_tan/chess-nnue-work/nnue-candidate-h512.bin.gz (and log.txt, net-h512.bin.log)
+11-09 10:35 send: attach these 3 files in the Claude chat, or commit them to chess/tools/nnue/results/ on a NEW branch with GitHub Desktop and tell Claude the branch name (not Hugging Face; TRAIN.md section 5)
