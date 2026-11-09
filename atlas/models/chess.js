@@ -218,9 +218,9 @@
   }
   function lathe(key, pts, seg) {   // phones: fewer segments round the lathe
     const sm = small();
-    seg = Math.min(seg || 99, LOW ? (sm ? 8 : 14) : sm ? 14 : X.coarse ? 24 : 28); key += '@' + seg + (sm || LOW ? 'd' : '');
+    seg = Math.min(seg || 99, LOW ? (sm ? 8 : 12) : sm ? 12 : X.coarse ? 20 : 24); key += '@' + seg + (sm || LOW ? 'd' : '');
     if (geoCache[key]) return geoCache[key];
-    pts = simplify(pts, LOW ? .008 : sm ? .0035 : X.coarse ? .0035 : .0022);   // drop profile points that sit on the line of their neighbours (small / mirror pieces: a looser outline; was every other point)   // the fine pieces: drop profile points that sit on the line of their neighbours (the outline stays within ~2 mm at a piece's scale)
+    pts = simplify(pts, LOW ? .008 : sm ? .0035 : X.coarse ? .0035 : .003);   // drop profile points that sit on the line of their neighbours (small / mirror pieces: a looser outline; was every other point)   // the fine pieces: drop profile points that sit on the line of their neighbours (the outline stays within ~2 mm at a piece's scale)
     const TT = T(), g = new TT.LatheGeometry(pts.map(([r, y]) => new TT.Vector2(Math.max(0, r), y)), seg);
     return (geoCache[key] = g);
   }
@@ -304,7 +304,7 @@
     sh.splineThru([V(-.025, .87), V(-.06, .8)]);     // back ear
     sh.splineThru([V(-.14, .7), V(-.21, .56), V(-.25, .38), V(-.255, .2), V(-.23, .08), V(-.2, .02)]);
     const D = .1, BT = .075;
-    const g = new TT.ExtrudeGeometry(sh, { depth: D, bevelEnabled: true, bevelThickness: BT, bevelSize: .045, bevelSegments: lo ? 2 : 3, curveSegments: lo ? 3 : 6 });   // (curveSegments is per spline span: 6 keeps the profile smooth at ~40% of the triangles)
+    const g = new TT.ExtrudeGeometry(sh, { depth: D, bevelEnabled: true, bevelThickness: BT, bevelSize: .045, bevelSegments: lo ? 1 : 2, curveSegments: lo ? 2 : 4 });   // (curveSegments is per spline span: 6 keeps the profile smooth at ~40% of the triangles)
     g.translate(0, 0, -D / 2);
     const P = g.attributes.position, UV = g.attributes.uv;
     for (let i = 0; i < P.count; i++) {   // narrower muzzle and ears, a fuller jaw and neck
@@ -332,19 +332,19 @@
     const add = (geo, mat, o = {}) => { const x = new TT.Mesh(geo, mat); x.castShadow = true; x.receiveShadow = true; if (o.p) x.position.set(...o.p); if (o.r) x.rotation.set(...o.r); if (o.s) x.scale.set(...o.s); g.add(x); return x; };
     pr.resin.forEach((p, i) => add(lathe(tp + 'r' + i, p), m.resin));
     pr.metal.forEach((p, i) => add(lathe(tp + 'm' + i, p), m.metal));
-    pr.felt.forEach((p, i) => add(lathe(tp + 'f' + i, p, 32), m.felt).castShadow = false);
+    pr.felt.forEach((p, i) => add(lathe(tp + 'f' + i, p, 24), m.felt).castShadow = false);
     if (pr.merlons) {   // rook: crenellated metal top
       const q = pr.merlons, key = 'merlon';
       const key2 = key + (small() || LOW ? 'S' : ''); let geo = geoCache[key2];
       if (!geo) {
         const s = new TT.Shape(), a = TAU / q.n * .56;
         s.absarc(0, 0, q.r1, -a / 2, a / 2, false); s.absarc(0, 0, q.r0, a / 2, -a / 2, true);
-        geo = geoCache[key2] = new TT.ExtrudeGeometry(s, { depth: q.y1 - q.y0 - .016, bevelEnabled: true, bevelThickness: .008, bevelSize: .008, bevelSegments: small() || LOW ? 1 : 2, curveSegments: small() || LOW ? 3 : 6 });
+        geo = geoCache[key2] = new TT.ExtrudeGeometry(s, { depth: q.y1 - q.y0 - .016, bevelEnabled: true, bevelThickness: .008, bevelSize: .008, bevelSegments: small() || LOW ? 1 : 2, curveSegments: small() || LOW ? 3 : 4 });
         geo.rotateX(-Math.PI / 2);
       }
       for (let i = 0; i < q.n; i++) add(geo, m.metal, { p: [0, q.y0 + .008, 0], r: [0, i * TAU / q.n + TAU / q.n / 2, 0] });
     }
-    if (pr.coronet) { const q = pr.coronet, ck = small() ? 'corS' : 'cor', geo = geoCache[ck] || (geoCache[ck] = small() ? new TT.SphereGeometry(q.s, 6, 4) : new TT.SphereGeometry(q.s, 10, 7)); for (let i = 0; i < q.n; i++) { const a = i / q.n * TAU; add(geo, m.metal, { p: [Math.cos(a) * q.r, q.y, Math.sin(a) * q.r] }); } }
+    if (pr.coronet) { const q = pr.coronet, ck = small() ? 'corS' : 'cor', geo = geoCache[ck] || (geoCache[ck] = small() ? new TT.SphereGeometry(q.s, 6, 4) : new TT.SphereGeometry(q.s, 8, 5)); for (let i = 0; i < q.n; i++) { const a = i / q.n * TAU; add(geo, m.metal, { p: [Math.cos(a) * q.r, q.y, Math.sin(a) * q.r] }); } }
     if (pr.cross && wd) {   // wood king: a turned bud finial instead of the cross
       const y = pr.cross.y, geo = geoCache.bud || (geoCache.bud = lathe('kbud', closed([[.05, y - .005], [.07, y + .03], [.085, y + .08], [.08, y + .13], [.06, y + .18], [.035, y + .22], [.012, y + .26], [0, y + .275]]), 40));
       add(geo, m.resin);
@@ -358,7 +358,7 @@
       const hd = new TT.Group(); hd.position.y = pr.head; g.add(hd);
       const h = new TT.Mesh(headGeo, m.resin); h.castShadow = h.receiveShadow = true; hd.add(h);
       const mn = new TT.Mesh(maneGeo, m.metal); mn.castShadow = true; hd.add(mn);
-      const eg = geoCache.eye || (geoCache.eye = new TT.SphereGeometry(.026, 10, 8));
+      const eg = geoCache.eye || (geoCache.eye = new TT.SphereGeometry(.026, 6, 4));
       [1, -1].forEach(s => { const e = new TT.Mesh(eg, m.metal); e.position.set(.2, .655, s * .118); hd.add(e); });
       const nos = geoCache.nos || (geoCache.nos = new TT.TorusGeometry(.13, .018, 8, 24, Math.PI * .9));   // a metal noseband
       const nb = new TT.Mesh(nos, m.metal); nb.position.set(.3, .52, 0); nb.rotation.set(Math.PI / 2, 0, -.55); nb.scale.set(.9, .72, 1); nb.visible = false; hd.add(nb);
