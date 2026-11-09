@@ -82,7 +82,7 @@
 .sgpromo .y{background:#d8321c;color:#fff}.sgpromo .n{background:#ece5d6;color:#3a3226}
 @keyframes sgpIn{from{transform:translate(-50%,calc(-100% - 6px)) scale(.8)}}
 .hud .sgk{font-style:normal;font-size:18px;line-height:1}
-.sghs{position:fixed;z-index:75;top:calc(10px + env(safe-area-inset-top));left:max(12px,env(safe-area-inset-left));right:104px;display:flex;flex-direction:column;gap:5px;pointer-events:none}
+.sghs{position:fixed;z-index:75;top:calc(10px + env(safe-area-inset-top));left:max(12px,env(safe-area-inset-left));right:158px;display:flex;flex-direction:column;gap:5px;pointer-events:none}
 .sghs .r{display:flex;align-items:center;flex-wrap:wrap;gap:4px;pointer-events:auto}
 .sghs .lb{font:800 11px/1 var(--round,system-ui,sans-serif);color:#fff;background:rgba(60,36,16,.72);padding:5px 8px;border-radius:999px;margin-inline-end:2px}
 .sghs .op .lb{background:rgba(150,40,30,.78)}
@@ -90,7 +90,7 @@
 .sghs .op .c{transform:none}
 .sghs button.c{cursor:pointer}.sghs button.c.on{background:#bdf0d2;border-color:#2fa864;box-shadow:0 2px 0 #1f7a46}
 .sghs .c i{position:absolute;right:-6px;top:-6px;min-width:17px;height:17px;border-radius:9px;background:#2a1a0e;color:#fff;font:800 11px/17px system-ui,sans-serif;font-style:normal;text-align:center;padding:0 3px}
-.sgzoom{position:fixed;z-index:75;top:calc(66px + env(safe-area-inset-top));right:14px;display:grid;place-items:center;width:44px;height:44px;padding:0;border-radius:50%;border:2px solid var(--line,#eadfcb);background:#fff;box-shadow:0 3px 0 var(--line,#eadfcb);font:800 13px/1 var(--round,system-ui,sans-serif);color:#3a2e24;cursor:pointer}
+.sgzoom{position:fixed;z-index:75;top:calc(12px + env(safe-area-inset-top));right:106px;display:grid;place-items:center;width:44px;height:44px;padding:0;border-radius:50%;border:2px solid var(--line,#eadfcb);background:#fff;box-shadow:0 3px 0 var(--line,#eadfcb);font:800 13px/1 var(--round,system-ui,sans-serif);color:#3a2e24;cursor:pointer}
 .sgzoom svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .sghs .nil{color:rgba(255,255,255,.8);font-weight:800;text-shadow:0 1px 2px rgba(0,0,0,.4)}`;
     document.head.appendChild(s);
