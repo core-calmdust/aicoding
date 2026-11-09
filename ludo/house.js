@@ -187,7 +187,15 @@
     });
   }
   // the tags as HTML, with the rule's icon (for the new-game dialogs)
+  function tagCss() {
+    if (document.getElementById('lhrTagCss')) return;
+    const st = document.createElement('style'); st.id = 'lhrTagCss';
+    st.textContent = `.lhr-tag{display:inline-flex;align-items:center;gap:5px;max-width:100%;box-sizing:border-box;padding:3px 10px 3px 7px;border-radius:99px;font-size:11.5px;font-weight:700;line-height:1.5;color:var(--lhr-tag-fg,inherit);background:var(--lhr-tag-bg,color-mix(in srgb,var(--accent,#e8a33a) 12%,transparent));border:1px solid var(--lhr-tag-bd,color-mix(in srgb,var(--accent,#e8a33a) 38%,transparent));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lhr-tag svg{width:13px;height:13px;flex:none;color:#4f97f5}.lhr-tag.adv svg{color:#ef5350}`;
+    document.head.appendChild(st);
+  }
   function tagsHTML(lang, h = get()) {
+    try { tagCss(); } catch (e) {}
     const e = x => String(x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     return tags(lang, h).map(t => `<span class="lhr-tag${t.adv ? ' adv' : ''}">${IC[t.k] ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[t.k]}</svg>` : ''}${e(t.text)}</span>`).join('');
   }
