@@ -87,21 +87,24 @@
     },
   };
   const pick = (o, l) => o[l] || o.en;
-  // the Atlas Mon about each place, as in the chabudai room (2026-11-09): [id, height, x, z, turn, y (default: the floor)] — low-poly
-  // figures (Table3D.placeMon), on the floor round the table or up on the furniture, kept clear of where the board is
+  // the Atlas Mon about each place, as in the chabudai room (2026-11-09): [id, height, x, z, turn, y] — not ringed round the table but
+  // where a creature would be: sitting on a chair or a stool, up on the sideboard or a crane game, by the fig tree, at the tent's door,
+  // on the hearth. Without a y the figure is dropped onto whatever is under (x, z) (a ray straight down to the first upward face)
   const MONS_AT = {
-    2: [['plop', 6, -21, 7, .7], ['owl', 5.5, 22, 7, -.7], ['puffin', 6.5, -27, -22, .4], ['dot', 3.6, 27, -23, -.4]],
-    3: [['dice', 5.5, -21, 8, .6], ['gem', 5, 22, 7, -.6], ['gold', 4.5, -27, -22, .4], ['knight', 7, 27, -22, -.4]],
-    4: [['puffin', 6.5, -21, 8, .7], ['crab', 4.5, 22, 7, -.7], ['plop', 6, -28, -22, .4], ['stone', 6.5, 28, -24, -.4]],
-    5: [['owl', 5.5, -25, 12, .7], ['knight', 7, 22, 7, -.7], ['shogi', 6, -27, -20, .4], ['tile', 6.5, 27, -22, -.4]],
+    2: [['plop', 5.5, -7, -14.6, .1], ['dot', 4.2, 37, -56, -.3], ['puffin', 8, -48, -44, .9], ['owl', 6, -56, 4, 1.3]],
+    3: [['knight', 9, -54, -26, .8], ['dice', 6, 40, -40, -.5], ['gold', 5, 46, 18, -1.6]],
+    4: [['puffin', 6.5, 7, -15, -.1], ['crab', 5, 59, -22, -1.5], ['plop', 7, -52, -14, 1.2], ['stone', 7, -40, -50, .5]],
+    5: [['owl', 5.5, -22.5, 13.2, .7], ['knight', 8, 36, -38, -.5], ['shogi', 6.5, 28, 18, -2.2]],
     6: [['stone', 4.6, -22, 4, .7], ['shogi', 4.6, 22, 4, -.7], ['puffin', 6, 16, -46, -.3, -16.4], ['dot', 3.4, -12, -36, .3, -16.4]],
-    7: [['owl', 5.5, -21, 8, .7], ['plop', 6, 22, 7, -.7], ['stone', 6.5, -28, -22, .4], ['crab', 4.5, 28, -22, -.4]],
-    8: [['disc', 6, -22, 8, .7], ['tile', 6.5, 22, 6, -.7], ['dice', 5, -36, -8, .9], ['gem', 4.5, 34, -2, -.9]],
-    9: [['gold', 4.5, -21, 8, .7], ['gem', 5, 22, 7, -.7], ['knight', 7, -28, -22, .4], ['owl', 5.5, 28, -24, -.4]],
-    10: [['crab', 4.5, -20, 10, .7], ['puffin', 6.5, 22, 8, -.7], ['stone', 6.5, -34, -20, .4], ['plop', 6, 36, -18, -.4]],
-    11: [['shogi', 6, -21, 8, .7], ['dot', 3.6, 22, 7, -.7], ['tile', 6.5, -27, -22, .4], ['gold', 4.5, 27, -22, -.4]],
+    7: [['plop', 5.5, 7, -14.2, -.1], ['owl', 5, -36, -30, .6], ['stone', 7, 21, -31.5, -.6], ['crab', 5, -24, 20, 2.2]],
+    8: [['disc', 5.5, -18, -40, .1], ['dice', 4.5, -52, -27, 1.4], ['tile', 6, 7, -17.5, -.1], ['gem', 5, 44, -8, -1.2]],
+    9: [['gem', 5, -9, -16, .2], ['gold', 4.5, -50, -20, 1.2], ['owl', 6, 34, -46, -.4], ['knight', 9, 50, -6, -1.4]],
+    10: [['puffin', 7.5, 31, -74, 1.2], ['crab', 6, -45, -69, .3], ['plop', 5.5, -7, -15, .1], ['stone', 9, -60, -22, .9]],
+    11: [['tile', 5.5, 7, -14.6, -.1], ['dot', 4.5, -34, -33, .5], ['shogi', 7.5, 14, -46, -.2], ['gold', 5, 32, 14, -2.4]],
   };
-  const mons = (o, k, FL) => { if (!X.placeMon || !MONS_AT[k]) return; MONS_AT[k].forEach(([id, h, x, z, ry, y]) => { try { X.placeMon(o.g, id, h * (k === 6 ? 1 : 1.5), x, y === undefined ? FL : y, z, ry); } catch (e) {} }); };
+  const mons = (o, k, FL) => { if (!X.placeMon || !MONS_AT[k]) return; const TT = o.TT, rc = new TT.Raycaster(), dn = new TT.Vector3(0, -1, 0), from = new TT.Vector3(); o.g.updateMatrixWorld(true);
+    const ground = (x, z) => { from.set(x, 120, z); rc.set(from, dn); const hits = rc.intersectObject(o.g, true); for (const h of hits) { const m = h.object.material; if (!h.face || (m && (m.transparent || m.isMeshBasicMaterial || m.alphaTest > 0))) continue; const nY = h.face.normal.clone().transformDirection(h.object.matrixWorld).y; if (nY > .6 && h.point.y < FL + 40) return h.point.y; } return FL; };
+    MONS_AT[k].forEach(([id, h, x, z, ry, y]) => { try { X.placeMon(o.g, id, h, x, y === undefined ? ground(x, z) : y, z, ry); } catch (e) {} }); };
   X.PLACES = PLACES;
   X.placeText = (kind, lang, k = X.table()) => { const o = kind === 'news' ? PLACES.news[lang] : pick(PLACES[kind], lang); return o ? o[k] ?? o[0] : ''; };
   X.placeUi = (key, lang) => pick(PLACES.ui[key], lang);
@@ -822,7 +825,8 @@
     { const bt = canvasTex('dealer-btn', 128, 128, (c, W) => { c.fillStyle = '#f6f2ea'; c.fillRect(0, 0, W, W); c.fillStyle = '#1a1a1a'; c.font = 'bold 22px Georgia, serif'; c.textAlign = 'center'; c.fillText('DEALER', W / 2, W / 2 + 8); c.strokeStyle = '#1a1a1a'; c.lineWidth = 3; c.beginPath(); c.arc(W / 2, W / 2, W / 2 - 8, 0, 7); c.stroke(); });
       at(g, new TT.Mesh(new TT.CylinderGeometry(1.15, 1.15, .32, SEG(o, 28)), [M({ color: 0xf6f2ea, roughness: .4 }), M({ map: bt, roughness: .35, clearcoat: .4, bump: false }), M({ color: 0xf6f2ea })]), -8.4, .16, -9.6, .4); }
     { const Gr = grp(TT, g, -17.6, 0, -1.2, Math.PI / 2 + .06); at(Gr, new TT.Mesh(RB(8.6, .7, 3.6, .2, 2), M({ color: 0x2a1a10, roughness: .35, clearcoat: .6 })), 0, .35, 0);
-      const rowG = new TT.CylinderGeometry(.78, .78, 7.8, SEG(o, 18)); [0, 1, 2, 3].forEach(i => { const m = new TT.Mesh(rowG, M({ map: canvasTex('chip-row-' + i, 32, 256, (c, W, H) => { c.fillStyle = '#' + chipC[i].toString(16).padStart(6, '0'); c.fillRect(0, 0, W, H); c.fillStyle = 'rgba(0,0,0,.35)'; for (let y = 0; y < H; y += 6.6) c.fillRect(0, y, W, 1); c.fillStyle = chipC[i] === 0xf1ece0 ? 'rgba(40,70,140,.7)' : 'rgba(255,250,240,.6)'; for (let y = 0; y < H; y += 6.6) for (let x = (y / 6.6 % 2) * 8; x < W; x += 16) c.fillRect(x, y + 1, 5, 5); }), roughness: .5, clearcoat: .2, bump: false })); m.rotation.z = Math.PI / 2; at(Gr, m, 0, .9, -1.2 + i * .82); }); }
+      const rowG = new TT.CylinderGeometry(.78, .78, 7.8, SEG(o, 18)); [0, 1, 2, 3].forEach(i => { const rt = canvasTex('chip-row2-' + i, 64, 512, (c, W, H) => { const P = H / 39; c.fillStyle = '#' + chipC[i].toString(16).padStart(6, '0'); c.fillRect(0, 0, W, H); for (let k = 0; k < 39; k++) { const y = k * P; const gr = c.createLinearGradient(0, y - 2, 0, y + 2); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(.5, 'rgba(0,0,0,.22)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = gr; c.fillRect(0, y - 2, W, 4); c.fillStyle = chipC[i] === 0xf1ece0 ? 'rgba(40,70,140,.45)' : 'rgba(255,250,240,.4)'; for (let x = (k % 2) * 16; x < W; x += 32) c.fillRect(x + 2, y + 3, 10, P - 6); } }); rt.anisotropy = 16;   // (2026-11-09: softer edges, more pixels, full anisotropy — the 1-px rows shimmered as the camera moved)
+        const m = new TT.Mesh(rowG, M({ map: rt, roughness: .5, clearcoat: .2, bump: false })); m.rotation.z = Math.PI / 2; at(Gr, m, 0, .9, -1.2 + i * .82); }); }
     { const Gw = grp(TT, g, 15.4, 0, 1.6); at(Gw, new TT.Mesh(new TT.CylinderGeometry(1.5, 1.5, .12, SEG(o, 24)), M({ color: 0x3a2214, roughness: .6 })), 0, .06, 0, 0, false);
       snifter(o, Gw, 0, 0, 0xa8561a, 1).position.y = .12; }   // a snifter of brandy, see-through (2026-11-07: was whisky on the rocks)
     { const Gs = grp(TT, g, 17.8, 0, -3.2, -.3); at(Gs, new TT.Mesh(RB(3.4, .25, 4.8, .05, 1), M({ map: canvasTex('scorepad', 128, 180, (c, W, H) => { c.fillStyle = '#f7f2e2'; c.fillRect(0, 0, W, H); c.fillStyle = '#7a1e2a'; c.fillRect(0, 0, W, 22); c.strokeStyle = 'rgba(60,80,140,.4)'; for (let y = 36; y < H; y += 12) { c.beginPath(); c.moveTo(6, y); c.lineTo(W - 6, y); c.stroke(); } c.strokeStyle = 'rgba(160,40,40,.5)'; c.beginPath(); c.moveTo(W / 2, 26); c.lineTo(W / 2, H - 6); c.stroke(); c.fillStyle = 'rgba(30,30,60,.75)'; for (let y = 46; y < 120; y += 12) { c.fillRect(14 + Math.random() * 8, y - 6, 18 + Math.random() * 14, 2); c.fillRect(W / 2 + 10 + Math.random() * 8, y - 6, 14 + Math.random() * 14, 2); } }), roughness: .85, bump: false })), 0, .125, 0);
@@ -1840,41 +1844,43 @@
   }
   TABLES[8] = (o) => {
     const { TT, g, scene } = o, T = TOD(o), FL = -16, Z0 = 1, night = T === 'night', dayL = T === 'day' || T === 'morning', S = SKY[T];
-    // the table: a cocktail-table cabinet — a black glass top with the CRT's glow and the instruction art round the edge, a body in black
-    // with neon side stripes, a control panel at each end (a lever, three buttons), the coin doors with their orange slots
-    const glassT = canvasTex('tbl8-ctop', sz(o, 1024), sz(o, 768), (c, W, H) => { c.fillStyle = '#05050c'; c.fillRect(0, 0, W, H);
-      c.fillStyle = rad(c, W / 2, H / 2, W * .36, [[0, 'rgba(40,90,200,.5)'], [.7, 'rgba(20,40,120,.2)'], [1, 'rgba(0,0,0,0)']]); c.fillRect(0, 0, W, H);   // the tube's glow under the glass
-      c.strokeStyle = 'rgba(46,230,255,.35)'; c.lineWidth = 2; c.strokeRect(W * .2, H * .12, W * .6, H * .76); c.strokeStyle = 'rgba(255,58,168,.6)'; c.lineWidth = 3; c.strokeRect(W * .03, H * .04, W * .94, H * .92);
-      c.strokeStyle = 'rgba(120,90,255,.16)'; c.lineWidth = 1.2; const hr = W * .022; for (let row = 0; row * hr * 1.5 < H + hr; row++) for (let col = 0; col * hr * 1.732 < W + hr; col++) { const cx = col * hr * 1.732 + (row % 2) * hr * .866, cy = row * hr * 1.5; c.beginPath(); for (let k = 0; k <= 6; k++) { const a = Math.PI / 6 + k * Math.PI / 3; c.lineTo(cx + Math.cos(a) * hr, cy + Math.sin(a) * hr); } c.stroke(); }   // a hexagon mesh under the glass
-      c.fillStyle = rad(c, W / 2, H / 2, W * .5, [[.55, 'rgba(0,0,0,0)'], [1, 'rgba(0,0,0,.75)']]); c.fillRect(0, 0, W, H);
-      [[.04, '#ff3aa8'], [.055, '#2ee6ff']].forEach(([m, col]) => { c.strokeStyle = col; c.lineWidth = 3; c.shadowColor = col; c.shadowBlur = 12; c.strokeRect(W * m, H * m * 1.33, W * (1 - 2 * m), H * (1 - 2 * m * 1.33)); }); c.shadowBlur = 0; });
-    const topM = M({ map: glassT, emissive: new TT.Color(0xffffff), emissiveMap: glassT, emissiveIntensity: .55, roughness: .06, clearcoat: 1, clearcoatRoughness: .03, bump: false });
-    const blk = M({ color: 0x121218, roughness: .4, clearcoat: .4 });
-    at(g, new TT.Mesh(RB(28, 1, 21, .3, 3), [blk, blk, topM, blk, blk, blk]), 0, -.5, Z0, 0, false).receiveShadow = true;
-    const sideT = canvasTex('tbl8-cside', 512, 256, (c, W, H) => { c.fillStyle = '#121218'; c.fillRect(0, 0, W, H); [['#ff3aa8', .2], ['#2ee6ff', .3], ['#ffe03a', .4]].forEach(([col, y]) => { c.fillStyle = col; c.beginPath(); c.moveTo(0, H * y); c.lineTo(W * .7, H * y); c.lineTo(W * .78, H * (y + .3)); c.lineTo(W, H * (y + .3)); c.lineTo(W, H * (y + .36)); c.lineTo(W * .76, H * (y + .36)); c.lineTo(W * .68, H * (y + .06)); c.lineTo(0, H * (y + .06)); c.fill(); }); });
-    const sideM = M({ map: sideT, emissive: new TT.Color(0xffffff), emissiveMap: sideT, emissiveIntensity: .35, roughness: .35, clearcoat: .5 });
-    at(g, new TT.Mesh(RB(25, 13.6, 18, .4, 2), [sideM, sideM, blk, blk, sideM, sideM]), 0, FL + 6.8 + .6, Z0);
-    at(g, new TT.Mesh(RB(26, .6, 19, .2, 1), M({ color: 0x2a2a34, metalness: .6, roughness: .3 })), 0, FL + .3, Z0, 0, false);
-    [-1, 1].forEach(sd => { const P = grp(TT, g, 0, -1.6, Z0 + sd * 11.4, sd > 0 ? 0 : Math.PI); P.rotation.x = .3; at(P, new TT.Mesh(RB(14, 1.2, 3, .4, 2), blk), 0, 0, 0);
-      const pl = new TT.Mesh(new TT.PlaneGeometry(13.4, 2.4), M({ color: sd > 0 ? 0x2a6aff : 0xff3a6a, roughness: .35, clearcoat: .7 })); pl.rotation.x = -Math.PI / 2; at(P, pl, 0, .62, 0, 0, false);
-      at(P, new TT.Mesh(new TT.CylinderGeometry(.13, .13, 1.8, 6), M({ color: 0x202020, metalness: .8, roughness: .3 })), -3.6, 1.5, 0, 0, false); at(P, new TT.Mesh(new TT.SphereGeometry(.6, 14, 10), M({ color: 0xe8203a, roughness: .2, clearcoat: 1 })), -3.6, 2.4, 0, 0, false);
-      [[0xffd030, 0], [0x3ad06a, 1.5], [0xffffff, 3]].forEach(([col, dx]) => at(P, new TT.Mesh(new TT.CylinderGeometry(.5, .5, .4, 14), M({ color: col, roughness: .25, clearcoat: 1 })), dx, .8, 0, 0, false));
-      const cd = grp(TT, g, 0, FL + 5, Z0 + sd * 9.05, sd > 0 ? 0 : Math.PI); at(cd, new TT.Mesh(RB(5, 5, .3, .1, 1), M({ color: 0x2a2a30, metalness: .7, roughness: .35 })), 0, 0, 0, 0, false); [-.9, .9].forEach(dx => at(cd, new TT.Mesh(RB(.8, 1.6, .2, .05, 1), M({ color: 0xff9a2a, emissive: new TT.Color(0xff7a10), emissiveIntensity: 1.5 })), dx, .6, .2, 0, false)); });
-    // the gaming lights (2026-11-09): an RGB strip running round the top's edge and up the cabinet's corners, the colours flowing; an
-    // underglow on the carpet; LED rings round the levers and the buttons lit, all cycling through the hues
-    { const rainbow = canvasTex('tbl8-rgb', 256, 4, (c, W, H) => { for (let x = 0; x < W; x++) { c.fillStyle = `hsl(${x / W * 360},100%,58%)`; c.fillRect(x, 0, 1, H); } }); rainbow.wrapS = TT.RepeatWrapping;
-      const strips = [], strip = (w, h, x, y, z, ry, rx = 0, u = 1) => { const t = rainbow.clone(); t.needsUpdate = true; t.wrapS = TT.RepeatWrapping; t.repeat.set(u, 1); const m = new TT.Mesh(new TT.PlaneGeometry(w, h), new TT.MeshBasicMaterial({ map: t, toneMapped: false })); m.position.set(x, y, z); m.rotation.set(rx, ry, 0); g.add(m); strips.push(t); return m; };
-      [[28.2, 0, Z0 + 10.56, 0], [28.2, 0, Z0 - 10.56, Math.PI], [21.2, 14.06, Z0, Math.PI / 2], [21.2, -14.06, Z0, -Math.PI / 2]].forEach(([w, x, z, ry]) => strip(w, .34, x, -.5, z, ry, 0, w / 14));   // round the edge of the top
-      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => { const m = strip(13, .28, a * 12.56, FL + 7.4, Z0 + b * 9.06, b > 0 ? 0 : Math.PI, 0, 1); m.rotation.z = Math.PI / 2; });   // up the cabinet's corners
-      [-1, 1].forEach(sd => strip(24, .3, 0, FL + 1.2, Z0 + sd * 9.06, sd > 0 ? 0 : Math.PI, 0, 2));   // along the kick plate
+    // the table (2026-11-09, after the coffee-table cabinets; no levers or buttons): a glossy black slab — a sheet of glass framed by a wide
+    // plain deck at each end and two rails, under the glass a dark screen with a rainbow LED band running round just inside the frame;
+    // the body a bridge on two thick end slabs with an arched opening front and back, painted with bold stepped stripes in silver and white;
+    // the colours flow round the band, and a glow spreads on the carpet underneath
+    { const gloss = M({ color: 0x0b0b0f, roughness: .1, clearcoat: 1, clearcoatRoughness: .04 }), GW = 19.4, GD = 15.2, deck = (28 - GW) / 2, rail = (21 - GD) / 2;
+      [-1, 1].forEach(sd => { at(g, new TT.Mesh(RB(deck, 1.4, 21, .3, 2), gloss), sd * (GW / 2 + deck / 2), -.7, Z0, 0, false).receiveShadow = true;
+        at(g, new TT.Mesh(RB(GW + .6, 1.4, rail, .25, 2), gloss), 0, -.7, Z0 + sd * (GD / 2 + rail / 2), 0, false).receiveShadow = true; });
+      const scr = canvasTex('tbl8-tscreen', sz(o, 1024), sz(o, 800), (c, W, H) => { c.fillStyle = '#04040a'; c.fillRect(0, 0, W, H);
+        c.fillStyle = rad(c, W / 2, H / 2, W * .55, [[0, 'rgba(60,40,140,.35)'], [1, 'rgba(0,0,0,0)']]); c.fillRect(0, 0, W, H);
+        c.strokeStyle = 'rgba(120,100,255,.12)'; c.lineWidth = 1.5; for (let x = 0; x <= W; x += W / 24) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, H); c.stroke(); } for (let y = 0; y <= H; y += W / 24) { c.beginPath(); c.moveTo(0, y); c.lineTo(W, y); c.stroke(); } });
+      const sp = new TT.Mesh(new TT.PlaneGeometry(GW, GD), M({ map: scr, emissive: new TT.Color(0xffffff), emissiveMap: scr, emissiveIntensity: .6, roughness: .6, bump: false })); sp.rotation.x = -Math.PI / 2; at(g, sp, 0, -1.25, Z0, 0, false).receiveShadow = true;
+      [[GW, 0, GD / 2, 0], [GW, 0, -GD / 2, Math.PI], [GD, GW / 2, 0, -Math.PI / 2], [GD, -GW / 2, 0, Math.PI / 2]].forEach(([w, x, z, ry]) => at(g, new TT.Mesh(new TT.PlaneGeometry(w, 1.3), gloss), x, -.62, Z0 + z, ry + Math.PI, false));   // the well's walls
+      const gl = new TT.Mesh(new TT.PlaneGeometry(GW, GD), M({ color: 0xffffff, roughness: .02, clearcoat: 1, clearcoatRoughness: .02, transparent: true, opacity: .12, depthWrite: false })); gl.rotation.x = -Math.PI / 2; gl.renderOrder = 2; at(g, gl, 0, -.03, Z0, 0, false);
+      const rainbow = canvasTex('tbl8-rgb', 256, 4, (c, W, H) => { for (let x = 0; x < W; x++) { c.fillStyle = `hsl(${x / W * 360},100%,60%)`; c.fillRect(x, 0, 1, H); } });
+      const strips = [], strip = (w, h, x, y, z, ry, u) => { const t = rainbow.clone(); t.needsUpdate = true; t.wrapS = TT.RepeatWrapping; t.repeat.set(u, 1); const m = new TT.Mesh(new TT.PlaneGeometry(w, h), new TT.MeshBasicMaterial({ map: t, toneMapped: false })); m.rotation.set(-Math.PI / 2, 0, ry); m.position.set(x, y, z); g.add(m); strips.push(t); return m; };
+      const ip = .55, iw = GW - ip * 2, id = GD - ip * 2;   // the LED band, lying under the glass just inside the frame (one loop: the hues run on round it)
+      strip(iw + .5, .5, 0, -1.0, Z0 + id / 2, 0, iw / (2 * (iw + id))); strip(id + .5, .5, iw / 2, -1.0, Z0, Math.PI / 2, id / (2 * (iw + id))); strip(iw + .5, .5, 0, -1.0, Z0 - id / 2, Math.PI, iw / (2 * (iw + id))); strip(id + .5, .5, -iw / 2, -1.0, Z0, -Math.PI / 2, id / (2 * (iw + id)));
+      const bloom = canvasTex('tbl8-ledglow', 64, 16, (c, W, H) => { const gr = c.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(.5, 'rgba(255,255,255,.55)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = gr; c.fillRect(0, 0, W, H); });
+      [[iw, 0, id / 2, 0], [iw, 0, -id / 2, 0], [id, iw / 2, 0, Math.PI / 2], [id, -iw / 2, 0, Math.PI / 2]].forEach(([w, x, z, ry]) => { const m = new TT.Mesh(new TT.PlaneGeometry(w + 1.4, 2.4), new TT.MeshBasicMaterial({ map: bloom, transparent: true, depthWrite: false, blending: TT.AdditiveBlending, color: 0x9a80ff, toneMapped: false })); m.rotation.set(-Math.PI / 2, 0, ry); m.position.set(x, -.98, Z0 + z); g.add(m); });   // its glow on the screen
+      // the body: two end slabs and the bridged front and back, with the arch cut out underneath
+      const stripeT = (key, W, H, draw) => canvasTex(key, W, H, (c) => { c.clearRect(0, 0, W, H); draw(c, W, H); });
+      [-1, 1].forEach(sd => at(g, new TT.Mesh(RB(2.6, 15, 20.2, .35, 2), gloss), sd * 12.5, FL + 7.5, Z0));
+      const sh = new TT.Shape(); sh.moveTo(-11.3, 0); sh.lineTo(-7.2, 0); sh.lineTo(-7.2, 6.4); sh.quadraticCurveTo(-7.2, 8, -5.6, 8); sh.lineTo(5.6, 8); sh.quadraticCurveTo(7.2, 8, 7.2, 6.4); sh.lineTo(7.2, 0); sh.lineTo(11.3, 0); sh.lineTo(11.3, 14.6); sh.lineTo(-11.3, 14.6); sh.lineTo(-11.3, 0);
+      const fas = new TT.ExtrudeGeometry(sh, { depth: 1.1, bevelEnabled: true, bevelThickness: .12, bevelSize: .12, bevelSegments: 2, curveSegments: 10 });
+      const art = stripeT('tbl8-fascia', 1024, 660, (c, W, H) => { const u = W / 22.6, X = x => (x + 11.3) * u, Y = y => H - y * u;   // bold stepped stripes, mirrored at each end, running down the legs and across the top
+        [['#d8d8dc', 0], ['#ffffff', 1], ['#a8a8b0', 2]].forEach(([col, k]) => { const o0 = .7 + k * 1.55, w = 1; c.fillStyle = col;
+          [-1, 1].forEach(m => { c.beginPath(); const xo = m * (11.3 - o0), xi = m * (11.3 - o0 - w);
+            c.moveTo(X(xo), Y(0)); c.lineTo(X(xo), Y(13.6 - k * 1.55)); c.lineTo(X(m * (11.3 - o0 - 4.4 + k * .4)), Y(13.6 - k * 1.55)); c.lineTo(X(m * (11.3 - o0 - 4.4 + k * .4)), Y(12.6 - k * 1.55)); c.lineTo(X(xi), Y(12.6 - k * 1.55)); c.lineTo(X(xi), Y(0)); c.closePath(); c.fill(); }); });
+        c.fillStyle = 'rgba(255,255,255,.85)'; c.fillRect(X(-3.2), Y(12.2), 6.4 * u, .35 * u); c.fillRect(X(-2.2), Y(11.3), 4.4 * u, .35 * u); });   // and two thin bars in the middle
+      [-1, 1].forEach(sd => { const f = new TT.Mesh(fas, gloss); f.position.set(0, FL, Z0 + sd * 9.6 - (sd > 0 ? 1.1 : 0)); if (sd < 0) { f.rotation.y = Math.PI; f.position.z = Z0 - 9.6 + 1.1; } f.castShadow = f.receiveShadow = true; g.add(f);
+        const ap = new TT.Mesh(new TT.PlaneGeometry(22.6, 14.6), M({ map: art, transparent: true, alphaTest: .4, roughness: .25, clearcoat: .8, bump: false })); ap.position.set(0, FL + 7.3, Z0 + sd * (9.6 + .13)); if (sd < 0) ap.rotation.y = Math.PI; g.add(ap); });
+      const endArt = stripeT('tbl8-endart', 512, 340, (c, W, H) => { [['#d8d8dc', .12], ['#ffffff', .24], ['#a8a8b0', .36]].forEach(([col, y]) => { c.fillStyle = col; c.fillRect(0, H * y, W, H * .07); }); });
+      [-1, 1].forEach(sd => { const ep = new TT.Mesh(new TT.PlaneGeometry(19.6, 13), M({ map: endArt, transparent: true, alphaTest: .4, roughness: .25, clearcoat: .8, bump: false })); ep.position.set(sd * 13.82, FL + 8, Z0); ep.rotation.y = sd * Math.PI / 2; g.add(ep); });
       const ug = new TT.Mesh(new TT.PlaneGeometry(40, 32), new TT.MeshBasicMaterial({ map: canvasTex('tbl8-underglow', 256, 256, (c, W) => { const gr = c.createRadialGradient(W / 2, W / 2, W * .15, W / 2, W / 2, W / 2); gr.addColorStop(0, 'rgba(255,255,255,.75)'); gr.addColorStop(.45, 'rgba(255,255,255,.35)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = gr; c.fillRect(0, 0, W, W); }), color: 0xff3aa8, transparent: true, depthWrite: false, blending: TT.AdditiveBlending, toneMapped: false }));
       ug.rotation.x = -Math.PI / 2; ug.position.set(0, FL + .06, Z0); ug.userData.keep = 1; g.add(ug);
-      const leds = []; [-1, 1].forEach(sd => { const P = grp(TT, g, 0, -1.6, Z0 + sd * 11.4, sd > 0 ? 0 : Math.PI); P.rotation.x = .3; P.userData.keep = 1;
-        const rm = new TT.MeshBasicMaterial({ color: 0xff3aa8, toneMapped: false }); leds.push([rm, 0]); at(P, new TT.Mesh(new TT.TorusGeometry(1.05, .09, 6, 24), rm), -3.6, .66, 0, 0, false).rotation.x = Math.PI / 2;
-        [0, 1.5, 3].forEach((dx, i) => { const bm = new TT.MeshBasicMaterial({ color: 0xffffff, toneMapped: false }); leds.push([bm, .2 + i * .25]); at(P, new TT.Mesh(new TT.TorusGeometry(.56, .07, 5, 18), bm), dx, .66, 0, 0, false).rotation.x = Math.PI / 2; });
-        [-6, 6].forEach(dx => { at(P, new TT.Mesh(new TT.CylinderGeometry(.62, .62, .1, 16), M({ color: 0x1a1a20, roughness: .9 })), dx, .64, 0, 0, false); at(P, new TT.Mesh(new TT.TorusGeometry(.62, .06, 4, 16), M({ color: 0xc0c0c8, metalness: 1, roughness: .25 })), dx, .7, 0, 0, false).rotation.x = Math.PI / 2; }); });   // the speaker grilles
-      const ugc = new TT.Color();
-      o.tick && o.tick(t => { strips.forEach(tx => tx.offset.x = (-t * .25) % 1); leds.forEach(([m, k]) => m.color.setHSL((t * .15 + k) % 1, 1, .55)); ugc.setHSL((t * .15 + .5) % 1, 1, .5); ug.material.color.copy(ugc); }, ug); }
+      const ugc = new TT.Color(); let off = [0, iw, iw + id, iw * 2 + id].map(v => v / (2 * (iw + id)));
+      o.tick && o.tick(t => { strips.forEach((tx, i) => tx.offset.x = (off[i] - t * .12) % 1); ugc.setHSL((t * .12) % 1, 1, .5); ug.material.color.copy(ugc); }, ug); }
     // the room: a starry carpet, dark walls with neon strips and posters, the glass front on the street (left), the prize wall (right)
     const XL = -60, XR = 60, ZB = -58, ZF = 150, Y1 = 34;
     roomBox(o, { key: 'tbl8-arc-' + T, xl: XL, xr: XR, zb: ZB, zf: ZF, y0: FL, y1: Y1, px: 2048, pxs: 1024,

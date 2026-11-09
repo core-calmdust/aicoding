@@ -73,7 +73,7 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
   /* ---------- which keys ---------- */
   function prefixes() {
     const G = (window.Atlas && window.Atlas.GAMES) || [];
-    const p = ['atlas-v1', 'aicoding-lang', 'atlas-ach-meta'];   // (ach-meta: the portal-only counts behind the achievements → the same coins everywhere)
+    const p = ['atlas-v1', 'aicoding-lang', 'atlas-ach-meta', 'atlas-rec-'];   // (atlas-rec-<game>: the record page's games)   // (ach-meta: the portal-only counts behind the achievements → the same coins everywhere)
     G.forEach(g => { (g.store || []).forEach(x => p.push(x)); p.push('aicoding-' + g.id + '-rules-seen'); });
     return p;
   }
