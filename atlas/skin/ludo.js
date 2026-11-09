@@ -194,6 +194,8 @@ html.atlas-ludo3d #frame{background:none!important;box-shadow:none!important}`;
       const tx = g.position.x, tz = g.position.z, u0 = upNow;
       await anim(240 * K(), k => { const e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; pose(u0 + (1 - u0) * e, Math.sin(k * Math.PI) * .5); });
       const from = ds.map(d => [d.position.x, d.position.y, d.position.z, d.rotation.x, d.rotation.z]);
+      // (2026-11-09) a soft hollow knock as each die drops into the cup (the 2D game's tone(), so its sound setting applies)
+      ds.forEach((d, i) => setTimeout(() => { try { if (typeof tone === 'function') { tone(240, .08, 'triangle', .07); tone(480, .03, 'square', .012); } } catch (e) {} }, 320 * K() * (1 + i * .25) / 1.25 / (pending ? 3 : 1)));
       await anim(320 * K(), k => ds.forEach((d, i) => { const qq = Math.min(1, Math.max(0, k * 1.25 - i * .25)), e = qq * qq * (3 - 2 * qq), f = from[i];
         d.position.set(f[0] + (tx - f[0]) * e, f[1] + (U.top + CH * .35 - f[1]) * e + Math.sin(qq * Math.PI) * 1.1, f[2] + (tz - f[2]) * e);
         d.rotation.x = f[3] + qq * 4; d.rotation.z = f[4] + qq * 2.5; d.scale.setScalar(1 - .3 * e); }));
