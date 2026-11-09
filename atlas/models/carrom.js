@@ -217,11 +217,11 @@
   // the piece's face: turned rings (wood men), a star (striker), a brass pip (modern), glowing rings (neon), painted lotus
   // and dots (rajasthan), one clean ring (bauhaus)
   const FACE = { w: '#efe0c0', b: '#2b201a', q: '#c0262a', s: '#f4f1ea', mw: '#ece5d6', mb: '#2c2b2e', mq: '#e1694f', ms: '#efe6d2',
-    nw: '#d8f6ff', nb: '#1c1430', nq: '#ff3a3a', ns: '#eefcff', rw: '#f1e4c4', rb: '#2a1a12', rq: '#c7262c', rs: '#f3e8cc',
+    nw: '#d8f6ff', nb: '#1c1430', nq: '#ff3a3a', ns: '#0d0d16', rw: '#f1e4c4', rb: '#2a1a12', rq: '#c7262c', rs: '#f3e8cc',
     hw: '#f2efe6', hb: '#161616', hq: '#d6332a', hs: '#f2c230' };
   Object.assign(FACE, { tw: '#f3eee4', tb: '#151317', tq: '#a3122c', ts: '#d9ad55' });
   const SIDE = { w: '#e7d3ad', b: '#211813', q: '#a91f22', s: '#ece8de', mw: '#e3dccb', mb: '#26252a', mq: '#d55d45', ms: '#e7dcc5',
-    nw: '#bfeeff', nb: '#3a2a66', nq: '#e82828', ns: '#d9f7ff', rw: '#e6d4ac', rb: '#1f130d', rq: '#a91f22', rs: '#e8d9b4',
+    nw: '#bfeeff', nb: '#3a2a66', nq: '#e82828', ns: '#15151f', rw: '#e6d4ac', rb: '#1f130d', rq: '#a91f22', rs: '#e8d9b4',
     hw: '#e8e4d8', hb: '#111111', hq: '#c42a22', hs: '#e3b322', tw: '#d9b866', tb: '#d9b866', tq: '#d9b866', ts: '#c99a45' };
   function faceTex(kind) {
     const t = X.canvasTex('crFace' + kind, SZ(256), SZ(256), (g, W) => {
@@ -232,8 +232,10 @@
       const dotRing = (r, n, rr, col) => { g.fillStyle = col; for (let k = 0; k < n; k++) { const a = k / n * Math.PI * 2; g.beginPath(); g.arc(c + Math.cos(a) * c * r, c + Math.sin(a) * c * r, c * rr, 0, 7); g.fill(); } };
       const lotus = (n, r0, r1, wd, col) => { g.fillStyle = col; for (let k = 0; k < n; k++) { const a = k / n * Math.PI * 2 - Math.PI / 2, ca = Math.cos(a), sa = Math.sin(a), m = (r0 + r1) / 2; g.beginPath(); g.moveTo(c + ca * c * r0, c + sa * c * r0); g.quadraticCurveTo(c + (ca * m - sa * wd) * c, c + (sa * m + ca * wd) * c, c + ca * c * r1, c + sa * c * r1); g.quadraticCurveTo(c + (ca * m + sa * wd) * c, c + (sa * m - ca * wd) * c, c + ca * c * r0, c + sa * c * r0); g.fill(); } };
       if (kind[0] === 'n') {   // neon acrylic: a smooth face, glowing rings (the material makes them glow)
-        ring(.8, .05, { nw: '#3ce6ff', nb: '#ff3fb4', nq: '#ffffff', ns: '#3ce6ff' }[kind], .06);
-        if (kind === 'ns') { ring(.5, .025, 'rgba(60,230,255,.6)', .04); ring(.18, .05, '#3ce6ff', .05); }
+        ring(.8, .05, { nw: '#3ce6ff', nb: '#ff3fb4', nq: '#ffffff', ns: '#ffffff' }[kind], .06);
+        if (kind === 'ns') {   // (2026-11-10) the striker: a black disc with a big white star — the material turns it into a rainbow that keeps cycling
+          g.fillStyle = '#ffffff'; g.beginPath(); for (let k = 0; k < 10; k++) { const a = Math.PI / 2 + k * Math.PI / 5, r = (k % 2 ? .3 : .7) * c; g.lineTo(c + Math.cos(a) * r, c + Math.sin(a) * r); } g.closePath(); g.fill();
+        }
         else {   // (2026-11-10) a bold emblem on each colour so the sides tell apart at a glance even on a phone:
           // white = a cyan star, black = a magenta diamond, queen = a white crown
           const poly = (pts, col, blur) => { g.save(); g.shadowColor = col; g.shadowBlur = W * blur; g.fillStyle = col; g.beginPath(); pts.forEach(([x, y], i) => i ? g.lineTo(c + x * c, c + y * c) : g.moveTo(c + x * c, c + y * c)); g.closePath(); g.fill(); g.restore(); };
@@ -278,7 +280,10 @@
         g.putImageData(img, 0, 0);
         g.strokeStyle = kind === 'mb' ? 'rgba(255,255,255,.12)' : 'rgba(0,0,0,.12)'; g.lineWidth = W * .012; g.beginPath(); g.arc(c, c, c * .72, 0, 7); g.stroke();
         g.fillStyle = '#c69a45';
-        if (kind === 'ms') { g.strokeStyle = '#c69a45'; g.lineWidth = W * .07; g.beginPath(); g.arc(c, c, c * .62, 0, 7); g.stroke(); }
+        if (kind === 'ms') {   // (2026-11-10) a bold red star inside the brass ring, so the striker stands out from the cream men
+          g.strokeStyle = '#c69a45'; g.lineWidth = W * .06; g.beginPath(); g.arc(c, c, c * .8, 0, 7); g.stroke();
+          g.fillStyle = '#d23a2a'; g.beginPath(); for (let k = 0; k < 10; k++) { const a = Math.PI / 2 + k * Math.PI / 5, r = (k % 2 ? .27 : .64) * c; g.lineTo(c + Math.cos(a) * r, c + Math.sin(a) * r); } g.closePath(); g.fill();
+        }
         else { g.beginPath(); g.arc(c, c, c * .17, 0, 7); g.fill(); }
       }
     });
@@ -455,6 +460,7 @@
   function pieceGroup(look, c) {
     const TT = T(), striker = c === 's', r = striker ? RS : RM, h = striker ? HS : HM, M2 = pieceMat(look, c);
     const neon = look === 'neon', top = neon ? M2.top.clone() : M2.top;   // (neon: a material of its own, so one man can flash alone)
+    if (neon && striker) { top.color = new TT.Color(.12, .12, .12); top.emissive = new TT.Color(1.3, 1.3, 1.3); rgbify(top, 'uv'); }   // the striker's star cycles through the rainbow (dim diffuse: the colours stay saturated)
     const g = new TT.Group(), body = new TT.Mesh(discGeo(r, h), top); body.castShadow = true; body.receiveShadow = false; g.add(body);   // (no self-shadow: thin discs flickered with shadow acne)
     if (look === 'modern' && striker) { const ring = new TT.Mesh(geos.ring || (geos.ring = (() => { const q = new TT.TorusGeometry(r - .004, .006, 6, 36); q.rotateX(Math.PI / 2); if (X.share) X.share(q); return q; })()), boardMats('modern').brass); ring.position.y = h * .55; g.add(ring); }
     g.userData = { c, r, h };
