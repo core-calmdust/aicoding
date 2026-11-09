@@ -8,6 +8,8 @@
 //   node tools/mt-sim.js --end 20 --gen 16 [--threads …]            exact solves (the time = the virtual clock; a thread
 //                                                                    waiting in Atomics.wait does not hold the others back)
 //   node tools/mt-sim.js --match 4 --games 40 --budget 1e6 --wasmB old.wasm --engineB old.js [--exact 14]
+//   --slow 0,10,11,12 [--slowstep 5]: those threads (0 = the lead) run at 2/5 of the speed (Apple's efficiency cores, 2026-11-09):
+//                                     a fast thread's clock goes 2 per check, a slow one's --slowstep
 // Midgame: per position (bench.html's MID, 36 empties, + --gen more from self-play) and thread count, the lead thinks with
 // a node budget (its own nodes, cfg.nodes) from an empty table: the depth it finished, the lead's nodes to the common depth,
 // the moves. --ttbits: a smaller table (like the Mac's 3 s × many threads). --plan / --d0 / --noidle: the helpers' variants
@@ -19,7 +21,7 @@ const RV = process.env.REVERSI_DIR || path.join(__dirname, '..');
 
 if (!isMainThread) {
   const m = workerData, S = m.sync, T = new Int32Array(S, 0, 64), A = new Int32Array(S, 256, 64), E0 = new Int32Array(S, 512, 4);
-  const id = m.id;
+  const id = m.id, STEP = m.step || 1, MAXSTEP = m.maxstep || 1;
   // a thread waiting on the others (the root split of the solve: Atomics.wait) does not hold them back; when it wakes it
   // goes on from the latest time of the others (the virtual clock = the highest tick)
   const wait0 = Atomics.wait.bind(Atomics);
@@ -33,10 +35,10 @@ if (!isMainThread) {
   };
   const now = () => {
     if (A[id]) {
-      const t = ++T[id]; Atomics.add(E0, 0, 1); Atomics.notify(E0, 0);
+      const t = (T[id] += STEP); Atomics.add(E0, 0, 1); Atomics.notify(E0, 0);
       for (;;) {
         let mn = 1e9; for (let i = 0; i < m.n; i++) if (Atomics.load(A, i) && T[i] < mn) mn = T[i];
-        if (t - mn <= 1) break;
+        if (t - mn <= MAXSTEP) break;
         Atomics.wait(E0, 0, Atomics.load(E0, 0), 5);
       }
     }
@@ -53,7 +55,7 @@ if (!isMainThread) {
     T[id] = 0; Atomics.store(A, id, 1);
     if (id === 0) {
       const per = {};
-      const r = E.think(j.cells, j.toMove, { cfg: j.cfg, time: 1e9, noBook: true, variety: false }, p => { if (p.depth) per[p.depth] = { nodes: p.nodes, move: p.move }; });
+      const r = E.think(j.cells, j.toMove, { cfg: j.cfg, time: 1e9, noBook: true, variety: false }, p => { if (p.depth) per[p.depth] = { nodes: m.step > 1 || m.maxstep > 1 ? T[id] : p.nodes, move: p.move }; });   // (--slow: the clock, not the lead's nodes)
       let mx = 0; for (let k = 0; k < m.n; k++) if (T[k] > mx) mx = T[k];
       Atomics.store(A, id, 0); Atomics.notify(E0, 0);
       parentPort.postMessage({ type: 'result', move: r.move, score: r.score, exact: !!r.exact, depth: r.depth, nodes: r.nodes, per, ticks: mx });
@@ -115,7 +117,9 @@ async function makePool(n, wasm = WASM, engine = ENGINE) {
   if (opt.ttbits && X.tt_bits) X.tt_bits(+opt.ttbits);
   const ctl = new Int32Array(new SharedArrayBuffer(512)), sync = new SharedArrayBuffer(1024);
   const ws = [];
-  for (let id = 0; id < n; id++) ws.push(new Worker(__filename, { workerData: { module, mem, id, n, tls: base + id * SLOT, top: base + id * SLOT + SLOT - 16, ctl, sync, engine, plan: opt.plan, noidle: !!opt.noidle } }));
+  const SLOW = new Set(String(opt.slow || '').split(',').filter(x => x !== '').map(Number)), SST = +(opt.slowstep || 5), het = SLOW.size > 0;
+  for (let id = 0; id < n; id++) ws.push(new Worker(__filename, { workerData: { module, mem, id, n, tls: base + id * SLOT, top: base + id * SLOT + SLOT - 16, ctl, sync, engine, plan: opt.plan, noidle: !!opt.noidle,
+    step: het ? (SLOW.has(id) ? SST : 2) : 1, maxstep: het ? SST : 1 } }));
   for (const w of ws) await new Promise(res => { w.once('message', res); const b = new Int16Array(W); w.postMessage({ type: 'weights', buffer: b.buffer }, [b.buffer]); });
   return {
     run(p, game) {

@@ -1808,7 +1808,7 @@ weightsReady = (async () => {
 let book = null;
 const bookReady = fetch('book.bin?v=2').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null).then(b => (book = b));   // (the opening book: tools/book-gen.js; each worker decodes it, engine.js decodeBook)
 function makeWorker(onmsg) {
-  const w = new Worker('engine.js?v=56');
+  const w = new Worker('engine.js?v=57');
   w.onmessage = onmsg;
   const send = wt => { if (wt) w.postMessage({ type: 'weights', buffer: wt.buffer.slice(0), nphase: wt.nphase }); };
   if (weights) send(weights); else weightsReady.then(send);
@@ -1847,7 +1847,7 @@ let jobId = 0;
 const MT_CFG = { 17: { exact: 18, wld: 20 }, 18: { exact: 18, wld: 21 }, 19: { exact: 19, wld: 21 }, 20: { exact: 20, wld: 22 },
   21: { exact: 21, wld: 23 }, 22: { exact: 22, wld: 23 }, 23: { exact: 22, wld: 24 }, 24: { exact: 23, wld: 24 }, 25: { exact: 23, wld: 25 } };   // the helpers' settings (engine.js LEVELS)
 const MTP = window.MTEngine ? MTEngine.use({
-  wasm: 'engine_mt.wasm?v=4', lead: 'mt-worker.js?v=9', helper: 'mt-worker.js?v=9', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
+  wasm: 'engine_mt.wasm?v=5', lead: 'mt-worker.js?v=10', helper: 'mt-worker.js?v=10', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => Date.now() } }),
   after: async (X, mem, ws) => {
     X.init();   // (the tables in the shared memory, once)
@@ -5695,7 +5695,7 @@ accRender();
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=129')).then(() => load('../atlas/tables3d.js?v=36')).then(() => load('../atlas/skin/common.js?v=48npc')).then(() => load('../atlas/skin/reversi.js?v=23l14'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=129')).then(() => load('../atlas/tables3d.js?v=36')).then(() => load('../atlas/skin/common.js?v=49npc')).then(() => load('../atlas/skin/reversi.js?v=23l14'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>

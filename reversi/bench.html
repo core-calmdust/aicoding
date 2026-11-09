@@ -114,7 +114,7 @@ async function setup() {
   const wt = await loadWeights();
   // the same pool as the game page (index.html MTP): lead and helpers are mt-worker.js on a shared engine_mt.wasm
   pool = MTEngine.pool({
-    wasm: 'engine_mt.wasm?v=4', lead: 'mt-worker.js?v=9', helper: 'mt-worker.js?v=9', slot: 2 << 20, initial: 1024, maximum: 16384,
+    wasm: 'engine_mt.wasm?v=5', lead: 'mt-worker.js?v=10', helper: 'mt-worker.js?v=10', slot: 2 << 20, initial: 1024, maximum: 16384,
     imports: mem => ({ env: { memory: mem, now: () => Date.now() } }),
     after: async (X, mem, ws) => { if (!PX) { PX = X; X.init(); } ws.forEach(w => w.postMessage({ type: 'weights', buffer: wt.buffer.slice(0), nphase: wt.nphase })); },
     help: m => { const o = m.opts || {}, ex = o.cfg.exact; return { cells: m.cells, toMove: m.toMove, cfg: { depth: 60, exact: ex, wld: o.cfg.wld || ex + 2, mpc: 1 } }; },   // (= index.html MTP.help with opts.cfg)
