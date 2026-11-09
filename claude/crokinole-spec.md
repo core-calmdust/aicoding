@@ -1,6 +1,6 @@
 # クロキノール（crokinole）仕様
 
-キャロムに続く「3D専用」タイトル（2D版はない）。2026-11-09 公開（BETA）。キャロムの操作・効果音・操作カードを流用し、カナダのおはじきとして発展させたもの。
+キャロムに続く「3D専用」タイトル（2D版はない）。2026-11-09 公開（同日にBETAを外して正式公開）。キャロムの操作・効果音・操作カードを流用し、カナダのおはじきとして発展させたもの。
 
 ## 構成
 | ファイル | 役割 |
@@ -12,8 +12,8 @@
 | `atlas/rules/crokinole.js` | ルールコース（案内役：ビーバーのメイプル、`images/atlas/av/beaver-1.webp`） |
 | `atlas/historia/s/crokinole.json`・`atlas/historia/<lang>/crokinole.json` | ヒストリア（14言語）。図は historia.js の `crokinole` 型 |
 
-- 台帳：`shared/atlas.js` の GAMES に `only3d: true`、`href: 'atlas/#games/crokinole'`、`cat: 'action'`、`beta: true`。テーマ色 #b8742a（メープル材）。
-- トップページ：GAMES に `key:'ck'`・`beta:1`、アイコン `images/icons/crokinole.svg`、サムネイル `images/crokinole.webp`（topdown.html でクラシック盤を撮る。エンジン同士の数打で途中局面を作る）。一覧 `atlas/shots/crokinole.webp`、ポータルのアイコン `images/atlas/crokinole.webp`（icons3d.js）。
+- 台帳：`shared/atlas.js` の GAMES に `only3d: true`、`href: 'atlas/#games/crokinole'`、`cat: 'action'`。テーマ色 #b8742a（メープル材）。
+- トップページ：GAMES に `key:'ck'`、アイコン `images/icons/crokinole.svg`、サムネイル `images/crokinole.webp`（topdown.html で既定の寄木細工盤を撮る。エンジン同士の数打で途中局面を作る）。一覧 `atlas/shots/crokinole.webp`、ポータルのアイコン `images/atlas/crokinole.webp`（icons3d.js）。
 - 地図：`atlas/mapdata.js` にカナダ（オンタリオ州）とドイツ系移民の起源。
 
 - 一覧のひとこと（`tl.crokinole`、atlas/gamelist-i18n.js、14言語）：「カナダ生まれのおはじき」。
@@ -51,7 +51,7 @@
 - モダンアート：温かい紙に4つの区画の色面（テラコッタ・サフラン・ティール・インク）、15〜10の間に弧の輪、穴の周りに円の花、リソグラフ風の粒子。インクの線、マットな紺の枠に真鍮の輪、テラコッタの溝。ディスクはマットなコーラルとインクに真鍮の点。
 - ディスクの色はどの盤でも「赤系」と「黒系」（2人対戦の色名は赤／黒のまま）。HUDの色見本は盤ごとの色（`userData.dot`）。
 - 展示用（3Dビュー）のディスクとルールコースのディスクはペグに重ならない位置に置く（ペグ＋ディスク＝中心間2.14cm以上）。
-- 上部のHUD：左右に両者の点と残り枚数、中央にラウンド・点数（小さく）と手番。「相手の駒に当てよう／15の円まで届かせよう」は盤より上（HUDの下）に黒い帯のポップアップ（`.cktask`）で出し、狙っている間・相手の番は消す。
+- 上部のHUD：AIが考えている間は「AIが狙っている…」（スマホは折り返さないよう「AIの番」だけ）。左右に両者の点と残り枚数、中央にラウンド・点数（小さく）と手番。「相手の駒に当てよう／15の円まで届かせよう」は盤より上（HUDの下）に黒い帯のポップアップ（`.cktask`）で出し、狙っている間・相手の番は消す。
 - 溝に落ちたディスクは溝を転がって止まる演出。ラウンドの終わりに得点表示 → 次のラウンド。
 - テスト用に `window.__crokinoleTable._debug`。
 
