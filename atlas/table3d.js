@@ -1343,6 +1343,15 @@
       c.fillStyle = 'rgba(0,0,0,.18)'; c.fillRect(0, 0, W, 3); c.fillRect(0, H - 3, W, 3);
     }));
     tatami.wrapS = tatami.wrapT = TT.RepeatWrapping; tatami.repeat.set(6, 3);
+    // the rush itself from a photo of real tatami (images/atlas/tatami.webp, 2026-11-10): drawn under the heri once it has loaded
+    { const im = new Image(); im.onload = () => { try {
+        const c = tatami.image.getContext('2d'), W = tatami.image.width, H = tatami.image.height, k = W / (im.width * .5);
+        for (let y = 0; y < H; y += im.height * k) for (let x = 0; x < W; x += im.width * k) c.drawImage(im, x, y, im.width * k, im.height * k);
+        c.fillStyle = '#3f4f30'; c.fillRect(0, 0, 14, H); c.fillRect(W - 14, 0, 14, H);
+        c.fillStyle = 'rgba(255,255,255,.1)'; for (let y = 0; y < H; y += 14) c.fillRect(0, y, 14, 2), c.fillRect(W - 14, y, 14, 2);
+        c.fillStyle = 'rgba(0,0,0,.22)'; c.fillRect(0, 0, W, 3); c.fillRect(0, H - 3, W, 3);
+        tatami.needsUpdate = true; if (X.kick) X.kick(300);
+      } catch (e) {} }; im.src = '../images/atlas/tatami.webp?v=1'; }
     const floor = new TT.Mesh(new TT.PlaneGeometry(60, 60), M({ map: tatami, roughness: .85, bumpScale: .01 }));
     floor.rotation.x = -Math.PI / 2; floor.position.y = FLOOR; floor.receiveShadow = true; g.add(floor);
     // walls: warm plaster above a wooden wainscot
