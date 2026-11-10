@@ -428,5 +428,9 @@ function ladder(LEVELS, o) {
     },
   };
 }
-window.ProSet = { init, T, maxThreads, defThreads, ladder };
+// every PRO block of the page (a game may have more than one): the portal's quick start (atlas/skin/common.js autoStart — a
+// level picked on the 3D view's card) puts them back to the level's defaults, so the game is played as that level (2026-11-11)
+const ALL = [];
+function resetAll() { ALL.forEach(a => { try { if (a.values && Object.keys(a.values()).length) a.reset(); } catch (e) {} }); }
+window.ProSet = { init: cfg => { const a = init(cfg); if (a) ALL.push(a); return a; }, T, maxThreads, defThreads, ladder, resetAll };
 })();
