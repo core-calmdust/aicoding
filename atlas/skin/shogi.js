@@ -50,9 +50,11 @@
     skip: 'sq|\\.pc|hslot|hand|coords|arrows|\\.mark|frame',
     start(lv, side, mode) {
       if (typeof openNewDialog !== 'function' || typeof dlg !== 'object' || !document.getElementById('btnStart')) return null;
-      if (mode === 'puzzle' || mode === 'lesson') {   // the portal's 「あそぶ」 sheet: straight to 詰将棋 / the lessons (2026-11-09)
-        if (typeof openLessons !== 'function') return null;
-        lsTab = mode === 'puzzle' ? 'tsume' : 'lesson'; openLessons(); return true;
+      // the portal's card / 「あそぶ」 sheet: straight to 詰将棋 / the lessons / a rated game (shogi/index.html AtlasDeep)
+      if (/^(puzzle|lesson|online)$/.test(mode) || (mode === 'rated' && new URLSearchParams(location.search).get('tc'))) {
+        if (!window.AtlasDeep) return null;
+        const q = new URLSearchParams(location.search), r = AtlasDeep(mode, q.get('sub'), q.get('tc'));
+        return r;
       }
       openNewDialog();
       dlg.mode = mode === 'rated' || mode === 'pvp' ? mode : 'ai';
