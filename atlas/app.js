@@ -1451,7 +1451,7 @@
   }
   renderPlace();
   $('bvQuit').onclick = () => { if (rulesFromList && $('bv').classList.contains('rules')) { rulesFromList = false; closeBoard(); } else openBoard(bvGame.id); };   // rules opened from the game list: back to the list
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('bv').classList.contains('on') && !$('ov').classList.contains('on')) closeBoard(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('bv').classList.contains('on') && !$('ov').classList.contains('on')) { if ($('bv').classList.contains('playing')) { const q = $('bvQuit'); if (q) q.click(); } else closeBoard(); } });   // in a game (or the rules on the table): back to the 3D view, like the × (2026-11-10)
   // ‹ › / ← → / swipe: the previous / next game on the chabudai (same order as the game grid)
   function stepBoard(d) {
     const bv = $('bv'); if (!bv.classList.contains('on') || bv.classList.contains('playing') || bv.classList.contains('rules') || !bvGame) return;
