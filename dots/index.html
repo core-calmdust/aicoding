@@ -1154,7 +1154,7 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
 <script src="../shared/tick.js?v=2l14"></script>
 <script src="../shared/ruletour.js?v=29l14"></script><!-- only RuleTour.intro() for the rules intro page -->
 <link rel="stylesheet" href="learn.css?v=20261028sk"><!-- learn-ui -->
-<script src="engine.js?v=20261110ai1"></script><script src="../shared/mtengine.js?v=8"></script><script src="../shared/mtworkers.js?v=3"></script><script>MTWorkers.init({ sw: 'sw.js?v=1' });</script>
+<script src="engine.js?v=20261110mt5"></script><script src="../shared/mtengine.js?v=8"></script><script src="../shared/mtworkers.js?v=3"></script><script>MTWorkers.init({ sw: 'sw.js?v=1' });</script>
 <script src="rvbox.js?v=20261107l14"></script><!-- 振り返りボックス (PC): 候補手・読み筋・検討 -->
 <script src="learn.js?v=20261101fl"></script>
 <script src="i18n-online.js?v=20261107l14"></script>
@@ -1300,7 +1300,7 @@ function edgeName(e) {
 // little (CPU time ×1.03 with 2 workers, ×1.42 with 8 — dots/RATING.md「本編のマルチスレッド」). Not isolated: one worker.
 const mtN = () => window.MTWorkers && MTWorkers.on() ? MTWorkers.helpers() : 0;
 const mtSh = () => window.MTWorkers && MTWorkers.shared ? MTWorkers.helpers() : 0;
-function makeWorker(onmsg) { const w = new Worker('engine.js?v=20261110ai1'); w.onmessage = onmsg; w.onerror = ev => console.warn('worker error', ev.message); return w; }
+function makeWorker(onmsg) { const w = new Worker('engine.js?v=20261110mt5'); w.onmessage = onmsg; w.onerror = ev => console.warn('worker error', ev.message); return w; }
 let aiWorker, anaWorker, aiJob = null, anaJob = null, jobId = 0, aiPending = false;
 function aiMsg(ev) { const m = ev.data; if (m.type === 'error') console.warn(m.msg); if (!aiJob || m.id !== aiJob.id) return; const j = aiJob; aiJob = null; j.resolve(m); }
 function anaMsg(ev) { const m = ev.data; if (m.type === 'error') console.warn(m.msg); if (!anaJob || m.id !== anaJob.id) return; const j = anaJob; anaJob = null; j.resolve(m); }
