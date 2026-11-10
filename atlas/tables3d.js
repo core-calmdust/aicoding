@@ -133,6 +133,9 @@
      always show the same board. Names are the design tab's own (10 languages). Games with a single 3D board are not listed. */
   const ls = { get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} } };
   const N3 = {   // the design tab's names
+    // amazons (atlas/models/amazons.js)
+    temple: { ja: 'テミスキュラの神殿 3D', en: 'Temple of Themiscyra 3D', zh: '特弥斯库拉神殿 3D', ko: '테미스키라 신전 3D', es: 'Templo de Temiscira 3D', fr: 'Temple de Thémiscyre 3D', pt: 'Templo de Temiscira 3D', de: 'Tempel von Themiskyra 3D', hi: 'थेमिस्कीरा का मंदिर 3D', ar: 'معبد ثيميسكيرا ثلاثي', ru: 'Храм Фемискиры 3D', 'zh-TW': '特彌斯庫拉神殿 3D', id: '3D Kuil Themiskyra', tr: 'Themiskyra Tapınağı 3D' },
+    ruins: { ja: '密林の遺跡 3D', en: 'Jungle ruins 3D', zh: '密林遗迹 3D', ko: '밀림의 유적 3D', es: 'Ruinas en la selva 3D', fr: 'Ruines dans la jungle 3D', pt: 'Ruínas na selva 3D', de: 'Dschungelruinen 3D', hi: 'जंगल के खंडहर 3D', ar: 'أطلال الغابة ثلاثي', ru: 'Руины в джунглях 3D', 'zh-TW': '密林遺跡 3D', id: '3D Reruntuhan rimba', tr: 'Orman harabeleri 3D' },
     lux: { ja: '高級3D', en: 'Luxury 3D', zh: '豪华3D', ko: '고급 3D', es: 'Lujo 3D', fr: 'Luxe 3D', pt: 'Luxo 3D', de: 'Luxus 3D', hi: 'लक्ज़री 3D', ar: 'فاخر ثلاثي', ru: 'Роскошная 3D', 'zh-TW': '高級3D', id: '3D mewah', tr: 'Lüks 3D' },
     wood: { ja: '木製3D', en: 'Wooden 3D', zh: '木制3D', ko: '목재 3D', es: 'Madera 3D', fr: 'Bois 3D', pt: 'Madeira 3D', de: 'Holz 3D', hi: 'लकड़ी 3D', ar: 'خشبي ثلاثي', ru: 'Деревянная 3D', 'zh-TW': '木製3D', id: '3D kayu', tr: 'Ahşap 3D' },
     kaya: { ja: '榧3D', en: 'Kaya 3D', zh: '榧木3D', ko: '비자 3D', es: 'Kaya 3D', fr: 'Kaya 3D', pt: 'Kaya 3D', de: 'Kaya 3D', hi: 'काया 3D', ar: 'كايا ثلاثي', ru: '3D из каи', 'zh-TW': '榧木3D', id: '3D kaya', tr: 'Kaya ağacı 3D' },
@@ -185,6 +188,8 @@
     senet: { list: ['tut', 'faience', 'papyrus', 'night'],
       get: () => { try { const d = (JSON.parse(ls.get('aicoding-senet') || '{}').settings || {}).design; return ['faience', 'papyrus', 'night'].includes(d) ? d : 'tut'; } catch (e) { return 'tut'; } },
       set: k => { try { const o = JSON.parse(ls.get('aicoding-senet') || '{}') || {}; o.settings = o.settings || {}; o.settings.design = k; ls.set('aicoding-senet', JSON.stringify(o)); } catch (e) {} } },
+    // atlas/skin/amazons.js: 'atlas-amazons-look' ('temple' the default | 'ruins'); the figures: 'atlas-amazons-pc3'
+    amazons: { list: ['temple', 'ruins'], get: () => ls.get('atlas-amazons-look') === 'ruins' ? 'ruins' : 'temple', set: k => ls.set('atlas-amazons-look', k) },
     konane: { list: ['papamu', 'quilt'], get: () => ls.get('atlas-konane-look') === 'quilt' ? 'quilt' : 'papamu', set: k => ls.set('atlas-konane-look', k) },
     // carrom (3D only): 'atlas-carrom-look' ('neon' the default | 'modern' | 'classic' | 'rajasthan' | 'bauhaus' | 'tycoon')
     carrom: { list: ['neon', 'modern', 'classic', 'rajasthan', 'bauhaus', 'tycoon'], get: () => { const v = ls.get('atlas-carrom-look'); return ['modern', 'classic', 'rajasthan', 'bauhaus', 'tycoon'].includes(v) ? v : 'neon'; }, set: k => ls.set('atlas-carrom-look', k) },

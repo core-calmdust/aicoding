@@ -992,7 +992,7 @@
     ps.onclick = e => { const b = e.target.closest('.ps-row'); if (b) { try { SFX.tap && SFX.tap(); } catch (x) {} if (b.dataset.k === 'puzzle' && window.AtlasPuzzles && AtlasPuzzles.has(g.id) && ad.table) startPuzzle(); else startPlay('full', b.dataset.k); return; } if (e.target === ps || e.target.closest('.lvs-x')) close(); };
     if (window.__bvModeRz) setTimeout(window.__bvModeRz, 0);
   }
-  const FULL_SKIN = { ludo: true, reversi: true, shogi: true, chess: true, backgammon: true, gomoku: true, go: true, morris: true, connect4: true, checkers: true, mancala: true, dots: true, xiangqi: true, janggi: true, hex: true, tafl: true, ur: true, senet: true, fanorona: true, ugolki: true, agon: true, alquerque: true, konane: true };
+  const FULL_SKIN = { ludo: true, reversi: true, shogi: true, chess: true, backgammon: true, gomoku: true, go: true, morris: true, connect4: true, checkers: true, mancala: true, dots: true, xiangqi: true, janggi: true, hex: true, tafl: true, ur: true, senet: true, fanorona: true, ugolki: true, agon: true, alquerque: true, konane: true, amazons: true };
   let lastKind;
   function startPlay(kind, over) {   // over: 'puzzle' | 'lesson' — the 「あそぶ」 sheet opens the full game straight at its puzzles / lessons
     if (renderPlace.close) renderPlace.close();

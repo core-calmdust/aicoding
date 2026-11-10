@@ -1,0 +1,67 @@
+<!doctype html>
+<!-- Dev tool: one Amazons figure alone (atlas/models/amazons.js), for the page's piece pictures in the 3D skin (amazons/img/pc3-<set>-<w|b>.webp).
+     amzpiece.html?game=amazons&set=statue&col=1&el=12 → window.ICON; node amazons/tools/render_pc3.js writes all six. -->
+<!-- Dev tool: one game's 3D board alone (no room, a transparent ground), seen from straight above (?el= for an angle) — the icons of the full
+     games' 「3D盤」 tiles (atlas/img/boardic-<game>-<look>.webp, 2026-11-09). boardicon.html?game=ludo&look=peg[&w=512&h=512]
+     → window.ICON (a PNG data URL) -->
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>html,body{margin:0;height:100%;overflow:hidden;background:#000}#gl{position:absolute;inset:0}#gl canvas{display:block;width:100%!important;height:100%!important}</style></head>
+<body><div id="gl"></div>
+<script>try { localStorage.setItem('atlas-tod', 'day'); localStorage.removeItem('atlas-lite'); localStorage.setItem('atlas-table', '2'); localStorage.setItem('atlas-bright2', '1'); } catch (e) {}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="../texgen.js"></script>
+<script src="../table3d.js"></script>
+<script src="../tables3d.js"></script>
+<script src="../models/chess.js"></script>
+<script src="../models/backgammon.js"></script>
+<script src="../models/goban.js"></script>
+<script src="../models/agon.js"></script>
+<script src="../models/konane.js"></script>
+<script src="../models/amazons.js"></script>
+<script src="../../senet/sprites.js"></script>
+<script src="../../senet/board2d.js"></script>
+<script src="../models/senet.js"></script>
+<script src="../models/janggi.js"></script>
+<script src="../../ludo/engine.js"></script>
+<script src="../../ludo/board2d.js"></script>
+<script src="../../ludo/board-art.js"></script>
+<script src="../models/ludo.js"></script>
+<script src="../../carrom/engine.js"></script>
+<script src="../models/carrom.js"></script>
+<script src="../../crokinole/engine.js"></script>
+<script src="../models/crokinole.js"></script>
+<script>
+(function () {
+  const q = new URLSearchParams(location.search), X = window.Table3D, id = q.get('game') || 'ludo', look = q.get('look'), W = +q.get('w') || 512, H = +q.get('h') || 512, el = q.get('el') ? +q.get('el') : 90;   // (2026-11-09: straight down by default — the board as a flat icon, like the 2D tiles)
+  if (look && X.BOARDS[id]) X.BOARDS[id].set(look);
+  if (id === 'senet' && look) try { localStorage.setItem('aicoding-senet', JSON.stringify({ settings: { design: look } })); } catch (e) {}
+  X.mount(document.getElementById('gl'));
+  const g = new THREE.Group(); { const p = Table3D.amazons.piece(+q.get('col'), q.get('set')); g.add(p); }
+  X.show(id, g, { still: true }); X.quiet(true); X.snap();
+  setTimeout(() => { X.kick(3000); setTimeout(shoot, 5000); }, 800);
+  function shoot() {
+    const T = THREE, scene = X._scene(), R = X.renderer();
+    const mine = new Set(); g.traverse(o => mine.add(o));
+    scene.traverse(o => { if ((o.isMesh || o.isSprite || o.isPoints || o.isLine) && !mine.has(o)) o.visible = false; });
+    const bg = scene.background; scene.background = null; scene.fog = null;
+    const box = new T.Box3().setFromObject(g), c = box.getCenter(new T.Vector3()), sz = box.getSize(new T.Vector3());
+    const cam = new T.PerspectiveCamera(24, W / H, .1, 200), a = el * Math.PI / 180;
+    // fit: move back until every corner of the box is inside the frame (with a margin), then centre the picture
+    const pts = []; for (const x of [box.min.x, box.max.x]) for (const y of [box.min.y, box.max.y]) for (const z of [box.min.z, box.max.z]) pts.push(new T.Vector3(x, y, z));
+    const tgt = c.clone();
+    if (el > 89) cam.up.set(0, 0, -1);   // (looking straight down: the far side stays at the top)
+    const place = d => { cam.position.set(tgt.x, tgt.y + Math.sin(a) * d, tgt.z + Math.cos(a) * d); cam.lookAt(tgt); cam.updateMatrixWorld(); cam.updateProjectionMatrix(); };
+    const ext = () => { let x0 = 9, x1 = -9, y0 = 9, y1 = -9; pts.forEach(p => { const v = p.clone().project(cam); x0 = Math.min(x0, v.x); x1 = Math.max(x1, v.x); y0 = Math.min(y0, v.y); y1 = Math.max(y1, v.y); }); return { x0, x1, y0, y1 }; };
+    let d = 4; for (let it = 0; it < 4; it++) { place(d); let e = ext(); for (let k = 0; k < 400 && Math.max(-e.x0, e.x1, -e.y0, e.y1) > .9; k++) { d *= 1.02; place(d); e = ext(); }
+      for (let k = 0; k < 400 && Math.max(-e.x0, e.x1, -e.y0, e.y1) < .86; k++) { d /= 1.02; place(d); e = ext(); }
+      // centre: shift the target by the picture's offset (in world units along the camera's right / up)
+      const r = new T.Vector3().setFromMatrixColumn(cam.matrixWorld, 0), u = new T.Vector3().setFromMatrixColumn(cam.matrixWorld, 1), h = Math.tan(12 * Math.PI / 180) * d;
+      tgt.addScaledVector(r, (e.x0 + e.x1) / 2 * h * (W / H)).addScaledVector(u, (e.y0 + e.y1) / 2 * h); }
+    place(d);
+    R.setPixelRatio(1); R.setSize(W, H, false); R.setClearColor(0x000000, 0);
+    R.render(scene, cam);
+    window.ICON = R.domElement.toDataURL('image/png'); window.READY = true;
+  }
+})();
+</script>
+</body></html>
