@@ -134,7 +134,7 @@ function medalDisc(g, R, th, maps, opt) {
 }
 function cameo() {   // temple: a cameo in a gold bezel. White: white marble, the helmet in relief; Black: verde antico / onyx, a gold helmet
   const w = SIDE === 'w', g = new T.Group();
-  const field = w ? '#aebcae' : '#16231e', hi = w ? '#fcfaf5' : '#d8ab58';
+  const field = w ? '#62768f' : '#1d1d21', hi = w ? '#fcfaf5' : '#d8ab58';
   const maps = faceMaps((x, mode) => {
     const H = mode === 'h', Mm = mode === 'm';
     x.fillStyle = H ? '#555' : Mm ? '#000' : field; x.fillRect(0, 0, 1024, 1024);
@@ -144,7 +144,7 @@ function cameo() {   // temple: a cameo in a gold bezel. White: white marble, th
     beads(x, 440, 72, 9, rel);
     drawHelmet(x, 500, 560, 1.12, rel, cut, line);
   }, 7);
-  medalDisc(g, .66, .14, maps, { y: .92, bump: .02, metalMap: !w, edge: GOLD(), face: w ? { roughness: .34, clearcoat: .5, clearcoatRoughness: .25 } : { roughness: .22, metalness: 1, clearcoat: .8, clearcoatRoughness: .15 } });
+  medalDisc(g, .66, .14, maps, { y: .92, bump: .02, metalMap: !w, edge: GOLD(), face: w ? { roughness: .62, clearcoat: .12, clearcoatRoughness: .5, envMapIntensity: .6 } : { roughness: .22, metalness: 1, clearcoat: .8, clearcoatRoughness: .15 } });
   const bez = new T.Mesh(new T.TorusGeometry(.68, .035, 18, 120), GOLD()); bez.position.y = .92; g.add(bez);
   const foot = lathe([[0, 0], [.4, 0], [.42, .035], [.38, .07], [.22, .1], [.16, .15], [.1, .2], [.13, .23], [.09, .27], [0, .27]]);
   g.add(new T.Mesh(foot, GOLD()));
@@ -179,7 +179,7 @@ function coin() {   // ruins: a hand-struck ancient coin on a stone. White: worn
   return g;
 }
 function enamel() {   // modern: a satin ceramic disc with a gold-inlaid emblem (a bow and an arrow) on a slim brass stand
-  const w = SIDE === 'w', g = new T.Group(), field = w ? '#efebe4' : '#1e1f22', gold = '#d6b26a';
+  const w = SIDE === 'w', g = new T.Group(), field = w ? '#efebe4' : '#1e1f22', gold = w ? '#b0812e' : '#d6b26a';
   const maps = faceMaps((x, mode) => {
     x.fillStyle = mode === 'h' ? '#555' : mode === 'm' ? '#000' : field; x.fillRect(0, 0, 1024, 1024);
     const ink = mode === 'h' ? '#7a7a7a' : mode === 'm' ? '#fff' : gold;
@@ -197,9 +197,35 @@ function enamel() {   // modern: a satin ceramic disc with a gold-inlaid emblem 
   const post = new T.Mesh(new T.BoxGeometry(.5, .2, .16), brass); post.position.y = .15; g.add(post);
   return g;
 }
+// the arrow stuck in a burnt square (the 2D page's arrows, img/arw.webp): a wooden shaft charred near the ground, red silk
+// bindings, three barred feathers, a horn nock (one picture for both sides)
+function arrowStuck() {
+  const g = new T.Group(), a = new T.Group();
+  const wood = PH({ map: canvasTex(64, 512, (u, v) => { const s = Math.sin(u * 40 + fbm(u * 3, v * 40) * 3) * .5 + .5; return mix([122, 82, 46], [82, 52, 28], s * .7); }), roughness: .5, clearcoat: .3 });
+  const char = PH({ map: canvasTex(64, 256, (u, v) => { const n = fbm(u * 8, v * 30); return n > .62 ? [255, 110, 30] : mix([16, 11, 8], [52, 34, 22], v); }), emissiveMap: canvasTex(64, 256, (u, v) => fbm(u * 8, v * 30) > .62 ? [255, 90, 20] : [0, 0, 0]), emissive: 0xffffff, emissiveIntensity: .8, roughness: .9 });
+  const L = 1.25, R = .028;
+  const shaft = new T.Mesh(new T.CylinderGeometry(R, R, L, 16), wood); shaft.position.y = L / 2; a.add(shaft);
+  const burnt = new T.Mesh(new T.CylinderGeometry(R * 1.12, R * 1.05, .32, 16), char); burnt.position.y = .16; a.add(burnt);
+  const silk = PH({ color: 0x9a2a1e, roughness: .6 });
+  for (const y of [.74, 1.2]) for (let k = 0; k < 3; k++) { const t = new T.Mesh(new T.TorusGeometry(R * 1.12, .006, 6, 24), silk); t.rotation.x = Math.PI / 2; t.position.y = y + k * .012; a.add(t); }
+  // the feathers: a curved vane, barred brown on cream, the quill along the shaft
+  const fc = document.createElement('canvas'); fc.width = 128; fc.height = 512; const fg = fc.getContext('2d');
+  { const gr = fg.createLinearGradient(0, 0, 128, 0); gr.addColorStop(0, '#f2e8d2'); gr.addColorStop(1, '#c9b48e'); fg.fillStyle = gr; fg.fillRect(0, 0, 128, 512); }
+  for (const [y, h] of [[120, 46], [250, 40], [370, 34]]) { fg.fillStyle = 'rgba(70,44,26,.88)'; fg.beginPath(); fg.moveTo(0, y); fg.quadraticCurveTo(70, y - 18, 128, y - 30); fg.lineTo(128, y - 30 + h); fg.quadraticCurveTo(70, y - 18 + h, 0, y + h); fg.fill(); }   // barred like a wild goose's feather
+  fg.strokeStyle = 'rgba(60,40,24,.4)'; fg.lineWidth = 1; for (let y = -160; y < 560; y += 5) { fg.beginPath(); fg.moveTo(0, y + 40); fg.quadraticCurveTo(64, y + 14, 128, y); fg.stroke(); }   // the barbs
+  fg.fillStyle = '#e8dcc0'; fg.fillRect(0, 0, 7, 512);   // the quill
+  const ft = new T.CanvasTexture(fc); ft.encoding = T.sRGBEncoding;
+  const fm = PH({ map: ft, side: T.DoubleSide, roughness: .85 });
+  const vs = new T.Shape(); vs.moveTo(0, -.02); vs.quadraticCurveTo(.05, .05, .07, .14); vs.lineTo(.072, .34); vs.lineTo(.05, .38); vs.lineTo(.068, .42); vs.quadraticCurveTo(.03, .44, 0, .46); vs.lineTo(0, -.02);   // long and narrow, the back trimmed in a notch
+  const vg = new T.ShapeGeometry(vs, 12); { const P = vg.attributes.position, U = vg.attributes.uv; for (let i = 0; i < P.count; i++) U.setXY(i, P.getX(i) / .072, P.getY(i) / .46); }
+  for (let k = 0; k < 3; k++) { const v = new T.Mesh(vg, fm); v.position.y = .76; const h = new T.Group(); h.add(v); v.position.x = R * .8; h.rotation.y = k * Math.PI * 2 / 3 + .4; a.add(h); }
+  const nock = new T.Mesh(new T.CylinderGeometry(R * 1.1, R * 1.2, .05, 12), PH({ color: 0x2a1c12, roughness: .3, clearcoat: .8 })); nock.position.y = L + .02; a.add(nock);
+  a.rotation.z = -.52; g.add(a);   // leaning to the right, as shot from the left
+  return g;
+}
 // ---------------------------------------------------------------- the studio
 const r = new T.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
-r.setSize(SIZE, SIZE); r.setPixelRatio(1); r.outputEncoding = T.sRGBEncoding; r.toneMapping = T.ACESFilmicToneMapping; r.toneMappingExposure = 1.05; r.physicallyCorrectLights = true;
+r.setSize(SIZE, SIZE); r.setPixelRatio(1); r.outputEncoding = T.sRGBEncoding; r.toneMapping = T.ACESFilmicToneMapping; r.toneMappingExposure = 1.16;   // (2026-11-10: brighter pieces) r.physicallyCorrectLights = true;
 document.body.appendChild(r.domElement);
 const scene = new T.Scene();
 // environment: soft boxes over a dark floor (a canvas panorama through PMREM)
@@ -217,7 +243,7 @@ const key = new T.DirectionalLight(0xfff2e0, 3.2); key.position.set(-2.5, 4, 3.5
 const rim = new T.DirectionalLight(0xcfe0ff, 2.4); rim.position.set(3, 2.5, -3); scene.add(rim);
 const fill = new T.DirectionalLight(0xffffff, .7); fill.position.set(2, 1, 4); scene.add(fill);
 scene.add(new T.AmbientLight(0xffffff, .25));
-const obj = SET === 'cameo' ? cameo() : SET === 'coin' ? coin() : SET === 'enamel' ? enamel() : vase();
+const obj = SET === 'arrow' ? arrowStuck() : SET === 'cameo' ? cameo() : SET === 'coin' ? coin() : SET === 'enamel' ? enamel() : vase();
 const FLAT = true;
 scene.add(obj);
 // frame the figure: a 3/4 front view from slightly above, the bounding box filling the picture
