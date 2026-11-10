@@ -160,14 +160,14 @@
 .bpk-g{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
 .bpk-g button{display:flex;align-items:center;gap:10px;text-align:left;border:2px solid #e6dcc6;border-radius:16px;background:#fff;padding:7px 9px;font:inherit;cursor:pointer;color:inherit;box-shadow:0 3px 0 #e6dcc6;transition:transform .12s}
 .bpk-g button:hover{transform:translateY(-2px)}.bpk-g button[aria-pressed=true]{border-color:var(--bpk,#2f6fd0);box-shadow:0 3px 0 var(--bpk,#2f6fd0);background:#f4f8ff}
-.bpk-g .th{flex:none;width:66px;height:46px;border-radius:10px;overflow:hidden;background:#e9dfca}.bpk-g .th img{width:100%;height:100%;object-fit:cover;transform:scale(1.9);display:block}
+.bpk-g .th{flex:none;width:66px;height:46px;border-radius:10px;overflow:hidden;background:#e9dfca}.bpk-g .th img{width:100%;height:100%;object-fit:cover;transform:scale(1.25);display:block}
 .bpk-g b{display:block;font-size:14.5px;font-weight:900}.bpk-g small{display:block;font-size:11.5px;font-weight:700;color:#5b6074;line-height:1.35;margin-top:2px}
 .bpk-f{display:flex;gap:10px;margin-top:12px}.bpk-f button{flex:1;padding:12px;border:0;border-radius:99px;font:inherit;font-size:17px;font-weight:900;cursor:pointer}
 .bpk-f .bk{flex:1;background:#ece6d8;color:#3a3f52;box-shadow:0 3px 0 #d4ccb8}.bpk-f .go{background:#ff5d5d;color:#fff;box-shadow:0 3px 0 #c23b3b}
 @media (max-width:560px){.bpk-g small{display:none}.bpk-g .th{width:52px;height:38px}.bpk-g button{padding:6px 7px;gap:7px}}
 @media (min-width:900px) and (min-height:600px) and (hover:hover){.bpk-c{width:min(1120px,82vw);padding:24px 30px 22px;border-radius:30px}.bpk h2{font-size:28px}.bpk .sub{font-size:15px;margin-bottom:16px}
 .bpk-g{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.bpk-g button{flex-direction:column;align-items:stretch;gap:10px;padding:10px 10px 14px;border-radius:20px}
-.bpk-g .th{width:100%;height:auto;aspect-ratio:16/9;border-radius:14px}.bpk-g .th img{transform:scale(1.7) translateY(-3%)}.bpk-g b{font-size:20px;padding:0 6px}.bpk-g small{font-size:14px;padding:0 6px}
+.bpk-g .th{width:100%;height:auto;aspect-ratio:16/9;border-radius:14px}.bpk-g .th img{transform:scale(1.3)}.bpk-g b{font-size:20px;padding:0 6px}.bpk-g small{font-size:14px;padding:0 6px}
 .bpk-f{max-width:640px;margin:16px auto 0}.bpk-f button{font-size:21px;padding:15px}}
 @media (min-width:900px) and (max-height:820px) and (hover:hover){.bpk-g .th{aspect-ratio:2/1}.bpk-g{gap:12px}}`;
       document.head.appendChild(c);
@@ -175,7 +175,7 @@
     let cur = o.cur;
     const el = document.createElement('div'); el.className = 'bpk'; el.dir = o.lang === 'ar' ? 'rtl' : 'ltr'; if (o.color) el.style.setProperty('--bpk', o.color);
     el.innerHTML = `<div class="bpk-c" role="dialog" aria-label="${esc(pkT(PKTX.title, o.lang))}"><h2>${esc(pkT(PKTX.title, o.lang))}</h2><p class="sub">${esc(pkT(PKTX.sub, o.lang))}</p>
-      <div class="bpk-g">${o.list.map(k => `<button type="button" data-k="${k}" aria-pressed="${k === cur}"><span class="th"><img src="${o.thumb(k)}" alt="" loading="lazy"></span><span><b>${esc(o.name(k))}</b><small>${esc(pkT(FEELTX[o.feel[k] || 'std'], o.lang))}</small></span></button>`).join('')}</div>
+      <div class="bpk-g">${o.list.map(k => `<button type="button" data-k="${k}" aria-pressed="${k === cur}"><span class="th"><img src="${o.pick ? o.pick(k) : o.thumb(k)}" alt="" loading="lazy"></span><span><b>${esc(o.name(k))}</b><small>${esc(pkT(FEELTX[o.feel[k] || 'std'], o.lang))}</small></span></button>`).join('')}</div>
       <div class="bpk-f"><button type="button" class="bk">${esc(pkT(PKTX.back, o.lang))}</button><button type="button" class="go">${esc(pkT(PKTX.go, o.lang))} ▶</button></div></div>`;
     ['pointerdown', 'pointermove', 'pointerup'].forEach(k => el.addEventListener(k, e => e.stopPropagation()));
     el.querySelectorAll('[data-k]').forEach(b => { b.onclick = () => { if (b.dataset.k === cur) return; cur = b.dataset.k; el.querySelectorAll('[data-k]').forEach(x => x.setAttribute('aria-pressed', x.dataset.k === cur)); try { SND.click && SND.click(); } catch (e) {} o.onPick(cur); }; b.ondblclick = () => { close(); o.onStart(cur); }; });
@@ -653,7 +653,7 @@
     /* ---------- go ---------- */
     // (2026-11-10) first the controls (unless turned off), then the board picker, then the game
     const goNow = () => { st = E.newBoard({ first: youFirst ? 0 : 1 }); build(); striker.visible = true; placeMesh(striker, 0, E.baseY(st.turn)); later(next, 650); };
-    const pick = () => { if (stopped) return; BoardPick({ lang, list: BDL, cur: look, feel: CFEEL, name: k => T3.boardName ? T3.boardName(k, lang, 'carrom') : k, thumb: k => T3.boardThumb ? T3.boardThumb('carrom', k) : '', color: '#c23a7a', onPick: setLook, onStart: v => { setLook(v); goNow(); }, onBack: () => { const q = document.getElementById('bvQuit'); if (q) q.click(); } }); };
+    const pick = () => { if (stopped) return; BoardPick({ lang, list: BDL, cur: look, feel: CFEEL, name: k => T3.boardName ? T3.boardName(k, lang, 'carrom') : k, thumb: k => T3.boardThumb ? T3.boardThumb('carrom', k) : '', pick: k => new URL('img/pick/carrom-' + k + '.webp?v=1', location.href).href, color: '#c23a7a', onPick: setLook, onStart: v => { setLook(v); goNow(); }, onBack: () => { const q = document.getElementById('bvQuit'); if (q) q.click(); } }); };
     if (howtoOn()) { told = true; howtoCard(pick); } else { told = true; pick(); }
 
     const myTurn = () => !stopped && !over && !busy && st && human(st.turn) && phase === 'place';

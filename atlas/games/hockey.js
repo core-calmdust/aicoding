@@ -158,7 +158,7 @@
 .hkmodes button{display:flex;align-items:center;gap:10px;text-align:left;border:2px solid #e6dcc6;border-radius:16px;background:#fff;padding:10px 12px;font:inherit;cursor:pointer;color:inherit;box-shadow:0 3px 0 #e6dcc6;transition:transform .12s}
 .hkmodes button:hover{transform:translateY(-2px)}.hkmodes button[aria-pressed=true]{border-color:#2f6fd0;box-shadow:0 3px 0 #2f6fd0;background:#eef5ff}
 .hkmodes .ic{flex:none;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:24px;background:#f2ecdf}.hkmodes button[aria-pressed=true] .ic{background:#d6e6ff}
-.hkmodes .ic.th{width:66px;height:46px;padding:0;overflow:hidden;background:#e9dfca}.hkmodes .ic.th img{width:100%;height:100%;object-fit:cover;transform:scale(2.1) translateY(-6%);display:block}
+.hkmodes .ic.th{width:66px;height:46px;padding:0;overflow:hidden;background:#e9dfca}.hkmodes .ic.th img{width:100%;height:100%;object-fit:cover;transform:scale(1.3);display:block}
 .hkmodes b{display:block;font-size:15px;font-weight:900}.hkmodes small{display:block;font-size:12px;font-weight:700;color:#5b6074;line-height:1.35;margin-top:2px}
 .hkmenu .hkft{display:flex;gap:10px;margin-top:14px}.hkmenu .hkft .go{flex:1;margin-top:0}.hkmenu .bk{flex:1;padding:13px;border:0;border-radius:99px;background:#ece6d8;color:#3a3f52;font:inherit;font-size:17px;font-weight:900;cursor:pointer;box-shadow:0 3px 0 #d4ccb8}
 .hkhw{position:fixed;inset:0;z-index:95;display:flex;align-items:center;justify-content:center;background:rgba(10,12,22,.55);padding:16px;-webkit-user-select:none;user-select:none}
@@ -180,7 +180,7 @@
 .hkmenu-c{width:min(1120px,82vw);padding:26px 30px 24px;border-radius:30px}.hkmenu h2{font-size:28px;margin-bottom:18px}
 .hkmodes{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
 .hkmodes button{flex-direction:column;align-items:stretch;gap:10px;padding:10px 10px 14px;border-radius:20px}
-.hkmodes .ic.th{width:100%;height:auto;aspect-ratio:16/9;border-radius:14px}.hkmodes .ic.th img{transform:scale(1.9) translateY(-4%)}
+.hkmodes .ic.th{width:100%;height:auto;aspect-ratio:16/9;border-radius:14px}.hkmodes .ic.th img{transform:scale(1.3)}
 .hkmodes b{font-size:20px;padding:0 6px}.hkmodes small{font-size:14px;padding:0 6px;margin-top:4px}
 .hkmenu .go{font-size:22px;padding:15px}.hkmenu .hkft{max-width:680px;margin:18px auto 0}.hkmenu .bk{font-size:22px;padding:15px}
 }
@@ -391,7 +391,7 @@ html.hk-on #bv > .npc-float .npc-pic{width:36px!important;height:36px!important}
       phase = 'menu';
       const el = document.createElement('div'); el.className = 'hkmenu'; menuEl = el;
       const how = '';   // (2026-11-10: the controls now come first, on a card of their own — see howFirst)
-      el.innerHTML = `<div class="hkmenu-c" role="dialog" aria-label="${esc(tr('pickB', lang))}"><h2>${esc(tr('pickB', lang))}</h2><div class="hkmodes">${BL.map(m => { const [n, d] = boardTxt(m, lang); return `<button type="button" data-m="${m}" aria-pressed="${m === look}"><span class="ic th"><img src="${T3.boardThumb ? T3.boardThumb('hockey', m) : ''}" alt="" loading="lazy"></span><span><b>${esc(n)}</b><small>${esc(d)}</small></span></button>`; }).join('')}</div><div class="sel">${esc(boardTxt(look, lang)[1])}</div>${how}<div class="hkft"><button type="button" class="bk">${esc(BKT[li(lang)] || BKT[1])}</button><button type="button" class="go">${esc(tr('play', lang))} ▶</button></div></div>`;
+      el.innerHTML = `<div class="hkmenu-c" role="dialog" aria-label="${esc(tr('pickB', lang))}"><h2>${esc(tr('pickB', lang))}</h2><div class="hkmodes">${BL.map(m => { const [n, d] = boardTxt(m, lang); return `<button type="button" data-m="${m}" aria-pressed="${m === look}"><span class="ic th"><img src="${new URL('img/pick/hockey-' + m + '.webp?v=1', location.href).href}" alt="" loading="lazy"></span><span><b>${esc(n)}</b><small>${esc(d)}</small></span></button>`; }).join('')}</div><div class="sel">${esc(boardTxt(look, lang)[1])}</div>${how}<div class="hkft"><button type="button" class="bk">${esc(BKT[li(lang)] || BKT[1])}</button><button type="button" class="go">${esc(tr('play', lang))} ▶</button></div></div>`;
       document.body.appendChild(el);
       el.querySelectorAll('[data-m]').forEach(b => { b.onclick = () => pickMode(b.dataset.m); b.ondblclick = () => { pickMode(b.dataset.m); begin(); }; });
       el.querySelector('.go').onclick = begin;
