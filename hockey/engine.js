@@ -19,17 +19,30 @@
   const MODES = ['classic', 'block', 'monster', 'items', 'bumper', 'warp', 'multi', 'chaos'];
   const ITEMS = ['speed', 'split', 'giant', 'shield', 'freeze'];
   function rng(seed) { let s = (seed >>> 0) || 1; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
-  const has = (s, g) => s.mode === g || (s.mode === 'chaos' && (g === 'block' || g === 'monster' || g === 'items'));
+  // (2026-11-10) the board decides the game: its special rules (flags) and the feel of the puck
+  //   classic  — no tricks · air — a gliding puck (little friction, lively walls) · neon — monsters + items (a gaming board)
+  //   pinball  — four bumpers and two pucks · gear — the turning bar in the middle · space — warp holes in the side walls
+  const BOARDS = {
+    classic: { flags: [] },
+    air: { flags: [], damp: .07, eWall: .93, eMal: .9, spd: 1.2 },
+    neon: { flags: ['monster', 'items'] },
+    pinball: { flags: ['bumper', 'multi'], eWall: .9 },
+    gear: { flags: ['block'] },
+    space: { flags: ['warp'], damp: .3 },
+  };
+  const MODE_FLAGS = { classic: [], block: ['block'], monster: ['monster'], items: ['items'], bumper: ['bumper'], warp: ['warp'], multi: ['multi'], chaos: ['block', 'monster', 'items'] };
+  const has = (s, g) => (s.flags || MODE_FLAGS[s.mode] || []).includes(g);
 
   function newMatch(o) {
     o = o || {};
-    const s = { mode: MODES.includes(o.mode) ? o.mode : 'classic', target: o.target || 7, score: [0, 0], t: 0, over: -1, R: rng(o.seed || (Date.now() & 0xffffff)),
+    const B = BOARDS[o.board] || null, sp = (o.speed || 1) * (B && B.spd || 1);
+    const s = { board: B ? o.board : null, flags: B ? B.flags.slice() : null, damp: B && B.damp != null ? B.damp : DAMP, eWall: B && B.eWall || E_WALL, eMal: B && B.eMal || E_MAL, mode: MODES.includes(o.mode) ? o.mode : 'classic', target: o.target || 7, score: [0, 0], t: 0, over: -1, R: rng(o.seed || (Date.now() & 0xffffff)),
       mal: [{ x: 0, y: L / 2 - 8, vx: 0, vy: 0, r: RM, big: 0, slow: 0, tx: 0, ty: L / 2 - 8 }, { x: 0, y: -L / 2 + 8, vx: 0, vy: 0, r: RM, big: 0, slow: 0, tx: 0, ty: -L / 2 + 8 }],
       pucks: [], mons: [], items: [], shield: [0, 0], nextItem: 4, bar: 0, last: -1, pause: 0, ev: [], serveTo: o.first == null ? 0 : o.first,
       // (2026-11-10) the pace grows with the AI level: o.speed 1 (Lv.1, the slow pace that felt right) … about 1.5 (Lv.20)
-      vmax: VMAX * (o.speed || 1), vsmash: VSMASH * (o.speed || 1) };
+      vmax: VMAX * sp, vsmash: VSMASH * sp };
     if (has(s, 'monster')) for (let i = 0; i < 2; i++) s.mons.push({ x: (i ? 1 : -1) * 9, y: 0, vx: (i ? -1 : 1) * 14, vy: 6, r: 2.6, dash: 0, t: s.R() * 3 });
-    serve(s, s.serveTo); if (s.mode === 'multi') serve(s, 1 - s.serveTo, true);
+    serve(s, s.serveTo); if (has(s, 'multi')) serve(s, 1 - s.serveTo, true);
     return s;
   }
   // a puck is put down in the half of the player who receives it, a little off the middle line
@@ -59,7 +72,7 @@
     for (let i = 0; i < 2; i++) { const m = s.mal[i]; if (m.big > 0) { m.big -= dt; if (m.big <= 0) s.ev.push({ k: 'end', what: 'giant', side: i }); } m.r = m.big > 0 ? RM * 1.6 : RM; if (m.slow > 0) m.slow -= dt; if (s.shield[i] > 0) { s.shield[i] -= dt; if (s.shield[i] <= 0) s.ev.push({ k: 'end', what: 'shield', side: i }); } }
     if (has(s, 'block')) s.bar = (s.bar + dt * 1.15) % (Math.PI * 2);
     if (has(s, 'items')) { s.nextItem -= dt; if (s.nextItem <= 0 && s.items.length < 2) { s.items.push({ k: ITEMS[Math.floor(s.R() * ITEMS.length)], x: (s.R() - .5) * (W - 10), y: (s.R() - .5) * 14, t: 0 }); s.nextItem = 5 + s.R() * 4; s.ev.push({ k: 'item' }); } s.items.forEach(it => it.t += dt); s.items = s.items.filter(it => it.t < 12); }
-    if (s.pause > 0) { s.pause -= dt; if (s.pause <= 0 && !s.pucks.length) { serve(s, s.serveTo); if (s.mode === 'multi') serve(s, 1 - s.serveTo, true); } }
+    if (s.pause > 0) { s.pause -= dt; if (s.pause <= 0 && !s.pucks.length) { serve(s, s.serveTo); if (has(s, 'multi')) serve(s, 1 - s.serveTo, true); } }
     // sub-steps: 1/240 s, and more when a mallet swings fast — no mallet moves more than .8 cm in one sub-step, so a quick
     // swing can't jump past the puck's centre and knock it backwards (2026-11-10)
     let far = 0; for (const m of s.mal) far = Math.max(far, Math.hypot(m.ex - m.x, m.ey - m.y));
@@ -105,20 +118,20 @@
     // pucks
     for (const p of s.pucks) {
       if (p.wait > 0) { p.wait -= h; continue; }
-      const dmp = Math.exp(-DAMP * h); p.vx *= dmp; p.vy *= dmp;
+      const dmp = Math.exp(-s.damp * h); p.vx *= dmp; p.vy *= dmp;
       if (p.fire > 0) p.fire -= h;
       const cap = p.fire > 0 ? s.vsmash * 1.15 : p.boost > s.t ? s.vsmash : s.vmax, sp = Math.hypot(p.vx, p.vy); if (sp > cap) { const ns = cap + (sp - cap) * Math.exp(-h / .18); p.vx *= ns / sp; p.vy *= ns / sp; }   // (over the table's pace — just struck — it eases down within a few tenths of a second)
       p.x += p.vx * h; p.y += p.vy * h;
       // side walls
-      if (p.x < -W / 2 + RP) { p.x = -W / 2 + RP; p.vx = Math.abs(p.vx) * E_WALL; wall(s, p); } else if (p.x > W / 2 - RP) { p.x = W / 2 - RP; p.vx = -Math.abs(p.vx) * E_WALL; wall(s, p); }
+      if (p.x < -W / 2 + RP) { p.x = -W / 2 + RP; p.vx = Math.abs(p.vx) * s.eWall; wall(s, p); } else if (p.x > W / 2 - RP) { p.x = W / 2 - RP; p.vx = -Math.abs(p.vx) * s.eWall; wall(s, p); }
       // end walls (the goal mouth is open), shields
       for (const side of [0, 1]) {
         const sg = side === 0 ? 1 : -1, yw = sg * (L / 2 - RP);
         if (sg * p.y > sg * yw) {
           const inMouth = Math.abs(p.x) < GW / 2 - RP * .3;
-          if (s.shield[side] > 0 || !inMouth) { p.y = yw; p.vy = -sg * Math.abs(p.vy) * E_WALL; wall(s, p, s.shield[side] > 0 && inMouth ? 'shield' : 'wall'); }
+          if (s.shield[side] > 0 || !inMouth) { p.y = yw; p.vy = -sg * Math.abs(p.vy) * s.eWall; wall(s, p, s.shield[side] > 0 && inMouth ? 'shield' : 'wall'); }
           else if (sg * p.y > sg * (L / 2 + RP)) { goal(s, p, 1 - side); }
-          else if (Math.abs(p.x) > GW / 2 - RP) { p.x = Math.sign(p.x) * (GW / 2 - RP); p.vx = -p.vx * E_WALL; }   // the mouth's posts
+          else if (Math.abs(p.x) > GW / 2 - RP) { p.x = Math.sign(p.x) * (GW / 2 - RP); p.vx = -p.vx * s.eWall; }   // the mouth's posts
         }
       }
       if (p.gone) continue;
@@ -135,8 +148,8 @@
         }
       }
       for (const mo of s.mons) bounceCircle(s, p, mo.x, mo.y, mo.r, 1.05, mo.vx, mo.vy, 'monster', true);
-      if (s.mode === 'bumper') for (const [bx, by] of BUMPERS) bounceCircle(s, p, bx, by, BR, 1.35, 0, 0, 'bumper');
-      if (s.mode === 'warp' && !(p.warpT > 0)) for (let k = 0; k < 2; k++) { const [wx, wy] = PORTAL[k]; if (Math.hypot(p.x - wx, p.y - wy) < PR) { const [ox, oy] = PORTAL[1 - k]; p.x = ox - Math.sign(ox) * (PR + RP + .3); p.y = oy + (p.y - wy); p.vx = -Math.sign(ox) * Math.max(60, Math.abs(p.vx)); p.warpT = .4; s.ev.push({ k: 'warp', from: k }); break; } }
+      if (has(s, 'bumper')) for (const [bx, by] of BUMPERS) bounceCircle(s, p, bx, by, BR, 1.35, 0, 0, 'bumper');
+      if (has(s, 'warp') && !(p.warpT > 0)) for (let k = 0; k < 2; k++) { const [wx, wy] = PORTAL[k]; if (Math.hypot(p.x - wx, p.y - wy) < PR) { const [ox, oy] = PORTAL[1 - k]; p.x = ox - Math.sign(ox) * (PR + RP + .3); p.y = oy + (p.y - wy); p.vx = -Math.sign(ox) * Math.max(60, Math.abs(p.vx)); p.warpT = .4; s.ev.push({ k: 'warp', from: k }); break; } }
       if (p.warpT > 0) p.warpT -= h;
       // items: the puck picks one up for the player who touched it last
       for (let j = s.items.length - 1; j >= 0; j--) { const it = s.items[j]; if (Math.hypot(p.x - it.x, p.y - it.y) < RP + 2.2) { s.items.splice(j, 1); useItem(s, it.k, s.last >= 0 ? s.last : (p.y > 0 ? 1 : 0), p); } }
@@ -184,7 +197,7 @@
       if (edge) { p.edgeT = s.t + .25; p.boost = s.t + .8; }
       p.ghost[i] = s.t + .2;
     } else {   // the puck runs into a still (or retreating) mallet: a plain bounce
-      p.vx = m.vx + rvx - (1 + E_MAL) * vn * nx; p.vy = m.vy + rvy - (1 + E_MAL) * vn * ny;
+      p.vx = m.vx + rvx - (1 + s.eMal) * vn * nx; p.vy = m.vy + rvy - (1 + s.eMal) * vn * ny;
       const cap = p.fire > 0 ? s.vsmash : s.vmax, sp = Math.hypot(p.vx, p.vy); if (sp > cap) { p.vx *= cap / sp; p.vy *= cap / sp; }
       p.ghost[i] = s.t + .05;
     }
@@ -286,7 +299,7 @@
     return { tx: p.x * f + mem.err * .3, ty: gy + (p.y - gy) * .15 };
   }
 
-  const API = { DIM, MODES, ITEMS, PORTAL, PR, BUMPERS, BR, BAR, newMatch, step, serve, aiTarget, aiSkill, rng, has };
+  const API = { DIM, MODES, BOARDS, ITEMS, PORTAL, PR, BUMPERS, BR, BAR, newMatch, step, serve, aiTarget, aiSkill, rng, has };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   root.HockeyEngine = API;
 })(typeof self !== 'undefined' ? self : this);

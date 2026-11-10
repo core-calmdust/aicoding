@@ -6,6 +6,9 @@
               (red for you, yellow for the far player); a white puck.
    · 'neon'    night arcade: a black field with glowing cyan / magenta markings, a black lacquer frame with a light strip,
               glowing mallet balls and a puck with a light ring.
+   · 'air' an air-hockey table (white glossy field with air holes), 'pinball' (purple sunburst, red frame), 'gear'
+              (leather and brass gears, walnut frame), 'space' (stars and nebula, violet light) — 2026-11-10: each board has a
+              game of its own (hockey/engine.js BOARDS).
    Everything the special modes add (atlas/games/hockey.js shows / hides them): the turning bar (block), monsters,
    item tokens, bumpers, portals, goal shields.
    Units: K world units per cm (the 66 cm tray ≈ 9.2 world units long). Field coordinates as in hockey/engine.js.
@@ -19,7 +22,7 @@
   const LO = () => !!(X.coarse || X.lite);
   const SZ = v => Math.round(v * (X.texScale ? X.texScale() : 1));
   const K = 10 / 72, W = 40, L = 62, GW = 13, RP = 2, RM = 3.1, FR = 2.2, WH = 3.2;   // frame thickness, wall height (cm)
-  const TOP = .7, LOOKS = ['classic', 'neon'];
+  const TOP = .7, LOOKS = ['classic', 'air', 'neon', 'pinball', 'gear', 'space'];
   const lin = c => new (T().Color)(c).convertSRGBToLinear();
   function phys(o) {
     const TT = T(), p = Object.assign({}, o);
@@ -31,18 +34,54 @@
   const mats = {}, mat = (k, f) => mats[k] || (mats[k] = f());
   const geos = {}, share = g => { if (X.share) X.share(g); return g; }, geo = (k, f) => geos[k] || (geos[k] = share(f()));
   const lookNow = () => X.BOARDS && X.BOARDS.hockey ? X.BOARDS.hockey.get() : 'classic';
-  const COL = { classic: ['#e2402f', '#f2c230'], neon: ['#ff3fb4', '#3ce6ff'] };
+  const COL = { classic: ['#e2402f', '#f2c230'], neon: ['#ff3fb4', '#3ce6ff'], air: ['#e2302a', '#2a64d8'], pinball: ['#ff5a2c', '#ffd23c'], gear: ['#c8402a', '#3a8ad0'], space: ['#ff4fa3', '#4fd8ff'] };
+  // (2026-11-10) each board its own field: base colour, grain, markings and a picture of its own
+  const FLD = {
+    classic: { base: [36, 74, 140], grain: 14, mott: 20, ink: 'rgba(250,250,255,.92)', ink2: 'rgba(250,250,255,.92)' },
+    neon: { base: [10, 11, 22], grain: 6, mott: 8, ink: '#3ce6ff', ink2: '#ff3fb4', glow: true, seed: 5 },
+    air: { base: [238, 242, 246], grain: 3, mott: 5, ink: '#d8342c', ink2: '#2a64d8', seed: 7 },
+    pinball: { base: [44, 22, 92], grain: 8, mott: 22, ink: '#ffd23c', ink2: '#ff5a2c', glow: true, seed: 11 },
+    gear: { base: [70, 46, 30], grain: 12, mott: 26, ink: '#e8c27a', ink2: '#e8c27a', seed: 13 },
+    space: { base: [8, 8, 26], grain: 5, mott: 10, ink: '#c9b8ff', ink2: '#7fe6ff', glow: true, seed: 17 },
+  };
+
+  /* ---------- each board's picture under the markings ---------- */
+  function deco(g, look, S, H, u, X0, Y0) {
+    const rnd = (k => () => (k = (k * 16807) % 2147483647) / 2147483647)(look.length * 977 + 13);
+    if (look === 'air') {   // the air holes: a fine grid of small dark dots (the air comes through them)
+      g.fillStyle = 'rgba(70,80,96,.55)';
+      for (let y = -L / 2 + 1; y < L / 2; y += 1.6) for (let x = -W / 2 + 1; x < W / 2; x += 1.6) { g.beginPath(); g.arc(X0(x), Y0(y), .13 * u, 0, 7); g.fill(); }
+      g.fillStyle = 'rgba(42,100,216,.10)'; g.fillRect(0, 0, S, H * .5); g.fillStyle = 'rgba(216,52,44,.08)'; g.fillRect(0, H * .5, S, H * .5);
+    } else if (look === 'pinball') {   // sunburst rays and stars, a pinball playfield
+      g.save(); g.translate(X0(0), Y0(0));
+      for (let k = 0; k < 24; k++) { g.fillStyle = k % 2 ? 'rgba(255,90,44,.16)' : 'rgba(255,210,60,.10)'; g.beginPath(); g.moveTo(0, 0); const a0 = k / 24 * Math.PI * 2, a1 = (k + 1) / 24 * Math.PI * 2, R = S * 2; g.lineTo(Math.cos(a0) * R, Math.sin(a0) * R); g.lineTo(Math.cos(a1) * R, Math.sin(a1) * R); g.fill(); }
+      g.restore();
+      const star = (x, y, r, c) => { g.fillStyle = c; g.beginPath(); for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, q = k % 2 ? r * .45 : r; g.lineTo(X0(x) + Math.cos(a) * q * u, Y0(y) + Math.sin(a) * q * u); } g.fill(); };
+      for (let k = 0; k < 26; k++) star((rnd() - .5) * (W - 4), (rnd() - .5) * (L - 8), .4 + rnd() * .8, rnd() < .5 ? 'rgba(255,230,120,.55)' : 'rgba(255,255,255,.4)');
+    } else if (look === 'gear') {   // brass gears etched in the leather
+      const gear = (x, y, r, n) => { g.strokeStyle = 'rgba(232,194,122,.28)'; g.lineWidth = .18 * u; g.beginPath(); for (let k = 0; k <= n * 4; k++) { const a = k / (n * 4) * Math.PI * 2, q = (k % 4 < 2 ? r : r * .86); g.lineTo(X0(x) + Math.cos(a) * q * u, Y0(y) + Math.sin(a) * q * u); } g.stroke(); g.beginPath(); g.arc(X0(x), Y0(y), r * .35 * u, 0, 7); g.stroke(); };
+      gear(-12, -18, 6, 12); gear(-3, -11, 3.6, 8); gear(13, 16, 6.5, 13); gear(4, 21, 3.2, 8); gear(14, -24, 4, 9); gear(-14, 22, 4.5, 10);
+    } else if (look === 'space') {   // stars and a faint nebula
+      for (let k = 0; k < 5; k++) { const x = X0((rnd() - .5) * W), y = Y0((rnd() - .5) * L), r = (6 + rnd() * 10) * u, gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, k % 2 ? 'rgba(160,90,255,.22)' : 'rgba(60,170,255,.18)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(x - r, y - r, r * 2, r * 2); }
+      for (let k = 0; k < 420; k++) { const b = rnd(); g.fillStyle = `rgba(255,255,255,${.25 + b * .7})`; g.beginPath(); g.arc(rnd() * S, rnd() * H, (b > .96 ? .16 : .07) * u, 0, 7); g.fill(); }
+    } else if (look === 'neon') {   // a faint grid (a gaming floor)
+      g.strokeStyle = 'rgba(60,230,255,.08)'; g.lineWidth = .06 * u;
+      for (let x = -W / 2; x <= W / 2; x += 4) { g.beginPath(); g.moveTo(X0(x), 0); g.lineTo(X0(x), H); g.stroke(); }
+      for (let y = -L / 2; y <= L / 2; y += 4) { g.beginPath(); g.moveTo(0, Y0(y)); g.lineTo(S, Y0(y)); g.stroke(); }
+    }
+  }
 
   /* ---------- the field: felt and markings, in field centimetres (W × L) ---------- */
   function fieldTex(look) {
     const S = SZ(1024), H = Math.round(S * L / W);
     return X.canvasTex('hkField' + look + S, S, H, (g) => {
-      const u = S / W, X0 = cm => (cm + W / 2) * u, Y0 = cm => (cm + L / 2) * u, neon = look === 'neon';
-      const N = X.makeNoise(neon ? 5 : 19), img = g.createImageData(S, H), d = img.data;
-      const base = neon ? [10, 11, 22] : [36, 74, 140];
-      for (let y = 0; y < H; y++) for (let x = 0; x < S; x++) { const k = (Math.random() - .5) * (neon ? 6 : 14) + (N(x / 3, y / 3, 2) - .5) * (neon ? 8 : 20) + (N(x / 60, y / 60, 3) - .5) * 14, i = (y * S + x) * 4; d[i] = base[0] + k; d[i + 1] = base[1] + k; d[i + 2] = base[2] + k * 1.1; d[i + 3] = 255; }
+      const u = S / W, X0 = cm => (cm + W / 2) * u, Y0 = cm => (cm + L / 2) * u, F = FLD[look] || FLD.classic, neon = !!F.glow;
+      const N = X.makeNoise(F.seed || 19), img = g.createImageData(S, H), d = img.data;
+      const base = F.base;
+      for (let y = 0; y < H; y++) for (let x = 0; x < S; x++) { const k = (Math.random() - .5) * F.grain + (N(x / 3, y / 3, 2) - .5) * F.mott + (N(x / 60, y / 60, 3) - .5) * 14, i = (y * S + x) * 4; d[i] = base[0] + k; d[i + 1] = base[1] + k; d[i + 2] = base[2] + k * 1.1; d[i + 3] = 255; }
       g.putImageData(img, 0, 0);
-      const ink = neon ? '#3ce6ff' : 'rgba(250,250,255,.92)', ink2 = neon ? '#ff3fb4' : 'rgba(250,250,255,.92)';
+      deco(g, look, S, H, u, X0, Y0);
+      const ink = F.ink, ink2 = F.ink2;
       const glow = c => { if (neon) { g.shadowColor = c; g.shadowBlur = .8 * u; } else g.shadowBlur = 0; };
       const line = (x0, y0, x1, y1, w, c) => { glow(c); g.strokeStyle = c; g.lineWidth = w * u; g.beginPath(); g.moveTo(X0(x0), Y0(y0)); g.lineTo(X0(x1), Y0(y1)); g.stroke(); };
       const arc = (x, y, r, a0, a1, w, c) => { glow(c); g.strokeStyle = c; g.lineWidth = w * u; g.beginPath(); g.arc(X0(x), Y0(y), r * u, a0, a1); g.stroke(); };
@@ -65,22 +104,27 @@
   /* ---------- materials ---------- */
   function boardMats(look) {
     return mat('bm' + look, () => {
-      const TT = T(), neon = look === 'neon';
-      const field = phys({ map: fieldTex(look), color: '#ffffff', roughness: neon ? .5 : .95, metalness: 0 });
-      if (neon) { field.emissiveMap = field.map; field.emissive = new TT.Color(.75, .75, .75); }
-      let frame;
-      if (neon) frame = phys({ color: '#0d0e18', roughness: .25, clearcoat: 1, clearcoatRoughness: .1 });
+      const TT = T(), F = FLD[look] || FLD.classic, glowF = !!F.glow;
+      const field = phys({ map: fieldTex(look), color: '#ffffff', roughness: look === 'air' ? .18 : glowF ? .5 : look === 'gear' ? .8 : .95, metalness: 0, clearcoat: look === 'air' ? 1 : undefined, clearcoatRoughness: look === 'air' ? .12 : undefined });
+      if (glowF) { field.emissiveMap = field.map; field.emissive = new TT.Color(.75, .75, .75); }
+      const glowM = c => { const m = phys({ color: '#000000' }); m.emissive = new TT.Color(c); m.emissiveIntensity = 1.6; return m; };
+      let frame, ply, strip = null;
+      if (look === 'neon') { frame = phys({ color: '#0d0e18', roughness: .25, clearcoat: 1, clearcoatRoughness: .1 }); strip = glowM(0x3ce6ff); }
+      else if (look === 'air') { frame = phys({ color: '#22252c', roughness: .3, metalness: .3, clearcoat: 1, clearcoatRoughness: .15 }); strip = phys({ color: '#d8342c', roughness: .35, clearcoat: .8 }); }
+      else if (look === 'pinball') { frame = phys({ color: '#a8182a', roughness: .3, clearcoat: 1, clearcoatRoughness: .1 }); strip = glowM(0xffc83c); }
+      else if (look === 'gear') { const w = X.wood('hkWalnut', '#6a4428', '#3c2414', SZ(1024), SZ(256), .8); w.wrapS = w.wrapT = TT.RepeatWrapping; frame = phys({ map: w, color: '#ffffff', roughness: .5, clearcoat: .5 }); strip = phys({ color: '#c9a050', roughness: .25, metalness: 1 }); }
+      else if (look === 'space') { frame = phys({ color: '#181530', roughness: .25, metalness: .6, clearcoat: .8 }); strip = glowM(0xa46bff); }
       else { const w = X.wood('hkBirch', '#e8d4b0', '#c9ad80', SZ(1024), SZ(256), .7); w.wrapS = w.wrapT = TT.RepeatWrapping; frame = phys({ map: w, color: '#ffffff', roughness: .55 }); }
-      const ply = phys({ color: neon ? '#16182a' : '#d8bf94', roughness: .7 });
-      const strip = neon ? (() => { const m = phys({ color: '#000000' }); m.emissive = new TT.Color(neon ? 0x3ce6ff : 0); m.emissiveIntensity = 1.6; return m; })() : null;
+      ply = phys({ color: { neon: '#16182a', air: '#2a2d34', pinball: '#5c0f18', gear: '#3a2414', space: '#100e22' }[look] || '#d8bf94', roughness: .7 });
       const hole = new TT.MeshBasicMaterial({ color: 0x050508 });
-      const black = phys({ color: '#141416', roughness: .35, clearcoat: .6 });
-      const puck = phys({ color: neon ? '#e8f8ff' : '#f6f4ee', roughness: .3, clearcoat: .8 });
-      const ring = neon ? (() => { const m = phys({ color: '#000000' }); m.emissive = new TT.Color(0xffffff); m.emissiveIntensity = 1.4; return m; })() : phys({ color: '#d0d0d4', roughness: .3, metalness: .6 });
+      const black = phys({ color: look === 'air' ? '#f2f2f4' : '#141416', roughness: .35, clearcoat: .6 });   // (air hockey strikers: white bodies)
+      const puckC = { neon: '#e8f8ff', air: '#f2c230', pinball: '#e8e8ee', gear: '#e9d7b0', space: '#f0ecff' }[look] || '#f6f4ee';
+      const puck = phys({ color: puckC, roughness: look === 'pinball' ? .08 : .3, metalness: look === 'pinball' ? .9 : 0, clearcoat: .8 });
+      const ring = glowF ? (() => { const m = phys({ color: '#000000' }); m.emissive = new TT.Color(0xffffff); m.emissiveIntensity = 1.4; return m; })() : phys({ color: '#d0d0d4', roughness: .3, metalness: .6 });
       return { field, frame, ply, strip, hole, black, puck, ring };
     });
   }
-  const ballMat = (look, side) => mat('ball' + look + side, () => { const m = phys({ color: COL[look][side], roughness: .25, clearcoat: 1, clearcoatRoughness: .1 }); if (look === 'neon') { m.emissive = lin(COL[look][side]); m.emissiveIntensity = .7; } return m; });
+  const ballMat = (look, side) => mat('ball' + look + side, () => { const m = phys({ color: COL[look][side], roughness: .25, clearcoat: 1, clearcoatRoughness: .1 }); if ((FLD[look] || {}).glow) { m.emissive = lin(COL[look][side]); m.emissiveIntensity = .7; } return m; });
 
   /* ---------- pieces ---------- */
   function mallet(look, side) {
@@ -185,7 +229,7 @@
     const ph = TOP - .6 * K - .004, plinth = new TT.Mesh(new TT.BoxGeometry(OW * K, ph, OL * K), BM.frame); plinth.position.y = ph / 2; plinth.castShadow = plinth.receiveShadow = true; g.add(plinth);
     for (const sg of [1, -1]) { const pk = TOP - .8 * K - .004, b = new TT.Mesh(new TT.BoxGeometry((GW + 1.6) * K, pk, 4.8 * K), BM.frame); b.position.set(0, pk / 2, sg * (L / 2 + FR + 2.2) * K); b.castShadow = true; g.add(b); }
     const U = g.userData;
-    U.top = TOP; U.K = K; U.look = look; U.W = W; U.L = L; U.OW = OW; U.OL = OL;
+    U.top = TOP; U.K = K; U.look = look; U.mats = BM; U.W = W; U.L = L; U.OW = OW; U.OL = OL;
     U.xz = (x, y) => [x * K, y * K];
     U.mallet = side => mallet(look, side); U.puck = () => puck(look); U.monster = i => monster(look, i); U.item = k => item(look, k);
     U.bar = () => bar(look); U.bumper = () => bumper(look); U.portal = k => portal(look, k); U.shield = () => shield(look);

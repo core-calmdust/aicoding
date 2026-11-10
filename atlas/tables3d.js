@@ -188,18 +188,28 @@
     konane: { list: ['papamu', 'quilt'], get: () => ls.get('atlas-konane-look') === 'quilt' ? 'quilt' : 'papamu', set: k => ls.set('atlas-konane-look', k) },
     // carrom (3D only): 'atlas-carrom-look' ('neon' the default | 'modern' | 'classic' | 'rajasthan' | 'bauhaus' | 'tycoon')
     carrom: { list: ['neon', 'modern', 'classic', 'rajasthan', 'bauhaus', 'tycoon'], get: () => { const v = ls.get('atlas-carrom-look'); return ['modern', 'classic', 'rajasthan', 'bauhaus', 'tycoon'].includes(v) ? v : 'neon'; }, set: k => ls.set('atlas-carrom-look', k) },
-    // table hockey (3D only): 'atlas-hockey-look' ('classic' the default | 'neon')
-    hockey: { list: ['classic', 'neon'], get: () => ls.get('atlas-hockey-look') === 'neon' ? 'neon' : 'classic', set: k => ls.set('atlas-hockey-look', k) },
+    // table hockey (3D only): 'atlas-hockey-look'
+    // (2026-11-10) six boards, each with its own game (hockey/engine.js BOARDS): classic · air · neon · pinball · gear · space
+    hockey: { list: ['classic', 'air', 'neon', 'pinball', 'gear', 'space'], get: () => { const v = ls.get('atlas-hockey-look'); return ['air', 'neon', 'pinball', 'gear', 'space'].includes(v) ? v : 'classic'; }, set: k => ls.set('atlas-hockey-look', k) },
     // crokinole (3D only): 'atlas-crokinole-look' ('marq' the default | 'classic' | 'modern' | 'mcm' | 'winter' | 'neon')
     crokinole: { list: ['marq', 'classic', 'modern', 'mcm', 'winter', 'neon'], get: () => { const v = ls.get('atlas-crokinole-look'); return ['classic', 'modern', 'mcm', 'winter', 'neon'].includes(v) ? v : 'marq'; }, set: k => ls.set('atlas-crokinole-look', k) },
     // ludo (atlas/models/ludo.js, atlas/skin/ludo.js): 'atlas-ludo-look' ('classic' the default | 'marble' | 'street' | 'peg' | 'mondrian' | 'cutout'); pachisi keeps its cloth
     ludo: { list: ['classic', 'peg', 'street', 'mondrian', 'cutout', 'marble'], get: () => { const v = ls.get('atlas-ludo-look'); return ['marble', 'street', 'peg', 'mondrian', 'cutout'].includes(v) ? v : 'classic'; }, set: k => ls.set('atlas-ludo-look', k) },
   };
   X.BOARDS = BOARDS;
-  X.boardName = (k, lang) => { const o = N3[k]; return o ? o[lang] || o.en : k; };
+  // a game's own board names (the board is part of its game, so no '3D'): table hockey
+  const NG = { hockey: {
+    classic: { ja: 'クラシック', en: 'Classic', zh: '经典', 'zh-TW': '經典', ko: '클래식', es: 'Clásico', fr: 'Classique', pt: 'Clássico', de: 'Klassisch', ru: 'Классика', tr: 'Klasik', id: 'Klasik', hi: 'क्लासिक', ar: 'كلاسيك' },
+    air: { ja: 'エアホッケー', en: 'Air hockey', zh: '气垫球', 'zh-TW': '氣墊球', ko: '에어하키', es: 'Air hockey', fr: 'Air-hockey', pt: 'Air hockey', de: 'Airhockey', ru: 'Аэрохоккей', tr: 'Hava hokeyi', id: 'Air hockey', hi: 'एयर हॉकी', ar: 'هوكي الهواء' },
+    neon: { ja: 'ネオン', en: 'Neon', zh: '霓虹', 'zh-TW': '霓虹', ko: '네온', es: 'Neón', fr: 'Néon', pt: 'Neon', de: 'Neon', ru: 'Неон', tr: 'Neon', id: 'Neon', hi: 'नियॉन', ar: 'نيون' },
+    pinball: { ja: 'ピンボール', en: 'Pinball', zh: '弹珠台', 'zh-TW': '彈珠台', ko: '핀볼', es: 'Pinball', fr: 'Flipper', pt: 'Pinball', de: 'Flipper', ru: 'Пинбол', tr: 'Pinball', id: 'Pinball', hi: 'पिनबॉल', ar: 'بينبول' },
+    gear: { ja: 'からくり工房', en: 'Clockwork', zh: '机关工坊', 'zh-TW': '機關工坊', ko: '태엽 공방', es: 'Engranajes', fr: 'Engrenages', pt: 'Engrenagens', de: 'Uhrwerk', ru: 'Механизм', tr: 'Çark', id: 'Roda gigi', hi: 'घड़ी-कारखाना', ar: 'التروس' },
+    space: { ja: 'スペース', en: 'Space', zh: '太空', 'zh-TW': '太空', ko: '스페이스', es: 'Espacio', fr: 'Espace', pt: 'Espaço', de: 'Weltraum', ru: 'Космос', tr: 'Uzay', id: 'Luar angkasa', hi: 'अंतरिक्ष', ar: 'الفضاء' },
+  } };
+  X.boardName = (k, lang, id) => { const g = id && NG[id] && NG[id][k]; if (g) return g[lang] || g.en; const o = N3[k]; return o ? o[lang] || o.en : k; };
   // the full games' 「3D盤」 tiles: the board alone, from straight above, no room (atlas/tools/boardicon.html, 2026-11-09)
   X.boardIcon = (id, k) => new URL('img/boardic-' + id + '-' + k + '.webp?v=1', ME).href;
-  X.boardThumb = (id, k) => new URL('img/board-' + id + '-' + k + '.webp?v=' + (id === 'senet' ? 3 : id === 'carrom' ? 5 : id === 'crokinole' ? 5 : id === 'konane' ? 2 : id === 'ludo' ? 2 : 1), ME).href;
+  X.boardThumb = (id, k) => new URL('img/board-' + id + '-' + k + '.webp?v=' + (id === 'senet' ? 3 : id === 'carrom' ? 5 : id === 'crokinole' ? 5 : id === 'konane' ? 2 : id === 'ludo' ? 2 : id === 'hockey' ? 2 : 1), ME).href;
   // choose a board for a game: the shared key is written and the showcase board (if it is that game's) is rebuilt at once
   X.setBoard = (id, k) => { const B = BOARDS[id]; if (!B || !B.list.includes(k)) return; B.set(k); try { dispatchEvent(new CustomEvent('atlas-board', { detail: { id, look: k } })); } catch (e) {} };
   PLACES.ui.board = { ja: '盤', en: 'Board', zh: '棋盘', ko: '판', es: 'Tablero', fr: 'Plateau', pt: 'Tabuleiro', de: 'Brett', hi: 'बोर्ड', ar: 'اللوحة', ru: 'Доска', 'zh-TW': '棋盤', id: 'Papan', tr: 'Tahta' };
