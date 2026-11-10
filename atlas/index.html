@@ -1603,6 +1603,16 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 .lvs-l .pzs-c{display:flex;padding:0;text-align:center;flex-direction:column;align-items:center;justify-content:center;gap:2px;height:56px;border-radius:14px;border:2px solid var(--line);background:#fff;box-shadow:0 3px 0 var(--line);font:inherit;color:var(--ink);cursor:pointer}
 .lvs-l .pzs-c b{grid-row:auto;min-width:0;font-size:15px;font-weight:900;color:var(--ink)}.lvs-l .pzs-c small{grid-column:auto;font-size:10px;line-height:1;color:#e0a020;letter-spacing:-1px}.lvs-l .pzs-c.ok{background:#fff8e3;border-color:#f3d48a}
 .lvs-l .pzs-c:disabled{opacity:.45;cursor:default;box-shadow:none}
+.bksheet{position:fixed;inset:0;z-index:160;display:flex;align-items:flex-end;justify-content:center;background:rgba(20,12,4,0);transition:background .25s;--bg:#130d09;--bg2:#1b130d;--panel:#21170f;--panel2:#2b1f15;--line:#45321f;--text:#f2e8d9;--muted:#bba487;--dim:#8a735b;--brass:#c9a961;--brass2:#8e7440;--accent:#e2c275;--red:#ff6b5b;--good:#7fd6a4}
+.bksheet.on{background:rgba(20,12,4,.5)}
+.bk-in{width:min(980px,100%);height:min(92dvh,900px);display:flex;flex-direction:column;background:radial-gradient(120% 60% at 50% 0%,#2b1f15,#160f0a 70%);color:var(--text);border-radius:24px 24px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,.5);transform:translateY(105%);transition:transform .28s cubic-bezier(.3,1.1,.5,1);overflow:hidden}
+.bksheet.on .bk-in{transform:none}
+.bk-h{flex:none;display:flex;align-items:center;gap:10px;padding:14px 16px 10px;border-bottom:1px solid var(--line)}
+.bk-t{flex:1;min-width:0;font-size:17px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--accent)}
+.bk-x,.bk-bk{flex:none;width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--text);font:900 17px/1 var(--font);cursor:pointer}.bk-bk{font-size:22px;padding-bottom:3px}
+.bk-body{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:14px 14px calc(18px + env(safe-area-inset-bottom))}
+.bk-body .lesson-list{display:grid;gap:10px}.bk-body .lesson-list.lx-on{display:block}.bk-wait{text-align:center;color:var(--muted);padding:30px}
+@media (min-width:820px){.bk-in{border-radius:24px;height:min(88dvh,900px);margin-bottom:4dvh}.bksheet{align-items:center}}
 .lss-cat{margin:12px 2px 4px;font-size:12.5px;font-weight:900;color:var(--ink2)}.lss-cat:first-child{margin-top:0}
 .lssheet .lss b{color:var(--ink2)}.lssheet .lss.pass b{color:#1ea36c}.lss-wait{padding:20px;text-align:center;color:var(--ink2)}
 .recp .rtsum{display:grid;grid-template-columns:auto 1fr;gap:12px 18px;align-items:center}.recp .rtnow small{display:block;font-size:12px;font-weight:800;color:var(--ink2)}.recp .rtnow b{font-size:30px;font-weight:900;color:var(--ink)}
@@ -1932,8 +1942,8 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 };</script>
 <script src="lazy.js?v=39"></script>
 <script src="puzzle-lines.js?v=1"></script>
-<script src="puzzles.js?v=6"></script>
-<script src="lessons3d.js?v=2"></script>
+<script src="puzzles.js?v=7"></script>
+<script src="lessons3d.js?v=3"></script>
 <script src="missions.js?v=6"></script>
 <link rel="stylesheet" href="historia.css?v=15">
 <script src="historia.js?v=38"></script>
@@ -1946,6 +1956,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <link rel="stylesheet" href="worldmap.css?v=18">
 <script src="worldmap.js?v=31"></script>
 <script src="npc/npc.js?v=22"></script>
-<script src="app.js?v=289"></script>
+<script src="app.js?v=290"></script>
 </body>
 </html>

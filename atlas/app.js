@@ -1467,8 +1467,79 @@
     fitStage(); Table3D.play(true);
   }
   // the list of lessons / openings (the card's レッスン tab → 一覧): a sheet like the level list; a row starts it on the 3D table
+  /* ---------- 将棋: the illustrated lists of the full game (shared/pzbook.js + shogi/lists-ui.js), in a dark sheet like the shogi page (2026-11-11) ----------
+     詰将棋: hero · today's two · tabs (手数別 / テーマ別 / 実戦) · set cards with a position → a set's stage grid with thumbnails → that problem on the 3D table.
+     レッスン: tabs by band (入門 / 初級 / 中級 / 有段) · lesson cards with a position → that lesson on the 3D table. */
+  const loadJs = (src, ok) => ok() ? Promise.resolve() : new Promise(res => { const sc = document.createElement('script'); sc.src = src; sc.onload = sc.onerror = () => res(); document.head.appendChild(sc); });
+  const needBooks = () => loadJs('../shared/pzbook.js?v=5l14', () => window.PZBook).then(() => loadJs('../shogi/lists-ui.js?v=20261107l14', () => window.ShogiLX));
+  const TS_TIER = { p1: 0, p3: 1, p5: 2, p7: 3, p9: 4, art: 5, c3: 0, c5: 1, c7: 2, c9: 3, c13: 5, t_sac: 1, t_funari: 2, t_touchi: 2, t_uchifu: 3, t_aigoma: 3, t_aki: 2, t_kwalk: 4 };   // (= shogi/index.html)
+  const TS_ICON = { t_sac: '捨', t_funari: '不', t_touchi: '遠', t_uchifu: '歩', t_aigoma: '合', t_aki: '開', t_kwalk: '追' };
+  const TS_CAT = { ja: { comp: '手数別', theme: 'テーマ別', prac: '実戦' }, en: { comp: 'By length', theme: 'By theme', prac: 'Practical' }, zh: { comp: '按手数', theme: '按主题', prac: '实战' }, 'zh-TW': { comp: '按手數', theme: '按主題', prac: '實戰' }, ko: { comp: '수별', theme: '테마별', prac: '실전' } };
+  const LSX = { ja: { clear: 'クリア', best: '最高 {p}点', nw: 'NEW', dg: '今日の詰将棋', de: 'やさしい詰将棋', go: '解く', ttl: '詰将棋', lsT: 'レッスン' }, en: { clear: 'Cleared', best: 'Best {p} pts', nw: 'NEW', dg: 'Daily tsume', de: 'Easy tsume', go: 'Solve', ttl: 'Tsume', lsT: 'Lessons' } };
+  const lsx = k => (LSX[lang] || LSX.en)[k];
+  function bookSheet(title) {
+    const sh = document.createElement('div'); sh.className = 'bksheet';
+    sh.innerHTML = `<div class="bk-in" id="lessonOverlay"><div class="bk-h"><button type="button" class="bk-bk" hidden aria-label="${esc(t('bv.back'))}">‹</button><b class="bk-t">${esc(title)}</b><button type="button" class="bk-x" aria-label="${esc(t('bv.close'))}">✕</button></div><div class="bk-body"><div id="lessonList" class="lesson-list"><p class="bk-wait">…</p></div></div></div>`;
+    document.body.appendChild(sh); requestAnimationFrame(() => sh.classList.add('on'));
+    const close = () => { if (sh.classList.contains('out')) return; sh.classList.add('out'); sh.classList.remove('on'); setTimeout(() => sh.remove(), 260); };
+    sh.addEventListener('click', e => { if (e.target === sh || e.target.closest('.bk-x')) close(); });
+    return { sh, close, body: sh.querySelector('#lessonList'), back: sh.querySelector('.bk-bk'), title: sh.querySelector('.bk-t') };
+  }
+  function tsumeBook(g) {
+    const S0 = bookSheet(lsx('ttl'));
+    Promise.all([needBooks(), AtlasPuzzles.book('shogi')]).then(([, B]) => {
+      if (!window.PZBook || !window.ShogiLX) return S0.body.textContent = '⚠';
+      PZBook.setLang(lang); ShogiLX.style();
+      const SETS = B.data.sets, CJ = /^(ja|zh|zh-TW)$/.test(lang);
+      const L = o => !o ? '' : typeof o === 'string' ? o : o[lang] || o.en || o.ja || '';
+      const grp = s => s.group || 'prac', no = s => s.id === 'art' ? (CJ ? '創' : '✦') : TS_ICON[s.id] ? (CJ ? TS_ICON[s.id] : '✦') : s.id.replace(/^[pc]/, '') + (s.id === 'p9' || s.id === 'c13' ? '+' : '');
+      const badge = s => `<b class="gl">${no(s)}</b>`, tier = (s, i) => TS_TIER[s.id] !== undefined ? TS_TIER[s.id] : Math.min(5, i);
+      const thumb = P => P && P.sfen ? ShogiLX.board(P.sfen, { crop: ShogiLX.cropFor('tsume:' + P.id, P, 'tsume'), move: P.sol, hands: 'b' }) : '';
+      const recsOf = i => B.sets.find(x => String(x.key) === String(i)).recs;
+      const shown = i => { const r = recsOf(i), j = PZBook.nextIndex(r); return B.problems(i)[j >= 0 ? j : r.length - 1]; };
+      let cur = 'comp';
+      const home = () => {
+        S0.back.hidden = true; S0.title.textContent = lsx('ttl'); S0.body.className = 'lesson-list pz-home';
+        const cats = ['comp', 'theme', 'prac'].filter(k => SETS.some(s => grp(s) === k)); if (!cats.includes(cur)) cur = cats[0];
+        const daily = ['d1', 'd2'].map(w => { const d = B.daily(w); if (!d) return null; const s = SETS[d.i], P = (s.base || s.problems)[d.j]; let rec = {}; try { rec = JSON.parse(localStorage.getItem(B.DAILY[w]) || '{}') || {}; } catch (e) {}
+          return { key: w, board: thumb(P), title: (w === 'd2' ? '☆ ' : '★ ') + lsx(w === 'd2' ? 'de' : 'dg'), date: d.date.slice(5).replace('-', '/'), sub: L(s.title), done: !!(rec.days && rec.days[d.date]), go: lsx('go') }; }).filter(Boolean);
+        const cont = PZBook.resume(SETS.map((s, i) => ({ key: i, recs: recsOf(i), cat: grp(s) })), B.LAST);
+        S0.body.innerHTML = PZBook.home({ title: lsx('ttl'), all: SETS.map((s, i) => recsOf(i)), style: '--pbh-tint:rgba(176,122,58,.45)',
+          cont: cont && { key: cont.key + ':' + cont.j, no: cont.j + 1, name: L(SETS[cont.key].title) }, daily,
+          cats: cats.map(k => { const r = SETS.map((s, i) => grp(s) === k ? recsOf(i) : []).flat(); return { key: k, icon: PZBook.icon({ comp: 'level', theme: 'theme', prac: 'real' }[k]), name: (TS_CAT[lang] || TS_CAT.en)[k], done: r.filter(x => x > 0).length, total: r.length }; }),
+          cur, cards: SETS.map((s, i) => grp(s) !== cur ? null : { key: i, board: thumb(shown(i)), bdCls: 'tall', badge: badge(s), name: L(s.title), desc: L(s.short), recs: recsOf(i), tier: tier(s, i) }).filter(Boolean) });
+        PZBook.bindHome(S0.body, {
+          cat: k => { cur = k; home(); S0.body.parentNode.scrollTop = 0; },
+          cont: v => { const [i, j] = v.split(':').map(Number); S0.close(); startPuzzle({ pick: { i, j } }); },
+          daily: w => { S0.close(); startPuzzle({ daily: w }); },
+          card: v => gridOf(+v) });
+      };
+      const gridOf = i => {
+        const s = SETS[i]; S0.back.hidden = false; S0.title.textContent = L(s.title); S0.body.className = 'lesson-list';
+        S0.body.innerHTML = PZBook.ghead({ badge: badge(s), name: L(s.title), desc: L(s.short), chips: [(TS_CAT[lang] || TS_CAT.en)[grp(s)], PZBook.t('count', { n: s.problems.length })], tier: tier(s, i) }) + `<div id="tsGrid" class="pb-grid">${PZBook.grid({ recs: recsOf(i) })}</div>`;
+        ShogiLX.tsThumbs(S0.body.querySelector('#tsGrid'), B.problems(i));
+        S0.body.parentNode.scrollTop = 0;
+        S0.body.onclick = e => { const b = e.target.closest('#tsGrid button[data-j]'); if (!b) return; if (b.getAttribute('aria-disabled')) { toast(PZBook.t('locked')); return; } S0.close(); startPuzzle({ pick: { i, j: +b.dataset.j } }); };
+      };
+      S0.back.onclick = () => { S0.body.onclick = null; home(); };
+      home();
+    }).catch(() => { S0.body.textContent = '⚠'; });
+  }
+  function lessonBook(g) {
+    const S0 = bookSheet(lsx('lsT'));
+    Promise.all([needBooks(), AtlasLessons.data('shogi')]).then(([, D]) => {
+      if (!window.ShogiLX) return S0.body.textContent = '⚠';
+      let pr = {}; try { pr = JSON.parse(localStorage.getItem('shogi-kaya-lessons-v1') || '{}') || {}; } catch (e) {}
+      const L = o => !o ? '' : typeof o === 'string' ? o : o[lang] || o.en || o.ja || '';
+      const T = (k, v) => k === 'ls.clear' ? lsx('clear') : k === 'ls.bestPts' ? lsx('best').replace('{p}', v && v.p) : k === 'ls.new' ? lsx('nw') : k;
+      const go = () => ShogiLX.lessons({ lang: () => lang, L, t: T, grades: D.ls.grades, rules: [], prog: id => pr[id] });
+      go();
+      S0.body.onclick = e => { const b = e.target.closest('[data-i]'); if (!b || e.target.closest('[data-lx]')) return; const i = +b.dataset.i; if (i < 0) return; S0.close(); startLesson3D('list', String(i)); };
+    }).catch(() => { S0.body.textContent = '⚠'; });
+  }
   // 問題一覧 on the 3D table (2026-11-11): the sets → a set's problems (stars; stages still locked greyed) → that problem here
   function puzzleSheet(g) {
+    if (g.id === 'shogi' && AtlasPuzzles.book) return tsumeBook(g);
     if (!window.AtlasPuzzles || !AtlasPuzzles.sets) return startPlay('full', 'puzzle', 'list');
     const sh = document.createElement('div'); sh.className = 'lvsheet lssheet pzsheet';
     sh.innerHTML = `<div class="lvs-in" role="listbox"><div class="lvs-h"><button type="button" class="pzs-bk" hidden aria-label="${esc(t('bv.back'))}">‹</button><span class="pzs-t">${esc(t('bv.pzList'))}</span><button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div><div class="lvs-l"><div class="lss-wait">…</div></div></div>`;
@@ -1492,6 +1563,7 @@
     };
   }
   function lessonSheet(g, kind) {
+    if (g.id === 'shogi' && kind !== 'open' && window.AtlasLessons && AtlasLessons.data) return lessonBook(g);
     if (!window.AtlasLessons) return startPlay('full', 'lesson', kind);
     const sh = document.createElement('div'); sh.className = 'lvsheet lssheet';
     sh.innerHTML = `<div class="lvs-in" role="listbox"><div class="lvs-h">${esc(t(kind === 'open' ? 'bv.lsOp' : 'bv.ls'))}<button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div><div class="lvs-l"><div class="lss-wait">…</div></div></div>`;
