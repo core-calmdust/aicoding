@@ -33,6 +33,6 @@ AI・評価関数・定跡などは `shogi/MODEL_CARD.md` を参照。ここに�
 ## 盤・駒の追加（2026-11-10）
 
 - 盤「本榧」（天地柾）：黄金色の榧、上から下へ走る年輪の線が本物の木のように揺らぎ・枝分かれする木目（控えめ、multiply .22）、左上にやわらかい艶。デザインタブでは木目の次。
-- 駒「菱湖」「錦旗」「水無瀬」：LuffyKudo さんの SVG（CC BY-SA 4.0、github.com/LuffyKudo/Shogi-Themes の 2-Kanji、成駒は赤）。`shogi/pieces/{ryoko,kinki,minase}/`、クレジットは pieces/README.md とデザインタブ下の1行。既存の「本格（一文字）」（1kanji_3d）とは別物。
+- 駒「菱湖」「錦旗」「水無瀬」：LuffyKudo さんの SVG（CC BY-SA 4.0、github.com/LuffyKudo/Shogi-Themes の 2-Kanji、成駒は赤）。大きさは本格（立体）に合わせる（viewBox を元の1.08倍）。`shogi/pieces/{ryoko,kinki,minase}/`、クレジットは pieces/README.md とデザインタブ下の1行。既存の「本格（一文字）」（1kanji_3d）とは別物。
 - 画像の駒（本格・菱湖・錦旗・水無瀬など）の表面にうっすら木目：駒の絵そのものをマスクにして、本物の駒（黄楊）のように細くまっすぐな繊細な木目を重ねる（multiply .26）。木目の位置・大きさは駒の種類と向きごとに変え、同じ種類どうしは同じ木目。メタル・漆黒の盤では出さない。
 - どうぶつしょうぎ（LuffyKudo の Dobutsu Chess）は保留：元の絵柄（藤田麻衣子さん）は著作権が保護されており、lishogi も許可を得て使っているため。
