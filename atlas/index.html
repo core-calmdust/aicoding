@@ -1829,7 +1829,16 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 </script>
 <script src="gamelist-i18n.js?v=13am"></script>
 <script src="table3d.js?v=141"></script>
-<script src="tables3d.js?v=52"></script>
+<script>/* the places other than the chabudai (tables3d.js, 440 KB): at once when one is chosen, else in idle time after the page has
+   loaded (2026-11-10); 'atlas-places' tells the page they are there */
+(function () {
+  var SRC = 'tables3d.js?v=52', k = 0, p = null;
+  try { k = +(localStorage.getItem('atlas-table') || 0) || 0; var m = /[?&]tbl=(\d+)/.exec(location.search); if (m) k = +m[1]; } catch (e) {}
+  window.AtlasPlaces = function () { return p || (p = new Promise(function (res) { var s = document.createElement('script'); s.src = SRC; s.onload = s.onerror = function () { res(); try { dispatchEvent(new Event('atlas-places')); } catch (e) {} }; document.head.appendChild(s); })); };
+  if (k) { document.write('<script src="' + SRC + '"><\/script>'); p = Promise.resolve(); }
+  else addEventListener('load', function () { var go = function () { AtlasPlaces(); }; window.requestIdleCallback ? requestIdleCallback(go, { timeout: 4000 }) : setTimeout(go, 1500); });
+})();
+</script>
 <script src="models/cardtables.js?v=4"></script>
 <script src="icons3d.js?v=37"></script>
 <script>/* rules tours: after a solved step, the ▶ button fills up like a timer until the tour moves on by itself */
@@ -1856,6 +1865,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <link rel="stylesheet" href="worldmap.css?v=18">
 <script src="worldmap.js?v=31"></script>
 <script src="npc/npc.js?v=16"></script>
-<script src="app.js?v=274"></script>
+<script src="app.js?v=275"></script>
 </body>
 </html>
