@@ -1361,8 +1361,8 @@
   function boardRowHtml(big) {
     const X = P3(), B = !big && bvGame && X && X.BOARDS && X.BOARDS[bvGame.id]; if (!B) return '';
     const k = B.get();
-    return `<div class="plh">${esc(X.placeUi('board', lang))}<small>${esc(X.boardName(k, lang))}</small></div>
-      <div class="plrow plbd" role="group">${B.list.map(v => `<button type="button" class="plcb" data-bd="${v}" aria-pressed="${v === k}"><img src="${X.boardThumb(bvGame.id, v)}" alt="" loading="lazy" width="160" height="107"><span>${esc(X.boardName(v, lang))}</span></button>`).join('')}</div>`;
+    return `<div class="plh">${esc(X.placeUi('board', lang))}<small>${esc(X.boardName(k, lang, bvGame.id))}</small></div>
+      <div class="plrow plbd" role="group">${B.list.map(v => `<button type="button" class="plcb" data-bd="${v}" aria-pressed="${v === k}"><img src="${X.boardThumb(bvGame.id, v)}" alt="" loading="lazy" width="160" height="107"><span>${esc(X.boardName(v, lang, bvGame.id))}</span></button>`).join('')}</div>`;
   }
   // another 3D board: the shared key is written (the full game shows it too) and the board on the table is rebuilt at once
   function setBoard(v) {

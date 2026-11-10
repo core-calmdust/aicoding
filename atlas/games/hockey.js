@@ -19,6 +19,7 @@
     len: ['何点先取', 'Goals to win', '先得分数', '先得分數', '선취 점수', 'Goles para ganar', 'Buts pour gagner', 'Gols para vencer', 'Tore zum Sieg', 'Голов до победы', 'Kazanmak için gol', 'Gol untuk menang', 'जीत के लिए गोल', 'أهداف للفوز'],
     npt: ['{n}点', '{n}', '{n}分', '{n}分', '{n}점', '{n}', '{n}', '{n}', '{n}', '{n}', '{n}', '{n}', '{n}', '{n}'],
     first: ['{n}点先取', 'First to {n}', '先得{n}分', '先得{n}分', '{n}점 선취', 'A {n} goles', 'En {n} buts', 'Até {n} gols', 'Bis {n} Tore', 'До {n} голов', '{n} gole kadar', 'Sampai {n} gol', '{n} गोल तक', 'حتى {n} أهداف'],
+    pickB: ['盤を選ぶ', 'Choose a board', '选择台面', '選擇台面', '보드 선택', 'Elige un tablero', 'Choisis un plateau', 'Escolha um tabuleiro', 'Brett wählen', 'Выбери поле', 'Masa seç', 'Pilih papan', 'बोर्ड चुनें', 'اختر اللوحة'],
     pick: ['モードを選ぶ', 'Choose a mode', '选择模式', '選擇模式', '모드 선택', 'Elige un modo', 'Choisis un mode', 'Escolha um modo', 'Modus wählen', 'Выбери режим', 'Mod seç', 'Pilih mode', 'मोड चुनो', 'اختر نمطًا'],
     play: ['スタート', 'Start', '开始', '開始', '시작', 'Empezar', 'Jouer', 'Começar', 'Los', 'Старт', 'Başla', 'Mulai', 'शुरू', 'ابدأ'],
     you: ['あなた', 'You', '你', '你', '나', 'Tú', 'Toi', 'Você', 'Du', 'Вы', 'Sen', 'Kamu', 'आप', 'أنت'],
@@ -37,6 +38,16 @@
     'it.freeze': ['相手のパッドが凍った！', 'Opponent frozen!', '对手被冻住！', '對手被凍住！', '상대 패드가 얼었다！', '¡Rival congelado!', 'Adversaire gelé !', 'Rival congelado!', 'Gegner eingefroren!', 'Соперник заморожен!', 'Rakip dondu!', 'Lawan membeku!', 'विरोधी जम गया!', 'تجمّد الخصم!'],
     paused: ['一時停止中（クリックで再開）', 'Paused (click to resume)', '已暂停（点击继续）', '已暫停（點擊繼續）', '일시 정지 (클릭하면 재개)', 'En pausa (clic para seguir)', 'En pause (clic pour reprendre)', 'Pausado (clique para continuar)', 'Pause (Klick zum Weiterspielen)', 'Пауза (нажми, чтобы продолжить)', 'Duraklatıldı (devam için tıkla)', 'Dijeda (klik untuk lanjut)', 'रुका (जारी रखने के लिए क्लिक)', 'متوقف (انقر للمتابعة)'],
   };
+  // (2026-11-10) the boards: each one plays differently (hockey/engine.js BOARDS) — [name, one line], in LG order
+  const BT = {
+    classic: [['クラシック', '特別なルールなし。腕だけで勝負'], ['Classic', 'No tricks: skill only'], ['经典', '没有特殊规则，只拼技术'], ['經典', '沒有特殊規則，只拼技術'], ['클래식', '특수 규칙 없이 실력 승부'], ['Clásico', 'Sin trucos: solo habilidad'], ['Classique', 'Sans gadget : que du talent'], ['Clássico', 'Sem truques: só habilidade'], ['Klassisch', 'Keine Tricks, nur Können'], ['Классика', 'Без хитростей — только умение'], ['Klasik', 'Hile yok, sadece beceri'], ['Klasik', 'Tanpa trik, murni keterampilan'], ['क्लासिक', 'कोई चाल नहीं, सिर्फ़ हुनर'], ['كلاسيك', 'بلا حيل: المهارة فقط']],
+    air: [['エアホッケー', '空気でパックがすべる。止まりにくく、よく跳ねる'], ['Air hockey', 'The puck glides on air: it hardly slows and bounces well'], ['气垫球', '冰球在气垫上滑行，不易停下，反弹有力'], ['氣墊球', '冰球在氣墊上滑行，不易停下，反彈有力'], ['에어하키', '공기 위를 미끄러지는 퍽. 잘 멈추지 않고 잘 튄다'], ['Air hockey', 'El disco se desliza sobre aire: casi no frena'], ['Air-hockey', 'Le palet glisse sur l’air : il ralentit à peine'], ['Air hockey', 'O disco desliza no ar: quase não desacelera'], ['Airhockey', 'Der Puck gleitet auf Luft und wird kaum langsamer'], ['Аэрохоккей', 'Шайба скользит на воздухе и почти не тормозит'], ['Hava hokeyi', 'Pul havada kayar: zor yavaşlar, iyi seker'], ['Air hockey', 'Keping meluncur di atas udara, nyaris tak melambat'], ['एयर हॉकी', 'पक हवा पर फिसलता है: मुश्किल से धीमा होता है'], ['هوكي الهواء', 'القرص ينزلق على الهواء ولا يكاد يتباطأ']],
+    neon: [['ネオン', 'モンスターがうろつき、アイテムが出るゲーミング盤'], ['Neon', 'A gaming board: monsters roam and items pop up'], ['霓虹', '电竞台面：怪物游荡，道具出现'], ['霓虹', '電競台面：怪物遊蕩，道具出現'], ['네온', '몬스터가 돌아다니고 아이템이 나오는 게이밍 보드'], ['Neón', 'Tablero gamer: monstruos y objetos'], ['Néon', 'Plateau gaming : monstres et objets'], ['Neon', 'Tabuleiro gamer: monstros e itens'], ['Neon', 'Gaming-Brett: Monster und Items'], ['Неон', 'Игровое поле: монстры и предметы'], ['Neon', 'Oyuncu masası: canavarlar ve eşyalar'], ['Neon', 'Papan gaming: monster dan item'], ['नियॉन', 'गेमिंग बोर्ड: राक्षस घूमते हैं, आइटम आते हैं'], ['نيون', 'لوحة ألعاب: وحوش تتجول وأدوات تظهر']],
+    pinball: [['ピンボール', '4つのバンパーがはじき、パックは2つ'], ['Pinball', 'Four bumpers kick back, and two pucks at once'], ['弹珠台', '四个弹簧柱反弹，两个冰球同时上场'], ['彈珠台', '四個彈簧柱反彈，兩個冰球同時上場'], ['핀볼', '범퍼 4개가 튕겨 내고 퍽은 2개'], ['Pinball', 'Cuatro rebotadores y dos discos a la vez'], ['Flipper', 'Quatre bumpers et deux palets à la fois'], ['Pinball', 'Quatro bumpers e dois discos ao mesmo tempo'], ['Flipper', 'Vier Bumper und zwei Pucks zugleich'], ['Пинбол', 'Четыре отбойника и две шайбы сразу'], ['Pinball', 'Dört tampon ve aynı anda iki pul'], ['Pinball', 'Empat bumper dan dua keping sekaligus'], ['पिनबॉल', 'चार बंपर और एक साथ दो पक'], ['بينبول', 'أربعة مصدات وقرصان معًا']],
+    gear: [['からくり工房', '真ん中で回るバーがパックをはじき返す'], ['Clockwork', 'A turning bar in the middle bounces the puck back'], ['机关工坊', '中间旋转的横杆会弹回冰球'], ['機關工坊', '中間旋轉的橫桿會彈回冰球'], ['태엽 공방', '가운데서 도는 막대가 퍽을 튕겨 낸다'], ['Engranajes', 'Una barra giratoria en el centro devuelve el disco'], ['Engrenages', 'Une barre tournante au centre renvoie le palet'], ['Engrenagens', 'Uma barra giratória no meio rebate o disco'], ['Uhrwerk', 'Ein drehender Balken in der Mitte schlägt zurück'], ['Механизм', 'Вращающаяся планка в центре отбивает шайбу'], ['Çark', 'Ortada dönen çubuk pulu geri sektirir'], ['Roda gigi', 'Palang berputar di tengah memantulkan keping'], ['घड़ी-कारखाना', 'बीच में घूमती छड़ पक को लौटा देती है'], ['التروس', 'عارضة تدور في الوسط ترد القرص']],
+    space: [['スペース', '左右のワープホールに入ると反対側から出てくる'], ['Space', 'Warp holes on both sides send the puck across'], ['太空', '左右两侧的虫洞会把冰球送到对面'], ['太空', '左右兩側的蟲洞會把冰球送到對面'], ['스페이스', '좌우 워프홀에 들어가면 반대쪽에서 나온다'], ['Espacio', 'Agujeros de warp a los lados cruzan el disco'], ['Espace', 'Des trous de distorsion envoient le palet de l’autre côté'], ['Espaço', 'Buracos de dobra nos lados levam o disco ao outro'], ['Weltraum', 'Warp-Löcher an den Seiten schicken den Puck hinüber'], ['Космос', 'Варп-дыры по бокам перебрасывают шайбу'], ['Uzay', 'Yanlardaki solucan delikleri pulu karşıya atar'], ['Luar angkasa', 'Lubang warp di sisi memindahkan keping ke seberang'], ['अंतरिक्ष', 'दोनों ओर के वार्प-छेद पक को उस पार भेजते हैं'], ['الفضاء', 'ثقوب الالتواء على الجانبين ترسل القرص للجهة الأخرى']],
+  };
+  const boardTxt = (b, l) => (BT[b] || BT.classic)[li(l)] || (BT[b] || BT.classic)[1];
   // the modes: [name, one line]
   const M = {
     classic: [['クラシック', '特別なルールなし。腕だけで勝負'], ['Classic', 'No tricks: skill only'], ['经典', '没有特殊规则，只拼技术'], ['經典', '沒有特殊規則，只拼技術'], ['클래식', '특수 규칙 없이 실력 승부'], ['Clásico', 'Sin trucos: solo habilidad'], ['Classique', 'Sans gadget : que du talent'], ['Clássico', 'Sem truques: só habilidade'], ['Klassisch', 'Keine Tricks, nur Können'], ['Классика', 'Без хитростей — только умение'], ['Klasik', 'Hile yok, sadece beceri'], ['Klasik', 'Tanpa trik, murni kemampuan'], ['क्लासिक', 'कोई चाल नहीं, सिर्फ़ हुनर'], ['كلاسيكي', 'بلا حيل: المهارة فقط']],
@@ -111,11 +122,12 @@
   function start(ctx) {
     const T3 = ctx.Table3D, E = window.HockeyEngine, D = E.DIM, lang = ctx.lang;
     const pvp = ctx.mode === 'pvp', level = Math.max(1, Math.min(20, +ctx.level || 6)), target = SIZES.includes(+ctx.size) ? +ctx.size : 7;
-    const board = T3.MODELS.hockey(true); T3.show('hockey', board);
+    const BL = Object.keys(E.BOARDS), lookNow = () => { const v = T3.BOARDS && T3.BOARDS.hockey ? T3.BOARDS.hockey.get() : 'classic'; return BL.includes(v) ? v : 'classic'; };
+    let look = lookNow(), board = T3.MODELS.hockey(true, look); T3.show('hockey', board);
     document.documentElement.classList.add('hk-on');
     const barFit = () => { const b = document.getElementById('tbar'); if (b && b.offsetHeight) { const r = b.getBoundingClientRect(); document.documentElement.style.setProperty('--hk-bar', Math.round(innerHeight - r.top + 6) + 'px'); } };
     setTimeout(barFit, 400); addEventListener('resize', barFit);
-    const U = board.userData, Y = U.top, K = U.K, TH = window.THREE;
+    let U = board.userData; const Y = U.top, K = U.K, TH = window.THREE;
     const port = () => innerHeight > innerWidth * 1.05;
     const sideways = () => pvp && !port();   // two players on a wide screen: the table across the screen, red on the left
     const fitNow = () => {
@@ -141,6 +153,7 @@
 .hkmodes button{display:flex;align-items:center;gap:10px;text-align:left;border:2px solid #e6dcc6;border-radius:16px;background:#fff;padding:10px 12px;font:inherit;cursor:pointer;color:inherit;box-shadow:0 3px 0 #e6dcc6;transition:transform .12s}
 .hkmodes button:hover{transform:translateY(-2px)}.hkmodes button[aria-pressed=true]{border-color:#2f6fd0;box-shadow:0 3px 0 #2f6fd0;background:#eef5ff}
 .hkmodes .ic{flex:none;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:24px;background:#f2ecdf}.hkmodes button[aria-pressed=true] .ic{background:#d6e6ff}
+.hkmodes .ic.th{width:66px;height:46px;padding:0;overflow:hidden;background:#e9dfca}.hkmodes .ic.th img{width:100%;height:100%;object-fit:cover;transform:scale(2.1) translateY(-6%);display:block}
 .hkmodes b{display:block;font-size:15px;font-weight:900}.hkmodes small{display:block;font-size:12px;font-weight:700;color:#5b6074;line-height:1.35;margin-top:2px}
 .hkmenu .go{display:block;width:100%;margin-top:14px;padding:13px;border:0;border-radius:99px;background:#ff5d5d;color:#fff;font:inherit;font-size:19px;font-weight:900;cursor:pointer;box-shadow:0 4px 0 #c94040}
 .hkmenu .how{margin:12px 2px 0;padding:10px 12px;border-radius:14px;background:#f4efe3;font-size:12.5px;font-weight:700;color:#4a4f63;line-height:1.5}
@@ -170,11 +183,11 @@ html.hk-on #bv > .npc-float .npc-pic{width:36px!important;height:36px!important}
 
     /* ---------- HUD ---------- */
     const pill = p => `<span class="hkp"><i style="background:${U.dot(p)}"></i><span>${esc(names[p])}</span><b>${s ? s.score[p] : 0}</b></span>`;
-    function hud() { if (stopped) return; const sw = sideways(); ctx.hud(pill(sw ? 0 : 1) + `<span class="hkm"><span>${esc(mode ? modeName(mode, lang)[0] : '')}</span><span>${esc(tr('to', lang).replace('{n}', target))}</span></span>` + pill(sw ? 1 : 0)); }
+    function hud() { if (stopped) return; const sw = sideways(); ctx.hud(pill(sw ? 0 : 1) + `<span class="hkm"><span>${esc(boardTxt(look, lang)[0])}</span><span>${esc(tr('to', lang).replace('{n}', target))}</span></span>` + pill(sw ? 1 : 0)); }
     hud();
 
     /* ---------- meshes ---------- */
-    const mal = [U.mallet(0), U.mallet(1)]; mal.forEach(m => board.add(m));
+    let mal = [U.mallet(0), U.mallet(1)]; mal.forEach(m => board.add(m));
     const pk = new Map();   // puck id → mesh
     let extra = [];         // the mode's own pieces
     const monM = [], itemM = new Map(); let barM = null, shieldM = [null, null];
@@ -182,16 +195,58 @@ html.hk-on #bv > .npc-float .npc-pic{width:36px!important;height:36px!important}
     // (2026-11-10) before the match (the mode menu) the mallets wait at their own ends — they were both at the centre spot, where
     // the yellow one's ball read as a puck — and a puck sits on the centre spot
     put(mal[0], 0, D.L / 2 - 8); put(mal[1], 0, -(D.L / 2 - 8));
-    const prePuck = U.puck(); put(prePuck, 0, 0); board.add(prePuck);
+    let prePuck = U.puck(); put(prePuck, 0, 0); board.add(prePuck);
+    // (2026-11-10) board effects. Neon: a gaming board — the markings and the rim light cycle through the colours, the puck
+    // leaves a glowing trail, every hit sends out a ring of light and a goal flashes the table. Pinball: the rim lights
+    // flash when a bumper kicks.
+    const fx = (() => {
+      let trail = [], rings = [], flash = 0, hist = [];
+      const neon = () => look === 'neon';
+      function reset() { trail.forEach(m => m.parent && m.parent.remove(m)); rings.forEach(r => r.m.parent && r.m.parent.remove(r.m)); trail = []; rings = []; hist = []; flash = 0; }
+      function ensureTrail() {
+        if (trail.length || !TH) return;
+        for (let i = 0; i < 12; i++) { const m = new TH.Mesh(new TH.CircleGeometry(D.RP * K * (1 - i / 16), 20), new TH.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, blending: TH.AdditiveBlending, depthWrite: false })); m.rotation.x = -Math.PI / 2; board.add(m); trail.push(m); }
+      }
+      function ring(x, y, big) {
+        if (!TH || !neon()) return;
+        const m = new TH.Mesh(new TH.RingGeometry(D.RP * K * .9, D.RP * K * 1.25, 32), new TH.MeshBasicMaterial({ color: new TH.Color().setHSL((performance.now() / 1600) % 1, 1, .6), transparent: true, opacity: .95, blending: TH.AdditiveBlending, depthWrite: false, side: TH.DoubleSide }));
+        m.rotation.x = -Math.PI / 2; put(m, x, y, .02); board.add(m); rings.push({ m, t: 0, big: big ? 2.4 : 1 });
+      }
+      function frame(now, dt) {
+        const M = U.mats || {};
+        if (neon()) {
+          const h = (now / 2600) % 1, c = new TH.Color().setHSL(h, 1, .55);
+          if (M.strip) M.strip.emissive.copy(c);
+          if (M.field) { const w = new TH.Color(1, 1, 1).lerp(c, .55).multiplyScalar(.8 + flash * 1.2); M.field.emissive.copy(w); }
+          ensureTrail();
+          const p = s && s.pucks[0]; if (p && !(p.wait > 0)) { hist.unshift([p.x, p.y, Math.hypot(p.vx, p.vy)]); } else hist.unshift(null); hist.length = Math.min(hist.length, 24);
+          trail.forEach((m, i) => { const q = hist[i * 2 + 1]; if (!q || q[2] < 25) { m.material.opacity = 0; return; } put(m, q[0], q[1], .012); m.material.color.setHSL((h + i * .04) % 1, 1, .6); m.material.opacity = .5 * (1 - i / 12) * Math.min(1, q[2] / 90); });
+        } else if (look === 'pinball' && M.strip) { M.strip.emissiveIntensity = 1.6 + flash * 3; }
+        flash = Math.max(0, flash - dt * 3);
+        for (let i = rings.length - 1; i >= 0; i--) { const r = rings[i]; r.t += dt; const k = r.t / .4; r.m.scale.setScalar(1 + k * 2.2 * r.big); r.m.material.opacity = .95 * (1 - k); if (k >= 1) { r.m.parent && r.m.parent.remove(r.m); r.m.geometry.dispose(); r.m.material.dispose(); rings.splice(i, 1); } }
+      }
+      return { reset, frame, ring, flash: v => { flash = Math.max(flash, v || 1); } };
+    })();
+    // another board picked in the start menu: the table is rebuilt at once (before the match only)
+    function setLook(v) {
+      if (v === look || s) return; look = v;
+      try { if (T3.setBoard) T3.setBoard('hockey', v); else if (T3.BOARDS && T3.BOARDS.hockey) T3.BOARDS.hockey.set(v); } catch (e) {}
+      board = T3.MODELS.hockey(true, v); U = board.userData; T3.show('hockey', board);
+      mal = [U.mallet(0), U.mallet(1)]; mal.forEach(m => board.add(m)); put(mal[0], 0, D.L / 2 - 8); put(mal[1], 0, -(D.L / 2 - 8));
+      prePuck = U.puck(); put(prePuck, 0, 0); board.add(prePuck);
+      pk.clear(); fitNow(); kick(500); hud(); fx.reset();
+    }
     function setupMode() {
       extra.forEach(g => board.remove(g)); extra = []; monM.length = 0; barM = null;
       if (E.has(s, 'block')) { barM = U.bar(); put(barM, 0, 0); board.add(barM); extra.push(barM); }
       s.mons.forEach((m, i) => { const g = U.monster(i); board.add(g); monM.push(g); extra.push(g); });
-      if (s.mode === 'bumper') E.BUMPERS.forEach(([x, y]) => { const g = U.bumper(); put(g, x, y); board.add(g); extra.push(g); });
-      if (s.mode === 'warp') E.PORTAL.forEach(([x, y], k) => { const g = U.portal(k); put(g, x, y); board.add(g); extra.push(g); });
+      if (E.has(s, 'bumper')) E.BUMPERS.forEach(([x, y]) => { const g = U.bumper(); put(g, x, y); board.add(g); extra.push(g); });
+      if (E.has(s, 'warp')) E.PORTAL.forEach(([x, y], k) => { const g = U.portal(k); put(g, x, y); board.add(g); extra.push(g); });
       for (const side of [0, 1]) { const g = U.shield(); put(g, 0, (side === 0 ? 1 : -1) * (D.L / 2 - .4)); g.visible = false; board.add(g); extra.push(g); shieldM[side] = g; }
     }
+    let fxLast = 0;
     function sync(now) {
+      fx.frame(now, Math.min(.05, Math.max(0, (now - (fxLast || now)) / 1000))); fxLast = now;
       for (let i = 0; i < 2; i++) { const m = s.mal[i], g = mal[i]; put(g, m.x, m.y); const sc = m.r / D.RM; g.scale.set(sc, 1, sc); }
       const seen = new Set();
       if (prePuck.parent) board.remove(prePuck);
@@ -228,6 +283,11 @@ html.hk-on #bv > .npc-float .npc-pic{width:36px!important;height:36px!important}
     function onUp(e) { ptr.delete(e.pointerId); }
     ctx.el.addEventListener('pointerdown', onDown); ctx.el.addEventListener('pointermove', onMove); addEventListener('pointerup', onUp, true); addEventListener('pointercancel', onUp, true);
     const prevTouch = ctx.el.style.touchAction; ctx.el.style.touchAction = 'none';
+    // (2026-11-10) no zooming with the mouse wheel (it was set off by accident mid-game), and no pointer drawn over the
+    // table while a match is on (the mallet is the pointer)
+    const noWheel = e => { if (e.ctrlKey) return; if (ctx.el.contains(e.target) || e.target === ctx.el) { e.preventDefault(); e.stopImmediatePropagation(); } };
+    addEventListener('wheel', noWheel, { capture: true, passive: false });
+    const curCss = document.createElement('style'); curCss.textContent = 'html.hk-play #gl,html.hk-play #gl *,html.hk-play #bv canvas{cursor:none!important}'; document.head.appendChild(curCss);
     const keys = new Set(), keyUsed = [false, false], src = ['', ''];
     const KEYMAP = pvp ? { KeyW: [0, 0, -1], KeyS: [0, 0, 1], KeyA: [0, -1, 0], KeyD: [0, 1, 0], ArrowUp: [1, 0, -1], ArrowDown: [1, 0, 1], ArrowLeft: [1, -1, 0], ArrowRight: [1, 1, 0] }
       : { KeyW: [0, 0, -1], KeyS: [0, 0, 1], KeyA: [0, -1, 0], KeyD: [0, 1, 0], ArrowUp: [0, 0, -1], ArrowDown: [0, 0, 1], ArrowLeft: [0, -1, 0], ArrowRight: [0, 1, 0] };
@@ -268,18 +328,18 @@ html.hk-on #bv > .npc-float .npc-pic{width:36px!important;height:36px!important}
       let ax = 0, ay = 0, go = false;
       pads.forEach(gp => { const b = gp.buttons || []; let x = gp.axes[0] || 0, y = gp.axes[1] || 0; if (b[14] && b[14].pressed) x = -1; if (b[15] && b[15].pressed) x = 1; if (b[12] && b[12].pressed) y = -1; if (b[13] && b[13].pressed) y = 1; if (Math.abs(x) > Math.abs(ax)) ax = x; if (Math.abs(y) > Math.abs(ay)) ay = y; if ((b[0] && b[0].pressed) || (b[9] && b[9].pressed)) go = true; });
       if (!go) padHeld = false; else if (!padHeld) { padHeld = true; begin(); return; }
-      if ((Math.abs(ay) > .6 || Math.abs(ax) > .6) && performance.now() - padNav > 220) { padNav = performance.now(); const i0 = E.MODES.indexOf(menuSel), n = E.MODES.length, d = Math.abs(ay) > .6 ? (ay > 0 ? 2 : -2) : (ax > 0 ? 1 : -1); pickMode(E.MODES[(i0 + d + n) % n]); }
+      if ((Math.abs(ay) > .6 || Math.abs(ax) > .6) && performance.now() - padNav > 220) { padNav = performance.now(); const i0 = BL.indexOf(look), n = BL.length, d = Math.abs(ay) > .6 ? (ay > 0 ? 2 : -2) : (ax > 0 ? 1 : -1); pickMode(BL[(i0 + d + n) % n]); }
     }
 
     /* ---------- the mode menu ---------- */
-    let menuEl = null, menuSel = (() => { try { const v = localStorage.getItem('atlas-hockey-mode'); return E.MODES.includes(v) ? v : 'classic'; } catch (e) { return 'classic'; } })();
+    let menuEl = null;
     let howOff = false; try { howOff = localStorage.getItem('atlas-hockey-howto') === 'off'; } catch (e) {}
-    function pickMode(m) { menuSel = m; if (menuEl) { menuEl.querySelectorAll('[data-m]').forEach(b => b.setAttribute('aria-pressed', b.dataset.m === m)); const d = menuEl.querySelector('.sel'); if (d) d.textContent = modeName(m, lang)[1]; } SND.click(); }
+    function pickMode(m) { setLook(m); if (menuEl) { menuEl.querySelectorAll('[data-m]').forEach(b => b.setAttribute('aria-pressed', b.dataset.m === m)); const d = menuEl.querySelector('.sel'); if (d) d.textContent = boardTxt(m, lang)[1]; } SND.click(); }
     function showMenu() {
       phase = 'menu';
       const el = document.createElement('div'); el.className = 'hkmenu'; menuEl = el;
       const how = howOff ? '' : `<div class="how">${(HOW[lang] || HOW.en).map(esc).join('<br>')}<label style="display:flex;gap:6px;align-items:center;margin-top:6px;cursor:pointer"><input type="checkbox" id="hkNever"> ${esc((HOWK.never[li(lang)]) || HOWK.never[1])}</label></div>`;
-      el.innerHTML = `<div class="hkmenu-c" role="dialog" aria-label="${esc(tr('pick', lang))}"><h2>${esc(tr('pick', lang))}</h2><div class="hkmodes">${E.MODES.map(m => { const [n, d] = modeName(m, lang); return `<button type="button" data-m="${m}" aria-pressed="${m === menuSel}"><span class="ic">${ICON[m]}</span><span><b>${esc(n)}</b><small>${esc(d)}</small></span></button>`; }).join('')}</div><div class="sel">${esc(modeName(menuSel, lang)[1])}</div>${how}<button type="button" class="go">${esc(tr('play', lang))} ▶</button></div>`;
+      el.innerHTML = `<div class="hkmenu-c" role="dialog" aria-label="${esc(tr('pickB', lang))}"><h2>${esc(tr('pickB', lang))}</h2><div class="hkmodes">${BL.map(m => { const [n, d] = boardTxt(m, lang); return `<button type="button" data-m="${m}" aria-pressed="${m === look}"><span class="ic th"><img src="${T3.boardThumb ? T3.boardThumb('hockey', m) : ''}" alt="" loading="lazy"></span><span><b>${esc(n)}</b><small>${esc(d)}</small></span></button>`; }).join('')}</div><div class="sel">${esc(boardTxt(look, lang)[1])}</div>${how}<button type="button" class="go">${esc(tr('play', lang))} ▶</button></div>`;
       document.body.appendChild(el);
       el.querySelectorAll('[data-m]').forEach(b => { b.onclick = () => pickMode(b.dataset.m); b.ondblclick = () => { pickMode(b.dataset.m); begin(); }; });
       el.querySelector('.go').onclick = begin;
@@ -288,11 +348,11 @@ html.hk-on #bv > .npc-float .npc-pic{width:36px!important;height:36px!important}
     function begin() {
       if (!menuEl) return;
       const nv = menuEl.querySelector('#hkNever'); if (nv && nv.checked) { howOff = true; try { localStorage.setItem('atlas-hockey-howto', 'off'); } catch (e) {} }
-      menuEl.remove(); menuEl = null; mode = menuSel; try { localStorage.setItem('atlas-hockey-mode', mode); } catch (e) {}
+      menuEl.remove(); menuEl = null; mode = look;
       // (the pace grows with the AI level; 2 players: a little brisker)
-      s = E.newMatch({ mode, target, first: 0, speed: pvp ? 1.2 : 1 + .5 * (level - 1) / 19 }); setupMode(); hud(); sync(performance.now()); kick(300); barFit();
+      s = E.newMatch({ board: look, target, first: 0, speed: pvp ? 1.2 : 1 + .5 * (level - 1) / 19 }); setupMode(); hud(); sync(performance.now()); kick(300); barFit();
       phase = 'count'; let n = 3;
-      const tick = () => { if (stopped) return; if (n > 0) { big(String(n)); SND.beep(false); n--; later(tick, 600); } else { big('GO!', 'g', 600); SND.beep(true); phase = 'play'; last = performance.now(); loop(last); } };
+      const tick = () => { if (stopped) return; if (n > 0) { big(String(n)); SND.beep(false); n--; later(tick, 600); } else { big('GO!', 'g', 600); SND.beep(true); phase = 'play'; document.documentElement.classList.add('hk-play'); last = performance.now(); loop(last); } };
       tick();
     }
     showMenu();
@@ -300,8 +360,8 @@ html.hk-on #bv > .npc-float .npc-pic{width:36px!important;height:36px!important}
     /* ---------- AI ---------- */
     const mem = {};
     /* ---------- the loop ---------- */
-    function pause() { if (phase !== 'play' || paused) return; paused = true; toast(tr('paused', lang)); }
-    function resume() { if (!paused) return; paused = false; last = performance.now(); if (toastEl) toastEl.remove(); }
+    function pause() { if (phase !== 'play' || paused) return; paused = true; document.documentElement.classList.remove('hk-play'); toast(tr('paused', lang)); }
+    function resume() { if (!paused) return; paused = false; document.documentElement.classList.add('hk-play'); last = performance.now(); if (toastEl) toastEl.remove(); }
     const onVis = () => { if (document.hidden) pause(); else if (document.hasFocus()) resume(); };
     const onBlur = () => pause();   // (2026-11-10) the window losing focus (another window / app in front) pauses too, not only a hidden tab
     const onFocus = () => { if (!document.hidden) resume(); };   // and coming back resumes by itself
@@ -319,15 +379,18 @@ html.hk-on #bv > .npc-float .npc-pic{width:36px!important;height:36px!important}
       if (s.over >= 0) end();
     }
     function onEvent(e) {
+      if (e.k === 'hit' || e.k === 'edge') fx.ring(e.x, e.y, e.k === 'edge');
+      if (e.k === 'bumper') fx.flash(.8);
       if (e.k === 'hit') SND.hit(e.v);
       else if (e.k === 'edge') { SND.edge(); fxAt(e.x, e.y, tr('edge', lang)); }
       else if (e.k === 'wall' || e.k === 'shield') SND.wall(e.v || 100);
       else if (e.k === 'block' || e.k === 'bumper' || e.k === 'monster') SND.boing();
       else if (e.k === 'warp') SND.warp();
-      else if (e.k === 'goal') { const mine = pvp || e.side === 0; (mine ? SND.goal : SND.lose)(); big(tr('goal', lang), 'g', 900); hud(); }
+      else if (e.k === 'goal') { fx.flash(1.5); const mine = pvp || e.side === 0; (mine ? SND.goal : SND.lose)(); big(tr('goal', lang), 'g', 900); hud(); }
       else if (e.k === 'pick') { SND.pick(); toast(tr('it.' + e.what, lang).replace('{p}', names[e.side])); }
     }
     function end() {
+      document.documentElement.classList.remove('hk-play');
       over = true; phase = 'over'; cancelAnimationFrame(raf);
       const w = s.over, score = `${s.score[0]} − ${s.score[1]}`;
       hud();
@@ -347,7 +410,7 @@ html.hk-on #bv > .npc-float .npc-pic{width:36px!important;height:36px!important}
         removeEventListener('keydown', onKey); removeEventListener('keyup', onKey); removeEventListener('resize', onResize); document.removeEventListener('visibilitychange', onVis); removeEventListener('blur', onBlur); removeEventListener('focus', onFocus);
         ctx.el.style.touchAction = prevTouch; css.remove(); if (toastEl) toastEl.remove(); if (menuEl) menuEl.remove(); document.querySelectorAll('.hkbig,.hkfx').forEach(e => e.remove());
         if (T3.turn) T3.turn(null);
-        document.documentElement.classList.remove('hk-on'); removeEventListener('resize', barFit);
+        document.documentElement.classList.remove('hk-on', 'hk-play'); removeEventListener('resize', barFit); removeEventListener('wheel', noWheel, { capture: true }); curCss.remove();
       },
       _debug: { st: () => s, phase: () => phase, begin: m => { if (m) pickMode(m); begin(); }, at: (x, y) => { const [a, b] = U.xz(x, y); return T3.project(a, b, Y); } },
     };
