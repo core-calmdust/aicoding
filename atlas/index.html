@@ -83,8 +83,9 @@ header{position:sticky;top:0;z-index:30;background:rgba(255,246,226,.95);border-
 @media (max-width:760px){
   /* a backdrop-filter on the sticky header would make it the containing block of the fixed tab bar */
   header{backdrop-filter:none;-webkit-backdrop-filter:none;background:#fff6e2}
-  .tabs{position:fixed;left:0;right:0;bottom:0;z-index:40;background:#fff;border-top:2px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom));gap:0;justify-content:space-around}
-  .tab{flex-direction:column;gap:2px;font-size:10.5px;padding:6px 4px;border-radius:14px;flex:1;max-width:84px}
+  .tabs{position:fixed;left:0;right:0;bottom:0;z-index:40;background:#fff;border-top:2px solid var(--line);padding:6px 6px calc(6px + env(safe-area-inset-bottom));gap:2px;justify-content:space-around}
+  .tab{flex-direction:column;gap:3px;font-size:11.5px;letter-spacing:0;white-space:nowrap;padding:5px 0 3px;border-radius:14px;flex:1 1 0;min-width:0;max-width:none}
+  .tab svg{width:26px;height:26px}
   .tab[aria-selected=true]{background:transparent;color:var(--coral2);box-shadow:none}
   .tab[aria-selected=true] svg{transform:translateY(-2px) scale(1.12)}
   .brand .wm b{font-size:16px}.brand img{width:40px;height:40px}.brand .wm small{font-size:10px}
