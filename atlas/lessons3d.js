@@ -410,5 +410,5 @@
       panel: el, _debug: dbg,
     };
   }
-  window.AtlasLessons = { has: id => !!DATA[id], list, next, start };
+  window.AtlasLessons = { has: id => !!DATA[id], list, next, start, data: id => DATA[id].load().then(D => D.data) };
 })();

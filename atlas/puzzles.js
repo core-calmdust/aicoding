@@ -419,5 +419,8 @@
     };
   }
 
-  window.AtlasPuzzles = { has: id => !!G[id], start, G, sets: setsOf };   // (G: the guides — atlas/lessons3d.js too)
+  // the raw collection for the portal's illustrated 問題一覧 (atlas/app.js tsumeBook): the sets, each set's problems as the
+  // full game lists them (pinned old / new versions), the daily picks
+  const book = id => loadBook(id).then(B => ({ sets: B.sets(), data: B.data, problems: i => id === 'shogi' ? B.list(B.data.sets[i], B.stars()) : B.data.levels[i].puzzles, daily: w => dailyPick(id, w), LAST: B.LAST, DAILY: DAILY[id] }));
+  window.AtlasPuzzles = { has: id => !!G[id], start, G, sets: setsOf, book };   // (G: the guides — atlas/lessons3d.js too)
 })();
