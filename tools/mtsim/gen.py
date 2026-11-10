@@ -57,5 +57,11 @@ if 'busyT[' in s:
     s = re.sub(r'SIMWB\(&busyT\[i\], ([^;]*), __ATOMIC_RELAXED\);', r'SIMWB(&busyT[i], \1);', s)
     rep('__atomic_compare_exchange_n(&busyT[i], &mine, 0, 0, __ATOMIC_RELAXED, __ATOMIC_RELAXED);', 'SIMCB(&busyT[i], mine);')
 
-open(f'eng_{game}.c', 'w').write('#include "simcore.h"\n' + s)
+# chess's YBW (2026-11-10, chess/MODEL_CARD.md「マルチスレッド v2」): g_chess.h calls mt_idle / mt_lazy, and an idle thread's
+# spin (MT_PAUSE) ticks the clock
+if game == 'chess' and 'EXPORT(mt_idle)' in s:
+    s = '#define HAS_MT_IDLE 1\n#include "simcore.h"\n#define MT_PAUSE() SIM_IDLE()\n' + s
+else:
+    s = '#include "simcore.h"\n' + s
+open(f'eng_{game}.c', 'w').write(s)
 print('eng_%s.c' % game)
