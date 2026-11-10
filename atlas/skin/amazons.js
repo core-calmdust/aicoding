@@ -53,8 +53,16 @@ html.atlas-amazons .pieces .arw:not(.hov){background:none!important;box-shadow:n
 html.atlas-amazons .pieces .arw:not(.hov)::before,html.atlas-amazons .pieces .arw:not(.hov)::after,html.atlas-amazons .pieces .arw:not(.hov) :is(svg,.ai){display:none!important}
 html.atlas-amazons .pieces :is(.spark,.flare){display:none!important}
 html.atlas-amazons .pieces .pc.hov{opacity:.5!important}
+html.atlas-amazons .reserve.turn::after{display:none}   /* (the 2D page's turn mark: a line floating under the plate with no frame behind it) */
 html.atlas-amazons .reserve .rsv-plate{background:rgba(20,16,12,.82)!important;box-shadow:0 0 0 1px rgba(226,182,96,.45),0 2px 6px rgba(0,0,0,.35)!important;color:#f0e2c4!important}
 html.atlas-amazons #fPieces{display:none!important}
+/* lesson / puzzle cards: no guide picture (the four tool tiles with labels and the primary button need the whole row) */
+html.atlas-skin .cb-foot .pic{display:none!important}
+html.atlas-skin .atlas-guide .bub::before,html.atlas-skin .atlas-guide .bub::after{display:none!important}
+html.atlas-skin .cb-foot .cb-bar{flex:1 1 auto;min-width:0}
+html.atlas-skin .cb-bar .cb-tools{flex:1 1 auto;min-width:0;display:flex;gap:6px}
+html.atlas-skin .cb-bar .cb-tools > .cb-ic{flex:1 1 0;min-width:0;width:auto!important}
+html.atlas-skin .cb-bar .cb-t{flex:none;white-space:nowrap}
 html.atlas-skin #f3D{margin:12px 0 0;padding:10px 12px 12px;border-radius:14px;background:#f6f1e4;border:2px solid #e2cf9e}
 html.atlas-skin #f3D > label{display:block;font-weight:700;font-size:13px;color:#7a5a1c;margin:0 0 8px}
 html.atlas-skin #f3D > label.pc3l{margin-top:12px}
@@ -94,21 +102,79 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
   const SC = .8;   // the leaning board is drawn smaller than the DOM board's place, so its near edge (wider in perspective) and
   // the frame round it stay inside the page's board area (the cards beside never cover it)
   let liftK = .05;  // of the drawn height: set by centre() so the drawn board (far edge to near edge, base included) is centred in the frame
+  // zoom (wheel / pinch) and pan (drag on the empty area round the board): the 3D board and the DOM board over it move together
+  const view = { z: 1, x: 0, y: 0 };
+  const ZMAX = 3;
+  let hostFull = false;
   function lift3d() {
     const holder = boardDom.parentElement;
     const box = () => { let x = 0, y = 0, e = boardDom; while (e && e !== holder) { x += e.offsetLeft; y += e.offsetTop; e = e.offsetParent; } return { x, y, w: boardDom.offsetWidth, h: boardDom.offsetHeight }; };
     const host = document.getElementById('atlasGL');
     T3.align(() => {
-      const b = box(), on = !de.classList.contains('atlas-2d'), s = on ? SC : 1, w = b.w * s, h = b.h * s, d = on ? h * liftK : 0;
-      boardDom.style.translate = d ? `0 ${-d}px` : ''; boardDom.style.scale = s !== 1 ? String(s) : '';
-      return { x: b.x + (b.w - w) / 2 - (host ? host.offsetLeft : 0), y: b.y + (b.h - h) / 2 - d - (host ? host.offsetTop : 0), w, h, tilt: 26, persp: h * 2.6 };
+      const b = box(), on = !de.classList.contains('atlas-2d'), z = on ? view.z : 1, px = on ? view.x : 0, py = on ? view.y : 0;
+      const s = (on ? SC : 1) * z, w = b.w * s, h = b.h * s, d = on ? h * liftK : 0;
+      boardDom.style.translate = d || px || py ? `${px}px ${py - d}px` : ''; boardDom.style.scale = s !== 1 ? String(s) : '';
+      // zoomed in or moved: the canvas covers the whole window (the board may reach anywhere); at rest it hugs the board (fewer pixels)
+      const full = on && (z > 1.001 || Math.abs(px) > .5 || Math.abs(py) > .5);
+      if (host && (full || hostFull)) {
+        if (full) { const r = holder.getBoundingClientRect(); Object.assign(host.style, { left: Math.round(-r.left) + 'px', top: Math.round(-r.top) + 'px', width: innerWidth + 'px', height: innerHeight + 'px' }); }
+        else dispatchEvent(new Event('resize'));   // (back at rest: the skin's own placement of the canvas)
+        hostFull = full;
+      }
+      return { x: b.x + (b.w - w) / 2 + px - (host ? host.offsetLeft : 0), y: b.y + (b.h - h) / 2 - d + py - (host ? host.offsetTop : 0), w, h, tilt: 26, persp: h * 2.6 };
     }, 10, U.top);
+  }
+  function setView(z, x, y) {
+    const b = boardDom.offsetWidth * SC;
+    view.z = Math.max(1, Math.min(ZMAX, z));
+    const lim = b * (view.z * .55 + .2);   // keep a good part of the board on the screen
+    view.x = Math.max(-lim, Math.min(lim, x)); view.y = Math.max(-lim, Math.min(lim, y));
+    if (view.z === 1 && Math.abs(view.x) < 2 && Math.abs(view.y) < 2) { view.x = 0; view.y = 0; }
+    lift3d(); T3.kick(200);
+  }
+  // the board's centre on the screen now (zoom keeps the point under the pointer / the pinch where it is)
+  function centreNow() { const holder = boardDom.parentElement, r = holder.getBoundingClientRect(); let x = 0, y = 0, e = boardDom; while (e && e !== holder) { x += e.offsetLeft; y += e.offsetTop; e = e.offsetParent; } return [r.left + x + boardDom.offsetWidth / 2 + view.x, r.top + y + boardDom.offsetHeight / 2 + view.y]; }
+  function zoomAt(f, cx, cy) {
+    const z1 = Math.max(1, Math.min(ZMAX, view.z * f)), k = z1 / view.z; if (k === 1) return;
+    const [ox, oy] = centreNow();
+    setView(z1, view.x + (cx - ox) * (1 - k), view.y + (cy - oy) * (1 - k));
+  }
+  {
+    const area = document.querySelector('.board-area') || boardDom.parentElement;
+    const on3 = () => !de.classList.contains('atlas-2d');
+    const ui = t => t.closest && t.closest('button, a, input, select, .reserve, .rsv-plate, .prompt, .side, .overlay, .modal');
+    area.addEventListener('wheel', e => { if (!on3() || ui(e.target)) return; e.preventDefault(); zoomAt(Math.exp(-e.deltaY * (e.deltaMode === 1 ? .04 : .0012)), e.clientX, e.clientY); }, { passive: false });
+    const pts = new Map(); let drag = null, pinch = null, noClick = false;
+    area.addEventListener('click', e => { if (noClick) { noClick = false; e.stopImmediatePropagation(); e.preventDefault(); } }, true);   // (the click that ends a drag or a pinch is not a move)
+    area.addEventListener('pointerdown', e => {
+      if (!on3() || ui(e.target)) return;
+      pts.set(e.pointerId, [e.clientX, e.clientY]);
+      if (pts.size === 2) { noClick = true; const [a, b] = [...pts.values()]; pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]), z: view.z, mx: (a[0] + b[0]) / 2, my: (a[1] + b[1]) / 2, x: view.x, y: view.y }; drag = null; return; }
+      // a drag anywhere (on the board too: a tap that does not move is still a move on the board, a drag moves the view)
+      drag = { x0: e.clientX, y0: e.clientY, x: view.x, y: view.y, moved: false };
+    });
+    addEventListener('pointermove', e => {
+      if (!pts.has(e.pointerId)) return;
+      pts.set(e.pointerId, [e.clientX, e.clientY]);
+      if (pinch && pts.size >= 2) {
+        const [a, b] = [...pts.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]), mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
+        view.x = pinch.x + (mx - pinch.mx); view.y = pinch.y + (my - pinch.my);
+        zoomAt(pinch.z * d / pinch.d / view.z, mx, my); e.preventDefault(); return;
+      }
+      if (drag) { const dx = e.clientX - drag.x0, dy = e.clientY - drag.y0; if (!drag.moved && Math.hypot(dx, dy) < 4) return; drag.moved = true; noClick = true; setView(view.z, drag.x + dx, drag.y + dy); }
+    }, { passive: false });
+    const up = e => { pts.delete(e.pointerId); if (pts.size < 2) pinch = null; if (!pts.size) { drag = null; setTimeout(() => { noClick = false; }, 0); } };
+    addEventListener('pointerup', up); addEventListener('pointercancel', up);
+    area.addEventListener('dblclick', e => { if (!on3() || ui(e.target) || boardDom.contains(e.target)) return; setView(1, 0, 0); });   // back to the whole board
+    const st2 = document.createElement('style');
+    st2.textContent = 'html.atlas-amazons:not(.atlas-2d) .board-area{touch-action:none}';
+    document.head.appendChild(st2);
   }
   // centre the board as drawn: the 3D board's corners (the slab and its base, not the pieces) projected on the screen, their top
   // and bottom set round the centre of the page's board area (#frame); a few passes (the camera follows the new lift)
   let bbox = null, cT = 0;
   function centre(n) {
-    clearTimeout(cT); if (!root || de.classList.contains('atlas-2d')) return;
+    clearTimeout(cT); if (!root || de.classList.contains('atlas-2d') || view.z !== 1 || view.x || view.y) return;   // (zoomed / moved: the lift stays)
     cT = setTimeout(() => {
       const fr = document.getElementById('frame'); if (!fr || !bbox) return;
       let y0 = 1e9, y1 = -1e9;
