@@ -1,6 +1,6 @@
 # テーブルホッケー（hockey）仕様
 
-大百科の3D専用タイトル（2D版なし）。キャロム・クロキノールに続く「アクション」カテゴリ。2026-11-09 公開（BETA）。リアルタイムの対戦（ターン制ではない）。
+大百科の3D専用タイトル（2D版なし）。キャロム・クロキノールに続く「アクション」カテゴリ。2026-11-09 公開（BETA）、2026-11-10 正式版。リアルタイムの対戦（ターン制ではない）。
 
 ## 構成
 | ファイル | 役割 |
@@ -12,7 +12,8 @@
 | `atlas/historia/s/hockey.json`・`atlas/historia/<lang>/hockey.json` | ヒストリア（14言語）。図は historia.js の `hockey` 型（縦長のリンク、パッド r/y、パック p） |
 
 - 台座：卓の下とゴールの受け箱の下は、テーブルの面までふさがった台座（2026-11-10。脚だけだとすき間から浮いて見えた）。
-- 台帳：`shared/atlas.js` の GAMES（`only3d`、`cat: 'action'`、`beta: true`、テーマ色 #2f6fd0）。トップページ：GAMES に `key:'th'`・`beta:1`、`images/hockey.webp`（topdown.html、縦長の卓を正方形に収める）、アイコン `images/icons/hockey.svg`、ポータルのアイコン `images/atlas/hockey.webp`（icons3d.js）、一覧 `atlas/shots/hockey.webp`、盤のサムネイル `atlas/img/board-hockey-<look>.webp`。
+- **正式版（2026-11-10）**：BETA を外した（`index.html` の `beta:1`、`shared/atlas.js` の `beta: true`）。更新情報に「正式版に」の行（14言語）。
+- 台帳：`shared/atlas.js` の GAMES（`only3d`、`cat: 'action'`、テーマ色 #2f6fd0）。トップページ：GAMES に `key:'th'`、`images/hockey.webp`（topdown.html、縦長の卓を正方形に収める）、アイコン `images/icons/hockey.svg`、ポータルのアイコン `images/atlas/hockey.webp`（icons3d.js）、一覧 `atlas/shots/hockey.webp`、盤のサムネイル `atlas/img/board-hockey-<look>.webp`。
 - 地図（mapdata.js）：トロント・シカゴ近郊・スウェーデン・デンマーク・日本。一覧のひとこと `tl.hockey`、紹介 `about.hockey`・`hist.hockey`（i18n.js）。
 - AIのボス7体（npc/roster.js）：リンクのペンギン・ゲーセンのカワウソ・パックさばきギツネ・ゴーリーウルフ・スラップショットうし・エアテーブル博士・マンロー大王グマ（1932年トロントの卓上ホッケーの作者がモチーフ）。肩書きとまめちしきは npc/t/<lang>.js。
 
