@@ -42,7 +42,7 @@ function movers(pos) { const out = [], p = pos.turn; for (let k = 0; k < 8; k++)
 
 // ====================================================================== state
 const STORE = 'aicoding-amazons';
-const settings = { mode: 'ai', rule: 'std', color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: true, num: true, coach: true, lang: '', bd: 'jungle', pcs: 'classic' };
+const settings = { mode: 'ai', rule: 'std', color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: true, num: true, coach: true, lang: '', bd: 'temple', pcs: 'statue' };
 const SUPPORTED = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); if (/^zh-(tw|hk|mo|hant)/.test(n)) return 'zh-TW'; return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
@@ -222,7 +222,7 @@ const animOn = () => settings.anim && !reduceMotion;
 const dRC = i => { const [r, c] = E.RC[i], n = NS_() - 1; return flip ? [n - r, n - c] : [r, c]; };
 const ptX = i => (dRC(i)[1] + 0.5) / NS_() * 100, ptY = i => (dRC(i)[0] + 0.5) / NS_() * 100;
 function placeAt(el, i) { el.style.left = ptX(i) + '%'; el.style.top = ptY(i) + '%'; }
-// the board itself is a baked texture per design (tools/gen_art.py, html[data-bd]); the SVG layer carries the coordinates only:
+// the board itself is a baked texture per design (tools/gen_boards.py, html[data-bd]); the SVG layer carries the coordinates only:
 // files a… in the bottom row's corners, ranks 1… in the left column's corners (the chess way)
 function drawLines() {
   const N = NS_(); document.documentElement.style.setProperty('--S', N);
@@ -246,10 +246,13 @@ function flipAuto() {   // the player's side at the bottom: the board turns roun
 }
 const pcEls = new Map();      // square -> element (the amazons and the arrows)
 let shownKey = '';
-const ARROW_SVG = '<svg viewBox="0 0 40 40"><path class="fl" d="M7 33 1 34l4-6zM9 35l-1 5 5-4z"/><line class="shaft" x1="8" y1="32" x2="29" y2="11"/><path class="head" d="M34 6 22 9.5l8.5 8.5z"/></svg>';
+// a fire arrow: the flame (.fire, wrapped behind the head and blown back along the shaft) burns while it flies and dies down after it strikes
+const ARROW_SVG = '<svg viewBox="0 0 40 40"><path class="fl" d="M7 33 1 34l4-6zM9 35l-1 5 5-4z"/><line class="shaft" x1="8" y1="32" x2="29" y2="11"/>' +
+  '<g class="fire"><path d="M31 9c3 4-1 10-15 17 4-6 3-12 8-16 2-2 5-2 7-1z" fill="#ff6a14" opacity=".88"/><path d="M29.6 10.4c1.5 3-1 6.5-9 11 3-4 2.5-8 5.5-10.5 1.2-1 2.6-1.2 3.5-.5z" fill="#ffc24a"/><ellipse cx="27.6" cy="12.6" rx="1.7" ry="1.3" fill="#fff4cc"/></g>' +
+  '<path class="head" d="M34 6 22 9.5l8.5 8.5z"/></svg>';
 function newPiece(kind) {     // kind: 1 White amazon (P1), 3 Black amazon (P2), 5 an arrow
   const el = document.createElement('div');
-  if (kind === 5) { el.className = 'arw'; el.innerHTML = ARROW_SVG; }
+  if (kind === 5) { el.className = 'arw'; el.innerHTML = ARROW_SVG; el.style.setProperty('--sd', (-Math.random() * 6.5).toFixed(2) + 's'); }   // (each smoke on its own beat)
   else { el.className = 'pc p' + (kind <= 2 ? 1 : 2); el.innerHTML = '<i class="orn"></i>'; }
   el.dataset.k = kind; return el;
 }
@@ -283,14 +286,38 @@ function animateMove(m, before) {
   const ar = newPiece(5); placeAt(ar, a); ar.classList.add('fly'); piecesEl.appendChild(ar); pcEls.set(a, ar);
   const sv = ar.querySelector('svg'), ang = Math.atan2(ay - ty, ax - tx) * 180 / Math.PI + 45;
   sv.style.transform = `rotate(${ang}deg)`;
-  const land = () => { ar.classList.remove('fly'); sv.style.transform = ''; };
+  const land = () => {   // it strikes: the flame dies down, the scorch mark glows and cools (CSS .burn / .hot)
+    ar.classList.remove('fly'); sv.style.transform = ''; ar.classList.add('burn', 'hot');
+    setTimeout(() => ar.classList.remove('burn'), 650); setTimeout(() => ar.classList.remove('hot'), 4500);
+  };
   if (ar.animate) {
-    const an = ar.animate([{ transform: `translate(${tx - ax}px,${ty - ay}px) scale(.75)`, opacity: 1 }, { transform: 'none', opacity: 1 }], { duration: ad, delay: qd + SHOOT_GAP, easing: 'cubic-bezier(.45,.05,.7,1)', fill: 'backwards' });
+    const t0 = qd + SHOOT_GAP;
+    const an = ar.animate([{ transform: `translate(${tx - ax}px,${ty - ay}px) scale(.75)`, opacity: 1 }, { transform: 'none', opacity: 1 }], { duration: ad, delay: t0, easing: 'cubic-bezier(.45,.05,.7,1)', fill: 'backwards' });
     an.onfinish = land;
+    fireFx(tx, ty, ax, ay, u, r0.width, t0, ad);
   } else land();
   sShoot(qd + SHOOT_GAP); sThunk(qd + SHOOT_GAP + ad - 20);
   setTimeout(() => { el.style.zIndex = ''; }, moveDur(m));
   return true;
+}
+// sparks shed along the flight (they drift back and down, and die), then a flash and a burst of sparks where the arrow strikes.
+// Throwaway elements on the pieces layer (positions in % of the board), removed when their animation ends.
+function fireFx(tx, ty, ax, ay, u, W, t0, ad) {
+  const fx = (x, y, cls) => { const e = document.createElement('div'); e.className = cls; e.style.left = (x / W * 100) + '%'; e.style.top = (y / W * 100) + '%'; piecesEl.appendChild(e); return e; };
+  const done = (e, an) => { an.onfinish = () => e.remove(); an.oncancel = () => e.remove(); };
+  const L = Math.hypot(ax - tx, ay - ty) || 1, ux = (ax - tx) / L, uy = (ay - ty) / L;
+  const n = Math.min(18, 5 + Math.round(L / u * 2));
+  for (let k = 0; k < n; k++) {
+    const p = (k + Math.random() * 0.6) / n, e = fx(tx + (ax - tx) * p, ty + (ay - ty) * p, 'spark');
+    const dx = (-ux * 0.25 + (Math.random() - 0.5) * 0.35) * u, dy = (-uy * 0.25 + 0.18 + Math.random() * 0.25) * u, s = 0.6 + Math.random() * 0.8;
+    done(e, e.animate([{ transform: `scale(${s})`, opacity: 1 }, { transform: `translate(${dx}px,${dy}px) scale(${s * 0.3})`, opacity: 0 }], { duration: 380 + Math.random() * 260, delay: t0 + p * ad * 0.92, easing: 'ease-out', fill: 'backwards' }));
+  }
+  const hit = t0 + ad - 15, fl = fx(ax, ay, 'flare');
+  done(fl, fl.animate([{ transform: 'scale(.15)', opacity: 0 }, { transform: 'scale(.55)', opacity: 1, offset: 0.18 }, { transform: 'scale(1.05)', opacity: 0 }], { duration: 460, delay: hit, easing: 'ease-out', fill: 'backwards' }));
+  for (let k = 0; k < 9; k++) {
+    const g = Math.PI * 2 * (k + Math.random() * 0.7) / 9, r = (0.35 + Math.random() * 0.4) * u, e = fx(ax, ay, 'spark');
+    done(e, e.animate([{ transform: 'scale(1.2)', opacity: 1 }, { transform: `translate(${Math.cos(g) * r}px,${Math.sin(g) * r + u * 0.12}px) scale(.3)`, opacity: 0 }], { duration: 420 + Math.random() * 240, delay: hit, easing: 'cubic-bezier(.2,.7,.4,1)', fill: 'backwards' }));
+  }
 }
 // above / below the board: each side's territory (the empty squares its amazons reach first) and how many squares its amazons
 // can move to now (0 on its turn = lost)
@@ -902,22 +929,22 @@ document.addEventListener('keydown', e => {
 });
 
 // ---------------------------------------------------------------- 2D board designs and amazon sets (CSS: html[data-bd] / html[data-pcs]; mini boards: BD_PAL)
-// Boards (tools/gen_art.py): jungle (jade and sage, the default), maple and walnut, Carrara and green marble, Argentine celeste,
-// modern grey, midnight with gold lines. Amazons (tools/gen_pieces.js): ivory and ebony, silver and bronze, glass, flat.
-const BD_KEYS = ['jungle', 'wood', 'marble', 'celeste', 'mono', 'night'], PC_KEYS = ['classic', 'metal', 'glass', 'flat'];   // jungle / classic first: the defaults
+// Boards (tools/gen_boards.py): the temple of Themiscyra (Carrara and verde antico marble, gold inlay; the default), jungle ruins,
+// the Amazonomachy vase (clay and black glaze), steel and fire. Amazons (3D renders: tools/pieces3d.html + render_pieces.js):
+// marble warrior statues (the default), ivory and ebony archers, vase-painting medallions, bronze and iron queens.
+const BD_KEYS = ['temple', 'ruins', 'vase', 'iron'], PC_KEYS = ['statue', 'archer', 'vase', 'bronze'];   // temple / statue first: the defaults
 // [frame, arrow tile, arrow shaft, fletching]
 const BD_PAL = {
-  jungle: ['#1f4a2c', '#4a3420', '#e4c27a', '#fff3d0'],
-  wood: ['#3a2010', '#1e1e22', '#e6e6ea', '#c94a3a'],
-  marble: ['#26332f', '#5a1824', '#f2e2c4', '#fff8ec'],
-  celeste: ['#173f62', '#b07e22', '#fff6dc', '#ffffff'],
-  mono: ['#2c2c30', '#2a2a2e', '#f2f0ea', '#e2533e'],
-  night: ['#0e1830', '#5a4218', '#ffe2a0', '#fff6e0'],
+  temple: ['#cdbf9f', '#2a1a10', '#f0cf86', '#fff6e2'],
+  ruins: ['#26331f', '#241a10', '#dcbc7c', '#f4e6c4'],
+  vase: ['#16110d', '#2a1208', '#e88a4e', '#f6d8b0'],
+  iron: ['#1c1b1e', '#1c1210', '#ffb070', '#ffe4b8'],
 };
 function designApply() {
-  if (!BD_KEYS.includes(settings.bd)) settings.bd = 'jungle';
-  if (!PC_KEYS.includes(settings.pcs)) settings.pcs = 'classic';
+  if (!BD_KEYS.includes(settings.bd)) settings.bd = 'temple';   // (old designs: jungle, wood, … → the new default)
+  if (!PC_KEYS.includes(settings.pcs)) settings.pcs = 'statue';
   document.documentElement.dataset.bd = settings.bd; document.documentElement.dataset.pcs = settings.pcs;
+  document.documentElement.classList.toggle('no-anim', !animOn());   // (no smoke either)
 }
 function designSpec() { const p = E.Pos.from(null); for (const x of ['d1-d7/g7', 'd10-d8/b6']) p.play(E.parse(p, x)); return p.spec(); }
 function designPickers() {
@@ -928,9 +955,9 @@ function designPickers() {
 }
 // an amazon-set tile: the two amazons on a patch of the current board
 function pcSwatch(k) {
-  const BP = BD_PAL[settings.bd] || BD_PAL.jungle;
+  const BP = BD_PAL[settings.bd] || BD_PAL.temple;
   return `<svg class="bdm" viewBox="0 0 120 120"><rect x="1" y="1" width="118" height="118" rx="10" fill="${BP[0]}"/><image href="img/bd-${settings.bd}.webp" x="8" y="8" width="104" height="104" preserveAspectRatio="xMidYMid slice"/>` +
-    `<image href="img/pc-${k}-w.svg" x="8" y="22" width="56" height="56"/><image href="img/pc-${k}-b.svg" x="56" y="46" width="56" height="56"/></svg>`;
+    `<image href="img/pc-${k}-w.webp" x="8" y="18" width="58" height="58"/><image href="img/pc-${k}-b.webp" x="54" y="44" width="58" height="58"/></svg>`;
 }
 // spec: { b: 100 chars '.wbx', side, n } ; o: { cls, bd, pcs, marks: {sq: 'ok'|'ng'|'x'}, arrows: [[a, b], …], shots: [[a, b], …], flip, click, sel,
 // dest: [], adest: [] (arrow targets), last: move (from / to / arrow highlighted), ghost: square (the moving amazon, translucent), away: square, num }
@@ -939,17 +966,17 @@ function miniSVG(spec, o) {
   o = o || {};
   const N = 10, fl = !!o.flip, P = i => { const [r, c] = E.RC[i]; return fl ? [N - 1 - r, N - 1 - c] : [r, c]; };
   const u = 24, pad = 8, W = 240 + pad * 2, X = i => pad + (P(i)[1] + 0.5) * u, Y = i => pad + (P(i)[0] + 0.5) * u;
-  const bdk = o.bd || settings.bd, BP = BD_PAL[bdk] || BD_PAL.jungle, pk = o.pcs || settings.pcs;
+  const bdk = o.bd || settings.bd, BP = BD_PAL[bdk] || BD_PAL.temple, pk = o.pcs || settings.pcs;
   let s = `<svg class="${o.cls || 'mini'}" viewBox="0 0 ${W} ${W}">`;
   s += `<rect x="1" y="1" width="${W - 2}" height="${W - 2}" rx="8" fill="${BP[0]}"/><image href="img/bd-${bdk}.webp" x="${pad}" y="${pad}" width="240" height="240" preserveAspectRatio="none"/>`;
   const sqr = (i, fill, extra) => `<rect x="${X(i) - u / 2}" y="${Y(i) - u / 2}" width="${u}" height="${u}" fill="${fill}" ${extra || ''}/>`;
   if (o.last != null && o.last >= 0) { s += sqr(mFrom(o.last), 'rgba(214,236,134,.22)'); s += sqr(mTo(o.last), 'rgba(214,236,134,.4)'); s += sqr(mArrow(o.last), 'none', 'stroke="rgba(255,150,110,.95)" stroke-width="2.4"'); }
   for (const i of o.hl || []) s += sqr(i, 'rgba(214,236,134,.35)');
   const b = spec && spec.b ? spec.b : '';
-  const amazon = (i, side, op) => `<image href="img/pc-${pk}-${side}.svg" x="${(X(i) - u * 0.47).toFixed(1)}" y="${(Y(i) - u * 0.5).toFixed(1)}" width="${(u * 0.94).toFixed(1)}" height="${(u * 0.94).toFixed(1)}"${op ? ` opacity="${op}"` : ''}/>`;
+  const amazon = (i, side, op) => `<image href="img/pc-${pk}-${side}.webp" x="${(X(i) - u * 0.47).toFixed(1)}" y="${(Y(i) - u * 0.5).toFixed(1)}" width="${(u * 0.94).toFixed(1)}" height="${(u * 0.94).toFixed(1)}"${op ? ` opacity="${op}"` : ''}/>`;
   for (let i = 0; i < N * N; i++) {
     const ch = b[i]; if (!ch || ch === '.') continue;
-    if (ch === 'x') { const x = X(i), y = Y(i), h = u * 0.44; s += `<rect x="${x - h}" y="${y - h}" width="${h * 2}" height="${h * 2}" rx="${u * 0.1}" fill="${BP[1]}"/><path d="M${x - h * .55},${y + h * .55}L${x + h * .5},${y - h * .5}" stroke="${BP[2]}" stroke-width="${u * .08}" stroke-linecap="round"/><path d="M${x + h * .7},${y - h * .7}l${-h * .55},${h * .14}l${h * .41},${h * .41}z" fill="${BP[2]}"/><path d="M${x - h * .6},${y + h * .6}l${-h * .28},${h * .05}l${h * .2},${-h * .3}z" fill="${BP[3]}"/>`; continue; }
+    if (ch === 'x') { const x = X(i), y = Y(i), h = u * 0.44; s += `<circle cx="${x}" cy="${y}" r="${h * 1.08}" fill="${BP[1]}" opacity=".55"/><circle cx="${x}" cy="${y}" r="${h * .78}" fill="${BP[1]}" opacity=".9"/><path d="M${x - h * .55},${y + h * .55}L${x + h * .5},${y - h * .5}" stroke="${BP[2]}" stroke-width="${u * .08}" stroke-linecap="round"/><path d="M${x + h * .7},${y - h * .7}l${-h * .55},${h * .14}l${h * .41},${h * .41}z" fill="${BP[2]}"/><path d="M${x - h * .6},${y + h * .6}l${-h * .28},${h * .05}l${h * .2},${-h * .3}z" fill="${BP[3]}"/>`; continue; }
     s += amazon(i, ch, i === o.away ? 0.3 : 0);
   }
   if (o.ghost != null && o.ghost >= 0) s += amazon(o.ghost, o.ghostSide || 'w', 0.85);
@@ -1161,6 +1188,7 @@ $('#btnStart').onclick = () => {
   if (draft.mode === 'lesson') { openLessons(); return; }
   if (draft.mode === 'puzzle') { openPuzzles(); return; }
   Object.assign(settings, { eval: $('#optEval').checked, last: $('#optLast').checked, anim: $('#optAnim').checked, threat: $('#optThreat').checked, num: $('#optNum').checked });
+  document.documentElement.classList.toggle('no-anim', !animOn());
   if (draft.mode === 'rated') { rtStart(draft.rule); return; }
   if (draft.resume) { resumeWith(); return; }
   exitSpecial();
