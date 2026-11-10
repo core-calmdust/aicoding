@@ -128,18 +128,18 @@
 
   /* ---------- pieces ---------- */
   function mallet(look, side) {
-    const TT = T(), BM = boardMats(look), g = new TT.Group(), r = RM * K, seg = LO() ? 20 : 32;
+    const TT = T(), BM = boardMats(look), g = new TT.Group(), r = RM * K, seg = LO() ? 20 : 24;
     const base = new TT.Mesh(geo('mbase', () => new TT.CylinderGeometry(r, r * 1.04, .9 * K, seg)), BM.black); base.position.y = .45 * K; base.castShadow = true; g.add(base);
     const felt = new TT.Mesh(geo('mfelt', () => new TT.CylinderGeometry(r * .78, r * .78, .05 * K, seg)), ballMat(look, side)); felt.position.y = .92 * K; g.add(felt);
     const stick = new TT.Mesh(geo('mstick', () => new TT.CylinderGeometry(.42 * K, .55 * K, 5.2 * K, 14)), BM.black); stick.position.y = .9 * K + 2.6 * K; stick.castShadow = true; g.add(stick);
-    const ball = new TT.Mesh(geo('mball', () => new TT.SphereGeometry(1.05 * K, 20, 14)), ballMat(look, side)); ball.position.y = 6.3 * K; ball.castShadow = true; g.add(ball);
+    const ball = new TT.Mesh(geo('mball', () => new TT.SphereGeometry(1.05 * K, 16, 12)), ballMat(look, side)); ball.position.y = 6.3 * K; ball.castShadow = true; g.add(ball);
     g.userData = { side, r: RM };
     return g;
   }
   function puck(look) {
     const TT = T(), BM = boardMats(look), g = new TT.Group(), r = RP * K;
-    const b = new TT.Mesh(geo('puck', () => new TT.CylinderGeometry(r, r, .7 * K, LO() ? 18 : 28)), BM.puck); b.position.y = .35 * K; b.castShadow = true; g.add(b);
-    const ring = new TT.Mesh(geo('pring', () => { const q = new TT.TorusGeometry(r * .62, .05 * K, 6, 28); q.rotateX(Math.PI / 2); return q; }), BM.ring); ring.position.y = .71 * K; g.add(ring);
+    const b = new TT.Mesh(geo('puck', () => new TT.CylinderGeometry(r, r, .7 * K, LO() ? 18 : 24)), BM.puck); b.position.y = .35 * K; b.castShadow = true; g.add(b);
+    const ring = new TT.Mesh(geo('pring', () => { const q = new TT.TorusGeometry(r * .62, .05 * K, 4, 24); q.rotateX(Math.PI / 2); return q; }), BM.ring); ring.position.y = .71 * K; g.add(ring);
     return g;
   }
   // a little round creature: a squashed ball with eyes and feet (the colour per monster)
