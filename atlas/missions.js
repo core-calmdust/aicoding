@@ -274,7 +274,17 @@
     const s0 = state(), got = !!s0.M.c[m.id], can = s0.can(m);
     return `<button type="button" class="msget ${got ? 'got' : can ? 'can' : ''}" data-c="${m.id}" data-n="${coins}" ${can ? '' : 'disabled'}>${got ? '✓ ' + C.esc(X().got) : `${coin}+${coins}`}</button>`;
   }
+  // phones: the popup keeps the starter card's size on every tab (the lists scroll inside), 2026-11-11
+  let stH = 0; addEventListener('resize', () => { stH = 0; });
   function render() {
+    const phone = matchMedia('(max-width: 600px)').matches;
+    if (phone && !stH && tab !== 'st' && ov) { const t0 = tab; tab = 'st'; render0(); const q = ov.querySelector('.msp'); if (q) stH = q.offsetHeight; tab = t0; }
+    render0();
+    const p = ov && ov.querySelector('.msp'); if (!p) return;
+    if (!phone) { stH = 0; return; }
+    if (tab === 'st') { p.style.height = ''; stH = p.offsetHeight; } else if (stH) p.style.height = stH + 'px';
+  }
+  function render0() {
     if (!ov) return;
     const x = X(), s = state(), esc = C.esc;
     const say = tab === 'st' ? x.hi[Math.floor(Date.now() / 60000) % x.hi.length] : tab === 'mo' ? x.moHi : x.lgHi;
