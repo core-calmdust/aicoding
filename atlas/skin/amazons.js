@@ -173,7 +173,9 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
       // (the region's size as drawn now — the lean shortens the rows — over the zoom now: its size at zoom 1; a little margin)
       const A = T3.project(w.c0 - 5 - .3, w.r0 - 5 - .3, Y), B = T3.project(w.c0 + w.n - 5 + .3, w.r0 + w.n - 5 + .3, Y), C = T3.project(w.c0 + w.n - 5 + .3, w.r0 - 5 - .3, Y), D = T3.project(w.c0 - 5 - .3, w.r0 + w.n - 5 + .3, Y);
       const rw = (Math.max(B.x, C.x) - Math.min(A.x, D.x)) / view.z, rh = (Math.max(B.y, D.y) - Math.min(A.y, C.y)) / view.z;
-      z = Math.max(1, Math.min(ZMAX, 10 / w.n * .9, rw > 0 ? vw * .96 / rw : 9, rh > 0 ? vh * .94 / rh : 9)); }
+      // (2026-11-11 the user, with a picture of the zoom wanted: about 7–8 columns across — 1.6× at least, up to 2.2× for a small
+      //  region; the strip's height may cut the region's far / near rows, the view can be slid)
+      z = Math.max(1.6, Math.min(2.2, ZMAX, 10 / w.n * .95)); }
     // (the region's centre is brought to the centre of the board's place as far as it is on the screen — on phones the cards
     //  above and the tabs below cover part of it). The drawn board is the same picture scaled about the aligned box's centre
     //  (the camera's distance follows the box), so where the region's centre is drawn now, measured from the box's centre and
@@ -197,10 +199,10 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
       const x0 = Math.max(fr.left, 0), x1 = Math.min(fr.right, innerWidth), y0 = Math.max(fr.top, 0), y1 = Math.min(fr.bottom, innerHeight - tb);
       const q = (c, r) => T3.project(c - 5, r - 5, Y), A = q(w.c0 - .3, w.r0 - .3), B = q(w.c0 + w.n + .3, w.r0 + w.n + .3), C = q(w.c0 + w.n + .3, w.r0 - .3), D = q(w.c0 - .3, w.r0 + w.n + .3);
       const L = Math.min(A.x, D.x), R = Math.max(B.x, C.x), Tp = Math.min(A.y, C.y), Bt = Math.max(B.y, D.y);
-      const k = Math.min(1, (x1 - x0) * .96 / (R - L), (y1 - y0) * .94 / (Bt - Tp));   // (too big for the strip: zoom out)
+      const k = 1;   // (the zoom stays: only the position is corrected)
       const ex = (x0 + x1) / 2 - (L + R) / 2, ey = (y0 + y1) / 2 - (Tp + Bt) / 2;
       if (!isFinite(ex) || !isFinite(ey) || !isFinite(k)) return;
-      if (Math.hypot(ex, ey) < 3 && k > .97) return;
+      if (Math.hypot(ex, ey) < 3) return;
       const z1 = Math.max(1, view.z * k), f = z1 / view.z;
       // (zoom about the region's centre, then move it to the strip's centre)
       const [ox, oy] = centreNow(), mx = (L + R) / 2, my = (Tp + Bt) / 2;
