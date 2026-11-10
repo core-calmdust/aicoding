@@ -1799,10 +1799,11 @@
     const st = document.documentElement.style, tb = document.querySelector('.tabs'), hd = document.querySelector('header'), dt = document.querySelector('#pg-dress .dtop');
     if (tb) st.setProperty('--tabsH', tb.offsetHeight + 'px');
     if (hd) st.setProperty('--hdrH', hd.offsetHeight + 'px');   // PC きせかえ: the sticky title/tabs row sits under the header,
-    if (dt && dt.offsetHeight) st.setProperty('--dtopH', dt.offsetHeight + 'px');   //  and the name card under that row
+    if (dt && dt.offsetHeight) st.setProperty('--dtopH', Math.min(dt.offsetHeight, 140) + 'px');   // (capped: a row wrapped while the page was narrow never pushes the card far down)   //  and the name card under that row
   }
   addEventListener('resize', dsegPos);   // (also places the updates ticker above the tab bar on every tab;
-  if (window.ResizeObserver) { const ro = new ResizeObserver(dsegPos); ro.observe(tabsEl); const dt = document.querySelector('#pg-dress .dtop'); if (dt) ro.observe(dt); }   //  the bar grows when its labels' web font arrives, e.g. Arabic)
+  if (window.ResizeObserver) { const ro = new ResizeObserver(dsegPos); ro.observe(tabsEl); const dt = document.querySelector('#pg-dress .dtop'), hd = document.querySelector('header'); if (dt) ro.observe(dt); if (hd) ro.observe(hd); }   // (the header too: a banner coming and going changed its height and left the name card too low, 2026-11-10)
+  addEventListener('hashchange', () => setTimeout(dsegPos, 0)); setTimeout(dsegPos, 1500); if (document.fonts && document.fonts.ready) document.fonts.ready.then(dsegPos);   //  the bar grows when its labels' web font arrives, e.g. Arabic)
   function dressInfo(it) {
     openSheet(`<div class="dinfo"><div class="card item r${it.rar} locked" data-kind="${it.kind}"><span class="rar">${ART.RAR[it.rar]}</span><div class="art">${ART.svg(it.id)}</div></div>
       <h3>${esc(iname(it))}</h3><div class="gnote">${t('kind.' + it.kind)} · ${t('dress.notyet')}</div><p class="dget">${t('dress.get')}</p>
