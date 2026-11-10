@@ -95,6 +95,7 @@ html[dir=rtl] .cb-cmp .cb-qp::before,html[lang=ar] .cb-cmp .cb-qp::before{transf
 .cb-cmp > .lh .cb-qp:hover{color:var(--text,#eee)}
 .cb-cmp > .lh .cb-qp.hidden{display:none!important}
 html.atlas-skin .cb-cmp > .lh .cb-qp{background:#fff!important;border:2px solid #ead9b6!important;color:#4a5068!important;box-shadow:0 2px 0 #ead9b6!important}
+body.in-puzzle #coachCard{display:none!important}   /* no coach panel during puzzles */
 .cb-cmp .pz-goal{background:none!important;border:0!important;padding:0!important;margin:0 0 4px!important;box-shadow:none!important}   /* the goal as plain text */
 .cb-cmp .cb-bar{flex-wrap:nowrap!important}
 .cb-cmp .cb-bar .cb-br{display:none!important}
