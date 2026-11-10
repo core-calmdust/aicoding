@@ -114,7 +114,7 @@
   function slabGeo(key, w, h, th, r, rough, uvTop) {
     if (geos[key]) return geos[key];
     const TT = T(), bv = .06;
-    const g = new TT.ExtrudeGeometry(roundRect(w, h, r, rough, key.length * 3.1), { depth: th - 2 * bv, bevelEnabled: true, bevelThickness: bv, bevelSize: bv - .01, bevelSegments: LO() ? 2 : 4, curveSegments: LO() ? 8 : 14, steps: rough ? 2 : 1 });
+    const g = new TT.ExtrudeGeometry(roundRect(w, h, r, rough, key.length * 3.1), { depth: th - 2 * bv, bevelEnabled: true, bevelThickness: bv, bevelSize: bv - .01, bevelSegments: LO() ? 1 : 2, curveSegments: LO() ? 5 : 8, steps: 1 });
     g.rotateX(-Math.PI / 2); g.translate(0, bv, 0);
     g.scale((w - .02) / (w + 2 * (bv - .01)), 1, (h - .02) / (h + 2 * (bv - .01)));
     const P = g.attributes.position, UV = g.attributes.uv, side = new Uint8Array(P.count);
@@ -188,7 +188,7 @@
   }
 
   /* ---------- the amazons: sculpted figures ---------- */
-  const SEG = () => LO() ? 20 : 36;
+  const SEG = () => LO() ? 12 : 18;   // (2026-11-10: polygons cut ~60% — 8 figures + up to 92 arrows on the board)
   const lathe = (pts, seg) => new (T().LatheGeometry)(pts.map(([x, y]) => new (T().Vector2)(x, y)), seg || SEG());
   const share = g => { if (X.share) X.share(g); return g; };
   const marbleTex = (key, base, vein, vein2, scale) => pixTex(key, SZ(LO() ? 192 : 320), (u, v) => {
@@ -223,7 +223,7 @@
   function crestGeo(w, h, depth) {
     const TT = T(), s = new TT.Shape();
     s.moveTo(-w, 0); s.bezierCurveTo(-w, h * 1.1, w * .2, h * 1.25, w * .95, h * .5); s.bezierCurveTo(w * 1.05, h * .25, w, .05, w * .8, 0); s.lineTo(-w, 0);
-    const g = new TT.ExtrudeGeometry(s, { depth, bevelEnabled: true, bevelThickness: depth * .35, bevelSize: depth * .3, bevelSegments: 2, curveSegments: LO() ? 10 : 18 });
+    const g = new TT.ExtrudeGeometry(s, { depth, bevelEnabled: true, bevelThickness: depth * .35, bevelSize: depth * .3, bevelSegments: 1, curveSegments: LO() ? 6 : 9 });
     g.translate(0, 0, -depth / 2); return g;
   }
   function helmet(g, M, key, r, y, open) {
@@ -234,7 +234,7 @@
     g.add(mesh(G(key + 'band', () => new TT.TorusGeometry(r, r * .05, 8, SEG())), M.trim, 0, y + r * .08, 0, Math.PI / 2));
     g.add(mesh(G(key + 'nose', () => new TT.BoxGeometry(r * .13, r * .5, r * .09)), M.body, 0, y - r * .2, r, -.1));
     g.add(mesh(G(key + 'crest', () => crestGeo(r * 1.3, r * 1.25, r * .34)), M.body, 0, y + r * .86, -r * .12, 0, Math.PI / 2));
-    g.add(mesh(G(key + 'hold', () => new TT.CylinderGeometry(r * .1, r * .14, r * .3, 10)), M.trim, 0, y + r * .98));
+    g.add(mesh(G(key + 'hold', () => new TT.CylinderGeometry(r * .1, r * .14, r * .3, 8, 1, true)), M.trim, 0, y + r * .98));
   }
   function statue(g, M) {   // a marble bust on a moulded plinth: crested helmet, cloak and brooch, a spear behind the shoulder
     const TT = T();
@@ -242,23 +242,23 @@
     g.add(mesh(G('st-ring', () => new TT.TorusGeometry(.51, .016, 6, SEG())), M.trim, 0, .18, 0, Math.PI / 2));
     g.add(mesh(G('st-sock', () => lathe([[0, .34], [.24, .34], [.19, .38], [.17, .44], [.22, .48], [0, .48]])), M.body));
     g.add(mesh(G('st-torso', () => lathe([[0, .46], [.2, .46], [.27, .5], [.33, .58], [.38, .68], [.42, .76], [.43, .8], [.4, .85], [.31, .89], [.2, .93], [.12, .96], [0, .97]])), M.body, 0, 0, 0, 0, 0, 0, 1.05, 1, .56));
-    g.add(mesh(G('st-nl', () => new TT.TorusGeometry(.16, .014, 6, 32)), M.trim, 0, .925, 0, Math.PI / 2, 0, 0, 1.05, .6, 1));
-    g.add(mesh(G('st-fib', () => new TT.SphereGeometry(.035, 12, 8)), M.trim, .25, .84, .16));
-    g.add(mesh(G('st-cloak', () => new TT.TorusGeometry(.3, .03, 8, 32, Math.PI * .5)), M.body, .02, .74, .06, -.35, .1, Math.PI * .1, 1, 1, .5));
-    g.add(mesh(G('st-neck', () => new TT.CylinderGeometry(.095, .12, .24, 16)), M.body, 0, 1.06));
-    g.add(mesh(G('st-head', () => new TT.SphereGeometry(.19, 28, 20)), M.body, 0, 1.26, .02, 0, 0, 0, .86, 1.08, .98));
-    g.add(mesh(G('st-jaw', () => new TT.SphereGeometry(.115, 16, 12)), M.body, 0, 1.14, .09, 0, 0, 0, .92, .8, .9));
+    g.add(mesh(G('st-nl', () => new TT.TorusGeometry(.16, .014, 4, 18)), M.trim, 0, .925, 0, Math.PI / 2, 0, 0, 1.05, .6, 1));
+    g.add(mesh(G('st-fib', () => new TT.SphereGeometry(.035, 8, 5)), M.trim, .25, .84, .16));
+    g.add(mesh(G('st-cloak', () => new TT.TorusGeometry(.3, .03, 5, 12, Math.PI * .5)), M.body, .02, .74, .06, -.35, .1, Math.PI * .1, 1, 1, .5));
+    g.add(mesh(G('st-neck', () => new TT.CylinderGeometry(.095, .12, .24, 12, 1, true)), M.body, 0, 1.06));
+    g.add(mesh(G('st-head', () => new TT.SphereGeometry(.19, 16, 12)), M.body, 0, 1.26, .02, 0, 0, 0, .86, 1.08, .98));
+    g.add(mesh(G('st-jaw', () => new TT.SphereGeometry(.115, 10, 7)), M.body, 0, 1.14, .09, 0, 0, 0, .92, .8, .9));
     g.add(mesh(G('st-nose', () => new TT.ConeGeometry(.024, .075, 8)), M.body, 0, 1.25, .2, Math.PI / 2 + .4));
     helmet(g, M, 'st-h', .205, 1.32, true);
-    g.add(mesh(G('st-hair', () => new TT.CylinderGeometry(.08, .15, .36, 16)), M.body, 0, 1.1, -.13, .32));
-    g.add(mesh(G('st-shaft', () => new TT.CylinderGeometry(.016, .016, 1.55, 8)), M.trim, .42, 1.08, -.16, 0, 0, -.08));
-    g.add(mesh(G('st-tip', () => new TT.SphereGeometry(.06, 12, 8)), M.trim, .488, 1.965, -.16, 0, 0, -.08, .55, 2.3, .22));
+    g.add(mesh(G('st-hair', () => new TT.CylinderGeometry(.08, .15, .36, 10, 1, true)), M.body, 0, 1.1, -.13, .32));
+    g.add(mesh(G('st-shaft', () => new TT.CylinderGeometry(.016, .016, 1.55, 5, 1, true)), M.trim, .42, 1.08, -.16, 0, 0, -.08));
+    g.add(mesh(G('st-tip', () => new TT.SphereGeometry(.06, 8, 5)), M.trim, .488, 1.965, -.16, 0, 0, -.08, .55, 2.3, .22));
   }
   function bronze(g, M) {   // a tall queen: a fluted stem and a wide collar, crowned by a crested helmet
     const TT = T();
     g.add(mesh(G('br-body', () => lathe([[0, 0], [.58, 0], [.6, .05], [.58, .1], [.48, .13], [.5, .18], [.42, .22], [.32, .25], [.27, .32], [.22, .48], [.17, .7], [.14, .86], [.15, .9], [.3, .93], [.36, .97], [.3, 1.0], [.18, 1.02], [.15, 1.06], [0, 1.06]])), M.body));
     for (const [y, r] of [[.1, .585], [.96, .355]]) g.add(mesh(G('br-r' + r, () => new TT.TorusGeometry(r, .018, 6, SEG())), M.trim, 0, y, 0, Math.PI / 2));
-    const fl = G('br-fl', () => new TT.CylinderGeometry(.01, .014, .52, 5));
+    const fl = G('br-fl', () => new TT.CylinderGeometry(.01, .014, .52, 4, 1, true));
     for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2; g.add(mesh(fl, M.trim, Math.cos(a) * .2, .58, Math.sin(a) * .2)); }
     helmet(g, M, 'br-h', .25, 1.2, false);
   }
@@ -272,9 +272,9 @@
     g.add(mesh(G('ar-robe', () => lathe([[0, .16], [.36, .16], [.345, .22], [.3, .3], [.25, .42], [.2, .56], [.158, .68], [.135, .76], [.152, .83], [.176, .9], [.182, .96], [.15, 1.01], [.075, 1.04], [.055, 1.09], [0, 1.09]])), M.body, 0, 0, 0, 0, 0, 0, 1, 1, .84));
     for (const [y, r] of [[.3, .302], [.44, .238], [.2, .352]]) g.add(mesh(G('ar-hem' + y, () => new TT.TorusGeometry(r, .009, 5, SEG())), M.trim, 0, y, 0, Math.PI / 2, 0, 0, 1, .84, 1));   // embroidered bands on the robe
     g.add(mesh(G('ar-belt', () => new TT.TorusGeometry(.138, .02, 6, SEG())), M.trim, 0, .76, 0, Math.PI / 2, 0, 0, 1, .84, 1));
-    g.add(mesh(G('ar-buckle', () => new TT.SphereGeometry(.028, 10, 8)), M.trim, 0, .76, .118));
-    g.add(mesh(G('ar-torc', () => new TT.TorusGeometry(.07, .013, 6, 24)), M.trim, 0, 1.06, 0, Math.PI / 2 + .12));   // a gold torc at the neck
-    g.add(mesh(G('ar-head', () => new TT.SphereGeometry(.098, 24, 16)), M.body, 0, 1.17, .01, 0, 0, 0, .9, 1.1, .96));
+    g.add(mesh(G('ar-buckle', () => new TT.SphereGeometry(.028, 6, 4)), M.trim, 0, .76, .118));
+    g.add(mesh(G('ar-torc', () => new TT.TorusGeometry(.07, .013, 4, 14)), M.trim, 0, 1.06, 0, Math.PI / 2 + .12));   // a gold torc at the neck
+    g.add(mesh(G('ar-head', () => new TT.SphereGeometry(.098, 14, 10)), M.body, 0, 1.17, .01, 0, 0, 0, .9, 1.1, .96));
     // the Phrygian cap: a tall cone whose tip curls forward and down, a gold band round the brow, lappets down the sides
     g.add(mesh(G('ar-cap', () => {
       const geo = lathe([[.112, 0], [.116, .05], [.104, .12], [.085, .19], [.062, .25], [.04, .3], [.02, .34], [0, .35]]), P = geo.attributes.position;
@@ -282,30 +282,30 @@
       geo.computeVertexNormals(); return geo;
     }), M.body, 0, 1.19, -.02));
     g.add(mesh(G('ar-capband', () => new TT.TorusGeometry(.113, .013, 6, SEG())), M.trim, 0, 1.2, -.02, Math.PI / 2));
-    g.add(mesh(G('ar-captip', () => new TT.SphereGeometry(.022, 10, 8)), M.trim, 0, 1.19 + .23, -.02 + .2));
+    g.add(mesh(G('ar-captip', () => new TT.SphereGeometry(.022, 6, 4)), M.trim, 0, 1.19 + .23, -.02 + .2));
     for (const s of [1, -1]) g.add(mesh(G('ar-lap', () => new TT.BoxGeometry(.026, .17, .065)), M.body, s * .1, 1.1, -.02, 0, 0, s * .1));
     // the recurve bow (the Scythian kind: the grip set back, the limbs bending forward, the tips curling back), held upright beside
     // the body in the left hand with an arrow on the string; its plane faces the viewer, so the double curve reads
     const bowPts = [[.06, -.5], [.0, -.44], [-.05, -.32], [-.06, -.18], [-.02, -.05], [-.035, 0], [-.02, .05], [-.06, .18], [-.05, .32], [.0, .44], [.06, .5]];
     const bow = new TT.Group();
-    bow.add(mesh(G('ar-bow', () => new TT.TubeGeometry(new TT.CatmullRomCurve3(bowPts.map(([x, y]) => new TT.Vector3(x, y, 0))), LO() ? 28 : 56, .017, 6, false)), M.trim));
-    bow.add(mesh(G('ar-grip', () => new TT.CylinderGeometry(.026, .026, .12, 8)), M.body, -.035, 0));
-    bow.add(mesh(G('ar-string', () => new TT.CylinderGeometry(.0045, .0045, 1.0, 4)), M.trim, .06, 0));
-    for (const s of [1, -1]) bow.add(mesh(G('ar-nock', () => new TT.SphereGeometry(.022, 8, 6)), M.trim, .06, s * .5));
-    bow.add(mesh(G('ar-arrow', () => new TT.CylinderGeometry(.006, .006, .3, 4)), M.body, .02, .0, 0, 0, 0, Math.PI / 2));   // the nocked arrow
+    bow.add(mesh(G('ar-bow', () => new TT.TubeGeometry(new TT.CatmullRomCurve3(bowPts.map(([x, y]) => new TT.Vector3(x, y, 0))), LO() ? 16 : 24, .017, 4, false)), M.trim));
+    bow.add(mesh(G('ar-grip', () => new TT.CylinderGeometry(.026, .026, .12, 6, 1, true)), M.body, -.035, 0));
+    bow.add(mesh(G('ar-string', () => new TT.CylinderGeometry(.0045, .0045, 1.0, 3, 1, true)), M.trim, .06, 0));
+    for (const s of [1, -1]) bow.add(mesh(G('ar-nock', () => new TT.SphereGeometry(.022, 6, 4)), M.trim, .06, s * .5));
+    bow.add(mesh(G('ar-arrow', () => new TT.CylinderGeometry(.006, .006, .3, 3, 1, true)), M.body, .02, .0, 0, 0, 0, Math.PI / 2));   // the nocked arrow
     bow.add(mesh(G('ar-arrowhead', () => new TT.ConeGeometry(.018, .05, 4)), M.trim, -.15, 0, 0, 0, 0, Math.PI / 2));
     bow.position.set(.27, .72, .1); bow.rotation.set(0, -.25, -.08); g.add(bow);
     // the quiver (a gorytos) on the back, three arrows with gold nocks and fletchings standing out of it
     const q = new TT.Group();
     q.add(mesh(G('ar-quiver', () => lathe([[0, 0], [.06, 0], [.075, .08], [.08, .32], [.085, .36], [0, .36]], 12)), M.body));
-    q.add(mesh(G('ar-qband', () => new TT.TorusGeometry(.081, .01, 5, 16)), M.trim, 0, .3, 0, Math.PI / 2));
-    q.add(mesh(G('ar-qband2', () => new TT.TorusGeometry(.077, .01, 5, 16)), M.trim, 0, .08, 0, Math.PI / 2));
+    q.add(mesh(G('ar-qband', () => new TT.TorusGeometry(.081, .01, 3, 10)), M.trim, 0, .3, 0, Math.PI / 2));
+    q.add(mesh(G('ar-qband2', () => new TT.TorusGeometry(.077, .01, 3, 10)), M.trim, 0, .08, 0, Math.PI / 2));
     const vane = G('ar-vane', () => { const s = new TT.Shape(); s.moveTo(0, 0); s.lineTo(.035, .02); s.lineTo(.035, .1); s.lineTo(0, .085); s.lineTo(0, 0); return new TT.ExtrudeGeometry(s, { depth: .006, bevelEnabled: false }); });
     for (let k = 0; k < 3; k++) {
       const a = new TT.Group(), dx = (k - 1) * .035;
-      a.add(mesh(G('ar-ashaft', () => new TT.CylinderGeometry(.006, .006, .12, 4)), M.body, 0, .06));
+      a.add(mesh(G('ar-ashaft', () => new TT.CylinderGeometry(.006, .006, .12, 3, 1, true)), M.body, 0, .06));
       for (let v = 0; v < 3; v++) { const vm = mesh(vane, M.trim, 0, .02); vm.rotation.y = v * Math.PI * 2 / 3; a.add(vm); }
-      a.add(mesh(G('ar-anock', () => new TT.SphereGeometry(.012, 6, 4)), M.trim, 0, .13));
+      a.add(mesh(G('ar-anock', () => new TT.SphereGeometry(.012, 4, 3)), M.trim, 0, .13));
       a.position.set(dx, .34, (k % 2) * .02); a.rotation.z = -(k - 1) * .12; q.add(a);
     }
     q.position.set(-.1, .58, -.16); q.rotation.set(-.32, 0, .38); g.add(q);
@@ -330,12 +330,11 @@
     const wood = mat('aw', () => phys({ color: '#5a3a22', roughness: .6 })), iron = mat('ai', () => phys({ color: '#3a3836', metalness: .9, roughness: .45 }));
     const fl = mat('af', () => phys({ color: '#efe2c4', roughness: .8, side: TT.DoubleSide })), char = mat('ac', () => phys({ color: '#1a120c', roughness: .9 }));
     const a = new TT.Group();
-    a.add(mesh(G('a-shaft', () => new TT.CylinderGeometry(.024, .024, .9, 6)), wood, 0, .45));
-    a.add(mesh(G('a-char', () => new TT.CylinderGeometry(.027, .025, .2, 6)), char, 0, .08));   // the burnt end by the head
+    a.add(mesh(G('a-shaft', () => new TT.CylinderGeometry(.024, .024, .9, 5, 1, true)), wood, 0, .45));
+    a.add(mesh(G('a-char', () => new TT.CylinderGeometry(.027, .025, .2, 5, 1, true)), char, 0, .08));   // the burnt end by the head
     a.add(mesh(G('a-head', () => new TT.ConeGeometry(.055, .16, 4)), iron, 0, -.05, 0, Math.PI));
     const vane = G('a-vane', () => { const s = new TT.Shape(); s.moveTo(0, 0); s.lineTo(.1, .05); s.lineTo(.1, .26); s.lineTo(0, .22); s.lineTo(0, 0); return new TT.ShapeGeometry(s); });
     for (let v = 0; v < 3; v++) { const m = mesh(vane, fl, 0, .66); m.rotation.y = v * Math.PI * 2 / 3; a.add(m); }
-    a.add(mesh(G('a-nock', () => new TT.CylinderGeometry(.028, .028, .04, 6)), wood, 0, .91));
     a.rotation.z = .5; a.position.y = -.03; g.add(a);
     g.userData.arrow = a;
     return g;
