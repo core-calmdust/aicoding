@@ -429,6 +429,7 @@ function canHumanPlay() {
   if (gameOver(cur)) return false;
   if (animating) return false;
   if (puzzle) return puzzle.state === 'play' && !puzzle.busy && toMoveAt(cur) === puzzle.me;
+  if (lesson && window.SeqPrac && SeqPrac.active()) return SeqPrac.state().waiting;   // the 3-move opening practice
   if (lesson) return !lesson.answered && !lesson.study;
   if (reviewing) return false;
   if (settings.mode === 'online') return !!(window.olCanMove && olCanMove());
@@ -1323,6 +1324,7 @@ let introIdx = 0;
 let savedGame = null;
 function stashGame() { if (!lesson && !puzzle) savedGame = { moves, cur, evals: evals.slice(), humanColor }; }
 function exitSpecial() {
+  if (window.SeqPrac) SeqPrac.stop();
   if (!lesson && !puzzle) return;
   lesson = null; puzzle = null; lessonMarks = []; labelList = null;
   document.body.classList.remove('in-lesson', 'in-puzzle');
@@ -1487,12 +1489,14 @@ function rampMove(m) {
 const curStep = () => lesson.virt || LESSONS.steps[lesson.step];
 function lessonProblem() { return curStep().problems[lesson.i]; }
 function loadLessonProblem() {
+  if (window.SeqPrac) SeqPrac.stop();
   const P = lessonProblem();
   lesson.me = P.s.side;
   enterSpecial(P.s);
   lesson.answered = false; lesson.hinted = false;
   update(false); renderLessonCard();
   $('#lsFb').innerHTML = '';
+  if (lesson.virt && lesson.virt.id !== 'mk' && window.seqGameStart && !lesson.ramp) seqGameStart(lessonProblem(), window.SEQ_CFG);   // opening practice: 3 moves in a row (shared/seqgame.js)
 }
 function renderLessonCard() {
   if (lesson && lesson.ramp) return renderRampCard();
@@ -1526,6 +1530,7 @@ function lsAuto(good, ms) {
   CardBar.autoNext({ ms: Math.max(1300, ms || 0), ok: () => lesson === L && L.i === i && L.answered });
 }
 function lessonAnswer(m) {
+  if (window.SeqPrac && SeqPrac.active()) { SeqPrac.move(String(m)); return; }
   if (lesson.ramp) return rampMove(m);
   const P = lessonProblem(), s = curStep(), pos0 = posAt(0).pos;
   lesson.answered = true;
