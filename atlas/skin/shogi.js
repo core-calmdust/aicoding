@@ -130,6 +130,10 @@
     if (board.userData.setTone) board.userData.setTone('classic');   // (the same tone as the 大百科's 3D view — ちゃぶ台 — 2026-11-10)
     if (T3.kick) T3.kick(400);
     ['metal', 'ink', 'grain'].forEach(k => document.documentElement.classList.toggle('atlas-sk-' + k, sk === k));
+    // the page's own board classes (body.skin-*: piece colours / filters of メタル・漆黒…): the 3D board shows the 本榧 pieces whatever
+    // 2D board was picked before; the 2D board, the one picked (2026-11-10: メタル → 3D left the pieces grey)
+    try { const real = typeof settings === 'object' && settings ? settings.skin : 'kaya', eff = is3() ? 'kaya' : real;
+      ['grain', 'kaya', 'metal', 'ink'].forEach(k => document.body.classList.toggle('skin-' + k, eff === k)); } catch (e) {}
   }
   if (typeof window.applyLook === 'function') { const oa = window.applyLook; window.applyLook = function () { const r = oa.apply(this, arguments); try { look(); } catch (e) {} return r; }; }
   setTimeout(look, 0);
