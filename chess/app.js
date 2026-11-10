@@ -2065,7 +2065,26 @@ function renderPuzzleCard() {
   $('#pzDots').innerHTML = Array.from({ length: Pz.n }, (_, i) => `<i class="${i < Pz.used ? 'ok' : ''} ${i === Pz.used && Pz.state === 'play' ? 'cur' : ''}"></i>`).join('');
   $('#pzNext').disabled = !!Pz.daily || Pz.j + 1 >= L.puzzles.length || !PZBook.isOpen(pzRecs(Pz.L), Pz.j + 1);
   $('#pzHint').disabled = Pz.state !== 'play'; $('#pzAnswer').disabled = Pz.busy;
-  renderInfo();
+  renderInfo(); pzBar();
+}
+// the puzzle card laid out like the shogi tsume card (2026-11-10): the step and a small quit pill on the head row, 「n/N問目」 beside
+// the title, the goal as plain text, icon buttons with a small caption (ヒント・やり直し・答え・一覧 — the same order as the shogi tsume card) and a wide 「次の問題」
+const PZB_CAP = {   // list, hint, retry, answer, quit
+  ja: ['一覧', 'ヒント', 'やり直し', '答え', 'やめる'], en: ['List', 'Hint', 'Retry', 'Answer', 'Quit'], zh: ['列表', '提示', '重试', '答案', '退出'], 'zh-TW': ['列表', '提示', '重試', '答案', '退出'],
+  ko: ['목록', '힌트', '다시', '정답', '그만'], es: ['Lista', 'Pista', 'Otra vez', 'Solución', 'Salir'], fr: ['Liste', 'Indice', 'Rejouer', 'Solution', 'Quitter'], pt: ['Lista', 'Dica', 'De novo', 'Solução', 'Sair'],
+  de: ['Liste', 'Tipp', 'Nochmal', 'Lösung', 'Beenden'], hi: ['सूची', 'संकेत', 'फिर से', 'उत्तर', 'छोड़ें'], ar: ['القائمة', 'تلميح', 'أعد', 'الحل', 'خروج'], ru: ['Список', 'Подсказка', 'Ещё раз', 'Ответ', 'Выйти'],
+  id: ['Daftar', 'Petunjuk', 'Ulangi', 'Jawaban', 'Keluar'], tr: ['Liste', 'İpucu', 'Tekrar', 'Çözüm', 'Çık'] };
+function pzBar() {
+  const card = $('#puzzleCard'), bar = card && card.querySelector('.cb-bar'), Pz = puzzle; if (!bar || !Pz) return;
+  card.classList.add('pz-compact');
+  let hd = $('#pzHead'); const ti = $('#pzTitle');
+  if (!hd && ti) { hd = document.createElement('div'); hd.id = 'pzHead'; ti.before(hd); hd.appendChild(ti); const n = document.createElement('span'); n.id = 'pzNo'; hd.appendChild(n); }
+  const L = PUZZLES.levels[Pz.L], NO = { ja: '{k}/{n}問目', zh: '第{k}/{n}题', 'zh-TW': '第{k}/{n}題', ko: '{k}/{n}번째' };
+  $('#pzNo').textContent = Pz.daily || !L ? '' : (NO[LANG] || '{k}/{n}').replace('{k}', Pz.j + 1).replace('{n}', L.puzzles.length);
+  const q = $('#pzQuit'), lh = card.querySelector(':scope > .lh'); if (q && lh && q.parentElement !== lh) lh.appendChild(q);
+  const tools = bar.querySelector('.cb-tools');
+  ['pzHint', 'pzRetry', 'pzAnswer', 'pzList', 'pzPrev'].forEach(id => { const b = $('#' + id); if (b && tools && b.parentElement === tools) tools.appendChild(b); });
+  const C = PZB_CAP[LANG] || PZB_CAP.en; [['pzList', 0], ['pzHint', 1], ['pzRetry', 2], ['pzAnswer', 3], ['pzQuit', 4]].forEach(([id, i]) => { const b = $('#' + id); if (b) b.dataset.cap = C[i]; });
 }
 function pzStatus(html) { $('#pzStatus').innerHTML = html; }
 function mateReq(n, defend) { return request('ai', { type: 'mate', moves: moves.slice(0, cur), n, defend: !!defend, maxNodes: 3e7 }).then(r => r && r.list); }
