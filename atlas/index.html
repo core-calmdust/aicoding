@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script src="../shared/latinfs.js?v=1"></script>
-<script src="../shared/focusgate.js?v=2"></script>
+<script src="../shared/focusgate.js?v=3"></script>
 <script src="../shared/phonesnd.js?v=2"></script>
 <title>世界のボドゲ大百科 — World Board Game Atlas</title>
 <meta name="description" content="世界のボドゲ大百科のポータル。更新されたゲーム、実績、ショップ、ガチャ。">
@@ -126,7 +126,12 @@ html[lang=ar] .badge,html[lang=hi] .badge{letter-spacing:0}
 .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(70% 60% at 50% 45%,#fff 40%,#f3f3f1 100%)}
 .props{position:absolute;inset:0}
 /* the moving layer is the span; the image (with its shadow) is painted into it once, so the GPU doesn't redo a drop-shadow blur per piece every frame */
-.props .pp{position:absolute;width:var(--w);left:var(--x);top:var(--y);transform:translate(-50%,-50%) rotate(var(--r));will-change:transform;cursor:pointer;padding:0;line-height:0}
+.props .pp{position:absolute;width:var(--w);left:var(--x);top:var(--y);transform:translate(var(--pt,0px,0px)) translate(-50%,-50%) rotate(var(--r));cursor:pointer;padding:0;line-height:0}
+.props .pb{display:block;will-change:transform}
+.props .pp img{animation:ppBob var(--bd,7s) ease-in-out var(--bdl,0s) infinite}   /* the bob: on the compositor (2026-11-10) */
+.props.pz .pp img{animation-play-state:paused}
+@keyframes ppBob{0%{transform:translateY(0) rotate(0)}25%{transform:translateY(10px) rotate(7deg)}50%{transform:translateY(0) rotate(0)}75%{transform:translateY(-10px) rotate(-7deg)}100%{transform:translateY(0) rotate(0)}}
+@media (prefers-reduced-motion:reduce){.props .pp img{animation:none}}
 /* the board view and the play overlays (toasts, task pill, power, how-to card, buttons, NPC talk): no text selection or long-press callout
    — a long press while aiming on a phone otherwise selects the HUD's words (2026-11-09) */
 #bv,#bv *,.crtoast,.crpow,.crhow,.crhow *,.crflip,.cktask,.cktoast,.ckpow,.ckhow,.ckhow *,.ckflip,[class^=npc],[class^=npc] *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
@@ -1865,6 +1870,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <link rel="stylesheet" href="worldmap.css?v=18">
 <script src="worldmap.js?v=31"></script>
 <script src="npc/npc.js?v=17"></script>
-<script src="app.js?v=275"></script>
+<script src="app.js?v=276"></script>
 </body>
 </html>

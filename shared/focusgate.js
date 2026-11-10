@@ -4,6 +4,21 @@
 // (physics, timers, shooters, AI animations) see no time pass and carry on exactly where they were when focus returns.
 // Date.now() is left alone (network, saves, server clocks); timers built on Date.now() pause themselves (each game).
 // Load it first, before the game's own scripts.  ?nofreeze turns it off (tests).
+// Quiet DOM (2026-11-10, battery): classList.add of a class already there, classList.remove of one that is absent, and
+// setAttribute / .title with the value already set change nothing — but they still make MutationObserver records, and the
+// pages' layout observers (headerbar, the 3D skin, the card bar) then woke up and re-measured several times a second while
+// nothing happened (a 250 ms clock tick re-adding 'on' …). Those no-op writes are skipped here; real changes go through as before.
+(function () {
+  try {
+    const T = DOMTokenList.prototype, add = T.add, rem = T.remove;
+    T.add = function () { const n = []; for (let i = 0; i < arguments.length; i++) { const c = arguments[i]; if (typeof c !== 'string' || !c || /\s/.test(c) || !this.contains(c)) n.push(c); } if (n.length) add.apply(this, n); };
+    T.remove = function () { const n = []; for (let i = 0; i < arguments.length; i++) { const c = arguments[i]; if (typeof c !== 'string' || !c || /\s/.test(c) || this.contains(c)) n.push(c); } if (n.length) rem.apply(this, n); };
+    const E = Element.prototype, sa = E.setAttribute;
+    E.setAttribute = function (k, v) { if (this.getAttribute(k) === String(v)) return; return sa.call(this, k, v); };
+    const d = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'title');
+    if (d && d.set) Object.defineProperty(HTMLElement.prototype, 'title', { configurable: true, enumerable: d.enumerable, get: d.get, set(v) { if (this.getAttribute('title') === String(v)) return; d.set.call(this, v); } });
+  } catch (e) {}
+})();
 (function () {
   if (window.__focusGate) return;
   window.__focusGate = { frozen: false };
