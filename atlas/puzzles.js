@@ -271,7 +271,7 @@
     /* ---------- the guide's panel (the rules tour's .rgd) ---------- */
     const el = document.createElement('div'); el.className = 'rgd pzg';
     el.innerHTML = `<div class="rgd-in"><div class="pic"><img src="${GD.guide}" alt=""></div><div class="bub"><div class="nm">${name}<span class="pg"></span></div><div class="tx"></div><div class="cnt"></div></div></div>
-      <div class="rgd-act"><button type="button" class="btn ghost sm" data-a="hint">💡 ${X.hint}</button><button type="button" class="btn ghost sm" data-a="again">↻ ${X.again}</button><span class="sp"></span><button type="button" class="btn big" data-a="next">${X.next} ▶</button></div>`;
+      <div class="rgd-act"><button type="button" class="btn ghost sm" data-a="hint">💡 ${X.hint}</button><button type="button" class="btn ghost sm" data-a="again">↻ ${X.again}</button>${ctx.onList ? `<button type="button" class="btn ghost sm" data-a="list">▦ ${ctx.t ? ctx.t('bv.list') : '≡'}</button>` : ''}<span class="sp"></span><button type="button" class="btn big" data-a="next">${X.next} ▶</button></div>`;
     ctx.panel.appendChild(el);
     const $ = s => el.querySelector(s);
     function say(html) {   // typed speech; a tap on the bubble shows it all
@@ -399,6 +399,7 @@
       begin(B.problem(r.key, r.j, X, ctx.lang), true);
     }
     $('[data-a=hint]').onclick = hint;
+    if ($('[data-a=list]')) $('[data-a=list]').onclick = () => ctx.onList();   // 一覧 (the portal's list sheet: pick another problem)
     $('[data-a=again]').onclick = () => { if (!cur) return; begin(B.problem(cur.i, cur.j, X, ctx.lang), false); const a = line('again'); if (a) say(a + ' ' + goal(cur)); };
     $('[data-a=next]').onclick = () => nextPuzzle();
 
