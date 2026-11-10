@@ -1593,6 +1593,12 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 .lvs-l .lvpvp{width:100%;text-align:start;font:inherit;cursor:pointer;background:linear-gradient(100deg,#e3f3ff,#f6fbff 70%);border-color:#cfe6f7;padding:6px 12px 6px 10px}
 .lvs-l .lvpvp svg{width:96px;height:80px;flex:none;margin:-2px 0}.lvs-l .lvpvp small{color:#4f7fa3}
 .lvs-l .lvpvp.on{border-color:#ff5d5d;box-shadow:0 0 0 2px rgba(255,93,93,.25)}
+.pzsheet .lvs-h{gap:8px}.pzsheet .pzs-t{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pzs-bk{flex:none;width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:#fff;font:900 20px/1 var(--font);color:var(--ink);cursor:pointer;padding:0 0 2px}
+.pzs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:8px;padding:2px}
+.lvs-l .pzs-c{display:flex;padding:0;text-align:center;flex-direction:column;align-items:center;justify-content:center;gap:2px;height:56px;border-radius:14px;border:2px solid var(--line);background:#fff;box-shadow:0 3px 0 var(--line);font:inherit;color:var(--ink);cursor:pointer}
+.lvs-l .pzs-c b{grid-row:auto;min-width:0;font-size:15px;font-weight:900;color:var(--ink)}.lvs-l .pzs-c small{grid-column:auto;font-size:10px;line-height:1;color:#e0a020;letter-spacing:-1px}.lvs-l .pzs-c.ok{background:#fff8e3;border-color:#f3d48a}
+.lvs-l .pzs-c:disabled{opacity:.45;cursor:default;box-shadow:none}
 .lss-cat{margin:12px 2px 4px;font-size:12.5px;font-weight:900;color:var(--ink2)}.lss-cat:first-child{margin-top:0}
 .lssheet .lss b{color:var(--ink2)}.lssheet .lss.pass b{color:#1ea36c}.lss-wait{padding:20px;text-align:center;color:var(--ink2)}
 .recp .rtsum{display:grid;grid-template-columns:auto 1fr;gap:12px 18px;align-items:center}.recp .rtnow small{display:block;font-size:12px;font-weight:800;color:var(--ink2)}.recp .rtnow b{font-size:30px;font-weight:900;color:var(--ink)}
@@ -1921,7 +1927,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 };</script>
 <script src="lazy.js?v=37"></script>
 <script src="puzzle-lines.js?v=1"></script>
-<script src="puzzles.js?v=5"></script>
+<script src="puzzles.js?v=6"></script>
 <script src="lessons3d.js?v=1"></script>
 <script src="missions.js?v=4"></script>
 <link rel="stylesheet" href="historia.css?v=15">
@@ -1935,6 +1941,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <link rel="stylesheet" href="worldmap.css?v=18">
 <script src="worldmap.js?v=31"></script>
 <script src="npc/npc.js?v=22"></script>
-<script src="app.js?v=283"></script>
+<script src="app.js?v=285"></script>
 </body>
 </html>

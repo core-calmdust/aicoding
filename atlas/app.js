@@ -777,7 +777,7 @@
         if ($('bvTable')) $('bvTable').disabled = MX ? false : !(ad.tableModes || ['ai']).includes(m);   // rated / online games need the full game
         fitStage(); };
       if (window.__bvModeRz) removeEventListener('resize', window.__bvModeRz);
-      window.__bvModeRz = () => { if (!$('bvOpts') || !$('bvMode')) return; bodyH = 0; setMode($('bvMode').dataset.v); }; addEventListener('resize', window.__bvModeRz);
+      window.__bvModeRz = () => { if (!$('bvOpts') || !$('bvMode') || !$('bvMode').getClientRects().length) return; bodyH = 0; setMode($('bvMode').dataset.v); }; addEventListener('resize', window.__bvModeRz);
       $('bvMode').onclick = e => { const b = e.target.closest('button'); if (b) setMode(b.dataset.m); };
       setMode(mode);
       // measure again once the custom pickers below are in place and the web fonts have loaded
@@ -1056,7 +1056,7 @@
     $('bvFull').onclick = () => { const m = M(); if (m === 'puzzle') startPuzzle(); else if (m === 'lesson') startLesson3D($('bvLsK').value); else if (m === 'rated' && $('bvRtOpp').value === 'online') startPlay('full'); else startPlay('table'); };   // あそぶ (here)
     $('bvTable').onclick = () => { const m = M(); if (m === 'puzzle') startPlay('full', 'puzzle', 'cont'); else if (m === 'lesson') startPlay('full', 'lesson', $('bvLsK').value); else startPlay('full'); };   // フル機能で遊ぶ
     $('bvLsList').onclick = () => { try { SFX.tap && SFX.tap(); } catch (x) {} lessonSheet(g, $('bvLsK').value); };
-    $('bvPz').onclick = e => { const b = e.target.closest('[data-pz]'); if (b) { try { SFX.tap && SFX.tap(); } catch (x) {} startPlay('full', 'puzzle', b.dataset.pz); } };
+    $('bvPz').onclick = e => { const b = e.target.closest('[data-pz]'); if (b) { try { SFX.tap && SFX.tap(); } catch (x) {} const k = b.dataset.pz; if (k === 'list') puzzleSheet(g); else startPuzzle({ daily: k }); } };   // (on the 3D table, 2026-11-11)
     $('bvRtRec').onclick = () => { try { SFX.tap && SFX.tap(); } catch (x) {} openRec(g, 'all', 'rt'); };
     $('bvLsK').addEventListener('change', () => { pref[id + ':lsk'] = $('bvLsK').value; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (x) {} const cl = $('bvi').querySelector('.R .act > a.btn'); if (cl && M() === 'lesson') cl.href = mx2d(g, 'lesson'); });
     // レート戦's time control: a picker button + list sheet (the same UI as the level); its list follows 相手
@@ -1107,7 +1107,7 @@
         <div class="ps-act ps-act3">${here ? `<button type="button" class="btn big pk ps-go"><b>${esc(t('ps.go'))} ▶</b><small>${esc(t(pz ? 'bv.pzContSub' : 'bv.lsSub3d'))}</small></button>` : ''}<button type="button" class="btn big2 pk ps-full"><b>${esc(t('bv.full'))}</b></button><a class="btn ghost big2 pk ps-2d" href="${'../' + g.href + (pz ? '?mode=puzzle&sub=cont' : '?mode=lesson&sub=' + lsk)}"><b>${esc(t('bv.classic'))}</b></a></div></div>`;
     };
     const openSub = k => { subK = k; inn.style.height = inn.offsetHeight + 'px'; inn.classList.add('sub'); sv.innerHTML = subHtml(k); main.hidden = true; sv.hidden = false; sv.classList.remove('bk'); void sv.offsetWidth; sv.classList.add('in'); inn.scrollTop = 0; };
-    const backSub = () => { subK = null; sv.hidden = true; sv.classList.remove('in'); main.hidden = false; inn.classList.remove('sub'); inn.style.height = ''; main.classList.remove('in'); void main.offsetWidth; main.classList.add('in'); };
+    const backSub = () => { subK = null; sv.hidden = true; sv.classList.remove('in'); main.hidden = false; inn.classList.remove('sub'); inn.style.height = ''; main.classList.remove('in'); void main.offsetWidth; main.classList.add('in'); if (window.__bvModeRz) window.__bvModeRz(); };   // (the settings area was measured while hidden: measure again)
     const close = () => { ps.classList.remove('on'); if (subK) setTimeout(() => { if (!ps.classList.contains('on')) { backSub(); main.classList.remove('in'); } }, 280); };
     go.onclick = () => { ps.classList.add('on'); if (window.__bvModeRz) window.__bvModeRz(); try { SFX.tap && SFX.tap(); } catch (e) {} };
     ps.onclick = e => {
@@ -1116,7 +1116,7 @@
       const b = e.target.closest('.ps-row'); if (b) { tap(); openSub(b.dataset.k); return; }
       if (!subK) return;
       if (e.target.closest('.ps-back')) { tap(); backSub(); return; }
-      const pzb = e.target.closest('[data-pz]'); if (pzb) { tap(); startPlay('full', 'puzzle', pzb.dataset.pz); return; }
+      const pzb = e.target.closest('[data-pz]'); if (pzb) { tap(); const k = pzb.dataset.pz; if (!pz3d) startPlay('full', 'puzzle', k); else if (k === 'list') puzzleSheet(g); else startPuzzle({ daily: k }); return; }
       const lk = e.target.closest('[data-lk]'); if (lk) { tap(); lsk = lk.dataset.lk; pref[g.id + ':lsk'] = lsk; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (x) {} sv.querySelectorAll('[data-lk]').forEach(x => x.classList.toggle('on', x === lk)); sv.querySelector('.ps-2d').href = '../' + g.href + '?mode=lesson&sub=' + lsk; return; }
       if (e.target.closest('[data-ll]')) { tap(); lessonSheet(g, lsk); return; }
       if (e.target.closest('.ps-go')) { tap(); if (subK === 'puzzle') startPuzzle(); else { ps.classList.remove('on'); startLesson3D(lsk); } return; }
@@ -1426,13 +1426,14 @@
     if (bvGame && $('bv').classList.contains('on')) { stopSession(); openBoard(bvGame.id); }
   });
   // puzzles on the 3D table with the guide character (atlas/puzzles.js; chess, shogi — 2026-11-10)
-  function startPuzzle() {
+  function startPuzzle(o = {}) {   // o: { daily: 'd1' | 'd2' } (today's puzzle) or { pick: { i, j } } (one from 問題一覧); none = continue
     if (renderPlace.close) renderPlace.close();
     if ($('bvPS')) $('bvPS').classList.remove('on');
-    if (pend3d) { pend3d.then(() => startPuzzle()); return; }   // the board isn't on the table yet
+    if (pend3d) { pend3d.then(() => startPuzzle(o)); return; }   // the board isn't on the table yet
     const g = bvGame; stopSession();
     $('bv').classList.add('playing', 'rules'); $('endc').classList.remove('on');
-    session = AtlasPuzzles.start({ id: g.id, el: $('gl'), Table3D, lang, t, panel: $('bv'), adapter: Atlas3D[g.id], onExit: () => openBoard(g.id) });
+    session = AtlasPuzzles.start({ id: g.id, el: $('gl'), Table3D, lang, t, panel: $('bv'), adapter: Atlas3D[g.id], onExit: () => openBoard(g.id),
+      daily: o.daily, pick: o.pick, dailyTitle: w => t(g.id === 'chess' ? 'bv.pz.dc' : w === 'd2' ? 'bv.pz.d2' : 'bv.pz.d1') });
     if (session.panel && window.ResizeObserver) new ResizeObserver(fitStage).observe(session.panel);
     fitStage(); Table3D.play(true);
   }
@@ -1449,6 +1450,30 @@
     fitStage(); Table3D.play(true);
   }
   // the list of lessons / openings (the card's レッスン tab → 一覧): a sheet like the level list; a row starts it on the 3D table
+  // 問題一覧 on the 3D table (2026-11-11): the sets → a set's problems (stars; stages still locked greyed) → that problem here
+  function puzzleSheet(g) {
+    if (!window.AtlasPuzzles || !AtlasPuzzles.sets) return startPlay('full', 'puzzle', 'list');
+    const sh = document.createElement('div'); sh.className = 'lvsheet lssheet pzsheet';
+    sh.innerHTML = `<div class="lvs-in" role="listbox"><div class="lvs-h"><button type="button" class="pzs-bk" hidden aria-label="${esc(t('bv.back'))}">‹</button><span class="pzs-t">${esc(t('bv.pzList'))}</span><button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div><div class="lvs-l"><div class="lss-wait">…</div></div></div>`;
+    document.body.appendChild(sh); requestAnimationFrame(() => sh.classList.add('on'));
+    const close = () => { if (sh.classList.contains('out')) return; sh.classList.add('out'); sh.classList.remove('on'); setTimeout(() => sh.remove(), 240); };
+    const L = sh.querySelector('.lvs-l'), bk = sh.querySelector('.pzs-bk'), ttl = sh.querySelector('.pzs-t');
+    let sets = null;
+    const STAR = n => '★★★'.slice(0, n) + '☆☆☆'.slice(n);
+    const showSets = () => { bk.hidden = true; ttl.textContent = t('bv.pzList');
+      L.innerHTML = sets.map(x => { const done = x.recs.filter(v => v > 0).length, all = x.recs.length;
+        return `<button type="button" role="option" data-set="${x.key}" class="lss${done >= all ? ' pass' : ''}"><b>${done >= all ? '✓' : '▦'}</b><span class="nm">${esc(x.title)}</span><small>${done}/${all}</small></button>`; }).join(''); };
+    const showSet = k => { const x = sets.find(y => String(y.key) === String(k)); if (!x) return; bk.hidden = false; ttl.textContent = x.title;
+      L.innerHTML = `<div class="pzs-grid">${x.recs.map((v, j) => `<button type="button" data-i="${x.key}" data-j="${j}" class="pzs-c${v ? ' ok' : ''}" ${x.open[j] ? '' : 'disabled'}><b>${j + 1}</b><small>${x.open[j] ? STAR(v) : '🔒'}</small></button>`).join('')}</div>`;
+      const nx = L.querySelector('.pzs-c:not(.ok):not(:disabled)'); if (nx) nx.scrollIntoView({ block: 'center' }); L.scrollTop = Math.max(0, L.scrollTop); };
+    AtlasPuzzles.sets(g.id, lang).then(S => { sets = S; showSets(); }).catch(() => { L.textContent = '⚠'; });
+    sh.onclick = e => {
+      if (e.target === sh || e.target.closest('.lvs-x')) return close();
+      if (e.target.closest('.pzs-bk')) { try { SFX.tap && SFX.tap(); } catch (x) {} return showSets(); }
+      const st = e.target.closest('[data-set]'); if (st) { try { SFX.tap && SFX.tap(); } catch (x) {} return showSet(st.dataset.set); }
+      const c = e.target.closest('[data-j]'); if (c && !c.disabled) { close(); startPuzzle({ pick: { i: +c.dataset.i, j: +c.dataset.j } }); }
+    };
+  }
   function lessonSheet(g, kind) {
     if (!window.AtlasLessons) return startPlay('full', 'lesson', kind);
     const sh = document.createElement('div'); sh.className = 'lvsheet lssheet';
