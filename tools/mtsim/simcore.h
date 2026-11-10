@@ -18,6 +18,9 @@ typedef struct { unsigned long long *a; unsigned long long v; int h; } SimPE;
 static int simDelay, busyDelay;
 static _Thread_local SimPE *simP; static _Thread_local int simN, simOn, simCnt, simQ = SIM_Q; static _Thread_local int *simX;
 static double simJit; static _Thread_local unsigned simR = 1;   // jitter: a thread's nodes per round SIM_Q x (1 ± simJit), uneven cores
+// SIM_SLOW=8,9,10 (environment): those threads (0 = the main one) do 2/5 of SIM_Q nodes per round (Apple's efficiency cores,
+// as reversi/tools/mt-sim.js --slow; 2026-11-10)
+static _Thread_local int simBase = SIM_Q;
 static SimPE *simAllP[64]; static int *simAllN[64], *simAllX[64];
 static inline unsigned simH(const void *a) { unsigned long long x = (unsigned long long)(uintptr_t)a >> 3; x *= 0x9E3779B97F4A7C15ull; return (unsigned)(x >> 40) & (SIM_PH - 1); }
 static inline unsigned long long SIMR(unsigned long long *a) {
@@ -44,10 +47,19 @@ static void simFlush(int id) {
 }
 static void simThreadInit(int id) {
   simR = 0x9e3779b9u * (unsigned)(id + 1);
+  { const char *e = getenv("SIM_SLOW"); simBase = SIM_Q; simQ = SIM_Q;
+    if (e) { char b[256]; int n = 0; while (*e && n < 250) b[n++] = *e++; b[n] = 0;
+      for (char *t = b, *u; *t; t = *u ? u + 1 : u) { long v = strtol(t, &u, 10); if (u == t) break; if (v == id) { simBase = SIM_Q * 2 / 5; simQ = simBase; } } } }
   simP = malloc(sizeof(SimPE) * SIM_PMAX); simN = 0; simX = calloc(SIM_PH, sizeof(int));
   simAllP[id] = simP; simAllN[id] = &simN; simAllX[id] = simX;
 }
 static void sim_tick(void);
+// an idle thread's spin (YBW engines: MT_PAUSE in mt_idle and in an owner's wait) counts as SIM_PAUSE_N nodes of its round
+#ifndef SIM_PAUSE_N
+#define SIM_PAUSE_N SIM_Q
+#endif
+static void sim_pause(void) { if (simOn && (simCnt += SIM_PAUSE_N) >= simQ) { simCnt = 0; sim_tick(); } }
+#define MT_PAUSE() sim_pause()
 #define SIM_NODE() do { if (simOn && ++simCnt >= simQ) { simCnt = 0; sim_tick(); } } while (0)
 #define SIM_NODE_E() (simOn && ++simCnt >= simQ ? (simCnt = 0, sim_tick(), 0) : 0)
 
@@ -56,7 +68,7 @@ static pthread_mutex_t simMu = PTHREAD_MUTEX_INITIALIZER; static pthread_cond_t 
 static int simNp, simArrived; static long simGen, simRounds;
 static void simEndRound(void) { for (int i = 0; i < 64; i++) if (simAllN[i] && *simAllN[i]) simFlush(i); simArrived = 0; simGen++; simRounds++; pthread_cond_broadcast(&simCv); }
 static void sim_tick(void) {
-  if (simJit > 0) { simR ^= simR << 13; simR ^= simR >> 17; simR ^= simR << 5; simQ = (int)(SIM_Q * (1 - simJit + 2 * simJit * (simR / 4294967296.0))); if (simQ < 1) simQ = 1; }
+  if (simJit > 0) { simR ^= simR << 13; simR ^= simR >> 17; simR ^= simR << 5; simQ = (int)(simBase * (1 - simJit + 2 * simJit * (simR / 4294967296.0))); if (simQ < 1) simQ = 1; }
   pthread_mutex_lock(&simMu);
   long g = simGen;
   if (++simArrived >= simNp) simEndRound();

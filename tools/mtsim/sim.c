@@ -74,7 +74,11 @@ int main(int argc, char **argv) {
       pthread_mutex_lock(&mu); while (running > 0) pthread_cond_wait(&jcv, &mu); pthread_mutex_unlock(&mu);
       double tm = t > 1 ? (double)R0 * SIM_Q : mainNodes; if (t == 1) { r1 = tm; sumN1 += mainNodes; }
       if (r1 >= 20000) { sumR[ti] += tm; lg[ti] += log(r1 / tm); if (ti == 0) cnt++; }
-      printf(" t%d %.2fM x%.2f m%d d%d |", t, tm / 1e6, r1 / tm, mv, dd); fflush(stdout);
+      printf(" t%d %.2fM x%.2f m%d d%d |", t, tm / 1e6, r1 / tm, mv, dd);
+#ifdef G_STAT
+      G_STAT();   /* (a YBW engine built with -DMT_STAT: its split points' counters for this run) */
+#endif
+      fflush(stdout);
     }
     printf("\n");
   }

@@ -56,5 +56,7 @@ if 'busyT[' in s:
     s = re.sub(r'SIMWB\(&busyT\[i\], ([^;]*), __ATOMIC_RELAXED\);', r'SIMWB(&busyT[i], \1);', s)
     rep('__atomic_compare_exchange_n(&busyT[i], &mine, 0, 0, __ATOMIC_RELAXED, __ATOMIC_RELAXED);', 'SIMCB(&busyT[i], mine);')
 
-open(f'eng_{game}.c', 'w').write('#include "simcore.h"\n' + s)
+# a YBW engine (chess, 2026-11-10): the helpers wait in mt_idle (g_<game>.h), its spins tick the clock (MT_PAUSE, simcore.h)
+pre = '#define HAS_MT_IDLE 1\n' if 'EXPORT(mt_idle)' in s else ''
+open(f'eng_{game}.c', 'w').write(pre + '#include "simcore.h"\n' + s)
 print('eng_%s.c' % game)
