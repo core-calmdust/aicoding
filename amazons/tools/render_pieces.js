@@ -4,7 +4,7 @@ const path = require('path'), fs = require('fs'), { execFileSync } = require('ch
 const PW = process.env.PW || '/opt/node-tools/node_modules/playwright-core', CHROME = process.env.CHROME || '/usr/bin/google-chrome';
 const THREE_LOCAL = process.env.THREE_LOCAL;   // (a local copy of three.min.js r128 when the CDN is out of reach)
 const { chromium } = require(PW);
-const SETS = process.argv.slice(2).length ? process.argv.slice(2) : ['cameo', 'coin', 'vase', 'enamel'];   // (the 2D sets; statue / bronze / archer are the 3D figures)
+const SETS = process.argv.slice(2).length ? process.argv.slice(2) : ['cameo', 'coin', 'vase', 'enamel'];   // (the 3D figures: tools/render_pc3.js)
 (async () => {
   const b = await chromium.launch({ executablePath: CHROME, args: ['--no-sandbox', '--use-gl=swiftshader', '--enable-unsafe-swiftshader'] });
   const p = await b.newPage();

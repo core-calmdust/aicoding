@@ -54,7 +54,7 @@ URL: https://core-calmdust.github.io/aicoding/amazons/ ／ トップは「囲碁
 - 盤の上下と対局者カード：陣地（クイーン距離で先に届く空きマスの数）と動けるマスの数。ヘッダー中央：手番・両者の陣地／動けるマス・矢の本数・形勢・手数。
 - 盤（tools/gen_boards.py：numpy＋Pillow で生成。マス目 img/bd-<key>.webp と枠 img/fr-<key>.webp）5種：テミスキュラの神殿（既定。カッラーラ大理石とヴェルデ・アンティーコ、金の目地。模様は駒の邪魔をしないよう薄め。マスごとに石板の別の場所を切り出す）・密林の遺跡（1マスずつ角の丸い石の切石を土に据え、すき間に苔）・アマゾノマキアの壺絵（赤土と黒釉、貫入、刻線、交点のパルメット）・テラゾー（モダン。アイボリーとチャコールの研ぎ出し、真鍮の目地）・ネイビーとアイボリー（モダン。漆のつや、金の細線）。
 - 2Dの駒はメダル型（台に立てた円盤。three.js r128 の 3D モデルを tools/pieces3d.html で作り、tools/render_pieces.js がヘッドレス Chrome で撮って 256px webp に）4種：大理石のカメオ（既定。白＝セージ地に白大理石のコリント式兜、黒＝ヴェルデ地に金の兜、金の縁と台）・古代のコイン（打ち出しの不揃いな縁、ラブリュス（両刃斧）と ΑΜΑΖΟΝΩΝ の銘。白＝銀、黒＝緑青のブロンズ。石の台）・壺絵のメダル（白＝黒絵式、黒＝赤絵式の弓兵）・モダン・エナメル（つや消しの陶板に金の弓矢の象嵌、真鍮の台）。浮き彫りは高さのキャンバスを bumpMap に。盤上では 0.98 マスの大きさ。
-- 立体の駒（大理石の女戦士像・象牙と黒檀の弓兵・ブロンズと鉄のクイーン、pieces3d.html の statue / archer / bronze）は3D盤用（2Dの絵柄とは質感が合わないので2Dでは使わない）。
+- 立体の駒（大理石の女戦士像・象牙と黒檀の弓兵・ブロンズと鉄のクイーン）は3D盤用（atlas/models/amazons.js。2Dの絵柄とは質感が合わないので2Dでは使わない）。
 - 推奨の組み合わせ：神殿＋カメオ、遺跡＋コイン、壺絵＋壺絵のメダル、テラゾー／ネイビー＋エナメル（自由に組み合わせ可）。旧デザインの保存設定は既定に戻す。
 - ルール（RuleTour、実際の盤）：紹介 → 盤とアマゾン → クイーンのように動く（課題）→ 矢を放つ（課題）→ 飛び越えられない（課題）→ 動けなくしたら勝ち（課題）→ 陣地（読むだけ）。
 - 振り返り解説：最善／悪くない／疑問手／悪手と、陣地の損・自分のアマゾンが囲まれかけた・相手を閉じ込めるチャンス。PC振り返りボックス（候補手・読み筋・検討モード）。
@@ -76,7 +76,17 @@ URL: https://core-calmdust.github.io/aicoding/amazons/ ／ トップは「囲碁
 
 ## 未実装（今後）
 - オンライン対戦。3手以上の「動けなくせ」。
-- 大百科の3D（盤モデル・フル機能版スキン・ちゃぶ台対局・ルールコース・ヒストリア・地図）。今は大百科の盤シートから2D版へ飛ぶ（atlas/app.js の専用ページ扱い）。
+- 大百科のちゃぶ台対局（games/amazons.js は今はカードのレベル・手番・モードを渡してフル機能版3Dへ飛ぶだけ）・3Dルールコース・ヒストリア・地図・ボス。
+
+## 3D（大百科の3D盤、フル機能版スキン amazons/?skin=atlas）
+- 盤モデル atlas/models/amazons.js（Table3D.amazons、MODELS.amazons）：2種（Table3D.BOARDS.amazons、保存キー atlas-amazons-look）
+  - temple（既定）テミスキュラの神殿：2Dの bd-temple / fr-temple を上面に貼った磨きの大理石の盤＋二段の基壇（スタイロベート）と金の縁。
+  - ruins 密林の遺跡：bd-ruins / fr-ruins、1マスずつの切石の目地を法線マップで沈め、縁は手割りの不揃いな石。
+- 駒は立体の像3種（Table3D.amazons.SETS、保存キー atlas-amazons-pc3、デザインタブの「3D盤」の下の「3D駒」の行）：大理石の女戦士像（既定。コリント式兜の胸像と槍）・象牙と黒檀の弓兵（抽象化したスキタイの弓兵：ローブの旋盤形、前に曲がるフリギア帽、リカーブ弓と番えた矢、背中の矢筒、金の帯・トルク）・ブロンズと鉄のクイーン。白黒とも手前（見る人の方）を向く。形・材質は駒どうしで共有（自動インスタンス化）。
+- 3D表示中のページの駒の絵は amazons/img/pc3-<set>-<w|b>.webp（amazons/tools/render_pc3.js ＋ atlas/tools/amzpiece.html で描く）。
+- 立体の像を見せるため、カメラは盤を30°傾ける（AtlasSkin の tilt: 30, persp: 2.6。他のゲームは真上からが標準）。DOMの盤も同じ傾きで重なるのでタップ・行き先・矢印はそのまま合う。奥の陣地プレートは傾きに合わせて下げて縮める。
+- 手のアニメ（2Dと同じ時間 qDur / SHOOT_GAP / aDur）：アマゾンが少し浮いて滑る → 着地で軽く弾む → 火矢が弧を描いて飛ぶ（矢じりの炎・飛んだ跡に火の粉）→ 着弾で閃光と火の粉の飛散 → マスに焦げ跡と刺さった矢、焦げ跡の縁が赤く光って約4秒で冷め、細い煙が数秒立つ。描画は Table3D.kick の必要時のみ。
+- 大百科：atlas/lazy.js（models/amazons.js・games/amazons.js、t3 のみ）、atlas/app.js の FULL_SKIN、盤の行のサムネイル atlas/img/board-amazons-<look>.webp（atlas/tools/boards.html）、3D盤タイル atlas/img/boardic-amazons-<look>.webp（atlas/tools/boardicon.html、盤だけ）、名前は atlas/tables3d.js の N3（temple / ruins）。
 
 ## ポータル・トップ
 - shared/atlas.js の GAMES（beta: true、released 2026-11-10、total.pz 120・ls 8）、READ（パズル・星・今日の一問・レッスン合格数・レート戦・ルール既読）、UPDATES。
@@ -84,4 +94,5 @@ URL: https://core-calmdust.github.io/aicoding/amazons/ ／ トップは「囲碁
 - 大百科の一言（gamelist-i18n.js の tl.amazons）、about.amazons・hist.amazons（atlas/i18n.js）。
 
 ## 保存キー
+- atlas-amazons-look（3D盤）、atlas-amazons-pc3（3D駒）、atlas-amazons-view（3D / 2D 表示）。
 - aicoding-amazons（設定・対局）、-rated、-rules、-lessons、-puzzles、-pz-last、-pz-tab、-daily、aicoding-amazons-rules-seen。
