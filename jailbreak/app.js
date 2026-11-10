@@ -1338,6 +1338,8 @@ function bind() {
     }
   });
   document.addEventListener('visibilitychange', () => { setPaused(document.hidden || !$('#modal').hidden); });
+  addEventListener('blur', () => setPaused(true));   // (2026-11-10) also while the window is not in front
+  addEventListener('focus', () => setPaused(document.hidden || !$('#modal').hidden));
 }
 async function boot() {
   bind(); applyI18n(); applySkin();

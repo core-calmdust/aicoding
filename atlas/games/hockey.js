@@ -179,6 +179,10 @@ html.hk-on #bv > .npc-float .npc-pic{width:36px!important;height:36px!important}
     let extra = [];         // the mode's own pieces
     const monM = [], itemM = new Map(); let barM = null, shieldM = [null, null];
     const put = (g, x, y, h) => { const [a, b] = U.xz(x, y); g.position.set(a, Y + (h || 0), b); };
+    // (2026-11-10) before the match (the mode menu) the mallets wait at their own ends — they were both at the centre spot, where
+    // the yellow one's ball read as a puck — and a puck sits on the centre spot
+    put(mal[0], 0, D.L / 2 - 8); put(mal[1], 0, -(D.L / 2 - 8));
+    const prePuck = U.puck(); put(prePuck, 0, 0); board.add(prePuck);
     function setupMode() {
       extra.forEach(g => board.remove(g)); extra = []; monM.length = 0; barM = null;
       if (E.has(s, 'block')) { barM = U.bar(); put(barM, 0, 0); board.add(barM); extra.push(barM); }
@@ -190,7 +194,8 @@ html.hk-on #bv > .npc-float .npc-pic{width:36px!important;height:36px!important}
     function sync(now) {
       for (let i = 0; i < 2; i++) { const m = s.mal[i], g = mal[i]; put(g, m.x, m.y); const sc = m.r / D.RM; g.scale.set(sc, 1, sc); }
       const seen = new Set();
-      for (const p of s.pucks) { let g = pk.get(p.id); if (!g) { g = U.puck(); board.add(g); pk.set(p.id, g); } seen.add(p.id); put(g, p.x, p.y); g.visible = !(p.wait > .45); const f = p.fire > 0; g.children[0].scale.set(f ? 1.06 : 1, 1, f ? 1.06 : 1); }
+      if (prePuck.parent) board.remove(prePuck);
+      for (const p of s.pucks) { let g = pk.get(p.id); if (!g) { g = U.puck(); board.add(g); pk.set(p.id, g); } seen.add(p.id); put(g, p.x, p.y); g.visible = true; const f = p.fire > 0; g.children[0].scale.set(f ? 1.06 : 1, 1, f ? 1.06 : 1); }
       for (const [id, g] of pk) if (!seen.has(id)) { board.remove(g); pk.delete(id); }
       s.mons.forEach((m, i) => { const g = monM[i]; if (!g) return; put(g, m.x, m.y); g.rotation.y = Math.atan2(m.vx, m.vy); const b = g.userData.body; b.scale.y = .8 + Math.sin(now / 120 + i) * .06; });
       if (barM) barM.rotation.y = -s.bar;
