@@ -3,7 +3,7 @@
 <head>
 <script>/* portal skin: show "loading" until the 3D board is ready */ if (/[?&]skin=atlas\b/.test(location.search)) { document.documentElement.classList.add('atlas-skin'); document.write('<style>html.atlas-skin{background:#fff6e2}html.atlas-skin body{opacity:0}html.atlas-skin.atlas-ready body{opacity:1;transition:opacity .2s}.atlas-load{visibility:hidden}</style><link rel="stylesheet" href="../atlas/skin/loading.css?v=2l14"><script src="../atlas/skin/loading.js?v=4l14"><\/script><script>AtlasLoading.show()<\/script>'); }</script>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <script src="../shared/latinfs.js?v=1l14"></script>
 <script src="../shared/phonesnd.js?v=2l14"></script>
 <meta name="theme-color" content="#130d09">
@@ -426,6 +426,7 @@ html.atlas-skin .ts-compact #tsNo{color:#9a7a3a}
 .lesson-card.ts-compact > .lh .lt{flex:1 1 auto;min-width:0;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;font-size:11.5px!important;letter-spacing:.01em!important;line-height:1.35}   /* never cut: smaller, tighter (2026-11-10) */
 .lesson-card.ts-compact > .lh,.lesson-card.ts-compact #tsHead{padding-inline-end:0!important;margin-inline-end:0!important}   /* やめる and 「n問目」 share one right edge */
 .lesson-card.ts-compact > .lh #lsQuit{margin-inline-start:auto!important}
+.lesson-card.ts-compact > .lh #lsQuit{position:relative;inset-inline-end:-4px;top:-3px}   /* off the 「問目」 line, into the corner like 一覧 sits in its corner */
 /* the quit button in the head row: a small pill, icon + 「やめる」 */
 .lesson-card.ts-compact > .lh #lsQuit{flex:none;display:inline-flex!important;align-items:center;gap:4px;height:28px!important;width:auto!important;padding:0 10px 0 8px!important;font-size:0!important;border-radius:99px!important;margin:0!important}
 .lesson-card.ts-compact > .lh #lsQuit::after{content:attr(data-cap);font-size:11.5px;font-weight:800;line-height:1}
@@ -443,7 +444,8 @@ body.ts-noopp .hand.top{visibility:hidden;height:0!important;min-height:0!import
 #lessonCard.ts-compact .cb-bar :is(.cb-ic,.cb-q)[data-cap]{height:52px!important;min-width:50px!important;width:auto!important;padding:0 6px!important;overflow:visible!important}
 #lessonCard.ts-compact .cb-bar :is(.cb-ic,.cb-q)[data-cap]::after{font-size:10px!important}
 #lessonCard.ts-compact .cb-bar .cb-t{height:52px!important;flex:1 1 auto!important}
-#lessonCard.ts-compact #lsAuto{color:inherit!important;border-color:var(--line)!important;background:rgba(0,0,0,.2)!important;font-weight:700}
+#lessonCard.ts-compact #lsAuto{color:var(--muted,#aaa)!important;border-color:var(--line)!important;background:rgba(0,0,0,.2)!important;font-weight:inherit}
+#lessonCard.ts-compact #lsAuto[data-cap]{gap:6px!important}   /* the other icon buttons carry a hidden (0-height) label as a third item: same caption line (2026-11-10) */
 #lessonCard.ts-compact #lsAuto > svg{display:none!important}
 #lessonCard.ts-compact #lsAuto::before{content:'';display:block;flex:none;width:20px;height:20px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27black%27%20stroke%3D%27black%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M8%205v14l11-7z%27/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27black%27%20stroke%3D%27black%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M8%205v14l11-7z%27/%3E%3C/svg%3E") center/contain no-repeat}
 #lessonCard.ts-compact #lsAuto.on::before{-webkit-mask-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27black%27%20stroke%3D%27black%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M8%205v14M16%205v14%27/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27black%27%20stroke%3D%27black%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M8%205v14M16%205v14%27/%3E%3C/svg%3E")}
@@ -1988,6 +1990,9 @@ function tzSync() {
   if (TZ.s > 1.001 || TZ.reg) { const T = tzTarget(); if (Math.abs(T.s - TZ.s) > .001 || Math.abs(T.tx - TZ.tx) > .5 || Math.abs(T.ty - TZ.ty) > .5) tzApply(true); }
 }
 addEventListener('resize', () => requestAnimationFrame(() => { if (TZ.reg) tzApply(true); }));
+// no page pinch-zoom: a pinch on the (zoomed, clipped) board blew up the browser's memory on iOS (2026-11-10)
+['gesturestart', 'gesturechange', 'gestureend'].forEach(t => document.addEventListener(t, e => e.preventDefault(), { passive: false }));
+document.addEventListener('touchmove', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
 // zoomed: a slide that does not start on one of your own pieces pans the board
 { let pd = null;
   boardEl.addEventListener('pointerdown', e => {
