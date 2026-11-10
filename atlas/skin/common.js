@@ -58,9 +58,10 @@
           return;
         }
         de.removeProperty('background');
-        if (!floorURL[k]) floorURL[k] = F.img.toDataURL('image/jpeg', .86);
+        const fk = k + ':' + (F.img.__v || 1);   // (the tatami is redrawn from a photo once loaded: a new picture)
+        if (!floorURL[fk]) floorURL[fk] = F.img.toDataURL('image/jpeg', .86);
         const over = F.over ? F.over + ',' : '', n = F.over ? (() => { let d = 0, c = 1; for (const ch of F.over) { if (ch === '(') d++; else if (ch === ')') d--; else if (ch === ',' && !d) c++; } return c; })() : 0, rep = (v) => Array(n).fill(v).join(', ') + (n ? ', ' : '');
-        de.setProperty('background-image', `${over}linear-gradient(rgba(0,0,0,.05),rgba(0,0,0,.05)),url("${floorURL[k]}")`);
+        de.setProperty('background-image', `${over}linear-gradient(rgba(0,0,0,.05),rgba(0,0,0,.05)),url("${floorURL[fk]}")`);
         de.setProperty('background-size', `${rep('100% 100%')}auto, ${Math.round(F.w * unitPx)}px ${Math.round(F.h * unitPx)}px`);
         de.setProperty('background-repeat', `${rep('no-repeat')}repeat, repeat`); de.setProperty('background-attachment', `${rep('fixed')}scroll, scroll`);
         const r = boardDom.getBoundingClientRect();   // the tile grid is centred on the board, like the 3D floor
@@ -69,6 +70,7 @@
     }
     // another place / brightness chosen (the デザイン tab, or another tab of the series): the floor follows at once
     addEventListener('atlas-table', () => paintFloor(true));
+    addEventListener('atlas-floor', () => paintFloor(true));
     let alignHooked = false;
     const alignTo = (units, top) => {
       o.units = units; placeHost();
