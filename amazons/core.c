@@ -243,7 +243,7 @@ __attribute__((import_module("env"), import_name("now"))) double now(void);
 typedef struct { int m, first; float n, w, p, mm, sc; u8 nch, exp, full; i8 proof; } Node;   // 32 bytes
 // sc: the evaluation of the node from the view of the player who moved into it (cand's score); p: its prior value
 // proof: +1 = the player who moved into this node wins (the side to move here is lost), −1 = loses
-static Node *T = 0; static int NODES = 0;
+static Node *T = 0; static int NODES = 0, CAP = 0;   // NODES: the pool in use (mcts_limit), CAP: the nodes allocated
 #ifdef MT
 typedef struct { volatile int v; int pad[15]; } __attribute__((aligned(64))) LineV;
 static LineV nNodes_, gStop_, gTree_, gActive_, gHS_, gHE_;
@@ -343,20 +343,31 @@ static float expand(int ni, int side) {
   return v;
 }
 static TLS int pathN[200]; static TLS int pathL;
+// how the visits ended (mcts_vk; bench.html, tools/mt_node.js): per thread, each row on its own cache line
+// 0 an expansion (the evaluations), 1 a proven node, 2 a leaf waiting for expT visits, 3 a leaf another thread is expanding or
+// the pool full, 4 the depth cap; 5 (of 1) a proven-lost child taken because every child in the window was lost
+#define VKT 128
+static double VK[VKT][8] __attribute__((aligned(64)));
+#ifdef MT
+#define VKR VK[threadId & (VKT - 1)]
+#else
+#define VKR VK[0]
+#endif
 static void iterate(void) {
   for (int i = 0; i < NN; i++) SQ[i] = RSQ[i]; for (int k = 0; k < 8; k++) Q[k] = RQ[k];
   int side = RSIDE, ni = 0; pathL = 0; pathN[pathL++] = 0;
   float v;
   for (;;) {
     Node *nd = &T[ni];
-    if (nd->proof) { v = nd->proof > 0 ? 1.f : 0.f; break; }
+    if (nd->proof) { v = nd->proof > 0 ? 1.f : 0.f; VKR[1] += 1; break; }
     if (!EXPD(nd)) {
 #ifdef MT
       float seen = nd->n - (ni ? VLOSS : 0.f);
 #else
       float seen = nd->n;
 #endif
-      v = ni == 0 || seen >= expT ? expand(ni, side) : -1.f; if (v < 0) v = nd->mm; break;
+      int ex = ni == 0 || seen >= expT;
+      v = ex ? expand(ni, side) : -1.f; VKR[v >= 0 ? 0 : ex ? 3 : 2] += 1; if (v < 0) v = nd->mm; break;
     }
     // select
     Node *ch = &T[nd->first]; int nch = nd->nch, best = -1; float bv = -1e30f, N = nd->n;
@@ -375,8 +386,9 @@ static void iterate(void) {
       if (best < 0) best = 0;
     }
     Node *c = &ch[best];
+    if (c->proof < 0) VKR[5] += 1;
     playM(c->m); side = 3 - side;
-    ni = nd->first + best; if (pathL < 199) pathN[pathL++] = ni; else { v = c->mm; break; }
+    ni = nd->first + best; if (pathL < 199) pathN[pathL++] = ni; else { v = c->mm; VKR[4] += 1; break; }
 #ifdef MT
     c->n += VLOSS;   // (virtual loss: a visit without its result yet)
 #endif
@@ -402,16 +414,20 @@ static void iterate(void) {
 static TLS double sims, evalsUsed;
 // a pool of n nodes (grown memory; the tree reuses it while it is big enough). Returns 1 when it is there.
 EXPORT(mcts_alloc) int mcts_alloc(int n) {
-  if (n <= NODES) return 1;
+  if (n <= CAP) { if (n > NODES) NODES = n; return 1; }
 #ifdef NATIVE
   T = (Node *)realloc(T, (size_t)n * sizeof(Node)); if (!T) return 0;
 #else
   unsigned long need = (unsigned long)n * sizeof(Node), cur = __builtin_wasm_memory_size(0) * 65536UL;
-  long r = __builtin_wasm_memory_grow(0, (need + 65535) / 65536); if (r < 0) return 0;
-  T = (Node *)cur;
+  // the pool at the end of the memory (nothing is allocated after it): grow it in place, the old nodes stay where they are
+  unsigned long at = T && (unsigned long)T + (((unsigned long)CAP * sizeof(Node) + 65535) & ~65535UL) == cur ? (unsigned long)T : cur;
+  if (at + need > cur) { long r = __builtin_wasm_memory_grow(0, (at + need - cur + 65535) / 65536); if (r < 0) return 0; }
+  T = (Node *)at;
 #endif
-  NODES = n; return 1;
+  NODES = CAP = n; return 1;
 }
+// use only n of the allocated nodes (0: all) — tools/mcts_match.js pool=…, to see a pool that fills
+EXPORT(mcts_limit) void mcts_limit(int n) { NODES = n > 0 && n < CAP ? n : CAP; }
 EXPORT(mcts_set) void mcts_set(int k, float v) {
   switch (k) {
     case 0: P_QK = (int)v; break; case 1: P_K = (int)v; break; case 2: P_QKR = (int)v; break; case 3: P_KR = (int)v; break;
@@ -428,6 +444,7 @@ EXPORT(mcts_begin) int mcts_begin(int side, int seed) {
   rs = 0x9E3779B97F4A7C15ULL ^ ((unsigned long long)(unsigned)seed * 0xD1B54A32D192ED03ULL); rnd();
   nNodes = 1; Node *r = &T[0]; r->m = -1; r->first = 0; r->n = 0; r->w = 0; r->p = 0.5f; r->mm = 0.5f; r->sc = 0; r->nch = 0; r->exp = 0; r->full = 0; r->proof = 0;
   biasSum = 0; biasCnt = 0;
+  for (int i = 0; i < VKT; i++) for (int k = 0; k < 8; k++) VK[i][k] = 0;
   sims = 0; evalsUsed = 0; evn = 0; expT = 0;
   iterate(); sims = 1; evalsUsed = evn; evn = 0;
   return r->nch;
@@ -464,6 +481,7 @@ EXPORT(mcts_run) double mcts_run(double ms, double evalLimit, double simLimit) {
   return sims;
 }
 EXPORT(mcts_evals) double mcts_evals(void) { return evalsUsed; }
+EXPORT(mcts_vk) double mcts_vk(int k) { double t = 0; for (int i = 0; i < VKT; i++) t += VK[i][k & 7]; return t; }
 EXPORT(mcts_nodes) int mcts_nodes(void) { return nNodes; }
 EXPORT(mcts_proof) int mcts_proof(void) { return T[0].proof; }
 // the root's children, most visited first: RM move, RN visits, RV value (σ⁻¹ of the mixed value, in the evaluation's units:

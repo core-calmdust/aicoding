@@ -1,9 +1,13 @@
 // The MCTS on several threads in Node (core_mt.wasm on a shared memory, the same code as the page's threads): the lead is this
 // thread (engine.js with useCore), the helpers are worker_threads running mt_help — the shape of shared/mtengine.js + mt-helper.js.
 //   node tools/mt_node.js check [T…]          bench positions: visits, the root's visits ÷ visits, the best move, the process's
-//                                            CPU time per visit (process.cpuUsage counts every thread)
+//                                            CPU time per visit (process.cpuUsage counts every thread), how the visits ended
+//                                            (core.c mcts_vk: expanded / proven / waiting leaf / busy); MC_MS=2000 or MC_SIMS=…
 //   node tools/mt_node.js match T sims pairs  T threads (sims visits in all) vs 1 thread (the same sims), colours swapped,
 //                                            two random opening plies (a crowded 2-core machine: equal visits, not equal time)
+//   node tools/mt_node.js match T nk=A pairs nk=B [seed]   T threads with A thousand evaluations in all vs 1 thread with B —
+//                                            "the same wall time" on a machine with the cores: A = B × the evaluations/s ratio
+//                                            of bench.html (the user's M4 Pro: 2T 2.0, 4T 3.8, 8T 6.6, 10T 7.5)
 'use strict';
 const path = require('path'), fs = require('fs');
 const { Worker } = require('worker_threads');
@@ -50,6 +54,8 @@ function benchPositions() {   // (bench.html: Lv.9 vs Lv.10, plies 10 … 40)
   for (let g = 0; g < 2; g++) { const moves = []; for (let i = 0; i < 40; i++) { const r = E.think(null, moves, 9 + g, rnd); if (r.move < 0) break; moves.push(r.move); if (i % 10 === 9) out.push(moves.slice()); } }
   return out;
 }
+// check's budget: MC_SIMS visits (default 3000) or MC_MS ms (the process's threads, the wall clock)
+const MC_O = process.env.MC_MS ? { ms: +process.env.MC_MS, seed: 1 } : { sims: +(process.env.MC_SIMS || 3000), seed: 1 };
 async function check(Ts) {
   const P = benchPositions();
   for (const T of Ts) {
@@ -59,12 +65,14 @@ async function check(Ts) {
       const { pos } = E.replay(null, mv);
       E.useCore(C);
       const t0 = process.cpuUsage();
-      const run = () => E.mcts(pos, { sims: 3000, seed: 1 });
+      const run = () => E.mcts(pos, MC_O);
       const o = C ? await C.job(run) : { r: run(), hs: 0, hcpu: 0 };
       const u = process.cpuUsage(t0); cpuL += (u.user + u.system) / 1000; cpuH += o.hcpu; simsH += o.hs;
       const r = o.r, sumN = r.list.reduce((a, e) => a + e.n, 0);
       tot += r.sims; rootOK += sumN / (r.sims - 1);
-      console.log(`T${T} pos${i}: sims ${r.sims} (helpers ${o.hs}) root Σn/sims ${(sumN / (r.sims - 1)).toFixed(4)} best ${E.name(null, r.list[0].m)} n${r.list[0].n} v${r.list[0].v} nodes ${r.nodes}`);
+      const vk = r.vk || [], vt = vk.reduce((a, x, k) => k < 5 ? a + x : a, 0) || 1, pc = k => (vk[k] / vt * 100).toFixed(1) + '%';
+      console.log(`T${T} pos${i}: sims ${r.sims} (helpers ${o.hs}) evals/visit ${(r.evals / r.sims).toFixed(1)} root Σn/sims ${(sumN / (r.sims - 1)).toFixed(4)} best ${E.name(null, r.list[0].m)} n${r.list[0].n} v${r.list[0].v} nodes ${r.nodes}` +
+        ` | ends: expand ${pc(0)} proven ${pc(1)} (lost child ${pc(5)}) wait ${pc(2)} busy ${pc(3)} cap ${pc(4)}`);
     }
     simsL = tot - simsH;
     console.log(`# T${T}: avg sims ${(tot / P.length).toFixed(0)}, root Σn/sims ${(rootOK / P.length).toFixed(4)}, the process's CPU ms per visit (all threads) ${(cpuL / tot).toFixed(3)}`);
@@ -72,9 +80,11 @@ async function check(Ts) {
   }
   E.useCore(null);
 }
-async function match(T, sims, pairs) {
-  const C = await setupMT(T - 1);
-  let rs = 12345; const rnd = () => { rs = (Math.imul(rs, 1103515245) + 12345) & 0x7fffffff; return rs / 0x7fffffff; };
+async function match(T, sims, pairs, oneB, seed) {
+  const C = T > 1 ? await setupMT(T - 1) : null;
+  const bud = b => typeof b === 'string' && b.startsWith('nk=') ? { nk: +b.slice(3) } : { sims: +b };
+  const bMT = bud(sims), b1 = oneB ? bud(oneB) : bMT;
+  let rs = 12345 + (seed | 0) * 7919; const rnd = () => { rs = (Math.imul(rs, 1103515245) + 12345) & 0x7fffffff; return rs / 0x7fffffff; };
   let w = 0, n = 0;
   for (let i = 0; i < pairs; i++) {
     const op = []; for (let k = 0; k < 2; k++) { const { pos } = E.replay(null, op); const L = E.candList(pos, 10, 0, 14); op.push(L[Math.floor(rnd() * L.length)].m); }
@@ -84,9 +94,9 @@ async function match(T, sims, pairs) {
         const { pos } = E.replay(null, moves);
         if (!pos.canMove(pos.turn)) { win = 3 - pos.turn; break; }
         const t = pos.terr(); if (t.sep && Math.abs(t.a - t.b) >= 3) { win = t.a > t.b ? 1 : 2; break; }
-        const mtSide = sw ? 2 : 1, cfg = { s: 1, mc: 1, sims, seed: ply };
+        const mtSide = sw ? 2 : 1, cfg = Object.assign({ s: 1, mc: 1, seed: ply }, pos.turn === mtSide ? bMT : b1);
         let r;
-        if (pos.turn === mtSide) { E.useCore(C); r = (await C.job(() => E.think(null, moves, 0, rnd, null, cfg))).r; E.useCore(null); }
+        if (pos.turn === mtSide && C) { E.useCore(C); r = (await C.job(() => E.think(null, moves, 0, rnd, null, cfg))).r; E.useCore(null); }
         else r = E.think(null, moves, 0, rnd, null, cfg);
         if (r.move < 0) { win = 3 - pos.turn; break; }
         moves.push(r.move);
@@ -95,11 +105,11 @@ async function match(T, sims, pairs) {
       console.log(JSON.stringify({ pair: i, mtWhite: !sw, mtWin: mtWin ? 1 : 0, plies: moves.length }));
     }
   }
-  console.log(`# ${T} threads vs 1, ${sims} visits each: ${w}/${n} (${(w / n * 100).toFixed(1)}%)`);
-  C.close();
+  console.log(`# ${T} threads (${JSON.stringify(bMT)}) vs 1 (${JSON.stringify(b1)}): ${w}/${n} (${(w / n * 100).toFixed(1)}%)`);
+  if (C) C.close();
 }
 if (require.main === module) {
   const [, , cmd, ...a] = process.argv;
   if (cmd === 'check') check(a.length ? a.map(Number) : [1, 2, 4]);
-  else if (cmd === 'match') match(+a[0], +a[1], +a[2]);
+  else if (cmd === 'match') match(+a[0], a[1].startsWith('nk=') ? a[1] : +a[1], +a[2], a[3], +(a[4] || 0));
 }
