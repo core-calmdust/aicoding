@@ -123,6 +123,7 @@
   function start(ctx) {
     const T3 = ctx.Table3D, E = window.HockeyEngine, D = E.DIM, lang = ctx.lang;
     const pvp = ctx.mode === 'pvp', level = Math.max(1, Math.min(20, +ctx.level || 6)), target = SIZES.includes(+ctx.size) ? +ctx.size : 7;
+    const BKT = ['もどる', 'Back', '返回', '返回', '돌아가기', 'Volver', 'Retour', 'Voltar', 'Zurück', 'Назад', 'Geri', 'Kembali', 'वापस', 'رجوع'];
     const BL = Object.keys(E.BOARDS), lookNow = () => { const v = T3.BOARDS && T3.BOARDS.hockey ? T3.BOARDS.hockey.get() : 'classic'; return BL.includes(v) ? v : 'classic'; };
     let look = lookNow(), board = T3.MODELS.hockey(true, look); T3.show('hockey', board);
     document.documentElement.classList.add('hk-on');
@@ -156,6 +157,8 @@
 .hkmodes .ic{flex:none;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:24px;background:#f2ecdf}.hkmodes button[aria-pressed=true] .ic{background:#d6e6ff}
 .hkmodes .ic.th{width:66px;height:46px;padding:0;overflow:hidden;background:#e9dfca}.hkmodes .ic.th img{width:100%;height:100%;object-fit:cover;transform:scale(2.1) translateY(-6%);display:block}
 .hkmodes b{display:block;font-size:15px;font-weight:900}.hkmodes small{display:block;font-size:12px;font-weight:700;color:#5b6074;line-height:1.35;margin-top:2px}
+.hkmenu .hkft{display:flex;gap:10px;margin-top:14px}.hkmenu .hkft .go{flex:1;margin-top:0}.hkmenu .bk{flex:0 0 32%;padding:13px;border:0;border-radius:99px;background:#ece6d8;color:#3a3f52;font:inherit;font-size:17px;font-weight:900;cursor:pointer;box-shadow:0 3px 0 #d4ccb8}
+.hkmenu .hkhow{width:min(560px,100%)}.hkmenu .hkhow .how{display:block!important;font-size:16px;font-weight:800;line-height:1.7;margin:4px 2px 0}.hkmenu .nv{display:flex;gap:8px;align-items:center;justify-content:center;margin:14px 0 2px;font-weight:800;cursor:pointer}
 .hkmenu .go{display:block;width:100%;margin-top:14px;padding:13px;border:0;border-radius:99px;background:#ff5d5d;color:#fff;font:inherit;font-size:19px;font-weight:900;cursor:pointer;box-shadow:0 4px 0 #c94040}
 .hkmenu .how{margin:12px 2px 0;padding:10px 12px;border-radius:14px;background:#f4efe3;font-size:12.5px;font-weight:700;color:#4a4f63;line-height:1.5}
 
@@ -166,7 +169,7 @@
 .hkmodes button{flex-direction:column;align-items:stretch;gap:10px;padding:10px 10px 14px;border-radius:20px}
 .hkmodes .ic.th{width:100%;height:auto;aspect-ratio:16/9;border-radius:14px}.hkmodes .ic.th img{transform:scale(1.9) translateY(-4%)}
 .hkmodes b{font-size:20px;padding:0 6px}.hkmodes small{font-size:14px;padding:0 6px;margin-top:4px}
-.hkmenu .go{font-size:22px;padding:15px;max-width:520px;margin-left:auto;margin-right:auto}
+.hkmenu .go{font-size:22px;padding:15px}.hkmenu .hkft{max-width:680px;margin:18px auto 0}.hkmenu .bk{font-size:21px;padding:15px}
 }
 @media (min-width:900px) and (max-height:820px) and (hover:hover){.hkmodes .ic.th{aspect-ratio:2/1}.hkmodes{gap:12px}.hkmenu h2{margin-bottom:12px}}
 @media (max-width:560px){.hkmenu-c{padding:14px 12px 12px}.hkmodes{gap:6px}.hkmodes button{padding:7px 8px;gap:7px}.hkmodes .ic{width:32px;height:32px;font-size:18px;border-radius:10px}.hkmodes b{font-size:13.5px}.hkmodes small{display:none}.hkmenu h2{font-size:19px;margin-bottom:10px}.hkmenu .sel{display:block}.hkmenu .how{font-size:11.5px;padding:8px 10px}}
@@ -373,11 +376,12 @@ html.hk-on #bv > .npc-float .npc-pic{width:36px!important;height:36px!important}
     function showMenu() {
       phase = 'menu';
       const el = document.createElement('div'); el.className = 'hkmenu'; menuEl = el;
-      const how = howOff ? '' : `<div class="how">${(HOW[lang] || HOW.en).map(esc).join('<br>')}<label style="display:flex;gap:6px;align-items:center;margin-top:6px;cursor:pointer"><input type="checkbox" id="hkNever"> ${esc((HOWK.never[li(lang)]) || HOWK.never[1])}</label></div>`;
-      el.innerHTML = `<div class="hkmenu-c" role="dialog" aria-label="${esc(tr('pickB', lang))}"><h2>${esc(tr('pickB', lang))}</h2><div class="hkmodes">${BL.map(m => { const [n, d] = boardTxt(m, lang); return `<button type="button" data-m="${m}" aria-pressed="${m === look}"><span class="ic th"><img src="${T3.boardThumb ? T3.boardThumb('hockey', m) : ''}" alt="" loading="lazy"></span><span><b>${esc(n)}</b><small>${esc(d)}</small></span></button>`; }).join('')}</div><div class="sel">${esc(boardTxt(look, lang)[1])}</div>${how}<button type="button" class="go">${esc(tr('play', lang))} ▶</button></div>`;
+      const how = '';   // (2026-11-10: the controls now come first, on a card of their own — see howFirst)
+      el.innerHTML = `<div class="hkmenu-c" role="dialog" aria-label="${esc(tr('pickB', lang))}"><h2>${esc(tr('pickB', lang))}</h2><div class="hkmodes">${BL.map(m => { const [n, d] = boardTxt(m, lang); return `<button type="button" data-m="${m}" aria-pressed="${m === look}"><span class="ic th"><img src="${T3.boardThumb ? T3.boardThumb('hockey', m) : ''}" alt="" loading="lazy"></span><span><b>${esc(n)}</b><small>${esc(d)}</small></span></button>`; }).join('')}</div><div class="sel">${esc(boardTxt(look, lang)[1])}</div>${how}<div class="hkft"><button type="button" class="bk">${esc(BKT[li(lang)] || BKT[1])}</button><button type="button" class="go">${esc(tr('play', lang))} ▶</button></div></div>`;
       document.body.appendChild(el);
       el.querySelectorAll('[data-m]').forEach(b => { b.onclick = () => pickMode(b.dataset.m); b.ondblclick = () => { pickMode(b.dataset.m); begin(); }; });
       el.querySelector('.go').onclick = begin;
+      el.querySelector('.bk').onclick = () => { const q = document.getElementById('bvQuit'); if (q) q.click(); };
       padHeld = true; padRaf = requestAnimationFrame(padMenu);
     }
     function begin() {
@@ -390,7 +394,17 @@ html.hk-on #bv > .npc-float .npc-pic{width:36px!important;height:36px!important}
       const tick = () => { if (stopped) return; if (n > 0) { big(String(n)); SND.beep(false); n--; later(tick, 600); } else { big('GO!', 'g', 600); SND.beep(true); phase = 'play'; document.documentElement.classList.add('hk-play'); last = performance.now(); loop(last); } };
       tick();
     }
-    showMenu();
+    // (2026-11-10) the controls first (until 'don't show again'), then the board menu
+    function howFirst() {
+      if (howOff) { showMenu(); return; }
+      const el = document.createElement('div'); el.className = 'hkmenu'; menuEl = null;
+      el.innerHTML = `<div class="hkmenu-c hkhow" role="dialog" aria-label="${esc(HOWK.title[li(lang)] || HOWK.title[1])}"><h2>${esc(HOWK.title[li(lang)] || HOWK.title[1])}</h2><div class="how">${(HOW[lang] || HOW.en).map(esc).join('<br>')}</div><label class="nv"><input type="checkbox" id="hkNever"> ${esc(HOWK.never[li(lang)] || HOWK.never[1])}</label><button type="button" class="go">${esc(HOWK.ok[li(lang)] || HOWK.ok[1])}</button></div>`;
+      ['pointerdown', 'pointermove', 'pointerup'].forEach(k => el.addEventListener(k, e => e.stopPropagation()));
+      document.body.appendChild(el); howEl = el;
+      el.querySelector('.go').onclick = () => { if (el.querySelector('#hkNever').checked) { howOff = true; try { localStorage.setItem('atlas-hockey-howto', 'off'); } catch (e) {} } el.remove(); howEl = null; if (!stopped) showMenu(); };
+    }
+    let howEl = null;
+    howFirst();
 
     /* ---------- AI ---------- */
     const mem = {};
@@ -443,7 +457,7 @@ html.hk-on #bv > .npc-float .npc-pic{width:36px!important;height:36px!important}
         stopped = true; cancelAnimationFrame(raf); cancelAnimationFrame(padRaf); timers.forEach(clearTimeout);
         ctx.el.removeEventListener('pointerdown', onDown); ctx.el.removeEventListener('pointermove', onMove); if (raw) ctx.el.removeEventListener('pointerrawupdate', onMove); removeEventListener('pointerup', onUp, true); removeEventListener('pointercancel', onUp, true);
         removeEventListener('keydown', onKey); removeEventListener('keyup', onKey); removeEventListener('resize', onResize); document.removeEventListener('visibilitychange', onVis); removeEventListener('blur', onBlur); removeEventListener('focus', onFocus);
-        ctx.el.style.touchAction = prevTouch; css.remove(); if (toastEl) toastEl.remove(); if (menuEl) menuEl.remove(); document.querySelectorAll('.hkbig,.hkfx').forEach(e => e.remove());
+        ctx.el.style.touchAction = prevTouch; css.remove(); if (toastEl) toastEl.remove(); if (menuEl) menuEl.remove(); if (howEl) howEl.remove(); document.querySelectorAll('.hkbig,.hkfx').forEach(e => e.remove());
         if (T3.turn) T3.turn(null);
         document.documentElement.classList.remove('hk-on', 'hk-play'); removeEventListener('resize', barFit); removeEventListener('wheel', noWheel, { capture: true }); curCss.remove();
       },

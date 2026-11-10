@@ -178,7 +178,9 @@
     } else {
       if (t[0] > t[1]) s.score[0] += 2; else if (t[1] > t[0]) s.score[1] += 2; else { s.score[0]++; s.score[1]++; }
       s.hist.push(t);
-      if (s.hist.length >= 4 && s.score[0] !== s.score[1]) { s.over = true; s.winner = s.score[0] > s.score[1] ? 0 : 1; }
+      const left = Math.max(0, 4 - s.hist.length), lead = Math.abs(s.score[0] - s.score[1]);
+      if (left > 0 && lead > left * 2) { s.over = true; s.winner = s.score[0] > s.score[1] ? 0 : 1; s.early = true; }   // (2026-11-10: decided before the 4th round — e.g. 3 rounds won — ends the game)
+      else if (s.hist.length >= 4 && s.score[0] !== s.score[1]) { s.over = true; s.winner = s.score[0] > s.score[1] ? 0 : 1; }
       else if (s.hist.length >= 8) { s.over = true; s.winner = -1; }   // (tied after the extra rounds: a draw)
     }
     msg.push('round');
@@ -286,9 +288,10 @@
   function perform(shot, level, seed) { return jitter(shot, skill(level), rng(seed || 7)); }
   // a human flick is never quite the same twice: a small wobble in angle and strength, larger for hard shots
   // (1 s.d.: soft draws ±0.8° / ±4% — a perfectly aimed open 20 drops about 4 times in 5 — a full-power takeout ±1.6° / ±7%)
-  function wobble(shot, seed) {
-    const R = rng(seed || 11), k = Math.min(1, shot.v / VMAX), k2 = k * k;
-    return { x: shot.x, ang: shot.ang + gauss(R) * (.8 + .8 * k2) * Math.PI / 180, v: Math.max(15, shot.v * (1 + gauss(R) * (.04 + .03 * k2))) };
+  // f (2026-11-10, the board's feel): a = angle, v = strength, s = soft shots, h = hard shots — multipliers (1 = the classic board)
+  function wobble(shot, seed, f) {
+    const R = rng(seed || 11), k = Math.min(1, shot.v / VMAX), k2 = k * k, F = Object.assign({ a: 1, v: 1, s: 1, h: 1 }, f || {});
+    return { x: shot.x, ang: shot.ang + gauss(R) * (.8 * F.s + .8 * k2 * F.h) * F.a * Math.PI / 180, v: Math.max(15, shot.v * (1 + gauss(R) * (.04 * F.s + .03 * k2 * F.h) * F.v)) };
   }
 
   // first contact along an aim (for the aiming guide): a disc, a peg, or the edge
