@@ -411,3 +411,10 @@ html.atlas-skin .ck-rec .ck-rb.c-dev{background:#ffe2c2!important;color:#8a4a10!
 html.atlas-skin :is(.playbar,.plate,.player){box-shadow:0 4px 0 #efe3c8!important}
 html.atlas-skin .rollbtn{background:#ffb627!important;color:#fff!important;border:0!important;box-shadow:0 4px 0 #e09400!important;text-shadow:0 1px 0 rgba(160,90,0,.35)!important}
 html.atlas-skin :is(.rulecard,.setupcard).sel,html.atlas-skin .ngl button.sel{background-image:none!important}
+/* every slider of the full version (AI の強さ …) in the PRO slider's look: a light track, an amber knob with a white ring (2026-11-10) */
+html.atlas-skin :is(.modal,.side,.card) input[type=range]{-webkit-appearance:none;appearance:none;background:transparent;height:26px;accent-color:#e0a33a}
+html.atlas-skin :is(.modal,.side,.card) input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:99px;background:#efe3c8;border:0}
+html.atlas-skin :is(.modal,.side,.card) input[type=range]::-moz-range-track{height:8px;border-radius:99px;background:#efe3c8;border:0}
+html.atlas-skin :is(.modal,.side,.card) input[type=range]::-moz-range-progress{height:8px;border-radius:99px;background:#e0a33a}
+html.atlas-skin :is(.modal,.side,.card) input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;margin-top:-7px;border-radius:50%;background:#e0a33a;border:3px solid #fff;box-shadow:0 2px 0 #c98a24}
+html.atlas-skin :is(.modal,.side,.card) input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#e0a33a;border:3px solid #fff;box-shadow:0 2px 0 #c98a24}
