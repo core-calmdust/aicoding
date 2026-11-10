@@ -1,11 +1,13 @@
 // Level matches at real time on all threads (for a multi-core Mac; guide: LEVELS-MAC.md).
 // Each player is a pool of threads like the game page's (shared/mtengine.js + mt-worker.js): engine_mt.wasm on its own
-// shared memory, the lead runs think() with the level's settings, the helpers search the same position from other root
-// moves (Lazy SMP, opts.rot) and join the root split of the endgame solve (engine.js rootSplit / splitHelp). Each side
-// has its own pool (its own transposition table). Several games can run at once (--conc).
+// shared memory, the lead runs think() with the level's settings, the helpers wait in engine.c mt_idle and take the
+// remaining moves at the lead's split points (YBW: engine.js LAZY.plan 'ybw', engine_mt.wasm v4.1 — MODEL_CARD.md
+// 「マルチスレッド v4 / v4.1」). Each side has its own pool (its own transposition table). Several games can run at once (--conc).
+// Levels 17–25 and T<s> use all the threads of the pool (the page: MT_CFG); levels 14–16 only the lead (the page plays them
+// on its one-thread worker), so the whole ladder Lv.14 … Lv.25 can be measured in one run (--plan full).
 //
-//   node tools/levelmatch.js [run] [--plan default|adjacent|ladder|L20:L21,T2:T4,…] [--games 40] [--scale 1]
-//                                  [--conc 2] [--threads N] [--out tools/levelmatch-out/results.jsonl] [--dry]
+//   node tools/levelmatch.js [run] [--plan default|full|low|adjacent|ladder|L20:L21,T2:T4,…] [--games 40] [--scale 1]
+//                                  [--conc 2] [--threads N] [--out tools/levelmatch-out/results-ybw.jsonl] [--dry]
 //   node tools/levelmatch.js report [--out …]        the summary to paste back (also written to report.txt)
 //
 // Players: L<n> = engine.js LEVELS[n] (time and max × scale); T<s> = the Lv.20 shape with a soft time of s seconds
@@ -54,12 +56,14 @@ const SCALE = +(opt.scale || 1);
 const GAMES = Math.max(2, Math.round(+(opt.games || 40) / 2) * 2);
 const CONC = Math.max(1, +(opt.conc || (CORES >= 8 ? 2 : 1)));
 const THREADS = Math.max(1, +(opt.threads || Math.min(8, Math.floor(CORES / CONC))));   // (the page: 1 + min(cores − 1, 7))
-const OUT = path.resolve(opt.out || path.join(__dirname, 'levelmatch-out', 'results.jsonl'));
+const OUT = path.resolve(opt.out || path.join(__dirname, 'levelmatch-out', 'results-ybw.jsonl'));   // (2026-11-10: a new file for the YBW threads and the gentle low levels; the 2026-11-09 run is results.jsonl)
 const PLANS = {
   adjacent: ['L20:L21', 'L21:L22', 'L22:L23', 'L23:L24', 'L24:L25'],
   ladder: ['T2:T4', 'T4:T8', 'T8:T16'],
+  low: ['L14:L15', 'L15:L16', 'L16:L17', 'L17:L18', 'L18:L19', 'L19:L20'],   // (Lv.14 = the fixed anchor of the ratings: MODEL_CARD.md)
 };
 PLANS.default = PLANS.adjacent.concat(PLANS.ladder);
+PLANS.full = PLANS.low.concat(PLANS.adjacent, PLANS.ladder);   // the whole ladder Lv.14 … Lv.25 and the time doublings
 const planOf = p => (PLANS[p] || String(p).split(',')).map(s => s.trim()).filter(Boolean).map(s => { const [a, b] = s.split(':'); return { id: `${a}-${b}`, a, b }; });
 const PLAN = planOf(opt.plan || 'default');
 
@@ -71,12 +75,18 @@ const { legal, play, start } = require('./eng-lite.js');
 
 function cfgOf(p, scale) {
   let m;
-  if ((m = /^L(\d+)$/.exec(p))) { const L = Object.assign({}, E0.LEVELS[+m[1]]); if (!L.time) throw new Error(p + ': not a timed level'); L.time = Math.round(L.time * scale); if (L.max) L.max = Math.round(L.max * scale); return L; }
-  if ((m = /^T([\d.]+)$/.exec(p))) return { depth: 60, exact: 20, wld: 22, time: Math.round(+m[1] * 1000 * scale), mpc: 1 };
-  throw new Error('player? ' + p + ' (L17…L25 or T<seconds>)');
+  if ((m = /^L(\d+)$/.exec(p))) {
+    const n = +m[1]; if (n < 14 || !E0.LEVELS[n]) throw new Error(p + ': Lv.14 … Lv.25 (the lower levels play by chance: tools/match.js)');
+    const L = Object.assign({}, E0.LEVELS[n]);
+    if (L.time) L.time = Math.round(L.time * scale); if (L.max) L.max = Math.round(L.max * scale);
+    L.mt = n >= 17;   // (the page: levels 17–25 on the threads, the others on one thread)
+    return L;
+  }
+  if ((m = /^T([\d.]+)$/.exec(p))) return { depth: 60, exact: 20, wld: 22, time: Math.round(+m[1] * 1000 * scale), mpc: 1, mt: true };
+  throw new Error('player? ' + p + ' (L14…L25 or T<seconds>)');
 }
 // rough time used per move (s, scale 1, all threads) for the estimate before any game is played; replaced by the measured times
-const USE = { L17: 1.0, L18: 1.4, L19: 1.9, L20: 2.9, L21: 5, L22: 7.5, L23: 10, L24: 12.5, L25: 14.5 };
+const USE = { L14: 0.3, L15: 0.1, L16: 0.2, L17: 1.0, L18: 1.4, L19: 1.9, L20: 2.9, L21: 5, L22: 7.5, L23: 10, L24: 12.5, L25: 14.5 };
 const useOf = p => USE[p] || (/^T/.test(p) ? 0.58 * +p.slice(1) : 3);
 const MOVES_FULL = 13;   // moves per side that use their full time (from the book's end, before the endgame solve)
 
@@ -85,17 +95,18 @@ function rng(seed) { let s = seed >>> 0 || 1; return () => { s ^= s << 13; s >>>
 function openings(n) {
   const out = [], seen = new Set(), r = rng(20261108);
   for (let tries = 0; out.length < n && tries < n * 50; tries++) {
-    let c = start(), s = 1, ply = 0, line = '';
+    let c = start(), s = 1, ply = 0, line = '', short = null;
     for (;;) {
       let ms = legal(c, s);
       if (!ms.length) { s = 3 - s; ms = legal(c, s); if (!ms.length) break; }
       const t = E0.think(c, s, { cfg: { depth: 1, exact: 0, mpc: 1 }, random: r });
       if (!t.book) break;
       c = play(c, t.move, s); s = 3 - s; ply++; line += 'abcdefgh'[t.move & 7] + ((t.move >> 3) + 1);
+      if (ply === 6) short = { cells: c.slice(), toMove: s, line };
     }
     const key = c.join('') + s;
-    if (ply < 4 || seen.has(key) || !legal(c, s).length) continue;
-    seen.add(key); out.push({ cells: c, toMove: s, ply, line });
+    if (ply < 6 || seen.has(key) || !legal(c, s).length) continue;
+    seen.add(key); out.push({ cells: c, toMove: s, ply, line, short });
   }
   return out;
 }
@@ -120,12 +131,13 @@ async function makePool(n) {
   await send(ws[0], { type: 'book', book: new Uint8Array(BOOK) });
   return {
     clear() { X.clear_tt(); },
-    think(cells, toMove, cfg) {   // = shared/mtengine.js run() with index.html's help()
+    think(cells, toMove, cfg) {   // = shared/mtengine.js run() with index.html's help(); cfg.mt false: the lead alone (one thread)
       X.mt_stop(0); Atomics.store(ctl, 0, 0);
       const ex = cfg.exact, hcfg = { depth: 60, exact: ex, wld: cfg.wld || ex + 2, mpc: 1 };
+      const use = cfg.mt ? ws : ws.slice(0, 1);
       return new Promise(resolve => {
-        const t0 = Date.now(); let left = ws.length, res = null, hn = 0;
-        ws.forEach((w, i) => {
+        const t0 = Date.now(); let left = use.length, res = null, hn = 0;
+        use.forEach((w, i) => {
           w.removeAllListeners('message');
           w.on('message', msg => {
             if (msg.type === 'result') { res = msg; res.wall = Date.now() - t0; Atomics.store(ctl, 0, 1); X.mt_stop(1); }
@@ -176,6 +188,12 @@ function report(rs, full) {
     const chain = []; let e = 0, v = 0, lv = 20;
     for (;;) { const x = S[`L${lv}-L${lv + 1}|${sc}`]; if (!x) break; e -= x.elo; v += x.eloSe ** 2; lv++; chain.push(`Lv.${lv} ${f1(e)} ±${Math.sqrt(v).toFixed(0)} (step ${f1(-x.elo)})`); }
     if (chain.length) L.push(`chain (scale ${sc}, Lv.20 = 0): ` + chain.join(', '));
+    // the whole ladder from Lv.14 (its fixed Elo 1810 on the MODEL_CARD scale) and the rating it suggests (RT_LV = 50 + 0.77 × Elo)
+    if (S[`L14-L15|${sc}`]) {
+      const full = ['Lv.14 1810 (R 1440)']; let e2 = 1810, v2 = 0;
+      for (let n = 14; ; n++) { const x = S[`L${n}-L${n + 1}|${sc}`]; if (!x) break; e2 -= x.elo; v2 += x.eloSe ** 2; full.push(`Lv.${n + 1} ${e2.toFixed(0)} ±${Math.sqrt(v2).toFixed(0)} (R ${Math.round(50 + 0.77 * e2)})`); }
+      L.push(`ladder (scale ${sc}, Lv.14 = 1810): ` + full.join(', '));
+    }
     const dbl = []; let sw = 0, swx = 0;
     for (const [k, x] of Object.entries(S)) { const m = /^T([\d.]+)-T([\d.]+)\|(.+)$/.exec(k); if (!m || m[3] !== String(sc)) continue; const r = Math.log2(+m[2] / +m[1]); const per = -x.elo / r, ps = x.eloSe / r; dbl.push(`${m[1]}→${m[2]} s ${f1(per)} ±${ps.toFixed(0)}`); sw += 1 / ps ** 2; swx += per / ps ** 2; }
     if (dbl.length) L.push(`Elo per doubling of the time (scale ${sc}): ${dbl.join(', ')}; weighted ${f1(swx / sw)} ±${(1 / Math.sqrt(sw)).toFixed(0)}`);
@@ -219,7 +237,9 @@ async function main() {
   async function playGame(slot, j) {
     const [PA, PB] = slot, op = OP[j.k], ca = cfgOf(j.p.a, SCALE), cb = cfgOf(j.p.b, SCALE);
     PA.clear(); PB.clear();
-    let c = op.cells.slice(), s = op.toMove, moves = '';
+    // a level without the opening book (Lv.14) plays from the 6th move of the same book line, so the book's worth to the other side counts
+    const o = (!ca.mpc || !cb.mpc) && op.short ? op.short : op;
+    let c = o.cells.slice(), s = o.toMove, moves = '';
     const st = { A: { ms: 0, n: 0, max: 0, nodes: 0, d: 0, nd: 0 }, B: { ms: 0, n: 0, max: 0, nodes: 0, d: 0, nd: 0 } };
     const g0 = Date.now();
     for (;;) {
@@ -237,7 +257,7 @@ async function main() {
     const rec = { id: j.p.id, scale: SCALE, k: j.k, aBlack: j.aBlack, da, res: da > 0 ? 1 : da < 0 ? 0 : 0.5,
       msA: Math.round(st.A.ms / Math.max(1, st.A.n)), msB: Math.round(st.B.ms / Math.max(1, st.B.n)), maxA: st.A.max, maxB: st.B.max,
       npsA: Math.round(st.A.nodes / Math.max(1, st.A.ms) * 1000), npsB: Math.round(st.B.nodes / Math.max(1, st.B.ms) * 1000),
-      dA: +(st.A.d / Math.max(1, st.A.nd)).toFixed(1), dB: +(st.B.d / Math.max(1, st.B.nd)).toFixed(1), sec: Math.round((Date.now() - g0) / 1000), threads: THREADS, open: op.line, moves };
+      dA: +(st.A.d / Math.max(1, st.A.nd)).toFixed(1), dB: +(st.B.d / Math.max(1, st.B.nd)).toFixed(1), sec: Math.round((Date.now() - g0) / 1000), threads: THREADS, open: o.line, moves };
     fs.appendFileSync(OUT, JSON.stringify(rec) + '\n');
     rs.push(rec); fin++;
     const left = jobs.length - fin, el = (Date.now() - t0) / 1000;
