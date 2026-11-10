@@ -368,6 +368,7 @@ function restNow(rv, can) {
 }
 function render() {
   if (!card) return;
+  if (window.SeqPrac && SeqPrac.active() && SeqPrac.paint()) return;   // the 3-move opening practice (shared/seqprac.js, 2026-11-10)
   if (C4Coach.sw) C4Coach.sw.sync();
   const rv = !!document.querySelector('#reviewCard.show');
   // the coach is for the game in progress: after the game (or while browsing earlier moves) it steps aside and the
