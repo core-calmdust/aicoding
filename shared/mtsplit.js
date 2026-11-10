@@ -11,7 +11,8 @@
 // • MTSplit.use(cfg) → { pool(prio), ready(), cancel(tag), threads } (the same shape as MTEngine.use)
 //     cfg: { url (the engine worker), setup(worker)? (e.g. send it the opening book), drive(msg, X, onProgress) → Promise<result
 //            | undefined (not for threads: do it the usual way)> }
-//   pool.free(), pool.run(msg, onProgress, tag) → Promise<result (nodes = all threads, threads, ms) | null (cancelled) |
+//   pool.free(), pool.run(msg, onProgress, tag) → Promise<result (nodes = all threads, threads, ms, busy = the workers' busy share
+//   of threads × ms, cores = the search cores the replies named, e.g. ['wasm']) | null (cancelled) |
 //   undefined (failed / not for threads)>, pool.cancel(tag), pool.preempt(tag) — one job at a time.
 //   (msg.mtThreads: use only that many threads — PRO mode)
 // • X (inside drive): X.n (threads of this job), X.exec(msg, aff, prio) → Promise<reply | null (cancelled / failed)> runs one
@@ -26,7 +27,10 @@
 //   MTSplit.ladder — drive() for the engines that speak 'mtplan' / 'mtv' / 'mtpv' / 'mtfin' (ugolki, agon, konane, mancala);
 //   in shared mode a plan with `lazy` (mancala; agon / konane only on their bench, 2026-11-09) is searched Lazy SMP style instead ('mtlead' + 'mthelp'), and
 //   so is an analysis plan with `lazyAll` (mancala, 2026-11-09: 6 root moves at most, so splitting them left threads idle);
-//   'mtlead' carries `job` (the page's message type).
+//   'mtlead' carries `job` (the page's message type). A plan with `sticky` sends each task to the worker that last took a task of
+//   the same root move when it is free (the engines whose workers keep their own tables: Kōnane without a shared table), and
+//   `specRes: 0` lets every other worker test the other moves while the first one is searched (a root-only split, splitMin 99:
+//   no worker is needed for the main line).
 (function () {
   'use strict';
   if (window.MTSplit) return;
@@ -105,6 +109,12 @@
     const H = helpers(), HM = Math.max(H, maxHelpers());
     let dead = false, job = null, seq = 0, tid = 0;
     const W = [], queue = [];
+    // sticky jobs (X.sticky — the plan's `sticky`, Kōnane without a shared table, 2026-11-10): aff → the worker that last took a
+    // task of it (its own table holds that subtree), and the next task of the same aff goes there when it is free. The test
+    // "has ever searched aff" alone is true for every worker after a few depths, so a root move's next depth — and a fail-high's
+    // re-search — landed on whichever worker came first, often one without that subtree in its table (Kōnane's root split
+    // without a shared table: 2 threads slower than 1 on the user's Mac)
+    const last = new Map();
     // shared mode: one table for every worker (cfg.tt !== false; the bench passes false to compare) and the stop flags —
     // ctl[0] the job's epoch (a new job / a cancel stops the tasks of the one before at once), ctl[16 + i] the task of worker
     // i to abandon (a dropped task stops at once instead of running on unheard / restarting the worker)
@@ -118,6 +128,7 @@
         const d = e.data, t = s.task; if (!t || !d || d.id !== t.id || d.type === 'progress') return;
         s.task = null; clearTimeout(s.wd); if (t.aff !== undefined) { if (s.aff.size > 256) s.aff.clear(); s.aff.add(t.aff); }
         if (typeof d.nodes === 'number' && t.job) t.job.X.nodes += d.nodes;
+        if (t.job) { t.job.X.busy += performance.now() - t.t0; if (d.core) t.job.X.cores.add(d.core); }   // (the bench: how busy the workers were, and each one's search core)
         t.resolve(d.error ? null : d); pump();
       };
       s.w.onerror = e => { console.warn('[mtsplit]', e.message || e); const t = s.task; s.task = null; if (t && t.job) t.job.X.failed = true; restart(s); if (t) t.resolve(null); pump(); };
@@ -125,7 +136,7 @@
       if (cfg.setup) cfg.setup(s.w);
       return s;
     }
-    function restart(s) { clearTimeout(s.wd); try { s.w.terminate(); } catch (e) {} if (!dead) W[s.i] = spawn(s.i); }
+    function restart(s) { clearTimeout(s.wd); try { s.w.terminate(); } catch (e) {} for (const [k, i] of last) if (i === s.i) last.delete(k); if (!dead) W[s.i] = spawn(s.i); }
     // shared mode: ask the worker to stop its task (it answers within a moment and is free again; if not, it is restarted)
     function halt(s) {
       const t = s.task; if (!t) return;
@@ -142,12 +153,14 @@
         while (W.length < j.X.n) W.push(spawn(W.length));
         const free = W.slice(0, j.X.n).filter(s => !s.task);
         if (!free.length) break;
-        const s = (q.aff !== undefined && free.find(x => x.aff.has(q.aff))) || free.find(x => !x.aff.size) || free[0];
-        queue.splice(k, 1); s.task = q; s.w.postMessage(Object.assign({}, q.msg, TT ? { id: q.id, _ep: j.ep, _age: j.age } : { id: q.id }));
+        const sticky = j.X.sticky && q.aff !== undefined, li = sticky ? last.get(q.aff) : undefined, lw = li !== undefined && li < j.X.n ? W[li] : null;
+        const s = (lw && !lw.task ? lw : null) || (q.aff !== undefined && free.find(x => x.aff.has(q.aff))) || free.find(x => !x.aff.size) || free[0];
+        if (sticky) { if (last.size > 4096) last.clear(); last.set(q.aff, s.i); }
+        queue.splice(k, 1); s.task = q; q.t0 = performance.now(); s.w.postMessage(Object.assign({}, q.msg, TT ? { id: q.id, _ep: j.ep, _age: j.age } : { id: q.id }));
       }
     }
     function makeX(j, n) {
-      const X = { n, nodes: 0, cancelled: false, failed: false, shared: !!TT,
+      const X = { n, nodes: 0, busy: 0, cores: new Set(), cancelled: false, failed: false, shared: !!TT,
         exec(msg, aff, prio) {
           if (j.cancelled || dead) return Promise.resolve(null);
           let res; const p = new Promise(r => { res = r; });
@@ -184,7 +197,8 @@
         try { r = await cfg.drive(msg, j.X, prog); } catch (e) { console.warn('[mtsplit]', e); r = undefined; }
         if (j.cancelled) r = null; else if (j.X.failed && !r) r = undefined;
         if (job === j) job = null;
-        j.resolve(r ? Object.assign({}, r, { nodes: j.X.nodes, threads: n, shared: !!TT, ms: performance.now() - t0 }) : r);
+        const ms = performance.now() - t0;
+        j.resolve(r ? Object.assign({}, r, { nodes: j.X.nodes, threads: n, shared: !!TT, ms, busy: j.X.busy / (ms * n), cores: [...j.X.cores] }) : r);
       })().catch(e => { console.warn('[mtsplit]', e); j.resolve(undefined); }).finally(() => { if (job === j) job = null; });
       return out;
     }
@@ -365,6 +379,7 @@
       if (plan.result) return plan.result;   // (book, a single move, a weak level…: nothing to search on threads)
       if (!plan.plan) return undefined;
       const p = plan.plan;
+      X.sticky = !!p.sticky;
       const S = { X, base, inf: p.inf, until: p.ms ? Date.now() + p.ms : 0, nodes: p.nodes || 0, splitMin: p.splitMin || 4, splitPly: p.splitPly || 8, lmr: p.lmr || null, specRes: p.specRes, timeout: false, allEx: true };
       const kids = p.kids || p.moves.map(m => ({ m, s: -1 }));
       const win = v => !!p.win && Math.abs(v) > p.win;
