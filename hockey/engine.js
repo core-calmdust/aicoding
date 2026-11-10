@@ -200,7 +200,7 @@
   function aiSkill(level) {
     const k = Math.pow((Math.max(1, Math.min(20, level)) - 1) / 19, 1.35);   // (eased: the first levels stay gentle)
     // (2026-11-10) much weaker at the low end: slower to react, less exact, attacks less, and now and then looks away
-    return { cap: .1 + .9 * Math.pow(k, 1.1), react: .55 - .52 * Math.pow(k, .7), err: 9 - 8.4 * k, attack: .3 + .6 * k, bank: level >= 9, lead: .6 + .4 * k, lapse: .22 * Math.pow(1 - k, 1.5) };
+    return { cap: .22 + .78 * Math.pow(k, 1.1), react: .4 - .37 * Math.pow(k, .7), err: 6 - 5.4 * k, attack: .45 + .45 * k, bank: level >= 9, lead: .6 + .4 * k, lapse: .1 * Math.pow(1 - k, 1.5) };   // (2026-11-10: Lv.1 a little more able — it moves, defends and plays the puck, just slowly)
   }
   // where a puck will cross the line y = yl (bouncing off the side walls), or null
   function cross(p, yl) {
