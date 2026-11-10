@@ -1,7 +1,7 @@
 <!doctype html>
 <!-- Dev tool: the 2D amazon pieces rendered from 3D models (three.js r128, procedural geometry and textures, a studio light
      set-up). node tools/render_pieces.js opens it through a local server and saves img/pc-<set>-<w|b>.webp.
-     ?set=statue|bronze|vase|archer&side=w|b&size=512 → window.SHOT = PNG data URL (transparent background). -->
+     ?set=cameo|coin|vase|enamel (2D) · statue|bronze|archer (3D look)&side=w|b&size=512 → window.SHOT = PNG data URL (transparent background). -->
 <html><head><meta charset="utf-8"><style>html,body{margin:0;background:transparent}</style></head><body>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
@@ -199,6 +199,126 @@ function vase() {
   const gold = new T.Mesh(new T.TorusGeometry(.41, .014, 10, 80), GOLD()); gold.rotation.x = Math.PI / 2; gold.position.y = .045; g.add(gold);
   return g;
 }
+// ---------------------------------------------------------------- the medallions (the 2D sets): a disc on a stand, the face a
+// relief (a height canvas → bumpMap; colour and metal from the same drawing)
+const CV = () => { const c = document.createElement('canvas'); c.width = c.height = 1024; return c; };
+const texOf = (c, srgb) => { const t = new T.CanvasTexture(c); if (srgb) t.encoding = T.sRGBEncoding; t.anisotropy = 8; return t; };
+function helmPath(g) {   // a Corinthian helmet in profile, facing right, about 600 units tall, centred on (0, 0)
+  g.beginPath(); g.moveTo(-150, 230); g.bezierCurveTo(-215, 120, -222, -60, -140, -165); g.bezierCurveTo(-70, -250, 95, -248, 152, -146);
+  g.bezierCurveTo(182, -96, 178, -40, 164, 0); g.lineTo(182, 118); g.bezierCurveTo(176, 176, 124, 232, 62, 240); g.lineTo(26, 150);
+  g.bezierCurveTo(-14, 196, -62, 232, -150, 230); g.closePath();
+}
+function crestPath(g) { g.beginPath(); g.moveTo(-196, -146); g.bezierCurveTo(-214, -330, 150, -372, 236, -228); g.bezierCurveTo(150, -282, 4, -292, -122, -188); g.closePath(); }
+function drawHelmet(g, x, y, s, relief, cut, line) {   // relief / cut / line: fill styles for the raised parts, the openings, engraved lines
+  g.save(); g.translate(x, y); g.scale(s, s); g.lineCap = 'round'; g.lineJoin = 'round';
+  g.fillStyle = relief; crestPath(g); g.fill();
+  g.fillRect(-20, -262, 40, 40);                                                                   // the crest holder
+  helmPath(g); g.fill();
+  g.fillStyle = cut;                                                                                // the eye opening and the face slit
+  g.beginPath(); g.moveTo(64, -62); g.bezierCurveTo(98, -86, 150, -76, 172, -44); g.bezierCurveTo(150, -26, 98, -26, 64, -62); g.fill();
+  g.beginPath(); g.moveTo(166, -6); g.lineTo(186, 116); g.lineTo(150, 128); g.bezierCurveTo(150, 60, 152, 20, 166, -6); g.fill();
+  g.strokeStyle = line; g.lineWidth = 9;
+  g.beginPath(); g.moveTo(160, -100); g.bezierCurveTo(80, -128, -30, -116, -158, -56); g.stroke();       // the brow ridge
+  g.beginPath(); g.moveTo(-170, 120); g.bezierCurveTo(-120, 110, -40, 140, 26, 150); g.stroke();          // the neck-guard edge
+  g.lineWidth = 6; for (let k = 0; k < 9; k++) { const t = k / 8; g.beginPath(); g.moveTo(-170 + t * 360, -170 - Math.sin(t * Math.PI) * 120); g.lineTo(-150 + t * 340, -210 - Math.sin(t * Math.PI) * 140); g.stroke(); }   // horsehair
+  g.beginPath(); g.arc(70, 70, 26, 0, Math.PI * 1.6); g.stroke();                                           // a curl on the cheek piece
+  g.restore();
+}
+function drawLabrys(g, x, y, s, relief, line) {   // the double axe of the Amazons, with a bow below it
+  g.save(); g.translate(x, y); g.scale(s, s); g.fillStyle = relief; g.strokeStyle = relief; g.lineCap = 'round';
+  g.fillRect(-14, -250, 28, 500);                                                                   // the haft
+  for (const d of [1, -1]) { g.beginPath(); g.moveTo(14 * d, -96); g.bezierCurveTo(70 * d, -120, 130 * d, -170, 186 * d, -196); g.bezierCurveTo(262 * d, -100, 262 * d, 40, 186 * d, 136); g.bezierCurveTo(130 * d, 110, 70 * d, 64, 14 * d, 50); g.closePath(); g.fill(); }
+  g.beginPath(); g.arc(0, -262, 22, 0, Math.PI * 2); g.fill();
+  g.strokeStyle = line; g.lineWidth = 6; for (const d of [1, -1]) { g.beginPath(); g.moveTo(40 * d, -100); g.bezierCurveTo(110 * d, -120, 150 * d, -130, 176 * d, -140); g.stroke(); g.beginPath(); g.moveTo(40 * d, 60); g.bezierCurveTo(110 * d, 80, 150 * d, 90, 176 * d, 100); g.stroke(); }
+  g.restore();
+}
+function legend(g, text, r, size, fill) { g.save(); g.translate(512, 512); g.fillStyle = fill; g.font = `700 ${size}px Georgia, serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; const n = text.length, span = Math.PI * 1.25; for (let k = 0; k < n; k++) { const a = -Math.PI / 2 - span / 2 + span * (k + .5) / n; g.save(); g.rotate(a + Math.PI / 2); g.fillText(text[k], 0, -r); g.restore(); } g.restore(); }
+function beads(g, r, n, rad, fill) { g.save(); g.translate(512, 512); g.fillStyle = fill; for (let k = 0; k < n; k++) { const a = k / n * Math.PI * 2; g.beginPath(); g.arc(Math.cos(a) * r, Math.sin(a) * r, rad, 0, Math.PI * 2); g.fill(); } g.restore(); }
+// draw(g, mode) paints the face in one of three modes: 'h' height (white = high), 'c' colour, 'm' metal (white = metal)
+function faceMaps(draw, blur) {
+  const h = CV(), hg = h.getContext('2d'); draw(hg, 'h');
+  const hb = CV(), hbg = hb.getContext('2d'); hbg.filter = `blur(${blur}px)`; hbg.drawImage(h, 0, 0);
+  const c = CV(); draw(c.getContext('2d'), 'c'); const m = CV(); draw(m.getContext('2d'), 'm');
+  return { h: hb, c, m };
+}
+function shapeDisc(R, rough) {   // a round (or a hand-struck, uneven) outline
+  const sh = new T.Shape(), n = 160;
+  for (let k = 0; k <= n; k++) { const a = k / n * Math.PI * 2, rr = R * (1 + (rough ? (N1(Math.cos(a) * 3 + 9, Math.sin(a) * 3 + 9) - .5) * rough + Math.sin(a * 3 + 1) * rough * .3 : 0)); k ? sh.lineTo(Math.cos(a) * rr, Math.sin(a) * rr) : sh.moveTo(Math.cos(a) * rr, Math.sin(a) * rr); }
+  return sh;
+}
+function medalDisc(g, R, th, maps, opt) {
+  const geo = new T.ExtrudeGeometry(shapeDisc(R, opt.rough || 0), { depth: th, bevelEnabled: true, bevelThickness: opt.bevel || .025, bevelSize: opt.bevel || .025, bevelSegments: 5, curveSegments: 160 });
+  geo.translate(0, 0, -th / 2);
+  const fix = t => { t.wrapS = t.wrapT = T.ClampToEdgeWrapping; t.repeat.set(1 / (2 * R), 1 / (2 * R)); t.offset.set(.5, .5); return t; };
+  const face = PH(Object.assign({ map: fix(texOf(maps.c, true)), bumpMap: fix(texOf(maps.h)), bumpScale: opt.bump || .012, metalnessMap: opt.metalMap ? fix(texOf(maps.m)) : null }, opt.face));
+  const disc = new T.Mesh(geo, [face, opt.edge]); disc.position.y = opt.y; g.add(disc);
+  return disc;
+}
+function cameo() {   // temple: a cameo in a gold bezel. White: white marble, the helmet in relief; Black: verde antico / onyx, a gold helmet
+  const w = SIDE === 'w', g = new T.Group();
+  const field = w ? '#aebcae' : '#16231e', hi = w ? '#fcfaf5' : '#d8ab58';
+  const maps = faceMaps((x, mode) => {
+    const H = mode === 'h', Mm = mode === 'm';
+    x.fillStyle = H ? '#555' : Mm ? '#000' : field; x.fillRect(0, 0, 1024, 1024);
+    if (mode === 'c') { const im = x.getImageData(0, 0, 1024, 1024); for (let y = 0; y < 1024; y++) for (let xx = 0; xx < 1024; xx++) { const n = (fbm(xx / 90, y / 90, 4) - .5) * (w ? 18 : 22), i = (y * 1024 + xx) * 4; im.data[i] += n; im.data[i + 1] += n * (w ? 1 : 1.2); im.data[i + 2] += n; } x.putImageData(im, 0, 0); }
+    const rel = H ? '#fff' : Mm ? (w ? '#000' : '#fff') : hi, cut = H ? '#3a3a3a' : Mm ? '#000' : field, line = H ? '#9a9a9a' : Mm ? '#000' : (w ? '#cfc6b4' : '#8a6a30');
+    x.lineWidth = 16; x.strokeStyle = rel; x.beginPath(); x.arc(512, 512, 470, 0, Math.PI * 2); x.stroke();
+    beads(x, 440, 72, 9, rel);
+    drawHelmet(x, 500, 560, 1.12, rel, cut, line);
+  }, 7);
+  medalDisc(g, .66, .14, maps, { y: .92, bump: .02, metalMap: !w, edge: GOLD(), face: w ? { roughness: .34, clearcoat: .5, clearcoatRoughness: .25 } : { roughness: .22, metalness: 1, clearcoat: .8, clearcoatRoughness: .15 } });
+  const bez = new T.Mesh(new T.TorusGeometry(.68, .035, 18, 120), GOLD()); bez.position.y = .92; g.add(bez);
+  const foot = lathe([[0, 0], [.4, 0], [.42, .035], [.38, .07], [.22, .1], [.16, .15], [.1, .2], [.13, .23], [.09, .27], [0, .27]]);
+  g.add(new T.Mesh(foot, GOLD()));
+  const cup = new T.Mesh(new T.CylinderGeometry(.12, .08, .06, 32), GOLD()); cup.position.y = .27; g.add(cup);
+  return g;
+}
+function coin() {   // ruins: a hand-struck ancient coin on a stone. White: worn silver; Black: bronze with a green patina
+  const w = SIDE === 'w', g = new T.Group();
+  let maps = faceMaps((x, mode) => {
+    x.fillStyle = mode === 'h' ? '#4a4a4a' : '#000'; x.fillRect(0, 0, 1024, 1024);
+    const rel = '#fff';
+    x.lineWidth = 14; x.strokeStyle = rel; x.beginPath(); x.arc(512, 512, 468, 0, Math.PI * 2); x.stroke();
+    beads(x, 432, 60, 10, rel);
+    drawLabrys(x, 512, 560, 1.15, rel, '#777');
+    legend(x, 'ΑΜΑΖΟΝΩΝ', 360, 74, rel);
+  }, 6);
+  // colour from the height: high points worn bright, the field toned dark (and green for the bronze)
+  const hc = maps.h.getContext('2d').getImageData(0, 0, 1024, 1024).data, c = CV(), cg = c.getContext('2d'), im = cg.createImageData(1024, 1024);
+  const lo = w ? [138, 136, 130] : [46, 40, 30], hi = w ? [240, 238, 232] : [176, 128, 78], pat = [70, 118, 92];
+  for (let i = 0; i < 1024 * 1024; i++) {
+    const x = i % 1024, y = (i / 1024) | 0, h = hc[i * 4] / 255, n = fbm(x / 60, y / 60, 4), t = Math.min(1, Math.max(0, (h - .25) * 1.6 + (n - .5) * .3));
+    let col = mix(lo, hi, t);
+    if (!w) col = mix(col, pat, Math.max(0, (.55 - t)) * 1.2 * Math.min(1, Math.max(0, (fbm(x / 120 + 5, y / 120, 4) - .35) * 2.5)));
+    im.data[i * 4] = col[0]; im.data[i * 4 + 1] = col[1]; im.data[i * 4 + 2] = col[2]; im.data[i * 4 + 3] = 255;
+  }
+  cg.putImageData(im, 0, 0); maps.c = c;
+  const metal = PH({ color: w ? 0xc8c4bc : 0x6a5236, metalness: 1, roughness: .5 });
+  medalDisc(g, .64, .12, maps, { y: .9, bump: .028, rough: .05, bevel: .03, edge: metal, face: { metalness: w ? .55 : .75, roughness: w ? .36 : .55 } });
+  const stone = PH({ map: canvasTex(256, 256, (u, v) => { const n = fbm(u * 8, v * 8, 4); return mix([150, 146, 128], [196, 192, 170], n); }), roughness: .92 });
+  const base = new T.Mesh(new T.BoxGeometry(.92, .24, .5, 1, 1, 1), stone); base.position.y = .12; g.add(base);
+  const top = new T.Mesh(new T.BoxGeometry(.8, .06, .42), stone); top.position.y = .27; g.add(top);
+  return g;
+}
+function enamel() {   // modern: a satin ceramic disc with a gold-inlaid emblem (a bow and an arrow) on a slim brass stand
+  const w = SIDE === 'w', g = new T.Group(), field = w ? '#efebe4' : '#1e1f22', gold = '#d6b26a';
+  const maps = faceMaps((x, mode) => {
+    x.fillStyle = mode === 'h' ? '#555' : mode === 'm' ? '#000' : field; x.fillRect(0, 0, 1024, 1024);
+    const ink = mode === 'h' ? '#7a7a7a' : mode === 'm' ? '#fff' : gold;
+    x.strokeStyle = ink; x.fillStyle = ink; x.lineCap = 'round'; x.lineJoin = 'round';
+    x.lineWidth = 12; x.beginPath(); x.arc(512, 512, 430, 0, Math.PI * 2); x.stroke();
+    x.lineWidth = 26; x.beginPath(); x.arc(512, 600, 250, Math.PI * 1.08, Math.PI * 1.92); x.stroke();          // the bow
+    x.lineWidth = 8; x.beginPath(); x.moveTo(512 - 250 * Math.cos(Math.PI * .08), 600 - 250 * Math.sin(Math.PI * .08)); x.lineTo(512, 470); x.lineTo(512 + 250 * Math.cos(Math.PI * .08), 600 - 250 * Math.sin(Math.PI * .08)); x.stroke();   // the string, drawn
+    x.lineWidth = 18; x.beginPath(); x.moveTo(512, 760); x.lineTo(512, 250); x.stroke();                       // the arrow
+    x.beginPath(); x.moveTo(512, 196); x.lineTo(470, 276); x.lineTo(554, 276); x.closePath(); x.fill();
+    x.lineWidth = 10; for (const d of [-1, 1]) for (const k of [0, 1]) { x.beginPath(); x.moveTo(512, 700 + k * 36); x.lineTo(512 + d * 40, 740 + k * 36); x.stroke(); }
+  }, 2.5);
+  medalDisc(g, .64, .1, maps, { y: .88, bump: .01, metalMap: true, bevel: .04, edge: PH({ color: w ? 0xefebe4 : 0x1e1f22, roughness: .4, clearcoat: .6 }), face: { roughness: .38, clearcoat: .6, clearcoatRoughness: .3 } });
+  const brass = PH({ color: 0xd2ad66, metalness: 1, roughness: .3 });
+  const plate = new T.Mesh(new T.BoxGeometry(.86, .05, .34), brass); plate.position.y = .025; g.add(plate);
+  const post = new T.Mesh(new T.BoxGeometry(.5, .2, .16), brass); post.position.y = .15; g.add(post);
+  return g;
+}
 // ---------------------------------------------------------------- the studio
 const r = new T.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
 r.setSize(SIZE, SIZE); r.setPixelRatio(1); r.outputEncoding = T.sRGBEncoding; r.toneMapping = T.ACESFilmicToneMapping; r.toneMappingExposure = 1.05; r.physicallyCorrectLights = true;
@@ -220,13 +340,14 @@ const rim = new T.DirectionalLight(0xcfe0ff, 2.4); rim.position.set(3, 2.5, -3);
 const fill = new T.DirectionalLight(0xffffff, .7); fill.position.set(2, 1, 4); scene.add(fill);
 scene.add(new T.AmbientLight(0xffffff, .25));
 const M = matSet();
-const obj = SET === 'statue' ? statue(M) : SET === 'bronze' ? bronze(M) : SET === 'archer' ? archer(M) : vase();
+const obj = SET === 'statue' ? statue(M) : SET === 'bronze' ? bronze(M) : SET === 'archer' ? archer(M) : SET === 'cameo' ? cameo() : SET === 'coin' ? coin() : SET === 'enamel' ? enamel() : vase();
+const FLAT = ['vase', 'cameo', 'coin', 'enamel'].includes(SET);
 scene.add(obj);
 // frame the figure: a 3/4 front view from slightly above, the bounding box filling the picture
 const box = new T.Box3().setFromObject(obj), size = box.getSize(new T.Vector3()), ctr = box.getCenter(new T.Vector3());
 const cam = new T.PerspectiveCamera(22, 1, .1, 100);
 const dist = Math.max(size.y, size.x * 1.05) / 2 / Math.tan(22 * Math.PI / 360) * 1.06;
-const az = SET === 'vase' ? -.16 : -.3, el = .18;
+const az = FLAT ? -.16 : -.3, el = .18;
 cam.position.set(ctr.x + Math.sin(az) * Math.cos(el) * dist, ctr.y + Math.sin(el) * dist, ctr.z + Math.cos(az) * Math.cos(el) * dist);
 cam.lookAt(ctr);
 r.render(scene, cam);
