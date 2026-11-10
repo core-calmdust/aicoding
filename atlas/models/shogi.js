@@ -166,7 +166,7 @@
   let kayaImg = null;
   function withKaya(fn) {
     if (kayaImg && kayaImg.complete && kayaImg.naturalWidth) { fn(kayaImg); return; }
-    if (!kayaImg) { kayaImg = new Image(); kayaImg.src = '../images/atlas/shogi-kaya.webp?v=1'; }
+    if (!kayaImg) { kayaImg = new Image(); kayaImg.src = '../images/atlas/shogi-kaya.webp?v=2'; }
     kayaImg.addEventListener('load', () => fn(kayaImg), { once: true });
   }
   function boardTop(n = 9) {
