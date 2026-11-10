@@ -161,6 +161,7 @@
     if (on) { if (typeof id !== 'string' || (game && game.id === id)) return; close(true); }
     if (typeof id === 'string') {
       const G = window.Atlas && Atlas.GAMES && Atlas.GAMES.find(x => x.id === id); if (!G || !has(id)) return;
+      if (window.AtlasLazy && !AtlasLazy.loaded(id) && AtlasLazy.has3D(id)) { AtlasLazy.need(id).then(() => open(id)); return; }   // (its 3D board loads first: atlas/lazy.js)
       const bv = $('bv'), onBoard = bv && bv.classList.contains('on') && !bv.classList.contains('playing') && game && game.id === id;
       if (!onBoard) { let l = lang; try { l = localStorage.getItem('aicoding-lang') || (l => /^zh-(tw|hk|mo|hant)/i.test(l) ? 'zh-TW' : String(l).slice(0, 2))(navigator.language || 'ja'); } catch (e) {} lang = LANGS.includes(l) ? l : 'en'; game = G; }
       solo = !onBoard; fromList = false;
