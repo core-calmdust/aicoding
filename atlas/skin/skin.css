@@ -207,11 +207,10 @@ html.atlas-shogi .board-area{gap:calc(var(--cw)*.62)!important}   /* (the 2D boa
    otherwise the 360px info column is pushed off the right edge on narrower windows */
 @media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   html.atlas-shogi,html.atlas-shogi body{--cw:min(var(--cwh), calc((100vw - var(--padx) * 2 - var(--gap) - var(--rw, 360px)) / 13.65), 120px)!important}
-  html.atlas-shogi.atlas-2d,html.atlas-shogi.atlas-2d body{--cw:min(calc((var(--vh) - 116px) / 10.9), calc((100vw - var(--padx) * 2 - var(--gap) - var(--rw, 360px)) / 13.2), 120px)!important}   /* the 2D board as large as the 3D one (its wood ≈ 10 × 10.9 cells) */
 }
 /* komadai wood grain (atlas/skin/shogi.js paints --kdwood: a light procedural kaya texture, grain along the stand) */
-html.atlas-shogi:not(.atlas-2d) .hand{background:linear-gradient(rgba(236,200,128,.5),rgba(236,200,128,.5)),url(../../images/atlas/shogi-kaya.webp?v=2) 20% 10%/320% auto,#e8c47c!important}   /* 本榧, as the board (2026-11-10) */
-html.atlas-shogi:not(.atlas-2d) .hand.kd-wide{background:linear-gradient(rgba(236,200,128,.5),rgba(236,200,128,.5)),url(../../images/atlas/shogi-kaya.webp?v=2) 20% 10%/120% auto,#e8c47c!important}
+html.atlas-shogi:not(.atlas-2d) .hand{background:linear-gradient(rgba(191,152,92,.5),rgba(191,152,92,.5)),url(../../images/atlas/shogi-kaya.webp?v=2) 20% 10%/320% auto,#d0a768!important}   /* 本榧, as the board — the 3D board's tone (2026-11-10) */
+html.atlas-shogi:not(.atlas-2d) .hand.kd-wide{background:linear-gradient(rgba(191,152,92,.5),rgba(191,152,92,.5)),url(../../images/atlas/shogi-kaya.webp?v=2) 20% 10%/120% auto,#e8c47c!important}
 html.atlas-shogi.atlas-sk-metal .pc.atlas3d .k img{filter:saturate(.15) brightness(1.08) contrast(1.05)}
 html.atlas-shogi.atlas-sk-ink .pc.atlas3d .k img{filter:brightness(.62) contrast(1.15) saturate(.8)}
 html.atlas-shogi.atlas-sk-grain .pc.atlas3d .k img{filter:sepia(.25) saturate(1.2) brightness(.95)}
