@@ -38,8 +38,9 @@
     s.pucks.push(p); s.ev.push({ k: 'serve', to, id: p.id }); return p;
   }
   // the bounds of a mallet: its own half, inside the walls
-  function clampMal(m, side) {
+  function clampMal(m, side, pos) {
     const r = m.r, y0 = side === 0 ? r + .2 : -L / 2 + r, y1 = side === 0 ? L / 2 - r : -r - .2;
+    if (pos) { m.x = Math.max(-W / 2 + r, Math.min(W / 2 - r, m.x)); m.y = Math.max(y0, Math.min(y1, m.y)); return; }
     m.tx = Math.max(-W / 2 + r, Math.min(W / 2 - r, m.tx)); m.ty = Math.max(y0, Math.min(y1, m.ty));
   }
   const PORTAL = [[-W / 2 + 2.2, 0], [W / 2 - 2.2, 0]], PR = 2.8;
@@ -78,9 +79,19 @@
   function sub(s, h) {
     // mallets move toward their targets at a limited speed
     for (let i = 0; i < 2; i++) {
-      const m = s.mal[i], vmax = (m.aiCap ? MALLET_V * m.aiCap : MALLET_HUMAN) * (m.slow > 0 ? .3 : 1), dx = m.tx - m.x, dy = m.ty - m.y, d = Math.hypot(dx, dy), mv = Math.min(d, vmax * h);
-      const nx = d > 1e-6 ? m.x + dx / d * mv : m.x, ny = d > 1e-6 ? m.y + dy / d * mv : m.y;
-      m.vx = (nx - m.x) / h; m.vy = (ny - m.y) / h; m.x = nx; m.y = ny;
+      const m = s.mal[i], vmax = (m.aiCap ? MALLET_V * m.aiCap : MALLET_HUMAN) * (m.slow > 0 ? .3 : 1), dx = m.tx - m.x, dy = m.ty - m.y, d = Math.hypot(dx, dy);
+      if (m.aiCap) {
+        // (2026-11-10) the AI's hand: it speeds up and slows down like an arm (limited acceleration, easing into the target),
+        // so it never darts or jitters at an unnatural speed
+        const acc = 1500 + 2500 * m.aiCap, want = d > 1e-6 ? Math.min(vmax, Math.sqrt(2 * acc * d) * .9) : 0;
+        const wx = d > 1e-6 ? dx / d * want : 0, wy = d > 1e-6 ? dy / d * want : 0;
+        let ax = wx - (m.vx || 0), ay = wy - (m.vy || 0); const al = Math.hypot(ax, ay), lim = acc * h; if (al > lim) { ax *= lim / al; ay *= lim / al; }
+        m.vx = (m.vx || 0) + ax; m.vy = (m.vy || 0) + ay; m.x += m.vx * h; m.y += m.vy * h;
+        const cx = m.x, cy = m.y; clampMal(m, i, true); if (m.x !== cx) m.vx = 0; if (m.y !== cy) m.vy = 0;
+      } else {
+        const mv = Math.min(d, vmax * h), nx = d > 1e-6 ? m.x + dx / d * mv : m.x, ny = d > 1e-6 ? m.y + dy / d * mv : m.y;
+        m.vx = (nx - m.x) / h; m.vy = (ny - m.y) / h; m.x = nx; m.y = ny;
+      }
     }
     // monsters wander the middle band
     for (const mo of s.mons) {
