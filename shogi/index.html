@@ -487,7 +487,9 @@ body.in-lesson:has(#lessonCard.ts-compact) #coachCard:not(.ck-seq){display:none!
 body.in-lesson #coachCard.ck-seq.ck-seq{display:block!important}
 #coachCard .sq-rv{margin-top:10px}#coachCard .sq-rv h4{margin:0 0 6px;font-size:13.5px;color:var(--accent)}#coachCard .sq-line{margin:0 0 8px;line-height:1.9;font-size:14.5px}#coachCard .sq-line .ok{color:#6fd3a0;font-weight:700}#coachCard .sq-line .df{color:#f2c060;font-weight:700}#coachCard .sq-line .op{color:var(--muted)}
 html.atlas-skin #coachCard .sq-line .ok{color:#1e8a55}html.atlas-skin #coachCard .sq-line .df{color:#b8771a}   /* lessons: the 3-move practice's guidance (seqCoachHtml) */
-#lessonCard.ts-compact :is(#lsHint,#lsAuto,#lsNext,#lsToList){display:none!important}
+#lessonCard.ts-compact:not(.st-cmp) :is(#lsHint,#lsAuto,#lsNext,#lsToList){display:none!important}
+#lessonCard.st-cmp .ts-b{display:none!important}
+#lessonCard.st-cmp .cb-bar{margin-top:8px!important}   /* the same gap as between 「この局面から…」 and 「定跡の説明に戻る」 */
 #lessonCard:not(.ts-compact) .ts-b{display:none!important}
 #lessonCard.ts-compact .cb-bar .cb-ic.ts-b[data-cap]{gap:6px!important}   /* no hidden text label inside: same caption line as 一覧 */   /* tsume: no coach panel at all (2026-11-10) */
 body.ts-noopp .hand.top{visibility:hidden;height:0!important;min-height:0!important;padding:0!important;margin:0!important;border:0!important;overflow:hidden}
@@ -4294,7 +4296,7 @@ function startStudy(oi) {
   lesson = { study: true, gi: oi, g, i: 0, probs: [], pts: [], results: [], k: 0, waiting: false };
   document.body.classList.add('in-lesson');
   if (!game) game = newRecord(HANDI[0], 0);
-  showStudy();
+  showStudy(); tsBar();
 }
 function showStudy() {
   const g = lesson.g, st = g.study, i = lesson.i, N = st.steps.length;
@@ -4635,6 +4637,7 @@ const TSB_CAP = {   // hint, retry, answer, list, quit
   ko: ['힌트', '다시', '정답', '목록', '그만'], es: ['Pista', 'Otra vez', 'Solución', 'Lista', 'Salir'], fr: ['Indice', 'Rejouer', 'Solution', 'Liste', 'Quitter'], pt: ['Dica', 'De novo', 'Solução', 'Lista', 'Sair'],
   de: ['Tipp', 'Nochmal', 'Lösung', 'Liste', 'Beenden'], hi: ['संकेत', 'फिर से', 'उत्तर', 'सूची', 'छोड़ें'], ar: ['تلميح', 'أعد', 'الحل', 'القائمة', 'خروج'], ru: ['Подсказка', 'Ещё раз', 'Ответ', 'Список', 'Выйти'],
   id: ['Petunjuk', 'Ulangi', 'Jawaban', 'Daftar', 'Keluar'], tr: ['İpucu', 'Tekrar', 'Çözüm', 'Liste', 'Çık'] };
+const TSB_PLAY = { ja: '再生', en: 'Play', zh: '播放', 'zh-TW': '播放', ko: '재생', es: 'Reproducir', fr: 'Lecture', pt: 'Reproduzir', de: 'Abspielen', hi: 'चलाएँ', ar: 'تشغيل', ru: 'Воспр.', id: 'Putar', tr: 'Oynat' };
 const tsIcon = k => `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>${TSB_I[k].replace(/"/g, "'")}</svg>`)}")`;
 const tsAct = {
   tsBH() { if (lesson && lesson.seq) { seqHint(); return; } if (lesson && !lesson.retry && !lesson.answered) $('#lsHint').click(); },
@@ -4651,21 +4654,27 @@ const tsAct = {
 };
 function tsBar() {
   const card = $('#lessonCard'), bar = card && card.querySelector('.cb-bar'); if (!bar) return;
-  const on = !!(lesson && lesson.cur && ((lesson.endless && lesson.cur.kind === 'tsume') || lesson.seq)), tools = bar.querySelector('.cb-tools'), main = bar.querySelector('.cb-main');   // 詰将棋 and the lessons' problems (2026-11-10)
-  card.classList.toggle('ts-compact', on);
+  const stOn = !!(lesson && lesson.study);   // the opening study (解説): the same compact card — quit at the top, captioned buttons, no coach (2026-11-10)
+  const on = stOn || !!(lesson && lesson.cur && ((lesson.endless && lesson.cur.kind === 'tsume') || lesson.seq)), tools = bar.querySelector('.cb-tools'), main = bar.querySelector('.cb-main');   // 詰将棋 and the lessons' problems (2026-11-10)
+  card.classList.toggle('ts-compact', on); card.classList.toggle('st-cmp', stOn);
   // the title row: 「創作 3手詰 …… 18/120問目」; the head row's right end: the quit button (2026-11-10)
   let th = $('#tsHead'); const ti = $('#lsTitle');
   if (!th && ti) { th = document.createElement('div'); th.id = 'tsHead'; ti.before(th); th.appendChild(ti); const n = document.createElement('span'); n.id = 'tsNo'; th.appendChild(n); }
   const q = $('#lsQuit'), lh = card.querySelector(':scope > .lh');
   if (on) {
     const NO = { ja: '{k}/{n}問目', zh: '第{k}/{n}题', 'zh-TW': '第{k}/{n}題', ko: '{k}/{n}번째' }, n = lesson.endless ? (lesson.g ? lesson.g.problems.length : 0) : lesson.probs.length;
-    $('#tsNo').textContent = n ? (NO[LANG] || '{k}/{n}').replace('{k}', lesson.k + 1).replace('{n}', n) : '';
+    $('#tsNo').textContent = !stOn && n ? (NO[LANG] || '{k}/{n}').replace('{k}', lesson.k + 1).replace('{n}', n) : '';
     if (q && lh && q.parentElement !== lh) lh.appendChild(q);
   } else if (q && q.parentElement !== bar) { bar.appendChild(q); }
   // composed tsume: the defender holds every remaining piece by convention — its stand is not shown
   document.body.classList.toggle('ts-noopp', !!(on && lesson.endless && lesson.cur && lesson.cur.conv));
   if (!on) return;
   const C = TSB_CAP[LANG] || TSB_CAP.en;
+  if (stOn) {
+    const bl = $('#lsList'), au = $('#lsAuto');
+    if (bl) bl.dataset.cap = C[3]; if (au) au.dataset.cap = TSB_PLAY[LANG] || TSB_PLAY.en; if (q) q.dataset.cap = C[4];
+    return;
+  }
   const mk = (id, ic, cap, label, tool) => {
     let b = $('#' + id);
     if (!b) { b = document.createElement('button'); b.id = id; b.className = tool ? 'cb-ic ts-b' : 'cb-t cb-nx ts-b'; if (ic) b.style.setProperty('--cb-i', tsIcon(ic)); b.onclick = e => { e.stopPropagation(); tsAct[id](); }; }
@@ -4853,21 +4862,23 @@ function seqCoachHtml() {
   const esc = CoachKit.esc, C = window.ShogiCoach ? ShogiCoach.tx : k => k;
   let h = `<h3 class="ck-h">${CoachKit.ICON.coach}<span>${esc(C('head'))}</span><small>${Math.min(S.i + (S.done ? 0 : 1), SEQ_N)}/${SEQ_N}</small></h3>`;
   if (!S.steps.length) h += `<p class="ck-muted">${esc(sqt('intro', { n: SEQ_N }))}</p>`;
+  const head = h; h = '';   // (finished: the total and the review go first, right under the head — 2026-11-10)
   const list = S.steps.slice().reverse();   // the newest first
   for (const st of list) {
     const g = { best: 0, good: 1, dubious: 2, bad: 3 }[st.q], title = st.ans ? sqt('ans', { i: st.i + 1, m: st.kif }) : sqt('step', { i: st.i + 1, m: st.kif, q: t('q.' + st.q) }) + '　' + t('ls.pts', { p: st.pts });
     h += CoachKit.verdict(st.ans ? 2 : g, esc(title), st.why);
   }
   if (S.done) {
-    h += `<p class="ck-muted"><b>${esc(sqt('total', { n: SEQ_N, p: S.total }))}</b></p>`;
+    const steps = h; h = `<p class="ck-muted"><b>${esc(sqt('total', { n: SEQ_N, p: S.total }))}</b></p>`;
     const RV = { ja: ['振り返り：定跡の正しい進行', '盤で再生', '定跡を調べています…', '緑は定跡どおり、黄は定跡と違った手。(AI)は定跡が途切れた先のAIの手。'], en: ['Review: the book line', 'Play on the board', 'Looking up the book…', 'Green: as in the book. Yellow: off the book. (AI): past the book, the engine’s move.'], zh: ['复盘：定式的正确进行', '在棋盘上播放', '正在查定式…', '绿色＝符合定式，黄色＝偏离定式。(AI)＝定式之后AI的着法。'], 'zh-TW': ['復盤：定跡的正確進行', '在棋盤上播放', '正在查定跡…', '綠色＝符合定跡，黃色＝偏離定跡。(AI)＝定跡之後AI的著法。'], ko: ['복기: 정석의 올바른 진행', '판에서 재생', '정석을 찾는 중…', '초록은 정석대로, 노랑은 정석과 다른 수. (AI)는 정석 이후 AI의 수.'] }[LANG] || ['Review: the book line', 'Play on the board', 'Looking up the book…', 'Green: as in the book. Yellow: off the book. (AI): past the book, the engine’s move.'];
     if (S.ideal) {
       const ks = lineKanji(lesson.cur.sfen, S.ideal), mine = lesson.played;
       h += `<div class="ck-sec sq-rv"><h4>${esc(RV[0])}</h4><p class="sq-line" title="${esc(RV[3])}">${ks.map((k, i) => `<span class="${i % 2 ? 'op' : mine[i] === S.ideal[i] ? 'ok' : 'df'}">${esc(k)}${S.idealAi && S.idealAi.has(i) ? '<small>(AI)</small>' : ''}</span>`).join(' ')}</p><p class="ck-muted" style="margin:0 0 8px;font-size:12.5px">${esc(RV[3])}</p><button type="button" class="ck-rvgo" data-sq="play">▶ ${esc(RV[1])}</button></div>`;
     } else h += `<p class="ck-calc">${esc(RV[2])}</p>`;
+    h += steps;
   }
   else if (S.busy) h += `<p class="ck-calc">${esc(sqt(S.busy))}</p>`;
-  return h;
+  return head + h;
 }
 function seqShow() { if (window.ShogiCoach) ShogiCoach.render(); }
 function seqStatus() {
