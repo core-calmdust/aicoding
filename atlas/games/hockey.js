@@ -36,6 +36,7 @@
     'it.giant': ['{p}のパッドが巨大化！', '{p}: giant mallet!', '{p}的球拍变大！', '{p}的球拍變大！', '{p}의 패드가 거대화！', '{p}: ¡mazo gigante!', '{p} : maillet géant !', '{p}: taco gigante!', '{p}: Riesenschläger!', '{p}: гигантская бита!', '{p}: dev raket!', '{p}: pemukul raksasa!', '{p}: बड़ा मैलेट!', '{p}: مضرب عملاق!'],
     'it.shield': ['{p}のゴールにシールド！', '{p}: goal shield!', '{p}的球门有护盾！', '{p}的球門有護盾！', '{p}의 골에 실드！', '{p}: ¡escudo en la portería!', '{p} : bouclier au but !', '{p}: escudo no gol!', '{p}: Torschild!', '{p}: щит у ворот!', '{p}: kale kalkanı!', '{p}: perisai gawang!', '{p}: गोल पर ढाल!', '{p}: درع للمرمى!'],
     'it.freeze': ['相手のパッドが凍った！', 'Opponent frozen!', '对手被冻住！', '對手被凍住！', '상대 패드가 얼었다！', '¡Rival congelado!', 'Adversaire gelé !', 'Rival congelado!', 'Gegner eingefroren!', 'Соперник заморожен!', 'Rakip dondu!', 'Lawan membeku!', 'विरोधी जम गया!', 'تجمّد الخصم!'],
+    'it.worm': ['{p}がワームホールを広げた！', '{p} widened the wormholes!', '{p}扩大了虫洞！', '{p}擴大了蟲洞！', '{p}이(가) 웜홀을 넓혔다!', '¡{p} agrandó los agujeros de gusano!', '{p} élargit les trous de ver !', '{p} alargou os buracos de minhoca!', '{p} vergrößert die Wurmlöcher!', '{p} расширил червоточины!', '{p} solucan deliklerini büyüttü!', '{p} memperbesar lubang cacing!', '{p} ने वर्महोल बड़े किए!', '{p} وسّع الثقوب الدودية!'],
     paused: ['一時停止中（クリックで再開）', 'Paused (click to resume)', '已暂停（点击继续）', '已暫停（點擊繼續）', '일시 정지 (클릭하면 재개)', 'En pausa (clic para seguir)', 'En pause (clic pour reprendre)', 'Pausado (clique para continuar)', 'Pause (Klick zum Weiterspielen)', 'Пауза (нажми, чтобы продолжить)', 'Duraklatıldı (devam için tıkla)', 'Dijeda (klik untuk lanjut)', 'रुका (जारी रखने के लिए क्लिक)', 'متوقف (انقر للمتابعة)'],
   };
   // (2026-11-10) the boards: each one plays differently (hockey/engine.js BOARDS) — [name, one line], in LG order
@@ -43,9 +44,9 @@
     classic: [['クラシック', '特別なルールなし。腕だけで勝負'], ['Classic', 'No tricks: skill only'], ['经典', '没有特殊规则，只拼技术'], ['經典', '沒有特殊規則，只拼技術'], ['클래식', '특수 규칙 없이 실력 승부'], ['Clásico', 'Sin trucos: solo habilidad'], ['Classique', 'Sans gadget : que du talent'], ['Clássico', 'Sem truques: só habilidade'], ['Klassisch', 'Keine Tricks, nur Können'], ['Классика', 'Без хитростей — только умение'], ['Klasik', 'Hile yok, sadece beceri'], ['Klasik', 'Tanpa trik, murni keterampilan'], ['क्लासिक', 'कोई चाल नहीं, सिर्फ़ हुनर'], ['كلاسيك', 'بلا حيل: المهارة فقط']],
     air: [['エアホッケー', '空気でパックがすべる。止まりにくく、よく跳ねる'], ['Air hockey', 'The puck glides on air: it hardly slows and bounces well'], ['气垫球', '冰球在气垫上滑行，不易停下，反弹有力'], ['氣墊球', '冰球在氣墊上滑行，不易停下，反彈有力'], ['에어하키', '공기 위를 미끄러지는 퍽. 잘 멈추지 않고 잘 튄다'], ['Air hockey', 'El disco se desliza sobre aire: casi no frena'], ['Air-hockey', 'Le palet glisse sur l’air : il ralentit à peine'], ['Air hockey', 'O disco desliza no ar: quase não desacelera'], ['Airhockey', 'Der Puck gleitet auf Luft und wird kaum langsamer'], ['Аэрохоккей', 'Шайба скользит на воздухе и почти не тормозит'], ['Hava hokeyi', 'Pul havada kayar: zor yavaşlar, iyi seker'], ['Air hockey', 'Keping meluncur di atas udara, nyaris tak melambat'], ['एयर हॉकी', 'पक हवा पर फिसलता है: मुश्किल से धीमा होता है'], ['هوكي الهواء', 'القرص ينزلق على الهواء ولا يكاد يتباطأ']],
     neon: [['ネオン', 'モンスターがうろつき、アイテムが出るゲーミング盤'], ['Neon', 'A gaming board: monsters roam and items pop up'], ['霓虹', '电竞台面：怪物游荡，道具出现'], ['霓虹', '電競台面：怪物遊蕩，道具出現'], ['네온', '몬스터가 돌아다니고 아이템이 나오는 게이밍 보드'], ['Neón', 'Tablero gamer: monstruos y objetos'], ['Néon', 'Plateau gaming : monstres et objets'], ['Neon', 'Tabuleiro gamer: monstros e itens'], ['Neon', 'Gaming-Brett: Monster und Items'], ['Неон', 'Игровое поле: монстры и предметы'], ['Neon', 'Oyuncu masası: canavarlar ve eşyalar'], ['Neon', 'Papan gaming: monster dan item'], ['नियॉन', 'गेमिंग बोर्ड: राक्षस घूमते हैं, आइटम आते हैं'], ['نيون', 'لوحة ألعاب: وحوش تتجول وأدوات تظهر']],
-    pinball: [['ピンボール', '4つのバンパーがはじき、パックは2つ'], ['Pinball', 'Four bumpers kick back, and two pucks at once'], ['弹珠台', '四个弹簧柱反弹，两个冰球同时上场'], ['彈珠台', '四個彈簧柱反彈，兩個冰球同時上場'], ['핀볼', '범퍼 4개가 튕겨 내고 퍽은 2개'], ['Pinball', 'Cuatro rebotadores y dos discos a la vez'], ['Flipper', 'Quatre bumpers et deux palets à la fois'], ['Pinball', 'Quatro bumpers e dois discos ao mesmo tempo'], ['Flipper', 'Vier Bumper und zwei Pucks zugleich'], ['Пинбол', 'Четыре отбойника и две шайбы сразу'], ['Pinball', 'Dört tampon ve aynı anda iki pul'], ['Pinball', 'Empat bumper dan dua keping sekaligus'], ['पिनबॉल', 'चार बंपर और एक साथ दो पक'], ['بينبول', 'أربعة مصدات وقرصان معًا']],
-    gear: [['からくり工房', '真ん中で回るバーがパックをはじき返す'], ['Clockwork', 'A turning bar in the middle bounces the puck back'], ['机关工坊', '中间旋转的横杆会弹回冰球'], ['機關工坊', '中間旋轉的橫桿會彈回冰球'], ['태엽 공방', '가운데서 도는 막대가 퍽을 튕겨 낸다'], ['Engranajes', 'Una barra giratoria en el centro devuelve el disco'], ['Engrenages', 'Une barre tournante au centre renvoie le palet'], ['Engrenagens', 'Uma barra giratória no meio rebate o disco'], ['Uhrwerk', 'Ein drehender Balken in der Mitte schlägt zurück'], ['Механизм', 'Вращающаяся планка в центре отбивает шайбу'], ['Çark', 'Ortada dönen çubuk pulu geri sektirir'], ['Roda gigi', 'Palang berputar di tengah memantulkan keping'], ['घड़ी-कारखाना', 'बीच में घूमती छड़ पक को लौटा देती है'], ['التروس', 'عارضة تدور في الوسط ترد القرص']],
-    space: [['スペース', '左右のワープホールに入ると反対側から出てくる'], ['Space', 'Warp holes on both sides send the puck across'], ['太空', '左右两侧的虫洞会把冰球送到对面'], ['太空', '左右兩側的蟲洞會把冰球送到對面'], ['스페이스', '좌우 워프홀에 들어가면 반대쪽에서 나온다'], ['Espacio', 'Agujeros de warp a los lados cruzan el disco'], ['Espace', 'Des trous de distorsion envoient le palet de l’autre côté'], ['Espaço', 'Buracos de dobra nos lados levam o disco ao outro'], ['Weltraum', 'Warp-Löcher an den Seiten schicken den Puck hinüber'], ['Космос', 'Варп-дыры по бокам перебрасывают шайбу'], ['Uzay', 'Yanlardaki solucan delikleri pulu karşıya atar'], ['Luar angkasa', 'Lubang warp di sisi memindahkan keping ke seberang'], ['अंतरिक्ष', 'दोनों ओर के वार्प-छेद पक को उस पार भेजते हैं'], ['الفضاء', 'ثقوب الالتواء على الجانبين ترسل القرص للجهة الأخرى']],
+    pinball: [['ピンボール', '4つのバンパーがパックを強くはじき返す'], ['Pinball', 'Four bumpers kick the puck back hard'], ['弹珠台', '四个弹簧柱把冰球用力弹回'], ['彈珠台', '四個彈簧柱把冰球用力彈回'], ['핀볼', '범퍼 4개가 퍽을 세게 튕겨 낸다'], ['Pinball', 'Cuatro rebotadores devuelven el disco con fuerza'], ['Flipper', 'Quatre bumpers renvoient le palet avec force'], ['Pinball', 'Quatro bumpers rebatem o disco com força'], ['Flipper', 'Vier Bumper schlagen den Puck kräftig zurück'], ['Пинбол', 'Четыре отбойника сильно отбивают шайбу'], ['Pinball', 'Dört tampon pulu sertçe geri sektirir'], ['Pinball', 'Empat bumper memantulkan keping dengan keras'], ['पिनबॉल', 'चार बंपर पक को ज़ोर से लौटाते हैं'], ['بينبول', 'أربعة مصدات ترد القرص بقوة']],
+    gear: [['からくり工房', 'からくり仕掛けのバーが回りながら左右にゆっくり動く'], ['Clockwork', 'A clockwork bar turns and slowly drifts side to side'], ['机关工坊', '机关横杆一边旋转一边缓缓左右移动'], ['機關工坊', '機關橫桿一邊旋轉一邊緩緩左右移動'], ['태엽 공방', '태엽 막대가 돌면서 좌우로 천천히 움직인다'], ['Engranajes', 'Una barra de engranajes gira y se desplaza despacio de lado a lado'], ['Engrenages', 'Une barre à engrenages tourne et glisse lentement de gauche à droite'], ['Engrenagens', 'Uma barra de engrenagens gira e desliza devagar de um lado ao outro'], ['Uhrwerk', 'Ein Zahnrad-Balken dreht sich und wandert langsam hin und her'], ['Механизм', 'Шестерёнчатая планка вращается и медленно ходит из стороны в сторону'], ['Çark', 'Çarklı çubuk döner ve yavaşça sağa sola kayar'], ['Roda gigi', 'Palang roda gigi berputar sambil bergeser pelan ke kiri-kanan'], ['घड़ी-कारखाना', 'घड़ी-जैसी छड़ घूमती है और धीरे-धीरे दाएँ-बाएँ चलती है'], ['التروس', 'عارضة تروس تدور وتنزلق ببطء يمينًا ويسارًا']],
+    space: [['スペース', '無重力ですべるパック。ワープホールと、それを広げるアイテム'], ['Space', 'Zero gravity: the puck glides. Warp holes, and items that make them grow'], ['太空', '失重中冰球滑行。有虫洞，还有让虫洞变大的道具'], ['太空', '失重中冰球滑行。有蟲洞，還有讓蟲洞變大的道具'], ['스페이스', '무중력이라 퍽이 미끄러진다. 워프홀과 그것을 키우는 아이템'], ['Espacio', 'Sin gravedad: el disco se desliza. Agujeros de warp y objetos que los agrandan'], ['Espace', 'Apesanteur : le palet glisse. Des trous de distorsion et des objets qui les agrandissent'], ['Espaço', 'Gravidade zero: o disco desliza. Buracos de dobra e itens que os aumentam'], ['Weltraum', 'Schwerelos: der Puck gleitet. Warp-Löcher und Items, die sie vergrößern'], ['Космос', 'Невесомость: шайба скользит. Варп-дыры и предметы, что их расширяют'], ['Uzay', 'Yerçekimsiz: pul kayar. Solucan delikleri ve onları büyüten eşyalar'], ['Luar angkasa', 'Tanpa gravitasi: keping meluncur. Lubang warp dan item yang membesarkannya'], ['अंतरिक्ष', 'शून्य गुरुत्व: पक फिसलता है। वार्प-छेद और उन्हें बड़ा करने वाले आइटम'], ['الفضاء', 'انعدام الجاذبية: القرص ينزلق. ثقوب التواء وأدوات تكبّرها']],
   };
   const boardTxt = (b, l) => (BT[b] || BT.classic)[li(l)] || (BT[b] || BT.classic)[1];
   // the modes: [name, one line]
@@ -199,7 +200,7 @@ html.hk-on #bv > .npc-float .npc-pic{width:36px!important;height:36px!important}
     let mal = [U.mallet(0), U.mallet(1)]; mal.forEach(m => board.add(m));
     const pk = new Map();   // puck id → mesh
     let extra = [];         // the mode's own pieces
-    const monM = [], itemM = new Map(); let barM = null, shieldM = [null, null];
+    const monM = [], itemM = new Map(), portM = []; let barM = null, shieldM = [null, null];
     const put = (g, x, y, h) => { const [a, b] = U.xz(x, y); g.position.set(a, Y + (h || 0), b); };
     // (2026-11-10) before the match (the mode menu) the mallets wait at their own ends — they were both at the centre spot, where
     // the yellow one's ball read as a puck — and a puck sits on the centre spot
@@ -209,9 +210,9 @@ html.hk-on #bv > .npc-float .npc-pic{width:36px!important;height:36px!important}
     // leaves a glowing trail, every hit sends out a ring of light and a goal flashes the table. Pinball: the rim lights
     // flash when a bumper kicks.
     const fx = (() => {
-      let trail = [], rings = [], flash = 0, hist = [];
+      let trail = [], rings = [], flash = 0, hist = [], stars = [], shoot = null, shootT = 2;
       const neon = () => look === 'neon';
-      function reset() { trail.forEach(m => m.parent && m.parent.remove(m)); rings.forEach(r => r.m.parent && r.m.parent.remove(r.m)); trail = []; rings = []; hist = []; flash = 0; }
+      function reset() { stars.forEach(m => m.parent && m.parent.remove(m)); stars = []; if (shoot && shoot.parent) shoot.parent.remove(shoot); shoot = null; trail.forEach(m => m.parent && m.parent.remove(m)); rings.forEach(r => r.m.parent && r.m.parent.remove(r.m)); trail = []; rings = []; hist = []; flash = 0; }
       function ensureTrail() {
         if (trail.length || !TH) return;
         for (let i = 0; i < 12; i++) { const m = new TH.Mesh(new TH.CircleGeometry(D.RP * K * (1 - i / 16), 20), new TH.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, blending: TH.AdditiveBlending, depthWrite: false })); m.rotation.x = -Math.PI / 2; board.add(m); trail.push(m); }
@@ -230,6 +231,26 @@ html.hk-on #bv > .npc-float .npc-pic{width:36px!important;height:36px!important}
           ensureTrail();
           const p = s && s.pucks[0]; if (p && !(p.wait > 0)) { hist.unshift([p.x, p.y, Math.hypot(p.vx, p.vy)]); } else hist.unshift(null); hist.length = Math.min(hist.length, 24);
           trail.forEach((m, i) => { const q = hist[i * 2 + 1]; if (!q || q[2] < 25) { m.material.opacity = 0; return; } put(m, q[0], q[1], .012); m.material.color.setHSL((h + i * .04) % 1, 1, .6); m.material.opacity = .5 * (1 - i / 12) * Math.min(1, q[2] / 90); });
+        } else if (look === 'space') {
+          // twinkling stars over the field (three layers blinking out of step) and now and then a shooting star
+          if (!stars.length && TH) {
+            const R = (k => () => (k = (k * 16807) % 2147483647) / 2147483647)(4242);
+            for (let l = 0; l < 3; l++) {
+              const pos = [], n = 46; for (let i = 0; i < n; i++) { const [a, b] = U.xz((R() - .5) * (D.W - 2), (R() - .5) * (D.L - 2)); pos.push(a, Y + .006 + l * .002, b); }
+              const gm = new TH.BufferGeometry(); gm.setAttribute('position', new TH.Float32BufferAttribute(pos, 3));
+              const pm = new TH.Points(gm, new TH.PointsMaterial({ color: [0xffffff, 0xc9b8ff, 0x9fe8ff][l], size: [.05, .035, .07][l], transparent: true, opacity: .8, blending: TH.AdditiveBlending, depthWrite: false }));
+              board.add(pm); stars.push(pm);
+            }
+          }
+          stars.forEach((pm, l) => { pm.material.opacity = .25 + .75 * Math.pow(.5 + .5 * Math.sin(now / (380 + l * 170) + l * 2.1), 2); });
+          if (M.strip) M.strip.emissive.setHSL(.72 + Math.sin(now / 1400) * .06, 1, .55);
+          if (M.field) M.field.emissive.setScalar(.72 + Math.sin(now / 900) * .06 + flash);
+          shootT -= dt;
+          if (shootT <= 0 && !shoot && TH) {
+            shoot = new TH.Mesh(new TH.PlaneGeometry(D.RP * K * 4, D.RP * K * .25), new TH.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .9, blending: TH.AdditiveBlending, depthWrite: false }));
+            shoot.rotation.x = -Math.PI / 2; const a = Math.random() * Math.PI * 2; shoot.rotation.z = a; shoot.userData = { t: 0, x: (Math.random() - .5) * 20, y: (Math.random() - .5) * 40, dx: Math.cos(a) * 60, dy: -Math.sin(a) * 60 }; board.add(shoot);
+          }
+          if (shoot) { const u2 = shoot.userData; u2.t += dt; put(shoot, u2.x + u2.dx * u2.t, u2.y + u2.dy * u2.t, .015); shoot.material.opacity = .9 * Math.max(0, 1 - u2.t / .45); if (u2.t > .45) { board.remove(shoot); shoot = null; shootT = 2 + Math.random() * 4; } }
         } else if (look === 'pinball' && M.strip) { M.strip.emissiveIntensity = 1.6 + flash * 3; }
         flash = Math.max(0, flash - dt * 3);
         for (let i = rings.length - 1; i >= 0; i--) { const r = rings[i]; r.t += dt; const k = r.t / .4; r.m.scale.setScalar(1 + k * 2.2 * r.big); r.m.material.opacity = .95 * (1 - k); if (k >= 1) { r.m.parent && r.m.parent.remove(r.m); r.m.geometry.dispose(); r.m.material.dispose(); rings.splice(i, 1); } }
@@ -247,11 +268,11 @@ html.hk-on #bv > .npc-float .npc-pic{width:36px!important;height:36px!important}
       pk.clear(); fitNow(); kick(500); hud(); fx.reset();
     }
     function setupMode() {
-      extra.forEach(g => board.remove(g)); extra = []; monM.length = 0; barM = null;
+      extra.forEach(g => board.remove(g)); extra = []; monM.length = 0; portM.length = 0; barM = null;
       if (E.has(s, 'block')) { barM = U.bar(); put(barM, 0, 0); board.add(barM); extra.push(barM); }
       s.mons.forEach((m, i) => { const g = U.monster(i); board.add(g); monM.push(g); extra.push(g); });
       if (E.has(s, 'bumper')) E.BUMPERS.forEach(([x, y]) => { const g = U.bumper(); put(g, x, y); board.add(g); extra.push(g); });
-      if (E.has(s, 'warp')) E.PORTAL.forEach(([x, y], k) => { const g = U.portal(k); put(g, x, y); board.add(g); extra.push(g); });
+      if (E.has(s, 'warp')) E.PORTAL.forEach(([x, y], k) => { const g = U.portal(k); put(g, x, y); board.add(g); extra.push(g); portM.push(g); });
       for (const side of [0, 1]) { const g = U.shield(); put(g, 0, (side === 0 ? 1 : -1) * (D.L / 2 - .4)); g.visible = false; board.add(g); extra.push(g); shieldM[side] = g; }
     }
     let fxLast = 0;
@@ -263,7 +284,9 @@ html.hk-on #bv > .npc-float .npc-pic{width:36px!important;height:36px!important}
       for (const p of s.pucks) { let g = pk.get(p.id); if (!g) { g = U.puck(); board.add(g); pk.set(p.id, g); } seen.add(p.id); put(g, p.x, p.y); g.visible = true; const f = p.fire > 0; g.children[0].scale.set(f ? 1.06 : 1, 1, f ? 1.06 : 1); }
       for (const [id, g] of pk) if (!seen.has(id)) { board.remove(g); pk.delete(id); }
       s.mons.forEach((m, i) => { const g = monM[i]; if (!g) return; put(g, m.x, m.y); g.rotation.y = Math.atan2(m.vx, m.vy); const b = g.userData.body; b.scale.y = .8 + Math.sin(now / 120 + i) * .06; });
-      if (barM) barM.rotation.y = -s.bar;
+      if (barM) { barM.rotation.y = -s.bar; if (s.barMove) put(barM, s.barX || 0, 0); const cg = barM.userData.cogs; if (cg) cg.forEach(c => { c.rotation.y = now / 400; }); }
+      // the wormholes grow while the 'worm' item lasts (eased)
+      portM.forEach(g => { const want = (s.pr || E.PR) / E.PR, k = g.scale.x + (want - g.scale.x) * .12; g.scale.set(k, 1, k); g.rotation.y = now / 900 * (g === portM[0] ? 1 : -1); });
       const ids = new Set();
       s.items.forEach(it => { const key = it.k + ':' + it.x.toFixed(2) + ':' + it.y.toFixed(2); ids.add(key); let g = itemM.get(key); if (!g) { g = U.item(it.k); board.add(g); itemM.set(key, g); } put(g, it.x, it.y, Math.sin(now / 300) * .03); g.userData.coin.rotation.y = now / 500; g.visible = !(it.t > 10.5 && Math.floor(now / 120) % 2); });
       for (const [k, g] of itemM) if (!ids.has(k)) { board.remove(g); itemM.delete(k); }

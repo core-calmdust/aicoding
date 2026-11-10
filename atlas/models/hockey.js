@@ -159,8 +159,8 @@
     return g;
   }
   // item tokens: a floating coin with its symbol on both faces
-  const ITEMC = { speed: '#ff5a2a', split: '#36b4ff', giant: '#2fbf6a', shield: '#8a5cd8', freeze: '#5ad8ff' };
-  const ITEMS = { speed: '⚡', split: '✦', giant: '⬤', shield: '▮', freeze: '❄' };
+  const ITEMC = { speed: '#ff5a2a', split: '#36b4ff', giant: '#2fbf6a', shield: '#8a5cd8', freeze: '#5ad8ff', worm: '#a46bff' };
+  const ITEMS = { speed: '⚡', split: '✦', giant: '⬤', shield: '▮', freeze: '❄', worm: '◎' };
   function itemTex(k) {
     return X.canvasTex('hkItem' + k, 128, 128, (g, S) => {
       g.fillStyle = ITEMC[k]; g.beginPath(); g.arc(S / 2, S / 2, S / 2, 0, 7); g.fill();
@@ -176,8 +176,26 @@
     g.userData = { coin, kind: k };
     return g;
   }
+  // (2026-11-10) the clockwork board's bar: a brass beam with a big cog at the hub and a small cog at each end, rivets
+  function gearBar() {
+    const TT = T(), g = new TT.Group(), BAR = 9, r = 1 * K;
+    const brass = mat('gearBrass', () => phys({ color: '#c99a45', roughness: .28, metalness: 1, envMapIntensity: 1.2 }));
+    const steel = mat('gearSteel', () => phys({ color: '#6c6a66', roughness: .35, metalness: 1 }));
+    const cog = (R, n, h) => { const c = new TT.Group(); const disc = new TT.Mesh(new TT.CylinderGeometry(R * .86, R * .86, h, 28), brass); c.add(disc);
+      for (let k = 0; k < n; k++) { const a = k / n * Math.PI * 2, t = new TT.Mesh(new TT.BoxGeometry(R * .26, h, R * .32), brass); t.position.set(Math.cos(a) * R * .92, 0, Math.sin(a) * R * .92); t.rotation.y = -a; c.add(t); }
+      const hub = new TT.Mesh(new TT.CylinderGeometry(R * .3, R * .3, h * 1.3, 16), steel); c.add(hub);
+      for (let k = 0; k < 5; k++) { const a = k / 5 * Math.PI * 2, h2 = new TT.Mesh(new TT.CylinderGeometry(R * .12, R * .12, h * 1.1, 10), steel); h2.position.set(Math.cos(a) * R * .58, 0, Math.sin(a) * R * .58); c.add(h2); }
+      c.traverse(o => { o.castShadow = true; }); return c; };
+    const beam = new TT.Mesh(new TT.BoxGeometry(2 * BAR * K, r * 1.3, r * 1.5), brass); beam.position.y = r * 1.1; beam.castShadow = true; g.add(beam);
+    for (let k = -3; k <= 3; k++) { if (!k) continue; const rv = new TT.Mesh(new TT.SphereGeometry(r * .22, 10, 8), steel); rv.position.set(k * BAR / 3.6 * K, r * 1.8, 0); g.add(rv); }
+    const big = cog(r * 2.6, 14, r * .9); big.position.y = r * 1.9; g.add(big);
+    for (const sx of [-1, 1]) { const sm = cog(r * 1.15, 9, r * 1.3); sm.position.set(sx * BAR * K, r * 1.1, 0); g.add(sm); }
+    g.userData.cogs = [big];
+    return g;
+  }
   // block mode: a chrome bar (capsule) turning round a hub
   function bar(look) {
+    if (look === 'gear') return gearBar();
     const TT = T(), g = new TT.Group(), BAR = 9, r = 1 * K, chrome = mat('chrome' + look, () => { const m = phys({ color: look === 'neon' ? '#c8f4ff' : '#dfe3ea', roughness: .12, metalness: 1, envMapIntensity: 1.3 }); if (look === 'neon') { m.emissive = lin('#3ce6ff'); m.emissiveIntensity = .4; } return m; });
     const rod = new TT.Mesh(geo('barRod', () => { const q = new TT.CylinderGeometry(r, r, 2 * BAR * K, 18); q.rotateZ(Math.PI / 2); return q; }), chrome); rod.position.y = r * 1.1; rod.castShadow = true; g.add(rod);
     for (const sx of [-1, 1]) { const e = new TT.Mesh(geo('barEnd', () => new TT.SphereGeometry(r, 16, 12)), chrome); e.position.set(sx * BAR * K, r * 1.1, 0); g.add(e); }
