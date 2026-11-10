@@ -96,6 +96,8 @@ html[dir=rtl] .cb-cmp .cb-qp::before,html[lang=ar] .cb-cmp .cb-qp::before{transf
 .cb-cmp > .lh .cb-qp.hidden{display:none!important}
 html.atlas-skin .cb-cmp > .lh .cb-qp{background:#fff!important;border:2px solid #ead9b6!important;color:#4a5068!important;box-shadow:0 2px 0 #ead9b6!important}
 body.in-puzzle #coachCard{display:none!important}   /* no coach panel during puzzles */
+body.in-lesson:has(#lessonCard.cb-st) #coachCard{display:none!important}   /* …nor during an opening study (解説), 2026-11-10 */
+#lessonCard.cb-st .cb-bar{margin-top:8px}
 .cb-cmp .pz-goal{background:none!important;border:0!important;padding:0!important;margin:0 0 4px!important;box-shadow:none!important}   /* the goal as plain text */
 .cb-cmp .cb-bar{flex-wrap:nowrap!important}
 .cb-cmp .cb-bar .cb-br{display:none!important}
@@ -155,6 +157,7 @@ const CAP = { ja: ['ヒント', 'やり直し', '答え', '一覧', '前へ', '�
   de: ['Tipp', 'Nochmal', 'Lösung', 'Liste', 'Zurück', 'Beenden'], hi: ['संकेत', 'फिर से', 'उत्तर', 'सूची', 'पीछे', 'छोड़ें'], ar: ['تلميح', 'أعد', 'الحل', 'القائمة', 'السابق', 'خروج'], ru: ['Подсказка', 'Ещё раз', 'Ответ', 'Список', 'Назад', 'Выйти'],
   id: ['Petunjuk', 'Ulangi', 'Jawaban', 'Daftar', 'Kembali', 'Keluar'], tr: ['İpucu', 'Tekrar', 'Çözüm', 'Liste', 'Geri', 'Çık'] };
 const CAPK = { hint: 0, retry: 1, answer: 2, list: 3, prev: 4 };
+const PLAYCAP = { ja: '再生', en: 'Play', zh: '播放', 'zh-TW': '播放', ko: '재생', es: 'Reproducir', fr: 'Lecture', pt: 'Reproduzir', de: 'Abspielen', hi: 'चलाएँ', ar: 'تشغيل', ru: 'Воспр.', id: 'Putar', tr: 'Oynat' };
 const label = b => (b.id === 'lsAuto' ? (b.title || (document.querySelector('[data-sn="auto"]') || {}).title || '') : b.textContent.replace(/\s+/g, ' ').trim());
 function icon(b, kind) {
   b.classList.add('cb-ic'); b.classList.remove('go'); b.dataset.cb = kind;
@@ -179,7 +182,7 @@ function build(card, spec) {
   rows.forEach(r => [...r.querySelectorAll('button')].forEach(b => { if (!used.has(b) && b.id !== spec.quit && b.id !== spec.next) rest.push(b); }));
   rest.forEach(b => { b.classList.add('cb-t'); main.appendChild(b); });
   const nx = $(spec.next); if (nx && card.contains(nx)) { nx.classList.add('cb-t'); if (spec.nextChev) nx.classList.add('cb-nx'); main.appendChild(nx); }
-  const q = $(spec.quit), lh = spec.puzzle && card.querySelector(':scope > .lh');
+  const q = $(spec.quit), sh = card.querySelector(':scope > .lh'), lh = spec.puzzle && sh;
   if (lh) card.classList.add('cb-cmp');
   if (q && card.contains(q)) {
     if (lh) { q.classList.add('cb-qp'); q.classList.remove('go'); lh.appendChild(q); }   // puzzle: a small pill at the head row's end
@@ -192,9 +195,20 @@ function build(card, spec) {
     // buttons a game adds later (e.g. next to the quit button) join the bar the same way
     [...bar.children].forEach(b => { if (b.tagName !== 'BUTTON' || b.classList.contains('cb-q')) return;
       if (toolKind.has(b.id)) { icon(b, toolKind.get(b.id)); tools.appendChild(b); } else { b.classList.add('cb-t'); main.insertBefore(b, nx && main.contains(nx) ? nx : null); } });
-    if (lh) {
+    // the opening study (解説) in the lesson card: the puzzles' compact card — quit as a pill at the head row's end, captioned icons,
+    // no coach (2026-11-10; shogi does this itself in tsBar)
+    if (!spec.puzzle && GAME_ID !== 'shogi' && q && sh) {
+      let L = null; try { L = typeof lesson !== 'undefined' ? lesson : null; } catch (e) {}
+      const st = !!(L && L.study);
+      if (st !== card.classList.contains('cb-st')) {
+        card.classList.toggle('cb-st', st); card.classList.toggle('cb-cmp', st);
+        if (st) { q.classList.remove('cb-q'); q.classList.add('cb-qp'); sh.appendChild(q); }
+        else { q.classList.remove('cb-qp'); q.classList.add('cb-q'); bar.appendChild(q); }
+      }
+    }
+    if (card.classList.contains('cb-cmp')) {
       const C = CAP[pageLang()] || CAP.en; let n = 0;
-      bar.querySelectorAll('.cb-tools .cb-ic').forEach(b => { const k = CAPK[b.dataset.cb]; if (k != null && b.dataset.cap !== C[k]) b.dataset.cap = C[k]; if (getComputedStyle(b).display !== 'none') n++; });
+      bar.querySelectorAll('.cb-tools .cb-ic').forEach(b => { const k = CAPK[b.dataset.cb], c = b.dataset.cb === 'auto' ? PLAYCAP[pageLang()] || PLAYCAP.en : k != null ? C[k] : null; if (c && b.dataset.cap !== c) b.dataset.cap = c; if (getComputedStyle(b).display !== 'none') n++; });
       if (q && q.dataset.cap !== C[5]) q.dataset.cap = C[5];
       card.classList.toggle('cb-5', n >= 5);
     }
@@ -208,6 +222,7 @@ function build(card, spec) {
     }
   };
   new MutationObserver(sync).observe(card, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['disabled', 'title'] });
+  if (!spec.puzzle) new MutationObserver(sync).observe(document.body, { attributes: true, attributeFilter: ['class'] });   // (a lesson / study starting or ending)
   sync();
 }
 function init() {
