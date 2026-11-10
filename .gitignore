@@ -6,3 +6,4 @@ checkers/egdb.d/
 *.nnue.npz
 reversi/tools/book-work/nodes.jsonl
 morris/tools/solve
+amazons/tools/cand-*.jsonl
