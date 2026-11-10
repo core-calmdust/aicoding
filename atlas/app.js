@@ -856,7 +856,7 @@
         const max = ad.levels, cur = +sel.value;
         const sh = document.createElement('div'); sh.className = 'lvsheet'; sh.innerHTML = `<div class="lvs-in" role="listbox"><div class="lvs-h">${esc(t('bv.level'))}<button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div><div class="lvs-l">${[...sel.options].map(o => {
           const n = +o.value, x = ad.levelInfo ? ad.levelInfo(n, lang) : null;
-          return bossHead(id, n, cur) + `<button type="button" role="option" data-v="${n}" class="${n === cur ? 'on' : ''}"><b>Lv.${n}</b><span class="nm">${bossRw(id, n)}${esc(lvNm(x, n, lang, max))}</span><span class="meter">${Array.from({ length: max }, (_, i) => `<i class="${i < n ? 'on' : ''}" style="height:${Math.round(4 + 12 * (i + 1) / max)}px"></i>`).join('')}</span>${x ? `<small><em>${esc(x.who)}</em>${x.desc ? ` · ${esc(x.desc)}` : ''}${x.rating ? ` · ${t('bv.rating')} ${x.rating}` : ''}</small>` : ''}</button>`; }).join('')}</div></div>`;
+          return bossHead(id, n, cur) + `<button type="button" role="option" data-v="${n}" class="${n === cur ? 'on' : ''}"><b>Lv.${n}</b><span class="nm">${bossRw(id, n)}${esc(lvNm(x, n, lang, max))}${bossOwn(id, n) ? '<i class="lvck" aria-label="cleared">✓</i>' : ''}</span><span class="meter">${Array.from({ length: max }, (_, i) => `<i class="${i < n ? 'on' : ''}" style="height:${Math.round(4 + 12 * (i + 1) / max)}px"></i>`).join('')}</span>${x ? `<small><em>${esc(x.who)}</em>${x.desc ? ` · ${esc(x.desc)}` : ''}${x.rating ? ` · ${t('bv.rating')} ${x.rating}` : ''}</small>` : ''}</button>`; }).join('')}</div></div>`;
         document.body.appendChild(sh); requestAnimationFrame(() => sh.classList.add('on'));
         const close = () => { if (sh.classList.contains('out')) return; sh.classList.add('out'); sh.classList.remove('on'); setTimeout(() => sh.remove(), 240); };
         sh.onclick = e => { const b = e.target.closest('[data-v]'); if (b) { sel.value = b.dataset.v; sel.dispatchEvent(new Event('change')); close(); return; } if (e.target === sh || e.target.closest('.lvs-x')) close(); };
@@ -909,10 +909,11 @@
     const N = window.AtlasNPC; if (!N || !N.tier || !(N.BOSSES || {})[g] || !n) return '';
     return `<img class="lvb" src="../images/atlas/av/${N.bossId(g, N.band(g, n))}-${N.tier(g, n)}.webp?v=1" alt="">`;
   }
-  function bossRw(g, n) {   // what a win at this level gives: the boss's N / R / SR (✓ once owned)
+  function bossOwn(g, n) { const N = window.AtlasNPC; if (!N || !N.tier || !(N.BOSSES || {})[g]) return false; return (W.owned || []).includes(`av-${N.bossId(g, N.band(g, n))}-${N.tier(g, n)}`); }
+  function bossRw(g, n) {   // what a win at this level gives: the boss's N / R / SR (dimmed once owned; the ✓ sits after the name — 2026-11-10)
     const N = window.AtlasNPC; if (!N || !N.tier || !(N.BOSSES || {})[g]) return '';
-    const t = N.tier(g, n), own = (W.owned || []).includes(`av-${N.bossId(g, N.band(g, n))}-${t}`);
-    return `<i class="rw r${t}${own ? ' got' : ''}">${own ? '✓' : ''}${['N', 'R', 'SR'][t]}</i>`;
+    const t = N.tier(g, n);
+    return `<i class="rw r${t}${bossOwn(g, n) ? ' got' : ''}">${['N', 'R', 'SR'][t]}</i>`;
   }
   function bossTitles(sh, g) {   // the bosses' titles live in the talk's language files (npc/t/<lang>.js), loaded on demand
     const N = window.AtlasNPC; if (!N || !N.ensure || !sh.querySelector('.lvs-boss')) return;

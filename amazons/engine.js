@@ -216,7 +216,7 @@ let WA = null;
 (function loadCore() {
   try {
     let b64 = null;
-    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('core-wasm.js?v=2'); b64 = self.AMZ_WASM; }
+    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('core-wasm.js?v=3'); b64 = self.AMZ_WASM; }
     else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') { const g = typeof globalThis !== 'undefined' ? globalThis : global, had = 'self' in g, old = g.self; g.self = g; try { require(require('path').join(__dirname, 'core-wasm.js')); b64 = g.AMZ_WASM; } finally { if (had) g.self = old; else delete g.self; } }
     if (!b64 || (typeof process !== 'undefined' && process.env && process.env.AMZ_NOWASM)) return;
     const bin = typeof atob === 'function' ? Uint8Array.from(atob(b64), c => c.charCodeAt(0)) : Buffer.from(b64, 'base64');
@@ -474,15 +474,21 @@ const MC_KEYS = ['qk', 'k', 'qkr', 'kr', 'po', 's', 'np', 'c', 'a', 'pwa', 'pwk'
 let MX = null;   // the core of the MCTS: { x, views } — WA (one thread) or the multi-thread core of the lead (mt=1)
 function mcCore() { return MX || WA; }
 function mcViews(C) { if (C.buf !== C.x.memory.buffer) { if (C === WA) waViews(); else C.views(); } }
-const MC_MAX_NODES = 1 << 21;   // (64 MB of tree; more threads: the lead's core sets its own)
+// The pool of the tree (core.c mcts_alloc; 32 bytes a node). Past half full a leaf waits for visits before it is expanded and
+// at 96 % the search stops (core.c mcts_run): those waiting visits back up a value without an evaluation — the "superlinear"
+// visits/s of bench.html on many threads (2026-11-10: a 2 s search on 8 threads filled the 3.2 M nodes sized for it and 80〜95 %
+// of its visits were such waits). So the pool is sized by the nodes per ms per thread that the searches here have made (MC_RATE,
+// first 120: the user's M4 Pro ~140 on one thread in the middle game) and the threads of this job, up to MC_MAX_NODES (one
+// thread, 128 MB) or the lead's maxNodes (several threads: up to 512 MB — Lv.23's 20 s on 10 threads may still fill it).
+const MC_MAX_NODES = 1 << 22;
+let MC_RATE = 120;
 function mcts(pos, o) {
   const C = mcCore(); if (!C) return null;
   const X = C.x, p = Object.assign({}, MC, o.prm || {});
-  const evl = o.nk ? o.nk * 1000 : 0, sims = o.sims || 0, ms = o.ms || 0;
-  // nodes: about k per visit; a visit is ~0.3 ms of one thread here (more threads: the core's own maximum)
-  const est = Math.max(sims, evl / 200, ms * 4 * (C.threads || 1));
-  const want = Math.min(C.maxNodes || MC_MAX_NODES, Math.max(1 << 16, Math.ceil(est * p.k * 1.2)));
-  X.mcts_alloc(want); mcViews(C);
+  const evl = o.nk ? o.nk * 1000 : 0, sims = o.sims || 0, ms = o.ms || 0, thr = Math.max(1, C === WA ? 1 : C.jobThreads || C.threads || 1);
+  const est = Math.max(sims * p.k, evl / 200 * p.k, ms * MC_RATE * thr) * 1.3;
+  const want = o.pool > 0 ? o.pool : Math.min(C.maxNodes || MC_MAX_NODES, Math.max(1 << 16, Math.ceil(est)));
+  X.mcts_alloc(want); if (X.mcts_limit) X.mcts_limit(o.pool > 0 ? o.pool : 0); mcViews(C);
   MC_KEYS.forEach((k, i) => X.mcts_set(i, p[k]));
   C.sq.set(pos.sq); C.q.set(pos.q);
   X.mcts_begin(pos.turn, o.seed | 0);
@@ -496,7 +502,12 @@ function mcts(pos, o) {
   }
   const list = mcList(C);
   evals = X.mcts_evals();
-  return { list, sims: n, evals, nodes: X.mcts_nodes(), proof: X.mcts_proof() };
+  if (ms && !o.pool) {   // (the rate of the next pool: a search that filled half its pool made more nodes than it could keep)
+    const el = Math.max(50, Date.now() - t0), nn = X.mcts_nodes(), r = nn / el / thr * (nn > want * 0.5 ? 2 : 1);
+    if (el >= 200) MC_RATE = Math.min(600, Math.max(30, r, MC_RATE * 0.75));
+  }
+  const vk = X.mcts_vk ? [0, 1, 2, 3, 4, 5].map(k => X.mcts_vk(k)) : null;   // (how the visits ended: core.c mcts_vk)
+  return { list, sims: n, evals, nodes: X.mcts_nodes(), proof: X.mcts_proof(), vk };
 }
 function mcList(C) {
   const X = C.x, k = X.mcts_out(), out = [];
@@ -506,11 +517,12 @@ function mcList(C) {
 function mcPV(m, plies) { const C = mcCore(), k = Math.min(C.x.mcts_pv(m), plies || 5), out = []; for (let i = 0; i < k; i++) out.push(C.pv[i]); return out; }
 // a level / PRO setting with mc: the MCTS's move (the alpha-beta search's way in a lost position: resist)
 function mctsThink(pos, L) {
-  const r = mcts(pos, { ms: L.ms || 0, nk: L.nk || 0, sims: L.sims || 0, seed: L.seed || 0, prm: L.prm });
+  const r = mcts(pos, { ms: L.ms || 0, nk: L.nk || 0, sims: L.sims || 0, seed: L.seed || 0, prm: L.prm, pool: L.pool || 0 });
   if (!r || !r.list.length) return null;
   const b = r.list[0];
   const out = thinkFin(pos, { move: b.m, v: b.v, depth: 3, evals: r.evals, sims: r.sims });
   out.nodes = r.evals; out.mc = 1;   // (nodes: the evaluations of every thread — the page's nps readout)
+  if (r.vk) out.vk = r.vk;   // (how the visits ended: bench.html)
   return out;
 }
 // ---------------------------------------------------------------- AI levels (20 steps, Lv.1 … Lv.20)
@@ -824,7 +836,10 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
       .then(m => {
         const x = new WebAssembly.Instance(m.module, { env: { memory: m.mem, now: () => Date.now() } }).exports;
         x.mt_stack(m.top); x.mt_thread(m.tls, 0);
-        const C = { x: Object.assign({}, x, { memory: m.mem }), threads: navigator.hardwareConcurrency || 2, maxNodes: 1 << 22 };
+        // maxNodes: 512 MB of tree with 8 or more cores and 8 GB or more (deviceMemory; Safari has none: 10 or more cores), 256 MB with
+        // 8 or more cores, else 128 MB (the memory grows only as far as a search asks: mcts_alloc)
+        const hc = navigator.hardwareConcurrency || 2, big = hc >= 8 && (navigator.deviceMemory ? navigator.deviceMemory >= 8 : hc >= 10);
+        const C = { x: Object.assign({}, x, { memory: m.mem }), threads: hc, maxNodes: big ? 1 << 24 : hc >= 8 ? 1 << 23 : 1 << 22 };   // (jobThreads: set by each job, mtThreads)
         C.views = () => { const buf = m.mem.buffer; Object.assign(C, { buf, sq: new Int8Array(buf, x.sqp(), NN), q: new Int8Array(buf, x.qp(), 8), rm: new Int32Array(buf, x.rmp(), 64), rn: new Int32Array(buf, x.rnp(), 64), rv: new Int32Array(buf, x.rvp(), 64), rp: new Int32Array(buf, x.rpp(), 64), pv: new Int32Array(buf, x.pvp(), 32) }); };
         C.views(); MX = C;
         self.postMessage({ type: 'mtready' });
@@ -836,6 +851,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
     if (m && m.type === 'mtshare') { try { importScripts(m.lib); SH = self.MTTT.attach(m); } catch (err) { SH = null; } return; }   // (shared/mtsplit.js shared mode)
     queueP = queueP.catch(() => {}).then(() => {
       try {
+        if (MX) MX.jobThreads = m.mtThreads > 0 ? Math.min(m.mtThreads, MX.threads) : 0;   // (the MCTS pool's size: the threads of this job)
         if (SH !== null) { SH.begin(m); SH.salt = 0; }
         if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...think(m.start, m.moves, m.level, null, null, m.cfg) });
         else if (m.type === 'analyze') {

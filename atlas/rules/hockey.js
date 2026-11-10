@@ -317,7 +317,7 @@
         // a fast sideways sweep that catches the puck with the mallet's rim (a glancing contact) — it flies into the far goal
         setMal(0, -14, 10);
         let tt = 0;
-        run({ input: dt => { tt += dt; const k = Math.min(1, tt / .14); return [{ tx: -14 + k * 32, ty: 10 - k * 5 }, park]; }, check: () => { if (tt > 1.4 || s.score[0] > 0 && tt > .9) { halt(); ok('edge.ok'); } } });
+        run({ input: dt => { tt += dt; const k = Math.min(1, tt / .12); return [{ tx: -14 + k * 32, ty: 10 - k * 4 }, park]; }, check: () => { if (tt > 2.6 || s.score[0] > 0 && tt > .9) { halt(); ok('edge.ok'); } } });
       } else if (pg.id === 'goal') {
         let tt = 0;
         run({ input: dt => { tt += dt; return [{ tx: -9 + Math.min(1, tt / .2) * 9, ty: 12 - Math.min(1, tt / .2) * 14 }, park]; }, check: () => { if (s.score[0] > 0 || tt > 4) { halt(); later(() => ok('goal.ok'), 400); } } });

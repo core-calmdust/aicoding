@@ -986,7 +986,14 @@ static inline void ttGet(TTEntry *e) {
   }
   e->key = ~hh; e->move = 0; e->data = 0;
 }
-EXPORT(tt_clear) void tt_clear(void) { memset(ttm, 0, sizeof ttm); }
+/* the busy marks of the threads (busyOther below): the position's key | thread number + 1 */
+#define BUSY_BITS 15
+#ifndef BUSY_D
+#define BUSY_D 2   /* (remaining depth: 2 was faster than 3 in tools/mtsim) */
+#endif
+#define BUSY_DEF 32
+static u64 busyT[1 << BUSY_BITS];
+EXPORT(tt_clear) void tt_clear(void) { memset(ttm, 0, sizeof ttm); memset(busyT, 0, sizeof busyT); }
 #else
 EXPORT(tt_clear) void tt_clear(void) { memset(tt, 0, sizeof tt); }
 #endif
@@ -1066,6 +1073,25 @@ static void store(int depth, double score, int flag, int move, int ply) {
   if (!move && old) move = (int)((old >> 16) & 0x7FFF);
   u64 w = (u64)((i32)score & 0xffff) | (u64)(move & 0x7FFF) << 16 | (u64)(depth & 255) << 32 | (u64)(flag & 3) << 40 | (u64)(ttAge & 31) << 42 | 1ull << 63;
   bk[2 * j + 1] = w; bk[2 * j] = key ^ w;
+}
+/* (2026-11-10, after the Mac bench-all-2: the time to the same depth only x2.3 with 14 threads; morris/MODEL_CARD.md
+   「マルチスレッドの見直し その2」) busy marks, Kerrigan's "simplified ABDADA". The threads walk the same tree in the same order
+   at the same speed, so they search the same subtree at the same time and none gets the other's result from the table. A
+   thread marks the position of the move it searches (remaining depth >= BUSY_D); a move after the first whose position
+   another thread has marked is put off to the end of the node (by then its result is usually in the table). One thread alone
+   never meets another's mark: its search is as before. (tools/mtsim: the simulation that showed it.) */
+static inline int busyOther(u64 k) {
+  u64 v = __atomic_load_n(&busyT[(k >> 32) & ((1u << BUSY_BITS) - 1)], __ATOMIC_RELAXED);
+  return (v & ~63ull) == (k & ~63ull) && (int)(v & 63) != (threadId & 63) + 1;
+}
+static inline int busySet(u64 k) {
+  int i = (int)((k >> 32) & ((1u << BUSY_BITS) - 1));
+  __atomic_store_n(&busyT[i], (k & ~63ull) | (u64)((threadId & 63) + 1), __ATOMIC_RELAXED);
+  return i;
+}
+static inline void busyClear(u64 k, int i) {
+  u64 mine = (k & ~63ull) | (u64)((threadId & 63) + 1);
+  __atomic_compare_exchange_n(&busyT[i], &mine, 0, 0, __ATOMIC_RELAXED, __ATOMIC_RELAXED);
 }
 #else
 static void store(int depth, double score, int flag, int move, int ply) {
@@ -1293,8 +1319,19 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
   PickBlocks *pk = &pkT[ply]; pk->nb = 0;
   EvMask ev; if (inChk) evMask(&ev);
   if (!(ttm && isPseudo(ttm))) { ttm = 0; stage = 1; }
+#ifdef MT
+  /* (2026-11-10) busy marks (see busyT): a move whose position another thread is searching right now is put off until the
+     other moves are done (after the last stage); it keeps its place in the order (lgb: the legal moves before it) */
+  int defM[BUSY_DEF], defL[BUSY_DEF], nDef = 0, kDef = 0;
+#endif
   for (;;) {
     int m;
+#ifdef MT
+    int redo = 0, lgb = legal;
+#define LGB lgb
+#else
+#define LGB legal
+#endif
     if (stage == 0) { m = ttm; stage = 1; }
     else if (stage == 1) {
       if (i1 == 0 && n1 == 0) { n1 = inChk ? genEv(moves, 1, &ev) : gen(moves, 1); orderMoves(moves, scores, n1, 0, ply); if (!n1) { stage = 2; continue; } }
@@ -1313,11 +1350,16 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
         orderMoves(qmoves, qscores, n2, 0, ply);
         pk->nb = 0; stage = 3;
       }
+#ifdef MT
+      if (i2 >= n2) { if (kDef >= nDef) break; m = defM[kDef]; lgb = defL[kDef++]; redo = 1; }
+      else
+#else
       if (i2 >= n2) break;
+#endif
       m = pickFast(qmoves, qscores, n2, i2++, pk);
     }
     int to = (m >> 7) & 127, cap = board[to], quiet = !cap && !((m >> 14) & 1);
-    if (!pvNode && !inChk && quiet && legal > 0 && depth <= (P[18] ? P[18] : 2) && staticEval + (P[16] ? P[16] : 150) * depth + 100 <= alpha) {
+    if (!pvNode && !inChk && quiet && LGB > 0 && depth <= (P[18] ? P[18] : 2) && staticEval + (P[16] ? P[16] : 150) * depth + 100 <= alpha) {
       if (!givesCheckPre(m)) continue;   /* (a move that gives no check is skipped here either way) */
       doMove(m);
       int ok = legalAfter(m, inChk), chk = ok && inCheck();
@@ -1325,7 +1367,7 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
       if (!chk) continue;
     }
     if (m == ex) continue;
-    if (!pvNode && !inChk && quiet && depth <= (P[26] ? P[26] : 3) && legal > ((P[12] ? P[12] : 6) + depth * depth * 3) * (P[24] && !improving ? 2 : 3) / 3) {
+    if (!pvNode && !inChk && quiet && depth <= (P[26] ? P[26] : 3) && LGB > ((P[12] ? P[12] : 6) + depth * depth * 3) * (P[24] && !improving ? 2 : 3) / 3) {
       if (!givesCheckPre(m)) continue;
       if (!chkFast) { doMove(m); int chk = inCheck(); undoMove(); if (!chk) continue; }   /* (else givesCheckPre was exact) */
     }
@@ -1348,23 +1390,30 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
       doMove(m);
       if (!legalAfter(m, 0)) { undoMove(); continue; }
     }
+#ifdef MT
+    if (!redo && legal && depth >= BUSY_D && nDef < BUSY_DEF && busyOther(ttKey())) { undoMove(); defM[nDef] = m; defL[nDef++] = lgb; continue; }
+    const u64 mkKey = ttKey(); const int mk = depth >= BUSY_D ? busySet(mkKey) : -1;
+#define LGA (lgb + 1)
+#else
+#define LGA legal
+#endif
     legal++;
     int givesChk = inCheck();
     int ext = givesChk && ply < rootDepth * 2 && (P[11] || seeAfterCheck(m) >= 0) ? 1 : 0;
     if (sext > 0) ext = 1; else if (sext < 0 && !ext) ext = -1;
     double v;
     int nd = depth - 1 + ext;
-    if (legal == 1) v = -search(nd, -beta, -alpha, ply + 1, pvNode, 1);
+    if (LGA == 1) v = -search(nd, -beta, -alpha, ply + 1, pvNode, 1);
     else {
       int r = 0;
-      if (depth >= 3 && quiet && !inChk && !givesChk && legal > 3) {
+      if (depth >= 3 && quiet && !inChk && !givesChk && LGA > 3) {
         if (P[5]) {
-          r = LMRT[depth < 63 ? depth : 63][legal < 63 ? legal : 63];
+          r = LMRT[depth < 63 ? depth : 63][LGA < 63 ? LGA : 63];
           if (m == killers[ply * 2] || m == killers[ply * 2 + 1]) r--;
           if (P[22]) { undoMove(); int hv = quietHist(us, m); doMove(m); r -= hv / (P[9] ? P[9] : 6000); }
           else { i32 hv = history[((us * 88 + (m & 127)) * 81 + to) * 2 + ((m >> 14) & 1)]; if (hv > 2000) r--; else if (hv == 0) r++; }
           if (P[24] && !improving) r++;
-        } else r = 1 + (legal > 8 ? 1 : 0) + (depth >= 8 ? 1 : 0);
+        } else r = 1 + (LGA > 8 ? 1 : 0) + (depth >= 8 ? 1 : 0);
         if (pvNode) r--;
         if (r < 0) r = 0;
         if (r > depth - 2) r = depth - 2;
@@ -1373,6 +1422,11 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
       if (v > alpha && r) v = -search(nd, -alpha - 1, -alpha, ply + 1, 0, 1);
       if (v > alpha && v < beta) v = -search(nd, -beta, -alpha, ply + 1, 1, 1);
     }
+#undef LGA
+#undef LGB
+#ifdef MT
+    if (mk >= 0) busyClear(mkKey, mk);
+#endif
     undoMove();
     if (stopFlag) return 0;
     if (quiet && nq < 1000) tq[nq++] = m;
@@ -1419,9 +1473,20 @@ static void rootMoveToFront(int idx) {
 static double searchRoot(int depth, double alpha, double beta) {
   double best = -INF; int first = 1;
   pvLen[0] = 0;
+#ifdef MT
+  int rdM[BUSY_DEF], nrd = 0;   /* (the busy marks at the root too: a root move another thread is on is put off) */
+  for (int k = 0; k < nRoot + nrd; k++) {
+    int i = k, m;
+    if (k < nRoot) m = rootM[i];
+    else { m = rdM[k - nRoot]; for (i = 0; i < nRoot - 1 && rootM[i] != m; i++); }   /* (its place now: rootMoveToFront moves them) */
+    doMove(m);
+    if (k < nRoot && !first && depth >= BUSY_D && nrd < BUSY_DEF && busyOther(ttKey())) { undoMove(); rdM[nrd++] = m; continue; }
+    const u64 mkKey = ttKey(); const int mk = depth >= BUSY_D ? busySet(mkKey) : -1;
+#else
   for (int i = 0; i < nRoot; i++) {
     int m = rootM[i];
     doMove(m);
+#endif
     int chk = inCheck();
     int nd = depth - 1 + (chk ? 1 : 0);
     double v;
@@ -1430,6 +1495,9 @@ static double searchRoot(int depth, double alpha, double beta) {
       v = -search(nd, -alpha - 1, -alpha, 1, 0, 1);
       if (v > alpha && v < beta) v = -search(nd, -beta, -alpha, 1, 1, 1);
     }
+#ifdef MT
+    if (mk >= 0) busyClear(mkKey, mk);
+#endif
     undoMove();
     if (stopFlag) return best;
     rootS[i] = first || v > alpha ? v : -INF + 1;

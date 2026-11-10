@@ -202,11 +202,12 @@ html.atlas-shogi .hslot .cnt{background:#2b3044!important;color:#fff!important}
 html.atlas-shogi:not(.atlas-2d) .sq.last{background:rgba(255,200,90,.35)!important}
 html.atlas-shogi:not(.atlas-2d) .sq.sel{background:rgba(90,170,110,.4)!important}
 /* the 3D board is wider than the DOM grid (its wooden margin): keep the komadai clear of it */
-html.atlas-shogi:not(.atlas-2d) .board-area{gap:calc(var(--cw)*.62)!important}
+html.atlas-shogi .board-area{gap:calc(var(--cw)*.62)!important}   /* (the 2D board too: the same size and place as the 3D one, 2026-11-10) */
 /* …so the board group is .8 cell wider than the page sizes it for (12.6 cells): PC sizes the cell for the wider group (13.65),
    otherwise the 360px info column is pushed off the right edge on narrower windows */
 @media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
-  html.atlas-shogi:not(.atlas-2d),html.atlas-shogi:not(.atlas-2d) body{--cw:min(var(--cwh), calc((100vw - var(--padx) * 2 - var(--gap) - var(--rw, 360px)) / 13.65), 120px)!important}
+  html.atlas-shogi,html.atlas-shogi body{--cw:min(var(--cwh), calc((100vw - var(--padx) * 2 - var(--gap) - var(--rw, 360px)) / 13.65), 120px)!important}
+  html.atlas-shogi.atlas-2d,html.atlas-shogi.atlas-2d body{--cw:min(calc((var(--vh) - 116px) / 10.9), calc((100vw - var(--padx) * 2 - var(--gap) - var(--rw, 360px)) / 13.2), 120px)!important}   /* the 2D board as large as the 3D one (its wood ≈ 10 × 10.9 cells) */
 }
 /* komadai wood grain (atlas/skin/shogi.js paints --kdwood: a light procedural kaya texture, grain along the stand) */
 html.atlas-shogi:not(.atlas-2d) .hand{background:linear-gradient(rgba(236,200,128,.5),rgba(236,200,128,.5)),url(../../images/atlas/shogi-kaya.webp?v=2) 20% 10%/320% auto,#e8c47c!important}   /* 本榧, as the board (2026-11-10) */

@@ -166,10 +166,16 @@
     const HK = 'atlas-crokinole-howto';
     const howtoOn = () => { try { return localStorage.getItem(HK) !== 'off'; } catch (e) { return true; } };
     let cardEl = null;
+    // the touchpad note on PCs: its heading on a line of its own, then the steps, then how to cancel — no wrapping (2026-11-10)
+    function padBlock(H) {
+      if (!(mousey() && H.pad)) return `<p class="u">${esc(H.undo)}</p>`;
+      const i = H.pad.search(/[：:]/), head = i > 0 ? H.pad.slice(0, i + 1) : '', body = i > 0 ? H.pad.slice(i + 1).trim() : H.pad;
+      return `<p class="u pad">💻 <b>${esc(head)}</b>${head ? '<br>' : ''}${esc(body)}<br>${esc(H.undo)}</p>`;
+    }
     function howtoCard(done) {
       const H = howtoFor(lang), steps = H[mousey() ? 'm' : 't'], ic = ['↔', '↓', '↔', '☝'];
       const d = document.createElement('div'); d.className = 'ckhow'; d.dir = lang === 'ar' ? 'rtl' : 'ltr';
-      d.innerHTML = `<div class="ckhow-c" role="dialog" aria-modal="true"><h2>${esc(H.title)}</h2><ol>${steps.map((x, i) => `<li><i>${ic[i]}</i><span>${esc(x)}</span></li>`).join('')}</ol>${mousey() && H.pad ? `<p class="u" style="margin-top:10px">💻 ${esc(H.pad)}</p>` : ''}<p class="u">${esc(H.undo)}</p><label><input type="checkbox"> ${esc(H.never)}</label><p class="n">${esc(H.note.replace('{r}', t('bv.rules')))}</p><button type="button">${esc(H.ok)}</button></div>`;
+      d.innerHTML = `<div class="ckhow-c" role="dialog" aria-modal="true"><h2>${esc(H.title)}</h2><ol>${steps.map((x, i) => `<li><i>${ic[i]}</i><span>${esc(x)}</span></li>`).join('')}</ol>${padBlock(H)}<label><input type="checkbox"> ${esc(H.never)}</label><p class="n">${esc(H.note.replace('{r}', t('bv.rules')))}</p><button type="button">${esc(H.ok)}</button></div>`;
       const close = () => { if (d.querySelector('input').checked) { try { localStorage.setItem(HK, 'off'); } catch (e) {} } d.remove(); cardEl = null; done && done(); };
       d.querySelector('button').onclick = close;
       ['pointerdown', 'pointermove', 'pointerup'].forEach(k => d.addEventListener(k, e => e.stopPropagation()));

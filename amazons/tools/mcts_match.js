@@ -3,6 +3,7 @@
 // same CPU time on a crowded machine. claude/amazons-spec.md「MCTS」.
 //   node tools/mcts_match.js A B pairs [seed] [part/n]
 //   a player: ab:ms=1500 | ab:nk=36 | ab:lv=15 | mc:ms=1500 | mc:nk=36,k=16,c=0.2 (MC parameters after the budget)
+//             mc:ms=1500,pool=24000 (the tree's pool in nodes: a small one fills as on many threads with a long time)
 //   each opening (two random plies from the best 10 candidates) is played twice, colours swapped. A separated board with a
 //   territory lead of 3 or more is adjudicated. Prints one JSON line per game and a summary.
 'use strict';
@@ -21,8 +22,8 @@ const A = parseP(SA), B = parseP(SB);
 function cfgOf(P, seed) {
   const o = P.o;
   if (P.kind === 'ab') { if (o.lv) return { level: o.lv }; return { cfg: Object.assign({ s: 1 }, o.ms ? { ms: o.ms } : {}, o.nk ? { nk: o.nk } : {}) }; }
-  const prm = {}; for (const k in o) if (k !== 'ms' && k !== 'nk' && k !== 'sims') prm[k] = o[k];
-  return { cfg: { s: 1, mc: 1, ms: o.ms || 0, nk: o.nk || 0, sims: o.sims || 0, seed, prm } };
+  const prm = {}; for (const k in o) if (k !== 'ms' && k !== 'nk' && k !== 'sims' && k !== 'pool') prm[k] = o[k];
+  return { cfg: { s: 1, mc: 1, ms: o.ms || 0, nk: o.nk || 0, sims: o.sims || 0, pool: o.pool || 0, seed, prm } };
 }
 let rs = (+SEED * 7919 + 13) | 0;
 const rnd = () => { rs = (Math.imul(rs, 1103515245) + 12345) & 0x7fffffff; return rs / 0x7fffffff; };
