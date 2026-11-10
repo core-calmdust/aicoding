@@ -1984,11 +1984,14 @@ function themeText(P) { return (P.th || []).filter(x => THEMES.includes(x)).map(
 //             nothing) -> "clear mistake" + failed.
 // Puzzles with a single own move (mate in 1, one-move tactics) are judged at once as before.
 const pzAnswerSan = Pz => { const p0 = posAt(0).pos, u = Pz.line ? Pz.P.line[1] : Pz.P.answer; if (Pz.line) { const q = E.replay(startFen, [p0.fromUci(Pz.P.line[0])]).pos; return q.san(q.fromUci(u)); } return p0.san(p0.fromUci(u)); };
-function pzAnswerWas(Pz) { try { return ' ' + t('pz2.answerWas', { b: pzAnswerSan(Pz) }); } catch (e) { return ''; } }
-function pzRewindFail(Pz, m, best, html) {   // take the last move back, show it in red (and the right move in gold)
+// a failed puzzle never shows the answer by itself (2026-11-10): only the 「答え」 button plays it — the message points there
+const PZ_SEE = { ja: '「答え」で正解手順を見られます。', en: 'Tap “Answer” to see the solution.', zh: '点“答案”可查看正解手顺。', 'zh-TW': '點「答案」可查看正解。', ko: '「정답」을 누르면 정답 수순을 볼 수 있어요.',
+  es: 'Pulsa «Solución» para ver la respuesta.', fr: 'Touchez « Solution » pour voir la réponse.', pt: 'Toque em “Solução” para ver a resposta.', de: 'Tippe auf „Lösung“, um sie zu sehen.',
+  hi: 'हल देखने के लिए “उत्तर” दबाएँ।', ar: 'اضغط «الحل» لرؤية الإجابة.', ru: 'Нажмите «Ответ», чтобы увидеть решение.', id: 'Ketuk “Jawaban” untuk melihat solusinya.', tr: 'Çözümü görmek için “Çözüm”e dokunun.' };
+function pzAnswerWas(Pz) { return ' ' + (PZ_SEE[LANG] || PZ_SEE.en); }
+function pzRewindFail(Pz, m, best, html) {   // take the last move back, show it in red (the right move is not shown: 「答え」 plays it)
   moves = moves.slice(0, cur - 1); cur = moves.length; Pz.used--; Pz.busy = false; Pz.state = 'fail'; Pz.failed = true;
   lessonMarks = [];
-  if (best) lessonMarks.push({ arrow: [mFrom(best), mTo(best)], cls: '' }, { at: mTo(best), cls: 'ok' });
   lessonMarks.push({ arrow: [mFrom(m), mTo(m)], cls: 'ng' });
   update(false); playChime(false); pzStatus(html); renderPuzzleCard();
 }
@@ -2009,7 +2012,7 @@ async function linePuzzleMove(m) {
   if (st.over && st.winner === Pz.me) { setTimeout(() => puzzleSolved(), moveDur() + 300); return; }
   if (m !== exp && Pz.n === 1) {   // one-move puzzle: judged at once
     await sleep(moveDur() + 400); if (puzzle !== Pz) return;
-    pzRewindFail(Pz, m, exp, `<b class="ng">${t('pz.fail')}</b> ${t('pz.failLine', { m: ms, b: es })}`); return;
+    pzRewindFail(Pz, m, exp, `<b class="ng">${t('pz.fail')}</b> ${PZBook.t('outOfMoves', { n: Pz.n })}${pzAnswerWas(Pz)}`); return;
   }
   if (m !== exp) {
     // off the main line: judge with the engine
@@ -2032,8 +2035,8 @@ async function linePuzzleMove(m) {
     }
     if (verdict === 'lost') {
       await sleep(250); if (puzzle !== Pz) return;
-      if (exp) pzRewindFail(Pz, m, exp, `<b class="ng">${t('pz.fail')}</b> ${t('pz2.tLost', { m: ms, b: es })}`);
-      else pzRewindFail(Pz, m, 0, `<b class="ng">${t('pz.fail')}</b> ${t('pz2.tLost', { m: ms, b: '—' })}${pzAnswerWas(Pz)}`);
+      if (exp) pzRewindFail(Pz, m, exp, `<b class="ng">${t('pz.fail')}</b>${pzAnswerWas(Pz)}`);
+      else pzRewindFail(Pz, m, 0, `<b class="ng">${t('pz.fail')}</b>${pzAnswerWas(Pz)}`);
       return;
     }
     // keeps the advantage: play on with the engine's replies
@@ -2132,7 +2135,7 @@ async function puzzleMove(m) {
   const stray = !e || !e.need || e.need > left;
   if (stray && Pz.n === 1) {   // mate in one: judged at once
     await sleep(moveDur() + 400); if (puzzle !== Pz) return;
-    pzRewindFail(Pz, m, good[0] && good[0].m, `<b class="ng">${t('pz.fail')}</b> ${t('pz.failWhy', { m: ms, b: good.length ? pos.san(good[0].m) : '—', n: Pz.n })}`);
+    pzRewindFail(Pz, m, good[0] && good[0].m, `<b class="ng">${t('pz.fail')}</b> ${PZBook.t('outOfMoves', { n: Pz.n })}${pzAnswerWas(Pz)}`);
     return;
   }
   // mate puzzles never judge a move mid-way (2026-11-10): no 「良い手」, no 「正解手順とは違う」, no instant 「悪手」 — only the
