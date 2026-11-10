@@ -761,6 +761,14 @@ function rootPVS(pos, moves, depth, mode, a0, b0) {
   const empties = 64 - pc(pl | ol) - pc(ph | oh);
   let alpha = mode === 'exact' ? -65 : -32001, beta = -alpha;
   if (a0 !== undefined) { alpha = a0; beta = b0; }
+  if (ybwOn() && moves.length <= 64) {   // (threads, YBW: the same root search in engine.c, split over the idle helpers)
+    new Int8Array(WX.memory.buffer, WX.root_mv(), 64).set(moves);
+    wasmIn();
+    const v = WX.root_mt(pl, ph, ol, oh, mode === 'exact' ? 1 : 0, depth, alpha, beta, moves.length), bm = WX.root_info(0), bi = WX.root_info(1);
+    if (PART && bi >= 0) { PART.move = bm; PART.score = WX.root_info(2) * (mode === 'exact' ? SCALE : 1); PART.n = bi; }
+    wasmOut(v);
+    return { move: bm, score: mode === 'exact' ? v * SCALE : v };
+  }
   let best = null, bestScore = -99999;
   for (let i = 0; i < moves.length; i++) {
     const s = moves[i];
@@ -932,7 +940,11 @@ function lzGet(L, k) {
 // how helper thread `id` (1, 2, …) differs from the lead in the midgame. 'rot' (before 2026-11-09): root moves rotated by id.
 // 'mix': odd helpers rotate the root moves, even ones keep the lead's root order and rotate the replies one ply below
 // (engine_mt.wasm set_rot1), so the lead's first (most expensive) move is shared out too.
-const LAZY = { plan: 'mix', idle: true };   // (idle: splitHelp's help on the root moves still being solved)
+// 'ybw' (2026-11-10, MODEL_CARD.md「マルチスレッド v4」): no Lazy SMP — the helpers wait in engine.c mt_idle and take the
+// remaining moves of the nodes whose first move is done (Young Brothers Wait split points, midgame and solver, the root too:
+// rootPVS → root_mt); the lead's think is the only search. 'mix' and the others: Lazy SMP (+ rootSplit / splitHelp in the solve).
+const LAZY = { plan: 'ybw', idle: true };   // (idle: splitHelp's help on the root moves still being solved)
+const ybwOn = () => LAZY.plan === 'ybw' && WON && !!WX.root_mt && !!root.REVERSI_SPLIT;
 function helperPlan(id) {
   if (LAZY.plan === 'rot') return { rk: id, r1: 0, d0: 0 };
   if (LAZY.plan === 'r1') return { rk: 0, r1: id, d0: 0 };
@@ -1074,6 +1086,10 @@ function think(cells, toMove, opts, onProgress) {
     }
   }
   const empties = 64 - pc(pl | ol) - pc(ph | oh);
+  if (opts.rot && ybwOn()) {   // a helper (YBW): take moves at the lead's split points until the pool stops the threads
+    nodes = WX.mt_idle();
+    return { move: -1, score: 0, depth: 0, nodes, ms: Date.now() - t0 };
+  }
   if (!opts.rot && WON && WX.tt_new) WX.tt_new();   // (engine_mt.wasm: a new age for the shared table's entries)
   const time = opts.time ?? lv.time;
   nodeMax = lv.nodes || 0;   // (PRO: a node limit — the search stops like at a deadline and keeps the last finished depth)
@@ -1111,7 +1127,7 @@ function think(cells, toMove, opts, onProgress) {
   const maxDepth = Math.min(lv.depth, empties);
   const doExact = empties <= lv.exact;
   const wldNow = !doExact && lv.wld && empties <= lv.wld && !variety;
-  const SPL = !opts.rot && (doExact ? !variety : wldNow) ? splitAnnounce(pos) : null;   // (threads: the lead's solve is split at the root)
+  const SPL = !opts.rot && (doExact ? !variety : wldNow) && !ybwOn() ? splitAnnounce(pos) : null;   // (threads: the lead's solve is split at the root)
   const LZ = !variety && lzArr(), lzk = LZ ? lzKey(pos) : 0;   // (threads: the helpers' deeper midgame results)
   const HP = opts.rot ? helperPlan(opts.rot) : null;   // (a helper thread: how it differs from the lead)
   if (WON && WX.set_rot1) WX.set_rot1(HP ? HP.r1 : 0);

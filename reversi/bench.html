@@ -41,7 +41,7 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);ma
 <body>
 <main>
 <h1>リバーシ マルチスレッド ベンチマーク</h1>
-<p class="sub">対局ページと同じ方式（Document-Isolation-Policy の分離、engine_mt.wasm の Lazy SMP ＋ 終盤のルート分割）で、スレッド数ごとの読みの速さを測ります。PC の Chrome で開き、ほかのアプリを閉じて「開始」。終わったら「結果をコピー」を押して貼り付けてください（約5分）。</p>
+<p class="sub">対局ページと同じ方式（Document-Isolation-Policy の分離、engine_mt.wasm の YBW 分割探索）で、スレッド数ごとの読みの速さを測ります。PC の Chrome で開き、ほかのアプリを閉じて「開始」。終わったら「結果をコピー」を押して貼り付けてください（約5分）。</p>
 
 <div class="card"><div class="kv" id="env"></div></div>
 
@@ -59,7 +59,7 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);ma
 </div>
 
 <div class="card"><h2>中盤（残り36マス ×8局面、時間で区切る反復深化）</h2><div class="tw"><table id="tblM"><thead><tr><th>スレッド</th><th>nps（合計）</th><th>1スレッド比</th><th>到達した深さ（平均）</th><th>共通の深さまでの時間</th><th>速さ</th><th>最善手の一致</th><th>起動</th></tr></thead><tbody></tbody></table></div></div>
-<div class="card"><h2>終盤（残り24マスの完全読み、ルート分割）</h2><div class="tw"><table id="tblE"><thead><tr><th>スレッド</th><th>合計時間</th><th>1スレッド比</th><th>nps（合計）</th><th>局面数（1スレッド比）</th><th>石差の一致</th><th>起動</th></tr></thead><tbody></tbody></table></div><pre id="log"></pre></div>
+<div class="card"><h2>終盤（残り24マスの完全読み、YBW）</h2><div class="tw"><table id="tblE"><thead><tr><th>スレッド</th><th>合計時間</th><th>1スレッド比</th><th>nps（合計）</th><th>局面数（1スレッド比）</th><th>石差の一致</th><th>起動</th></tr></thead><tbody></tbody></table></div><pre id="log"></pre></div>
 </main>
 <script src="../shared/mtengine.js?v=9"></script>
 <script>
@@ -114,7 +114,7 @@ async function setup() {
   const wt = await loadWeights();
   // the same pool as the game page (index.html MTP): lead and helpers are mt-worker.js on a shared engine_mt.wasm
   pool = MTEngine.pool({
-    wasm: 'engine_mt.wasm?v=5', lead: 'mt-worker.js?v=10', helper: 'mt-worker.js?v=10', slot: 2 << 20, initial: 1024, maximum: 16384,
+    wasm: 'engine_mt.wasm?v=6', lead: 'mt-worker.js?v=11', helper: 'mt-worker.js?v=11', slot: 2 << 20, initial: 1024, maximum: 16384,
     imports: mem => ({ env: { memory: mem, now: () => Date.now() } }),
     after: async (X, mem, ws) => { if (!PX) { PX = X; X.init(); } ws.forEach(w => w.postMessage({ type: 'weights', buffer: wt.buffer.slice(0), nphase: wt.nphase })); },
     help: m => { const o = m.opts || {}, ex = o.cfg.exact; return { cells: m.cells, toMove: m.toMove, cfg: { depth: 60, exact: ex, wld: o.cfg.wld || ex + 2, mpc: 1 } }; },   // (= index.html MTP.help with opts.cfg)
@@ -141,7 +141,7 @@ async function run() {
   const t00 = performance.now(); let doneW = 0;
   const totalW = COUNTS.length * (MP.length * T + EP.length * 6000) + 1500;   // (rough weights for the bar)
   const tick = (add, msg) => { doneW += add; $('#bar i').style.width = Math.min(100, doneW / totalW * 100) + '%'; if (msg) $('#st').textContent = msg + `　経過 ${Math.round((performance.now() - t00) / 1000)}秒`; };
-  lines = [`reversi bench (mt v2, 2026-11-09) ${new Date().toISOString()} | ${ua} | isolated ${ISO} | hc ${HC} | mid ${MP.length}x${T}ms (36 empties) | end ${EP.length}x24 empties exact`];
+  lines = [`reversi bench (mt v4 ybw, 2026-11-10) ${new Date().toISOString()} | ${ua} | isolated ${ISO} | hc ${HC} | mid ${MP.length}x${T}ms (36 empties) | end ${EP.length}x24 empties exact`];
   const M = {}, E = {};   // per thread count
   // midgame: iterative deepening for T ms (use 1.0: a new depth may start until T, cut at T); per depth the time and move
   const midCfg = { depth: 60, exact: 0, time: T, use: 1, max: T, mpc: 1 };

@@ -1308,6 +1308,21 @@
   landMQ.addEventListener('change', () => setTimeout(landNudge, 400));
   function closeBoard() { if (renderPlace.close) renderPlace.close(); stopSession(); $('bv').classList.remove('on', 'playing'); document.body.style.overflow = ''; history.replaceState(null, '', '#' + page); render(page); }
   $('bvClose').onclick = closeBoard;
+  // PC: the header's icons go into the 3D view while it is open (the same buttons, moved: their handlers come along) and back
+  // when it closes; the × closes the view, or quits the game / rules tour being played (2026-11-10)
+  { const bv = $('bv'), top = $('bvTop'), X = $('bvX'), MQ = matchMedia('(hover:hover) and (pointer:fine) and (min-width:900px)');
+    const ids = ['coinPill', 'sfxBtn', 'npcBtn', 'langBtn', 'langPop'];
+    let home = null;
+    const sync = () => {
+      const on = bv.classList.contains('on') && MQ.matches;
+      if (on === bv.classList.contains('bvt')) return;
+      bv.classList.toggle('bvt', on);
+      if (on) { if (!home) home = $('homeBtn'); ids.forEach(id => { const e = $(id); if (e) top.insertBefore(e, X); }); }
+      else if (home) ids.forEach(id => { const e = $(id); if (e) home.before(e); });
+    };
+    X.onclick = () => { if (bv.classList.contains('playing')) $('bvQuit').click(); else closeBoard(); };
+    new MutationObserver(sync).observe(bv, { attributes: true, attributeFilter: ['class'] });
+    MQ.addEventListener ? MQ.addEventListener('change', sync) : MQ.addListener(sync); sync(); }
   window.AtlasBoard = { open: id => openBoard(id), close: closeBoard, ready: id => !window.AtlasLazy || AtlasLazy.loaded(id) };   // ヒストリア (opened from the game list) puts that game's board on the table first
   // the room's time of day (auto = by the clock)
   const TOD = { ja: ['自動', '朝', '昼', '夕方', '夜'], en: ['Auto', 'Morning', 'Day', 'Evening', 'Night'], zh: ['自动', '早晨', '白天', '傍晚', '夜晚'], ko: ['자동', '아침', '낮', '저녁', '밤'], es: ['Auto', 'Mañana', 'Día', 'Tarde', 'Noche'], fr: ['Auto', 'Matin', 'Jour', 'Soir', 'Nuit'], pt: ['Auto', 'Manhã', 'Dia', 'Tarde', 'Noite'], de: ['Auto', 'Morgen', 'Tag', 'Abend', 'Nacht'], hi: ['ऑटो', 'सुबह', 'दिन', 'शाम', 'रात'], ar: ['تلقائي', 'صباح', 'نهار', 'مساء', 'ليل'], ru: ['Авто', 'Утро', 'День', 'Вечер', 'Ночь'], 'zh-TW': ['自動', '早晨', '白天', '傍晚', '夜晚'], id: ['Otomatis', 'Pagi', 'Siang', 'Sore', 'Malam'], tr: ['Otomatik', 'Sabah', 'Gündüz', 'Akşam', 'Gece'] };

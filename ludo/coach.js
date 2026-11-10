@@ -213,6 +213,7 @@ function tipsOf(st, w) {
 }
 function render() {
   if (!card) return;
+  if (window.SeqPrac && SeqPrac.active() && SeqPrac.paint()) return;   // the 3-move opening practice (shared/seqprac.js, 2026-11-10)
   if (LudoCoach.sw) LudoCoach.sw.sync();
   const rv = !!document.querySelector('#reviewCard.show');
   const over = !!G && G.state.over, playing = !!G && !over && !VIEW;

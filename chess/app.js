@@ -432,7 +432,7 @@ function canHumanPlay() {
   if (gameOver(cur) || animating) return false;
   if (inStudy()) return true;
   if (puzzle) return puzzle.state === 'play' && !puzzle.busy && toMoveAt(cur) === puzzle.me;
-  if (lesson) return !lesson.answered;
+  if (lesson) return window.SeqPrac && SeqPrac.active() ? SeqPrac.state().waiting : !lesson.answered;
   if (reviewing) return false;
   if (settings.mode === 'online') return olLive() && !!net.game && net.game.status === 'play' && !net.pending && cur === moves.length && toMoveAt(cur) === net.me;
   return !isAIColor(toMoveAt(cur)) && !thinking;
@@ -1326,6 +1326,7 @@ function pzProgress() { try { return JSON.parse(localStorage.getItem(PZ_STORE) |
 let introIdx = 0, savedGame = null;
 function stashGame() { studyEnd(true); olDetach(); if (!lesson && !puzzle) savedGame = { moves, cur, evals: evals.slice(), humanColor }; }
 function exitSpecial() {
+  if (window.SeqPrac) SeqPrac.stop();
   if (!lesson && !puzzle) return;
   lesson = null; puzzle = null; lessonMarks = []; labelList = null;
   document.body.classList.remove('in-lesson', 'in-puzzle');
@@ -1568,7 +1569,9 @@ function loadLessonProblem() {
   else if (P.ok) { P._ok = new Set(P.ok.map(u => pos.fromUci(u))); P._best = pos.fromUci(P.ok[0]); P._sc = null; }
   else { P._sc = P.sc.map(([u, v]) => [pos.fromUci(u), v]); P._best = pos.fromUci(P.best); }
   lesson.answered = false; lesson.hinted = false;
+  if (window.SeqPrac) SeqPrac.stop();
   update(false); renderLessonCard(); $('#lsFb').innerHTML = '';
+  if (lesson.virt && P.cand && s.id !== 'mk' && window.SeqPrac) seqStart(P);
 }
 function renderLessonCard() {
   if (lesson && lesson.ramp) return renderRampCard();
@@ -1608,6 +1611,7 @@ function lsAuto(good, ms) {
 }
 function lessonAnswer(m) {
   if (lesson.ramp) return rampMove(m);
+  if (window.SeqPrac && SeqPrac.active()) { const { pos } = posAt(cur); SeqPrac.move(pos.uci(m)); return; }
   const P = lessonProblem(), s = curStep(), { pos } = posAt(0);
   lesson.answered = true;
   if (P._freq) return openingAnswer(P, m, pos);
@@ -1862,6 +1866,36 @@ function openingAnswer(P, m, pos) {
     if (!c) lessonMarks.push({ arrow: [mFrom(m), mTo(m)], cls: 'ng' });
     update(false);
   }, moveDur() + 800);
+}
+
+// ---- the opening practice in the shogi style (shared/seqprac.js, 2026-11-10): 3 moves in a row from the problem position against
+// the book / the engine, each rated in the coach box, then the correct opening line (振り返り). The book: every position of
+// openings.json (the practice positions of all the openings, with the moves strong players chose there)
+let opBookM = null;
+const fenKey = f => f.split(' ').slice(0, 4).join(' ');
+function opBook() {
+  if (opBookM) return opBookM; opBookM = new Map();
+  for (const g of (OPEN && OPEN.sets) || []) for (const P of g.problems || []) { const k = fenKey(P.fen), e = opBookM.get(k); if (!e || (P.n || 0) > e.n) opBookM.set(k, { n: P.n || 0, cand: P.cand }); }
+  return opBookM;
+}
+function seqStart(P) {
+  const g = lesson.virt && OPEN.sets.find(x => x.id === lesson.virt.id), model = new Map();
+  if (g && g.study) { const z = E.Pos.fromFEN(E.START); for (const [u] of g.study.steps) { model.set(fenKey(z.fen()), u); const m = z.fromUci(u); if (!m) break; z.make(m); } }
+  const at = line => { const pos = E.Pos.fromFEN(P.fen), ms = []; for (const u of line) { const m = pos.fromUci(u); if (!m) break; ms.push(m); pos.make(m); } return { pos, ms }; };
+  const L0 = lesson, Pz = P;
+  SeqPrac.start({
+    lang: () => LANG,
+    book: line => { if (!line.length) return P.cand.map(([u, c]) => ({ u, c })); const e = opBook().get(fenKey(at(line).pos.fen())); return e ? e.cand.map(([u, c]) => ({ u, c })) : null; },
+    analyze: async line => { const { pos, ms } = at(line), r = await request('ana', { type: 'analyze', moves: ms, time: 1500 }); return ((r && r.list) || []).map(e => ({ u: pos.uci(e.m), wr: (sOfV(e.v) + 1) / 2 })).sort((a, b) => b.wr - a.wr); },
+    think: async line => { const { pos, ms } = at(line), r = await request('ai', { type: 'think', moves: ms, level: 16 }); return r && r.move ? pos.uci(r.move) : null; },
+    name: (line, u) => { const { pos } = at(line), m = pos.fromUci(u); if (!m) return u; const f = pos.fen().split(' '); return (f[1] === 'w' ? f[5] + '.' : f[5] + '…') + pos.san(m); },
+    over: line => { const { pos, ms } = at(line); return ms.length < line.length || !pos.legal().length; },
+    show: (line, anim) => { if (lesson !== L0) return; moves = at(line).ms; cur = moves.length; sel = null; lessonMarks = []; labelList = null; update(anim); },
+    mark: u => { const { pos } = at(SeqPrac.state().line), m = pos.fromUci(u); if (!m) return; lessonMarks = [{ at: mFrom(m), cls: 'ok' }]; renderFx(); },
+    model: line => model.get(fenKey(at(line).pos.fen())) || null,
+    changed: () => { if (lesson !== L0 || lessonProblem() !== Pz) return; renderLessonCard(); $('#lsFb').innerHTML = SeqPrac.status(); },
+    done: total => { if (lesson !== L0) return; lesson.results[lesson.i] = total; lesson.answered = true; renderLessonCard(); playChime(total >= 16); },
+  });
 }
 
 // ====================================================================== puzzles: mate in N

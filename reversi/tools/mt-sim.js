@@ -12,6 +12,9 @@
 //           next check of the clock — the threads truly at the same time (2026-11-10, MODEL_CARD.md「マルチスレッドの見直し その2」)
 //   --slow 0,10,11,12 [--slowstep 5]: those threads (0 = the lead) run at 2/5 of the speed (Apple's efficiency cores, 2026-11-09):
 //                                     a fast thread's clock goes 2 per check, a slow one's --slowstep
+//   --ticks: the midgame's time to a depth is the virtual clock, not the lead's nodes (needed for --plan ybw, where the lead
+//            also waits and helps: 2026-11-10, MODEL_CARD.md「マルチスレッド v4」). --split D,E: YBW's split depth / empties
+//            (engine.c mt_split). The YBW helpers wait in engine.c mt_idle, which ticks the clock while it finds no work.
 // Midgame: per position (bench.html's MID, 36 empties, + --gen more from self-play) and thread count, the lead thinks with
 // a node budget (its own nodes, cfg.nodes) from an empty table: the depth it finished, the lead's nodes to the common depth,
 // the moves. --ttbits: a smaller table (like the Mac's 3 s × many threads). --plan / --d0 / --noidle: the helpers' variants
@@ -57,7 +60,7 @@ if (!isMainThread) {
     T[id] = 0; Atomics.store(A, id, 1);
     if (id === 0) {
       const per = {};
-      const r = E.think(j.cells, j.toMove, { cfg: j.cfg, time: 1e9, noBook: true, variety: false }, p => { if (p.depth) per[p.depth] = { nodes: m.step > 1 || m.maxstep > 1 ? T[id] : p.nodes, move: p.move }; });   // (--slow: the clock, not the lead's nodes)
+      const r = E.think(j.cells, j.toMove, { cfg: j.cfg, time: 1e9, noBook: true, variety: false }, p => { if (p.depth) per[p.depth] = { nodes: m.step > 1 || m.maxstep > 1 || m.ticks ? T[id] : p.nodes, move: p.move }; });   // (--slow / --ticks: the clock, not the lead's nodes)
       let mx = 0; for (let k = 0; k < m.n; k++) if (T[k] > mx) mx = T[k];
       Atomics.store(A, id, 0); Atomics.notify(E0, 0);
       parentPort.postMessage({ type: 'result', move: r.move, score: r.score, exact: !!r.exact, depth: r.depth, nodes: r.nodes, per, ticks: mx });
@@ -117,11 +120,12 @@ async function makePool(n, wasm = WASM, engine = ENGINE) {
   X.mt_stack(base + n * SLOT + SLOT - 16); X.mt_thread(base + n * SLOT);
   X.init();
   if (opt.ttbits && X.tt_bits) X.tt_bits(+opt.ttbits);
+  if (opt.split && X.mt_split) { const [d, e] = String(opt.split).split(',').map(Number); X.mt_split(d || 0, e || 0); }   // (--split D,E: YBW split depth / empties)
   if (opt.delay) { if (!X.sim_delay) throw new Error('--delay needs a build of tools/mtsim-delay.py (--wasm)'); X.sim_delay(n > 1 ? 1 : 0, n > 1 ? 1 : 0); }
   const ctl = new Int32Array(new SharedArrayBuffer(512)), sync = new SharedArrayBuffer(1024);
   const ws = [];
   const SLOW = new Set(String(opt.slow || '').split(',').filter(x => x !== '').map(Number)), SST = +(opt.slowstep || 5), het = SLOW.size > 0;
-  for (let id = 0; id < n; id++) ws.push(new Worker(__filename, { workerData: { module, mem, id, n, tls: base + id * SLOT, top: base + id * SLOT + SLOT - 16, ctl, sync, engine, plan: opt.plan, noidle: !!opt.noidle,
+  for (let id = 0; id < n; id++) ws.push(new Worker(__filename, { workerData: { module, mem, id, n, tls: base + id * SLOT, top: base + id * SLOT + SLOT - 16, ctl, sync, engine, plan: opt.plan, noidle: !!opt.noidle, ticks: !!opt.ticks,
     step: het ? (SLOW.has(id) ? SST : 2) : 1, maxstep: het ? SST : 1 } }));
   for (const w of ws) await new Promise(res => { w.once('message', res); const b = new Int16Array(W); w.postMessage({ type: 'weights', buffer: b.buffer }, [b.buffer]); });
   return {
@@ -190,7 +194,7 @@ async function match() {
     for (const n of TH) {
       const same = R[n].filter((r, i) => r.score === R[b][i].score && r.exact).length;
       const geo = Math.exp(R[n].reduce((a, r, i) => a + Math.log(R[b][i].ticks / Math.max(1, r.ticks)), 0) / P.length);
-      console.log(`threads ${n}: time x${(tk(b) / tk(n)).toFixed(2)} (geomean x${geo.toFixed(2)})  nodes x${(nd(n) / nd(b)).toFixed(2)}  same score ${same}/${P.length}`);
+      console.log(`threads ${n}: time x${(tk(b) / tk(n)).toFixed(2)} (geomean x${geo.toFixed(2)})  nodes x${(nd(n) / nd(b)).toFixed(2)} (${nd(n)})  same score ${same}/${P.length}`);
     }
     return;
   }
@@ -203,7 +207,7 @@ async function match() {
     const agree = P.filter((_, i) => at(n, i).move === at(b, i).move).length;
     const work = R[n].reduce((a, r) => a + r.nodes + r.helperNodes, 0) / R[b].reduce((a, r) => a + r.nodes + r.helperNodes, 0);
     const geo = Math.exp(P.reduce((a, _, i) => a + Math.log((at(b, i).nodes || 1) / (at(n, i).nodes || 1)), 0) / P.length);
-    console.log(`threads ${n}: avg depth ${avg.toFixed(2)}  time to common depth x${(ttd(b) / ttd(n)).toFixed(2)} (geomean x${geo.toFixed(2)})  agree ${agree}/${P.length}  all nodes x${work.toFixed(2)}`);
+    console.log(`threads ${n}: avg depth ${avg.toFixed(2)}  time to common depth x${(ttd(b) / ttd(n)).toFixed(2)} (geomean x${geo.toFixed(2)})  agree ${agree}/${P.length}  all nodes x${work.toFixed(2)}${opt.ticks ? `  nodes per thread per tick ${(R[n].reduce((a, r) => a + r.nodes + r.helperNodes, 0) / R[n].reduce((a, r) => a + r.ticks, 0) / n).toFixed(0)}` : ''}`);
   }
   console.log('common depths', common.join(','), ' budget', BUDGET, 'lead nodes', opt.ttbits ? 'ttbits ' + opt.ttbits : '');
 })();

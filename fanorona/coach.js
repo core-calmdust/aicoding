@@ -459,6 +459,7 @@ function restNow(rv, can) {
 }
 function render() {
   if (!card) return;
+  if (window.SeqPrac && SeqPrac.active() && SeqPrac.paint()) return;   // the 3-move opening practice (shared/seqprac.js, 2026-11-10)
   if (FanoronaCoach.sw) FanoronaCoach.sw.sync();
   const rv = !!document.querySelector('#reviewCard.show');
   const over = moves.length > 0 && gameOver(moves.length), playing = !over && cur === moves.length && !reviewing;

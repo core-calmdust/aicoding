@@ -208,7 +208,7 @@ html.atlas-skin .pro-lab b{color:#2b3044}
 html.atlas-skin .pro-row{border-top-color:#f1e6cf}
 html.atlas-skin .pro-seg{background:#f2e7cf;border-color:#ead9b6}
 html.atlas-skin .pro-seg button{color:#6b6f80}
-html.atlas-skin .pro-seg button.sel{background:#fff;color:#2b3044;box-shadow:inset 0 0 0 2px #e3b866,0 2px 0 #e3b866}
+html.atlas-skin .pro-seg button.sel{background:#fff;color:#2b3044;box-shadow:0 2px 0 #e3cfa4}   /* as the dialog's other tabs (nglux .seg) */
 html.atlas-skin .pro-num input[type=range]{-webkit-appearance:none;appearance:none;background:transparent;height:26px}
 html.atlas-skin .pro-num input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:99px;background:#efe3c8;border:0}
 html.atlas-skin .pro-num input[type=range]::-moz-range-track{height:8px;border-radius:99px;background:#efe3c8;border:0}
