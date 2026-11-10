@@ -3605,6 +3605,31 @@ $('#langSel').onchange = e => {
   }
   if ($('#puzzleOverlay').classList.contains('show')) { if (!$('#pzListView').classList.contains('hidden')) openPuzzles(); else openPzGrid(pzLevel); }
 };
+// ---- the portal's 3D view card opens this page at a part of it (2026-11-10): ?mode=puzzle|lesson|rated|online &sub=… &tc=…
+// (the 3D skin calls it from its start(); the plain 2D page on load, below). null: not ready yet (called again)
+window.AtlasDeep = function (mode, sub, tc) {
+  if (typeof openPuzzles !== 'function' || typeof openNewDialog !== 'function' || !$('#btnStart')) return null;
+  const click = (sel, n = 0) => { const b = document.querySelector(sel); if (b) b.click(); else if (n < 30) setTimeout(() => click(sel, n + 1), 150); };
+  if (mode === 'puzzle') {
+    Promise.resolve(openPuzzles()).then(() => { if (sub === 'd1') click('#pzLevels [data-pbh-daily]'); else if (sub === 'cont') { const b = document.querySelector('#pzLevels [data-pbh-cont]'); if (b) b.click(); } });
+    return true;
+  }
+  if (mode === 'lesson') { if (sub === 'open') openOpenings(); else openLessons(); return true; }
+  if (mode === 'online') {
+    if (!window.Online || !$('#dkAuto')) return null;
+    if (tc && typeof olSetTc === 'function') olSetTc(tc);
+    $('#dkAuto').click(); return true;
+  }
+  if (mode === 'rated') { openNewDialog(); draft.mode = 'rated'; segSync(); $('#btnStart').click(); return true; }
+  return false;
+};
+{ const q = new URLSearchParams(location.search), m = q.get('mode');
+  if (m && /^(puzzle|lesson|rated|online)$/.test(m) && q.get('skin') !== 'atlas') {   // the plain 2D page opened at a part of it
+    let n = 0; const go = () => { const r = window.AtlasDeep(m, q.get('sub'), q.get('tc')); if (r === null && ++n < 60) return setTimeout(go, 200);
+      ['mode', 'sub', 'tc'].forEach(k => q.delete(k)); history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash); };
+    if (document.readyState === 'complete') setTimeout(go, 1200); else addEventListener('load', () => setTimeout(go, 1200));   // (after the page's own start-up, which closes its dialogs)
+  }
+}
 const olRoomQ = (new URLSearchParams(location.search).get('room') || (location.hash.match(/room=([A-Za-z0-9]{5})/) || [])[1] || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 if (loadFromHash()) { /* shared game opened */ }
 else if (!hadSave) { update(false); if (!olRoomQ) afterPosition(); }   // no saved game: the starting position waits (the new-game dialog opens from the menu)
