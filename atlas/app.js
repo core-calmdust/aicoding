@@ -1450,7 +1450,7 @@
     const g = bvGame; stopSession();
     $('bv').classList.add('playing', 'rules'); $('endc').classList.remove('on');
     session = AtlasPuzzles.start({ id: g.id, el: $('gl'), Table3D, lang, t, panel: $('bv'), adapter: Atlas3D[g.id], onExit: () => openBoard(g.id),
-      daily: o.daily, pick: o.pick, dailyTitle: w => t(g.id === 'chess' ? 'bv.pz.dc' : w === 'd2' ? 'bv.pz.d2' : 'bv.pz.d1') });
+      daily: o.daily, pick: o.pick, onList: () => puzzleSheet(g), dailyTitle: w => t(g.id === 'chess' ? 'bv.pz.dc' : w === 'd2' ? 'bv.pz.d2' : 'bv.pz.d1') });
     if (session.panel && window.ResizeObserver) new ResizeObserver(fitStage).observe(session.panel);
     fitStage(); Table3D.play(true);
   }
@@ -1462,7 +1462,7 @@
     const g = bvGame; stopSession();
     $('bv').classList.add('playing', 'rules'); $('endc').classList.remove('on');
     session = AtlasLessons.start({ id: g.id, kind: kind === 'open' ? 'open' : 'lesson', key, el: $('gl'), Table3D, lang, t, panel: $('bv'), adapter: Atlas3D[g.id], onExit: () => openBoard(g.id),
-      onFull: k => startPlay('full', 'lesson', k === 'open' ? 'open' : 'list'), onDone: () => { try { refresh(); } catch (e) {} } });
+      onFull: k => startPlay('full', 'lesson', k === 'open' ? 'open' : 'list'), onList: k => lessonSheet(g, k === 'open' ? 'open' : 'list'), onDone: () => { try { refresh(); } catch (e) {} } });
     if (session.panel && window.ResizeObserver) new ResizeObserver(fitStage).observe(session.panel);
     fitStage(); Table3D.play(true);
   }

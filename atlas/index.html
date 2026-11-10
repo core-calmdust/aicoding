@@ -1592,7 +1592,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 .bvi .sidetg button.on{background:#fff;color:var(--ink);box-shadow:0 2px 0 rgba(0,0,0,.08)}
 /* many choices (ludo: rule × players): the toggle takes the row and wraps */
 .bvi .opts label:has(.sidetg button:nth-child(5)){flex:1 1 100%!important;flex-wrap:wrap}.bvi .sidetg:has(button:nth-child(5)){flex:1 1 100%;flex-wrap:wrap}.bvi .sidetg:has(button:nth-child(5)) button{flex:1 1 30%;padding-inline:6px}
-.bvi .act.act3 #bvTable.mxfull{background:#8a5a2b;color:#fff;box-shadow:0 4px 0 #5d3a16;border:2px solid #7a4c22}.bvi .act.act3 #bvTable.mxfull:hover{background:#7d5126}
+.bvi .act.act3 #bvTable.mxfull{background:#ffeccc;color:#7a4a12;box-shadow:0 4px 0 #f0cf98;border:2px solid #f6dcae}.bvi .act.act3 #bvTable.mxfull:hover{background:#ffe4b8}   /* (the 書斎で遊ぶ colours, 2026-11-11) */
 .bvi .mxb.mxic{width:48px;padding:0}.bvi .mxb.mxic svg{width:22px;height:22px}
 .lvs-l .lvpvp{width:100%;text-align:start;font:inherit;cursor:pointer;background:linear-gradient(100deg,#e3f3ff,#f6fbff 70%);border-color:#cfe6f7;padding:6px 12px 6px 10px}
 .lvs-l .lvpvp svg{width:96px;height:80px;flex:none;margin:-2px 0}.lvs-l .lvpvp small{color:#4f7fa3}
@@ -1629,6 +1629,11 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 .bksheet .pb-tile{background:#fff;border-color:var(--line)}
 .bksheet .pb-tile.lk{background:#f6f1e6}
 .bksheet .pb-stage header{background:none}
+/* the portal's flat buttons (2026-11-11): coral with a solid edge below, no gradient / glow */
+.bksheet .pb-cont{background:#ff5d5d;color:#fff;border:0;border-radius:16px;box-shadow:0 4px 0 #d93c3c;font-weight:900}
+.bksheet .pb-cont small{color:#fff}
+.bksheet .pbh-daily .go{background:#ff5d5d;color:#fff;border:0;border-radius:14px;box-shadow:0 3px 0 #d93c3c;font-weight:900}
+.bksheet .pbh-daily .go.ok{box-shadow:none}
 @media (min-width:820px){.bk-in{border-radius:24px;height:min(88dvh,900px);margin-bottom:4dvh}.bksheet{align-items:center}}
 .lss-cat{margin:12px 2px 4px;font-size:12.5px;font-weight:900;color:var(--ink2)}.lss-cat:first-child{margin-top:0}
 .lssheet .lss b{color:var(--ink2)}.lssheet .lss.pass b{color:#1ea36c}.lss-wait{padding:20px;text-align:center;color:var(--ink2)}
@@ -1959,8 +1964,8 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 };</script>
 <script src="lazy.js?v=39"></script>
 <script src="puzzle-lines.js?v=1"></script>
-<script src="puzzles.js?v=7"></script>
-<script src="lessons3d.js?v=3"></script>
+<script src="puzzles.js?v=8"></script>
+<script src="lessons3d.js?v=4"></script>
 <script src="missions.js?v=7"></script>
 <link rel="stylesheet" href="historia.css?v=15">
 <script src="historia.js?v=38"></script>
@@ -1973,6 +1978,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <link rel="stylesheet" href="worldmap.css?v=18">
 <script src="worldmap.js?v=31"></script>
 <script src="npc/npc.js?v=22"></script>
-<script src="app.js?v=291"></script>
+<script src="app.js?v=292"></script>
 </body>
 </html>
