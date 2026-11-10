@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <script>/* portal skin: show "loading" until the 3D board is ready */ if (/[?&]skin=atlas\b/.test(location.search)) { document.documentElement.classList.add('atlas-skin'); document.write('<style>html.atlas-skin{background:#fff6e2}html.atlas-skin body{opacity:0}html.atlas-skin.atlas-ready body{opacity:1;transition:opacity .2s}.atlas-load{visibility:hidden}</style><link rel="stylesheet" href="../atlas/skin/loading.css?v=2l14"><script src="../atlas/skin/loading.js?v=4l14"><\/script><script>AtlasLoading.show()<\/script>'); }</script>
-<script>try { const S = (JSON.parse(localStorage.getItem('aicoding-amazons') || '{}') || {}).settings || {}; const B = ['temple', 'ruins', 'vase', 'terrazzo', 'navy'], P = ['cameo', 'coin', 'vase', 'enamel']; document.documentElement.dataset.bd = B.includes(S.bd) ? S.bd : 'temple'; document.documentElement.dataset.pcs = P.includes(S.pcs) ? S.pcs : 'cameo'; } catch (e) {} document.documentElement.style.setProperty('--S', 10);</script>
+<script>try { const S = (JSON.parse(localStorage.getItem('aicoding-amazons') || '{}') || {}).settings || {}; const B = ['temple', 'ruins', 'vase', 'navy'], P = ['cameo', 'coin', 'vase', 'enamel']; document.documentElement.dataset.bd = B.includes(S.bd) ? S.bd : 'temple'; document.documentElement.dataset.pcs = P.includes(S.pcs) ? S.pcs : 'cameo'; } catch (e) {} document.documentElement.style.setProperty('--S', 10);</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <script src="../shared/latinfs.js?v=1l14"></script>
@@ -846,7 +846,6 @@ html.no-anim .arw::after,.arw.fly::after{display:none}
 html[data-bd=temple]{--bdImg:url(img/bd-temple.webp);--frameBg:url(img/fr-temple.webp) center/100% 100% no-repeat,#d9cdb2;--frm:#c9a052;--num:rgba(120,92,40,.9);--numS:rgba(255,248,230,.6);--arw1:#3a2414;--arw2:#120a06;--arwSh:#f0cf86;--arwFl:#fff6e2}
 html[data-bd=ruins]{--bdImg:url(img/bd-ruins.webp);--frameBg:url(img/fr-ruins.webp) center/100% 100% no-repeat,#24301f;--frm:#6f8a4a;--num:rgba(236,232,206,.85);--arw1:#2e2418;--arw2:#0e0a06;--arwSh:#dcbc7c;--arwFl:#f4e6c4}
 html[data-bd=vase]{--bdImg:url(img/bd-vase.webp);--frameBg:url(img/fr-vase.webp) center/100% 100% no-repeat,#16110d;--frm:#c4683a;--num:rgba(226,140,90,.9);--arw1:#3a1a0c;--arw2:#100604;--arwSh:#e88a4e;--arwFl:#f6d8b0}
-html[data-bd=terrazzo]{--bdImg:url(img/bd-terrazzo.webp);--frameBg:url(img/fr-terrazzo.webp) center/100% 100% no-repeat,#2e2f31;--frm:#c4a062;--num:rgba(70,66,60,.85);--numS:rgba(255,255,255,.55);--arw1:#2a2622;--arw2:#0c0a08;--arwSh:#d6b26a;--arwFl:#f4ead6}
 html[data-bd=navy]{--bdImg:url(img/bd-navy.webp);--frameBg:url(img/fr-navy.webp) center/100% 100% no-repeat,#18243e;--frm:#cca864;--num:rgba(204,168,100,.95);--numS:rgba(0,0,0,.5);--arw1:#2a1e14;--arw2:#0a0705;--arwSh:#e0bf7a;--arwFl:#fff4dc}
 .frame{background:var(--frameBg)}
 html[data-bd=temple] .frame{box-shadow:0 40px 80px -30px rgba(0,0,0,.85),0 0 0 1px rgba(201,160,82,.6),inset 0 1px 0 rgba(255,255,255,.5)}
@@ -855,8 +854,7 @@ html[data-pcs=cameo]{--pcW:url(img/pc-cameo-w.webp);--pcB:url(img/pc-cameo-b.web
 html[data-pcs=coin]{--pcW:url(img/pc-coin-w.webp);--pcB:url(img/pc-coin-b.webp)}
 html[data-pcs=vase]{--pcW:url(img/pc-vase-w.webp);--pcB:url(img/pc-vase-b.webp)}
 html[data-pcs=enamel]{--pcW:url(img/pc-enamel-w.webp);--pcB:url(img/pc-enamel-b.webp)}
-#bdRow{grid-template-columns:repeat(5,minmax(0,1fr))}
-@media (max-width: 520px){#bdRow{grid-template-columns:repeat(3,minmax(0,1fr))}}
+#bdRow{grid-template-columns:repeat(4,minmax(0,1fr))}
 .mtabs{display:none;background:linear-gradient(180deg,var(--panel2),var(--bg));border-top:1px solid var(--line)}
 .mtabs button{background:none;border:0;color:var(--muted);position:relative;cursor:pointer}
 .mtabs button.sel{color:var(--accent)}
@@ -1376,7 +1374,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=146')).then(() => load('../atlas/tables3d.js?v=54')).then(() => load('../atlas/skin/common.js?v=59tz')).then(() => load('../atlas/models/amazons.js?v=1')).then(() => load('../atlas/skin/amazons.js?v=2'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=146')).then(() => load('../atlas/tables3d.js?v=54')).then(() => load('../atlas/skin/common.js?v=59tz')).then(() => load('../atlas/models/amazons.js?v=1')).then(() => load('../atlas/skin/amazons.js?v=3'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
