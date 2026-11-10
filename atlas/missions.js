@@ -15,11 +15,11 @@
 (function () {
   'use strict';
   const TX = {
-    ja: { title: 'ミッション', st: 'スターター', mo: 'マンスリー', lg: 'レジェンダリー', claim: '受け取る', got: '受取済み', line: '1列そろうと +{n}', card: 'ぜんぶそろうと +{n}', bingo: 'ビンゴ！', left: 'あと{n}日', month: '{m}月のミッション', all: 'ぜんぶ達成で +{n}', done: 'クリア！', name: 'ホシマル',
-      hi: ['ミッションをクリアしてコインをもらおう！', 'できたところから受け取ってね。', 'ビンゴを狙ってみよう！'], moHi: '毎月かわるミッションだよ。月末までにいくつクリアできるかな？', lgHi: 'とっておきの大挑戦。達成したら大きなごほうび！',
-      page: '「{p}」を開く', news: 'NEW（更新情報）を見る', rules: '3D盤でルールを見る', historia: 'ヒストリアを見る', play: '{g}で遊ぶ', playN: '{g}で{n}回遊ぶ', games: '{n}種類のゲームで遊ぶ', pz: 'パズルを{n}問解く', ls: 'レッスンに{n}回合格する', win: '3D盤でAIに{n}回勝つ', login: '{n}日ログインする', pull: 'ガチャを{n}回引く', beat: '{g}でLv.{n}以上のAIに勝つ', beatN: '{n}種類のゲームでLv.{l}以上のAIに勝つ', ach: '実績を{n}個達成する', top: 'どれかのゲームで最強のAIに勝つ', allG: 'すべてのゲームで遊ぶ' },
+    ja: { title: 'ミッション', st: 'スターター', mo: 'マンスリー', lg: 'レジェンダリー', claim: '受け取る', got: '受取済み', line: '1列そろうと +{n}', card: '全部で +{n}', bingo: 'ビンゴ！', left: 'あと{n}日', month: '{m}月のミッション', all: 'ぜんぶ達成で +{n}', done: 'クリア！', name: 'ホシマル',
+      hi: ['クリアしてコインをもらおう！', 'クリアしたマスをタップしてね。', 'ビンゴを狙ってみよう！'], moHi: '毎月かわるミッション。月末までにいくつクリアできるかな？', lgHi: 'とっておきの大挑戦。達成したら大きなごほうび！',
+      page: '「{p}」を開く', news: 'NEWを見る', rules: '3D盤でルールを見る', historia: 'ヒストリアを見る', play: '{g}で遊ぶ', playN: '{g}で{n}回遊ぶ', games: '{n}種類のゲームで遊ぶ', pz: 'パズルを{n}問解く', ls: 'レッスンに{n}回合格する', win: '3D盤でAIに{n}回勝つ', login: '{n}日ログインする', pull: 'ガチャを{n}回引く', beat: '{g}でLv.{n}以上に勝つ', beatS: '{g} Lv.{n}に勝つ', beatN: '{n}種類のゲームでLv.{l}以上のAIに勝つ', ach: '実績を{n}個達成する', top: 'どれかのゲームで最強のAIに勝つ', allG: 'すべてのゲームで遊ぶ' },
     en: { title: 'Missions', st: 'Starter', mo: 'Monthly', lg: 'Legendary', claim: 'Claim', got: 'Claimed', line: 'Each line +{n}', card: 'Full card +{n}', bingo: 'Bingo!', left: '{n} days left', month: 'Missions for {M}', all: 'All done +{n}', done: 'Clear!', name: 'Hoshimaru',
-      hi: ['Clear missions and earn coins!', 'Claim whatever you have finished.', 'Go for a bingo!'], moHi: 'New missions every month. How many can you clear by the end?', lgHi: 'The big challenges — with big rewards!',
+      hi: ['Clear missions, earn coins!', 'Claim whatever you have finished.', 'Go for a bingo!'], moHi: 'New missions every month. How many can you clear by the end?', lgHi: 'The big challenges — with big rewards!',
       page: 'Open "{p}"', news: 'Look at NEW (updates)', rules: 'Watch the rules on the 3D board', historia: 'Open a Historia', play: 'Play {g}', playN: 'Play {g} {n} times', games: 'Play {n} different games', pz: 'Solve {n} puzzles', ls: 'Pass {n} lessons', win: 'Beat the AI {n} times on the 3D board', login: 'Log in on {n} days', pull: 'Pull the gacha {n} times', beat: 'Beat an AI of Lv.{n}+ in {g}', beatN: 'Beat an AI of Lv.{l}+ in {n} games', ach: 'Earn {n} achievements', top: 'Beat the strongest AI of any game', allG: 'Play every game' },
     zh: { title: '任务', st: '新手', mo: '每月', lg: '传说', claim: '领取', got: '已领取', line: '每连一行 +{n}', card: '全部完成 +{n}', bingo: '宾果！', left: '还剩{n}天', month: '{m}月的任务', all: '全部完成 +{n}', done: '完成！', name: '星丸',
       hi: ['完成任务赚金币吧！', '完成的部分记得领取哦。', '试着连成一行吧！'], moHi: '每月更换的任务。月底前能完成几个呢？', lgHi: '压轴的大挑战，完成有大奖励！',
@@ -107,7 +107,7 @@
       mk('s-chess', fill(x.play, { g: gn('chess') }), S.touched('chess') ? 1 : 0, 1, 50, '♞'), mk('s-games3', fill(x.games, { n: 3 }), S.ids.filter(S.touched).length, 3, 50, '🎲'),
       mk('s-rules', x.rules, pg('rules'), 1, 50, '📖'), mk('s-hist', x.historia, pg('historia'), 1, 50, '🏛️'), mk('s-pz', fill(x.pz, { n: 1 }), S.pz, 1, 50, '🧩'), mk('s-ls', fill(x.ls, { n: 1 }), S.ls, 1, 50, '🎓'),
       mk('s-win', fill(x.win, { n: 1 }), S.wins, 1, 50, '🏆'), mk('s-login', fill(x.login, { n: 3 }), S.login, 3, 50, '📅'), mk('s-pull', fill(x.pull, { n: 1 }), S.pulls, 1, 50, '🎰'),
-      mk('s-boss', fill(x.beat, { g: gn('reversi'), n: 4 }), S.p3('reversi').best, 4, 50, '👑'),
+      mk('s-boss', fill(x.beatS || x.beat, { g: gn('reversi'), n: 4 }), S.p3('reversi').best, 4, 50, '👑'),
     ];
   }
   const LINES = (() => { const L = []; for (let i = 0; i < 4; i++) { L.push([0, 1, 2, 3].map(j => i * 4 + j)); L.push([0, 1, 2, 3].map(j => j * 4 + i)); } L.push([0, 5, 10, 15], [3, 6, 9, 12]); return L; })();
@@ -153,7 +153,7 @@
     const lines = LINES.map((L, i) => ({ id: 'sl-' + i, L, ok: L.every(stClaimed) }));
     const card = { id: 'sc-all', ok: st.every((_, i) => stClaimed(i)) };
     const can = m => m.ok && !M.c[m.id];
-    const n = { st: st.filter(can).length + lines.filter(can).length + (can(card) ? 1 : 0), mo: mo.filter(can).length, lg: lg.filter(can).length };
+    const n = { st: st.filter(can).length, mo: mo.filter(can).length, lg: lg.filter(can).length };
     return { S, M, st, mo, lg, lines, card, can, n };
   }
   function claim(id, coins) {
@@ -162,6 +162,32 @@
     try { C.sfx('coin'); } catch (e) {}
     try { C.confetti(coins >= 500 ? 90 : 36); } catch (e) {}
     C.refresh(); sync();
+  }
+
+  // a finished line / the full card pays out by itself (no button of its own): returns what was new, for the effect
+  function bingo() {
+    const s = state(), M = s.M, nl = [], W = C.W(); let coins = 0, card = false;
+    s.lines.forEach((L, i) => { if (L.ok && !M.c[L.id]) { M.c[L.id] = Date.now(); coins += LINE_COINS; nl.push(i); } });
+    if (s.card.ok && !M.c[s.card.id]) { M.c[s.card.id] = Date.now(); coins += CARD_COINS; card = true; }
+    if (!coins) return null;
+    W.bonus = (W.bonus || 0) + coins; C.save(W); C.refresh(); sync();
+    return { lines: nl, card, coins };
+  }
+  function playBingo(b) {
+    if (!b || !ov) return;
+    const grid = ov.querySelector('.msgrid'); if (!grid) return;
+    const cells = grid.querySelectorAll('.mscell'), x = X();
+    b.lines.forEach((li, k) => LINES[li].forEach((ci, j) => { const c = cells[ci]; if (!c) return; c.classList.remove('bg'); void c.offsetWidth; c.style.animationDelay = (k * 380 + j * 90) + 'ms'; c.classList.add('bg'); }));
+    const t = b.lines.length * 380 + 300;
+    setTimeout(() => {
+      if (!ov || !grid.isConnected) return;
+      const el = document.createElement('div'); el.className = 'msbingo' + (b.card ? ' all' : '');
+      el.innerHTML = `<b>${C.esc(b.card ? '🌟 ' + x.bingo : x.bingo + (b.lines.length > 1 ? ' ×' + b.lines.length : ''))}</b><span><i>¢</i>+${b.coins.toLocaleString()}</span>`;
+      grid.parentNode.appendChild(el);
+      try { C.sfx('coin'); } catch (e) {}
+      try { C.confetti(b.card ? 120 : 60); } catch (e) {}
+      setTimeout(() => el.remove(), 2200);
+    }, t);
   }
 
   /* ---------- the button and the popup ---------- */
@@ -189,35 +215,44 @@
 .msov.on .msp{transform:none}
 .mshd{display:flex;align-items:center;gap:12px;padding:14px 16px 10px;background:linear-gradient(180deg,#fff1c9,#fffaf0)}
 .mshd .pic{flex:none;width:64px;height:64px;filter:drop-shadow(0 3px 3px rgba(120,70,0,.25))}.mshd .pic svg{width:100%;height:100%}
-.mshd .say{flex:1;min-width:0}.mshd .say small{font-size:12px;font-weight:900;color:#c98a2a}.mshd .say p{margin:2px 0 0;font-size:14px;font-weight:800;line-height:1.5}
+.mshd .say{flex:1;min-width:0}.mshd .say small{font-size:12px;font-weight:900;color:#c98a2a}.mshd .say p{margin:2px 0 0;font-size:14px;font-weight:800;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.mshd .say p.one{display:block;white-space:nowrap;text-overflow:ellipsis}
 .mshd h3{margin:0;font-size:20px;font-weight:900}.msx{flex:none;width:40px;height:40px;border-radius:50%;border:0;background:#f1e6cf;font-size:18px;cursor:pointer;color:var(--ink,#2b3044)}
 .mstabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:0 16px;padding:4px;border-radius:99px;background:#f1e6cf}
-.mstabs button{position:relative;border:0;border-radius:99px;background:transparent;padding:9px 6px;font:900 14px var(--font,sans-serif);color:#6b7088;cursor:pointer}
+.mstabs button{position:relative;min-width:0;white-space:nowrap;overflow:visible;text-overflow:clip;border:0;border-radius:99px;background:transparent;padding:9px 4px;font:900 14px var(--font,sans-serif);color:#6b7088;cursor:pointer}
 .mstabs button.on{background:#fff;color:var(--ink,#2b3044);box-shadow:0 3px 0 #e3cfa4}.mstabs button i{position:absolute;top:-4px;right:8px;min-width:18px;height:18px;border-radius:99px;background:#ff5d5d;color:#fff;font:900 11px/18px var(--font,sans-serif);font-style:normal;padding:0 5px}
 .mstabs button[data-t=lg].on{background:linear-gradient(90deg,#fff3c4,#ffe2f4,#dff3ff)}
 .msbd{flex:1;min-height:0;overflow:auto;padding:14px 16px 18px}
-.msnote{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;font-weight:800;color:#a07a48;margin:0 2px 10px}
-.msgrid{display:grid;grid-template-columns:repeat(4,1fr) 46px;gap:8px;align-items:stretch}
-.mscell{position:relative;min-height:104px;border-radius:16px;border:2px solid #efe3c8;background:#fff;padding:8px 6px 8px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:4px;text-align:center;box-shadow:0 3px 0 #efe3c8;font:inherit;color:inherit;cursor:default}
-.mscell .ic{font-size:24px;line-height:1}.mscell .tx{font-size:11.5px;font-weight:800;line-height:1.35;color:#4a5068}.mscell .pr{font-size:11px;font-weight:900;color:#a07a48}
-.mscell.can{border-color:#ffb21e;background:#fff7dc;box-shadow:0 3px 0 #f0c25a;cursor:pointer;animation:msGlow 1.6s ease-in-out infinite}
+.msnote{display:flex;flex-wrap:nowrap;overflow:hidden;white-space:nowrap;gap:14px;font-size:12.5px;font-weight:800;color:#a07a48;margin:0 2px 10px}
+.msgw{position:relative}
+.msgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.mscell{position:relative;height:96px;min-width:0;border-radius:16px;border:2px solid #efe3c8;background:#fff;padding:7px 5px 6px;display:grid;grid-template-rows:26px 1fr auto;justify-items:center;align-items:center;text-align:center;box-shadow:0 3px 0 #efe3c8;font:inherit;color:inherit;cursor:default}
+.mscell .ic{font-size:22px;line-height:1}
+.mscell .tx{font-size:11.5px;font-weight:800;line-height:1.3;color:#4a5068;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
+.mscell .cn{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:900;color:#a07a48;white-space:nowrap}
+.mscell .cn i{display:inline-grid;place-items:center;width:14px;height:14px;border-radius:50%;background:#ffc928;color:#8a5a00;font-size:9px;font-style:normal}
+.mscell .cn em{font-style:normal;color:#b9a988;margin-right:2px}
+.mscell.can{border-color:#ffb21e;background:#fff7dc;box-shadow:0 3px 0 #f0c25a;cursor:pointer;animation:msGlow 1.6s ease-in-out infinite}.mscell.can .cn{color:#d17c00}
 @keyframes msGlow{0%,100%{box-shadow:0 3px 0 #f0c25a,0 0 0 0 rgba(255,178,30,.5)}50%{box-shadow:0 3px 0 #f0c25a,0 0 0 6px rgba(255,178,30,0)}}
 .mscell.got{background:#f2fbf6;border-color:#bfe8d2;box-shadow:0 3px 0 #bfe8d2}.mscell.got::after{content:'✓';position:absolute;inset:0;display:grid;place-items:center;font-size:52px;font-weight:900;color:rgba(30,163,108,.28);transform:rotate(-12deg)}
-.mscell .cn{font-size:11px;font-weight:900;color:#c98a2a}.mscell.can .cn{color:#d17c00}
-.msln{display:grid;place-items:center;border-radius:14px;border:2px dashed #efe3c8;font:900 11px var(--font,sans-serif);color:#c9b48a;background:transparent;padding:0}
-.msln.ok{border:2px solid #ffb21e;background:#fff3c4;color:#c46c00;cursor:pointer;animation:msGlow 1.6s ease-in-out infinite}.msln.got{border-style:solid;border-color:#bfe8d2;background:#f2fbf6;color:#1ea36c}
+.mscell.bg{animation:msBg .7s cubic-bezier(.3,1.5,.5,1) both}
+@keyframes msBg{0%{transform:scale(1)}40%{transform:scale(1.1);background:#fff3a8;border-color:#ffb21e;box-shadow:0 0 0 4px rgba(255,190,40,.55),0 0 22px 6px rgba(255,190,40,.6)}100%{transform:scale(1)}}
+.msbingo{position:absolute;left:50%;top:50%;z-index:5;display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px 26px;border-radius:22px;background:linear-gradient(180deg,#fff7c8,#ffd65a);border:3px solid #fff;box-shadow:0 6px 0 #e9a21a,0 18px 36px -10px rgba(120,70,0,.6);pointer-events:none;animation:msPop 2.2s cubic-bezier(.3,1.5,.5,1) both}
+.msbingo b{font-size:28px;font-weight:900;color:#c4500a;letter-spacing:.04em;text-shadow:0 2px 0 #fff}.msbingo span{display:inline-flex;align-items:center;gap:4px;font-size:16px;font-weight:900;color:#8a5a00}
+.msbingo span i{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#ffc928;font-size:11px;font-style:normal;border:1.5px solid #e09a00}
+.msbingo.all{background:linear-gradient(120deg,#fff3c4,#ffd9f0,#d9f0ff)}
+@keyframes msPop{0%{opacity:0;transform:translate(-50%,-50%) scale(.4) rotate(-8deg)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.08) rotate(2deg)}25%,80%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(0)}100%{opacity:0;transform:translate(-50%,-62%) scale(.96)}}
 .mscard{margin-top:12px;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:16px;background:linear-gradient(90deg,#fff3c4,#ffe9f2);border:2px solid #f6d79a;font-weight:900}
 .mscard span{flex:1;font-size:14px}.mslist{display:flex;flex-direction:column;gap:10px}
 .msrow{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:16px;background:#fff;border:2px solid #efe3c8;box-shadow:0 3px 0 #efe3c8}
 .msrow .ic{flex:none;width:42px;height:42px;border-radius:12px;background:#fff3d8;display:grid;place-items:center;font-size:22px}
-.msrow .md{flex:1;min-width:0}.msrow .md b{display:block;font-size:14px;font-weight:900;line-height:1.35}.msrow .bar{display:block;height:8px;margin-top:6px;border-radius:99px;background:#efe6d3;overflow:hidden}.msrow .bar i{display:block;height:100%;border-radius:99px;background:#ffb21e}
-.msrow .md small{display:block;margin-top:3px;font-size:11.5px;font-weight:800;color:#a07a48}
+.msrow .md{flex:1;min-width:0}.msrow .md b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:14px;font-weight:900;line-height:1.35}.msrow .bar{display:block;height:8px;margin-top:6px;border-radius:99px;background:#efe6d3;overflow:hidden}.msrow .bar i{display:block;height:100%;border-radius:99px;background:#ffb21e}
+.msrow .pg{display:flex;align-items:center;gap:8px;margin-top:5px}.msrow .pg .bar{flex:1;margin:0}.msrow .md small{flex:none;display:block;font-size:11.5px;font-weight:800;color:#a07a48}
 .msrow.lgd{border-color:#f0d3ff;background:linear-gradient(100deg,#fff,#fbf4ff);box-shadow:0 3px 0 #ead7f7}.msrow.lgd .ic{background:linear-gradient(135deg,#fff3c4,#f6defe)}
 .msrow.all{border-color:#f6d79a;background:linear-gradient(90deg,#fff8e0,#fff)}
 .msget{flex:none;min-width:96px;height:40px;padding:0 12px;border-radius:99px;border:0;font:900 13px var(--font,sans-serif);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:4px;background:#f1e6cf;color:#a08a64}
 .msget.can{background:#ff5d5d;color:#fff;box-shadow:0 3px 0 #c43a3a}.msget.got{background:#e3f6ec;color:#1ea36c;cursor:default}.msget:disabled{cursor:default}
 .msget .cc{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;background:#ffc928;color:#8a5a00;font-size:10px}
-@media (max-width:600px){.msgrid{grid-template-columns:repeat(4,1fr) 34px;gap:5px}.mscell{min-height:92px;padding:6px 3px}.mscell .tx{font-size:10.5px}.mscell .ic{font-size:20px}.mshd .pic{width:52px;height:52px}}
+@media (max-width:600px){.msrow{gap:9px;padding:9px 10px}.msrow .ic{width:36px;height:36px;font-size:19px}.msrow .md b{font-size:13px}.msget{min-width:74px;height:34px;padding:0 9px;font-size:12px}.msgrid{gap:6px}.mscell{height:84px;padding:6px 3px 5px;border-radius:14px;grid-template-rows:22px 1fr auto}.mscell .tx{font-size:10.5px}.mscell .ic{font-size:19px}.mshd .pic{width:52px;height:52px}.mshd .say p{font-size:13px}.mshd h3{font-size:18px}.mstabs button{font-size:12.5px}.msbd{padding:12px 12px 16px}.msnote{font-size:12px;gap:10px}.msbingo b{font-size:24px}}
 `;
     document.head.appendChild(s);
   }
@@ -232,24 +267,18 @@
     const say = tab === 'st' ? x.hi[Math.floor(Date.now() / 60000) % x.hi.length] : tab === 'mo' ? x.moHi : x.lgHi;
     let body = '';
     if (tab === 'st') {
-      const cell = (m, i) => { const got = !!s.M.c[m.id], can = s.can(m); return `<button type="button" class="mscell ${got ? 'got' : can ? 'can' : ''}" ${can ? `data-c="${m.id}" data-n="${m.coins}"` : 'tabindex="-1"'}><span class="ic">${m.ic}</span><span class="tx">${esc(m.tx)}</span><span class="${can || got ? 'cn' : 'pr'}">${got ? '' : can ? x.claim : m.need > 1 ? m.have + '/' + m.need : '+' + m.coins}</span></button>`; };
-      const ln = i => { const L = s.lines[i], got = !!s.M.c[L.id]; return `<button type="button" class="msln ${got ? 'got' : L.ok ? 'ok' : ''}" ${L.ok && !got ? `data-c="${L.id}" data-n="${LINE_COINS}"` : 'tabindex="-1"'}>${got ? '✓' : '+' + LINE_COINS}</button>`; };
-      let g = '';
-      for (let r = 0; r < 4; r++) { for (let c = 0; c < 4; c++) g += cell(s.st[r * 4 + c], r * 4 + c); g += ln(r * 2); }
-      for (let c = 0; c < 4; c++) g += ln(c * 2 + 1);
-      g += `<div style="display:grid;grid-template-rows:1fr 1fr;gap:4px">${ln(8)}${ln(9)}</div>`;
-      const cardGot = !!s.M.c[s.card.id];
-      body = `<div class="msnote"><span>🎯 ${esc(fill(x.line, { n: LINE_COINS }))}</span><span>🌟 ${esc(fill(x.card, { n: CARD_COINS }))}</span><span>✓ ${s.lines.filter(l => s.M.c[l.id]).length}/${s.lines.length}</span></div>
-        <div class="msgrid">${g}</div>
-        <div class="mscard"><span>🌟 ${esc(x.bingo)} ${esc(fill(x.card, { n: CARD_COINS }))}</span>${getBtn(s.card, CARD_COINS)}</div>`;
+      const cell = m => { const got = !!s.M.c[m.id], can = s.can(m), pr = !got && !can && m.need > 1 ? `<em>${m.have}/${m.need}</em>` : '';
+        return `<button type="button" class="mscell ${got ? 'got' : can ? 'can' : ''}" ${can ? `data-c="${m.id}" data-n="${m.coins}"` : 'tabindex="-1"'}><span class="ic">${m.ic}</span><span class="tx">${esc(m.tx)}</span><span class="cn">${pr}<i>¢</i>+${m.coins}</span></button>`; };
+      body = `<div class="msnote"><span>🎯 ${esc(fill(x.line, { n: LINE_COINS }))}</span><span>🌟 ${esc(fill(x.card, { n: CARD_COINS }))}</span></div>
+        <div class="msgw"><div class="msgrid">${s.st.map(cell).join('')}</div></div>`;
     } else {
       const L = tab === 'mo' ? s.mo : s.lg, d = new Date(), last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
       const M2 = new Intl.DateTimeFormat(C.lang(), { month: 'long' }).format(d);
       body = (tab === 'mo' ? `<div class="msnote"><span>📅 ${esc(fill(x.month, { m: d.getMonth() + 1, M: M2 }))}</span><span>⏳ ${esc(fill(x.left, { n: last - d.getDate() + 1 }))}</span></div>` : '') +
-        `<div class="mslist">${L.map(m => `<div class="msrow ${tab === 'lg' ? 'lgd' : ''} ${m.all ? 'all' : ''}"><span class="ic">${m.ic}</span><span class="md"><b>${esc(m.tx)}</b><span class="bar"><i style="width:${Math.round(m.have / m.need * 100)}%"></i></span><small>${m.have.toLocaleString()} / ${m.need.toLocaleString()}</small></span>${getBtn(m, m.coins)}</div>`).join('')}</div>`;
+        `<div class="mslist">${L.map(m => `<div class="msrow ${tab === 'lg' ? 'lgd' : ''} ${m.all ? 'all' : ''}"><span class="ic">${m.ic}</span><span class="md"><b>${esc(m.tx)}</b><span class="pg"><span class="bar"><i style="width:${Math.round(m.have / m.need * 100)}%"></i></span><small>${m.have.toLocaleString()} / ${m.need.toLocaleString()}</small></span></span>${getBtn(m, m.coins)}</div>`).join('')}</div>`;
     }
     ov.innerHTML = `<div class="msp" role="dialog" aria-modal="true" aria-label="${esc(x.title)}">
-      <div class="mshd"><span class="pic">${HOSHI}</span><div class="say"><small>${esc(x.name)}</small><h3>${esc(x.title)}</h3><p>${esc(say)}</p></div><button type="button" class="msx" aria-label="close">✕</button></div>
+      <div class="mshd"><span class="pic">${HOSHI}</span><div class="say"><small>${esc(x.name)}</small><h3>${esc(x.title)}</h3><p class="${tab === 'st' ? 'one' : ''}">${esc(say)}</p></div><button type="button" class="msx" aria-label="close">✕</button></div>
       <div class="mstabs" role="tablist">${[['st', x.st], ['mo', x.mo], ['lg', x.lg]].map(([k, lb]) => `<button type="button" role="tab" data-t="${k}" class="${k === tab ? 'on' : ''}" aria-selected="${k === tab}">${esc(lb)}${s.n[k] ? `<i>${s.n[k]}</i>` : ''}</button>`).join('')}</div>
       <div class="msbd">${body}</div></div>`;
   }
@@ -259,12 +288,14 @@
       ov = document.createElement('div'); ov.className = 'msov'; document.body.appendChild(ov);
       ov.addEventListener('click', e => {
         if (e.target === ov || e.target.closest('.msx')) return close();
-        const tb = e.target.closest('[data-t]'); if (tb) { tab = tb.dataset.t; try { C.sfx('tap'); } catch (x) {} render(); return; }
-        const c = e.target.closest('[data-c]'); if (c && !c.disabled) { claim(c.dataset.c, +c.dataset.n); render(); }
+        const tb = e.target.closest('[data-t]'); if (tb) { tab = tb.dataset.t; try { C.sfx('tap'); } catch (x) {} const b = tab === 'st' ? bingo() : null; render(); playBingo(b); return; }
+        const c = e.target.closest('[data-c]'); if (c && !c.disabled) { claim(c.dataset.c, +c.dataset.n); const b = tab === 'st' ? bingo() : null; render(); playBingo(b); }
       });
       addEventListener('keydown', e => { if (e.key === 'Escape' && ov.classList.contains('on')) close(); });
     }
+    const b = tab === 'st' ? bingo() : null;
     render(); requestAnimationFrame(() => ov.classList.add('on'));
+    if (b) setTimeout(() => playBingo(b), 300);
   }
   function close() { if (ov) ov.classList.remove('on'); }
   function sync() {
