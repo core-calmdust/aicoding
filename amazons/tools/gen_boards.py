@@ -5,6 +5,7 @@
 #   ruins   密林の遺跡: weathered limestone and basalt flags, moss in the joints, roots, morning haze
 #   vase    アマゾノマキアの壺絵: fired clay and black glaze squares, incised lines, palmettes at the crossings
 #   navy    ネイビーとアイボリー: navy and ivory lacquer, gold hairlines (modern)
+#   (3D only) camp 野営の作戦卓, minimal ミニマル
 import math, os
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
@@ -231,6 +232,38 @@ def navy():
     d.rounded_rectangle([16, 16, W - 16, H - 16], 22, outline=(204, 168, 100), width=2)
     d.rounded_rectangle([24, 24, W - 24, H - 24], 18, outline=(204, 168, 100), width=1)
     save(np.asarray(fim, np.float32) / 255, 'fr-navy.webp', 86)
+
+# ---------------------------------------------------------------- 3D only (atlas/models/amazons.js)
+# camp  野営の作戦卓: a campaign table — tooled leather squares (tan and oxblood) with gilt fillets, a walnut rim
+def camp():
+    n = fbm(S, S, 101); grain = fbm(S, S, 102, ((60, .5), (180, .3), (400, .2)))
+    tan = lerp(np.broadcast_to(col((196, 152, 104)), (S, S, 3)), np.broadcast_to(col((168, 122, 78)), (S, S, 3)), n)
+    ox = lerp(np.broadcast_to(col((104, 34, 30)), (S, S, 3)), np.broadcast_to(col((76, 22, 20)), (S, S, 3)), n)
+    a = np.where(DARK[..., None], ox, tan)
+    a += ((grain - .5) * .12)[..., None]                                   # the leather's pebbled grain
+    a += per_tile(13, .05)[..., None]
+    wear = np.exp(-(((LX - U / 2) / (U * .45)) ** 2 + ((LY - U / 2) / (U * .45)) ** 2)) * .06; a = a + wear[..., None]   # rubbed lighter in the middle
+    a = bevel(a, 6, .05, .14)
+    ins = ((np.abs(LX - 8) < 1.2) | (np.abs(LY - 8) < 1.2) | (np.abs(LX - (U - 9)) < 1.2) | (np.abs(LY - (U - 9)) < 1.2)) & (LX >= 7) & (LY >= 7) & (LX <= U - 8) & (LY <= U - 8)
+    a[ins] = a[ins] * .3 + col((214, 172, 90))[0, 0] * .7                  # the gilt fillet tooled in each square
+    a = joints(a, 2, (40, 24, 14), .9)
+    save(a, 'bd-camp.webp')
+    W, H = 1100, 1200
+    f = lerp(np.broadcast_to(col((74, 46, 28)), (H, W, 3)), np.broadcast_to(col((44, 26, 14)), (H, W, 3)), up(np.random.default_rng(103).random((H, 6)).astype(np.float32), (W, H)))
+    f = f + ((fbm(W, H, 104, ((8, .5), (40, .5))) - .5) * .08)[..., None]
+    save(f, 'fr-camp.webp', 84)
+
+# minimal  ミニマル: matte warm white and pale stone squares, no lines at all; a pale oak rim
+def minimal():
+    n = fbm(S, S, 111, ((3, .6), (8, .4)))
+    lt = lerp(np.broadcast_to(col((240, 237, 230)), (S, S, 3)), np.broadcast_to(col((234, 231, 224)), (S, S, 3)), n)
+    dk = lerp(np.broadcast_to(col((196, 193, 186)), (S, S, 3)), np.broadcast_to(col((188, 185, 178)), (S, S, 3)), n)
+    a = np.where(DARK[..., None], dk, lt)
+    a += ((fbm(S, S, 112, ((200, .5), (500, .5))) - .5) * .02)[..., None]   # a fine matte tooth
+    save(a, 'bd-minimal.webp')
+    W, H = 1100, 1200
+    f = lerp(np.broadcast_to(col((224, 206, 176)), (H, W, 3)), np.broadcast_to(col((206, 186, 152)), (H, W, 3)), up(np.random.default_rng(113).random((H, 10)).astype(np.float32), (W, H)))
+    save(f, 'fr-minimal.webp', 84)
 
 if __name__ == '__main__':
     import sys

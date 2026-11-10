@@ -4,7 +4,11 @@
               verde antico squares with gold joints) on a polished slab framed in cream marble (fr-temple.webp), standing on
               a two-step stylobate like a temple's floor;
    · 'ruins'  the jungle ruins: the dressed stones of bd-ruins.webp, each one a block with a sunken joint (a normal map), on a
-              rough, hand-split slab of mossy stone.
+              rough, hand-split slab of mossy stone;
+   · 'krater' the Amazonomachy vase: clay and black glaze (bd-vase / fr-vase) on a glazed foot with a clay-red band;
+   · 'navy'   navy and ivory lacquer with gold hairlines, a thin top on a recessed plinth;
+   · 'camp'   a campaign table: tooled leather squares with gilt fillets in walnut, brass corners (bd-camp / fr-camp);
+   · 'minimal' modern and minimal: one thin slab of matte pale stone, no lines, floating on a dark recessed base (bd-minimal).
    The amazons are sculpted figures (Table3D.amazons.SETS, chosen under 「3D駒」 in the design tab, 'atlas-amazons-pc3'):
    · 'statue'  a marble bust with a crested Corinthian helmet and a spear (White: Carrara; Black: black marble with gold veins)
    · 'archer'  an abstract Scythian archer: a robed, turned figure in a Phrygian cap, a recurve bow held across the body and a
@@ -25,7 +29,7 @@
   const LO = () => !!(X.coarse || X.lite);
   const N = 10, BX = .45, BZ = .8, TH = .42, RAD = .36, R = .36;
   const W = N + 2 * BX, H = N + 2 * BZ;
-  const LOOKS = ['temple', 'ruins'], SETS = ['statue', 'archer', 'bronze'];
+  const LOOKS = ['temple', 'ruins', 'krater', 'navy', 'camp', 'minimal'], SETS = ['statue', 'archer', 'bronze'];
   const IMG = (() => { try { const s = document.currentScript && document.currentScript.src; if (s) return new URL('../../amazons/img/', s).href; } catch (e) {} return '../amazons/img/'; })();
   const lin = c => new (T().Color)(c).convertSRGBToLinear();
   const mats = {}, mat = (k, f) => mats[k] || (mats[k] = f());
@@ -53,20 +57,24 @@
   }
 
   /* ---------- the top: the 2D page's board and frame pictures, a normal map for the ruins' joints ---------- */
-  const tops = {};
+  const tops = {}, FILE = { krater: 'vase' };   // (the krater board uses the 2D page's vase pictures)
   function topTex(look) {
     if (tops[look]) return tops[look];
     const TT = T(), ppu = SZ(LO() ? 80 : 120), Wp = Math.round(W * ppu), Hp = Math.round(H * ppu), ox = BX * ppu, oz = BZ * ppu, F = N * ppu;
     const c = document.createElement('canvas'); c.width = Wp; c.height = Hp; const g = c.getContext('2d');
-    g.fillStyle = look === 'temple' ? '#ddd2bc' : '#2c3626'; g.fillRect(0, 0, Wp, Hp);
-    g.fillStyle = look === 'temple' ? '#cfd6cc' : '#6a6e5c'; g.fillRect(ox, oz, F, F);
+    const C0 = { temple: ['#ddd2bc', '#cfd6cc'], ruins: ['#2c3626', '#6a6e5c'], krater: ['#16110d', '#b4643a'], navy: ['#18243e', '#d8cfbd'], camp: ['#4a2e1a', '#a06a44'], minimal: ['#ddc7a4', '#dedbd4'] }[look];
+    g.fillStyle = C0[0]; g.fillRect(0, 0, Wp, Hp);
+    g.fillStyle = C0[1]; g.fillRect(ox, oz, F, F);
     const map = new TT.CanvasTexture(c); map.encoding = TT.sRGBEncoding; map.anisotropy = 8;
-    Promise.all([loadImg(IMG + 'fr-' + look + '.webp'), loadImg(IMG + 'bd-' + look + '.webp')]).then(([fr, bd]) => {
+    const file = FILE[look] || look;
+    Promise.all([loadImg(IMG + 'fr-' + file + '.webp'), loadImg(IMG + 'bd-' + file + '.webp')]).then(([fr, bd]) => {
       if (fr) g.drawImage(fr, 0, 0, Wp, Hp);
+      if (look === 'minimal' && fr) { g.fillStyle = '#efece6'; g.fillRect(0, 0, Wp, Hp); }   // (minimal: one stone slab, the oak only on the sides)
       if (bd) {
-        g.save(); g.shadowColor = 'rgba(0,0,0,.45)'; g.shadowBlur = ppu * .12; g.fillStyle = '#000'; g.fillRect(ox, oz, F, F); g.restore();
+        if (look !== 'minimal') { g.save(); g.shadowColor = 'rgba(0,0,0,.45)'; g.shadowBlur = ppu * .12; g.fillStyle = '#000'; g.fillRect(ox, oz, F, F); g.restore(); }
         g.drawImage(bd, ox, oz, F, F);
       }
+      if (look === 'navy' || look === 'camp') { g.strokeStyle = '#d2ac5e'; g.lineWidth = ppu * .03; g.strokeRect(ox - ppu * .1, oz - ppu * .1, F + ppu * .2, F + ppu * .2); }
       if (look === 'temple') { g.strokeStyle = '#d2ac5e'; g.lineWidth = ppu * .05; g.strokeRect(ox - ppu * .06, oz - ppu * .06, F + ppu * .12, F + ppu * .12); }
       map.needsUpdate = true; if (X.kick) X.kick(300);
     });
@@ -120,28 +128,61 @@
     return (geos[key] = g);
   }
   function sideTex(look) {
-    return mat('sideT' + look, () => { const t = new (T().TextureLoader)().load(IMG + 'fr-' + look + '.webp', () => X.kick && X.kick(200)); t.encoding = T().sRGBEncoding; t.wrapS = t.wrapT = T().RepeatWrapping; t.repeat.set(2, 1); return t; });
+    return mat('sideT' + look, () => { const t = new (T().TextureLoader)().load(IMG + 'fr-' + (FILE[look] || look) + '.webp', () => X.kick && X.kick(200)); t.encoding = T().sRGBEncoding; t.wrapS = t.wrapT = T().RepeatWrapping; t.repeat.set(2, 1); return t; });
   }
+  const GOLDM = () => mat('gold', () => phys({ color: '#e2b660', metalness: 1, roughness: .28 }));
   function board(look) {
     look = LOOKS.includes(look) ? look : (X.BOARDS && X.BOARDS.amazons ? X.BOARDS.amazons.get() : 'temple');
-    const TT = T(), g = new TT.Group(), tx = topTex(look), temple = look === 'temple';
-    const topM = mat('top' + look, () => temple
-      ? phys({ map: tx.map, color: '#ffffff', roughness: .3, clearcoat: .7, clearcoatRoughness: .14, envMapIntensity: .9 })
-      : phys({ map: tx.map, normalMap: tx.nm, normalScale: new TT.Vector2(1.4, 1.4), color: '#ffffff', roughness: .9, envMapIntensity: .55 }));
-    const sideM = mat('side' + look, () => temple
-      ? phys({ map: sideTex(look), color: '#ffffff', roughness: .32, clearcoat: .5, clearcoatRoughness: .2, envMapIntensity: .9 })
-      : phys({ map: sideTex(look), color: '#c8ccb6', roughness: .95, envMapIntensity: .45 }));
-    let base = 0;
-    if (temple) {   // the stylobate: two steps of the same marble under the slab, a gold fillet on the upper one
-      const s1 = new TT.Mesh(slabGeo('st1', W + 1.2, H + 1.2, .16, .5, 0, false), sideM); s1.receiveShadow = true; g.add(s1);
-      const s2 = new TT.Mesh(slabGeo('st2', W + .6, H + .6, .16, .44, 0, false), sideM); s2.position.y = .16; s2.receiveShadow = s2.castShadow = true; g.add(s2);
-      const gm = mat('gold', () => phys({ color: '#e2b660', metalness: 1, roughness: .28 }));
-      const fil = new TT.Mesh(slabGeo('fil', W + .3, H + .3, .03, .4, 0, false), gm); fil.position.y = .32; g.add(fil);
+    const TT = T(), g = new TT.Group(), tx = topTex(look);
+    const TOP = {
+      temple: { roughness: .3, clearcoat: .7, clearcoatRoughness: .14, envMapIntensity: .9 },
+      ruins: { normalMap: tx.nm, normalScale: new TT.Vector2(1.4, 1.4), roughness: .9, envMapIntensity: .55 },
+      krater: { roughness: .35, clearcoat: .8, clearcoatRoughness: .12, envMapIntensity: .9 },   // fired clay under a glossy glaze
+      navy: { roughness: .25, clearcoat: 1, clearcoatRoughness: .06, envMapIntensity: 1 },       // lacquer
+      camp: { roughness: .7, clearcoat: .15, clearcoatRoughness: .5, envMapIntensity: .6 },       // waxed leather
+      minimal: { roughness: .85, envMapIntensity: .5 },                                          // matte stone
+    }[look];
+    const topM = mat('top' + look, () => phys(Object.assign({ map: tx.map, color: '#ffffff' }, TOP)));
+    const SIDE = {
+      temple: { color: '#ffffff', roughness: .32, clearcoat: .5, clearcoatRoughness: .2, envMapIntensity: .9 },
+      ruins: { color: '#c8ccb6', roughness: .95, envMapIntensity: .45 },
+      krater: { color: '#ffffff', roughness: .25, clearcoat: .9, clearcoatRoughness: .1 },
+      navy: { color: '#ffffff', roughness: .25, clearcoat: 1, clearcoatRoughness: .08 },
+      camp: { color: '#ffffff', roughness: .4, clearcoat: .6, clearcoatRoughness: .25 },            // oiled walnut
+      minimal: { color: '#ffffff', roughness: .6, envMapIntensity: .6 },                          // pale oak
+    }[look];
+    const sideM = mat('side' + look, () => phys(Object.assign({ map: sideTex(look) }, SIDE)));
+    const add = (m, y) => { m.position.y = y || 0; m.castShadow = m.receiveShadow = true; g.add(m); return m; };
+    let base = 0, th = TH, rad = RAD, rough = 0;
+    if (look === 'temple') {   // the stylobate: two steps of the same marble under the slab, a gold fillet on the upper one
+      add(new TT.Mesh(slabGeo('st1', W + 1.2, H + 1.2, .16, .5, 0, false), sideM));
+      add(new TT.Mesh(slabGeo('st2', W + .6, H + .6, .16, .44, 0, false), sideM), .16);
+      add(new TT.Mesh(slabGeo('fil', W + .3, H + .3, .03, .4, 0, false), GOLDM()), .32);
       base = .35;
+    } else if (look === 'ruins') { rad = RAD * 1.4; rough = .4; }
+    else if (look === 'krater') {   // a black-glazed slab on a foot, a clay-red band round its foot as on a krater
+      const glaze = mat('glaze', () => phys({ color: '#17110d', roughness: .22, clearcoat: .9, clearcoatRoughness: .1 }));
+      const clay = mat('clayband', () => phys({ color: '#c0663a', roughness: .5 }));
+      add(new TT.Mesh(slabGeo('kf', W - .8, H - .8, .22, .5, 0, false), glaze));
+      add(new TT.Mesh(slabGeo('kb', W - .5, H - .5, .06, .45, 0, false), clay), .2);
+      base = .26;
+    } else if (look === 'navy') {   // a thin lacquer top with a gold fillet, on a recessed plinth (it seems to float)
+      const lac = mat('navylac', () => phys({ color: '#141e34', roughness: .2, clearcoat: 1, clearcoatRoughness: .06 }));
+      add(new TT.Mesh(slabGeo('np', W - 1.4, H - 1.4, .28, .3, 0, false), lac));
+      add(new TT.Mesh(slabGeo('nf', W + .06, H + .06, .03, RAD + .03, 0, false), GOLDM()), .28);
+      base = .3; th = .24;
+    } else if (look === 'camp') {   // a campaign table: walnut, the leather inset, brass corners
+      const brass = mat('brass', () => phys({ color: '#c99a52', metalness: 1, roughness: .35 }));
+      for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { const c = new TT.Mesh(new TT.BoxGeometry(.7, TH + .04, .7), brass); c.position.set(sx * (W / 2 - .3), TH / 2, sz * (H / 2 - .3)); c.castShadow = true; g.add(c); }
+      rad = .08;
+    } else if (look === 'minimal') {   // one thin slab of pale stone floating on a dark, recessed base
+      const dark = mat('mindark', () => phys({ color: '#2a2a2c', roughness: .7 }));
+      add(new TT.Mesh(slabGeo('mb', W - 2, H - 2, .3, .2, 0, false), dark));
+      base = .3; th = .18; rad = .06;
     }
-    const slab = new TT.Mesh(slabGeo('slab' + look, W, H, TH, temple ? RAD : RAD * 1.4, temple ? 0 : .4, true), [topM, sideM]);
-    slab.position.y = base; slab.castShadow = slab.receiveShadow = true; g.add(slab);
-    const top = base + TH + .002;
+    const slab = add(new TT.Mesh(slabGeo('slab' + look, W, H, th, rad, rough, true), [topM, sideM]), base);
+    void slab;
+    const top = base + th + .002;
     Object.assign(g.userData, { S: N, top, W, H, look, sink: 0, pt: (x, y) => [-N / 2 + x + .5, -N / 2 + y + .5], piece: (col, set) => piece(col, set) });
     return g;
   }
@@ -317,6 +358,71 @@
     o.renderOrder = 1; return o;
   }
 
+  /* ---------- the fire arrow's effects (shared by the full game's skin and the portal's table play) ---------- */
+  const spr = {};
+  function sprTex(kind) {
+    if (spr[kind]) return spr[kind];
+    const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'), gr = g.createRadialGradient(32, kind === 'flame' ? 44 : 32, 0, 32, 32, 32);
+    if (kind === 'fire') { gr.addColorStop(0, 'rgba(255,250,220,1)'); gr.addColorStop(.25, 'rgba(255,200,80,.95)'); gr.addColorStop(.55, 'rgba(255,110,20,.6)'); gr.addColorStop(1, 'rgba(255,60,0,0)'); }
+    else if (kind === 'flame') { gr.addColorStop(0, 'rgba(255,248,210,1)'); gr.addColorStop(.3, 'rgba(255,196,70,.95)'); gr.addColorStop(.62, 'rgba(255,100,20,.55)'); gr.addColorStop(1, 'rgba(255,50,0,0)'); }
+    else if (kind === 'spark') { gr.addColorStop(0, 'rgba(255,255,230,1)'); gr.addColorStop(.3, 'rgba(255,190,70,.9)'); gr.addColorStop(1, 'rgba(255,90,10,0)'); }
+    else if (kind === 'ember') { gr.addColorStop(0, 'rgba(255,120,30,0)'); gr.addColorStop(.55, 'rgba(255,120,30,0)'); gr.addColorStop(.72, 'rgba(255,110,30,.55)'); gr.addColorStop(.86, 'rgba(255,70,10,.2)'); gr.addColorStop(1, 'rgba(255,60,0,0)'); }
+    else { gr.addColorStop(0, 'rgba(210,206,200,.5)'); gr.addColorStop(.5, 'rgba(190,186,180,.22)'); gr.addColorStop(1, 'rgba(180,176,170,0)'); }
+    g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+    return (spr[kind] = new (T().CanvasTexture)(c));
+  }
+  const sprMat = kind => new (T().SpriteMaterial)({ map: sprTex(kind), transparent: true, depthWrite: false, blending: kind === 'smoke' ? T().NormalBlending : T().AdditiveBlending, toneMapped: false });
+  const sprite = (parent, kind, x, y, z, s) => { const o = new (T().Sprite)(sprMat(kind)); o.position.set(x, y, z); o.scale.set(s, s, s); parent.add(o); return o; };
+  const kill = o => { if (o.parent) o.parent.remove(o); if (o.material) o.material.dispose(); };
+  const io = k => k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+  // the flight: from p0 to p1 ([x, z] on the board, Y = its top) in an arc, a flame at the head, sparks shed behind.
+  // anim(dur, f(k), done) is the host's animation runner (it keeps Table3D drawing)
+  function fly(root, Y, p0, p1, dur, anim, done) {
+    const TT = T(), [x0, z0] = p0, [x1, z1] = p1, d = Math.hypot(x1 - x0, z1 - z0), hgt = .5 + d * .09;
+    const g = new TT.Group(), a = arrow().userData.arrow; a.rotation.set(Math.PI / 2, 0, 0); a.position.set(0, 0, .38);
+    const ar = new TT.Group(); ar.add(a); g.add(ar);
+    const fire = new TT.Sprite(sprMat('fire')); fire.scale.set(.42, .42, .42); fire.position.set(0, 0, .12); ar.add(fire);
+    root.add(g);
+    let lastSpark = 0; const sparks = [];
+    const pos = k => [x0 + (x1 - x0) * k, Y + .62 + Math.sin(k * Math.PI) * hgt - k * .55, z0 + (z1 - z0) * k];
+    const age = () => { const now = performance.now(); for (let i = sparks.length - 1; i >= 0; i--) { const s = sparks[i], t = (now - s.userData.t) / 480; if (t >= 1) { kill(s); sparks.splice(i, 1); continue; } const v = s.userData.v; s.position.x += v[0] * .016; s.position.y += v[1] * .016; s.position.z += v[2] * .016; s.material.opacity = 1 - t; } };
+    anim(dur, k => {
+      const kk = io(k * .9 + .1 * k * k), [x, y, z] = pos(kk), [xn, yn, zn] = pos(Math.min(1, kk + .02));
+      g.position.set(x, y, z); g.lookAt(xn, yn, zn);
+      const fl = .38 + Math.sin(k * 40) * .06; fire.scale.set(fl, fl, fl);
+      if (k - lastSpark > .06) { lastSpark = k; const s = sprite(root, 'spark', x, y, z, .1 + Math.random() * .06); s.userData.v = [(Math.random() - .5) * .6, -.2 - Math.random() * .5, (Math.random() - .5) * .6]; s.userData.t = performance.now(); sparks.push(s); }
+      age();
+    }, () => { kill(fire); if (g.parent) g.parent.remove(g); anim(500, age, () => sparks.forEach(kill)); if (done) done(); });
+  }
+  // the strike on an arrow's group g (placed on its square at the board's top): a flash and a burst of sparks; then the square
+  // burns — three flame tongues licking up round the arrow for several seconds, dying down — the scorch's edge glowing and
+  // cooling, a thin smoke rising
+  function strike(g, anim, burn) {
+    const TT = T(), fl = sprite(g, 'fire', 0, .25, 0, .2);
+    anim(460, k => { const s = .2 + k * 1.5; fl.scale.set(s, s, s); fl.material.opacity = k < .2 ? k / .2 : 1 - (k - .2) / .8; }, () => kill(fl));
+    const burst = [];
+    for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2 + Math.random() * .4, sp = .9 + Math.random() * 1.2, s = sprite(g, 'spark', 0, .2, 0, .09 + Math.random() * .05); s.userData.v = [Math.cos(a) * sp, 1.2 + Math.random() * 1.2, Math.sin(a) * sp]; burst.push(s); }
+    anim(620, k => { burst.forEach(s => { const v = s.userData.v; s.position.x += v[0] * .016; s.position.z += v[2] * .016; v[1] -= .09; s.position.y = Math.max(.02, s.position.y + v[1] * .016); s.material.opacity = 1 - k; }); }, () => burst.forEach(kill));
+    const BURN = burn || 9000;
+    const em = new TT.Mesh(new TT.PlaneGeometry(1.2, 1.2).rotateX(-Math.PI / 2), new TT.MeshBasicMaterial({ map: sprTex('ember'), transparent: true, depthWrite: false, blending: TT.AdditiveBlending, toneMapped: false }));
+    em.position.y = .006; g.add(em);
+    anim(BURN + 3000, k => { em.material.opacity = (1 - k) * (.5 + .15 * Math.sin(k * 60)); }, () => { g.remove(em); em.geometry.dispose(); em.material.dispose(); });
+    const tongues = [[-.1, .02, .5], [.06, -.06, .7], [.1, .08, .45]].map(([x, z, h]) => { const s = sprite(g, 'flame', x, h * .42, z, 1); s.userData.h = h; return s; });
+    const t0 = Math.random() * 10;
+    anim(BURN, k => {
+      const fade = k < .08 ? k / .08 : k > .7 ? 1 - (k - .7) / .3 : 1, t = t0 + k * BURN / 1000;
+      tongues.forEach((s, i) => { const h = s.userData.h * fade * (1 + .22 * Math.sin(t * (9 + i * 2.3)) + .1 * Math.sin(t * 23 + i)), w = .26 * (.7 + .3 * fade) * (1 + .12 * Math.sin(t * 13 + i * 2)); s.scale.set(w, h, 1); s.position.y = h * .42; s.material.opacity = .9 * fade; });
+    }, () => tongues.forEach(kill));
+    let n = 0; const tick = () => {
+      if (!g.parent || n > 30) return; n++;
+      const s = new TT.Sprite(sprMat('smoke')); s.position.set((Math.random() - .5) * .15, .3, (Math.random() - .5) * .15); s.scale.set(.25, .25, .25); g.add(s);
+      const v = (Math.random() - .5) * .3;
+      anim(1900, k => { s.position.y = .3 + k * 1.2; s.position.x += v * .006; const sc = .25 + k * .6; s.scale.set(sc, sc, sc); s.material.opacity = Math.sin(k * Math.PI) * .6; }, () => { g.remove(s); s.material.dispose(); });
+      setTimeout(tick, 320);
+    };
+    tick();
+  }
+
   X.MODELS.amazons = function (live) {
     const g = board(), U = g.userData, Y = U.top;
     if (live) return g;
@@ -328,5 +434,5 @@
     g.scale.setScalar(.86);   // (the showcase: about 10 across with the stylobate)
     return g;
   };
-  X.amazons = { board, piece, arrow, scorch, SETS, LOOKS, W, H, R, pcSet };
+  X.amazons = { board, piece, arrow, scorch, fly, strike, SETS, LOOKS, W, H, R, pcSet };
 })();
