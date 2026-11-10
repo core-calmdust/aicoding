@@ -132,7 +132,9 @@ function saveGame() {
 function elapsed() { return G ? G.el + (G.t0 ? Date.now() - G.t0 : 0) : 0; }
 function startTimer() { if (G.over || G.t0 || document.hidden) return; G.t0 = Date.now(); clearInterval(timerId); timerId = setInterval(renderNums, 1000); }
 function stopTimer() { if (G && G.t0) { G.el += Date.now() - G.t0; G.t0 = 0; } clearInterval(timerId); }
-document.addEventListener('visibilitychange', () => { if (!G) return; if (document.hidden) { stopTimer(); saveGame(); } else if (G.started && !G.over) startTimer(); });
+document.addEventListener('visibilitychange', () => { if (!G) return; if (document.hidden) { stopTimer(); saveGame(); } else if (G.started && !G.over && document.hasFocus()) startTimer(); });
+addEventListener('blur', () => { if (G) stopTimer(); });   // (2026-11-10) the clock also stops while the window is not in front
+addEventListener('focus', () => { if (G && G.started && !G.over) startTimer(); });
 window.addEventListener('pagehide', () => { stopTimer(); saveGame(); });
 const fmtT = ms => { const s = Math.floor(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
 

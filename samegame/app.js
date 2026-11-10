@@ -1457,6 +1457,9 @@ function bind() {
     if (!$('#play').hidden && G) { if ((e.key === 'z' && (e.ctrlKey || e.metaKey)) || e.key === 'Backspace') { e.preventDefault(); undo(); } if (e.key === 'h' && !e.ctrlKey && !e.metaKey) hint(); }
   });
   document.addEventListener('visibilitychange', () => { if (G && G.action) { if (document.hidden) G.paused = true; else { G.paused = false; G.last = performance.now(); } } });
+  // (2026-11-10) the daily clock stands still while the page is hidden or the window is not in front
+  const clkOff = () => { if (G && G.t0 && !G.over && !G.pz) G.pz = Date.now(); }, clkOn = () => { if (G && G.pz) { if (G.t0) G.t0 += Date.now() - G.pz; G.pz = 0; } };
+  addEventListener('blur', clkOff); addEventListener('focus', clkOn); document.addEventListener('visibilitychange', () => (document.hidden ? clkOff() : document.hasFocus() && clkOn()));
 }
 /* ---------------- back swipe / browser back: one step back inside the app ----------------
    While the app is anywhere but its root (daily tab, no dialog), one extra history entry is kept.
