@@ -92,6 +92,7 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
 .npc-toast b{display:block;font-size:15px;color:#b5651d;font-weight:900}
 .npc-toast small{display:block;font-size:12px;color:#6a6a7a;font-weight:700;margin-top:2px}
 .npc-toast .sr{display:inline-block;margin-inline-end:6px;padding:0 7px;border-radius:99px;background:linear-gradient(180deg,#c07aff,#8a4ad8);color:#fff;font:800 11px/1.6 'Fredoka',system-ui,sans-serif}.npc-toast .sr.r0{background:linear-gradient(180deg,#b8bcc8,#8a90a0)}.npc-toast .sr.r1{background:linear-gradient(180deg,#5ab8ff,#2a7ad8)}
+@media (hover:hover) and (pointer:fine) and (min-width:820px){.npc-toast{gap:20px;padding:16px 30px 16px 16px;border-radius:28px;border-width:3px}.npc-toast img{width:108px;height:108px}.npc-toast b{font-size:26px}.npc-toast small{font-size:16px;margin-top:5px}.npc-toast .sr{font-size:14px;padding:0 10px}}   /* PC: the boss-beaten banner larger (2026-11-10) */
 `;
   let cssDone = false;
   const addCss = () => { if (cssDone) return; cssDone = true; const s = document.createElement('style'); s.textContent = CSS; document.head.appendChild(s); };
