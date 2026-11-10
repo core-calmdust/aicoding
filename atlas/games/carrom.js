@@ -163,7 +163,7 @@
 .bpk-g .th{flex:none;width:66px;height:46px;border-radius:10px;overflow:hidden;background:#e9dfca}.bpk-g .th img{width:100%;height:100%;object-fit:cover;transform:scale(1.9);display:block}
 .bpk-g b{display:block;font-size:14.5px;font-weight:900}.bpk-g small{display:block;font-size:11.5px;font-weight:700;color:#5b6074;line-height:1.35;margin-top:2px}
 .bpk-f{display:flex;gap:10px;margin-top:12px}.bpk-f button{flex:1;padding:12px;border:0;border-radius:99px;font:inherit;font-size:17px;font-weight:900;cursor:pointer}
-.bpk-f .bk{flex:0 0 34%;background:#ece6d8;color:#3a3f52;box-shadow:0 3px 0 #d4ccb8}.bpk-f .go{background:#ff5d5d;color:#fff;box-shadow:0 3px 0 #c23b3b}
+.bpk-f .bk{flex:1;background:#ece6d8;color:#3a3f52;box-shadow:0 3px 0 #d4ccb8}.bpk-f .go{background:#ff5d5d;color:#fff;box-shadow:0 3px 0 #c23b3b}
 @media (max-width:560px){.bpk-g small{display:none}.bpk-g .th{width:52px;height:38px}.bpk-g button{padding:6px 7px;gap:7px}}
 @media (min-width:900px) and (min-height:600px) and (hover:hover){.bpk-c{width:min(1120px,82vw);padding:24px 30px 22px;border-radius:30px}.bpk h2{font-size:28px}.bpk .sub{font-size:15px;margin-bottom:16px}
 .bpk-g{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.bpk-g button{flex-direction:column;align-items:stretch;gap:10px;padding:10px 10px 14px;border-radius:20px}
@@ -299,6 +299,7 @@
     const BDL = (T3.BOARDS && T3.BOARDS.carrom) ? T3.BOARDS.carrom.list : ['neon', 'modern', 'classic', 'rajasthan', 'bauhaus', 'tycoon'];
     let look = T3.BOARDS && T3.BOARDS.carrom ? T3.BOARDS.carrom.get() : 'neon';
     const board = T3.MODELS.carrom(true, look); T3.show('carrom', board);
+    let modelKids = new Set(board.children);   // (the parts the board model came with: swapped when another board is picked)
     let U = board.userData; const Y = U.top, K = U.K, W = 2 * (U.S + 7 * K);
     // (2026-11-10) each board's hand: the wobble's character (see FEEL); the classic board keeps the standard feel
     const CFEEL = { classic: 'std', neon: 'power', modern: 'precise', rajasthan: 'aim', bauhaus: 'hard', tycoon: 'finest' };
@@ -306,7 +307,7 @@
     function setLook(v) {   // (before the game: the board's pieces are swapped inside the group on the table — T3.show() would move the camera)
       if (v === look) return; look = v; feel = feelOf(CFEEL[v]);
       try { if (T3.setBoard) T3.setBoard('carrom', v); } catch (e) {}
-      const nb = T3.MODELS.carrom(true, v); while (board.children.length) board.remove(board.children[0]); while (nb.children.length) board.add(nb.children[0]); board.userData = nb.userData; U = board.userData; kick(500);
+      const nb = T3.MODELS.carrom(true, v); modelKids.forEach(c => board.remove(c)); modelKids = new Set(nb.children); [...nb.children].forEach(c => board.add(c));   // (only the board's own parts: the guides, pieces etc. added since stay) board.userData = nb.userData; U = board.userData; kick(500);
     }
     // the camera: a 3/4 view with perspective by default; the button beside the flip switches to the near top-down view (remembered)
     const VK = 'atlas-carrom-view';

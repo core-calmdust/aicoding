@@ -76,6 +76,7 @@
     const BDL = (T3.BOARDS && T3.BOARDS.crokinole) ? T3.BOARDS.crokinole.list : ['marq', 'classic', 'modern', 'mcm', 'winter', 'neon'];
     let look = T3.BOARDS && T3.BOARDS.crokinole ? T3.BOARDS.crokinole.get() : 'marq';
     const board = T3.MODELS.crokinole(true, look); T3.show('crokinole', board);
+    let modelKids = new Set(board.children);   // (the parts the board model came with: swapped when another board is picked)
     let U = board.userData; const Y = U.top, K = U.K, W = 2 * U.RO;
     // (2026-11-10) each board's hand: the wobble's character (Atlas3D.carrom FEEL); the classic board keeps the standard feel
     const CFEEL = { classic: 'std', marq: 'aim', modern: 'precise', mcm: 'hard', winter: 'power', neon: 'finest' };
@@ -83,7 +84,7 @@
     function setLook(v) {   // (before the game: the pieces are swapped inside the group on the table — T3.show() would move the camera)
       if (v === look) return; look = v; feel = AC().feelOf(CFEEL[v]);
       try { if (T3.setBoard) T3.setBoard('crokinole', v); } catch (e) {}
-      const nb = T3.MODELS.crokinole(true, v); while (board.children.length) board.remove(board.children[0]); while (nb.children.length) board.add(nb.children[0]); board.userData = nb.userData; U = board.userData; if (T3.kick) T3.kick(500);
+      const nb = T3.MODELS.crokinole(true, v); modelKids.forEach(c => board.remove(c)); modelKids = new Set(nb.children); [...nb.children].forEach(c => board.add(c));   // (only the board's own parts: the guides, pieces etc. added since stay) board.userData = nb.userData; U = board.userData; if (T3.kick) T3.kick(500);
     }
     const VK = 'atlas-crokinole-view';
     let topView = false; try { topView = localStorage.getItem(VK) === 'top'; } catch (e) {}
