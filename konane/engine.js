@@ -491,11 +491,11 @@ function mtPlan(m) {
     const L = m.cfg || LEVELS[m.level] || LEVELS[10];
     if (all.length < 2 || !L.s) { PRO_CFG = m.cfg || null; try { return { result: think(m.start, m.moves, m.level) }; } finally { PRO_CFG = null; } }
     kreset();
-    return { plan: { kind: 'best', moves: orderMoves(pos, all, -1, 0), inf, maxD: L.dx || 60, ms: L.ms || 0, nodes: (L.nk || (L.ms ? 0 : 50)) * 1000, win: WINT, partialIfBetter: true, splitMin: 99, lazy: lazyOf(m, L, false) } };   // (the root moves only: Kōnane leans on its table, a split main line costs more than it gives; Young Brothers Wait on the shared table — on the user's Mac 8 threads ×2.4 vs Lazy SMP ×1.5, 2026-11-09; lazy: Lazy SMP, for the bench)
+    return { plan: { kind: 'best', moves: orderMoves(pos, all, -1, 0), inf, maxD: L.dx || 60, ms: L.ms || 0, nodes: (L.nk || (L.ms ? 0 : 50)) * 1000, win: WINT, partialIfBetter: true, splitMin: 99, specRes: SH === null ? 0 : undefined, sticky: SH === null, lazy: lazyOf(m, L, false) } };   // (the root moves only: Kōnane leans on its table, a split main line costs more than it gives; Young Brothers Wait on the shared table — on the user's Mac 8 threads ×2.4 vs Lazy SMP ×1.5, 2026-11-09; lazy: Lazy SMP, for the bench)
   }
   if (!all.length) return { result: { list: [], depth: 0 } };
   const cands = m.job === 'cands';
-  return { plan: { kind: 'all', moves: orderMoves(pos, all, -1, 0), inf, maxD: 40, ms: m.time || (cands ? 1200 : 1000), win: WINT, stopAll: true, progress: true, pv: cands ? m.plies || 7 : 0, pvK: m.k || 5 } };
+  return { plan: { kind: 'all', sticky: SH === null, moves: orderMoves(pos, all, -1, 0), inf, maxD: 40, ms: m.time || (cands ? 1200 : 1000), win: WINT, stopAll: true, progress: true, pv: cands ? m.plies || 7 : 0, pvK: m.k || 5 } };
 }
 function mtV(m) {
   const { pos, ply } = mtNode(m);
@@ -676,7 +676,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
         else if (m.type === 'win') self.postMessage({ id: m.id, type: 'result', list: winningMoves(m.start, m.moves) });
         else if (m.type === 'newgame') { ttClear(); self.postMessage({ id: m.id, type: 'result' }); }
         else if (m.type === 'mtplan') self.postMessage({ id: m.id, type: 'result', ...mtPlan(m) });
-        else if (m.type === 'mtv') self.postMessage({ id: m.id, type: 'result', ...mtV(m) });
+        else if (m.type === 'mtv') self.postMessage({ id: m.id, type: 'result', core: WA ? 'wasm' : 'js', ...mtV(m) });   // (core: every worker's, for bench.html)
         else if (m.type === 'mtkids') self.postMessage({ id: m.id, type: 'result', ...mtKids(m) });
         else if (m.type === 'mtpv') self.postMessage({ id: m.id, type: 'result', pv: pvOf(m.start, m.moves, m.m, m.plies) });
         else if (m.type === 'mtlead') self.postMessage({ id: m.id, type: 'result', ...(() => { PRO_CFG = m.cfg || null; try { const r = think(m.start, m.moves, m.level); return Object.assign({}, r, { nodes }); } finally { PRO_CFG = null; } })() });   // (Lazy SMP: the job as one thread plays it, on the shared table)
