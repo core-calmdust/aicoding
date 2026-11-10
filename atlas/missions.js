@@ -272,7 +272,8 @@
       body = `<div class="msnote"><span>🎯 ${esc(fill(x.line, { n: LINE_COINS }))}</span><span>🌟 ${esc(fill(x.card, { n: CARD_COINS }))}</span></div>
         <div class="msgw"><div class="msgrid">${s.st.map(cell).join('')}</div></div>`;
     } else {
-      const L = tab === 'mo' ? s.mo : s.lg, d = new Date(), last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+      const L = (tab === 'mo' ? s.mo : s.lg).map((m, i) => [m, i]).sort((a, b) => (s.can(b[0]) - s.can(a[0])) || (!!s.M.c[a[0].id] - !!s.M.c[b[0].id]) || a[1] - b[1]).map(x => x[0]),   // (claimable first, claimed last)
+        d = new Date(), last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
       const M2 = new Intl.DateTimeFormat(C.lang(), { month: 'long' }).format(d);
       body = (tab === 'mo' ? `<div class="msnote"><span>📅 ${esc(fill(x.month, { m: d.getMonth() + 1, M: M2 }))}</span><span>⏳ ${esc(fill(x.left, { n: last - d.getDate() + 1 }))}</span></div>` : '') +
         `<div class="mslist">${L.map(m => `<div class="msrow ${tab === 'lg' ? 'lgd' : ''} ${m.all ? 'all' : ''}"><span class="ic">${m.ic}</span><span class="md"><b>${esc(m.tx)}</b><span class="pg"><span class="bar"><i style="width:${Math.round(m.have / m.need * 100)}%"></i></span><small>${m.have.toLocaleString()} / ${m.need.toLocaleString()}</small></span></span>${getBtn(m, m.coins)}</div>`).join('')}</div>`;
