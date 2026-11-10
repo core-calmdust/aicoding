@@ -42,7 +42,7 @@ function movers(pos) { const out = [], p = pos.turn; for (let k = 0; k < 8; k++)
 
 // ====================================================================== state
 const STORE = 'aicoding-amazons';
-const settings = { mode: 'ai', rule: 'std', color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: true, num: true, coach: true, lang: '', bd: 'temple', pcs: 'statue' };
+const settings = { mode: 'ai', rule: 'std', color: 1, level: 6, level2: 6, anim: true, sound: true, hint: false, eval: true, last: true, threat: true, num: true, coach: true, lang: '', bd: 'temple', pcs: 'cameo' };
 const SUPPORTED = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); if (/^zh-(tw|hk|mo|hant)/.test(n)) return 'zh-TW'; return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
@@ -930,19 +930,21 @@ document.addEventListener('keydown', e => {
 
 // ---------------------------------------------------------------- 2D board designs and amazon sets (CSS: html[data-bd] / html[data-pcs]; mini boards: BD_PAL)
 // Boards (tools/gen_boards.py): the temple of Themiscyra (Carrara and verde antico marble, gold inlay; the default), jungle ruins,
-// the Amazonomachy vase (clay and black glaze), steel and fire. Amazons (3D renders: tools/pieces3d.html + render_pieces.js):
-// marble warrior statues (the default), ivory and ebony archers, vase-painting medallions, bronze and iron queens.
-const BD_KEYS = ['temple', 'ruins', 'vase', 'iron'], PC_KEYS = ['statue', 'archer', 'vase', 'bronze'];   // temple / statue first: the defaults
+// the Amazonomachy vase (clay and black glaze), and two modern ones: terrazzo, navy and ivory lacquer. Amazons: medallions on stands
+// rendered from 3D models (tools/pieces3d.html + render_pieces.js): marble cameos (the default), ancient coins, vase paintings,
+// modern enamel. (The sculpted 3D figures belong to the 3D board.)
+const BD_KEYS = ['temple', 'ruins', 'vase', 'terrazzo', 'navy'], PC_KEYS = ['cameo', 'coin', 'vase', 'enamel'];   // temple / cameo first: the defaults
 // [frame, arrow tile, arrow shaft, fletching]
 const BD_PAL = {
   temple: ['#cdbf9f', '#2a1a10', '#f0cf86', '#fff6e2'],
   ruins: ['#26331f', '#241a10', '#dcbc7c', '#f4e6c4'],
   vase: ['#16110d', '#2a1208', '#e88a4e', '#f6d8b0'],
-  iron: ['#1c1b1e', '#1c1210', '#ffb070', '#ffe4b8'],
+  terrazzo: ['#2e2f31', '#241e18', '#d6b26a', '#f4ead6'],
+  navy: ['#18243e', '#241a12', '#e0bf7a', '#fff4dc'],
 };
 function designApply() {
   if (!BD_KEYS.includes(settings.bd)) settings.bd = 'temple';   // (old designs: jungle, wood, … → the new default)
-  if (!PC_KEYS.includes(settings.pcs)) settings.pcs = 'statue';
+  if (!PC_KEYS.includes(settings.pcs)) settings.pcs = 'cameo';
   document.documentElement.dataset.bd = settings.bd; document.documentElement.dataset.pcs = settings.pcs;
   document.documentElement.classList.toggle('no-anim', !animOn());   // (no smoke either)
 }

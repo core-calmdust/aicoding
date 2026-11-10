@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<script>try { const S = (JSON.parse(localStorage.getItem('aicoding-amazons') || '{}') || {}).settings || {}; const B = ['temple', 'ruins', 'vase', 'iron'], P = ['statue', 'archer', 'vase', 'bronze']; document.documentElement.dataset.bd = B.includes(S.bd) ? S.bd : 'temple'; document.documentElement.dataset.pcs = P.includes(S.pcs) ? S.pcs : 'statue'; } catch (e) {} document.documentElement.style.setProperty('--S', 10);</script>
+<script>try { const S = (JSON.parse(localStorage.getItem('aicoding-amazons') || '{}') || {}).settings || {}; const B = ['temple', 'ruins', 'vase', 'terrazzo', 'navy'], P = ['cameo', 'coin', 'vase', 'enamel']; document.documentElement.dataset.bd = B.includes(S.bd) ? S.bd : 'temple'; document.documentElement.dataset.pcs = P.includes(S.pcs) ? S.pcs : 'cameo'; } catch (e) {} document.documentElement.style.setProperty('--S', 10);</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <script src="../shared/latinfs.js?v=1l14"></script>
@@ -778,7 +778,7 @@ body .info-line{font-size:12.5px}
   .brand-r #langSel{height:34px;font-size:13px;padding:0 8px;border-radius:9px;max-width:none}
 }
 
-/* ================================================================ amazons: the 10×10 board (a baked texture per design), the amazons (3D renders, tools/pieces3d.html + render_pieces.js) and the arrows (scorched squares) */
+/* ================================================================ amazons: the 10×10 board (a baked texture per design), the amazons (medallions rendered from 3D models, tools/pieces3d.html + render_pieces.js) and the arrows (scorched squares) */
 :root{--frm:#3a5a2a;--num:rgba(255,255,248,.8);--numS:rgba(0,0,0,.45);--arw1:#4a3826;--arw2:#20160d;--arwFl:#f0dca4;--arwSh:#c9a25a}
 .board{background:none;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--frm) 70%,transparent),0 0 0 4px rgba(0,0,0,.55),0 0 0 6px color-mix(in srgb,var(--frm) 55%,transparent);border-radius:4px}
 .board::after{display:none}
@@ -787,7 +787,7 @@ body .info-line{font-size:12.5px}
 .board.no-num .lines .num{display:none}
 .sqfx{position:absolute;width:var(--cell);height:var(--cell);margin:calc(var(--cell) * -.5) 0 0 calc(var(--cell) * -.5);pointer-events:none;z-index:1}
 .board.hide-last .sqfx.last,.board.hide-last .sqfx.lastf,.board.hide-last .sqfx.lasta{display:none}
-.pc{width:calc(var(--cell) * 1.1);height:calc(var(--cell) * 1.1);margin:calc(var(--cell) * -.66) 0 0 calc(var(--cell) * -.55);border-radius:0}
+.pc{width:calc(var(--cell) * .98);height:calc(var(--cell) * .98);margin:calc(var(--cell) * -.56) 0 0 calc(var(--cell) * -.49);border-radius:0}
 .pc::before,.pc::after{display:none}
 .pc .orn{display:none}
 .pc.p1,.rv.p1{background:var(--pcW) center/100% 100% no-repeat;box-shadow:none;filter:drop-shadow(0 calc(var(--cell) * .03) calc(var(--cell) * .04) rgba(0,0,0,.45))}
@@ -845,15 +845,17 @@ html.no-anim .arw::after,.arw.fly::after{display:none}
 html[data-bd=temple]{--bdImg:url(img/bd-temple.webp);--frameBg:url(img/fr-temple.webp) center/100% 100% no-repeat,#d9cdb2;--frm:#c9a052;--num:rgba(120,92,40,.9);--numS:rgba(255,248,230,.6);--arw1:#3a2414;--arw2:#120a06;--arwSh:#f0cf86;--arwFl:#fff6e2}
 html[data-bd=ruins]{--bdImg:url(img/bd-ruins.webp);--frameBg:url(img/fr-ruins.webp) center/100% 100% no-repeat,#24301f;--frm:#6f8a4a;--num:rgba(236,232,206,.85);--arw1:#2e2418;--arw2:#0e0a06;--arwSh:#dcbc7c;--arwFl:#f4e6c4}
 html[data-bd=vase]{--bdImg:url(img/bd-vase.webp);--frameBg:url(img/fr-vase.webp) center/100% 100% no-repeat,#16110d;--frm:#c4683a;--num:rgba(226,140,90,.9);--arw1:#3a1a0c;--arw2:#100604;--arwSh:#e88a4e;--arwFl:#f6d8b0}
-html[data-bd=iron]{--bdImg:url(img/bd-iron.webp);--frameBg:url(img/fr-iron.webp) center/100% 100% no-repeat,#1c1b1e;--frm:#d0702e;--num:rgba(255,190,130,.88);--arw1:#241814;--arw2:#0a0605;--arwSh:#ffb070;--arwFl:#ffe4b8}
+html[data-bd=terrazzo]{--bdImg:url(img/bd-terrazzo.webp);--frameBg:url(img/fr-terrazzo.webp) center/100% 100% no-repeat,#2e2f31;--frm:#c4a062;--num:rgba(70,66,60,.85);--numS:rgba(255,255,255,.55);--arw1:#2a2622;--arw2:#0c0a08;--arwSh:#d6b26a;--arwFl:#f4ead6}
+html[data-bd=navy]{--bdImg:url(img/bd-navy.webp);--frameBg:url(img/fr-navy.webp) center/100% 100% no-repeat,#18243e;--frm:#cca864;--num:rgba(204,168,100,.95);--numS:rgba(0,0,0,.5);--arw1:#2a1e14;--arw2:#0a0705;--arwSh:#e0bf7a;--arwFl:#fff4dc}
 .frame{background:var(--frameBg)}
 html[data-bd=temple] .frame{box-shadow:0 40px 80px -30px rgba(0,0,0,.85),0 0 0 1px rgba(201,160,82,.6),inset 0 1px 0 rgba(255,255,255,.5)}
-/* amazon sets (3D renders, tools/render_pieces.js) */
-html[data-pcs=statue]{--pcW:url(img/pc-statue-w.webp);--pcB:url(img/pc-statue-b.webp)}
-html[data-pcs=archer]{--pcW:url(img/pc-archer-w.webp);--pcB:url(img/pc-archer-b.webp)}
+/* amazon sets: medallions on stands (rendered from 3D models: tools/pieces3d.html + render_pieces.js) */
+html[data-pcs=cameo]{--pcW:url(img/pc-cameo-w.webp);--pcB:url(img/pc-cameo-b.webp)}
+html[data-pcs=coin]{--pcW:url(img/pc-coin-w.webp);--pcB:url(img/pc-coin-b.webp)}
 html[data-pcs=vase]{--pcW:url(img/pc-vase-w.webp);--pcB:url(img/pc-vase-b.webp)}
-html[data-pcs=bronze]{--pcW:url(img/pc-bronze-w.webp);--pcB:url(img/pc-bronze-b.webp)}
-#bdRow{grid-template-columns:repeat(4,minmax(0,1fr))}
+html[data-pcs=enamel]{--pcW:url(img/pc-enamel-w.webp);--pcB:url(img/pc-enamel-b.webp)}
+#bdRow{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media (max-width: 520px){#bdRow{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .mtabs{display:none;background:linear-gradient(180deg,var(--panel2),var(--bg));border-top:1px solid var(--line)}
 .mtabs button{background:none;border:0;color:var(--muted);position:relative;cursor:pointer}
 .mtabs button.sel{color:var(--accent)}
@@ -1339,8 +1341,8 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 </div>
 
 <script src="../checkers/i18n.js?v=20261107l14"></script>
-<script src="i18n-am.js?v=2"></script>
-<script src="i18n-am-more.js?v=2"></script>
+<script src="i18n-am.js?v=3"></script>
+<script src="i18n-am-more.js?v=3"></script>
 <script src="i18n-am-ls.js?v=1"></script>
 <script src="i18n-am-ls-more.js?v=1"></script>
 <script src="i18n-am-ls-more2.js?v=1"></script>
@@ -1362,10 +1364,10 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 <script src="coach.js?v=1sq"></script>
 <script src="coach-i18n.js?v=1"></script>
 <script src="../shared/export.js?v=9l14"></script>
-<script src="../shared/mtengine.js?v=8"></script><script src="../shared/mtsplit.js?v=6"></script><script src="../shared/proset.js?v=5t2svhxbf-ms1"></script><script src="app.js?v=10"></script>
+<script src="../shared/mtengine.js?v=8"></script><script src="../shared/mtsplit.js?v=6"></script><script src="../shared/proset.js?v=5t2svhxbf-ms1"></script><script src="app.js?v=11"></script>
 <nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="tab.game"></button></nav>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=20261110am5" defer></script>
+<script src="../shared/atlas.js?v=20261110am6" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1l14" defer></script>
 <script src="../shared/atlas-account.js?v=20261109ac2l14" defer></script>
 <script src="../shared/infotabs.js?v=17l14" defer></script>

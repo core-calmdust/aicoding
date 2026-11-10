@@ -4,7 +4,8 @@
 #   temple  テミスキュラの神殿: Carrara and verde antico marble squares, gold inlay lines, a polished slab
 #   ruins   密林の遺跡: weathered limestone and basalt flags, moss in the joints, roots, morning haze
 #   vase    アマゾノマキアの壺絵: fired clay and black glaze squares, incised lines, palmettes at the crossings
-#   iron    鋼と炎: blued and blackened steel plates, rivets, ember light in the seams
+#   terrazzo テラゾー: polished terrazzo (ivory and charcoal) with brass strips (modern)
+#   navy    ネイビーとアイボリー: navy and ivory lacquer, gold hairlines (modern)
 import math, os
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
@@ -89,8 +90,9 @@ def polish(arr, strength=.08):
 
 # ---------------------------------------------------------------- 1. temple
 def temple():
-    light = slabs(marble(900, 900, 11, (242, 239, 233), (110, 114, 124), (196, 192, 188), 1.7), 1)
-    dark = slabs(marble(900, 900, 12, (26, 54, 44), (214, 230, 218), (78, 122, 102), 2.2), 2)   # verde antico
+    # (soft veins: the stone should stay quiet under the pieces)
+    light = slabs(marble(900, 900, 11, (243, 240, 234), (178, 178, 186), (220, 216, 212), 1.3), 1)
+    dark = slabs(marble(900, 900, 12, (30, 60, 49), (92, 128, 112), (46, 80, 66), 1.6), 2)   # verde antico
     a = np.where(DARK[..., None], dark, light)
     a += per_tile(5, .05)[..., None]
     a = bevel(a, 7, .07, .12)
@@ -115,24 +117,33 @@ def temple():
 # ---------------------------------------------------------------- 2. ruins (the default)
 def ruins():
     n = fbm(S, S, 31); n2 = fbm(S, S, 32, ((20, .5), (60, .3), (160, .2)))
-    lime = lerp(np.broadcast_to(col((196, 192, 168)), (S, S, 3)), np.broadcast_to(col((150, 152, 128)), (S, S, 3)), n)
-    bas = lerp(np.broadcast_to(col((70, 80, 72)), (S, S, 3)), np.broadcast_to(col((38, 46, 42)), (S, S, 3)), n)
+    lime = lerp(np.broadcast_to(col((200, 196, 170)), (S, S, 3)), np.broadcast_to(col((156, 156, 130)), (S, S, 3)), n)
+    bas = lerp(np.broadcast_to(col((74, 84, 76)), (S, S, 3)), np.broadcast_to(col((40, 48, 44)), (S, S, 3)), n)
     a = np.where(DARK[..., None], bas, lime)
     a += ((n2 - .5) * .14)[..., None]
-    a += per_tile(7, .09)[..., None]
-    # pits and cracks
+    a += per_tile(7, .12)[..., None]
     cr = np.abs(np.sin(xx / 37 + fbm(S, S, 33) * 18)) < .015; a[cr] *= .72
     pits = fbm(S, S, 34, ((120, .6), (300, .4))) > .74; a[pits] *= .82
-    a = bevel(a, 10, .06, .2)
+    # every square a separate dressed stone: a rounded block with a worn, uneven edge, set in earth with a gap round it
+    GAP, RAD = 6, 12
+    qx = np.minimum(LX, U - 1 - LX).astype(np.float32); qy = np.minimum(LY, U - 1 - LY).astype(np.float32)
+    cx = np.maximum(RAD - qx, 0); cy = np.maximum(RAD - qy, 0)
+    dist = np.where((qx < RAD) & (qy < RAD), RAD - np.hypot(cx, cy), np.minimum(qx, qy)) - GAP   # inside the stone > 0
+    dist = dist + (fbm(S, S, 43, ((40, .6), (110, .4))) - .5) * 6                                 # worn edge
+    inside = np.clip(dist / 1.5, 0, 1)
+    rim = np.clip(1 - dist / 16, 0, 1) * inside                                                   # a rounded, darker arris
+    a = a * (1 - rim * .28)[..., None]
+    lt = np.clip(1 - np.minimum(LX, LY) / 18, 0, 1) * inside * .1; a = a + lt[..., None]          # light on the top-left edges
+    earth = lerp(np.broadcast_to(col((40, 36, 26)), (S, S, 3)), np.broadcast_to(col((22, 26, 18)), (S, S, 3)), fbm(S, S, 44, ((60, .5), (180, .5))))
+    a = lerp(earth, a, inside)
+    jd = np.clip(dist + GAP, 0, None)
     # moss: in the joints, spreading where the noise allows
-    jd = np.minimum(np.minimum(LX, LY), np.minimum(U - 1 - LX, U - 1 - LY)).astype(np.float32)
     moss = np.clip((1 - jd / 16) * 1.3 + (fbm(S, S, 35) - .55) * 3, 0, 1) * np.clip((fbm(S, S, 36, ((10, .7), (40, .3))) - .35) * 2.4, 0, 1)
     mc = lerp(np.broadcast_to(col((70, 104, 46)), (S, S, 3)), np.broadcast_to(col((128, 150, 66)), (S, S, 3)), fbm(S, S, 37, ((80, .5), (240, .5))))
-    a = lerp(a, mc, moss * .85)
-    a = joints(a, 2, (24, 30, 20), .9)
+    a = lerp(a, mc, moss * .85 * (1 - inside * .75))   # (moss in the joints, little on the stones)
     # lichen: pale rosettes here and there on the stone
     lic = np.clip((fbm(S, S, 38, ((30, .5), (90, .5))) - .66) * 6, 0, 1) * np.clip((fbm(S, S, 42, ((6, 1.0),)) - .4) * 3, 0, 1)
-    a = lerp(a, np.broadcast_to(col((206, 200, 150)), a.shape), lic * .5)
+    a = lerp(a, np.broadcast_to(col((206, 200, 150)), a.shape), lic * .18)
     # chipped corners: a few squares lost a corner (darker, rough)
     im = Image.fromarray((np.clip(a, 0, 1) * 255).astype(np.uint8)); d = ImageDraw.Draw(im, 'RGBA')
     r = np.random.default_rng(38)
@@ -201,42 +212,60 @@ def vase():
         for y in range(80, H - 80, 30): d.ellipse([xb - 5, y - 9, xb + 5, y + 9], outline=(196, 104, 58), width=2)
     save(np.asarray(fim, np.float32) / 255, 'fr-vase.webp', 84)
 
-# ---------------------------------------------------------------- 4. iron (steel and fire)
-def iron():
-    n = fbm(S, S, 71)
-    brush = noise(S, S, 600, 72); brush = np.asarray(Image.fromarray((brush * 255).astype(np.uint8)).resize((S, S)).filter(ImageFilter.GaussianBlur(0)), np.float32) / 255
-    streak = up(np.random.default_rng(73).random((S, 8)).astype(np.float32), (S, S)) * .6 + up(np.random.default_rng(74).random((S, 40)).astype(np.float32), (S, S)) * .4
-    light = lerp(np.broadcast_to(col((138, 146, 158)), (S, S, 3)), np.broadcast_to(col((104, 112, 128)), (S, S, 3)), n)   # blued steel
-    light = light + ((streak - .5) * .1)[..., None]
-    heat = np.clip((fbm(S, S, 75, ((5, .7), (12, .3))) - .45) * 2, 0, 1)                                             # heat tint (straw / purple)
-    light = lerp(light, light * col((255, 214, 170)) * 1.05, heat * .35)
-    dark = lerp(np.broadcast_to(col((42, 40, 44)), (S, S, 3)), np.broadcast_to(col((22, 21, 24)), (S, S, 3)), n)       # blackened iron
-    dark = dark + ((fbm(S, S, 76, ((60, .5), (200, .5))) - .5) * .08)[..., None]
-    a = np.where(DARK[..., None], dark, light)
-    a += per_tile(11, .05)[..., None]
-    a = bevel(a, 8, .1, .22)
-    # ember seams: glowing orange in the joints, fading out
-    jd = np.minimum(np.minimum(LX, LY), np.minimum(U - 1 - LX, U - 1 - LY)).astype(np.float32)
-    glow = np.exp(-jd / 3.2) * (0.55 + 0.45 * fbm(S, S, 77, ((8, .6), (30, .4))))
-    a = a * (1 - glow * .6)[..., None] + (glow[..., None] * col((255, 120, 40)) * 1.15)
-    a = joints(a, 1, (255, 196, 120), .55)
-    im = Image.fromarray((np.clip(a, 0, 1) * 255).astype(np.uint8)); d = ImageDraw.Draw(im, 'RGBA')
-    for r in range(N):   # rivets in the corners of every plate
-        for c in range(N):
-            for dx, dy in ((14, 14), (U - 14, 14), (14, U - 14), (U - 14, U - 14)):
-                x, y = c * U + dx, r * U + dy
-                d.ellipse([x - 5, y - 5, x + 5, y + 5], fill=(30, 30, 34, 255)); d.ellipse([x - 4, y - 5, x + 2, y + 1], fill=(190, 196, 206, 200))
-    save(np.asarray(im, np.float32) / 255, 'bd-iron.webp')
+# ---------------------------------------------------------------- 4. terrazzo (modern): polished terrazzo, ivory and charcoal, brass strips
+def chips(im, mask, seed, palette, n, rmin, rmax):
+    d = ImageDraw.Draw(im); r = np.random.default_rng(seed)
+    for _ in range(n):
+        x, y = r.integers(0, S, 2)
+        if not mask[y, x]: continue
+        rad = rmin + (rmax - rmin) * r.random() ** 2.2; k = int(r.integers(4, 8)); a0 = r.random() * 6.28
+        pts = [(x + math.cos(a0 + t / k * 6.283) * rad * (.55 + .45 * r.random()), y + math.sin(a0 + t / k * 6.283) * rad * (.55 + .45 * r.random())) for t in range(k)]
+        c = palette[int(r.integers(0, len(palette)))]; j = r.integers(-10, 10)
+        d.polygon(pts, fill=tuple(int(max(0, min(255, v + j))) for v in c))
+def terrazzo():
+    base_l = lerp(np.broadcast_to(col((234, 229, 219)), (S, S, 3)), np.broadcast_to(col((222, 216, 205)), (S, S, 3)), fbm(S, S, 81))
+    base_d = lerp(np.broadcast_to(col((62, 64, 66)), (S, S, 3)), np.broadcast_to(col((48, 50, 52)), (S, S, 3)), fbm(S, S, 82))
+    a = np.where(DARK[..., None], base_d, base_l)
+    im = Image.fromarray((np.clip(a, 0, 1) * 255).astype(np.uint8))
+    inner = (LX > 3) & (LY > 3) & (LX < U - 4) & (LY < U - 4)
+    chips(im, ~DARK & inner, 83, [(150, 150, 152), (196, 112, 82), (128, 148, 120), (64, 64, 66), (246, 244, 238), (214, 170, 120)], 15000, 1.2, 6)
+    chips(im, DARK & inner, 84, [(236, 232, 224), (150, 150, 154), (176, 98, 70), (110, 128, 112), (30, 30, 32)], 13000, 1.2, 6)
+    a = np.asarray(im.filter(ImageFilter.GaussianBlur(.6)), np.float32) / 255
+    a = polish(a, .06)
+    a = joints(a, 2, (196, 160, 98))                                                  # brass strips
+    g = ((LX == 2) | (LY == 2)).astype(np.float32) * .3; a = a + g[..., None] * col((255, 236, 190))
+    save(a, 'bd-terrazzo.webp')
     W, H = 1100, 1200
-    f = lerp(np.broadcast_to(col((34, 32, 36)), (H, W, 3)), np.broadcast_to(col((16, 15, 18)), (H, W, 3)), fbm(W, H, 78))
-    st = up(np.random.default_rng(79).random((H, 10)).astype(np.float32), (W, H)); f = f + ((st - .5) * .06)[..., None]
-    yy2, xx2 = np.mgrid[0:H, 0:W]; ed = np.minimum(np.minimum(xx2, yy2), np.minimum(W - 1 - xx2, H - 1 - yy2)).astype(np.float32)
-    f = f + (np.exp(-ed / 26) * .35)[..., None] * col((255, 110, 40))      # embers along the edge
-    fim = Image.fromarray((np.clip(f, 0, 1) * 255).astype(np.uint8)); d = ImageDraw.Draw(fim, 'RGBA')
-    for x in list(range(40, W - 20, 70)):
-        for y in (22, H - 22): d.ellipse([x - 6, y - 6, x + 6, y + 6], fill=(28, 28, 32, 255)); d.ellipse([x - 5, y - 6, x + 2, y + 1], fill=(170, 176, 186, 190))
-    save(np.asarray(fim, np.float32) / 255, 'fr-iron.webp', 84)
+    f = lerp(np.broadcast_to(col((46, 47, 49)), (H, W, 3)), np.broadcast_to(col((36, 37, 39)), (H, W, 3)), fbm(W, H, 85))
+    fim = Image.fromarray((np.clip(f, 0, 1) * 255).astype(np.uint8)); r = np.random.default_rng(86); d = ImageDraw.Draw(fim)
+    for _ in range(9000):
+        x, y = r.integers(0, W), r.integers(0, H); rad = 1.2 + 4 * r.random() ** 2.5
+        c = [(200, 196, 188), (120, 120, 124), (150, 90, 66), (24, 24, 26)][int(r.integers(0, 4))]
+        d.ellipse([x - rad, y - rad * .7, x + rad, y + rad * .7], fill=c)
+    d.rounded_rectangle([12, 12, W - 12, H - 12], 24, outline=(196, 160, 98), width=3)
+    save(np.asarray(fim.filter(ImageFilter.GaussianBlur(.5)), np.float32) / 255, 'fr-terrazzo.webp', 84)
+
+# ---------------------------------------------------------------- 5. navy (modern): navy and ivory lacquer, gold hairlines
+def navy():
+    n = fbm(S, S, 91, ((4, .6), (12, .4)))
+    ivory = lerp(np.broadcast_to(col((238, 231, 216)), (S, S, 3)), np.broadcast_to(col((228, 220, 203)), (S, S, 3)), n)
+    nv = lerp(np.broadcast_to(col((28, 42, 70)), (S, S, 3)), np.broadcast_to(col((20, 31, 54)), (S, S, 3)), n)
+    a = np.where(DARK[..., None], nv, ivory)
+    a += ((fbm(S, S, 92, ((200, .5), (400, .5))) - .5) * .015)[..., None]           # a faint orange peel in the lacquer
+    sheen = np.exp(-(((xx + yy) / S - .7) / .22) ** 2) * .06; a = a + sheen[..., None]   # a soft diagonal reflection
+    a = joints(a, 1, (204, 168, 100))
+    a = polish(a, .03)
+    edge = np.minimum(np.minimum(xx, yy), np.minimum(S - 1 - xx, S - 1 - yy))
+    a = lerp(a, np.broadcast_to(col((204, 168, 100)), a.shape), (edge < 4).astype(np.float32))
+    save(a, 'bd-navy.webp')
+    W, H = 1100, 1200
+    f = lerp(np.broadcast_to(col((24, 36, 60)), (H, W, 3)), np.broadcast_to(col((16, 25, 44)), (H, W, 3)), fbm(W, H, 93, ((3, .6), (8, .4))))
+    yy2, xx2 = np.mgrid[0:H, 0:W]; f = f + (np.exp(-(((xx2 + yy2) / (W + H) - .35) / .18) ** 2) * .05)[..., None]
+    fim = Image.fromarray((np.clip(f, 0, 1) * 255).astype(np.uint8)); d = ImageDraw.Draw(fim)
+    d.rounded_rectangle([16, 16, W - 16, H - 16], 22, outline=(204, 168, 100), width=2)
+    d.rounded_rectangle([24, 24, W - 24, H - 24], 18, outline=(204, 168, 100), width=1)
+    save(np.asarray(fim, np.float32) / 255, 'fr-navy.webp', 86)
 
 if __name__ == '__main__':
     import sys
-    for k in (sys.argv[1:] or ['temple', 'ruins', 'vase', 'iron']): globals()[k]()
+    for k in (sys.argv[1:] or ['temple', 'ruins', 'vase', 'terrazzo', 'navy']): globals()[k]()
