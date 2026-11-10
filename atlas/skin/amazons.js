@@ -36,7 +36,7 @@ html.atlas-amazons.hb-atlas body{padding-top:64px}
   html.atlas-amazons.hb-atlas.ol-dock.ol-soon{--vh:calc(100vh - 46px - 64px)}
   @supports (height:100dvh){html.atlas-amazons.hb-atlas.ol-dock.ol-soon{--vh:calc(100dvh - 46px - 64px)}}
 }
-html.atlas-2d #board{transform:none!important}   /* (the 2D board: flat; the tilt is the 3D board's) */
+html.atlas-2d #board{transform:none!important;translate:none!important}   /* (the 2D board: flat; the tilt is the 3D board's) */
 html.atlas-amazons .frame{background:transparent!important;box-shadow:none!important;border:0!important}
 html.atlas-amazons .frame::before,html.atlas-amazons .frame::after,html.atlas-amazons .board::after,html.atlas-amazons .board::before{display:none!important}
 html.atlas-amazons .board{background:none!important;box-shadow:none!important}
@@ -88,6 +88,16 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
   });
   if (!skin) return;
 
+  /* ---------- the tilt's lens: the leaning board is drawn a little lower and larger at the near side; the board (3D and the DOM
+     board over it, together) is moved up by the same amount so it sits centred between the count plates (the page's layout itself
+     is not touched) ---------- */
+  const LIFT = .05;   // of the board's height
+  function lift3d() {
+    const holder = boardDom.parentElement;
+    const box = () => { let x = 0, y = 0, e = boardDom; while (e && e !== holder) { x += e.offsetLeft; y += e.offsetTop; e = e.offsetParent; } return { x, y, w: boardDom.offsetWidth, h: boardDom.offsetHeight }; };
+    const host = document.getElementById('atlasGL');
+    T3.align(() => { const b = box(), d = de.classList.contains('atlas-2d') ? 0 : b.h * LIFT; boardDom.style.translate = d ? `0 ${-d}px` : ''; return { x: b.x - (host ? host.offsetLeft : 0), y: b.y - d - (host ? host.offsetTop : 0), w: b.w, h: b.h, tilt: 26, persp: b.h * 2.6 }; }, 10, U.top);
+  }
   /* ---------- the board ---------- */
   const holder = new THREE.Group();
   let root = null, U = null, Y = 0, built = '';
@@ -101,7 +111,7 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
     P3.clear();
     root = A3.board(look); U = root.userData; Y = U.top; holder.add(root);
     T3.show('amazons', holder, { still: true });
-    skin.alignTo(10, U.top);
+    skin.alignTo(10, U.top); lift3d();
     dispatchEvent(new Event('resize'));
     T3.kick(600);
     return true;
@@ -169,22 +179,6 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
   }
   addEventListener('storage', e => { if (e.key === 'atlas-amazons-look' || e.key === 'atlas-amazons-pc3') { setPc3Attr(); try { mirror(); } catch (x) {} paint3(); } });
 
-  /* ---------- effects: sprites (fire, sparks, flash, smoke) ---------- */
-  const spr = {};
-  function sprTex(kind) {
-    if (spr[kind]) return spr[kind];
-    const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
-    if (kind === 'fire') { gr.addColorStop(0, 'rgba(255,250,220,1)'); gr.addColorStop(.25, 'rgba(255,200,80,.95)'); gr.addColorStop(.55, 'rgba(255,110,20,.6)'); gr.addColorStop(1, 'rgba(255,60,0,0)'); }
-    else if (kind === 'spark') { gr.addColorStop(0, 'rgba(255,255,230,1)'); gr.addColorStop(.3, 'rgba(255,190,70,.9)'); gr.addColorStop(1, 'rgba(255,90,10,0)'); }
-    else if (kind === 'ember') { gr.addColorStop(0, 'rgba(255,120,30,0)'); gr.addColorStop(.55, 'rgba(255,120,30,0)'); gr.addColorStop(.72, 'rgba(255,110,30,.55)'); gr.addColorStop(.86, 'rgba(255,70,10,.2)'); gr.addColorStop(1, 'rgba(255,60,0,0)'); }
-    else { gr.addColorStop(0, 'rgba(210,206,200,.5)'); gr.addColorStop(.5, 'rgba(190,186,180,.22)'); gr.addColorStop(1, 'rgba(180,176,170,0)'); }
-    g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
-    const t = new THREE.CanvasTexture(c); return (spr[kind] = t);
-  }
-  const sprMat = (kind) => new THREE.SpriteMaterial({ map: sprTex(kind), transparent: true, depthWrite: false, blending: kind === 'smoke' ? THREE.NormalBlending : THREE.AdditiveBlending, toneMapped: false });
-  function sprite(kind, x, y, z, s) { const o = new THREE.Sprite(sprMat(kind)); o.position.set(x, y, z); o.scale.set(s, s, s); root.add(o); return o; }
-  const kill = o => { if (o.parent) o.parent.remove(o); if (o.material) o.material.dispose(); };
-
   /* ---------- 3D amazons and arrows mirrored from the page ---------- */
   const io = k => k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
   const xz = i => { let rc; try { rc = dRC(i); } catch (e) { rc = E.RC[i]; } return U.pt(rc[1], rc[0]); };
@@ -207,7 +201,7 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
     const sh = g.userData.sh; if (sh) { sh.position.y = .002 - h; const s = 1 + h * .5; sh.scale.set(s, s, s); sh.material.opacity = .5 / (1 + h * 1.4); }
   }
   const hOf = g => g.userData.h0 || 0;
-  function drop(g) { if (!g) return; g.traverse(o => { if (o.isSprite && o.material) o.material.dispose(); }); if (g.userData.sh) g.userData.sh.material.dispose(); if (g.parent) g.parent.remove(g); }
+  function drop(g) { if (!g) return; if (g.userData.sh) g.userData.sh.material.dispose(); if (g.parent) g.parent.remove(g); }
   function applySel() {
     let els; try { els = pcEls; } catch (e) { return; }
     for (const [i, o] of P3) {
@@ -233,50 +227,6 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
     }
     applySel(); T3.kick(300);
   }
-  // the fire arrow's flight: from the amazon's new square to the target, an arc; flame at the head, sparks shed behind
-  function fly(fromSq, toSq, delay, dur, my) {
-    const [x0, z0] = xz(fromSq), [x1, z1] = xz(toSq), d = Math.hypot(x1 - x0, z1 - z0), hgt = .5 + d * .09;
-    later(delay, () => {
-      const g = new THREE.Group(), a = A3.arrow().userData.arrow; a.rotation.set(0, 0, 0); a.position.set(0, 0, 0);
-      const ar = new THREE.Group(); ar.add(a); a.rotation.x = Math.PI / 2; a.position.z = .38; g.add(ar);   // the arrow along +z (head first)
-      const fire = new THREE.Sprite(sprMat('fire')); fire.scale.set(.42, .42, .42); fire.position.set(0, 0, .12); ar.add(fire);
-      root.add(g);
-      let lastSpark = 0; const sparks = [];
-      const pos = k => [x0 + (x1 - x0) * k, Y + .62 + Math.sin(k * Math.PI) * hgt - k * .55, z0 + (z1 - z0) * k];
-      anim(dur, k => {
-        const kk = io(k * .9 + .1 * k * k), [x, y, z] = pos(kk), [xn, yn, zn] = pos(Math.min(1, kk + .02));
-        g.position.set(x, y, z); g.lookAt(xn, yn, zn);
-        const fl = .38 + Math.sin(k * 40) * .06; fire.scale.set(fl, fl, fl);
-        if (k - lastSpark > .06) { lastSpark = k; const s = sprite('spark', x, y, z, .1 + Math.random() * .06); s.userData.v = [(Math.random() - .5) * .6, -.2 - Math.random() * .5, (Math.random() - .5) * .6]; s.userData.t = performance.now(); sparks.push(s); }
-        const now = performance.now();
-        for (let i = sparks.length - 1; i >= 0; i--) { const s = sparks[i], t = (now - s.userData.t) / 480; if (t >= 1) { kill(s); sparks.splice(i, 1); continue; } const v = s.userData.v; s.position.x += v[0] * .016; s.position.y += v[1] * .016; s.position.z += v[2] * .016; s.material.opacity = 1 - t; }
-      }, () => {
-        g.remove(ar); kill(fire); if (g.parent) g.parent.remove(g);
-        anim(500, () => { const now = performance.now(); for (let i = sparks.length - 1; i >= 0; i--) { const s = sparks[i], t = (now - s.userData.t) / 480; if (t >= 1) { kill(s); sparks.splice(i, 1); continue; } s.material.opacity = 1 - t; } }, () => sparks.forEach(kill));
-      }, my);
-    }, my);
-  }
-  // the strike: a flash and a burst of sparks, the edge of the scorch glowing then cooling, smoke rising for a while
-  function strike(sq, g, my) {
-    const [x, z] = xz(sq);
-    const fl = sprite('fire', x, Y + .25, z, .2);
-    anim(460, k => { const s = .2 + k * 1.5; fl.scale.set(s, s, s); fl.material.opacity = k < .2 ? k / .2 : 1 - (k - .2) / .8; }, () => kill(fl), my);
-    const burst = [];
-    for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2 + Math.random() * .4, sp = .9 + Math.random() * 1.2, s = sprite('spark', x, Y + .2, z, .09 + Math.random() * .05); s.userData.v = [Math.cos(a) * sp, 1.2 + Math.random() * 1.2, Math.sin(a) * sp]; burst.push(s); }
-    anim(620, k => { burst.forEach(s => { const v = s.userData.v; s.position.x += v[0] * .016; s.position.z += v[2] * .016; v[1] -= .09; s.position.y = Math.max(Y + .02, s.position.y + v[1] * .016); s.material.opacity = 1 - k; }); }, () => burst.forEach(kill), my);
-    const em = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 1.2).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: sprTex('ember'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }));
-    em.position.y = .006; g.add(em);
-    anim(4200, k => { em.material.opacity = (1 - k) * (.45 + .15 * Math.sin(k * 30)); }, () => { g.remove(em); em.geometry.dispose(); em.material.dispose(); });
-    const smoke = [];
-    let t = 0; const tick = () => {
-      if (!g.parent || t > 14) return; t++;
-      const s = new THREE.Sprite(sprMat('smoke')); s.position.set((Math.random() - .5) * .15, .25, (Math.random() - .5) * .15); s.scale.set(.25, .25, .25); g.add(s); smoke.push(s);
-      const v = (Math.random() - .5) * .3;
-      anim(1800, k => { s.position.y = .25 + k * 1.1; s.position.x += v * .006; const sc = .25 + k * .55; s.scale.set(sc, sc, sc); s.material.opacity = Math.sin(k * Math.PI) * .7; }, () => { g.remove(s); s.material.dispose(); });
-      setTimeout(tick, 260);
-    };
-    tick();
-  }
   function travel(m, before) {
     const f = E.mFrom(m), tq = E.mTo(m), a = E.mArrow(m), o = P3.get(f); if (!o) return false;
     const my = tok, g = o.g;
@@ -289,8 +239,8 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
     // the arrow: it flies after the amazon has landed, then sticks (the stuck arrow and the scorch appear at the strike)
     const old = P3.get(a); if (old) { drop(old.g); P3.delete(a); }
     const slot = { g: null, k: 5 }; P3.set(a, slot);
-    fly(tq, a, qd + gap, ad, my);
-    later(qd + gap + ad - 10, () => { if (P3.get(a) !== slot) return; slot.g = mkArrow(a, a); const st = slot.g.userData.arrow; st.position.y = .22; anim(90, k => { st.position.y = .22 * (1 - k) - .03 * k; }, null, my); strike(a, slot.g, my); T3.kick(600); }, my);
+    later(qd + gap, () => A3.fly(root, Y, xz(tq), xz(a), ad, (d, f, done) => anim(d, f, done, my)), my);
+    later(qd + gap + ad - 10, () => { if (P3.get(a) !== slot) return; slot.g = mkArrow(a, a); const st = slot.g.userData.arrow; st.position.y = .22; anim(90, k => { st.position.y = .22 * (1 - k) - .03 * k; }, null, my); A3.strike(slot.g, (d, f, done) => anim(d, f, done)); T3.kick(600); }, my);
     return true;
   }
   const oSync = window.syncPieces;
