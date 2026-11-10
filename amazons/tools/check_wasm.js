@@ -18,3 +18,10 @@ const diff = k => a[k].filter((x, i) => x !== b[k][i]).length;
 console.log('wasm loaded:', b.speed.wasm, '| evaluate', a.ev.length, 'diff', diff('ev'), '| cands', a.cand.length, 'diff', diff('cand'), '| think', a.think.length, 'diff', diff('think'));
 console.log('2 s from the start — JS: depth', a.speed.depth, 'evals', a.speed.evals, '| wasm: depth', b.speed.depth, 'evals', b.speed.evals, `(×${(b.speed.evals / a.speed.evals).toFixed(2)})`);
 if (diff('ev') || diff('cand') || diff('think') || !b.speed.wasm) process.exit(1);
+// the MCTS (wasm only): the same visits and seed give the same tree (deterministic), with and without playouts
+{
+  const { pos } = E.replay(null, []), one = prm => JSON.stringify(E.mcts(pos, { sims: 400, seed: 3, prm }).list.slice(0, 8));
+  const ok = one() === one() && one({ po: 4 }) === one({ po: 4 });
+  console.log('mcts deterministic:', ok);
+  if (!ok) process.exit(1);
+}

@@ -108,7 +108,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=5';
+const ENGINE_URL = 'engine.js?v=6';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -135,6 +135,12 @@ let aiW = makeWorker(), anaW = makeWorker();
 if (window.MTSplit) MTSplit.init({ sw: 'sw.js?v=1' });
 const MTP = window.MTSplit ? MTSplit.use({ url: ENGINE_URL, drive: MTSplit.ladder.drive }) : null;
 const mtLevel = lv => { const L = E.LEVELS[lv]; return !!(L && L.s && L.ms && !L.nk); };   // a level that thinks by time
+// The MCTS on several threads (2026-11-10, claude/amazons-spec.md「MCTS」): Lv.19〜23 (mc in LEVELS; rated games, the coach's deeper
+// pass and PRO's MCTS too) grow ONE tree on every thread (tree-parallel with virtual loss): core_mt.wasm on a shared memory,
+// the lead engine.js?…&mt=1, the helpers mt-helper.js (shared/mtengine.js; only on an isolated page). Without it: one thread.
+const MCP = window.MTEngine && MTEngine.use ? MTEngine.use({ wasm: 'core_mt.wasm?v=1', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=1', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = core_mt.wasm's (1 GiB)
+  imports: mem => ({ env: { memory: mem, now: () => Date.now() } }), help: m => m.type === 'think' ? {} : null }) : null;
+const mcJob = msg => msg.type === 'think' && (msg.cfg ? !!(msg.cfg.s && msg.cfg.mc) : !!(E.LEVELS[msg.level] || {}).mc);
 function mtWants(which, msg) {
   if (msg.type === 'analyze' || msg.type === 'cands') return true;
   if (msg.type !== 'think') return false;
@@ -142,9 +148,16 @@ function mtWants(which, msg) {
   return mtLevel(msg.level) || (which === 'ana' && msg.level === 19);   // (rated games too: the user's decision 2026-11-08; 19 = COACH_DEEP, the coach's deeper pass)
 }
 function request(which, msg, onProgress) {
+  const mc = mcJob(msg);
   // a top level (Lv.21〜) right after the page has opened: wait up to 4 s for the threads rather than start on one
-  if (MTP && which === 'ai' && msg.type === 'think' && msg.level > 20 && MTSplit.on() && !msg.waited) {
-    return (async () => { const t0 = Date.now(); while (!MTP.pool('ai') && Date.now() - t0 < 4000) await new Promise(r => setTimeout(r, 100)); return request(which, Object.assign({}, msg, { waited: 1 }), onProgress); })();
+  if ((mc ? MCP && MTEngine.on() : MTP && MTSplit.on()) && which === 'ai' && msg.type === 'think' && msg.level > 20 && !msg.waited) {
+    const P = mc ? MCP : MTP;
+    return (async () => { const t0 = Date.now(); while (!P.pool('ai') && Date.now() - t0 < 4000) await new Promise(r => setTimeout(r, 100)); return request(which, Object.assign({}, msg, { waited: 1 }), onProgress); })();
+  }
+  if (mc) {   // the MCTS: its own pool of threads (PRO: with more than one thread), else the one-thread worker
+    const mp = MCP && (!msg.cfg || msg.cfg.threads > 1) && MCP.pool(which === 'ai' ? 'ai' : null);
+    if (mp) { const t0 = performance.now(), full = { start: startSpec, rule: gv, ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }; return mp.run(full, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full, onProgress) : r; }); }
+    return requestW(which, msg, onProgress);
   }
   const mp = MTP && mtWants(which, msg) && MTP.pool(which === 'ai' ? 'ai' : null);
   if (mp) { const t0 = performance.now(), full = { start: startSpec, rule: gv, ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }; return mp.run(full, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full, onProgress) : r; }); }
@@ -156,6 +169,7 @@ function requestW(which, msg, onProgress) {   // (the one-thread workers)
 }
 function cancelWorker(which) {
   if (MTP) MTP.cancel(which);
+  if (MCP) MCP.cancel(which);
   const w = which === 'ai' ? aiW : anaW;
   if (!w.jobs.size) return;
   w.terminate();
@@ -723,7 +737,7 @@ async function analyzeCurrent(tok) {
 // coach: a second, deeper pass. The all-moves analysis above is quick but shallow,
 // and its first choice was weaker than the AI's own search at the top levels,
 // so the coach then runs the AI's own stronger search and puts that move at the top of the candidates.
-const COACH_DEEP = 19;   // engine LEVELS: 四段, about 1 s
+const COACH_DEEP = 19;   // engine LEVELS: 1.5 s of the MCTS (on the MCTS threads when they are there)
 async function coachDeep(idx, key, apply) {
   const list = anaCache.get(key);
   if (!list || !list.length || list.deep || !(window.AmazonsCoach && AmazonsCoach.active() && (settings.mode === 'pvp' || toMoveAt(idx) === humanColor))) return;
@@ -1108,12 +1122,18 @@ $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 // PRO mode (shared/proset.js; common rule「対局設定の Pro モード」): advanced settings for the AI beside the level — vs the AI /
 // AI vs AI, never rated. ProSet.ladder() turns the changed values into a step of this engine's ladder (engine.js think: cfg).
 const PRO_L = window.ProSet ? ProSet.ladder(E.LEVELS, { dmax: 20, nmax: 20000000 }) : null;
+// the search: MCTS (the default of Lv.19〜23) or alpha-beta (Lv.9〜18); a depth limit is always the alpha-beta search
+const PRO_ALGO = { key: 'algo', type: 'choice', group: 'read', when: e => e.limit && e.limit.k !== 'depth',
+  label: { ja: '探索の方式', en: 'Search', zh: '搜索方式', 'zh-TW': '搜尋方式', ko: '탐색 방식', es: 'Búsqueda', fr: 'Recherche', pt: 'Busca', de: 'Suche', ru: 'Поиск', tr: 'Arama', id: 'Pencarian', hi: 'खोज का तरीका', ar: 'طريقة البحث' },
+  help: { ja: 'MCTS は有望な手を深く読み、αβ は候補をそろえて読みます。同じ時間では MCTS のほうが強めです。', en: 'MCTS reads the promising moves deeper; alpha-beta reads the candidates evenly. In the same time MCTS is stronger.', zh: 'MCTS 深入计算有希望的着法，αβ 均匀地计算候选。同样时间下 MCTS 更强。', 'zh-TW': 'MCTS 深入計算有希望的著法，αβ 均勻地計算候選。同樣時間下 MCTS 較強。', ko: 'MCTS는 유망한 수를 깊이 읽고, αβ는 후보를 고르게 읽습니다. 같은 시간이면 MCTS가 더 강합니다.', es: 'MCTS lee más hondo las jugadas prometedoras; alfa-beta lee los candidatos por igual. Con el mismo tiempo, MCTS es más fuerte.', fr: 'MCTS lit plus loin les coups prometteurs ; alpha-bêta lit les candidats de façon égale. À temps égal, MCTS est plus fort.', pt: 'MCTS lê mais fundo os lances promissores; alfa-beta lê os candidatos por igual. No mesmo tempo, MCTS é mais forte.', de: 'MCTS liest vielversprechende Züge tiefer, Alpha-Beta liest die Kandidaten gleichmäßig. Bei gleicher Zeit ist MCTS stärker.', ru: 'MCTS глубже считает перспективные ходы, альфа-бета — все кандидаты поровну. За то же время MCTS сильнее.', tr: 'MCTS umut veren hamleleri daha derin okur, alfa-beta adayları eşit okur. Aynı sürede MCTS daha güçlüdür.', id: 'MCTS membaca langkah yang menjanjikan lebih dalam; alfa-beta membaca kandidat secara merata. Dalam waktu sama MCTS lebih kuat.', hi: 'MCTS आशाजनक चालें गहराई से पढ़ता है, αβ सभी उम्मीदवार बराबर पढ़ता है। उतने ही समय में MCTS ज़्यादा मज़बूत है।', ar: 'يقرأ MCTS النقلات الواعدة أعمق، ويقرأ ألفا-بيتا المرشحات بالتساوي. في الوقت نفسه يكون MCTS أقوى.' },
+  opts: [{ v: 'mc', label: { ja: 'MCTS', en: 'MCTS', zh: 'MCTS', 'zh-TW': 'MCTS', ko: 'MCTS', es: 'MCTS', fr: 'MCTS', pt: 'MCTS', de: 'MCTS', ru: 'MCTS', tr: 'MCTS', id: 'MCTS', hi: 'MCTS', ar: 'MCTS' } },
+    { v: 'ab', label: { ja: 'αβ', en: 'Alpha-beta', zh: 'αβ', 'zh-TW': 'αβ', ko: 'αβ', es: 'Alfa-beta', fr: 'Alpha-bêta', pt: 'Alfa-beta', de: 'Alpha-Beta', ru: 'Альфа-бета', tr: 'Alfa-beta', id: 'Alfa-beta', hi: 'αβ', ar: 'ألفا-بيتا' } }] };
 var PRO = PRO_L ? ProSet.init({ game: 'amazons', lang: () => LANG, level: () => draft.level || settings.level, show: () => draft.mode === 'ai' || draft.mode === 'watch',
   store: { get: () => settings.pro, set: v => { settings.pro = v; } },
   // threads (本編のマルチスレッド, shared/mtsplit.js): with any limit of the search; the default is the levels' own count for the
   // levels that think by time, else one
-  defaults: MTP ? lv => Object.assign(PRO_L.defaults(lv), { threads: mtLevel(lv) ? Math.min(ProSet.maxThreads(), MTSplit.autoThreads()) : 1 }) : PRO_L.defaults,   // (threads: the levels' own count, min(cores − 1, 7) + 1 — on the user's Mac 14 threads were slower than 8, 2026-11-09)
-  params: MTP ? [PRO_L.params[0], { key: 'threads' }].concat(PRO_L.params.slice(1)) : PRO_L.params }) : null;
+  defaults: lv => Object.assign(PRO_L.defaults(lv), MTP ? { threads: mtLevel(lv) ? Math.min(ProSet.maxThreads(), MTSplit.autoThreads()) : 1 } : {}, { algo: (E.LEVELS[lv] || {}).mc ? 'mc' : 'ab' }),   // (threads: the levels' own count, min(cores − 1, 7) + 1 — on the user's Mac 14 threads were slower than 8, 2026-11-09)
+  params: (MTP ? [PRO_L.params[0], { key: 'threads' }].concat(PRO_L.params.slice(1)) : PRO_L.params).concat([PRO_ALGO]) }) : null;
 // a rated game (5 min + 3 s): the timed top levels (Lv.21〜) never think longer than the clock allows — about a twentieth of the
 // time left plus most of the increment (on every thread, as without the cap)
 function rtCap(lv) {
@@ -1121,7 +1141,13 @@ function rtCap(lv) {
   const left = rtClockLeft(toMoveAt(moves.length) - 1), ms = Math.min(L.ms, Math.max(800, left / 20 + RT_CLOCK.inc * 0.8));
   return ms >= L.ms ? null : Object.assign({}, L, { ms, threads: MTP && MTSplit.on() ? 1 + MTSplit.helpers() : 1 });
 }
-function proCfg(lv) { if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; const e = PRO.get(lv); return e ? Object.assign(PRO_L.cfg(e, lv), MTP ? { threads: e.threads || 1 } : {}) : null; }
+function proCfg(lv) {
+  if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null;
+  const e = PRO.get(lv); if (!e) return null;
+  const c = Object.assign(PRO_L.cfg(e, lv), MTP ? { threads: e.threads || 1 } : {});
+  if (e.algo === 'mc' && c.s && !c.dx) c.mc = 1;   // (the MCTS with a time or evaluation limit)
+  return c;
+}
 function proTag(lv) { return proCfg(lv) ? ' PRO' : ''; }
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
@@ -1143,7 +1169,7 @@ $('#btnStart').onclick = () => {
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_CLOCK = { base: 300000, inc: 3000 };
 // rating of each AI step (a first estimate from short matches of neighbouring levels on the work machine; to be measured on the
 // user's Mac): about +110 per step at the bottom, smaller at the top
-const RT_LV = [0, 350, 460, 570, 680, 790, 900, 1000, 1100, 1200, 1300, 1390, 1480, 1560, 1640, 1710, 1780, 1840, 1900, 1970, 2040, 2100, 2150, 2190];   // (Lv.21〜23: provisional, +60 / +50 / +40)
+const RT_LV = [0, 350, 460, 570, 680, 790, 900, 1000, 1100, 1200, 1300, 1390, 1480, 1560, 1640, 1710, 1780, 1840, 1900, 2170, 2240, 2300, 2350, 2390];   // (Lv.19〜23 = the MCTS since 2026-11-10: the alpha-beta values +200, provisional — in the same CPU time it beat the alpha-beta search 82.5% at 0.5 s and 15 of 16 at 1.5 s; to be measured on the user's Mac)
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };
