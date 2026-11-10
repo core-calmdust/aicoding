@@ -278,7 +278,7 @@ html.hk-on #bv > .npc-float .npc-pic{width:36px!important;height:36px!important}
       if (v === look || s) return; look = v;
       try { if (T3.setBoard) T3.setBoard('hockey', v); else if (T3.BOARDS && T3.BOARDS.hockey) T3.BOARDS.hockey.set(v); } catch (e) {}
       // (the new board's pieces move into the group already on the table: T3.show() would put the camera back to the room view)
-      const nb = T3.MODELS.hockey(true, v); modelKids.forEach(c => board.remove(c)); modelKids = new Set(nb.children); [...nb.children].forEach(c => board.add(c));   // (only the board's own parts: the guides, pieces etc. added since stay) board.userData = nb.userData; U = board.userData;
+      const nb = T3.MODELS.hockey(true, v); modelKids.forEach(c => board.remove(c)); modelKids = new Set(nb.children); [...nb.children].forEach(c => board.add(c)); board.userData = nb.userData; U = board.userData;   // (only the board's own parts: the guides, pieces etc. added since stay)
       mal.forEach(m => board.remove(m)); if (prePuck) board.remove(prePuck);
       mal = [U.mallet(0), U.mallet(1)]; mal.forEach(m => board.add(m)); put(mal[0], 0, D.L / 2 - 8); put(mal[1], 0, -(D.L / 2 - 8));
       prePuck = U.puck(); put(prePuck, 0, 0); board.add(prePuck);
