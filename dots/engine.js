@@ -551,8 +551,8 @@ async function allShared(p, ms, pool) {
 }
 async function analyzeShared(p, ms, pool) {
   if (!x4Ok(p) && (p.G.E <= 24 || countSafe(p) <= (p.G.R <= 4 ? 20 : 15))) {
-    const ex = await allShared(p, ms * 0.7, pool);
-    if (ex) return { exact: true, list: ex.sort((a, b) => b.v - a.v), nodes: ex.nodes, hn: ex.hn };
+    const ex = await (p.G.R === 5 && p.G.C === 5 && XA() === X5M ? allSharedW : allShared)(p, ms * 0.7, pool);   // (5x5: the wasm solver on one shared table, 2026-11-10)
+    if (ex) return { exact: true, list: ex.sort((a, b) => b.v - a.v), nodes: ex.nodes, hn: ex.hn, m5: ex.helpers };
   }
   if (x4Ok(p)) return analyze(p, ms);
   return analyzeEst(p, ms);
@@ -822,7 +822,7 @@ function chooseMove(p, level, rand, lead, hist) {
 const v2Solvers = {}, v2Hs = {};
 let v2Bits = 22;   // helper workers use smaller tables
 function v2SolverFor(G) {
-  if (x5Ok(G)) return X5.w;
+  if (x5Ok(G)) return XA().w;
   const k = G.R + 'x' + G.C; if (!v2Solvers[k]) { const s = new Solver(G, G.E <= 24 ? 20 : v2Bits); s.prune = true; v2Solvers[k] = s; } return v2Solvers[k];
 }
 function v2HsFor(G, np) { const k = G.R + 'x' + G.C + ':' + np; if (!v2Hs[k]) { const h = new HSearch(G); h.np = np; h.prune = true; v2Hs[k] = h; } return v2Hs[k]; }
@@ -910,7 +910,7 @@ function chooseV2(p, cfg, rand, lead, hist) {
 // 5x5 with the wasm solver: a heuristic search first (short when the solver will very likely finish), then outcome
 // searches of every move in growing slices: play a proven win (or draw); otherwise never a move proven to lose
 function chooseW5(p, cfg, rand, t, sure, t0) {
-  const G = p.G, ms = cfg.ms, S = X5.w, H = v2HsFor(G, cfg.np), left = () => ms - (Date.now() - t0);
+  const G = p.G, ms = cfg.ms, S = XA().w, H = v2HsFor(G, cfg.np), left = () => ms - (Date.now() - t0);
   const h = H.best(p, cfg.depth, Math.max(60, ms * (sure ? cfg.w5.hs : cfg.w5.hn)), rand);
   const moves = v2Moves(S, p, h.move, rand);
   const o = S.sliced(p, t, moves, left() - (sure ? 30 : ms * cfg.w5.re));
@@ -941,21 +941,22 @@ function ponderStart(p, lead, level) {
   if (!x5Ok(p.G) || cfg.kind !== 'v2' || !p.undrawn || p.hasCapture()) return false;
   const safe = countSafe(p), t = v2Target(p, lead);
   if (t === null || safe > cfg.w5.gate + 4 || safe <= 6) return false;
-  const S = X5.w; S.set(p);
-  Object.assign(PD, { on: true, until: Date.now() + 20000, lo: X5.io[0], hi: X5.io[1], t, moves: S.rootMoves(p), st: null, b: 30, i: 0, open: 0 });
+  const X = XA(), S = X.w; S.set(p);
+  if (X === X5M) mjSolo();
+  Object.assign(PD, { on: true, X, until: Date.now() + 20000, lo: X.io[0], hi: X.io[1], t, moves: S.rootMoves(p), st: null, b: 30, i: 0, open: 0 });
   PD.st = new Int8Array(PD.moves.length);
   return true;
 }
 function ponderStep(ms) {
-  if (!PD.on || !x5Ok(geom(5, 5))) return false;
+  if (!PD.on || !x5On || PD.X.st !== 2) return false;
   if (Date.now() > PD.until) { PD.on = false; return false; }   // at most 20 s per move
   const end = Date.now() + ms;
   while (Date.now() < end) {
     if (PD.i >= PD.moves.length) { if (!PD.open) { PD.on = false; return false; } PD.i = 0; PD.open = 0; PD.b *= 3; }
     const i = PD.i++;
     if (PD.st[i]) continue;
-    X5.io[0] = PD.lo; X5.io[1] = PD.hi;
-    const v = X5.x.w_move_value(PD.moves[i], PD.t - 1, PD.t + 1, Math.max(5, Math.min(PD.b, end - Date.now())));
+    PD.X.io[0] = PD.lo; PD.X.io[1] = PD.hi;
+    const v = PD.X.x.w_move_value(PD.moves[i], PD.t - 1, PD.t + 1, Math.max(5, Math.min(PD.b, end - Date.now())));
     if (v === -999) PD.open++; else PD.st[i] = 1;
   }
   return true;
@@ -964,7 +965,7 @@ function ponderStop() { PD.on = false; }
 // the same with helper workers: each proves a share of the moves while this worker runs the heuristic search and then
 // proves its own share (the heuristic move first)
 async function chooseW5Async(p, cfg, rand, t, sure, t0, pool) {
-  const G = p.G, ms = cfg.ms, S = X5.w, H = v2HsFor(G, cfg.np), end = t0 + ms, left = () => end - Date.now();
+  const G = p.G, ms = cfg.ms, S = XA().w, H = v2HsFor(G, cfg.np), end = t0 + ms, left = () => end - Date.now();
   const winAns = (w, exactOk) => {
     if (exactOk && left() > ms * 0.3) { S.limit(0, left() - 20); const r = S.best(p, rand, w.move); if (r) return { move: r.move, value: r.value, exact: true }; }
     return { move: w.move, value: w.value, exact: false, outcome: 1 };
@@ -1063,7 +1064,7 @@ async function chooseMoveAsync(p, level, rand, pool, lead, hist) {
   const cap = p.hasCapture() ? captureMoves(p) : null;
   if (cap && cap.forced !== undefined) return { move: cap.forced, forced: true };
   const G = p.G, t0 = Date.now(), end = t0 + cfg.ms, safe = countSafe(p), edges = p.edges(), t = v2Target(p, lead);
-  if (x5Ok(G) && t !== null && safe > 12 && safe <= v2PGate(cfg, G)) return chooseW5Async(p, cfg, rand, t, safe <= v2Sure(cfg, G), t0, pool);
+  if (x5Ok(G) && t !== null && safe > 12 && safe <= v2PGate(cfg, G)) return (XA() === X5M ? chooseW5Shared : chooseW5Async)(p, cfg, rand, t, safe <= v2Sure(cfg, G), t0, pool);
   if (safe <= 12 || t === null || safe > v2PGate(cfg, G)) return chooseV2(p, cfg, rand, lead, hist);
   const S = v2SolverFor(G), H = v2HsFor(G, cfg.np);
   // a short try first: late positions (and a warm table) finish at once
@@ -1110,28 +1111,28 @@ async function chooseMoveAsync(p, level, rand, pool, lead, hist) {
 const X5V = '?v=20261019';
 const X5 = { st: 0, x: null, io: null, w: null, loading: null, bits: 22 };
 class W5 {
-  constructor() { this.G = geom(5, 5); this.deadline = Infinity; this.aborted = false; this.nodes = 0; this.partial = null; this.firstV = null; }
+  constructor(X) { this.X = X; this.G = geom(5, 5); this.deadline = Infinity; this.aborted = false; this.nodes = 0; this.partial = null; this.firstV = null; }
   limit(maxNodes, ms) { this.aborted = false; this.nodes = 0; this.deadline = ms ? Date.now() + ms : Infinity; }
-  set(p) { let lo = 0, hi = 0; const d = p.drawn; for (let e = 0; e < 32; e++) if (d[e]) lo |= 1 << e; for (let e = 32; e < 60; e++) if (d[e]) hi |= 1 << (e - 32); X5.io[0] = lo; X5.io[1] = hi; }
+  set(p) { let lo = 0, hi = 0; const d = p.drawn; for (let e = 0; e < 32; e++) if (d[e]) lo |= 1 << e; for (let e = 32; e < 60; e++) if (d[e]) hi |= 1 << (e - 32); this.X.io[0] = lo; this.X.io[1] = hi; }
   left() { const l = this.deadline === Infinity ? 0 : this.deadline - Date.now(); if (this.deadline !== Infinity && l <= 0) this.aborted = true; return l; }
   moveValue(p, e, alpha, beta) {
     const rem = p.G.B - p.filled; if (alpha === undefined) { alpha = -rem - 1; beta = rem + 1; }
     const ms = this.left(); if (this.aborted) return null;
-    this.set(p); const v = X5.x.w_move_value(e, alpha, beta, ms);
-    this.nodes += X5.x.w_nodes();
+    this.set(p); const v = this.X.x.w_move_value(e, alpha, beta, ms);
+    this.nodes += this.X.x.w_nodes();
     if (v === -999) { this.aborted = true; return null; }
     return v;
   }
-  rootMoves(p) { this.set(p); const n = X5.x.w_root_moves(), out = []; for (let i = 0; i < n; i++) out.push(X5.io[8 + i]); return out.sort((a, b) => p.gives(a) - p.gives(b)); }
+  rootMoves(p) { this.set(p); const n = this.X.x.w_root_moves(), out = []; for (let i = 0; i < n; i++) out.push(this.X.io[8 + i]); return out.sort((a, b) => p.gives(a) - p.gives(b)); }
   best(p, rand, first) {
     this.partial = null; if (p.undrawn === 0) return null;
     const ms = this.left(); if (this.aborted) return null;
-    this.set(p); X5.io[2] = first !== undefined && first >= 0 ? first : -1;
-    const v = X5.x.w_best(ms); this.nodes += X5.x.w_nodes();
-    if (v === -999) { this.aborted = true; if (X5.io[4] >= 0) this.partial = { move: X5.io[4], value: X5.io[5] }; return null; }
-    return { move: X5.io[3], value: v };
+    this.set(p); this.X.io[2] = first !== undefined && first >= 0 ? first : -1;
+    const v = this.X.x.w_best(ms); this.nodes += this.X.x.w_nodes();
+    if (v === -999) { this.aborted = true; if (this.X.io[4] >= 0) this.partial = { move: this.X.io[4], value: this.X.io[5] }; return null; }
+    return { move: this.X.io[3], value: v };
   }
-  value(p) { const ms = this.left(); if (this.aborted) return null; this.set(p); const rem = p.G.B - p.filled, v = X5.x.w_value(-rem - 1, rem + 1, ms); return v === -999 ? null : v; }
+  value(p) { const ms = this.left(); if (this.aborted) return null; this.set(p); const rem = p.G.B - p.filled, v = this.X.x.w_value(-rem - 1, rem + 1, ms); return v === -999 ? null : v; }
 }
 // outcome of every move against the target t in growing time slices (the table keeps the work between slices), so that
 // within the time it proves as many moves as it can rather than spending everything on the first one. Stops at a win.
@@ -1139,14 +1140,14 @@ class W5 {
 // stop (optional): a function, true when the main worker has decided (its helpers' shares, 2026-11-10): stop as at the time limit
 W5.prototype.sliced = function (p, t, moves, ms, stop) {
   const end = Date.now() + ms, st = new Int8Array(moves.length), lost = new Set(); let draw = null, b = 25;
-  this.set(p); const lo = X5.io[0], hi = X5.io[1];
+  this.set(p); const lo = this.X.io[0], hi = this.X.io[1];
   for (;;) {
     let open = 0;
     for (let i = 0; i < moves.length; i++) {
       if (st[i]) continue;
       const left = end - Date.now(); if (left <= 3 || (stop && stop())) return { win: null, draw, lost, open: moves.filter((m, j) => !st[j]) };
-      X5.io[0] = lo; X5.io[1] = hi;
-      const v = X5.x.w_move_value(moves[i], t - 1, t + 1, Math.min(b, left)); this.nodes += X5.x.w_nodes();
+      this.X.io[0] = lo; this.X.io[1] = hi;
+      const v = this.X.x.w_move_value(moves[i], t - 1, t + 1, Math.min(b, left)); this.nodes += this.X.x.w_nodes();
       if (v === -999) { open++; continue; }
       if (v > t) return { win: { move: moves[i], value: v }, draw, lost, open: [] };
       if (v === t) { st[i] = 2; if (!draw) draw = { move: moves[i], value: v }; } else { st[i] = 1; lost.add(moves[i]); }
@@ -1162,7 +1163,7 @@ function x5Init(wasm) {
   const now = typeof performance !== 'undefined' ? () => performance.now() : () => Date.now();
   const x = new WebAssembly.Instance(new WebAssembly.Module(wasm), { env: { now } }).exports;
   x.w_setup(5, 5, X5.bits);
-  X5.x = x; X5.io = new Int32Array(x.memory.buffer, x.io_ptr(), 256); X5.w = new W5(); X5.st = 2;
+  X5.x = x; X5.io = new Int32Array(x.memory.buffer, x.io_ptr(), 256); X5.w = new W5(X5); X5.st = 2;
 }
 // Node: load synchronously; worker: fetch once (x5Ready() resolves when done). Never on the page itself.
 function x5Ready(bits) {
@@ -1182,8 +1183,233 @@ function x5Ready(bits) {
   return X5.loading;
 }
 let x5On = true;   // tests: false = the JavaScript solver (the previous Lv9+)
-const x5Ok = G => x5On && G.R === 5 && G.C === 5 && X5.st === 2;
+const x5Ok = G => x5On && G.R === 5 && G.C === 5 && XA().st === 2;
 function setX5(on) { x5On = !!on; }
+
+// ---------------------------------------------------------------- 5x5 on ONE shared table (dots5mt.wasm, 2026-11-10)
+// solver5.c built with -DMT: the same solver, its table in a shared WebAssembly.Memory that the engine worker (the lead, slot
+// 0) and its helpers (slots 1..15) all search on. Only on an isolated page with threads on (the request's mt > 0: shOn);
+// otherwise X5 (dots5.wasm, one thread, its own table) exactly as before. Separate tables made the helpers solve the same
+// subtrees again (Lv.10, every move losing: 3.6M nodes alone, more than that on the busiest of 2–14 threads); one table gives,
+// in the lock-step simulation (tools/mtsim, the nodes of the busiest thread), x1.9 / x3.3 / x5.0 / x6.6 with 2 / 4 / 8 / 14.
+// Jobs (mj*): the lead clears the control block (I, in the shared memory) and sets the job id in force (mt_job: a thread on an
+// older job stops at its next check); every thread then runs the same loop and takes moves under a small lock:
+//   'out'  the outcome of every move against t in growing slices (W5.sliced, shared: the open move with the fewest threads on
+//          it, then the lowest slice); a thread on a move that another proves stops at once (mt_watch on the move's word);
+//          a win stops the job. One thread alone takes the moves in the order of W5.sliced.
+//   'all'  the exact value of every move (the analysis): the lead first finds the best move's value (as S.all), all take moves.
+//   'best' the exact best move: the lead solves the first move alone (its value bounds the rest), then all take moves with a
+//          null window at the shared alpha and the full window when one fails high (the value is the one-thread value; among
+//          moves of equal value another may be chosen).
+// I: [0] lock [1] job [2] win + 1 [3] next [4] alpha + 1000 [5] best move + 1 [6] first done [7] done [8] n [9] cut off
+//    [16 + i] move i: 0 open, 1 lost, 2 draw, 3 win  [80 + i] its slice  [144 + i] threads on it  [208 + i] value + 1000
+const X5MV = '?v=20261110';
+const M_SLOT = 2 << 20, M_SLOTS = 16;
+const X5M = { st: 0, x: null, io: null, w: null, I: null, mem: null, module: null, ctl: 0, tt: 0, bits: 22, slot: 0, job: 0, loading: null };
+let x5mOn = false;
+const XA = () => (x5mOn && X5M.st === 2 ? X5M : X5);
+function useX5M(on) { x5mOn = !!on; }
+function x5mLayout(x) { const base = Math.ceil(x.mt_heap_base() / 65536) * 65536, ctl = base + M_SLOTS * M_SLOT; return { base, ctl, tt: ctl + 65536 }; }
+function x5mInst(module, mem, slot, bits, lead) {
+  const now = typeof performance !== 'undefined' ? () => performance.now() : () => Date.now();
+  const x = new WebAssembly.Instance(module, { env: { memory: mem, now } }).exports;
+  const L = x5mLayout(x), s0 = L.base + slot * M_SLOT;
+  if (slot >= M_SLOTS || L.tt + (16 << bits) > mem.buffer.byteLength) throw new Error('dots5mt: memory');
+  x.mt_stack(s0 + M_SLOT - 16); x.mt_thread(s0);
+  if (lead) x.w_setup(5, 5, 0);
+  x.mt_tt(L.tt, bits, lead ? 1 : 0);
+  Object.assign(X5M, { x, mem, module, ctl: L.ctl, tt: L.tt, bits, slot, io: new Int32Array(mem.buffer, x.io_ptr(), 256), I: new Int32Array(mem.buffer, L.ctl, 1024), st: 2 });
+  X5M.w = new W5(X5M);
+}
+function x5mLead(module) {   // (all memory at once: the slots, then 2^bits entries of 16 bytes; it never grows)
+  const pages = Math.ceil(((1 << 20) + M_SLOTS * M_SLOT + 65536 + (16 << X5M.bits)) / 65536);
+  x5mInst(module, new WebAssembly.Memory({ initial: pages, maximum: 8192, shared: true }), 0, X5M.bits, true);
+}
+// the lead: load once (Node: at once; a worker: only when isolated). A helper gets the module and the memory from its lead.
+function x5mReady() {
+  if (X5M.st === 2) return true;
+  if (X5M.st < 0) return false;
+  if (typeof SharedArrayBuffer !== 'function' || typeof Atomics !== 'object' || typeof WebAssembly === 'undefined') { X5M.st = -1; return false; }
+  if (typeof process !== 'undefined' && process.versions && process.versions.node && typeof require === 'function') {
+    try { x5mLead(new WebAssembly.Module(require('fs').readFileSync(__dirname + '/dots5mt.wasm'))); } catch (e) { X5M.st = -1; return false; }
+    return true;
+  }
+  if (typeof importScripts !== 'function' || typeof fetch !== 'function' || !self.crossOriginIsolated) { X5M.st = -1; return false; }
+  if (!X5M.loading) {
+    X5M.st = 1;
+    X5M.loading = fetch(new URL('dots5mt.wasm' + X5MV, self.location.href)).then(r => { if (!r.ok) throw new Error('dots5mt.wasm ' + r.status); return r.arrayBuffer(); })
+      .then(b => WebAssembly.compile(b)).then(m => { x5mLead(m); return true; }).catch(e => { console.warn('[dots5mt]', e); X5M.st = -1; return false; });
+  }
+  return X5M.loading;
+}
+function x5mHelper(d) { if (X5M.st !== 2 || X5M.mem !== d.mem) x5mInst(d.module, d.mem, d.slot, d.bits, false); return 1; }
+const mjLock = I => { while (Atomics.compareExchange(I, 0, 0, 1) !== 0); };
+const mjUnlock = I => { Atomics.store(I, 0, 0); };
+function mjSolo() { const X = X5M; if (X.st !== 2) return; const id = ++X.job; X.x.mt_job(id); X.x.mt_mine(id); }   // (the lead alone from now on)
+function mjStart(kind, p, moves, t, until) {
+  const X = X5M, I = X.I, id = ++X.job;
+  mjLock(I); for (let i = 1; i < 272; i++) I[i] = 0; I[1] = id; I[8] = moves.length; mjUnlock(I);
+  X.x.mt_job(id); X.x.mt_mine(id);
+  X.w.set(p); X.x.mt_root();
+  return { type: 'x5mjob', kind, id, lo: X.io[0], hi: X.io[1], moves, t, rem: p.G.B - p.filled, until, ms: Math.max(0, until - Date.now()), b0: 25 };
+}
+function mjStop(d) { X5M.x.mt_job(-d.id); mjSolo(); }
+// one thread's part of a job; returns its nodes
+function mjOut(d) {
+  const X = X5M, I = X.I, x = X.x, n = d.moves.length, t = d.t; let nodes = 0;
+  for (;;) {
+    const left = d.until - Date.now(); if (left <= 3 || x.mt_cur() !== d.id) break;
+    mjLock(I);
+    if (I[1] !== d.id || I[2]) { mjUnlock(I); break; }
+    let k = -1;
+    for (let i = 0; i < n; i++) if (!I[16 + i] && (k < 0 || I[144 + i] < I[144 + k] || (I[144 + i] === I[144 + k] && I[80 + i] < I[80 + k]))) k = i;
+    if (k < 0) { mjUnlock(I); break; }
+    const r = I[80 + k]; I[144 + k]++;
+    mjUnlock(I);
+    X.io[0] = d.lo; X.io[1] = d.hi; x.mt_watch(X.ctl + 4 * (16 + k));
+    const v = x.w_move_value(d.moves[k], t - 1, t + 1, Math.min(d.b0 * Math.pow(3, r), left)); nodes += x.w_nodes();
+    x.mt_watch(0);
+    mjLock(I);
+    if (I[1] === d.id) {
+      I[144 + k]--;
+      if (v !== -999) { if (!I[16 + k]) { I[16 + k] = v > t ? 3 : v === t ? 2 : 1; if (v > t && !I[2]) I[2] = k + 1; } }
+      else if (I[80 + k] < r + 1) I[80 + k] = r + 1;
+    }
+    mjUnlock(I);
+    if (v !== -999 && v > t) { x.mt_job(-d.id); break; }   // (a win: every thread stops)
+  }
+  return nodes;
+}
+function mjAll(d, lead) {
+  const X = X5M, I = X.I, x = X.x, n = d.moves.length; let nodes = 0;
+  const cut = () => { Atomics.store(I, 9, 1); x.mt_job(-d.id); Atomics.notify(I, 7); };
+  if (lead) { X.io[0] = d.lo; X.io[1] = d.hi; X.io[2] = -1; const v = x.w_best(Math.max(5, d.until - Date.now())); nodes += x.w_nodes(); if (v === -999) { cut(); return nodes; } }
+  for (;;) {
+    const left = d.until - Date.now(); if (left <= 3) { cut(); break; }
+    mjLock(I); if (I[1] !== d.id) { mjUnlock(I); break; } const i = I[3]++; mjUnlock(I);
+    if (i >= n) break;
+    X.io[0] = d.lo; X.io[1] = d.hi;
+    const v = x.w_move_value(d.moves[i], -d.rem - 1, d.rem + 1, left); nodes += x.w_nodes();
+    if (v === -999) { if (x.mt_cur() === d.id) cut(); break; }
+    mjLock(I); if (I[1] === d.id) { I[208 + i] = v + 1000; I[7]++; } mjUnlock(I); Atomics.notify(I, 7);
+  }
+  return nodes;
+}
+function mjBest(d, lead) {
+  const X = X5M, I = X.I, x = X.x, n = d.moves.length; let nodes = 0;
+  const cut = () => { Atomics.store(I, 9, 1); x.mt_job(-d.id); Atomics.notify(I, 6); Atomics.notify(I, 7); };
+  if (lead) {
+    X.io[0] = d.lo; X.io[1] = d.hi;
+    const v = x.w_move_value(d.moves[0], -d.rem - 1, d.rem + 1, Math.max(5, d.until - Date.now())); nodes += x.w_nodes();
+    if (v === -999) { cut(); return nodes; }
+    mjLock(I); if (I[1] === d.id) { I[4] = v + 1000; I[5] = d.moves[0] + 1; I[3] = 1; I[6] = 1; } mjUnlock(I); Atomics.notify(I, 6);
+  } else while (!Atomics.load(I, 6) && Atomics.load(I, 1) === d.id && !Atomics.load(I, 9) && Date.now() < d.until) Atomics.wait(I, 6, 0, 20);
+  for (;;) {
+    const left = d.until - Date.now(); if (left <= 3) { cut(); break; }
+    mjLock(I); if (I[1] !== d.id || !I[6] || I[9]) { mjUnlock(I); break; } const i = I[3]++, a = I[4] - 1000; mjUnlock(I);
+    if (i >= n) break;
+    X.io[0] = d.lo; X.io[1] = d.hi;
+    let v = x.w_move_value(d.moves[i], a, a + 1, left); nodes += x.w_nodes();
+    if (v !== -999 && v > a) { X.io[0] = d.lo; X.io[1] = d.hi; v = x.w_move_value(d.moves[i], a, d.rem + 1, Math.max(3, d.until - Date.now())); nodes += x.w_nodes(); }
+    if (v === -999) { if (x.mt_cur() === d.id) cut(); break; }
+    mjLock(I); if (I[1] === d.id) { if (v > I[4] - 1000) { I[4] = v + 1000; I[5] = d.moves[i] + 1; } I[7]++; } mjUnlock(I); Atomics.notify(I, 7);
+  }
+  return nodes;
+}
+// a helper's part (the 'x5mjob' message)
+function mjWork(d) {
+  if (X5M.st !== 2 || X5M.x.mt_cur() !== d.id) return { nodes: 0 };
+  X5M.x.mt_mine(d.id);
+  const nodes = d.kind === 'out' ? mjOut(d) : d.kind === 'all' ? mjAll(d, false) : mjBest(d, false);
+  return { nodes };
+}
+// the lead: the job to every helper (pool.m5: their shared solver set up first — a message ahead of the job, so no waiting),
+// then its own part
+async function mjPost(pool, d) {
+  const hs = pool && pool.m5 ? pool.m5() : [];
+  for (const i of hs) pool.run(i, d);
+  if (hs.length) await new Promise(r => setTimeout(r, 0));   // (let the messages go out before this worker blocks)
+  if (X5M.x.mt_cur() !== d.id) { X5M.x.mt_job(d.id); X5M.x.mt_mine(d.id); }   // (the job was cut while waiting: the lead's part ends at once)
+  return hs.length;
+}
+const mjWait = (d, n) => { const I = X5M.I; while (Atomics.load(I, 7) < n && !Atomics.load(I, 9) && Atomics.load(I, 1) === d.id && Date.now() < d.until) Atomics.wait(I, 7, Atomics.load(I, 7), 10); };
+// the exact values of every move (the analysis's list, S.all's), or null when cut off by the time
+async function allSharedW(p, ms, pool) {
+  if (pool.ready) await pool.ready(Math.min(3000, ms / 4));   // (new helpers: their script loads through this worker)
+  const moves = p.legal(), d = mjStart('all', p, moves, 0, Date.now() + ms), I = X5M.I;
+  const nh = await mjPost(pool, d);
+  const nodes = mjAll(d, true);
+  mjWait(d, moves.length);
+  const ok = !Atomics.load(I, 9) && Atomics.load(I, 1) === d.id && Atomics.load(I, 7) === moves.length, out = [];
+  if (ok) for (let i = 0; i < moves.length; i++) out.push({ m: moves[i], v: I[208 + i] - 1000 });
+  mjStop(d);
+  if (!ok) return null;
+  out.nodes = nodes; out.helpers = nh;
+  return out;
+}
+// the exact best move ({ move, value } or null when cut off); first: the move solved first (-1: the table's)
+async function bestSharedW(p, first, ms, pool) {
+  const S = X5M.w, moves = S.rootMoves(p).slice();
+  if (first === undefined || first < 0) { S.set(p); first = X5M.x.w_tt_probe() ? X5M.io[3] : -1; }
+  const j = moves.indexOf(first); if (j > 0) { moves[j] = moves[0]; moves[0] = first; }
+  if (moves.length === 1) { mjSolo(); S.limit(0, ms); const v = S.moveValue(p, moves[0]); return v === null ? null : { move: moves[0], value: v }; }
+  const d = mjStart('best', p, moves, 0, Date.now() + ms), I = X5M.I;
+  await mjPost(pool, d);
+  mjBest(d, true);
+  mjWait(d, moves.length - 1);
+  const ok = !Atomics.load(I, 9) && Atomics.load(I, 1) === d.id && Atomics.load(I, 7) === moves.length - 1, r = ok ? { move: I[5] - 1, value: I[4] - 1000 } : null;
+  mjStop(d);
+  return r;
+}
+// Lv.9–10 on the shared table (in chooseW5Async's place): every thread proves outcomes from the start (no lone first try, no
+// static shares); the lead stops in time for the heuristic search, which runs only when the outcome is still open.
+async function chooseW5Shared(p, cfg, rand, t, sure, t0, pool) {
+  const G = p.G, ms = cfg.ms, S = X5M.w, H = v2HsFor(G, cfg.np), end = t0 + ms, left = () => end - Date.now();
+  const all = v2Moves(S, p, -1, rand), n = all.length, I = X5M.I;
+  const reserve = sure ? 40 : ms * cfg.w5.re, hT = Math.max(60, ms * (sure ? cfg.w5.hs : cfg.w5.hn));
+  const d = mjStart('out', p, all, t, end - reserve - 20);
+  const nh = await mjPost(pool, d);
+  mjOut(Object.assign({}, d, { until: Math.min(d.until, end - reserve - hT) }));   // (the lead: time left for the heuristic search)
+  const fold = () => {
+    let win = null, draw = null, open = 0; const lost = new Set();
+    const w = Atomics.load(I, 2); if (w) win = { move: all[w - 1], value: t + 1 };   // (an outcome window: the value is only "> t")
+    for (let i = 0; i < n; i++) { const s = Atomics.load(I, 16 + i); if (s === 1) lost.add(all[i]); else if (s === 2) { if (!draw) draw = { move: all[i], value: t }; } else if (!s) open++; }
+    return { win, draw, lost, open };
+  };
+  const stat = k => ({ n, lost: k.lost.size, draw: k.draw ? 1 : 0, helpers: nh });
+  const decided = async k => {   // a win, a draw with every other move proved, or every move lost: the answer (null: still open)
+    if (k.win) {
+      mjStop(d);
+      if (left() > ms * 0.3) { const r = await bestSharedW(p, k.win.move, left() - 20, pool); if (r && r.value > t) return { move: r.move, value: r.value, exact: true, stat: stat(k) }; }
+      return { move: k.win.move, value: k.win.value, exact: false, outcome: 1, stat: stat(k) };
+    }
+    if (k.open) return null;
+    mjStop(d);
+    if (k.draw) return { move: k.draw.move, value: k.draw.value, exact: false, outcome: 0, stat: stat(k) };
+    const r = await bestSharedW(p, -1, left() - 20, pool);   // every move loses: the best margin
+    return r ? { move: r.move, value: r.value, exact: true, stat: stat(k) } : null;
+  };
+  let k = fold(), ans = await decided(k);
+  if (ans) return ans;
+  const allLost = !k.open && !k.win && !k.draw;   // (the margin was cut off)
+  // still open: the heuristic search over the moves not proved to lose; the helpers go on meanwhile
+  const rest0 = all.filter(m => !k.lost.has(m));
+  const h = rest0.length ? H.best(p, cfg.depth, Math.max(60, Math.min(hT, left() - reserve - 20)), rand, k.lost) : H.best(p, cfg.depth, Math.max(60, left() - 20), rand);
+  if (!allLost) {
+    while (Date.now() < d.until && Atomics.load(I, 1) === d.id) { k = fold(); if (k.win || !k.open) break; Atomics.wait(I, 2, 0, 10); }
+    k = fold();
+    if (k.win || !k.open) { ans = await decided(k); if (ans) return ans; }
+    mjStop(d);
+  }
+  const lost = k.lost, st = stat(k);
+  if (k.draw) return { move: k.draw.move, value: k.draw.value, exact: false, outcome: 0, stat: st };
+  if (!lost.has(h.move)) return { move: h.move, value: h.value, exact: false, depth: H.depth, stat: st };
+  const rest = all.filter(m => !lost.has(m));
+  if (!rest.length) return { move: h.move, value: h.value, exact: false, stat: st };
+  if (rest.length === 1 || left() < 60) return { move: rest[0], value: h.value, exact: false, stat: st };
+  const h2 = H.best(p, cfg.depth, left() - 20, rand, lost);
+  return { move: lost.has(h2.move) ? rest[0] : h2.move, value: h2.value, exact: false, depth: H.depth, stat: st };
+}
 
 // ---------------------------------------------------------------- 4x4: exact solver (WebAssembly) + opening book (Lv9+)
 // solver4.c compiled to dots4.wasm: alpha-beta on net boxes with Berlekamp's capture rules, exact simple-loony values,
@@ -1419,7 +1645,7 @@ function candLine(p, first, plies, ms) {
   }
   return line;
 }
-return { allShare, allShared, analyzeShared, SharedSolver, candLine, x5Ready, setX5, X5, ponderStart, ponderStep, ponderStop, chooseMoveAsync, helperTask, chooseV2, bookMove, canonKey, setBook, x4Ready, x4Choose, x4Values, x4Book, x4All, X4, geom, Pos, Solver, HSearch, captureMoves, simpleLoony, loonyValue, components, evalH, chooseMove, analyze, reviewMove, solverFor, fastSolverFor, markRedundant, sacrificeSize, captureEdge, LEVELS, xorshift };
+return { x5mReady, x5mHelper, useX5M, X5M, mjWork, allSharedW, bestSharedW, chooseW5Shared, allShare, allShared, analyzeShared, SharedSolver, candLine, x5Ready, setX5, X5, ponderStart, ponderStep, ponderStop, chooseMoveAsync, helperTask, chooseV2, bookMove, canonKey, setBook, x4Ready, x4Choose, x4Values, x4Book, x4All, X4, geom, Pos, Solver, HSearch, captureMoves, simpleLoony, loonyValue, components, evalH, chooseMove, analyze, reviewMove, solverFor, fastSolverFor, markRedundant, sacrificeSize, captureEdge, LEVELS, xorshift };
 })();
 
 // ---------------------------------------------------------------- worker glue
@@ -1455,7 +1681,18 @@ if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof
       }
     } catch (e) { pool.dead = true; }
     const size = Math.min(k, pool.ws.length);
-    return { size, run: pool.run, ready: ms => Promise.race([Promise.all(pool.ws.slice(0, size).map(h => h.ready)), new Promise(r => setTimeout(r, ms))]) };
+    // m5: the helpers' shared 5x5 solver (dots5mt.wasm on this worker's memory, slot i + 1), set up by a message ahead of
+    // their first job (so nothing waits for it; a helper where it fails does nothing in the job)
+    const m5 = () => {
+      const X = DotsEngine.X5M; if (X.st !== 2) return [];
+      const out = [];
+      pool.ws.slice(0, size).forEach((h, i) => {
+        if (!h.m5) { h.m5 = 1; const id = ++pool.seq; h.cb.set(id, r => { h.m5 = r ? 2 : -1; }); h.w.postMessage({ type: 'x5minit', id, module: X.module, mem: X.mem, slot: i + 1, bits: X.bits }); }
+        if (h.m5 > 0) out.push(i);
+      });
+      return out;
+    };
+    return { size, run: pool.run, m5, ready: ms => Promise.race([Promise.all(pool.ws.slice(0, size).map(h => h.ready)), new Promise(r => setTimeout(r, ms))]) };
   };
   // the analysis on the shared table: the page asks for it (msg.mt > 0 only when its page is isolated — shared/mtworkers.js
   // shared mode) and this worker can share memory with its helpers
@@ -1469,6 +1706,8 @@ if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof
     pondering++; DotsEngine.ponderStop();
     try {
       if (d.type === 'xall') { self.postMessage({ type: d.type, id: d.id, r: DotsEngine.allShare(d) }); return; }   // (a helper's share of the shared-table analysis)
+      if (d.type === 'x5minit') { let r = 0; try { r = DotsEngine.x5mHelper(d); } catch (e) { console.warn('[dots5mt]', e); } self.postMessage({ type: d.type, id: d.id, r }); return; }
+      if (d.type === 'x5mjob') { self.postMessage({ type: d.type, id: d.id, r: DotsEngine.mjWork(d) }); return; }   // (a helper's part of a job on the shared 5x5 table)
       if (d.type === 'xpart') {
         if (d.R === 5 && d.C === 5 && d.x5) { const rd = DotsEngine.x5Ready(d.bits); if (rd && rd.then) await rd; }
         self.postMessage({ type: d.type, id: d.id, r: DotsEngine.helperTask(d) }); return;
@@ -1477,6 +1716,10 @@ if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof
       const p = DotsEngine.Pos.from(G, d.edges);
       if (d.R === 4 && d.C === 4 && (d.type !== 'move' || d.level >= 9)) { const rd = DotsEngine.x4Ready(); if (rd && rd.then) await rd; }
       if (d.R === 5 && d.C === 5 && d.type === 'move' && d.level >= 9) { const rd = DotsEngine.x5Ready(); if (rd && rd.then) await rd; }
+      // (2026-11-10) 5x5 with threads on an isolated page: the wasm solver on one table shared with the helpers (X5M)
+      let m5 = false;
+      if (d.R === 5 && d.C === 5 && (shOn(d) || (d.m5 && typeof SharedArrayBuffer === 'function' && !!self.crossOriginIsolated)) && ((d.type === 'move' && d.level >= 9) || d.type === 'analyze' || d.type === 'cands')) { const rd = DotsEngine.x5mReady(); m5 = rd && rd.then ? await rd : rd; }
+      if (d.type === 'move' || d.type === 'analyze' || d.type === 'cands') DotsEngine.useX5M(m5);
       if (d.type === 'move') {
         const t0 = Date.now();
         const r = (DotsEngine.LEVELS[d.level] || {}).kind === 'v2' ? await DotsEngine.chooseMoveAsync(p, d.level, null, getPool(d.mt), d.lead, d.edges) : DotsEngine.chooseMove(p, d.level);
@@ -1486,8 +1729,8 @@ if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof
           if (!k && DotsEngine.ponderStart(p, -(d.lead || 0), d.level)) { const tok = ++pondering; setTimeout(() => ponderLoop(tok), 0); }
         }
       } else if (d.type === 'analyze') {
-        const r = shOn(d) ? await DotsEngine.analyzeShared(p, d.ms || 1500, getPool(d.mt)) : DotsEngine.analyze(p, d.ms || 1500);
-        self.postMessage({ type: 'analyze', id: d.id, list: r.list, exact: r.exact, hn: r.hn });
+        const r = shOn(d) || m5 ? await DotsEngine.analyzeShared(p, d.ms || 1500, getPool(d.mt)) : DotsEngine.analyze(p, d.ms || 1500);   // (m5 without mt: the bench's shared solver alone)
+        self.postMessage({ type: 'analyze', id: d.id, list: r.list, exact: r.exact, hn: r.hn, m5: r.m5 });
       } else if (d.type === 'solve') {
         let list = null;
         if (d.R === 4 && d.C === 4 && DotsEngine.X4.st === 2) list = DotsEngine.x4All(p, d.ms || 8000);
