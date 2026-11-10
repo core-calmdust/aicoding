@@ -181,10 +181,9 @@
       const back = new TT.Mesh(new TT.BoxGeometry((GW + 1.6) * K, 1.4 * K, .8 * K), BM.frame); back.position.set(0, TOP - .1 * K, sg * (L / 2 + FR + 4) * K); back.castShadow = true; g.add(back);
     }
     if (BM.strip) for (const sg of [1, -1]) { const s = new TT.Mesh(new TT.BoxGeometry(.25 * K, .25 * K, OL * K), BM.strip); s.position.set(sg * (W / 2 + FR) * K, TOP + (WH - .6) * K, 0); g.add(s); }
-    // two U-shaped plywood feet (the classic look; the neon tray sits on black blocks)
-    for (const sg of [1, -1]) {
-      const foot = new TT.Mesh(new TT.BoxGeometry(OW * .78 * K, 1.2 * K, 3 * K), BM.ply); foot.position.set(0, TOP - 1.2 * K, sg * OL * .3 * K); foot.castShadow = true; g.add(foot);
-    }
+    // (2026-11-10) a solid plinth under the whole tray and under both goal pockets, down to the table: no gap to see through
+    const ph = TOP - .6 * K - .004, plinth = new TT.Mesh(new TT.BoxGeometry(OW * K, ph, OL * K), BM.frame); plinth.position.y = ph / 2; plinth.castShadow = plinth.receiveShadow = true; g.add(plinth);
+    for (const sg of [1, -1]) { const pk = TOP - .8 * K - .004, b = new TT.Mesh(new TT.BoxGeometry((GW + 1.6) * K, pk, 4.8 * K), BM.frame); b.position.set(0, pk / 2, sg * (L / 2 + FR + 2.2) * K); b.castShadow = true; g.add(b); }
     const U = g.userData;
     U.top = TOP; U.K = K; U.look = look; U.W = W; U.L = L; U.OW = OW; U.OL = OL;
     U.xz = (x, y) => [x * K, y * K];
