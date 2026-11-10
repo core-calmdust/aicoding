@@ -413,38 +413,27 @@
     tick();
   }
 
-  // every burnt square keeps burning for the rest of the game (2026-11-10 user: the blocked squares must read at a glance): three
-  // flame tongues licking up round the arrow and the scorch's glowing edge. One loop drives every fire (about 30 frames a second,
-  // only while a fire is on a board in the scene and the page is visible), so idle boards with no arrows still draw nothing.
-  const fires = new Set(); let fireRaf = 0, fireLast = 0;
+  // every burnt square keeps burning for the rest of the game (2026-11-10 user: the blocked squares must read at a glance) — as a
+  // still picture (an icon of three flame tongues, drawn like the 2D page's, and the scorch's glowing edge): nothing animates, so
+  // the 3D view draws nothing while idle (the user chose a still fire over a moving one that keeps the GPU busy)
+  function flameTex() {
+    if (spr.flameIcon) return spr.flameIcon;
+    const c = document.createElement('canvas'); c.width = 128; c.height = 160; const g = c.getContext('2d');
+    const tongue = (x, y, s) => { g.save(); g.translate(x, y); g.scale(s, s);
+      const gr = g.createRadialGradient(0, -10, 2, 0, -22, 46); gr.addColorStop(0, '#fffbe0'); gr.addColorStop(.3, '#ffd658'); gr.addColorStop(.62, 'rgba(255,122,24,.95)'); gr.addColorStop(1, 'rgba(227,58,6,0)');
+      g.fillStyle = gr; g.beginPath(); g.moveTo(0, 0); g.bezierCurveTo(-30, -4, -38, -34, -26, -56); g.bezierCurveTo(-18, -70, -18, -90, -8, -118); g.bezierCurveTo(-4, -94, 16, -80, 24, -58); g.bezierCurveTo(32, -32, 26, -4, 0, 0); g.fill(); g.restore(); };
+    tongue(36, 156, .8); tongue(94, 158, .72); tongue(64, 160, 1.3);
+    return (spr.flameIcon = new (T().CanvasTexture)(c));
+  }
   function ignite(g) {
     if (g.userData.fire) return;
-    const TT = T(), em = new TT.Mesh(G('emberPlane', () => new TT.PlaneGeometry(1.15, 1.15).rotateX(-Math.PI / 2)), mat('emberM', () => new TT.MeshBasicMaterial({ map: sprTex('ember'), transparent: true, depthWrite: false, toneMapped: false, opacity: .5 })));
+    const TT = T(), em = new TT.Mesh(G('emberPlane', () => new TT.PlaneGeometry(1.15, 1.15).rotateX(-Math.PI / 2)), mat('emberM', () => new TT.MeshBasicMaterial({ map: sprTex('ember'), transparent: true, depthWrite: false, toneMapped: false, opacity: .55 })));
     em.position.y = .006; g.add(em);
-    const fm = mat('flameM', () => new TT.SpriteMaterial({ map: sprTex('flame'), transparent: true, depthWrite: false, toneMapped: false, opacity: .95 }))   // (normal blending: additive turned white on the white marble);
-    const tongues = [[-.13, .04, .7], [.04, -.05, 1.0], [.15, .1, .64]].map(([x, z, h]) => { const s = new TT.Sprite(fm); s.position.set(x, h * .42, z); s.scale.set(.44, h, 1); s.userData.h = h; g.add(s); return s; });
-    g.userData.fire = { tongues, em, t0: Math.random() * 20 };
-    fires.add(g);
-    if (!fireRaf) fireRaf = requestAnimationFrame(burnLoop);
+    const fl = new TT.Sprite(mat('flameIconM', () => new TT.SpriteMaterial({ map: flameTex(), transparent: true, depthWrite: false, toneMapped: false })));
+    fl.center.set(.5, 0); fl.scale.set(.85, 1.06, 1); fl.position.set(0, .02, 0); g.add(fl);
+    g.userData.fire = { fl, em };
   }
-  function douse(g) { const f = g && g.userData.fire; if (!f) return; f.tongues.forEach(s => g.remove(s)); g.remove(f.em); delete g.userData.fire; fires.delete(g); }
-  const inScene = o => { while (o.parent) o = o.parent; return o.isScene; };
-  function burnLoop(now) {
-    fireRaf = 0;
-    if (!fires.size) return;
-    if (now - fireLast > 30 && !document.hidden) {
-      fireLast = now; const t = now / 1000; let shown = 0;
-      for (const g of fires) {
-        if (!g.parent) { fires.delete(g); continue; }
-        if (!inScene(g)) continue;
-        shown++; const f = g.userData.fire;
-        f.tongues.forEach((s, i) => { const k = f.t0 + t, h = s.userData.h * (1 + .22 * Math.sin(k * (9 + i * 2.3)) + .1 * Math.sin(k * 23 + i)), w = .44 * (1 + .12 * Math.sin(k * 13 + i * 2)); s.scale.set(w, h, 1); s.position.y = h * .42; });
-      }
-      if (shown && X.kick) X.kick(80);
-      if (shown) { const em = mats.emberM; if (em) em.opacity = .42 + .12 * Math.sin(t * 7); }
-    }
-    if (fires.size) fireRaf = requestAnimationFrame(burnLoop);
-  }
+  function douse(g) { const f = g && g.userData.fire; if (!f) return; g.remove(f.fl); g.remove(f.em); delete g.userData.fire; }
 
   X.MODELS.amazons = function (live) {
     const g = board(), U = g.userData, Y = U.top;

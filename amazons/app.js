@@ -283,7 +283,7 @@ function animateMove(m, before) {
   if (isPass(m)) return true;
   const f = mFrom(m), tq = mTo(m), a = mArrow(m), el = pcEls.get(f);
   if (!el || pcEls.has(a) && a !== f) return false;
-  const r0 = boardEl.getBoundingClientRect(), u = r0.width / NS_();
+  const u = boardEl.offsetWidth / NS_();   // (the board's own size: a CSS transform on it — the 3D skin's lean — changes its box, not its squares)
   const pt = i => { const [r, c] = dRC(i); return [(c + 0.5) * u, (r + 0.5) * u]; };
   const [fx, fy] = pt(f), [tx, ty] = pt(tq), [ax, ay] = pt(a);
   pcEls.delete(f); placeAt(el, tq); pcEls.set(tq, el);
@@ -304,7 +304,7 @@ function animateMove(m, before) {
     const t0 = qd + SHOOT_GAP;
     const an = ar.animate([{ transform: `translate(${tx - ax}px,${ty - ay}px) scale(.75)`, opacity: 1 }, { transform: 'none', opacity: 1 }], { duration: ad, delay: t0, easing: 'cubic-bezier(.45,.05,.7,1)', fill: 'backwards' });
     an.onfinish = land;
-    fireFx(tx, ty, ax, ay, u, r0.width, t0, ad);
+    fireFx(tx, ty, ax, ay, u, boardEl.offsetWidth, t0, ad);
   } else land();
   sShoot(qd + SHOOT_GAP); sThunk(qd + SHOOT_GAP + ad - 20);
   setTimeout(() => { el.style.zIndex = ''; }, moveDur(m));
@@ -600,7 +600,10 @@ function update(anim) { if (!anim) sel = null; renderBoard(anim); renderInfo(); 
 
 // ====================================================================== input (three taps: an amazon, the square it moves to, the square the arrow flies to)
 function squareAt(clientX, clientY) {
-  const N = NS_(), r = boardEl.getBoundingClientRect(), u = r.width / N;
+  const N = NS_();
+  // (the portal's 3D skin leans the board with a CSS perspective: the box no longer maps to the squares — it asks the 3D view)
+  if (typeof window.boardPick === 'function') { const rc = window.boardPick(clientX, clientY); if (rc) { let [rr, c] = rc; if (c < 0 || c >= N || rr < 0 || rr >= N) return -1; if (flip) { c = N - 1 - c; rr = N - 1 - rr; } return E.sqAt(rr, c); } }
+  const r = boardEl.getBoundingClientRect(), u = r.width / N;
   let c = Math.floor((clientX - r.left) / u), rr = Math.floor((clientY - r.top) / u);
   if (c < 0 || c >= N || rr < 0 || rr >= N) return -1;
   if (flip) { c = N - 1 - c; rr = N - 1 - rr; }

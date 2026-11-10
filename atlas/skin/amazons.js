@@ -91,18 +91,41 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
   /* ---------- the tilt's lens: the leaning board is drawn a little lower and larger at the near side; the board (3D and the DOM
      board over it, together) is moved up by the same amount so it sits centred between the count plates (the page's layout itself
      is not touched) ---------- */
-  const LIFT = .05, SC = .8;   // lift: of the board's height; SC: the leaning board is drawn smaller than the DOM board's place, so
-  // its near edge (wider in perspective) and the frame round it stay inside the page's board area (the cards beside never cover it)
+  const SC = .8;   // the leaning board is drawn smaller than the DOM board's place, so its near edge (wider in perspective) and
+  // the frame round it stay inside the page's board area (the cards beside never cover it)
+  let liftK = .05;  // of the drawn height: set by centre() so the drawn board (far edge to near edge, base included) is centred in the frame
   function lift3d() {
     const holder = boardDom.parentElement;
     const box = () => { let x = 0, y = 0, e = boardDom; while (e && e !== holder) { x += e.offsetLeft; y += e.offsetTop; e = e.offsetParent; } return { x, y, w: boardDom.offsetWidth, h: boardDom.offsetHeight }; };
     const host = document.getElementById('atlasGL');
     T3.align(() => {
-      const b = box(), on = !de.classList.contains('atlas-2d'), s = on ? SC : 1, w = b.w * s, h = b.h * s, d = on ? h * LIFT : 0;
+      const b = box(), on = !de.classList.contains('atlas-2d'), s = on ? SC : 1, w = b.w * s, h = b.h * s, d = on ? h * liftK : 0;
       boardDom.style.translate = d ? `0 ${-d}px` : ''; boardDom.style.scale = s !== 1 ? String(s) : '';
       return { x: b.x + (b.w - w) / 2 - (host ? host.offsetLeft : 0), y: b.y + (b.h - h) / 2 - d - (host ? host.offsetTop : 0), w, h, tilt: 26, persp: h * 2.6 };
     }, 10, U.top);
   }
+  // centre the board as drawn: the 3D board's corners (the slab and its base, not the pieces) projected on the screen, their top
+  // and bottom set round the centre of the page's board area (#frame); a few passes (the camera follows the new lift)
+  let bbox = null, cT = 0;
+  function centre(n) {
+    clearTimeout(cT); if (!root || de.classList.contains('atlas-2d')) return;
+    cT = setTimeout(() => {
+      const fr = document.getElementById('frame'); if (!fr || !bbox) return;
+      let y0 = 1e9, y1 = -1e9;
+      for (const x of [bbox.min.x, bbox.max.x]) for (const y of [bbox.min.y, bbox.max.y]) for (const z of [bbox.min.z, bbox.max.z]) { const p = T3.project(x, z, y); y0 = Math.min(y0, p.y); y1 = Math.max(y1, p.y); }
+      const r = fr.getBoundingClientRect(), want = r.top + r.height / 2, err = (y0 + y1) / 2 - want, h = boardDom.offsetHeight * SC;
+      if (!h || !isFinite(err)) return;
+      if (Math.abs(err) > .5) { liftK += err / h; lift3d(); T3.kick(300); }
+      if ((n || 0) < 4 && Math.abs(err) > .5) centre((n || 0) + 1);
+    }, n ? 60 : 200);
+  }
+  addEventListener('resize', () => centre(0));
+  // the page's clicks: the square under the pointer, read from the 3D view (the DOM board's box is distorted by the lean)
+  window.boardPick = (x, y) => {
+    if (de.classList.contains('atlas-2d') || !root) return null;
+    const p = T3.pick({ clientX: x, clientY: y }, U.top); if (!p) return null;
+    return [Math.floor(p.z + 5), Math.floor(p.x + 5)];
+  };
   /* ---------- the board ---------- */
   const holder = new THREE.Group();
   let root = null, U = null, Y = 0, built = '';
@@ -114,9 +137,9 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
     built = key; tok++;
     if (root) holder.remove(root);
     P3.clear();
-    root = A3.board(look); U = root.userData; Y = U.top; holder.add(root);
+    root = A3.board(look); U = root.userData; Y = U.top; bbox = new THREE.Box3().setFromObject(root); holder.add(root);   // (the box before it is added: in the holder's own units, as T3.project takes them)
     T3.show('amazons', holder, { still: true });
-    skin.alignTo(10, U.top); lift3d();
+    skin.alignTo(10, U.top); lift3d(); centre(0);
     dispatchEvent(new Event('resize'));
     T3.kick(600);
     return true;
@@ -259,5 +282,5 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
   if (piecesDom) new MutationObserver(() => applySel()).observe(piecesDom, { subtree: true, attributes: true, attributeFilter: ['class'] });
   try { mirror(); } catch (e) {}
 
-  window.__amSkin = { pieces: () => P3.size, look: () => built, at: i => { const [x, z] = xz(i); return T3.project(x, z, Y); } };
+  window.__amSkin = { look: () => built, at: i => { const [x, z] = xz(i); return T3.project(x, z, Y); }, lift: () => liftK };
 })();
