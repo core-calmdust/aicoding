@@ -914,20 +914,21 @@ function chooseW5(p, cfg, rand, t, sure, t0) {
   const h = H.best(p, cfg.depth, Math.max(60, ms * (sure ? cfg.w5.hs : cfg.w5.hn)), rand);
   const moves = v2Moves(S, p, h.move, rand);
   const o = S.sliced(p, t, moves, left() - (sure ? 30 : ms * cfg.w5.re));
+  const F = x => Object.assign(x, { stat: { n: moves.length, lost: o.lost.size, draw: o.draw ? 1 : 0, helpers: 0 } });   // (what was proved: dots/bench.html)
   if (o.win) {
-    if (left() > ms * 0.3) { S.limit(0, left() - 20); const r = S.best(p, rand, o.win.move); if (r) return { move: r.move, value: r.value, exact: true }; }
-    return { move: o.win.move, value: o.win.value, exact: false, outcome: 1 };
+    if (left() > ms * 0.3) { S.limit(0, left() - 20); const r = S.best(p, rand, o.win.move); if (r) return F({ move: r.move, value: r.value, exact: true }); }
+    return F({ move: o.win.move, value: o.win.value, exact: false, outcome: 1 });
   }
-  if (o.draw) return { move: o.draw.move, value: o.draw.value, exact: false, outcome: 0 };
+  if (o.draw) return F({ move: o.draw.move, value: o.draw.value, exact: false, outcome: 0 });
   if (!o.open.length) {   // every move loses: the best margin
     S.limit(0, left() - 20); const r = S.best(p, rand, h.move);
-    if (r) return { move: r.move, value: r.value, exact: true };
-    return { move: h.move, value: h.value, exact: false };
+    if (r) return F({ move: r.move, value: r.value, exact: true });
+    return F({ move: h.move, value: h.value, exact: false });
   }
-  if (!o.lost.has(h.move)) return { move: h.move, value: h.value, exact: false, depth: H.depth };
-  if (o.open.length === 1 || left() < 60) return { move: o.open[0], value: h.value, exact: false };
+  if (!o.lost.has(h.move)) return F({ move: h.move, value: h.value, exact: false, depth: H.depth });
+  if (o.open.length === 1 || left() < 60) return F({ move: o.open[0], value: h.value, exact: false });
   const h2 = H.best(p, cfg.depth, left() - 20, rand, o.lost);
-  return { move: o.lost.has(h2.move) ? o.open[0] : h2.move, value: h2.value, exact: false, depth: H.depth };
+  return F({ move: o.lost.has(h2.move) ? o.open[0] : h2.move, value: h2.value, exact: false, depth: H.depth });
 }
 // Pondering (5x5, Lv9+): while the opponent thinks, prove the outcome of each of the opponent's replies, round-robin in
 // growing slices. The work stays in the table, so the next search starts warm (often already solved).
@@ -972,33 +973,67 @@ async function chooseW5Async(p, cfg, rand, t, sure, t0, pool) {
   const q = S.sliced(p, t, all, Math.min(200, ms * 0.05));   // late positions and a warm table finish at once
   if (q.win) return winAns(q.win, true);
   if (q.draw && !q.open.length) return { move: q.draw.move, value: q.draw.value, exact: false, outcome: 0 };
-  const open = q.open, n = pool.size + 1, edges = p.edges(), span = Math.max(50, left() - (sure ? 40 : ms * cfg.w5.re) - 40);
-  const jobs = [];
-  for (let i = 0; i < pool.size; i++) jobs.push(pool.run(i, { type: 'xpart', kind: 'sliced', R: G.R, C: G.C, edges, moves: open.filter((m, j) => j % n === i + 1), ms: span, until: Date.now() + span, t, x5: true }));
-  const h = H.best(p, cfg.depth, Math.max(60, ms * (sure ? cfg.w5.hs : cfg.w5.hn)), rand);
-  const mine = [h.move].concat(open.filter((m, j) => j % n === 0 && m !== h.move));
-  const o = S.sliced(p, t, mine, Math.max(30, end - (sure ? 40 : ms * cfg.w5.re) - Date.now()));
-  if (o.win) { Promise.all(jobs); return winAns(o.win, false); }
-  const res = await Promise.all(jobs);
-  const lost = new Set(q.lost); for (const m of o.lost) lost.add(m);
-  let draw = q.draw || o.draw, helpersOk = true;
-  for (const r of res) {
-    if (!r || !Array.isArray(r.lost)) { helpersOk = false; continue; }
-    if (r.win) return winAns(r.win, false);
-    if (r.draw && !draw) draw = r.draw;
-    for (const m of r.lost) lost.add(m);
+  // (2026-11-10, after the Mac bench: Lv.10 took as long with 2–14 threads as with one where the outcome gets proved, e.g.
+  // 1.32 s → 1.34 s when every move loses) this worker first proves its own share, then waits for the helpers while the
+  // heuristic search still fits after; the heuristic search (hT, the fall-back answer) runs only when the outcome is
+  // still open — before, it ran first, for a fixed 15–35% of the time, so the helpers' work never made the move earlier.
+  // The helpers stop as soon as the move is decided (a shared flag when the page is isolated), and their answers are not
+  // waited for past the move's time.
+  const open = q.open, n = pool.size + 1, edges = p.edges(), reserve = sure ? 40 : ms * cfg.w5.re;
+  const hT = Math.max(60, ms * (sure ? cfg.w5.hs : cfg.w5.hn)), span = Math.max(50, left() - reserve - 40);
+  const stop = typeof SharedArrayBuffer === 'function' && typeof Atomics === 'object' && typeof self !== 'undefined' && self.crossOriginIsolated ? new Int32Array(new SharedArrayBuffer(4)) : null;
+  const halt = () => { if (stop) Atomics.store(stop, 0, 1); };
+  const jobs = [], got = [];
+  for (let i = 0; i < pool.size; i++) jobs.push(pool.run(i, { type: 'xpart', kind: 'sliced', R: G.R, C: G.C, edges, moves: open.filter((m, j) => j % n === i + 1), ms: span, until: Date.now() + span, t, x5: true, stop: stop ? stop.buffer : undefined }).then(r => { got[i] = r === undefined ? null : r; return r; }));
+  let anyWin = null; const winP = new Promise(res => { anyWin = res; }); jobs.forEach(j => j.then(r => { if (r && r.win) anyWin(); }));
+  const until = at => Promise.race([Promise.all(jobs), winP, new Promise(r => setTimeout(r, Math.max(0, at - Date.now())))]);
+  const lost = new Set(q.lost); let draw = q.draw;
+  const stat = () => ({ n: all.length, lost: lost.size, draw: draw ? 1 : 0, helpers: pool.size });
+  const fold = () => {   // what is known so far: { win, all: every helper has answered }
+    let win = null, every = true;
+    for (let i = 0; i < pool.size; i++) {
+      const r = got[i];
+      if (r === undefined) { every = false; continue; }
+      if (!r || !Array.isArray(r.lost)) { every = false; continue; }
+      if (r.win && !win) win = r.win;
+      if (r.draw && !draw) draw = r.draw;
+      for (const m of r.lost) lost.add(m);
+    }
+    return { win, every };
+  };
+  const mine = open.filter((m, j) => j % n === 0);
+  if (mine.length) {
+    const o = S.sliced(p, t, mine, Math.max(30, end - reserve - hT - Date.now()));
+    if (o.win) { halt(); return winAns(o.win, false); }
+    for (const m of o.lost) lost.add(m);
+    if (o.draw && !draw) draw = o.draw;
   }
-  if (draw) return { move: draw.move, value: draw.value, exact: false, outcome: 0 };
-  if (helpersOk && all.every(m => lost.has(m))) {   // every move loses: the best margin
+  await until(end - reserve - hT);
+  let k = fold();
+  if (k.win) { halt(); return Object.assign(winAns(k.win, false), { stat: stat() }); }
+  if (k.every && draw) return { move: draw.move, value: draw.value, exact: false, outcome: 0, stat: stat() };
+  if (k.every && all.every(m => lost.has(m))) {   // every move loses: the best margin
+    S.limit(0, left() - 20); const r = S.best(p, rand, -1);
+    if (r) return { move: r.move, value: r.value, exact: true, stat: stat() };
+  }
+  // still open: the heuristic search over the moves not proved to lose (the helpers go on meanwhile)
+  const rest0 = all.filter(m => !lost.has(m));
+  const h = rest0.length ? H.best(p, cfg.depth, Math.max(60, Math.min(hT, left() - reserve - 20)), rand, lost) : H.best(p, cfg.depth, Math.max(60, left() - 20), rand);
+  await until(end - 20);
+  k = fold(); halt();
+  if (k.win) return Object.assign(winAns(k.win, false), { stat: stat() });
+  if (draw) return { move: draw.move, value: draw.value, exact: false, outcome: 0, stat: stat() };
+  if (k.every && all.every(m => lost.has(m))) {
     S.limit(0, left() - 20); const r = S.best(p, rand, h.move);
-    if (r) return { move: r.move, value: r.value, exact: true };
-    return { move: h.move, value: h.value, exact: false };
+    if (r) return { move: r.move, value: r.value, exact: true, stat: stat() };
+    return { move: h.move, value: h.value, exact: false, stat: stat() };
   }
-  if (!lost.has(h.move)) return { move: h.move, value: h.value, exact: false, depth: H.depth };
+  if (!lost.has(h.move)) return { move: h.move, value: h.value, exact: false, depth: H.depth, stat: stat() };
   const rest = all.filter(m => !lost.has(m));
-  if (rest.length === 1 || left() < 60) return { move: rest[0], value: h.value, exact: false };
+  if (!rest.length) return { move: h.move, value: h.value, exact: false, stat: stat() };
+  if (rest.length === 1 || left() < 60) return { move: rest[0], value: h.value, exact: false, stat: stat() };
   const h2 = H.best(p, cfg.depth, left() - 20, rand, lost);
-  return { move: lost.has(h2.move) ? rest[0] : h2.move, value: h2.value, exact: false, depth: H.depth };
+  return { move: lost.has(h2.move) ? rest[0] : h2.move, value: h2.value, exact: false, depth: H.depth, stat: stat() };
 }
 // work for a helper worker: an outcome (or exact) root search over the given moves, in that order
 function helperTask(d) {
@@ -1009,7 +1044,8 @@ function helperTask(d) {
   const S = v2SolverFor(G); S.limit(0, d.ms);
   if (d.kind === 'sliced') {
     if (!S.sliced) return null;
-    const o = S.sliced(p, d.t, d.moves, d.ms);
+    const sf = d.stop && typeof Atomics === 'object' ? new Int32Array(d.stop) : null;   // (the main worker's "decided" flag)
+    const o = S.sliced(p, d.t, d.moves, d.ms, sf ? () => Atomics.load(sf, 0) !== 0 : null);
     return { win: o.win, draw: o.draw, lost: Array.from(o.lost) };
   }
   const r = d.t === null || d.t === undefined ? S.bestOf(p, d.moves) : S.outcome(p, d.t, d.moves);
@@ -1100,14 +1136,15 @@ class W5 {
 // outcome of every move against the target t in growing time slices (the table keeps the work between slices), so that
 // within the time it proves as many moves as it can rather than spending everything on the first one. Stops at a win.
 // Returns { win: {move, value} | null, draw: {move, value} | null, lost: Set of moves proven to lose, open: moves unknown }
-W5.prototype.sliced = function (p, t, moves, ms) {
+// stop (optional): a function, true when the main worker has decided (its helpers' shares, 2026-11-10): stop as at the time limit
+W5.prototype.sliced = function (p, t, moves, ms, stop) {
   const end = Date.now() + ms, st = new Int8Array(moves.length), lost = new Set(); let draw = null, b = 25;
   this.set(p); const lo = X5.io[0], hi = X5.io[1];
   for (;;) {
     let open = 0;
     for (let i = 0; i < moves.length; i++) {
       if (st[i]) continue;
-      const left = end - Date.now(); if (left <= 3) return { win: null, draw, lost, open: moves.filter((m, j) => !st[j]) };
+      const left = end - Date.now(); if (left <= 3 || (stop && stop())) return { win: null, draw, lost, open: moves.filter((m, j) => !st[j]) };
       X5.io[0] = lo; X5.io[1] = hi;
       const v = X5.x.w_move_value(moves[i], t - 1, t + 1, Math.min(b, left)); this.nodes += X5.x.w_nodes();
       if (v === -999) { open++; continue; }
@@ -1443,7 +1480,7 @@ if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof
       if (d.type === 'move') {
         const t0 = Date.now();
         const r = (DotsEngine.LEVELS[d.level] || {}).kind === 'v2' ? await DotsEngine.chooseMoveAsync(p, d.level, null, getPool(d.mt), d.lead, d.edges) : DotsEngine.chooseMove(p, d.level);
-        self.postMessage({ type: 'move', id: d.id, move: r.move, value: r.value, exact: !!r.exact, ms: Date.now() - t0 });
+        self.postMessage({ type: 'move', id: d.id, move: r.move, value: r.value, exact: !!r.exact, ms: Date.now() - t0, stat: r.stat, outcome: r.outcome });
         if (d.level >= 9 && d.R === 5 && d.C === 5 && d.ponder !== false) {
           const k = p.play(r.move);
           if (!k && DotsEngine.ponderStart(p, -(d.lead || 0), d.level)) { const tok = ++pondering; setTimeout(() => ponderLoop(tok), 0); }
