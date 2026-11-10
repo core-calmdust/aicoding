@@ -211,7 +211,7 @@
     gear: { ja: 'からくり工房', en: 'Clockwork', zh: '机关工坊', 'zh-TW': '機關工坊', ko: '태엽 공방', es: 'Engranajes', fr: 'Engrenages', pt: 'Engrenagens', de: 'Uhrwerk', ru: 'Механизм', tr: 'Çark', id: 'Roda gigi', hi: 'घड़ी-कारखाना', ar: 'التروس' },
     space: { ja: 'スペース', en: 'Space', zh: '太空', 'zh-TW': '太空', ko: '스페이스', es: 'Espacio', fr: 'Espace', pt: 'Espaço', de: 'Weltraum', ru: 'Космос', tr: 'Uzay', id: 'Luar angkasa', hi: 'अंतरिक्ष', ar: 'الفضاء' },
   } };
-  X.boardName = (k, lang, id) => { const g = id && NG[id] && NG[id][k]; if (g) return g[lang] || g.en; const o = N3[k]; return o ? o[lang] || o.en : k; };
+  X.boardName = (k, lang, id) => { const g = id && NG[id] && NG[id][k]; if (g) return g[lang] || g.en; const o = N3[k]; if (!o) return k; const n = o[lang] || o.en, c = n.replace(/\s*(?:3D|ثلاثي(?: الأبعاد)?)$/, '').trim(); return c || n; };   // (2026-11-10: the boards' names without '3D')
   // the full games' 「3D盤」 tiles: the board alone, from straight above, no room (atlas/tools/boardicon.html, 2026-11-09)
   X.boardIcon = (id, k) => new URL('img/boardic-' + id + '-' + k + '.webp?v=1', ME).href;
   X.boardThumb = (id, k) => new URL('img/board-' + id + '-' + k + '.webp?v=' + (id === 'senet' ? 3 : id === 'carrom' ? 5 : id === 'crokinole' ? 5 : id === 'konane' ? 2 : id === 'ludo' ? 2 : id === 'hockey' ? 2 : 1), ME).href;

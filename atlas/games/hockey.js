@@ -123,9 +123,12 @@
   function start(ctx) {
     const T3 = ctx.Table3D, E = window.HockeyEngine, D = E.DIM, lang = ctx.lang;
     const pvp = ctx.mode === 'pvp', level = Math.max(1, Math.min(20, +ctx.level || 6)), target = SIZES.includes(+ctx.size) ? +ctx.size : 7;
+    // the touchpad note on the controls card (PCs): a heading line, then how — like carrom / crokinole
+    const PADT = [['ノートPCのタッチパッドなら：', '指をすべらせるだけでパッドが動く（クリック不要）'], ['On a laptop touchpad:', 'just glide a finger and the mallet follows (no clicking)'], ['笔记本触控板：', '手指滑动即可移动球拍（不用点击）'], ['筆電觸控板：', '手指滑動即可移動球拍（不用點擊）'], ['노트북 터치패드라면:', '손가락을 미끄러뜨리기만 하면 패드가 움직인다 (클릭 불필요)'], ['Con el panel táctil del portátil:', 'desliza el dedo y el mazo te sigue (sin clic)'], ['Sur le pavé tactile d’un portable :', 'glisse le doigt, le maillet suit (sans clic)'], ['No touchpad do notebook:', 'deslize o dedo e o batedor acompanha (sem clicar)'], ['Mit dem Touchpad am Laptop:', 'einfach den Finger gleiten lassen, der Schläger folgt (ohne Klick)'], ['На тачпаде ноутбука:', 'просто веди пальцем — бита следует (без щелчка)'], ['Dizüstü dokunmatik yüzeyde:', 'parmağını kaydır, tokmak takip eder (tıklama yok)'], ['Dengan touchpad laptop:', 'cukup geser jari, pemukul mengikuti (tanpa klik)'], ['लैपटॉप टचपैड पर:', 'बस उँगली फिसलाओ, मैलेट पीछे-पीछे चलेगा (क्लिक नहीं)'], ['على لوحة لمس الحاسوب المحمول:', 'مرّر إصبعك فقط وتتبعه المضرب (بلا نقر)']];
     const BKT = ['もどる', 'Back', '返回', '返回', '돌아가기', 'Volver', 'Retour', 'Voltar', 'Zurück', 'Назад', 'Geri', 'Kembali', 'वापस', 'رجوع'];
     const BL = Object.keys(E.BOARDS), lookNow = () => { const v = T3.BOARDS && T3.BOARDS.hockey ? T3.BOARDS.hockey.get() : 'classic'; return BL.includes(v) ? v : 'classic'; };
     let look = lookNow(), board = T3.MODELS.hockey(true, look); T3.show('hockey', board);
+    let modelKids = new Set(board.children);   // (the parts the board model came with: swapped when another board is picked)
     document.documentElement.classList.add('hk-on');
     const barFit = () => { const b = document.getElementById('tbar'); if (b && b.offsetHeight) { const r = b.getBoundingClientRect(); document.documentElement.style.setProperty('--hk-bar', Math.round(innerHeight - r.top + 6) + 'px'); } };
     setTimeout(barFit, 400); addEventListener('resize', barFit);
@@ -157,8 +160,18 @@
 .hkmodes .ic{flex:none;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:24px;background:#f2ecdf}.hkmodes button[aria-pressed=true] .ic{background:#d6e6ff}
 .hkmodes .ic.th{width:66px;height:46px;padding:0;overflow:hidden;background:#e9dfca}.hkmodes .ic.th img{width:100%;height:100%;object-fit:cover;transform:scale(2.1) translateY(-6%);display:block}
 .hkmodes b{display:block;font-size:15px;font-weight:900}.hkmodes small{display:block;font-size:12px;font-weight:700;color:#5b6074;line-height:1.35;margin-top:2px}
-.hkmenu .hkft{display:flex;gap:10px;margin-top:14px}.hkmenu .hkft .go{flex:1;margin-top:0}.hkmenu .bk{flex:0 0 32%;padding:13px;border:0;border-radius:99px;background:#ece6d8;color:#3a3f52;font:inherit;font-size:17px;font-weight:900;cursor:pointer;box-shadow:0 3px 0 #d4ccb8}
-.hkmenu .hkhow{width:min(560px,100%)}.hkmenu .hkhow .how{display:block!important;font-size:16px;font-weight:800;line-height:1.7;margin:4px 2px 0}.hkmenu .nv{display:flex;gap:8px;align-items:center;justify-content:center;margin:14px 0 2px;font-weight:800;cursor:pointer}
+.hkmenu .hkft{display:flex;gap:10px;margin-top:14px}.hkmenu .hkft .go{flex:1;margin-top:0}.hkmenu .bk{flex:1;padding:13px;border:0;border-radius:99px;background:#ece6d8;color:#3a3f52;font:inherit;font-size:17px;font-weight:900;cursor:pointer;box-shadow:0 3px 0 #d4ccb8}
+.hkhw{position:fixed;inset:0;z-index:95;display:flex;align-items:center;justify-content:center;background:rgba(10,12,22,.55);padding:16px;-webkit-user-select:none;user-select:none}
+.hkhw-c{background:#fff;color:#1d2133;border-radius:24px;box-shadow:0 0 0 4px #2f6fd0,0 18px 50px rgba(0,0,0,.45);padding:22px 22px 18px;width:min(440px,100%);max-height:100%;overflow:auto}
+.hkhw h2{margin:0 0 14px;font-size:24px;font-weight:900;text-align:center;color:#2f6fd0}
+.hkhw ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.hkhw li{display:flex;align-items:center;gap:12px;font-size:18px;font-weight:800;line-height:1.35}
+.hkhw li i{flex:none;width:40px;height:40px;border-radius:50%;background:#e3edfb;color:#2f6fd0;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:20px;font-weight:900}
+.hkhw li span{white-space:normal}html .hkhw li{white-space:normal!important}
+.hkhw .u{margin:14px 0 0;font-size:14px;font-weight:700;color:#5b6074;text-align:center;line-height:1.7}
+.hkhw label{display:flex;align-items:center;justify-content:center;gap:8px;margin:16px 0 14px;font-size:16px;font-weight:800;cursor:pointer}
+.hkhw label input{width:20px;height:20px;accent-color:#2f6fd0}
+.hkhw button{display:block;width:100%;padding:13px;border:0;border-radius:99px;background:#2f6fd0;color:#fff;font:inherit;font-size:18px;font-weight:900;cursor:pointer}
 .hkmenu .go{display:block;width:100%;margin-top:14px;padding:13px;border:0;border-radius:99px;background:#ff5d5d;color:#fff;font:inherit;font-size:19px;font-weight:900;cursor:pointer;box-shadow:0 4px 0 #c94040}
 .hkmenu .how{margin:12px 2px 0;padding:10px 12px;border-radius:14px;background:#f4efe3;font-size:12.5px;font-weight:700;color:#4a4f63;line-height:1.5}
 
@@ -169,7 +182,7 @@
 .hkmodes button{flex-direction:column;align-items:stretch;gap:10px;padding:10px 10px 14px;border-radius:20px}
 .hkmodes .ic.th{width:100%;height:auto;aspect-ratio:16/9;border-radius:14px}.hkmodes .ic.th img{transform:scale(1.9) translateY(-4%)}
 .hkmodes b{font-size:20px;padding:0 6px}.hkmodes small{font-size:14px;padding:0 6px;margin-top:4px}
-.hkmenu .go{font-size:22px;padding:15px}.hkmenu .hkft{max-width:680px;margin:18px auto 0}.hkmenu .bk{font-size:21px;padding:15px}
+.hkmenu .go{font-size:22px;padding:15px}.hkmenu .hkft{max-width:680px;margin:18px auto 0}.hkmenu .bk{font-size:22px;padding:15px}
 }
 @media (min-width:900px) and (max-height:820px) and (hover:hover){.hkmodes .ic.th{aspect-ratio:2/1}.hkmodes{gap:12px}.hkmenu h2{margin-bottom:12px}}
 @media (max-width:560px){.hkmenu-c{padding:14px 12px 12px}.hkmodes{gap:6px}.hkmodes button{padding:7px 8px;gap:7px}.hkmodes .ic{width:32px;height:32px;font-size:18px;border-radius:10px}.hkmodes b{font-size:13.5px}.hkmodes small{display:none}.hkmenu h2{font-size:19px;margin-bottom:10px}.hkmenu .sel{display:block}.hkmenu .how{font-size:11.5px;padding:8px 10px}}
@@ -265,7 +278,8 @@ html.hk-on #bv > .npc-float .npc-pic{width:36px!important;height:36px!important}
       if (v === look || s) return; look = v;
       try { if (T3.setBoard) T3.setBoard('hockey', v); else if (T3.BOARDS && T3.BOARDS.hockey) T3.BOARDS.hockey.set(v); } catch (e) {}
       // (the new board's pieces move into the group already on the table: T3.show() would put the camera back to the room view)
-      const nb = T3.MODELS.hockey(true, v); while (board.children.length) board.remove(board.children[0]); while (nb.children.length) board.add(nb.children[0]); board.userData = nb.userData; U = board.userData;
+      const nb = T3.MODELS.hockey(true, v); modelKids.forEach(c => board.remove(c)); modelKids = new Set(nb.children); [...nb.children].forEach(c => board.add(c));   // (only the board's own parts: the guides, pieces etc. added since stay) board.userData = nb.userData; U = board.userData;
+      mal.forEach(m => board.remove(m)); if (prePuck) board.remove(prePuck);
       mal = [U.mallet(0), U.mallet(1)]; mal.forEach(m => board.add(m)); put(mal[0], 0, D.L / 2 - 8); put(mal[1], 0, -(D.L / 2 - 8));
       prePuck = U.puck(); put(prePuck, 0, 0); board.add(prePuck);
       pk.clear(); fitNow(); kick(500); hud(); fx.reset();
@@ -397,11 +411,15 @@ html.hk-on #bv > .npc-float .npc-pic{width:36px!important;height:36px!important}
     // (2026-11-10) the controls first (until 'don't show again'), then the board menu
     function howFirst() {
       if (howOff) { showMenu(); return; }
-      const el = document.createElement('div'); el.className = 'hkmenu'; menuEl = null;
-      el.innerHTML = `<div class="hkmenu-c hkhow" role="dialog" aria-label="${esc(HOWK.title[li(lang)] || HOWK.title[1])}"><h2>${esc(HOWK.title[li(lang)] || HOWK.title[1])}</h2><div class="how">${(HOW[lang] || HOW.en).map(esc).join('<br>')}</div><label class="nv"><input type="checkbox" id="hkNever"> ${esc(HOWK.never[li(lang)] || HOWK.never[1])}</label><button type="button" class="go">${esc(HOWK.ok[li(lang)] || HOWK.ok[1])}</button></div>`;
+      // (2026-11-10) the same card as carrom / crokinole: title, the steps with round icons, 'don't show again', OK
+      const H = HOW[lang] || HOW.en, mouse = matchMedia('(hover: hover) and (pointer: fine)').matches;
+      const dev = (H[1].split(/[／·・|]/).map(x => x.trim()).filter(Boolean)[mouse ? 0 : 1] || H[1]).trim();
+      const steps = [['🏒', H[0]], [mouse ? '🖱' : '👆', dev]].concat(mouse ? [['⌨', H[2]]] : []).concat([['⚡', H[3]]]);
+      const el = document.createElement('div'); el.className = 'hkhw'; el.dir = lang === 'ar' ? 'rtl' : 'ltr'; menuEl = null;
+      el.innerHTML = `<div class="hkhw-c" role="dialog" aria-modal="true"><h2>${esc(HOWK.title[li(lang)] || HOWK.title[1])}</h2><ol>${steps.map(([ic, x]) => `<li><i>${ic}</i><span>${esc(x)}</span></li>`).join('')}</ol>${mouse ? `<p class="u pad">💻 <b>${esc((PADT[li(lang)] || PADT[1])[0])}</b><br>${esc((PADT[li(lang)] || PADT[1])[1])}</p>` : ''}<label><input type="checkbox" id="hkNever"> ${esc(HOWK.never[li(lang)] || HOWK.never[1])}</label><button type="button" class="ok">${esc(HOWK.ok[li(lang)] || HOWK.ok[1])}</button></div>`;
       ['pointerdown', 'pointermove', 'pointerup'].forEach(k => el.addEventListener(k, e => e.stopPropagation()));
       document.body.appendChild(el); howEl = el;
-      el.querySelector('.go').onclick = () => { if (el.querySelector('#hkNever').checked) { howOff = true; try { localStorage.setItem('atlas-hockey-howto', 'off'); } catch (e) {} } el.remove(); howEl = null; if (!stopped) showMenu(); };
+      el.querySelector('.ok').onclick = () => { if (el.querySelector('#hkNever').checked) { howOff = true; try { localStorage.setItem('atlas-hockey-howto', 'off'); } catch (e) {} } el.remove(); howEl = null; if (!stopped) showMenu(); };
     }
     let howEl = null;
     howFirst();
