@@ -1849,7 +1849,7 @@ let jobId = 0;
 const MT_CFG = { 17: { exact: 18, wld: 20 }, 18: { exact: 18, wld: 21 }, 19: { exact: 19, wld: 21 }, 20: { exact: 20, wld: 22 },
   21: { exact: 21, wld: 23 }, 22: { exact: 22, wld: 23 }, 23: { exact: 22, wld: 24 }, 24: { exact: 23, wld: 24 }, 25: { exact: 23, wld: 25 } };   // the helpers' settings (engine.js LEVELS)
 const MTP = window.MTEngine ? MTEngine.use({
-  wasm: 'engine_mt.wasm?v=6', lead: 'mt-worker.js?v=11', helper: 'mt-worker.js?v=11', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
+  wasm: 'engine_mt.wasm?v=7', lead: 'mt-worker.js?v=11', helper: 'mt-worker.js?v=11', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => Date.now() } }),
   after: async (X, mem, ws) => {
     X.init();   // (the tables in the shared memory, once)
