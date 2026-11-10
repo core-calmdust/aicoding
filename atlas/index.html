@@ -997,7 +997,7 @@ button.nct[data-go]:hover{transform:translateY(-1px);box-shadow:0 3px 0 var(--li
 .dic:not(.vis) .rfx::before,.dic:not(.vis)::after,.dic:not(.vis) .art::after,.dic:not(.vis) .art::before{animation-play-state:paused}
 @media (prefers-reduced-motion:reduce){.rfx::before,.dic::after,.dic .art::after,.dic .art::before{animation:none!important}}
 /* the name card wearing an SSR / UR: the same running light round its edge, a soft glow, a twinkle in the corner */
-.dprev.nr3,.dprev.nr4{position:relative}
+/* (.dprev stays position:sticky — a 'position:relative' here un-stuck the SSR / UR card and it drifted down, 2026-11-10) */
 .prof.nr4{box-shadow:0 6px 0 #e9dcc0,0 0 26px 4px rgba(255,170,60,.45)!important}
 .prof.nr3{box-shadow:0 6px 0 #e9dcc0,0 0 26px 4px rgba(180,107,255,.4)!important}
 .prof > .rfx{position:absolute;inset:0;z-index:6;padding:3.5px;border-radius:inherit}
@@ -1789,7 +1789,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 <script src="gamelist-i18n.js?v=13am"></script>
 <script src="table3d.js?v=136"></script>
 <script src="tables3d.js?v=51"></script>
-<script src="models/shogi.js?v=24"></script>
+<script src="models/shogi.js?v=26"></script>
 <script src="models/chess.js?v=16"></script>
 <script src="models/backgammon.js?v=118"></script>
 <script src="models/goban.js?v=14"></script>
