@@ -211,6 +211,14 @@ html.atlas-shogi:not(.atlas-2d) .board-area{gap:calc(var(--cw)*.62)!important}
 /* komadai wood grain (atlas/skin/shogi.js paints --kdwood: a light procedural kaya texture, grain along the stand) */
 html.atlas-shogi:not(.atlas-2d) .hand{background:linear-gradient(rgba(236,200,128,.5),rgba(236,200,128,.5)),url(../../images/atlas/shogi-kaya.webp?v=2) 20% 10%/320% auto,#e8c47c!important}   /* 本榧, as the board (2026-11-10) */
 html.atlas-shogi:not(.atlas-2d) .hand.kd-wide{background:linear-gradient(rgba(236,200,128,.5),rgba(236,200,128,.5)),url(../../images/atlas/shogi-kaya.webp?v=2) 20% 10%/120% auto,#e8c47c!important}
+/* the 2D board in the portal (html.atlas-2d) on the tatami: a real shogi board — the wooden board (its rim and coordinates on the
+   same kaya, a thick edge below) and wooden komadai, not the 2D page's dark frame and stands (2026-11-10). 漆黒・メタル keep their own look */
+html.atlas-shogi.atlas-2d body:not(.skin-ink):not(.skin-metal) .frame{background:linear-gradient(rgba(214,160,78,.42),rgba(196,140,62,.42)),url(../../images/atlas/shogi-kaya.webp?v=2) 50% 30%/140% auto,#dcae62!important;border:0!important;border-radius:6px!important;box-shadow:inset 0 0 0 1px rgba(255,236,190,.45),inset 0 -2px 0 rgba(120,70,20,.25),0 calc(var(--cw)*.14) 0 #a8743a,0 calc(var(--cw)*.14) 0 1px rgba(90,50,14,.35),0 calc(var(--cw)*.3) calc(var(--cw)*.36) -2px rgba(50,30,0,.42)!important}
+html.atlas-shogi.atlas-2d body:not(.skin-ink):not(.skin-metal) .frame::before,html.atlas-shogi.atlas-2d body:not(.skin-ink):not(.skin-metal) .frame::after{display:none!important}
+html.atlas-shogi.atlas-2d body:not(.skin-ink):not(.skin-metal) .coords{color:rgba(58,30,6,.78)!important;text-shadow:none!important;font-family:'Shippori Mincho B1','Hiragino Mincho ProN','Yu Mincho',serif!important}
+html.atlas-shogi.atlas-2d body:not(.skin-ink):not(.skin-metal) .board{border:1px solid rgba(60,34,6,.7)!important;border-radius:0!important;box-shadow:none!important}
+html.atlas-shogi.atlas-2d body:not(.skin-ink):not(.skin-metal) .hand{background:linear-gradient(rgba(236,200,128,.5),rgba(236,200,128,.5)),url(../../images/atlas/shogi-kaya.webp?v=2) 30% 50%/cover,#e8c47c!important;border-radius:8px!important;box-shadow:inset 0 0 0 1px rgba(255,240,200,.5),0 calc(var(--cw)*.1) 0 #b0803f,0 calc(var(--cw)*.24) calc(var(--cw)*.3) -2px rgba(50,30,0,.4)!important}
+html.atlas-shogi.atlas-2d body:not(.skin-ink):not(.skin-metal) .hand .hname{color:#5a3412!important}
 html.atlas-shogi.atlas-sk-metal .pc.atlas3d .k img{filter:saturate(.15) brightness(1.08) contrast(1.05)}
 html.atlas-shogi.atlas-sk-ink .pc.atlas3d .k img{filter:brightness(.62) contrast(1.15) saturate(.8)}
 html.atlas-shogi.atlas-sk-grain .pc.atlas3d .k img{filter:sepia(.25) saturate(1.2) brightness(.95)}
