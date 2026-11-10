@@ -4,7 +4,6 @@
 #   temple  テミスキュラの神殿: Carrara and verde antico marble squares, gold inlay lines, a polished slab
 #   ruins   密林の遺跡: weathered limestone and basalt flags, moss in the joints, roots, morning haze
 #   vase    アマゾノマキアの壺絵: fired clay and black glaze squares, incised lines, palmettes at the crossings
-#   terrazzo テラゾー: polished terrazzo (ivory and charcoal) with brass strips (modern)
 #   navy    ネイビーとアイボリー: navy and ivory lacquer, gold hairlines (modern)
 import math, os
 import numpy as np
@@ -212,40 +211,7 @@ def vase():
         for y in range(80, H - 80, 30): d.ellipse([xb - 5, y - 9, xb + 5, y + 9], outline=(196, 104, 58), width=2)
     save(np.asarray(fim, np.float32) / 255, 'fr-vase.webp', 84)
 
-# ---------------------------------------------------------------- 4. terrazzo (modern): polished terrazzo, ivory and charcoal, brass strips
-def chips(im, mask, seed, palette, n, rmin, rmax):
-    d = ImageDraw.Draw(im); r = np.random.default_rng(seed)
-    for _ in range(n):
-        x, y = r.integers(0, S, 2)
-        if not mask[y, x]: continue
-        rad = rmin + (rmax - rmin) * r.random() ** 2.2; k = int(r.integers(4, 8)); a0 = r.random() * 6.28
-        pts = [(x + math.cos(a0 + t / k * 6.283) * rad * (.55 + .45 * r.random()), y + math.sin(a0 + t / k * 6.283) * rad * (.55 + .45 * r.random())) for t in range(k)]
-        c = palette[int(r.integers(0, len(palette)))]; j = r.integers(-10, 10)
-        d.polygon(pts, fill=tuple(int(max(0, min(255, v + j))) for v in c))
-def terrazzo():
-    base_l = lerp(np.broadcast_to(col((234, 229, 219)), (S, S, 3)), np.broadcast_to(col((222, 216, 205)), (S, S, 3)), fbm(S, S, 81))
-    base_d = lerp(np.broadcast_to(col((62, 64, 66)), (S, S, 3)), np.broadcast_to(col((48, 50, 52)), (S, S, 3)), fbm(S, S, 82))
-    a = np.where(DARK[..., None], base_d, base_l)
-    im = Image.fromarray((np.clip(a, 0, 1) * 255).astype(np.uint8))
-    inner = (LX > 3) & (LY > 3) & (LX < U - 4) & (LY < U - 4)
-    chips(im, ~DARK & inner, 83, [(150, 150, 152), (196, 112, 82), (128, 148, 120), (64, 64, 66), (246, 244, 238), (214, 170, 120)], 15000, 1.2, 6)
-    chips(im, DARK & inner, 84, [(236, 232, 224), (150, 150, 154), (176, 98, 70), (110, 128, 112), (30, 30, 32)], 13000, 1.2, 6)
-    a = np.asarray(im.filter(ImageFilter.GaussianBlur(.6)), np.float32) / 255
-    a = polish(a, .06)
-    a = joints(a, 2, (196, 160, 98))                                                  # brass strips
-    g = ((LX == 2) | (LY == 2)).astype(np.float32) * .3; a = a + g[..., None] * col((255, 236, 190))
-    save(a, 'bd-terrazzo.webp')
-    W, H = 1100, 1200
-    f = lerp(np.broadcast_to(col((46, 47, 49)), (H, W, 3)), np.broadcast_to(col((36, 37, 39)), (H, W, 3)), fbm(W, H, 85))
-    fim = Image.fromarray((np.clip(f, 0, 1) * 255).astype(np.uint8)); r = np.random.default_rng(86); d = ImageDraw.Draw(fim)
-    for _ in range(9000):
-        x, y = r.integers(0, W), r.integers(0, H); rad = 1.2 + 4 * r.random() ** 2.5
-        c = [(200, 196, 188), (120, 120, 124), (150, 90, 66), (24, 24, 26)][int(r.integers(0, 4))]
-        d.ellipse([x - rad, y - rad * .7, x + rad, y + rad * .7], fill=c)
-    d.rounded_rectangle([12, 12, W - 12, H - 12], 24, outline=(196, 160, 98), width=3)
-    save(np.asarray(fim.filter(ImageFilter.GaussianBlur(.5)), np.float32) / 255, 'fr-terrazzo.webp', 84)
-
-# ---------------------------------------------------------------- 5. navy (modern): navy and ivory lacquer, gold hairlines
+# ---------------------------------------------------------------- 4. navy (modern): navy and ivory lacquer, gold hairlines
 def navy():
     n = fbm(S, S, 91, ((4, .6), (12, .4)))
     ivory = lerp(np.broadcast_to(col((238, 231, 216)), (S, S, 3)), np.broadcast_to(col((228, 220, 203)), (S, S, 3)), n)
@@ -268,4 +234,4 @@ def navy():
 
 if __name__ == '__main__':
     import sys
-    for k in (sys.argv[1:] or ['temple', 'ruins', 'vase', 'terrazzo', 'navy']): globals()[k]()
+    for k in (sys.argv[1:] or ['temple', 'ruins', 'vase', 'navy']): globals()[k]()

@@ -10,11 +10,11 @@ const SETS = process.argv.slice(2).length ? process.argv.slice(2) : ['cameo', 'c
   const p = await b.newPage();
   if (THREE_LOCAL) await p.route(/three\.min\.js/, r => r.fulfill({ path: THREE_LOCAL, contentType: 'application/javascript' }));
   p.on('pageerror', e => console.log('PAGEERR', e.message));
-  for (const set of SETS) for (const side of ['w', 'b']) {
+  for (const set of SETS) for (const side of set === 'arrow' ? ['w'] : ['w', 'b']) {
     await p.goto(`http://localhost:8765/amazons/tools/pieces3d.html?set=${set}&side=${side}&size=640`);
     await p.waitForFunction(() => window.SHOT, null, { timeout: 120000 });
     const png = Buffer.from((await p.evaluate(() => window.SHOT)).split(',')[1], 'base64');
-    const tmp = path.join(require('os').tmpdir(), `pc-${set}-${side}.png`), out = path.join(__dirname, '..', 'img', `pc-${set}-${side}.webp`);
+    const tmp = path.join(require('os').tmpdir(), `pc-${set}-${side}.png`), out = path.join(__dirname, '..', 'img', set === 'arrow' ? 'arw.webp' : `pc-${set}-${side}.webp`);
     fs.writeFileSync(tmp, png);
     execFileSync('python3', ['-c', `from PIL import Image\nim=Image.open('${tmp}').convert('RGBA')\nbb=im.getbbox()\nim=im.crop(bb)\nw,h=im.size\ns=max(w,h)\nc=Image.new('RGBA',(s,s),(0,0,0,0))\nc.paste(im,((s-w)//2,s-h))\nc=c.resize((256,256),Image.LANCZOS)\nc.save('${out}','WEBP',quality=90,method=6)`]);
     console.log(set, side, fs.statSync(out).size);
