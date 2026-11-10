@@ -307,7 +307,7 @@
     function setLook(v) {   // (before the game: the board's pieces are swapped inside the group on the table — T3.show() would move the camera)
       if (v === look) return; look = v; feel = feelOf(CFEEL[v]);
       try { if (T3.setBoard) T3.setBoard('carrom', v); } catch (e) {}
-      const nb = T3.MODELS.carrom(true, v); modelKids.forEach(c => board.remove(c)); modelKids = new Set(nb.children); [...nb.children].forEach(c => board.add(c));   // (only the board's own parts: the guides, pieces etc. added since stay) board.userData = nb.userData; U = board.userData; kick(500);
+      const nb = T3.MODELS.carrom(true, v); modelKids.forEach(c => board.remove(c)); modelKids = new Set(nb.children); [...nb.children].forEach(c => board.add(c)); board.userData = nb.userData; U = board.userData; kick(500);   // (only the board's own parts: the guides, pieces etc. added since stay)
     }
     // the camera: a 3/4 view with perspective by default; the button beside the flip switches to the near top-down view (remembered)
     const VK = 'atlas-carrom-view';

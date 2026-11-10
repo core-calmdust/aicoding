@@ -21,17 +21,42 @@
   try { localStorage.removeItem('atlas-lite'); } catch (e) {}
   const LITE = (() => { try { const t = +localStorage.getItem('atlas-lite2') || 0; if (t && Date.now() - t < 864e5) return true; } catch (e) {}
     return COARSE && (navigator.deviceMemory || 8) <= 3; })();   // (core counts are unreliable on iOS: the frame-time check below decides there)
-  const texScale = () => (LITE ? .5 : COARSE ? .5 : 1);   // phones never need 2048² procedural textures
+  const texScale = () => (window.TEX_SCALE || (LITE ? .5 : COARSE ? .5 : 1));   // phones never need 2048² procedural textures
   let texNest = 0;   // > 1 while one procedural canvas is drawn inside another (a composite: its sources are drawn at once)
-  function canvasTex(key, w, h, draw, rep) {
-    if (texCache[key]) return texCache[key];
+  // (2026-11-10) baked textures: the slow procedural ones (boards drawn pixel by pixel) are shipped as images
+  // (atlas/img/tex/b/<key>.webp, listed in atlas/img/tex/baked.js → window.ATLAS_TEX = { key: version }); the image is used and
+  // the browser caches it. A key not listed, a composite drawing its parts (texNest), window.TEX_DRAW (the baking tool) or an
+  // image that fails to load → drawn as before. Re-bake (python3 atlas/tools/texbake.py) when a listed drawing changes.
+  const TEX_HERE = (document.currentScript && document.currentScript.src) || location.href;
+  const texFile = key => 'img/tex/b/' + key.replace(/[^A-Za-z0-9_.-]/g, ch => '_' + ch.charCodeAt(0).toString(16)) + '.webp';
+  const texT = {};   // key → { ms, w, h } (how long each drawing took: read by the baking tool)
+  function drawTex(key, w, h, draw) {
     const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const t0 = performance.now();
     texNest++; try { draw(c.getContext('2d'), w, h); } finally { texNest--; }
-    const t = new (T().CanvasTexture)(c);
+    texT[key] = { ms: Math.round(performance.now() - t0), w, h };
+    return c;
+  }
+  function canvasTex(key, w, h, draw, rep) {
+    const hit = texCache[key];
+    if (hit) { if (texNest && hit.__baked && !(hit.image && hit.image.complete !== false && hit.image.width > 8)) return canvasTex('#d' + key, w, h, draw, rep); return hit; }   // (a part inside another drawing must be there at once)
+    const B = window.ATLAS_TEX, v = B && !window.TEX_DRAW && !texNest && B[key];
+    let t;
+    if (v) {
+      const c0 = document.createElement('canvas'); c0.width = c0.height = 2;
+      t = new (T().Texture)(c0); t.__baked = true; t.needsUpdate = true;
+      const img = new Image(); img.decoding = 'async';
+      img.onload = () => {   // (baked at full size: a phone asking for half the size gets it shrunk, as its drawing would have been)
+        let im = img; if (img.width > w * 1.2 && w > 8 && h > 8) { try { const c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(img, 0, 0, w, h); im = c; } catch (e) {} }
+        t.image = im; t.needsUpdate = true; kickSoon(); };
+      img.onerror = () => { t.image = drawTex(key, w, h, draw); t.__baked = false; t.needsUpdate = true; kickSoon(); };
+      img.src = new URL(texFile(key) + '?v=' + v, TEX_HERE).href;
+    } else t = new (T().CanvasTexture)(drawTex(key, w, h, draw));
     t.anisotropy = 4; t.encoding = T().sRGBEncoding;
     if (rep) { t.wrapS = t.wrapT = T().RepeatWrapping; t.repeat.set(rep, rep); }
     return (texCache[key] = t);
   }
+  const kickSoon = () => { try { if (window.Table3D && Table3D.kick) Table3D.kick(300); } catch (e) {} };
   // value noise / fbm for natural-looking textures
   function makeNoise(seed) {
     const P = new Uint8Array(512); let x = seed * 9301 + 49297 | 0;
@@ -2268,5 +2293,5 @@
   try { if (sessionStorage.getItem('t3d-debug')) setTimeout(() => R && dbgToggle(true), 500); } catch (e) {}
   setInterval(() => { if (dbgOn && performance.now() - dbgT > 1000) { dbgFps = 0; dbgT = performance.now(); dbgPaint(); } }, 1000);   // (the loop sleeps when nothing moves: keep the numbers fresh)
 
-  window.Table3D = { decoOn, boSet: on => { BO_OK = !!on; bo.key = ''; kick(400); }, debug: dbgToggle, TABLES, placeMon, setTable, table: () => tableStyle, setBright, bright: () => bright, turn, museum, setShift, quiet, setTimeOfDay, timeOfDayPick: todPick, share, lp, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, rvDisc, rvMats, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
+  window.Table3D = { _texT: texT, _texCache: texCache, _texFile: texFile, decoOn, boSet: on => { BO_OK = !!on; bo.key = ''; kick(400); }, debug: dbgToggle, TABLES, placeMon, setTable, table: () => tableStyle, setBright, bright: () => bright, turn, museum, setShift, quiet, setTimeOfDay, timeOfDayPick: todPick, share, lp, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, rvDisc, rvMats, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
 })();

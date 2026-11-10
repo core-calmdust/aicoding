@@ -84,7 +84,7 @@
     function setLook(v) {   // (before the game: the pieces are swapped inside the group on the table — T3.show() would move the camera)
       if (v === look) return; look = v; feel = AC().feelOf(CFEEL[v]);
       try { if (T3.setBoard) T3.setBoard('crokinole', v); } catch (e) {}
-      const nb = T3.MODELS.crokinole(true, v); modelKids.forEach(c => board.remove(c)); modelKids = new Set(nb.children); [...nb.children].forEach(c => board.add(c));   // (only the board's own parts: the guides, pieces etc. added since stay) board.userData = nb.userData; U = board.userData; if (T3.kick) T3.kick(500);
+      const nb = T3.MODELS.crokinole(true, v); modelKids.forEach(c => board.remove(c)); modelKids = new Set(nb.children); [...nb.children].forEach(c => board.add(c)); board.userData = nb.userData; U = board.userData; if (T3.kick) T3.kick(500);   // (only the board's own parts: the guides, pieces etc. added since stay)
     }
     const VK = 'atlas-crokinole-view';
     let topView = false; try { topView = localStorage.getItem(VK) === 'top'; } catch (e) {}
