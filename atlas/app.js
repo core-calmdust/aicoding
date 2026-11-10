@@ -966,7 +966,19 @@
     $('bv').style.setProperty('--bvcard', Math.max(0, innerHeight - top) + 'px');
   }
   addEventListener('resize', () => fitStage());
-  window.__fitStage = () => fitStage();   // (the 詰将棋 hand chips appear / change: atlas/games/shogi-play.js)
+  window.__fitStage = () => fitStage();
+  // the SSR / UR name card's running light (index.html .prof > .rfx / .dprev > .rfx): its angle turned here, ~30 fps, only while one is on screen
+  (function rfxTurn() {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    let last = 0;
+    const step = now => {
+      requestAnimationFrame(step);
+      if (now - last < 33) return; const dt = Math.min(100, now - (last || now)); last = now;
+      document.querySelectorAll('.prof > .rfx, .dprev > .rfx').forEach(e => { if (!e.getClientRects().length) return;
+        e.__a = ((e.__a || 0) + dt * 360 / (e.classList.contains('u') ? 3200 : 2600)) % 360; e.style.setProperty('--ra', e.__a.toFixed(1) + 'deg'); });
+    };
+    requestAnimationFrame(step);
+  })();   // (the 詰将棋 hand chips appear / change: atlas/games/shogi-play.js)
   // games opened from here (cards, puzzles …) send their home button back here instead of the top page (shared/homeback.js)
   const homeMark = () => { try { sessionStorage.setItem('aicoding-home', location.pathname + '#' + page); } catch (e) {} };
   homeMark(); addEventListener('pagehide', homeMark);
