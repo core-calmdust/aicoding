@@ -24,6 +24,12 @@
   --font:'Zen Maru Gothic','Fredoka','Noto Sans Devanagari','Noto Sans Arabic',system-ui,sans-serif;
   --round:'Fredoka','Zen Maru Gothic','Noto Sans Devanagari','Noto Sans Arabic',sans-serif;
 }
+/* Chinese: the Japanese faces lack many simplified / traditional glyphs (鲁 fell back to the system font mid-word), so the whole
+   text takes one Chinese face — Noto Sans SC / TC, loaded only for these languages (app.js zhFont) (2026-11-10) */
+html[lang=zh]{--zhf:'Noto Sans SC'} html[lang=zh-TW]{--zhf:'Noto Sans TC'}
+html[lang^=zh]{--font:var(--zhf),'Fredoka',system-ui,sans-serif;--round:'Fredoka',var(--zhf),sans-serif}
+html[lang^=zh] :is(.brand .wm b,.brand .wm small,.plb .plt b,.bv.pland .pl,.mcl-n,.hs-h,.hs-map text,.dg text,.ttlMain,.ttlPre){font-family:var(--zhf),'Fredoka',sans-serif!important}
+html[lang^=zh] :is(.brand .wm b,.plb .plt b,.ttlMain,.ttlPre,.hs-h){font-weight:900!important}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;font-family:var(--font);color:var(--ink);background:var(--cream);
@@ -1833,7 +1839,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 })();
 </script>
 <script src="gamelist-i18n.js?v=13am"></script>
-<script src="table3d.js?v=142"></script>
+<script src="table3d.js?v=144"></script>
 <script>/* the places other than the chabudai (tables3d.js, 440 KB): at once when one is chosen, else in idle time after the page has
    loaded (2026-11-10); 'atlas-places' tells the page they are there */
 (function () {
@@ -1856,7 +1862,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
     if (!btn.classList.contains('rgd-auto')) { btn.style.setProperty('--rgd0', -Math.round(el) + 'ms'); btn.classList.add('rgd-auto'); }   // the tour redrew its buttons: carry on where it was
   }, 60);
 };</script>
-<script src="lazy.js?v=17"></script>
+<script src="lazy.js?v=18"></script>
 <script src="puzzle-lines.js?v=1"></script>
 <script src="puzzles.js?v=4"></script>
 <link rel="stylesheet" href="historia.css?v=15">
@@ -1870,6 +1876,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <link rel="stylesheet" href="worldmap.css?v=18">
 <script src="worldmap.js?v=31"></script>
 <script src="npc/npc.js?v=20"></script>
-<script src="app.js?v=276"></script>
+<script src="app.js?v=277"></script>
 </body>
 </html>

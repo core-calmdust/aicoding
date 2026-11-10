@@ -874,7 +874,7 @@
     if (!placard) return; const c = placard.image, x = c.getContext('2d'), W = c.width, H = c.height;
     const gr = x.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#d9b46a'); gr.addColorStop(1, '#a9803e'); x.fillStyle = gr; x.fillRect(0, 0, W, H);
     x.fillStyle = '#2a1a0c'; x.fillRect(10, 10, W - 20, H - 20); x.strokeStyle = '#d9b46a'; x.lineWidth = 3; x.strokeRect(22, 22, W - 44, H - 44);
-    x.textAlign = 'center'; x.fillStyle = '#f3dfae'; x.font = "900 60px 'Zen Maru Gothic','Noto Sans Devanagari','Noto Sans Arabic',serif"; x.fillText(o.title || '', W / 2, 104, W - 80);
+    x.textAlign = 'center'; x.fillStyle = '#f3dfae'; x.font = "900 60px " + ({ zh: "'Noto Sans SC',", 'zh-TW': "'Noto Sans TC'," }[document.documentElement.lang] || '') + "'Zen Maru Gothic','Noto Sans Devanagari','Noto Sans Arabic',serif"; x.fillText(o.title || '', W / 2, 104, W - 80);
     x.font = "700 24px Fredoka,'Zen Maru Gothic',sans-serif"; x.fillStyle = '#d9b46a'; x.fillText(o.sub || 'WORLD BOARD GAME ATLAS', W / 2, 152, W - 80);
     placard.needsUpdate = true;
   }
@@ -1429,9 +1429,10 @@
   function mount(container, opts = {}) {
     el = container;
     const coarse = COARSE, skinPage = !!opts.local;
-    pr = Math.min(LITE ? 1.25 : coarse ? 1.5 : 2, window.devicePixelRatio || 1);   // (lite: 1.25×, not 1× — 1× looked blurry on phones)   // phones: 1.5x is sharp enough and ~45% fewer pixels than 2x; lite: 1x
+    pr = prMax = Math.min(LITE ? 1.25 : coarse ? 1.5 : 2, window.devicePixelRatio || 1);   // (lite: 1.25×, not 1× — 1× looked blurry on phones)   // phones: 1.5x is sharp enough and ~45% fewer pixels than 2x; lite: 1x
     // skin pages drawn at 2x: no MSAA on top (the 2x pixels already smooth the edges; MSAA would multiply the fill and memory again)
-    R = new (T().WebGLRenderer)({ antialias: !LITE && !(skinPage && pr >= 2), alpha: true, powerPreference: 'high-performance' });
+    // (no MSAA from 1.5× up: the extra pixels already smooth the edges — 4 samples on a 2× full-window canvas cost the GPU a lot, 2026-11-10)
+    R = new (T().WebGLRenderer)({ antialias: !LITE && pr < 1.5, alpha: true, powerPreference: 'high-performance' });
     R.setPixelRatio(pr);
     R.shadowMap.enabled = true; R.shadowMap.type = LITE ? T().PCFShadowMap : T().PCFSoftShadowMap;
     // skin pages: a static shadow map, redrawn only while something moves (kick) or the board changes — not for a scroll / re-alignment
@@ -1532,6 +1533,8 @@
     if (alignFn && dockAnim() && R.domElement.width) { sizeLate = w !== cw || h !== ch; return; }
     sizeLate = false;
     if (w === cw && h === ch && R.domElement.width) { kick(300); return; }   // (the same size again: no new buffer)
+    // a pixel budget (2026-11-10, GPU): a large window at 2× is ~8 M pixels a frame — the ratio steps down so the canvas stays near 4.2 M
+    { const want = Math.max(1, Math.min(prMax, Math.sqrt(4.2e6 / (w * h)))); if (Math.abs(want - pr) > .04) { pr = want; R.setPixelRatio(pr); } }
     cw = w; ch = h; R.setSize(w, h, false); frame(); kick(300);
     // setSize clears the canvas: draw the new size right away, in this frame (a resize observer runs after the animation frame callbacks)
     if (alignFn && !document.hidden) { cancelAnimationFrame(rafId); rafId = 0; lastT = 0; loop(performance.now()); }
@@ -1795,6 +1798,11 @@
   // on-demand rendering (shared rule for every 3D skin): a frame is drawn only while something moves —
   // a kick(ms) from an animation, a changed board rect / canvas size, or dirty; otherwise the GPU stays idle
   let lastKey = null, kickUntil = 0, dirty = true, lastDraw = 0;
+  // decorations (a place's living things, a game's neon flow / aim pulse) rest a while after the last input: nothing moves on the
+  // table then and no frame is drawn (battery / GPU, 2026-11-10). Any pointer / key / wheel input brings them back.
+  const DECO_MS = 5000; let lastInput = performance.now();
+  const decoOn = () => performance.now() - lastInput < DECO_MS;
+  ['pointerdown', 'pointermove', 'keydown', 'wheel', 'touchstart'].forEach(ev => addEventListener(ev, () => { const was = decoOn(); lastInput = performance.now(); if (!was) { try { kick(200); } catch (e) {} } }, { passive: true, capture: true }));
   addEventListener('resize', () => kick(300));
   const ALIGN_FOV = 40, ALIGN_SHIFT = .9;
   const dockAnim = () => document.documentElement.classList.contains('dock-anim');
@@ -1918,7 +1926,7 @@
   // drop to 1× pixels at once and remember 'lite' for the next visit (half-size textures, small shadows)
   // (only after the first 4 s — textures and shaders are still being built then — and only when two windows in a row are slow;
   //  the step down is to 1.25×, never below)
-  let pr = 1, slow = [], slowDone = false, slowHits = 0; const t0Speed = performance.now();
+  let pr = 1, prMax = 2, slow = [], slowDone = false, slowHits = 0; const t0Speed = performance.now();
   function watchSpeed(dt) {
     if (slowDone || !COARSE || !R || performance.now() - t0Speed < 4000) return;
     slow.push(dt); if (slow.length < 40) return;
@@ -1926,7 +1934,7 @@
     if (med > 40) {
       if (++slowHits < 2) return;
       const lo = Math.min(1.25, window.devicePixelRatio || 1);
-      if (pr > lo) { pr = lo; R.setPixelRatio(lo); frame(); kick(300); }
+      if (pr > lo) { pr = prMax = lo; R.setPixelRatio(lo); frame(); kick(300); }
       try { localStorage.setItem('atlas-lite2', String(Date.now())); } catch (e) {}
       slowDone = true;
     } else { slowHits = 0; if (med < 22) slowDone = true; }   // fast enough: stop measuring
@@ -1965,8 +1973,9 @@
     if (viewOnly.length) { const on = !museumOn && mode !== 'play' && camK < .5; if (viewOnly[0].visible !== on) { viewOnly.forEach(x => { x.visible = on; }); dirty = true; } }   // (a place's lamp over the table: never between the play camera and the board)
     if (!drag) { yaw += vel; vel *= .94; if (Math.abs(vel) < .0004) vel = 0; tilt *= .96; if (Math.abs(tilt) < 1e-5) tilt = 0; } else moving = true;
     if (vel || tilt) moving = true;
-    if (!drag && !vel && mode === 'view' && !quietOn && performance.now() - idleT > 2500) yaw += .004;   // gentle turntable when untouched
-    if (mode === 'view' && !quietOn && !alignFn) moving = true;   // (the showcase turns — or is about to — : it keeps the frames coming, as designed)
+    const show = performance.now() - lastInput < 30000;   // (the showcase turns for 30 s after the last input, then rests: no frames — 2026-11-10)
+    if (!drag && !vel && mode === 'view' && !quietOn && show && performance.now() - idleT > 2500) yaw += .004;   // gentle turntable when untouched
+    if (mode === 'view' && !quietOn && !alignFn && show) moving = true;   // (the showcase turns — or is about to — : it keeps the frames coming, as designed)
     if (mode === 'play' && tYaw !== null) { yaw = tYaw; vel = 0; }   // the 盤面反転 turn (turn()): the angle is given
     else if (mode === 'play') {   // in a game the board stays still, squared to the player
       const home = Math.round(yaw / (Math.PI * 2)) * Math.PI * 2; if (Math.abs(home - yaw) > 1e-5) { yaw += (home - yaw) * .15; moving = true; } else yaw = home; vel = 0;
@@ -1976,7 +1985,7 @@
       // enlarged a hair so the field (lower now, further from the camera) still looks exactly s × its size, like the DOM board on top
       const s = tYaw !== null ? tS : 1, H0 = Math.max(1, cam.position.y - (alignTop || 0)), t = alignTop || 0, k = s === 1 ? 1 : s * (H0 + t) / (H0 + s * t);
       if (root.scale.x !== k) { root.scale.setScalar(k); root.position.y = 0; rootDirty = true; } }
-    const ticking = roomTicks.length && !alignFn && !(quietOn && now > kickUntil);
+      const ticking = roomTicks.length && !alignFn && !(quietOn && now > kickUntil) && ((mode !== 'play' ? performance.now() - lastInput < 30000 : decoOn()) || now <= kickUntil);
     if (ticking) { const ts = now / 1000; for (const f of roomTicks) f(ts); }
     // the online dock's move / resize (shared/headerbar.js, html.dock-anim): the canvas is scaled and moved with the board by the
     // page's FLIP transform, so the last picture is held as it is — a new drawing at the new size inside the old buffer showed
@@ -2028,7 +2037,7 @@
     if (museumOn) glare(camK);
     // the room's own life (PC: the characters breathe and blink, the castle flag waves, the TV flickers) keeps the frames coming
     // while one of them is in the picture — e.g. a character at the edge of a game on the table; out of the picture it waits
-    if (ticking && !moving && !museumOn && tickSeen()) moving = true;
+    if (ticking && !moving && !museumOn && tickSeen() && (mode !== 'play' ? show : decoOn())) moving = true;   // (in a game: only for a while after an input)
     if (quietOn) {
       const e = cam.projectionMatrix.elements, kq = [cam.position.x, cam.position.y, cam.position.z, yaw, e[0], e[5], e[8], e[9], e[11], cw, ch].map(v => v.toFixed(4)).join();
       if (kq === quietKey && now > kickUntil && !dirty) return more();
@@ -2197,5 +2206,5 @@
   try { if (sessionStorage.getItem('t3d-debug')) setTimeout(() => R && dbgToggle(true), 500); } catch (e) {}
   setInterval(() => { if (dbgOn && performance.now() - dbgT > 1000) { dbgFps = 0; dbgT = performance.now(); dbgPaint(); } }, 1000);   // (the loop sleeps when nothing moves: keep the numbers fresh)
 
-  window.Table3D = { debug: dbgToggle, TABLES, placeMon, setTable, table: () => tableStyle, setBright, bright: () => bright, turn, museum, setShift, quiet, setTimeOfDay, timeOfDayPick: todPick, share, lp, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, rvDisc, rvMats, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
+  window.Table3D = { decoOn, debug: dbgToggle, TABLES, placeMon, setTable, table: () => tableStyle, setBright, bright: () => bright, turn, museum, setShift, quiet, setTimeOfDay, timeOfDayPick: todPick, share, lp, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, rvDisc, rvMats, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
 })();

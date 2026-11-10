@@ -166,7 +166,7 @@
       kick(120);
     }
     let pulseT = 0;
-    function pulse() { clearInterval(pulseT); const t0 = performance.now(); pulseT = setInterval(() => { if (stopped || document.hidden || !document.hasFocus()) return; let any = false; gd.children.forEach(m => { if (m.userData.pulse) { m.scale.setScalar(1.12 + Math.sin((performance.now() - t0) / 230) * .1); any = true; } }); if (any) kick(80); }, 60); }
+    function pulse() { clearInterval(pulseT); const t0 = performance.now(); pulseT = setInterval(() => { if (stopped || document.hidden || !document.hasFocus() || (T3.decoOn && !T3.decoOn())) return; let any = false; gd.children.forEach(m => { if (m.userData.pulse) { m.scale.setScalar(1.12 + Math.sin((performance.now() - t0) / 230) * .1); any = true; } }); if (any) kick(80); }, 60); }
 
     /* ---------- HUD (the carrom look: .crp pills, .crtoast, the how-to card) ---------- */
     const css = document.createElement('style');
@@ -226,7 +226,7 @@
     function flash(g, v) { if (!g || !g.userData.flash) return; g.userData.ft = performance.now(); g.userData.fk = Math.min(.85, .3 + v / 420); flashing.add(g); if (!flashRaf) flashRaf = requestAnimationFrame(flashStep); }
     function flashStep() { flashRaf = 0; if (stopped) return; const now = performance.now(); flashing.forEach(g => { const k = g.userData.fk * Math.max(0, 1 - (now - g.userData.ft) / 420); g.userData.flash(k * k); if (k <= 0) flashing.delete(g); }); kick(80); if (flashing.size) flashRaf = requestAnimationFrame(flashStep); }
     let waveT = 0;
-    function neonTick() { clearInterval(waveT); if (stopped || U.look !== 'neon') return; waveT = setInterval(() => { if (stopped) return clearInterval(waveT); if (!document.hidden && document.hasFocus()) kick(160); }, 100); }
+    function neonTick() { clearInterval(waveT); if (stopped || U.look !== 'neon') return; waveT = setInterval(() => { if (stopped) return clearInterval(waveT); if (!document.hidden && document.hasFocus() && (!T3.decoOn || T3.decoOn())) kick(160); }, 100); }
 
     /* ---------- playing a shot back ---------- */
     function playback(sim) {
