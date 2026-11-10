@@ -35,9 +35,9 @@
     const code = type === 8 && ou ? 'OU' : PCODE[type];
     return fetch(GLYPH_BASE + '0' + code + '.svg').then(r => r.ok ? r.text() : Promise.reject()).then(svg => {
       // bounding box of the piece body in the drawing (the light yellow path) → crop to it
-      const body = svg.match(/<path fill="#feec99"[^>]*\sd="([^"]+)"/);
-      const noBody = svg.replace(/<path fill="#feec99"[^>]*\/>/g, '').replace(/<path fill="#c3983c"[^>]*\/>/g, '').replace(/filter="url\([^)]*\)"/g, '');
-      const bodyOnly = svg.replace(/<path fill="(?!#feec99)[^"]*"[^>]*\/>/g, '').replace(/filter="url\([^)]*\)"/g, '');
+      const body = svg.match(/<path fill="#f3e0c2"[^>]*\sd="([^"]+)"/);
+      const noBody = svg.replace(/<path fill="#f3e0c2"[^>]*\/>/g, '').replace(/<path fill="#b48d63"[^>]*\/>/g, '').replace(/filter="url\([^)]*\)"/g, '');
+      const bodyOnly = svg.replace(/<path fill="(?!#f3e0c2)[^"]*"[^>]*\/>/g, '').replace(/filter="url\([^)]*\)"/g, '');
       const S = 600, draw = txt => new Promise((res, rej) => { const im = new Image(); im.onload = () => { const c = document.createElement('canvas'); c.width = c.height = S; c.getContext('2d').drawImage(im, 0, 0, S, S); res(c); }; im.onerror = rej; im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(txt); });
       return Promise.all([draw(bodyOnly), draw(noBody)]).then(([b, g]) => {
         const bd = b.getContext('2d').getImageData(0, 0, S, S).data; let x0 = S, y0 = S, x1 = 0, y1 = 0;
@@ -72,7 +72,7 @@
         const g = N(u * 60, v * 3, 2) * .5 + N(u * 9 + N(v * 2, u, 2) * 2, v * .8, 3) * .5;
         const fleck = N(u * 30, v * 90, 1) > .8 ? .06 : 0;
         const t = .18 + g * .32 - fleck, i = (y * W + x) * 4;
-        d[i] = 236 - t * 60; d[i + 1] = 204 - t * 70; d[i + 2] = 140 - t * 80; d[i + 3] = 255;
+        d[i] = 229 - t * 67; d[i + 1] = 200 - t * 82; d[i + 2] = 168 - t * 93; d[i + 3] = 255;
       }
     };
     return {
@@ -105,7 +105,7 @@
           const fib = (N(u * 9, v * 420, 1) - .5) * .07 + (N(u * 160, v * 6, 1) - .5) * .04;
           const tone = (N(u * 1.6, v * 1.3, 2) - .5) * .16;
           const t = .12 + line * .62 + fib * 1.4 + tone, i = (y * W + x) * 4;
-          d[i] = 240 - t * 72; d[i + 1] = 200 - t * 82; d[i + 2] = 118 - t * 76; d[i + 3] = 255;
+          d[i] = 229 - t * 77; d[i + 1] = 192 - t * 87; d[i + 2] = 150 - t * 92; d[i + 3] = 255;
         }
       },
       endGrain(d, W, H, p) {
@@ -115,7 +115,7 @@
           const r = Math.sqrt(dx * dx + dy * dy) * 60 + N(u * 4, v * 4, 3) * 3 + N(u * 40, v * 40, 1) * .2;
           const f = r % 1, late = Math.exp(-Math.pow((f - .8) / .08, 2));
           const t = .2 + late * .35 + (N(u * 2, v * 2, 2) - .5) * .2, i = (y * W + x) * 4;
-          d[i] = 212 - t * 70; d[i + 1] = 158 - t * 70; d[i + 2] = 82 - t * 55; d[i + 3] = 255;
+          d[i] = 201 - t * 73; d[i + 1] = 157 - t * 73; d[i + 2] = 113 - t * 72; d[i + 3] = 255;
         }
       },
     };
@@ -147,10 +147,10 @@
         [...txt].forEach((ch, i) => { c.save(); c.translate(W / 2, ys[i]); c.scale(1, txt.length > 1 ? .92 : 1); c.fillText(ch, 0, 0); c.strokeText(ch, 0, 0); c.restore(); }); c.restore(); };
       if (kind === 'map') {
         // the face darkens a little towards the edges (a hand-rubbed finish), then the lacquer
-        const vg = c.createRadialGradient(W / 2, H * .55, W * .2, W / 2, H * .55, W * .78); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(90,50,10,.22)'); c.fillStyle = vg; c.fillRect(0, 0, W, H);
-        c.save(); c.translate(1.5, 2.5); draw('rgba(60,30,5,.35)', 4, .02); c.restore();             // soft shadow under the raised strokes
+        const vg = c.createRadialGradient(W / 2, H * .55, W * .2, W / 2, H * .55, W * .78); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(96,60,24,.22)'); c.fillStyle = vg; c.fillRect(0, 0, W, H);
+        c.save(); c.translate(1.5, 2.5); draw('rgba(70,40,16,.35)', 4, .02); c.restore();             // soft shadow under the raised strokes
         draw(red ? '#9c1f16' : '#120804', 0);
-        c.save(); c.translate(-1.2, -1.6); c.globalCompositeOperation = 'lighter'; draw(red ? 'rgba(120,40,20,.25)' : 'rgba(70,60,50,.22)', 0, -.03); c.restore();   // highlight on the crown of the lacquer
+        c.save(); c.translate(-1.2, -1.6); c.globalCompositeOperation = 'lighter'; draw(red ? 'rgba(120,40,20,.25)' : 'rgba(79,70,61,.22)', 0, -.03); c.restore();   // highlight on the crown of the lacquer
       }
       if (kind === 'rough') draw('#1a1a1a', 2);
       if (kind === 'bump') { draw('#606060', 8, .03); draw('#c0c0c0', 4); draw('#ffffff', 1, -.02); }
@@ -166,15 +166,15 @@
   let kayaImg = null;
   function withKaya(fn) {
     if (kayaImg && kayaImg.complete && kayaImg.naturalWidth) { fn(kayaImg); return; }
-    if (!kayaImg) { kayaImg = new Image(); kayaImg.src = '../images/atlas/shogi-kaya.webp?v=2'; }
+    if (!kayaImg) { kayaImg = new Image(); kayaImg.src = '../images/atlas/shogi-kaya.webp?v=3'; }
     kayaImg.addEventListener('load', () => fn(kayaImg), { once: true });
   }
   // a plain kaya surface (the komadai): the same golden tone with a part of the board's grain, drawn fainter
   function kayaPlain(key) {
     let tex = null;
     tex = X.canvasTex(key, 512, 512, (c, W, H) => {
-      c.fillStyle = '#e8c47c'; c.fillRect(0, 0, W, H);
-      withKaya(img => { c.drawImage(img, img.width * .05, img.height * .05, img.width * .35, img.height * .35, 0, 0, W, H); c.fillStyle = 'rgba(236,200,128,.55)'; c.fillRect(0, 0, W, H); if (tex) tex.needsUpdate = true; });
+      c.fillStyle = '#dfbf99'; c.fillRect(0, 0, W, H);
+      withKaya(img => { c.drawImage(img, img.width * .05, img.height * .05, img.width * .35, img.height * .35, 0, 0, W, H); c.fillStyle = 'rgba(227,195,157,.55)'; c.fillRect(0, 0, W, H); if (tex) tex.needsUpdate = true; });
     });
     return tex;
   }
@@ -183,18 +183,18 @@
     const PX = 100, BW = n * CW + MG * 2, BD = n * CH + MG * 2;
     const grid = (c) => {
       const ox = MG * PX, oy = MG * PX, cw = CW * PX, ch = CH * PX;
-      c.strokeStyle = 'rgba(20,10,4,.92)'; c.lineCap = 'square';
+      c.strokeStyle = 'rgba(33,19,11,.92)'; c.lineCap = 'square';
       for (let i = 0; i <= n; i++) {
         c.lineWidth = i === 0 || i === n ? 3.4 : 2.2;
         c.beginPath(); c.moveTo(ox + i * cw, oy); c.lineTo(ox + i * cw, oy + n * ch); c.stroke();
         c.beginPath(); c.moveTo(ox, oy + i * ch); c.lineTo(ox + n * cw, oy + i * ch); c.stroke();
       }
-      c.fillStyle = 'rgba(20,10,4,.95)';
+      c.fillStyle = 'rgba(33,19,11,.95)';
       if (n === 9) [[3, 3], [6, 3], [3, 6], [6, 6]].forEach(([i, j]) => { c.beginPath(); c.arc(ox + i * cw, oy + j * ch, 5.5, 0, 7); c.fill(); });
     };
     let tex = null;
     tex = canvasTex(n === 9 ? 'shogiTop5' : 'shogiTop5-' + n, BW * PX | 0, BD * PX | 0, (c0, W, H) => {
-      const base = (c) => { const g = c.createLinearGradient(0, 0, W * .14, H); g.addColorStop(0, '#f2d48a'); g.addColorStop(.4, '#ebc979'); g.addColorStop(.75, '#e2bb66'); g.addColorStop(1, '#d7ac57'); c.fillStyle = g; c.fillRect(0, 0, W, H); };
+      const base = (c) => { const g = c.createLinearGradient(0, 0, W * .14, H); g.addColorStop(0, '#e9cda7'); g.addColorStop(.4, '#e1c197'); g.addColorStop(.75, '#d7b385'); g.addColorStop(1, '#cca476'); c.fillStyle = g; c.fillRect(0, 0, W, H); };
       base(c0); grid(c0);
       withKaya(img => {
         const c = c0; c.drawImage(img, 0, 0, W, H); grid(c);
@@ -277,23 +277,23 @@
     const g = new (T().Group)(), TT = T();
     // o.n = 5: the 5五将棋 board — same squares, a smaller block (thickness and legs scaled with it)
     const n = o.n === 5 ? 5 : 9, MG = n === 9 ? MARGIN : MARGIN * n / 9, k = n === 9 ? 1 : .62, FW = n * CW, FH = n * CH, BW = FW + MG * 2, BD = FH + MG * 2, THICK = 2.6 * k;
-    const kaya = M({ map: X.wood('kayaSide2', '#d4a057', '#9c6628', 512, 512, 2.4), roughness: .5, bumpScale: .003 });
+    const kaya = M({ map: X.wood('kayaSide2', '#caa075', '#9c6c3c', 512, 512, 2.4), roughness: .5, bumpScale: .003 });
     const endF = M({ map: endGrain('kayaEndF2', 512, 256, .5, 2.6, .7), roughness: .5, bumpScale: .003 });
     const endS = M({ map: endGrain('kayaEndS2', 512, 256, -1.4, .5, .5), roughness: .5, bumpScale: .003 });
     const top = new TT.MeshPhysicalMaterial({ map: boardTop(n), bumpMap: boardBump(n), bumpScale: .006, roughness: .58, clearcoat: .15, clearcoatRoughness: .45 });   // soft satin, no glare on the playing field
     top.map.anisotropy = 8;
-    const bottom = M({ color: 0x8a5a2a, roughness: .7 });
+    const bottom = M({ color: 0x8c643c, roughness: .7 });
     const base = o.legs === false ? 0 : LEG * k;
     const block = new TT.Mesh(RB(BW, THICK, BD, .05, 2), [endS, endS, top, bottom, endF, endF]);
     block.position.y = base + THICK / 2; block.castShadow = block.receiveShadow = true; g.add(block);
     if (o.legs !== false) {
-      const lm = M({ map: X.wood('kayaLeg', '#e0b06a', '#a87232', 256, 256, 2), roughness: .5, bumpScale: .002 });
+      const lm = M({ map: X.wood('kayaLeg', '#d6af88', '#a87747', 256, 256, 2), roughness: .5, bumpScale: .002 });
       [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => { const l = leg(lm); l.scale.setScalar(k); l.position.set(sx * (BW / 2 - 1.15 * k), 0, sz * (BD / 2 - 1.2 * k)); g.add(l); });
     }
     // board colour (the game's "board & piece skin"): a tint over the kaya
     const tinted = [top, kaya, endF, endS, bottom]; g.traverse(o => { if (o.isMesh && o.material && !Array.isArray(o.material) && !tinted.includes(o.material)) tinted.push(o.material); });
     const base0 = tinted.map(m => m.color.clone());
-    const TONES = { classic: 0xe8c9a0, grain: 0xd2a26e, kaya: 0xf6e2bc, metal: 0xb4bcc6, ink: 0x5e5046 };   // kaya: golden 本榧 (the default)
+    const TONES = { classic: 0xf8f0e6, grain: 0xdcbfa2, kaya: 0xfcf6ee, metal: 0xb4bcc6, ink: 0x5e5046 };   // kaya: 本榧 (the default). 2026-11-10: near-neutral tints — the kaya picture itself carries the colour (less yellow)
     g.userData.setTone = name => { g.userData.tone = name; const c = new TT.Color(TONES[name] || 0xffffff).convertSRGBToLinear(); tinted.forEach((m, i) => { m.color.copy(base0[i]).multiply(c); }); };
     g.userData.setTone('classic');
     g.userData.S = FH; g.userData.W = FW; g.userData.top = base + THICK + .001; g.userData.outer = BD / FH; g.userData.n = n;
@@ -312,7 +312,7 @@
     for (let i = 0; i <= 12; i++) { const t = i / 12, w = .26 + .16 * Math.pow(Math.abs(t - .55) / .55, 2); pts.push(new TT.Vector2(w, t * H)); }
     const col = new TT.LatheGeometry(pts, 4); col.rotateY(Math.PI / 4);                             // square, waisted
     // the lathe wraps the texture round the column: use a soft, low-contrast grain there so it doesn't band
-    const cm = colMat || (colMat = M({ map: X.wood('komadaiCol', '#d6a462', '#c69350', 256, 256, .6), roughness: .55, bumpScale: .001 }));
+    const cm = colMat || (colMat = M({ map: X.wood('komadaiCol', '#cda67f', '#be956d', 256, 256, .6), roughness: .55, bumpScale: .001 }));
     const c = mesh(col, cm, 0, .56, 0); c.scale.set(1, 1, 1.15); g.add(c);
     return g;
   }
@@ -326,7 +326,7 @@
     for (let c = 0; c < 9; c++) { put(1, c, 2, true); put(1, c, 6, false); }
     put(6, 1, 1, true); put(5, 7, 1, true); put(6, 7, 7, false); put(5, 1, 7, false);
     // 駒台 (piece stands): yours at the bottom right, the opponent's at the top left — same as the rules tour
-    const KH = g.userData.top, sw = M({ map: X.wood('komadaiF', '#d9a764', '#c18a48', 256, 256, 1.6), roughness: .55, bumpScale: .001 });   // the original tone, the grain faint (dark wood close to the light one, 2026-11-10)
+    const KH = g.userData.top, sw = M({ map: X.wood('komadaiF', '#d0a981', '#b88f65', 256, 256, 1.6), roughness: .55, bumpScale: .001 });   // the original tone, the grain faint (dark wood close to the light one, 2026-11-10)
     [{ x: FW / 2 + 1.95, z: 3.9 }, { x: -FW / 2 - 1.95, z: -3.9 }].forEach(st => { const k = komadai(sw, KH); k.position.set(st.x, 0, st.z); g.add(k); });
     // in the toy room the tall board would hide the room: a little smaller than life
     g.scale.setScalar(.72);   // board + stands about the reversi board's size on the chabudai
