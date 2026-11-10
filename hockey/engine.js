@@ -13,7 +13,8 @@
 (function (root) {
   'use strict';
   const W = 40, L = 62, GW = 13, RP = 2, RM = 3.1, CREASE = 0;
-  const VMAX = 130, VSMASH = 185, DAMP = .34, E_WALL = .86, E_MAL = .86, MALLET_V = 600;   // (2026-11-09 and 11-10: slowed twice — a table this small can't be played at air-hockey speed)
+  const VMAX = 100, VSMASH = 140, DAMP = .4, E_WALL = .85, E_MAL = .85, MALLET_V = 600, MALLET_HUMAN = 1200;   // (2026-11-09/10: slowed three times — a table this small can't be played at air-hockey speed)
+  // a player's mallet follows the pointer almost at once (1200 cm/s; at 600 it trailed the hand and felt laggy); the AI keeps 600 × its level cap
   const DIM = { W, L, GW, RP, RM, VMAX };
   const MODES = ['classic', 'block', 'monster', 'items', 'bumper', 'warp', 'multi', 'chaos'];
   const ITEMS = ['speed', 'split', 'giant', 'shield', 'freeze'];
@@ -72,7 +73,7 @@
   function sub(s, h) {
     // mallets move toward their targets at a limited speed
     for (let i = 0; i < 2; i++) {
-      const m = s.mal[i], vmax = MALLET_V * (m.slow > 0 ? .3 : 1) * (m.aiCap || 1), dx = m.tx - m.x, dy = m.ty - m.y, d = Math.hypot(dx, dy), mv = Math.min(d, vmax * h);
+      const m = s.mal[i], vmax = (m.aiCap ? MALLET_V * m.aiCap : MALLET_HUMAN) * (m.slow > 0 ? .3 : 1), dx = m.tx - m.x, dy = m.ty - m.y, d = Math.hypot(dx, dy), mv = Math.min(d, vmax * h);
       const nx = d > 1e-6 ? m.x + dx / d * mv : m.x, ny = d > 1e-6 ? m.y + dy / d * mv : m.y;
       m.vx = (nx - m.x) / h; m.vy = (ny - m.y) / h; m.x = nx; m.y = ny;
     }
