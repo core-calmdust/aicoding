@@ -1294,9 +1294,13 @@
         const c = map.image.getContext('2d'), k = (W - HERI * 2) / im.width * 1.6;
         c.save(); c.beginPath(); c.rect(HERI, 0, W - HERI * 2, H); c.clip();
         for (let y = 0; y < H; y += im.height * k) for (let x = HERI; x < W - HERI; x += im.width * k) c.drawImage(im, x, y, im.width * k, im.height * k);
+        // the photo's blue-grey green → the warm straw-green of the earlier tatami (hue / saturation only, then a little lighter)
+        c.globalCompositeOperation = 'color'; c.fillStyle = 'rgba(204,190,112,.9)'; c.fillRect(HERI, 0, W - HERI * 2, H);
+        c.globalCompositeOperation = 'soft-light'; c.fillStyle = 'rgba(255,246,210,.45)'; c.fillRect(HERI, 0, W - HERI * 2, H);
+        c.globalCompositeOperation = 'source-over';
         c.restore();
         const g = c.createLinearGradient(0, 0, W, 0); g.addColorStop(0, 'rgba(0,0,0,.18)'); g.addColorStop(.08, 'rgba(0,0,0,0)'); g.addColorStop(.92, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.18)'); c.fillStyle = g; c.fillRect(0, 0, W, H);
-        map.image.__v = 2; map.needsUpdate = true; kick(300); dispatchEvent(new Event('atlas-floor'));
+        map.image.__v = 3; map.needsUpdate = true; kick(300); dispatchEvent(new Event('atlas-floor'));
       } catch (e) {} }; im.src = '../images/atlas/tatami.webp?v=1'; }
     map.anisotropy = bump.anisotropy = 8;
     return (tatamiCache = { map, bump });
