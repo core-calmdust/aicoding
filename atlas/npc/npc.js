@@ -88,6 +88,9 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
 /* SR won */
 .npc-toast{position:fixed;z-index:9000;left:50%;top:calc(14px + env(safe-area-inset-top));transform:translate(-50%,-140%);display:flex;align-items:center;gap:12px;padding:10px 18px 10px 10px;border-radius:20px;background:#fffdf6;border:2px solid #ffd27a;box-shadow:0 6px 0 #f0c868,0 18px 30px -12px rgba(80,40,0,.5);transition:transform .5s cubic-bezier(.3,1.3,.5,1);max-width:calc(100vw - 24px);box-sizing:border-box}
 .npc-toast.on{transform:translate(-50%,0)}
+.npc-toast.mid{top:50%;flex-direction:column;text-align:center;gap:8px;padding:20px 22px 18px;width:min(320px,calc(100vw - 40px));transform:translate(-50%,-50%) scale(.6);opacity:0;transition:transform .45s cubic-bezier(.3,1.5,.5,1),opacity .25s;z-index:9001;cursor:pointer}
+.npc-toast.mid.on{transform:translate(-50%,-50%);opacity:1}.npc-toast.mid img{width:110px;height:110px}.npc-toast.mid b{font-size:18px;text-wrap:balance}.npc-toast.mid small{font-size:13px;margin-top:4px}
+.npc-toast-bg{position:fixed;inset:0;z-index:9000;background:rgba(10,14,30,.45);opacity:0;transition:opacity .3s}.npc-toast-bg.on{opacity:1}
 .npc-toast img{width:64px;height:64px;flex:none;object-fit:contain}
 .npc-toast b{display:block;font-size:15px;color:#b5651d;font-weight:900}
 .npc-toast small{display:block;font-size:12px;color:#6a6a7a;font-weight:700;margin-top:2px}
@@ -219,13 +222,27 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
     }
     return { S, setLevel, step, end, newGame, relang, relabel: () => ui.relabel && ui.relabel() };
   }
+  // (2026-11-11) phones: while the result card (勝ち／負け · やめる · もう一局) is up, the banner waits; after やめる / もう一局 it
+  // comes as a card in the middle of the screen (tap to close) instead of a pop-up over the result
+  const PHONE = () => { try { return matchMedia('(max-width: 760px)').matches || (matchMedia('(pointer: coarse)').matches && matchMedia('(max-height: 600px)').matches); } catch (e) { return false; } };
+  A._toast = (id, name, t) => toast(id, name, t);   // (tests)
   function toast(id, name, t) {
+    const endc = document.getElementById('endc');
+    if (PHONE() && endc && endc.classList.contains('on')) {
+      const mo = new MutationObserver(() => { if (endc.classList.contains('on') && endc.isConnected) return; mo.disconnect(); setTimeout(() => toast2(id, name, t, true), 350); });
+      mo.observe(endc, { attributes: true, attributeFilter: ['class'] }); return;
+    }
+    toast2(id, name, t, PHONE());
+  }
+  function toast2(id, name, t, mid) {
     const R = ['N', 'R', 'SR'][t] || 'SR';
     addCss(); const X = TX(); if (!X) return;
-    const el = document.createElement('div'); el.className = 'npc-toast'; el.setAttribute('role', 'status');
+    const el = document.createElement('div'); el.className = 'npc-toast' + (mid ? ' mid' : ''); el.setAttribute('role', 'status');
     el.innerHTML = `<img src="${avUrl(id.slice(3))}" alt=""><div><b>${esc(X.ui.beat.replace('{name}', name))}</b><small><span class="sr r${t}">${R}</span>${esc(X.ui.got.replace('{name}', name).replace('SR', R))}</small><small>${esc(X.ui.gacha.replace('{name}', name))}</small></div>`;
-    document.body.appendChild(el); requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('on')));
-    setTimeout(() => { el.classList.remove('on'); setTimeout(() => el.remove(), 600); }, 5200);
+    let bg = null; const close = () => { el.classList.remove('on'); if (bg) bg.classList.remove('on'); setTimeout(() => { el.remove(); if (bg) bg.remove(); }, 600); };
+    if (mid) { bg = document.createElement('div'); bg.className = 'npc-toast-bg'; document.body.appendChild(bg); bg.onclick = el.onclick = close; }
+    document.body.appendChild(el); requestAnimationFrame(() => requestAnimationFrame(() => { el.classList.add('on'); if (bg) bg.classList.add('on'); }));
+    setTimeout(close, mid ? 8000 : 5200);
     try { if (window.SFX && SFX.win) SFX.win(); } catch (e) {}
   }
 

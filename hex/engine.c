@@ -392,6 +392,7 @@ static void expand(int ni, Pos *p) {
   for (int c = 0; c < NC; c++) if (!p->b[c]) cnt++;
   if (p->swapOk) cnt++;
 #ifdef MT
+  if (__atomic_load_n(&nNodes, __ATOMIC_RELAXED) + cnt > NODES) return;   // (the pool is full: no write to the leaf's line, 2026-11-10)
   u8 z = 0; if (!__atomic_compare_exchange_n(&nd->exp, &z, 2, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)) return;   // (another thread expands it: 2 until done)
   int f = newNodes(cnt); if (f < 0) { __atomic_store_n(&nd->exp, 0, __ATOMIC_SEQ_CST); return; }
   nd->first = f; nd->nch = cnt;
