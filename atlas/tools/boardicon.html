@@ -15,6 +15,7 @@
 <script src="../models/goban.js"></script>
 <script src="../models/agon.js"></script>
 <script src="../models/konane.js"></script>
+<script src="../models/amazons.js"></script>
 <script src="../../senet/sprites.js"></script>
 <script src="../../senet/board2d.js"></script>
 <script src="../models/senet.js"></script>
@@ -33,7 +34,7 @@
   if (look && X.BOARDS[id]) X.BOARDS[id].set(look);
   if (id === 'senet' && look) try { localStorage.setItem('aicoding-senet', JSON.stringify({ settings: { design: look } })); } catch (e) {}
   X.mount(document.getElementById('gl'));
-  const g = X.MODELS[id](id === 'senet');
+  const g = X.MODELS[id](id === 'senet' || id === 'amazons');   // (amazons: the board alone, without the showcase's game)
   X.show(id, g, { still: true }); X.quiet(true); X.snap();
   setTimeout(() => { X.kick(3000); setTimeout(shoot, 5000); }, 800);
   function shoot() {
