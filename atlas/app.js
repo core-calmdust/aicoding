@@ -150,16 +150,30 @@
   const recLoad = id => { try { const a = JSON.parse(localStorage.getItem('atlas-rec-' + id) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } };
   function recPush(id, r) { try { const a = recLoad(id); a.push(Object.assign({ t: Date.now() }, r)); localStorage.setItem('atlas-rec-' + id, JSON.stringify(a.slice(-500))); } catch (e) {} }
   let recMode = 'all', recTab = 'rec';
-  function openRec(g, mode) {
+  function openRec(g, mode, tab) {
     let ov = $('recOv');
     if (!ov) { ov = document.createElement('div'); ov.id = 'recOv'; ov.className = 'recov'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); document.body.appendChild(ov);
       ov.addEventListener('click', e => { if (e.target === ov) closeRec(); });
       addEventListener('keydown', e => { if (e.key === 'Escape' && ov.classList.contains('on')) closeRec(); }); }
-    recMode = mode || 'all'; recTab = 'rec'; renderRec(g); requestAnimationFrame(() => ov.classList.add('on'));
+    recMode = mode || 'all'; recTab = tab || 'rec'; renderRec(g); requestAnimationFrame(() => ov.classList.add('on'));
+  }
+  function rtHtml(g, resChip, dt) {   // the レート戦 tab: the rating, its curve and the rated games
+    const C = RTG[g.id], S = rtLoadG(g.id), H = S.hist.slice(-40), ol = recLoad(g.id).filter(r => r && r.res && r.mode === 'online');
+    if (!S.n && !ol.length) return `<div class="rempty card"><span>📈</span><p>${esc(t('rec.none'))}</p></div>`;
+    let curve = '';
+    if (H.length > 1) { const rs = H.map(h => h.r), lo = Math.min(...rs) - 20, hi = Math.max(...rs) + 20, X = i => 8 + i * 304 / (H.length - 1), Y = r => 92 - (r - lo) / (hi - lo) * 84;
+      curve = `<svg class="rtcurve" viewBox="0 0 320 100" preserveAspectRatio="none"><polyline points="${H.map((h, i) => X(i).toFixed(1) + ',' + Y(h.r).toFixed(1)).join(' ')}" fill="none" stroke="${g.color}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>`; }
+    const res = h => h.s === 1 ? 'w' : h.s === 0 ? 'l' : 'd';
+    return `<section class="rsum card rtsum"><div class="rtnow"><small>${esc(t('rec.rtNow'))}</small><b>R ${S.r}</b></div>
+        <div class="rnums"><div class="w"><b>${S.w || 0}</b><span>${esc(t('rec.w'))}</span></div><div class="l"><b>${S.l || 0}</b><span>${esc(t('rec.l'))}</span></div><div class="d"><b>${S.d || 0}</b><span>${esc(t('rec.d'))}</span></div></div>${curve}</section>
+      <h4>${esc(t('rec.recent'))}</h4>
+      <div class="rlist card">${S.hist.slice(-20).reverse().map(h => `<div class="rr">${resChip(res(h))}<span class="ro2"><b>AI Lv.${h.lv + C.off}</b><small>${esc(['R' + h.or, h.why || ''].filter(Boolean).join(' · '))}</small></span><span class="rm"><b class="rtd ${h.d >= 0 ? 'up' : 'dn'}">${h.d >= 0 ? '+' : '−'}${Math.abs(h.d)}</b><small>${h.via === '3d' ? '🎲 ' : ''}${dt(h.t)}</small></span></div>`).join('')}
+        ${ol.slice(-10).reverse().map(r => `<div class="rr">${resChip(r.res)}<span class="ro2"><b>${esc(r.opp || '')}</b><small>${esc(t('bv.online'))}</small></span><span class="rm"><small>${dt(r.t)}</small></span></div>`).join('')}</div>`;
   }
   function closeRec() { const ov = $('recOv'); if (ov) ov.classList.remove('on'); }
   function renderRec(g) {
-    const ov = $('recOv'), all = recLoad(g.id).filter(r => r && r.res && r.mode !== 'pvp');
+    // レート戦 has a tab of its own (2026-11-10): the rated games (the full game's record — shared with the 3D table) leave 戦績
+    const rtOn = !!RTG[g.id], all = recLoad(g.id).filter(r => r && r.res && r.mode !== 'pvp' && !(rtOn && (r.mode === 'rated' || r.mode === 'online'))), ov = $('recOv');
     const versus = all.length || (g.tags || []).some(x => x === 'ai' || x === 'online' || x === 'rated') || !!(window.Atlas3D && Atlas3D[g.id]) || !!(window.AtlasLazy && AtlasLazy.hasPlay(g.id));   // a game with opponents (puzzles / solo games: no empty record box)
     const has = { ai: all.some(r => r.mode === 'ai'), rated: all.some(r => r.mode === 'rated'), online: all.some(r => r.mode === 'online'), t3d: all.some(r => r.via === '3d') };
     const L = recMode === 'all' ? all : recMode === 't3d' ? all.filter(r => r.via === '3d') : all.filter(r => r.mode === recMode);
@@ -185,7 +199,7 @@
     const achs = ACH.filter(a => a.gid === g.id).sort((a, b) => (b.done - a.done) || (a.done ? b.tier - a.tier : (b.have / b.need) - (a.have / a.need)));
     const ad = achs.filter(a => a.done).length;
     // three tabs along the bottom: 戦績 (the games) · あそびの記録 (progress) · 実績 (achievements) — only those with something to show
-    const tabs = [['rec', '🏆', t('rec.title'), versus], ['play', '📊', t('rec.play'), tiles.length], ['ach', '🏅', t('tab.ach'), achs.length]].filter(x => x[3]);
+    const tabs = [['rec', '🏆', t('rec.title'), versus], ['rt', '📈', t('bv.m.rated'), rtOn], ['play', '📊', t('rec.play'), tiles.length], ['ach', '🏅', t('tab.ach'), achs.length]].filter(x => x[3]);
     if (!tabs.some(x => x[0] === recTab)) recTab = tabs.length ? tabs[0][0] : 'rec';
     const modes = [['all', 1], ['ai', has.ai], ['rated', has.rated], ['online', has.online], ['t3d', has.t3d]].filter(x => x[1]).map(x => x[0]);
     const recHtml = all.length ? `${modes.length > 1 ? `<div class="rdd"><button type="button" class="rddb" aria-haspopup="listbox" aria-expanded="false"><span>${esc(t('rec.m.' + recMode))}</span><i>▾</i></button><div class="rddl" role="listbox" hidden>${modes.map(k => `<button type="button" role="option" data-m="${k}" class="${k === recMode ? 'on' : ''}">${esc(t('rec.m.' + k))}</button>`).join('')}</div></div>` : ''}
@@ -200,7 +214,7 @@
         <h4>${esc(t('rec.recent'))}</h4>
         <div class="rlist card">${L.slice(-20).reverse().map(r => `<div class="rr">${resChip(r.res)}<span class="ro2"><b>${esc(r.opp || '')}</b><small>${esc([r.vn, r.why, r.n ? t('rec.moves', { n: r.n }) : ''].filter(Boolean).join(' · '))}</small></span><span class="rm">${r.via === '3d' ? '🎲 ' : ''}${esc(t('rec.m.' + (r.mode === 'rated' ? 'rated' : r.mode === 'online' ? 'online' : 'ai')))}<small>${dt(r.t)}</small></span></div>`).join('')}</div>`
       : `<div class="rempty card"><span>🏆</span><p>${esc(t('rec.none'))}</p></div>`;
-    const body = recTab === 'rec' ? recHtml
+    const body = recTab === 'rec' ? recHtml : recTab === 'rt' ? rtHtml(g, resChip, dt)
       : recTab === 'play' ? `<div class="rtiles">${tiles.map(([k, v, s2]) => `<div class="card rt"><small>${esc(k)}</small><b>${esc(String(v))}</b><span>${esc(String(s2 || ''))}</span></div>`).join('')}</div>`
       : `<div class="rachs"><b>${ad}</b> / ${achs.length}<span class="bar"><i style="width:${achs.length ? ad / achs.length * 100 : 0}%;--c:var(--mint)"></i></span></div><div class="rach">${achs.map(achHtml).join('')}</div>`;
     ov.innerHTML = `<div class="recp" style="--c:${g.color}">
@@ -759,7 +773,7 @@
       const setMode = m => { $('bvMode').dataset.v = m; $('bvMode').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.m === m));
         if (!bodyH) measure();
         layout(m);
-        if ($('bvTable')) $('bvTable').disabled = MX ? m === 'rated' : !(ad.tableModes || ['ai']).includes(m);   // rated / online games need the full game
+        if ($('bvTable')) $('bvTable').disabled = MX ? false : !(ad.tableModes || ['ai']).includes(m);   // rated / online games need the full game
         fitStage(); };
       if (window.__bvModeRz) removeEventListener('resize', window.__bvModeRz);
       window.__bvModeRz = () => { if (!$('bvOpts') || !$('bvMode')) return; bodyH = 0; setMode($('bvMode').dataset.v); }; addEventListener('resize', window.__bvModeRz);
@@ -865,7 +879,7 @@
         const max = ad.levels, cur = +sel.value;
         const sh = document.createElement('div'); sh.className = 'lvsheet'; sh.innerHTML = `<div class="lvs-in" role="listbox"><div class="lvs-h">${esc(t(MX ? 'bv.opp' : 'bv.level'))}<button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div><div class="lvs-l">${[...sel.options].map(o => {
           const n = +o.value, x = ad.levelInfo && n ? ad.levelInfo(n, lang) : null;
-          if (!n) return `<button type="button" role="option" data-v="0" class="lvpvp${n === cur ? ' on' : ''}"><b>👥</b><span class="nm">${esc(t('bv.m.pvp'))}</span><small>${esc(t('bv.pvpSub'))}</small></button>`;   // (shogi / chess: 二人で対戦 heads the 相手 list)
+          if (!n) return `<button type="button" role="option" data-v="0" class="lvs-boss lvpvp${n === cur ? ' on' : ''}">${PVP_SVG}<div><b>${esc(t('bv.m.pvp'))}</b><small>${esc(t('bv.pvpSub'))}</small></div></button>`;   // (a colour box like the bosses' heads, two friends hand in hand — 2026-11-10)   // (shogi / chess: 二人で対戦 heads the 相手 list)
           return bossHead(id, n, cur) + `<button type="button" role="option" data-v="${n}" class="${n === cur ? 'on' : ''}"><b>Lv.${n}</b><span class="nm">${bossRw(id, n)}${esc(lvNm(x, n, lang, max))}${bossOwn(id, n) ? '<i class="lvck" aria-label="cleared">✓</i>' : ''}</span><span class="meter">${Array.from({ length: max }, (_, i) => `<i class="${i < n ? 'on' : ''}" style="height:${Math.round(4 + 12 * (i + 1) / max)}px"></i>`).join('')}</span>${x ? `<small><em>${esc(x.who)}</em>${x.desc ? ` · ${esc(x.desc)}` : ''}${x.rating ? ` · ${t('bv.rating')} ${x.rating}` : ''}</small>` : ''}</button>`; }).join('')}</div></div>`;
         document.body.appendChild(sh); requestAnimationFrame(() => sh.classList.add('on'));
         const close = () => { if (sh.classList.contains('out')) return; sh.classList.add('out'); sh.classList.remove('on'); setTimeout(() => sh.remove(), 240); };
@@ -977,43 +991,76 @@
      ones — the AI's rated games of shogi take the local clocks, chess's have none), and the rated games' record. パズル: the daily
      problem(s) and the list, 続きから解く on this 3D board (atlas/puzzles.js), the full / 2D versions at the puzzles. レッスン: lessons or
      openings, opened in the full / 2D version. The full / 2D pages are opened with ?mode=…&sub=…&tc=… (their window.AtlasDeep). */
+  const PVP_SVG = '<svg viewBox="0 0 96 80" aria-hidden="true"><ellipse cx="48" cy="74" rx="38" ry="5" fill="rgba(80,60,30,.13)"/><path d="M14 72c0-15 6-25 16-25s16 10 16 25z" fill="#ff8f7a"/><path d="M50 72c0-15 6-25 16-25s16 10 16 25z" fill="#5fb8f0"/><path d="M40 55q8 7 16 0" fill="none" stroke="#f3c79a" stroke-width="5" stroke-linecap="round"/><circle cx="30" cy="31" r="15" fill="#ffe2c4"/><circle cx="66" cy="31" r="15" fill="#ffe2c4"/><path d="M15 29a15 15 0 0 1 30 0q-8-6-15-4q-8 1-15 4z" fill="#5a3a22"/><path d="M51 27a15 15 0 0 1 30 2q-4-8-12-8q-10 0-18 6z" fill="#2f2a3a"/><circle cx="25" cy="33" r="2" fill="#2b2b33"/><circle cx="35" cy="33" r="2" fill="#2b2b33"/><circle cx="61" cy="33" r="2" fill="#2b2b33"/><circle cx="71" cy="33" r="2" fill="#2b2b33"/><path d="M27 39q3 2.4 6 0M63 39q3 2.4 6 0" fill="none" stroke="#c4553f" stroke-width="1.6" stroke-linecap="round"/><circle cx="21.5" cy="37.5" r="2.6" fill="#ffaaa0" opacity=".7"/><circle cx="38.5" cy="37.5" r="2.6" fill="#ffaaa0" opacity=".7"/><circle cx="57.5" cy="37.5" r="2.6" fill="#ffaaa0" opacity=".7"/><circle cx="74.5" cy="37.5" r="2.6" fill="#ffaaa0" opacity=".7"/></svg>';
   const MXG = { shogi: true, chess: true }, MX_MODES = ['ai', 'rated', 'puzzle', 'lesson'];
   const MX_LBL = { ai: 'bv.m.vs', rated: 'bv.m.rated', puzzle: 'pg.pz', lesson: 'pg.ls' };
   const OTC = { shogi: [{ id: 'fast', main: 300, byo: 30 }, { id: 'long', main: 600, byo: 30 }, { id: 'blitz', byo: 30 }, { id: 'fis', main: 300, inc: 10 }],
     chess: [{ id: 'blitz', main: 180, inc: 2 }, { id: 'rapid', main: 600, inc: 5 }, { id: 'classical', main: 900, inc: 10 }] };
-  const rtList = (id, opp) => opp === 'online' ? OTC[id] : id === 'shogi' ? TCS.byo : null;   // (chess: the AI's rated games have no clock)
+  const rtList = (id, opp) => opp === 'online' ? OTC[id] : RTG[id] ? [RTG[id].tc] : null;   // (the AI's rated games: the full game's fixed clock)
   const rtOpp = id => pref[id + ':rtOpp'] === 'online' ? 'online' : 'ai';
+  /* ---------- rated games against the AI on the 3D table (2026-11-10): the same record as the full game (its localStorage store,
+     its ladder of level ratings, its placement — shared/placement.js — and Elo K), so a rated game here counts there too ---------- */
+  const RTG = {
+    shogi: { key: 'shogi-rated-v1', start: 900, flag: 'k', off: 1, from: 0, tc: { id: 'rt', main: 600, byo: 30 },
+      lv: [150, 300, 450, 550, 650, 750, 850, 950, 1050, 1150, 1250, 1350, 1450, 1550, 1650, 1750, 1850, 2000, 2200, 2300, 2400, 2500, 2600, 2700, 2800, 2900] },
+    chess: { key: 'aicoding-chess-rated', start: 1000, flag: 'lvv', off: 0, from: 1, tc: { id: 'rt', main: 600, inc: 5 },
+      lv: [0, 200, 350, 500, 650, 800, 1000, 1250, 1400, 1600, 1700, 1800, 1900, 2150, 2295, 2385, 2495, 2705, 2885, 2985, 3075, 3160, 3240, 3305, 3370, 3440] },
+  };
+  function rtLoadG(id) { const C = RTG[id]; let s = null; try { s = JSON.parse(localStorage.getItem(C.key) || 'null'); } catch (e) {} if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: C.start, n: 0, w: 0, l: 0, d: 0, hist: [] }; if (!Array.isArray(s.hist)) s.hist = []; if (!s.hist.length) s[C.flag] = 2; return s; }
+  function rtSaveG(id, s) { try { localStorage.setItem(RTG[id].key, JSON.stringify(s)); } catch (e) {} }
+  function rtPickG(id, S) {   // (the full games' rtPick: mostly within ±100, sometimes clearly stronger / weaker)
+    const C = RTG[id], idx = C.lv.map((x, i) => [i, x]).slice(C.from);
+    if (window.Placement && Placement.on(S)) { const r = Placement.pick(S, idx); if (r) return { lv: r.lv, or: r.or }; }
+    const u = Math.random(), v = Math.random(), off = u < .1 ? 150 + v * 150 : u < .2 ? -(150 + v * 150) : (v * 2 - 1) * 100, target = S.r + off;
+    let b = idx[0]; idx.forEach(x => { if (Math.abs(x[1] - target) < Math.abs(b[1] - target)) b = x; }); return { lv: b[0], or: b[1] };
+  }
+  function rtSettleG(id, R, sc, why) {   // once per game
+    if (!R || R.done) return R && R.done;
+    const S = rtLoadG(id), old = S.r, pl = window.Placement && Placement.on(S) ? Placement.record(S, R.or, sc) : null;
+    const K = S.n < 10 ? 48 : 24, Ex = 1 / (1 + Math.pow(10, (R.or - old) / 400)), now = pl ? pl.r : Math.max(0, Math.round(old + K * (sc - Ex)));
+    S.r = now; S.n++; if (sc === 1) S.w++; else if (sc === 0) S.l++; else S.d++;
+    S.hist.push({ id: R.id, t: Date.now(), lv: R.lv, or: R.or, s: sc, d: now - old, r: now, why, pl: pl ? pl.k : undefined, via: '3d' });
+    if (S.hist.length > 100) S.hist = S.hist.slice(-100);
+    rtSaveG(id, S); R.done = { old, now, d: now - old };
+    if (pl && pl.final && window.Placement) try { Placement.reveal(S, 'R ' + now); } catch (e) {}
+    return R.done;
+  }
+  const PLACE_JS = '../shared/placement.js?v=1l14';
+  const needPlacement = () => window.Placement ? Promise.resolve() : new Promise(res => { const sc = document.createElement('script'); sc.src = PLACE_JS; sc.onload = sc.onerror = () => res(); document.head.appendChild(sc); });
+  let rtCur = null;   // the rated game being played on the table: { gid, R } (leaving it before the end = a loss, as in the full games)
   const rtTc = (id, opp) => { const L = rtList(id, opp); if (!L) return null; return L.find(c => c.id === pref[id + ':rtTc:' + opp]) || L[0]; };
   function mxPanels(g) {
     const id = g.id, opp = rtOpp(id), lsk = pref[id + ':lsk'] === 'open' ? 'open' : 'list';
     const daily = id === 'shogi' ? [['d1', '★', t('bv.pz.d1')], ['d2', '☆', t('bv.pz.d2')]] : [['d1', '★', t('bv.pz.dc')]];
-    return `<div class="opts mxp" id="bvRt" hidden><div class="mxrow"><label>${t('bv.opp')}<select id="bvRtOpp"><option value="ai" ${opp === 'ai' ? 'selected' : ''}>AI</option><option value="online" ${opp === 'online' ? 'selected' : ''}>${esc(t('bv.online'))}</option></select></label><button type="button" class="mxb" id="bvRtRec"><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg></i>${esc(t('bv.rtRec'))}</button></div>`
+    return `<div class="opts mxp" id="bvRt" hidden><div class="mxrow"><label>${t('bv.opp')}<select id="bvRtOpp"><option value="ai" ${opp === 'ai' ? 'selected' : ''}>AI</option><option value="online" ${opp === 'online' ? 'selected' : ''}>${esc(t('bv.online'))}</option></select></label><button type="button" class="mxb mxic" id="bvRtRec" aria-label="${esc(t('bv.rtRec'))}" title="${esc(t('bv.rtRec'))}"><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg></i></button></div>`
       + `<label id="bvRtTcL">${t('tc.h')}<button type="button" class="lvpick" id="bvRtTc"></button></label><div class="mxnote" id="bvRtNote" hidden>${esc(t('bv.rtNoTc'))}</div></div>`
       + `<div class="opts mxp" id="bvPz" hidden>${daily.map(([k, ic, lb]) => `<button type="button" class="mxb" data-pz="${k}"><i>${ic}</i>${esc(lb)}</button>`).join('')}<button type="button" class="mxb" data-pz="list"><i>▦</i>${esc(t('bv.pzList'))}</button></div>`
-      + `<div class="opts mxp" id="bvLs" hidden><label><select id="bvLsK"><option value="list" ${lsk === 'list' ? 'selected' : ''}>${esc(t('bv.ls'))}</option><option value="open" ${lsk === 'open' ? 'selected' : ''}>${esc(t('bv.lsOp'))}</option></select></label></div>`;
+      + `<div class="opts mxp" id="bvLs" hidden><label><select id="bvLsK"><option value="list" ${lsk === 'list' ? 'selected' : ''}>${esc(t('bv.ls'))}</option><option value="open" ${lsk === 'open' ? 'selected' : ''}>${esc(t('bv.lsOp'))}</option></select></label><button type="button" class="mxb" id="bvLsList"><i>▦</i>${esc(t('bv.list'))}</button></div>`;
   }
   const mx2d = (g, m) => '../' + g.href + (m === 'puzzle' ? '?mode=puzzle&sub=cont' : m === 'lesson' ? '?mode=lesson&sub=' + ($('bvLsK') ? $('bvLsK').value : 'list') : '');
   function mxLayout(m) {
     const g = bvGame; if (!g) return;
     ['bvRt', 'bvPz', 'bvLs'].forEach((k, i) => { if ($(k)) $(k).hidden = m !== ['rated', 'puzzle', 'lesson'][i]; });
     const f = $('bvFull'), tb = $('bvTable'), cl = $('bvi').querySelector('.R .act > a.btn'), act = $('bvi').querySelector('.R .act'); if (!f || !tb) return;
-    const set = (el, a, b) => { el.innerHTML = `<b>${a}</b><small>${b}</small>`; };
-    if (m === 'puzzle') { set(f, esc(t('bv.pzCont')) + ' ▶', esc(t('bv.pzContSub'))); tb.innerHTML = `<b>${esc(t('bv.full'))}</b>`; }
-    else if (m === 'lesson') set(f, esc(t('bv.full')) + ' ▶', esc(t('bv.lsSub')));
-    else { set(f, esc(t('bv.full')) + ' ▶', esc(t('bv.fullSub'))); set(tb, esc(placeT('play')), esc(t('bv.tableSub'))); }
-    tb.style.display = m === 'lesson' ? 'none' : ''; tb.classList.toggle('mxw', m === 'puzzle'); if (act) act.classList.toggle('act1', m === 'lesson');   // (lessons: no table play — 2D takes the row)
+    const set = (el, a, b) => { el.innerHTML = `<b>${a}</b>${b ? `<small>${b}</small>` : ''}`; };
+    // every tab the same (2026-11-10): red あそぶ = here on the 3D table · brown フル機能で遊ぶ · white 2Dで遊ぶ
+    const online = m === 'rated' && $('bvRtOpp') && $('bvRtOpp').value === 'online';
+    set(f, esc(t('ps.go')) + ' ▶', esc(online ? t('bv.lsSub') : t(m === 'puzzle' ? 'bv.pzContSub' : m === 'lesson' ? 'bv.lsSub3d' : 'bv.tableSub')));
+    set(tb, esc(t('bv.full')), ''); tb.classList.add('mxfull'); tb.style.display = ''; tb.disabled = false;
+    if (act) act.classList.remove('act1');
     if (cl) cl.href = mx2d(g, m);
   }
   function mxBind(g, ad) {
     const id = g.id, M = () => $('bvMode') ? $('bvMode').dataset.v : 'ai';
-    $('bvFull').onclick = () => { const m = M(); if (m === 'puzzle') startPuzzle(); else if (m === 'lesson') startPlay('full', 'lesson', $('bvLsK').value); else startPlay('full'); };
-    $('bvTable').onclick = () => { if (M() === 'puzzle') startPlay('full', 'puzzle', 'cont'); else startPlay('table'); };
+    $('bvFull').onclick = () => { const m = M(); if (m === 'puzzle') startPuzzle(); else if (m === 'lesson') startLesson3D($('bvLsK').value); else if (m === 'rated' && $('bvRtOpp').value === 'online') startPlay('full'); else startPlay('table'); };   // あそぶ (here)
+    $('bvTable').onclick = () => { const m = M(); if (m === 'puzzle') startPlay('full', 'puzzle', 'cont'); else if (m === 'lesson') startPlay('full', 'lesson', $('bvLsK').value); else startPlay('full'); };   // フル機能で遊ぶ
+    $('bvLsList').onclick = () => { try { SFX.tap && SFX.tap(); } catch (x) {} lessonSheet(g, $('bvLsK').value); };
     $('bvPz').onclick = e => { const b = e.target.closest('[data-pz]'); if (b) { try { SFX.tap && SFX.tap(); } catch (x) {} startPlay('full', 'puzzle', b.dataset.pz); } };
-    $('bvRtRec').onclick = () => { try { SFX.tap && SFX.tap(); } catch (x) {} openRec(g, 'rated'); };
+    $('bvRtRec').onclick = () => { try { SFX.tap && SFX.tap(); } catch (x) {} openRec(g, 'all', 'rt'); };
     $('bvLsK').addEventListener('change', () => { pref[id + ':lsk'] = $('bvLsK').value; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (x) {} const cl = $('bvi').querySelector('.R .act > a.btn'); if (cl && M() === 'lesson') cl.href = mx2d(g, 'lesson'); });
     // レート戦's time control: a picker button + list sheet (the same UI as the level); its list follows 相手
     const bt = $('bvRtTc'), paint = () => { const opp = $('bvRtOpp').value, c = rtTc(id, opp); $('bvRtTcL').hidden = !c; $('bvRtNote').hidden = !!c; if (c) { bt.dataset.v = c.id; bt.innerHTML = `<span>${esc(tcName(c))}</span><i>▾</i>`; } };
-    $('bvRtOpp').addEventListener('change', () => { pref[id + ':rtOpp'] = $('bvRtOpp').value; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (x) {} paint(); });
+    $('bvRtOpp').addEventListener('change', () => { pref[id + ':rtOpp'] = $('bvRtOpp').value; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (x) {} paint(); mxLayout(M()); });
     paint();
     bt.onclick = () => {
       const opp = $('bvRtOpp').value, L = rtList(id, opp), cur = bt.dataset.v; if (!L) return;
@@ -1068,15 +1115,26 @@
     if (pend3d) { pend3d.then(() => startPlay(kind)); return; }   // the board isn't on the table yet
     let level = +$('bvLv').value, pmode = $('bvMode') ? $('bvMode').dataset.v : 'ai';
     if (pmode === 'ai' && level === 0) { pmode = 'pvp'; level = pref[g.id + ':lv'] || 1; }   // (shogi / chess: 相手 二人で対戦)
+    let rtR = null;
+    if (pmode === 'rated') {   // レート戦 on the table: the opponent from the player's rating (the full game's ladder and record)
+      if (!RTG[g.id]) pmode = 'ai';
+      else {
+        if (!window.Placement) { needPlacement().then(() => startPlay(kind)); return; }
+        const S = rtLoadG(g.id);
+        if (Placement.gate(S, x => rtSaveG(g.id, x), () => startPlay(kind))) return;   // (a player with games, before placement existed: asked once)
+        const pk = rtPickG(g.id, S); rtR = { id: 'p3' + Date.now().toString(36), lv: pk.lv, or: pk.or, r: S.r }; level = pk.lv + RTG[g.id].off;
+      }
+    }
     const side = $('bvSide') ? +$('bvSide').value : 1, size = $('bvSize') ? +$('bvSize').value : 0;
-    pref[g.id + ':lv'] = level; pref[g.id + ':side'] = side; pref[g.id + ':mode'] = pmode; if (size) pref[g.id + ':size'] = size; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {}
+    if (!rtR) pref[g.id + ':lv'] = level; pref[g.id + ':side'] = side; pref[g.id + ':mode'] = pmode; if (size) pref[g.id + ':size'] = size; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {}
     lastKind = kind;
     const tc = tcOf(ad, $('bvTc') ? $('bvTc').dataset.v : pref[g.id + ':tc']), tcT = new URLSearchParams(location.search).get('tcTest');
-    const clock = tcT ? { id: 'test', byo: +tcT } : tc;   // (tests: ?tcTest=5 → 5 s per move)
+    const clock = tcT ? { id: 'test', byo: +tcT } : rtR ? RTG[g.id].tc : tc;   // (tests: ?tcTest=5 → 5 s per move; rated: the full game's rated clock)
     if ($('bvTc')) { pref[g.id + ':tc'] = $('bvTc').dataset.v; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {} }
     $('bv').classList.add('playing'); $('endc').classList.remove('on');
     LAND.game(ad.land || ''); fitStage();
     let sess = null, tbOn = false;
+    rtCur = rtR ? { gid: g.id, R: rtR } : null;
     // AI games: the level's boss and a watching creature talk now and then (atlas/npc/npc.js); beating the boss gives its SR avatar
     if (npcT) npcT.kill();
     npcT = pmode === 'ai' && window.AtlasNPC && AtlasNPC.portal ? AtlasNPC.portal({ game: g.id, level }) : null;
@@ -1104,6 +1162,7 @@
       onTurn: (s, info) => { if (tbOn && session === sess) TB.turn(s, info); if (npcT && session === sess && info) npcT.turn(info.ply); },
       onEnd: res => {
         if (session === sess) TB.end();
+        const rtX = rtR && rtCur && rtCur.R === rtR ? rtSettleG(g.id, rtR, res.draw ? .5 : res.win ? 1 : 0, String(res.score || '').replace(/<[^>]*>/g, '').slice(0, 40)) : null;
         if (!res.pvp) { A_.recordPlay(W, g.id, res); recPush(g.id, { mode: pmode === 'rated' ? 'rated' : 'ai', res: res.draw ? 'd' : res.win ? 'w' : 'l', side: side === 2 ? 1 : 0, opp: 'AI Lv.' + (res.level || level), key: (pmode === 'rated' ? 'rt:' : 'ai:') + (res.level || level), why: String(res.score || '').replace(/<[^>]*>/g, '').slice(0, 60), via: '3d' }); }
         refresh();   // two players on one device: no win / loss for the player's record
         if (npcT && session === sess && !res.pvp) { npcT.end(res); W = A_.load(); refresh(); }   // (a boss beaten: its N / R / SR was added to the saved wallet)
@@ -1111,7 +1170,7 @@
           if (session !== sess) return;
           TB.hide();
           const head = res.pvp ? (res.draw ? t('res.draw') : '🎉 ' + (res.winnerText || res.score || '')) : (res.win ? '🎉 ' : '') + t(res.draw ? 'res.draw' : res.win ? 'res.win' : 'res.lose');
-          $('endc').innerHTML = `<h3>${esc(head)}</h3>${res.score && !(res.pvp && !res.winnerText && !res.draw) ? `<div class="sc">${esc(res.score)}</div>` : ''}${res.pvp ? '' : `<div class="gnote">Lv.${res.level}</div>`}
+          $('endc').innerHTML = `<h3>${esc(head)}</h3>${res.score && !(res.pvp && !res.winnerText && !res.draw) ? `<div class="sc">${esc(res.score)}</div>` : ''}${res.pvp ? '' : `<div class="gnote">Lv.${res.level}</div>`}${rtX ? `<div class="rtres"><b>R ${rtX.old} → ${rtX.now}</b><i class="${rtX.d >= 0 ? 'up' : 'dn'}">${rtX.d >= 0 ? '+' : '−'}${Math.abs(rtX.d)}</i></div>` : ''}
             <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center"><button class="btn ghost" id="eBack">${t('bv.quit')}</button><button class="btn" id="eAgain">${t('bv.again')}</button></div>`;
           $('endc').classList.add('on'); if (res.win || (res.pvp && !res.draw)) confetti(120);
           try { SFX[res.draw ? 'draw' : res.win || res.pvp ? 'win' : 'lose'](); } catch (e) {}   // (respects the sound setting)
@@ -1125,7 +1184,7 @@
     Table3D.play(true);   // after start(): the adapter puts its own board on the table
   }
   let npcT = null;
-  function stopSession() { if (npcT) { npcT.kill(); npcT = null; } TB.off(); if (session) { session.stop(); session = null; } LAND.game(''); $('hud').innerHTML = ''; $('bv').classList.remove('rules'); }
+  function stopSession() { if (rtCur && !rtCur.R.done) { const c = rtCur; rtCur = null; rtSettleG(c.gid, c.R, 0, 'abandon'); } rtCur = null; if (npcT) { npcT.kill(); npcT = null; } TB.off(); if (session) { session.stop(); session = null; } LAND.game(''); $('hud').innerHTML = ''; $('bv').classList.remove('rules'); }
 
   /* ---------- table play: time controls, clocks and the action bar (待った · 投了 · ヒント), one implementation for every game ----------
      Adapter session API (atlas/games/*.js): undo() canUndo() · hint() → Promise canHint() · resign() canResign() · timeout(side).
@@ -1348,6 +1407,33 @@
     session = AtlasPuzzles.start({ id: g.id, el: $('gl'), Table3D, lang, t, panel: $('bv'), adapter: Atlas3D[g.id], onExit: () => openBoard(g.id) });
     if (session.panel && window.ResizeObserver) new ResizeObserver(fitStage).observe(session.panel);
     fitStage(); Table3D.play(true);
+  }
+  // lessons / openings on the 3D table (atlas/lessons3d.js, 2026-11-10): kind 'list' (lessons) | 'open' (定跡); key: which one (else the next one)
+  function startLesson3D(kind, key) {
+    if (!window.AtlasLessons) return startPlay('full', 'lesson', kind);
+    if (renderPlace.close) renderPlace.close();
+    if (pend3d) { pend3d.then(() => startLesson3D(kind, key)); return; }
+    const g = bvGame; stopSession();
+    $('bv').classList.add('playing', 'rules'); $('endc').classList.remove('on');
+    session = AtlasLessons.start({ id: g.id, kind: kind === 'open' ? 'open' : 'lesson', key, el: $('gl'), Table3D, lang, t, panel: $('bv'), adapter: Atlas3D[g.id], onExit: () => openBoard(g.id),
+      onFull: k => startPlay('full', 'lesson', k === 'open' ? 'open' : 'list'), onDone: () => { try { refresh(); } catch (e) {} } });
+    if (session.panel && window.ResizeObserver) new ResizeObserver(fitStage).observe(session.panel);
+    fitStage(); Table3D.play(true);
+  }
+  // the list of lessons / openings (the card's レッスン tab → 一覧): a sheet like the level list; a row starts it on the 3D table
+  function lessonSheet(g, kind) {
+    if (!window.AtlasLessons) return startPlay('full', 'lesson', kind);
+    const sh = document.createElement('div'); sh.className = 'lvsheet lssheet';
+    sh.innerHTML = `<div class="lvs-in" role="listbox"><div class="lvs-h">${esc(t(kind === 'open' ? 'bv.lsOp' : 'bv.ls'))}<button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div><div class="lvs-l"><div class="lss-wait">…</div></div></div>`;
+    document.body.appendChild(sh); requestAnimationFrame(() => sh.classList.add('on'));
+    const close = () => { if (sh.classList.contains('out')) return; sh.classList.add('out'); sh.classList.remove('on'); setTimeout(() => sh.remove(), 240); };
+    AtlasLessons.list(g.id, kind === 'open' ? 'open' : 'lesson', lang).then(items => {
+      let cat = null; const ST = { pass: '✓', try: '…' };
+      sh.querySelector('.lvs-l').innerHTML = items.map((x, i) => { const hd = x.catName && x.catName !== cat ? `<div class="lss-cat">${esc(x.catName)}</div>` : ''; cat = x.catName || cat;
+        return hd + `<button type="button" role="option" data-k="${esc(x.key)}" data-full="${x.full ? 1 : ''}" class="lss ${x.st}"><b>${i + 1}</b><span class="nm">${esc(x.title)}${x.st === 'pass' ? '<i class="lvck">✓</i>' : ''}</span><small>${esc(x.sub || '')}${x.full ? ' · ' + esc(t('bv.full')) : ''}</small></button>`; }).join('');
+      const nx = sh.querySelector('.lss:not(.pass):not([data-full="1"])'); if (nx) { nx.classList.add('on'); nx.scrollIntoView({ block: 'center' }); }
+    }).catch(() => { sh.querySelector('.lvs-l').textContent = '⚠'; });
+    sh.onclick = e => { const b = e.target.closest('[data-k]'); if (b) { close(); if (b.dataset.full) startPlay('full', 'lesson', kind); else startLesson3D(kind, b.dataset.k); return; } if (e.target === sh || e.target.closest('.lvs-x')) close(); };
   }
   // character-guided rules on the 3D table (atlas/rules/<id>.js)
   let rulesFromList = false;

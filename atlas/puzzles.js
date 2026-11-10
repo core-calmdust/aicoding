@@ -364,5 +364,5 @@
     };
   }
 
-  window.AtlasPuzzles = { has: id => !!G[id], start };
+  window.AtlasPuzzles = { has: id => !!G[id], start, G };   // (G: the guides — atlas/lessons3d.js too)
 })();
