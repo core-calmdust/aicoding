@@ -1371,6 +1371,7 @@ html.bv-pland .urtoast{top:calc(52px + env(safe-area-inset-top));left:calc(50% +
 /* ---------- home on phones (≤760px): name row · today strip · one-line updates, so the game list peeks into the first screen ----------
    (PC keeps the cards above: .pf-sum and .updline are hidden there, .pf-det is display:contents) */
 .pf-sum{display:none}
+.prof > .pfbg{display:none}
 .pf-det{display:contents}
 @media (max-width:760px){
   /* the title and the name row make one card, as tall as the title box was (250px): emblem above, name row attached under it;
@@ -1381,6 +1382,11 @@ html.bv-pland .urtoast{top:calc(52px + env(safe-area-inset-top));left:calc(50% +
   #pg-home .ttl{width:min(88%,262px)}
   #pg-home .toprow{margin-top:0}
   #pg-home .prof{border-radius:0 0 24px 24px!important;background:#fff;min-height:62px}
+  /* the background chosen in きせかえ fills the whole name row (2026-11-11), under a light veil so the name and the pills read */
+  #pg-home .prof > .pfbg{display:block;position:absolute;inset:0;z-index:0;border-radius:inherit;overflow:hidden;pointer-events:none}
+  #pg-home .prof > .pfbg::after{content:'';position:absolute;inset:0;background:rgba(255,253,247,.3)}#pg-home .prof > .pfbg.dk::after{background:rgba(255,253,247,.55)}
+  #pg-home .prof .pf-r > *{position:relative;z-index:1}   /* (.pf-r is display:contents here: its items over the background) */
+  #pg-home .prof .pf-r input{text-shadow:0 1px 0 #fff,0 0 6px #fff,0 0 12px rgba(255,255,255,.9)}
   /* wearing an SSR / UR: the glow and the running light wrap the title and the name row as one card (2026-11-11) */
   #pg-home .prof.nr3,#pg-home .prof.nr4{overflow:visible;box-shadow:0 6px 0 #e9dcc0!important}
   #pg-home .prof.nr3::before,#pg-home .prof.nr4::before{content:'';position:absolute;left:0;right:0;top:-188px;bottom:0;border-radius:24px;z-index:-1;pointer-events:none;box-shadow:0 0 26px 4px rgba(180,107,255,.45)}
@@ -1927,7 +1933,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="puzzle-lines.js?v=1"></script>
 <script src="puzzles.js?v=6"></script>
 <script src="lessons3d.js?v=2"></script>
-<script src="missions.js?v=5"></script>
+<script src="missions.js?v=6"></script>
 <link rel="stylesheet" href="historia.css?v=15">
 <script src="historia.js?v=38"></script>
 <link rel="stylesheet" href="skin/loading.css?v=2">
@@ -1939,6 +1945,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <link rel="stylesheet" href="worldmap.css?v=18">
 <script src="worldmap.js?v=31"></script>
 <script src="npc/npc.js?v=22"></script>
-<script src="app.js?v=288"></script>
+<script src="app.js?v=289"></script>
 </body>
 </html>
