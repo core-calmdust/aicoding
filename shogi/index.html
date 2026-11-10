@@ -130,10 +130,21 @@ div.sq:nth-of-type(n+73){border-bottom:none}
 .pc.img .k{clip-path:none;background:none!important;width:100%;height:100%;padding:0;transform:none!important}
 .pc.img .k img{width:112%;height:112%;margin:-6%;object-fit:contain;pointer-events:none;user-select:none}
 .pc.img{filter:none}
+/* the image piece sets: a faint wood grain on the face, cut to the piece's own outline (the image as a mask), placed differently for
+   every piece kind and side so no two kinds look alike (2026-11-10) */
+.pc.img .k{position:relative}
+.pc.img .k::after{content:'';position:absolute;inset:-6%;pointer-events:none;mix-blend-mode:multiply;opacity:.26;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Cfilter id='p' x='0' y='0' width='100%25' height='100%25' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.008 .003' numOctaves='2' seed='6' stitchTiles='stitch' result='w'/%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.32 .012' numOctaves='2' seed='19' stitchTiles='stitch' result='b'/%3E%3CfeDisplacementMap in='b' in2='w' scale='10' xChannelSelector='R' yChannelSelector='G' result='bd'/%3E%3CfeColorMatrix in='bd' values='0 0 0 0 .6 0 0 0 0 .4 0 0 0 0 .16 2.4 0 0 0 -1.05'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23p)'/%3E%3C/svg%3E");background-size:var(--gs,70%) auto;background-position:var(--gp,0 0);
+  -webkit-mask:var(--pm) center/contain no-repeat;mask:var(--pm) center/contain no-repeat}
+body.skin-metal .pc.img .k::after,body.skin-ink .pc.img .k::after{display:none}
 .pc.has-intl .k{padding:0}
 /* skins */
 body.skin-grain .board{background:linear-gradient(172deg,#e4c48e 0%,#dbb780 38%,#d3ac72 70%,#c9a066 100%);box-shadow:inset 0 0 26px rgba(120,72,20,.22),inset 0 1px 0 rgba(255,245,220,.5)}   /* 木目 (2026-11-10): a light kaya tone, the grain drawn in the overlay */
-body.skin-grain .board::after{opacity:.36;mix-blend-mode:multiply;background-size:100% 100%;background-repeat:no-repeat;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='990' viewBox='0 0 900 990' preserveAspectRatio='none'%3E%3Cfilter id='g' filterUnits='userSpaceOnUse' x='-80' y='-80' width='1060' height='1150' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.004 .0012' numOctaves='2' seed='4' result='w'/%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.03 0.0012' numOctaves='4' seed='11' result='b'/%3E%3CfeDisplacementMap in='b' in2='w' scale='40' xChannelSelector='R' yChannelSelector='G' result='bd'/%3E%3CfeColorMatrix in='bd' values='0 0 0 0 .52 0 0 0 0 .32 0 0 0 0 .13 3.0 0 0 0 -1.3' result='bands'/%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.35 0.003' numOctaves='2' seed='23' result='f'/%3E%3CfeDisplacementMap in='f' in2='w' scale='40' xChannelSelector='R' yChannelSelector='G' result='fd'/%3E%3CfeColorMatrix in='fd' values='0 0 0 0 .45 0 0 0 0 .27 0 0 0 0 .1 2.0 0 0 0 -0.95' result='fib'/%3E%3CfeMerge%3E%3CfeMergeNode in='bands'/%3E%3CfeMergeNode in='fib'/%3E%3C/feMerge%3E%3C/filter%3E%3Crect x='-80' y='-80' width='1060' height='1150' filter='url(%23g)'/%3E%3C/svg%3E")}   /* 柾目: straight growth bands that waver a little, with fine fibres (2026-11-10) */
+body.skin-grain .board::after{opacity:.24;mix-blend-mode:multiply;background-size:100% 100%;background-repeat:no-repeat;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='990' viewBox='0 0 900 990' preserveAspectRatio='none'%3E%3Cfilter id='g' filterUnits='userSpaceOnUse' x='-80' y='-80' width='1060' height='1150' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.004 .0012' numOctaves='2' seed='4' result='w'/%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.03 0.0012' numOctaves='4' seed='11' result='b'/%3E%3CfeDisplacementMap in='b' in2='w' scale='40' xChannelSelector='R' yChannelSelector='G' result='bd'/%3E%3CfeColorMatrix in='bd' values='0 0 0 0 .52 0 0 0 0 .32 0 0 0 0 .13 3.0 0 0 0 -1.3' result='bands'/%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.35 0.003' numOctaves='2' seed='23' result='f'/%3E%3CfeDisplacementMap in='f' in2='w' scale='40' xChannelSelector='R' yChannelSelector='G' result='fd'/%3E%3CfeColorMatrix in='fd' values='0 0 0 0 .45 0 0 0 0 .27 0 0 0 0 .1 2.0 0 0 0 -0.95' result='fib'/%3E%3CfeMerge%3E%3CfeMergeNode in='bands'/%3E%3CfeMergeNode in='fib'/%3E%3C/feMerge%3E%3C/filter%3E%3Crect x='-80' y='-80' width='1060' height='1150' filter='url(%23g)'/%3E%3C/svg%3E")}   /* 柾目: straight growth bands that waver a little, with fine fibres (2026-11-10) */
+body.skin-kaya .board{background:radial-gradient(120% 70% at 30% 10%,rgba(255,250,225,.08),rgba(255,250,225,0) 55%),linear-gradient(172deg,#f2d48a 0%,#ebc979 40%,#e2bb66 75%,#d7ac57 100%);box-shadow:inset 0 0 24px rgba(120,72,10,.22),inset 0 1px 0 rgba(255,248,220,.25)}   /* 本榧（天地柾, 2026-11-10）: golden kaya, fine straight grain from top to bottom, a soft sheen */
+body.skin-kaya .board::after{opacity:.22;mix-blend-mode:multiply;background-size:100% 100%;background-repeat:no-repeat;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='990' viewBox='0 0 900 990' preserveAspectRatio='none'%3E%3Cfilter id='y' filterUnits='userSpaceOnUse' x='-60' y='-60' width='1020' height='1110' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.003 .0009' numOctaves='2' seed='3' result='w'/%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.009 0.0006' numOctaves='3' seed='9' result='t'/%3E%3CfeDisplacementMap in='t' in2='w' scale='30' xChannelSelector='R' yChannelSelector='G' result='td'/%3E%3CfeComponentTransfer in='td' result='r'%3E%3CfeFuncR type='table' tableValues='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0'/%3E%3C/feComponentTransfer%3E%3CfeColorMatrix in='r' values='0 0 0 0 .55 0 0 0 0 .36 0 0 0 0 .1 0.7 0 0 0 0' result='rings'/%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.25 .003' numOctaves='2' seed='29' result='f'/%3E%3CfeColorMatrix in='f' values='0 0 0 0 .55 0 0 0 0 .36 0 0 0 0 .1 1.0 0 0 0 -0.55' result='fib'/%3E%3CfeMerge%3E%3CfeMergeNode in='fib'/%3E%3CfeMergeNode in='rings'/%3E%3C/feMerge%3E%3C/filter%3E%3Cfilter id='y2' filterUnits='userSpaceOnUse' x='-60' y='-60' width='1020' height='1110' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.003 .0009' numOctaves='2' seed='3' result='w'/%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.009 0.0006' numOctaves='3' seed='14' result='t'/%3E%3CfeDisplacementMap in='t' in2='w' scale='30' xChannelSelector='R' yChannelSelector='G' result='td'/%3E%3CfeComponentTransfer in='td' result='r'%3E%3CfeFuncR type='table' tableValues='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0'/%3E%3C/feComponentTransfer%3E%3CfeColorMatrix in='r' values='0 0 0 0 .55 0 0 0 0 .36 0 0 0 0 .1 0.7 0 0 0 0' result='rings'/%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.25 .003' numOctaves='2' seed='29' result='f'/%3E%3CfeColorMatrix in='f' values='0 0 0 0 .55 0 0 0 0 .36 0 0 0 0 .1 1.0 0 0 0 -0.55' result='fib'/%3E%3CfeMerge%3E%3CfeMergeNode in='fib'/%3E%3CfeMergeNode in='rings'/%3E%3C/feMerge%3E%3C/filter%3E%3CradialGradient id='g'%3E%3Cstop offset='0' stop-color='%23fff'/%3E%3Cstop offset='.6' stop-color='%23fff'/%3E%3Cstop offset='1' stop-color='%23000'/%3E%3C/radialGradient%3E%3CradialGradient id='gi'%3E%3Cstop offset='0' stop-color='%23000'/%3E%3Cstop offset='.6' stop-color='%23000'/%3E%3Cstop offset='1' stop-color='%23fff'/%3E%3C/radialGradient%3E%3Cmask id='mi' maskUnits='userSpaceOnUse' x='-80' y='-80' width='1060' height='1150'%3E%3Crect x='-80' y='-80' width='1060' height='1150' fill='%23fff'/%3E%3Cellipse cx='390' cy='495' rx='230' ry='260' fill='url(%23gi)'/%3E%3C/mask%3E%3Cmask id='mo' maskUnits='userSpaceOnUse' x='-80' y='-80' width='1060' height='1150'%3E%3Cellipse cx='390' cy='495' rx='230' ry='260' fill='url(%23g)'/%3E%3C/mask%3E%3Cg mask='url(%23mi)'%3E%3Crect x='-60' y='-60' width='1020' height='1110' filter='url(%23y)'/%3E%3C/g%3E%3Cg mask='url(%23mo)'%3E%3Crect x='-60' y='-60' width='1020' height='1110' filter='url(%23y2)'/%3E%3C/g%3E%3C/svg%3E")}   /* growth lines that waver and branch like real kaya (contours of a stretched noise) + fine fibres, kept light (2026-11-10; the centre patched with a calmer grain, the old one drew busy rings there) */
+body.skin-kaya .sq{border-color:rgba(60,34,6,.72)}
+body.skin-kaya .star{background:#3a2208}
+body.skin-kaya .pth{background:linear-gradient(172deg,#f2d48a 0%,#ebc979 40%,#e2bb66 75%,#d7ac57 100%)}
 body.skin-grain .pc .k{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='110' viewBox='0 0 100 110' preserveAspectRatio='none'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.004 .06' numOctaves='4' seed='9' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .24 0 0 0 0 .06 0 0 0 1.1 -.15'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E") 0 0/100% 100% no-repeat,linear-gradient(175deg,#f5d79a 0%,#e6bf73 45%,#d2a252 100%)}
 body.skin-metal .frame{background:linear-gradient(145deg,#3b4248 0%,#1d2226 55%,#2f353a 100%);box-shadow:0 40px 80px -30px rgba(0,0,0,.85),0 0 0 1px rgba(200,210,220,.25)}
 body.skin-metal .board{background:linear-gradient(160deg,#c9d0d6 0%,#9aa3ab 45%,#b8c0c7 70%,#8a939b 100%);border-color:#22282c;box-shadow:inset 0 0 30px rgba(20,30,40,.35)}
@@ -147,7 +158,7 @@ body.skin-metal .hand{background:linear-gradient(160deg,#363d43,#22272b);box-sha
 body.skin-metal .coords,body.skin-metal .hand .hname{color:rgba(210,220,228,.65)}
 body.skin-ink .frame{background:linear-gradient(145deg,#141414 0%,#070707 60%,#121212 100%)}
 body.skin-ink .board{background:linear-gradient(170deg,#2b2622 0%,#1f1b18 100%);border-color:#000;box-shadow:inset 0 0 30px rgba(0,0,0,.6)}   /* 漆黒: the original tone (2026-11-10) */
-body.skin-ink .board::after{opacity:.16;mix-blend-mode:screen;background-size:100% 100%;background-repeat:no-repeat;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='990' viewBox='0 0 900 990' preserveAspectRatio='none'%3E%3Cfilter id='k' filterUnits='userSpaceOnUse' x='0' y='0' width='900' height='990' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.01 0.0007' numOctaves='3' seed='5' result='t'/%3E%3CfeComponentTransfer in='t' result='r'%3E%3CfeFuncR type='table' tableValues='0 0 0 1 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0 1 0'/%3E%3C/feComponentTransfer%3E%3CfeColorMatrix in='r' values='0 0 0 0 .78 0 0 0 0 .66 0 0 0 0 .5 1.0 0 0 0 0' result='rings'/%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.5 .004' numOctaves='2' seed='29' result='f'/%3E%3CfeColorMatrix in='f' values='0 0 0 0 .7 0 0 0 0 .6 0 0 0 0 .45 1.2 0 0 0 -0.6' result='fib'/%3E%3CfeMerge%3E%3CfeMergeNode in='rings'/%3E%3CfeMergeNode in='fib'/%3E%3C/feMerge%3E%3C/filter%3E%3Crect width='900' height='990' filter='url(%23k)'/%3E%3C/svg%3E")}   /* real-looking grain: thin crisp growth lines (contours of a stretched noise) running up the board, uneven, plus fine fibres; one sheet (2026-11-10) */
+body.skin-ink .board::after{opacity:.09;mix-blend-mode:screen;background-size:100% 100%;background-repeat:no-repeat;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='990' viewBox='0 0 900 990' preserveAspectRatio='none'%3E%3Cfilter id='k' filterUnits='userSpaceOnUse' x='0' y='0' width='900' height='990' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.01 0.0007' numOctaves='3' seed='5' result='t'/%3E%3CfeComponentTransfer in='t' result='r'%3E%3CfeFuncR type='table' tableValues='0 0 0 1 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0 1 0'/%3E%3C/feComponentTransfer%3E%3CfeColorMatrix in='r' values='0 0 0 0 .78 0 0 0 0 .66 0 0 0 0 .5 1.0 0 0 0 0' result='rings'/%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.5 .004' numOctaves='2' seed='29' result='f'/%3E%3CfeColorMatrix in='f' values='0 0 0 0 .7 0 0 0 0 .6 0 0 0 0 .45 1.2 0 0 0 -0.6' result='fib'/%3E%3CfeMerge%3E%3CfeMergeNode in='rings'/%3E%3CfeMergeNode in='fib'/%3E%3C/feMerge%3E%3C/filter%3E%3Crect width='900' height='990' filter='url(%23k)'/%3E%3C/svg%3E")}   /* real-looking grain: thin crisp growth lines (contours of a stretched noise) running up the board, uneven, plus fine fibres; one sheet (2026-11-10) */
 body.skin-ink .sq{border-color:rgba(214,180,110,.35)}
 body.skin-ink .star{background:#d6b46e}
 body.skin-ink .pc .k{background:linear-gradient(175deg,#2f2a25 0%,#1d1915 100%);color:#e9d39f;box-shadow:none}
@@ -434,7 +445,9 @@ html.atlas-skin .ts-compact #tsNo{color:#9a7a3a}
 .lesson-card.ts-compact > .lh #lsQuit{background:rgba(0,0,0,.2);border:1px solid var(--line);color:var(--muted);cursor:pointer}
 html.atlas-skin .lesson-card.ts-compact > .lh #lsQuit{background:#fff!important;border:2px solid #ead9b6!important;color:#4a5068!important;box-shadow:0 2px 0 #ead9b6!important}
 body.in-lesson:has(#lessonCard.ts-compact) #coachCard:not(.ck-seq){display:none!important}
-body.in-lesson #coachCard.ck-seq.ck-seq{display:block!important}   /* lessons: the 3-move practice's guidance (seqCoachHtml) */
+body.in-lesson #coachCard.ck-seq.ck-seq{display:block!important}
+#coachCard .sq-rv{margin-top:10px}#coachCard .sq-rv h4{margin:0 0 6px;font-size:13.5px;color:var(--accent)}#coachCard .sq-line{margin:0 0 8px;line-height:1.9;font-size:14.5px}#coachCard .sq-line .ok{color:#6fd3a0;font-weight:700}#coachCard .sq-line .df{color:#f2c060;font-weight:700}#coachCard .sq-line .op{color:var(--muted)}
+html.atlas-skin #coachCard .sq-line .ok{color:#1e8a55}html.atlas-skin #coachCard .sq-line .df{color:#b8771a}   /* lessons: the 3-move practice's guidance (seqCoachHtml) */
 #lessonCard.ts-compact :is(#lsHint,#lsAuto,#lsNext,#lsToList){display:none!important}
 #lessonCard:not(.ts-compact) .ts-b{display:none!important}
 #lessonCard.ts-compact .cb-bar .cb-ic.ts-b[data-cap]{gap:6px!important}   /* no hidden text label inside: same caption line as 一覧 */   /* tsume: no coach panel at all (2026-11-10) */
@@ -1441,8 +1454,8 @@ html[lang=ar] .pf-input{direction:rtl}
         <label><input type="checkbox" id="optCoach"><span data-i18n="ng.coach"></span></label>
       </div>
     </div>
-    <div class="field dsg-field" data-ng="design"><label data-i18n="ng.pieces"></label><b class="dsg-now" id="pcNow"></b><div class="dsg dsg-pc" id="segPieces"><button type="button" data-v="2kanji_3d"><span class="th pth"></span><span class="nm" data-i18n="pc.3d"></span></button><button type="button" data-v="orangain"><span class="th pth"></span><span class="nm" data-i18n="pc.orangain"></span></button><button type="button" data-v="1kanji_3d"><span class="th pth"></span><span class="nm" data-i18n="pc.ryoko"></span></button><button type="button" data-v="one"><span class="th pth"></span><span class="nm" data-i18n="pc.one"></span></button><button type="button" data-v="two"><span class="th pth"></span><span class="nm" data-i18n="pc.two"></span></button><button type="button" data-v="intl"><span class="th pth"></span><span class="nm" data-i18n="pc.intl"></span></button><button type="button" data-v="intl0"><span class="th pth"></span><span class="nm" data-i18n="pc.intl0"></span></button></div></div>
-    <div class="field dsg-field" data-ng="design"><label data-i18n="ng.skin"></label><b class="dsg-now" id="skNow"></b><div class="dsg dsg-bd" id="segSkin"><button type="button" data-v="classic"><span class="th"></span><span class="nm" data-i18n="sk.classic"></span></button><button type="button" data-v="grain"><span class="th"></span><span class="nm" data-i18n="sk.grain"></span></button><button type="button" data-v="metal"><span class="th"></span><span class="nm" data-i18n="sk.metal"></span></button><button type="button" data-v="ink"><span class="th"></span><span class="nm" data-i18n="sk.ink"></span></button></div></div>
+    <div class="field dsg-field" data-ng="design"><label data-i18n="ng.pieces"></label><b class="dsg-now" id="pcNow"></b><div class="dsg dsg-pc" id="segPieces"><button type="button" data-v="2kanji_3d"><span class="th pth"></span><span class="nm" data-i18n="pc.3d"></span></button><button type="button" data-v="orangain"><span class="th pth"></span><span class="nm" data-i18n="pc.orangain"></span></button><button type="button" data-v="1kanji_3d"><span class="th pth"></span><span class="nm" data-i18n="pc.ryoko"></span></button><button type="button" data-v="ryoko"><span class="th pth"></span><span class="nm" data-i18n="pc.ryokoL"></span></button><button type="button" data-v="kinki"><span class="th pth"></span><span class="nm" data-i18n="pc.kinki"></span></button><button type="button" data-v="minase"><span class="th pth"></span><span class="nm" data-i18n="pc.minase"></span></button><button type="button" data-v="one"><span class="th pth"></span><span class="nm" data-i18n="pc.one"></span></button><button type="button" data-v="two"><span class="th pth"></span><span class="nm" data-i18n="pc.two"></span></button><button type="button" data-v="intl"><span class="th pth"></span><span class="nm" data-i18n="pc.intl"></span></button><button type="button" data-v="intl0"><span class="th pth"></span><span class="nm" data-i18n="pc.intl0"></span></button></div></div>
+    <div class="field dsg-field" data-ng="design"><label data-i18n="ng.skin"></label><b class="dsg-now" id="skNow"></b><div class="dsg dsg-bd" id="segSkin"><button type="button" data-v="kaya"><span class="th"></span><span class="nm" data-i18n="sk.kaya"></span></button><button type="button" data-v="grain"><span class="th"></span><span class="nm" data-i18n="sk.grain"></span></button><button type="button" data-v="classic"><span class="th"></span><span class="nm" data-i18n="sk.classic"></span></button><button type="button" data-v="metal"><span class="th"></span><span class="nm" data-i18n="sk.metal"></span></button><button type="button" data-v="ink"><span class="th"></span><span class="nm" data-i18n="sk.ink"></span></button></div></div>
     <div class="pc-credit" id="pcCredit" data-ng="design" data-ng-credit></div>
     </div></div>
     <div class="modal-actions"><button class="mbtn" id="btnCancelNew" data-i18n="close"></button><button class="mbtn go" id="btnStart" data-i18n="start"></button></div>
@@ -1604,7 +1617,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="rvtip.js?v=20261107l14"></script>
 <script src="../shared/coachkit.js?v=16l14"></script>
 <script src="../shared/record.js?v=12l14"></script>
-<script src="coach.js?v=14"></script>
+<script src="coach.js?v=15"></script>
 <script src="coach-i18n.js?v=20261107l14"></script>
 <script>
 'use strict';
@@ -1622,7 +1635,13 @@ const MV = {
   13: { l: ['NW', 'NE', 'SW', 'SE'], s: ['N', 'S', 'W', 'E'] }, 14: { l: ['N', 'S', 'W', 'E'], s: ['NW', 'NE', 'SW', 'SE'] },
 };
 const PCODE = ['', 'FU', 'KY', 'KE', 'GI', 'KA', 'HI', 'KI', 'OU', 'TO', 'NY', 'NK', 'NG', 'UM', 'RY'];
-const PIECE_SETS = { orangain: 'orangain (CC BY-SA 3.0)', '2kanji_3d': 'Little-Mage & orangain (CC BY-SA 3.0)', '1kanji_3d': 'Little-Mage & CouchTomato87 (CC BY 4.0)' };
+const PIECE_SETS = { orangain: 'orangain (CC BY-SA 3.0)', '2kanji_3d': 'Little-Mage & orangain (CC BY-SA 3.0)', '1kanji_3d': 'Little-Mage & CouchTomato87 (CC BY 4.0)',
+  ryoko: 'LuffyKudo (CC BY-SA 4.0)', kinki: 'LuffyKudo (CC BY-SA 4.0)', minase: 'LuffyKudo (CC BY-SA 4.0)' };   // 菱湖・錦旗・水無瀬 (2026-11-10, github.com/LuffyKudo/Shogi-Themes)
+// names of the added piece sets / board (14 languages)
+{ const N = { ja: ['菱湖', '錦旗', '水無瀬', '本榧'], en: ['Ryoko', 'Kinki', 'Minase', 'Kaya'], zh: ['菱湖', '锦旗', '水无濑', '本榧'], 'zh-TW': ['菱湖', '錦旗', '水無瀨', '本榧'], ko: ['료코', '긴키', '미나세', '비자나무'],
+    es: ['Ryoko', 'Kinki', 'Minase', 'Kaya'], fr: ['Ryoko', 'Kinki', 'Minase', 'Kaya'], pt: ['Ryoko', 'Kinki', 'Minase', 'Kaya'], de: ['Ryoko', 'Kinki', 'Minase', 'Kaya'], hi: ['र्योको', 'किंकी', 'मिनासे', 'काया'],
+    ar: ['ريوكو', 'كينكي', 'ميناسي', 'كايا'], ru: ['Рёко', 'Кинки', 'Минасэ', 'Кая'], id: ['Ryoko', 'Kinki', 'Minase', 'Kaya'], tr: ['Ryoko', 'Kinki', 'Minase', 'Kaya'] };
+  for (const l in N) { const o = I18N[l] || (I18N[l] = {}); o['pc.ryokoL'] = N[l][0]; o['pc.kinki'] = N[l][1]; o['pc.minase'] = N[l][2]; o['sk.kaya'] = N[l][3]; } }
 for (const [l, v] of Object.entries({"ja": "英語（動きなし）", "en": "English (plain)", "zh": "英文（无走法）", "ko": "영어(이동 표시 없음)", "es": "Inglés (sin movimientos)", "fr": "Anglais (sans déplacements)", "pt": "Inglês (sem movimentos)", "de": "Englisch (ohne Züge)", "hi": "अंग्रेज़ी (बिना चालें)", "ar": "إنجليزي (بدون الحركات)", "ru": "Английские (без ходов)", "zh-TW": "英文（無走法）", "id": "Inggris (polos)", "tr": "İngilizce (sade)"})) (I18N[l] || (I18N[l] = {}))['pc.intl0'] = v;   // letters without movement marks
 const EN_LETTER = ['', 'P', 'L', 'N', 'S', 'B', 'R', 'G', 'K', '+P', '+L', '+N', '+S', '+B', '+R'];
 const MV_ANG = { N: 0, NE: 45, E: 90, SE: 135, S: 180, SW: 225, W: 270, NW: 315 };
@@ -1669,7 +1688,7 @@ const lvClamp = v => typeof v === 'number' && v >= 0 && v < LEVELS.length ? Math
 
 // ====================================================================== i18n / state
 const STORE = 'shogi-kaya-v1', LSTORE = 'shogi-kaya-lessons-v1';
-const settings = { mode: 'ai', color: 0, level: LV_DEFAULT, level2: LV_DEFAULT, lvv: 3, handicap: 0, legal: true, last: true, eval: true, coach: true, sound: true, lang: '', pieces: '2kanji_3d', skin: 'classic', variant: '', heianB: '8' };
+const settings = { mode: 'ai', color: 0, level: LV_DEFAULT, level2: LV_DEFAULT, lvv: 3, handicap: 0, legal: true, last: true, eval: true, coach: true, sound: true, lang: '', pieces: '2kanji_3d', skin: 'kaya', skinV: 2, variant: '', heianB: '8' };
 const SUPPORTED = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
 function detectLang() { const f = (navigator.language || 'ja').toLowerCase(); if (/^zh-(tw|hk|mo|hant)/.test(f)) return 'zh-TW'; const n = f.slice(0, 2); return SUPPORTED.includes(n) ? n : 'en'; }
 let LANG = detectLang();
@@ -1710,6 +1729,7 @@ function load() {
     const d = JSON.parse(localStorage.getItem(STORE) || 'null');
     if (!d) return false;
     Object.assign(settings, d.settings || {});
+    if (settings.skinV !== 2) { if (!settings.skin || settings.skin === 'classic') settings.skin = 'kaya'; settings.skinV = 2; }   // 本榧 is the default board (2026-11-10)
     // settings saved before the rank steps (10 levels): map the level indices once
     if (d.settings && d.settings.lvv !== 2 && d.settings.lvv !== 3) { settings.level = lvMig(d.settings.level); settings.level2 = lvMig(d.settings.level2); settings.lvv = 2; }
     settings.level = lvClamp(settings.level); settings.level2 = lvClamp(settings.level2);
@@ -1917,7 +1937,11 @@ function pieceEl(code, promoted) {
     // image piece sets (lishogi assets; see pieces/README.md for authors and licences)
     el.classList.add('img'); el.classList.remove('g');
     const up = (col === 1) !== flip, code = tp === OU ? (col ? 'OU' : 'GY') : PCODE[tp];
-    k.innerHTML = `<img src="pieces/${settings.pieces}/${up ? 1 : 0}${code}.svg?v=2" alt="" draggable="false">`;
+    const src = `pieces/${settings.pieces}/${up ? 1 : 0}${code}.svg?v=4`;
+    k.innerHTML = `<img src="${src}" alt="" draggable="false">`;
+    // the face's wood grain: its own patch of the grain texture for each kind (and side), rotated with the piece
+    const gi = tp * 2 + (up ? 1 : 0);
+    k.style.setProperty('--pm', `url("${src}")`); k.style.setProperty('--gp', `${(gi * 37) % 100}% ${(gi * 61) % 100}%`); k.style.setProperty('--gs', `${60 + (gi * 29) % 30}%`);
   } else if (settings.pieces === 'two') { const w = tp === OU ? (col ? '王将' : '玉将') : KANJI2[tp]; k.innerHTML = `<span class="two">${w[0]}<br>${w[1]}</span>`; }
   else if (settings.pieces === 'intl' || settings.pieces === 'intl0') { el.classList.add('has-intl'); k.innerHTML = intlSvg(tp, one, settings.pieces === 'intl0'); }
   else k.textContent = one;
@@ -1932,7 +1956,7 @@ function preloadPieces(set) {
   if (!PIECE_SETS[set] || PRELOAD[set]) return;
   PRELOAD[set] = [];
   for (const side of [0, 1]) for (const code of PCODE.slice(1).concat('GY')) {
-    const im = new Image(); im.src = `pieces/${set}/${side}${code}.svg?v=2`;
+    const im = new Image(); im.src = `pieces/${set}/${side}${code}.svg?v=4`;
     if (im.decode) im.decode().catch(() => {});
     PRELOAD[set].push(im);
   }
@@ -2989,7 +3013,7 @@ function applyLook() {
   if (settings.pieces === 'ryoko_1kanji') settings.pieces = '1kanji_3d';
   preloadPieces(settings.pieces);
   $('#pcCredit').textContent = PIECE_SETS[settings.pieces] ? t('pc.credit', { a: PIECE_SETS[settings.pieces] }) : '';
-  ['grain', 'metal', 'ink'].forEach(s => document.body.classList.toggle('skin-' + s, settings.skin === s));
+  ['grain', 'kaya', 'metal', 'ink'].forEach(s => document.body.classList.toggle('skin-' + s, settings.skin === s));
   segSel('segPieces', settings.pieces); segSel('segSkin', settings.skin);
   designThumbs();
 }
@@ -2997,6 +3021,7 @@ function applyLook() {
 const DSG_SKIN = {
   classic: { b: ['#ecc67f', '#e2b66b', '#d6a55a'], line: 'rgba(40,22,5,.75)', star: '#2b1a0a', fr: ['#2a2018', '#16100b'], co: 'rgba(226,194,117,.75)', pc: ['#f7dca2', '#eccb85', '#ddb466'], ink: '#1c1209', red: '#b8231a', noise: '.03 .9', na: .28 },
   grain: { b: ['#e9be76', '#dcab60', '#cc9648'], line: 'rgba(40,22,5,.75)', star: '#2b1a0a', fr: ['#3a2414', '#1f130a'], co: 'rgba(226,194,117,.75)', pc: ['#f5d79a', '#e6bf73', '#d2a252'], ink: '#1c1209', red: '#b8231a', noise: '.012 .16', na: .75 },
+  kaya: { b: ['#f2d48a', '#e9c574', '#dcb25c'], line: 'rgba(60,34,6,.72)', star: '#3a2208', fr: ['#3a2414', '#1f130a'], co: 'rgba(226,194,117,.75)', pc: ['#f7dca2', '#eccb85', '#ddb466'], ink: '#1c1209', red: '#b8231a', noise: '.09 .004', na: .5 },
   metal: { b: ['#c9d0d6', '#9aa3ab', '#8a939b'], line: 'rgba(20,28,34,.7)', star: '#1b2226', fr: ['#3b4248', '#1d2226'], co: 'rgba(210,220,228,.75)', pc: ['#f4f6f8', '#cfd5da', '#a9b1b8'], ink: '#15191c', red: '#c0281c', brushed: 1, imgF: 'saturate(.12) brightness(1.12) contrast(1.08)' },
   ink: { b: ['#2b2622', '#25211d', '#1f1b18'], line: 'rgba(214,180,110,.5)', star: '#d6b46e', fr: ['#141414', '#070707'], co: 'rgba(214,180,110,.8)', pc: ['#2f2a25', '#26211c', '#1d1915'], ink: '#e9d39f', red: '#ff7a66', edge: 'rgba(214,180,110,.75)' },
 };
@@ -3007,7 +3032,7 @@ function dsgPiece(tp, gote, cx, cy, cw, ch, set, S, id) {
   const rot = gote ? ` transform="rotate(180 ${cx} ${cy})"` : '';
   if (PIECE_SETS[set]) {
     const code = tp === OU ? (gote ? 'OU' : 'GY') : PCODE[tp], w = cw * 1.12, h = ch * 1.12;
-    return `<image href="pieces/${set}/${gote ? 1 : 0}${code}.svg?v=2" x="${cx - w / 2}" y="${cy - h / 2}" width="${w}" height="${h}"${S.imgF ? ` style="filter:${S.imgF}"` : ''}/>`;
+    return `<image href="pieces/${set}/${gote ? 1 : 0}${code}.svg?v=4" x="${cx - w / 2}" y="${cy - h / 2}" width="${w}" height="${h}"${S.imgF ? ` style="filter:${S.imgF}"` : ''}/>`;
   }
   const w = cw * sz[0], h = ch * sz[1], x = cx - w / 2, y = cy - h / 2;
   const pts = [[.5, 0], [.83, .13], [.97, 1], [.03, 1], [.17, .13]].map(([a, b]) => `${(x + a * w).toFixed(2)},${(y + b * h).toFixed(2)}`).join(' ');
@@ -4794,7 +4819,14 @@ function seqCoachHtml() {
     const g = { best: 0, good: 1, dubious: 2, bad: 3 }[st.q], title = st.ans ? sqt('ans', { i: st.i + 1, m: st.kif }) : sqt('step', { i: st.i + 1, m: st.kif, q: t('q.' + st.q) }) + '　' + t('ls.pts', { p: st.pts });
     h += CoachKit.verdict(st.ans ? 2 : g, esc(title), st.why);
   }
-  if (S.done) h += `<p class="ck-muted"><b>${esc(sqt('total', { n: SEQ_N, p: S.total }))}</b></p>`;
+  if (S.done) {
+    h += `<p class="ck-muted"><b>${esc(sqt('total', { n: SEQ_N, p: S.total }))}</b></p>`;
+    const RV = { ja: ['振り返り：定跡の正しい進行', '盤で再生', '定跡を調べています…', '緑は定跡どおり、黄は定跡と違った手。(AI)は定跡が途切れた先のAIの手。'], en: ['Review: the book line', 'Play on the board', 'Looking up the book…', 'Green: as in the book. Yellow: off the book. (AI): past the book, the engine’s move.'], zh: ['复盘：定式的正确进行', '在棋盘上播放', '正在查定式…', '绿色＝符合定式，黄色＝偏离定式。(AI)＝定式之后AI的着法。'], 'zh-TW': ['復盤：定跡的正確進行', '在棋盤上播放', '正在查定跡…', '綠色＝符合定跡，黃色＝偏離定跡。(AI)＝定跡之後AI的著法。'], ko: ['복기: 정석의 올바른 진행', '판에서 재생', '정석을 찾는 중…', '초록은 정석대로, 노랑은 정석과 다른 수. (AI)는 정석 이후 AI의 수.'] }[LANG] || ['Review: the book line', 'Play on the board', 'Looking up the book…', 'Green: as in the book. Yellow: off the book. (AI): past the book, the engine’s move.'];
+    if (S.ideal) {
+      const ks = lineKanji(lesson.cur.sfen, S.ideal), mine = lesson.played;
+      h += `<div class="ck-sec sq-rv"><h4>${esc(RV[0])}</h4><p class="sq-line" title="${esc(RV[3])}">${ks.map((k, i) => `<span class="${i % 2 ? 'op' : mine[i] === S.ideal[i] ? 'ok' : 'df'}">${esc(k)}${S.idealAi && S.idealAi.has(i) ? '<small>(AI)</small>' : ''}</span>`).join(' ')}</p><p class="ck-muted" style="margin:0 0 8px;font-size:12.5px">${esc(RV[3])}</p><button type="button" class="ck-rvgo" data-sq="play">▶ ${esc(RV[1])}</button></div>`;
+    } else h += `<p class="ck-calc">${esc(RV[2])}</p>`;
+  }
   else if (S.busy) h += `<p class="ck-calc">${esc(sqt(S.busy))}</p>`;
   return h;
 }
@@ -4868,6 +4900,33 @@ function seqFinish(S, over) {
   S.total = Math.round(pts.reduce((a, x, i) => a + x * SEQ_W[i], 0)); S.done = true; S.busy = null;
   lessonScored(S.total, { seq: true });
   seqShow();
+  seqIdeal(S);
+}
+// 振り返り (2026-11-10): the correct opening line (定跡の正しい進行) from the problem position — the main book move for both
+// sides, as far as the book goes — shown under the verdicts with a button that plays it on the board
+async function seqIdeal(S) {
+  const pr = lesson.cur, line = [], q = new E.Position(); q.setSfen(pr.sfen);
+  const studyMap = {};   // position → the next move of the opening's model line
+  try { const st = lesson.g && lesson.g.study; if (st && st.start) { const z = new E.Position(); z.setSfen(st.start); for (const [u] of st.steps) { studyMap[z.sfen().replace(/ \d+$/, '')] = u; z.doMove(z.fromUsi(u)); } } } catch (e) {}
+  for (let ply = 0; ply < SEQ_N * 2 - 1; ply++) {
+    if (!q.hasLegalMove()) break;
+    // the correct opening line: this opening's own model line (study) when the position is on it, else the main book move;
+    // past the book the engine's move (marked in the list)
+    const key = q.sfen().replace(/ \d+$/, ''), sl = studyMap[key], bk = sl ? null : seqBook(q, pr, ply === 0);
+    let u = sl || (bk ? bk[0].u : null), ai = false;
+    if (!u) { const r = await aiCall({ type: 'think', sfen: pr.sfen, moves: line.slice(), opts: { time: 500 } }); if (!lesson || lesson.seq !== S) return; u = r && r.move; ai = true; }
+    if (!u) break;
+    if (ai) (S.idealAi || (S.idealAi = new Set())).add(line.length);
+    line.push(u); q.doMove(q.fromUsi(u));
+  }
+  if (!lesson || lesson.seq !== S) return;
+  S.ideal = line; seqShow();
+}
+function seqPlayIdeal() {
+  const S = lesson && lesson.seq, pr = lesson && lesson.cur; if (!S || !S.ideal) return;
+  const tok = S.ptok = (S.ptok || 0) + 1;
+  lessonGame(pr.sfen, []);
+  S.ideal.forEach((u, i) => setTimeout(() => { if (!lesson || lesson.seq !== S || S.ptok !== tok) return; lessonGame(pr.sfen, S.ideal.slice(0, i + 1)); playPiece(false); }, 700 * (i + 1)));
 }
 async function seqAnswer() {   // 「答え」: the best move is played for you (0 points for it) and explained
   const S = lesson.seq, pr = lesson.cur; if (!S || S.done || !lesson.waiting) return;
@@ -6035,11 +6094,11 @@ if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStar
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=39l14'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=41l14'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=136')).then(() => load('../atlas/tables3d.js?v=51')).then(() => load('../atlas/skin/common.js?v=52tz')).then(() => load('../atlas/models/shogi.js?v=22l14')).then(() => load('../atlas/skin/shogi.js?v=14l14'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=136')).then(() => load('../atlas/tables3d.js?v=51')).then(() => load('../atlas/skin/common.js?v=52tz')).then(() => load('../atlas/models/shogi.js?v=27k')).then(() => load('../atlas/skin/shogi.js?v=16k'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
@@ -6050,6 +6109,7 @@ if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStar
 <script src="../shared/infotabs.js?v=17l14" defer></script>
 <script src="../shared/pickdrop.js?v=8l14"></script>
 <script src="../shared/ngtabs.js?v=25l14"></script>
+<script src="../shared/nglux.js?v=16l14"></script>
 <script src="../shared/resumeng.js?v=1l14"></script>
 <script src="../shared/langsel.js?v=2l14" defer></script>
 </body>

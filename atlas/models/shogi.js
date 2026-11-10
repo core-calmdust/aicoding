@@ -91,15 +91,21 @@
           else { const v = 255 * a * (.35 + .65 * hgt); d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = v; }
         }
       },
-      // board top: straight-grained kaya
+      // board top: 本榧 (天地柾, 2026-11-10) — golden kaya; thin growth lines running from top to bottom, unevenly spaced and of
+      // uneven strength, broadly warped (no repeating pattern), with fine fibres; kept light so the board stays bright
       top(d, W, H) {
-        const N = makeNoise(5);
+        const N = makeNoise(5), hs = k => { const x = Math.sin(k * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
         for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
           const u = x / W, v = y / H;
-          const r = (u * 34 + N(u * 1.5, v * 2.2, 3) * 1.8 + N(u * 12, v * 30, 2) * .05) % 1;
-          const late = Math.exp(-Math.pow((r - .85) / .05, 2)) * .55 + Math.exp(-Math.pow((r - .85) / .18, 2)) * .25;
-          const t = .16 + late * .45 + (N(u * 3, v * 260, 1) - .5) * .12 + (N(u * 2, v * 2, 2) - .5) * .18, i = (y * W + x) * 4;
-          d[i] = 208 - t * 66; d[i + 1] = 150 - t * 62; d[i + 2] = 78 - t * 46; d[i + 3] = 255;
+          // the ring coordinate: slow warp + uneven spacing (each ring's width from a hash)
+          const ph = u * 40 + (N(u * 1.4, v * .9, 3) - .5) * 3 + (N(u * 6, v * 3.2, 2) - .5) * .35;
+          const k = Math.floor(ph), f = ph - k, w0 = .5 + hs(k) * .9;
+          const pos = Math.min(.98, .55 + hs(k + 7) * .35), str = .35 + hs(k + 13) * .65;
+          const line = Math.exp(-Math.pow((f - pos) / (.022 * w0), 2)) * str + Math.exp(-Math.pow((f - pos) / (.09 * w0), 2)) * str * .22;
+          const fib = (N(u * 9, v * 420, 1) - .5) * .07 + (N(u * 160, v * 6, 1) - .5) * .04;
+          const tone = (N(u * 1.6, v * 1.3, 2) - .5) * .16;
+          const t = .12 + line * .62 + fib * 1.4 + tone, i = (y * W + x) * 4;
+          d[i] = 240 - t * 72; d[i + 1] = 200 - t * 82; d[i + 2] = 118 - t * 76; d[i + 3] = 255;
         }
       },
       endGrain(d, W, H, p) {
@@ -155,10 +161,18 @@
   }
   // board top: straight-grained kaya with the black lacquer lines (太刀盛り) and four stars
   // n: squares per side (9; 5 for 5五将棋 — no stars)
+  // 本榧 (2026-11-10): the same grain as the 2D board (shogi/index.html body.skin-kaya), pre-rendered to images/atlas/shogi-kaya.webp
+  // (a same-origin picture: an SVG filter drawn into the canvas would taint it for WebGL); the top is redrawn once it has loaded
+  let kayaImg = null;
+  function withKaya(fn) {
+    if (kayaImg && kayaImg.complete && kayaImg.naturalWidth) { fn(kayaImg); return; }
+    if (!kayaImg) { kayaImg = new Image(); kayaImg.src = '../images/atlas/shogi-kaya.webp?v=2'; }
+    kayaImg.addEventListener('load', () => fn(kayaImg), { once: true });
+  }
   function boardTop(n = 9) {
     const MG = n === 9 ? MARGIN : MARGIN * n / 9;   // rim scales with the grid (the 5x5 board is fitted to the same screen size)
     const PX = 100, BW = n * CW + MG * 2, BD = n * CH + MG * 2;
-    return canvasTex(n === 9 ? 'shogiTop3' : 'shogiTop3-' + n, BW * PX | 0, BD * PX | 0, (c0) => paint(c0.canvas, 'top', {}, (c) => {
+    const grid = (c) => {
       const ox = MG * PX, oy = MG * PX, cw = CW * PX, ch = CH * PX;
       c.strokeStyle = 'rgba(20,10,4,.92)'; c.lineCap = 'square';
       for (let i = 0; i <= n; i++) {
@@ -168,7 +182,17 @@
       }
       c.fillStyle = 'rgba(20,10,4,.95)';
       if (n === 9) [[3, 3], [6, 3], [3, 6], [6, 6]].forEach(([i, j]) => { c.beginPath(); c.arc(ox + i * cw, oy + j * ch, 5.5, 0, 7); c.fill(); });
-    }));
+    };
+    let tex = null;
+    tex = canvasTex(n === 9 ? 'shogiTop5' : 'shogiTop5-' + n, BW * PX | 0, BD * PX | 0, (c0, W, H) => {
+      const base = (c) => { const g = c.createLinearGradient(0, 0, W * .14, H); g.addColorStop(0, '#f2d48a'); g.addColorStop(.4, '#ebc979'); g.addColorStop(.75, '#e2bb66'); g.addColorStop(1, '#d7ac57'); c.fillStyle = g; c.fillRect(0, 0, W, H); };
+      base(c0); grid(c0);
+      withKaya(img => {
+        const c = c0; c.drawImage(img, 0, 0, W, H); grid(c);
+        if (tex) tex.needsUpdate = true;
+      });
+    });
+    return tex;
   }
   // the lines are raised lacquer too: a bump map with the grid
   function boardBump(n = 9) {
@@ -198,7 +222,7 @@
     // taper: thick at the bottom, thinner towards the tip (as real pieces are)
     const P = geo.attributes.position, UV = geo.attributes.uv;
     for (let i = 0; i < P.count; i++) {
-      const y = P.getY(i), z = P.getZ(i), th = (.3 - (y - bot) / (tip - bot) * .1) * s;
+      const y = P.getY(i), z = P.getZ(i), th = (.26 - (y - bot) / (tip - bot) * .085) * s;   // (a little thinner, closer to real pieces: 2026-11-10)
       P.setZ(i, z < 0 ? z : z > 1 ? th + (z - 1) : z * th);
     }
     for (let i = 0; i < UV.count; i++) UV.setXY(i, (P.getX(i) + bw) / (2 * bw), (P.getY(i) - bot) / (tip - bot));
@@ -260,7 +284,7 @@
     // board colour (the game's "board & piece skin"): a tint over the kaya
     const tinted = [top, kaya, endF, endS, bottom]; g.traverse(o => { if (o.isMesh && o.material && !Array.isArray(o.material) && !tinted.includes(o.material)) tinted.push(o.material); });
     const base0 = tinted.map(m => m.color.clone());
-    const TONES = { classic: 0xe8c9a0, grain: 0xd2a26e, metal: 0xb4bcc6, ink: 0x5e5046 };
+    const TONES = { classic: 0xe8c9a0, grain: 0xd2a26e, kaya: 0xf6e2bc, metal: 0xb4bcc6, ink: 0x5e5046 };   // kaya: golden 本榧 (the default)
     g.userData.setTone = name => { g.userData.tone = name; const c = new TT.Color(TONES[name] || 0xffffff).convertSRGBToLinear(); tinted.forEach((m, i) => { m.color.copy(base0[i]).multiply(c); }); };
     g.userData.setTone('classic');
     g.userData.S = FH; g.userData.W = FW; g.userData.top = base + THICK + .001; g.userData.outer = BD / FH; g.userData.n = n;

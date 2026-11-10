@@ -491,7 +491,7 @@ function mtPlan(m) {
     const L = m.cfg || LEVELS[m.level] || LEVELS[10];
     if (all.length < 2 || !L.s) { PRO_CFG = m.cfg || null; try { return { result: think(m.start, m.moves, m.level) }; } finally { PRO_CFG = null; } }
     kreset();
-    return { plan: { kind: 'best', moves: orderMoves(pos, all, -1, 0), inf, maxD: L.dx || 60, ms: L.ms || 0, nodes: (L.nk || (L.ms ? 0 : 50)) * 1000, win: WINT, partialIfBetter: true, splitMin: 99, specRes: SH === null ? 0 : undefined, sticky: SH === null, lazy: lazyOf(m, L, false) } };   // (the root moves only: Kōnane leans on its table, a split main line costs more than it gives; Young Brothers Wait on the shared table — on the user's Mac 8 threads ×2.4 vs Lazy SMP ×1.5, 2026-11-09; lazy: Lazy SMP, for the bench)
+    return { plan: { kind: 'best', moves: orderMoves(pos, all, -1, 0), inf, maxD: L.dx || 60, ms: L.ms || 0, nodes: (L.nk || (L.ms ? 0 : 50)) * 1000, win: WINT, partialIfBetter: true, splitMin: 99, lmr: { d: 3, i: 5 }, specRes: SH === null ? 0 : undefined, sticky: SH === null, lazy: lazyOf(m, L, false) } };   // (the root moves only: Kōnane leans on its table, a split main line costs more than it gives; Young Brothers Wait on the shared table — on the user's Mac 8 threads ×2.4 vs Lazy SMP ×1.5, 2026-11-09; lazy: Lazy SMP, for the bench)
   }
   if (!all.length) return { result: { list: [], depth: 0 } };
   const cands = m.job === 'cands';

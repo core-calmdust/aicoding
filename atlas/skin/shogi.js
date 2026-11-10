@@ -79,7 +79,7 @@
       // straight grain with a slow wave, a few darker late-wood lines
       for (let i = 0; i < 70; i++) {
         const a0 = rnd() * A, amp = 2 + rnd() * 5, f = .004 + rnd() * .01, ph = rnd() * 6.28, dark = rnd() < .22;
-        x.strokeStyle = dark ? `rgba(150,92,38,${.16 + rnd() * .14})` : `rgba(170,112,52,${.06 + rnd() * .1})`;
+        x.strokeStyle = dark ? `rgba(150,92,38,${.03 + rnd() * .03})` : `rgba(170,112,52,${.015 + rnd() * .02})`;   // (faint: the stand stays quiet, 2026-11-10)
         x.lineWidth = dark ? 1 + rnd() * 1.6 : .5 + rnd() * .8;
         x.beginPath();
         for (let t = 0; t <= L; t += 8) { const a = a0 + Math.sin(t * f + ph) * amp; const px = along === 'y' ? a : t, py = along === 'y' ? t : a; t ? x.lineTo(px, py) : x.moveTo(px, py); }
@@ -119,6 +119,10 @@
       if (mine) { e.stopImmediatePropagation(); look(); try { renderBoard(false); renderHands(); } catch (x) {} }
     }, true);
   }
+  // 3D / 2D (the standard of the other games, 2026-11-10): a 「3D」 tile first in the board row; a 2D board picked = the 2D page
+  const V = skin.view ? skin.view({ key: 'atlas-shogi-view', row: document.getElementById('segSkin'), img: '../images/atlas/shogi.webp',
+    on() { setTimeout(() => { try { look(); renderBoard(false); renderHands(); } catch (e) {} }, 0); } }) : null;
+  const is3 = () => !V || V.is3d();
   function look() {   // selection mark, board tone and piece tone follow the game's skin setting
     if (seg) seg.querySelectorAll('button').forEach(x => { if (mine) x.classList.toggle('sel', x.dataset.v === 'atlas3d'); else if (x.dataset.v === 'atlas3d') x.classList.remove('sel'); });
     let sk = 'classic'; try { sk = settings.skin || 'classic'; } catch (e) {}
@@ -130,12 +134,15 @@
   setTimeout(look, 0);
   window.pieceEl = function (code, promoted) {
     const el = orig(code, promoted);
-    if (!IMG || !mine) return el;
+    if (!IMG || !mine || !is3()) return el;
     try {
       const tp = E.typeOf(code), col = E.colorOf(code), up = (col === 1) !== flip;
       const src = IMG['k' + tp + (tp === 8 && col === 1 ? 'o' : '')]; if (!src) return el;
       el.classList.add('img', 'atlas3d'); el.classList.remove('g', 'has-intl');
       const k = el.querySelector('.k'); k.innerHTML = `<img src="${src}" alt="" draggable="false"${up ? ' class="up"' : ''}>`;
+      // the face's fine wood grain, as on the page's image sets (its own patch per kind and side)
+      const gi = tp * 2 + (up ? 1 : 0); k.classList.toggle('up', up);
+      k.style.setProperty('--pm', `url("${src}")`); k.style.setProperty('--gp', `${(gi * 37) % 100}% ${(gi * 61) % 100}%`); k.style.setProperty('--gs', `${60 + (gi * 29) % 30}%`);
     } catch (e) {}
     return el;
   };
@@ -143,7 +150,7 @@
   const sheet = () => new Promise((res, rej) => { const im = new Image(); im.onload = () => {
     const out = {}, keys = ['k1', 'k2', 'k3', 'k4', 'k5', 'k6', 'k7', 'k8', 'k9', 'k10', 'k11', 'k12', 'k13', 'k14', 'k8o'];
     keys.forEach((k, i) => { const c = document.createElement('canvas'); c.width = 256; c.height = 282; c.getContext('2d').drawImage(im, (i % 5) * 256, (i / 5 | 0) * 282, 256, 282, 0, 0, 256, 282); out[k] = c.toDataURL('image/png'); });
-    res(out); }; im.onerror = rej; im.src = '../images/atlas/shogi-pieces.png?v=1'; });
+    res(out); }; im.onerror = rej; im.src = '../images/atlas/shogi-pieces.png?v=2'; });
   sheet().catch(() => SG.images(256)).then(o => {
     IMG = o;
     window.__shogiAtlasPre = Object.values(o).map(src => { const im = new Image(); im.src = src; if (im.decode) im.decode().catch(() => {}); return im; });   // decoded up front: promotions show at once

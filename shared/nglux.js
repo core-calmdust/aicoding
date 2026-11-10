@@ -62,7 +62,8 @@ ${P} > :is(.ngt-modef,.ng-cols){order:0!important}
 ${P}.ngt-pc[data-ngt=rules] .ngt-modef{margin-bottom:16px!important}
 ${P}.ngt-pc[data-ngt=rules] .ngt-modef > label{letter-spacing:.18em}
 /* デザイン tab: each design row in a panel, big picture tiles */
-${P}[data-ngt=design] [data-ng=design]:not(.ngt-hide):not(.hidden){margin:0 0 14px!important;padding:16px 18px 18px!important;border-radius:16px;border:1px solid var(--ngl-pbd);background:var(--ngl-pbg);box-shadow:var(--ngl-psh)}
+${P}[data-ngt=design] [data-ng=design]:not(.ngt-hide):not(.hidden):not([data-ng-credit]){margin:0 0 14px!important;padding:16px 18px 18px!important;border-radius:16px;border:1px solid var(--ngl-pbd);background:var(--ngl-pbg);box-shadow:var(--ngl-psh)}
+${P}[data-ngt=design] [data-ng-credit]{margin:4px 0 0!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;text-align:center}   /* the design credit: just a line at the bottom, no frame */
 ${P}[data-ngt=design] [data-ng=design] :is(.dsg,.bdrow,.skrow,.skinrow){gap:10px!important}
 ${P}.ngt-pc[data-ngt=design] [data-ng=design] :is(.dsg,.bdrow,.skrow,.skinrow){display:grid!important;grid-template-columns:repeat(auto-fill,minmax(var(--ngl-tile,136px),1fr))!important}
 ${P}[data-ngt=design] [data-ng=design] :is(.dsg,.bdrow,.skrow,.skinrow) > button{border-radius:12px!important;padding:6px 6px 8px!important;gap:6px;border:1px solid color-mix(in srgb, var(--ngl-a) 18%, var(--line,#3a2f24))!important;
@@ -80,7 +81,7 @@ ${P}.ngt-on .ngt-gcard p{font-size:12.5px!important;line-height:1.6}
 ${P}.ngt-on[data-ngt=rules] .ng-cols:not(.ngt-hide){display:flex!important;flex-direction:column;gap:10px!important;margin:0 0 6px!important}
 ${P}.ngt-on[data-ngt=rules] .ng-col:not(.ngt-hide):not(.ngl-empty){gap:22px!important;padding:16px 14px 18px!important;border-radius:14px}
 ${P}.ngt-on :is(.ng-col,[data-ng=design]) > .field > label:first-child,${P}.ngt-on [data-ng=design] > label:first-child{font-size:11px;letter-spacing:.2em;margin-bottom:8px}
-${P}.ngt-on[data-ngt=design] [data-ng=design]:not(.ngt-hide):not(.hidden){margin:0 0 10px!important;padding:13px 12px 14px!important;border-radius:14px}
+${P}.ngt-on[data-ngt=design] [data-ng=design]:not(.ngt-hide):not(.hidden):not([data-ng-credit]){margin:0 0 10px!important;padding:13px 12px 14px!important;border-radius:14px}
 ${P}.ngt-on[data-ngt=design] [data-ng=design] :is(.dsg,.bdrow,.skrow,.skinrow){gap:6px!important}
 ${P}.ngt-on[data-ngt=design] [data-ng=design] :is(.dsg,.bdrow,.skrow,.skinrow) > button{padding:3px 3px 5px!important;border-radius:10px!important}
 /* phones held sideways (html.ngt-land / html.rot, 2026-11-07): the dialog is short and wide — the ルール panels side by side
@@ -111,6 +112,16 @@ html.atlas-skin ${P}[data-ngt=design] [data-ng=design] :is(.dsg,.bdrow,.skrow,.s
 html.atlas-skin ${P}[data-ngt=design] [data-ng=design] :is(.dsg,.bdrow,.skrow,.skinrow) > button:is(.sel,.on,[aria-pressed=true]){background:linear-gradient(180deg,#fff6df,#fde6b6)!important;border-color:#e0a33a!important;box-shadow:0 0 0 1px #e9bd6a, 0 6px 14px -8px rgba(150,100,30,.6)!important}
 html.atlas-skin ${P} .ngt-gcard.sel{background:linear-gradient(180deg,#fff6df,#fdeac4)}
 html.atlas-skin ${P}.ngt-pc .ngt-gcard p{color:#4a5068}
+/* the portal look is flat (2026-11-10): solid fills, a solid border and at most a solid bottom edge — no gradients, glows or soft drop shadows */
+html.atlas-skin ${P}{--ngl-pbg:#fffaf0;--ngl-psh:0 3px 0 #ecdab4}
+html.atlas-skin ${P} :is(.ng-col,[data-ng=design],.ngt-gcard,.ngt-modef,.ngt-rl){background-image:none!important}
+html.atlas-skin ${P} .seg button.sel{background:#fff!important;box-shadow:0 2px 0 #e3cfa4!important}
+html.atlas-skin ${P}[data-ngt=design] [data-ng=design] :is(.dsg,.bdrow,.skrow,.skinrow) > button{box-shadow:0 2px 0 #efe2c4!important}
+html.atlas-skin ${P}[data-ngt=design] [data-ng=design] :is(.dsg,.bdrow,.skrow,.skinrow) > button:is(.sel,.on,[aria-pressed=true]){background:#fff3d6!important;border-color:#e0a33a!important;box-shadow:0 0 0 1px #e0a33a, 0 3px 0 #e6c27a!important;transform:none!important}
+html.atlas-skin ${P}[data-ngt=design] [data-ng=design] :is(.dsg,.bdrow,.skrow,.skinrow) > button :is(.th,svg,img,i){box-shadow:none!important}
+html.atlas-skin ${P} .ngt-gcard{box-shadow:0 3px 0 #ecdab4!important}
+html.atlas-skin ${P} .ngt-gcard.sel{background:#fff3d6!important;border-color:#e0a33a!important;box-shadow:0 0 0 1px #e0a33a, 0 3px 0 #e6c27a!important}
+html.atlas-skin ${P} .ngt-gcard .gart{box-shadow:none!important;background-image:none!important}
 `;
 function init() {
   const ov = document.getElementById('newOverlay'), modal = ov && ov.querySelector('.modal');

@@ -59,8 +59,8 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);ma
 
 <div class="card"><h2>結果</h2><div class="tw"><table id="tbl"><thead><tr><th>測定</th><th>方式</th><th>スレッド</th><th>時間</th><th>1スレッド比</th><th>効率</th><th>nps（合計）</th><th>1スレッドと一致</th></tr></thead><tbody></tbody></table></div><pre id="log"></pre></div>
 </main>
-<script src="engine.js?v=4-wa3"></script>
-<script src="../shared/mtengine.js?v=8"></script><script src="../shared/mtsplit.js?v=5"></script>
+<script src="engine.js?v=4-wa4"></script>
+<script src="../shared/mtengine.js?v=8"></script><script src="../shared/mtsplit.js?v=6"></script>
 <script>MTSplit.init({ sw: 'sw.js?v=1' });</script>
 
 <script>
@@ -81,7 +81,7 @@ env();
 const E = window.KonaneEngine;
 const RULE = 's8', D = { light: 11, normal: 13, heavy: 14 }, TA = { light: 1000, normal: 2000, heavy: 4000 };
 const G = {
-  url: 'engine.js?v=4-wa3', drive: MTSplit.ladder.drive,
+  url: 'engine.js?v=4-wa4', drive: MTSplit.ladder.drive,
   positions() {   // two games of Lv.6 vs Lv.6 (a fixed random seed), every 10 plies from ply 10
     const out = []; let seed = 7; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
     E.setRule(RULE);
@@ -106,7 +106,10 @@ const G = {
 // ns = no shared table; the analysis has one way (alt is not run for it)
 const MODES = T => MTSplit.shared ? (T && T.key === 'best' ? ['sh', 'alt', 'ns'] : ['sh', 'ns']) : ['ns'], MODE_NAME = { sh: '共有・YBW', alt: '共有・Lazy', ns: '非共有' }, MODE_KEY = { sh: 'shared', alt: 'shared-lazy', ns: 'split' };
 const ALT_LAZY = 1;
+// ?help=0: without the helpers of the shared Young Brothers Wait (shared/mtsplit.js, 2026-11-10) — to compare
+const NOHELP = /[?&]help=0/.test(location.search);
 async function once(t, msg, mode) {
+  if (NOHELP) msg = Object.assign({}, msg, { mtHelp: 0 });
   const pool = MTSplit.pool({ url: G.url, setup: G.setup, drive: G.drive, tt: mode !== 'ns' });
   if (mode === 'alt') msg = Object.assign({}, msg, { lazy: ALT_LAZY });
   await new Promise(r => setTimeout(r, 400));
@@ -123,7 +126,7 @@ async function run() {
   $('#btnRun').disabled = true; $('#btnCopy').disabled = true;
   const w = $('#selW').value, P = G.positions(w);
   const total = P.length * G.tests.reduce((a, T) => a + MODES(T).length, 0) * COUNTS.length; let done = 0;
-  lines = [`konane bench ${new Date().toISOString()} | ${ua} | hc ${HC} | weight ${w} | shared ${MTSplit.shared ? 'yes' : 'no'}`];
+  lines = [`konane bench ${new Date().toISOString()} | ${ua} | hc ${HC} | weight ${w} | shared ${MTSplit.shared ? 'yes' : 'no'}${NOHELP ? ' | help off' : ''}`];
   const R = {};
   try {
     for (const p of P) for (const T of G.tests) for (const M of MODES(T)) {

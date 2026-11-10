@@ -28,7 +28,7 @@ html.atlas-skin:not(.atlas-2d) .cell.legal::before{background:rgba(255,226,122,.
 html.atlas-skin .last-mark{background:#ff5d5d;box-shadow:0 0 8px rgba(255,93,93,.9)}
 
 /* panels → portal cards */
-html.atlas-skin .card{background:rgba(255,253,247,.95)!important;border:2px solid #fff!important;border-radius:22px!important;box-shadow:0 14px 30px -18px rgba(80,40,0,.55)!important;color:var(--text)}
+html.atlas-skin .card{background:rgba(255,253,247,.97)!important;border:2px solid #efe3c8!important;border-radius:22px!important;box-shadow:0 4px 0 #efe3c8!important;color:var(--text)}
 html.atlas-skin .side button{color:var(--text)}
 html.atlas-skin .brand h1,html.atlas-skin .brand .series{color:#fff;text-shadow:0 2px 0 rgba(90,50,10,.35)}
 html.atlas-skin .brand .snd,html.atlas-skin #langSel{background:#fff!important;color:var(--text)!important;border:2px solid var(--line)!important;border-radius:99px!important}
@@ -96,12 +96,12 @@ html.atlas-skin .brand{display:none!important}
 .atlas-ic svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .atlas-ic.off .on-w,.atlas-ic:not(.off) .off-x{display:none}
 /* 盤面反転 (on: turned round) and 戦績 icons of the game, mirrored into the portal bar; the phones' tab bar has its own 戦績 tab */
-#atlasFlip.flipped{color:#b07a1a;border-color:#e6c77e;background:linear-gradient(180deg,#fff8e6,#fbe9c0);box-shadow:0 2px 0 #e6c77e}
+#atlasFlip.flipped{color:#b07a1a;border-color:#e6c77e;background:#fff3d6;box-shadow:0 2px 0 #e6c77e}
 .atlas-ic:focus-visible{outline:2px solid #e2b65e;outline-offset:2px}
 #atlasRec[hidden]{display:none}
 .atlas-lbtn{display:inline-flex;gap:6px;padding:0 12px 0 9px;font:700 14px 'Fredoka',sans-serif}
 .atlas-lbtn svg{width:20px;height:20px}
-.atlas-lpop{position:absolute;top:62px;right:60px;width:276px;padding:8px;border-radius:24px;background:#fffdf7;border:2px solid #efe3c8;box-shadow:0 6px 0 #efe3c8,0 24px 40px -18px rgba(80,40,0,.5);display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.atlas-lpop{position:absolute;top:62px;right:60px;width:276px;padding:8px;border-radius:24px;background:#fffdf7;border:2px solid #efe3c8;box-shadow:0 6px 0 #efe3c8;display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .atlas-lpop[hidden]{display:none}
 .atlas-lpop button{display:flex;flex-direction:column;align-items:flex-start;border:0;border-radius:16px;background:#f6efdd;padding:9px 12px;cursor:pointer;text-align:start;color:#2b3044}
 .atlas-lpop button b{font-size:15px;font-weight:900}
@@ -183,22 +183,23 @@ html.atlas-2d.hb-atlas body{padding-top:64px}
 }
 
 /* ===== shogi skin ===== */
-html.atlas-shogi .board{background:transparent!important;border-color:transparent!important;box-shadow:none!important}
-html.atlas-shogi .board::after,html.atlas-shogi .star{display:none!important}
-html.atlas-shogi .sq{border-color:transparent!important}
-html.atlas-shogi .frame{background:transparent!important;box-shadow:none!important;border:0!important}
-html.atlas-shogi .frame::before,html.atlas-shogi .frame::after{display:none!important}
-html.atlas-shogi .coords{color:rgba(60,32,8,.6)!important;text-shadow:none}
+html.atlas-shogi:not(.atlas-2d) .board{background:transparent!important;border-color:transparent!important;box-shadow:none!important}
+html.atlas-shogi:not(.atlas-2d) .board::after,html.atlas-shogi:not(.atlas-2d) .star{display:none!important}
+html.atlas-shogi:not(.atlas-2d) .sq{border-color:transparent!important}
+html.atlas-shogi:not(.atlas-2d) .frame{background:transparent!important;box-shadow:none!important;border:0!important}
+html.atlas-shogi:not(.atlas-2d) .frame::before,html.atlas-shogi:not(.atlas-2d) .frame::after{display:none!important}
+html.atlas-shogi:not(.atlas-2d) .coords{color:rgba(60,32,8,.6)!important;text-shadow:none}
 html.atlas-shogi .pc.atlas3d{filter:drop-shadow(0 calc(var(--cw)*.05) calc(var(--cw)*.05) rgba(40,20,0,.45))}
 html.atlas-shogi .pc.atlas3d .k img{width:100%;height:100%;margin:0;object-fit:contain}
 html.atlas-shogi .pc.atlas3d .k img.up{transform:rotate(180deg)}
+html.atlas-shogi .pc.atlas3d .k::after{inset:0}html.atlas-shogi .pc.atlas3d .k.up::after{transform:rotate(180deg)}   /* the face grain (shogi/index.html .pc.img .k::after) on the 3D renders */
 /* komadai (piece stands): light wood trays, at board height — always above the 3D canvas (the board's shadow never falls on them) */
 html.atlas-shogi .hand{position:relative;z-index:3;isolation:isolate}
 html.atlas-shogi .hand{background:linear-gradient(160deg,#e9c58a,#d4a565)!important;box-shadow:0 14px 26px -14px rgba(80,40,0,.6),inset 0 0 0 2px rgba(255,255,255,.35),inset 0 -6px 0 rgba(120,70,20,.25)!important;border-radius:14px}
 html.atlas-shogi .hand .hname{color:#5a3412!important;font-weight:900}
 html.atlas-shogi .hslot .cnt{background:#2b3044!important;color:#fff!important}
-html.atlas-shogi .sq.last{background:rgba(255,200,90,.35)!important}
-html.atlas-shogi .sq.sel{background:rgba(90,170,110,.4)!important}
+html.atlas-shogi:not(.atlas-2d) .sq.last{background:rgba(255,200,90,.35)!important}
+html.atlas-shogi:not(.atlas-2d) .sq.sel{background:rgba(90,170,110,.4)!important}
 /* the 3D board is wider than the DOM grid (its wooden margin): keep the komadai clear of it */
 html.atlas-shogi .board-area{gap:calc(var(--cw)*.62)!important}
 /* …so the board group is .8 cell wider than the page sizes it for (12.6 cells): PC sizes the cell for the wider group (13.65),
@@ -248,7 +249,7 @@ html.atlas-chess .pc.drag img.a3d{filter:drop-shadow(0 calc(var(--cell) * .16) c
 html.atlas-chess .pieces:has(.pc.drag){z-index:25}
 html.atlas-chess .reserve .cp{position:relative;overflow:visible}
 html.atlas-chess .reserve .cp img.a3d{position:absolute;left:0;bottom:0;width:100%;height:160%;filter:drop-shadow(0 1px 1px rgba(0,0,0,.45))}
-html.atlas-chess .promo{background:rgba(255,253,247,.97)!important;border:2px solid #ead9b6!important;border-radius:16px!important;box-shadow:0 16px 40px rgba(60,30,0,.45)!important}
+html.atlas-chess .promo{background:rgba(255,253,247,.97)!important;border:2px solid #ead9b6!important;border-radius:16px!important;box-shadow:0 6px 0 #ead9b6!important}
 html.atlas-chess .promo button{position:relative;overflow:hidden}
 html.atlas-chess .promo button img.a3d{position:absolute;left:19%;bottom:3%;width:62%;height:99%}
 html.atlas-chess .promo button:hover{background:rgba(255,201,40,.25)!important}
@@ -266,17 +267,17 @@ html.atlas-chess .star,html.atlas-chess .dot,html.atlas-chess .fxsvg{z-index:12!
 /* dialogs: the games' dark-theme panels (black at low alpha) → light portal tones (lists, tabs, banners, cards) */
 html.atlas-skin .modal :is(.lx-card,.lx-tabs button,.lesson-item,.op-book .ob,.rt-card,.ru-hand,.ru-pair,.ru-chip,.ru-win,.syncbox,.ed-pal button,.ed-tools button,.ed-hands button,.ol-list > div,.st-nav button,.lesson-actions button:not(.go)){background:#f8f0e0!important;border-color:var(--line)!important}
 html.atlas-skin .modal :is(.lx-card,.lesson-item,.op-book .ob):hover{background:#fff6e3!important;border-color:rgba(196,138,58,.55)!important}
-html.atlas-skin .modal .lx-card.done{background:linear-gradient(120deg,#e4f4ea,#f8f0e0 60%)!important;border-color:rgba(30,163,108,.35)!important}
-html.atlas-skin .modal .lx-tabs button.sel{background:linear-gradient(180deg,#fff4dc,#fbe8c2)!important;border-color:var(--brass)!important}
-html.atlas-skin .modal .lx-banner{background:linear-gradient(120deg,#fbefd4,#f6ecda 70%)!important;border-color:rgba(196,138,58,.35)!important}
+html.atlas-skin .modal .lx-card.done{background:#ecf6ee!important;border-color:rgba(30,163,108,.35)!important}
+html.atlas-skin .modal .lx-tabs button.sel{background:#fff3d6!important;border-color:var(--brass)!important}
+html.atlas-skin .modal .lx-banner{background:#fbf0d8!important;border-color:rgba(196,138,58,.35)!important}
 html.atlas-skin .modal .lx-bar{background:rgba(120,90,40,.14)!important}
 
 /* hints that "light up" a piece / square / hand slot: a bright pulsing glow that reads on the wooden 3D boards */
 @keyframes atlasGlow{0%,100%{box-shadow:0 0 0 2px rgba(255,255,255,.85),0 0 14px 4px rgba(255,196,40,.85)}50%{box-shadow:0 0 0 2px rgba(255,255,255,.95),0 0 26px 10px rgba(255,196,40,.95)}}
 html.atlas-skin .mark.best{border:4px solid #ffcf3a!important;background:rgba(255,214,70,.32);border-radius:14%;animation:atlasGlow 1.1s ease-in-out infinite;z-index:6}
 html.atlas-shogi .hslot.hint{background:rgba(255,214,70,.5)!important;border-radius:10px;animation:atlasGlow 1.1s ease-in-out infinite}
-html.atlas-skin .modal .pb-card{background:linear-gradient(120deg,color-mix(in srgb,var(--c2) 26%,#fff),#f8f0e0 60%)!important}
-html.atlas-skin .modal .pb-stage{background:linear-gradient(180deg,color-mix(in srgb,var(--c2) 18%,#fff),#f8f0e0)!important}
+html.atlas-skin .modal .pb-card{background:color-mix(in srgb,var(--c2) 16%,#fffaf0)!important}
+html.atlas-skin .modal .pb-stage{background:color-mix(in srgb,var(--c2) 12%,#fffaf0)!important}
 html.atlas-skin .modal .pb-tile:not(.done){background:#f8f0e0!important}
 
 /* ===== backgammon skin: the museum-piece 3D board — the DOM frame is the 3D case's outer edge (15.85 × H board units) ===== */
@@ -316,8 +317,8 @@ html.atlas-bg3d .die.used{opacity:.45}
 /* the doubling cube: rosewood with a gold ring, the value in gold */
 html.atlas-bg3d #cube{background:var(--bgcube) center/100% 100% no-repeat!important;box-shadow:calc(var(--u)*.05) calc(var(--u)*.08) calc(var(--u)*.12) rgba(0,0,0,.55)!important;color:#efd79e!important;font-family:Georgia,'Times New Roman',serif!important;font-size:calc(var(--u)*.34)!important;border-radius:18%}
 /* buttons on the board (roll / double / confirm) */
-html.atlas-backgammon .bbtn{background:rgba(255,253,247,.95)!important;color:#2b3044!important;border:2px solid #fff!important;box-shadow:0 4px 0 rgba(150,110,50,.45),0 10px 22px rgba(0,0,0,.3)!important;font-weight:900;border-radius:99px!important}
-html.atlas-backgammon .bbtn.go{background:#ff5d5d!important;color:#fff!important;border-color:transparent!important;box-shadow:0 4px 0 #d93c3c,0 10px 22px rgba(0,0,0,.3)!important}
+html.atlas-backgammon .bbtn{background:rgba(255,253,247,.95)!important;color:#2b3044!important;border:2px solid #fff!important;box-shadow:0 4px 0 rgba(150,110,50,.45)!important;font-weight:900;border-radius:99px!important}
+html.atlas-backgammon .bbtn.go{background:#ff5d5d!important;color:#fff!important;border-color:transparent!important;box-shadow:0 4px 0 #d93c3c!important}
 html.atlas-backgammon .bbtn.red{color:#d93c3c!important}
 /* the 3D looks in the board-design row */
 html.atlas-backgammon #skinRow button.a3d{position:relative}
@@ -397,3 +398,4 @@ html.atlas-gomoku .st-nav button{background:#fff!important;border:2px solid #ead
 /* the side column is fitted to the 3D board (taller than the page's frame): anchor it at the top of the row, so its new height doesn't re-centre it */
 html.atlas-gomoku .side{align-self:start!important}
 html.atlas-skin :is(#lessonListView,#pzListView,#pzGridView,#lessonIntroView) > .modal-actions{background:linear-gradient(180deg,rgba(255,253,247,0),#fffdf7 34%)!important}   /* (2026-11-09: the sticky footer of the lesson / puzzle lists kept the dark theme — dark under the 戻る button) */
+/* flat UI (2026-11-10): the full version follows the portal — solid fills and borders, a solid bottom edge at most; no gradients, glows or soft drop shadows on the UI chrome (boards and pieces keep their own depth) */

@@ -1467,6 +1467,11 @@
       ${weekHtml('🔥 ' + esc(t('login.day', { n: s })), pos)}
       <div class="accw"></div></div></div>`;
     $('prof').classList.toggle('open', pfOpen);
+    { // wearing an SSR / UR (icon, background or frame): the home profile card gets the same running light, glow and twinkle as the dress-up name card (2026-11-10)
+      const el = $('prof'), top = Math.max(-1, ...['icon', 'bg', 'frame'].map(k => { const it = ART.byId(W.av[k]); return it ? it.rar : -1; }));
+      el.classList.toggle('nr3', top === 3); el.classList.toggle('nr4', top === 4);
+      el.querySelectorAll(':scope > .rfx, :scope > .ntw').forEach(x => x.remove());
+      if (top >= 3) el.insertAdjacentHTML('beforeend', `<i class="rfx ${top === 4 ? 'u' : 's'}"></i><i class="ntw"></i>`); }
     $('pfMore').onclick = () => { pfOpen = !pfOpen; $('prof').classList.toggle('open', pfOpen); $('pfMore').setAttribute('aria-expanded', pfOpen); };   // phones: the one-line profile opens its stats · login week · Google sign-in
     $('avBtn').onclick = () => go('dress');
     renderAcc();
@@ -1799,10 +1804,11 @@
     const st = document.documentElement.style, tb = document.querySelector('.tabs'), hd = document.querySelector('header'), dt = document.querySelector('#pg-dress .dtop');
     if (tb) st.setProperty('--tabsH', tb.offsetHeight + 'px');
     if (hd) st.setProperty('--hdrH', hd.offsetHeight + 'px');   // PC きせかえ: the sticky title/tabs row sits under the header,
-    if (dt && dt.offsetHeight) st.setProperty('--dtopH', dt.offsetHeight + 'px');   //  and the name card under that row
+    if (dt && dt.offsetHeight) st.setProperty('--dtopH', Math.min(dt.offsetHeight, 140) + 'px');   // (capped: a row wrapped while the page was narrow never pushes the card far down)   //  and the name card under that row
   }
   addEventListener('resize', dsegPos);   // (also places the updates ticker above the tab bar on every tab;
-  if (window.ResizeObserver) { const ro = new ResizeObserver(dsegPos); ro.observe(tabsEl); const dt = document.querySelector('#pg-dress .dtop'); if (dt) ro.observe(dt); }   //  the bar grows when its labels' web font arrives, e.g. Arabic)
+  if (window.ResizeObserver) { const ro = new ResizeObserver(dsegPos); ro.observe(tabsEl); const dt = document.querySelector('#pg-dress .dtop'), hd = document.querySelector('header'); if (dt) ro.observe(dt); if (hd) ro.observe(hd); }   // (the header too: a banner coming and going changed its height and left the name card too low, 2026-11-10)
+  addEventListener('hashchange', () => setTimeout(dsegPos, 0)); setTimeout(dsegPos, 1500); if (document.fonts && document.fonts.ready) document.fonts.ready.then(dsegPos);   //  the bar grows when its labels' web font arrives, e.g. Arabic)
   function dressInfo(it) {
     openSheet(`<div class="dinfo"><div class="card item r${it.rar} locked" data-kind="${it.kind}"><span class="rar">${ART.RAR[it.rar]}</span><div class="art">${ART.svg(it.id)}</div></div>
       <h3>${esc(iname(it))}</h3><div class="gnote">${t('kind.' + it.kind)} · ${t('dress.notyet')}</div><p class="dget">${t('dress.get')}</p>

@@ -586,7 +586,7 @@ function render() {
   // lessons' 3-move practice (index.html seqCoachHtml): the box shows the move-by-move guidance instead (2026-11-10)
   const sq = typeof lesson !== 'undefined' && lesson && lesson.seq && typeof seqCoachHtml === 'function';
   card.classList.toggle('ck-seq', !!sq);
-  if (sq) { card.classList.remove('hidden', 'ck-off', 'ck-rest'); document.body.classList.add('ck-tab'); arrows(null); return put(seqCoachHtml()); }
+  if (sq) { card.classList.remove('hidden', 'ck-off', 'ck-rest'); document.body.classList.add('ck-tab'); arrows(null); put(seqCoachHtml()); const pb = card.querySelector('[data-sq=play]'); if (pb) pb.onclick = () => seqPlayIdeal(); return; }
   if (ShogiCoach.sw) ShogiCoach.sw.sync();
   const rv = !!document.querySelector('#reviewCard.show');
   // the coach is for the game in progress: after the game (or while browsing earlier moves) it steps aside and the

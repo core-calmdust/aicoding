@@ -645,7 +645,7 @@ function mtPlan(m) {
   if (m.job === 'think') {
     const L = m.cfg || LEVELS[m.level] || LEVELS[10];
     if (all.length < 2 || !L.s) { PRO_CFG = m.cfg || null; try { return { result: think(m.start, m.moves, m.level) }; } finally { PRO_CFG = null; } }
-    return { plan: { kind: 'best', moves: orderMoves(pos, all, -1, 0), inf, maxD: L.dx || 60, ms: L.ms || 3000, nodes: L.nk ? L.nk * 1000 : 0, win: WINT, lmr: { d: 3, i: 8 }, splitMin: 5, lazy: lazyOf(m, L, false) } };   // (Young Brothers Wait on the shared table — on the user's Mac 8 threads ×3.3 vs Lazy SMP ×1.2, 2026-11-09; lazy: Lazy SMP, for the bench)
+    return { plan: { kind: 'best', moves: orderMoves(pos, all, -1, 0), inf, maxD: L.dx || 60, ms: L.ms || 3000, nodes: L.nk ? L.nk * 1000 : 0, win: WINT, lmr: { d: 3, i: 8 }, splitMin: 5, helpMin: 4, lazy: lazyOf(m, L, false) } };   // (Young Brothers Wait on the shared table — on the user's Mac 8 threads ×3.3 vs Lazy SMP ×1.2, 2026-11-09; lazy: Lazy SMP, for the bench; helpMin: the idle workers help only tasks of depth 5 or more — shared/mtsplit.js, 2026-11-10)
   }
   if (!all.length) return { result: { list: [], depth: 0 } };
   const cands = m.job === 'cands';
