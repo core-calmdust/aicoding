@@ -319,7 +319,14 @@ static void ttStore(u64 key, int d, int flag, int v, Move m, int ply) {
   u64 w = (u64)(u16)(i16)vToTT(v, ply) | mv | (u64)(u8)(i8)(d > 120 ? 120 : d < -1 ? -1 : d) << 32 | (u64)(flag & 3) << 40 | (u64)ttAge << 48 | 1ull << 58;
   bk[2 * j + 1] = w; bk[2 * j] = key ^ w;
 }
-EXPORT(new_game) void new_game(void) { memset(TTM, 0, sizeof(TTM)); ttAge = 0; }
+// the busy marks of the threads (see busyOther below): the position's key | thread number + 1
+#define BUSY_BITS 15
+#ifndef BUSY_D
+#define BUSY_D 2   // (remaining depth: 2 was faster than 3 and 1 in tools/mtsim)
+#endif
+#define BUSY_DEF 32
+static u64 busyT[1 << BUSY_BITS];
+EXPORT(new_game) void new_game(void) { memset(TTM, 0, sizeof(TTM)); memset(busyT, 0, sizeof(busyT)); ttAge = 0; }
 #define TT_PROBE(k) TTE e_, *e = &e_; ttGet((k), e)
 #else
 #define TT_PROBE(k) TTE *e = &TT[(k) & ((1 << TT_BITS) - 1)]
@@ -354,6 +361,25 @@ static inline int timeUp(void) {
   if (stopFlag) return 1;
   if ((nodes & 1023) == 0) { if ((tEnd > 0 && now() > tEnd) || (nodeLimitOn && nodes > nodeLimit) || gStop || (rootK && gHit == rootK)) stopFlag = 1; }
   return stopFlag;
+}
+// (2026-11-10, after the Mac bench-all-2: the time to the same depth only x2.4 with 14 threads; morris/MODEL_CARD.md「マルチ
+// スレッドの見直し その2」) busy marks, Kerrigan's "simplified ABDADA". The threads walk the same tree in the same order at
+// the same speed, so they search the same subtree at the same time and none gets the other's result from the table. A thread
+// marks the position of the move it searches (remaining depth >= BUSY_D); a move after the first whose position another
+// thread has marked is put off to the end of the node (by then its result is usually in the table). One thread alone never
+// meets another's mark: its search is as before. (tools/mtsim: the simulation that showed it.)
+static inline int busyOther(u64 k) {
+  u64 v = __atomic_load_n(&busyT[(k >> 32) & ((1u << BUSY_BITS) - 1)], __ATOMIC_RELAXED);
+  return (v & ~63ull) == (k & ~63ull) && (int)(v & 63) != (threadId & 63) + 1;
+}
+static inline int busySet(u64 k) {
+  int i = (int)((k >> 32) & ((1u << BUSY_BITS) - 1));
+  __atomic_store_n(&busyT[i], (k & ~63ull) | (u64)((threadId & 63) + 1), __ATOMIC_RELAXED);
+  return i;
+}
+static inline void busyClear(u64 k, int i) {
+  u64 mine = (k & ~63ull) | (u64)((threadId & 63) + 1);
+  __atomic_compare_exchange_n(&busyT[i], &mine, 0, 0, __ATOMIC_RELAXED, __ATOMIC_RELAXED);
 }
 #else
 static inline int timeUp(void) {
@@ -462,23 +488,46 @@ static int search(int depth, int alpha, int beta, int ply, int pv, int nullOk) {
   int sc[MAXMV]; for (int i = 0; i < n; i++) sc[i] = moveScore(L[i], ttm, ply);
   int best = -INF, oldAlpha = alpha, legal = 0; Move bestM = 0;
   int futile = !inChk && !pv && depth <= 2 && stat > -INF && stat + 150 * depth <= alpha && alpha > -WINT;
+#ifdef JG_THREADS
+  // (2026-11-10) busy marks (see busyT): a move whose position another thread is searching right now is put off until the
+  // other moves are done; it keeps its place in the order (lg) for the reductions
+  Move defM[BUSY_DEF]; u8 defL[BUSY_DEF]; int nDef = 0;
+  for (int k = 0; k < n + nDef; k++) {
+    Move m; int lg;
+    if (k < n) {
+      int i = k;
+      int bi = i; for (int j = i + 1; j < n; j++) if (sc[j] > sc[bi]) bi = j;
+      { Move tm = L[bi]; L[bi] = L[i]; L[i] = tm; int ts = sc[bi]; sc[bi] = sc[i]; sc[i] = ts; }
+      m = L[i]; lg = legal + 1;
+    } else { m = defM[k - n]; lg = defL[k - n]; }
+#define LG lg
+#else
   for (int i = 0; i < n; i++) {
     int bi = i; for (int j = i + 1; j < n; j++) if (sc[j] > sc[bi]) bi = j;
     { Move tm = L[bi]; L[bi] = L[i]; L[i] = tm; int ts = sc[bi]; sc[bi] = sc[i]; sc[i] = ts; }
-    Move m = L[i]; int isCap = B[MT(m)] != 0;
+    Move m = L[i];
+#define LG legal
+#endif
+    int isCap = B[MT(m)] != 0;
     u8 c = makeMove(m);
     if (attackedKing(me)) { unmakeMove(m, c); continue; }
+#ifdef JG_THREADS
+    if (k < n && legal && depth >= BUSY_D && nDef < BUSY_DEF && busyOther(KEY)) { unmakeMove(m, c); defM[nDef] = m; defL[nDef++] = (u8)lg; continue; }
+#endif
     legal++;
     int givesChk = attackedKing(side);
-    if (futile && legal > 1 && !isCap && !givesChk) { unmakeMove(m, c); continue; }
+    if (futile && LG > 1 && !isCap && !givesChk) { unmakeMove(m, c); continue; }
     HK[hn] = KEY; HC[hn] = (u8)givesChk; hn++;
     int saveIrr = hirr; if (c) hirr = hn - 1;
+#ifdef JG_THREADS
+    const u64 mkKey = KEY; const int mk = depth >= BUSY_D ? busySet(mkKey) : -1;
+#endif
     int v, d1 = depth - 1;
-    if (legal == 1) v = -search(d1, -beta, -alpha, ply + 1, pv, 1);
+    if (LG == 1) v = -search(d1, -beta, -alpha, ply + 1, pv, 1);
     else {
       int red = 0;
-      if (depth >= 3 && legal > 3 && !isCap && !inChk && !givesChk && m != killers[ply][0] && m != killers[ply][1]) {
-        red = 1 + (legal > 10) + (depth >= 8 && legal > 20);
+      if (depth >= 3 && LG > 3 && !isCap && !inChk && !givesChk && m != killers[ply][0] && m != killers[ply][1]) {
+        red = 1 + (LG > 10) + (depth >= 8 && LG > 20);
         if (pv && red) red--;
         if (red > d1 - 1) red = d1 - 1 > 0 ? d1 - 1 : 0;
       }
@@ -486,6 +535,10 @@ static int search(int depth, int alpha, int beta, int ply, int pv, int nullOk) {
       if (v > alpha && red) v = -search(d1, -alpha - 1, -alpha, ply + 1, 0, 1);
       if (v > alpha && v < beta) v = -search(d1, -beta, -alpha, ply + 1, pv, 1);
     }
+#undef LG
+#ifdef JG_THREADS
+    if (mk >= 0) busyClear(mkKey, mk);
+#endif
     hn--; hirr = saveIrr;
     unmakeMove(m, c);
     if (stopFlag) return best > -INF ? best : 0;
@@ -550,14 +603,26 @@ EXPORT(setup) int setup(void) {
 }
 static int rootSearch(int depth, int all, int alpha0, int beta0) {
   int alpha = alpha0, best = -INF;
+#ifdef JG_THREADS
+  int rdI[BUSY_DEF], nrd = 0;   // (the busy marks at the root too: a root move another thread is on is put off)
+  for (int k = 0; k < rootN + nrd; k++) {
+    int i = k < rootN ? k : rdI[k - rootN];
+    Move m = rootL[i]; u8 c = makeMove(m);
+    if (k < rootN && i > 0 && !all && depth >= BUSY_D && nrd < BUSY_DEF && busyOther(KEY)) { unmakeMove(m, c); rdI[nrd++] = i; continue; }
+    const u64 mkKey = KEY; const int mk = !all && depth >= BUSY_D ? busySet(mkKey) : -1;
+#else
   for (int i = 0; i < rootN; i++) {
     Move m = rootL[i]; u8 c = makeMove(m);
+#endif
     HK[hn] = KEY; HC[hn] = (u8)attackedKing(side); hn++;
     int saveIrr = hirr; if (c) hirr = hn - 1;
     int v;
     if (all) v = -search(depth - 1, -INF, INF, 1, 1, 1);
     else if (i == 0) v = -search(depth - 1, -beta0, -alpha, 1, 1, 1);
     else { v = -search(depth - 1, -alpha - 1, -alpha, 1, 0, 1); if (v > alpha && v < beta0 && !stopFlag) v = -search(depth - 1, -beta0, -alpha, 1, 1, 1); }
+#ifdef JG_THREADS
+    if (mk >= 0) busyClear(mkKey, mk);
+#endif
     hn--; hirr = saveIrr; unmakeMove(m, c);
     if (stopFlag) return best;
     rootVal[i] = v;

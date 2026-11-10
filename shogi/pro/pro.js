@@ -3,7 +3,7 @@
 (() => {
   'use strict';
   const S = window.ShogiEngine;
-  const VER = '?v=4';
+  const VER = '?v=5';
   const LANG = (() => { try { return (localStorage.getItem('aicoding-lang') || 'ja') === 'ja' ? 'ja' : 'en'; } catch (e) { return 'ja'; } })();
   const T = {
     ja: { game: '将棋', back: '← 将棋', ttl: '最強解析', depth: '深さ', nps: '局面/秒', threads: 'スレッド', sel: 'スレッド数', ana: '解析', stop: '停止', play: 'AIに指させる',
