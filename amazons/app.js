@@ -613,7 +613,10 @@ function pzzRegion(Pz) {
   const rc = i => [(i / N) | 0, i % N], ch = (a, b) => { const [r1, c1] = rc(a), [r2, c2] = rc(b); return Math.max(Math.abs(r1 - r2), Math.abs(c1 - c2)); };
   const S = new Set(T);
   for (const t of T) for (const x of E.NB[t]) if (!pos.sq[x]) S.add(x);
-  for (let k = 0; k < 8; k++) { const f = pos.q[k]; if (f >= 0 && T.some(t => ch(t, f) <= 4)) S.add(f); }
+  // the amazons near the targets (5 squares), and in any case the nearest amazon of the other side to each target — both sides on
+  // the screen (2026-11-11 the user: sometimes only one side was shown)
+  for (let k = 0; k < 8; k++) { const f = pos.q[k]; if (f >= 0 && !T.includes(f) && T.some(t => ch(t, f) <= 5)) S.add(f); }
+  for (const t of T) { const ts = pos.sq[t]; let best = -1, bd = 99; for (let k = 0; k < 8; k++) { const f = pos.q[k]; if (f >= 0 && pos.sq[f] !== ts) { const d = ch(t, f); if (d < bd) { bd = d; best = f; } } } if (best >= 0) S.add(best); }
   let r0 = N, r1 = -1, c0 = N, c1 = -1;
   for (const i of S) { let [r, c] = rc(i); if (flip) { r = N - 1 - r; c = N - 1 - c; } r0 = Math.min(r0, r); r1 = Math.max(r1, r); c0 = Math.min(c0, c); c1 = Math.max(c1, c); }
   r0--; c0--; r1++; c1++;
@@ -641,7 +644,9 @@ function pzzBtn() {
     boardEl.parentElement.appendChild(b);
   }
   const b = PZZ.btn; b.hidden = !show; if (!show) return;
-  b.style.left = (boardEl.offsetLeft + boardEl.offsetWidth - 46) + 'px'; b.style.top = (boardEl.offsetTop + boardEl.offsetHeight - 46) + 'px';
+  // (the board's bottom-right corner — kept above the phone's tab bar when the board runs under it)
+  const par = b.offsetParent || boardEl.parentElement, pr = par.getBoundingClientRect(), tabs = matchMedia('(pointer:coarse)').matches && innerWidth < 820 ? 100 : 8;
+  b.style.left = (boardEl.offsetLeft + boardEl.offsetWidth - 46) + 'px'; b.style.top = Math.min(boardEl.offsetTop + boardEl.offsetHeight - 46, innerHeight - tabs - 40 - pr.top) + 'px';
   const zin = !!PZZ.win, k = zin ? 'all' : 'in';
   if (b.dataset.k !== k) {
     b.dataset.k = k; b.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${zin ? '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>' : '<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5M8 10.5h5M10.5 8v5"/>'}</svg>`;

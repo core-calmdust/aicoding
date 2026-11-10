@@ -65,10 +65,14 @@ html.atlas-skin .cb-bar .cb-tools{flex:1 1 auto;min-width:0;display:flex;gap:6px
 html.atlas-skin .cb-bar .cb-tools > .cb-ic{flex:1 1 0;min-width:0;width:auto!important}
 html.atlas-skin .cb-bar .cb-t{flex:none;white-space:nowrap}
 /* (2026-11-11 the user: the tiles' insides were cramped — more room round the icon and the label) */
-html.atlas-skin .cb-cmp .cb-bar .cb-ic[data-cap]{height:60px!important;padding:6px 8px!important;gap:5px!important;min-width:56px!important;box-sizing:border-box}
+/* (2026-11-11 later, the user: the sizes looked off — four equal tiles, a gap before the next button, the next button the same
+   height and a rounded box like the tiles, not a pill pressed against them) */
+html.atlas-skin .cb-cmp .cb-bar{gap:8px!important}
+html.atlas-skin .cb-cmp .cb-bar > .cb-main{flex:0 0 auto!important;width:auto!important;min-width:0!important;max-width:none!important}
+html.atlas-skin .cb-cmp .cb-tools{gap:6px!important;flex:1 1 auto!important;min-width:0}
+html.atlas-skin .cb-cmp .cb-bar .cb-tools > .cb-ic[data-cap]{flex:1 1 0!important;min-width:0!important;width:auto!important;height:58px!important;padding:6px 2px!important;gap:5px!important;box-sizing:border-box}
 html.atlas-skin .cb-cmp .cb-bar .cb-ic[data-cap]::after{font-size:11px}
-html.atlas-skin .cb-cmp .cb-bar .cb-t{height:60px!important;padding:0 16px!important;min-width:0!important}
-html.atlas-skin .cb-cmp .cb-tools{gap:8px}
+html.atlas-skin .cb-cmp .cb-bar .cb-t{flex:0 0 auto!important;height:58px!important;padding:0 14px!important;min-width:0!important;border-radius:14px!important;font-size:14px!important;box-sizing:border-box}
 html.atlas-skin #f3D{margin:12px 0 0;padding:10px 12px 12px;border-radius:14px;background:#f6f1e4;border:2px solid #e2cf9e}
 html.atlas-skin #f3D > label{display:block;font-weight:700;font-size:13px;color:#7a5a1c;margin:0 0 8px}
 html.atlas-skin #f3D > label.pc3l{margin-top:12px}
@@ -150,26 +154,59 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
   // the page's puzzle close-up (amazons/app.js pzzApply): w = { r0, c0, n } on the shown board, null = the whole board — the view
   // glides there (0.4 s)
   let zT = 0;
-  window.__amzZoom = w => {
-    const b = boardDom.offsetWidth * SC, cell = b / 10, z = w ? Math.min(ZMAX, 10 / w.n * .9) : 1;
+  let zw = null, zR = 0;
+  // (the page's layout may still move after a puzzle opens — the cards fill in: the close-up is aimed again once it settles)
+  let zAt = 0;   // (only while a close-up is being set up: later, a card's text changing must not move the board under the finger)
+  { const re = () => { if (!zw || performance.now() - zAt > 1500) return; clearTimeout(zR); zR = setTimeout(() => zw && window.__amzZoom(zw, true), 160); };
+    addEventListener('resize', re); const fr0 = document.getElementById('frame'); if (fr0 && window.ResizeObserver) new ResizeObserver(re).observe(fr0);
+    const sd = document.querySelector('.app > .side'); if (sd && window.ResizeObserver) new ResizeObserver(re).observe(sd); }
+  // (a new puzzle moves the page's layout — the cards fill in — and the camera follows a frame later: the close-up is worked out
+  //  once things have settled, from where the region is drawn then)
+  let zD = 0;
+  window.__amzZoom = (w, again) => { zw = w || null; if (again && !w) return; clearTimeout(zD); cancelAnimationFrame(zT); if (!w) return zoom0(null); T3.kick(400); if (!again) zAt = performance.now(); zD = setTimeout(() => zoom0(w), 380); };
+  const zoom0 = w => {
+    const b = boardDom.offsetWidth * SC, cell = b / 10;
+    // (as close as the region still fits the board's place on the screen — on phones the cards above leave a short strip)
+    let z = 1;
+    if (w) { const fr = (document.getElementById('frame') || boardDom).getBoundingClientRect(), tb = matchMedia('(pointer:coarse)').matches ? 96 : 0;
+      const vw = Math.min(fr.right, innerWidth) - Math.max(fr.left, 0), vh = Math.min(fr.bottom, innerHeight - tb) - Math.max(fr.top, 0);
+      // (the region's size as drawn now — the lean shortens the rows — over the zoom now: its size at zoom 1; a little margin)
+      const A = T3.project(w.c0 - 5 - .3, w.r0 - 5 - .3, Y), B = T3.project(w.c0 + w.n - 5 + .3, w.r0 + w.n - 5 + .3, Y), C = T3.project(w.c0 + w.n - 5 + .3, w.r0 - 5 - .3, Y), D = T3.project(w.c0 - 5 - .3, w.r0 + w.n - 5 + .3, Y);
+      const rw = (Math.max(B.x, C.x) - Math.min(A.x, D.x)) / view.z, rh = (Math.max(B.y, D.y) - Math.min(A.y, C.y)) / view.z;
+      z = Math.max(1, Math.min(ZMAX, 10 / w.n * .9, rw > 0 ? vw * .96 / rw : 9, rh > 0 ? vh * .94 / rh : 9)); }
     // (the region's centre is brought to the centre of the board's place as far as it is on the screen — on phones the cards
-    //  above and the tabs below cover part of it)
+    //  above and the tabs below cover part of it). The drawn board is the same picture scaled about the aligned box's centre
+    //  (the camera's distance follows the box), so where the region's centre is drawn now, measured from the box's centre and
+    //  divided by the zoom, gives where it will be drawn at any zoom and offset
     let tx = 0, ty = 0;
     if (w) {
-      const [cx, cy] = centreNow(), bx = cx - view.x, by = cy - view.y, fr = (document.getElementById('frame') || boardDom).getBoundingClientRect();
+      const [cx, cy] = centreNow(), bx = cx - view.x, by = cy - view.y, bh = boardDom.offsetHeight * SC;
+      const P = T3.project(w.c0 + w.n / 2 - 5, w.r0 + w.n / 2 - 5, Y);   // (read once the camera has settled: see below)
+      const relX = (P.x - (bx + view.x)) / view.z, relY = (P.y - (by + view.y - liftK * bh * view.z)) / view.z;
+      const fr = (document.getElementById('frame') || boardDom).getBoundingClientRect();
       const tabs = matchMedia('(pointer:coarse)').matches ? 96 : 0, y0 = Math.max(fr.top, 0), y1 = Math.min(fr.bottom, innerHeight - tabs);
       const dx = (Math.max(fr.left, 0) + Math.min(fr.right, innerWidth)) / 2, dy = y1 > y0 ? (y0 + y1) / 2 : by;
-      tx = dx - bx - ((w.c0 + w.n / 2) - 5) * cell * z; ty = dy - by - ((w.r0 + w.n / 2) - 5) * cell * z;
+      if (isFinite(relX) && isFinite(relY)) { tx = dx - bx - relX * z; ty = dy - by + liftK * bh * z - relY * z; }
+      else { tx = dx - bx - ((w.c0 + w.n / 2) - 5) * cell * z; ty = dy - by - ((w.r0 + w.n / 2) - 5) * cell * z; }
     }
     const a = { z: view.z, x: view.x, y: view.y }, t0 = performance.now(); cancelAnimationFrame(zT); clearTimeout(zT);
-    // (then a few passes: the region's centre as drawn — the lean and the perspective move it — is put on the target point)
-    const fix = n => { if (!w || n > 3) return; zT = setTimeout(() => {
-      const p = T3.project(w.c0 + w.n / 2 - 5, w.r0 + w.n / 2 - 5, Y), fr = (document.getElementById('frame') || boardDom).getBoundingClientRect();
-      const tabs = matchMedia('(pointer:coarse)').matches ? 96 : 0, y0 = Math.max(fr.top, 0), y1 = Math.min(fr.bottom, innerHeight - tabs);
-      const ex = (Math.max(fr.left, 0) + Math.min(fr.right, innerWidth)) / 2 - p.x, ey = (y1 > y0 ? (y0 + y1) / 2 : p.y) - p.y;
-      if (!isFinite(ex) || !isFinite(ey) || Math.hypot(ex, ey) < 2) return;
-      setView(view.z, view.x + ex, view.y + ey); fix(n + 1);
-    }, 80); };
+    // (then a few passes on what is actually drawn: the region's corners and centre projected from the 3D view — the lean and the
+    //  perspective make the first aim approximate. Each pass waits for the camera to be drawn where the last one put it)
+    const fix = (n = 0) => { if (!w || n > 6) return; requestAnimationFrame(() => requestAnimationFrame(() => { zT = setTimeout(() => {
+      const fr = (document.getElementById('frame') || boardDom).getBoundingClientRect(), tb = matchMedia('(pointer:coarse)').matches ? 96 : 0;
+      const x0 = Math.max(fr.left, 0), x1 = Math.min(fr.right, innerWidth), y0 = Math.max(fr.top, 0), y1 = Math.min(fr.bottom, innerHeight - tb);
+      const q = (c, r) => T3.project(c - 5, r - 5, Y), A = q(w.c0 - .3, w.r0 - .3), B = q(w.c0 + w.n + .3, w.r0 + w.n + .3), C = q(w.c0 + w.n + .3, w.r0 - .3), D = q(w.c0 - .3, w.r0 + w.n + .3);
+      const L = Math.min(A.x, D.x), R = Math.max(B.x, C.x), Tp = Math.min(A.y, C.y), Bt = Math.max(B.y, D.y);
+      const k = Math.min(1, (x1 - x0) * .96 / (R - L), (y1 - y0) * .94 / (Bt - Tp));   // (too big for the strip: zoom out)
+      const ex = (x0 + x1) / 2 - (L + R) / 2, ey = (y0 + y1) / 2 - (Tp + Bt) / 2;
+      if (!isFinite(ex) || !isFinite(ey) || !isFinite(k)) return;
+      if (Math.hypot(ex, ey) < 3 && k > .97) return;
+      const z1 = Math.max(1, view.z * k), f = z1 / view.z;
+      // (zoom about the region's centre, then move it to the strip's centre)
+      const [ox, oy] = centreNow(), mx = (L + R) / 2, my = (Tp + Bt) / 2;
+      setView(z1, view.x + (mx - ox) * (1 - f) + ex, view.y + (my - oy) * (1 - f) + ey);
+      fix(n + 1);
+    }, 60); })); };
     const step = () => { const k = Math.min(1, (performance.now() - t0) / 400), e = 1 - Math.pow(1 - k, 3); setView(a.z + (z - a.z) * e, a.x + (tx - a.x) * e, a.y + (ty - a.y) * e); if (k < 1) zT = requestAnimationFrame(step); else if (!w) centre(0); else fix(0); };
     zT = requestAnimationFrame(step);
   };
