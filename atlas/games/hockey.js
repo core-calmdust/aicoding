@@ -314,7 +314,9 @@ html.hk-on #bv > .npc-float .npc-pic{width:36px!important;height:36px!important}
       tgt[side] = { tx: q.x, ty: q.y + lead }; src[side] = 'ptr';
     }
     function onUp(e) { ptr.delete(e.pointerId); }
-    ctx.el.addEventListener('pointerdown', onDown); ctx.el.addEventListener('pointermove', onMove); addEventListener('pointerup', onUp, true); addEventListener('pointercancel', onUp, true);
+    ctx.el.addEventListener('pointerdown', onDown); ctx.el.addEventListener('pointermove', onMove);
+    // (2026-11-10, lower latency) Chrome's pointerrawupdate arrives as soon as the mouse moves, not once per frame
+    const raw = 'onpointerrawupdate' in window; if (raw) ctx.el.addEventListener('pointerrawupdate', onMove); addEventListener('pointerup', onUp, true); addEventListener('pointercancel', onUp, true);
     const prevTouch = ctx.el.style.touchAction; ctx.el.style.touchAction = 'none';
     // (2026-11-10) no zooming with the mouse wheel (it was set off by accident mid-game), and no pointer drawn over the
     // table while a match is on (the mallet is the pointer)
@@ -439,7 +441,7 @@ html.hk-on #bv > .npc-float .npc-pic{width:36px!important;height:36px!important}
       timeout() {},
       stop() {
         stopped = true; cancelAnimationFrame(raf); cancelAnimationFrame(padRaf); timers.forEach(clearTimeout);
-        ctx.el.removeEventListener('pointerdown', onDown); ctx.el.removeEventListener('pointermove', onMove); removeEventListener('pointerup', onUp, true); removeEventListener('pointercancel', onUp, true);
+        ctx.el.removeEventListener('pointerdown', onDown); ctx.el.removeEventListener('pointermove', onMove); if (raw) ctx.el.removeEventListener('pointerrawupdate', onMove); removeEventListener('pointerup', onUp, true); removeEventListener('pointercancel', onUp, true);
         removeEventListener('keydown', onKey); removeEventListener('keyup', onKey); removeEventListener('resize', onResize); document.removeEventListener('visibilitychange', onVis); removeEventListener('blur', onBlur); removeEventListener('focus', onFocus);
         ctx.el.style.touchAction = prevTouch; css.remove(); if (toastEl) toastEl.remove(); if (menuEl) menuEl.remove(); document.querySelectorAll('.hkbig,.hkfx').forEach(e => e.remove());
         if (T3.turn) T3.turn(null);
