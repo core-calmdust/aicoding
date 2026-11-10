@@ -203,6 +203,13 @@ html.hb-on .throw .shown:not(.cw){width:60px;height:60px}html.hb-on .throw .show
 .dsg button{width:92px;padding:6px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.03);cursor:pointer;display:flex;flex-direction:column;gap:5px;align-items:center;font-size:12.5px;color:var(--muted)}
 .dsg button.on{border-color:var(--accent);color:var(--text)}
 .dsg button svg{width:76px;height:76px;border-radius:8px}
+/* (2026-11-10) the Luxury dialog (shared/nglux.js): on PC the デザイン tab's boards are its big picture tiles (the grid of nglux) —
+   no fixed width here; the ゲーム tab's two boards drawn big in their cards */
+#newOverlay > .modal.ngl.ngt-pc #bdRow.dsg > button{width:auto}
+#newOverlay > .modal.ngl.ngt-pc #bdRow.dsg > button svg{width:100%;height:auto;aspect-ratio:1/1}
+#newOverlay > .modal.ngt-pc #ruleCards.few .gart svg{height:clamp(160px, calc(min(860px, 100vh - 40px) - 560px), 290px)!important}
+#newOverlay > .modal.ngt-on #ruleCards.few .gart{height:auto!important;min-height:0}
+#newOverlay > .modal.ngt-on #ruleCards.few .gart svg{height:clamp(110px, 34vw, 150px)!important;max-height:none!important}
 @media (max-width:520px){#bdRow.dsg{gap:8px}#bdRow.dsg button{width:calc(25% - 6px);padding:5px 3px;font-size:11.5px}#bdRow.dsg button svg{width:100%;height:auto;aspect-ratio:1}}   /* (4 boards in a row on phones) */
 .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
 .mbtn{height:44px;min-width:120px;padding:0 18px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.05);cursor:pointer;font-size:15px;font-weight:600}
