@@ -2013,7 +2013,7 @@
   $('langBtn').onclick = e => { e.stopPropagation(); openLang(); };
   document.addEventListener('click', e => { if (!$('langPop').hidden && !$('langPop').contains(e.target)) openLang(false); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('langPop').hidden) openLang(false); });
-  $('langSel').onchange = e => { lang = e.target.value; try { localStorage.setItem('aicoding-lang', lang); } catch (x) {} applyLang(); render(page); };
+  $('langSel').onchange = e => { const lg = e.target.value; (window.ATLAS_I18N_LOAD ? ATLAS_I18N_LOAD(lg) : Promise.resolve()).then(() => { lang = I[lg] ? lg : 'ja'; try { localStorage.setItem('aicoding-lang', lang); } catch (x) {} applyLang(); render(page); }); };   // (only the page's language is loaded: atlas/i18n/<lang>.js)
 
   // ボドゲ地図: atlas/worldmap.js draws the map; a pin's ▶ flies its icon into the board view like the home icons
   function renderMap() {

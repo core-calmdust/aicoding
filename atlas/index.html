@@ -1815,7 +1815,18 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 <script src="../shared/atlas.js?v=20261110am4"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261109ac2"></script>
-<script src="i18n.js?v=67am"></script>
+<script src="i18n/v.js?v=67am"></script>
+<script>/* the UI strings: only ja, en and the page language (atlas/i18n/<lang>.js, made from i18n.js by tools/i18n-split.js — 2026-11-10);
+   when they were made from another version of i18n.js than FULL, the whole i18n.js loads instead. Edit i18n.js, bump FULL's ?v=, run the tool. */
+(function () {
+  var FULL = 'i18n.js?v=67am', S = window.ATLAS_I18N_SPLIT, v = FULL.split('v=')[1], l = 'ja';
+  try { l = localStorage.getItem('aicoding-lang') || (function (x) { return /^zh-(tw|hk|mo|hant)/i.test(x) ? 'zh-TW' : String(x).slice(0, 2); })(navigator.language || 'ja'); } catch (e) {}
+  if (!S || S.v !== v) { document.write('<script src="' + FULL + '"><\/script>'); return; }
+  var L = ['ja', 'en']; if (S.langs.indexOf(l) >= 0 && L.indexOf(l) < 0) L.push(l);
+  window.ATLAS_I18N_LOAD = function (lg) { return new Promise(function (res) { if ((window.ATLAS_I18N_DONE || {})[lg] || S.langs.indexOf(lg) < 0) return res(); var sc = document.createElement('script'); sc.src = 'i18n/' + lg + '.js?v=' + v; sc.onload = sc.onerror = function () { res(); }; document.head.appendChild(sc); }); };
+  L.forEach(function (x) { document.write('<script src="i18n/' + x + '.js?v=' + v + '"><\/script>'); });
+})();
+</script>
 <script src="gamelist-i18n.js?v=13am"></script>
 <script src="table3d.js?v=141"></script>
 <script src="tables3d.js?v=52"></script>
@@ -1845,6 +1856,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <link rel="stylesheet" href="worldmap.css?v=18">
 <script src="worldmap.js?v=31"></script>
 <script src="npc/npc.js?v=16"></script>
-<script src="app.js?v=273"></script>
+<script src="app.js?v=274"></script>
 </body>
 </html>
