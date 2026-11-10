@@ -39,8 +39,8 @@ URL: https://core-calmdust.github.io/aicoding/atlas/  ／ 詳細: repo の atlas
 - 種族：ゲームの案内役11種（icons3d.js の MONS）＋39種（atlas/avatars/sp-*.js）。仕組みは atlas/avatars3d.js（define・段階・小物・色替え）
 - アバター画像は images/atlas/av/<種族>-<段階>.webp（256px）を atlas/tools/icons.html?kind=av&id=<種族>-<段階> で書き出し。ポータルは画像だけ使う（three.js不要）
 - 種族の追加：sp-*.js に define → art.js の AV 表に名前（10言語）を1行 → 書き出し
-- 背景100種も3D調の画像（atlas/bg3d.js＝タイル、atlas/bg3d-covers.js＝1枚絵の空・草原・海・雪・おもちゃの町・宇宙 → tools/bgs.html → images/atlas/bg/<id>.webp）。IDは追加順（新しいものは末尾に追加し、既存IDは動かさない）。名前は模様×色の組み合わせ（art.js の BG_NAME・BGCOL・NAMES、10言語）
-- フレーム50種も3Dのリング画像（atlas/frame3d.js → tools/frames.html → images/atlas/frame/<key>.webp、透過256px、アバター全体に重ねる）
+- 背景306種も3D調の画像（2026-11-10に100→306。新色ティール・抹茶・サンド・みかん・ネイビー・ワイン（ネイビー・ワインは暗色＝白文字））（atlas/bg3d.js＝タイル、atlas/bg3d-covers.js＝1枚絵の空・草原・海・雪・おもちゃの町・宇宙 → tools/bgs.html → images/atlas/bg/<id>.webp）。IDは追加順（新しいものは末尾に追加し、既存IDは動かさない）。名前は模様×色の組み合わせ（art.js の BG_NAME・BGCOL・NAMES、10言語）
+- フレーム126種も3Dのリング画像（2026-11-10に50→126。N=単色リング、R=ドット・ステッチ・ビーズ・ハート等の色違い、SR=盤ゲーム・花・音符・水族館など、SSR=宝石・金属、UR=オーロラ・星雲・天体・クリスタル・鳳凰）（atlas/frame3d.js → tools/frames.html → images/atlas/frame/<key>.webp、透過256px、アバター全体に重ねる）
 - ガチャは3Dのカプセル機（atlas/gacha3d.js）：コイン投入→ツマミ→滑り台→受け皿→揺れ（カプセルの色でレア度）→開封。10連は10個並べて順に開封。タップでスキップ。描画は必要なときだけ
 - きせかえ画面：キャラをタップするとランダムなアニメーション（ジャンプ・回転・ゆらゆら・むぎゅっ・ダンス・宙返り）＋ハート等が飛ぶ。着替え直後もジャンプ。暗い背景では名前を白文字に
 - きせかえの並び替え（持ってる順／レア度 高い順／低い順）の**左・同じ列にレア度のプルダウン**（すべて・N・R・SR・SSR・UR）。タグ形式は使わない（場所を取るため）。並び替えと組み合わせて使え、選択は端末に保存（`atlas-drar`）。スマホでも1列に収める。2026-11-09
@@ -52,7 +52,7 @@ URL: https://core-calmdust.github.io/aicoding/atlas/  ／ 詳細: repo の atlas
 - タグ：ai / online / rated / netrank / daily / lessons / puzzles / openings / variants / mobile
 - 実績はゲームごとの記録（localStorage）から自動計算。銅50・銀120・金300・プラチナ800コイン
 - コイン＝実績＋ログインボーナス（毎日30・7日ごと+150）＋ガチャかぶり返金−使用分
-- ガチャ 1回100／10回900（10回目SR以上）、N58/R28/SR10/SSR3.5/UR0.5%。アイテム350種（アバター200・背景100・フレーム50）
+- ガチャ 1回100／10回900（10回目SR以上）、N58/R28/SR10/SSR3.5/UR0.5%。アイテムはアバター200（＋ボス）・背景306・フレーム126
 - **AIのボス**（2026-11-09、`atlas/npc/`）：各ゲームのボスのSSR（最上位はUR）がガチャに入る。ボスのSRはそのボスに勝ったときだけもらえる（ガチャ・ショップには出ない）。詳細は addendum「AI戦のボスと観戦キャラ」
 - 「今日のゲーム」カードの本文は `hist.<id>`（i18n.js、14言語）＝そのゲームの歴史・雑学。ルール説明（`about.<id>`）は載せない。ゲーム追加時は `hist.<id>` を必ず書く（無い言語は英語、英語も無ければ空）。
 - ショップ：毎日6品（アイコン3・背景2・フレーム1。PCは横1列で幅いっぱい、スマホは3×2。ガチャのページの下段）
