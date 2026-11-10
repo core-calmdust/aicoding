@@ -1417,9 +1417,12 @@
     if (!glOK || !window.Table3D || !Table3D.setShift || matchMedia('(max-width:760px)').matches) return;
     const w = on ? $('bvPlMenu').offsetWidth + 28 : 0, rtl = document.documentElement.dir === 'rtl'; Table3D.setShift(on ? (rtl ? w / 2 : -w / 2) : 0);
   }
+  // the places (tables3d.js) arrive after the page (index.html AtlasPlaces): the chip, the labels and the open page follow
+  addEventListener('atlas-places', () => { try { renderPlace(); } catch (e) {} try { if (page === 'dress' && dKind === 'table') renderDress(); else if (!$('bv').classList.contains('on')) render(page); } catch (e) {} });
   function renderPlace() {
     const X = P3(), btn = $('bvPlBtn'); if (!btn) return;
     if (!X) { btn.hidden = true; return; }
+    if (btn.hidden) btn.hidden = false;   // (the places arrived after the page: atlas-places)
     const k = X.table(), names = X.PLACES.name[lang] || X.PLACES.name.en;
     $('bvPlIm').src = X.placeThumb(k); $('bvPlLb').textContent = names[k];
     btn.setAttribute('aria-label', X.placeUi('place', lang) + ': ' + names[k]);
