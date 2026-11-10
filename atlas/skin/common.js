@@ -171,7 +171,7 @@
     let refits = 0, usedK = [], checks = 0, chkT = 0; const ext = f => function () { refits = 0; usedK = []; checks = 0; return f.apply(this, arguments); };
     // the board model on the table (skins call T3.show(id, model) — also for a new board size / variant)
     const show0 = T3.show;
-    T3.show = function (id, m) { const g = show0.apply(this, arguments); if (m) { model = m; K = null; refits = 0; usedK = []; checks = 0; remeasure(); } return g; };
+    T3.show = function (id, m) { const g = show0.apply(this, arguments); if (m) { model = m; K = P.fit2d && de.classList.contains('atlas-2d') ? k2d() : null; refits = 0; usedK = []; checks = 0; remeasure(); } return g; };
     const align0 = T3.align;   // (the camera follows the DOM board only once a skin has aligned it: measure again then)
     T3.align = function () { const r = align0.apply(this, arguments); refits = 0; usedK = []; checks = 0; remeasure(); return r; };
     if (T3.turn) T3.turn = ext(T3.turn);   // (盤面反転: the frame turns with the board)
@@ -218,6 +218,7 @@
         // (a refit that follows a refit needs a clearer change: the frame measured right after a fit can differ by a few tenths of
         // a px each time — the board then grew and shrank by 2–4 px for a couple of seconds)
         const tol = refits ? .004 : .0008, differs = (a, t = tol) => ['l', 'r', 't', 'b'].some(s => Math.abs(m[s] - a[s]) > t);
+        try { if (P.fit2d) localStorage.setItem('atlas-k2d', JSON.stringify(m)); } catch (e) {}
         if (!K || differs(K)) { if (refits >= 4 || usedK.some(a => !differs(a))) { K = m; settle(); return; } refits++; if (K) usedK.push(K); K = m; fit(); }
         // a frame a little off the one the layout was made for (a fraction of a px — or the refits are over): the board stays as it
         // is (a refit would move the camera and the frame once more), only the column (and the review box) are put against the
@@ -230,13 +231,14 @@
       setTimeout(() => step(0, null), 60);
     }
     const reviewBox = () => [...document.querySelectorAll('.app > #rvBox, .app > .rvbox, .app > .rbox, body > .rbox')].some(b => b.getClientRects().length);
-    const want = () => MQ.matches && K && !de.classList.contains('atlas-2d') && getComputedStyle(side).display !== 'none' && !reviewBox() && visible(model);
+    const is2 = () => de.classList.contains('atlas-2d');
+    const want = () => MQ.matches && K && (!is2() || P.fit2d) && getComputedStyle(side).display !== 'none' && !reviewBox() && (is2() || visible(model));
     // 振り返り with the review box under the board (reversi, shogi…): the page lays the board, the column and the box out itself (its
     // grid), sized for the flat board — the 3D frame reaching past it would slip under the portal bar or onto the box. So the board is
     // shrunk until its 3D frame fits between the bar and the box with MY px to spare above and below, and moved down (with the column)
     let rvOn = false, rbShare = .32;
     const rvBox = () => [...document.querySelectorAll('.app > #rvBox, .app > .rvbox, .app > .rbox, body > .rbox')].find(b => b.getClientRects().length);
-    const wantRv = () => MQ.matches && K && !de.classList.contains('atlas-2d') && getComputedStyle(side).display !== 'none' && !!rvBox() && visible(model);
+    const wantRv = () => MQ.matches && K && (!is2() || P.fit2d) && getComputedStyle(side).display !== 'none' && !!rvBox() && (is2() || visible(model));
     // 振り返り with the review box under the board (reversi, chess, shogi…): laid out like the page's own 2D grid — the board, the
     // column beside it and the box under both — but from the 3D frame (it reaches past the flat board the grid is sized for): the
     // column the page's column gap to the right of the frame, level with its top and bottom; the box the page's row gap under
@@ -393,10 +395,11 @@
           if (Math.abs(dy) > .3) g.style.top = (px(g, 'top') + dy) + 'px';
           if (placeSide(GP.x) && Math.abs(dx) <= .3 && Math.abs(dy) <= .3) break;
         }
-        placeHost();
+        placeHost(); kVars();
         checks = 0; clearTimeout(reT); reT = setTimeout(remeasure, 250);   // check the frame again once the camera has followed the new size
       } finally { busy = false; }
     }
+    function kVars() { if (!P.fit2d || !K) return; const h = boardDom.getBoundingClientRect().height; ['l', 't', 'r', 'b'].forEach(k => de.style.setProperty('--k2' + k, (K[k] * h).toFixed(2) + 'px')); }
     let q = 0; const later = () => { if (q) return; q = 1; const go = () => { if (!q) return; q = 0; fit(); }; requestAnimationFrame(go); setTimeout(go, 120); };   // (a timer too: frames wait while the window is hidden or occluded)
     const laterX = ext(later);
     addEventListener('resize', laterX);
@@ -407,8 +410,13 @@
     if (window.ResizeObserver) { new ResizeObserver(laterX).observe(de); new ResizeObserver(later).observe(boardDom); }   // (the board's own size: mostly the fit itself)
     // back from the game's own 2D board to the 3D one: the frame is measured afresh (a measurement taken while the 3D board was hidden
     // left the board shrunk to a few px — reversi: 3D → 2D → 3D in the デザイン tab)
+    // P.fit2d (shogi): the game's own 2D board is laid out exactly as the 3D one — the same frame (K: the 3D board's extent beyond the
+    // DOM board, as last measured in 3D, else P.k2d), so the board, the komadai and the column sit at the very same px; the 2D wood is
+    // drawn over that frame (--k2l/t/r/b: its margins in px around the DOM board) (2026-11-10)
+    const k2d = () => { try { const v = JSON.parse(localStorage.getItem('atlas-k2d') || 'null'); if (v && v.l > 0 && v.l < .5) return v; } catch (e) {} return P.k2d || null; };
+    if (P.fit2d && de.classList.contains('atlas-2d') && !K) { K = k2d(); setTimeout(laterX, 60); }
     let was2d = de.classList.contains('atlas-2d');
-    new MutationObserver(() => { const is2d = de.classList.contains('atlas-2d'); if (is2d !== was2d) { was2d = is2d; K = null; refits = 0; usedK = []; checks = 0; if (!is2d) { setTimeout(remeasure, 60); setTimeout(ext(remeasure), 700); } } laterX(); }).observe(de, { attributes: true, attributeFilter: ['class'] });
+    new MutationObserver(() => { const is2d = de.classList.contains('atlas-2d'); if (is2d !== was2d) { was2d = is2d; K = is2d && P.fit2d ? (K || k2d()) : null; refits = 0; usedK = []; checks = 0; if (!is2d) { setTimeout(remeasure, 60); setTimeout(ext(remeasure), 700); } } laterX(); }).observe(de, { attributes: true, attributeFilter: ['class'] });
     new MutationObserver(() => { laterX(); setTimeout(laterX, 320); setTimeout(laterX, 700); }).observe(body, { attributes: true, attributeFilter: ['class'] });   // (the online dock opens / closes with a .25s transition: once more at its end)
     { const dk = document.getElementById('dock') || document.querySelector('.dock'); if (dk) dk.addEventListener('transitionend', laterX); }
     if (document.fonts) document.fonts.ready.then(laterX);

@@ -160,7 +160,7 @@
   function closeRec() { const ov = $('recOv'); if (ov) ov.classList.remove('on'); }
   function renderRec(g) {
     const ov = $('recOv'), all = recLoad(g.id).filter(r => r && r.res && r.mode !== 'pvp');
-    const versus = all.length || (g.tags || []).some(x => x === 'ai' || x === 'online' || x === 'rated') || !!(window.Atlas3D && Atlas3D[g.id]);   // a game with opponents (puzzles / solo games: no empty record box)
+    const versus = all.length || (g.tags || []).some(x => x === 'ai' || x === 'online' || x === 'rated') || !!(window.Atlas3D && Atlas3D[g.id]) || !!(window.AtlasLazy && AtlasLazy.hasPlay(g.id));   // a game with opponents (puzzles / solo games: no empty record box)
     const has = { ai: all.some(r => r.mode === 'ai'), rated: all.some(r => r.mode === 'rated'), online: all.some(r => r.mode === 'online'), t3d: all.some(r => r.via === '3d') };
     const L = recMode === 'all' ? all : recMode === 't3d' ? all.filter(r => r.via === '3d') : all.filter(r => r.mode === recMode);
     const n = { w: 0, l: 0, d: 0 }; L.forEach(r => { n[r.res] = (n[r.res] || 0) + 1; });
@@ -320,11 +320,12 @@
   function hop(el, big) { el._hop = performance.now(); el._big = !!big; }
   // the bob runs only while it can be seen (home page, tab shown and focused, no 3D board over it): otherwise the loop stops
   // (0 frames — battery) and propWake() starts it again when one of these changes
-  let propStep = null, propObs = false;
+  let propStep = null, propObs = false, propVis = true;
   function propWake() { if (!propRaf && propStep) propRaf = requestAnimationFrame(propStep); }
   function startProps() {
     cancelAnimationFrame(propRaf); propRaf = 0;
     if (!propObs) { propObs = true;
+      try { new IntersectionObserver(es => { propVis = es.some(e => e.isIntersecting); if (propVis) propWake(); }).observe($('props')); } catch (e) {}
       document.addEventListener('visibilitychange', propWake); addEventListener('focus', propWake);
       try { new MutationObserver(propWake).observe($('bv'), { attributes: true, attributeFilter: ['class'] }); } catch (e) {} }
     const els = [...$('props').querySelectorAll('.pp')];
@@ -333,7 +334,7 @@
     let lastP = 0;
     propStep = function step(now) {
       propRaf = 0;
-      if (document.hidden || page !== 'home' || !els[0] || !els[0].isConnected || !document.hasFocus() || $('bv').classList.contains('on')) return;   // (stopped: see propWake)
+      if (document.hidden || page !== 'home' || !els[0] || !els[0].isConnected || !document.hasFocus() || $('bv').classList.contains('on') || !propVis) return;   // (stopped: see propWake; also while the hero is scrolled out of view, 2026-11-10)
       propRaf = requestAnimationFrame(step);
       // 60 fps while a piece hops or the pointer / tilt moves them, 30 fps for the slow idle bob; stopped while the window isn't focused
       const busy = els.some(e => e._hop) || Math.abs(tx - px) > .002 || Math.abs(ty - py) > .002;
@@ -575,6 +576,7 @@
   function warm(id) { if (initGL()) tagged(id, () => Table3D.prepare(id)); }   // (the icon intro isn't used by the portal: no icon model is built / compiled)
   function flyOpen(id, img) {
     if (flying) return;
+    if (window.AtlasLazy) AtlasLazy.need(id);   // (its files load while the icon flies)
     if (!img || !img.animate) return openBoard(id);   // (animations run even with the OS 'reduce motion' setting: they're part of the design)
     flying = true; initGL();
     const r = img.getBoundingClientRect(), W = innerWidth, H = innerHeight, wide = W > 900 && W / H > 1.25;
@@ -623,8 +625,10 @@
         requestAnimationFrame(() => requestAnimationFrame(finish));
         setTimeout(finish, 900);
       }, 0));
-      try { warm(id); } catch (e) {}
-      if (texBusy(id)) texReady(id).then(go); else go();   // (the icon keeps wobbling meanwhile)
+      (window.AtlasLazy ? AtlasLazy.need(id) : Promise.resolve()).then(() => {   // (its files first: atlas/lazy.js)
+        try { warm(id); } catch (e) {}
+        if (texBusy(id)) texReady(id).then(go); else go();   // (the icon keeps wobbling meanwhile)
+      });
     }, T1);
   }
   // magic: sparkles trail the rising icon, then rain down and twinkle over the board as it appears
@@ -672,7 +676,14 @@
   }
   let show3dTok = 0, pend3d = null;   // a board waiting for its textures (see openBoard)
   let bvDrawer = 0;   // phones: the board card's drawer state, kept while moving between games on the table
+  // a game's 3D board / table play / rules tour load when it is opened (atlas/lazy.js): the board view waits for them (2026-11-10)
+  let openTok = 0;
   function openBoard(id, push = true, flown = false) {
+    const L = window.AtlasLazy;
+    if (L && !L.loaded(id)) { const tok = ++openTok; document.body.classList.add('lz-wait'); return L.need(id).then(() => { document.body.classList.remove('lz-wait'); if (tok === openTok) openBoard0(id, push, flown); }); }
+    ++openTok; openBoard0(id, push, flown); return Promise.resolve();
+  }
+  function openBoard0(id, push = true, flown = false) {
     const g = A_.GAMES.find(x => x.id === id); if (!g) return;
     if (!$('bv').classList.contains('on')) bvDrawer = 0;   // freshly opened: the default (settings) card
     const back = $('bv').classList.contains('playing');   // coming back from a game / the rules on the table
@@ -1297,7 +1308,7 @@
   landMQ.addEventListener('change', () => setTimeout(landNudge, 400));
   function closeBoard() { if (renderPlace.close) renderPlace.close(); stopSession(); $('bv').classList.remove('on', 'playing'); document.body.style.overflow = ''; history.replaceState(null, '', '#' + page); render(page); }
   $('bvClose').onclick = closeBoard;
-  window.AtlasBoard = { open: id => openBoard(id), close: closeBoard };   // ヒストリア (opened from the game list) puts that game's board on the table first
+  window.AtlasBoard = { open: id => openBoard(id), close: closeBoard, ready: id => !window.AtlasLazy || AtlasLazy.loaded(id) };   // ヒストリア (opened from the game list) puts that game's board on the table first
   // the room's time of day (auto = by the clock)
   const TOD = { ja: ['自動', '朝', '昼', '夕方', '夜'], en: ['Auto', 'Morning', 'Day', 'Evening', 'Night'], zh: ['自动', '早晨', '白天', '傍晚', '夜晚'], ko: ['자동', '아침', '낮', '저녁', '밤'], es: ['Auto', 'Mañana', 'Día', 'Tarde', 'Noche'], fr: ['Auto', 'Matin', 'Jour', 'Soir', 'Nuit'], pt: ['Auto', 'Manhã', 'Dia', 'Tarde', 'Noite'], de: ['Auto', 'Morgen', 'Tag', 'Abend', 'Nacht'], hi: ['ऑटो', 'सुबह', 'दिन', 'शाम', 'रात'], ar: ['تلقائي', 'صباح', 'نهار', 'مساء', 'ليل'], ru: ['Авто', 'Утро', 'День', 'Вечер', 'Ночь'], 'zh-TW': ['自動', '早晨', '白天', '傍晚', '夜晚'], id: ['Otomatis', 'Pagi', 'Siang', 'Sore', 'Malam'], tr: ['Otomatik', 'Sabah', 'Gündüz', 'Akşam', 'Gece'] };
   function renderTod() {
@@ -1490,7 +1501,7 @@
     AtlasGameList.render($('allGames'), list, { t, esc, gname, about: g => t('about.' + g.id), tl: g => t('tl.' + g.id),
       hasRules: () => true,
       // the 3D rules tour on the table where the game has one; otherwise the 2D game opens straight on its own rules (shared/rulelink.js)
-      onRules: id => { if (window.AtlasRules && AtlasRules[id]) { openBoard(id); if (glOK) startRules(true); return; } const g = A_.GAMES.find(x => x.id === id); if (g) location.href = '../' + g.href + '?rules=1'; }, onHistoria: id => Historia.open(id), art: g => artImg(g), badge: g => A_.badges(g).slice(0, 1).map(badgeHtml).join(''),
+      onRules: id => { if ((window.AtlasRules && AtlasRules[id]) || (window.AtlasLazy && AtlasLazy.hasRules(id))) { openBoard(id).then(() => { if (glOK && window.AtlasRules && AtlasRules[id]) startRules(true); }); return; } const g = A_.GAMES.find(x => x.id === id); if (g) location.href = '../' + g.href + '?rules=1'; }, onHistoria: id => Historia.open(id), art: g => artImg(g), badge: g => A_.badges(g).slice(0, 1).map(badgeHtml).join(''),
       pct: g => P[g.id].pct, tags: A_.TAGS, cats: A_.CATS });
     $('gNone2').hidden = !!list.length; $('gNone2').textContent = t('search.none');
     $('allGames').querySelectorAll('[data-open]').forEach(a => a.onclick = e => { if (e.metaKey || e.ctrlKey) return; e.preventDefault(); openBoard(a.dataset.open); });

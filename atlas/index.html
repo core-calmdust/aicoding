@@ -1806,69 +1806,8 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 <script src="gamelist-i18n.js?v=13am"></script>
 <script src="table3d.js?v=140"></script>
 <script src="tables3d.js?v=51"></script>
-<script src="models/shogi.js?v=30"></script>
-<script src="models/chess.js?v=16"></script>
-<script src="models/backgammon.js?v=118"></script>
-<script src="models/goban.js?v=14"></script>
-<script src="models/hex.js?v=2"></script>
-<script src="models/xiangqi.js?v=4"></script>
-<script src="models/janggi.js?v=3"></script>
-<script src="models/checkers.js?v=17"></script>
-<script src="models/morris.js?v=7"></script>
-<script src="models/connect4.js?v=5"></script>
-<script src="models/mancala.js?v=5"></script>
-<script src="models/dots.js?v=4"></script>
-<script src="models/ur-dice.js?v=2"></script>
-<script src="models/ur.js?v=4"></script>
-<script src="models/fanorona.js?v=4"></script>
-<script src="models/ugolki.js?v=4"></script>
-<script src="models/konane.js?v=7"></script>
-<script src="models/senet.js?v=10"></script>
-<script src="models/agon.js?v=4"></script>
-<script src="models/alquerque.js?v=3"></script>
-<script src="../ludo/engine.js?v=3"></script>
-<script src="../ludo/house.js?v=7"></script>
-<script src="../ludo/board2d.js?v=7"></script>
-<script src="../ludo/board-art.js?v=3"></script>
-<script src="models/ludo.js?v=9"></script>
-<script src="../carrom/engine.js?v=6"></script>
-<script src="models/carrom.js?v=16"></script>
-<script src="../crokinole/engine.js?v=2"></script>
-<script src="models/crokinole.js?v=10"></script>
-<script src="../hockey/engine.js?v=7"></script>
-<script src="models/hockey.js?v=3"></script>
 <script src="models/cardtables.js?v=4"></script>
 <script src="icons3d.js?v=37"></script>
-<script src="games/reversi.js?v=31"></script>
-<script src="games/shogi-play.js?v=30"></script>
-<script src="games/shogi.js?v=14"></script>
-<script src="games/chess.js?v=14"></script>
-<script src="games/backgammon.js?v=21"></script>
-<script src="games/gomoku.js?v=11"></script>
-<script src="games/morris-pieces.js?v=2"></script>
-<script src="games/morris.js?v=6"></script>
-<script src="games/connect4-tiles.js?v=1"></script>
-<script src="games/connect4.js?v=5"></script>
-<script src="games/go.js?v=7"></script>
-<script src="games/hex.js?v=5"></script>
-<script src="games/tafl.js?v=15"></script>
-<script src="games/xiangqi.js?v=12"></script>
-<script src="games/janggi.js?v=5"></script>
-<script src="games/checkers.js?v=8"></script>
-<script src="games/mancala.js?v=9"></script>
-<script src="games/dots.js?v=9"></script>
-<script src="games/ur-kit.js?v=15"></script>
-<script src="games/ur.js?v=10"></script>
-<script src="games/fanorona.js?v=6"></script>
-<script src="games/ugolki.js?v=7"></script>
-<script src="games/konane.js?v=10"></script>
-<script src="games/senet-kit.js?v=5"></script>
-<script src="games/senet.js?v=15"></script>
-<script src="games/agon.js?v=10"></script>
-<script src="games/ludo.js?v=28"></script>
-<script src="games/carrom.js?v=30"></script>
-<script src="games/crokinole.js?v=8"></script>
-<script src="games/hockey.js?v=5"></script>
 <script>/* rules tours: after a solved step, the ▶ button fills up like a timer until the tour moves on by itself */
 window.AtlasRgdTimer = function (btn, ms, alive) {
   if (!btn) return; btn.classList.remove('rgd-auto'); void btn.offsetWidth; btn.style.setProperty('--rgt', ms + 'ms'); btn.classList.add('rgd-auto');
@@ -1879,36 +1818,11 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
     if (!btn.classList.contains('rgd-auto')) { btn.style.setProperty('--rgd0', -Math.round(el) + 'ms'); btn.classList.add('rgd-auto'); }   // the tour redrew its buttons: carry on where it was
   }, 60);
 };</script>
-<script src="rules/reversi.js?v=13"></script>
-<script src="rules/shogi.js?v=20"></script>
-<script src="rules/chess.js?v=6"></script>
+<script src="lazy.js?v=5"></script>
 <script src="puzzle-lines.js?v=1"></script>
 <script src="puzzles.js?v=4"></script>
-<script src="rules/backgammon.js?v=10"></script>
-<script src="rules/gomoku.js?v=8"></script>
-<script src="rules/go.js?v=6"></script>
-<script src="rules/hex.js?v=5"></script>
-<script src="rules/tafl.js?v=6"></script>
-<script src="rules/xiangqi.js?v=5"></script>
-<script src="rules/janggi.js?v=1"></script>
-<script src="rules/ur.js?v=14"></script>
-<script src="rules/fanorona.js?v=7"></script>
-<script src="rules/ugolki.js?v=6"></script>
-<script src="rules/konane.js?v=3"></script>
-<script src="rules/senet.js?v=6"></script>
-<script src="rules/agon.js?v=3"></script>
-<script src="rules/alquerque.js?v=5"></script>
-<script src="rules/checkers.js?v=3"></script>
-<script src="rules/morris.js?v=3"></script>
-<script src="rules/connect4.js?v=2"></script>
-<script src="rules/mancala.js?v=3"></script>
-<script src="rules/dots.js?v=2"></script>
-<script src="rules/ludo.js?v=2"></script>
-<script src="rules/carrom.js?v=7"></script>
-<script src="rules/crokinole.js?v=3"></script>
-<script src="rules/hockey.js?v=4"></script>
 <link rel="stylesheet" href="historia.css?v=15">
-<script src="historia.js?v=37"></script>
+<script src="historia.js?v=38"></script>
 <link rel="stylesheet" href="skin/loading.css?v=2">
 <script src="skin/loading.js?v=5"></script>
 <script src="gacha3d.js?v=7"></script>
@@ -1919,6 +1833,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=31"></script>
 <script src="updnews.js?v=7"></script>
 <script src="npc/npc.js?v=16"></script>
-<script src="app.js?v=266"></script>
+<script src="app.js?v=268"></script>
 </body>
 </html>

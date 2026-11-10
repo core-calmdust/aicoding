@@ -21,7 +21,7 @@
     // PC: board + info column laid out from the 3D frame (AtlasSkin pcFit). The komadai stand against the 3D board's frame with
     // the 2D page's gap (.22 cell — the gote side of the 2D board), both sides the same: gote's top level with the frame's top,
     // sente's bottom level with its bottom
-    pc: { vars: ['--cw'], extras: '.board-area > .hand',
+    pc: { vars: ['--cw'], extras: '.board-area > .hand', fit2d: true, k2d: { l: .0506, r: .0511, t: .0502, b: .0516 },   // (the 2D board: laid out exactly as the 3D one)
       place(F) {
         const top = document.getElementById('handTop'), bot = document.getElementById('handBottom'); if (!top || !bot) return;
         const G = top.offsetWidth / 1.25 * .22;
