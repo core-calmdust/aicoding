@@ -509,6 +509,13 @@ html.atlas-skin #coachCard .sq-play:hover{background:#ffc23f}   /* lessons: the 
 body.ts-noopp .hand.top{visibility:hidden;height:0!important;min-height:0!important;padding:0!important;margin:0!important;border:0!important;overflow:hidden}
 /* (PC: the empty stand's column is dropped too — the board and the attacker's stand stay centred with the column, 2026-11-10) */
 body.ts-noopp .hand.top{display:none!important}body.ts-noopp .board-area{grid-template-columns:auto calc(var(--cw)*1.25)}
+/* PC, the column beside the board (2026-11-10): attacker's stand goes under the column, its left edge on the column's — the
+   board takes the width the two stands had */
+html.side-col:not(.atlas-skin) body.ts-noopp{--cw:min(var(--cwh), calc((100vw - var(--padx) * 2 - var(--gap) - var(--sidew)) / 9.9), 120px)}
+html.side-col:not(.atlas-skin) body.ts-noopp .board-area{display:contents}
+html.side-col:not(.atlas-skin) body.ts-noopp .board-area > .frame{grid-area:board}
+body.ts-noopp .board-area > .hand.bottom{z-index:3}
+html.side-col:not(.atlas-skin) body.ts-noopp .board-area > .hand.bottom{grid-area:side;align-self:end;justify-self:start;width:calc(var(--cw)*1.25);position:relative;z-index:2;left:0}
 .ts-compact .cb-bar .cb-q{font-size:0!important;width:42px!important;height:42px!important;padding:0!important;margin-inline-start:0!important;justify-content:center;gap:0!important;border-radius:14px!important}
 .ts-compact .cb-bar .cb-q::before{width:18px;height:18px}
 .ts-compact .cb-bar{flex-wrap:nowrap!important}
@@ -2042,17 +2049,20 @@ function tzRegion(pr) {
   const [c0, c1] = span(Math.min(...cs), Math.max(...cs)), [r0, r1] = span(Math.min(...rs), Math.max(...rs));
   return c1 - c0 >= 7 && r1 - r0 >= 7 ? null : { c0, c1, r0, r1 };
 }
-function tzTarget() {
+function tzTarget(free) {
   const W = boardEl.offsetWidth, H = boardEl.offsetHeight;
   if (!TZ.on || !TZ.reg || !tzActive() || !W) return { s: 1, tx: 0, ty: 0 };
-  // a little air around the problem, and the bottom strip (the zoom button in the corner) kept free (2026-11-10)
-  const g = TZ.reg, cw = W / 9, ch = H / 9, pad = .8, RB = 52;
-  const s = Math.min(2.4, W / ((g.c1 - g.c0 + 1 + pad) * cw), (H - RB) / ((g.r1 - g.r0 + 1 + pad) * ch));
+  // whole cells (2026-11-10): the view is n × n cells of the board, its edges on the grid lines — a cell cut in half against the
+  // frame read as the frame lying over the board. The problem's cells (with the air tzRegion gives) are centred; a drag pans
+  // freely (free) and lands back on whole cells when it ends
+  const g = TZ.reg, cw = W / 9, ch = H / 9, n = Math.max(4, g.c1 - g.c0 + 1, g.r1 - g.r0 + 1), s = 9 / n;
   const cx = (g.c0 + g.c1 + 1) / 2 * cw, cy = (g.r0 + g.r1 + 1) / 2 * ch;
-  let tx = W / 2 - s * cx + TZ.pan[0], ty = (H - RB) / 2 - s * cy + TZ.pan[1];
+  let tx = W / 2 - s * cx + TZ.pan[0], ty = H / 2 - s * cy + TZ.pan[1];
+  if (!free) { tx = Math.round(tx / (cw * s)) * cw * s; ty = Math.round(ty / (ch * s)) * ch * s; }
   const ctx0 = tx, cty0 = ty;
-  tx = Math.max(W - s * W, Math.min(0, tx)); ty = Math.max(H - s * H - RB, Math.min(0, ty));   // (a problem on the bottom edge: the board stops RB above the view's bottom, the button sits below it)
+  tx = Math.max(W - s * W, Math.min(0, tx)); ty = Math.max(H - s * H, Math.min(0, ty));
   TZ.pan[0] += tx - ctx0; TZ.pan[1] += ty - cty0;   // (the pan stops at the board's edges)
+  if (!free) { TZ.pan[0] = tx - (W / 2 - s * cx); TZ.pan[1] = ty - (H / 2 - s * cy); }   // (the pan as it now stands, on whole cells)
   return { s, tx, ty };
 }
 function tzStyle() {
@@ -2063,7 +2073,7 @@ function tzStyle() {
   boardEl.style.clipPath = on ? `inset(${(-ty / s).toFixed(2)}px ${(W - (W - tx) / s).toFixed(2)}px ${Math.max(0, H - (H - ty) / s).toFixed(2)}px ${(-tx / s).toFixed(2)}px)` : '';
   document.body.classList.toggle('tz-on', on);
   window.__boardZoom = on ? { s, tx, ty } : null;
-  tzFrame(on);
+  tzFrame(on); tzEdge(on);
   const host = document.getElementById('atlasGL');
   if (host) host.style.clipPath = on ? `inset(${boardEl.offsetTop - host.offsetTop}px ${host.offsetLeft + host.offsetWidth - boardEl.offsetLeft - W}px ${host.offsetTop + host.offsetHeight - boardEl.offsetTop - H}px ${boardEl.offsetLeft - host.offsetLeft}px)` : '';
   if (window.Table3D && Table3D.kick) Table3D.kick(200);
@@ -2095,6 +2105,17 @@ function tzFrame(on) {
   // a hole where the board is (the 3D board shows through it; the 2D board draws its own wood there)
   { const L = k('l'), T = k('t'), R = L + boardEl.offsetWidth, B = T + boardEl.offsetHeight;
     fr.style.clipPath = `polygon(evenodd, 0 0, 100% 0, 100% 100%, 0 100%, 0 0, ${L}px ${T}px, ${L}px ${B}px, ${R}px ${B}px, ${R}px ${T}px, ${L}px ${T}px)`; }
+}
+// the view's edge is a grid line (the board's outer line): on whole cells, the lines at the edge were half outside the view
+function tzEdge(on) {
+  let e = document.getElementById('tzEdge');
+  if (!on) { if (e) e.remove(); return; }
+  if (!e) { e = document.createElement('div'); e.id = 'tzEdge'; e.setAttribute('aria-hidden', 'true'); }
+  if (e.previousElementSibling !== boardEl) boardEl.after(e);
+  const q = boardEl.querySelector('.sq'), c = q ? getComputedStyle(q).borderRightColor : '';
+  const col = !c || /rgba\([^)]*,\s*0\)$/.test(c) || c === 'transparent' ? 'rgba(40,22,5,.75)' : c, w = Math.max(1.5, TZ.s);
+  Object.assign(e.style, { position: 'absolute', pointerEvents: 'none', zIndex: 3, left: boardEl.offsetLeft + 'px', top: boardEl.offsetTop + 'px',
+    width: boardEl.offsetWidth + 'px', height: boardEl.offsetHeight + 'px', boxShadow: `inset 0 0 0 ${w.toFixed(1)}px ${col}` });
 }
 function tzApply(snap) {
   const T = tzTarget(); cancelAnimationFrame(TZ.raf); TZ.raf = 0;
@@ -2139,9 +2160,9 @@ new MutationObserver(() => { if (TZ.s > 1.001) setTimeout(() => tzFrame(TZ.s > 1
     if (!pd || e.pointerId !== pd.id) return;
     const dx = e.clientX - pd.x, dy = e.clientY - pd.y; pd.m += Math.abs(dx) + Math.abs(dy); pd.x = e.clientX; pd.y = e.clientY;
     if (pd.m < 8) return;
-    TZ.pan[0] += dx; TZ.pan[1] += dy; const T = tzTarget(); Object.assign(TZ, T); tzStyle(); suppressClick = Date.now();
+    TZ.pan[0] += dx; TZ.pan[1] += dy; const T = tzTarget(true); Object.assign(TZ, T); tzStyle(); suppressClick = Date.now();
   });
-  const up = () => { if (pd && pd.m >= 8) suppressClick = Date.now(); pd = null; };
+  const up = () => { if (pd && pd.m >= 8) { suppressClick = Date.now(); tzApply(); } pd = null; };   // (the drag ends: back on whole cells)
   addEventListener('pointerup', up); addEventListener('pointercancel', up);
 }
 function renderBoard(anim) {
@@ -6195,7 +6216,7 @@ if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStar
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=146')).then(() => load('../atlas/tables3d.js?v=54')).then(() => load('../atlas/skin/common.js?v=60tz')).then(() => load('../atlas/models/shogi.js?v=31k')).then(() => load('../atlas/skin/shogi.js?v=22k'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=146')).then(() => load('../atlas/tables3d.js?v=54')).then(() => load('../atlas/skin/common.js?v=61tz')).then(() => load('../atlas/models/shogi.js?v=31k')).then(() => load('../atlas/skin/shogi.js?v=23k'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
