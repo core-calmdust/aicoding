@@ -231,7 +231,7 @@
     // the field
     const f = new TT.Mesh(geo('field', () => { const q = new TT.PlaneGeometry(W * K, L * K); q.rotateX(-Math.PI / 2); return q; }), BM.field); f.position.y = TOP; f.receiveShadow = true; g.add(f);
     // the tray's floor slab under it
-    const slab = new TT.Mesh(geo('slab', () => new TT.BoxGeometry(OW * K, .6 * K, OL * K)), BM.ply); slab.position.y = TOP - .3 * K - .002; slab.castShadow = slab.receiveShadow = true; g.add(slab);
+    const slab = new TT.Mesh(geo('slab', () => new TT.BoxGeometry(OW * K - .03, .6 * K, OL * K - .03)), BM.ply);   // (a hair inside the walls' outer faces: the same plane flickered, 2026-11-10) slab.position.y = TOP - .3 * K - .002; slab.castShadow = slab.receiveShadow = true; g.add(slab);
     // walls: the sides whole, the ends split by the goal slot (the slot opens onto a dark pocket box behind)
     const wall = (w, d, x, z) => { const m = new TT.Mesh(new TT.BoxGeometry(w * K, WH * K, d * K), BM.frame); m.position.set(x * K, TOP + WH * K / 2 - .6 * K, z * K); m.castShadow = m.receiveShadow = true; g.add(m); return m; };
     wall(FR, OL, -(W / 2 + FR / 2), 0); wall(FR, OL, W / 2 + FR / 2, 0);
@@ -244,8 +244,8 @@
     }
     if (BM.strip) for (const sg of [1, -1]) { const s = new TT.Mesh(new TT.BoxGeometry(.25 * K, .25 * K, OL * K), BM.strip); s.position.set(sg * (W / 2 + FR) * K, TOP + (WH - .6) * K, 0); g.add(s); }
     // (2026-11-10) a solid plinth under the whole tray and under both goal pockets, down to the table: no gap to see through
-    const ph = TOP - .6 * K - .004, plinth = new TT.Mesh(new TT.BoxGeometry(OW * K, ph, OL * K), BM.frame); plinth.position.y = ph / 2; plinth.castShadow = plinth.receiveShadow = true; g.add(plinth);
-    for (const sg of [1, -1]) { const pk = TOP - .8 * K - .004, b = new TT.Mesh(new TT.BoxGeometry((GW + 1.6) * K, pk, 4.8 * K), BM.frame); b.position.set(0, pk / 2, sg * (L / 2 + FR + 2.2) * K); b.castShadow = true; g.add(b); }
+    const ph = TOP - .6 * K - .004, plinth = new TT.Mesh(new TT.BoxGeometry(OW * K - .03, ph, OL * K - .03), BM.frame); plinth.position.y = ph / 2; plinth.castShadow = plinth.receiveShadow = true; g.add(plinth);
+    for (const sg of [1, -1]) { const pk = TOP - .8 * K - .004, b = new TT.Mesh(new TT.BoxGeometry((GW + 1.6) * K - .03, pk, 4.58 * K), BM.frame); b.position.set(0, pk / 2, sg * (L / 2 + FR + 2.09) * K); b.castShadow = true; g.add(b); }
     const U = g.userData;
     U.top = TOP; U.K = K; U.look = look; U.mats = BM; U.W = W; U.L = L; U.OW = OW; U.OL = OL;
     U.xz = (x, y) => [x * K, y * K];
@@ -262,6 +262,27 @@
     const U = g.userData;
     const put = (m, x, y) => { const [a, b] = U.xz(x, y); m.position.set(a, TOP, b); g.add(m); };
     put(U.mallet(0), 4, 20); put(U.mallet(1), -6, -21); put(U.puck(), 7, -4);
+    // (2026-11-10) the room view shows the boards' light shows too: neon's colours keep cycling; space twinkles (three layers of
+    // stars blinking out of step) and its rim light breathes. Run from the field's onBeforeRender (only while it is drawn).
+    if (look === 'neon' || look === 'space') {
+      const TT = T(), BM = U.mats, f = g.children[0], stars = [];
+      if (look === 'space') {
+        const R = (k => () => (k = (k * 16807) % 2147483647) / 2147483647)(4242);
+        for (let l = 0; l < 3; l++) {
+          const pos = []; for (let i = 0; i < 46; i++) { const [a, b] = U.xz((R() - .5) * (W - 2), (R() - .5) * (L - 2)); pos.push(a, TOP + .006 + l * .002, b); }
+          const gm = new TT.BufferGeometry(); gm.setAttribute('position', new TT.Float32BufferAttribute(pos, 3));
+          const pm = new TT.Points(gm, new TT.PointsMaterial({ color: [0xffffff, 0xc9b8ff, 0x9fe8ff][l], size: [.05, .035, .07][l], transparent: true, opacity: .8, blending: TT.AdditiveBlending, depthWrite: false }));
+          g.add(pm); stars.push(pm);
+        }
+      }
+      const c = new TT.Color(), w = new TT.Color();
+      f.onBeforeRender = () => {
+        const now = performance.now();
+        if (look === 'neon') { c.setHSL((now / 2600) % 1, 1, .55); if (BM.strip) BM.strip.emissive.copy(c); w.setRGB(1, 1, 1).lerp(c, .55).multiplyScalar(.8); BM.field.emissive.copy(w); }
+        else { stars.forEach((pm, l) => { pm.material.opacity = .25 + .75 * Math.pow(.5 + .5 * Math.sin(now / (380 + l * 170) + l * 2.1), 2); }); if (BM.strip) BM.strip.emissive.setHSL(.72 + Math.sin(now / 1400) * .06, 1, .55); BM.field.emissive.setScalar(.72 + Math.sin(now / 900) * .06); }
+        if (X.kick) X.kick(60);   // (keep the frames coming while the board is on view)
+      };
+    }
     return g;
   };
   X.hockey = { board, LOOKS, K };
