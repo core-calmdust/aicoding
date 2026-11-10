@@ -108,7 +108,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=6';
+const ENGINE_URL = 'engine.js?v=7';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -138,9 +138,13 @@ const mtLevel = lv => { const L = E.LEVELS[lv]; return !!(L && L.s && L.ms && !L
 // The MCTS on several threads (2026-11-10, claude/amazons-spec.md「MCTS」): Lv.19〜23 (mc in LEVELS; rated games, the coach's deeper
 // pass and PRO's MCTS too) grow ONE tree on every thread (tree-parallel with virtual loss): core_mt.wasm on a shared memory,
 // the lead engine.js?…&mt=1, the helpers mt-helper.js (shared/mtengine.js; only on an isolated page). Without it: one thread.
-const MCP = window.MTEngine && MTEngine.use ? MTEngine.use({ wasm: 'core_mt.wasm?v=1', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=1', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = core_mt.wasm's (1 GiB)
+const MCP = window.MTEngine && MTEngine.use ? MTEngine.use({ wasm: 'core_mt.wasm?v=2', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=1', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = core_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => Date.now() } }), help: m => m.type === 'think' ? {} : null }) : null;
 const mcJob = msg => msg.type === 'think' && (msg.cfg ? !!(msg.cfg.s && msg.cfg.mc) : !!(E.LEVELS[msg.level] || {}).mc);
+// the MCTS's default thread count (2026-11-10): the performance cores (shared/mtengine.js perfThreads — 10 of the user's M4 Pro's
+// 14; ProSet.defThreads, the other games' timed levels, #1299) for the levels, rated games, the coach's deeper pass and PRO's
+// default. The tree search's evaluations per second grew on to 10 threads there (x7.5) and hardly past them (x7.9 on 14).
+const mcThreads = () => MCP && MTEngine.on() ? (window.ProSet ? ProSet.defThreads() : Math.max(1, Math.min(1 + MTEngine.maxHelpers(), MTEngine.perfThreads()))) : 1;
 function mtWants(which, msg) {
   if (msg.type === 'analyze' || msg.type === 'cands') return true;
   if (msg.type !== 'think') return false;
@@ -156,7 +160,7 @@ function request(which, msg, onProgress) {
   }
   if (mc) {   // the MCTS: its own pool of threads (PRO: with more than one thread), else the one-thread worker
     const mp = MCP && (!msg.cfg || msg.cfg.threads > 1) && MCP.pool(which === 'ai' ? 'ai' : null);
-    if (mp) { const t0 = performance.now(), full = { start: startSpec, rule: gv, ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }; return mp.run(full, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full, onProgress) : r; }); }
+    if (mp) { const t0 = performance.now(), full = { start: startSpec, rule: gv, ...msg, mtThreads: msg.cfg ? msg.cfg.threads : mcThreads() }; return mp.run(full, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full, onProgress) : r; }); }
     return requestW(which, msg, onProgress);
   }
   const mp = MTP && mtWants(which, msg) && MTP.pool(which === 'ai' ? 'ai' : null);
@@ -1132,14 +1136,14 @@ var PRO = PRO_L ? ProSet.init({ game: 'amazons', lang: () => LANG, level: () => 
   store: { get: () => settings.pro, set: v => { settings.pro = v; } },
   // threads (本編のマルチスレッド, shared/mtsplit.js): with any limit of the search; the default is the levels' own count for the
   // levels that think by time, else one
-  defaults: lv => Object.assign(PRO_L.defaults(lv), MTP ? { threads: mtLevel(lv) ? Math.min(ProSet.maxThreads(), MTSplit.autoThreads()) : 1 } : {}, { algo: (E.LEVELS[lv] || {}).mc ? 'mc' : 'ab' }),   // (threads: the levels' own count, min(cores − 1, 7) + 1 — on the user's Mac 14 threads were slower than 8, 2026-11-09)
+  defaults: lv => Object.assign(PRO_L.defaults(lv), MTP ? { threads: !mtLevel(lv) ? 1 : (E.LEVELS[lv] || {}).mc ? ProSet.defThreads() : Math.min(ProSet.maxThreads(), MTSplit.autoThreads()) } : {}, { algo: (E.LEVELS[lv] || {}).mc ? 'mc' : 'ab' }),   // (threads: the levels' own count — the MCTS levels (Lv.19〜23) the performance cores (mcThreads), the alpha-beta ones min(cores − 1, 7) + 1: on the user's Mac 14 threads were slower than 8, 2026-11-09)
   params: (MTP ? [PRO_L.params[0], { key: 'threads' }].concat(PRO_L.params.slice(1)) : PRO_L.params).concat([PRO_ALGO]) }) : null;
 // a rated game (5 min + 3 s): the timed top levels (Lv.21〜) never think longer than the clock allows — about a twentieth of the
 // time left plus most of the increment (on every thread, as without the cap)
 function rtCap(lv) {
   const L = E.LEVELS[lv]; if (!rgame || lv <= 20 || !L || !L.ms) return null;
   const left = rtClockLeft(toMoveAt(moves.length) - 1), ms = Math.min(L.ms, Math.max(800, left / 20 + RT_CLOCK.inc * 0.8));
-  return ms >= L.ms ? null : Object.assign({}, L, { ms, threads: MTP && MTSplit.on() ? 1 + MTSplit.helpers() : 1 });
+  return ms >= L.ms ? null : Object.assign({}, L, { ms, threads: L.mc ? mcThreads() : MTP && MTSplit.on() ? 1 + MTSplit.helpers() : 1 });
 }
 function proCfg(lv) {
   if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null;

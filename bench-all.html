@@ -72,7 +72,7 @@ const GAMES = [
   ['senet', 'セネト', 1], ['backgammon', 'バックギャモン', 2], ['ludo', 'ルドー', 2], ['ugolki', 'ウゴルキ', 6],
   ['agon', 'アゴン', 6], ['konane', 'コナネ', 6], ['dots', 'ドット＆ボックス', 8], ['tafl', 'タフル', 7],
   ['hex', 'ヘックス', 5], ['chess', 'チェス', 7], ['shogi', '将棋', 7], ['xiangqi', 'シャンチー', 7],
-  ['janggi', 'チャンギ', 7], ['fanorona', 'ファノロナ', 7], ['amazons', 'アマゾンズ', 11, 1],
+  ['janggi', 'チャンギ', 7], ['fanorona', 'ファノロナ', 7], ['amazons', 'アマゾンズ', 14, 1],
 ].map(([id, name, est, nu]) => ({ id, name, est, nu: !!nu }));   // (nu: added after the first list — checked even where a choice was saved before it)
 // A run measures only the list saved when it started (S.queue): a game added here later is not slipped into a run in progress
 // (it waits for the next 「全部測る」), and a game no longer here is skipped.
