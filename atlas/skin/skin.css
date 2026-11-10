@@ -400,3 +400,14 @@ html.atlas-gomoku .st-nav button{background:#fff!important;border:2px solid #ead
 html.atlas-gomoku .side{align-self:start!important}
 html.atlas-skin :is(#lessonListView,#pzListView,#pzGridView,#lessonIntroView) > .modal-actions{background:linear-gradient(180deg,rgba(255,253,247,0),#fffdf7 34%)!important}   /* (2026-11-09: the sticky footer of the lesson / puzzle lists kept the dark theme — dark under the 戻る button) */
 /* flat UI (2026-11-10): the full version follows the portal — solid fills and borders, a solid bottom edge at most; no gradients, glows or soft drop shadows on the UI chrome (boards and pieces keep their own depth) */
+
+html.atlas-skin .modal{box-shadow:0 6px 0 #efe3c8!important}   /* (flat: no soft drop shadow under the dialogs) */
+html.atlas-skin .rules-offer{background:#fff3d6!important;border-color:#ead9b6!important}
+html.atlas-skin .rules-offer > button{background:#e0a33a!important;color:#fff!important;border:0!important;box-shadow:0 3px 0 #c98a24!important;text-shadow:none!important}
+html.atlas-skin #coachCard .ck-rvgo{background:#ffb627!important;color:#fff!important;border:0!important;box-shadow:0 3px 0 #e09400!important;text-shadow:0 1px 0 rgba(160,90,0,.35)}   /* the coach's 振り返り button: bright and flat */
+html.atlas-skin #dock.dock{box-shadow:none!important;border-top:2px solid #efe3c8!important}
+html.atlas-skin .ck-rec .ck-rb{background:#ffb627!important;color:#fff!important}
+html.atlas-skin .ck-rec .ck-rb.c-dev{background:#ffe2c2!important;color:#8a4a10!important}
+html.atlas-skin :is(.playbar,.plate,.player){box-shadow:0 4px 0 #efe3c8!important}
+html.atlas-skin .rollbtn{background:#ffb627!important;color:#fff!important;border:0!important;box-shadow:0 4px 0 #e09400!important;text-shadow:0 1px 0 rgba(160,90,0,.35)!important}
+html.atlas-skin :is(.rulecard,.setupcard).sel,html.atlas-skin .ngl button.sel{background-image:none!important}

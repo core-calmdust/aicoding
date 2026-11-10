@@ -208,7 +208,13 @@ html.atlas-skin .pro-lab b{color:#2b3044}
 html.atlas-skin .pro-row{border-top-color:#f1e6cf}
 html.atlas-skin .pro-seg{background:#f2e7cf;border-color:#ead9b6}
 html.atlas-skin .pro-seg button{color:#6b6f80}
-html.atlas-skin .pro-seg button.sel{background:linear-gradient(180deg,#fffaf0,#fde9c0);color:#2b3044;box-shadow:0 0 0 1px #e3b866}
+html.atlas-skin .pro-seg button.sel{background:#fff;color:#2b3044;box-shadow:inset 0 0 0 2px #e3b866,0 2px 0 #e3b866}
+html.atlas-skin .pro-num input[type=range]{-webkit-appearance:none;appearance:none;background:transparent;height:26px}
+html.atlas-skin .pro-num input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:99px;background:#efe3c8;border:0}
+html.atlas-skin .pro-num input[type=range]::-moz-range-track{height:8px;border-radius:99px;background:#efe3c8;border:0}
+html.atlas-skin .pro-num input[type=range]::-moz-range-progress{height:8px;border-radius:99px;background:#e0a33a}
+html.atlas-skin .pro-num input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;margin-top:-7px;border-radius:50%;background:#e0a33a;border:3px solid #fff;box-shadow:0 2px 0 #c98a24}
+html.atlas-skin .pro-num input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#e0a33a;border:3px solid #fff;box-shadow:0 2px 0 #c98a24}   /* flat (2026-11-10) */
 html.atlas-skin .pro-num input[type=number]{background:#fff;color:#2b3044;border-color:#e6d6b2}
 html.atlas-skin .pro-row.ch .pro-lab b{color:#c0811c}
 `;
