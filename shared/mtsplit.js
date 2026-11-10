@@ -31,6 +31,10 @@
 //   the same root move when it is free (the engines whose workers keep their own tables: Kōnane without a shared table), and
 //   `specRes: 0` lets every other worker test the other moves while the first one is searched (a root-only split, splitMin 99:
 //   no worker is needed for the main line).
+//   Helpers (shared mode, 2026-11-10): a worker with nothing to do helps a running 'mtv' task through the shared table (the
+//   task's late kids, from the last one back, and along the line its worker is on) until the task is done or a real task
+//   wants the worker; not with a node budget, one thread or no shared table. plan.help: false / plan.helpMin; msg.mtHelp: 0
+//   (the bench's ?help=0) turns it off. shared/tools/mtstep.js simulates it on real threads in lock step.
 (function () {
   'use strict';
   if (window.MTSplit) return;
@@ -107,7 +111,7 @@
   // ------------------------------------------------------------------ the pool of workers
   function pool(cfg) {
     const H = helpers(), HM = Math.max(H, maxHelpers());
-    let dead = false, job = null, seq = 0, tid = 0;
+    let dead = false, job = null, seq = 0, tid = 0, idling = false;
     const W = [], queue = [];
     // sticky jobs (X.sticky — the plan's `sticky`, Kōnane without a shared table, 2026-11-10): aff → the worker that last took a
     // task of it (its own table holds that subtree), and the next task of the same aff goes there when it is free. The test
@@ -158,13 +162,27 @@
         if (sticky) { if (last.size > 4096) last.clear(); last.set(q.aff, s.i); }
         queue.splice(k, 1); s.task = q; q.t0 = performance.now(); s.w.postMessage(Object.assign({}, q.msg, TT ? { id: q.id, _ep: j.ep, _age: j.age } : { id: q.id }));
       }
+      // helpers (shared mode, X.onIdle — the drivers' "help the running tasks", 2026-11-10): a task of the job that waits for a
+      // worker stops a helper (the stop flag: within one poll of its search); a worker with nothing to do asks the driver for
+      // a helper task
+      const j = job;
+      if (!TT || !j || !j.running || j.cancelled || dead || !j.X) return;
+      let want = 0; for (const q of queue) if (q.job === j && !q.help) want++;
+      if (want) {
+        for (const s of W) { if (want <= 0) break; const t = s.task; if (t && t.help && t.job === j && !t.halted) { t.halted = true; halt(s); want--; } }
+        return;
+      }
+      if (!j.X.onIdle || idling) return;
+      let free = 0; for (let i = 0; i < Math.min(W.length, j.X.n); i++) if (!W[i].task) free++;
+      if (!free) return;
+      idling = true; try { j.X.onIdle(free); } catch (e) { console.warn('[mtsplit]', e); } finally { idling = false; }
     }
     function makeX(j, n) {
       const X = { n, nodes: 0, busy: 0, cores: new Set(), cancelled: false, failed: false, shared: !!TT,
-        exec(msg, aff, prio) {
+        exec(msg, aff, prio, o) {   // (o.help: a helper task — it gives its worker up to any other task of the job)
           if (j.cancelled || dead) return Promise.resolve(null);
           let res; const p = new Promise(r => { res = r; });
-          const q = { id: ++tid, msg, aff, prio: prio || 0, job: j, resolve: v => { if (res) { const f = res; res = null; f(v); } } };
+          const q = { id: ++tid, msg, aff, prio: prio || 0, job: j, help: !!(o && o.help), resolve: v => { if (res) { const f = res; res = null; p.done = true; f(v); } } };
           p.tid = q.id;
           let k = queue.length; while (k > 0 && queue[k - 1].prio < q.prio) k--;   // (higher priority first, else in order)
           queue.splice(k, 0, q); pump();
@@ -176,6 +194,7 @@
           if (TT) { halt(s); return; }
           if (hard) { const t = s.task; s.task = null; restart(s); t.resolve(null); pump(); } else s.task.resolve(null);
         },
+        kick() { pump(); },   // (the driver has new work for the helpers)
         // shared mode: wait (at most ms) until the dropped tasks of this job have stopped and reported their nodes
         settle(ms) { const t0 = Date.now(); return new Promise(r => { const chk = () => { if (!W.some(s => s.task && s.task.job === j) || Date.now() - t0 >= ms) r(); else setTimeout(chk, 1); }; chk(); }); },
       };
@@ -195,6 +214,8 @@
         const prog = d => { if (!j.cancelled && onProgress) onProgress(Object.assign({}, d, { nodes: j.X.nodes })); };
         let r;
         try { r = await cfg.drive(msg, j.X, prog); } catch (e) { console.warn('[mtsplit]', e); r = undefined; }
+        j.X.onIdle = null;
+        for (const s of W.slice()) { const t = s.task; if (t && t.job === j && t.help && !t.halted) { t.halted = true; halt(s); } }   // (the helpers of the job stop)
         if (j.cancelled) r = null; else if (j.X.failed && !r) r = undefined;
         if (job === j) job = null;
         const ms = performance.now() - t0;
@@ -240,12 +261,82 @@
   function kill(X, t) { if (t.dead) return; t.dead = true; for (const p of t.ps) X.drop(p); t.ps.clear(); for (const k of t.kids) kill(X, k); }
   async function ask(S, msg, aff, prio, tok) {
     const p = S.X.exec(msg, aff, prio); tok.ps.add(p);
+    const g = S.help && msg.type === 'mtv' ? helpOn(S, msg, null, p) : null;
     const r = await p; tok.ps.delete(p);
+    if (g) helpOff(S, g);
     if (tok.dead) return DEAD;
     if (!r || r.ok === false) { S.timeout = true; return null; }
     if (r.exact === false) S.allEx = false;
     return r;
   }
+  // Helpers (shared mode, 2026-11-10 — Kōnane on the user's Mac: Young Brothers Wait left 8 threads 26% busy, ×2.1): a worker
+  // with nothing to do helps a running search task through the shared table instead of waiting. A target is a running 'mtv'
+  // task (or a helper's own task); a helper takes one of its kids that its worker will reach late — from the last one back
+  // (the first kid is the task's own) — and searches it with the window and depth the task's worker will use there (the
+  // engine's own late-move reduction: plan.lmr), so the task finds the result in the table when it gets there. The first kid
+  // is helped one ply down the same way (its late kids), and so on along the line the task's worker is on. A helper stops
+  // when its target is done, or at once when a real task of the job wants its worker (shared/mtsplit.js's pool). Only with
+  // the shared table, several threads and no node budget (the budget is all the threads' together: PR #1239), so one thread
+  // and the levels decided by positions play as before. plan.help: false turns it off (the bench compares).
+  // target: { line, d, wa, wb, kids (null: not asked yet), next (the next kid to give, from the end), hs (its helpers' tasks),
+  //           sub (child targets), up, dead, k0 (the first kid's target, help only) }
+  function helpOn(S, msg, up, p) {
+    const g = { line: msg.line, d: msg.d, wa: msg.wa, wb: msg.wb, kids: null, ask: false, next: -1, hs: new Set(), sub: new Set(), up, p, dead: false, own: !up, seq: ++S.hseq };
+    S.tg.add(g); if (up) up.sub.add(g);
+    return g;
+  }
+  function helpOff(S, g) {
+    if (g.dead) return; g.dead = true; S.tg.delete(g); if (g.up) g.up.sub.delete(g);
+    for (const p of g.hs) S.X.drop(p); g.hs.clear();
+    for (const c of [...g.sub]) helpOff(S, c);
+  }
+  // the next piece of help: [target, kid index] (−1: ask for the kids first) or null
+  function helpPick(S) {
+    let best = null, bs = -Infinity;
+    for (const g of S.tg) {
+      if (g.d - 1 < S.helpMin) continue;
+      let x = g; while (x && !x.dead && !(x.p && x.p.done)) x = x.up;
+      if (x) continue;   // (it or a target above it is done: its helper is about to stop)
+      let i;
+      if (g.kids === null) { if (g.ask) continue; i = -1; }
+      else if (g.next >= 1) i = g.next;
+      else continue;
+      // the most work first: the deepest target; the tasks' own before the helpers'; the oldest
+      const sc = g.d * 1000 + (g.own ? 500 : g.k0h ? 300 : 0) - g.seq * 1e-6;
+      if (sc > bs) { bs = sc; best = [g, i]; }
+    }
+    return best;
+  }
+  function helpIdle(S, free) {
+    const X = S.X;
+    for (let n = 0; n < free; n++) {
+      const pk = helpPick(S); if (!pk) return;
+      const [g, i] = pk, base = S.base;
+      if (i < 0) {
+        g.ask = true;
+        const p = X.exec(Object.assign({}, base, { type: 'mtkids', line: g.line }), g.line[0], -1000, { help: true }); g.hs.add(p);
+        p.then(r => {
+          g.hs.delete(p); if (g.dead) return;
+          if (!r || !r.kids) { g.ask = false; return; }
+          g.kids = r.kids; g.next = g.kids.length - 1;
+          const k = g.kids[0];   // (the first kid: the target's own worker searches it first — help it one ply down)
+          if (k && k.t === undefined && g.d - 1 - 1 >= S.helpMin) { const w = helpWin(g, k); const c = helpOn(S, { line: g.line.concat([k.m]), d: g.d - 1, wa: w[0], wb: w[1] }, g, null); c.k0h = true; }
+          X.kick();
+        });
+        continue;
+      }
+      const k = g.kids[i]; g.next = i - 1;
+      if (k.t !== undefined) { n--; continue; }
+      const red = S.lmr && g.d >= S.lmr.d && i >= S.lmr.i ? 1 : 0, dd = g.d - 1 - red;
+      if (dd < 1) { n--; continue; }
+      const w = helpWin(g, k), msg = Object.assign({}, base, { type: 'mtv', line: g.line.concat([k.m]), d: dd, wa: w[0], wb: w[1], until: S.until });
+      const p = X.exec(msg, g.line[0], -1000, { help: true }); g.hs.add(p);
+      const c = helpOn(S, msg, g, p);
+      p.then(() => { g.hs.delete(p); helpOff(S, c); });
+    }
+  }
+  // the window of kid k of target g (the kid's side to move)
+  const helpWin = (g, k) => k.s < 0 ? [-g.wb, -g.wa] : [g.wa, g.wb];
   async function leafV(S, line, d, a, b, tok, prio) {
     const msg = Object.assign({}, S.base, { type: 'mtv', line, d, wa: a, wb: b, until: S.until });
     if (S.nodes) { if (S.X.nodes >= S.nodes) { S.timeout = true; return null; } msg.nl = Math.max(1000, S.nodes - S.X.nodes); }
@@ -373,14 +464,16 @@
   // 'mtpv' (the line after a root move) and 'mtfin' (the engine's own finishing touches and reply format).
   const ladder = {
     async drive(msg, X, onProgress) {
-      const base = Object.assign({}, msg); delete base.id; delete base.mtThreads;
+      const base = Object.assign({}, msg); delete base.id; delete base.mtThreads; delete base.mtHelp;
       const plan = await X.exec(Object.assign({}, base, { type: 'mtplan', job: msg.type }), undefined, 100);
       if (!plan) return X.cancelled ? null : undefined;
       if (plan.result) return plan.result;   // (book, a single move, a weak level…: nothing to search on threads)
       if (!plan.plan) return undefined;
       const p = plan.plan;
       X.sticky = !!p.sticky;
-      const S = { X, base, inf: p.inf, until: p.ms ? Date.now() + p.ms : 0, nodes: p.nodes || 0, splitMin: p.splitMin || 4, splitPly: p.splitPly || 8, lmr: p.lmr || null, specRes: p.specRes, timeout: false, allEx: true };
+      const S = { X, base, inf: p.inf, until: p.ms ? Date.now() + p.ms : 0, nodes: p.nodes || 0, splitMin: p.splitMin || 4, splitPly: p.splitPly || 8, lmr: p.lmr || null, specRes: p.specRes, timeout: false, allEx: true,
+        help: X.shared && X.n > 1 && !p.nodes && p.help !== false && p.help !== 0 && msg.mtHelp !== 0, helpMin: p.helpMin || 2, tg: new Set(), hseq: 0 };
+      if (S.help) X.onIdle = free => helpIdle(S, free);
       const kids = p.kids || p.moves.map(m => ({ m, s: -1 }));
       const win = v => !!p.win && Math.abs(v) > p.win;
       const kindOf = v => win(v) ? 'exact' : 'heur';
