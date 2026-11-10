@@ -35,9 +35,9 @@
     const code = type === 8 && ou ? 'OU' : PCODE[type];
     return fetch(GLYPH_BASE + '0' + code + '.svg').then(r => r.ok ? r.text() : Promise.reject()).then(svg => {
       // bounding box of the piece body in the drawing (the light yellow path) → crop to it
-      const body = svg.match(/<path fill="#f3e0c2"[^>]*\sd="([^"]+)"/);
-      const noBody = svg.replace(/<path fill="#f3e0c2"[^>]*\/>/g, '').replace(/<path fill="#b48d63"[^>]*\/>/g, '').replace(/filter="url\([^)]*\)"/g, '');
-      const bodyOnly = svg.replace(/<path fill="(?!#f3e0c2)[^"]*"[^>]*\/>/g, '').replace(/filter="url\([^)]*\)"/g, '');
+      const body = svg.match(/<path fill="#e7d5b8"[^>]*\sd="([^"]+)"/);
+      const noBody = svg.replace(/<path fill="#e7d5b8"[^>]*\/>/g, '').replace(/<path fill="#ab865e"[^>]*\/>/g, '').replace(/filter="url\([^)]*\)"/g, '');
+      const bodyOnly = svg.replace(/<path fill="(?!#e7d5b8)[^"]*"[^>]*\/>/g, '').replace(/filter="url\([^)]*\)"/g, '');
       const S = 600, draw = txt => new Promise((res, rej) => { const im = new Image(); im.onload = () => { const c = document.createElement('canvas'); c.width = c.height = S; c.getContext('2d').drawImage(im, 0, 0, S, S); res(c); }; im.onerror = rej; im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(txt); });
       return Promise.all([draw(bodyOnly), draw(noBody)]).then(([b, g]) => {
         const bd = b.getContext('2d').getImageData(0, 0, S, S).data; let x0 = S, y0 = S, x1 = 0, y1 = 0;
@@ -72,7 +72,7 @@
         const g = N(u * 60, v * 3, 2) * .5 + N(u * 9 + N(v * 2, u, 2) * 2, v * .8, 3) * .5;
         const fleck = N(u * 30, v * 90, 1) > .8 ? .06 : 0;
         const t = .18 + g * .32 - fleck, i = (y * W + x) * 4;
-        d[i] = 229 - t * 67; d[i + 1] = 200 - t * 82; d[i + 2] = 168 - t * 93; d[i + 3] = 255;
+        d[i] = 218 - t * 64; d[i + 1] = 190 - t * 78; d[i + 2] = 160 - t * 88; d[i + 3] = 255;
       }
     };
     return {
@@ -105,7 +105,7 @@
           const fib = (N(u * 9, v * 420, 1) - .5) * .07 + (N(u * 160, v * 6, 1) - .5) * .04;
           const tone = (N(u * 1.6, v * 1.3, 2) - .5) * .16;
           const t = .12 + line * .62 + fib * 1.4 + tone, i = (y * W + x) * 4;
-          d[i] = 229 - t * 77; d[i + 1] = 192 - t * 87; d[i + 2] = 150 - t * 92; d[i + 3] = 255;
+          d[i] = 218 - t * 73; d[i + 1] = 182 - t * 83; d[i + 2] = 142 - t * 87; d[i + 3] = 255;
         }
       },
       endGrain(d, W, H, p) {
@@ -115,7 +115,7 @@
           const r = Math.sqrt(dx * dx + dy * dy) * 60 + N(u * 4, v * 4, 3) * 3 + N(u * 40, v * 40, 1) * .2;
           const f = r % 1, late = Math.exp(-Math.pow((f - .8) / .08, 2));
           const t = .2 + late * .35 + (N(u * 2, v * 2, 2) - .5) * .2, i = (y * W + x) * 4;
-          d[i] = 201 - t * 73; d[i + 1] = 157 - t * 73; d[i + 2] = 113 - t * 72; d[i + 3] = 255;
+          d[i] = 191 - t * 69; d[i + 1] = 149 - t * 69; d[i + 2] = 107 - t * 68; d[i + 3] = 255;
         }
       },
     };
@@ -174,9 +174,18 @@
     let tex = null;
     tex = X.canvasTex(key, 512, 512, (c, W, H) => {
       c.fillStyle = '#dfbf99'; c.fillRect(0, 0, W, H);
-      withKaya(img => { c.drawImage(img, img.width * .05, img.height * .05, img.width * .35, img.height * .35, 0, 0, W, H); c.fillStyle = 'rgba(227,195,157,.55)'; c.fillRect(0, 0, W, H); if (tex) tex.needsUpdate = true; });
+      withKaya(img => { c.drawImage(img, img.width * .05, img.height * .05, img.width * .35, img.height * .35, 0, 0, W, H); c.fillStyle = 'rgba(227,195,157,.18)'; c.fillRect(0, 0, W, H); if (tex) tex.needsUpdate = true; });
     });
     return tex;
+  }
+  // the 駒台 material: the board's own kaya picture and the board's tone (2026-11-10: the stands matched to the board)
+  const STAND_TONE = 0xebe4db;   // = TONES.classic below
+  let standM = null;
+  function standMat() {
+    if (standM) return standM;
+    standM = M({ map: kayaPlain('kayaStand'), roughness: .55, bumpScale: .001 });
+    standM.color.multiply(new (T().Color)(STAND_TONE).convertSRGBToLinear());
+    return standM;
   }
   function boardTop(n = 9) {
     const MG = n === 9 ? MARGIN : MARGIN * n / 9;   // rim scales with the grid (the 5x5 board is fitted to the same screen size)
@@ -293,7 +302,7 @@
     // board colour (the game's "board & piece skin"): a tint over the kaya
     const tinted = [top, kaya, endF, endS, bottom]; g.traverse(o => { if (o.isMesh && o.material && !Array.isArray(o.material) && !tinted.includes(o.material)) tinted.push(o.material); });
     const base0 = tinted.map(m => m.color.clone());
-    const TONES = { classic: 0xf8f0e6, grain: 0xdcbfa2, kaya: 0xfcf6ee, metal: 0xb4bcc6, ink: 0x5e5046 };   // kaya: 本榧 (the default). 2026-11-10: near-neutral tints — the kaya picture itself carries the colour (less yellow)
+    const TONES = { classic: 0xebe4db, grain: 0xd1b59a, kaya: 0xefeae2, metal: 0xb4bcc6, ink: 0x5e5046 };   // kaya: 本榧 (the default). 2026-11-10: near-neutral tints — the kaya picture itself carries the colour (less yellow)
     g.userData.setTone = name => { g.userData.tone = name; const c = new TT.Color(TONES[name] || 0xffffff).convertSRGBToLinear(); tinted.forEach((m, i) => { m.color.copy(base0[i]).multiply(c); }); };
     g.userData.setTone('classic');
     g.userData.S = FH; g.userData.W = FW; g.userData.top = base + THICK + .001; g.userData.outer = BD / FH; g.userData.n = n;
@@ -312,7 +321,7 @@
     for (let i = 0; i <= 12; i++) { const t = i / 12, w = .26 + .16 * Math.pow(Math.abs(t - .55) / .55, 2); pts.push(new TT.Vector2(w, t * H)); }
     const col = new TT.LatheGeometry(pts, 4); col.rotateY(Math.PI / 4);                             // square, waisted
     // the lathe wraps the texture round the column: use a soft, low-contrast grain there so it doesn't band
-    const cm = colMat || (colMat = M({ map: X.wood('komadaiCol', '#cda67f', '#be956d', 256, 256, .6), roughness: .55, bumpScale: .001 }));
+    const cm = colMat || (colMat = standMat());
     const c = mesh(col, cm, 0, .56, 0); c.scale.set(1, 1, 1.15); g.add(c);
     return g;
   }
@@ -326,7 +335,7 @@
     for (let c = 0; c < 9; c++) { put(1, c, 2, true); put(1, c, 6, false); }
     put(6, 1, 1, true); put(5, 7, 1, true); put(6, 7, 7, false); put(5, 1, 7, false);
     // 駒台 (piece stands): yours at the bottom right, the opponent's at the top left — same as the rules tour
-    const KH = g.userData.top, sw = M({ map: X.wood('komadaiF', '#d0a981', '#b88f65', 256, 256, 1.6), roughness: .55, bumpScale: .001 });   // the original tone, the grain faint (dark wood close to the light one, 2026-11-10)
+    const KH = g.userData.top, sw = standMat();   // the board's kaya and tone (2026-11-10)
     [{ x: FW / 2 + 1.95, z: 3.9 }, { x: -FW / 2 - 1.95, z: -3.9 }].forEach(st => { const k = komadai(sw, KH); k.position.set(st.x, 0, st.z); g.add(k); });
     // in the toy room the tall board would hide the room: a little smaller than life
     g.scale.setScalar(.72);   // board + stands about the reversi board's size on the chabudai
@@ -368,5 +377,5 @@
     }));
   }
 
-  X.shogi = { komadai, piece, board, cell, images, fontReady, GLYPHS, CW, CH, FW, FH };
+  X.shogi = { komadai, standMat, piece, board, cell, images, fontReady, GLYPHS, CW, CH, FW, FH };
 })();

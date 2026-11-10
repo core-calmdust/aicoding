@@ -125,7 +125,7 @@
     const cellXZ = sq => SG.cell(...disp(sq));
 
     /* ---------- piece stands beside the board on wide screens; on tall ones the pieces in hand lie in a row above / below it ---------- */
-    const wood = T3.M({ map: T3.wood('komadai', '#d9a764', '#a06c30', 256, 256, 1.6), roughness: .55, bumpScale: .002 });
+    const wood = SG.standMat ? SG.standMat() : T3.M({ map: T3.wood('komadai', '#d9a764', '#a06c30', 256, 256, 1.6), roughness: .55, bumpScale: .002 });   // the board's kaya and tone (2026-11-10)
     const stands = [SG.komadai(wood, Y), SG.komadai(wood, Y)]; stands.forEach(k => board.add(k));   // [0] = the player's, [1] = the AI's
     let tall = false, ST = [], KH = Y;   // KH: the height the pieces in hand rest at (the stand's top; on the table when tall)
     const GRID_W = [[-.8, -1], [0, -1], [.8, -1], [-.8, 0], [0, 0], [.8, 0], [0, 1]];          // 3 × 3 on the upright plate
