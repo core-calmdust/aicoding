@@ -1169,7 +1169,7 @@ $('#btnStart').onclick = () => {
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_CLOCK = { base: 300000, inc: 3000 };
 // rating of each AI step (a first estimate from short matches of neighbouring levels on the work machine; to be measured on the
 // user's Mac): about +110 per step at the bottom, smaller at the top
-const RT_LV = [0, 350, 460, 570, 680, 790, 900, 1000, 1100, 1200, 1300, 1390, 1480, 1560, 1640, 1710, 1780, 1840, 1900, 1970, 2040, 2100, 2150, 2190];   // (Lv.21〜23: provisional, +60 / +50 / +40)
+const RT_LV = [0, 350, 460, 570, 680, 790, 900, 1000, 1100, 1200, 1300, 1390, 1480, 1560, 1640, 1710, 1780, 1840, 1900, 2170, 2240, 2300, 2350, 2390];   // (Lv.19〜23 = the MCTS since 2026-11-10: the alpha-beta values +200, provisional — in the same CPU time it beat the alpha-beta search 82.5% at 0.5 s and 15 of 16 at 1.5 s; to be measured on the user's Mac)
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };
