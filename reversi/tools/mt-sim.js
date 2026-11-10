@@ -4,10 +4,12 @@
 // it is ahead of the slowest running thread. So every thread gets the same speed, as on N equal cores, and the lead's own
 // nodes are the clock (MODEL_CARD.md「マルチスレッドの改良 v2」, 2026-11-09).
 //   node tools/mt-sim.js [--threads 1,2,4,8] [--budget 3e6] [--pos 8] [--gen 8] [--wasm engine_mt.wasm] [--engine engine.js]
-//                        [--ttbits N] [--d0 none|odd|all] [--plan mix|rot|r1|mixd] [--noidle]
+//                        [--ttbits N] [--d0 none|odd|all] [--plan mix|rot|r1|mixd] [--noidle] [--nodes (print the lead's nodes)]
 //   node tools/mt-sim.js --end 20 --gen 16 [--threads …]            exact solves (the time = the virtual clock; a thread
 //                                                                    waiting in Atomics.wait does not hold the others back)
 //   node tools/mt-sim.js --match 4 --games 40 --budget 1e6 --wasmB old.wasm --engineB old.js [--exact 14]
+//   --delay (with --wasm, a build of tools/mtsim-delay.py): a thread's table stores and busy marks reach the others only at its
+//           next check of the clock — the threads truly at the same time (2026-11-10, MODEL_CARD.md「マルチスレッドの見直し その2」)
 //   --slow 0,10,11,12 [--slowstep 5]: those threads (0 = the lead) run at 2/5 of the speed (Apple's efficiency cores, 2026-11-09):
 //                                     a fast thread's clock goes 2 per check, a slow one's --slowstep
 // Midgame: per position (bench.html's MID, 36 empties, + --gen more from self-play) and thread count, the lead thinks with
@@ -115,6 +117,7 @@ async function makePool(n, wasm = WASM, engine = ENGINE) {
   X.mt_stack(base + n * SLOT + SLOT - 16); X.mt_thread(base + n * SLOT);
   X.init();
   if (opt.ttbits && X.tt_bits) X.tt_bits(+opt.ttbits);
+  if (opt.delay) { if (!X.sim_delay) throw new Error('--delay needs a build of tools/mtsim-delay.py (--wasm)'); X.sim_delay(n > 1 ? 1 : 0, n > 1 ? 1 : 0); }
   const ctl = new Int32Array(new SharedArrayBuffer(512)), sync = new SharedArrayBuffer(1024);
   const ws = [];
   const SLOW = new Set(String(opt.slow || '').split(',').filter(x => x !== '').map(Number)), SST = +(opt.slowstep || 5), het = SLOW.size > 0;
@@ -180,7 +183,7 @@ async function match() {
     const pool = await makePool(n); R[n] = [];
     for (let i = 0; i < P.length; i++) { const t0 = Date.now(); const r = await pool.run(P[i]); r.wall = Date.now() - t0; R[n].push(r); }
     pool.close();
-    console.log(`t${n}: ${END ? 'scores ' + R[n].map(r => r.exact ? r.score : 'x').join(',') : 'depths ' + R[n].map(r => r.depth).join(',')}  (${(R[n].reduce((a, r) => a + r.wall, 0) / 1000).toFixed(0)} s)`);
+    console.log(`t${n}: ${END ? 'scores ' + R[n].map(r => r.exact ? r.score : 'x').join(',') : 'depths ' + R[n].map(r => r.depth).join(',') + (opt.nodes ? '  lead nodes per depth ' + R[n].map(r => Object.keys(r.per).map(d => d + ':' + r.per[d].nodes + ':' + r.per[d].move).join(' ')).join(' | ') : '')}  (${(R[n].reduce((a, r) => a + r.wall, 0) / 1000).toFixed(0)} s)`);
   }
   if (END) {
     const b = TH[0], tk = n => R[n].reduce((a, r) => a + r.ticks, 0), nd = n => R[n].reduce((a, r) => a + r.nodes + r.helperNodes, 0);

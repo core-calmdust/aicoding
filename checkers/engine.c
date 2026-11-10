@@ -616,6 +616,31 @@ static TLS int threadId;              // 0 = the main thread (time control, resu
 static u64 gRes[MT_SLOTS][2];
 static volatile u64 gGoalKey, gHit; static volatile int gGoal;
 static TLS u64 rootKey;
+// (2026-11-10, as morris/engine.c, after the Mac bench: same depth x1.66 / x1.62 / x2.34 with 4 / 8 / 14 threads although
+// the nodes/s grew x4.1 / x7.4 / x10) busy marks, Kerrigan's "simplified ABDADA". The threads walk the same tree in the same
+// order at the same speed, so they search the same subtree at the same time and none gets the other's result from the
+// table (tools/mtsim: the simulation where a thread's stores reach the others only at the end of a round agreed with the
+// Mac). A thread marks the position of the move it searches (remaining depth >= BUSY_D); a move after the first whose
+// position another thread has marked is put off to the end of the node. One thread alone never meets another's mark.
+#define BUSY_BITS 15
+#ifndef BUSY_D
+#define BUSY_D 3
+#endif
+#define BUSY_DEF 32
+static u64 busyT[1 << BUSY_BITS];
+static inline int busyOther(u64 key) {
+  u64 v = __atomic_load_n(&busyT[(key >> 32) & ((1u << BUSY_BITS) - 1)], __ATOMIC_RELAXED);
+  return (v & ~63ull) == (key & ~63ull) && (int)(v & 63) != (threadId & 63) + 1;
+}
+static inline int busySet(u64 key) {
+  int i = (int)((key >> 32) & ((1u << BUSY_BITS) - 1));
+  __atomic_store_n(&busyT[i], (key & ~63ull) | (u64)((threadId & 63) + 1), __ATOMIC_RELAXED);
+  return i;
+}
+static inline void busyClear(u64 key, int i) {
+  u64 mine = (key & ~63ull) | (u64)((threadId & 63) + 1);
+  __atomic_compare_exchange_n(&busyT[i], &mine, 0, 0, __ATOMIC_RELAXED, __ATOMIC_RELAXED);
+}
 static inline int timeUp(void) {
   if (stopFlag) return 1;
   if ((nodes & nodeMask) == 0) { if ((tEnd > 0 && now() > tEnd) || (nodeLimit_on && nodes > nodeLimit) || gStop || (threadId == 0 && gHit == rootKey)) stopFlag = 1; }
@@ -690,6 +715,23 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, u64 key, int 
   }
   int best = -INF, oldAlpha = alpha; Move bestM = L[0];
   hkeys[hn++] = key;
+#ifdef MT
+  // (2026-11-10) busy marks (see busyT): a move whose position another thread is searching right now is put off until the
+  // other moves are done (by then its result is usually in the table)
+  int defI[BUSY_DEF], nDef = 0;
+  for (int k = 0; k < n + nDef; k++) {
+    int i;
+    if (k < n) {
+      i = k; int bi = i; for (int j = i + 1; j < n; j++) if (sc[j] > sc[bi]) bi = j;
+      { Move tm = L[bi]; L[bi] = L[i]; L[i] = tm; int ts = sc[bi]; sc[bi] = sc[i]; sc[i] = ts; }
+    } else i = defI[k - n];
+    Move *m = &L[i];
+    u64 k2 = hashMove(key, p, m);
+    if (k < n && i > 0 && depth >= BUSY_D && nDef < BUSY_DEF && busyOther(k2)) { defI[nDef++] = i; continue; }
+    const int mk = depth >= BUSY_D ? busySet(k2) : -1;
+    Pos q = *p; doMove(&q, m);
+    if (netOn()) accStep(p, m, ply);
+#else
   for (int i = 0; i < n; i++) {
     int bi = i; for (int j = i + 1; j < n; j++) if (sc[j] > sc[bi]) bi = j;
     { Move tm = L[bi]; L[bi] = L[i]; L[i] = tm; int ts = sc[bi]; sc[bi] = sc[i]; sc[i] = ts; }
@@ -697,6 +739,7 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, u64 key, int 
     Pos q = *p; doMove(&q, m);
     if (netOn()) accStep(p, m, ply);
     u64 k2 = hashMove(key, p, m);
+#endif
     int irr = irreversible(p, m), saveIrr = hirr;
     if (irr) hirr = hn;
     int qp = irr ? 0 : quietPlies + 1;
@@ -710,6 +753,9 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply, u64 key, int 
       if (v > alpha && red) v = -search(&q, d1, -alpha - 1, -alpha, ply + 1, k2, 0, qp);
       if (v > alpha && v < beta) v = -search(&q, d1, -beta, -alpha, ply + 1, k2, pv, qp);
     }
+#ifdef MT
+    if (mk >= 0) busyClear(k2, mk);
+#endif
     hirr = saveIrr;
     if (stopFlag) { hn--; return best > -INF ? best : 0; }
     if (v > best) {
@@ -761,15 +807,30 @@ static void writeMove(i32 *o, const Move *m) { o[0] = m->f | (m->t << 5); o[1] =
 static int rootSearch(int depth, int all, int alpha0, int beta0) {
   int alpha = alpha0, best = -INF;
   if (netOn()) accRoot(&ROOT);
+#ifdef MT
+  int defI[BUSY_DEF], nDef = 0;   // (the busy marks at the root too: a root move another thread is on is put off)
+  for (int k = 0; k < rootN + nDef; k++) {
+    const int i = k < rootN ? k : defI[k - rootN];
+    Move *m = &rootL[i];
+    u64 k2 = hashMove(rootKey, &ROOT, m);
+    if (!all && k < rootN && i > 0 && depth >= BUSY_D && nDef < BUSY_DEF && busyOther(k2)) { defI[nDef++] = i; continue; }
+    const int mk = !all && depth >= BUSY_D ? busySet(k2) : -1;
+    Pos q = ROOT; doMove(&q, m);
+    if (netOn()) accStep(&ROOT, m, 0);
+#else
   for (int i = 0; i < rootN; i++) {
     Move *m = &rootL[i]; Pos q = ROOT; doMove(&q, m);
     if (netOn()) accStep(&ROOT, m, 0);
     u64 k2 = hashMove(rootKey, &ROOT, m);
+#endif
     int irr = irreversible(&ROOT, m), saveIrr = hirr; hkeys[hn++] = rootKey; if (irr) hirr = hn;
     int qp = irr ? 0 : rootPly + 1, v;
     if (all) v = -search(&q, depth - 1, -INF, INF, 1, k2, 1, qp);
     else if (i == 0) v = -search(&q, depth - 1, -beta0, -alpha, 1, k2, 1, qp);
     else { v = -search(&q, depth - 1, -alpha - 1, -alpha, 1, k2, 0, qp); if (v > alpha && v < beta0 && !stopFlag) v = -search(&q, depth - 1, -beta0, -alpha, 1, k2, 1, qp); }
+#ifdef MT
+    if (mk >= 0) busyClear(k2, mk);
+#endif
     hn--; hirr = saveIrr;
     if (stopFlag) return best;
     rootVal[i] = v;

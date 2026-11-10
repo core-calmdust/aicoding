@@ -130,7 +130,7 @@ let aiW = makeWorker(), anaW = makeWorker();
 // keeps the level's own limits; the helpers fill the shared table, so it reads deeper in the same time). The levels decided by
 // depth / positions (15級〜三段) stay on the one-thread workers.
 const MTP = window.MTEngine ? MTEngine.use({
-  wasm: 'engine_mt.wasm?v=2', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=1', slot: 4 << 20, initial: 1024, maximum: 16384,   // slot: TLS + the accumulators + the stack; maximum = engine_mt.wasm's (1 GiB)
+  wasm: 'engine_mt.wasm?v=3', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=1', slot: 4 << 20, initial: 1024, maximum: 16384,   // slot: TLS + the accumulators + the stack; maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => Date.now(), progress: () => {} } }),
   help: m => ({ io: E.setupIO(m.start, m.moves || []) }),
 }) : null;
