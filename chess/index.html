@@ -697,7 +697,7 @@ html[lang=ar] :is(p, .lesson-prompt, .lesson-fb, .lesson-intro, .tx, .pz-status,
 html[lang=ar] :is(p, .tx, .lesson-fb, .pz-status, .pz-goal, .rv-note) b{unicode-bidi:isolate}
 /* the puzzle card in the shogi tsume layout (app.js pzBar, 2026-11-10) */
 #puzzleCard.pz-compact .cb-bar .cb-br{display:none!important}
-#pzHead{display:flex;align-items:baseline;gap:10px}#pzHead h3{flex:1 1 auto;min-width:0}
+#pzHead{display:flex;align-items:baseline;gap:10px}#pzHead h3{flex:0 1 auto;min-width:0}   /* 「n/N問目」 right after the title (2026-11-10) */
 #pzNo{display:none;flex:none;font-size:12px;font-weight:700;color:var(--brass);white-space:nowrap}
 #puzzleCard.pz-compact #pzNo{display:inline}
 html.atlas-skin #puzzleCard.pz-compact #pzNo{color:#9a7a3a}
