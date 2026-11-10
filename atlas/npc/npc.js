@@ -82,7 +82,7 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
 @media (max-width:520px){.npc-float{width:min(420px,calc(100vw - 24px));gap:7px}.npc-float .npc-pic{width:46px;height:46px}.npc-float .npc-bub{padding:6px 11px 8px;border-radius:15px}.npc-float .npc-nm b{font-size:12.5px}.npc-float .npc-tag{font-size:10px}.npc-float .npc-ttl{font-size:10.5px}.npc-float .npc-tx{font-size:13px;line-height:1.5}.npc-float .npc-ttl:empty + .npc-tx{min-height:0}}
 .npc-float.on .npc-pic,.npc-float.on .npc-bub{pointer-events:auto;cursor:pointer}
 .npc-float.on{opacity:1;transform:translate(-50%,0)}
-.bv > .npc-float{position:absolute;z-index:3}
+.bv > .npc-float{position:absolute;z-index:4}
 .npc-float.npc-skin{z-index:45}
 .npc-float .npc-bub{box-shadow:0 4px 0 #f0e2c4,0 14px 24px -14px rgba(80,40,0,.5)}
 /* SR won */
@@ -258,6 +258,15 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
   // phones: in landscape the board comes first — no bubble at all (portrait: it stays)
   const PCQ = matchMedia((window.HeaderBar && HeaderBar.MEDIA) || '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4)');
   const phoneLand = () => !PCQ.matches && innerWidth > innerHeight && innerHeight < 600;
+  // the portal's table: PC just above the action bar; phones (portrait) over the action bar itself (投了 etc.) — above it the bubble
+  // covered the board (2026-11-11); a tap puts it away
+  function tableBottom() {
+    const bar = document.querySelector('.bv .tbar');
+    if (!PCQ.matches && innerWidth <= 600 && bar && bar.getClientRects().length && getComputedStyle(bar).position === 'absolute') {
+      const r = bar.getBoundingClientRect(); if (r.height) return Math.max(0, innerHeight - r.bottom) - 10;
+    }
+    return window.__tbar && __tbar.band;
+  }
   function floatUI(o = {}) {
     addCss();
     const el = document.createElement('div'); el.className = 'npc-float'; el.setAttribute('aria-live', 'polite');
@@ -276,7 +285,7 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
         if (img.getAttribute('src') !== m.img) img.src = m.img;
         nm.textContent = m.name; tag.textContent = m.tag; tag.classList.toggle('tv', !!m.tv); ttl.textContent = m.title || ''; tx.innerHTML = html;
         // (after the text: the place may depend on the bubble's height — the skins centre it between the board and the bar)
-        try { const b = o.bottom ? o.bottom(el) : window.__tbar && __tbar.band; if (b) el.style.setProperty('--npc-bot', Math.round(b) + 'px'); } catch (e) {}
+        try { const b = o.bottom ? o.bottom(el) : tableBottom(); if (b != null) el.style.setProperty('--npc-bot', Math.round(b) + 'px'); } catch (e) {}
         el.classList.add('on'); pic.classList.remove('talk'); void pic.offsetWidth; pic.classList.add('talk');
         clearTimeout(hideT); hideT = setTimeout(() => el.classList.remove('on'), Math.max(7500, tx.textContent.length * 170));
       },
