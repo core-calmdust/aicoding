@@ -2135,18 +2135,13 @@ async function puzzleMove(m) {
     pzRewindFail(Pz, m, good[0] && good[0].m, `<b class="ng">${t('pz.fail')}</b> ${t('pz.failWhy', { m: ms, b: good.length ? pos.san(good[0].m) : '—', n: Pz.n })}`);
     return;
   }
+  // mate puzzles never judge a move mid-way (2026-11-10): no 「良い手」, no 「正解手順とは違う」, no instant 「悪手」 — only the
+  // moves left; the result is told only when the moves are used up (or the game is over)
   if (stray) {
-    const why = await pzMateBlunder(Pz, ms);
-    if (puzzle !== Pz || tok !== busyToken) return;
-    if (why) {
-      await sleep(moveDur() + 300); if (puzzle !== Pz) return;
-      pzRewindFail(Pz, m, good[0] && good[0].m, `<b class="ng">${PZBook.t('blunder')}</b> ${why}${good[0] ? ' ' + t('pz2.answerWas', { b: pos.san(good[0].m) }) : pzAnswerWas(Pz)}`);
-      return;
-    }
     Pz.failed = true; Pz.strayed = true;
     if (Pz.used >= Pz.n) { await sleep(moveDur() + 200); if (puzzle === Pz) pzOutOfMoves(Pz); return; }
-    pzStatus(t('pz2.cont', { m: ms }) + ' ' + PZBook.t('movesLeft', { n: Pz.n - Pz.used }));
-  } else pzStatus(t('pz.good'));
+  }
+  pzStatus(PZBook.t('movesLeft', { n: Pz.n - Pz.used }));
   const r = await pzDefend(Pz.n - Pz.used);
   if (puzzle !== Pz || tok !== busyToken) return;
   await sleep(moveDur() + 300); if (puzzle !== Pz) return;
@@ -2155,7 +2150,7 @@ async function puzzleMove(m) {
   await sleep(moveDur()); if (puzzle !== Pz) return;
   if (statusAt(cur).over) { pzOutOfMoves(Pz); return; }
   Pz.busy = false; renderPuzzleCard(); boardEl.classList.toggle('can', canHumanPlay());
-  pzStatus(Pz.strayed ? PZBook.t('movesLeft', { n: Pz.n - Pz.used }) : t('pz.yourMove', { n: Pz.n - Pz.used }));
+  pzStatus(PZBook.t('movesLeft', { n: Pz.n - Pz.used }));
 }
 function playMove2(m) { moves = moves.slice(0, cur); moves.push(m); cur = moves.length; hintList = null; update(true); }
 function puzzleSolved() {

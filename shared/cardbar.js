@@ -81,6 +81,32 @@ html[dir=rtl] .cb-nx::after,html[lang=ar] .cb-nx::after,html[dir=rtl] .cb-ic[dat
 .cb-bar,.cb-tools,.cb-main{align-items:center!important}
 @media (pointer:coarse){ .cb-bar .cb-ic,.cb-bar .cb-t{height:42px!important}.cb-bar .cb-ic{width:42px!important}.cb-bar .cb-q{height:38px} }
 @media (max-width:360px){ .cb-bar{gap:6px}.cb-tools{gap:4px}.cb-bar .cb-ic{width:38px!important}.cb-bar .cb-t{padding:0 8px!important} }
+
+/* puzzle cards: the compact layout shared with the shogi tsume card (2026-11-10) — the step and a small quit pill on the head
+   row, icon buttons with a small caption (ヒント・やり直し・答え・一覧) and a wide 「次の問題」 */
+.cb-cmp > .lh{display:flex!important;flex-wrap:nowrap!important;align-items:center!important;gap:10px;padding-inline-end:0!important;margin-inline-end:0!important}
+.cb-cmp > .lh .dots{display:none!important}
+.cb-cmp > .lh .lt{flex:1 1 auto;min-width:0;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;font-size:11.5px!important;letter-spacing:.01em!important;line-height:1.35}
+.cb-cmp > .lh .cb-qp{flex:none;margin-inline-start:auto!important;display:inline-flex!important;align-items:center;gap:4px;height:28px!important;width:auto!important;padding:0 10px 0 8px!important;font-size:0!important;border-radius:99px!important;margin-top:0!important;margin-bottom:0!important;
+  background:rgba(0,0,0,.2);border:1px solid var(--line,rgba(255,255,255,.14));color:var(--muted,#aaa);cursor:pointer;font-family:inherit;line-height:1;white-space:nowrap}
+.cb-cmp > .lh .cb-qp::after{content:attr(data-cap);font-size:11.5px;font-weight:800;line-height:1}
+.cb-cmp > .lh .cb-qp::before{content:'';flex:none;width:15px;height:15px;background:currentColor;-webkit-mask:${ICONS.quit} center/contain no-repeat;mask:${ICONS.quit} center/contain no-repeat}
+html[dir=rtl] .cb-cmp .cb-qp::before,html[lang=ar] .cb-cmp .cb-qp::before{transform:scaleX(-1)}
+.cb-cmp > .lh .cb-qp:hover{color:var(--text,#eee)}
+.cb-cmp > .lh .cb-qp.hidden{display:none!important}
+html.atlas-skin .cb-cmp > .lh .cb-qp{background:#fff!important;border:2px solid #ead9b6!important;color:#4a5068!important;box-shadow:0 2px 0 #ead9b6!important}
+.cb-cmp .pz-goal{background:none!important;border:0!important;padding:0!important;margin:0 0 4px!important;box-shadow:none!important}   /* the goal as plain text */
+.cb-cmp .cb-bar{flex-wrap:nowrap!important}
+.cb-cmp .cb-bar .cb-br{display:none!important}
+.cb-cmp .cb-bar .cb-ic[data-cap]{display:inline-flex!important;flex-direction:column!important;justify-content:center!important;gap:3px!important;height:52px!important;width:auto!important;min-width:50px!important;padding:0 6px!important;overflow:visible!important}
+.cb-cmp .cb-bar .cb-ic[data-cap]::after{content:attr(data-cap);font-size:10px;line-height:1;font-weight:700;letter-spacing:0;white-space:nowrap}
+.cb-cmp .cb-bar .cb-t{height:52px!important;flex:1 1 auto!important}
+.cb-cmp .cb-tools{gap:6px}
+.cb-cmp.cb-5 .cb-bar .cb-ic[data-cap],html.atlas-skin .cb-cmp .cb-bar .cb-ic[data-cap]{min-width:46px!important;padding:0 2px!important}
+html.atlas-skin .cb-cmp .cb-tools,.cb-cmp.cb-5 .cb-tools{gap:5px}
+html.atlas-skin .cb-cmp .cb-bar .cb-t,.cb-cmp.cb-5 .cb-bar .cb-t{padding:0 8px!important;min-width:72px!important}
+html.atlas-skin .cb-cmp .cb-bar .cb-nx::after,.cb-cmp.cb-5 .cb-bar .cb-nx::after{display:none}
+@media (max-width:360px){ .cb-cmp .cb-bar .cb-ic[data-cap]{min-width:44px!important;padding:0 2px!important} }
 `;
 const st = document.createElement('style'); st.id = 'cardbar-css'; st.textContent = CSS; document.head.appendChild(st);
 
@@ -122,6 +148,12 @@ function quitLabel(card) {
   if (lang === 'fr' && !/^\S*[sx]\b/.test(x)) return `Quitter « ${x} »`;   // singular names (Tactique, Tsume)
   return QT[lang].replace('{x}', x);
 }
+// small captions under the puzzle icons and on the quit pill: hint, retry, answer, list, prev, quit
+const CAP = { ja: ['ヒント', 'やり直し', '答え', '一覧', '前へ', 'やめる'], en: ['Hint', 'Retry', 'Answer', 'List', 'Back', 'Quit'], zh: ['提示', '重试', '答案', '列表', '上一题', '退出'], 'zh-TW': ['提示', '重試', '答案', '列表', '上一題', '退出'],
+  ko: ['힌트', '다시', '정답', '목록', '이전', '그만'], es: ['Pista', 'Otra vez', 'Solución', 'Lista', 'Atrás', 'Salir'], fr: ['Indice', 'Rejouer', 'Solution', 'Liste', 'Retour', 'Quitter'], pt: ['Dica', 'De novo', 'Solução', 'Lista', 'Voltar', 'Sair'],
+  de: ['Tipp', 'Nochmal', 'Lösung', 'Liste', 'Zurück', 'Beenden'], hi: ['संकेत', 'फिर से', 'उत्तर', 'सूची', 'पीछे', 'छोड़ें'], ar: ['تلميح', 'أعد', 'الحل', 'القائمة', 'السابق', 'خروج'], ru: ['Подсказка', 'Ещё раз', 'Ответ', 'Список', 'Назад', 'Выйти'],
+  id: ['Petunjuk', 'Ulangi', 'Jawaban', 'Daftar', 'Kembali', 'Keluar'], tr: ['İpucu', 'Tekrar', 'Çözüm', 'Liste', 'Geri', 'Çık'] };
+const CAPK = { hint: 0, retry: 1, answer: 2, list: 3, prev: 4 };
 const label = b => (b.id === 'lsAuto' ? (b.title || (document.querySelector('[data-sn="auto"]') || {}).title || '') : b.textContent.replace(/\s+/g, ' ').trim());
 function icon(b, kind) {
   b.classList.add('cb-ic'); b.classList.remove('go'); b.dataset.cb = kind;
@@ -146,7 +178,12 @@ function build(card, spec) {
   rows.forEach(r => [...r.querySelectorAll('button')].forEach(b => { if (!used.has(b) && b.id !== spec.quit && b.id !== spec.next) rest.push(b); }));
   rest.forEach(b => { b.classList.add('cb-t'); main.appendChild(b); });
   const nx = $(spec.next); if (nx && card.contains(nx)) { nx.classList.add('cb-t'); if (spec.nextChev) nx.classList.add('cb-nx'); main.appendChild(nx); }
-  const q = $(spec.quit); if (q && card.contains(q)) { const br = document.createElement('div'); br.className = 'cb-br'; q.classList.add('cb-q'); q.classList.remove('go'); bar.append(br, q); }
+  const q = $(spec.quit), lh = spec.puzzle && card.querySelector(':scope > .lh');
+  if (lh) card.classList.add('cb-cmp');
+  if (q && card.contains(q)) {
+    if (lh) { q.classList.add('cb-qp'); q.classList.remove('go'); lh.appendChild(q); }   // puzzle: a small pill at the head row's end
+    else { const br = document.createElement('div'); br.className = 'cb-br'; q.classList.add('cb-q'); q.classList.remove('go'); bar.append(br, q); }
+  }
   rows[rows.length - 1].after(bar); rows.forEach(r => r.remove());
   // labels of icon buttons → tooltip + accessible name; puzzle state → primary button
   const toolKind = new Map(spec.tools);
@@ -154,7 +191,13 @@ function build(card, spec) {
     // buttons a game adds later (e.g. next to the quit button) join the bar the same way
     [...bar.children].forEach(b => { if (b.tagName !== 'BUTTON' || b.classList.contains('cb-q')) return;
       if (toolKind.has(b.id)) { icon(b, toolKind.get(b.id)); tools.appendChild(b); } else { b.classList.add('cb-t'); main.insertBefore(b, nx && main.contains(nx) ? nx : null); } });
-    if (q && bar.contains(q)) { const l = quitLabel(card); if (q.textContent !== l) q.textContent = l; if (q.getAttribute('aria-label') !== l) q.setAttribute('aria-label', l); if (q.title) q.removeAttribute('title'); }
+    if (lh) {
+      const C = CAP[pageLang()] || CAP.en; let n = 0;
+      bar.querySelectorAll('.cb-tools .cb-ic').forEach(b => { const k = CAPK[b.dataset.cb]; if (k != null && b.dataset.cap !== C[k]) b.dataset.cap = C[k]; if (getComputedStyle(b).display !== 'none') n++; });
+      if (q && q.dataset.cap !== C[5]) q.dataset.cap = C[5];
+      card.classList.toggle('cb-5', n >= 5);
+    }
+    if (q && card.contains(q)) { const l = quitLabel(card); if (q.textContent !== l) q.textContent = l; if (q.getAttribute('aria-label') !== l) q.setAttribute('aria-label', l); if (q.title) q.removeAttribute('title'); }
     bar.querySelectorAll('.cb-ic').forEach(b => { const l = label(b); if (l && b.getAttribute('aria-label') !== l) { b.setAttribute('aria-label', l); b.title = l; } });
     if (spec.puzzle) {
       const sv = !!card.querySelector('.pz-status .pb-sv, #pzStatus .pb-sv'), h = $('pzHint'), r = $('pzRetry');

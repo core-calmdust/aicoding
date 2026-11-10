@@ -1560,7 +1560,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="../shared/pzbook.js?v=5l14"></script>
 <script src="../shared/headerbar.js?v=51l14r"></script>
 <script src="../shared/flipbtn.js?v=3l14"></script>
-<script src="../shared/cardbar.js?v=7l14"></script>
+<script src="../shared/cardbar.js?v=8l14"></script>
 <script src="../shared/watchpause.js?v=2l14"></script>
 <script src="../shared/tick.js?v=2l14"></script>
 <script src="../shared/fischer.js?v=1"></script>
@@ -4660,7 +4660,7 @@ async function lessonMove(m) {
     const q = posAt(lesson.played.length), left = pr.n - lesson.played.length;
     if (!q.legalMoves(true).some(m => { q.doMove(m); const c = q.inCheck(); q.undoMove(); return c; })) { return fail(t('ts.escaped'), true); }
     lesson.waiting = true;
-    lesson.fbHtml = `<b class="${res.mate ? 'ok' : ''}">${res.mate && !lesson.offline ? t('ls.continue') : t('ts.offline')}</b> <span class="ts-left">${PZBook.t('movesLeft', { n: left })}</span>`;
+    lesson.fbHtml = `<span class="ts-left">${PZBook.t('movesLeft', { n: left })}</span>`;   // mate puzzles never judge a move mid-way: no 「正解」 / 「正解手順とは違いますが」 (2026-11-10)
     renderLesson();
     return;
   }
