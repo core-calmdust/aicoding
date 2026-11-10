@@ -56,6 +56,13 @@ html.atlas-amazons .pieces .pc.hov{opacity:.5!important}
 html.atlas-amazons .reserve.turn::after{display:none}   /* (the 2D page's turn mark: a line floating under the plate with no frame behind it) */
 html.atlas-amazons .reserve .rsv-plate{background:rgba(20,16,12,.82)!important;box-shadow:0 0 0 1px rgba(226,182,96,.45),0 2px 6px rgba(0,0,0,.35)!important;color:#f0e2c4!important}
 html.atlas-amazons #fPieces{display:none!important}
+/* lesson / puzzle cards: no guide picture (the four tool tiles with labels and the primary button need the whole row) */
+html.atlas-skin .cb-foot .pic{display:none!important}
+html.atlas-skin .atlas-guide .bub::before,html.atlas-skin .atlas-guide .bub::after{display:none!important}
+html.atlas-skin .cb-foot .cb-bar{flex:1 1 auto;min-width:0}
+html.atlas-skin .cb-bar .cb-tools{flex:1 1 auto;min-width:0;display:flex;gap:6px}
+html.atlas-skin .cb-bar .cb-tools > .cb-ic{flex:1 1 0;min-width:0;width:auto!important}
+html.atlas-skin .cb-bar .cb-t{flex:none;white-space:nowrap}
 html.atlas-skin #f3D{margin:12px 0 0;padding:10px 12px 12px;border-radius:14px;background:#f6f1e4;border:2px solid #e2cf9e}
 html.atlas-skin #f3D > label{display:block;font-weight:700;font-size:13px;color:#7a5a1c;margin:0 0 8px}
 html.atlas-skin #f3D > label.pc3l{margin-top:12px}
