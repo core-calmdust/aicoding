@@ -299,7 +299,7 @@
     for (let i = 0; i <= st; i++) { const a = -Math.PI / 2 + Math.PI / 2 * i / st; pts.push(new TT.Vector2(r - b + Math.cos(a) * b, b + Math.sin(a) * b)); }
     for (let i = 0; i <= st; i++) { const a = Math.PI / 2 * i / st; pts.push(new TT.Vector2(r - b + Math.cos(a) * b, h - b + Math.sin(a) * b)); }
     pts.push(new TT.Vector2(.001, h));
-    const g = new TT.LatheGeometry(pts, LO() ? 20 : 30);
+    const g = new TT.LatheGeometry(pts, LO() ? 16 : 22);
     const P = g.attributes.position, UV = g.attributes.uv;   // planar UVs from above (the face texture lies flat on the top)
     for (let i = 0; i < UV.count; i++) UV.setXY(i, P.getX(i) / (2 * r) + .5, P.getZ(i) / (2 * r) + .5);
     g.computeVertexNormals(); if (X.share) X.share(g);
@@ -462,16 +462,16 @@
     const neon = look === 'neon', top = neon ? M2.top.clone() : M2.top;   // (neon: a material of its own, so one man can flash alone)
     if (neon && striker) { top.color = new TT.Color(.12, .12, .12); top.emissive = new TT.Color(1.3, 1.3, 1.3); rgbify(top, 'uv'); }   // the striker's star cycles through the rainbow (dim diffuse: the colours stay saturated)
     const g = new TT.Group(), body = new TT.Mesh(discGeo(r, h), top); body.castShadow = true; body.receiveShadow = false; g.add(body);   // (no self-shadow: thin discs flickered with shadow acne)
-    if (look === 'modern' && striker) { const ring = new TT.Mesh(geos.ring || (geos.ring = (() => { const q = new TT.TorusGeometry(r - .004, .006, 6, 36); q.rotateX(Math.PI / 2); if (X.share) X.share(q); return q; })()), boardMats('modern').brass); ring.position.y = h * .55; g.add(ring); }
+    if (look === 'modern' && striker) { const ring = new TT.Mesh(geos.ring || (geos.ring = (() => { const q = new TT.TorusGeometry(r - .004, .006, 4, 28); q.rotateX(Math.PI / 2); if (X.share) X.share(q); return q; })()), boardMats('modern').brass); ring.position.y = h * .55; g.add(ring); }
     g.userData = { c, r, h };
     if (neon) {   // a hit lights the man up: its face glows hard and a halo flares round it (flash(k), k 1 → 0)
       // an RGB LED ring round the rim (dim at rest), and a rainbow halo that spins out from the man when it is hit
       const lm = rgbify(phys({ color: '#000000', roughness: .4, metalness: 0 }), 'ring'); lm.emissive = new TT.Color(1, 1, 1); lm.emissiveIntensity = .55;
-      const led = new TT.Mesh(geos['led' + c] || (geos['led' + c] = (() => { const q = new TT.TorusGeometry(r + .002, .007, 6, LO() ? 28 : 44); q.rotateX(Math.PI / 2); if (X.share) X.share(q); return q; })()), lm);
+      const led = new TT.Mesh(geos['led' + c] || (geos['led' + c] = (() => { const q = new TT.TorusGeometry(r + .002, .007, 4, LO() ? 24 : 32); q.rotateX(Math.PI / 2); if (X.share) X.share(q); return q; })()), lm);
       led.position.y = h * .5; g.add(led);
       const hm = rgbify(new TT.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, blending: TT.AdditiveBlending, depthWrite: false }), 'halo');
       const wm = rgbify(new TT.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, blending: TT.AdditiveBlending, depthWrite: false }), 'halo');
-      const halo = new TT.Mesh(geos.halo || (geos.halo = (() => { const q = new TT.RingGeometry(.5, 1, LO() ? 24 : 40); q.rotateX(-Math.PI / 2); if (X.share) X.share(q); return q; })()), hm);
+      const halo = new TT.Mesh(geos.halo || (geos.halo = (() => { const q = new TT.RingGeometry(.5, 1, LO() ? 20 : 28); q.rotateX(-Math.PI / 2); if (X.share) X.share(q); return q; })()), hm);
       halo.position.y = h + .002; halo.visible = false; halo.renderOrder = 3; g.add(halo);
       const wave = new TT.Mesh(geos.halo, wm); wave.position.y = .006; wave.visible = false; wave.renderOrder = 3; g.add(wave);   // a thin shock ring on the board
       const e0 = top.emissive.clone();
@@ -501,7 +501,7 @@
     for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
       const cup = new TT.Mesh(cupG, new TT.MeshStandardMaterial({ color: 0x0c0b0a, roughness: 1, side: TT.BackSide })); cup.position.set(sx * PC, (TOP + .05) / 2, sz * PC); g.add(cup);
       const net = new TT.Mesh(netG, BM.net); net.position.set(sx * PC, .07, sz * PC); g.add(net);
-      if (BM.rim) { const rg = geos.prim || (geos.prim = (() => { const q = new TT.TorusGeometry(RP + .012, .014, 6, LO() ? 20 : 36); q.rotateX(Math.PI / 2); if (X.share) X.share(q); return q; })()); const rim = new TT.Mesh(rg, BM.rim); rim.position.set(sx * PC, TOP + .004, sz * PC); g.add(rim); }
+      if (BM.rim) { const rg = geos.prim || (geos.prim = (() => { const q = new TT.TorusGeometry(RP + .012, .014, 5, LO() ? 20 : 28); q.rotateX(Math.PI / 2); if (X.share) X.share(q); return q; })()); const rim = new TT.Mesh(rg, BM.rim); rim.position.set(sx * PC, TOP + .004, sz * PC); g.add(rim); }
     }
     if (BM.ruby) {   // cabochons along the frame (ruby · sapphire · emerald · sapphire · ruby …) and a diamond at each corner
       const cab = gemGeo(.22, 12), dia = gemGeo(.3, 16);

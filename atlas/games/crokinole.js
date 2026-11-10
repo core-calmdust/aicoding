@@ -73,8 +73,18 @@
     const tx = (k, o) => { let s = L[k] != null ? L[k] : (TXT.en[k] != null ? TXT.en[k] : k); if (o) for (const q in o) s = s.split('{' + q + '}').join(o[q]); return s; };
     const pvp = ctx.mode === 'pvp', level = Math.max(1, Math.min(20, +ctx.level || 6)), mode = +ctx.size === 100 ? '100' : 'r4';
     const youFirst = (+ctx.side || 1) === 1;
-    const board = T3.MODELS.crokinole(true); T3.show('crokinole', board);
-    const U = board.userData, Y = U.top, K = U.K, W = 2 * U.RO;
+    const BDL = (T3.BOARDS && T3.BOARDS.crokinole) ? T3.BOARDS.crokinole.list : ['marq', 'classic', 'modern', 'mcm', 'winter', 'neon'];
+    let look = T3.BOARDS && T3.BOARDS.crokinole ? T3.BOARDS.crokinole.get() : 'marq';
+    const board = T3.MODELS.crokinole(true, look); T3.show('crokinole', board);
+    let U = board.userData; const Y = U.top, K = U.K, W = 2 * U.RO;
+    // (2026-11-10) each board's hand: the wobble's character (Atlas3D.carrom FEEL); the classic board keeps the standard feel
+    const CFEEL = { classic: 'std', marq: 'aim', modern: 'precise', mcm: 'hard', winter: 'power', neon: 'finest' };
+    let feel = AC().feelOf(CFEEL[look]);
+    function setLook(v) {   // (before the game: the pieces are swapped inside the group on the table — T3.show() would move the camera)
+      if (v === look) return; look = v; feel = AC().feelOf(CFEEL[v]);
+      try { if (T3.setBoard) T3.setBoard('crokinole', v); } catch (e) {}
+      const nb = T3.MODELS.crokinole(true, v); while (board.children.length) board.remove(board.children[0]); while (nb.children.length) board.add(nb.children[0]); board.userData = nb.userData; U = board.userData; if (T3.kick) T3.kick(500);
+    }
     const VK = 'atlas-crokinole-view';
     let topView = false; try { topView = localStorage.getItem(VK) === 'top'; } catch (e) {}
     const baseFit = () => { const port = innerHeight > innerWidth * 1.1, pitch = topView ? (port ? 1.36 : 1.3) : .82; return port ? { w: W * .8, d: W * .8, y: Y, pitch } :   // phones: the board a touch wider than the screen (the rail's sides run off it)
@@ -359,7 +369,7 @@
         powEl.hidden = false; powEl.textContent = Math.round(aimPow * 100) + '%'; powEl.style.left = a.e.clientX + 'px'; powEl.style.top = a.e.clientY + 'px';
         say('💪 ' + Math.round(aimPow * 100) + '%'); showGuides();
       },
-      shoot: (ang, pw) => shoot(E.wobble({ x: sx, ang, v: vOf(pw) }, (Math.random() * 1e9) | 0)),   // the hand wobbles a little (engine wobble)
+      shoot: (ang, pw) => shoot(E.wobble({ x: sx, ang, v: vOf(pw) }, (Math.random() * 1e9) | 0, feel)),   // the hand wobbles a little (engine wobble)
       tap: () => { if (phase === 'anim' && !stopped) speedUp = 3; },
     });
 
@@ -411,9 +421,10 @@
     const prevTouch = ctx.el.style.touchAction; ctx.el.style.touchAction = 'none';
 
     /* ---------- go ---------- */
-    st = E.newRound({ first: youFirst ? 0 : 1, mode });
-    syncAll(); hud();
-    later(next, 650);
+    // (2026-11-10) first the controls (unless turned off), then the board picker, then the game
+    const goNow = () => { st = E.newRound({ first: youFirst ? 0 : 1, mode }); syncAll(); hud(); later(next, 650); };
+    const pick = () => { if (stopped) return; AC().BoardPick({ lang, list: BDL, cur: look, feel: CFEEL, name: k => T3.boardName ? T3.boardName(k, lang, 'crokinole') : k, thumb: k => T3.boardThumb ? T3.boardThumb('crokinole', k) : '', color: '#b8742a', onPick: setLook, onStart: v => { setLook(v); goNow(); }, onBack: () => { const q = document.getElementById('bvQuit'); if (q) q.click(); } }); };
+    if (howtoOn()) { told = true; howtoCard(pick); } else { told = true; pick(); }
 
     const myTurn = () => !stopped && !over && !busy && st && human(st.turn) && phase === 'place';
     function finish(why) {
@@ -446,7 +457,7 @@
       canResign: () => !stopped && !over && !!st,
       resign() { finish('resign'); },
       timeout() { finish('time'); },
-      stop() {
+      stop() { document.querySelectorAll(".bpk").forEach(e => e.remove());
         stopped = true; tok++; timers.forEach(clearTimeout); clearInterval(pulseT);
         hand.stop();
         document.removeEventListener('keydown', onKey); removeEventListener('resize', onResize); ctx.el.style.touchAction = prevTouch;

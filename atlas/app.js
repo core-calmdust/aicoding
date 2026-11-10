@@ -111,7 +111,7 @@
     const toShop = k === 'shop'; if (toShop) k = 'gacha';
     if (k === 'gacha') gsSet(toShop ? 'shop' : 'gacha');   // phones: the ガチャ｜ショップ tabs of the page
     if (!TABS.includes(k)) k = 'home';
-    page = k; propWake(); document.documentElement.dataset.pg = k;   // (phones: the updates ticker hides on the map and きせかえ)
+    page = k; propSync(); document.documentElement.dataset.pg = k;   // (phones: the updates ticker hides on the map and きせかえ)
     tabsEl.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', b.dataset.k === k));
     document.querySelectorAll('section.pg').forEach(s => s.classList.toggle('on', s.id === 'pg-' + k));
     if (push) history.replaceState(null, '', '#' + k);
@@ -309,56 +309,51 @@
     $('ttl').setAttribute('aria-label', t('title') + ' — World Board Game Atlas');
     fitTitle();
     if (titleOnly && $('props').childElementCount) return;   // (the font arrived: only the title is redrawn, the pieces keep floating)
-    $('props').innerHTML = PROPS.filter((_, i) => !phone || i < 17).map(([img, gid, x, y, w, r], i) => `<span class="pp" data-g="${gid}" style="--x:${x}%;--y:${y}%;--w:${Math.round(w * (phone ? .44 : 1))}px;--r:${r}deg"><img src="../images/atlas/p-${img}.webp?v=2" alt="" decoding="async"></span>`).join('');
+    $('props').innerHTML = PROPS.filter((_, i) => !phone || i < 17).map(([img, gid, x, y, w, r], i) => `<span class="pp" data-g="${gid}" style="--x:${x}%;--y:${y}%;--w:${Math.round(w * (phone ? .44 : 1))}px;--r:${r}deg"><span class="pb"><img src="../images/atlas/p-${img}.webp?v=2" alt="" decoding="async"></span></span>`).join('');
     $('props').querySelectorAll('[data-g]').forEach(b => b.onclick = () => { hop(b, true); SFX.shimmer(60); SFX.chime(290); setTimeout(() => openBoard(b.dataset.g), 380); });   // (the sparkle a game icon ends on when its board appears)
     startProps();
   }
-  /* floating pieces: bob + sway, random hops/spins, follow the pointer / phone tilt a little (JS, so it runs on every browser) */
-  let propRaf = 0, px = 0, py = 0, tx = 0, ty = 0;
-  addEventListener('pointermove', e => { tx = e.clientX / innerWidth - .5; ty = e.clientY / innerHeight - .5; }, { passive: true });
-  addEventListener('deviceorientation', e => { if (e.gamma != null) { tx = Math.max(-.5, Math.min(.5, e.gamma / 60)); ty = Math.max(-.5, Math.min(.5, (e.beta - 40) / 80)); } }, { passive: true });
-  function hop(el, big) { el._hop = performance.now(); el._big = !!big; }
-  // the bob runs only while it can be seen (home page, tab shown and focused, no 3D board over it): otherwise the loop stops
-  // (0 frames — battery) and propWake() starts it again when one of these changes
-  let propStep = null, propObs = false, propVis = true;
-  function propWake() { if (!propRaf && propStep) propRaf = requestAnimationFrame(propStep); }
+  /* floating pieces: bob + sway (CSS animations: the compositor draws them, no script runs — battery, 2026-11-10), random
+     hops / spins (Web Animations, also on the compositor), and a little parallax that follows the pointer / phone tilt (a frame
+     loop only while it is still moving). Paused while they cannot be seen (off the home page, scrolled away, the tab hidden or
+     the window behind another, the 3D board over them). */
+  let propRaf = 0, px = 0, py = 0, tx = 0, ty = 0, propEls = [], propHopT = 0, propVis = true, propObs = false;
+  const propOn = () => !document.hidden && page === 'home' && document.hasFocus() && !$('bv').classList.contains('on') && propVis && propEls.length && propEls[0].isConnected;
+  function propPar(now) {   // the parallax: eases towards the pointer / tilt, then stops
+    propRaf = 0; if (!propOn()) return;
+    px += (tx - px) * .08; py += (ty - py) * .08;
+    propEls.forEach(el => el.style.setProperty('--pt', `${(-px * 26 * el._z).toFixed(1)}px, ${(-py * 18 * el._z).toFixed(1)}px`));
+    if (Math.abs(tx - px) > .002 || Math.abs(ty - py) > .002) propRaf = requestAnimationFrame(propPar);
+  }
+  const propMove = () => { if (!propRaf && propOn()) propRaf = requestAnimationFrame(propPar); };
+  addEventListener('pointermove', e => { tx = e.clientX / innerWidth - .5; ty = e.clientY / innerHeight - .5; propMove(); }, { passive: true });
+  addEventListener('deviceorientation', e => { if (e.gamma != null) { const a = Math.max(-.5, Math.min(.5, e.gamma / 60)), b = Math.max(-.5, Math.min(.5, (e.beta - 40) / 80)); if (Math.abs(a - tx) > .01 || Math.abs(b - ty) > .01) { tx = a; ty = b; propMove(); } } }, { passive: true });
+  function hop(el, big) {   // a jump with a spin (and a squash at take-off / landing) on the piece's middle layer
+    const pb = el && el.querySelector('.pb'); if (!pb || !pb.animate) return;
+    const dir = big ? 1 : (el._ph % 2 > 1 ? 1 : -1), H = big ? 46 : 34, K = [];
+    for (let i = 0; i <= 12; i++) {
+      const k = i / 12; let y = -Math.sin(k * Math.PI) * H, r = dir * 360 * (1 - Math.pow(1 - k, 3)), sc = 1, sy = 1;
+      if (k < .12) { sy = 1 - k * 2; sc = 1 + k; } else if (k > .88) { sy = 1 - (1 - k) * 1.6; }
+      K.push({ offset: k, transform: `translateY(${y.toFixed(1)}px) rotate(${r.toFixed(1)}deg) scale(${sc.toFixed(3)}, ${(sc * sy).toFixed(3)})` });
+    }
+    pb.animate(K, { duration: big ? 650 : 900, easing: 'linear' });
+  }
+  function propSync() {   // pause / resume everything with the visibility
+    const on = propOn(), box = $('props'); if (!box) return;
+    box.classList.toggle('pz', !on);
+    clearTimeout(propHopT);
+    if (on) { const next = () => { propHopT = setTimeout(() => { if (!propOn()) return; hop(propEls[Math.random() * propEls.length | 0]); next(); }, 900 + Math.random() * 1400); }; next(); propMove(); }
+  }
   function startProps() {
     cancelAnimationFrame(propRaf); propRaf = 0;
     if (!propObs) { propObs = true;
-      try { new IntersectionObserver(es => { propVis = es.some(e => e.isIntersecting); if (propVis) propWake(); }).observe($('props')); } catch (e) {}
-      document.addEventListener('visibilitychange', propWake); addEventListener('focus', propWake);
-      try { new MutationObserver(propWake).observe($('bv'), { attributes: true, attributeFilter: ['class'] }); } catch (e) {} }
-    const els = [...$('props').querySelectorAll('.pp')];
-    els.forEach((el, i) => { el._ph = i * 1.7; el._sp = .7 + (i % 5) * .12; el._r = parseFloat(el.style.getPropertyValue('--r')) || 0; el._z = .4 + (i % 4) * .2; });
-    let nextHop = performance.now() + 1200;
-    let lastP = 0;
-    propStep = function step(now) {
-      propRaf = 0;
-      if (document.hidden || page !== 'home' || !els[0] || !els[0].isConnected || !document.hasFocus() || $('bv').classList.contains('on') || !propVis) return;   // (stopped: see propWake; also while the hero is scrolled out of view, 2026-11-10)
-      propRaf = requestAnimationFrame(step);
-      // 60 fps while a piece hops or the pointer / tilt moves them, 30 fps for the slow idle bob; stopped while the window isn't focused
-      const busy = els.some(e => e._hop) || Math.abs(tx - px) > .002 || Math.abs(ty - py) > .002;
-      if (now - lastP < 1000 / (busy ? 60 : 30) - 2) return;
-      lastP = now;
-      px += (tx - px) * .06; py += (ty - py) * .06;
-      if (now > nextHop) { hop(els[Math.random() * els.length | 0]); nextHop = now + 900 + Math.random() * 1400; }
-      const t = now / 1000;
-      els.forEach(el => {
-        let y = Math.sin(t * el._sp + el._ph) * 10, r = el._r + Math.sin(t * el._sp * .8 + el._ph) * 7, sc = 1, sy = 1;
-        if (el._hop) {
-          const k = (now - el._hop) / (el._big ? 650 : 900);
-          if (k >= 1) el._hop = 0;
-          else {
-            y -= Math.sin(k * Math.PI) * (el._big ? 46 : 34);
-            r += (el._big ? 360 : 360 * (el._ph % 2 > 1 ? 1 : -1)) * (1 - Math.pow(1 - k, 3)) % 360;
-            if (k < .12) { sy = 1 - k * 2; sc = 1 + k; } else if (k > .88) { sy = 1 - (1 - k) * 1.6; }
-          }
-        }
-        const ox = -px * 26 * el._z, oy = -py * 18 * el._z;
-        el.style.transform = `translate(calc(-50% + ${ox.toFixed(1)}px), calc(-50% + ${(y + oy).toFixed(1)}px)) rotate(${r.toFixed(1)}deg) scale(${sc.toFixed(3)}, ${(sc * sy).toFixed(3)})`;
-      });
-    };
-    propStep(performance.now());
+      try { new IntersectionObserver(es => { propVis = es.some(e => e.isIntersecting); propSync(); }).observe($('props')); } catch (e) {}
+      document.addEventListener('visibilitychange', propSync); addEventListener('focus', propSync); addEventListener('blur', () => setTimeout(propSync, 0));
+      try { new MutationObserver(propSync).observe($('bv'), { attributes: true, attributeFilter: ['class'] }); } catch (e) {} }
+    propEls = [...$('props').querySelectorAll('.pp')];
+    propEls.forEach((el, i) => { el._ph = i * 1.7; el._z = .4 + (i % 4) * .2; const sp = .7 + (i % 5) * .12, per = 2 * Math.PI / sp;   // (the bob's speed and phase, as the JS bob had them)
+      el.style.setProperty('--bd', per.toFixed(2) + 's'); el.style.setProperty('--bdl', (-(el._ph / sp) % per).toFixed(2) + 's'); });
+    propSync();
   }
   // after load, in idle time: start the 3D table, then build every board ahead of time (one per idle slice),
   // so tapping an icon never has to build a board while the fly / smoke / sparkle effects are playing
@@ -444,7 +439,13 @@
       const day = new Intl.DateTimeFormat(lang, { day: 'numeric' }).formatToParts(dt).find(p => p.type === 'day');
       return { n: day ? day.value : String(dt.getDate()), m: dt.toLocaleDateString(lang, { month: 'long' }), w: dt.toLocaleDateString(lang, { weekday: 'long' }) };
     } catch (e) { return { n: String(dt.getDate()), m: String(dt.getMonth() + 1), w: '' }; } };
+  // atlas/updnews.js (0.9 MB: the "what was this day?" lines) loads when the sheet is first opened (2026-11-10)
+  let newsP = null;
   function openUpdSheet() {
+    if (!window.AtlasNews) { if (!newsP) newsP = new Promise(res => { const sc = document.createElement('script'); sc.src = 'updnews.js?v=7'; sc.onload = sc.onerror = res; document.head.appendChild(sc); }); newsP.then(openUpdSheet0); return; }
+    openUpdSheet0();
+  }
+  function openUpdSheet0() {
     try { localStorage.setItem(UPD_SEEN, updKey(A_.UPDATES[0])); } catch (e) {}
     const dot = document.querySelector('#updLine .ul-dot'); if (dot) dot.remove();
     const N = NEWS(), days = [];
@@ -1409,9 +1410,12 @@
     if (!glOK || !window.Table3D || !Table3D.setShift || matchMedia('(max-width:760px)').matches) return;
     const w = on ? $('bvPlMenu').offsetWidth + 28 : 0, rtl = document.documentElement.dir === 'rtl'; Table3D.setShift(on ? (rtl ? w / 2 : -w / 2) : 0);
   }
+  // the places (tables3d.js) arrive after the page (index.html AtlasPlaces): the chip, the labels and the open page follow
+  addEventListener('atlas-places', () => { try { renderPlace(); } catch (e) {} try { if (page === 'dress' && dKind === 'table') renderDress(); else if (!$('bv').classList.contains('on')) render(page); } catch (e) {} });
   function renderPlace() {
     const X = P3(), btn = $('bvPlBtn'); if (!btn) return;
     if (!X) { btn.hidden = true; return; }
+    if (btn.hidden) btn.hidden = false;   // (the places arrived after the page: atlas-places)
     const k = X.table(), names = X.PLACES.name[lang] || X.PLACES.name.en;
     $('bvPlIm').src = X.placeThumb(k); $('bvPlLb').textContent = names[k];
     btn.setAttribute('aria-label', X.placeUi('place', lang) + ': ' + names[k]);
@@ -2005,7 +2009,7 @@
   $('langBtn').onclick = e => { e.stopPropagation(); openLang(); };
   document.addEventListener('click', e => { if (!$('langPop').hidden && !$('langPop').contains(e.target)) openLang(false); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('langPop').hidden) openLang(false); });
-  $('langSel').onchange = e => { lang = e.target.value; try { localStorage.setItem('aicoding-lang', lang); } catch (x) {} applyLang(); render(page); };
+  $('langSel').onchange = e => { const lg = e.target.value; (window.ATLAS_I18N_LOAD ? ATLAS_I18N_LOAD(lg) : Promise.resolve()).then(() => { lang = I[lg] ? lg : 'ja'; try { localStorage.setItem('aicoding-lang', lang); } catch (x) {} applyLang(); render(page); }); };   // (only the page's language is loaded: atlas/i18n/<lang>.js)
 
   // ボドゲ地図: atlas/worldmap.js draws the map; a pin's ▶ flies its icon into the board view like the home icons
   function renderMap() {

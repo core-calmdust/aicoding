@@ -129,6 +129,66 @@
   // Hand(o): o = { el, toCm(e) → {x, y} board cm, sign() → +1 when "down" on screen is +y for the player striking (−1 on the
   //   turned board), canAim() → it is your stroke, place(x) (striker to x), striker() → its x, aim({ ang, pow, e }) (null = no aim),
   //   shoot(ang, pow), tap(e) (a tap when you cannot aim: e.g. to speed up the roll) }
+  /* ---------- the board picker (carrom, crokinole) — 2026-11-10 ----------
+     At the start of a game: a card per board (its picture, name and its feel), 「はじめる」 and 「もどる」. Each board gives the
+     hand's wobble (the small randomness of a human flick) a character of its own; the classic board keeps today's feel.
+     FEEL: a = the angle's wobble, v = the strength's, s = soft shots, h = hard shots (multipliers on the engine's wobble). */
+  const FEEL = { std: {}, precise: { a: .75, v: .75 }, finest: { a: .6, v: .6 }, aim: { a: 1.35 }, power: { a: .75, v: 1.45 }, hard: { s: .7, h: 1.5 } };
+  const FEELTX = {
+    std: ['王道の手ごたえ。いつもどおりの、ほどよい揺らぎ', 'The standard feel: the usual, gentle wobble', '经典手感：一贯适度的晃动', '經典手感：一貫適度的晃動', '정석의 손맛. 늘 같은 적당한 흔들림', 'El tacto de siempre: un temblor justo', 'Le toucher classique : un léger tremblé habituel', 'O toque clássico: a leve oscilação de sempre', 'Das klassische Gefühl: das übliche, leichte Zittern', 'Классика: привычная лёгкая дрожь руки', 'Klasik his: alışılmış hafif titreme', 'Rasa klasik: getaran ringan seperti biasa', 'मानक एहसास: वही हल्का कंपन', 'الإحساس الكلاسيكي: الاهتزاز الخفيف المعتاد'],
+    precise: ['揺らぎが小さく、ねらいどおりに飛びやすい', 'Less wobble: shots go where you aim', '晃动小，容易照瞄准方向飞出', '晃動小，容易照瞄準方向飛出', '흔들림이 작아 노린 대로 날아가기 쉽다', 'Menos temblor: va adonde apuntas', 'Moins de tremblé : ça part où tu vises', 'Menos oscilação: vai aonde você mira', 'Weniger Zittern: er geht, wohin du zielst', 'Меньше дрожи: летит, куда целишься', 'Az titreme: nişan aldığın yere gider', 'Getaran kecil: meluncur sesuai bidikan', 'कम कंपन: जहाँ निशाना, वहीं जाता है', 'اهتزاز أقل: يذهب حيث تصوّب'],
+    finest: ['揺らぎがいちばん小さい、いちばん素直な盤', 'The least wobble of all: the most faithful board', '晃动最小，最听话的盘', '晃動最小，最聽話的盤', '흔들림이 가장 작은, 가장 정직한 보드', 'El que menos tiembla: el más fiel', 'Le moins de tremblé : le plus fidèle', 'A menor oscilação: o mais fiel', 'Das wenigste Zittern: das treueste Brett', 'Меньше всего дрожи: самое послушное поле', 'En az titreme: en sadık masa', 'Getaran paling kecil: papan paling patuh', 'सबसे कम कंपन: सबसे भरोसेमंद बोर्ड', 'أقل اهتزاز: أكثر اللوحات طاعة'],
+    aim: ['ねらいの向きが少しぶれやすい', 'The aim drifts a little more', '瞄准方向更容易偏一点', '瞄準方向更容易偏一點', '노리는 방향이 조금 더 흔들린다', 'La puntería se desvía un poco más', 'La visée dévie un peu plus', 'A mira desvia um pouco mais', 'Die Richtung weicht etwas mehr ab', 'Направление чуть больше уходит', 'Nişan biraz daha sapar', 'Arah bidikan sedikit lebih meleset', 'निशाने की दिशा थोड़ी ज़्यादा भटकती है', 'يميل الاتجاه أكثر قليلًا'],
+    power: ['向きは正確、強さが少しぶれやすい', 'True aim, but the strength varies a little more', '方向准确，力度更容易有偏差', '方向準確，力度更容易有偏差', '방향은 정확, 세기가 조금 더 흔들린다', 'Puntería fiel, la fuerza varía algo más', 'Visée juste, mais la force varie un peu plus', 'Mira certa, a força varia um pouco mais', 'Richtung genau, die Stärke schwankt etwas mehr', 'Направление точное, сила гуляет чуть больше', 'Yön doğru, güç biraz daha değişir', 'Arah tepat, kekuatan sedikit lebih berubah', 'दिशा सटीक, ताक़त थोड़ी ज़्यादा बदलती है', 'الاتجاه دقيق والقوة تتفاوت أكثر قليلًا'],
+    hard: ['弱い打ちは正確、強打ほどぶれる', 'Soft shots are true, hard ones wobble more', '轻打准确，越用力越晃', '輕打準確，越用力越晃', '약하게 치면 정확, 세게 칠수록 흔들린다', 'Los golpes suaves son fieles, los fuertes tiemblan', 'Les coups doux sont justes, les forts tremblent', 'Toques suaves certeiros, os fortes oscilam', 'Sanfte Schüsse genau, harte zittern mehr', 'Мягкие удары точны, сильные дрожат', 'Hafif atış doğru, sert atış titrer', 'Pukulan pelan tepat, yang keras bergetar', 'हल्के शॉट सटीक, तेज़ शॉट ज़्यादा काँपते हैं', 'الضربات الخفيفة دقيقة والقوية تهتز'],
+  };
+  const PKTX = {
+    title: ['盤を選ぶ', 'Choose a board', '选择棋盘', '選擇棋盤', '보드 선택', 'Elige un tablero', 'Choisis un plateau', 'Escolha um tabuleiro', 'Brett wählen', 'Выбери поле', 'Tahta seç', 'Pilih papan', 'बोर्ड चुनें', 'اختر اللوحة'],
+    sub: ['盤ごとに、打つときの揺らぎ（手のぶれ）が少しずつちがうよ', 'Each board gives the flick’s wobble a character of its own', '每个棋盘出手时的晃动都略有不同', '每個棋盤出手時的晃動都略有不同', '보드마다 칠 때의 흔들림이 조금씩 달라', 'Cada tablero da su carácter al temblor del golpe', 'Chaque plateau donne son caractère au tremblé du tir', 'Cada tabuleiro dá seu jeito à oscilação do toque', 'Jedes Brett gibt dem Zittern beim Schnippen seinen Charakter', 'У каждого поля своя дрожь при щелчке', 'Her tahtanın vuruştaki titremesi biraz farklı', 'Tiap papan punya getaran pukulan sendiri', 'हर बोर्ड पर शॉट का कंपन थोड़ा अलग है', 'لكل لوحة طابع مختلف لاهتزاز الضربة'],
+    go: ['はじめる', 'Start', '开始', '開始', '시작', 'Empezar', 'Commencer', 'Começar', 'Starten', 'Начать', 'Başla', 'Mulai', 'शुरू करें', 'ابدأ'],
+    back: ['もどる', 'Back', '返回', '返回', '돌아가기', 'Volver', 'Retour', 'Voltar', 'Zurück', 'Назад', 'Geri', 'Kembali', 'वापस', 'رجوع'],
+  };
+  const PKL = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
+  const pkT = (a, l) => a[Math.max(0, PKL.indexOf(l))] || a[1];
+  // o: { lang, list: [look…], cur, feel: { look: type }, name(look), thumb(look), color, onPick(look), onStart(look), onBack() }
+  function BoardPick(o) {
+    if (!document.getElementById('bpkCss')) {
+      const c = document.createElement('style'); c.id = 'bpkCss';
+      c.textContent = `.bpk{position:fixed;inset:0;z-index:96;display:flex;align-items:center;justify-content:center;background:rgba(10,12,22,.5);padding:14px;-webkit-user-select:none;user-select:none}
+.bpk-c{background:#fffdf7;border-radius:26px;box-shadow:0 0 0 4px var(--bpk,#2f6fd0),0 18px 50px rgba(0,0,0,.45);padding:16px 16px 14px;width:min(640px,100%);max-height:100%;overflow:auto;color:#1d2133}
+.bpk h2{margin:0;font-size:22px;font-weight:900;text-align:center;color:var(--bpk,#2f6fd0)}.bpk .sub{margin:4px 0 12px;font-size:12.5px;font-weight:700;color:#5b6074;text-align:center}
+.bpk-g{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.bpk-g button{display:flex;align-items:center;gap:10px;text-align:left;border:2px solid #e6dcc6;border-radius:16px;background:#fff;padding:7px 9px;font:inherit;cursor:pointer;color:inherit;box-shadow:0 3px 0 #e6dcc6;transition:transform .12s}
+.bpk-g button:hover{transform:translateY(-2px)}.bpk-g button[aria-pressed=true]{border-color:var(--bpk,#2f6fd0);box-shadow:0 3px 0 var(--bpk,#2f6fd0);background:#f4f8ff}
+.bpk-g .th{flex:none;width:66px;height:46px;border-radius:10px;overflow:hidden;background:#e9dfca}.bpk-g .th img{width:100%;height:100%;object-fit:cover;transform:scale(1.9);display:block}
+.bpk-g b{display:block;font-size:14.5px;font-weight:900}.bpk-g small{display:block;font-size:11.5px;font-weight:700;color:#5b6074;line-height:1.35;margin-top:2px}
+.bpk-f{display:flex;gap:10px;margin-top:12px}.bpk-f button{flex:1;padding:12px;border:0;border-radius:99px;font:inherit;font-size:17px;font-weight:900;cursor:pointer}
+.bpk-f .bk{flex:0 0 34%;background:#ece6d8;color:#3a3f52;box-shadow:0 3px 0 #d4ccb8}.bpk-f .go{background:#ff5d5d;color:#fff;box-shadow:0 3px 0 #c23b3b}
+@media (max-width:560px){.bpk-g small{display:none}.bpk-g .th{width:52px;height:38px}.bpk-g button{padding:6px 7px;gap:7px}}
+@media (min-width:900px) and (min-height:600px) and (hover:hover){.bpk-c{width:min(1120px,82vw);padding:24px 30px 22px;border-radius:30px}.bpk h2{font-size:28px}.bpk .sub{font-size:15px;margin-bottom:16px}
+.bpk-g{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.bpk-g button{flex-direction:column;align-items:stretch;gap:10px;padding:10px 10px 14px;border-radius:20px}
+.bpk-g .th{width:100%;height:auto;aspect-ratio:16/9;border-radius:14px}.bpk-g .th img{transform:scale(1.7) translateY(-3%)}.bpk-g b{font-size:20px;padding:0 6px}.bpk-g small{font-size:14px;padding:0 6px}
+.bpk-f{max-width:640px;margin:16px auto 0}.bpk-f button{font-size:21px;padding:15px}}
+@media (min-width:900px) and (max-height:820px) and (hover:hover){.bpk-g .th{aspect-ratio:2/1}.bpk-g{gap:12px}}`;
+      document.head.appendChild(c);
+    }
+    let cur = o.cur;
+    const el = document.createElement('div'); el.className = 'bpk'; el.dir = o.lang === 'ar' ? 'rtl' : 'ltr'; if (o.color) el.style.setProperty('--bpk', o.color);
+    el.innerHTML = `<div class="bpk-c" role="dialog" aria-label="${esc(pkT(PKTX.title, o.lang))}"><h2>${esc(pkT(PKTX.title, o.lang))}</h2><p class="sub">${esc(pkT(PKTX.sub, o.lang))}</p>
+      <div class="bpk-g">${o.list.map(k => `<button type="button" data-k="${k}" aria-pressed="${k === cur}"><span class="th"><img src="${o.thumb(k)}" alt="" loading="lazy"></span><span><b>${esc(o.name(k))}</b><small>${esc(pkT(FEELTX[o.feel[k] || 'std'], o.lang))}</small></span></button>`).join('')}</div>
+      <div class="bpk-f"><button type="button" class="bk">${esc(pkT(PKTX.back, o.lang))}</button><button type="button" class="go">${esc(pkT(PKTX.go, o.lang))} ▶</button></div></div>`;
+    ['pointerdown', 'pointermove', 'pointerup'].forEach(k => el.addEventListener(k, e => e.stopPropagation()));
+    el.querySelectorAll('[data-k]').forEach(b => { b.onclick = () => { if (b.dataset.k === cur) return; cur = b.dataset.k; el.querySelectorAll('[data-k]').forEach(x => x.setAttribute('aria-pressed', x.dataset.k === cur)); try { SND.click && SND.click(); } catch (e) {} o.onPick(cur); }; b.ondblclick = () => { close(); o.onStart(cur); }; });
+    const close = () => el.remove();
+    el.querySelector('.go').onclick = () => { close(); o.onStart(cur); };
+    el.querySelector('.bk').onclick = () => { close(); o.onBack(); };
+    document.body.appendChild(el);
+    return { close };
+  }
+  // the wobble of a board: the engine's wobble parameters scaled by its feel
+  const feelOf = type => Object.assign({ a: 1, v: 1, s: 1, h: 1 }, FEEL[type] || {});
+  const esc = x => String(x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
   function Hand(o) {
     // pull like a slingshot round the striker: the aim points from your pointer back through the striker, and the further you
     // pull, the harder (so pulling down shoots up the board, pulling up shoots down it). Coming back round the striker
@@ -236,8 +296,18 @@
     const tx = (k, o) => { let s = L[k] != null ? L[k] : (TXT.en[k] != null ? TXT.en[k] : k); if (o) for (const q in o) s = s.split('{' + q + '}').join(o[q]); return s; };
     const pvp = ctx.mode === 'pvp', level = Math.max(1, Math.min(20, +ctx.level || 6)), target = +ctx.size === 25 ? 25 : 0;
     const youFirst = (+ctx.side || 1) === 1;
-    const board = T3.MODELS.carrom(true); T3.show('carrom', board);
-    const U = board.userData, Y = U.top, K = U.K, W = 2 * (U.S + 7 * K);
+    const BDL = (T3.BOARDS && T3.BOARDS.carrom) ? T3.BOARDS.carrom.list : ['neon', 'modern', 'classic', 'rajasthan', 'bauhaus', 'tycoon'];
+    let look = T3.BOARDS && T3.BOARDS.carrom ? T3.BOARDS.carrom.get() : 'neon';
+    const board = T3.MODELS.carrom(true, look); T3.show('carrom', board);
+    let U = board.userData; const Y = U.top, K = U.K, W = 2 * (U.S + 7 * K);
+    // (2026-11-10) each board's hand: the wobble's character (see FEEL); the classic board keeps the standard feel
+    const CFEEL = { classic: 'std', neon: 'power', modern: 'precise', rajasthan: 'aim', bauhaus: 'hard', tycoon: 'finest' };
+    let feel = feelOf(CFEEL[look]);
+    function setLook(v) {   // (before the game: the board's pieces are swapped inside the group on the table — T3.show() would move the camera)
+      if (v === look) return; look = v; feel = feelOf(CFEEL[v]);
+      try { if (T3.setBoard) T3.setBoard('carrom', v); } catch (e) {}
+      const nb = T3.MODELS.carrom(true, v); while (board.children.length) board.remove(board.children[0]); while (nb.children.length) board.add(nb.children[0]); board.userData = nb.userData; U = board.userData; kick(500);
+    }
     // the camera: a 3/4 view with perspective by default; the button beside the flip switches to the near top-down view (remembered)
     const VK = 'atlas-carrom-view';
     let topView = false; try { topView = localStorage.getItem(VK) === 'top'; } catch (e) {}
@@ -528,7 +598,7 @@
         powEl.hidden = false; powEl.textContent = Math.round(aimPow * 100) + '%'; powEl.style.left = a.e.clientX + 'px'; powEl.style.top = a.e.clientY + 'px';
         say('💪 ' + Math.round(aimPow * 100) + '%'); showGuides();
       },
-      shoot: (ang, pw) => stroke(E.wobble({ x: sx, ang, v: 40 + pw * (E.VMAX - 40) }, (Math.random() * 1e9) | 0)),
+      shoot: (ang, pw) => stroke(E.wobble({ x: sx, ang, v: 40 + pw * (E.VMAX - 40) }, (Math.random() * 1e9) | 0, .5 * feel.a * feel.s, .6 * feel.a * feel.h, .03 * feel.v * feel.s, .025 * feel.v * feel.h)),
       tap: () => { if (phase === 'anim' && !stopped) speedUp = 3; },   // a tap while the men roll: fast-forward
     });
     /* ---------- 盤面反転: a round button at the lower left (and the F key) turns the table round 180°, remembered per game.
@@ -580,9 +650,10 @@
     const prevTouch = ctx.el.style.touchAction; ctx.el.style.touchAction = 'none';
 
     /* ---------- go ---------- */
-    st = E.newBoard({ first: youFirst ? 0 : 1 });
-    build(); striker.visible = true; placeMesh(striker, 0, E.baseY(st.turn));
-    later(next, 650);
+    // (2026-11-10) first the controls (unless turned off), then the board picker, then the game
+    const goNow = () => { st = E.newBoard({ first: youFirst ? 0 : 1 }); build(); striker.visible = true; placeMesh(striker, 0, E.baseY(st.turn)); later(next, 650); };
+    const pick = () => { if (stopped) return; BoardPick({ lang, list: BDL, cur: look, feel: CFEEL, name: k => T3.boardName ? T3.boardName(k, lang, 'carrom') : k, thumb: k => T3.boardThumb ? T3.boardThumb('carrom', k) : '', color: '#c23a7a', onPick: setLook, onStart: v => { setLook(v); goNow(); }, onBack: () => { const q = document.getElementById('bvQuit'); if (q) q.click(); } }); };
+    if (howtoOn()) { told = true; howtoCard(pick); } else { told = true; pick(); }
 
     const myTurn = () => !stopped && !over && !busy && st && human(st.turn) && phase === 'place';
     function finish(why) {
@@ -616,7 +687,7 @@
       canResign: () => !stopped && !over && !!st,
       resign() { finish('resign'); },
       timeout() { finish('time'); },
-      stop() {
+      stop() { document.querySelectorAll(".bpk").forEach(e => e.remove());
         stopped = true; tok++; timers.forEach(clearTimeout); clearInterval(pulseT);
         hand.stop();
         document.removeEventListener('keydown', onKey); removeEventListener('resize', onResize); ctx.el.style.touchAction = prevTouch;
@@ -631,5 +702,5 @@
   }
 
   window.Atlas3D = window.Atlas3D || {};
-  window.Atlas3D.carrom = { levels: 20, sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], sizes: SIZES, size0: 1, sizeLabel, sizeName, levelInfo, start, SND, TXT, Hand, HOW, HOWTO, how };
+  window.Atlas3D.carrom = { levels: 20, sides: true, modes: ['ai', 'pvp'], table: true, tableModes: ['ai', 'pvp'], sizes: SIZES, size0: 1, sizeLabel, sizeName, levelInfo, start, SND, TXT, Hand, HOW, HOWTO, how, BoardPick, feelOf };
 })();
