@@ -15,6 +15,8 @@
 //   --ticks: the midgame's time to a depth is the virtual clock, not the lead's nodes (needed for --plan ybw, where the lead
 //            also waits and helps: 2026-11-10, MODEL_CARD.md「マルチスレッド v4」). --split D,E: YBW's split depth / empties
 //            (engine.c mt_split). The YBW helpers wait in engine.c mt_idle, which ticks the clock while it finds no work.
+//            A build of tools/mtsim-delay.py also prints the split points' counters (splits, joins, idle / waiting share of
+//            all threads' checks of the clock, second searches: v4.1, 2026-11-10).
 // Midgame: per position (bench.html's MID, 36 empties, + --gen more from self-play) and thread count, the lead thinks with
 // a node budget (its own nodes, cfg.nodes) from an empty table: the depth it finished, the lead's nodes to the common depth,
 // the moves. --ttbits: a smaller table (like the Mac's 3 s × many threads). --plan / --d0 / --noidle: the helpers' variants
@@ -132,6 +134,7 @@ async function makePool(n, wasm = WASM, engine = ENGINE) {
     run(p, game) {
       if (!game) X.clear_tt();
       X.mt_stop(0); Atomics.store(ctl, 0, 0);
+      if (X.mt_stat_reset) X.mt_stat_reset();
       const cfg = game ? game.cfg : END ? { depth: 60, exact: 64, mpc: 1 } : { depth: 60, exact: 0, mpc: 1, nodes: BUDGET };
       const hcfg = game ? game.hcfg : END ? { depth: 60, exact: 64, wld: 66, mpc: 1 } : { depth: 60, exact: 0, wld: 2, mpc: 1 };
       return new Promise(resolve => {
@@ -141,7 +144,7 @@ async function makePool(n, wasm = WASM, engine = ENGINE) {
           w.on('message', m => {
             if (m.type === 'result') { res = m; Atomics.store(ctl, 0, 1); X.mt_stop(1); }
             else if (m.type === 'done') hn += m.nodes;
-            if (--left === 0) resolve(Object.assign(res, { helperNodes: hn }));
+            if (--left === 0) resolve(Object.assign(res, { helperNodes: hn, st: X.mt_stat ? Array.from({ length: 10 }, (_, k) => X.mt_stat(k)) : null }));
           });
           w.postMessage({ cells: p.cells, toMove: p.toMove, cfg, hcfg, d0: opt.d0 });
         });
@@ -189,12 +192,15 @@ async function match() {
     pool.close();
     console.log(`t${n}: ${END ? 'scores ' + R[n].map(r => r.exact ? r.score : 'x').join(',') : 'depths ' + R[n].map(r => r.depth).join(',') + (opt.nodes ? '  lead nodes per depth ' + R[n].map(r => Object.keys(r.per).map(d => d + ':' + r.per[d].nodes + ':' + r.per[d].move).join(' ')).join(' | ') : '')}  (${(R[n].reduce((a, r) => a + r.wall, 0) / 1000).toFixed(0)} s)`);
   }
+  // (a build with counters: splits, the helpers' moves, idle / waiting ticks — the share of all threads' ticks)
+  const stat = n => { const r = R[n]; if (!r[0].st) return ''; const t = k => r.reduce((a, x) => a + x.st[k], 0), tk = r.reduce((a, x) => a + x.ticks, 0) * n / (opt.slow ? 2 : 1);
+    return `  splits ${t(0) + t(1)} (mid ${t(0)}), helper joins ${t(3)} (moves/join ${(t(2) / Math.max(1, t(3))).toFixed(1)}), empty joins ${t(4)}, idle ${(100 * t(5) / tk).toFixed(1)}%, owner waiting ${(100 * t(6) / tk).toFixed(1)}%, aborted helper moves ${t(8)}, second searches ${t(9)}`; };
   if (END) {
     const b = TH[0], tk = n => R[n].reduce((a, r) => a + r.ticks, 0), nd = n => R[n].reduce((a, r) => a + r.nodes + r.helperNodes, 0);
     for (const n of TH) {
       const same = R[n].filter((r, i) => r.score === R[b][i].score && r.exact).length;
       const geo = Math.exp(R[n].reduce((a, r, i) => a + Math.log(R[b][i].ticks / Math.max(1, r.ticks)), 0) / P.length);
-      console.log(`threads ${n}: time x${(tk(b) / tk(n)).toFixed(2)} (geomean x${geo.toFixed(2)})  nodes x${(nd(n) / nd(b)).toFixed(2)} (${nd(n)})  same score ${same}/${P.length}`);
+      console.log(`threads ${n}: time x${(tk(b) / tk(n)).toFixed(2)} (geomean x${geo.toFixed(2)})  nodes x${(nd(n) / nd(b)).toFixed(2)} (${nd(n)})  same score ${same}/${P.length}${stat(n)}`);
     }
     return;
   }
@@ -207,7 +213,7 @@ async function match() {
     const agree = P.filter((_, i) => at(n, i).move === at(b, i).move).length;
     const work = R[n].reduce((a, r) => a + r.nodes + r.helperNodes, 0) / R[b].reduce((a, r) => a + r.nodes + r.helperNodes, 0);
     const geo = Math.exp(P.reduce((a, _, i) => a + Math.log((at(b, i).nodes || 1) / (at(n, i).nodes || 1)), 0) / P.length);
-    console.log(`threads ${n}: avg depth ${avg.toFixed(2)}  time to common depth x${(ttd(b) / ttd(n)).toFixed(2)} (geomean x${geo.toFixed(2)})  agree ${agree}/${P.length}  all nodes x${work.toFixed(2)}${opt.ticks ? `  nodes per thread per tick ${(R[n].reduce((a, r) => a + r.nodes + r.helperNodes, 0) / R[n].reduce((a, r) => a + r.ticks, 0) / n).toFixed(0)}` : ''}`);
+    console.log(`threads ${n}: avg depth ${avg.toFixed(2)}  time to common depth x${(ttd(b) / ttd(n)).toFixed(2)} (geomean x${geo.toFixed(2)})  agree ${agree}/${P.length}  all nodes x${work.toFixed(2)}${opt.ticks ? `  nodes per thread per tick ${(R[n].reduce((a, r) => a + r.nodes + r.helperNodes, 0) / R[n].reduce((a, r) => a + r.ticks, 0) / n).toFixed(0)}` : ''}${stat(n)}`);
   }
   console.log('common depths', common.join(','), ' budget', BUDGET, 'lead nodes', opt.ttbits ? 'ttbits ' + opt.ttbits : '');
 })();

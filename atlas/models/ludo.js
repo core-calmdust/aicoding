@@ -72,7 +72,7 @@
     if (geos.peg) return geos.peg;
     const TT = T(), s = UP.ludo, P = [];
     [[0, -.25], [.18, -.25], [.19, -.23], [.19, 0], [.285, 0], [.3, .012], [.305, .035], [.305, .4], [.3, .422], [.285, .434], [.24, .44], [0, .44]].forEach(([r, y]) => P.push(new TT.Vector2(r * s, y * s)));
-    const g = new TT.LatheGeometry((X.lp || (a => a))(P, .003), LO() ? 16 : 24); if (X.share) X.share(g);
+    const g = new TT.LatheGeometry((X.lp || (a => a))(P, .003), LO() ? 14 : 20); if (X.share) X.share(g);
     return (geos.peg = g);
   }
   function modGeo() {
@@ -80,7 +80,7 @@
     const TT = T(), s = UP.ludo, P = [];
     [[0, 0], [.31, 0], [.33, .015], [.335, .04], [.335, .25], [.32, .275], [.29, .285], [.07, .29]].forEach(([r, y]) => P.push(new TT.Vector2(r * s, y * s)));
     for (let k = 0; k <= 10; k++) { const a = -Math.PI / 2 + .42 + k / 10 * (Math.PI - .42); P.push(new TT.Vector2(Math.max(0, Math.cos(a) * .17 * s), (.45 + Math.sin(a) * .17) * s)); }
-    const g = new TT.LatheGeometry((X.lp || (a => a))(P, .003), LO() ? 16 : 24); if (X.share) X.share(g);
+    const g = new TT.LatheGeometry((X.lp || (a => a))(P, .003), LO() ? 14 : 20); if (X.share) X.share(g);
     return (geos.mod = g);
   }
   const STONES = [0xb23a22, 0x116f42, 0xdc951c, 0x22409a];   // carnelian, malachite, amber, lapis (the marble board)

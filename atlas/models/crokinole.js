@@ -286,7 +286,7 @@
     for (let i = 0; i <= st; i++) { const a = -Math.PI / 2 + Math.PI / 2 * i / st; pts.push(new TT.Vector2(r - b + Math.cos(a) * b, b + Math.sin(a) * b)); }
     for (let i = 0; i <= st; i++) { const a = Math.PI / 2 * i / st; pts.push(new TT.Vector2(r - b + Math.cos(a) * b, h - b + Math.sin(a) * b)); }
     pts.push(new TT.Vector2(.001, h));
-    const g = new TT.LatheGeometry(pts, LO() ? 20 : 30), P = g.attributes.position, UV = g.attributes.uv;
+    const g = new TT.LatheGeometry(pts, LO() ? 16 : 22), P = g.attributes.position, UV = g.attributes.uv;
     for (let i = 0; i < UV.count; i++) UV.setXY(i, P.getX(i) / (2 * r) + .5, P.getZ(i) / (2 * r) + .5);
     g.computeVertexNormals(); return (geos.disc = share(g));
   }
@@ -306,7 +306,7 @@
     for (let i = 0; i <= st; i++) { const a = Math.PI / 2 * i / st; pts.push(new V(ro - b + Math.cos(a) * b, h - b + Math.sin(a) * b)); }
     for (let i = 0; i <= st; i++) { const a = Math.PI / 2 + Math.PI / 2 * i / st; pts.push(new V(ri + b + Math.cos(a) * b, h - b + Math.sin(a) * b)); }
     pts.push(new V(ri, DY - .02));
-    const g = new TT.LatheGeometry(pts, LO() ? 48 : 96); g.computeVertexNormals();
+    const g = new TT.LatheGeometry(pts, LO() ? 40 : 72); g.computeVertexNormals();
     const P = g.attributes.position, UV = g.attributes.uv;   // the grain runs round the rail
     for (let i = 0; i < UV.count; i++) { const a = Math.atan2(P.getZ(i), P.getX(i)); UV.setXY(i, (a / (Math.PI * 2) + .5) * 6, P.getY(i) * 2 + Math.hypot(P.getX(i), P.getZ(i)) * .6); }
     return (geos.rail = share(g));
@@ -370,10 +370,10 @@
     g.userData = { c, r, h: HD };
     if (neon) {   // an RGB ring round the rim, a rainbow halo and shock ring when it knocks (as carrom's night board)
       const lm = rgbify(phys({ color: '#000000', roughness: .4, metalness: 0 }), 'ring'); lm.emissive = new TT.Color(1, 1, 1); lm.emissiveIntensity = .55;
-      const led = new TT.Mesh(geos.led || (geos.led = share((() => { const q = new TT.TorusGeometry(r + .002, .007, 6, LO() ? 28 : 44); q.rotateX(Math.PI / 2); return q; })())), lm); led.position.y = HD * .5; g.add(led);
+      const led = new TT.Mesh(geos.led || (geos.led = share((() => { const q = new TT.TorusGeometry(r + .002, .007, 4, LO() ? 24 : 32); q.rotateX(Math.PI / 2); return q; })())), lm); led.position.y = HD * .5; g.add(led);
       const hm = rgbify(new TT.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, blending: TT.AdditiveBlending, depthWrite: false }), 'halo');
       const wm = rgbify(new TT.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, blending: TT.AdditiveBlending, depthWrite: false }), 'halo');
-      const hg = geos.halo || (geos.halo = share((() => { const q = new TT.RingGeometry(.5, 1, LO() ? 24 : 40); q.rotateX(-Math.PI / 2); return q; })()));
+      const hg = geos.halo || (geos.halo = share((() => { const q = new TT.RingGeometry(.5, 1, LO() ? 20 : 28); q.rotateX(-Math.PI / 2); return q; })()));
       const halo = new TT.Mesh(hg, hm); halo.position.y = HD + .002; halo.visible = false; halo.renderOrder = 3; g.add(halo);
       const wave = new TT.Mesh(hg, wm); wave.position.y = .006; wave.visible = false; wave.renderOrder = 3; g.add(wave);
       const e0 = top.emissive.clone();
@@ -391,9 +391,9 @@
     look = LOOKS.includes(look) ? look : lookNow();
     const TT = T(), g = new TT.Group(), BM = boardMats(look);
     // the body under it all (a low drum the size of the rail)
-    const body = new TT.Mesh(geos.body || (geos.body = share(new TT.CylinderGeometry(RO * K, RO * K, DY - .02, LO() ? 48 : 96))), BM.base); body.position.y = (DY - .02) / 2; body.receiveShadow = true; body.castShadow = true; g.add(body);   // (2026-11-09: it casts too — the floor showed only the rail's ring)
+    const body = new TT.Mesh(geos.body || (geos.body = share(new TT.CylinderGeometry(RO * K, RO * K, DY - .02, LO() ? 40 : 72))), BM.base); body.position.y = (DY - .02) / 2; body.receiveShadow = true; body.castShadow = true; g.add(body);   // (2026-11-09: it casts too — the floor showed only the rail's ring)
     // the ditch's floor
-    const df = new TT.Mesh(geos.ditch || (geos.ditch = share((() => { const q = new TT.RingGeometry(RB * K - .01, RR * K + .01, LO() ? 48 : 96, 1); q.rotateX(-Math.PI / 2); return q; })())), BM.ditch); df.position.y = DY; df.receiveShadow = true; g.add(df);
+    const df = new TT.Mesh(geos.ditch || (geos.ditch = share((() => { const q = new TT.RingGeometry(RB * K - .01, RR * K + .01, LO() ? 40 : 72, 1); q.rotateX(-Math.PI / 2); return q; })())), BM.ditch); df.position.y = DY; df.receiveShadow = true; g.add(df);
     // the playing surface and its edge (it stands up out of the ditch)
     const surf = new TT.Mesh(surfaceGeo(), BM.surf); surf.position.y = TOP; surf.receiveShadow = true; g.add(surf);
     const edge = new TT.Mesh(geos.edge || (geos.edge = share(new TT.CylinderGeometry(RB * K, RB * K, TOP - DY, LO() ? 48 : 96, 1, true))), BM.edge); edge.position.y = (TOP + DY) / 2; g.add(edge);
@@ -402,8 +402,8 @@
     const cb = new TT.Mesh(geos.cupb || (geos.cupb = share((() => { const q = new TT.CircleGeometry(RH * K, 24); q.rotateX(-Math.PI / 2); return q; })())), BM.cup); cb.position.y = TOP - .095; g.add(cb);
     // the rail
     const rail = new TT.Mesh(railGeo(), BM.rail); rail.castShadow = rail.receiveShadow = true; g.add(rail);
-    if (BM.trim) { const tr = new TT.Mesh(geos.trim || (geos.trim = share((() => { const q = new TT.TorusGeometry((RR + (RO - RR) * .5) * K, .016, 6, LO() ? 64 : 128); q.rotateX(Math.PI / 2); return q; })())), BM.trim); tr.position.y = RAIL_H - .004; g.add(tr); }
-    if (BM.glow) { const tube = new TT.Mesh(geos.tube || (geos.tube = share((() => { const q = new TT.TorusGeometry(RR * K + .03, .014, 6, LO() ? 64 : 128); q.rotateX(Math.PI / 2); return q; })())), BM.glow); tube.position.y = RAIL_H - .01; g.add(tube); }
+    if (BM.trim) { const tr = new TT.Mesh(geos.trim || (geos.trim = share((() => { const q = new TT.TorusGeometry((RR + (RO - RR) * .5) * K, .016, 5, LO() ? 56 : 96); q.rotateX(Math.PI / 2); return q; })())), BM.trim); tr.position.y = RAIL_H - .004; g.add(tr); }
+    if (BM.glow) { const tube = new TT.Mesh(geos.tube || (geos.tube = share((() => { const q = new TT.TorusGeometry(RR * K + .03, .014, 5, LO() ? 56 : 96); q.rotateX(Math.PI / 2); return q; })())), BM.glow); tube.position.y = RAIL_H - .01; g.add(tube); }
     // the pegs on the 15 line: a post and a rubber sleeve
     const post = geos.post || (geos.post = share(new TT.CylinderGeometry(RP * K * .62, RP * K * .62, PEG_H, 16)));
     const sleeve = geos.sleeve || (geos.sleeve = share(new TT.CylinderGeometry(RP * K, RP * K, PEG_H * .55, 20)));
