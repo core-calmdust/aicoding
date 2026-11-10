@@ -1047,9 +1047,10 @@ button.nct[data-go]:hover{transform:translateY(-1px);box-shadow:0 3px 0 var(--li
 .dprev > .rfx{position:absolute;z-index:6;padding:3.5px}
 /* (2026-11-11) the name card's ring: its own conic gradient, turned by atlas/app.js (--ra set every frame — iPhone Safari neither
    ran the turning child inside the masked ring nor an animated @property; a plain var() always works) */
-.prof > .rfx::before,.dprev > .rfx::before{content:none}
-.prof > .rfx.s,.dprev > .rfx.s{background:conic-gradient(from var(--ra,0deg),#b46bff 0deg,#b46bff 250deg,#e6ccff 290deg,#fff 305deg,#e6ccff 320deg,#b46bff 360deg)}
-.prof > .rfx.u,.dprev > .rfx.u{background:conic-gradient(from var(--ra,0deg),#ff7fbe,#ffb21e,#fff2a0,#36b4ff,#b46bff,#ff7fbe)}
+/* (painted by the child, as before: iPhone Safari showed nothing when the masked ring painted its own background) */
+.prof > .rfx::before,.dprev > .rfx::before{left:0;top:0;width:100%;height:100%;aspect-ratio:auto;margin:0;animation:none;transform:none;will-change:auto}
+.prof > .rfx.s::before,.dprev > .rfx.s::before{background:conic-gradient(from var(--ra,0deg),#b46bff 0deg,#b46bff 250deg,#e6ccff 290deg,#fff 305deg,#e6ccff 320deg,#b46bff 360deg)}
+.prof > .rfx.u::before,.dprev > .rfx.u::before{background:conic-gradient(from var(--ra,0deg),#ff7fbe,#ffb21e,#fff2a0,#36b4ff,#b46bff,#ff7fbe)}
 .dprev > .ntw{position:absolute;top:8px;right:10px;width:18px;height:18px;z-index:7;pointer-events:none;
   background:conic-gradient(from 45deg,transparent 0 10%,#fff 12.5%,transparent 15% 35%,#fff 37.5%,transparent 40% 60%,#fff 62.5%,transparent 65% 85%,#fff 87.5%,transparent 90%);
   -webkit-mask:radial-gradient(circle,#000 0 18%,transparent 60%);mask:radial-gradient(circle,#000 0 18%,transparent 60%);animation:dicTw 2.2s ease-in-out infinite}
