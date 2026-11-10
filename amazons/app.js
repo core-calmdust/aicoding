@@ -249,7 +249,7 @@ let shownKey = '';
 // a fire arrow. In flight (.fly): the SVG, turned along its line — a leaf-shaped iron head with its ridge, a wooden shaft, silk
 // bindings, three barred feathers, the flame (.fire) wrapped behind the head. Stuck in its square: the picture of the 3D arrow
 // (.ai, img/arw.webp, tools/pieces3d.html set=arrow) leaning out of the scorch; the newest arrows keep burning (.blaze: .fl3)
-const ARROW_SVG = '<i class="ai"></i><i class="fl3"><b></b><b></b><b></b></i><svg viewBox="0 0 40 40"><defs><linearGradient id="amzSh" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#5a3a20"/><stop offset=".5" stop-color="#a8774a"/><stop offset="1" stop-color="#6a4426"/></linearGradient><linearGradient id="amzHd" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d9dde2"/><stop offset=".5" stop-color="#7d838b"/><stop offset="1" stop-color="#3a3e44"/></linearGradient></defs>' +
+const ARROW_SVG = '<i class="ai"></i><svg class="fl3" viewBox="0 0 40 40"><defs><radialGradient id="amzFl" cx=".5" cy=".85" r=".75"><stop offset="0" stop-color="#fffbe0"/><stop offset=".28" stop-color="#ffd658"/><stop offset=".6" stop-color="#ff7a18" stop-opacity=".92"/><stop offset="1" stop-color="#e33a06" stop-opacity="0"/></radialGradient></defs><path class="t t1" d="M20 38C12.5 37 10.5 29.5 13.5 24C15.5 20.5 15.5 15.5 18 8.5C19 14.5 24 18 26 23.5C28 30 26.5 37 20 38Z" fill="url(#amzFl)"/><path class="t t2" d="M20 38C12.5 37 10.5 29.5 13.5 24C15.5 20.5 15.5 15.5 18 8.5C19 14.5 24 18 26 23.5C28 30 26.5 37 20 38Z" fill="url(#amzFl)"/><path class="t t3" d="M20 38C12.5 37 10.5 29.5 13.5 24C15.5 20.5 15.5 15.5 18 8.5C19 14.5 24 18 26 23.5C28 30 26.5 37 20 38Z" fill="url(#amzFl)"/></svg><svg viewBox="0 0 40 40"><defs><linearGradient id="amzSh" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#5a3a20"/><stop offset=".5" stop-color="#a8774a"/><stop offset="1" stop-color="#6a4426"/></linearGradient><linearGradient id="amzHd" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d9dde2"/><stop offset=".5" stop-color="#7d838b"/><stop offset="1" stop-color="#3a3e44"/></linearGradient></defs>' +
   '<path class="fe" d="M3.2 36.8 1 31.6 4.2 30.4 6.6 33.4ZM3.2 36.8 8.4 39 9.6 35.8 6.6 33.4Z" fill="#efe4c8" stroke="#6a4a2c" stroke-width=".35"/><path d="M2.2 33.9 4.6 33M5 36.8 5.9 34.5M2.9 31.7 4.9 31.1M7.2 38.3 7.9 36.3" stroke="#5a3a20" stroke-width=".9"/>' +
   '<line x1="4" y1="36" x2="29" y2="11" stroke="url(#amzSh)" stroke-width="2.2" stroke-linecap="round"/><path d="M8.6 30.6 10.2 32.2M7.2 32 8.8 33.6" stroke="#9a2a1e" stroke-width="1.1"/>' +
   '<g class="fire"><path d="M31 9c3 4-1 10-15 17 4-6 3-12 8-16 2-2 5-2 7-1z" fill="#ff6a14" opacity=".88"/><path d="M29.6 10.4c1.5 3-1 6.5-9 11 3-4 2.5-8 5.5-10.5 1.2-1 2.6-1.2 3.5-.5z" fill="#ffc24a"/><ellipse cx="27.6" cy="12.6" rx="1.7" ry="1.3" fill="#fff4cc"/></g>' +
@@ -260,10 +260,9 @@ function newPiece(kind) {     // kind: 1 White amazon (P1), 3 Black amazon (P2),
   else { el.className = 'pc p' + (kind <= 2 ? 1 : 2); el.innerHTML = '<i class="orn"></i>'; }
   el.dataset.k = kind; return el;
 }
-// the arrows of the last two moves shown keep burning (flames on their squares); older ones smoulder (a thin smoke)
+// every burnt square keeps burning for the rest of the game (2026-11-10 user: where nothing can pass must read at a glance)
 function markFires() {
-  const fire = new Set(); for (let k = cur - 1; k >= Math.max(0, cur - 2); k--) { const m = moves[k]; if (m != null && !isPass(m)) fire.add(mArrow(m)); }
-  for (const [i, el] of pcEls) if (el.classList.contains('arw')) el.classList.toggle('blaze', fire.has(i));
+  for (const [, el] of pcEls) if (el.classList.contains('arw')) el.classList.add('blaze');
 }
 function syncPieces(pos, force) {
   for (const [i, el] of pcEls) if (force || pos.at(i) !== +el.dataset.k) { el.remove(); pcEls.delete(i); }
@@ -294,7 +293,7 @@ function animateMove(m, before) {
   sHop(0); sPlace(false, qd - 30);
   // the arrow: shot from the amazon's new square, turned to its flight; it lands and burns the square
   const ar = newPiece(5); placeAt(ar, a); ar.classList.add('fly'); piecesEl.appendChild(ar); pcEls.set(a, ar);
-  const sv = ar.querySelector('svg'), ang = Math.atan2(ay - ty, ax - tx) * 180 / Math.PI + 45;
+  const sv = ar.querySelector('svg:not(.fl3)'), ang = Math.atan2(ay - ty, ax - tx) * 180 / Math.PI + 45;
   sv.style.transform = `rotate(${ang}deg)`;
   const land = () => {   // it strikes: the flame dies down, the scorch mark glows and cools (CSS .burn / .hot)
     ar.classList.remove('fly'); sv.style.transform = ''; ar.classList.add('burn', 'hot');

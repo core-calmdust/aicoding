@@ -36,7 +36,7 @@ html.atlas-amazons.hb-atlas body{padding-top:64px}
   html.atlas-amazons.hb-atlas.ol-dock.ol-soon{--vh:calc(100vh - 46px - 64px)}
   @supports (height:100dvh){html.atlas-amazons.hb-atlas.ol-dock.ol-soon{--vh:calc(100dvh - 46px - 64px)}}
 }
-html.atlas-2d #board{transform:none!important;translate:none!important}   /* (the 2D board: flat; the tilt is the 3D board's) */
+html.atlas-2d #board{transform:none!important;translate:none!important;scale:none!important}   /* (the 2D board: flat; the tilt is the 3D board's) */
 html.atlas-amazons .frame{background:transparent!important;box-shadow:none!important;border:0!important}
 html.atlas-amazons .frame::before,html.atlas-amazons .frame::after,html.atlas-amazons .board::after,html.atlas-amazons .board::before{display:none!important}
 html.atlas-amazons .board{background:none!important;box-shadow:none!important}
@@ -50,7 +50,7 @@ html.atlas-amazons .pieces .pc.sel{box-shadow:0 0 0 3px rgba(255,214,100,.95),0 
 html.atlas-amazons .pieces .pc.mov:not(.sel){box-shadow:0 0 0 2.5px rgba(190,232,140,.85),0 0 12px rgba(190,232,140,.5)!important;border-radius:50%!important}
 html.atlas-amazons .pieces .pc.dim{opacity:1!important}
 html.atlas-amazons .pieces .arw:not(.hov){background:none!important;box-shadow:none!important}
-html.atlas-amazons .pieces .arw:not(.hov)::before,html.atlas-amazons .pieces .arw:not(.hov)::after,html.atlas-amazons .pieces .arw:not(.hov) svg{display:none!important}
+html.atlas-amazons .pieces .arw:not(.hov)::before,html.atlas-amazons .pieces .arw:not(.hov)::after,html.atlas-amazons .pieces .arw:not(.hov) :is(svg,.ai){display:none!important}
 html.atlas-amazons .pieces :is(.spark,.flare){display:none!important}
 html.atlas-amazons .pieces .pc.hov{opacity:.5!important}
 html.atlas-amazons .reserve .rsv-plate{background:rgba(20,16,12,.82)!important;box-shadow:0 0 0 1px rgba(226,182,96,.45),0 2px 6px rgba(0,0,0,.35)!important;color:#f0e2c4!important}
@@ -91,12 +91,17 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
   /* ---------- the tilt's lens: the leaning board is drawn a little lower and larger at the near side; the board (3D and the DOM
      board over it, together) is moved up by the same amount so it sits centred between the count plates (the page's layout itself
      is not touched) ---------- */
-  const LIFT = .05;   // of the board's height
+  const LIFT = .05, SC = .8;   // lift: of the board's height; SC: the leaning board is drawn smaller than the DOM board's place, so
+  // its near edge (wider in perspective) and the frame round it stay inside the page's board area (the cards beside never cover it)
   function lift3d() {
     const holder = boardDom.parentElement;
     const box = () => { let x = 0, y = 0, e = boardDom; while (e && e !== holder) { x += e.offsetLeft; y += e.offsetTop; e = e.offsetParent; } return { x, y, w: boardDom.offsetWidth, h: boardDom.offsetHeight }; };
     const host = document.getElementById('atlasGL');
-    T3.align(() => { const b = box(), d = de.classList.contains('atlas-2d') ? 0 : b.h * LIFT; boardDom.style.translate = d ? `0 ${-d}px` : ''; return { x: b.x - (host ? host.offsetLeft : 0), y: b.y - d - (host ? host.offsetTop : 0), w: b.w, h: b.h, tilt: 26, persp: b.h * 2.6 }; }, 10, U.top);
+    T3.align(() => {
+      const b = box(), on = !de.classList.contains('atlas-2d'), s = on ? SC : 1, w = b.w * s, h = b.h * s, d = on ? h * LIFT : 0;
+      boardDom.style.translate = d ? `0 ${-d}px` : ''; boardDom.style.scale = s !== 1 ? String(s) : '';
+      return { x: b.x + (b.w - w) / 2 - (host ? host.offsetLeft : 0), y: b.y + (b.h - h) / 2 - d - (host ? host.offsetTop : 0), w, h, tilt: 26, persp: h * 2.6 };
+    }, 10, U.top);
   }
   /* ---------- the board ---------- */
   const holder = new THREE.Group();
@@ -194,14 +199,14 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
     const g = new THREE.Group(), s = A3.scorch(), a = A3.arrow();
     s.position.y = .003; g.add(s);
     a.rotation.y = (seed * 2.399) % (Math.PI * 2); g.add(a); g.userData.arrow = a;
-    const [x, z] = xz(sq); g.position.set(x, Y, z); root.add(g); return g;
+    const [x, z] = xz(sq); g.position.set(x, Y, z); root.add(g); A3.ignite(g); return g;
   }
   function lift(g, h) {
     g.position.y = Y + h; g.userData.h0 = h;
     const sh = g.userData.sh; if (sh) { sh.position.y = .002 - h; const s = 1 + h * .5; sh.scale.set(s, s, s); sh.material.opacity = .5 / (1 + h * 1.4); }
   }
   const hOf = g => g.userData.h0 || 0;
-  function drop(g) { if (!g) return; if (g.userData.sh) g.userData.sh.material.dispose(); if (g.parent) g.parent.remove(g); }
+  function drop(g) { if (!g) return; A3.douse(g); if (g.userData.sh) g.userData.sh.material.dispose(); if (g.parent) g.parent.remove(g); }
   function applySel() {
     let els; try { els = pcEls; } catch (e) { return; }
     for (const [i, o] of P3) {
