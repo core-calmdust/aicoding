@@ -354,6 +354,7 @@
       const E = { ...F };
       if (P.extras) app.querySelectorAll(P.extras).forEach(e => {
         if (!e.getClientRects().length || getComputedStyle(e).visibility === 'hidden') return;
+        if (P.extraOff && P.extraOff(e)) return;   // (a part the game lays elsewhere for now — shogi 詰将棋: sente's stand under the column)
         const q = e.getBoundingClientRect(); if (q.width < 1 || q.height < 1) return;
         E.l = Math.min(E.l, q.left); E.t = Math.min(E.t, q.top); E.r = Math.max(E.r, q.right); E.b = Math.max(E.b, q.bottom);
       });
@@ -402,6 +403,7 @@
           if (Math.abs(dy) > .3) g.style.top = (px(g, 'top') + dy) + 'px';
           if (placeSide(GP.x) && Math.abs(dx) <= .3 && Math.abs(dy) <= .3) break;
         }
+        if (P.afterSide) P.afterSide(frame(), side.getBoundingClientRect());   // (parts laid against the column, once it stands)
         placeHost(); kVars();
         checks = 0; clearTimeout(reT); reT = setTimeout(remeasure, 250);   // check the frame again once the camera has followed the new size
       } finally { busy = false; }
