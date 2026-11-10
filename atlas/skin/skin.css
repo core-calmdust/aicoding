@@ -423,3 +423,9 @@ html.atlas-skin :is(.modal,.side,.card) input[type=range]::-moz-range-thumb{widt
 html.atlas-skin:not(.atlas-land) .card.controls{padding-top:6px!important;padding-bottom:6px!important}
 html.atlas-skin:not(.atlas-land) .card.controls .btn{border-radius:14px!important;background:#fff!important;border:2px solid #efe3c8!important;box-shadow:none!important;padding-top:5px!important;padding-bottom:5px!important}
 html.atlas-skin:not(.atlas-land) .card.controls .btn:disabled{background:#fbf7ee!important;border-color:#f3ead6!important}
+/* phones (portrait): the menu bar's buttons right under the portal bar, edge to edge (2026-11-11); the page starts below them */
+@media (max-width:760px) and (orientation:portrait){
+  html.atlas-skin:not(.atlas-land):not(.atlas-2d) .card.controls{position:fixed!important;z-index:40;top:56px;left:0;right:0;width:auto!important;margin:0!important;border-radius:0 0 18px 18px!important;border-width:0 0 2px!important;padding-left:8px!important;padding-right:8px!important;box-shadow:0 3px 0 #efe3c8,0 8px 16px -10px rgba(80,40,0,.35)!important}
+  html.atlas-skin:not(.atlas-land):not(.atlas-2d) .app{padding-top:calc(56px + var(--ctlh,64px) + 8px)!important}
+  html.atlas-skin.hb-atlas:not(.atlas-land):not(.atlas-2d) body{padding-top:0!important}
+}
