@@ -433,7 +433,8 @@ html.atlas-skin .ts-compact #tsNo{color:#9a7a3a}
 .lesson-card.ts-compact > .lh #lsQuit::before{content:'';flex:none;width:15px;height:15px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27black%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M14%204h4a2%202%200%200%201%202%202v12a2%202%200%200%201-2%202h-4%27/%3E%3Cpath%20d%3D%27M9%208l-4%204%204%204%27/%3E%3Cpath%20d%3D%27M5%2012h10%27/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27black%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M14%204h4a2%202%200%200%201%202%202v12a2%202%200%200%201-2%202h-4%27/%3E%3Cpath%20d%3D%27M9%208l-4%204%204%204%27/%3E%3Cpath%20d%3D%27M5%2012h10%27/%3E%3C/svg%3E") center/contain no-repeat}
 .lesson-card.ts-compact > .lh #lsQuit{background:rgba(0,0,0,.2);border:1px solid var(--line);color:var(--muted);cursor:pointer}
 html.atlas-skin .lesson-card.ts-compact > .lh #lsQuit{background:#fff!important;border:2px solid #ead9b6!important;color:#4a5068!important;box-shadow:0 2px 0 #ead9b6!important}
-body:has(#lessonCard.ts-compact) #coachCard{display:none!important}
+body:has(#lessonCard.ts-compact) #coachCard:not(.ck-seq){display:none!important}
+body.in-lesson #coachCard.ck-seq.ck-seq{display:block!important}   /* lessons: the 3-move practice's guidance (seqCoachHtml) */
 #lessonCard.ts-compact :is(#lsHint,#lsAuto,#lsNext,#lsToList){display:none!important}
 #lessonCard:not(.ts-compact) .ts-b{display:none!important}
 #lessonCard.ts-compact .cb-bar .cb-ic.ts-b[data-cap]{gap:6px!important}   /* no hidden text label inside: same caption line as 一覧 */   /* tsume: no coach panel at all (2026-11-10) */
@@ -1580,7 +1581,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="rvtip.js?v=20261107l14"></script>
 <script src="../shared/coachkit.js?v=16l14"></script>
 <script src="../shared/record.js?v=12l14"></script>
-<script src="coach.js?v=13"></script>
+<script src="coach.js?v=14"></script>
 <script src="coach-i18n.js?v=20261107l14"></script>
 <script>
 'use strict';
@@ -4377,9 +4378,12 @@ function startLesson(gi) {
   const g = gradeAt(gi);
   if (!g.problems.length) { toast('—'); return; }
   // like the reversi lessons: mostly standard problems plus one or two "exception" problems
-  const std = shuffle(g.problems.filter(p => !p.trap)), trap = shuffle(g.problems.filter(p => p.trap));
+  // the next-move problems: picked from the easier ones (tools/lesson_easy.js: fd = the search depth that finds the answer), easiest first (2026-11-10)
+  const ez = p => p.kind !== 'best' || p.mode === 'material' || p.mode === 'freq' ? 1 : p.fd || 5;
+  const pool = g.problems.filter(p => !p.trap).sort((a, b) => ez(a) - ez(b)), keep = Math.max(7, Math.ceil(pool.length * .6));
+  const std = shuffle(pool.slice(0, keep)), trap = shuffle(g.problems.filter(p => p.trap));
   const nTrap = trap.length ? (Math.random() < 0.5 ? 1 : 2) : 0;
-  const probs = g.rules ? g.problems.slice() : shuffle([...std.slice(0, 5 - nTrap), ...trap.slice(0, nTrap)]);   // the rules lesson: every problem, in order
+  const probs = g.rules ? g.problems.slice() : shuffle([...std.slice(0, 5 - nTrap), ...trap.slice(0, nTrap)]).sort((a, b) => ez(a) - ez(b));   // the rules lesson: every problem, in order
   lesson = { gi, g, probs, k: 0, results: [], pts: [], waiting: false };
   document.body.classList.add('in-lesson');
   if (!game) game = newRecord(HANDI[0], 0);
@@ -4478,8 +4482,10 @@ function loadProblem() {
   const pr = lesson.probs[lesson.k];
   if (lesson.endless && lesson.g) tsPin(lesson.g, lesson.k, pr);   // a replaced slot keeps the version played here
   lesson.cur = pr; lesson.retry = null; lesson.missed = false; lesson.played = []; lesson.answered = false; lesson.waiting = true; lesson.hintShown = false; lesson.shownAnswer = false; lesson.atkOk = 0; lesson.fbHtml = ''; lesson.offline = false; lesson.dev = 0;
+  lesson.seq = seqOn(pr) ? { i: 0, steps: [], hint: -1 } : null;
   lessonGame(pr.sfen, []);
-  renderLesson();
+  if (lesson.seq) seqStatus();
+  renderLesson(); if (lesson.seq) seqShow();
 }
 function lessonGame(sfen, moves) {
   rtForfeit(); hideOverlay('#resultOverlay');
@@ -4513,12 +4519,13 @@ const TSB_CAP = {   // hint, retry, answer, list, quit
   id: ['Petunjuk', 'Ulangi', 'Jawaban', 'Daftar', 'Keluar'], tr: ['İpucu', 'Tekrar', 'Çözüm', 'Liste', 'Çık'] };
 const tsIcon = k => `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>${TSB_I[k].replace(/"/g, "'")}</svg>`)}")`;
 const tsAct = {
-  tsBH() { if (lesson && !lesson.retry && !lesson.answered) $('#lsHint').click(); },
+  tsBH() { if (lesson && lesson.seq) { seqHint(); return; } if (lesson && !lesson.retry && !lesson.answered) $('#lsHint').click(); },
   tsBR() {   // back to the start of the problem (any time before it is solved)
     if (!lesson || lesson.answered) return; const pr = lesson.cur;
+    if (lesson.seq) { lesson.seq = { i: 0, steps: [], hint: -1, tok: (lesson.seq.tok || 0) + 1 }; lesson.played = []; lessonGame(pr.sfen, []); lesson.waiting = true; seqStatus(); renderLesson(); seqShow(); return; }
     lesson.retry = null; lesson.played = []; lesson.atkOk = 0; lesson.offline = false; lesson.dev = 0; lesson.fbHtml = ''; lessonGame(pr.sfen, []); lesson.waiting = true; renderLesson();
   },
-  tsBA() { if (!lesson) return; if (lesson.answered) playSolution(); else $('#lsNext').click(); },   // unsolved: give up and show it; solved: play it again
+  tsBA() { if (!lesson) return; if (lesson.seq) { seqAnswer(); return; } if (lesson.answered) playSolution(); else $('#lsNext').click(); },   // unsolved: give up and show it; solved: play it again
   tsBN() {
     if (!lesson) return; if (lesson.answered) { $('#lsNext').click(); return; }
     const n = lesson.k + 1; if (!lesson.daily && n < lesson.probs.length && PZBook.isOpen(tsRecs(lesson.g), n)) { lesson.k = n; loadProblem(); }
@@ -4526,19 +4533,19 @@ const tsAct = {
 };
 function tsBar() {
   const card = $('#lessonCard'), bar = card && card.querySelector('.cb-bar'); if (!bar) return;
-  const on = !!(lesson && lesson.endless && lesson.cur && lesson.cur.kind === 'tsume'), tools = bar.querySelector('.cb-tools'), main = bar.querySelector('.cb-main');
+  const on = !!(lesson && lesson.cur && !lesson.exam && !lesson.review && !lesson.study && !lesson.ramp && !lesson.opening && !lesson.virt && (lesson.cur.kind === 'tsume' || lesson.seq)), tools = bar.querySelector('.cb-tools'), main = bar.querySelector('.cb-main');   // 詰将棋 and the lessons' problems (2026-11-10)
   card.classList.toggle('ts-compact', on);
   // the title row: 「創作 3手詰 …… 18/120問目」; the head row's right end: the quit button (2026-11-10)
   let th = $('#tsHead'); const ti = $('#lsTitle');
   if (!th && ti) { th = document.createElement('div'); th.id = 'tsHead'; ti.before(th); th.appendChild(ti); const n = document.createElement('span'); n.id = 'tsNo'; th.appendChild(n); }
   const q = $('#lsQuit'), lh = card.querySelector(':scope > .lh');
   if (on) {
-    const NO = { ja: '{k}/{n}問目', zh: '第{k}/{n}题', 'zh-TW': '第{k}/{n}題', ko: '{k}/{n}번째' }, n = lesson.g ? lesson.g.problems.length : 0;
+    const NO = { ja: '{k}/{n}問目', zh: '第{k}/{n}题', 'zh-TW': '第{k}/{n}題', ko: '{k}/{n}번째' }, n = lesson.endless ? (lesson.g ? lesson.g.problems.length : 0) : lesson.probs.length;
     $('#tsNo').textContent = n ? (NO[LANG] || '{k}/{n}').replace('{k}', lesson.k + 1).replace('{n}', n) : '';
     if (q && lh && q.parentElement !== lh) lh.appendChild(q);
   } else if (q && q.parentElement !== bar) { bar.appendChild(q); }
   // composed tsume: the defender holds every remaining piece by convention — its stand is not shown
-  document.body.classList.toggle('ts-noopp', on && !!(lesson.cur && lesson.cur.conv));
+  document.body.classList.toggle('ts-noopp', !!(on && lesson.endless && lesson.cur && lesson.cur.conv));
   if (!on) return;
   const C = TSB_CAP[LANG] || TSB_CAP.en;
   const mk = (id, ic, cap, label, tool) => {
@@ -4549,10 +4556,11 @@ function tsBar() {
   };
   const L = lesson, played = !!(L.played && L.played.length);
   const bH = mk('tsBH', 'hint', C[0], t('ls.hint'), 1), bR = mk('tsBR', 'retry', C[1], t('ts.retry'), 1), bA = mk('tsBA', 'answer', C[2], t('ls.answer'), 1);
-  const bL = $('#lsList'), bN = mk('tsBN', null, '', t('ls.next'), 0);
-  bH.disabled = !!(L.answered || L.retry || L.hintShown || L.offline);
-  bR.disabled = !!(L.answered || (!played && !L.retry));
-  const nOpen = !L.daily && L.k + 1 < L.probs.length && PZBook.isOpen(tsRecs(L.g), L.k + 1);
+  const bL = $('#lsList'), bN = mk('tsBN', null, '', !L.endless && L.k >= L.probs.length - 1 ? t('ls.finish') : t('ls.next'), 0);
+  bH.disabled = L.seq ? !!(L.seq.done || !L.waiting || L.seq.hint === L.seq.i) : !!(L.answered || L.retry || L.hintShown || L.offline);
+  bR.disabled = L.seq ? !!(L.seq.done || !played) : !!(L.answered || (!played && !L.retry));
+  bA.disabled = L.seq ? !!(L.seq.done || !L.waiting) : false;
+  const nOpen = L.endless && !L.daily && L.k + 1 < L.probs.length && PZBook.isOpen(tsRecs(L.g), L.k + 1);
   bN.disabled = !L.answered && !nOpen; bN.classList.toggle('go', !!L.answered);
   [bH, bR, bA, bL].forEach(b => { if (b && (b.parentElement !== tools || tools.lastElementChild !== b)) tools.appendChild(b); });
   if (bL) { bL.dataset.cap = C[3]; }
@@ -4622,6 +4630,7 @@ async function lessonMove(m) {
   lesson.waiting = false; lesson.t0 = window.CardBar && CardBar.now ? CardBar.now() : null;
   const moves = [...lesson.played, usi];
   lessonGame(pr.sfen, moves); playPiece(false);
+  if (lesson.seq) return seqMove(usi);   // lessons: the 3-move practice
   const pen = lesson.hintShown ? HINT_PEN : 0;
   if (pr.kind === 'tsume') {
     // tsume v2 (common spec): a check that leaves the solution does not fail at once — the defender answers (longest
@@ -4671,6 +4680,153 @@ async function lessonMove(m) {
     rs = r && !r.error ? -r.score : undefined;
   }
   lessonScored(Math.max(0, movePoints(pr, usi, rs) - pen), { usi });
+}
+// ---- lessons: 3-move practice with move-by-move coaching (2026-11-10) -------------------------------------------------
+// The "next move" problems of the graded lessons (駒の価値・タダの駒・王手をかわす・両取り・詰めろを受ける・中盤 …) are played
+// for 3 of your own moves from the problem position; the AI answers in between. After every move the coach box tells how good
+// it was (最善手・好手・疑問手・悪手), the best move and why. Points: the theme move (1st) counts half, moves 2 and 3 a quarter
+// each (20 per move as before: the 1st from the problem's own scoring, the others from the win-rate loss of an analysis).
+// A hint marks the piece of the best move (−HINT_PEN on that move); 「答え」 plays the best move for you (0 points for it).
+const SEQ_N = 3, SEQ_W = [.5, .25, .25];
+const SEQ_TX = {
+  ja: { intro: 'この局面から{n}手指してみよう。1手ごとに、指した手の評価といちばん良い手をここで解説します。', judge: '指し手を評価しています…', opp: '相手が考えています…', you: 'あなたの番です（{i}/{n}手目）。', step: '{i}手目 {m}：{q}', ans: '{i}手目　答え：{m}', total: '{n}手の合計 {p}点', hint: '💡 動かす駒を光らせました（この手は−{n}点）。' },
+  en: { intro: 'Play {n} moves from this position. After each move, the coach rates it and explains the best move here.', judge: 'Rating your move…', opp: 'The opponent is thinking…', you: 'Your move ({i}/{n}).', step: 'Move {i} {m}: {q}', ans: 'Move {i} — answer: {m}', total: 'Total for {n} moves: {p} pts', hint: '💡 The piece to move is highlighted (−{n} pts on this move).' },
+  zh: { intro: '从这个局面走{n}步。每走一步，这里都会评价你的着法并讲解最好的一手。', judge: '正在评价着法…', opp: '对手在思考…', you: '轮到你了（第{i}/{n}步）。', step: '第{i}步 {m}：{q}', ans: '第{i}步　答案：{m}', total: '{n}步合计 {p}分', hint: '💡 已高亮要走的棋子（本步−{n}分）。' },
+  'zh-TW': { intro: '從這個局面走{n}步。每走一步，這裡都會評價你的著法並講解最好的一手。', judge: '正在評價著法…', opp: '對手在思考…', you: '輪到你了（第{i}/{n}步）。', step: '第{i}步 {m}：{q}', ans: '第{i}步　答案：{m}', total: '{n}步合計 {p}分', hint: '💡 已標示要走的棋子（本步−{n}分）。' },
+  ko: { intro: '이 국면에서 {n}수를 둬 보세요. 한 수마다 둔 수의 평가와 가장 좋은 수를 여기서 해설합니다.', judge: '수를 평가하는 중…', opp: '상대가 생각하는 중…', you: '당신 차례입니다({i}/{n}수째).', step: '{i}수째 {m}: {q}', ans: '{i}수째 정답: {m}', total: '{n}수 합계 {p}점', hint: '💡 움직일 말을 표시했습니다(이 수 −{n}점).' },
+  es: { intro: 'Juega {n} jugadas desde esta posición. Tras cada una, el entrenador la valora y explica aquí la mejor.', judge: 'Valorando tu jugada…', opp: 'El rival está pensando…', you: 'Te toca ({i}/{n}).', step: 'Jugada {i} {m}: {q}', ans: 'Jugada {i} — solución: {m}', total: 'Total de {n} jugadas: {p} pts', hint: '💡 Se resalta la pieza que hay que mover (−{n} pts en esta jugada).' },
+  fr: { intro: 'Jouez {n} coups depuis cette position. Après chaque coup, le coach l’évalue et explique ici le meilleur.', judge: 'Évaluation du coup…', opp: 'L’adversaire réfléchit…', you: 'À vous ({i}/{n}).', step: 'Coup {i} {m} : {q}', ans: 'Coup {i} — solution : {m}', total: 'Total sur {n} coups : {p} pts', hint: '💡 La pièce à jouer est surlignée (−{n} pts sur ce coup).' },
+  pt: { intro: 'Jogue {n} lances a partir desta posição. Após cada um, o treinador avalia e explica aqui o melhor.', judge: 'Avaliando seu lance…', opp: 'O rival está pensando…', you: 'Sua vez ({i}/{n}).', step: 'Lance {i} {m}: {q}', ans: 'Lance {i} — solução: {m}', total: 'Total de {n} lances: {p} pts', hint: '💡 A peça a mover está destacada (−{n} pts neste lance).' },
+  de: { intro: 'Spiele {n} Züge aus dieser Stellung. Nach jedem Zug bewertet ihn der Coach und erklärt hier den besten.', judge: 'Zug wird bewertet…', opp: 'Der Gegner denkt nach…', you: 'Du bist am Zug ({i}/{n}).', step: 'Zug {i} {m}: {q}', ans: 'Zug {i} – Lösung: {m}', total: 'Summe aus {n} Zügen: {p} P.', hint: '💡 Der zu ziehende Stein ist markiert (−{n} P. für diesen Zug).' },
+  hi: { intro: 'इस स्थिति से {n} चालें चलें। हर चाल के बाद कोच उसका मूल्यांकन और सबसे अच्छी चाल यहाँ समझाएगा।', judge: 'चाल का मूल्यांकन हो रहा है…', opp: 'विरोधी सोच रहा है…', you: 'आपकी बारी ({i}/{n})।', step: 'चाल {i} {m}: {q}', ans: 'चाल {i} — उत्तर: {m}', total: '{n} चालों का योग: {p} अंक', hint: '💡 चलाने वाला मोहरा दिखाया गया है (इस चाल पर −{n} अंक)।' },
+  ar: { intro: 'العب {n} نقلات من هذا الوضع. بعد كل نقلة يقيّمها المدرب ويشرح هنا أفضل نقلة.', judge: 'جارٍ تقييم النقلة…', opp: 'الخصم يفكر…', you: 'دورك ({i}/{n}).', step: 'النقلة {i} {m}: {q}', ans: 'النقلة {i} — الحل: {m}', total: 'مجموع {n} نقلات: {p} نقطة', hint: '💡 تم تمييز القطعة المطلوب تحريكها (−{n} على هذه النقلة).' },
+  ru: { intro: 'Сделайте {n} хода из этой позиции. После каждого тренер оценит ход и объяснит здесь лучший.', judge: 'Оцениваем ход…', opp: 'Соперник думает…', you: 'Ваш ход ({i}/{n}).', step: 'Ход {i} {m}: {q}', ans: 'Ход {i} — ответ: {m}', total: 'Итог за {n} хода: {p} очк.', hint: '💡 Фигура для хода подсвечена (−{n} очк. за этот ход).' },
+  id: { intro: 'Mainkan {n} langkah dari posisi ini. Setiap langkah dinilai pelatih dan langkah terbaik dijelaskan di sini.', judge: 'Menilai langkahmu…', opp: 'Lawan sedang berpikir…', you: 'Giliranmu ({i}/{n}).', step: 'Langkah {i} {m}: {q}', ans: 'Langkah {i} — jawaban: {m}', total: 'Total {n} langkah: {p} poin', hint: '💡 Bidak yang harus digerakkan disorot (−{n} poin di langkah ini).' },
+  tr: { intro: 'Bu konumdan {n} hamle oynayın. Her hamleden sonra koç onu değerlendirir ve en iyi hamleyi burada açıklar.', judge: 'Hamle değerlendiriliyor…', opp: 'Rakip düşünüyor…', you: 'Sıra sizde ({i}/{n}).', step: '{i}. hamle {m}: {q}', ans: '{i}. hamle — çözüm: {m}', total: '{n} hamle toplamı: {p} puan', hint: '💡 Oynanacak taş işaretlendi (bu hamlede −{n} puan).' },
+};
+const sqt = (k, v) => { let s = (SEQ_TX[LANG] || SEQ_TX.en)[k] || SEQ_TX.en[k]; for (const x in v || {}) s = s.split('{' + x + '}').join(v[x]); return s; };
+function seqOn(pr) {
+  return !!(lesson && pr && pr.kind === 'best' && !lesson.exam && !lesson.review && !lesson.endless && !lesson.study && !lesson.opening && !lesson.virt
+    && lesson.g && !lesson.g.rules && !lesson.g.handi && !pr.variant && pr.src !== 'opening' && pr.src !== 'handi');
+}
+const seqQ = pts => pts >= PTS ? 'best' : pts >= 16 ? 'good' : pts >= 8 ? 'dubious' : 'bad';
+const seqKif = (sfen, moves, u) => { try { return lineKanji(sfen, [...moves, u]).pop(); } catch (e) { return u; } };
+function seqWhy(p, bestU, playedU) {   // the coach's words on a move: same as the AI's first choice, or what the first choice was about
+  if (!window.ShogiCoach || !ShogiCoach.classify) return '';
+  try {
+    const bm = p.fromUsi(bestU), f = ShogiCoach.facts(p, 40), k = ShogiCoach.classify(p, bm, f), C = ShogiCoach.tx;
+    const E2 = CoachKit.esc;
+    if (playedU === bestU) return E2(C('prevBest', { c: C('c.' + k.k) }) + ' ' + C('x.' + k.k, { p: k.p || '', c: k.c || '' }));
+    const nm = (p.side ? '△' : '▲') + kifName(p, bm, -1);
+    return E2(C('prevAlt', { m: nm, c: C('c.' + k.k) }) + ' ' + C('x.' + k.k, { p: k.p || '', c: k.c || '' }));
+  } catch (e) { return ''; }
+}
+// the coach box during the practice
+function seqCoachHtml() {
+  const S = lesson && lesson.seq; if (!S) return '';
+  const esc = CoachKit.esc, C = window.ShogiCoach ? ShogiCoach.tx : k => k;
+  let h = `<h3 class="ck-h">${CoachKit.ICON.coach}<span>${esc(C('head'))}</span><small>${Math.min(S.i + (S.done ? 0 : 1), SEQ_N)}/${SEQ_N}</small></h3>`;
+  if (!S.steps.length) h += `<p class="ck-muted">${esc(sqt('intro', { n: SEQ_N }))}</p>`;
+  const list = S.steps.slice().reverse();   // the newest first
+  for (const st of list) {
+    const g = { best: 0, good: 1, dubious: 2, bad: 3 }[st.q], title = st.ans ? sqt('ans', { i: st.i + 1, m: st.kif }) : sqt('step', { i: st.i + 1, m: st.kif, q: t('q.' + st.q) }) + '　' + t('ls.pts', { p: st.pts });
+    h += CoachKit.verdict(st.ans ? 2 : g, esc(title), st.why);
+  }
+  if (S.done) h += `<p class="ck-muted"><b>${esc(sqt('total', { n: SEQ_N, p: S.total }))}</b></p>`;
+  else if (S.busy) h += `<p class="ck-calc">${esc(sqt(S.busy))}</p>`;
+  return h;
+}
+function seqShow() { if (window.ShogiCoach) ShogiCoach.render(); }
+function seqStatus() {
+  const S = lesson.seq; if (!S || S.done) return;
+  const last = S.steps[S.steps.length - 1];   // the last verdict in short (the whole guidance is in the coach box)
+  const lv = last ? `<b class="${last.ans ? '' : last.pts >= 16 ? 'ok' : last.pts < 8 ? 'ng' : ''}">${last.ans ? sqt('ans', { i: last.i + 1, m: last.kif }) : sqt('step', { i: last.i + 1, m: last.kif, q: t('q.' + last.q) })}</b><br>` : '';
+  lesson.fbHtml = lv + (S.busy ? `<span class="ts-left">${sqt(S.busy)}</span>` : `<span class="ts-left">${sqt('you', { i: S.i + 1, n: SEQ_N })}</span>`);
+}
+// analysis of the position the player is to move in (moves 2, 3): every legal move with a score
+function seqPrefetch() {
+  const S = lesson.seq, pr = lesson.cur; if (!S || S.i === 0 || S.done) return;
+  const key = lesson.played.join(' ');
+  if (S.ana && S.ana.key === key) return;
+  S.ana = { key, p: anaCall({ type: 'analyze', sfen: pr.sfen, moves: lesson.played.slice(), opts: { time: 1500 } }).then(r => (r && r.list) || []) };
+}
+async function seqMove(usi) {
+  const S = lesson.seq, pr = lesson.cur, tok = S.tok = (S.tok || 0) + 1, before = lesson.played.slice(), i = S.i;
+  const alive = () => lesson && lesson.cur === pr && lesson.seq === S && S.tok === tok;
+  lesson.played = [...before, usi]; lesson.waiting = false;
+  S.busy = 'judge'; seqStatus(); renderLesson(); seqShow();
+  const p0 = new E.Position(); p0.setSfen(pr.sfen); for (const u of before) p0.doMove(p0.fromUsi(u));
+  let pts, bestU, why;
+  if (i === 0) {
+    let rs;
+    if (!pr.cand && !pr.accept.includes(usi)) { const r = await aiCall({ type: 'think', sfen: pr.sfen, moves: [usi], opts: { time: 600 } }); if (!alive()) return; rs = r && !r.error ? -r.score : undefined; }
+    pts = movePoints(pr, usi, rs); bestU = pr.accept[0];
+    const rsn = lessonReason(pr, usi);
+    why = [pts >= PTS ? '' : t('ls.bestIs', { m: pr.accept.map(u => kan1(pr.sfen, u)).join('・') }), rsn, L(pr.expl), pr.trap && L(lesson.g.trapNote) ? '※ ' + L(lesson.g.trapNote) : ''].filter(Boolean).join('<br>');
+  } else {
+    const list = S.ana && S.ana.key === before.join(' ') ? await S.ana.p : await anaCall({ type: 'analyze', sfen: pr.sfen, moves: before, opts: { time: 1500 } }).then(r => (r && r.list) || []);
+    if (!alive()) return;
+    const best = list[0], mine = list.find(x => x.move === usi);
+    bestU = best ? best.move : usi;
+    const d = best && mine ? Math.max(0, winRate(best.score) - winRate(mine.score)) : 0;
+    pts = best && mine ? (best.move === usi ? PTS : Math.max(0, Math.min(PTS - 1, Math.round(PTS * (1 - d / 0.3))))) : PTS;
+    why = seqWhy(p0, bestU, usi);
+  }
+  if (S.hint === i) pts = Math.max(0, pts - HINT_PEN);
+  S.steps.push({ i, usi, kif: seqKif(pr.sfen, before, usi), q: seqQ(pts), pts, why });
+  S.i = i + 1;
+  await seqNext(S, tok);
+}
+async function seqNext(S, tok) {
+  const pr = lesson.cur, alive = () => lesson && lesson.cur === pr && lesson.seq === S && S.tok === tok;
+  const q = posAt(lesson.played.length), over = !q.hasLegalMove();
+  if (S.i >= SEQ_N || over) return seqFinish(S, over);
+  S.busy = 'opp'; seqStatus(); renderLesson(); seqShow();
+  const r = await aiCall({ type: 'think', sfen: pr.sfen, moves: lesson.played.slice(), opts: { time: 700 } });
+  if (!alive()) return;
+  if (!r || !r.move) return seqFinish(S, true);
+  await sleep(250); if (!alive()) return;
+  lesson.played = [...lesson.played, r.move];
+  lessonGame(pr.sfen, lesson.played); playPiece(false);
+  if (!posAt(lesson.played.length).hasLegalMove()) return seqFinish(S, true);
+  S.busy = null; lesson.waiting = true; seqStatus(); seqPrefetch(); renderLesson(); seqShow();
+}
+function seqFinish(S, over) {
+  // the moves not played (the game ended): full points when you mated, none when you were mated
+  const p = posAt(lesson.played.length), youMated = over && !p.hasLegalMove() && lesson.played.length % 2 === 1;
+  const pts = SEQ_W.map((w, i) => (S.steps.find(x => x.i === i) || { pts: youMated ? PTS : 0 }).pts);
+  S.total = Math.round(pts.reduce((a, x, i) => a + x * SEQ_W[i], 0)); S.done = true; S.busy = null;
+  lessonScored(S.total, { seq: true });
+  seqShow();
+}
+async function seqAnswer() {   // 「答え」: the best move is played for you (0 points for it) and explained
+  const S = lesson.seq, pr = lesson.cur; if (!S || S.done || !lesson.waiting) return;
+  const before = lesson.played.slice(), i = S.i, tok = S.tok = (S.tok || 0) + 1;
+  lesson.waiting = false; S.busy = 'judge'; seqStatus(); renderLesson(); seqShow();
+  let bestU = pr.accept[0];
+  if (i > 0) { const list = S.ana && S.ana.key === before.join(' ') ? await S.ana.p : []; if (!(lesson && lesson.seq === S && S.tok === tok)) return; if (list[0]) bestU = list[0].move; }
+  const p0 = new E.Position(); p0.setSfen(pr.sfen); for (const u of before) p0.doMove(p0.fromUsi(u));
+  const why = i === 0 ? [lessonReason(pr, bestU), L(pr.expl)].filter(Boolean).join('<br>') : seqWhy(p0, bestU, bestU);
+  lesson.shownAnswer = true;
+  lesson.played = [...before, bestU]; lessonGame(pr.sfen, lesson.played); playPiece(false);
+  S.steps.push({ i, usi: bestU, kif: seqKif(pr.sfen, before, bestU), q: 'bad', pts: 0, ans: true, why });
+  S.i = i + 1;
+  await seqNext(S, tok);
+}
+function seqHint() {
+  const S = lesson.seq; if (!S || S.done || !lesson.waiting || S.hint === S.i) return;
+  S.hint = S.i;
+  const go = u => {
+    if (!lesson || lesson.seq !== S || S.hint !== S.i) return;
+    const m = posAt(cur).fromUsi(u);
+    lesson.fbHtml = sqt('hint', { n: HINT_PEN }); renderLesson();
+    setTimeout(() => {
+      if (E.isDrop(m)) { lesson.hintDrop = { tp: E.dropType(m), at: cur }; renderHands(); }
+      else { const mk = document.createElement('div'); mk.className = 'mark best hintsq'; sqEls[sqToDisp(E.mFrom(m))].appendChild(mk); }
+    }, 0);
+  };
+  if (S.i === 0) go(lesson.cur.accept[0]);
+  else if (S.ana) S.ana.p.then(list => { if (list[0]) go(list[0].move); });
 }
 // step-specific explanation (cf. reversi lessonReason)
 function lessonReason(pr, usi) {
@@ -4722,6 +4878,10 @@ function lessonScored(pts, info) {
     PZBook.setLang(LANG); book = PZBook.solved({ stars, recs: after, j: lesson.k, events: ev });
   }
   if (lesson.daily && info.solved) { dailySolved(lesson.daily, lesson.hintShown || lesson.missed, lesson.dailyEasy); lesson.dailyMsg = true; }
+  if (info.seq) {   // the 3-move practice: the result here, the move-by-move guidance in the coach box
+    lesson.fbHtml = `<b class="${pts >= 16 ? 'ok' : 'ng'}">${t(pts >= PTS ? 'ls.perfect' : pts >= 16 ? 'ls.good' : pts >= 8 ? 'ls.soso' : 'ls.wrong')} ${t('ls.pts', { p: pts })}</b> <span class="ts-left">${sqt('total', { n: SEQ_N, p: pts })}</span>`;
+    playChime(pts >= 16); renderLesson(); return;
+  }
   const sol = pr.kind === 'tsume' ? pr.sol : pr.pv;
   let html = `<b class="${pts >= 16 ? 'ok' : 'ng'}">${t(pts >= PTS ? 'ls.perfect' : pts >= 16 ? 'ls.good' : pts >= 8 ? 'ls.soso' : 'ls.wrong')} ${t('ls.pts', { p: pts })}</b>`;
   if (lesson.hintShown && !lesson.shownAnswer) html += ` <span style="font-size:11.5px">(${t('ls.hintPen', { n: HINT_PEN })})</span>`;
