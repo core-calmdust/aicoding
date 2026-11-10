@@ -1610,6 +1610,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 .recp .rtt h3{margin:2px 0 0;font-family:var(--round);font-size:26px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .recp .rx{flex:none;width:44px;height:44px;border-radius:50%;border:2px solid var(--line);background:#fff;box-shadow:0 3px 0 var(--line);font-size:26px;line-height:1;color:var(--ink2);cursor:pointer}
 .recp .rbd{overflow:auto;padding:14px 18px 22px;-webkit-overflow-scrolling:touch}
+.recp:has(.rtabs){height:min(860px,100%)}.recp:has(.rtabs) .rbd{flex:1 1 auto;min-height:0}   /* with tabs: one fixed size, switching tabs never resizes the box (2026-11-10) */
 .recp h4{margin:18px 4px 8px;font-family:var(--round);font-size:15px;color:var(--ink2);display:flex;align-items:center;gap:8px}.recp h4 em{font-style:normal;font-size:13px;color:var(--mint2)}
 .recp .rdd{position:relative;display:inline-block;margin-bottom:12px;z-index:2}
 .recp .rddb{display:inline-flex;align-items:center;gap:10px;height:42px;padding:0 16px 0 18px;border-radius:99px;border:2px solid var(--line);background:#fff;box-shadow:0 3px 0 var(--line);font-weight:900;font-size:15px;color:var(--ink);cursor:pointer}
