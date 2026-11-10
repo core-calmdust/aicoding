@@ -173,6 +173,55 @@
       save(p, stars) { const st = this.stars(); st[p.P.id] = Math.max(st[p.P.id] || 0, stars); store.set(this.KEY, st); store.set(this.LAST, String(p.i)); },
     },
   };
+  /* ---------- the daily puzzles: the same problem of the day as the full games, and their streak record ---------- */
+  const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const DAILY = { chess: { d1: 'aicoding-chess-daily' }, shogi: { d1: 'shogi-kaya-daily', d2: 'shogi-kaya-daily-easy' } };
+  function dailyPick(id, which) {
+    const B = BOOK[id], now = new Date(), date = ymd(now), wd = now.getDay(), day = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 864e5);
+    if (id === 'chess') {   // (chess/app.js dailyPick)
+      const D = B.data; if (!D || D.levels.length < 4) return null;
+      const T = D.levels.map((x, i) => x.kind === 'line' ? i : -1).filter(i => i >= 0);
+      const L = T.length >= 5 ? [3, T[0], T[1], T[2], T[2], T[3], T[4]][wd] : (wd >= 1 && wd <= 2 ? 1 : wd >= 3 && wd <= 4 ? 2 : 3);
+      let h = Math.imul(day, 2654435761) >>> 0; h ^= h >>> 15; h = Math.imul(h, 2246822519) >>> 0; h ^= h >>> 13;
+      return { date, i: L, j: (h >>> 0) % D.levels[L].puzzles.length };
+    }
+    const S = B.data && B.data.sets; if (!S) return null;   // (shogi/index.html dailyPick)
+    const idx = ids => ids.map(x => S.findIndex(g => g.id === x)).find(i => i >= 0);
+    if (which === 'd2') {
+      const si = idx(day % 2 ? ['c5', 'p5'] : ['c3', 'p3']); if (si === undefined) return null;
+      let h = (day * 2246822519 + 374761393) >>> 0; h = (h ^ (h >>> 13)) >>> 0; h = Math.imul(h, 3266489917) >>> 0; h = (h ^ (h >>> 16)) >>> 0;
+      return { date, i: si, j: h % S[si].problems.length, easy: true };
+    }
+    const want = wd === 0 ? ['c13', 'c9', 'p9'] : wd <= 2 ? ['c5', 'p3'] : wd <= 4 ? ['c7', 'p5'] : wd === 5 ? ['p7', 'c7'] : ['c9', 'p9'];
+    const si = S.findIndex(x => x.id === want[0]) >= 0 ? S.findIndex(x => x.id === want[0]) : S.findIndex(x => want.includes(x.id));
+    if (si < 0) return null;
+    let h = day * 2654435761 >>> 0; h = (h ^ (h >>> 15)) >>> 0;
+    return { date, i: si, j: h % S[si].problems.length };
+  }
+  function dailyProblem(id, which, X, lang) {
+    const d = dailyPick(id, which); if (!d) return null;
+    const B = BOOK[id]; let p;
+    if (id === 'chess') p = B.problem(d.i, d.j, X);
+    else { const g = B.data.sets[d.i], P = (g.base || g.problems)[d.j]; p = { i: d.i, j: d.j, P, sfen: P.sfen, kind: 'tsume', n: P.n, count: g.problems.length, set: (g.title && (g.title[lang] || g.title.en)) || g.id }; }
+    p.daily = { date: d.date, key: DAILY[id][which] || DAILY[id].d1, which };
+    return p;
+  }
+  function dailySolved(p, hinted) {   // (the full games' dailySolved: the streak)
+    const k = p.daily.key, R = Object.assign({ last: '', streak: 0, best: 0, days: {} }, store.get(k, {})), date = p.daily.date;
+    if (R.days[date]) return;
+    const y = new Date(date + 'T12:00:00'); y.setDate(y.getDate() - 1);
+    R.streak = R.last === ymd(y) ? R.streak + 1 : 1; R.last = date; R.best = Math.max(R.best || 0, R.streak); R.days[date] = hinted ? 'h' : 1;
+    store.set(k, R);
+  }
+  // the sets for the portal's 問題一覧 (atlas/app.js puzzleSheet): title, stars per problem, which are open
+  function setsOf(id, lang) {
+    const X = TX[lang] || TX.en;
+    return loadBook(id).then(B => B.sets().map((x, n) => {
+      const title = id === 'chess' ? B.problem(x.key, 0, X).set : ((g => (g.title && (g.title[lang] || g.title.en)) || g.id)(B.data.sets[x.key]));
+      return { key: x.key, title, cat: x.cat, recs: x.recs, open: x.recs.map((_, j) => stageOpen(x.recs, j)), stage: STAGE };
+    }));
+  }
+
   function loadBook(id) {
     const B = BOOK[id]; if (B.data) return Promise.resolve(B);
     return B.p || (B.p = fetch(B.url).then(r => r.json()).then(d => { B.data = id === 'shogi' ? B.prep(d) : d; return B; }).catch(e => { B.p = null; throw e; }));
@@ -242,7 +291,7 @@
       $('[data-a=next]').classList.toggle('ghost', st === 'play');
     }
     function stars(n) { $('.cnt').innerHTML = n ? [1, 2, 3].map(k => STAR(k <= n)).join('') : ''; }
-    function head() { $('.pg').textContent = cur ? ` · ${cur.set} · No.${cur.j + 1}` : ''; }
+    function head() { $('.pg').textContent = !cur ? '' : cur.daily ? ` · ${ctx.dailyTitle ? ctx.dailyTitle(cur.daily.which) : '★'} · ${+cur.daily.date.slice(5, 7)}/${+cur.daily.date.slice(8)}` : ` · ${cur.set} · No.${cur.j + 1}`; }
     const side = c => c ? X.black : X.white;
     function goal(p) {
       if (p.kind === 'tsume') return fill(X.goalTsume, { n: p.n });
@@ -326,7 +375,9 @@
     }
     function solved(p) {
       const n = p.hinted || p.failed ? 2 : 3;
-      p.state = 'solved'; B.save(p, n); chime(true); stars(n);
+      p.state = 'solved'; chime(true); stars(n);
+      if (p.daily) { dailySolved(p, p.hinted || p.failed); if (id === 'chess') { const pr = store.get(B.KEY, {}); pr[p.rk] = Math.max(B.sv(pr[p.rk]), n); store.set(B.KEY, pr); } }   // (as the full games: chess also keeps the stars, shogi only the streak)
+      else B.save(p, n);
       streak = n === 3 ? streak + 1 : 0;
       say(n === 3 ? (streak >= 3 && line('streak', { n: streak })) || line('solved') || pick(X.solved) : line('help') || X.solvedHelp);
       buttons();
@@ -342,8 +393,8 @@
     }
     function nextPuzzle() {
       const sets = B.sets(), p = cur;
-      if (p) { const s = sets[p.i], j = p.j + 1; if (j < s.recs.length && stageOpen(s.recs, j) && !s.recs[j]) return begin(B.problem(p.i, j, X, ctx.lang), true); }
-      const r = resume(sets, p ? p.i : store.raw(B.LAST));
+      if (p && !p.daily) { const s = sets[p.i], j = p.j + 1; if (j < s.recs.length && stageOpen(s.recs, j) && !s.recs[j]) return begin(B.problem(p.i, j, X, ctx.lang), true); }
+      const r = resume(sets, p && !p.daily ? p.i : store.raw(B.LAST));
       if (!r) { say(line('allDone') || X.allDone); if (p) { p.state = 'solved'; buttons(); } return; }
       begin(B.problem(r.key, r.j, X, ctx.lang), true);
     }
@@ -353,7 +404,11 @@
 
     requestAnimationFrame(() => el.classList.add('on'));
     say(X.loading); buttons();
-    loadBook(id).then(b => { if (stopped) return; B = b; nextPuzzle(); }).catch(() => { if (!stopped) say('⚠'); });
+    loadBook(id).then(b => { if (stopped) return; B = b;
+      const d = ctx.daily && dailyProblem(id, ctx.daily, X, ctx.lang);   // 今日の詰将棋 / やさしい詰将棋 / 今日のパズル
+      if (d) return begin(d, true);
+      if (ctx.pick && B.sets()[ctx.pick.i]) return begin(B.problem(ctx.pick.i, ctx.pick.j, X, ctx.lang), true);   // one chosen in 問題一覧
+      nextPuzzle(); }).catch(() => { if (!stopped) say('⚠'); });
 
     const dbg = { state: () => cur && { kind: cur.kind, i: cur.i, j: cur.j, state: cur.state, used: cur.used, k: cur.k, answer: cur.P.answer || cur.P.line || cur.P.sol, moves: pz() ? pz().moves() : [], say: $('.tx').textContent }, go: (i, j) => begin(B.problem(i, j, X, ctx.lang), true) };
     window.__atlasPz = dbg;   // (test hook)
@@ -364,5 +419,5 @@
     };
   }
 
-  window.AtlasPuzzles = { has: id => !!G[id], start, G };   // (G: the guides — atlas/lessons3d.js too)
+  window.AtlasPuzzles = { has: id => !!G[id], start, G, sets: setsOf };   // (G: the guides — atlas/lessons3d.js too)
 })();
