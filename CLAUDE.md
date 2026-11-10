@@ -18,5 +18,5 @@
 
 - 変更が終わったら、作業ブランチにコミット・プッシュし、main 向けの PR を作成して main にマージまで行う（ユーザーへの確認は不要）。
 - マージ済みの PR のブランチに追加作業をする場合は、最新の main からブランチを作り直してから作業する。
-- `atlas/` の JS/CSS を変更したら、`atlas/index.html` の該当 `<script src="...?v=N">` のバージョン番号を上げる（上げないとブラウザのキャッシュで古いファイルが読まれる）。ゲームごとの models/・games/・rules/ と ludo・carrom・crokinole・hockey のエンジンは `atlas/lazy.js` から読み込むので、そちらの `?v=` を上げる。
+- `atlas/` の JS/CSS を変更したら、`atlas/index.html` の該当 `<script src="...?v=N">` のバージョン番号を上げる（上げないとブラウザのキャッシュで古いファイルが読まれる）。ゲームごとの models/・games/・rules/ と ludo・carrom・crokinole・hockey のエンジンは `atlas/lazy.js` から読み込むので、そちらの `?v=` を上げる。`atlas/i18n.js` を変えたら、`atlas/index.html` の `FULL = 'i18n.js?v=N'` と `i18n/v.js?v=N` を上げてから `node tools/i18n-split.js` を実行する（言語ごとのファイル atlas/i18n/ を作り直す。忘れても全言語の i18n.js が読まれるだけで表示は正しい）。
 - `wyrm/` を変更したら、`wyrm/index.html` の `const BUILD = N` を1上げる（タイトル画面右下とPキー表示に出る更新番号。不具合の確認用）。
