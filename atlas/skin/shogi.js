@@ -79,7 +79,7 @@
       // straight grain with a slow wave, a few darker late-wood lines
       for (let i = 0; i < 70; i++) {
         const a0 = rnd() * A, amp = 2 + rnd() * 5, f = .004 + rnd() * .01, ph = rnd() * 6.28, dark = rnd() < .22;
-        x.strokeStyle = dark ? `rgba(150,92,38,${.07 + rnd() * .06})` : `rgba(170,112,52,${.03 + rnd() * .04})`;   // (faint: the stand stays quiet, 2026-11-10)
+        x.strokeStyle = dark ? `rgba(150,92,38,${.03 + rnd() * .03})` : `rgba(170,112,52,${.015 + rnd() * .02})`;   // (faint: the stand stays quiet, 2026-11-10)
         x.lineWidth = dark ? 1 + rnd() * 1.6 : .5 + rnd() * .8;
         x.beginPath();
         for (let t = 0; t <= L; t += 8) { const a = a0 + Math.sin(t * f + ph) * amp; const px = along === 'y' ? a : t, py = along === 'y' ? t : a; t ? x.lineTo(px, py) : x.moveTo(px, py); }
@@ -150,7 +150,7 @@
   const sheet = () => new Promise((res, rej) => { const im = new Image(); im.onload = () => {
     const out = {}, keys = ['k1', 'k2', 'k3', 'k4', 'k5', 'k6', 'k7', 'k8', 'k9', 'k10', 'k11', 'k12', 'k13', 'k14', 'k8o'];
     keys.forEach((k, i) => { const c = document.createElement('canvas'); c.width = 256; c.height = 282; c.getContext('2d').drawImage(im, (i % 5) * 256, (i / 5 | 0) * 282, 256, 282, 0, 0, 256, 282); out[k] = c.toDataURL('image/png'); });
-    res(out); }; im.onerror = rej; im.src = '../images/atlas/shogi-pieces.png?v=1'; });
+    res(out); }; im.onerror = rej; im.src = '../images/atlas/shogi-pieces.png?v=2'; });
   sheet().catch(() => SG.images(256)).then(o => {
     IMG = o;
     window.__shogiAtlasPre = Object.values(o).map(src => { const im = new Image(); im.src = src; if (im.decode) im.decode().catch(() => {}); return im; });   // decoded up front: promotions show at once
