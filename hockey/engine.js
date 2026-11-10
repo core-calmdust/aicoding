@@ -13,8 +13,9 @@
 (function (root) {
   'use strict';
   const W = 40, L = 62, GW = 13, RP = 2, RM = 3.1, CREASE = 0;
-  const VMAX = 100, VSMASH = 140, DAMP = .4, E_WALL = .85, E_MAL = .85, MALLET_V = 600, MALLET_HUMAN = 1200;   // (2026-11-09/10: slowed three times — a table this small can't be played at air-hockey speed)
-  // a player's mallet follows the pointer almost at once (1200 cm/s; at 600 it trailed the hand and felt laggy); the AI keeps 600 × its level cap
+  const VMAX = 100, VSMASH = 140, DAMP = .4, E_WALL = .85, E_MAL = .85, MALLET_V = 600, MALLET_HUMAN = 1e5;   // (2026-11-09/10: slowed three times — a table this small can't be played at air-hockey speed)
+  // a player's mallet is where the pointer is, with no speed limit (2026-11-10: even 1200 cm/s trailed a quick swing and felt
+  // laggy; the sub-steps keep every move under .8 cm, so it still can't jump through the puck); the AI keeps 600 × its level cap
   const DIM = { W, L, GW, RP, RM, VMAX };
   const MODES = ['classic', 'block', 'monster', 'items', 'bumper', 'warp', 'multi', 'chaos'];
   const ITEMS = ['speed', 'split', 'giant', 'shield', 'freeze'];   // (+ 'worm' on the space board)
@@ -78,7 +79,7 @@
     // sub-steps: 1/240 s, and more when a mallet swings fast — no mallet moves more than .8 cm in one sub-step, so a quick
     // swing can't jump past the puck's centre and knock it backwards (2026-11-10)
     let far = 0; for (const m of s.mal) far = Math.max(far, Math.hypot(m.ex - m.x, m.ey - m.y));
-    const n = Math.min(64, Math.max(1, Math.ceil(dt / (1 / 240)), Math.ceil(far / .8))), h = dt / n;
+    const n = Math.min(96, Math.max(1, Math.ceil(dt / (1 / 240)), Math.ceil(far / .8))), h = dt / n;
     for (let k = 0; k < n; k++) { const f = (k + 1) / n; for (const m of s.mal) { m.tx = m.px + (m.ex - m.px) * f; m.ty = m.py + (m.ey - m.py) * f; } sub(s, h); }
     // a puck left still out of reach (2.5 s; 1.2 s in a corner or against an end wall) is given a small nudge toward the open table
     for (const p of s.pucks) {
