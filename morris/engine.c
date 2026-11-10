@@ -297,6 +297,33 @@ static void ttSave(const Pos *p, int sv, int m, int d, int f) {
 static u64 gRes[MT_SLOTS][2];
 static volatile u64 gGoalKey, gHit; static volatile int gGoal;
 static TLS u64 rootK;
+// (2026-11-10, after the Mac bench-all: same depth x1.5 with 4–14 threads although the nodes/s grew x4–x9.6) busy marks,
+// Kerrigan's "simplified ABDADA". The threads walk the same tree in the same order at the same speed, so they search the
+// same subtree at the same time and none gets the other's result from the table (a simulation where a thread's stores
+// reach the others only after a while — true concurrency — gave x1.2 / x1.4 / x1.7 with 2 / 4 / 8 threads, as on the Mac;
+// the earlier simulations let the threads take turns and so saw each other's finished subtrees). A thread marks the
+// position of the move it searches (remaining depth >= BUSY_D); a move after the first whose position another thread has
+// marked is put off to the end of the node. One thread alone never meets another's mark: its search is as before.
+#define BUSY_BITS 15
+#ifndef BUSY_D
+#define BUSY_D 3
+#endif
+#define BUSY_DEF 32
+static u64 busyT[1 << BUSY_BITS];
+static inline u64 busyKey(const Pos *p) { return ((u64)p->h1 << 32 | p->h2) & ~63ull; }
+static inline int busyOther(const Pos *p) {
+  u64 v = __atomic_load_n(&busyT[p->h2 & ((1u << BUSY_BITS) - 1)], __ATOMIC_RELAXED);
+  return (v & ~63ull) == busyKey(p) && (int)(v & 63) != (threadId & 63) + 1;
+}
+static inline int busySet(const Pos *p) {
+  int i = (int)(p->h2 & ((1u << BUSY_BITS) - 1));
+  __atomic_store_n(&busyT[i], busyKey(p) | (u64)((threadId & 63) + 1), __ATOMIC_RELAXED);
+  return i;
+}
+static inline void busyClear(const Pos *p, int i) {
+  u64 mine = busyKey(p) | (u64)((threadId & 63) + 1);
+  __atomic_compare_exchange_n(&busyT[i], &mine, 0, 0, __ATOMIC_RELAXED, __ATOMIC_RELAXED);
+}
 static void checkAbort(void) { if (now() > deadline || nodes > maxNodes || gStop || (threadId == 0 && rootK && gHit == rootK)) aborted = 1; }
 #else
 static void checkAbort(void) { if (now() > deadline || nodes > maxNodes) aborted = 1; }
@@ -383,6 +410,29 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply) {
   int *sc = scb[ply];
   order(p, mv, n, ply, ttm, sc);
   int a0 = alpha, best = -INF, bm = mv[0];
+#ifdef MT
+  // (2026-11-10) busy marks ("simplified ABDADA", see busyT): a move whose position another thread is searching right now
+  // is put off until the other moves are done (by then its result is usually in the table)
+  int defM[BUSY_DEF], defI[BUSY_DEF], nDef = 0;
+  for (int k = 0; k < n + nDef; k++) {
+    int i, m;
+    if (k < n) { pickBest(mv, sc, k, n); m = mv[k]; i = k; } else { m = defM[k - n]; i = defI[k - n]; }
+    play(p, m); rep[repLen++] = p->h1;
+    if (k < n && i > 0 && depth >= BUSY_D && nDef < BUSY_DEF && busyOther(p)) { repLen--; undo(p, m); defM[nDef] = m; defI[nDef++] = i; continue; }
+    const int mk = depth >= BUSY_D ? busySet(p) : -1;
+    int v;
+    if (i == 0) v = -search(p, depth - 1, -beta, -alpha, ply + 1);
+    else {
+      int R = 0;
+#ifdef LMR
+      if (depth >= LMR_D && i >= LMR_I && ((m >> 10) & 31) == NONE && m != killer[ply * 2] && m != killer[ply * 2 + 1]) R = (i >= LMR_I2 && depth >= 5) ? 2 : 1;
+#endif
+      v = -search(p, depth - 1 - R, -alpha - 1, -alpha, ply + 1);
+      if (R && v > alpha && !aborted) v = -search(p, depth - 1, -alpha - 1, -alpha, ply + 1);
+      if (v > alpha && v < beta && !aborted) v = -search(p, depth - 1, -beta, -alpha, ply + 1);
+    }
+    if (mk >= 0) busyClear(p, mk);
+#else
   for (int i = 0; i < n; i++) {
     pickBest(mv, sc, i, n); int m = mv[i];
     play(p, m); rep[repLen++] = p->h1;
@@ -397,6 +447,7 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply) {
       if (R && v > alpha && !aborted) v = -search(p, depth - 1, -alpha - 1, -alpha, ply + 1);
       if (v > alpha && v < beta && !aborted) v = -search(p, depth - 1, -beta, -alpha, ply + 1);
     }
+#endif
     repLen--; undo(p, m);
     if (aborted) return 0;
     if (v > best) {
@@ -456,6 +507,7 @@ EXPORT(setup) int setup(void) {
 EXPORT(new_game) void new_game(void) {
 #ifdef MT
   for (unsigned i = 0; i < sizeof(TTM) / 8; i++) TTM[i] = 0;
+  for (unsigned i = 0; i < (1u << BUSY_BITS); i++) busyT[i] = 0;
   ttAge = 0;
 #else
   for (int i = 0; i < TT_SIZE; i++) { tk1[i] = 0; tk2[i] = 0; td[i] = 0; tfl[i] = 0; }
@@ -510,6 +562,19 @@ EXPORT(best) void best(int maxDepth, double ms, double mn) {
 #endif
     int k = 0; ord[k++] = bestM; for (int i = 0; i < rootN; i++) if (rootMv[i] != bestM) ord[k++] = rootMv[i];
     int alpha = -INF, bm = bestM, bv = -INF;
+#ifdef MT
+    int rdM[BUSY_DEF], nrd = 0;   // (the busy marks at the root too: a root move another thread is on is put off)
+    for (int k = 0; k < rootN + nrd; k++) {
+      int i = k < rootN ? k : 1, m = k < rootN ? ord[k] : rdM[k - rootN], v;
+      play(p, m); rep[repLen++] = p->h1;
+      int st = quickStatus(p, 1);
+      if (k < rootN && i > 0 && st == INF + 1 && d >= BUSY_D && nrd < BUSY_DEF && busyOther(p)) { repLen--; undo(p, m); rdM[nrd++] = m; continue; }
+      const int mk = st == INF + 1 && d >= BUSY_D ? busySet(p) : -1;
+      if (st != INF + 1) v = -st;
+      else if (i == 0) v = -search(p, d - 1, -INF, INF, 1);
+      else { v = -search(p, d - 1, -alpha - 1, -alpha, 1); if (v > alpha && !aborted) v = -search(p, d - 1, -INF, -alpha, 1); }
+      if (mk >= 0) busyClear(p, mk);
+#else
     for (int i = 0; i < rootN; i++) {
       int m = ord[i], v;
       play(p, m); rep[repLen++] = p->h1;
@@ -517,6 +582,7 @@ EXPORT(best) void best(int maxDepth, double ms, double mn) {
       if (st != INF + 1) v = -st;
       else if (i == 0) v = -search(p, d - 1, -INF, INF, 1);
       else { v = -search(p, d - 1, -alpha - 1, -alpha, 1); if (v > alpha && !aborted) v = -search(p, d - 1, -INF, -alpha, 1); }
+#endif
       repLen--; undo(p, m);
       if (aborted) break;
       if (v > bv) { bv = v; bm = m; if (v > alpha) alpha = v; }
