@@ -260,7 +260,7 @@
     // board colour (the game's "board & piece skin"): a tint over the kaya
     const tinted = [top, kaya, endF, endS, bottom]; g.traverse(o => { if (o.isMesh && o.material && !Array.isArray(o.material) && !tinted.includes(o.material)) tinted.push(o.material); });
     const base0 = tinted.map(m => m.color.clone());
-    const TONES = { classic: 0xe8c9a0, grain: 0xd2a26e, metal: 0xb4bcc6, ink: 0x5e5046 };
+    const TONES = { classic: 0xe8c9a0, grain: 0xd2a26e, kaya: 0xf7e0b0, metal: 0xb4bcc6, ink: 0x5e5046 };   // kaya: golden 本榧 (the default)
     g.userData.setTone = name => { g.userData.tone = name; const c = new TT.Color(TONES[name] || 0xffffff).convertSRGBToLinear(); tinted.forEach((m, i) => { m.color.copy(base0[i]).multiply(c); }); };
     g.userData.setTone('classic');
     g.userData.S = FH; g.userData.W = FW; g.userData.top = base + THICK + .001; g.userData.outer = BD / FH; g.userData.n = n;
