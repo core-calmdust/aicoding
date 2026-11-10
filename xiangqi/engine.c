@@ -487,9 +487,32 @@ static TLS int threadId;              // 0 = the main thread (time control, resu
 static u64 gRes[MT_SLOTS][2];
 static volatile u64 gGoalKey, gHit; static volatile int gGoal;
 static TLS u64 rootK;
+// (2026-11-10, Young Brothers Wait: see "split points" after search(); MODEL_CARD.md「マルチスレッド その3：YBW」)
+// stopFlag 2: a split point on this thread's chain was cut off / stopped (or its move was finished by another thread) — the
+// search unwinds to it; 3: a thread searching a straggler's move a second time leaves it for a split point to join.
+#define MT_YBW 1   /* (tools/mtsim: the helpers wait in mt_idle) */
+#ifndef SIM_IDLE
+#define SIM_IDLE() ((void)0)   /* (tools/mtsim: an idle thread's tick of the clock) */
+#endif
+typedef struct SPt SPt;
+static TLS SPt *curSP; static TLS int curIdx = -1;   // the split point this thread works under, its move there
+static TLS int dupMode;                              // searching a straggler's move a second time (spDup)
+static int chainStopped(const SPt *s, int idx);
+static int dupLeave(void);
+// the counters of the split points (written at every join): a cache line of their own
+static struct { volatile int idle, waitN, openN, hi; } __attribute__((aligned(64))) GS;
+#define gIdle (GS.idle)     /* helper threads waiting for a split point (mt_idle) */
+#define gWaitN (GS.waitN)   /* owners waiting for the helpers of their split point */
+#define gOpenN (GS.openN)   /* split points open for joining */
+#define gSPHi (GS.hi)       /* the slots used so far */
+static inline void mtCheck(void) {
+  if ((tEnd > 0 && now() > tEnd) || (nodeLimitOn && nodes > nodeLimit) || gStop || (rootK && gHit == rootK)) stopFlag = 1;
+  else if (curSP && chainStopped(curSP, curIdx)) stopFlag = 2;
+  else if (dupMode && gOpenN > 0 && dupLeave()) stopFlag = 3;
+}
 static inline int timeUp(void) {
   if (stopFlag) return 1;
-  if ((nodes & 1023) == 0) { if ((tEnd > 0 && now() > tEnd) || (nodeLimitOn && nodes > nodeLimit) || gStop || (rootK && gHit == rootK)) stopFlag = 1; }
+  if ((nodes & 1023) == 0) mtCheck();
   return stopFlag;
 }
 // (2026-11-10, after the Mac bench-all-2: the time to the same depth only x2.1 with 14 threads; morris/MODEL_CARD.md「マルチ
@@ -511,6 +534,57 @@ static inline void busyClear(u64 k, int i) {
   u64 mine = (k & ~63ull) | (u64)((threadId & 63) + 1);
   __atomic_compare_exchange_n(&busyT[i], &mine, 0, 0, __ATOMIC_RELAXED, __ATOMIC_RELAXED);
 }
+// ---- split points (Young Brothers Wait, 2026-11-10; the method of reversi/engine.c v4 / v4.1, MODEL_CARD.md「マルチスレッド
+// その3：YBW」). Lazy SMP (every thread searching the root, helping each other only through the table, with busy marks) grew
+// to x4.1-5.0 at 8-14 threads on the Mac and no further. Here the helpers do not search on their own: they wait in mt_idle.
+// A node of the search (remaining depth >= SPLIT_D) whose first move is done opens a split point when a helper is idle: its
+// other moves (legal ones, in the one-thread order, with their place lg for the reductions and futility) are taken one at
+// a time by the owner and the idle threads, each with the one-thread loop's null window / re-search. A helper copies the
+// position of the split point (board, key, the repetition history since the last capture; the NNUE accumulator is computed
+// afresh). A cut-off stops the split point (the threads below it see it at their next check: stopFlag 2). The owner waits
+// until every helper has left, meanwhile helping at the split points below its own, or searching a move that another
+// thread is still on a second time (a thread on a slow core then holds up nobody: the first result counts). The root is
+// one too. Without an idle helper nothing is split: one thread searches exactly as before.
+#define NSP 128
+#define SP_MV 128
+#define SP_HK 192
+struct SPt {
+  volatile int word;   // seq << 9 | open (256) | the helpers on it (0..255)
+  volatile int lock, stop, next, alpha, best, bestMove, inuse, waiting;
+  int beta, n, depth, ply, root, all, pv, inChk, pidx, nnue;
+  const void *own; SPt *parent;   // the owner thread (the address of its curIdx); the split point above (pidx: its move)
+  u64 key, bb[2][2]; int side, hn, hirr, ksq[2];
+  volatile u8 busy[SP_MV], done[SP_MV], dup[SP_MV];   // the moves taken, finished, searched a second time
+  Move mv[SP_MV]; u8 lg[SP_MV], gc[SP_MV]; int vals[SP_MV];   // the moves, their place, gives check; root: the values
+  u8 B[90]; u8 hc[SP_HK]; u64 hk[SP_HK];
+} __attribute__((aligned(64)));
+static SPt SPS[NSP] __attribute__((aligned(64)));
+#ifndef SPLIT_D
+#define SPLIT_D 3   /* (tools/mtsim: 3 and 4 alike within the noise, 3 a little better with slow cores; 2, 5, 6 worse) */
+#endif
+static int splitD = SPLIT_D;
+static SPt *spAlloc(void) {
+  for (int i = 0; i < NSP; i++) { int z = 0; if (!SPS[i].inuse && __atomic_compare_exchange_n(&SPS[i].inuse, &z, 1, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)) {
+    int h = __atomic_load_n(&gSPHi, __ATOMIC_ACQUIRE); while (h <= i && !__atomic_compare_exchange_n(&gSPHi, &h, i + 1, 0, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) {}
+    return SPS + i; } }
+  return 0;
+}
+static inline void spRelease(SPt *s) { __atomic_store_n(&s->inuse, 0, __ATOMIC_RELEASE); }   // (never opened)
+static int spFillPos(SPt *s) {   // the owner: this node's position
+  if (hn - hirr > SP_HK || hirr < 0) return 0;
+  memcpy(s->B, B, 90); s->side = side; s->key = KEY; memcpy(s->bb, BB, sizeof(BB)); s->ksq[0] = KSQ[0]; s->ksq[1] = KSQ[1];
+  s->hn = hn; s->hirr = hirr; memcpy(s->hk, HK + hirr, 8 * (hn - hirr)); memcpy(s->hc, HC + hirr, hn - hirr);
+  s->nnue = xqOn;
+  return 1;
+}
+static void spLoadPos(const SPt *s, int top, int fresh) {   // a thread joining s (fresh: the NNUE accumulator at slot top anew)
+  memcpy(B, s->B, 90); side = s->side; KEY = s->key; memcpy(BB, s->bb, sizeof(BB)); KSQ[0] = s->ksq[0]; KSQ[1] = s->ksq[1];
+  hn = s->hn; hirr = s->hirr; memcpy(HK + hirr, s->hk, 8 * (hn - hirr)); memcpy(HC + hirr, s->hc, hn - hirr);
+  xqOn = s->nnue; xqTop = top;
+  if (fresh && xqOn && top < XQ_ST) xqRefresh(top);
+}
+static void spRun(SPt *s, int *best, Move *bestM, int *vals);
+static int spWanted(void);
 #else
 static inline int timeUp(void) {
   if (stopFlag) return 1;
@@ -621,9 +695,47 @@ static int search(int depth, int alpha, int beta, int ply, int pv, int nullOk) {
 #ifdef XQ_THREADS
   // (2026-11-10) busy marks (see busyT): a move whose position another thread is searching right now is put off until the
   // other moves are done; it keeps its place in the order (lg) for the reductions
-  Move defM[BUSY_DEF]; u8 defL[BUSY_DEF]; int nDef = 0;
+  Move defM[BUSY_DEF]; u8 defL[BUSY_DEF]; int nDef = 0, noSplit = 0;
   for (int k = 0; k < n + nDef; k++) {
     Move m; int lg;
+    // YBW: the first move is done and a helper is idle (or an owner above waits for its helpers): the remaining moves go to
+    // a split point, in the order of this loop (the selection sort's, then the moves put off), legal ones with their place
+    if (k < n && legal && !noSplit && depth >= splitD && (gIdle > 0 || (gWaitN > 0 && spWanted()))) {
+      SPt *s = spAlloc(); int ns = 0;
+      if (s && spFillPos(s)) {
+        int lg2 = legal;
+        for (int i = k; i < n && ns >= 0; i++) {
+          int bi = i; for (int j = i + 1; j < n; j++) if (sc[j] > sc[bi]) bi = j;
+          { Move tm = L[bi]; L[bi] = L[i]; L[i] = tm; int ts = sc[bi]; sc[bi] = sc[i]; sc[i] = ts; }
+          Move m2 = L[i]; int cap2 = B[MT(m2)] != 0; u8 c2 = makeMove(m2);
+          if (attackedKing(me)) { unmakeMove(m2, c2); continue; }
+          int g2 = attackedKing(side); unmakeMove(m2, c2); lg2++;
+          if (futile && lg2 > 1 && !cap2 && !g2) continue;
+          if (ns == SP_MV) { ns = -1; break; }
+          s->mv[ns] = m2; s->lg[ns] = (u8)lg2; s->gc[ns] = (u8)g2; ns++;
+        }
+        for (int j = 0; j < nDef && ns >= 0; j++) {
+          Move m2 = defM[j]; int cap2 = B[MT(m2)] != 0; u8 c2 = makeMove(m2); int g2 = attackedKing(side); unmakeMove(m2, c2);
+          if (futile && defL[j] > 1 && !cap2 && !g2) continue;
+          if (ns == SP_MV) { ns = -1; break; }
+          s->mv[ns] = m2; s->lg[ns] = defL[j]; s->gc[ns] = (u8)g2; ns++;
+        }
+      }
+      if (ns >= 2) {
+        s->n = ns; s->depth = depth; s->ply = ply; s->root = 0; s->all = 0; s->pv = pv; s->inChk = inChk; s->beta = beta;
+        s->alpha = alpha;
+        spRun(s, &best, &bestM, 0);
+        if (stopFlag) return best > -INF ? best : 0;
+        if (best >= beta && bestM && !B[MT(bestM)]) {
+          if (killers[ply][0] != bestM) { killers[ply][1] = killers[ply][0]; killers[ply][0] = bestM; }
+          i32 *h = &hist[me][MF(bestM)][MT(bestM)]; *h += depth * depth;
+          if (*h > (1 << 24)) for (int a = 0; a < 2; a++) for (int b = 0; b < 90; b++) for (int q = 0; q < 90; q++) hist[a][b][q] >>= 1;
+        }
+        break;
+      }
+      if (s) spRelease(s);
+      noSplit = 1;   // (fewer than 2 moves left, or no free slot: on alone)
+    }
     if (k < n) {
       int i = k;
       int bi = i; for (int j = i + 1; j < n; j++) if (sc[j] > sc[bi]) bi = j;
@@ -692,6 +804,254 @@ static int search(int depth, int alpha, int beta, int ply, int pv, int nullOk) {
   return best;
 }
 
+#ifdef XQ_THREADS
+// ---------------------------------------------------------------- split points (YBW, see SPt above)
+#ifdef SIM_STAT
+static double ST[16];   // (tools/mtsim) 0 splits, 1 helper joins, 2 their moves, 3 empty joins, 4 idle ticks, 5 waiting ticks, 6 second searches
+#define STAT(k, v) (ST[k] += (v))
+EXPORT(mt_stat) double mt_stat(int k) { return ST[k]; }
+#else
+#define STAT(k, v) ((void)0)
+#endif
+// s or a split point above it was stopped, or the move idx of s (idx >= 0) or a move above it was finished by another
+// thread (a straggler searched a second time)
+static int chainStopped(const SPt *s, int idx) {
+  for (int k = 0; s && k < 128; k++, idx = s->pidx, s = s->parent)
+    if (__atomic_load_n(&s->stop, __ATOMIC_ACQUIRE) || (idx >= 0 && __atomic_load_n(&s->done[idx], __ATOMIC_ACQUIRE))) return 1;
+  return 0;
+}
+static inline void spLock(SPt *s) { int z; do { z = 0; } while (!__atomic_compare_exchange_n(&s->lock, &z, 1, 0, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED)); }
+static inline void spUnlock(SPt *s) { __atomic_store_n(&s->lock, 0, __ATOMIC_RELEASE); }
+static inline void spStop(SPt *s) { __atomic_store_n(&s->stop, 1, __ATOMIC_RELEASE); }
+static void spFree(SPt *s) {   // closed, no helper left: a new sequence number, then the slot is free
+  const int w = __atomic_load_n(&s->word, __ATOMIC_ACQUIRE);
+  __atomic_store_n(&s->word, ((w >> 9) + 1) << 9, __ATOMIC_RELEASE);
+  __atomic_store_n(&s->inuse, 0, __ATOMIC_RELEASE);
+}
+static int spJoin(SPt *s) {   // a helper is counted on the split point while it is open
+  int w = __atomic_load_n(&s->word, __ATOMIC_ACQUIRE);
+  for (;;) {
+    if (!(w & 256) || (w & 255) == 255) return 0;
+    if (__atomic_compare_exchange_n(&s->word, &w, w + 1, 0, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) return 1;
+  }
+}
+static inline void spLeave(SPt *s) { __atomic_sub_fetch(&s->word, 1, __ATOMIC_ACQ_REL); }
+// the move i of s (the thread is at s's position) with the null window against a and the re-searches, as the one-thread loop
+static int spSearch(SPt *s, int i, int a) {
+  const int b = s->beta, d1 = s->depth - 1, ply = s->ply; const Move m = s->mv[i]; const int isCap = B[MT(m)] != 0, gc = s->gc[i];
+  u8 c = makeMove(m);
+  HK[hn] = KEY; HC[hn] = (u8)gc; hn++;
+  int saveIrr = hirr; if (c) hirr = hn - 1;
+  const u64 mkKey = KEY; const int mk = !s->all && s->depth >= BUSY_D ? busySet(mkKey) : -1;
+  int v;
+  if (s->root) {
+    if (s->all) v = -search(d1, -INF, INF, 1, 1, 1);
+    else { v = -search(d1, -a - 1, -a, 1, 0, 1); if (v > a && v < b && !stopFlag) v = -search(d1, -b, -a, 1, 1, 1); }
+  } else {
+    const int LG = s->lg[i]; int red = 0;
+    if (s->depth >= 3 && LG > 3 && !isCap && !s->inChk && !gc && m != killers[ply][0] && m != killers[ply][1]) {
+      red = 1 + (LG > 10) + (s->depth >= 8 && LG > 20);
+      if (s->pv && red) red--;
+      if (red > d1 - 1) red = d1 - 1 > 0 ? d1 - 1 : 0;
+    }
+    v = -search(d1 - red, -a - 1, -a, ply + 1, 0, 1);
+    if (v > a && red) v = -search(d1, -a - 1, -a, ply + 1, 0, 1);
+    if (v > a && v < b) v = -search(d1, -b, -a, ply + 1, s->pv, 1);
+  }
+  if (mk >= 0) busyClear(mkKey, mk);
+  hn--; hirr = saveIrr;
+  unmakeMove(m, c);
+  return v;
+}
+static void spResult(SPt *s, int i, int v) {
+  spLock(s);
+  if (s->root) s->vals[i] = v;
+  if (v > s->best) {
+    s->best = v; s->bestMove = s->mv[i];
+    if (v > s->alpha && !s->all) { __atomic_store_n(&s->alpha, v, __ATOMIC_RELEASE); if (v >= s->beta) spStop(s); }
+  }
+  __atomic_store_n(&s->done[i], 1, __ATOMIC_RELEASE);   // (a second search of it stops: chainStopped)
+  spUnlock(s);
+}
+// take moves of s until none is left (the owner and the helpers); returns the number of moves taken
+static int spWork(SPt *s, int owner) {
+  for (int done = 0;; done++) {
+    if (chainStopped(s, -1)) return done;
+    const int i = __atomic_fetch_add(&s->next, 1, __ATOMIC_ACQ_REL);
+    if (i >= s->n) return done;
+    const int a = __atomic_load_n(&s->alpha, __ATOMIC_ACQUIRE);
+    if (a >= s->beta && !s->all) return done;
+    __atomic_store_n(&s->busy[i], 1, __ATOMIC_RELEASE);
+    curIdx = i;
+    const int v = spSearch(s, i, a);
+    curIdx = -1;
+    if (stopFlag) {
+      if (stopFlag == 2 && !chainStopped(s, -1)) { stopFlag = 0; continue; }   // (another thread finished this move first)
+      if (owner || stopFlag == 1 || stopFlag == 3) { if (owner) spStop(s); return done + 1; }
+      stopFlag = 0; continue;   // (a helper: this split point or one above it was stopped — the check above leaves)
+    }
+    if (v >= s->beta && !s->root && !B[MT(s->mv[i])]) {   // (this thread's killers / history, as the one-thread cut-off)
+      const Move m = s->mv[i]; const int ply = s->ply;
+      if (killers[ply][0] != m) { killers[ply][1] = killers[ply][0]; killers[ply][0] = m; }
+      i32 *h = &hist[side][MF(m)][MT(m)]; *h += s->depth * s->depth;
+      if (*h > (1 << 24)) for (int x = 0; x < 2; x++) for (int y = 0; y < 90; y++) for (int q = 0; q < 90; q++) hist[x][y][q] >>= 1;
+    }
+    spResult(s, i, v);
+  }
+}
+// a split is wanted below a split point whose owner waits for its helpers
+static int spWanted(void) {
+  for (const SPt *s = curSP; s; s = s->parent) if (s->waiting) return 1;
+  return 0;
+}
+static TLS const SPt *dupZ, *dupUnder; static TLS int dupJ;
+static int isBelow(const SPt *y, const SPt *s) { for (int k = 0; y && k < 128; k++) { y = y->parent; if (y == s) return 1; } return 0; }
+// y is in this thread's own part of the move it searches a second time
+static int dupBelow(const SPt *y) {
+  int mine = 0;
+  for (int k = 0; y && k < 128; k++, y = y->parent) { if (y->own == (const void *)&curIdx) mine = 1; if (y->parent == dupZ && y->pidx == dupJ) return mine; }
+  return 0;
+}
+// an idle thread: the open split point with the most work left (only those below `under` when it is set)
+static SPt *spFind(const SPt *under) {
+  SPt *bs = 0; int bw = -(1 << 30);
+  for (int i = 0, hi = gSPHi; i < hi; i++) {
+    SPt *y = SPS + i;
+    if (!__atomic_load_n(&y->inuse, __ATOMIC_ACQUIRE)) continue;
+    const int w = __atomic_load_n(&y->word, __ATOMIC_ACQUIRE);
+    if (!(w & 256) || __atomic_load_n(&y->next, __ATOMIC_ACQUIRE) >= y->n || y->stop) continue;
+    const int work = y->depth * 4 + (y->root ? 1000 : 0) - (w & 255);
+    if (work > bw && (!under || isBelow(y, under)) && !chainStopped(y, -1) && !(dupMode && dupBelow(y))) { bw = work; bs = y; }
+  }
+  return bs;
+}
+static int dupLeave(void) { return spFind(dupUnder) != 0; }
+// nothing to join: a move another thread is still searching (the oldest one of the highest split point; only at or below
+// `under` when it is set), searched a second time with the shared table — the first to finish counts, the other stops
+static SPt *spFindDup(const SPt *under, int *pj) {
+  SPt *bs = 0; int bw = -(1 << 30), bj = -1;
+  for (int i = 0, hi = gSPHi; i < hi; i++) {
+    SPt *y = SPS + i;
+    if (!__atomic_load_n(&y->inuse, __ATOMIC_ACQUIRE) || y->stop) continue;
+    const int w = __atomic_load_n(&y->word, __ATOMIC_ACQUIRE);
+    if (!(w & 256) && !(w & 255)) continue;
+    const int work = y->depth * 4 + (y->root ? 1000 : 0);
+    if (work <= bw || (under && y != under && !isBelow(y, under)) || chainStopped(y, -1)) continue;
+    const int n = y->n < SP_MV ? y->n : SP_MV; int j = -1;
+    for (int q = 0; q < n; q++) if (y->busy[q] && !y->done[q] && !y->dup[q]) { j = q; break; }
+    if (j >= 0) { bw = work; bs = y; bj = j; }
+  }
+  *pj = bj;
+  return bs;
+}
+static int spDup(SPt *y, int j, const SPt *under) {   // 1 when it searched (a part of) the move
+  int w = __atomic_load_n(&y->word, __ATOMIC_ACQUIRE);
+  for (;;) {   // (counted on it while it is open or a helper is still there: the owner frees it only at 0)
+    if ((!(w & 256) && !(w & 255)) || (w & 255) == 255) return 0;
+    if (__atomic_compare_exchange_n(&y->word, &w, w + 1, 0, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) break;
+  }
+  if (y->stop || (under && y != under && !isBelow(y, under)) || __atomic_exchange_n(&y->dup[j], 1, __ATOMIC_ACQ_REL) || __atomic_load_n(&y->done[j], __ATOMIC_ACQUIRE)) { spLeave(y); return 0; }
+  SPt *const saved = curSP; const int savedIdx = curIdx, top = xqTop;
+  spLoadPos(y, under ? top + 1 : 0, 1);
+  curSP = y; curIdx = j;
+  dupMode = 1; dupZ = y; dupJ = j; dupUnder = under;
+  const int a = __atomic_load_n(&y->alpha, __ATOMIC_ACQUIRE);
+  if ((a < y->beta || y->all) && !chainStopped(y, j)) { const int v = spSearch(y, j, a); if (!stopFlag) spResult(y, j, v); }
+  dupMode = 0;
+  if (stopFlag == 3) stopFlag = 0;
+  curSP = saved; curIdx = savedIdx;
+  if (under) spLoadPos(under, top, 0);
+  spLeave(y);
+  return 1;
+}
+// join y and take its moves (a helper, or an owner waiting for the helpers of its split point `under`)
+static int spHelp(SPt *y, const SPt *under) {   // returns the number of moves it took
+  if (!spJoin(y)) return 0;
+  if (y->stop || __atomic_load_n(&y->next, __ATOMIC_ACQUIRE) >= y->n || (under && !isBelow(y, under))) { spLeave(y); return 0; }
+  SPt *const saved = curSP; const int savedIdx = curIdx, top = xqTop;
+  spLoadPos(y, under ? top + 1 : 0, 1);
+  curSP = y;
+  const int k = spWork(y, 0);
+  curSP = saved; curIdx = savedIdx;
+  if (under) spLoadPos(under, top, 0);
+  spLeave(y);
+  return k;
+}
+static void waitCheck(void) { SIM_IDLE(); mtCheck(); }
+// the owner: s (moves, position, window filled in) is opened, searched with the helpers; *best / *bestM updated (the root:
+// the values of the finished moves into vals)
+static void spRun(SPt *s, int *best, Move *bestM, int *vals) {
+  STAT(0, 1);
+  s->alpha = s->alpha > *best ? s->alpha : *best; s->best = *best; s->bestMove = *bestM; s->next = 0; s->stop = 0; s->lock = 0; s->waiting = 0;
+  for (int i = 0; i < s->n; i++) { s->busy[i] = 0; s->done[i] = 0; s->dup[i] = 0; }
+  s->pidx = curSP ? curIdx : -1; s->own = (const void *)&curIdx; s->parent = curSP;
+  { const int w = __atomic_load_n(&s->word, __ATOMIC_ACQUIRE); __atomic_store_n(&s->word, (w & ~511) | 256, __ATOMIC_RELEASE); }   // open
+  __atomic_add_fetch(&gOpenN, 1, __ATOMIC_ACQ_REL);
+  SPt *const saved = curSP; const int savedIdx = curIdx;
+  curSP = s;
+  spWork(s, 1);
+  __atomic_and_fetch(&s->word, ~256, __ATOMIC_ACQ_REL);   // closed: no more joins
+  __atomic_sub_fetch(&gOpenN, 1, __ATOMIC_ACQ_REL);
+  int ab = stopFlag;
+  if (ab) spStop(s);
+  stopFlag = 0;
+  int w8 = 0;
+  while (__atomic_load_n(&s->word, __ATOMIC_ACQUIRE) & 255) {   // the helpers still on it: help below it meanwhile
+    SPt *y = s->stop || !gOpenN ? 0 : spFind(s);
+    if (y) { if (w8) { w8 = 0; s->waiting = 0; __atomic_sub_fetch(&gWaitN, 1, __ATOMIC_ACQ_REL); } if (spHelp(y, s)) y = s; else y = 0; }
+    else if (!s->stop && !dupMode) {   // nothing to help: a straggler below it, searched a second time
+      int j; SPt *z = spFindDup(s, &j);
+      if (z && spDup(z, j, s)) { STAT(6, 1); y = s; }
+    }
+    if (!y) {
+      if (!w8 && !s->stop) { w8 = 1; s->waiting = 1; __atomic_add_fetch(&gWaitN, 1, __ATOMIC_ACQ_REL); }   // (its helpers split for it)
+      STAT(5, 1); waitCheck();
+    }
+    if (stopFlag == 1 || stopFlag == 3) { ab = stopFlag; spStop(s); }
+    stopFlag = 0;
+  }
+  if (w8) { s->waiting = 0; __atomic_sub_fetch(&gWaitN, 1, __ATOMIC_ACQ_REL); }
+  curSP = saved; curIdx = savedIdx;
+  if (!ab && gStop) ab = 1;
+  if (chainStopped(saved, savedIdx)) { if (!ab) ab = 2; }   // above it was stopped: this result is not complete
+  else if (ab == 2) ab = 0;                                 // its own cut-off (best >= beta)
+  stopFlag = ab;
+  *best = s->best; *bestM = (Move)s->bestMove;
+  if (vals) for (int j = 0; j < s->n; j++) if (s->done[j]) vals[j] = s->vals[j];
+  spFree(s);
+}
+EXPORT(mt_split) void mt_split(int d) { if (d > 0) splitD = d; }
+// a helper (mt-helper.js): take moves at the split points until the search is over (mt_stop) — or, with ms > 0, until it
+// has nothing to do after ms milliseconds (the page then counts its nodes and calls again); returns its nodes. fresh: a new
+// job (the history decays and the killers are cleared, as beginSearch)
+EXPORT(mt_idle) double mt_idle(double ms, int fresh) {
+  nodes = 0; tEnd = 0; nodeLimitOn = 0; rootK = 0; stopFlag = 0; curSP = 0; curIdx = -1; dupMode = 0;
+  if (fresh) {
+    for (int a = 0; a < 2; a++) for (int b = 0; b < 90; b++) for (int c = 0; c < 90; c++) hist[a][b][c] >>= 2;
+    memset(killers, 0, sizeof(killers));
+  }
+  const double t0 = ms > 0 ? now() : 0;
+  __atomic_add_fetch(&gIdle, 1, __ATOMIC_ACQ_REL);
+  while (!__atomic_load_n(&gStop, __ATOMIC_ACQUIRE)) {
+    SPt *y = gOpenN > 0 ? spFind(0) : 0;
+    if (!y) {
+      if (ms > 0 && now() - t0 > ms) break;
+      int j; SPt *z = spFindDup(0, &j);
+      if (!z || !spDup(z, j, 0)) { STAT(4, 1); SIM_IDLE(); } else STAT(6, 1);
+      stopFlag = 0;
+      continue;
+    }
+    __atomic_sub_fetch(&gIdle, 1, __ATOMIC_ACQ_REL);
+    { const int k = spHelp(y, 0); if (!k) { STAT(3, 1); STAT(4, 1); SIM_IDLE(); } else { STAT(1, 1); STAT(2, k); } }
+    stopFlag = 0;
+    __atomic_add_fetch(&gIdle, 1, __ATOMIC_ACQ_REL);
+  }
+  __atomic_sub_fetch(&gIdle, 1, __ATOMIC_ACQ_REL);
+  stopFlag = 0;
+  return (double)nodes;
+}
+#endif
+
 // ---------------------------------------------------------------- root / host interface
 static TLS u8 RB[90]; static TLS int rootSide; static TLS u64 rootKey;
 static TLS Move rootL[MAXMV]; static TLS int rootN; static TLS int rootVal[MAXMV];
@@ -727,6 +1087,19 @@ static int rootSearch(int depth, int all, int alpha0, int beta0) {
 #ifdef XQ_THREADS
   int rdI[BUSY_DEF], nrd = 0;   // (the busy marks at the root too: a root move another thread is on is put off)
   for (int k = 0; k < rootN + nrd; k++) {
+    // YBW at the root: the first move is done, the others go to a split point (with the values of the moves for sortRoot)
+    if (k == 1 && rootN - 1 >= 2 && rootN - 1 <= SP_MV && depth >= splitD && gIdle > 0) {
+      SPt *s = spAlloc();
+      if (s && spFillPos(s)) {
+        for (int j = 1; j < rootN; j++) { Move m = rootL[j]; u8 c = makeMove(m); s->gc[j - 1] = (u8)attackedKing(side); unmakeMove(m, c); s->mv[j - 1] = m; s->lg[j - 1] = (u8)(j + 1); }
+        s->n = rootN - 1; s->depth = depth; s->ply = 0; s->root = 1; s->all = all; s->pv = 1; s->inChk = HC[hn - 1]; s->beta = all ? INF : beta0;
+        s->alpha = alpha;
+        Move bm = rootL[0];
+        spRun(s, &best, &bm, rootVal + 1);
+        return best;
+      }
+      if (s) spRelease(s);
+    }
     int i = k < rootN ? k : rdI[k - rootN];
     Move m = rootL[i]; u8 c = makeMove(m);
     if (k < rootN && i > 0 && !all && depth >= BUSY_D && nrd < BUSY_DEF && busyOther(KEY)) { unmakeMove(m, c); rdI[nrd++] = i; continue; }

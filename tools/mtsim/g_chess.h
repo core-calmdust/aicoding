@@ -28,7 +28,7 @@ static void g_newgame(void) { new_game(); }
 static int g_budget(double nodesB, int *mv) { think(0, 0, 0, nodesB); *mv = resBuf[0]; return resBuf[2]; }
 static void g_main(int D, int *mv, int *dd, double *nn) { think(0, 0, D, 0); *mv = resBuf[0]; *dd = resBuf[2]; *nn = nodes; }
 #if defined(HAS_MT_IDLE) && defined(MT_STAT)   /* splits, joins, second searches, idle spins, owners' waiting spins; all nodes */
-#define G_STAT() (printf(" [s%.0f j%.0f d%.0f i%.0f w%.0f all %.2fM main %.2fM]", mt_stat(0), mt_stat(1), mt_stat(2), mt_stat(3), mt_stat(4), (nodes + gHelpN) / 1e6, nodes / 1e6), mt_stat(7), gHelpN = 0)
+#define G_STAT(t, R0) (printf(" [s%.0f j%.0f d%.0f i%.0f w%.0f all %.2fM main %.2fM]", mt_stat(0), mt_stat(1), mt_stat(2), mt_stat(3), mt_stat(4), (nodes + gHelpN) / 1e6, nodes / 1e6), mt_stat(7), gHelpN = 0)
 #endif
 #ifdef HAS_MT_IDLE   /* YBW (2026-11-10): a YBW helper takes moves at the split points (mt_idle), a Lazy SMP one thinks (as the pages:
                         SIM_YBWN=1 — chess/MODEL_CARD.md「マルチスレッド v2」) */

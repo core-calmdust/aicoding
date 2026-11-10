@@ -8,13 +8,15 @@
 // 2 (the default): only the main thread's (its one-thread runs and so D are the same for two builds whose one-thread search
 // is the same, and the comparison of two builds is not blurred by the history the main thread carries). SIM_D=<d>: the
 // depth D for every position instead of the budget. Positions where one thread needs < 20k nodes are left out of the means.
+// SIM_SLOW=k (environment): the threads k, k+1, … at 2/5 of the speed (simcore.h). -DSIM_Q=64: finer rounds (a YBW helper
+// notices a new split point one round later; the real threads at once — reversi/MODEL_CARD.md「マルチスレッド v4」).
 // Built by gen.py: gcc -O2 -DGAME_H='"g_<game>.h"' sim.c (eng_<game>.c, g_<game>.h, pos_<game>.txt in the folder).
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
 #include GAME_H
-static int SETUP[16][4096], ns[16], npos;
+static int SETUP[64][4096], ns[64], npos;
 static pthread_mutex_t mu = PTHREAD_MUTEX_INITIALIZER; static pthread_cond_t jcv = PTHREAD_COND_INITIALIZER;
 static int curPos, curT, jobId, running, quit, FRESH, warmTurn;
 static void *helper(void *a) {
@@ -42,7 +44,7 @@ static void *helper(void *a) {
 int main(int argc, char **argv) {
   FILE *f = fopen(POS_FILE, "r"); static char line[1 << 16];
   if (!f) { fprintf(stderr, "no %s\n", POS_FILE); return 1; }
-  while (fgets(line, sizeof line, f) && npos < 16) {
+  while (fgets(line, sizeof line, f) && npos < 64) {
     int n = 0; for (char *t = strtok(line + 2, " \n"); t; t = strtok(0, " \n")) SETUP[npos][n++] = atoi(t);
     ns[npos++] = n;
   }
@@ -74,14 +76,16 @@ int main(int argc, char **argv) {
       pthread_mutex_lock(&mu); while (running > 0) pthread_cond_wait(&jcv, &mu); pthread_mutex_unlock(&mu);
       double tm = t > 1 ? (double)R0 * SIM_Q : mainNodes; if (t == 1) { r1 = tm; sumN1 += mainNodes; }
       if (r1 >= 20000) { sumR[ti] += tm; lg[ti] += log(r1 / tm); if (ti == 0) cnt++; }
-      printf(" t%d %.2fM x%.2f m%d d%d |", t, tm / 1e6, r1 / tm, mv, dd);
+      printf(" t%d %.2fM x%.2f m%d d%d |", t, tm / 1e6, r1 / tm, mv, dd); fflush(stdout);
 #ifdef G_STAT
-      G_STAT();   /* (a YBW engine built with -DMT_STAT: its split points' counters for this run) */
+      G_STAT(t, R0);
 #endif
-      fflush(stdout);
     }
     printf("\n");
   }
+#ifdef G_STAT_SUM
+  G_STAT_SUM();
+#endif
   printf("SUM 1-thread nodes %.0f |", sumN1);
   for (int ti = 0; ti < nt; ti++) printf(" t%d x%.2f (geo x%.2f)", T[ti], sumR[0] / sumR[ti], exp(lg[ti] / cnt));
   printf("\n");

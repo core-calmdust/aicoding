@@ -1213,7 +1213,7 @@ html.bv-pland .urtoast{top:calc(52px + env(safe-area-inset-top));left:calc(50% +
 .rgd .cnt .vs{font:700 18px var(--round);color:var(--ink2)}
 .rgd .cnt .tag{background:var(--ink);color:#fff;border-radius:99px;padding:5px 14px;font:700 14px/1.4 var(--round);letter-spacing:.06em;white-space:nowrap;flex:none;max-width:100%;box-sizing:border-box}
 .rgd .dk{width:18px;height:18px;border-radius:50%;display:inline-block}.rgd .dk.b{background:#16171b}.rgd .dk.w{background:#f3f0e6;box-shadow:inset 0 0 0 1px #c9c2b0}
-.rgd-act{display:flex;align-items:center;gap:10px;background:rgba(255,253,247,.95);border:2px solid #fff;border-radius:99px;padding:6px;box-shadow:0 10px 24px -12px rgba(80,40,0,.5)}
+.rgd-act{display:flex;align-items:center;gap:10px;background:rgba(255,253,247,.95);border:2px solid #fff;border-radius:99px;padding:4px 6px 8px;box-shadow:0 10px 24px -12px rgba(80,40,0,.5)}   /* (the buttons' 4px under-shadow counted: they sit in the middle) */
 .rgd-act .dots{flex:1;display:flex;justify-content:center;gap:6px}
 .rgd-act .dots i{width:8px;height:8px;border-radius:50%;background:var(--line)}.rgd-act .dots i.done{background:var(--sun)}.rgd-act .dots i.on{background:var(--coral);width:20px;border-radius:99px}
 .rgd-act .btn.big{min-width:150px}
@@ -1533,7 +1533,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
   .rgd .bub{padding:16px 22px 18px;border-radius:26px}
   .rgd .nm{font-size:15px;margin-bottom:6px}.rgd .pg{font-size:14px}
   .rgd .tx{font-size:21px;line-height:1.8;min-height:3.6em}
-  .rgd-act{padding:8px;gap:14px}
+  .rgd-act{padding:6px 8px 10px;gap:14px}
   .rgd-act .btn{font-size:18px;padding:14px 24px}
   .rgd-act .btn.big{min-width:210px;font-size:20px}
   .rgd-act .sfx{width:52px;height:52px}.rgd-act .sfx svg{width:24px;height:24px}
@@ -1573,6 +1573,32 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 .bvi .sidetg button.on{background:#fff;color:var(--ink);box-shadow:0 2px 0 rgba(0,0,0,.08)}
 /* many choices (ludo: rule × players): the toggle takes the row and wraps */
 .bvi .opts label:has(.sidetg button:nth-child(5)){flex:1 1 100%!important;flex-wrap:wrap}.bvi .sidetg:has(button:nth-child(5)){flex:1 1 100%;flex-wrap:wrap}.bvi .sidetg:has(button:nth-child(5)) button{flex:1 1 30%;padding-inline:6px}
+.bvi .act.act3 #bvTable.mxfull{background:#8a5a2b;color:#fff;box-shadow:0 4px 0 #5d3a16;border:2px solid #7a4c22}.bvi .act.act3 #bvTable.mxfull:hover{background:#7d5126}
+.bvi .mxb.mxic{width:48px;padding:0}.bvi .mxb.mxic svg{width:22px;height:22px}
+.lvs-l .lvpvp{width:100%;text-align:start;font:inherit;cursor:pointer;background:linear-gradient(100deg,#e3f3ff,#f6fbff 70%);border-color:#cfe6f7;padding:6px 12px 6px 10px}
+.lvs-l .lvpvp svg{width:96px;height:80px;flex:none;margin:-2px 0}.lvs-l .lvpvp small{color:#4f7fa3}
+.lvs-l .lvpvp.on{border-color:#ff5d5d;box-shadow:0 0 0 2px rgba(255,93,93,.25)}
+.lss-cat{margin:12px 2px 4px;font-size:12.5px;font-weight:900;color:var(--ink2)}.lss-cat:first-child{margin-top:0}
+.lssheet .lss b{color:var(--ink2)}.lssheet .lss.pass b{color:#1ea36c}.lss-wait{padding:20px;text-align:center;color:var(--ink2)}
+.recp .rtsum{display:grid;grid-template-columns:auto 1fr;gap:12px 18px;align-items:center}.recp .rtnow small{display:block;font-size:12px;font-weight:800;color:var(--ink2)}.recp .rtnow b{font-size:30px;font-weight:900;color:var(--ink)}
+.recp .rtcurve{grid-column:1 / -1;width:100%;height:90px}
+.recp .rtd.up{color:#1ea36c}.recp .rtd.dn{color:#d93c3c}
+#endc .rtres{display:flex;gap:10px;align-items:center;justify-content:center;margin:2px 0 10px;font-weight:900}#endc .rtres b{font-size:18px}#endc .rtres i{font-style:normal;padding:2px 10px;border-radius:99px;color:#fff;background:#1ea36c}#endc .rtres i.dn{background:#d93c3c}
+.rgd.lsg .rgd-act{gap:8px}.rgd.lsg .rgd-act .sp{flex:1}.rgd.lsg .cnt{display:flex;align-items:center;gap:5px;min-height:0}.rgd.lsg .lsd{width:12px;height:12px;border-radius:50%;background:#e6dccb;display:inline-block}.rgd.lsg .lsd.ok{background:#3ccf91}.rgd.lsg .lsd.mid{background:#ffb21e}.rgd.lsg .lsd.ng{background:#ff5d5d}.rgd.lsg .lsd.on{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--ink)}
+body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn{display:none}   /* (ミッション: not over the 3D view) */
+/* shogi / chess, PC: 対戦 · レート戦 · パズル · レッスン (app.js mxPanels, 2026-11-10) */
+.bvi .mtab3.mtab4 button{padding-inline:4px;font-size:13.5px}
+.bvi .mxp[hidden]{display:none!important}
+.bvi #bvRt{flex-direction:column;align-items:stretch;flex-wrap:nowrap}.bvi #bvRt > label{flex:none!important;width:100%}.bvi #bvRt > label[hidden]{display:none}
+.bvi #bvRt .mxrow{display:flex;gap:10px;align-items:center}.bvi #bvRt .mxrow > label{flex:1 1 auto!important;min-width:0;display:flex;align-items:center;gap:8px;white-space:nowrap}.bvi #bvRt .mxrow .mxb{flex:none}
+.bvi #bvRt .sidetg,.bvi #bvLs .sidetg{flex:1}.bvi #bvRt .sidetg button,.bvi #bvLs .sidetg button{flex:1}
+.bvi #bvLs > label{flex:1 1 100%!important}
+.bvi .mxnote{font-size:12.5px;font-weight:700;color:var(--ink2);padding:2px}
+.bvi .mxb{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:0;height:48px;padding:0 12px;border-radius:14px;border:2px solid var(--line);background:#fff;box-shadow:0 3px 0 var(--line);font:900 14.5px var(--font);color:var(--ink);cursor:pointer;white-space:nowrap}
+.bvi .mxb:hover{background:#fffaf0}.bvi .mxb i{font-style:normal;color:#c98a2a;display:inline-flex}.bvi .mxb svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.bvi #bvPz{display:grid;grid-template-columns:1fr 1fr;gap:10px}.bvi #bvPz .mxb[data-pz="list"]:nth-child(3){grid-column:1 / -1}
+.bvi .act.act3.act1 > a.btn{grid-column:1 / -1}
+.bvi .act.act3 #bvTable.mxw{background:#fff;color:var(--ink);box-shadow:0 4px 0 var(--line);border:2px solid var(--line)}
 .bvi .lvpick{flex:1;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:6px;height:38px;border-radius:12px;border:2px solid var(--line);background:#fff;padding:0 12px;font:inherit;font-weight:900;color:var(--ink);cursor:pointer}
 .bvi .lvpick span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bvi .lvpick .lvb{flex:none;width:34px;height:34px;margin:-4px 0;object-fit:contain;transform:scale(1.2);pointer-events:none}.bvi .lvpick:has(.lvb) i{margin-inline-start:auto}.bvi .lvpick i{font-style:normal;color:var(--ink2);font-size:13px}
 @media (min-width:820px){.bvi .lvpick{height:48px;font-size:17px;padding:0 16px;border-radius:14px}.bvi .lvpick .lvb{width:44px;height:44px}.bvi .sidetg button{font-size:16px;padding:10px 8px}}
@@ -1826,11 +1852,11 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 <script src="../shared/atlas.js?v=20261110hk1"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261109ac2"></script>
-<script src="i18n/v.js?v=67am"></script>
+<script src="i18n/v.js?v=69am"></script>
 <script>/* the UI strings: only ja, en and the page language (atlas/i18n/<lang>.js, made from i18n.js by tools/i18n-split.js — 2026-11-10);
    when they were made from another version of i18n.js than FULL, the whole i18n.js loads instead. Edit i18n.js, bump FULL's ?v=, run the tool. */
 (function () {
-  var FULL = 'i18n.js?v=67am', S = window.ATLAS_I18N_SPLIT, v = FULL.split('v=')[1], l = 'ja';
+  var FULL = 'i18n.js?v=69am', S = window.ATLAS_I18N_SPLIT, v = FULL.split('v=')[1], l = 'ja';
   try { l = localStorage.getItem('aicoding-lang') || (function (x) { return /^zh-(tw|hk|mo|hant)/i.test(x) ? 'zh-TW' : String(x).slice(0, 2); })(navigator.language || 'ja'); } catch (e) {}
   if (!S || S.v !== v) { document.write('<script src="' + FULL + '"><\/script>'); return; }
   var L = ['ja', 'en']; if (S.langs.indexOf(l) >= 0 && L.indexOf(l) < 0) L.push(l);
@@ -1863,9 +1889,11 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
     if (!btn.classList.contains('rgd-auto')) { btn.style.setProperty('--rgd0', -Math.round(el) + 'ms'); btn.classList.add('rgd-auto'); }   // the tour redrew its buttons: carry on where it was
   }, 60);
 };</script>
-<script src="lazy.js?v=31"></script>
+<script src="lazy.js?v=34"></script>
 <script src="puzzle-lines.js?v=1"></script>
-<script src="puzzles.js?v=4"></script>
+<script src="puzzles.js?v=5"></script>
+<script src="lessons3d.js?v=1"></script>
+<script src="missions.js?v=1"></script>
 <link rel="stylesheet" href="historia.css?v=15">
 <script src="historia.js?v=38"></script>
 <link rel="stylesheet" href="skin/loading.css?v=2">
@@ -1877,6 +1905,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <link rel="stylesheet" href="worldmap.css?v=18">
 <script src="worldmap.js?v=31"></script>
 <script src="npc/npc.js?v=20"></script>
-<script src="app.js?v=279"></script>
+<script src="app.js?v=282"></script>
 </body>
 </html>
