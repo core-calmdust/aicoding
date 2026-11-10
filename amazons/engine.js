@@ -216,14 +216,16 @@ let WA = null;
 (function loadCore() {
   try {
     let b64 = null;
-    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('core-wasm.js?v=1'); b64 = self.AMZ_WASM; }
+    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('core-wasm.js?v=2'); b64 = self.AMZ_WASM; }
     else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') { const g = typeof globalThis !== 'undefined' ? globalThis : global, had = 'self' in g, old = g.self; g.self = g; try { require(require('path').join(__dirname, 'core-wasm.js')); b64 = g.AMZ_WASM; } finally { if (had) g.self = old; else delete g.self; } }
     if (!b64 || (typeof process !== 'undefined' && process.env && process.env.AMZ_NOWASM)) return;
     const bin = typeof atob === 'function' ? Uint8Array.from(atob(b64), c => c.charCodeAt(0)) : Buffer.from(b64, 'base64');
-    const x = new WebAssembly.Instance(new WebAssembly.Module(bin), {}).exports, buf = x.memory.buffer;
-    WA = { x, sq: new Int8Array(buf, x.sqp(), NN), q: new Int8Array(buf, x.qp(), 8), om: new Int32Array(buf, x.omp(), 8192), os: new Int32Array(buf, x.osp(), 8192) };
+    const x = new WebAssembly.Instance(new WebAssembly.Module(bin), { env: { now: () => Date.now() } }).exports;
+    WA = { x }; waViews();
   } catch (e) { WA = null; }
 })();
+// (again after the memory has grown — the MCTS tree, mcts_alloc — the old views are detached then)
+function waViews() { const x = WA.x, buf = x.memory.buffer; Object.assign(WA, { buf, sq: new Int8Array(buf, x.sqp(), NN), q: new Int8Array(buf, x.qp(), 8), om: new Int32Array(buf, x.omp(), 8192), os: new Int32Array(buf, x.osp(), 8192), rm: new Int32Array(buf, x.rmp(), 64), rn: new Int32Array(buf, x.rnp(), 64), rv: new Int32Array(buf, x.rvp(), 64), rp: new Int32Array(buf, x.rpp(), 64), pv: new Int32Array(buf, x.pvp(), 32) }); }
 function waLoad(pos) { WA.sq.set(pos.sq); WA.q.set(pos.q); }
 // ---------------------------------------------------------------- evaluation (~100 = one square of territory)
 // The classic terms (Lieberum, "An evaluation function for the game of Amazons", 2005): t1 / t2 = territory by queen /
@@ -462,6 +464,55 @@ function bestMove(pos, maxD, ms, ek, rootK) {
   }
   return best;
 }
+// ---------------------------------------------------------------- MCTS (core.c: a tree search by visits with the evaluation)
+// The way of the strong Amazons programs (Invader-MC and after; claude/amazons-spec.md「MCTS」): each visit expands one leaf with
+// the candidate list (the evaluation of its children = its value), the children pre-selected and valued by the evaluation
+// (prior), progressive widening and implicit minimax values. Only with the WebAssembly core (mcts: null without it).
+// o: { ms (time), nk (thousands of evaluations), sims (visits), seed, prm (parameters, MC), onProgress(list, sims) }
+const MC = { qk: 10, k: 24, qkr: 20, kr: 48, po: 0, s: 400, np: 2, c: 0.25, a: 0.3, pwa: 3, pwk: 1, pwb: 0.5, pom: 0.5, vl: 1, b0: 300 };
+const MC_KEYS = ['qk', 'k', 'qkr', 'kr', 'po', 's', 'np', 'c', 'a', 'pwa', 'pwk', 'pwb', 'pom', 'vl', 'b0'];
+let MX = null;   // the core of the MCTS: { x, views } — WA (one thread) or the multi-thread core of the lead (mt=1)
+function mcCore() { return MX || WA; }
+function mcViews(C) { if (C.buf !== C.x.memory.buffer) { if (C === WA) waViews(); else C.views(); } }
+const MC_MAX_NODES = 1 << 21;   // (64 MB of tree; more threads: the lead's core sets its own)
+function mcts(pos, o) {
+  const C = mcCore(); if (!C) return null;
+  const X = C.x, p = Object.assign({}, MC, o.prm || {});
+  const evl = o.nk ? o.nk * 1000 : 0, sims = o.sims || 0, ms = o.ms || 0;
+  // nodes: about k per visit; a visit is ~0.3 ms of one thread here (more threads: the core's own maximum)
+  const est = Math.max(sims, evl / 200, ms * 4 * (C.threads || 1));
+  const want = Math.min(C.maxNodes || MC_MAX_NODES, Math.max(1 << 16, Math.ceil(est * p.k * 1.2)));
+  X.mcts_alloc(want); mcViews(C);
+  MC_KEYS.forEach((k, i) => X.mcts_set(i, p[k]));
+  C.sq.set(pos.sq); C.q.set(pos.q);
+  X.mcts_begin(pos.turn, o.seed | 0);
+  const t0 = Date.now();
+  let n = 1;
+  if (!o.onProgress) n = X.mcts_run(ms, evl, sims);
+  else for (;;) {   // (in steps of 0.5 s for the caller's progress)
+    n = X.mcts_run(ms ? Math.max(1, Math.min(500, ms - (Date.now() - t0))) : 500, evl, sims);
+    if (X.mcts_proof() || (evl && X.mcts_evals() >= evl) || (sims && n >= sims) || (ms && Date.now() - t0 >= ms) || (!ms && !evl && !sims)) break;
+    o.onProgress(mcList(C), n);
+  }
+  const list = mcList(C);
+  evals = X.mcts_evals();
+  return { list, sims: n, evals, nodes: X.mcts_nodes(), proof: X.mcts_proof() };
+}
+function mcList(C) {
+  const X = C.x, k = X.mcts_out(), out = [];
+  for (let i = 0; i < k; i++) out.push({ m: C.rm[i], n: C.rn[i], v: C.rv[i], p: C.rp[i] });
+  return out;
+}
+function mcPV(m, plies) { const C = mcCore(), k = Math.min(C.x.mcts_pv(m), plies || 5), out = []; for (let i = 0; i < k; i++) out.push(C.pv[i]); return out; }
+// a level / PRO setting with mc: the MCTS's move (the alpha-beta search's way in a lost position: resist)
+function mctsThink(pos, L) {
+  const r = mcts(pos, { ms: L.ms || 0, nk: L.nk || 0, sims: L.sims || 0, seed: L.seed || 0, prm: L.prm });
+  if (!r || !r.list.length) return null;
+  const b = r.list[0];
+  const out = thinkFin(pos, { move: b.m, v: b.v, depth: 3, evals: r.evals, sims: r.sims });
+  out.nodes = r.evals; out.mc = 1;   // (nodes: the evaluations of every thread — the page's nps readout)
+  return out;
+}
 // ---------------------------------------------------------------- AI levels (20 steps, Lv.1 … Lv.20)
 // weak steps: one ply, the candidates' values with noise (and fewer queen moves looked at); strong: a budget of evaluated
 // positions (nk, thousands — the PRO mode's "positions"); Lv.19〜23 a time budget.
@@ -484,13 +535,14 @@ const LEVELS = [null,
   { s: 1, nk: 36 },                    // 16
   { s: 1, nk: 52 },                    // 17
   { s: 1, nk: 75 },                    // 18
-  { s: 1, ms: 1500 },                   // 19
-  { s: 1, ms: 3000 },                   // 20
-  // the top levels (common rule「最上位のレベルの追加」): twice the time per step up to 20 s, on every thread of the page's pool
-  // (shared/mtsplit.js; the shared table on an isolated page) — one thread without the option
-  { s: 1, ms: 6000 },                   // 21
-  { s: 1, ms: 12000 },                  // 22
-  { s: 1, ms: 20000 },                  // 23
+  // Lv.19〜23 think by time with the MCTS (mc, 2026-11-10: stronger than the alpha-beta search in the same CPU time — tools/mcts_match.js,
+  // claude/amazons-spec.md「MCTS」), on the threads of the page's MCTS pool (core_mt.wasm, shared/mtengine.js) when it is there
+  { s: 1, ms: 1500, mc: 1 },            // 19
+  { s: 1, ms: 3000, mc: 1 },            // 20
+  // the top levels (common rule「最上位のレベルの追加」): twice the time per step up to 20 s, on every thread — one thread without the option
+  { s: 1, ms: 6000, mc: 1 },            // 21
+  { s: 1, ms: 12000, mc: 1 },           // 22
+  { s: 1, ms: 20000, mc: 1 },           // 23
 ];
 function gauss(rand) { let u = 0, v = 0; while (!u) u = rand(); while (!v) v = rand(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
 function replay(start, moves) {
@@ -527,6 +579,7 @@ function think(start, moves, level, rand, rule, cfg) {
     for (const e of vals) { const x = e.v + (Math.abs(e.v) > WINT ? 0 : gauss(rand) * L.noise); if (x > bv) { bv = x; best = e.m; } }
     return { move: best, v: vals[0].v };
   }
+  if (L.mc && mcCore()) { const r = mctsThink(pos, L); if (r) return r; }
   const r = bestMove(pos, L.dx || 40, L.ms || 0, L.nk || (L.ms ? 0 : 60));
   return thinkFin(pos, r);
 }
@@ -537,7 +590,7 @@ function thinkFin(pos, r) {
     const vals = rootValues(pos, cands(pos, 12, 0, 14), Math.min(3, r.depth));
     if (!stop && vals.length) return { move: resist(pos, vals), v: r.v, depth: r.depth };
   }
-  return { move: r.move, v: r.v, depth: r.depth, evals: r.evals !== undefined ? r.evals : evals };
+  return Object.assign({ move: r.move, v: r.v, depth: r.depth, evals: r.evals !== undefined ? r.evals : evals }, r.sims ? { sims: r.sims } : {});
 }
 // all-candidates analysis for hints / the review: the root candidates (and the move(s) in extra) valued, deeper as time allows
 function analyze(start, moves, ms, onProgress, rule, extra) {
@@ -591,7 +644,7 @@ function mtPlan(m) {
   nodes = 0; evals = 0; stop = false; tEnd = Infinity; evalLimit = Infinity;
   if (m.job === 'think') {
     const L = m.cfg || LEVELS[m.level] || LEVELS[10];
-    if (!L.s) return { result: think(m.start, m.moves, m.level, null, null, m.cfg) };
+    if (!L.s || L.mc) return { result: think(m.start, m.moves, m.level, null, null, m.cfg) };   // (the MCTS: one thread here; its own pool reads it on several)
     const C = cands(pos, 16, 0, 20);
     if (C.length === 1 || C[0].s > WINT) return { result: { move: C[0].m, v: C[0].s, depth: 1 } };
     return { plan: { kind: 'best', kids: C.map(c => ({ m: c.m, s: -1 })), inf, maxD: L.dx || 40, ms: L.ms || 0, nodes: (L.nk || (L.ms ? 0 : 60)) * 1000, win: WINT, partialIfBetter: true, splitMin: 4 } };
@@ -760,14 +813,28 @@ const hops = () => 1;
 
 const API = { get nodes() { return nodes; }, get evals() { return evals; }, P1, P2, WIN, WINT, ARROW, RULES, RULE_ORDER, setRule, get rule() { return 'std'; }, N, NN, RC, RAYS, NB, START,
   sqAt, sqName, sqIdx, mv, mFrom, mTo, mArrow, isRemove, hops, Pos, path, arrowPath, captured, name, parse, replay, judge, clearLine,
-  get wasm() { return !!WA; }, LEVELS, think, analyze, cands: candsJob, candList: cands, evaluate, evalFor, kindOf, EW, pvOf, bestMove, mtPlan, mtV, mtKids, mtFin, win1, canWin, duelGood, duelReply, trapGood, endGood, fillMax, roomOf, sideMoves, emptyAround, pzGood, set SH(t) { SH = t; }, get SH() { return SH; } };
+  get wasm() { return !!WA; }, LEVELS, MC, mcts, mcPV, useCore: C => { MX = C; }, think, analyze, cands: candsJob, candList: cands, evaluate, evalFor, kindOf, EW, pvOf, bestMove, mtPlan, mtV, mtKids, mtFin, win1, canWin, duelGood, duelReply, trapGood, endGood, fillMax, roomOf, sideMoves, emptyAround, pzGood, set SH(t) { SH = t; }, get SH() { return SH; } };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') {
+  // ?…&mt=1: the lead of the MCTS on several threads (shared/mtengine.js): core_mt.wasm on the shared memory sent with the first
+  // message ('mtinit'); the helpers (mt-helper.js) grow the same tree meanwhile. The alpha-beta parts keep the one-thread core.
   let queueP = Promise.resolve();
+  if (/[?&]mt=1\b/.test(self.location.search || '')) {
+    queueP = new Promise(res => self.addEventListener('message', function f(e) { if (e.data && e.data.type === 'mtinit') { self.removeEventListener('message', f); res(e.data); } }))
+      .then(m => {
+        const x = new WebAssembly.Instance(m.module, { env: { memory: m.mem, now: () => Date.now() } }).exports;
+        x.mt_stack(m.top); x.mt_thread(m.tls, 0);
+        const C = { x: Object.assign({}, x, { memory: m.mem }), threads: navigator.hardwareConcurrency || 2, maxNodes: 1 << 22 };
+        C.views = () => { const buf = m.mem.buffer; Object.assign(C, { buf, sq: new Int8Array(buf, x.sqp(), NN), q: new Int8Array(buf, x.qp(), 8), rm: new Int32Array(buf, x.rmp(), 64), rn: new Int32Array(buf, x.rnp(), 64), rv: new Int32Array(buf, x.rvp(), 64), rp: new Int32Array(buf, x.rpp(), 64), pv: new Int32Array(buf, x.pvp(), 32) }); };
+        C.views(); MX = C;
+        self.postMessage({ type: 'mtready' });
+      }).catch(err => { MX = null; self.postMessage({ type: 'mtready', error: String(err && err.message || err) }); });
+  }
   self.onmessage = e => {
     const m = e.data;
+    if (m && m.type === 'mtinit') return;
     if (m && m.type === 'mtshare') { try { importScripts(m.lib); SH = self.MTTT.attach(m); } catch (err) { SH = null; } return; }   // (shared/mtsplit.js shared mode)
-    queueP = queueP.then(() => {
+    queueP = queueP.catch(() => {}).then(() => {
       try {
         if (SH !== null) { SH.begin(m); SH.salt = 0; }
         if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...think(m.start, m.moves, m.level, null, null, m.cfg) });

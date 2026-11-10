@@ -41,12 +41,13 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);ma
 <body>
 <main>
 <h1>アマゾンズ マルチスレッド ベンチマーク</h1>
-<p class="sub">対局ページと同じ方式（shared/mtsplit.js：ふつうの Worker がルートの手と本筋（残り深さ4以上）を分担する Young Brothers Wait、評価と候補手は Worker 内の WebAssembly コア core-wasm.js）で、スレッド数ごとの速さを測ります。<b>共有</b>＝ページが分離されているとき（Chrome / Edge は自動、Safari・Firefox は対局ページでマルチスレッドをオン）の置換表を共有する方式、<b>非共有</b>＝各スレッドが自分の置換表を持つ方式（分離できないときの方式）。両方を測ります。PC の Chrome / Safari で開き、終わったら「結果をコピー」を押して貼り付けてください。</p>
+<p class="sub"><b>αβ</b>：Lv.9〜18 と解析・ヒントの探索。対局ページと同じ方式（shared/mtsplit.js：ふつうの Worker がルートの手と本筋（残り深さ4以上）を分担する Young Brothers Wait、評価と候補手は Worker 内の WebAssembly コア core-wasm.js）で、スレッド数ごとの速さを測ります。<b>共有</b>＝ページが分離されているとき（Chrome / Edge は自動、Safari・Firefox は対局ページでマルチスレッドをオン）の置換表を共有する方式、<b>非共有</b>＝各スレッドが自分の置換表を持つ方式（分離できないときの方式）。両方を測ります。<b>MCTS</b>：Lv.19〜23 の探索（2026-11-10〜）。全スレッドで1本の木を育てる方式（core_mt.wasm、shared/mtengine.js ＋ mt-helper.js、分離できたページだけ）で、同じ時間の訪問数（visits/s）と、1スレッドで4倍の時間読んだ手との一致を測ります。PC の Chrome / Safari で開き、終わったら「結果をコピー」を押して貼り付けてください。</p>
 
 <div class="card"><div class="kv" id="env"></div></div>
 
 <div class="card">
   <div class="row">
+    <label>測るもの <select id="selK"><option value="both" selected>αβ と MCTS</option><option value="ab">αβ だけ</option><option value="mc">MCTS だけ</option></select></label>
     <label>重さ <select id="selW"><option value="light">軽い（数分）</option><option value="normal" selected>ふつう</option><option value="heavy">重い</option></select></label>
   </div>
   <div class="row" style="margin-top:12px">
@@ -57,9 +58,11 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);ma
   <div id="st">準備中…</div>
 </div>
 
-<div class="card"><h2>結果</h2><div class="tw"><table id="tbl"><thead><tr><th>測定</th><th>方式</th><th>スレッド</th><th>時間</th><th>1スレッド比</th><th>幾何平均</th><th>効率</th><th>nps（合計）</th><th>1スレッドと一致</th></tr></thead><tbody></tbody></table></div><pre id="log"></pre></div>
+<div class="card"><h2>MCTS（Lv.19〜23）</h2><div class="tw"><table id="tblMc"><thead><tr><th>スレッド</th><th>visits/s（合計）</th><th>1スレッド比</th><th>効率</th><th>評価/s</th><th>4倍の1スレッドと一致</th><th>1スレッドと一致</th></tr></thead><tbody></tbody></table></div></div>
+
+<div class="card"><h2>αβ（Lv.9〜18・解析）</h2><div class="tw"><table id="tbl"><thead><tr><th>測定</th><th>方式</th><th>スレッド</th><th>時間</th><th>1スレッド比</th><th>幾何平均</th><th>効率</th><th>nps（合計）</th><th>1スレッドと一致</th></tr></thead><tbody></tbody></table></div><pre id="log"></pre></div>
 </main>
-<script src="engine.js?v=5"></script>
+<script src="engine.js?v=6"></script>
 <script src="../shared/mtengine.js?v=8"></script><script src="../shared/mtsplit.js?v=5"></script>
 <script>MTSplit.init({ sw: 'sw.js?v=1' });</script>
 
@@ -81,8 +84,9 @@ env();
 // ---- the game: G = { url, warm?, ready?, positions(weight) → [{ name, moves }], tests: [{ key, label, msg(p, weight), cmp(r) → string (the answer compared with 1 thread) }] }
 
 const E = window.AmazonsEngine;
-const ENGINE = 'engine.js?v=5';   // (the game page's ENGINE_URL in app.js: the same file and cache entry)
+const ENGINE = 'engine.js?v=6';   // (the game page's ENGINE_URL in app.js: the same file and cache entry)
 const D = { light: 6, normal: 8, heavy: 9 }, TA = { light: 1000, normal: 2000, heavy: 4000 }, EST = { light: 3, normal: 7, heavy: 18 };
+const TM = { light: 1000, normal: 2000, heavy: 4000 }, EST_MC = { light: 2, normal: 4, heavy: 8 };   // (the MCTS: ms per search; minutes on a 14-core Mac)
 let POS = null;
 const G = {
   url: ENGINE, drive: MTSplit.ladder.drive,
@@ -123,15 +127,16 @@ async function once(t, msg, mode) {
 }
 async function run() {
   $('#btnRun').disabled = true; $('#btnCopy').disabled = true;
-  const w = $('#selW').value, P = G.positions(w);
-  const total = P.length * G.tests.reduce((a, T) => a + MODES(T).length, 0) * COUNTS.length; let done = 0;
-  lines = [`amazons bench ${new Date().toISOString()} | ${ua} | hc ${HC} | weight ${w} (depth ${D[w]}, analysis ${TA[w]} ms) | shared ${MTSplit.shared ? 'yes' : 'no'}`];
-  const R = {};
+  const w = $('#selW').value, P = G.positions(w), K = $('#selK').value, doAB = K !== 'mc', doMC = K !== 'ab';
+  const total = (doAB ? P.length * G.tests.reduce((a, T) => a + MODES(T).length, 0) * COUNTS.length : 0) + (doMC ? P.length * (COUNTS.length + 1) : 0); let done = 0;
+  lines = [`amazons bench ${new Date().toISOString()} | ${ua} | hc ${HC} | weight ${w} (depth ${D[w]}, analysis ${TA[w]} ms, mcts ${TM[w]} ms) | shared ${MTSplit.shared ? 'yes' : 'no'} | kinds ${K}`];
+  const R = {}, mcLines = [];
   try {
-    for (const p of P) for (const T of G.tests) for (const M of MODES(T)) {
+    if (doMC) done = await mcRun(w, P, mcLines, () => { $('#bar i').style.width = (++done / total * 100) + '%'; }, done);
+    if (doAB) for (const p of P) for (const T of G.tests) for (const M of MODES(T)) {
       let ref = null, ms1 = 0; const row = [`${p.name} ${T.key} ${M}`];
       for (const t of COUNTS) {
-        $('#st').textContent = `${p.name}：${T.label}・${MODE_NAME[M]}・${t}スレッド（全体で所要 約${EST[w]}分）`;
+        $('#st').textContent = `${p.name}：${T.label}・${MODE_NAME[M]}・${t}スレッド（全体で所要 約${estMin()}分）`;
         const { r, ms } = await once(t, T.msg(p, w), M);
         const ans = T.cmp(r); if (t === 1) { ref = ans; ms1 = ms; }
         const a = R[T.key + '|' + M + '|' + t] || (R[T.key + '|' + M + '|' + t] = { ms: 0, nodes: 0, agree: 0, cnt: 0, extra: 0, lg: 0, lc: 0 });
@@ -146,9 +151,52 @@ async function run() {
   } catch (e) { $('#st').innerHTML = '<span class="n">エラー：' + String(e.message || e).replace(/</g, '&lt;') + '</span>'; lines.push('error ' + (e.message || e)); }
   env();
   lines[0] += ' | core ' + coreTxt();
-  lines.splice(1, 0, ...render(R));
+  lines.splice(1, 0, ...mcLines, ...render(R));
   $('#log').textContent = lines.join('\n');
   $('#btnRun').disabled = false; $('#btnCopy').disabled = false;
+}
+// ---- the MCTS (Lv.19〜23): the game page's pool (app.js MCP): one tree on every thread, the lead engine.js?…&mt=1 and the helpers
+// mt-helper.js on core_mt.wasm. Each position: 1 thread with 4× the time (the reference move), then every thread count for TM ms.
+const MC_CFG = { wasm: 'core_mt.wasm?v=1', lead: ENGINE + '&mt=1', helper: 'mt-helper.js?v=1', slot: 2 << 20, initial: 1024, maximum: 16384,
+  imports: mem => ({ env: { memory: mem, now: () => Date.now() } }), help: m => m.type === 'think' ? {} : null };
+async function mcRun(w, P, out, tick, done) {
+  if (!window.MTEngine || !MTEngine.isolated || !MTEngine.pool) { out.push('mcts: the page is not isolated (no shared memory) — not measured'); return done; }
+  const pool = MTEngine.pool(MC_CFG);
+  if (!(await pool.ready)) { out.push('mcts: the threads did not start'); return done; }
+  const job = (moves, ms, t) => pool.run({ type: 'think', start: null, moves, level: 0, cfg: { s: 1, mc: 1, ms }, mtThreads: t }, null, 'bench');
+  await job([], 300, HC);   // (warm: every helper has started)
+  const A = {}, rows = [];
+  for (const p of P) {
+    $('#st').textContent = `MCTS ${p.name}：基準（1スレッド・${TM[w] * 4 / 1000}秒）`;
+    const ref = await job(p.moves, TM[w] * 4, 1); tick(); done++;
+    let one = null; const row = [`mcts ${p.name} ref ${E.name(null, ref.move)} (${ref.sims} visits)`];
+    for (const t of COUNTS) {
+      $('#st').textContent = `MCTS ${p.name}：${t}スレッド（全体で所要 約${estMin()}分）`;
+      const r = await job(p.moves, TM[w], t); tick(); done++;
+      if (!r) throw new Error('the MCTS failed');
+      started = Math.max(started, r.threads || 1);
+      if (t === 1) one = r.move;
+      const a = A[t] || (A[t] = { sims: 0, ev: 0, ms: 0, ag: 0, ag1: 0, cnt: 0 });
+      a.sims += r.sims || 0; a.ev += r.nodes || 0; a.ms += r.ms || TM[w]; a.cnt++; if (r.move === ref.move) a.ag++; if (r.move === one) a.ag1++;
+      row.push(`t${t}(${r.threads || 1}) ${r.sims} visits ${E.name(null, r.move)}`);
+    }
+    rows.push(row.join(' | '));
+    renderMc(A);
+  }
+  pool.close();
+  out.push(...renderMc(A), ...rows);
+  return done;
+}
+function renderMc(A) {
+  const tb = $('#tblMc tbody'), out = [], b = A[1]; tb.innerHTML = ''; if (!b) return out;
+  const v1 = b.sims / b.ms * 1000;
+  for (const t of COUNTS) {
+    const a = A[t]; if (!a) continue;
+    const vs = a.sims / a.ms * 1000, sp = vs / v1, es = a.ev / a.ms * 1000;
+    tb.insertAdjacentHTML('beforeend', `<tr><td>${t}</td><td>${Math.round(vs)}</td><td>${sp.toFixed(2)}×</td><td>${(sp / t * 100).toFixed(0)}%</td><td>${Math.round(es / 1000)}k</td><td>${a.ag}/${a.cnt}</td><td>${a.ag1}/${a.cnt}</td></tr>`);
+    out.push(`mcts threads ${t}: ${Math.round(vs)} visits/s, x${sp.toFixed(2)} vs 1, eff ${(sp / t * 100).toFixed(0)}%, ${Math.round(es / 1000)}k evals/s, agree with 1 thread x4 time ${a.ag}/${a.cnt}, with 1 thread ${a.ag1}/${a.cnt}`);
+  }
+  return out;
 }
 function render(R) {
   const tb = $('#tbl tbody'), out = []; tb.innerHTML = '';
@@ -164,9 +212,10 @@ function render(R) {
   }
   return out;
 }
-const readyText = () => `準備完了（最大 ${HC} スレッド）。「開始」を押してください。所要 約${EST[$('#selW').value]}分。`;
+const estMin = () => { const w = $('#selW').value, k = $('#selK').value; return (k !== 'mc' ? EST[w] : 0) + (k !== 'ab' ? EST_MC[w] : 0); };
+const readyText = () => `準備完了（最大 ${HC} スレッド）。「開始」を押してください。所要 約${estMin()}分。`;
 $('#btnRun').onclick = run;
-$('#selW').onchange = () => { if (!$('#btnRun').disabled) $('#st').textContent = readyText(); };
+$('#selW').onchange = $('#selK').onchange = () => { if (!$('#btnRun').disabled) $('#st').textContent = readyText(); };
 $('#btnCopy').onclick = async () => {
   const txt = lines.join('\n');
   try { await navigator.clipboard.writeText(txt); $('#btnCopy').textContent = 'コピーしました'; }
