@@ -180,6 +180,7 @@ function tipsOf(st, cl, d) {
 let calcT = 0;
 function render() {
   if (!card) return;
+  if (window.SeqPrac && SeqPrac.active() && SeqPrac.paint()) return;   // the 3-move opening practice (shared/seqprac.js, 2026-11-10)
   if (SenetCoach.sw) SenetCoach.sw.sync();
   const rv = !!document.querySelector('#reviewCard.show');
   const over = !!game && game.plies.length > 0 && overNow(), playing = !!game && !over && atLatest() && !reviewing;
