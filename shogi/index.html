@@ -433,6 +433,10 @@ html.atlas-skin .ts-compact #tsNo{color:#9a7a3a}
 .lesson-card.ts-compact > .lh #lsQuit::before{content:'';flex:none;width:15px;height:15px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27black%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M14%204h4a2%202%200%200%201%202%202v12a2%202%200%200%201-2%202h-4%27/%3E%3Cpath%20d%3D%27M9%208l-4%204%204%204%27/%3E%3Cpath%20d%3D%27M5%2012h10%27/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27black%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M14%204h4a2%202%200%200%201%202%202v12a2%202%200%200%201-2%202h-4%27/%3E%3Cpath%20d%3D%27M9%208l-4%204%204%204%27/%3E%3Cpath%20d%3D%27M5%2012h10%27/%3E%3C/svg%3E") center/contain no-repeat}
 .lesson-card.ts-compact > .lh #lsQuit{background:rgba(0,0,0,.2);border:1px solid var(--line);color:var(--muted);cursor:pointer}
 html.atlas-skin .lesson-card.ts-compact > .lh #lsQuit{background:#fff!important;border:2px solid #ead9b6!important;color:#4a5068!important;box-shadow:0 2px 0 #ead9b6!important}
+body:has(#lessonCard.ts-compact) #coachCard{display:none!important}
+#lessonCard.ts-compact :is(#lsHint,#lsAuto,#lsNext,#lsToList){display:none!important}
+#lessonCard:not(.ts-compact) .ts-b{display:none!important}
+#lessonCard.ts-compact .cb-bar .cb-ic.ts-b[data-cap]{gap:6px!important}   /* no hidden text label inside: same caption line as 一覧 */   /* tsume: no coach panel at all (2026-11-10) */
 body.ts-noopp .hand.top{visibility:hidden;height:0!important;min-height:0!important;padding:0!important;margin:0!important;border:0!important;overflow:hidden}
 .ts-compact .cb-bar .cb-q{font-size:0!important;width:42px!important;height:42px!important;padding:0!important;margin-inline-start:0!important;justify-content:center;gap:0!important;border-radius:14px!important}
 .ts-compact .cb-bar .cb-q::before{width:18px;height:18px}
@@ -4498,14 +4502,30 @@ function keepBoardPos(fn) {
 }
 // 詰将棋: a compact card bar (2026-11-10) — ヒント (もう一度 after a miss) as an icon among the tools, 詰将棋をやめる as an icon at
 // the end of the same row (shared/cardbar.js built the bar; this only rearranges it while a tsume is on)
-const TSB_I = { hint: '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2h5c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3z"/>', retry: '<path d="M4 4v6h6"/><path d="M5.5 15a7 7 0 1 0 1.6-7.3L4 10"/>' };
-const TSB_CAP = {   // small captions under the icons (like the game's toolbar): list, play, hint, retry, quit
-  ja: ['一覧', '再生', 'ヒント', 'もう一度', 'やめる'], en: ['List', 'Play', 'Hint', 'Retry', 'Quit'], zh: ['列表', '播放', '提示', '重试', '退出'], 'zh-TW': ['列表', '播放', '提示', '重試', '退出'],
-  ko: ['목록', '재생', '힌트', '다시', '그만'], es: ['Lista', 'Ver', 'Pista', 'Otra vez', 'Salir'], fr: ['Liste', 'Lire', 'Indice', 'Rejouer', 'Quitter'], pt: ['Lista', 'Ver', 'Dica', 'De novo', 'Sair'],
-  de: ['Liste', 'Zeigen', 'Tipp', 'Nochmal', 'Beenden'], hi: ['सूची', 'चलाएँ', 'संकेत', 'फिर से', 'छोड़ें'], ar: ['القائمة', 'تشغيل', 'تلميح', 'أعد', 'خروج'], ru: ['Список', 'Показ', 'Подсказка', 'Ещё раз', 'Выйти'],
-  id: ['Daftar', 'Putar', 'Petunjuk', 'Ulangi', 'Keluar'], tr: ['Liste', 'Oynat', 'İpucu', 'Tekrar', 'Çık'] };
+const TSB_I = { hint: '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2h5c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3z"/>', retry: '<path d="M4 4v6h6"/><path d="M5.5 15a7 7 0 1 0 1.6-7.3L4 10"/>',
+  answer: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>' };
+// the tsume card's buttons — the same set and order as the chess puzzles (2026-11-10): ヒント・やり直し・答え・一覧 (icons with a small
+// caption) and a wide 「次の問題」. They drive the lesson's own handlers (lsHint / lsNext), which stay hidden while a tsume is on.
+const TSB_CAP = {   // hint, retry, answer, list, quit
+  ja: ['ヒント', 'やり直し', '答え', '一覧', 'やめる'], en: ['Hint', 'Retry', 'Answer', 'List', 'Quit'], zh: ['提示', '重试', '答案', '列表', '退出'], 'zh-TW': ['提示', '重試', '答案', '列表', '退出'],
+  ko: ['힌트', '다시', '정답', '목록', '그만'], es: ['Pista', 'Otra vez', 'Solución', 'Lista', 'Salir'], fr: ['Indice', 'Rejouer', 'Solution', 'Liste', 'Quitter'], pt: ['Dica', 'De novo', 'Solução', 'Lista', 'Sair'],
+  de: ['Tipp', 'Nochmal', 'Lösung', 'Liste', 'Beenden'], hi: ['संकेत', 'फिर से', 'उत्तर', 'सूची', 'छोड़ें'], ar: ['تلميح', 'أعد', 'الحل', 'القائمة', 'خروج'], ru: ['Подсказка', 'Ещё раз', 'Ответ', 'Список', 'Выйти'],
+  id: ['Petunjuk', 'Ulangi', 'Jawaban', 'Daftar', 'Keluar'], tr: ['İpucu', 'Tekrar', 'Çözüm', 'Liste', 'Çık'] };
+const tsIcon = k => `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>${TSB_I[k].replace(/"/g, "'")}</svg>`)}")`;
+const tsAct = {
+  tsBH() { if (lesson && !lesson.retry && !lesson.answered) $('#lsHint').click(); },
+  tsBR() {   // back to the start of the problem (any time before it is solved)
+    if (!lesson || lesson.answered) return; const pr = lesson.cur;
+    lesson.retry = null; lesson.played = []; lesson.atkOk = 0; lesson.offline = false; lesson.dev = 0; lesson.fbHtml = ''; lessonGame(pr.sfen, []); lesson.waiting = true; renderLesson();
+  },
+  tsBA() { if (!lesson) return; if (lesson.answered) playSolution(); else $('#lsNext').click(); },   // unsolved: give up and show it; solved: play it again
+  tsBN() {
+    if (!lesson) return; if (lesson.answered) { $('#lsNext').click(); return; }
+    const n = lesson.k + 1; if (!lesson.daily && n < lesson.probs.length && PZBook.isOpen(tsRecs(lesson.g), n)) { lesson.k = n; loadProblem(); }
+  },
+};
 function tsBar() {
-  const card = $('#lessonCard'), bar = card && card.querySelector('.cb-bar'), h = $('#lsHint'); if (!bar || !h) return;
+  const card = $('#lessonCard'), bar = card && card.querySelector('.cb-bar'); if (!bar) return;
   const on = !!(lesson && lesson.endless && lesson.cur && lesson.cur.kind === 'tsume'), tools = bar.querySelector('.cb-tools'), main = bar.querySelector('.cb-main');
   card.classList.toggle('ts-compact', on);
   // the title row: 「創作 3手詰 …… 18/120問目」; the head row's right end: the quit button (2026-11-10)
@@ -4519,19 +4539,25 @@ function tsBar() {
   } else if (q && q.parentElement !== bar) { bar.appendChild(q); }
   // composed tsume: the defender holds every remaining piece by convention — its stand is not shown
   document.body.classList.toggle('ts-noopp', on && !!(lesson.cur && lesson.cur.conv));
-  if (on) {
-    const k = lesson.retry ? 'retry' : 'hint';
-    if (h.parentElement !== tools) tools.appendChild(h);
-    h.classList.add('cb-ic'); h.classList.remove('cb-t');
-    if (h.dataset.tsi !== k) { h.dataset.tsi = k; h.style.setProperty('--cb-i', `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>${TSB_I[k].replace(/"/g, "'")}</svg>`)}")`); }
-    const l = h.textContent.trim(); if (l) { h.title = l; h.setAttribute('aria-label', l); }
-    const C = TSB_CAP[LANG] || TSB_CAP.en, cap = (id, v) => { const e = $('#' + id); if (e) e.dataset.cap = v; };
-    cap('lsList', C[0]); cap('lsToList', C[0]); cap('lsAuto', C[1]); cap('lsHint', lesson.retry ? C[3] : C[2]); cap('lsQuit', C[4]);
-  } else if (h.parentElement === tools) {
-    const nx = $('#lsNext'); main.insertBefore(h, nx && main.contains(nx) ? nx : null);
-    h.classList.remove('cb-ic'); h.classList.add('cb-t'); h.style.removeProperty('--cb-i'); delete h.dataset.tsi; h.removeAttribute('title'); h.removeAttribute('aria-label');
-    ['lsList', 'lsToList', 'lsAuto', 'lsHint', 'lsQuit'].forEach(id => { const e = $('#' + id); if (e) delete e.dataset.cap; });
-  }
+  if (!on) return;
+  const C = TSB_CAP[LANG] || TSB_CAP.en;
+  const mk = (id, ic, cap, label, tool) => {
+    let b = $('#' + id);
+    if (!b) { b = document.createElement('button'); b.id = id; b.className = tool ? 'cb-ic ts-b' : 'cb-t cb-nx ts-b'; if (ic) b.style.setProperty('--cb-i', tsIcon(ic)); b.onclick = e => { e.stopPropagation(); tsAct[id](); }; }
+    if (tool) { b.dataset.cap = cap; b.title = label; b.setAttribute('aria-label', label); } else if (b.textContent !== label) b.textContent = label;
+    return b;
+  };
+  const L = lesson, played = !!(L.played && L.played.length);
+  const bH = mk('tsBH', 'hint', C[0], t('ls.hint'), 1), bR = mk('tsBR', 'retry', C[1], t('ts.retry'), 1), bA = mk('tsBA', 'answer', C[2], t('ls.answer'), 1);
+  const bL = $('#lsList'), bN = mk('tsBN', null, '', t('ls.next'), 0);
+  bH.disabled = !!(L.answered || L.retry || L.hintShown || L.offline);
+  bR.disabled = !!(L.answered || (!played && !L.retry));
+  const nOpen = !L.daily && L.k + 1 < L.probs.length && PZBook.isOpen(tsRecs(L.g), L.k + 1);
+  bN.disabled = !L.answered && !nOpen; bN.classList.toggle('go', !!L.answered);
+  [bH, bR, bA, bL].forEach(b => { if (b && (b.parentElement !== tools || tools.lastElementChild !== b)) tools.appendChild(b); });
+  if (bL) { bL.dataset.cap = C[3]; }
+  if (bN.parentElement !== main) main.appendChild(bN);
+  if (q) q.dataset.cap = C[4];
 }
 function renderLesson() { keepBoardPos(renderLesson0); tsBar(); stSync(); hbInfo(); $('#lsBackOp').classList.toggle('hidden', !(lesson && (lesson.study || lesson.opening))); }
 function renderLesson0() {
