@@ -123,6 +123,8 @@
   function start(ctx) {
     const T3 = ctx.Table3D, E = window.HockeyEngine, D = E.DIM, lang = ctx.lang;
     const pvp = ctx.mode === 'pvp', level = Math.max(1, Math.min(20, +ctx.level || 6)), target = SIZES.includes(+ctx.size) ? +ctx.size : 7;
+    // the touchpad note on the controls card (PCs): a heading line, then how — like carrom / crokinole
+    const PADT = [['ノートPCのタッチパッドなら：', '指をすべらせるだけでパッドが動く（クリック不要）'], ['On a laptop touchpad:', 'just glide a finger and the mallet follows (no clicking)'], ['笔记本触控板：', '手指滑动即可移动球拍（不用点击）'], ['筆電觸控板：', '手指滑動即可移動球拍（不用點擊）'], ['노트북 터치패드라면:', '손가락을 미끄러뜨리기만 하면 패드가 움직인다 (클릭 불필요)'], ['Con el panel táctil del portátil:', 'desliza el dedo y el mazo te sigue (sin clic)'], ['Sur le pavé tactile d’un portable :', 'glisse le doigt, le maillet suit (sans clic)'], ['No touchpad do notebook:', 'deslize o dedo e o batedor acompanha (sem clicar)'], ['Mit dem Touchpad am Laptop:', 'einfach den Finger gleiten lassen, der Schläger folgt (ohne Klick)'], ['На тачпаде ноутбука:', 'просто веди пальцем — бита следует (без щелчка)'], ['Dizüstü dokunmatik yüzeyde:', 'parmağını kaydır, tokmak takip eder (tıklama yok)'], ['Dengan touchpad laptop:', 'cukup geser jari, pemukul mengikuti (tanpa klik)'], ['लैपटॉप टचपैड पर:', 'बस उँगली फिसलाओ, मैलेट पीछे-पीछे चलेगा (क्लिक नहीं)'], ['على لوحة لمس الحاسوب المحمول:', 'مرّر إصبعك فقط وتتبعه المضرب (بلا نقر)']];
     const BKT = ['もどる', 'Back', '返回', '返回', '돌아가기', 'Volver', 'Retour', 'Voltar', 'Zurück', 'Назад', 'Geri', 'Kembali', 'वापस', 'رجوع'];
     const BL = Object.keys(E.BOARDS), lookNow = () => { const v = T3.BOARDS && T3.BOARDS.hockey ? T3.BOARDS.hockey.get() : 'classic'; return BL.includes(v) ? v : 'classic'; };
     let look = lookNow(), board = T3.MODELS.hockey(true, look); T3.show('hockey', board);
@@ -166,6 +168,7 @@
 .hkhw li{display:flex;align-items:center;gap:12px;font-size:18px;font-weight:800;line-height:1.35}
 .hkhw li i{flex:none;width:40px;height:40px;border-radius:50%;background:#e3edfb;color:#2f6fd0;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:20px;font-weight:900}
 .hkhw li span{white-space:normal}html .hkhw li{white-space:normal!important}
+.hkhw .u{margin:14px 0 0;font-size:14px;font-weight:700;color:#5b6074;text-align:center;line-height:1.7}
 .hkhw label{display:flex;align-items:center;justify-content:center;gap:8px;margin:16px 0 14px;font-size:16px;font-weight:800;cursor:pointer}
 .hkhw label input{width:20px;height:20px;accent-color:#2f6fd0}
 .hkhw button{display:block;width:100%;padding:13px;border:0;border-radius:99px;background:#2f6fd0;color:#fff;font:inherit;font-size:18px;font-weight:900;cursor:pointer}
@@ -413,7 +416,7 @@ html.hk-on #bv > .npc-float .npc-pic{width:36px!important;height:36px!important}
       const dev = (H[1].split(/[／·・|]/).map(x => x.trim()).filter(Boolean)[mouse ? 0 : 1] || H[1]).trim();
       const steps = [['🏒', H[0]], [mouse ? '🖱' : '👆', dev]].concat(mouse ? [['⌨', H[2]]] : []).concat([['⚡', H[3]]]);
       const el = document.createElement('div'); el.className = 'hkhw'; el.dir = lang === 'ar' ? 'rtl' : 'ltr'; menuEl = null;
-      el.innerHTML = `<div class="hkhw-c" role="dialog" aria-modal="true"><h2>${esc(HOWK.title[li(lang)] || HOWK.title[1])}</h2><ol>${steps.map(([ic, x]) => `<li><i>${ic}</i><span>${esc(x)}</span></li>`).join('')}</ol><label><input type="checkbox" id="hkNever"> ${esc(HOWK.never[li(lang)] || HOWK.never[1])}</label><button type="button" class="ok">${esc(HOWK.ok[li(lang)] || HOWK.ok[1])}</button></div>`;
+      el.innerHTML = `<div class="hkhw-c" role="dialog" aria-modal="true"><h2>${esc(HOWK.title[li(lang)] || HOWK.title[1])}</h2><ol>${steps.map(([ic, x]) => `<li><i>${ic}</i><span>${esc(x)}</span></li>`).join('')}</ol>${mouse ? `<p class="u pad">💻 <b>${esc((PADT[li(lang)] || PADT[1])[0])}</b><br>${esc((PADT[li(lang)] || PADT[1])[1])}</p>` : ''}<label><input type="checkbox" id="hkNever"> ${esc(HOWK.never[li(lang)] || HOWK.never[1])}</label><button type="button" class="ok">${esc(HOWK.ok[li(lang)] || HOWK.ok[1])}</button></div>`;
       ['pointerdown', 'pointermove', 'pointerup'].forEach(k => el.addEventListener(k, e => e.stopPropagation()));
       document.body.appendChild(el); howEl = el;
       el.querySelector('.ok').onclick = () => { if (el.querySelector('#hkNever').checked) { howOff = true; try { localStorage.setItem('atlas-hockey-howto', 'off'); } catch (e) {} } el.remove(); howEl = null; if (!stopped) showMenu(); };
