@@ -159,6 +159,15 @@
 .hkmenu .how{margin:12px 2px 0;padding:10px 12px;border-radius:14px;background:#f4efe3;font-size:12.5px;font-weight:700;color:#4a4f63;line-height:1.5}
 
 .hkmenu .sel{display:none;margin:10px 2px 0;font-size:13px;font-weight:800;color:#2f6fd0;text-align:center;min-height:2.6em}
+@media (min-width:900px) and (min-height:600px) and (hover:hover){   /* (2026-11-10) PCs: the board picker uses the width — three big cards with large pictures */
+.hkmenu-c{width:min(1120px,82vw);padding:26px 30px 24px;border-radius:30px}.hkmenu h2{font-size:28px;margin-bottom:18px}
+.hkmodes{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.hkmodes button{flex-direction:column;align-items:stretch;gap:10px;padding:10px 10px 14px;border-radius:20px}
+.hkmodes .ic.th{width:100%;height:auto;aspect-ratio:16/9;border-radius:14px}.hkmodes .ic.th img{transform:scale(1.9) translateY(-4%)}
+.hkmodes b{font-size:20px;padding:0 6px}.hkmodes small{font-size:14px;padding:0 6px;margin-top:4px}
+.hkmenu .go{font-size:22px;padding:15px;max-width:520px;margin-left:auto;margin-right:auto}
+}
+@media (min-width:900px) and (max-height:820px) and (hover:hover){.hkmodes .ic.th{aspect-ratio:2/1}.hkmodes{gap:12px}.hkmenu h2{margin-bottom:12px}}
 @media (max-width:560px){.hkmenu-c{padding:14px 12px 12px}.hkmodes{gap:6px}.hkmodes button{padding:7px 8px;gap:7px}.hkmodes .ic{width:32px;height:32px;font-size:18px;border-radius:10px}.hkmodes b{font-size:13.5px}.hkmodes small{display:none}.hkmenu h2{font-size:19px;margin-bottom:10px}.hkmenu .sel{display:block}.hkmenu .how{font-size:11.5px;padding:8px 10px}}
 .hkmenu .go{position:sticky;bottom:0}
 .hktoast{position:fixed;left:50%;top:calc(80px + env(safe-area-inset-top));transform:translateX(-50%);z-index:90;padding:9px 20px;border-radius:99px;background:#fff;color:#1d2133;font-weight:900;font-size:16px;box-shadow:0 0 0 2.5px #2f6fd0,0 8px 20px rgba(0,0,0,.3);pointer-events:none;white-space:nowrap;-webkit-user-select:none;user-select:none}
@@ -231,7 +240,8 @@ html.hk-on #bv > .npc-float .npc-pic{width:36px!important;height:36px!important}
     function setLook(v) {
       if (v === look || s) return; look = v;
       try { if (T3.setBoard) T3.setBoard('hockey', v); else if (T3.BOARDS && T3.BOARDS.hockey) T3.BOARDS.hockey.set(v); } catch (e) {}
-      board = T3.MODELS.hockey(true, v); U = board.userData; T3.show('hockey', board);
+      // (the new board's pieces move into the group already on the table: T3.show() would put the camera back to the room view)
+      const nb = T3.MODELS.hockey(true, v); while (board.children.length) board.remove(board.children[0]); while (nb.children.length) board.add(nb.children[0]); board.userData = nb.userData; U = board.userData;
       mal = [U.mallet(0), U.mallet(1)]; mal.forEach(m => board.add(m)); put(mal[0], 0, D.L / 2 - 8); put(mal[1], 0, -(D.L / 2 - 8));
       prePuck = U.puck(); put(prePuck, 0, 0); board.add(prePuck);
       pk.clear(); fitNow(); kick(500); hud(); fx.reset();
