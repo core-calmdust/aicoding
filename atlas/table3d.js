@@ -1679,9 +1679,10 @@
     g.userData.merged = true; try { mergeStatic(g); } catch (e) {}   // merged here (idle time), not at the swap
     try { R.compile(tmp, cam); } catch (e) {}
     tmp.remove(g); if (extra) tmp.remove(extra);
-    prepared[id] = { g, extra, st: stamp() };
+    prepared[id] = { g, extra, st: stamp(), fn: MODELS[id] };
   }
-  function take(id) { const p = prepared[id]; delete prepared[id]; return p && p.st === stamp() ? p : null; }
+  // (fn: a board built by the builder of the time — atlas/lazy.js replaces a game's builder with its full model when the game is opened)
+  function take(id) { const p = prepared[id]; delete prepared[id]; return p && p.st === stamp() && p.fn === MODELS[id] ? p : null; }
   function show(id, model, opts = {}) {
     if (!R) return null;
     // (soft = back from a game: the play framing stays until the camera's glide has left it — clearing it here made the camera
