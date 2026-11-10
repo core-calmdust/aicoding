@@ -112,6 +112,16 @@ html.atlas-skin ${P}[data-ngt=design] [data-ng=design] :is(.dsg,.bdrow,.skrow,.s
 html.atlas-skin ${P}[data-ngt=design] [data-ng=design] :is(.dsg,.bdrow,.skrow,.skinrow) > button:is(.sel,.on,[aria-pressed=true]){background:linear-gradient(180deg,#fff6df,#fde6b6)!important;border-color:#e0a33a!important;box-shadow:0 0 0 1px #e9bd6a, 0 6px 14px -8px rgba(150,100,30,.6)!important}
 html.atlas-skin ${P} .ngt-gcard.sel{background:linear-gradient(180deg,#fff6df,#fdeac4)}
 html.atlas-skin ${P}.ngt-pc .ngt-gcard p{color:#4a5068}
+/* the portal look is flat (2026-11-10): solid fills, a solid border and at most a solid bottom edge — no gradients, glows or soft drop shadows */
+html.atlas-skin ${P}{--ngl-pbg:#fffaf0;--ngl-psh:0 3px 0 #ecdab4}
+html.atlas-skin ${P} :is(.ng-col,[data-ng=design],.ngt-gcard,.ngt-modef,.ngt-rl){background-image:none!important}
+html.atlas-skin ${P} .seg button.sel{background:#fff!important;box-shadow:0 2px 0 #e3cfa4!important}
+html.atlas-skin ${P}[data-ngt=design] [data-ng=design] :is(.dsg,.bdrow,.skrow,.skinrow) > button{box-shadow:0 2px 0 #efe2c4!important}
+html.atlas-skin ${P}[data-ngt=design] [data-ng=design] :is(.dsg,.bdrow,.skrow,.skinrow) > button:is(.sel,.on,[aria-pressed=true]){background:#fff3d6!important;border-color:#e0a33a!important;box-shadow:0 0 0 1px #e0a33a, 0 3px 0 #e6c27a!important;transform:none!important}
+html.atlas-skin ${P}[data-ngt=design] [data-ng=design] :is(.dsg,.bdrow,.skrow,.skinrow) > button :is(.th,svg,img,i){box-shadow:none!important}
+html.atlas-skin ${P} .ngt-gcard{box-shadow:0 3px 0 #ecdab4!important}
+html.atlas-skin ${P} .ngt-gcard.sel{background:#fff3d6!important;border-color:#e0a33a!important;box-shadow:0 0 0 1px #e0a33a, 0 3px 0 #e6c27a!important}
+html.atlas-skin ${P} .ngt-gcard .gart{box-shadow:none!important;background-image:none!important}
 `;
 function init() {
   const ov = document.getElementById('newOverlay'), modal = ov && ov.querySelector('.modal');
