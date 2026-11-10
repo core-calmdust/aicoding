@@ -130,7 +130,7 @@
     let look = lookNow(), board = T3.MODELS.hockey(true, look); T3.show('hockey', board);
     let modelKids = new Set(board.children);   // (the parts the board model came with: swapped when another board is picked)
     document.documentElement.classList.add('hk-on');
-    const barFit = () => { const b = document.getElementById('tbar'); if (b && b.offsetHeight) { const r = b.getBoundingClientRect(); document.documentElement.style.setProperty('--hk-bar', Math.round(innerHeight - r.top + 6) + 'px'); } };
+    const barFit = () => { const b = document.getElementById('tbar'); if (b && b.offsetHeight) { const r = b.getBoundingClientRect(); const D = document.documentElement.style; D.setProperty('--hk-bar', Math.round(innerHeight - r.top + 6) + 'px'); D.setProperty('--hk-barb', Math.max(0, Math.round(innerHeight - r.bottom)) + 'px'); D.setProperty('--hk-barh', Math.round(r.height) + 'px'); } };
     setTimeout(barFit, 400); addEventListener('resize', barFit);
     let U = board.userData; const Y = U.top, K = U.K, TH = window.THREE;
     const port = () => innerHeight > innerWidth * 1.05;
@@ -190,7 +190,7 @@
 .hktoast{position:fixed;left:50%;top:calc(80px + env(safe-area-inset-top));transform:translateX(-50%);z-index:90;padding:9px 20px;border-radius:99px;background:#fff;color:#1d2133;font-weight:900;font-size:16px;box-shadow:0 0 0 2.5px #2f6fd0,0 8px 20px rgba(0,0,0,.3);pointer-events:none;white-space:nowrap;-webkit-user-select:none;user-select:none}
 .hkbig{position:fixed;left:50%;top:42%;transform:translate(-50%,-50%);z-index:90;font-weight:900;font-size:min(16vw,92px);color:#fff;text-shadow:0 4px 0 rgba(0,0,0,.25),0 0 24px rgba(255,255,255,.6);pointer-events:none;animation:hkPop .6s cubic-bezier(.2,1.6,.4,1);-webkit-user-select:none;user-select:none;white-space:nowrap}
 .hkbig.g{color:#ffd23a;-webkit-text-stroke:2px #b5651d}@keyframes hkPop{from{transform:translate(-50%,-50%) scale(.3);opacity:0}}
-/* the boss / watcher talk: kept down in the action bar's row, never over the rink (PC: beside the bar; phones: a slim strip just above it) */
+/* the boss / watcher talk: kept down in the action bar's row, never over the rink (PC: beside the bar; phones (2026-11-11): over the bar itself — the taps still reach its buttons) */
 html.hk-on #bv > .npc-float{left:calc(50% + 145px)!important;right:auto!important;width:min(440px,calc(50% - 165px))!important;bottom:calc(14px + env(safe-area-inset-bottom))!important;transform:translateY(10px);gap:8px!important;align-items:center!important}
 html.hk-on #bv > .npc-float.on{transform:none}
 html.hk-on #bv > .npc-float .npc-pic{width:58px!important;height:58px!important}
@@ -198,8 +198,8 @@ html.hk-on #bv > .npc-float .npc-bub{padding:6px 12px 7px!important;border-radiu
 html.hk-on #bv > .npc-float .npc-bub::before,html.hk-on #bv > .npc-float .npc-bub::after{bottom:auto!important;top:50%;margin-top:-9px}
 html.hk-on #bv > .npc-float .npc-nm b{font-size:13px!important}html.hk-on #bv > .npc-float .npc-tag{font-size:10.5px!important}html.hk-on #bv > .npc-float .npc-ttl{display:none}
 html.hk-on #bv > .npc-float .npc-tx{font-size:14px!important;line-height:1.4!important;min-height:0!important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-@media (max-width:760px){html.hk-on #bv > .npc-float{left:10px!important;right:10px!important;width:auto!important;bottom:calc(env(safe-area-inset-bottom) + var(--hk-bar,76px))!important}
-html.hk-on #bv > .npc-float .npc-pic{width:36px!important;height:36px!important}html.hk-on #bv > .npc-float .npc-bub{padding:4px 10px 5px!important;max-height:46px}html.hk-on #bv > .npc-float .npc-nm{display:none}html.hk-on #bv > .npc-float .npc-tx{font-size:12.5px!important;line-height:1.35!important}}
+@media (max-width:760px){html.hk-on #bv > .npc-float{left:10px!important;right:10px!important;width:auto!important;bottom:var(--hk-barb,14px)!important;min-height:var(--hk-barh,61px);z-index:60!important;pointer-events:none}
+html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}html.hk-on #bv > .npc-float .npc-bub{padding:4px 12px 5px!important;max-height:none;min-height:var(--hk-barh,61px);box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;flex:1}html.hk-on #bv > .npc-float .npc-nm{display:none}html.hk-on #bv > .npc-float .npc-tx{font-size:12.5px!important;line-height:1.35!important}}
 .hkfx{position:fixed;z-index:80;pointer-events:none;font-weight:900;font-size:15px;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.35),0 0 10px rgba(255,120,40,.9);transform:translate(-50%,-50%);animation:hkUp .8s ease-out forwards;white-space:nowrap;-webkit-user-select:none;user-select:none}@keyframes hkUp{to{transform:translate(-50%,-180%);opacity:0}}`;
     document.head.appendChild(css);
     let toastEl = null, toastT = 0;
