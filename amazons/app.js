@@ -246,20 +246,30 @@ function flipAuto() {   // the player's side at the bottom: the board turns roun
 }
 const pcEls = new Map();      // square -> element (the amazons and the arrows)
 let shownKey = '';
-// a fire arrow: the flame (.fire, wrapped behind the head and blown back along the shaft) burns while it flies and dies down after it strikes
-const ARROW_SVG = '<svg viewBox="0 0 40 40"><path class="fl" d="M7 33 1 34l4-6zM9 35l-1 5 5-4z"/><line class="shaft" x1="8" y1="32" x2="29" y2="11"/>' +
+// a fire arrow. In flight (.fly): the SVG, turned along its line — a leaf-shaped iron head with its ridge, a wooden shaft, silk
+// bindings, three barred feathers, the flame (.fire) wrapped behind the head. Stuck in its square: the picture of the 3D arrow
+// (.ai, img/arw.webp, tools/pieces3d.html set=arrow) leaning out of the scorch; the newest arrows keep burning (.blaze: .fl3)
+const ARROW_SVG = '<i class="ai"></i><i class="fl3"><b></b><b></b><b></b></i><svg viewBox="0 0 40 40"><defs><linearGradient id="amzSh" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#5a3a20"/><stop offset=".5" stop-color="#a8774a"/><stop offset="1" stop-color="#6a4426"/></linearGradient><linearGradient id="amzHd" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d9dde2"/><stop offset=".5" stop-color="#7d838b"/><stop offset="1" stop-color="#3a3e44"/></linearGradient></defs>' +
+  '<path class="fe" d="M3.2 36.8 1 31.6 4.2 30.4 6.6 33.4ZM3.2 36.8 8.4 39 9.6 35.8 6.6 33.4Z" fill="#efe4c8" stroke="#6a4a2c" stroke-width=".35"/><path d="M2.2 33.9 4.6 33M5 36.8 5.9 34.5M2.9 31.7 4.9 31.1M7.2 38.3 7.9 36.3" stroke="#5a3a20" stroke-width=".9"/>' +
+  '<line x1="4" y1="36" x2="29" y2="11" stroke="url(#amzSh)" stroke-width="2.2" stroke-linecap="round"/><path d="M8.6 30.6 10.2 32.2M7.2 32 8.8 33.6" stroke="#9a2a1e" stroke-width="1.1"/>' +
   '<g class="fire"><path d="M31 9c3 4-1 10-15 17 4-6 3-12 8-16 2-2 5-2 7-1z" fill="#ff6a14" opacity=".88"/><path d="M29.6 10.4c1.5 3-1 6.5-9 11 3-4 2.5-8 5.5-10.5 1.2-1 2.6-1.2 3.5-.5z" fill="#ffc24a"/><ellipse cx="27.6" cy="12.6" rx="1.7" ry="1.3" fill="#fff4cc"/></g>' +
-  '<path class="head" d="M34 6 22 9.5l8.5 8.5z"/></svg>';
+  '<path d="M35.5 4.5 27 8.2 26.4 13.6 31.8 13Z" fill="url(#amzHd)" stroke="#2a2d31" stroke-width=".4"/><path d="M35.5 4.5 29.1 10.9" stroke="#f2f4f6" stroke-width=".6" opacity=".8"/></svg>';
 function newPiece(kind) {     // kind: 1 White amazon (P1), 3 Black amazon (P2), 5 an arrow
   const el = document.createElement('div');
   if (kind === 5) { el.className = 'arw'; el.innerHTML = ARROW_SVG; el.style.setProperty('--sd', (-Math.random() * 6.5).toFixed(2) + 's'); }   // (each smoke on its own beat)
   else { el.className = 'pc p' + (kind <= 2 ? 1 : 2); el.innerHTML = '<i class="orn"></i>'; }
   el.dataset.k = kind; return el;
 }
+// the arrows of the last two moves shown keep burning (flames on their squares); older ones smoulder (a thin smoke)
+function markFires() {
+  const fire = new Set(); for (let k = cur - 1; k >= Math.max(0, cur - 2); k--) { const m = moves[k]; if (m != null && !isPass(m)) fire.add(mArrow(m)); }
+  for (const [i, el] of pcEls) if (el.classList.contains('arw')) el.classList.toggle('blaze', fire.has(i));
+}
 function syncPieces(pos, force) {
   for (const [i, el] of pcEls) if (force || pos.at(i) !== +el.dataset.k) { el.remove(); pcEls.delete(i); }
   for (let i = 0; i < NN_(); i++) { const k = pos.at(i); if (k && !pcEls.has(i)) { const el = newPiece(k); placeAt(el, i); piecesEl.appendChild(el); pcEls.set(i, el); } }
   for (const [i, el] of pcEls) { placeAt(el, i); el.getAnimations && el.getAnimations().forEach(a => a.cancel()); el.classList.remove('sel', 'dim', 'mov', 'ghost', 'away', 'fly'); el.style.opacity = ''; }
+  markFires();
 }
 // the amazon slides (longer for a longer line), a short pause, then the arrow flies from its new square
 const sqDist = (a, b) => { const [r0, c0] = E.RC[a], [r1, c1] = E.RC[b]; return Math.max(Math.abs(r1 - r0), Math.abs(c1 - c0)); };
@@ -289,6 +299,7 @@ function animateMove(m, before) {
   const land = () => {   // it strikes: the flame dies down, the scorch mark glows and cools (CSS .burn / .hot)
     ar.classList.remove('fly'); sv.style.transform = ''; ar.classList.add('burn', 'hot');
     setTimeout(() => ar.classList.remove('burn'), 650); setTimeout(() => ar.classList.remove('hot'), 4500);
+    markFires();
   };
   if (ar.animate) {
     const t0 = qd + SHOOT_GAP;
@@ -930,16 +941,15 @@ document.addEventListener('keydown', e => {
 
 // ---------------------------------------------------------------- 2D board designs and amazon sets (CSS: html[data-bd] / html[data-pcs]; mini boards: BD_PAL)
 // Boards (tools/gen_boards.py): the temple of Themiscyra (Carrara and verde antico marble, gold inlay; the default), jungle ruins,
-// the Amazonomachy vase (clay and black glaze), and two modern ones: terrazzo, navy and ivory lacquer. Amazons: medallions on stands
+// the Amazonomachy vase (clay and black glaze), navy and ivory lacquer (modern). Amazons: medallions on stands
 // rendered from 3D models (tools/pieces3d.html + render_pieces.js): marble cameos (the default), ancient coins, vase paintings,
 // modern enamel. (The sculpted 3D figures belong to the 3D board.)
-const BD_KEYS = ['temple', 'ruins', 'vase', 'terrazzo', 'navy'], PC_KEYS = ['cameo', 'coin', 'vase', 'enamel'];   // temple / cameo first: the defaults
+const BD_KEYS = ['temple', 'ruins', 'vase', 'navy'], PC_KEYS = ['cameo', 'coin', 'vase', 'enamel'];   // temple / cameo first: the defaults
 // [frame, arrow tile, arrow shaft, fletching]
 const BD_PAL = {
   temple: ['#cdbf9f', '#2a1a10', '#f0cf86', '#fff6e2'],
   ruins: ['#26331f', '#241a10', '#dcbc7c', '#f4e6c4'],
   vase: ['#16110d', '#2a1208', '#e88a4e', '#f6d8b0'],
-  terrazzo: ['#2e2f31', '#241e18', '#d6b26a', '#f4ead6'],
   navy: ['#18243e', '#241a12', '#e0bf7a', '#fff4dc'],
 };
 function designApply() {
@@ -962,7 +972,8 @@ function pcSwatch(k) {
     `<image href="img/pc-${k}-w.webp" x="8" y="18" width="58" height="58"/><image href="img/pc-${k}-b.webp" x="54" y="44" width="58" height="58"/></svg>`;
 }
 // spec: { b: 100 chars '.wbx', side, n } ; o: { cls, bd, pcs, marks: {sq: 'ok'|'ng'|'x'}, arrows: [[a, b], …], shots: [[a, b], …], flip, click, sel,
-// dest: [], adest: [] (arrow targets), last: move (from / to / arrow highlighted), ghost: square (the moving amazon, translucent), away: square, num }
+// dest: [], adest: [] (arrow targets), last: move (from / to / arrow highlighted), ghost: square (the moving amazon, translucent), away: square, num,
+// simple: flat squares and plain pieces (the small pictures) }
 const sizeOf = () => 10;
 function miniSVG(spec, o) {
   o = o || {};
@@ -970,14 +981,18 @@ function miniSVG(spec, o) {
   const u = 24, pad = 8, W = 240 + pad * 2, X = i => pad + (P(i)[1] + 0.5) * u, Y = i => pad + (P(i)[0] + 0.5) * u;
   const bdk = o.bd || settings.bd, BP = BD_PAL[bdk] || BD_PAL.temple, pk = o.pcs || settings.pcs;
   let s = `<svg class="${o.cls || 'mini'}" viewBox="0 0 ${W} ${W}">`;
-  s += `<rect x="1" y="1" width="${W - 2}" height="${W - 2}" rx="8" fill="${BP[0]}"/><image href="img/bd-${bdk}.webp" x="${pad}" y="${pad}" width="240" height="240" preserveAspectRatio="none"/>`;
+  if (o.simple) {   // the small pictures of lessons / puzzles / rules (2026-11-10): flat squares, plain discs, plain arrows — easy to read
+    s += `<rect x="1" y="1" width="${W - 2}" height="${W - 2}" rx="8" fill="#4a5a4e"/><rect x="${pad}" y="${pad}" width="240" height="240" fill="#f1ece0"/>`;
+    for (let i = 0; i < N * N; i++) { const [r, c] = E.RC[i]; if ((r + c) % 2) s += `<rect x="${pad + c * u}" y="${pad + r * u}" width="${u}" height="${u}" fill="#86a38d"/>`; }
+  } else s += `<rect x="1" y="1" width="${W - 2}" height="${W - 2}" rx="8" fill="${BP[0]}"/><image href="img/bd-${bdk}.webp" x="${pad}" y="${pad}" width="240" height="240" preserveAspectRatio="none"/>`;
   const sqr = (i, fill, extra) => `<rect x="${X(i) - u / 2}" y="${Y(i) - u / 2}" width="${u}" height="${u}" fill="${fill}" ${extra || ''}/>`;
   if (o.last != null && o.last >= 0) { s += sqr(mFrom(o.last), 'rgba(214,236,134,.22)'); s += sqr(mTo(o.last), 'rgba(214,236,134,.4)'); s += sqr(mArrow(o.last), 'none', 'stroke="rgba(255,150,110,.95)" stroke-width="2.4"'); }
   for (const i of o.hl || []) s += sqr(i, 'rgba(214,236,134,.35)');
   const b = spec && spec.b ? spec.b : '';
-  const amazon = (i, side, op) => `<image href="img/pc-${pk}-${side}.webp" x="${(X(i) - u * 0.47).toFixed(1)}" y="${(Y(i) - u * 0.5).toFixed(1)}" width="${(u * 0.94).toFixed(1)}" height="${(u * 0.94).toFixed(1)}"${op ? ` opacity="${op}"` : ''}/>`;
+  const amazon = (i, side, op) => o.simple ? `<circle cx="${X(i)}" cy="${Y(i)}" r="${u * .36}" fill="${side === 'w' ? '#fffdf7' : '#26262a'}" stroke="${side === 'w' ? '#3a3a3a' : '#000'}" stroke-width="1.6"${op ? ` opacity="${op}"` : ''}/><circle cx="${X(i)}" cy="${Y(i)}" r="${u * .17}" fill="none" stroke="${side === 'w' ? '#b9a77a' : '#c9a24e'}" stroke-width="1.4"${op ? ` opacity="${op}"` : ''}/>` : `<image href="img/pc-${pk}-${side}.webp" x="${(X(i) - u * 0.47).toFixed(1)}" y="${(Y(i) - u * 0.5).toFixed(1)}" width="${(u * 0.94).toFixed(1)}" height="${(u * 0.94).toFixed(1)}"${op ? ` opacity="${op}"` : ''}/>`;
   for (let i = 0; i < N * N; i++) {
     const ch = b[i]; if (!ch || ch === '.') continue;
+    if (ch === 'x' && o.simple) { const x = X(i), y = Y(i), h = u * 0.4; s += `<rect x="${x - h}" y="${y - h}" width="${h * 2}" height="${h * 2}" rx="${u * .08}" fill="#5c4434"/><path d="M${x - h * .55},${y + h * .55}L${x + h * .45},${y - h * .45}M${x + h * .6},${y - h * .6}l${-h * .5},${h * .1}l${h * .4},${h * .4}z" stroke="#f2d9a4" stroke-width="${u * .07}" fill="#f2d9a4" stroke-linecap="round"/>`; continue; }
     if (ch === 'x') { const x = X(i), y = Y(i), h = u * 0.44; s += `<circle cx="${x}" cy="${y}" r="${h * 1.08}" fill="${BP[1]}" opacity=".55"/><circle cx="${x}" cy="${y}" r="${h * .78}" fill="${BP[1]}" opacity=".9"/><path d="M${x - h * .55},${y + h * .55}L${x + h * .5},${y - h * .5}" stroke="${BP[2]}" stroke-width="${u * .08}" stroke-linecap="round"/><path d="M${x + h * .7},${y - h * .7}l${-h * .55},${h * .14}l${h * .41},${h * .41}z" fill="${BP[2]}"/><path d="M${x - h * .6},${y + h * .6}l${-h * .28},${h * .05}l${h * .2},${-h * .3}z" fill="${BP[3]}"/>`; continue; }
     s += amazon(i, ch, i === o.away ? 0.3 : 0);
   }
@@ -999,6 +1014,20 @@ function miniSVG(spec, o) {
   for (const a of o.arrows || []) s += line(a, false, '#e8f7a8');
   for (const a of o.shots || []) s += line(a, true, '#ff9a72');
   if (o.click) for (let i = 0; i < N * N; i++) s += `<rect data-p="${i}" x="${X(i) - u / 2}" y="${Y(i) - u / 2}" width="${u}" height="${u}" fill="transparent"/>`;
+  if (o.zoom) {   // (simple pictures) only the part of the board that matters: every piece, mark and line, one square round them, at least 5×5
+    // the marks and lines (what the step teaches) and the pieces next to them; other pieces far off are left out of the frame
+    const key = []; for (const k in o.marks || {}) key.push(+k); for (const a of [...(o.arrows || []), ...(o.shots || [])]) key.push(...a);
+    const pts = key.slice(), near = i => key.some(k => Math.max(Math.abs(E.RC[i][0] - E.RC[k][0]), Math.abs(E.RC[i][1] - E.RC[k][1])) <= 2);
+    for (let i = 0; i < N * N; i++) if (b[i] && b[i] !== '.' && (!key.length || near(i))) pts.push(i);
+    if (pts.length) {
+      const rs = pts.map(i => P(i)[0]), cs = pts.map(i => P(i)[1]);
+      let r0 = Math.min(...rs) - 1, r1 = Math.max(...rs) + 1, c0 = Math.min(...cs) - 1, c1 = Math.max(...cs) + 1;
+      const n = Math.min(N, Math.max(5, r1 - r0 + 1, c1 - c0 + 1));
+      const fit = (a0, a1) => { let a = Math.round((a0 + a1) / 2 - (n - 1) / 2); return Math.max(0, Math.min(N - n, a)); };
+      r0 = fit(r0, r1); c0 = fit(c0, c1);
+      if (n < N) s = s.replace(/viewBox="[^"]*"/, `viewBox="${pad + c0 * u} ${pad + r0 * u} ${n * u} ${n * u}"`);
+    }
+  }
   return s + '</svg>';
 }
 var CROP_UID = 0;
@@ -1068,7 +1097,7 @@ function tourPage(id, spec, o) {
   };
 }
 const tourRead = (id, html) => ({ id, title: () => t('tr.' + id + '.t'), body: () => t('tr.' + id + '.b').split('\n').map(x => `<p>${x}</p>`).join(''), html });
-const tourPic = (spec, o) => `<div class="tour-pic">${miniSVG(spec, Object.assign({ cls: '' }, o || {}))}</div>`;
+const tourPic = (spec, o) => `<div class="tour-pic">${miniSVG(spec, Object.assign({ cls: '', simple: true }, o || {}))}</div>`;
 // page 1: what the game is (history / how to win / culture), read only — common spec
 const introPage = () => ({ id: 'intro', title: () => t('intro.t'), body: '', html: () => RuleTour.intro({ lang: LANG, img: '../images/atlas/amazons.webp?v=1', origin: t('intro.origin'), players: t('intro.players'), time: t('intro.time'), history: t('intro.hist'), win: t('intro.win'), culture: t('intro.cult') }) });
 const TERR_SPEC = specOf({ w: ['b3', 'h2'], b: ['c8', 'h9'], x: lineOf('a6', 'j6'), side: P1 });   // a wall of arrows: White's room 48 squares, Black's 38
@@ -1339,12 +1368,12 @@ const MK_CLS = { s_escape: 'ng' };
 function stepPic(s, cls) {
   const R = s.ramp && s.ramp[0];
   if (R) {
-    const o = { cls, marks: {}, arrows: [], shots: [] };
+    const o = { cls, marks: {}, arrows: [], shots: [], simple: true, zoom: true };
     for (const [q, c] of R.marks || []) o.marks[q - 1] = c;
     let p = E.Pos.from(R.s); for (const nm of R.seq || []) { const m = rampByName(p, nm); if (m === undefined) break; o.arrows.push([mFrom(m), mTo(m)]); o.shots.push([mTo(m), mArrow(m)]); p = p.clone().play(m); }
     return miniSVG(R.s, o);
   }
-  const P = s.problems[0]; return P ? miniSVG(P.s, { cls }) : '';
+  const P = s.problems[0]; return P ? miniSVG(P.s, { cls, simple: true, zoom: true }) : '';
 }
 const lsCourseSel = {};
 const cOf = s => s.course || 'basics';
@@ -1563,7 +1592,7 @@ function showPzView(v) { ['pzListView', 'pzGridView'].forEach(id => $('#' + id).
 const PZ_LAST = STORE + '-pz-last', PZ_TAB = STORE + '-pz-tab', PZ_GRPS = ['Win', 'Tac', 'End'], PZ_GIC = { Win: 'crown', Tac: 'target', End: 'grid' };
 const PZ_TSVG = { t1: '<rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="12" cy="12" r="3"/>', e1: '<path d="M4 4h16v16H4zM12 4v16M4 12h16"/>' };
 const pzBadge = T => PZ_TSVG[T.id] ? `<svg viewBox="0 0 24 24" aria-hidden="true">${PZ_TSVG[T.id]}</svg>` : `<b class="gl">${(T.id.match(/\d+$/) || [''])[0]}</b>`;
-const pzThumbSVG = (T, j, P) => miniSVG(P.s, { cls: 'lxb', flip: P.s.side === P2, marks: P.e !== undefined ? { [P.e]: 'ng' } : {} });
+const pzThumbSVG = (T, j, P) => miniSVG(P.s, { cls: 'lxb', simple: true, flip: P.s.side === P2, marks: P.e !== undefined ? { [P.e]: 'ng' } : {} });
 function pzThumbOf(T, j) { if (j < 0) j = T.puzzles.length - 1; const P = T.puzzles[j]; return P && P.s ? { board: pzThumbSVG(T, j, P), tm: `<span class="pdisc p${P.s.side === P2 ? 2 : 1}"></span>` } : { board: '' }; }
 async function openPuzzles() {
   const d = await puzzlesReady; selTab('puzzle');

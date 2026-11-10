@@ -13,6 +13,7 @@
   const THREE = window.THREE, T3 = window.Table3D;
   if (!THREE || !T3 || !T3.shogi || !window.AtlasSkin || typeof window.pieceEl !== 'function') return;
   const SG = T3.shogi, boardDom = document.getElementById('board');
+  const tsSolo = () => document.body.classList.contains('ts-noopp');   // 詰将棋: gote's stand hidden
   let board = T3.MODELS.shogi(true), FH = board.userData.S, Y = board.userData.top, OUT = board.userData.outer;
 
   const skin = AtlasSkin.init({
@@ -24,14 +25,23 @@
     pc: { vars: ['--cw'], extras: '.board-area > .hand', fit2d: true, k2d: { l: .0506, r: .0511, t: .0502, b: .0516 },   // (the 2D board: laid out exactly as the 3D one)
       place(F) {
         const top = document.getElementById('handTop'), bot = document.getElementById('handBottom'); if (!top || !bot) return;
-        const G = top.offsetWidth / 1.25 * .22;
+        const G = (top.offsetWidth || bot.offsetWidth) / 1.25 * .22;   // (詰将棋 hides gote's stand: sente's gives the width)
         const put = (h, x, y) => {   // move the box by (x, y) from where it is now (position: relative)
           const cs = getComputedStyle(h), l = parseFloat(cs.left) || 0, t = parseFloat(cs.top) || 0;
           if (Math.abs(x) > .3) h.style.setProperty('left', (l + x) + 'px', 'important');
           if (Math.abs(y) > .3) h.style.setProperty('top', (t + y) + 'px', 'important');
         };
         let r = top.getBoundingClientRect(); put(top, F.l - G - r.right, F.t - r.top);
+        if (tsSolo()) return;   // (詰将棋: sente's stand goes under the column — afterSide)
         r = bot.getBoundingClientRect(); put(bot, F.r + G - r.left, F.b - r.bottom);
+      },
+      // 詰将棋 (gote's stand hidden, body.ts-noopp): sente's stand stands under the column, its left edge on the column's and its
+      // bottom on the frame's — the board takes the width the stands had (2026-11-10)
+      extraOff: e => tsSolo() && e.id === 'handBottom',
+      afterSide(F, sr) {
+        const bot = document.getElementById('handBottom'); if (!bot || !tsSolo()) return;
+        const cs = getComputedStyle(bot), r = bot.getBoundingClientRect(), l = parseFloat(cs.left) || 0, t = parseFloat(cs.top) || 0;
+        bot.style.setProperty('left', (l + sr.left - r.left) + 'px', 'important'); bot.style.setProperty('top', (t + F.b - r.bottom) + 'px', 'important');
       },
       unplace() { ['handTop', 'handBottom'].forEach(id => { const h = document.getElementById(id); if (h) { h.style.removeProperty('left'); h.style.removeProperty('top'); } }); } },
     outer: r => { const H = r.height * OUT; return { top: r.top + r.height / 2 - H / 2, height: H }; },

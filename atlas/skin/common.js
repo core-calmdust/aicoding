@@ -13,6 +13,13 @@
    ===================================================================== */
 (function () {
   'use strict';
+  // the board's own box, without the page's zoom on it (shogi 詰将棋: the board is scaled with a CSS transform — window.__boardZoom
+  // {s, tx, ty}, origin 0 0; the layout keeps the board's place, only the picture inside zooms) (2026-11-10)
+  function bRect(el) {
+    const r = el.getBoundingClientRect(), z = window.__boardZoom; if (!z || !z.s || el.style.transform === '') return r;
+    const w = r.width / z.s, h = r.height / z.s, l = r.left - z.tx, t = r.top - z.ty;
+    return { left: l, top: t, right: l + w, bottom: t + h, width: w, height: h, x: l, y: t };
+  }
   const BASE = '../atlas/';
   function init(o) {
     const T3 = window.Table3D;
@@ -64,7 +71,7 @@
         de.setProperty('background-image', `${over}linear-gradient(rgba(0,0,0,.05),rgba(0,0,0,.05)),url("${floorURL[fk]}")`);
         de.setProperty('background-size', `${rep('100% 100%')}auto, ${Math.round(F.w * unitPx)}px ${Math.round(F.h * unitPx)}px`);
         de.setProperty('background-repeat', `${rep('no-repeat')}repeat, repeat`); de.setProperty('background-attachment', `${rep('fixed')}scroll, scroll`);
-        const r = boardDom.getBoundingClientRect();   // the tile grid is centred on the board, like the 3D floor
+        const r = bRect(boardDom);   // the tile grid is centred on the board, like the 3D floor
         de.setProperty('background-position', `${rep('0 0')}0 0, ${Math.round(r.left + scrollX + r.width / 2 - F.w * unitPx / 2)}px ${Math.round(r.top + scrollY + r.height / 2 - F.h * unitPx / 2)}px`);
       } catch (e) {}
     }
@@ -341,12 +348,13 @@
       return Math.abs(sx) <= .3 && Math.abs(sy) <= .3 && Math.abs(sr.height - fh) <= .3;
     }
     const setVar = v => VARS.forEach(k => { if (v == null) { de.style.removeProperty(k); body.style.removeProperty(k); } else { de.style.setProperty(k, v + 'px', 'important'); body.style.setProperty(k, v + 'px', 'important'); } });
-    const frame = () => { const r = boardDom.getBoundingClientRect(), h = r.height; return { l: r.left - K.l * h, t: r.top - K.t * h, r: r.right + K.r * h, b: r.bottom + K.b * h }; };
+    const frame = () => { const r = bRect(boardDom), h = r.height; return { l: r.left - K.l * h, t: r.top - K.t * h, r: r.right + K.r * h, b: r.bottom + K.b * h }; };
     const extent = F => {
       if (P.place) P.place(F);   // the game's own parts beside the board (shogi: the komadai) placed against the 3D frame first
       const E = { ...F };
       if (P.extras) app.querySelectorAll(P.extras).forEach(e => {
         if (!e.getClientRects().length || getComputedStyle(e).visibility === 'hidden') return;
+        if (P.extraOff && P.extraOff(e)) return;   // (a part the game lays elsewhere for now — shogi 詰将棋: sente's stand under the column)
         const q = e.getBoundingClientRect(); if (q.width < 1 || q.height < 1) return;
         E.l = Math.min(E.l, q.left); E.t = Math.min(E.t, q.top); E.r = Math.max(E.r, q.right); E.b = Math.max(E.b, q.bottom);
       });
@@ -395,11 +403,12 @@
           if (Math.abs(dy) > .3) g.style.top = (px(g, 'top') + dy) + 'px';
           if (placeSide(GP.x) && Math.abs(dx) <= .3 && Math.abs(dy) <= .3) break;
         }
+        if (P.afterSide) P.afterSide(frame(), side.getBoundingClientRect());   // (parts laid against the column, once it stands)
         placeHost(); kVars();
         checks = 0; clearTimeout(reT); reT = setTimeout(remeasure, 250);   // check the frame again once the camera has followed the new size
       } finally { busy = false; }
     }
-    function kVars() { if (!P.fit2d || !K) return; const h = boardDom.getBoundingClientRect().height; ['l', 't', 'r', 'b'].forEach(k => de.style.setProperty('--k2' + k, (K[k] * h).toFixed(2) + 'px')); }
+    function kVars() { if (!P.fit2d || !K) return; const h = bRect(boardDom).height; ['l', 't', 'r', 'b'].forEach(k => de.style.setProperty('--k2' + k, (K[k] * h).toFixed(2) + 'px')); }
     let q = 0; const later = () => { if (q) return; q = 1; const go = () => { if (!q) return; q = 0; fit(); }; requestAnimationFrame(go); setTimeout(go, 120); };   // (a timer too: frames wait while the window is hidden or occluded)
     const laterX = ext(later);
     addEventListener('resize', laterX);
@@ -436,7 +445,7 @@
       // two fits writing the column's top / height in turn made it jump and (in the online dock's review mode, where the CSS
       // height is 0 until a fit sets it) vanish and reappear, forever — each change restarted the dock's move watcher
       side.style.top = ''; side.style.height = ''; side.style.maxHeight = '';
-      const r = boardDom.getBoundingClientRect(), s = side.getBoundingClientRect();
+      const r = bRect(boardDom), s = side.getBoundingClientRect();
       if (!r.width || s.left < r.right - 4 || getComputedStyle(side).display === 'contents') return;   // only when the column sits beside the board
       if (document.documentElement.classList.contains('atlas-2d')) return;   // the game's own 2D board: the page's own layout
       const B = o.outer(r);

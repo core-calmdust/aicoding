@@ -2,13 +2,14 @@
    Amazons — portal skin (amazons/?skin=atlas)
    The full page keeps every feature (AI in 23 levels, rated games, two players, lessons, puzzles, the daily puzzle,
    review / analysis, the coach…). This file:
-     • draws the 3D board (atlas/models/amazons.js: 'temple' — the Temple of Themiscyra on its stylobate, or 'ruins' — the
-       jungle ruins' dressed stones) with the 3D table; the camera is aligned to the DOM board, which stays on top
-       (transparent) for taps, destinations, arrows, hints and labels
-     • the layout of chess's skin (no perspective on the page): only the board is 3D; the amazons are the page's own pieces drawn
-       as 3/4 renders of the sculpted figures (amazons/img/pc3-<set>-<w|b>.webp: statue / archer / bronze, chosen in a 「3D駒」
-       row under the 3D boards, 'atlas-amazons-pc3'), the arrows and their fire are the page's own (the 3D figures move in
-       the portal's 3D view, atlas/games/amazons.js)
+     • draws the 3D board (atlas/models/amazons.js) with the 3D table, leaning back (tilt 26°); the camera is aligned to the DOM
+       board, which stays on top (transparent, tilted the same way) for taps, destinations, arrows, hints and labels. The page's
+       layout is never changed (the same positions as the 2D page, in 2D and in 3D): the 3D frame may go under the cards
+     • the amazons are sculpted figures (statue / archer / bronze), chosen in a 「3D駒」 row under the 3D boards
+       ('atlas-amazons-pc3'); the page's piece pictures (plates, players, record) follow the chosen figures
+     • mirrors the page's moves: the amazon glides to its square (lifted a little), then a fire arrow flies from her in an arc
+       — a flame at its head, sparks shed along the way — strikes with a flash and a burst of sparks; the square stays
+       scorched with the arrow stuck in it, its edge glows and cools, a thin smoke rises for a few seconds
      • lesson / puzzle text → the guide's speech bubble (shared AtlasSkin)
    Rendering is on demand (Table3D.kick); nothing is drawn while idle.
    ===================================================================== */
@@ -25,6 +26,17 @@
   /* ---------- page: the DOM board's pictures become invisible (taps and marks stay) ---------- */
   const st = document.createElement('style');
   st.textContent = `
+/* the page's layout exactly as with the 2D board (html.atlas-2d in skin.css): the same height for the page under the portal bar */
+html.atlas-amazons.hb-atlas{--ttop:0px;--vh:calc(100vh - 64px)}
+html.atlas-amazons.hb-atlas,html.atlas-amazons.hb-atlas body{--hb-h:64px}
+html.atlas-amazons.hb-atlas body{padding-top:64px}
+@media not all and (pointer: coarse){
+  html.atlas-amazons.hb-atlas.ol-dock{--vh:calc(100vh - 108px - 64px)}
+  @supports (height:100dvh){html.atlas-amazons.hb-atlas.ol-dock{--vh:calc(100dvh - 108px - 64px)}}
+  html.atlas-amazons.hb-atlas.ol-dock.ol-soon{--vh:calc(100vh - 46px - 64px)}
+  @supports (height:100dvh){html.atlas-amazons.hb-atlas.ol-dock.ol-soon{--vh:calc(100dvh - 46px - 64px)}}
+}
+html.atlas-2d #board{transform:none!important;translate:none!important}   /* (the 2D board: flat; the tilt is the 3D board's) */
 html.atlas-amazons .frame{background:transparent!important;box-shadow:none!important;border:0!important}
 html.atlas-amazons .frame::before,html.atlas-amazons .frame::after,html.atlas-amazons .board::after,html.atlas-amazons .board::before{display:none!important}
 html.atlas-amazons .board{background:none!important;box-shadow:none!important}
@@ -33,8 +45,14 @@ html.atlas-amazons[data-pc3=archer]{--pcW:url(img/pc3-archer-w.webp)!important;-
 html.atlas-amazons[data-pc3=bronze]{--pcW:url(img/pc3-bronze-w.webp)!important;--pcB:url(img/pc3-bronze-b.webp)!important}
 html.atlas-amazons .lines{overflow:visible!important}
 html.atlas-amazons .lines .num{fill:rgba(255,246,226,.85)!important;stroke:rgba(0,0,0,.55)!important;font-weight:700}
-html.atlas-amazons .frame > .reserve.bot{transform:translateY(calc(var(--cell) * .1))}html.atlas-amazons .frame > .reserve.top{transform:translateY(calc(var(--cell) * -.08))}
-html.atlas-amazons .pieces .pc{width:calc(var(--cell) * 1.02);height:calc(var(--cell) * 1.02);margin:calc(var(--cell) * -.66) 0 0 calc(var(--cell) * -.51)}   /* the figures: 3/4 renders standing on their squares (as chess) */
+html.atlas-amazons .pieces .pc:not(.hov){background:none!important;box-shadow:none!important;filter:none!important;opacity:1!important;border:0!important}
+html.atlas-amazons .pieces .pc.sel{box-shadow:0 0 0 3px rgba(255,214,100,.95),0 0 18px rgba(255,200,80,.75)!important;border-radius:50%!important}
+html.atlas-amazons .pieces .pc.mov:not(.sel){box-shadow:0 0 0 2.5px rgba(190,232,140,.85),0 0 12px rgba(190,232,140,.5)!important;border-radius:50%!important}
+html.atlas-amazons .pieces .pc.dim{opacity:1!important}
+html.atlas-amazons .pieces .arw:not(.hov){background:none!important;box-shadow:none!important}
+html.atlas-amazons .pieces .arw:not(.hov)::before,html.atlas-amazons .pieces .arw:not(.hov)::after,html.atlas-amazons .pieces .arw:not(.hov) svg{display:none!important}
+html.atlas-amazons .pieces :is(.spark,.flare){display:none!important}
+html.atlas-amazons .pieces .pc.hov{opacity:.5!important}
 html.atlas-amazons .reserve .rsv-plate{background:rgba(20,16,12,.82)!important;box-shadow:0 0 0 1px rgba(226,182,96,.45),0 2px 6px rgba(0,0,0,.35)!important;color:#f0e2c4!important}
 html.atlas-amazons #fPieces{display:none!important}
 html.atlas-skin #f3D{margin:12px 0 0;padding:10px 12px 12px;border-radius:14px;background:#f6f1e4;border:2px solid #e2cf9e}
@@ -44,13 +62,17 @@ html.atlas-skin #f3D .bdrow button img{display:block;width:100%;aspect-ratio:1/1
 html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at 50% 40%,#5a6a5c,#26302a);padding:6%;box-sizing:border-box}
 `;
   document.head.appendChild(st);
+  // the portal skin's 3D rule that moves the page down inside .app (html.atlas-skin:not(.atlas-2d) .app{padding-top: … + 64px}) is
+  // dropped on this page: the body takes the bar's 64px as with the 2D board, so every card keeps exactly the 2D page's place
+  const dropRule = () => { let hit = false; for (const sh of document.styleSheets) { let R; try { R = sh.cssRules; } catch (e) { continue; } for (let i = R.length - 1; i >= 0; i--) if (R[i].selectorText === 'html.atlas-skin:not(.atlas-2d) .app') { sh.deleteRule(i); hit = true; } } return hit; };
+  if (!dropRule()) { let n = 0; const t = setInterval(() => { if (dropRule() || ++n > 40) { clearInterval(t); dispatchEvent(new Event('resize')); } }, 100); }
 
   const skin = AtlasSkin.init({
-    margin: .16,
-    persp: 2.6,   // (straight down with a near lens, as chess: the figures show their sides toward the edges; no tilt, so the page keeps its full layout)
+    margin: .3,
+    tilt: 26, persp: 2.6,   // leaning back a little: the sculpted amazons are seen from the front
     board: boardDom,
-    pc: { vars: ['--cell'], extras: '.frame > .reserve' },
-    outer: r => { const Hh = r.height * A3.H / 10; return { top: r.top + r.height / 2 - Hh / 2, height: Hh }; },
+    // (no pc / outer: the page keeps exactly the 2D page's layout in 2D and in 3D — user rule 2026-11-10; the 3D board follows
+    //  the DOM board and its frame may go under the cards around it)
     guide: '../images/atlas/amazons.webp', guideFallback: '../images/atlas/amazons.webp',
     bubbles: [['lsPrompt', 'lsFb'], ['pzGoal', 'pzStatus']],
     skip: 'lines|\\.pc|\\.arw|\\.rv|reserve|rsv|sqfx|\\.dest|\\.mark|\\.hov|fxsvg|hintlbl|frame|prompt|spark|flare',
@@ -66,17 +88,30 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
   });
   if (!skin) return;
 
+  /* ---------- the tilt's lens: the leaning board is drawn a little lower and larger at the near side; the board (3D and the DOM
+     board over it, together) is moved up by the same amount so it sits centred between the count plates (the page's layout itself
+     is not touched) ---------- */
+  const LIFT = .05;   // of the board's height
+  function lift3d() {
+    const holder = boardDom.parentElement;
+    const box = () => { let x = 0, y = 0, e = boardDom; while (e && e !== holder) { x += e.offsetLeft; y += e.offsetTop; e = e.offsetParent; } return { x, y, w: boardDom.offsetWidth, h: boardDom.offsetHeight }; };
+    const host = document.getElementById('atlasGL');
+    T3.align(() => { const b = box(), d = de.classList.contains('atlas-2d') ? 0 : b.h * LIFT; boardDom.style.translate = d ? `0 ${-d}px` : ''; return { x: b.x - (host ? host.offsetLeft : 0), y: b.y - d - (host ? host.offsetTop : 0), w: b.w, h: b.h, tilt: 26, persp: b.h * 2.6 }; }, 10, U.top);
+  }
   /* ---------- the board ---------- */
   const holder = new THREE.Group();
-  let root = null, U = null, built = '';
+  let root = null, U = null, Y = 0, built = '';
+  const P3 = new Map();   // square → { g, k }
+  let tok = 0;
   function build() {
-    const look = T3.BOARDS && T3.BOARDS.amazons ? T3.BOARDS.amazons.get() : 'temple';
-    if (look === built && root) return false;
-    built = look;
+    const look = T3.BOARDS && T3.BOARDS.amazons ? T3.BOARDS.amazons.get() : 'temple', key = look + pc3();
+    if (key === built && root) return false;
+    built = key; tok++;
     if (root) holder.remove(root);
-    root = A3.board(look); U = root.userData; holder.add(root);
+    P3.clear();
+    root = A3.board(look); U = root.userData; Y = U.top; holder.add(root);
     T3.show('amazons', holder, { still: true });
-    skin.alignTo(10, U.top);
+    skin.alignTo(10, U.top); lift3d();
     dispatchEvent(new Event('resize'));
     T3.kick(600);
     return true;
@@ -102,14 +137,14 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
     if (!T3.BOARDS || !T3.BOARDS.amazons) return;
     if (T3.setBoard) T3.setBoard('amazons', k); else T3.BOARDS.amazons.set(k);
     if (V && !V.is3d()) V.set(true);
-    build();
+    try { mirror(); } catch (e) {}
     paint3();
   }
   function setSet(k) {
     try { localStorage.setItem('atlas-amazons-pc3', k); } catch (e) {}
     setPc3Attr();
     if (V && !V.is3d()) V.set(true);
-    build();
+    try { mirror(); } catch (e) {}
     paint3();
   }
   let f3 = null;
@@ -142,8 +177,82 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
     if (r2) r2.addEventListener('click', e => { if (e.target.closest('button') && V) { V.set(false); setTimeout(paint3, 0); } }, true);
     if (typeof window.designPickers === 'function') { const od = window.designPickers; window.designPickers = function () { const r = od.apply(this, arguments); try { paint3(); } catch (e) {} return r; }; }
   }
-  addEventListener('storage', e => { if (e.key === 'atlas-amazons-look' || e.key === 'atlas-amazons-pc3') { setPc3Attr(); build(); paint3(); } });
+  addEventListener('storage', e => { if (e.key === 'atlas-amazons-look' || e.key === 'atlas-amazons-pc3') { setPc3Attr(); try { mirror(); } catch (x) {} paint3(); } });
 
+  /* ---------- 3D amazons and arrows mirrored from the page ---------- */
+  const io = k => k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+  const xz = i => { let rc; try { rc = dRC(i); } catch (e) { rc = E.RC[i]; } return U.pt(rc[1], rc[0]); };
+  const animOk = () => { try { return typeof animOn === 'function' ? animOn() : true; } catch (e) { return true; } };
+  const anim = (dur, f, done, my) => { const t0 = performance.now(); (function s(n) { if (my !== undefined && my !== tok) return; const k = Math.min(1, Math.max(0, (n - t0) / dur)); f(k); T3.kick(120); if (k < 1) requestAnimationFrame(s); else if (done) done(); })(t0); };
+  const later = (ms, f, my) => setTimeout(() => { if (my === undefined || my === tok) f(); }, ms);
+  function mkAmazon(k, sq) {
+    const g = A3.piece(k <= 2 ? 1 : 2, pc3());
+    const sh = T3.contact(A3.R * .95, .5); sh.position.y = .002; g.add(sh); g.userData.sh = sh;
+    const [x, z] = xz(sq); g.position.set(x, Y, z); root.add(g); return g;
+  }
+  function mkArrow(sq, seed) {
+    const g = new THREE.Group(), s = A3.scorch(), a = A3.arrow();
+    s.position.y = .003; g.add(s);
+    a.rotation.y = (seed * 2.399) % (Math.PI * 2); g.add(a); g.userData.arrow = a;
+    const [x, z] = xz(sq); g.position.set(x, Y, z); root.add(g); return g;
+  }
+  function lift(g, h) {
+    g.position.y = Y + h; g.userData.h0 = h;
+    const sh = g.userData.sh; if (sh) { sh.position.y = .002 - h; const s = 1 + h * .5; sh.scale.set(s, s, s); sh.material.opacity = .5 / (1 + h * 1.4); }
+  }
+  const hOf = g => g.userData.h0 || 0;
+  function drop(g) { if (!g) return; if (g.userData.sh) g.userData.sh.material.dispose(); if (g.parent) g.parent.remove(g); }
+  function applySel() {
+    let els; try { els = pcEls; } catch (e) { return; }
+    for (const [i, o] of P3) {
+      if (o.k === 5) continue;
+      const el = els.get(i), on = !!(el && el.classList.contains('sel')), g = o.g;
+      if (g.userData.moving || on === !!g.userData.up) continue;
+      g.userData.up = on; const h0 = hOf(g), h1 = on ? .22 : 0;
+      anim(on ? 130 : 110, k => lift(g, h0 + (h1 - h0) * io(k)));
+    }
+  }
+  function mirror() {
+    let els; try { els = pcEls; } catch (e) { return; }
+    build();
+    tok++;
+    const want = new Map(); for (const [i, el] of els) want.set(i, +el.dataset.k);
+    for (const [i, o] of P3) if (want.get(i) !== o.k) { drop(o.g); P3.delete(i); }
+    for (const [i, k] of want) {
+      const o = P3.get(i);
+      if (!o) { P3.set(i, { g: k === 5 ? mkArrow(i, i) : mkAmazon(k, i), k }); continue; }
+      if (!o.g) { o.g = mkArrow(i, i); continue; }   // (an arrow still in the air when the page re-synced)
+      const g = o.g, [x, z] = xz(i); g.position.x = x; g.position.z = z;
+      if (k !== 5) { g.scale.set(1, 1, 1); g.userData.moving = false; g.userData.up = false; lift(g, 0); }
+    }
+    applySel(); T3.kick(300);
+  }
+  function travel(m, before) {
+    const f = E.mFrom(m), tq = E.mTo(m), a = E.mArrow(m), o = P3.get(f); if (!o) return false;
+    const my = tok, g = o.g;
+    const qd = typeof qDur === 'function' ? qDur(m) : 400, ad = typeof aDur === 'function' ? aDur(m) : 300, gap = typeof SHOOT_GAP === 'number' ? SHOOT_GAP : 70;
+    P3.delete(f); P3.set(tq, o);
+    g.userData.moving = true; g.userData.up = false;
+    const [x0, z0] = xz(f), [x1, z1] = xz(tq), h0 = hOf(g);
+    anim(qd, k => { const q = io(k); g.position.x = x0 + (x1 - x0) * q; g.position.z = z0 + (z1 - z0) * q; lift(g, Math.sin(k * Math.PI) * .18 + h0 * (1 - k)); },
+      () => { g.userData.moving = false; lift(g, 0); anim(140, k => { const s = 1 + Math.sin(k * Math.PI) * .04; g.scale.set(s, 1 / s, s); }, () => g.scale.set(1, 1, 1), my); }, my);
+    // the arrow: it flies after the amazon has landed, then sticks (the stuck arrow and the scorch appear at the strike)
+    const old = P3.get(a); if (old) { drop(old.g); P3.delete(a); }
+    const slot = { g: null, k: 5 }; P3.set(a, slot);
+    later(qd + gap, () => A3.fly(root, Y, xz(tq), xz(a), ad, (d, f, done) => anim(d, f, done, my)), my);
+    later(qd + gap + ad - 10, () => { if (P3.get(a) !== slot) return; slot.g = mkArrow(a, a); const st = slot.g.userData.arrow; st.position.y = .22; anim(90, k => { st.position.y = .22 * (1 - k) - .03 * k; }, null, my); A3.strike(slot.g, (d, f, done) => anim(d, f, done)); T3.kick(600); }, my);
+    return true;
+  }
+  const oSync = window.syncPieces;
+  window.syncPieces = function () { const r = oSync.apply(this, arguments); try { mirror(); } catch (e) {} return r; };
+  const oAnim = window.animateMove;
+  window.animateMove = function (m, before) {
+    const ok = oAnim.apply(this, arguments);
+    if (ok && !(typeof isPass === 'function' && isPass(m))) { try { if (build() || !animOk() || !travel(m, before)) mirror(); } catch (e) { try { mirror(); } catch (x) {} } }
+    return ok;
+  };
+  if (piecesDom) new MutationObserver(() => applySel()).observe(piecesDom, { subtree: true, attributes: true, attributeFilter: ['class'] });
+  try { mirror(); } catch (e) {}
 
-  window.__amSkin = { look: () => built };
+  window.__amSkin = { pieces: () => P3.size, look: () => built, at: i => { const [x, z] = xz(i); return T3.project(x, z, Y); } };
 })();
