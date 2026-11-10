@@ -684,10 +684,11 @@
     if (L && !L.loaded(id)) { const tok = ++openTok; document.body.classList.add('lz-wait'); return L.need(id).then(() => { document.body.classList.remove('lz-wait'); if (tok === openTok) openBoard0(id, push, flown); }); }
     ++openTok; openBoard0(id, push, flown); return Promise.resolve();
   }
-  function openBoard0(id, push = true, flown = false) {
+  function openBoard0(id, push = true, flown = false, relang = false) {
     const g = A_.GAMES.find(x => x.id === id); if (!g) return;
     if (!$('bv').classList.contains('on')) bvDrawer = 0;   // freshly opened: the default (settings) card
     const back = $('bv').classList.contains('playing');   // coming back from a game / the rules on the table
+    if (relang) { renderPlace(); return bvCard(g, id, push, false); }   // the language changed: only the card and the labels are rebuilt (the board stays)
     bvGame = g; stopSession(); renderPlace();   // (the panel's 盤 row follows the game on the table)
     setTimeout(landNudge, 900);
     $('bv').classList.add('on'); $('bv').classList.remove('playing'); $('endc').classList.remove('on');
@@ -712,6 +713,9 @@
       } else { ++show3dTok; pend3d = null; $('gl').style.visibility = ''; show3d(); }
     }
     else $('gl').innerHTML = `<div style="position:absolute;inset:0;display:grid;place-items:center"><img src="${artSrc(g)}" alt="" style="width:min(70vw,420px)"></div>`;
+    bvCard(g, id, push, flown);
+  }
+  function bvCard(g, id, push, flown) {
     const ad = glOK && window.Atlas3D && Atlas3D[id], r = P[id];
     const rows = [];
     if (g.total.pz) rows.push([t('pg.pz'), r.pz || 0, g.total.pz]);
@@ -1408,7 +1412,8 @@
     if (!on && !plShift) return; plShift = on;
     if (!on && window.Historia && Historia.on) return;   // (ヒストリア has taken the lens over)
     if (!glOK || !window.Table3D || !Table3D.setShift || matchMedia('(max-width:760px)').matches) return;
-    const w = on ? $('bvPlMenu').offsetWidth + 28 : 0, rtl = document.documentElement.dir === 'rtl'; Table3D.setShift(on ? (rtl ? w / 2 : -w / 2) : 0);
+    const w = on ? $('bvPlMenu').offsetWidth + 28 : 0, rtl = document.documentElement.dir === 'rtl'; const left = $('bv').classList.contains('bvt');   // PC: the panel opens on the left (top-left buttons), so the board moves right
+    Table3D.setShift(on ? ((rtl !== left) ? w / 2 : -w / 2) : 0);
   }
   // the places (tables3d.js) arrive after the page (index.html AtlasPlaces): the chip, the labels and the open page follow
   addEventListener('atlas-places', () => { try { renderPlace(); } catch (e) {} try { if (page === 'dress' && dKind === 'table') renderDress(); else if (!$('bv').classList.contains('on')) render(page); } catch (e) {} });
@@ -1983,7 +1988,15 @@
   function fitWM(b, sm) { if (!b || !sm) return; sm.style.fontSize = ''; const k = b.querySelector('.wk'); if (!k || sm.hidden) return; const r = document.createRange(); r.setStartAfter(k); r.setEnd(b, b.childNodes.length); const mw = r.getBoundingClientRect().width, sw = sm.scrollWidth; if (mw > 0 && sw > mw) sm.style.fontSize = Math.max(7, parseFloat(getComputedStyle(sm).fontSize) * mw / sw * .98) + 'px'; }
   const fitBrand = () => fitWM($('wm'), $('wmSub'));
   if (document.fonts) document.fonts.ready.then(() => fitBrand()); addEventListener('resize', () => fitBrand());
+  // Chinese face (see index.html html[lang^=zh]): the stylesheet is added the first time Chinese is picked (Google Fonts slices it by unicode-range)
+  function zhFont() {
+    const f = lang === 'zh' ? 'SC' : lang === 'zh-TW' ? 'TC' : ''; if (!f || document.getElementById('zhf' + f)) return;
+    const l = document.createElement('link'); l.id = 'zhf' + f; l.rel = 'stylesheet';
+    l.href = `https://fonts.googleapis.com/css2?family=Noto+Sans+${f}:wght@500;700;900&display=swap`; document.head.appendChild(l);
+    l.onload = () => { if (document.fonts) document.fonts.ready.then(() => { try { fitBrand(); if (page === 'home') renderHero(true); } catch (e) {} }); };
+  }
   function applyLang() {
+    zhFont();
     document.documentElement.lang = lang; document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
     const title = t('title');
     $('wm').innerHTML = lang === 'en' || /[^\x00-\x7f]/.test(title) === false ? [...title].map(c => `<span>${esc(c)}</span>`).join('') : esc(title);
@@ -2009,7 +2022,7 @@
   $('langBtn').onclick = e => { e.stopPropagation(); openLang(); };
   document.addEventListener('click', e => { if (!$('langPop').hidden && !$('langPop').contains(e.target)) openLang(false); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('langPop').hidden) openLang(false); });
-  $('langSel').onchange = e => { const lg = e.target.value; (window.ATLAS_I18N_LOAD ? ATLAS_I18N_LOAD(lg) : Promise.resolve()).then(() => { lang = I[lg] ? lg : 'ja'; try { localStorage.setItem('aicoding-lang', lang); } catch (x) {} applyLang(); render(page); }); };   // (only the page's language is loaded: atlas/i18n/<lang>.js)
+  $('langSel').onchange = e => { const lg = e.target.value; (window.ATLAS_I18N_LOAD ? ATLAS_I18N_LOAD(lg) : Promise.resolve()).then(() => { lang = I[lg] ? lg : 'ja'; try { localStorage.setItem('aicoding-lang', lang); } catch (x) {} applyLang(); render(page); const bv = $('bv'); if (bv.classList.contains('on') && !bv.classList.contains('playing') && bvGame) openBoard0(bvGame.id, false, false, true); else if (bv.classList.contains('on')) try { renderPlace(); } catch (x) {} }); };   // (only the page's language is loaded: atlas/i18n/<lang>.js)
 
   // ボドゲ地図: atlas/worldmap.js draws the map; a pin's ▶ flies its icon into the board view like the home icons
   function renderMap() {

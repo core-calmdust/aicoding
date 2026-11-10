@@ -306,7 +306,7 @@
       kick(120);
     }
     let pulseT = 0;
-    function pulse() { clearInterval(pulseT); const t0 = performance.now(); pulseT = setInterval(() => { if (stopped || document.hidden || !document.hasFocus()) return;   /* (the ring stands still while the window is not in front: no frames then) */ let any = false; gd.children.forEach(m => { if (m.userData.pulse) { m.scale.setScalar(1.12 + Math.sin((performance.now() - t0) / 230) * .1); any = true; } }); if (any) kick(80); }, 60); }
+    function pulse() { clearInterval(pulseT); const t0 = performance.now(); pulseT = setInterval(() => { if (stopped || document.hidden || !document.hasFocus() || (T3.decoOn && !T3.decoOn())) return;   /* (the ring stands still while the window is not in front: no frames then) */ let any = false; gd.children.forEach(m => { if (m.userData.pulse) { m.scale.setScalar(1.12 + Math.sin((performance.now() - t0) / 230) * .1); any = true; } }); if (any) kick(80); }, 60); }
 
     /* ---------- HUD ---------- */
     const css = document.createElement('style');
@@ -373,7 +373,7 @@
     let waveT = 0;
     function neonTick() {   // the RGB keeps flowing for the whole game (frames all along, but only while the window is in front)
       clearInterval(waveT); if (stopped || !board || board.userData.look !== 'neon') return;
-      waveT = setInterval(() => { if (stopped) return clearInterval(waveT); if (!document.hidden && document.hasFocus()) kick(160); }, 100);
+      waveT = setInterval(() => { if (stopped) return clearInterval(waveT); if (!document.hidden && document.hasFocus() && (!T3.decoOn || T3.decoOn())) kick(160); }, 100);
     }
 
 
