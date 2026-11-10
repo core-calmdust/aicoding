@@ -1359,7 +1359,7 @@ body.in-online #coachCard{display:none!important}
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2l14"></script>
 <script src="online.js?v=stale2pf"></script>
-<script src="../shared/mtengine.js?v=9"></script><script>MTEngine.init({ sw: "sw.js?v=1", light: true }); if (MTEngine.coi && window.MorrisOnline) MorrisOnline.available = false;</script><script src="../shared/proset.js?v=3t2svhxbf-pt1"></script><script>
+<script src="../shared/mtengine.js?v=9"></script><script>MTEngine.init({ sw: "sw.js?v=1", light: true }); if (MTEngine.coi && window.MorrisOnline) MorrisOnline.available = false;</script><script src="../shared/proset.js?v=4t2svhxbf-pt1"></script><script>
 'use strict';
 // ====================================================================== rules (shared with the engine)
 const E = window.MorrisEngine, NONE = E.NONE, WIN = E.WIN, WINT = E.WINT;
@@ -3864,7 +3864,7 @@ window.addEventListener('resize', () => renderFx());
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=44l19'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=44l21'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
