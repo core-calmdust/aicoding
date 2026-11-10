@@ -150,12 +150,12 @@
   const recLoad = id => { try { const a = JSON.parse(localStorage.getItem('atlas-rec-' + id) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } };
   function recPush(id, r) { try { const a = recLoad(id); a.push(Object.assign({ t: Date.now() }, r)); localStorage.setItem('atlas-rec-' + id, JSON.stringify(a.slice(-500))); } catch (e) {} }
   let recMode = 'all', recTab = 'rec';
-  function openRec(g) {
+  function openRec(g, mode) {
     let ov = $('recOv');
     if (!ov) { ov = document.createElement('div'); ov.id = 'recOv'; ov.className = 'recov'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); document.body.appendChild(ov);
       ov.addEventListener('click', e => { if (e.target === ov) closeRec(); });
       addEventListener('keydown', e => { if (e.key === 'Escape' && ov.classList.contains('on')) closeRec(); }); }
-    recMode = 'all'; recTab = 'rec'; renderRec(g); requestAnimationFrame(() => ov.classList.add('on'));
+    recMode = mode || 'all'; recTab = 'rec'; renderRec(g); requestAnimationFrame(() => ov.classList.add('on'));
   }
   function closeRec() { const ov = $('recOv'); if (ov) ov.classList.remove('on'); }
   function renderRec(g) {
@@ -720,9 +720,11 @@
     const rows = [];
     if (g.total.pz) rows.push([t('pg.pz'), r.pz || 0, g.total.pz]);
     if (g.total.ls) rows.push([t('pg.ls'), r.ls || 0, g.total.ls]);
-    const lv = pref[id + ':lv'] || 1, side = pref[id + ':side'] || 1;
+    // shogi / chess on PC (2026-11-10): the tabs are 対戦 · レート戦 · パズル · レッスン — 二人で対戦 is the first choice of the 相手 list
+    const MX = !!(MXG[id] && ad && ad.table && FULL_SKIN[id] && !matchMedia('(max-width: 819px)').matches);
+    const lv = MX && pref[id + ':mode'] === 'pvp' ? 0 : pref[id + ':lv'] || 1, side = pref[id + ':side'] || 1;
     const bsz = ad && ad.sizes ? (ad.sizes.includes(+pref[id + ':size']) ? +pref[id + ':size'] : ad.sizes.includes(ad.size0) ? ad.size0 : ad.sizes[0]) : 0;   // board size (go, hex, tafl); adapter.size0 = the default
-    const mode = ad && ad.modes && ad.modes.includes(pref[id + ':mode']) ? pref[id + ':mode'] : 'ai';
+    const modes = MX ? MX_MODES : ad && ad.modes, mode = modes && modes.includes(pref[id + ':mode']) ? pref[id + ':mode'] : 'ai';
     // board size (go): on the same row as the time control when there is one
     const sizeHtml = ad && ad.sizes ? `<label>${esc(ad.sizeLabel ? ad.sizeLabel(lang) : '')}<select id="bvSize">${ad.sizes.map(z => `<option value="${z}" ${z === bsz ? 'selected' : ''}>${ad.sizeName ? esc(ad.sizeName(z, lang)) : z + '×' + z}</option>`).join('')}</select></label>` : '';
     headIcons(false);   // (ヒストリア / 戦績 back out of the old card before it is rebuilt)
@@ -730,10 +732,10 @@
       <div class="tags">${g.tags.filter(k => k !== 'mobile').map(tagHtml).join('')}</div>
       <p class="bvab">${esc(t('about.' + id))}</p>
       ${rows.length ? `<div class="pgl">${rows.map(([l, a, b]) => `<span>${l}</span><span class="bar" style="--c:${g.color}"><i style="width:${Math.min(100, a / b * 100)}%"></i></span><b>${Math.min(a, b)}/${b}</b>`).join('')}</div>` : ''}
-      </div><div class="R">${ad && ad.modes ? `<div class="mtab3" id="bvMode">${ad.modes.map(m => `<button type="button" data-m="${m}" class="${m === mode ? 'on' : ''}">${t('bv.m.' + m)}</button>`).join('')}</div>` : ''}${ad ? `<div class="mbody" id="bvMBody">${ad.modes ? `<div class="mnote" id="bvMNote"></div>` : ''}<div class="opts" id="bvOpts"><label>${t('bv.level')}<select id="bvLv">${Array.from({ length: ad.levels }, (_, i) => `<option value="${i + 1}" ${i + 1 === lv ? 'selected' : ''}>Lv.${i + 1}${ad.levelInfo && lvNm(ad.levelInfo(i + 1, lang), i + 1, lang, ad.levels) ? ' ' + esc(lvNm(ad.levelInfo(i + 1, lang), i + 1, lang, ad.levels)) : ''}</option>`).join('')}</select></label>
+      </div><div class="R">${modes ? `<div class="mtab3${MX ? ' mtab4' : ''}" id="bvMode">${modes.map(m => `<button type="button" data-m="${m}" class="${m === mode ? 'on' : ''}">${MX ? t(MX_LBL[m]) : t('bv.m.' + m)}</button>`).join('')}</div>` : ''}${ad ? `<div class="mbody" id="bvMBody">${modes ? `<div class="mnote" id="bvMNote"></div>` : ''}<div class="opts" id="bvOpts"><label>${t(MX ? 'bv.opp' : 'bv.level')}<select id="bvLv">${MX ? `<option value="0" ${lv === 0 ? 'selected' : ''}>${esc(t('bv.m.pvp'))}</option>` : ''}${Array.from({ length: ad.levels }, (_, i) => `<option value="${i + 1}" ${i + 1 === lv ? 'selected' : ''}>Lv.${i + 1}${ad.levelInfo && lvNm(ad.levelInfo(i + 1, lang), i + 1, lang, ad.levels) ? ' ' + esc(lvNm(ad.levelInfo(i + 1, lang), i + 1, lang, ad.levels)) : ''}</option>`).join('')}</select></label>
         ${ad.sides ? `<label>${t('bv.side')}<select id="bvSide"><option value="1" ${side === 1 ? 'selected' : ''}>${t('bv.first')}</option><option value="2" ${side === 2 ? 'selected' : ''}>${t('bv.second')}</option></select></label>` : ''}
         ${ad.sizes && !(ad.table && TCS[ad.clock]) && !ad.house ? sizeHtml : ''}${ad.house ? `<button type="button" class="hrb" id="bvHouse"><span>${esc(ad.house.label(lang))}</span><b></b><i aria-hidden="true">⚙</i></button>` : ''}</div>
-        ${ad.table && TCS[ad.clock] ? `<div class="opts tcrow" id="bvTcRow"><label>${t('tc.h')}<button type="button" class="lvpick" id="bvTc" data-v="${esc(tcOf(ad, pref[id + ':tc']).id)}"></button></label>${ad.sizes ? sizeHtml : ''}</div>` : ''}</div>${ad.house && ad.sizes ? `<div class="opts szrow" id="bvSzRow">${sizeHtml}</div>` : ''}` : (g.id === 'sudoku' || g.id === 'speedsudoku' || g.id === 'samegame' || g.id === 'jailbreak' || g.id === 'amazons' ? `<div class="soon ext"><b>${t('bv.ext')}</b><span>${t('bv.extSub', { name: esc(gname(g)) })}</span></div>` : CARD2D[g.id] ? `<div class="soon ext"><b>${t('bv.card2d')}</b><span>${t('bv.card2dSub', { name: esc(gname(g)) })}</span></div>` : `<div class="soon">${t('bv.soon')}</div>`)}
+        ${ad.table && TCS[ad.clock] ? `<div class="opts tcrow" id="bvTcRow"><label>${t('tc.h')}<button type="button" class="lvpick" id="bvTc" data-v="${esc(tcOf(ad, pref[id + ':tc']).id)}"></button></label>${ad.sizes ? sizeHtml : ''}</div>` : ''}${MX ? mxPanels(g, ad) : ''}</div>${ad.house && ad.sizes ? `<div class="opts szrow" id="bvSzRow">${sizeHtml}</div>` : ''}` : (g.id === 'sudoku' || g.id === 'speedsudoku' || g.id === 'samegame' || g.id === 'jailbreak' || g.id === 'amazons' ? `<div class="soon ext"><b>${t('bv.ext')}</b><span>${t('bv.extSub', { name: esc(gname(g)) })}</span></div>` : CARD2D[g.id] ? `<div class="soon ext"><b>${t('bv.card2d')}</b><span>${t('bv.card2dSub', { name: esc(gname(g)) })}</span></div>` : `<div class="soon">${t('bv.soon')}</div>`)}
       <div class="act${ad && ad.table && FULL_SKIN[g.id] ? ' act3' : ''}">${!ad ? `<a class="btn big" href="../${g.href}">${t('play')} ▶</a>`
         : ad.table && FULL_SKIN[g.id] ? `<button class="btn big pk" id="bvFull"><b>${t('bv.full')} ▶</b><small>${t('bv.fullSub')}</small></button><button class="btn big2 pk" id="bvTable"><b>${esc(placeT('play'))}</b><small>${t('bv.tableSub')}</small></button><a class="btn ghost big2 pk" href="../${g.href}"><b>${t('bv.classic')}</b><small>${t('bv.classicSub')}</small></a>`
         : `<button class="btn big" id="bvStart">${t('bv.start')} ▶</button>${g.only3d ? '' : `<a class="btn ghost big2" href="../${g.href}">${t('bv.classic')}</a>`}`}</div></div></div>`;   // (only3d: a game made for the 3D table alone — carrom — has no 2D page)
@@ -747,16 +749,17 @@
       // one fixed height for the settings area in every mode (the tallest mode's): the note of a mode without a level fills the space
       const body = $('bvMBody');
       const layout = m => {
+        if (MX) { $('bvOpts').hidden = m !== 'ai'; $('bvMNote').hidden = true; if ($('bvTcRow')) $('bvTcRow').hidden = m !== 'ai'; mxLayout(m); return; }
         $('bvOpts').hidden = m !== 'ai'; $('bvMNote').hidden = m === 'ai';
         if ($('bvTcRow')) $('bvTcRow').hidden = !(ad.tableModes || ['ai']).includes(m);   // the time control is for table play only
         $('bvMNote').textContent = m === 'ai' ? '' : t('bv.m.' + m + 'Note');
       };
       let bodyH = 0;
-      const measure = () => { body.style.height = 'auto'; bodyH = 0; ad.modes.forEach(m => { layout(m); $('bvMNote').style.flex = 'none'; bodyH = Math.max(bodyH, body.offsetHeight); }); $('bvMNote').style.flex = ''; body.style.height = bodyH + 'px'; };
+      const measure = () => { body.style.height = 'auto'; bodyH = 0; modes.forEach(m => { layout(m); $('bvMNote').style.flex = 'none'; bodyH = Math.max(bodyH, body.offsetHeight); }); $('bvMNote').style.flex = ''; body.style.height = bodyH + 'px'; };
       const setMode = m => { $('bvMode').dataset.v = m; $('bvMode').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.m === m));
         if (!bodyH) measure();
         layout(m);
-        if ($('bvTable')) $('bvTable').disabled = !(ad.tableModes || ['ai']).includes(m);   // rated / online games need the full game
+        if ($('bvTable')) $('bvTable').disabled = MX ? m === 'rated' : !(ad.tableModes || ['ai']).includes(m);   // rated / online games need the full game
         fitStage(); };
       if (window.__bvModeRz) removeEventListener('resize', window.__bvModeRz);
       window.__bvModeRz = () => { if (!$('bvOpts') || !$('bvMode')) return; bodyH = 0; setMode($('bvMode').dataset.v); }; addEventListener('resize', window.__bvModeRz);
@@ -766,6 +769,7 @@
       setTimeout(() => window.__bvModeRz && window.__bvModeRz(), 0); if (document.fonts) document.fonts.ready.then(() => window.__bvModeRz && window.__bvModeRz());
     }
     if ($('bvRules')) $('bvRules').onclick = startRules;
+    if (MX) mxBind(g, ad);
     $('bvRec').setAttribute('aria-label', t('rec.btn')); $('bvRec').title = t('rec.btn'); $('bvRec').onclick = () => { try { SFX.tap && SFX.tap(); } catch (e) {} openRec(g); };   // (the cup: phones right of the ヒストリア pill, PC beside the place chip)
     placeRec();
     // phones: a grab handle on the card — swipe down (or tap) folds away the tags and progress, leaving the game settings; swipe up opens it again
@@ -823,7 +827,7 @@
     if ($('bvRules') && matchMedia('(max-width: 819px)').matches) { const rw = $('bvi').querySelector('.row'); if (rw) { $('bvRules').classList.add('ph'); rw.appendChild($('bvRules')); } }   // phones
     // the board card's choices as our own UI (no system pickers): the side as a two-button toggle,
     // the level as a button that opens a list sheet with each level's name, meter and who it suits
-    ['bvSide', 'bvSize'].forEach(sid => { if (!$(sid)) return;
+    ['bvSide', 'bvSize', 'bvRtOpp', 'bvLsK'].forEach(sid => { if (!$(sid)) return;
       // many choices (ludo: rule × players): a picker button + a list sheet instead of a wrapping toggle — phones (2026-11-09),
       // and on every screen for a game with house rules (its own row under the level: the same pulldown as the level)
       if (sid === 'bvSize' && $(sid).options.length > 3 && (ad.house || matchMedia('(max-width: 819px)').matches)) {
@@ -855,12 +859,13 @@
     }
     if ($('bvLv')) {
       const sel = $('bvLv'), bt = document.createElement('button'); bt.type = 'button'; bt.className = 'lvpick'; sel.hidden = true; sel.after(bt);
-      const paint = () => { const o = sel.options[sel.selectedIndex]; bt.innerHTML = `<span>${esc(matchMedia('(max-width: 819px)').matches ? 'Lv.' + sel.value : o ? o.textContent : '')}</span>${bossImg(id, +sel.value)}<i>▾</i>`; };   // (phones: just Lv.N + the opponent's face)
+      const paint = () => { const o = sel.options[sel.selectedIndex]; bt.innerHTML = `<span>${esc(sel.value === '0' ? t('bv.m.pvp') : matchMedia('(max-width: 819px)').matches ? 'Lv.' + sel.value : o ? o.textContent : '')}</span>${bossImg(id, +sel.value)}<i>▾</i>`; };   // (phones: just Lv.N + the opponent's face)
       sel.addEventListener('change', paint); paint();
       bt.onclick = () => {
         const max = ad.levels, cur = +sel.value;
-        const sh = document.createElement('div'); sh.className = 'lvsheet'; sh.innerHTML = `<div class="lvs-in" role="listbox"><div class="lvs-h">${esc(t('bv.level'))}<button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div><div class="lvs-l">${[...sel.options].map(o => {
-          const n = +o.value, x = ad.levelInfo ? ad.levelInfo(n, lang) : null;
+        const sh = document.createElement('div'); sh.className = 'lvsheet'; sh.innerHTML = `<div class="lvs-in" role="listbox"><div class="lvs-h">${esc(t(MX ? 'bv.opp' : 'bv.level'))}<button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div><div class="lvs-l">${[...sel.options].map(o => {
+          const n = +o.value, x = ad.levelInfo && n ? ad.levelInfo(n, lang) : null;
+          if (!n) return `<button type="button" role="option" data-v="0" class="lvpvp${n === cur ? ' on' : ''}"><b>👥</b><span class="nm">${esc(t('bv.m.pvp'))}</span><small>${esc(t('bv.pvpSub'))}</small></button>`;   // (shogi / chess: 二人で対戦 heads the 相手 list)
           return bossHead(id, n, cur) + `<button type="button" role="option" data-v="${n}" class="${n === cur ? 'on' : ''}"><b>Lv.${n}</b><span class="nm">${bossRw(id, n)}${esc(lvNm(x, n, lang, max))}${bossOwn(id, n) ? '<i class="lvck" aria-label="cleared">✓</i>' : ''}</span><span class="meter">${Array.from({ length: max }, (_, i) => `<i class="${i < n ? 'on' : ''}" style="height:${Math.round(4 + 12 * (i + 1) / max)}px"></i>`).join('')}</span>${x ? `<small><em>${esc(x.who)}</em>${x.desc ? ` · ${esc(x.desc)}` : ''}${x.rating ? ` · ${t('bv.rating')} ${x.rating}` : ''}</small>` : ''}</button>`; }).join('')}</div></div>`;
         document.body.appendChild(sh); requestAnimationFrame(() => sh.classList.add('on'));
         const close = () => { if (sh.classList.contains('out')) return; sh.classList.add('out'); sh.classList.remove('on'); setTimeout(() => sh.remove(), 240); };
@@ -883,7 +888,7 @@
       };
     }
     if (ad && ad.levelInfo && $('bvLvInfo')) {   // how strong is this level?
-      const show = () => { const n = +$('bvLv').value, x = ad.levelInfo(n, lang), max = ad.levels;
+      const show = () => { const n = +$('bvLv').value; if (!n) { $('bvLvInfo').innerHTML = `<b>${esc(t('bv.m.pvp'))}</b><small>${esc(t('bv.pvpSub'))}</small>`; return; } const x = ad.levelInfo(n, lang), max = ad.levels;
         $('bvLvInfo').innerHTML = `<span class="meter">${Array.from({ length: max }, (_, i) => `<i class="${i < n ? 'on' : ''}" style="height:${Math.round(6 + 20 * (i + 1) / max)}px;width:${max > 12 ? 3 : 5}px"></i>`).join('')}</span><b>${esc(x.who)}</b><small>${esc(x.desc)}${x.rating ? ` · ${t('bv.rating')} ${x.rating}` : ''}</small>`; };
       $('bvLv').addEventListener('change', show); show();
       if ($('bvi').classList.contains('fold')) { const w = $('bvLvInfo').parentNode; if (w.classList.contains('lvw')) w.style.height = '0px'; }
@@ -967,6 +972,58 @@
     [rb, hb].forEach(b => { if (b) { b.classList.add('inhd'); sub.appendChild(b); } });
   }
   const PS_GAMES = { shogi: true, chess: true };
+  /* ---------- shogi / chess, PC: the card's tabs 対戦 · レート戦 · パズル · レッスン (2026-11-10) ----------
+     対戦: the usual settings, 相手 (the level list) headed by 二人で対戦. レート戦: 相手 AI / オンライン and the time control (the online
+     ones — the AI's rated games of shogi take the local clocks, chess's have none), and the rated games' record. パズル: the daily
+     problem(s) and the list, 続きから解く on this 3D board (atlas/puzzles.js), the full / 2D versions at the puzzles. レッスン: lessons or
+     openings, opened in the full / 2D version. The full / 2D pages are opened with ?mode=…&sub=…&tc=… (their window.AtlasDeep). */
+  const MXG = { shogi: true, chess: true }, MX_MODES = ['ai', 'rated', 'puzzle', 'lesson'];
+  const MX_LBL = { ai: 'bv.m.vs', rated: 'bv.m.rated', puzzle: 'pg.pz', lesson: 'pg.ls' };
+  const OTC = { shogi: [{ id: 'fast', main: 300, byo: 30 }, { id: 'long', main: 600, byo: 30 }, { id: 'blitz', byo: 30 }, { id: 'fis', main: 300, inc: 10 }],
+    chess: [{ id: 'blitz', main: 180, inc: 2 }, { id: 'rapid', main: 600, inc: 5 }, { id: 'classical', main: 900, inc: 10 }] };
+  const rtList = (id, opp) => opp === 'online' ? OTC[id] : id === 'shogi' ? TCS.byo : null;   // (chess: the AI's rated games have no clock)
+  const rtOpp = id => pref[id + ':rtOpp'] === 'online' ? 'online' : 'ai';
+  const rtTc = (id, opp) => { const L = rtList(id, opp); if (!L) return null; return L.find(c => c.id === pref[id + ':rtTc:' + opp]) || L[0]; };
+  function mxPanels(g) {
+    const id = g.id, opp = rtOpp(id), lsk = pref[id + ':lsk'] === 'open' ? 'open' : 'list';
+    const daily = id === 'shogi' ? [['d1', '★', t('bv.pz.d1')], ['d2', '☆', t('bv.pz.d2')]] : [['d1', '★', t('bv.pz.dc')]];
+    return `<div class="opts mxp" id="bvRt" hidden><div class="mxrow"><label>${t('bv.opp')}<select id="bvRtOpp"><option value="ai" ${opp === 'ai' ? 'selected' : ''}>AI</option><option value="online" ${opp === 'online' ? 'selected' : ''}>${esc(t('bv.online'))}</option></select></label><button type="button" class="mxb" id="bvRtRec"><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg></i>${esc(t('bv.rtRec'))}</button></div>`
+      + `<label id="bvRtTcL">${t('tc.h')}<button type="button" class="lvpick" id="bvRtTc"></button></label><div class="mxnote" id="bvRtNote" hidden>${esc(t('bv.rtNoTc'))}</div></div>`
+      + `<div class="opts mxp" id="bvPz" hidden>${daily.map(([k, ic, lb]) => `<button type="button" class="mxb" data-pz="${k}"><i>${ic}</i>${esc(lb)}</button>`).join('')}<button type="button" class="mxb" data-pz="list"><i>▦</i>${esc(t('bv.pzList'))}</button></div>`
+      + `<div class="opts mxp" id="bvLs" hidden><label><select id="bvLsK"><option value="list" ${lsk === 'list' ? 'selected' : ''}>${esc(t('bv.ls'))}</option><option value="open" ${lsk === 'open' ? 'selected' : ''}>${esc(t('bv.lsOp'))}</option></select></label></div>`;
+  }
+  const mx2d = (g, m) => '../' + g.href + (m === 'puzzle' ? '?mode=puzzle&sub=cont' : m === 'lesson' ? '?mode=lesson&sub=' + ($('bvLsK') ? $('bvLsK').value : 'list') : '');
+  function mxLayout(m) {
+    const g = bvGame; if (!g) return;
+    ['bvRt', 'bvPz', 'bvLs'].forEach((k, i) => { if ($(k)) $(k).hidden = m !== ['rated', 'puzzle', 'lesson'][i]; });
+    const f = $('bvFull'), tb = $('bvTable'), cl = $('bvi').querySelector('.R .act > a.btn'), act = $('bvi').querySelector('.R .act'); if (!f || !tb) return;
+    const set = (el, a, b) => { el.innerHTML = `<b>${a}</b><small>${b}</small>`; };
+    if (m === 'puzzle') { set(f, esc(t('bv.pzCont')) + ' ▶', esc(t('bv.pzContSub'))); tb.innerHTML = `<b>${esc(t('bv.full'))}</b>`; }
+    else if (m === 'lesson') set(f, esc(t('bv.full')) + ' ▶', esc(t('bv.lsSub')));
+    else { set(f, esc(t('bv.full')) + ' ▶', esc(t('bv.fullSub'))); set(tb, esc(placeT('play')), esc(t('bv.tableSub'))); }
+    tb.style.display = m === 'lesson' ? 'none' : ''; tb.classList.toggle('mxw', m === 'puzzle'); if (act) act.classList.toggle('act1', m === 'lesson');   // (lessons: no table play — 2D takes the row)
+    if (cl) cl.href = mx2d(g, m);
+  }
+  function mxBind(g, ad) {
+    const id = g.id, M = () => $('bvMode') ? $('bvMode').dataset.v : 'ai';
+    $('bvFull').onclick = () => { const m = M(); if (m === 'puzzle') startPuzzle(); else if (m === 'lesson') startPlay('full', 'lesson', $('bvLsK').value); else startPlay('full'); };
+    $('bvTable').onclick = () => { if (M() === 'puzzle') startPlay('full', 'puzzle', 'cont'); else startPlay('table'); };
+    $('bvPz').onclick = e => { const b = e.target.closest('[data-pz]'); if (b) { try { SFX.tap && SFX.tap(); } catch (x) {} startPlay('full', 'puzzle', b.dataset.pz); } };
+    $('bvRtRec').onclick = () => { try { SFX.tap && SFX.tap(); } catch (x) {} openRec(g, 'rated'); };
+    $('bvLsK').addEventListener('change', () => { pref[id + ':lsk'] = $('bvLsK').value; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (x) {} const cl = $('bvi').querySelector('.R .act > a.btn'); if (cl && M() === 'lesson') cl.href = mx2d(g, 'lesson'); });
+    // レート戦's time control: a picker button + list sheet (the same UI as the level); its list follows 相手
+    const bt = $('bvRtTc'), paint = () => { const opp = $('bvRtOpp').value, c = rtTc(id, opp); $('bvRtTcL').hidden = !c; $('bvRtNote').hidden = !!c; if (c) { bt.dataset.v = c.id; bt.innerHTML = `<span>${esc(tcName(c))}</span><i>▾</i>`; } };
+    $('bvRtOpp').addEventListener('change', () => { pref[id + ':rtOpp'] = $('bvRtOpp').value; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (x) {} paint(); });
+    paint();
+    bt.onclick = () => {
+      const opp = $('bvRtOpp').value, L = rtList(id, opp), cur = bt.dataset.v; if (!L) return;
+      const sh = document.createElement('div'); sh.className = 'lvsheet tcsheet'; sh.innerHTML = `<div class="lvs-in" role="listbox"><div class="lvs-h">${esc(t('tc.h'))}<button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div><div class="lvs-l">${L.map(c =>
+        `<button type="button" role="option" data-v="${c.id}" class="${c.id === cur ? 'on' : ''}"><b>${c.id === 'none' ? '—' : '⏱'}</b><span class="nm">${esc(tcName(c))}</span><small>${esc(tcDesc(c))}</small></button>`).join('')}</div></div>`;
+      document.body.appendChild(sh); requestAnimationFrame(() => sh.classList.add('on'));
+      const close = () => { if (sh.classList.contains('out')) return; sh.classList.add('out'); sh.classList.remove('on'); setTimeout(() => sh.remove(), 240); };
+      sh.onclick = e => { const b = e.target.closest('[data-v]'); if (b) { pref[id + ':rtTc:' + opp] = b.dataset.v; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (x) {} paint(); close(); return; } if (e.target === sh || e.target.closest('.lvs-x')) close(); };
+    };
+  }
   function playSheet(g, ad, r) {
     const old = $('bvPS'); if (old) old.remove();
     if (!PS_GAMES[g.id] || !ad || !FULL_SKIN[g.id] || !matchMedia('(max-width: 819px)').matches) return;
@@ -994,19 +1051,24 @@
   }
   const FULL_SKIN = { ludo: true, reversi: true, shogi: true, chess: true, backgammon: true, gomoku: true, go: true, morris: true, connect4: true, checkers: true, mancala: true, dots: true, xiangqi: true, janggi: true, hex: true, tafl: true, ur: true, senet: true, fanorona: true, ugolki: true, agon: true, alquerque: true, konane: true, amazons: true };
   let lastKind;
-  function startPlay(kind, over) {   // over: 'puzzle' | 'lesson' — the 「あそぶ」 sheet opens the full game straight at its puzzles / lessons
+  function startPlay(kind, over, sub) {   // over: 'puzzle' | 'lesson' — the 「あそぶ」 sheet opens the full game straight at its puzzles / lessons; sub: which part (the card's tabs, mxBind)
     if (renderPlace.close) renderPlace.close();
     if ($('bvPS')) $('bvPS').classList.remove('on');
     const g = bvGame, ad = Atlas3D[g.id];
     if (FULL_SKIN[g.id] && !(kind === 'table' && ad.table)) {
-      const lv = $('bvLv') ? +$('bvLv').value : 0, side = $('bvSide') ? +$('bvSide').value : 1, mode = over || ($('bvMode') ? $('bvMode').dataset.v : 'ai'), size = $('bvSize') ? +$('bvSize').value : 0;
-      if (!over) pref[g.id + ':mode'] = mode; pref[g.id + ':lv'] = lv; pref[g.id + ':side'] = side; if (size) pref[g.id + ':size'] = size; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {}
+      let lv = $('bvLv') ? +$('bvLv').value : 0, mode = over || ($('bvMode') ? $('bvMode').dataset.v : 'ai'), tc = '';
+      const side = $('bvSide') ? +$('bvSide').value : 1, size = $('bvSize') ? +$('bvSize').value : 0;
+      if (mode === 'ai' && $('bvLv') && lv === 0) { mode = 'pvp'; lv = pref[g.id + ':lv'] || 1; }   // (相手: 二人で対戦)
+      if (mode === 'rated' && $('bvRtOpp')) { const opp = $('bvRtOpp').value, c = rtTc(g.id, opp); if (opp === 'online') mode = 'online'; if (c) tc = c.id; }
+      if (!over) pref[g.id + ':mode'] = mode === 'online' ? 'rated' : mode; pref[g.id + ':lv'] = lv; pref[g.id + ':side'] = side; if (size) pref[g.id + ':size'] = size; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {}
       if (window.AtlasLoading) AtlasLoading.show(lang);   // straight to the loading screen (no camera move behind it)
-      setTimeout(() => { location.href = '../' + g.href + '?skin=atlas' + (mode !== 'ai' ? '&mode=' + mode : (lv ? '&lv=' + lv : '') + '&side=' + side + (size ? '&size=' + size : '')); }, 420);
+      setTimeout(() => { location.href = '../' + g.href + '?skin=atlas' + (mode !== 'ai' ? '&mode=' + mode + (sub ? '&sub=' + sub : '') + (tc ? '&tc=' + tc : '') : (lv ? '&lv=' + lv : '') + '&side=' + side + (size ? '&size=' + size : '')); }, 420);
       return;
     }
     if (pend3d) { pend3d.then(() => startPlay(kind)); return; }   // the board isn't on the table yet
-    const level = +$('bvLv').value, side = $('bvSide') ? +$('bvSide').value : 1, pmode = $('bvMode') ? $('bvMode').dataset.v : 'ai', size = $('bvSize') ? +$('bvSize').value : 0;
+    let level = +$('bvLv').value, pmode = $('bvMode') ? $('bvMode').dataset.v : 'ai';
+    if (pmode === 'ai' && level === 0) { pmode = 'pvp'; level = pref[g.id + ':lv'] || 1; }   // (shogi / chess: 相手 二人で対戦)
+    const side = $('bvSide') ? +$('bvSide').value : 1, size = $('bvSize') ? +$('bvSize').value : 0;
     pref[g.id + ':lv'] = level; pref[g.id + ':side'] = side; pref[g.id + ':mode'] = pmode; if (size) pref[g.id + ':size'] = size; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {}
     lastKind = kind;
     const tc = tcOf(ad, $('bvTc') ? $('bvTc').dataset.v : pref[g.id + ':tc']), tcT = new URLSearchParams(location.search).get('tcTest');
