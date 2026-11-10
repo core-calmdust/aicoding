@@ -29,7 +29,7 @@
   function ensure(lang) {
     const need = [];
     if (!A.BOSSES) need.push(load(BASE + 'roster.js?v=' + V));
-    if (!window.AtlasArt) need.push(load(ATLAS + 'art.js?v=9').catch(() => {}));
+    if (!window.AtlasArt) need.push(load(ATLAS + 'art.js?v=10').catch(() => {}));
     return Promise.all(need).then(() => load(BASE + 't/' + lang + '.js?v=' + V).catch(() => load(BASE + 't/en.js?v=' + V)))
       .then(() => load(BASE + 't2/' + lang + '.js?v=' + V).catch(() => {}));   // more lines + the watchers' own ways of talking (t2/, where there is one)
   }
