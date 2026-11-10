@@ -5,11 +5,10 @@
      • draws the 3D board (atlas/models/amazons.js: 'temple' — the Temple of Themiscyra on its stylobate, or 'ruins' — the
        jungle ruins' dressed stones) with the 3D table; the camera is aligned to the DOM board, which stays on top
        (transparent) for taps, destinations, arrows, hints and labels
-     • the amazons are sculpted figures (statue / archer / bronze), chosen in a 「3D駒」 row under the 3D boards
-       ('atlas-amazons-pc3'); the page's piece pictures (plates, players, record) follow the chosen figures
-     • mirrors the page's moves: the amazon glides to its square (lifted a little), then a fire arrow flies from her in an arc
-       — a flame at its head, sparks shed along the way — strikes with a flash and a burst of sparks; the square stays
-       scorched with the arrow stuck in it, its edge glows and cools, a thin smoke rises for a few seconds
+     • the layout of chess's skin (no perspective on the page): only the board is 3D; the amazons are the page's own pieces drawn
+       as 3/4 renders of the sculpted figures (amazons/img/pc3-<set>-<w|b>.webp: statue / archer / bronze, chosen in a 「3D駒」
+       row under the 3D boards, 'atlas-amazons-pc3'), the arrows and their fire are the page's own (the 3D figures move in
+       the portal's 3D view, atlas/games/amazons.js)
      • lesson / puzzle text → the guide's speech bubble (shared AtlasSkin)
    Rendering is on demand (Table3D.kick); nothing is drawn while idle.
    ===================================================================== */
@@ -34,15 +33,8 @@ html.atlas-amazons[data-pc3=archer]{--pcW:url(img/pc3-archer-w.webp)!important;-
 html.atlas-amazons[data-pc3=bronze]{--pcW:url(img/pc3-bronze-w.webp)!important;--pcB:url(img/pc3-bronze-b.webp)!important}
 html.atlas-amazons .lines{overflow:visible!important}
 html.atlas-amazons .lines .num{fill:rgba(255,246,226,.85)!important;stroke:rgba(0,0,0,.55)!important;font-weight:700}
-html.atlas-amazons .frame > .reserve.bot{transform:translateY(calc(var(--cell) * .1))}html.atlas-amazons .frame > .reserve.top{transform:translateY(calc(var(--cell) * 1.3)) scale(.86);transform-origin:left center}   /* (the board leans back: the far band is lower and smaller on screen) */
-html.atlas-amazons .pieces .pc:not(.hov){background:none!important;box-shadow:none!important;filter:none!important;opacity:1!important;border:0!important}
-html.atlas-amazons .pieces .pc.sel{box-shadow:0 0 0 3px rgba(255,214,100,.95),0 0 18px rgba(255,200,80,.75)!important;border-radius:50%!important}
-html.atlas-amazons .pieces .pc.mov:not(.sel){box-shadow:0 0 0 2.5px rgba(190,232,140,.85),0 0 12px rgba(190,232,140,.5)!important;border-radius:50%!important}
-html.atlas-amazons .pieces .pc.dim{opacity:1!important}
-html.atlas-amazons .pieces .arw:not(.hov){background:none!important;box-shadow:none!important}
-html.atlas-amazons .pieces .arw:not(.hov)::before,html.atlas-amazons .pieces .arw:not(.hov)::after,html.atlas-amazons .pieces .arw:not(.hov) svg{display:none!important}
-html.atlas-amazons .pieces :is(.spark,.flare){display:none!important}
-html.atlas-amazons .pieces .pc.hov{opacity:.5!important}
+html.atlas-amazons .frame > .reserve.bot{transform:translateY(calc(var(--cell) * .1))}html.atlas-amazons .frame > .reserve.top{transform:translateY(calc(var(--cell) * -.08))}
+html.atlas-amazons .pieces .pc{width:calc(var(--cell) * 1.02);height:calc(var(--cell) * 1.02);margin:calc(var(--cell) * -.66) 0 0 calc(var(--cell) * -.51)}   /* the figures: 3/4 renders standing on their squares (as chess) */
 html.atlas-amazons .reserve .rsv-plate{background:rgba(20,16,12,.82)!important;box-shadow:0 0 0 1px rgba(226,182,96,.45),0 2px 6px rgba(0,0,0,.35)!important;color:#f0e2c4!important}
 html.atlas-amazons #fPieces{display:none!important}
 html.atlas-skin #f3D{margin:12px 0 0;padding:10px 12px 12px;border-radius:14px;background:#f6f1e4;border:2px solid #e2cf9e}
@@ -55,7 +47,7 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
 
   const skin = AtlasSkin.init({
     margin: .16,
-    tilt: 30, persp: 2.6,   // (leaning back: the sculpted amazons are seen from the front, not from straight above)
+    persp: 2.6,   // (straight down with a near lens, as chess: the figures show their sides toward the edges; no tilt, so the page keeps its full layout)
     board: boardDom,
     pc: { vars: ['--cell'], extras: '.frame > .reserve' },
     outer: r => { const Hh = r.height * A3.H / 10; return { top: r.top + r.height / 2 - Hh / 2, height: Hh }; },
@@ -76,16 +68,13 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
 
   /* ---------- the board ---------- */
   const holder = new THREE.Group();
-  let root = null, U = null, Y = 0, built = '';
-  const P3 = new Map();   // square → { g, k }
-  let tok = 0;
+  let root = null, U = null, built = '';
   function build() {
-    const look = T3.BOARDS && T3.BOARDS.amazons ? T3.BOARDS.amazons.get() : 'temple', key = look + pc3();
-    if (key === built && root) return false;
-    built = key; tok++;
+    const look = T3.BOARDS && T3.BOARDS.amazons ? T3.BOARDS.amazons.get() : 'temple';
+    if (look === built && root) return false;
+    built = look;
     if (root) holder.remove(root);
-    P3.clear();
-    root = A3.board(look); U = root.userData; Y = U.top; holder.add(root);
+    root = A3.board(look); U = root.userData; holder.add(root);
     T3.show('amazons', holder, { still: true });
     skin.alignTo(10, U.top);
     dispatchEvent(new Event('resize'));
@@ -113,14 +102,14 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
     if (!T3.BOARDS || !T3.BOARDS.amazons) return;
     if (T3.setBoard) T3.setBoard('amazons', k); else T3.BOARDS.amazons.set(k);
     if (V && !V.is3d()) V.set(true);
-    try { mirror(); } catch (e) {}
+    build();
     paint3();
   }
   function setSet(k) {
     try { localStorage.setItem('atlas-amazons-pc3', k); } catch (e) {}
     setPc3Attr();
     if (V && !V.is3d()) V.set(true);
-    try { mirror(); } catch (e) {}
+    build();
     paint3();
   }
   let f3 = null;
@@ -153,142 +142,8 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
     if (r2) r2.addEventListener('click', e => { if (e.target.closest('button') && V) { V.set(false); setTimeout(paint3, 0); } }, true);
     if (typeof window.designPickers === 'function') { const od = window.designPickers; window.designPickers = function () { const r = od.apply(this, arguments); try { paint3(); } catch (e) {} return r; }; }
   }
-  addEventListener('storage', e => { if (e.key === 'atlas-amazons-look' || e.key === 'atlas-amazons-pc3') { setPc3Attr(); try { mirror(); } catch (x) {} paint3(); } });
+  addEventListener('storage', e => { if (e.key === 'atlas-amazons-look' || e.key === 'atlas-amazons-pc3') { setPc3Attr(); build(); paint3(); } });
 
-  /* ---------- effects: sprites (fire, sparks, flash, smoke) ---------- */
-  const spr = {};
-  function sprTex(kind) {
-    if (spr[kind]) return spr[kind];
-    const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
-    if (kind === 'fire') { gr.addColorStop(0, 'rgba(255,250,220,1)'); gr.addColorStop(.25, 'rgba(255,200,80,.95)'); gr.addColorStop(.55, 'rgba(255,110,20,.6)'); gr.addColorStop(1, 'rgba(255,60,0,0)'); }
-    else if (kind === 'spark') { gr.addColorStop(0, 'rgba(255,255,230,1)'); gr.addColorStop(.3, 'rgba(255,190,70,.9)'); gr.addColorStop(1, 'rgba(255,90,10,0)'); }
-    else if (kind === 'ember') { gr.addColorStop(0, 'rgba(255,120,30,0)'); gr.addColorStop(.55, 'rgba(255,120,30,0)'); gr.addColorStop(.72, 'rgba(255,110,30,.55)'); gr.addColorStop(.86, 'rgba(255,70,10,.2)'); gr.addColorStop(1, 'rgba(255,60,0,0)'); }
-    else { gr.addColorStop(0, 'rgba(210,206,200,.5)'); gr.addColorStop(.5, 'rgba(190,186,180,.22)'); gr.addColorStop(1, 'rgba(180,176,170,0)'); }
-    g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
-    const t = new THREE.CanvasTexture(c); return (spr[kind] = t);
-  }
-  const sprMat = (kind) => new THREE.SpriteMaterial({ map: sprTex(kind), transparent: true, depthWrite: false, blending: kind === 'smoke' ? THREE.NormalBlending : THREE.AdditiveBlending, toneMapped: false });
-  function sprite(kind, x, y, z, s) { const o = new THREE.Sprite(sprMat(kind)); o.position.set(x, y, z); o.scale.set(s, s, s); root.add(o); return o; }
-  const kill = o => { if (o.parent) o.parent.remove(o); if (o.material) o.material.dispose(); };
 
-  /* ---------- 3D amazons and arrows mirrored from the page ---------- */
-  const io = k => k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
-  const xz = i => { let rc; try { rc = dRC(i); } catch (e) { rc = E.RC[i]; } return U.pt(rc[1], rc[0]); };
-  const animOk = () => { try { return typeof animOn === 'function' ? animOn() : true; } catch (e) { return true; } };
-  const anim = (dur, f, done, my) => { const t0 = performance.now(); (function s(n) { if (my !== undefined && my !== tok) return; const k = Math.min(1, Math.max(0, (n - t0) / dur)); f(k); T3.kick(120); if (k < 1) requestAnimationFrame(s); else if (done) done(); })(t0); };
-  const later = (ms, f, my) => setTimeout(() => { if (my === undefined || my === tok) f(); }, ms);
-  function mkAmazon(k, sq) {
-    const g = A3.piece(k <= 2 ? 1 : 2, pc3());
-    const sh = T3.contact(A3.R * .95, .5); sh.position.y = .002; g.add(sh); g.userData.sh = sh;
-    const [x, z] = xz(sq); g.position.set(x, Y, z); root.add(g); return g;
-  }
-  function mkArrow(sq, seed) {
-    const g = new THREE.Group(), s = A3.scorch(), a = A3.arrow();
-    s.position.y = .003; g.add(s);
-    a.rotation.y = (seed * 2.399) % (Math.PI * 2); g.add(a); g.userData.arrow = a;
-    const [x, z] = xz(sq); g.position.set(x, Y, z); root.add(g); return g;
-  }
-  function lift(g, h) {
-    g.position.y = Y + h; g.userData.h0 = h;
-    const sh = g.userData.sh; if (sh) { sh.position.y = .002 - h; const s = 1 + h * .5; sh.scale.set(s, s, s); sh.material.opacity = .5 / (1 + h * 1.4); }
-  }
-  const hOf = g => g.userData.h0 || 0;
-  function drop(g) { if (!g) return; g.traverse(o => { if (o.isSprite && o.material) o.material.dispose(); }); if (g.userData.sh) g.userData.sh.material.dispose(); if (g.parent) g.parent.remove(g); }
-  function applySel() {
-    let els; try { els = pcEls; } catch (e) { return; }
-    for (const [i, o] of P3) {
-      if (o.k === 5) continue;
-      const el = els.get(i), on = !!(el && el.classList.contains('sel')), g = o.g;
-      if (g.userData.moving || on === !!g.userData.up) continue;
-      g.userData.up = on; const h0 = hOf(g), h1 = on ? .22 : 0;
-      anim(on ? 130 : 110, k => lift(g, h0 + (h1 - h0) * io(k)));
-    }
-  }
-  function mirror() {
-    let els; try { els = pcEls; } catch (e) { return; }
-    build();
-    tok++;
-    const want = new Map(); for (const [i, el] of els) want.set(i, +el.dataset.k);
-    for (const [i, o] of P3) if (want.get(i) !== o.k) { drop(o.g); P3.delete(i); }
-    for (const [i, k] of want) {
-      const o = P3.get(i);
-      if (!o) { P3.set(i, { g: k === 5 ? mkArrow(i, i) : mkAmazon(k, i), k }); continue; }
-      if (!o.g) { o.g = mkArrow(i, i); continue; }   // (an arrow still in the air when the page re-synced)
-      const g = o.g, [x, z] = xz(i); g.position.x = x; g.position.z = z;
-      if (k !== 5) { g.scale.set(1, 1, 1); g.userData.moving = false; g.userData.up = false; lift(g, 0); }
-    }
-    applySel(); T3.kick(300);
-  }
-  // the fire arrow's flight: from the amazon's new square to the target, an arc; flame at the head, sparks shed behind
-  function fly(fromSq, toSq, delay, dur, my) {
-    const [x0, z0] = xz(fromSq), [x1, z1] = xz(toSq), d = Math.hypot(x1 - x0, z1 - z0), hgt = .5 + d * .09;
-    later(delay, () => {
-      const g = new THREE.Group(), a = A3.arrow().userData.arrow; a.rotation.set(0, 0, 0); a.position.set(0, 0, 0);
-      const ar = new THREE.Group(); ar.add(a); a.rotation.x = Math.PI / 2; a.position.z = .38; g.add(ar);   // the arrow along +z (head first)
-      const fire = new THREE.Sprite(sprMat('fire')); fire.scale.set(.42, .42, .42); fire.position.set(0, 0, .12); ar.add(fire);
-      root.add(g);
-      let lastSpark = 0; const sparks = [];
-      const pos = k => [x0 + (x1 - x0) * k, Y + .62 + Math.sin(k * Math.PI) * hgt - k * .55, z0 + (z1 - z0) * k];
-      anim(dur, k => {
-        const kk = io(k * .9 + .1 * k * k), [x, y, z] = pos(kk), [xn, yn, zn] = pos(Math.min(1, kk + .02));
-        g.position.set(x, y, z); g.lookAt(xn, yn, zn);
-        const fl = .38 + Math.sin(k * 40) * .06; fire.scale.set(fl, fl, fl);
-        if (k - lastSpark > .06) { lastSpark = k; const s = sprite('spark', x, y, z, .1 + Math.random() * .06); s.userData.v = [(Math.random() - .5) * .6, -.2 - Math.random() * .5, (Math.random() - .5) * .6]; s.userData.t = performance.now(); sparks.push(s); }
-        const now = performance.now();
-        for (let i = sparks.length - 1; i >= 0; i--) { const s = sparks[i], t = (now - s.userData.t) / 480; if (t >= 1) { kill(s); sparks.splice(i, 1); continue; } const v = s.userData.v; s.position.x += v[0] * .016; s.position.y += v[1] * .016; s.position.z += v[2] * .016; s.material.opacity = 1 - t; }
-      }, () => {
-        g.remove(ar); kill(fire); if (g.parent) g.parent.remove(g);
-        anim(500, () => { const now = performance.now(); for (let i = sparks.length - 1; i >= 0; i--) { const s = sparks[i], t = (now - s.userData.t) / 480; if (t >= 1) { kill(s); sparks.splice(i, 1); continue; } s.material.opacity = 1 - t; } }, () => sparks.forEach(kill));
-      }, my);
-    }, my);
-  }
-  // the strike: a flash and a burst of sparks, the edge of the scorch glowing then cooling, smoke rising for a while
-  function strike(sq, g, my) {
-    const [x, z] = xz(sq);
-    const fl = sprite('fire', x, Y + .25, z, .2);
-    anim(460, k => { const s = .2 + k * 1.5; fl.scale.set(s, s, s); fl.material.opacity = k < .2 ? k / .2 : 1 - (k - .2) / .8; }, () => kill(fl), my);
-    const burst = [];
-    for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2 + Math.random() * .4, sp = .9 + Math.random() * 1.2, s = sprite('spark', x, Y + .2, z, .09 + Math.random() * .05); s.userData.v = [Math.cos(a) * sp, 1.2 + Math.random() * 1.2, Math.sin(a) * sp]; burst.push(s); }
-    anim(620, k => { burst.forEach(s => { const v = s.userData.v; s.position.x += v[0] * .016; s.position.z += v[2] * .016; v[1] -= .09; s.position.y = Math.max(Y + .02, s.position.y + v[1] * .016); s.material.opacity = 1 - k; }); }, () => burst.forEach(kill), my);
-    const em = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 1.2).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: sprTex('ember'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }));
-    em.position.y = .006; g.add(em);
-    anim(4200, k => { em.material.opacity = (1 - k) * (.45 + .15 * Math.sin(k * 30)); }, () => { g.remove(em); em.geometry.dispose(); em.material.dispose(); });
-    const smoke = [];
-    let t = 0; const tick = () => {
-      if (!g.parent || t > 14) return; t++;
-      const s = new THREE.Sprite(sprMat('smoke')); s.position.set((Math.random() - .5) * .15, .25, (Math.random() - .5) * .15); s.scale.set(.25, .25, .25); g.add(s); smoke.push(s);
-      const v = (Math.random() - .5) * .3;
-      anim(1800, k => { s.position.y = .25 + k * 1.1; s.position.x += v * .006; const sc = .25 + k * .55; s.scale.set(sc, sc, sc); s.material.opacity = Math.sin(k * Math.PI) * .7; }, () => { g.remove(s); s.material.dispose(); });
-      setTimeout(tick, 260);
-    };
-    tick();
-  }
-  function travel(m, before) {
-    const f = E.mFrom(m), tq = E.mTo(m), a = E.mArrow(m), o = P3.get(f); if (!o) return false;
-    const my = tok, g = o.g;
-    const qd = typeof qDur === 'function' ? qDur(m) : 400, ad = typeof aDur === 'function' ? aDur(m) : 300, gap = typeof SHOOT_GAP === 'number' ? SHOOT_GAP : 70;
-    P3.delete(f); P3.set(tq, o);
-    g.userData.moving = true; g.userData.up = false;
-    const [x0, z0] = xz(f), [x1, z1] = xz(tq), h0 = hOf(g);
-    anim(qd, k => { const q = io(k); g.position.x = x0 + (x1 - x0) * q; g.position.z = z0 + (z1 - z0) * q; lift(g, Math.sin(k * Math.PI) * .18 + h0 * (1 - k)); },
-      () => { g.userData.moving = false; lift(g, 0); anim(140, k => { const s = 1 + Math.sin(k * Math.PI) * .04; g.scale.set(s, 1 / s, s); }, () => g.scale.set(1, 1, 1), my); }, my);
-    // the arrow: it flies after the amazon has landed, then sticks (the stuck arrow and the scorch appear at the strike)
-    const old = P3.get(a); if (old) { drop(old.g); P3.delete(a); }
-    const slot = { g: null, k: 5 }; P3.set(a, slot);
-    fly(tq, a, qd + gap, ad, my);
-    later(qd + gap + ad - 10, () => { if (P3.get(a) !== slot) return; slot.g = mkArrow(a, a); const st = slot.g.userData.arrow; st.position.y = .22; anim(90, k => { st.position.y = .22 * (1 - k) - .03 * k; }, null, my); strike(a, slot.g, my); T3.kick(600); }, my);
-    return true;
-  }
-  const oSync = window.syncPieces;
-  window.syncPieces = function () { const r = oSync.apply(this, arguments); try { mirror(); } catch (e) {} return r; };
-  const oAnim = window.animateMove;
-  window.animateMove = function (m, before) {
-    const ok = oAnim.apply(this, arguments);
-    if (ok && !(typeof isPass === 'function' && isPass(m))) { try { if (build() || !animOk() || !travel(m, before)) mirror(); } catch (e) { try { mirror(); } catch (x) {} } }
-    return ok;
-  };
-  if (piecesDom) new MutationObserver(() => applySel()).observe(piecesDom, { subtree: true, attributes: true, attributeFilter: ['class'] });
-  try { mirror(); } catch (e) {}
-
-  window.__amSkin = { pieces: () => P3.size, look: () => built, at: i => { const [x, z] = xz(i); return T3.project(x, z, Y); } };
+  window.__amSkin = { look: () => built };
 })();
