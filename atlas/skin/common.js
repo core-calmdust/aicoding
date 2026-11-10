@@ -471,7 +471,7 @@
     if ((!lv && !side && mode === 'ai') || !o.start) { ready(false); return; }
     let tries = 0;
     const go = () => {
-      if (lv && window.ProSet && ProSet.resetAll) ProSet.resetAll();   // (a level chosen on the portal: played as that level — no PRO changes left over, 2026-11-11)
+      if (lv && window.ProSet && ProSet.suspend) ProSet.suspend();   // (a level chosen on the portal: PRO customizations are off for this page only, kept saved)
       let ok = false; try { ok = o.start(lv, side, mode); } catch (e) { ok = true; }
       if (ok === null && ++tries < 40) return setTimeout(go, 150);   // the page isn't ready yet
       ready(true);
