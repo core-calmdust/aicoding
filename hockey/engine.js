@@ -17,7 +17,7 @@
   // a player's mallet follows the pointer almost at once (1200 cm/s; at 600 it trailed the hand and felt laggy); the AI keeps 600 × its level cap
   const DIM = { W, L, GW, RP, RM, VMAX };
   const MODES = ['classic', 'block', 'monster', 'items', 'bumper', 'warp', 'multi', 'chaos'];
-  const ITEMS = ['speed', 'split', 'giant', 'shield', 'freeze'];
+  const ITEMS = ['speed', 'split', 'giant', 'shield', 'freeze'];   // (+ 'worm' on the space board)
   function rng(seed) { let s = (seed >>> 0) || 1; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
   // (2026-11-10) the board decides the game: its special rules (flags) and the feel of the puck
   //   classic  — no tricks · air — a gliding puck (little friction, lively walls) · neon — monsters + items (a gaming board)
@@ -26,9 +26,9 @@
     classic: { flags: [] },
     air: { flags: [], damp: .07, eWall: .93, eMal: .9, spd: 1.2 },
     neon: { flags: ['monster', 'items'] },
-    pinball: { flags: ['bumper', 'multi'], eWall: .9 },
-    gear: { flags: ['block'] },
-    space: { flags: ['warp'], damp: .3 },
+    pinball: { flags: ['bumper'], eWall: .9 },
+    gear: { flags: ['block'], barMove: true },   // (the bar also drifts slowly left and right)
+    space: { flags: ['warp', 'items'], items: ['worm', 'worm', 'speed', 'split'], damp: .07, eWall: .93, eMal: .9, spd: 1.2 },   // (zero gravity: it glides like air hockey; worm: the wormholes grow for a while)
   };
   const MODE_FLAGS = { classic: [], block: ['block'], monster: ['monster'], items: ['items'], bumper: ['bumper'], warp: ['warp'], multi: ['multi'], chaos: ['block', 'monster', 'items'] };
   const has = (s, g) => (s.flags || MODE_FLAGS[s.mode] || []).includes(g);
@@ -36,7 +36,7 @@
   function newMatch(o) {
     o = o || {};
     const B = BOARDS[o.board] || null, sp = (o.speed || 1) * (B && B.spd || 1);
-    const s = { board: B ? o.board : null, flags: B ? B.flags.slice() : null, damp: B && B.damp != null ? B.damp : DAMP, eWall: B && B.eWall || E_WALL, eMal: B && B.eMal || E_MAL, mode: MODES.includes(o.mode) ? o.mode : 'classic', target: o.target || 7, score: [0, 0], t: 0, over: -1, R: rng(o.seed || (Date.now() & 0xffffff)),
+    const s = { itemSet: B && B.items || ITEMS, barMove: !!(B && B.barMove), barX: 0, barV: 0, worm: 0, pr: PR, board: B ? o.board : null, flags: B ? B.flags.slice() : null, damp: B && B.damp != null ? B.damp : DAMP, eWall: B && B.eWall || E_WALL, eMal: B && B.eMal || E_MAL, mode: MODES.includes(o.mode) ? o.mode : 'classic', target: o.target || 7, score: [0, 0], t: 0, over: -1, R: rng(o.seed || (Date.now() & 0xffffff)),
       mal: [{ x: 0, y: L / 2 - 8, vx: 0, vy: 0, r: RM, big: 0, slow: 0, tx: 0, ty: L / 2 - 8 }, { x: 0, y: -L / 2 + 8, vx: 0, vy: 0, r: RM, big: 0, slow: 0, tx: 0, ty: -L / 2 + 8 }],
       pucks: [], mons: [], items: [], shield: [0, 0], nextItem: 4, bar: 0, last: -1, pause: 0, ev: [], serveTo: o.first == null ? 0 : o.first,
       // (2026-11-10) the pace grows with the AI level: o.speed 1 (Lv.1, the slow pace that felt right) … about 1.5 (Lv.20)
@@ -70,8 +70,10 @@
     for (let i = 0; i < 2; i++) { const m = s.mal[i], q = inputs && inputs[i]; m.px = m.tx; m.py = m.ty; if (q) { m.tx = q.tx; m.ty = q.ty; } clampMal(m, i); m.ex = m.tx; m.ey = m.ty; }
     // timers
     for (let i = 0; i < 2; i++) { const m = s.mal[i]; if (m.big > 0) { m.big -= dt; if (m.big <= 0) s.ev.push({ k: 'end', what: 'giant', side: i }); } m.r = m.big > 0 ? RM * 1.6 : RM; if (m.slow > 0) m.slow -= dt; if (s.shield[i] > 0) { s.shield[i] -= dt; if (s.shield[i] <= 0) s.ev.push({ k: 'end', what: 'shield', side: i }); } }
-    if (has(s, 'block')) s.bar = (s.bar + dt * 1.15) % (Math.PI * 2);
-    if (has(s, 'items')) { s.nextItem -= dt; if (s.nextItem <= 0 && s.items.length < 2) { s.items.push({ k: ITEMS[Math.floor(s.R() * ITEMS.length)], x: (s.R() - .5) * (W - 10), y: (s.R() - .5) * 14, t: 0 }); s.nextItem = 5 + s.R() * 4; s.ev.push({ k: 'item' }); } s.items.forEach(it => it.t += dt); s.items = s.items.filter(it => it.t < 12); }
+    if (has(s, 'block')) { s.bar = (s.bar + dt * (s.barMove ? .9 : 1.15)) % (Math.PI * 2); if (s.barMove) { const nx = Math.sin(s.t * .42) * 8; s.barV = dt > 0 ? (nx - s.barX) / dt : 0; s.barX = nx; } }
+    if (s.worm > 0) { s.worm -= dt; if (s.worm <= 0) s.ev.push({ k: 'end', what: 'worm' }); }
+    s.pr = PR * (s.worm > 0 ? 2 : 1);
+    if (has(s, 'items')) { s.nextItem -= dt; if (s.nextItem <= 0 && s.items.length < 2) { s.items.push({ k: s.itemSet[Math.floor(s.R() * s.itemSet.length)], x: (s.R() - .5) * (W - 10), y: (s.R() - .5) * 14, t: 0 }); s.nextItem = 5 + s.R() * 4; s.ev.push({ k: 'item' }); } s.items.forEach(it => it.t += dt); s.items = s.items.filter(it => it.t < 12); }
     if (s.pause > 0) { s.pause -= dt; if (s.pause <= 0 && !s.pucks.length) { serve(s, s.serveTo); if (has(s, 'multi')) serve(s, 1 - s.serveTo, true); } }
     // sub-steps: 1/240 s, and more when a mallet swings fast — no mallet moves more than .8 cm in one sub-step, so a quick
     // swing can't jump past the puck's centre and knock it backwards (2026-11-10)
@@ -139,17 +141,17 @@
       for (let i = 0; i < 2; i++) hitMallet(s, p, s.mal[i], i);
       // block mode: the turning bar (a capsule) bounces the puck back harder
       if (has(s, 'block')) {
-        const c = Math.cos(s.bar), sn = Math.sin(s.bar), u = Math.max(-BAR, Math.min(BAR, p.x * c + p.y * sn)), qx = u * c, qy = u * sn;
+        const bx = s.barX || 0, c = Math.cos(s.bar), sn = Math.sin(s.bar), u = Math.max(-BAR, Math.min(BAR, (p.x - bx) * c + p.y * sn)), qx = bx + u * c, qy = u * sn;
         const dx = p.x - qx, dy = p.y - qy, d = Math.hypot(dx, dy), md = RP + 1;
         if (d < md && d > 1e-6) {
-          const nx = dx / d, ny = dy / d, wv = 1.15 * u, bvx = -sn * wv, bvy = c * wv, rvx = p.vx - bvx, rvy = p.vy - bvy, vn = rvx * nx + rvy * ny;
+          const nx = dx / d, ny = dy / d, wv = (s.barMove ? .9 : 1.15) * u, bvx = -sn * wv + (s.barV || 0), bvy = c * wv, rvx = p.vx - bvx, rvy = p.vy - bvy, vn = rvx * nx + rvy * ny;
           p.x = qx + nx * md; p.y = qy + ny * md;
           if (vn < 0) { p.vx = bvx + rvx - 2.15 * vn * nx; p.vy = bvy + rvy - 2.15 * vn * ny; s.ev.push({ k: 'block', x: p.x, y: p.y }); }
         }
       }
       for (const mo of s.mons) bounceCircle(s, p, mo.x, mo.y, mo.r, 1.05, mo.vx, mo.vy, 'monster', true);
       if (has(s, 'bumper')) for (const [bx, by] of BUMPERS) bounceCircle(s, p, bx, by, BR, 1.35, 0, 0, 'bumper');
-      if (has(s, 'warp') && !(p.warpT > 0)) for (let k = 0; k < 2; k++) { const [wx, wy] = PORTAL[k]; if (Math.hypot(p.x - wx, p.y - wy) < PR) { const [ox, oy] = PORTAL[1 - k]; p.x = ox - Math.sign(ox) * (PR + RP + .3); p.y = oy + (p.y - wy); p.vx = -Math.sign(ox) * Math.max(60, Math.abs(p.vx)); p.warpT = .4; s.ev.push({ k: 'warp', from: k }); break; } }
+      if (has(s, 'warp') && !(p.warpT > 0)) for (let k = 0; k < 2; k++) { const [wx, wy] = PORTAL[k]; if (Math.hypot(p.x - wx, p.y - wy) < s.pr) { const [ox, oy] = PORTAL[1 - k]; p.x = ox - Math.sign(ox) * (s.pr + RP + .3); p.y = oy + (p.y - wy); p.vx = -Math.sign(ox) * Math.max(60, Math.abs(p.vx)); p.warpT = .4; s.ev.push({ k: 'warp', from: k }); break; } }
       if (p.warpT > 0) p.warpT -= h;
       // items: the puck picks one up for the player who touched it last
       for (let j = s.items.length - 1; j >= 0; j--) { const it = s.items[j]; if (Math.hypot(p.x - it.x, p.y - it.y) < RP + 2.2) { s.items.splice(j, 1); useItem(s, it.k, s.last >= 0 ? s.last : (p.y > 0 ? 1 : 0), p); } }
@@ -218,6 +220,7 @@
     else if (k === 'giant') s.mal[side].big = 8;
     else if (k === 'shield') s.shield[side] = 8;
     else if (k === 'freeze') s.mal[1 - side].slow = 3.5;
+    else if (k === 'worm') s.worm = 8;
   }
 
   /* ---------- AI (Lv.1–20) ---------- */
