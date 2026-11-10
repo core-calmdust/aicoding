@@ -418,3 +418,8 @@ html.atlas-skin :is(.modal,.side,.card) input[type=range]::-moz-range-track{heig
 html.atlas-skin :is(.modal,.side,.card) input[type=range]::-moz-range-progress{height:8px;border-radius:99px;background:#e0a33a}
 html.atlas-skin :is(.modal,.side,.card) input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;margin-top:-7px;border-radius:50%;background:#e0a33a;border:3px solid #fff;box-shadow:0 2px 0 #c98a24}
 html.atlas-skin :is(.modal,.side,.card) input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#e0a33a;border:3px solid #fff;box-shadow:0 2px 0 #c98a24}
+/* the game's menu bar (対局 · 待った · 投了 · ヒント …): rounded squares like the puzzle panel's buttons, without their drop
+   shadow; the buttons keep their size, the bar is a little shorter (2026-11-11) */
+html.atlas-skin:not(.atlas-land) .card.controls{padding-top:6px!important;padding-bottom:6px!important}
+html.atlas-skin:not(.atlas-land) .card.controls .btn{border-radius:14px!important;background:#fff!important;border:2px solid #efe3c8!important;box-shadow:none!important;padding-top:5px!important;padding-bottom:5px!important}
+html.atlas-skin:not(.atlas-land) .card.controls .btn:disabled{background:#fbf7ee!important;border-color:#f3ead6!important}
