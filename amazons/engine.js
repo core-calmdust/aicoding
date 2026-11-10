@@ -779,7 +779,15 @@ function trapWin(pos, k, n) {   // the attacker to move
   }
   return false;
 }
+// (exact quick escape for the last round: the marked amazon can step to a square with four or more empty squares round it —
+//  its old square counts — and no arrow, nor the attacker's one move after it, closes them all)
+function escapes(pos, k) {
+  const f = pos.q[k], sq = pos.sq; if (f < 0) return false;
+  for (let d = 0; d < 8; d++) for (const t of RAYS[f][d]) { if (sq[t]) break; let c = 0; for (const u of NB[t]) if (!sq[u] || u === f) c++; if (c >= 4) return true; }
+  return false;
+}
 function trapAll(pos, k, n) {   // the defender to move: every reply still gets boxed within n
+  if (n === 1 && escapes(pos, k)) return false;
   const R = pos.moves(); if (!R.length) return true;
   const sc = R.map(r => { pos.play(r); const v = freeAt(pos, k); pos.unplay(r); return v; });
   if (n === 1 && sc.some(v => v > 2)) return false;   // (one move of ours closes two squares at most; moving our amazon away only opens)
@@ -804,6 +812,33 @@ function trapReply(start, moves, e, n) {
   duelBudget = 2e6;
   let best = R[0], bs = -Infinity;
   for (const r of R) { pos.play(r); const room = freeAt(pos, k), esc = n >= 1 && !trapWin(pos, k, n); pos.unplay(r); const s = (esc ? 1000 : 0) + room * 10 + pos.mobility(pos.turn === P1 ? P2 : P1) / 100; if (s > bs) { bs = s; best = r; } }
+  return { move: best };
+}
+// guard: your own marked amazon (pos.q[k], followed through its moves) is threatened — find the moves after which the
+// opponent can no longer box it in within h of its moves (nor leave you without a move). null: out of budget
+function guardOk(pos, k, h) { const op = pos.turn; if (boxed(pos, k)) return false; if (!pos.canMove(op)) return true; return !trapWin(pos, k, h); }
+function guardGood(start, moves, e, h, budget) {
+  const k = trapIdx(start, e); if (k < 0) return [];
+  const { pos } = replay(start, moves), out = [];
+  duelBudget = budget || 6e6; h = h || 2;
+  // (the moves that leave the marked amazon most room first — not needed for exactness, only the order of the list)
+  for (const m of pos.moves()) { pos.play(m); const ok = guardOk(pos, k, h); pos.unplay(m); if (duelBudget < 0) return null; if (ok) out.push(m); }
+  return out;
+}
+// the attacker's reply in a guard puzzle: the one that leaves the defender the fewest safe moves (among the 6 tightest)
+function guardReply(start, moves, e, h) {
+  const k = trapIdx(start, e), { pos } = replay(start, moves), R = pos.moves();
+  if (!R.length || k < 0) return { move: -1 };
+  // (after a slip the attacker punishes it: a move that boxes the amazon in within h, the quickest first)
+  for (let n = 1; n <= h; n++) { const w = trapGood(start, moves, e, n, 1.5e6); if (w && w.length) return { move: w[0] }; }
+  const sc = R.map(r => { pos.play(r); const v = freeAt(pos, k) * 100 - pos.mobility(pos.turn) / 10; pos.unplay(r); return v; });
+  const ord = R.map((_, i) => i).sort((a, b) => sc[a] - sc[b]).slice(0, 6);
+  let best = R[ord[0]], bn = Infinity;
+  for (const i of ord) {
+    const mv2 = moves.concat([R[i]]), g = guardGood(start, mv2, e, h, 8e5);
+    const c = g === null ? 999 : g.length;
+    if (c > 0 && c < bn) { bn = c; best = R[i]; }
+  }
   return { move: best };
 }
 // separated endgames: every amazon alone in its own room (a king-connected area of empty squares, closed by arrows and the
@@ -875,6 +910,7 @@ function readReply(start, moves) {
 // the page's puzzle questions: the good moves from the shown position for a puzzle of kind k
 function pzGood(m) {
   if (m.kind === 'trap') return trapGood(m.start, m.moves, m.e, m.n);
+  if (m.kind === 'guard') return guardGood(m.start, m.moves, m.e, 2);
   if (m.kind === 'end') return endGood(m.start, m.moves);
   if (m.kind === 'read') return readGood(m.start, m.moves);
   return duelGood(m.start, m.moves, m.n);
@@ -896,7 +932,7 @@ const hops = () => 1;
 
 const API = { get nodes() { return nodes; }, get evals() { return evals; }, P1, P2, WIN, WINT, ARROW, RULES, RULE_ORDER, setRule, get rule() { return 'std'; }, N, NN, RC, RAYS, NB, START,
   sqAt, sqName, sqIdx, mv, mFrom, mTo, mArrow, isRemove, hops, Pos, path, arrowPath, captured, name, parse, replay, judge, clearLine,
-  get wasm() { return !!WA; }, LEVELS, MC, mcts, mcPV, useCore: C => { MX = C; }, think, analyze, cands: candsJob, candList: cands, evaluate, evalFor, kindOf, EW, pvOf, bestMove, mtPlan, mtV, mtKids, mtFin, win1, canWin, duelGood, duelReply, trapGood, trapReply, trapWin, trapAll, trapIdx, boxed, freeAt, endGood, readGood, readReply, solveWin, fillMax, roomOf, sideMoves, emptyAround, pzGood, set SH(t) { SH = t; }, get SH() { return SH; } };
+  get wasm() { return !!WA; }, LEVELS, MC, mcts, mcPV, useCore: C => { MX = C; }, think, analyze, cands: candsJob, candList: cands, evaluate, evalFor, kindOf, EW, pvOf, bestMove, mtPlan, mtV, mtKids, mtFin, win1, canWin, duelGood, duelReply, trapGood, trapReply, trapWin, trapAll, trapIdx, boxed, guardGood, guardReply, escapes, freeAt, endGood, readGood, readReply, solveWin, fillMax, roomOf, sideMoves, emptyAround, pzGood, set SH(t) { SH = t; }, get SH() { return SH; } };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') {
   // ?…&mt=1: the lead of the MCTS on several threads (shared/mtengine.js): core_mt.wasm on the shared memory sent with the first
@@ -931,7 +967,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
         } else if (m.type === 'cands') self.postMessage({ id: m.id, type: 'result', ...candsJob(m.start, m.moves, m.time || 1200, m.k, m.plies, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth })) });
         else if (m.type === 'newgame') { TT.clear(); CC.clear(); self.postMessage({ id: m.id, type: 'result' }); }
         else if (m.type === 'pzgood') { const g = pzGood(m); self.postMessage({ id: m.id, type: 'result', list: g }); }
-        else if (m.type === 'duelReply') self.postMessage({ id: m.id, type: 'result', ...(m.kind === 'trap' ? trapReply(m.start, m.moves, m.e, m.n) : m.kind === 'read' ? readReply(m.start, m.moves) : duelReply(m.start, m.moves, m.n)) });
+        else if (m.type === 'duelReply') self.postMessage({ id: m.id, type: 'result', ...(m.kind === 'trap' ? trapReply(m.start, m.moves, m.e, m.n) : m.kind === 'guard' ? guardReply(m.start, m.moves, m.e, 2) : m.kind === 'read' ? readReply(m.start, m.moves) : duelReply(m.start, m.moves, m.n)) });
         else if (m.type === 'mtplan') self.postMessage({ id: m.id, type: 'result', ...mtPlan(m) });
         else if (m.type === 'mtv') self.postMessage({ id: m.id, type: 'result', ...mtV(m) });
         else if (m.type === 'mtkids') self.postMessage({ id: m.id, type: 'result', ...mtKids(m) });
