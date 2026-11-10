@@ -959,22 +959,25 @@ function orderRoot(moves, prev) {
 
 // 25 strength levels (v4.1: 20, 2026-11-08: +21-25). noise: random jitter added to every move's score (eval units, 100 = 1 disc);
 // mpc: Multi-ProbCut + opening book; time: soft time per move in ms (levels 17-25 also split the root over several workers in the page).
-// The old 10 levels are the same settings as new 4, 7, 9 (≈ old 3), 11, 13, 14, 16, 17, 19, 20. Measured Elo of each level: MODEL_CARD.md.
+// The old 10 levels were the same settings as 4, 7, 9 (≈ old 3), 11, 13, 14, 16, 17, 19, 20 (Lv.1-13 made gentler on 2026-11-10).
+// Lv.1-13 (2026-11-10, "gentle"): rnd = the chance of a random move, greedy = the chance of a beginner's move (most discs
+// flipped: corners given away, X squares), else the search with noise; the endgame solve only in the last few squares.
+// The same depths as before (the level descriptions); measured Elo of each level: MODEL_CARD.md「やさしいレベル」.
 const LEVELS = [
   null,
-  { depth: 1, exact: 2, noise: 4000 },              // 1  almost random
-  { depth: 1, exact: 3, noise: 1800 },              // 2
-  { depth: 1, exact: 3, noise: 1300 },              // 3
-  { depth: 1, exact: 4, noise: 900 },               // 4  (old Lv.1)
-  { depth: 1, exact: 4, noise: 450 },               // 5
-  { depth: 2, exact: 5, noise: 650 },               // 6
-  { depth: 2, exact: 6, noise: 450 },               // 7  (old Lv.2)
-  { depth: 2, exact: 6, noise: 200 },               // 8
-  { depth: 3, exact: 7, noise: 320 },               // 9  (≈ old Lv.3)
-  { depth: 4, exact: 9, noise: 400 },               // 10
-  { depth: 4, exact: 10, noise: 110 },              // 11 (old Lv.4)
-  { depth: 5, exact: 11, noise: 70 },               // 12
-  { depth: 6, exact: 12, noise: 40 },               // 13 (old Lv.5)
+  { depth: 1, exact: 0, rnd: 0.7, greedy: 0.2, noise: 3000 },     // 1  almost random
+  { depth: 1, exact: 0, rnd: 0.5, greedy: 0.3, noise: 1800 },     // 2
+  { depth: 1, exact: 0, rnd: 0.32, greedy: 0.3, noise: 1300 },    // 3
+  { depth: 1, exact: 2, rnd: 0.22, greedy: 0.28, noise: 1100 },   // 4
+  { depth: 1, exact: 4, rnd: 0.14, greedy: 0.22, noise: 900 },    // 5  (≈ the old Lv.1)
+  { depth: 2, exact: 4, rnd: 0.12, greedy: 0.16, noise: 900 },    // 6
+  { depth: 2, exact: 5, rnd: 0.08, greedy: 0.12, noise: 700 },    // 7
+  { depth: 2, exact: 6, rnd: 0.05, greedy: 0.07, noise: 550 },    // 8
+  { depth: 3, exact: 7, rnd: 0.04, greedy: 0.05, noise: 450 },    // 9
+  { depth: 4, exact: 8, rnd: 0.03, greedy: 0.03, noise: 450 },    // 10
+  { depth: 4, exact: 9, rnd: 0.02, noise: 400 },                  // 11
+  { depth: 5, exact: 10, rnd: 0.01, noise: 300 },                 // 12
+  { depth: 6, exact: 12, noise: 180 },                            // 13
   { depth: 8, exact: 14 },                          // 14 (old Lv.6)
   { depth: 9, exact: 15, time: 700, mpc: 1 },       // 15
   { depth: 10, exact: 16, time: 1000, mpc: 1 },     // 16 (old Lv.7)
@@ -1098,14 +1101,27 @@ function think(cells, toMove, opts, onProgress) {
   let result = null;
 
   // ---- noisy weak levels: score every move then add noise
-  if (lv.noise) {
+  if (lv.noise || lv.rnd || lv.greedy) {
     deadline = Infinity;
+    // (2026-11-10, the gentle levels 1-9) human-like slips before any reading: rnd = the chance of a random move,
+    // greedy = the chance of a beginner's move (the most discs flipped, corners and X squares not thought about)
+    const r0 = rand();
+    if (lv.rnd && r0 < lv.rnd) {
+      const mv = moves[Math.floor(rand() * moves.length)];
+      return { move: mv, score: 0, depth: 0, nodes: 0, ms: Date.now() - t0, slip: 'rnd' };
+    }
+    if (lv.greedy && r0 < (lv.rnd || 0) + lv.greedy) {
+      const o0 = pc(ol) + pc(oh);
+      let bm = moves[0], bv = -1;
+      for (const s of moves) { const c = childOf(pl, ph, ol, oh, s), v = o0 - pc(c[0]) - pc(c[1]) + rand() * 1.5; if (v > bv) { bv = v; bm = s; } }   // (c[0..1]: the opponent's discs after the move; near ties at random)
+      return { move: bm, score: 0, depth: 0, nodes: 0, ms: Date.now() - t0, slip: 'greedy' };
+    }
     let sc;
     if (empties <= lv.exact) sc = scoreAllMoves(pos, moves, 'exact');
     else sc = scoreAllMoves(pos, moves, 'mid', Math.min(lv.depth, empties));
     let bi = 0, bv = -1e9;
     for (let i = 0; i < sc.length; i++) {
-      const v = sc[i].score + (rand() * 2 - 1) * lv.noise;
+      const v = sc[i].score + (rand() * 2 - 1) * (lv.noise || 0);
       if (v > bv) { bv = v; bi = i; }
     }
     return { move: sc[bi].move, score: sc[bi].score / SCALE, depth: lv.depth, nodes, ms: Date.now() - t0, exact: empties <= lv.exact };
