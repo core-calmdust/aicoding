@@ -269,16 +269,26 @@
     if (mem.back > 0) return { tx: home.x * .5 + p.x * .5, ty: home.y };
     const near = Math.hypot(m.x - p.x, m.y - p.y) < m.r + RP + 3, still = Math.hypot(p.vx, p.vy) < 25;
     mem.jam = near && still && inHalf ? (mem.jam || 0) + dt : 0;
-    if (mem.jam > .9) { mem.jam = 0; mem.back = .7; mem.strike = 0; mem.bankSide = null; }
+    if (mem.jam > .9) { mem.jam = 0; mem.back = .7; mem.strike = 0; mem.bankSide = null; mem.dodge = null; }
     mem.modeT = (mem.modeT || 0) - dt;
     if (mem.modeT <= 0) { mem.att = Math.random() < sk.attack + .4; mem.modeT = .5; }
     mem.sit = inHalf && Math.hypot(p.vx, p.vy) < 30 ? (mem.sit || 0) + dt : 0;
     if (mem.sit > .15) mem.att = true;   // (a serve on its side is played at once — slowly at low levels)
+    if (!inHalf) mem.dodge = null;
     // attack: a puck in its half → come from behind it toward the far goal (a bank off a side wall at higher levels)
     if (inHalf && mem.att) {
       let gx = mem.err * .5, gy = -sg * (L / 2 + 2);
-      if (sk.bank && Math.abs(p.x) > 6 && mem.bankSide == null) mem.bankSide = Math.random() < .5 ? 1 : 0;
-      if (sk.bank && mem.bankSide === 1) { const wx = Math.sign(p.x || 1) * W / 2; gx = 2 * wx - gx; }
+      // (2026-11-10) Lv.4 (初級) up: a slow puck (a serve) with the other mallet parked on the straight line in front of it is
+      // not hit straight into that mallet (an easy return goal) — it goes to the side, off the wall away from that mallet
+      const o = s.mal[1 - side];
+      if (level >= 4 && mem.dodge == null && Math.hypot(p.vx, p.vy) < 70) {
+        const lx = gx - p.x, ly = gy - p.y, ll = Math.hypot(lx, ly), rx = o.x - p.x, ry = o.y - p.y;
+        const ahead = (rx * lx + ry * ly) / ll, lat = Math.abs(rx * ly - ry * lx) / ll;
+        mem.dodge = ahead > 0 && lat < o.r + RP + 4 && o.y * sg < 0 ? (o.x > p.x + .5 ? -1 : o.x < p.x - .5 ? 1 : (Math.random() < .5 ? -1 : 1)) : 0;
+      }
+      if (mem.dodge) { const wx = mem.dodge * W / 2; gx = 2 * wx - gx * .3; }   // (the bank's aim: the goal mirrored in that wall)
+      else if (sk.bank && Math.abs(p.x) > 6 && mem.bankSide == null) mem.bankSide = Math.random() < .5 ? 1 : 0;
+      if (!mem.dodge && sk.bank && mem.bankSide === 1) { const wx = Math.sign(p.x || 1) * W / 2; gx = 2 * wx - gx; }
       let ax = gx - p.x, ay = gy - p.y, al = Math.hypot(ax, ay), ux = ax / al, uy = ay / al;
       const reach = (x, y) => Math.abs(x) <= W / 2 - m.r + .2 && y * sg >= m.r - .2 && y * sg <= L / 2 - m.r + .2;   // where its mallet can be
       const bh = (cx, cy) => ({ x: p.x - cx * (RP + m.r + 1.5), y: p.y - cy * (RP + m.r + 1.5) });
@@ -293,7 +303,7 @@
         [ux, uy, behind] = ok;
       }
       const dB = Math.hypot(m.x - behind.x, m.y - behind.y);
-      if (dB < 2.5 || mem.strike > 0) { mem.strike = (mem.strike || .18) - dt; if (mem.strike <= 0) { mem.strike = 0; mem.bankSide = null; } return { tx: p.x + ux * 8, ty: p.y + uy * 8 }; }   // strike through it
+      if (dB < 2.5 || mem.strike > 0) { mem.strike = (mem.strike || .18) - dt; if (mem.strike <= 0) { mem.strike = 0; mem.bankSide = null; mem.dodge = null; } return { tx: p.x + ux * 8, ty: p.y + uy * 8 }; }   // strike through it
       // come round the puck without knocking it toward its own goal
       const side2 = (m.y - p.y) * sg < 0 ? { x: behind.x + (m.x < p.x ? -1 : 1) * (m.r + 3), y: behind.y } : behind;
       return { tx: side2.x, ty: side2.y };
