@@ -433,7 +433,7 @@ html.atlas-skin .ts-compact #tsNo{color:#9a7a3a}
 .lesson-card.ts-compact > .lh #lsQuit::before{content:'';flex:none;width:15px;height:15px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27black%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M14%204h4a2%202%200%200%201%202%202v12a2%202%200%200%201-2%202h-4%27/%3E%3Cpath%20d%3D%27M9%208l-4%204%204%204%27/%3E%3Cpath%20d%3D%27M5%2012h10%27/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27black%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M14%204h4a2%202%200%200%201%202%202v12a2%202%200%200%201-2%202h-4%27/%3E%3Cpath%20d%3D%27M9%208l-4%204%204%204%27/%3E%3Cpath%20d%3D%27M5%2012h10%27/%3E%3C/svg%3E") center/contain no-repeat}
 .lesson-card.ts-compact > .lh #lsQuit{background:rgba(0,0,0,.2);border:1px solid var(--line);color:var(--muted);cursor:pointer}
 html.atlas-skin .lesson-card.ts-compact > .lh #lsQuit{background:#fff!important;border:2px solid #ead9b6!important;color:#4a5068!important;box-shadow:0 2px 0 #ead9b6!important}
-body:has(#lessonCard.ts-compact) #coachCard:not(.ck-seq){display:none!important}
+body.in-lesson:has(#lessonCard.ts-compact) #coachCard:not(.ck-seq){display:none!important}
 body.in-lesson #coachCard.ck-seq.ck-seq{display:block!important}   /* lessons: the 3-move practice's guidance (seqCoachHtml) */
 #lessonCard.ts-compact :is(#lsHint,#lsAuto,#lsNext,#lsToList){display:none!important}
 #lessonCard:not(.ts-compact) .ts-b{display:none!important}
@@ -4378,12 +4378,9 @@ function startLesson(gi) {
   const g = gradeAt(gi);
   if (!g.problems.length) { toast('—'); return; }
   // like the reversi lessons: mostly standard problems plus one or two "exception" problems
-  // the next-move problems: picked from the easier ones (tools/lesson_easy.js: fd = the search depth that finds the answer), easiest first (2026-11-10)
-  const ez = p => p.kind !== 'best' || p.mode === 'material' || p.mode === 'freq' ? 1 : p.fd || 5;
-  const pool = g.problems.filter(p => !p.trap).sort((a, b) => ez(a) - ez(b)), keep = Math.max(7, Math.ceil(pool.length * .6));
-  const std = shuffle(pool.slice(0, keep)), trap = shuffle(g.problems.filter(p => p.trap));
+  const std = shuffle(g.problems.filter(p => !p.trap)), trap = shuffle(g.problems.filter(p => p.trap));
   const nTrap = trap.length ? (Math.random() < 0.5 ? 1 : 2) : 0;
-  const probs = g.rules ? g.problems.slice() : shuffle([...std.slice(0, 5 - nTrap), ...trap.slice(0, nTrap)]).sort((a, b) => ez(a) - ez(b));   // the rules lesson: every problem, in order
+  const probs = g.rules ? g.problems.slice() : shuffle([...std.slice(0, 5 - nTrap), ...trap.slice(0, nTrap)]);   // the rules lesson: every problem, in order
   lesson = { gi, g, probs, k: 0, results: [], pts: [], waiting: false };
   document.body.classList.add('in-lesson');
   if (!game) game = newRecord(HANDI[0], 0);
@@ -4533,7 +4530,7 @@ const tsAct = {
 };
 function tsBar() {
   const card = $('#lessonCard'), bar = card && card.querySelector('.cb-bar'); if (!bar) return;
-  const on = !!(lesson && lesson.cur && !lesson.exam && !lesson.review && !lesson.study && !lesson.ramp && !lesson.opening && !lesson.virt && (lesson.cur.kind === 'tsume' || lesson.seq)), tools = bar.querySelector('.cb-tools'), main = bar.querySelector('.cb-main');   // 詰将棋 and the lessons' problems (2026-11-10)
+  const on = !!(lesson && lesson.cur && ((lesson.endless && lesson.cur.kind === 'tsume') || lesson.seq)), tools = bar.querySelector('.cb-tools'), main = bar.querySelector('.cb-main');   // 詰将棋 and the lessons' problems (2026-11-10)
   card.classList.toggle('ts-compact', on);
   // the title row: 「創作 3手詰 …… 18/120問目」; the head row's right end: the quit button (2026-11-10)
   let th = $('#tsHead'); const ti = $('#lsTitle');
@@ -4681,13 +4678,15 @@ async function lessonMove(m) {
   }
   lessonScored(Math.max(0, movePoints(pr, usi, rs) - pen), { usi });
 }
-// ---- lessons: 3-move practice with move-by-move coaching (2026-11-10) -------------------------------------------------
-// The "next move" problems of the graded lessons (駒の価値・タダの駒・王手をかわす・両取り・詰めろを受ける・中盤 …) are played
-// for 3 of your own moves from the problem position; the AI answers in between. After every move the coach box tells how good
-// it was (最善手・好手・疑問手・悪手), the best move and why. Points: the theme move (1st) counts half, moves 2 and 3 a quarter
-// each (20 per move as before: the 1st from the problem's own scoring, the others from the win-rate loss of an analysis).
-// A hint marks the piece of the best move (−HINT_PEN on that move); 「答え」 plays the best move for you (0 points for it).
-const SEQ_N = 3, SEQ_W = [.5, .25, .25];
+// ---- 定跡の実戦練習: 3-move practice with move-by-move coaching (2026-11-10) --------------------------------------------
+// The opening practice (定跡 → 戦型 → 実戦練習; positions from strong Floodgate games) is played for 3 of your own moves from the
+// problem position; the opponent answers with the most played book move (the engine when the position is out of book). After
+// every move the coach box tells how good it was (最善手・好手・疑問手・悪手), how often strong players chose it, the main move
+// and what it is about. Points per move (20 each, the average is the problem's score):
+//   book move: the most played 20 · played ≥15% 18 · ≥3% 16 · rarer 12;  out of book: the engine's win-rate loss (≤12)
+// A hint marks the piece of the main move (−HINT_PEN on that move); 「答え」 plays the main move for you (0 points for it).
+// (The graded lessons 入門〜 keep their one-move problems.)
+const SEQ_N = 3, SEQ_W = [1 / 3, 1 / 3, 1 / 3];
 const SEQ_TX = {
   ja: { intro: 'この局面から{n}手指してみよう。1手ごとに、指した手の評価といちばん良い手をここで解説します。', judge: '指し手を評価しています…', opp: '相手が考えています…', you: 'あなたの番です（{i}/{n}手目）。', step: '{i}手目 {m}：{q}', ans: '{i}手目　答え：{m}', total: '{n}手の合計 {p}点', hint: '💡 動かす駒を光らせました（この手は−{n}点）。' },
   en: { intro: 'Play {n} moves from this position. After each move, the coach rates it and explains the best move here.', judge: 'Rating your move…', opp: 'The opponent is thinking…', you: 'Your move ({i}/{n}).', step: 'Move {i} {m}: {q}', ans: 'Move {i} — answer: {m}', total: 'Total for {n} moves: {p} pts', hint: '💡 The piece to move is highlighted (−{n} pts on this move).' },
@@ -4705,10 +4704,16 @@ const SEQ_TX = {
   tr: { intro: 'Bu konumdan {n} hamle oynayın. Her hamleden sonra koç onu değerlendirir ve en iyi hamleyi burada açıklar.', judge: 'Hamle değerlendiriliyor…', opp: 'Rakip düşünüyor…', you: 'Sıra sizde ({i}/{n}).', step: '{i}. hamle {m}: {q}', ans: '{i}. hamle — çözüm: {m}', total: '{n} hamle toplamı: {p} puan', hint: '💡 Oynanacak taş işaretlendi (bu hamlede −{n} puan).' },
 };
 const sqt = (k, v) => { let s = (SEQ_TX[LANG] || SEQ_TX.en)[k] || SEQ_TX.en[k]; for (const x in v || {}) s = s.split('{' + x + '}').join(v[x]); return s; };
-function seqOn(pr) {
-  return !!(lesson && pr && pr.kind === 'best' && !lesson.exam && !lesson.review && !lesson.endless && !lesson.study && !lesson.opening && !lesson.virt
-    && lesson.g && !lesson.g.rules && !lesson.g.handi && !pr.variant && pr.src !== 'opening' && pr.src !== 'handi');
+function seqOn(pr) { return !!(lesson && lesson.opening && pr && pr.kind === 'best' && !pr.variant); }
+// the book moves of a position, most played first: [{ u, c, share }] (null when out of book)
+function seqBook(p, pr, first) {
+  let e = first && pr.cand ? pr.cand.map(([u, c]) => [u, c]) : null;
+  if (!e && typeof BOOK !== 'undefined' && BOOK) e = BOOK[p.sfen().replace(/ \d+$/, '')];
+  if (!e || !e.length) return null;
+  const tot = e.reduce((a, x) => a + x[1], 0); if (tot < 20) return null;
+  return e.map(([u, c]) => ({ u, c, share: c / tot })).sort((a, b) => b.c - a.c);
 }
+const pctS0 = x => Math.round(x * 100) + '%';
 const seqQ = pts => pts >= PTS ? 'best' : pts >= 16 ? 'good' : pts >= 8 ? 'dubious' : 'bad';
 const seqKif = (sfen, moves, u) => { try { return lineKanji(sfen, [...moves, u]).pop(); } catch (e) { return u; } };
 function seqWhy(p, bestU, playedU) {   // the coach's words on a move: same as the AI's first choice, or what the first choice was about
@@ -4757,12 +4762,19 @@ async function seqMove(usi) {
   S.busy = 'judge'; seqStatus(); renderLesson(); seqShow();
   const p0 = new E.Position(); p0.setSfen(pr.sfen); for (const u of before) p0.doMove(p0.fromUsi(u));
   let pts, bestU, why;
-  if (i === 0) {
-    let rs;
-    if (!pr.cand && !pr.accept.includes(usi)) { const r = await aiCall({ type: 'think', sfen: pr.sfen, moves: [usi], opts: { time: 600 } }); if (!alive()) return; rs = r && !r.error ? -r.score : undefined; }
-    pts = movePoints(pr, usi, rs); bestU = pr.accept[0];
-    const rsn = lessonReason(pr, usi);
-    why = [pts >= PTS ? '' : t('ls.bestIs', { m: pr.accept.map(u => kan1(pr.sfen, u)).join('・') }), rsn, L(pr.expl), pr.trap && L(lesson.g.trapNote) ? '※ ' + L(lesson.g.trapNote) : ''].filter(Boolean).join('<br>');
+  const bk = seqBook(p0, pr, i === 0), C = window.ShogiCoach ? ShogiCoach.tx : k => k, esc = CoachKit.esc;
+  const mineB = bk && bk.find(x => x.u === usi);
+  if (bk && mineB) {   // a book move
+    bestU = bk[0].u;
+    pts = usi === bestU ? PTS : mineB.share >= .15 ? 18 : mineB.share >= .03 ? 16 : 12;
+    why = esc(C('prevBook', { x: pctS0(mineB.share) })) + (usi !== bestU ? ' ' + esc(C('prevOff', { m: seqKif(pr.sfen, before, bestU), x: pctS0(bk[0].share) })) : '') + ' ' + seqWhy(p0, bestU, usi).replace(/^[^。.]*[。.]\s*/, '');
+  } else if (bk) {   // out of book: the engine says how much it costs
+    bestU = bk[0].u;
+    const list = S.ana && S.ana.key === before.join(' ') ? await S.ana.p : await anaCall({ type: 'analyze', sfen: pr.sfen, moves: before, opts: { time: 1500 } }).then(r => (r && r.list) || []);
+    if (!alive()) return;
+    const best = list[0], mine = list.find(x => x.move === usi), d = best && mine ? Math.max(0, winRate(best.score) - winRate(mine.score)) : .1;
+    pts = Math.max(0, Math.min(12, Math.round(PTS * (1 - d / 0.3))));
+    why = esc(C('prevOff', { m: seqKif(pr.sfen, before, bestU), x: pctS0(bk[0].share) })) + ' ' + seqWhy(p0, bestU, usi).replace(/^[^。.]*[。.]\s*/, '');
   } else {
     const list = S.ana && S.ana.key === before.join(' ') ? await S.ana.p : await anaCall({ type: 'analyze', sfen: pr.sfen, moves: before, opts: { time: 1500 } }).then(r => (r && r.list) || []);
     if (!alive()) return;
@@ -4782,7 +4794,8 @@ async function seqNext(S, tok) {
   const q = posAt(lesson.played.length), over = !q.hasLegalMove();
   if (S.i >= SEQ_N || over) return seqFinish(S, over);
   S.busy = 'opp'; seqStatus(); renderLesson(); seqShow();
-  const r = await aiCall({ type: 'think', sfen: pr.sfen, moves: lesson.played.slice(), opts: { time: 700 } });
+  const bk = seqBook(q, pr, false);   // the opponent: the most played book move, else the engine
+  const r = bk ? { move: bk[0].u } : await aiCall({ type: 'think', sfen: pr.sfen, moves: lesson.played.slice(), opts: { time: 700 } });
   if (!alive()) return;
   if (!r || !r.move) return seqFinish(S, true);
   await sleep(250); if (!alive()) return;
@@ -4803,10 +4816,11 @@ async function seqAnswer() {   // 「答え」: the best move is played for you 
   const S = lesson.seq, pr = lesson.cur; if (!S || S.done || !lesson.waiting) return;
   const before = lesson.played.slice(), i = S.i, tok = S.tok = (S.tok || 0) + 1;
   lesson.waiting = false; S.busy = 'judge'; seqStatus(); renderLesson(); seqShow();
-  let bestU = pr.accept[0];
-  if (i > 0) { const list = S.ana && S.ana.key === before.join(' ') ? await S.ana.p : []; if (!(lesson && lesson.seq === S && S.tok === tok)) return; if (list[0]) bestU = list[0].move; }
   const p0 = new E.Position(); p0.setSfen(pr.sfen); for (const u of before) p0.doMove(p0.fromUsi(u));
-  const why = i === 0 ? [lessonReason(pr, bestU), L(pr.expl)].filter(Boolean).join('<br>') : seqWhy(p0, bestU, bestU);
+  const bk = seqBook(p0, pr, i === 0);
+  let bestU = bk ? bk[0].u : pr.accept[0];
+  if (!bk) { const list = S.ana && S.ana.key === before.join(' ') ? await S.ana.p : []; if (!(lesson && lesson.seq === S && S.tok === tok)) return; if (list[0]) bestU = list[0].move; }
+  const why = (bk ? CoachKit.esc(ShogiCoach.tx('prevBook', { x: pctS0(bk[0].share) })) + ' ' : '') + seqWhy(p0, bestU, bestU).replace(bk ? /^[^。.]*[。.]\s*/ : /^$/, '');
   lesson.shownAnswer = true;
   lesson.played = [...before, bestU]; lessonGame(pr.sfen, lesson.played); playPiece(false);
   S.steps.push({ i, usi: bestU, kif: seqKif(pr.sfen, before, bestU), q: 'bad', pts: 0, ans: true, why });
@@ -4825,7 +4839,8 @@ function seqHint() {
       else { const mk = document.createElement('div'); mk.className = 'mark best hintsq'; sqEls[sqToDisp(E.mFrom(m))].appendChild(mk); }
     }, 0);
   };
-  if (S.i === 0) go(lesson.cur.accept[0]);
+  const p0 = posAt(cur), bk = seqBook(p0, lesson.cur, S.i === 0);
+  if (bk) go(bk[0].u);
   else if (S.ana) S.ana.p.then(list => { if (list[0]) go(list[0].move); });
 }
 // step-specific explanation (cf. reversi lessonReason)
