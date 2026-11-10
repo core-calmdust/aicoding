@@ -214,8 +214,10 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
   .bvtop{position:absolute;z-index:6;top:calc(12px + env(safe-area-inset-top));inset-inline-end:14px;display:flex;align-items:center;gap:12px}
   .bvtop .lpop{top:54px;inset-inline-end:52px}
   .bv.bvt #bvClose,.bv.bvt #bvQuit{display:none!important}
-  .bv.bvt .bvtod{top:calc(66px + env(safe-area-inset-top));inset-inline-end:14px}
-  .bv.bvt .bvplm{top:calc(116px + env(safe-area-inset-top))}
+  .bv.bvt .bvtod{top:calc(12px + env(safe-area-inset-top));inset-inline-end:auto;inset-inline-start:max(14px,env(safe-area-inset-left))}   /* 場所・戦績: top left (2026-11-10) */
+  .bv.bvt .bvhw{top:calc(70px + env(safe-area-inset-top))}   /* (ヒストリア under them) */
+  .bv.bvt.playing .bvhw{top:calc(12px + env(safe-area-inset-top))}
+  .bv.bvt .bvplm{top:calc(62px + env(safe-area-inset-top));inset-inline-end:auto;inset-inline-start:14px}
 }
 .bv.on{display:block;animation:fadeIn .25s}
 #gl{position:absolute;inset:0;touch-action:none}
