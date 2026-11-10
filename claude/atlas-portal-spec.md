@@ -70,3 +70,4 @@ GAMES に追加（store 含む）→ i18n.js に hist.<id>（歴史・雑学、1
 - ゲームごとの3Dモデル・卓プレイ（games/）・ルール（rules/）と、ludo・carrom・crokinole・hockey のエンジンは、atlas/index.html に直接書かず atlas/lazy.js の GROUPS で必要になった時に読み込む（盤を開く・ルールを開く・ヒストリアを開く時。カードにカーソルが乗った時に先読み）。初回の読み込みは約8.6MB→約0.9MB。
 - これらのファイルを変えたら、lazy.js の該当パスの ?v= を上げる（index.html ではなく lazy.js）。新しいゲームを足す時も lazy.js の GROUPS に登録する。
 - 画面外の浮かぶ駒（propVis）は IntersectionObserver で止める。
+- 読み込み前のゲームは、ページを開いた直後の先作り（warm）をしない。読み込み前の簡易な盤で作った3D盤が残り、読み込み後もそれが表示されていたため（2026-11-10 不具合修正）。Table3D の先作りは、作った時の盤の作り方（MODELS[id]）が今と同じ時だけ使う。
