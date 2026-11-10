@@ -515,6 +515,29 @@ html.atlas-skin #lessonCard.ts-compact #lsAuto{background:#fff!important;border:
 .lesson-intro p{font-size:14px;line-height:1.85;color:#cfd8d2;margin-bottom:10px}
 .lesson-intro p b{color:var(--accent)}
 .lesson-intro .note{font-size:12.5px;color:var(--muted);border-left:2px solid var(--brass2);padding-left:10px}
+/* the lesson intro page: like the rules box — a picture + chips, then cards with an icon (2026-11-10) */
+.li-hero{display:flex;gap:18px;align-items:center;margin:2px 0 14px}
+.li-fig{flex:none}.li-fig figcaption{text-align:center;font-size:12px!important;margin-top:4px!important}
+.li-chips{display:flex;flex-wrap:wrap;gap:8px;align-content:center;min-width:0}
+.li-chip{display:flex;flex-direction:column;gap:2px;padding:8px 12px;border:1px solid rgba(201,162,92,.28);border-radius:12px;background:rgba(255,255,255,.03);min-width:76px}
+.li-chip small{font-size:11.5px;color:var(--muted);letter-spacing:.04em}.li-chip b{font-size:14.5px;font-weight:700;color:var(--text)}
+.li-sec{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;margin:0 0 10px;border:1px solid rgba(201,162,92,.22);border-radius:14px;background:rgba(255,255,255,.025)}
+.li-ic{flex:none;font-size:22px;line-height:1.2;width:28px;text-align:center}
+.li-sec h4{margin:0 0 4px;font-size:14.5px;color:var(--accent);letter-spacing:.04em}
+#lessonOverlay .lesson-intro .li-sec p{margin:0 0 6px;font-size:15px;line-height:1.75}.li-sec p:last-child{margin-bottom:0!important}
+@media (max-width:560px){.li-hero{gap:10px;align-items:center}.li-chips{flex-direction:column;flex:1 1 auto;gap:6px}.li-chip{min-width:0;padding:5px 10px}.li-chip small{font-size:10.5px}.li-chip b{font-size:13px}}
+/* the intro page: the same frame as the rules box — fixed height, the text scrolls, the buttons stay at the bottom in the rules
+   box's slots (一覧へ = 閉じる's middle slot, はじめる = 次へ's right slot) */
+#lessonOverlay .modal:has(> #lessonIntroView:not(.hidden)){display:flex;flex-direction:column;overflow:hidden;height:min(900px,calc(100vh - 32px));height:min(900px,calc(100dvh - 32px));max-height:none}
+@media (max-width:520px),(max-height:560px){#lessonOverlay .modal:has(> #lessonIntroView:not(.hidden)){height:calc(100vh - 20px);height:calc(100dvh - 20px)}}
+#lessonIntroView:not(.hidden){flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
+#lessonIntroView > :not(#liBody):not(.modal-actions){flex:none}
+#lessonIntroView > #liBody{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-bottom:4px}
+#lessonIntroView > .modal-actions{flex:none;display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:0!important;padding-top:12px;border-top:1px solid var(--line,rgba(255,255,255,.1))}
+#lessonIntroView > .modal-actions .mbtn{grid-row:1;width:auto!important;min-width:0!important;margin:0!important;padding:10px 12px!important;border-radius:10px!important;font-size:14px!important;font-weight:600;height:auto!important;min-height:0!important;line-height:normal}
+@media (hover: hover) and (pointer: fine) and (min-width: 820px){#lessonIntroView > .modal-actions{grid-template-columns:repeat(3,minmax(0,220px));justify-content:center}#lessonIntroView > .modal-actions .mbtn{font-size:16px!important;padding:12px 14px!important}}
+#lessonIntroView > .modal-actions #btnLessonBack{grid-column:2}
+#lessonIntroView > .modal-actions #btnLessonStart{grid-column:3}
 /* ---------------------------------------------------------------- list dialog: fixed size across tabs, larger text */
 #lessonOverlay .modal{height:calc(var(--vh) - 32px)}
 @media (min-width: 760px){ #lessonOverlay .modal{height:min(900px, calc(var(--vh) - 32px))} }
@@ -4296,12 +4319,46 @@ $('#lsPlayHere').onclick = () => {
   flip = flipA(human === 1);
   refresh(false); save();
 };
+// the lesson's intro page (2026-11-10): a sample position, chips (目安・問題数・合格・形式) and cards like the rules box —
+// the goal of the step, how to think (the step's own intro), what passing means, and how the step is played
+const LI_TX = {
+  ja: { goal: 'このレッスンの目標', think: '考え方', clear: 'クリアの目安', how: '進め方', lv: '目安', n: '問題', pass: '合格', kind: '形式', probs: '{n}問', pts: '{n}点以上', tsume: '詰将棋', best: '次の一手', mix: '詰将棋・次の一手', fig: '問題の一例', howTx: '1問20点、{n}問で{m}点満点。{p}点以上で合格です。ヒントは1回{h}点引かれます。', ramp: 'はじめに準備問題で考え方を確かめてから、本番の問題に進みます。' },
+  en: { goal: 'Goal of this lesson', think: 'How to think', clear: 'What passing means', how: 'How it works', lv: 'Level', n: 'Problems', pass: 'Pass', kind: 'Type', probs: '{n}', pts: '{n}+ pts', tsume: 'Tsume', best: 'Next move', mix: 'Tsume · next move', fig: 'A sample problem', howTx: '20 points per problem, {m} for {n} problems. {p} or more passes. Each hint costs {h} points.', ramp: 'A short warm-up checks the idea first, then the real problems start.' },
+  zh: { goal: '本课目标', think: '思路', clear: '通关参考', how: '进行方式', lv: '参考', n: '题数', pass: '合格', kind: '形式', probs: '{n}题', pts: '{n}分以上', tsume: '诘将棋', best: '下一手', mix: '诘将棋・下一手', fig: '题目示例', howTx: '每题20分，{n}题满分{m}分。{p}分以上合格。每用一次提示扣{h}分。', ramp: '先用热身题确认思路，再进入正式题目。' },
+  'zh-TW': { goal: '本課目標', think: '思路', clear: '過關參考', how: '進行方式', lv: '參考', n: '題數', pass: '合格', kind: '形式', probs: '{n}題', pts: '{n}分以上', tsume: '詰將棋', best: '下一手', mix: '詰將棋・下一手', fig: '題目示例', howTx: '每題20分，{n}題滿分{m}分。{p}分以上合格。每用一次提示扣{h}分。', ramp: '先用暖身題確認思路，再進入正式題目。' },
+  ko: { goal: '이 레슨의 목표', think: '생각하는 법', clear: '클리어 기준', how: '진행 방법', lv: '기준', n: '문제', pass: '합격', kind: '형식', probs: '{n}문제', pts: '{n}점 이상', tsume: '박보장기', best: '다음 한 수', mix: '박보장기・다음 한 수', fig: '문제 예시', howTx: '1문제 20점, {n}문제 {m}점 만점. {p}점 이상이면 합격. 힌트는 1회 {h}점 감점.', ramp: '먼저 준비 문제로 생각하는 법을 확인한 뒤 본 문제로 넘어갑니다.' },
+  es: { goal: 'Objetivo de la lección', think: 'Cómo pensar', clear: 'Qué significa aprobar', how: 'Cómo funciona', lv: 'Nivel', n: 'Problemas', pass: 'Aprobado', kind: 'Tipo', probs: '{n}', pts: '{n}+ pts', tsume: 'Tsume', best: 'Siguiente jugada', mix: 'Tsume · siguiente jugada', fig: 'Un problema de ejemplo', howTx: '20 puntos por problema, {m} en total por {n}. Apruebas con {p} o más. Cada pista resta {h}.', ramp: 'Un calentamiento corto repasa la idea y luego empiezan los problemas.' },
+  fr: { goal: 'Objectif de la leçon', think: 'Comment réfléchir', clear: 'Ce que vaut la réussite', how: 'Déroulement', lv: 'Niveau', n: 'Problèmes', pass: 'Réussite', kind: 'Type', probs: '{n}', pts: '{n} pts et +', tsume: 'Tsume', best: 'Coup suivant', mix: 'Tsume · coup suivant', fig: 'Un problème exemple', howTx: '20 points par problème, {m} pour {n} problèmes. Réussite à {p} ou plus. Chaque indice coûte {h} points.', ramp: 'Un court échauffement vérifie l’idée, puis les vrais problèmes commencent.' },
+  pt: { goal: 'Objetivo da lição', think: 'Como pensar', clear: 'O que significa passar', how: 'Como funciona', lv: 'Nível', n: 'Problemas', pass: 'Aprovação', kind: 'Tipo', probs: '{n}', pts: '{n}+ pts', tsume: 'Tsume', best: 'Próximo lance', mix: 'Tsume · próximo lance', fig: 'Um problema de exemplo', howTx: '20 pontos por problema, {m} no total em {n}. Passa com {p} ou mais. Cada dica custa {h} pontos.', ramp: 'Um aquecimento curto revisa a ideia e depois vêm os problemas.' },
+  de: { goal: 'Ziel dieser Lektion', think: 'So denkst du', clear: 'Was das Bestehen heißt', how: 'Ablauf', lv: 'Stufe', n: 'Aufgaben', pass: 'Bestanden', kind: 'Art', probs: '{n}', pts: 'ab {n} P.', tsume: 'Tsume', best: 'Nächster Zug', mix: 'Tsume · nächster Zug', fig: 'Eine Beispielaufgabe', howTx: '20 Punkte pro Aufgabe, {m} für {n} Aufgaben. Ab {p} bestanden. Jeder Tipp kostet {h} Punkte.', ramp: 'Ein kurzes Aufwärmen prüft die Idee, dann beginnen die Aufgaben.' },
+  hi: { goal: 'इस पाठ का लक्ष्य', think: 'कैसे सोचें', clear: 'पास होने का अर्थ', how: 'कैसे चलता है', lv: 'स्तर', n: 'प्रश्न', pass: 'पास', kind: 'प्रकार', probs: '{n}', pts: '{n}+ अंक', tsume: 'त्सुमे', best: 'अगली चाल', mix: 'त्सुमे · अगली चाल', fig: 'एक उदाहरण प्रश्न', howTx: 'हर प्रश्न 20 अंक, {n} प्रश्नों में {m}। {p} या अधिक पर पास। हर संकेत पर {h} अंक कटते हैं।', ramp: 'पहले छोटा अभ्यास विचार जाँचता है, फिर असली प्रश्न आते हैं।' },
+  ar: { goal: 'هدف هذا الدرس', think: 'طريقة التفكير', clear: 'معنى النجاح', how: 'طريقة السير', lv: 'المستوى', n: 'الأسئلة', pass: 'النجاح', kind: 'النوع', probs: '{n}', pts: '{n}+ نقطة', tsume: 'تسومي', best: 'النقلة التالية', mix: 'تسومي · النقلة التالية', fig: 'مثال على مسألة', howTx: '20 نقطة لكل مسألة، و{m} لـ{n} مسائل. تنجح بـ{p} أو أكثر. كل تلميح يخصم {h} نقاط.', ramp: 'تمرين قصير يراجع الفكرة أولًا، ثم تبدأ المسائل.' },
+  ru: { goal: 'Цель урока', think: 'Как думать', clear: 'Что значит сдать', how: 'Как проходит', lv: 'Уровень', n: 'Задачи', pass: 'Зачёт', kind: 'Тип', probs: '{n}', pts: 'от {n} очк.', tsume: 'Цумэ', best: 'Следующий ход', mix: 'Цумэ · следующий ход', fig: 'Пример задачи', howTx: '20 очков за задачу, {m} за {n} задач. Зачёт от {p}. Каждая подсказка −{h} очк.', ramp: 'Короткая разминка проверяет идею, затем начинаются задачи.' },
+  id: { goal: 'Tujuan pelajaran ini', think: 'Cara berpikir', clear: 'Arti lulus', how: 'Cara main', lv: 'Tingkat', n: 'Soal', pass: 'Lulus', kind: 'Jenis', probs: '{n}', pts: '{n}+ poin', tsume: 'Tsume', best: 'Langkah berikut', mix: 'Tsume · langkah berikut', fig: 'Contoh soal', howTx: '20 poin per soal, {m} untuk {n} soal. Lulus dengan {p} atau lebih. Tiap petunjuk −{h} poin.', ramp: 'Pemanasan singkat memeriksa idenya dulu, lalu soal sebenarnya dimulai.' },
+  tr: { goal: 'Bu dersin hedefi', think: 'Nasıl düşünülür', clear: 'Geçmek ne demek', how: 'Nasıl ilerler', lv: 'Seviye', n: 'Problem', pass: 'Geçme', kind: 'Tür', probs: '{n}', pts: '{n}+ puan', tsume: 'Tsume', best: 'Sonraki hamle', mix: 'Tsume · sonraki hamle', fig: 'Örnek bir problem', howTx: 'Problem başına 20 puan, {n} problemde {m}. {p} ve üzeri geçer. Her ipucu {h} puan düşürür.', ramp: 'Önce kısa bir ısınma fikri kontrol eder, sonra asıl problemler başlar.' },
+};
+const lit = (k, v) => { let x = (LI_TX[LANG] || LI_TX.en)[k] || LI_TX.en[k]; for (const y in v || {}) x = x.split('{' + y + '}').join(v[y]); return x; };
 function openIntro(i) {
   openChoiceIdx = -1; $('#btnLessonStart').classList.remove('hidden');
   introIdx = i; const g = gradeAt(i);
   $('#liStep').textContent = i < 0 ? L(g.head) : `STEP ${i + 1} ・ ${t('ls.levelTag', { g: L(g.grade) })}`;
   $('#liTitle').textContent = L(g.title);
-  $('#liBody').innerHTML = (g.intro[LANG] || g.intro.en || g.intro.ja).map(p => `<p>${p}</p>`).join('') + (L(g.note) ? `<p class="note">${L(g.note)}</p>` : '');
+  const intro = g.intro[LANG] || g.intro.en || g.intro.ja, n = g.rules ? g.problems.length : Math.min(5, g.problems.length), max = n * PTS, need = Math.ceil(max * PASS_RATE);
+  const kinds = new Set(g.problems.map(p => p.kind)), kind = kinds.size > 1 ? 'mix' : kinds.has('tsume') ? 'tsume' : 'best';
+  // the picture: a sample position of the step (a later problem than the first one played, nothing marked)
+  let fig = '';
+  const smp = g.problems[Math.min(g.problems.length - 1, 2)];
+  if (smp && window.ShogiRules && ShogiRules.diagram && !smp.variant) {
+    try { const w = Math.min(($('#liBody').clientWidth || 340), 900), cw = w < 560 ? Math.max(15, Math.min(22, Math.floor((w - 150) / 9))) : Math.max(18, Math.min(28, Math.floor((Math.min(w, 420) - 70) / 9))); fig = `<figure class="op-fig li-fig">${ShogiRules.diagram(smp.sfen, [], cw)}<figcaption>${escHb(lit('fig'))}</figcaption></figure>`; } catch (e) { fig = ''; }
+  }
+  const chip = (k, v) => `<div class="li-chip"><small>${escHb(k)}</small><b>${escHb(v)}</b></div>`;
+  const chips = `<div class="li-chips">${i >= 0 ? chip(lit('lv'), L(g.grade)) : ''}${chip(lit('n'), lit('probs', { n }))}${chip(lit('pass'), lit('pts', { n: need }))}${chip(lit('kind'), lit(kind))}</div>`;
+  const sec = (ic, h, body) => `<div class="li-sec"><span class="li-ic">${ic}</span><div><h4>${escHb(h)}</h4>${body}</div></div>`;
+  $('#liBody').innerHTML = `<div class="li-hero">${fig}${chips}</div>` +
+    (L(g.short) ? sec('🎯', lit('goal'), `<p>${L(g.short)}</p>`) : '') +
+    sec('📖', lit('think'), intro.map(p => `<p>${p}</p>`).join('')) +
+    (L(g.note) ? sec('🏅', lit('clear'), `<p>${L(g.note).replace(/^[^:：]{1,8}[:：]\s*/, '')}</p>`) : '') +
+    sec('✅', lit('how'), `<p>${escHb(lit('howTx', { n, m: max, p: need, h: HINT_PEN }))}${g.ramp && g.ramp.length ? '<br>' + escHb(lit('ramp')) : ''}</p>`);
   lessonView('intro');
 }
 $('#btnLessonClose').onclick = () => hideOverlay('#lessonOverlay');
