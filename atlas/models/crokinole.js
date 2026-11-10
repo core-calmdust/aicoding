@@ -29,6 +29,7 @@
    ===================================================================== */
 (function () {
   'use strict';
+  const HERE = (document.currentScript && document.currentScript.src) || location.href;   // (for the pre-rendered textures)
   const X = window.Table3D; if (!X) return;
   const T = () => window.THREE;
   const LO = () => !!(X.coarse || X.lite);
@@ -218,7 +219,24 @@
       g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; g.restore();
     }
   }
+  // (2026-11-10) the surfaces are drawn pixel by pixel (≈4 s for the marquetry on a slow machine, every time the page opened), so
+  // they are shipped pre-rendered: img/tex/crokinole-<look>.webp (2048², made by tools/cktex.html from drawSurface below). The
+  // browser keeps the image in its cache, so later visits are instant. If the image can't load, the surface is drawn as before.
+  // (TEXV: raise it whenever a surface's drawing changes, and re-make the images.)
+  const TEXV = 1, preTex = {};
   function surfaceTex(look) {
+    if (window.CK_DRAW_SURF) return drawSurface(look);   // (the tool that makes the images draws them)
+    if (preTex[look]) return preTex[look];
+    const TT = T(), t = new TT.Texture(), c0 = document.createElement('canvas'); c0.width = c0.height = 4;
+    { const g = c0.getContext('2d'); g.fillStyle = { neon: '#0b0c18', marq: '#c9a679', classic: '#e2c99a', modern: '#efe4d0', mcm: '#7c4524', winter: '#dce9f2' }[look] || '#d9c3a0'; g.fillRect(0, 0, 4, 4); }
+    t.image = c0; t.anisotropy = 4; t.encoding = TT.sRGBEncoding; t.needsUpdate = true;
+    const img = new Image(); img.decoding = 'async';
+    img.onload = () => { t.image = img; t.needsUpdate = true; if (X.kick) X.kick(300); };
+    img.onerror = () => { const d = drawSurface(look); t.image = d.image; t.needsUpdate = true; if (X.kick) X.kick(300); };
+    img.src = new URL('../img/tex/crokinole-' + look + (SZ(2048) < 2048 ? '-1k' : '') + '.webp?v=' + TEXV, HERE).href;   // (phones / light mode: the 1024² one)
+    return (preTex[look] = t);
+  }
+  function drawSurface(look) {
     const W = SZ(2048);
     return X.canvasTex('ckSurf' + look + W, W, W, (g) => {
       const u = W / (2 * RB), X0 = cm => (cm + RB) * u, N = X.makeNoise({ neon: 7, classic: 23, marq: 31, winter: 43, mcm: 59, modern: 67 }[look] || 23), img = g.createImageData(W, W), d = img.data;
