@@ -169,6 +169,15 @@
     if (!kayaImg) { kayaImg = new Image(); kayaImg.src = '../images/atlas/shogi-kaya.webp?v=2'; }
     kayaImg.addEventListener('load', () => fn(kayaImg), { once: true });
   }
+  // a plain kaya surface (the komadai): the same golden tone with a part of the board's grain, drawn fainter
+  function kayaPlain(key) {
+    let tex = null;
+    tex = X.canvasTex(key, 512, 512, (c, W, H) => {
+      c.fillStyle = '#e8c47c'; c.fillRect(0, 0, W, H);
+      withKaya(img => { c.drawImage(img, img.width * .05, img.height * .05, img.width * .35, img.height * .35, 0, 0, W, H); c.fillStyle = 'rgba(236,200,128,.55)'; c.fillRect(0, 0, W, H); if (tex) tex.needsUpdate = true; });
+    });
+    return tex;
+  }
   function boardTop(n = 9) {
     const MG = n === 9 ? MARGIN : MARGIN * n / 9;   // rim scales with the grid (the 5x5 board is fitted to the same screen size)
     const PX = 100, BW = n * CW + MG * 2, BD = n * CH + MG * 2;
@@ -303,7 +312,7 @@
     for (let i = 0; i <= 12; i++) { const t = i / 12, w = .26 + .16 * Math.pow(Math.abs(t - .55) / .55, 2); pts.push(new TT.Vector2(w, t * H)); }
     const col = new TT.LatheGeometry(pts, 4); col.rotateY(Math.PI / 4);                             // square, waisted
     // the lathe wraps the texture round the column: use a soft, low-contrast grain there so it doesn't band
-    const cm = colMat || (colMat = M({ map: X.wood('komadaiCol', '#d6a462', '#c69350', 256, 256, .6), roughness: .55, bumpScale: .001 }));
+    const cm = colMat || (colMat = M({ map: kayaPlain('komadaiColK'), roughness: .55, bumpScale: .001 }));
     const c = mesh(col, cm, 0, .56, 0); c.scale.set(1, 1, 1.15); g.add(c);
     return g;
   }
@@ -317,7 +326,7 @@
     for (let c = 0; c < 9; c++) { put(1, c, 2, true); put(1, c, 6, false); }
     put(6, 1, 1, true); put(5, 7, 1, true); put(6, 7, 7, false); put(5, 1, 7, false);
     // 駒台 (piece stands): yours at the bottom right, the opponent's at the top left — same as the rules tour
-    const KH = g.userData.top, sw = M({ map: X.wood('komadai', '#d9a764', '#a06c30', 256, 256, 1.6), roughness: .55, bumpScale: .002 });
+    const KH = g.userData.top, sw = M({ map: kayaPlain('komadaiKaya'), roughness: .55, bumpScale: .001 });   // 本榧, as the board top (faint grain, 2026-11-10)
     [{ x: FW / 2 + 1.95, z: 3.9 }, { x: -FW / 2 - 1.95, z: -3.9 }].forEach(st => { const k = komadai(sw, KH); k.position.set(st.x, 0, st.z); g.add(k); });
     // in the toy room the tall board would hide the room: a little smaller than life
     g.scale.setScalar(.72);   // board + stands about the reversi board's size on the chabudai

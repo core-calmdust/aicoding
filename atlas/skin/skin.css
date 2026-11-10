@@ -208,8 +208,8 @@ html.atlas-shogi .board-area{gap:calc(var(--cw)*.62)!important}
   html.atlas-shogi,html.atlas-shogi body{--cw:min(var(--cwh), calc((100vw - var(--padx) * 2 - var(--gap) - var(--rw, 360px)) / 13.65), 120px)!important}
 }
 /* komadai wood grain (atlas/skin/shogi.js paints --kdwood: a light procedural kaya texture, grain along the stand) */
-html.atlas-shogi .hand{background:var(--kdwood, linear-gradient(160deg,#e9c58a,#d4a565)) center/100% 100%!important}
-html.atlas-shogi .hand.kd-wide{background:var(--kdwoodh, linear-gradient(160deg,#e9c58a,#d4a565)) center/100% 100%!important}
+html.atlas-shogi .hand{background:linear-gradient(rgba(236,200,128,.5),rgba(236,200,128,.5)),url(../../images/atlas/shogi-kaya.webp?v=2) 20% 10%/320% auto,#e8c47c!important}   /* 本榧, as the board (2026-11-10) */
+html.atlas-shogi .hand.kd-wide{background:linear-gradient(rgba(236,200,128,.5),rgba(236,200,128,.5)),url(../../images/atlas/shogi-kaya.webp?v=2) 20% 10%/120% auto,#e8c47c!important}
 html.atlas-shogi.atlas-sk-metal .pc.atlas3d .k img{filter:saturate(.15) brightness(1.08) contrast(1.05)}
 html.atlas-shogi.atlas-sk-ink .pc.atlas3d .k img{filter:brightness(.62) contrast(1.15) saturate(.8)}
 html.atlas-shogi.atlas-sk-grain .pc.atlas3d .k img{filter:sepia(.25) saturate(1.2) brightness(.95)}
