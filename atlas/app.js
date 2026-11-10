@@ -573,7 +573,7 @@
   }
   /* tap an icon → it flies to the centre spinning, then turns into the 3D board (≈0.8 s) */
   let flying = false;
-  function warm(id) { if (initGL()) tagged(id, () => Table3D.prepare(id)); }   // (the icon intro isn't used by the portal: no icon model is built / compiled)
+  function warm(id) { if (window.AtlasLazy && !AtlasLazy.loaded(id)) return; if (initGL()) tagged(id, () => Table3D.prepare(id)); }   // (a game whose files are not loaded yet: not built from the bare fallback board)   // (the icon intro isn't used by the portal: no icon model is built / compiled)
   function flyOpen(id, img) {
     if (flying) return;
     if (window.AtlasLazy) AtlasLazy.need(id);   // (its files load while the icon flies)
