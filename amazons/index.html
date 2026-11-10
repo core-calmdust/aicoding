@@ -824,16 +824,15 @@ html.no-anim .arw::after,.arw.fly::after{display:none}
 /* stuck: the picture of the 3D arrow, its charred end in the middle of the scorch, leaning out to the upper right */
 .arw .ai{position:absolute;width:100%;height:100%;left:calc(50% - 100% * .25);top:calc(58% - 100%);background:url(img/arw.webp?v=1) center/100% 100% no-repeat;filter:drop-shadow(calc(var(--cell) * .05) calc(var(--cell) * .03) calc(var(--cell) * .03) rgba(0,0,0,.45));pointer-events:none}
 .arw.fly .ai,.arw.fly .fl3{display:none}
-/* the newest arrows keep burning: three flame tongues licking up from the scorch */
-.arw .fl3{position:absolute;left:20%;top:2%;width:60%;height:60%;display:none;pointer-events:none;mix-blend-mode:screen}
+/* every burnt square keeps burning: three flame tongues (an SVG) licking up round the arrow's foot */
+.arw .fl3{position:absolute;left:12%;top:-6%;width:76%;height:76%;display:none;pointer-events:none;overflow:visible;mix-blend-mode:screen}
 .arw.blaze .fl3{display:block}
-.arw .fl3 b{position:absolute;bottom:0;width:46%;height:100%;border-radius:50% 50% 45% 45%/62% 62% 38% 38%;transform-origin:50% 100%;
-  background:radial-gradient(60% 55% at 50% 72%,#fff6c8 0%,#ffd060 26%,#ff8a20 56%,rgba(255,70,0,0) 100%);animation:fl3 .5s ease-in-out infinite alternate}
-.arw .fl3 b:nth-child(1){left:2%;height:70%;animation-duration:.42s;animation-delay:-.2s}
-.arw .fl3 b:nth-child(2){left:27%;height:100%;animation-duration:.55s}
-.arw .fl3 b:nth-child(3){left:52%;height:62%;animation-duration:.37s;animation-delay:-.1s}
-@keyframes fl3{0%{transform:scale(.88,.8) skewX(-5deg);opacity:.85}50%{transform:scale(1.05,1.08) skewX(4deg);opacity:1}100%{transform:scale(.94,.92) skewX(-2deg);opacity:.9}}
-html.no-anim .arw .fl3 b{animation:none}
+.arw .fl3 .t{transform-box:fill-box;transform-origin:50% 100%;animation:fl3 .5s ease-in-out infinite alternate}
+.arw .fl3 .t1{transform:translate(-22%,12%) scale(.62);animation-duration:.43s;animation-delay:-.2s}
+.arw .fl3 .t2{animation-duration:.56s}
+.arw .fl3 .t3{transform:translate(24%,16%) scale(.55);animation-duration:.38s;animation-delay:-.1s}
+@keyframes fl3{0%{scale:.92 .84;rotate:-3deg;opacity:.85}50%{scale:1.04 1.1;rotate:3deg;opacity:1}100%{scale:.96 .94;rotate:-1deg;opacity:.9}}
+html.no-anim .arw .fl3 .t{animation:none}
 .arw.blaze::before{opacity:1;animation:emb 1.1s ease-in-out infinite alternate}
 .arw .fire{opacity:0;transition:opacity .9s ease-out;transform-origin:27px 13px}
 .arw.fly .fire,.arw.burn .fire{opacity:1;transition:none;animation:flick .12s linear infinite alternate}
@@ -1375,7 +1374,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 <script src="coach.js?v=1sq"></script>
 <script src="coach-i18n.js?v=1"></script>
 <script src="../shared/export.js?v=9l14"></script>
-<script src="../shared/mtengine.js?v=8"></script><script src="../shared/mtsplit.js?v=6"></script><script src="../shared/proset.js?v=5t2svhxbf-ms1"></script><script src="app.js?v=12"></script>
+<script src="../shared/mtengine.js?v=8"></script><script src="../shared/mtsplit.js?v=6"></script><script src="../shared/proset.js?v=5t2svhxbf-ms1"></script><script src="app.js?v=13"></script>
 <nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="tab.game"></button></nav>
 <!-- World Board Game Atlas portal skin: amazons/?skin=atlas — 3D boards (the Temple of Themiscyra on its stylobate / the jungle ruins' dressed stones), sculpted amazons (marble warriors, ivory & ebony archers, bronze & iron queens), fire arrows that scorch the squares, guide speech bubbles, portal look (all features kept) -->
 <script>
@@ -1386,7 +1385,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/img/tex/baked.js?v=1')).then(() => load('../atlas/table3d.js?v=147')).then(() => load('../atlas/tables3d.js?v=55')).then(() => load('../atlas/skin/common.js?v=61tz')).then(() => load('../atlas/models/amazons.js?v=2')).then(() => load('../atlas/skin/amazons.js?v=4'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/img/tex/baked.js?v=1')).then(() => load('../atlas/table3d.js?v=147')).then(() => load('../atlas/tables3d.js?v=55')).then(() => load('../atlas/skin/common.js?v=61tz')).then(() => load('../atlas/models/amazons.js?v=3')).then(() => load('../atlas/skin/amazons.js?v=6'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>

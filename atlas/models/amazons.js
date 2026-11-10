@@ -364,7 +364,7 @@
     if (spr[kind]) return spr[kind];
     const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'), gr = g.createRadialGradient(32, kind === 'flame' ? 44 : 32, 0, 32, 32, 32);
     if (kind === 'fire') { gr.addColorStop(0, 'rgba(255,250,220,1)'); gr.addColorStop(.25, 'rgba(255,200,80,.95)'); gr.addColorStop(.55, 'rgba(255,110,20,.6)'); gr.addColorStop(1, 'rgba(255,60,0,0)'); }
-    else if (kind === 'flame') { gr.addColorStop(0, 'rgba(255,248,210,1)'); gr.addColorStop(.3, 'rgba(255,196,70,.95)'); gr.addColorStop(.62, 'rgba(255,100,20,.55)'); gr.addColorStop(1, 'rgba(255,50,0,0)'); }
+    else if (kind === 'flame') { gr.addColorStop(0, 'rgba(255,250,215,1)'); gr.addColorStop(.35, 'rgba(255,200,72,1)'); gr.addColorStop(.7, 'rgba(255,110,24,.8)'); gr.addColorStop(1, 'rgba(240,60,0,0)'); }
     else if (kind === 'spark') { gr.addColorStop(0, 'rgba(255,255,230,1)'); gr.addColorStop(.3, 'rgba(255,190,70,.9)'); gr.addColorStop(1, 'rgba(255,90,10,0)'); }
     else if (kind === 'ember') { gr.addColorStop(0, 'rgba(255,120,30,0)'); gr.addColorStop(.55, 'rgba(255,120,30,0)'); gr.addColorStop(.72, 'rgba(255,110,30,.55)'); gr.addColorStop(.86, 'rgba(255,70,10,.2)'); gr.addColorStop(1, 'rgba(255,60,0,0)'); }
     else { gr.addColorStop(0, 'rgba(210,206,200,.5)'); gr.addColorStop(.5, 'rgba(190,186,180,.22)'); gr.addColorStop(1, 'rgba(180,176,170,0)'); }
@@ -394,33 +394,56 @@
       age();
     }, () => { kill(fire); if (g.parent) g.parent.remove(g); anim(500, age, () => sparks.forEach(kill)); if (done) done(); });
   }
-  // the strike on an arrow's group g (placed on its square at the board's top): a flash and a burst of sparks; then the square
-  // burns — three flame tongues licking up round the arrow for several seconds, dying down — the scorch's edge glowing and
-  // cooling, a thin smoke rising
-  function strike(g, anim, burn) {
+  // the strike on an arrow's group g (placed on its square at the board's top): a flash, a burst of sparks, a puff of smoke; the
+  // square catches fire (ignite) and keeps burning
+  function strike(g, anim) {
     const TT = T(), fl = sprite(g, 'fire', 0, .25, 0, .2);
     anim(460, k => { const s = .2 + k * 1.5; fl.scale.set(s, s, s); fl.material.opacity = k < .2 ? k / .2 : 1 - (k - .2) / .8; }, () => kill(fl));
     const burst = [];
     for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2 + Math.random() * .4, sp = .9 + Math.random() * 1.2, s = sprite(g, 'spark', 0, .2, 0, .09 + Math.random() * .05); s.userData.v = [Math.cos(a) * sp, 1.2 + Math.random() * 1.2, Math.sin(a) * sp]; burst.push(s); }
     anim(620, k => { burst.forEach(s => { const v = s.userData.v; s.position.x += v[0] * .016; s.position.z += v[2] * .016; v[1] -= .09; s.position.y = Math.max(.02, s.position.y + v[1] * .016); s.material.opacity = 1 - k; }); }, () => burst.forEach(kill));
-    const BURN = burn || 9000;
-    const em = new TT.Mesh(new TT.PlaneGeometry(1.2, 1.2).rotateX(-Math.PI / 2), new TT.MeshBasicMaterial({ map: sprTex('ember'), transparent: true, depthWrite: false, blending: TT.AdditiveBlending, toneMapped: false }));
-    em.position.y = .006; g.add(em);
-    anim(BURN + 3000, k => { em.material.opacity = (1 - k) * (.5 + .15 * Math.sin(k * 60)); }, () => { g.remove(em); em.geometry.dispose(); em.material.dispose(); });
-    const tongues = [[-.1, .02, .5], [.06, -.06, .7], [.1, .08, .45]].map(([x, z, h]) => { const s = sprite(g, 'flame', x, h * .42, z, 1); s.userData.h = h; return s; });
-    const t0 = Math.random() * 10;
-    anim(BURN, k => {
-      const fade = k < .08 ? k / .08 : k > .7 ? 1 - (k - .7) / .3 : 1, t = t0 + k * BURN / 1000;
-      tongues.forEach((s, i) => { const h = s.userData.h * fade * (1 + .22 * Math.sin(t * (9 + i * 2.3)) + .1 * Math.sin(t * 23 + i)), w = .26 * (.7 + .3 * fade) * (1 + .12 * Math.sin(t * 13 + i * 2)); s.scale.set(w, h, 1); s.position.y = h * .42; s.material.opacity = .9 * fade; });
-    }, () => tongues.forEach(kill));
+    ignite(g);
     let n = 0; const tick = () => {
-      if (!g.parent || n > 30) return; n++;
+      if (!g.parent || n > 12) return; n++;
       const s = new TT.Sprite(sprMat('smoke')); s.position.set((Math.random() - .5) * .15, .3, (Math.random() - .5) * .15); s.scale.set(.25, .25, .25); g.add(s);
       const v = (Math.random() - .5) * .3;
       anim(1900, k => { s.position.y = .3 + k * 1.2; s.position.x += v * .006; const sc = .25 + k * .6; s.scale.set(sc, sc, sc); s.material.opacity = Math.sin(k * Math.PI) * .6; }, () => { g.remove(s); s.material.dispose(); });
       setTimeout(tick, 320);
     };
     tick();
+  }
+
+  // every burnt square keeps burning for the rest of the game (2026-11-10 user: the blocked squares must read at a glance): three
+  // flame tongues licking up round the arrow and the scorch's glowing edge. One loop drives every fire (about 30 frames a second,
+  // only while a fire is on a board in the scene and the page is visible), so idle boards with no arrows still draw nothing.
+  const fires = new Set(); let fireRaf = 0, fireLast = 0;
+  function ignite(g) {
+    if (g.userData.fire) return;
+    const TT = T(), em = new TT.Mesh(G('emberPlane', () => new TT.PlaneGeometry(1.15, 1.15).rotateX(-Math.PI / 2)), mat('emberM', () => new TT.MeshBasicMaterial({ map: sprTex('ember'), transparent: true, depthWrite: false, toneMapped: false, opacity: .5 })));
+    em.position.y = .006; g.add(em);
+    const fm = mat('flameM', () => new TT.SpriteMaterial({ map: sprTex('flame'), transparent: true, depthWrite: false, toneMapped: false, opacity: .95 }))   // (normal blending: additive turned white on the white marble);
+    const tongues = [[-.13, .04, .7], [.04, -.05, 1.0], [.15, .1, .64]].map(([x, z, h]) => { const s = new TT.Sprite(fm); s.position.set(x, h * .42, z); s.scale.set(.44, h, 1); s.userData.h = h; g.add(s); return s; });
+    g.userData.fire = { tongues, em, t0: Math.random() * 20 };
+    fires.add(g);
+    if (!fireRaf) fireRaf = requestAnimationFrame(burnLoop);
+  }
+  function douse(g) { const f = g && g.userData.fire; if (!f) return; f.tongues.forEach(s => g.remove(s)); g.remove(f.em); delete g.userData.fire; fires.delete(g); }
+  const inScene = o => { while (o.parent) o = o.parent; return o.isScene; };
+  function burnLoop(now) {
+    fireRaf = 0;
+    if (!fires.size) return;
+    if (now - fireLast > 30 && !document.hidden) {
+      fireLast = now; const t = now / 1000; let shown = 0;
+      for (const g of fires) {
+        if (!g.parent) { fires.delete(g); continue; }
+        if (!inScene(g)) continue;
+        shown++; const f = g.userData.fire;
+        f.tongues.forEach((s, i) => { const k = f.t0 + t, h = s.userData.h * (1 + .22 * Math.sin(k * (9 + i * 2.3)) + .1 * Math.sin(k * 23 + i)), w = .44 * (1 + .12 * Math.sin(k * 13 + i * 2)); s.scale.set(w, h, 1); s.position.y = h * .42; });
+      }
+      if (shown && X.kick) X.kick(80);
+      if (shown) { const em = mats.emberM; if (em) em.opacity = .42 + .12 * Math.sin(t * 7); }
+    }
+    if (fires.size) fireRaf = requestAnimationFrame(burnLoop);
   }
 
   X.MODELS.amazons = function (live) {
@@ -434,5 +457,5 @@
     g.scale.setScalar(.86);   // (the showcase: about 10 across with the stylobate)
     return g;
   };
-  X.amazons = { board, piece, arrow, scorch, fly, strike, SETS, LOOKS, W, H, R, pcSet };
+  X.amazons = { board, piece, arrow, scorch, fly, strike, ignite, douse, SETS, LOOKS, W, H, R, pcSet };
 })();

@@ -103,10 +103,10 @@
     /* ---------- amazons and arrows ---------- */
     let pcs = {};   // square → { g, c } (c 1 / 2 amazon, 5 arrow)
     function mkAmazon(c, i) { const g = U.piece(c), sh = T3.contact(A3.R * .95, .5); sh.position.y = .002; g.add(sh); g.userData.sh = sh; const [x, z] = xz(i); g.position.set(x, Y, z); board.add(g); return g; }
-    function mkArrow(i) { const g = new TH.Group(), s = A3.scorch(), a = A3.arrow(); s.position.y = .003; g.add(s); a.rotation.y = (i * 2.399) % (Math.PI * 2); g.add(a); g.userData.arrow = a; const [x, z] = xz(i); g.position.set(x, Y, z); board.add(g); return g; }
+    function mkArrow(i) { const g = new TH.Group(), s = A3.scorch(), a = A3.arrow(); s.position.y = .003; g.add(s); a.rotation.y = (i * 2.399) % (Math.PI * 2); g.add(a); g.userData.arrow = a; const [x, z] = xz(i); g.position.set(x, Y, z); board.add(g); A3.ignite(g); return g; }
     function lift(g, h) { g.position.y = Y + h; g.userData.h0 = h; const sh = g.userData.sh; if (sh) { sh.position.y = .002 - h; const s = 1 + h * .5; sh.scale.set(s, s, s); sh.material.opacity = .5 / (1 + h * 1.4); } }
     const hOf = g => g.userData.h0 || 0;
-    function drop(g) { if (g.userData.sh) g.userData.sh.material.dispose(); board.remove(g); }
+    function drop(g) { A3.douse(g); if (g.userData.sh) g.userData.sh.material.dispose(); board.remove(g); }
     function land(g) { anim(160, k => { const s = 1 + Math.sin(k * Math.PI) * .04; g.scale.set(s, 1 / s, s); }, () => g.scale.set(1, 1, 1)); }
     function setup() {
       Object.values(pcs).forEach(p => drop(p.g)); pcs = {};
