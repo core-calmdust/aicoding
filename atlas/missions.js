@@ -197,7 +197,7 @@
     <ellipse cx="41" cy="47" rx="3.6" ry="4.6" fill="#3a2a1a"/><ellipse cx="59" cy="47" rx="3.6" ry="4.6" fill="#3a2a1a"/><circle cx="42.2" cy="45.4" r="1.2" fill="#fff"/><circle cx="60.2" cy="45.4" r="1.2" fill="#fff"/>
     <path d="M44 56q6 5 12 0" fill="none" stroke="#3a2a1a" stroke-width="2.6" stroke-linecap="round"/><circle cx="35" cy="55" r="3.4" fill="#ff8a7a" opacity=".6"/><circle cx="65" cy="55" r="3.4" fill="#ff8a7a" opacity=".6"/>
     <path d="M62 14q8-6 14 0q-7 2-8 9z" fill="#ff5d5d"/></svg>`;
-  let btn = null, ov = null, tab = 'st';
+  let btn = null, ov = null, tab = 'st', ord = {};   // ord: the list order fixed while the popup is open (a claimed one stays where it was)
   function css() {
     if (document.getElementById('msCss')) return;
     const s = document.createElement('style'); s.id = 'msCss';
@@ -272,7 +272,8 @@
       body = `<div class="msnote"><span>🎯 ${esc(fill(x.line, { n: LINE_COINS }))}</span><span>🌟 ${esc(fill(x.card, { n: CARD_COINS }))}</span></div>
         <div class="msgw"><div class="msgrid">${s.st.map(cell).join('')}</div></div>`;
     } else {
-      const L = (tab === 'mo' ? s.mo : s.lg).map((m, i) => [m, i]).sort((a, b) => (s.can(b[0]) - s.can(a[0])) || (!!s.M.c[a[0].id] - !!s.M.c[b[0].id]) || a[1] - b[1]).map(x => x[0]),   // (claimable first, claimed last)
+      const L0 = tab === 'mo' ? s.mo : s.lg, O = ord[tab] || (ord[tab] = L0.map((m, i) => [m, i]).sort((a, b) => (s.can(b[0]) - s.can(a[0])) || (!!s.M.c[a[0].id] - !!s.M.c[b[0].id]) || a[1] - b[1]).map(x => x[0].id)),
+        L = L0.slice().sort((a, b) => (O.indexOf(a.id) + 1 || 99) - (O.indexOf(b.id) + 1 || 99)),   // (claimable first, claimed last)
         d = new Date(), last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
       const M2 = new Intl.DateTimeFormat(C.lang(), { month: 'long' }).format(d);
       body = (tab === 'mo' ? `<div class="msnote"><span>📅 ${esc(fill(x.month, { m: d.getMonth() + 1, M: M2 }))}</span><span>⏳ ${esc(fill(x.left, { n: last - d.getDate() + 1 }))}</span></div>` : '') +
@@ -289,13 +290,13 @@
       ov = document.createElement('div'); ov.className = 'msov'; document.body.appendChild(ov);
       ov.addEventListener('click', e => {
         if (e.target === ov || e.target.closest('.msx')) return close();
-        const tb = e.target.closest('[data-t]'); if (tb) { tab = tb.dataset.t; try { C.sfx('tap'); } catch (x) {} const b = tab === 'st' ? bingo() : null; render(); playBingo(b); return; }
+        const tb = e.target.closest('[data-t]'); if (tb) { tab = tb.dataset.t; ord = {}; try { C.sfx('tap'); } catch (x) {} const b = tab === 'st' ? bingo() : null; render(); playBingo(b); return; }
         const c = e.target.closest('[data-c]'); if (c && !c.disabled) { claim(c.dataset.c, +c.dataset.n); const b = tab === 'st' ? bingo() : null; render(); playBingo(b); }
       });
       addEventListener('keydown', e => { if (e.key === 'Escape' && ov.classList.contains('on')) close(); });
     }
     const b = tab === 'st' ? bingo() : null;
-    render(); requestAnimationFrame(() => ov.classList.add('on'));
+    ord = {}; render(); requestAnimationFrame(() => ov.classList.add('on'));
     if (b) setTimeout(() => playBingo(b), 300);
   }
   function close() { if (ov) ov.classList.remove('on'); }
