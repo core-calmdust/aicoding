@@ -109,7 +109,7 @@
   };
   // the first-turn how-to card: steps for a mouse (m) or a finger (t), a "don't show again" box and where to find it later
   const HOWTO = {
-    ja: { pad: "ノートPCのタッチパッドなら：位置を決めて1回クリックすると狙いに入り、もう1回クリックで打てる", title: '操作のしかた', m: ['マウスを左右に動かして位置を決める', 'クリックしたまま下へ引く。引くほど強い', '引いたまま左右で角度を調整', 'ボタンを離して打つ'], t: ['左右にスライドして位置を決める', 'そのまま下へスライド。引くほど強い', '指をつけたまま左右で角度を調整', '指を離して打つ'], undo: 'ストライカーのそばに戻すとやり直し', never: 'もう表示しない', note: '操作のしかたは「{r}」からいつでも見られます', ok: 'わかった' },
+    ja: { pad: "ノートPCのタッチパッドなら：位置を決めて1回クリックすると狙いに入り、もう1回クリックで発射", title: '操作のしかた', m: ['マウスを左右に動かして位置を決める', 'クリックしたまま下へ引く。引くほど強い', '引いたまま左右で角度を調整', 'ボタンを離して打つ'], t: ['左右にスライドして位置を決める', 'そのまま下へスライド。引くほど強い', '指をつけたまま左右で角度を調整', '指を離して打つ'], undo: 'ストライカーのそばに戻すとやり直し', never: 'もう表示しない', note: '操作のしかたは「{r}」からいつでも見られます', ok: 'わかった' },
     en: { pad: "On a laptop touchpad: place it, click once to start aiming, click again to strike", title: 'How to play', m: ['Move the mouse left/right to place the striker', 'Hold the button and pull down — further is harder', 'Still holding, move left/right to aim', 'Let go to strike'], t: ['Slide left/right to place the striker', 'Keep going and slide down — further is harder', 'Finger still down, move left/right to aim', 'Lift your finger to strike'], undo: 'Back to the striker to cancel', never: "Don't show again", note: 'You can always see the controls in "{r}"', ok: 'Got it' },
     zh: { pad: "笔记本触控板：决定位置后点一下进入瞄准，再点一下击出", title: '操作方法', m: ['左右移动鼠标决定位置', '按住鼠标向下拉，拉得越远越用力', '按住时左右移动调整角度', '松开按键击出'], t: ['左右滑动决定位置', '接着向下滑，拉得越远越用力', '手指不离开，左右移动调整角度', '松开手指击出'], undo: '移回击子旁边即可重来', never: '不再显示', note: '随时可在「{r}」中查看操作方法', ok: '知道了' },
     'zh-TW': { pad: "筆電觸控板：決定位置後點一下進入瞄準，再點一下擊出", title: '操作方法', m: ['左右移動滑鼠決定位置', '按住滑鼠往下拉，拉得越遠越用力', '按住時左右移動調整角度', '放開按鍵擊出'], t: ['左右滑動決定位置', '接著往下滑，拉得越遠越用力', '手指不離開，左右移動調整角度', '放開手指擊出'], undo: '移回擊子旁邊即可重來', never: '不再顯示', note: '隨時可在「{r}」中查看操作方法', ok: '知道了' },
@@ -315,10 +315,16 @@
     const HK = 'atlas-carrom-howto';
     const howtoOn = () => { try { return localStorage.getItem(HK) !== 'off'; } catch (e) { return true; } };
     let cardEl = null;
+    // the touchpad note on PCs: its heading on a line of its own, then the steps, then how to cancel — no wrapping (2026-11-10)
+    function padBlock(H) {
+      if (!(mousey() && H.pad)) return `<p class="u">${esc(H.undo)}</p>`;
+      const i = H.pad.search(/[：:]/), head = i > 0 ? H.pad.slice(0, i + 1) : '', body = i > 0 ? H.pad.slice(i + 1).trim() : H.pad;
+      return `<p class="u pad">💻 <b>${esc(head)}</b>${head ? '<br>' : ''}${esc(body)}<br>${esc(H.undo)}</p>`;
+    }
     function howtoCard(done) {   // a big card on the first turn: the steps for this device; "don't show again" turns it off for good
       const H = HOWTO[lang] || HOWTO.en, steps = H[mousey() ? 'm' : 't'], ic = ['↔', '↓', '↔', '☝'];
       const d = document.createElement('div'); d.className = 'crhow'; d.dir = lang === 'ar' ? 'rtl' : 'ltr';
-      d.innerHTML = `<div class="crhow-c" role="dialog" aria-modal="true"><h2>${esc(H.title)}</h2><ol>${steps.map((x, i) => `<li><i>${ic[i]}</i><span>${esc(x)}</span></li>`).join('')}</ol>${mousey() && H.pad ? `<p class="u" style="margin-top:10px">💻 ${esc(H.pad)}</p>` : ''}<p class="u">${esc(H.undo)}</p><label><input type="checkbox"> ${esc(H.never)}</label><p class="n">${esc(H.note.replace('{r}', t('bv.rules')))}</p><button type="button">${esc(H.ok)}</button></div>`;
+      d.innerHTML = `<div class="crhow-c" role="dialog" aria-modal="true"><h2>${esc(H.title)}</h2><ol>${steps.map((x, i) => `<li><i>${ic[i]}</i><span>${esc(x)}</span></li>`).join('')}</ol>${padBlock(H)}<label><input type="checkbox"> ${esc(H.never)}</label><p class="n">${esc(H.note.replace('{r}', t('bv.rules')))}</p><button type="button">${esc(H.ok)}</button></div>`;
       const close = () => { if (d.querySelector('input').checked) { try { localStorage.setItem(HK, 'off'); } catch (e) {} } d.remove(); cardEl = null; done && done(); };
       d.querySelector('button').onclick = close;
       ['pointerdown', 'pointermove', 'pointerup'].forEach(k => d.addEventListener(k, e => e.stopPropagation()));
