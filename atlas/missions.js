@@ -236,7 +236,7 @@
 .mscell.got{background:#f2fbf6;border-color:#bfe8d2;box-shadow:0 3px 0 #bfe8d2}.mscell.got::after{content:'✓';position:absolute;inset:0;display:grid;place-items:center;font-size:52px;font-weight:900;color:rgba(30,163,108,.28);transform:rotate(-12deg)}
 .mscell.bg{animation:msBg .7s cubic-bezier(.3,1.5,.5,1) both}
 @keyframes msBg{0%{transform:scale(1)}40%{transform:scale(1.1);background:#fff3a8;border-color:#ffb21e;box-shadow:0 0 0 4px rgba(255,190,40,.55),0 0 22px 6px rgba(255,190,40,.6)}100%{transform:scale(1)}}
-.msbingo{position:absolute;left:50%;top:50%;z-index:5;display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px 26px;border-radius:22px;background:linear-gradient(180deg,#fff7c8,#ffd65a);border:3px solid #fff;box-shadow:0 6px 0 #e9a21a,0 18px 36px -10px rgba(120,70,0,.6);pointer-events:none;animation:msPop 2.2s cubic-bezier(.3,1.5,.5,1) both}
+.msbingo{position:absolute;left:50%;top:50%;z-index:5;width:max-content;max-width:calc(100% - 8px);white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px 26px;border-radius:22px;background:linear-gradient(180deg,#fff7c8,#ffd65a);border:3px solid #fff;box-shadow:0 6px 0 #e9a21a,0 18px 36px -10px rgba(120,70,0,.6);pointer-events:none;animation:msPop 2.2s cubic-bezier(.3,1.5,.5,1) both}
 .msbingo b{font-size:28px;font-weight:900;color:#c4500a;letter-spacing:.04em;text-shadow:0 2px 0 #fff}.msbingo span{display:inline-flex;align-items:center;gap:4px;font-size:16px;font-weight:900;color:#8a5a00}
 .msbingo span i{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#ffc928;font-size:11px;font-style:normal;border:1.5px solid #e09a00}
 .msbingo.all{background:linear-gradient(120deg,#fff3c4,#ffd9f0,#d9f0ff)}
