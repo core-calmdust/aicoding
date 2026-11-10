@@ -954,7 +954,11 @@
     if (!glOK) return;
     if (window.Historia && Historia.on) return Historia.fit();   // ヒストリア open: it frames the board itself
     const card = $('bvi'), playing = $('bv').classList.contains('playing');
-    if ($('bv').classList.contains('rules')) { const p = $('bv').querySelector('.rgd'); Table3D.setInset(p ? $('bv').clientHeight - p.offsetTop + 4 : 0); return; }
+    if ($('bv').classList.contains('rules')) {
+      const p = $('bv').querySelector('.rgd');
+      // phones: the board below やめる and the 詰将棋 hand chips at the top (they covered its top row, 2026-11-11)
+      let tp = 0; if (matchMedia('(max-width: 819px)').matches) [$('bvQuit'), document.querySelector('.sghs')].forEach(e => { if (!e || !e.getClientRects().length) return; const r = e.getBoundingClientRect(); if (r.height && r.bottom < innerHeight * .35) tp = Math.max(tp, Math.round(r.bottom + 6)); });
+      Table3D.setInset(p ? $('bv').clientHeight - p.offsetTop + 4 : 0, tp); return; }
     // the card's resting top (layout only: its slide-in animation must not move the framing — that made the camera return in two steps)
     let top = 0; for (let e = card; e; e = e.offsetParent) top += e.offsetTop;
     if (!card.offsetParent) top = card.getBoundingClientRect().top;
@@ -962,6 +966,7 @@
     $('bv').style.setProperty('--bvcard', Math.max(0, innerHeight - top) + 'px');
   }
   addEventListener('resize', () => fitStage());
+  window.__fitStage = () => fitStage();   // (the 詰将棋 hand chips appear / change: atlas/games/shogi-play.js)
   // games opened from here (cards, puzzles …) send their home button back here instead of the top page (shared/homeback.js)
   const homeMark = () => { try { sessionStorage.setItem('aicoding-home', location.pathname + '#' + page); } catch (e) {} };
   homeMark(); addEventListener('pagehide', homeMark);

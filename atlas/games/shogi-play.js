@@ -193,6 +193,7 @@
       // composed 詰将棋 (no attacker king on the board): the defender holds every remaining piece by convention, so only the
       // player's own hand is shown; the practical mates from real games (the attacker's king is on the board) show both (2026-11-10)
       strip.innerHTML = (P.king[hc] >= 0 ? row(1, S.hOpp || STR.en.hOpp) : '') + row(0, S.hMe || STR.en.hMe);
+      if (window.__fitStage) requestAnimationFrame(() => window.__fitStage());   // (the portal frames the board below the chips on phones)
     }
     function buildBoard(fallIn) {
       Object.values(pcs).forEach(g => board.remove(g)); pcs = {}; let i = 0;
@@ -495,7 +496,7 @@
       // above the guide character of the puzzle panel (atlas/puzzles.js .rgd.pzg), else top right (2026-11-10)
       const host = document.querySelector('.rgd.pzg'), pic = host && host.querySelector('.pic');
       if (host && zbtn.parentElement !== host) { host.appendChild(zbtn); zbtn.classList.add('in-rgd'); }
-      if (pic) { const pr = pic.getBoundingClientRect(), hr = host.getBoundingClientRect(); zbtn.style.left = Math.round(pr.left - hr.left + pr.width / 2 - 22) + 'px'; zbtn.style.bottom = Math.round(hr.bottom - pr.top + 10) + 'px'; }
+      if (pic) { const pr = pic.getBoundingClientRect(), hr = host.getBoundingClientRect(); zbtn.style.left = Math.round(pr.left - hr.left + pr.width / 2 - 22) + 'px'; zbtn.style.bottom = Math.round(hr.bottom - pr.top + 22) + 'px'; }
       zbtn.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${zoomOn ? '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>' : '<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5M8 10.5h5M10.5 8v5"/>'}</svg>`;   // (icon only, 2026-11-10)
       zbtn.setAttribute('aria-label', zoomOn ? L[0] : L[1]); zbtn.title = zoomOn ? L[0] : L[1];
     }
