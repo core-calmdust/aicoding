@@ -4,6 +4,8 @@
 // meanwhile (opts.rot = id: engine.js helperPlan — odd ids another first root move, even ids other replies one ply
 // below; a deeper finished depth is shared with the lead, 2026-11-09), until the page stops every thread.
 // In the exact / win-draw-loss solve of think the root moves are shared out instead (engine.js rootSplit / splitHelp).
+// (2026-11-10, engine.js LAZY.plan 'ybw', the default: a helper's think waits in engine.c mt_idle and takes the remaining
+// moves at the lead's split points instead — Young Brothers Wait, MODEL_CARD.md「マルチスレッド v4」.)
 self.addEventListener('message', function boot(e) {
   const m = e.data; if (m.type !== 'mtinit') return;
   self.removeEventListener('message', boot);
@@ -12,7 +14,7 @@ self.addEventListener('message', function boot(e) {
     X.mt_stack(m.top); X.mt_thread(m.tls);
     self.REVERSI_WX = Object.assign({}, X, { memory: m.mem });   // engine.js reads WX.memory
     self.REVERSI_SPLIT = m.ctl;   // (the endgame solve is split at the root over the threads: engine.js rootSplit)
-    importScripts('engine.js?v=57');
+    importScripts('engine.js?v=58');
   } catch (err) { self.postMessage({ type: 'mtready', error: String(err && err.message || err) }); return; }
   const id = m.id, ctl = m.ctl, cnt = m.cnt, R = self.ReversiEngine;
   if (id > 0) {

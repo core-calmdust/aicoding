@@ -13,8 +13,11 @@ import sys
 s = open(sys.argv[1]).read()
 Q = sys.argv[2] if len(sys.argv) > 2 else '1024'
 a = "  if (((long long)(++nodes) & 4095) == 0) { checkTime(); if (aborted) return 0; }"
-assert s.count(a) == 1
-s = s.replace(a, a.replace('4095', str(int(Q) - 1)))
+if "#define CHK_Q 4096" in s:   # (2026-11-10: the MT build checks the clock every CHK_Q nodes of any kind, solver included)
+    s = s.replace("#define CHK_Q 4096", "#define CHK_Q " + Q, 1)
+else:
+    assert s.count(a) == 1
+    s = s.replace(a, a.replace('4095', str(int(Q) - 1)))
 a = "static inline void checkTime(void) {\n"
 assert s.count(a) == 1
 s = s.replace(a, "static void simFlush(void);\n" + a + "  simFlush();\n")

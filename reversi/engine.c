@@ -258,9 +258,23 @@ static int evalAt(int ply, u64 P, u64 O) {
 static TLS double nodes, deadline, nodeMax; static TLS int aborted;   /* nodeMax: PRO mode's node limit (0 = none) */
 static TLS double MPC_T = 1.5, MPC_A = 357.32, MPC_B = 1.1, MPC_C = -3.14; static TLS int MPC_ON = 1, MPC_MIN = 3;
 static TLS int T_EVALMIN = 12, T_SEARCHMIN = 14, T_SDEPTH = 1, T_KE = 8;
+#ifdef MT
+/* (2026-11-10) Young Brothers Wait: split points (SPt) where idle threads take the remaining moves of a node whose first
+   move is done. aborted = 2: a split point on this thread's chain was cut off (or stopped) — the search unwinds to it. */
+typedef struct SPt SPt;
+static TLS SPt *curSP;
+static int chainStopped(const SPt *s);
+#ifndef CHK_Q
+#define CHK_Q 4096
+#endif
+static TLS double nextChk;   /* the clock is checked every CHK_Q nodes of any kind (midgame, solver, last moves) */
+#endif
 EXPORT(set_state) void set_state(double n, double dl, int mpcOn, double t, double a, double b, double c, int minDepth, int evalMin, int searchMin, int sDepth, int kE) {
   nodes = n; deadline = dl; aborted = 0; MPC_ON = mpcOn; MPC_T = t; MPC_A = a; MPC_B = b; MPC_C = c; MPC_MIN = minDepth;
   T_EVALMIN = evalMin; T_SEARCHMIN = searchMin; T_SDEPTH = sDepth; T_KE = kE;
+#ifdef MT
+  nextChk = n + CHK_Q;
+#endif
 }
 EXPORT(set_node_max) void set_node_max(double n) { nodeMax = n; }
 EXPORT(get_nodes) double get_nodes(void) { return nodes; }
@@ -269,6 +283,7 @@ static inline void checkTime(void) {
 #ifdef MT
   if (gStop) { aborted = 1; return; }
   if (jumpAt && gJump >= jumpAt) { aborted = 1; return; }
+  if (curSP && chainStopped(curSP)) aborted = 2;
 #endif
   if (deadline > 0 && now() > deadline) aborted = 1;
   if (nodeMax > 0 && nodes >= nodeMax) aborted = 1;
@@ -370,8 +385,16 @@ static void sortMoves(int base, int n) {   // descending by SC, MF along
 }
 
 // ------------------------------------------------------------------ midgame PVS
+#ifdef MT
+static int splitHere(int kind, u64 P, u64 O, int depth, int alpha, int beta, int ply, const i8 *mv, const u64 *mf, int n, int *best, int *bestMove);
+static volatile int gIdle;   /* helper threads waiting for a split point */
+static int SPLIT_D = 5, SPLIT_E = 14;
+#define CHECK_NODES() if (++nodes >= nextChk) { nextChk += CHK_Q; checkTime(); if (aborted) return 0; }
+#else
+#define CHECK_NODES() if (((long long)(++nodes) & 4095) == 0) { checkTime(); if (aborted) return 0; }
+#endif
 static int searchI(u64 P, u64 O, int depth, int alpha, int beta, int ply, int passed) {
-  if (((long long)(++nodes) & 4095) == 0) { checkTime(); if (aborted) return 0; }
+  CHECK_NODES()
   if (depth <= 0) return evalAt(ply, P, O);
 #ifndef MT
   u32 h = hash(P, O); int ti = h & TT_MASK, ttMove = -1;
@@ -461,6 +484,10 @@ static int searchI(u64 P, u64 O, int depth, int alpha, int beta, int ply, int pa
 #endif
   if (bestMove < 0) bestMove = MV[base];
   for (int i = 0; i < n; i++) {
+#ifdef MT
+    if ((i > 0 || first) && n - i >= 2 && depth >= SPLIT_D && gIdle > 0 &&
+        splitHere(0, P, O, depth, alpha, beta, ply, MV + base + i, MF + base + i, n - i, &best, &bestMove)) { if (aborted) return 0; break; }
+#endif
     int s = MV[base + i];
     u64 f = MF[base + i] ? MF[base + i] : flips(s, P, O), nP = P | f | (1ULL << s), nO = O & ~f;
     childIdx(ply, s, f);
@@ -632,7 +659,11 @@ static inline int etFind(u64 P, u64 O, int i) {
 #endif
 static int solve(u64 P, u64 O, int alpha, int beta, int empties, int ply, int passed) {
   if (empties <= SMALL) return solveSmall(P, O, alpha, beta, empties, passed);
+#ifdef MT
+  CHECK_NODES()
+#else
   if (((long long)(++nodes) & 16383) == 0) { checkTime(); if (aborted) return 0; }
+#endif
   int ti = -1, hb = -1, ttMove = -1;
   if (empties >= ET_MIN) {
     hb = hash(P, O) & ET_MASK & ~1;
@@ -701,6 +732,10 @@ static int solve(u64 P, u64 O, int alpha, int beta, int empties, int ply, int pa
   sortMoves(base, n);
   int alpha0 = alpha, best = -99, bestMove = MV[base];
   for (int i = 0; i < n; i++) {
+#ifdef MT
+    if (i > 0 && n - i >= 2 && empties >= SPLIT_E && gIdle > 0 &&
+        splitHere(1, P, O, empties, alpha, beta, ply, MV + base + i, MF + base + i, n - i, &best, &bestMove)) { if (aborted) return 0; break; }
+#endif
     int s = MV[base + i];
     u64 f = MF[base + i], nP = P | f | (1ULL << s), nO = O & ~f; int v;
     if (i == 0) v = -solve(nO, nP, -beta, -alpha, empties - 1, ply + 1, 0);
@@ -730,6 +765,204 @@ static int solve(u64 P, u64 O, int alpha, int beta, int empties, int ply, int pa
   return best;
 }
 
+#ifdef MT
+// ------------------------------------------------------------------ Young Brothers Wait (2026-11-10, MODEL_CARD.md「マルチスレッド v4」)
+/* A node of the midgame search (remaining depth >= SPLIT_D) or of the solver (empties >= SPLIT_E) whose first move is done
+   opens a split point when a helper is idle: its other moves are taken one at a time (an atomic counter) by the owner and
+   by the idle threads (engine.js in YBW mode: the helpers wait in mt_idle instead of searching the root on their own), each
+   with a null window against the split point's alpha and a re-search when it fails high, as in the one-thread loop. A
+   cut-off stops the split point: the threads below it see the stop (chainStopped, at their next check of the clock:
+   aborted = 2) and unwind to it. The owner waits until every helper has left, helping meanwhile at the split points below
+   its own ("helpful master"). The root is one too (root_mt: engine.js rootPVS's windows). Without an idle helper nothing
+   is split (the same nodes and values as before). */
+#define NSP 256
+struct SPt {
+  volatile int word;              /* seq << 9 | closed (256) | the helpers working on it (0..255) */
+  volatile int lock, stop, next, alpha, best, bestMove, inuse;
+  int beta, n, kind, depth, ply, root;   /* kind 0: midgame (depth), 1: solver (depth = empties); root: the root loop */
+  u64 P, O;
+  SPt *parent;
+  i8 mv[36]; u64 mf[36];
+  double mpcT, mpcA, mpcB, mpcC; int mpcOn, mpcMin, tEvalMin, tSearchMin, tSDepth, tKE, rootE;
+};
+static SPt SPS[NSP];
+static int chainStopped(const SPt *s) {
+  for (int k = 0; s && k < 128; k++, s = s->parent) if (__atomic_load_n(&s->stop, __ATOMIC_ACQUIRE)) return 1;
+  return 0;
+}
+static inline void spLock(SPt *s) { int z; do { z = 0; } while (!__atomic_compare_exchange_n(&s->lock, &z, 1, 0, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED)); }
+static inline void spUnlock(SPt *s) { __atomic_store_n(&s->lock, 0, __ATOMIC_RELEASE); }
+static inline void spStop(SPt *s) { __atomic_store_n(&s->stop, 1, __ATOMIC_RELEASE); }
+static SPt *spAlloc(void) {
+  for (int i = 0; i < NSP; i++) { int z = 0; if (!SPS[i].inuse && __atomic_compare_exchange_n(&SPS[i].inuse, &z, 1, 0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)) return SPS + i; }
+  return 0;
+}
+static void spFree(SPt *s) {   /* closed, no helper left: a new sequence number, then the slot is free */
+  const int w = __atomic_load_n(&s->word, __ATOMIC_ACQUIRE);
+  __atomic_store_n(&s->word, (((w >> 9) + 1) << 9) | 256, __ATOMIC_RELEASE);
+  __atomic_store_n(&s->inuse, 0, __ATOMIC_RELEASE);
+}
+static int spJoin(SPt *s) {   /* a helper is counted on the split point unless it is closed */
+  int w = __atomic_load_n(&s->word, __ATOMIC_ACQUIRE);
+  for (;;) {
+    if ((w & 256) || (w & 255) == 255) return 0;
+    if (__atomic_compare_exchange_n(&s->word, &w, w + 1, 0, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) return 1;
+  }
+}
+static inline void spLeave(SPt *s) { __atomic_sub_fetch(&s->word, 1, __ATOMIC_ACQ_REL); }
+static void spParamsGet(const SPt *s) {
+  MPC_T = s->mpcT; MPC_A = s->mpcA; MPC_B = s->mpcB; MPC_C = s->mpcC; MPC_ON = s->mpcOn; MPC_MIN = s->mpcMin;
+  T_EVALMIN = s->tEvalMin; T_SEARCHMIN = s->tSearchMin; T_SDEPTH = s->tSDepth; T_KE = s->tKE; gRootE = s->rootE;
+}
+static void spParamsPut(SPt *s) {
+  s->mpcT = MPC_T; s->mpcA = MPC_A; s->mpcB = MPC_B; s->mpcC = MPC_C; s->mpcOn = MPC_ON; s->mpcMin = MPC_MIN;
+  s->tEvalMin = T_EVALMIN; s->tSearchMin = T_SEARCHMIN; s->tSDepth = T_SDEPTH; s->tKE = T_KE; s->rootE = gRootE;
+}
+static int gRootMove = -1, gRootScore, gRootIdx = -1;   /* root_mt: the best root move so far (engine.js PART) */
+/* take moves of s until none is left (the owner and the helpers): the one-thread loop's PVS on each */
+static int spWork(SPt *s, int owner) {   /* returns the number of moves it took */
+  for (int done = 0;; done++) {
+    if (chainStopped(s)) return done;
+    const int i = __atomic_fetch_add(&s->next, 1, __ATOMIC_ACQ_REL);
+    if (i >= s->n) return done;
+    const int a = __atomic_load_n(&s->alpha, __ATOMIC_ACQUIRE), b = s->beta;
+    if (a >= b) return done;
+    const int m = s->mv[i]; const u64 f = s->mf[i] ? s->mf[i] : flips(m, s->P, s->O), nP = s->P | f | (1ULL << m), nO = s->O & ~f;
+    int v;
+    if (s->root) {   /* (as engine.js rootPVS: the re-search from max(v - 1, alpha)) */
+      if (s->kind == 0) {
+        v = -searchE(nO, nP, s->depth - 1, -a - 1, -a, 1, 0);
+        if (!aborted && v > a) { const int a2 = __atomic_load_n(&s->alpha, __ATOMIC_ACQUIRE), lo = v - 1 > a2 ? v - 1 : a2; if (lo < b) v = -searchE(nO, nP, s->depth - 1, -b, -lo, 1, 0); }
+      } else {
+        v = -solve(nO, nP, -a - 1, -a, s->depth - 1, 1, 0);
+        if (!aborted && v > a) { const int a2 = __atomic_load_n(&s->alpha, __ATOMIC_ACQUIRE), lo = v - 1 > a2 ? v - 1 : a2; if (lo < b) v = -solve(nO, nP, -b, -lo, s->depth - 1, 1, 0); }
+      }
+    } else if (s->kind == 0) {
+      childIdx(s->ply, m, f);
+      v = -searchI(nO, nP, s->depth - 1, -a - 1, -a, s->ply + 1, 0);
+      if (!aborted && v > a && v < b) v = -searchI(nO, nP, s->depth - 1, -b, -v, s->ply + 1, 0);
+    } else {
+      v = -solve(nO, nP, -a - 1, -a, s->depth - 1, s->ply + 1, 0);
+      if (!aborted && v > a && v < b) v = -solve(nO, nP, -b, -v, s->depth - 1, s->ply + 1, 0);
+    }
+    if (aborted) {
+      if (owner || aborted == 1) { if (owner) spStop(s); return done + 1; }
+      aborted = 0; continue;   /* (a helper: this split point or one above it was stopped — the check above leaves) */
+    }
+    spLock(s);
+    if (v > s->best) {
+      s->best = v; s->bestMove = m;
+      if (s->root) { gRootMove = m; gRootScore = v; gRootIdx = i + 1; }
+      if (v > s->alpha) { __atomic_store_n(&s->alpha, v, __ATOMIC_RELEASE); if (v >= b) spStop(s); }
+    }
+    spUnlock(s);
+  }
+}
+static int isBelow(const SPt *y, const SPt *s) { for (int k = 0; y && k < 128; k++) { y = y->parent; if (y == s) return 1; } return 0; }
+/* an idle thread: the open split point with the most work left (only those below `under` when it is set) */
+static SPt *spFind(const SPt *under) {
+  SPt *bs = 0; int bw = -(1 << 30);
+  for (int i = 0; i < NSP; i++) {
+    SPt *y = SPS + i;
+    if (!__atomic_load_n(&y->inuse, __ATOMIC_ACQUIRE)) continue;
+    const int w = __atomic_load_n(&y->word, __ATOMIC_ACQUIRE);
+    if ((w & 256) || __atomic_load_n(&y->next, __ATOMIC_ACQUIRE) >= y->n || y->stop) continue;
+    const int work = y->depth * 4 + (y->root ? 1000 : 0) - (w & 255);
+    if (work > bw && (!under || isBelow(y, under)) && !chainStopped(y)) { bw = work; bs = y; }
+  }
+  return bs;
+}
+/* join y and take its moves (a helper, or an owner waiting for the helpers of its split point `under`) */
+static int spHelp(SPt *y, const SPt *under) {   /* returns the number of moves it took */
+  if (!spJoin(y)) return 0;
+  if (y->stop || __atomic_load_n(&y->next, __ATOMIC_ACQUIRE) >= y->n || (under && !isBelow(y, under))) { spLeave(y); return 0; }
+  SPt *const saved = curSP;
+  spParamsGet(y);
+  curSP = y;
+  if (y->kind == 0 && !y->root) initIdx(y->ply, y->P, y->O);
+  const int k = spWork(y, 0);
+  curSP = saved;
+  spLeave(y);
+  return k;
+}
+/* the owner: a split point for the moves mv[0..n-1] of this node (ply < 0: the root); 0 when no slot is free (go on alone) */
+static int splitHere(int kind, u64 P, u64 O, int depth, int alpha, int beta, int ply, const i8 *mv, const u64 *mf, int n, int *best, int *bestMove) {
+  SPt *s = spAlloc(); if (!s) return 0;
+  s->P = P; s->O = O; s->kind = kind; s->depth = depth; s->root = ply < 0; s->ply = ply < 0 ? 0 : ply; s->beta = beta;
+  s->n = n; for (int i = 0; i < n; i++) { s->mv[i] = mv[i]; s->mf[i] = mf ? mf[i] : 0; }
+  s->alpha = alpha > *best ? alpha : *best; s->best = *best; s->bestMove = *bestMove; s->next = 0; s->stop = 0; s->lock = 0;
+  s->parent = curSP; spParamsPut(s);
+  __atomic_and_fetch(&s->word, ~511, __ATOMIC_ACQ_REL);   /* open */
+  SPt *const saved = curSP;
+  curSP = s;
+  spWork(s, 1);
+  __atomic_or_fetch(&s->word, 256, __ATOMIC_ACQ_REL);   /* closed: no more joins */
+  int ab = aborted;
+  if (ab) spStop(s);
+  aborted = 0;
+  while (__atomic_load_n(&s->word, __ATOMIC_ACQUIRE) & 255) {   /* the helpers still on it: help below it meanwhile */
+    SPt *y = s->stop ? 0 : spFind(s);
+    if (!y || !spHelp(y, s)) checkTime();   /* (the lead's deadline; the simulation's clock) */
+    if (aborted == 1) { ab = 1; spStop(s); }
+    aborted = 0;
+  }
+  curSP = saved;
+  spParamsGet(s);
+  if (!ab && gStop) ab = 1;
+  if (chainStopped(saved)) { if (!ab) ab = 2; }   /* above it was stopped: this result is not complete */
+  else if (ab == 2) ab = 0;                      /* its own cut-off (best >= beta) */
+  aborted = ab;
+  *best = s->best; *bestMove = s->bestMove;
+  spFree(s);
+  return 1;
+}
+EXPORT(mt_split) void mt_split(int d, int e) { if (d > 0) SPLIT_D = d; if (e > 0) SPLIT_E = e; }
+/* a helper (engine.js in YBW mode): take moves at the split points until the search is over (mt_stop); returns its nodes */
+EXPORT(mt_idle) double mt_idle(void) {
+  nodes = 0; deadline = 1e300; nodeMax = 0; jumpAt = 0; aborted = 0; curSP = 0; nextChk = CHK_Q;
+  __atomic_add_fetch(&gIdle, 1, __ATOMIC_ACQ_REL);
+  while (!__atomic_load_n(&gStop, __ATOMIC_ACQUIRE)) {
+    SPt *y = spFind(0);
+    if (!y) { (void)now(); continue; }
+    __atomic_sub_fetch(&gIdle, 1, __ATOMIC_ACQ_REL);
+    if (!spHelp(y, 0)) (void)now();
+    aborted = 0;
+    __atomic_add_fetch(&gIdle, 1, __ATOMIC_ACQ_REL);
+  }
+  __atomic_sub_fetch(&gIdle, 1, __ATOMIC_ACQ_REL);
+  return nodes;
+}
+/* the root (the lead in YBW mode): engine.js rootPVS(pos, moves, depth, mode, alpha, beta) with the moves in root_mv().
+   exact: the solver (scores in discs), else the midgame search to depth. root_info(0 / 1 / 2): the best move so far, its
+   index, its score (also after a stop: engine.js PART). Alone (no idle helper) the same nodes and values as rootPVS. */
+static i8 ROOTMV[64];
+EXPORT(root_mv) i8 *root_mv(void) { return ROOTMV; }
+EXPORT(root_info) int root_info(int k) { return k == 0 ? gRootMove : k == 1 ? gRootIdx : gRootScore; }
+EXPORT(root_mt) int root_mt(u32 pl, u32 ph, u32 ol, u32 oh, int exact, int depth, int alpha, int beta, int n) {
+  const u64 P = (u64)ph << 32 | pl, O = (u64)oh << 32 | ol;
+  const int empties = 64 - pc(P | O);
+  gRootMove = -1; gRootIdx = -1; gRootScore = 0; curSP = 0;
+  if (n <= 0) return 0;
+  if (exact) gRootE = empties;
+  int best, bestMove = ROOTMV[0];
+  { const int m = ROOTMV[0]; const u64 f = flips(m, P, O), nP = P | f | (1ULL << m), nO = O & ~f;
+    best = exact ? -solve(nO, nP, -beta, -alpha, empties - 1, 1, 0) : -searchE(nO, nP, depth - 1, -beta, -alpha, 1, 0);
+    if (aborted) return 0;
+    gRootMove = m; gRootScore = best; gRootIdx = 0; }
+  int a = alpha > best ? alpha : best;
+  if (a >= beta || n < 2) return best;
+  if (gIdle > 0 && splitHere(exact, P, O, exact ? empties : depth, alpha, beta, -1, ROOTMV + 1, 0, n - 1, &best, &bestMove)) return aborted ? 0 : best;
+  for (int i = 1; i < n; i++) {   /* alone: exactly rootPVS */
+    const int m = ROOTMV[i]; const u64 f = flips(m, P, O), nP = P | f | (1ULL << m), nO = O & ~f;
+    int v = exact ? -solve(nO, nP, -a - 1, -a, empties - 1, 1, 0) : -searchE(nO, nP, depth - 1, -a - 1, -a, 1, 0);
+    if (aborted) return 0;
+    if (v > a) { const int lo = v - 1 > a ? v - 1 : a; v = exact ? -solve(nO, nP, -beta, -lo, empties - 1, 1, 0) : -searchE(nO, nP, depth - 1, -beta, -lo, 1, 0); if (aborted) return 0; }
+    if (v > best) { best = v; bestMove = m; gRootMove = m; gRootScore = v; gRootIdx = i; if (v > a) { a = v; if (a >= beta) break; } }
+  }
+  return best;
+}
+#endif
+
 // ------------------------------------------------------------------ exports (boards as 32-bit halves, as in engine.js)
 static inline u64 B(u32 l, u32 h) { return (u64)h << 32 | l; }
 EXPORT(search) int search(u32 pl, u32 ph, u32 ol, u32 oh, int depth, int alpha, int beta, int ply, int passed) { return searchE(B(pl, ph), B(ol, oh), depth, alpha, beta, ply, passed); }
@@ -741,6 +974,7 @@ EXPORT(init) void init(void) {
   for (int s = 0; s < 64; s++) QUAD[s] = (i8)(((s >> 5) << 1) | ((s & 7) >> 2));
 #ifdef MT
   ttAlloc();
+  for (int i = 0; i < NSP; i++) SPS[i].word = 256;   /* (closed until a split point is opened there) */
 #endif
   clear_tt();
 }
