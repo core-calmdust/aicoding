@@ -65,3 +65,8 @@ URL: https://core-calmdust.github.io/aicoding/atlas/  ／ 詳細: repo の atlas
 
 ## ゲーム追加の手順
 GAMES に追加（store 含む）→ i18n.js に hist.<id>（歴史・雑学、14言語）→ READ に進捗読み取り → UPDATES に1行 → icons3d.js にアイコンシーン＋書き出し（書き出したら `atlas/app.js` の `R3` に id を足す。足さないとポータルに3Dアイコンが出ない）→ table3d.js に盤モデル → 3D対局は games/<id>.js → ゲームページに `HeaderBar.init` を入れておけば、ポータル版でもロゴ横のゲーム名・メニューが自動で出る
+
+## 読み込みの軽量化（2026-11-10）
+- ゲームごとの3Dモデル・卓プレイ（games/）・ルール（rules/）と、ludo・carrom・crokinole・hockey のエンジンは、atlas/index.html に直接書かず atlas/lazy.js の GROUPS で必要になった時に読み込む（盤を開く・ルールを開く・ヒストリアを開く時。カードにカーソルが乗った時に先読み）。初回の読み込みは約8.6MB→約0.9MB。
+- これらのファイルを変えたら、lazy.js の該当パスの ?v= を上げる（index.html ではなく lazy.js）。新しいゲームを足す時も lazy.js の GROUPS に登録する。
+- 画面外の浮かぶ駒（propVis）は IntersectionObserver で止める。
