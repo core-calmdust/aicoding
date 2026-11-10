@@ -84,7 +84,7 @@ URL: https://core-calmdust.github.io/aicoding/amazons/ ／ トップは「囲碁
   - ruins 密林の遺跡：bd-ruins / fr-ruins、1マスずつの切石の目地を法線マップで沈め、縁は手割りの不揃いな石。
 - 駒は立体の像3種（Table3D.amazons.SETS、保存キー atlas-amazons-pc3、デザインタブの「3D盤」の下の「3D駒」の行）：大理石の女戦士像（既定。コリント式兜の胸像と槍）・象牙と黒檀の弓兵（抽象化したスキタイの弓兵：ローブの旋盤形、前に曲がるフリギア帽、リカーブ弓と番えた矢、背中の矢筒、金の帯・トルク）・ブロンズと鉄のクイーン。白黒とも手前（見る人の方）を向く。形・材質は駒どうしで共有（自動インスタンス化）。
 - 3D表示中のページの駒の絵は amazons/img/pc3-<set>-<w|b>.webp（amazons/tools/render_pc3.js ＋ atlas/tools/amzpiece.html で描く）。
-- フル機能版はチェスのスキンと同じレイアウト（2026-11-10 ユーザー指定「パースはつけずに、チェスみたいな感じ」）：3Dは盤だけ（真上から、persp 2.6）。アマゾンはページの駒のまま、立体の像の3/4レンダー（pc3-*.webp、1.02マス、下端をマスに合わせる）で描き、矢・火・焦げ跡もページのもの。立体の駒が3Dで動くのは大百科の3Dビュー（atlas/games/amazons.js）。
+- フル機能版3D（2026-11-10 ユーザー指定）：盤は少しパースをつける（AtlasSkin tilt 26°・persp 2.6、DOMの盤も同じ傾きで重なる）。**UIの位置は2D・3Dで絶対に変えない**：AtlasSkin の pc / outer（3D盤に合わせた配置）は使わず、skin.css の3D用 .app の余白ルールをこのページだけ外し、--vh などを2D盤（html.atlas-2d）と同じにする。3D盤の縁はUIの裏に隠れてよい。2D盤を選んだときはDOMの盤の傾きを外す。駒は立体の像が3Dで動く（DOMの駒は透明でタップ用）。
 - 大百科：atlas/lazy.js（models/amazons.js・games/amazons.js、t3 のみ）、atlas/app.js の FULL_SKIN、盤の行のサムネイル atlas/img/board-amazons-<look>.webp（atlas/tools/boards.html）、3D盤タイル atlas/img/boardic-amazons-<look>.webp（atlas/tools/boardicon.html、盤だけ）、名前は atlas/tables3d.js の N3（temple / ruins）。
 
 ## ポータル・トップ

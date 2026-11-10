@@ -424,7 +424,7 @@
     /* ---------- go ---------- */
     // (2026-11-10) first the controls (unless turned off), then the board picker, then the game
     const goNow = () => { st = E.newRound({ first: youFirst ? 0 : 1, mode }); syncAll(); hud(); later(next, 650); };
-    const pick = () => { if (stopped) return; AC().BoardPick({ lang, list: BDL, cur: look, feel: CFEEL, name: k => T3.boardName ? T3.boardName(k, lang, 'crokinole') : k, thumb: k => T3.boardThumb ? T3.boardThumb('crokinole', k) : '', color: '#b8742a', onPick: setLook, onStart: v => { setLook(v); goNow(); }, onBack: () => { const q = document.getElementById('bvQuit'); if (q) q.click(); } }); };
+    const pick = () => { if (stopped) return; AC().BoardPick({ lang, list: BDL, cur: look, feel: CFEEL, name: k => T3.boardName ? T3.boardName(k, lang, 'crokinole') : k, thumb: k => T3.boardThumb ? T3.boardThumb('crokinole', k) : '', pick: k => new URL('img/pick/crokinole-' + k + '.webp?v=1', location.href).href, color: '#b8742a', onPick: setLook, onStart: v => { setLook(v); goNow(); }, onBack: () => { const q = document.getElementById('bvQuit'); if (q) q.click(); } }); };
     if (howtoOn()) { told = true; howtoCard(pick); } else { told = true; pick(); }
 
     const myTurn = () => !stopped && !over && !busy && st && human(st.turn) && phase === 'place';
