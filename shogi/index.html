@@ -445,7 +445,9 @@ html.atlas-skin .ts-compact #tsNo{color:#9a7a3a}
 .lesson-card.ts-compact > .lh #lsQuit{background:rgba(0,0,0,.2);border:1px solid var(--line);color:var(--muted);cursor:pointer}
 html.atlas-skin .lesson-card.ts-compact > .lh #lsQuit{background:#fff!important;border:2px solid #ead9b6!important;color:#4a5068!important;box-shadow:0 2px 0 #ead9b6!important}
 body.in-lesson:has(#lessonCard.ts-compact) #coachCard:not(.ck-seq){display:none!important}
-body.in-lesson #coachCard.ck-seq.ck-seq{display:block!important}   /* lessons: the 3-move practice's guidance (seqCoachHtml) */
+body.in-lesson #coachCard.ck-seq.ck-seq{display:block!important}
+#coachCard .sq-rv{margin-top:10px}#coachCard .sq-rv h4{margin:0 0 6px;font-size:13.5px;color:var(--accent)}#coachCard .sq-line{margin:0 0 8px;line-height:1.9;font-size:14.5px}#coachCard .sq-line .ok{color:#6fd3a0;font-weight:700}#coachCard .sq-line .df{color:#f2c060;font-weight:700}#coachCard .sq-line .op{color:var(--muted)}
+html.atlas-skin #coachCard .sq-line .ok{color:#1e8a55}html.atlas-skin #coachCard .sq-line .df{color:#b8771a}   /* lessons: the 3-move practice's guidance (seqCoachHtml) */
 #lessonCard.ts-compact :is(#lsHint,#lsAuto,#lsNext,#lsToList){display:none!important}
 #lessonCard:not(.ts-compact) .ts-b{display:none!important}
 #lessonCard.ts-compact .cb-bar .cb-ic.ts-b[data-cap]{gap:6px!important}   /* no hidden text label inside: same caption line as 一覧 */   /* tsume: no coach panel at all (2026-11-10) */
@@ -1615,7 +1617,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="rvtip.js?v=20261107l14"></script>
 <script src="../shared/coachkit.js?v=16l14"></script>
 <script src="../shared/record.js?v=12l14"></script>
-<script src="coach.js?v=14"></script>
+<script src="coach.js?v=15"></script>
 <script src="coach-i18n.js?v=20261107l14"></script>
 <script>
 'use strict';
@@ -4817,7 +4819,14 @@ function seqCoachHtml() {
     const g = { best: 0, good: 1, dubious: 2, bad: 3 }[st.q], title = st.ans ? sqt('ans', { i: st.i + 1, m: st.kif }) : sqt('step', { i: st.i + 1, m: st.kif, q: t('q.' + st.q) }) + '　' + t('ls.pts', { p: st.pts });
     h += CoachKit.verdict(st.ans ? 2 : g, esc(title), st.why);
   }
-  if (S.done) h += `<p class="ck-muted"><b>${esc(sqt('total', { n: SEQ_N, p: S.total }))}</b></p>`;
+  if (S.done) {
+    h += `<p class="ck-muted"><b>${esc(sqt('total', { n: SEQ_N, p: S.total }))}</b></p>`;
+    const RV = { ja: ['振り返り：最善の手順', '盤で再生', '手順を調べています…'], en: ['Review: the best line', 'Play on the board', 'Working out the line…'], zh: ['复盘：最佳手顺', '在棋盘上播放', '正在计算手顺…'], 'zh-TW': ['復盤：最佳手順', '在棋盤上播放', '正在計算手順…'], ko: ['복기: 최선의 수순', '판에서 재생', '수순을 찾는 중…'] }[LANG] || ['Review: the best line', 'Play on the board', 'Working out the line…'];
+    if (S.ideal) {
+      const ks = lineKanji(lesson.cur.sfen, S.ideal), mine = lesson.played;
+      h += `<div class="ck-sec sq-rv"><h4>${esc(RV[0])}</h4><p class="sq-line">${ks.map((k, i) => `<span class="${i % 2 ? 'op' : mine[i] === S.ideal[i] ? 'ok' : 'df'}">${esc(k)}</span>`).join(' ')}</p><button type="button" class="ck-rvgo" data-sq="play">▶ ${esc(RV[1])}</button></div>`;
+    } else h += `<p class="ck-calc">${esc(RV[2])}</p>`;
+  }
   else if (S.busy) h += `<p class="ck-calc">${esc(sqt(S.busy))}</p>`;
   return h;
 }
@@ -4891,6 +4900,28 @@ function seqFinish(S, over) {
   S.total = Math.round(pts.reduce((a, x, i) => a + x * SEQ_W[i], 0)); S.done = true; S.busy = null;
   lessonScored(S.total, { seq: true });
   seqShow();
+  seqIdeal(S);
+}
+// 振り返り (2026-11-10): the best line through the whole practice from the problem position — the main book move for both
+// sides while in book, the engine's move after that — shown under the verdicts with a button that plays it on the board
+async function seqIdeal(S) {
+  const pr = lesson.cur, line = [], q = new E.Position(); q.setSfen(pr.sfen);
+  for (let ply = 0; ply < SEQ_N * 2 - 1; ply++) {
+    if (!q.hasLegalMove()) break;
+    const bk = seqBook(q, pr, ply === 0);
+    let u = bk ? bk[0].u : null;
+    if (!u) { const r = await aiCall({ type: 'think', sfen: pr.sfen, moves: line.slice(), opts: { time: 500 } }); if (!lesson || lesson.seq !== S) return; u = r && r.move; }
+    if (!u) break;
+    line.push(u); q.doMove(q.fromUsi(u));
+  }
+  if (!lesson || lesson.seq !== S) return;
+  S.ideal = line; seqShow();
+}
+function seqPlayIdeal() {
+  const S = lesson && lesson.seq, pr = lesson && lesson.cur; if (!S || !S.ideal) return;
+  const tok = S.ptok = (S.ptok || 0) + 1;
+  lessonGame(pr.sfen, []);
+  S.ideal.forEach((u, i) => setTimeout(() => { if (!lesson || lesson.seq !== S || S.ptok !== tok) return; lessonGame(pr.sfen, S.ideal.slice(0, i + 1)); playPiece(false); }, 700 * (i + 1)));
 }
 async function seqAnswer() {   // 「答え」: the best move is played for you (0 points for it) and explained
   const S = lesson.seq, pr = lesson.cur; if (!S || S.done || !lesson.waiting) return;
