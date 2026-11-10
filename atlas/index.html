@@ -998,6 +998,10 @@ button.nct[data-go]:hover{transform:translateY(-1px);box-shadow:0 3px 0 var(--li
 @media (prefers-reduced-motion:reduce){.rfx::before,.dic::after,.dic .art::after,.dic .art::before{animation:none!important}}
 /* the name card wearing an SSR / UR: the same running light round its edge, a soft glow, a twinkle in the corner */
 .dprev.nr3,.dprev.nr4{position:relative}
+.prof.nr4{box-shadow:0 6px 0 #e9dcc0,0 0 26px 4px rgba(255,170,60,.45)!important}
+.prof.nr3{box-shadow:0 6px 0 #e9dcc0,0 0 26px 4px rgba(180,107,255,.4)!important}
+.prof > .rfx{position:absolute;inset:0;z-index:6;padding:3.5px;border-radius:inherit}
+.prof > .ntw{position:absolute;top:8px;right:10px;width:18px;height:18px;z-index:7;pointer-events:none;background:conic-gradient(from 45deg,transparent 0 10%,#fff 12.5%,transparent 15% 35%,#fff 37.5%,transparent 40% 60%,#fff 62.5%,transparent 65% 85%,#fff 87.5%,transparent 90%);-webkit-mask:radial-gradient(circle,#000 0 18%,transparent 60%);mask:radial-gradient(circle,#000 0 18%,transparent 60%);animation:dicTw 2.2s ease-in-out infinite}
 .dprev.nr4{box-shadow:0 0 0 1px rgba(255,255,255,.6),0 0 26px 4px rgba(255,170,60,.45),0 10px 24px rgba(60,40,10,.14)}
 .dprev.nr3{box-shadow:0 0 0 1px rgba(255,255,255,.6),0 0 26px 4px rgba(180,107,255,.4),0 10px 24px rgba(60,40,10,.14)}
 .dprev > .rfx{position:absolute;z-index:6;padding:3.5px}
@@ -1610,7 +1614,8 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 .recp .rtt h3{margin:2px 0 0;font-family:var(--round);font-size:26px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .recp .rx{flex:none;width:44px;height:44px;border-radius:50%;border:2px solid var(--line);background:#fff;box-shadow:0 3px 0 var(--line);font-size:26px;line-height:1;color:var(--ink2);cursor:pointer}
 .recp .rbd{overflow:auto;padding:14px 18px 22px;-webkit-overflow-scrolling:touch}
-.recp:has(.rtabs){height:min(860px,100%)}.recp:has(.rtabs) .rbd{flex:1 1 auto;min-height:0}   /* with tabs: one fixed size, switching tabs never resizes the box (2026-11-10) */
+.recp:has(.rtabs){height:min(1000px,100%)}
+@media (min-width:820px){.recp{width:min(1040px,92vw)}.recp:has(.rtabs){height:min(1000px,92vh)}}   /* PC: as large as the window allows (2026-11-10) */.recp:has(.rtabs) .rbd{flex:1 1 auto;min-height:0}   /* with tabs: one fixed size, switching tabs never resizes the box (2026-11-10) */
 .recp h4{margin:18px 4px 8px;font-family:var(--round);font-size:15px;color:var(--ink2);display:flex;align-items:center;gap:8px}.recp h4 em{font-style:normal;font-size:13px;color:var(--mint2)}
 .recp .rdd{position:relative;display:inline-block;margin-bottom:12px;z-index:2}
 .recp .rddb{display:inline-flex;align-items:center;gap:10px;height:42px;padding:0 16px 0 18px;border-radius:99px;border:2px solid var(--line);background:#fff;box-shadow:0 3px 0 var(--line);font-weight:900;font-size:15px;color:var(--ink);cursor:pointer}
@@ -1897,6 +1902,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=31"></script>
 <script src="updnews.js?v=7"></script>
 <script src="npc/npc.js?v=15"></script>
-<script src="app.js?v=264"></script>
+<script src="app.js?v=265"></script>
 </body>
 </html>
