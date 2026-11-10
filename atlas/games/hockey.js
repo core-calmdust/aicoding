@@ -297,7 +297,8 @@ html.hk-on #bv > .npc-float .npc-pic{width:36px!important;height:36px!important}
     function pause() { if (phase !== 'play' || paused) return; paused = true; toast(tr('paused', lang)); }
     function resume() { if (!paused) return; paused = false; last = performance.now(); if (toastEl) toastEl.remove(); }
     const onVis = () => { if (document.hidden) pause(); };
-    document.addEventListener('visibilitychange', onVis); addEventListener('blur', onVis);
+    const onBlur = () => pause();   // (2026-11-10) the window losing focus (another window / app in front) pauses too, not only a hidden tab
+    document.addEventListener('visibilitychange', onVis); addEventListener('blur', onBlur);
     function loop(now) {
       if (stopped || over) return;
       raf = requestAnimationFrame(loop);
@@ -336,7 +337,7 @@ html.hk-on #bv > .npc-float .npc-pic{width:36px!important;height:36px!important}
       stop() {
         stopped = true; cancelAnimationFrame(raf); cancelAnimationFrame(padRaf); timers.forEach(clearTimeout);
         ctx.el.removeEventListener('pointerdown', onDown); ctx.el.removeEventListener('pointermove', onMove); removeEventListener('pointerup', onUp, true); removeEventListener('pointercancel', onUp, true);
-        removeEventListener('keydown', onKey); removeEventListener('keyup', onKey); removeEventListener('resize', onResize); document.removeEventListener('visibilitychange', onVis); removeEventListener('blur', onVis);
+        removeEventListener('keydown', onKey); removeEventListener('keyup', onKey); removeEventListener('resize', onResize); document.removeEventListener('visibilitychange', onVis); removeEventListener('blur', onBlur);
         ctx.el.style.touchAction = prevTouch; css.remove(); if (toastEl) toastEl.remove(); if (menuEl) menuEl.remove(); document.querySelectorAll('.hkbig,.hkfx').forEach(e => e.remove());
         if (T3.turn) T3.turn(null);
         document.documentElement.classList.remove('hk-on'); removeEventListener('resize', barFit);
