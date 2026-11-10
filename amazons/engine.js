@@ -712,7 +712,11 @@ function canWin(pos, k) {
   const me = pos.turn, op = 3 - me;
   if (win1(pos).length) return true;
   if (k <= 1) return false;
-  for (const m of pos.moves()) {
+  // the moves that leave the defender the fewest empty squares first (the same answer, found sooner)
+  const M = pos.moves(), sc = M.map(m => { pos.play(m); const n = emptyAround(pos, op).length; pos.unplay(m); return n; });
+  const ord = M.map((_, i) => i).sort((x, y) => sc[x] - sc[y]);
+  for (const i of ord) {
+    const m = M[i];
     pos.play(m);
     const ok = pos.canMove(op) && allLose(pos, k - 1);
     pos.unplay(m);
@@ -759,10 +763,48 @@ function duelReply(start, moves, n) {
   return { move: best };
 }
 // trap: the moves after which the amazon on e has no empty square next to it (it may still be the defender's turn to move)
-function trapGood(start, moves, e) {
-  const { pos } = replay(start, moves), out = [];
-  for (const m of pos.moves()) { pos.play(m); let n = 0; for (const t of NB[e]) if (!pos.sq[t]) n++; pos.unplay(m); if (!n && pos.sq[e] && pos.sq[e] !== ARROW) out.push(m); }
+// trap: box in the marked enemy amazon (the one on e in the puzzle's start position, followed through its moves: pos.q[k]) —
+// no empty square left next to it — within n of your moves, whatever the replies (it may run away meanwhile)
+const trapIdx = (start, e) => { const p = replay(start, []).pos; for (let k = 0; k < 8; k++) if (p.q[k] === e) return k; return -1; };
+function boxed(pos, k) { const f = pos.q[k]; if (f < 0) return true; for (const t of NB[f]) if (!pos.sq[t]) return false; return true; }
+const freeAt = (pos, k) => { const f = pos.q[k]; let n = 0; if (f >= 0) for (const t of NB[f]) if (!pos.sq[t]) n++; return n; };
+function trapWin(pos, k, n) {   // the attacker to move
+  if (--duelBudget < 0) return false;
+  const op = 3 - pos.turn, M = pos.moves(), sc = M.map(m => { pos.play(m); const v = freeAt(pos, k); pos.unplay(m); return v; });
+  const ord = M.map((_, i) => i).sort((x, y) => sc[x] - sc[y]);
+  for (const i of ord) {
+    if (n === 1 && sc[i] > 0) break;   // (our last move: not boxed now = not boxed)
+    pos.play(M[i]); const ok = boxed(pos, k) || !pos.canMove(op) || (n > 1 && trapAll(pos, k, n - 1)); pos.unplay(M[i]);
+    if (ok) return true; if (duelBudget < 0) return false;
+  }
+  return false;
+}
+function trapAll(pos, k, n) {   // the defender to move: every reply still gets boxed within n
+  const R = pos.moves(); if (!R.length) return true;
+  const sc = R.map(r => { pos.play(r); const v = freeAt(pos, k); pos.unplay(r); return v; });
+  if (n === 1 && sc.some(v => v > 2)) return false;   // (one move of ours closes two squares at most; moving our amazon away only opens)
+  const ord = R.map((_, i) => i).sort((x, y) => sc[y] - sc[x]);
+  for (const i of ord) { pos.play(R[i]); const ok = trapWin(pos, k, n); pos.unplay(R[i]); if (!ok || duelBudget < 0) return false; }
+  return true;
+}
+function trapGood(start, moves, e, n, budget) {
+  const k = trapIdx(start, e); if (k < 0) return [];
+  const { pos } = replay(start, moves), op = 3 - pos.turn, out = [];
+  duelBudget = budget || 4e6; n = n || 1;
+  for (const m of pos.moves()) {
+    pos.play(m); const ok = boxed(pos, k) || !pos.canMove(op) || (n > 1 && trapAll(pos, k, n - 1)); pos.unplay(m);
+    if (ok) out.push(m); if (duelBudget < 0) return null;
+  }
   return out;
+}
+// the defender's most stubborn reply in a trap: one that escapes if there is one, else the one leaving the marked amazon most room
+function trapReply(start, moves, e, n) {
+  const k = trapIdx(start, e), { pos } = replay(start, moves), R = pos.moves();
+  if (!R.length || k < 0) return { move: -1 };
+  duelBudget = 2e6;
+  let best = R[0], bs = -Infinity;
+  for (const r of R) { pos.play(r); const room = freeAt(pos, k), esc = n >= 1 && !trapWin(pos, k, n); pos.unplay(r); const s = (esc ? 1000 : 0) + room * 10 + pos.mobility(pos.turn === P1 ? P2 : P1) / 100; if (s > bs) { bs = s; best = r; } }
+  return { move: best };
 }
 // separated endgames: every amazon alone in its own room (a king-connected area of empty squares, closed by arrows and the
 // edge). room(pos, f): its squares; fillMax: the most moves the amazon can still make there (exact, memo on the room's
@@ -802,10 +844,39 @@ function endGood(start, moves) {
   for (const m of pos.moves()) { pos.play(m); const W = sideMoves(pos, me); pos.unplay(m); if (W >= B) out.push(m); }
   return out;
 }
+// endgame read to the end: the side to move wins (the last to move wins) — an exact search with a memo, for positions with few
+// empty squares left (every move fills one: the depth is the number of empty squares at most). null: out of budget
+const SOLVE = new Map(); let solveBudget = 0;
+function solveWin(pos) {
+  if (--solveBudget < 0) throw SOLVE;
+  const key = pos.h1 * 2097152 + (pos.h2 >>> 11), c = SOLVE.get(key);   // (53 bits: exact in a double) if (c !== undefined) return c;
+  const M = pos.moves(); let win = false;
+  // (the moves that leave the opponent the fewest moves first: a win is found sooner)
+  if (M.length > 6) { const sc = M.map(m => { pos.play(m); const v = pos.mobility(pos.turn); pos.unplay(m); return v; }); const o = M.map((_, i) => i).sort((a, b) => sc[a] - sc[b]); for (const i of o) { pos.play(M[i]); const r = !solveWin(pos); pos.unplay(M[i]); if (r) { win = true; break; } } }
+  else for (const m of M) { pos.play(m); const r = !solveWin(pos); pos.unplay(m); if (r) { win = true; break; } }
+  if (SOLVE.size > 3e6) SOLVE.clear();
+  SOLVE.set(key, win); return win;
+}
+function readGood(start, moves, budget) {
+  const { pos } = replay(start, moves), out = [];
+  solveBudget = budget || 3e6;
+  try { for (const m of pos.moves()) { pos.play(m); const lose = !solveWin(pos); pos.unplay(m); if (lose) out.push(m); } } catch (e) { if (e === SOLVE) return null; throw e; }
+  return out;
+}
+// the defender's reply in a lost endgame: the one that makes the game last longest (most moves left for itself), a win if any
+function readReply(start, moves) {
+  const { pos } = replay(start, moves), R = pos.moves(), me = pos.turn;
+  if (!R.length) return { move: -1 };
+  solveBudget = 3e6;
+  let best = R[0], bs = -Infinity;
+  for (const r of R) { pos.play(r); let w = false; try { w = !solveWin(pos); } catch (e) {} const s = (w ? 1e4 : 0) + pos.mobility(me) * 10 - pos.mobility(pos.turn); pos.unplay(r); if (s > bs) { bs = s; best = r; } }
+  return { move: best };
+}
 // the page's puzzle questions: the good moves from the shown position for a puzzle of kind k
 function pzGood(m) {
-  if (m.kind === 'trap') return trapGood(m.start, m.moves, m.e);
+  if (m.kind === 'trap') return trapGood(m.start, m.moves, m.e, m.n);
   if (m.kind === 'end') return endGood(m.start, m.moves);
+  if (m.kind === 'read') return readGood(m.start, m.moves);
   return duelGood(m.start, m.moves, m.n);
 }
 // ---------------------------------------------------------------- notation
@@ -825,7 +896,7 @@ const hops = () => 1;
 
 const API = { get nodes() { return nodes; }, get evals() { return evals; }, P1, P2, WIN, WINT, ARROW, RULES, RULE_ORDER, setRule, get rule() { return 'std'; }, N, NN, RC, RAYS, NB, START,
   sqAt, sqName, sqIdx, mv, mFrom, mTo, mArrow, isRemove, hops, Pos, path, arrowPath, captured, name, parse, replay, judge, clearLine,
-  get wasm() { return !!WA; }, LEVELS, MC, mcts, mcPV, useCore: C => { MX = C; }, think, analyze, cands: candsJob, candList: cands, evaluate, evalFor, kindOf, EW, pvOf, bestMove, mtPlan, mtV, mtKids, mtFin, win1, canWin, duelGood, duelReply, trapGood, endGood, fillMax, roomOf, sideMoves, emptyAround, pzGood, set SH(t) { SH = t; }, get SH() { return SH; } };
+  get wasm() { return !!WA; }, LEVELS, MC, mcts, mcPV, useCore: C => { MX = C; }, think, analyze, cands: candsJob, candList: cands, evaluate, evalFor, kindOf, EW, pvOf, bestMove, mtPlan, mtV, mtKids, mtFin, win1, canWin, duelGood, duelReply, trapGood, trapReply, trapWin, trapAll, trapIdx, boxed, freeAt, endGood, readGood, readReply, solveWin, fillMax, roomOf, sideMoves, emptyAround, pzGood, set SH(t) { SH = t; }, get SH() { return SH; } };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') {
   // ?…&mt=1: the lead of the MCTS on several threads (shared/mtengine.js): core_mt.wasm on the shared memory sent with the first
@@ -860,7 +931,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
         } else if (m.type === 'cands') self.postMessage({ id: m.id, type: 'result', ...candsJob(m.start, m.moves, m.time || 1200, m.k, m.plies, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth })) });
         else if (m.type === 'newgame') { TT.clear(); CC.clear(); self.postMessage({ id: m.id, type: 'result' }); }
         else if (m.type === 'pzgood') { const g = pzGood(m); self.postMessage({ id: m.id, type: 'result', list: g }); }
-        else if (m.type === 'duelReply') self.postMessage({ id: m.id, type: 'result', ...duelReply(m.start, m.moves, m.n) });
+        else if (m.type === 'duelReply') self.postMessage({ id: m.id, type: 'result', ...(m.kind === 'trap' ? trapReply(m.start, m.moves, m.e, m.n) : m.kind === 'read' ? readReply(m.start, m.moves) : duelReply(m.start, m.moves, m.n)) });
         else if (m.type === 'mtplan') self.postMessage({ id: m.id, type: 'result', ...mtPlan(m) });
         else if (m.type === 'mtv') self.postMessage({ id: m.id, type: 'result', ...mtV(m) });
         else if (m.type === 'mtkids') self.postMessage({ id: m.id, type: 'result', ...mtKids(m) });

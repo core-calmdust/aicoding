@@ -108,7 +108,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=7';
+const ENGINE_URL = 'engine.js?v=8';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -1580,19 +1580,19 @@ $('#lsNext').onclick = () => {
 $('#lsQuit').onclick = () => quitSpecial();
 $('#lsList').onclick = () => { if (!lesson) return; openLessons(null, cOf(curStep())); };
 // ====================================================================== puzzles (PZBook v2; tools/gen_puzzles.js → puzzles.json, exact answers)
-// Themes: w1 / w2 leave the opponent without a move within N of your moves (the opponent defends as stubbornly as it can),
-// t1 box in the marked amazon, e1 a split board: keep as many moves as the opponent (the engine counts every room exactly).
+// Themes (version 2, 2026-11-11): w2 / w3 leave the opponent without a move within N of your moves (the opponent defends as
+// stubbornly as it can), t2 box in the marked amazon within 2 (it runs), e3 an endgame read to the end (engine.js solveWin).
 let PUZZLES = null, pzLevel = 0;
-const puzzlesReady = fetch('puzzles.json?v=1').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
-const PZ_STORE = STORE + '-puzzles';
+const puzzlesReady = fetch('puzzles.json?v=2').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
+const PZ_STORE = STORE + '-puzzles2';   // (2026-11-11: the puzzles were renewed — version 2; the first day's records stay under -puzzles)
 function pzProgress() { try { return JSON.parse(localStorage.getItem(PZ_STORE) || '{}') || {}; } catch (e) { return {}; } }
 const pzKey = (id, j) => id + '-' + j;
 const starVal = x => x === true ? 3 : (+x || 0);
 function pzRecs(T, pr) { pr = pr || pzProgress(); return T.puzzles.map((_, j) => starVal(pr[pzKey(T.id, j)])); }
-function themeTier(T) { return { w1: 1, t1: 1, e1: 2, w2: 3 }[T.id] || 1; }
+function themeTier(T) { return { w2: 2, t2: 2, w3: 3, e3: 3 }[T.id] || 1; }
 function showPzView(v) { ['pzListView', 'pzGridView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
 const PZ_LAST = STORE + '-pz-last', PZ_TAB = STORE + '-pz-tab', PZ_GRPS = ['Win', 'Tac', 'End'], PZ_GIC = { Win: 'crown', Tac: 'target', End: 'grid' };
-const PZ_TSVG = { t1: '<rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="12" cy="12" r="3"/>', e1: '<path d="M4 4h16v16H4zM12 4v16M4 12h16"/>' };
+const PZ_TSVG = { t2: '<rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="12" cy="12" r="3"/>', e3: '<path d="M4 4h16v16H4zM12 4v16M4 12h16"/>' };
 const pzBadge = T => PZ_TSVG[T.id] ? `<svg viewBox="0 0 24 24" aria-hidden="true">${PZ_TSVG[T.id]}</svg>` : `<b class="gl">${(T.id.match(/\d+$/) || [''])[0]}</b>`;
 const pzThumbSVG = (T, j, P) => miniSVG(P.s, { cls: 'lxb', simple: true, flip: P.s.side === P2, marks: P.e !== undefined ? { [P.e]: 'ng' } : {} });
 function pzThumbOf(T, j) { if (j < 0) j = T.puzzles.length - 1; const P = T.puzzles[j]; return P && P.s ? { board: pzThumbSVG(T, j, P), tm: `<span class="pdisc p${P.s.side === P2 ? 2 : 1}"></span>` } : { board: '' }; }
@@ -1637,7 +1637,9 @@ $('#pzGrid').onclick = e => {
 };
 $('#pzBack').onclick = () => openPuzzles();
 $('#pzClose').onclick = () => hideOverlay('#puzzleOverlay');
-const pzMarks = Pz => Pz.P.e !== undefined ? [{ at: Pz.P.e, cls: 'ng' }] : [];
+// the marked amazon of a trap, followed through its moves (its index in pos.q stays the same)
+const pzTarget = Pz => { if (Pz.P.e === undefined) return -1; if (Pz.tk === undefined) Pz.tk = E.trapIdx(Pz.P.s, Pz.P.e); return Pz.tk < 0 ? -1 : posAt(cur).pos.q[Pz.tk]; };
+const pzMarks = Pz => { const at = pzTarget(Pz); return at >= 0 ? [{ at, cls: 'ng' }] : []; };
 function startPuzzle(L, j, daily) {
   hideOverlay('#puzzleOverlay');
   stashGame(); lesson = null; document.body.classList.remove('in-lesson');
@@ -1665,21 +1667,23 @@ function renderPuzzleCard() {
 function pzStatus(html) { $('#pzStatus').innerHTML = html; }
 // the moves of the puzzle side that still reach the goal from the shown position (engine.js pzGood: exact)
 function goodReq(Pz) { return request('ai', { type: 'pzgood', kind: Pz.kind, n: Pz.n - Pz.used, e: Pz.P.e, moves: moves.slice(0, cur) }).then(r => r && r.list ? r.list : null); }
-function replyReq(n) { return request('ai', { type: 'duelReply', moves: moves.slice(0, cur), n }).then(r => r && r.move != null ? r.move : null); }
+function replyReq(n, Pz) { return request('ai', { type: 'duelReply', kind: Pz && Pz.kind, e: Pz && Pz.P.e, moves: moves.slice(0, cur), n }).then(r => r && r.move != null ? r.move : null); }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const pzWon = Pz => { const st = statusAt(cur); return st.over && st.winner === Pz.me; };
 // the opponent answers (its most stubborn reply); true when the puzzle is solved by then
 async function pzOpponent(Pz, tok) {
   if (pzWon(Pz)) return true;
   const st = statusAt(cur); if (st.over) return false;
-  const r = await replyReq(Pz.n - Pz.used);
+  const r = await replyReq(Pz.n - Pz.used, Pz);
   if (r == null || r < 0 || puzzle !== Pz || tok !== busyToken) return false;
   const before = posAt(cur).pos.clone();
   await sleep(380); if (puzzle !== Pz || tok !== busyToken) return false;
   playMove2(r); Pz.lastReply = mvIn(before, r);
   await sleep(moveDur(r, before) + 120);
-  return pzWon(Pz);
+  return pzWon(Pz) || pzDone(Pz);
 }
+// a trap is done when the marked amazon has no empty square next to it
+const pzDone = Pz => { if (Pz.kind !== 'trap') return false; Pz.tk = Pz.tk === undefined ? E.trapIdx(Pz.P.s, Pz.P.e) : Pz.tk; return Pz.tk >= 0 && E.boxed(posAt(cur).pos, Pz.tk); };
 async function puzzleMove(m) {
   const Pz = puzzle; Pz.busy = true; lessonMarks = [];
   const left = Pz.n - Pz.used, tok = busyToken;
@@ -1695,16 +1699,18 @@ async function puzzleMove(m) {
     moves = moves.slice(0, cur - 1); cur = moves.length; Pz.used--;
     lessonMarks = pzMarks(Pz); if (good[0] !== undefined) lessonMarks.push(...moveMarks(good[0], 'ok')); lessonMarks.push(...moveMarks(m, 'ng'));
     Pz.busy = false; Pz.state = 'play'; update(false); playChime(false); renderPuzzleCard();
-    const why = Pz.kind === 'trap' ? t('pz.bl.trap', { m: mvIn(before, m) }) : Pz.kind === 'end' ? t('pz.bl.end', { m: mvIn(before, m) }) : t(left <= 1 ? 'pz.bl.last' : 'pz.bl.reach', { n: left, m: mvIn(before, m) });
+    const why = Pz.kind === 'trap' ? t('pz.bl.trap', { m: mvIn(before, m) }) : Pz.kind === 'end' ? t('pz.bl.end', { m: mvIn(before, m) }) : Pz.kind === 'read' ? t('pz.bl.read', { m: mvIn(before, m) }) : t(left <= 1 ? 'pz.bl.last' : 'pz.bl.reach', { n: left, m: mvIn(before, m) });
     pzStatus(`<b class="ng">${t('fb.bad')}</b> ${why} ${t('pz.again')}`);
     return;
   }
   await sleep(dm + 60);
   if (puzzle !== Pz || tok !== busyToken) return;
-  if (Pz.kind !== 'duel' || pzWon(Pz) || await pzOpponent(Pz, tok)) { if (puzzle === Pz) puzzleSolved(); return; }
+  lessonMarks = pzMarks(Pz); update(false);
+  if (Pz.kind === 'end' || pzWon(Pz) || pzDone(Pz) || await pzOpponent(Pz, tok)) { if (puzzle === Pz) puzzleSolved(); return; }
+  lessonMarks = pzMarks(Pz); update(false);
   if (puzzle !== Pz || tok !== busyToken) return;
   Pz.busy = false; renderPuzzleCard(); boardEl.classList.toggle('can', canHumanPlay());
-  pzStatus(t('pz.reply', { m: Pz.lastReply || '', n: Pz.n - Pz.used }));
+  pzStatus(t('pz.reply', { m: Pz.lastReply || '', n: Math.max(1, Pz.n - Pz.used) }));
 }
 function puzzleSolved() {
   const Pz = puzzle; if (!Pz) return;
@@ -1716,7 +1722,7 @@ function puzzleSolved() {
   const after = pzRecs(Pz.T, pr), ev = PZBook.events(before, after, Pz.j);
   if (Pz.daily) dailySolved(Pz.daily, Pz.hinted);
   PZBook.setLang(LANG);
-  const sub = Pz.kind === 'trap' ? t('pz.solvedTrap') : Pz.kind === 'end' ? t('pz.solvedEnd') : t('pz.solvedSub', { n: Pz.used });
+  const sub = Pz.kind === 'trap' ? t('pz.solvedTrap') : Pz.kind === 'end' ? t('pz.solvedEnd') : Pz.kind === 'read' ? t('pz.solvedRead') : t('pz.solvedSub', { n: Pz.used });
   pzStatus(`<b class="ok">${t('pz.solved')}</b> ${sub}` + (Pz.daily ? `<br>🔥 ${t('daily.streak', { n: dailyInfo().streak })}` : '') + PZBook.solved({ stars, recs: after, j: Pz.j, events: ev }));
   playChime(true); confetti(); if (ev.length) setTimeout(confetti, 600); renderPuzzleCard();
 }
