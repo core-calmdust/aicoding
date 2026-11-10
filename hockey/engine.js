@@ -96,7 +96,7 @@
       if (p.wait > 0) { p.wait -= h; continue; }
       const dmp = Math.exp(-DAMP * h); p.vx *= dmp; p.vy *= dmp;
       if (p.fire > 0) p.fire -= h;
-      const cap = p.fire > 0 ? s.vsmash * 1.15 : s.vsmash, sp = Math.hypot(p.vx, p.vy); if (sp > cap) { const ns = cap + (sp - cap) * Math.exp(-h / .05); p.vx *= ns / sp; p.vy *= ns / sp; }   // (over the cap: eases down fast)
+      const cap = p.fire > 0 ? s.vsmash * 1.15 : p.boost > s.t ? s.vsmash : s.vmax, sp = Math.hypot(p.vx, p.vy); if (sp > cap) { const ns = cap + (sp - cap) * Math.exp(-h / .18); p.vx *= ns / sp; p.vy *= ns / sp; }   // (over the table's pace — just struck — it eases down within a few tenths of a second)
       p.x += p.vx * h; p.y += p.vy * h;
       // side walls
       if (p.x < -W / 2 + RP) { p.x = -W / 2 + RP; p.vx = Math.abs(p.vx) * E_WALL; wall(s, p); } else if (p.x > W / 2 - RP) { p.x = W / 2 - RP; p.vx = -Math.abs(p.vx) * E_WALL; wall(s, p); }
@@ -150,34 +150,36 @@
     if (vn < 0) { p.vx = vx + rvx - (1 + e) * vn * nx; p.vy = vy + rvy - (1 + e) * vn * ny; if (k === 'bumper') { const sp = Math.hypot(p.vx, p.vy); if (sp < 90) { p.vx *= 90 / sp; p.vy *= 90 / sp; } } s.ev.push({ k, x: p.x, y: p.y, v: -vn }); }
   }
   function hitMallet(s, p, m, i) {
+    // (2026-11-10, air-hockey feel) a swing sends the puck where the mallet is moving, faster than the mallet so it gets
+    // away cleanly (then it eases down to the table's pace); for a moment after a strike the same mallet can't touch it
+    // again — no rattling double hits, one sound per strike
+    p.ghost = p.ghost || [0, 0];
+    if (p.ghost[i] > s.t) return;
     const dx = p.x - m.x, dy = p.y - m.y, d = Math.hypot(dx, dy), md = RP + m.r;
-    p.tc = p.tc || [0, 0];
-    if (d >= md + .4) { p.tc[i] = 0; } if (d >= md) return;
-    const fresh = !p.tc[i]; p.tc[i] = 1;   // (one hit sound per contact, not one per sub-step while the mallet keeps pushing)
+    if (d >= md) return;
     const nx = d > 1e-6 ? dx / d : 0, ny = d > 1e-6 ? dy / d : (i === 0 ? -1 : 1);
-    p.x = m.x + nx * md; p.y = m.y + ny * md;
+    const mv = Math.hypot(m.vx, m.vy), into = mv > 1e-6 ? (m.vx * nx + m.vy * ny) / mv : 0;
     const rvx = p.vx - m.vx, rvy = p.vy - m.vy, vn = rvx * nx + rvy * ny;
+    p.x = m.x + nx * md; p.y = m.y + ny * md;
     if (vn >= 0) { s.last = i; return; }
-    p.vx = m.vx + rvx - (1 + E_MAL) * vn * nx; p.vy = m.vy + rvy - (1 + E_MAL) * vn * ny;
-    // (2026-11-10) the swing carries the puck: its direction leans toward where the mallet is moving (felt + grip), and a
-    // mallet that is not pulling back never sends the puck toward its own goal — a sideways / diagonal swing no longer
-    // squirts the puck backward when it meets it a little in front of centre
-    { const mv = Math.hypot(m.vx, m.vy), ps = Math.hypot(p.vx, p.vy);
-      if (mv > 30 && ps > 1e-6) {
-        const fwd = i === 0 ? -1 : 1, mx = m.vx / mv, my = m.vy / mv;
-        let dx2 = p.vx / ps + mx * .8, dy2 = p.vy / ps + my * .8, l = Math.hypot(dx2, dy2) || 1; dx2 /= l; dy2 /= l;
-        if (my * fwd > -.3 && dy2 * fwd < .15) { dy2 = .15 * fwd; dx2 = Math.sign(dx2 || mx || 1) * Math.sqrt(1 - .0225); }   // not pulling back: at least a little forward
-        p.vx = dx2 * ps; p.vy = dy2 * ps;
-      } }
-    // the edge shot: a fast mallet meeting the puck with its side (contact 50–80° off its own direction of travel)
-    const mv = Math.hypot(m.vx, m.vy); let edge = false;
-    if (mv > 70 && !(p.edgeT > s.t)) { const c = (m.vx * nx + m.vy * ny) / mv; if (c > .17 && c < .64) { p.vx *= 1.3; p.vy *= 1.3; edge = true; p.edgeT = s.t + .25; } }
-    // (2026-11-10) the puck may leave a fast mallet faster than the cap (so the mallet doesn't catch it again and again);
-    // above the cap it then eases down within a fraction of a second (see sub)
-    const mvn = Math.max(0, m.vx * nx + m.vy * ny), base = edge || p.fire > 0 ? s.vsmash : s.vmax, cap = Math.min(base * 2.5, Math.max(base, mvn * 1.15)), sp = Math.hypot(p.vx, p.vy); if (sp > cap) { p.vx *= cap / sp; p.vy *= cap / sp; }
-    // the puck cannot be pinned through the mallet into the wall: push the mallet's bounds
-    s.last = i; if (fresh || edge) s.ev.push({ k: edge ? 'edge' : 'hit', side: i, v: Math.hypot(p.vx, p.vy), x: p.x, y: p.y });
+    let edge = false;
+    if (mv > 25 && into > .05) {   // a swing
+      const fwd = i === 0 ? -1 : 1, mx = m.vx / mv, my = m.vy / mv;
+      let ux = mx * .85 + nx * .15, uy = my * .85 + ny * .15, l = Math.hypot(ux, uy) || 1; ux /= l; uy /= l;
+      if (my * fwd > -.3 && uy * fwd < .12) { uy = .12 * fwd; ux = Math.sign(ux || mx || 1) * Math.sqrt(1 - .0144); }   // not pulling back: never toward its own goal
+      edge = mv > 70 && into > .17 && into < .64 && !(p.edgeT > s.t);   // the edge shot: a fast mallet meeting it with its rim
+      const base = edge || p.fire > 0 ? s.vsmash : s.vmax, sp = Math.min(base * 3, Math.max(mv * 1.15 * (edge ? 1.3 : 1), Math.hypot(p.vx, p.vy) * .5, 35));
+      p.vx = ux * sp; p.vy = uy * sp;
+      if (edge) { p.edgeT = s.t + .25; p.boost = s.t + .8; }
+      p.ghost[i] = s.t + .2;
+    } else {   // the puck runs into a still (or retreating) mallet: a plain bounce
+      p.vx = m.vx + rvx - (1 + E_MAL) * vn * nx; p.vy = m.vy + rvy - (1 + E_MAL) * vn * ny;
+      const cap = p.fire > 0 ? s.vsmash : s.vmax, sp = Math.hypot(p.vx, p.vy); if (sp > cap) { p.vx *= cap / sp; p.vy *= cap / sp; }
+      p.ghost[i] = s.t + .05;
+    }
+    s.last = i; s.ev.push({ k: edge ? 'edge' : 'hit', side: i, v: Math.hypot(p.vx, p.vy), x: p.x, y: p.y });
   }
+
   function goal(s, p, side) {
     p.gone = true; s.score[side]++; s.serveTo = 1 - side; s.last = -1;
     s.ev.push({ k: 'goal', side, x: p.x });
@@ -216,7 +218,7 @@
     // lapses (low levels): for a moment it stops following the puck and drifts home
     mem.lapseT = (mem.lapseT || 0) - dt; mem.lapseNext = (mem.lapseNext == null ? 1 + Math.random() * 2 : mem.lapseNext) - dt;
     if (mem.lapseNext <= 0) { mem.lapseNext = 1.2 + Math.random() * 2; if (Math.random() < sk.lapse * 2) mem.lapseT = .5 + Math.random() * .5; }
-    if (mem.lapseT > 0) return { tx: m.x * .9, ty: m.y + (home.y - m.y) * .1 };
+    if (mem.lapseT > 0 && !(mem.sit > 0)) return { tx: m.x * .9, ty: m.y + (home.y - m.y) * .1 };   // (never while a puck rests on its side)
     // it sees the table a little late (reaction)
     mem.buf = mem.buf || []; mem.buf.push({ t: s.t, pucks: s.pucks.map(p => ({ x: p.x, y: p.y, vx: p.vx, vy: p.vy, wait: p.wait })) });
     while (mem.buf.length > 1 && s.t - mem.buf[1].t >= sk.react) mem.buf.shift();
@@ -243,7 +245,7 @@
     mem.modeT = (mem.modeT || 0) - dt;
     if (mem.modeT <= 0) { mem.att = Math.random() < sk.attack + .4; mem.modeT = .5; }
     mem.sit = inHalf && Math.hypot(p.vx, p.vy) < 30 ? (mem.sit || 0) + dt : 0;
-    if (mem.sit > .8) mem.att = true;   // a puck resting in its half is always played (even at Lv.1, just slowly)
+    if (mem.sit > .15) mem.att = true;   // (a serve on its side is played at once — slowly at low levels)
     // attack: a puck in its half → come from behind it toward the far goal (a bank off a side wall at higher levels)
     if (inHalf && mem.att) {
       let gx = mem.err * .5, gy = -sg * (L / 2 + 2);
