@@ -320,10 +320,10 @@
   function hop(el, big) { el._hop = performance.now(); el._big = !!big; }
   // the bob runs only while it can be seen (home page, tab shown and focused, no 3D board over it): otherwise the loop stops
   // (0 frames — battery) and propWake() starts it again when one of these changes
-  let propStep = null, propObs = false, propVis = true;
+  let propStep = null, propObs = false, propVis = true, propTo = 0;
   function propWake() { if (!propRaf && propStep) propRaf = requestAnimationFrame(propStep); }
   function startProps() {
-    cancelAnimationFrame(propRaf); propRaf = 0;
+    cancelAnimationFrame(propRaf); clearTimeout(propTo); propRaf = 0;
     if (!propObs) { propObs = true;
       try { new IntersectionObserver(es => { propVis = es.some(e => e.isIntersecting); if (propVis) propWake(); }).observe($('props')); } catch (e) {}
       document.addEventListener('visibilitychange', propWake); addEventListener('focus', propWake);
@@ -335,9 +335,11 @@
     propStep = function step(now) {
       propRaf = 0;
       if (document.hidden || page !== 'home' || !els[0] || !els[0].isConnected || !document.hasFocus() || $('bv').classList.contains('on') || !propVis) return;   // (stopped: see propWake; also while the hero is scrolled out of view, 2026-11-10)
-      propRaf = requestAnimationFrame(step);
       // 60 fps while a piece hops or the pointer / tilt moves them, 30 fps for the slow idle bob; stopped while the window isn't focused
+      // (the idle bob waits ~30 ms by a timer before asking for the next frame: the page wakes 30 times a second, not 60 — 2026-11-10)
       const busy = els.some(e => e._hop) || Math.abs(tx - px) > .002 || Math.abs(ty - py) > .002;
+      if (busy) propRaf = requestAnimationFrame(step);
+      else { propRaf = -1; clearTimeout(propTo); propTo = setTimeout(() => { propRaf = requestAnimationFrame(step); }, 28); }
       if (now - lastP < 1000 / (busy ? 60 : 30) - 2) return;
       lastP = now;
       px += (tx - px) * .06; py += (ty - py) * .06;
@@ -444,7 +446,13 @@
       const day = new Intl.DateTimeFormat(lang, { day: 'numeric' }).formatToParts(dt).find(p => p.type === 'day');
       return { n: day ? day.value : String(dt.getDate()), m: dt.toLocaleDateString(lang, { month: 'long' }), w: dt.toLocaleDateString(lang, { weekday: 'long' }) };
     } catch (e) { return { n: String(dt.getDate()), m: String(dt.getMonth() + 1), w: '' }; } };
+  // atlas/updnews.js (0.9 MB: the "what was this day?" lines) loads when the sheet is first opened (2026-11-10)
+  let newsP = null;
   function openUpdSheet() {
+    if (!window.AtlasNews) { if (!newsP) newsP = new Promise(res => { const sc = document.createElement('script'); sc.src = 'updnews.js?v=7'; sc.onload = sc.onerror = res; document.head.appendChild(sc); }); newsP.then(openUpdSheet0); return; }
+    openUpdSheet0();
+  }
+  function openUpdSheet0() {
     try { localStorage.setItem(UPD_SEEN, updKey(A_.UPDATES[0])); } catch (e) {}
     const dot = document.querySelector('#updLine .ul-dot'); if (dot) dot.remove();
     const N = NEWS(), days = [];
