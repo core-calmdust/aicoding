@@ -148,7 +148,9 @@ function init() {
   if (mf && mf.parentNode === wrap.parentNode && (wrap.compareDocumentPosition(mf) & Node.DOCUMENT_POSITION_FOLLOWING)) wrap.before(mf);
   const items = [...c1.children, ...c2.children].filter(e => own(e) && e !== mf);   // the settings in their original order
   const side = items.find(e => e.id === 'fColor'); if (side && side.parentNode === c2) { items.splice(items.indexOf(side), 1); const i = items.findIndex(e => e.parentNode === c1 && !/Info$/.test(e.id)); items.splice(i < 0 ? 0 : i, 0, side); }   // your side first, as in every game
-  const shown = e => !e.classList.contains('hidden') && !e.hidden && getComputedStyle(e).display !== 'none' && e.offsetHeight > 0;
+  // (a field in a column hidden as empty has no height: it still counts as shown when it is not hidden itself — otherwise a
+  //  column emptied by a mode with few settings (レッスン…) never came back, 2026-11-10)
+  const shown = e => !e.classList.contains('hidden') && !e.hidden && getComputedStyle(e).display !== 'none' && (e.offsetHeight > 0 || !!e.closest('.ngl-empty'));
   function place(col, list) {
     const want = list.concat([...col.children].filter(e => !own(e)));
     want.forEach((e, i) => { if (col.children[i] !== e) col.insertBefore(e, col.children[i] || null); });
