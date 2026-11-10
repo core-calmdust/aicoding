@@ -73,13 +73,13 @@
     const paint = (W, H, along) => {   // along: 'y' = grain runs down the stand (PC, upright stands), 'x' = across (phones, flat bars)
       const c = document.createElement('canvas'); c.width = W; c.height = H;
       const x = c.getContext('2d'), L = along === 'y' ? H : W, A = along === 'y' ? W : H;
-      const bg = x.createLinearGradient(0, 0, W, H); bg.addColorStop(0, '#e5c7a9'); bg.addColorStop(.5, '#dab794'); bg.addColorStop(1, '#cea882');
+      const bg = x.createLinearGradient(0, 0, W, H); bg.addColorStop(0, '#dabda1'); bg.addColorStop(.5, '#cfae8d'); bg.addColorStop(1, '#c4a07b');
       x.fillStyle = bg; x.fillRect(0, 0, W, H);
       let s = 7; const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
       // straight grain with a slow wave, a few darker late-wood lines
       for (let i = 0; i < 70; i++) {
         const a0 = rnd() * A, amp = 2 + rnd() * 5, f = .004 + rnd() * .01, ph = rnd() * 6.28, dark = rnd() < .22;
-        x.strokeStyle = dark ? `rgba(151,103,58,${.03 + rnd() * .03})` : `rgba(170,121,73,${.015 + rnd() * .02})`;   // (faint: the stand stays quiet, 2026-11-10)
+        x.strokeStyle = dark ? `rgba(151,103,58,${.03 + rnd() * .03})` : `rgba(162,115,69,${.015 + rnd() * .02})`;   // (faint: the stand stays quiet, 2026-11-10)
         x.lineWidth = dark ? 1 + rnd() * 1.6 : .5 + rnd() * .8;
         x.beginPath();
         for (let t = 0; t <= L; t += 8) { const a = a0 + Math.sin(t * f + ph) * amp; const px = along === 'y' ? a : t, py = along === 'y' ? t : a; t ? x.lineTo(px, py) : x.moveTo(px, py); }
@@ -87,7 +87,7 @@
       }
       // soft sheen + darker edges, like the lit board
       const sh = along === 'y' ? x.createLinearGradient(0, 0, W, 0) : x.createLinearGradient(0, 0, 0, H);
-      sh.addColorStop(0, 'rgba(114,71,31,.18)'); sh.addColorStop(.18, 'rgba(252,243,233,.10)'); sh.addColorStop(.6, 'rgba(252,243,233,0)'); sh.addColorStop(1, 'rgba(114,71,31,.16)');
+      sh.addColorStop(0, 'rgba(114,71,31,.18)'); sh.addColorStop(.18, 'rgba(239,231,221,.10)'); sh.addColorStop(.6, 'rgba(239,231,221,0)'); sh.addColorStop(1, 'rgba(114,71,31,.16)');
       x.fillStyle = sh; x.fillRect(0, 0, W, H);
       return `url(${c.toDataURL('image/jpeg', .85)})`;
     };
@@ -155,7 +155,7 @@
   const sheet = () => new Promise((res, rej) => { const im = new Image(); im.onload = () => {
     const out = {}, keys = ['k1', 'k2', 'k3', 'k4', 'k5', 'k6', 'k7', 'k8', 'k9', 'k10', 'k11', 'k12', 'k13', 'k14', 'k8o'];
     keys.forEach((k, i) => { const c = document.createElement('canvas'); c.width = 256; c.height = 282; c.getContext('2d').drawImage(im, (i % 5) * 256, (i / 5 | 0) * 282, 256, 282, 0, 0, 256, 282); out[k] = c.toDataURL('image/png'); });
-    res(out); }; im.onerror = rej; im.src = '../images/atlas/shogi-pieces.png?v=2'; });
+    res(out); }; im.onerror = rej; im.src = '../images/atlas/shogi-pieces.png?v=3'; });
   sheet().catch(() => SG.images(256)).then(o => {
     IMG = o;
     window.__shogiAtlasPre = Object.values(o).map(src => { const im = new Image(); im.src = src; if (im.decode) im.decode().catch(() => {}); return im; });   // decoded up front: promotions show at once
