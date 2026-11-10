@@ -60,7 +60,7 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);ma
 <div class="card"><h2>結果</h2><div class="tw"><table id="tbl"><thead><tr><th>測定</th><th>方式</th><th>スレッド</th><th>時間</th><th>1スレッド比</th><th>幾何平均</th><th>効率</th><th>nps（合計）</th><th>1スレッドと一致</th></tr></thead><tbody></tbody></table></div><pre id="log"></pre></div>
 </main>
 <script src="engine.js?v=5"></script>
-<script src="../shared/mtengine.js?v=8"></script><script src="../shared/mtsplit.js?v=5"></script>
+<script src="../shared/mtengine.js?v=8"></script><script src="../shared/mtsplit.js?v=6"></script>
 <script>MTSplit.init({ sw: 'sw.js?v=1' });</script>
 
 <script>
@@ -109,7 +109,10 @@ const G = {
 // a fresh pool for every run (no table left over from the run before), warmed up first
 // sh = the shared table (共有・YBW, the game's way), ns = no shared table (the way without isolation)
 const MODES = () => MTSplit.shared ? ['sh', 'ns'] : ['ns'], MODE_NAME = { sh: '共有・YBW', ns: '非共有' }, MODE_KEY = { sh: 'shared', ns: 'split' };
+// ?help=0: without the helpers of the shared Young Brothers Wait (shared/mtsplit.js, 2026-11-10) — to compare
+const NOHELP = /[?&]help=0/.test(location.search);
 async function once(t, msg, mode) {
+  if (NOHELP) msg = Object.assign({}, msg, { mtHelp: 0 });
   const pool = MTSplit.pool({ url: G.url, setup: G.setup, drive: G.drive, tt: mode !== 'ns' });
   await new Promise(r => setTimeout(r, 400));
   if (G.warm) await pool.run(Object.assign({ mtThreads: t }, G.warm));
@@ -118,14 +121,14 @@ async function once(t, msg, mode) {
   const ms = performance.now() - t0;
   pool.close();
   if (!r) throw new Error('the search failed');
-  started = Math.max(started, r.threads || 1); if (r.core) cores.add(r.core);
+  started = Math.max(started, r.threads || 1); if (r.core) cores.add(r.core); (r.cores || []).forEach(c => cores.add(c));
   return { r, ms };
 }
 async function run() {
   $('#btnRun').disabled = true; $('#btnCopy').disabled = true;
   const w = $('#selW').value, P = G.positions(w);
   const total = P.length * G.tests.reduce((a, T) => a + MODES(T).length, 0) * COUNTS.length; let done = 0;
-  lines = [`amazons bench ${new Date().toISOString()} | ${ua} | hc ${HC} | weight ${w} (depth ${D[w]}, analysis ${TA[w]} ms) | shared ${MTSplit.shared ? 'yes' : 'no'}`];
+  lines = [`amazons bench ${new Date().toISOString()} | ${ua} | hc ${HC} | weight ${w} (depth ${D[w]}, analysis ${TA[w]} ms) | shared ${MTSplit.shared ? 'yes' : 'no'}${NOHELP ? ' | help off' : ''}`];
   const R = {};
   try {
     for (const p of P) for (const T of G.tests) for (const M of MODES(T)) {
@@ -135,9 +138,9 @@ async function run() {
         const { r, ms } = await once(t, T.msg(p, w), M);
         const ans = T.cmp(r); if (t === 1) { ref = ans; ms1 = ms; }
         const a = R[T.key + '|' + M + '|' + t] || (R[T.key + '|' + M + '|' + t] = { ms: 0, nodes: 0, agree: 0, cnt: 0, extra: 0, lg: 0, lc: 0 });
-        a.ms += ms; a.nodes += r.nodes || 0; a.cnt++; if (ans === ref) a.agree++; if (T.extra) a.extra += T.extra(r);
+        a.ms += ms; a.nodes += r.nodes || 0; a.busy = (a.busy || 0) + (r.busy || 0); a.cnt++; if (ans === ref) a.agree++; if (T.extra) a.extra += T.extra(r);
         if (!T.more && ms1 >= 50) { a.lg += Math.log(ms1 / Math.max(1, ms)); a.lc++; }   // (the geometric mean over the positions: one slow position does not decide it)
-        row.push(`t${t}(${r.threads || 1}) ${Math.round(ms)}ms ${ans}${T.extra ? ' ' + T.extraName + T.extra(r) : ''}`);
+        row.push(`t${t}(${r.threads || 1}) ${Math.round(ms)}ms ${ans}${T.extra ? ' ' + T.extraName + T.extra(r) : ''} ${Math.round((r.nodes || 0) / 1000)}kn b${Math.round((r.busy || 0) * 100)}`);
         $('#bar i').style.width = (++done / total * 100) + '%';
       }
       lines.push(row.join(' | ')); render(R);
@@ -159,7 +162,7 @@ function render(R) {
       const sp = T.more ? (a.extra / a.cnt) / (b.extra / b.cnt) : b.ms / a.ms, nps = a.nodes / a.ms * 1000, geo = a.lc ? Math.exp(a.lg / a.lc) : 0;
       const spTxt = T.more ? `${(a.extra / a.cnt).toFixed(1)}${T.extraName}` : `${sp.toFixed(2)}×`;
       tb.insertAdjacentHTML('beforeend', `<tr><td>${T.label}</td><td>${MODE_NAME[M]}</td><td>${t}</td><td>${(a.ms / a.cnt / 1000).toFixed(2)}s</td><td>${spTxt}</td><td>${T.more || !geo ? '—' : geo.toFixed(2) + '×'}</td><td>${T.more ? '—' : (sp / t * 100).toFixed(0) + '%'}</td><td>${Math.round(nps / 1000)}k</td><td>${a.agree}/${a.cnt}</td></tr>`);
-      out.push(`${T.key} ${MODE_KEY[M]} threads ${t}: ${(a.ms / a.cnt).toFixed(0)} ms, ${T.more ? 'avg ' + (a.extra / a.cnt).toFixed(2) + ' ' + T.extraName : 'x' + sp.toFixed(2) + ' vs 1 (geomean x' + geo.toFixed(2) + '), eff ' + (sp / t * 100).toFixed(0) + '%'}, ${Math.round(nps / 1000)}k nps, agree ${a.agree}/${a.cnt}`);
+      out.push(`${T.key} ${MODE_KEY[M]} threads ${t}: ${(a.ms / a.cnt).toFixed(0)} ms, ${T.more ? 'avg ' + (a.extra / a.cnt).toFixed(2) + ' ' + T.extraName : 'x' + sp.toFixed(2) + ' vs 1 (geomean x' + geo.toFixed(2) + '), eff ' + (sp / t * 100).toFixed(0) + '%'}, ${Math.round(nps / 1000)}k nps, agree ${a.agree}/${a.cnt}${a.busy ? `, busy ${Math.round(a.busy / a.cnt * 100)}%` : ''}`);
     }
   }
   return out;
