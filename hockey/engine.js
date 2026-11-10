@@ -25,7 +25,9 @@
     o = o || {};
     const s = { mode: MODES.includes(o.mode) ? o.mode : 'classic', target: o.target || 7, score: [0, 0], t: 0, over: -1, R: rng(o.seed || (Date.now() & 0xffffff)),
       mal: [{ x: 0, y: L / 2 - 8, vx: 0, vy: 0, r: RM, big: 0, slow: 0, tx: 0, ty: L / 2 - 8 }, { x: 0, y: -L / 2 + 8, vx: 0, vy: 0, r: RM, big: 0, slow: 0, tx: 0, ty: -L / 2 + 8 }],
-      pucks: [], mons: [], items: [], shield: [0, 0], nextItem: 4, bar: 0, last: -1, pause: 0, ev: [], serveTo: o.first == null ? 0 : o.first };
+      pucks: [], mons: [], items: [], shield: [0, 0], nextItem: 4, bar: 0, last: -1, pause: 0, ev: [], serveTo: o.first == null ? 0 : o.first,
+      // (2026-11-10) the pace grows with the AI level: o.speed 1 (Lv.1, the slow pace that felt right) … about 1.5 (Lv.20)
+      vmax: VMAX * (o.speed || 1), vsmash: VSMASH * (o.speed || 1) };
     if (has(s, 'monster')) for (let i = 0; i < 2; i++) s.mons.push({ x: (i ? 1 : -1) * 9, y: 0, vx: (i ? -1 : 1) * 14, vy: 6, r: 2.6, dash: 0, t: s.R() * 3 });
     serve(s, s.serveTo); if (s.mode === 'multi') serve(s, 1 - s.serveTo, true);
     return s;
@@ -49,7 +51,6 @@
     s.ev.length = 0;
     if (s.over >= 0) return s;
     s.t += dt;
-    const n = Math.max(1, Math.ceil(dt / (1 / 240))), h = dt / n;
     // targets
     // (the target is spread over the sub-steps: a low frame rate does not turn a smooth swing into jerks)
     for (let i = 0; i < 2; i++) { const m = s.mal[i], q = inputs && inputs[i]; m.px = m.tx; m.py = m.ty; if (q) { m.tx = q.tx; m.ty = q.ty; } clampMal(m, i); m.ex = m.tx; m.ey = m.ty; }
@@ -58,6 +59,10 @@
     if (has(s, 'block')) s.bar = (s.bar + dt * 1.15) % (Math.PI * 2);
     if (has(s, 'items')) { s.nextItem -= dt; if (s.nextItem <= 0 && s.items.length < 2) { s.items.push({ k: ITEMS[Math.floor(s.R() * ITEMS.length)], x: (s.R() - .5) * (W - 10), y: (s.R() - .5) * 14, t: 0 }); s.nextItem = 5 + s.R() * 4; s.ev.push({ k: 'item' }); } s.items.forEach(it => it.t += dt); s.items = s.items.filter(it => it.t < 12); }
     if (s.pause > 0) { s.pause -= dt; if (s.pause <= 0 && !s.pucks.length) { serve(s, s.serveTo); if (s.mode === 'multi') serve(s, 1 - s.serveTo, true); } }
+    // sub-steps: 1/240 s, and more when a mallet swings fast — no mallet moves more than .8 cm in one sub-step, so a quick
+    // swing can't jump past the puck's centre and knock it backwards (2026-11-10)
+    let far = 0; for (const m of s.mal) far = Math.max(far, Math.hypot(m.ex - m.x, m.ey - m.y));
+    const n = Math.min(64, Math.max(1, Math.ceil(dt / (1 / 240)), Math.ceil(far / .8))), h = dt / n;
     for (let k = 0; k < n; k++) { const f = (k + 1) / n; for (const m of s.mal) { m.tx = m.px + (m.ex - m.px) * f; m.ty = m.py + (m.ey - m.py) * f; } sub(s, h); }
     // a puck left still out of reach (2.5 s; 1.2 s in a corner or against an end wall) is given a small nudge toward the open table
     for (const p of s.pucks) {
@@ -91,7 +96,7 @@
       if (p.wait > 0) { p.wait -= h; continue; }
       const dmp = Math.exp(-DAMP * h); p.vx *= dmp; p.vy *= dmp;
       if (p.fire > 0) p.fire -= h;
-      const cap = p.fire > 0 ? VSMASH * 1.15 : VSMASH, sp = Math.hypot(p.vx, p.vy); if (sp > cap) { p.vx *= cap / sp; p.vy *= cap / sp; }
+      const cap = p.fire > 0 ? s.vsmash * 1.15 : s.vsmash, sp = Math.hypot(p.vx, p.vy); if (sp > cap) { p.vx *= cap / sp; p.vy *= cap / sp; }
       p.x += p.vx * h; p.y += p.vy * h;
       // side walls
       if (p.x < -W / 2 + RP) { p.x = -W / 2 + RP; p.vx = Math.abs(p.vx) * E_WALL; wall(s, p); } else if (p.x > W / 2 - RP) { p.x = W / 2 - RP; p.vx = -Math.abs(p.vx) * E_WALL; wall(s, p); }
@@ -155,7 +160,7 @@
     // the edge shot: a fast mallet meeting the puck with its side (contact 50–80° off its own direction of travel)
     const mv = Math.hypot(m.vx, m.vy); let edge = false;
     if (mv > 70 && !(p.edgeT > s.t)) { const c = (m.vx * nx + m.vy * ny) / mv; if (c > .17 && c < .64) { p.vx *= 1.3; p.vy *= 1.3; edge = true; p.edgeT = s.t + .25; } }
-    const sp = Math.hypot(p.vx, p.vy), cap = edge || p.fire > 0 ? VSMASH : VMAX; if (sp > cap) { p.vx *= cap / sp; p.vy *= cap / sp; }
+    const sp = Math.hypot(p.vx, p.vy), cap = edge || p.fire > 0 ? s.vsmash : s.vmax; if (sp > cap) { p.vx *= cap / sp; p.vy *= cap / sp; }
     // the puck cannot be pinned through the mallet into the wall: push the mallet's bounds
     s.last = i; s.ev.push({ k: edge ? 'edge' : 'hit', side: i, v: Math.hypot(p.vx, p.vy), x: p.x, y: p.y });
   }
@@ -168,7 +173,7 @@
   }
   function useItem(s, k, side, p) {
     s.ev.push({ k: 'pick', what: k, side });
-    if (k === 'speed') { p.fire = 5; const sp = Math.hypot(p.vx, p.vy) || 1, v = Math.min(VSMASH, Math.max(sp * 1.6, 160)); p.vx *= v / sp; p.vy *= v / sp; }
+    if (k === 'speed') { p.fire = 5; const sp = Math.hypot(p.vx, p.vy) || 1, v = Math.min(s.vsmash, Math.max(sp * 1.6, s.vmax * 1.2)); p.vx *= v / sp; p.vy *= v / sp; }
     else if (k === 'split') { for (const a of [-.45, .45]) { const c = Math.cos(a), sn = Math.sin(a); s.pucks.push({ x: p.x, y: p.y, vx: p.vx * c - p.vy * sn, vy: p.vx * sn + p.vy * c, fire: 0, id: (s.pid = (s.pid || 0) + 1), wait: 0 }); } p.vx *= .2; p.vy *= .2; p.wait = 0; p.gone = false; }
     else if (k === 'giant') s.mal[side].big = 8;
     else if (k === 'shield') s.shield[side] = 8;
@@ -177,8 +182,9 @@
 
   /* ---------- AI (Lv.1–20) ---------- */
   function aiSkill(level) {
-    const k = (Math.max(1, Math.min(20, level)) - 1) / 19;
-    return { cap: .12 + .88 * Math.pow(k, .8), react: .32 - .29 * k, err: 5 - 4.4 * k, attack: .35 + .65 * k, bank: level >= 9, lead: .6 + .4 * k };
+    const k = Math.pow((Math.max(1, Math.min(20, level)) - 1) / 19, 1.35);   // (eased: the first levels stay gentle)
+    // (2026-11-10) much weaker at the low end: slower to react, less exact, attacks less, and now and then looks away
+    return { cap: .1 + .9 * Math.pow(k, 1.1), react: .55 - .52 * Math.pow(k, .7), err: 9 - 8.4 * k, attack: -.2 + .8 * k, bank: level >= 9, lead: .6 + .4 * k, lapse: .35 * Math.pow(1 - k, 1.5) };
   }
   // where a puck will cross the line y = yl (bouncing off the side walls), or null
   function cross(p, yl) {
@@ -193,6 +199,10 @@
     const sk = aiSkill(level), m = s.mal[side], sg = side === 0 ? 1 : -1, home = { x: 0, y: sg * (L / 2 - 6) };
     m.aiCap = sk.cap;
     mem.cool = (mem.cool || 0) - dt;
+    // lapses (low levels): for a moment it stops following the puck and drifts home
+    mem.lapseT = (mem.lapseT || 0) - dt; mem.lapseNext = (mem.lapseNext == null ? 1 + Math.random() * 2 : mem.lapseNext) - dt;
+    if (mem.lapseNext <= 0) { mem.lapseNext = 1.2 + Math.random() * 2; if (Math.random() < sk.lapse * 2) mem.lapseT = .5 + Math.random() * .5; }
+    if (mem.lapseT > 0) return { tx: m.x * .9, ty: m.y + (home.y - m.y) * .1 };
     // it sees the table a little late (reaction)
     mem.buf = mem.buf || []; mem.buf.push({ t: s.t, pucks: s.pucks.map(p => ({ x: p.x, y: p.y, vx: p.vx, vy: p.vy, wait: p.wait })) });
     while (mem.buf.length > 1 && s.t - mem.buf[1].t >= sk.react) mem.buf.shift();
