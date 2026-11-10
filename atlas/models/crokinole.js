@@ -93,7 +93,8 @@
     return { px: (ca + cb * .5) * s, py: cb * s * .8660254, h: hash(ia, ib, up), up, e, dir: (Math.floor(hash(ib, ia, up + 3) * 3)) * Math.PI / 3 + Math.PI / 6 };
   }
   const SURF = {
-    classic: (N) => { const O = { cx: 4, by: -46, asp: .11, sp: .62, wp: 2.2, ring: .55, fib: .34, drift: .32 }, A = hx('#ebd09d'), B = hx('#b8864f');
+    classic: (N) => { const O = { cx: 4, by: 0, asp: 0, sp: .5, wp: .45, ring: .32, fib: .3, drift: .18 },   // (2026-11-10) a quarter-sawn look: straight, even grain, no ring arcs or swirls
+      A = hx('#ebd09d'), B = hx('#b8864f');
       return (x, y) => mix(A, B, .14 + woodT(N, x, y, O) * .66); },
     marq: (N) => {
       // inside the 15: small triangles of maple, cherry and walnut. Outside the 5: the same three woods, but every piece cut to
