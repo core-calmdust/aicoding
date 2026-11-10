@@ -453,6 +453,7 @@ function gameOver(i) { return statusAt(i).over; }
 function canHumanPlay() {
   if (gameOver(cur)) return false;
   if (puzzle) return puzzle.state === 'play' && !puzzle.busy && toMoveAt(cur) === puzzle.me;
+  if (lesson && window.SeqPrac && SeqPrac.active()) return SeqPrac.state().waiting;   // the 3-move opening practice
   if (lesson) return !lesson.answered && !lesson.study;
   if (reviewing) return false;
   if (isCounting(cur)) return false;

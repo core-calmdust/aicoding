@@ -54,7 +54,7 @@ const why = (line, b, u) => { let w = ''; try { w = (A.why && A.why(line, b, u))
 async function move(u) {
   if (!S || S.done || !S.waiting) return;
   const s = S, tok = ++s.tok, before = s.line.slice(), i = s.i;
-  s.line = [...before, u]; s.waiting = false; s.busy = 'judge'; changed();
+  s.line = [...before, u]; s.waiting = false; s.busy = 'judge'; try { A.show(s.line, true); } catch (e) {} changed();
   const bk = book(before), mine = bk && bk.find(x => x.u === u);
   let pts, bestU, w = '';
   if (bk && mine) {
@@ -78,7 +78,8 @@ async function next(s, tok) {
   if (s.i >= s.N || A.over(s.line)) return finish(s);
   s.busy = 'opp'; changed();
   const bk = book(s.line);
-  let r = bk ? bk[0].u : await Promise.resolve(A.think(s.line.slice())).catch(() => null);
+  let r = bk ? bk[0].u : null; if (!r && A.model) { try { r = A.model(s.line); } catch (e) {} }   // (no book: the opening's model line)
+  if (!r) r = await Promise.resolve(A.think(s.line.slice())).catch(() => null);
   if (!alive(s, tok)) return;
   if (!r) return finish(s);
   await new Promise(res => setTimeout(res, 250)); if (!alive(s, tok)) return;

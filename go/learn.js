@@ -6,6 +6,7 @@
 let savedGame = null;
 function stashGame() { if (!lesson && !puzzle) savedGame = { game: Object.assign({}, game), start: startSpec, moves, cur, evals: evals.slice(), humanColor, manualEnd }; }
 function exitSpecial() {
+  if (window.SeqPrac) SeqPrac.stop();
   if (!lesson && !puzzle) return;
   lesson = null; puzzle = null; lessonMarks = []; labelList = null; view = null; drawnKey = '';
   document.body.classList.remove('in-lesson', 'in-puzzle');
@@ -298,12 +299,24 @@ function rampMove(m) {
 const curStep = () => lesson.virt || LESSONS.steps[lesson.step];
 function lessonProblem() { return curStep().problems[lesson.i]; }
 function loadLessonProblem() {
+  if (window.SeqPrac) SeqPrac.stop();
   const P = lessonProblem(), sp = specFrom(P.s);
   lesson.me = sp.turn || P1;
   enterSpecial(sp, { view: P.view || (sp.n > 9 ? cropOf(sp, gtps(P.ok, sp.n), 9) : null), komi: P.komi });
   lesson.answered = false; lesson.hinted = false;
   update(false); renderLessonCard();
   $('#lsFb').innerHTML = '';
+  if (lesson.virt && lesson.virt.id !== 'mk' && window.seqGameStart && !lesson.ramp) seqGoStart(P);
+}
+// the joseki practice in the shogi style: 3 moves in a row against the engine (shared/seqprac.js · seqgame.js, 2026-11-10)
+function seqGoStart(P) {
+  const sp = startSpec, job = l => jobBase(sp, l);
+  seqGameStart(P, {
+    noModel: true, hintAt: m => m,
+    analyze: async l => { const r = await request({ type: 'analyze', ...job(l), net: 'light', visits: COARSE ? 40 : 80, time: 1500 }); return ((r && r.list) || []).filter(e => typeof e.wr === 'number').map(e => ({ u: String(e.m), wr: e.wr })).sort((a, b) => b.wr - a.wr); },
+    think: async l => { const r = await request({ type: 'analyze', ...job(l), net: 'light', visits: COARSE ? 30 : 60, time: 1000 }); const L = (r && r.list) || []; let b = null; for (const e of L) if (!b || e.wr > b.wr) b = e; return b ? String(b.m) : null; },
+    nameM: m => mvName(m), overL: () => false,
+  });
 }
 function renderLessonCard() {
   if (lesson && lesson.ramp) return renderRampCard();
@@ -332,6 +345,7 @@ function lsAuto(good, ms) {
   CardBar.autoNext({ ms: Math.max(1300, ms || 0), ok: () => lesson === L && L.i === i && L.answered });
 }
 async function lessonAnswer(m) {
+  if (window.SeqPrac && SeqPrac.active()) { SeqPrac.move(String(m)); return; }
   if (lesson.ramp) return rampMove(m);
   const P = lessonProblem(), s = curStep(), n = game.n;
   lesson.answered = true;
