@@ -1603,15 +1603,32 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 .lvs-l .pzs-c{display:flex;padding:0;text-align:center;flex-direction:column;align-items:center;justify-content:center;gap:2px;height:56px;border-radius:14px;border:2px solid var(--line);background:#fff;box-shadow:0 3px 0 var(--line);font:inherit;color:var(--ink);cursor:pointer}
 .lvs-l .pzs-c b{grid-row:auto;min-width:0;font-size:15px;font-weight:900;color:var(--ink)}.lvs-l .pzs-c small{grid-column:auto;font-size:10px;line-height:1;color:#e0a020;letter-spacing:-1px}.lvs-l .pzs-c.ok{background:#fff8e3;border-color:#f3d48a}
 .lvs-l .pzs-c:disabled{opacity:.45;cursor:default;box-shadow:none}
-.bksheet{position:fixed;inset:0;z-index:160;display:flex;align-items:flex-end;justify-content:center;background:rgba(20,12,4,0);transition:background .25s;--bg:#130d09;--bg2:#1b130d;--panel:#21170f;--panel2:#2b1f15;--line:#45321f;--text:#f2e8d9;--muted:#bba487;--dim:#8a735b;--brass:#c9a961;--brass2:#8e7440;--accent:#e2c275;--red:#ff6b5b;--good:#7fd6a4}
+.bksheet{position:fixed;inset:0;z-index:160;display:flex;align-items:flex-end;justify-content:center;background:rgba(20,12,4,0);transition:background .25s;--bg:#fffaf0;--bg2:#fff6e6;--panel:#fff;--panel2:#fffaf0;--line:#efe3c8;--text:#2b3044;--muted:#6b7088;--dim:#9a8a70;--brass:#c98a2a;--brass2:#e6c48a;--accent:#b5651d;--red:#e2483b;--good:#1ea36c}
 .bksheet.on{background:rgba(20,12,4,.5)}
-.bk-in{width:min(980px,100%);height:min(92dvh,900px);display:flex;flex-direction:column;background:radial-gradient(120% 60% at 50% 0%,#2b1f15,#160f0a 70%);color:var(--text);border-radius:24px 24px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,.5);transform:translateY(105%);transition:transform .28s cubic-bezier(.3,1.1,.5,1);overflow:hidden}
+.bk-in{width:min(980px,100%);height:min(92dvh,900px);display:flex;flex-direction:column;background:#fdf8ee;color:var(--text);border-radius:24px 24px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,.5);transform:translateY(105%);transition:transform .28s cubic-bezier(.3,1.1,.5,1);overflow:hidden}
 .bksheet.on .bk-in{transform:none}
 .bk-h{flex:none;display:flex;align-items:center;gap:10px;padding:14px 16px 10px;border-bottom:1px solid var(--line)}
 .bk-t{flex:1;min-width:0;font-size:17px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--accent)}
-.bk-x,.bk-bk{flex:none;width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--text);font:900 17px/1 var(--font);cursor:pointer}.bk-bk{font-size:22px;padding-bottom:3px}
+.bk-x,.bk-bk{flex:none;width:38px;height:38px;border-radius:50%;border:2px solid var(--line);background:#fff;color:var(--text);font:900 17px/1 var(--font);cursor:pointer}.bk-bk{font-size:22px;padding-bottom:3px}
 .bk-body{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:14px 14px calc(18px + env(safe-area-inset-bottom))}
 .bk-body .lesson-list{display:grid;gap:10px}.bk-body .lesson-list.lx-on{display:block}.bk-wait{text-align:center;color:var(--muted);padding:30px}
+/* (the full game's lists are drawn for its dark page: here in the portal's cream and white) */
+.bksheet .pbh-tabs button,.bksheet .lx-tabs button{background:#fff;box-shadow:0 2px 0 var(--line)}
+.bksheet .pbh-tabs button.sel,.bksheet .lx-tabs button.sel{background:#fff6dc}
+.bksheet #lessonList .lx-card{background:#fff;box-shadow:0 3px 0 var(--line)}
+.bksheet #lessonList .lx-card.done{background:linear-gradient(120deg,#e9f8f0,#fff 60%)}
+.bksheet .lx-banner{background:linear-gradient(120deg,#fff0cc,#fff 70%);border-color:#f3dca8}
+.bksheet .pb-ring,.bksheet .pbh-hero .pb-ring{background:radial-gradient(closest-side,#fff 79%,transparent 81%),conic-gradient(#f2b630 calc(var(--p)*360deg),#efe6d3 0)}
+.bksheet .pbh-th{background:none}
+.bksheet .pbh-hero{background:radial-gradient(120% 140% at 0% 0%,rgba(255,200,120,.35),transparent 60%),linear-gradient(120deg,#fff3d6,#fff 70%);box-shadow:0 3px 0 var(--line)}
+.bksheet .pbh-hero::after{opacity:.05}
+.bksheet .pbh-daily{background:linear-gradient(110deg,#fff1cc,#fff 55%);box-shadow:0 3px 0 var(--line)}
+.bksheet .pbh-daily .go.ok{color:#1ea36c;background:#e3f6ec;border-color:#bfe8d2}
+.bksheet .pbh-card{background:linear-gradient(125deg,color-mix(in srgb,var(--c2) 22%,#fff),#fff 62%);box-shadow:0 3px 0 var(--line)}
+.bksheet .pb-stage{background:linear-gradient(180deg,color-mix(in srgb,var(--c2) 14%,#fff),#fff)}
+.bksheet .pb-tile{background:#fff;border-color:var(--line)}
+.bksheet .pb-tile.lk{background:#f6f1e6}
+.bksheet .pb-stage header{background:none}
 @media (min-width:820px){.bk-in{border-radius:24px;height:min(88dvh,900px);margin-bottom:4dvh}.bksheet{align-items:center}}
 .lss-cat{margin:12px 2px 4px;font-size:12.5px;font-weight:900;color:var(--ink2)}.lss-cat:first-child{margin-top:0}
 .lssheet .lss b{color:var(--ink2)}.lssheet .lss.pass b{color:#1ea36c}.lss-wait{padding:20px;text-align:center;color:var(--ink2)}
@@ -1667,7 +1684,7 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 .ps-ch{display:grid;grid-template-columns:1fr 1fr;gap:10px}.ps-ch.pz .mxb[data-pz="list"]:nth-child(3){grid-column:1 / -1}.ps-ch.pz .mxb[data-pz="list"]:nth-child(2){grid-column:auto}
 .ps-ch.ls{grid-template-columns:minmax(0,1fr) auto;align-items:center}.ps-ch .mxb{width:100%}.ps-ch.ls .mxb{width:auto}.ps-ch .mtab3{margin:0}
 .ps-subv .ps-act.ps-act3{margin-top:auto;grid-template-columns:1fr 1fr}.ps-act3 .ps-go{grid-column:1 / -1}
-.ps-act3 .ps-full{background:#8a5a2b;color:#fff;box-shadow:0 4px 0 #5d3a16;border:2px solid #7a4c22}
+.ps-act3 .ps-full{background:#ffeccc;color:#7a4a12;box-shadow:0 4px 0 #f0cf98;border:2px solid #f6dcae}   /* (the 書斎で遊ぶ colours, 2026-11-11) */
 .ps-ic{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:#fff;background:linear-gradient(150deg,color-mix(in srgb,var(--c) 80%,#fff),var(--c));box-shadow:inset 0 -2px 0 rgba(0,0,0,.15)}
 .ps-ic svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linejoin:round;stroke-linecap:round}
 .ps-tx{display:flex;flex-direction:column;min-width:0}.ps-tx b{font-size:16px;font-weight:900}.ps-tx small{font-size:11px;font-weight:700;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1956,6 +1973,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <link rel="stylesheet" href="worldmap.css?v=18">
 <script src="worldmap.js?v=31"></script>
 <script src="npc/npc.js?v=22"></script>
-<script src="app.js?v=290"></script>
+<script src="app.js?v=291"></script>
 </body>
 </html>
