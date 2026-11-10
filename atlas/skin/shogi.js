@@ -127,7 +127,7 @@
     if (seg) seg.querySelectorAll('button').forEach(x => { if (mine) x.classList.toggle('sel', x.dataset.v === 'atlas3d'); else if (x.dataset.v === 'atlas3d') x.classList.remove('sel'); });
     // the 3D board is chosen on its own (the 「3D」 tile): it is always 本榧 — a 2D board picked before (漆黒 …) no longer tints it (2026-11-10)
     const sk = 'kaya';
-    if (board.userData.setTone) board.userData.setTone(sk);
+    if (board.userData.setTone) board.userData.setTone('classic');   // (the same tone as the 大百科's 3D view — ちゃぶ台 — 2026-11-10)
     if (T3.kick) T3.kick(400);
     ['metal', 'ink', 'grain'].forEach(k => document.documentElement.classList.toggle('atlas-sk-' + k, sk === k));
   }
