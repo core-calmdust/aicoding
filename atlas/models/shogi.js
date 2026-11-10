@@ -222,7 +222,7 @@
     // taper: thick at the bottom, thinner towards the tip (as real pieces are)
     const P = geo.attributes.position, UV = geo.attributes.uv;
     for (let i = 0; i < P.count; i++) {
-      const y = P.getY(i), z = P.getZ(i), th = (.3 - (y - bot) / (tip - bot) * .1) * s;
+      const y = P.getY(i), z = P.getZ(i), th = (.26 - (y - bot) / (tip - bot) * .085) * s;   // (a little thinner, closer to real pieces: 2026-11-10)
       P.setZ(i, z < 0 ? z : z > 1 ? th + (z - 1) : z * th);
     }
     for (let i = 0; i < UV.count; i++) UV.setXY(i, (P.getX(i) + bw) / (2 * bw), (P.getY(i) - bot) / (tip - bot));
