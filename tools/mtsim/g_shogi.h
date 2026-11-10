@@ -23,4 +23,8 @@ static void g_setup(const int *io, int n) {
 static void g_newgame(void) { tt_clear(); }
 static int g_budget(double nodesB, int *mv) { root_search(0, 0, (int)nodesB); *mv = res[0]; return res[1]; }
 static void g_main(int D, int *mv, int *dd, double *nn) { root_search(0, D, 0); *mv = res[0]; *dd = res[1]; *nn = (double)(u32)nodes; }
+#ifdef MT_YBW   /* (2026-11-10, YBW: the helpers wait for split points, as mt-helper.js) */
+static void g_helper(void) { mt_idle(0, 1); }
+#else
 static void g_helper(void) { for (int k = 0; k < 200 && !gStop; k++) root_search(0, 0, 0); }
+#endif

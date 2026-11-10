@@ -5,6 +5,7 @@
 #   python3 gen.py <repo> <game> && node dump.js <repo> <game>
 #   gcc -O2 -w -DMT -DNATIVE -I<repo>/<game> -DGAME_H='"g_<game>.h"' -DPOS_FILE='"pos_<game>.txt"' -o sim_<game> sim.c -lpthread -lm
 #     (janggi: g_xiangqi.h with -DJANGGI; shogi: also -DNUE_H=512 as its engine_mt.wasm)
+#   (YBW engines: -DSIM_Q=64 for finer rounds, -DSIM_STAT for the split points' counters; SIM_SLOW=8 in the environment: slow cores)
 #   ./sim_<game> 1,2,4,8 3 -1 1 1     (threads, the 1-thread budget in M nodes → the depth D, positions (-1 all / 0,3,…),
 #                                      delayed table stores, delayed busy marks)
 # game: xiangqi, janggi, chess, shogi. Works on the engines before and after the busy marks (the marks' functions are
