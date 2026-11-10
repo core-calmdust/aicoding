@@ -39,7 +39,7 @@ URL: https://core-calmdust.github.io/aicoding/atlas/  ／ 詳細: repo の atlas
 - 種族：ゲームの案内役11種（icons3d.js の MONS）＋39種（atlas/avatars/sp-*.js）。仕組みは atlas/avatars3d.js（define・段階・小物・色替え）
 - アバター画像は images/atlas/av/<種族>-<段階>.webp（256px）を atlas/tools/icons.html?kind=av&id=<種族>-<段階> で書き出し。ポータルは画像だけ使う（three.js不要）
 - 種族の追加：sp-*.js に define → art.js の AV 表に名前（10言語）を1行 → 書き出し
-- 背景306種。柄の背景は3D調の画像（2026-11-10に103種追加。新色ティール・抹茶・サンド・みかん・ネイビー・ワイン（ネイビー・ワインは暗色＝白文字）。いったん206種足したうち半分は取り下げ、IDは欠番のまま＝art.js の GONE）。**場所の背景103種（b307〜、SR〜UR）**はまいにち数独の絵本風の風景（sudoku/bg.js の SudokuBG.svg）を tools/scenes.html で512²の1枚絵にしたもの。昼＝SR、夕方・夜＝SSR、特別な場所はUR。夜の場所は白文字（art.js SCENES・SCN_NAME、10言語）（atlas/bg3d.js＝タイル、atlas/bg3d-covers.js＝1枚絵の空・草原・海・雪・おもちゃの町・宇宙 → tools/bgs.html → images/atlas/bg/<id>.webp）。IDは追加順（新しいものは末尾に追加し、既存IDは動かさない）。名前は模様×色の組み合わせ（art.js の BG_NAME・BGCOL・NAMES、10言語）
+- 背景306種。柄の背景は3D調の画像（2026-11-10に103種追加。新色ティール・抹茶・サンド・みかん・ネイビー・ワイン（ネイビー・ワインは暗色＝白文字）。いったん206種足したうち半分は取り下げ、IDは欠番のまま＝art.js の GONE）。**場所の背景103種（b307〜、SR〜UR）**はまいにち数独の絵本風の風景（sudoku/bg.js の SudokuBG.svg）を tools/scenes.html で512²の1枚絵にしたもの。SRとSSRはどちらにも昼・夕方・夜が混ざる（SR46・SSR45）、特別な場所12はUR。夜の場所は白文字（art.js SCENES・SCN_NAME、10言語）（atlas/bg3d.js＝タイル、atlas/bg3d-covers.js＝1枚絵の空・草原・海・雪・おもちゃの町・宇宙 → tools/bgs.html → images/atlas/bg/<id>.webp）。IDは追加順（新しいものは末尾に追加し、既存IDは動かさない）。名前は模様×色の組み合わせ（art.js の BG_NAME・BGCOL・NAMES、10言語）
 - フレーム126種も3Dのリング画像（2026-11-10に50→126。N=単色リング、R=ドット・ステッチ・ビーズ・ハート等の色違い、SR=盤ゲーム・花・音符・水族館など、SSR=宝石・金属、UR=オーロラ・星雲・天体・クリスタル・鳳凰）（atlas/frame3d.js → tools/frames.html → images/atlas/frame/<key>.webp、透過256px、アバター全体に重ねる）
 - ガチャは3Dのカプセル機（atlas/gacha3d.js）：コイン投入→ツマミ→滑り台→受け皿→揺れ（カプセルの色でレア度）→開封。10連は10個並べて順に開封。タップでスキップ。描画は必要なときだけ
 - きせかえ画面：キャラをタップするとランダムなアニメーション（ジャンプ・回転・ゆらゆら・むぎゅっ・ダンス・宙返り）＋ハート等が飛ぶ。着替え直後もジャンプ。暗い背景では名前を白文字に
