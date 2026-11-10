@@ -4821,10 +4821,10 @@ function seqCoachHtml() {
   }
   if (S.done) {
     h += `<p class="ck-muted"><b>${esc(sqt('total', { n: SEQ_N, p: S.total }))}</b></p>`;
-    const RV = { ja: ['振り返り：最善の手順', '盤で再生', '手順を調べています…'], en: ['Review: the best line', 'Play on the board', 'Working out the line…'], zh: ['复盘：最佳手顺', '在棋盘上播放', '正在计算手顺…'], 'zh-TW': ['復盤：最佳手順', '在棋盤上播放', '正在計算手順…'], ko: ['복기: 최선의 수순', '판에서 재생', '수순을 찾는 중…'] }[LANG] || ['Review: the best line', 'Play on the board', 'Working out the line…'];
+    const RV = { ja: ['振り返り：定跡の正しい進行', '盤で再生', '定跡を調べています…', '緑は定跡どおり、黄は定跡と違った手。(AI)は定跡が途切れた先のAIの手。'], en: ['Review: the book line', 'Play on the board', 'Looking up the book…', 'Green: as in the book. Yellow: off the book. (AI): past the book, the engine’s move.'], zh: ['复盘：定式的正确进行', '在棋盘上播放', '正在查定式…', '绿色＝符合定式，黄色＝偏离定式。(AI)＝定式之后AI的着法。'], 'zh-TW': ['復盤：定跡的正確進行', '在棋盤上播放', '正在查定跡…', '綠色＝符合定跡，黃色＝偏離定跡。(AI)＝定跡之後AI的著法。'], ko: ['복기: 정석의 올바른 진행', '판에서 재생', '정석을 찾는 중…', '초록은 정석대로, 노랑은 정석과 다른 수. (AI)는 정석 이후 AI의 수.'] }[LANG] || ['Review: the book line', 'Play on the board', 'Looking up the book…', 'Green: as in the book. Yellow: off the book. (AI): past the book, the engine’s move.'];
     if (S.ideal) {
       const ks = lineKanji(lesson.cur.sfen, S.ideal), mine = lesson.played;
-      h += `<div class="ck-sec sq-rv"><h4>${esc(RV[0])}</h4><p class="sq-line">${ks.map((k, i) => `<span class="${i % 2 ? 'op' : mine[i] === S.ideal[i] ? 'ok' : 'df'}">${esc(k)}</span>`).join(' ')}</p><button type="button" class="ck-rvgo" data-sq="play">▶ ${esc(RV[1])}</button></div>`;
+      h += `<div class="ck-sec sq-rv"><h4>${esc(RV[0])}</h4><p class="sq-line" title="${esc(RV[3])}">${ks.map((k, i) => `<span class="${i % 2 ? 'op' : mine[i] === S.ideal[i] ? 'ok' : 'df'}">${esc(k)}${S.idealAi && S.idealAi.has(i) ? '<small>(AI)</small>' : ''}</span>`).join(' ')}</p><p class="ck-muted" style="margin:0 0 8px;font-size:12.5px">${esc(RV[3])}</p><button type="button" class="ck-rvgo" data-sq="play">▶ ${esc(RV[1])}</button></div>`;
     } else h += `<p class="ck-calc">${esc(RV[2])}</p>`;
   }
   else if (S.busy) h += `<p class="ck-calc">${esc(sqt(S.busy))}</p>`;
@@ -4902,16 +4902,21 @@ function seqFinish(S, over) {
   seqShow();
   seqIdeal(S);
 }
-// 振り返り (2026-11-10): the best line through the whole practice from the problem position — the main book move for both
-// sides while in book, the engine's move after that — shown under the verdicts with a button that plays it on the board
+// 振り返り (2026-11-10): the correct opening line (定跡の正しい進行) from the problem position — the main book move for both
+// sides, as far as the book goes — shown under the verdicts with a button that plays it on the board
 async function seqIdeal(S) {
   const pr = lesson.cur, line = [], q = new E.Position(); q.setSfen(pr.sfen);
+  const studyMap = {};   // position → the next move of the opening's model line
+  try { const st = lesson.g && lesson.g.study; if (st && st.start) { const z = new E.Position(); z.setSfen(st.start); for (const [u] of st.steps) { studyMap[z.sfen().replace(/ \d+$/, '')] = u; z.doMove(z.fromUsi(u)); } } } catch (e) {}
   for (let ply = 0; ply < SEQ_N * 2 - 1; ply++) {
     if (!q.hasLegalMove()) break;
-    const bk = seqBook(q, pr, ply === 0);
-    let u = bk ? bk[0].u : null;
-    if (!u) { const r = await aiCall({ type: 'think', sfen: pr.sfen, moves: line.slice(), opts: { time: 500 } }); if (!lesson || lesson.seq !== S) return; u = r && r.move; }
+    // the correct opening line: this opening's own model line (study) when the position is on it, else the main book move;
+    // past the book the engine's move (marked in the list)
+    const key = q.sfen().replace(/ \d+$/, ''), sl = studyMap[key], bk = sl ? null : seqBook(q, pr, ply === 0);
+    let u = sl || (bk ? bk[0].u : null), ai = false;
+    if (!u) { const r = await aiCall({ type: 'think', sfen: pr.sfen, moves: line.slice(), opts: { time: 500 } }); if (!lesson || lesson.seq !== S) return; u = r && r.move; ai = true; }
     if (!u) break;
+    if (ai) (S.idealAi || (S.idealAi = new Set())).add(line.length);
     line.push(u); q.doMove(q.fromUsi(u));
   }
   if (!lesson || lesson.seq !== S) return;
