@@ -12,7 +12,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <script src="../shared/latinfs.js?v=1l14"></script>
-<script src="../shared/focusgate.js?v=2"></script>
+<script src="../shared/focusgate.js?v=3"></script>
 <script src="../shared/phonesnd.js?v=2l14"></script>
 <meta name="theme-color" content="#0b0f1c">
 <meta name="description" content="六角形のマスに石を置き、自分の色の2辺をつないだら勝ち。引き分けのない陣取りゲーム「ヘックス」。MCTSと連結ソルバーのAI（15級〜五段の20段階）、盤サイズ7〜13路、スワップルール、レーティング戦、オンライン対戦、レッスン・定跡・詰めヘックス、今日の一問。">
@@ -1206,12 +1206,12 @@ html:not(.pc2) body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=141')).then(() => load('../atlas/tables3d.js?v=51')).then(() => load('../atlas/skin/common.js?v=56tz')).then(() => load('../atlas/models/hex.js?v=1l14')).then(() => load('../atlas/skin/hex.js?v=4l14'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=141')).then(() => load('../atlas/tables3d.js?v=51')).then(() => load('../atlas/skin/common.js?v=58tz')).then(() => load('../atlas/models/hex.js?v=1l14')).then(() => load('../atlas/skin/hex.js?v=4l14'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=20261110bg" defer></script>
+<script src="../shared/atlas.js?v=20261110sc" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1l14" defer></script>
 <script src="../shared/atlas-account.js?v=20261109ac2l14" defer></script>
 <script src="../shared/infotabs.js?v=17l14" defer></script>

@@ -6,7 +6,7 @@
 <script>/* portal skin: show "loading" until the 3D board is ready */ if (/[?&]skin=atlas\b/.test(location.search) && !(!/[?&]embed=1/.test(location.search) && (function () { try { return localStorage.getItem('aicoding-senet-landscape') === '1'; } catch (e) { return false; } })() && matchMedia('(pointer: coarse)').matches)) { document.documentElement.classList.add('atlas-skin'); document.write('<style>html.atlas-skin{background:#fff6e2}html.atlas-skin body{opacity:0}html.atlas-skin.atlas-ready body{opacity:1;transition:opacity .2s}.atlas-load{visibility:hidden}</style><link rel="stylesheet" href="../atlas/skin/loading.css?v=2l14"><script src="../atlas/skin/loading.js?v=4l14"><\/script><script>AtlasLoading.show()<\/script>'); }</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <script src="../shared/latinfs.js?v=1l14"></script>
-<script src="../shared/focusgate.js?v=2"></script>
+<script src="../shared/focusgate.js?v=3"></script>
 <script src="../shared/phonesnd.js?v=2l14"></script>
 <meta name="theme-color" content="#0f0b04">
 <meta name="description" content="古代エジプトのボードゲーム「セネト」。ツタンカーメンの黒檀と象牙の盤など、歴史の盤そのままの見た目で遊べます。投げ棒4本、30マスの逆S字の道、美の家と水の家。20段階のAI、レーティング戦、コーチ、レッスン・次の一手パズル。登録不要でスマホでも遊べます。">
@@ -1030,12 +1030,12 @@ html:not([lang=ja]):not([lang=zh]):not([lang=zh-TW]):not([lang=ko]) .result-big{
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=141')).then(() => load('../atlas/tables3d.js?v=51')).then(() => load('../atlas/skin/common.js?v=56tz')).then(() => load('../atlas/models/senet.js?v=10l14')).then(() => load('../atlas/skin/senet.js?v=10l14'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=141')).then(() => load('../atlas/tables3d.js?v=51')).then(() => load('../atlas/skin/common.js?v=58tz')).then(() => load('../atlas/models/senet.js?v=10l14')).then(() => load('../atlas/skin/senet.js?v=10l14'))
     .catch(() => { const u = new URL(location.href); u.searchParams.delete('skin'); location.replace(u.href); });   // (the 3D files are missing: the plain 2D page)
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=20261110bg" defer></script>
+<script src="../shared/atlas.js?v=20261110sc" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=fa2l14" defer></script>
 <script src="../shared/atlas-account.js?v=20261109ac2l14" defer></script>
 <script src="../shared/infotabs.js?v=17l14" defer></script>

@@ -1,0 +1,23 @@
+<!doctype html>
+<!-- Dev tool: renders the scene backgrounds (b307 …) from まいにち数独's illustrated scenes (sudoku/bg.js SudokuBG.svg)
+     to a 512×512 PNG for images/atlas/bg/<id>.webp (cover images). Open via a local server:
+     http://localhost:8000/atlas/tools/scenes.html?scene=forest&tod=eve  (tod: day | eve | night; daily also takes v=e|m|h)
+     → window.SHOT holds the data URL. The ids, scenes and times are listed in atlas/art.js (SCENES). -->
+<html><head><meta charset="utf-8"><style>html,body{margin:0;background:#fff}</style></head>
+<body>
+<script src="../../sudoku/bg.js"></script>
+<script>
+(function () {
+  const q = new URLSearchParams(location.search), name = q.get('scene') || 'forest', tod = q.get('tod') || 'day', v = q.get('v') || undefined, S = 1024, OUT = 512;
+  const svg = SudokuBG.svg(name, S, S, v, tod).replace('<svg ', `<svg width="${S}" height="${S}" `);
+  const img = new Image();
+  img.onload = () => {
+    const c = document.createElement('canvas'); c.width = c.height = OUT; const g = c.getContext('2d');
+    g.imageSmoothingQuality = 'high'; g.drawImage(img, 0, 0, OUT, OUT);
+    window.SHOT = c.toDataURL('image/png');
+  };
+  img.onerror = e => { window.SHOT = 'ERR'; };
+  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+})();
+</script>
+</body></html>
