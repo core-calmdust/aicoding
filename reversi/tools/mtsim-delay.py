@@ -77,4 +77,20 @@ static void busyFlushMine(void) { for (int j = 0; j < nbp; j++) if (bpVal[j]) bu
 ''' + anchor, 1)
 else:
     s = s.replace("static void busyFlushMine(void);\n", "static void busyFlushMine(void) {}\n")
+# (2026-11-10, v4.1) counters of the YBW split points for mt-sim.js (mt_stat): 0/1 splits (midgame/solver), 2 the helpers'
+# moves, 3 their joins, 4 empty joins, 5 idle checks of the clock, 6 an owner's waiting checks, 8 helper moves cut short,
+# 9 second searches of a straggler's move (spDup)
+def rep(a, b):
+    global s
+    assert s.count(a) == 1, a
+    s = s.replace(a, b)
+if 'spDup' in s:
+    rep("static SPt SPS[NSP] __attribute__((aligned(64)));", "static SPt SPS[NSP] __attribute__((aligned(64)));\nstatic double ST[16];\nEXPORT(mt_stat) double mt_stat(int k) { return ST[k]; }\nEXPORT(mt_stat_reset) void mt_stat_reset(void) { for (int i = 0; i < 16; i++) ST[i] = 0; }\n")
+    rep("  SPt *s = spAlloc(); if (!s) return 0;\n", "  SPt *s = spAlloc(); if (!s) return 0;\n  ST[kind]++;\n")
+    rep("      if (!z) { (void)now(); continue; }", "      if (!z) { ST[5]++; (void)now(); continue; }")
+    rep("      if (!spDup(z, j, 0)) (void)now();", "      if (!spDup(z, j, 0)) { ST[5]++; (void)now(); } else ST[9]++;")
+    rep("      if (z && spDup(z, j, s)) y = s;", "      if (z && spDup(z, j, s)) { ST[9]++; y = s; }")
+    rep("    if (!spHelp(y, 0)) (void)now();", "    { const int k = spHelp(y, 0); if (!k) { ST[4]++; ST[5]++; (void)now(); } else { ST[3]++; ST[2] += k; } }")
+    rep("      checkTime();   /* (the lead's deadline", "      ST[6]++; checkTime();   /* (the lead's deadline")
+    rep("      aborted = 0; continue;   /* (a helper", "      ST[8]++; aborted = 0; continue;   /* (a helper")
 sys.stdout.write(s)
