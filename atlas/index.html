@@ -386,7 +386,7 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
 @keyframes bRay{from{transform:rotate(var(--a)) translateY(-40px) scaleY(.4);opacity:1}to{transform:rotate(var(--a)) translateY(-190px) scaleY(1);opacity:0}}
 .endc{position:absolute;z-index:4;left:50%;top:50%;transform:translate(-50%,-50%);display:none;flex-direction:column;align-items:center;gap:10px;padding:22px 26px;border-radius:28px;background:rgba(255,253,247,.97);border:3px solid #fff;box-shadow:0 30px 60px -20px rgba(0,0,0,.5);text-align:center;min-width:260px}
 .endc.on{display:flex;animation:pop .4s cubic-bezier(.3,1.5,.5,1)}
-.endc h3{margin:0;font-family:var(--round);font-size:30px}
+.endc h3{margin:0;font-family:var(--round);font-size:min(30px,7.2vw);white-space:nowrap}.endc{max-width:calc(100vw - 24px);box-sizing:border-box}
 .endc .sc{font-family:var(--round);font-weight:700;font-size:20px;color:var(--ink2)}
 /* table play: the action bar (待った · 投了 · ヒント) with the clocks at its ends — bottom centre, the board is framed above it */
 .tbar{position:absolute;z-index:3;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;align-items:center;gap:6px;padding:5px;border-radius:99px;background:rgba(255,253,247,.95);border:2px solid #fff;box-shadow:0 10px 24px -12px rgba(80,40,0,.5);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .3s}
@@ -1585,6 +1585,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 .recp .rtd.up{color:#1ea36c}.recp .rtd.dn{color:#d93c3c}
 #endc .rtres{display:flex;gap:10px;align-items:center;justify-content:center;margin:2px 0 10px;font-weight:900}#endc .rtres b{font-size:18px}#endc .rtres i{font-style:normal;padding:2px 10px;border-radius:99px;color:#fff;background:#1ea36c}#endc .rtres i.dn{background:#d93c3c}
 .rgd.lsg .rgd-act{gap:8px}.rgd.lsg .rgd-act .sp{flex:1}.rgd.lsg .cnt{display:flex;align-items:center;gap:5px;min-height:0}.rgd.lsg .lsd{width:12px;height:12px;border-radius:50%;background:#e6dccb;display:inline-block}.rgd.lsg .lsd.ok{background:#3ccf91}.rgd.lsg .lsd.mid{background:#ffb21e}.rgd.lsg .lsd.ng{background:#ff5d5d}.rgd.lsg .lsd.on{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--ink)}
+body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn{display:none}   /* (ミッション: not over the 3D view) */
 /* shogi / chess, PC: 対戦 · レート戦 · パズル · レッスン (app.js mxPanels, 2026-11-10) */
 .bvi .mtab3.mtab4 button{padding-inline:4px;font-size:13.5px}
 .bvi .mxp[hidden]{display:none!important}
@@ -1888,10 +1889,11 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
     if (!btn.classList.contains('rgd-auto')) { btn.style.setProperty('--rgd0', -Math.round(el) + 'ms'); btn.classList.add('rgd-auto'); }   // the tour redrew its buttons: carry on where it was
   }, 60);
 };</script>
-<script src="lazy.js?v=35"></script>
+<script src="lazy.js?v=36"></script>
 <script src="puzzle-lines.js?v=1"></script>
 <script src="puzzles.js?v=5"></script>
 <script src="lessons3d.js?v=1"></script>
+<script src="missions.js?v=1"></script>
 <link rel="stylesheet" href="historia.css?v=15">
 <script src="historia.js?v=38"></script>
 <link rel="stylesheet" href="skin/loading.css?v=2">
@@ -1902,7 +1904,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="gamelist.js?v=32"></script>
 <link rel="stylesheet" href="worldmap.css?v=18">
 <script src="worldmap.js?v=31"></script>
-<script src="npc/npc.js?v=20"></script>
-<script src="app.js?v=281"></script>
+<script src="npc/npc.js?v=21"></script>
+<script src="app.js?v=282"></script>
 </body>
 </html>

@@ -471,6 +471,7 @@
     if ((!lv && !side && mode === 'ai') || !o.start) { ready(false); return; }
     let tries = 0;
     const go = () => {
+      if (lv && window.ProSet && ProSet.suspend) ProSet.suspend();   // (a level chosen on the portal: PRO customizations are off for this page only, kept saved)
       let ok = false; try { ok = o.start(lv, side, mode); } catch (e) { ok = true; }
       if (ok === null && ++tries < 40) return setTimeout(go, 150);   // the page isn't ready yet
       ready(true);
@@ -665,7 +666,7 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
     // AI games: the boss of the level and a watching creature talk now and then (atlas/npc/npc.js, common rule 2026-11-09)
     (function npc() {
       if (o.npc === false || !GAME) return;
-      const s = document.createElement('script'); s.src = BASE + 'npc/npc.js?v=20'; s.onload = () => { try { window.AtlasNPC.skin(GAME); } catch (e) {} };
+      const s = document.createElement('script'); s.src = BASE + 'npc/npc.js?v=21'; s.onload = () => { try { window.AtlasNPC.skin(GAME); } catch (e) {} };
       setTimeout(() => document.head.appendChild(s), 1500);   // after the board and the first frames
     })();
     return { T3, ready, alignTo, view };

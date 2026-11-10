@@ -21,7 +21,7 @@
   /* ---------- state ---------- */
   let W = A_.load(), P = A_.allProgress(), ACH = A_.achievements(P, W), C = A_.coins(W, ACH);
   if (W.name && A_.shareName) A_.shareName(W.name, true);   // the portal name is the player name in every game
-  function refresh() { P = A_.allProgress(); ACH = A_.achievements(P, W); C = A_.coins(W, ACH); $('coinN').textContent = C.balance.toLocaleString(); document.querySelectorAll('.coinM').forEach(e => { e.textContent = C.balance.toLocaleString(); }); }
+  function refresh() { P = A_.allProgress(); ACH = A_.achievements(P, W); C = A_.coins(W, ACH); if (window.AtlasMissions) { try { AtlasMissions.sync(); } catch (e) {} if (window.Historia && !Historia.__ms) { const o = Historia.open; Historia.open = function () { AtlasMissions.page('historia'); return o.apply(this, arguments); }; Historia.__ms = 1; } } $('coinN').textContent = C.balance.toLocaleString(); document.querySelectorAll('.coinM').forEach(e => { e.textContent = C.balance.toLocaleString(); }); }
 
   /* ---------- sound effects: synthesized with WebAudio (no files), one shared AudioContext ---------- */
   const SFX = (() => {
@@ -456,6 +456,7 @@
   // atlas/updnews.js (0.9 MB: the "what was this day?" lines) loads when the sheet is first opened (2026-11-10)
   let newsP = null;
   function openUpdSheet() {
+    if (window.AtlasMissions) AtlasMissions.page('news');
     if (!window.AtlasNews) { if (!newsP) newsP = new Promise(res => { const sc = document.createElement('script'); sc.src = 'updnews.js?v=7'; sc.onload = sc.onerror = res; document.head.appendChild(sc); }); newsP.then(openUpdSheet0); return; }
     openUpdSheet0();
   }
@@ -561,7 +562,7 @@
     el.onclick = e => { if (e.target.closest('.pan, [data-go]')) goT(e); };
     { const b = el.querySelector('[data-go]'); b.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') goT(e); }; }
     const hb = el.querySelector('[data-hist]');   // ヒストリアを見る: the history book of today's game (not the table)
-    if (hb) { const go = e => { e.preventDefault(); e.stopPropagation(); Historia.open(g.id); };
+    if (hb) { const go = e => { e.preventDefault(); e.stopPropagation(); if (window.AtlasMissions) AtlasMissions.page('historia'); Historia.open(g.id); };
       hb.onclick = go; hb.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') go(e); };
       // when 「ヒストリアを見る」 doesn't fit its button (narrow phones, long languages) it says just 「ヒストリア」
       const lb = hb.querySelector('.hsl'), fitH = () => { if (!hb.isConnected) return; lb.textContent = t('gl.histSee'); if (hb.scrollWidth > hb.clientWidth + 1) lb.textContent = t('gl.historia'); };
@@ -1438,6 +1439,7 @@
   // character-guided rules on the 3D table (atlas/rules/<id>.js)
   let rulesFromList = false;
   function startRules(fromList) {
+    if (window.AtlasMissions) AtlasMissions.page('rules');
     if (renderPlace.close) renderPlace.close();
     rulesFromList = fromList === true;
     if (pend3d) { pend3d.then(() => startRules(fromList)); return; }   // the board isn't on the table yet
@@ -2182,6 +2184,7 @@
     e.preventDefault(); if (page !== 'home') go('home'); scrollTo({ top: 0, behavior: 'smooth' }); }); }
   function render(k) {
     sfxIcon(); npcIcon();
+    if (window.AtlasMissions) AtlasMissions.page(k);   // (ミッション: the pages opened)
     renderUpdLine();
     if (k === 'home') renderHome(); else if (k === 'games') renderGames(); else if (k === 'map') renderMap(); else if (k === 'ach') renderAch();
     else if (k === 'gacha') { renderGacha(); renderShop(); } else if (k === 'dress') renderDress();
@@ -2195,6 +2198,11 @@
     document.addEventListener('visibilitychange', set); addEventListener('blur', set); addEventListener('focus', set);
   })();
 
+  // ミッション (atlas/missions.js, 2026-11-11): the button at the bottom right and its popup
+  if (window.AtlasMissions) AtlasMissions.init({ t, lang: () => lang, W: () => W, P: () => P, ACH: () => ACH, save: d => A_.save(d), refresh: () => refresh(), games: A_.GAMES, gname, esc,
+    sfx: k => { try { (SFX[k] || SFX.tap)(); } catch (e) {} }, confetti: n => confetti(n),
+    playable: () => A_.GAMES.filter(g => (window.Atlas3D && Atlas3D[g.id] && Atlas3D[g.id].table) || (window.AtlasLazy && AtlasLazy.hasPlay(g.id))).map(g => g.id),
+    levels: id => (window.Atlas3D && Atlas3D[id] && Atlas3D[id].levels) || (window.AtlasNPC && AtlasNPC.LEVELS && AtlasNPC.LEVELS[id]) || 0 });
   applyLang(); refresh(); dsegPos();
   const [h0, h1] = (location.hash || '#home').slice(1).split('/');
   go(h0, false);

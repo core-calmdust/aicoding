@@ -233,6 +233,12 @@ function maxThreads() { const M = mtLib(); return M && M.on && M.on() ? 1 + (M.m
 // perfThreads: the Mac's efficiency cores made the Lazy SMP searches no faster or slower) — more can still be chosen up to maxThreads()
 function defThreads() { const mx = maxThreads(), M = window.MTEngine; return M && M.perfThreads ? Math.max(1, Math.min(mx, M.perfThreads())) : mx; }
 
+// ポータルでレベルを選んで始めたときは、保存したPROカスタマイズを消さずにこのページの間だけ無効にする
+// （新規対局ダイアログから始める・PRO設定を触ると解除。shared/mtengine.js の自動リロードをまたいで残るようタブ単位で覚える）
+const SK = 'proset-suspend';
+let SUS = (() => { try { return sessionStorage.getItem(SK) === '1'; } catch (e) { return false; } })();
+function setSus(v) { SUS = v; try { if (v) sessionStorage.setItem(SK, '1'); else sessionStorage.removeItem(SK); } catch (e) {} }
+function suspend() { setSus(true); }
 function init(cfg) {
   const key = 'aicoding-pro:' + cfg.game;
   const store = cfg.store || { get: () => { try { return JSON.parse(LS.get(key) || 'null'); } catch (e) { return null; } }, set: v => LS.set(key, JSON.stringify(v)) };
@@ -259,7 +265,7 @@ function init(cfg) {
     return eff;
   }
   const api = {
-    get(lv) { saved = load(); const e = effOf(lv, saved); return e.changed.length ? e : null; },
+    get(lv) { if (SUS) return null; saved = load(); const e = effOf(lv, saved); return e.changed.length ? e : null; },
     active(lv) { return !!api.get(lv == null ? cfg.level() : lv); },
     tag(lv) { return api.active(lv) ? ' · PRO' : ''; },
     values: () => Object.assign({}, saved = load()),
@@ -286,7 +292,7 @@ function init(cfg) {
       let was = ov.classList.contains('show');
       if (was) draft = Object.assign({}, saved);
       new MutationObserver(() => { const s = ov.classList.contains('show'); if (s && !was) { saved = load(); draft = Object.assign({}, saved); render(); } if (!s && was) draft = null; was = s; }).observe(ov, { attributes: true, attributeFilter: ['class'] });
-      ov.addEventListener('click', e => { if (e.target.closest && e.target.closest('#btnStart')) api.commit(); }, true);
+      ov.addEventListener('click', e => { if (e.target.closest && e.target.closest('#btnStart')) { if (e.isTrusted && SUS) setSus(false); api.commit(); } }, true);
       // the game's own controls (level slider, mode buttons): re-render after they have done their part
       let q = 0; const later = () => { if (!q) q = requestAnimationFrame(() => { q = 0; render(); }); };
       ov.addEventListener('input', e => { if (!panel.contains(e.target)) later(); });
@@ -298,6 +304,7 @@ function init(cfg) {
   api.commit = () => { if (draft) { saved = sanitize(draft); store.set({ v: saved }); } };
   const values = () => draft || saved;
   function setVal(k, v) {
+    if (SUS) setSus(false);
     const vals = draft || (draft = Object.assign({}, saved));
     const d = defs(cfg.level())[k];
     if (v === undefined || same(v, d)) delete vals[k]; else vals[k] = v;
@@ -385,7 +392,7 @@ function init(cfg) {
       if (k === 'limit.k') { const p = prm('limit'), dl = d.limit; const cur = eff.limit; if (cur && cur.k === v) return; const R = kindRange(p, v); setVal('limit', dl && dl.k === v ? dl : { k: v, v: v === 'time' ? Math.max(R.min, Math.min(R.max, 2)) : v === 'depth' ? Math.max(R.min, Math.min(R.max, 8)) : Math.max(R.min, Math.min(R.max, 100000)) }); }
       else setVal(k, v);
     });
-    panel.querySelector('.pro-reset').onclick = () => { if (draft) draft = {}; else { saved = {}; store.set({ v: saved }); } render(); };
+    panel.querySelector('.pro-reset').onclick = () => { if (SUS) setSus(false); if (draft) draft = {}; else { saved = {}; store.set({ v: saved }); } render(); };
     if (fk) { const el = panel.querySelector(`[data-k="${fk}"] input[type=number]`) || panel.querySelector(`[data-k="${fk}"] button.sel`); if (el && el.focus) try { el.focus({ preventScroll: true }); } catch (e) {} }
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount); else mount();
@@ -428,5 +435,9 @@ function ladder(LEVELS, o) {
     },
   };
 }
-window.ProSet = { init, T, maxThreads, defThreads, ladder };
+// every PRO block of the page (a game may have more than one): the portal's quick start (atlas/skin/common.js autoStart — a
+// level picked on the 3D view's card) puts them back to the level's defaults, so the game is played as that level (2026-11-11)
+const ALL = [];
+function resetAll() { ALL.forEach(a => { try { if (a.values && Object.keys(a.values()).length) a.reset(); } catch (e) {} }); }
+window.ProSet = { init: cfg => { const a = init(cfg); if (a) ALL.push(a); return a; }, T, maxThreads, defThreads, ladder, resetAll, suspend };
 })();

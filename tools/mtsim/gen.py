@@ -5,6 +5,7 @@
 #   python3 gen.py <repo> <game> && node dump.js <repo> <game>
 #   gcc -O2 -w -DMT -DNATIVE -I<repo>/<game> -DGAME_H='"g_<game>.h"' -DPOS_FILE='"pos_<game>.txt"' -o sim_<game> sim.c -lpthread -lm
 #     (janggi: g_xiangqi.h with -DJANGGI; shogi: also -DNUE_H=512 as its engine_mt.wasm)
+#   (YBW engines: -DSIM_Q=64 for finer rounds, -DSIM_STAT for the split points' counters; SIM_SLOW=8 in the environment: slow cores)
 #   ./sim_<game> 1,2,4,8 3 -1 1 1     (threads, the 1-thread budget in M nodes → the depth D, positions (-1 all / 0,3,…),
 #                                      delayed table stores, delayed busy marks)
 # game: xiangqi, janggi, chess, shogi. Works on the engines before and after the busy marks (the marks' functions are
@@ -56,5 +57,11 @@ if 'busyT[' in s:
     s = re.sub(r'SIMWB\(&busyT\[i\], ([^;]*), __ATOMIC_RELAXED\);', r'SIMWB(&busyT[i], \1);', s)
     rep('__atomic_compare_exchange_n(&busyT[i], &mine, 0, 0, __ATOMIC_RELAXED, __ATOMIC_RELAXED);', 'SIMCB(&busyT[i], mine);')
 
-open(f'eng_{game}.c', 'w').write('#include "simcore.h"\n' + s)
+# chess's YBW (2026-11-10, chess/MODEL_CARD.md「マルチスレッド v2」): g_chess.h calls mt_idle / mt_lazy, and an idle thread's
+# spin (MT_PAUSE) ticks the clock
+if game == 'chess' and 'EXPORT(mt_idle)' in s:
+    s = '#define HAS_MT_IDLE 1\n#include "simcore.h"\n#define MT_PAUSE() SIM_IDLE()\n' + s
+else:
+    s = '#include "simcore.h"\n' + s
+open(f'eng_{game}.c', 'w').write(s)
 print('eng_%s.c' % game)
