@@ -67,16 +67,19 @@
   T3.show('shogi', board, { still: true });
   skin.alignTo(FH, Y);
   // 5五将棋 (shogi/variants/): the page switches its board to 5×5 → a 5×5 kaya board, the camera fitted to it again
-  let boardN = 9;
-  function setBoard(n) {
-    if (n === boardN) return; boardN = n;
-    board = T3.MODELS.shogi(true, { n }); FH = board.userData.S; Y = board.userData.top; OUT = board.userData.outer;
+  let boardN = 9, cropK = '', variantN = 9;
+  // crop {n, c0, r0}: 詰将棋's close-up (shogi/index.html tzStyle) — an n×n kaya board cut from the whole one
+  function setBoard(n, crop) {
+    const ck = crop ? crop.n + ':' + crop.c0 + ':' + crop.r0 : '';
+    if (n === boardN && ck === cropK) return; boardN = n; cropK = ck;
+    board = T3.MODELS.shogi(true, crop ? { n: crop.n, crop } : { n }); FH = board.userData.S; Y = board.userData.top; OUT = board.userData.outer;
     T3.show('shogi', board, { still: true }); skin.alignTo(FH, Y);
     try { look(); } catch (e) {}
     if (T3.kick) T3.kick(600);
   }
-  document.addEventListener('shogi-geom', e => { try { setBoard(e.detail && e.detail.n === 5 ? 5 : 9); } catch (x) { console.warn(x); } });
-  { const b0 = document.getElementById('board'); if (b0 && b0.classList.contains('v5')) setBoard(5); }
+  document.addEventListener('shogi-geom', e => { try { variantN = e.detail && e.detail.n === 5 ? 5 : 9; setBoard(variantN); } catch (x) { console.warn(x); } });
+  document.addEventListener('shogi-crop', e => { try { const c = e.detail; if (c) setBoard(c.n, c); else setBoard(variantN); } catch (x) { console.warn(x); } });
+  { const b0 = document.getElementById('board'); if (b0 && b0.classList.contains('v5')) setBoard(variantN = 5); if (window.__tzCrop) setBoard(window.__tzCrop.n, window.__tzCrop); }
 
   /* ---------- komadai: a light kaya wood-grain texture (procedural, drawn once; skin.css uses --kdwood / --kdwoodh) ---------- */
   try {
