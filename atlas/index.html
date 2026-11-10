@@ -1375,6 +1375,12 @@ html.bv-pland .urtoast{top:calc(52px + env(safe-area-inset-top));left:calc(50% +
   #pg-home .ttl{width:min(88%,262px)}
   #pg-home .toprow{margin-top:0}
   #pg-home .prof{border-radius:0 0 24px 24px!important;background:#fff;min-height:62px}
+  /* wearing an SSR / UR: the glow and the running light wrap the title and the name row as one card (2026-11-11) */
+  #pg-home .prof.nr3,#pg-home .prof.nr4{overflow:visible;box-shadow:0 6px 0 #e9dcc0!important}
+  #pg-home .prof.nr3::before,#pg-home .prof.nr4::before{content:'';position:absolute;left:0;right:0;top:-188px;bottom:0;border-radius:24px;z-index:-1;pointer-events:none;box-shadow:0 0 26px 4px rgba(180,107,255,.45)}
+  #pg-home .prof.nr4::before{box-shadow:0 0 26px 4px rgba(255,170,60,.5)}
+  #pg-home .prof > .rfx{top:-188px;border-radius:24px}
+  #pg-home .prof > .ntw{top:-180px}
   /* name row: avatar · name · coins · streak · ⌄ — the stats, the login week and Google sign-in open under it */
   #pg-home .prof{display:grid!important;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;column-gap:10px;padding:8px 10px 8px 8px!important}
   #pg-home .prof .pf-r{display:contents}
