@@ -56,6 +56,7 @@ html.atlas-amazons .pieces .pc.hov{opacity:.5!important}
 html.atlas-amazons .reserve.turn::after{display:none}   /* (the 2D page's turn mark: a line floating under the plate with no frame behind it) */
 html.atlas-amazons .reserve .rsv-plate{background:rgba(20,16,12,.82)!important;box-shadow:0 0 0 1px rgba(226,182,96,.45),0 2px 6px rgba(0,0,0,.35)!important;color:#f0e2c4!important}
 html.atlas-amazons #fPieces{display:none!important}
+html.atlas-amazons:not(.atlas-2d) .app > .side{z-index:3}   /* (zoomed in, the canvas covers the window: the cards stay above it) */
 /* lesson / puzzle cards: no guide picture (the four tool tiles with labels and the primary button need the whole row) */
 html.atlas-skin .cb-foot .pic{display:none!important}
 html.atlas-skin .atlas-guide .bub::before,html.atlas-skin .atlas-guide .bub::after{display:none!important}
@@ -63,6 +64,11 @@ html.atlas-skin .cb-foot .cb-bar{flex:1 1 auto;min-width:0}
 html.atlas-skin .cb-bar .cb-tools{flex:1 1 auto;min-width:0;display:flex;gap:6px}
 html.atlas-skin .cb-bar .cb-tools > .cb-ic{flex:1 1 0;min-width:0;width:auto!important}
 html.atlas-skin .cb-bar .cb-t{flex:none;white-space:nowrap}
+/* (2026-11-11 the user: the tiles' insides were cramped — more room round the icon and the label) */
+html.atlas-skin .cb-cmp .cb-bar .cb-ic[data-cap]{height:60px!important;padding:6px 8px!important;gap:5px!important;min-width:56px!important;box-sizing:border-box}
+html.atlas-skin .cb-cmp .cb-bar .cb-ic[data-cap]::after{font-size:11px}
+html.atlas-skin .cb-cmp .cb-bar .cb-t{height:60px!important;padding:0 16px!important;min-width:0!important}
+html.atlas-skin .cb-cmp .cb-tools{gap:8px}
 html.atlas-skin #f3D{margin:12px 0 0;padding:10px 12px 12px;border-radius:14px;background:#f6f1e4;border:2px solid #e2cf9e}
 html.atlas-skin #f3D > label{display:block;font-weight:700;font-size:13px;color:#7a5a1c;margin:0 0 8px}
 html.atlas-skin #f3D > label.pc3l{margin-top:12px}
@@ -117,7 +123,9 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
       // zoomed in or moved: the canvas covers the whole window (the board may reach anywhere); at rest it hugs the board (fewer pixels)
       const full = on && (z > 1.001 || Math.abs(px) > .5 || Math.abs(py) > .5);
       if (host && (full || hostFull)) {
-        if (full) { const r = holder.getBoundingClientRect(); Object.assign(host.style, { left: Math.round(-r.left) + 'px', top: Math.round(-r.top) + 'px', width: innerWidth + 'px', height: innerHeight + 'px' }); }
+        // (every time: the skin's own placement on a resize may have put the canvas back round the board meanwhile)
+        // (from the board's place down only: on phones the cards above it show the table through, so the canvas stays under them)
+        if (full) { const r = holder.getBoundingClientRect(), fr = document.getElementById('frame'), ft = Math.max(0, fr ? fr.getBoundingClientRect().top : 0), L = Math.round(-r.left) + 'px', Tp = Math.round(ft - r.top) + 'px', W = innerWidth + 'px', H = Math.round(innerHeight - ft) + 'px'; const st = host.style; if (st.left !== L || st.top !== Tp || st.width !== W || st.height !== H) Object.assign(st, { left: L, top: Tp, width: W, height: H }); }
         else dispatchEvent(new Event('resize'));   // (back at rest: the skin's own placement of the canvas)
         hostFull = full;
       }
@@ -127,7 +135,7 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
   function setView(z, x, y) {
     const b = boardDom.offsetWidth * SC;
     view.z = Math.max(1, Math.min(ZMAX, z));
-    const lim = b * (view.z * .55 + .2);   // keep a good part of the board on the screen
+    const lim = b * (view.z * .55 + .2) + Math.max(innerWidth, innerHeight) * .3;   // keep a good part of the board on the screen (the puzzle close-up may need to bring a corner up past the cards)
     view.x = Math.max(-lim, Math.min(lim, x)); view.y = Math.max(-lim, Math.min(lim, y));
     if (view.z === 1 && Math.abs(view.x) < 2 && Math.abs(view.y) < 2) { view.x = 0; view.y = 0; }
     lift3d(); T3.kick(200);
@@ -139,6 +147,32 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
     const [ox, oy] = centreNow();
     setView(z1, view.x + (cx - ox) * (1 - k), view.y + (cy - oy) * (1 - k));
   }
+  // the page's puzzle close-up (amazons/app.js pzzApply): w = { r0, c0, n } on the shown board, null = the whole board — the view
+  // glides there (0.4 s)
+  let zT = 0;
+  window.__amzZoom = w => {
+    const b = boardDom.offsetWidth * SC, cell = b / 10, z = w ? Math.min(ZMAX, 10 / w.n * .9) : 1;
+    // (the region's centre is brought to the centre of the board's place as far as it is on the screen — on phones the cards
+    //  above and the tabs below cover part of it)
+    let tx = 0, ty = 0;
+    if (w) {
+      const [cx, cy] = centreNow(), bx = cx - view.x, by = cy - view.y, fr = (document.getElementById('frame') || boardDom).getBoundingClientRect();
+      const tabs = matchMedia('(pointer:coarse)').matches ? 96 : 0, y0 = Math.max(fr.top, 0), y1 = Math.min(fr.bottom, innerHeight - tabs);
+      const dx = (Math.max(fr.left, 0) + Math.min(fr.right, innerWidth)) / 2, dy = y1 > y0 ? (y0 + y1) / 2 : by;
+      tx = dx - bx - ((w.c0 + w.n / 2) - 5) * cell * z; ty = dy - by - ((w.r0 + w.n / 2) - 5) * cell * z;
+    }
+    const a = { z: view.z, x: view.x, y: view.y }, t0 = performance.now(); cancelAnimationFrame(zT); clearTimeout(zT);
+    // (then a few passes: the region's centre as drawn — the lean and the perspective move it — is put on the target point)
+    const fix = n => { if (!w || n > 3) return; zT = setTimeout(() => {
+      const p = T3.project(w.c0 + w.n / 2 - 5, w.r0 + w.n / 2 - 5, Y), fr = (document.getElementById('frame') || boardDom).getBoundingClientRect();
+      const tabs = matchMedia('(pointer:coarse)').matches ? 96 : 0, y0 = Math.max(fr.top, 0), y1 = Math.min(fr.bottom, innerHeight - tabs);
+      const ex = (Math.max(fr.left, 0) + Math.min(fr.right, innerWidth)) / 2 - p.x, ey = (y1 > y0 ? (y0 + y1) / 2 : p.y) - p.y;
+      if (!isFinite(ex) || !isFinite(ey) || Math.hypot(ex, ey) < 2) return;
+      setView(view.z, view.x + ex, view.y + ey); fix(n + 1);
+    }, 80); };
+    const step = () => { const k = Math.min(1, (performance.now() - t0) / 400), e = 1 - Math.pow(1 - k, 3); setView(a.z + (z - a.z) * e, a.x + (tx - a.x) * e, a.y + (ty - a.y) * e); if (k < 1) zT = requestAnimationFrame(step); else if (!w) centre(0); else fix(0); };
+    zT = requestAnimationFrame(step);
+  };
   {
     const area = document.querySelector('.board-area') || boardDom.parentElement;
     const on3 = () => !de.classList.contains('atlas-2d');
@@ -148,6 +182,9 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
     area.addEventListener('click', e => { if (noClick) { noClick = false; e.stopImmediatePropagation(); e.preventDefault(); } }, true);   // (the click that ends a drag or a pinch is not a move)
     area.addEventListener('pointerdown', e => {
       if (!on3() || ui(e.target)) return;
+      // (phones, 2026-11-11 the user: a slide moves the board only when it starts on the board itself — an empty square or an
+      //  arrow; the empty space round it is left alone. A second finger joins a gesture already started on the board)
+      if (e.pointerType !== 'mouse' && !pts.size && !(typeof window.amzTouchPan === 'function' && window.amzTouchPan(e.clientX, e.clientY))) return;
       pts.set(e.pointerId, [e.clientX, e.clientY]);
       if (pts.size === 2) { noClick = true; const [a, b] = [...pts.values()]; pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]), z: view.z, mx: (a[0] + b[0]) / 2, my: (a[1] + b[1]) / 2, x: view.x, y: view.y }; drag = null; return; }
       // a drag anywhere (on the board too: a tap that does not move is still a move on the board, a drag moves the view)
@@ -167,7 +204,7 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
     addEventListener('pointerup', up); addEventListener('pointercancel', up);
     area.addEventListener('dblclick', e => { if (!on3() || ui(e.target) || boardDom.contains(e.target)) return; setView(1, 0, 0); });   // back to the whole board
     const st2 = document.createElement('style');
-    st2.textContent = 'html.atlas-amazons:not(.atlas-2d) .board-area{touch-action:none}';
+    st2.textContent = '@media (pointer:fine){html.atlas-amazons:not(.atlas-2d) .board-area{touch-action:none}} html.atlas-amazons:not(.atlas-2d) #board{touch-action:none}';
     document.head.appendChild(st2);
   }
   // centre the board as drawn: the 3D board's corners (the slab and its base, not the pieces) projected on the screen, their top
@@ -186,6 +223,11 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
     }, n ? 60 : 200);
   }
   addEventListener('resize', () => centre(0));
+  // (zoomed: the common skin's placement — on a resize or a change of the board's box — put the canvas back round the board: full
+  //  window again, after it)
+  { const again = () => requestAnimationFrame(() => requestAnimationFrame(() => { if (hostFull) { const h = document.getElementById('atlasGL'); if (h && (h.style.width !== innerWidth + 'px' || h.offsetHeight > innerHeight)) { lift3d(); T3.kick(200); } } }));
+    addEventListener('resize', again); if (window.ResizeObserver) new ResizeObserver(again).observe(boardDom);
+    const gl = document.getElementById('atlasGL'); if (gl) new MutationObserver(again).observe(gl, { attributes: true, attributeFilter: ['style'] }); }
   // the page's clicks: the square under the pointer, read from the 3D view (the DOM board's box is distorted by the lean)
   window.boardPick = (x, y) => {
     if (de.classList.contains('atlas-2d') || !root) return null;

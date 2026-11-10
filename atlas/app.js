@@ -874,7 +874,7 @@
     }
     if ($('bvLv')) {
       const sel = $('bvLv'), bt = document.createElement('button'); bt.type = 'button'; bt.className = 'lvpick'; sel.hidden = true; sel.after(bt);
-      const paint = () => { const o = sel.options[sel.selectedIndex]; bt.innerHTML = `<span>${esc(sel.value === '0' ? t('bv.m.pvp') : matchMedia('(max-width: 819px)').matches ? 'Lv.' + sel.value : o ? o.textContent : '')}</span>${bossImg(id, +sel.value)}<i>▾</i>`; };   // (phones: just Lv.N + the opponent's face)
+      const paint = () => { const o = sel.options[sel.selectedIndex]; bt.innerHTML = `<span>${esc(sel.value === '0' ? t('bv.m.pvp') : matchMedia('(max-width: 819px)').matches ? 'Lv.' + sel.value : o ? o.textContent : '')}</span>${+sel.value && bossOwn(id, +sel.value) ? '<i class="lvck" aria-label="cleared">✓</i>' : ''}${bossImg(id, +sel.value)}<i>▾</i>`; };   // (a cleared level: the ✓ on the closed picker too, 2026-11-11)   // (phones: just Lv.N + the opponent's face)
       sel.addEventListener('change', paint); paint();
       bt.onclick = () => {
         const max = ad.levels, cur = +sel.value;

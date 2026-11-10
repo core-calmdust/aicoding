@@ -108,7 +108,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=8';
+const ENGINE_URL = 'engine.js?v=9';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -596,15 +596,97 @@ $('#kifu').addEventListener('click', e => { const b = e.target.closest('button[d
 })();
 let toastTimer = 0;
 function toast(msg, ms = 1500, big) { const el = $('#toast'); el.textContent = msg; el.classList.toggle('big', !!big); el.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), ms); }
-function update(anim) { if (!anim) sel = null; renderBoard(anim); renderInfo(); stSync(); document.body.classList.toggle("ai-live", aiGameLive()); }
+function update(anim) { if (!anim) sel = null; renderBoard(anim); renderInfo(); stSync(); document.body.classList.toggle("ai-live", aiGameLive()); pzzSync(); }
+// ====================================================================== puzzle close-up (2026-11-11, as in 詰将棋)
+// A puzzle played in one part of the board opens zoomed on it: the marked amazon (trap / guard) or the defender's amazons (no
+// move left), the squares round them and the amazons within four squares, one square more round that (5×5 at least, square;
+// not from the answer's squares — that would be a hint). 9 squares or more: the whole board. A round button on the board's
+// bottom-right corner switches close-up / whole board; zoomed, a slide that does not start on your own amazon moves the window
+// a square at a time. 2D: the board's layers are scaled inside the board (#board > .bz); 3D skin: window.__amzZoom(reg) moves
+// the camera view (atlas/skin/amazons.js).
+const PZZ = { pr: null, reg: null, on: true, pan: [0, 0], btn: null, bz: null, win: null };
+function pzzRegion(Pz) {
+  const N = NS_(), pos = E.Pos.from(Pz.P.s), me = pos.turn, op = 3 - me, T = [];
+  if (Pz.kind === 'trap' || Pz.kind === 'guard') T.push(Pz.P.e);
+  else if (Pz.kind === 'duel') { for (let k = 0; k < 8; k++) { const f = pos.q[k]; if (f >= 0 && pos.sq[f] === op) T.push(f); } }
+  else return null;
+  const rc = i => [(i / N) | 0, i % N], ch = (a, b) => { const [r1, c1] = rc(a), [r2, c2] = rc(b); return Math.max(Math.abs(r1 - r2), Math.abs(c1 - c2)); };
+  const S = new Set(T);
+  for (const t of T) for (const x of E.NB[t]) if (!pos.sq[x]) S.add(x);
+  for (let k = 0; k < 8; k++) { const f = pos.q[k]; if (f >= 0 && T.some(t => ch(t, f) <= 4)) S.add(f); }
+  let r0 = N, r1 = -1, c0 = N, c1 = -1;
+  for (const i of S) { let [r, c] = rc(i); if (flip) { r = N - 1 - r; c = N - 1 - c; } r0 = Math.min(r0, r); r1 = Math.max(r1, r); c0 = Math.min(c0, c); c1 = Math.max(c1, c); }
+  r0--; c0--; r1++; c1++;
+  const n = Math.max(5, r1 - r0 + 1, c1 - c0 + 1); if (n >= 9) return null;
+  const fit = (a0, a1) => { let a = Math.round((a0 + a1 + 1 - n) / 2); return Math.max(0, Math.min(N - n, a)); };
+  return { r0: fit(r0, r1), c0: fit(c0, c1), n };
+}
+const pzz3D = () => document.documentElement.classList.contains('atlas-skin') && !document.documentElement.classList.contains('atlas-2d');
+function pzzWindow() { const R = PZZ.reg; if (!R || !PZZ.on) return null; const N = NS_(); return { n: R.n, r0: Math.max(0, Math.min(N - R.n, R.r0 + PZZ.pan[1])), c0: Math.max(0, Math.min(N - R.n, R.c0 + PZZ.pan[0])) }; }
+function pzzApply() {
+  const N = NS_(), w = PZZ.win = pzzWindow();
+  if (!PZZ.bz) { const bz = PZZ.bz = document.createElement('div'); bz.className = 'bz'; while (boardEl.firstChild) bz.appendChild(boardEl.firstChild); boardEl.appendChild(bz); }
+  const d3 = pzz3D();
+  boardEl.classList.toggle('zoomed', !!w && !d3);
+  PZZ.bz.style.transform = w && !d3 ? `scale(${N / w.n}) translate(${-w.c0 / N * 100}%, ${-w.r0 / N * 100}%)` : '';
+  const zk = d3 ? JSON.stringify(w) : 'flat'; if (zk !== PZZ.zk && typeof window.__amzZoom === 'function') { PZZ.zk = zk; window.__amzZoom(d3 ? w : null); }
+  pzzBtn();
+}
+function pzzBtn() {
+  const show = !!puzzle && !!PZZ.reg;
+  if (!PZZ.btn) {
+    if (!show) return;
+    const b = PZZ.btn = document.createElement('button'); b.type = 'button'; b.className = 'pzz-btn';
+    b.onclick = e => { e.stopPropagation(); PZZ.on = !PZZ.on; PZZ.pan = [0, 0]; pzzApply(); };
+    boardEl.parentElement.appendChild(b);
+  }
+  const b = PZZ.btn; b.hidden = !show; if (!show) return;
+  b.style.left = (boardEl.offsetLeft + boardEl.offsetWidth - 46) + 'px'; b.style.top = (boardEl.offsetTop + boardEl.offsetHeight - 46) + 'px';
+  const zin = !!PZZ.win, k = zin ? 'all' : 'in';
+  if (b.dataset.k !== k) {
+    b.dataset.k = k; b.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${zin ? '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>' : '<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5M8 10.5h5M10.5 8v5"/>'}</svg>`;
+    b.title = t(zin ? 'pz.zAll' : 'pz.zIn'); b.setAttribute('aria-label', b.title);
+  }
+}
+// a new puzzle: its region (zoomed); anything else: the whole board
+function pzzSync() {
+  const pr = puzzle && puzzle.state !== 'answer' ? puzzle.P : puzzle ? PZZ.pr : null;
+  if (pr !== PZZ.pr) { PZZ.pr = pr; PZZ.reg = pr ? pzzRegion(puzzle) : null; PZZ.on = true; PZZ.pan = [0, 0]; pzzApply(); }
+  else pzzBtn();
+}
+addEventListener('resize', () => requestAnimationFrame(pzzBtn));
+{ let was = null; new MutationObserver(() => { const d = pzz3D(); if (d !== was) { was = d; if (PZZ.reg) pzzApply(); } }).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] }); }   // (2D ⇄ 3D)
+{ let pd = null;
+  boardEl.addEventListener('pointerdown', e => {
+    if (!PZZ.win || pzz3D() || (e.pointerType === 'mouse' && e.button)) return;
+    const s = squareAt(e.clientX, e.clientY); if (s >= 0 && posAt(cur).pos.sq[s] === toMoveAt(cur)) return;
+    pd = { id: e.pointerId, x: e.clientX, y: e.clientY, m: 0, ax: 0, ay: 0 };
+  });
+  addEventListener('pointermove', e => {
+    if (!pd || e.pointerId !== pd.id || !PZZ.win) return;
+    const dx = e.clientX - pd.x, dy = e.clientY - pd.y; pd.m += Math.abs(dx) + Math.abs(dy); pd.x = e.clientX; pd.y = e.clientY; pd.ax += dx; pd.ay += dy;
+    if (pd.m < 8) return;
+    pzzNoClick = Date.now();
+    const cw = boardEl.offsetWidth / PZZ.win.n, sx = Math.trunc(pd.ax / cw), sy = Math.trunc(pd.ay / cw); if (!sx && !sy) return;
+    pd.ax -= sx * cw; pd.ay -= sy * cw;
+    const N = NS_(), R = PZZ.reg; PZZ.pan[0] = Math.max(-R.c0, Math.min(N - R.n - R.c0, PZZ.pan[0] - sx)); PZZ.pan[1] = Math.max(-R.r0, Math.min(N - R.n - R.r0, PZZ.pan[1] - sy));
+    pzzApply();
+  });
+  const up = () => { if (pd && pd.m >= 8) pzzNoClick = Date.now(); pd = null; };
+  addEventListener('pointerup', up); addEventListener('pointercancel', up);
+  boardEl.addEventListener('click', e => { if (Date.now() - pzzNoClick < 250) { e.stopImmediatePropagation(); e.preventDefault(); } }, true);
+}
+var pzzNoClick = 0;
+// (the 3D skin on phones: may a slide starting here move the board? only on the board's empty squares and arrows)
+window.amzTouchPan = (x, y) => { const s = squareAt(x, y); if (s < 0) return false; const v = posAt(cur).pos.sq[s]; return v === 0 || v === 3; };
 
 // ====================================================================== input (three taps: an amazon, the square it moves to, the square the arrow flies to)
 function squareAt(clientX, clientY) {
   const N = NS_();
   // (the portal's 3D skin leans the board with a CSS perspective: the box no longer maps to the squares — it asks the 3D view)
   if (typeof window.boardPick === 'function') { const rc = window.boardPick(clientX, clientY); if (rc) { let [rr, c] = rc; if (c < 0 || c >= N || rr < 0 || rr >= N) return -1; if (flip) { c = N - 1 - c; rr = N - 1 - rr; } return E.sqAt(rr, c); } }
-  const r = boardEl.getBoundingClientRect(), u = r.width / N;
-  let c = Math.floor((clientX - r.left) / u), rr = Math.floor((clientY - r.top) / u);
+  const r = boardEl.getBoundingClientRect(), w = !pzz3D() && PZZ.win, u = r.width / N * (w ? N / w.n : 1);
+  let c = Math.floor((clientX - r.left) / u) + (w ? w.c0 : 0), rr = Math.floor((clientY - r.top) / u) + (w ? w.r0 : 0);
   if (c < 0 || c >= N || rr < 0 || rr >= N) return -1;
   if (flip) { c = N - 1 - c; rr = N - 1 - rr; }
   return E.sqAt(rr, c);
@@ -1583,18 +1665,20 @@ $('#lsList').onclick = () => { if (!lesson) return; openLessons(null, cOf(curSte
 // Themes (version 2, 2026-11-11): w2 / w3 leave the opponent without a move within N of your moves (the opponent defends as
 // stubbornly as it can), t2 box in the marked amazon within 2 (it runs), e3 an endgame read to the end (engine.js solveWin).
 let PUZZLES = null, pzLevel = 0;
-const puzzlesReady = fetch('puzzles.json?v=2').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
+const puzzlesReady = fetch('puzzles.json?v=3').then(r => r.json()).then(d => (PUZZLES = d)).catch(() => null);
 const PZ_STORE = STORE + '-puzzles2';   // (2026-11-11: the puzzles were renewed — version 2; the first day's records stay under -puzzles)
 function pzProgress() { try { return JSON.parse(localStorage.getItem(PZ_STORE) || '{}') || {}; } catch (e) { return {}; } }
+// (2026-11-11 later: w2・w3・t2 were rebuilt — the day's records of those three themes point at other puzzles now: dropped once)
+try { if (!localStorage.getItem(PZ_STORE + '-r3')) { const pr = pzProgress(); for (const k in pr) if (/^(w2|w3|t2)-/.test(k)) delete pr[k]; localStorage.setItem(PZ_STORE, JSON.stringify(pr)); localStorage.setItem(PZ_STORE + '-r3', '1'); } } catch (e) {}
 const pzKey = (id, j) => id + '-' + j;
 const starVal = x => x === true ? 3 : (+x || 0);
 function pzRecs(T, pr) { pr = pr || pzProgress(); return T.puzzles.map((_, j) => starVal(pr[pzKey(T.id, j)])); }
-function themeTier(T) { return { w2: 2, t2: 2, w3: 3, e3: 3 }[T.id] || 1; }
+function themeTier(T) { return { w2: 2, t2: 2, d2: 2, w3: 3, t3: 3, e3: 3, w4: 3, t4: 3 }[T.id] || 1; }
 function showPzView(v) { ['pzListView', 'pzGridView'].forEach(id => $('#' + id).classList.toggle('hidden', id !== v)); }
 const PZ_LAST = STORE + '-pz-last', PZ_TAB = STORE + '-pz-tab', PZ_GRPS = ['Win', 'Tac', 'End'], PZ_GIC = { Win: 'crown', Tac: 'target', End: 'grid' };
-const PZ_TSVG = { t2: '<rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="12" cy="12" r="3"/>', e3: '<path d="M4 4h16v16H4zM12 4v16M4 12h16"/>' };
+const PZ_TSVG = { d2: '<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/>', e3: '<path d="M4 4h16v16H4zM12 4v16M4 12h16"/>' };
 const pzBadge = T => PZ_TSVG[T.id] ? `<svg viewBox="0 0 24 24" aria-hidden="true">${PZ_TSVG[T.id]}</svg>` : `<b class="gl">${(T.id.match(/\d+$/) || [''])[0]}</b>`;
-const pzThumbSVG = (T, j, P) => miniSVG(P.s, { cls: 'lxb', simple: true, flip: P.s.side === P2, marks: P.e !== undefined ? { [P.e]: 'ng' } : {} });
+const pzThumbSVG = (T, j, P) => miniSVG(P.s, { cls: 'lxb', simple: true, flip: P.s.side === P2, marks: P.e !== undefined ? { [P.e]: T.kind === 'guard' ? 'ok' : 'ng' } : {} });
 function pzThumbOf(T, j) { if (j < 0) j = T.puzzles.length - 1; const P = T.puzzles[j]; return P && P.s ? { board: pzThumbSVG(T, j, P), tm: `<span class="pdisc p${P.s.side === P2 ? 2 : 1}"></span>` } : { board: '' }; }
 async function openPuzzles() {
   const d = await puzzlesReady; selTab('puzzle');
@@ -1639,7 +1723,7 @@ $('#pzBack').onclick = () => openPuzzles();
 $('#pzClose').onclick = () => hideOverlay('#puzzleOverlay');
 // the marked amazon of a trap, followed through its moves (its index in pos.q stays the same)
 const pzTarget = Pz => { if (Pz.P.e === undefined) return -1; if (Pz.tk === undefined) Pz.tk = E.trapIdx(Pz.P.s, Pz.P.e); return Pz.tk < 0 ? -1 : posAt(cur).pos.q[Pz.tk]; };
-const pzMarks = Pz => { const at = pzTarget(Pz); return at >= 0 ? [{ at, cls: 'ng' }] : []; };
+const pzMarks = Pz => { const at = pzTarget(Pz); return at >= 0 ? [{ at, cls: Pz.kind === 'guard' ? 'ok' : 'ng' }] : []; };
 function startPuzzle(L, j, daily) {
   hideOverlay('#puzzleOverlay');
   stashGame(); lesson = null; document.body.classList.remove('in-lesson');
@@ -1674,7 +1758,8 @@ const pzWon = Pz => { const st = statusAt(cur); return st.over && st.winner === 
 async function pzOpponent(Pz, tok) {
   if (pzWon(Pz)) return true;
   const st = statusAt(cur); if (st.over) return false;
-  const r = await replyReq(Pz.n - Pz.used, Pz);
+  const ml = Pz.P.r, onLine = Pz.kind === 'guard' && ml && cur === 1 && moves[0] === ml[0];   // (guard: the stored main line's reply — no wait)
+  const r = onLine ? ml[1] : await replyReq(Pz.n - Pz.used, Pz);
   if (r == null || r < 0 || puzzle !== Pz || tok !== busyToken) return false;
   const before = posAt(cur).pos.clone();
   await sleep(380); if (puzzle !== Pz || tok !== busyToken) return false;
@@ -1682,35 +1767,42 @@ async function pzOpponent(Pz, tok) {
   await sleep(moveDur(r, before) + 120);
   return pzWon(Pz) || pzDone(Pz);
 }
-// a trap is done when the marked amazon has no empty square next to it
-const pzDone = Pz => { if (Pz.kind !== 'trap') return false; Pz.tk = Pz.tk === undefined ? E.trapIdx(Pz.P.s, Pz.P.e) : Pz.tk; return Pz.tk >= 0 && E.boxed(posAt(cur).pos, Pz.tk); };
+// a trap is done when the marked amazon has no empty square next to it; a guard when you held every time
+const pzDone = Pz => { if (Pz.kind === 'guard') return !Pz.miss && Pz.used >= Pz.n; if (Pz.kind !== 'trap') return false; Pz.tk = Pz.tk === undefined ? E.trapIdx(Pz.P.s, Pz.P.e) : Pz.tk; return Pz.tk >= 0 && E.boxed(posAt(cur).pos, Pz.tk); };
 async function puzzleMove(m) {
+  // (2026-11-11 common rule: a wrong move is not called out nor failed at once — the game goes on, the opponent answers with its
+  //  best, and the result shows only when the goal is reached or can no longer be: the moves used up, boxed in, the game over)
   const Pz = puzzle; Pz.busy = true; lessonMarks = [];
-  const left = Pz.n - Pz.used, tok = busyToken;
-  pzStatus(t('pz.checking'));
+  const tok = busyToken;
   const good = await goodReq(Pz);
-  if (!good || puzzle !== Pz || tok !== busyToken) return;
+  if (puzzle !== Pz || tok !== busyToken) return;
+  if (good && !good.includes(m)) { Pz.miss = true; Pz.failed = true; }
   const before = posAt(cur).pos.clone(), dm = moveDur(m, before);
   playMove2(m); Pz.used++; renderPuzzleCard();
-  if (!good.includes(m)) {
-    Pz.state = 'fail'; Pz.failed = true;
-    await sleep(dm + 350);
-    if (puzzle !== Pz) return;
-    moves = moves.slice(0, cur - 1); cur = moves.length; Pz.used--;
-    lessonMarks = pzMarks(Pz); if (good[0] !== undefined) lessonMarks.push(...moveMarks(good[0], 'ok')); lessonMarks.push(...moveMarks(m, 'ng'));
-    Pz.busy = false; Pz.state = 'play'; update(false); playChime(false); renderPuzzleCard();
-    const why = Pz.kind === 'trap' ? t('pz.bl.trap', { m: mvIn(before, m) }) : Pz.kind === 'end' ? t('pz.bl.end', { m: mvIn(before, m) }) : Pz.kind === 'read' ? t('pz.bl.read', { m: mvIn(before, m) }) : t(left <= 1 ? 'pz.bl.last' : 'pz.bl.reach', { n: left, m: mvIn(before, m) });
-    pzStatus(`<b class="ng">${t('fb.bad')}</b> ${why} ${t('pz.again')}`);
-    return;
-  }
   await sleep(dm + 60);
   if (puzzle !== Pz || tok !== busyToken) return;
   lessonMarks = pzMarks(Pz); update(false);
-  if (Pz.kind === 'end' || pzWon(Pz) || pzDone(Pz) || await pzOpponent(Pz, tok)) { if (puzzle === Pz) puzzleSolved(); return; }
-  lessonMarks = pzMarks(Pz); update(false);
+  if (pzWon(Pz) || pzDone(Pz)) { puzzleSolved(); return; }
+  if (Pz.kind === 'end') return Pz.miss ? pzFail(Pz) : puzzleSolved();
+  if ((Pz.kind === 'duel' || Pz.kind === 'trap') && Pz.used >= Pz.n) { pzFail(Pz); return; }
+  if (await pzOpponent(Pz, tok)) { if (puzzle === Pz) puzzleSolved(); return; }
   if (puzzle !== Pz || tok !== busyToken) return;
+  lessonMarks = pzMarks(Pz); update(false);
+  if (pzLost(Pz)) { pzFail(Pz); return; }
   Pz.busy = false; renderPuzzleCard(); boardEl.classList.toggle('can', canHumanPlay());
   pzStatus(t('pz.reply', { m: Pz.lastReply || '', n: Math.max(1, Pz.n - Pz.used) }));
+}
+// the goal can no longer be reached: you cannot move (the read-out endgame lost), or your guarded amazon is boxed in
+function pzLost(Pz) {
+  const st = statusAt(cur); if (st.over && st.winner !== Pz.me) return true;
+  if (Pz.kind === 'guard') { const k = Pz.tk === undefined ? (Pz.tk = E.trapIdx(Pz.P.s, Pz.P.e)) : Pz.tk; if (k >= 0 && E.boxed(posAt(cur).pos, k)) return true; if (Pz.used >= Pz.n + 2) return true; }
+  return false;
+}
+function pzFail(Pz) {
+  Pz.state = 'fail'; Pz.failed = true; Pz.busy = false;
+  const why = t('pz.out.' + Pz.kind, { n: Pz.n });
+  pzStatus(`<b class="ng">${t('pz.failed')}</b> ${why} ${t('pz.see')}`);
+  playChime(false); renderPuzzleCard(); boardEl.classList.toggle('can', false);
 }
 function puzzleSolved() {
   const Pz = puzzle; if (!Pz) return;
@@ -1722,7 +1814,7 @@ function puzzleSolved() {
   const after = pzRecs(Pz.T, pr), ev = PZBook.events(before, after, Pz.j);
   if (Pz.daily) dailySolved(Pz.daily, Pz.hinted);
   PZBook.setLang(LANG);
-  const sub = Pz.kind === 'trap' ? t('pz.solvedTrap') : Pz.kind === 'end' ? t('pz.solvedEnd') : Pz.kind === 'read' ? t('pz.solvedRead') : t('pz.solvedSub', { n: Pz.used });
+  const sub = Pz.kind === 'trap' ? t('pz.solvedTrap') : Pz.kind === 'guard' ? t('pz.solvedGuard') : Pz.kind === 'end' ? t('pz.solvedEnd') : Pz.kind === 'read' ? t('pz.solvedRead') : t('pz.solvedSub', { n: Pz.used });
   pzStatus(`<b class="ok">${t('pz.solved')}</b> ${sub}` + (Pz.daily ? `<br>🔥 ${t('daily.streak', { n: dailyInfo().streak })}` : '') + PZBook.solved({ stars, recs: after, j: Pz.j, events: ev }));
   playChime(true); confetti(); if (ev.length) setTimeout(confetti, 600); renderPuzzleCard();
 }
@@ -1751,7 +1843,7 @@ $('#pzAnswer').onclick = async () => {
   moves = []; cur = 0; Pz.used = 0; update(false); renderPuzzleCard();
   pzStatus(t('pz.showing'));
   const tok = busyToken;
-  for (let step = 0; step < 4; step++) {
+  for (let step = 0; step < 8; step++) {
     if (puzzle !== Pz) return;
     const pos = posAt(cur).pos;
     const good = await goodReq(Pz); if (puzzle !== Pz || !good || !good.length) break;
@@ -1759,7 +1851,7 @@ $('#pzAnswer').onclick = async () => {
     playMove2(good[0]); Pz.used++;
     renderPuzzleCard();
     await sleep(moveDur(good[0], pos));
-    if (Pz.kind !== 'duel' || pzWon(Pz) || await pzOpponent(Pz, tok)) break;
+    if (Pz.kind === 'end' || pzWon(Pz) || pzDone(Pz) || await pzOpponent(Pz, tok)) break;
     if (puzzle !== Pz || statusAt(cur).over) break;
   }
   lessonMarks = pzMarks(Pz);
