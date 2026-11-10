@@ -1081,9 +1081,9 @@
     const PZI = '<svg viewBox="0 0 24 24"><path d="M10 3h4v2.2a1.8 1.8 0 1 0 3.6 0V3H21v6h-2.2a1.8 1.8 0 1 0 0 3.6H21V21h-6v-2.2a1.8 1.8 0 1 0-3.6 0V21H3v-6h2.2a1.8 1.8 0 1 0 0-3.6H3V3h7z"/></svg>';
     const LSI = '<svg viewBox="0 0 24 24"><path d="M3 9.5 12 5l9 4.5-9 4.5z"/><path d="M7 11.6V16c0 1.4 2.2 2.6 5 2.6s5-1.2 5-2.6v-4.4M21 9.5V15"/></svg>';
     const ps = document.createElement('div'); ps.className = 'psheet'; ps.id = 'bvPS';
-    ps.innerHTML = `<div class="ps-in bvi" role="dialog" aria-label="${esc(t('ps.h'))}"><div class="ps-h">${esc(t('ps.h'))}<button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div>
+    ps.innerHTML = `<div class="ps-in bvi" role="dialog" aria-label="${esc(t('ps.h'))}"><div class="ps-main"><div class="ps-h">${esc(t('ps.h'))}<button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div>
       <div class="ps-sec"><div class="ps-t">${esc(t('ps.vs'))}</div><div class="ps-body"></div><div class="ps-act"></div></div>
-      ${g.total.pz ? row('puzzle', PZI, t('pg.pz'), r.pz || 0, g.total.pz) : ''}${g.total.ls ? row('lesson', LSI, t('pg.ls'), r.ls || 0, g.total.ls) : ''}</div>`;
+      ${g.total.pz ? row('puzzle', PZI, t('pg.pz'), r.pz || 0, g.total.pz) : ''}${g.total.ls ? row('lesson', LSI, t('pg.ls'), r.ls || 0, g.total.ls) : ''}</div><div class="ps-subv" hidden></div></div>`;
     $('bv').appendChild(ps);
     const body = ps.querySelector('.ps-body'), pa = ps.querySelector('.ps-act');
     ['bvMode', 'bvMBody', 'bvSzRow'].forEach(i => { if ($(i)) body.appendChild($(i)); });
@@ -1092,9 +1092,36 @@
     act.className = 'act act2';
     const go = document.createElement('button'); go.className = 'btn big'; go.id = 'bvGo'; go.textContent = t('ps.go') + ' ▶'; act.prepend(go);
     if (cls) { cls.querySelectorAll('small').forEach(x => x.remove()); cls.classList.remove('pk'); }
-    const close = () => ps.classList.remove('on');
+    // パズル / レッスン (2026-11-11): the sheet keeps its size and turns into that part's page (← back), with the PC card's three buttons:
+    // red あそぶ (here on the 3D table) · brown フル機能で遊ぶ · white 2Dで遊ぶ
+    const inn = ps.querySelector('.ps-in'), main = ps.querySelector('.ps-main'), sv = ps.querySelector('.ps-subv');
+    const pz3d = !!(window.AtlasPuzzles && AtlasPuzzles.has(g.id) && ad.table), ls3d = !!(window.AtlasLessons && AtlasLessons.has && AtlasLessons.has(g.id) && ad.table);
+    let subK = null, lsk = pref[g.id + ':lsk'] === 'open' ? 'open' : 'list';
+    const subHtml = k => {
+      const pz = k === 'puzzle', a = pz ? r.pz || 0 : r.ls || 0, b = pz ? g.total.pz : g.total.ls, here = pz ? pz3d : ls3d;
+      const daily = g.id === 'shogi' ? [['d1', '★', t('bv.pz.d1')], ['d2', '☆', t('bv.pz.d2')]] : [['d1', '★', t('bv.pz.dc')]];
+      const ch = pz ? `<div class="ps-ch pz">${daily.map(([x, ic, lb]) => `<button type="button" class="mxb" data-pz="${x}"><i>${ic}</i>${esc(lb)}</button>`).join('')}<button type="button" class="mxb" data-pz="list"><i>▦</i>${esc(t('bv.pzList'))}</button></div>`
+        : `<div class="ps-ch ls"><div class="mtab3 ps-lsk">${[['list', t('bv.ls')], ['open', t('bv.lsOp')]].map(([x, lb]) => `<button type="button" data-lk="${x}" class="${x === lsk ? 'on' : ''}">${esc(lb)}</button>`).join('')}</div><button type="button" class="mxb" data-ll="1"><i>▦</i>${esc(t('bv.list'))}</button></div>`;
+      return `<div class="ps-h"><button type="button" class="ps-back" aria-label="${esc(t('bv.back'))}"><i class="ps-cv"></i><span>${esc(t('bv.back'))}</span></button><span class="ps-ttl">${esc(t(pz ? 'pg.pz' : 'pg.ls'))}</span><button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div>
+        <div class="ps-sec ps-sx"><div class="ps-prog"><span class="ps-ic" style="--c:${g.color}">${pz ? PZI : LSI}</span><span class="bar" style="--c:${g.color}"><i style="width:${Math.min(100, a / b * 100)}%"></i></span><em>${Math.min(a, b).toLocaleString()}/${b.toLocaleString()}</em></div>${ch}
+        <div class="ps-act ps-act3">${here ? `<button type="button" class="btn big pk ps-go"><b>${esc(t('ps.go'))} ▶</b><small>${esc(t(pz ? 'bv.pzContSub' : 'bv.lsSub3d'))}</small></button>` : ''}<button type="button" class="btn big2 pk ps-full"><b>${esc(t('bv.full'))}</b></button><a class="btn ghost big2 pk ps-2d" href="${'../' + g.href + (pz ? '?mode=puzzle&sub=cont' : '?mode=lesson&sub=' + lsk)}"><b>${esc(t('bv.classic'))}</b></a></div></div>`;
+    };
+    const openSub = k => { subK = k; inn.style.height = inn.offsetHeight + 'px'; inn.classList.add('sub'); sv.innerHTML = subHtml(k); main.hidden = true; sv.hidden = false; sv.classList.remove('bk'); void sv.offsetWidth; sv.classList.add('in'); inn.scrollTop = 0; };
+    const backSub = () => { subK = null; sv.hidden = true; sv.classList.remove('in'); main.hidden = false; inn.classList.remove('sub'); inn.style.height = ''; main.classList.remove('in'); void main.offsetWidth; main.classList.add('in'); };
+    const close = () => { ps.classList.remove('on'); if (subK) setTimeout(() => { if (!ps.classList.contains('on')) { backSub(); main.classList.remove('in'); } }, 280); };
     go.onclick = () => { ps.classList.add('on'); if (window.__bvModeRz) window.__bvModeRz(); try { SFX.tap && SFX.tap(); } catch (e) {} };
-    ps.onclick = e => { const b = e.target.closest('.ps-row'); if (b) { try { SFX.tap && SFX.tap(); } catch (x) {} if (b.dataset.k === 'puzzle' && window.AtlasPuzzles && AtlasPuzzles.has(g.id) && ad.table) startPuzzle(); else startPlay('full', b.dataset.k); return; } if (e.target === ps || e.target.closest('.lvs-x')) close(); };
+    ps.onclick = e => {
+      const tap = () => { try { SFX.tap && SFX.tap(); } catch (x) {} };
+      if (e.target === ps || e.target.closest('.lvs-x')) return close();
+      const b = e.target.closest('.ps-row'); if (b) { tap(); openSub(b.dataset.k); return; }
+      if (!subK) return;
+      if (e.target.closest('.ps-back')) { tap(); backSub(); return; }
+      const pzb = e.target.closest('[data-pz]'); if (pzb) { tap(); startPlay('full', 'puzzle', pzb.dataset.pz); return; }
+      const lk = e.target.closest('[data-lk]'); if (lk) { tap(); lsk = lk.dataset.lk; pref[g.id + ':lsk'] = lsk; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (x) {} sv.querySelectorAll('[data-lk]').forEach(x => x.classList.toggle('on', x === lk)); sv.querySelector('.ps-2d').href = '../' + g.href + '?mode=lesson&sub=' + lsk; return; }
+      if (e.target.closest('[data-ll]')) { tap(); lessonSheet(g, lsk); return; }
+      if (e.target.closest('.ps-go')) { tap(); if (subK === 'puzzle') startPuzzle(); else { ps.classList.remove('on'); startLesson3D(lsk); } return; }
+      if (e.target.closest('.ps-full')) { tap(); if (subK === 'puzzle') startPlay('full', 'puzzle', 'cont'); else startPlay('full', 'lesson', lsk); }
+    };
     if (window.__bvModeRz) setTimeout(window.__bvModeRz, 0);
   }
   const FULL_SKIN = { ludo: true, reversi: true, shogi: true, chess: true, backgammon: true, gomoku: true, go: true, morris: true, connect4: true, checkers: true, mancala: true, dots: true, xiangqi: true, janggi: true, hex: true, tafl: true, ur: true, senet: true, fanorona: true, ugolki: true, agon: true, alquerque: true, konane: true, amazons: true };
