@@ -125,7 +125,8 @@
   const is3 = () => !V || V.is3d();
   function look() {   // selection mark, board tone and piece tone follow the game's skin setting
     if (seg) seg.querySelectorAll('button').forEach(x => { if (mine) x.classList.toggle('sel', x.dataset.v === 'atlas3d'); else if (x.dataset.v === 'atlas3d') x.classList.remove('sel'); });
-    let sk = 'classic'; try { sk = settings.skin || 'classic'; } catch (e) {}
+    // the 3D board is chosen on its own (the 「3D」 tile): it is always 本榧 — a 2D board picked before (漆黒 …) no longer tints it (2026-11-10)
+    const sk = 'kaya';
     if (board.userData.setTone) board.userData.setTone(sk);
     if (T3.kick) T3.kick(400);
     ['metal', 'ink', 'grain'].forEach(k => document.documentElement.classList.toggle('atlas-sk-' + k, sk === k));

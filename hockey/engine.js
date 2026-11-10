@@ -13,7 +13,8 @@
 (function (root) {
   'use strict';
   const W = 40, L = 62, GW = 13, RP = 2, RM = 3.1, CREASE = 0;
-  const VMAX = 185, VSMASH = 265, DAMP = .3, E_WALL = .88, E_MAL = .9, MALLET_V = 800;   // (2026-11-09: slowed — it was too fast to follow)
+  const VMAX = 100, VSMASH = 140, DAMP = .4, E_WALL = .85, E_MAL = .85, MALLET_V = 600, MALLET_HUMAN = 1200;   // (2026-11-09/10: slowed three times — a table this small can't be played at air-hockey speed)
+  // a player's mallet follows the pointer almost at once (1200 cm/s; at 600 it trailed the hand and felt laggy); the AI keeps 600 × its level cap
   const DIM = { W, L, GW, RP, RM, VMAX };
   const MODES = ['classic', 'block', 'monster', 'items', 'bumper', 'warp', 'multi', 'chaos'];
   const ITEMS = ['speed', 'split', 'giant', 'shield', 'freeze'];
@@ -58,14 +59,21 @@
     if (has(s, 'items')) { s.nextItem -= dt; if (s.nextItem <= 0 && s.items.length < 2) { s.items.push({ k: ITEMS[Math.floor(s.R() * ITEMS.length)], x: (s.R() - .5) * (W - 10), y: (s.R() - .5) * 14, t: 0 }); s.nextItem = 5 + s.R() * 4; s.ev.push({ k: 'item' }); } s.items.forEach(it => it.t += dt); s.items = s.items.filter(it => it.t < 12); }
     if (s.pause > 0) { s.pause -= dt; if (s.pause <= 0 && !s.pucks.length) { serve(s, s.serveTo); if (s.mode === 'multi') serve(s, 1 - s.serveTo, true); } }
     for (let k = 0; k < n; k++) { const f = (k + 1) / n; for (const m of s.mal) { m.tx = m.px + (m.ex - m.px) * f; m.ty = m.py + (m.ey - m.py) * f; } sub(s, h); }
-    // a puck left still out of reach (2.5 s) is given a small nudge
-    for (const p of s.pucks) { if (p.wait > 0) continue; if (Math.hypot(p.vx, p.vy) < 6) { p.still = (p.still || 0) + dt; if (p.still > 2.5) { const a = s.R() * Math.PI * 2; p.vx = Math.cos(a) * 40; p.vy = Math.sin(a) * 40 + (p.y > 0 ? 25 : -25); p.still = 0; s.ev.push({ k: 'nudge' }); } } else p.still = 0; }
+    // a puck left still out of reach (2.5 s; 1.2 s in a corner or against an end wall) is given a small nudge toward the open table
+    for (const p of s.pucks) {
+      if (p.wait > 0) continue;
+      if (Math.hypot(p.vx, p.vy) < 6) {
+        const corner = Math.abs(p.y) > L / 2 - RP - 2 || (Math.abs(p.x) > W / 2 - RP - 2 && Math.abs(p.y) > L / 2 - RP - 5);   // (in a corner or against an end wall)
+        p.still = (p.still || 0) + dt;
+        if (p.still > (corner ? 1.2 : 2.5)) { const a = Math.atan2(-p.y * .6, -p.x) + (s.R() - .5) * .8; p.vx = Math.cos(a) * 45; p.vy = Math.sin(a) * 45; p.still = 0; s.ev.push({ k: 'nudge' }); }
+      } else p.still = 0;
+    }
     return s;
   }
   function sub(s, h) {
     // mallets move toward their targets at a limited speed
     for (let i = 0; i < 2; i++) {
-      const m = s.mal[i], vmax = MALLET_V * (m.slow > 0 ? .3 : 1) * (m.aiCap || 1), dx = m.tx - m.x, dy = m.ty - m.y, d = Math.hypot(dx, dy), mv = Math.min(d, vmax * h);
+      const m = s.mal[i], vmax = (m.aiCap ? MALLET_V * m.aiCap : MALLET_HUMAN) * (m.slow > 0 ? .3 : 1), dx = m.tx - m.x, dy = m.ty - m.y, d = Math.hypot(dx, dy), mv = Math.min(d, vmax * h);
       const nx = d > 1e-6 ? m.x + dx / d * mv : m.x, ny = d > 1e-6 ? m.y + dy / d * mv : m.y;
       m.vx = (nx - m.x) / h; m.vy = (ny - m.y) / h; m.x = nx; m.y = ny;
     }
@@ -201,13 +209,33 @@
       const x = c ? c.x : p.x;
       return { tx: x + mem.err * .6, ty: yl };
     }
+    // (2026-11-10) it stops ramming: after pushing at a puck that won't come out (stuck in a corner / against a wall) it backs
+    // off for a moment, and the choice to attack is held for half a second instead of re-rolled every frame
+    mem.back = (mem.back || 0) - dt;
+    if (mem.back > 0) return { tx: home.x * .5 + p.x * .5, ty: home.y };
+    const near = Math.hypot(m.x - p.x, m.y - p.y) < m.r + RP + 3, still = Math.hypot(p.vx, p.vy) < 25;
+    mem.jam = near && still && inHalf ? (mem.jam || 0) + dt : 0;
+    if (mem.jam > .9) { mem.jam = 0; mem.back = .7; mem.strike = 0; mem.bankSide = null; }
+    mem.modeT = (mem.modeT || 0) - dt;
+    if (mem.modeT <= 0) { mem.att = Math.random() < sk.attack + .4; mem.modeT = .5; }
     // attack: a puck in its half → come from behind it toward the far goal (a bank off a side wall at higher levels)
-    if (inHalf && Math.random() < sk.attack + .4) {
+    if (inHalf && mem.att) {
       let gx = mem.err * .5, gy = -sg * (L / 2 + 2);
       if (sk.bank && Math.abs(p.x) > 6 && mem.bankSide == null) mem.bankSide = Math.random() < .5 ? 1 : 0;
       if (sk.bank && mem.bankSide === 1) { const wx = Math.sign(p.x || 1) * W / 2; gx = 2 * wx - gx; }
-      const ax = gx - p.x, ay = gy - p.y, al = Math.hypot(ax, ay), ux = ax / al, uy = ay / al;
-      const behind = { x: p.x - ux * (RP + m.r + 1.5), y: p.y - uy * (RP + m.r + 1.5) };
+      let ax = gx - p.x, ay = gy - p.y, al = Math.hypot(ax, ay), ux = ax / al, uy = ay / al;
+      const reach = (x, y) => Math.abs(x) <= W / 2 - m.r + .2 && y * sg >= m.r - .2 && y * sg <= L / 2 - m.r + .2;   // where its mallet can be
+      const bh = (cx, cy) => ({ x: p.x - cx * (RP + m.r + 1.5), y: p.y - cy * (RP + m.r + 1.5) });
+      let behind = bh(ux, uy);
+      if (!reach(behind.x, behind.y)) {   // a puck in a corner or on a wall: turn the shot (toward the open table) until the mallet can get behind it
+        let ok = null;
+        const onL = p.x < -W / 2 + RP + 1.2, onR = p.x > W / 2 - RP - 1.2;   // (a shot into the wall it lies on does nothing)
+        // the mallet may stand a little off the line (clamped inside its reach): a glancing hit still sends the puck along the wall
+        const clampR = b => ({ x: Math.max(-(W / 2 - m.r), Math.min(W / 2 - m.r, b.x)), y: sg * Math.max(m.r, Math.min(L / 2 - m.r, b.y * sg)) });
+        for (let k = 0; k <= 5 && !ok; k++) for (const sgn of [1, -1]) { const a = Math.atan2(uy, ux) + sgn * k * .2, cx = Math.cos(a), cy = Math.sin(a); if (cy * sg > -.2 || (onL && cx < -.05) || (onR && cx > .05)) continue; const b = bh(cx, cy), c = clampR(b); if (Math.hypot(c.x - b.x, c.y - b.y) < 2.3) { ok = [cx, cy, c]; break; } }
+        if (!ok) { mem.back = .6; return { tx: home.x, ty: home.y }; }   // no clean shot (a corner): stand off and let the puck be nudged out
+        [ux, uy, behind] = ok;
+      }
       const dB = Math.hypot(m.x - behind.x, m.y - behind.y);
       if (dB < 2.5 || mem.strike > 0) { mem.strike = (mem.strike || .18) - dt; if (mem.strike <= 0) { mem.strike = 0; mem.bankSide = null; } return { tx: p.x + ux * 8, ty: p.y + uy * 8 }; }   // strike through it
       // come round the puck without knocking it toward its own goal

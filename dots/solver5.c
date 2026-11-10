@@ -9,6 +9,17 @@
  *  - move ordering: table move, safe moves from the centre outwards, then sacrifices.
  * Edge numbering matches engine.js: horizontal edges first ((R+1)*C, row-major), then vertical (R*(C+1)).
  *
+ * MT (dots5mt.wasm, 2026-11-10): several threads solve on ONE transposition table in a shared memory (engine.js X5M: the
+ * analysis and Lv.9–10 split the root moves among the engine worker and its helpers). The state of one search is
+ * thread-local (TLS); the geometry and the table are shared. Table entries are { key ^ d, d } (a torn entry fails the check,
+ * "lockless"), stored by key, else into an empty / dead slot (fewer edges than the current root: it can never come back), else
+ * the one with the least work (undrawn edges, less 8 for an earlier root's generation). A job id in the shared memory stops a
+ * thread whose job is over. Without MT the code (and dots5.wasm) is as before.
+ * Build:    clang --target=wasm32 -O3 -nostdlib -fno-builtin -Wl,--no-entry -Wl,--export-dynamic -o dots5.wasm solver5.c
+ * Build MT: clang --target=wasm32 -O3 -matomics -mbulk-memory -DMT -nostdlib -fno-builtin -Wl,--no-entry -Wl,--export-dynamic
+ *           -Wl,--shared-memory -Wl,--import-memory -Wl,--max-memory=536870912 -o dots5mt.wasm solver5.c
+ * (tools/mtsim: the same source natively with pthreads, in lock step: the multi-thread schemes measured in nodes)
+ *
  * Copyright 2026 core-calmdust — Apache License 2.0
  */
 typedef unsigned long long u64;
@@ -16,6 +27,11 @@ typedef unsigned int u32;
 typedef int i32;
 typedef signed char i8;
 typedef unsigned char u8;
+#ifdef MT
+#define TLS _Thread_local
+#else
+#define TLS
+#endif
 
 #ifdef __wasm__
 #define EXPORT(name) __attribute__((export_name(#name)))
@@ -25,6 +41,11 @@ void *memset(void *d, int c, unsigned long n) { u8 *p = d; while (n--) *p++ = (u
 void *memcpy(void *d, const void *s, unsigned long n) { u8 *p = d; const u8 *q = s; while (n--) *p++ = *q++; return d; }
 void *memmove(void *d, const void *s, unsigned long n) { u8 *p = d; const u8 *q = s; if (p < q) while (n--) *p++ = *q++; else { p += n; q += n; while (n--) *--p = *--q; } return d; }
 #define TT_MAXBITS 23
+#elif defined(SIM)
+#define EXPORT(name)
+#include <string.h>
+#include <stdlib.h>
+static double js_now(void) { return 0; }
 #else
 #define EXPORT(name)
 #include <string.h>
@@ -43,8 +64,8 @@ static i32 ncorner; static i8 cpa[4], cpb[4];   /* the two outer edges of each c
 static i8 order[MAXE];
 
 /* position */
-static u64 M, MS[8]; static u8 cnt[MAXB];
-static u64 pbit[8][MAXE]; static i32 filled, n2, n3;
+static TLS u64 M, MS[8]; static TLS u8 cnt[MAXB];
+static u64 pbit[8][MAXE]; static TLS i32 filled, n2, n3;
 
 static inline int play(int e) {
   M |= 1ULL << e; for (int s = 0; s < NS; s++) MS[s] |= pbit[s][e]; int k = 0, b = eb0[e];
@@ -150,7 +171,7 @@ static inline u64 corner_norm(u64 x) {
   for (int i = 0; i < ncorner; i++) { u64 a = 1ULL << cpa[i], b = 1ULL << cpb[i]; if ((x & b) && !(x & a)) x ^= a | b; }
   return x;
 }
-static int canon_sym;
+static TLS int canon_sym;
 static inline u64 canon_cur(void) {   /* canonical key of the current position */
   u64 best = ~0ULL; int bs = 0;
   for (int s = 0; s < NS; s++) { u64 x = corner_norm(MS[s]); if (x < best) { best = x; bs = s; } }
@@ -169,19 +190,43 @@ static u64 canon(u64 m) {
 
 /* ------------------------------------------------------------ transposition table (wide keys: up to 63 edges) */
 typedef struct { u64 k, d; } tent;
-static tent *tt; static u64 ttmask; static i32 ttbits;
 #define KEYMASK (~0ULL)
 #define KMARK (1ULL << 63)
+static inline int popc(u64 x) { return __builtin_popcountll(x); }
+#ifndef MT
+static tent *tt; static u64 ttmask; static i32 ttbits;
 static inline u64 ttidx(u64 key) { return ((key * 0x9E3779B97F4A7C15ULL) >> (64 - ttbits)) & ~3ULL; }
 static inline u64 *tt_find(u64 key) {
   tent *p = tt + ttidx(key);
   for (int i = 0; i < 4; i++) if (p[i].k == (key | KMARK)) return &p[i].d;
   return 0;
 }
+#else
+/* the shared table: { (key | KMARK) ^ d, d }; d's low 8 bits = the generation (bits 0..41 were unused). tt_find returns a
+   thread-local copy (another thread may rewrite the entry meanwhile). */
+static TLS tent *tt; static TLS u64 ttmask; static TLS i32 ttbits;
+static volatile u32 ttgen, ttfloor;   /* shared: the generation, the edge count of the current root (fewer: dead) */
+static TLS u64 ttcopy;
+#define LD(p) __atomic_load_n((p), __ATOMIC_RELAXED)
+#define ST(p, v) __atomic_store_n((p), (v), __ATOMIC_RELAXED)
+static inline u64 ttidx(u64 key) { return ((key * 0x9E3779B97F4A7C15ULL) >> (64 - ttbits)) & ~3ULL; }
+#ifdef SIM
+static u64 *sim_pending(u64 key);   /* tools/mtsim: this thread's stores not yet seen by the others */
+static void sim_store(tent *slot, u64 k, u64 d);
+#endif
+static inline u64 *tt_find(u64 key) {
+#ifdef SIM
+  { u64 *q = sim_pending(key); if (q) { ttcopy = *q; return &ttcopy; } }
+#endif
+  tent *p = tt + ttidx(key); const u64 kk = key | KMARK;
+  for (int i = 0; i < 4; i++) { u64 k = LD(&p[i].k), d = LD(&p[i].d); if ((k ^ d) == kk) { ttcopy = d; return &ttcopy; } }
+  return 0;
+}
+#endif
 #define E_LO(x) ((int)(((x) >> 42) & 63) - 32)
 #define E_HI(x) ((int)(((x) >> 48) & 63) - 32)
 #define E_MV(x) ((int)(((x) >> 54) & 63))
-static inline int popc(u64 x) { return __builtin_popcountll(x); }
+#ifndef MT
 static void tt_store(u64 key, int lo, int hi, int mv) {
   tent *p = tt + ttidx(key), *slot = 0;
   u64 ent = ((u64)(lo + 32) << 42) | ((u64)(hi + 32) << 48) | ((u64)(mv < 0 ? 63 : mv) << 54);
@@ -194,6 +239,37 @@ static void tt_store(u64 key, int lo, int hi, int mv) {
   }
   slot->k = key | KMARK; slot->d = ent;
 }
+#else
+static void tt_store(u64 key, int lo, int hi, int mv) {
+  tent *p = tt + ttidx(key), *slot = 0; const u64 kk = key | KMARK; const u32 g = ttgen & 255, fl = ttfloor;
+  u64 ent = ((u64)(lo + 32) << 42) | ((u64)(hi + 32) << 48) | ((u64)(mv < 0 ? 63 : mv) << 54) | g;
+  int worst = 1 << 30;
+  for (int i = 0; i < 4; i++) {
+    u64 k = LD(&p[i].k), d = LD(&p[i].d), x = (k ^ d) & ~KMARK;
+    if ((k ^ d) == kk) { slot = p + i; break; }
+    int sc;
+    if (!d || !((k ^ d) & KMARK)) sc = -1000;                  /* empty (or torn) */
+    else if ((u32)popc(x) < fl) sc = -999;                     /* fewer edges than the root: never needed again */
+    else sc = E - popc(x) - ((d & 255) != g ? 8 : 0);
+    if (sc < worst) { worst = sc; slot = p + i; }
+  }
+#ifdef SIM
+  sim_store(slot, kk ^ ent, ent);
+#else
+  ST(&slot->d, ent); ST(&slot->k, kk ^ ent);
+#endif
+}
+#endif
+#ifdef MT
+/* every thread: the shared table at addr (2^bits entries of 16 bytes); clear: the lead's first call */
+EXPORT(mt_tt) void mt_tt(u32 addr, i32 bits, i32 clear) {
+  tt = (tent *)(unsigned long)addr; ttbits = bits; ttmask = (1ULL << bits) - 1;
+  if (clear) { memset(tt, 0, sizeof(tent) << bits); ttgen = 0; ttfloor = 0; }
+}
+#ifdef SIM
+static void tt_sim_attach(tent *t, int bits) { tt = t; ttbits = bits; ttmask = (1ULL << bits) - 1; }
+#endif
+#else
 EXPORT(tt_init) i32 tt_init(i32 bits) {
 #ifdef __wasm__
   /* the table lives above the static data; memory grows on first use to the largest size asked for */
@@ -218,10 +294,17 @@ EXPORT(tt_init) i32 tt_init(i32 bits) {
   memset(tt, 0, sizeof(tent) << bits);
   return bits;
 }
+#endif
 
 /* ------------------------------------------------------------ simple loony endgames */
 #define LM_BITS 16
+#ifndef MT
 static u64 lm_k1[1 << LM_BITS], lm_k2[1 << LM_BITS]; static i8 lm_v[1 << LM_BITS]; static u8 lm_used[1 << LM_BITS];
+#else
+static TLS u64 *lm_k1, *lm_k2; static TLS i8 *lm_v; static TLS u8 *lm_used;   /* each thread's own (in its slot: mt_thread) */
+#define LM_SIZE ((16 + 1 + 1) << LM_BITS)
+static void lm_at(u8 *a) { lm_k1 = (u64 *)a; lm_k2 = (u64 *)(a + (8 << LM_BITS)); lm_v = (i8 *)(a + (16 << LM_BITS)); lm_used = a + (17 << LM_BITS); }
+#endif
 /* items: chain n -> code n (1..31), loop n -> code 32+n; sorted ascending */
 static int loony_rec(u8 *it, int n) {
   if (!n) return 0;
@@ -374,12 +457,23 @@ static u64 chain_skip(void) {
 }
 
 /* ------------------------------------------------------------ search */
-static double nodes, max_nodes; static double deadline; static i32 aborted;
+static TLS double nodes, max_nodes; static TLS double deadline; static TLS i32 aborted;
 static i32 use_loony = 1, use_prune = 1, use_tt = 1, use_pvs = 1, use_hist = 0;
-static u32 hist[MAXE];
+static TLS u32 hist[MAXE];
 static i32 etc_min = 0, use_killer = 0, ord_mode = 0;
-static i8 killer[MAXE + 1];
+static TLS i8 killer[MAXE + 1];
 static void (*hook)(void);   /* native: periodic checkpoint hook */
+#ifdef MT
+static volatile i32 gJob;   /* shared: the job in force (the lead sets it); a thread whose own job (myJob) differs stops */
+static TLS i32 myJob;
+static TLS volatile i32 *watch;   /* optional: stop as soon as this word (shared) is non-zero (the move is decided elsewhere) */
+#define CHK_MASK 0x1FFF
+#else
+#define CHK_MASK 0xFFFF
+#endif
+#ifdef SIM
+static void sim_tick(void);
+#endif
 
 static int gen_quiet(i8 *mv, int ttm) {
   u64 skip = use_prune ? (use_chain_prune ? chain_skip() : redundant_mask()) : 0;
@@ -418,7 +512,13 @@ static int search(int alpha, int beta) {
   { int u = E - popc(M); prof_und[u]++; if (n3) prof_cap++; else if (n2 + filled == B) prof_loony++; else { int sc = 0; for (int e = 0; e < E; e++) if (!drawn(e) && !gives(e)) sc++; prof_safe[sc]++; } }
 #endif
   if (aborted) return 0;
-  if (((u64)nodes & 0xFFFF) == 0) {
+#ifdef SIM
+  if (((u64)nodes & (SIM_Q - 1)) == 0) sim_tick();
+#endif
+  if (((u64)nodes & CHK_MASK) == 0) {
+#ifdef MT
+    if (gJob != myJob || (watch && __atomic_load_n(watch, __ATOMIC_RELAXED))) { aborted = 1; return 0; }
+#endif
     if (nodes > max_nodes || js_now() > deadline) { aborted = 1; return 0; }
     if (hook) hook();
   }
@@ -559,7 +659,7 @@ static int best_from(u64 m, int lower, int first, int *bm, int *pbm, int *pbv) {
 }
 
 #ifdef __wasm__
-static i32 io[256];
+static TLS i32 io[256];
 EXPORT(io_ptr) i32 *io_ptr(void) { return io; }
 static u64 io_mask(void) { return (u64)(u32)io[0] | ((u64)(u32)io[1] << 32); }
 /* io[0..1] = mask. Returns the value (or -999 if cut off). */
@@ -574,7 +674,11 @@ EXPORT(w_best) i32 w_best(double ms) {
   int bm, pbm, pbv, v = best_of(io_mask(), io[2], &bm, &pbm, &pbv);
   io[3] = bm; io[4] = pbm; io[5] = pbv; return v;
 }
+#ifndef MT
 EXPORT(w_setup) void w_setup(i32 r, i32 c, i32 bits) { setup(r, c); tt_init(bits); }
+#else
+EXPORT(w_setup) void w_setup(i32 r, i32 c, i32 bits) { (void)bits; setup(r, c); }   /* the lead, once: the geometry is shared */
+#endif
 /* best move with a known lower bound (io[6], -100 = none); io[2] first move. Same outputs as w_best. */
 EXPORT(w_best_from) i32 w_best_from(double ms) {
   limits(0, ms);
@@ -591,6 +695,34 @@ EXPORT(w_tt_probe) i32 w_tt_probe(void) {
   if (t >= 0 && drawn(t)) t = twin[t] >= 0 && !drawn(twin[t]) ? twin[t] : -1;
   io[3] = t; io[4] = E_LO(*ent); io[5] = E_HI(*ent); return 1;
 }
+#ifndef MT
 EXPORT(w_clear) void w_clear(void) { tt_init(ttbits); }
+#else
+EXPORT(w_clear) void w_clear(void) { mt_tt((u32)(unsigned long)tt, ttbits, 1); }
+#endif
 EXPORT(w_nodes) double w_nodes(void) { return nodes; }
+#ifdef MT
+/* ---------------------------------------------------------------- threads (engine.js X5M)
+   Memory: [static data][16 slots of MT_SLOT: TLS block, the loony tables, the stack (top)][the table]. Every instance first
+   calls mt_stack (its stack top), then mt_thread (its TLS block), then mt_tt (the table). */
+extern void __wasm_init_tls(void *);
+extern unsigned char __heap_base;
+EXPORT(mt_heap_base) u32 mt_heap_base(void) { return (u32)(unsigned long)&__heap_base; }
+EXPORT(mt_tls_size) u32 mt_tls_size(void) { return __builtin_wasm_tls_size(); }
+EXPORT(mt_lm_size) u32 mt_lm_size(void) { return LM_SIZE; }
+EXPORT(mt_stack) void mt_stack(u32 top) { __asm__ volatile(".globaltype __stack_pointer, i32\n local.get %0\n global.set __stack_pointer" :: "r"(top)); }
+static __attribute__((noinline)) void mt_self(u32 tls) { lm_at((u8 *)(unsigned long)((tls + __builtin_wasm_tls_size() + 63) & ~63u)); myJob = gJob; }
+EXPORT(mt_thread) void mt_thread(u32 tls) { __wasm_init_tls((void *)(unsigned long)tls); mt_self(tls); }
+/* the job: mt_job (the lead: the job in force; a thread on another stops at its next check), mt_mine (this thread's job) */
+EXPORT(mt_job) void mt_job(i32 id) { __atomic_store_n(&gJob, id, __ATOMIC_SEQ_CST); }
+EXPORT(mt_mine) void mt_mine(i32 id) { myJob = id; }
+EXPORT(mt_watch) void mt_watch(u32 addr) { watch = (volatile i32 *)(unsigned long)addr; }
+EXPORT(mt_cur) i32 mt_cur(void) { return __atomic_load_n(&gJob, __ATOMIC_SEQ_CST); }
+/* a new root (io[0..1]), the lead: not a descendant of the last one → a new generation; the floor = its edge count */
+EXPORT(mt_root) void mt_root(void) {
+  static u64 last = 0; u64 m = io_mask();
+  if (last & ~m) ttgen++;
+  last = m; ttfloor = (u32)popc(m);
+}
+#endif
 #endif
