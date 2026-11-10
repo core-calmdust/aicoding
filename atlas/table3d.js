@@ -914,7 +914,7 @@
   function setTimeOfDay(v) {   // rebuild the room's lights, sky and decor for another time of day
     try { localStorage.setItem('atlas-tod', v); } catch (e) {}
     if (!R || !scene || mountOpts.plain) return;
-    roomObjs.forEach(o => { scene.remove(o); o.traverse && o.traverse(x => { if (x.geometry) x.geometry.dispose(); }); });
+    roomGen++; roomObjs.forEach(o => { scene.remove(o); o.traverse && o.traverse(x => { if (x.geometry) x.geometry.dispose(); }); });
     const before = new Set(scene.children); buildRoom(scene, false); roomObjs = scene.children.filter(o => !before.has(o));
     try { envBuild && envBuild(); } catch (e) {}
     if (museumOn) { roomObjs.forEach(x => { x.visible = false; }); museumOn = false; museum(true); }
@@ -928,7 +928,7 @@
     const same = k === tableStyle; tableStyle = k;
     try { localStorage.setItem('atlas-table', String(k)); } catch (e) {}
     if (R && scene && !same) {
-      roomObjs.forEach(o => { scene.remove(o); o.traverse && o.traverse(x => { if (x.geometry && !SHARED.has(x.geometry)) x.geometry.dispose(); }); });
+      roomGen++; roomObjs.forEach(o => { scene.remove(o); o.traverse && o.traverse(x => { if (x.geometry && !SHARED.has(x.geometry)) x.geometry.dispose(); }); });
       const before = new Set(scene.children); buildRoom(scene, mountOpts.plain || false); roomObjs = scene.children.filter(o => !before.has(o) && o !== root);
       try { envBuild && envBuild(); } catch (e) {}
       if (museumOn) { roomObjs.forEach(x => { x.visible = false; }); museumOn = false; museum(true); }
@@ -947,7 +947,7 @@
   let baseExp = .78, boardLamp = null, boardLampI = 0, ambLift = null;
   const expo = v => v * BRIGHT[bright];
   function setBright(b) {
-    bright = Math.max(0, Math.min(2, b | 0));
+    bright = Math.max(0, Math.min(2, b | 0)); roomGen++;
     try { localStorage.setItem('atlas-bright2', String(bright)); } catch (e) {}
     if (R) { if (!museumOn) R.toneMappingExposure = expo(baseExp); else { glareW = -1; R.toneMappingExposure = MUSEUM_EXP; }
       if (boardLamp) boardLamp.intensity = boardLampI * BOARD_K[bright] + BOARD_ADD[bright]; if (ambLift) ambLift.intensity = AMB_ADD[bright]; dirty = true; kick(300); }
@@ -1961,7 +1961,7 @@
       camK = glide.k0 + (camTo - glide.k0) * e; inset = glide.i0 + (glide.i1 - glide.i0) * e; if (fitRelease && glide.v0 != null) vsh = glide.v0 * (1 - e); if (glide.t0 != null) insetT = glide.t0 + (insetTTo - glide.t0) * e; frame();   // the framing reaches its end on the same curve   // the framing follows smoothly even if the card changes size meanwhile
       if (k >= 1) { camK = camTo; inset = glide.i1; insetT = insetTTo; glide = null; if (fitRelease) { fitRelease = false; vsh = 0; if (camTo === 0) fitTo = null; } frame(); }
       moving = true;
-    } else if (Math.abs(camTo - camK) > 1e-5) { camK += (camTo - camK) * ez(.07); moving = true; } else camK = camTo;
+    } else if (Math.abs(camTo - camK) > 5e-4) { camK += (camTo - camK) * ez(.07); moving = true; } else if (camK !== camTo) { camK = camTo; moving = true; }   // (the last 0.05 % is snapped: a second of invisible creeping cost full frames)
     if (Math.abs(zoomTo - zoom) > 1e-5) { zoom += (zoomTo - zoom) * ez(.18); moving = true; } else zoom = zoomTo;
     if (Math.abs(pzoomTo - pzoom) > 1e-5) { pzoom += (pzoomTo - pzoom) * ez(.18); moving = true; } else pzoom = pzoomTo;
     if (fitStep(ez)) moving = true;
@@ -1985,7 +1985,7 @@
       // enlarged a hair so the field (lower now, further from the camera) still looks exactly s × its size, like the DOM board on top
       const s = tYaw !== null ? tS : 1, H0 = Math.max(1, cam.position.y - (alignTop || 0)), t = alignTop || 0, k = s === 1 ? 1 : s * (H0 + t) / (H0 + s * t);
       if (root.scale.x !== k) { root.scale.setScalar(k); root.position.y = 0; rootDirty = true; } }
-      const ticking = roomTicks.length && !alignFn && !(quietOn && now > kickUntil) && ((mode !== 'play' ? performance.now() - lastInput < 30000 : decoOn()) || now <= kickUntil);
+      const ticking = roomTicks.length && !alignFn && !(quietOn && now > kickUntil) && ((mode !== 'play' ? performance.now() - lastInput < 30000 : !BO_OK && decoOn()) || (mode !== 'play' || !BO_OK) && now <= kickUntil);   // (in a game the room holds still: only the board is redrawn — boardPass)
     if (ticking) { const ts = now / 1000; for (const f of roomTicks) f(ts); }
     // the online dock's move / resize (shared/headerbar.js, html.dock-anim): the canvas is scaled and moved with the board by the
     // page's FLIP transform, so the last picture is held as it is — a new drawing at the new size inside the old buffer showed
@@ -2043,7 +2043,9 @@
       if (kq === quietKey && now > kickUntil && !dirty) return more();
       quietKey = kq; dirty = false;
     } else if (!moving && !dirty && now > kickUntil) return more();   // nothing changed: no frame (the showcase's turntable counts as moving)
-    R.render(scene, cam); lastDraw = now; dbgTick(now); if (now > kickUntil) dirty = false;
+    if (BO_OK && mode === 'play' && !museumOn && !quietOn && cur && !glide && camTo > .999 && !ticking) boardPass(now);
+    else { bo.key = ''; R.render(scene, cam); }
+    lastDraw = now; dbgTick(now); if (now > kickUntil) dirty = false;
     if (DOF_OK && mode === 'view' && !museumOn && !quietOn) dof();
     return more();
   }
@@ -2052,6 +2054,66 @@
      (9 taps each) and laid back over the frame with a mask — clear on the board and in front of it, blurring in above the
      board's far edge (farther away in this slanted view) and a little toward the sides. Costs a copy and three cheap
      full-screen passes on the frames that are drawn anyway (the renderer stays on demand). Off on touch / lite devices. */
+  /* ---------- board-only frames (in a game on the table, 2026-11-10) ----------
+     While the camera and the room stand still, the room is drawn once without the board and kept as a picture (a copy of the
+     frame, like dof()); every later frame lays that picture back with one full-screen quad and draws only the board over it
+     (camera layer BL: the board's objects and the lights). The shadow map keeps the board's shadow on the table (the room's
+     picture is drawn with the last map, which still holds the board) and is updated only while something on the board moves.
+     The room's own ticks are off in a game (the room holds still), so the room costs nothing after its one drawing.
+     Any change of the view, the room, the light or the size draws everything again and takes a new picture.
+     Off with ?nobo (for comparing). */
+  let BO_OK = !/[?&]nobo\b/.test(location.search); const BL = 2;
+  const bo = { key: '', tex: null, w: 0, h: 0, qs: null, qc: null, lights: [], texs: [], tv: -1 };
+  // the room's textures (a picture arriving later — a place's photo, the floor — bumps its version): a change takes the picture again
+  const BO_TK = ['map', 'emissiveMap', 'normalMap', 'roughnessMap', 'aoMap', 'alphaMap', 'bumpMap', 'lightMap', 'envMap'];
+  function boTexs() {
+    const out = new Set(), walk = o => { if (o === root) return; const ms = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : [];
+      for (const m of ms) for (const k of BO_TK) if (m[k]) out.add(m[k]); for (const c of o.children) walk(c); };
+    walk(scene); if (scene.background && scene.background.isTexture) out.add(scene.background); if (scene.environment) out.add(scene.environment);
+    return [...out];
+  }
+  const boTv = () => { let v = 0; for (const t of bo.texs) v += t.version; return v; };
+  let roomGen = 0;   // bumped wherever the room / its light is rebuilt (the picture is taken again)
+  function boKey() {
+    const e = cam.projectionMatrix.elements, b = scene.background;
+    return [cam.position.x, cam.position.y, cam.position.z, cam.quaternion.x, cam.quaternion.y, cam.quaternion.z, cam.quaternion.w, yaw, e[0], e[5], e[8], e[9], e[10], e[14]].map(v => v.toFixed(5)).join()
+      + '|' + cw + 'x' + ch + '|' + pr + '|' + scene.children.length + '|' + R.toneMappingExposure.toFixed(4) + '|' + (b && b.isColor ? b.getHexString() : b ? 'o' : '') + '|' + roomGen + '|' + bright;
+  }
+  function boardPass(now) {
+    const TT = T(), key = boKey(), sz = R.getDrawingBufferSize(new TT.Vector2()), w = sz.x, h = sz.y;
+    if (key === bo.key && boTv() !== bo.tv) bo.key = '';
+    if (key !== bo.key) {   // new view / room: everything as usual this frame, the picture is taken on the next still one
+      if (bo.key !== 'pending:' + key) { bo.key = 'pending:' + key; R.render(scene, cam); return; }
+      // the room alone: the board hidden, the shadow map as it is (it still holds the board's shadow on the table)
+      const au = R.shadowMap.autoUpdate, nu = R.shadowMap.needsUpdate; R.shadowMap.autoUpdate = false; R.shadowMap.needsUpdate = false;
+      const vis = root.visible; root.visible = false; R.render(scene, cam); root.visible = vis;
+      R.shadowMap.autoUpdate = au; R.shadowMap.needsUpdate = nu;
+      if (!bo.tex || bo.w !== w || bo.h !== h) {
+        if (bo.tex) bo.tex.dispose();
+        bo.tex = new TT.DataTexture(null, w, h, TT.RGBAFormat); bo.tex.minFilter = bo.tex.magFilter = TT.NearestFilter; bo.tex.generateMipmaps = false; bo.w = w; bo.h = h;
+      }
+      R.copyFramebufferToTexture(new TT.Vector2(0, 0), bo.tex);
+      if (!bo.qs) {
+        const m = new TT.ShaderMaterial({ uniforms: { t: { value: null } }, depthTest: false, depthWrite: false,
+          vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0., 1.); }',
+          fragmentShader: 'uniform sampler2D t; varying vec2 vUv; void main(){ gl_FragColor = texture2D(t, vUv); }' });
+        m.toneMapped = false;
+        const q = new TT.Mesh(new TT.PlaneGeometry(2, 2), m); q.frustumCulled = false;
+        bo.qs = new TT.Scene(); bo.qs.add(q); bo.qc = new TT.OrthographicCamera(-1, 1, 1, -1, 0, 1); bo.mat = m;
+      }
+      bo.lights.length = 0; scene.traverse(o => { if (o.isLight) { o.layers.enable(BL); bo.lights.push(o); } });
+      bo.texs = boTexs(); bo.tv = boTv(); bo.key = key;
+    }
+    bo.mat.uniforms.t.value = bo.tex;
+    root.traverse(o => o.layers.enable(BL));   // (pieces added since: on the board's layer too)
+    const at = R.autoClear, bg = scene.background, au = R.shadowMap.autoUpdate;
+    R.autoClear = false; R.setRenderTarget(null);
+    R.render(bo.qs, bo.qc); R.clearDepth();
+    scene.background = null; cam.layers.set(BL);
+    R.shadowMap.autoUpdate = false; R.shadowMap.needsUpdate = shadowDirty || now <= kickUntil; shadowDirty = false;   // (the shadow map: all casters, as the shadow cameras see every layer 0 object)
+    R.render(scene, cam);
+    cam.layers.set(0); scene.background = bg; R.autoClear = at; R.shadowMap.autoUpdate = au;
+  }
   const DOF_OK = !COARSE && !LITE && !/[?&]nodof\b/.test(location.search);
   let dofS = null;
   function dofInit(w, h) {
@@ -2206,5 +2268,5 @@
   try { if (sessionStorage.getItem('t3d-debug')) setTimeout(() => R && dbgToggle(true), 500); } catch (e) {}
   setInterval(() => { if (dbgOn && performance.now() - dbgT > 1000) { dbgFps = 0; dbgT = performance.now(); dbgPaint(); } }, 1000);   // (the loop sleeps when nothing moves: keep the numbers fresh)
 
-  window.Table3D = { decoOn, debug: dbgToggle, TABLES, placeMon, setTable, table: () => tableStyle, setBright, bright: () => bright, turn, museum, setShift, quiet, setTimeOfDay, timeOfDayPick: todPick, share, lp, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, rvDisc, rvMats, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
+  window.Table3D = { decoOn, boSet: on => { BO_OK = !!on; bo.key = ''; kick(400); }, debug: dbgToggle, TABLES, placeMon, setTable, table: () => tableStyle, setBright, bright: () => bright, turn, museum, setShift, quiet, setTimeOfDay, timeOfDayPick: todPick, share, lp, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, rvDisc, rvMats, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
 })();
