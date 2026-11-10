@@ -62,7 +62,8 @@ ${P} > :is(.ngt-modef,.ng-cols){order:0!important}
 ${P}.ngt-pc[data-ngt=rules] .ngt-modef{margin-bottom:16px!important}
 ${P}.ngt-pc[data-ngt=rules] .ngt-modef > label{letter-spacing:.18em}
 /* デザイン tab: each design row in a panel, big picture tiles */
-${P}[data-ngt=design] [data-ng=design]:not(.ngt-hide):not(.hidden){margin:0 0 14px!important;padding:16px 18px 18px!important;border-radius:16px;border:1px solid var(--ngl-pbd);background:var(--ngl-pbg);box-shadow:var(--ngl-psh)}
+${P}[data-ngt=design] [data-ng=design]:not(.ngt-hide):not(.hidden):not([data-ng-credit]){margin:0 0 14px!important;padding:16px 18px 18px!important;border-radius:16px;border:1px solid var(--ngl-pbd);background:var(--ngl-pbg);box-shadow:var(--ngl-psh)}
+${P}[data-ngt=design] [data-ng-credit]{margin:4px 0 0!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;text-align:center}   /* the design credit: just a line at the bottom, no frame */
 ${P}[data-ngt=design] [data-ng=design] :is(.dsg,.bdrow,.skrow,.skinrow){gap:10px!important}
 ${P}.ngt-pc[data-ngt=design] [data-ng=design] :is(.dsg,.bdrow,.skrow,.skinrow){display:grid!important;grid-template-columns:repeat(auto-fill,minmax(var(--ngl-tile,136px),1fr))!important}
 ${P}[data-ngt=design] [data-ng=design] :is(.dsg,.bdrow,.skrow,.skinrow) > button{border-radius:12px!important;padding:6px 6px 8px!important;gap:6px;border:1px solid color-mix(in srgb, var(--ngl-a) 18%, var(--line,#3a2f24))!important;
@@ -80,7 +81,7 @@ ${P}.ngt-on .ngt-gcard p{font-size:12.5px!important;line-height:1.6}
 ${P}.ngt-on[data-ngt=rules] .ng-cols:not(.ngt-hide){display:flex!important;flex-direction:column;gap:10px!important;margin:0 0 6px!important}
 ${P}.ngt-on[data-ngt=rules] .ng-col:not(.ngt-hide):not(.ngl-empty){gap:22px!important;padding:16px 14px 18px!important;border-radius:14px}
 ${P}.ngt-on :is(.ng-col,[data-ng=design]) > .field > label:first-child,${P}.ngt-on [data-ng=design] > label:first-child{font-size:11px;letter-spacing:.2em;margin-bottom:8px}
-${P}.ngt-on[data-ngt=design] [data-ng=design]:not(.ngt-hide):not(.hidden){margin:0 0 10px!important;padding:13px 12px 14px!important;border-radius:14px}
+${P}.ngt-on[data-ngt=design] [data-ng=design]:not(.ngt-hide):not(.hidden):not([data-ng-credit]){margin:0 0 10px!important;padding:13px 12px 14px!important;border-radius:14px}
 ${P}.ngt-on[data-ngt=design] [data-ng=design] :is(.dsg,.bdrow,.skrow,.skinrow){gap:6px!important}
 ${P}.ngt-on[data-ngt=design] [data-ng=design] :is(.dsg,.bdrow,.skrow,.skinrow) > button{padding:3px 3px 5px!important;border-radius:10px!important}
 /* phones held sideways (html.ngt-land / html.rot, 2026-11-07): the dialog is short and wide — the ルール panels side by side
