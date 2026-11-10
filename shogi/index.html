@@ -1934,7 +1934,7 @@ function pieceEl(code, promoted) {
     // image piece sets (lishogi assets; see pieces/README.md for authors and licences)
     el.classList.add('img'); el.classList.remove('g');
     const up = (col === 1) !== flip, code = tp === OU ? (col ? 'OU' : 'GY') : PCODE[tp];
-    const src = `pieces/${settings.pieces}/${up ? 1 : 0}${code}.svg?v=3`;
+    const src = `pieces/${settings.pieces}/${up ? 1 : 0}${code}.svg?v=4`;
     k.innerHTML = `<img src="${src}" alt="" draggable="false">`;
     // the face's wood grain: its own patch of the grain texture for each kind (and side), rotated with the piece
     const gi = tp * 2 + (up ? 1 : 0);
@@ -1953,7 +1953,7 @@ function preloadPieces(set) {
   if (!PIECE_SETS[set] || PRELOAD[set]) return;
   PRELOAD[set] = [];
   for (const side of [0, 1]) for (const code of PCODE.slice(1).concat('GY')) {
-    const im = new Image(); im.src = `pieces/${set}/${side}${code}.svg?v=3`;
+    const im = new Image(); im.src = `pieces/${set}/${side}${code}.svg?v=4`;
     if (im.decode) im.decode().catch(() => {});
     PRELOAD[set].push(im);
   }
@@ -3029,7 +3029,7 @@ function dsgPiece(tp, gote, cx, cy, cw, ch, set, S, id) {
   const rot = gote ? ` transform="rotate(180 ${cx} ${cy})"` : '';
   if (PIECE_SETS[set]) {
     const code = tp === OU ? (gote ? 'OU' : 'GY') : PCODE[tp], w = cw * 1.12, h = ch * 1.12;
-    return `<image href="pieces/${set}/${gote ? 1 : 0}${code}.svg?v=3" x="${cx - w / 2}" y="${cy - h / 2}" width="${w}" height="${h}"${S.imgF ? ` style="filter:${S.imgF}"` : ''}/>`;
+    return `<image href="pieces/${set}/${gote ? 1 : 0}${code}.svg?v=4" x="${cx - w / 2}" y="${cy - h / 2}" width="${w}" height="${h}"${S.imgF ? ` style="filter:${S.imgF}"` : ''}/>`;
   }
   const w = cw * sz[0], h = ch * sz[1], x = cx - w / 2, y = cy - h / 2;
   const pts = [[.5, 0], [.83, .13], [.97, 1], [.03, 1], [.17, .13]].map(([a, b]) => `${(x + a * w).toFixed(2)},${(y + b * h).toFixed(2)}`).join(' ');
