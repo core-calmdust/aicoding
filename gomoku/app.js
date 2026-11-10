@@ -4,6 +4,7 @@
 const E = window.RenjuEngine, WIN = E.WIN, WINT = E.WINT, N = 15;
 const P1 = 1, P2 = 2;                         // P1 = black (moves first), P2 = white
 const sqName = E.sqName, sqOf = E.sqOf;
+window.SEQ_CFG = { nameM: m => sqName(m) };   // the opening practice (shared/seqgame.js): moves named by their point
 let rule = 'renju';            // rule of the game on the board
 let startPos = null;           // lesson / puzzle start: { b: [m], w: [m], side } (null = empty board)
 let net = null;                // online game in progress or being watched (see the online section)
@@ -322,6 +323,7 @@ function canHumanPlay() {
   if (ken && kenOk()) return kenSwap(() => !gameOver(cur));
   if (gameOver(cur) || animating) return false;
   if (puzzle) return puzzle.state === 'play' && !puzzle.busy && toMoveAt(cur) === puzzle.me;
+  if (lesson && window.SeqPrac && SeqPrac.active()) return SeqPrac.state().waiting;   // the 3-move opening practice
   if (lesson) return !lesson.answered && !lesson.study;
   if (reviewing) return false;
   if (settings.mode === 'online') return olLive() && !!net.game && net.game.status === 'play' && !net.pending && cur === moves.length && toMoveAt(cur) === net.me;
@@ -1230,6 +1232,7 @@ if (!pzPinned || typeof pzPinned !== 'object') { pzPinned = pzPinFrom(pzProgress
 let introIdx = 0, savedGame = null;
 function stashGame() { olDetach(); if (!lesson && !puzzle) savedGame = { moves, cur, evals: evals.slice(), humanColor, rule }; }
 function exitSpecial() {
+  if (window.SeqPrac) SeqPrac.stop();
   if (!lesson && !puzzle) return;
   lesson = null; puzzle = null; lessonMarks = []; labelList = null;
   document.body.classList.remove('in-lesson', 'in-puzzle');
@@ -1447,6 +1450,7 @@ function stepNo(i) { const c = LESSONS.steps[i].course; let n = 0; for (let k = 
 const curStep = () => lesson.virt || LESSONS.steps[lesson.step];
 function lessonProblem() { return curStep().problems[lesson.i]; }
 function loadLessonProblem() {
+  if (window.SeqPrac) SeqPrac.stop();
   const P = lessonProblem();
   lesson.me = P.side || P1; lesson.pick = P.kind === 'pick';
   lesson.noForbidMarks = !!(curStep().hideForbid || P.kind === 'pick');
@@ -1456,6 +1460,7 @@ function loadLessonProblem() {
   lesson.answered = false; lesson.hinted = false;
   if (P.last) lessonMarks = [{ at: sqOf(P.last), cls: 'last' }];
   update(false); renderLessonCard(); $('#lsFb').innerHTML = '';
+  if (lesson.virt && lesson.virt.id !== 'mk' && window.seqGameStart && !lesson.ramp) seqGameStart(lessonProblem(), window.SEQ_CFG);   // opening practice: 3 moves in a row (shared/seqgame.js)
 }
 function renderLessonCard() {
   if (lesson && lesson.ramp) return renderRampCard();
@@ -1487,6 +1492,7 @@ function lsAuto(good, ms) {
   CardBar.autoNext({ ms: Math.max(1300, ms || 0), ok: () => lesson === L && L.i === i && L.answered });
 }
 function lessonAnswer(m) {
+  if (window.SeqPrac && SeqPrac.active()) { SeqPrac.move(String(m)); return; }
   if (lesson.ramp) return rampMove(m);
   const P = lessonProblem(), s = curStep();
   if (lesson.answered) return;

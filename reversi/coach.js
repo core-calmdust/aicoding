@@ -437,6 +437,7 @@ function verdictHtml() {
 }
 function render() {
   if (!card) return;
+  if (window.SeqPrac && SeqPrac.active() && SeqPrac.paint()) return;   // the 3-move opening practice (shared/seqprac.js, 2026-11-10)
   if (ReversiCoach.sw) ReversiCoach.sw.sync();
   // the coach is for the game in progress: after the game (or while browsing earlier moves) it steps aside and the coach tab
   // shows the review card instead; before the review exists, a short note with a button that starts it (shared/COACH.md §5)

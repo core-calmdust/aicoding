@@ -98,6 +98,8 @@ html.atlas-skin .cb-cmp > .lh .cb-qp{background:#fff!important;border:2px solid 
 body.in-puzzle #coachCard{display:none!important}   /* no coach panel during puzzles */
 body.in-lesson:has(#lessonCard.cb-st) #coachCard{display:none!important}   /* …nor during an opening study (解説), 2026-11-10 */
 #lessonCard.cb-st .cb-bar{margin-top:8px}
+#lessonCard:not(.cb-sq) .cb-sqb{display:none!important}
+#lessonCard.cb-sq :is(#lsHint,#lsAuto){display:none!important}   /* the 3-move opening practice (shared/seqprac.js): ヒント・やり直し・答え as icons */
 .cb-cmp .pz-goal{background:none!important;border:0!important;padding:0!important;margin:0 0 4px!important;box-shadow:none!important}   /* the goal as plain text */
 .cb-cmp .cb-bar{flex-wrap:nowrap!important}
 .cb-cmp .cb-bar .cb-br{display:none!important}
@@ -199,12 +201,15 @@ function build(card, spec) {
     // no coach (2026-11-10; shogi does this itself in tsBar)
     if (!spec.puzzle && GAME_ID !== 'shogi' && q && sh) {
       let L = null; try { L = typeof lesson !== 'undefined' ? lesson : null; } catch (e) {}
-      const st = !!(L && L.study);
-      if (st !== card.classList.contains('cb-st')) {
-        card.classList.toggle('cb-st', st); card.classList.toggle('cb-cmp', st);
-        if (st) { q.classList.remove('cb-q'); q.classList.add('cb-qp'); sh.appendChild(q); }
+      const st = !!(L && L.study), sq = !!(L && window.SeqPrac && SeqPrac.active()), cm = st || sq;   // (sq: the 3-move opening practice, 2026-11-10)
+      if (st !== card.classList.contains('cb-st')) card.classList.toggle('cb-st', st);
+      if (sq !== card.classList.contains('cb-sq')) card.classList.toggle('cb-sq', sq);
+      if (cm !== card.classList.contains('cb-cmp')) {
+        card.classList.toggle('cb-cmp', cm);
+        if (cm) { q.classList.remove('cb-q'); q.classList.add('cb-qp'); sh.appendChild(q); }
         else { q.classList.remove('cb-qp'); q.classList.add('cb-q'); bar.appendChild(q); }
       }
+      if (sq) sqButtons();
     }
     if (card.classList.contains('cb-cmp')) {
       const C = CAP[pageLang()] || CAP.en; let n = 0;
@@ -221,6 +226,16 @@ function build(card, spec) {
       if (r && r.classList.contains('cb-go') !== failed) r.classList.toggle('cb-go', failed);
     }
   };
+  // the practice's own buttons (made once): ヒント・やり直し・答え before 一覧, enabled by the practice's state
+  function sqButtons() {
+    const S = SeqPrac.state(); if (!S) return;
+    const mk = (id, kind, fn) => { let b = $(id); if (!b) { b = document.createElement('button'); b.type = 'button'; b.id = id; b.className = 'cb-sqb'; icon(b, kind); b.onclick = e => { e.stopPropagation(); fn(); }; } return b; };
+    const bs = [mk('sqHint', 'hint', () => SeqPrac.hint()), mk('sqRetry', 'retry', () => SeqPrac.retry()), mk('sqAns', 'answer', () => SeqPrac.answer())];
+    const first = tools.firstElementChild; bs.forEach(b => { if (b.parentElement !== tools) tools.insertBefore(b, first && !first.classList.contains('cb-sqb') ? first : null); });
+    const dis = [S.done || !S.waiting || S.hint === S.i, S.done || !S.line.length, S.done || !S.waiting];
+    bs.forEach((b, i) => { if (b.disabled !== dis[i]) b.disabled = dis[i]; });
+    const C = CAP[pageLang()] || CAP.en; bs.forEach((b, i) => { if (b.dataset.cap !== C[i]) b.dataset.cap = C[i]; const l = C[i]; if (b.getAttribute('aria-label') !== l) { b.setAttribute('aria-label', l); b.title = l; } });
+  }
   new MutationObserver(sync).observe(card, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['disabled', 'title'] });
   if (!spec.puzzle) new MutationObserver(sync).observe(document.body, { attributes: true, attributeFilter: ['class'] });   // (a lesson / study starting or ending)
   sync();

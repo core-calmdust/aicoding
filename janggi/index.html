@@ -12,7 +12,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <script src="../shared/latinfs.js?v=1l14"></script>
-<script src="../shared/focusgate.js?v=1"></script>
+<script src="../shared/focusgate.js?v=2"></script>
 <script src="../shared/phonesnd.js?v=2l14"></script>
 <meta name="theme-color" content="#0e1416">
 <meta name="description" content="韓国の将棋、チャンギ（장기）。九宮の斜め線、跳び越える包（ポ）、自分で選ぶ馬と象の布陣（상차림）。20段階のAI、レーティング戦、レッスン・詰めチャンギ・今日の一問、3D盤。登録不要でスマホでも遊べます。">
@@ -1297,7 +1297,7 @@ html[data-pcs=west] .pc .ic svg .f{fill:var(--pCho)}html[data-pcs=west] .pc.p2 .
 <script src="../shared/rulesoffer.js?v=17l14j"></script>
 <script src="../shared/headerbar.js?v=51l14r"></script>
 <script src="../shared/flipbtn.js?v=3l14"></script>
-<script src="../shared/cardbar.js?v=10l14"></script>
+<script src="../shared/cardbar.js?v=11l14"></script>
 <script src="../shared/watchpause.js?v=2l14"></script>
 <script src="../shared/tick.js?v=1nl14"></script>
 <script src="../shared/ruletour.js?v=28nl14"></script>
@@ -1308,24 +1308,26 @@ html[data-pcs=west] .pc .ic svg .f{fill:var(--pCho)}html[data-pcs=west] .pc.p2 .
 <script src="../shared/resign.js?v=3l14"></script><script src="../shared/drawoffer.js?v=1l14"></script>
 <script src="rvbox.js?v=1"></script>
 <script src="../shared/coachkit.js?v=16l14"></script>
+<script src="../shared/seqprac.js?v=6"></script>
+<script src="../shared/seqgame.js?v=4"></script>
 <script src="../shared/record.js?v=12l14"></script>
 <script src="../shared/export.js?v=9l14"></script>
-<script src="coach.js?v=1"></script>
+<script src="coach.js?v=1sq"></script>
 <script src="coach-i18n.js?v=2"></script>
 <script src="coach-jg.js?v=1"></script>
 <script src="../shared/mtengine.js?v=9"></script><script>MTEngine.init({ sw: 'sw.js?v=1', light: true }); if (MTEngine.coi && window.JanggiOnline) JanggiOnline.available = false;</script>
-<script src="../shared/proset.js?v=3t2svhxbf-pt1"></script><script src="app.js?v=2-pro1-aim2-mt2-pt1-bm1"></script>
+<script src="../shared/proset.js?v=5t2svhxbf-pt1"></script><script src="app.js?v=2-pro1-aim2-mt2-pt1-bm1sq"></script>
 <script src="online-ui.js?v=1"></script>
 <!-- World Board Game Atlas portal skin: xiangqi/?skin=atlas — 3D antique lacquer board with boxwood discs, guide speech bubbles, portal look (all features kept) -->
 <script>
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=44l19'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=44l22'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=140')).then(() => load('../atlas/tables3d.js?v=51')).then(() => load('../atlas/skin/common.js?v=55tz')).then(() => load('../atlas/models/janggi.js?v=3')).then(() => load('../atlas/skin/janggi.js?v=2'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/table3d.js?v=141')).then(() => load('../atlas/tables3d.js?v=51')).then(() => load('../atlas/skin/common.js?v=55tz')).then(() => load('../atlas/models/janggi.js?v=3')).then(() => load('../atlas/skin/janggi.js?v=2'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>

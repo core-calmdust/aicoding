@@ -469,6 +469,7 @@ function restNow(rv, can) {
 }
 function render() {
   if (!card) return;
+  if (window.SeqPrac && SeqPrac.active() && SeqPrac.paint()) return;   // the 3-move opening practice (shared/seqprac.js, 2026-11-10)
   if (BGCoach.sw) BGCoach.sw.sync();
   // the coach is for the game in progress: after the game (or while browsing earlier positions) it steps aside and the
   // phones' coach tab shows the review (#reviewCard, data-itc="coach") instead; before a review exists, a short note with

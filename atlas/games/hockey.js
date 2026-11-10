@@ -289,7 +289,8 @@ html.hk-on #bv > .npc-float .npc-pic{width:36px!important;height:36px!important}
       if (!menuEl) return;
       const nv = menuEl.querySelector('#hkNever'); if (nv && nv.checked) { howOff = true; try { localStorage.setItem('atlas-hockey-howto', 'off'); } catch (e) {} }
       menuEl.remove(); menuEl = null; mode = menuSel; try { localStorage.setItem('atlas-hockey-mode', mode); } catch (e) {}
-      s = E.newMatch({ mode, target, first: 0, speed: pvp ? 1.2 : 1 + .5 * (level - 1) / 19 });   // (the pace grows with the AI level; 2 players: a little brisker) setupMode(); hud(); sync(performance.now()); kick(300); barFit();
+      // (the pace grows with the AI level; 2 players: a little brisker)
+      s = E.newMatch({ mode, target, first: 0, speed: pvp ? 1.2 : 1 + .5 * (level - 1) / 19 }); setupMode(); hud(); sync(performance.now()); kick(300); barFit();
       phase = 'count'; let n = 3;
       const tick = () => { if (stopped) return; if (n > 0) { big(String(n)); SND.beep(false); n--; later(tick, 600); } else { big('GO!', 'g', 600); SND.beep(true); phase = 'play'; last = performance.now(); loop(last); } };
       tick();
@@ -301,9 +302,10 @@ html.hk-on #bv > .npc-float .npc-pic{width:36px!important;height:36px!important}
     /* ---------- the loop ---------- */
     function pause() { if (phase !== 'play' || paused) return; paused = true; toast(tr('paused', lang)); }
     function resume() { if (!paused) return; paused = false; last = performance.now(); if (toastEl) toastEl.remove(); }
-    const onVis = () => { if (document.hidden) pause(); };
+    const onVis = () => { if (document.hidden) pause(); else if (document.hasFocus()) resume(); };
     const onBlur = () => pause();   // (2026-11-10) the window losing focus (another window / app in front) pauses too, not only a hidden tab
-    document.addEventListener('visibilitychange', onVis); addEventListener('blur', onBlur);
+    const onFocus = () => { if (!document.hidden) resume(); };   // and coming back resumes by itself
+    document.addEventListener('visibilitychange', onVis); addEventListener('blur', onBlur); addEventListener('focus', onFocus);
     function loop(now) {
       if (stopped || over) return;
       raf = requestAnimationFrame(loop);
@@ -342,7 +344,7 @@ html.hk-on #bv > .npc-float .npc-pic{width:36px!important;height:36px!important}
       stop() {
         stopped = true; cancelAnimationFrame(raf); cancelAnimationFrame(padRaf); timers.forEach(clearTimeout);
         ctx.el.removeEventListener('pointerdown', onDown); ctx.el.removeEventListener('pointermove', onMove); removeEventListener('pointerup', onUp, true); removeEventListener('pointercancel', onUp, true);
-        removeEventListener('keydown', onKey); removeEventListener('keyup', onKey); removeEventListener('resize', onResize); document.removeEventListener('visibilitychange', onVis); removeEventListener('blur', onBlur);
+        removeEventListener('keydown', onKey); removeEventListener('keyup', onKey); removeEventListener('resize', onResize); document.removeEventListener('visibilitychange', onVis); removeEventListener('blur', onBlur); removeEventListener('focus', onFocus);
         ctx.el.style.touchAction = prevTouch; css.remove(); if (toastEl) toastEl.remove(); if (menuEl) menuEl.remove(); document.querySelectorAll('.hkbig,.hkfx').forEach(e => e.remove());
         if (T3.turn) T3.turn(null);
         document.documentElement.classList.remove('hk-on'); removeEventListener('resize', barFit);

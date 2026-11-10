@@ -28,4 +28,6 @@
   setTimeout(check, 0);
   // any click / key on the page means it is in front again
   addEventListener('pointerdown', check, true); addEventListener('keydown', check, true);
+  addEventListener('pointermove', () => { if (frozen) check(); }, true);   // (the pointer moving over the page while it is in front)
+  setInterval(() => { if (frozen) check(); }, 500);   // a safety net: a missed focus event can never leave the page stuck
 })();
