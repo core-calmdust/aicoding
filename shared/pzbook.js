@@ -388,6 +388,17 @@ html[lang=ar] .pbh :is(.pb-ring, .pbh-prog, .pbh-stats .pb-st, .pbh-tabs .ct, .p
 .pb-cont b{color:#fff!important}
 .pbh-tabs button.sel{color:#d93c3c!important;border:2px solid #ff8a7a!important;background:#fff1ee!important;box-shadow:0 3px 0 #ffb3a8!important}
 .pbh-tabs button.sel .ic,.pbh-tabs button.sel .ct{color:#d93c3c!important}
+/* the full versions (3D skin): the boxes in the portal's light tone, not a dark wash over the cream (2026-11-11 the user, every
+   game): cream fill, a sand border and a solid shadow under; the themes keep a light tint of their colour */
+html.atlas-skin :is(.pbh-hero,.pbh-daily,.pb-stage,.pbh-ghead .ic){background:#fffaf0!important;background-image:none!important;border:2px solid #ead9b6!important;box-shadow:0 3px 0 #ead9b6!important;color:#2b3044!important}
+html.atlas-skin .pbh-hero::before,html.atlas-skin .pbh-hero::after{opacity:.05!important}
+html.atlas-skin :is(.pbh-card,.pb-card){background:color-mix(in srgb,var(--c2) 8%,#fffaf0)!important;background-image:none!important;border:2px solid color-mix(in srgb,var(--c) 40%,#ead9b6)!important;box-shadow:0 3px 0 color-mix(in srgb,var(--c) 40%,#ead9b6)!important;color:#2b3044!important}
+html.atlas-skin .pbh-tabs button:not(.sel){background:#fffaf0!important;border:2px solid #ead9b6!important;box-shadow:0 3px 0 #ead9b6!important;color:#4a5068!important}
+html.atlas-skin .pbh-hero .pb-ring,html.atlas-skin .pb-ring{background:radial-gradient(closest-side,#fffaf0 79%,transparent 81%),conic-gradient(#ff5d5d calc(var(--p)*360deg),#efe4cc 0)!important;color:#2b3044!important}
+html.atlas-skin .pb-tile:not(.done){background:#fffaf0!important;border-color:#ead9b6!important}
+html.atlas-skin .pbh-daily .go.ok{color:#2f9a6a!important;background:#eaf7ef!important;border:2px solid #9fd8b8!important;box-shadow:0 3px 0 #9fd8b8!important}
+html.atlas-skin :is(.pbh-hero,.pbh-daily,.pbh-card,.pb-card) :is(small,.sub,.dt,.pbh-desc){color:#6b6f80}
+.pb-cont *{color:inherit!important}
 `;
 function injectCSS() { if (document.getElementById('pbCss')) return; const st = document.createElement('style'); st.id = 'pbCss'; st.textContent = CSS; document.head.appendChild(st); }
 if (typeof document !== 'undefined') injectCSS();
