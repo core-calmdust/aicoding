@@ -9,7 +9,7 @@
  *  - move ordering: table move, safe moves from the centre outwards, then sacrifices.
  * Edge numbering matches engine.js: horizontal edges first ((R+1)*C, row-major), then vertical (R*(C+1)).
  *
- * Copyright 2026 core-calmdust — Apache License 2.0
+ * Copyright 2026 core-calmdust — license not set yet (to be decided)
  */
 typedef unsigned long long u64;
 typedef unsigned int u32;

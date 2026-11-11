@@ -20,7 +20,7 @@
  *           -Wl,--shared-memory -Wl,--import-memory -Wl,--max-memory=536870912 -o dots5mt.wasm solver5.c
  * (tools/mtsim: the same source natively with pthreads, in lock step: the multi-thread schemes measured in nodes)
  *
- * Copyright 2026 core-calmdust — Apache License 2.0
+ * Copyright 2026 core-calmdust — license not set yet (to be decided)
  */
 typedef unsigned long long u64;
 typedef unsigned int u32;
