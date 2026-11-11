@@ -16,9 +16,10 @@ s = s.replace('#define EXPORT(name) __attribute__((export_name(#name)))', '#defi
 s = s.replace('#define IMPORT(name) __attribute__((import_module("env"), import_name(#name)))', '#define IMPORT(name)\n#include "simhook.h"')
 a = 'if (((long long)(++nodes) & 2047) == 0) checkAbort();'
 assert a in s
-s = s.replace(a, '++nodes; if (nodes >= simNext) { simNext += SIM_Q; sim_tick(); checkAbort(); }')
+s = s.replace(a, '++nodes; if (nodes >= simNext) { simNext += simQT; sim_tick(); checkAbort(); }')
 s = s.replace('static TLS double nodes, maxNodes, deadline; static TLS int aborted;', 'static TLS double nodes, maxNodes, deadline, simNext; static TLS int aborted;')
-s = s.replace('  nodes = 0; aborted = 0;', '  nodes = 0; simNext = SIM_Q; aborted = 0;')
+s = s.replace('  nodes = 0; aborted = 0;', '  nodes = 0; simNext = simQT; aborted = 0;')
+s = s.replace('  nodes = 0; deadline = 1e300;', '  nodes = 0; simNext = simQT; deadline = 1e300;')   # (YBW, 2026-11-11: mt_idle)
 s = s.replace('extern unsigned char __heap_base;\nEXPORT(heap_ptr) u8 *heap_ptr(void) { return &__heap_base; }', '')
 a = "      if (threadId && d >= gGoal && gGoalKey == rk) gHit = rk;"
 if a in s: s = s.replace(a, "#ifndef NOHIT\n" + a + "\n#endif")

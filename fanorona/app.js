@@ -158,7 +158,7 @@ let aiW = makeWorker(), anaW = makeWorker();
 // table, so it reads deeper in the same time). The levels decided by depth / positions (15級〜三段) stay on the one-thread
 // workers, as does Fanoron-Telo (solved in JavaScript).
 const MTP = window.MTEngine && GID === 'fanorona' ? MTEngine.use({
-  wasm: 'engine_mt.wasm?v=3', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=1', slot: 4 << 20, initial: 1024, maximum: 16384,   // slot: TLS + the 1 MB move stack + the stack; maximum = engine_mt.wasm's (1 GiB)
+  wasm: 'engine_mt.wasm?v=4', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=2', slot: 4 << 20, initial: 1024, maximum: 16384,   // slot: TLS + the 1 MB move stack + the stack; maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => Date.now(), progress: () => {} } }),
   help: m => m.rule === 'telo' ? null : { io: E.setupIO(m.start, m.moves || []), rk: E.ruleKey() },   // (the page's rule is the job's: gv)
 }) : null;
@@ -1449,9 +1449,20 @@ $('#lessonList').onclick = e => {
 function stepNo(i) { const c = LESSONS.steps[i].course || 'tactics'; let n = 0; for (let k = 0; k <= i; k++) if ((LESSONS.steps[k].course || 'tactics') === c) n++; return n; }
 function openIntro(i) {
   introIdx = i; openChoiceIdx = -1; $('#btnLessonStart').classList.remove('hidden'); const s = LESSONS.steps[i];
-  $('#liStep').textContent = t('course.' + (s.course || 'tactics')) + ' · STEP ' + stepNo(i);
-  $('#liTitle').textContent = t('ls.' + s.id + '.title');
-  $('#liBody').innerHTML = (s.diagram ? diagSVG(s.diagram, 'mini') : '') + t('ls.' + s.id + '.intro');
+  const step = t('course.' + (s.course || 'tactics')) + ' · STEP ' + stepNo(i), title = t('ls.' + s.id + '.title'), fig = (s.diagram ? diagSVG(s.diagram, 'mini') : '');
+  $('#liStep').textContent = step; $('#liTitle').textContent = title;
+  // the common lesson page (shared/luxintro.js, 2026-11-11): board · facts · goal · how to think · trivia — as much as shogi's page
+  if (window.LuxIntro) {
+    LuxIntro.load('lux.json?v=1').then(X => {
+      if (introIdx !== i || openChoiceIdx >= 0) return;
+      const U = LL(X.ui || {}) || {}, x = (X.lessons || {})[s.id] || {}, H = k => LuxIntro.head(k, LANG), n = (s.problems || []).length;
+      const gk = 'ls.' + s.id + '.goal', goal = t(gk) !== gk ? t(gk) : '', tr = LL(x.trivia);
+      LuxIntro.lesson({ step, title, fig, cap: U.figL, chips: [[U.kind, (U.probs || '').replace('{n}', n)], [U.pass, U.passPts]],
+        secs: [goal && { h: H('goal'), html: goal }, { h: H('think'), html: t('ls.' + s.id + '.intro') }, tr && { h: H('trivia'), html: tr, cls: 'lx-trivia' }].filter(Boolean) });
+    });
+    showLessonView('lessonIntroView'); return;
+  }
+  $('#liBody').innerHTML = fig + t('ls.' + s.id + '.intro');
   showLessonView('lessonIntroView');
 }
 $('#btnLessonBack').onclick = () => openChoiceIdx >= 0 ? openOpenings(OPEN.sets[openChoiceIdx] && OPEN.sets[openChoiceIdx].grp) : openLessons(null, LESSONS.steps[introIdx] && (LESSONS.steps[introIdx].course || 'tactics'));
@@ -1651,6 +1662,18 @@ function openOpeningChoice(i) {
   openChoiceIdx = i; const g = OPEN.sets[i], pre = g.study.line.slice(0, g.show || 3), last = pre[pre.length - 1];
   $('#liStep').textContent = t('op.title') + ' · ' + g.moves;
   $('#liTitle').textContent = LL(g.title);
+  if (window.LuxIntro) {   // the common opening page (shared/luxintro.js, 2026-11-11): board · lead · the two ways in · history (with trivia)
+    const fig = miniSVG(lineSpec(pre), { last: last !== undefined ? mTo(last) : -1 });
+    LuxIntro.load('lux.json?v=1').then(X => {
+      if (openChoiceIdx !== i) return;
+      const U = LL(X.ui || {}) || {}, x = (X.openings || {})[g.id] || {};
+      LuxIntro.opening({ step: $('#liStep').textContent, title: LL(g.title), fig, cap: U.figO, lead: opIntro(g),
+        choices: [{ ic: '📖', b: t('op.study'), small: t('op.studyDesc', { n: g.study.line.length }), attrs: 'data-study="1"' }, { ic: '✎', b: t('op.practice'), small: t('op.practiceDesc'), attrs: 'data-practice="1"' }],
+        secs: [LL(x.hist) && { h: LuxIntro.head('hist', LANG), html: [LL(x.hist), LL(x.trivia)].filter(Boolean) }].filter(Boolean) });
+    });
+    $('#btnLessonStart').classList.add('hidden');
+    showLessonView('lessonIntroView'); showOverlay('#lessonOverlay'); return;
+  }
   $('#liBody').innerHTML = miniSVG(lineSpec(pre), { last: last !== undefined ? mTo(last) : -1 }) + opIntro(g).map(x => `<p>${x}</p>`).join('') +
     `<div class="op-choice"><button class="lesson-item" data-study="1"><span class="no">📖</span><span class="tx"><b>${t('op.study')}</b><small>${t('op.studyDesc', { n: g.study.line.length })}</small></span></button>` +
     `<button class="lesson-item" data-practice="1"><span class="no">✎</span><span class="tx"><b>${t('op.practice')}</b><small>${t('op.practiceDesc')}</small></span></button></div>`;

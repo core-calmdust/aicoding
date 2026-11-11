@@ -248,7 +248,8 @@
 .rgd.pzg .cnt{display:flex;align-items:center;gap:2px;min-height:0}
 .pzst{width:22px;height:22px;fill:#e6dccb;stroke:none}.pzst.on{fill:#ffb81c;filter:drop-shadow(0 1px 0 #c98400)}
 @keyframes pzPop{0%{transform:scale(.2)}70%{transform:scale(1.25)}100%{transform:scale(1)}}.pzst.on{animation:pzPop .4s cubic-bezier(.3,1.5,.5,1) both}
-.pzst.on:nth-child(2){animation-delay:.12s}.pzst.on:nth-child(3){animation-delay:.24s}`;
+.pzst.on:nth-child(2){animation-delay:.12s}.pzst.on:nth-child(3){animation-delay:.24s}
+@media (max-width:600px){.rgd.pzg .pic{display:none!important}.rgd.pzg .bub::before,.rgd.pzg .bub::after{display:none!important}}`;   // (phones: no guide picture in the puzzle / lesson box — it broke the row of buttons, 2026-11-11)
     document.head.appendChild(s);
   }
 

@@ -580,8 +580,13 @@ function defenceCells(pos, a, d) {
 
 // ---------------------------------------------------------------- search
 const TT_BITS = 20, TT_SIZE = 1 << TT_BITS, TT_MASK = TT_SIZE - 1;
-const SPLIT_MAX = 40;   // (moves shared among the threads at most: ctl has 128 slots)
-const SP_MV = 17, SP_DW = SP_MV + SPLIT_MAX, SP_PL = SP_DW + SPLIT_MAX, SP_PATH = 128 - SP_PL;   // (17…56 the moves, 57…96 their done words, 97…127 the path to the split node)
+const SPLIT_MAX = 40;   // (moves of a split point at most)
+// split points (engine_mt.wasm SPA, see splitRun): a slot of SPW Int32 words — the numbers, SP_MV… the moves, SP_DW… their
+// done words, SP_PL… the path from the root to the node (so a split point is at ply < SP_PATH); GV: the pool's counters
+const SPW = 128, SP_SLOTS = 64, SP_SEQ = 0, SP_STATE = 1, SP_CNT = 2, SP_N = 3, SP_BEST = 4, SP_BETA = 5, SP_DEPTH = 6, SP_PLY = 7, SP_KIND = 8,
+  SP_OPP = 9, SP_STOP = 10, SP_WAIT = 11, SP_PS = 12, SP_PQ = 13, SP_OWNER = 14, SP_MV = 16, SP_DW = SP_MV + SPLIT_MAX, SP_PL = SP_DW + SPLIT_MAX, SP_PATH = SPW - SP_PL;
+const G_IDLE = 0, G_OPEN = 1, G_SEQ = 2, G_HI = 3;
+const SPLIT_D = 4, SPLIT_PV = 2;   // (the least depth of a split point; at a node of the principal variation — 2026-11-11: depth 3 about the same, 2 / 5 and PV 3 worse)
 // a move's done word: tag << 18 | value + 131072 when done, tag << 18 (value field 0) while still pending in split tag (2026-11-09:
 // only that pending word may be replaced, so a slow thread still finishing a move of an older split cannot mark the new split's
 // move as "not done" — the lead then gave up the whole depth: Mac 8 / 14 threads, depth 2 in 26 ms)
@@ -590,19 +595,24 @@ class Engine {
   // tt (the page's multi-thread search): the transposition table on the shared memory (engine_mt.wasm, mt.c) and the stop flag
   // ctl (Int32Array, [0] = 1: stop) — every thread of the pool reads and writes one table (and the moves are shared out: nodeSplit, splitIter); without it, its own table
   constructor(tt) {
-    if (tt) { this.k1 = tt.k1; this.k2 = tt.k2; this.tv = tt.tv; this.td = tt.td; this.tf = tt.tf; this.tm = tt.tm; this.ctl = tt.ctl; }
+    if (tt) { this.k1 = tt.k1; this.k2 = tt.k2; this.tv = tt.tv; this.td = tt.td; this.tf = tt.tf; this.tm = tt.tm; this.ctl = tt.ctl; this.spa = tt.sp || null; this.gv = tt.gv || null; }
     else { this.k1 = new Int32Array(TT_SIZE); this.k2 = new Int32Array(TT_SIZE); this.tv = new Int32Array(TT_SIZE);
     this.td = new Int8Array(TT_SIZE); this.tf = new Int8Array(TT_SIZE); this.tm = new Int16Array(TT_SIZE); }
     this.hist = tt && tt.hist ? tt.hist : new Int32Array(SIZE * 3);   // (the threads share the move ordering's history too: mt.c)
     this.solver = new Solver();
     this.nodes = 0; this.stop = false; this.deadline = 0; this.rand = Math.random; this.noise = 0;
     this.ordS = new Int32Array(SIZE);
-    this.dupK = -1; this.rsplit = false; this.inSplit = false; this.sp = null; this.path = new Int32Array(128);
+    this.rsplit = false; this.ybw = false; this.path = new Int32Array(128);
+    this.chain = []; this.stopAt = -1; this.dupE = null; this.openSeen = 0;   // (the split points this thread works under: see the split points below)
   }
   // the shared table's age (0..31): the lead of the pool starts a new one for each search, the helpers take the lead's
   newAge() { if (this.ctl) this.age = this.mtLead ? (Atomics.add(this.ctl, 12, 1) + 1) & 31 : Atomics.load(this.ctl, 12) & 31; }
   clear() { this.k1.fill(0); this.k2.fill(0); this.hist.fill(0); this.solver.clear(); }
-  timeUp() { if ((++this.nodes & 1023) === 0 && (now() > this.deadline || this.nodes > this.nodeLimit || (this.ctl && (Atomics.load(this.ctl, 0) || (this.splitG && (Atomics.load(this.ctl, 13) !== this.splitG || (this.dupK >= 0 && spDone(Atomics.load(this.ctl, SP_DW + this.dupK), this.splitT)))))))) this.stop = true; return this.stop; }
+  timeUp() {
+    if ((++this.nodes & 1023) === 0 && (now() > this.deadline || this.nodes > this.nodeLimit || (this.ctl && Atomics.load(this.ctl, 0)))) { this.stop = true; this.stopAt = -1; }
+    else if ((this.nodes & 127) === 0 && this.chain.length && !this.stop) { const j = this.chainStale(); if (j >= 0) { this.stop = true; this.stopAt = j; } }
+    return this.stop;
+  }
   evaluate(pos) {
     const me = pos.side, op = 3 - me;
     const nn = pos.nn && this.nnx ? this.nnx : pos.nn;      // nnx: a per-engine net (A/B tests)
@@ -655,7 +665,7 @@ class Engine {
     if (of.length === 1) {
       const q = of[0];
       if (!legalFor(pos, q, me)) { if (ply === 0) this.rootBest = -1; return -(WIN - ply - 2); }
-      if (this.rsplit) this.path[ply] = q;
+      if (this.ctl) this.path[ply] = q;
       pos.make(I2M[q]);
       const v = -this.search(pos, depth, -beta, -alpha, ply + 1);
       pos.unmake();
@@ -704,19 +714,21 @@ class Engine {
     let best = -WIN, bestM = list[0], a0 = alpha, n = 0;
     for (const i of list) {
       if (n >= width) break;
-      if (n === 1 && this.rsplit && !this.inSplit && depth >= 2 && ply <= SP_PATH && beta - alpha > 1 && list.length > 1) {   // (the page's threads: the other moves of a PV node are shared out, see nodeSplit)
-        const r = this.nodeSplit(pos, list.slice(1, Math.min(width, list.length)), depth, alpha, beta, ply, oppThreat);
-        if (this.stop) break;
-        for (let k = 0; k < r.length; k++) {
-          const v = r[k], j = list[k + 1];
-          if (v > best) { best = v; bestM = j; if (ply === 0) this.rootBest = j; }
-          if (v > alpha) alpha = v;
-          if (alpha >= beta) { this.hist[j * 3 + me] += depth * depth; break; }
+      if (n === 1 && this.ybw && depth >= (beta - alpha > 1 ? SPLIT_PV : SPLIT_D) && ply < SP_PATH && Math.min(width, list.length) > 2 && !this.stop && this.mayHelp()) {   // (the page's threads: the other moves are shared out, see the split points)
+        const r = this.splitRun(pos, list.slice(1, Math.min(width, list.length)), depth, 1, alpha, beta, ply, oppThreat);
+        if (r !== false) {   // (false: no free slot — on alone)
+          if (!r) break;
+          for (let k = 0; k < r.length; k++) {
+            const v = r[k], j = list[k + 1];
+            if (v > best) { best = v; bestM = j; if (ply === 0) this.rootBest = j; }
+            if (v > alpha) alpha = v;
+            if (alpha >= beta) { this.hist[j * 3 + me] += depth * depth; break; }
+          }
+          break;
         }
-        break;
       }
       n++;
-      if (this.rsplit) this.path[ply] = i;
+      if (this.ctl) this.path[ply] = i;
       pos.make(I2M[i]);
       let v;
       const ext = 0;
@@ -848,111 +860,223 @@ class Engine {
     this.rootOnly = ro;
     return best;
   }
-  // ---- moves shared among the pool's threads (2026-11-09). Two kinds, ctl[10] & 15:
+  // ---- split points: the moves shared among the pool's threads (Young Brothers Wait). 2026-11-09: at the lead's principal
+  // variation only, one split at a time; 2026-11-11 (as reversi v4 / v4.1): at any node of any thread. After a node's first
+  // move (depth >= SPLIT_D, while a thread is idle or an owner waits above), the thread publishes the node's other moves as
+  // a split point (engine_mt.wasm SPA: SP_SLOTS slots of SPW Int32 words, each slot on its own cache lines) and takes them
+  // with the other threads from an atomic counter. Two kinds:
   //  0 rootList (analysis, hints, the coach, the review box): every candidate gets a full-window search of its own;
-  //  1 best (a move: the coach's deeper pass, PRO's thread count): Young Brothers Wait on the PV — at a node of the lead's
-  //    principal variation (full window, depth >= 2) the lead searches the first move itself as one thread does, then the
-  //    other moves go to the threads: each is tried with a null window on the best value so far (ctl[8], an atomic maximum;
-  //    reduced as in one thread) and searched again with the window (…, ctl[11]) if it is better. A cut-off (>= beta) leaves
-  //    the moves not started yet (their value -WIN - 1). The lead makes one split at a time (none inside a shared move).
-  // The threads take the moves from an atomic counter (no shared memory of the search but the table). ctl (shared/mtengine.js,
-  // [8…] free for the engine): [8] the best value so far (the split's tag << 18 | value + 131072: a thread still busy with an old split cannot raise it), [9] the opponent's threat at the node, [10] the kind | the node's
-  // ply << 4, [11] beta, [12] the table's age, [13] the split's number (a new one aborts the old searches), [14] its depth,
-  // [15] the next move (number << 6 | move), [16] the number of moves, [SP_MV + k] the k-th move (cell), [SP_DW + k] its done
-  // word: the split's tag << 18 | value + 131072 — the first thread to finish a move writes it with one compare-exchange —,
-  // [SP_PL + p] the path from the root to the node (cells).
-  // When no move is left to take, a thread searches the moves still being searched by others once more (with the table they
-  // fill, so it costs much less) and stops as soon as one of them has it: the lead never waits for a slow thread (a thread on
-  // a slower core, e.g. Apple's efficiency cores, used to make the whole depth wait for its move).
+  //  1 a node of a search: each move is tried with a null window on the split's best value so far (an atomic maximum,
+  //    reduced as in one thread) and searched again with the window (…, beta) if it is better. A value >= beta stops the
+  //    split (SP_STOP): the moves not started yet are not needed (-WIN - 1).
+  // A thread joins a split point by playing its path from the root (or, an owner helping below its own split point, from its
+  // own node). Every thread keeps the chain of the split moves it works under (this.chain) and checks it every 128 positions
+  // (chainStale): when a split point is over (stopped, or its slot taken by another split) or the move has been finished by
+  // another thread, the search unwinds to that level. An owner with no move left to take does not sit and wait: it helps at
+  // the split points below its own (helpful master) or searches a move still being searched once more (with the table the
+  // other thread fills, so it costs much less) — the first thread to finish a move writes its done word (the split's tag
+  // << 18 | value + 131072) with one compare-exchange, the other stops. A helper with no split point to join does the same
+  // with the top-most split point's moves. A thread searching a move again gives way when a split point it can join opens.
+  // Slot words: SP_SEQ the split's number (0: free), SP_STATE 1 open / 2 all moves taken / 3 being written, SP_CNT the
+  // next move (number << 6 | move), SP_N, SP_BEST (tag << 18 | value + 131072), SP_BETA, SP_DEPTH, SP_PLY, SP_KIND, SP_OPP
+  // (the opponent's threat at the node: no reduction), SP_STOP, SP_WAIT (the owner waits), SP_PS / SP_PQ (the split point
+  // its owner worked under: slot, number), SP_OWNER, SP_MV + k the moves, SP_DW + k their done words, SP_PL + p the path.
+  // GV (its own cache line): G_IDLE the threads with nothing to do (+ waiting owners, + threads searching a move again),
+  // G_OPEN bumped when a split point opens, G_SEQ the split counter, G_HI the slots used so far.
   moveVal(pos, i, d) { pos.make(I2M[i]); const v = pos.lastFive() ? WIN - 1 : -this.search(pos, d - 1, -WIN - 1, WIN + 1, 1); pos.unmake(); return v; }
-  splitOne(pos, k, d) {   // one move of the current split (this.splitT): its value, or undefined when stopped
-    const c = this.ctl, i = c[SP_MV + k], T = this.splitT, S = this.sp;
-    // (a helper: the lead may have published the next split since this one's numbers were read — then the cell may be another
-    // position's move, even an occupied one, and playing it would spoil this thread's board and fill the table with nonsense)
-    if (!this.mtLead && (Atomics.load(c, 13) !== this.splitG || !pos.legalIdx(i))) { this.stop = true; return undefined; }
-    if (!S.kind) { const v = this.moveVal(pos, i, d); return this.stop ? undefined : v; }
-    const x = Atomics.load(c, 8); if ((x >>> 18) !== T) { this.stop = true; return undefined; }   // (the split is over)
-    const a = (x & 0x3ffff) - 131072, beta = S.beta, ply = S.ply;
+  mayHelp() {   // split here? (a thread is idle, or an owner waits for one of the split moves this thread works under)
+    if (Atomics.load(this.gv, G_IDLE) > 0) return true;
+    const A = this.spa;
+    for (let j = this.chain.length - 1; j >= 0; j--) { const e = this.chain[j]; if (A[e.b + SP_WAIT] && A[e.b + SP_SEQ] === e.q) return true; }
+    return false;
+  }
+  chainStale() {   // the outermost level of this.chain that is no longer needed (-1: none)
+    const A = this.spa, ch = this.chain;
+    for (let j = 0; j < ch.length; j++) {
+      const e = ch[j];
+      if (Atomics.load(A, e.b + SP_SEQ) !== e.q || Atomics.load(A, e.b + SP_STOP) || (e.k >= 0 && spDone(Atomics.load(A, e.b + SP_DW + e.k), e.T))) return j;
+    }
+    const d = this.dupE;   // (searching a move again: give way to a split point that opened since)
+    if (d) { const o = Atomics.load(this.gv, G_OPEN); if (o !== this.openSeen) { this.openSeen = o; if (this.findOpen(d.own) >= 0) return d.lvl; } }
+    return -1;
+  }
+  outerStale(lvl) {   // between the searches of a split: the pool stopped, time is up, or a level above lvl is over
+    if (Atomics.load(this.ctl, 0) || now() > this.deadline) { this.stop = true; this.stopAt = -1; return true; }
+    const j = this.chainStale(); if (j >= 0 && j < lvl) { this.stop = true; this.stopAt = j; return true; }
+    return false;
+  }
+  descends(s, own) {   // is split point s below the split point own (its owner worked under it, or under one below it)?
+    const A = this.spa;
+    for (let b = s * SPW, n = 0; n < 64; n++) {
+      const ps = A[b + SP_PS], pq = A[b + SP_PQ];
+      if (ps < 0) return false;
+      if (ps === own.s && pq === own.q) return true;
+      b = ps * SPW; if (Atomics.load(A, b + SP_SEQ) !== pq) return false;
+    }
+    return false;
+  }
+  findOpen(own) {   // an open split point to join (the top-most; own: only below that one), -1: none
+    const A = this.spa, hi = Atomics.load(this.gv, G_HI); let best = -1, bp = 1e9;
+    for (let j = 0; j < hi; j++) {
+      const b = j * SPW;
+      if (Atomics.load(A, b + SP_STATE) !== 1 || A[b + SP_OWNER] === this.mtId || Atomics.load(A, b + SP_STOP)) continue;
+      const ply = A[b + SP_PLY];
+      if (ply >= bp || (own && (ply <= own.ply || !this.descends(j, own)))) continue;
+      best = j; bp = ply;
+    }
+    return best;
+  }
+  spRead(s) {   // a split point's numbers (null: free / being reused)
+    const A = this.spa, b = s * SPW, q = Atomics.load(A, b + SP_SEQ);
+    if (!q || Atomics.load(A, b + SP_STATE) === 3) return null;
+    const sp = { s, b, q, T: q % 16383 + 1, n: A[b + SP_N], d: A[b + SP_DEPTH], kind: A[b + SP_KIND], beta: A[b + SP_BETA], ply: A[b + SP_PLY], opp: A[b + SP_OPP] === 1, own: false };
+    return Atomics.load(A, b + SP_SEQ) === q ? sp : null;
+  }
+  spGo(pos, sp, base) {   // play split point sp's path from this thread's node at ply base (its path agrees up to there); the moves made, -1: stale
+    const A = this.spa;
+    for (let p = base; p < sp.ply; p++) this.path[p] = A[sp.b + SP_PL + p];
+    if (Atomics.load(A, sp.b + SP_SEQ) !== sp.q) return -1;
+    let made = base;
+    for (; made < sp.ply; made++) { const c = this.path[made]; if (!(c >= 0 && pos.b[c] === EMPTY)) break; pos.make(I2M[c]); }
+    if (made < sp.ply) { while (made-- > base) pos.unmake(); return -1; }
+    return made - base;
+  }
+  join(pos, s, base) {   // take the moves of the open split point s, from this thread's node at ply base
+    const sp = this.spRead(s); if (!sp || sp.ply < base) return;
+    let m = this.spGo(pos, sp, base); if (m < 0) return;
+    this.splitTake(pos, sp);
+    while (m--) pos.unmake();
+  }
+  dupMove(pos, sp, lvl, own) {   // search an unfinished move of sp once more (from this thread's turn on); false: none
+    const A = this.spa, s0 = ((this.mtId | 0) * 5) % sp.n;
+    for (let j = 0; j < sp.n; j++) {
+      const k = (s0 + j) % sp.n;
+      if (spDone(Atomics.load(A, sp.b + SP_DW + k), sp.T)) continue;
+      const d0 = this.dupE; this.dupE = { lvl, own }; this.openSeen = Atomics.load(this.gv, G_OPEN);
+      this.splitMove(pos, sp, k);
+      this.dupE = d0;
+      return true;
+    }
+    return false;
+  }
+  splitOne(pos, sp, k) {   // one move of split point sp: its value, or undefined when stopped
+    const A = this.spa, i = A[sp.b + SP_MV + k];
+    if (Atomics.load(A, sp.b + SP_SEQ) !== sp.q || !pos.legalIdx(i)) { this.stop = true; this.stopAt = this.chain.length - 1; return undefined; }
+    this.path[sp.ply] = i;
+    if (!sp.kind) { const v = this.moveVal(pos, i, sp.d); return this.stop ? undefined : v; }
+    const x = Atomics.load(A, sp.b + SP_BEST); if ((x >>> 18) !== sp.T) { this.stop = true; this.stopAt = this.chain.length - 1; return undefined; }
+    const a = (x & 0x3ffff) - 131072, beta = sp.beta, d = sp.d;
     if (a >= beta) return -WIN - 1;   // (cut off: not needed)
     pos.make(I2M[i]);
-    let v = -this.search(pos, d - 1 - (k + 2 > 6 && d >= 3 && !S.opp ? 1 : 0), -a - 1, -a, ply + 1);
-    if (v > a && !this.stop) v = -this.search(pos, d - 1, -beta, -a, ply + 1);
+    let v = -this.search(pos, d - 1 - (k + 2 > 6 && d >= 3 && !sp.opp ? 1 : 0), -a - 1, -a, sp.ply + 1);
+    if (v > a && !this.stop) v = -this.search(pos, d - 1, -beta, -a, sp.ply + 1);
     pos.unmake();
-    if (this.stop) return undefined;
-    for (let o = Atomics.load(c, 8); (o >>> 18) === T && v > (o & 0x3ffff) - 131072; o = Atomics.load(c, 8))   // (the best value of this split only)
-      if (Atomics.compareExchange(c, 8, o, T << 18 | (v + 131072)) === o) break;
-    return v;
+    return this.stop ? undefined : v;
   }
-  splitFinish(k, v) {
-    const c = this.ctl, T = this.splitT;   // (only while pending in this split: see spDone)
-    Atomics.compareExchange(c, SP_DW + k, T << 18, T << 18 | (v + 131072));
+  splitMove(pos, sp, k) {   // search move k of sp under its chain entry; write its value
+    const A = this.spa;
+    this.chain.push({ b: sp.b, q: sp.q, T: sp.T, k });
+    const v = this.splitOne(pos, sp, k);
+    this.chain.pop();
+    if (v === undefined) return;
+    Atomics.compareExchange(A, sp.b + SP_DW + k, sp.T << 18, sp.T << 18 | (v + 131072));   // (only while pending in this split: see spDone)
+    if (!sp.kind) return;
+    for (let o = Atomics.load(A, sp.b + SP_BEST); (o >>> 18) === sp.T && v > (o & 0x3ffff) - 131072; o = Atomics.load(A, sp.b + SP_BEST))   // (the best value of this split only)
+      if (Atomics.compareExchange(A, sp.b + SP_BEST, o, sp.T << 18 | (v + 131072)) === o) break;
+    if (v >= sp.beta && Atomics.load(A, sp.b + SP_SEQ) === sp.q) Atomics.store(A, sp.b + SP_STOP, 1);
   }
-  splitTake(pos, g, d, n) {   // take moves of split g until none is left, then join the unfinished ones; false: aborted
-    const c = this.ctl, T = this.splitT, lost = () => now() > this.deadline || Atomics.load(c, 0) || Atomics.load(c, 13) !== g;
-    for (;;) {
-      const x = Atomics.load(c, 15), k = x & 63;   // (the counter carries its split: a late thread of an old one takes nothing)
-      if ((x >>> 6) !== (g & 0x1ffffff) || this.stop) return false;
-      if (k >= n) break;
-      if (Atomics.compareExchange(c, 15, x, x + 1) !== x) continue;
-      const v = this.splitOne(pos, k, d);
-      if (v === undefined) return false;
-      this.splitFinish(k, v);
-    }
-    const s0 = this.mtLead ? 0 : ((this.mtId | 0) * 5) % n;
-    for (let j = 0; j < n; j++) {
-      const k = (s0 + j) % n;
-      if (spDone(Atomics.load(c, SP_DW + k), T)) continue;
-      this.dupK = k;
-      const v = this.splitOne(pos, k, d);
-      this.dupK = -1;
-      if (v === undefined) { if (lost()) return false; this.stop = false; continue; }   // (another thread had it first)
-      this.splitFinish(k, v);
-    }
+  spOver(sp) {   // all of sp's moves done, or cut off
+    const A = this.spa;
+    if (Atomics.load(A, sp.b + SP_STOP)) return true;
+    for (let k = 0; k < sp.n; k++) if (!spDone(Atomics.load(A, sp.b + SP_DW + k), sp.T)) return false;
     return true;
   }
-  splitRun(pos, moves, d, kind, alpha, beta, ply, opp) {   // the lead: publish one split, search it with the helpers; the values (or null: stopped)
-    const c = this.ctl, n = moves.length;
-    const g = Atomics.load(c, 13) + 1, T = g % 16383 + 1;
-    for (let k = 0; k < n; k++) { c[SP_MV + k] = moves[k]; Atomics.store(c, SP_DW + k, T << 18); }   // (pending in split T)
-    for (let p = 0; p < ply; p++) c[SP_PL + p] = this.path[p];
-    c[8] = T << 18 | ((alpha | 0) + 131072); c[9] = opp ? 1 : 0; c[10] = kind | ply << 4; c[11] = beta | 0; c[16] = n; c[14] = d; Atomics.store(c, 15, (g & 0x1ffffff) << 6);
-    Atomics.store(c, 13, g); Atomics.notify(c, 13);
-    this.splitG = g; this.splitT = T; this.inSplit = true; this.sp = { kind, beta: beta | 0, ply, opp: !!opp };
+  splitTake(pos, sp) {   // take sp's moves until none is left (the owner: then help until the others' are done)
+    const A = this.spa, G = this.gv, b = sp.b, lvl = this.chain.length;
+    for (;;) {
+      if (this.stop) return;
+      const x = Atomics.load(A, b + SP_CNT), k = x & 63;
+      if ((x >>> 6) !== (sp.q & 0x1ffffff) || k >= sp.n || Atomics.load(A, b + SP_STOP)) break;
+      if (Atomics.compareExchange(A, b + SP_CNT, x, x + 1) !== x) continue;
+      if (k + 1 >= sp.n) Atomics.compareExchange(A, b + SP_STATE, 1, 2);
+      this.splitMove(pos, sp, k);
+      if (this.stop) { if (this.stopAt === lvl) { this.stop = false; continue; } return; }
+    }
+    if (!sp.own) return;
+    Atomics.compareExchange(A, b + SP_STATE, 1, 2);
+    Atomics.store(A, b + SP_WAIT, 1); Atomics.add(G, G_IDLE, 1);
+    this.chain.push({ b, q: sp.q, T: sp.T, k: -1 });   // (the owner's own split point: a cut-off ends the wait)
+    for (;;) {
+      if (this.spOver(sp) || this.outerStale(lvl)) break;
+      const s = this.findOpen(sp);
+      if (s >= 0) { Atomics.sub(G, G_IDLE, 1); this.join(pos, s, sp.ply); Atomics.add(G, G_IDLE, 1); }
+      else if (!this.dupMove(pos, sp, lvl, sp)) continue;
+      if (this.stop) { if (this.stopAt >= lvl) { this.stop = false; continue; } break; }
+    }
+    this.chain.pop();
+    Atomics.store(A, b + SP_WAIT, 0); Atomics.sub(G, G_IDLE, 1);
+  }
+  splitRun(pos, moves, d, kind, alpha, beta, ply, opp) {   // publish a split point at this node and search it; its values, null: stopped, false: no free slot
+    const A = this.spa, G = this.gv, n = moves.length;
+    let s = -1; for (let j = 0; j < SP_SLOTS; j++) if (Atomics.compareExchange(A, j * SPW + SP_STATE, 0, 3) === 0) { s = j; break; }
+    if (s < 0) return false;
+    const b = s * SPW, q = ((Atomics.add(G, G_SEQ, 1) + 1) & 0x1ffffff) || 1, T = q % 16383 + 1, top = this.chain[this.chain.length - 1];
+    for (let k = 0; k < n; k++) { A[b + SP_MV + k] = moves[k]; A[b + SP_DW + k] = T << 18; }   // (pending in split T)
+    for (let p = 0; p < ply; p++) A[b + SP_PL + p] = this.path[p];
+    A[b + SP_N] = n; A[b + SP_BEST] = T << 18 | ((alpha | 0) + 131072); A[b + SP_BETA] = beta | 0; A[b + SP_DEPTH] = d; A[b + SP_PLY] = ply;
+    A[b + SP_KIND] = kind; A[b + SP_OPP] = opp ? 1 : 0; A[b + SP_STOP] = 0; A[b + SP_WAIT] = 0; A[b + SP_OWNER] = this.mtId | 0;
+    A[b + SP_PS] = top ? top.b / SPW : -1; A[b + SP_PQ] = top ? top.q : 0;
+    Atomics.store(A, b + SP_CNT, q << 6); Atomics.store(A, b + SP_SEQ, q); Atomics.store(A, b + SP_STATE, 1);
+    for (let h = Atomics.load(G, G_HI); h <= s; h = Atomics.load(G, G_HI)) if (Atomics.compareExchange(G, G_HI, h, s + 1) === h) break;
+    Atomics.add(G, G_OPEN, 1); Atomics.notify(G, G_OPEN);
+    const sp = { s, b, q, T, n, d, kind, beta: beta | 0, ply, opp: !!opp, own: true };
+    this.splitTake(pos, sp);
     let out = null;
-    if (this.splitTake(pos, g, d, n)) {
+    if (!this.stop) {
+      const cut = Atomics.load(A, b + SP_STOP);
       out = [];
       for (let k = 0; k < n; k++) {
-        const w = Atomics.load(c, SP_DW + k);
-        if (!spDone(w, this.splitT)) { this.stop = true; break; }   // (cannot happen: every move is done when splitTake returns)
-        out.push((w & 0x3ffff) - 131072);
+        const w = Atomics.load(A, b + SP_DW + k);
+        if (spDone(w, T)) out.push((w & 0x3ffff) - 131072);
+        else if (cut) out.push(-WIN - 1);
+        else { out = null; this.stop = true; this.stopAt = -1; break; }   // (cannot happen)
       }
-    } else this.stop = true;
-    if (this.stop) { out = null; Atomics.add(c, 13, 1); Atomics.notify(c, 13); }   // (time is up: the helpers drop this split)
-    this.splitG = 0; this.inSplit = false;
+    }
+    Atomics.store(A, b + SP_STOP, 1); Atomics.store(A, b + SP_SEQ, 0); Atomics.store(A, b + SP_STATE, 0);   // (late threads see the split is over)
     return out;
   }
-  // rootList's depth d: the values of order's moves into cur
-  splitIter(pos, order, d, cur) { const r = this.splitRun(pos, order, d, 0, 0, 0, 0, false); if (r) for (let k = 0; k < order.length; k++) cur.set(order[k], r[k]); }
-  // a PV node of best (ply, depth d, window alpha … beta, the first move done): the values of the other moves
-  nodeSplit(pos, moves, d, alpha, beta, ply, opp) { return this.splitRun(pos, moves, d, 1, alpha, beta, ply, opp) || []; }
-  splitHelp(pos) {   // a helper: wait for the lead's splits and take their moves until the pool stops
-    const c = this.ctl; let seen = Atomics.load(c, 13);
-    this.deadline = Infinity; this.nodeLimit = 1e12; this.nodes = 0; this.newAge();
-    this.solver.nodes = 0; this.solver.clear();
+  // rootList's depth d: the values of order's moves into cur (false: no free slot)
+  splitIter(pos, order, d, cur) { const r = this.splitRun(pos, order, d, 0, 0, 0, 0, false); if (r === false) return false; if (r) for (let k = 0; k < order.length; k++) cur.set(order[k], r[k]); return true; }
+  splitHelp(pos) {   // a helper: join the split points (or search their moves once more) until the pool stops
+    const c = this.ctl, G = this.gv;
+    this.deadline = Infinity; this.nodeLimit = 1e12; this.nodes = 0; this.newAge(); this.ybw = true;
+    this.solver.nodes = 0; this.solver.clear(); this.chain.length = 0; this.stop = false; this.dupE = null;
+    if (!this.spa) { while (!Atomics.load(c, 0)) Atomics.wait(c, 0, 0, 20); return; }
+    Atomics.add(G, G_IDLE, 1);
     while (!Atomics.load(c, 0)) {
-      const g = Atomics.load(c, 13);
-      if (g === seen) { Atomics.wait(c, 13, g, 20); continue; }
-      seen = g; this.splitG = g; this.splitT = g % 16383 + 1; this.stop = false; this.age = Atomics.load(c, 12) & 31;
-      const d = c[14], n = c[16], ply = c[10] >>> 4;
-      this.sp = { kind: c[10] & 15, beta: c[11], ply, opp: c[9] === 1 };
-      if (Atomics.load(c, 13) !== g) continue;   // (the lead writes a split's numbers before its number [13])
-      let made = 0;
-      for (; made < ply; made++) { const q = c[SP_PL + made]; if (!(q >= 0 && pos.b[q] === EMPTY)) break; pos.make(I2M[q]); }
-      if (made === ply && Atomics.load(c, 13) === g) this.splitTake(pos, g, d, n);
-      while (made--) pos.unmake();
-      this.splitG = 0;
+      const ov = Atomics.load(G, G_OPEN);
+      this.age = Atomics.load(c, 12) & 31;
+      const s = this.findOpen(null);
+      if (s >= 0) { Atomics.sub(G, G_IDLE, 1); const n0 = this.nodes; this.join(pos, s, 0); Atomics.add(G, G_IDLE, 1); if (this.nodes === n0) Atomics.wait(G, G_OPEN, ov, 1); }   // (nothing to take after all: do not spin)
+      else if (!this.dupTop(pos)) { Atomics.wait(G, G_OPEN, ov, 5); continue; }
+      this.stop = false; this.chain.length = 0;
     }
+    Atomics.sub(G, G_IDLE, 1);
     this.stop = false;
+  }
+  dupTop(pos) {   // a helper with no split point to join: search a move of the top-most split point once more; false: none
+    const A = this.spa, hi = Atomics.load(this.gv, G_HI); let best = -1, bp = 1e9;
+    for (let j = 0; j < hi; j++) {
+      const b = j * SPW, st = Atomics.load(A, b + SP_STATE);
+      if ((st !== 1 && st !== 2) || Atomics.load(A, b + SP_STOP)) continue;
+      const ply = A[b + SP_PLY]; if (ply < bp) { best = j; bp = ply; }
+    }
+    if (best < 0) return false;
+    const sp = this.spRead(best); if (!sp) return false;
+    const m = this.spGo(pos, sp, 0); if (m < 0) return false;
+    const r = this.dupMove(pos, sp, 0, null);
+    for (let j = m; j--;) pos.unmake();
+    return r;
   }
   // values of the best candidate root moves (for hints / analysis)
   rootList(pos, ms, onProgress, maxN, maxD) {   // (maxD: a depth limit — bench.html)
@@ -969,8 +1093,9 @@ class Engine {
     for (let d = 1; d <= (maxD || 40); d++) {
       const cur = new Map();
       const order = last ? cand.slice().sort((p, q) => last.get(q) - last.get(p)) : cand;
-      if (this.split && order.length > 1 && order.length <= SPLIT_MAX) this.splitIter(pos, order, d, cur);   // (the pool's lead: the threads share the moves)
+      if (this.split && this.spa && order.length > 1 && order.length <= SPLIT_MAX && this.splitIter(pos, order, d, cur)) {}   // (the pool's lead: the threads share the moves)
       else for (const i of order) {
+        if (this.ctl) this.path[0] = i;
         pos.make(I2M[i]);
         let v;
         if (pos.lastFive()) v = WIN - 1;
@@ -1114,6 +1239,7 @@ function cands(rule, moves, ms, start, k, plies, onProgress) {
   const E = eng();
   const r = E.rootList(pos, ms || 1200, onProgress, 12);
   const list = r.list.slice().sort((a, b) => b.v - a.v).slice(0, k || 5);
+  const yb = E.ybw; E.ybw = false;   // (the lines start at other positions than the helpers' root: no split points)
   for (const e of list) {
     e.pv = [];
     pos.make(e.m); let made = 1;
@@ -1126,6 +1252,7 @@ function cands(rule, moves, ms, start, k, plies, onProgress) {
     }
     while (made--) pos.unmake();
   }
+  E.ybw = yb;
   return { list, depth: r.depth, nodes: E.nodes };
 }
 // puzzle solver. attacker to move (defend=false): need per candidate move; defender to move (defend=true): need per reply
@@ -1184,7 +1311,8 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
       const x = new WebAssembly.Instance(m.module, { env: { memory: m.mem } }).exports, B = m.mem.buffer, n = x.tt_size();
       x.mt_stack(m.top); x.mt_thread(m.tls, m.id);
       mtCtl = m.ctl; mtCnt = m.cnt; mtId = m.id;
-      ENG = new Engine({ k1: new Int32Array(B, x.tt_k1(), n), k2: new Int32Array(B, x.tt_k2(), n), tv: new Int32Array(B, x.tt_tv(), n), td: new Int8Array(B, x.tt_td(), n), tf: new Int8Array(B, x.tt_tf(), n), tm: new Int16Array(B, x.tt_tm(), n), hist: new Int32Array(B, x.tt_hist(), SIZE * 3), ctl: m.ctl });
+      ENG = new Engine({ k1: new Int32Array(B, x.tt_k1(), n), k2: new Int32Array(B, x.tt_k2(), n), tv: new Int32Array(B, x.tt_tv(), n), td: new Int8Array(B, x.tt_td(), n), tf: new Int8Array(B, x.tt_tf(), n), tm: new Int16Array(B, x.tt_tm(), n), hist: new Int32Array(B, x.tt_hist(), SIZE * 3), ctl: m.ctl,
+        sp: x.tt_sp ? new Int32Array(B, x.tt_sp(), SPW * SP_SLOTS) : null, gv: x.tt_gv ? new Int32Array(B, x.tt_gv(), 16) : null });
       ENG.age = 0; ENG.mtLead = MTQ === '1'; ENG.mtId = m.id;
       ready.then(() => { self.postMessage({ type: 'mtready' }); res(); });
     } catch (err) { self.postMessage({ type: 'mtready', error: String(err && err.message || err) }); res(); }
@@ -1204,7 +1332,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
     await ready;
     const m = e.data;
     if (m.type === 'help') { help(m); return; }
-    if (MTQ === '1') { eng().split = m.type === 'analyze' || m.type === 'cands'; eng().rsplit = m.type === 'think'; }   // (the lead: rootList / best share their root moves with the helpers)
+    if (MTQ === '1') { const E = eng(); E.split = m.type === 'analyze' || m.type === 'cands'; E.rsplit = m.type === 'think'; E.ybw = E.split || E.rsplit; }   // (the lead: rootList / best share their moves with the helpers — split points at any node, see splitRun)
     try {
       if (m.type === 'info') self.postMessage({ id: m.id, type: 'result', nnRenju: !!NNI.renju, nnStd: !!NNI.std, learnedStd: !!LW.std });
       else if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...(() => { PRO_CFG = m.cfg || null; try { return think(m.rule, m.moves, m.level, m.start); } finally { PRO_CFG = null; } })() });

@@ -6,9 +6,11 @@
 #   gcc -O2 -w -DMT -DNATIVE -I<repo>/<game> -DGAME_H='"g_<game>.h"' -DPOS_FILE='"pos_<game>.txt"' -o sim_<game> sim.c -lpthread -lm
 #     (janggi: g_xiangqi.h with -DJANGGI; shogi: also -DNUE_H=512 as its engine_mt.wasm)
 #   (YBW engines: -DSIM_Q=64 for finer rounds, -DSIM_STAT for the split points' counters; SIM_SLOW=8 in the environment: slow cores)
+#   (2026-11-11: SIM_SLOWSET=0,3 these threads slow; SIM_MIG=10,200 10 fast cores and the OS moving the threads: every 200 rounds
+#    another (threads − 10) of them are the slow ones — simcore.h)
 #   ./sim_<game> 1,2,4,8 3 -1 1 1     (threads, the 1-thread budget in M nodes → the depth D, positions (-1 all / 0,3,…),
 #                                      delayed table stores, delayed busy marks)
-# game: xiangqi, janggi, chess, shogi. Works on the engines before and after the busy marks (the marks' functions are
+# game: xiangqi, janggi, chess, shogi, tafl (2026-11-11: -DNATIVE, net_tafl.bin). Works on the engines before and after the busy marks (the marks' functions are
 # rewritten only when present).
 import sys, re
 repo, game = sys.argv[1], sys.argv[2]
@@ -46,6 +48,13 @@ elif game == 'shogi':   # (built with -DNATIVE: its native block, with thread-lo
     rep('u64 w = bk[2 * i + 1], kx = bk[2 * i];', 'u64 w = SIMR(&bk[2 * i + 1]), kx = SIMR(&bk[2 * i]);')
     rep('bk[2 * j + 1] = w; bk[2 * j] = key ^ w;', 'SIMW(&bk[2 * j + 1], w); SIMW(&bk[2 * j], key ^ w);')
     rep('  nodes++;\n  if (timeUp()) return 0;', '  nodes++; SIM_NODE();\n  if (timeUp()) return 0;', 0)
+elif game == 'tafl':    # (2026-11-11; built with -DNATIVE: its native block, with thread-local state as -DMT)
+    rep('#define EXPORT(name)\n#define TLS\n', '#define EXPORT(name)\n#define TLS _Thread_local\n')
+    cut_threads('/* ------------------------------------------------------------------ threads (engine_mt.wasm')
+    rep('u64 w = bk[2 * j + 1], kx = bk[2 * j];', 'u64 w = SIMR((u64 *)&bk[2 * j + 1]), kx = SIMR((u64 *)&bk[2 * j]);')
+    rep('u64 w = bk[2 * i + 1], kx = bk[2 * i];', 'u64 w = SIMR(&bk[2 * i + 1]), kx = SIMR(&bk[2 * i]);')
+    rep('bk[2 * j + 1] = w; bk[2 * j] = key ^ w;', 'SIMW(&bk[2 * j + 1], w); SIMW(&bk[2 * j], key ^ w);')
+    rep('  nodes++;\n', '  nodes++; SIM_NODE();\n', 0)
 else:
     raise SystemExit('game?')
 
@@ -59,6 +68,10 @@ if 'busyT[' in s:
 
 # chess's YBW (2026-11-10, chess/MODEL_CARD.md「マルチスレッド v2」): g_chess.h calls mt_idle / mt_lazy, and an idle thread's
 # spin (MT_PAUSE) ticks the clock
+# shogi's Lazy SMP helpers past the first ybwMax threads (2026-11-11, shogi/MODEL_CARD.md「マルチスレッド その4」): SIM_YBWN=<n>
+# in the environment sets mt_ybw(n) (99: every thread YBW, as before)
+if game == 'shogi' and 'EXPORT(mt_ybw)' in s:
+    s = '#define HAS_MT_YBW 1\n' + s
 if game == 'chess' and 'EXPORT(mt_idle)' in s:
     s = '#define HAS_MT_IDLE 1\n#include "simcore.h"\n#define MT_PAUSE() SIM_IDLE()\n' + s
 else:

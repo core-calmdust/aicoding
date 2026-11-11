@@ -12,7 +12,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../amazons/', VER = '?v=9';   // same file / version as amazons/app.js ENGINE_URL → shared cache
+  const BASE = '../amazons/', VER = '?v=10';   // same file / version as amazons/app.js ENGINE_URL → shared cache
   let engP = null;
   function loadEngine() {
     if (window.AmazonsEngine) return Promise.resolve(window.AmazonsEngine);

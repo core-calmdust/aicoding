@@ -1058,6 +1058,14 @@ static TLS u64 rootK;
 typedef struct SPt SPt;
 static TLS SPt *curSP; static TLS int curIdx = -1;   /* the split point this thread works under, its move there */
 static TLS int dupMode;                              /* searching a straggler's move a second time (spDup) */
+/* (2026-11-11, MODEL_CARD.md「マルチスレッド その4」) the threads past the first ybwMax (threadId >= ybwMax) do not take moves at the
+   split points: they search the lead's root on their own (Lazy SMP, lazyRun), no split points of their own */
+#ifndef YBW_MAX
+#define YBW_MAX 10
+#endif
+static int ybwMax = YBW_MAX;
+static TLS int lazyT, lazySeen;   /* a Lazy SMP helper now; the root it is on (gRootSeq) */
+static volatile int gRootSeq;     /* the lead's root (gRootP), a new one at every root_search: odd while written */
 static int chainStopped(const SPt *s, int idx);
 static int dupLeave(void);
 /* the counters of the split points (written at every join): a cache line of their own */
@@ -1069,6 +1077,7 @@ static struct { volatile int idle, waitN, openN, hi; } __attribute__((aligned(64
 static inline void mtCheck(void) {
   if (curSP && chainStopped(curSP, curIdx)) stopFlag = 2;
   else if (dupMode && gOpenN > 0 && dupLeave()) stopFlag = 3;
+  else if (lazyT && __atomic_load_n(&gRootSeq, __ATOMIC_ACQUIRE) != lazySeen) stopFlag = 1;   /* (a Lazy SMP helper: the lead is on a new root) */
 }
 #endif
 static inline int timeUp(void) {
@@ -1423,7 +1432,7 @@ static double search(int depth, double alpha, double beta, int ply, int pvNode, 
     /* YBW: the first move is done and a helper is idle (or an owner above waits for its helpers): the remaining moves go to a
        split point — the staged generation run to its end as the loop below would (the same pruning of quiet moves by their
        place, the illegal ones left out), then the moves put off */
-    if (legal && !noSplit && !ex && depth >= splitD && (gIdle > 0 || (gWaitN > 0 && spWanted()))) {
+    if (legal && !noSplit && !lazyT && !ex && depth >= splitD && (gIdle > 0 || (gWaitN > 0 && spWanted()))) {
       SPt *s = spAlloc();
       if (s) {
         int ns = 0, lg2 = legal;
@@ -1876,8 +1885,32 @@ EXPORT(mt_split) void mt_split(int d) { if (d > 0) splitD = d; }
 /* a helper (mt-helper.js): take moves at the split points until the search is over (mt_stop) — or, with ms > 0, until it
    has nothing to do after ms milliseconds (the page then counts its nodes and calls again); returns its nodes. fresh: a new
    job (the history decays and the killers are cleared, as root_search) */
+static SPt gRootP __attribute__((aligned(64)));   /* the lead's root position (root_search: spFillPos at ply 0) */
+EXPORT(mt_ybw) void mt_ybw(int n) { ybwMax = n > 0 ? n : 1 << 20; }   /* the threads that take moves at the split points (the lead counted) */
+int root_search(double timeMs, int maxDepth, int nodeLim);
+/* a Lazy SMP helper (threadId >= ybwMax): the lead's root searched on its own, again whenever the lead starts a new one, until
+   the search is over (or, with ms > 0, nothing to do after ms milliseconds); returns its nodes */
+static double lazyRun(double ms) {
+  const double t0 = ms > 0 ? js_now() : 0; double tot = 0;
+  while (!__atomic_load_n(&gStop, __ATOMIC_ACQUIRE)) {
+    const int q = __atomic_load_n(&gRootSeq, __ATOMIC_ACQUIRE);
+    if (q && !(q & 1) && q != lazySeen) {
+      spLoadPos(&gRootP, 1);
+      if (__atomic_load_n(&gRootSeq, __ATOMIC_ACQUIRE) != q) continue;   /* (written meanwhile) */
+      lazySeen = q; lazyT = 1;
+      root_search(0, 0, 0); tot += (double)(u32)nodes;
+      lazyT = 0; stopFlag = 0;
+      continue;
+    }
+    if (ms > 0 && js_now() - t0 > ms) break;
+    SIM_IDLE();
+  }
+  nodes = 0;
+  return tot;
+}
 EXPORT(mt_idle) double mt_idle(double ms, int fresh) {
   nodes = 0; deadline = 0; nodeLimit = 0; rootK = 0; stopFlag = 0; curSP = 0; curIdx = -1; dupMode = 0;
+  if (threadId >= ybwMax) return lazyRun(ms);
   if (fresh) { memset(killers, 0, sizeof killers); for (int k = 0; k < (int)(sizeof history / 4); k++) history[k] >>= 2; }
   const double t0 = ms > 0 ? js_now() : 0;
   __atomic_add_fetch(&gIdle, 1, __ATOMIC_ACQ_REL);
@@ -1916,7 +1949,7 @@ static double searchRoot(int depth, double alpha, double beta) {
   int rdM[BUSY_DEF], nrd = 0;   /* (the busy marks at the root too: a root move another thread is on is put off) */
   for (int k = 0; k < nRoot + nrd; k++) {
     /* YBW at the root: the first move is done, the others go to a split point (their values for sortRoot) */
-    if (k == 1 && !first && nRoot - 1 >= 2 && nRoot - 1 <= SP_MV && depth >= splitD && gIdle > 0) {
+    if (k == 1 && !first && nRoot - 1 >= 2 && nRoot - 1 <= SP_MV && depth >= splitD && gIdle > 0 && !lazyT) {
       SPt *s = spAlloc();
       if (s) {
         spFillPos(s, 0);
@@ -2017,6 +2050,7 @@ EXPORT(root_search) int root_search(double timeMs, int maxDepth, int nodeLim) {
   rk |= 1;
   rootK = 0;
   if (!threadId) {   /* a new search: forget the threads' results of the last one, set the depth goal */
+    { const int q = gRootSeq | 1; __atomic_store_n(&gRootSeq, q, __ATOMIC_RELEASE); spFillPos(&gRootP, 0); __atomic_store_n(&gRootSeq, q + 1, __ATOMIC_RELEASE); }   /* (the Lazy SMP helpers' root) */
     for (int i = 0; i < MT_SLOTS; i++) { __atomic_store_n(&gRes[i][0], 0, __ATOMIC_SEQ_CST); __atomic_store_n(&gRes[i][1], 0, __ATOMIC_SEQ_CST); }
     gHit = 0; gGoal = maxDepth; gGoalKey = rk; rootK = rk;
   }

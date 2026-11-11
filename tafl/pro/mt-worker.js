@@ -1,5 +1,6 @@
-// One search thread of the strongest analysis (engine_mt.wasm, Lazy SMP). Thread 0 runs the timed search and reports;
-// the others help until it is over (they share its transposition table through the shared memory).
+// One search thread of the strongest analysis (engine_mt.wasm). Thread 0 runs the timed search and reports; the others
+// help until it is over: they take moves at the split points of its search (engine.c mt_idle, Young Brothers Wait,
+// 2026-11-11; without mt_idle: the old Lazy SMP, the same root on the shared transposition table).
 let X = null, id = 0, mem = null;
 const io = () => new Int32Array(mem.buffer, X.io_ptr(), 8192);
 self.onmessage = e => {
@@ -15,9 +16,10 @@ self.onmessage = e => {
   if (m.type === 'go') {
     io().set(m.setup); const ok = X.setup();
     const t0 = Date.now();
-    if (ok) { if (id === 0) X.best(99, m.time, 0); else X.best(99, 0, 0); }
+    let hn = 0;
+    if (ok) { if (id === 0) X.best(99, m.time, 0); else if (X.mt_idle) hn = X.mt_idle(0, 1); else X.best(99, 0, 0); }
     if (id === 0) X.mt_stop(1);
     const r = io();
-    self.postMessage({ type: 'done', id, move: ok ? r[0] : -1, score: r[2], depth: r[3], nodes: r[4] * 1000, ms: Date.now() - t0 });
+    self.postMessage({ type: 'done', id, move: ok ? r[0] : -1, score: r[2], depth: r[3], nodes: id && X.mt_idle ? hn : r[4] * 1000, ms: Date.now() - t0 });
   }
 };
