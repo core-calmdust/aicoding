@@ -1,4 +1,4 @@
-# Writes images/atlas/shogi-glyphs-futofude.png: the 3D piece set 「太筆」 from sunfish-shogi's two-character pieces
+# Writes images/atlas/shogi-glyphs-futofude.png: the 3D piece set 「浮木」 from sunfish-shogi's two-character pieces
 # (shogi/pieces/futamoji/piece.svg, https://github.com/sunfish-shogi/shogi-images, CC0 1.0) — 2026-11-11.
 # The sheet's pieces are drawn at 20× (filters off), each piece's light face (#ffe680) found, and its inscription (everything on the
 # face that is not face colour) reproduced as drawn: same place on the face, one scale (the mean of the face's width and height
