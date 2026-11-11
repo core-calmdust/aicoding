@@ -1,4 +1,5 @@
 # Writes images/atlas/shogi-pieces-<set>.png and atlas/img/pc3-shogi-<set>.webp from atlas/tools/shogi-pieces.html (serve the repo root on :8765).
+# CHROME=/path/to/chrome uses that browser instead of playwright's own.
 # The 盛り上げ set's page sheet is images/atlas/shogi-pieces.png.
 import asyncio, base64, os, sys
 from playwright.async_api import async_playwright
@@ -6,7 +7,7 @@ ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
 SETS = sys.argv[1:] or ['moriage', 'ichiji', 'kinki', 'minase', 'ryoko', 'futofude']
 async def main():
     async with async_playwright() as p:
-        b = await p.chromium.launch(args=['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'])
+        b = await p.chromium.launch(executable_path=os.environ.get('CHROME') or None, args=['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'])
         for s in SETS:
             pg = await b.new_page()
             await pg.route('**/three.min.js', lambda r: r.fulfill(path='/tmp/three.min.js', content_type='application/javascript'))
