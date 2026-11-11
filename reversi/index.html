@@ -1858,7 +1858,7 @@ let jobId = 0;
 // strongest levels (17–28, rated games too; 17–27 read to a fixed depth, so the threads only make them faster) go to the pool of threads when it is free (Lazy SMP on engine_mt.wasm,
 // the helpers start from other root moves). Without the threads: one thread, or the root split below (4+ cores).
 const MT_CFG = { 17: { exact: 18, wld: 20 }, 18: { exact: 18, wld: 20 }, 19: { exact: 18, wld: 20 }, 20: { exact: 19, wld: 21 }, 21: { exact: 22, wld: 24 }, 22: { exact: 22, wld: 24 }, 23: { exact: 22, wld: 24 },
-  24: { exact: 23, wld: 24 }, 25: { exact: 23, wld: 25 }, 26: { exact: 23, wld: 25 }, 27: { exact: 24, wld: 26 }, 28: { exact: 23, wld: 25 } };   // the helpers' settings (engine.js LEVELS)
+  24: { exact: 23, wld: 24 }, 25: { exact: 23, wld: 25 }, 26: { exact: 23, wld: 25 }, 27: { exact: 24, wld: 26 }, 28: { exact: 23, wld: 25, wtry: 30, xtry: 26 } };   // the helpers' settings (engine.js LEVELS)
 const MTP = window.MTEngine ? MTEngine.use({
   wasm: 'engine_mt.wasm?v=7', lead: 'mt-worker.js?v=14', helper: 'mt-worker.js?v=14', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => Date.now() } }),
@@ -1868,7 +1868,7 @@ const MTP = window.MTEngine ? MTEngine.use({
     ws.forEach(w => { if (wt) w.postMessage({ type: 'weights', buffer: wt.buffer.slice(0), nphase: wt.nphase }); if (bk) w.postMessage({ type: 'book', book: bk }); });
   },
   help: m => { const o = m.opts || {}, L = o.cfg ? { exact: o.cfg.exact, wld: o.cfg.wld || o.cfg.exact + 2 } : MT_CFG[o.level], ex = L ? L.exact : o.exact || 18;   // (o.cfg: PRO mode)
-    return { cells: m.cells, toMove: m.toMove, cfg: { depth: 60, exact: ex, wld: L ? L.wld : ex + 2, mpc: 1 } }; },
+    return { cells: m.cells, toMove: m.toMove, cfg: { depth: 60, exact: ex, wld: L ? L.wld : ex + 2, mpc: 1, ...(L && L.wtry ? { wtry: L.wtry, xtry: L.xtry } : {}) } }; },   // (Lv.28's wider solve: the helpers join it)
   isDone: m => m.type === 'result' || m.type === 'analysis', isProg: m => m.type === 'progress' || m.type === 'analysisProgress',
 }) : null;
 const mtPool = prio => MTP && MTP.pool(prio);
