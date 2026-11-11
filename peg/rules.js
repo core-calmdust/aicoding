@@ -97,10 +97,10 @@ function tour() {
     close: () => close(), play: () => { close(); }, sound: k => { if (k === 'ok') A.SND.win(); } });
   return TOUR;
 }
-function open(page) { try { localStorage.setItem('aicoding-peg-rules-seen', '1'); } catch (e) {} document.querySelectorAll('.ls-tabs button').forEach(b => b.classList.toggle('sel', b.dataset.v === 'rules')); A.show('#rulesOverlay'); const T = tour(); T.open(page != null ? page : T.page || 0); }
-function close() { if (TOUR) TOUR.stop(); A.hide('#rulesOverlay'); }
-document.getElementById('rulesOverlay').addEventListener('click', e => { if (e.target.id === 'rulesOverlay') close(); });
-window.PegRules = { open, close };
+function open(page) { try { localStorage.setItem('aicoding-peg-rules-seen', '1'); } catch (e) {} A.learn('rules'); const T = tour(); T.open(page != null ? page : T.page || 0); }
+function close() { if (TOUR) TOUR.stop(); A.hide('#puzzleOverlay'); }
+function stop() { if (TOUR) TOUR.stop(); }
+window.PegRules = { open, close, stop };
 // the first visit: the rules open once by themselves? No — the common rule is not to open dialogs on load; the new-game
 // dialog's "first time?" banner (RulesOffer) offers them.
 })();

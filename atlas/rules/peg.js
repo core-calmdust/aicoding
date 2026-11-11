@@ -204,8 +204,8 @@
       if (T3.fit) T3.fit({ w: U.W + .6, d: U.H + 1.6, y: TOP + .4, pitch: 1.0 });
       return true;
     }
-    function mkMarble(i) { const m = P3.marble(i), sh = T3.contact(P3.R * 1.05, .5); sh.position.y = .004; m.add(sh); m.userData.sh = sh; board.add(m); return m; }
-    function lift(g, h) { g.position.y = TOP + h; g.userData.h0 = h; const sh = g.userData.sh; if (sh) { sh.position.y = .004 - h; const s = 1 + h * .6; sh.scale.set(s, s, s); sh.material.opacity = .5 / (1 + h * 1.6); } }
+    function mkMarble(i) { const m = P3.marble(i), sh = T3.contact(P3.R * 1.05, .5); sh.position.y = .014; m.add(sh); m.userData.sh = sh; board.add(m); return m; }
+    function lift(g, h) { g.position.y = TOP + h; g.userData.h0 = h; const sh = g.userData.sh; if (sh) { sh.position.y = .014 - h; const s = 1 + h * .6; sh.scale.set(s, s, s); sh.material.opacity = .5 / (1 + h * 1.6); } }
     function drop(g) { if (g.userData.sh) g.userData.sh.material.dispose(); board.remove(g); }
     function land(g) { anim(160, k => { const s = 1 + Math.sin(k * Math.PI) * .05; g.scale.set(s, 1 / s, s); }, () => g.scale.set(1, 1, 1)); }
     function setBoard(spec) {   // diff against what is already there: the same marbles stay, new ones drop in
