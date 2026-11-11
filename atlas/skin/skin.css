@@ -436,7 +436,7 @@ html.atlas-skin:not(.atlas-land) .card.controls .btn:disabled{background:#fbf7ee
 /* shogi, phones (portrait), the 3D board: sized so the whole board area — both komadai bars and the board — fits between the
    menu bar and the bottom tabs, as the 2D page shows it (the board sized from the width alone hid the lower komadai, 2026-11-11) */
 @media (pointer: coarse) and (max-aspect-ratio: 1/1) and (max-width: 600px){
-  html.atlas-skin.atlas-shogi:not(.atlas-2d):not(.atlas-land),html.atlas-skin.atlas-shogi:not(.atlas-2d):not(.atlas-land) body{--cw:min(calc((100vw - 8px) / 9.75), calc((100dvh - 56px - var(--ctlh, 64px) - 8px - 58px - env(safe-area-inset-bottom)) / 12.6), 90px)!important}
+  html.atlas-skin.atlas-shogi:not(.atlas-2d):not(.atlas-land),html.atlas-skin.atlas-shogi:not(.atlas-2d):not(.atlas-land) body{--cw:min(calc((100vw - 8px) / 9.75), calc((100svh - 56px - var(--ctlh, 64px) - 8px - 58px - env(safe-area-inset-bottom)) / 12.6), 90px)!important}
 }
 @media (pointer: coarse) and (max-aspect-ratio: 1/1) and (max-width: 600px){html.atlas-skin.atlas-shogi:not(.atlas-land) .app{padding-left:4px!important;padding-right:4px!important}}
 /* 戦績 (shared/record.js) in the portal's colours (2026-11-11): cream sheet, white boxes, sky wins / coral losses, the portal's coral button */
