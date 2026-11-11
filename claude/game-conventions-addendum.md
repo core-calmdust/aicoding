@@ -397,3 +397,4 @@
 - （実装：将棋は index.html の tsBar / lessonCoachHtml。ほかのゲームは shared/cardbar.js の cb-ls（レッスン中もコンパクトカード、ヒントはアイコン）と shared/coachkit.js の lessonPanel / lessonRest（各 coach.js の休憩表示の代わりに出る））
 - （2026-11-11、全ゲーム共通・将棋から）レッスンの問題中の右カードは定跡の実戦練習と同じコンパクト形式（上段に見出しとやめる、タイトル横に「k/n問目」、ヒント・やり直し・答え・一覧のアイコン＋次の問題）。コーチはレッスン中も休まず、レッスンのポイント・ここまでの点数と合格までの残り・解いた問題ごとの解説（新しい順）を表示する。
 - （2026-11-11、全ゲーム共通・ユーザー指示）ルールの説明は「スマホ＝タップ、PC＝クリック」。文はスマホ向け（タップ／Tap／Toca…）に書き、PC（hover かつ pointer: fine）では shared/tapword.js の TapWord.fix(html, lang) が14言語で書き換える（タグ・属性はそのまま）。2Dのルール（shared/ruletour.js が自分の隣の tapword.js を読み込み、題・本文・課題・判定の文に適用）と大百科の3Dルールコース（atlas/rules/*.js の吹き出し say() と ▶ボタン。atlas/index.html が tapword.js を読む）。新しいルールの文も「タップ」で書けばよい。
+- （2026-11-11、ユーザー指示）トップページ `index.html` の「開発室」の下に見出し「ソフトウェア」（`#software`、台帳 `SOFTWARE`）を新設し、思考エンジン Praline を「準備中」（台帳の `soon: true`：SOON の印・「準備中」のタグとボタン、遷移しない）で掲載。ロゴは `praline/`（icon.svg・icon-16.svg・logo.svg・card.svg）。詳細は `claude/praline-spec.md` §9。

@@ -253,3 +253,24 @@ Many cores (nuts) held together by shared memory (caramel).
 - [ ] 秘密の企画・個人情報・内部の計測ログ・ユーザーの端末の情報が入っていない。
 - [ ] 英語の README・コメント（日本語のコメントは英語に）。
 - [ ] サイト側が公開版を取り込んでも全ゲームの1スレッドの一致・ベンチが前と同じ。
+
+---
+
+## 9. ロゴとトップページの掲載（2026-11-11）
+
+**ロゴ（ユーザーが決めたデザイン、白ベース＝明るい背景用の横組み）**：`praline/`
+| ファイル | 中身 |
+|---|---|
+| `icon.svg` | アイコン（案A Cluster）：キャラメル #C9823F の角丸正方形に、クリーム #F5EADB とココア #2A1E17 の丸4つ（縁取りはキャラメル） |
+| `icon-16.svg` | 16px 用の簡略版（丸3つ、縁取りなし） |
+| `logo.svg` | 横組み：白い背景＋アイコン＋「Praline」（Outfit 600、letter-spacing −0.03em、ココア #2A1E17。i の点はキャラメルの丸＝点なしの ı ＋直径0.2em の丸を Outfit の i の点の高さに）＋下に「THINKING ENGINE」（Outfit 500、letter-spacing 0.32em、#7A5A44） |
+| `card.svg` | トップページのパネル用（4:3・1600×1200、白地の中央にロゴ、幅の約62%） |
+| `tools/build.py`・`tools/outline.py` | 上の4つを作るスクリプト（`python3 praline/tools/build.py praline`、fontTools） |
+
+- 文字は**アウトライン化済み**（`<img>` で使ってもフォントを読まない）。作業機に Outfit の可変フォントがなかったため、Outfit の Regular（400）と Bold（700）の輪郭（同じ点の構成）を補間して 600・500 相当を作り、カーニング（GPOS kern）も同じく補間。可変フォントで作り直すときは `outline.py` を差し替える。
+- Outfit は SIL Open Font License 1.1（Copyright 2021 The Outfit Project Authors）。ロゴのような図案（アウトライン化した文字）は自由に使え、フォントのファイル自体は同梱しないので OFL の文書の同梱は不要。
+
+**トップページ（`index.html`）**：「開発室」の下に新しい見出し「ソフトウェア」（`#software`、14言語 `sw.h2`・`sw.sub`・`sw.desc`）を作り、開発室と同じギャラリー（`makeGallery`、`p: 'sw'`、台帳 `SOFTWARE`）で Praline を1項目置く。
+- 箱は開発室と同じ形（`.lab.sw`、キャラメル色の破線・方眼）、カードはパネル＋アイコンの並び。パネルの絵は `card.svg`（`white: true` でパネルの絵の地を白に）。
+- **準備中**：台帳の `soon: true` で、アイコンの左上に「SOON」（バッジは英語表記の規則どおり）、タグと再生ボタンの位置に「準備中」（`tag.soon`、14言語）。ボタンは破線の押せない形（`aria-disabled`）、パネルの絵・アイコンをクリックしても遷移しない（Enter も選ぶだけ）。公開したら `soon` を外して `href` を入れる。
+- 説明は `pl.desc`（14言語、PC 幅392px・6行に収まることを計測済み）。上のメニュー・下のタブには足していない（1項目・準備中のため。項目が増えたら検討）。公開タイトル数（`stat-titles`）にも数えない。
