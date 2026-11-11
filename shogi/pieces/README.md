@@ -38,4 +38,4 @@ The same for 菱湖 (`atlas/tools/shogi-glyphs-photo.py <photo> ryoko 8`, `ryoko
 
 ## 錦旗 (Kinki) — inscriptions traced from a real set (2026-11-12)
 
-The same for 錦旗: the unpromoted inscriptions are traced from the user's reference photo of a real 錦旗書 盛り上げ set (`atlas/tools/shogi-glyphs-photo.py <photo> kinki 8`, `kinki/traced.png`, `atlas/tools/shogi-traced-svg.py kinki`); 王將 and 玉將 are each traced from their own piece. The promoted sides, the face, band and maker's mark stay LuffyKudo's (CC BY-SA 4.0). The 3D 錦旗 pieces have a 虎杢 (tiger figure) grain, drawn by `atlas/models/shogi.js`.
+The same for 錦旗: the unpromoted inscriptions are traced from the user's reference photo of a real 錦旗書 盛り上げ set (`atlas/tools/shogi-glyphs-photo.py <photo> kinki 8`, `kinki/traced.png`, `atlas/tools/shogi-traced-svg.py kinki`); 王將 and 玉將 are each traced from their own piece. The promoted sides, the face, band and maker's mark stay LuffyKudo's (CC BY-SA 4.0).
