@@ -56,6 +56,9 @@ const CSS = `
   /* the fixed strips outside the scroller: a swipe / double tap there must not pan or zoom the page (iOS: the top of
      .app — the title row — would slide out of view and could not be scrolled back, since .app doesn't chain its overscroll) */
   body.it-on .mtabs,body.it-on.it-nav #itNav{touch-action:none}
+  /* (2026-11-11, every game) the 2D page's title row and menu bar stay at the top while the page scrolls (as on the portal skins) */
+  html.it-on:not(.atlas-skin) body.it-on .app .brand{position:sticky!important;top:calc(-1 * var(--it-pt,10px));z-index:31;background:var(--bg,#111);margin-top:calc(-1 * var(--it-pt,10px));padding-top:var(--it-pt,10px)}
+  html.it-on:not(.atlas-skin) body.it-on .app .card.controls{position:sticky!important;top:calc(var(--it-bh,46px) - var(--it-pt,10px));z-index:30;background-color:var(--bg,#111)!important;box-shadow:0 -12px 0 10px var(--bg,#111),0 10px 14px -8px rgba(0,0,0,.6)!important}
 }`;
 let cur = 'eval', saved = false;
 try { const v = localStorage.getItem(KEY); if (v === 'eval' || v === 'kifu' || v === 'coach') { cur = v; saved = true; } } catch (e) {}
@@ -197,6 +200,10 @@ function init(tries) {
     }));
   }, true);
   document.body.classList.add('it-on'); document.documentElement.classList.add('it-on'); fix();
+  // (the sticky title row's height and the scroller's top padding, for the menu bar under it)
+  { const brand = document.querySelector('.app .brand'), app = document.querySelector('.app');
+    const setH = () => { if (!brand || !app) return; const de = document.documentElement; de.style.setProperty('--it-pt', (parseFloat(getComputedStyle(app).paddingTop) || 0) + 'px'); de.style.setProperty('--it-bh', Math.max(brand.offsetHeight, brand.scrollHeight) + 'px'); };
+    setH(); addEventListener('resize', setH); if (window.ResizeObserver && brand) new ResizeObserver(setH).observe(brand); }
   // the scroller ends at the top of the bar (or of the move strip above it)
   const setB = () => {
     if (!navMq.matches) return;
