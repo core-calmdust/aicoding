@@ -19,3 +19,7 @@ The files are used unchanged, except that in the 3D sets the sente pieces use th
 | `ryoko/`, `kinki/`, `minase/` | [LuffyKudo](https://github.com/LuffyKudo/Shogi-Themes) (Jemierry J.I. Maglinte Jumawan) | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) |
 
 From `Pieces (2-Kanji)` of [LuffyKudo/Shogi-Themes](https://github.com/LuffyKudo/Shogi-Themes) (promoted pieces from `Red Promoted`, gote from `180°`). Changes: renamed to this folder's scheme (`0` up / `1` down, `FU` … `UM`, `GY` 玉 / `OU` 王), the Inkscape editor metadata removed, in `ryoko/` the inscription turned back 3° clockwise around its own centre (the calligraphy leaned too much on screen), and the viewBox widened by 8% (centred) so the pieces show at the same size as `2kanji_3d`. The changed files are shared under the same licence, CC BY-SA 4.0.
+
+## 3D piece sets (2026-11-11)
+
+`../../images/atlas/shogi-glyphs-<set>.png` (the inscriptions cut out of the SVGs above by `atlas/tools/shogi-glyphs.html`), `../../images/atlas/shogi-pieces-<set>.png` (top-down renders of the 3D boxwood pieces with those inscriptions) and `../../atlas/img/pc3-shogi-<set>.webp` (their tile pictures) are derived works of the matching folder and are shared under its licence: `ichiji` ← `1kanji_3d` (CC BY 4.0, Little-Mage and CouchTomato87), `kinki` / `minase` / `ryoko` ← `kinki/` / `minase/` / `ryoko/` (CC BY-SA 4.0, LuffyKudo), `kaisho` ← `orangain/` (CC BY-SA 3.0, orangain), `moriage` ← `2kanji_3d/` (CC BY-SA 3.0, Little-Mage and orangain).

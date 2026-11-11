@@ -1,0 +1,25 @@
+<!doctype html>
+<!-- Dev tool: per 3D piece set (atlas/models/shogi.js PSETS) the top-down renders the full game's page uses
+     (images/atlas/shogi-pieces-<set>.png: 5 columns of 256×282, the order k1…k14, k8o — as images/atlas/shogi-pieces.png)
+     and the tile picture (atlas/img/pc3-shogi-<set>.webp, 320×214: 玉将 and 飛車). python3 atlas/tools/shogi-pieces.py -->
+<html><head><meta charset="utf-8"><title>shogi piece sheets</title></head><body style="background:#444">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="../table3d.js"></script>
+<script src="../tables3d.js"></script>
+<script src="../models/shogi.js"></script>
+<script>
+(function () {
+  const SG = Table3D.shogi, KEYS = ['k1', 'k2', 'k3', 'k4', 'k5', 'k6', 'k7', 'k8', 'k9', 'k10', 'k11', 'k12', 'k13', 'k14', 'k8o'];
+  const load = src => new Promise(ok => { const im = new Image(); im.onload = () => ok(im); im.src = src; });
+  window.MAKE = async set => {
+    const o = await SG.images(256, set), ims = {}; for (const k of KEYS) ims[k] = await load(o[k]);
+    const c = document.createElement('canvas'); c.width = 256 * 5; c.height = 282 * 3; const g = c.getContext('2d');
+    KEYS.forEach((k, i) => g.drawImage(ims[k], (i % 5) * 256, (i / 5 | 0) * 282, 256, 282));
+    const t = document.createElement('canvas'); t.width = 320; t.height = 214; const tg = t.getContext('2d');
+    tg.shadowColor = 'rgba(40,20,0,.45)'; tg.shadowBlur = 10; tg.shadowOffsetY = 5;
+    [['k8', 92, -.12], ['k6', 228, .1]].forEach(([k, x, a]) => { tg.save(); tg.translate(x, 110); tg.rotate(a); tg.drawImage(ims[k], -82, -90, 164, 181); tg.restore(); });
+    return { sheet: c.toDataURL('image/png'), thumb: t.toDataURL('image/webp', .9) };
+  };
+  window.READY = true;
+})();
+</script></body></html>

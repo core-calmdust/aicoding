@@ -50,8 +50,23 @@
     }).catch(() => {});
   }
   // baked once from those SVGs into one sheet (images/atlas/shogi-glyphs.png, same licence) — fast to load and slice
+  const ME_SRC = (document.currentScript && document.currentScript.src) || location.href;
   const SHEET = (() => { try { return new URL('../../images/atlas/shogi-glyphs.png?v=1', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../images/atlas/shogi-glyphs.png?v=1'; } })();
   const SHEET_KEYS = ['k1', 'k2', 'k3', 'k4', 'k5', 'k6', 'k7', 'k8', 'k9', 'k10', 'k11', 'k12', 'k13', 'k14', 'k8o'];
+  /* ---------- the six 3D piece sets (2026-11-11, Table3D.PIECES.shogi, key 'atlas-shogi-pc3'): the same raised-lacquer boxwood pieces with
+     the inscriptions of the 2D sets — 盛り上げ (2kanji_3d, the original) · 一字書き (1kanji_3d) · 錦旗 · 水無瀬 · 菱湖 (LuffyKudo) · 楷書 (orangain).
+     Sheets: images/atlas/shogi-glyphs-<set>.png (atlas/tools/shogi-glyphs.html; licences in shogi/pieces/README.md) ---------- */
+  const PSETS = ['moriage', 'ichiji', 'kinki', 'minase', 'ryoko', 'kaisho'];
+  const GLY = { moriage: GLYPHS };
+  const curSet = () => { try { const v = X.PIECES && X.PIECES.shogi ? X.PIECES.shogi.get() : 'moriage'; return PSETS.includes(v) ? v : 'moriage'; } catch (e) { return 'moriage'; } };
+  const SHEETS = {};
+  function glyphsOf(set) {
+    if (set === 'moriage') return glyphsReady;
+    if (SHEETS[set]) return SHEETS[set];
+    const G = GLY[set] = {};
+    const url = (() => { try { return new URL('../../images/atlas/shogi-glyphs-' + set + '.png?v=2', ME_SRC).href; } catch (e) { return '../images/atlas/shogi-glyphs-' + set + '.png?v=2'; } })();
+    return (SHEETS[set] = new Promise(res => { const im = new Image(); im.onload = () => { SHEET_KEYS.forEach((k, i) => { const c = document.createElement('canvas'); c.width = 256; c.height = 296; c.getContext('2d', { willReadFrequently: true }).drawImage(im, (i % 5) * 256, (i / 5 | 0) * 296, 256, 296, 0, 0, 256, 296); G[k] = c; }); res(); upgrade(set); }; im.onerror = () => res(); im.src = url; }));
+  }
   const glyphsReady = new Promise(res => {
     const slice = im => { SHEET_KEYS.forEach((k, i) => { const c = document.createElement('canvas'); c.width = 256; c.height = 296; c.getContext('2d', { willReadFrequently: true }).drawImage(im, (i % 5) * 256, (i / 5 | 0) * 296, 256, 296, 0, 0, 256, 296); GLYPHS[k] = c; }); res(); };
     const svgs = () => Promise.all([...Array(14).keys()].map(i => loadGlyph(i + 1, false)).concat([loadGlyph(8, true)])).then(res);   // fall back to the SVGs
@@ -132,9 +147,9 @@
 
   const FRONT = ['', '歩兵', '香車', '桂馬', '銀将', '角行', '飛車', '金将', '玉将', 'と金', '成香', '成桂', '成銀', '龍馬', '龍王'];
   // face: wood + lacquer characters; rough: glossy where lacquered; bump: raised, rounded strokes
-  function faceTex(type, kingOu, kind) {
-    const G = GLYPHS['k' + type + (kingOu ? 'o' : '')];
-    const key = `shf-${type}${kingOu ? 'o' : ''}-${kind}-${G ? 'g' : fontOK ? 1 : 0}`;
+  function faceTex(type, kingOu, kind, set = 'moriage') {
+    const G = (GLY[set] || GLYPHS)['k' + type + (kingOu ? 'o' : '')];
+    const key = `shf-${set === 'moriage' ? '' : set + '-'}${type}${kingOu ? 'o' : ''}-${kind}-${G ? 'g' : fontOK ? 1 : 0}`;
     if (G) return canvasTex(key, 256, 296, (c, W, H) => { paint(c.canvas, 'glyphFace', { gd: G.__gd || (G.__gd = G.getContext('2d').getImageData(0, 0, W, H).data), type, kind }); });   // (read once per glyph)
     return canvasTex(key, 256, 296, (c0, W, H) => {
       const txt = type === 8 && kingOu ? '王将' : FRONT[type], red = type > 8;
@@ -185,7 +200,7 @@
     sakura: { top: 'top-sakura', side: 'sakura', stand: 'sakura', leg: ['#8a3a26', '#4a1c12'], bottom: 0x2a0806, line: 'rgba(48,20,10,.92)', raden: true },   // (v3: 朱溜 lacquer with 螺鈿 cherry blossoms and a 鶯)
   };
   const SH3 = (() => { try { return new URL('../../images/atlas/shogi3d/', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../images/atlas/shogi3d/'; } })();
-  const SH3V = '?v=6';
+  const SH3V = '?v=8';
   const lookOf = o => { const k = (o && o.look) || (X.BOARDS && X.BOARDS.shogi ? X.BOARDS.shogi.get() : 'kaya'); return LOOK[k] ? k : 'kaya'; };
   const imgs = {};
   function withImg(name, fn) {
@@ -210,9 +225,9 @@
       #ifdef USE_ROUGHNESSMAP
       { vec4 nmr = texture2D( roughnessMap, vUv ); float shl = smoothstep( .13, .17, nmr.r ) * ( 1. - smoothstep( .23, .27, nmr.r ) );
         if ( shl > 0. ) { float vd = dot( normal, normalize( -vViewPosition ) ); float lum = dot( diffuseColor.rgb, vec3( .3, .5, .2 ) );
-          float ph = fract( vd * 1.6 + lum * 2.2 + vUv.x * 3. );
+          float ph = fract( vd * 2.6 + lum * 2.6 + vUv.x * 4. + vUv.y * 2. );
           vec3 rb = .55 + .45 * cos( 6.2832 * ( ph + vec3( 0., .33, .67 ) ) );
-          diffuseColor.rgb = mix( diffuseColor.rgb, diffuseColor.rgb * .7 + rb * lum * .45, shl * .5 ); } }
+          diffuseColor.rgb = mix( diffuseColor.rgb, diffuseColor.rgb * .5 + rb * lum * .85, shl * .8 ); } }
       #endif`);
     };
     m.customProgramCacheKey = () => 'nacre';
@@ -338,21 +353,25 @@
     return (geoCache[sz] = geo);
   }
   const matCache = {};
-  function pieceMats(type, ou) {
-    const key = type + (ou ? 'o' : '');
+  let sideM = null;
+  function pieceMats(type, ou, set = 'moriage') {
+    const key = set + ':' + type + (ou ? 'o' : '');
     if (matCache[key]) return matCache[key];
+    if (set !== 'moriage') glyphsOf(set);
     const TT = T();
-    const face = new TT.MeshPhysicalMaterial({ map: faceTex(type, ou, 'map'), roughnessMap: faceTex(type, ou, 'rough'), bumpMap: faceTex(type, ou, 'bump'), bumpScale: .032, roughness: 1, clearcoat: .55, clearcoatRoughness: .28 });
-    const side = M({ map: X.canvasTex('tsugeSide', 128, 128, (c, W, H) => tsuge(c, W, H, 3)), roughness: .5, bumpScale: .002 });
+    const face = new TT.MeshPhysicalMaterial({ map: faceTex(type, ou, 'map', set), roughnessMap: faceTex(type, ou, 'rough', set), bumpMap: faceTex(type, ou, 'bump', set), bumpScale: .032, roughness: 1, clearcoat: .55, clearcoatRoughness: .28 });
+    const side = sideM || (sideM = M({ map: X.canvasTex('tsugeSide', 128, 128, (c, W, H) => tsuge(c, W, H, 3)), roughness: .5, bumpScale: .002 }));
     return (matCache[key] = [face, side]);
   }
-  glyphsReady.then(() => {   // upgrade the faces made before the glyphs arrived
-    for (const key in matCache) { const ou = key.endsWith('o'), type = parseInt(key, 10), f = matCache[key][0];
-      if (!GLYPHS['k' + type + (ou ? 'o' : '')]) continue;
-      f.map = faceTex(type, ou, 'map'); f.roughnessMap = faceTex(type, ou, 'rough'); f.bumpMap = faceTex(type, ou, 'bump'); f.needsUpdate = true; }
-  });
-  function piece(type, gote, ou) {
-    const m = new (T().Mesh)(pieceGeo(SIZE[type] || 1), pieceMats(type, ou));
+  function upgrade(set) {   // the faces made before the set's glyphs arrived
+    for (const key in matCache) { const [st, rest] = key.split(':'); if (st !== set) continue; const ou = rest.endsWith('o'), type = parseInt(rest, 10), f = matCache[key][0];
+      if (!(GLY[set] || {})['k' + type + (ou ? 'o' : '')]) continue;
+      f.map = faceTex(type, ou, 'map', set); f.roughnessMap = faceTex(type, ou, 'rough', set); f.bumpMap = faceTex(type, ou, 'bump', set); f.needsUpdate = true; }
+    if (X.kick) X.kick(300);
+  }
+  glyphsReady.then(() => upgrade('moriage'));
+  function piece(type, gote, ou, set = curSet()) {
+    const m = new (T().Mesh)(pieceGeo(SIZE[type] || 1), pieceMats(type, ou, set));
     m.castShadow = true; m.receiveShadow = true;
     const g = new (T().Group)(); g.add(m); if (gote) g.rotation.y = Math.PI;
     g.userData.type = type; return g;
@@ -436,13 +455,13 @@
   };
 
   /* ---------- top-down renders of each piece for the DOM (hands, dragging, the board itself in the skin) ---------- */
-  let imgCache = null;
-  function images(px = 220) {
-    if (imgCache) return imgCache;
-    return (imgCache = Promise.all([Promise.race([fontReady, new Promise(r => setTimeout(r, 1500))]), glyphsReady]).then(() => {
+  const imgCaches = {};
+  function images(px = 220, set = curSet()) {
+    if (imgCaches[set]) return imgCaches[set];
+    return (imgCaches[set] = Promise.all([Promise.race([fontReady, new Promise(r => setTimeout(r, 1500))]), glyphsOf(set)]).then(() => {
       // portal: the faces are drawn in a worker — build them first and wait (they are cached for the renders below)
       if (!window.AtlasTexGen) return;
-      for (let type = 1; type <= 14; type++) for (const ou of type === 8 ? [false, true] : [false]) pieceMats(type, ou);
+      for (let type = 1; type <= 14; type++) for (const ou of type === 8 ? [false, true] : [false]) pieceMats(type, ou, set);
       return AtlasTexGen.settle();
     }).then(() => {
       const TT = T(), W = px, H = Math.round(px * CH / CW);
@@ -460,7 +479,7 @@
       const cam = new TT.OrthographicCamera(-CW / 2, CW / 2, CH / 2, -CH / 2, .1, 20); cam.position.set(0, 8, 0); cam.up.set(0, 0, -1); cam.lookAt(0, 0, 0);
       const out = {};
       for (let type = 1; type <= 14; type++) for (const ou of type === 8 ? [false, true] : [false]) {
-        const p = piece(type, false, ou); scene.add(p);
+        const p = piece(type, false, ou, set); scene.add(p);
         R.render(scene, cam); out['k' + type + (ou ? 'o' : '')] = R.domElement.toDataURL('image/png');
         scene.remove(p);
       }
@@ -469,5 +488,5 @@
     }));
   }
 
-  X.shogi = { komadai, standMat, piece, board, cell, images, fontReady, GLYPHS, CW, CH, FW, FH, LOOKS, standImg: look => LOOK[look] && LOOK[look].stand ? SH3 + 'stand-' + LOOK[look].stand + '.webp' + SH3V : LOOK[look] && LOOK[look].lacq ? SH3 + 'stand-makie.webp' + SH3V : null };
+  X.shogi = { komadai, standMat, piece, board, cell, images, fontReady, GLYPHS, CW, CH, FW, FH, LOOKS, PSETS, curSet, standImg: look => LOOK[look] && LOOK[look].stand ? SH3 + 'stand-' + LOOK[look].stand + '.webp' + SH3V : LOOK[look] && LOOK[look].lacq ? SH3 + 'stand-makie.webp' + SH3V : null };
 })();
