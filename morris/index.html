@@ -2790,7 +2790,18 @@ function openIntro(i) {
   $('#liTitle').textContent = t('ls.' + s.id + '.title');
   const d = s.diagram;
   const dv = d && (d.v || (lsVar === 'nine' ? 'nine' : null));
-  $('#liBody').innerHTML = (d && dv ? miniSVG(dv, bOf(dv, d.p1 || [], d.p2 || []), { marks: Object.fromEntries((d.marks || []).map(([n, k]) => [E.geom(dv).index[n], k])), arrows: (d.arrows || []).map(a => nm(dv, ...a)), mills: (d.mills || []).map(a => nm(dv, ...a)) }) : '') + t('ls.' + s.id + '.intro');
+  const fig = d && dv ? miniSVG(dv, bOf(dv, d.p1 || [], d.p2 || []), { marks: Object.fromEntries((d.marks || []).map(([n, k]) => [E.geom(dv).index[n], k])), arrows: (d.arrows || []).map(a => nm(dv, ...a)), mills: (d.mills || []).map(a => nm(dv, ...a)) }) : '';
+  // the common lesson page (shared/luxintro.js, 2026-11-11): board · facts · how to think · trivia — as much as shogi's page
+  if (window.LuxIntro) {
+    LuxIntro.load('lux.json?v=1').then(X => {
+      if (introIdx !== i || openChoiceIdx >= 0) return;
+      const U = LL(X.ui || {}) || {}, x = (X.lessons || {})[s.id] || {}, H = k => LuxIntro.head(k, LANG), n = (s.problems || []).length, tr = LL(x.trivia);
+      LuxIntro.lesson({ step: $('#liStep').textContent, title: $('#liTitle').textContent, fig, cap: U.figL, chips: [[U.kind, (U.probs || '').replace('{n}', n)], [U.pass, U.passPts]],
+        secs: [{ h: H('think'), html: t('ls.' + s.id + '.intro') }, tr && { h: H('trivia'), html: tr, cls: 'lx-trivia' }].filter(Boolean) });
+    });
+    showLessonView('lessonIntroView'); return;
+  }
+  $('#liBody').innerHTML = fig + t('ls.' + s.id + '.intro');
   showLessonView('lessonIntroView');
 }
 $('#btnLessonBack').onclick = () => openChoiceIdx >= 0 ? openOpenings(OPEN.sets[openChoiceIdx] && OPEN.sets[openChoiceIdx].grp) : openLessons(null, LESSONS.steps[introIdx] && (LESSONS.steps[introIdx].course || 'tactics'));
@@ -3000,6 +3011,17 @@ function openOpeningChoice(i) {
   openChoiceIdx = i; const g = OPEN.sets[i], pre = g.study.line.slice(0, g.show || 2), last = pre[pre.length - 1];
   $('#liStep').textContent = t('op.title') + ' · ' + t(g.side === 2 ? 'op.forBlack' : 'op.forWhite');
   $('#liTitle').textContent = LL(g.title);
+  if (window.LuxIntro) {   // the common opening page (shared/luxintro.js, 2026-11-11): board · lead · the two ways in
+    const fig = miniSVG('nine', lineBoard(pre), { marks: last !== undefined ? { [mTo(last)]: 'ring' } : {} });
+    LuxIntro.load('lux.json?v=1').then(X => {
+      if (openChoiceIdx !== i) return;
+      const U = LL(X.ui || {}) || {};
+      LuxIntro.opening({ step: $('#liStep').textContent, title: LL(g.title), fig, cap: U.figO, lead: LL(g.intro),
+        choices: [{ ic: '📖', b: t('op.study'), small: t('op.studyDesc', { n: g.study.line.length }), attrs: 'data-study="1"' }, { ic: '✎', b: t('op.practice'), small: t('op.practiceDesc'), attrs: 'data-practice="1"' }], secs: [] });
+    });
+    $('#btnLessonStart').classList.add('hidden');
+    showLessonView('lessonIntroView'); showOverlay('#lessonOverlay'); return;
+  }
   $('#liBody').innerHTML = miniSVG('nine', lineBoard(pre), { marks: last !== undefined ? { [mTo(last)]: 'ring' } : {} }) + LL(g.intro).map(x => `<p>${x}</p>`).join('') +
     `<div class="op-choice"><button class="lesson-item" data-study="1"><span class="no">📖</span><span class="tx"><b>${t('op.study')}</b><small>${t('op.studyDesc', { n: g.study.line.length })}</small></span></button>` +
     `<button class="lesson-item" data-practice="1"><span class="no">✎</span><span class="tx"><b>${t('op.practice')}</b><small>${t('op.practiceDesc')}</small></span></button></div>`;
@@ -3890,5 +3912,6 @@ window.addEventListener('resize', () => renderFx());
 <script src="../shared/resumeng.js?v=1l14"></script>
 <script src="../shared/langsel.js?v=2l14" defer></script>
 <script src="../shared/rulelink.js?v=1l14"></script>
+<script src="../shared/luxintro.js?v=3"></script>
 </body>
 </html>
