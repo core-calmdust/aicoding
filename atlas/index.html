@@ -1961,7 +1961,7 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 <script src="texgen.js?v=1"></script>
 <script src="npc/roster.js?v=6"></script>
 <script src="art.js?v=11"></script>
-<script src="../shared/atlas.js?v=20261111bgc1"></script>
+<script src="../shared/atlas.js?v=20261111sh1"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261109ac2"></script>
 <script src="i18n/v.js?v=72ph"></script>
@@ -1978,11 +1978,11 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 </script>
 <script src="gamelist-i18n.js?v=14pg"></script>
 <script src="img/tex/baked.js?v=1"></script>
-<script src="table3d.js?v=147"></script>
+<script src="table3d.js?v=148"></script>
 <script>/* the places other than the chabudai (tables3d.js, 440 KB): at once when one is chosen, else in idle time after the page has
    loaded (2026-11-10); 'atlas-places' tells the page they are there */
 (function () {
-  var SRC = 'tables3d.js?v=61', k = 0, p = null;
+  var SRC = 'tables3d.js?v=62', k = 0, p = null;
   try { k = +(localStorage.getItem('atlas-table') || 0) || 0; var m = /[?&]tbl=(\d+)/.exec(location.search); if (m) k = +m[1]; } catch (e) {}
   window.AtlasPlaces = function () { return p || (p = new Promise(function (res) { var s = document.createElement('script'); s.src = SRC; s.onload = s.onerror = function () { res(); try { dispatchEvent(new Event('atlas-places')); } catch (e) {} }; document.head.appendChild(s); })); };
   if (k) { document.write('<script src="' + SRC + '"><\/script>'); p = Promise.resolve(); }
@@ -2002,7 +2002,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   }, 60);
 };</script>
 <script src="../shared/tapword.js?v=1"></script>
-<script src="lazy.js?v=54"></script>
+<script src="lazy.js?v=55"></script>
 <script src="puzzle-lines.js?v=1"></script>
 <script src="puzzles.js?v=12"></script>
 <script src="lessons3d.js?v=8"></script>
