@@ -8,6 +8,10 @@
 //   node tools/mt_node.js match T nk=A pairs nk=B [seed]   T threads with A thousand evaluations in all vs 1 thread with B —
 //                                            "the same wall time" on a machine with the cores: A = B × the evaluations/s ratio
 //                                            of bench.html (the user's M4 Pro: 2T 2.0, 4T 3.8, 8T 6.6, 10T 7.5)
+//   node tools/mt_node.js ab [T…] [depth=D]     (2026-11-11) the alpha-beta search of core_mt.wasm on T threads (Praline's YBW; the
+//                                            helpers' mt_help takes moves at the split points): the bench positions' best move to
+//                                            depth D (6) and the analysis's root values at depth 4 — the same answers as 1 thread
+//                                            (the move, the value) and every thread's evaluations (a 2-core machine: no wall time)
 'use strict';
 const path = require('path'), fs = require('fs');
 const { Worker } = require('worker_threads');
@@ -15,7 +19,7 @@ const E = require(path.join(__dirname, '..', 'engine.js'));
 const SLOT = 2 << 20;
 async function setupMT(nHelp) {
   const module = new WebAssembly.Module(fs.readFileSync(path.join(__dirname, '..', 'core_mt.wasm')));
-  const mem = new WebAssembly.Memory({ initial: 512, maximum: 16384, shared: true });
+  const mem = new WebAssembly.Memory({ initial: 1024, maximum: 16384, shared: true });   // (≥ core_mt.wasm's declared pages)
   const x = new WebAssembly.Instance(module, { env: { memory: mem, now: () => Date.now() } }).exports;
   const base = Math.ceil(x.mt_heap_base() / 65536) * 65536, n = 1 + nHelp, need = base + (n + 1) * SLOT;
   if (need > mem.buffer.byteLength) mem.grow(Math.ceil((need - mem.buffer.byteLength) / 65536));
@@ -31,8 +35,8 @@ async function setupMT(nHelp) {
     await new Promise(r => { w.once('message', r); w.postMessage({ type: 'mtinit', module, mem, id: i, tls: base + i * SLOT, top: base + i * SLOT + SLOT - 16 }); });
     hw.push(w);
   }
-  const C = { x: Object.assign({}, x, { memory: mem }), threads: n, maxNodes: 1 << 22 };
-  C.views = () => { const buf = mem.buffer; Object.assign(C, { buf, sq: new Int8Array(buf, x.sqp(), 100), q: new Int8Array(buf, x.qp(), 8), rm: new Int32Array(buf, x.rmp(), 64), rn: new Int32Array(buf, x.rnp(), 64), rv: new Int32Array(buf, x.rvp(), 64), rp: new Int32Array(buf, x.rpp(), 64), pv: new Int32Array(buf, x.pvp(), 32) }); };
+  const C = { x: Object.assign({}, x, { memory: mem }), threads: n, jobThreads: n, maxNodes: 1 << 22 };
+  C.views = () => { const buf = mem.buffer; Object.assign(C, { buf, sq: new Int8Array(buf, x.sqp(), 100), q: new Int8Array(buf, x.qp(), 8), rm: new Int32Array(buf, x.rmp(), 64), rn: new Int32Array(buf, x.rnp(), 64), rv: new Int32Array(buf, x.rvp(), 64), rp: new Int32Array(buf, x.rpp(), 64), pv: new Int32Array(buf, x.pvp(), 32), rlm: new Int32Array(buf, x.rlmp(), 64), rls: new Int32Array(buf, x.rlsp(), 64), aom: new Int32Array(buf, x.aomp(), 64), aov: new Int32Array(buf, x.aovp(), 64) }); };
   C.views();
   // run fn (synchronous, on this thread) with the helpers joining its trees; returns { r, hs (helpers' visits), hcpu }
   C.job = async fn => {
@@ -108,8 +112,28 @@ async function match(T, sims, pairs, oneB, seed) {
   console.log(`# ${T} threads (${JSON.stringify(bMT)}) vs 1 (${JSON.stringify(b1)}): ${w}/${n} (${(w / n * 100).toFixed(1)}%)`);
   if (C) C.close();
 }
+async function ab(Ts, D) {
+  const P = benchPositions(), ref = [];
+  for (const T of Ts) {
+    const C = await setupMT(T - 1);   // (T = 1: the same core without helpers)
+    E.useCore(C);
+    C.x.ab_newgame();
+    let same = 0, sameV = 0, ev = 0, n = 0;
+    for (const [i, mv] of P.entries()) {
+      const o = await C.job(() => { const t = E.think(null, mv, 0, null, null, { s: 1, dx: D, nk: 1e7 }); return { t, ev: E.evals }; });
+      const va = await C.job(() => E.valuesAt(null, mv, 4).map(e => e.m + ':' + e.v).join(','));
+      const k = [o.r.t.move, o.r.t.v, o.r.t.depth].join(' ');
+      if (T === Ts[0]) ref[i] = [k, va.r]; else { if (ref[i][0] === k) same++; if (ref[i][1] === va.r) sameV++; }
+      ev += o.r.ev; n++;
+      console.log(`T${T} pos${i}: ${E.name(null, o.r.t.move)} v${o.r.t.v} d${o.r.t.depth} evals ${o.r.ev} | values@4 ${va.r.slice(0, 60)}…`);
+    }
+    console.log(`# T${T}: ${T === Ts[0] ? 'reference' : `best move + value as T${Ts[0]} ${same}/${n}, the analysis's values ${sameV}/${n}`}, evals (all threads) ${ev}`);
+    E.useCore(null); C.close();
+  }
+}
 if (require.main === module) {
   const [, , cmd, ...a] = process.argv;
   if (cmd === 'check') check(a.length ? a.map(Number) : [1, 2, 4]);
+  else if (cmd === 'ab') { const d = a.find(x => x.startsWith('depth=')); ab(a.filter(x => !x.startsWith('depth=')).map(Number).concat(a.length && a.some(x => !x.startsWith('depth=')) ? [] : [1, 2, 4]), d ? +d.slice(6) : 6); }
   else if (cmd === 'match') match(+a[0], a[1].startsWith('nk=') ? a[1] : +a[1], +a[2], a[3], +(a[4] || 0));
 }

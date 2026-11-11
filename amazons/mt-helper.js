@@ -1,6 +1,7 @@
-// A helper thread of the MCTS on several threads (shared/mtengine.js): core_mt.wasm on the shared memory. While the lead
+// A helper thread of the searches on several threads (shared/mtengine.js): core_mt.wasm on the shared memory. While the lead
 // (engine.js?…&mt=1) works on a job, this joins every search tree the lead opens (core.c mt_help: tree-parallel MCTS on ONE
-// shared tree with virtual loss) until the page stops every thread (mt_stop). The lead's result counts the helpers' visits.
+// shared tree with virtual loss) and, meanwhile, takes moves at the split points of its alpha-beta search (2026-11-11: Praline's
+// Young Brothers Wait, mt_idle), until the page stops every thread (mt_stop). The lead's result counts the helpers' work.
 let X = null;
 self.onmessage = e => {
   const m = e.data;
