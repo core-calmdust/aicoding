@@ -171,14 +171,18 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
       same = k === last ? same + 1 : 0; last = k; if ((same >= 2 && performance.now() - t0 > 250) || performance.now() - t0 > 1500) { zAt = performance.now(); zoom0(w); } else zD = setTimeout(look, 90); };
     zD = setTimeout(look, 90); };
   // w = { r0, c0, nr, nc }: the squares that matter (both sides' amazons in play, the target's room), tight — on the shown board
-  const ZM = .1;   // (the page's region already has one square of margin all round)
+  const ZM = 0;   // (the page's window already has one square of margin all round)
   const strip = () => { const fr = (document.getElementById('frame') || boardDom).getBoundingClientRect(), tb = matchMedia('(pointer:coarse)').matches ? 96 : 0;
     return { x0: Math.max(fr.left, 0), x1: Math.min(fr.right, innerWidth), y0: Math.max(fr.top, 0), y1: Math.min(fr.bottom, innerHeight - tb), fr }; };
   // (the region's box as drawn: its floor corners, and the top of a standing figure on its far row — a piece there stands up
   //  into the rows behind it, so its head must not be cut by the cards above)
   const drawn = w => { const q = (c, r, h) => T3.project(c - 5, r - 5, Y + (h || 0)), c0 = w.c0 - ZM, c1 = w.c0 + w.nc + ZM, r0 = w.r0 - ZM, r1 = w.r0 + w.nr + ZM;
     const A = q(c0, r0), B = q(c1, r1), C = q(c1, r0), D = q(c0, r1), H = q((c0 + c1) / 2, w.r0 + .5, 2.4);
-    return { L: Math.min(A.x, D.x), R: Math.max(B.x, C.x), T: Math.min(A.y, C.y, H.y), B: Math.max(B.y, D.y) }; };
+    return { L: Math.min(A.x, D.x), R: Math.max(B.x, C.x), T: Math.min(A.y, C.y), B: Math.max(B.y, D.y) }; };
+  // (the amazons' own box as drawn: their squares, half a square more, and the heads of the far row's figures)
+  const piecesBox = w => { const p = w.p; if (!p) return null; const q = (c, r, h) => T3.project(c - 5, r - 5, Y + (h || 0)), c0 = p.c0 - .5, c1 = p.c1 + 1.5, r0 = p.r0 - .5, r1 = p.r1 + 1.5;
+    const A = q(c0, r0), B = q(c1, r1), C = q(c1, r0), D = q(c0, r1), H = q((c0 + c1) / 2, p.r0 + .5, 3.2);
+    return { T: Math.min(A.y, C.y, H.y) - 14, B: Math.max(B.y, D.y), L: Math.min(A.x, D.x), R: Math.max(B.x, C.x) }; };   // (14px of air above the tallest head)
   const zoom0 = w => {
     const b = boardDom.offsetWidth * SC, cell = b / 10;
     // (2026-11-11 the user: not a fixed amount — the size each puzzle needs: the region, as drawn, fitted into the part of the board's
@@ -186,13 +190,16 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
     let z = 1;
     const S = strip();
     if (w) { const d = drawn(w), rw = (d.R - d.L) / view.z, rh = (d.B - d.T) / view.z;
-      z = Math.max(1, Math.min(2.6, ZMAX, rw > 0 ? (S.x1 - S.x0) * .94 / rw : 9, rh > 0 ? (S.y1 - S.y0) * .92 / rh : 9)); }
+      // (the square window filled across the board's place, as 詰将棋 does — the strip's height may cut its far / near edge a little)
+      // (but never so close that an amazon (with its head) leaves the strip: every piece stays on the screen)
+      const pb = piecesBox(w), ph = pb ? (pb.B - pb.T) / view.z : 0;
+      z = Math.max(1, Math.min(2.6, ZMAX, rw > 0 ? (S.x1 - S.x0) * .99 / rw : 9, ph > 0 ? (S.y1 - S.y0) * .96 / ph : 9)); }
     // (the region's centre to the strip's centre. The drawn board is the same picture scaled about the aligned box's centre (the
     //  camera's distance follows the box): where it is drawn now, from the box's centre and over the zoom, gives where it will be)
     let tx = 0, ty = 0;
     if (w) {
       const [cx, cy] = centreNow(), bx = cx - view.x, by = cy - view.y, bh = boardDom.offsetHeight * SC, d = drawn(w);
-      const P = { x: (d.L + d.R) / 2, y: (d.T + d.B) / 2 };
+      const pb = piecesBox(w), P = { x: (d.L + d.R) / 2, y: pb ? (pb.T + pb.B) / 2 : (d.T + d.B) / 2 };   // (across: the window's centre; up and down: the amazons')
       const relX = (P.x - (bx + view.x)) / view.z, relY = (P.y - (by + view.y - liftK * bh * view.z)) / view.z;
       const dx = (S.x0 + S.x1) / 2, dy = S.y1 > S.y0 ? (S.y0 + S.y1) / 2 : by;
       if (isFinite(relX) && isFinite(relY)) { tx = dx - bx - relX * z; ty = dy - by + liftK * bh * z - relY * z; }
@@ -203,13 +210,13 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
     //  position corrected until the region sits in the strip. Each pass waits for the camera to be drawn where the last one put it)
     const fix = (n = 0) => { if (!w || n > 7) return; requestAnimationFrame(() => requestAnimationFrame(() => { zT = setTimeout(() => {
       const S = strip(), d = drawn(w);
-      const k = Math.min((S.x1 - S.x0) * .94 / (d.R - d.L), (S.y1 - S.y0) * .92 / (d.B - d.T));
-      const ex = (S.x0 + S.x1) / 2 - (d.L + d.R) / 2, ey = (S.y0 + S.y1) / 2 - (d.T + d.B) / 2;
+      const pb = piecesBox(w), k = Math.min((S.x1 - S.x0) * .99 / (d.R - d.L), pb ? (S.y1 - S.y0) * .96 / (pb.B - pb.T) : 9);
+      const ex = (S.x0 + S.x1) / 2 - (d.L + d.R) / 2, ey = (S.y0 + S.y1) / 2 - (pb ? (pb.T + pb.B) / 2 : (d.T + d.B) / 2);
       if (!isFinite(ex) || !isFinite(ey) || !isFinite(k)) return;
       const z1 = Math.max(1, Math.min(2.6, ZMAX, view.z * k)), f = z1 / view.z;
       if (Math.hypot(ex, ey) < 3 && Math.abs(f - 1) < .03) return;
       // (zoom about the region's centre, then move it to the strip's centre)
-      const [ox, oy] = centreNow(), mx = (d.L + d.R) / 2, my = (d.T + d.B) / 2;
+      const [ox, oy] = centreNow(), mx = (d.L + d.R) / 2, my = pb ? (pb.T + pb.B) / 2 : (d.T + d.B) / 2;
       setView(z1, view.x + (mx - ox) * (1 - f) + ex, view.y + (my - oy) * (1 - f) + ey);
       fix(n + 1);
     }, 60); })); };
