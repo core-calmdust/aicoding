@@ -889,6 +889,13 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
 .dprev{position:sticky;top:calc(var(--hdrH,127px) + var(--dtopH,66px) + 14px);display:grid;grid-template-columns:200px minmax(0,1fr);grid-template-areas:"l side" "l tiles" "l wk";grid-template-rows:auto auto 1fr;row-gap:12px;overflow:hidden;padding:0}
 .nc-l{grid-area:l;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px 12px 14px;overflow:hidden}
 .nc-l .bgfill{position:absolute;inset:0;opacity:.9}
+.nc-av{display:inline-block;position:relative;flex:none}
+.nc-talk{position:absolute;top:-6px;inset-inline-end:-16px;z-index:3;font:700 15px/1 'Fredoka','RocknRoll One','Zen Maru Gothic',sans-serif;font-synthesis:none;letter-spacing:.04em;color:#e0712b;-webkit-text-stroke:.4px #e0712b;text-shadow:0 1.5px 0 #ffe2a8;background:#fff;border:2.5px solid #f2c14e;border-radius:14px;padding:6px 11px 7px;box-shadow:0 3px 0 #e0a92e,0 6px 12px rgba(80,50,10,.18);cursor:pointer;white-space:nowrap;animation:ncTalk 2.6s ease-in-out infinite;transform-origin:15% 100%}
+.nc-talk::after{content:"";position:absolute;bottom:-7px;inset-inline-start:13px;width:10px;height:10px;background:inherit;border:solid #f2c14e;border-width:0 2.5px 2.5px 0;transform:rotate(45deg) skew(-14deg,-14deg);border-bottom-right-radius:2px}
+[dir=rtl] .nc-talk::after{transform:rotate(45deg) skew(14deg,14deg)}
+.nc-talk:hover{background:#fff8e2}.nc-talk:active{transform:translateY(2px);box-shadow:0 1px 0 #e0a92e}
+@keyframes ncTalk{0%,70%,100%{transform:rotate(0)}76%{transform:rotate(-6deg) scale(1.06)}84%{transform:rotate(5deg)}92%{transform:rotate(-2deg)}}
+@media (max-width:760px){.nc-talk{font-size:14px;padding:5px 9px 6px;inset-inline-end:-6px;top:-4px}}
 .nc-l > *:not(.bgfill){position:relative}
 .nc-side{grid-area:side;min-width:0;padding:16px 18px 0;display:flex;flex-direction:column;gap:8px}
 .nc-tiles{grid-area:tiles;padding:0 18px}
@@ -1412,14 +1419,14 @@ html.bv-pland .urtoast{top:calc(52px + env(safe-area-inset-top));left:calc(50% +
   #pg-home .prof > .rfx{top:-188px;border-radius:24px}
   #pg-home .prof > .ntw{top:-180px}
   /* name row: avatar · name · coins · streak · ⌄ — the stats, the login week and Google sign-in open under it */
-  #pg-home .prof{display:grid!important;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;column-gap:10px;padding:8px 10px 8px 8px!important}
+  #pg-home .prof{display:grid!important;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;column-gap:10px;padding:8px 10px 13px 8px!important}
   #pg-home .prof .pf-r{display:contents}
   #pg-home .prof .pf-l{width:auto;border-radius:50%;overflow:visible;background:none;align-self:center}
   #pg-home .prof .pf-l .bgfill,#pg-home .prof .pf-l::after{display:none}
   #pg-home .prof .pf-l .av svg,#pg-home .prof .pf-l .av img{width:46px;height:46px}
   #pg-home .prof .pf-l .av{box-shadow:0 3px 0 rgba(0,0,0,.1),0 0 0 3px #fff}
   #pg-home .prof .pf-l .av.framed{box-shadow:none}
-  #pg-home .prof .pf-l .av .lv{bottom:-7px;font-size:10px;padding:0 6px;line-height:15px}
+  #pg-home .prof .pf-l .av .lv{bottom:-4px;font-size:10px;padding:0 6px;line-height:15px}   /* (inside the card edge, 2026-11-11) */
   #pg-home .prof .pf-r input{font-size:16px;min-width:0}
   #pg-home .pf-sum{display:inline-flex;align-items:center;gap:6px;border:0;background:none;padding:4px 0;cursor:pointer;color:var(--ink);font:inherit}
   .pf-sum .pfc,.pf-sum .pfs{display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 9px 0 4px;border-radius:99px;background:#fff;border:2px solid var(--line);font:700 13px var(--round);white-space:nowrap}
@@ -1951,11 +1958,11 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 <script src="../shared/atlas.js?v=20261111ai5"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261109ac2"></script>
-<script src="i18n/v.js?v=71am"></script>
+<script src="i18n/v.js?v=72pg"></script>
 <script>/* the UI strings: only ja, en and the page language (atlas/i18n/<lang>.js, made from i18n.js by tools/i18n-split.js — 2026-11-10);
    when they were made from another version of i18n.js than FULL, the whole i18n.js loads instead. Edit i18n.js, bump FULL's ?v=, run the tool. */
 (function () {
-  var FULL = 'i18n.js?v=71am', S = window.ATLAS_I18N_SPLIT, v = FULL.split('v=')[1], l = 'ja';
+  var FULL = 'i18n.js?v=72pg', S = window.ATLAS_I18N_SPLIT, v = FULL.split('v=')[1], l = 'ja';
   try { l = localStorage.getItem('aicoding-lang') || (function (x) { return /^zh-(tw|hk|mo|hant)/i.test(x) ? 'zh-TW' : String(x).slice(0, 2); })(navigator.language || 'ja'); } catch (e) {}
   if (!S || S.v !== v) { document.write('<script src="' + FULL + '"><\/script>'); return; }
   var L = ['ja', 'en']; if (S.langs.indexOf(l) >= 0 && L.indexOf(l) < 0) L.push(l);
@@ -1963,7 +1970,7 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
   L.forEach(function (x) { document.write('<script src="i18n/' + x + '.js?v=' + v + '"><\/script>'); });
 })();
 </script>
-<script src="gamelist-i18n.js?v=13am"></script>
+<script src="gamelist-i18n.js?v=14pg"></script>
 <script src="img/tex/baked.js?v=1"></script>
 <script src="table3d.js?v=147"></script>
 <script>/* the places other than the chabudai (tables3d.js, 440 KB): at once when one is chosen, else in idle time after the page has
@@ -1994,17 +2001,17 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="lessons3d.js?v=6"></script>
 <script src="missions.js?v=8"></script>
 <link rel="stylesheet" href="historia.css?v=15">
-<script src="historia.js?v=39"></script>
+<script src="historia.js?v=40"></script>
 <link rel="stylesheet" href="skin/loading.css?v=2">
 <script src="skin/loading.js?v=5"></script>
 <script src="gacha3d.js?v=7"></script>
 <script src="../shared/resign.js?v=3"></script><script src="../shared/drawoffer.js?v=1"></script>
 <script src="../shared/tick.js?v=2"></script>
-<script src="gamelist.js?v=33"></script>
+<script src="gamelist.js?v=34"></script>
 <link rel="stylesheet" href="worldmap.css?v=18">
-<script src="worldmap.js?v=32"></script>
+<script src="worldmap.js?v=33"></script>
 <script src="npc/npc.js?v=23"></script>
 <script src="avtalk.js?v=2"></script>
-<script src="app.js?v=299"></script>
+<script src="app.js?v=303"></script>
 </body>
 </html>

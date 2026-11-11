@@ -121,7 +121,7 @@
   }
 
   /* ---------- common renderers ---------- */
-  const R3 = new Set(['reversi', 'shogi', 'chess', 'gomoku', 'dots', 'connect4', 'mancala', 'backgammon', 'morris', 'sudoku', 'speedsudoku', 'checkers', 'samegame', 'go', 'hex', 'tafl', 'xiangqi', 'jailbreak', 'solitaire', 'poker', 'baccarat', 'blackjack', 'fanorona', 'alquerque', 'ur', 'ugolki', 'agon', 'konane', 'senet', 'janggi', 'ludo', 'carrom', 'crokinole', 'hockey', 'amazons']);   // images/atlas/<id>.webp exists
+  const R3 = new Set(['peg', 'reversi', 'shogi', 'chess', 'gomoku', 'dots', 'connect4', 'mancala', 'backgammon', 'morris', 'sudoku', 'speedsudoku', 'checkers', 'samegame', 'go', 'hex', 'tafl', 'xiangqi', 'jailbreak', 'solitaire', 'poker', 'baccarat', 'blackjack', 'fanorona', 'alquerque', 'ur', 'ugolki', 'agon', 'konane', 'senet', 'janggi', 'ludo', 'carrom', 'crokinole', 'hockey', 'amazons']);   // images/atlas/<id>.webp exists
   const artSrc = g => R3.has(g.id) ? `../images/atlas/${g.id}.webp?v=${g.id === 'fanorona' || g.id === 'janggi' || g.id === 'morris' ? 11 : 10}` : `../${g.icon}`;
   const artImg = (g, extra = '') => `<img src="${artSrc(g)}" alt="" loading="lazy" decoding="async"${R3.has(g.id) ? '' : ' class="flat"'}${extra}>`;
   const g3 = g => `<span class="g3" style="--c:${g.color}">${artImg(g)}</span>`;
@@ -319,13 +319,21 @@
     const SPLIT = { ja: ['世界の', 'ボドゲ大百科'], fr: ['ATLAS MONDIAL', 'Jeux de société'], es: ['ATLAS MUNDIAL', 'Juegos de Mesa'], pt: ['ATLAS MUNDIAL', 'Jogos de Tabuleiro'],
       de: ['WELT', 'Brettspiel-Atlas'], id: ['ATLAS DUNIA', 'Permainan Papan'], tr: ['DÜNYA ATLASI', 'Masa Oyunları'], ru: ['АТЛАС', 'Настольные игры'],
       zh: ['世界', '桌游大全'], 'zh-TW': ['世界', '桌遊大百科'], ko: ['세계의', '보드게임 대전'], hi: ['विश्व', 'बोर्ड गेम एटलस'] }[lang];
+    // a redraw (the font arrived, a sync / place change in the background) carries on where the old logo and pieces were:
+    // the ring's turn and each piece's bob don't snap back to their start (a jolt), and a logo drawn while the window is
+    // not in front / the hero is off screen starts paused (it used to turn on, unfocused, after such a redraw — 2026-11-11)
+    const o = $('ttl').querySelector('svg'), ct = o && o.getCurrentTime ? o.getCurrentTime() : 0;
     $('ttl').innerHTML = emblem(SPLIT ? SPLIT[1] : t('title'), SPLIT ? SPLIT[0] : '', A_.GAMES.length);
+    const n = $('ttl').querySelector('svg'); try { if (ct && n && n.setCurrentTime) n.setCurrentTime(ct); } catch (e) {}
+    svgSync([n]);
     $('ttl').setAttribute('aria-label', t('title') + ' — World Board Game Atlas');
     fitTitle();
     if (titleOnly && $('props').childElementCount) return;   // (the font arrived: only the title is redrawn, the pieces keep floating)
+    const bob = [...$('props').querySelectorAll('.pp img')].map(i => { try { const a = i.getAnimations()[0]; return a ? a.currentTime : null; } catch (e) { return null; } });
     $('props').innerHTML = PROPS.filter((_, i) => !phone || i < 17).map(([img, gid, x, y, w, r], i) => `<span class="pp" data-g="${gid}" style="--x:${x}%;--y:${y}%;--w:${Math.round(w * (phone ? .44 : 1))}px;--r:${r}deg"><span class="pb"><img src="../images/atlas/p-${img}.webp?v=2" alt="" decoding="async"></span></span>`).join('');
     $('props').querySelectorAll('[data-g]').forEach(b => b.onclick = () => { hop(b, true); SFX.shimmer(60); SFX.chime(290); setTimeout(() => openBoard(b.dataset.g), 380); });   // (the sparkle a game icon ends on when its board appears)
     startProps();
+    if (bob.length) $('props').querySelectorAll('.pp img').forEach((i, k) => { try { const a = i.getAnimations()[0]; if (a && bob[k] != null) a.currentTime = bob[k]; } catch (e) {} });
   }
   /* floating pieces: bob + sway (CSS animations: the compositor draws them, no script runs — battery, 2026-11-10), random
      hops / spins (Web Animations, also on the compositor), and a little parallax that follows the pointer / phone tilt (a frame
@@ -354,9 +362,19 @@
   }
   function propSync() {   // pause / resume everything with the visibility
     const on = propOn(), box = $('props'); if (!box) return;
-    box.classList.toggle('pz', !on);
+    box.classList.toggle('pz', !on); svgSync([$('ttl').querySelector('svg')]);
     clearTimeout(propHopT);
     if (on) { const next = () => { propHopT = setTimeout(() => { if (!propOn()) return; hop(propEls[Math.random() * propEls.length | 0]); next(); }, 900 + Math.random() * 1400); }; next(); propMove(); }
+  }
+  /* SVG (SMIL) animations — the logo's turning ring and a few icons: CSS animation-play-state doesn't reach them, so they are
+     paused here: every one while the window is not in front (svgIdle), the logo's also while the hero can't be seen (as the
+     pieces). paused ↔ running only when it changes; the time stands still while paused, so they go on where they stopped. */
+  let svgIdle = false;
+  function svgSync(list) {
+    const hero = $('hero');
+    (list || document.querySelectorAll('svg')).forEach(s => { if (!s || !s.pauseAnimations) return;
+      const stop = svgIdle || (!!hero && hero.contains(s) && !propOn());
+      try { if (stop !== s.animationsPaused()) { if (stop) s.pauseAnimations(); else s.unpauseAnimations(); } } catch (e) {} });
   }
   function startProps() {
     cancelAnimationFrame(propRaf); propRaf = 0;
@@ -574,7 +592,7 @@
   /* ---------- 3D board viewer ---------- */
   let glOK = false, bvGame = null, session = null;
   // card games are 2D only, like the puzzle games (no 3D table): the board card says so and Play opens the game
-  const CARD2D = { poker: true, blackjack: true, baccarat: true, solitaire: true };
+  const CARD2D = { poker: true, blackjack: true, baccarat: true, solitaire: true, peg: true };   // (peg: its 3D table is still to come)
   const pref = (() => { try { return JSON.parse(localStorage.getItem('atlas-play') || '{}'); } catch (e) { return {}; } })();
   // the textures of the room and of each board are drawn in workers (texgen.js): the work is tagged per board,
   // and a board is only shown once its pictures are done (texReady)
@@ -750,7 +768,7 @@
       </div><div class="R">${modes ? `<div class="mtab3${MX ? ' mtab4' : ''}" id="bvMode">${modes.map(m => `<button type="button" data-m="${m}" class="${m === mode ? 'on' : ''}">${MX ? t(MX_LBL[m]) : t('bv.m.' + m)}</button>`).join('')}</div>` : ''}${ad ? `<div class="mbody" id="bvMBody">${modes ? `<div class="mnote" id="bvMNote"></div>` : ''}<div class="opts" id="bvOpts"><label>${t(MX ? 'bv.opp' : 'bv.level')}<select id="bvLv">${MX ? `<option value="0" ${lv === 0 ? 'selected' : ''}>${esc(t('bv.m.pvp'))}</option>` : ''}${Array.from({ length: ad.levels }, (_, i) => `<option value="${i + 1}" ${i + 1 === lv ? 'selected' : ''}>Lv.${i + 1}${ad.levelInfo && lvNm(ad.levelInfo(i + 1, lang), i + 1, lang, ad.levels) ? ' ' + esc(lvNm(ad.levelInfo(i + 1, lang), i + 1, lang, ad.levels)) : ''}</option>`).join('')}</select></label>
         ${ad.sides ? `<label>${t('bv.side')}<select id="bvSide"><option value="1" ${side === 1 ? 'selected' : ''}>${t('bv.first')}</option><option value="2" ${side === 2 ? 'selected' : ''}>${t('bv.second')}</option></select></label>` : ''}
         ${ad.sizes && !(ad.table && TCS[ad.clock]) && !ad.house ? sizeHtml : ''}${ad.house ? `<button type="button" class="hrb" id="bvHouse"><span>${esc(ad.house.label(lang))}</span><b></b><i aria-hidden="true">⚙</i></button>` : ''}</div>
-        ${ad.table && TCS[ad.clock] ? `<div class="opts tcrow" id="bvTcRow"><label>${t('tc.h')}<button type="button" class="lvpick" id="bvTc" data-v="${esc(tcOf(ad, pref[id + ':tc']).id)}"></button></label>${ad.sizes ? sizeHtml : ''}</div>` : ''}${MX ? mxPanels(g, ad) : ''}</div>${ad.house && ad.sizes ? `<div class="opts szrow" id="bvSzRow">${sizeHtml}</div>` : ''}` : (g.id === 'sudoku' || g.id === 'speedsudoku' || g.id === 'samegame' || g.id === 'jailbreak' || g.id === 'amazons' ? `<div class="soon ext"><b>${t('bv.ext')}</b><span>${t('bv.extSub', { name: esc(gname(g)) })}</span></div>` : CARD2D[g.id] ? `<div class="soon ext"><b>${t('bv.card2d')}</b><span>${t('bv.card2dSub', { name: esc(gname(g)) })}</span></div>` : `<div class="soon">${t('bv.soon')}</div>`)}
+        ${ad.table && TCS[ad.clock] ? `<div class="opts tcrow" id="bvTcRow"><label>${t('tc.h')}<button type="button" class="lvpick" id="bvTc" data-v="${esc(tcOf(ad, pref[id + ':tc']).id)}"></button></label>${ad.sizes ? sizeHtml : ''}</div>` : ''}${MX ? mxPanels(g, ad) : ''}</div>${ad.house && ad.sizes ? `<div class="opts szrow" id="bvSzRow">${sizeHtml}</div>` : ''}` : (g.id === 'sudoku' || g.id === 'speedsudoku' || g.id === 'samegame' || g.id === 'jailbreak' || g.id === 'amazons' || g.id === 'peg' ? `<div class="soon ext"><b>${t('bv.ext')}</b><span>${t('bv.extSub', { name: esc(gname(g)) })}</span></div>` : CARD2D[g.id] ? `<div class="soon ext"><b>${t('bv.card2d')}</b><span>${t('bv.card2dSub', { name: esc(gname(g)) })}</span></div>` : `<div class="soon">${t('bv.soon')}</div>`)}
       <div class="act${ad && ad.table && FULL_SKIN[g.id] ? ' act3' : ''}">${!ad ? `<a class="btn big" href="../${g.href}">${t('play')} ▶</a>`
         : ad.table && FULL_SKIN[g.id] ? `<button class="btn big pk" id="bvFull"><b>${t('bv.full')} ▶</b><small>${t('bv.fullSub')}</small></button><button class="btn big2 pk" id="bvTable"><b>${esc(placeT('play'))}</b><small>${t('bv.tableSub')}</small></button><a class="btn ghost big2 pk" href="../${g.href}"><b>${t('bv.classic')}</b><small>${t('bv.classicSub')}</small></a>`
         : `<button class="btn big" id="bvStart">${t('bv.start')} ▶</button>${g.only3d ? '' : `<a class="btn ghost big2" href="../${g.href}">${t('bv.classic')}</a>`}`}</div></div></div>`;   // (only3d: a game made for the 3D table alone — carrom — has no 2D page)
@@ -971,17 +989,30 @@
   addEventListener('resize', () => fitStage());
   window.__fitStage = () => fitStage();
   // the SSR / UR name card's running light (index.html .prof > .rfx / .dprev > .rfx): its angle turned here, ~30 fps, only while one is on screen
-  (function rfxTurn() {
-    // (runs also with reduce-motion on: the rarity light is part of the reward's look, 2026-11-11)
-    let last = 0;
-    const step = now => {
-      requestAnimationFrame(step);
-      if (now - last < 33) return; const dt = Math.min(100, now - (last || now)); last = now;
-      document.querySelectorAll('.prof > .rfx, .dprev > .rfx').forEach(e => { if (!e.getClientRects().length) return;
-        e.__a = ((e.__a || 0) + dt * 360 / (e.classList.contains('u') ? 3200 : 2600)) % 360; e.style.setProperty('--ra', e.__a.toFixed(1) + 'deg'); });
-    };
-    requestAnimationFrame(step);
-  })();   // (the 詰将棋 hand chips appear / change: atlas/games/shogi-play.js)
+  // (2026-11-11, battery) frames only while such a card can be seen: none on the page, scrolled off (IntersectionObserver),
+  // another tab (the section hidden), the 3D view up, or the window not in front → no frame is asked for at all. The angle is
+  // kept per kind (s / u), so it goes on where it stopped and a redrawn card starts at the same angle (no jump).
+  let rfxIO = null, rfxRaf = 0, rfxLast = 0; const rfxSeen = new Set(), rfxA = { s: 0, u: 0 };
+  const rfxK = e => e.classList.contains('u') ? 'u' : 's';
+  const rfxOn = () => { if (document.hidden || !document.hasFocus() || $('bv').classList.contains('on')) return false;
+    for (const e of rfxSeen) { if (!e.isConnected) { rfxSeen.delete(e); if (rfxIO) rfxIO.unobserve(e); } } return rfxSeen.size > 0; };
+  function rfxStep(now) {
+    rfxRaf = 0; if (!rfxOn()) { rfxLast = 0; return; }
+    rfxRaf = requestAnimationFrame(rfxStep);
+    if (now - rfxLast < 33) return; const dt = rfxLast ? Math.min(100, now - rfxLast) : 0; rfxLast = now;
+    rfxA.s = (rfxA.s + dt * 360 / 2600) % 360; rfxA.u = (rfxA.u + dt * 360 / 3200) % 360;
+    rfxSeen.forEach(e => { if (e.getClientRects().length) e.style.setProperty('--ra', rfxA[rfxK(e)].toFixed(1) + 'deg'); });
+  }
+  function rfxWake() { if (!rfxRaf && rfxOn()) rfxRaf = requestAnimationFrame(rfxStep); }
+  function rfxTrack() {   // after a .rfx is drawn (the home profile card, the きせかえ name card)
+    if (!rfxIO) {
+      if (!window.IntersectionObserver) { rfxIO = { observe: e => { rfxSeen.add(e); }, unobserve() {} }; }
+      else rfxIO = new IntersectionObserver(es => { es.forEach(x => { if (x.isIntersecting) rfxSeen.add(x.target); else rfxSeen.delete(x.target); }); rfxWake(); });
+      document.addEventListener('visibilitychange', rfxWake); addEventListener('focus', rfxWake); addEventListener('pageshow', rfxWake);
+      try { new MutationObserver(rfxWake).observe($('bv'), { attributes: true, attributeFilter: ['class'] }); } catch (e) {}
+    }
+    document.querySelectorAll('.prof > .rfx, .dprev > .rfx').forEach(e => { if (e.__rfx) return; e.__rfx = 1; e.style.setProperty('--ra', rfxA[rfxK(e)].toFixed(1) + 'deg'); rfxIO.observe(e); });
+  }   // (the 詰将棋 hand chips appear / change: atlas/games/shogi-play.js)
   // games opened from here (cards, puzzles …) send their home button back here instead of the top page (shared/homeback.js)
   const homeMark = () => { try { sessionStorage.setItem('aicoding-home', location.pathname + '#' + page); } catch (e) {} };
   homeMark(); addEventListener('pagehide', homeMark);
@@ -1800,6 +1831,14 @@
     ['nameIn', 'dpName'].forEach(id => { const ni = $(id); if (ni && ni.value !== W.name) ni.value = W.name; });
     const mn = document.querySelector('#dmini .mnm'); if (mn) mn.textContent = W.name || t('pf.player');
   }
+  // the character flies up big and talks (atlas/avtalk.js); without it, straight to dress-up (the home card) / nothing (きせかえ)
+  function talk(from, onDress) {
+    if (!window.AvTalk) return onDress && onDress();
+    const st = profStats(), tg = todayGame(), un = A_.GAMES.filter(g => !P[g.id].touched), fg = un.length ? un[Math.floor(Math.random() * un.length)] : null;
+    AvTalk.open({ from, av: W.av, name: W.name || t('pf.player'), lang, lv: st.lv, streak: st.s, coins: C.balance, done: st.done, achTotal: ACH.length,
+      touched: st.touched, gamesTotal: A_.GAMES.length, today: { id: tg.id, name: gname(tg) }, fresh: fg ? { id: fg.id, name: gname(fg) } : null,
+      gameName: id => { const g = A_.GAMES.find(x => x.id === id); return g ? gname(g) : id; }, onDress, onPlay: id => openBoard(id) });
+  }
   function renderProfile() {
     const { touched, done, s, pos, lv } = profStats();
     // profile card: big avatar on its own backdrop · name · three stat tiles · the login week as a row of coin stamps
@@ -1814,15 +1853,9 @@
       const el = $('prof'), top = Math.max(-1, ...['icon', 'bg', 'frame'].map(k => { const it = ART.byId(W.av[k]); return it ? it.rar : -1; }));
       el.classList.toggle('nr3', top === 3); el.classList.toggle('nr4', top === 4);
       el.querySelectorAll(':scope > .rfx, :scope > .ntw').forEach(x => x.remove());
-      if (top >= 3) el.insertAdjacentHTML('beforeend', `<i class="rfx ${top === 4 ? 'u' : 's'}"></i><i class="ntw"></i>`); }
+      if (top >= 3) { el.insertAdjacentHTML('beforeend', `<i class="rfx ${top === 4 ? 'u' : 's'}"></i><i class="ntw"></i>`); rfxTrack(); } }
     $('pfMore').onclick = () => { pfOpen = !pfOpen; $('prof').classList.toggle('open', pfOpen); $('pfMore').setAttribute('aria-expanded', pfOpen); };   // phones: the one-line profile opens its stats · login week · Google sign-in
-    $('avBtn').onclick = () => {   // the character flies up big and talks (atlas/avtalk.js); without it, straight to dress-up
-      if (!window.AvTalk) return go('dress');
-      const st = profStats(), tg = todayGame(), un = A_.GAMES.filter(g => !P[g.id].touched), fg = un.length ? un[Math.floor(Math.random() * un.length)] : null;
-      AvTalk.open({ from: $('avBtn'), av: W.av, name: W.name || t('pf.player'), lang, lv: st.lv, streak: st.s, coins: C.balance, done: st.done, achTotal: ACH.length,
-        touched: st.touched, gamesTotal: A_.GAMES.length, today: { id: tg.id, name: gname(tg) }, fresh: fg ? { id: fg.id, name: gname(fg) } : null,
-        gameName: id => { const g = A_.GAMES.find(x => x.id === id); return g ? gname(g) : id; }, onDress: () => go('dress'), onPlay: id => openBoard(id) });
-    };
+    $('avBtn').onclick = () => talk($('avBtn'), () => go('dress'));
     renderAcc();
     $('nameIn').onchange = e => setName(e.target.value);
   }
@@ -2060,7 +2093,7 @@
     el.classList.toggle('dark', ART.isDark(W.av.bg));
     el.classList.toggle('wk', ncWk);
     el.innerHTML = `<div class="pfbg${ART.isDark(W.av.bg) ? ' dk' : ''}" style="background:${ART.bgDataUri(W.av.bg)}" aria-hidden="true"></div><div class="nc-l"><div class="bgfill" style="background:${ART.bgDataUri(W.av.bg)}"></div>
-        <button class="av poke" aria-label="${esc(iname(ART.byId(W.av.icon) || ART.byId(ART.DEFAULT_ICON)))}" style="background:none;box-shadow:none">${ART.avatar(W.av, PS, { pop: true, clear: true, noChar: true })}${popChar(W.av, PS)}</button>
+        <span class="nc-av"><button class="av poke" aria-label="${esc(iname(ART.byId(W.av.icon) || ART.byId(ART.DEFAULT_ICON)))}" style="background:none;box-shadow:none">${ART.avatar(W.av, PS, { pop: true, clear: true, noChar: true })}${popChar(W.av, PS)}</button><button type="button" class="nc-talk">${esc(t('dress.talk'))}</button></span>
         ${phone ? '' : `<div class="dname">${worn}</div>`}</div>
       <div class="nc-side"><div class="nc-top"><input id="dpName" maxlength="16" value="${esc(W.name)}" placeholder="${esc(t('pf.name'))}" aria-label="${esc(t('pf.name'))}"><span class="coin nc-coin"><i>¢</i><span class="coinM">${C.balance.toLocaleString()}</span></span></div>
         <div class="nc-lv"><b>Lv.${lv}</b><span class="nc-lvb" role="img" aria-label="${nx}">${[0, 1, 2].map(i => `<i class="${i < got ? 'on' : ''}"></i>`).join('')}</span><small>${nx}</small></div>
@@ -2068,13 +2101,14 @@
       <div class="nc-tiles">${tile('🏆', `${done}<small>/${ACH.length}</small>`, t('pf.ach'), ' data-go="ach"', '<span class="nc-ar" aria-hidden="true">›</span>')}${tile('🎲', `${touched}<small>/${A_.GAMES.length}</small>`, t('pf.games'))}${tile('🔥', `${s}<small> ${esc(t('mp.d'))}</small>`, t('mp.streak'), ` data-wk aria-expanded="${ncWk}" aria-controls="ncWk"`, '<svg class="nc-v" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>')}${tile('🎀', `${W.owned.length}<small>/${ART.items.length}</small>`, t('g.coll'))}</div>
       <div class="nc-wk" id="ncWk">${weekHtml(esc(t('login.h')), pos)}<div class="accw"></div></div>`;
     el.querySelector('.poke').onclick = () => pokeAvatar();
+    el.querySelector('.nc-talk').onclick = () => talk(el.querySelector('.poke'), null);   // (talking from きせかえ: its 「きせかえ」 button just closes)
     el.querySelector('[data-go=ach]').onclick = () => go('ach');
     el.querySelector('[data-wk]').onclick = e => { ncWk = !ncWk; el.classList.toggle('wk', ncWk); e.currentTarget.setAttribute('aria-expanded', ncWk); };
     $('dpName').onchange = e => setName(e.target.value);
     // wearing an SSR / UR (icon, background or frame): the name card gets the same running light and glow
     const top = Math.max(-1, ...['icon', 'bg', 'frame'].map(k => { const it = ART.byId(W.av[k]); return it ? it.rar : -1; }));
     el.classList.toggle('nr3', top === 3); el.classList.toggle('nr4', top === 4);
-    if (top >= 3) el.insertAdjacentHTML('beforeend', `<i class="rfx ${top === 4 ? 'u' : 's'}"></i><i class="ntw"></i>`);
+    if (top >= 3) { el.insertAdjacentHTML('beforeend', `<i class="rfx ${top === 4 ? 'u' : 's'}"></i><i class="ntw"></i>`); rfxTrack(); }
     renderAcc();
     renderMini();
   }
@@ -2361,8 +2395,14 @@
   /* ---------- idle: pause CSS/SVG animations while the tab is hidden or the window isn't focused ---------- */
   (function idle() {
     const st = document.createElement('style'); st.textContent = 'html.atlas-idle *,html.atlas-idle *::before,html.atlas-idle *::after{animation-play-state:paused!important}'; document.head.appendChild(st);
-    const set = () => { const on = document.hidden || !document.hasFocus(); document.documentElement.classList.toggle('atlas-idle', on); document.querySelectorAll('svg').forEach(s => { try { on ? s.pauseAnimations() : s.unpauseAnimations(); } catch (e) {} }); };
-    document.addEventListener('visibilitychange', set); addEventListener('blur', set); addEventListener('focus', set);
+    // an SVG added while idle (the home redrawn by a sync, a place change … in the background) is paused as it arrives: it
+    // used to start turning on its own while the window was still behind (the logo's ring, 2026-11-11)
+    const mo = window.MutationObserver ? new MutationObserver(rs => { const l = []; rs.forEach(r => r.addedNodes.forEach(n => { if (n.nodeType !== 1) return; if (n.tagName.toLowerCase() === 'svg') l.push(n); else if (n.querySelector) n.querySelectorAll('svg').forEach(x => l.push(x)); })); if (l.length) svgSync(l); }) : null;
+    const set = () => { const on = document.hidden || !document.hasFocus(); document.documentElement.classList.toggle('atlas-idle', on);
+      if (on !== svgIdle) { svgIdle = on; if (mo) { if (on) mo.observe(document.body, { childList: true, subtree: true }); else mo.disconnect(); } }
+      svgSync(); };
+    document.addEventListener('visibilitychange', set); addEventListener('blur', set); addEventListener('blur', () => setTimeout(set, 0)); addEventListener('focus', set); addEventListener('pageshow', set);
+    set();
   })();
 
   // ミッション (atlas/missions.js, 2026-11-11): the button at the bottom right and its popup
