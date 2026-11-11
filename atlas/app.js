@@ -122,7 +122,7 @@
 
   /* ---------- common renderers ---------- */
   const R3 = new Set(['reversi', 'shogi', 'chess', 'gomoku', 'dots', 'connect4', 'mancala', 'backgammon', 'morris', 'sudoku', 'speedsudoku', 'checkers', 'samegame', 'go', 'hex', 'tafl', 'xiangqi', 'jailbreak', 'solitaire', 'poker', 'baccarat', 'blackjack', 'fanorona', 'alquerque', 'ur', 'ugolki', 'agon', 'konane', 'senet', 'janggi', 'ludo', 'carrom', 'crokinole', 'hockey', 'amazons']);   // images/atlas/<id>.webp exists
-  const artSrc = g => R3.has(g.id) ? `../images/atlas/${g.id}.webp?v=${g.id === 'fanorona' || g.id === 'janggi' ? 11 : 10}` : `../${g.icon}`;
+  const artSrc = g => R3.has(g.id) ? `../images/atlas/${g.id}.webp?v=${g.id === 'fanorona' || g.id === 'janggi' || g.id === 'morris' ? 11 : 10}` : `../${g.icon}`;
   const artImg = (g, extra = '') => `<img src="${artSrc(g)}" alt="" loading="lazy" decoding="async"${R3.has(g.id) ? '' : ' class="flat"'}${extra}>`;
   const g3 = g => `<span class="g3" style="--c:${g.color}">${artImg(g)}</span>`;
   const gno = g => 'No.' + String(A_.GAMES.indexOf(g) + 1).padStart(2, '0');
@@ -1723,7 +1723,7 @@
     Table3D.setShift(on ? ((rtl !== left) ? w / 2 : -w / 2) : 0);
   }
   // the places (tables3d.js) arrive after the page (index.html AtlasPlaces): the chip, the labels and the open page follow
-  addEventListener('atlas-places', () => { try { renderPlace(); } catch (e) {} try { if (page === 'dress' && dKind === 'table') renderDress(); else if (!$('bv').classList.contains('on')) render(page); } catch (e) {} });
+  addEventListener('atlas-places', () => { try { renderPlace(); } catch (e) {} try { if (page === 'dress') renderDress(); } catch (e) {} });   // (only きせかえ (its 台 tab) shows the places: re-rendering the open page here made the home jump a few seconds after load with nothing touched, 2026-11-11)
   function renderPlace() {
     const X = P3(), btn = $('bvPlBtn'); if (!btn) return;
     if (!X) { btn.hidden = true; return; }
@@ -2353,7 +2353,11 @@
     else if (k === 'gacha') { renderGacha(); renderShop(); } else if (k === 'dress') renderDress();
   }
   // progress may change in another tab (a game) — re-read when coming back
-  document.addEventListener('visibilitychange', () => { if (!document.hidden && !session) { W = A_.load(); refresh(); render(page); welcome(); } });
+  // (only when something was saved meanwhile or the day changed: re-rendering the same page restarted its animations and
+  // the updates row, a jolt on every return to the tab, 2026-11-11)
+  const lsSig = () => { let h = 0; try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k === 'atlas-avtalk-recent') continue; const v = k + '=' + localStorage.getItem(k); for (let j = 0; j < v.length; j++) h = (h * 31 + v.charCodeAt(j)) | 0; } } catch (e) { return Math.random(); } return A_.ymd(Date.now()) + ':' + h; };
+  let visSig = '';
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { visSig = lsSig(); return; } if (!session) { const sg = lsSig(); if (sg !== visSig) { W = A_.load(); refresh(); render(page); } welcome(); } });
   /* ---------- idle: pause CSS/SVG animations while the tab is hidden or the window isn't focused ---------- */
   (function idle() {
     const st = document.createElement('style'); st.textContent = 'html.atlas-idle *,html.atlas-idle *::before,html.atlas-idle *::after{animation-play-state:paused!important}'; document.head.appendChild(st);

@@ -384,13 +384,27 @@
       g.add(at(die(.9, 0x222533, [6, 1, 2, 5, 4, 3]), .85, 1.45, -.1, -.3, -.4, .35));
       return g;
     },
-    morris() {
-      const top = M({ map: X.canvasTex('icnm', 512, 512, (c, W) => { c.fillStyle = '#f2dcae'; c.fillRect(0, 0, W, W); c.strokeStyle = '#3a2410'; c.lineWidth = 18; c.lineCap = 'round'; c.strokeRect(70, 70, W - 140, W - 140); c.strokeRect(190, 190, W - 380, W - 380); c.beginPath(); c.moveTo(W / 2, 70); c.lineTo(W / 2, 190); c.moveTo(70, W / 2); c.lineTo(190, W / 2); c.stroke(); }) });
-      const g = boardChunk(3, 3.6, top, M({ map: softWood('icnw', '#d9a865', '#9a6a2a') }));
+    morris() {   // the game's own look (2026-11-11): deep indigo velvet with inlaid gold lines and studs, a gilt rim; gold and pearl-silver stones, a gold stone dropping in to close the mill
+      const top = M({ map: X.canvasTex('icnm2', 512, 512, (c, W) => {
+        const gr = c.createRadialGradient(W * .45, W * .4, 20, W / 2, W / 2, W * .75); gr.addColorStop(0, '#4b2d8c'); gr.addColorStop(.6, '#2f1a66'); gr.addColorStop(1, '#1b0e42');
+        c.fillStyle = gr; c.fillRect(0, 0, W, W);
+        for (let k = 0; k < 2600; k++) { c.fillStyle = `rgba(${k % 2 ? '190,150,255' : '20,6,40'},${.04 + (k % 7) * .006})`; c.fillRect((k * 197) % W, (k * 331 + (k >> 3)) % W, 2, 2); }   // velvet nap
+        c.strokeStyle = '#a87a26'; c.lineWidth = 10; c.strokeRect(22, 22, W - 44, W - 44);
+        c.strokeStyle = '#c9932e'; c.lineWidth = 16; c.lineCap = 'round';
+        c.strokeRect(80, 80, W - 160, W - 160); c.strokeRect(196, 196, W - 392, W - 392);
+        c.beginPath(); c.moveTo(W / 2, 80); c.lineTo(W / 2, 196); c.moveTo(80, W / 2); c.lineTo(196, W / 2); c.moveTo(W / 2, W - 80); c.lineTo(W / 2, W - 196); c.moveTo(W - 80, W / 2); c.lineTo(W - 196, W / 2); c.stroke();
+        [[80, 80], [256, 80], [432, 80], [80, 256], [432, 256], [80, 432], [256, 432], [432, 432], [196, 196], [256, 196], [316, 196], [196, 256], [316, 256], [196, 316], [256, 316], [316, 316]].forEach(([x, y]) => {
+          c.fillStyle = '#5a3f12'; c.beginPath(); c.arc(x, y + 2, 17, 0, 7); c.fill(); c.fillStyle = '#e8b54a'; c.beginPath(); c.arc(x, y, 14, 0, 7); c.fill(); });
+      }), roughness: .9 });
+      const g = boardChunk(3, 3.6, top, C(0x41267a, { roughness: .4, metalness: .05 }));
+      const gold = C(0xe0b453, { roughness: .28, metalness: .65 });
+      [[0, 1.66, 3.5, .1], [0, -1.66, 3.5, .1], [1.66, 0, .1, 3.5], [-1.66, 0, .1, 3.5]].forEach(([x, z, w, d]) => g.add(at(mesh(new T.BoxGeometry(w, .08, d), gold), x, .54, z)));   // the gilt rim
+      const stone = (hex, mt, s) => { const st = C(hex, { roughness: .22, metalness: mt }), o = new T.Group(); o.add(puck(.6, .28, st, .45));
+        const cap = mesh(new T.SphereGeometry(.5, 32, 12, 0, Math.PI * 2, 0, Math.PI / 2), st); cap.scale.y = .32; cap.position.y = .27; o.add(cap); o.scale.setScalar(s); return o; };
       const p = v => -1.65 + 3.3 * v / 512;
-      g.add(at(checker(0xf3ead8, .62), p(70), .5, p(70))); g.add(at(checker(0xf3ead8, .62), p(256), .5, p(70)));
-      g.add(at(checker(0x7a2a1a, .62), p(70), .5, p(256))); g.add(at(checker(0x7a2a1a, .62), p(190), .5, p(190)));
-      g.add(at(checker(0xf3ead8, .95), p(420), 1.8, p(70) + .2, .5, 0, -.35));   // completing the mill
+      g.add(at(stone(0xe2b04a, .6, .62), p(80), .5, p(80))); g.add(at(stone(0xe2b04a, .6, .62), p(256), .5, p(80)));
+      g.add(at(stone(0xd9dce6, .35, .62), p(80), .5, p(256))); g.add(at(stone(0xd9dce6, .35, .62), p(196), .5, p(196)));
+      g.add(at(stone(0xf0c45a, .65, .95), p(432), 1.8, p(80) + .2, .5, 0, -.35));   // completing the mill
       return g;
     },
     checkers() {
