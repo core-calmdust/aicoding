@@ -14,6 +14,11 @@
    · 'archer'  an abstract Scythian archer: a robed, turned figure in a Phrygian cap, a recurve bow held across the body and a
                quiver of arrows on the back (White: ivory; Black: ebony; gold fittings)
    · 'bronze'  a tall queen in bronze crowned with a crested helmet (White: gilt bronze with verdigris; Black: dark iron)
+  · 'totem'   a carved forest idol of the Amazon: two faces (the upper one beaked like a harpy eagle), folded wings, a fan of macaw
+              feathers (a cocar) on the head (White: pale cedar, urucum red and yellow; Black: rosewood, gold and parrot green)
+  · 'jade'    a turned queen in jade with a gold sun-disc headdress of rays (White: pale celadon jade; Black: glossy obsidian)
+  · 'pottery' a vase-painting amazon: chiton, Attic helmet, a crescent pelta shield and a raised labrys (double axe)
+              (White: terracotta with black glaze; Black: black glaze with terracotta)
    An arrow is a fire arrow stuck in a scorched square (arrow(), scorch()); the skin animates its flight.
    Registers into Table3D:
      Table3D.MODELS.amazons(live)   board (+ a game in progress unless live)
@@ -29,7 +34,7 @@
   const LO = () => !!(X.coarse || X.lite);
   const N = 10, BX = .45, BZ = .8, TH = .42, RAD = .36, R = .36;
   const W = N + 2 * BX, H = N + 2 * BZ;
-  const LOOKS = ['temple', 'ruins', 'krater', 'navy', 'camp', 'minimal'], SETS = ['statue', 'archer', 'bronze'];
+  const LOOKS = ['temple', 'ruins', 'krater', 'navy', 'camp', 'minimal'], SETS = ['statue', 'archer', 'bronze', 'totem', 'jade', 'pottery'];
   const IMG = (() => { try { const s = document.currentScript && document.currentScript.src; if (s) return new URL('../../amazons/img/', s).href; } catch (e) {} return '../amazons/img/'; })();
   const lin = c => new (T().Color)(c).convertSRGBToLinear();
   const mats = {}, mat = (k, f) => mats[k] || (mats[k] = f());
@@ -203,6 +208,9 @@
   });
   const ivoryTex = key => pixTex(key, SZ(LO() ? 192 : 320), (u, v) => { const g = Math.sin(v * 60 + fbm(u * 2, v * 12) * 6) * .5 + .5, n = fbm(u * 8, v * 8); return mix([246, 236, 214], [226, 208, 172], g * .35 + (n - .5) * .4); });
   const ebonyTex = key => pixTex(key, SZ(LO() ? 192 : 320), (u, v) => { const g = Math.sin(v * 140 + fbm(u * 3, v * 30) * 9) * .5 + .5; return mix([46, 31, 24], [10, 6, 5], Math.pow(g, 3) * .8); });
+  const woodTex = (key, light) => pixTex(key, SZ(LO() ? 192 : 320), (u, v) => { const g = Math.sin(v * 70 + fbm(u * 2.5, v * 10) * 7) * .5 + .5, n = fbm(u * 9, v * 9);
+    return light ? mix([214, 172, 120], [168, 118, 72], Math.pow(g, 2) * .6 + (n - .5) * .3) : mix([92, 48, 32], [44, 22, 16], Math.pow(g, 2) * .7 + (n - .5) * .3); });
+  const jadeTex = key => pixTex(key, SZ(LO() ? 192 : 320), (u, v) => { const n = fbm(u * 5, v * 5), m = fbm(u * 16 + 4, v * 16, 3); let c = mix([196, 226, 200], [120, 176, 142], clamp((n - .35) * 1.6)); return mix(c, [236, 244, 232], clamp((m - .6) * 3) * .6); });
   function matSet(set, col) {
     const w = col === 1;
     return mat('m' + set + col, () => {
@@ -211,6 +219,13 @@
                                             : phys({ map: marbleTex('mb', [24, 24, 28], [212, 176, 104], [120, 120, 130], 2), roughness: .2, clearcoat: .9, clearcoatRoughness: .12 }),
                                      trim: w ? mat('pgold', () => phys({ color: '#e9d9b0', metalness: 1, roughness: .3 })) : GOLD };
       if (set === 'bronze') return { body: phys({ map: bronzeTex(w ? 'bw' : 'bb', !w), metalness: 1, roughness: w ? .34 : .42 }), trim: w ? GOLD : mat('copper', () => phys({ color: '#b87c48', metalness: 1, roughness: .32 })) };
+      if (set === 'totem') return { body: phys({ map: woodTex(w ? 'cd' : 'rw', w), roughness: .62 }), trim: w ? mat('uru', () => phys({ color: '#c8361e', roughness: .5 })) : GOLD,
+                                    acc: w ? mat('ylw', () => phys({ color: '#f0b428', roughness: .5 })) : mat('pgr', () => phys({ color: '#2a8a5e', roughness: .45 })) };
+      if (set === 'jade') return { body: w ? phys({ map: jadeTex('jd'), roughness: .22, clearcoat: .9, clearcoatRoughness: .15 }) : mat('obs', () => phys({ color: '#141418', roughness: .07, metalness: .15, clearcoat: 1, clearcoatRoughness: .05 })), trim: GOLD };
+      if (set === 'pottery') {
+        const TC = mat('terra', () => phys({ color: '#c8693a', roughness: .62 })), BG = mat('bglz', () => phys({ color: '#1e1a17', roughness: .22, clearcoat: .8, clearcoatRoughness: .2 }));
+        return w ? { body: TC, trim: BG } : { body: BG, trim: TC };
+      }
       return { body: w ? phys({ map: ivoryTex('iv'), roughness: .38, clearcoat: .45, clearcoatRoughness: .3 }) : phys({ map: ebonyTex('eb'), roughness: .28, clearcoat: .7, clearcoatRoughness: .2 }), trim: GOLD };
     });
   }
@@ -310,8 +325,65 @@
     }
     q.position.set(-.1, .58, -.16); q.rotation.set(-.32, 0, .38); g.add(q);
   }
-  const BUILD = { statue, bronze, archer };
-  const SCALE = { statue: .76, bronze: .78, archer: .84 };   // the base ≈ .36 across a square of 1.0
+  // a carved forest idol: two faces one over the other (the upper one beaked like a harpy eagle), folded wings, painted bands,
+  // and a cocar (a crown of macaw feathers) fanned up behind the head
+  function totem(g0, M) {
+    const TT = T(), g = new TT.Group(); g.scale.set(.84, 1.14, .84); g0.add(g);   // (turned on a slim post: taller than wide)
+    g.add(mesh(G('to-base', () => lathe([[0, 0], [.52, 0], [.54, .05], [.5, .1], [.42, .12], [.42, .16], [0, .16]])), M.body));
+    g.add(mesh(G('to-col', () => lathe([[0, .16], [.3, .16], [.32, .22], [.3, .42], [.26, .46], [.28, .5], [.29, .7], [.25, .76], [.27, .8], [.27, 1.0], [.22, 1.06], [0, 1.06]])), M.body, 0, 0, 0, 0, 0, 0, 1, 1, .9));
+    for (const [y, r, m] of [[.46, .27, 'trim'], [.78, .262, 'trim'], [.2, .315, 'acc'], [1.02, .24, 'acc']]) g.add(mesh(G('to-b' + y, () => new TT.TorusGeometry(r, .018, 5, SEG())), M[m], 0, y, 0, Math.PI / 2, 0, 0, 1, .9, 1));
+    const eye = G('to-eye', () => new TT.SphereGeometry(.045, 8, 6)), pup = G('to-pup', () => new TT.SphereGeometry(.02, 6, 4));
+    for (const [y, z] of [[.33, .275], [.9, .245]]) for (const s of [1, -1]) { g.add(mesh(eye, M.acc, s * .1, y, z, 0, 0, 0, 1, 1, .5)); g.add(mesh(pup, M.trim, s * .1, y, z + .02)); }
+    g.add(mesh(G('to-mouth', () => new TT.BoxGeometry(.16, .03, .03)), M.trim, 0, .25, .28));
+    g.add(mesh(G('to-beak', () => new TT.ConeGeometry(.05, .17, 6)), M.trim, 0, .83, .3, Math.PI / 2 + .5));   // the hooked beak of the harpy eagle
+    const wing = G('to-wing', () => { const sh = new TT.Shape(); sh.moveTo(0, 0); sh.quadraticCurveTo(.2, .02, .22, .2); sh.quadraticCurveTo(.12, .12, 0, .16); sh.lineTo(0, 0);
+      return new TT.ExtrudeGeometry(sh, { depth: .04, bevelEnabled: true, bevelThickness: .012, bevelSize: .01, bevelSegments: 1, curveSegments: LO() ? 4 : 6 }); });
+    for (const s of [1, -1]) g.add(mesh(wing, M.body, s * .24, .56, -.02, 0, s === 1 ? 0 : Math.PI, 0));
+    const fe = G('to-fe', () => new TT.SphereGeometry(.05, 8, 6));
+    const N = 9; for (let k = 0; k < N; k++) {
+      const a = (k / (N - 1) - .5) * 2.5, f = new TT.Group(); f.add(mesh(fe, k % 2 ? M.acc : M.trim, 0, .17, 0, 0, 0, 0, .75, 3.6, .3));
+      f.position.set(0, 1.03, -.06); f.rotation.set(-.15, 0, -a); g.add(f);
+    }
+    g.add(mesh(G('to-band', () => new TT.TorusGeometry(.2, .03, 5, SEG())), M.trim, 0, 1.05, 0, Math.PI / 2, 0, 0, 1, .9, 1));
+  }
+  // a turned queen in jade: a tall stem, a gold collar and a jewel on the brow, a sun disc of rays behind the head
+  function jade(g, M) {
+    const TT = T();
+    g.add(mesh(G('jd-body', () => lathe([[0, 0], [.55, 0], [.57, .05], [.54, .1], [.45, .13], [.47, .17], [.38, .2], [.3, .22], [.24, .3], [.18, .5], [.13, .8], [.12, .95], [.2, 1.0], [.24, 1.04], [.16, 1.08], [.13, 1.12], [.18, 1.2], [.2, 1.27], [.15, 1.33], [.06, 1.36], [0, 1.36]])), M.body));
+    for (const [y, r] of [[.1, .55], [1.04, .245], [.2, .385]]) g.add(mesh(G('jd-r' + r, () => new TT.TorusGeometry(r, .017, 6, SEG())), M.trim, 0, y, 0, Math.PI / 2));
+    const st = G('jd-step', () => new TT.BoxGeometry(.05, .05, .03));   // a stepped fret round the stem
+    for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2, o = mesh(st, M.trim, Math.sin(a) * .215, .38, Math.cos(a) * .215); o.rotation.y = a; g.add(o); }
+    g.add(mesh(G('jd-jewel', () => new TT.SphereGeometry(.035, 8, 6)), M.trim, 0, 1.22, .19));
+    const sun = new TT.Group();
+    sun.add(mesh(G('jd-disc', () => new TT.TorusGeometry(.27, .024, 5, LO() ? 18 : 28)), M.trim));
+    const ray = G('jd-ray', () => new TT.ConeGeometry(.032, .15, 4));
+    for (let k = 0; k <= 10; k++) { const a = -.25 + k / 10 * (Math.PI + .5); sun.add(mesh(ray, k % 2 ? M.body : M.trim, Math.cos(a) * .35, Math.sin(a) * .35, 0, 0, 0, a - Math.PI / 2)); }
+    sun.position.set(0, 1.24, -.1); g.add(sun);
+  }
+  // an amazon off a Greek vase: a chiton, an Attic helmet, the crescent pelta shield before her and a labrys (double axe) raised
+  function pottery(g, M) {
+    const TT = T();
+    g.add(mesh(G('po-base', () => lathe([[0, 0], [.5, 0], [.52, .05], [.48, .09], [.4, .11], [0, .11]])), M.body));
+    g.add(mesh(G('po-r0', () => new TT.TorusGeometry(.51, .016, 6, SEG())), M.trim, 0, .05, 0, Math.PI / 2));
+    g.add(mesh(G('po-skirt', () => lathe([[0, .11], [.3, .11], [.27, .2], [.22, .4], [.17, .58], [.14, .66], [0, .66]])), M.body, 0, 0, 0, 0, 0, 0, 1, 1, .85));
+    for (const [y, r] of [[.25, .255], [.4, .222]]) g.add(mesh(G('po-hm' + y, () => new TT.TorusGeometry(r, .012, 5, SEG())), M.trim, 0, y, 0, Math.PI / 2, 0, 0, 1, .85, 1));
+    g.add(mesh(G('po-torso', () => lathe([[0, .62], [.14, .62], [.17, .72], [.19, .8], [.17, .88], [.08, .93], [.05, .98], [0, .98]])), M.body, 0, 0, 0, 0, 0, 0, 1, 1, .8));
+    g.add(mesh(G('po-belt', () => new TT.TorusGeometry(.145, .018, 5, SEG())), M.trim, 0, .64, 0, Math.PI / 2, 0, 0, 1, .82, 1));
+    g.add(mesh(G('po-head', () => new TT.SphereGeometry(.095, 12, 9)), M.body, 0, 1.06, .01, 0, 0, 0, .9, 1.08, .96));
+    helmet(g, M, 'po-h', .108, 1.1, false);
+    const pel = G('po-pelta', () => { const sh = new TT.Shape(); sh.absarc(0, 0, .2, Math.PI * 5 / 6, Math.PI / 6 + Math.PI * 2, false); sh.absarc(0, .1, .13, 0, -Math.PI, true);
+      return new TT.ExtrudeGeometry(sh, { depth: .025, bevelEnabled: true, bevelThickness: .01, bevelSize: .01, bevelSegments: 1, curveSegments: LO() ? 10 : 16 }); });
+    g.add(mesh(pel, M.trim, -.1, .7, .17, -.1, .25, .1));
+    g.add(mesh(G('po-boss', () => new TT.SphereGeometry(.03, 6, 4)), M.body, -.096, .66, .21));
+    const ax = new TT.Group();
+    ax.add(mesh(G('po-haft', () => new TT.CylinderGeometry(.013, .013, .62, 5, 1, true)), M.trim));
+    const blade = G('po-blade', () => { const sh = new TT.Shape(); sh.moveTo(0, -.03); sh.lineTo(.1, -.08); sh.quadraticCurveTo(.14, 0, .1, .08); sh.lineTo(0, .03); sh.lineTo(0, -.03);
+      return new TT.ExtrudeGeometry(sh, { depth: .014, bevelEnabled: false, curveSegments: LO() ? 4 : 6 }); });
+    for (const s of [0, Math.PI]) { const b = mesh(blade, M.trim, 0, .26, 0, 0, s, 0); b.position.z = s ? .007 : -.007; ax.add(b); }
+    ax.position.set(.24, 1.0, -.02); ax.rotation.set(0, 0, -.18); g.add(ax);
+  }
+  const BUILD = { statue, bronze, archer, totem, jade, pottery };
+  const SCALE = { statue: .76, bronze: .78, archer: .84, totem: .84, jade: .8, pottery: .86 };   // the base ≈ .36 across a square of 1.0
   const pcSet = () => { try { const v = localStorage.getItem('atlas-amazons-pc3'); return SETS.includes(v) ? v : 'statue'; } catch (e) { return 'statue'; } };
   // col 1 White / 2 Black (the game's P1 / P2); every figure faces the near side (the viewer)
   function piece(col, set) {

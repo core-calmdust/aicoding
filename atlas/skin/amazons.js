@@ -5,7 +5,7 @@
      • draws the 3D board (atlas/models/amazons.js) with the 3D table, leaning back (tilt 26°); the camera is aligned to the DOM
        board, which stays on top (transparent, tilted the same way) for taps, destinations, arrows, hints and labels. The page's
        layout is never changed (the same positions as the 2D page, in 2D and in 3D): the 3D frame may go under the cards
-     • the amazons are sculpted figures (statue / archer / bronze), chosen in a 「3D駒」 row under the 3D boards
+     • the amazons are sculpted figures (statue / archer / bronze / totem / jade / pottery), chosen in a 「3D駒」 row under the 3D boards
        ('atlas-amazons-pc3'); the page's piece pictures (plates, players, record) follow the chosen figures
      • mirrors the page's moves: the amazon glides to its square (lifted a little), then a fire arrow flies from her in an arc
        — a flame at its head, sparks shed along the way — strikes with a flash and a burst of sparks; the square stays
@@ -43,6 +43,9 @@ html.atlas-amazons .board{background:none!important;box-shadow:none!important}
 html.atlas-amazons[data-pc3=statue]{--pcW:url(img/pc3-statue-w.webp)!important;--pcB:url(img/pc3-statue-b.webp)!important}
 html.atlas-amazons[data-pc3=archer]{--pcW:url(img/pc3-archer-w.webp)!important;--pcB:url(img/pc3-archer-b.webp)!important}
 html.atlas-amazons[data-pc3=bronze]{--pcW:url(img/pc3-bronze-w.webp)!important;--pcB:url(img/pc3-bronze-b.webp)!important}
+html.atlas-amazons[data-pc3=totem]{--pcW:url(img/pc3-totem-w.webp)!important;--pcB:url(img/pc3-totem-b.webp)!important}
+html.atlas-amazons[data-pc3=jade]{--pcW:url(img/pc3-jade-w.webp)!important;--pcB:url(img/pc3-jade-b.webp)!important}
+html.atlas-amazons[data-pc3=pottery]{--pcW:url(img/pc3-pottery-w.webp)!important;--pcB:url(img/pc3-pottery-b.webp)!important}
 html.atlas-amazons .lines{overflow:visible!important}
 html.atlas-amazons .lines .num{fill:rgba(255,246,226,.85)!important;stroke:rgba(0,0,0,.55)!important;font-weight:700}
 html.atlas-amazons .pieces .pc:not(.hov){background:none!important;box-shadow:none!important;filter:none!important;opacity:1!important;border:0!important}
@@ -315,11 +318,6 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
   /* ---------- the new-game dialog: 「3D盤」 (boards) and 「3D駒」 (figures) under the 2D boards ---------- */
   const T3L = { ja: '3D盤', en: '3D boards', zh: '3D棋盘', ko: '3D 판', es: 'Tableros 3D', fr: 'Plateaux 3D', pt: 'Tabuleiros 3D', de: '3D-Bretter', hi: '3D बोर्ड', ar: 'رقع ثلاثية الأبعاد', ru: '3D-доски', 'zh-TW': '3D棋盤', id: 'Papan 3D', tr: '3D tahtalar' };
   const P3L = { ja: '3D駒', en: '3D pieces', zh: '3D棋子', ko: '3D 말', es: 'Piezas 3D', fr: 'Pièces 3D', pt: 'Peças 3D', de: '3D-Figuren', hi: '3D मोहरे', ar: 'قطع ثلاثية الأبعاد', ru: '3D-фигуры', 'zh-TW': '3D棋子', id: 'Bidak 3D', tr: '3D taşlar' };
-  const PN = {
-    statue: { ja: '大理石の女戦士像', en: 'Marble warriors', zh: '大理石女战士像', 'zh-TW': '大理石女戰士像', ko: '대리석 여전사상', es: 'Guerreras de mármol', fr: 'Guerrières de marbre', pt: 'Guerreiras de mármore', de: 'Marmorkriegerinnen', ru: 'Мраморные воительницы', tr: 'Mermer savaşçılar', id: 'Prajurit marmer', hi: 'संगमरमर की योद्धा', ar: 'محاربات من الرخام' },
-    archer: { ja: '象牙と黒檀の弓兵', en: 'Ivory & ebony archers', zh: '象牙与乌木弓手', 'zh-TW': '象牙與烏木弓手', ko: '상아와 흑단 궁수', es: 'Arqueras de marfil y ébano', fr: 'Archères ivoire et ébène', pt: 'Arqueiras de marfim e ébano', de: 'Bogenschützinnen aus Elfenbein & Ebenholz', ru: 'Лучницы из слоновой кости и эбена', tr: 'Fildişi ve abanoz okçular', id: 'Pemanah gading & eboni', hi: 'हाथीदाँत और आबनूस की धनुर्धर', ar: 'رامياتٌ من العاج والأبنوس' },
-    bronze: { ja: 'ブロンズと鉄のクイーン', en: 'Bronze & iron queens', zh: '青铜与铁女王', 'zh-TW': '青銅與鐵女王', ko: '청동과 철의 여왕', es: 'Reinas de bronce y hierro', fr: 'Reines de bronze et de fer', pt: 'Rainhas de bronze e ferro', de: 'Königinnen aus Bronze & Eisen', ru: 'Королевы из бронзы и железа', tr: 'Bronz ve demir kraliçeler', id: 'Ratu perunggu & besi', hi: 'काँसे और लोहे की रानियाँ', ar: 'ملكاتٌ من البرونز والحديد' },
-  };
   const lng = () => (l => /^zh-(tw|hk|mo|hant)/i.test(l) ? 'zh-TW' : String(l).slice(0, 2))((document.getElementById('langSel') || {}).value || (typeof LANG !== 'undefined' ? LANG : 'ja'));
   const is3 = () => !V || V.is3d();
   function setLook(k) {
@@ -353,7 +351,7 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
       bt.append(im, document.createElement('span')); bt.onclick = () => setSet(k); prow.appendChild(bt);
     });
     row.querySelectorAll('button').forEach(bt => { const k = bt.dataset.look, sel = on && cur === k; bt.querySelector('span').textContent = T3.boardName ? T3.boardName(k, l) : k; bt.classList.toggle('sel', sel); bt.setAttribute('aria-pressed', String(sel)); });
-    prow.querySelectorAll('button').forEach(bt => { const k = bt.dataset.set, sel = cs === k; bt.querySelector('span').textContent = (PN[k] || {})[l] || PN[k].en; bt.classList.toggle('sel', sel); bt.setAttribute('aria-pressed', String(sel)); });
+    prow.querySelectorAll('button').forEach(bt => { const k = bt.dataset.set, sel = cs === k; bt.querySelector('span').textContent = T3.pieceName ? T3.pieceName('amazons', k, l) : k; bt.classList.toggle('sel', sel); bt.setAttribute('aria-pressed', String(sel)); });
     const r2 = document.getElementById('bdRow');
     if (r2 && on) r2.querySelectorAll('button').forEach(b => { if (b.classList.contains('sel')) b.classList.remove('sel'); if (b.getAttribute('aria-pressed') === 'true') b.setAttribute('aria-pressed', 'false'); });
   }
