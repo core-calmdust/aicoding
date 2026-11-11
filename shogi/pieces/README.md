@@ -26,4 +26,4 @@ From `Pieces (2-Kanji)` of [LuffyKudo/Shogi-Themes](https://github.com/LuffyKudo
 
 ## 隷書 (reisho) 3D set (2026-11-11)
 
-`../../images/atlas/shogi-glyphs-reisho.png`, `shogi-pieces-reisho.png` and `../../atlas/img/pc3-shogi-reisho.webp` are set in the free brush font 「青柳隷書しも」 (aoyagireisyosimo v2.02, made by SIMO from the calligraphy of 青柳衡山). Its readme: free, no conditions of use, commercial use allowed. The font file itself is not in this repository (`atlas/tools/shogi-glyphs-font.py` reads it from a path).
+`../../images/atlas/shogi-glyphs-reisho.png`, `shogi-pieces-reisho.png` and `../../atlas/img/pc3-shogi-reisho.webp` are set in the free brush font 「青柳隷書しも」 (aoyagireisyosimo v2.02, made by SIMO from the calligraphy of 青柳衡山). Its readme: free, no conditions of use, commercial use allowed. The promoted sides are the `minase` set's cursive inscriptions (CC BY-SA 4.0, LuffyKudo), as real 隷書 sets carve them in cursive. The font file itself is not in this repository (`atlas/tools/shogi-glyphs-font.py` reads it from a path).
