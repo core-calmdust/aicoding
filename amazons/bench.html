@@ -62,7 +62,7 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);ma
 
 <div class="card"><h2>αβ（Lv.9〜18・解析）</h2><div class="tw"><table id="tbl"><thead><tr><th>測定</th><th>方式</th><th>スレッド</th><th>時間</th><th>1スレッド比</th><th>幾何平均</th><th>効率</th><th>nps（合計）</th><th>1スレッドと一致</th></tr></thead><tbody></tbody></table></div><pre id="log"></pre></div>
 </main>
-<script src="engine.js?v=10"></script>
+<script src="engine.js?v=11"></script>
 <script src="../shared/mtengine.js?v=8"></script><script src="../shared/mtsplit.js?v=6"></script>
 <script>MTSplit.init({ sw: 'sw.js?v=1' });</script>
 
@@ -84,7 +84,7 @@ env();
 // ---- the game: G = { url, warm?, ready?, positions(weight) → [{ name, moves }], tests: [{ key, label, msg(p, weight), cmp(r) → string (the answer compared with 1 thread) }] }
 
 const E = window.AmazonsEngine;
-const ENGINE = 'engine.js?v=10';   // (the game page's ENGINE_URL in app.js: the same file and cache entry)
+const ENGINE = 'engine.js?v=11';   // (the game page's ENGINE_URL in app.js: the same file and cache entry)
 const D = { light: 6, normal: 8, heavy: 9 }, TA = { light: 1000, normal: 2000, heavy: 4000 }, EST = { light: 3, normal: 7, heavy: 18 };
 const TM = { light: 1000, normal: 2000, heavy: 4000 }, EST_MC = { light: 3, normal: 6, heavy: 12 };   // (the MCTS: ms per search; minutes on a 14-core Mac)
 // the reference move of each position: one thread with REF_X times the time (2026-11-10: ×4 was weaker than the searches on 8 or
@@ -166,7 +166,7 @@ async function run() {
 // The main measure is the evaluations per second (r.nodes: every thread's); the visits are shown for reference with how many of
 // them ended without an evaluation (core.c mcts_vk: a leaf waiting for visits in a pool past half full, a proven node, a leaf
 // being expanded by another thread).
-const MC_CFG = { wasm: 'core_mt.wasm?v=3', lead: ENGINE + '&mt=1', helper: 'mt-helper.js?v=1', slot: 2 << 20, initial: 1024, maximum: 16384,
+const MC_CFG = { wasm: 'core_mt.wasm?v=4', lead: ENGINE + '&mt=1', helper: 'mt-helper.js?v=1', slot: 2 << 20, initial: 1024, maximum: 16384,
   imports: mem => ({ env: { memory: mem, now: () => Date.now() } }), help: m => m.type === 'think' ? {} : null };
 async function mcRun(w, P, out, tick, done) {
   if (!window.MTEngine || !MTEngine.isolated || !MTEngine.pool) { out.push('mcts: the page is not isolated (no shared memory) — not measured'); return done; }
@@ -185,11 +185,11 @@ async function mcRun(w, P, out, tick, done) {
       if (!r) throw new Error('the MCTS failed');
       started = Math.max(started, r.threads || 1);
       if (t === 1) one = r.move;
-      const a = A[t] || (A[t] = { sims: 0, ev: 0, ms: 0, ag: 0, ag1: 0, cnt: 0, vk: [0, 0, 0, 0, 0, 0] });
+      const a = A[t] || (A[t] = { sims: 0, ev: 0, ms: 0, ag: 0, ag1: 0, cnt: 0, vk: [0, 0, 0, 0, 0, 0, 0, 0] });
       a.sims += r.sims || 0; a.ev += r.nodes || 0; a.ms += r.ms || TM[w]; a.cnt++; if (r.move === ref.move) a.ag++; if (r.move === one) a.ag1++;
       const vk = r.vk || []; vk.forEach((x, k) => { a.vk[k] += x || 0; });
       const vt = vk.slice(0, 5).reduce((x, y) => x + y, 0) || 1;
-      row.push(`t${t}(${r.threads || 1}) ${Math.round((r.nodes || 0) / 1000)}k evals ${r.sims} visits (wait ${Math.round((vk[2] || 0) / vt * 100)}% proven ${Math.round((vk[1] || 0) / vt * 100)}%) ${E.name(null, r.move)}`);
+      row.push(`t${t}(${r.threads || 1}) ${Math.round((r.nodes || 0) / 1000)}k evals ${r.sims} visits (wait ${Math.round((vk[2] || 0) / vt * 100)}% proven ${Math.round((vk[1] || 0) / vt * 100)}%${r.tree ? ` tree ${Math.round(r.tree[0] / 1000)}k of ${Math.round(r.tree[1] / 1000)}k` : ''}) ${E.name(null, r.move)}`);
     }
     rows.push(row.join(' | '));
     renderMc(A);
@@ -206,7 +206,7 @@ function renderMc(A) {
     const es = a.ev / a.ms * 1000, sp = es / e1, vs = a.sims / a.ms * 1000, vt = a.vk.slice(0, 5).reduce((x, y) => x + y, 0);
     const pc = k => vt ? Math.round(a.vk[k] / vt * 100) + '%' : '—', cheap = vt ? Math.round((vt - a.vk[0]) / vt * 100) + '%' : '—';
     tb.insertAdjacentHTML('beforeend', `<tr><td>${t}</td><td>${Math.round(es / 1000)}k</td><td>${sp.toFixed(2)}×</td><td>${(sp / t * 100).toFixed(0)}%</td><td>${a.ag}/${a.cnt}</td><td>${a.ag1}/${a.cnt}</td><td>${Math.round(vs)}（${(vs / v1).toFixed(2)}×）</td><td>${cheap}</td></tr>`);
-    out.push(`mcts threads ${t}: ${Math.round(es / 1000)}k evals/s, x${sp.toFixed(2)} vs 1, eff ${(sp / t * 100).toFixed(0)}%, agree with 1 thread x${REF_X} time ${a.ag}/${a.cnt}, with 1 thread ${a.ag1}/${a.cnt} | ref.: ${Math.round(vs)} visits/s (x${(vs / v1).toFixed(2)}), visits without an evaluation ${cheap} (wait ${pc(2)}, proven ${pc(1)}, busy ${pc(3)})`);
+    out.push(`mcts threads ${t}: ${Math.round(es / 1000)}k evals/s, x${sp.toFixed(2)} vs 1, eff ${(sp / t * 100).toFixed(0)}%, agree with 1 thread x${REF_X} time ${a.ag}/${a.cnt}, with 1 thread ${a.ag1}/${a.cnt} | ref.: ${Math.round(vs)} visits/s (x${(vs / v1).toFixed(2)}), visits without an evaluation ${cheap} (wait ${pc(2)}, proven ${pc(1)}, busy ${pc(3)}) | evaluations to make the rest of the children ${a.ev ? (a.vk[7] / a.ev * 100).toFixed(1) + '%' : '—'}`);
   }
   return out;
 }

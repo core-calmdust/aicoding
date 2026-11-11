@@ -216,7 +216,7 @@ let WA = null;
 (function loadCore() {
   try {
     let b64 = null;
-    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('core-wasm.js?v=4'); b64 = self.AMZ_WASM; }
+    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('core-wasm.js?v=5'); b64 = self.AMZ_WASM; }
     else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') { const g = typeof globalThis !== 'undefined' ? globalThis : global, had = 'self' in g, old = g.self; g.self = g; try { require(require('path').join(__dirname, 'core-wasm.js')); b64 = g.AMZ_WASM; } finally { if (had) g.self = old; else delete g.self; } }
     if (!b64 || (typeof process !== 'undefined' && process.env && process.env.AMZ_NOWASM)) return;
     // (the SIMD build first; the one without SIMD where that does not compile — AMZ_NOSIMD=1 in Node to check it)
@@ -479,27 +479,38 @@ function bestMove(pos, maxD, ms, ek, rootK) {
 // the candidate list (the evaluation of its children = its value), the children pre-selected and valued by the evaluation
 // (prior), progressive widening and implicit minimax values. Only with the WebAssembly core (mcts: null without it).
 // o: { ms (time), nk (thousands of evaluations), sims (visits), seed, prm (parameters, MC), onProgress(list, sims) }
-const MC = { qk: 10, k: 24, qkr: 20, kr: 48, po: 0, s: 400, np: 2, c: 0.25, a: 0.3, pwa: 3, pwk: 1, pwb: 0.5, pom: 0.5, vl: 1, b0: 300 };
-const MC_KEYS = ['qk', 'k', 'qkr', 'kr', 'po', 's', 'np', 'c', 'a', 'pwa', 'pwk', 'pwb', 'pom', 'vl', 'b0'];
+const MC = { qk: 10, k: 24, qkr: 20, kr: 48, po: 0, s: 400, np: 2, c: 0.25, a: 0.3, pwa: 3, pwk: 1, pwb: 0.5, pom: 0.5, vl: 1, b0: 300, la: 8 };
+const MC_KEYS = ['qk', 'k', 'qkr', 'kr', 'po', 's', 'np', 'c', 'a', 'pwa', 'pwk', 'pwb', 'pom', 'vl', 'b0', 'la'];
 let MX = null;   // the core of the MCTS: { x, views } — WA (one thread) or the multi-thread core of the lead (mt=1)
 function mcCore() { return MX || WA; }
 function mcViews(C) { if (C.buf !== C.x.memory.buffer) { if (C === WA) waViews(); else C.views(); } }
 // The pool of the tree (core.c mcts_alloc; 32 bytes a node). Past half full a leaf waits for visits before it is expanded and
 // at 96 % the search stops (core.c mcts_run): those waiting visits back up a value without an evaluation — the "superlinear"
 // visits/s of bench.html on many threads (2026-11-10: a 2 s search on 8 threads filled the 3.2 M nodes sized for it and 80〜95 %
-// of its visits were such waits). So the pool is sized by the nodes per ms per thread that the searches here have made (MC_RATE,
-// first 300: the user's M4 Pro ~140 on one thread in the middle game before the SIMD core of 2026-11-11, ~2.5× that since) and the threads of this job, up to MC_MAX_NODES (one
-// thread, 128 MB) or the lead's maxNodes (several threads: up to 512 MB — Lv.23's 20 s on 10 threads may still fill it).
+// of its visits were such waits). So the pool is sized by the nodes per ms per thread that the searches here have made (MC_RATE)
+// and the threads of this job, up to MC_MAX_NODES (one thread, 128 MB) or the lead's maxNodes (several threads: up to 512 MB).
+// (2026-11-11) With the SIMD core (#1612) the searches made ~1.7× the nodes in the same time and the user's M4 Pro waited in 37 /
+// 41 % of the visits on 10 / 14 threads (2 s; 11 / 12 % before), the pools at their caps. Now the children of a node come as the
+// window reaches them (core.c P_LA): ~0.38 of the nodes for the same search (bench positions); MC_RATE counts those (first 200:
+// ~0.38 × the M4 Pro's ~500 of before on one thread), and a search by time asks for 2.6 × the nodes it is expected to make
+// (1.3 before) so that it stays under half the pool, where no leaf waits. The caps are as before (the memory too: the same
+// search fits in ~0.4 of it).
 const MC_MAX_NODES = 1 << 22;
-let MC_RATE = 300;
+let MC_RATE = 200;
 function mcts(pos, o) {
   const C = mcCore(); if (!C) return null;
   const X = C.x, p = Object.assign({}, MC, o.prm || {});
   const evl = o.nk ? o.nk * 1000 : 0, sims = o.sims || 0, ms = o.ms || 0, thr = Math.max(1, C === WA ? 1 : C.jobThreads || C.threads || 1);
-  const est = Math.max(sims * p.k, evl / 200 * p.k, ms * MC_RATE * thr) * 1.3;
+  const est = Math.max(Math.max(sims * p.k, evl / 200 * p.k) * 1.3, ms * MC_RATE * thr * 2.6);
   const want = o.pool > 0 ? o.pool : Math.min(C.maxNodes || MC_MAX_NODES, Math.max(1 << 16, Math.ceil(est)));
-  X.mcts_alloc(want); if (X.mcts_limit) X.mcts_limit(o.pool > 0 ? o.pool : 0); mcViews(C);
+  // (2026-11-11, lazy children: core.c P_LA) a search by visits / evaluations counts the pool's fill as if every child were made
+  // at once, in the pool it had before (vcap: the largest asked so far) — the same search as before; the nodes really made are
+  // fewer (at most 1 + 1/24 of those: room for them). A search by time counts the nodes made (MC_RATE is in those).
+  const exact = !ms && !(o.pool > 0);
+  if (exact) C.vcap = Math.max(C.vcap || 0, want);
+  X.mcts_alloc(exact ? Math.ceil(C.vcap * 1.05) + 64 : want); if (X.mcts_limit) X.mcts_limit(o.pool > 0 ? o.pool : 0); mcViews(C);
   MC_KEYS.forEach((k, i) => X.mcts_set(i, p[k]));
+  if (X.mcts_vnodes) X.mcts_set(16, exact ? C.vcap : 0);
   C.sq.set(pos.sq); C.q.set(pos.q);
   X.mcts_begin(pos.turn, o.seed | 0);
   const t0 = Date.now();
@@ -514,10 +525,10 @@ function mcts(pos, o) {
   evals = X.mcts_evals();
   if (ms && !o.pool) {   // (the rate of the next pool: a search that filled half its pool made more nodes than it could keep)
     const el = Math.max(50, Date.now() - t0), nn = X.mcts_nodes(), r = nn / el / thr * (nn > want * 0.5 ? 2 : 1);
-    if (el >= 200) MC_RATE = Math.min(600, Math.max(30, r, MC_RATE * 0.75));
+    if (el >= 200) MC_RATE = Math.min(1000, Math.max(30, r, MC_RATE * 0.75));
   }
-  const vk = X.mcts_vk ? [0, 1, 2, 3, 4, 5].map(k => X.mcts_vk(k)) : null;   // (how the visits ended: core.c mcts_vk)
-  return { list, sims: n, evals, nodes: X.mcts_nodes(), proof: X.mcts_proof(), vk };
+  const vk = X.mcts_vk ? [0, 1, 2, 3, 4, 5, 6, 7].map(k => X.mcts_vk(k)) : null;   // (how the visits ended: core.c mcts_vk; 6, 7 the lazy children made, their evaluations)
+  return { list, sims: n, evals, nodes: X.mcts_nodes(), vnodes: X.mcts_vnodes ? X.mcts_vnodes() : 0, proof: X.mcts_proof(), vk };
 }
 function mcList(C) {
   const X = C.x, k = X.mcts_out(), out = [];
@@ -533,6 +544,7 @@ function mctsThink(pos, L) {
   const out = thinkFin(pos, { move: b.m, v: b.v, depth: 3, evals: r.evals, sims: r.sims });
   out.nodes = r.evals; out.mc = 1;   // (nodes: the evaluations of every thread — the page's nps readout)
   if (r.vk) out.vk = r.vk;   // (how the visits ended: bench.html)
+  out.tree = [r.nodes, r.vnodes];   // (the tree's nodes, and those with every child made at once: bench.html)
   return out;
 }
 // ---------------------------------------------------------------- AI levels (20 steps, Lv.1 … Lv.20)
