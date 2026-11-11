@@ -160,6 +160,16 @@ function render(cats) {
   L.querySelectorAll('[data-oct]').forEach(b => b.onclick = () => { lxTab(kind, b.dataset.oct); render(cats); L.scrollTop = 0; });
   L.querySelectorAll('[data-occ]').forEach(b => b.onclick = () => { lxTab(kind + ':' + curK, b.dataset.occ); render(cats); });
 }
+// the longer 【狙い】 for the deep lines whose data only had a one-line type (opcourse-notes.json, 14 languages, 2026-11-11);
+// {n:<ja name>} in a note is the line's name in the page language
+let notesPr = null;
+function notesP() { if (window.__ocNotes !== undefined) return Promise.resolve(); return notesPr || (notesPr = fetch('opcourse-notes.json?v=1').then(r => r.json()).then(d => { window.__ocNotes = d; }).catch(() => { window.__ocNotes = null; })); }
+function noteHtml(ln) {
+  const D = window.__ocNotes, n = D && D.notes[ln.moves]; if (!n) return '';
+  const byJa = new Map(); (openData.sets || []).forEach(st => st.lines.forEach(l => { if (l.name && l.name.ja && !byJa.has(l.name.ja)) byJa.set(l.name.ja, l.name); }));
+  const txt = PT2(n).replace(/\{n:([^}]+)\}/g, (m, k) => PT2(byJa.get(k)) || k);
+  return `<p><span class="oc-tg">${D.tag[LANG] || D.tag.en}</span>${txt}</p>`;
+}
 // ---------------------------------------------------------------- a step's page
 function intro(i) {
   const S = steps(), st = S[i]; if (!st) return list();
@@ -174,12 +184,13 @@ function intro(i) {
   const kidsH = kids.length ? `<div class="oc-kids">${kids.map(n => { const j = S.findIndex(z => z.ln.moves === n.m); return `<button type="button" class="oc-kid"${j >= 0 ? ` data-ocgo="${j}"` : ''}><b>${PT2(n.n)}</b><small>${splitM(n.m.slice(ln.moves.length)).map((m, k) => `${ln.moves.length / 2 + k + 1}.${m}`).join(' ')}</small></button>`; }).join('')}</div>` : '';
   const go = () => {
     const U = (window.__lux && (__lux.ui[LANG] || __lux.ui.en)) || {}, H = k => LuxIntro.head(k, LANG);
+    const note = noteHtml(ln);
     LuxIntro.opening({ step: `${x.title} · STEP ${chapNo}`, title: nm, fig, cap: (U.figO || '') + (s.pr ? ` · ${s.st.text}` : ''), lead,
       choices: [{ ic: '📖', b: tx('study'), small: tx('studyD', { n: seq.length }), attrs: 'data-ocs="1"' }, { ic: '✎', b: tx('prac'), small: tx('pracD', { n: probs }), attrs: 'data-ocp="1"' },
         { ic: '●', b: t('op.drillB'), small: tx('drillD', { c: t('black') }), attrs: 'data-ocd="1"' }, { ic: '○', b: t('op.drillW'), small: tx('drillD', { c: t('white') }), attrs: 'data-ocd="2"' }],
-      secs: [ip.rest && { h: H('think'), html: tagged(ip.rest) }, ip.origin && { h: H('hist'), html: tagged(ip.origin) }, kidsH && { h: tx('next'), html: kidsH }].filter(Boolean) });
+      secs: [(ip.rest || note) && { h: H('think'), html: (ip.rest ? tagged(ip.rest) : '') + note }, ip.origin && { h: H('hist'), html: tagged(ip.origin) }, kidsH && { h: tx('next'), html: kidsH }].filter(Boolean) });
   };
-  if (window.LuxIntro) { if (window.__lux) go(); else LuxIntro.load('lux.json?v=1').then(d => { window.__lux = d; if (introIdx === i) go(); }); }
+  if (window.LuxIntro) { const nl = notesP(); if (window.__lux && window.__ocNotes !== undefined) go(); else Promise.all([window.__lux ? 0 : LuxIntro.load('lux.json?v=1').then(d => { window.__lux = d; }), nl]).then(() => { if (introIdx === i) go(); }); }
   showLessonView('intro'); showOverlay('#lessonOverlay');
   $('#lessonOverlay .modal') && ($('#lessonOverlay .modal').scrollTop = 0);
 }
