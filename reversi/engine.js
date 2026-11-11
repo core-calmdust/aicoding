@@ -984,7 +984,7 @@ const LEVELS = [
   // 17-27 (2026-11-11, steps of about +25–110 Elo from Lv.16): a fixed depth (depth; mix: half of the positions to that depth instead,
   // by a hash of the position) and endgame (exact / wld), the same strength on any device and thread count (the threads only make
   // them faster). time / use / max are only a guard for slow devices (one thread on a slow phone): no new depth after time × use,
-  // the hard stop at max (MODEL_CARD.md「28段階：Lv.17〜27 を深さで刻み直し」).
+  // the hard stop at max (MODEL_CARD.md「29段階→28段階：Lv.17〜27 を深さで刻み直し」).
   { depth: 10, exact: 18, wld: 20, time: 10000, use: 1, max: 20000, mpc: 1 },   // 17
   { depth: 11, exact: 18, wld: 20, time: 10000, use: 1, max: 20000, mpc: 1 },   // 18
   { depth: 12, exact: 18, wld: 20, time: 10000, use: 1, max: 20000, mpc: 1 },   // 19
