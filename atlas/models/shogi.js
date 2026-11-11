@@ -55,7 +55,7 @@
   const SHEET_KEYS = ['k1', 'k2', 'k3', 'k4', 'k5', 'k6', 'k7', 'k8', 'k9', 'k10', 'k11', 'k12', 'k13', 'k14', 'k8o'];
   /* ---------- the six 3D piece sets (2026-11-11, Table3D.PIECES.shogi, key 'atlas-shogi-pc3'): the same raised-lacquer boxwood pieces with
      the inscriptions of the 2D sets — 盛り上げ (2kanji_3d, the original) · 一字書き (1kanji_3d) · 錦旗 · 水無瀬 · 菱湖 (LuffyKudo) · 楷書 (orangain).
-     Sheets: images/atlas/shogi-glyphs-<set>.png (atlas/tools/shogi-glyphs.html; licences in shogi/pieces/README.md) ---------- */
+     Sheets: images/atlas/shogi-glyphs-<set>.png (atlas/tools/shogi-glyphs-faithful.py; licences in shogi/pieces/README.md) ---------- */
   const PSETS = ['moriage', 'ichiji', 'kinki', 'minase', 'ryoko', 'kaisho'];
   const GLY = { moriage: GLYPHS };
   const curSet = () => { try { const v = X.PIECES && X.PIECES.shogi ? X.PIECES.shogi.get() : 'moriage'; return PSETS.includes(v) ? v : 'moriage'; } catch (e) { return 'moriage'; } };
@@ -64,7 +64,7 @@
     if (set === 'moriage') return glyphsReady;
     if (SHEETS[set]) return SHEETS[set];
     const G = GLY[set] = {};
-    const url = (() => { try { return new URL('../../images/atlas/shogi-glyphs-' + set + '.png?v=2', ME_SRC).href; } catch (e) { return '../images/atlas/shogi-glyphs-' + set + '.png?v=2'; } })();
+    const url = (() => { try { return new URL('../../images/atlas/shogi-glyphs-' + set + '.png?v=3', ME_SRC).href; } catch (e) { return '../images/atlas/shogi-glyphs-' + set + '.png?v=3'; } })();
     return (SHEETS[set] = new Promise(res => { const im = new Image(); im.onload = () => { SHEET_KEYS.forEach((k, i) => { const c = document.createElement('canvas'); c.width = 256; c.height = 296; c.getContext('2d', { willReadFrequently: true }).drawImage(im, (i % 5) * 256, (i / 5 | 0) * 296, 256, 296, 0, 0, 256, 296); G[k] = c; }); res(); upgrade(set); }; im.onerror = () => res(); im.src = url; }));
   }
   const glyphsReady = new Promise(res => {
