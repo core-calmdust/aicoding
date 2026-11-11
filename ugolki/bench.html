@@ -59,7 +59,7 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);ma
 
 <div class="card"><h2>結果</h2><div class="tw"><table id="tbl"><thead><tr><th>測定</th><th>方式</th><th>スレッド</th><th>時間</th><th>1スレッド比</th><th>幾何平均</th><th>効率</th><th>nps（合計）</th><th>1スレッドと一致</th></tr></thead><tbody></tbody></table></div><pre id="log"></pre></div>
 </main>
-<script src="engine.js?v=6-wa2"></script>
+<script src="engine.js?v=7-ab"></script>
 <script src="../shared/mtengine.js?v=8"></script><script src="../shared/mtsplit.js?v=6"></script>
 <script>MTSplit.init({ sw: 'sw.js?v=1' });</script>
 
@@ -82,7 +82,7 @@ env();
 const E = window.UgolkiEngine;
 const RULE = 'c33', D = { light: 8, normal: 10, heavy: 11 }, TA = { light: 1000, normal: 2000, heavy: 4000 };
 const G = {
-  url: 'engine.js?v=6-wa2', drive: MTSplit.ladder.drive,
+  url: 'engine.js?v=7-ab', drive: MTSplit.ladder.drive,
   positions() {   // two games of Lv.6 vs Lv.6 (a fixed random seed), every 10 plies from ply 10
     const out = []; let seed = 7; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
     E.setRule(RULE);
@@ -105,11 +105,28 @@ const G = {
 // a fresh pool for every run (no table left over from the run before), warmed up first
 // sh = the shared table with the game's own way for the best move (共有・YBW), alt = the shared table with the other way (msg.lazy),
 // ns = no shared table; the analysis has one way (alt is not run for it)
-const MODES = T => MTSplit.shared ? (T && T.key === 'best' ? ['sh', 'alt', 'ns'] : ['sh', 'ns']) : ['ns'], MODE_NAME = { sh: '共有・YBW', alt: '共有・Lazy', ns: '非共有' }, MODE_KEY = { sh: 'shared', alt: 'shared-lazy', ns: 'split' };
+// (2026-11-11) cy = the game page's way on an isolated page: core_mt.wasm on the page's thread pool (shared/mtengine.js; Praline's
+// Young Brothers Wait in C, one table in the shared memory) — sh (shared/mtsplit.js with the shared table) is its fallback now
+const CY = () => !!(window.MTEngine && MTEngine.isolated && MTEngine.pool);
+const MODES = T => MTSplit.shared ? (CY() ? ['cy', 'sh', 'ns'] : ['sh', 'ns']) : ['ns'], MODE_NAME = { cy: 'C・YBW', sh: '共有・YBW', alt: '共有・Lazy', ns: '非共有' }, MODE_KEY = { cy: 'c-ybw', sh: 'shared', alt: 'shared-lazy', ns: 'split' };
+const MC_CFG = { wasm: 'core_mt.wasm?v=1', lead: G.url + '&mt=1', helper: 'mt-helper.js?v=1', slot: 4 << 20, initial: 1024, maximum: 16384,   // (the same as app.js MCP)
+  imports: mem => ({ env: { memory: mem, now: () => Date.now() } }), help: () => ({}) };
+let cpool = null;   // (one pool for every C・YBW run: 'newgame' empties its table before each)
+async function cyOnce(t, msg) {
+  if (!cpool) { cpool = MTEngine.pool(MC_CFG); if (!(await cpool.ready)) throw new Error('core_mt.wasm threads did not start'); }
+  await cpool.run({ type: 'newgame', rule: RULE, mtThreads: 1 });
+  const t0 = performance.now();
+  const r = await cpool.run(Object.assign({}, msg, { mtThreads: t }), null, 'bench');
+  const ms = performance.now() - t0;
+  if (!r) throw new Error('the search failed');
+  started = Math.max(started, r.threads || 1); cores.add('wasm-mt');
+  return { r, ms };
+}
 const ALT_LAZY = 1;
 // ?help=0: without the helpers of the shared Young Brothers Wait (shared/mtsplit.js, 2026-11-10) — to compare
 const NOHELP = /[?&]help=0/.test(location.search);
 async function once(t, msg, mode) {
+  if (mode === 'cy') return cyOnce(t, msg);
   if (NOHELP) msg = Object.assign({}, msg, { mtHelp: 0 });
   const pool = MTSplit.pool({ url: G.url, setup: G.setup, drive: G.drive, tt: mode !== 'ns' });
   if (mode === 'alt') msg = Object.assign({}, msg, { lazy: ALT_LAZY });
@@ -154,7 +171,7 @@ async function run() {
 }
 function render(R) {
   const tb = $('#tbl tbody'), out = []; tb.innerHTML = '';
-  for (const T of G.tests) for (const M of ['sh', 'alt', 'ns']) {
+  for (const T of G.tests) for (const M of ['cy', 'sh', 'alt', 'ns']) {
     const b = R[T.key + '|' + M + '|1']; if (!b) continue;
     for (const t of COUNTS) {
       const a = R[T.key + '|' + M + '|' + t]; if (!a) continue;

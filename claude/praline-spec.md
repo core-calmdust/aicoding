@@ -78,7 +78,8 @@ wasm の αβ エンジン（`engine_mt.wasm`、`-DMT`）の**仕事を分ける
 | 五目並べ（`gomoku/`） | JS 探索＋wasm の共有の置換表・分割点（`mt.c`） | YBW v2（どの節も） | mtengine・proset |
 | 囲碁（`go/`）・ヘックス（`hex/`） | C（wasm） | 共有木 MCTS（virtual loss） | mtengine・proset |
 | アマゾンズ（`amazons/`） | C（wasm、αβ の探索ごと core.c、2026-11-11） | αβ は **YBW**（3）＋busy marks、Lv.19〜23 は共有木 MCTS（同じ `core_mt.wasm`、補助は両方を待つ）。分離できないページは mtsplit の非共有 | mtengine・**praline（2026-11-11）**・proset（mtsplit は非共有だけ） |
-| ウゴルキ・アゴン・コナネ | JS＋wasm コア | YBW＋共有の置換表＋手伝い（JS 分割） | mtsplit・mttt・proset |
+| ウゴルキ（`ugolki/`） | C（wasm、ルートのループも 2026-11-11） | **YBW**（3）（`core_mt.wasm`）。分離できないページは mtsplit | mtengine・**praline（2026-11-11）**・proset（mtsplit は非共有・予備） |
+| アゴン・コナネ | JS のルート＋wasm の探索 | YBW＋共有の置換表＋手伝い（JS 分割） | mtsplit・mttt・proset |
 | マンカラ | JS | Lazy SMP（共有の置換表） | mtsplit・mttt・proset |
 | コネクトフォー | JS | 列ごとの完全読み（共有の置換表） | mtsplit＋`connect4/mt.js` |
 | ドット＆ボックス | JS＋wasm（5×5） | 手の分担（共有の置換表）・補助 Worker | mtworkers（共有モード）・wasm `dots5mt.wasm` |
@@ -192,6 +193,9 @@ JavaScript エンジンは `shared/mtsplit.js`（＋`mttt.js`）、独立な仕�
 ### アマゾンズ（2026-11-11）：JS の αβ を C に移して Praline に
 - αβ の探索ループ（`search`・解析の全部の手・最善手の反復深化）を `amazons/core.c` に移し、MCTS と同じ `core_mt.wasm` で Praline の YBW（つなぎ：局面は盤100＋アマゾン8＋手番＋鍵2つ、ルートの候補の値 `sc`、`spCutoff` は空＝キラー・履歴なし）。補助は `mt_help` の中で MCTS の木と分割点の両方を待つ。1スレッドは JS の探索と手・値・局面数・評価数が全一致（`amazons/tools/check_ab.js`、246回の探索）。
 - `tools/mtsim`（評価数の時計）深さ6・8局面：2／4／8 ×1.78／3.07／4.76、遅いコアあり 8／10／14 ×4.82／4.79／4.73。前（mtsplit の共有・YBW＋手伝い、`mtstep` を評価数の時計に）×1.43／2.21／3.39。1スレッドも ×1.22（ループを C に）。詳細は claude/amazons-spec.md「αβ を C に」。
+
+### ウゴルキ（2026-11-11）：ルートのループを C に、Praline に
+- 探索はすでに C（core.c）で、JS はルートのループと mtsplit。ルートのループを `ab_best`／`ab_values` に移し、`core_mt.wasm` で Praline の YBW（つなぎ：局面・繰り返しの履歴・各手の元の順番 `lg`）。1スレッドは前の版と848回の探索で全一致。`tools/mtsim`（局面数の時計、5局面・深さ8）2／4／8 ×1.97／3.71／6.79、遅いコアあり 8／10／14 ×6.74／7.04／7.62（前の mtsplit ×1.37／2.18／3.30）。詳細は claude/ugolki-spec.md。
 
 ---
 
