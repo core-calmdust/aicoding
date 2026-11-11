@@ -227,7 +227,12 @@
     function flash(g, v) { if (!g || !g.userData.flash) return; g.userData.ft = performance.now(); g.userData.fk = Math.min(.85, .3 + v / 420); flashing.add(g); if (!flashRaf) flashRaf = requestAnimationFrame(flashStep); }
     function flashStep() { flashRaf = 0; if (stopped) return; const now = performance.now(); flashing.forEach(g => { const k = g.userData.fk * Math.max(0, 1 - (now - g.userData.ft) / 420); g.userData.flash(k * k); if (k <= 0) flashing.delete(g); }); kick(80); if (flashing.size) flashRaf = requestAnimationFrame(flashStep); }
     let waveT = 0;
-    function neonTick() { clearInterval(waveT); if (stopped || U.look !== 'neon') return; waveT = setInterval(() => { if (stopped) return clearInterval(waveT); if (!document.hidden && document.hasFocus() && (!T3.decoOn || T3.decoOn())) kick(160); }, 100); }
+    function neonTick() {   // (2026-11-11, as carrom: the frame loop, the board looked up on every frame — a neon board picked after the start froze while aiming)
+      cancelAnimationFrame(waveT); if (stopped) return;
+      const step = () => { if (stopped) return; waveT = requestAnimationFrame(step);
+        if (U && U.look === 'neon' && !document.hidden && document.hasFocus() && (!T3.decoOn || T3.decoOn() || document.documentElement.classList.contains('hand-drag'))) kick(160); };
+      waveT = requestAnimationFrame(step);
+    }
 
     /* ---------- playing a shot back ---------- */
     function playback(sim) {
@@ -463,7 +468,7 @@
         hand.stop();
         document.removeEventListener('keydown', onKey); removeEventListener('resize', onResize); ctx.el.style.touchAction = prevTouch;
         css.remove(); powEl.remove(); taskEl.remove(); if (toastEl) toastEl.remove(); if (cardEl) cardEl.remove(); if (worker) worker.terminate();
-        cancelAnimationFrame(viewRaf); clearInterval(waveT); cancelAnimationFrame(flashRaf); flipBtn.remove(); viewBtn.remove(); document.removeEventListener('keydown', onFlipKey); if (T3.turn) T3.turn(null);
+        cancelAnimationFrame(viewRaf); cancelAnimationFrame(waveT); cancelAnimationFrame(flashRaf); flipBtn.remove(); viewBtn.remove(); document.removeEventListener('keydown', onFlipKey); if (T3.turn) T3.turn(null);
         Object.values(MAT).forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose());
       },
       _debug: { st: () => st, phase: () => phase, shoot: (x, ang, pw) => { if (phase !== 'place') return false; sx = E.nearestFree(st, st.turn, x); shoot({ x: sx, ang, v: vOf(pw) }); return true; }, shootRaw: sh => { if (phase !== 'place') return false; sx = sh.x; shoot(sh); return true; }, at: (x, y) => { const [a, b] = wx(x, y); return T3.project(a, b, Y); }, disc: () => sx },
