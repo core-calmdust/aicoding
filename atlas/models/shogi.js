@@ -77,25 +77,35 @@
   });
   /* ---------- textures ---------- */
   // boxwood (柘植) face of a piece: pale honey with very fine straight grain and a few silky flecks
-  function tsuge(c, W, H, seed, after) { paint(c.canvas, 'tsuge', { seed }, after); }
+  function tsuge(c, W, H, seed, after, tora) { paint(c.canvas, 'tsuge', { seed, tora }, after); }
+  const TORA = { kinki: 1 };   // the sets of 虎杢 boxwood
   function KL(X) {
     const makeNoise = X.makeNoise;
-    const tsuge = (d, W, H, seed) => {
+    const tsuge = (d, W, H, seed, tora) => {
       const N = makeNoise(seed);
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
         const u = x / W, v = y / H;
         const g = N(u * 60, v * 3, 2) * .5 + N(u * 9 + N(v * 2, u, 2) * 2, v * .8, 3) * .5;
         const fleck = N(u * 30, v * 90, 1) > .8 ? .06 : 0;
-        const t = .18 + g * .32 - fleck, i = (y * W + x) * 4;
+        let t = .18 + g * .32 - fleck; const i = (y * W + x) * 4;
+        // 虎杢 (tiger figure; the 錦旗 set, 2026-11-12, the user's photo of a real set): soft bands across the grain, uneven in
+        // width and strength, wavering and fading in places — a silky light/dark shimmer over the fine straight grain
+        if (tora) {
+          const wv = v * 13 + (N(u * 1.3, v * 1.1, 2) - .5) * 2.2 + Math.sin(u * 5 + N(v * 2, u, 1) * 4) * .22;
+          const k = Math.floor(wv), f = wv - k, hs = Math.sin(k * 127.1 + seed * 3.7) * 43758.5453, r = hs - Math.floor(hs);
+          const band = Math.pow(.5 - .5 * Math.cos(f * 6.2832), 1.6) * (.35 + r * .65);
+          const fade = .45 + .55 * N(u * 2.4 + 9, v * 3.1, 2);
+          t += (band - .28) * .5 * fade; t -= .05;
+        }
         d[i] = 218 - t * 64; d[i + 1] = 190 - t * 78; d[i + 2] = 160 - t * 88; d[i + 3] = 255;
       }
     };
     return {
-      tsuge(d, W, H, p) { tsuge(d, W, H, p.seed); },
+      tsuge(d, W, H, p) { tsuge(d, W, H, p.seed, p.tora); },
       // a face from the inscription sheet: gd = the glyph's RGBA (alpha = lacquer, the grey layers = its height)
       glyphFace(d, W, H, p) {
         const gd = p.gd, type = p.type, kind = p.kind, red = type > 8;
-        if (kind === 'map') tsuge(d, W, H, 11 + type); else for (let i = 3; i < d.length; i += 4) d[i] = 255;   // (else: opaque black)
+        if (kind === 'map') tsuge(d, W, H, 11 + type, p.tora); else for (let i = 3; i < d.length; i += 4) d[i] = 255;   // (else: opaque black)
         // a soft shadow under the raised lacquer (map only)
         if (kind === 'map') for (let y = H - 1; y >= 3; y--) for (let x = W - 1; x >= 2; x--) { const j = ((y - 3) * W + (x - 2)) * 4 + 3, a = gd[j] / 255 * .28, i = (y * W + x) * 4; if (a) { d[i] *= 1 - a; d[i + 1] *= 1 - a; d[i + 2] *= 1 - a; } }
         for (let i = 0; i < W * H; i++) {
@@ -149,8 +159,8 @@
   // face: wood + lacquer characters; rough: glossy where lacquered; bump: raised, rounded strokes
   function faceTex(type, kingOu, kind, set = 'moriage') {
     const G = (GLY[set] || GLYPHS)['k' + type + (kingOu ? 'o' : '')];
-    const key = `shf-${set === 'moriage' ? '' : set + '-'}${type}${kingOu ? 'o' : ''}-${kind}-${G ? 'g' : fontOK ? 1 : 0}`;
-    if (G) return canvasTex(key, 256, 296, (c, W, H) => { paint(c.canvas, 'glyphFace', { gd: G.__gd || (G.__gd = G.getContext('2d').getImageData(0, 0, W, H).data), type, kind }); });   // (read once per glyph)
+    const key = `shf-${set === 'moriage' ? '' : set + '-'}${TORA[set] ? 'tora-' : ''}${type}${kingOu ? 'o' : ''}-${kind}-${G ? 'g' : fontOK ? 1 : 0}`;
+    if (G) return canvasTex(key, 256, 296, (c, W, H) => { paint(c.canvas, 'glyphFace', { gd: G.__gd || (G.__gd = G.getContext('2d').getImageData(0, 0, W, H).data), type, kind, tora: TORA[set] }); });   // (read once per glyph)
     return canvasTex(key, 256, 296, (c0, W, H) => {
       const txt = type === 8 && kingOu ? '王将' : FRONT[type], red = type > 8;
       const ink = c => {
@@ -359,14 +369,15 @@
     return (geoCache[sz] = geo);
   }
   const matCache = {};
-  let sideM = null;
+  let sideM = null, sideT = null;
   function pieceMats(type, ou, set = 'moriage') {
     const key = set + ':' + type + (ou ? 'o' : '');
     if (matCache[key]) return matCache[key];
     if (set !== 'moriage') glyphsOf(set);
     const TT = T();
     const face = new TT.MeshPhysicalMaterial({ map: faceTex(type, ou, 'map', set), roughnessMap: faceTex(type, ou, 'rough', set), bumpMap: faceTex(type, ou, 'bump', set), bumpScale: .032, roughness: 1, clearcoat: .55, clearcoatRoughness: .28 });
-    const side = sideM || (sideM = M({ map: X.canvasTex('tsugeSide', 128, 128, (c, W, H) => tsuge(c, W, H, 3)), roughness: .5, bumpScale: .002 }));
+    const side = TORA[set] ? (sideT || (sideT = M({ map: X.canvasTex('tsugeSideTora', 128, 128, (c, W, H) => tsuge(c, W, H, 3, null, 1)), roughness: .5, bumpScale: .002 })))
+      : sideM || (sideM = M({ map: X.canvasTex('tsugeSide', 128, 128, (c, W, H) => tsuge(c, W, H, 3)), roughness: .5, bumpScale: .002 }));
     return (matCache[key] = [face, side]);
   }
   function upgrade(set) {   // the faces made before the set's glyphs arrived

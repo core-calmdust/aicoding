@@ -1,5 +1,5 @@
-# Writes the 水無瀬 inscriptions of the unpromoted pieces into images/atlas/shogi-glyphs-minase.png, traced from a photo of a real
-# 水無瀬書 盛り上げ set (2026-11-12; the user's reference photo, not kept in the repo): python3 atlas/tools/shogi-glyphs-minase-photo.py <photo>
+# Writes the 水無瀬 inscriptions of the unpromoted pieces into images/atlas/shogi-glyphs-<set>.png, traced from a photo of a real
+# 水無瀬書 盛り上げ set (2026-11-12; the user's reference photo, not kept in the repo): python3 atlas/tools/shogi-glyphs-photo.py <photo> [minase|kinki]
 # The photo shows the 40 pieces face up on dark cloth in 8 rows: 玉將 王將 / 歩 角 角 飛 飛 歩 / 歩 金×4 歩 / 歩 銀×4 歩 / 歩 桂×4 歩 /
 # 歩 香×4 歩 / 歩×6 / 歩×6.
 #  - pieces: the wood is found by its colour (Lab b), rows by connected regions, the pieces of a row by the valleys between them
@@ -10,8 +10,8 @@
 #    widened by the photo piece's width/height over the 3D piece's (atlas/models/shogi.js pieceGeo) so the characters keep their shape
 #  - 王將: the photo's 王將 is washed out by glare, so it is the 玉將 without its dot
 # The promoted sides (not in the photo) stay as shogi-glyphs-faithful.py made them (LuffyKudo's SVGs): run that first, then this.
-# Also writes shogi/pieces/minase/traced.png (the 9 traced inscriptions as alpha masks in the photo pieces' own frames, 512×592
-# each, FU KY KE GI KA HI KI GY OU) for atlas/tools/shogi-minase-svg.py, which draws the 2D pieces from them.
+# Also writes shogi/pieces/<set>/traced.png (the 9 traced inscriptions as alpha masks in the photo pieces' own frames, 512×592
+# each, FU KY KE GI KA HI KI GY OU) for atlas/tools/shogi-traced-svg.py, which draws the 2D pieces from them.
 import os, sys, numpy as np, cv2
 from scipy import ndimage as ndi
 from scipy.signal import find_peaks
@@ -20,34 +20,48 @@ from PIL import Image, ImageFilter
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
 K, CW, CH, SS = 8, 256, 296, 4
 CODES = ['FU', 'KY', 'KE', 'GI', 'KA', 'HI', 'KI', 'GY', 'TO', 'NY', 'NK', 'NG', 'UM', 'RY', 'OU']
-KIND = {'GY': [(0, 0)], 'KA': [(1, 1), (1, 2)], 'HI': [(1, 3), (1, 4)], 'KI': [(2, c) for c in range(1, 5)], 'GI': [(3, c) for c in range(1, 5)],
-        'KE': [(4, c) for c in range(1, 5)], 'KY': [(5, c) for c in range(1, 5)],
-        'FU': [(r, c) for r in range(1, 6) for c in (0, 5)] + [(r, c) for r in (6, 7) for c in range(6)]}
+SET = sys.argv[2] if len(sys.argv) > 2 else 'minase'
+four = lambda r: [(r, c) for c in range(1, 5)]
+LAY = {   # rows of the photo, the pieces of each kind (row, column), and whether the kings are lit hard (glare)
+    'minase': dict(rows=[2, 6, 6, 6, 6, 6, 6, 6], glare=True, dy={'GY': .05, 'OU': .05},   # (dy: the kings sat high — their roof is lost in the glare; the user, 2026-11-12)
+                   kind={'GY': [(0, 0)], 'KA': [(1, 1), (1, 2)], 'HI': [(1, 3), (1, 4)], 'KI': four(2), 'GI': four(3), 'KE': four(4), 'KY': four(5),
+                   'FU': [(r, c) for r in range(1, 6) for c in (0, 5)] + [(r, c) for r in (6, 7) for c in range(6)]}),
+    # 錦旗: 玉將 王將 / 角 角 飛 飛 / 歩 金×4 歩 / 歩 銀×4 歩 / 歩 桂×4 歩 / 歩 香×4 歩 / 歩×6 / 歩×6
+    'kinki': dict(rows=[2, 4, 6, 6, 6, 6, 6, 6], glare=False, kind={'GY': [(0, 0)], 'OU': [(0, 1)], 'KA': [(1, 0), (1, 1)], 'HI': [(1, 2), (1, 3)], 'KI': four(2), 'GI': four(3), 'KE': four(4), 'KY': four(5),
+                  'FU': [(r, c) for r in range(2, 6) for c in (0, 5)] + [(r, c) for r in (6, 7) for c in range(6)]})}[SET]
+KIND = LAY['kind']; BW = float(sys.argv[3]) if len(sys.argv) > 3 else 25   # (the wood's Lab b threshold)
 SZ = {'FU': 1, 'KY': 2, 'KE': 2, 'GI': 3, 'KI': 3, 'KA': 4, 'HI': 4, 'GY': 5, 'OU': 5}
 ASP3D = lambda sz: 2 * (.385 + .009 * (sz - 1)) / .94          # the 3D face's width / height (pieceGeo)
 
 im = cv2.imread(sys.argv[1]); lab = cv2.cvtColor(im, cv2.COLOR_BGR2LAB).astype(np.float32)
-wood = ndi.binary_opening(lab[:, :, 2] - 128 > 25, iterations=1)
+wood = ndi.binary_opening(lab[:, :, 2] - 128 > BW, iterations=1)
 filled = ndi.binary_fill_holes(ndi.binary_closing(wood, iterations=2))
 inner = ndi.binary_erosion(filled, iterations=5)
 
 def pieces():
-    lb, n = ndi.label(ndi.binary_erosion(filled, iterations=3)); rows = []
+    lb, n = ndi.label(ndi.binary_erosion(filled, iterations=3)); comps = []
     for i, sl in enumerate(ndi.find_objects(lb)):
-        if (lb[sl] == i + 1).sum() >= 3000: rows.append((sl[0].start - 3, sl[0].stop + 3, sl[1].start - 3, sl[1].stop + 3))
-    rows.sort(); out = []
-    for j, (y0, y1, x0, x1) in enumerate(rows):
-        if j == 0: cuts = [0, (x1 - x0) // 2, x1 - x0]         # (the two kings: glare breaks the mask)
-        else:
-            col = ndi.gaussian_filter1d(filled[y0:y1, x0:x1].sum(0).astype(float), 1.2)
-            pk, _ = find_peaks(-col, prominence=4, distance=40); cuts = [0] + [p for p in pk if 20 < p < len(col) - 20] + [len(col)]
-        out.append([(y0, y1, x0 + a, x0 + c) for a, c in zip(cuts, cuts[1:])])
+        if (lb[sl] == i + 1).sum() >= 3000: comps.append((sl[0].start - 3, sl[0].stop + 3, sl[1].start - 3, sl[1].stop + 3))
+    comps.sort(key=lambda c: (c[0] + c[1]) / 2); rows = []          # touching pieces are one region; regions at one height are a row
+    for c in comps:
+        if rows and abs((c[0] + c[1]) / 2 - np.mean([(d[0] + d[1]) / 2 for d in rows[-1]])) < 40: rows[-1].append(c)
+        else: rows.append([c])
+    out = []
+    for j, row in enumerate(rows):
+        ps = []
+        for y0, y1, x0, x1 in sorted(row, key=lambda c: c[2]):
+            if j == 0 and len(row) == 1: cuts = [0, (x1 - x0) // 2, x1 - x0]         # (the two kings: glare can break the mask)
+            else:
+                col = ndi.gaussian_filter1d(filled[y0:y1, x0:x1].sum(0).astype(float), 1.2)
+                pk, _ = find_peaks(-col, prominence=4, distance=40); cuts = [0] + [p for p in pk if 20 < p < len(col) - 20] + [len(col)]
+            ps += [(y0, y1, x0 + a, x0 + c) for a, c in zip(cuts, cuts[1:])]
+        out.append(ps)
     return out
-P = pieces(); assert [len(r) for r in P] == [2, 6, 6, 6, 6, 6, 6, 6], [len(r) for r in P]
+P = pieces(); assert [len(r) for r in P] == LAY['rows'], [len(r) for r in P]
 
 def inkmap(box):
     y0, y1, x0, x1 = box; c = lab[y0:y1, x0:x1]; m = inner[y0:y1, x0:x1]; b = c[:, :, 2] - 128; L = c[:, :, 0]
-    bw = np.median(b[m & (b > 25)]); Lw = np.median(L[m & (b > bw * .85)])
+    bw = np.median(b[m & (b > BW)]); Lw = np.median(L[m & (b > bw * .85)])
     ch = np.clip((bw * .85 - b) / (bw * .6), 0, 1); dk = np.clip((Lw * .78 - L) / (Lw * .38), 0, 1)
     up = lambda a: cv2.resize(a.astype(np.float32), None, fx=K, fy=K, interpolation=cv2.INTER_CUBIC)
     return np.maximum(up(dk), np.clip((up(ch) - .62) / .2, 0, 1)) * (up(m) > .5)
@@ -83,7 +97,7 @@ def glyph(code):
     ref = ms[best]; al = [ref] + [x for x in (align(ref, m) for i, m in enumerate(ms) if i != best) if x is not None]
     al = [a for a in al if (G(a, 4) * G(ref, 4)).sum() > .75 * (G(ref, 4) ** 2).sum()]
     avg = np.median(al, 0) if len(al) > 2 else np.mean(al, 0)
-    if len(al) == 1: avg = king(avg)
+    if len(al) == 1 and LAY['glare']: avg = king(avg)
     RAW[code] = avg; cen = lambda m: np.array(ndi.center_of_mass(m))
     if len(al) > 1: avg = ndi.shift(avg, np.mean([cen(m) for m in ms], 0) - cen(avg), order=1)   # placed where the copies have it on average
     a = np.clip((G(avg, 3.0 if len(al) > 2 else 5.0) - .5) / .22 + .5, 0, 1)   # (two copies: the mean is rougher)
@@ -122,15 +136,17 @@ def cell(a, code, asp):
     out = np.zeros((CH, CW, 4), np.uint8); out[:, :, 0] = out[:, :, 1] = out[:, :, 2] = np.round(255 * (1 - h)).astype(np.uint8); out[:, :, 3] = np.array(A)
     return Image.fromarray(out, 'RGBA')
 
-path = os.path.join(ROOT, 'images', 'atlas', 'shogi-glyphs-minase.png'); sheet = Image.open(path).convert('RGBA')
+path = os.path.join(ROOT, 'images', 'atlas', f'shogi-glyphs-{SET}.png'); sheet = Image.open(path).convert('RGBA')
 tr = Image.new('L', (512 * 9, 592), 0); TR = ['FU', 'KY', 'KE', 'GI', 'KA', 'HI', 'KI', 'GY', 'OU']; info = []
-for code in [c for c in KIND if c != 'GY'] + ['GY', 'OU']:
-    if code == 'OU': a, n, asp = no_dot(gy), 1, gasp
+for code in [c for c in KIND if c not in ('GY', 'OU')] + ['GY', 'OU']:
+    if code == 'OU' and 'OU' not in KIND: a, n, asp = no_dot(gy), 1, gasp
     else: a, n, asp = glyph(code)
     if code == 'GY': gy, gasp = a, asp
+    dy = LAY.get('dy', {}).get(code, 0)
+    if dy: a = ndi.shift(a, (dy * a.shape[0], 0), order=1)
     i = CODES.index(code); box = ((i % 5) * CW, (i // 5) * CH)
     sheet.paste(Image.new('RGBA', (CW, CH), (255, 255, 255, 0)), box); sheet.paste(cell(a, code, asp), box)
     tr.paste(Image.fromarray(np.round(cv2.resize(a, (512, 592), interpolation=cv2.INTER_AREA) * 255).astype(np.uint8)), (TR.index(code) * 512, 0))
     info.append(f'{code}:{asp:.3f}'); print(code, n, round(asp, 3))
-sheet.save(path); tr.save(os.path.join(ROOT, 'shogi', 'pieces', 'minase', 'traced.png'), optimize=True)
+sheet.save(path); tr.save(os.path.join(ROOT, 'shogi', 'pieces', SET, 'traced.png'), optimize=True)
 print('photo pieces width/height —', ' '.join(info))
