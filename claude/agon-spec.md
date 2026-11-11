@@ -67,7 +67,10 @@ URL: https://core-calmdust.github.io/aicoding/agon/ ／ トップはアルケル
   - 計測ページ `agon/bench.html` に性能コアの数（`MTEngine.perfThreads()`、Mac で10）のスレッド数と、局面ごとの比の幾何平均の列を足した（ほかのゲームの計測ページと同じ形）。PRO の既定のスレッド数は `MTSplit.autoThreads()`（Mac で8）のまま。10スレッドが8より速いかは次の Mac の計測（`bench-all.html`）で見る。
   - **PRO の既定のスレッド数を性能コアの数に（2026-11-11）**：ユーザーの Mac（M4 Pro 14コア＝高性能10＋高効率4、Chrome）の `bench-all.html`（同じ深さまでの時間、1スレッド比、算術／幾何平均）で 8 ×3.55／3.53、10 ×3.59／3.56、14 ×3.70／3.76。10スレッドは8と同等以上なので、PRO の時間で考えるレベルの既定を `MTSplit.autoThreads()`（min(コア数 − 1, 7) + 1、Mac で8）から、ほかのゲームと同じ `ProSet.defThreads()`（`MTEngine.perfThreads()`＝性能コアまで、Mac で10。ほかの PC は全コア）にした（`agon/app.js`）。PRO で全コアまで選べるのは同じ。PRO でない対局（Lv.20〜23・レート戦）のスレッド数、大百科（atlas）の扱いは変えていない。
 
-## αβ を C に（2026-11-11 の点検、未実施）
-- ユーザー決定「αβ 探索の本体を C に移す」（アマゾンズ → ウゴルキ → アゴン → コナネ）の点検：このゲームはルートより下の探索（`search`）がすでに core.c で、JS に残っているのはルートのループ（`bestMove`／`rootValues`）と `shared/mtsplit.js` のマルチスレッドだけ。1スレッドの得はほぼない（ルートの1手ごとに1回 C を呼ぶだけ）。得があるのはマルチスレッドで、同じ形のウゴルキを Praline の YBW（`core_mt.wasm`）にした結果は歩調合わせのシミュレーションで8スレッド ×3.30 → ×6.79（claude/ugolki-spec.md「αβ を C に・Praline の YBW」）。PR #1606 の「共有表を JS 経由で引く損は数%」は1スレッドの測定で、YBW の分け方（mtsplit はルートと本筋だけ、Praline はどの節も）の差は含んでいなかった。
-- → **同じ作りで移す価値がある（次の作業）**：ウゴルキの手順（core.c に `-DMT` の TLS・ロックなしの置換表・分割点とつなぎ、`ab_best`／`ab_values`、engine.js の `MX`、`mt-helper.js`、app.js の `MTEngine.use`、bench の「C・YBW」、`tools/mtsim` の `g_<game>.h`、前の版との一致の確認 `tools/check_ab.js`）をそのまま当てる。今回は時間の都合でウゴルキまで。
-
+## αβ を C に・Praline の YBW（2026-11-11、ウゴルキと同じ手順）
+- 前の状態：ルートより下の探索（`search`・`qsearch`）はすでに core.c。JS に残っていたのはルートのループ（`bestMove`／`rootValues`）と `shared/mtsplit.js` のマルチスレッド。
+- **移したもの**：ルートのループを core.c の `ab_best`／`ab_values` に（同じ順・同じ数え方。JS の共有表 `SH` のときだけ前の JS のループ）。`core_mt.wasm`（`-DMT`）：探索の状態はスレッドごと、置換表は共有メモリに1つ（2^21 項目、ロックなし。データの語に手・根の手番 `rs`・h2 の下位22ビット。1スレッドは前と同じ60万件で全消去）、Praline の YBW（節は1手目のあと・残り深さ3以上、LMR は元の順番 `lg` で1スレッドと同じ、ルートは最善手が1手目のあと・解析は最初から、分割点は局面と繰り返しの履歴（最大600）を持つ）。根の手番 `rootSide` と上限手数 `RCAP` は仕事ごとに lead が設定（共有）。宣言のメモリ 530 ページ。
+- **ページ**：分離できたページの解析・ヒント・コーチ・検討・時間で考えるレベル・PRO（2スレッド以上）は `MTEngine.use`（lead＝`engine.js?v=7-ab&mt=1`、`mt-helper.js`）。分離できないページ・組が使用中のときは mtsplit。大百科は1スレッドの Worker（版だけ更新）。
+- **一致**（`node tools/check_ab.js <前の engine のフォルダ>`）：2つのルール×2局の各手と、深さ・局面数で決まるレベル（7段階）424回の探索で、**手・値・深さ・局面数が前の版と全一致**（core-wasm.js、core_mt.wasm の1スレッド）。
+- **速さ（作業機の歩調合わせのシミュレーション、局面数の時計、`mtstep` と同じ5局面・深さ7）**：後＝`tools/mtsim`（`g_agon.h`・`agon/tools/mtsim_pos.js`）2／4／8 **×1.89／3.58／6.14**、遅いコアあり 8／10／14 **×6.14／6.41／6.51**。前＝mtsplit の共有・YBW（`mtstep agon --depth 7`）×1.22／1.64／2.28（Mac の実測は8スレッド ×3.32）。1スレッドは同じ。
+- headless Chrome（作業機、2スレッド、分離あり）：対局ページの各レベル・解析・ヒント・PRO 2スレッド、`bench.html`（C・YBW／共有・YBW／非共有）、大百科の Worker が動く。Mac で `agon/bench.html` を測り直す（C・YBW の列）。
