@@ -18,9 +18,11 @@
   X.mount(document.getElementById('gl'));
   // a quiet Italian game, move 8 or so
   if (q.get('game') === 'shogi') {   // (the shogi board in its start position)
-    const g = X.MODELS.shogi(true), Y = g.userData.top, SG = X.shogi, T = { p: 1, l: 2, n: 3, s: 4, b: 5, r: 6, g: 7, k: 8 };
-    'lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL'.split('/').forEach((row, r) => { let f = 0; for (const ch of row) { if (/\d/.test(ch)) { f += +ch; continue; }
-      const up = ch === ch.toUpperCase(), p = SG.piece(T[ch.toLowerCase()], !up, !up && ch === 'k'), [x, z] = SG.cell(f, r); p.position.set(x, Y, z); g.add(p); f++; } });
+    // ?sfen=… (a variant's board: its size from the SFEN)
+    const SF = q.get('sfen') || 'lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL', rows = SF.split('/'), NH = rows.length, NW = rows[0].replace(/\+/g, '').split('').reduce((n, c) => n + (/\d/.test(c) ? +c : 1), 0);
+    const g = X.MODELS.shogi(true, NW !== 9 || NH !== 9 ? { w: NW, h: NH } : undefined), Y = g.userData.top, SG = X.shogi, T = { p: 1, l: 2, n: 3, s: 4, b: 5, r: 6, g: 7, k: 8 };
+    rows.forEach((row, r) => { let f = 0, pr = 0; for (const ch of row) { if (/\d/.test(ch)) { f += +ch; continue; } if (ch === '+') { pr = 8; continue; }
+      const up = ch === ch.toUpperCase(), p = SG.piece(T[ch.toLowerCase()] + pr, !up, !up && ch === 'k'); p.position.set(-NW * SG.CW / 2 + SG.CW * (f + .5), Y, -NH * SG.CH / 2 + SG.CH * (r + .5)); g.add(p); f++; pr = 0; } });
     g.scale.setScalar(.8); X.show('shogi', g, { still: true }); X.quiet(true); X.snap();
     setTimeout(() => { X.snap(); X.kick(1500); setTimeout(() => { window.READY = true; }, 1600); }, 300); return;
   }

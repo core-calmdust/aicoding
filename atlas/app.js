@@ -760,6 +760,36 @@
     else $('gl').innerHTML = `<div style="position:absolute;inset:0;display:grid;place-items:center"><img src="${artSrc(g)}" alt="" style="width:min(70vw,420px)"></div>`;
     bvCard(g, id, push, flown);
   }
+  /* ---------- 種目 (shogi, 2026-11-12): the variants as cards with their starting position drawn — like the encyclopedia's own pages;
+     every one plays on the 3D table (games/shogi-play.js), the full version opens with it chosen (?variant=) ---------- */
+  const VCH = { p: '歩', l: '香', n: '桂', s: '銀', b: '角', r: '飛', g: '金', k: '玉', '+p': 'と' };
+  function vSvg(ad, v, cls) {
+    const V = ad.variants, [W, H] = V.dims(v), cw = 10, ch = 11, pd = 4, w = W * cw + pd * 2, h = H * ch + pd * 2;
+    let o = `<svg class="${cls}" viewBox="0 0 ${w} ${h}" aria-hidden="true"><rect x="1" y="1" width="${w - 2}" height="${h - 2}" rx="2.5" fill="#e9c88f" stroke="#b5874a" stroke-width="1.2"/>`;
+    for (let i = 0; i <= W; i++) o += `<path d="M${pd + i * cw} ${pd}v${H * ch}" stroke="#7a5428" stroke-width="${i % W ? .35 : .6}"/>`;
+    for (let j = 0; j <= H; j++) o += `<path d="M${pd} ${pd + j * ch}h${W * cw}" stroke="#7a5428" stroke-width="${j % H ? .35 : .6}"/>`;
+    V.sfen(v).split('/').forEach((row, r) => { let c = 0;
+      for (let i = 0; i < row.length; i++) { let x = row[i]; if (/\d/.test(x)) { c += +x; continue; } if (x === '+') x += row[++i];
+        const gote = x === x.toLowerCase(), key = x.toLowerCase(), q = v === 'random' && (r < 2 || r > H - 3) ? '?' : key === 'k' && !gote ? '王' : VCH[key] || '?';
+        const cx = pd + (c + .5) * cw, cy = pd + (r + .5) * ch;
+        o += `<g transform="translate(${cx} ${cy})${gote ? ' rotate(180)' : ''}"><path d="M0 -4.6L3.3 -3.1L4 4.4H-4L-3.3 -3.1Z" fill="${q === '?' ? '#fff3d8' : '#fbe7c2'}" stroke="#a8763a" stroke-width=".45"/><text y="2.4" text-anchor="middle" font-size="5.2" font-weight="700" fill="${key === '+p' ? '#c0281c' : '#2a1a0e'}" font-family="'Hiragino Mincho ProN','Yu Mincho','Noto Serif CJK JP',serif">${q}</text></g>`; c++; } });
+    return o + '</svg>';
+  }
+  function varBind(g, ad) {
+    const bt = $('bvVar'), V = ad.variants;
+    const paint = () => { const v = bt.dataset.v || ''; bt.innerHTML = `${vSvg(ad, v, 'vico')}<span>${esc(V.name(v, lang))}</span><i>▾</i>`; };
+    paint();
+    bt.onclick = () => {
+      try { SFX.tap && SFX.tap(); } catch (x) {}
+      const cur = bt.dataset.v || '', sh = document.createElement('div'); sh.className = 'lvsheet vsheet';
+      sh.innerHTML = `<div class="lvs-in" role="listbox"><div class="lvs-h">${esc(V.label(lang))}<button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div><div class="lvs-l vgrid">${V.list.map(v => { const [W, H] = V.dims(v);
+        return `<button type="button" role="option" data-v="${esc(v)}" class="vcard${v === cur ? ' on' : ''}">${vSvg(ad, v, 'vsvg')}<span class="vtx"><span class="vnm">${esc(V.name(v, lang))}</span><em>${W}×${H}</em></span><small>${esc(V.desc(v, lang))}</small></button>`; }).join('')}</div></div>`;
+      document.body.appendChild(sh); requestAnimationFrame(() => sh.classList.add('on'));
+      const on = sh.querySelector('.vcard.on'); if (on) setTimeout(() => on.scrollIntoView({ block: 'nearest' }), 60);
+      const close = () => { if (sh.classList.contains('out')) return; sh.classList.add('out'); sh.classList.remove('on'); setTimeout(() => sh.remove(), 240); };
+      sh.onclick = e => { const b = e.target.closest('[data-v]'); if (b) { bt.dataset.v = b.dataset.v; pref[g.id + ':var'] = b.dataset.v; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (x) {} paint(); try { SFX.tap && SFX.tap(); } catch (x) {} close(); return; } if (e.target === sh || e.target.closest('.lvs-x')) close(); };
+    };
+  }
   function bvCard(g, id, push, flown) {
     const ad = glOK && window.Atlas3D && Atlas3D[id], r = P[id];
     const rows = [];
@@ -768,6 +798,7 @@
     // shogi / chess on PC (2026-11-10): the tabs are 対戦 · レート戦 · パズル · レッスン — 二人で対戦 is the first choice of the 相手 list
     const MX = !!(MXG[id] && ad && ad.table && FULL_SKIN[id] && !matchMedia('(max-width: 819px)').matches);
     const lv = MX && pref[id + ':mode'] === 'pvp' ? 0 : pref[id + ':lv'] || 1, side = pref[id + ':side'] || 1;
+    const vcur = ad && ad.variants && ad.variants.list.includes(pref[id + ':var']) ? pref[id + ':var'] : '';   // 種目 (shogi: its variants, 2026-11-12)
     const bsz = ad && ad.sizes ? (ad.sizes.includes(+pref[id + ':size']) ? +pref[id + ':size'] : ad.sizes.includes(ad.size0) ? ad.size0 : ad.sizes[0]) : 0;   // board size (go, hex, tafl); adapter.size0 = the default
     const modes = MX ? mxModes(id) : ad && ad.modes, mode = modes && modes.includes(pref[id + ':mode']) ? pref[id + ':mode'] : 'ai';
     // board size (go): on the same row as the time control when there is one
@@ -777,7 +808,7 @@
       <div class="tags">${g.tags.filter(k => k !== 'mobile').map(tagHtml).join('')}</div>
       <p class="bvab">${esc(t('about.' + id))}</p>
       ${rows.length ? `<div class="pgl">${rows.map(([l, a, b]) => `<span>${l}</span><span class="bar" style="--c:${g.color}"><i style="width:${Math.min(100, a / b * 100)}%"></i></span><b>${Math.min(a, b)}/${b}</b>`).join('')}</div>` : ''}
-      </div><div class="R">${modes ? `<div class="mtab3${MX ? ' mtab4' : ''}" id="bvMode">${modes.map(m => `<button type="button" data-m="${m}" class="${m === mode ? 'on' : ''}">${MX ? t(MX_LBL[m]) : t('bv.m.' + m)}</button>`).join('')}</div>` : ''}${ad ? `<div class="mbody" id="bvMBody">${modes ? `<div class="mnote" id="bvMNote"></div>` : ''}<div class="opts" id="bvOpts">${ad.levels ? `<label>${t(MX ? 'bv.opp' : 'bv.level')}<select id="bvLv">${MX ? `<option value="0" ${lv === 0 ? 'selected' : ''}>${esc(t('bv.m.pvp'))}</option>` : ''}${Array.from({ length: ad.levels }, (_, i) => `<option value="${i + 1}" ${i + 1 === lv ? 'selected' : ''}>Lv.${i + 1}${ad.levelInfo && lvNm(ad.levelInfo(i + 1, lang), i + 1, lang, ad.levels) ? ' ' + esc(lvNm(ad.levelInfo(i + 1, lang), i + 1, lang, ad.levels)) : ''}</option>`).join('')}</select></label>` : ''}
+      </div><div class="R">${modes ? `<div class="mtab3${MX ? ' mtab4' : ''}" id="bvMode">${modes.map(m => `<button type="button" data-m="${m}" class="${m === mode ? 'on' : ''}">${MX ? t(MX_LBL[m]) : t('bv.m.' + m)}</button>`).join('')}</div>` : ''}${ad ? `<div class="mbody" id="bvMBody">${modes ? `<div class="mnote" id="bvMNote"></div>` : ''}${ad.variants ? `<div class="opts vopts" id="bvVarRow"><label class="vrow">${esc(ad.variants.label(lang))}<button type="button" class="lvpick vpick" id="bvVar" data-v="${esc(vcur)}"></button></label></div>` : ''}<div class="opts" id="bvOpts">${ad.levels ? `<label>${t(MX ? 'bv.opp' : 'bv.level')}<select id="bvLv">${MX ? `<option value="0" ${lv === 0 ? 'selected' : ''}>${esc(t('bv.m.pvp'))}</option>` : ''}${Array.from({ length: ad.levels }, (_, i) => `<option value="${i + 1}" ${i + 1 === lv ? 'selected' : ''}>Lv.${i + 1}${ad.levelInfo && lvNm(ad.levelInfo(i + 1, lang), i + 1, lang, ad.levels) ? ' ' + esc(lvNm(ad.levelInfo(i + 1, lang), i + 1, lang, ad.levels)) : ''}</option>`).join('')}</select></label>` : ''}
         ${ad.sides ? `<label>${t('bv.side')}<select id="bvSide"><option value="1" ${side === 1 ? 'selected' : ''}>${t('bv.first')}</option><option value="2" ${side === 2 ? 'selected' : ''}>${t('bv.second')}</option></select></label>` : ''}
         ${ad.sizes && !(ad.table && TCS[ad.clock]) && !ad.house ? sizeHtml : ''}${ad.house ? `<button type="button" class="hrb" id="bvHouse"><span>${esc(ad.house.label(lang))}</span><b></b><i aria-hidden="true">⚙</i></button>` : ''}</div>
         ${ad.table && TCS[ad.clock] ? `<div class="opts tcrow" id="bvTcRow"><label>${t('tc.h')}<button type="button" class="lvpick" id="bvTc" data-v="${esc(tcOf(ad, pref[id + ':tc']).id)}"></button></label>${ad.sizes ? sizeHtml : ''}</div>` : ''}${MX ? mxPanels(g, ad) : ''}</div>${ad.house && ad.sizes ? `<div class="opts szrow" id="bvSzRow">${sizeHtml}</div>` : ''}` : (g.id === 'sudoku' || g.id === 'speedsudoku' || g.id === 'samegame' || g.id === 'jailbreak' || g.id === 'amazons' || g.id === 'peg' ? `<div class="soon ext"><b>${t('bv.ext')}</b><span>${t('bv.extSub', { name: esc(gname(g)) })}</span></div>` : CARD2D[g.id] ? `<div class="soon ext"><b>${t('bv.card2d')}</b><span>${t('bv.card2dSub', { name: esc(gname(g)) })}</span></div>` : `<div class="soon">${t('bv.soon')}</div>`)}
@@ -794,6 +825,7 @@
       // one fixed height for the settings area in every mode (the tallest mode's): the note of a mode without a level fills the space
       const body = $('bvMBody');
       const layout = m => {
+        if ($('bvVarRow')) $('bvVarRow').hidden = m !== 'ai' && m !== 'pvp';   // (種目: AI games and two players, not rated games)
         if (MX) { $('bvOpts').hidden = m !== 'ai'; $('bvMNote').hidden = true; if ($('bvTcRow')) $('bvTcRow').hidden = m !== 'ai'; mxLayout(m); return; }
         $('bvOpts').hidden = m !== 'ai'; $('bvMNote').hidden = m === 'ai';
         if ($('bvTcRow')) $('bvTcRow').hidden = !(ad.tableModes || ['ai']).includes(m);   // the time control is for table play only
@@ -814,6 +846,7 @@
       setTimeout(() => window.__bvModeRz && window.__bvModeRz(), 0); if (document.fonts) document.fonts.ready.then(() => window.__bvModeRz && window.__bvModeRz());
     }
     if ($('bvRules')) $('bvRules').onclick = startRules;
+    if ($('bvVar')) varBind(g, ad);
     if (MX) mxBind(g, ad);
     $('bvRec').setAttribute('aria-label', t('rec.btn')); $('bvRec').title = t('rec.btn'); $('bvRec').onclick = () => { try { SFX.tap && SFX.tap(); } catch (e) {} openRec(g); };   // (the cup: phones right of the ヒストリア pill, PC beside the place chip)
     placeRec();
@@ -1204,7 +1237,8 @@
       if (mode === 'rated' && $('bvRtOpp')) { const opp = $('bvRtOpp').value, c = rtTc(g.id, opp); if (opp === 'online') mode = 'online'; if (c) tc = c.id; }
       if (!over) pref[g.id + ':mode'] = mode === 'online' ? 'rated' : mode; pref[g.id + ':lv'] = lv; pref[g.id + ':side'] = side; if (size) pref[g.id + ':size'] = size; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {}
       if (window.AtlasLoading) AtlasLoading.show(lang);   // straight to the loading screen (no camera move behind it)
-      setTimeout(() => { location.href = '../' + g.href + '?skin=atlas' + (mode !== 'ai' ? '&mode=' + mode + (sub ? '&sub=' + sub : '') + (tc ? '&tc=' + tc : '') : (lv ? '&lv=' + lv : '') + '&side=' + side + (size ? '&size=' + size : '')); }, 420);
+      const vq = $('bvVar') && $('bvVar').dataset.v && (mode === 'ai' || mode === 'pvp') ? '&variant=' + encodeURIComponent($('bvVar').dataset.v) : '';   // (種目: the full game's dialog opens with it chosen)
+      setTimeout(() => { location.href = '../' + g.href + '?skin=atlas' + vq + (mode !== 'ai' ? '&mode=' + mode + (sub ? '&sub=' + sub : '') + (tc ? '&tc=' + tc : '') : (lv ? '&lv=' + lv : '') + '&side=' + side + (size ? '&size=' + size : '')); }, 420);
       return;
     }
     if (pend3d) { pend3d.then(() => startPlay(kind)); return; }   // the board isn't on the table yet
@@ -1253,7 +1287,8 @@
     clearTimeout(hudPopT); hudPopT = setTimeout(() => { el.classList.add('out'); setTimeout(() => { el.remove(); if (hudPopTxt === txt) hudPopTxt = ''; }, 300); }, Math.max(3500, txt.length * 120));
   }
 
-    session = sess = ad.start({ el: $('gl'), Table3D, lang, t, level, side, size, mode: pmode, bar: true, hud: h => { $('hud').innerHTML = h; hudFit(); if (tbOn && session === sess) TB.sync(); },   // (the bar's buttons follow every state change at once)
+    const variant = $('bvVar') && pmode !== 'rated' ? $('bvVar').dataset.v || '' : '';
+    session = sess = ad.start({ el: $('gl'), Table3D, lang, t, level, side, size, variant, mode: pmode, bar: true, hud: h => { $('hud').innerHTML = h; hudFit(); if (tbOn && session === sess) TB.sync(); },   // (the bar's buttons follow every state change at once)
       onTurn: (s, info) => { if (tbOn && session === sess) TB.turn(s, info); if (npcT && session === sess && info) npcT.turn(info.ply); },
       onEnd: res => {
         if (session === sess) TB.end();
