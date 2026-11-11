@@ -137,7 +137,7 @@ let aiW = makeWorker(), anaW = makeWorker();
 // node-limited levels (Lv.1–18) stay on the one-thread workers (the same moves on every device)
 const mtSetup = (start, mv, v) => { const p = E.Pos.from(start, v), a = [E.VID[p.v], p.turn === P2 ? 1 : 0]; for (let i = 0; i < p.b.length; i++) a.push(p.b[i]); a.push(mv.length); for (const m of mv) a.push(mFrom(m) | (mTo(m) << 8)); return a; };
 const MTP = window.MTEngine ? MTEngine.use({
-  wasm: 'engine_mt.wasm?v=20261111ybw1', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=2', slot: 2 << 20, initial: 1152, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
+  wasm: 'engine_mt.wasm?v=20261111pl1', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=2', slot: 2 << 20, initial: 1152, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => Date.now(), progress: () => {} } }),
   help: m => ({ setup: mtSetup(m.start, m.moves || [], m.v) }),
 }) : null;

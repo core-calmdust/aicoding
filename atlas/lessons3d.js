@@ -233,7 +233,71 @@
       return Math.max(0, Math.round(20 * (1 - (winP(best, 400) - winP(mine, 400)) / .45)));
     },
   };
-  const DATA = { shogi: SHOGI, chess: CHESS };
+  /* reversi (2026-11-11): the steps of lessons.json (5 problems: one move each, scored by the stored per-move values like the full
+     game's problemPoints) and the opening course (reversi/opcourse.js: a step per named line — the line played move by move,
+     then up to 5 of its positions, the line move 20 points, others by the stored evaluations). Progress: 'reversi-emerald-lessons'
+     ({ best: 0–100, clear } per lesson id, and per 'opl:<moves>' for the course). A position here is '<64 cells>:<side to move>'. */
+  const RV_TABS = ['op-tiger', 'op-tigervar', 'op-compos', 'op-rosebill', 'op-rabbit', 'op-roseswallow', 'op-cow', 'op-bull', 'op-cowdeep'];
+  const rvSq = m => (+m[1] - 1) * 8 + 'abcdefgh'.indexOf(m[0]);
+  const rvFlips = (c, sq, me) => { if (c[sq]) return []; const o = 3 - me, out = []; for (const [dr, dc] of [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]]) { let r = (sq >> 3) + dr, k = (sq & 7) + dc; const ln = []; while (r >= 0 && r < 8 && k >= 0 && k < 8 && c[r * 8 + k] === o) { ln.push(r * 8 + k); r += dr; k += dc; } if (ln.length && r >= 0 && r < 8 && k >= 0 && k < 8 && c[r * 8 + k] === me) out.push(...ln); } return out; };
+  function rvAfter(moves) {   // the position after a move list (a side with no move passes)
+    const c = Array(64).fill(0); c[27] = c[36] = 2; c[28] = c[35] = 1; let me = 1;
+    for (const m of String(moves).match(/../g) || []) { let sq = rvSq(m), f = rvFlips(c, sq, me); if (!f.length) { me = 3 - me; f = rvFlips(c, sq, me); } c[sq] = me; f.forEach(x => { c[x] = me; }); me = 3 - me; }
+    return c.join('') + ':' + me;
+  }
+  const RV_ASK = { ja: '『{n}』の次の一手を打とう。', en: 'Play the next move of the {n}.', zh: '下出「{n}」的下一手。', 'zh-TW': '下出「{n}」的下一手。', ko: '「{n}」의 다음 수를 두자.', es: 'Juega la siguiente jugada de «{n}».', fr: 'Jouez le coup suivant de « {n} ».', pt: 'Jogue o próximo lance de «{n}».', de: 'Spiele den nächsten Zug von „{n}“.', ru: 'Сделайте следующий ход линии «{n}».', tr: '“{n}” hattının sıradaki hamlesini oyna.', id: 'Mainkan langkah berikutnya dari «{n}».', hi: '«{n}» की अगली चाल चलो।', ar: 'العب النقلة التالية في «{n}».' };
+  const REVERSI = {
+    LKEY: 'reversi-emerald-lessons', data: null,
+    load() {
+      if (this.p) return this.p;
+      return (this.p = Promise.all([getJ('../reversi/lessons.json?v=20261107l14'), getJ('../reversi/openings.json?v=20261107l14'), getJ('../reversi/opcourse-evals.json?v=1').catch(() => ({}))])
+        .then(([ls, op, ev]) => {
+          const by = new Map(op.sets.map(x => [x.id, x])), steps = [];
+          RV_TABS.forEach(id => { const st = by.get(id); if (st) st.lines.forEach(ln => steps.push({ set: st, ln })); });
+          this.data = { ls, op, ev, steps }; return this;
+        }).catch(e => { this.p = null; throw e; }));
+    },
+    T(o, lang) { return o && o.text ? Object.assign({}, o.text.ja, o.text.en, o.text[lang]) : {}; },
+    pr(id) { const p = J(this.LKEY, {})[id]; return p ? (p.clear ? 'pass' : 'try') : ''; },
+    list(kind, lang) {
+      const D = this.data;
+      if (kind === 'open') return D.steps.map(x => ({ key: x.ln.moves, cat: x.set.id, catName: this.T(x.set, lang).title || x.set.id, title: L(x.ln.name, lang), sub: L(x.ln.aim, lang), st: this.pr('opl:' + x.ln.moves) }));
+      return D.ls.lessons.map((l, i) => { const T = this.T(l, lang); return { key: String(i), cat: 'lesson', catName: '', title: T.title || l.id, sub: T.short || '', st: this.pr(l.id) }; });
+    },
+    save(id, pts, max) { const pr = J(this.LKEY, {}), o = pr[id] || { best: 0, clear: false, v: 2 }, n = Math.round(pts * 100 / max), pass = n >= 75; pr[id] = { best: Math.max(o.best || 0, n), clear: !!o.clear || pass, v: 2 }; put(this.LKEY, pr); return pass; },
+    lesson(key, lang) {
+      const l = this.data.ls.lessons[+key]; if (!l) return null;
+      const T = this.T(l, lang), std = shuffle(l.problems.filter(p => !p.trap)), trap = shuffle(l.problems.filter(p => p.trap)), nT = trap.length ? 1 : 0;
+      const probs = [...std.slice(0, 5 - nT), ...trap.slice(0, nT)];
+      return { id: l.id, title: T.title || l.id, intro: (Array.isArray(T.intro) ? T.intro.join('<br>') : T.intro || ''),
+        probs: probs.map(p => { const v = Object.entries(p.f), b = v.reduce((a, x) => x[1][0] > a[1][0] ? x : a, v[0]); return { pos: p.cells + ':' + p.toMove, kind: 'best', P: p, ask: T.prompt || '', why: '', ans: b ? b[0] : '' }; }),
+        save: (pts, max) => this.save(l.id, pts, max) };
+    },
+    opening(key, lang) {
+      const st = this.data.steps.find(x => x.ln.moves === key); if (!st) return null;
+      const ln = st.ln, mv = ln.moves.match(/../g), n = mv.length, ev = this.data.ev || {};
+      const parent = this.data.steps.filter(x => x.ln.moves.length < key.length && key.startsWith(x.ln.moves)).reduce((a, x) => !a || x.ln.moves.length > a.length ? x.ln.moves : a, '');
+      const d = parent ? parent.length / 2 : 1, c = []; for (let k = Math.max(1, d - 4); k < n; k++) c.push(k);
+      const ks = c.length <= 5 ? c : [...new Set([0, 1, 2, 3, 4].map(j => c[Math.round(j * (c.length - 1) / 4)]))];
+      const info = L(ln.info, lang).replace(/【[^】]+】|\[[\p{L}\p{M}]{1,16}\]/gu, ' ').trim();
+      return { id: 'opl:' + key, title: L(ln.name, lang), intro: `<b>${L(ln.aim, lang)}</b><br>${mv.map((m, i) => `${i + 1}.${m}`).join(' ')}`, start: rvAfter(''),
+        steps: mv.map(rvSq), notes: info ? { [String(n - 1)]: info } : {},
+        probs: ks.map(k => { const pre = mv.slice(0, k).join(''); return { pos: rvAfter(pre), kind: 'best', ask: fill(RV_ASK[lang] || RV_ASK.en, { n: L(ln.name, lang) }), P: { rv: 'op', ans: rvSq(mv[k]), ev: ev[pre] || null }, ans: String(rvSq(mv[k])) }; }),
+        save: (pts, max) => this.save('opl:' + key, pts, max) };
+    },
+    points(P, u) {
+      u = +u;
+      if (P.rv === 'op') {   // = reversi/opcourse.js rate (one move): the line move 20; another move by how far below the best it is
+        if (u === P.ans) return PTS; if (!P.ev) return 0;
+        const sc = new Map(P.ev.map(([m, v]) => [rvSq(m), v])), best = Math.max(...P.ev.map(x => x[1])); if (!sc.has(u)) return 0;
+        return Math.max(0, Math.min(14, Math.round(14 - 2.5 * (best - sc.get(u)))));
+      }
+      const F = P.f || {}, all = Object.values(F).map(x => x[0]), mine = F[u] ? F[u][0] : -1e9, best = Math.max(...all);   // = reversi/index.html problemPoints
+      if (all.length <= 1 || mine >= best - 1e-9) return PTS;
+      return Math.max(0, Math.round(PTS * (all.length - 1 - all.filter(v => v > mine + 1e-9).length) / (all.length - 1)));
+    },
+  };
+  const DATA = { shogi: SHOGI, chess: CHESS, reversi: REVERSI };
 
   function list(id, kind, lang) { const D = DATA[id]; return D.load().then(() => D.list(kind, lang)); }
   function next(id, kind, lang) { return list(id, kind, lang).then(L2 => { const x = L2.find(i => !i.full && i.st !== 'pass') || L2.find(i => !i.full); return x ? x.key : null; }); }

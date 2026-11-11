@@ -1,0 +1,11 @@
+11-11 15:34 == build
+11-11 15:34 == training (H 384, king buckets 8, 8 epochs, lr 0.0005)
+train: epoch 8 valid 0.012596 lr 5e-05 526s 578k pos/s
+11-11 16:45 check: engine = trainer on 2000 positions (identical, H 384, king buckets 8)
+speed: /Users/core_tan/chess-nnue-work/base.bin: 2242 knps (24 positions x 200000 nodes, king buckets 1)
+speed: /Users/core_tan/chess-nnue-work/net-kb8.bin: 2235 knps (24 positions x 200000 nodes, king buckets 8)
+11-11 16:46 == matches vs the current net (H 384, king buckets 8 vs the site's 384)
+/Users/core_tan/chess-nnue-work/net-kb8.bin vs /Users/core_tan/chess-nnue-work/base.bin (20000): +174 -161 =185  score 0.512  Elo +9 (-15 .. +33)
+/Users/core_tan/chess-nnue-work/net-kb8.bin vs /Users/core_tan/chess-nnue-work/base.bin (100ms): +82 -74 =104  score 0.515  Elo +11 (-22 .. +44)
+11-11 16:51 done: /Users/core_tan/chess-nnue-work/nnue-candidate-kb8.bin.gz (3161044 bytes; and log.txt, net-kb8.bin.log)
+11-11 16:51 send: attach these 3 files in the Claude chat, or commit them to chess/tools/nnue/results/ on a NEW branch with GitHub Desktop and tell Claude the branch name (not Hugging Face; TRAIN.md section 5)

@@ -38,19 +38,27 @@ const POS = fs.readFileSync('pos_' + G + '.txt', 'utf8').trim().split('\n').map(
     u8().set(b.subarray(o, o + H * 4), X.nue_w2_ptr()); o += H * 4;
     X.nue_set_b2(b.readInt32LE(o)); X.nue_enable(1); X.tt_clear();
   }
+  if (G === 'tafl') {   // (2026-11-11) the Copenhagen net, as tools/mtsim/g_tafl.h
+    const b = fs.readFileSync('net_tafl.bin'); u8().set(b, X.nn_buf()); if (!X.nn_load(b.length)) throw new Error('net'); X.nn_enable(1);
+  }
     let line;
+    if (G === 'tafl') {   // (move, value, depth, nodes)
+      new Int32Array(mem.buffer, X.io_ptr(), 8192).set(POS[i]); if (!X.setup()) throw new Error('setup'); X.best(D, 0, 0);
+      const io = new Int32Array(mem.buffer, X.io_ptr(), 4); const n = X.last_nodes(); sum += n; line = `m${io[0]} v${io[2]} d${io[3]} n${n}`;
+    }
     if (G === 'xiangqi' || G === 'janggi') {
       new Int32Array(mem.buffer, X.io_ptr(), 8192).set(POS[i]); X.setup(); X.best(D, 0, 0);
       const io = new Int32Array(mem.buffer, X.io_ptr(), 4); const n = X.last_nodes(); sum += n; line = `m${io[0]} d${io[2]} n${n}`;
     }
     if (G === 'chess') {
       const str = String.fromCharCode(...POS[i]) + '\0'; u8().set(Buffer.from(str, 'latin1'), X.setup_ptr()); X.set_position();
-      X.think(0, 0, D, 0); const r = new Int32Array(mem.buffer, X.res_ptr(), 4); const n = X.res_nodes(); sum += n; line = `m${r[0]} d${r[2]} n${n}`;
+      X.think(0, 0, D, 0); const r = new Int32Array(mem.buffer, X.res_ptr(), 4); const n = X.res_nodes(); sum += n; line = `m${r[0]} v${r[1]} d${r[2]} n${n}`;
     }
     if (G === 'shogi') {
       const p = POS[i]; new Int8Array(mem.buffer, X.setup_ptr(), 98).set(p.slice(0, 98)); X.set_position();
       for (const m of p.slice(98)) X.play_move(m);
-      X.set_exclude(0); X.root_search(0, D, 0); const r = new Int32Array(mem.buffer, X.res_ptr(), 4); const n = r[2] >>> 0; sum += n; line = `m${r[0]} d${r[1]} n${n}`;
+      X.set_exclude(0); X.root_search(0, D, 0); const r = new Int32Array(mem.buffer, X.res_ptr(), 4 + 64); const n = r[2] >>> 0; sum += n;
+      line = `m${r[0]} v${X.res_score()} d${r[1]} n${n} pv ${Array.from(r.subarray(4, 4 + Math.max(0, Math.min(r[3], 64)))).join(',')}`;   // (2026-11-11: the value and the line too)
     }
     console.log('pos', i + 1, line);
   }

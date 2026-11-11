@@ -198,6 +198,8 @@
     peg: { list: ['walnut', 'maple', 'stone', 'night'],
       get: () => { try { const d = (JSON.parse(ls.get('aicoding-peg') || '{}').settings || {}).bd; return ['maple', 'stone', 'night'].includes(d) ? d : 'walnut'; } catch (e) { return 'walnut'; } },
       set: k => { try { const o = JSON.parse(ls.get('aicoding-peg') || '{}') || {}; o.settings = o.settings || {}; o.settings.bd = k; ls.set('aicoding-peg', JSON.stringify(o)); } catch (e) {} } },
+    // shogi (atlas/models/shogi.js LOOK, 2026-11-11): 'atlas-shogi-look' — 本榧 (the default) · 蒔絵 · 新榧 · 漆黒 · 寄木細工 · 山桜
+    shogi: { list: ['kaya', 'makie', 'grain', 'ink', 'yosegi', 'sakura'], get: () => { const v = ls.get('atlas-shogi-look'); return ['makie', 'grain', 'ink', 'yosegi', 'sakura'].includes(v) ? v : 'kaya'; }, set: k => ls.set('atlas-shogi-look', k) },
     konane: { list: ['papamu', 'quilt'], get: () => ls.get('atlas-konane-look') === 'quilt' ? 'quilt' : 'papamu', set: k => ls.set('atlas-konane-look', k) },
     // carrom (3D only): 'atlas-carrom-look' ('neon' the default | 'modern' | 'classic' | 'rajasthan' | 'bauhaus' | 'tycoon')
     carrom: { list: ['neon', 'modern', 'classic', 'rajasthan', 'bauhaus', 'tycoon'], get: () => { const v = ls.get('atlas-carrom-look'); return ['modern', 'classic', 'rajasthan', 'bauhaus', 'tycoon'].includes(v) ? v : 'neon'; }, set: k => ls.set('atlas-carrom-look', k) },
@@ -211,7 +213,14 @@
   };
   X.BOARDS = BOARDS;
   // a game's own board names (the board is part of its game, so no '3D'): table hockey
-  const NG = { peg: {
+  const NG = { shogi: {
+    kaya: { ja: '本榧', en: 'Kaya', zh: '本榧', 'zh-TW': '本榧', ko: '본비자', es: 'Kaya', fr: 'Kaya', pt: 'Kaya', de: 'Kaya', ru: 'Кая', tr: 'Kaya', id: 'Kaya', hi: 'काया', ar: 'كايا' },
+    makie: { ja: '蒔絵', en: 'Maki-e lacquer', zh: '莳绘', 'zh-TW': '蒔繪', ko: '마키에', es: 'Laca maki-e', fr: 'Laque maki-e', pt: 'Laca maki-e', de: 'Maki-e-Lack', ru: 'Лак макиэ', tr: 'Maki-e lake', id: 'Pernis maki-e', hi: 'माकी-ए लाख', ar: 'ورنيش ماكي-إي' },
+    grain: { ja: '新榧', en: 'Spruce', zh: '新榧', 'zh-TW': '新榧', ko: '신비자', es: 'Abeto', fr: 'Épicéa', pt: 'Abeto', de: 'Fichte', ru: 'Ель', tr: 'Ladin', id: 'Cemara', hi: 'स्प्रूस', ar: 'التنوب' },
+    ink: { ja: '漆黒', en: 'Ink black', zh: '漆黑', 'zh-TW': '漆黑', ko: '칠흑', es: 'Negro tinta', fr: 'Noir d’encre', pt: 'Preto tinta', de: 'Tintenschwarz', ru: 'Чёрный лак', tr: 'Mürekkep siyahı', id: 'Hitam tinta', hi: 'स्याह काला', ar: 'أسود حالك' },
+    yosegi: { ja: '寄木細工', en: 'Yosegi marquetry', zh: '寄木细工', 'zh-TW': '寄木細工', ko: '요세기 세공', es: 'Marquetería yosegi', fr: 'Marqueterie yosegi', pt: 'Marchetaria yosegi', de: 'Yosegi-Intarsie', ru: 'Мозаика ёсэги', tr: 'Yosegi kakma', id: 'Marquetri yosegi', hi: 'योसेगी जड़ाई', ar: 'تطعيم يوسيغي' },
+    sakura: { ja: '山桜', en: 'Wild cherry', zh: '山樱', 'zh-TW': '山櫻', ko: '산벚나무', es: 'Cerezo silvestre', fr: 'Merisier', pt: 'Cerejeira silvestre', de: 'Wildkirsche', ru: 'Дикая вишня', tr: 'Yaban kirazı', id: 'Ceri liar', hi: 'जंगली चेरी', ar: 'الكرز البري' } },
+  peg: {
     walnut: {ja: "ウォルナット", en: "Walnut", zh: "胡桃木", ko: "월넛", es: "Nogal", fr: "Noyer", pt: "Nogueira", de: "Nussbaum", ru: "Орех", tr: "Ceviz", id: "Walnut", hi: "अखरोट", ar: "جوز", 'zh-TW': "胡桃木"},
     maple: {ja: "メープル", en: "Maple", zh: "枫木", ko: "메이플", es: "Arce", fr: "Érable", pt: "Bordo", de: "Ahorn", ru: "Клён", tr: "Akçaağaç", id: "Maple", hi: "मेपल", ar: "قيقب", 'zh-TW': "楓木"},
     stone: {ja: "大理石", en: "Marble", zh: "大理石", ko: "대리석", es: "Mármol", fr: "Marbre", pt: "Mármore", de: "Marmor", ru: "Мрамор", tr: "Mermer", id: "Marmer", hi: "संगमरमर", ar: "رخام", 'zh-TW': "大理石"},

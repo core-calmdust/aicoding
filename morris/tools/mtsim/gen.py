@@ -8,8 +8,12 @@
 #   python3 gen.py <repo>/morris/engine.c && node dump.js <repo>/morris && gcc -O2 -DMT -DBUSYSIM -w -o sim sim.c -lpthread -lm
 #   ./sim 1,2,4,8 13 -1 0 0 1 1 1 1      (threads, 1-thread budget in M nodes → the depth D, positions (-1 all / 0,3,…),
 #                                          jitter, fresh helpers, main speed, lockstep, delayed stores, delayed marks)
-import sys
-s = open(sys.argv[1] if len(sys.argv) > 1 else '../../engine.c').read()
+import sys, os, re
+src = sys.argv[1] if len(sys.argv) > 1 else '../../engine.c'
+s = open(src).read()
+# (2026-11-11) Praline (shared/praline/, claude/praline-spec.md): its headers inlined, so that the rewrites below reach them
+pr = os.path.join(os.path.dirname(os.path.abspath(src)), '..', 'shared', 'praline')
+s = re.sub(r'#include "\.\./shared/praline/([a-z_]+\.h)"\n', lambda m: open(os.path.join(pr, m.group(1))).read(), s)
 i = s.index('// ---------------------------------------------------------------- threads (engine_mt.wasm')
 s = s[:i] + '#endif\n'
 s = s.replace('#define EXPORT(name) __attribute__((export_name(#name)))', '#define EXPORT(name)')
@@ -55,7 +59,26 @@ static void flushPend(PendE *pe, int n, int *px) {
 }
 ''')
 # delayed busy marks
-if 'busySet' in s:
+if 'static inline int busySet(u64 k) {' in s:   # (2026-11-11, Praline's busy marks on a u64 key: busyK(p))
+    s = s.replace("static inline int busySet(u64 k) {", "static inline int busySetS(u64 k) {", 1)
+    s = s.replace("static inline void busyClear(u64 k, int i) {", "static inline void busyClearS(u64 k, int i) {", 1)
+    anchor = "static void checkAbort(void) {"
+    k = s.index(anchor)
+    s = s[:k] + r'''static int busyDelay;
+static TLS int bpIdx[4096]; static TLS u64 bpVal[4096]; static TLS int nbp;
+static inline int busySet(u64 key) {
+  if (!busyDelay || nbp >= 4096) return busySetS(key);
+  int i = (int)((key >> 32) & ((1u << BUSY_BITS) - 1));
+  bpIdx[nbp] = i; bpVal[nbp++] = (key & ~63ull) | (u64)((threadId & 63) + 1); return i;
+}
+static inline void busyClear(u64 key, int i) {
+  if (busyDelay) { u64 mine = (key & ~63ull) | (u64)((threadId & 63) + 1);
+    for (int k = nbp - 1; k >= 0; k--) if (bpIdx[k] == i && bpVal[k] == mine) { bpVal[k] = 0; return; } }
+  busyClearS(key, i);
+}
+static void busyFlushMine(void) { for (int k = 0; k < nbp; k++) if (bpVal[k]) busyT[bpIdx[k]] = bpVal[k]; nbp = 0; }
+''' + s[k:]
+elif 'busySet' in s:
     s = s.replace("static inline int busySet(const Pos *p) {", "static inline int busySetS(const Pos *p) {", 1)
     s = s.replace("static inline void busyClear(const Pos *p, int i) {", "static inline void busyClearS(const Pos *p, int i) {", 1)
     anchor = "static void checkAbort(void) {"
