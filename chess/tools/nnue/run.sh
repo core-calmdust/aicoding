@@ -19,8 +19,10 @@
 #   TDEPTH    teacher depth (default 10)
 #   HIDDEN    hidden size (default 384 = the site; 512 / 768 = a bigger net, its own net-hN.bin, same data)
 #   KB        king buckets (default 1 = none, as the site's net; 4 / 8 / 16 / 32 = the first layer per zone of the own king,
-#             its own net-kbN.bin, same data; starts from the current site net copied into every bucket, LR 0.0005)
-#   EPOCHS (8)  LR (0.001)  LAM (0.9)  INIT (empty = from scratch; "base" = continue from the current site net)
+#             its own net-kbN.bin, same data; starts from the v2 net (tools/nnue/nnue-v2.bin.gz, no buckets) copied into every
+#             bucket, LR 0.0005 — the same start as the site's v3 net (KB=4, 2026-11-11), so KB=8 and KB=4 compare fairly)
+#   EPOCHS (8)  LR (0.001)  LAM (0.9)  INIT (empty = from scratch; "base" = from the v2 net (no king buckets, the site's net
+#             until 2026-11-11); "site" = continue from the current site net (same H and king buckets))
 #   MNODES    match nodes per move (default 20000)  MGAMES (games per process, default 40)  MTIME (default 100ms; "" = skip)
 set -e
 HERE=$(cd "$(dirname "$0")" && pwd)
@@ -37,11 +39,13 @@ log() { echo "$(date '+%m-%d %H:%M') $*" | tee -a "$WORK/log.txt"; }
 
 log "== build"
 bash "$HERE/build.sh"
-# base.bin = the site's current net (self-play, INIT=base, the matches). When the site's net has changed since the last run
+# base.bin = the site's current net (self-play, INIT=site, the matches: since 2026-11-11 the v3 net with 4 king buckets, so a
+# KB=8 run plays its matches against it directly). v2.bin = the v2 net (INIT=base: the start of a king-bucket training). When the site's net has changed since the last run
 # (v1 -> v2), the old one is kept as base-prev.bin.
 gzip -dc "$CHESS/nnue.bin.gz" > "$WORK/base.tmp"
 if [ -f "$WORK/base.bin" ] && ! cmp -s "$WORK/base.tmp" "$WORK/base.bin"; then mv "$WORK/base.bin" "$WORK/base-prev.bin"; log "base.bin: the site's net has changed (the old one is base-prev.bin)"; fi
 mv "$WORK/base.tmp" "$WORK/base.bin"
+gzip -dc "$HERE/nnue-v2.bin.gz" > "$WORK/v2.bin"
 
 # 1. Lichess evaluations (CC0): download (resumable) and convert to records
 if [ "$LICHESS" = 1 ] && [ ! -f "$WORK/lichess.done" ]; then
@@ -109,7 +113,11 @@ if [ "$KB" != 1 ]; then
 fi
 if [ ! -f "$DONE" ]; then
   log "== training (H $HIDDEN, king buckets $KB, $EPOCHS epochs, lr $LR)"
-  INITOPT=""; [ "$INIT" = base ] && { if [ "$HIDDEN" = 384 ]; then INITOPT="--init $WORK/base.bin"; else log "(INIT=base needs HIDDEN=384: training from scratch)"; fi; }
+  INITOPT=""
+  case $INIT in base|site)
+    if [ "$HIDDEN" != 384 ]; then log "(INIT=$INIT needs HIDDEN=384: training from scratch)"
+    elif [ "$INIT" = site ]; then INITOPT="--init $WORK/base.bin"; else INITOPT="--init $WORK/v2.bin"; fi ;;
+  esac
   python3 "$HERE/train.py" --out "$NET" --hidden $HIDDEN --kb $KB --epochs $EPOCHS --lr $LR --lam $LAM $INITOPT $TRAIN_OPTS $FILES
   touch "$DONE"
   tail -1 "$NET.log" | sed 's/^/train: /' | tee -a "$WORK/log.txt"

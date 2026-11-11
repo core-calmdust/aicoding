@@ -9,8 +9,10 @@ const mod = new WebAssembly.Module(fs.readFileSync(path.join(dir, 'engine.wasm')
 const X = new WebAssembly.Instance(mod, { env: { now: () => performance.now(), progress: () => {} } }).exports;
 X.init(); X.new_game();
 const nn = zlib.gunzipSync(fs.readFileSync(path.join(dir, 'nnue.bin.gz')));
-if (nn.length !== X.nn_size()) throw new Error('nnue size');
-new Uint8Array(X.memory.buffer).set(nn, X.nn_ptr()); X.nn_enable(1);
+if (nn.length > X.nn_cap()) throw new Error('nnue size');
+new Uint8Array(X.memory.buffer).set(nn, X.nn_ptr());
+if (!X.nn_load(nn.length)) throw new Error('nnue format');
+X.nn_enable(1);
 const CMATE = 31000, CMATE_MAX = CMATE - 256, MATE = E.MATE;
 const toJS = v => v >= CMATE_MAX ? MATE - (CMATE - v) : v <= -CMATE_MAX ? -MATE + (CMATE + v) : v;
 const wUci = m => { const a = new Uint8Array(X.memory.buffer), p = X.move_uci(m); let s = ''; for (let i = p; a[i]; i++) s += String.fromCharCode(a[i]); return s; };
