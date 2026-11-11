@@ -412,8 +412,8 @@
   /* ---------- 山桜 (top) and 樺細工 (cherry bark, the sides) with sakura inlays ---------- */
   function sakuraTop(W, H, s) {
     const c = pix(W, H, (x, y) => {
-      const o = straight(x, y, W, H, s, [212, 158, 118], [138, 84, 54], 64, 1.2, true);
-      const gum = fbm(x / W * 3, y / H * .4, s + 60, 3); if (gum > .7) { const k = (gum - .7) * 1.2; o[0] *= 1 - k; o[1] *= 1 - k * 1.25; o[2] *= 1 - k * 1.3; }   // 山桜's dark gum streaks
+      const o = straight(x, y, W, H, s, [212, 158, 118], [178, 120, 84], 64, .65, true);   // (2026-11-11: a fainter grain)
+      const gum = fbm(x / W * 3, y / H * .4, s + 60, 3); if (gum > .74) { const k = (gum - .74) * .6; o[0] *= 1 - k; o[1] *= 1 - k * 1.25; o[2] *= 1 - k * 1.3; }   // 山桜's dark gum streaks
       return o;
     });
     const g = ctx(c); vignette(g, W, H, 'rgba(90,44,22,.3)', .5);
