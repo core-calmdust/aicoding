@@ -68,11 +68,12 @@ html.atlas-skin .cb-bar .cb-t{flex:none;white-space:nowrap}
 /* (2026-11-11 later, the user: the sizes looked off — four equal tiles, a gap before the next button, the next button the same
    height and a rounded box like the tiles, not a pill pressed against them) */
 html.atlas-skin .cb-cmp .cb-bar{gap:8px!important}
-html.atlas-skin .cb-cmp .cb-bar > .cb-main{flex:0 0 auto!important;width:auto!important;min-width:0!important;max-width:none!important}
-html.atlas-skin .cb-cmp .cb-tools{gap:6px!important;flex:1 1 auto!important;min-width:0}
-html.atlas-skin .cb-cmp .cb-bar .cb-tools > .cb-ic[data-cap]{flex:1 1 0!important;min-width:0!important;width:auto!important;height:58px!important;padding:6px 2px!important;gap:5px!important;box-sizing:border-box}
+html.atlas-skin .cb-cmp .cb-bar > .cb-main{width:auto!important;min-width:0!important;max-width:none!important}
+html.atlas-skin .cb-cmp .cb-tools{gap:6px!important;flex:0 0 auto!important;min-width:0}
+html.atlas-skin .cb-cmp .cb-bar .cb-tools > .cb-ic[data-cap]{flex:0 0 58px!important;min-width:0!important;width:58px!important;height:58px!important;padding:6px 2px!important;gap:5px!important;box-sizing:border-box}   /* (square, 2026-11-11 the user) */
 html.atlas-skin .cb-cmp .cb-bar .cb-ic[data-cap]::after{font-size:11px}
-html.atlas-skin .cb-cmp .cb-bar .cb-t{flex:0 0 auto!important;height:58px!important;padding:0 14px!important;min-width:0!important;border-radius:14px!important;font-size:14px!important;box-sizing:border-box}
+html.atlas-skin .cb-cmp .cb-bar > .cb-main{flex:1 1 auto!important}
+html.atlas-skin .cb-cmp .cb-bar .cb-t{flex:1 1 auto!important;width:100%;height:58px!important;padding:0 14px!important;min-width:0!important;border-radius:14px!important;font-size:14px!important;box-sizing:border-box}
 html.atlas-skin #f3D{margin:12px 0 0;padding:10px 12px 12px;border-radius:14px;background:#f6f1e4;border:2px solid #e2cf9e}
 html.atlas-skin #f3D > label{display:block;font-weight:700;font-size:13px;color:#7a5a1c;margin:0 0 8px}
 html.atlas-skin #f3D > label.pc3l{margin-top:12px}
@@ -165,7 +166,13 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
   // (a new puzzle moves the page's layout — the cards fill in — and the camera follows a frame later: the close-up is worked out
   //  once things have settled, from where the region is drawn then)
   let zD = 0;
-  window.__amzZoom = (w, again) => { zw = w || null; if (again && !w) return; clearTimeout(zD); cancelAnimationFrame(zT); if (!w) return zoom0(null); T3.kick(400); if (!again) zAt = performance.now(); zD = setTimeout(() => zoom0(w), 380); };
+  window.__amzZoom = (w, again) => { zw = w || null; if (again && !w) return; clearTimeout(zD); cancelAnimationFrame(zT); if (!w) return zoom0(null); T3.kick(400); if (!again) zAt = performance.now();
+    // (one move, straight to the right size, 2026-11-11 the user: it went there in several steps — wait until the page has stopped
+    //  moving: the board's place and the cards the same for two looks in a row, 1.5 s at most)
+    const t0 = performance.now(); let last = '', same = 0;
+    const look = () => { const f = document.getElementById('frame'), r = f ? f.getBoundingClientRect() : { top: 0, height: 0 }, k = Math.round(r.top) + ',' + Math.round(r.height) + ',' + innerHeight;
+      same = k === last ? same + 1 : 0; last = k; if ((same >= 2 && performance.now() - t0 > 250) || performance.now() - t0 > 1500) { zAt = performance.now(); zoom0(w); } else zD = setTimeout(look, 90); };
+    zD = setTimeout(look, 90); };
   // w = { r0, c0, nr, nc }: the squares that matter (both sides' amazons in play, the target's room), tight — on the shown board
   const ZM = .55;   // (half a square of margin round it)
   const strip = () => { const fr = (document.getElementById('frame') || boardDom).getBoundingClientRect(), tb = matchMedia('(pointer:coarse)').matches ? 96 : 0;

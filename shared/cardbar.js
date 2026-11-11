@@ -112,6 +112,15 @@ html.atlas-skin .cb-cmp .cb-tools,.cb-cmp.cb-5 .cb-tools{gap:5px}
 html.atlas-skin .cb-cmp .cb-bar .cb-t,.cb-cmp.cb-5 .cb-bar .cb-t{padding:0 8px!important;min-width:72px!important}
 html.atlas-skin .cb-cmp .cb-bar .cb-nx::after,.cb-cmp.cb-5 .cb-bar .cb-nx::after{display:none}
 @media (max-width:360px){ .cb-cmp .cb-bar .cb-ic[data-cap]{min-width:44px!important;padding:0 2px!important} }
+/* puzzle cards on every page are flat like the 3D skin's (rule, 2026-11-11 the user): one solid fill, a solid 2px border, a solid
+   shadow under it only — no gradient, no glow. The game's own colours (--line / --text / --accent); the 3D skin keeps its own */
+html:not(.atlas-skin) .cb-cmp .cb-bar :is(.cb-ic,.cb-t){background:color-mix(in srgb,var(--text,#eee) 7%,transparent)!important;border:2px solid var(--line,rgba(255,255,255,.16))!important;border-radius:14px!important;box-shadow:0 3px 0 var(--line,rgba(255,255,255,.16))!important;filter:none!important;background-image:none!important}
+html:not(.atlas-skin) .cb-cmp .cb-bar :is(.cb-ic,.cb-t):hover:not(:disabled){border-color:color-mix(in srgb,var(--accent,#c9a961) 70%,transparent)!important}
+html:not(.atlas-skin) .cb-cmp .cb-bar .cb-ic.cb-go{background:color-mix(in srgb,var(--accent,#c9a961) 16%,transparent)!important;border-color:var(--accent,#c9a961)!important;box-shadow:0 3px 0 color-mix(in srgb,var(--accent,#c9a961) 55%,transparent)!important}
+html:not(.atlas-skin) .cb-cmp .cb-bar .cb-t.go{background:var(--accent,#c9a961)!important;color:var(--cb-go-fg,#1b150a)!important;border-color:transparent!important;box-shadow:0 3px 0 color-mix(in srgb,var(--accent,#c9a961) 55%,#000)!important}
+html:not(.atlas-skin) .cb-cmp > .lh .cb-qp{background:transparent!important;border:2px solid var(--line,rgba(255,255,255,.16))!important;box-shadow:0 2px 0 var(--line,rgba(255,255,255,.16))!important}
+/* (the caption tiles near square: as tall as the narrowest is wide) */
+.cb-cmp .cb-bar .cb-tools > .cb-ic[data-cap]{min-width:52px!important}
 `;
 const st = document.createElement('style'); st.id = 'cardbar-css'; st.textContent = CSS; document.head.appendChild(st);
 
