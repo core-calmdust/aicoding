@@ -259,6 +259,21 @@ Lv.1〜5 は技巧の最弱設定にも届かないため、レベル同士の�
 - `engine_mt.wasm?v=6`・`mt-helper.js?v=3`（`index.html`・`bench.html`）、`pro/` は `?v=7`。
 - **Mac で測るページ**：`shogi/bench.html`（`bench-all.html`）。見てほしいのは14スレッドの「同じ深さまで」：前回の ×3.31（幾何 3.69）より上がり、10スレッド（×4.48）と同じくらいになれば採用のまま。2〜10スレッドは前と同じ探索なので、前回の値と揺れの範囲で同じになるはず。悪くなっていれば `engine.c` の `YBW_MAX` を大きく（例 64）して作り直すと前の全部 YBW に戻る。
 
+### Praline に移行（2026-11-11、`claude/praline-spec.md`）
+- マルチスレッドの仕組み（busy marks・YBW の分割点・合流と取り合い・待つ持ち主の手伝いと印・二度読み・`mt_idle`・`mt_split`）を、サイト共通の思考エンジン **Praline** の C の共通ヘッダ（`shared/praline/praline.h`・`praline_ybw.h`）に移した。将棋のために共通ヘッダに**任意のつなぎ**を足した（値の型 `PL_VAL`＝`double`、読み筋の受け渡し `PL_ON_RAISE`／`PL_ON_OPEN`／`PL_ON_CLOSE`、根の値をゲームが持つ `PL_NO_VALS`＋`PL_ROOT_VAL`（fail-low は値なし：`PL_WANT_A`）、`mt_idle` の入口 `PL_IDLE_HOOK`＝`threadId >= ybwMax` は Lazy SMP の `lazyRun` へ、`PL_NODES`）。定義しないゲームは前と同じコード（シャンチー・チャンギ・チェッカー・タフル・モリス・ファノロナの `engine_mt.wasm` はヘッダを変えた後もコード・データの全セクションが同じ）。
+- `engine.c` に残したもの：分割点の欄 `PL_SP_FIELDS`（盤・持ち駒・玉・鍵・駒の印・繰り返しの判定用の履歴・継続履歴の手・"improving" 用の静的評価・最善手の下の読み筋・各手の順番 `lg`）、`spFillPos`／`spLoadPos`、`spSearch`、`spCutoff`（キラー・カウンター手・履歴）、`spTop`＝0、`waitCheck`、`spIdleReset`、読み筋の `spPvSave`／`spPvLoad`、`YBW_MAX` と `lazyRun`・`gRootP`・`mtCheck`、分割点を開く `search()`・`searchRoot()`。
+- **一致**：通常版 `engine.wasm`・`engine_simd.wasm`・`engine_simd512.wasm` は前処理後のソースが同じ（作り直していない）。HalfKP の道具（`-DNUE_KB`：`tools/nnue/build-kp.sh` の `kptool`（KB 9・H 512／256）・`engine_kp.wasm`、`tools/match/usimatch`）も前処理後のソースが前と同じで、ビルドも通る（評価・探索は前と同じ。`build-kp.sh` の KB 1・9 が通り、`kptool-1-512 bench cur.bin` のチェックサムが `tools/bench/bench.c` と一致）。乗せ換えで変えたのは `-DMT` の節だけで、HalfKP の道具が使う名前（`nueRefresh`・`nueOk`・`board` など）は変えていない。`engine_mt.wasm` の1スレッドは `tools/mtsim/wasm1.js` の12局面・深さ14 で局面数・手・評価値・深さ・読み筋が前の配信版と全一致（合計 1062万局面）。宣言するメモリは 1473 ページのまま。
+- **マルチスレッド**（`tools/mtsim`、64局面ごとに同期、24局面、1スレッド100万局面の深さまで。前＝移行前のソース、同じ設定。全部同じ速さは2回の平均（カッコは各回）、遅いコアあり（`SIM_SLOW=8`）は1回。10スレッドより先は前と同じく Lazy SMP）：
+
+| 同じ深さまでの時間 | 2 | 4 | 8 | 遅いコアあり 8 | 10 | 14 |
+|---|---|---|---|---|---|---|
+| 前 | ×1.41（1.41・1.40） | ×2.29（2.34・2.23） | ×3.16（3.25・3.07） | ×3.38 | ×2.77 | ×3.10 |
+| **Praline** | ×1.61（1.63・1.58） | ×2.29（2.25・2.32） | ×3.19（3.16・3.21） | ×3.41 | ×2.85 | ×3.67 |
+
+  - 揺れの内で同等。
+- headless Chrome（Playwright）：`bench.html`（1秒、1・2スレッド）、対局ページ（2スレッドの組で解析）、`pro/`（2スレッドで AI の手、読み筋も出る）がエラーなく動く。
+- `engine_mt.wasm?v=7`（`index.html`・`bench.html`）、`pro/` は `?v=8`、`pro.js?v=` も上げた。
+
 ## レーティング戦（ひとりで遊ぶレート対局）のレーティング表
 
 新しい対局の「レーティング戦」では、AIの各段階に固定のレーティングを割り当て、プレイヤーのレーティング（端末ごとに保存、`localStorage` の `shogi-rated-v1`）とのElo計算で増減させます。オンライン対戦のレーティングとは別物です。

@@ -179,13 +179,13 @@
   const LOOK = {
     kaya: {},
     makie: { side: 'makie', lacq: true, line: 'rgba(33,19,11,.92)', bottom: 0x120c0a },
-    grain: { top: 'top-grain', side: 'grain', stand: 'grain', leg: ['#eedcb0', '#c49c62'], bottom: 0xb48c58, line: 'rgba(52,32,12,.9)', satin: true },
+    grain: { top: 'top-grain', side: 'grain', stand: 'grain', leg: ['#dcc192', '#a97e48'], bottom: 0x9c7646, line: 'rgba(52,32,12,.9)', satin: true },
     ink: { top: 'top-ink', side: 'ink', stand: 'ink', leg: ['#3a2a20', '#120c09'], bottom: 0x16100c, line: 'rgba(214,180,110,.85)', star: '#d6b46e', gloss: true },
     yosegi: { top: 'top-yosegi', side: 'yosegi', stand: 'yosegi', leg: ['#c99a68', '#8a5a34'], bottom: 0x7a5232, line: 'rgba(40,26,14,.9)' },
     sakura: { top: 'top-sakura', side: 'sakura', stand: 'sakura', leg: ['#8a3a26', '#4a1c12'], bottom: 0x5a2a1c, line: 'rgba(48,20,10,.92)', bark: true },
   };
   const SH3 = (() => { try { return new URL('../../images/atlas/shogi3d/', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../images/atlas/shogi3d/'; } })();
-  const SH3V = '?v=1';
+  const SH3V = '?v=4';
   const lookOf = o => { const k = (o && o.look) || (X.BOARDS && X.BOARDS.shogi ? X.BOARDS.shogi.get() : 'kaya'); return LOOK[k] ? k : 'kaya'; };
   const imgs = {};
   function withImg(name, fn) {

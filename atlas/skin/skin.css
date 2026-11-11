@@ -219,7 +219,7 @@ html.atlas-shogi:not(.atlas-2d) .hand{background:linear-gradient(rgba(161,158,14
 html.atlas-shogi:not(.atlas-2d) .hand.kd-wide{background:linear-gradient(rgba(161,158,141,.35),rgba(161,158,141,.35)),url(../../images/atlas/shogi-kaya.webp?v=3) 20% 10%/120% auto,#c4ad8b!important}
 /* the six 3D boards (2026-11-11): the stands wear the board's own material (atlas/skin/shogi.js sets --shstand and html.atlas-shbd-<look>) */
 html.atlas-shogi:not(.atlas-2d)[class*="atlas-shbd-"] .hand,html.atlas-shogi:not(.atlas-2d)[class*="atlas-shbd-"] .hand.kd-wide{background:var(--shstand) center/cover,#2a201a!important}
-html.atlas-shogi.atlas-shbd-grain:not(.atlas-2d) .hand,html.atlas-shogi.atlas-shbd-yosegi:not(.atlas-2d) .hand{background:linear-gradient(rgba(250,240,220,.28),rgba(250,240,220,.28)),var(--shstand) center/cover,#d8bd8e!important}
+html.atlas-shogi.atlas-shbd-grain:not(.atlas-2d) .hand,html.atlas-shogi.atlas-shbd-yosegi:not(.atlas-2d) .hand{background:linear-gradient(rgba(250,240,220,.1),rgba(250,240,220,.1)),var(--shstand) center/cover,#d8bd8e!important}
 html.atlas-shogi.atlas-shbd-makie:not(.atlas-2d) .hand .hname,html.atlas-shogi.atlas-shbd-ink:not(.atlas-2d) .hand .hname,html.atlas-shogi.atlas-shbd-sakura:not(.atlas-2d) .hand .hname{color:#f1dcae!important;text-shadow:0 1px 2px rgba(0,0,0,.7)!important}
 html.atlas-shogi.atlas-shbd-yosegi:not(.atlas-2d) .hand .hname{color:#3a2412!important;text-shadow:0 0 4px rgba(255,248,230,.9)!important}
 html.atlas-shogi.atlas-sk-metal .pc.atlas3d .k img{filter:saturate(.15) brightness(1.08) contrast(1.05)}
