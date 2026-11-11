@@ -598,6 +598,14 @@
   // card games are 2D only, like the puzzle games (no 3D table): the board card says so and Play opens the game
   const CARD2D = { poker: true, blackjack: true, baccarat: true, solitaire: true };
   const pref = (() => { try { return JSON.parse(localStorage.getItem('atlas-play') || '{}'); } catch (e) { return {}; } })();
+  // reversi's AI ladder: 2026-11-11 its 25 levels became 28 (Lv.17–27 by depth, the strongest is Lv.28). The saved choice moves to
+  // the new level of about the same strength (reversi/index.html LV_25TO28); 'reversi:lvV' 2 = the 25-level ladder (also when unset), 3 = 28.
+  // (Done here, not in games/reversi.js: that loads after the sheet is drawn, and this object is written back as it is.)
+  if (pref['reversi:lvV'] !== 3) {
+    const n = Math.round(+pref['reversi:lv']) || 0, M = { 17: 18, 18: 19, 19: 20, 20: 21, 21: 21, 22: 23, 23: 24, 24: 26, 25: 28 };
+    if (M[n]) pref['reversi:lv'] = M[n];
+    pref['reversi:lvV'] = 3; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {}
+  }
   // the textures of the room and of each board are drawn in workers (texgen.js): the work is tagged per board,
   // and a board is only shown once its pictures are done (texReady)
   const TG = window.AtlasTexGen;
@@ -968,7 +976,8 @@
   function bossTitles(sh, g) {   // the bosses' titles live in the talk's language files (npc/t/<lang>.js), loaded on demand
     const N = window.AtlasNPC; if (!N || !N.ensure || !sh.querySelector('.lvs-boss')) return;
     N.ensure(N.lang()).then(() => { const T = N.T && (N.T[N.lang()] || N.T.en), L = T && T.bosses && T.bosses[g]; if (!L) return;
-      sh.querySelectorAll('.lvs-boss').forEach(h => { const s = h.querySelector('small'); if (s) s.textContent = L[+h.dataset.bi] || ''; }); }).catch(() => {});
+      sh.querySelectorAll('.lvs-boss:not(.lvpvp)').forEach(h => {   // (not 二人で対戦: its subtitle was blanked here)
+      const s = h.querySelector('small'); if (s) s.textContent = L[+h.dataset.bi] || ''; }); }).catch(() => {});
   }
   function lvNm(x, n, lang, max) {
     if (!x || !x.name) return '';

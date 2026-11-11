@@ -1,5 +1,4 @@
 ---
-license: apache-2.0
 tags:
   - chess
   - game-ai
@@ -200,6 +199,10 @@ Mac（M4 Pro、高性能10＋高効率4、Chrome）の bench：同じ深さま�
 - headless Chromium（この作業機、2コア、ほかの作業と共用）：`bench.html` の2スレッド（補助1つ＝YBW）と `pro/` の2スレッドで、分離・スレッド起動・読み・指し手まで動くことを確認（時間はほかの作業と共用のため参考外）。
 - **Mac で見てほしい数字**：`chess/bench.html`（1・2・4・8・10・14）の「同じ深さまでの時間」。前回（Lazy SMP）は 8・14スレッドで ×2.53／×2.72。採用の見込みは 8スレッドで ×2.9 前後、2・4スレッドも前回より下がらないこと。14 が 10 より悪ければ PRO の既定（性能コアまで）のまま。悪くなっていれば `mt-helper.js`・`pro/mt-worker.js` の `YBW_HELPERS = 0` で今までの Lazy SMP に戻る（エンジンはそのまま）。
 - 再現：`tools/mtsim/`（gen.py 冒頭）で `eng_chess.c` を作り、`gcc -O2 -w -DMT -DNATIVE -DMT_STAT -DSIM_Q=256 …`、`SIM_YBWN=1 ./sim_chess 1,2,4,8 1.5 -1 1 1`（`SIM_LAZY=1`：全部 Lazy SMP、`SIM_YBWN` なし：全部 YBW、`SIM_SPLIT=深さ,上限,二度読み,予想カット節で分ける前の手数`、`SIM_SLOW=8`：8番以降が遅い）。
+
+## ライセンス
+
+このゲームのコード・重みのライセンスは**未設定**です（今後決めます。2026-11-11 時点）。学習データの出所とそのライセンスは上の「学習データ」の節のとおりです。
 
 ## 対戦評価
 

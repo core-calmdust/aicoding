@@ -6,7 +6,7 @@
 // answer). Timing uses the page mode (what the worker runs: the stored main line is trusted, other moves get a time
 // budget of GoTsumego.budget ms): every position along the main line (reached? + the next side's candidates, as the page
 // asks) plus up to 2 wrong first moves with the defender's reply and the player's next list; max must be < 300 ms.
-// Copyright 2026 core-calmdust — Apache License 2.0
+// Copyright 2026 core-calmdust — license not set yet (to be decided)
 import fs from 'fs';
 import path from 'path';
 import { createRequire } from 'module';
