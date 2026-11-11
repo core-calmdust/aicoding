@@ -377,11 +377,23 @@ for (let i = 5; i < 8; i++) { ZR1.push(rnd()); ZR2.push(rnd()); }
 const TT_BITS = 21, TT_SIZE = 1 << TT_BITS, TT_MASK = TT_SIZE - 1;
 let ttKey = null, ttVal, ttInfo;   // info: depth (8 bits) | flag (2 bits) << 8 | move+1 (3 bits) << 10
 function ttInit() { if (!ttKey) { ttKey = new Uint32Array(TT_SIZE); ttVal = new Int32Array(TT_SIZE); ttInfo = new Uint16Array(TT_SIZE); } }
-function ttClear() { if (ttKey) { ttKey.fill(0); ttInfo.fill(0); } }
+function ttClear() { if (ttKey) { ttKey.fill(0); ttInfo.fill(0); } if (CX) CX.mc_ttclear(); }
 const EXACT = 1, LOWER = 2, UPPER = 3, SOLVED = 255;
 // the shared transposition table of the threads (shared/mttt.js, shared/mtsplit.js shared mode — 2026-11-09): set by the
 // 'mtshare' message on a cross-origin isolated page. The one-thread worker never has it: its levels play exactly as before.
 let SH = null;
+// the C engine (engine.c → engine_simd.wasm / engine.wasm, 2026-11-11): the same search (the same moves, values, depths and node
+// counts, tools/cmatch.js) about 10x faster. Loaded by the AI worker; then search / rootValues / rootBest run there (CX). On a
+// shared-table page the C engine keeps its own table: the threads split the root moves and the main line (Young Brothers Wait),
+// and the shared memory only carries the stop flags (env.now reports a stopped task as past its deadline).
+let CX = null, CB = null, COM = null, COV = null, COX = null, TTFIX = true;
+function cxLoad(x) {
+  CX = x; const mem = x.memory.buffer; x.mc_ttfix(TTFIX ? 1 : 0);
+  CB = new Uint8Array(mem, x.mc_board(), 14); COM = new Int32Array(mem, x.mc_outm(), 8); COV = new Int32Array(mem, x.mc_outv(), 8); COX = new Int32Array(mem, x.mc_outx(), 8);
+}
+// a job's clock: nodes from 0, the deadline (a performance.now() time or Infinity) — for the JavaScript and the C search
+function begin(dl) { nodes = 0; aborted = false; deadline = dl; if (CX) { CX.mc_begin(0); CX.mc_until(dl === Infinity ? 1e300 : dl); } }
+function setDl(dl) { deadline = dl; if (CX) CX.mc_until(dl === Infinity ? 1e300 : dl); }
 
 let nodes = 0, deadline = Infinity, aborted = false, cut = false, Rcur = RULES.kalah, ridx = 2, TOTAL = 48;
 const MAXPLY = 256;
@@ -390,6 +402,12 @@ const now = (typeof performance !== 'undefined' && performance.now) ? () => perf
 class Abort extends Error {}
 
 function search(b, side, depth, alpha, beta, ply) {
+  if (CX) {   // (the threads' mtV: one node on the C engine)
+    CB.set(b); const r = CX.mc_search(side, depth, alpha, beta, ply); nodes = CX.mc_nodes();
+    if (r < 0) { aborted = true; throw new Abort(); }
+    if (!COX[0]) cut = true;
+    return COV[0];
+  }
   if ((++nodes & 4095) === 0 && (now() > deadline || (SH !== null && SH.stopped()))) { aborted = true; throw new Abort(); }
   const ms = side ? 13 : 6, os = side ? 6 : 13;
   // bounds from the stores: the final margin lies in [2*mine - total, total - 2*theirs]
@@ -467,9 +485,16 @@ function setup(b, rules) {
   ttInit();
   Rcur = RULES[rules] || RULES.kalah; ridx = RULE_IDS.indexOf(Rcur.id);
   TOTAL = 0; for (let i = 0; i < 14; i++) TOTAL += b[i];
+  if (CX) { CB.set(b); CX.mc_setup(ridx); }
 }
 // value of each legal root move (full window), from the mover's view, in 1/100 seeds
 function rootValues(b, side, depth) {
+  if (CX) {
+    CB.set(b); const n = CX.mc_rootvalues(side, depth); nodes = CX.mc_nodes();
+    if (n < 0) { aborted = true; throw new Abort(); }
+    const out = []; for (let i = 0; i < n; i++) out.push({ m: COM[i], v: COV[i], exact: !!COX[i] });
+    return out;
+  }
   const out = [];
   for (const k of legal(b, side, Rcur)) {
     const c = new Int8Array(14); c.set(b);
@@ -486,6 +511,11 @@ function rootValues(b, side, depth) {
 }
 // principal-variation root search: best move only (faster than full root values)
 function rootBest(b, side, depth, prevBest, rot) {
+  if (CX) {
+    CB.set(b); const r = CX.mc_rootbest(side, depth, prevBest === undefined || prevBest === null ? -1 : prevBest, rot | 0); nodes = CX.mc_nodes();
+    if (r < 0) { aborted = true; throw new Abort(); }
+    return { m: COM[0], v: COV[0], exact: !!COX[0] };
+  }
   const ms = side ? 13 : 6, os = side ? 6 : 13;
   let moves = legal(b, side, Rcur);
   if (prevBest >= 0 && moves.includes(prevBest)) moves = [prevBest].concat(moves.filter(x => x !== prevBest));
@@ -516,11 +546,11 @@ function rootBest(b, side, depth, prevBest, rot) {
 function think(b, side, rules, opt) {
   b = Int8Array.from(b); setup(b, rules);
   const ms = opt.ms || 0, maxD = opt.depth || 60;
-  nodes = 0; aborted = false; deadline = ms ? now() + ms : Infinity;
+  begin(ms ? now() + ms : Infinity);
   const moves = legal(b, side, Rcur);
   if (moves.length === 1 && !opt.full) { // still give a value for the evaluation display
     let res = { move: moves[0], value: 0, exact: false, depth: 0 };
-    try { deadline = now() + Math.min(ms || 300, 300); const r = deepen(b, side, Math.min(maxD, 30)); if (r) res = { move: moves[0], value: r.v / SEED, exact: r.exact, depth: r.d }; } catch (e) { if (!(e instanceof Abort)) throw e; }
+    try { setDl(now() + Math.min(ms || 300, 300)); const r = deepen(b, side, Math.min(maxD, 30)); if (r) res = { move: moves[0], value: r.v / SEED, exact: r.exact, depth: r.d }; } catch (e) { if (!(e instanceof Abort)) throw e; }
     res.nodes = nodes; return res;
   }
   let best = null, d = 1;
@@ -542,7 +572,7 @@ function deepen(b, side, maxD) {
 // per-move analysis: list [{m, v (seeds, mover's view), exact}], depth, exact (all moves solved)
 function analyze(b, side, rules, ms, maxDepth) {
   b = Int8Array.from(b); setup(b, rules);
-  nodes = 0; aborted = false; deadline = now() + (ms || 1000);
+  begin(now() + (ms || 1000));
   let list = null, depth = 0;
   try {
     for (let d = 1; d <= (maxDepth || 60); d++) {
@@ -558,6 +588,7 @@ function analyze(b, side, rules, ms, maxDepth) {
 // principal variation after root move k (review box 読み筋): follows the transposition table's best moves,
 // with a short search where the table has nothing; [{side, k}] up to n moves (the root move first)
 function ttMoveOf(b, side) {
+  if (CX) { CB.set(b); return CX.mc_ttmove(side); }
   let h1 = side ? ZS1 : 0, h2 = side ? ZS2 : 0;
   for (let i = 0; i < 14; i++) { h1 ^= Z1[i * ZN + b[i]]; h2 ^= Z2[i * ZN + b[i]]; }
   h1 ^= ZR1[ridx]; h2 ^= ZR2[ridx];
@@ -568,7 +599,7 @@ function ttMoveOf(b, side) {
 function pvLine(b, side, k, n) {
   const c = Int8Array.from(b), out = [];
   let s = side, m = k;
-  deadline = Infinity; aborted = false;
+  setDl(Infinity); aborted = false;
   for (let i = 0; i < n; i++) {
     if (m < 0 || !c[baseOf(s) + m]) break;
     out.push({ side: s, k: m });
@@ -583,7 +614,7 @@ function pvLine(b, side, k, n) {
 // exact solve without time limit (generators, puzzles); returns list like analyze
 function solve(b, side, rules, maxMs) {
   b = Int8Array.from(b); setup(b, rules);
-  nodes = 0; aborted = false; deadline = maxMs ? now() + maxMs : Infinity;
+  begin(maxMs ? now() + maxMs : Infinity);
   try {
     let l = null;
     for (let d = 2; d <= 250; d += 2) {
@@ -623,8 +654,11 @@ function chooseMove(b, side, rules, level, cfg) {
   }
   if (L.kind === 'depth') {
     const bb = Int8Array.from(b); setup(bb, rules);
-    nodes = 0; aborted = false; deadline = Infinity;
-    const list = rootValues(bb, side, L.depth);
+    begin(Infinity);
+    // (the levels that read to a fixed depth keep engine.js' table exactly — the same moves as before; the C engine's fixed
+    // table (TTFIX) is for the levels that read by time and the analysis)
+    if (CX) CX.mc_ttfix(0);
+    let list; try { list = rootValues(bb, side, L.depth); } finally { if (CX) CX.mc_ttfix(TTFIX ? 1 : 0); }
     const noisy = list.map(x => ({ m: x.m, v: x.v + (L.noise ? (seedRand() * 2 - 1) * L.noise : 0), raw: x.v, exact: x.exact }));
     noisy.sort((a, c) => c.v - a.v);
     return { move: noisy[0].m, value: noisy[0].raw / SEED, exact: noisy[0].exact, depth: L.depth };
@@ -651,15 +685,16 @@ function mtPlan(m) {
     // (lazy / lazyAll: on the shared table — an isolated page — Lazy SMP: the lead plays the job as one thread does, the others
     // fill the table; without it the root moves and the main line are split as before. shared/tools: 8 threads ≈ ×3.7 to the
     // same depth for the best move, ≈ ×4.5 for the analysis, where splitting the ≤ 6 root moves gave ≈ ×2.7 on the same table)
-    if (L.kind === 'depth') return { plan: { kind: 'all', kids: mtKids({ b: m.b, side: m.side, rules: m.rules }).kids, inf, d0: L.depth, maxD: L.depth, solved: true, lazyAll: SH !== null } };   // (PRO: a depth on several threads, then the level's noise)
-    return { plan: { kind: 'best', kids: mtKids({ b: m.b, side: m.side, rules: m.rules }).kids, inf, maxD: 60, ms: L.ms, solved: true, splitMin: 6, lazy: SH !== null } };
+    // (the C engine: its own table in each worker — the root moves and the main line are split, no Lazy SMP, no helping)
+    if (L.kind === 'depth') return { plan: Object.assign({ kind: 'all', kids: mtKids({ b: m.b, side: m.side, rules: m.rules }).kids, inf, d0: L.depth, maxD: L.depth, solved: true, lazyAll: SH !== null && !CX }, CX ? { help: false } : {}) };   // (PRO: a depth on several threads, then the level's noise)
+    return { plan: Object.assign({ kind: 'best', kids: mtKids({ b: m.b, side: m.side, rules: m.rules }).kids, inf, maxD: 60, ms: L.ms, solved: true, splitMin: 6, lazy: SH !== null && !CX }, CX ? { help: false } : {}) };
   }
   if (!moves.length) return { result: { type: 'analyze', list: [], depth: 0, exact: true } };
-  return { plan: { kind: 'all', kids: mtKids({ b: m.b, side: m.side, rules: m.rules }).kids, inf, maxD: m.maxDepth || 60, ms: m.ms || 1000, solved: true, pv: m.pv || 0, lazyAll: SH !== null } };
+  return { plan: Object.assign({ kind: 'all', kids: mtKids({ b: m.b, side: m.side, rules: m.rules }).kids, inf, maxD: m.maxDepth || 60, ms: m.ms || 1000, solved: true, pv: m.pv || 0, lazyAll: SH !== null && !CX }, CX ? { help: false } : {}) };
 }
 function mtV(m) {
   const { b, side } = mtNode(m), ply = (m.line || []).length;
-  nodes = 0; aborted = false; cut = false; deadline = m.until ? now() + (m.until - Date.now()) : Infinity;
+  begin(m.until ? now() + (m.until - Date.now()) : Infinity); cut = false;
   const nl = m.nl || 0; let v, ok = true;
   try { v = search(b, side, m.d, m.wa, m.wb, Math.max(1, ply)); } catch (e) { if (!(e instanceof Abort)) throw e; ok = false; v = 0; }
   return { v, ok: ok && (!nl || nodes <= nl), exact: !cut, nodes };
@@ -670,8 +705,8 @@ function mtKids(m) {
   let h1 = side ? ZS1 : 0, h2 = side ? ZS2 : 0;
   for (let i = 0; i < 14; i++) { h1 ^= Z1[i * ZN + b[i]]; h2 ^= Z2[i * ZN + b[i]]; }
   h1 ^= ZR1[ridx]; h2 ^= ZR2[ridx];
-  const ti = h1 & TT_MASK, e0 = SH !== null ? SH.get(h1, h2) : undefined;
-  const ttMove = SH !== null ? (e0 !== undefined ? e0.m : -1) : ttKey[ti] === h2 && ttInfo[ti] ? (ttInfo[ti] >> 10) - 1 : -1;
+  const ti = h1 & TT_MASK, e0 = SH !== null && !CX ? SH.get(h1, h2) : undefined;
+  const ttMove = CX ? ttMoveOf(b, side) : SH !== null ? (e0 !== undefined ? e0.m : -1) : ttKey[ti] === h2 && ttInfo[ti] ? (ttInfo[ti] >> 10) - 1 : -1;
   const must = Rcur.feed && sideSum(b, 1 - side) === 0, out = [];
   for (let k = 0; k < 6; k++) {   // (the same moves and order as search())
     if (!b[base + k] || (must && Rcur.oware && b[base + k] < 6 - k)) continue;
@@ -713,7 +748,7 @@ function mtLead(m) {
 }
 function mtHelp(m) {
   const b = Int8Array.from(m.b); setup(b, m.rules);
-  nodes = 0; aborted = false; deadline = m.until ? now() + (m.until - Date.now()) : Infinity;
+  begin(m.until ? now() + (m.until - Date.now()) : Infinity);
   let prev = -1;
   try {
     for (let d = 1; d <= (m.maxD || 60); d++) {
@@ -727,16 +762,34 @@ function mtHelp(m) {
 
 const API = { RULES, RULE_IDS, initial, play, trace, replay, legal, isLegal, canFeed, stuck, sideSum, storeOf, baseOf, opposite, turnMax, turnMaxFirst,
   evaluate, think, analyze, solve, chooseMove, LEVELS, mtPlan, mtV, mtKids, mtFin, mtPv, mtLead, mtHelp, W, WO, WG,
-  setShared: t => { SH = t || null; }, get shared() { return SH; }, ttClear, pvLine, setRandom: f => { seedRand = f; }, get nodes() { return nodes; } };
+  setShared: t => { SH = t || null; }, get shared() { return SH; }, ttClear, setWasm: x => { if (x) cxLoad(x); else CX = null; }, get wasm() { return !!CX; }, ttFix: on => { TTFIX = !!on; if (CX) CX.mc_ttfix(TTFIX ? 1 : 0); }, pvLine, setRandom: f => { seedRand = f; }, get nodes() { return nodes; } };
 
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else root.MancalaEngine = API;
 
 // ---------------------------------------------------------------------------- worker protocol
 if (typeof WorkerGlobalScope !== 'undefined' && root instanceof WorkerGlobalScope) {
+  // (2026-11-11) the C engine: engine_simd.wasm (wasm SIMD) where the browser has SIMD, else engine.wasm (the same code); without
+  // WebAssembly (or with ?nowasm) the JavaScript search above. Its clock (env.now) also stops a task the threads drop (SH).
+  let core = 'js';
+  const ready = (async () => {
+    try {
+      if (typeof WebAssembly !== 'object' || /[?&]nowasm\b/.test(root.location.search || '')) return;
+      let simd = true;
+      try { simd = WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11])); } catch (e) { simd = false; }
+      const url = new URL((simd ? 'engine_simd.wasm' : 'engine.wasm') + '?v=1', root.location.href);
+      const imp = { env: { now: () => (SH !== null && SH.stopped()) ? Infinity : now() } };
+      const r = WebAssembly.instantiateStreaming ? await WebAssembly.instantiateStreaming(fetch(url), imp) : await WebAssembly.instantiate(await fetch(url).then(x => x.arrayBuffer()), imp);
+      cxLoad(r.instance.exports); core = simd ? 'wasm-simd' : 'wasm';
+    } catch (e) { CX = null; }
+  })();
   root.onmessage = ev => {
     const m = ev.data;
     if (m && m.type === 'mtshare') { try { importScripts(m.lib); SH = root.MTTT.attach(m); } catch (err) { SH = null; } return; }   // (shared/mtsplit.js shared mode)
+    ready.then(() => handle(m));
+  };
+  const handle = m => {
+    if (m && m.type === 'ping') { root.postMessage({ type: 'pong', id: m.id, core }); return; }
     if (SH !== null) SH.begin(m);
     try {
       const b = Int8Array.from(m.b || []);

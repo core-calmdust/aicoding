@@ -41,12 +41,13 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);ma
 <body>
 <main>
 <h1>マンカラ マルチスレッド ベンチマーク</h1>
-<p class="sub">対局ページと同じ方式（shared/mtsplit.js）で、スレッド数ごとの速さを測ります。<b>共有</b>＝ページが分離されているとき（Chrome / Edge は自動、Safari・Firefox は対局ページでマルチスレッドをオン）に置換表を共有して Lazy SMP で読む方式（2026-11-09〜）、<b>非共有</b>＝各スレッドが自分の置換表でルートの手と本筋を分担する Young Brothers Wait（分離できないときの方式）。両方を測ります。PC の Chrome / Safari で開き、終わったら「結果をコピー」を押して貼り付けてください。</p>
+<p class="sub">（2026-11-11）探索は C（WebAssembly、engine.c）。C では各スレッドが自分の置換表を持ち、共有のページでもルートの手と本筋を分担します（Lazy SMP は JavaScript だけ）。「エンジン」で前の JavaScript 版も測れます。<br>対局ページと同じ方式（shared/mtsplit.js）で、スレッド数ごとの速さを測ります。<b>共有</b>＝ページが分離されているとき（Chrome / Edge は自動、Safari・Firefox は対局ページでマルチスレッドをオン）に置換表を共有して Lazy SMP で読む方式（2026-11-09〜）、<b>非共有</b>＝各スレッドが自分の置換表でルートの手と本筋を分担する Young Brothers Wait（分離できないときの方式）。両方を測ります。PC の Chrome / Safari で開き、終わったら「結果をコピー」を押して貼り付けてください。</p>
 
 <div class="card"><div class="kv" id="env"></div></div>
 
 <div class="card">
   <div class="row">
+    <label>エンジン <select id="selE"><option value="c" selected>C（wasm）</option><option value="js">JavaScript（前の版との比較用）</option></select></label>
     <label>重さ <select id="selW"><option value="light">軽い（数分）</option><option value="normal" selected>ふつう</option><option value="heavy">重い</option></select></label>
   </div>
   <div class="row" style="margin-top:12px">
@@ -59,7 +60,7 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);ma
 
 <div class="card"><h2>結果</h2><div class="tw"><table id="tbl"><thead><tr><th>測定</th><th>方式</th><th>スレッド</th><th>時間</th><th>1スレッド比</th><th>効率</th><th>nps（合計）</th><th>1スレッドと一致</th></tr></thead><tbody></tbody></table></div><pre id="log"></pre></div>
 </main>
-<script src="engine.js?v=20261109wr1-pro1-mt2"></script>
+<script src="engine.js?v=20261111c1"></script>
 <script src="../shared/mtengine.js?v=8"></script><script src="../shared/mtsplit.js?v=6"></script>
 <script>MTSplit.init({ sw: 'sw.js?v=1' });</script>
 
@@ -80,7 +81,7 @@ env();
 const E = window.MancalaEngine;
 const D = { light: 14, normal: 16, heavy: 18 }, TA = { light: 1000, normal: 2000, heavy: 4000 };
 const G = {
-  url: 'engine.js?v=20261109wr1-pro1-mt2', drive: MTSplit.ladder.drive,
+  url: 'engine.js?v=20261111c1', drive: MTSplit.ladder.drive,
   positions() {
     const out = [];
     for (const rules of ['kalah', 'oware', 'mangala']) {
@@ -100,7 +101,7 @@ const G = {
 // a fresh pool for every run (no table left over from the run before), warmed up first
 const MODES = () => MTSplit.shared ? ['sh', 'ns'] : ['ns'], MODE_NAME = { sh: '共有', ns: '非共有' };
 async function once(t, msg, mode) {
-  const pool = MTSplit.pool({ url: G.url, setup: G.setup, drive: G.drive, tt: mode === 'sh' });
+  const pool = MTSplit.pool({ url: G.url + ($('#selE').value === 'js' ? '&nowasm=1' : ''), setup: G.setup, drive: G.drive, tt: mode === 'sh' });
   await new Promise(r => setTimeout(r, 400));
   if (G.warm) await pool.run(Object.assign({ mtThreads: t }, G.warm));
   const t0 = performance.now();
@@ -115,7 +116,7 @@ async function run() {
   $('#btnRun').disabled = true; $('#btnCopy').disabled = true;
   const w = $('#selW').value, P = G.positions(w);
   const total = P.length * G.tests.length * COUNTS.length * MODES().length; let done = 0;
-  lines = [`mancala bench ${new Date().toISOString()} | ${ua} | hc ${HC} | weight ${w} | shared ${MTSplit.shared ? 'yes' : 'no'}`];
+  lines = [`mancala bench ${new Date().toISOString()} | ${ua} | hc ${HC} | weight ${w} | shared ${MTSplit.shared ? 'yes' : 'no'} | engine ${$('#selE').value}`];
   const R = {};
   try {
     for (const p of P) for (const T of G.tests) for (const M of MODES()) {

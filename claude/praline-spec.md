@@ -78,8 +78,10 @@ wasm の αβ エンジン（`engine_mt.wasm`、`-DMT`）の**仕事を分ける
 | 五目並べ（`gomoku/`） | JS 探索＋wasm の共有の置換表・分割点（`mt.c`） | YBW v2（どの節も） | mtengine・proset |
 | 囲碁（`go/`）・ヘックス（`hex/`） | C（wasm） | 共有木 MCTS（virtual loss） | mtengine・proset |
 | アマゾンズ（`amazons/`） | C（wasm、αβ の探索ごと core.c、2026-11-11） | αβ は **YBW**（3）＋busy marks、Lv.19〜23 は共有木 MCTS（同じ `core_mt.wasm`、補助は両方を待つ）。分離できないページは mtsplit の非共有 | mtengine・**praline（2026-11-11）**・proset（mtsplit は非共有だけ） |
-| ウゴルキ・アゴン・コナネ | JS＋wasm コア | YBW＋共有の置換表＋手伝い（JS 分割） | mtsplit・mttt・proset |
-| マンカラ | JS | Lazy SMP（共有の置換表） | mtsplit・mttt・proset |
+| ウゴルキ（`ugolki/`） | C（wasm、ルートのループも 2026-11-11） | **YBW**（3）（`core_mt.wasm`）。分離できないページは mtsplit | mtengine・**praline（2026-11-11）**・proset（mtsplit は非共有・予備） |
+| アゴン（`agon/`） | C（wasm、ルートのループも 2026-11-11） | **YBW**（3）（`core_mt.wasm`）。分離できないページは mtsplit | mtengine・**praline（2026-11-11）**・proset（mtsplit は非共有・予備） |
+| コナネ | JS のルート＋wasm の探索 | YBW＋共有の置換表＋手伝い（JS 分割） | mtsplit・mttt・proset |
+| マンカラ | **C（wasm、2026-11-11）**：探索・評価・置換表（`engine.c`、SIMD 版となし版） | 各 Worker が自分の置換表でルートの手と本筋を分担（YBW。C では Lazy SMP は使わない） | mtsplit・proset（`claude/mancala-spec.md`） |
 | コネクトフォー | JS | 列ごとの完全読み（共有の置換表） | mtsplit＋`connect4/mt.js` |
 | ドット＆ボックス | JS＋wasm（5×5） | 手の分担（共有の置換表）・補助 Worker | mtworkers（共有モード）・wasm `dots5mt.wasm` |
 | ウル・セネト・ルドー | JS | 独立な仕事の配り分け（全コア） | mtworkers |
@@ -193,6 +195,12 @@ JavaScript エンジンは `shared/mtsplit.js`（＋`mttt.js`）、独立な仕�
 - αβ の探索ループ（`search`・解析の全部の手・最善手の反復深化）を `amazons/core.c` に移し、MCTS と同じ `core_mt.wasm` で Praline の YBW（つなぎ：局面は盤100＋アマゾン8＋手番＋鍵2つ、ルートの候補の値 `sc`、`spCutoff` は空＝キラー・履歴なし）。補助は `mt_help` の中で MCTS の木と分割点の両方を待つ。1スレッドは JS の探索と手・値・局面数・評価数が全一致（`amazons/tools/check_ab.js`、246回の探索）。
 - `tools/mtsim`（評価数の時計）深さ6・8局面：2／4／8 ×1.78／3.07／4.76、遅いコアあり 8／10／14 ×4.82／4.79／4.73。前（mtsplit の共有・YBW＋手伝い、`mtstep` を評価数の時計に）×1.43／2.21／3.39。1スレッドも ×1.22（ループを C に）。詳細は claude/amazons-spec.md「αβ を C に」。
 
+### ウゴルキ（2026-11-11）：ルートのループを C に、Praline に
+- 探索はすでに C（core.c）で、JS はルートのループと mtsplit。ルートのループを `ab_best`／`ab_values` に移し、`core_mt.wasm` で Praline の YBW（つなぎ：局面・繰り返しの履歴・各手の元の順番 `lg`）。1スレッドは前の版と848回の探索で全一致。`tools/mtsim`（局面数の時計、5局面・深さ8）2／4／8 ×1.97／3.71／6.79、遅いコアあり 8／10／14 ×6.74／7.04／7.62（前の mtsplit ×1.37／2.18／3.30）。詳細は claude/ugolki-spec.md。
+
+### アゴン（2026-11-11）：ウゴルキと同じ手順
+- ルートのループを `ab_best`／`ab_values` に、`core_mt.wasm` で Praline の YBW。1スレッドは前の版と424回の探索で全一致。`tools/mtsim`（局面数の時計、5局面・深さ7）2／4／8 ×1.89／3.58／6.14、遅いコアあり 8／10／14 ×6.14／6.41／6.51（前の mtsplit ×1.22／1.64／2.28）。
+
 ---
 
 ## 7. エンジン本体とサイト側のつなぎの境目（別リポジトリでの公開を前提に、2026-11-11）
@@ -281,14 +289,15 @@ Many cores (nuts) held together by shared memory (caramel).
 | `icon.svg` | アイコン（案A Cluster）：キャラメル #C9823F の角丸正方形に、クリーム #F5EADB とココア #2A1E17 の丸4つ（縁取りはキャラメル） |
 | `icon-16.svg` | 16px 用の簡略版（丸3つ、縁取りなし） |
 | `logo.svg` | 横組み：白い背景＋アイコン＋「Praline」（Outfit 600、letter-spacing −0.03em、ココア #2A1E17。i の点はキャラメルの丸＝点なしの ı ＋直径0.2em の丸を Outfit の i の点の高さに）＋下に「THINKING ENGINE」（Outfit 500、letter-spacing 0.32em、#7A5A44） |
-| `card.svg` | トップページのパネル用（4:3・1600×1200、白地の中央にロゴ、幅の約62%） |
+| `card.svg` | トップページのパネル用（2026-11-11 改：**3:2・1500×1000 の暗い版**。ココア〜黒の地 #1A130F〜#241A14、ロゴは暗い背景用＝文字クリーム #F5EADB・i の点キャラメル・THINKING ENGINE #C8B29C、幅の約56%。ロゴの帯の上下にキャラメル／ココアの光を feGaussianBlur（半径90）で敷き、画像の上下各22%は mask でパネルの地 #100C0A へ溶ける。白地は使わない＝トップは暗いテーマで、白は周りより明るすぎるため） |
 | `tools/build.py`・`tools/outline.py` | 上の4つを作るスクリプト（`python3 praline/tools/build.py praline`、fontTools） |
 
 - 文字は**アウトライン化済み**（`<img>` で使ってもフォントを読まない）。作業機に Outfit の可変フォントがなかったため、Outfit の Regular（400）と Bold（700）の輪郭（同じ点の構成）を補間して 600・500 相当を作り、カーニング（GPOS kern）も同じく補間。可変フォントで作り直すときは `outline.py` を差し替える。
 - Outfit は SIL Open Font License 1.1（Copyright 2021 The Outfit Project Authors）。ロゴのような図案（アウトライン化した文字）は自由に使え、フォントのファイル自体は同梱しないので OFL の文書の同梱は不要。
 
 **トップページ（`index.html`）**：「開発室」の下に新しい見出し「ソフトウェア」（`#software`、14言語 `sw.h2`・`sw.sub`・`sw.desc`）を作り、開発室と同じギャラリー（`makeGallery`、`p: 'sw'`、台帳 `SOFTWARE`）で Praline を1項目置く。
-- 箱は開発室と同じ形（`.lab.sw`、キャラメル色の破線・方眼）、カードはパネル＋アイコンの並び。パネルの絵は `card.svg`（`white: true` でパネルの絵の地を白に）。
+- 箱は開発室と同じ形（`.lab.sw`、キャラメル色の破線・方眼）、カードはパネル＋アイコンの並び。パネルの絵は `card.svg`（台帳の `soft: true` → `.gx-media.sf`：地を #100C0A、ぼかした背景の複製と下の影を出さない、スマホは枠を 3:2）。
 - **準備中**：台帳の `soon: true` で、アイコンの左上に「SOON」（バッジは英語表記の規則どおり）、タグと再生ボタンの位置に「準備中」（`tag.soon`、14言語）。ボタンは破線の押せない形（`aria-disabled`）、パネルの絵・アイコンをクリックしても遷移しない（Enter も選ぶだけ）。公開したら `soon` を外して `href` を入れる。
-- 説明は `pl.desc`（14言語、PC 幅392px・6行に収まることを計測済み）。上のメニュー・下のタブには足していない（1項目・準備中のため。項目が増えたら検討）。公開タイトル数（`stat-titles`）にも数えない。
+- 説明は `pl.desc`（14言語、PC 幅392px・6行に収まることを計測済み）。公開タイトル数（`stat-titles`）には数えない。
+- **メニュー**（2026-11-11 ユーザー指示）：上のナビ（開発室の次）と下のタブ（4列に）に「ソフトウェア」（`#software`、`nav.sw`＝`sw.h2`、インドネシア語だけタブに収まる「Software」）。5項目でも1行に収まるよう 901〜1120px はナビの間隔と文字を詰める（901〜1000px はさらに詰める）。
 - **ゲームの中の表示**（2026-11-11）：§2 の表のゲームの単体ページに「Powered by Praline」（`shared/praline-badge.js`。PC は右下に固定、スマホは歯車のパネルの下。押すとトップの `#software`）。決まりは addendum「Powered by Praline の表示」。
