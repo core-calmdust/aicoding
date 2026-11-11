@@ -351,6 +351,8 @@ body.in-lesson .review-card{display:none!important}
 /* ---------------------------------------------------------------- modal */
 .overlay{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:rgba(4,8,7,.62);backdrop-filter:blur(5px);opacity:0;pointer-events:none;transition:opacity .25s;padding:16px}
 .overlay.show{opacity:1;pointer-events:auto}
+/* (closed: not painted at all — ten full-screen layers with backdrop blur at opacity 0 still cost the GPU on phones, 2026-11-11) */
+.overlay:not(.show){visibility:hidden;transition:opacity .25s,visibility 0s linear .25s}
 .modal{width:min(480px,100%);max-height:calc(var(--vh) - 32px);overflow-y:auto;background:linear-gradient(180deg,#2b1f15,#1b130d);border:1px solid rgba(201,169,97,.35);border-radius:18px;padding:24px;box-shadow:0 40px 80px rgba(0,0,0,.6);transform:translateY(10px);transition:transform .25s}
 .overlay.show .modal{transform:none}
 .modal h2{font-family:'Shippori Mincho B1',serif;font-size:22px;letter-spacing:.12em;margin-bottom:18px}
@@ -1440,6 +1442,18 @@ html[lang=ar] .pf-input{direction:rtl}
   .board-area > .hand .hslot .pc{height:100%;width:calc(var(--cw)*0.95)}
   .side{height:calc(var(--bh) + var(--fp) + var(--cw) * 0.16 + var(--ch) * 1.9)}
   body.ts-noopp .side{height:calc(var(--bh) + var(--fp) + var(--cw) * 0.16 + var(--ch) * 0.95)}   /* (詰将棋: only the attacker's bar) */
+  /* the 3D board (フル機能): the board itself is made deeper for the bars (atlas/skin/shogi.js setBoard ext) — the bars are see-through
+     on its wood: no joint, nothing to slip */
+  html.atlas-shogi:not(.atlas-2d) body .board-area > #handTop.hand,html.atlas-shogi:not(.atlas-2d) body .board-area > #handBottom.hand{background:transparent!important;-webkit-mask:none!important;mask:none!important;box-shadow:none!important;border-radius:0!important}
+  /* the 2D page: the bars in the frame's own dark (the page's UI colour), the frame and the bars one piece — the frame's ground is
+     painted once under the whole block, so there is no joint */
+  html:not(.atlas-skin) .board-area{background:linear-gradient(145deg,#2a2018 0%,#16100b 55%,#22190f 100%);border-radius:12px;box-shadow:0 40px 80px -30px rgba(0,0,0,.85),0 0 0 1px rgba(201,169,97,.25)}
+  html:not(.atlas-skin) body.skin-metal .board-area{background:linear-gradient(145deg,#3b4248 0%,#1d2226 55%,#2f353a 100%);box-shadow:0 40px 80px -30px rgba(0,0,0,.85),0 0 0 1px rgba(200,210,220,.25)}
+  html:not(.atlas-skin) body.skin-ink .board-area{background:linear-gradient(145deg,#141414 0%,#070707 60%,#121212 100%)}
+  html:not(.atlas-skin) body .board-area > .frame{background:transparent!important;box-shadow:none!important}
+  html:not(.atlas-skin) body .board-area > #handTop.hand,html:not(.atlas-skin) body .board-area > #handBottom.hand{background:transparent!important;box-shadow:none!important;border:0!important}
+  html:root:not(.atlas-skin) body .board-area > .hand .hname{color:rgba(226,194,117,.82)!important}
+  html:root:not(.atlas-skin) body.skin-metal .board-area > .hand .hname{color:rgba(210,220,228,.75)!important}
 }
 /* lesson intro on phones (2026-11-11, a quieter, luxury layout): centred heading over a hairline; the sample board alone and centred on a
    soft plate; the four facts as one row of columns split by hairlines; sections as open text under small spaced gold heads; two equal
@@ -1484,6 +1498,51 @@ html[lang=ar] .pf-input{direction:rtl}
   #lessonIntroView .li-sec h4{font-size:12px;letter-spacing:.28em;margin:0 0 8px;display:flex;align-items:center;gap:14px}
   #lessonIntroView .li-sec h4::after{content:'';flex:1;height:1px;background:color-mix(in srgb,var(--brass,#c9a961) 30%,transparent)}
   #lessonOverlay .lesson-intro .li-sec p{font-size:15.5px;line-height:1.95}
+}
+/* 定跡 (the opening's page, 2026-11-11): the same quiet luxury as the lessons — open lead text, the two ways in as hairline cards,
+   the story as the sample board on a soft plate beside small spaced gold heads */
+#lessonIntroView.li-open .op-lead{max-width:700px;margin:0 auto 24px}
+#lessonIntroView.li-open .op-lead p{font-size:15.5px;line-height:1.95;margin:0 0 10px}
+#lessonIntroView.li-open .op-choice{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;max-width:700px;margin:0 auto 32px}
+#lessonIntroView.li-open .op-choice .lesson-item{display:flex;align-items:center;gap:14px;border:1px solid color-mix(in srgb,var(--brass,#c9a961) 45%,transparent);border-radius:14px;padding:16px 18px;background:linear-gradient(180deg,color-mix(in srgb,var(--brass,#c9a961) 10%,transparent),transparent);box-shadow:none;text-align:start}
+#lessonIntroView.li-open .op-choice .lesson-item:hover{border-color:color-mix(in srgb,var(--brass,#c9a961) 80%,transparent);background:linear-gradient(180deg,color-mix(in srgb,var(--brass,#c9a961) 18%,transparent),transparent)}
+#lessonIntroView.li-open .op-choice .lesson-item .no{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;border:1px solid color-mix(in srgb,var(--brass,#c9a961) 55%,transparent);background:none;font-size:17px;color:var(--brass,#c9a961)}
+#lessonIntroView.li-open .op-choice .lesson-item .tx b{font-size:15.5px;letter-spacing:.08em}
+#lessonIntroView.li-open .op-choice .lesson-item .tx small{font-size:12.5px;line-height:1.6;opacity:.75}
+#lessonIntroView.li-open .op-story{border:0;border-radius:0;background:none;padding:0;max-width:880px;margin:0 auto 10px;gap:40px;align-items:flex-start}
+#lessonIntroView.li-open .op-fig{width:min-content;max-width:100%;padding:16px 16px 10px;border-radius:20px;background:radial-gradient(120% 90% at 50% 0%,color-mix(in srgb,var(--brass,#c9a961) 14%,transparent),transparent 70%)}
+#lessonIntroView.li-open .op-fig figcaption{font-size:11.5px;letter-spacing:.12em;text-align:center;opacity:.75;max-width:none}
+#lessonIntroView.li-open .op-tx h4{font-size:12px;letter-spacing:.28em;margin:4px 0 8px;display:flex;align-items:center;gap:14px;color:var(--brass,#c9a961)}
+#lessonIntroView.li-open .op-tx h4::after{content:'';flex:1;height:1px;background:color-mix(in srgb,var(--brass,#c9a961) 30%,transparent)}
+#lessonIntroView.li-open .op-tx h4:not(:first-child){margin-top:22px}
+#lessonIntroView.li-open .op-tx p{font-size:15px;line-height:1.9}
+@media (max-width:560px){
+  #lessonIntroView.li-open .op-lead p{font-size:14.5px;line-height:1.85}
+  #lessonIntroView.li-open .op-choice{grid-template-columns:1fr;gap:8px;margin-bottom:24px}
+  #lessonIntroView.li-open .op-choice .lesson-item{padding:12px 14px}
+  #lessonIntroView.li-open .op-story{flex-direction:column;align-items:center;gap:16px}
+  #lessonIntroView.li-open .op-tx p{font-size:14.5px;line-height:1.85}
+}
+/* wide screens (2026-11-11): no empty half — the sample board on the left, and beside it, top to bottom, the four facts in one row and
+   the sections; everything read in one glance, the text column as tall as the board */
+@media (min-width:900px){
+  #lessonIntroView:not(.li-open) .lesson-intro{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:44px;align-items:start;max-width:980px;margin:0 auto}
+  #lessonIntroView .li-hero{display:contents}
+  #lessonIntroView .li-fig{grid-column:1;grid-row:1 / span 8;position:sticky;top:0}
+  #lessonIntroView .li-chips{grid-column:2;grid-template-columns:repeat(4,minmax(0,1fr));margin:4px 0 26px}
+  #lessonIntroView .li-chip{padding:12px 8px}
+  #lessonIntroView .li-chip:nth-child(even){border-inline-start:0}
+  #lessonIntroView .li-chip:nth-child(n+3){border-top:0}
+  #lessonIntroView .li-chip + .li-chip{border-inline-start:1px solid color-mix(in srgb,var(--brass,#c9a961) 25%,transparent)}
+  #lessonIntroView .li-sec{grid-column:2;max-width:none;margin:0 0 20px}
+  #lessonOverlay .lesson-intro .li-sec p{font-size:15px;line-height:1.85}
+  /* 定跡: the same — the position after the line on the left; the lead, the two ways in and the story beside it */
+  #lessonIntroView.li-open .lesson-intro{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:44px;align-items:start;max-width:1000px;margin:0 auto}
+  #lessonIntroView.li-open .op-story{display:contents}
+  #lessonIntroView.li-open .op-fig{grid-column:1;grid-row:1 / span 3;width:min-content;position:sticky;top:0;margin:0}
+  #lessonIntroView.li-open :is(.op-lead, .op-choice, .op-tx){grid-column:2;max-width:none;margin-left:0;margin-right:0}
+  #lessonIntroView.li-open .op-lead{margin-bottom:18px}
+  #lessonIntroView.li-open .op-choice{margin-bottom:28px}
 }
 </style>
 <style>
@@ -4502,7 +4561,8 @@ function openOpeningChoice(oi) {
   $('#liStep').textContent = g.handi ? t('op.handiHead') : OX ? `${t('op.title')} ・ ${OX.tx(OX.catOf(g))}` : t('op.title');
   $('#liTitle').textContent = L(g.title);
   const intro = st && st.intro ? (st.intro[LANG] || st.intro.en || st.intro.ja) : [L(g.short)];
-  $('#liBody').innerHTML = intro.map(p => `<p>${p}</p>`).join('') +
+  $('#lessonIntroView').classList.add('li-open');
+  $('#liBody').innerHTML = `<div class="op-lead">${intro.map(p => `<p>${p}</p>`).join('')}</div>` +
     `<div class="op-choice">${st ? `<button class="lesson-item" data-study="1"><span class="no">📖</span><span class="tx"><b>${t('op.study')}</b><small>${t('op.studyDesc', { n: st.steps.length })}</small></span></button>` : ''}` +
     (prac ? `<button class="lesson-item" data-practice="1"><span class="no">✎</span><span class="tx"><b>${t('op.practice')}</b><small>${t(g.handi ? 'op.practiceDescH' : 'op.practiceDesc')}</small></span></button>` : '') + `</div>` + opStory(g);
   $('#btnLessonStart').classList.add('hidden');
@@ -4629,7 +4689,7 @@ const LI_TX = {
 };
 const lit = (k, v) => { let x = (LI_TX[LANG] || LI_TX.en)[k] || LI_TX.en[k]; for (const y in v || {}) x = x.split('{' + y + '}').join(v[y]); return x; };
 function openIntro(i) {
-  openChoiceIdx = -1; $('#btnLessonStart').classList.remove('hidden');
+  openChoiceIdx = -1; $('#btnLessonStart').classList.remove('hidden'); $('#lessonIntroView').classList.remove('li-open');
   introIdx = i; const g = gradeAt(i);
   $('#liStep').textContent = i < 0 ? L(g.head) : `STEP ${i + 1} ・ ${t('ls.levelTag', { g: L(g.grade) })}`;
   $('#liTitle').textContent = L(g.title);
@@ -6374,7 +6434,7 @@ if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStar
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/img/tex/baked.js?v=1')).then(() => load('../atlas/table3d.js?v=147')).then(() => load('../atlas/tables3d.js?v=55')).then(() => load('../atlas/skin/common.js?v=68')).then(() => load('../atlas/models/shogi.js?v=33k')).then(() => load('../atlas/skin/shogi.js?v=34l'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/img/tex/baked.js?v=1')).then(() => load('../atlas/table3d.js?v=147')).then(() => load('../atlas/tables3d.js?v=55')).then(() => load('../atlas/skin/common.js?v=68')).then(() => load('../atlas/models/shogi.js?v=33l')).then(() => load('../atlas/skin/shogi.js?v=34m'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>

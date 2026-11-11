@@ -27,7 +27,17 @@
     pc: { vars: ['--cw'], extras: '.board-area > .hand', fit2d: true, k2d: { l: .0506, r: .0511, t: .0502, b: .0516 },   // (the 2D board: laid out exactly as the 3D one)
       place(F) {
         const top = document.getElementById('handTop'), bot = document.getElementById('handBottom'); if (!top || !bot) return;
-        if (STK.matches) {   // a PC window up to 3:2: the bars above and below the frame, its full width, touching it (3D: 13px onto its rim, as on phones)
+        if (STK.matches && extW && is3()) {   // the 3D board made deeper for them (setBoard ext): the bars exactly on that wood, see-through
+          const r0 = boardDom.getBoundingClientRect(), u = r0.height / FH, mg = board.userData.mg || .5, w = (r0.width + 2 * mg * u).toFixed(1) + 'px', hh = (extW * u).toFixed(1) + 'px';
+          [top, bot].forEach(h => { if (h.style.getPropertyValue('width') !== w) h.style.setProperty('width', w, 'important'); if (h.style.getPropertyValue('height') !== hh) h.style.setProperty('height', hh, 'important'); });
+          const mv = (h, x, y) => { const cs = getComputedStyle(h), l = parseFloat(cs.left) || 0, t = parseFloat(cs.top) || 0;
+            if (Math.abs(x) > .3) h.style.setProperty('left', (l + x) + 'px', 'important'); if (Math.abs(y) > .3) h.style.setProperty('top', (t + y) + 'px', 'important'); };
+          const r1 = boardDom.getBoundingClientRect(), L = r1.left - mg * u;
+          let r = top.getBoundingClientRect(); if (r.width) mv(top, L - r.left, r1.top - mg * u - r.bottom);
+          r = bot.getBoundingClientRect(); mv(bot, L - r.left, r1.bottom + mg * u - r.top);
+          return;
+        }
+        if (STK.matches) {   // a PC window up to 3:2: the bars above and below the frame, its full width, touching it (the 2D board: its plate runs on under them)
           const o = is3() ? 13 : 0, w = (F.r - F.l).toFixed(1) + 'px', de = document.documentElement;
           [top, bot].forEach(h => { if (h.style.getPropertyValue('width') !== w) h.style.setProperty('width', w, 'important'); });
           const mv = (h, x, y) => { const cs = getComputedStyle(h), l = parseFloat(cs.left) || 0, t = parseFloat(cs.top) || 0;
@@ -56,7 +66,7 @@
         const cs = getComputedStyle(bot), r = bot.getBoundingClientRect(), l = parseFloat(cs.left) || 0, t = parseFloat(cs.top) || 0;
         bot.style.setProperty('left', (l + sr.left - r.left) + 'px', 'important'); bot.style.setProperty('top', (t + F.b - r.bottom) + 'px', 'important');
       },
-      unplace() { ['handTop', 'handBottom'].forEach(id => { const h = document.getElementById(id); if (h) { h.style.removeProperty('left'); h.style.removeProperty('top'); h.style.removeProperty('width'); } }); } },
+      unplace() { ['handTop', 'handBottom'].forEach(id => { const h = document.getElementById(id); if (h) { h.style.removeProperty('left'); h.style.removeProperty('top'); h.style.removeProperty('width'); h.style.removeProperty('height'); } }); } },
     outer: r => { const H = r.height * OUT; return { top: r.top + r.height / 2 - H / 2, height: H }; },
     guide: '../images/atlas/g-shogi.webp', guideFallback: '../images/atlas/shogi.webp',
     bubbles: [['lsPrompt', 'lsFb']], floor: 'tatami',
@@ -82,18 +92,30 @@
   T3.show('shogi', board, { still: true });
   skin.alignTo(FH, Y);
   // 5五将棋 (shogi/variants/): the page switches its board to 5×5 → a 5×5 kaya board, the camera fitted to it again
-  let boardN = 9, cropK = '', variantN = 9;
+  let boardN = 9, cropK = '', variantN = 9, extW = 0, curCrop = null;
   // crop {n, c0, r0}: 詰将棋's close-up (shogi/index.html tzStyle) — an n×n kaya board cut from the whole one
-  function setBoard(n, crop) {
-    const ck = crop ? crop.n + ':' + crop.c0 + ':' + crop.r0 : '';
-    if (n === boardN && ck === cropK) return; boardN = n; cropK = ck;
-    board = T3.MODELS.shogi(true, crop ? { n: crop.n, crop } : { n }); FH = board.userData.S; Y = board.userData.top; OUT = board.userData.outer;
+  // ext: the PC layout up to 3:2 (STK) — the 3D board made deeper at the top and the bottom by the komadai bars' height, so the bars
+  // lie on the board's own wood (one block, no joint to see — 2026-11-11)
+  function setBoard(n, crop, ext = extW) {
+    const ck = (crop ? crop.n + ':' + crop.c0 + ':' + crop.r0 : '') + '|' + ext;
+    if (n === boardN && ck === cropK) return; boardN = n; cropK = ck; curCrop = crop || null; extW = ext;
+    board = T3.MODELS.shogi(true, crop ? { n: crop.n, crop, ext } : { n, ext }); FH = board.userData.S; Y = board.userData.top; OUT = board.userData.outer;
     T3.show('shogi', board, { still: true }); skin.alignTo(FH, Y);
     try { look(); } catch (e) {}
     if (T3.kick) T3.kick(600);
   }
-  document.addEventListener('shogi-geom', e => { try { variantN = e.detail && e.detail.n === 5 ? 5 : 9; setBoard(variantN); } catch (x) { console.warn(x); } });
-  document.addEventListener('shogi-crop', e => { try { const c = e.detail; if (c) setBoard(c.n, c); else setBoard(variantN); } catch (x) { console.warn(x); } });
+  document.addEventListener('shogi-geom', e => { try { variantN = e.detail && e.detail.n === 5 ? 5 : 9; setBoard(variantN); setTimeout(syncExt, 120); } catch (x) { console.warn(x); } });
+  document.addEventListener('shogi-crop', e => { try { const c = e.detail; if (c) setBoard(c.n, c); else setBoard(variantN); setTimeout(syncExt, 120); } catch (x) { console.warn(x); } });
+  // the depth the bars need, in board units (rounded: the model is not rebuilt for a fraction of a px); 0 = the board as it is
+  function wantExt() {
+    if (!STK.matches || !is3()) return 0;
+    const r = boardDom.getBoundingClientRect(), h = (document.getElementById('handBottom') || {}).offsetHeight || 0;
+    if (r.height < 40 || !h) return extW;
+    return Math.round(h / (r.height / FH) * 20) / 20;
+  }
+  function syncExt() { try { const e = wantExt(); if (e !== extW) setBoard(boardN, curCrop, e); } catch (x) { console.warn(x); } }
+  STK.addEventListener ? STK.addEventListener('change', () => setTimeout(syncExt, 60)) : STK.addListener(() => setTimeout(syncExt, 60));
+  addEventListener('resize', () => setTimeout(syncExt, 200)); [500, 1500, 3500].forEach(ms => setTimeout(syncExt, ms));
   { const b0 = document.getElementById('board'); if (b0 && b0.classList.contains('v5')) setBoard(variantN = 5); if (window.__tzCrop) setBoard(window.__tzCrop.n, window.__tzCrop); }
 
   /* ---------- komadai: a light kaya wood-grain texture (procedural, drawn once; skin.css uses --kdwood / --kdwoodh) ---------- */
@@ -178,7 +200,7 @@
   }
   // 3D / 2D (the standard of the other games, 2026-11-10): a 「3D」 tile first in the board row; a 2D board picked = the 2D page
   const V = skin.view ? skin.view({ key: 'atlas-shogi-view', row: document.getElementById('segSkin'), img: '../images/atlas/shogi.webp',
-    on() { setTimeout(() => { try { look(); renderBoard(false); renderHands(); } catch (e) {} }, 0); [60, 400, 1000].forEach(ms => setTimeout(() => { try { window.__kdFit && window.__kdFit(); } catch (e) {} }, ms)); } }) : null;   // (2D ↔ 3D: the komadai bars re-fitted to the new board)
+    on() { setTimeout(() => { try { look(); renderBoard(false); renderHands(); } catch (e) {} syncExt(); }, 0); [60, 400, 1000].forEach(ms => setTimeout(() => { try { window.__kdFit && window.__kdFit(); } catch (e) {} }, ms)); } }) : null;   // (2D ↔ 3D: the komadai bars re-fitted to the new board)
   const is3 = () => !V || V.is3d();
   function look() {   // selection mark, board tone and piece tone follow the game's skin setting
     if (seg) seg.querySelectorAll('button').forEach(x => { if (mine) x.classList.toggle('sel', x.dataset.v === 'atlas3d'); else if (x.dataset.v === 'atlas3d') x.classList.remove('sel'); });
