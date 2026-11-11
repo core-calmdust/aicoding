@@ -35,6 +35,7 @@ ${V} .lx-sec h4::after{content:'';flex:1;height:1px;background:${mix(30)}}
 ${V} .lx-sec p{font-size:15px;line-height:1.9;margin:0 0 10px}
 ${V} .lx-sec p:last-child{margin-bottom:0}
 ${V} .lx-sec ul{margin:0;padding-inline-start:1.2em}${V} .lx-sec li{font-size:15px;line-height:1.85;margin:0 0 4px}
+${V} .lx-sec.lx-trivia h4::after{display:none}
 ${V} .lx-sec.lx-trivia{padding:14px 16px;border-radius:14px;background:${mix(8)};border:1px solid ${mix(22)}}
 ${V} .lx-lead p{font-size:15.5px;line-height:1.95;margin:0 0 10px}
 ${V} .lx-lead{margin:0 0 22px}
