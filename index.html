@@ -85,13 +85,14 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700;900&family=Unbounded:wght@500;700&family=RocknRoll+One&family=Noto+Sans+Devanagari:wght@400;700&family=Noto+Sans+Arabic:wght@400;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700;900&family=Syne:wght@500;700&family=RocknRoll+One&family=Noto+Sans+Devanagari:wght@400;700&family=Noto+Sans+Arabic:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#07080d; --bg2:#0d0f17; --line:rgba(255,255,255,.08); --line2:rgba(255,255,255,.14);
   --text:#eef0f6; --muted:#9aa0b4; --dim:#646a80;
   --pink:#ff3fa4; --cyan:#30e6ff; --violet:#8b5cff; --gold:#f2cf7a;
   --radius:20px;
+  --font-en:'Syne';   /* Latin labels, numbers, badges — switch the English face here (and in the Google Fonts link) */
   --wrap:min(1180px, 100% - 48px);
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -104,7 +105,7 @@ body{
 a{color:inherit;text-decoration:none}
 img{display:block;max-width:100%}
 .wrap{width:var(--wrap);margin:0 auto}
-.en{font-family:'Unbounded',sans-serif;letter-spacing:.02em}
+.en{font-family:var(--font-en),sans-serif;letter-spacing:.02em}
 
 /* background atmosphere */
 .aurora{position:fixed;inset:0;z-index:-2;pointer-events:none;
@@ -150,7 +151,7 @@ nav ul a{white-space:nowrap}
 .btn.ghost{border:1px solid var(--line2);color:var(--text)}
 .btn.ghost:hover{background:rgba(255,255,255,.06)}
 .stats{margin-top:64px;display:flex;flex-wrap:wrap;gap:40px 56px}
-.stat b{display:block;font-family:'Unbounded',sans-serif;font-size:30px;font-weight:700}
+.stat b{display:block;font-family:var(--font-en),sans-serif;font-size:32px;font-weight:700}
 .stat span{font-size:12px;color:var(--dim);letter-spacing:.1em}
 
 /* section head */
@@ -243,7 +244,7 @@ section{padding:56px 0}
 .tag.netrank::before{content:'';display:inline-block;width:7px;height:7px;border-radius:2px;background:#ffc94d;box-shadow:0 0 8px #ffc94d;margin-right:6px;vertical-align:1px}
 .tag.online{border-color:rgba(80,220,140,.6);color:#9ff0c0;background:rgba(80,220,140,.08)}
 .tag.online::before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:#4fe08f;box-shadow:0 0 8px #4fe08f;margin-right:6px;vertical-align:1px}
-.gx-icon .ol{position:absolute;left:-6px;top:-6px;height:18px;padding:0 6px;border-radius:9px;display:flex;align-items:center;gap:3px;font:700 9.5px/1 'Unbounded',sans-serif;letter-spacing:.04em;color:#06210f;background:linear-gradient(135deg,#9ff5c4,#3fd27f);box-shadow:0 0 0 2.5px var(--bg),0 0 10px rgba(80,220,140,.6)}
+.gx-icon .ol{position:absolute;left:-6px;top:-6px;height:18px;padding:0 6px;border-radius:9px;display:flex;align-items:center;gap:3px;font:700 10px/1 var(--font-en),sans-serif;letter-spacing:.05em;color:#06210f;background:linear-gradient(135deg,#9ff5c4,#3fd27f);box-shadow:0 0 0 2.5px var(--bg),0 0 10px rgba(80,220,140,.6)}
 .tag.new{border-color:rgba(242,207,122,.55);color:var(--gold)}
 .tag.new.upd{border-color:rgba(48,230,255,.5);color:var(--cyan)}
 .tag.ai{border-color:rgba(139,92,255,.55);color:#c8b6ff}
@@ -271,7 +272,7 @@ section{padding:56px 0}
 .gx-media .shot{position:relative;width:100%;height:100%;object-fit:contain;transition:opacity .3s ease, transform .6s cubic-bezier(.2,.8,.2,1)}
 .gx-media::after{content:"";position:absolute;inset:auto 0 0 0;height:34%;background:linear-gradient(transparent,rgba(10,11,17,.55));pointer-events:none}
 .gx-media:hover .shot{transform:scale(1.025)}
-.gx-count{position:absolute;top:14px;right:14px;z-index:2;font-family:'Unbounded',sans-serif;font-size:10.5px;font-variant-numeric:tabular-nums;letter-spacing:.08em;padding:4px 10px;border-radius:999px;background:rgba(7,8,13,.62);border:1px solid var(--line2);color:var(--muted);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.gx-count{position:absolute;top:14px;right:14px;z-index:2;font-family:var(--font-en),sans-serif;font-size:11px;font-variant-numeric:tabular-nums;letter-spacing:.08em;padding:4px 10px;border-radius:999px;background:rgba(7,8,13,.62);border:1px solid var(--line2);color:var(--muted);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .gx-info{padding:34px 40px 36px;display:flex;flex-direction:column;justify-content:center;min-width:0;border-left:1px solid var(--line)}
 .gx-info > *{transition:opacity .28s ease, transform .5s cubic-bezier(.2,.8,.2,1)}
 .gx-panel:not(.swap) .gx-info > :nth-child(2){transition-delay:40ms}
@@ -292,7 +293,7 @@ section{padding:56px 0}
 .gx-facts{display:flex;flex-wrap:wrap;gap:12px 26px}
 .gx-facts:empty{display:none}
 .gx-facts div{display:flex;flex-direction:column-reverse}
-.gx-facts dd{direction:ltr;unicode-bidi:isolate;font-family:'Unbounded',sans-serif;font-size:20px;font-weight:700;line-height:1.2;color:var(--text)}
+.gx-facts dd{direction:ltr;unicode-bidi:isolate;font-family:var(--font-en),sans-serif;font-size:20px;font-weight:700;line-height:1.2;color:var(--text)}
 .gx-facts dt{font-size:11px;letter-spacing:.08em;color:var(--dim);margin-top:3px}
 .gx-play::after{content:"→";transition:transform .2s}
 .gx-play:hover::after{transform:translateX(4px)}
@@ -303,7 +304,7 @@ section{padding:56px 0}
 .gx-chips{display:flex;flex-wrap:wrap;gap:8px}
 .gx-chip{font:inherit;font-size:12.5px;line-height:1.4;padding:7px 13px;border-radius:999px;border:1px solid var(--line2);background:rgba(255,255,255,.03);color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;gap:7px;white-space:nowrap;transition:background .2s,color .2s,border-color .2s}
 .gx-chip:hover{color:var(--text);border-color:rgba(255,255,255,.28)}
-.gx-chip b{font-family:'Unbounded',sans-serif;font-size:10px;font-weight:500;color:var(--dim)}
+.gx-chip b{font-family:var(--font-en),sans-serif;font-size:10.5px;font-weight:500;color:var(--dim)}
 .gx-chip[aria-pressed=true]{background:var(--text);border-color:var(--text);color:#0a0b10;font-weight:700}
 .gx-chip[aria-pressed=true] b{color:#5b6070}
 .gx-chip:focus-visible,.gx-search input:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
@@ -418,8 +419,7 @@ html[lang=ar] .gx-chip{direction:rtl}
 /* about */
 .about{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:48px;align-items:center;padding:40px;border-radius:28px;border:1px solid var(--line);background:rgba(255,255,255,.025)}
 .about p{color:var(--muted);font-size:14px;margin-top:14px}
-.prof-name{margin-top:12px;font-size:clamp(28px,3vw,42px);font-weight:700;line-height:1.15;letter-spacing:.12em;margin-right:-.12em;color:var(--text);width:max-content;max-width:100%;background:linear-gradient(100deg,var(--text) 18%,var(--cyan) 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-.prof-name::selection{-webkit-text-fill-color:#07080d;background:var(--cyan)}
+.prof-name{margin-top:12px;font-size:clamp(28px,3vw,42px);font-weight:700;line-height:1.15;letter-spacing:.12em;margin-right:-.12em;color:var(--text);width:max-content;max-width:100%}
 .prof-role{display:flex;flex-wrap:wrap;gap:6px 30px;overflow:hidden;margin-top:12px;font-size:11px;font-weight:500;letter-spacing:.24em;text-transform:uppercase;color:var(--muted)}
 .prof-role span{position:relative;white-space:nowrap}
 .prof-role span+span::before{content:"/";position:absolute;left:-19px;color:var(--cyan);opacity:.6;letter-spacing:0}
@@ -458,6 +458,7 @@ footer a:hover{color:var(--text)}
 /* Arabic: keep the page layout LTR; text blocks read right-to-left */
 html[lang=ar] :is(h1, h2, h3, p){direction:rtl;text-align:right}
 html[lang=ar] .prof{direction:rtl;text-align:right}
+bdi.lt{direction:ltr;unicode-bidi:isolate}
 html[lang=ar] .prof-name{direction:ltr;margin-right:0}
 html[lang=ar] .prof-role span+span::before{left:auto;right:-19px}
 html[lang=ar] .about{direction:rtl}
@@ -830,6 +831,14 @@ Object.assign(I18N, {"ru": {"gx.modes": "Режимы", "gx.stages": "Этапы
 /* ソフトウェア・Praline (praline/) — gallery texts */
 (function (A) { for (const l in A) if (I18N[l]) Object.assign(I18N[l], A[l]); })({"ja": {"sw.h2": "ソフトウェア", "sw.sub": "サイトを支える技術", "sw.desc": "ゲームの裏側で動いている仕組みを、<br>単体のソフトウェアとしても公開していきます。", "tag.soon": "準備中", "pl.title": "プラリネ Praline", "pl.desc": "サイトのボードゲームAIを動かす共通の思考エンジン。PCの複数のコアで手を分け合って読み、読んだ結果を共有しながら、同じ時間でより深く先を読みます。将棋・チェス・シャンチーなど、このサイトの多くのゲームのAIがこの仕組みで考えています。いずれ単体のソフトウェアとして公開予定です。", "pl.play": "準備中"}, "en": {"sw.h2": "Software", "sw.sub": "The tech behind the site", "sw.desc": "The engines running behind the games,<br>to be released as standalone software too.", "tag.soon": "Coming soon", "pl.title": "Praline", "pl.desc": "The shared thinking engine behind the board-game AIs on this site. It splits the search across your PC’s cores and lets them share what they have read, so the AI looks deeper in the same time. Shogi, chess, xiangqi and many other games here already think with it. A standalone release is planned.", "pl.play": "Coming soon"}, "zh": {"sw.h2": "软件", "sw.sub": "支撑本站的技术", "sw.desc": "在游戏背后运行的机制，<br>今后也将作为独立软件公开。", "tag.soon": "准备中", "pl.title": "Praline", "pl.desc": "驱动本站棋盘游戏AI的通用思考引擎。由电脑的多个核心分担着法计算，并共享已经读过的结果，在同样的时间里看得更深。将棋、国际象棋、中国象棋等本站许多游戏的AI都在使用它思考。今后计划作为独立软件公开。", "pl.play": "准备中"}, "zh-TW": {"sw.h2": "軟體", "sw.sub": "支撐本站的技術", "sw.desc": "在遊戲背後運作的機制，<br>未來也將以獨立軟體公開。", "tag.soon": "準備中", "pl.title": "Praline", "pl.desc": "驅動本站棋盤遊戲AI的共通思考引擎。由電腦的多個核心分擔著法計算，並共享已經讀過的結果，在同樣的時間裡看得更深。將棋、西洋棋、象棋等本站許多遊戲的AI都在使用它思考。未來預計以獨立軟體公開。", "pl.play": "準備中"}, "ko": {"sw.h2": "소프트웨어", "sw.sub": "사이트를 받치는 기술", "sw.desc": "게임 뒤에서 움직이는 구조를<br>단독 소프트웨어로도 공개해 나갑니다.", "tag.soon": "준비 중", "pl.title": "Praline", "pl.desc": "이 사이트의 보드게임 AI를 움직이는 공통 사고 엔진. PC의 여러 코어가 수를 나누어 읽고, 읽은 결과를 공유하며 같은 시간에 더 깊이 내다봅니다. 쇼기·체스·샹치 등 이 사이트의 많은 게임 AI가 이 엔진으로 생각하고 있습니다. 언젠가 단독 소프트웨어로 공개할 예정입니다.", "pl.play": "준비 중"}, "es": {"sw.h2": "Software", "sw.sub": "La tecnología detrás del sitio", "sw.desc": "Los motores que funcionan detrás de los juegos,<br>también se publicarán como software independiente.", "tag.soon": "Próximamente", "pl.title": "Praline", "pl.desc": "El motor de pensamiento común de las IA de juegos de mesa del sitio. Reparte la búsqueda entre los núcleos de tu PC y les deja compartir lo ya analizado, para ver más lejos en el mismo tiempo. Shogi, ajedrez, xiangqi y muchos otros juegos del sitio ya piensan con él. Habrá una versión independiente.", "pl.play": "Próximamente"}, "fr": {"sw.h2": "Logiciels", "sw.sub": "La technologie derrière le site", "sw.desc": "Les moteurs qui tournent derrière les jeux,<br>bientôt publiés aussi comme logiciels autonomes.", "tag.soon": "Bientôt", "pl.title": "Praline", "pl.desc": "Le moteur de réflexion commun des IA de jeux de plateau du site. Il répartit la recherche entre les cœurs de votre PC et leur fait partager ce qu’ils ont déjà analysé, pour voir plus loin dans le même temps. Shogi, échecs, xiangqi et bien d’autres jeux du site l’utilisent déjà. Une version autonome est prévue.", "pl.play": "Bientôt"}, "pt": {"sw.h2": "Software", "sw.sub": "A tecnologia por trás do site", "sw.desc": "Os motores que rodam por trás dos jogos<br>também serão lançados como software independente.", "tag.soon": "Em breve", "pl.title": "Praline", "pl.desc": "O motor de raciocínio comum das IAs de tabuleiro do site. Divide a busca entre os núcleos do seu PC, que compartilham o que já analisaram, para ver mais longe no mesmo tempo. Shogi, xadrez, xiangqi e muitos outros jogos daqui já pensam com ele. Uma versão independente está planejada.", "pl.play": "Em breve"}, "de": {"sw.h2": "Software", "sw.sub": "Die Technik hinter der Seite", "sw.desc": "Die Engines hinter den Spielen<br>erscheinen auch als eigenständige Software.", "tag.soon": "Demnächst", "pl.title": "Praline", "pl.desc": "Die gemeinsame Denk-Engine hinter den Brettspiel-KIs dieser Seite. Sie verteilt die Suche auf die Kerne deines PCs, die ihre Ergebnisse teilen – so blickt die KI in derselben Zeit tiefer. Shogi, Schach, Xiangqi und viele weitere Spiele hier denken bereits damit. Eine eigenständige Version ist geplant.", "pl.play": "Demnächst"}, "ru": {"sw.h2": "Программы", "sw.sub": "Технологии, на которых держится сайт", "sw.desc": "Движки, работающие за кулисами игр,<br>выйдут и как отдельные программы.", "tag.soon": "Скоро", "pl.title": "Praline", "pl.desc": "Общий движок мышления для ИИ настольных игр сайта. Он делит перебор ходов между ядрами вашего ПК и даёт им делиться уже просчитанным, чтобы за то же время смотреть глубже. Сёги, шахматы, сянци и многие другие игры сайта уже думают с его помощью. Позже выйдет отдельной программой.", "pl.play": "Скоро"}, "tr": {"sw.h2": "Yazılım", "sw.sub": "Sitenin arkasındaki teknoloji", "sw.desc": "Oyunların arkasında çalışan motorlar<br>bağımsız yazılım olarak da yayımlanacak.", "tag.soon": "Yakında", "pl.title": "Praline", "pl.desc": "Sitedeki masa oyunu yapay zekâlarını çalıştıran ortak düşünme motoru. Aramayı bilgisayarınızın çekirdekleri arasında paylaştırır ve hesaplananları ortak kullanarak aynı sürede daha derine bakar. Shogi, satranç, xiangqi ve sitedeki pek çok oyun zaten bununla düşünüyor. Bağımsız bir sürüm planlanıyor.", "pl.play": "Yakında"}, "id": {"sw.h2": "Perangkat Lunak", "sw.sub": "Teknologi di balik situs ini", "sw.desc": "Mesin yang bekerja di balik game,<br>juga akan dirilis sebagai perangkat lunak tersendiri.", "tag.soon": "Segera hadir", "pl.title": "Praline", "pl.desc": "Mesin berpikir bersama di balik AI permainan papan situs ini. Ia membagi pencarian langkah ke beberapa inti PC Anda dan berbagi hasil yang sudah dihitung, sehingga AI melihat lebih dalam dalam waktu yang sama. Shogi, catur, xiangqi, dan banyak game lain di sini sudah berpikir dengannya. Versi tersendiri direncanakan.", "pl.play": "Segera hadir"}, "hi": {"sw.h2": "सॉफ़्टवेयर", "sw.sub": "साइट के पीछे की तकनीक", "sw.desc": "गेम के पीछे चलने वाले इंजन<br>अलग सॉफ़्टवेयर के रूप में भी जारी होंगे।", "tag.soon": "जल्द आ रहा है", "pl.title": "Praline", "pl.desc": "इस साइट के बोर्ड-गेम AI को चलाने वाला साझा चिंतन इंजन। यह आपके PC के कई कोर में चालों की खोज बाँटता है और पढ़े गए नतीजे साझा करता है, ताकि उतने ही समय में AI और गहराई तक देखे। शोगी, शतरंज, शियांगची और साइट के कई अन्य गेम इसी से सोचते हैं। आगे इसे अलग सॉफ़्टवेयर के रूप में जारी करने की योजना है।", "pl.play": "जल्द आ रहा है"}, "ar": {"sw.h2": "البرمجيات", "sw.sub": "التقنية التي يقوم عليها الموقع", "sw.desc": "المحركات التي تعمل خلف الألعاب<br>ستصدر أيضًا برامجَ مستقلة.", "tag.soon": "قريبًا", "pl.title": "Praline", "pl.desc": "محرك التفكير المشترك الذي يشغّل ذكاء ألعاب الطاولة في هذا الموقع. يوزّع البحث عن النقلات على أنوية حاسوبك ويتيح لها مشاركة ما حسبته، فيرى الذكاء الاصطناعي أعمق في الوقت نفسه. الشوغي والشطرنج والشيانغتشي وألعاب كثيرة أخرى في الموقع تفكر به بالفعل. نخطط لإطلاقه لاحقًا برنامجًا مستقلًا.", "pl.play": "قريبًا"}});
 for (const l in I18N) if (I18N[l]['sw.h2'] && !I18N[l]['nav.sw']) I18N[l]['nav.sw'] = l === 'id' ? 'Software' : I18N[l]['sw.h2'];   // menu / tab label = the section title (id: the short loanword fits the phone tab)
+/* Arabic (RTL): every Latin run — game / work / brand names such as COMET OUTBURST+, Praline, Jailbreak Slider! —
+   is isolated left-to-right in <bdi class="lt">, so trailing "+" / "!" stay at the end. Tags and entities are left alone;
+   other languages get the text unchanged. */
+window.ltrRuns = function (html, l) {
+  if (l !== 'ar' || html == null) return html;
+  return String(html).replace(/(<[^>]*>)|(&[#a-zA-Z0-9]+;)|([A-Za-z0-9](?:[A-Za-z0-9  +!'’.:\/\-–·]|&[#a-zA-Z0-9]+;|&(?=\s))*[A-Za-z0-9+!])/g,
+    (m, tag, ent, run) => run ? '<bdi class="lt">' + run + '</bdi>' : m);
+};
 (function () {
   const KEY = 'aicoding-lang';
   const detect = () => { const n = (navigator.language || 'ja').toLowerCase(); if (/^zh-(tw|hk|mo|hant)/.test(n)) return 'zh-TW'; return Object.keys(I18N).find(l => n.startsWith(l.toLowerCase())) || 'en'; };   // zh-TW / zh-HK / zh-Hant → 繁體中文, other zh → 简体中文
@@ -842,7 +851,7 @@ for (const l in I18N) if (I18N[l]['sw.h2'] && !I18N[l]['nav.sw']) I18N[l]['nav.s
     document.documentElement.lang = l === 'zh' ? 'zh-CN' : l;
     document.title = tr('title');
     { const m = document.querySelector('meta[name=description]'); if (m && tr('meta.desc')) m.content = tr('meta.desc'); }
-    document.querySelectorAll('[data-i18n]').forEach(e => { const v = tr(e.dataset.i18n); if (v !== undefined) e.innerHTML = v; });
+    document.querySelectorAll('[data-i18n]').forEach(e => { const v = tr(e.dataset.i18n); if (v !== undefined) e.innerHTML = window.ltrRuns(v, l); });
     document.getElementById('langSel').value = l;
     window.dispatchEvent(new CustomEvent('aicoding:lang', { detail: l }));
     fitLogo();
@@ -967,9 +976,12 @@ function makeGallery(C) {
   let lang = $('langSel').value || 'ja', cat = 'all', cur = null, swapT = 0, navEl = null;
 
   const tr = k => { const L = I18N[lang] || I18N.en; return L[k] ?? I18N.en[k] ?? I18N.ja[k]; };
-  const title = g => g.nameFirst ? g.name : (tr(g.key + '.title') ?? g.name ?? g.id);
-  const desc = g => (tr(g.descKey || g.key + '.desc') ?? '') + (g.tags.includes('gamepad') ? (lang === 'ja' || lang === 'zh' || lang === 'zh-TW' ? '' : ' ') + tr('gx.gamepad') : '');
+  const title = g => window.ltrRuns(g.nameFirst ? g.name : (tr(g.key + '.title') ?? g.name ?? g.id), lang);
+  const desc = g => window.ltrRuns((tr(g.descKey || g.key + '.desc') ?? '') + (g.tags.includes('gamepad') ? (lang === 'ja' || lang === 'zh' || lang === 'zh-TW' ? '' : ' ') + tr('gx.gamepad') : ''), lang);
   const byId = id => C.games.find(g => g.id === id);
+  // "Beta 2" in each language: ja β2版, compact (no space) in en / zh / ko, a space elsewhere; the number is isolated so it sits after the word in Arabic too
+  const betaN = n => { const t = tr('tag.beta'); if (t === 'β版') return 'β' + n + '版';
+    return t + (['en', 'zh', 'zh-TW', 'ko'].includes(lang) ? '' : ' ') + '<bdi>' + n + '</bdi>'; };
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const plain = html => { const d = document.createElement('div'); d.innerHTML = html; return d.textContent; };
   const norm = s => plain(s).normalize('NFKC').toLowerCase();
@@ -1020,7 +1032,7 @@ function makeGallery(C) {
     const s = q ? norm(q.value.trim()) : '';
     let n = 0;
     C.games.forEach((g, i) => {
-      const hay = s && norm([title(g), I18N.en[g.key + '.title'] || '', I18N.ja[g.key + '.title'] || '', g.name || '', g.id, g.kind, ...g.tags.map(k => [tr('tag.' + k), I18N.en['tag.' + k], I18N.ja['tag.' + k]].join(' '))].join(' '));
+      const hay = s && norm([plain(title(g)), I18N.en[g.key + '.title'] || '', I18N.ja[g.key + '.title'] || '', g.name || '', g.id, g.kind, ...g.tags.map(k => [tr('tag.' + k), I18N.en['tag.' + k], I18N.ja['tag.' + k]].join(' '))].join(' '));
       const ok = inCat(g, cat) && (!s || hay.includes(s));
       tiles[i].hidden = !ok; if (ok) n++;
     });
@@ -1067,7 +1079,7 @@ function makeGallery(C) {
     $(C.p + '-cat').innerHTML = (g.tags.includes('mobile') ? '<span class="mbk"><svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.4"/><path d="M10.5 18.5h3"/></svg> ' + tr('tag.mobile') + '</span> · ' : '<span class="mbk pc"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.8"/><path d="M8 20h8M12 16v4"/></svg> ' + tr('gx.pc') + '</span> · ') + esc(g.kind) + (C.cats ? ' · ' + tr('sub.' + g.cat) : '') + (stat(g) ? ' · ' + statHtml(g, 'nw') : '');
     $(C.p + '-title').innerHTML = t;
     $(C.p + '-desc').innerHTML = desc(g);
-    $(C.p + '-tags').innerHTML = statHtml(g, 'tag new') + (g.soon ? '<span class="tag soon">' + tr('tag.soon') + '</span>' : '') + (g.beta ? '<span class="tag new">' + (g.beta > 1 ? (tr('tag.beta') === 'β版' ? 'β' + g.beta + '版' : tr('tag.beta') + g.beta) : tr('tag.beta')) + '</span>' : '') + (g.alpha === 'pre' ? '<span class="tag prealpha">' + tr('tag.prealpha') + '</span>' : g.alpha ? '<span class="tag alpha">' + tr('tag.alpha') + '</span>' : '') + g.tags.filter(k => k !== 'mobile').map(k => `<span class="tag ${k}">${k === 'original' ? ORIGINAL_SVG : ''}${k === 'classic' ? CLASSIC_SVG : ''}${tr('tag.' + k)}</span>`).join('');
+    $(C.p + '-tags').innerHTML = statHtml(g, 'tag new') + (g.soon ? '<span class="tag soon">' + tr('tag.soon') + '</span>' : '') + (g.beta ? '<span class="tag new">' + (g.beta > 1 ? betaN(g.beta) : tr('tag.beta')) + '</span>' : '') + (g.alpha === 'pre' ? '<span class="tag prealpha">' + tr('tag.prealpha') + '</span>' : g.alpha ? '<span class="tag alpha">' + tr('tag.alpha') + '</span>' : '') + g.tags.filter(k => k !== 'mobile').map(k => `<span class="tag ${k}">${k === 'original' ? ORIGINAL_SVG : ''}${k === 'classic' ? CLASSIC_SVG : ''}${tr('tag.' + k)}</span>`).join('');
     const f = g.facts || {};
     $(C.p + '-facts').innerHTML = C.facts.filter(k => f[k] != null)
       .map(k => { const v = k === 'ai' ? (tr(g.key + '.str') || tr('gx.levels').replace('{n}', f[k])) : f[k]; return `<div${k === 'ai' ? ' class="str"' : ''}><dt>${tr('gx.' + k)}</dt><dd>${esc(v)}</dd></div>`; }).join('');

@@ -304,3 +304,4 @@ Many cores (nuts) held together by shared memory (caramel).
 - **準備中**：台帳の `soon: true` で、アイコンの左上に「SOON」（バッジは英語表記の規則どおり）、タグと再生ボタンの位置に「準備中」（`tag.soon`、14言語）。ボタンは破線の押せない形（`aria-disabled`）、パネルの絵・アイコンをクリックしても遷移しない（Enter も選ぶだけ）。公開したら `soon` を外して `href` を入れる。
 - 説明は `pl.desc`（14言語、PC 幅392px・6行に収まることを計測済み）。公開タイトル数（`stat-titles`）には数えない。
 - **メニュー**（2026-11-11 ユーザー指示）：上のナビ（開発室の次）と下のタブ（4列に）に「ソフトウェア」（`#software`、`nav.sw`＝`sw.h2`、インドネシア語だけタブに収まる「Software」）。5項目でも1行に収まるよう 901〜1120px はナビの間隔と文字を詰める（901〜1000px はさらに詰める）。
+- **ゲームの中の表示**（2026-11-11）：§2 の表のゲームの単体ページに「Powered by Praline」（`shared/praline-badge.js`。PC は右下に固定、スマホは歯車のパネルの下。押すとトップの `#software`）。決まりは addendum「Powered by Praline の表示」。
