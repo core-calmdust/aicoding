@@ -222,7 +222,10 @@ const API = { P1, P2, RED, BLUE, SWAP, WIN, WINT, SIZES, COLS, geo, mirror, onEd
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.HexEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  const V = 'v=3';
+  const V = 'v=4';
+  // (2026-11-11) engine_simd.wasm (wasm SIMD, -msimd128) where the browser has SIMD, else engine.wasm (the same values)
+  let simd = true;
+  try { simd = WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11])); } catch (e) { simd = false; }
   // ?…&mt=1: the lead thread of the page's multi-thread pool (shared/mtengine.js): engine_mt.wasm on the shared memory sent with
   // the first message ('mtinit'); the helpers (mt-helper.js) grow the same search tree meanwhile. The rest is the usual API.
   const MTL = /[?&]mt=1\b/.test(self.location.search || '');
@@ -237,7 +240,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
       }).catch(err => { WX = null; self.postMessage({ type: 'mtready', error: String(err && err.message || err) }); });
   } else if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
     const imp = { env: { now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } };
-    const url = new URL('engine.wasm?' + V, self.location.href);
+    const url = new URL((simd ? 'engine_simd.wasm?' : 'engine.wasm?') + V, self.location.href);
     readyP = (WebAssembly.instantiateStreaming ? WebAssembly.instantiateStreaming(fetch(url), imp) : fetch(url).then(r => r.arrayBuffer()).then(b => WebAssembly.instantiate(b, imp)))
       .then(r => { WX = r.instance.exports; }).catch(() => { WX = null; });
   }
