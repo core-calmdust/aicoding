@@ -68,7 +68,7 @@ function mini(api, B, a0, opt) {
   draw();
   api.board.onclick = e => {
     if (done || !api.alive()) return;
-    const svg = api.board.querySelector('svg'), p = RuleTour.svgPoint(svg, e);
+    const svg = api.board.querySelector('svg'), [px, py] = RuleTour.svgPoint(svg, e), p = { x: px, y: py };   // (svgPoint gives [x, y])
     let best = -1, bd = 1e9; B.cells.forEach((_, i) => { const d = Math.hypot(A.X(B, i) - p.x, A.Y(B, i) - p.y); if (d < bd) { bd = d; best = i; } });
     if (bd > 50) return;
     if (a[best]) { sel = best; A.SND.pick(); draw(); return; }
@@ -97,7 +97,7 @@ function tour() {
     close: () => close(), play: () => { close(); }, sound: k => { if (k === 'ok') A.SND.win(); } });
   return TOUR;
 }
-function open(page) { try { localStorage.setItem('aicoding-peg-rules-seen', '1'); } catch (e) {} A.show('#rulesOverlay'); const T = tour(); T.open(page != null ? page : T.page || 0); }
+function open(page) { try { localStorage.setItem('aicoding-peg-rules-seen', '1'); } catch (e) {} document.querySelectorAll('.ls-tabs button').forEach(b => b.classList.toggle('sel', b.dataset.v === 'rules')); A.show('#rulesOverlay'); const T = tour(); T.open(page != null ? page : T.page || 0); }
 function close() { if (TOUR) TOUR.stop(); A.hide('#rulesOverlay'); }
 document.getElementById('rulesOverlay').addEventListener('click', e => { if (e.target.id === 'rulesOverlay') close(); });
 window.PegRules = { open, close };
