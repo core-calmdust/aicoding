@@ -80,7 +80,7 @@ wasm の αβ エンジン（`engine_mt.wasm`、`-DMT`）の**仕事を分ける
 | アマゾンズ（`amazons/`） | C（wasm、αβ の探索ごと core.c、2026-11-11） | αβ は **YBW**（3）＋busy marks、Lv.19〜23 は共有木 MCTS（同じ `core_mt.wasm`、補助は両方を待つ）。分離できないページは mtsplit の非共有 | mtengine・**praline（2026-11-11）**・proset（mtsplit は非共有だけ） |
 | ウゴルキ（`ugolki/`） | C（wasm、ルートのループも 2026-11-11） | **YBW**（3）（`core_mt.wasm`）。分離できないページは mtsplit | mtengine・**praline（2026-11-11）**・proset（mtsplit は非共有・予備） |
 | アゴン（`agon/`） | C（wasm、ルートのループも 2026-11-11） | **YBW**（3）（`core_mt.wasm`）。分離できないページは mtsplit | mtengine・**praline（2026-11-11）**・proset（mtsplit は非共有・予備） |
-| コナネ | JS のルート＋wasm の探索 | YBW＋共有の置換表＋手伝い（JS 分割） | mtsplit・mttt・proset |
+| コナネ（`konane/`） | C（wasm、ルートのループも 2026-11-11） | **YBW**（3）（`core_mt.wasm`）。分離できないページは mtsplit | mtengine・**praline（2026-11-11）**・proset（mtsplit は非共有・予備） |
 | マンカラ | **C（wasm、2026-11-11）**：探索・評価・置換表（`engine.c`、SIMD 版となし版） | 各 Worker が自分の置換表でルートの手と本筋を分担（YBW。C では Lazy SMP は使わない） | mtsplit・proset（`claude/mancala-spec.md`） |
 | コネクトフォー | JS | 列ごとの完全読み（共有の置換表） | mtsplit＋`connect4/mt.js` |
 | ドット＆ボックス | JS＋wasm（5×5） | 手の分担（共有の置換表）・補助 Worker | mtworkers（共有モード）・wasm `dots5mt.wasm` |
@@ -200,6 +200,10 @@ JavaScript エンジンは `shared/mtsplit.js`（＋`mttt.js`）、独立な仕�
 
 ### アゴン（2026-11-11）：ウゴルキと同じ手順
 - ルートのループを `ab_best`／`ab_values` に、`core_mt.wasm` で Praline の YBW。1スレッドは前の版と424回の探索で全一致。`tools/mtsim`（局面数の時計、5局面・深さ7）2／4／8 ×1.89／3.58／6.14、遅いコアあり 8／10／14 ×6.14／6.41／6.51（前の mtsplit ×1.22／1.64／2.28）。
+
+### コナネ（2026-11-11）：ウゴルキ・アゴンと同じ手順
+- ルートのループを `ab_best`／`ab_values` に、`core_mt.wasm` で Praline の YBW。1スレッドは前の版と520回の探索で全一致。`tools/mtsim`（局面数の時計、深さ11）2／4／8 ×1.83／3.10／4.93、遅いコアあり 8／10／14 ×4.48／4.81／4.67（前の mtsplit ×1.39／2.19／3.16）。
+- `shared/tools/mtstep.js`：Worker の `location` を用意（アマゾンズ・ウゴルキ・アゴン・コナネの engine.js が `location.search` の `mt=1` を見るので、それまでアマゾンズで止まっていた）。αβ を C に移したアマゾンズは JS が時計をほとんど呼ばないので、mtstep の値は分離できないページの予備の方式の参考だけ。
 
 ---
 
