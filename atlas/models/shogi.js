@@ -185,7 +185,7 @@
     sakura: { top: 'top-sakura', side: 'sakura', stand: 'sakura', leg: ['#8a3a26', '#4a1c12'], bottom: 0x2a0806, line: 'rgba(48,20,10,.92)', raden: true },   // (v3: 朱溜 lacquer with 螺鈿 cherry blossoms and a 鶯)
   };
   const SH3 = (() => { try { return new URL('../../images/atlas/shogi3d/', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../images/atlas/shogi3d/'; } })();
-  const SH3V = '?v=5';
+  const SH3V = '?v=6';
   const lookOf = o => { const k = (o && o.look) || (X.BOARDS && X.BOARDS.shogi ? X.BOARDS.shogi.get() : 'kaya'); return LOOK[k] ? k : 'kaya'; };
   const imgs = {};
   function withImg(name, fn) {
@@ -202,6 +202,22 @@
     return (texs[name] = t);
   }
   // the board's faces and legs for a look (shared between boards of the same look)
+  // 螺鈿 (2026-11-11): the shell's colour slides through the spectrum with the angle you look at it from — the shell pixels are those
+  // whose map's R (height) is about 52/255 (cracks 40); the shift follows the normal against the view and the shell's own pattern
+  function nacre(m) {
+    m.onBeforeCompile = sh => {
+      sh.fragmentShader = sh.fragmentShader.replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+      #ifdef USE_ROUGHNESSMAP
+      { vec4 nmr = texture2D( roughnessMap, vUv ); float shl = smoothstep( .13, .17, nmr.r ) * ( 1. - smoothstep( .23, .27, nmr.r ) );
+        if ( shl > 0. ) { float vd = dot( normal, normalize( -vViewPosition ) ); float lum = dot( diffuseColor.rgb, vec3( .3, .5, .2 ) );
+          float ph = fract( vd * 1.6 + lum * 2.2 + vUv.x * 3. );
+          vec3 rb = .55 + .45 * cos( 6.2832 * ( ph + vec3( 0., .33, .67 ) ) );
+          diffuseColor.rgb = mix( diffuseColor.rgb, diffuseColor.rgb * .7 + rb * lum * .45, shl * .5 ); } }
+      #endif`);
+    };
+    m.customProgramCacheKey = () => 'nacre';
+    return m;
+  }
   const lookMats = {};
   function faceMats(look) {
     if (lookMats[look]) return lookMats[look];
@@ -213,7 +229,7 @@
       side = lq('side-makie', 'side-makie-m'); end = lq('end-makie', 'end-makie-m');
       leg = M({ map: imgTex('leg-makie'), bumpScale: .0005, roughness: .14, clearcoat: .9, clearcoatRoughness: .06 });
     } else if (L.raden) {   // 螺鈿: 朱溜 lacquer, shell pieces (the same maps as 蒔絵)
-      const lq = (c, mm) => M({ map: imgTex(c), roughnessMap: imgTex(mm, false), metalnessMap: imgTex(mm, false), bumpMap: imgTex(mm, false), bumpScale: .002, roughness: 1, metalness: 1, clearcoat: .9, clearcoatRoughness: .06, envMapIntensity: 1.4 });
+      const lq = (c, mm) => nacre(M({ map: imgTex(c), roughnessMap: imgTex(mm, false), metalnessMap: imgTex(mm, false), bumpMap: imgTex(mm, false), bumpScale: .002, roughness: 1, metalness: 1, clearcoat: .9, clearcoatRoughness: .06, envMapIntensity: 1.4 }));
       side = lq('side-sakura', 'side-sakura-m'); end = lq('end-sakura', 'end-sakura-m');
       leg = M({ color: 0x4a0d0b, roughness: .16, clearcoat: .9, clearcoatRoughness: .06 });
     } else {
@@ -242,7 +258,7 @@
     const L = LOOK[look];
     let m;
     if (L.lacq) m = M({ map: imgTex('stand-makie'), roughnessMap: imgTex('stand-makie-m', false), metalnessMap: imgTex('stand-makie-m', false), bumpMap: imgTex('stand-makie-m', false), bumpScale: .003, roughness: 1, metalness: 1, clearcoat: .8, clearcoatRoughness: .08 });
-    else if (L.raden) m = M({ map: imgTex('stand-sakura'), roughnessMap: imgTex('stand-sakura-m', false), metalnessMap: imgTex('stand-sakura-m', false), bumpMap: imgTex('stand-sakura-m', false), bumpScale: .002, roughness: 1, metalness: 1, clearcoat: .9, clearcoat: .9, clearcoatRoughness: .06 });
+    else if (L.raden) m = nacre(M({ map: imgTex('stand-sakura'), roughnessMap: imgTex('stand-sakura-m', false), metalnessMap: imgTex('stand-sakura-m', false), bumpMap: imgTex('stand-sakura-m', false), bumpScale: .002, roughness: 1, metalness: 1, clearcoat: .9, clearcoatRoughness: .06 }));
     else if (L.stand) m = M({ map: imgTex('stand-' + L.stand), roughness: L.gloss ? .24 : .5, bumpScale: .001 });
     else m = M({ map: kayaPlain('kayaStand'), roughness: .55, bumpScale: .001 });
     m.color.multiply(new (T().Color)(STAND_TONE).convertSRGBToLinear());
