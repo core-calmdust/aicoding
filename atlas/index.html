@@ -895,6 +895,7 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
 [dir=rtl] .nc-talk::after{transform:rotate(45deg) skew(14deg,14deg)}
 .nc-talk:hover{background:#fff8e2}.nc-talk:active{transform:translateY(2px);box-shadow:0 1px 0 #e0a92e}
 @keyframes ncTalk{0%,70%,100%{transform:rotate(0)}76%{transform:rotate(-6deg) scale(1.06)}84%{transform:rotate(5deg)}92%{transform:rotate(-2deg)}}
+.pf-l .nc-av{z-index:2}.pf-talk{top:-4px;inset-inline-end:-18px}
 @media (max-width:760px){.nc-talk{font-size:14px;padding:5px 9px 6px;inset-inline-end:-6px;top:-4px}}
 .nc-l > *:not(.bgfill){position:relative}
 .nc-side{grid-area:side;min-width:0;padding:16px 18px 0;display:flex;flex-direction:column;gap:8px}
@@ -1426,6 +1427,7 @@ html.bv-pland .urtoast{top:calc(52px + env(safe-area-inset-top));left:calc(50% +
   #pg-home .prof .pf-l .av svg,#pg-home .prof .pf-l .av img{width:46px;height:46px}
   #pg-home .prof .pf-l .av{box-shadow:0 3px 0 rgba(0,0,0,.1),0 0 0 3px #fff}
   #pg-home .prof .pf-l .av.framed{box-shadow:none}
+  #pg-home .prof .pf-talk{font-size:10px;padding:3px 6px 4px;border-width:2px;border-radius:9px;top:-3px;inset-inline-end:-24px;box-shadow:0 2px 0 #e0a92e}#pg-home .prof .pf-talk::after{width:6px;height:6px;bottom:-4.5px;inset-inline-start:7px;border-width:0 2px 2px 0}
   #pg-home .prof .pf-l .av .lv{bottom:-4px;font-size:10px;padding:0 6px;line-height:15px}   /* (inside the card edge, 2026-11-11) */
   #pg-home .prof .pf-r input{font-size:16px;min-width:0}
   #pg-home .pf-sum{display:inline-flex;align-items:center;gap:6px;border:0;background:none;padding:4px 0;cursor:pointer;color:var(--ink);font:inherit}
@@ -2012,6 +2014,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=33"></script>
 <script src="npc/npc.js?v=23"></script>
 <script src="avtalk.js?v=2"></script>
-<script src="app.js?v=303"></script>
+<script src="app.js?v=304"></script>
 </body>
 </html>
