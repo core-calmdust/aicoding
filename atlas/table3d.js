@@ -949,7 +949,7 @@
   // localStorage 'atlas-table' / 'atlas-bright2'; a change fires window 'atlas-table' (detail { table, bright }) for the labels / floors
   const say = () => { try { dispatchEvent(new CustomEvent('atlas-table', { detail: { table: tableStyle, bright } })); } catch (e) {} };
   function setTable(k) {   // switch the table design (0..5) and rebuild the room (no reload)
-    k = Math.max(0, Math.min(11, k | 0)); if (!TABLES[k] && k) k = 0;
+    k = Math.max(0, Math.min(12, k | 0)); if (!TABLES[k] && k) k = 0;
     const same = k === tableStyle; tableStyle = k;
     try { localStorage.setItem('atlas-table', String(k)); } catch (e) {}
     if (R && scene && !same) {
@@ -2300,5 +2300,5 @@
   try { if (sessionStorage.getItem('t3d-debug')) setTimeout(() => R && dbgToggle(true), 500); } catch (e) {}
   setInterval(() => { if (dbgOn && performance.now() - dbgT > 1000) { dbgFps = 0; dbgT = performance.now(); dbgPaint(); } }, 1000);   // (the loop sleeps when nothing moves: keep the numbers fresh)
 
-  window.Table3D = { fitRect, _texT: texT, _texCache: texCache, _texFile: texFile, decoOn, boSet: on => { BO_OK = !!on; bo.key = ''; kick(400); }, debug: dbgToggle, TABLES, placeMon, setTable, table: () => tableStyle, setBright, bright: () => bright, turn, museum, setShift, quiet, setTimeOfDay, timeOfDayPick: todPick, share, lp, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, rvDisc, rvMats, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
+  window.Table3D = { fitRect, _texT: texT, _texCache: texCache, _texFile: texFile, decoOn, boSet: on => { BO_OK = !!on; bo.key = ''; kick(400); }, debug: dbgToggle, TABLES, placeMon, setTable, table: () => tableStyle, setBright, bright: () => bright, turn, museum, setShift, quiet, setTimeOfDay, timeOfDayPick: todPick, share, lp, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, tatami: () => tatamiTex(), stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, rvDisc, rvMats, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
 })();
