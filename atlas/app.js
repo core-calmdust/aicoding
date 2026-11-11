@@ -1067,7 +1067,7 @@
     // every tab the same (2026-11-10): red あそぶ = here on the 3D table · brown フル機能で遊ぶ · white 2Dで遊ぶ
     const online = m === 'rated' && $('bvRtOpp') && $('bvRtOpp').value === 'online';
     set(f, esc(t('ps.go')) + ' ▶', esc(online ? t('bv.lsSub') : t(m === 'puzzle' ? 'bv.pzContSub' : m === 'lesson' ? 'bv.lsSub3d' : 'bv.tableSub')));
-    set(tb, esc(t('bv.full')), ''); tb.classList.add('mxfull'); tb.style.display = ''; tb.disabled = false;
+    set(tb, esc(t('bv.full')), esc(t('bv.fullSub2'))); tb.classList.add('mxfull'); tb.style.display = ''; tb.disabled = false;
     if (act) act.classList.remove('act1');
     if (cl) cl.href = mx2d(g, m);
   }
