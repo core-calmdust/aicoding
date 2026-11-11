@@ -141,7 +141,7 @@ async function makePool(n) {
     clear() { X.clear_tt(); },
     think(cells, toMove, cfg) {   // = shared/mtengine.js run() with index.html's help(); cfg.mt false: the lead alone (one thread)
       X.mt_stop(0); Atomics.store(ctl, 0, 0);
-      const ex = cfg.exact, hcfg = { depth: 60, exact: ex, wld: cfg.wld || ex + 2, mpc: 1 };
+      const ex = cfg.exact, hcfg = { depth: 60, exact: ex, wld: cfg.wld || ex + 2, mpc: 1, ...(cfg.wtry ? { wtry: cfg.wtry, xtry: cfg.xtry } : {}) };
       const use = cfg.mt ? ws : ws.slice(0, 1);
       return new Promise(resolve => {
         const t0 = Date.now(); let left = use.length, res = null, hn = 0;

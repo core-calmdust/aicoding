@@ -999,7 +999,9 @@ const LEVELS = [
   // 28 (2026-11-08, Lv.25 until 2026-11-11): the strongest, by time on all threads (page: MT_CFG). max = the hard limit per move in ms
   // (else 2.5 × time); use = start a new depth until this share of time (else 0.45), and a depth cut by max still counts when another
   // root move was already proved better there (think: PART).
-  { depth: 60, exact: 23, wld: 25, time: 18000, use: 0.8, max: 20000, mpc: 1 },   // 28
+  // wtry / xtry (2026-11-11): after the midgame deepening (which reaches the end of the game at ~30 empties within seconds on a PC), the time
+  // left is used for a win/draw/loss solve up to wtry empties and then an exact solve up to xtry; a solve cut by max is dropped (MODEL_CARD.md「Lv.28 の読み切りを広げる」)
+  { depth: 60, exact: 23, wld: 25, wtry: 30, xtry: 26, time: 18000, use: 0.8, max: 20000, mpc: 1 },   // 28
 ];
 const NLEVELS = LEVELS.length - 1, DEF_LEVEL = 15;
 
@@ -1156,8 +1158,9 @@ function think(cells, toMove, opts, onProgress) {
   // are read to depth lv.mix instead of lv.depth: a level between two depths (the strength gain by depth comes in steps: MODEL_CARD.md「28段階：Lv.17〜27 を深さで刻み直し」)
   const maxDepth = Math.min(lv.mix && mixPick(pl, ph, ol, oh) ? lv.mix : lv.depth, empties);
   const doExact = empties <= lv.exact;
-  const wldNow = !doExact && lv.wld && empties <= lv.wld && !variety;
-  const SPL = !opts.rot && (doExact ? !variety : wldNow) && !ybwOn() ? splitAnnounce(pos) : null;   // (threads: the lead's solve is split at the root)
+  const wldNow = !doExact && lv.wld && empties <= Math.max(lv.wld, lv.wtry || 0) && !variety;   // (lv.wtry: Lv.28 tries the solve further out)
+  const xTry = !doExact && !variety && lv.xtry && empties <= lv.xtry;
+  const SPL = !opts.rot && (doExact ? !variety : wldNow || xTry) && !ybwOn() ? splitAnnounce(pos) : null;   // (threads: the lead's solve is split at the root)
   const LZ = !variety && lzArr(), lzk = LZ ? lzKey(pos) : 0;   // (threads: the helpers' deeper midgame results)
   const HP = opts.rot ? helperPlan(opts.rot) : null;   // (a helper thread: how it differs from the lead)
   if (WON && WX.set_rot1) WX.set_rot1(HP ? HP.r1 : 0);
@@ -1248,16 +1251,37 @@ function think(cells, toMove, opts, onProgress) {
       }
       result = r; exactDone = true;
     } catch (e) { if (e !== ABORT) throw e; }
-  } else if (lv.wld && empties <= lv.wld && !variety && result) {
+  } else if (wldNow && result) {
     // win / draw / loss solve (window -1..1, much cheaper than exact): play a winning move when there is one,
     // else a drawing one; a lost position keeps the midgame choice. Bounded by the same deadline as the exact solve.
-    if (time) deadline = t0 + Math.max(hardTime, 2000);
+    // Beyond lv.wld (Lv.28's wtry) it is only tried with the time left: a solve cut by the deadline changes nothing.
+    if (time) deadline = t0 + (empties <= lv.wld ? Math.max(hardTime, 2000) : hardTime);   // (helper threads: no time, stopped by the lead)
+    let wldDone = false;
     try {
       if (opts.rot) splitHelp(pos, empties, opts.rot);
       const r = SPL ? rootSplit(SPL, pos, orderRoot(moves, prev), -1, 1) : rootPVS(pos, orderRoot(moves, prev), 0, 'exact', -1, 1);
+      wldDone = true;
       if (r.score > 0) result = { move: r.move, score: Math.max(result.score, SCALE) };
       else if (r.score === 0 && result.score < 0) result = { move: r.move, score: 0 };
     } catch (e) { if (e !== ABORT) throw e; }
+    if (xTry && wldDone && Date.now() < deadline) {
+      // Lv.28 (lv.xtry): an exact solve with the time still left (aspiration window around the result so far); kept only when it finishes
+      try {
+        if (prev) prev.set(result.move, 2e8);   // (the move the solve above chose first)
+        const ordered = orderRoot(moves, prev);
+        const g = Math.max(-60, Math.min(60, Math.round(result.score / SCALE)));
+        let lo = g - 3, hi = g + 3, r;
+        if (opts.rot) splitHelp(pos, empties, opts.rot);
+        for (;;) {
+          r = SPL ? rootSplit(SPL, pos, ordered, lo, hi) : rootPVS(pos, ordered, 0, 'exact', lo, hi);
+          const v = r.score / SCALE;
+          if (v <= lo && lo > -65) { hi = v + 1; lo = -65; }
+          else if (v >= hi && hi < 65) { lo = v - 1; hi = 65; }
+          else break;
+        }
+        result = r; exactDone = true;
+      } catch (e) { if (e !== ABORT) throw e; }
+    }
   }
 
   splitEnd(SPL);
