@@ -50,6 +50,7 @@ URL: https://core-calmdust.github.io/aicoding/peg/ ／ 2026-11-11 BETA公開（2
 ## 大百科・トップページ
 - `shared/atlas.js` の GAMES（BETA、total pz 145、進み具合 peg()）と更新情報、`atlas/i18n.js` の about.peg／hist.peg、`atlas/gamelist-i18n.js`、一覧の絵 `atlas/shots/peg.webp`（tools/shots.js）、トップページ `index.html`（key pg、pg.title／pg.desc 14言語）、アイコン `images/icons/peg.svg`、`images/peg.webp`（盤だけ）。
 - 大百科の3D（2026-11-11）：`atlas/models/peg.js`（ろくろ挽きの丸い盤／三角の盤、盤4種＝2D版のデザイン設定 settings.bd と共通、玉4種＝settings.pg）。`Table3D.BOARDS.peg`、盤のサムネ `atlas/img/board-peg-<look>.webp`（tools/boards.html）。3Dアイコン `images/atlas/peg.webp`（icons3d.js の peg：ウォルナットの盤の角で青い玉が赤い玉を跳び越える）。フル機能の3Dスキンはまだ（ルールコースの「遊んでみる」は peg/ へ）。
+- 大百科の盤・駒の選択（2026-11-11）：場所パネルの「盤」4種と「駒」5種（tables3d.js の BOARDS.peg / PIECES.peg）は2D版の設定 settings.bd / settings.pg と同じキーで、名前も2D版と同じ。駒のサムネは2D版の玉の絵（m-<set>-1.webp）。
 - 3D卓で遊ぶ（2026-11-11）：`atlas/games/peg.js`（lazy F.peg play:true、グループに ../peg/i18n.js も読み込んで2D版の文言 PEG_I18N を使う）。カードはAIの強さ・手番なしで「盤」の段（adapter.sizes 1〜5＝英国式・欧州式・三角・ダイヤ・ドイツ式）。各盤の定番の空き穴から始めて、◎（定番のゴール）に1本残せば完璧。玉をタップ→跳べる穴が光る→穴をタップ。取った玉は溝へ転がる。下のバーは待った（何手でも）とヒント（2D版と同じソルバーをワーカーで）、投了ボタンは出さない（adapter.noResign）。終わりのカードは2D版の評価（完璧！／1本残し！／あと一歩！…）と残り本数、Lv.なし（adapter.solo、app.js）。戦績は 2D版と同じく mode 'ai'・相手＝盤の名前・via '3d'。
 - 3Dルールコース `atlas/rules/peg.js`：案内役はベレー帽のビー玉「ビーユ」（av/marble-2）。全7ステップ：盤の紹介 → 跳び越えて取る → ななめは跳べない → 続けて跳ぶ → 十字架を◎へ（失敗したら言葉をかけてやり直し）→ 三角の盤（盤ごと入れ替え）→ 定番の問題と最短18手。取った玉は盤の縁の溝へ転がる。
 - ヒストリア：historia/s/peg.json ＋14言語、盤の図は新しい type 'peg'（historia.js の diag）。地図はヴェルサイユ・ベルリン・ロンドン・ケンブリッジ・テネシー（mapdata.js）。
