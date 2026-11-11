@@ -256,7 +256,7 @@
   // shogi (atlas/models/shogi.js PSETS, 2026-11-11): the raised-lacquer pieces with the inscriptions of the six 2D sets; 'atlas-shogi-pc3'
   PIECES.shogi = { list: ['ryoko', 'moriage', 'ichiji', 'kinki', 'minase', 'futofude'], get: () => { let v = ls.get('atlas-shogi-pc3'); if (v === 'kaisho' || v === 'reisho') v = 'futofude';   // (楷書, then 隷書, were replaced by 浮木, 2026-11-11)
     return PIECES.shogi.list.includes(v) ? v : 'ryoko'; }, set: k => ls.set('atlas-shogi-pc3', k),   // (default 菱湖, 2026-11-12)
-    thumb: k => new URL('img/pc3-shogi-' + k + '.webp?v=20', ME).href,
+    thumb: k => new URL('img/pc3-shogi-' + k + '.webp?v=21', ME).href,
     names: {
       moriage: { ja: '盛り上げ', en: 'Raised lacquer', zh: '盛上', 'zh-TW': '盛上', ko: '모리아게', es: 'Laca en relieve', fr: 'Laque en relief', pt: 'Laca em relevo', de: 'Lack-Relief', ru: 'Рельефный лак', tr: 'Kabartma lake', id: 'Pernis timbul', hi: 'उभरी लाह', ar: 'ورنيش بارز' },
       ichiji: { ja: '一字書き', en: 'One character', zh: '一字书', 'zh-TW': '一字書', ko: '한 글자', es: 'Un carácter', fr: 'Un caractère', pt: 'Um caractere', de: 'Ein Zeichen', ru: 'Один иероглиф', tr: 'Tek karakter', id: 'Satu karakter', hi: 'एक अक्षर', ar: 'حرف واحد' },

@@ -27,3 +27,7 @@ From `Pieces (2-Kanji)` of [LuffyKudo/Shogi-Themes](https://github.com/LuffyKudo
 ## 浮木 (Ukiki, key futofude) 3D set (2026-11-11)
 
 `futamoji/piece.svg` is the two-character piece sheet of [sunfish-shogi/shogi-images](https://github.com/sunfish-shogi/shogi-images), dedicated to the public domain (CC0 1.0), kept unchanged. `../../images/atlas/shogi-glyphs-futofude.png`, `shogi-pieces-futofude.png` and `../../atlas/img/pc3-shogi-futofude.webp` are made from it by `atlas/tools/shogi-glyphs-futamoji.py` (CC0 as well).
+
+## 水無瀬 (Minase) — inscriptions traced from a real set (2026-11-12)
+
+The inscriptions of the unpromoted 水無瀬 pieces (歩 香 桂 銀 金 角 飛 王 玉) are no longer LuffyKudo's drawing: they are outlines traced from the user's reference photo of a real 水無瀬書 盛り上げ set (`atlas/tools/shogi-glyphs-minase-photo.py`; the photo itself is not kept in the repo). 水無瀬 is a traditional script (after Minase Kanenari, c. 1600). `minase/traced.png` holds the traced masks; `atlas/tools/shogi-minase-svg.py` writes them into `minase/{0,1}{FU,KY,KE,GI,KA,HI,KI,GY,OU}.svg` in place of the black ink path (the piece's face, band and maker's mark stay LuffyKudo's, CC BY-SA 4.0). The promoted sides (red) are unchanged. `shogi-glyphs-minase.png`, `shogi-pieces-minase.png` and `pc3-shogi-minase.webp` carry the same traced inscriptions.
