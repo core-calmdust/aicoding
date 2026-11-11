@@ -49,6 +49,20 @@ wasm の αβ エンジン（`engine_mt.wasm`、`-DMT`）の**仕事を分ける
 | `spIdleReset(fresh)` | `mt_idle` の始め：局面数・時間・局面数の上限・根の鍵、新しい仕事なら履歴の減衰とキラーの消去 | `beginSearch` と同じ |
 | `timeUp()`／`mtCheck()` | ゲームの時計（`stopFlag` 1＝時間・停止、2＝上の分割点が止まった、3＝二度読みをやめて合流） | 1024局面ごと |
 
+**任意のつなぎ（2026-11-11、将棋・チェスの移行で追加。定義しなければ前と同じコード：先に移した6ゲームの `engine_mt.wasm` はヘッダを変えた後もコード・データの全セクションが同じ）**：
+
+| つなぎ | 中身 | 使うゲーム |
+|---|---|---|
+| `PL_VAL`（praline.h の前） | 値の型（窓・最善値・根の値）。既定 `int`。`int` 以外は汎用の atomics（`PL_ALPHA_LOAD`／`PL_ALPHA_STORE`） | 将棋（`double`） |
+| `PL_NO_VALS` ＋ `PL_ROOT_VAL(s, i, v)`／`PL_ROOT_GET(s, j)` | 分割点に根の値の欄を持たず、ゲームが持つ（既定は `s->vals[i]`） | 将棋（`spRootV`、一度に根は1つ）・チェス（根の値を返さない） |
+| `PL_WANT_A` | `spResult` に渡す手を読んだときの alpha を `plA` に（`PL_ROOT_VAL` で「fail-low は値なし」） | 将棋 |
+| `PL_ON_RAISE(s, i)` | 手が分割点の alpha を上げたとき（ロックの中）：その手の下の読み筋を写す・カットしたスレッドの印 | 将棋・チェス |
+| `PL_ON_OPEN(s)`／`PL_ON_CLOSE(s)` | `spRun` が分割点を開くとき／閉じる直前（`stopFlag` は結果の理由）：読み筋の初期化／節の読み筋を `pvTable` へ・他スレッドのカットの履歴ボーナス | 将棋・チェス |
+| `PL_IDLE_HOOK(ms)` | `mt_idle` の入口（状態を戻した後）：別の仕事へ（`return`） | 将棋（`threadId >= ybwMax` は Lazy SMP の `lazyRun`） |
+| `PL_NODES()` | `mt_idle` が返す局面数（既定 `(double)nodes`） | 将棋（32ビット）・チェス（結果の欄にも書く） |
+| `PL_MT_SPLIT` | ゲームが自分の `mt_split` を出す（分割の深さ `splitD` に加えてゲームの設定） | チェス（予想カット節の手数） |
+| `now()` | ヘッダが使う時計。名前の違うゲームは `#define now() js_now()` | 将棋・チェス |
+
 分割点を開く場所（`search()` の「最初の手を読み終えたら」の分岐、根の `rootSearch`）は、手の生成と順番・枝刈りがゲームごとに違うので**ゲームの `search()` の中**に残す（手は1スレッドのループを最後まで回した順・合法手だけ・枝刈りで落ちる手は落として分割点に並べる）。
 
 ### ③ 計測の道具
