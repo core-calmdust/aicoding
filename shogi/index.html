@@ -2194,8 +2194,11 @@ addEventListener('resize', () => requestAnimationFrame(tzBtn));
   const dragStart = () => {
     const w = TZ.win, W = boardEl.offsetWidth, H = boardEl.offsetHeight;
     pd.w = w; pd.cw = W / w.n; pd.ch = H / w.n; pd.s = 9 / w.n; pd.tx = -w.c0 * pd.cw; pd.ty = -w.r0 * pd.ch;
-    const fr = frameEl.getBoundingClientRect(), br = boardEl.getBoundingClientRect();
-    frameEl.style.clipPath = `inset(${(br.top - fr.top).toFixed(1)}px ${(fr.right - br.right).toFixed(1)}px ${(fr.bottom - br.bottom).toFixed(1)}px ${(br.left - fr.left).toFixed(1)}px)`;
+    // (cut to the board's place and the two bands of coordinates beside it — they slide with the board, 2026-11-11 the user: they
+    //  vanished while sliding; an L shape, so the top row's numbers do not run into the corner above the right column)
+    const fr = frameEl.getBoundingClientRect(), br = boardEl.getBoundingClientRect(), L = br.left - fr.left, R = br.right - fr.left, T = br.top - fr.top, B = br.bottom - fr.top, FW = fr.width;
+    frameEl.style.clipPath = `polygon(${L}px 0px, ${R}px 0px, ${R}px ${T}px, ${FW}px ${T}px, ${FW}px ${B}px, ${L}px ${B}px)`;
+    pd.br = br;
     TZ.drag = true; tzStyle();   // (the whole board, laid out in the board's place)
     try { document.dispatchEvent(new CustomEvent('shogi-crop', { detail: null })); } catch (e) {}
     boardEl.style.transformOrigin = '0 0';
@@ -2206,11 +2209,20 @@ addEventListener('resize', () => requestAnimationFrame(tzBtn));
     pd.tx = Math.max(-(9 - n) * pd.cw, Math.min(0, pd.tx + dx)); pd.ty = Math.max(-(9 - n) * pd.ch, Math.min(0, pd.ty + dy));   // (stops at the board's edges)
     boardEl.style.transform = `translate(${pd.tx.toFixed(1)}px, ${pd.ty.toFixed(1)}px) scale(${pd.s})`;
     window.__boardZoom = { s: pd.s, tx: pd.tx, ty: pd.ty };
+    // (the board itself and the 3D canvas cut to the board's place, so the coordinate bands beside it stay readable)
+    boardEl.style.clipPath = `inset(${(-pd.ty / pd.s).toFixed(1)}px ${(W - (W - pd.tx) / pd.s).toFixed(1)}px ${(H - (H - pd.ty) / pd.s).toFixed(1)}px ${(-pd.tx / pd.s).toFixed(1)}px)`;
+    { const gl = document.getElementById('atlasGL'); if (gl && pd.br) { const r = gl.getBoundingClientRect(); gl.style.clipPath = `inset(${(pd.br.top - r.top).toFixed(1)}px ${(r.right - pd.br.right).toFixed(1)}px ${(r.bottom - pd.br.bottom).toFixed(1)}px ${(pd.br.left - r.left).toFixed(1)}px)`; } }
+    // (the coordinates: all nine along each side, as long as the enlarged board and moved with it — the letters keep their size)
+    const ct = $('#coordTop'), cr = $('#coordRight');
+    if (ct) { ct.style.width = (W * pd.s).toFixed(1) + 'px'; ct.style.transform = `translateX(${pd.tx.toFixed(1)}px)`; }
+    if (cr) { cr.style.height = (H * pd.s).toFixed(1) + 'px'; cr.style.transform = `translateY(${pd.ty.toFixed(1)}px)`; }
     if (window.Table3D && Table3D.kick) Table3D.kick(200);
   };
   const dragEnd = () => {
     const n = pd.w.n, c0 = Math.round(-pd.tx / pd.cw), r0 = Math.round(-pd.ty / pd.ch);
-    boardEl.style.transform = ''; boardEl.style.transformOrigin = ''; window.__boardZoom = null; frameEl.style.clipPath = '';
+    boardEl.style.transform = ''; boardEl.style.transformOrigin = ''; boardEl.style.clipPath = ''; window.__boardZoom = null; frameEl.style.clipPath = '';
+    { const gl = document.getElementById('atlasGL'); if (gl) gl.style.clipPath = ''; }
+    ['#coordTop', '#coordRight'].forEach(q => { const c = $(q); if (c) { c.style.width = c.style.height = c.style.transform = ''; } });
     TZ.drag = false;
     { const p0 = TZ.pan; TZ.pan = [0, 0]; const wb = tzWindow(); TZ.pan = wb ? [c0 - wb.c0, r0 - wb.r0] : p0; }
     TZ.key = ''; tzStyle();   // (the cropped close-up again, at the settled window)
