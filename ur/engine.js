@@ -242,9 +242,32 @@
   // 時間制限：deadline を過ぎたら ABORT を投げて浅い結果に戻す
   const now = (typeof performance !== 'undefined' && performance.now) ? () => performance.now() : () => Date.now();
   let deadline = Infinity, tick = 0; const ABORT = { abort: true };
+  // the C engine (engine.c → engine_simd.wasm / engine.wasm, 2026-11-11): the same search and nets, loaded by worker.js
+  // (setWasm). Then valueToRoll / bestAfterRoll run there (the same win chances up to the last bits of e^x).
+  let CX = null, CS = null; const COK = {}, RID = { finkel: 0, blitz: 1, masters: 2 };
+  function cxFeed(id) {
+    const d = NETS[id]; if (!CX || !d || RID[id] == null) return (COK[id] = false);
+    const bytes = b64ToBytes(d.w), i16 = new Int16Array(bytes.buffer, bytes.byteOffset, bytes.byteLength >> 1);
+    if (i16.length > 13000) return (COK[id] = false);
+    new Int16Array(CX.memory.buffer, CX.ur_netraw(), i16.length).set(i16);
+    return (COK[id] = !!CX.ur_setnet(RID[id], d.shape[0], d.shape[1], d.shape[2], d.scale));
+  }
+  function setWasm(x) {
+    CX = x || null; if (!CX) return false;
+    CS = new Int8Array(CX.memory.buffer, CX.ur_state(), 18);
+    let ok = true; for (const id in RID) ok = cxFeed(id) && ok;
+    return ok;
+  }
+  function cxSet(s) {   // the state into the C engine (pos[2][8], turn, winner) and its rule
+    const P0 = s.pos[0], P1 = s.pos[1];
+    for (let k = 0; k < 8; k++) { CS[k] = k < P0.length ? P0[k] : 0; CS[8 + k] = k < P1.length ? P1[k] : 0; }
+    CS[16] = s.turn; CS[17] = s.winner; CX.ur_rule(RID[s.rule]);
+  }
+  const cxOn = s => CX !== null && COK[s.rule] === true;
   function valueToRoll(s, d) {
     if (s.winner >= 0) return s.winner === s.turn ? 1 : 0;
     if (d <= 0) return staticEval(s);
+    if (cxOn(s)) { cxSet(s); const v = CX.ur_value(d, deadline === Infinity ? 0 : deadline); if (v < 0) throw ABORT; return v; }
     if (((++tick) & 7) === 0 && now() > deadline) throw ABORT;
     const pr = R(s.rule).probs; let v = 0;
     for (let n = 0; n <= 4; n++) { if (pr[n] > 0) v += pr[n] * bestAfterRoll(s, n, d); }
@@ -257,6 +280,7 @@
     return ns.turn === me ? v : 1 - v;
   }
   function bestAfterRoll(s, n, d) {
+    if (cxOn(s)) { cxSet(s); const v = CX.ur_bestafter(n, d, deadline === Infinity ? 0 : deadline); if (v < 0) throw ABORT; return v; }
     const ms = legalMoves(s, n);
     if (!ms.length) return 1 - valueToRoll(apply(s, null).state, d - 1);
     let best = -1;
@@ -416,7 +440,7 @@
     if (typeof fetch !== 'function') return Promise.resolve(false);
     return fetch(url).then(r => r.ok ? r.json() : null).then(d => {
       if (!d || !d.shape || !d.w) return false;
-      NETS[rule] = d; delete NETCACHE[rule]; return !!getNet(rule);
+      NETS[rule] = d; delete NETCACHE[rule]; if (CX) cxFeed(rule); return !!getNet(rule);
     }).catch(() => false);
   }
 
@@ -424,7 +448,7 @@
     RULES, PROB: P4.slice(), ROSETTES_RC, LEVELS, probs,
     newGame, clone, coords, pathOf, isRosette, isSafe, rollDice, mulberry32,
     legalMoves, apply, key, moveText, winProb, evaluate, think, hitRisk, raceCount, staticEval, loadNet, splitEval, rollTask, fineFor,
-    _valueToRoll: valueToRoll, _features: features, _hasNet: id => !!getNet(id),
+    _valueToRoll: valueToRoll, _features: features, _hasNet: id => !!getNet(id), setWasm, get wasm() { return CX !== null; },
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   if (typeof window !== 'undefined') window.UrEngine = API;

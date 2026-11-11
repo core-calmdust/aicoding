@@ -4,11 +4,28 @@
                res = { ev:[{ from, to, wp }], wp0 }  (ev: every legal move, best first; wp0: the mover's win chance before rolling)
    the threads (../shared/mtworkers.js, one task per message):
              { id, type:'roll', state, n, d, k? }           → { id, v }   (E.rollTask: one move × one throw [× one move: k] of E.splitEval)
-             { id, type:'review1', state, n }               → { id, res }  (one position of the review) */
-importScripts('engine.js?v=4');
+             { id, type:'review1', state, n }               → { id, res }  (one position of the review)
+             { id, type:'ping' }                            → { id, core }  ('wasm-simd' | 'wasm' | 'js') */
+importScripts('engine.js?v=5');
 const E = self.UrEngine;
-self.onmessage = e => {
+// (2026-11-11) the C engine: engine_simd.wasm (wasm SIMD) where the browser has SIMD, else engine.wasm (the same numbers);
+// without WebAssembly (or with ?nowasm) the JavaScript search of engine.js. Messages wait until it is loaded.
+let core = 'js';
+const ready = (async () => {
+  try {
+    if (typeof WebAssembly !== 'object' || /[?&]nowasm\b/.test(self.location.search || '')) return;
+    let simd = true;
+    try { simd = WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11])); } catch (e) { simd = false; }
+    const url = new URL((simd ? 'engine_simd.wasm' : 'engine.wasm') + '?v=1', self.location.href);
+    const imp = { env: { now: () => performance.now() } };
+    const r = WebAssembly.instantiateStreaming ? await WebAssembly.instantiateStreaming(fetch(url), imp) : await WebAssembly.instantiate(await fetch(url).then(x => x.arrayBuffer()), imp);
+    if (E.setWasm(r.instance.exports)) core = simd ? 'wasm-simd' : 'wasm'; else E.setWasm(null);
+  } catch (e) { E.setWasm(null); }
+})();
+self.onmessage = e => { ready.then(() => handle(e)); };
+const handle = e => {
   const d = e.data || {};
+  if (d.type === 'ping') { postMessage({ id: d.id, core }); return; }
   try {
     if (d.type === 'roll') postMessage({ id: d.id, v: E.rollTask(d.state, d.n, d.d, d.k) });
     else if (d.type === 'review1') {
