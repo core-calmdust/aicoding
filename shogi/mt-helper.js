@@ -1,7 +1,8 @@
 // A helper thread of the main page's multi-thread search (shared/mtengine.js): engine_mt.wasm on the shared memory (the
 // NNUE and the tables are already there, loaded by the lead). While the lead (engine.js?…&mt=1) works on a job, this takes
 // moves at the split points the lead's search opens (engine.c mt_idle, Young Brothers Wait, 2026-11-10; MODEL_CARD.md
-// 「マルチスレッド その3：YBW」) until the page stops every thread. (An engine_mt.wasm without mt_idle: the old Lazy SMP, the
+// 「マルチスレッド その3：YBW」) until the page stops every thread — the helpers past the first 10 threads (threadId >= 10, 2026-11-11,
+// 「マルチスレッド その4」) search the lead's root on their own instead (Lazy SMP, inside mt_idle). (An engine_mt.wasm without mt_idle: the old Lazy SMP, the
 // same root position again and again with one transposition table.)
 let X = null, mem = null, ctl = null, cnt = null, id = 0, acc = 0;
 self.onmessage = e => {

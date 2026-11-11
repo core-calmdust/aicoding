@@ -20,6 +20,11 @@
 //   hb.relabel()                       // re-translate the added rules button after a language change
 //   HeaderBar.addOption({…})           // a game's own item in the options (gear) panel — see "the options button" below
 (function () {
+  // the game boards are not text: no selection box over them (a drag / long press across the board selected the squares' letters,
+  // coordinates and piece names — every game, 2026-11-11)
+  try { const st = document.createElement('style'); st.id = 'hb-noselect';
+    st.textContent = '.board-area,.board-area *,.board-wrap,.board-wrap *,#boardWrap,#boardArea,#board,.board,.frame,.hand,.coords{-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none}';
+    (document.head || document.documentElement).appendChild(st); } catch (e) {}
 'use strict';
 // PC layout (common spec): mouse + wide enough for left panel + board + right panel, and not a tall window; otherwise the phone layout
 const MQ = '(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4)';

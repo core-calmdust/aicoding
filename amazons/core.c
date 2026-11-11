@@ -16,13 +16,14 @@
 #define TLS
 #endif
 typedef signed char i8; typedef unsigned char u8;
-TLS i8 SQ[NN]; TLS i8 Q[8];
+TLS i8 SQ[NN + 12]; TLS i8 Q[8];   // (SQ: 12 more bytes, never used, so that a 16-byte row read from square 90 stays inside it)
 TLS int OM[8192]; TLS int OS[8192];
 static TLS int evn = 0;
 static u8 PI[NN]; static int OFF[8] = { -PW, PW, -1, 1, -PW - 1, -PW + 1, PW - 1, PW + 1 };
 static TLS i8 PB[PN]; static TLS u8 PQ[8];
 static TLS u8 DA[PN], DB[PN], KA[PN], KB[PN], QU[PN + 8];
-static double P2N[INF + 2];
+#define ML 99
+static double P2N[INF + 2], CL6[2 * ML + 1];   // CL6: clamp6(d) at d + ML
 static int RAY[NN][8][10], RAYN[NN][8], NBS[NN][8], NBN[NN];
 static int inited = 0;
 static void init(void) {
@@ -37,6 +38,7 @@ static void init(void) {
     }
   }
   double p = 1.0; for (int i = 0; i <= INF + 1; i++) { P2N[i] = i >= INF ? 0.0 : p; p *= 0.5; }
+  for (int d = -ML; d <= ML; d++) { double x = (double)d / 6; CL6[d + ML] = x > 1 ? 1 : x < -1 ? -1 : x; }
   inited = 1;   // (last: a thread that sees it set finds the tables filled)
 }
 static void padFrom(void) {
@@ -67,100 +69,141 @@ static void distK(int k0, u8 *D) {
 }
 static int jsRound(double x) { double r = __builtin_floor(x); if (x - r >= 0.5) r += 1.0; return (int)r; }
 // ---- bit boards: bit r * 11 + c (column 10 is a guard, never empty, so shifts across a row edge fall on it)
+// (2026-11-11) one 128-bit vector (wasm SIMD with -msimd128: and / or / any-true in one instruction; the same code without it
+// on two 64-bit words); the queen layers by a Kogge-Stone fill, the mobility from the rays (stopping at 5): the same sets and
+// counts as before, so the same values.
 typedef unsigned long long u64;
-typedef struct { u64 lo, hi; } BB;
-static inline BB bor(BB a, BB b) { BB r = { a.lo | b.lo, a.hi | b.hi }; return r; }
-static inline BB band(BB a, BB b) { BB r = { a.lo & b.lo, a.hi & b.hi }; return r; }
-static inline BB bandn(BB a, BB b) { BB r = { a.lo & ~b.lo, a.hi & ~b.hi }; return r; }
-static inline int bnz(BB a) { return (a.lo | a.hi) != 0; }
-static inline BB shl(BB x, int n) { BB r = { x.lo << n, (x.hi << n) | (x.lo >> (64 - n)) }; return r; }
-static inline BB shr(BB x, int n) { BB r = { (x.lo >> n) | (x.hi << (64 - n)), x.hi >> n }; return r; }
+typedef u64 BB __attribute__((vector_size(16)));
+#ifdef __wasm_simd128__
+#include <wasm_simd128.h>
+static inline int bnz(BB a) { return wasm_v128_any_true((v128_t)a); }
+#else
+static inline int bnz(BB a) { return (a[0] | a[1]) != 0; }
+#endif
 static const BB Z0 = { 0, 0 };
-static BB BIT[NN];
-static int bbInit = 0;
-static void initBB(void) { if (bbInit) return; for (int i = 0; i < NN; i++) { int b = (i / 10) * 11 + i % 10; BIT[i].lo = b < 64 ? 1ULL << b : 0; BIT[i].hi = b >= 64 ? 1ULL << (b - 64) : 0; } bbInit = 1; }
-static inline BB sh(BB x, int d) {   // the 8 directions in the order of OFF: N S W E NW NE SW SE
-  switch (d) { case 0: return shr(x, 11); case 1: return shl(x, 11); case 2: return shr(x, 1); case 3: return shl(x, 1);
-    case 4: return shr(x, 12); case 5: return shr(x, 10); case 6: return shl(x, 10); default: return shl(x, 12); }
+static inline __attribute__((always_inline)) BB shl(BB x, int n) {
+  if (n >= 64) { BB r = __builtin_shufflevector(x, Z0, 2, 0); return r << (u64)(n - 64); }
+  BB c = __builtin_shufflevector(x, Z0, 2, 0) >> (u64)(64 - n); return (x << (u64)n) | c;
 }
-static inline int pc(BB x) { return __builtin_popcountll(x.lo) + __builtin_popcountll(x.hi); }
-#define ML 99
+static inline __attribute__((always_inline)) BB shr(BB x, int n) {
+  if (n >= 64) { BB r = __builtin_shufflevector(x, Z0, 1, 2); return r >> (u64)(n - 64); }
+  BB c = __builtin_shufflevector(x, Z0, 1, 2) << (u64)(64 - n); return (x >> (u64)n) | c;
+}
+static inline __attribute__((always_inline)) BB shs(BB x, int s) { return s > 0 ? shl(x, s) : shr(x, -s); }
+static BB BIT[NN];
+static u8 BI[NN];   // the bit of square i
+static int bbInit = 0;
+static void initBB(void) { if (bbInit) return; for (int i = 0; i < NN; i++) { int b = (i / 10) * 11 + i % 10; BI[i] = (u8)b; BIT[i][0] = b < 64 ? 1ULL << b : 0; BIT[i][1] = b >= 64 ? 1ULL << (b - 64) : 0; } bbInit = 1; }
+// the 8 directions in the order of OFF: N S W E NW NE SW SE (as shifts of the bit board)
+#define SN (-11)
+#define SS 11
+#define SW (-1)
+#define SE 1
+#define SNW (-12)
+#define SNE (-10)
+#define SSW 10
+#define SSE 12
+static inline __attribute__((always_inline)) BB sh(BB x, int d) {
+  switch (d) { case 0: return shs(x, SN); case 1: return shs(x, SS); case 2: return shs(x, SW); case 3: return shs(x, SE);
+    case 4: return shs(x, SNW); case 5: return shs(x, SNE); case 6: return shs(x, SSW); default: return shs(x, SSE); }
+}
+static inline int pc(BB x) { return __builtin_popcountll(x[0]) + __builtin_popcountll(x[1]); }
 static TLS BB LA[ML], LB[ML];
-static TLS int CQ[ML * ML], OA[ML], OB[ML];
+static TLS int OA[ML], OB[ML];
+// the propagators of the Kogge-Stone fill for the empty squares E: P[d][0] = E, P[d][1] = runs of 2 empty squares in direction
+// d, [2] runs of 4, [3] runs of 8
+static TLS BB PR[8][4];
+#define PROP(d, s) { BB p = E; PR[d][0] = p; p &= shs(p, s); PR[d][1] = p; p &= shs(p, 2 * (s)); PR[d][2] = p; p &= shs(p, 4 * (s)); PR[d][3] = p; }
+static void props(BB E) { PROP(0, SN) PROP(1, SS) PROP(2, SW) PROP(3, SE) PROP(4, SNW) PROP(5, SNE) PROP(6, SSW) PROP(7, SSE) }
+// every empty square reached from g sliding in direction d (and g itself: up to 15 steps, the board has 9)
+#define FILL(d, s) { BB g = fr; g |= PR[d][0] & shs(g, s); g |= PR[d][1] & shs(g, 2 * (s)); g |= PR[d][2] & shs(g, 4 * (s)); g |= PR[d][3] & shs(g, 8 * (s)); nx |= g; }
 // distance layers: L[k] = the empty squares first reached in k queen (king) moves from the sources S; returns the last level
 static int layersQ(BB S, BB E, BB *L) {
   BB seen = S, fr = S; int k = 0;
   while (bnz(fr) && k < ML - 1) {
     BB nx = Z0;
-    for (int d = 0; d < 8; d++) { BB g = band(sh(fr, d), E); while (bnz(g)) { nx = bor(nx, g); g = band(sh(g, d), E); } }
-    nx = bandn(nx, seen); if (!bnz(nx)) break;
-    L[++k] = nx; seen = bor(seen, nx); fr = nx;
+    FILL(0, SN) FILL(1, SS) FILL(2, SW) FILL(3, SE) FILL(4, SNW) FILL(5, SNE) FILL(6, SSW) FILL(7, SSE)
+    nx &= ~seen; if (!bnz(nx)) break;
+    L[++k] = nx; seen |= nx; fr = nx;
   }
   return k;
 }
 static int layersK(BB S, BB E, BB *L) {
   BB seen = S, fr = S; int k = 0;
   while (bnz(fr) && k < ML - 1) {
-    BB nx = Z0;
-    for (int d = 0; d < 8; d++) nx = bor(nx, sh(fr, d));
-    nx = bandn(band(nx, E), seen); if (!bnz(nx)) break;
-    L[++k] = nx; seen = bor(seen, nx); fr = nx;
+    BB h = fr | shs(fr, SW) | shs(fr, SE), nx = h | shs(h, SN) | shs(h, SS);   // (the 8 neighbours and fr: fr is seen; a step onto the guard column is not empty)
+    nx = nx & E & ~seen; if (!bnz(nx)) break;
+    L[++k] = nx; seen |= nx; fr = nx;
   }
   return k;
 }
-static void counts(int La, int Lb) {
-  BB allA = Z0, allB = Z0;
-  for (int i = 1; i <= La; i++) allA = bor(allA, LA[i]);
-  for (int j = 1; j <= Lb; j++) allB = bor(allB, LB[j]);
-  for (int i = 0; i <= La; i++) OA[i] = i ? pc(bandn(LA[i], allB)) : 0;
-  for (int j = 0; j <= Lb; j++) OB[j] = j ? pc(bandn(LB[j], allA)) : 0;
-  for (int i = 0; i <= La; i++) for (int j = 0; j <= Lb; j++) CQ[i * ML + j] = i && j ? pc(band(LA[i], LB[j])) : 0;
-}
 static TLS double CS0, CS1, CS2;
-static double clamp6(int d) { double x = (double)d / 6; return x > 1 ? 1 : x < -1 ? -1 : x; }
-static void fromCounts(int La, int Lb, double kap, int kind) {   // (fromCounts in engine.js, the same order)
-  int nA = 0, nB = 0, nT = 0; double cc = 0, ww = 0;
-  for (int i = 0; i <= La; i++) for (int j = 0; j <= Lb; j++) { int c = CQ[i * ML + j]; if (!c) continue; if (i < j) nA += c; else if (j < i) nB += c; else nT += c; }
+static TLS int RS[ML], CSUM[ML];
+// The distance terms from the layers (fromCounts in engine.js, the same order): the counts c(i, j) = the empty squares White
+// reaches first in i moves and Black in j (here one pass over the pairs, row by row, a row's pairs only while it still has
+// squares Black reaches; every sum of doubles in the order of the JS, the zero counts skipped as there)
+static void terms(int La, int Lb, double kap, int kind) {
+  BB allA = Z0, allB = Z0;
+  for (int i = 1; i <= La; i++) allA |= LA[i];
+  for (int j = 1; j <= Lb; j++) allB |= LB[j];
   int sa = 0, sb = 0;
-  for (int i = 0; i <= La; i++) sa += OA[i];
-  for (int j = 0; j <= Lb; j++) sb += OB[j];
+  for (int i = 1; i <= La; i++) sa += OA[i] = pc(LA[i] & ~allB);
+  for (int j = 1; j <= Lb; j++) sb += OB[j] = pc(LB[j] & ~allA);
+  OA[0] = OB[0] = 0;
+  int nA = 0, nB = 0, nT = 0; double cc = 0, ww = 0;
+  for (int j = 0; j <= Lb; j++) CSUM[j] = 0;
+  RS[0] = 0;
+  for (int i = 1; i <= La; i++) {
+    BB x = LA[i] & allB; int rs = 0;
+    for (int j = 1; j <= Lb && bnz(x); j++) {
+      BB y = LA[i] & LB[j]; if (!bnz(y)) continue;
+      int c = pc(y); x &= ~y; rs += c; CSUM[j] += c;
+      if (i < j) nA += c; else if (j < i) nB += c; else nT += c;
+      if (kind == 0) ww += c * P2N[i > j ? i - j : j - i]; else cc += c * CL6[j - i + ML];
+    }
+    RS[i] = rs;
+  }
   nA += sa; nB += sb;
   if (kind == 0) {
     int L = La > Lb ? La : Lb;
     for (int k = 0; k <= L; k++) {
-      int ra = k <= La ? OA[k] : 0, cb = k <= Lb ? OB[k] : 0;
-      if (k <= La) for (int j = 0; j <= Lb; j++) ra += CQ[k * ML + j];
-      if (k <= Lb) for (int i = 0; i <= La; i++) cb += CQ[i * ML + k];
+      int ra = k <= La ? OA[k] + RS[k] : 0, cb = k <= Lb ? OB[k] + CSUM[k] : 0;
       cc += (ra - cb) * P2N[k];
     }
-    for (int i = 0; i <= La; i++) for (int j = 0; j <= Lb; j++) { int c = CQ[i * ML + j]; if (c) ww += c * P2N[i > j ? i - j : j - i]; }
-  } else {
-    for (int i = 0; i <= La; i++) for (int j = 0; j <= Lb; j++) { int c = CQ[i * ML + j]; if (c) cc += c * clamp6(j - i); }
-    cc += sa; cc -= sb;
-  }
+  } else { cc += sa; cc -= sb; }
   CS0 = (nA - nB) + kap * nT; CS1 = cc; CS2 = ww;
 }
 // the value for `me` with `toMove` to move (evalFor in engine.js)
 __attribute__((export_name("ev"))) int ev(int me, int toMove) {
   init(); initBB(); evn++;
-  BB E = Z0, SA = Z0, SB = Z0;
-  for (int i = 0; i < NN; i++) if (!SQ[i]) E = bor(E, BIT[i]);
-  for (int k = 0; k < 8; k++) if (Q[k] >= 0) { if (k < 4) SA = bor(SA, BIT[(int)Q[k]]); else SB = bor(SB, BIT[(int)Q[k]]); }
+  u64 e0 = 0, e1 = 0;
+#ifdef __wasm_simd128__
+  {   // (row r: the empty squares of SQ[10 r .. 10 r + 9] as 10 bits at bit 11 r)
+    const v128_t z = wasm_i8x16_splat(0); u64 m[10];
+    for (int r = 0; r < 10; r++) m[r] = (u64)(wasm_i8x16_bitmask(wasm_i8x16_eq(wasm_v128_load(SQ + 10 * r), z)) & 0x3FF);
+    e0 = m[0] | m[1] << 11 | m[2] << 22 | m[3] << 33 | m[4] << 44 | m[5] << 55; e1 = m[5] >> 9 | m[6] << 2 | m[7] << 13 | m[8] << 24 | m[9] << 35;
+  }
+#else
+  for (int i = 0; i < NN; i++) if (!SQ[i]) { int b = BI[i]; if (b < 64) e0 |= 1ULL << b; else e1 |= 1ULL << (b - 64); }
+#endif
+  BB E = { e0, e1 }, SA = Z0, SB = Z0;
+  for (int k = 0; k < 8; k++) if (Q[k] >= 0) { if (k < 4) SA |= BIT[(int)Q[k]]; else SB |= BIT[(int)Q[k]]; }
   double kap = toMove == 1 ? 0.05 : -0.05;
+  props(E);
   int La = layersQ(SA, E, LA), Lb = layersQ(SB, E, LB);
-  counts(La, Lb); fromCounts(La, Lb, kap, 0);
+  terms(La, Lb, kap, 0);
   double t1 = CS0, c1 = CS1, w = CS2, t2 = 0, c2 = 0;
   double e = w > 40 ? 1 : w / 40;
   if (e > 0) {
     La = layersK(SA, E, LA); Lb = layersK(SB, E, LB);
-    counts(La, Lb); fromCounts(La, Lb, kap, 1);
+    terms(La, Lb, kap, 1);
     t2 = CS0; c2 = CS1;
   }
   double mob = 0;
   for (int k = 0; k < 8; k++) {
     if (Q[k] < 0) continue;
-    BB s = BIT[(int)Q[k]]; int n = 0;
-    for (int d = 0; d < 8; d++) { BB g = band(sh(s, d), E); while (bnz(g)) { n++; g = band(sh(g, d), E); } }
+    int f = Q[k], n = 0;   // (the queen moves of this amazon, counted up to 5: the penalty is 0 from 5 on)
+    for (int d = 0; d < 8 && n < 5; d++) { const int *r = RAY[f][d]; for (int j = 0, m = RAYN[f][d]; j < m && n < 5 && !SQ[r[j]]; j++) n++; }
     double pen = n == 0 ? 10 : n < 5 ? (5 - n) * 1.4 : 0;
     mob += (k < 4 ? -1 : 1) * pen * (0.25 + 0.75 * e);
   }

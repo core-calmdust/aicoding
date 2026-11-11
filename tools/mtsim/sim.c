@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
       int t = T[ti];
       simDelay = DELAY && t > 1;
       g_newgame(); gStop = 0; if (FRESH) g_fresh();
-      pthread_mutex_lock(&simMu); simNp = t; simArrived = 0; simRounds = 0; pthread_mutex_unlock(&simMu);
+      pthread_mutex_lock(&simMu); simNp = t; simNT = t; simArrived = 0; simRounds = 0; pthread_mutex_unlock(&simMu);
       pthread_mutex_lock(&mu); curPos = pi; curT = t; running = t - 1; jobId++; pthread_cond_broadcast(&jcv); pthread_mutex_unlock(&mu);
       simOn = t > 1; simCnt = 0;
       g_setup(SETUP[pi], ns[pi]);

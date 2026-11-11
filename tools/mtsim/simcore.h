@@ -9,6 +9,7 @@
 #include <pthread.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 #ifndef SIM_Q
 #define SIM_Q 1024
 #endif
@@ -21,6 +22,11 @@ static double simJit; static _Thread_local unsigned simR = 1;   // jitter: a thr
 // (2026-11-10) slow cores (Apple's efficiency cores): with SIM_SLOW=k in the environment the threads k, k+1, … search 2/5 of
 // SIM_Q nodes per round (the M4 Pro: 10 performance + 4 efficiency cores → SIM_SLOW=10; reversi's model: SIM_SLOW=8)
 static int simSlowFrom = 1 << 30; static _Thread_local int simQB = SIM_Q;
+// (2026-11-11) SIM_SLOWSET=a,b,… : these threads slow (e.g. the lead: 0). SIM_MIG=F,P : F fast cores, the OS moves the threads
+// between the cores — every P rounds another (threads − F) of the job's threads (simNT) are the slow ones (the lead among them at times)
+static unsigned long long simSlowSet; static int simMigK, simMigP = 1, simNT; static _Thread_local int simId;
+static inline unsigned simMH(long e, int j) { unsigned long long x = (unsigned long long)e * 0x9E3779B97F4A7C15ull ^ (unsigned long long)(j + 1) * 0xC2B2AE3D27D4EB4Full; x ^= x >> 29; x *= 0xBF58476D1CE4E5B9ull; x ^= x >> 32; return (unsigned)x; }
+static inline int simMigSlow(long e, int id) { if (id >= simNT) return 0; unsigned h = simMH(e, id); int r = 0; for (int j = 0; j < simNT; j++) if (simMH(e, j) < h) r++; return r < simNT - simMigK; }
 static SimPE *simAllP[64]; static int *simAllN[64], *simAllX[64];
 static inline unsigned simH(const void *a) { unsigned long long x = (unsigned long long)(uintptr_t)a >> 3; x *= 0x9E3779B97F4A7C15ull; return (unsigned)(x >> 40) & (SIM_PH - 1); }
 static inline unsigned long long SIMR(unsigned long long *a) {
@@ -46,8 +52,11 @@ static void simFlush(int id) {
   *simAllN[id] = 0;
 }
 static void simThreadInit(int id) {
-  static int once; if (!once) { once = 1; const char *e = getenv("SIM_SLOW"); if (e && *e) simSlowFrom = atoi(e); }
-  simQB = simQ = id >= simSlowFrom ? SIM_Q * 2 / 5 : SIM_Q;
+  static int once; if (!once) { once = 1; const char *e = getenv("SIM_SLOW"); if (e && *e) simSlowFrom = atoi(e);
+    e = getenv("SIM_SLOWSET"); if (e) for (const char *q = e; *q; ) { simSlowSet |= 1ull << atoi(q); while (*q && *q != ',') q++; if (*q) q++; }
+    e = getenv("SIM_MIG"); if (e && *e) { simMigK = atoi(e); const char *c = strchr(e, ','); if (c) simMigP = atoi(c + 1); if (simMigP < 1) simMigP = 1; } }
+  simId = id;
+  simQB = simQ = id >= simSlowFrom || ((simSlowSet >> id) & 1) ? SIM_Q * 2 / 5 : SIM_Q;
   simR = 0x9e3779b9u * (unsigned)(id + 1);
   simP = malloc(sizeof(SimPE) * SIM_PMAX); simN = 0; simX = calloc(SIM_PH, sizeof(int));
   simAllP[id] = simP; simAllN[id] = &simN; simAllX[id] = simX;
@@ -69,7 +78,9 @@ static void sim_tick(void) {
   long g = simGen;
   if (++simArrived >= simNp) simEndRound();
   else while (simGen == g) pthread_cond_wait(&simCv, &simMu);
+  const long rr = simRounds;
   pthread_mutex_unlock(&simMu);
+  if (simMigK) simQ = simQB = simMigSlow(rr / simMigP, simId) ? SIM_Q * 2 / 5 : SIM_Q;
 }
 static void simLeave(void) {   // this thread is done with the job: the others go on without it
   pthread_mutex_lock(&simMu);
