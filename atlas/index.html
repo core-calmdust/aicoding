@@ -1655,6 +1655,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 #lessonOverlay #lessonList .lx-tabs button.sel{background:linear-gradient(180deg,#fff3c4,#ffe28a)!important;border-color:var(--sun)!important;color:#6a4200!important;box-shadow:0 3px 0 var(--sun2)!important}
 #lessonOverlay #lessonList .lx-banner{display:flex!important;align-items:center!important;gap:14px!important;padding:14px 18px!important;margin:0 0 14px!important;border-radius:20px!important;border:2px solid #f6dfa6!important;background:linear-gradient(120deg,#fff3cf,#fff 72%)!important;box-shadow:0 3px 0 #f6dfa6!important}
 #lessonOverlay #lessonList .lx-banner .ic{background:linear-gradient(140deg,#ffe08a,#f2b630)!important;border-radius:14px!important}
+#lessonOverlay #lessonList .lx-banner .tx{flex:1!important;min-width:0!important;display:flex!important;flex-direction:column!important;gap:3px!important}
 #lessonOverlay #lessonList .lx-banner .tx b{font:900 19px var(--font)!important;color:var(--ink)!important}
 #lessonOverlay #lessonList .lx-banner .tx small{font:700 13.5px/1.6 var(--font)!important;color:var(--ink2)!important}
 #lessonOverlay #lessonList .lx-banner .pg,#lessonOverlay #lessonList .lx-banner .pg small{font:700 12.5px var(--round)!important;color:var(--ink2)!important}
@@ -1679,6 +1680,26 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 #lessonOverlay #lessonList .lx-bar{background:var(--cream)!important;border-radius:4px!important}
 @media (max-width:600px){#lessonOverlay #lessonList .lx-grid{grid-template-columns:1fr!important}#lessonOverlay #lessonList .lx-th{width:76px!important}
   #lessonOverlay #lessonList .lx-tabs{grid-auto-columns:minmax(76px,1fr)!important}#lessonOverlay #lessonList .lx-tabs button{flex-direction:column!important;gap:3px!important;padding:8px 6px!important;font-size:12.5px!important}}
+/* 問題一覧 (atlas/app.js puzzleSheet): the guide over the total, icons on the chapters and sets (2026-11-11) */
+#lessonOverlay .pzh-hero{position:relative;display:flex;align-items:center;gap:16px;margin:0 0 14px;padding:14px 20px 14px 150px;min-height:118px;border-radius:24px;background:radial-gradient(130% 120% at 10% 0%,#fff6c9 0%,#ffd76a 55%,#ffb43d 100%);box-shadow:0 4px 0 #f0b440;overflow:hidden}
+#lessonOverlay .pzh-hero::before{content:'';position:absolute;left:-60px;top:-140px;width:360px;height:360px;border-radius:50%;background:repeating-conic-gradient(rgba(255,255,255,.45) 0 8deg,rgba(255,255,255,0) 8deg 22deg);pointer-events:none}
+#lessonOverlay .pzh-ch{position:absolute;left:14px;bottom:-12px;width:132px;height:132px;object-fit:contain;filter:drop-shadow(0 8px 8px rgba(120,60,0,.28));animation:lbBob 2.4s ease-in-out infinite;transform-origin:50% 100%}
+#lessonOverlay .pzh-tx{position:relative;flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+#lessonOverlay .pzh-tx small{font:900 12.5px var(--font);letter-spacing:.08em;color:#9a5a00}
+#lessonOverlay .pzh-tx b{font:900 24px var(--font);color:#4a2c00}
+#lessonOverlay .pzh-hero .pzh-bar{height:10px;background:rgba(255,255,255,.7);max-width:420px}
+#lessonOverlay .pzh-n{font:700 14px var(--round);color:#6a4200}
+#lessonOverlay .pzh-bar{display:block;flex:1;height:7px;border-radius:99px;background:var(--cream);overflow:hidden}
+#lessonOverlay .pzh-bar i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#ffc928,#ff9f1c)}
+#lessonOverlay .pzh-row{display:flex;align-items:center;gap:10px;margin-top:6px}
+#lessonOverlay .pzh-st{flex:none;font:700 12px var(--round);color:#e0a020}
+#lessonOverlay .pzh-ic{flex:none;width:26px;height:26px;border-radius:9px;display:grid;place-items:center;background:linear-gradient(140deg,#ffe08a,#f2b630);color:#6a4200;padding:4px}
+#lessonOverlay .pzh-ic svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#lessonOverlay .lx-banner .pzh-ic{width:46px;height:46px;border-radius:14px;padding:9px}
+#lessonOverlay .pzh-ic.sm{width:24px;height:24px;border-radius:8px;padding:4px}
+#lessonOverlay .pzh-grid{grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:10px}
+#lessonOverlay .pzh-grid .pzs-c{height:66px;border-radius:16px}
+@media (max-width:600px){#lessonOverlay .pzh-hero{padding-left:112px;min-height:96px}#lessonOverlay .pzh-ch{width:100px;height:100px}#lessonOverlay .pzh-tx b{font-size:19px}}
 /* (the full game's lists are drawn for its dark page: here in the portal's cream and white) */
 .bksheet .pbh-tabs button,.bksheet .lx-tabs button{background:#fff;box-shadow:0 2px 0 var(--line)}
 .bksheet .pbh-tabs button.sel,.bksheet .lx-tabs button.sel{background:#fff6dc}
@@ -1712,6 +1733,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 .rgd-act .btn.ic small{font-size:10px;font-weight:800;line-height:1.1;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .rgd-act .btn.ic svg{width:24px;height:24px;flex:none;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
 .rgd-act .btn.ic{width:78px;padding:9px 0 7px;gap:4px;border-radius:22px}.rgd-act .btn.ic svg{width:32px;height:32px}.rgd-act .btn.ic small{font-size:13px}.rgd-act .btn.big{font-size:19px;padding-top:16px;padding-bottom:16px}   /* (larger: they looked tiny on the 3D view, 2026-11-11) */
+@media (min-width:701px){.rgd-act .btn.ic{width:auto;flex-direction:row;gap:9px;padding:0 20px 0 16px;min-height:56px;border-radius:99px}.rgd-act .btn.ic svg{width:26px;height:26px}.rgd-act .btn.ic small{font-size:15px;max-width:none}}   /* (room enough on the 3D view: wide pills with the label beside the icon, 2026-11-11) */
 @media (max-width:600px){.rgd-act .btn.ic{width:60px;padding:6px 0 5px;gap:2px}.rgd-act .btn.ic svg{width:26px;height:26px}.rgd-act .btn.ic small{font-size:11px}.rgd-act .btn.big{font-size:16px;padding-top:12px;padding-bottom:12px}}
 .rgd.lsg .rgd-act{gap:8px}.rgd.lsg .rgd-act .sp{flex:1}.rgd.lsg .cnt{display:flex;align-items:center;gap:5px;min-height:0}.rgd.lsg .lsd{width:12px;height:12px;border-radius:50%;background:#e6dccb;display:inline-block}.rgd.lsg .lsd.ok{background:#3ccf91}.rgd.lsg .lsd.mid{background:#ffb21e}.rgd.lsg .lsd.ng{background:#ff5d5d}.rgd.lsg .lsd.on{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--ink)}
 body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,body:has(#pg-gacha.on) .msbtn,body:has(#pg-dress.on) .msbtn{display:none}   /* (ミッション: not over the 3D view) */
@@ -2044,9 +2066,9 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   }, 60);
 };</script>
 <script src="../shared/tapword.js?v=1"></script>
-<script src="lazy.js?v=74"></script>
+<script src="lazy.js?v=75"></script>
 <script src="puzzle-lines.js?v=1"></script>
-<script src="puzzles.js?v=12"></script>
+<script src="puzzles.js?v=13"></script>
 <script src="lessons3d.js?v=9"></script>
 <script src="missions.js?v=8"></script>
 <link rel="stylesheet" href="historia.css?v=15">
@@ -2061,7 +2083,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=34"></script>
 <script src="npc/npc.js?v=24"></script>
 <script src="avtalk.js?v=2"></script>
-<script src="app.js?v=311"></script>
+<script src="app.js?v=312"></script>
 <script src="../shared/praline-badge.js?v=2" data-portal defer></script>
 </body>
 </html>

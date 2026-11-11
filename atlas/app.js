@@ -1587,29 +1587,44 @@
       S0.body.onclick = e => { const b = e.target.closest('[data-i]'); if (!b || e.target.closest('[data-lx]')) return; const i = +b.dataset.i; if (i < 0) return; S0.close(); startLesson3D('list', String(i)); };
     }).catch(() => { S0.body.textContent = '⚠'; });
   }
-  // 問題一覧 on the 3D table (2026-11-11): the sets → a set's problems (stars; stages still locked greyed) → that problem here
+  // 問題一覧 on the 3D table (2026-11-11): in the lesson list's look (.bksheet) — the guide character over the total, the
+  // chapter tabs (the game's own: リバーシ レベル別・テーマ別・特選), each set a card (its icon, a small board of its first
+  // problem, its aim, the progress) → the set's problems (stars; stages still locked greyed) → that problem here
+  const pzMini = cells => { const c = String(cells || ''); if (c.length < 64) return ''; let o = '<svg viewBox="0 0 84 84" aria-hidden="true"><rect width="84" height="84" rx="6" fill="#2f8f5b"/>';
+    for (let k = 1; k < 8; k++) o += `<path d="M${2 + k * 10} 2V82M2 ${2 + k * 10}H82" stroke="#1f6b42" stroke-width=".8"/>`;
+    for (let q = 0; q < 64; q++) if (c[q] === '1' || c[q] === '2') o += `<circle cx="${7 + (q & 7) * 10}" cy="${7 + (q >> 3) * 10}" r="4.1" fill="${c[q] === '1' ? '#17181c' : '#f6f2e6'}"${c[q] === '2' ? ' stroke="#bdb6a2" stroke-width=".6"' : ''}/>`;
+    return o + '</svg>'; };
   function puzzleSheet(g) {
     if (g.id === 'shogi' && AtlasPuzzles.book) return tsumeBook(g);
     if (!window.AtlasPuzzles || !AtlasPuzzles.sets) return startPlay('full', 'puzzle', 'list');
-    const sh = document.createElement('div'); sh.className = 'lvsheet lssheet pzsheet';
-    sh.innerHTML = `<div class="lvs-in" role="listbox"><div class="lvs-h"><button type="button" class="pzs-bk" hidden aria-label="${esc(t('bv.back'))}">‹</button><span class="pzs-t">${esc(t('bv.pzList'))}</span><button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div><div class="lvs-l"><div class="lss-wait">…</div></div></div>`;
-    document.body.appendChild(sh); requestAnimationFrame(() => sh.classList.add('on'));
-    const close = () => { if (sh.classList.contains('out')) return; sh.classList.add('out'); sh.classList.remove('on'); setTimeout(() => sh.remove(), 240); };
-    const L = sh.querySelector('.lvs-l'), bk = sh.querySelector('.pzs-bk'), ttl = sh.querySelector('.pzs-t');
-    let sets = null;
+    const S0 = bookSheet(t('bv.pzList')), TK = 'atlas-pztab-' + g.id, GD = (AtlasPuzzles.G || {})[g.id] || {};
+    let sets = null, cats = null, cur = null;
     const STAR = n => '★★★'.slice(0, n) + '☆☆☆'.slice(n);
-    const showSets = () => { bk.hidden = true; ttl.textContent = t('bv.pzList');
-      L.innerHTML = sets.map(x => { const done = x.recs.filter(v => v > 0).length, all = x.recs.length;
-        return `<button type="button" role="option" data-set="${x.key}" class="lss${done >= all ? ' pass' : ''}"><b>${done >= all ? '✓' : '▦'}</b><span class="nm">${esc(x.title)}</span><small>${done}/${all}</small></button>`; }).join(''); };
-    const showSet = k => { const x = sets.find(y => String(y.key) === String(k)); if (!x) return; bk.hidden = false; ttl.textContent = x.title;
-      L.innerHTML = `<div class="pzs-grid">${x.recs.map((v, j) => `<button type="button" data-i="${x.key}" data-j="${j}" class="pzs-c${v ? ' ok' : ''}" ${x.open[j] ? '' : 'disabled'}><b>${j + 1}</b><small>${x.open[j] ? STAR(v) : '🔒'}</small></button>`).join('')}</div>`;
-      const nx = L.querySelector('.pzs-c:not(.ok):not(:disabled)'); if (nx) nx.scrollIntoView({ block: 'center' }); L.scrollTop = Math.max(0, L.scrollTop); };
-    AtlasPuzzles.sets(g.id, lang).then(S => { sets = S; showSets(); }).catch(() => { L.textContent = '⚠'; });
-    sh.onclick = e => {
-      if (e.target === sh || e.target.closest('.lvs-x')) return close();
-      if (e.target.closest('.pzs-bk')) { try { SFX.tap && SFX.tap(); } catch (x) {} return showSets(); }
+    const showSets = () => {
+      S0.back.hidden = true; S0.title.textContent = t('bv.pzList');
+      const done = x => x.recs.filter(v => v > 0).length, all = sets.reduce((a, x) => a + x.recs.length, 0), got = sets.reduce((a, x) => a + done(x), 0);
+      const C = cats ? cats.cats.filter(c => sets.some(x => x.cat === c.k)) : [];
+      if (C.length && !C.some(c => c.k === cur)) { try { cur = localStorage.getItem(TK); } catch (e) {} if (!C.some(c => c.k === cur)) cur = C[0].k; }
+      const cc = C.find(c => c.k === cur), list = cc ? sets.filter(x => x.cat === cur) : sets;
+      const nm = (GD.name && (GD.name[lang] || GD.name.en)) || '';
+      const hero = `<div class="pzh-hero">${GD.guide ? `<img class="pzh-ch" src="${GD.guide}" alt="">` : ''}<div class="pzh-tx"><small>${esc(nm)}</small><b>${esc(t('bv.pzList'))}</b><span class="pzh-bar"><i style="width:${all ? Math.round(got * 100 / all) : 0}%"></i></span><span class="pzh-n">${got} / ${all}</span></div></div>`;
+      const tabs = C.length > 1 ? `<div class="lx-tabs">${C.map(c => { const xs = sets.filter(x => x.cat === c.k), d = xs.reduce((a, x) => a + done(x), 0), n = xs.reduce((a, x) => a + x.recs.length, 0); return `<button type="button" data-cat="${c.k}" class="${c.k === cur ? 'sel' : ''}"><span class="ic pzh-ic">${c.icon}</span><span class="nm">${esc(c.name)}</span><span class="ct${d >= n ? ' ok' : ''}">${d}/${n}</span></button>`; }).join('')}</div>` : '';
+      const ban = cc ? `<div class="lx-banner"><span class="ic pzh-ic">${cc.icon}</span><div class="tx"><b>${esc(cc.name)}</b><small>${esc(cc.desc || '')}</small></div></div>` : '';
+      const card = x => { const d = done(x), n = x.recs.length, full = d >= n, st = x.recs.reduce((a, v) => a + v, 0); const th = pzMini(x.board);
+        return `<button type="button" class="lx-card${full ? ' done' : ''}" data-set="${x.key}">${th ? `<span class="lx-th">${th}</span>` : ''}<span class="lx-tx"><span class="lx-top">${x.icon ? `<span class="pzh-ic sm">${x.icon}</span>` : ''}<span class="lx-st${full ? ' ok' : d ? ' so' : ' new'}">${full ? '✓' : d ? d + '/' + n : 'NEW'}</span></span><span class="lx-t">${esc(x.title)}</span>${x.desc ? `<span class="lx-desc">${esc(x.desc)}</span>` : ''}<span class="pzh-row"><span class="pzh-bar"><i style="width:${Math.round(d * 100 / n)}%"></i></span><span class="pzh-st">★ ${st}/${n * 3}</span></span></span></button>`; };
+      S0.body.className = 'lesson-list lx-on';
+      S0.body.innerHTML = hero + tabs + ban + `<div class="lx-grid">${list.map(card).join('')}</div>`;
+    };
+    const showSet = k => { const x = sets.find(y => String(y.key) === String(k)); if (!x) return; S0.back.hidden = false; S0.title.textContent = x.title;
+      S0.body.className = 'lesson-list lx-on lvs-l';
+      S0.body.innerHTML = `<div class="pzs-grid pzh-grid">${x.recs.map((v, j) => `<button type="button" data-i="${x.key}" data-j="${j}" class="pzs-c${v ? ' ok' : ''}" ${x.open[j] ? '' : 'disabled'}><b>${j + 1}</b><small>${x.open[j] ? STAR(v) : '🔒'}</small></button>`).join('')}</div>`;
+      const nx = S0.body.querySelector('.pzs-c:not(.ok):not(:disabled)'); if (nx) nx.scrollIntoView({ block: 'center' }); };
+    Promise.all([AtlasPuzzles.sets(g.id, lang), AtlasPuzzles.cats ? AtlasPuzzles.cats(g.id, lang).catch(() => null) : null]).then(([S, C]) => { sets = S; cats = C; showSets(); }).catch(() => { S0.body.textContent = '⚠'; });
+    S0.back.onclick = () => { try { SFX.tap && SFX.tap(); } catch (x) {} showSets(); };
+    S0.body.onclick = e => {
+      const tb = e.target.closest('[data-cat]'); if (tb) { cur = tb.dataset.cat; try { localStorage.setItem(TK, cur); SFX.tap && SFX.tap(); } catch (x) {} return showSets(); }
       const st = e.target.closest('[data-set]'); if (st) { try { SFX.tap && SFX.tap(); } catch (x) {} return showSet(st.dataset.set); }
-      const c = e.target.closest('[data-j]'); if (c && !c.disabled) { close(); startPuzzle({ pick: { i: +c.dataset.i, j: +c.dataset.j } }); }
+      const c = e.target.closest('[data-j]'); if (c && !c.disabled) { S0.close(); startPuzzle({ pick: { i: +c.dataset.i, j: +c.dataset.j } }); }
     };
   }
   // レッスン・定跡の一覧 on the 3D table (2026-11-11): one look for every game, in the portal's fonts and colours — a tab per

@@ -128,7 +128,7 @@
     const wood = SG.standMat ? SG.standMat() : T3.M({ map: T3.wood('komadai', '#d9a764', '#a06c30', 256, 256, 1.6), roughness: .55, bumpScale: .002 });   // the board's kaya and tone (2026-11-10)
     const stands = [SG.komadai(wood, Y), SG.komadai(wood, Y)]; stands.forEach(k => board.add(k));   // [0] = the player's, [1] = the AI's
     let tall = false, ST = [], KH = Y;   // KH: the height the pieces in hand rest at (the stand's top; on the table when tall)
-    const GRID_W = [[-.8, -1], [0, -1], [.8, -1], [-.8, 0], [0, 0], [.8, 0], [0, 1]];          // 3 × 3 on the upright plate
+    const GRID_W = [[-.92, -1.12], [0, -1.12], [.92, -1.12], [-.92, 0], [0, 0], [.92, 0], [0, 1.12]];   // (pieces in hand made larger, 2026-11-11)          // 3 × 3 on the upright plate
     const GRID_T = [[-3.3, 0], [-2.2, 0], [-1.1, 0], [0, 0], [1.1, 0], [2.2, 0], [3.3, 0]];   // tall screens: one row on the table along the board's edge (no stands, 2026-11-09)
     function layout() {
       const r = ctx.el.getBoundingClientRect();
@@ -137,16 +137,17 @@
       // phones (tall): no stands — the pieces in hand lie in a row on the table just below (yours) / above (the AI's) the board, so
       // the board itself can be framed much larger (2026-11-09)
       ST = tall ? [{ x: 0, z: BDd / 2 + .72 }, { x: 0, z: -(BDd / 2 + .72) }]
-        : [{ x: FW / 2 + 1.95, z: 3.9 }, { x: -FW / 2 - 1.95, z: -3.9 }];
+        : [{ x: FW / 2 + 2.15, z: 3.7 }, { x: -FW / 2 - 2.15, z: -3.7 }];
       KH = tall ? .01 : Y;
       stands.forEach((k, i) => { k.position.set(ST[i].x, 0, ST[i].z); k.rotation.y = 0; k.visible = !tall; });
       // wide: the player's stand sits a little nearer the bottom — shift the scene so the HUD stays clear
       board.position.z = tall ? 0 : .25;
       // 詰将棋 (ctx.pz) on phones: the defender's pieces in hand (the row above the board) must be read — more room at the top
       if (PZ && pzFit()) { T3.kick(400); return; }
-      if (T3.fit) T3.fit(Object.assign(tall ? { w: (PZ ? FW + .7 : FW + 1.8) * SC, d: (PZ ? FH + 1.9 : FH + 1 + 2 * 1.45) * SC, y: Y * SC, pitch: 1.53, cz: PZ ? -.3 * SC : 0 } : { w: 16.4 * SC, d: 13.1 * SC, y: Y * SC, pitch: 1.53 }, PZ && zEase ? { ease: true, ek: .14 } : {}));
+      if (T3.fit) T3.fit(Object.assign(tall ? { w: (PZ ? FW + .7 : FW + 1.8) * SC, d: (PZ ? FH + 1.9 : FH + 1 + 2 * 1.45) * SC, y: Y * SC, pitch: 1.53, cz: PZ ? -.3 * SC : 0 } : { w: 17.2 * SC, d: 13.1 * SC, y: Y * SC, pitch: 1.53 }, PZ && zEase ? { ease: true, ek: .14 } : {}));
       T3.kick(400);
     }
+    const HS = () => tall ? .9 : 1.08;   // a piece in hand (was .82 everywhere)
     const slotXZ = (who, t) => {   // who: 0 = player, 1 = AI
       const i = HANDS.indexOf(t), g = (tall ? GRID_T : GRID_W)[i], s = who ? -1 : 1;
       return [ST[who].x + g[0] * s, ST[who].z + g[1] * s];
@@ -162,7 +163,7 @@
         x.fillStyle = '#2a1a0e'; x.beginPath(); x.arc(64, 64, 58, 0, 7); x.fill(); x.lineWidth = 8; x.strokeStyle = '#fff4dc'; x.stroke();
         x.fillStyle = '#fff'; x.font = '900 72px system-ui,sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(n, 64, 68);
         const tx = new TH.CanvasTexture(c); tx.encoding = TH.sRGBEncoding; return tx; })());
-      const sp = new TH.Sprite(new TH.SpriteMaterial({ map: tex, depthTest: false, toneMapped: false })); sp.scale.set(.42, .42, 1); sp.renderOrder = 5; return sp;
+      const sp = new TH.Sprite(new TH.SpriteMaterial({ map: tex, depthTest: false, toneMapped: false })); sp.scale.set(.5, .5, 1); sp.renderOrder = 5; return sp;
     }
     function buildHands() {   // the stands always show P.hand exactly: one piece per kind + a count badge
       hand.forEach(list => list.forEach(h => { board.remove(h.g); if (h.badge) { board.remove(h.badge); h.badge.material.dispose(); } }));
@@ -171,7 +172,7 @@
         const c = who ? ac : hc;
         for (const ty of HANDS) {
           const n = P.hand[c * 8 + ty]; if (!n) continue;
-          const g = mk((c ? 16 : 0) + ty), [x, z] = slotXZ(who, ty); g.scale.setScalar(.82); g.position.set(x, KH, z); board.add(g);
+          const g = mk((c ? 16 : 0) + ty), [x, z] = slotXZ(who, ty); g.scale.setScalar(HS()); g.position.set(x, KH, z); board.add(g);
           let b = null; if (n > 1) { b = badge(n); const s = who ? -1 : 1; b.position.set(x + .3 * s, KH + .5, z + .3 * s); board.add(b); }
           hand[who].push({ t: ty, g, badge: b });
         }
@@ -269,7 +270,7 @@
       if (drop) {   // from the stand
         const h = hand[who].find(h => h.t === from - 80);
         g = h ? h.g : mk((c ? 16 : 0) + from - 80);
-        if (h) { hand[who].splice(hand[who].indexOf(h), 1); if (h.badge) { board.remove(h.badge); } if (P.hand[c * 8 + h.t]) { const ng = mk((c ? 16 : 0) + h.t); ng.scale.setScalar(.82); ng.position.copy(h.g.position); ng.position.y = KH; board.add(ng); hand[who].push({ t: h.t, g: ng, badge: null }); } }
+        if (h) { hand[who].splice(hand[who].indexOf(h), 1); if (h.badge) { board.remove(h.badge); } if (P.hand[c * 8 + h.t]) { const ng = mk((c ? 16 : 0) + h.t); ng.scale.setScalar(HS()); ng.position.copy(h.g.position); ng.position.y = KH; board.add(ng); hand[who].push({ t: h.t, g: ng, badge: null }); } }
         else { const [sx, sz] = slotXZ(who, from - 80); g.position.set(sx, KH, sz); board.add(g); }
         y0 = g.position.y;
       } else { g = pcs[from]; delete pcs[from]; y0 = g.position.y; }

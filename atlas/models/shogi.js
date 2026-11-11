@@ -425,7 +425,7 @@
   let colMat = null;
   function komadai(mat, KH) {
     const TT = T(), g = new TT.Group();
-    g.add(mesh(RB(2.5, .26, 3.1, .05, 2), mat, 0, KH - .13, 0));                                   // top plate
+    g.add(mesh(RB(2.9, .26, 3.55, .05, 2), mat, 0, KH - .13, 0));                                  // top plate (larger with the larger pieces in hand, 2026-11-11)
     g.add(mesh(RB(2.3, .32, 2.7, .08, 2), mat, 0, .16, 0));                                        // base
     g.add(mesh(RB(1.5, .24, 1.8, .06, 2), mat, 0, .32 + .12, 0));                                   // step
     const H = KH - .26 - .56, pts = [];
@@ -447,7 +447,7 @@
     put(6, 1, 1, true); put(5, 7, 1, true); put(6, 7, 7, false); put(5, 1, 7, false);
     // 駒台 (piece stands): yours at the bottom right, the opponent's at the top left — same as the rules tour
     const KH = g.userData.top, sw = standMat(g.userData.look);   // the board's own wood and tone (2026-11-10; per look 2026-11-11)
-    [{ x: FW / 2 + 1.95, z: 3.9 }, { x: -FW / 2 - 1.95, z: -3.9 }].forEach(st => { const k = komadai(sw, KH); k.position.set(st.x, 0, st.z); g.add(k); });
+    [{ x: FW / 2 + 2.15, z: 3.7 }, { x: -FW / 2 - 2.15, z: -3.7 }].forEach(st => { const k = komadai(sw, KH); k.position.set(st.x, 0, st.z); g.add(k); });
     // in the toy room the tall board would hide the room: a little smaller than life
     g.scale.setScalar(.72);   // board + stands about the reversi board's size on the chabudai
     g.userData.viewY = g.userData.top * .72 * 1.05;   // the chabudai camera looks at the (scaled) playing surface of the legged board, like the goban
