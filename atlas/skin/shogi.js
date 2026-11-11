@@ -136,7 +136,8 @@
       de.style.setProperty('--kdth', top.offsetHeight + 'px'); de.style.setProperty('--kdbh', bot.offsetHeight + 'px');   // (the 2D designs paint one slab under bars and board)
       const r2 = bd.getBoundingClientRect(), B2 = r2.bottom + K.b * r2.height - (is3() ? 13 : 0), br = bot.getBoundingClientRect(); bot.style.setProperty('margin-top', (parseFloat(getComputedStyle(bot).marginTop) + B2 - br.top).toFixed(1) + 'px', 'important');
     };
-    let q = 0; const later = () => { if (q) return; q = 1; requestAnimationFrame(() => { q = 0; fit(); }); };
+    // (only when the board actually moved / changed size: the phone toolbar sliding in and out must not re-lay the bars every frame)
+    let q = 0, last = ''; const later = () => { if (q) return; q = 1; requestAnimationFrame(() => { q = 0; const bd = document.getElementById('board'); if (!bd) return; const r = bd.getBoundingClientRect(), k = [r.width, r.height, r.left].map(v => Math.round(v)).join(','); if (k === last) return; last = k; fit(); }); };
     addEventListener('resize', later); [300, 900, 2000, 4000].forEach(ms => setTimeout(fit, ms));
     if (window.ResizeObserver) { const ro = new ResizeObserver(later); const bd = document.getElementById('board'); if (bd) ro.observe(bd); }
     window.__kdFit = fit;
