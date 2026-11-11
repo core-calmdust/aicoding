@@ -60,6 +60,7 @@
       // 詰将棋 (gote's stand hidden, body.ts-noopp): sente's stand stands under the column, its left edge on the column's and its
       // bottom on the frame's — the board takes the width the stands had (2026-11-10)
       sideOnExtent: () => STK.matches,
+      k2dFix: (m, md) => { const e = md && md.userData && md.userData.ext, S = md && md.userData && md.userData.S; if (!e || !S) return m; return { ...m, t: m.t - e / S, b: m.b - e / S }; },
       extraOff: e => tsSolo() && !STK.matches && e.id === 'handBottom',
       afterSide(F, sr) {
         const bot = document.getElementById('handBottom'); if (!bot || !tsSolo() || STK.matches) return;
