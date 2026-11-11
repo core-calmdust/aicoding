@@ -107,7 +107,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=3-pro1-mt1';
+const ENGINE_URL = 'engine.js?v=4-pro1-mt1';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -132,7 +132,7 @@ let aiW = makeWorker(), anaW = makeWorker();
 // threads grow one search tree together (engine.c: tree-parallel MCTS with virtual loss), so more playouts in the same time.
 // The levels decided by playouts (15級〜三段) stay on the one-thread workers (their strength is unchanged).
 const MTP = window.MTEngine ? MTEngine.use({
-  wasm: 'engine_mt.wasm?v=3', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=1', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
+  wasm: 'engine_mt.wasm?v=4', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=1', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => Date.now(), progress: () => {} } }),
   help: m => (m.type === 'think' || m.type === 'analyze') ? {} : null,   // (the helpers join the trees the lead opens: nothing to send)
 }) : null;
