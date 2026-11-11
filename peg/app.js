@@ -87,7 +87,7 @@ function defs(id) {
 }
 // the boards and marbles are pictures (peg/tools/render_boards.py, 2026-11-11: realistic, detailed sets — user): the board image
 // covers the whole viewBox (its cups, groove and shadow line up with the holes), a marble image sits on each peg
-const IMGV = 4;
+const IMGV = 5;
 const bdImg = (look, id) => `img/bd-${look}-${id}.webp?v=${IMGV}`;
 function boardBody(B, id, look) {
   const g = geo(B), h = g.size * K / 2;

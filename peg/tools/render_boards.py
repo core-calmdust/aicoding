@@ -405,20 +405,11 @@ def marble_img(kind, k):
         col += win[..., None]
         col *= (.6 + .4 * (1 - rim ** 5))[..., None]
         alpha = ins * 1.0
-    elif kind == 'mod':     # abstract pieces for the abstract board: flat colour discs with one geometric motif each
+    elif kind == 'mod':     # abstract pieces for the abstract board: plain flat colour discs (user: もっとシンプルに)
         r = np.hypot(x, y)
-        T, M, Q, C, I, K = (np.array(v) for v in ([.83, .41, .29], [.89, .7, .29], [.18, .56, .54], [.94, .9, .83], [.16, .15, .3], [.93, .55, .5]))
-        col = np.zeros((MS, MS, 3), np.float32)
-        def fill(m, c): col[m] = c
-        fill(ins, [T, M, Q, C, I, K][k])
-        if k == 0: fill(ins & (x > .0), C); fill(r < .3, I)                                   # half and half, a dot
-        elif k == 1: fill(r < .42, I); fill(r < .18, M)                                         # a ring
-        elif k == 2: fill(ins & (y > .12), C); fill(ins & (y > .12) & (np.hypot(x, y - .12) < .38), T)   # a setting sun
-        elif k == 3: fill(ins & (x < 0) & (y < 0), T); fill(ins & (x > 0) & (y > 0), Q)       # two quarters
-        elif k == 4: fill((r < .72) & (r > .5), M); fill(ins & (x + y > .9), K)                # a ring and a corner cut
-        else: fill(ins & (np.abs(x - y) < .26), Q)                                              # a diagonal band
-        if k == 4: fill((r > .9) & ins, C)                                                      # a cream rim so indigo shows on the indigo board
-        col *= (.93 + .07 * (1 - r))[..., None]                                                 # barely any shading: flat
+        c = np.array([[.83, .41, .29], [.89, .7, .29], [.18, .56, .54], [.94, .9, .83], [.93, .55, .5], [.33, .45, .7]][k])
+        col = np.zeros((MS, MS, 3), np.float32); col[ins] = c
+        col *= (.95 + .05 * (1 - r))[..., None]                                                 # barely any shading: flat
         alpha = ins * 1.0
     else:   # turned wooden pegs, lacquered in six colours (the wood shows through at the turned rings)
         r = np.hypot(x, y)
