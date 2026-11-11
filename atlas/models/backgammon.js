@@ -152,25 +152,25 @@
           const i = (y * N0 + x) * 4; d[i] = R; d[i + 1] = G; d[i + 2] = B; d[i + 3] = 255;
         }
       },
-      // shagreen (galuchat): dense small domed beads of polished ray skin, the dye settled in the creases between them;
-      // here and there a larger bead. Wrapping grid → seamless
-      shagreen(d, N0, H, p) {
-        const GN = p.cells || 56, N = makeNoise(p.seed || 9), A = p.A, B = p.B;
-        let r = (p.seed || 9) * 7919 + 17; const rnd = () => ((r = (r * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
-        const P = new Float32Array(GN * GN * 3); for (let i = 0; i < GN * GN; i++) { P[i * 3] = .2 + rnd() * .6; P[i * 3 + 1] = .2 + rnd() * .6; P[i * 3 + 2] = rnd() < .04 ? 1.5 : .85 + rnd() * .3; }
+      // crocodile leather (embossed): rows of squarish scales of uneven widths (each row its own seamless sequence), domed,
+      // with soft creases between them and a fine pebble inside each; a grey height-and-colour tile
+      croc(d, N0, H, p) {
+        const RW = p.rows || 9, N = makeNoise(p.seed || 4), A = p.A, B = p.B;
+        let r = (p.seed || 4) * 7919 + 31; const rnd = () => ((r = (r * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+        const hs = []; let ht = 0; for (let k = 0; k < RW; k++) { const v = .7 + rnd() * .6; hs.push(v); ht += v; }
+        const ys = [0]; hs.forEach(v => ys.push(ys[ys.length - 1] + v / ht));
+        const rows = []; for (let k = 0; k < RW; k++) { const n = 4 + Math.floor(rnd() * 4), w = []; let t = 0; for (let q = 0; q < n; q++) { const v = .45 + rnd() * 1.3; w.push(v); t += v; } let a = rnd(); const e = w.map(v => (a += v / t) % 1); e.sort((x, y) => x - y); rows.push(e); }
         for (let y = 0; y < N0; y++) for (let x = 0; x < N0; x++) {
-          const gx = x / N0 * GN, gy = y / N0 * GN, cx = Math.floor(gx), cy = Math.floor(gy);
-          let best = 9, sz = 1;
-          for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) {
-            const X0 = cx + i, Y0 = cy + j, ci = ((Y0 % GN + GN) % GN) * GN + ((X0 % GN + GN) % GN);
-            const dx = X0 + P[ci * 3] - gx, dy = Y0 + P[ci * 3 + 1] - gy, dd = Math.sqrt(dx * dx + dy * dy) / P[ci * 3 + 2];
-            if (dd < best) { best = dd; sz = P[ci * 3 + 2]; }
-          }
-          const dome = Math.max(0, 1 - best / .5), top = Math.pow(dome, 1.2);
-          const t = Math.min(1, top * 1.35 + (N(x / 40, y / 40, 2) - .5) * .15);
-          const hl = Math.pow(Math.max(0, dome - .55) / .45, 2) * .5;
+          const vy = y / N0 + (N(x / 90, y / 90, 2) - .5) * .02; let k = 0; while (k < RW - 1 && vy >= ys[k + 1]) k++;
+          const rh = hs[k] / ht, fy = Math.max(0, Math.min(1, (vy - ys[k]) / rh)), row = rows[k], u = ((x / N0 + (N(x / 70 + 3, y / 70, 2) - .5) * .015) % 1 + 1) % 1;
+          let lo, hi; const L = row.length;
+          if (u < row[0]) { lo = row[L - 1] - 1; hi = row[0]; } else { lo = row[L - 1]; hi = row[0] + 1; for (let q = 1; q < L; q++) if (u < row[q]) { lo = row[q - 1]; hi = row[q]; break; } }
+          const cw = (hi - lo) / rh, fx = (u - lo) / (hi - lo), ex = Math.min(fx, 1 - fx) * cw, ey = Math.min(fy, 1 - fy), rc = .22;
+          const e = ex < rc && ey < rc ? rc - Math.hypot(rc - ex, rc - ey) : Math.min(ex, ey);
+          const dome = Math.max(0, Math.min(1, e / .3)), crease = 1 - Math.max(0, Math.min(1, e / .07));
+          const t = Math.max(0, Math.min(1, .35 + Math.sqrt(dome) * .5 - crease * .55 + (N(x / 5, y / 5, 2) - .5) * .14 + (N(x / 50 + k * 7, y / 50, 2) - .5) * .22));
           const i = (y * N0 + x) * 4;
-          d[i] = A[0] + (B[0] - A[0]) * t + hl * 60; d[i + 1] = A[1] + (B[1] - A[1]) * t + hl * 60; d[i + 2] = A[2] + (B[2] - A[2]) * t + hl * 60; d[i + 3] = 255;
+          d[i] = A[0] + (B[0] - A[0]) * t; d[i + 1] = A[1] + (B[1] - A[1]) * t; d[i + 2] = A[2] + (B[2] - A[2]) * t; d[i + 3] = 255;
         }
       },
     };
@@ -224,14 +224,15 @@
     dOrange: () => veneer('vdOra', '#e8a24a', '#b46c22', { ring: 2, seed: 48 }),
     dBrown: () => veneer('vdBro', '#6a4024', '#3a2010', { ring: 3, seed: 49 }),
     dBlack: () => veneer('vdBlk', '#1e1a18', '#0a0808', { ring: 3, seed: 50 }),
-    dam: () => veneer('vDam', '#5e3c22', '#1e1108', { ring: 5, stripe: .25, seed: 61 }),       // Damascus walnut
-    lemon: () => veneer('vLem', '#ecd59a', '#c4a062', { ring: 2, seed: 62 }),
-    macD: () => veneer('vMacD', '#4c2c18', '#0b0604', { stripe: .8, ring: 3, seed: 66 }),   // the shagreen case's darker macassar
-    ivory: () => veneer('vIvo', '#f4ecd8', '#ddd0b2', { ring: 9, seed: 63 }),                   // bone / ivory: a fine straight grain
+    smoke: () => veneer('vSmk', '#4c4844', '#1a1817', { ring: 9, seed: 70 }),                 // smoked oak (open grain)
+    oakL: () => veneer('vOakL', '#d9ae74', '#a87442', { ring: 7, seed: 71 }),                 // light oak
+    burl: () => veneer('vBurl', '#b07a44', '#5a3216', { curl: .7, stripe: .4, ring: 11, seed: 72 }),   // burr walnut (the case sides)
+    ptRed: () => veneer('vPtR', '#dc4a3e', '#b8352c', { ring: 4, seed: 73 }),                 // the oak board's stained points
+    ptGrey: () => veneer('vPtG', '#646a70', '#4c5157', { ring: 4, seed: 74 }),
   };
 
-  /* ---------- the four luxury looks (2026-11-11): Damascus mother-of-pearl mosaic · malachite & ormolu ·
-     Calacatta marble & brass · Art Deco shagreen & ivory. Slabs are painted once (not tiled) and laid whole;
+  /* ---------- the four luxury looks (2026-11-11/12): smoked oak · butterflies · Calacatta marble & brass ·
+     crocodile leather (quiet fields: nothing on the board may get in the way of the checkers). Slabs are painted once (not tiled) and laid whole;
      the gilt / brass inlays also go into a roughness-metalness picture so they shine as metal ---------- */
   const slab = (key, W, H, kind, p) => SW[key] || (SW[key] = paint(cv(W, H), kind, p));
   const SL = {
@@ -239,13 +240,10 @@
     nero: () => slab('slNero', 512, 512, 'marble', { seed: 71, A: [18, 18, 20], B: [36, 35, 38], V: [232, 228, 220], G: [140, 140, 144], s: 1.3, ang: .9, bold: .85 }),
     nero2: () => slab('slNero2', 1024, 256, 'marble', { seed: 72, A: [16, 16, 18], B: [34, 33, 36], V: [226, 222, 214], G: [130, 130, 134], s: .8, ang: .25, bold: .7 }),
     rosso: () => slab('slRosso', 512, 512, 'marble', { seed: 83, A: [118, 26, 30], B: [76, 14, 20], V: [238, 218, 208], G: [178, 112, 102], s: 1.5, ang: 1.1, bold: .7 }),
-    mala: s => slab('slMala' + s, 560, 1000, 'malachite', { seed: 90 + s }),
     malaB: () => slab('slMalaB', 256, 1024, 'malachite', { seed: 97 }),
-    nacre: () => slab('slNac', 512, 512, 'nacre', { seed: 5, cells: 9, sat: 1.3 }),
-    nacreS: () => slab('slNacS', 256, 256, 'nacre', { seed: 8, cells: 4 }),
     pearl: () => slab('slPearl', 256, 256, 'nacre', { seed: 12, whole: 1, sat: 1.9 }),
     lapis: () => slab('slLapis', 256, 256, 'marble', { seed: 44, A: [30, 52, 150], B: [16, 30, 104], V: [196, 204, 228], G: [214, 176, 92], s: 1.6, ang: .4, bold: .35 }),
-    shag: () => slab('slShag', 512, 512, 'shagreen', { seed: 9, cells: 40, A: [34, 86, 80], B: [226, 240, 230] }),
+    croc: () => slab('slCroc', 512, 512, 'croc', { seed: 4, rows: 8, A: [22, 24, 27], B: [104, 112, 120] }),
   };
   const TAU0 = Math.PI * 2;
   const triPts = (g, x0, i, top, hw) => { const cx = x0 + i + .5, y0 = top ? g.TOP : g.BOT, y1 = top ? g.TOP + g.PL : g.BOT - g.PL; return [[cx - hw, y0], [cx + hw, y0], [cx, y1]]; };
@@ -259,166 +257,140 @@
   const poly = (c, U, P) => { c.beginPath(); P.forEach((p, j) => j ? c.lineTo(U(p[0]), U(p[1])) : c.moveTo(U(p[0]), U(p[1]))); c.closePath(); };
   const star = (c, U, cx, cy, r, n, k, rot = 0) => { c.beginPath(); for (let j = 0; j < 2 * n; j++) { const a = rot + j * Math.PI / n, rr = j % 2 ? r * k : r; const px = U(cx + Math.cos(a) * rr), py = U(cy + Math.sin(a) * rr); j ? c.lineTo(px, py) : c.moveTo(px, py); } c.closePath(); };
   const RMC = (rough, metal) => `rgb(0,${Math.round(rough * 255)},${Math.round(metal * 255)})`;
-  // a band round a rectangle (mitred corners): paint(c, len, w) draws one side in local units, x along the side, y from the outer edge in
-  function ringBand(c, U, x0, y0, w, h, bw, paint) {
-    const S = [[x0, y0, w, 0], [x0 + w, y0, h, Math.PI / 2], [x0 + w, y0 + h, w, Math.PI], [x0, y0 + h, h, -Math.PI / 2]];
-    S.forEach(([sx, sy, L, a]) => {
-      c.save(); c.translate(U(sx), U(sy)); c.rotate(a);
-      c.beginPath(); c.moveTo(0, 0); c.lineTo(U(L), 0); c.lineTo(U(L - bw), U(bw)); c.lineTo(U(bw), U(bw)); c.closePath(); c.clip();
-      paint(c, L, bw); c.restore();
-    });
-  }
-  // khatam: the Damascus inlaid band — lemonwood ground, ebony edges, a dog-tooth of bone and ebony, tiny pearl lozenges
-  function khatamBand(c, U, L, w) {
-    const R = (a, b, cc, d, col) => { c.fillStyle = col; c.fillRect(U(a), U(b), U(cc), U(d)); };
-    R(0, 0, L, w, '#d8b673'); R(0, 0, L, w * .13, '#1a110a'); R(0, w * .87, L, w * .13, '#1a110a');
-    R(0, w * .13, L, w * .05, '#f1e8d2'); R(0, w * .82, L, w * .05, '#f1e8d2');
-    const n = Math.max(2, Math.round(L / (w * .62))), cl = L / n, y0 = w * .2, y1 = w * .8;
-    for (let j = -1; j <= n; j++) {
-      const a = j * cl;
-      c.fillStyle = '#efe5cc'; c.beginPath(); c.moveTo(U(a), U(y1)); c.lineTo(U(a + cl), U(y1)); c.lineTo(U(a + cl / 2), U(y0)); c.closePath(); c.fill();
-      c.fillStyle = '#20150d'; c.beginPath(); c.moveTo(U(a + cl / 2), U(y0)); c.lineTo(U(a + cl * 1.5), U(y0)); c.lineTo(U(a + cl), U(y1)); c.closePath(); c.fill();
-      const mx = a + cl / 2, my = (y0 + y1) / 2 + (y1 - y0) * .12, r = (y1 - y0) * .16;
-      c.fillStyle = j % 2 ? '#e8f1ee' : '#f6e8ee'; c.beginPath(); c.moveTo(U(mx), U(my - r)); c.lineTo(U(mx + r * .6), U(my)); c.lineTo(U(mx), U(my + r)); c.lineTo(U(mx - r * .6), U(my)); c.closePath(); c.fill();
-    }
-  }
-  // the Greek key (meander) in gilt along a band, as on Empire malachite pieces
-  function meander(c, U, L, w, col) {
-    const u = w / 6, P = u * 7, n = Math.max(1, Math.round(L / P)), p = L / n;
-    c.strokeStyle = col; c.lineWidth = U(u * .78); c.lineCap = 'square'; c.lineJoin = 'miter';
-    c.beginPath(); c.moveTo(0, U(w - u)); c.lineTo(U(L), U(w - u)); c.stroke();
-    c.beginPath(); c.moveTo(0, U(u)); c.lineTo(U(L), U(u)); c.stroke();
-    for (let j = 0; j < n; j++) {
-      const a = j * p + p * .14, sx = (p / P);
-      const pts = [[0, 5], [0, 2], [4.2, 2], [4.2, 3.6], [2.1, 3.6]].map(([X0, Y0]) => [a + X0 * u * sx, Y0 * u]);
-      c.beginPath(); pts.forEach((q, i) => i ? c.lineTo(U(q[0]), U(q[1])) : c.moveTo(U(q[0]), U(q[1]))); c.stroke();
-    }
-  }
-  // the khatam micro-mosaic filling a point: a triangular lattice of bone, lemonwood and ebony
-  function mosaic(c, U, P, s) {
-    const xs = Math.min(P[0][0], P[1][0], P[2][0]) - s, xe = Math.max(P[0][0], P[1][0], P[2][0]) + s, ys = Math.min(P[0][1], P[1][1], P[2][1]) - s, ye = Math.max(P[0][1], P[1][1], P[2][1]) + s;
-    const h = s * .866, COL = ['#efe5cc', '#d6b06a', '#1d130c'];
-    c.fillStyle = '#1d130c'; c.fillRect(U(xs), U(ys), U(xe - xs), U(ye - ys));
-    for (let r = 0, y = ys; y < ye; r++, y += h) for (let q = 0, x = xs - (r % 2) * s / 2; x < xe; q++, x += s) {
-      c.fillStyle = COL[(q + r) % 3]; c.beginPath(); c.moveTo(U(x), U(y + h)); c.lineTo(U(x + s), U(y + h)); c.lineTo(U(x + s / 2), U(y)); c.closePath(); c.fill();
-      if ((q + 2 * r) % 5 === 0) { c.fillStyle = '#f3ecf0'; c.beginPath(); c.moveTo(U(x + s / 2), U(y)); c.lineTo(U(x + s), U(y + h)); c.lineTo(U(x + s * 1.5), U(y)); c.closePath(); c.fill(); }
-    }
-    // the mastic between the tesserae
-    c.strokeStyle = 'rgba(30,18,8,.55)'; c.lineWidth = Math.max(1, U(s * .06));
-    c.beginPath(); for (let y = ys; y < ye; y += h) { c.moveTo(U(xs), U(y)); c.lineTo(U(xe), U(y)); } c.stroke();
-  }
   const goldGrad = (c, x0, y0, x1, y1) => { const gr = c.createLinearGradient(x0, y0, x1, y1); gr.addColorStop(0, '#f6dc94'); gr.addColorStop(.3, '#d7a84f'); gr.addColorStop(.55, '#f3d58a'); gr.addColorStop(.8, '#bb8a3c'); gr.addColorStop(1, '#ecc874'); return gr; };
 
   // each look: deps (swatches the pictures are made from), field(C) / frame(C) drawing (C = { x, R (the rough/metal
   // picture, same coordinates), U, g, Wc, Hc, k, lay }), mats, extras(3D fittings)
   const LUX = {
-    nacre: {
+    // (2026-11-12) the user's references: a smoked-oak case with a cream field and red / slate points (Manopoulos style)
+    oak: {
       noRM: true,
-      fdeps: () => [W_.dam(), SL.nacre(), SL.nacreS(), suede('sdGrn', '#163a2b')],
+      fdeps: () => [leatherTile(), W_.ptRed(), W_.ptGrey()],
       field(C) {
-        const { x, U, g, lay } = C, mid = g.MID, gap = Math.min(1, (g.H - 1 - 2 * g.PL) / 1.8);
+        const { x, U, g, lay } = C, L = leatherTile();
+        const skin = (col, op) => { x.fillStyle = col; x.fill(); x.save(); x.clip(); const p = x.createPattern(L, 'repeat'); p.setTransform && p.setTransform(new DOMMatrix().scale(.24 * C.k / 160)); x.fillStyle = p; x.globalCompositeOperation = 'overlay'; x.globalAlpha = op; x.fillRect(0, 0, C.Wc, C.Hc); x.restore(); };
         for (const x0 of [g.LX, g.RX]) {
-          x.save(); x.beginPath(); x.rect(U(x0), U(g.TOP), U(6), U(g.H - 1)); x.clip();
-          lay(W_.dam(), 0, 0, 0, 1.25);
-          ringBand(x, U, x0, g.TOP, 6, g.H - 1, .2, (c2, L2, w2) => khatamBand(c2, U, L2, w2));
+          x.beginPath(); x.rect(U(x0), U(g.TOP), U(6), U(g.H - 1)); skin('#ece4d3', .14);
           for (let i = 0; i < 6; i++) for (const top of [true, false]) {
-            const a = (i % 2 === 0) === top, P = triPts(g, x0, i, top, .4);
-            x.save(); x.shadowColor = 'rgba(0,0,0,.5)'; x.shadowBlur = U(.04); x.shadowOffsetY = U(.012); poly(x, U, P); x.fillStyle = '#140c07'; x.fill(); x.restore();
-            const P2 = insetTri(P, .03);
-            poly(x, U, P2); x.save(); x.clip();
-            if (a) lay(SL.nacre(), .3 + i, U(x0 + i), U(mid), .62);
-            else { x.fillStyle = '#efe5cc'; x.fill(); poly(x, U, insetTri(P, .07)); x.clip(); mosaic(x, U, P, .1); }
-            x.restore();
-            poly(x, U, insetTri(P, .1)); x.strokeStyle = a ? 'rgba(40,26,14,.6)' : '#f3ece6'; x.lineWidth = U(.014); x.stroke();
-            if (a) { poly(x, U, insetTri(P, .2)); x.strokeStyle = 'rgba(40,26,14,.35)'; x.lineWidth = U(.008); x.stroke(); }
+            const a = (i % 2 === 0) === top, P = triPts(g, x0, i, top, .42);
+            poly(x, U, P); x.save(); x.clip(); lay(a ? W_.ptRed() : W_.ptGrey(), Math.PI / 2, U(x0 + i + .5), U(g.MID), .9); x.restore();
+            poly(x, U, P); x.strokeStyle = 'rgba(40,30,20,.22)'; x.lineWidth = U(.008); x.stroke();
           }
-          // the rosette between the points' tips: a pearl star in an ebony ring, a ring of pearl beads
-          const cx = x0 + 3, r = .3 * gap;
-          x.beginPath(); x.arc(U(cx), U(mid), U(r * 1.55), 0, TAU0); x.fillStyle = '#1a110a'; x.fill();
-          star(x, U, cx, mid, r * 1.3, 8, .72, Math.PI / 8); x.save(); x.clip(); lay(SL.nacreS(), .4, U(cx), U(mid), .5); x.restore();
-          star(x, U, cx, mid, r * .62, 8, .6); x.fillStyle = '#d6b06a'; x.fill();
-          x.beginPath(); x.arc(U(cx), U(mid), U(r * .18), 0, TAU0); x.fillStyle = '#1a110a'; x.fill();
-          for (const sx of [-1, 1]) { const bx = cx + sx * 1.05 * gap; star(x, U, bx, mid, r * .55, 4, .4); x.save(); x.clip(); lay(SL.nacreS(), 1, U(bx), U(mid), .4); x.restore(); }
-          x.restore();
         }
-        x.beginPath(); x.rect(U(g.TX), U(g.TOP), U(g.TW), U(g.H - 1)); x.save(); x.clip(); lay(suede('sdGrn', '#163a2b'), 0, 0, 0); x.restore();
+        x.beginPath(); x.rect(U(g.TX), U(g.TOP), U(g.TW), U(g.H - 1)); skin('#19191b', .9);
       },
-      rdeps: () => [W_.walnutR(), W_.walnut(), SL.nacreS()],
+      rdeps: () => [W_.smoke()],
       frame(C) {
         const { x, U, g, k, lay, strip, mitre } = C;
-        strip(hz => lay(W_.walnutR(), !hz, k / 150)); mitre();
-        for (const [x0, w] of C.inner) { x.save(); x.beginPath(); x.rect(U(x0), U(g.TOP), U(w), U(g.H - 1)); x.clip(); lay(W_.walnut(), true, k / 140); x.restore(); }
-        ringBand(x, U, .035, .035, g.W - .07, g.H - .07, .14, (c2, L2, w2) => khatamBand(c2, U, L2, w2));   // (near the outer edge: the point numbers sit on plain walnut)
-        // pearl stars on the corners, pearl stringing along both halves of the bar
-        for (const [cx, cy] of [[.25, .25], [g.W - .25, .25], [.25, g.H - .25], [g.W - .25, g.H - .25]]) {
-          x.beginPath(); x.arc(U(cx), U(cy), U(.2), 0, TAU0); x.fillStyle = '#1a110a'; x.fill();
-          star(x, U, cx, cy, .17, 8, .68, Math.PI / 8); x.save(); x.clip(); x.drawImage(SL.nacreS(), U(cx - .2), U(cy - .2), U(.4), U(.4)); x.restore();
-        }
-        const pl = (x0) => { x.save(); x.beginPath(); x.rect(U(x0), U(g.TOP + .2), U(.045), U(g.H - 1.4)); x.clip(); lay(SL.nacreS(), true, .5); x.restore(); };
-        pl(g.BX + .12); pl(g.BX + g.B - .165); pl(g.RE + .15);
-        x.fillStyle = 'rgba(10,4,0,.7)'; x.fillRect(U(g.BX + g.B / 2) - 1.5, U(g.TOP), 3, U(g.H - 1));
+        strip(hz => lay(W_.smoke(), !hz, k / 150)); mitre();
+        for (const [x0, w] of C.inner) { x.save(); x.beginPath(); x.rect(U(x0), U(g.TOP), U(w), U(g.H - 1)); x.clip(); lay(W_.smoke(), true, k / 140); x.restore(); }
+        // the stepped inner lip of the case: a dark line just outside every opening, a light one on the outer edge
+        x.strokeStyle = 'rgba(0,0,0,.45)'; x.lineWidth = U(.03); x.strokeRect(U(g.LX - .06), U(g.TOP - .06), U(g.RE - g.LX + .12), U(g.H - .88)); x.strokeRect(U(g.TX - .06), U(g.TOP - .06), U(g.TW + .12), U(g.H - .88));
+        x.strokeStyle = 'rgba(255,255,255,.08)'; x.lineWidth = U(.02); x.strokeRect(U(.18), U(.18), U(g.W - .36), U(g.H - .36));
+        x.fillStyle = 'rgba(0,0,0,.65)'; x.fillRect(U(g.BX + g.B / 2) - 1.5, U(g.TOP), 3, U(g.H - 1));
       },
       mats(TT, C) {
-        const wt = tex(veneer('vDamSide', '#6a4428', '#24140a', { ring: 6, seed: 64 })); wt.wrapS = wt.wrapT = TT.RepeatWrapping; wt.repeat.set(.18, 1.4);
-        return { side: new TT.MeshPhysicalMaterial({ map: wt, roughness: .36, clearcoat: .8, clearcoatRoughness: .16 }),
-          metal: new TT.MeshPhysicalMaterial({ color: C(0xcfa461), metalness: 1, roughness: .3, clearcoat: .3, clearcoatRoughness: .25 }),
-          metalDark: new TT.MeshStandardMaterial({ color: C(0x4a3410), metalness: 1, roughness: .45 }),
-          top: { roughness: .32, clearcoat: .85, clearcoatRoughness: .12, bump: .0012 }, field: { roughness: .26, clearcoat: .9, clearcoatRoughness: .08, bump: .001 }, bottom: 0x24140a };
+        const wt = tex(veneer('vSmkSide', '#4c4844', '#1a1817', { ring: 9, seed: 75 })); wt.wrapS = wt.wrapT = TT.RepeatWrapping; wt.repeat.set(.18, 1.4);
+        return { side: new TT.MeshPhysicalMaterial({ map: wt, roughness: .45, clearcoat: .4, clearcoatRoughness: .3 }),
+          metal: new TT.MeshPhysicalMaterial({ color: C(0xdcb86c), metalness: 1, roughness: .22, clearcoat: .3, clearcoatRoughness: .15 }),
+          metalDark: new TT.MeshStandardMaterial({ color: C(0x5a4212), metalness: 1, roughness: .4 }),
+          top: { roughness: .45, clearcoat: .35, clearcoatRoughness: .3, bump: .0015 }, field: { roughness: .6, clearcoat: .12, clearcoatRoughness: .4, bump: .0012 }, bottom: 0x1a1817 };
       },
     },
-    malachite: {
-      fdeps: () => [SL.mala(1), SL.nero(), suede('sdGrnV', '#0d3423')],
+    // a light-oak case, a midnight-blue field: points of white butterflies and of teal chevrons (Alexandra Llewellyn style)
+    butterfly: {
+      noRM: true,
+      fdeps: () => [suede('sdNavy', '#1b283b'), leatherTile()],
       field(C) {
-        const { x, R, U, g, lay } = C, mid = g.MID, gap = Math.min(1, (g.H - 1 - 2 * g.PL) / 1.8);
-        R.fillStyle = RMC(.16, 0); R.fillRect(0, 0, C.Wc, C.Hc);
-        [g.LX, g.RX].forEach((x0, fi) => {
-          x.save(); x.beginPath(); x.rect(U(x0), U(g.TOP), U(6), U(g.H - 1)); x.clip();
-          // book-matched slabs: the right field is the left one mirrored
-          x.save(); x.translate(U(x0 + (fi ? 6 : 0)), U(g.TOP)); x.scale(fi ? -1 : 1, 1); x.drawImage(SL.mala(1), 0, 0, U(6), U(g.H - 1)); x.restore();
-          for (let i = 0; i < 6; i++) for (const top of [true, false]) {
-            const a = (i % 2 === 0) === top, P = triPts(g, x0, i, top, .43);
-            x.save(); x.shadowColor = 'rgba(0,0,0,.55)'; x.shadowBlur = U(.05); x.shadowOffsetY = U(.014); poly(x, U, P); x.fillStyle = '#0c0b0a'; x.fill(); x.restore();
-            poly(x, U, P); x.save(); x.clip();
-            if (a) {   // water gilding with the burnisher's long strokes
-              x.fillStyle = goldGrad(x, U(P[0][0]), 0, U(P[1][0]), 0); x.fill();
-              x.globalAlpha = .18; x.strokeStyle = '#6a4a14'; x.lineWidth = 1; x.beginPath(); for (let t = -.5; t <= .5; t += .045) { x.moveTo(U(P[2][0] + t), U(P[0][1])); x.lineTo(U(P[2][0] + t * .2), U(P[2][1])); } x.stroke(); x.globalAlpha = 1;
-              poly(R, U, P); R.fillStyle = RMC(.26, 1); R.fill();
-            } else { const N = SL.nero(), o = (i * 61 + (top ? 0 : 217)) % 300; x.drawImage(N, o, 0, 180, 512, U(P[0][0]), U(Math.min(P[0][1], P[2][1])), U(.86), U(g.PL)); }
-            x.restore();
-            poly(x, U, P); x.strokeStyle = '#e8c06a'; x.lineWidth = U(.026); x.stroke(); poly(R, U, P); R.strokeStyle = RMC(.22, 1); R.lineWidth = U(.026); R.stroke();
+        const { x, U, g, lay } = C, L = leatherTile();
+        const fly = (cx, cy, r, v) => {   // one butterfly, wings spread across, body along the point
+          const dark = v % 4 === 2, wing = dark ? '#1c1a1a' : '#f2ede2', vein = dark ? 'rgba(240,236,226,.75)' : 'rgba(30,26,24,.8)';
+          const W = (ox, oy, rx, ry, rot) => { x.beginPath(); x.ellipse(U(cx + ox), U(cy + oy), U(rx), U(ry), rot, 0, Math.PI * 2); };
+          for (const sx of [-1, 1]) {
+            for (const [ox, oy, rx, ry, rot] of [[.52, -.2, .5, .34, -.35], [.36, .28, .34, .26, .45]]) {
+              W(sx * ox * r, oy * r, rx * r, ry * r, sx * rot); x.fillStyle = wing; x.fill();
+              x.save(); x.clip(); x.strokeStyle = vein; x.lineWidth = U(r * .045);
+              x.beginPath(); for (let q = 0; q < 5; q++) { const a = -1.2 + q * .55; x.moveTo(U(cx), U(cy)); x.lineTo(U(cx + sx * Math.cos(a) * r * 1.3), U(cy + Math.sin(a) * r * 1.3)); } x.stroke();
+              W(sx * ox * r, oy * r, rx * r, ry * r, sx * rot); x.lineWidth = U(r * .14); x.strokeStyle = dark ? '#0c0b0b' : '#2a2422'; x.stroke(); x.restore();
+            }
+            x.fillStyle = dark ? '#f2ede2' : '#1e1a18'; for (const [ox, oy, rr] of [[.58, -.32, .07], [.8, -.1, .05], [.4, .3, .06]]) { x.beginPath(); x.arc(U(cx + sx * ox * r), U(cy + oy * r), U(rr * r), 0, Math.PI * 2); x.fill(); }
+            if (v % 3 === 0) { x.fillStyle = '#c8442e'; x.beginPath(); x.arc(U(cx + sx * .36 * r), U(cy + .3 * r), U(.08 * r), 0, Math.PI * 2); x.fill(); }   // the Apollo's red eye-spot
           }
-          // a gilt ormolu rosette between the tips, small gilt bosses either side
-          const cx = x0 + 3, r = .28 * gap, gilt = (c) => { c.fillStyle = c === R ? RMC(.24, 1) : goldGrad(c, U(cx - r), U(mid - r), U(cx + r), U(mid + r)); };
-          for (const c of [x, R]) { star(c, U, cx, mid, r * 1.35, 12, .62); gilt(c); c.fill(); }
-          x.beginPath(); x.arc(U(cx), U(mid), U(r * .55), 0, TAU0); x.fillStyle = '#0d0c0b'; x.fill(); R.beginPath(); R.arc(U(cx), U(mid), U(r * .55), 0, TAU0); R.fillStyle = RMC(.1, 0); R.fill();
-          for (const c of [x, R]) { c.beginPath(); c.arc(U(cx), U(mid), U(r * .3), 0, TAU0); gilt(c); c.fill(); for (const sx of [-1, 1]) { c.beginPath(); c.arc(U(cx + sx * 1.05 * gap), U(mid), U(r * .32), 0, TAU0); gilt(c); c.fill(); } }
-          // gilt fillet round the field
-          for (const c of [x, R]) { c.strokeStyle = c === R ? RMC(.22, 1) : '#e2b862'; c.lineWidth = U(.04); c.strokeRect(U(x0 + .07), U(g.TOP + .07), U(5.86), U(g.H - 1.14)); }
+          x.beginPath(); x.ellipse(U(cx), U(cy), U(r * .07), U(r * .42), 0, 0, Math.PI * 2); x.fillStyle = '#16120f'; x.fill();
+        };
+        for (const x0 of [g.LX, g.RX]) {
+          x.save(); x.beginPath(); x.rect(U(x0), U(g.TOP), U(6), U(g.H - 1)); x.clip(); lay(suede('sdNavy', '#1b283b'), 0, 0, 0);
+          for (let i = 0; i < 6; i++) for (const top of [true, false]) {
+            const a = (i % 2 === 0) === top, P = triPts(g, x0, i, top, .44), cx = x0 + i + .5, y0 = top ? g.TOP : g.BOT, dir = top ? 1 : -1;
+            poly(x, U, P); x.fillStyle = a ? 'rgba(255,255,255,.05)' : 'rgba(64,170,184,.07)'; x.fill();   // (the point reads as a point even under checkers)
+            if (a) {   // six butterflies, large at the base, smaller towards the tip (they may spill a little over the point's edge)
+              let t = .34, n = i * 3 + (top ? 0 : 7);
+              for (let q = 0; q < 6 && t < g.PL - .1; q++) { const w = .44 * (1 - t / g.PL), r = Math.max(.08, w * 1.05); fly(cx, y0 + dir * t, r, n++); t += r * 1.62; }
+            } else {
+              poly(x, U, P); x.save(); x.clip();   // teal chevrons pointing along the point
+              x.strokeStyle = '#2f9fae'; x.lineWidth = U(.045); x.lineCap = 'butt'; x.lineJoin = 'miter';
+              for (let t = .12; t < g.PL - .1; t += .17) { const w = .4 * (1 - t / g.PL); if (w < .03) break; x.beginPath(); x.moveTo(U(cx - w), U(y0 + dir * t)); x.lineTo(U(cx), U(y0 + dir * (t + .09))); x.lineTo(U(cx + w), U(y0 + dir * t)); x.stroke(); }
+              x.restore();
+            }
+          }
+          fly(x0 + 3, g.MID, .16, 1);   // a lone butterfly between the tips
           x.restore();
-        });
-        x.beginPath(); x.rect(U(g.TX), U(g.TOP), U(g.TW), U(g.H - 1)); x.save(); x.clip(); lay(suede('sdGrnV', '#0d3423'), 0, 0, 0); x.restore();
-        R.fillStyle = RMC(1, 0); R.fillRect(U(g.TX), U(g.TOP), U(g.TW), U(g.H - 1));
-      },
-      rdeps: () => [SL.malaB()],
-      frame(C) {
-        const { x, R, U, g } = C;
-        // black lacquer (a faint depth in it), the gilt Greek key round the rails, gilt fillets on every edge
-        const gr = x.createLinearGradient(0, 0, C.Wc, C.Hc); gr.addColorStop(0, '#141315'); gr.addColorStop(.5, '#0a0a0b'); gr.addColorStop(1, '#121113'); x.fillStyle = gr; x.fillRect(0, 0, C.Wc, C.Hc);
-        R.fillStyle = RMC(.07, 0); R.fillRect(0, 0, C.Wc, C.Hc);
-        for (const c of [x, R]) ringBand(c, U, .1, .1, g.W - .2, g.H - .2, .28, (cc, L, w) => meander(cc, U, L, w, cc === R ? RMC(.24, 1) : '#dcb35e'));
-        // the bar: a malachite panel in a gilt frame on each half
-        for (const [x0, w] of [[g.BX + .1, g.B / 2 - .16], [g.BX + g.B / 2 + .06, g.B / 2 - .16]]) {
-          x.drawImage(SL.malaB(), U(x0), U(g.TOP + .15), U(w), U(g.H - 1.3));
-          for (const c of [x, R]) { c.strokeStyle = c === R ? RMC(.22, 1) : '#e2b862'; c.lineWidth = U(.03); c.strokeRect(U(x0), U(g.TOP + .15), U(w), U(g.H - 1.3)); }
         }
-        for (const c of [x, R]) { c.strokeStyle = c === R ? RMC(.22, 1) : '#d6ab58'; c.lineWidth = U(.03); c.strokeRect(U(.03), U(.03), U(g.W - .06), U(g.H - .06)); c.strokeRect(U(g.LX - .05), U(g.TOP - .05), U(g.RE - g.LX + .1), U(g.H - .9)); c.strokeRect(U(g.TX - .05), U(g.TOP - .05), U(g.TW + .1), U(g.H - .9)); }
-        x.fillStyle = 'rgba(0,0,0,.8)'; x.fillRect(U(g.BX + g.B / 2) - 1.5, U(g.TOP), 3, U(g.H - 1));
+        x.beginPath(); x.rect(U(g.TX), U(g.TOP), U(g.TW), U(g.H - 1)); x.fillStyle = '#121214'; x.fill(); x.save(); x.clip(); const p = x.createPattern(L, 'repeat'); p.setTransform && p.setTransform(new DOMMatrix().scale(.24 * C.k / 160)); x.fillStyle = p; x.globalCompositeOperation = 'overlay'; x.globalAlpha = .9; x.fillRect(0, 0, C.Wc, C.Hc); x.restore();
+      },
+      rdeps: () => [W_.oakL()],
+      frame(C) {
+        const { x, U, g, k, lay, strip, mitre } = C;
+        strip(hz => lay(W_.oakL(), !hz, k / 150)); mitre();
+        for (const [x0, w] of C.inner) { x.save(); x.beginPath(); x.rect(U(x0), U(g.TOP), U(w), U(g.H - 1)); x.clip(); lay(W_.oakL(), true, k / 140); x.restore(); }
+        // black leather lining round the field and the trays (as in the reference)
+        x.strokeStyle = '#141416'; x.lineWidth = U(.1); x.strokeRect(U(g.LX - .05), U(g.TOP - .05), U(6.1), U(g.H - .9)); x.strokeRect(U(g.RX - .05), U(g.TOP - .05), U(6.1), U(g.H - .9)); x.strokeRect(U(g.TX - .05), U(g.TOP - .05), U(g.TW + .1), U(g.H - .9));
+        x.fillStyle = 'rgba(40,20,4,.6)'; x.fillRect(U(g.BX + g.B / 2) - 1.5, U(g.TOP), 3, U(g.H - 1));
       },
       mats(TT, C) {
-        return { side: new TT.MeshPhysicalMaterial({ color: C(0x0b0b0c), roughness: .22, clearcoat: 1, clearcoatRoughness: .04 }),
-          metal: new TT.MeshPhysicalMaterial({ color: C(0xf2c873), metalness: 1, roughness: .2, clearcoat: .4, clearcoatRoughness: .1 }),
-          metalDark: new TT.MeshStandardMaterial({ color: C(0x6a4c14), metalness: 1, roughness: .4 }),
-          top: { roughness: 1, clearcoat: 1, clearcoatRoughness: .04, bump: .0004 }, field: { roughness: 1, clearcoat: .95, clearcoatRoughness: .05, bump: .0005 }, bottom: 0x0b0b0c, corners: true };
+        const wt = tex(W_.burl()); wt.wrapS = wt.wrapT = TT.RepeatWrapping; wt.repeat.set(.5, 1.2);
+        return { side: new TT.MeshPhysicalMaterial({ map: wt, roughness: .3, clearcoat: .9, clearcoatRoughness: .1 }),
+          metal: new TT.MeshPhysicalMaterial({ color: C(0xecd09a), metalness: 1, roughness: .2, clearcoat: .3, clearcoatRoughness: .1 }),
+          metalDark: new TT.MeshStandardMaterial({ color: C(0x6a5228), metalness: 1, roughness: .4 }),
+          top: { roughness: .32, clearcoat: .8, clearcoatRoughness: .12, bump: .0012 }, field: { roughness: .55, clearcoat: .2, clearcoatRoughness: .35, bump: .0015 }, bottom: 0x5a3a1c };
+      },
+    },
+    // grey crocodile-embossed leather, a charcoal leather field, white and black points, chrome fittings
+    croc: {
+      noRM: true,
+      fdeps: () => [leatherTile(), SL.croc()],
+      field(C) {
+        const { x, U, g } = C, L = leatherTile();
+        const skin = (col, op) => { x.fillStyle = col; x.fill(); x.save(); x.clip(); const p = x.createPattern(L, 'repeat'); p.setTransform && p.setTransform(new DOMMatrix().scale(.26 * C.k / 160)); x.fillStyle = p; x.globalCompositeOperation = 'overlay'; x.globalAlpha = op; x.fillRect(0, 0, C.Wc, C.Hc); x.restore(); };
+        for (const x0 of [g.LX, g.RX]) {
+          x.beginPath(); x.rect(U(x0), U(g.TOP), U(6), U(g.H - 1)); skin('#5f5e5b', .55);
+          for (let i = 0; i < 6; i++) for (const top of [true, false]) {
+            const a = (i % 2 === 0) === top, P = triPts(g, x0, i, top, .43);
+            x.save(); x.shadowColor = 'rgba(0,0,0,.45)'; x.shadowBlur = U(.03); x.shadowOffsetY = U(.01); poly(x, U, P); x.fillStyle = '#000'; x.fill(); x.restore();
+            poly(x, U, P); skin(a ? '#1d1d1f' : '#efeeea', a ? .7 : .14);
+          }
+          x.save(); x.setLineDash([U(.07), U(.05)]); x.lineCap = 'round'; x.strokeStyle = 'rgba(232,232,226,.32)'; x.lineWidth = U(.016); x.strokeRect(U(x0 + .1), U(g.TOP + .1), U(5.8), U(g.H - 1.2)); x.restore();
+        }
+        x.beginPath(); x.rect(U(g.TX), U(g.TOP), U(g.TW), U(g.H - 1)); skin('#3c3c3b', .6);
+      },
+      rdeps: () => [SL.croc()],
+      frame(C) {
+        const { x, U, g, k, lay, strip } = C;
+        strip(hz => lay(SL.croc(), !hz, .85 * k / 129));
+        for (const [x0, w] of C.inner) { x.save(); x.beginPath(); x.rect(U(x0), U(g.TOP), U(w), U(g.H - 1)); x.clip(); lay(SL.croc(), true, .85 * k / 129); x.restore(); }
+        x.fillStyle = 'rgba(90,110,130,.12)'; x.fillRect(0, 0, C.Wc, C.Hc);   // a cool blue-grey dye
+        x.setLineDash([U(.075), U(.05)]); x.lineCap = 'round';
+        const st = (x0, y0, w, h) => { x.strokeStyle = 'rgba(0,0,0,.5)'; x.lineWidth = U(.03); x.strokeRect(U(x0), U(y0), U(w), U(h)); x.strokeStyle = 'rgba(214,218,222,.6)'; x.lineWidth = U(.016); x.strokeRect(U(x0), U(y0), U(w), U(h)); };
+        st(.12, .12, g.W - .24, g.H - .24); st(g.LX - .13, g.TOP - .13, g.RE - g.LX + .26, g.H - 1 + .26); st(g.TX - .13, g.TOP - .13, g.TW + .26, g.H - 1 + .26);
+        x.setLineDash([]);
+        x.fillStyle = 'rgba(0,0,0,.55)'; x.fillRect(U(g.BX + g.B / 2) - 1, U(g.TOP), 2, U(g.H - 1));
+      },
+      mats(TT, C) {
+        const ct = tex(SL.croc()); ct.wrapS = ct.wrapT = TT.RepeatWrapping; ct.repeat.set(3, 3);
+        return { side: new TT.MeshPhysicalMaterial({ color: C(0xc8d0d8), map: ct, bumpMap: ct, bumpScale: .006, roughness: .4, clearcoat: .5, clearcoatRoughness: .25 }),
+          metal: new TT.MeshPhysicalMaterial({ color: C(0xdfe3e8), metalness: 1, roughness: .14, clearcoat: .4, clearcoatRoughness: .08 }),
+          metalDark: new TT.MeshStandardMaterial({ color: C(0x4a4e54), metalness: 1, roughness: .35 }),
+          top: { roughness: .4, clearcoat: .5, clearcoatRoughness: .22, bump: .005 }, field: { roughness: .62, clearcoat: .1, clearcoatRoughness: .4, bump: .003 }, bottom: 0x2a2c2f };
       },
     },
     marble: {
@@ -468,66 +440,8 @@
           top: { roughness: 1, clearcoat: .9, clearcoatRoughness: .05, bump: .0003 }, field: { roughness: 1, clearcoat: .9, clearcoatRoughness: .04, bump: .0003 }, bottom: 0x161618 };
       },
     },
-    shagreen: {
-      fdeps: () => [SL.shag(), W_.ivory(), W_.macassar(), suede('sdBlk', '#141416')],
-      field(C) {
-        const { x, R, U, g, lay } = C, mid = g.MID, gap = Math.min(1, (g.H - 1 - 2 * g.PL) / 1.8);
-        R.fillStyle = RMC(.45, 0); R.fillRect(0, 0, C.Wc, C.Hc);
-        const gold = (c, w) => { c.strokeStyle = c === R ? RMC(.22, 1) : '#e0b95f'; c.lineWidth = U(w); };
-        for (const x0 of [g.LX, g.RX]) {
-          x.save(); x.beginPath(); x.rect(U(x0), U(g.TOP), U(6), U(g.H - 1)); x.clip();
-          lay(SL.shag(), 0, 0, 0, .8);
-          // ivory border with a gilt line inside
-          x.fillStyle = '#efe6d0'; x.save(); x.beginPath(); x.rect(U(x0), U(g.TOP), U(6), U(g.H - 1)); x.rect(U(x0 + .09), U(g.TOP + .09), U(5.82), U(g.H - 1.18)); x.clip('evenodd'); lay(W_.ivory(), 0, 0, 0, .8); x.restore();
-          for (const c of [x, R]) { gold(c, .022); c.strokeRect(U(x0 + .12), U(g.TOP + .12), U(5.76), U(g.H - 1.24)); }
-          for (let i = 0; i < 6; i++) for (const top of [true, false]) {
-            const a = (i % 2 === 0) === top, P = triPts(g, x0, i, top, .42);
-            x.save(); x.shadowColor = 'rgba(0,0,0,.4)'; x.shadowBlur = U(.04); x.shadowOffsetY = U(.01); poly(x, U, P); x.fillStyle = '#20160e'; x.fill(); x.restore();
-            poly(x, U, P); x.save(); x.clip(); lay(a ? W_.ivory() : W_.macassar(), Math.PI / 2 + (top ? .01 : -.01), U(x0 + i + .5), U(mid), a ? .8 : 1.1); x.restore();
-            if (a) { poly(R, U, P); R.fillStyle = RMC(.3, 0); R.fill(); } else { poly(R, U, P); R.fillStyle = RMC(.22, 0); R.fill(); }
-            for (const c of [x, R]) { poly(c, U, P); gold(c, .02); c.stroke(); }
-            // an inlaid gilt chevron near the base of every point (Art Deco)
-            const b = top ? 1 : -1, cx = x0 + i + .5, y0 = (top ? g.TOP : g.BOT) + b * .5;
-            for (const c of [x, R]) { c.beginPath(); c.moveTo(U(cx - .2), U(y0)); c.lineTo(U(cx), U(y0 + b * .2)); c.lineTo(U(cx + .2), U(y0)); gold(c, .03); c.stroke(); }
-          }
-          // a stepped Deco lozenge between the tips: gilt outline, ivory inside, a black onyx centre
-          const cx = x0 + 3, r = .34 * gap, lz = (c, s) => { c.beginPath(); [[0, -1], [.32, -.55], [.55, -.55], [.55, -.32], [1, 0], [.55, .32], [.55, .55], [.32, .55], [0, 1], [-.32, .55], [-.55, .55], [-.55, .32], [-1, 0], [-.55, -.32], [-.55, -.55], [-.32, -.55]].forEach(([px, py], j) => { const X0 = U(cx + px * r * s), Y0 = U(mid + py * r * s); j ? c.lineTo(X0, Y0) : c.moveTo(X0, Y0); }); c.closePath(); };
-          for (const c of [x, R]) { lz(c, 1.25); c.fillStyle = c === R ? RMC(.22, 1) : goldGrad(c, U(cx - r), U(mid - r), U(cx + r), U(mid + r)); c.fill(); }
-          lz(x, 1.08); x.save(); x.clip(); lay(W_.ivory(), 0, 0, 0, .8); x.restore(); lz(R, 1.08); R.fillStyle = RMC(.3, 0); R.fill();
-          x.beginPath(); x.arc(U(cx), U(mid), U(r * .32), 0, TAU0); x.fillStyle = '#111013'; x.fill();
-          x.restore();
-        }
-        x.beginPath(); x.rect(U(g.TX), U(g.TOP), U(g.TW), U(g.H - 1)); x.save(); x.clip(); lay(suede('sdBlk', '#141416'), 0, 0, 0); x.restore();
-        R.fillStyle = RMC(1, 0); R.fillRect(U(g.TX), U(g.TOP), U(g.TW), U(g.H - 1));
-      },
-      rdeps: () => [W_.macD(), W_.ivory(), SL.shag()],
-      frame(C) {
-        const { x, R, U, g, k, lay, strip, mitre } = C;
-        strip(hz => lay(W_.macD(), !hz, k / 150)); mitre();
-        for (const [x0, w] of C.inner) { x.save(); x.beginPath(); x.rect(U(x0), U(g.TOP), U(w), U(g.H - 1)); x.clip(); lay(SL.shag(), false, .64); x.restore(); }
-        R.fillStyle = RMC(.24, 0); R.fillRect(0, 0, C.Wc, C.Hc);
-        // ivory stringing (two lines) round the rails, gilt stepped corners
-        x.strokeStyle = '#efe6d0'; x.lineWidth = U(.035); x.strokeRect(U(.1), U(.1), U(g.W - .2), U(g.H - .2)); x.lineWidth = U(.02); x.strokeRect(U(.38), U(.38), U(g.W - .76), U(g.H - .76));
-        for (const [x0, w] of C.inner) { x.strokeStyle = '#efe6d0'; x.lineWidth = U(.025); x.strokeRect(U(x0 + .05), U(g.TOP + .05), U(w - .1), U(g.H - 1.1)); }
-        for (const [sx, sy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) {
-          const ox = sx ? g.W : 0, oy = sy ? g.H : 0, fx = sx ? -1 : 1, fy = sy ? -1 : 1;
-          for (const c of [x, R]) {
-            c.beginPath(); [[.04, .04], [.46, .04], [.46, .14], [.28, .14], [.28, .28], [.14, .28], [.14, .46], [.04, .46]].forEach(([px, py], j) => { const X0 = U(ox + fx * px), Y0 = U(oy + fy * py); j ? c.lineTo(X0, Y0) : c.moveTo(X0, Y0); }); c.closePath();
-            c.fillStyle = c === R ? RMC(.2, 1) : goldGrad(c, U(ox), U(oy), U(ox + fx * .5), U(oy + fy * .5)); c.fill();
-          }
-        }
-        x.fillStyle = 'rgba(10,4,0,.7)'; x.fillRect(U(g.BX + g.B / 2) - 1.5, U(g.TOP), 3, U(g.H - 1));
-      },
-      mats(TT, C) {
-        const wt = tex(veneer('vMacSide', '#4c2c18', '#0b0604', { stripe: .8, ring: 3, seed: 65 })); wt.wrapS = wt.wrapT = TT.RepeatWrapping; wt.repeat.set(.18, 1.4);
-        return { side: new TT.MeshPhysicalMaterial({ map: wt, roughness: .3, clearcoat: .85, clearcoatRoughness: .12 }),
-          metal: new TT.MeshPhysicalMaterial({ color: C(0xeac27a), metalness: 1, roughness: .2, clearcoat: .3, clearcoatRoughness: .1 }),
-          metalDark: new TT.MeshStandardMaterial({ color: C(0x5a4212), metalness: 1, roughness: .4 }),
-          top: { roughness: 1, clearcoat: .8, clearcoatRoughness: .14, bump: .0015 }, field: { roughness: 1, clearcoat: .55, clearcoatRoughness: .3, bump: .0045 }, bottom: 0x120a06 };
-      },
-    },
   };
-  const LOOKS = ['marq', 'scarlet', 'nacre', 'malachite', 'marble', 'shagreen'];
+  const LOOKS = ['marq', 'scarlet', 'oak', 'butterfly', 'marble', 'croc'];   // (2026-11-12: nacre / malachite / shagreen replaced — busy patterns got in the way of play)
   const normLook = l => LOOKS.includes(l) ? l : 'marq';
   const RM = new WeakMap();   // top picture → its roughness / metalness picture (the luxury looks)
 
