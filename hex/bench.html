@@ -104,7 +104,7 @@ async function setup() {
   if (!iso) { $('#st').innerHTML = '<span class="n">クロスオリジン分離できませんでした。</span>PC の Chrome / Edge で開いてください（スレッドを使えません）。'; return; }
   $('#st').textContent = 'スレッドを起動しています…';
   pool = MTEngine.pool({
-    wasm: 'engine_mt.wasm?v=4', lead: 'engine.js?v=4-pro1-mt1&mt=1', helper: 'mt-helper.js?v=1', slot: 2 << 20, initial: 1024, maximum: 16384,
+    wasm: 'engine_mt.wasm?v=5', lead: 'engine.js?v=4-pro1-mt1&mt=1', helper: 'mt-helper.js?v=1', slot: 2 << 20, initial: 1024, maximum: 16384,
     imports: mem => ({ env: { memory: mem, now: () => Date.now(), progress: () => {} } }), help: m => m.type === 'analyze' ? {} : null,
   });
   if (!(await pool.ready)) { $('#st').innerHTML = '<span class="n">スレッドを起動できませんでした。</span>'; return; }

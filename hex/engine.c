@@ -343,12 +343,28 @@ static void pfSums(const u8 *b, int p, int last, int *out) {
 }
 
 // ---------------------------------------------------------------- MCTS (UCT + RAVE, MCTS-solver for immediate wins)
-typedef struct { int first; u16 nch; short mv; float n, w, rn, rw; i8 proof; u8 exp; } Node;
 // proof: +1 = the player who moved into this node wins from here, -1 = loses
 #ifndef NODES
 #define NODES 1200000
 #endif
+#ifdef MT
+// (2026-11-11, MODEL_CARD「マルチスレッドの選択の高速化と RAVE の置き場所」) MT: the RAVE results of node i are in RV[i], apart
+// from the node. A playout adds a RAVE result to about half of the children of each node on its path; with them inside the
+// 28-byte node those writes touched every line of the children (11×11 root: ~120 children, 53 lines) and every other thread
+// reading them to choose had to fetch all those lines again. In pairs of floats the RAVE results of 120 children are 15 lines,
+// and the visit counts (written for one child) stay on the node's lines. The same values and the same search.
+typedef struct { int first; u16 nch; short mv; float n, w; i8 proof; u8 exp; } Node;
+typedef struct { float rn, rw; } Rave;
 static Node T[NODES];
+static Rave RV[NODES];
+#define RN(c) (RV[(c) - T].rn)
+#define RW(c) (RV[(c) - T].rw)
+#else
+typedef struct { int first; u16 nch; short mv; float n, w, rn, rw; i8 proof; u8 exp; } Node;
+static Node T[NODES];
+#define RN(c) ((c)->rn)
+#define RW(c) ((c)->rw)
+#endif
 #ifdef MT
 // the variables every thread writes (or reads while another writes) each on a cache line of its own: no false sharing with the
 // read-only parameters next to them (2026-11-09, MODEL_CARD「スレッドが伸びない問題」)
@@ -405,12 +421,13 @@ static TLS int rbClock, rbThreads;    // rbThreads: threads in the tree (looked 
 static TLS float rootN, rootW;        // the root's own visits and wins (nothing chooses by them; added every 64 playouts)
 #ifndef MTSIM_W
 #define MTSIM_W(i)
+#define MTSIM_WR(i)
 #endif
 // add the slot's visits / wins to the tree (a few children), and with rave also its RAVE results (about all children)
 static void rbFlush(RBuf *s, int rave) {   // (the slot stays this node's)
-  Node *ch = &T[s->first];
+  Node *ch = &T[s->first]; Rave *rv = &RV[s->first];
   for (int i = 0; i < s->nch; i++) {
-    if (rave && s->rn[i] != 0) { ch[i].rn += s->rn[i]; ch[i].rw += s->rw[i]; s->rn[i] = 0; s->rw[i] = 0; MTSIM_W(s->first + i); }
+    if (rave && s->rn[i] != 0) { rv[i].rn += s->rn[i]; rv[i].rw += s->rw[i]; s->rn[i] = 0; s->rw[i] = 0; MTSIM_WR(s->first + i); }
     if (s->dn[i] != 0) { ch[i].n += s->dn[i]; ch[i].w += s->dw[i]; s->dn[i] = 0; s->dw[i] = 0; MTSIM_W(s->first + i); }
   }
   s->cnt = 0; if (rave) s->cntR = 0;
@@ -492,12 +509,12 @@ static void expand(int ni, Pos *p) {
     Node *ch = &T[f + k++];
     ch->first = 0; ch->nch = 0; ch->mv = c; ch->n = 0; ch->w = 0; ch->exp = 0; ch->proof = 0;
     float pv = (PW_ON && LP_ON) ? lp[c] : prior(p->b, c, me);
-    ch->rn = PRIOR_N; ch->rw = PRIOR_N * pv;
+    RN(ch) = PRIOR_N; RW(ch) = PRIOR_N * pv;
     if (myWin >= 0) { if (c == myWin) ch->proof = 1; }
     else if (no >= 2) ch->proof = -1;
     else if (no == 1 && c != ow[0]) ch->proof = -1;
   }
-  if (p->swapOk) { Node *ch = &T[f + k++]; ch->first = 0; ch->nch = 0; ch->mv = SWAP; ch->n = 0; ch->w = 0; ch->exp = 0; ch->proof = 0; ch->rn = 0; ch->rw = 0; }
+  if (p->swapOk) { Node *ch = &T[f + k++]; ch->first = 0; ch->nch = 0; ch->mv = SWAP; ch->n = 0; ch->w = 0; ch->exp = 0; ch->proof = 0; RN(ch) = 0; RW(ch) = 0; }
   if (myWin >= 0) nd->proof = -1;                  // the side to move here wins at once: whoever moved into this node loses
   else if (no >= 2) nd->proof = 1;
 #ifdef MT
@@ -509,6 +526,54 @@ static TLS int pathN[256]; static TLS int pathL;
 // (the multi-thread form: the same search; a busy node's results go through this thread's slot, see RBuf)
 static TLS RBuf *pathS[256];   // the slot of path node k (its children's results), 0 = written at once
 static TLS u8 pathI[256];      // the child index of path node k at its parent
+// (2026-11-11) the selection without the UCT term (UCT_C = 0, the default), as selectV of the one-thread search: the random
+// numbers first in the children's order, then the values 4 children at a time (wasm SIMD), with this thread's results in the
+// slot s added (s = 0: none). The same values and random numbers as the loop it replaces (kept below for UCT_C > 0), so with
+// one thread the search is the same.
+typedef float F4 __attribute__((vector_size(16)));
+typedef float F4u __attribute__((vector_size(16), aligned(4)));
+typedef int I4 __attribute__((vector_size(16)));
+static TLS float selR[MAXC + 4], selV[MAXC + 4];
+static int selectVmt(int first, int nch, const RBuf *s, int *allLost) {
+  const Node *ch = &T[first]; const Rave *rv = &RV[first];
+  int any = 0;
+  for (int i = 0; i < nch; i++) {
+    int pr = ch[i].proof;
+    if (pr > 0) { *allLost = 0; return i; }
+    if (pr < 0) { selR[i] = 0; continue; }
+    any = 1; selR[i] = (float)(rnd() & 0xFFFFFF) * (1e-4f / 16777216.0f);
+  }
+  *allLost = !any; if (!any) return -1;
+  {
+#pragma clang fp reassociate(off) contract(off)
+    const F4 half = { .5f, .5f, .5f, .5f }, eps = { 1e-6f, 1e-6f, 1e-6f, 1e-6f }, zero = { 0, 0, 0, 0 }, rb = { RAVE_B, RAVE_B, RAVE_B, RAVE_B };
+    int i = 0;
+    for (; i + 4 <= nch; i += 4) {
+      const Node *c = &ch[i];
+      F4 n = { c[0].n, c[1].n, c[2].n, c[3].n }, w = { c[0].w, c[1].w, c[2].w, c[3].w };
+      F4 r01 = *(const F4u *)&rv[i], r23 = *(const F4u *)&rv[i + 2];
+      F4 rn = __builtin_shufflevector(r01, r23, 0, 2, 4, 6), rw = __builtin_shufflevector(r01, r23, 1, 3, 5, 7);
+      if (s) { n = n + *(const F4u *)&s->dn[i]; w = w + *(const F4u *)&s->dw[i]; rn = rn + *(const F4u *)&s->rn[i]; rw = rw + *(const F4u *)&s->rw[i]; }
+      I4 mn = n > zero, mr = rn > zero;
+      F4 q = (F4)(((I4)(w / n) & mn) | ((I4)half & ~mn)), rq = (F4)(((I4)(rw / rn) & mr) | ((I4)half & ~mr));
+      F4 d = ((n + eps) + rn) + (n * rb) * rn;
+      F4 v = ((rq - q) * rn) / d + q;
+      F4 r = *(const F4u *)&selR[i];
+      v = v + r;
+      *(F4u *)&selV[i] = v;
+    }
+    for (; i < nch; i++) {
+      float n = ch[i].n, w = ch[i].w, rn = rv[i].rn, rw = rv[i].rw;
+      if (s) { n = n + s->dn[i]; w = w + s->dw[i]; rn = rn + s->rn[i]; rw = rw + s->rw[i]; }
+      float q = n > 0 ? w / n : .5f, rq = rn > 0 ? rw / rn : .5f;
+      float d = ((n + 1e-6f) + rn) + (n * RAVE_B) * rn;
+      selV[i] = (((rq - q) * rn) / d + q) + selR[i];
+    }
+  }
+  int best = -1; float bv = -1e9f;
+  for (int j = 0; j < nch; j++) if (ch[j].proof == 0 && selV[j] > bv) { bv = selV[j]; best = j; }
+  return best;
+}
 static void iterate(void) {
   Pos p = ROOT; int ni = 0; pathL = 0; pathS[0] = 0; pathN[pathL++] = 0;
   if ((++rbClock & 63) == 0) { rbThreads = 1 + __atomic_load_n(&gActive, __ATOMIC_RELAXED); rbRoot(); }
@@ -524,14 +589,16 @@ static void iterate(void) {
     }
     // select (with this thread's results not yet in the tree)
     RBuf *s = rbSlot(ni, nd); pathS[pathL - 1] = s;
-    Node *ch = &T[nd->first]; int best = -1, allLost = 1; float bv = -1e9f;
+    int best = -1, allLost = 1;
+    if (UCT_C <= 0) best = selectVmt(nd->first, nd->nch, s, &allLost); else {
+    Node *ch = &T[nd->first]; Rave *rv = &RV[nd->first]; float bv = -1e9f;
     float lg = UCT_C > 0 ? flog(nd->n + 1) : 0;
     for (int i = 0; i < nd->nch; i++) {
       Node *c = &ch[i];
       if (c->proof > 0) { best = i; allLost = 0; bv = 1e9f; break; }
       if (c->proof < 0) continue;
       allLost = 0;
-      float cn = c->n, cw = c->w, crn = c->rn, crw = c->rw;
+      float cn = c->n, cw = c->w, crn = rv[i].rn, crw = rv[i].rw;
       if (s) { cn += s->dn[i]; cw += s->dw[i]; crn += s->rn[i]; crw += s->rw[i]; }
       float q = cn > 0 ? cw / cn : .5f, rq = crn > 0 ? crw / crn : .5f;
       float beta = crn / (crn + cn + RAVE_B * crn * cn + 1e-6f);
@@ -539,6 +606,7 @@ static void iterate(void) {
       if (UCT_C > 0) v += UCT_C * __builtin_sqrtf(lg / (cn + 1));
       v += rndF() * 1e-4f;
       if (v > bv) { bv = v; best = i; }
+    }
     }
     if (allLost) { nd->proof = 1; res = p.side ^ 3; break; }   // every move loses for the side to move
     int ci = nd->first + best;
@@ -561,19 +629,27 @@ static void iterate(void) {
     if (!k) { if (res == mover) { if (rbThreads > 1) rootW += 1; else nd->w += 1; } }
     else if (pathS[k - 1]) { RBuf *ps = pathS[k - 1]; int i = pathI[k]; ps->dn[i] += 1; if (res == mover) ps->dw[i] += 1; }
     else { if (VLOSS != 1) nd->n -= VLOSS - 1; if (res == mover) nd->w += 1; }   // (n was counted on the way down)
-    // proof propagation
-    if (EXPD(nd) && !nd->proof) {
-      Node *ch = &T[nd->first]; int all = 1, any = 0;
-      for (int i = 0; i < nd->nch; i++) { if (ch[i].proof > 0) any = 1; if (ch[i].proof >= 0) all = 0; }
-      if (any) nd->proof = -1; else if (all) nd->proof = 1;
-    }
-    // RAVE: children of nd whose cell ended up owned by the side to move at nd
+    // proof propagation, and RAVE: children of nd whose cell ended up owned by the side to move at nd (one pass, 2026-11-11)
     RBuf *s = pathS[k];
-    if (EXPD(nd) && didPO) {
-      Node *ch = &T[nd->first];
-      float win = (res == side) ? 1.f : 0.f;
-      if (s) { for (int i = 0; i < nd->nch; i++) { int c = ch[i].mv; if (c != SWAP && PB[c] == side) { s->rn[i] += 1; s->rw[i] += win; } } }
-      else for (int i = 0; i < nd->nch; i++) { int c = ch[i].mv; if (c != SWAP && PB[c] == side) { ch[i].rn += 1; ch[i].rw += win; } }
+    if (EXPD(nd)) {
+      int first = nd->first, nch = nd->nch; Node *ch = &T[first];
+      int prop = !nd->proof, all = 1, any = 0;
+      if (didPO) {
+        float win = (res == side) ? 1.f : 0.f;
+        if (s) {   // (this thread's slot: no branch per child)
+          for (int i = 0; i < nch; i++) {
+            int pr = ch[i].proof; any |= pr > 0; all &= pr < 0;
+            int c = ch[i].mv; float o = (c != SWAP && PB[c] == side) ? 1.f : 0.f; s->rn[i] += o; s->rw[i] += o * win;
+          }
+        } else {
+          Rave *rv = &RV[first];
+          for (int i = 0; i < nch; i++) {
+            int pr = ch[i].proof; any |= pr > 0; all &= pr < 0;
+            int c = ch[i].mv; if (c != SWAP && PB[c] == side) { rv[i].rn += 1; rv[i].rw += win; }
+          }
+        }
+      } else if (prop) for (int i = 0; i < nch; i++) { int pr = ch[i].proof; any |= pr > 0; all &= pr < 0; }
+      if (prop) { if (any) nd->proof = -1; else if (all) nd->proof = 1; }
     }
     if (s && ++s->cnt >= s->lim) { s->cntR += s->cnt; rbFlush(s, s->cntR >= 4 * s->lim); }
     side ^= 3;
@@ -686,7 +762,7 @@ static void iterate(void) {
 #endif
 
 static void treeInit(void) {
-  nNodes = 1; T[0].first = 0; T[0].nch = 0; T[0].mv = -1; T[0].n = 0; T[0].w = 0; T[0].rn = 0; T[0].rw = 0; T[0].proof = 0; T[0].exp = 0;
+  nNodes = 1; T[0].first = 0; T[0].nch = 0; T[0].mv = -1; T[0].n = 0; T[0].w = 0; RN(&T[0]) = 0; RW(&T[0]) = 0; T[0].proof = 0; T[0].exp = 0;
   Pos p = ROOT; expand(0, &p);
 }
 static void search(double ms, int playouts) {
@@ -730,7 +806,7 @@ static void search(double ms, int playouts) {
 static int childV(const Node *c) {
   if (c->proof > 0) return WIN - 1;
   if (c->proof < 0) return -(WIN - 2);
-  float q = c->n > 0 ? c->w / c->n : (c->rn > 0 ? c->rw / c->rn : .5f);
+  float q = c->n > 0 ? c->w / c->n : (RN(c) > 0 ? RW(c) / RN(c) : .5f);
   int v = (int)((q - .5f) * 2000.f); return v > 999 ? 999 : v < -999 ? -999 : v;
 }
 static int rootBest(void) {
@@ -969,7 +1045,7 @@ EXPORT(best) void best(int playouts, int ms, int tempX1000, int seed, int must) 
   int bi = rootBest();
   if (ch[bi].proof < 0) {   // lost whatever we do: at least stop the quickest threat (a cell of its carrier, the best prior)
     float bp = -1; int fb = -1;
-    for (int i = 0; i < r->nch; i++) { if (ch[i].mv == SWAP) continue; float s = (mpk > 0 && sHas(&mp, ch[i].mv) ? 10.f : 0.f) + ch[i].n * 1e-3f + (ch[i].rn > 0 ? ch[i].rw / ch[i].rn : 0); if (s > bp) { bp = s; fb = i; } }
+    for (int i = 0; i < r->nch; i++) { if (ch[i].mv == SWAP) continue; float s = (mpk > 0 && sHas(&mp, ch[i].mv) ? 10.f : 0.f) + ch[i].n * 1e-3f + (RN(&ch[i]) > 0 ? RW(&ch[i]) / RN(&ch[i]) : 0); if (s > bp) { bp = s; fb = i; } }
     if (fb >= 0) bi = fb;
   }
   if (tempX1000 > 0 && ch[bi].proof <= 0) {   // weaker levels: sample by visits^(1/T)
@@ -988,7 +1064,7 @@ EXPORT(analyze) void analyze(int ms, int playouts, int maxList) {
   int idx[MAXC + 1], n = r->nch;
   for (int i = 0; i < n; i++) idx[i] = i;
   // sort: proven wins first, then by visits
-  for (int i = 1; i < n; i++) { int x = idx[i], j = i; float kx = ch[x].proof > 0 ? 1e12f : ch[x].proof < 0 ? -1 + ch[x].rn * 1e-9f : ch[x].n; while (j > 0) { int y = idx[j - 1]; float ky = ch[y].proof > 0 ? 1e12f : ch[y].proof < 0 ? -1 + ch[y].rn * 1e-9f : ch[y].n; if (ky >= kx) break; idx[j] = y; j--; } idx[j] = x; }
+  for (int i = 1; i < n; i++) { int x = idx[i], j = i; float kx = ch[x].proof > 0 ? 1e12f : ch[x].proof < 0 ? -1 + RN(&ch[x]) * 1e-9f : ch[x].n; while (j > 0) { int y = idx[j - 1]; float ky = ch[y].proof > 0 ? 1e12f : ch[y].proof < 0 ? -1 + RN(&ch[y]) * 1e-9f : ch[y].n; if (ky >= kx) break; idx[j] = y; j--; } idx[j] = x; }
   if (maxList > n || maxList <= 0) maxList = n;
   for (int i = 0; i < maxList; i++) { Node *c = &ch[idx[i]]; IO[2 + 3 * i] = c->mv; IO[3 + 3 * i] = childV(c); IO[4 + 3 * i] = (int)c->n; }
   IO[0] = maxList;
