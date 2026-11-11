@@ -183,6 +183,8 @@
     T3.align = function () { const r = align0.apply(this, arguments); refits = 0; usedK = []; checks = 0; remeasure(); return r; };
     if (T3.turn) T3.turn = ext(T3.turn);   // (盤面反転: the frame turns with the board)
     const grp = () => { let g = boardDom; while (g && g.parentElement !== app) g = g.parentElement; return g; };
+    // the frame as the game's own 2D board takes it (P.k2dFix: shogi's 3D board made deeper for the PC komadai bars — not the 2D plate's margin)
+    const k2 = m => (P.k2dFix && m ? P.k2dFix(m, model) : m);
     const visible = x => { for (let e = x; e; e = e.parent) if (!e.visible) return false; return true; };
     // the 3D board's visible extent beyond the DOM board, in DOM board heights (the camera is aligned to the DOM board, so this
     // does not change with the size or the place of the board)
@@ -225,7 +227,7 @@
         // (a refit that follows a refit needs a clearer change: the frame measured right after a fit can differ by a few tenths of
         // a px each time — the board then grew and shrank by 2–4 px for a couple of seconds)
         const tol = refits ? .004 : .0008, differs = (a, t = tol) => ['l', 'r', 't', 'b'].some(s => Math.abs(m[s] - a[s]) > t);
-        try { if (P.fit2d) localStorage.setItem('atlas-k2d', JSON.stringify(m)); } catch (e) {}
+        try { if (P.fit2d) localStorage.setItem('atlas-k2d2', JSON.stringify(k2(m))); } catch (e) {}
         if (!K || differs(K)) { if (refits >= 4 || usedK.some(a => !differs(a))) { K = m; settle(); return; } refits++; if (K) usedK.push(K); K = m; fit(); }
         // a frame a little off the one the layout was made for (a fraction of a px — or the refits are over): the board stays as it
         // is (a refit would move the camera and the frame once more), only the column (and the review box) are put against the
@@ -422,10 +424,10 @@
     // P.fit2d (shogi): the game's own 2D board is laid out exactly as the 3D one — the same frame (K: the 3D board's extent beyond the
     // DOM board, as last measured in 3D, else P.k2d), so the board, the komadai and the column sit at the very same px; the 2D wood is
     // drawn over that frame (--k2l/t/r/b: its margins in px around the DOM board) (2026-11-10)
-    const k2d = () => { try { const v = JSON.parse(localStorage.getItem('atlas-k2d') || 'null'); if (v && v.l > 0 && v.l < .5) return v; } catch (e) {} return P.k2d || null; };
+    const k2d = () => { try { const v = JSON.parse(localStorage.getItem('atlas-k2d2') || 'null'); if (v && v.l > 0 && v.l < .5) return v; } catch (e) {} return P.k2d || null; };
     if (P.fit2d && de.classList.contains('atlas-2d') && !K) { K = k2d(); setTimeout(laterX, 60); }
     let was2d = de.classList.contains('atlas-2d');
-    new MutationObserver(() => { const is2d = de.classList.contains('atlas-2d'); if (is2d !== was2d) { was2d = is2d; K = is2d && P.fit2d ? (K || k2d()) : null; refits = 0; usedK = []; checks = 0; if (!is2d) { setTimeout(remeasure, 60); setTimeout(ext(remeasure), 700); } } laterX(); }).observe(de, { attributes: true, attributeFilter: ['class'] });
+    new MutationObserver(() => { const is2d = de.classList.contains('atlas-2d'); if (is2d !== was2d) { was2d = is2d; K = is2d && P.fit2d ? (K ? k2(K) : k2d()) : null; refits = 0; usedK = []; checks = 0; if (!is2d) { setTimeout(remeasure, 60); setTimeout(ext(remeasure), 700); } } laterX(); }).observe(de, { attributes: true, attributeFilter: ['class'] });
     new MutationObserver(() => { laterX(); setTimeout(laterX, 320); setTimeout(laterX, 700); }).observe(body, { attributes: true, attributeFilter: ['class'] });   // (the online dock opens / closes with a .25s transition: once more at its end)
     { const dk = document.getElementById('dock') || document.querySelector('.dock'); if (dk) dk.addEventListener('transitionend', laterX); }
     if (document.fonts) document.fonts.ready.then(laterX);
