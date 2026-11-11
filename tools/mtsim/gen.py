@@ -8,7 +8,7 @@
 #   (YBW engines: -DSIM_Q=64 for finer rounds, -DSIM_STAT for the split points' counters; SIM_SLOW=8 in the environment: slow cores)
 #   ./sim_<game> 1,2,4,8 3 -1 1 1     (threads, the 1-thread budget in M nodes → the depth D, positions (-1 all / 0,3,…),
 #                                      delayed table stores, delayed busy marks)
-# game: xiangqi, janggi, chess, shogi. Works on the engines before and after the busy marks (the marks' functions are
+# game: xiangqi, janggi, chess, shogi, tafl (2026-11-11: -DNATIVE, net_tafl.bin). Works on the engines before and after the busy marks (the marks' functions are
 # rewritten only when present).
 import sys, re
 repo, game = sys.argv[1], sys.argv[2]
@@ -46,6 +46,13 @@ elif game == 'shogi':   # (built with -DNATIVE: its native block, with thread-lo
     rep('u64 w = bk[2 * i + 1], kx = bk[2 * i];', 'u64 w = SIMR(&bk[2 * i + 1]), kx = SIMR(&bk[2 * i]);')
     rep('bk[2 * j + 1] = w; bk[2 * j] = key ^ w;', 'SIMW(&bk[2 * j + 1], w); SIMW(&bk[2 * j], key ^ w);')
     rep('  nodes++;\n  if (timeUp()) return 0;', '  nodes++; SIM_NODE();\n  if (timeUp()) return 0;', 0)
+elif game == 'tafl':    # (2026-11-11; built with -DNATIVE: its native block, with thread-local state as -DMT)
+    rep('#define EXPORT(name)\n#define TLS\n', '#define EXPORT(name)\n#define TLS _Thread_local\n')
+    cut_threads('/* ------------------------------------------------------------------ threads (engine_mt.wasm')
+    rep('u64 w = bk[2 * j + 1], kx = bk[2 * j];', 'u64 w = SIMR((u64 *)&bk[2 * j + 1]), kx = SIMR((u64 *)&bk[2 * j]);')
+    rep('u64 w = bk[2 * i + 1], kx = bk[2 * i];', 'u64 w = SIMR(&bk[2 * i + 1]), kx = SIMR(&bk[2 * i]);')
+    rep('bk[2 * j + 1] = w; bk[2 * j] = key ^ w;', 'SIMW(&bk[2 * j + 1], w); SIMW(&bk[2 * j], key ^ w);')
+    rep('  nodes++;\n', '  nodes++; SIM_NODE();\n', 0)
 else:
     raise SystemExit('game?')
 
