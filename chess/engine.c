@@ -4,7 +4,7 @@
  * (768 -> H)x2 -> 1 with SCReLU and material output buckets; optionally king buckets (the first layer per zone of the
  * own king, HalfKA-style; NN_KB below).
  *
- * Copyright 2026 core-calmdust — Apache License 2.0
+ * Copyright 2026 core-calmdust — license not set yet (to be decided)
  */
 typedef unsigned long long u64;
 typedef unsigned int u32;
