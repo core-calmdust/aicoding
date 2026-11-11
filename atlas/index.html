@@ -1035,7 +1035,7 @@ button.nct[data-go]:hover{transform:translateY(-1px);box-shadow:0 3px 0 var(--li
 .dic.r3 .rl{box-shadow:0 0 6px 1px rgba(180,107,255,.75),0 0 0 1px rgba(255,255,255,.55)}
 .dic.locked.r3::before,.dic.locked.r4::before{content:none}
 .dic:not(.vis) .rfx::before,.dic:not(.vis)::after,.dic:not(.vis) .art::after,.dic:not(.vis) .art::before{animation-play-state:paused}
-@media (prefers-reduced-motion:reduce){.rfx::before,.dic::after,.dic .art::after,.dic .art::before{animation:none!important}}
+/* (the rarity effects run also with the system's reduce-motion setting on: they are the reward's look, 2026-11-11) */
 /* the name card wearing an SSR / UR: the same running light round its edge, a soft glow, a twinkle in the corner */
 /* (.dprev stays position:sticky — a 'position:relative' here un-stuck the SSR / UR card and it drifted down, 2026-11-10) */
 .prof.nr4{box-shadow:0 6px 0 #e9dcc0,0 0 26px 4px rgba(255,170,60,.45)!important}
@@ -1986,6 +1986,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <link rel="stylesheet" href="worldmap.css?v=18">
 <script src="worldmap.js?v=31"></script>
 <script src="npc/npc.js?v=22"></script>
-<script src="app.js?v=293"></script>
+<script src="app.js?v=294"></script>
 </body>
 </html>
