@@ -6,7 +6,7 @@
 # same size relative to the face as on the 2D piece. Nothing is re-centred or re-fitted: the calligraphy keeps the balance of the
 # original drawing. Only ANGLE (set by eye, degrees counter-clockwise) turns single pieces.
 # 水無瀬 (2026-11-12): only the promoted sides made here are used; the unpromoted ones are then traced from a photo of a real set by
-# shogi-glyphs-minase-photo.py (run it after this), so TUNE['minase'] no longer shows.
+# shogi-glyphs-photo.py (run it after this), so their TUNE no longer shows.
 # Serve the repo root on :8765 first (python3 -m http.server 8765), then: python3 atlas/tools/shogi-glyphs-faithful.py [set ...]
 import asyncio, base64, io, os, re, sys
 import numpy as np

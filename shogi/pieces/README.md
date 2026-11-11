@@ -30,8 +30,12 @@ From `Pieces (2-Kanji)` of [LuffyKudo/Shogi-Themes](https://github.com/LuffyKudo
 
 ## 水無瀬 (Minase) — inscriptions traced from a real set (2026-11-12)
 
-The inscriptions of the unpromoted 水無瀬 pieces (歩 香 桂 銀 金 角 飛 王 玉) are no longer LuffyKudo's drawing: they are outlines traced from the user's reference photo of a real 水無瀬書 盛り上げ set (`atlas/tools/shogi-glyphs-minase-photo.py`; the photo itself is not kept in the repo). 水無瀬 is a traditional script (after Minase Kanenari, c. 1600). `minase/traced.png` holds the traced masks; `atlas/tools/shogi-minase-svg.py` writes them into `minase/{0,1}{FU,KY,KE,GI,KA,HI,KI,GY,OU}.svg` in place of the black ink path (the piece's face, band and maker's mark stay LuffyKudo's, CC BY-SA 4.0). The promoted sides (red) are unchanged. `shogi-glyphs-minase.png`, `shogi-pieces-minase.png` and `pc3-shogi-minase.webp` carry the same traced inscriptions.
+The inscriptions of the unpromoted 水無瀬 pieces (歩 香 桂 銀 金 角 飛 王 玉) are no longer LuffyKudo's drawing: they are outlines traced from the user's reference photo of a real 水無瀬書 盛り上げ set (`atlas/tools/shogi-glyphs-photo.py`; the photo itself is not kept in the repo). 水無瀬 is a traditional script (after Minase Kanenari, c. 1600). `minase/traced.png` holds the traced masks; `atlas/tools/shogi-traced-svg.py` writes them into `minase/{0,1}{FU,KY,KE,GI,KA,HI,KI,GY,OU}.svg` in place of the black ink path (the piece's face, band and maker's mark stay LuffyKudo's, CC BY-SA 4.0). The promoted sides (red) are unchanged. `shogi-glyphs-minase.png`, `shogi-pieces-minase.png` and `pc3-shogi-minase.webp` carry the same traced inscriptions.
 
 ## 菱湖 (Ryoko) — inscriptions traced from a real set (2026-11-12)
 
 The same for 菱湖 (`atlas/tools/shogi-glyphs-photo.py <photo> ryoko 8`, `ryoko/traced.png`, `atlas/tools/shogi-traced-svg.py ryoko`): the unpromoted inscriptions, and their place and size on the piece, come from the user's reference photo of a real 菱湖書 盛り上げ set. The promoted sides, the face, band and maker's mark stay LuffyKudo's (CC BY-SA 4.0).
+
+## 錦旗 (Kinki) — inscriptions traced from a real set (2026-11-12)
+
+The same for 錦旗: the unpromoted inscriptions are traced from the user's reference photo of a real 錦旗書 盛り上げ set (`atlas/tools/shogi-glyphs-photo.py <photo> kinki 8`, `kinki/traced.png`, `atlas/tools/shogi-traced-svg.py kinki`); 王將 and 玉將 are each traced from their own piece. The promoted sides, the face, band and maker's mark stay LuffyKudo's (CC BY-SA 4.0). The 3D 錦旗 pieces have a 虎杢 (tiger figure) grain, drawn by `atlas/models/shogi.js`.
