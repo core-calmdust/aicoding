@@ -97,8 +97,9 @@
   // crop {n, c0, r0}: 詰将棋's close-up (shogi/index.html tzStyle) — an n×n kaya board cut from the whole one
   // ext: the PC layout up to 3:2 (STK) — the 3D board made deeper at the top and the bottom by the komadai bars' height, so the bars
   // lie on the board's own wood (one block, no joint to see — 2026-11-11)
+  const curLook = () => T3.BOARDS && T3.BOARDS.shogi ? T3.BOARDS.shogi.get() : 'kaya';   // the six 3D boards (2026-11-11)
   function setBoard(n, crop, ext = extW) {
-    const ck = (crop ? crop.n + ':' + crop.c0 + ':' + crop.r0 : '') + '|' + ext;
+    const ck = (crop ? crop.n + ':' + crop.c0 + ':' + crop.r0 : '') + '|' + ext + '|' + curLook();
     if (n === boardN && ck === cropK) return; boardN = n; cropK = ck; curCrop = crop || null; extW = ext;
     board = T3.MODELS.shogi(true, crop ? { n: crop.n, crop, ext } : { n, ext }); FH = board.userData.S; Y = board.userData.top; OUT = board.userData.outer;
     T3.show('shogi', board, { still: true }); skin.alignTo(FH, Y);
@@ -200,7 +201,7 @@
     }, true);
   }
   // 3D / 2D (the standard of the other games, 2026-11-10): a 「3D」 tile first in the board row; a 2D board picked = the 2D page
-  const V = skin.view ? skin.view({ key: 'atlas-shogi-view', row: document.getElementById('segSkin'), img: '../images/atlas/shogi.webp',
+  const V = skin.view ? skin.view({ key: 'atlas-shogi-view', img: '../images/atlas/shogi.webp',   // (no 3D tile in the 盤面 row: the 3D boards have their own 「3D盤」 box, 2026-11-11)
     on() { setTimeout(() => { try { look(); renderBoard(false); renderHands(); } catch (e) {} syncExt(); }, 0); [60, 400, 1000].forEach(ms => setTimeout(() => { try { window.__kdFit && window.__kdFit(); } catch (e) {} }, ms)); } }) : null;   // (2D ↔ 3D: the komadai bars re-fitted to the new board)
   const is3 = () => !V || V.is3d();
   function look() {   // selection mark, board tone and piece tone follow the game's skin setting
@@ -217,6 +218,60 @@
   }
   if (typeof window.applyLook === 'function') { const oa = window.applyLook; window.applyLook = function () { const r = oa.apply(this, arguments); try { look(); } catch (e) {} [60, 400].forEach(ms => setTimeout(() => { try { window.__kdFit && window.__kdFit(); } catch (e) {} }, ms)); return r; }; }
   setTimeout(look, 0);
+
+  /* ---------- 3D盤 (2026-11-11): six boards in a 「3D盤」 box under the 2D boards (the standard, atlas/skin/konane.js) ---------- */
+  const T3L = { ja: '3D盤', en: '3D boards', zh: '3D棋盘', ko: '3D 판', es: 'Tableros 3D', fr: 'Plateaux 3D', pt: 'Tabuleiros 3D', de: '3D-Bretter', hi: '3D बोर्ड', ar: 'رقع ثلاثية الأبعاد', ru: '3D-доски', 'zh-TW': '3D棋盤', id: 'Papan 3D', tr: '3D tahtalar' };
+  const lng = () => (l => /^zh-(tw|hk|mo|hant)/i.test(l) ? 'zh-TW' : String(l).slice(0, 2))((document.getElementById('langSel') || {}).value || 'ja');
+  function standLook() {   // the page's stands (DOM) wear the board's own wood / lacquer
+    const k = curLook(); ['makie', 'grain', 'ink', 'yosegi', 'sakura'].forEach(x => document.documentElement.classList.toggle('atlas-shbd-' + x, k === x));
+    const src = SG.standImg && SG.standImg(k); document.documentElement.style.setProperty('--shstand', src ? `url("${src}")` : 'none');
+  }
+  function setLook(k) {
+    if (!T3.BOARDS || !T3.BOARDS.shogi) return;
+    if (T3.setBoard) T3.setBoard('shogi', k); else T3.BOARDS.shogi.set(k);
+    if (V && !V.is3d()) V.set(true);
+    standLook(); setBoard(boardN, curCrop, extW); paint3();
+  }
+  let f3 = null;
+  function paint3() {
+    const B = T3.BOARDS && T3.BOARDS.shogi; if (!f3 || !B) return;
+    const l = lng(), cur = B.get(), on = is3();
+    f3.querySelector('label').textContent = T3L[l] || T3L.en;
+    const row = f3.querySelector('.bdrow');
+    if (!row.children.length) B.list.forEach(k => {
+      const bt = document.createElement('button'); bt.type = 'button'; bt.dataset.look = k;
+      const im = document.createElement('img'); im.src = T3.boardIcon ? T3.boardIcon('shogi', k) : ''; im.alt = ''; im.draggable = false;
+      bt.append(im, document.createElement('span')); bt.onclick = () => setLook(k); row.appendChild(bt);
+    });
+    row.querySelectorAll('button').forEach(bt => { const k = bt.dataset.look, sel = on && cur === k; bt.querySelector('span').textContent = T3.boardName ? T3.boardName(k, l, 'shogi') : k; bt.classList.toggle('sel', sel); bt.setAttribute('aria-pressed', String(sel)); });
+    const r2 = document.getElementById('segSkin');   // 3D chosen: no 2D board shows as selected
+    if (r2 && on) r2.querySelectorAll('button').forEach(b => { if (b.classList.contains('sel')) b.classList.remove('sel'); if (b.getAttribute('aria-pressed') === 'true') b.setAttribute('aria-pressed', 'false'); });
+    const now = document.getElementById('skNow'); if (now && on && T3.boardName) now.textContent = '3D · ' + T3.boardName(cur, l, 'shogi');
+  }
+  {
+    const r2 = document.getElementById('segSkin'), fd = r2 && r2.closest('.field');
+    if (fd) {
+      const st = document.createElement('style');
+      st.textContent = `html.atlas-skin #f3D{margin:12px 0 0;padding:10px 12px 12px;border-radius:14px;background:#f7efe1;border:2px solid #e3cfa6}
+html.atlas-skin #f3D > label{display:block;font-weight:700;font-size:14px;color:#7a4e1c;margin:0 0 8px}
+html.atlas-skin #f3D .bdrow{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:8px}
+@media (max-width:760px){html.atlas-skin #f3D .bdrow{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+html.atlas-skin #f3D .bdrow button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 4px 7px;border-radius:12px;border:2px solid transparent;background:#fffaf0;cursor:pointer;font:600 13px/1.25 inherit;color:#5a3a16}
+html.atlas-skin #f3D .bdrow button img{display:block;width:100%;aspect-ratio:1/1;object-fit:contain;border-radius:8px}
+html.atlas-skin #f3D .bdrow button.sel{border-color:#e09a00;background:#fff3d6;box-shadow:0 0 0 2px rgba(224,154,0,.25)}
+html.atlas-skin #f3D .bdrow button span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}`;
+      document.head.appendChild(st);
+      f3 = document.createElement('div'); f3.id = 'f3D'; f3.innerHTML = '<label></label><div class="bdrow"></div>';
+      r2.after(f3);
+      r2.addEventListener('click', e => { if (e.target.closest('button') && V) { V.set(false); setTimeout(paint3, 0); } }, true);   // a 2D board: the 2D page
+      paint3(); const ls = document.getElementById('langSel'); if (ls) ls.addEventListener('change', () => setTimeout(paint3, 30));
+      if (typeof window.designThumbs === 'function') { const od = window.designThumbs; window.designThumbs = function () { const r = od.apply(this, arguments); try { paint3(); } catch (e) {} return r; }; }
+      document.addEventListener('click', e => { if (e.target.closest && e.target.closest('#segPieces,#segSkin')) setTimeout(paint3, 80); }, true);
+    }
+  }
+  standLook();
+  addEventListener('storage', e => { if (e.key === 'atlas-shogi-look') { standLook(); setBoard(boardN, curCrop, extW); paint3(); } });
+
   window.pieceEl = function (code, promoted) {
     const el = orig(code, promoted);
     if (!IMG || !mine || !is3()) return el;

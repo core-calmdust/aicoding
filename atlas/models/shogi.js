@@ -164,10 +164,61 @@
   // 本榧 (2026-11-10): the same grain as the 2D board (shogi/index.html body.skin-kaya), pre-rendered to images/atlas/shogi-kaya.webp
   // (a same-origin picture: an SVG filter drawn into the canvas would taint it for WebGL); the top is redrawn once it has loaded
   let kayaImg = null;
+  const KAYA_SRC = (() => { try { return new URL('../../images/atlas/shogi-kaya.webp?v=3', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../images/atlas/shogi-kaya.webp?v=3'; } })();   // (from this file: the tool pages too)
   function withKaya(fn) {
     if (kayaImg && kayaImg.complete && kayaImg.naturalWidth) { fn(kayaImg); return; }
-    if (!kayaImg) { kayaImg = new Image(); kayaImg.src = '../images/atlas/shogi-kaya.webp?v=3'; }
+    if (!kayaImg) { kayaImg = new Image(); kayaImg.src = KAYA_SRC; }
     kayaImg.addEventListener('load', () => fn(kayaImg), { once: true });
+  }
+  /* ---------- the six 3D boards (2026-11-11, Table3D.BOARDS.shogi, key 'atlas-shogi-look') ----------
+     kaya 本榧 (the default, unchanged) · makie 蒔絵 (black roiro lacquer with gold maki-e round a 本榧 top) ·
+     grain 新榧 (the 2D 木目: pale spruce) · ink 漆黒 (the 2D 漆黒: dark top, gold lines, striped ebony) ·
+     yosegi 箱根寄木細工 (麻の葉・矢羽根・市松 of natural woods) · sakura 山桜 (cherry top with mother-of-pearl blossoms, 樺細工 bark sides).
+     The pictures: images/atlas/shogi3d/ (atlas/tools/shogi-tex.html). */
+  const LOOKS = ['kaya', 'makie', 'grain', 'ink', 'yosegi', 'sakura'];
+  const LOOK = {
+    kaya: {},
+    makie: { side: 'makie', lacq: true, line: 'rgba(33,19,11,.92)', bottom: 0x120c0a },
+    grain: { top: 'top-grain', side: 'grain', stand: 'grain', leg: ['#eedcb0', '#c49c62'], bottom: 0xb48c58, line: 'rgba(52,32,12,.9)', satin: true },
+    ink: { top: 'top-ink', side: 'ink', stand: 'ink', leg: ['#3a2a20', '#120c09'], bottom: 0x16100c, line: 'rgba(214,180,110,.85)', star: '#d6b46e', gloss: true },
+    yosegi: { top: 'top-yosegi', side: 'yosegi', stand: 'yosegi', leg: ['#c99a68', '#8a5a34'], bottom: 0x7a5232, line: 'rgba(40,26,14,.9)' },
+    sakura: { top: 'top-sakura', side: 'sakura', stand: 'sakura', leg: ['#8a3a26', '#4a1c12'], bottom: 0x5a2a1c, line: 'rgba(48,20,10,.92)', bark: true },
+  };
+  const SH3 = (() => { try { return new URL('../../images/atlas/shogi3d/', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../images/atlas/shogi3d/'; } })();
+  const SH3V = '?v=1';
+  const lookOf = o => { const k = (o && o.look) || (X.BOARDS && X.BOARDS.shogi ? X.BOARDS.shogi.get() : 'kaya'); return LOOK[k] ? k : 'kaya'; };
+  const imgs = {};
+  function withImg(name, fn) {
+    let im = imgs[name];
+    if (im && im.complete && im.naturalWidth) { fn(im); return; }
+    if (!im) { im = imgs[name] = new Image(); im.src = SH3 + name + '.webp' + SH3V; }
+    im.addEventListener('load', () => fn(im), { once: true });
+  }
+  const texs = {};
+  function imgTex(name, srgb = true, aniso = 8) {
+    if (texs[name]) return texs[name];
+    const t = new (T().TextureLoader)().load(SH3 + name + '.webp' + SH3V, () => { if (X.kick) X.kick(300); });
+    if (srgb) t.encoding = T().sRGBEncoding; t.anisotropy = aniso;
+    return (texs[name] = t);
+  }
+  // the board's faces and legs for a look (shared between boards of the same look)
+  const lookMats = {};
+  function faceMats(look) {
+    if (lookMats[look]) return lookMats[look];
+    const L = LOOK[look], TT = T();
+    if (look === 'kaya') return null;
+    let side, end, leg;
+    if (L.lacq) {   // 蒔絵: the colour + (R height, G roughness, B metalness); a deep clear lacquer over all
+      const lq = (c, mm) => M({ map: imgTex(c), roughnessMap: imgTex(mm, false), metalnessMap: imgTex(mm, false), bumpMap: imgTex(mm, false), bumpScale: .0035, roughness: 1, metalness: 1, clearcoat: .8, clearcoatRoughness: .08, envMapIntensity: 1.25 });
+      side = lq('side-makie', 'side-makie-m'); end = lq('end-makie', 'end-makie-m');
+      leg = M({ map: imgTex('leg-makie'), bumpScale: .0005, roughness: .14, clearcoat: .9, clearcoatRoughness: .06 });
+    } else {
+      const fin = L.gloss ? { roughness: .2, clearcoat: .8, clearcoatRoughness: .1 } : L.bark ? { roughness: .26, clearcoat: .65, clearcoatRoughness: .14 } : L.satin ? { roughness: .5 } : { roughness: .42, clearcoat: .3, clearcoatRoughness: .3 };
+      side = M(Object.assign({ map: imgTex('side-' + L.side), bumpScale: .002 }, fin));
+      end = M(Object.assign({ map: imgTex('end-' + L.side), bumpScale: .002 }, fin));
+      leg = L.bark ? M(Object.assign({ map: imgTex('side-sakura', true, 4), bumpScale: .002 }, fin)) : M(Object.assign({ map: X.wood('shLeg-' + look, L.leg[0], L.leg[1], 256, 256, 2), bumpScale: .002 }, fin));
+    }
+    return (lookMats[look] = { side, end, leg, bottom: M({ color: L.bottom, roughness: .7 }) });
   }
   // a plain kaya surface (the komadai): the same golden tone with a part of the board's grain, drawn fainter
   function kayaPlain(key) {
@@ -180,37 +231,43 @@
   }
   // the 駒台 material: the board's own kaya picture and the board's tone (2026-11-10: the stands matched to the board)
   const STAND_TONE = 0xebe4db;   // = TONES.classic below
-  let standM = null;
-  function standMat() {
-    if (standM) return standM;
-    standM = M({ map: kayaPlain('kayaStand'), roughness: .55, bumpScale: .001 });
-    standM.color.multiply(new (T().Color)(STAND_TONE).convertSRGBToLinear());
-    return standM;
+  const standMs = {};
+  function standMat(look) {
+    look = LOOK[look] ? look : lookOf();
+    if (standMs[look]) return standMs[look];
+    const L = LOOK[look];
+    let m;
+    if (L.lacq) m = M({ map: imgTex('stand-makie'), roughnessMap: imgTex('stand-makie-m', false), metalnessMap: imgTex('stand-makie-m', false), bumpMap: imgTex('stand-makie-m', false), bumpScale: .003, roughness: 1, metalness: 1, clearcoat: .8, clearcoatRoughness: .08 });
+    else if (L.stand) m = M({ map: imgTex('stand-' + L.stand), roughness: L.gloss || L.bark ? .24 : .5, bumpScale: .001 });
+    else m = M({ map: kayaPlain('kayaStand'), roughness: .55, bumpScale: .001 });
+    m.color.multiply(new (T().Color)(STAND_TONE).convertSRGBToLinear());
+    return (standMs[look] = m);
   }
   // cr {c0, r0} (詰将棋's close-up, shogi/index.html tzWindow): an n×n window of the 9×9 board — the stars where they fall inside it
   // and that part of the board's grain, so it reads as the same board seen closer (2026-11-10)
   const crStars = (n, cr) => !cr ? (n === 9 ? [[3, 3], [6, 3], [3, 6], [6, 6]] : []) : [[3, 3], [6, 3], [3, 6], [6, 6]].map(([i, j]) => [i - cr.c0, j - cr.r0]).filter(([i, j]) => i > 0 && i < n && j > 0 && j < n);
   const crKey = (n, cr) => cr ? `-${n}c${cr.c0}r${cr.r0}` : n === 9 ? '' : '-' + n;
   // ext: the block made that much deeper at the top and the bottom (world units) — the komadai bars of the PC layout lie on it (2026-11-11)
-  function boardTop(n = 9, cr = null, ext = 0) {
+  function boardTop(n = 9, cr = null, ext = 0, look = 'kaya') {
+    const L = LOOK[look] || {}, withTop = L.top ? fn => withImg(L.top, fn) : withKaya;
     const MG = n === 9 ? MARGIN : MARGIN * n / 9;   // rim scales with the grid (the 5x5 board is fitted to the same screen size)
     const PX = 100, BW = n * CW + MG * 2, BD = n * CH + MG * 2 + ext * 2;
     const grid = (c) => {
       const ox = MG * PX, oy = (MG + ext) * PX, cw = CW * PX, ch = CH * PX;
-      c.strokeStyle = 'rgba(33,19,11,.92)'; c.lineCap = 'square';
+      c.strokeStyle = L.line || 'rgba(33,19,11,.92)'; c.lineCap = 'square';
       for (let i = 0; i <= n; i++) {
         c.lineWidth = i === 0 || i === n ? 3.4 : 2.2;
         c.beginPath(); c.moveTo(ox + i * cw, oy); c.lineTo(ox + i * cw, oy + n * ch); c.stroke();
         c.beginPath(); c.moveTo(ox, oy + i * ch); c.lineTo(ox + n * cw, oy + i * ch); c.stroke();
       }
-      c.fillStyle = 'rgba(33,19,11,.95)';
+      c.fillStyle = L.star || 'rgba(33,19,11,.95)';
       crStars(n, cr).forEach(([i, j]) => { c.beginPath(); c.arc(ox + i * cw, oy + j * ch, 5.5, 0, 7); c.fill(); });
     };
     let tex = null;
-    tex = canvasTex('shogiTop5' + crKey(n, cr) + (ext ? 'e' + ext : ''), BW * PX | 0, BD * PX | 0, (c0, W, H) => {
+    tex = canvasTex('shogiTop5' + crKey(n, cr) + (ext ? 'e' + ext : '') + (look === 'kaya' || look === 'makie' ? '' : '-' + look), BW * PX | 0, BD * PX | 0, (c0, W, H) => {
       const base = (c) => { const g = c.createLinearGradient(0, 0, W * .14, H); g.addColorStop(0, '#e9cda7'); g.addColorStop(.4, '#e1c197'); g.addColorStop(.75, '#d7b385'); g.addColorStop(1, '#cca476'); c.fillStyle = g; c.fillRect(0, 0, W, H); };
       base(c0); grid(c0);
-      withKaya(img => {
+      withTop(img => {
         const c = c0;
         if (cr) {   // that window's part of the whole board's grain (the 9×9 board with its rim = the whole picture)
           const B9 = 9 * CW + MARGIN * 2, D9 = 9 * CH + MARGIN * 2, sx = (MARGIN + cr.c0 * CW - MG) / B9, sh = Math.min(1, BD / D9), sy = Math.max(0, Math.min(1 - sh, (MARGIN + cr.r0 * CH - MG - ext) / D9));
@@ -299,17 +356,18 @@
     // screen it is the same board seen closer
     const cr = o.crop && o.n >= 3 && o.n < 9 ? o.crop : null;
     const n = cr ? o.n : o.n === 5 ? 5 : 9, MG = n === 9 ? MARGIN : MARGIN * n / 9, k = n === 9 ? 1 : cr ? n / 9 : .62, FW = n * CW, FH = n * CH, EXT = Math.max(0, +o.ext || 0), BW = FW + MG * 2, BD = FH + MG * 2 + EXT * 2, THICK = 2.6 * k;
-    const kaya = M({ map: X.wood('kayaSide2', '#caa075', '#9c6c3c', 512, 512, 2.4), roughness: .5, bumpScale: .003 });
-    const endF = M({ map: endGrain('kayaEndF2', 512, 256, .5, 2.6, .7), roughness: .5, bumpScale: .003 });
-    const endS = M({ map: endGrain('kayaEndS2', 512, 256, -1.4, .5, .5), roughness: .5, bumpScale: .003 });
-    const top = new TT.MeshPhysicalMaterial({ map: boardTop(n, cr, EXT), bumpMap: boardBump(n, cr, EXT), bumpScale: .006, roughness: .58, clearcoat: .15, clearcoatRoughness: .45 });   // soft satin, no glare on the playing field
+    const look = lookOf(o), LM = faceMats(look);
+    const kaya = LM ? LM.leg : M({ map: X.wood('kayaSide2', '#caa075', '#9c6c3c', 512, 512, 2.4), roughness: .5, bumpScale: .003 });
+    const endF = LM ? LM.side : M({ map: endGrain('kayaEndF2', 512, 256, .5, 2.6, .7), roughness: .5, bumpScale: .003 });
+    const endS = LM ? LM.end : M({ map: endGrain('kayaEndS2', 512, 256, -1.4, .5, .5), roughness: .5, bumpScale: .003 });
+    const top = new TT.MeshPhysicalMaterial({ map: boardTop(n, cr, EXT, look), bumpMap: boardBump(n, cr, EXT), bumpScale: .006, roughness: look === 'ink' ? .42 : .58, clearcoat: look === 'ink' ? .35 : .15, clearcoatRoughness: .45 });   // soft satin, no glare on the playing field
     top.map.anisotropy = 8;
-    const bottom = M({ color: 0x8c643c, roughness: .7 });
+    const bottom = LM ? LM.bottom : M({ color: 0x8c643c, roughness: .7 });
     const base = o.legs === false ? 0 : LEG * k;
     const block = new TT.Mesh(RB(BW, THICK, BD, .05, 2), [endS, endS, top, bottom, endF, endF]);
     block.position.y = base + THICK / 2; block.castShadow = block.receiveShadow = true; g.add(block);
     if (o.legs !== false) {
-      const lm = M({ map: X.wood('kayaLeg', '#d6af88', '#a87747', 256, 256, 2), roughness: .5, bumpScale: .002 });
+      const lm = LM ? LM.leg : M({ map: X.wood('kayaLeg', '#d6af88', '#a87747', 256, 256, 2), roughness: .5, bumpScale: .002 });
       [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => { const l = leg(lm); l.scale.setScalar(k); l.position.set(sx * (BW / 2 - 1.15 * k), 0, sz * (BD / 2 - 1.2 * k)); g.add(l); });
     }
     // board colour (the game's "board & piece skin"): a tint over the kaya
@@ -318,7 +376,7 @@
     const TONES = { classic: 0xebe4db, grain: 0xd1b59a, kaya: 0xefeae2, metal: 0xb4bcc6, ink: 0x5e5046 };   // kaya: 本榧 (the default). 2026-11-10: near-neutral tints — the kaya picture itself carries the colour (less yellow)
     g.userData.setTone = name => { g.userData.tone = name; const c = new TT.Color(TONES[name] || 0xffffff).convertSRGBToLinear(); tinted.forEach((m, i) => { m.color.copy(base0[i]).multiply(c); }); };
     g.userData.setTone('classic');
-    g.userData.S = FH; g.userData.W = FW; g.userData.top = base + THICK + .001; g.userData.outer = BD / FH; g.userData.n = n; g.userData.mg = MG; g.userData.ext = EXT;
+    g.userData.look = look; g.userData.S = FH; g.userData.W = FW; g.userData.top = base + THICK + .001; g.userData.outer = BD / FH; g.userData.n = n; g.userData.mg = MG; g.userData.ext = EXT;
     return g;
   }
   const cell = (c, r) => [-FW / 2 + CW * (c + .5), -FH / 2 + CH * (r + .5)];   // c: 0 = left column on screen, r: 0 = top row
@@ -334,7 +392,7 @@
     for (let i = 0; i <= 12; i++) { const t = i / 12, w = .26 + .16 * Math.pow(Math.abs(t - .55) / .55, 2); pts.push(new TT.Vector2(w, t * H)); }
     const col = new TT.LatheGeometry(pts, 4); col.rotateY(Math.PI / 4);                             // square, waisted
     // the lathe wraps the texture round the column: use a soft, low-contrast grain there so it doesn't band
-    const cm = colMat || (colMat = standMat());
+    const cm = mat;
     const c = mesh(col, cm, 0, .56, 0); c.scale.set(1, 1, 1.15); g.add(c);
     return g;
   }
@@ -348,7 +406,7 @@
     for (let c = 0; c < 9; c++) { put(1, c, 2, true); put(1, c, 6, false); }
     put(6, 1, 1, true); put(5, 7, 1, true); put(6, 7, 7, false); put(5, 1, 7, false);
     // 駒台 (piece stands): yours at the bottom right, the opponent's at the top left — same as the rules tour
-    const KH = g.userData.top, sw = standMat();   // the board's kaya and tone (2026-11-10)
+    const KH = g.userData.top, sw = standMat(g.userData.look);   // the board's own wood and tone (2026-11-10; per look 2026-11-11)
     [{ x: FW / 2 + 1.95, z: 3.9 }, { x: -FW / 2 - 1.95, z: -3.9 }].forEach(st => { const k = komadai(sw, KH); k.position.set(st.x, 0, st.z); g.add(k); });
     // in the toy room the tall board would hide the room: a little smaller than life
     g.scale.setScalar(.72);   // board + stands about the reversi board's size on the chabudai
@@ -390,5 +448,5 @@
     }));
   }
 
-  X.shogi = { komadai, standMat, piece, board, cell, images, fontReady, GLYPHS, CW, CH, FW, FH };
+  X.shogi = { komadai, standMat, piece, board, cell, images, fontReady, GLYPHS, CW, CH, FW, FH, LOOKS, standImg: look => LOOK[look] && LOOK[look].stand ? SH3 + 'stand-' + LOOK[look].stand + '.webp' + SH3V : LOOK[look] && LOOK[look].lacq ? SH3 + 'stand-makie.webp' + SH3V : null };
 })();
