@@ -111,7 +111,7 @@
   X.placeUi = (key, lang) => pick(PLACES.ui[key], lang);
   // the thumbnails (small real renders, atlas/img/place-k.webp), next to this script whichever page loads it
   const ME = (document.currentScript && document.currentScript.src) || location.href;
-  X.placeThumb = k => new URL('img/place-' + k + '.webp?v=' + (k === 8 ? 5 : k === 12 ? 2 : k >= 2 ? 3 : 1), ME).href;   // (8: the game centre, 2026-11-09)
+  X.placeThumb = k => new URL('img/place-' + k + '.webp?v=' + (k === 8 ? 5 : k === 12 ? 3 : k >= 2 ? 3 : 1), ME).href;   // (8: the game centre, 2026-11-09)
 
   const lin = (c, y0, y1, stops) => { const g = c.createLinearGradient(0, y0, 0, y1); stops.forEach(([k, col]) => g.addColorStop(k, col)); return g; };
   const rad = (c, x, y, r, stops) => { const g = c.createRadialGradient(x, y, 0, x, y, r); stops.forEach(([k, col]) => g.addColorStop(k, col)); return g; };
@@ -2877,18 +2877,34 @@
       morning: { wb: .8, hemi: [0xdce4f0, 0x5a4a32, .4], key: [0xffe8c8, .82, [-64, 24, 8]], pt: [0xf4f6ff, .1], exp: .58, board: .2, tint: 'rgba(190,210,240,.10)' },
       day: { wb: .84, hemi: [0xf0ece2, 0x5a4a32, .46], key: [0xfff4e6, .74, [-8, 40, -30]], pt: [0xfffaf0, .2], exp: .6, board: .22, tint: '' },
       evening: { wb: .74, hemi: [0xffc49a, 0x3a2416, .3], key: [0xff8c40, 1.0, [-22, 15, -74]], pt: [0xffcf98, .36], exp: .6, board: .22, tint: 'rgba(255,140,60,.12)' },
-      night: { wb: .5, hemi: [0x8c96b8, 0x241a12, .15], key: [0xfff0da, .5, [4, 50, 8]], pt: [0xffe6c4, .62], exp: .6, board: .26, tint: 'rgba(30,30,60,.16)' },
+      night: { wb: .64, hemi: [0x9aa2c0, 0x2e2218, .28], key: [0xfff0da, .62, [4, 50, 8]], pt: [0xffe6c4, .85], exp: .68, board: .32, tint: 'rgba(30,30,60,.16)' },
     }[T];
     // no table (2026-11-12, the user's wish): the board stands right on the tatami
     ao(o, 0, FL, Z0, 30, 26, .25);
     // the floor: tatami with black heri (as in a tournament room), laid in a basket weave: each 40 × 40 square two mats side by side,
     // turned a quarter between neighbours
-    { const TA = X.tatami(), src = TA.map.image, HW = Math.round(src.width * 54 / 1024);
-      const tt = canvasTex('tbl12-tatami', src.width, src.height, (c, W, H) => { c.drawImage(src, 0, 0, W, H);
-        const hw = Math.round(HW * .5);   // (a narrower heri: the rest of the old one becomes rush)
-        c.drawImage(src, HW * 2, 0, HW - hw, H, hw, 0, HW - hw, H); c.drawImage(src, HW * 2, 0, HW - hw, H, W - HW, 0, HW - hw, H);
-        [0, W - hw].forEach(x0 => { c.fillStyle = '#1e1c18'; c.fillRect(x0, 0, hw, H); for (let y = 0; y < H; y += 6) { c.fillStyle = 'rgba(255,255,255,.05)'; c.fillRect(x0, y, hw, 2); } c.fillStyle = 'rgba(255,255,255,.12)'; c.fillRect(x0 + (x0 ? 1 : hw - 3), 0, 2, H); }); });
-      const tm = M({ map: tt, bumpMap: TA.bump, roughness: .8, bumpScale: .006, sheen: new TT.Color(0x3a3a24) }), geo = new TT.PlaneGeometry(20, 40);
+    // (2026-11-12, the user: finer) drawn here at 512 × 1024 per mat: the rush (igusa) across the mat in rows of ~1.2 cm, each row a ribbed
+    // band with its strands' own tones, the hemp warp threads along the mat, a woven black heri with its stitched edge along the long sides
+    { const tt = canvasTex('tbl12-tatami3', 512, 1024, (c, W, H) => {
+        const R = rng(31), hw = 22, row = 8;
+        c.fillStyle = '#c6bd8a'; c.fillRect(0, 0, W, H);
+        for (let y = 0; y < H; y += row) {   // one row of the weave: rushes side by side, rounded (lit along their middle)
+          const k = .96 + R() * .06;
+          for (let x = hw; x < W - hw; x += 3 + (R() * 3 | 0)) { const l = 3 + (R() * 4 | 0), g0 = (192 + R() * 18) * k | 0, g1 = (186 + R() * 16) * k | 0, b0 = (132 + R() * 20) * k | 0;
+            const gr = c.createLinearGradient(0, y, 0, y + row); gr.addColorStop(0, `rgb(${g0 - 11},${g1 - 10},${b0 - 8})`); gr.addColorStop(.45, `rgb(${g0 + 6},${g1 + 6},${b0 + 4})`); gr.addColorStop(1, `rgb(${g0 - 15},${g1 - 14},${b0 - 11})`);
+            c.fillStyle = gr; c.fillRect(x, y, l + 1, row); }
+          c.fillStyle = 'rgba(60,50,20,.1)'; c.fillRect(hw, y + row - 1, W - 2 * hw, 1); }
+        for (let x = hw + 9; x < W - hw; x += 17) { c.fillStyle = 'rgba(90,80,40,.12)'; c.fillRect(x, 0, 1, H); }   // the warp threads
+        for (let i = 0; i < 900; i++) { c.fillStyle = `rgba(${R() > .5 ? '255,250,210' : '90,80,30'},${.05 + R() * .08})`; c.fillRect(hw + (R() * (W - 2 * hw) | 0), R() * H | 0, 2 + (R() * 6 | 0), 1); }   // single strands catching the light / darker
+        [0, W - hw].forEach(x0 => { c.fillStyle = '#1c1a17'; c.fillRect(x0, 0, hw, H);   // the heri: a black cloth, finely woven, its fold and stitches
+          for (let y = 0; y < H; y += 3) { c.fillStyle = `rgba(255,255,255,${.03 + (y % 6 ? .02 : .05)})`; c.fillRect(x0, y, hw, 1); }
+          for (let x = x0; x < x0 + hw; x += 2) { c.fillStyle = 'rgba(0,0,0,.18)'; c.fillRect(x, 0, 1, H); }
+          const ex = x0 ? x0 + 2 : hw - 4; c.fillStyle = 'rgba(255,255,255,.14)'; c.fillRect(ex, 0, 2, H);
+          const sx = x0 ? x0 + 6 : hw - 8; for (let y = 2; y < H; y += 9) { c.fillStyle = 'rgba(200,190,160,.18)'; c.fillRect(sx, y, 1, 4); } });
+        c.fillStyle = 'rgba(60,50,20,.28)'; c.fillRect(hw - 1, 0, 1, H); c.fillRect(W - hw, 0, 1, H);
+      });
+      tt.anisotropy = 8;
+      const tm = M({ map: tt, roughness: .78, bumpScale: .007, sheen: new TT.Color(0x4a4a2a) }), geo = new TT.PlaneGeometry(20, 40);
       for (let i = -3; i <= 2; i++) for (let j = -2; j <= 4; j++) { const cx = i * 40 + 10, cz = Z0 + j * 40, turn = (i + j) % 2 !== 0;
         [-10, 10].forEach(d => { const m = new TT.Mesh(geo, tm); m.rotation.x = -Math.PI / 2; m.rotation.z = turn ? Math.PI / 2 : 0;
           m.position.set(cx + (turn ? 0 : d), FL, cz + (turn ? d : 0)); m.receiveShadow = true; g.add(m); }); } }
@@ -3122,7 +3138,7 @@
     const cordTex = canvasTex('tbl12-goldcord', 64, 16, (c, W, H) => { c.fillStyle = '#b8902e'; c.fillRect(0, 0, W, H); for (let x = -H; x < W + H; x += 6) { c.fillStyle = lin(c, 0, H, [[0, '#7a5a18'], [.45, '#f2d27a'], [.6, '#fff0b8'], [1, '#8a6a20']]); c.beginPath(); c.moveTo(x, 0); c.lineTo(x + 3.4, 0); c.lineTo(x + 3.4 + H, H); c.lineTo(x + H, H); c.fill(); } }, 1);
     cordTex.repeat.set(70, 1);
     const pipe = M({ map: cordTex, color: 0xffffff, metalness: .55, roughness: .38, bumpScale: .01 }), tas = M({ color: 0xd8b058, metalness: .45, roughness: .45, sheen: new TT.Color(0xffe8a0) });
-    const zabuton = (z, ry) => { const G = grp(TT, g, 0, FL, z, ry), w = 14.6, d = 15.6, t = 2.8;
+    const zabuton = (z, ry) => { const G = grp(TT, g, 0, FL, z, ry), w = 12.2, d = 13, t = 2.4;   // (a size smaller beside the board, 2026-11-12)
       const m = new TT.Mesh(RB(w, t, d, 1.2, 4), zabM); m.scale.y = 1; at(G, m, 0, t / 2, 0);
       { const pg = new TT.PlaneGeometry(w - .9, d - .9, 24, 24), P = pg.attributes.position;   // the plump middle: the top bulges
         for (let i = 0; i < P.count; i++) { const u = P.getX(i) / ((w - .9) / 2), v = P.getY(i) / ((d - .9) / 2); P.setZ(i, .75 * (1 - Math.pow(Math.abs(u), 3)) * (1 - Math.pow(Math.abs(v), 3))); }
@@ -3135,15 +3151,32 @@
         at(T2, new TT.Mesh(new TT.SphereGeometry(.38, 10, 8), tas), 0, 0, 0); const fr = new TT.Mesh(new TT.ConeGeometry(.42, 1.1, 10, 1, true), tas); fr.rotation.set(Math.PI + b * .5, 0, -a * .5); at(T2, fr, a * .3, -.15, b * .3, 0, false); });
       ao(o, 0, FL, z, w + 2, d + 2, .4); return G; };
     // closer to the board (2026-11-12): the player kneels with the knees a hand's breadth from it
-    zabuton(-18.5, 0); zabuton(20.5, Math.PI);
-    const cloth = M({ map: canvasTex('tbl12-pleat', 256, 64, (c, W, H) => { c.fillStyle = '#f4f2ec'; c.fillRect(0, 0, W, H); for (let x = 0; x < W; x += 8) { c.fillStyle = 'rgba(150,150,140,.35)'; c.fillRect(x, 0, 2, H); c.fillStyle = 'rgba(255,255,255,.6)'; c.fillRect(x + 4, 0, 2, H); } }), roughness: .85, sheen: new TT.Color(0xffffff) });
-    const clothTop = M({ color: 0xf6f4ee, roughness: .8, sheen: new TT.Color(0xffffff) }), legW = M({ map: wood('tbl12-leg', '#d8b880', '#a88048', 128, 256, 1), roughness: .45, clearcoat: .3 });
-    const kyosoku = (x, z, ry) => { const G = grp(TT, g, x, FL, z, ry); G.scale.setScalar(.8);
-      [-1, 1].forEach(s => { at(G, new TT.Mesh(RB(1.4, 3.6, 3.4, .3, 1), legW), s * 4.6, 1.8, 0); at(G, new TT.Mesh(RB(3.4, .8, 4.6, .3, 1), legW), s * 4.6, .4, 0); });
-      at(G, new TT.Mesh(RB(13, 2, 4.6, .9, 3), clothTop), 0, 5.6, 0);
-      [-1, 1].forEach(s => { const sk = new TT.Mesh(new TT.PlaneGeometry(12.4, 2.6), cloth); at(G, sk, 0, 3.6, s * 2.25, s > 0 ? 0 : Math.PI, false); });
-      [-1, 1].forEach(s => { const sk = new TT.Mesh(new TT.PlaneGeometry(4.4, 2.6), cloth); at(G, sk, s * 6.3, 3.6, 0, s * Math.PI / 2, false); }); ao(o, x, FL, z, 15, 7, .3); };
-    kyosoku(12.5, -19, Math.PI / 2); kyosoku(-13.5, 22, Math.PI / 2);
+    zabuton(-16.6, 0); zabuton(18.6, Math.PI);
+    // 脇息 (2026-11-12, the user's reference photos): a long padded top like a flattened bolster, covered in an ikat-woven cloth
+    // (navy, olive, grey-white streaks), on a dark walnut tray; two waisted plank legs on foot boards, a stretcher between them
+    const ikat = canvasTex('tbl12-ikat', 256, 256, (c, W, H) => {
+      const R = rng(19); c.fillStyle = '#3a4258'; c.fillRect(0, 0, W, H);
+      const cols = ['#5e6e40', '#76854e', '#26325e', '#3c4c86', '#c4c8c8', '#9aa4b0', '#4a5a3a', '#1e2848'];
+      for (let y = 0; y < H; y += 3) { let x = -20 + R() * 20; const ph = Math.sin(y * .05) * 30;
+        while (x < W) { const l = 6 + R() * 40, col = cols[(Math.abs(Math.floor((x + ph + y * .6) / 48 + R() * 1.3)) + (y >> 4)) % cols.length];
+          c.fillStyle = col; c.fillRect(Math.round(x), y, Math.round(l), 3); x += l + (R() < .3 ? R() * 6 : 0); } }
+      for (let x = 0; x < W; x += 2) { c.fillStyle = `rgba(${x % 4 ? '255,255,255' : '0,0,0'},.07)`; c.fillRect(x, 0, 1, H); }   // the weave
+    }, 1);
+    ikat.repeat.set(1 / 7, 1 / 3.4);
+    const ikM = M({ map: ikat, roughness: .85, bumpScale: .012, sheen: new TT.Color(0x8a96b0) });
+    const walnut = M({ map: wood('tbl12-walnut', '#86522c', '#4e2c14', 128, 256, 1.2), roughness: .4, clearcoat: .35 });
+    const stadium = (L, Wd) => { const sh = new TT.Shape(), r = Wd / 2, h = L / 2 - r; sh.moveTo(-h, -r); sh.lineTo(h, -r); sh.absarc(h, 0, r, -Math.PI / 2, Math.PI / 2, false); sh.lineTo(-h, r); sh.absarc(-h, 0, r, Math.PI / 2, Math.PI * 1.5, false); return sh; };
+    const flat = (geo) => { geo.rotateX(-Math.PI / 2); return geo; };   // (a shape drawn in x / z, extruded upwards)
+    const legShape = (() => { const sh = new TT.Shape(); sh.moveTo(-1.9, 0); sh.lineTo(1.9, 0); sh.bezierCurveTo(1.1, .6, .55, 2.2, .7, 3.6); sh.bezierCurveTo(.85, 4.8, 1.3, 5.6, 1.7, 6); sh.lineTo(-1.7, 6); sh.bezierCurveTo(-1.3, 5.6, -.85, 4.8, -.7, 3.6); sh.bezierCurveTo(-.55, 2.2, -1.1, .6, -1.9, 0); return sh; })();
+    const kyosoku = (x, z, ry) => { const G = grp(TT, g, x, FL, z, ry), L = 14.5; G.scale.setScalar(.74);
+      [-1, 1].forEach(s => { const lg = new TT.Mesh(new TT.ExtrudeGeometry(legShape, { depth: .8, bevelEnabled: true, bevelThickness: .06, bevelSize: .06, bevelSegments: 1, curveSegments: 10 }), walnut);
+        lg.rotation.y = Math.PI / 2; at(G, lg, s * (L / 2 - 2.4) - .4, .45, 0);
+        at(G, new TT.Mesh(RB(1.4, .45, 4.4, .12, 2), walnut), s * (L / 2 - 2.4), .23, 0); });
+      at(G, new TT.Mesh(RB(L - 5.6, .6, .55, .12, 2), walnut), 0, 1.9, 0);   // the stretcher
+      const tray = new TT.Mesh(flat(new TT.ExtrudeGeometry(stadium(L, 4.2), { depth: .42, bevelEnabled: true, bevelThickness: .08, bevelSize: .08, bevelSegments: 2, curveSegments: 16 })), walnut); at(G, tray, 0, 6.45, 0);
+      const cush = new TT.Mesh(flat(new TT.ExtrudeGeometry(stadium(L - 2.6, 1.4), { depth: .2, bevelEnabled: true, bevelThickness: 1.25, bevelSize: 1.2, bevelSegments: 7, curveSegments: 18 })), ikM); at(G, cush, 0, 6.95 + 1.25, 0);
+      ao(o, x, FL, z, 7, 12.5, .32); };
+    kyosoku(10.4, -17, Math.PI / 2); kyosoku(-11.4, 19, Math.PI / 2);
     // the recorder's place on the right: a low dark desk with the score sheet, a pen and a laptop; a grey zabuton
     { const G = grp(TT, g, 44, FL, -14, -.35), dk = M({ color: 0x3a2a20, roughness: .3, clearcoat: .6 });
       at(G, new TT.Mesh(RB(20, 1, 10, .2, 1), dk), 0, 7.5, 0); [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => at(G, new TT.Mesh(RB(1, 7, 1, .1, 1), dk), a * 9, 3.5, b * 4.2));
@@ -3173,9 +3206,9 @@
     if (ev) lightPatch(o, 22, FL + .04, -40, 30, 46, -.35, 0xff9850, [6, 8], .22);   // … and through the back ones
     mons(o, 12, FL);
     try { X.mergeStatic(g); } catch (e) {}
-    const SH = { morning: ['#eef0ea', .7], day: ['#fbf6ec', .7], evening: ['#ffa860', .75], night: ['#8a8070', .08] }[T], CL = { morning: .3, day: .45, evening: .55, night: .75 }[T];
+    const SH = { morning: ['#eef0ea', .7], day: ['#fbf6ec', .7], evening: ['#ffa860', .75], night: ['#8a8070', .08] }[T], CL = { morning: .3, day: .45, evening: .55, night: 1.05 }[T];
     return { bg: { morning: '#b8b8b0', day: '#c4bca8', evening: '#8a6a50', night: '#3a342c' }[T], exp: LT.exp, minExp: .4, board: LT.board, key,
-      env: { top: night ? '#2a2420' : ev ? '#8a6448' : '#b8b0a0', bottom: night ? '#100c08' : '#3a2c1c', panels: [[0, 18, -60, 60, 24, SH[0], SH[1]], [-60, 18, 10, 60, 24, SH[0], T === 'morning' ? 1.2 : SH[1] * .6], [-33, 40, -23, 34, 30, '#fff6e6', CL], [33, 40, -23, 34, 30, '#fff6e6', CL]] }, onShow() {} };
+      env: { top: night ? '#4a4036' : ev ? '#8a6448' : '#b8b0a0', bottom: night ? '#100c08' : '#3a2c1c', panels: [[0, 18, -60, 60, 24, SH[0], SH[1]], [-60, 18, 10, 60, 24, SH[0], T === 'morning' ? 1.2 : SH[1] * .6], [-33, 40, -23, 34, 30, '#fff6e6', CL], [33, 40, -23, 34, 30, '#fff6e6', CL]] }, onShow() {} };
   };
   TABLES[12].plain = { sun: 0xfff6e8, sunI: .78, hemi: [0xf6f2e8, 0x6a5a3a, .5], exp: .66 };
   TABLES[12].floor = (o) => { const TA = X.tatami(); return { img: TA.map.image, w: 20, h: 40, over: 'radial-gradient(140% 120% at 50% 40%, transparent 55%, rgba(40,30,10,.22))' }; };
