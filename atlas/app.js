@@ -598,6 +598,14 @@
   // card games are 2D only, like the puzzle games (no 3D table): the board card says so and Play opens the game
   const CARD2D = { poker: true, blackjack: true, baccarat: true, solitaire: true };
   const pref = (() => { try { return JSON.parse(localStorage.getItem('atlas-play') || '{}'); } catch (e) { return {}; } })();
+  // reversi's AI ladder: 2026-11-11 its 25 levels became 28 (Lv.17–27 by depth, the strongest is Lv.28). The saved choice moves to
+  // the new level of about the same strength (reversi/index.html LV_25TO28); 'reversi:lvV' 2 = the 25-level ladder (also when unset), 3 = 28.
+  // (Done here, not in games/reversi.js: that loads after the sheet is drawn, and this object is written back as it is.)
+  if (pref['reversi:lvV'] !== 3) {
+    const n = Math.round(+pref['reversi:lv']) || 0, M = { 17: 18, 18: 19, 19: 20, 20: 21, 21: 21, 22: 23, 23: 24, 24: 26, 25: 28 };
+    if (M[n]) pref['reversi:lv'] = M[n];
+    pref['reversi:lvV'] = 3; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {}
+  }
   // the textures of the room and of each board are drawn in workers (texgen.js): the work is tagged per board,
   // and a board is only shown once its pictures are done (texReady)
   const TG = window.AtlasTexGen;
@@ -761,7 +769,7 @@
     const MX = !!(MXG[id] && ad && ad.table && FULL_SKIN[id] && !matchMedia('(max-width: 819px)').matches);
     const lv = MX && pref[id + ':mode'] === 'pvp' ? 0 : pref[id + ':lv'] || 1, side = pref[id + ':side'] || 1;
     const bsz = ad && ad.sizes ? (ad.sizes.includes(+pref[id + ':size']) ? +pref[id + ':size'] : ad.sizes.includes(ad.size0) ? ad.size0 : ad.sizes[0]) : 0;   // board size (go, hex, tafl); adapter.size0 = the default
-    const modes = MX ? MX_MODES : ad && ad.modes, mode = modes && modes.includes(pref[id + ':mode']) ? pref[id + ':mode'] : 'ai';
+    const modes = MX ? mxModes(id) : ad && ad.modes, mode = modes && modes.includes(pref[id + ':mode']) ? pref[id + ':mode'] : 'ai';
     // board size (go): on the same row as the time control when there is one
     const sizeHtml = ad && ad.sizes ? `<label>${esc(ad.sizeLabel ? ad.sizeLabel(lang) : '')}<select id="bvSize">${ad.sizes.map(z => `<option value="${z}" ${z === bsz ? 'selected' : ''}>${ad.sizeName ? esc(ad.sizeName(z, lang)) : z + '×' + z}</option>`).join('')}</select></label>` : '';
     headIcons(false);   // (ヒストリア / 戦績 back out of the old card before it is rebuilt)
@@ -968,7 +976,8 @@
   function bossTitles(sh, g) {   // the bosses' titles live in the talk's language files (npc/t/<lang>.js), loaded on demand
     const N = window.AtlasNPC; if (!N || !N.ensure || !sh.querySelector('.lvs-boss')) return;
     N.ensure(N.lang()).then(() => { const T = N.T && (N.T[N.lang()] || N.T.en), L = T && T.bosses && T.bosses[g]; if (!L) return;
-      sh.querySelectorAll('.lvs-boss').forEach(h => { const s = h.querySelector('small'); if (s) s.textContent = L[+h.dataset.bi] || ''; }); }).catch(() => {});
+      sh.querySelectorAll('.lvs-boss:not(.lvpvp)').forEach(h => {   // (not 二人で対戦: its subtitle was blanked here)
+      const s = h.querySelector('small'); if (s) s.textContent = L[+h.dataset.bi] || ''; }); }).catch(() => {});
   }
   function lvNm(x, n, lang, max) {
     if (!x || !x.name) return '';
@@ -1048,7 +1057,8 @@
      problem(s) and the list, 続きから解く on this 3D board (atlas/puzzles.js), the full / 2D versions at the puzzles. レッスン: lessons or
      openings, opened in the full / 2D version. The full / 2D pages are opened with ?mode=…&sub=…&tc=… (their window.AtlasDeep). */
   const PVP_SVG = '<svg viewBox="0 0 96 80" aria-hidden="true"><ellipse cx="48" cy="74" rx="38" ry="5" fill="rgba(80,60,30,.13)"/><path d="M14 72c0-15 6-25 16-25s16 10 16 25z" fill="#ff8f7a"/><path d="M50 72c0-15 6-25 16-25s16 10 16 25z" fill="#5fb8f0"/><path d="M40 55q8 7 16 0" fill="none" stroke="#f3c79a" stroke-width="5" stroke-linecap="round"/><circle cx="30" cy="31" r="15" fill="#ffe2c4"/><circle cx="66" cy="31" r="15" fill="#ffe2c4"/><path d="M15 29a15 15 0 0 1 30 0q-8-6-15-4q-8 1-15 4z" fill="#5a3a22"/><path d="M51 27a15 15 0 0 1 30 2q-4-8-12-8q-10 0-18 6z" fill="#2f2a3a"/><circle cx="25" cy="33" r="2" fill="#2b2b33"/><circle cx="35" cy="33" r="2" fill="#2b2b33"/><circle cx="61" cy="33" r="2" fill="#2b2b33"/><circle cx="71" cy="33" r="2" fill="#2b2b33"/><path d="M27 39q3 2.4 6 0M63 39q3 2.4 6 0" fill="none" stroke="#c4553f" stroke-width="1.6" stroke-linecap="round"/><circle cx="21.5" cy="37.5" r="2.6" fill="#ffaaa0" opacity=".7"/><circle cx="38.5" cy="37.5" r="2.6" fill="#ffaaa0" opacity=".7"/><circle cx="57.5" cy="37.5" r="2.6" fill="#ffaaa0" opacity=".7"/><circle cx="74.5" cy="37.5" r="2.6" fill="#ffaaa0" opacity=".7"/></svg>';
-  const MXG = { shogi: true, chess: true }, MX_MODES = ['ai', 'rated', 'puzzle', 'lesson'];
+  const MXG = { shogi: true, chess: true, reversi: true }, MX_MODES = ['ai', 'rated', 'puzzle', 'lesson'];
+  const mxModes = id => MX_MODES.filter(m => m !== 'lesson' || (window.AtlasLessons && (!AtlasLessons.has || AtlasLessons.has(id))));   // (each game gets レッスン on the table when atlas/lessons3d.js has it)
   const MX_LBL = { ai: 'bv.m.vs', rated: 'bv.m.rated', puzzle: 'pg.pz', lesson: 'pg.ls' };
   const OTC = { shogi: [{ id: 'fast', main: 300, byo: 30 }, { id: 'long', main: 600, byo: 30 }, { id: 'blitz', byo: 30 }, { id: 'fis', main: 300, inc: 10 }],
     chess: [{ id: 'blitz', main: 180, inc: 2 }, { id: 'rapid', main: 600, inc: 5 }, { id: 'classical', main: 900, inc: 10 }] };
@@ -1059,6 +1069,8 @@
   const RTG = {
     shogi: { key: 'shogi-rated-v1', start: 900, flag: 'k', off: 1, from: 0, tc: { id: 'rt', main: 600, byo: 30 },
       lv: [150, 300, 450, 550, 650, 750, 850, 950, 1050, 1150, 1250, 1350, 1450, 1550, 1650, 1750, 1850, 2000, 2200, 2300, 2400, 2500, 2600, 2700, 2800, 2900] },
+    reversi: { key: 'reversi-rated-v1', start: 1000, flag: 'lvV', off: 0, from: 1, tc: { id: 'rt', main: 600, byo: 30 },   // (reversi/index.html RT_LV / RT_CLOCK)
+      lv: (window.Atlas3D && Atlas3D.reversi && Atlas3D.reversi.ratings) || [0, 10, 50, 110, 170, 240, 340, 430, 550, 680, 780, 930, 1090, 1290, 1440, 1582, 1687, 1732, 1767, 1837, 1901, 1954, 1991, 2017, 2054, 2080, 2122, 2209, 2283] },   // (= RT_LV, Lv.1–28 since #1692)
     chess: { key: 'aicoding-chess-rated', start: 1000, flag: 'lvv', off: 0, from: 1, tc: { id: 'rt', main: 600, inc: 5 },
       lv: [0, 200, 350, 500, 650, 800, 1000, 1250, 1400, 1600, 1700, 1800, 1900, 2150, 2295, 2385, 2495, 2705, 2885, 2985, 3075, 3160, 3240, 3305, 3370, 3440] },
   };
@@ -1488,7 +1500,7 @@
     const g = bvGame; stopSession();
     $('bv').classList.add('playing', 'rules'); $('endc').classList.remove('on');
     session = AtlasPuzzles.start({ id: g.id, el: $('gl'), Table3D, lang, t, panel: $('bv'), adapter: Atlas3D[g.id], onExit: () => openBoard(g.id),
-      daily: o.daily, pick: o.pick, onList: () => puzzleSheet(g), dailyTitle: w => t(g.id === 'chess' ? 'bv.pz.dc' : w === 'd2' ? 'bv.pz.d2' : 'bv.pz.d1') });
+      daily: o.daily, pick: o.pick, onList: () => puzzleSheet(g), dailyTitle: w => t(g.id !== 'shogi' ? 'bv.pz.dc' : w === 'd2' ? 'bv.pz.d2' : 'bv.pz.d1') });
     if (session.panel && window.ResizeObserver) new ResizeObserver(fitStage).observe(session.panel);
     fitStage(); Table3D.play(true);
   }

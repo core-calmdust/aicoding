@@ -55,7 +55,7 @@ wasm の αβ エンジン（`engine_mt.wasm`、`-DMT`）の**仕事を分ける
 
 | 道具 | 使い方 |
 |---|---|
-| `tools/mtsim/`（`gen.py`・`sim.c`・`simcore.h`・`g_<game>.h`・`dump.js`・`wasm1.js`） | wasm の αβ（シャンチー・チャンギ・チェス・将棋・タフル）の「本当に同時」のシミュレーション：全スレッドが一定の局面数ずつ足並みをそろえ、置換表と busy marks の書き込みはその回の終わりまでほかに見えない。`-DSIM_Q=64`（YBW は細かく）、`SIM_SLOW=k`（k 番以降が 2/5 の速さ＝高効率コア）、`SIM_SLOWSET`・`SIM_MIG`。`wasm1.js` は本物の `engine_mt.wasm` の1スレッドの局面数・手。`gen.py` は Praline のヘッダを取り込んでから書き換える |
+| `tools/mtsim/`（`gen.py`・`sim.c`・`simcore.h`・`g_<game>.h`・`dump.js`・`wasm1.js`） | wasm の αβ（シャンチー・チャンギ・チェス・将棋・タフル、アマゾンズ＝評価数の時計・局面は `amazons/tools/mtsim_pos.js`）の「本当に同時」のシミュレーション：全スレッドが一定の局面数ずつ足並みをそろえ、置換表と busy marks の書き込みはその回の終わりまでほかに見えない。`-DSIM_Q=64`（YBW は細かく）、`SIM_SLOW=k`（k 番以降が 2/5 の速さ＝高効率コア）、`SIM_SLOWSET`・`SIM_MIG`。`wasm1.js` は本物の `engine_mt.wasm` の1スレッドの局面数・手。`gen.py` は Praline のヘッダを取り込んでから書き換える |
 | `checkers/tools/mtsim/`・`morris/tools/mtsim/`・`fanorona/tools/mtsim/` | 同じ方式のゲーム別版（3つとも `gen.py` が Praline のヘッダを取り込んでから書き換える） |
 | `shared/tools/mtsim.js`・`mtstep.js`・`mtlazy.js`・`nodematch.js` | JavaScript エンジン（mtsplit.js）の見積もり：局面数の時計、歩調合わせ（`--slow K:R`）、Lazy SMP、時間2倍の強さ |
 | `<game>/bench.html`・`bench-all.html` | ユーザーの Mac で測るページ（1・2・4・8・10・14スレッド、同じ深さまでの時間・nps・最善手の一致、「結果をコピー」）。`bench-all.html` で全ゲームをまとめて |
@@ -77,12 +77,13 @@ wasm の αβ エンジン（`engine_mt.wasm`、`-DMT`）の**仕事を分ける
 | チェス（`chess/`） | C（wasm、NNUE） | YBW 1（補助1番、深さ7・予想カット節は分けない）＋Lazy SMP | mtengine・proset・ponder（C は自前：履歴の共有） |
 | 五目並べ（`gomoku/`） | JS 探索＋wasm の共有の置換表・分割点（`mt.c`） | YBW v2（どの節も） | mtengine・proset |
 | 囲碁（`go/`）・ヘックス（`hex/`） | C（wasm） | 共有木 MCTS（virtual loss） | mtengine・proset |
-| アマゾンズ（`amazons/`） | JS＋wasm コア | αβ は YBW＋共有の置換表（JS 分割）、Lv.19〜23 は共有木 MCTS | mtsplit・mttt・mtengine・proset |
+| アマゾンズ（`amazons/`） | C（wasm、αβ の探索ごと core.c、2026-11-11） | αβ は **YBW**（3）＋busy marks、Lv.19〜23 は共有木 MCTS（同じ `core_mt.wasm`、補助は両方を待つ）。分離できないページは mtsplit の非共有 | mtengine・**praline（2026-11-11）**・proset（mtsplit は非共有だけ） |
 | ウゴルキ・アゴン・コナネ | JS＋wasm コア | YBW＋共有の置換表＋手伝い（JS 分割） | mtsplit・mttt・proset |
 | マンカラ | JS | Lazy SMP（共有の置換表） | mtsplit・mttt・proset |
 | コネクトフォー | JS | 列ごとの完全読み（共有の置換表） | mtsplit＋`connect4/mt.js` |
 | ドット＆ボックス | JS＋wasm（5×5） | 手の分担（共有の置換表）・補助 Worker | mtworkers（共有モード）・wasm `dots5mt.wasm` |
-| ウル・セネト・バックギャモン・ルドー | JS | 独立な仕事の配り分け（全コア） | mtworkers |
+| ウル・セネト・ルドー | JS | 独立な仕事の配り分け（全コア） | mtworkers |
+| バックギャモン（`backgammon/`） | **C（wasm、2026-11-11）**：評価（速いネット・wildbg・ベアオフ）と期待値の探索（`engine.c`、SIMD 版となし版の2本） | 独立な仕事の配り分け（候補手 × 相手の21の出目、全コア。各 Worker が自分の C エンジン） | mtworkers（`backgammon/MODEL_CARD.md`） |
 
 ---
 
@@ -188,11 +189,15 @@ JavaScript エンジンは `shared/mtsplit.js`（＋`mttt.js`）、独立な仕�
 - **リバーシ**：元祖の作り（分割点256個、`CHK_Q`＝4096局面ごとの確認、完全読みの分割）で、中盤と終盤の2種類の探索に分割点がある。並行して別の作業が `reversi/engine.c` 以外を触っている間は移さない。最後に回す。
 - **共通にしなかったもの（理由）**：①分割点を開く場所（手の生成・順番・枝刈りがゲームごとに違い、関数にすると1スレッドの読みを変えずに書くのが難しく、性能も落ちうる）、②`timeUp`（ゲームごとに確認の間隔・局面数の上限・`gHit` の見方が違う）、③各スレッドの結果の共有 `gRes`（手の詰め方がゲームごと）、④共有の置換表（局面の鍵と項目の詰め方がゲームごと。作りは同じなので、次の段で `praline_tt.h` にまとめる候補）、⑤スレッドの起動（`mt_stack`・`mt_thread`：ゲームの初期化を呼ぶ。シミュレーションの `gen.py` がこの節を切り取る）。
 
+### アマゾンズ（2026-11-11）：JS の αβ を C に移して Praline に
+- αβ の探索ループ（`search`・解析の全部の手・最善手の反復深化）を `amazons/core.c` に移し、MCTS と同じ `core_mt.wasm` で Praline の YBW（つなぎ：局面は盤100＋アマゾン8＋手番＋鍵2つ、ルートの候補の値 `sc`、`spCutoff` は空＝キラー・履歴なし）。補助は `mt_help` の中で MCTS の木と分割点の両方を待つ。1スレッドは JS の探索と手・値・局面数・評価数が全一致（`amazons/tools/check_ab.js`、246回の探索）。
+- `tools/mtsim`（評価数の時計）深さ6・8局面：2／4／8 ×1.78／3.07／4.76、遅いコアあり 8／10／14 ×4.82／4.79／4.73。前（mtsplit の共有・YBW＋手伝い、`mtstep` を評価数の時計に）×1.43／2.21／3.39。1スレッドも ×1.22（ループを C に）。詳細は claude/amazons-spec.md「αβ を C に」。
+
 ---
 
 ## 7. エンジン本体とサイト側のつなぎの境目（別リポジトリでの公開を前提に、2026-11-11）
 
-Praline は将来、別リポジトリで公開する予定（ユーザーの方針。リポジトリの作成・公開はユーザーが判断する）。そのため、どこが**エンジン本体（ゲームにもこのサイトにも依存しない）**で、どこが**サイト側のつなぎ**かをはっきり分けておく。
+Praline は将来、洗練してから Apache-2.0 で別リポジトリに公開する予定（ユーザーの方針、急がない。リポジトリの作成・公開はユーザーが判断する）。そのため、どこが**エンジン本体（ゲームにもこのサイトにも依存しない）**で、どこが**サイト側のつなぎ**かをはっきり分けておく。
 
 | 区分 | ファイル | サイト固有のものへの依存 | 公開の扱い |
 |---|---|---|---|
@@ -220,9 +225,9 @@ Praline は将来、別リポジトリで公開する予定（ユーザーの方
 - **学習した重み・学習データ**（NNUE の `nnue.bin.gz`・`evalnet.bin.gz` 等）。Praline は探索の並列化だけで、重みは含めない。
 - 未発表の企画、ユーザーの Mac の計測の生データ（数字の要約は README に載せてよい）。
 
-### ライセンス（確認した事実と候補）
-- サイトのリポジトリ直下に LICENSE はない（2026-11-11 時点）。ゲーム単位では `reversi/LICENSE`・`shogi/LICENSE` が **Apache License 2.0**。ほかのゲームのフォルダには LICENSE がない。
-- **候補：Apache-2.0**（既存の reversi・shogi と同じ。特許条項があり、ゲームやエンジンに組み込みやすい）または MIT（より短い）。Praline の C・JS はこのリポジトリで書いたもので外部のコードを含まないので、どちらでも選べる。決めるのはユーザー。
+### ライセンス
+- **サイト全体・各ゲームはライセンス未設定**（2026-11-11 時点。リポジトリ直下にもゲームのフォルダにも LICENSE は置かない。以前 `reversi/`・`shogi/` にあった Apache-2.0 の LICENSE と MODEL_CARD の `license: apache-2.0` は、ユーザーの指示で外した）。
+- **Praline は、もっと洗練してから Apache-2.0 で別リポジトリに公開する予定**（急がない）。Praline の C・JS はこのリポジトリで書いたもので外部のコードを含まない。公開するときに公開リポジトリ側に LICENSE と SPDX 表記を付ける（サイトのリポジトリのファイルには付けない）。
 - **GPL のエンジン**（Stockfish・Pikafish・Rapfi・GNU Go 等）は、ユーザーの Mac 上で教師役・物差しとして使っただけで、**コードはサイトにも Praline にも含めない**（`handoff-common-rules.md` §2、各 MODEL_CARD）。Praline の公開物に GPL のコードが入っていないことを公開前に確認する（下のチェックリスト）。
 - **重み・データの出所**（Praline には含めないが、例やベンチで触れるときの注意）：チェスの NNUE は Lichess の評価済み局面データベース（**CC0**）＋自己対局（Stockfish で付け直し）、シャンチーの NNUE は Pikafish（GPL-3.0）の自己対局の局面と評価で学習（エンジンの出力を学習に使ったもので、コードは含まない）、五目並べは Gomocup の局面と Rapfi（GPL-3.0）の採点、囲碁のネットは sanderland/vibego（**CC BY 4.0**、教師は KataGo）。サンプルやベンチに重みを同梱するなら、それぞれのライセンス・クレジットを付ける（同梱しないのが簡単）。
 - 参照した手法の名前（Young Brothers Wait、Kerrigan の simplified ABDADA、Lazy SMP）は README の参考文献に書く（コードの借用はない）。
@@ -259,9 +264,30 @@ Many cores (nuts) held together by shared memory (caramel).
 - [ ] 本体のファイルにサイト固有の名前（ゲーム名・`aicoding-*` のキー・`HeaderBar`・`Online`・`atlas`・Firebase）が残っていない（`grep`）。
 - [ ] GPL のコード・他者のコードが入っていない（Stockfish・Pikafish・Rapfi 等は使っていないことを確認、参考にした手法は README の参考文献へ）。
 - [ ] 重み・学習データを同梱しない（同梱するならライセンスとクレジット）。
-- [ ] LICENSE（Apache-2.0 か MIT をユーザーが決める）と各ファイルの先頭の SPDX 表記、著作権者の表記（ユーザーの希望の名義）。
+- [ ] 公開リポジトリの LICENSE（Apache-2.0）と各ファイルの先頭の SPDX 表記、著作権者の表記（ユーザーの希望の名義）。
 - [ ] サンプルのゲームが単体で build・実行できる（clang のコマンド、Node での1スレッドの一致テスト、2スレッドのブラウザのテスト）。
 - [ ] シミュレータの手順が README のとおりに再現できる。
 - [ ] 秘密の企画・個人情報・内部の計測ログ・ユーザーの端末の情報が入っていない。
 - [ ] 英語の README・コメント（日本語のコメントは英語に）。
 - [ ] サイト側が公開版を取り込んでも全ゲームの1スレッドの一致・ベンチが前と同じ。
+
+---
+
+## 9. ロゴとトップページの掲載（2026-11-11）
+
+**ロゴ（ユーザーが決めたデザイン、白ベース＝明るい背景用の横組み）**：`praline/`
+| ファイル | 中身 |
+|---|---|
+| `icon.svg` | アイコン（案A Cluster）：キャラメル #C9823F の角丸正方形に、クリーム #F5EADB とココア #2A1E17 の丸4つ（縁取りはキャラメル） |
+| `icon-16.svg` | 16px 用の簡略版（丸3つ、縁取りなし） |
+| `logo.svg` | 横組み：白い背景＋アイコン＋「Praline」（Outfit 600、letter-spacing −0.03em、ココア #2A1E17。i の点はキャラメルの丸＝点なしの ı ＋直径0.2em の丸を Outfit の i の点の高さに）＋下に「THINKING ENGINE」（Outfit 500、letter-spacing 0.32em、#7A5A44） |
+| `card.svg` | トップページのパネル用（4:3・1600×1200、白地の中央にロゴ、幅の約62%） |
+| `tools/build.py`・`tools/outline.py` | 上の4つを作るスクリプト（`python3 praline/tools/build.py praline`、fontTools） |
+
+- 文字は**アウトライン化済み**（`<img>` で使ってもフォントを読まない）。作業機に Outfit の可変フォントがなかったため、Outfit の Regular（400）と Bold（700）の輪郭（同じ点の構成）を補間して 600・500 相当を作り、カーニング（GPOS kern）も同じく補間。可変フォントで作り直すときは `outline.py` を差し替える。
+- Outfit は SIL Open Font License 1.1（Copyright 2021 The Outfit Project Authors）。ロゴのような図案（アウトライン化した文字）は自由に使え、フォントのファイル自体は同梱しないので OFL の文書の同梱は不要。
+
+**トップページ（`index.html`）**：「開発室」の下に新しい見出し「ソフトウェア」（`#software`、14言語 `sw.h2`・`sw.sub`・`sw.desc`）を作り、開発室と同じギャラリー（`makeGallery`、`p: 'sw'`、台帳 `SOFTWARE`）で Praline を1項目置く。
+- 箱は開発室と同じ形（`.lab.sw`、キャラメル色の破線・方眼）、カードはパネル＋アイコンの並び。パネルの絵は `card.svg`（`white: true` でパネルの絵の地を白に）。
+- **準備中**：台帳の `soon: true` で、アイコンの左上に「SOON」（バッジは英語表記の規則どおり）、タグと再生ボタンの位置に「準備中」（`tag.soon`、14言語）。ボタンは破線の押せない形（`aria-disabled`）、パネルの絵・アイコンをクリックしても遷移しない（Enter も選ぶだけ）。公開したら `soon` を外して `href` を入れる。
+- 説明は `pl.desc`（14言語、PC 幅392px・6行に収まることを計測済み）。上のメニュー・下のタブには足していない（1項目・準備中のため。項目が増えたら検討）。公開タイトル数（`stat-titles`）にも数えない。

@@ -28,7 +28,7 @@
       s: [
       { say: 'ボンジュール！ わたしは<b>ビーユ</b>、フランス生まれのビー玉だよ。今日は17世紀のフランスの宮廷で流行ったひとり遊び、<b>ペグソリテール</b>を覚えよう！ 真ん中の1つだけが空いた、この33穴の盤から始めるよ。' },
       { say: '玉は、縦か横の<b>隣の玉を跳び越えて</b>、その向こうの<b>空いた穴</b>へ移るの。跳び越えた玉は取られちゃう。左の光っている玉をタップして、光る穴へ跳ばしてみて！', done: 'コロン！ 跳び越えられた玉は、盤のふちの<b>溝</b>へ転がっていったね。' },
-      { say: '四角い盤では、跳べるのは<b>縦と横だけ</b>。ななめには跳べないよ。跳べる手を1つ見つけて、跳んでみて！', done: 'そのとおり！ まっすぐ縦か横だけだよ。' },
+      { say: '穴が縦横に並ぶ盤では、跳べるのは<b>縦と横だけ</b>。ななめには跳べないよ。跳べる手を1つ見つけて、跳んでみて！', done: 'そのとおり！ まっすぐ縦か横だけだよ。' },
       { say: '1回跳んだら1手。でも同じ玉で<b>続けて何回でも</b>跳べるよ。うまくつなげると一気に減らせるの。玉が<b>1つになるまで</b>跳んでみて！', done: '2回続けて跳んで、残り1つ！ 跳べる玉がなくなったら、そこでおしまいだよ。' },
       { say: '目標は<b>最後に1つだけ残す</b>こと。金の輪の<b>◎の穴</b>に残せたら<b>完璧</b>！ これは昔からある「十字架」の形。跳ぶ順番を考えてね。', done: 'パーフェクト！ ◎の穴にぴったり1つ。順番を考えるのがこのパズルの楽しさだよ。' },
       { say: '三角の盤では、<b>ななめの線</b>にも沿って跳べるの（6方向）。ななめの線に沿って跳んでみて！', done: 'ななめにも跳べたね！ 盤の形が変わると、考え方もがらりと変わるよ。' },
@@ -38,7 +38,7 @@
       s: [
       { say: "Bonjour! I'm <b>Bille</b>, a marble from France. Today let's learn <b>peg solitaire</b>, the puzzle for one that was the rage at the French court in the 1600s. We start on this 33-hole board with only the middle hole empty." },
       { say: 'A marble <b>jumps over the marble next to it</b>, up, down or sideways, into the <b>empty hole</b> just beyond. The one jumped over is taken. Tap the glowing marble on the left and jump it into the glowing hole!', done: 'Clack! The taken marble rolled into the <b>groove</b> round the rim.' },
-      { say: 'On the square boards a marble jumps <b>only up, down or sideways</b> — never diagonally. Find a jump that works and make it!', done: "That's it! Only straight up, down or sideways." },
+      { say: 'On boards with the holes in rows and columns, a marble jumps <b>only up, down or sideways</b> — never diagonally. Find a jump that works and make it!', done: "That's it! Only straight up, down or sideways." },
       { say: 'Each jump is one move, but the same marble may <b>keep jumping</b> — link jumps to clear the board fast. Jump until <b>only one marble</b> is left!', done: 'Two jumps in a row, one marble left! When no marble can jump, the game is over.' },
       { say: 'The aim is to <b>leave just one marble</b>. On the <b>◎ hole</b> in the gold ring it is <b>perfect</b>! This is the old “cross” shape — think about the order.', done: 'Perfect! Exactly one marble on ◎. Working out the order is the whole fun of it.' },
       { say: 'On the triangle board marbles also jump <b>along the slanted lines</b> (six directions). Make a jump along a slanted line!', done: 'Slanted jumps work here! A new board shape changes how you think.' },
@@ -48,7 +48,7 @@
       s: [
       { say: 'Bonjour！我是<b>小珠</b>，来自法国的弹珠。今天来学17世纪法国宫廷流行的单人游戏<b>孔明棋</b>吧！我们从这块只有中央空着的33孔棋盘开始。' },
       { say: '弹珠沿横或竖<b>跳过相邻的弹珠</b>，落到后面的<b>空孔</b>。被跳过的弹珠会被拿走。点击左边发光的弹珠，跳进发光的孔吧！', done: '咕噜！被吃掉的弹珠滚进了棋盘边缘的<b>槽</b>里。' },
-      { say: '方形棋盘上只能<b>横跳或竖跳</b>，不能斜着跳。找一步能跳的，跳跳看！', done: '没错！只能直着横跳或竖跳。' },
+      { say: '孔排成横竖方格的棋盘上只能<b>横跳或竖跳</b>，不能斜着跳。找一步能跳的，跳跳看！', done: '没错！只能直着横跳或竖跳。' },
       { say: '每跳一次算一步，但同一颗弹珠<b>可以一直跳下去</b>，连起来就能一口气减少。跳到<b>只剩1颗</b>吧！', done: '连跳两次，只剩1颗！没有弹珠能跳时，游戏就结束了。' },
       { say: '目标是<b>最后只剩1颗</b>。留在金环里的<b>◎孔</b>就是<b>完美</b>！这是传统的“十字架”形，想想跳的顺序吧。', done: '完美！◎孔里正好1颗。思考顺序正是这个谜题的乐趣。' },
       { say: '三角形棋盘上，还可以沿<b>斜线</b>跳（6个方向）。沿斜线跳一次吧！', done: '斜着也能跳！棋盘形状一变，思路也完全不同。' },
@@ -58,7 +58,7 @@
       s: [
       { say: 'Bonjour！我是<b>小珠</b>，來自法國的彈珠。今天來學17世紀法國宮廷流行的單人遊戲<b>孔明棋</b>吧！我們從這塊只有中央空著的33孔棋盤開始。' },
       { say: '彈珠沿橫或直<b>跳過相鄰的彈珠</b>，落到後面的<b>空孔</b>。被跳過的彈珠會被拿走。點擊左邊發光的彈珠，跳進發光的孔吧！', done: '咕嚕！被吃掉的彈珠滾進了棋盤邊緣的<b>槽</b>裡。' },
-      { say: '方形棋盤上只能<b>橫跳或直跳</b>，不能斜著跳。找一步能跳的，跳跳看！', done: '沒錯！只能直著橫跳或直跳。' },
+      { say: '孔排成橫直方格的棋盤上只能<b>橫跳或直跳</b>，不能斜著跳。找一步能跳的，跳跳看！', done: '沒錯！只能直著橫跳或直跳。' },
       { say: '每跳一次算一步，但同一顆彈珠<b>可以一直跳下去</b>，連起來就能一口氣減少。跳到<b>只剩1顆</b>吧！', done: '連跳兩次，只剩1顆！沒有彈珠能跳時，遊戲就結束了。' },
       { say: '目標是<b>最後只剩1顆</b>。留在金環裡的<b>◎孔</b>就是<b>完美</b>！這是傳統的「十字架」形，想想跳的順序吧。', done: '完美！◎孔裡正好1顆。思考順序正是這個謎題的樂趣。' },
       { say: '三角形棋盤上，還可以沿<b>斜線</b>跳（6個方向）。沿斜線跳一次吧！', done: '斜著也能跳！棋盤形狀一變，思路也完全不同。' },
@@ -68,7 +68,7 @@
       s: [
       { say: '봉주르! 나는 <b>비유</b>, 프랑스에서 온 구슬이야. 오늘은 17세기 프랑스 궁정에서 유행한 혼자 하는 놀이, <b>페그 솔리테르</b>를 배워 보자! 가운데 하나만 비어 있는 이 33구멍 판에서 시작해.' },
       { say: '구슬은 가로나 세로로 <b>이웃 구슬을 뛰어넘어</b> 그 너머의 <b>빈 구멍</b>으로 가. 넘은 구슬은 잡혀. 왼쪽의 빛나는 구슬을 탭해서 빛나는 구멍으로 뛰어 봐!', done: '또르르! 잡힌 구슬은 판 가장자리의 <b>홈</b>으로 굴러갔어.' },
-      { say: '네모난 판에서는 <b>가로와 세로로만</b> 뛸 수 있어. 대각선은 안 돼. 뛸 수 있는 수를 하나 찾아서 뛰어 봐!', done: '맞아! 곧게 가로나 세로로만.' },
+      { say: '구멍이 가로세로로 늘어선 판에서는 <b>가로와 세로로만</b> 뛸 수 있어. 대각선은 안 돼. 뛸 수 있는 수를 하나 찾아서 뛰어 봐!', done: '맞아! 곧게 가로나 세로로만.' },
       { say: '한 번 뛰면 한 수. 하지만 같은 구슬로 <b>계속 몇 번이든</b> 뛸 수 있어. 잘 이으면 한꺼번에 줄일 수 있지. 구슬이 <b>하나만 남을 때까지</b> 뛰어 봐!', done: '두 번 연속으로 뛰어서 하나 남았어! 뛸 구슬이 없으면 거기서 끝이야.' },
       { say: '목표는 <b>마지막에 하나만 남기기</b>. 금색 고리의 <b>◎ 구멍</b>에 남기면 <b>완벽</b>! 이건 옛날부터 있는 "십자가" 모양이야. 뛰는 순서를 생각해 봐.', done: '퍼펙트! ◎ 구멍에 딱 하나. 순서를 생각하는 게 이 퍼즐의 재미야.' },
       { say: '삼각형 판에서는 <b>대각선</b>을 따라서도 뛸 수 있어(6방향). 대각선을 따라 뛰어 봐!', done: '대각선으로도 뛰었네! 판 모양이 바뀌면 생각하는 법도 확 달라져.' },
@@ -78,7 +78,7 @@
       s: [
       { say: '¡Bonjour! Soy <b>Bille</b>, una canica de Francia. Hoy aprendemos el <b>solitario</b>, el rompecabezas para uno que hizo furor en la corte francesa del siglo XVII. Empezamos en este tablero de 33 huecos con solo el centro vacío.' },
       { say: 'Una canica <b>salta sobre la vecina</b>, en vertical u horizontal, hasta el <b>hueco vacío</b> de detrás. La saltada se retira. ¡Toca la canica que brilla a la izquierda y hazla saltar al hueco que brilla!', done: '¡Clac! La canica capturada rodó a la <b>ranura</b> del borde.' },
-      { say: 'En los tableros cuadrados solo se salta <b>en vertical u horizontal</b>, nunca en diagonal. ¡Busca un salto posible y hazlo!', done: '¡Eso es! Solo en línea recta.' },
+      { say: 'En los tableros con los huecos en filas y columnas solo se salta <b>en vertical u horizontal</b>, nunca en diagonal. ¡Busca un salto posible y hazlo!', done: '¡Eso es! Solo en línea recta.' },
       { say: 'Cada salto es un movimiento, pero la misma canica puede <b>seguir saltando</b>: encadena saltos para vaciar rápido. ¡Salta hasta que quede <b>una sola canica</b>!', done: '¡Dos saltos seguidos y queda una! Cuando ninguna canica puede saltar, se acaba la partida.' },
       { say: 'El objetivo es <b>dejar una sola canica</b>. ¡En el <b>hueco ◎</b> del aro dorado es <b>perfecto</b>! Es la vieja figura de la “cruz”: piensa en el orden.', done: '¡Perfecto! Una canica justo en ◎. Pensar el orden es toda la gracia.' },
       { say: 'En el tablero triangular también se salta <b>por las líneas inclinadas</b> (seis direcciones). ¡Haz un salto en diagonal!', done: '¡Aquí sí se salta en diagonal! Otro tablero, otra forma de pensar.' },
@@ -88,7 +88,7 @@
       s: [
       { say: 'Bonjour ! Moi, c’est <b>Bille</b>, une bille française. Aujourd’hui on apprend le <b>solitaire</b>, le casse-tête pour une personne qui faisait fureur à la cour de France au XVIIe siècle. On commence sur ce plateau de 33 trous dont seul le centre est vide.' },
       { say: 'Une bille <b>saute par-dessus sa voisine</b>, en ligne ou en colonne, jusqu’au <b>trou vide</b> juste derrière. La bille sautée est prise. Touche la bille qui brille à gauche et fais-la sauter dans le trou lumineux !', done: 'Clac ! La bille prise a roulé dans la <b>rainure</b> du bord.' },
-      { say: 'Sur les plateaux carrés, on saute <b>seulement en ligne ou en colonne</b>, jamais en diagonale. Trouve un saut possible et joue-le !', done: 'Exactement ! Tout droit seulement.' },
+      { say: 'Sur les plateaux aux trous en lignes et colonnes, on saute <b>seulement en ligne ou en colonne</b>, jamais en diagonale. Trouve un saut possible et joue-le !', done: 'Exactement ! Tout droit seulement.' },
       { say: 'Chaque saut est un coup, mais la même bille peut <b>continuer à sauter</b> : enchaîne pour vider vite. Saute jusqu’à ce qu’il ne reste <b>qu’une bille</b> !', done: 'Deux sauts d’affilée, une seule bille ! Quand plus aucune bille ne peut sauter, la partie est finie.' },
       { say: 'Le but : <b>laisser une seule bille</b>. Sur le <b>trou ◎</b> de l’anneau doré, c’est <b>parfait</b> ! Voici la vieille figure de la « croix » : réfléchis à l’ordre.', done: 'Parfait ! Une bille pile sur ◎. Trouver l’ordre, c’est tout le plaisir du jeu.' },
       { say: 'Sur le plateau triangulaire, on saute aussi <b>le long des lignes obliques</b> (six directions). Fais un saut en oblique !', done: 'Ici, on saute aussi en oblique ! Nouveau plateau, nouvelle façon de penser.' },
@@ -98,7 +98,7 @@
       s: [
       { say: 'Bonjour! Eu sou a <b>Bille</b>, uma bolinha de gude da França. Hoje vamos aprender o <b>Resta Um</b>, o quebra-cabeça para uma pessoa que virou febre na corte francesa no século XVII. Começamos neste tabuleiro de 33 buracos com só o centro vazio.' },
       { say: 'Uma bolinha <b>salta sobre a vizinha</b>, na vertical ou horizontal, até o <b>buraco vazio</b> logo atrás. A saltada sai. Toque na bolinha que brilha à esquerda e salte até o buraco que brilha!', done: 'Clac! A bolinha capturada rolou para o <b>sulco</b> da borda.' },
-      { say: 'Nos tabuleiros quadrados só se salta <b>na vertical ou horizontal</b>, nunca na diagonal. Ache um salto possível e faça-o!', done: 'Isso! Só em linha reta.' },
+      { say: 'Nos tabuleiros com os buracos em linhas e colunas só se salta <b>na vertical ou horizontal</b>, nunca na diagonal. Ache um salto possível e faça-o!', done: 'Isso! Só em linha reta.' },
       { say: 'Cada salto é um lance, mas a mesma bolinha pode <b>continuar saltando</b>: encadeie para esvaziar rápido. Salte até sobrar <b>uma só bolinha</b>!', done: 'Dois saltos seguidos, resta uma! Quando nenhuma bolinha pode saltar, o jogo acaba.' },
       { say: 'O objetivo é <b>deixar uma só bolinha</b>. No <b>buraco ◎</b> do anel dourado é <b>perfeito</b>! Esta é a velha figura da “cruz”: pense na ordem.', done: 'Perfeito! Uma bolinha bem no ◎. Pensar na ordem é toda a graça.' },
       { say: 'No tabuleiro triangular também se salta <b>pelas linhas inclinadas</b> (seis direções). Faça um salto na diagonal!', done: 'Aqui dá para saltar na diagonal! Outro tabuleiro, outro jeito de pensar.' },
@@ -108,7 +108,7 @@
       s: [
       { say: 'Bonjour! Ich bin <b>Bille</b>, eine Murmel aus Frankreich. Heute lernen wir <b>Solitär</b>, das Geduldspiel für eine Person, das im 17. Jahrhundert am französischen Hof in Mode war. Wir beginnen auf diesem Brett mit 33 Löchern, nur die Mitte ist frei.' },
       { say: 'Eine Murmel <b>springt über ihre Nachbarin</b>, senkrecht oder waagerecht, ins <b>leere Loch</b> dahinter. Die übersprungene wird geschlagen. Tippe die leuchtende Murmel links an und lass sie ins leuchtende Loch springen!', done: 'Klack! Die geschlagene Murmel ist in die <b>Rille</b> am Rand gerollt.' },
-      { say: 'Auf den eckigen Brettern springt man <b>nur senkrecht oder waagerecht</b>, nie diagonal. Finde einen möglichen Sprung und mach ihn!', done: 'Genau! Nur geradeaus.' },
+      { say: 'Auf Brettern mit Löchern in Reihen und Spalten springt man <b>nur senkrecht oder waagerecht</b>, nie diagonal. Finde einen möglichen Sprung und mach ihn!', done: 'Genau! Nur geradeaus.' },
       { say: 'Jeder Sprung ist ein Zug, aber dieselbe Murmel darf <b>weiterspringen</b> – verkette Sprünge, um schnell abzuräumen. Springe, bis <b>nur eine Murmel</b> übrig ist!', done: 'Zwei Sprünge hintereinander, eine Murmel übrig! Kann keine Murmel mehr springen, ist das Spiel vorbei.' },
       { say: 'Ziel: <b>nur eine Murmel übrig lassen</b>. Im <b>Loch ◎</b> mit dem goldenen Ring ist es <b>perfekt</b>! Das ist die alte Figur „Kreuz“ – denk an die Reihenfolge.', done: 'Perfekt! Genau eine Murmel auf ◎. Die Reihenfolge zu finden, macht den ganzen Reiz aus.' },
       { say: 'Auf dem Dreiecksbrett springt man auch <b>entlang der schrägen Linien</b> (sechs Richtungen). Mach einen schrägen Sprung!', done: 'Hier geht es auch schräg! Ein neues Brett, ein neues Denken.' },
@@ -118,7 +118,7 @@
       s: [
       { say: 'Бонжур! Я <b>Бийе</b>, шарик из Франции. Сегодня учимся <b>солитеру</b> — головоломке для одного, модной при французском дворе в XVII веке. Начнём с этой доски на 33 лунки, где пуст только центр.' },
       { say: 'Шарик <b>перепрыгивает соседний</b> по вертикали или горизонтали в <b>пустую лунку</b> за ним. Перепрыгнутый снимается. Нажми на светящийся шарик слева и прыгни в светящуюся лунку!', done: 'Щёлк! Снятый шарик скатился в <b>желобок</b> по краю.' },
-      { say: 'На квадратных досках прыгают <b>только по вертикали и горизонтали</b>, по диагонали нельзя. Найди возможный прыжок и сделай его!', done: 'Верно! Только прямо.' },
+      { say: 'На досках с лунками рядами и столбцами прыгают <b>только по вертикали и горизонтали</b>, по диагонали нельзя. Найди возможный прыжок и сделай его!', done: 'Верно! Только прямо.' },
       { say: 'Каждый прыжок — один ход, но тот же шарик может <b>прыгать дальше</b>: связывай прыжки, чтобы быстро расчистить доску. Прыгай, пока не останется <b>один шарик</b>!', done: 'Два прыжка подряд — остался один! Когда прыгать больше некому, игра окончена.' },
       { say: 'Цель — <b>оставить один шарик</b>. В <b>лунке ◎</b> с золотым кольцом — <b>идеально</b>! Это старинная фигура «крест»: подумай о порядке.', done: 'Идеально! Ровно один шарик на ◎. Найти порядок — в этом вся прелесть.' },
       { say: 'На треугольной доске прыгают и <b>вдоль наклонных линий</b> (шесть направлений). Сделай наклонный прыжок!', done: 'Здесь можно и наискосок! Другая доска — другое мышление.' },
@@ -128,7 +128,7 @@
       s: [
       { say: 'Bonjour! Ben <b>Bille</b>, Fransa’dan bir bilye. Bugün 17. yüzyıl Fransız sarayında moda olan tek kişilik bulmaca <b>peg solitaire</b>’i öğrenelim! Yalnızca ortası boş bu 33 delikli tahtayla başlıyoruz.' },
       { say: 'Bilye dikey ya da yatay olarak <b>komşu bilyenin üzerinden</b> hemen arkadaki <b>boş deliğe</b> atlar. Atlanan bilye alınır. Soldaki parlayan bilyeye dokun ve parlayan deliğe atlat!', done: 'Tık! Alınan bilye kenardaki <b>oluğa</b> yuvarlandı.' },
-      { say: 'Kare tahtalarda yalnızca <b>dikey ve yatay</b> atlanır, çapraz asla. Mümkün bir atlayış bul ve yap!', done: 'Aynen! Yalnızca düz.' },
+      { say: 'Delikleri satır ve sütun hâlinde dizili tahtalarda yalnızca <b>dikey ve yatay</b> atlanır, çapraz asla. Mümkün bir atlayış bul ve yap!', done: 'Aynen! Yalnızca düz.' },
       { say: 'Her atlayış bir hamledir ama aynı bilye <b>atlamaya devam edebilir</b>: atlayışları zincirleyip hızla temizle. <b>Tek bilye</b> kalana kadar atla!', done: 'Art arda iki atlayış, tek bilye kaldı! Hiçbir bilye atlayamazsa oyun biter.' },
       { say: 'Amaç <b>tek bilye bırakmak</b>. Altın halkadaki <b>◎ deliğinde</b> bırakırsan <b>kusursuz</b>! Bu eski “haç” şekli — sırayı düşün.', done: 'Kusursuz! ◎ deliğinde tam bir bilye. Sırayı bulmak bu bulmacanın asıl keyfi.' },
       { say: 'Üçgen tahtada <b>eğik çizgiler boyunca</b> da atlanır (altı yön). Eğik bir atlayış yap!', done: 'Burada eğik de atlanıyor! Yeni tahta, yeni düşünme biçimi.' },
@@ -138,7 +138,7 @@
       s: [
       { say: 'Bonjour! Aku <b>Bille</b>, kelereng dari Prancis. Hari ini kita belajar <b>peg solitaire</b>, teka-teki untuk satu orang yang populer di istana Prancis abad ke-17. Kita mulai di papan 33 lubang ini, hanya bagian tengahnya yang kosong.' },
       { say: 'Kelereng <b>melompati kelereng di sebelahnya</b>, vertikal atau horizontal, ke <b>lubang kosong</b> di baliknya. Yang dilompati diambil. Ketuk kelereng yang bersinar di kiri dan lompatkan ke lubang yang bersinar!', done: 'Klak! Kelereng yang diambil menggelinding ke <b>alur</b> di tepi papan.' },
-      { say: 'Di papan persegi, lompatan hanya <b>vertikal atau horizontal</b>, tidak pernah diagonal. Cari satu lompatan yang bisa lalu lakukan!', done: 'Betul! Hanya lurus.' },
+      { say: 'Di papan dengan lubang berbaris lurus, lompatan hanya <b>vertikal atau horizontal</b>, tidak pernah diagonal. Cari satu lompatan yang bisa lalu lakukan!', done: 'Betul! Hanya lurus.' },
       { say: 'Setiap lompatan satu langkah, tapi kelereng yang sama boleh <b>terus melompat</b>: rangkai lompatan untuk mengosongkan papan dengan cepat. Lompatlah sampai tinggal <b>satu kelereng</b>!', done: 'Dua lompatan beruntun, tinggal satu! Kalau tak ada kelereng yang bisa melompat, permainan selesai.' },
       { say: 'Tujuannya <b>menyisakan satu kelereng</b>. Di <b>lubang ◎</b> bercincin emas itu <b>sempurna</b>! Ini bentuk kuno “salib” — pikirkan urutannya.', done: 'Sempurna! Tepat satu kelereng di ◎. Mencari urutannya itulah serunya.' },
       { say: 'Di papan segitiga, kelereng juga melompat <b>sepanjang garis miring</b> (enam arah). Lakukan lompatan miring!', done: 'Di sini bisa miring juga! Papan baru, cara berpikir baru.' },
@@ -148,7 +148,7 @@
       s: [
       { say: 'बोंजूर! मैं <b>बीये</b> हूँ, फ़्रांस की एक कंचे की गोली। आज सीखते हैं <b>पेग सॉलिटेयर</b>, अकेले की वह पहेली जो 17वीं सदी में फ़्रांसीसी दरबार में बहुत चली। हम इस 33 छेदों वाले बोर्ड से शुरू करेंगे, जिसमें सिर्फ़ बीच का छेद ख़ाली है।' },
       { say: 'गोली ऊपर-नीचे या दाएँ-बाएँ <b>पड़ोसी गोली के ऊपर से</b> ठीक आगे के <b>ख़ाली छेद</b> में कूदती है। जिसके ऊपर से कूदी, वह हट जाती है। बाईं ओर की चमकती गोली पर टैप करो और चमकते छेद में कुदाओ!', done: 'खट! हटी हुई गोली किनारे की <b>नाली</b> में लुढ़क गई।' },
-      { say: 'चौकोर बोर्डों पर <b>सिर्फ़ ऊपर-नीचे या दाएँ-बाएँ</b> कूदते हैं, तिरछा कभी नहीं। एक संभव छलाँग ढूँढो और लगाओ!', done: 'बिल्कुल! सिर्फ़ सीधा।' },
+      { say: 'पंक्तियों-स्तंभों में छेदों वाले बोर्डों पर <b>सिर्फ़ ऊपर-नीचे या दाएँ-बाएँ</b> कूदते हैं, तिरछा कभी नहीं। एक संभव छलाँग ढूँढो और लगाओ!', done: 'बिल्कुल! सिर्फ़ सीधा।' },
       { say: 'हर छलाँग एक चाल है, पर वही गोली <b>लगातार कूद सकती है</b>: छलाँगें जोड़कर जल्दी साफ़ करो। तब तक कूदो जब तक <b>एक ही गोली</b> न बचे!', done: 'लगातार दो छलाँगें, एक गोली बची! जब कोई गोली न कूद सके, खेल ख़त्म।' },
       { say: 'लक्ष्य है <b>सिर्फ़ एक गोली छोड़ना</b>। सुनहरे छल्ले वाले <b>◎ छेद</b> में बचे तो <b>परफ़ेक्ट</b>! यह पुराना “क्रॉस” आकार है — क्रम सोचो।', done: 'परफ़ेक्ट! ◎ पर ठीक एक गोली। क्रम ढूँढना ही इस पहेली का मज़ा है।' },
       { say: 'त्रिकोण बोर्ड पर <b>तिरछी रेखाओं के साथ</b> भी कूद सकते हैं (छह दिशाएँ)। एक तिरछी छलाँग लगाओ!', done: 'यहाँ तिरछा भी चलता है! नया बोर्ड, सोचने का नया ढंग।' },
@@ -158,7 +158,7 @@
       s: [
       { say: 'بونجور! أنا <b>بييه</b>، كرة زجاجية من فرنسا. اليوم نتعلم <b>سوليتير الأوتاد</b>، لغز اللاعب الواحد الذي انتشر في البلاط الفرنسي في القرن السابع عشر. نبدأ على هذه اللوحة ذات الـ33 حفرة، والوسط وحده فارغ.' },
       { say: 'تقفز الكرة <b>فوق جارتها</b> عموديًا أو أفقيًا إلى <b>الحفرة الفارغة</b> خلفها مباشرة، وتُرفع الكرة التي قُفز فوقها. المس الكرة المضيئة على اليسار واقفز بها إلى الحفرة المضيئة!', done: 'طَق! تدحرجت الكرة المأخوذة إلى <b>المجرى</b> على الحافة.' },
-      { say: 'على اللوحات المربعة يكون القفز <b>عموديًا أو أفقيًا فقط</b>، وليس قطريًا أبدًا. جد قفزة ممكنة ونفّذها!', done: 'تمامًا! مستقيمًا فقط.' },
+      { say: 'على اللوحات ذات الحفر المصفوفة صفوفًا وأعمدة يكون القفز <b>عموديًا أو أفقيًا فقط</b>، وليس قطريًا أبدًا. جد قفزة ممكنة ونفّذها!', done: 'تمامًا! مستقيمًا فقط.' },
       { say: 'كل قفزة نقلة، لكن الكرة نفسها تستطيع <b>مواصلة القفز</b>: صِل القفزات لتُفرغ اللوحة بسرعة. اقفز حتى تبقى <b>كرة واحدة</b>!', done: 'قفزتان متتاليتان وبقيت واحدة! حين لا تستطيع أي كرة القفز تنتهي اللعبة.' },
       { say: 'الهدف <b>إبقاء كرة واحدة</b>. وعلى <b>الحفرة ◎</b> ذات الحلقة الذهبية تكون <b>مثاليًا</b>! هذا شكل «الصليب» القديم — فكّر في الترتيب.', done: 'مثالي! كرة واحدة تمامًا على ◎. إيجاد الترتيب هو متعة هذا اللغز.' },
       { say: 'على اللوحة المثلثة يمكن القفز أيضًا <b>على الخطوط المائلة</b> (ست جهات). نفّذ قفزة مائلة!', done: 'هنا يجوز القفز المائل أيضًا! لوحة جديدة وطريقة تفكير جديدة.' },

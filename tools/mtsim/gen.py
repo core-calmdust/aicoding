@@ -10,11 +10,14 @@
 #    another (threads − 10) of them are the slow ones — simcore.h)
 #   ./sim_<game> 1,2,4,8 3 -1 1 1     (threads, the 1-thread budget in M nodes → the depth D, positions (-1 all / 0,3,…),
 #                                      delayed table stores, delayed busy marks)
-# game: xiangqi, janggi, chess, shogi, tafl (2026-11-11: -DNATIVE, net_tafl.bin). Works on the engines before and after the busy marks (the marks' functions are
+# game: xiangqi, janggi, chess, shogi, tafl (2026-11-11: -DNATIVE, net_tafl.bin), amazons (2026-11-11: core.c's alpha-beta search,
+#   clang -O2 -DMT -DNATIVE (the bit boards use clang's vector builtins), the clock in evaluations: SIM_NODE() in ev();
+#   positions: node <repo>/amazons/tools/mtsim_pos.js; delayed stores 0 — its table and cache are not rewritten here).
+# Works on the engines before and after the busy marks (the marks' functions are
 # rewritten only when present).
 import sys, re
 repo, game = sys.argv[1], sys.argv[2]
-s = open(f'{repo}/{game}/engine.c').read()
+s = open(f'{repo}/{game}/' + ('core.c' if game == 'amazons' else 'engine.c')).read()
 # (2026-11-11) Praline (shared/praline/, claude/praline-spec.md): the engines that include its headers get them inlined here,
 # so that the rewrites below (the busy marks' accessors) reach the common code too
 s = re.sub(r'#include "\.\./shared/praline/([a-z_]+\.h)"\n', lambda m: open(f'{repo}/shared/praline/{m.group(1)}').read(), s)
@@ -58,6 +61,8 @@ elif game == 'tafl':    # (2026-11-11; built with -DNATIVE: its native block, wi
     rep('u64 w = bk[2 * i + 1], kx = bk[2 * i];', 'u64 w = SIMR(&bk[2 * i + 1]), kx = SIMR(&bk[2 * i]);')
     rep('bk[2 * j + 1] = w; bk[2 * j] = key ^ w;', 'SIMW(&bk[2 * j + 1], w); SIMW(&bk[2 * j], key ^ w);')
     rep('  nodes++;\n', '  nodes++; SIM_NODE();\n', 0)
+elif game == 'amazons':
+    rep('  init(); initBB(); evn++;\n', '  init(); initBB(); evn++; SIM_NODE();\n')
 else:
     raise SystemExit('game?')
 

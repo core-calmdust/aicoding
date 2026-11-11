@@ -1,4 +1,4 @@
-// Amazons — the evaluation and the two-stage candidate list in WebAssembly (tools/build.sh → core-wasm.js).
+// Amazons — the evaluation, the two-stage candidate list, the alpha-beta search (2026-11-11) and the MCTS in WebAssembly (tools/build.sh → core-wasm.js, core_mt.wasm).
 // The same arithmetic, in the same order, as evalFor / cands in engine.js: the values are identical (checked by
 // tools/check_wasm.js on random positions), engine.js falls back to its JS when this module is missing.
 // Memory (shared with JS): SQ[100] the board (0 empty, 1 White, 2 Black, 3 arrow), Q[8] the amazons' squares (−1 none),
@@ -16,6 +16,10 @@
 #define TLS
 #endif
 typedef signed char i8; typedef unsigned char u8;
+#if !defined(NATIVE) && !defined(__wasm_bulk_memory__)
+// (the struct copies of the alpha-beta search: no libc here)
+void *memcpy(void *d, const void *s, unsigned long n) { unsigned char *a = d; const unsigned char *b = s; while (n--) *a++ = *b++; return d; }
+#endif
 TLS i8 SQ[NN + 12]; TLS i8 Q[8];   // (SQ: 12 more bytes, never used, so that a 16-byte row read from square 90 stays inside it)
 TLS int OM[8192]; TLS int OS[8192];
 static TLS int evn = 0;
@@ -26,8 +30,10 @@ static TLS u8 DA[PN], DB[PN], KA[PN], KB[PN], QU[PN + 8];
 static double P2N[INF + 2], CL6[2 * ML + 1];   // CL6: clamp6(d) at d + ML
 static int RAY[NN][8][10], RAYN[NN][8], NBS[NN][8], NBN[NN];
 static int inited = 0;
+static void initZ(void);
 static void init(void) {
   if (inited) return;
+  initZ();
   static const int DR[8] = { -1, 1, 0, 0, -1, -1, 1, 1 }, DC[8] = { 0, 0, -1, 1, -1, 1, -1, 1 };
   for (int i = 0; i < NN; i++) {
     int r = i / 10, c = i % 10; PI[i] = (u8)((r + 1) * PW + c + 1); NBN[i] = 0;
@@ -287,19 +293,24 @@ typedef struct { int m, first; float n, w, p, mm, sc; u8 nch, exp, full; i8 proo
 // sc: the evaluation of the node from the view of the player who moved into it (cand's score); p: its prior value
 // proof: +1 = the player who moved into this node wins (the side to move here is lost), −1 = loses
 static Node *T = 0; static int NODES = 0, CAP = 0;   // NODES: the pool in use (mcts_limit), CAP: the nodes allocated
+typedef int Move;
 #ifdef MT
+// (2026-11-11) the alpha-beta search's threads are Praline's Young Brothers Wait (shared/praline/, claude/praline-spec.md): its
+// shared state here (gStop and threadId are the MCTS's too); the game's part of a split point: the node's position, the root
+// candidates' scores (a win is not searched), the moves themselves in mv
+#define SP_MV 32
+#define PL_SP_FIELDS i8 psq[NN]; i8 pq[8]; int pside; unsigned ph1, ph2; int sc[SP_MV];
+#include "../shared/praline/praline.h"
 typedef struct { volatile int v; int pad[15]; } __attribute__((aligned(64))) LineV;
-static LineV nNodes_, gStop_, gTree_, gActive_, gHS_, gHE_;
+static LineV nNodes_, gTree_, gActive_, gHS_, gHE_;
 #define nNodes nNodes_.v
 static LineV vNodes_;
 #define vNodes vNodes_.v
-#define gStop gStop_.v
 #define gTree gTree_.v
 #define gActive gActive_.v
 #define gHS gHS_.v
 #define gHE gHE_.v
 static int gTreeGen = 0;
-static TLS int threadId = 0;
 #define EXPD(nd) (__atomic_load_n(&(nd)->exp, __ATOMIC_ACQUIRE) == 1)
 static int newNodes(int k) { if (__atomic_load_n(&nNodes, __ATOMIC_SEQ_CST) + k > NODES) return -1; int f = __atomic_fetch_add(&nNodes, k, __ATOMIC_SEQ_CST); if (f + k > NODES) return -1; return f; }
 #else
@@ -632,6 +643,469 @@ EXPORT(rvp) int *rvp(void) { return RV; }
 EXPORT(rpp) int *rpp(void) { return RP; }
 EXPORT(pvp) int *pvp(void) { return PVA; }
 
+// ================================================================ alpha-beta search (2026-11-11: the loop of engine.js's search in C)
+// The same search as engine.js's JS (negamax alpha-beta, PVS, the transposition table, iterative deepening, the cache of the
+// candidate lists), node for node: the same table semantics (a Map keyed by the position's h1, an entry replaced by every store,
+// cleared past 400,000 entries; the candidate lists keyed by h1 and qkeep, cleared past 120,000), the same checks of the clock
+// and the evaluation budget every 32 nodes, the same order of the moves (cand() and a stable sort). engine.js keeps the root
+// candidates (with the review's extra moves), the depth loop of the analysis and the result; tools/check_ab.js compares this with
+// the JS search (moves, values, nodes and evaluations).
+// -DMT (core_mt.wasm): the threads split the nodes with Praline's Young Brothers Wait (praline_ybw.h below, as the other wasm
+// engines), one shared table and one shared cache of candidate lists (lockless: the table's entries checked by the position's
+// 64-bit key; the cache by a sequence lock). One thread (no helper) searches exactly as without MT.
+static unsigned Z1[3][NN], Z2[3][NN], ZS1, ZS2;
+static void initZ(void) {
+  unsigned zs = 0x2545F491u;
+#define ZR() (zs ^= zs << 13, zs ^= zs >> 17, zs ^= zs << 5, zs)
+  for (int k = 0; k < 3; k++) for (int i = 0; i < NN; i++) { Z1[k][i] = ZR(); Z2[k][i] = ZR(); }
+  ZS1 = ZR(); ZS2 = ZR();
+#undef ZR
+}
+static TLS int abSide;              // 0 = White to move (engine.js pos.side)
+static TLS unsigned H1, H2;          // the position's two 32-bit keys (pos.h1, pos.h2)
+static inline void abPlay(Move m) {
+  int f = m & 127, t = (m >> 7) & 127, a = m >> 14, p = abSide + 1;
+  SQ[f] = 0; SQ[t] = (i8)p; SQ[a] = 3;
+  for (int k = 0; k < 8; k++) if (Q[k] == f) { Q[k] = (i8)t; break; }
+  H1 ^= Z1[p - 1][f] ^ Z1[p - 1][t] ^ Z1[2][a] ^ ZS1; H2 ^= Z2[p - 1][f] ^ Z2[p - 1][t] ^ Z2[2][a] ^ ZS2;
+  abSide ^= 1;
+}
+static inline void abUnplay(Move m) {
+  int f = m & 127, t = (m >> 7) & 127, a = m >> 14;
+  abSide ^= 1; int p = abSide + 1;
+  SQ[a] = 0; SQ[t] = 0; SQ[f] = (i8)p;
+  for (int k = 0; k < 8; k++) if (Q[k] == t) { Q[k] = (i8)f; break; }
+  H1 ^= Z1[p - 1][f] ^ Z1[p - 1][t] ^ Z1[2][a] ^ ZS1; H2 ^= Z2[p - 1][f] ^ Z2[p - 1][t] ^ Z2[2][a] ^ ZS2;
+}
+static int clearLine(int f, int t, int skip) {
+  if (f == t) return 0;
+  int r0 = f / 10, c0 = f % 10, r1 = t / 10, c1 = t % 10, dr = (r1 > r0) - (r1 < r0), dc = (c1 > c0) - (c1 < c0);
+  int ar = r1 > r0 ? r1 - r0 : r0 - r1, ac = c1 > c0 ? c1 - c0 : c0 - c1;
+  if (!(r0 == r1 || c0 == c1 || ar == ac)) return 0;
+  for (int r = r0 + dr, c = c0 + dc;; r += dr, c += dc) { int i = r * 10 + c; if (SQ[i] && i != skip) return 0; if (i == t) return 1; }
+}
+static int isLegal(Move m) {
+  if (m < 0) return 0;
+  int f = m % 128, t = (m / 128) % 128, a = m / 16384, p = abSide + 1;
+  if (f >= NN || t >= NN || a >= NN || SQ[f] != p) return 0;
+  if (!clearLine(f, t, -1)) return 0;
+  return clearLine(t, a, f);
+}
+// ---- the state of a search (engine.js: nodes, evals, tEnd, evalLimit, stop)
+static TLS unsigned long long nodes;
+static TLS int stopFlag;             // 1 the clock / budget / the page stopped it; 2, 3: Praline's (praline_ybw.h)
+static TLS double tEnd = 1e300, evalLimit = 1e300;
+static TLS double abEv;              // this thread's evaluations in the search (cand / ev calls)
+static double evBase;                // the evaluations counted before (engine.js's root candidates)
+static int abExact = 1;              // one thread: the tables behave exactly as engine.js's Maps (cleared mid-search when full)
+#ifdef MT
+static volatile long long gEvN;      // every thread's evaluations of the job (flushed every 32 nodes)
+static TLS double abEvFl;
+static inline double evTotal(void) { const long long d = (long long)(abEv - abEvFl); if (d) { __atomic_fetch_add(&gEvN, d, __ATOMIC_RELAXED); abEvFl += d; } return evBase + (double)__atomic_load_n(&gEvN, __ATOMIC_RELAXED); }
+#else
+static inline double evTotal(void) { return evBase + abEv; }
+#endif
+static inline int abEval(void) { int e0 = evn, t = abSide + 1, v = ev(t, t); abEv += evn - e0; evn = e0; return v; }
+// ---- memory of the tables: grown at the end of the memory (one thread: as they fill; MT: fixed)
+#ifndef NATIVE
+static void *growMem(unsigned long bytes) {
+  unsigned long cur = __builtin_wasm_memory_size(0) * 65536UL;
+  long r = __builtin_wasm_memory_grow(0, (bytes + 65535) / 65536); if (r < 0) return 0;
+  return (void *)cur;   // (new pages are zero)
+}
+#else
+static void *growMem(unsigned long bytes) { return calloc(1, bytes); }
+#endif
+static void zero(void *p, unsigned long n) { unsigned long long *q = (unsigned long long *)p; for (unsigned long i = 0; i < n / 8; i++) q[i] = 0; }
+// ---- the transposition table: slot = { kw = h1 | h2 << 32 (0: empty), a = move 21 | flag 2 | depth 8 | value 16 | h2's low 16 | 1 << 63 }
+typedef struct { u64 kw, a; } TTS;
+#define TT_CLEAR 400000
+#ifdef MT
+#define TT_BITS 20
+static TTS TTB[1 << TT_BITS];
+static TTS *TTp = TTB; static unsigned ttMask = (1u << TT_BITS) - 1;
+#else
+static TTS *TTp = 0; static unsigned ttMask = 0;
+#endif
+static volatile int ttCount;
+static void ttClear(void) { if (TTp) zero(TTp, (unsigned long)(ttMask + 1) * sizeof(TTS)); ttCount = 0; }
+#ifndef MT
+static int ttGrow(void) {   // (one thread) twice the slots, every entry moved (the same entries: a Map has no size)
+  unsigned nb = ttMask ? (ttMask + 1) * 2 : 1u << 15;
+  TTS *n = (TTS *)growMem((unsigned long)nb * sizeof(TTS)); if (!n) return 0;
+  for (unsigned i = 0; TTp && i <= ttMask; i++) if (TTp[i].kw) { unsigned j = (unsigned)TTp[i].kw & (nb - 1); while (n[j].kw) j = (j + 1) & (nb - 1); n[j] = TTp[i]; }
+  TTp = n; ttMask = nb - 1; return 1;
+}
+#endif
+typedef struct { int d, v, f; Move m; } TTE;
+static int ttGet(TTE *e) {
+  if (!TTp) return 0;
+  const u64 want = (u64)H1 | (u64)H2 << 32;
+  for (unsigned i = H1 & ttMask, k = 0; k <= ttMask; i = (i + 1) & ttMask, k++) {
+    u64 kw = __atomic_load_n(&TTp[i].kw, __ATOMIC_ACQUIRE);
+    if (!kw) return 0;
+    if ((unsigned)kw != H1) continue;
+    if (kw != want) return 0;
+    u64 a = __atomic_load_n(&TTp[i].a, __ATOMIC_ACQUIRE);
+    if (!(a >> 63) || ((a >> 47) & 0xFFFF) != (H2 & 0xFFFF)) return 0;
+    e->m = (Move)(a & 0x1FFFFF); e->f = (int)((a >> 21) & 3); e->d = (int)((a >> 23) & 255); e->v = (int)(short)(unsigned short)((a >> 31) & 0xFFFF);
+    return 1;
+  }
+  return 0;
+}
+static void ttPut(int d, int v, int f, Move m, int ply) {
+  int sv = v > WINT ? v + ply : v < -WINT ? v - ply : v;
+  if (abExact && ttCount > TT_CLEAR) ttClear();
+#ifndef MT
+  if (!TTp || (unsigned)(ttCount + 1) * 2 > ttMask + 1) { if (!ttGrow() && !TTp) return; }
+#endif
+  const u64 want = (u64)H1 | (u64)H2 << 32;
+  const u64 a = (u64)(m & 0x1FFFFF) | (u64)(f & 3) << 21 | (u64)(d > 255 ? 255 : d < 0 ? 0 : d) << 23 | (u64)(unsigned short)(short)sv << 31 | (u64)(H2 & 0xFFFF) << 47 | 1ull << 63;
+  for (unsigned i = H1 & ttMask, k = 0; k <= ttMask && (abExact || k < 256u); i = (i + 1) & ttMask, k++) {
+    u64 kw = __atomic_load_n(&TTp[i].kw, __ATOMIC_ACQUIRE);
+    if (!kw) {
+#ifdef MT
+      if (!abExact && ttCount > (int)(ttMask / 4 * 3)) return;   // (several threads: never cleared mid-search; nearly full, nothing new)
+      if (!__atomic_compare_exchange_n(&TTp[i].kw, &kw, want, 0, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) { i = (i - 1) & ttMask; k--; continue; }   // (taken meanwhile: look again)
+#else
+      TTp[i].kw = want;
+#endif
+      __atomic_fetch_add(&ttCount, 1, __ATOMIC_RELAXED);
+      __atomic_store_n(&TTp[i].a, a, __ATOMIC_RELEASE);
+      return;
+    }
+    if ((unsigned)kw != H1) continue;
+    if (kw != want) __atomic_store_n(&TTp[i].kw, want, __ATOMIC_RELEASE);   // (the same h1, another position: replaced, as a Map's set)
+    __atomic_store_n(&TTp[i].a, a, __ATOMIC_RELEASE);
+    return;
+  }
+}
+// ---- the cache of candidate lists (engine.js CC): the best CK of a position for a qkeep, win scores relative to the node
+#define CK 10
+#define CC_CLEAR 120000
+typedef struct { u64 kw; volatile unsigned seq; unsigned h2; int n; Move m[CK]; short s[CK]; short pad; } CCS;
+#ifdef MT
+#define CC_BITS 18
+static CCS CCB[1 << CC_BITS];
+static CCS *CCp = CCB; static unsigned ccMask = (1u << CC_BITS) - 1;
+#else
+static CCS *CCp = 0; static unsigned ccMask = 0;
+#endif
+static volatile int ccCount;
+static void ccClear(void) { if (CCp) zero(CCp, (unsigned long)(ccMask + 1) * sizeof(CCS)); ccCount = 0; }
+static inline unsigned ccIdx(u64 kw) { return ((unsigned)kw ^ (unsigned)(kw >> 32) * 0x9E3779B9u) & ccMask; }
+#ifndef MT
+static int ccGrow(void) {
+  unsigned nb = ccMask ? (ccMask + 1) * 2 : 1u << 12;
+  CCS *n = (CCS *)growMem((unsigned long)nb * sizeof(CCS)); if (!n) return 0;
+  unsigned om = ccMask; CCS *o = CCp; ccMask = nb - 1;
+  for (unsigned i = 0; o && i <= om; i++) if (o[i].kw) { unsigned j = ccIdx(o[i].kw); while (n[j].kw) j = (j + 1) & ccMask; n[j] = o[i]; }
+  CCp = n; return 1;
+}
+#endif
+typedef struct { Move m; int s; } CI;
+static TLS CI LT[CK];
+// the top CK of cand()'s list in the order of a stable sort by score, best first (engine.js: out.sort((x, y) => y.s - x.s))
+static int topStable(int n) {
+  int k = 0;
+  for (int i = 0; i < n; i++) {
+    int s = OS[i];
+    if (k == CK && s <= LT[CK - 1].s) continue;
+    int j = k < CK ? k++ : CK - 1;
+    while (j > 0 && LT[j - 1].s < s) { LT[j] = LT[j - 1]; j--; }
+    LT[j].m = OM[i]; LT[j].s = s;
+  }
+  return k;
+}
+// candsC(pos, K, ply, qkeep): the first K of the cached list into out (win scores − ply); returns their number
+static int candsC(CI *out, int K, int ply, int qkeep) {
+  const u64 want = (u64)H1 | (u64)qkeep << 32 | 1ull << 40;
+  int n = -1; unsigned slot = ~0u;
+  if (CCp) for (unsigned i = ccIdx(want), k = 0; k <= ccMask; i = (i + 1) & ccMask, k++) {
+    u64 kw = __atomic_load_n(&CCp[i].kw, __ATOMIC_ACQUIRE);
+    if (!kw) { slot = i; break; }
+    if (kw != want) continue;
+    slot = i;
+    CCS *c = &CCp[i]; unsigned s1 = __atomic_load_n(&c->seq, __ATOMIC_ACQUIRE);
+    if (s1 & 1) { slot = ~1u; break; }   // (another thread writes it: no store)
+    if (c->h2 == H2) { int nn = c->n; for (int j = 0; j < nn && j < CK; j++) { LT[j].m = c->m[j]; LT[j].s = c->s[j]; } __atomic_thread_fence(__ATOMIC_ACQUIRE); if (__atomic_load_n(&c->seq, __ATOMIC_RELAXED) == s1) n = nn; }
+    break;
+  }
+  if (n < 0) {
+    int e0 = evn, nc = cand(abSide + 1, qkeep, 0); abEv += evn - e0; evn = e0;   // (counted here: evals_taken() stays the caller's)
+    n = topStable(nc);
+    if (slot != ~1u) {
+      if (abExact && ccCount > CC_CLEAR) { ccClear(); slot = ~0u; }
+#ifndef MT
+      if (!CCp || (unsigned)(ccCount + 1) * 2 > ccMask + 1) { if (ccGrow() || CCp) slot = ~0u; }
+      if (slot == ~0u && CCp) { slot = ccIdx(want); while (CCp[slot].kw && CCp[slot].kw != want) slot = (slot + 1) & ccMask; }
+#else
+      if (slot == ~0u) { slot = ccIdx(want); for (unsigned k = 0; k < 256 && CCp[slot].kw && CCp[slot].kw != want; k++) slot = (slot + 1) & ccMask; }
+#endif
+      if (CCp && slot != ~0u) {
+        CCS *c = &CCp[slot]; u64 kw = __atomic_load_n(&c->kw, __ATOMIC_ACQUIRE); int ok = 1;
+        if (!kw) {
+#ifdef MT
+          if (!abExact && ccCount > (int)(ccMask / 4 * 3)) ok = 0;
+          else if (!__atomic_compare_exchange_n(&c->kw, &kw, want, 0, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) ok = kw == want;
+          else __atomic_fetch_add(&ccCount, 1, __ATOMIC_RELAXED);
+#else
+          c->kw = want; ccCount++;
+#endif
+        } else ok = kw == want;
+        unsigned s1 = __atomic_load_n(&c->seq, __ATOMIC_ACQUIRE);
+        if (ok && !(s1 & 1) && __atomic_compare_exchange_n(&c->seq, &s1, s1 + 1, 0, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) {
+          c->h2 = H2; c->n = n; for (int j = 0; j < n; j++) { c->m[j] = LT[j].m; c->s[j] = (short)LT[j].s; }
+          __atomic_store_n(&c->seq, s1 + 2, __ATOMIC_RELEASE);
+        }
+      }
+    }
+  }
+  int k = K < n ? K : n;
+  for (int j = 0; j < k; j++) { out[j].m = LT[j].m; out[j].s = LT[j].s > WINT ? LT[j].s - ply : LT[j].s; }
+  return k;
+}
+// ---- the search
+static const int KW[16] = { 0, 1, 8, 9, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10 };   // moves searched at each remaining depth
+#define QKEEP_BASE 14
+#define NEGV (-1000000)
+#ifdef MT
+#ifndef BUSY_D
+#define BUSY_D 2
+#endif
+static inline u64 abKey(void) { return (u64)H2 << 32 | H1; }
+static inline void mtCheck(void) {
+  if (now() > tEnd || evTotal() > evalLimit || __atomic_load_n(&gStop, __ATOMIC_RELAXED)) stopFlag = 1;
+  else if (curSP && chainStopped(curSP, curIdx)) stopFlag = 2;
+  else if (dupMode && gOpenN > 0 && dupLeave()) stopFlag = 3;
+}
+static inline int timeUp(void) { mtCheck(); return stopFlag; }
+static int spFillPos(SPt *s) {
+  for (int i = 0; i < NN; i++) s->psq[i] = SQ[i]; for (int k = 0; k < 8; k++) s->pq[k] = Q[k];
+  s->pside = abSide; s->ph1 = H1; s->ph2 = H2; return 1;
+}
+static void spLoadPos(const SPt *s, int top, int fresh) {
+  for (int i = 0; i < NN; i++) SQ[i] = s->psq[i]; for (int k = 0; k < 8; k++) Q[k] = s->pq[k];
+  abSide = s->pside; H1 = s->ph1; H2 = s->ph2; (void)top; (void)fresh;
+}
+#else
+static inline int timeUp(void) { if (now() > tEnd || evTotal() > evalLimit) stopFlag = 1; return stopFlag; }
+#endif
+static int search(int d, int a, int b, int ply) {
+  nodes++;
+#ifdef SIM_NODE_AB
+  SIM_NODE_AB();
+#endif
+  if ((nodes & 31) == 0 && timeUp()) return 0;
+  if (stopFlag) return 0;
+  if (!canMove(abSide + 1)) return -(WIN - ply);
+  TTE e; const int hit = ttGet(&e);
+  if (hit && e.d >= d) {
+    int v = e.v > WINT ? e.v - ply : e.v < -WINT ? e.v + ply : e.v;
+    if (e.f == 0) return v; if (e.f == 1 && v >= b) return v; if (e.f == 2 && v <= a) return v;
+  }
+  if (d <= 0) return abEval();
+  CI C[CK + 1];
+  int n = candsC(C, d >= 2 ? KW[d < 15 ? d : 15] : 1, ply, d >= 3 ? QKEEP_BASE : 10);
+  if (!n) return -(WIN - ply);
+  if (d == 1) { int v = C[0].s; ttPut(d, v, 0, C[0].m, ply); return v; }
+  const Move em = hit ? e.m : -1;
+  if (em >= 0) {
+    int i = -1; for (int j = 0; j < n; j++) if (C[j].m == em) { i = j; break; }
+    if (i > 0) { CI x = C[i]; for (int j = i; j > 0; j--) C[j] = C[j - 1]; C[0] = x; }
+    else if (i < 0 && isLegal(em)) { for (int j = n; j > 0; j--) C[j] = C[j - 1]; C[0].m = em; C[0].s = 0; n++; }
+  }
+  const int a0 = a; int best = NEGV; Move bm = C[0].m;
+#ifdef MT
+  int defI[CK + 1], nDef = 0, noSplit = 0;
+  for (int k = 0; k < n + nDef; k++) {
+    // YBW: the first move is done and a helper is idle (or an owner above waits): the remaining moves (in this loop's order, the
+    // moves put off after them) go to a split point — not when a win is among them (it ends the loop at once, as below)
+    if (k >= 1 && k < n && !noSplit && d >= splitD && (gIdle > 0 || (gWaitN > 0 && spWanted()))) {
+      int ns = n - k + nDef, win = 0; for (int j = k; j < n; j++) if (C[j].s > WINT) win = 1;
+      SPt *s = !win && ns >= 2 && ns <= SP_MV ? spAlloc() : 0;
+      if (s && spFillPos(s)) {
+        int q = 0; for (int j = k; j < n; j++) { s->mv[q] = C[j].m; s->sc[q++] = C[j].s; }
+        for (int j = 0; j < nDef; j++) { s->mv[q] = C[defI[j]].m; s->sc[q++] = C[defI[j]].s; }
+        s->n = q; s->depth = d; s->ply = ply; s->root = 0; s->all = 0; s->pv = 0; s->beta = b; s->alpha = a;
+        spRun(s, &best, &bm, 0);
+        if (stopFlag) return best == NEGV ? C[0].s : best;
+        break;
+      }
+      if (s) spRelease(s);
+      noSplit = 1;
+    }
+    const int i = k < n ? k : defI[k - n];
+    const Move m = C[i].m;
+    if (C[i].s > WINT) { best = C[i].s; bm = m; if (best > a) a = best; break; }
+    abPlay(m);
+    if (k < n && k > 0 && d >= BUSY_D && nDef < CK + 1 && busyOther(abKey())) { abUnplay(m); defI[nDef++] = i; continue; }
+    const u64 mkKey = abKey(); const int mk = d >= BUSY_D ? busySet(mkKey) : -1;
+    int v;
+    if (k == 0) v = -search(d - 1, -b, -a, ply + 1);
+    else { v = -search(d - 1, -a - 1, -a, ply + 1); if (v > a && v < b && !stopFlag) v = -search(d - 1, -b, -a, ply + 1); }
+    if (mk >= 0) busyClear(mkKey, mk);
+#else
+  for (int i = 0; i < n; i++) {
+    const Move m = C[i].m;
+    if (C[i].s > WINT) { best = C[i].s; bm = m; if (best > a) a = best; break; }
+    abPlay(m);
+    int v;
+    if (i == 0) v = -search(d - 1, -b, -a, ply + 1);
+    else { v = -search(d - 1, -a - 1, -a, ply + 1); if (v > a && v < b && !stopFlag) v = -search(d - 1, -b, -a, ply + 1); }
+#endif
+    abUnplay(m);
+    if (stopFlag) return best == NEGV ? C[0].s : best;
+    if (v > best) { best = v; bm = m; if (v > a) { a = v; if (a >= b) break; } }
+  }
+  ttPut(d, best, best <= a0 ? 2 : best >= b ? 1 : 0, bm, ply);
+  return best;
+}
+#ifdef MT
+// ---- Praline's glue (praline_ybw.h)
+static int spSearch(SPt *s, int i, int a) {
+  const int b = s->beta, d1 = s->depth - 1, ply = s->ply; const Move m = s->mv[i];
+  if (s->root && (s->depth <= 1 || s->sc[i] > WINT)) return s->sc[i];   // (the root: a win or depth 1 is the candidate's score)
+  abPlay(m);
+  const u64 mkKey = abKey(); const int mk = !s->all && s->depth >= BUSY_D ? busySet(mkKey) : -1;
+  int v;
+  if (s->all) v = -search(d1, -WIN - 1, WIN + 1, ply + 1);
+  else { v = -search(d1, -a - 1, -a, ply + 1); if (v > a && v < b && !stopFlag) v = -search(d1, -b, -a, ply + 1); }
+  if (mk >= 0) busyClear(mkKey, mk);
+  abUnplay(m);
+  return v;
+}
+static void spCutoff(const SPt *s, int i) { (void)s; (void)i; }   // (no killers / history)
+static inline int spTop(void) { return 0; }
+static void waitCheck(void) { SIM_IDLE(); mtCheck(); }
+static void spIdleReset(int fresh) { nodes = 0; tEnd = 1e300; evalLimit = 1e300; abEv = 0; abEvFl = 0; (void)fresh; }
+#include "../shared/praline/praline_ybw.h"
+#endif
+// ---- the host interface. The root: SQ / Q (the lead's), its side and keys, and the root candidates RLM / RLS (engine.js's
+// list, in its order); AOM / AOV / AR: the answers.
+int RLM[64], RLS[64], AOM[64], AOV[64];
+static double AR[4];
+static i8 ARSQ[NN], ARQ[8]; static int ARside, ARn; static unsigned ARh1, ARh2;
+static void abLoadRoot(void) { for (int i = 0; i < NN; i++) SQ[i] = ARSQ[i]; for (int k = 0; k < 8; k++) Q[k] = ARQ[k]; abSide = ARside; H1 = ARh1; H2 = ARh2; }
+EXPORT(rlmp) int *rlmp(void) { return RLM; }
+EXPORT(rlsp) int *rlsp(void) { return RLS; }
+EXPORT(aomp) int *aomp(void) { return AOM; }
+EXPORT(aovp) int *aovp(void) { return AOV; }
+// the root: SQ / Q as written by engine.js, side 0 / 1, its keys, n root candidates in RLM / RLS
+EXPORT(ab_root) void ab_root(int side, double h1, double h2, int n) {
+  init(); initBB();
+  for (int i = 0; i < NN; i++) ARSQ[i] = SQ[i]; for (int k = 0; k < 8; k++) ARQ[k] = Q[k];
+  ARside = side; ARh1 = (unsigned)h1; ARh2 = (unsigned)h2; ARn = n > 64 ? 64 : n;
+  abLoadRoot();
+}
+// the search's state from engine.js before every call (its nodes, evals, tEnd, evalLimit, stop: one search may be several calls —
+// the analysis's depths); threads 1 = the exact one-thread tables. Read back with ab_nodes / ab_evals / ab_stopped.
+EXPORT(ab_sync) void ab_sync(double nodes_, double evals_, double tEnd_, double evalLimit_, int stop_, int threads) {
+  init(); initBB();
+  nodes = (unsigned long long)nodes_; abEv = 0; evBase = evals_; tEnd = tEnd_; evalLimit = evalLimit_; stopFlag = stop_ ? 1 : 0; abExact = threads <= 1;
+#ifdef MT
+  abEvFl = 0; __atomic_store_n(&gEvN, 0, __ATOMIC_RELAXED);
+  if (!abExact) { if (ttCount > (int)(ttMask / 2)) ttClear(); if (ccCount > (int)(ccMask / 2)) ccClear(); }   // (several threads: never mid-search)
+#endif
+}
+EXPORT(ab_evals) double ab_evals(void) { return evTotal(); }
+EXPORT(ab_nodes) double ab_nodes(void) { return (double)nodes; }
+EXPORT(ab_stopped) int ab_stopped(void) { return stopFlag != 0; }
+EXPORT(ab_res) double ab_res(int k) { return AR[k & 3]; }
+EXPORT(ab_newgame) void ab_newgame(void) { ttClear(); ccClear(); }
+// rootValues(pos, C, d): every root candidate with the full window (a win or d ≤ 1: its score) → AOM / AOV best first (a stable
+// sort); returns how many were finished (fewer: stopped)
+static int rootVals(int d, int *vals) {
+  int cnt = 0;
+#ifdef MT
+  if (d > 1 && ARn >= 2 && ARn <= SP_MV && d >= splitD && gIdle > 0) {
+    SPt *s = spAlloc();
+    if (s && spFillPos(s)) {
+      for (int j = 0; j < ARn; j++) { s->mv[j] = RLM[j]; s->sc[j] = RLS[j]; vals[j] = NEGV; }
+      s->n = ARn; s->depth = d; s->ply = 0; s->root = 1; s->all = 1; s->pv = 1; s->beta = WIN + 1; s->alpha = -WIN - 1;
+      int best = NEGV; Move bm = RLM[0];
+      spRun(s, &best, &bm, vals);
+      for (int j = 0; j < ARn; j++) if (vals[j] != NEGV) cnt++;
+      return cnt;
+    }
+    if (s) spRelease(s);
+  }
+#endif
+  for (int j = 0; j < ARn; j++) vals[j] = NEGV;
+  for (int j = 0; j < ARn; j++) {
+    int v;
+    if (d <= 1 || RLS[j] > WINT) v = RLS[j];
+    else { abPlay(RLM[j]); v = -search(d - 1, -WIN - 1, WIN + 1, 1); abUnplay(RLM[j]); }
+    if (stopFlag) break;
+    vals[j] = v; cnt++;
+  }
+  return cnt;
+}
+EXPORT(ab_values) int ab_values(int d) {
+  abLoadRoot();
+  int vals[64], k = 0; rootVals(d, vals);
+  for (int j = 0; j < ARn; j++) {   // (finished ones in the list's order, then a stable sort by value)
+    if (vals[j] == NEGV) continue;
+    int i = k++; while (i > 0 && AOV[i - 1] < vals[j]) { AOV[i] = AOV[i - 1]; AOM[i] = AOM[i - 1]; i--; }
+    AOV[i] = vals[j]; AOM[i] = RLM[j];
+  }
+  abLoadRoot();
+  return k;
+}
+// bestMove(pos, maxD, …) after its root list (engine.js handles one candidate and a win): iterative deepening from depth 2, PVS
+// at the root with the best move first; best = { move: RLM[0], v: RLS[0], depth: 1 } at first. AR: move, value, depth
+EXPORT(ab_best) int ab_best(int maxD) {
+  abLoadRoot();
+  Move bestM = RLM[0]; int bestV = RLS[0], bestD = 1;
+  Move ord[64];
+  for (int d = 2; d <= maxD; d++) {
+    int a = -WIN - 1, bv = NEGV; Move bm = -1;
+    int fi = 0; for (int j = 0; j < ARn; j++) if (RLM[j] == bestM) { fi = j; break; }
+    int no = 0; ord[no++] = RLM[fi]; for (int j = 0; j < ARn; j++) if (j != fi) ord[no++] = RLM[j];
+    for (int i = 0; i < no; i++) {
+#ifdef MT
+      if (i == 1 && no - 1 >= 2 && no - 1 <= SP_MV && d >= splitD && gIdle > 0) {   // YBW at the root: the first move is done
+        SPt *s = spAlloc();
+        if (s && spFillPos(s)) {
+          int vals[64];
+          for (int j = 1; j < no; j++) { s->mv[j - 1] = ord[j]; s->sc[j - 1] = 0; }
+          s->n = no - 1; s->depth = d; s->ply = 0; s->root = 1; s->all = 0; s->pv = 1; s->beta = WIN + 1; s->alpha = a;
+          spRun(s, &bv, &bm, vals);
+          break;
+        }
+        if (s) spRelease(s);
+      }
+#endif
+      const Move m = ord[i];
+      abPlay(m);
+      int v = i == 0 ? -search(d - 1, -WIN - 1, -a, 1) : -search(d - 1, -a - 1, -a, 1);
+      if (i > 0 && v > a && !stopFlag) v = -search(d - 1, -WIN - 1, -a, 1);
+      abUnplay(m);
+      if (stopFlag) break;
+      if (v > bv) { bv = v; bm = m; if (v > a) a = v; }
+    }
+    if (bm >= 0 && (!stopFlag || bv >= bestV)) { bestM = bm; bestV = bv; bestD = d; }
+    if (stopFlag) break;
+    if (bv > WINT || bv < -WINT) break;
+  }
+  abLoadRoot();
+  AR[0] = bestM; AR[1] = bestV; AR[2] = bestD;
+  return bestM;
+}
+// search(pos, d, a, b, ply) at the position SQ / Q (side, keys) — shared/mtsplit.js's 'mtv' task (engine.js mtV)
+EXPORT(ab_search) int ab_search(int side, double h1, double h2, int d, int a, int b, int ply) {
+  init(); initBB(); abSide = side; H1 = (unsigned)h1; H2 = (unsigned)h2;
+  return search(d, a, b, ply);
+}
+// a node's candidates in the search's order (engine.js mtKids): AOM / AOV, the table's move first; returns their number
+EXPORT(ab_kids) int ab_kids(int side, double h1, double h2, int ply) {
+  init(); initBB(); abSide = side; H1 = (unsigned)h1; H2 = (unsigned)h2;
+  CI C[CK + 1]; int n = candsC(C, CK, ply, QKEEP_BASE);
+  TTE e; if (ttGet(&e)) { int i = -1; for (int j = 0; j < n; j++) if (C[j].m == e.m) { i = j; break; } if (i > 0) { CI x = C[i]; for (int j = i; j > 0; j--) C[j] = C[j - 1]; C[0] = x; } }
+  for (int j = 0; j < n; j++) { AOM[j] = C[j].m; AOV[j] = C[j].s; }
+  return n;
+}
+
 #ifdef MT
 // ---------------------------------------------------------------- threads (core_mt.wasm: shared/mtengine.js, mt-helper.js)
 #ifndef NATIVE
@@ -646,11 +1120,13 @@ static void mt_thread_native(int id) { threadId = id; rs ^= (unsigned long long)
 EXPORT(mt_stop) void mt_stop(int v) { __atomic_store_n(&gStop, v, __ATOMIC_SEQ_CST); if (!v) __atomic_store_n(&gTree, 0, __ATOMIC_SEQ_CST); }
 // a helper: join every tree the lead opens during the job (mcts_run) and grow it, until the page stops the threads. Its
 // visits and evaluations count in the lead's budget (gHS / gHE, added after every visit: a visit is ~0.5 ms). Returns its visits.
+// (2026-11-11) The same helper takes moves at the alpha-beta search's split points meanwhile (Praline's mt_idle, back every 2 ms
+// to look for a tree): a job of either kind finds every helper ready.
 EXPORT(mt_help) int mt_help(void) {
-  int done = 0, last = 0;
+  int done = 0, last = 0, fresh = 1;
   while (!__atomic_load_n(&gStop, __ATOMIC_SEQ_CST)) {
     int g = __atomic_load_n(&gTree, __ATOMIC_SEQ_CST);
-    if (g <= 0 || g == last) continue;   // (waiting: the lead sets up or reads the tree)
+    if (g <= 0 || g == last) { mt_idle(2, fresh); fresh = 0; continue; }   // (no tree: the alpha-beta search's split points)
     __atomic_fetch_add(&gActive, 1, __ATOMIC_SEQ_CST);
     if (__atomic_load_n(&gTree, __ATOMIC_SEQ_CST) == g) {
       last = g;

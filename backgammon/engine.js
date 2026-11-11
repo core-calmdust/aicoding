@@ -1,15 +1,16 @@
 // Backgammon V2 — AI / analysis worker
-importScripts('bg.js?v=20261109mt2', 'explain.js?v=20261021op');
+importScripts('bg.js?v=20261111c1', 'explain.js?v=20261021op');
 let ready = null;
 async function init() {
+  let j = null, man = null, bin = null, bo = null;
   try {
-    const j = await fetch('weights.json').then(r => r.json());
+    j = await fetch('weights.json').then(r => r.json());
     if (j.contact && BG.setNets) BG.setNets(j);          // contact + race nets (GNUbg-style inputs)
     else BG.setNet(new BG.Net(j.nh, new Float32Array(j.w)));
   } catch (e) { console.warn('net weights unavailable', e); }
   try {   // strong evaluator: wildbg contact/race networks (MIT OR Apache-2.0, see THIRD_PARTY_LICENSES.txt)
     if (BG.loadWildbg) {
-      const [man, bin] = await Promise.all([fetch('wildbg.json').then(r => r.json()), fetch('wildbg.bin').then(r => r.arrayBuffer())]);
+      [man, bin] = await Promise.all([fetch('wildbg.json').then(r => r.json()), fetch('wildbg.bin').then(r => r.arrayBuffer())]);
       BG.loadWildbg(man, bin);
     }
   } catch (e) { console.warn('wildbg networks unavailable', e); }
@@ -21,9 +22,22 @@ async function init() {
       const ds = new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'));
       buf = await new Response(ds).arrayBuffer();
     }
-    BG.loadBearoff(buf);
+    BG.loadBearoff(buf); bo = buf;
   } catch (e) { console.warn('bear-off database unavailable', e); }
+  // (2026-11-11) the C engine (engine.c): the same evaluators and search ~6-10x faster; engine_simd.wasm (wasm SIMD) where the
+  // browser has SIMD, else engine.wasm (the same numbers). Without it (or ?nowasm) the JavaScript of bg.js does everything.
+  try {
+    if (typeof WebAssembly === 'object' && BG.setWasm && j && bin && !/[?&]nowasm\b/.test(self.location.search || '')) {
+      let simd = true;
+      try { simd = WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11])); } catch (e) { simd = false; }
+      const url = (simd ? 'engine_simd.wasm' : 'engine.wasm') + '?v=1';
+      const r = WebAssembly.instantiateStreaming ? await WebAssembly.instantiateStreaming(fetch(url), { env: {} }) : await WebAssembly.instantiate(await fetch(url).then(x => x.arrayBuffer()), { env: {} });
+      if (!BG.setWasm(r.instance.exports, j, man, bin, bo)) console.warn('C engine: data mismatch, using JavaScript');
+      else core = simd ? 'wasm-simd' : 'wasm';
+    }
+  } catch (e) { console.warn('C engine unavailable', e); }
 }
+let core = 'js';
 ready = init();
 
 const choosePlay = BG.aiChoosePlay, cubeFor = BG.aiCube, now = () => performance.now();
@@ -72,6 +86,7 @@ onmessage = async e => {
     } else if (m.type === 'plyr') {         // the threads: one opponent roll (m.i) of a candidate's 1・2-ply value (BG.plySum adds them)
       if (BG.plyWhole(pos)) out.whole = BG.evalPly(pos, m.o, m.ply); else out.v = BG.plyRoll(pos, m.o, m.ply, m.i);
     } else if (m.type === 'ping') {
+      out.core = core;
     } else if (m.type === 'eval') {          // pre-roll evaluation of a position (side on roll)
       const v = preRoll(pos, m.side, m.depth || 0);
       out.v = v;

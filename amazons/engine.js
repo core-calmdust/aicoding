@@ -216,7 +216,7 @@ let WA = null;
 (function loadCore() {
   try {
     let b64 = null;
-    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('core-wasm.js?v=5'); b64 = self.AMZ_WASM; }
+    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('core-wasm.js?v=6'); b64 = self.AMZ_WASM; }
     else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') { const g = typeof globalThis !== 'undefined' ? globalThis : global, had = 'self' in g, old = g.self; g.self = g; try { require(require('path').join(__dirname, 'core-wasm.js')); b64 = g.AMZ_WASM; } finally { if (had) g.self = old; else delete g.self; } }
     if (!b64 || (typeof process !== 'undefined' && process.env && process.env.AMZ_NOWASM)) return;
     // (the SIMD build first; the one without SIMD where that does not compile — AMZ_NOSIMD=1 in Node to check it)
@@ -235,8 +235,10 @@ let WA = null;
 // the search core loaded: 'wasm-simd' (core-wasm.js with SIMD), 'wasm' (without SIMD) or 'js' (bench.html, the 'core' message)
 function coreName() { return WA ? (WA.simd ? 'wasm-simd' : 'wasm') : 'js'; }
 // (again after the memory has grown — the MCTS tree, mcts_alloc — the old views are detached then)
-function waViews() { const x = WA.x, buf = x.memory.buffer; Object.assign(WA, { buf, sq: new Int8Array(buf, x.sqp(), NN), q: new Int8Array(buf, x.qp(), 8), om: new Int32Array(buf, x.omp(), 8192), os: new Int32Array(buf, x.osp(), 8192), rm: new Int32Array(buf, x.rmp(), 64), rn: new Int32Array(buf, x.rnp(), 64), rv: new Int32Array(buf, x.rvp(), 64), rp: new Int32Array(buf, x.rpp(), 64), pv: new Int32Array(buf, x.pvp(), 32) }); }
-function waLoad(pos) { WA.sq.set(pos.sq); WA.q.set(pos.q); }
+function waViews() { const x = WA.x, buf = x.memory.buffer; Object.assign(WA, { buf, sq: new Int8Array(buf, x.sqp(), NN), q: new Int8Array(buf, x.qp(), 8), om: new Int32Array(buf, x.omp(), 8192), os: new Int32Array(buf, x.osp(), 8192), rm: new Int32Array(buf, x.rmp(), 64), rn: new Int32Array(buf, x.rnp(), 64), rv: new Int32Array(buf, x.rvp(), 64), rp: new Int32Array(buf, x.rpp(), 64), pv: new Int32Array(buf, x.pvp(), 32) }, abViews(x, buf)); }
+// (the alpha-beta search's root list and answers: core.c ab_*)
+function abViews(x, buf) { return x.rlmp ? { rlm: new Int32Array(buf, x.rlmp(), 64), rls: new Int32Array(buf, x.rlsp(), 64), aom: new Int32Array(buf, x.aomp(), 64), aov: new Int32Array(buf, x.aovp(), 64) } : {}; }
+function waLoad(pos) { if (WA.buf !== WA.x.memory.buffer) waViews(); WA.sq.set(pos.sq); WA.q.set(pos.q); }   // (the views again after the memory has grown: the search's tables)
 // ---------------------------------------------------------------- evaluation (~100 = one square of territory)
 // The classic terms (Lieberum, "An evaluation function for the game of Amazons", 2005): t1 / t2 = territory by queen /
 // king distance (equal distances lean to the side to move), c1 / c2 = position terms, w = how open the board still is
@@ -432,6 +434,24 @@ function search(pos, d, a, b, ply) {
   store(pos, d, best, best <= a0 ? 2 : best >= b ? 1 : 0, bm, ply);
   return best;
 }
+// ---------------------------------------------------------------- the search in the core (2026-11-11, claude/amazons-spec.md「αβ を C に」)
+// The loop above (search, store, candsC, the root loops) runs in core.c (ab_*: node for node the same search, tools/check_ab.js);
+// this file keeps the root candidates and the answers. On the lead of the threads (?mt=1) it is core_mt.wasm, where the helpers
+// take moves at its split points (Praline's Young Brothers Wait). The JS above is the fallback (no WebAssembly; AMZ_JSSEARCH=1 in
+// Node: the JS search with the core's evaluation, to compare).
+const JSAB = typeof process !== 'undefined' && !!(process.env && process.env.AMZ_JSSEARCH);
+function abCore() {
+  if (JSAB) return null;
+  const A = MX && MX.x.ab_best && MX.rlm ? MX : WA && WA.x.ab_best ? WA : null;
+  if (A) abFresh(A);
+  return A;
+}
+function abFresh(A) { if (A.buf !== A.x.memory.buffer) { if (A === WA) waViews(); else A.views(); } }
+// the search's state into the core and back (one search may be several calls: the analysis's depths)
+function abSync(A) { A.x.ab_sync(nodes, evals, tEnd, evalLimit, stop ? 1 : 0, A === WA ? 1 : A.jobThreads || A.threads || 1); }
+function abBack(A) { nodes = A.x.ab_nodes(); evals = A.x.ab_evals(); stop = !!A.x.ab_stopped(); abFresh(A); }
+function abPos(A, pos) { A.sq.set(pos.sq); A.q.set(pos.q); }
+function abRoot(A, pos, C) { abPos(A, pos); const n = Math.min(64, C.length); for (let i = 0; i < n; i++) { A.rlm[i] = C[i].m; A.rls[i] = C[i].s; } A.x.ab_root(pos.side, pos.h1, pos.h2, n); }
 function store(pos, d, v, f, m, ply) {
   const sv = v > WINT ? v + ply : v < -WINT ? v - ply : v;
   if (SH !== null) { SH.put(pos.h1, pos.h2, d, sv, f, m >= 0 ? (m & 0xFFFF) - 2 : -2, m >= 0 ? m >>> 16 : 0); return; }
@@ -440,7 +460,12 @@ function store(pos, d, v, f, m, ply) {
 }
 // root: the values of the root candidates at depth d (each with a full window: an honest value per move for the lists)
 function rootValues(pos, C, d) {
-  const out = [];
+  const out = [], A = abCore();
+  if (A) {
+    abRoot(A, pos, C); abSync(A); const k = A.x.ab_values(d); abBack(A);
+    for (let i = 0; i < k; i++) out.push({ m: A.aom[i], v: A.aov[i] });
+    return out;
+  }
   for (const c of C) {
     let v;
     if (d <= 1 || c.s > WINT) v = c.s;
@@ -456,6 +481,8 @@ function bestMove(pos, maxD, ms, ek, rootK) {
   if (!C.length) return { move: -1, v: -WIN, depth: 0 };
   let best = { move: C[0].m, v: C[0].s, depth: 1 };
   if (C.length === 1 || C[0].s > WINT) return best;
+  const A = abCore();
+  if (A) { abRoot(A, pos, C); abSync(A); A.x.ab_best(maxD || 40); abBack(A); return { move: A.x.ab_res(0), v: A.x.ab_res(1), depth: A.x.ab_res(2) }; }
   for (let d = 2; d <= (maxD || 40); d++) {
     let a = -WIN - 1, bm = -1, bv = -Infinity;
     const order = C.slice(); { const i = order.findIndex(x => x.m === best.move); if (i > 0) { const x = order[i]; order.splice(i, 1); order.unshift(x); } }
@@ -644,11 +671,19 @@ function analyze(start, moves, ms, onProgress, rule, extra) {
   }
   return { list, depth };
 }
+// (tools/check_ab.js) every root candidate of the analysis valued at depth d, no clock
+function valuesAt(start, moves, d) {
+  const { pos } = replay(start, moves);
+  nodes = 0; evals = 0; stop = false; tEnd = Infinity; evalLimit = Infinity;
+  return rootValues(pos, cands(pos, 14, 0, 18), d);
+}
+// a new game: the search's tables emptied (the worker's 'newgame')
+function newGame() { TT.clear(); CC.clear(); if (WA && WA.x.ab_newgame) WA.x.ab_newgame(); if (MX && MX.x.ab_newgame) MX.x.ab_newgame(); }
 function candsJob(start, moves, ms, k, plies, onProgress) {
-  const r = analyze(start, moves, ms, onProgress);
+  const r = analyze(start, moves, ms, onProgress), ev = evals;
   const list = r.list.slice().sort((a, b) => b.v - a.v).slice(0, k || 5);
   for (const e of list) e.pv = pvOf(start, moves, e.m, plies);
-  return { list, depth: r.depth };
+  return { list, depth: r.depth, nodes: ev };   // (nodes: the analysis's evaluations, every thread's — not the short searches of the lines)
 }
 // the line after root move m (short searches, one per ply)
 function pvOf(start, moves, m, plies) {
@@ -681,21 +716,29 @@ function mtPlan(m) {
     if (!L.s || L.mc) return { result: think(m.start, m.moves, m.level, null, null, m.cfg) };   // (the MCTS: one thread here; its own pool reads it on several)
     const C = cands(pos, 16, 0, 20);
     if (C.length === 1 || C[0].s > WINT) return { result: { move: C[0].m, v: C[0].s, depth: 1 } };
-    return { plan: { kind: 'best', kids: C.map(c => ({ m: c.m, s: -1 })), inf, maxD: L.dx || 40, ms: L.ms || 0, nodes: (L.nk || (L.ms ? 0 : 60)) * 1000, win: WINT, partialIfBetter: true, splitMin: 4 } };
+    return { plan: { kind: 'best', kids: C.map(c => ({ m: c.m, s: -1 })), inf, maxD: L.dx || 40, ms: L.ms || 0, nodes: (L.nk || (L.ms ? 0 : 60)) * 1000, win: WINT, partialIfBetter: true, splitMin: 4, ...(abCore() ? { help: false } : {}) } };
   }
   const C = cands(pos, 14, 0, 18, m.extra), cj = m.job === 'cands';
-  return { plan: { kind: 'all', kids: C.map(c => c.s > WINT ? { m: c.m, s: -1, t: c.s } : { m: c.m, s: -1 }), inf, maxD: 30, ms: m.time || (cj ? 1200 : 1000), win: WINT, stopAll: true, progress: true, pv: cj ? m.plies || 5 : 0, pvK: m.k || 5 } };
+  return { plan: { kind: 'all', kids: C.map(c => c.s > WINT ? { m: c.m, s: -1, t: c.s } : { m: c.m, s: -1 }), inf, maxD: 30, ms: m.time || (cj ? 1200 : 1000), win: WINT, stopAll: true, progress: true, pv: cj ? m.plies || 5 : 0, pvK: m.k || 5, ...(abCore() ? { help: false } : {}) } };
 }
 function mtV(m) {
   const { pos, ply } = mtNode(m);
   nodes = 0; evals = 0; stop = false; tEnd = m.until || Infinity; evalLimit = m.nl || Infinity;
-  const v = search(pos, m.d, m.wa, m.wb, ply);
+  const A = abCore(); let v;
+  if (A) { abPos(A, pos); abSync(A); v = A.x.ab_search(pos.side, pos.h1, pos.h2, m.d, m.wa, m.wb, ply); abBack(A); }
+  else v = search(pos, m.d, m.wa, m.wb, ply);
   return { v, ok: !stop, nodes: evals };
 }
 function mtKids(m) {
   const { pos, ply } = mtNode(m);
   if (!pos.canMove(pos.turn)) return { kids: [] };
   nodes = 0; evals = 0; stop = false; tEnd = Infinity; evalLimit = Infinity;
+  const A = abCore();
+  if (A) {
+    abPos(A, pos); abSync(A); const n = A.x.ab_kids(pos.side, pos.h1, pos.h2, ply); abBack(A);
+    const kids = []; for (let i = 0; i < n; i++) { const s = A.aov[i]; kids.push(s > WINT ? { m: A.aom[i], s: -1, t: s } : { m: A.aom[i], s: -1 }); }
+    return { kids, nodes: evals };
+  }
   const C = candsC(pos, CK, ply, QKEEP_BASE), e = ttGet(pos), em = e ? e.m : -1;
   if (em >= 0) { const i = C.findIndex(x => x.m === em); if (i > 0) { const x = C[i]; C.splice(i, 1); C.unshift(x); } }
   return { kids: C.map(c => c.s > WINT ? { m: c.m, s: -1, t: c.s } : { m: c.m, s: -1 }), nodes: evals };
@@ -954,7 +997,7 @@ const hops = () => 1;
 
 const API = { get nodes() { return nodes; }, get evals() { return evals; }, P1, P2, WIN, WINT, ARROW, RULES, RULE_ORDER, setRule, get rule() { return 'std'; }, N, NN, RC, RAYS, NB, START,
   sqAt, sqName, sqIdx, mv, mFrom, mTo, mArrow, isRemove, hops, Pos, path, arrowPath, captured, name, parse, replay, judge, clearLine,
-  get wasm() { return !!WA; }, get simd() { return !!(WA && WA.simd); }, LEVELS, MC, mcts, mcPV, useCore: C => { MX = C; }, think, analyze, cands: candsJob, candList: cands, evaluate, evalFor, kindOf, EW, pvOf, bestMove, mtPlan, mtV, mtKids, mtFin, win1, canWin, duelGood, duelReply, trapGood, trapReply, trapWin, trapAll, trapIdx, boxed, guardGood, guardReply, escapes, freeAt, endGood, readGood, readReply, solveWin, fillMax, roomOf, sideMoves, emptyAround, pzGood, set SH(t) { SH = t; }, get SH() { return SH; } };
+  get wasm() { return !!WA; }, get simd() { return !!(WA && WA.simd); }, LEVELS, MC, mcts, mcPV, useCore: C => { MX = C; }, think, analyze, valuesAt, newGame, cands: candsJob, candList: cands, evaluate, evalFor, kindOf, EW, pvOf, bestMove, mtPlan, mtV, mtKids, mtFin, win1, canWin, duelGood, duelReply, trapGood, trapReply, trapWin, trapAll, trapIdx, boxed, guardGood, guardReply, escapes, freeAt, endGood, readGood, readReply, solveWin, fillMax, roomOf, sideMoves, emptyAround, pzGood, set SH(t) { SH = t; }, get SH() { return SH; } };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') {
   // ?…&mt=1: the lead of the MCTS on several threads (shared/mtengine.js): core_mt.wasm on the shared memory sent with the first
@@ -969,7 +1012,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
         // 8 or more cores, else 128 MB (the memory grows only as far as a search asks: mcts_alloc)
         const hc = navigator.hardwareConcurrency || 2, big = hc >= 8 && (navigator.deviceMemory ? navigator.deviceMemory >= 8 : hc >= 10);
         const C = { x: Object.assign({}, x, { memory: m.mem }), threads: hc, maxNodes: big ? 1 << 24 : hc >= 8 ? 1 << 23 : 1 << 22 };   // (jobThreads: set by each job, mtThreads)
-        C.views = () => { const buf = m.mem.buffer; Object.assign(C, { buf, sq: new Int8Array(buf, x.sqp(), NN), q: new Int8Array(buf, x.qp(), 8), rm: new Int32Array(buf, x.rmp(), 64), rn: new Int32Array(buf, x.rnp(), 64), rv: new Int32Array(buf, x.rvp(), 64), rp: new Int32Array(buf, x.rpp(), 64), pv: new Int32Array(buf, x.pvp(), 32) }); };
+        C.views = () => { const buf = m.mem.buffer; Object.assign(C, abViews(x, buf), { buf, sq: new Int8Array(buf, x.sqp(), NN), q: new Int8Array(buf, x.qp(), 8), rm: new Int32Array(buf, x.rmp(), 64), rn: new Int32Array(buf, x.rnp(), 64), rv: new Int32Array(buf, x.rvp(), 64), rp: new Int32Array(buf, x.rpp(), 64), pv: new Int32Array(buf, x.pvp(), 32) }); };
         C.views(); MX = C;
         self.postMessage({ type: 'mtready' });
       }).catch(err => { MX = null; self.postMessage({ type: 'mtready', error: String(err && err.message || err) }); });
@@ -982,13 +1025,15 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
       try {
         if (MX) MX.jobThreads = m.mtThreads > 0 ? Math.min(m.mtThreads, MX.threads) : 0;   // (the MCTS pool's size: the threads of this job)
         if (SH !== null) { SH.begin(m); SH.salt = 0; }
-        if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...think(m.start, m.moves, m.level, null, null, m.cfg) });
+        // (nodes: the evaluations of every thread — the page's nps readout; the alpha-beta search on the lead counts its helpers')
+        const nd = r => (MX && r && r.nodes == null ? Object.assign(r, { nodes: evals }) : r);
+        if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...nd(think(m.start, m.moves, m.level, null, null, m.cfg)) });
         else if (m.type === 'analyze') {
           const r = analyze(m.start, m.moves, m.time || 1000, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth }), null, m.extra);
-          self.postMessage({ id: m.id, type: 'result', ...r });
-        } else if (m.type === 'cands') self.postMessage({ id: m.id, type: 'result', ...candsJob(m.start, m.moves, m.time || 1200, m.k, m.plies, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth })) });
+          self.postMessage({ id: m.id, type: 'result', ...nd(r) });
+        } else if (m.type === 'cands') self.postMessage({ id: m.id, type: 'result', ...nd(candsJob(m.start, m.moves, m.time || 1200, m.k, m.plies, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth }))) });
         else if (m.type === 'core') self.postMessage({ id: m.id, type: 'result', core: coreName() });
-        else if (m.type === 'newgame') { TT.clear(); CC.clear(); self.postMessage({ id: m.id, type: 'result' }); }
+        else if (m.type === 'newgame') { newGame(); self.postMessage({ id: m.id, type: 'result' }); }
         else if (m.type === 'pzgood') { const g = pzGood(m); self.postMessage({ id: m.id, type: 'result', list: g }); }
         else if (m.type === 'duelReply') self.postMessage({ id: m.id, type: 'result', ...(m.kind === 'trap' ? trapReply(m.start, m.moves, m.e, m.n) : m.kind === 'guard' ? guardReply(m.start, m.moves, m.e, 2) : m.kind === 'read' ? readReply(m.start, m.moves) : duelReply(m.start, m.moves, m.n)) });
         else if (m.type === 'mtplan') self.postMessage({ id: m.id, type: 'result', ...mtPlan(m) });

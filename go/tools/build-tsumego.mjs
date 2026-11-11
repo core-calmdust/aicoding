@@ -5,7 +5,7 @@
 // 3. per theme keep fun >= 70 (a theme that cannot fill 50 falls back to >= 60, reported), best 50 by fun;
 // 4. orient: a random corner / symmetry per puzzle, the player's colour alternates Black / White along the theme;
 // 5. sort easy -> hard (fun.js difficulty estimate) and write puzzles.json (PZBook v2 format, see CONTENT.md).
-// Copyright 2026 core-calmdust — Apache License 2.0
+// Copyright 2026 core-calmdust — license not set yet (to be decided)
 import fs from 'fs';
 import path from 'path';
 import { createRequire } from 'module';

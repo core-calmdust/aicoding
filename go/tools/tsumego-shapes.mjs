@@ -1,7 +1,7 @@
 // Shape builders + classification helpers for the tsumego generator (gen-tsumego.mjs).
 // Shapes are built in the TOP-LEFT corner of the board (x right, y down; point i = y*n + x) and transformed later.
 // A raw shape is { n, b: Uint8Array (0 empty / 1 / 2), region: [points], tgt: [points], goal, G (side to move) }.
-// Copyright 2026 core-calmdust — Apache License 2.0
+// Copyright 2026 core-calmdust — license not set yet (to be decided)
 import path from 'path';
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
