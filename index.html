@@ -191,6 +191,18 @@ section{padding:56px 0}
 .tag.prealpha{color:#2a1a00;background:linear-gradient(135deg,#ffe6b0,#ffb340);border-color:transparent}
 .tag.alpha{color:#06231e;background:linear-gradient(135deg,#b8fff0,#3fd6b5);border-color:transparent}
 @media (max-width:560px){.lab{padding:18px 14px 20px;border-radius:22px}}
+/* ソフトウェア（Praline など。準備中） — same box as the lab, caramel accent */
+.lab.sw{background:linear-gradient(180deg, rgba(36,26,18,.9), rgba(12,10,9,.95));border-color:rgba(201,130,63,.45);
+  box-shadow:0 0 0 1px rgba(201,130,63,.07) inset, 0 40px 120px -40px rgba(201,130,63,.3)}
+.lab.sw::before{background:linear-gradient(rgba(201,130,63,.07) 1px,transparent 1px) 0 0/28px 28px,linear-gradient(90deg,rgba(201,130,63,.07) 1px,transparent 1px) 0 0/28px 28px}
+.lab.sw .sec-head .k{color:#e0a86c}
+#software{scroll-margin-top:12px}
+.gx-media.wh{background:#fff}
+.gx-media.wh .bg,.gx-media.wh::after{display:none}
+.gx-icon .ol.sn{color:#2a1e17;background:linear-gradient(135deg,#f5eadb,#c9823f)}
+.tag.soon{color:#2a1e17;background:linear-gradient(135deg,#f5eadb,#c9823f);border-color:transparent}
+.btn.gx-play.soon,.btn.gx-play.soon:hover{transform:none;background:transparent;color:var(--muted);border:1px dashed var(--line2);box-shadow:none;cursor:default;pointer-events:none}
+.btn.gx-play.soon::after{content:none}
 /* NEORETRO */
 .neo{
   position:relative;border-radius:28px;padding:clamp(22px,4vw,44px);overflow:hidden;
@@ -525,7 +537,7 @@ html[lang=ar] :is(.btn, .play, .tag, .stat span, footer a, footer span, .logo sp
   .btabs a.on{color:var(--text)}
   .btabs a.on svg{filter:drop-shadow(0 0 6px rgba(255,255,255,.35))}
   body{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
-  #neoretro,#games,#lab{scroll-margin-top:64px}
+  #neoretro,#games,#lab,#software{scroll-margin-top:64px}
 }
 </style>
 </head>
@@ -709,6 +721,44 @@ html[lang=ar] :is(.btn, .play, .tag, .stat span, footer a, footer span, .logo sp
   </div>
 </section>
 
+<section id="software">
+  <div class="wrap">
+   <div class="lab sw reveal">
+    <div class="sec-head">
+      <div>
+        <div class="k en">SOFTWARE · COMING SOON</div>
+        <h2 data-i18n="sw.h2">ソフトウェア</h2>
+        <div class="sec-sub" data-i18n="sw.sub">サイトを支える技術</div>
+      </div>
+      <p data-i18n="sw.desc">ゲームの裏側で動いている仕組みを、<br>単体のソフトウェアとしても公開していきます。</p>
+    </div>
+    <div class="gx lb" id="sw">
+      <article class="gx-panel" id="sw-panel" aria-labelledby="sw-title">
+        <a class="gx-media wh" id="sw-media" tabindex="-1">
+          <img class="bg" id="sw-bg" src="./praline/card.svg" alt="" aria-hidden="true" decoding="async">
+          <img class="shot" id="sw-shot" src="./praline/card.svg" alt="Praline" decoding="async">
+          <span class="gx-count" id="sw-count">01 / 01</span>
+        </a>
+        <div class="gx-info">
+          <div class="gx-cat en" id="sw-cat">THINKING ENGINE</div>
+          <h3 id="sw-title">プラリネ Praline</h3>
+          <div><p class="gx-desc" id="sw-desc"></p><button type="button" class="gx-more" id="sw-more" aria-expanded="false" aria-controls="sw-desc" data-i18n="gx.more">続きを読む</button></div>
+          <div class="tags" id="sw-tags"></div>
+          <div class="gx-foot">
+            <dl class="gx-facts" id="sw-facts"></dl>
+            <a class="btn primary gx-play soon" id="sw-play" aria-disabled="true">準備中</a>
+          </div>
+        </div>
+      </article>
+      <div class="gx-side">
+        <div class="gx-grid few" id="sw-grid" role="listbox" aria-label="ゲームを選ぶ" aria-controls="sw-panel"></div>
+      </div>
+    </div>
+    <ul class="gx-index" id="sw-index" aria-hidden="true"></ul>
+   </div>
+  </div>
+</section>
+
 <section id="about">
   <div class="wrap">
     <div class="about reveal">
@@ -785,6 +835,8 @@ Object.assign(I18N, {"ru": {"gx.modes": "Режимы", "gx.stages": "Этапы
 (function (A) { for (const l in A) if (I18N[l]) Object.assign(I18N[l], A[l]); })({"ja": {"th.title": "テーブルホッケー", "th.desc": "小さなリンクでパックを打ち合う3Dのリアルタイム対戦。パッドの端でかすめる「エッジショット」、回るバー・モンスター・アイテム・バンパー・ワープ・マルチパックなど8つのモード。20段階のAI、2人対戦、ゲームパッド対応。", "th.play": "3Dで遊ぶ"}, "en": {"th.title": "Table Hockey", "th.desc": "A real-time 3D puck battle on a little rink. Edge shots off the rim of your mallet, and eight modes — a turning bar, monsters, items, bumpers, warps, multi-puck and more. A 20-level AI, two players, gamepads.", "th.play": "Play in 3D"}, "zh": {"th.title": "桌上冰球", "th.desc": "在小冰场上互击冰球的3D即时对战。用球拍边缘擦出“边缘击球”，旋转横杆、怪兽、道具、弹射柱、传送门、多球等8种模式。20级AI、双人对战、支持手柄。", "th.play": "3D开玩"}, "zh-TW": {"th.title": "桌上冰球", "th.desc": "在小冰場上互擊冰球的3D即時對戰。用球拍邊緣擦出「邊緣擊球」，旋轉橫桿、怪獸、道具、彈射柱、傳送門、多球等8種模式。20級AI、雙人對戰、支援手把。", "th.play": "3D開玩"}, "ko": {"th.title": "테이블 하키", "th.desc": "작은 링크에서 퍽을 주고받는 3D 실시간 대전. 패드 가장자리로 스치는 「엣지 샷」, 도는 막대·몬스터·아이템·범퍼·워프·멀티 퍽 등 8가지 모드. 20단계 AI, 2인 대전, 게임패드 지원.", "th.play": "3D로 플레이"}, "es": {"th.title": "Hockey de mesa", "th.desc": "Duelo de disco en 3D y en tiempo real sobre una pista pequeña. Golpes de canto con el borde del mazo y ocho modos: barra giratoria, monstruos, objetos, rebotadores, portales, multidisco y más. IA de 20 niveles, dos jugadores, mandos.", "th.play": "Jugar en 3D"}, "fr": {"th.title": "Hockey de table", "th.desc": "Un duel de palet en 3D et en temps réel sur une petite patinoire. Coups de tranche avec le bord du maillet et huit modes : barre tournante, monstres, objets, bumpers, portails, multi-palet… IA en 20 niveaux, à deux, manettes.", "th.play": "Jouer en 3D"}, "pt": {"th.title": "Hóquei de mesa", "th.desc": "Duelo de disco em 3D e tempo real numa pista pequena. Tacadas de quina com a borda do taco e oito modos: barra giratória, monstros, itens, rebatedores, portais, multidisco e mais. IA de 20 níveis, dois jogadores, controles.", "th.play": "Jogar em 3D"}, "de": {"th.title": "Tischhockey", "th.desc": "Ein Echtzeit-Puckduell in 3D auf einer kleinen Bahn. Kantenschüsse mit dem Schlägerrand und acht Modi – drehender Balken, Monster, Items, Bumper, Warps, Multi-Puck und mehr. KI in 20 Stufen, zu zweit, Gamepads.", "th.play": "In 3D spielen"}, "ru": {"th.title": "Настольный хоккей", "th.desc": "Шайбовый поединок в 3D и в реальном времени на маленькой площадке. Удары ребром биты и восемь режимов: вращающаяся планка, монстры, предметы, отбойники, варпы, мультишайба и другие. ИИ на 20 уровней, игра вдвоём, геймпады.", "th.play": "Играть в 3D"}, "tr": {"th.title": "Masa hokeyi", "th.desc": "Küçük bir pistte gerçek zamanlı 3D pak düellosu. Raketin kenarıyla kenar vuruşları ve sekiz mod: dönen çubuk, canavarlar, eşyalar, tamponlar, ışınlanma, çoklu pak ve dahası. 20 seviyeli yapay zekâ, iki kişilik, oyun kolu.", "th.play": "3D oyna"}, "id": {"th.title": "Hoki meja", "th.desc": "Duel keping 3D waktu nyata di arena kecil. Pukulan tepi dengan bibir pemukul dan delapan mode: palang berputar, monster, item, bumper, warp, multi keping, dan lainnya. AI 20 tingkat, dua pemain, gamepad.", "th.play": "Main 3D"}, "hi": {"th.title": "टेबल हॉकी", "th.desc": "छोटे रिंक पर पक का रियल-टाइम 3D मुक़ाबला। मैलेट के किनारे से \"किनारे का शॉट\" और आठ मोड: घूमती छड़, राक्षस, आइटम, बम्पर, वार्प, मल्टी पक और भी। 20 स्तर का AI, दो खिलाड़ी, गेमपैड।", "th.play": "3D में खेलें"}, "ar": {"th.title": "هوكي الطاولة", "th.desc": "مبارزة قرص ثلاثية الأبعاد في الوقت الحقيقي على حلبة صغيرة. ضربات الحافة بطرف المضرب وثمانية أنماط: عارضة دوّارة ووحوش وعناصر ومصدّات وبوابات وأقراص متعددة وغيرها. ذكاء اصطناعي من 20 مستوى، ولاعبان، وأذرع تحكم.", "th.play": "العب ثلاثي الأبعاد"}});
 /* ABOUT → profile (2026-11-11) */
 (function (A) { for (const l in A) if (I18N[l]) Object.assign(I18N[l], A[l]); })({"ja":{"nav.about":"プロフィール","about.ceo":"代表","about.bio":"音楽と絵とコードを行き来しながら、“遊べるもの”をつくっています。ゲームのBGMは自分で作曲し、ボードゲームのAIは自分のMacで学習させて育てています。ネオンが弾けるアーケードシリーズ NEORETRO ARCADES は、IVS NEOCREA で準グランプリと Bandai Namco 021 Fund賞をいただきました。このサイトは、AIと一緒につくった作品をそのまま遊べる、動くポートフォリオです。"},"en":{"nav.about":"Profile","about.ceo":"CEO","about.bio":"I move between music, art and code to make things you can play. I compose the music for my games myself, and I train the board-game AIs on my own Mac. My neon-bursting arcade series NEORETRO ARCADES received the Runner-up Grand Prix and the Bandai Namco 021 Fund Award at IVS NEOCREA. This site is a living portfolio: everything here was made together with AI, and you can play it as it is."},"zh":{"nav.about":"简介","about.ceo":"CEO","about.bio":"我在音乐、绘画与代码之间来回穿梭，创作“可以玩的东西”。游戏的BGM由我亲自作曲，棋类游戏的AI则在自己的Mac上训练培养。霓虹迸发的街机系列 NEORETRO ARCADES 在 IVS NEOCREA 获得了准大奖和 Bandai Namco 021 Fund奖。这个网站是一份会动的作品集，和AI一起完成的作品都能直接在这里玩。"},"zh-TW":{"nav.about":"簡介","about.ceo":"執行長","about.bio":"我在音樂、繪畫與程式之間來回穿梭，創作「可以玩的東西」。遊戲的BGM由我親自作曲，棋類遊戲的AI則在自己的Mac上訓練培養。霓虹迸發的街機系列 NEORETRO ARCADES 在 IVS NEOCREA 獲得準大獎與萬代南夢宮021基金獎。這個網站是一份會動的作品集，和AI一起完成的作品都能直接在這裡遊玩。"},"ko":{"nav.about":"프로필","about.ceo":"대표","about.bio":"음악과 그림과 코드를 오가며 '놀 수 있는 것'을 만들고 있습니다. 게임 BGM은 직접 작곡하고, 보드게임 AI는 제 Mac에서 학습시켜 키우고 있습니다. 네온이 터지는 아케이드 시리즈 NEORETRO ARCADES는 IVS NEOCREA에서 준그랑프리와 Bandai Namco 021 Fund상을 받았습니다. 이 사이트는 AI와 함께 만든 작품을 그대로 즐길 수 있는, 움직이는 포트폴리오입니다."},"es":{"nav.about":"Perfil","about.ceo":"CEO","about.bio":"Me muevo entre la música, el dibujo y el código para crear cosas que se pueden jugar. Compongo yo mismo la música de mis juegos y entreno las IA de los juegos de mesa en mi propio Mac. Mi serie arcade de neón NEORETRO ARCADES quedó Subcampeón del Gran Premio y ganó el Premio Bandai Namco 021 Fund en IVS NEOCREA. Este sitio es un portafolio vivo: todo lo que he creado junto a la IA se puede jugar aquí tal cual."},"fr":{"nav.about":"Profil","about.ceo":"PDG","about.bio":"Entre musique, dessin et code, je crée des choses auxquelles on peut jouer. Je compose moi-même la musique de mes jeux et j'entraîne les IA des jeux de société sur mon propre Mac. Ma série d'arcade aux éclats de néon, NEORETRO ARCADES, a terminé Deuxième du Grand Prix et remporté le Prix Bandai Namco 021 Fund à l'IVS NEOCREA. Ce site est un portfolio vivant : les œuvres créées avec l'IA s'y jouent telles quelles."},"pt":{"nav.about":"Perfil","about.ceo":"CEO","about.bio":"Transito entre música, desenho e código para criar coisas que dá para jogar. Componho eu mesmo as músicas dos meus jogos e treino as IAs dos jogos de tabuleiro no meu próprio Mac. Minha série arcade cheia de neon, NEORETRO ARCADES, ficou com o Vice do Grande Prêmio e ganhou o Prêmio Bandai Namco 021 Fund no IVS NEOCREA. Este site é um portfólio vivo: tudo o que criei junto com a IA pode ser jogado aqui do jeito que está."},"de":{"nav.about":"Profil","about.ceo":"CEO","about.bio":"Ich bewege mich zwischen Musik, Bild und Code und mache Dinge, die man spielen kann. Die Musik meiner Spiele komponiere ich selbst, und die KIs der Brettspiele trainiere ich auf meinem eigenen Mac. Meine neongeladene Arcade-Reihe NEORETRO ARCADES belegte bei IVS NEOCREA den zweiten Platz im Grand Prix und erhielt den Bandai Namco 021 Fund Award. Diese Seite ist ein lebendiges Portfolio: Alles, was ich gemeinsam mit KI gemacht habe, lässt sich hier direkt spielen."},"ru":{"nav.about":"Профиль","about.ceo":"гендиректор","about.bio":"Я перехожу от музыки к рисунку и коду и обратно, создавая то, во что можно играть. Музыку к своим играм пишу сам, а ИИ для настольных игр обучаю на собственном Mac. Моя аркадная серия NEORETRO ARCADES, вспыхивающая неоном, получила на IVS NEOCREA второе место (Гран-при) и Премию фонда Bandai Namco 021. Этот сайт — живое портфолио: во всё, что я сделал вместе с ИИ, можно поиграть прямо здесь."},"tr":{"nav.about":"Profil","about.ceo":"CEO","about.bio":"Müzik, çizim ve kod arasında gidip gelerek oynanabilir şeyler yapıyorum. Oyunlarımın müziklerini kendim besteliyor, masa oyunlarının yapay zekâlarını kendi Mac'imde eğiterek geliştiriyorum. Neon ışıltılı arcade serim NEORETRO ARCADES, IVS NEOCREA'da Büyük Ödül İkinciliği ve Bandai Namco 021 Fon Ödülü'nü aldı. Bu site, yapay zekâyla birlikte yaptığım işleri olduğu gibi oynayabileceğiniz canlı bir portfolyo."},"id":{"nav.about":"Profil","about.ceo":"CEO","about.bio":"Saya bergerak di antara musik, gambar, dan kode untuk membuat hal-hal yang bisa dimainkan. Musik gim saya gubah sendiri, dan AI gim papan saya latih sendiri di Mac milik saya. Seri arkade penuh neon NEORETRO ARCADES meraih Juara Kedua Grand Prix dan Penghargaan Bandai Namco 021 Fund di IVS NEOCREA. Situs ini adalah portofolio hidup: karya yang saya buat bersama AI bisa langsung dimainkan di sini."},"hi":{"nav.about":"प्रोफ़ाइल","about.ceo":"CEO","about.bio":"मैं संगीत, चित्र और कोड के बीच आते-जाते हुए ऐसी चीज़ें बनाता हूँ जिन्हें खेला जा सके। अपने गेम्स का संगीत मैं खुद कंपोज़ करता हूँ, और बोर्ड गेम्स की AI को अपने Mac पर खुद ट्रेन करता हूँ। नियॉन से जगमगाती आर्केड सीरीज़ NEORETRO ARCADES को IVS NEOCREA में ग्रां प्री उपविजेता और Bandai Namco 021 Fund पुरस्कार मिला। यह साइट एक चलता-फिरता पोर्टफ़ोलियो है: AI के साथ बनाई गई रचनाएँ यहाँ जैसी हैं वैसी ही खेली जा सकती हैं।"},"ar":{"nav.about":"نبذة","about.ceo":"الرئيس التنفيذي","about.bio":"أتنقّل بين الموسيقى والرسم والبرمجة لأصنع أشياء يمكن اللعب بها. أؤلّف موسيقى ألعابي بنفسي، وأدرّب الذكاء الاصطناعي لألعاب الطاولة على جهاز Mac الخاص بي. حلّت سلسلة الأركيد NEORETRO ARCADES المتلألئة بالنيون في مرتبة وصيف الجائزة الكبرى ونالت جائزة Bandai Namco 021 Fund في IVS NEOCREA. هذا الموقع معرض أعمال حيّ: كل ما صنعته مع الذكاء الاصطناعي يمكن لعبه هنا كما هو."}});
+/* ソフトウェア・Praline (praline/) — gallery texts */
+(function (A) { for (const l in A) if (I18N[l]) Object.assign(I18N[l], A[l]); })({"ja": {"sw.h2": "ソフトウェア", "sw.sub": "サイトを支える技術", "sw.desc": "ゲームの裏側で動いている仕組みを、<br>単体のソフトウェアとしても公開していきます。", "tag.soon": "準備中", "pl.title": "プラリネ Praline", "pl.desc": "サイトのボードゲームAIを動かす共通の思考エンジン。PCの複数のコアで手を分け合って読み、読んだ結果を共有しながら、同じ時間でより深く先を読みます。将棋・チェス・シャンチーなど、このサイトの多くのゲームのAIがこの仕組みで考えています。いずれ単体のソフトウェアとして公開予定です。", "pl.play": "準備中"}, "en": {"sw.h2": "Software", "sw.sub": "The tech behind the site", "sw.desc": "The engines running behind the games,<br>to be released as standalone software too.", "tag.soon": "Coming soon", "pl.title": "Praline", "pl.desc": "The shared thinking engine behind the board-game AIs on this site. It splits the search across your PC’s cores and lets them share what they have read, so the AI looks deeper in the same time. Shogi, chess, xiangqi and many other games here already think with it. A standalone release is planned.", "pl.play": "Coming soon"}, "zh": {"sw.h2": "软件", "sw.sub": "支撑本站的技术", "sw.desc": "在游戏背后运行的机制，<br>今后也将作为独立软件公开。", "tag.soon": "准备中", "pl.title": "Praline", "pl.desc": "驱动本站棋盘游戏AI的通用思考引擎。由电脑的多个核心分担着法计算，并共享已经读过的结果，在同样的时间里看得更深。将棋、国际象棋、中国象棋等本站许多游戏的AI都在使用它思考。今后计划作为独立软件公开。", "pl.play": "准备中"}, "zh-TW": {"sw.h2": "軟體", "sw.sub": "支撐本站的技術", "sw.desc": "在遊戲背後運作的機制，<br>未來也將以獨立軟體公開。", "tag.soon": "準備中", "pl.title": "Praline", "pl.desc": "驅動本站棋盤遊戲AI的共通思考引擎。由電腦的多個核心分擔著法計算，並共享已經讀過的結果，在同樣的時間裡看得更深。將棋、西洋棋、象棋等本站許多遊戲的AI都在使用它思考。未來預計以獨立軟體公開。", "pl.play": "準備中"}, "ko": {"sw.h2": "소프트웨어", "sw.sub": "사이트를 받치는 기술", "sw.desc": "게임 뒤에서 움직이는 구조를<br>단독 소프트웨어로도 공개해 나갑니다.", "tag.soon": "준비 중", "pl.title": "Praline", "pl.desc": "이 사이트의 보드게임 AI를 움직이는 공통 사고 엔진. PC의 여러 코어가 수를 나누어 읽고, 읽은 결과를 공유하며 같은 시간에 더 깊이 내다봅니다. 쇼기·체스·샹치 등 이 사이트의 많은 게임 AI가 이 엔진으로 생각하고 있습니다. 언젠가 단독 소프트웨어로 공개할 예정입니다.", "pl.play": "준비 중"}, "es": {"sw.h2": "Software", "sw.sub": "La tecnología detrás del sitio", "sw.desc": "Los motores que funcionan detrás de los juegos,<br>también se publicarán como software independiente.", "tag.soon": "Próximamente", "pl.title": "Praline", "pl.desc": "El motor de pensamiento común de las IA de juegos de mesa del sitio. Reparte la búsqueda entre los núcleos de tu PC y les deja compartir lo ya analizado, para ver más lejos en el mismo tiempo. Shogi, ajedrez, xiangqi y muchos otros juegos del sitio ya piensan con él. Habrá una versión independiente.", "pl.play": "Próximamente"}, "fr": {"sw.h2": "Logiciels", "sw.sub": "La technologie derrière le site", "sw.desc": "Les moteurs qui tournent derrière les jeux,<br>bientôt publiés aussi comme logiciels autonomes.", "tag.soon": "Bientôt", "pl.title": "Praline", "pl.desc": "Le moteur de réflexion commun des IA de jeux de plateau du site. Il répartit la recherche entre les cœurs de votre PC et leur fait partager ce qu’ils ont déjà analysé, pour voir plus loin dans le même temps. Shogi, échecs, xiangqi et bien d’autres jeux du site l’utilisent déjà. Une version autonome est prévue.", "pl.play": "Bientôt"}, "pt": {"sw.h2": "Software", "sw.sub": "A tecnologia por trás do site", "sw.desc": "Os motores que rodam por trás dos jogos<br>também serão lançados como software independente.", "tag.soon": "Em breve", "pl.title": "Praline", "pl.desc": "O motor de raciocínio comum das IAs de tabuleiro do site. Divide a busca entre os núcleos do seu PC, que compartilham o que já analisaram, para ver mais longe no mesmo tempo. Shogi, xadrez, xiangqi e muitos outros jogos daqui já pensam com ele. Uma versão independente está planejada.", "pl.play": "Em breve"}, "de": {"sw.h2": "Software", "sw.sub": "Die Technik hinter der Seite", "sw.desc": "Die Engines hinter den Spielen<br>erscheinen auch als eigenständige Software.", "tag.soon": "Demnächst", "pl.title": "Praline", "pl.desc": "Die gemeinsame Denk-Engine hinter den Brettspiel-KIs dieser Seite. Sie verteilt die Suche auf die Kerne deines PCs, die ihre Ergebnisse teilen – so blickt die KI in derselben Zeit tiefer. Shogi, Schach, Xiangqi und viele weitere Spiele hier denken bereits damit. Eine eigenständige Version ist geplant.", "pl.play": "Demnächst"}, "ru": {"sw.h2": "Программы", "sw.sub": "Технологии, на которых держится сайт", "sw.desc": "Движки, работающие за кулисами игр,<br>выйдут и как отдельные программы.", "tag.soon": "Скоро", "pl.title": "Praline", "pl.desc": "Общий движок мышления для ИИ настольных игр сайта. Он делит перебор ходов между ядрами вашего ПК и даёт им делиться уже просчитанным, чтобы за то же время смотреть глубже. Сёги, шахматы, сянци и многие другие игры сайта уже думают с его помощью. Позже выйдет отдельной программой.", "pl.play": "Скоро"}, "tr": {"sw.h2": "Yazılım", "sw.sub": "Sitenin arkasındaki teknoloji", "sw.desc": "Oyunların arkasında çalışan motorlar<br>bağımsız yazılım olarak da yayımlanacak.", "tag.soon": "Yakında", "pl.title": "Praline", "pl.desc": "Sitedeki masa oyunu yapay zekâlarını çalıştıran ortak düşünme motoru. Aramayı bilgisayarınızın çekirdekleri arasında paylaştırır ve hesaplananları ortak kullanarak aynı sürede daha derine bakar. Shogi, satranç, xiangqi ve sitedeki pek çok oyun zaten bununla düşünüyor. Bağımsız bir sürüm planlanıyor.", "pl.play": "Yakında"}, "id": {"sw.h2": "Perangkat Lunak", "sw.sub": "Teknologi di balik situs ini", "sw.desc": "Mesin yang bekerja di balik game,<br>juga akan dirilis sebagai perangkat lunak tersendiri.", "tag.soon": "Segera hadir", "pl.title": "Praline", "pl.desc": "Mesin berpikir bersama di balik AI permainan papan situs ini. Ia membagi pencarian langkah ke beberapa inti PC Anda dan berbagi hasil yang sudah dihitung, sehingga AI melihat lebih dalam dalam waktu yang sama. Shogi, catur, xiangqi, dan banyak game lain di sini sudah berpikir dengannya. Versi tersendiri direncanakan.", "pl.play": "Segera hadir"}, "hi": {"sw.h2": "सॉफ़्टवेयर", "sw.sub": "साइट के पीछे की तकनीक", "sw.desc": "गेम के पीछे चलने वाले इंजन<br>अलग सॉफ़्टवेयर के रूप में भी जारी होंगे।", "tag.soon": "जल्द आ रहा है", "pl.title": "Praline", "pl.desc": "इस साइट के बोर्ड-गेम AI को चलाने वाला साझा चिंतन इंजन। यह आपके PC के कई कोर में चालों की खोज बाँटता है और पढ़े गए नतीजे साझा करता है, ताकि उतने ही समय में AI और गहराई तक देखे। शोगी, शतरंज, शियांगची और साइट के कई अन्य गेम इसी से सोचते हैं। आगे इसे अलग सॉफ़्टवेयर के रूप में जारी करने की योजना है।", "pl.play": "जल्द आ रहा है"}, "ar": {"sw.h2": "البرمجيات", "sw.sub": "التقنية التي يقوم عليها الموقع", "sw.desc": "المحركات التي تعمل خلف الألعاب<br>ستصدر أيضًا برامجَ مستقلة.", "tag.soon": "قريبًا", "pl.title": "Praline", "pl.desc": "محرك التفكير المشترك الذي يشغّل ذكاء ألعاب الطاولة في هذا الموقع. يوزّع البحث عن النقلات على أنوية حاسوبك ويتيح لها مشاركة ما حسبته، فيرى الذكاء الاصطناعي أعمق في الوقت نفسه. الشوغي والشطرنج والشيانغتشي وألعاب كثيرة أخرى في الموقع تفكر به بالفعل. نخطط لإطلاقه لاحقًا برنامجًا مستقلًا.", "pl.play": "قريبًا"}});
 (function () {
   const KEY = 'aicoding-lang';
   const detect = () => { const n = (navigator.language || 'ja').toLowerCase(); if (/^zh-(tw|hk|mo|hant)/.test(n)) return 'zh-TW'; return Object.keys(I18N).find(l => n.startsWith(l.toLowerCase())) || 'en'; };   // zh-TW / zh-HK / zh-Hant → 繁體中文, other zh → 简体中文
@@ -903,6 +955,10 @@ const LAB = [
   { id:'hexdeck', href:'./hexdeck/', thumb:'images/hexdeck.webp', icon:'images/icons/hexdeck.svg', kind:'BOARD GAME', key:'hd', alpha:true, tags:['original','ai','mobile'], facts:{ maps:6, players:'1 vs BOT' } },
   { id:'wyrm', href:'./wyrm/', thumb:'images/wyrm.webp?v=5', icon:'images/icons/wyrm.svg', kind:'3D SHOOTER', key:'wy', name:'WYRMSPHERE', alpha:'pre', tags:['original','shooter','gamepad','mobile'], facts:{ players:'1' } },
 ];
+/* ソフトウェア（準備中：soon = 遷移しない・「準備中」表示） */
+const SOFTWARE = [
+  { id:'praline', href:'#software=praline', thumb:'praline/card.svg', icon:'praline/icon.svg', kind:'THINKING ENGINE', key:'pl', soon:true, white:true, tags:[], facts:{} },
+];
 // published-title count: every game linked from this page (galleries + lab) — updates automatically when games are added
 (function () { const el = document.getElementById('stat-titles'); if (el) el.textContent = GAMES.length + ARCADE.length + LAB.length; })();   // chip order; label keys: gx.all, sub.ai, sub.classic, sub.old
 
@@ -940,7 +996,7 @@ function makeGallery(C) {
     a.className = 'gx-icon'; a.href = g.href; a.id = C.p + '-o-' + g.id; a.dataset.id = g.id;
     a.setAttribute('role', 'option'); a.tabIndex = -1;
     if (g.cat === 'old') a.classList.add('old');
-    a.innerHTML = `<span class="ic"><img src="${g.icon}" alt="" width="68" height="68" loading="${i < 16 ? 'eager' : 'lazy'}" decoding="async">${g.beta ? '<i class="ol bt" aria-hidden="true">BETA' + (g.beta > 1 ? g.beta : '') + '</i>' : ''}${g.alpha === 'pre' ? '<i class="ol pa" aria-hidden="true">PRE</i>' : g.alpha ? '<i class="ol al" aria-hidden="true">ALPHA</i>' : ''}${g.cat === 'old' ? '<i class="hv" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3"/><path d="M4 4.5v3.4h3.4"/><path d="M12 8v4.3l2.8 1.7"/></svg></i>' : ''}${g.tags.includes('mobile') ? '<i class="mb" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.4"/><path d="M10.5 18.5h3"/></svg></i>' : '<i class="mb pc" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.8"/><path d="M8 20h8M12 16v4"/></svg></i>'}${g.beta ? '' : g.tags.includes('online') ? '<i class="ol" aria-hidden="true">ONLINE</i>' : g.tags.includes('original') && !g.alpha ? '<i class="ol og" aria-hidden="true">ORIGINAL</i>' : ''}${g.tags.includes('gamepad') ? '<i class="gp" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 8h10a4.5 4.5 0 0 1 4.3 5.8l-1 3.3a2.4 2.4 0 0 1-4 1L14.6 16H9.4l-1.7 2.1a2.4 2.4 0 0 1-4-1l-1-3.3A4.5 4.5 0 0 1 7 8z"/><path d="M7.5 11v3M6 12.5h3"/><circle cx="16" cy="11.5" r=".6"/><circle cx="17.6" cy="13.3" r=".6"/></svg></i>' : ''}</span><span class="nm"></span>`;
+    a.innerHTML = `<span class="ic"><img src="${g.icon}" alt="" width="68" height="68" loading="${i < 16 ? 'eager' : 'lazy'}" decoding="async">${g.beta ? '<i class="ol bt" aria-hidden="true">BETA' + (g.beta > 1 ? g.beta : '') + '</i>' : ''}${g.soon ? '<i class="ol sn" aria-hidden="true">SOON</i>' : ''}${g.alpha === 'pre' ? '<i class="ol pa" aria-hidden="true">PRE</i>' : g.alpha ? '<i class="ol al" aria-hidden="true">ALPHA</i>' : ''}${g.cat === 'old' ? '<i class="hv" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3"/><path d="M4 4.5v3.4h3.4"/><path d="M12 8v4.3l2.8 1.7"/></svg></i>' : ''}${g.tags.includes('mobile') ? '<i class="mb" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.4"/><path d="M10.5 18.5h3"/></svg></i>' : '<i class="mb pc" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.8"/><path d="M8 20h8M12 16v4"/></svg></i>'}${g.beta ? '' : g.tags.includes('online') ? '<i class="ol" aria-hidden="true">ONLINE</i>' : g.tags.includes('original') && !g.alpha ? '<i class="ol og" aria-hidden="true">ORIGINAL</i>' : ''}${g.tags.includes('gamepad') ? '<i class="gp" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 8h10a4.5 4.5 0 0 1 4.3 5.8l-1 3.3a2.4 2.4 0 0 1-4 1L14.6 16H9.4l-1.7 2.1a2.4 2.4 0 0 1-4-1l-1-3.3A4.5 4.5 0 0 1 7 8z"/><path d="M7.5 11v3M6 12.5h3"/><circle cx="16" cy="11.5" r=".6"/><circle cx="17.6" cy="13.3" r=".6"/></svg></i>' : ''}</span><span class="nm"></span>`;
     a.addEventListener('click', e => {
       if (e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;   // let "open in new tab" work
       e.preventDefault(); select(g.id, { focus: false, user: true });
@@ -1012,17 +1068,20 @@ function makeGallery(C) {
     const i = C.games.indexOf(g), t = title(g);
     $(C.p + '-shot').src = g.thumb; $(C.p + '-shot').alt = plain(t);
     $(C.p + '-bg').src = g.thumb;
-    $(C.p + '-media').href = g.href;
+    if (g.soon) $(C.p + '-media').removeAttribute('href'); else $(C.p + '-media').href = g.href;
+    $(C.p + '-media').classList.toggle('wh', !!g.white);
     $(C.p + '-count').textContent = String(i + 1).padStart(2, '0') + ' / ' + String(C.games.length).padStart(2, '0');
     $(C.p + '-cat').innerHTML = (g.tags.includes('mobile') ? '<span class="mbk"><svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.4"/><path d="M10.5 18.5h3"/></svg> ' + tr('tag.mobile') + '</span> · ' : '<span class="mbk pc"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.8"/><path d="M8 20h8M12 16v4"/></svg> ' + tr('gx.pc') + '</span> · ') + esc(g.kind) + (C.cats ? ' · ' + tr('sub.' + g.cat) : '') + (stat(g) ? ' · ' + statHtml(g, 'nw') : '');
     $(C.p + '-title').innerHTML = t;
     $(C.p + '-desc').innerHTML = desc(g);
-    $(C.p + '-tags').innerHTML = statHtml(g, 'tag new') + (g.beta ? '<span class="tag new">' + (g.beta > 1 ? (tr('tag.beta') === 'β版' ? 'β' + g.beta + '版' : tr('tag.beta') + g.beta) : tr('tag.beta')) + '</span>' : '') + (g.alpha === 'pre' ? '<span class="tag prealpha">' + tr('tag.prealpha') + '</span>' : g.alpha ? '<span class="tag alpha">' + tr('tag.alpha') + '</span>' : '') + g.tags.filter(k => k !== 'mobile').map(k => `<span class="tag ${k}">${k === 'original' ? ORIGINAL_SVG : ''}${k === 'classic' ? CLASSIC_SVG : ''}${tr('tag.' + k)}</span>`).join('');
+    $(C.p + '-tags').innerHTML = statHtml(g, 'tag new') + (g.soon ? '<span class="tag soon">' + tr('tag.soon') + '</span>' : '') + (g.beta ? '<span class="tag new">' + (g.beta > 1 ? (tr('tag.beta') === 'β版' ? 'β' + g.beta + '版' : tr('tag.beta') + g.beta) : tr('tag.beta')) + '</span>' : '') + (g.alpha === 'pre' ? '<span class="tag prealpha">' + tr('tag.prealpha') + '</span>' : g.alpha ? '<span class="tag alpha">' + tr('tag.alpha') + '</span>' : '') + g.tags.filter(k => k !== 'mobile').map(k => `<span class="tag ${k}">${k === 'original' ? ORIGINAL_SVG : ''}${k === 'classic' ? CLASSIC_SVG : ''}${tr('tag.' + k)}</span>`).join('');
     const f = g.facts || {};
     $(C.p + '-facts').innerHTML = C.facts.filter(k => f[k] != null)
       .map(k => { const v = k === 'ai' ? (tr(g.key + '.str') || tr('gx.levels').replace('{n}', f[k])) : f[k]; return `<div${k === 'ai' ? ' class="str"' : ''}><dt>${tr('gx.' + k)}</dt><dd>${esc(v)}</dd></div>`; }).join('');
     const play = $(C.p + '-play');
-    play.href = g.href; play.innerHTML = tr(g.key + '.play') ?? tr(C.playKey || 'gx.play') ?? tr('gx.play');
+    if (g.soon) { play.removeAttribute('href'); play.setAttribute('aria-disabled', 'true'); } else { play.href = g.href; play.removeAttribute('aria-disabled'); }
+    play.classList.toggle('soon', !!g.soon);
+    play.innerHTML = tr(g.key + '.play') ?? tr(C.playKey || 'gx.play') ?? tr('gx.play');
     play.setAttribute('aria-label', plain(play.innerHTML) + ' — ' + plain(t));
     panel.classList.remove('open'); $(C.p + '-more').setAttribute('aria-expanded', 'false');
     if (navEl) { const many = visible().length > 1; navEl.querySelectorAll('button').forEach(b => b.hidden = !many); }
@@ -1179,7 +1238,7 @@ function makeGallery(C) {
         if (d < bd) { bd = d; best = b; }
       });
       to = best;
-    } else if (e.key === 'Enter') { e.preventDefault(); location.href = a.href; return; }
+    } else if (e.key === 'Enter') { e.preventDefault(); if (byId(a.dataset.id).soon) select(a.dataset.id); else location.href = a.href; return; }
     else if (e.key === ' ') { e.preventDefault(); select(a.dataset.id); return; }
     else return;
     e.preventDefault();
@@ -1203,6 +1262,7 @@ function makeGallery(C) {
 }
 makeGallery({ p: 'gx', games: GAMES, cats: GX_CATS, playKey: 'rv4.play', store: 'aicoding-game', hash: 'game', section: 'games', facts: ['ai', 'lessons', 'puzzles', 'players'] });
 makeGallery({ p: 'lb', games: LAB, cats: null, store: 'aicoding-lab', hash: 'lab', section: 'lab', facts: ['maps', 'players'] });
+makeGallery({ p: 'sw', games: SOFTWARE, cats: null, store: 'aicoding-software', hash: 'software', section: 'software', facts: [] });
 makeGallery({ p: 'nx', games: ARCADE, cats: null, store: 'aicoding-arcade', hash: 'arcade', section: 'neoretro', facts: ['modes', 'stages', 'players'] });
 </script>
 <script>
@@ -1220,6 +1280,6 @@ makeGallery({ p: 'nx', games: ARCADE, cats: null, store: 'aicoding-arcade', hash
 </script>
 <script src="shared/langsel.js?v=2" defer></script>
 <script>window.ATLAS_NO_ACH = 1;   // the top page reads only the badge rule from shared/atlas.js (no achievement banners here)</script>
-<script src="shared/atlas.js?v=20261111bgc1" defer onload="document.dispatchEvent(new Event('atlasready'))"></script>
+<script src="shared/atlas.js?v=20261111sh1" defer onload="document.dispatchEvent(new Event('atlasready'))"></script>
 </body>
 </html>

@@ -1512,7 +1512,7 @@ let aiW = makeWorker(), anaW = makeWorker();
 // pool of threads when it is free (Lazy SMP: the lead keeps the level's own limits, the helpers fill the shared table). The
 // levels decided by depth (Lv.1〜8) stay on the one-thread workers, as does the perfect play of six men's (the database).
 const MTP = window.MTEngine ? MTEngine.use({
-  wasm: 'engine_mt.wasm?v=5', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=2', slot: 4 << 20, initial: 1152, maximum: 16384,   // slot: TLS + the 1 MB move lists + the stack; maximum = engine_mt.wasm's (1 GiB)
+  wasm: 'engine_mt.wasm?v=6', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=2', slot: 4 << 20, initial: 1152, maximum: 16384,   // slot: TLS + the 1 MB move lists + the stack; maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => Date.now(), progress: () => {} } }),
   help: m => ({ io: E.setupIO(m.variant, m.start, m.moves || []), gk: E.geoKey(m.variant) }),
   isDone: m => m.type === 'result' || m.type === 'candsDone', isProg: m => m.type === 'progress' || m.type === 'cands',   // (the review box streams 'cands')
@@ -3893,16 +3893,16 @@ window.addEventListener('resize', () => renderFx());
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=56l25'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=56l26'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/img/tex/baked.js?v=1')).then(() => load('../atlas/table3d.js?v=147')).then(() => load('../atlas/tables3d.js?v=61')).then(() => load('../atlas/skin/common.js?v=71')).then(() => load('../atlas/models/morris.js?v=6l14')).then(() => load('../atlas/games/morris-pieces.js?v=2l14')).then(() => load('../atlas/skin/morris.js?v=6l15'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/img/tex/baked.js?v=1')).then(() => load('../atlas/table3d.js?v=148')).then(() => load('../atlas/tables3d.js?v=62')).then(() => load('../atlas/skin/common.js?v=71')).then(() => load('../atlas/models/morris.js?v=6l14')).then(() => load('../atlas/games/morris-pieces.js?v=2l14')).then(() => load('../atlas/skin/morris.js?v=6l15'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=20261111bgc1" defer></script>
+<script src="../shared/atlas.js?v=20261111sh1" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1l14" defer></script>
 <script src="../shared/atlas-account.js?v=20261109ac2l14" defer></script>
 <script src="../shared/infotabs.js?v=22l14" data-strips defer></script>
