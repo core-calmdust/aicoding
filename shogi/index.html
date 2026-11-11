@@ -1423,6 +1423,50 @@ html[lang=ar] .pf-input{direction:rtl}
   html.atlas-shogi:not(.atlas-2d) body .board-area > .hand.bottom.hand{background:url(../images/atlas/shogi-kd3d-bot.webp?v=3) center/100% 100% no-repeat,#e5cba8!important}
   html:not(.atlas-skin) .app{padding-left:4px!important;padding-right:4px!important}
 }
+/* lesson intro on phones (2026-11-11, a quieter, luxury layout): centred heading over a hairline; the sample board alone and centred on a
+   soft plate; the four facts as one row of columns split by hairlines; sections as open text under small spaced gold heads; two equal
+   buttons */
+@media (max-width:560px){
+  #lessonIntroView .li-step{text-align:center;font-size:11.5px;letter-spacing:.32em;margin-top:4px}
+  #lessonIntroView #liTitle{text-align:center;margin:8px 0 14px!important;font-size:26px;letter-spacing:.08em;line-height:1.3}
+  #lessonIntroView #liTitle::after{content:'';display:block;width:44px;height:1px;margin:12px auto 0;background:linear-gradient(90deg,transparent,var(--brass,#c9a961),transparent)}
+  #lessonIntroView .li-hero{flex-direction:column;align-items:stretch;gap:14px;margin:0 0 18px}
+  #lessonIntroView .li-fig{align-self:center;margin:0;padding:12px 12px 8px;border-radius:18px;background:radial-gradient(120% 90% at 50% 0%,color-mix(in srgb,var(--brass,#c9a961) 14%,transparent),transparent 70%)}
+  #lessonIntroView .li-fig figcaption{font-size:10.5px!important;letter-spacing:.18em;opacity:.7}
+  #lessonIntroView .li-chips{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:0;flex-direction:row;border-top:1px solid color-mix(in srgb,var(--brass,#c9a961) 35%,transparent);border-bottom:1px solid color-mix(in srgb,var(--brass,#c9a961) 35%,transparent);padding:10px 0}
+  #lessonIntroView .li-chip{align-items:center;text-align:center;border:0;border-radius:0;background:none;padding:2px 4px;min-width:0}
+  #lessonIntroView .li-chip + .li-chip{border-inline-start:1px solid color-mix(in srgb,var(--brass,#c9a961) 25%,transparent)}
+  #lessonIntroView .li-chip small{font-size:10px;letter-spacing:.14em;white-space:nowrap}
+  #lessonIntroView .li-chip b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  #lessonIntroView .li-sec{display:block;border:0;border-radius:0;background:none;padding:0 4px;margin:0 0 18px}
+  #lessonIntroView .li-sec .li-ic{display:none}
+  #lessonIntroView .li-sec h4{font-size:11.5px;letter-spacing:.24em;margin:0 0 6px;display:flex;align-items:center;gap:10px}
+  #lessonIntroView .li-sec h4::after{content:'';flex:1;height:1px;background:color-mix(in srgb,var(--brass,#c9a961) 30%,transparent)}
+  #lessonOverlay .lesson-intro .li-sec p{font-size:14.5px;line-height:1.85}
+  #lessonIntroView > .modal-actions{grid-template-columns:1fr 1fr!important}
+  #lessonIntroView > .modal-actions #btnLessonBack{grid-column:1}
+  #lessonIntroView > .modal-actions #btnLessonStart{grid-column:2}
+}
+/* …and the same quiet look on wider screens (PC, 2026-11-11): the board beside a 2×2 table of the facts, split by hairlines */
+@media (min-width:561px){
+  #lessonIntroView .li-step{text-align:center;font-size:12px;letter-spacing:.34em;margin-top:6px}
+  #lessonIntroView #liTitle{text-align:center;margin:10px 0 22px!important;font-size:32px;letter-spacing:.1em;line-height:1.3}
+  #lessonIntroView #liTitle::after{content:'';display:block;width:56px;height:1px;margin:16px auto 0;background:linear-gradient(90deg,transparent,var(--brass,#c9a961),transparent)}
+  #lessonIntroView .li-hero{justify-content:center;gap:40px;margin:0 auto 28px;max-width:760px}
+  #lessonIntroView .li-fig{margin:0;padding:16px 16px 10px;border-radius:20px;background:radial-gradient(120% 90% at 50% 0%,color-mix(in srgb,var(--brass,#c9a961) 14%,transparent),transparent 70%)}
+  #lessonIntroView .li-fig figcaption{font-size:11px!important;letter-spacing:.2em;opacity:.7}
+  #lessonIntroView .li-chips{display:grid;grid-template-columns:repeat(2,minmax(120px,1fr));gap:0;flex:0 1 300px;border-top:1px solid color-mix(in srgb,var(--brass,#c9a961) 35%,transparent);border-bottom:1px solid color-mix(in srgb,var(--brass,#c9a961) 35%,transparent)}
+  #lessonIntroView .li-chip{border:0;border-radius:0;background:none;padding:16px 14px;min-width:0;align-items:center;text-align:center}
+  #lessonIntroView .li-chip:nth-child(even){border-inline-start:1px solid color-mix(in srgb,var(--brass,#c9a961) 25%,transparent)}
+  #lessonIntroView .li-chip:nth-child(n+3){border-top:1px solid color-mix(in srgb,var(--brass,#c9a961) 25%,transparent)}
+  #lessonIntroView .li-chip small{font-size:10.5px;letter-spacing:.2em}
+  #lessonIntroView .li-chip b{font-size:17px;margin-top:4px}
+  #lessonIntroView .li-sec{display:block;border:0;border-radius:0;background:none;padding:0;margin:0 auto 24px;max-width:680px}
+  #lessonIntroView .li-sec .li-ic{display:none}
+  #lessonIntroView .li-sec h4{font-size:12px;letter-spacing:.28em;margin:0 0 8px;display:flex;align-items:center;gap:14px}
+  #lessonIntroView .li-sec h4::after{content:'';flex:1;height:1px;background:color-mix(in srgb,var(--brass,#c9a961) 30%,transparent)}
+  #lessonOverlay .lesson-intro .li-sec p{font-size:15.5px;line-height:1.95}
+}
 </style>
 <style>
 /* phones held upright (narrow touch screens): the board is sized from the width only, the same side gutter (10px) in every game —
@@ -2194,8 +2238,11 @@ addEventListener('resize', () => requestAnimationFrame(tzBtn));
   const dragStart = () => {
     const w = TZ.win, W = boardEl.offsetWidth, H = boardEl.offsetHeight;
     pd.w = w; pd.cw = W / w.n; pd.ch = H / w.n; pd.s = 9 / w.n; pd.tx = -w.c0 * pd.cw; pd.ty = -w.r0 * pd.ch;
-    const fr = frameEl.getBoundingClientRect(), br = boardEl.getBoundingClientRect();
-    frameEl.style.clipPath = `inset(${(br.top - fr.top).toFixed(1)}px ${(fr.right - br.right).toFixed(1)}px ${(fr.bottom - br.bottom).toFixed(1)}px ${(br.left - fr.left).toFixed(1)}px)`;
+    // (cut to the board's place and the two bands of coordinates beside it — they slide with the board, 2026-11-11 the user: they
+    //  vanished while sliding; an L shape, so the top row's numbers do not run into the corner above the right column)
+    const fr = frameEl.getBoundingClientRect(), br = boardEl.getBoundingClientRect(), L = br.left - fr.left, R = br.right - fr.left, T = br.top - fr.top, B = br.bottom - fr.top, FW = fr.width;
+    frameEl.style.clipPath = `polygon(${L}px 0px, ${R}px 0px, ${R}px ${T}px, ${FW}px ${T}px, ${FW}px ${B}px, ${L}px ${B}px)`;
+    pd.br = br;
     TZ.drag = true; tzStyle();   // (the whole board, laid out in the board's place)
     try { document.dispatchEvent(new CustomEvent('shogi-crop', { detail: null })); } catch (e) {}
     boardEl.style.transformOrigin = '0 0';
@@ -2206,11 +2253,20 @@ addEventListener('resize', () => requestAnimationFrame(tzBtn));
     pd.tx = Math.max(-(9 - n) * pd.cw, Math.min(0, pd.tx + dx)); pd.ty = Math.max(-(9 - n) * pd.ch, Math.min(0, pd.ty + dy));   // (stops at the board's edges)
     boardEl.style.transform = `translate(${pd.tx.toFixed(1)}px, ${pd.ty.toFixed(1)}px) scale(${pd.s})`;
     window.__boardZoom = { s: pd.s, tx: pd.tx, ty: pd.ty };
+    // (the board itself and the 3D canvas cut to the board's place, so the coordinate bands beside it stay readable)
+    boardEl.style.clipPath = `inset(${(-pd.ty / pd.s).toFixed(1)}px ${(W - (W - pd.tx) / pd.s).toFixed(1)}px ${(H - (H - pd.ty) / pd.s).toFixed(1)}px ${(-pd.tx / pd.s).toFixed(1)}px)`;
+    { const gl = document.getElementById('atlasGL'); if (gl && pd.br) { const r = gl.getBoundingClientRect(); gl.style.clipPath = `inset(${(pd.br.top - r.top).toFixed(1)}px ${(r.right - pd.br.right).toFixed(1)}px ${(r.bottom - pd.br.bottom).toFixed(1)}px ${(pd.br.left - r.left).toFixed(1)}px)`; } }
+    // (the coordinates: all nine along each side, as long as the enlarged board and moved with it — the letters keep their size)
+    const ct = $('#coordTop'), cr = $('#coordRight');
+    if (ct) { ct.style.width = (W * pd.s).toFixed(1) + 'px'; ct.style.transform = `translateX(${pd.tx.toFixed(1)}px)`; }
+    if (cr) { cr.style.height = (H * pd.s).toFixed(1) + 'px'; cr.style.transform = `translateY(${pd.ty.toFixed(1)}px)`; }
     if (window.Table3D && Table3D.kick) Table3D.kick(200);
   };
   const dragEnd = () => {
     const n = pd.w.n, c0 = Math.round(-pd.tx / pd.cw), r0 = Math.round(-pd.ty / pd.ch);
-    boardEl.style.transform = ''; boardEl.style.transformOrigin = ''; window.__boardZoom = null; frameEl.style.clipPath = '';
+    boardEl.style.transform = ''; boardEl.style.transformOrigin = ''; boardEl.style.clipPath = ''; window.__boardZoom = null; frameEl.style.clipPath = '';
+    { const gl = document.getElementById('atlasGL'); if (gl) gl.style.clipPath = ''; }
+    ['#coordTop', '#coordRight'].forEach(q => { const c = $(q); if (c) { c.style.width = c.style.height = c.style.transform = ''; } });
     TZ.drag = false;
     { const p0 = TZ.pan; TZ.pan = [0, 0]; const wb = tzWindow(); TZ.pan = wb ? [c0 - wb.c0, r0 - wb.r0] : p0; }
     TZ.key = ''; tzStyle();   // (the cropped close-up again, at the settled window)
@@ -4547,7 +4603,7 @@ function openIntro(i) {
   let fig = '';
   const smp = g.problems[Math.min(g.problems.length - 1, 2)];
   if (smp && window.ShogiRules && ShogiRules.diagram && !smp.variant) {
-    try { const w = Math.min(($('#liBody').clientWidth || 340), 900), cw = w < 560 ? Math.max(15, Math.min(22, Math.floor((w - 150) / 9))) : Math.max(18, Math.min(28, Math.floor((Math.min(w, 420) - 70) / 9))); fig = `<figure class="op-fig li-fig">${ShogiRules.diagram(smp.sfen, [], cw)}<figcaption>${escHb(lit('fig'))}</figcaption></figure>`; } catch (e) { fig = ''; }
+    try { const w = Math.min(($('#liBody').clientWidth || 340), 900), cw = w < 560 ? Math.max(18, Math.min(30, Math.floor((w - 64) / 9.6))) : Math.max(20, Math.min(32, Math.floor((Math.min(w, 460) - 70) / 9))); fig = `<figure class="op-fig li-fig">${ShogiRules.diagram(smp.sfen, [], cw)}<figcaption>${escHb(lit('fig'))}</figcaption></figure>`; } catch (e) { fig = ''; }
   }
   const chip = (k, v) => `<div class="li-chip"><small>${escHb(k)}</small><b>${escHb(v)}</b></div>`;
   const chips = `<div class="li-chips">${i >= 0 ? chip(lit('lv'), L(g.grade)) : ''}${chip(lit('n'), lit('probs', { n }))}${chip(lit('pass'), lit('pts', { n: need }))}${chip(lit('kind'), lit(kind))}</div>`;
