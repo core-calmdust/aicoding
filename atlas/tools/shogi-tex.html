@@ -394,7 +394,7 @@
         const o = yosegiPx(lx, ly, { kind: 'yabane', a: bw / 2, x0: 0, y0: 0 }, s); return o;
       }
       const edge = Math.min(Math.abs(x - b0), Math.abs(y - b0), Math.abs(W - b0 - x), Math.abs(H - b0 - y), Math.abs(x - b0 - bw), Math.abs(y - b0 - bw), Math.abs(W - b0 - bw - x), Math.abs(H - b0 - bw - y));
-      const o = straight(x, y, W, H, s, [232, 214, 174], [196, 166, 118], 48, .7, true);
+      const o = straight(x, y, W, H, s + 40, [214, 170, 122], [160, 110, 66], 44, .8, true);   // 桂, the same tone as the 駒台 (2026-11-11)
       if (edge < 2.2 && x > b0 - 2 && x < W - b0 + 2 && y > b0 - 2 && y < H - b0 + 2) return [70, 54, 40];
       return o;
     });
