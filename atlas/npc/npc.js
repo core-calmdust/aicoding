@@ -260,12 +260,22 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
   const phoneLand = () => !PCQ.matches && innerWidth > innerHeight && innerHeight < 600;
   // the portal's table: PC just above the action bar; phones (portrait) over the action bar itself (投了 etc.) — above it the bubble
   // covered the board (2026-11-11); a tap puts it away
-  function tableBottom() {
+  function tableBottom(el) {
     const bar = document.querySelector('.bv .tbar');
     if (!PCQ.matches && innerWidth <= 600 && bar && bar.getClientRects().length && getComputedStyle(bar).position === 'absolute') {
       const r = bar.getBoundingClientRect(); if (r.height) return Math.max(0, innerHeight - r.bottom) - 10;
     }
-    return window.__tbar && __tbar.band;
+    // PC (wide): just above the action bar — but when the bubble would cover the board there, down over the bar itself like on
+    // phones (the bar's buttons are under it for a few seconds; a click puts it away) (2026-11-12)
+    const band = window.__tbar && __tbar.band;
+    try {
+      const fr = window.Table3D && Table3D.fitRect && Table3D.fitRect(), f = el && el.getBoundingClientRect();
+      if (band && fr && f && f.width && bar && bar.getClientRects().length) {
+        const w = f.width, x0 = innerWidth / 2 - w / 2, x1 = innerWidth / 2 + w / 2, h = f.height, yb = innerHeight - band - 10, yt = yb - h;
+        if (x1 > fr.left + 8 && x0 < fr.right - 8 && yt < fr.bottom - 6) { const r = bar.getBoundingClientRect(); return Math.max(0, innerHeight - r.bottom) - 4; }
+      }
+    } catch (e) {}
+    return band;
   }
   function floatUI(o = {}) {
     addCss();
@@ -285,7 +295,7 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
         if (img.getAttribute('src') !== m.img) img.src = m.img;
         nm.textContent = m.name; tag.textContent = m.tag; tag.classList.toggle('tv', !!m.tv); ttl.textContent = m.title || ''; tx.innerHTML = html;
         // (after the text: the place may depend on the bubble's height — the skins centre it between the board and the bar)
-        try { const b = o.bottom ? o.bottom(el) : tableBottom(); if (b != null) el.style.setProperty('--npc-bot', Math.round(b) + 'px'); } catch (e) {}
+        try { const b = o.bottom ? o.bottom(el) : tableBottom(el); if (b != null) el.style.setProperty('--npc-bot', Math.round(b) + 'px'); } catch (e) {}
         el.classList.add('on'); pic.classList.remove('talk'); void pic.offsetWidth; pic.classList.add('talk');
         clearTimeout(hideT); hideT = setTimeout(() => el.classList.remove('on'), Math.max(7500, tx.textContent.length * 170));
       },
