@@ -254,16 +254,16 @@
       } },
   };
   // shogi (atlas/models/shogi.js PSETS, 2026-11-11): the raised-lacquer pieces with the inscriptions of the six 2D sets; 'atlas-shogi-pc3'
-  PIECES.shogi = { list: ['moriage', 'ichiji', 'kinki', 'minase', 'ryoko', 'reisho'], get: () => { let v = ls.get('atlas-shogi-pc3'); if (v === 'kaisho') v = 'reisho';   // (楷書 was replaced by 隷書, 2026-11-11)
+  PIECES.shogi = { list: ['moriage', 'ichiji', 'kinki', 'minase', 'ryoko', 'futofude'], get: () => { let v = ls.get('atlas-shogi-pc3'); if (v === 'kaisho' || v === 'reisho') v = 'futofude';   // (楷書, then 隷書, were replaced by 太筆, 2026-11-11)
     return PIECES.shogi.list.includes(v) ? v : 'moriage'; }, set: k => ls.set('atlas-shogi-pc3', k),
-    thumb: k => new URL('img/pc3-shogi-' + k + '.webp?v=11', ME).href,
+    thumb: k => new URL('img/pc3-shogi-' + k + '.webp?v=12', ME).href,
     names: {
       moriage: { ja: '盛り上げ', en: 'Raised lacquer', zh: '盛上', 'zh-TW': '盛上', ko: '모리아게', es: 'Laca en relieve', fr: 'Laque en relief', pt: 'Laca em relevo', de: 'Lack-Relief', ru: 'Рельефный лак', tr: 'Kabartma lake', id: 'Pernis timbul', hi: 'उभरी लाह', ar: 'ورنيش بارز' },
       ichiji: { ja: '一字書き', en: 'One character', zh: '一字书', 'zh-TW': '一字書', ko: '한 글자', es: 'Un carácter', fr: 'Un caractère', pt: 'Um caractere', de: 'Ein Zeichen', ru: 'Один иероглиф', tr: 'Tek karakter', id: 'Satu karakter', hi: 'एक अक्षर', ar: 'حرف واحد' },
       kinki: { ja: '錦旗', en: 'Kinki', zh: '锦旗', 'zh-TW': '錦旗', ko: '긴키', es: 'Kinki', fr: 'Kinki', pt: 'Kinki', de: 'Kinki', ru: 'Кинки', tr: 'Kinki', id: 'Kinki', hi: 'किंकी', ar: 'كينكي' },
       minase: { ja: '水無瀬', en: 'Minase', zh: '水无濑', 'zh-TW': '水無瀨', ko: '미나세', es: 'Minase', fr: 'Minase', pt: 'Minase', de: 'Minase', ru: 'Минасэ', tr: 'Minase', id: 'Minase', hi: 'मिनासे', ar: 'ميناسي' },
       ryoko: { ja: '菱湖', en: 'Ryōko', zh: '菱湖', 'zh-TW': '菱湖', ko: '료코', es: 'Ryōko', fr: 'Ryōko', pt: 'Ryōko', de: 'Ryōko', ru: 'Рёко', tr: 'Ryōko', id: 'Ryōko', hi: 'र्योको', ar: 'ريوكو' },
-      reisho: { ja: '隷書', en: 'Clerical script', zh: '隶书', 'zh-TW': '隸書', ko: '예서', es: 'Escritura clerical', fr: 'Écriture des scribes', pt: 'Escrita clerical', de: 'Kanzleischrift', ru: 'Письмо лишу', tr: 'Kâtip yazısı', id: 'Aksara klerikal', hi: 'लिपिक लिपि', ar: 'خط الكتّاب' } } };
+      futofude: { ja: '太筆', en: 'Bold brush', zh: '粗笔', 'zh-TW': '粗筆', ko: '굵은 붓', es: 'Pincel grueso', fr: 'Pinceau épais', pt: 'Pincel grosso', de: 'Breiter Pinsel', ru: 'Толстая кисть', tr: 'Kalın fırça', id: 'Kuas tebal', hi: 'मोटा ब्रश', ar: 'فرشاة عريضة' } } };
   // peg solitaire (atlas/models/peg.js SETS, 2026-11-11): the 2D page's marble sets ('aicoding-peg' settings.pg — the same choice in 2D and 3D);
   // the pictures are the 2D page's own marbles (peg/img/m-<set>-<k>.webp)
   PIECES.peg = { list: ['glass', 'pearl', 'steel', 'peg', 'mod'],
