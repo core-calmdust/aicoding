@@ -1553,11 +1553,11 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
 <script src="i18n_sync.js?v=20261020gs-i14"></script>
 <script src="i18n_ai.js?v=20261108top"></script>
 <script src="../shared/pzbook.js?v=8l14"></script>
-<script src="engine.js?v=20261109nn2"></script>
+<script src="engine.js?v=20261111pd1"></script>
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2l14"></script>
 <script src="online.js?v=stale1od1pf"></script>
-<script src="../shared/mtengine.js?v=9"></script><script src="../shared/proset.js?v=5t2svhxbf-sp2"></script><script>MTEngine.init({ sw: 'sw.js?v=2', light: true });</script>
+<script src="../shared/mtengine.js?v=9"></script><script src="../shared/proset.js?v=5t2svhxbf-sp2-pd1"></script><script src="../shared/ponder.js?v=1"></script><script>MTEngine.init({ sw: 'sw.js?v=2', light: true });</script>
 <script src="../shared/placement.js?v=1l14"></script>
 <script src="../shared/rulesoffer.js?v=17l14j"></script>
 <script src="../shared/headerbar.js?v=51l14r"></script>
@@ -1577,18 +1577,18 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
 <script src="../shared/export.js?v=9l14"></script>
 <script src="coach.js?v=6sq"></script>
 <script src="coach-i18n.js?v=3-i14"></script>
-<script src="app.js?v=20261110dp-ybw"></script>
+<script src="app.js?v=20261110dp-ybw-pd1"></script>
 <script src="rules.js?v=20261021rb"></script>
 <!-- World Board Game Atlas portal skin: chess/?skin=atlas — 3D luxury board, guide speech bubbles, portal look (all features kept) -->
 <script>
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=55l22'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=56l22'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/img/tex/baked.js?v=1')).then(() => load('../atlas/table3d.js?v=147')).then(() => load('../atlas/tables3d.js?v=55')).then(() => load('../atlas/skin/common.js?v=67')).then(() => load('../atlas/models/chess.js?v=16l14')).then(() => load('../atlas/skin/chess.js?v=11l14'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/img/tex/baked.js?v=1')).then(() => load('../atlas/table3d.js?v=147')).then(() => load('../atlas/tables3d.js?v=55')).then(() => load('../atlas/skin/common.js?v=68')).then(() => load('../atlas/models/chess.js?v=16l14')).then(() => load('../atlas/skin/chess.js?v=11l14'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>

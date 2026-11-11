@@ -834,8 +834,8 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
       return { move: best };
     }
     const cm = L.wnodes ? X.think(0, 0, 64, L.wnodes) : L.ms ? X.think(L.ms * 0.55, L.ms, 64, 0) : X.think(0, 0, L.d, 0);
-    const r = new Int32Array(MEM.buffer, X.res_ptr(), 8);
-    return { move: pos.fromUci(wUci(cm)), v: toJS(r[1]), depth: r[2], nodes: X.res_nodes(), wasm: true };
+    const r = new Int32Array(MEM.buffer, X.res_ptr(), 10);
+    return { move: pos.fromUci(wUci(cm)), v: toJS(r[1]), depth: r[2], nodes: X.res_nodes(), wasm: true, reply: r[4] > 1 ? wUci(r[9]) : '' };   // reply: the expected answer (PV's 2nd move, UCI) — PRO's ponder (shared/ponder.js)
   }
   // review box: the best few moves with their lines (each search excludes the moves already found), best first
   function multiPV(m) {

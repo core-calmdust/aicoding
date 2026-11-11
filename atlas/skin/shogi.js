@@ -16,6 +16,8 @@
   const tsSolo = () => document.body.classList.contains('ts-noopp');   // 詰将棋: gote's stand hidden
   let board = T3.MODELS.shogi(true), FH = board.userData.S, Y = board.userData.top, OUT = board.userData.outer;
 
+  // PC windows up to 3:2 (shogi/index.html, 2026-11-11): the komadai as bars above and below the board, as on phones
+  const STK = matchMedia('(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4) and (max-aspect-ratio: 3/2)');
   const skin = AtlasSkin.init({
     margin: 0.2,   // canvas margin around the board (less = fewer pixels to draw; enough for the bezel and its shadow)
     board: boardDom,
@@ -25,6 +27,26 @@
     pc: { vars: ['--cw'], extras: '.board-area > .hand', fit2d: true, k2d: { l: .0506, r: .0511, t: .0502, b: .0516 },   // (the 2D board: laid out exactly as the 3D one)
       place(F) {
         const top = document.getElementById('handTop'), bot = document.getElementById('handBottom'); if (!top || !bot) return;
+        if (STK.matches && extW && is3()) {   // the 3D board made deeper for them (setBoard ext): the bars exactly on that wood, see-through
+          const r0 = boardDom.getBoundingClientRect(), u = r0.height / FH, mg = board.userData.mg || .5, w = (r0.width + 2 * mg * u).toFixed(1) + 'px', hh = (extW * u).toFixed(1) + 'px';
+          [top, bot].forEach(h => { if (h.style.getPropertyValue('width') !== w) h.style.setProperty('width', w, 'important'); if (h.style.getPropertyValue('height') !== hh) h.style.setProperty('height', hh, 'important'); });
+          const mv = (h, x, y) => { const cs = getComputedStyle(h), l = parseFloat(cs.left) || 0, t = parseFloat(cs.top) || 0;
+            if (Math.abs(x) > .3) h.style.setProperty('left', (l + x) + 'px', 'important'); if (Math.abs(y) > .3) h.style.setProperty('top', (t + y) + 'px', 'important'); };
+          const r1 = boardDom.getBoundingClientRect(), L = r1.left - mg * u;
+          let r = top.getBoundingClientRect(); if (r.width) mv(top, L - r.left, r1.top - mg * u - r.bottom);
+          r = bot.getBoundingClientRect(); mv(bot, L - r.left, r1.bottom + mg * u - r.top);
+          return;
+        }
+        if (STK.matches) {   // a PC window up to 3:2: the bars above and below the frame, its full width, touching it (the 2D board: its plate runs on under them)
+          const o = is3() ? 13 : 0, w = (F.r - F.l).toFixed(1) + 'px', de = document.documentElement;
+          [top, bot].forEach(h => { if (h.style.getPropertyValue('width') !== w) h.style.setProperty('width', w, 'important'); });
+          const mv = (h, x, y) => { const cs = getComputedStyle(h), l = parseFloat(cs.left) || 0, t = parseFloat(cs.top) || 0;
+            if (Math.abs(x) > .3) h.style.setProperty('left', (l + x) + 'px', 'important'); if (Math.abs(y) > .3) h.style.setProperty('top', (t + y) + 'px', 'important'); };
+          let r = top.getBoundingClientRect(); if (r.width) mv(top, F.l - r.left, F.t + o - r.bottom);
+          r = bot.getBoundingClientRect(); mv(bot, F.l - r.left, F.b - o - r.top);
+          de.style.setProperty('--kdth', top.offsetHeight + 'px'); de.style.setProperty('--kdbh', bot.offsetHeight + 'px');   // (the 2D designs: the plate runs on under the bars)
+          return;
+        }
         const G = (top.offsetWidth || bot.offsetWidth) / 1.25 * .22;   // (詰将棋 hides gote's stand: sente's gives the width)
         const put = (h, x, y) => {   // move the box by (x, y) from where it is now (position: relative)
           const cs = getComputedStyle(h), l = parseFloat(cs.left) || 0, t = parseFloat(cs.top) || 0;
@@ -37,13 +59,14 @@
       },
       // 詰将棋 (gote's stand hidden, body.ts-noopp): sente's stand stands under the column, its left edge on the column's and its
       // bottom on the frame's — the board takes the width the stands had (2026-11-10)
-      extraOff: e => tsSolo() && e.id === 'handBottom',
+      sideOnExtent: () => STK.matches,
+      extraOff: e => tsSolo() && !STK.matches && e.id === 'handBottom',
       afterSide(F, sr) {
-        const bot = document.getElementById('handBottom'); if (!bot || !tsSolo()) return;
+        const bot = document.getElementById('handBottom'); if (!bot || !tsSolo() || STK.matches) return;
         const cs = getComputedStyle(bot), r = bot.getBoundingClientRect(), l = parseFloat(cs.left) || 0, t = parseFloat(cs.top) || 0;
         bot.style.setProperty('left', (l + sr.left - r.left) + 'px', 'important'); bot.style.setProperty('top', (t + F.b - r.bottom) + 'px', 'important');
       },
-      unplace() { ['handTop', 'handBottom'].forEach(id => { const h = document.getElementById(id); if (h) { h.style.removeProperty('left'); h.style.removeProperty('top'); } }); } },
+      unplace() { ['handTop', 'handBottom'].forEach(id => { const h = document.getElementById(id); if (h) { h.style.removeProperty('left'); h.style.removeProperty('top'); h.style.removeProperty('width'); h.style.removeProperty('height'); } }); } },
     outer: r => { const H = r.height * OUT; return { top: r.top + r.height / 2 - H / 2, height: H }; },
     guide: '../images/atlas/g-shogi.webp', guideFallback: '../images/atlas/shogi.webp',
     bubbles: [['lsPrompt', 'lsFb']], floor: 'tatami',
@@ -69,18 +92,30 @@
   T3.show('shogi', board, { still: true });
   skin.alignTo(FH, Y);
   // 5五将棋 (shogi/variants/): the page switches its board to 5×5 → a 5×5 kaya board, the camera fitted to it again
-  let boardN = 9, cropK = '', variantN = 9;
+  let boardN = 9, cropK = '', variantN = 9, extW = 0, curCrop = null;
   // crop {n, c0, r0}: 詰将棋's close-up (shogi/index.html tzStyle) — an n×n kaya board cut from the whole one
-  function setBoard(n, crop) {
-    const ck = crop ? crop.n + ':' + crop.c0 + ':' + crop.r0 : '';
-    if (n === boardN && ck === cropK) return; boardN = n; cropK = ck;
-    board = T3.MODELS.shogi(true, crop ? { n: crop.n, crop } : { n }); FH = board.userData.S; Y = board.userData.top; OUT = board.userData.outer;
+  // ext: the PC layout up to 3:2 (STK) — the 3D board made deeper at the top and the bottom by the komadai bars' height, so the bars
+  // lie on the board's own wood (one block, no joint to see — 2026-11-11)
+  function setBoard(n, crop, ext = extW) {
+    const ck = (crop ? crop.n + ':' + crop.c0 + ':' + crop.r0 : '') + '|' + ext;
+    if (n === boardN && ck === cropK) return; boardN = n; cropK = ck; curCrop = crop || null; extW = ext;
+    board = T3.MODELS.shogi(true, crop ? { n: crop.n, crop, ext } : { n, ext }); FH = board.userData.S; Y = board.userData.top; OUT = board.userData.outer;
     T3.show('shogi', board, { still: true }); skin.alignTo(FH, Y);
     try { look(); } catch (e) {}
     if (T3.kick) T3.kick(600);
   }
-  document.addEventListener('shogi-geom', e => { try { variantN = e.detail && e.detail.n === 5 ? 5 : 9; setBoard(variantN); } catch (x) { console.warn(x); } });
-  document.addEventListener('shogi-crop', e => { try { const c = e.detail; if (c) setBoard(c.n, c); else setBoard(variantN); } catch (x) { console.warn(x); } });
+  document.addEventListener('shogi-geom', e => { try { variantN = e.detail && e.detail.n === 5 ? 5 : 9; setBoard(variantN); setTimeout(syncExt, 120); } catch (x) { console.warn(x); } });
+  document.addEventListener('shogi-crop', e => { try { const c = e.detail; if (c) setBoard(c.n, c); else setBoard(variantN); setTimeout(syncExt, 120); } catch (x) { console.warn(x); } });
+  // the depth the bars need, in board units (rounded: the model is not rebuilt for a fraction of a px); 0 = the board as it is
+  function wantExt() {
+    if (!STK.matches || !is3()) return 0;
+    const r = boardDom.getBoundingClientRect(), h = (document.getElementById('handBottom') || {}).offsetHeight || 0;
+    if (r.height < 40 || !h) return extW;
+    return Math.round(h / (r.height / FH) * 20) / 20;
+  }
+  function syncExt() { try { const e = wantExt(); if (e !== extW) setBoard(boardN, curCrop, e); } catch (x) { console.warn(x); } }
+  STK.addEventListener ? STK.addEventListener('change', () => setTimeout(syncExt, 60)) : STK.addListener(() => setTimeout(syncExt, 60));
+  addEventListener('resize', () => setTimeout(syncExt, 200)); [500, 1500, 3500].forEach(ms => setTimeout(syncExt, ms));
   { const b0 = document.getElementById('board'); if (b0 && b0.classList.contains('v5')) setBoard(variantN = 5); if (window.__tzCrop) setBoard(window.__tzCrop.n, window.__tzCrop); }
 
   /* ---------- komadai: a light kaya wood-grain texture (procedural, drawn once; skin.css uses --kdwood / --kdwoodh) ---------- */
@@ -122,6 +157,7 @@
     const fit = () => {
       const top = document.getElementById('handTop'), bot = document.getElementById('handBottom'), bd = document.getElementById('board');
       if (!top || !bot || !bd) return;
+      if (STK.matches) return;   // (PC: pcFit's place() lays the bars)
       const on = MQ.matches && !document.documentElement.classList.contains('atlas-land');   // (3D and the 2D designs alike: both are laid out with the same overhang)
       [top, bot].forEach(h => ['margin-left', 'width', 'margin-top', 'margin-bottom', 'transform'].forEach(k => h.style.removeProperty(k)));
       const de = document.documentElement; de.style.removeProperty('--kdth'); de.style.removeProperty('--kdbh');
@@ -137,7 +173,7 @@
       const r2 = bd.getBoundingClientRect(), B2 = r2.bottom + K.b * r2.height - (is3() ? 13 : 0), br = bot.getBoundingClientRect(); bot.style.setProperty('margin-top', (parseFloat(getComputedStyle(bot).marginTop) + B2 - br.top).toFixed(1) + 'px', 'important');
     };
     // (only when the board actually moved / changed size: the phone toolbar sliding in and out must not re-lay the bars every frame)
-    let q = 0, last = ''; const later = () => { if (q) return; q = 1; requestAnimationFrame(() => { q = 0; const bd = document.getElementById('board'); if (!bd) return; const r = bd.getBoundingClientRect(), k = [r.width, r.height, r.left].map(v => Math.round(v)).join(','); if (k === last) return; last = k; fit(); }); };
+    let q = 0, last = ''; const later = () => { if (q) return; q = 1; requestAnimationFrame(() => { q = 0; const bd = document.getElementById('board'); if (!bd) return; const r = bd.getBoundingClientRect(), k = [r.width, r.height, r.left, r.top].map(v => Math.round(v)).join(',') + (is3() ? '3' : '2') + document.body.className; if (k === last) return; last = k; fit(); }); };
     addEventListener('resize', later); [300, 900, 2000, 4000].forEach(ms => setTimeout(fit, ms));
     if (window.ResizeObserver) { const ro = new ResizeObserver(later); const bd = document.getElementById('board'); if (bd) ro.observe(bd); }
     window.__kdFit = fit;
@@ -164,7 +200,7 @@
   }
   // 3D / 2D (the standard of the other games, 2026-11-10): a 「3D」 tile first in the board row; a 2D board picked = the 2D page
   const V = skin.view ? skin.view({ key: 'atlas-shogi-view', row: document.getElementById('segSkin'), img: '../images/atlas/shogi.webp',
-    on() { setTimeout(() => { try { look(); renderBoard(false); renderHands(); } catch (e) {} }, 0); } }) : null;
+    on() { setTimeout(() => { try { look(); renderBoard(false); renderHands(); } catch (e) {} syncExt(); }, 0); [60, 400, 1000].forEach(ms => setTimeout(() => { try { window.__kdFit && window.__kdFit(); } catch (e) {} }, ms)); } }) : null;   // (2D ↔ 3D: the komadai bars re-fitted to the new board)
   const is3 = () => !V || V.is3d();
   function look() {   // selection mark, board tone and piece tone follow the game's skin setting
     if (seg) seg.querySelectorAll('button').forEach(x => { if (mine) x.classList.toggle('sel', x.dataset.v === 'atlas3d'); else if (x.dataset.v === 'atlas3d') x.classList.remove('sel'); });
@@ -178,7 +214,7 @@
     try { const real = typeof settings === 'object' && settings ? settings.skin : 'kaya', eff = is3() ? 'kaya' : real;
       ['grain', 'kaya', 'metal', 'ink'].forEach(k => document.body.classList.toggle('skin-' + k, eff === k)); } catch (e) {}
   }
-  if (typeof window.applyLook === 'function') { const oa = window.applyLook; window.applyLook = function () { const r = oa.apply(this, arguments); try { look(); } catch (e) {} return r; }; }
+  if (typeof window.applyLook === 'function') { const oa = window.applyLook; window.applyLook = function () { const r = oa.apply(this, arguments); try { look(); } catch (e) {} [60, 400].forEach(ms => setTimeout(() => { try { window.__kdFit && window.__kdFit(); } catch (e) {} }, ms)); return r; }; }
   setTimeout(look, 0);
   window.pieceEl = function (code, promoted) {
     const el = orig(code, promoted);
@@ -187,7 +223,7 @@
       const tp = E.typeOf(code), col = E.colorOf(code), up = (col === 1) !== flip;
       const src = IMG['k' + tp + (tp === 8 && col === 1 ? 'o' : '')]; if (!src) return el;
       el.classList.add('img', 'atlas3d'); el.classList.remove('g', 'has-intl');
-      const k = el.querySelector('.k'); k.innerHTML = `<img src="${src}" alt="" draggable="false"${up ? ' class="up"' : ''}>`;
+      const k = el.querySelector('.k'); k.innerHTML = `<img src="${src}" alt="" draggable="false" decoding="sync"${up ? ' class="up"' : ''}>`;   // (sync: painted with the frame, no blank flash)
       // the face's fine wood grain, as on the page's image sets (its own patch per kind and side)
       const gi = tp * 2 + (up ? 1 : 0); k.classList.toggle('up', up);
       k.style.setProperty('--pm', `url("${src}")`); k.style.setProperty('--gp', `${(gi * 37) % 100}% ${(gi * 61) % 100}%`); k.style.setProperty('--gs', `${60 + (gi * 29) % 30}%`);
@@ -197,8 +233,10 @@
   // pre-rendered sheet of the 3D pieces (images/atlas/shogi-pieces.png, made with Table3D.shogi.images); live render as fallback
   const sheet = () => new Promise((res, rej) => { const im = new Image(); im.onload = () => {
     const out = {}, keys = ['k1', 'k2', 'k3', 'k4', 'k5', 'k6', 'k7', 'k8', 'k9', 'k10', 'k11', 'k12', 'k13', 'k14', 'k8o'];
-    keys.forEach((k, i) => { const c = document.createElement('canvas'); c.width = 256; c.height = 282; c.getContext('2d').drawImage(im, (i % 5) * 256, (i / 5 | 0) * 282, 256, 282, 0, 0, 256, 282); out[k] = c.toDataURL('image/png'); });
-    res(out); }; im.onerror = rej; im.src = '../images/atlas/shogi-pieces.png?v=3'; });
+    // blob: URLs, not data: URLs (2026-11-11) — every board redraw (each move, 待った) makes ~40 <img>; a long data: URL is parsed and
+    // decoded again each time on iPhone (the board flashed as if redrawn, and the phone ran hot); a blob: URL is decoded once and cached
+    Promise.all(keys.map((k, i) => new Promise(ok => { const c = document.createElement('canvas'); c.width = 256; c.height = 282; c.getContext('2d').drawImage(im, (i % 5) * 256, (i / 5 | 0) * 282, 256, 282, 0, 0, 256, 282);
+      if (c.toBlob) c.toBlob(b => { out[k] = b ? URL.createObjectURL(b) : c.toDataURL('image/png'); ok(); }, 'image/png'); else { out[k] = c.toDataURL('image/png'); ok(); } }))).then(() => res(out)); }; im.onerror = rej; im.src = '../images/atlas/shogi-pieces.png?v=3'; });
   sheet().catch(() => SG.images(256)).then(o => {
     IMG = o;
     window.__shogiAtlasPre = Object.values(o).map(src => { const im = new Image(); im.src = src; if (im.decode) im.decode().catch(() => {}); return im; });   // decoded up front: promotions show at once

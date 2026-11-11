@@ -340,8 +340,8 @@
     // the column: gx px right of the board group, its top / bottom level with the 3D frame's → true when nothing had to move
     function placeSide(gx) {
       const px = (el, p) => parseFloat(getComputedStyle(el)[p]) || 0;
-      const F2 = frame(), E2 = extent(F2), sr = side.getBoundingClientRect();
-      const fh = F2.b - F2.t, sx = E2.r + gx - sr.left, sy = F2.t - sr.top;
+      const F2 = frame(), E2 = extent(F2), sr = side.getBoundingClientRect(), V = P.sideOnExtent && P.sideOnExtent() ? E2 : F2;   // (shogi, a PC window up to 3:2: level with the komadai bars above and below the frame)
+      const fh = V.b - V.t, sx = E2.r + gx - sr.left, sy = V.t - sr.top;
       if (Math.abs(sr.height - fh) > .3) { side.style.setProperty('height', fh + 'px', 'important'); side.style.setProperty('min-height', '0px', 'important'); }
       if (Math.abs(sx) > .3) side.style.left = (px(side, 'left') + sx) + 'px';
       if (Math.abs(sy) > .3) side.style.top = (px(side, 'top') + sy) + 'px';
