@@ -77,6 +77,7 @@ html:not(.atlas-skin) .board-area > .hand.bottom{position:relative;left:0}
 }
 .hand .hname{font-size:calc(var(--cw)*0.16);color:rgba(226,194,117,.7);text-align:center;letter-spacing:.1em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hand .hn-n{display:none}
+.hand .hname{font-family:'Shippori Mincho B1','Hiragino Mincho ProN','Yu Mincho','Noto Serif JP',serif!important;font-weight:400!important}   /* ☗あなた / ☖AI… on the stands: mincho in every design (2026-11-11) */
 .hslot{touch-action:none;position:relative;height:var(--ch);width:100%;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .hslot .cnt{position:absolute;right:2%;bottom:4%;z-index:3;font-family:'JetBrains Mono',monospace;font-size:calc(var(--cw)*0.2);color:#fff;background:rgba(0,0,0,.7);border-radius:9px;padding:0 5px;line-height:1.4}
 .hslot.sel{background:rgba(226,194,117,.25);box-shadow:inset 0 0 0 2px var(--accent)}
@@ -1831,9 +1832,9 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="lists-ui.js?v=20261107l14"></script>
 <script src="openings-ui.js?v=20261107l14"></script>
 <script src="../shared/pzbook.js?v=8l14"></script>
-<script src="../shared/headerbar.js?v=51l14r"></script>
+<script src="../shared/headerbar.js?v=51l14s"></script>
 <script src="../shared/flipbtn.js?v=3l14"></script>
-<script src="../shared/cardbar.js?v=14l14"></script>
+<script src="../shared/cardbar.js?v=15l14"></script>
 <script src="../shared/watchpause.js?v=2l14"></script>
 <script src="../shared/tick.js?v=2l14"></script>
 <script src="../shared/fischer.js?v=1"></script>
@@ -1851,9 +1852,9 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="variants/variants.js?v=20261107l14"></script>
 <script src="rvbox.js?v=20261107l14"></script>
 <script src="rvtip.js?v=20261107l14"></script>
-<script src="../shared/coachkit.js?v=16l14"></script>
+<script src="../shared/coachkit.js?v=17l14"></script>
 <script src="../shared/record.js?v=12l14"></script>
-<script src="coach.js?v=15"></script>
+<script src="coach.js?v=16"></script>
 <script src="coach-i18n.js?v=20261107l14"></script>
 <script>
 'use strict';
@@ -2025,7 +2026,7 @@ aiWorker = makeWorker(aiMsg); anaWorker = makeWorker(anaMsg);
 // device) and stay on the one-thread workers; the timed top steps 七段〜九段 (rated games too: the user's decision 2026-11-08,
 // device differences accepted) and PRO time limits use the pool.
 const MTP = window.MTEngine ? MTEngine.use({
-  wasm: 'engine_mt.wasm?v=5', lead: 'engine.js?v=20261109s4&mt=1', helper: 'mt-helper.js?v=2', slot: 8 << 20, initial: 1536, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
+  wasm: 'engine_mt.wasm?v=6', lead: 'engine.js?v=20261109s4&mt=1', helper: 'mt-helper.js?v=3', slot: 8 << 20, initial: 1536, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => Date.now(), progress: () => {}, aprogress: () => {} } }),
   after: async (X, mem, ws) => { const wt = await weightsReady; if (wt) ws[0].postMessage({ type: 'weights', buffer: wt.slice(0) }); },
   help: m => { const p = new E.Position(); p.setSfen(m.sfen); const board = Array.from(p.board), hand = Array.from(p.hand), side = p.side, moves = [];
@@ -4940,7 +4941,7 @@ const tsAct = {
 function tsBar() {
   const card = $('#lessonCard'), bar = card && card.querySelector('.cb-bar'); if (!bar) return;
   const stOn = !!(lesson && lesson.study);   // the opening study (解説): the same compact card — quit at the top, captioned buttons, no coach (2026-11-10)
-  const on = stOn || !!(lesson && lesson.cur && ((lesson.endless && lesson.cur.kind === 'tsume') || lesson.seq)), tools = bar.querySelector('.cb-tools'), main = bar.querySelector('.cb-main');   // 詰将棋 and the lessons' problems (2026-11-10)
+  const on = stOn || !!(lesson && lesson.cur && !lesson.ramp && !lesson.review), tools = bar.querySelector('.cb-tools'), main = bar.querySelector('.cb-main');   // 詰将棋 and the lessons' problems (2026-11-10)
   card.classList.toggle('ts-compact', on); card.classList.toggle('st-cmp', stOn);
   // the title row: 「創作 3手詰 …… 18/120問目」; the head row's right end: the quit button (2026-11-10)
   let th = $('#tsHead'); const ti = $('#lsTitle');
@@ -4979,7 +4980,7 @@ function tsBar() {
   if (bN.parentElement !== main) main.appendChild(bN);
   if (q) q.dataset.cap = C[4];
 }
-function renderLesson() { keepBoardPos(renderLesson0); tsBar(); stSync(); hbInfo(); $('#lsBackOp').classList.toggle('hidden', !(lesson && (lesson.study || lesson.opening))); }
+function renderLesson() { keepBoardPos(renderLesson0); tsBar(); stSync(); hbInfo(); try { if (window.ShogiCoach && lesson && lesson.cur && !lesson.seq) ShogiCoach.render(); } catch (e) {} $('#lsBackOp').classList.toggle('hidden', !(lesson && (lesson.study || lesson.opening))); }
 function renderLesson0() {
   if (lesson.study) { showStudy(); return; }
   if (lesson.ramp) { renderRamp(); return; }
@@ -5000,11 +5001,11 @@ function renderLesson0() {
     $('#lsTitle').textContent = L(g.title);
     $('#lsDots').classList.add('exam'); $('#lsDots').innerHTML = Array.from({ length: EXAM_N }, (_, i) => { const p = lesson.pts[i]; return `<i class="pt ${p === undefined ? '' : p >= 16 ? 'ok' : p >= 8 ? 'mid' : 'ng'} ${i === lesson.k ? 'cur' : ''}">${p === undefined ? '' : p >= 16 ? '○' : '×'}</i>`; }).join('');
   } else if (lesson.opening) {
-    $('#lsStep').textContent = `${t('op.title')} ・ ${lesson.k + 1}/${lesson.probs.length}`;
+    $('#lsStep').textContent = `${t('op.title')}`;
     $('#lsTitle').textContent = L(g.title);
     $('#lsDots').innerHTML = chips();
   } else {
-    $('#lsStep').textContent = `${lesson.gi < 0 ? L(g.head) : `STEP ${lesson.gi + 1} ・ ${L(g.grade)}`} ・ ${lesson.k + 1}/${lesson.probs.length}`;
+    $('#lsStep').textContent = `${lesson.gi < 0 ? L(g.head) : `STEP ${lesson.gi + 1} ・ ${L(g.grade)}`}`;   // (k/n: 「1/5問目」 beside the title)
     $('#lsTitle').textContent = L(g.title);
     $('#lsDots').innerHTML = chips();
   }
@@ -5168,6 +5169,36 @@ function seqCoachHtml() {
   return head + h;
 }
 function seqShow() { if (window.ShogiCoach) ShogiCoach.render(); }
+// the coach in a lesson (2026-11-11): the lesson's point, the score so far against the pass line, and each answered problem
+// with its explanation, newest first (the box no longer rests during lessons)
+const LSC = { ja: ['このレッスンのポイント', 'ここまで {p}点', '合格（{n}点）まであと {r}点', '合格ラインに届きました', '{i}問目 — {p}点', '1問ずつ、解いた手の解説をここに残します。'],
+  en: ['Point of this lesson', '{p} pts so far', '{r} more to pass ({n})', 'You have reached the pass line', 'Puzzle {i} — {p} pts', 'Each puzzle you solve is explained here.'],
+  zh: ['本课要点', '目前 {p}分', '距合格（{n}分）还差 {r}分', '已达到合格线', '第{i}题 — {p}分', '每解一题，这里会留下解说。'],
+  'zh-TW': ['本課要點', '目前 {p}分', '距合格（{n}分）還差 {r}分', '已達到合格線', '第{i}題 — {p}分', '每解一題，這裡會留下解說。'],
+  ko: ['이번 레슨의 포인트', '지금까지 {p}점', '합격({n}점)까지 {r}점', '합격선에 도달했습니다', '{i}번 문제 — {p}점', '문제를 풀 때마다 여기에 해설을 남깁니다.'],
+  es: ['Clave de la lección', '{p} pts hasta ahora', 'Faltan {r} para aprobar ({n})', 'Has alcanzado el aprobado', 'Ejercicio {i} — {p} pts', 'Aquí se explica cada ejercicio que resuelvas.'],
+  fr: ['Le point clé', '{p} pts pour l’instant', 'Encore {r} pour réussir ({n})', 'Vous avez atteint la réussite', 'Exercice {i} — {p} pts', 'Chaque exercice résolu est expliqué ici.'],
+  pt: ['Ponto-chave da lição', '{p} pts até agora', 'Faltam {r} para passar ({n})', 'Você atingiu a aprovação', 'Exercício {i} — {p} pts', 'Cada exercício resolvido é explicado aqui.'],
+  de: ['Kern der Lektion', 'Bisher {p} Pkt.', 'Noch {r} bis bestanden ({n})', 'Bestehensgrenze erreicht', 'Aufgabe {i} — {p} Pkt.', 'Jede gelöste Aufgabe wird hier erklärt.'],
+  hi: ['इस पाठ की मुख्य बात', 'अब तक {p} अंक', 'पास ({n}) के लिए {r} और', 'आप पास रेखा तक पहुँच गए', 'पहेली {i} — {p} अंक', 'हर हल की गई पहेली की व्याख्या यहाँ मिलेगी।'],
+  ar: ['فكرة الدرس', '{p} نقطة حتى الآن', 'بقي {r} للنجاح ({n})', 'بلغتَ حدّ النجاح', 'اللغز {i} — {p} نقطة', 'يُشرح هنا كل لغز تحلّه.'],
+  ru: ['Главное в уроке', 'Пока {p} очк.', 'До зачёта ({n}) ещё {r}', 'Зачёт набран', 'Задача {i} — {p} очк.', 'Здесь появляется разбор каждой решённой задачи.'],
+  id: ['Inti pelajaran', '{p} poin sejauh ini', 'Kurang {r} untuk lulus ({n})', 'Kamu sudah mencapai batas lulus', 'Soal {i} — {p} poin', 'Setiap soal yang diselesaikan dijelaskan di sini.'],
+  tr: ['Dersin özü', 'Şimdiye kadar {p} puan', 'Geçmek için {r} daha ({n})', 'Geçme sınırına ulaştın', 'Soru {i} — {p} puan', 'Çözdüğün her soru burada açıklanır.'] };
+function lessonCoachHtml() {
+  const Ls = lesson; if (!Ls || !Ls.cur || Ls.seq || Ls.study || Ls.ramp || Ls.review || Ls.endless) return '';
+  const esc = CoachKit.esc, C = window.ShogiCoach ? ShogiCoach.tx : k => k, X = LSC[LANG] || LSC.en, f = (s, o) => s.replace(/\{(\w)\}/g, (_, k) => o[k]);
+  if (Ls.answered && Ls.fbHtml) { (Ls.fbs || (Ls.fbs = {}))[Ls.k] = Ls.fbHtml; }
+  const n = Ls.probs.length, sum = Ls.pts.reduce((a, b) => a + (b || 0), 0), need = Ls.exam ? 0 : 75;
+  let h = `<h3 class="ck-h">${CoachKit.ICON.coach}<span>${esc(C('head'))}</span><small>${Ls.k + 1}/${n}</small></h3>`;
+  const pt = Ls.g && (L(Ls.g.short) || L(Ls.g.prompt));
+  if (pt) h += `<div class="ck-sec"><h4 style="margin:0 0 4px;font-size:12px;letter-spacing:.12em;opacity:.8">${esc(X[0])}</h4><p style="margin:0">${pt}</p></div>`;
+  if (need) h += `<p class="ck-muted" style="margin:8px 0">${esc(f(X[1], { p: sum }))}　${esc(sum >= need ? X[3] : f(X[2], { n: need, r: need - sum }))}</p>`;
+  const done = Ls.pts.map((p, i) => [p, i]).filter(x => x[0] !== undefined).reverse();
+  if (!done.length) h += `<p class="ck-muted">${esc(X[5])}</p>`;
+  for (const [p, i] of done) h += CoachKit.verdict(p >= 16 ? 0 : p >= 8 ? 2 : 3, esc(f(X[4], { i: i + 1, p })), (Ls.fbs && Ls.fbs[i]) || '');
+  return h;
+}
 function seqStatus() {
   const S = lesson.seq; if (!S || S.done) return;
   const last = S.steps[S.steps.length - 1];   // the last verdict in short (the whole guidance is in the coach box)
@@ -6431,7 +6462,7 @@ if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStar
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=56l22'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=56l23'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
