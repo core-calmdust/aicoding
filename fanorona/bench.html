@@ -41,7 +41,7 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);ma
 <body>
 <main>
 <h1>ファノロナ マルチスレッド ベンチマーク</h1>
-<p class="sub">対局ページと同じ方式（Document-Isolation-Policy の分離、engine_mt.wasm の Lazy SMP、学習評価・終盤データベース、初期局面から乱数で 6〜25手の12局面）で、スレッド数ごとの読みの速さを測ります。①同じ時間での局面数／秒・深さ・最善手、②同じ深さまでの時間。Chrome（PC）で開き、終わったら「結果をコピー」を押して貼り付けてください。</p>
+<p class="sub">対局ページと同じ方式（Document-Isolation-Policy の分離、engine_mt.wasm の YBW（分割探索）、学習評価・終盤データベース、初期局面から乱数で 6〜25手の12局面）で、スレッド数ごとの読みの速さを測ります。①同じ時間での局面数／秒・深さ・最善手、②同じ深さまでの時間。Chrome（PC）で開き、終わったら「結果をコピー」を押して貼り付けてください。</p>
 
 <div class="card"><div class="kv" id="env"></div></div>
 
@@ -78,7 +78,7 @@ const POS = (() => {
   return out;
 })();
 const ENG = 'engine.js?v=fb5s-pro1-mt1';
-const POOL = { wasm: 'engine_mt.wasm?v=3', lead: ENG + '&mt=1', helper: 'mt-helper.js?v=1', slot: 4 << 20, initial: 1024, maximum: 16384,
+const POOL = { wasm: 'engine_mt.wasm?v=4', lead: ENG + '&mt=1', helper: 'mt-helper.js?v=2', slot: 4 << 20, initial: 1024, maximum: 16384,
   imports: mem => ({ env: { memory: mem, now: () => Date.now(), progress: () => {} } }),
   help: m => m.type === 'think' ? { io: E.setupIO(m.start, m.moves || []), rk: E.ruleKey() } : null };
 const think = (moves, cfg, threads) => ({ type: 'think', start: null, rule: 'sivy', moves, level: 20, cfg: { s: 1, d: cfg.d < 99 ? cfg.d : 99, ms: cfg.ms || 0, nk: 0 }, mtThreads: threads });
