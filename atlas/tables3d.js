@@ -220,11 +220,11 @@
     ink: { ja: '漆黒', en: 'Ink black', zh: '漆黑', 'zh-TW': '漆黑', ko: '칠흑', es: 'Negro tinta', fr: 'Noir d’encre', pt: 'Preto tinta', de: 'Tintenschwarz', ru: 'Чёрный лак', tr: 'Mürekkep siyahı', id: 'Hitam tinta', hi: 'स्याह काला', ar: 'أسود حالك' },
     yosegi: { ja: '寄木細工', en: 'Yosegi marquetry', zh: '寄木细工', 'zh-TW': '寄木細工', ko: '요세기 세공', es: 'Marquetería yosegi', fr: 'Marqueterie yosegi', pt: 'Marchetaria yosegi', de: 'Yosegi-Intarsie', ru: 'Мозаика ёсэги', tr: 'Yosegi kakma', id: 'Marquetri yosegi', hi: 'योसेगी जड़ाई', ar: 'تطعيم يوسيغي' },
     sakura: { ja: '山桜', en: 'Wild cherry', zh: '山樱', 'zh-TW': '山櫻', ko: '산벚나무', es: 'Cerezo silvestre', fr: 'Merisier', pt: 'Cerejeira silvestre', de: 'Wildkirsche', ru: 'Дикая вишня', tr: 'Yaban kirazı', id: 'Ceri liar', hi: 'जंगली चेरी', ar: 'الكرز البري' } },
-  peg: {
-    walnut: {ja: "ウォルナット", en: "Walnut", zh: "胡桃木", ko: "월넛", es: "Nogal", fr: "Noyer", pt: "Nogueira", de: "Nussbaum", ru: "Орех", tr: "Ceviz", id: "Walnut", hi: "अखरोट", ar: "جوز", 'zh-TW': "胡桃木"},
-    maple: {ja: "メープル", en: "Maple", zh: "枫木", ko: "메이플", es: "Arce", fr: "Érable", pt: "Bordo", de: "Ahorn", ru: "Клён", tr: "Akçaağaç", id: "Maple", hi: "मेपल", ar: "قيقب", 'zh-TW': "楓木"},
-    stone: {ja: "大理石", en: "Marble", zh: "大理石", ko: "대리석", es: "Mármol", fr: "Marbre", pt: "Mármore", de: "Marmor", ru: "Мрамор", tr: "Mermer", id: "Marmer", hi: "संगमरमर", ar: "رخام", 'zh-TW': "大理石"},
-    night: {ja: "夜の漆", en: "Night lacquer", zh: "夜漆", ko: "밤의 옻칠", es: "Laca nocturna", fr: "Laque de nuit", pt: "Laca noturna", de: "Nachtlack", ru: "Ночной лак", tr: "Gece laki", id: "Pernis malam", hi: "रात की लाख", ar: "ورنيش ليلي", 'zh-TW': "夜漆"} },
+  peg: {   // (the 2D page's own names: peg/i18n.js dz.bd.*)
+    walnut: { ja: "ウォルナット", en: "Walnut", zh: "胡桃木", 'zh-TW': "胡桃木", ko: "월넛", es: "Nogal", fr: "Noyer", pt: "Nogueira", de: "Nussbaum", ru: "Орех", tr: "Ceviz", id: "Walnut", hi: "अखरोट", ar: "جوز" },
+    maple: { ja: "ヴェルサイユ", en: "Versailles", zh: "凡尔赛", 'zh-TW': "凡爾賽", ko: "베르사유", es: "Versalles", fr: "Versailles", pt: "Versalhes", de: "Versailles", ru: "Версаль", tr: "Versay", id: "Versailles", hi: "वर्साय", ar: "فرساي" },
+    stone: { ja: "大理石と真鍮", en: "Marble & brass", zh: "大理石与黄铜", 'zh-TW': "大理石與黃銅", ko: "대리석과 황동", es: "Mármol y latón", fr: "Marbre et laiton", pt: "Mármore e latão", de: "Marmor & Messing", ru: "Мрамор и латунь", tr: "Mermer ve pirinç", id: "Marmer & kuningan", hi: "संगमरमर और पीतल", ar: "رخام ونحاس" },
+    night: { ja: "アブストラクト", en: "Abstract", zh: "抽象", 'zh-TW': "抽象", ko: "추상", es: "Abstracto", fr: "Abstrait", pt: "Abstrato", de: "Abstrakt", ru: "Абстракция", tr: "Soyut", id: "Abstrak", hi: "अमूर्त", ar: "تجريدي" } },
   hockey: {
     classic: { ja: 'クラシック', en: 'Classic', zh: '经典', 'zh-TW': '經典', ko: '클래식', es: 'Clásico', fr: 'Classique', pt: 'Clássico', de: 'Klassisch', ru: 'Классика', tr: 'Klasik', id: 'Klasik', hi: 'क्लासिक', ar: 'كلاسيك' },
     air: { ja: 'エアホッケー', en: 'Air hockey', zh: '气垫球', 'zh-TW': '氣墊球', ko: '에어하키', es: 'Air hockey', fr: 'Air-hockey', pt: 'Air hockey', de: 'Airhockey', ru: 'Аэрохоккей', tr: 'Hava hokeyi', id: 'Air hockey', hi: 'एयर हॉकी', ar: 'هوكي الهواء' },
@@ -255,7 +255,7 @@
   };
   // shogi (atlas/models/shogi.js PSETS, 2026-11-11): the raised-lacquer pieces with the inscriptions of the six 2D sets; 'atlas-shogi-pc3'
   PIECES.shogi = { list: ['moriage', 'ichiji', 'kinki', 'minase', 'ryoko', 'kaisho'], get: () => { const v = ls.get('atlas-shogi-pc3'); return PIECES.shogi.list.includes(v) ? v : 'moriage'; }, set: k => ls.set('atlas-shogi-pc3', k),
-    thumb: k => new URL('img/pc3-shogi-' + k + '.webp?v=2', ME).href,
+    thumb: k => new URL('img/pc3-shogi-' + k + '.webp?v=5', ME).href,
     names: {
       moriage: { ja: '盛り上げ', en: 'Raised lacquer', zh: '盛上', 'zh-TW': '盛上', ko: '모리아게', es: 'Laca en relieve', fr: 'Laque en relief', pt: 'Laca em relevo', de: 'Lack-Relief', ru: 'Рельефный лак', tr: 'Kabartma lake', id: 'Pernis timbul', hi: 'उभरी लाह', ar: 'ورنيش بارز' },
       ichiji: { ja: '一字書き', en: 'One character', zh: '一字书', 'zh-TW': '一字書', ko: '한 글자', es: 'Un carácter', fr: 'Un caractère', pt: 'Um caractere', de: 'Ein Zeichen', ru: 'Один иероглиф', tr: 'Tek karakter', id: 'Satu karakter', hi: 'एक अक्षर', ar: 'حرف واحد' },
@@ -263,6 +263,19 @@
       minase: { ja: '水無瀬', en: 'Minase', zh: '水无濑', 'zh-TW': '水無瀨', ko: '미나세', es: 'Minase', fr: 'Minase', pt: 'Minase', de: 'Minase', ru: 'Минасэ', tr: 'Minase', id: 'Minase', hi: 'मिनासे', ar: 'ميناسي' },
       ryoko: { ja: '菱湖', en: 'Ryōko', zh: '菱湖', 'zh-TW': '菱湖', ko: '료코', es: 'Ryōko', fr: 'Ryōko', pt: 'Ryōko', de: 'Ryōko', ru: 'Рёко', tr: 'Ryōko', id: 'Ryōko', hi: 'र्योको', ar: 'ريوكو' },
       kaisho: { ja: '楷書', en: 'Regular script', zh: '楷书', 'zh-TW': '楷書', ko: '해서', es: 'Escritura regular', fr: 'Écriture régulière', pt: 'Escrita regular', de: 'Normalschrift', ru: 'Уставное письмо', tr: 'Düzenli yazı', id: 'Aksara reguler', hi: 'नियमित लिपि', ar: 'الخط النظامي' } } };
+  // peg solitaire (atlas/models/peg.js SETS, 2026-11-11): the 2D page's marble sets ('aicoding-peg' settings.pg — the same choice in 2D and 3D);
+  // the pictures are the 2D page's own marbles (peg/img/m-<set>-<k>.webp)
+  PIECES.peg = { list: ['glass', 'pearl', 'steel', 'peg', 'mod'],
+    get: () => { try { const v = (JSON.parse(ls.get('aicoding-peg') || '{}').settings || {}).pg; return PIECES.peg.list.includes(v) ? v : 'glass'; } catch (e) { return 'glass'; } },
+    set: k => { try { const o = JSON.parse(ls.get('aicoding-peg') || '{}') || {}; o.settings = o.settings || {}; o.settings.pg = k; ls.set('aicoding-peg', JSON.stringify(o)); } catch (e) {} },
+    thumb: k => new URL('../peg/img/m-' + k + '-1.webp?v=5', ME).href,
+    names: {
+      glass: { ja: "アンティークのビー玉", en: "Antique marbles", zh: "古董弹珠", 'zh-TW': "古董彈珠", ko: "앤티크 구슬", es: "Canicas antiguas", fr: "Billes anciennes", pt: "Bolinhas antigas", de: "Antike Murmeln", ru: "Старинные шарики", tr: "Antika bilyeler", id: "Kelereng antik", hi: "पुराने कंचे", ar: "كرات زجاجية عتيقة" },
+      pearl: { ja: "陶器の玉", en: "Ceramic balls", zh: "陶瓷珠", 'zh-TW': "陶瓷珠", ko: "도자기 구슬", es: "Bolas de cerámica", fr: "Billes en céramique", pt: "Bolinhas de cerâmica", de: "Keramikkugeln", ru: "Керамические шарики", tr: "Seramik toplar", id: "Bola keramik", hi: "चीनी मिट्टी की गोलियाँ", ar: "كرات خزفية" },
+      steel: { ja: "宝石", en: "Jewels", zh: "宝石", 'zh-TW': "寶石", ko: "보석", es: "Joyas", fr: "Joyaux", pt: "Joias", de: "Edelsteine", ru: "Драгоценности", tr: "Mücevherler", id: "Permata", hi: "रत्न", ar: "جواهر" },
+      peg: { ja: "木のペグ", en: "Wooden pegs", zh: "木钉", 'zh-TW': "木釘", ko: "나무 페그", es: "Clavijas de madera", fr: "Chevilles en bois", pt: "Pinos de madeira", de: "Holzstifte", ru: "Деревянные колышки", tr: "Ahşap çiviler", id: "Pasak kayu", hi: "लकड़ी की खूँटियाँ", ar: "أوتاد خشبية" },
+      mod: { ja: "アブストラクトの駒", en: "Abstract pieces", zh: "抽象棋子", 'zh-TW': "抽象棋子", ko: "추상 말", es: "Fichas abstractas", fr: "Pions abstraits", pt: "Peças abstratas", de: "Abstrakte Steine", ru: "Абстрактные фишки", tr: "Soyut taşlar", id: "Bidak abstrak", hi: "अमूर्त गोटियाँ", ar: "قطع تجريدية" }
+    } };
   X.PIECES = PIECES;
   X.pieceName = (id, k, lang) => { const o = PIECES[id] && PIECES[id].names[k]; return o ? o[lang] || o.en : k; };
   X.pieceThumb = (id, k) => PIECES[id] ? PIECES[id].thumb(k) : '';
