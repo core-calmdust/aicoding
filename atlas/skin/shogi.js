@@ -187,7 +187,7 @@
       const tp = E.typeOf(code), col = E.colorOf(code), up = (col === 1) !== flip;
       const src = IMG['k' + tp + (tp === 8 && col === 1 ? 'o' : '')]; if (!src) return el;
       el.classList.add('img', 'atlas3d'); el.classList.remove('g', 'has-intl');
-      const k = el.querySelector('.k'); k.innerHTML = `<img src="${src}" alt="" draggable="false"${up ? ' class="up"' : ''}>`;
+      const k = el.querySelector('.k'); k.innerHTML = `<img src="${src}" alt="" draggable="false" decoding="sync"${up ? ' class="up"' : ''}>`;   // (sync: painted with the frame, no blank flash)
       // the face's fine wood grain, as on the page's image sets (its own patch per kind and side)
       const gi = tp * 2 + (up ? 1 : 0); k.classList.toggle('up', up);
       k.style.setProperty('--pm', `url("${src}")`); k.style.setProperty('--gp', `${(gi * 37) % 100}% ${(gi * 61) % 100}%`); k.style.setProperty('--gs', `${60 + (gi * 29) % 30}%`);
@@ -197,8 +197,10 @@
   // pre-rendered sheet of the 3D pieces (images/atlas/shogi-pieces.png, made with Table3D.shogi.images); live render as fallback
   const sheet = () => new Promise((res, rej) => { const im = new Image(); im.onload = () => {
     const out = {}, keys = ['k1', 'k2', 'k3', 'k4', 'k5', 'k6', 'k7', 'k8', 'k9', 'k10', 'k11', 'k12', 'k13', 'k14', 'k8o'];
-    keys.forEach((k, i) => { const c = document.createElement('canvas'); c.width = 256; c.height = 282; c.getContext('2d').drawImage(im, (i % 5) * 256, (i / 5 | 0) * 282, 256, 282, 0, 0, 256, 282); out[k] = c.toDataURL('image/png'); });
-    res(out); }; im.onerror = rej; im.src = '../images/atlas/shogi-pieces.png?v=3'; });
+    // blob: URLs, not data: URLs (2026-11-11) — every board redraw (each move, 待った) makes ~40 <img>; a long data: URL is parsed and
+    // decoded again each time on iPhone (the board flashed as if redrawn, and the phone ran hot); a blob: URL is decoded once and cached
+    Promise.all(keys.map((k, i) => new Promise(ok => { const c = document.createElement('canvas'); c.width = 256; c.height = 282; c.getContext('2d').drawImage(im, (i % 5) * 256, (i / 5 | 0) * 282, 256, 282, 0, 0, 256, 282);
+      if (c.toBlob) c.toBlob(b => { out[k] = b ? URL.createObjectURL(b) : c.toDataURL('image/png'); ok(); }, 'image/png'); else { out[k] = c.toDataURL('image/png'); ok(); } }))).then(() => res(out)); }; im.onerror = rej; im.src = '../images/atlas/shogi-pieces.png?v=3'; });
   sheet().catch(() => SG.images(256)).then(o => {
     IMG = o;
     window.__shogiAtlasPre = Object.values(o).map(src => { const im = new Image(); im.src = src; if (im.decode) im.decode().catch(() => {}); return im; });   // decoded up front: promotions show at once
