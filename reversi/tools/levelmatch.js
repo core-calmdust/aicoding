@@ -9,6 +9,9 @@
 //   node tools/levelmatch.js [run] [--plan default|full|low|adjacent|ladder|top|depth|L20:L21,T2:T4,…] [--games 40] [--scale 1]
 //                                  [--conc 2] [--threads N] [--out tools/levelmatch-out/results-28.jsonl] [--dry]
 //   node tools/levelmatch.js report [--out …]        the summary to paste back (also written to report.txt)
+//   --wa / --wb weights.bin.gz   the weights of player A / B (default reversi/weights.bin.gz): new evaluation weights against
+//                                the old at the same level, e.g. --plan D10:D10,L20:L20,T2:T2 --wb tools/train/weights_v5.bin.gz
+//                                (MODEL_CARD.md「評価関数 v5」; the match id gets the file names)
 //
 // Players: L<n> = engine.js LEVELS[n] (time and max × scale; Lv.17–27 read to a fixed depth since 2026-11-11, their time is
 // only a guard for slow devices, so they play the same at any --scale / --threads and only Lv.28 depends on the machine);
@@ -69,11 +72,13 @@ PLANS.top = ['L24:L25', 'L25:L26', 'L26:L27', 'L27:L28', 'L25:L27', 'L26:L28']; 
 PLANS.depth = ['L16:L17', 'L17:L18', 'L18:L19', 'L19:L20', 'L20:L21', 'L21:L22', 'L22:L23', 'L23:L24'].concat(PLANS.top);   // (2026-11-11: Lv.16 … 28, the levels by depth and the timed top)
 PLANS.default = PLANS.adjacent.concat(PLANS.ladder);
 PLANS.full = PLANS.low.concat(PLANS.adjacent, PLANS.ladder);   // the whole ladder Lv.14 … Lv.28 and the time doublings
-const planOf = p => (PLANS[p] || String(p).split(',')).map(s => s.trim()).filter(Boolean).map(s => { const [a, b] = s.split(':'); return { id: `${a}-${b}`, a, b }; });
-const PLAN = planOf(opt.plan || 'default');
+const planOf = p => (PLANS[p] || String(p).split(',')).map(s => s.trim()).filter(Boolean).map(s => { const [a, b] = s.split(':'); return { id: `${a}-${b}${WTAG}`, a, b }; });
 
-const raw = zlib.gunzipSync(fs.readFileSync(path.join(RV, 'weights.bin.gz')));
-const W = new Int16Array(raw.buffer, raw.byteOffset, raw.length / 2);
+const readW = f => { let b = fs.readFileSync(f); if (b[0] === 0x1f && b[1] === 0x8b) b = zlib.gunzipSync(b); b = new Uint8Array(b); return new Int16Array(b.buffer, 0, b.length >> 1); };
+const W = readW(path.join(RV, 'weights.bin.gz'));
+const WA = opt.wa ? readW(path.resolve(opt.wa)) : W, WB = opt.wb ? readW(path.resolve(opt.wb)) : W;   // (v5: tools/train/README.md)
+const WTAG = opt.wa || opt.wb ? ` [${opt.wa ? path.basename(opt.wa) : 'weights.bin.gz'} vs ${opt.wb ? path.basename(opt.wb) : 'weights.bin.gz'}]` : '';
+const PLAN = planOf(opt.plan || 'default');
 const BOOK = fs.readFileSync(path.join(RV, 'book.bin'));
 const E0 = require(path.join(RV, 'engine.js')); E0.setWeights(W, 30); E0.setBook(BOOK);
 const { legal, play, start } = require('./eng-lite.js');
@@ -122,7 +127,7 @@ function openings(n) {
 // ====================================================================== a pool of threads (one player)
 const SLOT = 2 << 20;
 let MODULE = null;
-async function makePool(n) {
+async function makePool(n, Wp) {
   MODULE = MODULE || new WebAssembly.Module(fs.readFileSync(path.join(RV, 'engine_mt.wasm')));
   const module = MODULE;
   const mem = new WebAssembly.Memory({ initial: 1024, maximum: 16384, shared: true });
@@ -130,12 +135,12 @@ async function makePool(n) {
   const base = Math.ceil(X.mt_heap_base() / 65536) * 65536, need = base + (n + 1) * SLOT;
   if (need > mem.buffer.byteLength) mem.grow(Math.ceil((need - mem.buffer.byteLength) / 65536));
   X.mt_stack(base + n * SLOT + SLOT - 16); X.mt_thread(base + n * SLOT, 999);
-  X.init();
+  if (X.w_defer) X.w_defer(); X.init();
   const ctl = new Int32Array(new SharedArrayBuffer(512));
   const ws = [];
   for (let id = 0; id < n; id++) ws.push(new Worker(__filename, { workerData: { module, mem, id, tls: base + id * SLOT, top: base + id * SLOT + SLOT - 16, ctl } }));
   const send = (w, msg, tr) => new Promise(res => { w.once('message', res); w.postMessage(msg, tr || []); });
-  for (const w of ws) { const b = new Int16Array(W); await send(w, { type: 'weights', buffer: b.buffer }, [b.buffer]); }
+  for (const w of ws) { const b = new Int16Array(Wp || W); await send(w, { type: 'weights', buffer: b.buffer }, [b.buffer]); }
   await send(ws[0], { type: 'book', book: new Uint8Array(BOOK) });
   return {
     clear() { X.clear_tt(); },
@@ -240,7 +245,7 @@ async function main() {
   await new Promise(r => setTimeout(r, opt.now ? 0 : 5000));
 
   const slots = [];
-  for (let i = 0; i < CONC; i++) slots.push([await makePool(THREADS), await makePool(THREADS)]);
+  for (let i = 0; i < CONC; i++) slots.push([await makePool(THREADS, WA), await makePool(THREADS, WB)]);
   const t0 = Date.now(); let next = 0, fin = 0;
   async function playGame(slot, j) {
     const [PA, PB] = slot, op = OP[j.k], ca = cfgOf(j.p.a, SCALE), cb = cfgOf(j.p.b, SCALE);

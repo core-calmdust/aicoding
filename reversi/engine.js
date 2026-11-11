@@ -245,6 +245,11 @@ const PATTERN_DEFS_B = PATTERN_DEFS.concat([
   ['diag8c', P('a1 b2 c3 d4 e5 f6 g7 h8 b1 a2')],
   ['narrowTri', P('a1 b1 c1 d1 e1 a2 b2 a3 a4 a5')],
 ]);
+// (v5, 2026-11) set C: set B + the three diagonals at a corner (a1-d4 with the lines beside it, like Egaroucid's "cross").
+// Chosen only through the weights file's header (MODEL_CARD.md「評価関数 v5」); 66 instances.
+const PATTERN_DEFS_C = PATTERN_DEFS_B.concat([
+  ['cross', P('a1 b2 c3 d4 b1 c2 d3 a2 b3 c4')],
+]);
 function buildPatterns(defs) {
   const pats = [];
   let offset = 0;
@@ -256,8 +261,11 @@ function buildPatterns(defs) {
   }
   return { pats, total: offset };
 }
-const EXT_SIZE = 256, NEXT = 4;
-let EXT_OFF = 0, PS_V1 = 0, PS_V2 = 0, USE_EXT = false, PATTERN_SET = '';
+// the extra features after the pattern tables, 64 entries each: 0 own mobility, 1 the opponent's, 2 own potential mobility
+// (empty squares next to an opponent disc), 3 the opponent's, 4 (v5) own discs (0..63; with one phase per ply this is the disc
+// difference). v1 has none, v2-v4 the first four (USE_EXT 4), v5 files say how many in their header.
+const EXT_SIZE = 256, NEXT = 4, NEXT_MAX = 5;
+let EXT_OFF = 0, PS_V1 = 0, PS_V2 = 0, USE_EXT = 0, PATTERN_SET = '';
 let INST_OFF, INST_LEN, INST_SQ, NINST = 0;
 const MAXI = 80, NSTK = 96;
 const I_OFF = new Int32Array(MAXI), I_LEN = new Int8Array(MAXI), I_SQ = new Int8Array(MAXI * 10);
@@ -278,7 +286,7 @@ function setupPatterns(defs, name) {
   let o = 0; for (let q = 0; q < 64; q++) { SQ_START[q] = o; for (const [i, pw] of lists[q]) { SQI[o] = i; SQP[o] = pw; o++; } } SQ_START[64] = o;
 }
 setupPatterns(PATTERN_DEFS, 'A');
-const SETS = { A: PATTERN_DEFS, B: PATTERN_DEFS_B };
+const SETS = { A: PATTERN_DEFS, B: PATTERN_DEFS_B, C: PATTERN_DEFS_C };
 function sizesOf(defs) { const t = buildPatterns(defs).total; return [t + 1, t + EXT_SIZE + 1]; }
 // per square cell code: 0 empty, 1 player, 2 opponent
 const CELL = new Int8Array(64);
@@ -294,6 +302,7 @@ function extCounts(pl, ph, ol, oh, out, o) {
   neighbours(ol, oh); const pp = pc(NL & el) + pc(NH & eh);
   neighbours(pl, ph); const po = pc(NL & el) + pc(NH & eh);
   out[o] = EXT_OFF + mp; out[o + 1] = EXT_OFF + 64 + mo; out[o + 2] = EXT_OFF + 128 + pp; out[o + 3] = EXT_OFF + 192 + po;
+  if (USE_EXT >= 5) { const d = pc(pl) + pc(ph); out[o + 4] = EXT_OFF + 256 + (d > 63 ? 63 : d); }
 }
 // feature indices (for training): writes NINST (+NEXT when ext) indices into out
 function featureIndices(pl, ph, ol, oh, out, ext) {
@@ -305,7 +314,7 @@ function featureIndices(pl, ph, ol, oh, out, ext) {
   }
   if (ext) extCounts(pl, ph, ol, oh, out, NINST);
 }
-const EXT_TMP = new Int32Array(NEXT);
+const EXT_TMP = new Int32Array(NEXT_MAX);
 function phaseOf(discs) { // discs 4..64
   const ply = discs - 4;
   const ph = (ply * NPHASE / 61) | 0;
@@ -325,18 +334,54 @@ function evalPattern(pl, ph, ol, oh) {
   if (USE_EXT) {
     extCounts(pl, ph, ol, oh, EXT_TMP, 0);
     s += W[base + EXT_TMP[0]] + W[base + EXT_TMP[1]] + W[base + EXT_TMP[2]] + W[base + EXT_TMP[3]];
+    if (USE_EXT >= 5) s += W[base + EXT_TMP[4]];
   }
   // weights are in 1/32 disc units -> convert to 1/100 discs
   return ((s * 100) / 32) | 0;
 }
 let evaluate = evalHand;
+// Multi-ProbCut's sigma for weights without a header (v1-v4); a v5 file carries its own (tools/train/rvlabel mpc)
+const MPC_V4 = { A: 357.32, B: 1.1, C: -3.14 };
+let WINFO = { version: 4 };
+// v5 weights file (tools/train/rvtrain, MODEL_CARD.md「評価関数 v5」): a header of 16 int16 words, then the weights.
+//   0: 0x5652 ('RV')  1: 5 (format)  2: header words (16)  3: phases  4: pattern set ('B' / 'C')  5: extra features (4 / 5)
+//   6: flags (1: each phase stored as the difference from the one before; 2: the low and high bytes of the weights stored
+//      as two planes — both only to gzip better)  7: quant (the stored values × quant = weights in 1/32 disc)
+//   8-13: Multi-ProbCut sigma A, B, C (float32)  14-15: reserved
+// Older files (no header) are recognised by their size, the number of phases given by the caller (weights.json: 30).
+function decodeV5(arr) {
+  const H = arr[2], nph = arr[3], set = String.fromCharCode(arr[4]), next = arr[5], flags = arr[6], q = arr[7] || 1;
+  if (!SETS[set] || next < 0 || next > NEXT_MAX || nph < 1 || nph > 64) throw new Error('weights header: ' + [nph, set, next].join(' '));
+  const f32 = new Float32Array(new Int16Array([arr[8], arr[9], arr[10], arr[11], arr[12], arr[13]]).buffer);
+  const n = arr.length - H, per = n / nph;
+  let w = new Int16Array(n);
+  if (flags & 2) {   // byte planes: low bytes of all the values, then the high bytes
+    const b = new Uint8Array(arr.buffer, arr.byteOffset + 2 * H, 2 * n);
+    for (let i = 0; i < n; i++) w[i] = b[i] | (b[n + i] << 8);
+  } else w.set(arr.subarray(H));
+  if (flags & 1) for (let i = per; i < n; i++) w[i] = (w[i] + w[i - per]) << 16 >> 16;
+  if (q !== 1) for (let i = 0; i < n; i++) w[i] *= q;
+  return { w, nphase: nph, set, next, mpc: f32[0] > 0 ? { A: f32[0], B: f32[1], C: f32[2] } : null };
+}
 function setWeights(arr, nphase) {
-  W = arr; NPHASE = nphase;
-  const per = arr.length / nphase;
-  for (const k of ['A', 'B']) { const [v1, v2] = sizesOf(SETS[k]); if ((per === v1 || per === v2) && PATTERN_SET !== k) setupPatterns(SETS[k], k); }
-  if (per === PS_V2) { USE_EXT = true; PHASE_SIZE = PS_V2; }
-  else if (per === PS_V1) { USE_EXT = false; PHASE_SIZE = PS_V1; }
-  else throw new Error('weights size mismatch: ' + per);
+  if (arr.length > 16 && arr[0] === 0x5652 && arr[1] === 5) {
+    const d = decodeV5(arr);
+    W = d.w; NPHASE = d.nphase;
+    if (PATTERN_SET !== d.set) setupPatterns(SETS[d.set], d.set);
+    USE_EXT = d.next; PHASE_SIZE = EXT_OFF + 64 * d.next + 1;
+    if (W.length !== NPHASE * PHASE_SIZE) throw new Error('weights size mismatch: ' + W.length);
+    Object.assign(MPC, d.mpc || MPC_V4);
+    WINFO = { version: 5, nphase: NPHASE, set: d.set, next: d.next, mpc: d.mpc };
+  } else {
+    W = arr; NPHASE = nphase;
+    const per = arr.length / nphase;
+    for (const k of ['A', 'B']) { const [v1, v2] = sizesOf(SETS[k]); if ((per === v1 || per === v2) && PATTERN_SET !== k) setupPatterns(SETS[k], k); }
+    if (per === PS_V2) { USE_EXT = 4; PHASE_SIZE = PS_V2; }
+    else if (per === PS_V1) { USE_EXT = 0; PHASE_SIZE = PS_V1; }
+    else throw new Error('weights size mismatch: ' + per);
+    if (WINFO.version === 5) Object.assign(MPC, MPC_V4);   // (back from v5 weights in the same engine)
+    WINFO = { version: 4, nphase };
+  }
   evaluate = evalPattern;
   if (typeof wasmWeights === 'function') wasmWeights();
 }
@@ -424,6 +469,7 @@ function evalAt(ply, pl, ph, ol, oh) {
   if (USE_EXT) {
     extCounts(pl, ph, ol, oh, EXT_TMP, 0);
     s += W[base + EXT_TMP[0]] + W[base + EXT_TMP[1]] + W[base + EXT_TMP[2]] + W[base + EXT_TMP[3]];
+    if (USE_EXT >= 5) s += W[base + EXT_TMP[4]];
   }
   return ((s * 100) / 32) | 0;
 }
@@ -695,18 +741,22 @@ let WX = null, WON = false;
     }
     if (!bytes || typeof WebAssembly === 'undefined') return;
     WX = new WebAssembly.Instance(new WebAssembly.Module(bytes), { env: { now: () => Date.now() } }).exports;
+    if (WX.w_defer) WX.w_defer();   // (v5: memory for the weights when they come — engine.c w_alloc)
     WX.init();
   } catch (e) { WX = null; }
 })();
 function wasmWeights() {
   WON = false;
-  if (!WX || !W || W.length > WX.w_max()) return;
-  new Int16Array(WX.memory.buffer, WX.w_ptr(), W.length).set(W);
+  if (!WX || !W) return;
+  // (v5) engine.c keeps the weights in memory it grows to their size (w_alloc); before, a fixed table of w_max()
+  const wp = WX.w_alloc ? WX.w_alloc(W.length) : W.length <= WX.w_max() ? WX.w_ptr() : 0;
+  if (!wp) return;
+  new Int16Array(WX.memory.buffer, wp, W.length).set(W);
   new Int32Array(WX.memory.buffer, WX.tab_ptr(0), NINST).set(I_OFF.subarray(0, NINST));
   new Int32Array(WX.memory.buffer, WX.tab_ptr(1), 65).set(SQ_START);
   new Int32Array(WX.memory.buffer, WX.tab_ptr(2), SQ_START[64]).set(SQI.subarray(0, SQ_START[64]));
   new Int32Array(WX.memory.buffer, WX.tab_ptr(3), SQ_START[64]).set(SQP.subarray(0, SQ_START[64]));
-  WX.set_patterns(NINST, NPHASE, PHASE_SIZE, USE_EXT ? 1 : 0, EXT_OFF);
+  WX.set_patterns(NINST, NPHASE, PHASE_SIZE, USE_EXT, EXT_OFF);
   WX.clear_tt(); WON = true;
 }
 function wasmIn() {
@@ -1381,7 +1431,7 @@ const API = {
   LAZY, think, analyze, searchMove, setWeights, setBook, bookLookup, bookCanon, decodeBook, clearTT, toBits, legalList, childOf, featureIndices,
   evalHand, evaluate: (a, b, c, d) => evaluate(a, b, c, d), search, solve, finalScore, pc,
   get nodes() { return nodes; }, set deadline(v) { deadline = v; },
-  TUNE, MPC, get NINST() { return NINST; }, NEXT, get PS_V1() { return PS_V1; }, get PS_V2() { return PS_V2; }, get PHASE_SIZE() { return PHASE_SIZE; }, get PATTERNS() { return PATTERNS; }, get PATTERN_SET() { return PATTERN_SET; }, useSet: k => setupPatterns(SETS[k], k), LEVELS, NLEVELS, SCALE,
+  TUNE, MPC, get NINST() { return NINST; }, NEXT, get PS_V1() { return PS_V1; }, get PS_V2() { return PS_V2; }, get PHASE_SIZE() { return PHASE_SIZE; }, get PATTERNS() { return PATTERNS; }, get PATTERN_SET() { return PATTERN_SET; }, get WINFO() { return WINFO; }, get USE_EXT() { return USE_EXT; }, get NPHASE() { return NPHASE; }, useSet: k => setupPatterns(SETS[k], k), LEVELS, NLEVELS, SCALE,
   genMovesList: legalList,
 };
 root.ReversiEngine = API;

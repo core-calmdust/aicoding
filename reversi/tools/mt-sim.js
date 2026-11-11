@@ -120,7 +120,7 @@ async function makePool(n, wasm = WASM, engine = ENGINE) {
   const base = Math.ceil(X.mt_heap_base() / 65536) * 65536, need = base + (n + 1) * SLOT;
   if (need > mem.buffer.byteLength) mem.grow(Math.ceil((need - mem.buffer.byteLength) / 65536));
   X.mt_stack(base + n * SLOT + SLOT - 16); X.mt_thread(base + n * SLOT);
-  X.init();
+  if (X.w_defer) X.w_defer(); X.init();
   if (opt.ttbits && X.tt_bits) X.tt_bits(+opt.ttbits);
   if (opt.split && X.mt_split) { const [d, e] = String(opt.split).split(',').map(Number); X.mt_split(d || 0, e || 0); }   // (--split D,E: YBW split depth / empties)
   if (opt.delay) { if (!X.sim_delay) throw new Error('--delay needs a build of tools/mtsim-delay.py (--wasm)'); X.sim_delay(n > 1 ? 1 : 0, n > 1 ? 1 : 0); }
