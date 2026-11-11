@@ -203,6 +203,8 @@ function afterMove() {
   if (better) recs[rk] = { best: left, perfect: perfect || !!r.perfect };
   else if (perfect) recs[rk].perfect = true;
   save(); renderRecs();
+  // 戦績 (shared/record.js, as the other games): one line per finished free game — 1 left = a win, 2 or more = a loss
+  try { if (window.GameRecord) GameRecord.add({ mode: 'ai', res: left === 1 ? 'w' : 'l', opp: boardName(G.board), key: G.board, n: G.hist.length, why: rating(left, perfect)[1] + ' · ' + t('res.left', { n: left }) }); } catch (e) {}
   setTimeout(() => showResult(left, perfect, better && r.best !== undefined), 380);
 }
 function rating(left, perfect) {
@@ -551,6 +553,7 @@ function applyI18n() {
 }
 $('#langSel').onchange = e => { LANG = e.target.value; settings.lang = LANG; try { localStorage.setItem('aicoding-lang', LANG); } catch (x) {} save(); applyI18n(); update(); renderRecs(); renderDaily(); if (puzzle) renderPuzzleCard(); if (HB && HB.relabel) HB.relabel(); };
 
+if (window.GameRecord) GameRecord.init({ game: 'peg', lang: () => LANG, menu: '.controls', variant: () => ({ k: G ? G.board : settings.board, n: boardName(G ? G.board : settings.board) }), variants: () => E.IDS, variantName: k => boardName(k), defVariant: 'english' });
 const HB = window.HeaderBar ? HeaderBar.init({ brand: '.brand', controls: '.controls', order: ['#btnNew', '#btnUndo', '#btnReset', '#btnHint', '#btnRules', '#btnPuzzle'], lang: () => LANG }) : null;
 if (window.RulesOffer) RulesOffer.init({ game: 'peg', lang: () => LANG, open: () => window.PegRules && PegRules.open(), watch: '#rulesOverlay' });
 applyI18n();
