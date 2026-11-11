@@ -152,25 +152,37 @@
           const i = (y * N0 + x) * 4; d[i] = R; d[i + 1] = G; d[i + 2] = B; d[i + 3] = 255;
         }
       },
-      // crocodile leather (embossed): rows of squarish scales of uneven widths (each row its own seamless sequence), domed,
-      // with soft creases between them and a fine pebble inside each; a grey height-and-colour tile
+      // crocodile leather (embossed, belly cut): scales in rows whose joints mostly line up into columns (as on the real belly),
+      // squarish with rounded corners, every edge a little wavy; each scale a soft dome with its own tone and a fine
+      // pebble / wrinkle inside, deep narrow creases between them (the dye settles there). Wrapping grid → seamless
       croc(d, N0, H, p) {
-        const RW = p.rows || 9, N = makeNoise(p.seed || 4), A = p.A, B = p.B;
+        const RW = p.rows || 8, CL = p.cols || 6, N = makeNoise(p.seed || 4), M = makeNoise((p.seed || 4) + 11), A = p.A, B = p.B;
         let r = (p.seed || 4) * 7919 + 31; const rnd = () => ((r = (r * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
-        const hs = []; let ht = 0; for (let k = 0; k < RW; k++) { const v = .7 + rnd() * .6; hs.push(v); ht += v; }
+        // row heights (uneven), column joints shared by the rows but nudged, now and then a joint missing (a long scale) or added
+        const hs = []; let ht = 0; for (let k = 0; k < RW; k++) { const v = .8 + rnd() * .45; hs.push(v); ht += v; }
         const ys = [0]; hs.forEach(v => ys.push(ys[ys.length - 1] + v / ht));
-        const rows = []; for (let k = 0; k < RW; k++) { const n = 4 + Math.floor(rnd() * 4), w = []; let t = 0; for (let q = 0; q < n; q++) { const v = .45 + rnd() * 1.3; w.push(v); t += v; } let a = rnd(); const e = w.map(v => (a += v / t) % 1); e.sort((x, y) => x - y); rows.push(e); }
+        const base = []; { let t = 0; const w = []; for (let q = 0; q < CL; q++) { const v = .8 + rnd() * .5; w.push(v); t += v; } let a = 0; w.forEach(v => { base.push(a); a += v / t; }); }
+        const rows = [], tone = [];
+        for (let k = 0; k < RW; k++) {
+          let e = [];
+          base.forEach((b, q) => { const r2 = rnd(); if (r2 < .12) return; e.push((b + (rnd() - .5) * .35 / CL + 1) % 1); if (r2 > .9) e.push((b + .5 / CL + (rnd() - .5) * .1 / CL) % 1); });
+          e.sort((x, y) => x - y); const f = []; e.forEach(v => { if (!f.length || v - f[f.length - 1] > .5 / CL) f.push(v); }); if (f.length > 1 && f[0] + 1 - f[f.length - 1] < .5 / CL) f.pop(); e = f;   // (no slivers)
+          rows.push(e); tone.push(e.map(() => (rnd() - .5) * .14));
+        }
         for (let y = 0; y < N0; y++) for (let x = 0; x < N0; x++) {
-          const vy = y / N0 + (N(x / 90, y / 90, 2) - .5) * .02; let k = 0; while (k < RW - 1 && vy >= ys[k + 1]) k++;
-          const rh = hs[k] / ht, fy = Math.max(0, Math.min(1, (vy - ys[k]) / rh)), row = rows[k], u = ((x / N0 + (N(x / 70 + 3, y / 70, 2) - .5) * .015) % 1 + 1) % 1;
-          let lo, hi; const L = row.length;
-          if (u < row[0]) { lo = row[L - 1] - 1; hi = row[0]; } else { lo = row[L - 1]; hi = row[0] + 1; for (let q = 1; q < L; q++) if (u < row[q]) { lo = row[q - 1]; hi = row[q]; break; } }
-          const cw = (hi - lo) / rh, fx = (u - lo) / (hi - lo), ex = Math.min(fx, 1 - fx) * cw, ey = Math.min(fy, 1 - fy), rc = .22;
+          const wx = (N(x / 46, y / 46, 3) - .5) * .022, wy = (M(x / 46, y / 46, 3) - .5) * .022;   // wavy joints
+          const vy = ((y / N0 + wy) % 1 + 1) % 1; let k = 0; while (k < RW - 1 && vy >= ys[k + 1]) k++;
+          const rh = hs[k] / ht, fy = Math.max(0, Math.min(1, (vy - ys[k]) / rh)), row = rows[k], L = row.length, u = ((x / N0 + wx) % 1 + 1) % 1;
+          let q = L - 1; for (let z = 0; z < L; z++) if (u < row[z]) { q = z - 1; break; }
+          const lo = q < 0 ? row[L - 1] - 1 : row[q], hi = q < 0 ? row[0] : q === L - 1 ? row[0] + 1 : row[q + 1], qi = q < 0 ? L - 1 : q;
+          const cw = (hi - lo) / rh, fx = (u - (q < 0 ? lo : lo)) / (hi - lo), ex = Math.min(fx, 1 - fx) * cw, ey = Math.min(fy, 1 - fy), rc = .26;
           const e = ex < rc && ey < rc ? rc - Math.hypot(rc - ex, rc - ey) : Math.min(ex, ey);
-          const dome = Math.max(0, Math.min(1, e / .3)), crease = 1 - Math.max(0, Math.min(1, e / .07));
-          const t = Math.max(0, Math.min(1, .35 + Math.sqrt(dome) * .5 - crease * .55 + (N(x / 5, y / 5, 2) - .5) * .14 + (N(x / 50 + k * 7, y / 50, 2) - .5) * .22));
+          const ee = Math.max(0, e), m = Math.min(1, ee / Math.min(.5, .5 * Math.min(cw, 1))), dome = Math.sin(m * Math.PI / 2), groove = Math.exp(-Math.pow(ee / .016, 2));
+          const peb = N(x / 2.2, y / 2.2, 2) - .5, wr = Math.sin((x * .9 + N(x / 9, y / 9, 2) * 14) * .7) * .5;   // pebble grain, faint wrinkles
+          let h = .36 + dome * .42 - groove * .36 + Math.pow(dome, 6) * .08 + peb * .1 * dome + wr * .025 * dome + tone[k][qi] + (N(x / 80 + k, y / 80, 2) - .5) * .12;
+          h = Math.max(0, Math.min(1, h));
           const i = (y * N0 + x) * 4;
-          d[i] = A[0] + (B[0] - A[0]) * t; d[i + 1] = A[1] + (B[1] - A[1]) * t; d[i + 2] = A[2] + (B[2] - A[2]) * t; d[i + 3] = 255;
+          d[i] = A[0] + (B[0] - A[0]) * h; d[i + 1] = A[1] + (B[1] - A[1]) * h; d[i + 2] = A[2] + (B[2] - A[2]) * h; d[i + 3] = 255;
         }
       },
     };
@@ -243,7 +255,7 @@
     malaB: () => slab('slMalaB', 256, 1024, 'malachite', { seed: 97 }),
     pearl: () => slab('slPearl', 256, 256, 'nacre', { seed: 12, whole: 1, sat: 1.9 }),
     lapis: () => slab('slLapis', 256, 256, 'marble', { seed: 44, A: [30, 52, 150], B: [16, 30, 104], V: [196, 204, 228], G: [214, 176, 92], s: 1.6, ang: .4, bold: .35 }),
-    croc: () => slab('slCroc', 512, 512, 'croc', { seed: 4, rows: 8, A: [22, 24, 27], B: [104, 112, 120] }),
+    croc: () => slab('slCroc', 768, 768, 'croc', { seed: 4, rows: 9, cols: 7, A: [18, 20, 23], B: [118, 126, 134] }),
   };
   const TAU0 = Math.PI * 2;
   const triPts = (g, x0, i, top, hw) => { const cx = x0 + i + .5, y0 = top ? g.TOP : g.BOT, y1 = top ? g.TOP + g.PL : g.BOT - g.PL; return [[cx - hw, y0], [cx + hw, y0], [cx, y1]]; };
@@ -303,20 +315,27 @@
       fdeps: () => [suede('sdNavy', '#1b283b'), leatherTile()],
       field(C) {
         const { x, U, g, lay } = C, L = leatherTile();
-        const fly = (cx, cy, r, v) => {   // one butterfly, wings spread across, body along the point
-          const dark = v % 4 === 2, wing = dark ? '#1c1a1a' : '#f2ede2', vein = dark ? 'rgba(240,236,226,.75)' : 'rgba(30,26,24,.8)';
-          const W = (ox, oy, rx, ry, rot) => { x.beginPath(); x.ellipse(U(cx + ox), U(cy + oy), U(rx), U(ry), rot, 0, Math.PI * 2); };
+        // one butterfly, wings spread across, body along the point; hd = which way its head points (+1 down the canvas, −1 up):
+        // every butterfly faces the middle of the board, so the two sides look at each other (2026-11-12)
+        const fly = (cx, cy, r, v, hd = -1) => {
+          const dark = v % 4 === 2, wing = dark ? '#1c1a1a' : '#f2ede2', vein = dark ? 'rgba(240,236,226,.75)' : 'rgba(30,26,24,.8)', f = -hd;
+          const W = (ox, oy, rx, ry, rot) => { x.beginPath(); x.ellipse(U(cx + ox), U(cy + oy * f), U(rx), U(ry), rot * f, 0, Math.PI * 2); };
           for (const sx of [-1, 1]) {
             for (const [ox, oy, rx, ry, rot] of [[.52, -.2, .5, .34, -.35], [.36, .28, .34, .26, .45]]) {
               W(sx * ox * r, oy * r, rx * r, ry * r, sx * rot); x.fillStyle = wing; x.fill();
               x.save(); x.clip(); x.strokeStyle = vein; x.lineWidth = U(r * .045);
-              x.beginPath(); for (let q = 0; q < 5; q++) { const a = -1.2 + q * .55; x.moveTo(U(cx), U(cy)); x.lineTo(U(cx + sx * Math.cos(a) * r * 1.3), U(cy + Math.sin(a) * r * 1.3)); } x.stroke();
+              x.beginPath(); for (let q = 0; q < 5; q++) { const a = -1.2 + q * .55; x.moveTo(U(cx), U(cy)); x.lineTo(U(cx + sx * Math.cos(a) * r * 1.3), U(cy + Math.sin(a) * r * 1.3 * f)); } x.stroke();
               W(sx * ox * r, oy * r, rx * r, ry * r, sx * rot); x.lineWidth = U(r * .14); x.strokeStyle = dark ? '#0c0b0b' : '#2a2422'; x.stroke(); x.restore();
             }
-            x.fillStyle = dark ? '#f2ede2' : '#1e1a18'; for (const [ox, oy, rr] of [[.58, -.32, .07], [.8, -.1, .05], [.4, .3, .06]]) { x.beginPath(); x.arc(U(cx + sx * ox * r), U(cy + oy * r), U(rr * r), 0, Math.PI * 2); x.fill(); }
-            if (v % 3 === 0) { x.fillStyle = '#c8442e'; x.beginPath(); x.arc(U(cx + sx * .36 * r), U(cy + .3 * r), U(.08 * r), 0, Math.PI * 2); x.fill(); }   // the Apollo's red eye-spot
+            x.fillStyle = dark ? '#f2ede2' : '#1e1a18'; for (const [ox, oy, rr] of [[.58, -.32, .07], [.8, -.1, .05], [.4, .3, .06]]) { x.beginPath(); x.arc(U(cx + sx * ox * r), U(cy + oy * r * f), U(rr * r), 0, Math.PI * 2); x.fill(); }
+            if (v % 3 === 0) { x.fillStyle = '#c8442e'; x.beginPath(); x.arc(U(cx + sx * .36 * r), U(cy + .3 * r * f), U(.08 * r), 0, Math.PI * 2); x.fill(); }   // the Apollo's red eye-spot
+            // the antennae: from the head, curving out, with clubbed tips
+            x.strokeStyle = '#16120f'; x.lineWidth = U(r * .035); x.beginPath(); x.moveTo(U(cx + sx * r * .03), U(cy + hd * r * .5));
+            x.quadraticCurveTo(U(cx + sx * r * .1), U(cy + hd * r * .78), U(cx + sx * r * .26), U(cy + hd * r * .92)); x.stroke();
+            x.beginPath(); x.arc(U(cx + sx * r * .26), U(cy + hd * r * .92), U(r * .045), 0, Math.PI * 2); x.fillStyle = '#16120f'; x.fill();
           }
-          x.beginPath(); x.ellipse(U(cx), U(cy), U(r * .07), U(r * .42), 0, 0, Math.PI * 2); x.fillStyle = '#16120f'; x.fill();
+          x.beginPath(); x.ellipse(U(cx), U(cy - hd * r * .05), U(r * .07), U(r * .4), 0, 0, Math.PI * 2); x.fillStyle = '#16120f'; x.fill();   // the body
+          x.beginPath(); x.arc(U(cx), U(cy + hd * r * .42), U(r * .085), 0, Math.PI * 2); x.fill();   // the head
         };
         for (const x0 of [g.LX, g.RX]) {
           x.save(); x.beginPath(); x.rect(U(x0), U(g.TOP), U(6), U(g.H - 1)); x.clip(); lay(suede('sdNavy', '#1b283b'), 0, 0, 0);
@@ -325,7 +344,7 @@
             poly(x, U, P); x.fillStyle = a ? 'rgba(255,255,255,.05)' : 'rgba(64,170,184,.07)'; x.fill();   // (the point reads as a point even under checkers)
             if (a) {   // six butterflies, large at the base, smaller towards the tip (they may spill a little over the point's edge)
               let t = .34, n = i * 3 + (top ? 0 : 7);
-              for (let q = 0; q < 6 && t < g.PL - .1; q++) { const w = .44 * (1 - t / g.PL), r = Math.max(.08, w * 1.05); fly(cx, y0 + dir * t, r, n++); t += r * 1.62; }
+              for (let q = 0; q < 6 && t < g.PL - .1; q++) { const w = .44 * (1 - t / g.PL), r = Math.max(.08, w * 1.05); fly(cx, y0 + dir * t, r, n++, dir); t += r * 1.62; }
             } else {
               poly(x, U, P); x.save(); x.clip();   // teal chevrons pointing along the point
               x.strokeStyle = '#2f9fae'; x.lineWidth = U(.045); x.lineCap = 'butt'; x.lineJoin = 'miter';
@@ -376,8 +395,8 @@
       rdeps: () => [SL.croc()],
       frame(C) {
         const { x, U, g, k, lay, strip } = C;
-        strip(hz => lay(SL.croc(), !hz, .85 * k / 129));
-        for (const [x0, w] of C.inner) { x.save(); x.beginPath(); x.rect(U(x0), U(g.TOP), U(w), U(g.H - 1)); x.clip(); lay(SL.croc(), true, .85 * k / 129); x.restore(); }
+        strip(hz => lay(SL.croc(), !hz, .42 * k / 129));
+        for (const [x0, w] of C.inner) { x.save(); x.beginPath(); x.rect(U(x0), U(g.TOP), U(w), U(g.H - 1)); x.clip(); lay(SL.croc(), true, .42 * k / 129); x.restore(); }
         x.fillStyle = 'rgba(90,110,130,.12)'; x.fillRect(0, 0, C.Wc, C.Hc);   // a cool blue-grey dye
         x.setLineDash([U(.075), U(.05)]); x.lineCap = 'round';
         const st = (x0, y0, w, h) => { x.strokeStyle = 'rgba(0,0,0,.5)'; x.lineWidth = U(.03); x.strokeRect(U(x0), U(y0), U(w), U(h)); x.strokeStyle = 'rgba(214,218,222,.6)'; x.lineWidth = U(.016); x.strokeRect(U(x0), U(y0), U(w), U(h)); };
@@ -386,11 +405,11 @@
         x.fillStyle = 'rgba(0,0,0,.55)'; x.fillRect(U(g.BX + g.B / 2) - 1, U(g.TOP), 2, U(g.H - 1));
       },
       mats(TT, C) {
-        const ct = tex(SL.croc()); ct.wrapS = ct.wrapT = TT.RepeatWrapping; ct.repeat.set(3, 3);
-        return { side: new TT.MeshPhysicalMaterial({ color: C(0xc8d0d8), map: ct, bumpMap: ct, bumpScale: .006, roughness: .4, clearcoat: .5, clearcoatRoughness: .25 }),
+        const ct = tex(SL.croc()); ct.wrapS = ct.wrapT = TT.RepeatWrapping; ct.repeat.set(4, 4);
+        return { side: new TT.MeshPhysicalMaterial({ color: C(0xc8d0d8), map: ct, bumpMap: ct, bumpScale: .008, roughness: .38, clearcoat: .7, clearcoatRoughness: .18 }),
           metal: new TT.MeshPhysicalMaterial({ color: C(0xdfe3e8), metalness: 1, roughness: .14, clearcoat: .4, clearcoatRoughness: .08 }),
           metalDark: new TT.MeshStandardMaterial({ color: C(0x4a4e54), metalness: 1, roughness: .35 }),
-          top: { roughness: .4, clearcoat: .5, clearcoatRoughness: .22, bump: .005 }, field: { roughness: .62, clearcoat: .1, clearcoatRoughness: .4, bump: .003 }, bottom: 0x2a2c2f };
+          top: { roughness: .36, clearcoat: .7, clearcoatRoughness: .16, bump: .008 }, field: { roughness: .62, clearcoat: .1, clearcoatRoughness: .4, bump: .003 }, bottom: 0x2a2c2f };
       },
     },
     marble: {
@@ -678,9 +697,10 @@
     const TT = T(), grp = new TT.Group(), L = .62, Tk = .2, y = FY + RH;
     const s = new TT.Shape(); s.moveTo(0, 0); s.lineTo(L, 0); s.lineTo(L, Tk); s.lineTo(Tk, Tk); s.lineTo(Tk, L); s.lineTo(0, L); s.closePath();
     const top = new TT.Mesh(new TT.ExtrudeGeometry(s, { depth: .012, bevelEnabled: true, bevelThickness: .006, bevelSize: .012, bevelSegments: 3 }), m.metal);
-    top.rotation.x = Math.PI / 2; top.position.y = y + .018; grp.add(top);
-    const fl1 = new TT.Mesh(RB(L, y * .55, .016, .006, 2), m.metal); fl1.position.set(L / 2, y * .7, -.006); grp.add(fl1);
-    const fl2 = new TT.Mesh(RB(.016, y * .55, L, .006, 2), m.metal); fl2.position.set(-.006, y * .7, L / 2); grp.add(fl2);
+    top.rotation.x = Math.PI / 2; top.position.y = y + .026; grp.add(top);   // (its underside clear of the rail top: no z-fighting)
+    // (the flaps stand clear of the case's sides: half-buried in them they flickered against the leather — 2026-11-12)
+    const fl1 = new TT.Mesh(RB(L, y * .55, .016, .006, 2), m.metal); fl1.position.set(L / 2, y * .7, -.016); grp.add(fl1);
+    const fl2 = new TT.Mesh(RB(.016, y * .55, L, .006, 2), m.metal); fl2.position.set(-.016, y * .7, L / 2); grp.add(fl2);
     const sg = new TT.CylinderGeometry(.026, .028, .012, 14);
     [[.42, .1], [.1, .42]].forEach(([a, b]) => { const sc = new TT.Mesh(sg, m.metalDark); sc.position.set(a, y + .03, b); grp.add(sc); });
     grp.traverse(o => { if (o.isMesh) o.castShadow = o.receiveShadow = true; });
