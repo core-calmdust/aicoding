@@ -52,12 +52,13 @@ const POS = fs.readFileSync('pos_' + G + '.txt', 'utf8').trim().split('\n').map(
     }
     if (G === 'chess') {
       const str = String.fromCharCode(...POS[i]) + '\0'; u8().set(Buffer.from(str, 'latin1'), X.setup_ptr()); X.set_position();
-      X.think(0, 0, D, 0); const r = new Int32Array(mem.buffer, X.res_ptr(), 4); const n = X.res_nodes(); sum += n; line = `m${r[0]} d${r[2]} n${n}`;
+      X.think(0, 0, D, 0); const r = new Int32Array(mem.buffer, X.res_ptr(), 4); const n = X.res_nodes(); sum += n; line = `m${r[0]} v${r[1]} d${r[2]} n${n}`;
     }
     if (G === 'shogi') {
       const p = POS[i]; new Int8Array(mem.buffer, X.setup_ptr(), 98).set(p.slice(0, 98)); X.set_position();
       for (const m of p.slice(98)) X.play_move(m);
-      X.set_exclude(0); X.root_search(0, D, 0); const r = new Int32Array(mem.buffer, X.res_ptr(), 4); const n = r[2] >>> 0; sum += n; line = `m${r[0]} d${r[1]} n${n}`;
+      X.set_exclude(0); X.root_search(0, D, 0); const r = new Int32Array(mem.buffer, X.res_ptr(), 4 + 64); const n = r[2] >>> 0; sum += n;
+      line = `m${r[0]} v${X.res_score()} d${r[1]} n${n} pv ${Array.from(r.subarray(4, 4 + Math.max(0, Math.min(r[3], 64)))).join(',')}`;   // (2026-11-11: the value and the line too)
     }
     console.log('pos', i + 1, line);
   }
