@@ -1447,6 +1447,26 @@ html[lang=ar] .pf-input{direction:rtl}
   #lessonIntroView > .modal-actions #btnLessonBack{grid-column:1}
   #lessonIntroView > .modal-actions #btnLessonStart{grid-column:2}
 }
+/* …and the same quiet look on wider screens (PC, 2026-11-11): the board beside a 2×2 table of the facts, split by hairlines */
+@media (min-width:561px){
+  #lessonIntroView .li-step{text-align:center;font-size:12px;letter-spacing:.34em;margin-top:6px}
+  #lessonIntroView #liTitle{text-align:center;margin:10px 0 22px!important;font-size:32px;letter-spacing:.1em;line-height:1.3}
+  #lessonIntroView #liTitle::after{content:'';display:block;width:56px;height:1px;margin:16px auto 0;background:linear-gradient(90deg,transparent,var(--brass,#c9a961),transparent)}
+  #lessonIntroView .li-hero{justify-content:center;gap:40px;margin:0 auto 28px;max-width:760px}
+  #lessonIntroView .li-fig{margin:0;padding:16px 16px 10px;border-radius:20px;background:radial-gradient(120% 90% at 50% 0%,color-mix(in srgb,var(--brass,#c9a961) 14%,transparent),transparent 70%)}
+  #lessonIntroView .li-fig figcaption{font-size:11px!important;letter-spacing:.2em;opacity:.7}
+  #lessonIntroView .li-chips{display:grid;grid-template-columns:repeat(2,minmax(120px,1fr));gap:0;flex:0 1 300px;border-top:1px solid color-mix(in srgb,var(--brass,#c9a961) 35%,transparent);border-bottom:1px solid color-mix(in srgb,var(--brass,#c9a961) 35%,transparent)}
+  #lessonIntroView .li-chip{border:0;border-radius:0;background:none;padding:16px 14px;min-width:0;align-items:center;text-align:center}
+  #lessonIntroView .li-chip:nth-child(even){border-inline-start:1px solid color-mix(in srgb,var(--brass,#c9a961) 25%,transparent)}
+  #lessonIntroView .li-chip:nth-child(n+3){border-top:1px solid color-mix(in srgb,var(--brass,#c9a961) 25%,transparent)}
+  #lessonIntroView .li-chip small{font-size:10.5px;letter-spacing:.2em}
+  #lessonIntroView .li-chip b{font-size:17px;margin-top:4px}
+  #lessonIntroView .li-sec{display:block;border:0;border-radius:0;background:none;padding:0;margin:0 auto 24px;max-width:680px}
+  #lessonIntroView .li-sec .li-ic{display:none}
+  #lessonIntroView .li-sec h4{font-size:12px;letter-spacing:.28em;margin:0 0 8px;display:flex;align-items:center;gap:14px}
+  #lessonIntroView .li-sec h4::after{content:'';flex:1;height:1px;background:color-mix(in srgb,var(--brass,#c9a961) 30%,transparent)}
+  #lessonOverlay .lesson-intro .li-sec p{font-size:15.5px;line-height:1.95}
+}
 </style>
 <style>
 /* phones held upright (narrow touch screens): the board is sized from the width only, the same side gutter (10px) in every game —
@@ -4583,7 +4603,7 @@ function openIntro(i) {
   let fig = '';
   const smp = g.problems[Math.min(g.problems.length - 1, 2)];
   if (smp && window.ShogiRules && ShogiRules.diagram && !smp.variant) {
-    try { const w = Math.min(($('#liBody').clientWidth || 340), 900), cw = w < 560 ? Math.max(18, Math.min(30, Math.floor((w - 64) / 9.6))) : Math.max(18, Math.min(28, Math.floor((Math.min(w, 420) - 70) / 9))); fig = `<figure class="op-fig li-fig">${ShogiRules.diagram(smp.sfen, [], cw)}<figcaption>${escHb(lit('fig'))}</figcaption></figure>`; } catch (e) { fig = ''; }
+    try { const w = Math.min(($('#liBody').clientWidth || 340), 900), cw = w < 560 ? Math.max(18, Math.min(30, Math.floor((w - 64) / 9.6))) : Math.max(20, Math.min(32, Math.floor((Math.min(w, 460) - 70) / 9))); fig = `<figure class="op-fig li-fig">${ShogiRules.diagram(smp.sfen, [], cw)}<figcaption>${escHb(lit('fig'))}</figcaption></figure>`; } catch (e) { fig = ''; }
   }
   const chip = (k, v) => `<div class="li-chip"><small>${escHb(k)}</small><b>${escHb(v)}</b></div>`;
   const chips = `<div class="li-chips">${i >= 0 ? chip(lit('lv'), L(g.grade)) : ''}${chip(lit('n'), lit('probs', { n }))}${chip(lit('pass'), lit('pts', { n: need }))}${chip(lit('kind'), lit(kind))}</div>`;
