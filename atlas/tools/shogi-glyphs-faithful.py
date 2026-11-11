@@ -25,14 +25,14 @@ ANGLE = {}   # e.g. {'ryoko': {'HI': -0.8}}
 # fine adjustments by eye against photos of the real sets (2026-11-11): the two characters of a piece each centred on the piece's
 # axis (their bodies: the ink between the 6% and 94% points across), the pair set in the body of the piece below the shoulders and a
 # little smaller (scale), and single characters turned (TURN: {code: (upper, lower)} degrees, counter-clockwise +)
-TUNE = {'ryoko': {'turn': {}, 'dx': {'KE': (0, .05)}},
-        'minase': {'turn': {'KI': (-3, 0)}, 'up': {'OU': .52, 'GY': .52}, 'fill': {'FU': .9}, 'thin': {'FU': 5}, 'gap': {'FU': .07}},
+TUNE = {'ryoko': {'turn': {}, 'dx': {'KE': (0, .05), 'HI': (.09, .04)}, 'up': {'KI': .95}, 'fill': {'KI': 1.06}},
+        'minase': {'turn': {'KI': (-3, 0)}, 'up': {'OU': .52, 'GY': .52}, 'fill': {'FU': 1.16}, 'thin': {'FU': 5}, 'gap': {'FU': .07}},
         'kinki': {'turn': {}, 'up': {'OU': .78, 'GY': .78, 'KE': .86}, 'dx': {'KE': (0, .05)}}}
 # turn: degrees (counter-clockwise +) for the (upper, lower) character; dx: shift across, a fraction of the character's width
 # (right +; 馬's four dots pull its axis left); fill: the block's size, times FILL; thin: strokes made thinner (a min filter of this size at the source scale; 水無瀬's 歩兵
 # is drawn bold)
 # every two-character inscription of these sets fills the same block of the face (as the user's photos: the 王將 of 錦旗 the model)
-FILL, WMAX, CY = .78, .80, .535
+FILL, WMAX, BOT = .78, .80, .925   # BOT: the inscription's foot on one line for every piece (the carvers' rule), not centred
 TWO = {'FU', 'KY', 'KE', 'GI', 'KA', 'HI', 'KI', 'GY', 'OU'}
 
 def axis(g):
@@ -91,7 +91,7 @@ def restack(g, turn, up=0, dx=(0, 0), gap=0):
             parts = [(q, y0_ + p0.height - q.height - (int(.04 * a.shape[0]) if f < 1 else 0)), (p1, y1_)]   # (the upper one's foot kept where it was)
     if gap and len(parts) == 2: parts[1] = (parts[1][0], parts[1][1] + int(gap * a.shape[0]))   # (more room between the two)
     top0 = min(y for _, y in parts); parts = [(p, y - top0) for p, y in parts]
-    W = int(max(max(axis(p), p.width - axis(p)) for p, _ in parts) * 2) + 4
+    W = int(max(max(axis(p), p.width - axis(p)) + abs(d) * p.width for (p, _), d in zip(parts, dx)) * 2) + 4
     out = Image.new('L', (W, max(y + p.height for p, y in parts)), 0)
     for (p, y), d in zip(parts, dx): out.paste(p, (int(round(W / 2 - axis(p) + d * p.width)), y), p)
     bb = out.getbbox(); return out.crop(bb)
@@ -147,7 +147,7 @@ async def cell(pg, folder, code, set_):
     cx, cy = (gcx - fx0) / (fx1 - fx0) * CW, (gcy - fy0) / (fy1 - fy0) * CH
     if T:
         cx = CW / 2 - (axis(g) - g.width / 2)   # on the piece's axis
-    if T and code in TWO: cy = CY * CH
+    if T and code in TWO: cy = BOT * CH - g.height / 2
     elif set_ in BODY or T:
         # one character sits in the body of the piece (below the shoulders): the 3D piece's roof is steeper (shoulders at 23.4% from the
         # tip, atlas/models/shogi.js pieceGeo) than the 2D drawing's, so the centre is placed by the body (shoulder → bottom), not the bbox
