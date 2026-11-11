@@ -14,6 +14,7 @@
 (function () {
   'use strict';
   const X = window.Table3D; if (!X) return;
+  const IMG = new URL('../../peg/img/', (document.currentScript && document.currentScript.src) || location.href).href;
   const T = () => window.THREE;
   const LO = () => !!(X.coarse || X.lite);
   const LOOKS = ['walnut', 'maple', 'stone', 'night'], SETS = ['glass', 'pearl', 'steel', 'peg'];
@@ -44,6 +45,11 @@
     const g = c.createRadialGradient(W * .5, W * .56, W * .05, W * .5, W * .5, W * .5); g.addColorStop(0, dark); g.addColorStop(.72, dark); g.addColorStop(.86, 'rgba(255,240,220,.25)'); g.addColorStop(1, 'rgba(0,0,0,0)');
     c.fillStyle = g; c.beginPath(); c.arc(W / 2, W / 2, W / 2, 0, 7); c.fill();
   }), transparent: true, roughness: .9, depthWrite: false, bump: false }));
+  const faceMat = (look, id) => mat('face' + look + id, () => {
+    const tx = new (T().TextureLoader)().load(IMG + 'bd-' + look + '-' + id + '.webp?v=2', () => { if (X.kick) X.kick(200); });
+    tx.anisotropy = 4; if (T().sRGBEncoding) tx.encoding = T().sRGBEncoding;
+    return new (T().MeshStandardMaterial)({ map: tx, transparent: true, alphaTest: .92, roughness: .45, metalness: 0 });
+  });
   const grooveMat = look => mat('gr' + look, () => X.M({ color: { walnut: '#2a170c', maple: '#7a5530', stone: '#8e8a82', night: '#0b0714' }[look], roughness: .8 }));
 
   /* ---------- the boards ---------- */
@@ -56,22 +62,25 @@
       const top = Math.min(...pts.map(p => p[1])), bot = Math.max(...pts.map(p => p[1])), half = (Math.max(...pts.map(p => p[0])) - Math.min(...pts.map(p => p[0]))) / 2;
       const s3 = Math.sqrt(3), m = 1.05, dy = .9;
       const P = [[0, top - m * 2], [-half - m * s3, bot + m + dy], [half + m * s3, bot + m + dy]];
-      return (B.geoT = { tri: true, pts, P, groove: { z: bot + 1.35, x0: -half - 1.1, x1: half + 1.1 } });
+      const span = Math.max(P[2][0] - P[1][0], P[1][1] - P[0][1]);
+      return (B.geoT = { tri: true, pts, P, groove: { z: bot + 1.35, x0: -half - 1.1, x1: half + 1.1 }, size: span + .3, oz: (P[0][1] + P[1][1]) / 2 });
     }
-    const Rr = Math.max(...pts.map(([x, y]) => Math.hypot(x, y))) + 1.35;
-    return (B.geoT = { tri: false, pts, R: Rr, gr: Rr - .5 });
+    const Rr = Math.max(...pts.map(([x, y]) => Math.hypot(x, y))) + 1.22;   // (the 2D page's geometry: its pictures line up)
+    return (B.geoT = { tri: false, pts, R: Rr, gr: Rr - .48, size: Rr * 2 + .12, oz: 0 });
   }
   function board(id, look) {
     id = id || 'english'; look = LOOKS.includes(look) ? look : lookNow();
     const TT = T(), E = window.PegEngine, B = E.BOARDS[id], S = shape(B), g = new TT.Group();
-    const W = woodMat(look);
+    // this board's own materials, swapped in place by setSet (the portal's 盤 row: a board kept from before / merged meshes
+    // still show the chosen design — the same fix as chess)
+    const W = woodMat(look).clone(), RM = rimMat(look).clone(), GM = grooveMat(look).clone(), FM = faceMat(look, id).clone();
     if (!S.tri) {
       const Rr = S.R, gr = S.gr, prof = [[0, TOP], [gr - .34, TOP], [gr - .3, TOP - .03], [gr - .22, TOP - .12], [gr, TOP - .16], [gr + .22, TOP - .12], [gr + .3, TOP - .03], [gr + .34, TOP], [Rr - .14, TOP + .02], [Rr - .04, TOP - .04], [Rr, TOP - .14], [Rr + .02, .12], [Rr - .06, 0], [0, 0]];
       const body = X.mesh(geo('pgBody' + id, () => new TT.LatheGeometry(prof.map(([a, b]) => new TT.Vector2(a, b)).reverse(), LO() ? 48 : 96)), W);
       g.add(body);
       // the groove's dark floor and a bead (gilt on the lacquer board) on the rim
-      const gf = X.mesh(geo('pgGF' + id, () => { const r = new TT.RingGeometry(gr - .2, gr + .2, LO() ? 48 : 96); r.rotateX(-Math.PI / 2); return r; }), grooveMat(look), 0, TOP - .155, 0); gf.castShadow = false; g.add(gf);
-      const bead = X.mesh(geo('pgBead' + id, () => { const t = new TT.TorusGeometry(Rr - .1, .035, 6, LO() ? 60 : 120); t.rotateX(Math.PI / 2); return t; }), rimMat(look), 0, TOP + .015, 0); g.add(bead);
+      const gf = X.mesh(geo('pgGF' + id, () => { const r = new TT.RingGeometry(gr - .2, gr + .2, LO() ? 48 : 96); r.rotateX(-Math.PI / 2); return r; }), GM, 0, TOP - .155, 0); gf.castShadow = false; g.add(gf);
+      const bead = X.mesh(geo('pgBead' + id, () => { const t = new TT.TorusGeometry(Rr - .1, .035, 6, LO() ? 60 : 120); t.rotateX(Math.PI / 2); return t; }), RM, 0, TOP + .015, 0); g.add(bead);
     } else {
       const sh = new TT.Shape(), P = S.P, rr = .7;
       for (let i = 0; i < 3; i++) {
@@ -83,16 +92,18 @@
       ex.rotateX(-Math.PI / 2); ex.translate(0, .0, 0);
       g.add(X.mesh(geo('pgTri', () => ex), W));
       const gz = S.groove.z, gl = S.groove.x1 - S.groove.x0;
-      const gv = X.mesh(geo('pgTriG', () => { const p = new TT.PlaneGeometry(gl, .42); p.rotateX(-Math.PI / 2); return p; }), grooveMat(look), (S.groove.x0 + S.groove.x1) / 2, TOP + .002, gz); gv.castShadow = false; g.add(gv);
+      const gv = X.mesh(geo('pgTriG', () => { const p = new TT.PlaneGeometry(gl, .42); p.rotateX(-Math.PI / 2); return p; }), GM, (S.groove.x0 + S.groove.x1) / 2, TOP + .002, gz); gv.castShadow = false; g.add(gv);
     }
-    // the cups
-    const cupG = geo('pgCup', () => { const c = new TT.CircleGeometry(CUP, 28); c.rotateX(-Math.PI / 2); return c; });
-    S.pts.forEach(([x, z]) => { const m = new TT.Mesh(cupG, cupMat(look)); m.position.set(x, TOP + .003, z); m.renderOrder = 1; g.add(m); });
+    // the face: the 2D page's own picture of this board (peg/img/bd-<look>-<board>.webp: wood / stone / lacquer, inlay, cups, groove),
+    // laid over the turned body so both views show the same set (2026-11-11)
+    const face = X.mesh(geo('pgFace' + id, () => { const p = new TT.PlaneGeometry(S.size, S.size); p.rotateX(-Math.PI / 2); return p; }), FM, 0, TOP + .004, S.oz);
+    face.castShadow = false; face.receiveShadow = true; g.add(face);
     g.userData = {
       id, B, look, top: TOP, R, W: S.tri ? S.P[2][0] * 2 : S.R * 2, H: S.tri ? S.P[1][1] - S.P[0][1] : S.R * 2, sink: 0,
       pt: i => S.pts[i].slice(),
-      groove: k => { if (S.tri) { const n = 13, x = S.groove.x0 + (S.groove.x1 - S.groove.x0) * ((k % n) + .5) / n; return [x, TOP + R * .55, S.groove.z]; } const step = Math.min(.66 / S.gr, Math.PI * 2 / B.n), a = -Math.PI / 2 + (k + .5) * step * 1.02; return [Math.cos(a) * S.gr, TOP - .16 + R * .9, Math.sin(a) * S.gr]; },
+      groove: k => { if (S.tri) { const n = 13, x = S.groove.x0 + (S.groove.x1 - S.groove.x0) * ((k % n) + .5) / n; return [x, TOP + R * .78, S.groove.z]; } const step = Math.min(.66 / S.gr, Math.PI * 2 / B.n), a = -Math.PI / 2 + (k + .5) * step * 1.02; return [Math.cos(a) * S.gr, TOP + R * .78, Math.sin(a) * S.gr]; },
       marble: (i, set) => marble(i, set),
+      setSet: k => { if (!LOOKS.includes(k) || k === g.userData.look) return; g.userData.look = k; W.copy(woodMat(k)); RM.copy(rimMat(k)); GM.copy(grooveMat(k)); FM.copy(faceMat(k, id)); [W, RM, GM, FM].forEach(m => { m.needsUpdate = true; }); if (X.kick) X.kick(300); },
     };
     return g;
   }

@@ -108,7 +108,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=11';
+const ENGINE_URL = 'engine.js?v=12';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -138,8 +138,12 @@ const mtLevel = lv => { const L = E.LEVELS[lv]; return !!(L && L.s && L.ms && !L
 // The MCTS on several threads (2026-11-10, claude/amazons-spec.md「MCTS」): Lv.19〜23 (mc in LEVELS; rated games, the coach's deeper
 // pass and PRO's MCTS too) grow ONE tree on every thread (tree-parallel with virtual loss): core_mt.wasm on a shared memory,
 // the lead engine.js?…&mt=1, the helpers mt-helper.js (shared/mtengine.js; only on an isolated page). Without it: one thread.
-const MCP = window.MTEngine && MTEngine.use ? MTEngine.use({ wasm: 'core_mt.wasm?v=4', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=1', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = core_mt.wasm's (1 GiB)
-  imports: mem => ({ env: { memory: mem, now: () => Date.now() } }), help: m => m.type === 'think' ? {} : null }) : null;
+// (2026-11-11) The alpha-beta search too (analysis, hints, the coach, the review box, PRO's alpha-beta on threads): its loop is in
+// core.c now, and on these threads the helpers take moves at its split points (Praline's Young Brothers Wait in core_mt.wasm,
+// claude/amazons-spec.md「αβ を C に」). Without an isolated page (no shared memory): shared/mtsplit.js's workers as before (each
+// with its own core: the root moves and the main line shared out, no shared table).
+const MCP = window.MTEngine && MTEngine.use ? MTEngine.use({ wasm: 'core_mt.wasm?v=5', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=2', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = core_mt.wasm's (1 GiB); initial ≥ its declared 617 pages
+  imports: mem => ({ env: { memory: mem, now: () => Date.now() } }), help: () => ({}) }) : null;
 const mcJob = msg => msg.type === 'think' && (msg.cfg ? !!(msg.cfg.s && msg.cfg.mc) : !!(E.LEVELS[msg.level] || {}).mc);
 // the MCTS's default thread count (2026-11-10): the performance cores (shared/mtengine.js perfThreads — 10 of the user's M4 Pro's
 // 14; ProSet.defThreads, the other games' timed levels, #1299) for the levels, rated games, the coach's deeper pass and PRO's
@@ -163,6 +167,9 @@ function request(which, msg, onProgress) {
     if (mp) { const t0 = performance.now(), full = { start: startSpec, rule: gv, ...msg, mtThreads: msg.cfg ? msg.cfg.threads : mcThreads() }; return mp.run(full, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full, onProgress) : r; }); }
     return requestW(which, msg, onProgress);
   }
+  // the alpha-beta search on threads: core_mt.wasm's pool on an isolated page (PRO: with more than one thread), else mtsplit.js's
+  const cp = MCP && MTEngine.on() && mtWants(which, msg) && (!msg.cfg || msg.cfg.threads > 1) && MCP.pool(which === 'ai' ? 'ai' : null);
+  if (cp) { const t0 = performance.now(), full = { start: startSpec, rule: gv, ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }; return cp.run(full, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full, onProgress) : r; }); }
   const mp = MTP && mtWants(which, msg) && MTP.pool(which === 'ai' ? 'ai' : null);
   if (mp) { const t0 = performance.now(), full = { start: startSpec, rule: gv, ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }; return mp.run(full, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full, onProgress) : r; }); }
   return requestW(which, msg, onProgress);

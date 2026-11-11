@@ -132,7 +132,7 @@ GAMES に追加（store 含む）→ i18n.js に hist.<id>（歴史・雑学、1
 - リバーシ（1番目）：
   - パズル：フル版と同じ問題・記録（`reversi-emerald-puzzles`・`reversi-pz-last`・今日のパズル `reversi-emerald-daily`）。案内はリバガメ。正確な終盤読み（engine.js の analyze exact）で、目標（勝ち／N石差／全滅／引き分け以上）を保つ手なら相手が最善で応じて続行、最後まで打ったらクリア。目標に届かない手はその場で不正解（フル版は最後まで打たせる。3D版は簡略）。
   - レッスン：lessons.json の9ステップ（各5問、点数はフル版の problemPoints）。定跡は定石コースの名前つき手順（手順を1手ずつ→練習最大5局面、定跡の手20点、ほかは評価差で0〜14点）。記録は `reversi-emerald-lessons`（定跡は `opl:<手順>`）。
-  - レート戦：`reversi-rated-v1`、10分+30秒、レベル別レートはフル版の RT_LV。
+  - レート戦：`reversi-rated-v1`、10分+30秒、レベル別レートはフル版の RT_LV（レベル数が変わったら app.js の RTG.reversi も合わせる）。
   - スマホのあそぶシート（PS_GAMES）はまだ将棋・チェスのみ。
 
 ## スマホのあそぶシートのパズル・レッスン（2026-11-11）
