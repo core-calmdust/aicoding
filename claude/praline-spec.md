@@ -301,3 +301,4 @@ Many cores (nuts) held together by shared memory (caramel).
 - 説明は `pl.desc`（14言語、PC 幅392px・6行に収まることを計測済み）。公開タイトル数（`stat-titles`）には数えない。
 - **メニュー**（2026-11-11 ユーザー指示）：上のナビ（開発室の次）と下のタブ（4列に）に「ソフトウェア」（`#software`、`nav.sw`＝`sw.h2`、インドネシア語だけタブに収まる「Software」）。5項目でも1行に収まるよう 901〜1120px はナビの間隔と文字を詰める（901〜1000px はさらに詰める）。
 - **ゲームの中の表示**（2026-11-11）：§2 の表のゲームの単体ページに「Powered by Praline」（`shared/praline-badge.js`。PC は右下に固定、スマホは歯車のパネルの下。押すとトップの `#software`）。決まりは addendum「Powered by Praline の表示」。
+- **フル機能・大百科**（2026-11-11）：フル機能（`?skin=atlas`）にも同じ表示、大百科（`atlas/index.html`）はいちばん下の「トップへ · CALMDUST COLLECTION」の横と、ちゃぶ台で Praline のゲームを遊んでいる間（PC 右下・スマホ右上の小さなアイコン、別タブで開く）。
