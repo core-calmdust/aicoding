@@ -58,7 +58,7 @@
      Sheets: images/atlas/shogi-glyphs-<set>.png (atlas/tools/shogi-glyphs-faithful.py; licences in shogi/pieces/README.md) ---------- */
   const PSETS = ['moriage', 'ichiji', 'kinki', 'minase', 'ryoko', 'futofude'];
   const GLY = { moriage: GLYPHS };
-  const curSet = () => { try { const v = X.PIECES && X.PIECES.shogi ? X.PIECES.shogi.get() : 'moriage'; return PSETS.includes(v) ? v : 'moriage'; } catch (e) { return 'moriage'; } };
+  const curSet = () => { try { const v = X.PIECES && X.PIECES.shogi ? X.PIECES.shogi.get() : 'ryoko'; return PSETS.includes(v) ? v : 'ryoko'; } catch (e) { return 'ryoko'; } };
   const SHEETS = {};
   function glyphsOf(set) {
     if (set === 'moriage') return glyphsReady;
