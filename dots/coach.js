@@ -487,7 +487,7 @@ function render() {
   if (resting) {
     card.classList.remove('hidden'); card.classList.add('ck-off'); document.body.classList.add('ck-tab'); S0.rvWas = rvShow;
     cancel(); clearHover();
-    return put(`<h3 class="ck-h">${CoachKit.ICON.coach}<span>${esc(tx('head'))}</span></h3><p class="ck-muted">${esc(tx('rest'))}</p>`);
+    return put(CoachKit.lessonRest ? CoachKit.lessonRest(card, `<h3 class="ck-h">${CoachKit.ICON.coach}<span>${esc(tx('head'))}</span></h3><p class="ck-muted">${esc(tx('rest'))}</p>`) : `<h3 class="ck-h">${CoachKit.ICON.coach}<span>${esc(tx('head'))}</span></h3><p class="ck-muted">${esc(tx('rest'))}</p>`);
   }
   card.classList.toggle('hidden', !can);
   card.classList.toggle('ck-off', can && !on && !SF.over);
