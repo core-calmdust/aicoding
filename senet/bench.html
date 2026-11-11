@@ -41,13 +41,14 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);ma
 <body>
 <main>
 <h1 id="h1">セネト マルチスレッド ベンチマーク</h1>
-<p class="sub" id="lead">対局ページと同じ方式（shared/mtworkers.js：ふつうの Worker を並べ、期待値探索を「手 × 次の出目」の仕事に分けて配る）で、スレッド数ごとの読みの速さを測ります。共有メモリを使わないので分離は不要です。PC の Chrome で開き、終わったら「結果をコピー」を押して貼り付けてください。</p>
+<p class="sub" id="lead">（2026-11-11）期待値探索は C（WebAssembly、engine.c）。「エンジン」で前の JavaScript 版も測れます（同じ局面・同じ読みで、速さの比較用）。<br>対局ページと同じ方式（shared/mtworkers.js：ふつうの Worker を並べ、期待値探索を「手 × 次の出目」の仕事に分けて配る）で、スレッド数ごとの読みの速さを測ります。共有メモリを使わないので分離は不要です。PC の Chrome で開き、終わったら「結果をコピー」を押して貼り付けてください。</p>
 
 <div class="card"><div class="kv" id="env"></div></div>
 
 <div class="card">
   <div class="row">
     <label>読みの深さ <select id="selD"></select></label>
+    <label>エンジン <select id="selE"><option value="c" selected>C（wasm）</option><option value="js">JavaScript（前の版との比較用）</option></select></label>
     <label>局面数 <select id="selP"><option value="12">12</option><option value="24" selected>24</option><option value="48">48</option></select></label>
   </div>
   <div class="row" style="margin-top:12px">
@@ -60,12 +61,12 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);ma
 
 <div class="card"><h2>結果</h2><div class="tw"><table id="tbl"><thead><tr><th>スレッド</th><th>局面/秒</th><th>仕事/秒</th><th>1スレッド比</th><th>効率</th><th>最善手の一致</th></tr></thead><tbody></tbody></table></div><pre id="log"></pre></div>
 </main>
-<script src="engine.js?v=5"></script>
+<script src="engine.js?v=6"></script>
 <script>
 'use strict';
 // ---- the game's part (the same page for senet/: G changes) ----
 const G = {
-  id: 'senet', E: window.SenetEngine, worker: 'worker.js?v=5', depths: [[4, '4（重い）'], [3, '3（Lv.19・20・ヒント）'], [5, '5（とても重い）']],
+  id: 'senet', E: window.SenetEngine, worker: 'worker.js?v=6', depths: [[4, '4（重い）'], [3, '3（Lv.19・20・ヒント）'], [5, '5（とても重い）']],
   positions(k) {   // positions with a throw and 2+ moves, from Lv.16 self-play (seeded)
     const E = this.E, rng = E.mulberry32(20261108), out = [];
     for (let g = 0; out.length < k && g < 200; g++) {
@@ -102,15 +103,18 @@ function runPool(ws, tasks) {
     ws.forEach(feed);
   });
 }
-async function spawn(t) {
-  const ws = []; for (let i = 0; i < t; i++) ws.push(new Worker(G.worker));
+let core = '';
+async function spawn(t) {   // (the engine: the C engine, or ?nowasm = the JavaScript of engine.js — 2026-11-11)
+  const url = G.worker + ($('#selE').value === 'js' ? '&nowasm=1' : '');
+  const ws = []; for (let i = 0; i < t; i++) ws.push(new Worker(url));
   await Promise.all(ws.map(w => new Promise(r => { w.onmessage = () => r(); w.postMessage(Object.assign({ id: 0 }, G.warm || { type: 'roll', state: G.E.newGame(), n: 1, d: 1 })); })));   // (loaded and warm)
+  core = await new Promise(r => { ws[0].onmessage = e => r(e.data.core || '?'); ws[0].postMessage({ id: 0, type: 'ping' }); });
   return ws;
 }
 async function run() {
   $('#btnRun').disabled = true; $('#btnCopy').disabled = true;
   const d = +$('#selD').value, P = G.positions(+$('#selP').value);
-  lines = [`${G.id} bench ${new Date().toISOString()} | ${ua} | hc ${HC} | depth ${d} | ${P.length} positions`];
+  lines = [`${G.id} bench ${new Date().toISOString()} | ${ua} | hc ${HC} | depth ${d} | ${P.length} positions | engine ${$('#selE').value}`];
   const tb = $('#tbl tbody'); tb.innerHTML = '';
   let base = 0, ref = null, step = 0;
   try {
@@ -121,6 +125,7 @@ async function run() {
       const t0 = performance.now(), bests = []; let nt = 0;
       for (const q of P) { const sp = await G.split(q, d, ws); nt += sp.tasks.length; const r = await runPool(ws, sp.tasks.map(x => G.task(x))); bests.push(G.best(sp.combine(r.map(x => x.v)))); }
       const ms = performance.now() - t0; ws.forEach(w => w.terminate());
+      if (t === COUNTS[0]) lines.push('core ' + core);
       const pps = P.length / ms * 1000, tps = nt / ms * 1000; if (!base) { base = pps; ref = bests; }
       const agree = bests.filter((b, i) => b === ref[i]).length, sp = pps / base;
       tb.insertAdjacentHTML('beforeend', `<tr><td>${t}</td><td>${pps.toFixed(2)}</td><td>${tps.toFixed(0)}</td><td>${sp.toFixed(2)}×</td><td>${(sp / t * 100).toFixed(0)}%</td><td>${agree}/${P.length}</td></tr>`);

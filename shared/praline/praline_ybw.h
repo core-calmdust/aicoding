@@ -11,7 +11,7 @@
 // nothing is split: one thread searches exactly as before.
 //
 // Included after the game's search(). The game provides first (its "glue"):
-//   static int spSearch(SPt *s, int i, int a)       the move i of s at s's position (the thread is there) with the null
+//   static PL_VAL spSearch(SPt *s, int i, PL_VAL a) the move i of s at s's position (the thread is there) with the null
 //                                                     window against a and the re-searches, as the one-thread loop / root
 //   static void spLoadPos(const SPt *s, int top, int fresh)   a thread joining s: copy its position (and the repetition
 //                                                     history); top: the slot of the incremental evaluation's stack to use,
@@ -24,8 +24,31 @@
 //   static void spIdleReset(int fresh)              mt_idle starts: the game's search state (nodes, time / node limits, root
 //                                                     key …); fresh: a new job (the history decays, the killers are cleared)
 //   now(), and the thread-local `nodes` and `stopFlag` of its search
+// Optional hooks (macros; nothing when not defined):
+//   PL_ON_RAISE(s, i)      a move raised the split point's alpha (under its lock): e.g. copy this thread's line below it
+//   PL_ON_OPEN(s)          spRun opens s (e.g. no line yet);   PL_ON_CLOSE(s)   spRun is done with s (e.g. the node's line)
+//   PL_ROOT_VAL(s, i, v)   the root's value of its move i (default: s->vals[i] = v); PL_ROOT_GET(s, j) (default: s->vals[j])
+//   PL_WANT_A              keep the alpha the move was searched against in plA for PL_ROOT_VAL (e.g. a fail-low is no value)
+//   PL_IDLE_HOOK(ms)       in mt_idle after the reset: e.g. send a thread elsewhere (return its nodes)
+//   PL_NODES()             the nodes mt_idle returns (default: (double)nodes)
+//   PL_MT_SPLIT            the game exports its own mt_split (it sets splitD and its own settings)
 #ifndef PRALINE_YBW_H
 #define PRALINE_YBW_H 1
+#ifndef PL_ROOT_VAL
+#define PL_ROOT_VAL(s, i, v) ((s)->vals[i] = (v))
+#endif
+#ifndef PL_ROOT_GET
+#define PL_ROOT_GET(s, j) ((s)->vals[j])
+#endif
+#ifdef PL_WANT_A
+static TLS PL_VAL plA;   // the alpha the move given to spResult was searched against
+#define PL_SET_A(a) (plA = (a))
+#else
+#define PL_SET_A(a) ((void)0)
+#endif
+#ifndef PL_NODES
+#define PL_NODES() ((double)nodes)
+#endif
 #ifdef SIM_STAT
 static double ST[16];   // (a simulator's counters) 0 splits, 1 helper joins, 2 their moves, 3 empty joins, 4 idle ticks, 5 waiting ticks, 6 second searches
 #define STAT(k, v) (ST[k] += (v))
@@ -56,12 +79,18 @@ static int spJoin(SPt *s) {   // a helper is counted on the split point while it
   }
 }
 static inline void spLeave(SPt *s) { __atomic_sub_fetch(&s->word, 1, __ATOMIC_ACQ_REL); }
-static void spResult(SPt *s, int i, int v) {
+static void spResult(SPt *s, int i, PL_VAL v) {
   spLock(s);
-  if (s->root) s->vals[i] = v;
+  if (s->root) PL_ROOT_VAL(s, i, v);
   if (v > s->best) {
     s->best = v; s->bestMove = s->mv[i];
-    if (v > s->alpha && !s->all) { __atomic_store_n(&s->alpha, v, __ATOMIC_RELEASE); if (v >= s->beta) spStop(s); }
+    if (v > s->alpha && !s->all) {
+      PL_ALPHA_STORE(s, v);
+#ifdef PL_ON_RAISE
+      PL_ON_RAISE(s, i);
+#endif
+      if (v >= s->beta) spStop(s);
+    }
   }
   __atomic_store_n(&s->done[i], 1, __ATOMIC_RELEASE);   // (a second search of it stops: chainStopped)
   spUnlock(s);
@@ -72,11 +101,11 @@ static int spWork(SPt *s, int owner) {
     if (chainStopped(s, -1)) return done;
     const int i = __atomic_fetch_add(&s->next, 1, __ATOMIC_ACQ_REL);
     if (i >= s->n) return done;
-    const int a = __atomic_load_n(&s->alpha, __ATOMIC_ACQUIRE);
+    const PL_VAL a = PL_ALPHA_LOAD(s);
     if (a >= s->beta && !s->all) return done;
     __atomic_store_n(&s->busy[i], 1, __ATOMIC_RELEASE);
     curIdx = i;
-    const int v = spSearch(s, i, a);
+    const PL_VAL v = spSearch(s, i, a);
     curIdx = -1;
     if (stopFlag) {
       if (stopFlag == 2 && !chainStopped(s, -1)) { stopFlag = 0; continue; }   // (another thread finished this move first)
@@ -84,6 +113,7 @@ static int spWork(SPt *s, int owner) {
       stopFlag = 0; continue;   // (a helper: this split point or one above it was stopped — the check above leaves)
     }
     if (v >= s->beta && !s->root) spCutoff(s, i);   // (this thread's killers / history, as the one-thread cut-off)
+    PL_SET_A(a);
     spResult(s, i, v);
   }
 }
@@ -142,8 +172,8 @@ static int spDup(SPt *y, int j, const SPt *under) {   // 1 when it searched (a p
   spLoadPos(y, under ? top + 1 : 0, 1);
   curSP = y; curIdx = j;
   dupMode = 1; dupZ = y; dupJ = j; dupUnder = under;
-  const int a = __atomic_load_n(&y->alpha, __ATOMIC_ACQUIRE);
-  if ((a < y->beta || y->all) && !chainStopped(y, j)) { const int v = spSearch(y, j, a); if (!stopFlag) spResult(y, j, v); }
+  const PL_VAL a = PL_ALPHA_LOAD(y);
+  if ((a < y->beta || y->all) && !chainStopped(y, j)) { const PL_VAL v = spSearch(y, j, a); if (!stopFlag) { PL_SET_A(a); spResult(y, j, v); } }
   dupMode = 0;
   if (stopFlag == 3) stopFlag = 0;
   curSP = saved; curIdx = savedIdx;
@@ -164,11 +194,14 @@ static int spHelp(SPt *y, const SPt *under) {   // returns the number of moves i
   spLeave(y);
   return k;
 }
-static void spRun(SPt *s, int *best, Move *bestM, int *vals) {
+static void spRun(SPt *s, PL_VAL *best, Move *bestM, PL_VAL *vals) {
   STAT(0, 1);
   s->alpha = s->alpha > *best ? s->alpha : *best; s->best = *best; s->bestMove = *bestM; s->next = 0; s->stop = 0; s->lock = 0; s->waiting = 0;
   for (int i = 0; i < s->n; i++) { s->busy[i] = 0; s->done[i] = 0; s->dup[i] = 0; }
   s->pidx = curSP ? curIdx : -1; s->own = (const void *)&curIdx; s->parent = curSP;
+#ifdef PL_ON_OPEN
+  PL_ON_OPEN(s);
+#endif
   { const int w = __atomic_load_n(&s->word, __ATOMIC_ACQUIRE); __atomic_store_n(&s->word, (w & ~511) | 256, __ATOMIC_RELEASE); }   // open
   __atomic_add_fetch(&gOpenN, 1, __ATOMIC_ACQ_REL);
   SPt *const saved = curSP; const int savedIdx = curIdx;
@@ -201,15 +234,23 @@ static void spRun(SPt *s, int *best, Move *bestM, int *vals) {
   else if (ab == 2) ab = 0;                                 // its own cut-off (best >= beta)
   stopFlag = ab;
   *best = s->best; *bestM = s->bestMove;
-  if (vals) for (int j = 0; j < s->n; j++) if (s->done[j]) vals[j] = s->vals[j];
+#ifdef PL_ON_CLOSE
+  PL_ON_CLOSE(s);
+#endif
+  if (vals) for (int j = 0; j < s->n; j++) if (s->done[j]) vals[j] = PL_ROOT_GET(s, j);
   spFree(s);
 }
+#ifndef PL_MT_SPLIT   // (a game with its own mt_split: more settings)
 EXPORT(mt_split) void mt_split(int d) { if (d > 0) splitD = d; }
+#endif
 // a helper thread (the page's helper worker calls it): take moves at the split points until the search is over (mt_stop) — or, with ms > 0, until it
 // has nothing to do after ms milliseconds (the page then counts its nodes and calls again); returns its nodes. fresh: a new
 // job (spIdleReset: the history decays and the killers are cleared, as the game's search does when it begins)
 EXPORT(mt_idle) double mt_idle(double ms, int fresh) {
   spIdleReset(fresh); stopFlag = 0; curSP = 0; curIdx = -1; dupMode = 0;
+#ifdef PL_IDLE_HOOK
+  PL_IDLE_HOOK(ms);
+#endif
   const double t0 = ms > 0 ? now() : 0;
   __atomic_add_fetch(&gIdle, 1, __ATOMIC_ACQ_REL);
   while (!__atomic_load_n(&gStop, __ATOMIC_ACQUIRE)) {
@@ -228,6 +269,6 @@ EXPORT(mt_idle) double mt_idle(double ms, int fresh) {
   }
   __atomic_sub_fetch(&gIdle, 1, __ATOMIC_ACQ_REL);
   stopFlag = 0;
-  return (double)nodes;
+  return PL_NODES();
 }
 #endif
