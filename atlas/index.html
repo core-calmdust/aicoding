@@ -1239,6 +1239,10 @@ html.bv-pland .urtoast{top:calc(52px + env(safe-area-inset-top));left:calc(50% +
 .rgd .pg{font-family:var(--round);color:var(--ink2);font-weight:700}
 .rgd .tx{font-size:16px;line-height:1.75;color:var(--ink);min-height:3.5em;cursor:pointer}
 .rgd .tx b{color:#d93c3c}
+.rgd .rvn{display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap}.rgd .rvn[hidden]{display:none}
+.rgd .rvn > span:not(.vs){display:inline-flex;align-items:center;gap:6px;padding:4px 12px 4px 5px;border-radius:99px;background:var(--cream);border:2px solid var(--line)}
+.rgd .rvn svg{width:24px;height:24px;flex:none}.rgd .rvn small{font:700 12.5px var(--font);color:var(--ink2)}.rgd .rvn b{font:700 21px/1 var(--round);color:var(--ink);min-width:1.3em;text-align:end}
+.rgd .rvn .me{border-color:#ffd77a;background:#fff6d8}.rgd .rvn .vs{font:700 14px var(--round);color:var(--ink2)}   /* リバーシのパズル: each side's discs (2026-11-12) */
 .rgd .cnt{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;margin-top:6px}.rgd .cnt:empty{display:none}
 .rgd .cnt .sc{display:inline-flex;align-items:center;gap:6px;font:700 22px var(--round)}
 .rgd .cnt .vs{font:700 18px var(--round);color:var(--ink2)}
@@ -1711,6 +1715,23 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 #lessonOverlay .pzh-ic.sm{width:24px;height:24px;border-radius:8px;padding:4px}
 #lessonOverlay .pzh-grid{grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:10px}
 #lessonOverlay .pzh-grid .pzs-c{height:66px;border-radius:16px}
+/* 詰将棋の一覧 (tsumeBook, 2026-11-12): 続きから in the hero, the dailies, a coloured mark + difficulty bars per set */
+#lessonOverlay .pzh-sn{margin-inline-start:12px;color:#b36b00}
+#lessonOverlay .pzh-go{position:relative;flex:none;display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px 22px;border:0;border-radius:18px;background:var(--coral);color:#fff;box-shadow:0 4px 0 var(--coral2);font-family:var(--font);cursor:pointer;max-width:240px}
+#lessonOverlay .pzh-go b{font:900 17px var(--font);white-space:nowrap}#lessonOverlay .pzh-go small{font:700 12px var(--font);opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+#lessonOverlay .pzh-go:active{transform:translateY(3px);box-shadow:0 1px 0 var(--coral2)}
+#lessonOverlay .pzh-days{margin:0 0 14px}
+#lessonOverlay #lessonList .pzh-day{background:linear-gradient(120deg,#fff3cf,#fff 62%)!important;border-color:#f6dfa6!important;box-shadow:0 4px 0 #f6dfa6!important}
+#lessonOverlay #lessonList .pzh-day.done{background:linear-gradient(120deg,#eafaf2,#fff 62%)!important;border-color:#bfe9d3!important;box-shadow:0 4px 0 #bfe9d3!important}
+#lessonOverlay #lessonList .pzh-day .lx-th{width:76px!important}
+#lessonOverlay .pzh-ic.gl{font:900 14px/1 var(--round);color:#fff;padding:0;width:28px;height:28px}
+#lessonOverlay .pzh-ic.gl.t0{background:linear-gradient(140deg,#5fd39a,#2f9e68)}#lessonOverlay .pzh-ic.gl.t1{background:linear-gradient(140deg,#5cc3e0,#2b8fb3)}
+#lessonOverlay .pzh-ic.gl.t2{background:linear-gradient(140deg,#7f9cff,#4a63d6)}#lessonOverlay .pzh-ic.gl.t3{background:linear-gradient(140deg,#b28cff,#7a52d9)}
+#lessonOverlay .pzh-ic.gl.t4{background:linear-gradient(140deg,#ff9a7a,#e0603c)}#lessonOverlay .pzh-ic.gl.t5{background:linear-gradient(140deg,#ffd36b,#d99a1c)}
+#lessonOverlay .pzh-dif{display:inline-flex;gap:2px}#lessonOverlay .pzh-dif i{width:5px;height:12px;border-radius:2px;background:#f2b630}
+#lessonOverlay #lessonList .lx-th.sg svg{border-radius:6px!important}
+.bksheet .sh-mini text[fill="#e9d9b5"]{fill:#8a6234}   /* (the hand under a small board: was drawn for the dark page) */
+@media (max-width:600px){#lessonOverlay .pzh-hero{flex-wrap:wrap}#lessonOverlay .pzh-go{width:100%;max-width:none}}
 @media (max-width:600px){#lessonOverlay .pzh-hero{padding-left:112px;min-height:96px}#lessonOverlay .pzh-ch{width:100px;height:100px}#lessonOverlay .pzh-tx b{font-size:19px}}
 /* (the full game's lists are drawn for its dark page: here in the portal's cream and white) */
 .bksheet .pbh-tabs button,.bksheet .lx-tabs button{background:#fff;box-shadow:0 2px 0 var(--line)}
@@ -1734,6 +1755,60 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 .bksheet .pb-cont small{color:#fff}
 .bksheet .pbh-daily .go{background:#ff5d5d;color:#fff;border:0;border-radius:14px;box-shadow:0 3px 0 #d93c3c;font-weight:900}
 .bksheet .pbh-daily .go.ok{box-shadow:none}
+/* 詰将棋の一覧 (shared/pzbook.js, drawn for the full game's dark page) in the portal's look like the lesson list (2026-11-12):
+   Zen Maru / Fredoka in place of the mincho and the mono digits, white cards on a 2px cream line with a solid edge below,
+   the yellow chapter tabs, cream bars filled sun-yellow */
+.bksheet .pbh,.bksheet .pbh *,.bksheet .pb-stage,.bksheet .pb-stage *{font-family:var(--font)}
+.bksheet .pbh{gap:14px}
+.bksheet .pbh .pbh-hero{padding:16px 20px;border-radius:24px;border:2px solid #f6dfa6;background:radial-gradient(130% 140% at 0% 0%,#fff3c4 0%,#fff8e4 45%,#fff 80%);box-shadow:0 4px 0 #f6dfa6}
+.bksheet .pbh .pbh-hero::after{display:none}
+.bksheet .pbh .pbh-title{font:900 26px var(--font);letter-spacing:.04em;color:var(--ink)}
+.bksheet .pbh .pbh-title small{font:700 13px var(--round);color:#9a5a00;background:#fff3cf;border:0;padding:3px 10px}
+.bksheet .pbh .pbh-stats,.bksheet .pbh .pbh-stats *{font-family:var(--round);color:var(--ink2);font-weight:700}
+.bksheet .pbh .pb-ring b,.bksheet .pbh .pb-ring small,.bksheet .pbh .pb-ring{font-family:var(--round);color:var(--ink)}
+.bksheet .pbh .pb-ring b{font-weight:700}
+.bksheet .pb-st,.bksheet .pb-st *{font-family:var(--round);color:#e0a020;font-weight:700}
+.bksheet .pbh .pb-cont{font-family:var(--font)}.bksheet .pbh .pb-cont b{font-family:var(--round)}
+.bksheet .pbh .pbh-daily{border-radius:20px;border:2px solid #f6dfa6;background:linear-gradient(120deg,#fff3cf,#fff 62%);box-shadow:0 4px 0 #f6dfa6;padding:10px 14px 10px 10px}
+@media (hover:hover){.bksheet .pbh .pbh-daily:hover{transform:none;border-color:#ffc94d;background:#fffbef}}
+.bksheet .pbh .pbh-daily .tx b{font:900 17px var(--font);color:var(--ink)}
+.bksheet .pbh .pbh-daily .tx small{font:700 13px var(--font);color:var(--ink2)}
+.bksheet .pbh .pbh-daily .tx b small,.bksheet .pbh .pbh-daily .tx span{font-family:var(--round)}
+.bksheet .pbh .pbh-daily .go{border-radius:99px;padding:9px 18px;font:900 15px var(--font)}
+.bksheet .pbh .pbh-tabs{gap:8px;padding:2px 2px 6px}
+.bksheet .pbh .pbh-tabs button{gap:8px;padding:10px;border-radius:16px;border:2px solid var(--line);background:#fff;box-shadow:0 3px 0 var(--line);color:var(--ink2);font:900 14.5px var(--font);transition:none}
+.bksheet .pbh .pbh-tabs button .ic{background:var(--cream);border-radius:9px;color:#b5651d}
+.bksheet .pbh .pbh-tabs button .ct{font:700 12px var(--round);color:var(--ink2);background:var(--cream);border-radius:99px;padding:2px 8px}
+@media (hover:hover){.bksheet .pbh .pbh-tabs button:hover{border-color:#ffd77a;color:var(--ink)}}
+.bksheet .pbh .pbh-tabs button.sel{background:linear-gradient(180deg,#fff3c4,#ffe28a);border-color:var(--sun);color:#6a4200;box-shadow:0 3px 0 var(--sun2)}
+.bksheet .pbh .pbh-cat{font:700 13.5px/1.6 var(--font);color:var(--ink2)}
+.bksheet .pbh .pbh-cards{gap:12px}
+.bksheet .pbh .pbh-card{border-radius:20px;border:2px solid var(--line);background:#fff;box-shadow:0 4px 0 var(--line);color:var(--ink);padding:12px 14px 12px 12px;transition:none}
+@media (hover:hover){.bksheet .pbh .pbh-card:hover{transform:none;border-color:#ffc94d;box-shadow:0 4px 0 #ffd77a;background:#fffbef}}
+.bksheet .pbh .pbh-card:active{transform:translateY(2px);box-shadow:0 2px 0 var(--line)}
+.bksheet .pbh .pbh-card.full{background:linear-gradient(120deg,#eafaf2,#fff 62%);border-color:#bfe9d3;box-shadow:0 4px 0 #bfe9d3}
+.bksheet .pbh .pbh-nm{font:900 17px/1.35 var(--font);color:var(--ink)}
+.bksheet .pbh .pbh-desc{font:500 13px/1.65 var(--font);color:var(--ink2)}
+.bksheet .pbh .pbh-prog,.bksheet .pbh .pbh-prog *{font-family:var(--round);font-weight:700;color:var(--ink2)}
+.bksheet .pbh .pbh-ic{border-radius:12px;box-shadow:0 3px 0 rgba(0,0,0,.15)}
+.bksheet .pbh .pbh-ic .gl{font-family:var(--round);font-weight:700}
+.bksheet .pb-bar{background:var(--cream);height:7px;border-radius:99px}
+.bksheet .pb-bar i{border-radius:99px}
+.bksheet .pb-full{font-family:var(--round)}
+.bksheet .pbh-ghead h2{font:900 21px var(--font);color:var(--ink)}
+.bksheet .pbh-ghead small{font:700 13.5px/1.6 var(--font);color:var(--ink2)}
+.bksheet .pbh-ghead .ic{border-radius:14px}.bksheet .pbh-ghead .ic .gl{font-family:var(--round)}
+.bksheet .pbh-chip{font:700 12px var(--font);padding:2px 10px}
+.bksheet .pb-stage{border:2px solid var(--line);border-radius:20px;box-shadow:0 4px 0 var(--line);padding:12px 14px 14px;margin-bottom:12px}
+.bksheet .pb-sn,.bksheet .pb-sp,.bksheet .pb-sp *{font-family:var(--round);font-weight:700}
+.bksheet .pb-tier{font:900 12px var(--font)}
+.bksheet .pb-tiles{gap:8px}
+.bksheet .pb-tile{border:2px solid var(--line);border-radius:14px;box-shadow:0 3px 0 var(--line);color:var(--ink);transition:none}
+.bksheet .pb-tile .n{font:700 16px var(--round)}
+@media (hover:hover){.bksheet .pb-tile:not(.lk):hover{transform:none;border-color:#ffc94d;background:#fffbef}}
+.bksheet .pb-tile.next{box-shadow:0 3px 0 var(--sun2)}
+.bksheet .pb-tile.done{background:linear-gradient(160deg,color-mix(in srgb,var(--c) 55%,#fff),var(--c2));border-color:color-mix(in srgb,var(--c) 70%,#fff);box-shadow:0 3px 0 color-mix(in srgb,var(--c2) 80%,#000)}
+.bksheet .pb-tile.done .n{color:#fff}
 @media (min-width:820px){.bk-in{border-radius:24px;height:min(88dvh,900px);margin-bottom:4dvh}.bksheet{align-items:center}}
 .lss-cat{margin:12px 2px 4px;font-size:12.5px;font-weight:900;color:var(--ink2)}.lss-cat:first-child{margin-top:0}
 .lssheet .lss b{color:var(--ink2)}.lssheet .lss.pass b{color:#1ea36c}.lss-wait{padding:20px;text-align:center;color:var(--ink2)}
@@ -2054,7 +2129,7 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 </script>
 <script src="gamelist-i18n.js?v=14pg"></script>
 <script src="img/tex/baked.js?v=1"></script>
-<script src="table3d.js?v=154"></script>
+<script src="table3d.js?v=155"></script>
 <script>/* the places other than the chabudai (tables3d.js, 440 KB): at once when one is chosen, else in idle time after the page has
    loaded (2026-11-10); 'atlas-places' tells the page they are there */
 (function () {
@@ -2078,9 +2153,9 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   }, 60);
 };</script>
 <script src="../shared/tapword.js?v=1"></script>
-<script src="lazy.js?v=111"></script>
+<script src="lazy.js?v=112"></script>
 <script src="puzzle-lines.js?v=1"></script>
-<script src="puzzles.js?v=13"></script>
+<script src="puzzles.js?v=14"></script>
 <script src="lessons3d.js?v=9"></script>
 <script src="missions.js?v=8"></script>
 <link rel="stylesheet" href="historia.css?v=15">
@@ -2093,9 +2168,9 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="gamelist.js?v=34"></script>
 <link rel="stylesheet" href="worldmap.css?v=18">
 <script src="worldmap.js?v=34"></script>
-<script src="npc/npc.js?v=27"></script>
+<script src="npc/npc.js?v=28"></script>
 <script src="avtalk.js?v=2"></script>
-<script src="app.js?v=316"></script>
+<script src="app.js?v=317"></script>
 <script src="../shared/praline-badge.js?v=4" data-portal defer></script>
 </body>
 </html>

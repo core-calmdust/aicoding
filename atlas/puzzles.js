@@ -339,7 +339,7 @@
 
     /* ---------- the guide's panel (the rules tour's .rgd) ---------- */
     const el = document.createElement('div'); el.className = 'rgd pzg';
-    el.innerHTML = `<div class="rgd-in"><div class="pic"><img src="${GD.guide}" alt=""></div><div class="bub"><div class="nm">${name}<span class="pg"></span></div><div class="tx"></div><div class="cnt"></div></div></div>
+    el.innerHTML = `<div class="rgd-in"><div class="pic"><img src="${GD.guide}" alt=""></div><div class="bub"><div class="nm">${name}<span class="pg"></span></div><div class="tx"></div><div class="rvn" hidden></div><div class="cnt"></div></div></div>
       <div class="rgd-act"><button type="button" class="btn ghost sm ic" data-a="hint" aria-label="${X.hint}" title="${X.hint}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2h5c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/></svg><small>${X.hint}</small></button><button type="button" class="btn ghost sm ic" data-a="again" aria-label="${X.again}" title="${X.again}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4.5h4.5"/></svg><small>${X.again}</small></button>${ctx.onList ? `<button type="button" class="btn ghost sm ic" data-a="list" aria-label="${ctx.t ? ctx.t('bv.list') : ''}" title="${ctx.t ? ctx.t('bv.list') : ''}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg><small>${ctx.t ? ctx.t('bv.list') : ''}</small></button>` : ''}<span class="sp"></span><button type="button" class="btn big" data-a="next">${X.next} ▶</button></div>`;
     ctx.panel.appendChild(el);
     const $ = s => el.querySelector(s);
@@ -359,6 +359,15 @@
       $('[data-a=next]').disabled = !cur || st === 'busy' || st === 'load';
       $('[data-a=next]').classList.toggle('ghost', st === 'play');
     }
+    // リバーシ: the discs of each side under the guide's words, kept up after every move (2026-11-12)
+    const DSC = c => `<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.2" fill="${c === 1 ? '#1d1f26' : '#fbf7ec'}" stroke="${c === 1 ? '#000' : '#b9b19c'}" stroke-width="1.4"/></svg>`;
+    function rvCount() {
+      const n = $('.rvn'); if (!n) return; const st = cur && cur.kind === 'rv' && pz() && pz().state && pz().state();
+      if (!st) { n.hidden = true; return; }
+      const me = cur.me, a = me === 1 ? st.b : st.w, b = me === 1 ? st.w : st.b, T = k => (ctx.t && ctx.t(k)) || '';
+      n.hidden = false; n.innerHTML = `<span class="me">${DSC(me)}<small>${esc0(T('p.you') || 'You')}</small><b>${a}</b></span><span class="vs">vs</span><span class="op">${DSC(3 - me)}<small>${esc0(T('p.ai') || 'AI')}</small><b>${b}</b></span>`;
+    }
+    const esc0 = v => String(v).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     function stars(n) { $('.cnt').innerHTML = n ? [1, 2, 3].map(k => STAR(k <= n)).join('') : ''; }
     function head() { $('.pg').textContent = !cur ? '' : cur.daily ? ` · ${ctx.dailyTitle ? ctx.dailyTitle(cur.daily.which) : '★'} · ${+cur.daily.date.slice(5, 7)}/${+cur.daily.date.slice(8)}` : ` · ${cur.set} · No.${cur.j + 1}`; }
     const side = c => c ? X.black : X.white;
@@ -385,7 +394,7 @@
     }
     async function onReady(p) {
       if (p !== cur || stopped) return;
-      if (p.kind === 'rv') { p.state = 'play'; p.ex = pz().exact(); pz().wait(); buttons(); return; }
+      if (p.kind === 'rv') { p.state = 'play'; p.ex = pz().exact(); pz().wait(); buttons(); rvCount(); return; }
       if (p.kind === 'tac') { p.state = 'busy'; buttons(); await sleep(250); if (p !== cur) return; await pz().play(p.P.line[0]); if (p !== cur) return; }
       p.state = 'play'; pz().wait(); buttons();
     }
@@ -443,7 +452,7 @@
     const rvMeets = (g, v) => g.type === 'wipe' ? v >= 64 : g.type === 'margin' ? v >= g.value : g.type === 'draw' ? v >= 0 : v > 0;
     const sqN = sq => 'abcdefgh'[sq & 7] + ((sq >> 3) + 1);
     async function rvMoved(p, u) {
-      const list = await p.ex; if (p !== cur || stopped) return;
+      rvCount(); const list = await p.ex; if (p !== cur || stopped) return;
       const mine = (list.find(x => x.move === u) || { score: -99 }).score;
       if (list.length && !rvMeets(p.goal, mine)) {
         const top = Math.max(...list.map(x => x.score)), best = list.filter(x => x.score === top);
@@ -456,7 +465,7 @@
         const ol = await pz().exact(); if (p !== cur || stopped) return;
         if (!ol.length) return solved(p);
         const b = ol.reduce((a, x) => x.score > a.score ? x : a, ol[0]);
-        await pz().play(b.move); if (p !== cur) return;
+        await pz().play(b.move); if (p !== cur) return; rvCount();
       }
       const st = pz().state();
       say(pick(X.good) + ' ' + fill(X.rv.empties, { n: 64 - st.b - st.w }));
@@ -467,6 +476,7 @@
       say(msg + ' ' + (line('retry') || X.retry)); streak = 0;
       await sleep(700); if (p !== cur) return;
       if (back) pz().undo(back);
+      rvCount();
       if (ans || ans === 0) pz().mark(ans);
       p.state = 'fail'; buttons();
     }
