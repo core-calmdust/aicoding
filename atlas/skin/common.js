@@ -467,7 +467,9 @@
   }   // let fonts, the side column fit and the first frames settle
   // phones: the fixed menu bar's height for the page's top padding (skin.css --ctlh, 2026-11-11)
   (function ctlH() { const c = document.querySelector('.card.controls'); if (!c || !window.ResizeObserver) return;
-    const set = () => { const h = c.offsetHeight; if (h) document.documentElement.style.setProperty('--ctlh', h + 'px'); }; new ResizeObserver(set).observe(c); set(); })();
+    // (hidden — a puzzle or a lesson hides the menu bar: no room kept for it, or the page starts low with an empty band above the
+    //  card, 2026-11-11 the user on 詰将棋)
+    const set = () => { const h = c.offsetHeight; document.documentElement.style.setProperty('--ctlh', (h || (getComputedStyle(c).display === 'none' ? 0 : 64)) + 'px'); }; new ResizeObserver(set).observe(c); set(); })();
   /* ---------- opened from the portal with a level / side: start right away ---------- */
   (function autoStart() {
     const q = new URLSearchParams(location.search), lv = +q.get('lv'), side = +q.get('side'), mode = q.get('mode') || 'ai';
