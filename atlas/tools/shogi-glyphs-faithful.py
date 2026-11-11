@@ -25,9 +25,11 @@ ANGLE = {}   # e.g. {'ryoko': {'HI': -0.8}}
 # fine adjustments by eye against photos of the real sets (2026-11-11): the two characters of a piece each centred on the piece's
 # axis (their bodies: the ink between the 6% and 94% points across), the pair set in the body of the piece below the shoulders and a
 # little smaller (scale), and single characters turned (TURN: {code: (upper, lower)} degrees, counter-clockwise +)
-TUNE = {'ryoko': {'turn': {}, 'dx': {'KE': (0, .05), 'HI': (.12, .06)}, 'fill': {'OU': 1.1, 'GY': 1.1}, 'thin': {'HI': 5}},
-        'minase': {'turn': {'KI': (-3, 0)}, 'up': {'OU': .5, 'GY': .5, 'FU': .82, 'KY': .8, 'KE': .8}, 'fill': {'FU': 1.08, 'OU': 1.12, 'GY': 1.12}, 'thin': {'FU': 5}, 'gap': {'FU': .05}, 'dx': {'KI': (-.05, 0)}},
+TUNE = {'ryoko': {'turn': {'HI': (0, -1.5), 'KI': (0, -1.2)}, 'dx': {'KE': (0, .05), 'HI': (.12, .06)}, 'fill': {'OU': 1.1, 'GY': 1.1}, 'thin': {'HI': 5}},
+        'minase': {'turn': {'KI': (-3, 0), 'FU': (0, -1.5), 'KE': (0, -1.5), 'GI': (0, -1.2), 'HI': (0, -1.5)}, 'up': {'OU': .5, 'GY': .5, 'FU': .82, 'KY': .8, 'KE': .8}, 'fill': {'FU': 1.08, 'OU': 1.12, 'GY': 1.12}, 'thin': {'FU': 5}, 'gap': {'FU': .05, 'KI': .03}, 'dx': {'KI': (0, 0)}},
         'kinki': {'turn': {}, 'up': {'OU': .78, 'GY': .78, 'KE': .86}, 'dx': {'KE': (0, .05)}}}
+# (2026-11-12, from the user's own edit of the sheet: the lower characters whose horizontals read as rising — 車・兵・馬・將 —
+# turned a little clockwise, 水無瀬's 金 back on the axis with more room under it)
 # turn: degrees (counter-clockwise +) for the (upper, lower) character; dx: shift across, a fraction of the character's width
 # (right +; 馬's four dots pull its axis left); fill: the block's size, times FILL; thin: strokes made thinner (a min filter of this size at the source scale; 水無瀬's 歩兵
 # is drawn bold)
