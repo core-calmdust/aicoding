@@ -3,15 +3,18 @@
 // shared memory, the lead runs think() with the level's settings, the helpers wait in engine.c mt_idle and take the
 // remaining moves at the lead's split points (YBW: engine.js LAZY.plan 'ybw', engine_mt.wasm v4.1 — MODEL_CARD.md
 // 「マルチスレッド v4 / v4.1」). Each side has its own pool (its own transposition table). Several games can run at once (--conc).
-// Levels 17–25 and T<s> use all the threads of the pool (the page: MT_CFG); levels 14–16 only the lead (the page plays them
+// Levels 17–25, T<s> and D… use all the threads of the pool (the page: MT_CFG); levels 14–16 only the lead (the page plays them
 // on its one-thread worker), so the whole ladder Lv.14 … Lv.25 can be measured in one run (--plan full).
 //
-//   node tools/levelmatch.js [run] [--plan default|full|low|adjacent|ladder|L20:L21,T2:T4,…] [--games 40] [--scale 1]
-//                                  [--conc 2] [--threads N] [--out tools/levelmatch-out/results-ybw.jsonl] [--dry]
+//   node tools/levelmatch.js [run] [--plan default|full|low|adjacent|ladder|top|L20:L21,T2:T4,…] [--games 40] [--scale 1]
+//                                  [--conc 2] [--threads N] [--out tools/levelmatch-out/results-depth.jsonl] [--dry]
 //   node tools/levelmatch.js report [--out …]        the summary to paste back (also written to report.txt)
 //
-// Players: L<n> = engine.js LEVELS[n] (time and max × scale); T<s> = the Lv.20 shape with a soft time of s seconds
-// ({ depth 60, exact 20, wld 22, time s×1000×scale, mpc }), for the Elo per doubling of the time.
+// Players: L<n> = engine.js LEVELS[n] (time and max × scale; Lv.17–24 read to a fixed depth since 2026-11-11, their time is
+// only a guard for slow devices, so they play the same at any --scale / --threads and only Lv.25 depends on the machine);
+// T<s> = the old Lv.20 shape with a soft time of s seconds ({ depth 60, exact 20, wld 22, time s×1000×scale, mpc }), for the
+// Elo per doubling of the time; D<depth>[e<exact>][w<wld>][n<million nodes>] = a depth- / node-capped player of one's own
+// (e.g. D16e20w22, D60e20w22n8; the node cap counts the lead's nodes only — the helpers' are not added, engine.c TLS).
 // Openings: random lines of the opening book (book.bin; at each ply a move within 0.8 discs of the best, as the levels
 // play) up to where the book ends; the same set for every match (seeded), each played twice with the colours swapped.
 // Results are appended one line per game; a new run with the same --out continues (games in progress when it was stopped
@@ -56,12 +59,13 @@ const SCALE = +(opt.scale || 1);
 const GAMES = Math.max(2, Math.round(+(opt.games || 40) / 2) * 2);
 const CONC = Math.max(1, +(opt.conc || (CORES >= 8 ? 2 : 1)));
 const THREADS = Math.max(1, +(opt.threads || Math.min(8, Math.floor(CORES / CONC))));   // (the page: 1 + min(cores − 1, 7))
-const OUT = path.resolve(opt.out || path.join(__dirname, 'levelmatch-out', 'results-ybw.jsonl'));   // (2026-11-10: a new file for the YBW threads and the gentle low levels; the 2026-11-09 run is results.jsonl)
+const OUT = path.resolve(opt.out || path.join(__dirname, 'levelmatch-out', 'results-depth.jsonl'));   // (2026-11-11: a new file for Lv.17–24 by depth; 2026-11-10's YBW run is results-ybw.jsonl, 2026-11-10: a new file for the YBW threads and the gentle low levels; the 2026-11-09 run is results.jsonl)
 const PLANS = {
   adjacent: ['L20:L21', 'L21:L22', 'L22:L23', 'L23:L24', 'L24:L25'],
   ladder: ['T2:T4', 'T4:T8', 'T8:T16'],
   low: ['L14:L15', 'L15:L16', 'L16:L17', 'L17:L18', 'L18:L19', 'L19:L20'],   // (Lv.14 = the fixed anchor of the ratings: MODEL_CARD.md)
 };
+PLANS.top = ['L21:L22', 'L22:L23', 'L23:L24', 'L24:L25'];   // (2026-11-11: the deep levels the 2-core machine could not measure)
 PLANS.default = PLANS.adjacent.concat(PLANS.ladder);
 PLANS.full = PLANS.low.concat(PLANS.adjacent, PLANS.ladder);   // the whole ladder Lv.14 … Lv.25 and the time doublings
 const planOf = p => (PLANS[p] || String(p).split(',')).map(s => s.trim()).filter(Boolean).map(s => { const [a, b] = s.split(':'); return { id: `${a}-${b}`, a, b }; });
@@ -83,10 +87,12 @@ function cfgOf(p, scale) {
     return L;
   }
   if ((m = /^T([\d.]+)$/.exec(p))) return { depth: 60, exact: 20, wld: 22, time: Math.round(+m[1] * 1000 * scale), mpc: 1, mt: true };
-  throw new Error('player? ' + p + ' (L14…L25 or T<seconds>)');
+  // D<depth>[e<exact>][w<wld>][n<nodes in M>]: a depth-capped player of one's own (for trying level settings), e.g. D16e20w22n40
+  if ((m = /^D(\d+)(?:e(\d+))?(?:w(\d+))?(?:n([\d.]+))?$/.exec(p))) { const c = { depth: +m[1], exact: +(m[2] || 0), mpc: 1, mt: true }; if (m[3]) c.wld = +m[3]; if (m[4]) c.nodes = Math.round(+m[4] * 1e6); return c; }
+  throw new Error('player? ' + p + ' (L14…L25, T<seconds> or D<depth>e<exact>w<wld>n<Mnodes>)');
 }
 // rough time used per move (s, scale 1, all threads) for the estimate before any game is played; replaced by the measured times
-const USE = { L14: 0.3, L15: 0.1, L16: 0.2, L17: 1.0, L18: 1.4, L19: 1.9, L20: 2.9, L21: 5, L22: 7.5, L23: 10, L24: 12.5, L25: 14.5 };
+const USE = { L14: 0.3, L15: 0.1, L16: 0.2, L17: 0.1, L18: 0.15, L19: 0.3, L20: 0.5, L21: 0.8, L22: 1.5, L23: 2.5, L24: 4, L25: 4.3 };   // (2026-11-11: Lv.17–24 by depth)
 const useOf = p => USE[p] || (/^T/.test(p) ? 0.58 * +p.slice(1) : 3);
 const MOVES_FULL = 13;   // moves per side that use their full time (from the book's end, before the endgame solve)
 
