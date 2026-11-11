@@ -28,7 +28,7 @@
   /* ---------- look: 'marq' | 'scarlet' | '' (the game's own 2D drawing) ---------- */
   const LK = 'atlas-bg-look', LOOKS = BG3.LOOKS || ['marq', 'scarlet'];
   // (2026-11-11) six 3D boards; under each the 2D page keeps a related 2D skin (labels, the 2D thumbnails)
-  const SK2D = { marq: 'marquetry', scarlet: 'scarlet', nacre: 'andalus', malachite: 'emerald', marble: 'marble', shagreen: 'midnight' };
+  const SK2D = { marq: 'marquetry', scarlet: 'scarlet', oak: 'classic', butterfly: 'midnight', marble: 'marble', croc: 'classic' };
   let mine = null; try { const v = localStorage.getItem(LK); mine = v === '0' ? '' : LOOKS.includes(v) ? v : null; } catch (e) {}
   if (mine === null) { let sk = ''; try { sk = settings.skin; } catch (e) {} mine = sk === 'scarlet' ? 'scarlet' : 'marq'; }
 
