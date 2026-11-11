@@ -270,9 +270,9 @@
   const daysSince = s => Math.floor((Date.parse(ymd(Date.now())) - Date.parse(s)) / DAY);
   // the portal's own 3D play is named after the place chosen for it (localStorage 'atlas-table', atlas/tables3d.js):
   // the changelog's ちゃぶ台 / chabudai become that place (ja) or a plain "table" (the other languages)
-  const PLACE_JA = ['ちゃぶ台', '盤', 'ダイニング', 'フェルト卓', 'テラス', '書斎', '縁側', '山小屋', 'ゲーセン', 'スカイラウンジ', 'キャンプ場', '茶館'];
+  const PLACE_JA = ['ちゃぶ台', '盤', 'ダイニング', 'フェルト卓', 'テラス', '書斎', '縁側', '山小屋', 'ゲーセン', 'スカイラウンジ', 'キャンプ場', '茶館', '和室'];
   const PLACE_W = { en: [/chabudai/g, 'table'], hi: [/चाबुदाई/g, 'मेज़'], zh: [/矮桌/g, '棋桌'], ko: [/밥상/g, '테이블'], 'zh-TW': [/矮桌/g, '棋桌'] };
-  const placeK = () => { try { const k = +localStorage.getItem('atlas-table'); return k >= 1 && k <= 12 ? k | 0 : 0; } catch (e) { return 0; } };
+  const placeK = () => { try { const k = +localStorage.getItem('atlas-table'); return k >= 1 && k <= 12 && k !== 8 ? k | 0 : 0; } catch (e) { return 0; } };
   function placeWord(s, l) {
     const k = placeK(); if (!k || !s) return s;
     if (l === 'ja') return s.replace(/ちゃぶ台の3D盤/g, k === 1 ? '3D盤' : PLACE_JA[k] + 'の3D盤').replace(/ちゃぶ台/g, PLACE_JA[k]);

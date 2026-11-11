@@ -1718,7 +1718,7 @@
     const X = P3(); if (!X) return '';
     const k = X.table(), b = X.bright(), names = X.PLACES.name[lang] || X.PLACES.name.en, B = X.placeUi('b', lang);
     return `<div class="plp${big ? ' big' : ''}"><div class="plh">${esc(X.placeUi('place', lang))}<small>${esc(names[k])}</small></div>
-      <div class="plrow" role="group">${names.map((n, i) => `<button type="button" class="plcb" data-k="${i}" aria-pressed="${i === k}"><img src="${X.placeThumb(i)}" alt="" loading="lazy" width="160" height="107"><span>${esc(n)}</span></button>`).join('')}</div>
+      <div class="plrow" role="group">${names.map((n, i) => (X.placeOff || []).includes(i) ? '' : `<button type="button" class="plcb" data-k="${i}" aria-pressed="${i === k}"><img src="${X.placeThumb(i)}" alt="" loading="lazy" width="160" height="107"><span>${esc(n)}</span></button>`).join('')}</div>
       ${boardRowHtml(big)}${pieceRowHtml(big)}
       <div class="plh">${esc(X.placeUi('bright', lang))}</div>
       <div class="plbr" role="group">${B.map((n, i) => `<button type="button" data-b="${i}" aria-pressed="${i === b}"><i></i>${esc(n)}</button>`).join('')}</div>${big || k === 1 ? '' : todRowHtml()}</div>`;

@@ -5,17 +5,25 @@
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <style>html,body{margin:0;height:100%;overflow:hidden;background:#000}#gl{position:absolute;inset:0}#gl canvas{display:block;width:100%!important;height:100%!important}</style></head>
 <body><div id="gl"></div>
-<script>try { localStorage.setItem('atlas-tod', 'day'); localStorage.removeItem('atlas-lite'); } catch (e) {}</script>
+<script>try { localStorage.setItem('atlas-tod', (location.search.match(/tod=(\w+)/) || [0, 'day'])[1]); localStorage.removeItem('atlas-lite'); } catch (e) {}</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="../img/tex/baked.js?v=1"></script>
 <script src="../table3d.js"></script>
 <script src="../tables3d.js"></script>
 <script src="../models/chess.js"></script>
+<script src="../models/shogi.js"></script>
 <script>
 (function () {
   const q = new URLSearchParams(location.search), X = window.Table3D;
   X.mount(document.getElementById('gl'));
   // a quiet Italian game, move 8 or so
+  if (q.get('game') === 'shogi') {   // (the shogi board in its start position)
+    const g = X.MODELS.shogi(true), Y = g.userData.top, SG = X.shogi, T = { p: 1, l: 2, n: 3, s: 4, b: 5, r: 6, g: 7, k: 8 };
+    'lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL'.split('/').forEach((row, r) => { let f = 0; for (const ch of row) { if (/\d/.test(ch)) { f += +ch; continue; }
+      const up = ch === ch.toUpperCase(), p = SG.piece(T[ch.toLowerCase()], !up, !up && ch === 'k'), [x, z] = SG.cell(f, r); p.position.set(x, Y, z); g.add(p); f++; } });
+    g.scale.setScalar(.8); X.show('shogi', g, { still: true }); X.quiet(true); X.snap();
+    setTimeout(() => { X.snap(); X.kick(1500); setTimeout(() => { window.READY = true; }, 1600); }, 300); return;
+  }
   const FEN = 'r1bq1rk1/ppp2ppp/2np1n2/2b1p3/2B1P3/2NP1N2/PPP2PPP/R1BQ1RK1';
   const g = X.MODELS.chess(true), Y = g.userData.top, C = X.chess;
   FEN.split('/').forEach((row, r) => { let f = 0; for (const ch of row) { if (/\d/.test(ch)) { f += +ch; continue; }
