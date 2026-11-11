@@ -682,7 +682,11 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
   let wReady = null, wDone = false;
   if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
     const imp = { env: { now: () => Date.now(), progress: d => { if (wProg) wProg(d); } } };
-    const url = new URL('engine.wasm?v=20261019n', self.location.href);
+    // (2026-11-11) engine_simd.wasm (wasm SIMD) where the browser has SIMD, else engine.wasm (the same values; MODEL_CARD.md)
+    let simd = true;
+    try { simd = WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11])); } catch (e) { simd = false; }
+    if (/[?&]nosimd=1\b/.test(self.location.search || '')) simd = false;   // (a check of the fallback)
+    const url = new URL(simd ? 'engine_simd.wasm?v=1' : 'engine.wasm?v=20261111', self.location.href);
     wReady = (MTL ? new Promise(res => self.addEventListener('message', function f(e) { if (e.data && e.data.type === 'mtinit') { self.removeEventListener('message', f); res(e.data); } }))
       .then(m => {
         const x = new WebAssembly.Instance(m.module, { env: { memory: m.mem, now: () => Date.now(), progress: d => { if (wProg) wProg(d); } } }).exports;

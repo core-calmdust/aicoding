@@ -3,17 +3,19 @@
 // killer/history ordering, quiescence on captures, repetition and 50-move draws, mate-distance pruning.
 // Optional: endgame databases (retrograde-solved, loaded by the host) for nine men's morris.
 //
-// Build: clang --target=wasm32 -O3 -nostdlib -fno-builtin -Wl,--no-entry -Wl,--export-dynamic
-//        -Wl,--initial-memory=...,--max-memory=... -o engine.wasm engine.c
+// Build: sh tools/build.sh (engine_simd.wasm, engine.wasm without SIMD, engine_mt.wasm)
 // Host protocol (all through the shared buffer at io_ptr()):
 //   geometry(n, pieces, fly, nmills, mills[3*k]..., nextra, extra[2*k]...)  -> set_geometry()
 //   setup: b[n], hand1, hand2, side, quiet, nmoves, moves...                  -> setup()
 //   results are written back to io as int32 values.
 #include <stdint.h>
+#ifdef __wasm_simd128__
+#include <wasm_simd128.h>   // (2026-11-11) wasm SIMD (-msimd128): engine_simd.wasm and engine_mt.wasm; engine.wasm without it, the same values
+#endif
 // MT (engine_mt.wasm, see the build line below): several threads search one root together on a shared memory ("Lazy SMP");
 // the state of one search is thread-local (TLS), the geometry, the evaluation weights, the endgame databases and the
 // transposition table are shared. Without it TLS is nothing and engine.wasm stays byte for byte as before.
-// Build (MT): clang --target=wasm32 -O3 -matomics -mbulk-memory -DMT -nostdlib -fno-builtin -Wl,--no-entry -Wl,--export-dynamic
+// Build (MT): clang --target=wasm32 -O3 -msimd128 -matomics -mbulk-memory -DMT -nostdlib -fno-builtin -Wl,--no-entry -Wl,--export-dynamic
 //        -Wl,--shared-memory -Wl,--import-memory -Wl,--max-memory=1073741824 -o engine_mt.wasm engine.c
 #ifdef MT
 #define TLS _Thread_local
@@ -52,6 +54,7 @@ static int mills[24][3];
 static int adjn[24], adjv[24][8];
 static int prn[24], pr[24][16];          // pairs of mill partners per point
 static u32 millMask[24], adjMask[24], millAdj[24], ALL, DEG[5];
+static u32 MMV[24] __attribute__((aligned(16))); static int NMV;   // the mill masks, 0-padded to whole vectors of 4 (millCand, inMills)
 static int ptMn[24]; static u32 ptMm[24][4];
 static u32 zp[3][24], zp2[3][24], zh[3][16], zh2[3][16], zs, zs2;
 static u32 rs = 0x9e3779b9u;
@@ -72,6 +75,8 @@ EXPORT(set_geometry) void set_geometry(void) {
   for (int i = 0; i < N; i++) { adjMask[i] = 0; for (int j = 0; j < adjn[i]; j++) adjMask[i] |= 1u << adjv[i][j]; ptMn[i] = 0; if (adjn[i] < 5) DEG[adjn[i]] |= 1u << i; }
   for (int m = 0; m < NM; m++) { u32 mm = (1u << mills[m][0]) | (1u << mills[m][1]) | (1u << mills[m][2]); millMask[m] = mm; millAdj[m] = adjMask[mills[m][0]] | adjMask[mills[m][1]] | adjMask[mills[m][2]];
     for (int j = 0; j < 3; j++) { int p = mills[m][j]; ptMm[p][ptMn[p]++] = mm; } }
+  for (int m = 0; m < 24; m++) MMV[m] = m < NM ? millMask[m] : 0;
+  NMV = (NM + 3) / 4;
   rs = 0x9e3779b9u ^ (u32)(N * 7919);
   for (int s = 0; s < 3; s++) for (int i = 0; i < 24; i++) { zp[s][i] = rnd(); zp2[s][i] = rnd(); }
   for (int s = 0; s < 3; s++) for (int i = 0; i < 16; i++) { zh[s][i] = rnd(); zh2[s][i] = rnd(); }
@@ -101,34 +106,74 @@ static inline int closes(const Pos *p, int s, int f, int t) {
   for (int k = 0; k < ptMn[t]; k++) { u32 mt = ptMm[t][k] & ~tb; if ((B & mt) == mt) return 1; }
   return 0;
 }
-static int removable(const Pos *p, int o, int *out) {
-  u32 B = p->bb[o], inm = 0;
+// (2026-11-11) the empty points that would close a mill of B: the third point of every mill with two of B and one empty.
+// A move to t closes a mill only if t is one (with the moving piece's point f taken off B the mill may be gone: closes()
+// decides) — so the move generators call closes() only on these targets. 4 mills at a time with wasm SIMD.
+static inline u32 millCand(u32 B, u32 E) {
+#ifdef __wasm_simd128__
+  const v128_t vb = wasm_i32x4_splat((int)B), ve = wasm_i32x4_splat((int)E), one = wasm_i32x4_splat(1), z = wasm_i32x4_splat(0);
+  v128_t acc = z;
+  for (int q = 0; q < NMV; q++) {
+    v128_t mm = wasm_v128_load(&MMV[4 * q]), x = wasm_v128_and(vb, mm), y = wasm_v128_and(x, wasm_i32x4_sub(x, one));
+    v128_t two = wasm_v128_andnot(wasm_i32x4_eq(wasm_v128_and(y, wasm_i32x4_sub(y, one)), z), wasm_i32x4_eq(y, z));   // (exactly 2 bits of B)
+    acc = wasm_v128_or(acc, wasm_v128_and(two, wasm_v128_and(mm, ve)));
+  }
+  acc = wasm_v128_or(acc, wasm_i32x4_shuffle(acc, acc, 2, 3, 0, 1)); acc = wasm_v128_or(acc, wasm_i32x4_shuffle(acc, acc, 1, 0, 3, 2));
+  return (u32)wasm_i32x4_extract_lane(acc, 0);
+#else
+  u32 c = 0;
+  for (int m = 0; m < NM; m++) { u32 x = B & millMask[m], y = x & (x - 1); if (y && !(y & (y - 1))) c |= millMask[m] & E; }
+  return c;
+#endif
+}
+// the points of B in a mill of B
+static inline u32 inMills(u32 B) {
+#ifdef __wasm_simd128__
+  const v128_t vb = wasm_i32x4_splat((int)B);
+  v128_t acc = wasm_i32x4_splat(0);
+  for (int q = 0; q < NMV; q++) { v128_t mm = wasm_v128_load(&MMV[4 * q]); acc = wasm_v128_or(acc, wasm_v128_and(mm, wasm_i32x4_eq(wasm_v128_and(vb, mm), mm))); }
+  acc = wasm_v128_or(acc, wasm_i32x4_shuffle(acc, acc, 2, 3, 0, 1)); acc = wasm_v128_or(acc, wasm_i32x4_shuffle(acc, acc, 1, 0, 3, 2));
+  return (u32)wasm_i32x4_extract_lane(acc, 0);   // (a 0-padded lane passes the test but adds nothing)
+#else
+  u32 inm = 0;
   for (int m = 0; m < NM; m++) if ((B & millMask[m]) == millMask[m]) inm |= millMask[m];
+  return inm;
+#endif
+}
+static int removable(const Pos *p, int o, int *out) {
+  u32 B = p->bb[o], inm = inMills(B);
   u32 R = B & ~inm; if (!R) R = B;
   int k = 0; while (R) { out[k++] = __builtin_ctz(R); R &= R - 1; }
   return k;
 }
 static int gen(const Pos *p, int *out) {
   int s = p->side, o = 3 - s, k = 0, nr = -1, rem[24];
-#define ADD(f, t) do { if (p->cnt[o] > 0 && closes(p, s, f, t)) { if (nr < 0) nr = removable(p, o, rem); for (int j = 0; j < nr; j++) out[k++] = (f) | ((t) << 5) | (rem[j] << 10); } else out[k++] = (f) | ((t) << 5) | (NONE << 10); } while (0)
-  u32 E = ALL & ~(p->bb[1] | p->bb[2]);
+#define ADD(f, t) do { if ((C >> (t) & 1) && closes(p, s, f, t)) { if (nr < 0) nr = removable(p, o, rem); for (int j = 0; j < nr; j++) out[k++] = (f) | ((t) << 5) | (rem[j] << 10); } else out[k++] = (f) | ((t) << 5) | (NONE << 10); } while (0)
+  u32 E = ALL & ~(p->bb[1] | p->bb[2]), C = p->cnt[o] > 0 ? millCand(p->bb[s], E) : 0;   // (C: the targets that may close a mill)
   if (p->hand[s] > 0) { for (u32 T = E; T; T &= T - 1) { int t = __builtin_ctz(T); ADD(NONE, t); } }
   else if (FLY && p->cnt[s] == 3) { for (u32 F = p->bb[s]; F; F &= F - 1) { int f = __builtin_ctz(F); for (u32 T = E; T; T &= T - 1) { int t = __builtin_ctz(T); ADD(f, t); } } }
   else { for (u32 F = p->bb[s]; F; F &= F - 1) { int f = __builtin_ctz(F); for (int j = 0; j < adjn[f]; j++) { int t = adjv[f][j]; if (!p->b[t]) ADD(f, t); } } }
 #undef ADD
   return k;
 }
-// capture moves only (same order as gen), and whether the side to move has any move at all
-static int genCaps(const Pos *p, int *out, int *any) {
+// whether the side to move has any move at all
+static inline int anyMove(const Pos *p) {
+  int s = p->side; u32 E = ALL & ~(p->bb[1] | p->bb[2]);
+  if (p->hand[s] > 0 || (FLY && p->cnt[s] == 3)) return E != 0;
+  for (u32 F = p->bb[s]; F; F &= F - 1) if (adjMask[__builtin_ctz(F)] & E) return 1;
+  return 0;
+}
+// capture moves only (same order as gen; only the targets of millCand can close a mill)
+static int genCaps(const Pos *p, int *out) {
   int s = p->side, o = 3 - s, k = 0, nr = -1, rem[24];
-  u32 E = ALL & ~(p->bb[1] | p->bb[2]);
+  if (p->cnt[o] <= 0) return 0;
+  u32 E = ALL & ~(p->bb[1] | p->bb[2]), C = millCand(p->bb[s], E);
+  if (!C) return 0;
 #define CAP(f, t) do { if (closes(p, s, f, t)) { if (nr < 0) nr = removable(p, o, rem); for (int j = 0; j < nr; j++) out[k++] = (f) | ((t) << 5) | (rem[j] << 10); } } while (0)
-  if (p->hand[s] > 0) { *any = E != 0; if (p->cnt[o] > 0) for (u32 T = E; T; T &= T - 1) { int t = __builtin_ctz(T); CAP(NONE, t); } }
-  else if (FLY && p->cnt[s] == 3) { *any = E != 0; if (p->cnt[o] > 0) for (u32 F = p->bb[s]; F; F &= F - 1) { int f = __builtin_ctz(F); for (u32 T = E; T; T &= T - 1) { int t = __builtin_ctz(T); CAP(f, t); } } }
+  if (p->hand[s] > 0) { for (u32 T = C; T; T &= T - 1) { int t = __builtin_ctz(T); CAP(NONE, t); } }
+  else if (FLY && p->cnt[s] == 3) { for (u32 F = p->bb[s]; F; F &= F - 1) { int f = __builtin_ctz(F); for (u32 T = C; T; T &= T - 1) { int t = __builtin_ctz(T); CAP(f, t); } } }
   else {
-    int a = 0;
-    for (u32 F = p->bb[s]; F; F &= F - 1) { int f = __builtin_ctz(F); if (adjMask[f] & E) { a = 1; if (p->cnt[o] > 0) for (int j = 0; j < adjn[f]; j++) { int t = adjv[f][j]; if (!p->b[t]) CAP(f, t); } } }
-    *any = a;
+    for (u32 F = p->bb[s]; F; F &= F - 1) { int f = __builtin_ctz(F); if (adjMask[f] & C) for (int j = 0; j < adjn[f]; j++) { int t = adjv[f][j]; if (C >> t & 1) CAP(f, t); } }
   }
 #undef CAP
   return k;
@@ -187,8 +232,74 @@ static inline int egScore(int v, int ply) { return v == 0 ? 0 : v < 128 ? WIN - 
 #define NET_HMAX 128
 static float NETW[71 * NET_HMAX + 2 * NET_HMAX + 1]; static int netH = 0;
 EXPORT(net_ptr) float *net_ptr(void) { return NETW; }
-EXPORT(net_on) void net_on(int h) { netH = h; }
+#ifdef __wasm_simd128__
+// (netEval64) the first part of the sums, B1 + the rows of the side to move's pieces, depends on its pieces only (the same
+// at the leaves after the other side's moves): kept in a small cache by that set (exactly the floats the adds give)
+#define NPC_BITS 8
+typedef struct { u32 key; float a[64] __attribute__((aligned(16))); } NPC;
+#ifdef MT
+static TLS NPC *npc;   // (each thread's, 66 KB in its slot after the move lists: mt_thread)
+#else
+static NPC npc[1 << NPC_BITS];   // (key: the set | 1 << 31, 0 = empty)
+#endif
+#endif
+EXPORT(net_on) void net_on(int h) {
+  netH = h;
+#ifdef __wasm_simd128__
+  for (int i = 0; i < (1 << NPC_BITS); i++) npc[i].key = 0;   // (new weights)
+#endif
+}
+#ifdef __wasm_simd128__
+// (2026-11-11) H = 64 (evalnet.bin) with wasm SIMD: the 64 sums in 16 vectors that stay in registers, the rows added in the
+// same order as below (each lane is the same float sum), ReLU × W2 4 at a time, then the positive terms added one by one
+// in the order of k as below (a term of a sum ≤ 0 is skipped there too) — the same value to the last bit.
+static int netEval64(const Pos *p) {
+  int s = p->side, o = 3 - s, rows[32], nr = 0; const float *W1 = NETW, *B1 = NETW + 71 * 64, *W2 = B1 + 64; float b2 = W2[64];
+  const u32 S = p->bb[s], key = S | 1u << 31; NPC *c = &npc[(S * 0x9E3779B1u) >> (32 - NPC_BITS)];
+  if (c->key != key) { for (u32 x = S; x; x &= x - 1) rows[nr++] = __builtin_ctz(x); }
+  const float *a0p = c->key == key ? c->a : B1;
+#define LD(a, j) wasm_v128_load((a) + 4 * (j))
+#define ROWS() for (int r = 0; r < nr; r++) { \
+    const float *w = W1 + rows[r] * 64; \
+    a0 = wasm_f32x4_add(a0, LD(w, 0)); a1 = wasm_f32x4_add(a1, LD(w, 1)); a2 = wasm_f32x4_add(a2, LD(w, 2)); a3 = wasm_f32x4_add(a3, LD(w, 3)); \
+    a4 = wasm_f32x4_add(a4, LD(w, 4)); a5 = wasm_f32x4_add(a5, LD(w, 5)); a6 = wasm_f32x4_add(a6, LD(w, 6)); a7 = wasm_f32x4_add(a7, LD(w, 7)); \
+    a8 = wasm_f32x4_add(a8, LD(w, 8)); a9 = wasm_f32x4_add(a9, LD(w, 9)); a10 = wasm_f32x4_add(a10, LD(w, 10)); a11 = wasm_f32x4_add(a11, LD(w, 11)); \
+    a12 = wasm_f32x4_add(a12, LD(w, 12)); a13 = wasm_f32x4_add(a13, LD(w, 13)); a14 = wasm_f32x4_add(a14, LD(w, 14)); a15 = wasm_f32x4_add(a15, LD(w, 15)); }
+  v128_t a0 = LD(a0p, 0), a1 = LD(a0p, 1), a2 = LD(a0p, 2), a3 = LD(a0p, 3), a4 = LD(a0p, 4), a5 = LD(a0p, 5), a6 = LD(a0p, 6), a7 = LD(a0p, 7),
+         a8 = LD(a0p, 8), a9 = LD(a0p, 9), a10 = LD(a0p, 10), a11 = LD(a0p, 11), a12 = LD(a0p, 12), a13 = LD(a0p, 13), a14 = LD(a0p, 14), a15 = LD(a0p, 15);
+  if (nr) {
+    ROWS();
+    float *d = c->a;
+    wasm_v128_store(d, a0); wasm_v128_store(d + 4, a1); wasm_v128_store(d + 8, a2); wasm_v128_store(d + 12, a3);
+    wasm_v128_store(d + 16, a4); wasm_v128_store(d + 20, a5); wasm_v128_store(d + 24, a6); wasm_v128_store(d + 28, a7);
+    wasm_v128_store(d + 32, a8); wasm_v128_store(d + 36, a9); wasm_v128_store(d + 40, a10); wasm_v128_store(d + 44, a11);
+    wasm_v128_store(d + 48, a12); wasm_v128_store(d + 52, a13); wasm_v128_store(d + 56, a14); wasm_v128_store(d + 60, a15);
+    c->key = key; nr = 0;
+  } else if (c->key != key) {   // (no pieces: B1 itself)
+    c->key = key; for (int k = 0; k < 64; k++) c->a[k] = B1[k];
+  }
+  for (u32 x = p->bb[o]; x; x &= x - 1) rows[nr++] = 24 + __builtin_ctz(x);
+  rows[nr++] = 48 + p->hand[s]; rows[nr++] = 58 + p->hand[o];
+  if (!p->hand[s] && p->cnt[s] == 3) rows[nr++] = 68;
+  if (!p->hand[o] && p->cnt[o] == 3) rows[nr++] = 69;
+  if (p->hand[s] || p->hand[o]) rows[nr++] = 70;
+  ROWS();
+#undef ROWS
+  float q[64] __attribute__((aligned(16))); unsigned long long pos = 0; const v128_t z = wasm_f32x4_splat(0.0f);
+#define TERM(j, a) do { wasm_v128_store(q + 4 * (j), wasm_f32x4_mul(a, LD(W2, j))); pos |= (unsigned long long)wasm_i32x4_bitmask(wasm_f32x4_gt(a, z)) << (4 * (j)); } while (0)
+  TERM(0, a0); TERM(1, a1); TERM(2, a2); TERM(3, a3); TERM(4, a4); TERM(5, a5); TERM(6, a6); TERM(7, a7);
+  TERM(8, a8); TERM(9, a9); TERM(10, a10); TERM(11, a11); TERM(12, a12); TERM(13, a13); TERM(14, a14); TERM(15, a15);
+#undef TERM
+#undef LD
+  float out = b2; for (; pos; pos &= pos - 1) out += q[__builtin_ctzll(pos)];
+  int v = (int)(out * 200.0f + (out >= 0 ? 0.5f : -0.5f));
+  return v > 20000 ? 20000 : v < -20000 ? -20000 : v;
+}
+#endif
 static int netEval(const Pos *p) {
+#ifdef __wasm_simd128__
+  if (netH == 64) return netEval64(p);
+#endif
   int H = netH, s = p->side, o = 3 - s; const float *W1 = NETW, *B1 = NETW + 71 * H, *W2 = B1 + H; float b2 = W2[H];
   float acc[NET_HMAX];
   for (int k = 0; k < H; k++) acc[k] = B1[k];
@@ -245,7 +356,9 @@ static int evaluate(const Pos *p) {
 #define TT_BITS 20
 #define TT_SIZE (1 << TT_BITS)
 #define TT_MASK (TT_SIZE - 1)
-static u32 tk1[TT_SIZE], tk2[TT_SIZE]; static int16_t tv[TT_SIZE]; static i32 tmv[TT_SIZE]; static i8 td[TT_SIZE], tfl[TT_SIZE];
+// (2026-11-11) one entry in one 16-byte struct (was six arrays: six cache lines per probe); the same table otherwise
+typedef struct { u32 k1, k2; i32 mv; int16_t v; i8 d, fl; } TTE;
+static TTE TT[TT_SIZE] __attribute__((aligned(16)));
 #ifdef MT
 static TLS int (*buf)[MAXMV], (*scb)[MAXMV];   // each thread's move lists (1 MB): in its own slot, after its TLS block (mt_thread)
 #else
@@ -413,7 +526,21 @@ static void order(const Pos *p, int *mv, int n, int ply, int ttm, int *sc) {
   }
 }
 static inline void pickBest(int *mv, int *sc, int i, int n) {
-  int bi = i; for (int j = i + 1; j < n; j++) if (sc[j] > sc[bi]) bi = j;
+  int bi = i;
+#ifdef __wasm_simd128__
+  if (n - i >= 8) {   // (2026-11-11) the first of the highest scores (as the loop below): the maximum 4 at a time, then its first lane
+    int j = i + 4; v128_t m = wasm_v128_load(sc + i);
+    for (; j + 4 <= n; j += 4) m = wasm_i32x4_max(m, wasm_v128_load(sc + j));
+    m = wasm_i32x4_max(m, wasm_i32x4_shuffle(m, m, 2, 3, 0, 1)); m = wasm_i32x4_max(m, wasm_i32x4_shuffle(m, m, 1, 0, 3, 2));
+    int mx = wasm_i32x4_extract_lane(m, 0); for (; j < n; j++) if (sc[j] > mx) mx = sc[j];
+    const v128_t vm = wasm_i32x4_splat(mx);
+    for (j = i; j + 4 <= n; j += 4) { int b = wasm_i32x4_bitmask(wasm_i32x4_eq(wasm_v128_load(sc + j), vm)); if (b) break; }
+    if (j + 4 <= n) j += __builtin_ctz(wasm_i32x4_bitmask(wasm_i32x4_eq(wasm_v128_load(sc + j), vm)));
+    else while (sc[j] != mx) j++;
+    bi = j;
+  } else
+#endif
+  for (int j = i + 1; j < n; j++) if (sc[j] > sc[bi]) bi = j;
   int m = mv[bi]; mv[bi] = mv[i]; mv[i] = m; int t = sc[bi]; sc[bi] = sc[i]; sc[i] = t;
 }
 static int qsearch(Pos *p, int alpha, int beta, int ply, int qd) {
@@ -421,11 +548,11 @@ static int qsearch(Pos *p, int alpha, int beta, int ply, int qd) {
   int s = p->side;
   if (p->cnt[s] + p->hand[s] < 3) return -(WIN - ply);
   if (egOn && !p->hand[1] && !p->hand[2]) { int dv = egProbe(p); if (dv >= 0) return egScore(dv, ply); }
-  int *mv = buf[ply], any, k = genCaps(p, mv, &any);
-  if (!any) return p->cnt[1] + p->cnt[2] == N ? 0 : -(WIN - ply);
+  if (!anyMove(p)) return p->cnt[1] + p->cnt[2] == N ? 0 : -(WIN - ply);
   int best = evaluate(p);
   if (best >= beta || qd <= 0 || ply >= MAXPLY) return best;
   if (best > alpha) alpha = best;
+  int *mv = buf[ply], k = genCaps(p, mv);   // (2026-11-11: after the stand-pat cut-off, which needs no moves)
   int *sc = scb[ply];
   order(p, mv, k, ply, -1, sc);
   for (int i = 0; i < k; i++) {
@@ -463,12 +590,12 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply) {
       }
     } }
 #else
-  u32 idx = p->h1 & TT_MASK; int ttm = -1;
-  if (tk1[idx] == p->h1 && tk2[idx] == p->h2) {
-    ttm = tmv[idx];
-    if (ply > 0 && td[idx] >= depth) {
-      int v = tv[idx]; if (v > WINT) v -= ply; else if (v < -WINT) v += ply;
-      int f = tfl[idx];
+  TTE *te = &TT[p->h1 & TT_MASK]; int ttm = -1;
+  if (te->k1 == p->h1 && te->k2 == p->h2) {
+    ttm = te->mv;
+    if (ply > 0 && te->d >= depth) {
+      int v = te->v; if (v > WINT) v -= ply; else if (v < -WINT) v += ply;
+      int f = te->fl;
       if (f == 0 || (f == 1 && v >= beta) || (f == 2 && v <= alpha)) return v;
     }
   }
@@ -566,8 +693,8 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply) {
 #ifdef MT
   ttSave(p, sv, bm, depth, best >= beta ? 1 : best <= a0 ? 2 : 0);
 #else
-  tk1[idx] = p->h1; tk2[idx] = p->h2; tv[idx] = (int16_t)sv; tmv[idx] = bm; td[idx] = (i8)depth;
-  tfl[idx] = best >= beta ? 1 : best <= a0 ? 2 : 0;
+  te->k1 = p->h1; te->k2 = p->h2; te->v = (int16_t)sv; te->mv = bm; te->d = (i8)depth;
+  te->fl = best >= beta ? 1 : best <= a0 ? 2 : 0;
 #endif
   return best;
 }
@@ -861,7 +988,7 @@ EXPORT(new_game) void new_game(void) {
   for (unsigned i = 0; i < (1u << BUSY_BITS); i++) busyT[i] = 0;
   ttAge = 0;
 #else
-  for (int i = 0; i < TT_SIZE; i++) { tk1[i] = 0; tk2[i] = 0; td[i] = 0; tfl[i] = 0; }
+  for (int i = 0; i < TT_SIZE; i++) { TT[i].k1 = 0; TT[i].k2 = 0; TT[i].d = 0; TT[i].fl = 0; }
 #endif
   for (int i = 0; i < 32 * 32; i++) histT[i] = 0;
   for (int i = 0; i < (MAXPLY + 8) * 2; i++) killer[i] = -1;
@@ -1018,11 +1145,16 @@ static __attribute__((noinline)) void mtSelf(u32 tls, int id) {
   threadId = id;
   u32 a = (tls + __builtin_wasm_tls_size() + 63) & ~63u;   // (the stack grows down from the slot's top towards these)
   buf = (int (*)[MAXMV])a; a += sizeof(int) * (MAXPLY + 8) * MAXMV;
-  scb = (int (*)[MAXMV])a;
+  scb = (int (*)[MAXMV])a; a += sizeof(int) * (MAXPLY + 8) * MAXMV;
+#ifdef __wasm_simd128__
+  npc = (NPC *)((a + 63) & ~63u); for (int i = 0; i < (1 << NPC_BITS); i++) npc[i].key = 0;
+#endif
   for (int i = 0; i < (MAXPLY + 8) * 2; i++) killer[i] = -1;
 }
 EXPORT(mt_thread) void mt_thread(u32 tls, int id) { __wasm_init_tls((void *)tls); mtSelf(tls, id); }
 EXPORT(mt_id) int mt_id(void) { return threadId; }
 EXPORT(mt_stop) void mt_stop(int v) { __atomic_store_n(&gStop, v, __ATOMIC_SEQ_CST); }
 EXPORT(last_nodes) double last_nodes(void) { return nodes; }   // (this thread's last search: the page's nps readout)
+#else
+EXPORT(last_nodes) double last_nodes(void) { return nodes; }   // (the last search: tools/check_wasm.js)
 #endif

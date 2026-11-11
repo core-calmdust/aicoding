@@ -105,6 +105,19 @@ Lv.9 対 Lv.10 は4勝16分0敗（Lv.9から見て）で、ほぼ互角でした
   - headless Chrome（この作業機、2コアを他のシミュレーションと共用）の `bench.html`（1秒、1・2スレッド）：分離・スレッド起動・12局面とも最後まで動く、エラーなし。CPU が空いていないので壁時計の速さは測れない。
 - **Mac で測るページ**：`morris/bench.html`（busy marks 版の Mac の数字はまだ無い。その前の Lazy SMP は 8／10／14 で ×1.51／×1.49／×1.70）。
 
+## 1スレッドの高速化（2026-11-11、wasm SIMD）
+- **ファイル**：`engine_simd.wasm`（`-msimd128`）と `engine.wasm`（SIMD なし）の2本。engine.js が `WebAssembly.validate` で SIMD の有無を見て選ぶ（hex・go・amazons と同じ）。`engine_mt.wasm` は SIMD 版のみ（ほかのゲームと同じ）。ビルドは `tools/build.sh`。それまでの `engine.wasm` は実は `-msimd128` 付きでビルドされていて（コンパイラの自動ベクトル化だけ）、SIMD の無いブラウザでは読めずに JavaScript 版の探索になっていた。`engine_mt.wasm` は SIMD なしだった。
+- **直したこと（`engine.c`、読みは同じ）**：
+  - 学習評価（`netEval64`、中間64）：64個の和を v128 16本のレジスタに置き、行を前と同じ順に足す（各レーンは前と同じ float の和）。ReLU×W2 は4つずつ、正の項だけを k の順に1つずつ足す（前のループも 0 以下は足さない）＝最後のビットまで同じ値。さらに「B1＋手番側の駒の行」の部分和は手番側の駒の配置だけで決まる（相手の手の後の葉で同じ）ので、配置ごとの小さなキャッシュ（256項目、スレッドごと）に置く。
+  - 手の生成：「この空き点に置く／動くとミルになりうる点」を、ミル16本（トゥエルブ20本・シックス8本）を4本ずつ SIMD で一度に求め（自分の駒がちょうど2つで残りが空き）、`closes()` はその点にだけ呼ぶ。ミルの中の駒（`removable`）も4本ずつ。
+  - 静止探索：取る手の生成を、手番側が動けるかの判定と静止評価のカットの後に回す（カットするときは手を作らない）。
+  - 手の並べ替え（`pickBest`）：残りが8手以上なら最大値を4つずつ求め、前と同じ「最初の最大」を選ぶ。
+  - 通常版の置換表：6本の配列を1項目16バイトの構造体に（1回の参照が6キャッシュライン→1）。中身・置き換えは同じ。
+- **一致の確認**（`node tools/check_wasm.js`：bench.html の12局面＋ナイン終盤6・トゥエルブ6・シックス6局面の、`best`（深さ13・15）の手・評価値・深さ・局面数と、全ての根の手の値（深さ−6）の md5）：前の `engine.c` と `engine_simd.wasm`・`engine.wasm` が一致（深さ13 `037f3504…`、深さ15 `45b53bab…`、局面数 9,689万）。`engine_mt.wasm` の1スレッドも前の `engine_mt.wasm` と一致（深さ15 `a4599410…`）。
+- **速さ（作業機、Node、1スレッド、深さ15 の 30局面、局面数／秒）**：前の engine.wasm 372万 → `engine_simd.wasm` **678万（×1.83）**、`engine.wasm`（SIMD なし）323万（前は SIMD の無いブラウザでは使えなかった）、`engine_mt.wasm` 1スレッド 287万 → **636万（×2.2）**。時間で考えるレベル（Lv.9〜11）・分析・ヒント・検討ボックスは同じ時間でより深く読む。
+- headless Chrome（Playwright）：対局ページの worker が `engine_simd.wasm` と `evalnet.bin` を読み Lv.10 が指す（深さ16）、`bench.html`（1秒、1・2スレッド、`engine_mt.wasm?v=5`）が12局面とも最後まで動く。1スレッド 510万〜710万 nps。Mac で見るページ：`morris/bench.html`（1スレッドの nps が前の約1.8〜2倍の見込み）。
+- バージョン：`engine.js?v=20261111simd`（`index.html`・`bench.html`・`atlas/games/morris.js`・`atlas/rules/morris.js`）、`engine_mt.wasm?v=5`、`atlas/lazy.js` の games/rules `morris.js` と `lazy.js?v=42`。
+
 ## 完全解析データベース（ツール・2026-11-08）
 サイトのルール（50手ルール込み）での完全解析データベースのツールは `tools/solve.c`・`tools/solvedb.js`（Mac での作り方は `tools/SOLVE.md`）。
 - 値：移動段階は勝ち／負け＋ z（次に取る・動けなくするまでの手数。50 − 静かな手の数 以内なら決着、超えれば引き分け）、配置段階は勝ち・引き分け・負け。盤の16通りの対称で縮めた番号、1局面1バイト。
