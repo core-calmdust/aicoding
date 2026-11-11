@@ -122,7 +122,7 @@
 
   /* ---------- common renderers ---------- */
   const R3 = new Set(['peg', 'reversi', 'shogi', 'chess', 'gomoku', 'dots', 'connect4', 'mancala', 'backgammon', 'morris', 'sudoku', 'speedsudoku', 'checkers', 'samegame', 'go', 'hex', 'tafl', 'xiangqi', 'jailbreak', 'solitaire', 'poker', 'baccarat', 'blackjack', 'fanorona', 'alquerque', 'ur', 'ugolki', 'agon', 'konane', 'senet', 'janggi', 'ludo', 'carrom', 'crokinole', 'hockey', 'amazons']);   // images/atlas/<id>.webp exists
-  const artSrc = g => R3.has(g.id) ? `../images/atlas/${g.id}.webp?v=${g.id === 'fanorona' || g.id === 'janggi' ? 11 : 10}` : `../${g.icon}`;
+  const artSrc = g => R3.has(g.id) ? `../images/atlas/${g.id}.webp?v=${g.id === 'fanorona' || g.id === 'janggi' || g.id === 'morris' ? 11 : 10}` : `../${g.icon}`;
   const artImg = (g, extra = '') => `<img src="${artSrc(g)}" alt="" loading="lazy" decoding="async"${R3.has(g.id) ? '' : ' class="flat"'}${extra}>`;
   const g3 = g => `<span class="g3" style="--c:${g.color}">${artImg(g)}</span>`;
   const gno = g => 'No.' + String(A_.GAMES.indexOf(g) + 1).padStart(2, '0');
@@ -319,13 +319,21 @@
     const SPLIT = { ja: ['世界の', 'ボドゲ大百科'], fr: ['ATLAS MONDIAL', 'Jeux de société'], es: ['ATLAS MUNDIAL', 'Juegos de Mesa'], pt: ['ATLAS MUNDIAL', 'Jogos de Tabuleiro'],
       de: ['WELT', 'Brettspiel-Atlas'], id: ['ATLAS DUNIA', 'Permainan Papan'], tr: ['DÜNYA ATLASI', 'Masa Oyunları'], ru: ['АТЛАС', 'Настольные игры'],
       zh: ['世界', '桌游大全'], 'zh-TW': ['世界', '桌遊大百科'], ko: ['세계의', '보드게임 대전'], hi: ['विश्व', 'बोर्ड गेम एटलस'] }[lang];
+    // a redraw (the font arrived, a sync / place change in the background) carries on where the old logo and pieces were:
+    // the ring's turn and each piece's bob don't snap back to their start (a jolt), and a logo drawn while the window is
+    // not in front / the hero is off screen starts paused (it used to turn on, unfocused, after such a redraw — 2026-11-11)
+    const o = $('ttl').querySelector('svg'), ct = o && o.getCurrentTime ? o.getCurrentTime() : 0;
     $('ttl').innerHTML = emblem(SPLIT ? SPLIT[1] : t('title'), SPLIT ? SPLIT[0] : '', A_.GAMES.length);
+    const n = $('ttl').querySelector('svg'); try { if (ct && n && n.setCurrentTime) n.setCurrentTime(ct); } catch (e) {}
+    svgSync([n]);
     $('ttl').setAttribute('aria-label', t('title') + ' — World Board Game Atlas');
     fitTitle();
     if (titleOnly && $('props').childElementCount) return;   // (the font arrived: only the title is redrawn, the pieces keep floating)
+    const bob = [...$('props').querySelectorAll('.pp img')].map(i => { try { const a = i.getAnimations()[0]; return a ? a.currentTime : null; } catch (e) { return null; } });
     $('props').innerHTML = PROPS.filter((_, i) => !phone || i < 17).map(([img, gid, x, y, w, r], i) => `<span class="pp" data-g="${gid}" style="--x:${x}%;--y:${y}%;--w:${Math.round(w * (phone ? .44 : 1))}px;--r:${r}deg"><span class="pb"><img src="../images/atlas/p-${img}.webp?v=2" alt="" decoding="async"></span></span>`).join('');
     $('props').querySelectorAll('[data-g]').forEach(b => b.onclick = () => { hop(b, true); SFX.shimmer(60); SFX.chime(290); setTimeout(() => openBoard(b.dataset.g), 380); });   // (the sparkle a game icon ends on when its board appears)
     startProps();
+    if (bob.length) $('props').querySelectorAll('.pp img').forEach((i, k) => { try { const a = i.getAnimations()[0]; if (a && bob[k] != null) a.currentTime = bob[k]; } catch (e) {} });
   }
   /* floating pieces: bob + sway (CSS animations: the compositor draws them, no script runs — battery, 2026-11-10), random
      hops / spins (Web Animations, also on the compositor), and a little parallax that follows the pointer / phone tilt (a frame
@@ -354,9 +362,19 @@
   }
   function propSync() {   // pause / resume everything with the visibility
     const on = propOn(), box = $('props'); if (!box) return;
-    box.classList.toggle('pz', !on);
+    box.classList.toggle('pz', !on); svgSync([$('ttl').querySelector('svg')]);
     clearTimeout(propHopT);
     if (on) { const next = () => { propHopT = setTimeout(() => { if (!propOn()) return; hop(propEls[Math.random() * propEls.length | 0]); next(); }, 900 + Math.random() * 1400); }; next(); propMove(); }
+  }
+  /* SVG (SMIL) animations — the logo's turning ring and a few icons: CSS animation-play-state doesn't reach them, so they are
+     paused here: every one while the window is not in front (svgIdle), the logo's also while the hero can't be seen (as the
+     pieces). paused ↔ running only when it changes; the time stands still while paused, so they go on where they stopped. */
+  let svgIdle = false;
+  function svgSync(list) {
+    const hero = $('hero');
+    (list || document.querySelectorAll('svg')).forEach(s => { if (!s || !s.pauseAnimations) return;
+      const stop = svgIdle || (!!hero && hero.contains(s) && !propOn());
+      try { if (stop !== s.animationsPaused()) { if (stop) s.pauseAnimations(); else s.unpauseAnimations(); } } catch (e) {} });
   }
   function startProps() {
     cancelAnimationFrame(propRaf); propRaf = 0;
@@ -1723,7 +1741,7 @@
     Table3D.setShift(on ? ((rtl !== left) ? w / 2 : -w / 2) : 0);
   }
   // the places (tables3d.js) arrive after the page (index.html AtlasPlaces): the chip, the labels and the open page follow
-  addEventListener('atlas-places', () => { try { renderPlace(); } catch (e) {} try { if (page === 'dress' && dKind === 'table') renderDress(); else if (!$('bv').classList.contains('on')) render(page); } catch (e) {} });
+  addEventListener('atlas-places', () => { try { renderPlace(); } catch (e) {} try { if (page === 'dress') renderDress(); } catch (e) {} });   // (only きせかえ (its 台 tab) shows the places: re-rendering the open page here made the home jump a few seconds after load with nothing touched, 2026-11-11)
   function renderPlace() {
     const X = P3(), btn = $('bvPlBtn'); if (!btn) return;
     if (!X) { btn.hidden = true; return; }
@@ -1800,6 +1818,14 @@
     ['nameIn', 'dpName'].forEach(id => { const ni = $(id); if (ni && ni.value !== W.name) ni.value = W.name; });
     const mn = document.querySelector('#dmini .mnm'); if (mn) mn.textContent = W.name || t('pf.player');
   }
+  // the character flies up big and talks (atlas/avtalk.js); without it, straight to dress-up (the home card) / nothing (きせかえ)
+  function talk(from, onDress) {
+    if (!window.AvTalk) return onDress && onDress();
+    const st = profStats(), tg = todayGame(), un = A_.GAMES.filter(g => !P[g.id].touched), fg = un.length ? un[Math.floor(Math.random() * un.length)] : null;
+    AvTalk.open({ from, av: W.av, name: W.name || t('pf.player'), lang, lv: st.lv, streak: st.s, coins: C.balance, done: st.done, achTotal: ACH.length,
+      touched: st.touched, gamesTotal: A_.GAMES.length, today: { id: tg.id, name: gname(tg) }, fresh: fg ? { id: fg.id, name: gname(fg) } : null,
+      gameName: id => { const g = A_.GAMES.find(x => x.id === id); return g ? gname(g) : id; }, onDress, onPlay: id => openBoard(id) });
+  }
   function renderProfile() {
     const { touched, done, s, pos, lv } = profStats();
     // profile card: big avatar on its own backdrop · name · three stat tiles · the login week as a row of coin stamps
@@ -1816,7 +1842,7 @@
       el.querySelectorAll(':scope > .rfx, :scope > .ntw').forEach(x => x.remove());
       if (top >= 3) el.insertAdjacentHTML('beforeend', `<i class="rfx ${top === 4 ? 'u' : 's'}"></i><i class="ntw"></i>`); }
     $('pfMore').onclick = () => { pfOpen = !pfOpen; $('prof').classList.toggle('open', pfOpen); $('pfMore').setAttribute('aria-expanded', pfOpen); };   // phones: the one-line profile opens its stats · login week · Google sign-in
-    $('avBtn').onclick = () => go('dress');
+    $('avBtn').onclick = () => talk($('avBtn'), () => go('dress'));
     renderAcc();
     $('nameIn').onchange = e => setName(e.target.value);
   }
@@ -2054,7 +2080,7 @@
     el.classList.toggle('dark', ART.isDark(W.av.bg));
     el.classList.toggle('wk', ncWk);
     el.innerHTML = `<div class="pfbg${ART.isDark(W.av.bg) ? ' dk' : ''}" style="background:${ART.bgDataUri(W.av.bg)}" aria-hidden="true"></div><div class="nc-l"><div class="bgfill" style="background:${ART.bgDataUri(W.av.bg)}"></div>
-        <button class="av poke" aria-label="${esc(iname(ART.byId(W.av.icon) || ART.byId(ART.DEFAULT_ICON)))}" style="background:none;box-shadow:none">${ART.avatar(W.av, PS, { pop: true, clear: true, noChar: true })}${popChar(W.av, PS)}</button>
+        <span class="nc-av"><button class="av poke" aria-label="${esc(iname(ART.byId(W.av.icon) || ART.byId(ART.DEFAULT_ICON)))}" style="background:none;box-shadow:none">${ART.avatar(W.av, PS, { pop: true, clear: true, noChar: true })}${popChar(W.av, PS)}</button><button type="button" class="nc-talk">${esc(t('dress.talk'))}</button></span>
         ${phone ? '' : `<div class="dname">${worn}</div>`}</div>
       <div class="nc-side"><div class="nc-top"><input id="dpName" maxlength="16" value="${esc(W.name)}" placeholder="${esc(t('pf.name'))}" aria-label="${esc(t('pf.name'))}"><span class="coin nc-coin"><i>¢</i><span class="coinM">${C.balance.toLocaleString()}</span></span></div>
         <div class="nc-lv"><b>Lv.${lv}</b><span class="nc-lvb" role="img" aria-label="${nx}">${[0, 1, 2].map(i => `<i class="${i < got ? 'on' : ''}"></i>`).join('')}</span><small>${nx}</small></div>
@@ -2062,6 +2088,7 @@
       <div class="nc-tiles">${tile('🏆', `${done}<small>/${ACH.length}</small>`, t('pf.ach'), ' data-go="ach"', '<span class="nc-ar" aria-hidden="true">›</span>')}${tile('🎲', `${touched}<small>/${A_.GAMES.length}</small>`, t('pf.games'))}${tile('🔥', `${s}<small> ${esc(t('mp.d'))}</small>`, t('mp.streak'), ` data-wk aria-expanded="${ncWk}" aria-controls="ncWk"`, '<svg class="nc-v" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>')}${tile('🎀', `${W.owned.length}<small>/${ART.items.length}</small>`, t('g.coll'))}</div>
       <div class="nc-wk" id="ncWk">${weekHtml(esc(t('login.h')), pos)}<div class="accw"></div></div>`;
     el.querySelector('.poke').onclick = () => pokeAvatar();
+    el.querySelector('.nc-talk').onclick = () => talk(el.querySelector('.poke'), null);   // (talking from きせかえ: its 「きせかえ」 button just closes)
     el.querySelector('[data-go=ach]').onclick = () => go('ach');
     el.querySelector('[data-wk]').onclick = e => { ncWk = !ncWk; el.classList.toggle('wk', ncWk); e.currentTarget.setAttribute('aria-expanded', ncWk); };
     $('dpName').onchange = e => setName(e.target.value);
@@ -2347,12 +2374,22 @@
     else if (k === 'gacha') { renderGacha(); renderShop(); } else if (k === 'dress') renderDress();
   }
   // progress may change in another tab (a game) — re-read when coming back
-  document.addEventListener('visibilitychange', () => { if (!document.hidden && !session) { W = A_.load(); refresh(); render(page); welcome(); } });
+  // (only when something was saved meanwhile or the day changed: re-rendering the same page restarted its animations and
+  // the updates row, a jolt on every return to the tab, 2026-11-11)
+  const lsSig = () => { let h = 0; try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k === 'atlas-avtalk-recent') continue; const v = k + '=' + localStorage.getItem(k); for (let j = 0; j < v.length; j++) h = (h * 31 + v.charCodeAt(j)) | 0; } } catch (e) { return Math.random(); } return A_.ymd(Date.now()) + ':' + h; };
+  let visSig = '';
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { visSig = lsSig(); return; } if (!session) { const sg = lsSig(); if (sg !== visSig) { W = A_.load(); refresh(); render(page); } welcome(); } });
   /* ---------- idle: pause CSS/SVG animations while the tab is hidden or the window isn't focused ---------- */
   (function idle() {
     const st = document.createElement('style'); st.textContent = 'html.atlas-idle *,html.atlas-idle *::before,html.atlas-idle *::after{animation-play-state:paused!important}'; document.head.appendChild(st);
-    const set = () => { const on = document.hidden || !document.hasFocus(); document.documentElement.classList.toggle('atlas-idle', on); document.querySelectorAll('svg').forEach(s => { try { on ? s.pauseAnimations() : s.unpauseAnimations(); } catch (e) {} }); };
-    document.addEventListener('visibilitychange', set); addEventListener('blur', set); addEventListener('focus', set);
+    // an SVG added while idle (the home redrawn by a sync, a place change … in the background) is paused as it arrives: it
+    // used to start turning on its own while the window was still behind (the logo's ring, 2026-11-11)
+    const mo = window.MutationObserver ? new MutationObserver(rs => { const l = []; rs.forEach(r => r.addedNodes.forEach(n => { if (n.nodeType !== 1) return; if (n.tagName.toLowerCase() === 'svg') l.push(n); else if (n.querySelector) n.querySelectorAll('svg').forEach(x => l.push(x)); })); if (l.length) svgSync(l); }) : null;
+    const set = () => { const on = document.hidden || !document.hasFocus(); document.documentElement.classList.toggle('atlas-idle', on);
+      if (on !== svgIdle) { svgIdle = on; if (mo) { if (on) mo.observe(document.body, { childList: true, subtree: true }); else mo.disconnect(); } }
+      svgSync(); };
+    document.addEventListener('visibilitychange', set); addEventListener('blur', set); addEventListener('blur', () => setTimeout(set, 0)); addEventListener('focus', set); addEventListener('pageshow', set);
+    set();
   })();
 
   // ミッション (atlas/missions.js, 2026-11-11): the button at the bottom right and its popup

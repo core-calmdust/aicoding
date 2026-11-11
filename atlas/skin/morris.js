@@ -51,7 +51,7 @@ html.atlas-mm3d .dest{background:rgba(255,226,122,.9);box-shadow:0 0 12px rgba(2
     board: boardDom, persp: PERSP,
     pc: { vars: ['--cell'] },   // PC: board + info column laid out from the 3D frame (AtlasSkin pcFit)
     outer: r => { const k = r.height / S; return { top: r.top + r.height / 2 - HALF_D * k, height: (2 * HALF_D + .35) * k }; },
-    guide: '../images/atlas/g-owl.webp', guideFallback: '../images/atlas/morris.webp',
+    guide: '../images/atlas/g-owl.webp', guideFallback: '../images/atlas/morris.webp?v=2',
     bubbles: [['lsPrompt', 'lsFb'], ['pzGoal', 'pzStatus']],
     skip: 'pc\\b|\\.pc|\\.rv|reserve|\\.mark|\\.dest|hintlbl|fxsvg|millfx|lines|rbh',
     start(lv, side, mode) {
@@ -121,6 +121,6 @@ html.atlas-mm3d .dest{background:rgba(255,226,122,.9);box-shadow:0 0 12px rgba(2
   // test hooks (Playwright)
   window.__mmSkin = { dump: () => set._dump(), pieces: () => set.count(), at: i => { const [x, z] = set.xz(i); return T3.project(x, z, Y); }, variant: () => variant };
   // デザイン: "3D board" first in the board row, or one of the game's own 2D boards (shown as the plain 2D page)
-  if (skin.view) skin.view({ key: 'atlas-morris-view', row: document.getElementById('bdRow'), img: '../images/atlas/morris.webp', cls: ['atlas-morris'],
+  if (skin.view) skin.view({ key: 'atlas-morris-view', row: document.getElementById('bdRow'), img: '../images/atlas/morris.webp?v=2', cls: ['atlas-morris'],
     on(is3) { variant = ''; try { mirror(); } catch (e) {} if (!is3) de.classList.remove('atlas-mm3d'); } });
 })();

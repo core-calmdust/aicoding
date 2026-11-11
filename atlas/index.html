@@ -889,6 +889,13 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
 .dprev{position:sticky;top:calc(var(--hdrH,127px) + var(--dtopH,66px) + 14px);display:grid;grid-template-columns:200px minmax(0,1fr);grid-template-areas:"l side" "l tiles" "l wk";grid-template-rows:auto auto 1fr;row-gap:12px;overflow:hidden;padding:0}
 .nc-l{grid-area:l;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px 12px 14px;overflow:hidden}
 .nc-l .bgfill{position:absolute;inset:0;opacity:.9}
+.nc-av{display:inline-block;position:relative;flex:none}
+.nc-talk{position:absolute;top:-6px;inset-inline-end:-16px;z-index:3;font:800 13px/1 inherit;font-family:inherit;color:#5a3a12;background:#fff;border:2.5px solid #f2c14e;border-radius:14px;padding:6px 11px 7px;box-shadow:0 3px 0 #e0a92e,0 6px 12px rgba(80,50,10,.18);cursor:pointer;white-space:nowrap;animation:ncTalk 2.6s ease-in-out infinite;transform-origin:15% 100%}
+.nc-talk::after{content:"";position:absolute;bottom:-7px;inset-inline-start:13px;width:10px;height:10px;background:inherit;border:solid #f2c14e;border-width:0 2.5px 2.5px 0;transform:rotate(45deg) skew(-14deg,-14deg);border-bottom-right-radius:2px}
+[dir=rtl] .nc-talk::after{transform:rotate(45deg) skew(14deg,14deg)}
+.nc-talk:hover{background:#fff8e2}.nc-talk:active{transform:translateY(2px);box-shadow:0 1px 0 #e0a92e}
+@keyframes ncTalk{0%,70%,100%{transform:rotate(0)}76%{transform:rotate(-6deg) scale(1.06)}84%{transform:rotate(5deg)}92%{transform:rotate(-2deg)}}
+@media (max-width:760px){.nc-talk{font-size:12px;padding:5px 9px 6px;inset-inline-end:-6px;top:-4px}}
 .nc-l > *:not(.bgfill){position:relative}
 .nc-side{grid-area:side;min-width:0;padding:16px 18px 0;display:flex;flex-direction:column;gap:8px}
 .nc-tiles{grid-area:tiles;padding:0 18px}
@@ -1948,7 +1955,7 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 <script src="texgen.js?v=1"></script>
 <script src="npc/roster.js?v=5"></script>
 <script src="art.js?v=11"></script>
-<script src="../shared/atlas.js?v=20261111ai6"></script>
+<script src="../shared/atlas.js?v=20261111ai5"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261109ac2"></script>
 <script src="i18n/v.js?v=72pg"></script>
@@ -1977,7 +1984,7 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 })();
 </script>
 <script src="models/cardtables.js?v=4"></script>
-<script src="icons3d.js?v=37"></script>
+<script src="icons3d.js?v=38"></script>
 <script>/* rules tours: after a solved step, the ▶ button fills up like a timer until the tour moves on by itself */
 window.AtlasRgdTimer = function (btn, ms, alive) {
   if (!btn) return; btn.classList.remove('rgd-auto'); void btn.offsetWidth; btn.style.setProperty('--rgt', ms + 'ms'); btn.classList.add('rgd-auto');
@@ -2004,6 +2011,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <link rel="stylesheet" href="worldmap.css?v=18">
 <script src="worldmap.js?v=33"></script>
 <script src="npc/npc.js?v=23"></script>
-<script src="app.js?v=298"></script>
+<script src="avtalk.js?v=2"></script>
+<script src="app.js?v=302"></script>
 </body>
 </html>
