@@ -8,23 +8,31 @@ import os, sys
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from scipy.ndimage import label
+from skimage.morphology import skeletonize, dilation, disk
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
 CW, CH = 256, 296
-TEXT = ['歩兵', '香車', '桂馬', '銀将', '角行', '飛車', '金将', '玉将', 'と', '杏', '圭', '全', '龍馬', '龍王', '王将']
+TEXT = ['歩兵', '香車', '桂馬', '銀將', '角行', '飛車', '金將', '玉將', 'と', '杏', '圭', '全', '龍馬', '龍王', '王將']   # (將: the old form, as on real pieces)
 EM = 600
 SH, SW = (.47 - .25) / .94, .335 / .4   # the face: shoulder height (from the tip) and width (of the full width)
 
 def ink(font, ch):
-    """one character's ink, clean: the scanned font's loose specks of dry brush are dropped (carved pieces have clean strokes)"""
+    """one character, recut as a carved 隷書 piece inscription (compared by eye with photos of real 隷書 pieces, 2026-11-11):
+    the scanned brush font's loose specks are dropped and its ragged edges smoothed; every stroke is then made at least 2·R thick
+    along its centre line (the skeleton), keeping the font's own wider parts (the flared ends, 波磔) and the open counters; the edges
+    rounded as cut with a chisel"""
     m = font.getmask(ch); im = Image.frombytes('L', m.size, bytes(m)); a = np.array(im) > 100
-    lab, n = label(a); sizes = np.bincount(lab.ravel())
-    keep = np.zeros_like(a)
+    lab, n = label(a); sizes = np.bincount(lab.ravel()); keep = np.zeros_like(a)
     for i in range(1, n + 1):
         if sizes[i] >= a.sum() * .004: keep |= lab == i
-    im = Image.fromarray(np.where(keep, np.array(im), 0).astype(np.uint8)).filter(ImageFilter.MaxFilter(7)).filter(ImageFilter.GaussianBlur(3))   # (a little bolder, as cut and lacquered)
-    im = im.point(lambda v: 0 if v < 70 else 255 if v > 150 else int((v - 70) * 255 / 80))
+    im = Image.fromarray((keep * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(5)).point(lambda v: 255 if v > 110 else 0)
+    a = np.pad(np.array(im) > 0, 40)
+    b = a | dilation(skeletonize(a), disk(R))
+    im = Image.fromarray((b * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(5))
+    im = im.point(lambda v: 0 if v < 100 else 255 if v > 156 else int((v - 100) * 255 / 56))
     bb = im.getbbox(); return im.crop(bb)
+
+R = 14   # half the least stroke width, in font units of EM = 600
 
 def inside(cw, ch, inset):
     """the 3D face in the cell, shrunk by inset (fraction of the width)"""
@@ -54,9 +62,9 @@ def cell(font, text, ok):
         # as on real 隷書 pieces: each character as wide as the face lets it be at its height (so the lower one is the larger),
         # the two close together, the pair filling the face from under the tip to near the bottom
         top, bot = ink(font, text[0]), ink(font, text[1])
-        Y0, Y1, GAP = .14, .93, .03
-        hb = place(bot, ok, Y1 - .2, .40, Image.new('L', (CW, CH), 0))
-        place(bot, ok, Y1 - hb / 2, .40, A)
+        Y0, Y1, GAP = .12, .955, .02
+        hb = place(bot, ok, Y1 - .22, .44, Image.new('L', (CW, CH), 0))
+        place(bot, ok, Y1 - hb / 2, .44, A)
         yt1 = Y1 - hb - GAP; ht = place(top, ok, (Y0 + yt1) / 2, yt1 - Y0, Image.new('L', (CW, CH), 0))
         place(top, ok, yt1 - ht / 2, yt1 - Y0, A)
     a = np.array(A).astype(np.float32) / 255
@@ -67,7 +75,7 @@ def cell(font, text, ok):
 
 def main():
     font = ImageFont.truetype(sys.argv[1], EM)
-    ok = inside(CW, CH, .05)
+    ok = inside(CW, CH, .025)
     sheet = Image.new('RGBA', (CW * 5, CH * 3), (255, 255, 255, 0))
     # the promoted sides: real 隷書 sets carve them in cursive (草書), so they are taken from the 水無瀬 sheet (its licence:
     # shogi/pieces/README.md); the rest in 隷書
