@@ -1381,6 +1381,11 @@ html[lang=ar] .pf-input{direction:rtl}
 @media (max-width: 374px) and (pointer: coarse){ .controls{padding:6px;gap:4px} .controls .btn{padding-left:1px;padding-right:1px} }
 /* portal 3D skin on phones: same distance from the board to the komadai bar below as above */
 @media (pointer: coarse) and (orientation: portrait){ html.atlas-skin .board-area > .hand.bottom{margin-top:2px} html.atlas-skin .board-area > .frame{margin-top:-7px} html.atlas-skin .board-area{position:relative;left:5px} }
+/* phones: the rules / lessons / openings / tsume window as a bottom sheet over the full width (as the portal's list sheets, 2026-11-11) */
+@media (max-width: 600px) and (orientation: portrait){
+  #lessonOverlay{padding:0;align-items:flex-end}
+  #lessonOverlay .modal,#lessonOverlay .modal:has(> #lessonIntroView:not(.hidden)){width:100%;max-width:none;height:calc(100dvh - 44px);max-height:none;border-radius:22px 22px 0 0;border-width:1px 0 0;padding:14px 12px calc(12px + env(safe-area-inset-bottom))}
+}
 </style>
 <style>
 /* phones held upright (narrow touch screens): the board is sized from the width only, the same side gutter (10px) in every game —
