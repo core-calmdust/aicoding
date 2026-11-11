@@ -137,7 +137,7 @@
       const r2 = bd.getBoundingClientRect(), B2 = r2.bottom + K.b * r2.height - (is3() ? 13 : 0), br = bot.getBoundingClientRect(); bot.style.setProperty('margin-top', (parseFloat(getComputedStyle(bot).marginTop) + B2 - br.top).toFixed(1) + 'px', 'important');
     };
     // (only when the board actually moved / changed size: the phone toolbar sliding in and out must not re-lay the bars every frame)
-    let q = 0, last = ''; const later = () => { if (q) return; q = 1; requestAnimationFrame(() => { q = 0; const bd = document.getElementById('board'); if (!bd) return; const r = bd.getBoundingClientRect(), k = [r.width, r.height, r.left].map(v => Math.round(v)).join(','); if (k === last) return; last = k; fit(); }); };
+    let q = 0, last = ''; const later = () => { if (q) return; q = 1; requestAnimationFrame(() => { q = 0; const bd = document.getElementById('board'); if (!bd) return; const r = bd.getBoundingClientRect(), k = [r.width, r.height, r.left, r.top].map(v => Math.round(v)).join(',') + (is3() ? '3' : '2') + document.body.className; if (k === last) return; last = k; fit(); }); };
     addEventListener('resize', later); [300, 900, 2000, 4000].forEach(ms => setTimeout(fit, ms));
     if (window.ResizeObserver) { const ro = new ResizeObserver(later); const bd = document.getElementById('board'); if (bd) ro.observe(bd); }
     window.__kdFit = fit;
@@ -164,7 +164,7 @@
   }
   // 3D / 2D (the standard of the other games, 2026-11-10): a 「3D」 tile first in the board row; a 2D board picked = the 2D page
   const V = skin.view ? skin.view({ key: 'atlas-shogi-view', row: document.getElementById('segSkin'), img: '../images/atlas/shogi.webp',
-    on() { setTimeout(() => { try { look(); renderBoard(false); renderHands(); } catch (e) {} }, 0); } }) : null;
+    on() { setTimeout(() => { try { look(); renderBoard(false); renderHands(); } catch (e) {} }, 0); [60, 400, 1000].forEach(ms => setTimeout(() => { try { window.__kdFit && window.__kdFit(); } catch (e) {} }, ms)); } }) : null;   // (2D ↔ 3D: the komadai bars re-fitted to the new board)
   const is3 = () => !V || V.is3d();
   function look() {   // selection mark, board tone and piece tone follow the game's skin setting
     if (seg) seg.querySelectorAll('button').forEach(x => { if (mine) x.classList.toggle('sel', x.dataset.v === 'atlas3d'); else if (x.dataset.v === 'atlas3d') x.classList.remove('sel'); });
@@ -178,7 +178,7 @@
     try { const real = typeof settings === 'object' && settings ? settings.skin : 'kaya', eff = is3() ? 'kaya' : real;
       ['grain', 'kaya', 'metal', 'ink'].forEach(k => document.body.classList.toggle('skin-' + k, eff === k)); } catch (e) {}
   }
-  if (typeof window.applyLook === 'function') { const oa = window.applyLook; window.applyLook = function () { const r = oa.apply(this, arguments); try { look(); } catch (e) {} return r; }; }
+  if (typeof window.applyLook === 'function') { const oa = window.applyLook; window.applyLook = function () { const r = oa.apply(this, arguments); try { look(); } catch (e) {} [60, 400].forEach(ms => setTimeout(() => { try { window.__kdFit && window.__kdFit(); } catch (e) {} }, ms)); return r; }; }
   setTimeout(look, 0);
   window.pieceEl = function (code, promoted) {
     const el = orig(code, promoted);
