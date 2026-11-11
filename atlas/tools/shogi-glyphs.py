@@ -14,6 +14,20 @@ def boxes(a):
 KEYS = ['k1', 'k2', 'k3', 'k4', 'k5', 'k6', 'k7', 'k8', 'k9', 'k10', 'k11', 'k12', 'k13', 'k14', 'k8o']
 # per-piece turns in degrees (counter-clockwise +), set by eye on the sheets (2026-11-11): the automatic levelling misread the calligraphy
 ANGLE = {}
+# (2026-11-11, by eye against photos of the real sets) 菱湖・水無瀬: the upper and lower characters of the two-character pieces sit
+# off each other's axis in the source drawings, so the pair looks tilted; each character is centred on the piece's axis
+STACK = {'ryoko', 'minase', 'kinki'}
+STACKED = {0, 1, 2, 3, 4, 5, 6, 7, 12, 13, 14}
+def stack(g):
+    a = np.array(g)[:, :, 3].astype(float); H, W = a.shape; rows = a.sum(1)
+    lo, hi = int(H * .3), int(H * .7); cut = lo + int(np.argmin(rows[lo:hi]))
+    P = W // 2; out = Image.new('RGBA', (W + 2 * P, H), (255, 255, 255, 0))
+    for y0, y1 in ((0, cut), (cut, H)):
+        part = g.crop((0, y0, W, y1)); pa = np.array(part)[:, :, 3].astype(float); cols = pa.sum(0)
+        if cols.sum() < 1: continue
+        c = np.cumsum(cols) / cols.sum(); x0 = int(np.searchsorted(c, .04)); x1 = int(np.searchsorted(c, .96))
+        cx = (x0 + x1) / 2; out.alpha_composite(part, (int(round(P + W / 2 - cx)), y0))
+    bb = out.getbbox(); return out.crop(bb) if bb else out
 SET = ''
 def lean(g):
     # the slope of the column of ink: x of each row's ink centre against y (a two-character inscription should stand upright)
@@ -34,6 +48,7 @@ def fit(png, ref, one):
     for i in range(15):
         ox, oy = (i % 5) * CW, (i // 5) * CH
         x0, y0, x1, y1 = src[i]; g = im.crop((ox + x0, oy + y0, ox + x1, oy + y1))
+        if SET in STACK and i in STACKED: g = stack(g)
         ang = ANGLE.get(SET, {}).get(KEYS[i], 0)
         if ang: g = g.rotate(ang, resample=Image.BICUBIC, expand=True); bb = g.getbbox(); g = g.crop(bb) if bb else g
         tx0, ty0, tx1, ty1 = (0.13 * CW, 0.27 * CH, 0.87 * CW, 0.88 * CH) if one else ref[i]
@@ -42,7 +57,10 @@ def fit(png, ref, one):
     for i, (g, (tx0, ty0, tx1, ty1)) in enumerate(G):
         ox, oy = (i % 5) * CW, (i // 5) * CH; k = min(K[i], cap)
         g = g.resize((max(1, round(g.width * k)), max(1, round(g.height * k))), Image.LANCZOS)
-        out.alpha_composite(g, (int(ox + (tx0 + tx1 - g.width) / 2), int(oy + (ty0 + ty1 - g.height) / 2)))
+        cxg = g.width / 2
+        if SET in STACK:
+            cols = np.array(g)[:, :, 3].astype(float).sum(0); c = np.cumsum(cols) / max(1, cols.sum()); cxg = (np.searchsorted(c, .04) + np.searchsorted(c, .96)) / 2
+        out.alpha_composite(g, (int(ox + (tx0 + tx1) / 2 - cxg), int(oy + (ty0 + ty1 - g.height) / 2)))
     b = io.BytesIO(); out.save(b, 'PNG'); return b.getvalue()
 from playwright.async_api import async_playwright
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
