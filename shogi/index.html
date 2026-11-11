@@ -1423,6 +1423,30 @@ html[lang=ar] .pf-input{direction:rtl}
   html.atlas-shogi:not(.atlas-2d) body .board-area > .hand.bottom.hand{background:url(../images/atlas/shogi-kd3d-bot.webp?v=3) center/100% 100% no-repeat,#e5cba8!important}
   html:not(.atlas-skin) .app{padding-left:4px!important;padding-right:4px!important}
 }
+/* lesson intro on phones (2026-11-11, a quieter, luxury layout): centred heading over a hairline; the sample board alone and centred on a
+   soft plate; the four facts as one row of columns split by hairlines; sections as open text under small spaced gold heads; two equal
+   buttons */
+@media (max-width:560px){
+  #lessonIntroView .li-step{text-align:center;font-size:11.5px;letter-spacing:.32em;margin-top:4px}
+  #lessonIntroView #liTitle{text-align:center;margin:8px 0 14px!important;font-size:26px;letter-spacing:.08em;line-height:1.3}
+  #lessonIntroView #liTitle::after{content:'';display:block;width:44px;height:1px;margin:12px auto 0;background:linear-gradient(90deg,transparent,var(--brass,#c9a961),transparent)}
+  #lessonIntroView .li-hero{flex-direction:column;align-items:stretch;gap:14px;margin:0 0 18px}
+  #lessonIntroView .li-fig{align-self:center;margin:0;padding:12px 12px 8px;border-radius:18px;background:radial-gradient(120% 90% at 50% 0%,color-mix(in srgb,var(--brass,#c9a961) 14%,transparent),transparent 70%)}
+  #lessonIntroView .li-fig figcaption{font-size:10.5px!important;letter-spacing:.18em;opacity:.7}
+  #lessonIntroView .li-chips{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:0;flex-direction:row;border-top:1px solid color-mix(in srgb,var(--brass,#c9a961) 35%,transparent);border-bottom:1px solid color-mix(in srgb,var(--brass,#c9a961) 35%,transparent);padding:10px 0}
+  #lessonIntroView .li-chip{align-items:center;text-align:center;border:0;border-radius:0;background:none;padding:2px 4px;min-width:0}
+  #lessonIntroView .li-chip + .li-chip{border-inline-start:1px solid color-mix(in srgb,var(--brass,#c9a961) 25%,transparent)}
+  #lessonIntroView .li-chip small{font-size:10px;letter-spacing:.14em;white-space:nowrap}
+  #lessonIntroView .li-chip b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  #lessonIntroView .li-sec{display:block;border:0;border-radius:0;background:none;padding:0 4px;margin:0 0 18px}
+  #lessonIntroView .li-sec .li-ic{display:none}
+  #lessonIntroView .li-sec h4{font-size:11.5px;letter-spacing:.24em;margin:0 0 6px;display:flex;align-items:center;gap:10px}
+  #lessonIntroView .li-sec h4::after{content:'';flex:1;height:1px;background:color-mix(in srgb,var(--brass,#c9a961) 30%,transparent)}
+  #lessonOverlay .lesson-intro .li-sec p{font-size:14.5px;line-height:1.85}
+  #lessonIntroView > .modal-actions{grid-template-columns:1fr 1fr!important}
+  #lessonIntroView > .modal-actions #btnLessonBack{grid-column:1}
+  #lessonIntroView > .modal-actions #btnLessonStart{grid-column:2}
+}
 </style>
 <style>
 /* phones held upright (narrow touch screens): the board is sized from the width only, the same side gutter (10px) in every game —
@@ -4547,7 +4571,7 @@ function openIntro(i) {
   let fig = '';
   const smp = g.problems[Math.min(g.problems.length - 1, 2)];
   if (smp && window.ShogiRules && ShogiRules.diagram && !smp.variant) {
-    try { const w = Math.min(($('#liBody').clientWidth || 340), 900), cw = w < 560 ? Math.max(15, Math.min(22, Math.floor((w - 150) / 9))) : Math.max(18, Math.min(28, Math.floor((Math.min(w, 420) - 70) / 9))); fig = `<figure class="op-fig li-fig">${ShogiRules.diagram(smp.sfen, [], cw)}<figcaption>${escHb(lit('fig'))}</figcaption></figure>`; } catch (e) { fig = ''; }
+    try { const w = Math.min(($('#liBody').clientWidth || 340), 900), cw = w < 560 ? Math.max(18, Math.min(30, Math.floor((w - 64) / 9.6))) : Math.max(18, Math.min(28, Math.floor((Math.min(w, 420) - 70) / 9))); fig = `<figure class="op-fig li-fig">${ShogiRules.diagram(smp.sfen, [], cw)}<figcaption>${escHb(lit('fig'))}</figcaption></figure>`; } catch (e) { fig = ''; }
   }
   const chip = (k, v) => `<div class="li-chip"><small>${escHb(k)}</small><b>${escHb(v)}</b></div>`;
   const chips = `<div class="li-chips">${i >= 0 ? chip(lit('lv'), L(g.grade)) : ''}${chip(lit('n'), lit('probs', { n }))}${chip(lit('pass'), lit('pts', { n: need }))}${chip(lit('kind'), lit(kind))}</div>`;
