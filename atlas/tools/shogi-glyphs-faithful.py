@@ -25,7 +25,12 @@ ANGLE = {}   # e.g. {'ryoko': {'HI': -0.8}}
 # fine adjustments by eye against photos of the real sets (2026-11-11): the two characters of a piece each centred on the piece's
 # axis (their bodies: the ink between the 6% and 94% points across), the pair set in the body of the piece below the shoulders and a
 # little smaller (scale), and single characters turned (TURN: {code: (upper, lower)} degrees, counter-clockwise +)
-TUNE = {'ryoko': {'turn': {}}, 'minase': {'turn': {}, 'up': {'OU': .52, 'GY': .52}}, 'kinki': {'turn': {}, 'up': {'OU': .78, 'GY': .78, 'KE': .86}}}
+TUNE = {'ryoko': {'turn': {}, 'dx': {'KE': (0, .05)}},
+        'minase': {'turn': {'KI': (-3, 0)}, 'up': {'OU': .52, 'GY': .52}, 'fill': {'FU': .9}, 'thin': {'FU': 5}, 'gap': {'FU': .07}},
+        'kinki': {'turn': {}, 'up': {'OU': .78, 'GY': .78, 'KE': .86}, 'dx': {'KE': (0, .05)}}}
+# turn: degrees (counter-clockwise +) for the (upper, lower) character; dx: shift across, a fraction of the character's width
+# (right +; 馬's four dots pull its axis left); fill: the block's size, times FILL; thin: strokes made thinner (a min filter of this size at the source scale; 水無瀬's 歩兵
+# is drawn bold)
 # every two-character inscription of these sets fills the same block of the face (as the user's photos: the 王將 of 錦旗 the model)
 FILL, WMAX, CY = .78, .80, .535
 TWO = {'FU', 'KY', 'KE', 'GI', 'KA', 'HI', 'KI', 'GY', 'OU'}
@@ -57,7 +62,7 @@ def body_w(p):
     cols = np.array(p).astype(np.float64).sum(0); c = np.cumsum(cols) / max(1, cols.sum())
     return max(1, np.searchsorted(c, .94) - np.searchsorted(c, .06))
 
-def restack(g, turn, up=0):
+def restack(g, turn, up=0, dx=(0, 0), gap=0):
     """the two characters of g taken apart — by connected strokes, each stroke going to the character its centre lies in (a horizontal
     cut would split strokes that reach past the other character, as 飛's hook beside 車), each made upright and centred on one axis"""
     a = np.array(g); H = a.shape[0]; rows = a.astype(np.float64).sum(1)
@@ -66,6 +71,10 @@ def restack(g, turn, up=0):
     for i in range(1, n + 1):
         ys = np.nonzero(lab == i)[0]; cy[i] = ys.mean() if len(ys) else 0
     up_m = np.isin(lab, [i for i in range(1, n + 1) if cy[i] < cut])
+    yy = np.arange(H)[:, None]
+    for i in range(1, n + 1):   # a stroke run into the other character (水無瀬's 歩兵 touch): split at the cut
+        ys = np.nonzero(lab == i)[0]
+        if len(ys) and (ys < cut).mean() > .25 and (ys >= cut).mean() > .25: up_m = np.where(lab == i, yy < cut, up_m)
     halo = np.array(Image.fromarray((up_m * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(5))) > 0   # (the soft edges with it)
     parts = []
     for m, ang in ((halo, turn[0]), (~halo, turn[1])):
@@ -80,10 +89,11 @@ def restack(g, turn, up=0):
         if abs(f - 1) > .02:
             q = p0.resize((round(p0.width * f), round(p0.height * f)), Image.LANCZOS)
             parts = [(q, y0_ + p0.height - q.height - (int(.04 * a.shape[0]) if f < 1 else 0)), (p1, y1_)]   # (the upper one's foot kept where it was)
+    if gap and len(parts) == 2: parts[1] = (parts[1][0], parts[1][1] + int(gap * a.shape[0]))   # (more room between the two)
     top0 = min(y for _, y in parts); parts = [(p, y - top0) for p, y in parts]
     W = int(max(max(axis(p), p.width - axis(p)) for p, _ in parts) * 2) + 4
     out = Image.new('L', (W, max(y + p.height for p, y in parts)), 0)
-    for p, y in parts: out.paste(p, (int(round(W / 2 - axis(p))), y), p)
+    for (p, y), d in zip(parts, dx): out.paste(p, (int(round(W / 2 - axis(p) + d * p.width)), y), p)
     bb = out.getbbox(); return out.crop(bb)
 
 def only(svg, keep):
@@ -127,11 +137,12 @@ async def cell(pg, folder, code, set_):
     g = g.crop(bb); gl = gl.crop(bb)
     if ang: g = g.rotate(ang, resample=Image.BICUBIC, expand=True); gl = gl.rotate(ang, resample=Image.BICUBIC, expand=True, fillcolor=255)
     T = TUNE.get(set_)
-    if T and code in TWO: g = restack(g, T['turn'].get(code, (0, 0)), T.get('up', {}).get(code, 0)); gl = Image.new('L', g.size, 0)
+    if T and T.get('thin', {}).get(code): g = g.filter(ImageFilter.MinFilter(T['thin'][code])).filter(ImageFilter.GaussianBlur(1))
+    if T and code in TWO: g = restack(g, T['turn'].get(code, (0, 0)), T.get('up', {}).get(code, 0), T.get('dx', {}).get(code, (0, 0)), T.get('gap', {}).get(code, 0)); gl = Image.new('L', g.size, 0)
     # one scale keeps the drawing's proportions (the 2D face is a little squatter than the 3D one: the mean of the width and height
     # scales); the centre goes where it sits on the face
     k = (CW / (fx1 - fx0) * CH / (fy1 - fy0)) ** .5
-    if T and code in TWO: k = min(FILL * CH / g.height, WMAX * CW / g.width)
+    if T and code in TWO: f_ = T.get('fill', {}).get(code, 1); k = min(FILL * f_ * CH / g.height, WMAX * f_ * CW / g.width)
     sz = (max(1, round(g.width * k)), max(1, round(g.height * k))); g = g.resize(sz, Image.LANCZOS); gl = gl.resize(sz, Image.LANCZOS)
     cx, cy = (gcx - fx0) / (fx1 - fx0) * CW, (gcy - fy0) / (fy1 - fy0) * CH
     if T:
