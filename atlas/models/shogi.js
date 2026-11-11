@@ -54,9 +54,9 @@
   const SHEET = (() => { try { return new URL('../../images/atlas/shogi-glyphs.png?v=1', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../images/atlas/shogi-glyphs.png?v=1'; } })();
   const SHEET_KEYS = ['k1', 'k2', 'k3', 'k4', 'k5', 'k6', 'k7', 'k8', 'k9', 'k10', 'k11', 'k12', 'k13', 'k14', 'k8o'];
   /* ---------- the six 3D piece sets (2026-11-11, Table3D.PIECES.shogi, key 'atlas-shogi-pc3'): the same raised-lacquer boxwood pieces with
-     the inscriptions of the 2D sets — 盛り上げ (2kanji_3d, the original) · 一字書き (1kanji_3d) · 錦旗 · 水無瀬 · 菱湖 (LuffyKudo) · 隷書 (青柳隷書しも, atlas/tools/shogi-glyphs-font.py).
+     the inscriptions of the 2D sets — 盛り上げ (2kanji_3d, the original) · 一字書き (1kanji_3d) · 錦旗 · 水無瀬 · 菱湖 (LuffyKudo) · 太筆 (sunfish-shogi's two-character pieces, CC0, atlas/tools/shogi-glyphs-futamoji.py).
      Sheets: images/atlas/shogi-glyphs-<set>.png (atlas/tools/shogi-glyphs-faithful.py; licences in shogi/pieces/README.md) ---------- */
-  const PSETS = ['moriage', 'ichiji', 'kinki', 'minase', 'ryoko', 'reisho'];
+  const PSETS = ['moriage', 'ichiji', 'kinki', 'minase', 'ryoko', 'futofude'];
   const GLY = { moriage: GLYPHS };
   const curSet = () => { try { const v = X.PIECES && X.PIECES.shogi ? X.PIECES.shogi.get() : 'moriage'; return PSETS.includes(v) ? v : 'moriage'; } catch (e) { return 'moriage'; } };
   const SHEETS = {};
@@ -64,7 +64,7 @@
     if (set === 'moriage') return glyphsReady;
     if (SHEETS[set]) return SHEETS[set];
     const G = GLY[set] = {};
-    const url = (() => { try { return new URL('../../images/atlas/shogi-glyphs-' + set + '.png?v=7', ME_SRC).href; } catch (e) { return '../images/atlas/shogi-glyphs-' + set + '.png?v=7'; } })();
+    const url = (() => { try { return new URL('../../images/atlas/shogi-glyphs-' + set + '.png?v=8', ME_SRC).href; } catch (e) { return '../images/atlas/shogi-glyphs-' + set + '.png?v=8'; } })();
     return (SHEETS[set] = new Promise(res => { const im = new Image(); im.onload = () => { SHEET_KEYS.forEach((k, i) => { const c = document.createElement('canvas'); c.width = 256; c.height = 296; c.getContext('2d', { willReadFrequently: true }).drawImage(im, (i % 5) * 256, (i / 5 | 0) * 296, 256, 296, 0, 0, 256, 296); G[k] = c; }); res(); upgrade(set); }; im.onerror = () => res(); im.src = url; }));
   }
   const glyphsReady = new Promise(res => {
