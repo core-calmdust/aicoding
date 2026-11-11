@@ -111,7 +111,7 @@
   X.placeUi = (key, lang) => pick(PLACES.ui[key], lang);
   // the thumbnails (small real renders, atlas/img/place-k.webp), next to this script whichever page loads it
   const ME = (document.currentScript && document.currentScript.src) || location.href;
-  X.placeThumb = k => new URL('img/place-' + k + '.webp?v=' + (k === 8 ? 5 : k === 12 ? 4 : k >= 2 ? 3 : 1), ME).href;   // (8: the game centre, 2026-11-09)
+  X.placeThumb = k => new URL('img/place-' + k + '.webp?v=' + (k === 8 ? 5 : k === 12 ? 5 : k >= 2 ? 3 : 1), ME).href;   // (8: the game centre, 2026-11-09)
 
   const lin = (c, y0, y1, stops) => { const g = c.createLinearGradient(0, y0, 0, y1); stops.forEach(([k, col]) => g.addColorStop(k, col)); return g; };
   const rad = (c, x, y, r, stops) => { const g = c.createRadialGradient(x, y, 0, x, y, r); stops.forEach(([k, col]) => g.addColorStop(k, col)); return g; };
@@ -2885,17 +2885,19 @@
     // turned a quarter between neighbours
     // (2026-11-12, the user: finer) drawn here at 512 × 1024 per mat: the rush (igusa) across the mat in rows of ~1.2 cm, each row a ribbed
     // band with its strands' own tones, a woven black heri with its stitched edge along the long sides
-    { const tt = canvasTex('tbl12-tatami4', 512, 1024, (c, W, H) => {
+    { const tt = canvasTex('tbl12-tatami5', 512, 1024, (c, W, H) => {
         const R = rng(31), hw = 22, row = 8;
         c.fillStyle = '#c6bd8a'; c.fillRect(0, 0, W, H);
         // (2026-11-12, the user: not a grid — the stripes of the rush rows are the pattern, with fine woven lines between them)
-        for (let y = 0; y < H; y += row) {   // one row of rush: a rounded band, its strands as faint streaks along it
+        for (let y = 0; y < H; y += row) {   // one row of rush: a rounded band (lit along its crown, a groove below) made of fine fibres
           const k = .97 + R() * .05, g0 = 198 * k | 0, g1 = 191 * k | 0, b0 = 140 * k | 0;
-          const gr = c.createLinearGradient(0, y, 0, y + row); gr.addColorStop(0, `rgb(${g0 - 12},${g1 - 11},${b0 - 9})`); gr.addColorStop(.45, `rgb(${g0 + 6},${g1 + 6},${b0 + 4})`); gr.addColorStop(1, `rgb(${g0 - 16},${g1 - 15},${b0 - 12})`);
+          const gr = c.createLinearGradient(0, y, 0, y + row); gr.addColorStop(0, `rgb(${g0 - 14},${g1 - 13},${b0 - 10})`); gr.addColorStop(.4, `rgb(${g0 + 7},${g1 + 7},${b0 + 5})`); gr.addColorStop(1, `rgb(${g0 - 22},${g1 - 21},${b0 - 16})`);
           c.fillStyle = gr; c.fillRect(hw, y, W - 2 * hw, row);
-          for (let i = 0; i < 7; i++) { c.fillStyle = `rgba(${R() > .5 ? '255,250,215' : '110,96,50'},${.07 + R() * .08})`; c.fillRect(hw + (R() * (W - 2 * hw) | 0), y + 1 + (R() * (row - 2) | 0), 30 + (R() * 160 | 0), 1); }
-          c.fillStyle = 'rgba(70,58,24,.16)'; c.fillRect(hw, y + row - 1, W - 2 * hw, 1);   // the fine woven line between rows: short stitches, offset row by row
-          c.fillStyle = 'rgba(70,58,24,.18)'; for (let x = hw + ((y / row) % 2) * 4; x < W - hw; x += 8) c.fillRect(x, y + row - 1, 3, 1); }
+          for (let x = hw; x < W - hw; x += .7 + R() * .9) {   // the fibres: hair-thin, across the row, each its own tone, a little slanted
+            const t = R(), col = t < .45 ? `rgba(255,250,220,${.1 + R() * .16})` : t < .85 ? `rgba(110,98,52,${.08 + R() * .14})` : `rgba(150,160,90,${.08 + R() * .1})`;
+            const y0 = y + R() * 1.5, y1 = y + row - R() * 1.5, dx = (R() - .5) * 1.2;
+            c.strokeStyle = col; c.lineWidth = .6; c.beginPath(); c.moveTo(x, y0); c.lineTo(x + dx, y1); c.stroke(); }
+          c.fillStyle = 'rgba(70,58,24,.22)'; c.fillRect(hw, y + row - 1, W - 2 * hw, 1); }   // the groove where the warp binds the rows
         [0, W - hw].forEach(x0 => { c.fillStyle = '#1c1a17'; c.fillRect(x0, 0, hw, H);   // the heri: a black cloth, finely woven, its fold and stitches
           for (let y = 0; y < H; y += 3) { c.fillStyle = `rgba(255,255,255,${.03 + (y % 6 ? .02 : .05)})`; c.fillRect(x0, y, hw, 1); }
           for (let x = x0; x < x0 + hw; x += 2) { c.fillStyle = 'rgba(0,0,0,.18)'; c.fillRect(x, 0, 1, H); }
@@ -3148,7 +3150,7 @@
       const pts = sh.getSpacedPoints(80).map(p => new TT.Vector3(p.x, 0, p.y));
       const tube = new TT.Mesh(new TT.TubeGeometry(new TT.CatmullRomCurve3(pts, true), 160, .2, 6, true), pipe); at(G, tube, 0, t * .62, 0);
       [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => { const T2 = grp(TT, G, a * (hw - .3), t * .62, b * (hd - .3), 0);   // 房
-        at(T2, new TT.Mesh(new TT.SphereGeometry(.38, 10, 8), tas), 0, 0, 0); const fr = new TT.Mesh(new TT.ConeGeometry(.42, 1.1, 10, 1, true), tas); fr.rotation.set(Math.PI + b * .5, 0, -a * .5); at(T2, fr, a * .3, -.15, b * .3, 0, false); });
+        at(T2, new TT.Mesh(new TT.SphereGeometry(.34, 10, 8), tas), 0, 0, 0); });   // (only the knot: no flared tassel, 2026-11-12)
       ao(o, 0, FL, z, w + 2, d + 2, .4); return G; };
     // closer to the board (2026-11-12): the player kneels with the knees a hand's breadth from it
     zabuton(-16.6, 0); zabuton(18.6, Math.PI);
