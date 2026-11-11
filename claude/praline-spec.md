@@ -291,3 +291,4 @@ Many cores (nuts) held together by shared memory (caramel).
 - 箱は開発室と同じ形（`.lab.sw`、キャラメル色の破線・方眼）、カードはパネル＋アイコンの並び。パネルの絵は `card.svg`（`white: true` でパネルの絵の地を白に）。
 - **準備中**：台帳の `soon: true` で、アイコンの左上に「SOON」（バッジは英語表記の規則どおり）、タグと再生ボタンの位置に「準備中」（`tag.soon`、14言語）。ボタンは破線の押せない形（`aria-disabled`）、パネルの絵・アイコンをクリックしても遷移しない（Enter も選ぶだけ）。公開したら `soon` を外して `href` を入れる。
 - 説明は `pl.desc`（14言語、PC 幅392px・6行に収まることを計測済み）。上のメニュー・下のタブには足していない（1項目・準備中のため。項目が増えたら検討）。公開タイトル数（`stat-titles`）にも数えない。
+- **ゲームの中の表示**（2026-11-11）：§2 の表のゲームの単体ページに「Powered by Praline」（`shared/praline-badge.js`。PC は右下に固定、スマホは歯車のパネルの下。押すとトップの `#software`）。決まりは addendum「Powered by Praline の表示」。

@@ -273,6 +273,12 @@
 - wasm の αβ エンジンに YBW を入れる・直すときは、ゲームごとに写さず `shared/praline/` を読み、ゲームの違い（局面の写し・手の順番と枝刈り・LMR・千日手・評価の累積・キラー／履歴）は**つなぎの関数**（`PL_SP_FIELDS`・`spFillPos`／`spLoadPos`・`spSearch`・`spCutoff`・`spTop`・`waitCheck`・`spIdleReset`）で書く。移行済み：シャンチー・チャンギ・チェッカー（2026-11-11）。次の候補：タフル・モリス・ファノロナ、その後に将棋・チェス・リバーシ（spec「移行の判断と次の候補」）。
 - 約束：1スレッドの探索を変えない（通常版 wasm はバイト一致、`engine_mt.wasm` の1スレッドは局面数・手・深さが全一致）、遅いコアのモデル（`SIM_SLOW`）でも確かめる、headless Chrome で `bench.html` と対局ページを2スレッドで確認、共有のヘッダを変えたら読む全ゲームの `engine_mt.wasm` を作り直して `?v=` を上げる。
 
+## 「Powered by Praline」の表示（規定・2026-11-11、共通部品 `shared/praline-badge.js`）
+- AI が Praline（`claude/praline-spec.md` §2 の表のマルチスレッドの部品）で考えるゲームの単体ページは、`</body>` の前に `<script src="../shared/praline-badge.js?v=N" defer></script>` を1行置くだけ（ゲームごとに書き写さない）。対象：シャンチー・チャンギ・チェッカー・タフル・モリス・ファノロナ・リバーシ・将棋・チェス・五目並べ・囲碁・ヘックス・アマゾンズ・ウゴルキ・アゴン・コナネ・マンカラ・コネクトフォー・ドット＆ボックス・ウル・セネト・ルドー・バックギャモン。AI のないゲーム・Praline を使わないゲーム（アルケルケ＝1スレッド等）・大百科の3D卓（`?skin=atlas`）・ほかのページの中（iframe）には出さない。
+- 見た目：Praline のアイコン（`praline/icon.svg` と同じ図）＋「POWERED BY」（小さな英字）＋アウトライン化した「Praline」のロゴ（`praline/logo.svg` の文字、色は文字色・i の点はキャラメル）。**全言語で英語のまま**（ロゴ扱い）。aria-label／title は14言語（日本語「思考エンジン Praline について」）。押すとトップの「ソフトウェア」（`../#software`、同じタブ。ホームボタンと同じく確認なし）。
+- **PC**（`HeaderBar.MEDIA`）：画面の右下に固定（右14px・下10px、不透明度0.42、ホバーではっきり）。下端のオンライン欄（`#dock`）があるときは、その上端のすぐ上へ自動で上がる（開閉にも追従）。情報欄・情報の行がオンライン欄の上端まで届いて重なるゲーム（バックギャモン・ファノロナ・ヘックス・ウル・セネト）は script に `data-place="dock"` を付け、オンライン欄のバーの中（`.dk-sp` の直後＝オンラインのボタンの左。状態の文字は省略記号で縮む）に置く（オンライン欄がないときは右下）。そのほか `data-bottom` / `data-right` / `data-top`（px）、`PralineBadge.set({ bottom, right, top, hidden })`、`data-pc="off"`（PC の表示なし）。
+- **スマホ**（それ以外）：画面には出さず、オプション（歯車）のパネル（`shared/headerbar.js` の `.hbo-pop`）のいちばん下に、細い区切り線の下で中央に同じロゴを出す。
+
 ## オプション（歯車）のプルダウン（2026-11-09）
 - 歯車のパネルで3つ以上から選ぶ項目は、押すたびに切り替える行ではなく、言語の行と同じ形のプルダウンにする：`HeaderBar.addOption({ id, icon, label, type: 'select', options: [{ v, label }], get, set })`（`shared/headerbar.js`）。一覧はボタンの下に開き、下に入りきらなければ上に開く。大百科の配色（`hbo-atlas`）にも対応。最初はルドーの「速さ」。
 
