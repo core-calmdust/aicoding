@@ -88,6 +88,7 @@ html[dir=rtl] ${V} .lx-fig figcaption,html[lang=ar] ${V} .lx-sec{direction:rtl}
   const secH = s => s && s.html ? `<div class="lx-sec${s.cls ? ' ' + s.cls : ''}"><h4>${s.h}</h4>${paras(s.html)}</div>` : '';
   function lesson(o) {
     const b = shell(o.step, o.title, false); if (!b) return;
+    { const g = (o.secs || []).find(x => x && x.h === head('goal')); LuxIntro.cur = { title: o.title, goal: g ? g.html : '' }; }   // (the coach shows it during the lesson: shared/coachkit.js)
     const chips = (o.chips || []).filter(c => c && c[1] != null && c[1] !== '');
     b.innerHTML = figH(o.fig, o.cap) + (chips.length ? `<div class="lx-chips">${chips.map(([k, v]) => `<div class="lx-chip"><small>${k}</small><b>${v}</b></div>`).join('')}</div>` : '') + (o.secs || []).map(secH).join('');
   }
