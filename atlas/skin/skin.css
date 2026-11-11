@@ -435,3 +435,20 @@ html.atlas-skin:not(.atlas-land) .card.controls .btn:disabled{background:#fbf7ee
   html.atlas-skin.atlas-shogi:not(.atlas-2d):not(.atlas-land),html.atlas-skin.atlas-shogi:not(.atlas-2d):not(.atlas-land) body{--cw:min(calc((100vw - 8px) / 9.75), calc((100dvh - 56px - var(--ctlh, 64px) - 8px - 58px - env(safe-area-inset-bottom)) / 12.6), 90px)!important}
 }
 @media (pointer: coarse) and (max-aspect-ratio: 1/1) and (max-width: 600px){html.atlas-skin.atlas-shogi:not(.atlas-land) .app{padding-left:4px!important;padding-right:4px!important}}
+/* 戦績 (shared/record.js) in the portal's colours (2026-11-11): cream sheet, white boxes, sky wins / coral losses, the portal's coral button */
+html.atlas-skin .grc{--gw:#36b4ff;--gl:#ff5d5d;--gd:#b9a988;--gm:#6b7088;--gx:#2b3044;--ga:#ff5d5d;--gc:#fff;--gb:#efe3c8;background:#fffaf0!important;border:3px solid #fff!important;border-radius:26px!important;box-shadow:0 30px 60px -20px rgba(60,30,0,.55)!important;font-family:var(--round,inherit)}
+html.atlas-skin .grc-hd{background:linear-gradient(180deg,#fff1c9,#fffaf0)}
+html.atlas-skin .grc-x{border-radius:50%!important;border:0!important;background:#f1e6cf!important;color:#6b7088!important}
+html.atlas-skin .grc-tabs{background:#f1e6cf!important;border:0!important;border-radius:99px!important}
+html.atlas-skin .grc-tabs button{border-radius:99px!important;font-weight:800!important}
+html.atlas-skin .grc-tabs button.sel{background:#fff!important;color:#2b3044!important;box-shadow:0 3px 0 #e3cfa4!important}
+html.atlas-skin .grc-vb{background:#fff!important;border:2px solid #efe3c8!important;border-radius:14px!important;font-weight:800!important}
+html.atlas-skin .grc-vp{background:#fff!important;border:2px solid #efe3c8!important}
+html.atlas-skin .grc-hero{border:2px solid #efe3c8!important;box-shadow:0 3px 0 #efe3c8}
+html.atlas-skin .grc-cnt div{background:#f7f0de!important}
+html.atlas-skin .grc-tag{background:#f3ead6!important}
+html.atlas-skin .grc-mini{background:#efe6d3!important}
+html.atlas-skin .grc-row,html.atlas-skin .grc-g{background:#fff!important}
+html.atlas-skin .grc-ft button{border:2px solid #efe3c8!important;border-radius:99px!important;background:#fff!important;color:#2b3044!important;font-weight:800!important;box-shadow:0 3px 0 #efe3c8}
+html.atlas-skin .grc-ft .grc-go{background:#ff5d5d!important;color:#fff!important;border-color:transparent!important;box-shadow:0 4px 0 #d93c3c!important;font-weight:900!important}
+html.atlas-skin .grc-cf .grc-warn{background:#ff5d5d!important;box-shadow:0 3px 0 #d93c3c}
