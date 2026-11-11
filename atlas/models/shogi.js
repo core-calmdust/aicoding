@@ -91,7 +91,9 @@
         // 虎杢 (tiger figure; the 錦旗 set, 2026-11-12, the user's photo of a real set): soft bands across the grain, uneven in
         // width and strength, wavering and fading in places — a silky light/dark shimmer over the fine straight grain
         if (tora) {
-          const wv = v * 13 + (N(u * 1.3, v * 1.1, 2) - .5) * 2.2 + Math.sin(u * 5 + N(v * 2, u, 1) * 4) * .22;
+          // (each piece its own figure: the bands' spacing, slope and waver come from the seed too)
+          const sh = k => { const x = Math.sin(seed * 12.9898 + k * 78.233) * 43758.5453; return x - Math.floor(x); };
+          const wv = v * (10.5 + sh(1) * 6) + (u - .5) * (sh(2) - .5) * 2.4 + sh(3) * 7 + (N(u * 1.3, v * 1.1, 2) - .5) * (1.6 + sh(4) * 1.6) + Math.sin(u * (4 + sh(5) * 3) + N(v * 2, u, 1) * 4) * .22;
           const k = Math.floor(wv), f = wv - k, hs = Math.sin(k * 127.1 + seed * 3.7) * 43758.5453, r = hs - Math.floor(hs);
           const band = Math.pow(.5 - .5 * Math.cos(f * 6.2832), 1.6) * (.35 + r * .65);
           const fade = .45 + .55 * N(u * 2.4 + 9, v * 3.1, 2);
@@ -105,7 +107,7 @@
       // a face from the inscription sheet: gd = the glyph's RGBA (alpha = lacquer, the grey layers = its height)
       glyphFace(d, W, H, p) {
         const gd = p.gd, type = p.type, kind = p.kind, red = type > 8;
-        if (kind === 'map') tsuge(d, W, H, 11 + type, p.tora); else for (let i = 3; i < d.length; i += 4) d[i] = 255;   // (else: opaque black)
+        if (kind === 'map') tsuge(d, W, H, p.seed || 11 + type, p.tora); else for (let i = 3; i < d.length; i += 4) d[i] = 255;   // (else: opaque black)
         // a soft shadow under the raised lacquer (map only)
         if (kind === 'map') for (let y = H - 1; y >= 3; y--) for (let x = W - 1; x >= 2; x--) { const j = ((y - 3) * W + (x - 2)) * 4 + 3, a = gd[j] / 255 * .28, i = (y * W + x) * 4; if (a) { d[i] *= 1 - a; d[i + 1] *= 1 - a; d[i + 2] *= 1 - a; } }
         for (let i = 0; i < W * H; i++) {
@@ -157,10 +159,11 @@
 
   const FRONT = ['', '歩兵', '香車', '桂馬', '銀将', '角行', '飛車', '金将', '玉将', 'と金', '成香', '成桂', '成銀', '龍馬', '龍王'];
   // face: wood + lacquer characters; rough: glossy where lacquered; bump: raised, rounded strokes
-  function faceTex(type, kingOu, kind, set = 'moriage') {
+  function faceTex(type, kingOu, kind, set = 'moriage', vr = 0) {
+    if (kind !== 'map') vr = 0;   // (the variants differ in the wood only)
     const G = (GLY[set] || GLYPHS)['k' + type + (kingOu ? 'o' : '')];
-    const key = `shf-${set === 'moriage' ? '' : set + '-'}${TORA[set] ? 'tora-' : ''}${type}${kingOu ? 'o' : ''}-${kind}-${G ? 'g' : fontOK ? 1 : 0}`;
-    if (G) return canvasTex(key, 256, 296, (c, W, H) => { paint(c.canvas, 'glyphFace', { gd: G.__gd || (G.__gd = G.getContext('2d').getImageData(0, 0, W, H).data), type, kind, tora: TORA[set] }); });   // (read once per glyph)
+    const key = `shf-${set === 'moriage' ? '' : set + '-'}${TORA[set] ? 'tora' + vr + '-' : ''}${type}${kingOu ? 'o' : ''}-${kind}-${G ? 'g' : fontOK ? 1 : 0}`;
+    if (G) return canvasTex(key, 256, 296, (c, W, H) => { paint(c.canvas, 'glyphFace', { gd: G.__gd || (G.__gd = G.getContext('2d').getImageData(0, 0, W, H).data), type, kind, tora: TORA[set], seed: 11 + type + vr * 17 }); });   // (read once per glyph)
     return canvasTex(key, 256, 296, (c0, W, H) => {
       const txt = type === 8 && kingOu ? '王将' : FRONT[type], red = type > 8;
       const ink = c => {
@@ -370,25 +373,29 @@
   }
   const matCache = {};
   let sideM = null, sideT = null;
-  function pieceMats(type, ou, set = 'moriage') {
-    const key = set + ':' + type + (ou ? 'o' : '');
+  function pieceMats(type, ou, set = 'moriage', vr = 0) {
+    const key = set + ':' + type + (ou ? 'o' : '') + (vr ? '#' + vr : '');
     if (matCache[key]) return matCache[key];
     if (set !== 'moriage') glyphsOf(set);
     const TT = T();
-    const face = new TT.MeshPhysicalMaterial({ map: faceTex(type, ou, 'map', set), roughnessMap: faceTex(type, ou, 'rough', set), bumpMap: faceTex(type, ou, 'bump', set), bumpScale: .032, roughness: 1, clearcoat: .55, clearcoatRoughness: .28 });
+    const face = new TT.MeshPhysicalMaterial({ map: faceTex(type, ou, 'map', set, vr), roughnessMap: faceTex(type, ou, 'rough', set), bumpMap: faceTex(type, ou, 'bump', set), bumpScale: .032, roughness: 1, clearcoat: .55, clearcoatRoughness: .28 });
     const side = TORA[set] ? (sideT || (sideT = M({ map: X.canvasTex('tsugeSideTora', 128, 128, (c, W, H) => tsuge(c, W, H, 3, null, 1)), roughness: .5, bumpScale: .002 })))
       : sideM || (sideM = M({ map: X.canvasTex('tsugeSide', 128, 128, (c, W, H) => tsuge(c, W, H, 3)), roughness: .5, bumpScale: .002 }));
     return (matCache[key] = [face, side]);
   }
   function upgrade(set) {   // the faces made before the set's glyphs arrived
-    for (const key in matCache) { const [st, rest] = key.split(':'); if (st !== set) continue; const ou = rest.endsWith('o'), type = parseInt(rest, 10), f = matCache[key][0];
+    for (const key in matCache) { const [st, rest0] = key.split(':'); if (st !== set) continue; const [rest, vr = 0] = rest0.split('#'), ou = rest.endsWith('o'), type = parseInt(rest, 10), f = matCache[key][0];
       if (!(GLY[set] || {})['k' + type + (ou ? 'o' : '')]) continue;
-      f.map = faceTex(type, ou, 'map', set); f.roughnessMap = faceTex(type, ou, 'rough', set); f.bumpMap = faceTex(type, ou, 'bump', set); f.needsUpdate = true; }
+      f.map = faceTex(type, ou, 'map', set, +vr); f.roughnessMap = faceTex(type, ou, 'rough', set); f.bumpMap = faceTex(type, ou, 'bump', set); f.needsUpdate = true; }
     if (X.kick) X.kick(300);
   }
   glyphsReady.then(() => upgrade('moriage'));
+  // 虎杢 (2026-11-12, the user: each piece its own figure): the pieces of one kind take turns through a few variants of the wood
+  // (6 for 歩, 4 for the others — materials stay shared, so the pieces still batch)
+  const vrN = {};
   function piece(type, gote, ou, set = curSet()) {
-    const m = new (T().Mesh)(pieceGeo(SIZE[type] || 1), pieceMats(type, ou, set));
+    const vr = TORA[set] ? (vrN[type] = ((vrN[type] || 0) + 1)) % (type === 1 ? 6 : 4) : 0;
+    const m = new (T().Mesh)(pieceGeo(SIZE[type] || 1), pieceMats(type, ou, set, vr));
     m.castShadow = true; m.receiveShadow = true;
     const g = new (T().Group)(); g.add(m); if (gote) g.rotation.y = Math.PI;
     g.userData.type = type; return g;
