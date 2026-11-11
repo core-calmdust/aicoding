@@ -191,11 +191,12 @@
   // and that part of the board's grain, so it reads as the same board seen closer (2026-11-10)
   const crStars = (n, cr) => !cr ? (n === 9 ? [[3, 3], [6, 3], [3, 6], [6, 6]] : []) : [[3, 3], [6, 3], [3, 6], [6, 6]].map(([i, j]) => [i - cr.c0, j - cr.r0]).filter(([i, j]) => i > 0 && i < n && j > 0 && j < n);
   const crKey = (n, cr) => cr ? `-${n}c${cr.c0}r${cr.r0}` : n === 9 ? '' : '-' + n;
-  function boardTop(n = 9, cr = null) {
+  // ext: the block made that much deeper at the top and the bottom (world units) — the komadai bars of the PC layout lie on it (2026-11-11)
+  function boardTop(n = 9, cr = null, ext = 0) {
     const MG = n === 9 ? MARGIN : MARGIN * n / 9;   // rim scales with the grid (the 5x5 board is fitted to the same screen size)
-    const PX = 100, BW = n * CW + MG * 2, BD = n * CH + MG * 2;
+    const PX = 100, BW = n * CW + MG * 2, BD = n * CH + MG * 2 + ext * 2;
     const grid = (c) => {
-      const ox = MG * PX, oy = MG * PX, cw = CW * PX, ch = CH * PX;
+      const ox = MG * PX, oy = (MG + ext) * PX, cw = CW * PX, ch = CH * PX;
       c.strokeStyle = 'rgba(33,19,11,.92)'; c.lineCap = 'square';
       for (let i = 0; i <= n; i++) {
         c.lineWidth = i === 0 || i === n ? 3.4 : 2.2;
@@ -206,14 +207,14 @@
       crStars(n, cr).forEach(([i, j]) => { c.beginPath(); c.arc(ox + i * cw, oy + j * ch, 5.5, 0, 7); c.fill(); });
     };
     let tex = null;
-    tex = canvasTex('shogiTop5' + crKey(n, cr), BW * PX | 0, BD * PX | 0, (c0, W, H) => {
+    tex = canvasTex('shogiTop5' + crKey(n, cr) + (ext ? 'e' + ext : ''), BW * PX | 0, BD * PX | 0, (c0, W, H) => {
       const base = (c) => { const g = c.createLinearGradient(0, 0, W * .14, H); g.addColorStop(0, '#e9cda7'); g.addColorStop(.4, '#e1c197'); g.addColorStop(.75, '#d7b385'); g.addColorStop(1, '#cca476'); c.fillStyle = g; c.fillRect(0, 0, W, H); };
       base(c0); grid(c0);
       withKaya(img => {
         const c = c0;
         if (cr) {   // that window's part of the whole board's grain (the 9×9 board with its rim = the whole picture)
-          const B9 = 9 * CW + MARGIN * 2, D9 = 9 * CH + MARGIN * 2, sx = (MARGIN + cr.c0 * CW - MG) / B9, sy = (MARGIN + cr.r0 * CH - MG) / D9;
-          c.drawImage(img, sx * img.width, sy * img.height, BW / B9 * img.width, BD / D9 * img.height, 0, 0, W, H);
+          const B9 = 9 * CW + MARGIN * 2, D9 = 9 * CH + MARGIN * 2, sx = (MARGIN + cr.c0 * CW - MG) / B9, sh = Math.min(1, BD / D9), sy = Math.max(0, Math.min(1 - sh, (MARGIN + cr.r0 * CH - MG - ext) / D9));
+          c.drawImage(img, sx * img.width, sy * img.height, BW / B9 * img.width, sh * img.height, 0, 0, W, H);
         } else c.drawImage(img, 0, 0, W, H);
         grid(c);
         if (tex) tex.needsUpdate = true;
@@ -222,12 +223,12 @@
     return tex;
   }
   // the lines are raised lacquer too: a bump map with the grid
-  function boardBump(n = 9, cr = null) {
+  function boardBump(n = 9, cr = null, ext = 0) {
     const MG = n === 9 ? MARGIN : MARGIN * n / 9;
-    const PX = 100, BW = n * CW + MG * 2, BD = n * CH + MG * 2;
-    return canvasTex('shogiTopB' + crKey(n, cr), BW * PX | 0, BD * PX | 0, (c, W, H) => {
+    const PX = 100, BW = n * CW + MG * 2, BD = n * CH + MG * 2 + ext * 2;
+    return canvasTex('shogiTopB' + crKey(n, cr) + (ext ? 'e' + ext : ''), BW * PX | 0, BD * PX | 0, (c, W, H) => {
       c.fillStyle = '#000'; c.fillRect(0, 0, W, H);
-      const ox = MG * PX, oy = MG * PX, cw = CW * PX, ch = CH * PX;
+      const ox = MG * PX, oy = (MG + ext) * PX, cw = CW * PX, ch = CH * PX;
       c.strokeStyle = '#fff'; c.shadowColor = '#fff'; c.shadowBlur = 2;
       for (let i = 0; i <= n; i++) { c.lineWidth = i === 0 || i === n ? 3.4 : 2.2; c.beginPath(); c.moveTo(ox + i * cw, oy); c.lineTo(ox + i * cw, oy + n * ch); c.stroke(); c.beginPath(); c.moveTo(ox, oy + i * ch); c.lineTo(ox + n * cw, oy + i * ch); c.stroke(); }
     });
@@ -297,11 +298,11 @@
     // o.crop {c0, r0} with o.n 4…8: 詰将棋's close-up — n×n squares of the 9×9 board; block and legs scaled by n/9, so fitted to the
     // screen it is the same board seen closer
     const cr = o.crop && o.n >= 3 && o.n < 9 ? o.crop : null;
-    const n = cr ? o.n : o.n === 5 ? 5 : 9, MG = n === 9 ? MARGIN : MARGIN * n / 9, k = n === 9 ? 1 : cr ? n / 9 : .62, FW = n * CW, FH = n * CH, BW = FW + MG * 2, BD = FH + MG * 2, THICK = 2.6 * k;
+    const n = cr ? o.n : o.n === 5 ? 5 : 9, MG = n === 9 ? MARGIN : MARGIN * n / 9, k = n === 9 ? 1 : cr ? n / 9 : .62, FW = n * CW, FH = n * CH, EXT = Math.max(0, +o.ext || 0), BW = FW + MG * 2, BD = FH + MG * 2 + EXT * 2, THICK = 2.6 * k;
     const kaya = M({ map: X.wood('kayaSide2', '#caa075', '#9c6c3c', 512, 512, 2.4), roughness: .5, bumpScale: .003 });
     const endF = M({ map: endGrain('kayaEndF2', 512, 256, .5, 2.6, .7), roughness: .5, bumpScale: .003 });
     const endS = M({ map: endGrain('kayaEndS2', 512, 256, -1.4, .5, .5), roughness: .5, bumpScale: .003 });
-    const top = new TT.MeshPhysicalMaterial({ map: boardTop(n, cr), bumpMap: boardBump(n, cr), bumpScale: .006, roughness: .58, clearcoat: .15, clearcoatRoughness: .45 });   // soft satin, no glare on the playing field
+    const top = new TT.MeshPhysicalMaterial({ map: boardTop(n, cr, EXT), bumpMap: boardBump(n, cr, EXT), bumpScale: .006, roughness: .58, clearcoat: .15, clearcoatRoughness: .45 });   // soft satin, no glare on the playing field
     top.map.anisotropy = 8;
     const bottom = M({ color: 0x8c643c, roughness: .7 });
     const base = o.legs === false ? 0 : LEG * k;
@@ -317,7 +318,7 @@
     const TONES = { classic: 0xebe4db, grain: 0xd1b59a, kaya: 0xefeae2, metal: 0xb4bcc6, ink: 0x5e5046 };   // kaya: 本榧 (the default). 2026-11-10: near-neutral tints — the kaya picture itself carries the colour (less yellow)
     g.userData.setTone = name => { g.userData.tone = name; const c = new TT.Color(TONES[name] || 0xffffff).convertSRGBToLinear(); tinted.forEach((m, i) => { m.color.copy(base0[i]).multiply(c); }); };
     g.userData.setTone('classic');
-    g.userData.S = FH; g.userData.W = FW; g.userData.top = base + THICK + .001; g.userData.outer = BD / FH; g.userData.n = n;
+    g.userData.S = FH; g.userData.W = FW; g.userData.top = base + THICK + .001; g.userData.outer = BD / FH; g.userData.n = n; g.userData.mg = MG; g.userData.ext = EXT;
     return g;
   }
   const cell = (c, r) => [-FW / 2 + CW * (c + .5), -FH / 2 + CH * (r + .5)];   // c: 0 = left column on screen, r: 0 = top row
