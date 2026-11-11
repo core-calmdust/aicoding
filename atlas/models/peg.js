@@ -17,7 +17,7 @@
   const IMG = new URL('../../peg/img/', (document.currentScript && document.currentScript.src) || location.href).href;
   const T = () => window.THREE;
   const LO = () => !!(X.coarse || X.lite);
-  const LOOKS = ['walnut', 'maple', 'stone', 'night'], SETS = ['glass', 'pearl', 'steel', 'peg'];
+  const LOOKS = ['walnut', 'maple', 'stone', 'night'], SETS = ['glass', 'pearl', 'steel', 'peg', 'mod'];
   const R = .32, TOP = .5, CUP = .26;
   const pref = () => { try { return (JSON.parse(localStorage.getItem('aicoding-peg') || '{}') || {}).settings || {}; } catch (e) { return {}; } };
   const lookNow = () => { const v = pref().bd; return LOOKS.includes(v) ? v : 'walnut'; };
@@ -46,7 +46,7 @@
     c.fillStyle = g; c.beginPath(); c.arc(W / 2, W / 2, W / 2, 0, 7); c.fill();
   }), transparent: true, roughness: .9, depthWrite: false, bump: false }));
   const faceMat = (look, id) => mat('face' + look + id, () => {
-    const tx = new (T().TextureLoader)().load(IMG + 'bd-' + look + '-' + id + '.webp?v=3', () => { if (X.kick) X.kick(200); });
+    const tx = new (T().TextureLoader)().load(IMG + 'bd-' + look + '-' + id + '.webp?v=4', () => { if (X.kick) X.kick(200); });
     tx.anisotropy = 4; if (T().sRGBEncoding) tx.encoding = T().sRGBEncoding;
     return new (T().MeshStandardMaterial)({ map: tx, transparent: false, alphaTest: .92, roughness: .45, metalness: 0, polygonOffset: true, polygonOffsetFactor: -1 });   // (opaque + alpha test: no sorting flicker with the marbles)
   });
@@ -114,8 +114,16 @@
   const CERAMIC = ['#8cbca8', '#2b4085', '#d19a3d', '#cc3d29', '#ede6d1', '#333338'];
   const JEWEL = ['#d10a24', '#102ed1', '#089a4c', '#8c24cc', '#f79a1a', '#59cce6'];
   const PAINT = ['#c72924', '#1f5cb3', '#1f8047', '#e6a81f', '#6b338c', '#ebe6d6'];
+  // abstract pieces (for the abstract board): flat matte discs, the top painted with the 2D page's motif (m-mod-<k>.webp)
+  const MOD = ['#d4694a', '#e3b34a', '#2e8f8a', '#f0e6d4', '#29264d', '#ed8c80'];
+  const modTop = k => mat('mmodt' + k, () => {
+    const tx = new (T().TextureLoader)().load(IMG + 'm-mod-' + k + '.webp?v=4', () => { if (X.kick) X.kick(200); });
+    tx.anisotropy = 4; if (T().sRGBEncoding) tx.encoding = T().sRGBEncoding;
+    return new (T().MeshStandardMaterial)({ map: tx, roughness: .75, metalness: 0 });
+  });
   function marbleMat(i, set) {
     const k = (i * 7 + 3) % 6;
+    if (set === 'mod') return mat('mmod' + k, () => X.M({ color: MOD[k], roughness: .75 }));
     if (set === 'pearl') return mat('mcer' + k, () => X.M({ color: CERAMIC[k], roughness: .28, clearcoat: .8, clearcoatRoughness: .2 }));
     if (set === 'steel') return mat('mjw' + k, () => X.M({ color: JEWEL[k], roughness: .03, clearcoat: 1, clearcoatRoughness: .02, envMapIntensity: 2 }));
     if (set === 'peg') return mat('mpeg' + k, () => X.M({ color: PAINT[k], roughness: .3, clearcoat: .7, clearcoatRoughness: .25 }));
@@ -125,7 +133,13 @@
   function marble(i, set) {
     set = SETS.includes(set) ? set : setNow();
     const TT = T(), g = new TT.Group();
-    if (set === 'peg') {   // a turned wooden peg standing in its cup
+    if (set === 'mod') {   // a flat disc, like a modern design object
+      const k = (i * 7 + 3) % 6, h = R * .55;
+      const d = X.mesh(geo('pgDisc', () => new TT.CylinderGeometry(R * .98, R * .98, h, LO() ? 20 : 40)), marbleMat(i, set), 0, h / 2 + .004, 0);
+      d.material = [marbleMat(i, set), modTop(k), marbleMat(i, set)];
+      d.rotation.y = -Math.PI / 2;
+      g.add(d);
+    } else if (set === 'peg') {   // a turned wooden peg standing in its cup
       const prof = [[0, 0], [.13, 0], [.14, .22], [.2, .3], [.24, .4], [.22, .48], [.14, .54], [0, .56]].map(([a, b]) => new TT.Vector2(a, b));
       g.add(X.mesh(geo('pgPegG', () => new TT.LatheGeometry(prof, LO() ? 12 : 20)), marbleMat(i, set), 0, -.12, 0));
     } else {
