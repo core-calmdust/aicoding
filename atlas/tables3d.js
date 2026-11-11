@@ -254,7 +254,7 @@
       } },
   };
   // shogi (atlas/models/shogi.js PSETS, 2026-11-11): the raised-lacquer pieces with the inscriptions of the six 2D sets; 'atlas-shogi-pc3'
-  PIECES.shogi = { list: ['moriage', 'ichiji', 'kinki', 'minase', 'ryoko', 'futofude'], get: () => { let v = ls.get('atlas-shogi-pc3'); if (v === 'kaisho' || v === 'reisho') v = 'futofude';   // (楷書, then 隷書, were replaced by 太筆, 2026-11-11)
+  PIECES.shogi = { list: ['moriage', 'ichiji', 'kinki', 'minase', 'ryoko', 'futofude'], get: () => { let v = ls.get('atlas-shogi-pc3'); if (v === 'kaisho' || v === 'reisho') v = 'futofude';   // (楷書, then 隷書, were replaced by 浮木, 2026-11-11)
     return PIECES.shogi.list.includes(v) ? v : 'moriage'; }, set: k => ls.set('atlas-shogi-pc3', k),
     thumb: k => new URL('img/pc3-shogi-' + k + '.webp?v=12', ME).href,
     names: {
@@ -263,7 +263,7 @@
       kinki: { ja: '錦旗', en: 'Kinki', zh: '锦旗', 'zh-TW': '錦旗', ko: '긴키', es: 'Kinki', fr: 'Kinki', pt: 'Kinki', de: 'Kinki', ru: 'Кинки', tr: 'Kinki', id: 'Kinki', hi: 'किंकी', ar: 'كينكي' },
       minase: { ja: '水無瀬', en: 'Minase', zh: '水无濑', 'zh-TW': '水無瀨', ko: '미나세', es: 'Minase', fr: 'Minase', pt: 'Minase', de: 'Minase', ru: 'Минасэ', tr: 'Minase', id: 'Minase', hi: 'मिनासे', ar: 'ميناسي' },
       ryoko: { ja: '菱湖', en: 'Ryōko', zh: '菱湖', 'zh-TW': '菱湖', ko: '료코', es: 'Ryōko', fr: 'Ryōko', pt: 'Ryōko', de: 'Ryōko', ru: 'Рёко', tr: 'Ryōko', id: 'Ryōko', hi: 'र्योको', ar: 'ريوكو' },
-      futofude: { ja: '太筆', en: 'Bold brush', zh: '粗笔', 'zh-TW': '粗筆', ko: '굵은 붓', es: 'Pincel grueso', fr: 'Pinceau épais', pt: 'Pincel grosso', de: 'Breiter Pinsel', ru: 'Толстая кисть', tr: 'Kalın fırça', id: 'Kuas tebal', hi: 'मोटा ब्रश', ar: 'فرشاة عريضة' } } };
+      futofude: { ja: '浮木', en: 'Ukiki', zh: '浮木', 'zh-TW': '浮木', ko: '우키키', es: 'Ukiki', fr: 'Ukiki', pt: 'Ukiki', de: 'Ukiki', ru: 'Укики', tr: 'Ukiki', id: 'Ukiki', hi: 'उकिकी', ar: 'أوكيكي' } } };   // (futofude: the key; 浮木 = マンボウ in dialect, after sunfish-shogi)
   // peg solitaire (atlas/models/peg.js SETS, 2026-11-11): the 2D page's marble sets ('aicoding-peg' settings.pg — the same choice in 2D and 3D);
   // the pictures are the 2D page's own marbles (peg/img/m-<set>-<k>.webp)
   PIECES.peg = { list: ['glass', 'pearl', 'steel', 'peg', 'mod'],

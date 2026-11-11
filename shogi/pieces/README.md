@@ -24,6 +24,6 @@ From `Pieces (2-Kanji)` of [LuffyKudo/Shogi-Themes](https://github.com/LuffyKudo
 
 `../../images/atlas/shogi-glyphs-<set>.png` (the inscriptions of the SVGs above, reproduced as drawn — same place and size on the face — by `atlas/tools/shogi-glyphs-faithful.py`), `../../images/atlas/shogi-pieces-<set>.png` (top-down renders of the 3D boxwood pieces with those inscriptions) and `../../atlas/img/pc3-shogi-<set>.webp` (their tile pictures) are derived works of the matching folder and are shared under its licence: `ichiji` ← `1kanji_3d` (CC BY 4.0, Little-Mage and CouchTomato87), `kinki` / `minase` / `ryoko` ← `kinki/` / `minase/` / `ryoko/` (CC BY-SA 4.0, LuffyKudo), `moriage` ← `2kanji_3d/` (CC BY-SA 3.0, Little-Mage and orangain).
 
-## 太筆 (futofude) 3D set (2026-11-11)
+## 浮木 (Ukiki, key futofude) 3D set (2026-11-11)
 
 `futamoji/piece.svg` is the two-character piece sheet of [sunfish-shogi/shogi-images](https://github.com/sunfish-shogi/shogi-images), dedicated to the public domain (CC0 1.0), kept unchanged. `../../images/atlas/shogi-glyphs-futofude.png`, `shogi-pieces-futofude.png` and `../../atlas/img/pc3-shogi-futofude.webp` are made from it by `atlas/tools/shogi-glyphs-futamoji.py` (CC0 as well).
