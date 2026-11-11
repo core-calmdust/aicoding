@@ -99,7 +99,8 @@ wasm の αβ エンジン（`engine_mt.wasm`、`-DMT`）の**仕事を分ける
 | コネクトフォー | JS | 列ごとの完全読み（共有の置換表） | mtsplit＋`connect4/mt.js` |
 | ドット＆ボックス | JS＋wasm（5×5） | 手の分担（共有の置換表）・補助 Worker | mtworkers（共有モード）・wasm `dots5mt.wasm` |
 | ウル（`ur/`） | **C（wasm、2026-11-11）**：期待値の探索と評価ネット（`engine.c`、SIMD 版となし版） | 独立な仕事の配り分け（手 × 出目、全コア。各 Worker が C） | mtworkers（`claude/ur-spec.md`） |
-| セネト・ルドー | JS | 独立な仕事の配り分け（全コア） | mtworkers |
+| セネト（`senet/`） | **C（wasm、2026-11-11）**：期待値の探索と評価ネット（`engine.c`、SIMD 版となし版） | 独立な仕事の配り分け（手 × 投げ、全コア。各 Worker が C） | mtworkers（`claude/senet-spec.md`） |
+| ルドー | JS | 独立な仕事の配り分け（全コア） | mtworkers |
 | バックギャモン（`backgammon/`） | **C（wasm、2026-11-11）**：評価（速いネット・wildbg・ベアオフ）と期待値の探索（`engine.c`、SIMD 版となし版の2本） | 独立な仕事の配り分け（候補手 × 相手の21の出目、全コア。各 Worker が自分の C エンジン） | mtworkers（`backgammon/MODEL_CARD.md`） |
 
 ---
