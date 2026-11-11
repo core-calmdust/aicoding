@@ -87,7 +87,7 @@ function defs(id) {
 }
 // the boards and marbles are pictures (peg/tools/render_boards.py, 2026-11-11: realistic, detailed sets — user): the board image
 // covers the whole viewBox (its cups, groove and shadow line up with the holes), a marble image sits on each peg
-const IMGV = 1;
+const IMGV = 2;
 const bdImg = (look, id) => `img/bd-${look}-${id}.webp?v=${IMGV}`;
 function boardBody(B, id, look) {
   const g = geo(B), h = g.size * K / 2;
@@ -104,7 +104,7 @@ function roundTri(p, r) {
   return d + 'Z';
 }
 function marble(id, i, pg) {   // a marble centred at 0,0 (radius 33)
-  const sk = pg || settings.pg, k = sk === 'glass' || sk === 'steel' ? (i * 7 + 3) % 6 : 0;
+  const sk = pg || settings.pg, k = (i * 7 + 3) % 6;   // (every set has six colours)
   return `<g class="mb"><ellipse cx="6" cy="11" rx="32" ry="27" fill="url(#${id}sh)"/><image href="img/m-${sk}-${k}.webp?v=${IMGV}" x="-34" y="-34" width="68" height="68"/></g>`;
 }
 // a whole board as a static picture (dialogs, puzzle thumbnails, the rules)
@@ -506,10 +506,11 @@ function backToBoard() { $$('.overlay.show').forEach(o => o.classList.remove('sh
 function selTab(v) { $$('.ls-tabs').forEach(g => g.querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.v === v))); }
 $$('.ls-tabs').forEach(g => g.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b || b.classList.contains('sel')) return;
+  // no flash: the new page is put up first (instantly, over the old one), the old one goes away after it has been drawn
   const inst = on => ['#puzzleOverlay', '#rulesOverlay'].forEach(x => $(x).classList.toggle('instant', on)); inst(true);
-  if (b.dataset.v === 'rules') { hide('#puzzleOverlay'); window.PegRules && PegRules.open(); }
-  else { window.PegRules && PegRules.close(); openPuzzles(); }
-  setTimeout(() => inst(false), 150);
+  const after = f => requestAnimationFrame(() => requestAnimationFrame(f));
+  if (b.dataset.v === 'rules') { window.PegRules && PegRules.open(); after(() => { hide('#puzzleOverlay'); setTimeout(() => inst(false), 60); }); }
+  else openPuzzles().then(() => after(() => { if (window.PegRules) PegRules.close(true); setTimeout(() => inst(false), 60); }));
 }));
 $('#dailyGo').onclick = () => startDaily('n');
 if ($('#dailyEasy')) $('#dailyEasy').onclick = () => startDaily('e');
