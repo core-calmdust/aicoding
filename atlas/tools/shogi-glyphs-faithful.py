@@ -26,7 +26,7 @@ ANGLE = {}   # e.g. {'ryoko': {'HI': -0.8}}
 # axis (their bodies: the ink between the 6% and 94% points across), the pair set in the body of the piece below the shoulders and a
 # little smaller (scale), and single characters turned (TURN: {code: (upper, lower)} degrees, counter-clockwise +)
 TUNE = {'ryoko': {'turn': {}, 'dx': {'KE': (0, .05), 'HI': (.12, .06)}, 'fill': {'OU': 1.1, 'GY': 1.1}},
-        'minase': {'turn': {'KI': (-3, 0)}, 'up': {'OU': .52, 'GY': .52}, 'fill': {'FU': 1.16}, 'thin': {'FU': 5}, 'gap': {'FU': .07}},
+        'minase': {'turn': {'KI': (-3, 0)}, 'up': {'OU': .5, 'GY': .5, 'FU': .82, 'KY': .8, 'KE': .8}, 'fill': {'FU': 1.08, 'OU': 1.12, 'GY': 1.12}, 'thin': {'FU': 5}, 'gap': {'FU': .05}, 'dx': {'KI': (-.05, 0)}},
         'kinki': {'turn': {}, 'up': {'OU': .78, 'GY': .78, 'KE': .86}, 'dx': {'KE': (0, .05)}}}
 # turn: degrees (counter-clockwise +) for the (upper, lower) character; dx: shift across, a fraction of the character's width
 # (right +; 馬's four dots pull its axis left); fill: the block's size, times FILL; thin: strokes made thinner (a min filter of this size at the source scale; 水無瀬's 歩兵
