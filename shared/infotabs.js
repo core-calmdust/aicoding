@@ -191,7 +191,7 @@ function init(tries) {
       const bd = document.querySelector('.board-area'), br = bd && bd.getBoundingClientRect();
       const hm = document.querySelector('[data-it-home]'), hr = hm && hm.getClientRects().length ? hm.getBoundingClientRect() : null;   // (shogi: the opponent's komadai at the top, 2026-11-11)
       const t0 = sc === document.scrollingElement || sc === document.documentElement || sc === document.body ? 0 : sc.getBoundingClientRect().top;
-      const home = hr ? Math.min(max, Math.max(0, Math.round(sc.scrollTop + hr.top - t0 - 6))) : br ? Math.min(max, Math.max(0, Math.round(sc.scrollTop + br.top - top0 + br.height / 2 - H / 2))) : 0;
+      const home = hr ? Math.min(max, Math.max(0, Math.round(sc.scrollTop + hr.top - t0 - (parseFloat(getComputedStyle(sc).paddingTop) || 0) + 2))) : br ? Math.min(max, Math.max(0, Math.round(sc.scrollTop + br.top - top0 + br.height / 2 - H / 2))) : 0;
       sc.scrollTo({ top: again && Math.abs(sc.scrollTop - target) < 24 ? home : target, behavior: 'smooth' });
       fix();
     }));

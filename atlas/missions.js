@@ -228,7 +228,8 @@
 .msov.on .msp{transform:none}
 .mshd{display:flex;align-items:center;gap:12px;padding:14px 16px 10px;background:linear-gradient(180deg,#fff1c9,#fffaf0)}
 .mshd .pic{flex:none;width:64px;height:64px;filter:drop-shadow(0 3px 3px rgba(120,70,0,.25))}.mshd .pic svg{width:100%;height:100%}
-.mshd .say{flex:1;min-width:0}.mshd .say small{font-size:12px;font-weight:900;color:#c98a2a}.mshd .say p{margin:2px 0 0;font-size:14px;font-weight:800;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.mshd .say p.one{display:block;white-space:nowrap;text-overflow:ellipsis}
+.mshd .say{flex:1;min-width:0}.mshd .say small{font-size:12px;font-weight:900;color:#c98a2a}.mshd .say p{margin:2px 0 0;font-size:14px;font-weight:800;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.mshd .say p.one{}   /* (every tab: up to two lines — the box keeps one height, 2026-11-11) */
+.mshd .say p{min-height:2.9em}
 .mshd h3{margin:0;font-size:20px;font-weight:900}.msx{flex:none;width:40px;height:40px;border-radius:50%;border:0;background:#f1e6cf;font-size:18px;cursor:pointer;color:var(--ink,#2b3044)}
 .mstabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:0 16px;padding:4px;border-radius:99px;background:#f1e6cf}
 .mstabs button{position:relative;min-width:0;white-space:nowrap;overflow:visible;text-overflow:clip;border:0;border-radius:99px;background:transparent;padding:9px 4px;font:900 14px var(--font,sans-serif);color:#6b7088;cursor:pointer}

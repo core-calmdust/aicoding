@@ -122,16 +122,19 @@
     const fit = () => {
       const top = document.getElementById('handTop'), bot = document.getElementById('handBottom'), bd = document.getElementById('board');
       if (!top || !bot || !bd) return;
-      const on = MQ.matches && is3() && !document.documentElement.classList.contains('atlas-land');
+      const on = MQ.matches && !document.documentElement.classList.contains('atlas-land');   // (3D and the 2D designs alike: both are laid out with the same overhang)
       [top, bot].forEach(h => ['margin-left', 'width', 'margin-top', 'margin-bottom', 'transform'].forEach(k => h.style.removeProperty(k)));
+      const de = document.documentElement; de.style.removeProperty('--kdth'); de.style.removeProperty('--kdbh');
       if (!on) return;
       let K = null; try { const pf = window.__atlasPcFit; K = pf && pf.K && pf.K(); } catch (e) {}
       if (!K) return;
       const r = bd.getBoundingClientRect(); if (!r.width) return;
+      { const de = document.documentElement; ['l', 't', 'r', 'b'].forEach(k => de.style.setProperty('--k2' + k, (K[k] * r.height).toFixed(1) + 'px')); }   // (the 2D designs' plate: the same overhang as the 3D board, on phones too)
       const L = r.left - K.l * r.height, R = r.right + K.r * r.height, T = r.top - K.t * r.height, B = r.bottom + K.b * r.height;
       [top, bot].forEach(h => { const hr = h.getBoundingClientRect(); h.style.setProperty('margin-left', (parseFloat(getComputedStyle(h).marginLeft) + L - hr.left).toFixed(1) + 'px', 'important'); h.style.setProperty('width', (R - L).toFixed(1) + 'px', 'important'); });
-      { const rb = bd.getBoundingClientRect(), T = rb.top - K.t * rb.height, tr = top.getBoundingClientRect(); top.style.setProperty('transform', 'translateY(' + (T - tr.bottom).toFixed(1) + 'px)', 'important'); }   // (a margin would move the board with it)
-      const r2 = bd.getBoundingClientRect(), B2 = r2.bottom + K.b * r2.height, br = bot.getBoundingClientRect(); bot.style.setProperty('margin-top', (parseFloat(getComputedStyle(bot).marginTop) + B2 - br.top).toFixed(1) + 'px', 'important');
+      { const rb = bd.getBoundingClientRect(), T = rb.top - K.t * rb.height + (is3() ? 13 : 0), tr = top.getBoundingClientRect(); top.style.setProperty('transform', 'translateY(' + (T - tr.bottom).toFixed(1) + 'px)', 'important'); }   // (a margin would move the board with it)
+      de.style.setProperty('--kdth', top.offsetHeight + 'px'); de.style.setProperty('--kdbh', bot.offsetHeight + 'px');   // (the 2D designs paint one slab under bars and board)
+      const r2 = bd.getBoundingClientRect(), B2 = r2.bottom + K.b * r2.height - (is3() ? 13 : 0), br = bot.getBoundingClientRect(); bot.style.setProperty('margin-top', (parseFloat(getComputedStyle(bot).marginTop) + B2 - br.top).toFixed(1) + 'px', 'important');
     };
     let q = 0; const later = () => { if (q) return; q = 1; requestAnimationFrame(() => { q = 0; fit(); }); };
     addEventListener('resize', later); [300, 900, 2000, 4000].forEach(ms => setTimeout(fit, ms));
