@@ -2652,7 +2652,7 @@ setInterval(clockTick, 250);
 // Each AI level has a fixed rating (ladder in MODEL_CARD.md); the opponent is picked around the player's rating
 // (mostly close, sometimes clearly stronger or weaker) and the result moves the rating (Elo).
 const RT_STORE = 'reversi-rated-v1', RT_START = 1000;
-const RT_LV = [0, 10, 50, 110, 170, 240, 340, 430, 550, 680, 780, 930, 1090, 1290, 1440, 1582, 1687, 1732, 1767, 1837, 1901, 1954, 1991, 2017, 2054, 2080, 2122, 2209, 2283];   // index = level 1..28: 50 + 0.77 × the measured level Elo (MODEL_CARD.md; 1–13: the gentle levels of 2026-11-10, Lv.14 = 1810 as the anchor; 15–16: the Mac's matches of 2026-11-11; 17–27: by depth, measured from Lv.16 = 2126 on 2026-11-11 (12 steps of about +55); 28: the strongest by time, estimated)
+const RT_LV = [0, 10, 50, 110, 170, 240, 340, 430, 550, 680, 780, 930, 1090, 1290, 1440, 1582, 1687, 1732, 1767, 1837, 1901, 1954, 1991, 2017, 2054, 2067, 2082, 2143, 2157];   // index = level 1..28: 50 + 0.77 × the measured level Elo (MODEL_CARD.md; 1–13: the gentle levels of 2026-11-10, Lv.14 = 1810 as the anchor; 15–16: the Mac's matches of 2026-11-11; 17–27: by depth, measured from Lv.16 = 2126 on 2026-11-11 (12 steps of about +55); 28: the strongest by time, estimated)
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };
