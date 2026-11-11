@@ -1386,6 +1386,8 @@ html[lang=ar] .pf-input{direction:rtl}
   #lessonOverlay{padding:0;align-items:flex-end}
   #lessonOverlay .modal,#lessonOverlay .modal:has(> #lessonIntroView:not(.hidden)){width:100%;max-width:none;height:calc(100dvh - 44px);max-height:none;border-radius:22px 22px 0 0;border-width:1px 0 0;padding:14px 12px calc(12px + env(safe-area-inset-bottom))}
 }
+/* a game's 一覧: only that list (no ルール / レッスン / 定跡 / 詰将棋 tabs, no title) */
+#lessonOverlay.ls-solo #segLs,#lessonOverlay.ls-solo #lsListTitle,#lessonOverlay.ls-solo #lsListDesc{display:none!important}
 </style>
 <style>
 /* phones held upright (narrow touch screens): the board is sized from the width only, the same side gutter (10px) in every game —
@@ -4053,7 +4055,7 @@ const lessonsReady = fetch('lessons.json?v=20261107l14').then(r => r.json()).the
 let lprog = {};
 try { lprog = JSON.parse(localStorage.getItem(LSTORE) || '{}'); } catch (e) {}
 const L = o => (o && (o[LANG] || o.en || o.ja)) || '';
-let lsTab = 'lesson';
+let lsTab = 'lesson', lsSolo = false;   // lsSolo: opened from a game's 一覧 — only that list, no tabs (as the portal's list sheets, 2026-11-11)
 const gradeAt = i => i < 0 ? LESSONS.rules[-i - 1] : LESSONS.grades[i];
 $('#segLs').onclick = e => { const b = e.target.closest('button'); if (b) { lsTab = b.dataset.v; openLessons(); } };
 // ---- tsume collection
@@ -4190,7 +4192,7 @@ $('#tsGrid').onclick = e => {
   if (b.getAttribute('aria-disabled')) { toast(PZBook.t('locked')); return; }
   hideOverlay('#lessonOverlay'); startTsume(tsGridSet, +b.dataset.j);
 };
-$('#btnTsGridBack').onclick = () => { lsTab = 'tsume'; openLessons(); };
+$('#btnTsGridBack').onclick = () => { lsTab = 'tsume'; lsSolo = $('#lessonOverlay').classList.contains('ls-solo'); openLessons(); };
 // one problem of a set (k = index in the set, easy -> hard); "next" walks on through the unlocked stages
 function startTsume(si, k, dailyDate, dailyEasy) {
   busyToken++; cancelAI(); cancelAna();
@@ -4227,6 +4229,7 @@ function startOpening(oi) {
 async function openLessons() {
   await lessonsReady; await tsumeReady; await openReady; if (!LESSONS) return;
   lessonView('list'); showOverlay('#lessonOverlay');
+  $('#lessonOverlay').classList.toggle('ls-solo', lsSolo); lsSolo = false;
   $('#lessonList').className = 'lesson-list';
   $('#lessonListView').classList.toggle('pzh', lsTab === 'tsume');
   if (lsTab !== 'rules' && window.ShogiRules && ShogiRules.stop) ShogiRules.stop();   // pending tutorial timers must not redraw another tab
@@ -4439,7 +4442,7 @@ $('#lsBackOp').onclick = () => {
   if (!lesson || !(lesson.study || lesson.opening)) return;
   const gi = lesson.gi;
   exitLesson(); $('#lsBackOp').classList.add('hidden');
-  lsTab = 'open'; showOverlay('#lessonOverlay'); openOpeningChoice(gi);
+  lsTab = 'open'; $('#lessonOverlay').classList.remove('ls-solo'); showOverlay('#lessonOverlay'); openOpeningChoice(gi);
 };
 $('#lsPlayHere').onclick = () => {
   if (!lesson || !lesson.study) return;
@@ -4498,9 +4501,9 @@ function openIntro(i) {
   lessonView('intro');
 }
 $('#btnLessonClose').onclick = () => hideOverlay('#lessonOverlay');
-$('#btnLessonBack').onclick = () => { if (openChoiceIdx >= 0) lsTab = 'open'; openLessons(); };
+$('#btnLessonBack').onclick = () => { if (openChoiceIdx >= 0) lsTab = 'open'; lsSolo = $('#lessonOverlay').classList.contains('ls-solo'); openLessons(); };
 $('#btnLessonStart').onclick = () => { hideOverlay('#lessonOverlay'); startLesson(introIdx); };
-$('#btnLesson').onclick = () => { lsTab = 'lesson'; openLessons(); };
+$('#btnLesson').onclick = () => { lsTab = 'lesson'; openLessons(); };   // (menu: with the tabs)
 $('#btnTsume') && ($('#btnTsume').onclick = () => { lsTab = 'tsume'; openLessons(); });
 // first-time banner in the new-game dialog → the rules tutorial (the Rules tab of the lesson dialog)
 if (window.RulesOffer) window.__rulesOffer = RulesOffer.init({ game: 'shogi', lang: () => LANG, open: () => { lsTab = 'rules'; openLessons(); } });
@@ -5221,7 +5224,7 @@ $('#lsNext').onclick = () => {
   finishLesson();
 };
 $('#lsQuit').onclick = () => exitLesson();
-$('#lsList').onclick = () => { if (!lesson) return; if (lesson.endless && !lesson.daily) { openTsGrid(lesson.si, lesson.k); return; } lsTab = lesson.study || lesson.opening ? 'open' : lesson.endless ? 'tsume' : 'lesson'; openLessons(); };
+$('#lsList').onclick = () => { if (!lesson) return; if (lesson.endless && !lesson.daily) { $('#lessonOverlay').classList.add('ls-solo'); openTsGrid(lesson.si, lesson.k); return; } lsSolo = true; lsTab = lesson.study || lesson.opening ? 'open' : lesson.endless ? 'tsume' : 'lesson'; openLessons(); };
 function finishLesson() {
   const n = lesson.probs.length, total = sumPts(), max = PTS * n, need = Math.ceil(max * PASS_RATE);
   const pass = total >= need;
