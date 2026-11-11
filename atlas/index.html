@@ -1639,6 +1639,46 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 .bk-x,.bk-bk{flex:none;width:38px;height:38px;border-radius:50%;border:2px solid var(--line);background:#fff;color:var(--text);font:900 17px/1 var(--font);cursor:pointer}.bk-bk{font-size:22px;padding-bottom:3px}
 .bk-body{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:14px 14px calc(18px + env(safe-area-inset-bottom))}
 .bk-body .lesson-list{display:grid;gap:10px}.bk-body .lesson-list.lx-on{display:block}.bk-wait{text-align:center;color:var(--muted);padding:30px}
+/* レッスン・定跡の一覧 (every game, and 将棋's own cards): the portal's fonts and colours (2026-11-11) — ids in the selectors to
+   win over the full game's list styles (shogi/lists-ui.js) */
+#lessonOverlay{font-family:var(--font)!important}
+#lessonOverlay .bk-t{font:900 19px var(--font)!important;color:var(--ink)!important;letter-spacing:.04em!important}
+#lessonOverlay #lessonList .lx-tabs{display:grid!important;grid-auto-flow:column!important;grid-auto-columns:1fr!important;gap:8px!important;margin:0 0 14px!important;overflow-x:auto!important;scrollbar-width:none!important;padding:2px 2px 6px!important}
+#lessonOverlay #lessonList .lx-tabs::-webkit-scrollbar{display:none!important}
+#lessonOverlay #lessonList .lx-tabs.many{grid-auto-flow:row!important;grid-template-columns:repeat(auto-fill,minmax(170px,1fr))!important}   /* (many chapters: wrapped, names in full) */
+#lessonOverlay #lessonList .lx-tabs button{display:flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;min-width:0!important;padding:10px 10px!important;border-radius:16px!important;border:2px solid var(--line)!important;background:#fff!important;box-shadow:0 3px 0 var(--line)!important;color:var(--ink2)!important;font:900 14.5px var(--font)!important;cursor:pointer!important;transition:none!important}
+#lessonOverlay #lessonList .lx-tabs button .nm{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+#lessonOverlay #lessonList .lx-tabs button .ct{flex:none!important;font:700 12px var(--round)!important;color:var(--ink2)!important;background:var(--cream)!important;border-radius:99px!important;padding:2px 8px!important}
+#lessonOverlay #lessonList .lx-tabs button .ct.ok{background:#dcf7ea!important;color:var(--mint2)!important}
+#lessonOverlay #lessonList .lx-tabs button .ic{background:var(--cream)!important;border-radius:9px!important}
+@media (hover:hover){#lessonOverlay #lessonList .lx-tabs button:hover{border-color:#ffd77a!important;color:var(--ink)!important}}
+#lessonOverlay #lessonList .lx-tabs button.sel{background:linear-gradient(180deg,#fff3c4,#ffe28a)!important;border-color:var(--sun)!important;color:#6a4200!important;box-shadow:0 3px 0 var(--sun2)!important}
+#lessonOverlay #lessonList .lx-banner{display:flex!important;align-items:center!important;gap:14px!important;padding:14px 18px!important;margin:0 0 14px!important;border-radius:20px!important;border:2px solid #f6dfa6!important;background:linear-gradient(120deg,#fff3cf,#fff 72%)!important;box-shadow:0 3px 0 #f6dfa6!important}
+#lessonOverlay #lessonList .lx-banner .ic{background:linear-gradient(140deg,#ffe08a,#f2b630)!important;border-radius:14px!important}
+#lessonOverlay #lessonList .lx-banner .tx b{font:900 19px var(--font)!important;color:var(--ink)!important}
+#lessonOverlay #lessonList .lx-banner .tx small{font:700 13.5px/1.6 var(--font)!important;color:var(--ink2)!important}
+#lessonOverlay #lessonList .lx-banner .pg,#lessonOverlay #lessonList .lx-banner .pg small{font:700 12.5px var(--round)!important;color:var(--ink2)!important}
+#lessonOverlay #lessonList .lx-grid{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))!important;gap:12px!important}
+#lessonOverlay #lessonList .lx-card{display:flex!important;gap:14px!important;align-items:stretch!important;text-align:start!important;width:100%!important;min-width:0!important;padding:12px 14px 12px 12px!important;border-radius:20px!important;border:2px solid var(--line)!important;background:#fff!important;box-shadow:0 4px 0 var(--line)!important;color:var(--ink)!important;font-family:var(--font)!important;cursor:pointer!important;transition:none!important}
+@media (hover:hover){#lessonOverlay #lessonList .lx-card:hover{border-color:#ffc94d!important;box-shadow:0 4px 0 #ffd77a!important;background:#fffbef!important}}
+#lessonOverlay #lessonList .lx-card:active{transform:translateY(2px)!important;box-shadow:0 2px 0 var(--line)!important}
+#lessonOverlay #lessonList .lx-card.done{background:linear-gradient(120deg,#eafaf2,#fff 62%)!important;border-color:#bfe9d3!important;box-shadow:0 4px 0 #bfe9d3!important}
+#lessonOverlay #lessonList .lx-th{flex:none!important;width:96px!important;align-self:center!important;display:grid!important;place-items:center!important}
+#lessonOverlay #lessonList .lx-th svg{display:block!important;width:100%!important;height:auto!important;border-radius:10px!important}
+#lessonOverlay #lessonList .lx-tx{flex:1!important;min-width:0!important;display:flex!important;flex-direction:column!important;gap:3px!important}
+#lessonOverlay #lessonList .lx-top{display:flex!important;align-items:center!important;gap:8px!important;min-width:0!important}
+#lessonOverlay #lessonList .lx-no{font:900 13px var(--font)!important;letter-spacing:.06em!important;color:var(--sun2)!important;white-space:nowrap!important}
+#lessonOverlay #lessonList .lx-st{margin-inline-start:auto!important;font:700 12px var(--round)!important;white-space:nowrap!important;border-radius:99px!important;padding:2px 9px!important;background:var(--cream)!important;color:var(--ink2)!important}
+#lessonOverlay #lessonList .lx-st.ok{background:#dcf7ea!important;color:var(--mint2)!important}
+#lessonOverlay #lessonList .lx-st.new{background:#ffe9e9!important;color:var(--coral2)!important}
+#lessonOverlay #lessonList .lx-st.so{background:#fff3cf!important;color:var(--sun2)!important}
+#lessonOverlay #lessonList .lx-t{font:900 17px/1.35 var(--font)!important;color:var(--ink)!important}
+#lessonOverlay #lessonList .lx-t small{font:700 12px var(--font)!important;color:var(--ink2)!important}
+#lessonOverlay #lessonList .lx-sub{font:700 13.5px/1.5 var(--font)!important;color:var(--sun2)!important;opacity:1!important}
+#lessonOverlay #lessonList .lx-desc{font:500 13px/1.65 var(--font)!important;color:var(--ink2)!important;display:-webkit-box!important;-webkit-line-clamp:3!important;-webkit-box-orient:vertical!important;overflow:hidden!important}
+#lessonOverlay #lessonList .lx-bar{background:var(--cream)!important;border-radius:4px!important}
+@media (max-width:600px){#lessonOverlay #lessonList .lx-grid{grid-template-columns:1fr!important}#lessonOverlay #lessonList .lx-th{width:76px!important}
+  #lessonOverlay #lessonList .lx-tabs{grid-auto-columns:minmax(76px,1fr)!important}#lessonOverlay #lessonList .lx-tabs button{flex-direction:column!important;gap:3px!important;padding:8px 6px!important;font-size:12.5px!important}}
 /* (the full game's lists are drawn for its dark page: here in the portal's cream and white) */
 .bksheet .pbh-tabs button,.bksheet .lx-tabs button{background:#fff;box-shadow:0 2px 0 var(--line)}
 .bksheet .pbh-tabs button.sel,.bksheet .lx-tabs button.sel{background:#fff6dc}
@@ -1671,6 +1711,8 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 .rgd-act .btn.ic{flex:none;width:58px;min-width:0;padding:4px 0 3px;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;align-self:stretch;height:auto}   /* (icons only: ヒント · もう一度 · 一覧, 2026-11-11) */
 .rgd-act .btn.ic small{font-size:10px;font-weight:800;line-height:1.1;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .rgd-act .btn.ic svg{width:24px;height:24px;flex:none;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+.rgd-act .btn.ic{width:78px;padding:9px 0 7px;gap:4px;border-radius:22px}.rgd-act .btn.ic svg{width:32px;height:32px}.rgd-act .btn.ic small{font-size:13px}.rgd-act .btn.big{font-size:19px;padding-top:16px;padding-bottom:16px}   /* (larger: they looked tiny on the 3D view, 2026-11-11) */
+@media (max-width:600px){.rgd-act .btn.ic{width:60px;padding:6px 0 5px;gap:2px}.rgd-act .btn.ic svg{width:26px;height:26px}.rgd-act .btn.ic small{font-size:11px}.rgd-act .btn.big{font-size:16px;padding-top:12px;padding-bottom:12px}}
 .rgd.lsg .rgd-act{gap:8px}.rgd.lsg .rgd-act .sp{flex:1}.rgd.lsg .cnt{display:flex;align-items:center;gap:5px;min-height:0}.rgd.lsg .lsd{width:12px;height:12px;border-radius:50%;background:#e6dccb;display:inline-block}.rgd.lsg .lsd.ok{background:#3ccf91}.rgd.lsg .lsd.mid{background:#ffb21e}.rgd.lsg .lsd.ng{background:#ff5d5d}.rgd.lsg .lsd.on{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--ink)}
 body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,body:has(#pg-gacha.on) .msbtn,body:has(#pg-dress.on) .msbtn{display:none}   /* (ミッション: not over the 3D view) */
 /* shogi / chess, PC: 対戦 · レート戦 · パズル · レッスン (app.js mxPanels, 2026-11-10) */
@@ -2005,7 +2047,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="lazy.js?v=73"></script>
 <script src="puzzle-lines.js?v=1"></script>
 <script src="puzzles.js?v=12"></script>
-<script src="lessons3d.js?v=8"></script>
+<script src="lessons3d.js?v=9"></script>
 <script src="missions.js?v=8"></script>
 <link rel="stylesheet" href="historia.css?v=15">
 <script src="historia.js?v=41"></script>
@@ -2019,7 +2061,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=34"></script>
 <script src="npc/npc.js?v=24"></script>
 <script src="avtalk.js?v=2"></script>
-<script src="app.js?v=310"></script>
+<script src="app.js?v=311"></script>
 <script src="../shared/praline-badge.js?v=2" data-portal defer></script>
 </body>
 </html>

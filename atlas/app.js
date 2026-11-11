@@ -1612,20 +1612,34 @@
       const c = e.target.closest('[data-j]'); if (c && !c.disabled) { close(); startPuzzle({ pick: { i: +c.dataset.i, j: +c.dataset.j } }); }
     };
   }
+  // レッスン・定跡の一覧 on the 3D table (2026-11-11): one look for every game, in the portal's fonts and colours — a tab per
+  // chapter (done / all), the chapter's banner, then cards (a small board when the game gives one, the step, the title, its
+  // aim, the record). 将棋のレッスン keeps the full game's own cards (their boards) under the same styles (index.html .bksheet).
   function lessonSheet(g, kind) {
     if (g.id === 'shogi' && kind !== 'open' && window.AtlasLessons && AtlasLessons.data) return lessonBook(g);
     if (!window.AtlasLessons) return startPlay('full', 'lesson', kind);
-    const sh = document.createElement('div'); sh.className = 'lvsheet lssheet';
-    sh.innerHTML = `<div class="lvs-in" role="listbox"><div class="lvs-h">${esc(t(kind === 'open' ? 'bv.lsOp' : 'bv.ls'))}<button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div><div class="lvs-l"><div class="lss-wait">…</div></div></div>`;
-    document.body.appendChild(sh); requestAnimationFrame(() => sh.classList.add('on'));
-    const close = () => { if (sh.classList.contains('out')) return; sh.classList.add('out'); sh.classList.remove('on'); setTimeout(() => sh.remove(), 240); };
+    const S0 = bookSheet(t(kind === 'open' ? 'bv.lsOp' : 'bv.ls')), TK = 'atlas-lxtab-' + g.id + '-' + (kind === 'open' ? 'o' : 'l');
     AtlasLessons.list(g.id, kind === 'open' ? 'open' : 'lesson', lang).then(items => {
-      let cat = null; const ST = { pass: '✓', try: '…' };
-      sh.querySelector('.lvs-l').innerHTML = items.map((x, i) => { const hd = x.catName && x.catName !== cat ? `<div class="lss-cat">${esc(x.catName)}</div>` : ''; cat = x.catName || cat;
-        return hd + `<button type="button" role="option" data-k="${esc(x.key)}" data-full="${x.full ? 1 : ''}" class="lss ${x.st}"><b>${i + 1}</b><span class="nm">${esc(x.title)}${x.st === 'pass' ? '<i class="lvck">✓</i>' : ''}</span><small>${esc(x.sub || '')}${x.full ? ' · ' + esc(t('bv.full')) : ''}</small></button>`; }).join('');
-      const nx = sh.querySelector('.lss:not(.pass):not([data-full="1"])'); if (nx) { nx.classList.add('on'); nx.scrollIntoView({ block: 'center' }); }
-    }).catch(() => { sh.querySelector('.lvs-l').textContent = '⚠'; });
-    sh.onclick = e => { const b = e.target.closest('[data-k]'); if (b) { close(); if (b.dataset.full) startPlay('full', 'lesson', kind); else startLesson3D(kind, b.dataset.k); return; } if (e.target === sh || e.target.closest('.lvs-x')) close(); };
+      const cats = []; items.forEach((x, i) => { x.i = i; const k = x.cat || ''; let c = cats.find(y => y.k === k); if (!c) cats.push(c = { k, name: x.catName || '', items: [] }); c.items.push(x); });
+      let cur = null; try { cur = localStorage.getItem(TK); } catch (e) {}
+      if (!cats.some(c => c.k === cur)) { const c = cats.find(c => c.items.some(x => x.st !== 'pass')) || cats[0]; cur = c ? c.k : ''; }
+      const draw = () => {
+        const c = cats.find(y => y.k === cur) || cats[0]; if (!c) { S0.body.textContent = '—'; return; }
+        const pass = x => x.st === 'pass', dn = y => y.items.filter(pass).length;
+        const tabs = cats.length > 1 ? `<div class="lx-tabs${cats.length > 4 ? ' many' : ''}">${cats.map(y => `<button type="button" data-cat="${esc(y.k)}" class="${y.k === c.k ? 'sel' : ''}"><span class="nm">${esc(y.name || '—')}</span><span class="ct${dn(y) >= y.items.length ? ' ok' : ''}">${dn(y)}/${y.items.length}</span></button>`).join('')}</div>` : '';
+        const ban = `<div class="lx-banner"><div class="tx"><b>${esc(c.name || t(kind === 'open' ? 'bv.lsOp' : 'bv.ls'))}</b></div><div class="pg"><small>${dn(c)} / ${c.items.length} ✓</small></div></div>`;
+        const card = x => `<button type="button" class="lx-card${pass(x) ? ' done' : ''}${x.svg ? '' : ' nth'}" data-k="${esc(x.key)}" data-full="${x.full ? 1 : ''}">${x.svg ? `<span class="lx-th">${x.svg}</span>` : ''}<span class="lx-tx"><span class="lx-top"><span class="lx-no">${esc(x.tag || String(c.items.indexOf(x) + 1))}</span><span class="lx-st${pass(x) ? ' ok' : x.st === 'try' ? ' so' : ' new'}">${pass(x) ? '✓' : x.st === 'try' ? '…' : 'NEW'}</span></span><span class="lx-t">${esc(x.title)}</span>${x.sub ? `<span class="lx-sub">${esc(x.sub)}</span>` : ''}${x.desc ? `<span class="lx-desc">${esc(x.desc)}</span>` : ''}</span></button>`;
+        S0.body.className = 'lesson-list lx-on';
+        S0.body.innerHTML = tabs + ban + `<div class="lx-grid">${c.items.map(card).join('')}</div>`;
+        const sb = S0.body.querySelector('.lx-tabs .sel'); if (sb) { const tb = sb.parentNode; if (tb.scrollWidth > tb.clientWidth) tb.scrollLeft = Math.max(0, sb.offsetLeft - (tb.clientWidth - sb.offsetWidth) / 2); }
+      };
+      draw();
+      S0.body.onclick = e => {
+        const tb = e.target.closest('[data-cat]'); if (tb) { cur = tb.dataset.cat; try { localStorage.setItem(TK, cur); SFX.tap && SFX.tap(); } catch (x) {} draw(); S0.body.parentNode.scrollTop = 0; return; }
+        const b = e.target.closest('[data-k]'); if (!b) return; S0.close();
+        if (b.dataset.full) startPlay('full', 'lesson', kind); else startLesson3D(kind, b.dataset.k);
+      };
+    }).catch(() => { S0.body.textContent = '⚠'; });
   }
   // character-guided rules on the 3D table (atlas/rules/<id>.js)
   let rulesFromList = false;
