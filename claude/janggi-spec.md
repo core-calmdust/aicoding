@@ -77,6 +77,6 @@
 ### Praline に移行（2026-11-11、`claude/praline-spec.md`）
 - マルチスレッドの仕組み（busy marks・YBW の分割点・待つ持ち主の手伝いと印・二度読み・`mt_idle`）を共通の思考エンジン **Praline** の C のヘッダ（`shared/praline/`）に移した。`janggi/engine.c` にはチャンギのつなぎ（分割点の欄 `PL_SP_FIELDS`、`spFillPos`／`spLoadPos`、`spSearch`、`spCutoff`、`spTop`＝0、`waitCheck`、`spIdleReset`）だけを残した。手のない側のパスなど、分割点を開く `search()` はそのまま。
 - **一致**：通常版 `engine.wasm` は前処理後のソースが同じ（作り直していない）。`engine_mt.wasm` の1スレッドは `tools/mtsim/wasm1.js` の24局面・深さ10 で局面数・手・評価値・深さが前の配信版と全一致。宣言するメモリは 1102 ページのまま。
-- **マルチスレッド**（`tools/mtsim`、64局面ごとに同期、24局面、1スレッド100万局面の深さまで。前＝移行前のソース）：<!-- JG-SIM -->
+- **マルチスレッド**（`tools/mtsim`、64局面ごとに同期、24局面、1スレッド100万局面の深さまで。前＝移行前のソース）：2・4・8スレッド 前 ×1.78／×2.85／×4.40 → Praline ×1.74／×3.04／×4.58（2回の平均）、遅いコアあり 8・10・14 前 ×4.18／×4.63／×4.09 → ×4.41／×4.49／×3.93。揺れの内で同等。
 - headless Chrome（Playwright）：`bench.html`（1秒、1・2スレッド）と対局ページ（2スレッドで解析）がエラーなく動く。
 - `engine_mt.wasm?v=5`（`app.js`・`bench.html`）、`pro/` は `?v=5`。

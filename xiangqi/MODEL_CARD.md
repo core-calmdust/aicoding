@@ -209,6 +209,6 @@ v2 を出発点に、自己対局データを約8,287万局面（学習に約6,8
 ## Praline に移行（2026-11-11、`claude/praline-spec.md`）
 - マルチスレッドの仕組み（busy marks・YBW の分割点・合流と取り合い・待つ持ち主の手伝いと印・二度読み・`mt_idle`・`mt_split`）を、サイト共通の思考エンジン **Praline** の C の共通ヘッダ（`shared/praline/praline.h`・`praline_ybw.h`）に移した。`engine.c` に残したのはシャンチーの「つなぎ」：分割点の欄（`PL_SP_FIELDS`：盤・鍵・ビットボード・玉・最後の駒取り以降の履歴・NNUE のオン、各手の順番 `lg` と王手 `gc`）、`spFillPos`／`spLoadPos`（NNUE の累積を作り直す）、`spSearch`（1スレッドのループと同じ LMR・null window → 読み直し）、`spCutoff`、`spTop`（`xqTop`）、`waitCheck`、`spIdleReset`。分割点を開く所（`search()`・`rootSearch()`）と `timeUp`・`gRes` はそのまま。
 - **一致**：通常版（`engine.wasm`・`engine_simd.wasm`・`engine_simd512.wasm`）は前処理後のソースが前と同じ（作り直していない）。`engine_mt.wasm` の1スレッドは `tools/mtsim/wasm1.js` の24局面・深さ10 で局面数・手・評価値・深さが前の配信版と全一致。宣言するメモリは 1118 ページのまま。
-- **マルチスレッド**（`tools/mtsim`、64局面ごとに同期、24局面、1スレッド100万局面の深さまで。前＝移行前のソース、同じ日に同じ設定で）：<!-- XQ-SIM -->
+- **マルチスレッド**（`tools/mtsim`、64局面ごとに同期、24局面、1スレッド100万局面の深さまで。前＝移行前のソース、同じ日に同じ設定で）：2・4・8スレッド 前 ×1.86／×3.03／×4.88 → Praline ×1.77／×2.98／×4.58（2〜3回の平均）、遅いコアあり 8・10・14 前 ×4.64／×4.78／×5.14 → ×4.67／×5.06／×5.14。回ごとの揺れ（±10〜20%）の内で同等（式は同じで、局面数の時計のシミュレーションの差はスレッドの取り合いの順番から）。
 - headless Chrome（Playwright、作業機）：`bench.html`（1秒、1・2スレッド）と対局ページ（2スレッドの組で解析、補助の局面数あり）がエラーなく動く。
 - `engine_mt.wasm?v=6`（`app.js`・`bench.html`）、`pro/` は `?v=6`。Mac で測るページは今まで通り `xiangqi/bench.html`（前回の YBW と同じ数字になるはず）。
