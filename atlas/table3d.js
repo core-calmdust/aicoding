@@ -1627,6 +1627,13 @@
     const want = Math.max(-.3 * free, Math.min(.3 * free, vsh + ch / 2 * (1 - m) - band)) * Math.min(1, k * 1.2);
     if (Math.abs(want - vsh) > .5) { vsh = want; frame(); }
   }
+  // the play view's framed board on screen (client px: { left, right, top, bottom }), or null — the AI's bubble keeps clear of it (npc.js)
+  function fitRect() {
+    try { const F = fitCur || fitTo; if (!F || !cam || !R) return null; if (!ctrV.length) for (let i = 0; i < 4; i++) ctrV.push(new (T().Vector3)()); cam.updateMatrixWorld();
+      const r = R.domElement.getBoundingClientRect(), yy = F.cy != null ? F.cy : F.y; let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+      for (let i = 0; i < 4; i++) { const v = ctrV[i].set(i & 1 ? F.w / 2 : -F.w / 2, yy, i & 2 ? F.d / 2 : -F.d / 2).project(cam); const X = r.left + (v.x + 1) / 2 * r.width, Y = r.top + (1 - v.y) / 2 * r.height; x0 = Math.min(x0, X); x1 = Math.max(x1, X); y0 = Math.min(y0, Y); y1 = Math.max(y1, Y); }
+      return { left: x0, right: x1, top: y0, bottom: y1 }; } catch (e) { return null; }
+  }
   function camPose(k) {
     // the free part of the view: the shift lens (Historia's page beside the board) leaves (width − 2·shift) for the board
     const a = (cam.aspect || 1) * (hshift ? Math.max(.3, (cw - 2 * Math.abs(hshift)) / cw) : 1), th = Math.tan(cam.fov * Math.PI / 360);
@@ -2293,5 +2300,5 @@
   try { if (sessionStorage.getItem('t3d-debug')) setTimeout(() => R && dbgToggle(true), 500); } catch (e) {}
   setInterval(() => { if (dbgOn && performance.now() - dbgT > 1000) { dbgFps = 0; dbgT = performance.now(); dbgPaint(); } }, 1000);   // (the loop sleeps when nothing moves: keep the numbers fresh)
 
-  window.Table3D = { _texT: texT, _texCache: texCache, _texFile: texFile, decoOn, boSet: on => { BO_OK = !!on; bo.key = ''; kick(400); }, debug: dbgToggle, TABLES, placeMon, setTable, table: () => tableStyle, setBright, bright: () => bright, turn, museum, setShift, quiet, setTimeOfDay, timeOfDayPick: todPick, share, lp, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, rvDisc, rvMats, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
+  window.Table3D = { fitRect, _texT: texT, _texCache: texCache, _texFile: texFile, decoOn, boSet: on => { BO_OK = !!on; bo.key = ''; kick(400); }, debug: dbgToggle, TABLES, placeMon, setTable, table: () => tableStyle, setBright, bright: () => bright, turn, museum, setShift, quiet, setTimeOfDay, timeOfDayPick: todPick, share, lp, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, rvDisc, rvMats, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
 })();
