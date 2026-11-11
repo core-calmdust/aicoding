@@ -15,7 +15,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../agon/', VER = '?v=6-wa3';   // same file / version as agon/index.html → shared cache
+  const BASE = '../agon/', VER = '?v=7-ab';   // same file / version as agon/index.html → shared cache
   let engP = null;
   function loadEngine() {
     if (window.AgonEngine) return Promise.resolve(window.AgonEngine);

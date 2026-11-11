@@ -46,9 +46,9 @@
     c.fillStyle = g; c.beginPath(); c.arc(W / 2, W / 2, W / 2, 0, 7); c.fill();
   }), transparent: true, roughness: .9, depthWrite: false, bump: false }));
   const faceMat = (look, id) => mat('face' + look + id, () => {
-    const tx = new (T().TextureLoader)().load(IMG + 'bd-' + look + '-' + id + '.webp?v=2', () => { if (X.kick) X.kick(200); });
+    const tx = new (T().TextureLoader)().load(IMG + 'bd-' + look + '-' + id + '.webp?v=3', () => { if (X.kick) X.kick(200); });
     tx.anisotropy = 4; if (T().sRGBEncoding) tx.encoding = T().sRGBEncoding;
-    return new (T().MeshStandardMaterial)({ map: tx, transparent: true, alphaTest: .92, roughness: .45, metalness: 0 });
+    return new (T().MeshStandardMaterial)({ map: tx, transparent: false, alphaTest: .92, roughness: .45, metalness: 0, polygonOffset: true, polygonOffsetFactor: -1 });   // (opaque + alpha test: no sorting flicker with the marbles)
   });
   const grooveMat = look => mat('gr' + look, () => X.M({ color: { walnut: '#2a170c', maple: '#7a5530', stone: '#8e8a82', night: '#0b0714' }[look], roughness: .8 }));
 
@@ -75,12 +75,12 @@
     // still show the chosen design — the same fix as chess)
     const W = woodMat(look).clone(), RM = rimMat(look).clone(), GM = grooveMat(look).clone(), FM = faceMat(look, id).clone();
     if (!S.tri) {
-      const Rr = S.R, gr = S.gr, prof = [[0, TOP], [gr - .34, TOP], [gr - .3, TOP - .03], [gr - .22, TOP - .12], [gr, TOP - .16], [gr + .22, TOP - .12], [gr + .3, TOP - .03], [gr + .34, TOP], [Rr - .14, TOP + .02], [Rr - .04, TOP - .04], [Rr, TOP - .14], [Rr + .02, .12], [Rr - .06, 0], [0, 0]];
+      const Rr = S.R, gr = S.gr, prof = [[0, TOP], [gr - .34, TOP], [gr - .3, TOP - .03], [gr - .22, TOP - .12], [gr, TOP - .16], [gr + .22, TOP - .12], [gr + .3, TOP - .03], [gr + .34, TOP], [Rr - .14, TOP - .012], [Rr - .04, TOP - .04], [Rr, TOP - .14], [Rr + .02, .12], [Rr - .06, 0], [0, 0]];
       const body = X.mesh(geo('pgBody' + id, () => new TT.LatheGeometry(prof.map(([a, b]) => new TT.Vector2(a, b)).reverse(), LO() ? 48 : 96)), W);
       g.add(body);
       // the groove's dark floor and a bead (gilt on the lacquer board) on the rim
       const gf = X.mesh(geo('pgGF' + id, () => { const r = new TT.RingGeometry(gr - .2, gr + .2, LO() ? 48 : 96); r.rotateX(-Math.PI / 2); return r; }), GM, 0, TOP - .155, 0); gf.castShadow = false; g.add(gf);
-      const bead = X.mesh(geo('pgBead' + id, () => { const t = new TT.TorusGeometry(Rr - .1, .035, 6, LO() ? 60 : 120); t.rotateX(Math.PI / 2); return t; }), RM, 0, TOP + .015, 0); g.add(bead);
+      const bead = X.mesh(geo('pgBead' + id, () => { const t = new TT.TorusGeometry(Rr - .1, .035, 6, LO() ? 60 : 120); t.rotateX(Math.PI / 2); return t; }), RM, 0, TOP - .05, 0); g.add(bead);   // (kept under the picture: nothing pokes through the face)
     } else {
       const sh = new TT.Shape(), P = S.P, rr = .7;
       for (let i = 0; i < 3; i++) {
@@ -96,7 +96,7 @@
     }
     // the face: the 2D page's own picture of this board (peg/img/bd-<look>-<board>.webp: wood / stone / lacquer, inlay, cups, groove),
     // laid over the turned body so both views show the same set (2026-11-11)
-    const face = X.mesh(geo('pgFace' + id, () => { const p = new TT.PlaneGeometry(S.size, S.size); p.rotateX(-Math.PI / 2); return p; }), FM, 0, TOP + .004, S.oz);
+    const face = X.mesh(geo('pgFace' + id, () => { const p = new TT.PlaneGeometry(S.size, S.size); p.rotateX(-Math.PI / 2); return p; }), FM, 0, TOP + .002, S.oz);
     face.castShadow = false; face.receiveShadow = true; g.add(face);
     g.userData = {
       id, B, look, top: TOP, R, W: S.tri ? S.P[2][0] * 2 : S.R * 2, H: S.tri ? S.P[1][1] - S.P[0][1] : S.R * 2, sink: 0,
@@ -110,11 +110,16 @@
 
   /* ---------- marbles ---------- */
   const GLASS = ['#3a8be0', '#36b678', '#f0a030', '#e04656', '#9a66e8', '#2fc2b0'];
+  // the 2D page's sets (peg/tools/render_boards.py): glass marbles, glazed ceramic balls, round jewels, lacquered wooden pegs — six colours each
+  const CERAMIC = ['#8cbca8', '#2b4085', '#d19a3d', '#cc3d29', '#ede6d1', '#333338'];
+  const JEWEL = ['#d10a24', '#102ed1', '#089a4c', '#8c24cc', '#f79a1a', '#59cce6'];
+  const PAINT = ['#c72924', '#1f5cb3', '#1f8047', '#e6a81f', '#6b338c', '#ebe6d6'];
   function marbleMat(i, set) {
-    if (set === 'pearl') return mat('mpearl', () => X.M({ color: '#f2eadb', roughness: .22, clearcoat: .9, clearcoatRoughness: .15, sheen: 1 }));
-    if (set === 'steel') return mat('msteel', () => X.M({ color: '#c9ced6', metalness: 1, roughness: .14 }));
-    if (set === 'peg') return mat('mpeg', () => X.M({ map: X.wood('pgPeg', '#e6c48c', '#b88a50'), roughness: .5, clearcoat: .3 }));
-    const c = GLASS[(i * 7 + 3) % GLASS.length];
+    const k = (i * 7 + 3) % 6;
+    if (set === 'pearl') return mat('mcer' + k, () => X.M({ color: CERAMIC[k], roughness: .28, clearcoat: .8, clearcoatRoughness: .2 }));
+    if (set === 'steel') return mat('mjw' + k, () => X.M({ color: JEWEL[k], roughness: .03, clearcoat: 1, clearcoatRoughness: .02, envMapIntensity: 2 }));
+    if (set === 'peg') return mat('mpeg' + k, () => X.M({ color: PAINT[k], roughness: .3, clearcoat: .7, clearcoatRoughness: .25 }));
+    const c = GLASS[k];
     return mat('mg' + c, () => X.M({ color: c, roughness: .04, clearcoat: 1, clearcoatRoughness: .03, envMapIntensity: 1.6 }));
   }
   function marble(i, set) {
@@ -124,10 +129,10 @@
       const prof = [[0, 0], [.13, 0], [.14, .22], [.2, .3], [.24, .4], [.22, .48], [.14, .54], [0, .56]].map(([a, b]) => new TT.Vector2(a, b));
       g.add(X.mesh(geo('pgPegG', () => new TT.LatheGeometry(prof, LO() ? 12 : 20)), marbleMat(i, set), 0, -.12, 0));
     } else {
-      const s = X.mesh(geo('pgBall', () => new TT.SphereGeometry(R, LO() ? 16 : 28, LO() ? 12 : 20)), marbleMat(i, set), 0, R * .78, 0);
+      const s = X.mesh(geo('pgBall', () => new TT.SphereGeometry(R, LO() ? 16 : 28, LO() ? 12 : 20)), marbleMat(i, set), 0, R * .97, 0);   // (sits on the flat painted face)
       g.add(s);
       if (set === 'glass') {   // a twist of white inside the glass
-        const sw = X.mesh(geo('pgSwirl', () => new TT.TorusGeometry(R * .48, R * .07, 6, 24, Math.PI * 1.2)), mat('mswirl', () => X.M({ color: '#ffffff', roughness: .3, transparent: true, opacity: .55 })), 0, R * .78, 0);
+        const sw = X.mesh(geo('pgSwirl', () => new TT.TorusGeometry(R * .48, R * .07, 6, 24, Math.PI * 1.2)), mat('mswirl', () => X.M({ color: '#ffffff', roughness: .3, transparent: true, opacity: .55 })), 0, R * .97, 0);
         sw.rotation.set(.9 + (i % 5) * .3, (i % 7) * .9, .4); g.add(sw);
       }
     }
@@ -142,7 +147,7 @@
     // a game in progress: the classic start after eleven jumps of a solution, the taken marbles in the groove
     let a = E.startPos(B, B.center); const path = E.findPath(B, a, { target: B.center, time: 800 }).path || [];
     path.slice(0, 11).forEach(j => { a = E.apply(a, j); });
-    B.cells.forEach((_, i) => { if (!a[i]) return; const m = marble(i), [x, z] = U.pt(i); m.position.set(x, TOP, z); g.add(m); const sh = X.contact(R * 1.05, .5); sh.position.set(x, TOP + .004, z); g.add(sh); });
+    B.cells.forEach((_, i) => { if (!a[i]) return; const m = marble(i), [x, z] = U.pt(i); m.position.set(x, TOP, z); g.add(m); const sh = X.contact(R * 1.05, .5); sh.position.set(x, TOP + .014, z); g.add(sh); });
     for (let k = 0; k < Math.min(11, path.length); k++) { const m = marble(path[k][1]), [x, y, z] = U.groove(k); m.position.set(x, y - R * .78, z); m.scale.setScalar(.85); g.add(m); }
     return g;
   };

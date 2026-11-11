@@ -7,16 +7,28 @@
 ## あなたがやること
 
 1. GitHub Desktop で main を Pull
-2. 準備（最初の1回）：`xcode-select --install`、`pip3 install numpy`（確認用、無くても動きます）。空き容量 約60GB
-3. ターミナルで実行（半日〜1日、止めても同じコマンドで続きから）：
+2. 準備（最初の1回）：`xcode-select --install`、`pip3 install numpy`（確認用、無くても動きます）
+3. **前回の学習データがあれば使い回す**（ダウンロード約45分と前処理20〜40分、約47GBを省けます）。ターミナルで：
+   ```sh
+   ls -lh ~/shogi-nnue-work/train.bin ~/shogi-nnue-work/val.bin
+   ```
+   `train.bin` が出れば（約16GB＝約4億局面。約5GB でも使えます）：
+   ```sh
+   mkdir -p ~/shogi-kp-work && ln -s ~/shogi-nnue-work/train.bin ~/shogi-kp-work/train.bin && ln -s ~/shogi-nnue-work/val.bin ~/shogi-kp-work/val.bin
+   ```
+   「No such file」なら何もしない（自動でダウンロードします。そのときだけ空き容量 約60GB が必要。使い回すなら 1GB あれば足ります）
+4. ターミナルで実行（使い回しで約5〜7時間、ダウンロードからだと＋1〜1.5時間。止めても同じコマンドで続きから）：
    ```sh
    cd /Users/core_tan/Documents/GitHub/aicoding/shogi
    caffeinate -i bash tools/nnue/run-kp.sh
    ```
-4. 終わったら `~/shogi-kp-work/` の **`kp-candidate.bin.gz`（約12〜25MB）・`log.txt`・`train.log`** を送る。
+   - 電源につないだまま、ふたは閉じない（`caffeinate -i` は放置でのスリープだけを防ぎます）
+   - **ほかの作業と並行するとき**は、コマンドを `THREADS=8 P=6 caffeinate -i bash tools/nnue/run-kp.sh` に（学習8スレッド・対局6つ。ほかの作業に約6コア残ります。軽い作業なら指定なしで大丈夫）。
+     最後の対局（約40分）は持ち時間の勝負なので、その間に重い作業（別の学習・ビルドなど）をすると結果がぶれます。重なったら、あとで同じコマンドをもう一度（学習は飛ばして確認と対局だけやり直します）
+5. 終わったら `~/shogi-kp-work/` の **`kp-candidate.bin.gz`（約12〜25MB）・`log.txt`・`train.log`** を送る。
    **Claude のチャットに添付する**か、**GitHub Desktop で新しいブランチを作って `shogi/tools/nnue/results/` にコミット・Push** する（下の「5. 送ってほしいもの」）。
    Claude の作業環境からは Hugging Face に届かないので、Hugging Face には上げない
-5. Claude に「将棋の HalfKP 候補を送った」と伝える（ブランチで送ったときはブランチ名も）
+6. Claude に「将棋の HalfKP 候補を送った」と伝える（ブランチで送ったときはブランチ名も）
 
 ---
 
@@ -66,7 +78,7 @@ caffeinate -i bash tools/nnue/run-kp.sh
 ```
 
 - 進み具合は画面と `~/shogi-kp-work/log.txt`（学習は `train.log`、「pos/s」から1エポックの時間が分かります）。
-- ほかの作業もしたいときは `THREADS=8 P=8 caffeinate -i bash tools/nnue/run-kp.sh`。
+- ほかの作業もしたいときは `THREADS=8 P=6 caffeinate -i bash tools/nnue/run-kp.sh`（M4 Pro の14コアのうち約6コアが空きます。対局中の注意は上の「あなたがやること」4）。
 
 ### 設定（任意、環境変数）
 
@@ -182,3 +194,5 @@ $W/kptool-9-512 gen a.bin sp.psv 100 5000                    # 自己対局の�
 - `-DNUE_KB=1` のビルドに今のネットを読ませると、サイトのエンジンとベンチのチェックサムが一致。
 - 通常の wasm（`engine.wasm`・`engine_simd.wasm`・`engine_simd512.wasm`・`engine_mt.wasm`）は作り直してもバイト単位で同じ（`cmp`）。
 - 小さなデータでの対局（1手1,500局面・4局）は2勝2敗。データが少なすぎて強さの判断にはなりません。強さは Mac での本番の学習で測ります。
+
+2026-11-11 に今の main（YBW・Lazy SMP 化後の `engine.c`）で再確認済み：同じ方法で `run-kp.sh` が最後まで通り（clang・gcc とも）、学習で重みを実際に動かしたネット（`TRAIN_OPTS="--batch 256"`）でも学習器・エンジン・Python・`engine_kp.wasm` の評価値が2,000局面で一致、差分計算の不一致 0、`-DNUE_KB=1` のビルドはサイトのエンジンとベンチのチェックサムが一致。

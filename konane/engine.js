@@ -70,7 +70,7 @@ let WA = null;
 function loadCore() {
   try {
     let b64 = null;
-    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('core-wasm.js?v=1'); b64 = self.KN_WASM; }
+    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('core-wasm.js?v=2'); b64 = self.KN_WASM; }
     else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') { const g = globalThis, had = 'self' in g, old = g.self; g.self = g; try { require(require('path').join(__dirname, 'core-wasm.js')); b64 = g.KN_WASM; } finally { if (had) g.self = old; else delete g.self; } }
     if (!b64 || (typeof process !== 'undefined' && process.env && process.env.KN_NOWASM)) return;
     const bin = typeof atob === 'function' ? Uint8Array.from(atob(b64), c => c.charCodeAt(0)) : Buffer.from(b64, 'base64');
@@ -82,17 +82,37 @@ function loadCore() {
     };
     const x = new WebAssembly.Instance(new WebAssembly.Module(bin), { env }).exports, buf = x.memory.buffer;
     io = new Int32Array(buf, x.iop(), 16);
-    WA = { x, io, sq: new Int8Array(buf, x.sqp(), 100), zt: new Uint32Array(buf, x.ztp(), 402) };
+    WA = coreViews(x, buf, io);
   } catch (e) { WA = null; }
 }
-function waRule() {   // (setRule: the board size and the zobrist keys)
-  if (!WA) return;
-  for (let k = 0; k < 2; k++) for (let i = 0; i < NN; i++) { WA.zt[k * 100 + i] = Z1[k][i]; WA.zt[200 + k * 100 + i] = Z2[k][i]; }
-  WA.zt[400] = ZS1; WA.zt[401] = ZS2;
-  WA.x.setup(N);
+// the views of a core's memory: core-wasm.js (WA) or the lead's core_mt.wasm (MX)
+function coreViews(x, buf, io) {
+  const C = { x, io: io || new Int32Array(buf, x.iop(), 16), sq: new Int8Array(buf, x.sqp(), 100), zt: new Uint32Array(buf, x.ztp(), 402) };
+  if (x.aomp) { C.aom = new Int32Array(buf, x.aomp(), 512); C.aov = new Int32Array(buf, x.aovp(), 512); }
+  return C;
 }
-function kreset() { killers.length = 0; if (WA) WA.x.kclear(); }
-function ttClear() { TT.clear(); if (WA) WA.x.ttclear(); }
+function waRule() {   // (setRule: the board size and the zobrist keys)
+  for (const C of [WA, MX]) {
+    if (!C) continue;
+    for (let k = 0; k < 2; k++) for (let i = 0; i < NN; i++) { C.zt[k * 100 + i] = Z1[k][i]; C.zt[200 + k * 100 + i] = Z2[k][i]; }
+    C.zt[400] = ZS1; C.zt[401] = ZS2;
+    C.x.setup(N);
+  }
+}
+function kreset() { killers.length = 0; if (WA) WA.x.kclear(); if (MX) MX.x.kclear(); }
+function ttClear() { TT.clear(); if (WA) WA.x.ttclear(); if (MX) MX.x.ttclear(); }
+// (2026-11-11) The root's loops in the core too (core.c ab_best / ab_values: node for node bestMove / rootValues below — the
+// search under the root was there already). MX: the lead of the threads (?mt=1, shared/mtengine.js) on core_mt.wasm, where the
+// helpers (mt-helper.js) take moves at the split points of Praline's Young Brothers Wait (claude/konane-spec.md). Not with the
+// JS shared table (shared/mtsplit.js shared mode: SH) — that keeps the JS loops.
+let MX = null;
+const abCore = () => SH !== null ? null : MX || (WA && WA.x.ab_best ? WA : null);
+function abRoot(A, pos) {
+  A.sq.set(pos.sq); const io = A.io; io[8] = pos.side; io[9] = pos.ply; io[10] = pos.h1 | 0; io[11] = pos.h2 | 0;
+  A.x.setn(nodes, nodeLimit === Infinity ? 1e300 : nodeLimit, 0);
+  if (A === MX) { A.x.set_tend(tEnd); A.x.ab_threads(MX.jobThreads || MX.threads || 1); }
+}
+function abBack(A) { nodes = A.x.getn(); if (A.x.stopped()) stop = true; }
 function ttGet(pos) {   // the one-thread table's entry for pos (or the shared table's)
   if (SH !== null) return SH.get(pos.h1, pos.h2);
   if (WA) return WA.x.ttprobe(pos.h1, pos.h2) ? { h2: pos.h2, d: WA.io[0], f: WA.io[1], v: WA.io[2], m: WA.io[3] } : undefined;
@@ -356,6 +376,8 @@ function search(pos, d, a, b, ply) {
   return best;
 }
 function rootValues(pos, d) {
+  const A = abCore();
+  if (A) { abRoot(A, pos); const k = A.x.ab_values(d); abBack(A); const out = []; for (let i = 0; i < k; i++) out.push({ m: A.aom[i], v: A.aov[i] }); return out; }
   const L = orderMoves(pos, pos.moves(), -1, 0), out = [];
   for (const m of L) {
     const q = pos.clone().play(m);
@@ -375,6 +397,8 @@ function bestMove(pos, maxD, ms, nk) {
   nodes = 0; stop = false; tEnd = ms ? Date.now() + ms : Infinity; nodeLimit = nk ? nk * 1000 : Infinity; kreset();
   const L = pos.moves(); if (L.length === 1) return { move: L[0], v: 0, depth: 0 };
   let best = { move: orderMoves(pos, L, -1, 0)[0], v: 0, depth: 0 };
+  const A = abCore();
+  if (A) { abRoot(A, pos); A.x.ab_best(maxD || 60); abBack(A); return { move: A.io[0], v: A.io[1], depth: A.io[2] }; }
   for (let d = 1; d <= (maxD || 60); d++) {
     let a = -WIN - 1, bm = null, bv = -Infinity;
     const order = orderMoves(pos, L, best.move, 0);
@@ -652,25 +676,38 @@ function winningMoves(start, moves, rule, budget) {
 
 loadCore();
 setRule('s8');
-const API = { get wasm() { return !!WA; }, get nodes() { return nodes; }, set SH(t) { SH = t; }, get SH() { return SH; }, mtLazy, P1, P2, WIN, WINT, PASS, RULES, RULE_ORDER, setRule, get rule() { return RK; }, get R() { return R; }, get N() { return N; }, get NN() { return NN; },
+const API = { get ZT() { return [...Z1[0].slice(0, 100), ...Z1[1].slice(0, 100), ...Z2[0].slice(0, 100), ...Z2[1].slice(0, 100), ZS1, ZS2]; }, get N() { return N; }, useCore: (x, buf) => { MX = x ? coreViews(x, buf) : null; if (MX) { MX.threads = 1; MX.jobThreads = 1; waRule(); } }, get wasm() { return !!WA; }, get nodes() { return nodes; }, set SH(t) { SH = t; }, get SH() { return SH; }, mtLazy, P1, P2, WIN, WINT, PASS, RULES, RULE_ORDER, setRule, get rule() { return RK; }, get R() { return R; }, get N() { return N; }, get NN() { return NN; },
   get RC() { return RC; }, COLOR: () => COLOR, OPEN1: () => OPEN1, ADJ: () => ADJ, sqAt, sqName, mv, mFrom, mTo, isRemove, hops, Pos, path, captured, isJump, name, parse, replay, judge,
   LEVELS, think, analyze, cands, duelGood, duelMin, duelReply, solve, winningMoves, evaluate, kindOf, EW, mtPlan, mtV, mtKids, mtFin, pvOf };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') {
   let queueP = Promise.resolve();
+  // ?…&mt=1: the lead of the threads (shared/mtengine.js): core_mt.wasm on the shared memory sent with the first message ('mtinit')
+  if (/[?&]mt=1\b/.test(self.location.search || '')) {
+    queueP = new Promise(res => self.addEventListener('message', function f(e) { if (e.data && e.data.type === 'mtinit') { self.removeEventListener('message', f); res(e.data); } }))
+      .then(m => {
+        const x = new WebAssembly.Instance(m.module, { env: { memory: m.mem, now: () => Date.now() } }).exports;
+        x.mt_stack(m.top); x.mt_thread(m.tls, 0);
+        MX = coreViews(x, m.mem.buffer); MX.threads = navigator.hardwareConcurrency || 2;
+        waRule();
+        self.postMessage({ type: 'mtready' });
+      }).catch(err => { MX = null; self.postMessage({ type: 'mtready', error: String(err && err.message || err) }); });
+  }
   self.onmessage = e => {
     const m = e.data;
+    if (m && m.type === 'mtinit') return;
     if (m && m.type === 'mtshare') { try { importScripts(m.lib); SH = self.MTTT.attach(m); } catch (err) { SH = null; } return; }   // (shared/mtsplit.js shared mode)
     queueP = queueP.then(() => {
       try {
         if (SH !== null) SH.begin(m);
+        if (MX) MX.jobThreads = m.mtThreads > 0 ? Math.min(m.mtThreads, MX.threads) : 0;   // (the threads of this job: the exact one-thread table with 1)
         setRule(m.rule || 's8');
         if (SH !== null) SH.salt = SALT[RK] | 0;   // (every task on the shared table, the Lazy SMP lead's 'think' too)
-        if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...(() => { PRO_CFG = m.cfg || null; try { return think(m.start, m.moves, m.level); } finally { PRO_CFG = null; } })() });
+        if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...(() => { PRO_CFG = m.cfg || null; try { return Object.assign(think(m.start, m.moves, m.level), MX ? { nodes } : {}); } finally { PRO_CFG = null; } })() });   // (nodes: the lead's — the page adds the helpers')
         else if (m.type === 'analyze') {
           const r = analyze(m.start, m.moves, m.time || 1000, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth }));
-          self.postMessage({ id: m.id, type: 'result', ...r });
-        } else if (m.type === 'cands') self.postMessage({ id: m.id, type: 'result', ...cands(m.start, m.moves, m.time || 1200, m.k, m.plies, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth })) });
+          self.postMessage({ id: m.id, type: 'result', ...r, ...(MX ? { nodes } : {}) });
+        } else if (m.type === 'cands') self.postMessage({ id: m.id, type: 'result', ...(MX ? { nodes } : {}), ...cands(m.start, m.moves, m.time || 1200, m.k, m.plies, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth })) });
         else if (m.type === 'duel') { const g = duelGood(m.start, m.moves, m.n); self.postMessage({ id: m.id, type: 'result', list: g ? g.map(x => ({ m: x, need: m.n })) : null }); }
         else if (m.type === 'duelReply') self.postMessage({ id: m.id, type: 'result', ...duelReply(m.start, m.moves, m.n) });
         else if (m.type === 'win') self.postMessage({ id: m.id, type: 'result', list: winningMoves(m.start, m.moves) });
