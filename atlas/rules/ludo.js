@@ -352,7 +352,7 @@
     const blip = () => { try { if (localStorage.getItem('atlas-sfx') === '0') return; AC = AC || window.__atlasAC || new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); const f = 560 + Math.random() * 260, t = AC.currentTime, o = AC.createOscillator(), g = AC.createGain(); o.type = 'triangle'; o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * (Math.random() < .5 ? 1.25 : .82), t + .06); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.06, t + .008); g.gain.exponentialRampToValueAtTime(.0001, t + .07); o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + .08); } catch (e) {} };
     let typeT = 0;
     function say(html) {
-      const tx = $('.tx'); tx.innerHTML = html; clearInterval(typeT);
+      const tx = $('.tx'); tx.innerHTML = window.TapWord ? TapWord.fix(html) : html; clearInterval(typeT);
       const nodes = []; (function walkN(nd) { nd.childNodes.forEach(c => { if (c.nodeType === 3) nodes.push([c, c.textContent]); else walkN(c); }); })(tx);
       nodes.forEach(([nd]) => { nd.textContent = ''; });
       let ni = 0, ci = 0, bc = 0;
@@ -373,7 +373,7 @@
       const pg = P(), wait = waiting();
       $('[data-a=back]').style.visibility = step ? '' : 'hidden';
       const nx = $('[data-a=next]');
-      nx.textContent = pg.last && played ? L.start + ' ▶' : wait ? (phase === 'roll' ? L.rollK : L.tapIt) : L.next + ' ▶';
+      nx.textContent = (window.TapWord ? TapWord.fix : x => x)(pg.last && played ? L.start + ' ▶' : wait ? (phase === 'roll' ? L.rollK : L.tapIt) : L.next + ' ▶');
       nx.disabled = !!wait; nx.classList.toggle('wait', !!wait);
       $('.dots').querySelectorAll('i').forEach((d, i) => d.className = i === step ? 'on' : i < step ? 'done' : '');
       $('.pg').textContent = `${step + 1} / ${PAGES.length}`;

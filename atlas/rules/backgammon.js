@@ -692,7 +692,7 @@
     $('.dots').innerHTML = STEPS.map(() => '<i></i>').join('');
     let typeT = 0;
     function say(html) {
-      const tx = $('.tx'); tx.innerHTML = html; clearInterval(typeT);
+      const tx = $('.tx'); tx.innerHTML = window.TapWord ? TapWord.fix(html) : html; clearInterval(typeT);
       const nodes = []; (function walk(n) { n.childNodes.forEach(c => { if (c.nodeType === 3) nodes.push([c, c.textContent]); else walk(c); }); })(tx);
       nodes.forEach(([n]) => { n.textContent = ''; });
       let ni = 0, ci = 0, said = 0;
@@ -705,7 +705,7 @@
       const st = STEPS[step], wait = waiting();
       $('[data-a=back]').style.visibility = step ? '' : 'hidden';
       const nx = $('[data-a=next]');
-      nx.textContent = st.last ? L.start + ' ▶' : wait ? (st.roll ? L.roll : phase === 'dest' ? X0.tapDest : X0.tapCk) : L.next + ' ▶';
+      nx.textContent = (window.TapWord ? TapWord.fix : x => x)(st.last ? L.start + ' ▶' : wait ? (st.roll ? L.roll : phase === 'dest' ? X0.tapDest : X0.tapCk) : L.next + ' ▶');
       nx.disabled = !!wait; nx.classList.toggle('wait', !!wait);
       $('.dots').querySelectorAll('i').forEach((d, i) => d.className = i === step ? 'on' : i < step ? 'done' : '');
       $('.pg').textContent = `${step + 1} / ${STEPS.length}`;
