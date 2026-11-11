@@ -7,7 +7,7 @@
 >
 > **次の試し（2026-11-09〜）：玉の位置で入力を分ける king buckets → 下の「9.」**（同じ作業フォルダのデータをそのまま使い、学習から対局まで約1.5〜2時間）。
 >
-> 2026-11-11：king buckets 4区分（`KB=4`）の結果を **v3** としてサイトに反映済み（v2 比 同じ持ち時間で +31 Elo。`MODEL_CARD.md`「評価関数 v3」、ログは `tools/nnue/results/log-kb4.txt`・`net-kb4.bin.log`）。v2 は `tools/nnue/nnue-v2.bin.gz` に残しています。**次は8区分（`KB=8`）と比べる → 下の「9.」の「次：KB=8 と比べる」**。
+> 2026-11-11：king buckets 4区分（`KB=4`）の結果を **v3** としてサイトに反映済み（v2 比 同じ持ち時間で +31 Elo。`MODEL_CARD.md`「評価関数 v3」、ログは `tools/nnue/results/log-kb4.txt`・`net-kb4.bin.log`）。v2 は `tools/nnue/nnue-v2.bin.gz` に残しています。8区分（`KB=8`）も試したが v2 比 +9〜+11 Elo で4区分を上回らず、ファイルも約2倍なので**採用しない**（`MODEL_CARD.md`「評価関数 v3」）。
 
 ## あなたがやること
 
