@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>わからせ将棋オーバーキル！ — Shogi Overkill!</title>
-<meta name="description" content="チート駒でデッキを組んで、強い将棋AIをわからせるデッキ構築型の将棋（アルファ版）">
+<meta name="description" content="チート駒でデッキを組んで、強い将棋AIをわからせるデッキ構築型の将棋（プレアルファ版）">
 <link rel="icon" href="../images/icons/overkill.svg">
 <style>
 /* 作戦卓 (the war table): gunmetal, a hologram grid, the deployment zone glowing (claude/overkill-spec.md §7) */
@@ -18,6 +18,7 @@ header.bar{display:flex;align-items:center;gap:14px;height:60px;padding:0 18px;b
 .logo b{color:var(--cyan);text-shadow:0 0 12px var(--cy2)}
 .logo .k{color:var(--red);text-shadow:0 0 12px rgba(255,77,94,.5)}
 .tag{font-size:12px;font-weight:700;color:#0b1017;background:var(--amber);border-radius:6px;padding:2px 8px}
+.tag.pre{color:#2a1a00;background:linear-gradient(135deg,#ffe6b0,#ffb340);letter-spacing:.08em;font-style:italic}
 header .sp{flex:1}
 .hb{height:40px;min-width:40px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);font-weight:700;font-size:15px;white-space:nowrap}
 .hb:hover{border-color:var(--cyan)}
@@ -145,7 +146,7 @@ main{padding:18px;display:flex;justify-content:center}
 <body>
 <header class="bar">
   <div class="logo"><b>わからせ将棋</b><span class="k">オーバーキル！</span></div>
-  <span class="tag" id="tAlpha">アルファ版</span>
+  <span class="tag pre" id="tAlpha">PRE-ALPHA</span>
   <span class="sp"></span>
   <button class="hb" id="bRules">ルール</button>
   <select class="hb" id="lang" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option></select>
@@ -196,7 +197,7 @@ main{padding:18px;display:flex;justify-content:center}
 <div class="dlg" id="dRules"><div class="box"><h2 id="rT"></h2><div id="rB" style="color:var(--sub)"></div><div class="row"><button class="btn" id="rC">OK</button></div></div></div>
 <div class="flash" id="flash"></div><div class="boomtx" id="boomtx"></div>
 <script src="engine.js?v=2"></script>
-<script src="data.js?v=1"></script>
+<script src="data.js?v=2"></script>
 <script>
 (function () {
   'use strict';
