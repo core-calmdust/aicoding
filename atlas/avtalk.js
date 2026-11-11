@@ -23,6 +23,19 @@
   const recent = () => { try { return JSON.parse(localStorage.getItem(RK) || '[]'); } catch (e) { return []; } };
   const remember = x => { try { const r = recent().filter(y => y !== x); r.push(x); localStorage.setItem(RK, JSON.stringify(r.slice(-24))); } catch (e) {} };
   const fresh = a => { a = (a || []).filter(Boolean); if (!a.length) return ''; const r = recent(), c = a.filter(x => !r.includes(x)); return pick(c.length ? c : a); };
+  // talking blips (like the puzzles' guide): each creature has its own pitch; off with the portal's sound setting (atlas-sfx)
+  const ac = () => { try { if (localStorage.getItem('atlas-sfx') === '0') return null; const C = window.__atlasAC || (window.__atlasAC = new (window.AudioContext || window.webkitAudioContext)()); if (C.state === 'suspended') C.resume(); return C; } catch (e) { return null; } };
+  const voiceOf = sp => { let h = 0; for (const ch of String(sp || '')) h = (h * 31 + ch.charCodeAt(0)) | 0; h = Math.abs(h); return { f: 380 + (h % 9) * 55, w: ['triangle', 'sine', 'square'][h % 3] }; };
+  function blip(v) {
+    const C = ac(); if (!C) return; const t = C.currentTime, f = v.f * (.9 + Math.random() * .3);
+    const o = C.createOscillator(), g = C.createGain(); o.type = v.w; o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * (Math.random() < .5 ? 1.25 : .82), t + .05);
+    const pk = v.w === 'square' ? .022 : .06; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(pk, t + .008); g.gain.exponentialRampToValueAtTime(.001, t + .06); o.connect(g).connect(C.destination); o.start(t); o.stop(t + .07);
+  }
+  function pop(v) {   // the character arriving
+    const C = ac(); if (!C) return; const t = C.currentTime;
+    [1, 1.5].forEach((m, i) => { const o = C.createOscillator(), g = C.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(v.f * m * .8, t + i * .07); o.frequency.exponentialRampToValueAtTime(v.f * m * 1.4, t + i * .07 + .1);
+      g.gain.setValueAtTime(0, t + i * .07); g.gain.linearRampToValueAtTime(.07, t + i * .07 + .01); g.gain.exponentialRampToValueAtTime(.001, t + i * .07 + .16); o.connect(g).connect(C.destination); o.start(t + i * .07); o.stop(t + i * .07 + .18); });
+  }
   async function texts(lang) {
     const T = window.AvTalkT = window.AvTalkT || {};
     if (!T[lang]) await load(BASE + 'talk/' + lang + '.js?v=' + V).catch(() => load(BASE + 'talk/en.js?v=' + V));
@@ -118,7 +131,8 @@ html[dir=rtl] #avTalk .at-nm{left:auto;right:20px}html[dir=rtl] #avTalk .at-nx{r
     s.el.querySelectorAll('.at-pg i').forEach((x, k) => x.classList.toggle('on', k === s.i));
     ch.classList.remove('hop'); void ch.offsetWidth; ch.classList.add('hop');
     s.typing = true; let n = 0; const chars = [...full];
-    const step = () => { if (S !== s) return; n = Math.min(chars.length, n + (/^(ja|zh|ko)/.test(s.c.lang) ? 1 : 2)); tx.innerHTML = esc(chars.slice(0, n).join('')) + (n < chars.length ? '<span class="cu">▍</span>' : ''); if (n < chars.length) s.tm = setTimeout(step, 34); else done(s); };
+    let said = 0; const cjk = /^(ja|zh|ko)/.test(s.c.lang);
+    const step = () => { if (S !== s) return; const n0 = n; n = Math.min(chars.length, n + (cjk ? 1 : 2)); if (chars.slice(n0, n).some(ch => !/[\s、。！？!?,.：:（）()「」『』—–・…~〜]/.test(ch)) && (said++ % (cjk ? 3 : 2) === 0)) blip(s.voice); tx.innerHTML = esc(chars.slice(0, n).join('')) + (n < chars.length ? '<span class="cu">▍</span>' : ''); if (n < chars.length) s.tm = setTimeout(step, 34); else done(s); };
     step(); remember(full.split('\n').pop());
   }
   function done(s) {
@@ -141,7 +155,7 @@ html[dir=rtl] #avTalk .at-nm{left:auto;right:20px}html[dir=rtl] #avTalk .at-nx{r
     const ART = window.AtlasArt, ic = (c.av && c.av.icon) || (ART && ART.DEFAULT_ICON), it = ART && ART.byId(ic);
     const nm = it ? (it.name[c.lang] || it.name.en || it.name.ja).replace(/[（(][^）)]*[）)]\s*$/, '') : '';
     const el = document.createElement('div'); el.id = 'avTalk'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', nm);
-    const s = S = { el, c, T, i: 0, conv: compose(c, T, N) };
+    const s = S = { el, c, T, i: 0, conv: compose(c, T, N), voice: voiceOf(String(ic || '').replace(/^av-/, '').replace(/-\d+$/, '')) };
     const U = T.ui, sp = [[8, 14], [84, 10], [90, 62], [4, 70], [70, 88]].map(([x, y], k) => `<i class="sp" style="left:${x}%;top:${y}%;animation-delay:${k * .37}s"></i>`).join('');
     el.innerHTML = `<div class="at-bd"></div><button type="button" class="at-x" aria-label="${esc(U.close)}">×</button>
       <div class="at-st"><div class="at-bub" tabindex="0"><span class="at-nm">${esc(nm)}</span><span class="at-pg">${s.conv.lines.map(() => '<i></i>').join('')}</span><div class="at-tx"></div><span class="at-nx">${esc(U.tap)} ▼</span></div>
@@ -151,7 +165,7 @@ html[dir=rtl] #avTalk .at-nm{left:auto;right:20px}html[dir=rtl] #avTalk .at-nx{r
     const ch = el.querySelector('.at-ch');
     flip(ch, c.from, false);
     requestAnimationFrame(() => el.classList.add('on'));
-    setTimeout(() => { if (S === s) say(s); }, 380);
+    pop(s.voice); setTimeout(() => { if (S === s) say(s); }, 380);
     el.querySelector('.at-bd').onclick = () => close();
     el.querySelector('.at-x').onclick = () => close();
     el.querySelector('.at-bub').onclick = next; ch.onclick = next;
