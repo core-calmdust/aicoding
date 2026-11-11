@@ -1398,7 +1398,15 @@ html[lang=ar] .pf-input{direction:rtl}
   html .board-area > .frame,html.atlas-skin .board-area > .frame{margin:0!important;border-radius:0!important}
   html.atlas-skin .board-area > .hand.bottom{margin-top:0!important}
   html.atlas-skin:not(.atlas-2d) .board-area > .hand{margin-left:calc(var(--cw) * -0.33)!important}   /* (the 3D board reaches a little further left than the DOM frame: the bars line up with its edge) */
-  html:not(.atlas-skin) .board-area > .hand{background:linear-gradient(145deg,#2a2018 0%,#1c140d 100%)!important;border-left:0;border-right:0}
+  /* the bars in the board's own wood (each board design its own), flat — no shadow */
+  html:root body .board-area > .hand.hand{box-shadow:none!important}
+  html:root:not(.atlas-skin) body .board-area > .hand.hand{border:0}
+  html:root:not(.atlas-skin) body.skin-kaya .board-area > .hand.hand,html:root:not(.atlas-skin) body:not(.skin-grain):not(.skin-metal):not(.skin-ink) .board-area > .hand.hand{background:radial-gradient(120% 70% at 30% 10%,rgba(241,239,235,.08),rgba(241,239,235,0) 55%),linear-gradient(172deg,#ddc39f 0%,#d6b78f 40%,#ccaa7e 75%,#c29c70 100%)!important}
+  html:root:not(.atlas-skin) body.skin-grain .board-area > .hand.hand{background:linear-gradient(172deg,#e4c48e 0%,#dbb780 38%,#d3ac72 70%,#c9a066 100%)!important}
+  html:root:not(.atlas-skin) body.skin-metal .board-area > .hand.hand{background:linear-gradient(160deg,#c9d0d6 0%,#9aa3ab 45%,#b8c0c7 70%,#8a939b 100%)!important}
+  html:root:not(.atlas-skin) body.skin-ink .board-area > .hand.hand{background:linear-gradient(170deg,#2b2622 0%,#1f1b18 100%)!important}
+  html:root:not(.atlas-skin) body:not(.skin-ink) .board-area > .hand .hname{color:#3a2412}
+  html.atlas-shogi:not(.atlas-2d) body .board-area > .hand.hand{background:url(../images/atlas/shogi-kaya.webp?v=3) 20% 10%/120% auto,#d9be98!important}   /* 3D: 本榧, as the 3D board (no grey veil) */
   html:not(.atlas-skin) .app{padding-left:4px!important;padding-right:4px!important}
 }
 </style>
@@ -1439,7 +1447,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <body>
 <div class="app">
   <div class="board-area">
-    <div class="hand top" id="handTop"></div>
+    <div class="hand top" id="handTop" data-it-home></div>
     <div class="frame">
       <div class="coords top" id="coordTop"></div>
       <div class="coords right" id="coordRight"></div>
@@ -6237,7 +6245,7 @@ if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStar
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/img/tex/baked.js?v=1')).then(() => load('../atlas/table3d.js?v=147')).then(() => load('../atlas/tables3d.js?v=55')).then(() => load('../atlas/skin/common.js?v=66')).then(() => load('../atlas/models/shogi.js?v=33k')).then(() => load('../atlas/skin/shogi.js?v=25k'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/img/tex/baked.js?v=1')).then(() => load('../atlas/table3d.js?v=147')).then(() => load('../atlas/tables3d.js?v=55')).then(() => load('../atlas/skin/common.js?v=66')).then(() => load('../atlas/models/shogi.js?v=33k')).then(() => load('../atlas/skin/shogi.js?v=26k'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
@@ -6245,7 +6253,7 @@ if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStar
 <script src="../shared/atlas.js?v=20261111am1" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1l14" defer></script>
 <script src="../shared/atlas-account.js?v=20261109ac2l14" defer></script>
-<script src="../shared/infotabs.js?v=18l14" defer></script>
+<script src="../shared/infotabs.js?v=19l14" defer></script>
 <script src="../shared/pickdrop.js?v=8l14"></script>
 <script src="../shared/ngtabs.js?v=25l14"></script>
 <script src="../shared/nglux.js?v=17l14"></script>

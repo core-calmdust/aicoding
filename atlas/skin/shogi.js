@@ -115,6 +115,30 @@
     if (window.ResizeObserver) { const ro = new ResizeObserver(() => requestAnimationFrame(fitKd)); document.querySelectorAll('.hand').forEach(h => ro.observe(h)); }
   } catch (e) {}
 
+  /* ---------- phones (portrait), the 3D board: the komadai bars exactly on the 3D board's edges (2026-11-11) ----------
+     the 3D board is drawn a little past the DOM board (__atlasPcFit.K: overhang per side, in board heights) */
+  (function barsOnEdge() {
+    const MQ = matchMedia('(pointer: coarse) and (max-aspect-ratio: 1/1) and (max-width: 600px)');
+    const fit = () => {
+      const top = document.getElementById('handTop'), bot = document.getElementById('handBottom'), bd = document.getElementById('board');
+      if (!top || !bot || !bd) return;
+      const on = MQ.matches && is3() && !document.documentElement.classList.contains('atlas-land');
+      [top, bot].forEach(h => ['margin-left', 'width', 'margin-top', 'margin-bottom', 'transform'].forEach(k => h.style.removeProperty(k)));
+      if (!on) return;
+      let K = null; try { const pf = window.__atlasPcFit; K = pf && pf.K && pf.K(); } catch (e) {}
+      if (!K) return;
+      const r = bd.getBoundingClientRect(); if (!r.width) return;
+      const L = r.left - K.l * r.height, R = r.right + K.r * r.height, T = r.top - K.t * r.height, B = r.bottom + K.b * r.height;
+      [top, bot].forEach(h => { const hr = h.getBoundingClientRect(); h.style.setProperty('margin-left', (parseFloat(getComputedStyle(h).marginLeft) + L - hr.left).toFixed(1) + 'px', 'important'); h.style.setProperty('width', (R - L).toFixed(1) + 'px', 'important'); });
+      { const rb = bd.getBoundingClientRect(), T = rb.top - K.t * rb.height, tr = top.getBoundingClientRect(); top.style.setProperty('transform', 'translateY(' + (T - tr.bottom).toFixed(1) + 'px)', 'important'); }   // (a margin would move the board with it)
+      const r2 = bd.getBoundingClientRect(), B2 = r2.bottom + K.b * r2.height, br = bot.getBoundingClientRect(); bot.style.setProperty('margin-top', (parseFloat(getComputedStyle(bot).marginTop) + B2 - br.top).toFixed(1) + 'px', 'important');
+    };
+    let q = 0; const later = () => { if (q) return; q = 1; requestAnimationFrame(() => { q = 0; fit(); }); };
+    addEventListener('resize', later); [300, 900, 2000, 4000].forEach(ms => setTimeout(fit, ms));
+    if (window.ResizeObserver) { const ro = new ResizeObserver(later); const bd = document.getElementById('board'); if (bd) ro.observe(bd); }
+    window.__kdFit = fit;
+  })();
+
   /* ---------- pieces: renders of the 3D pieces ---------- */
   document.documentElement.classList.add('atlas-shogi');
   const orig = window.pieceEl;
