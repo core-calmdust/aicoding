@@ -429,3 +429,8 @@ html.atlas-skin:not(.atlas-land) .card.controls .btn:disabled{background:#fbf7ee
   html.atlas-skin:not(.atlas-land):not(.atlas-2d) .app{padding-top:calc(56px + var(--ctlh,64px) + 8px)!important}
   html.atlas-skin.hb-atlas:not(.atlas-land):not(.atlas-2d) body{padding-top:0!important}
 }
+/* shogi, phones (portrait), the 3D board: sized so the whole board area — both komadai bars and the board — fits between the
+   menu bar and the bottom tabs, as the 2D page shows it (the board sized from the width alone hid the lower komadai, 2026-11-11) */
+@media (pointer: coarse) and (max-aspect-ratio: 1/1) and (max-width: 600px){
+  html.atlas-skin.atlas-shogi:not(.atlas-2d):not(.atlas-land),html.atlas-skin.atlas-shogi:not(.atlas-2d):not(.atlas-land) body{--cw:min(calc((100vw - 20px) / 9.75), calc((100dvh - 56px - var(--ctlh, 64px) - 8px - 58px - env(safe-area-inset-bottom)) / 13.7), 90px)!important}
+}
