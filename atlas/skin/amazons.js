@@ -159,13 +159,10 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
   // (the page's layout may still move after a puzzle opens — the cards fill in: the close-up is aimed again once it settles)
   let zAt = 0;   // (re-aimed when the board's place moves — but not just after a tap: a card's text changing must not move the board under the finger)
   let zPtr = 0; addEventListener('pointerdown', () => { zPtr = performance.now(); }, true);
-  { const re = () => { if (!zw || (performance.now() - zAt > 1500 && performance.now() - zPtr < 1500)) return; clearTimeout(zR); zR = setTimeout(() => zw && window.__amzZoom(zw, true), 160); };
-    addEventListener('resize', re); const fr0 = document.getElementById('frame'); if (fr0 && window.ResizeObserver) new ResizeObserver(re).observe(fr0);
-    // (the board's place moving without changing size — the cards above grow or shrink: looked at twice a second while zoomed)
-    let ft = null; setInterval(() => { if (!zw) { ft = null; return; } const f = document.getElementById('frame'); if (!f) return; const t = Math.round(f.getBoundingClientRect().top); if (ft !== null && Math.abs(t - ft) > 4) re(); ft = t; }, 500); }
-  // (a new puzzle moves the page's layout — the cards fill in — and the camera follows a frame later: the close-up is worked out
-  //  once things have settled, from where the region is drawn then)
-  let zD = 0;
+  // (re-aimed only when the window itself changes size — a phone turned round; never because the cards moved: one move per
+  //  puzzle, 2026-11-11 the user: it still went in steps)
+  { let iw = innerWidth; const re = () => { if (innerWidth === iw) return; iw = innerWidth; if (!zw) return; clearTimeout(zR); zR = setTimeout(() => zw && window.__amzZoom(zw, true), 200); };
+    addEventListener('resize', re); }   // (the width only: a phone's address bar showing / hiding changes the height while scrolling)
   window.__amzZoom = (w, again) => { zw = w || null; if (again && !w) return; clearTimeout(zD); cancelAnimationFrame(zT); if (!w) return zoom0(null); T3.kick(400); if (!again) zAt = performance.now();
     // (one move, straight to the right size, 2026-11-11 the user: it went there in several steps — wait until the page has stopped
     //  moving: the board's place and the cards the same for two looks in a row, 1.5 s at most)
