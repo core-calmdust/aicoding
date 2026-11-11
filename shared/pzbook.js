@@ -382,12 +382,12 @@ html[lang=ar] .pbh :is(.pb-ring, .pbh-prog, .pbh-stats .pb-st, .pbh-tabs .ct, .p
   .pbh-desc{min-height:3.1em}
 }
 
-/* the 3D skin's colours on every game (2026-11-11 the user: puzzle list buttons red like 3D, flat): the way-on buttons red with a
+/* the full versions (3D skin) of every game (2026-11-11 the user: puzzle list buttons red like 3D, flat; the 2D pages keep their colours): the way-on buttons red with a
    solid shadow under, the chosen tab red-tinted — no gradient, no glow */
-.pb-cont,.pbh-daily .go:not(.ok){background:#ff5d5d!important;color:#fff!important;border:0!important;box-shadow:0 3px 0 #d93c3c!important;background-image:none!important;filter:none!important}
-.pb-cont b{color:#fff!important}
-.pbh-tabs button.sel{color:#d93c3c!important;border:2px solid #ff8a7a!important;background:#fff1ee!important;box-shadow:0 3px 0 #ffb3a8!important}
-.pbh-tabs button.sel .ic,.pbh-tabs button.sel .ct{color:#d93c3c!important}
+html.atlas-skin :is(.pb-cont,.pbh-daily .go:not(.ok)){background:#ff5d5d!important;color:#fff!important;border:0!important;box-shadow:0 3px 0 #d93c3c!important;background-image:none!important;filter:none!important}
+html.atlas-skin .pb-cont b{color:#fff!important}
+html.atlas-skin .pbh-tabs button.sel{color:#d93c3c!important;border:2px solid #ff8a7a!important;background:#fff1ee!important;box-shadow:0 3px 0 #ffb3a8!important}
+html.atlas-skin .pbh-tabs button.sel :is(.ic,.ct){color:#d93c3c!important}
 /* the full versions (3D skin): the boxes in the portal's light tone, not a dark wash over the cream (2026-11-11 the user, every
    game): cream fill, a sand border and a solid shadow under; the themes keep a light tint of their colour */
 html.atlas-skin :is(.pbh-hero,.pbh-daily,.pb-stage,.pbh-ghead .ic){background:#fffaf0!important;background-image:none!important;border:2px solid #ead9b6!important;box-shadow:0 3px 0 #ead9b6!important;color:#2b3044!important}
@@ -398,7 +398,7 @@ html.atlas-skin .pbh-hero .pb-ring,html.atlas-skin .pb-ring{background:radial-gr
 html.atlas-skin .pb-tile:not(.done){background:#fffaf0!important;border-color:#ead9b6!important}
 html.atlas-skin .pbh-daily .go.ok{color:#2f9a6a!important;background:#eaf7ef!important;border:2px solid #9fd8b8!important;box-shadow:0 3px 0 #9fd8b8!important}
 html.atlas-skin :is(.pbh-hero,.pbh-daily,.pbh-card,.pb-card) :is(small,.sub,.dt,.pbh-desc){color:#6b6f80}
-.pb-cont *{color:inherit!important}
+html.atlas-skin .pb-cont *{color:inherit!important}
 `;
 function injectCSS() { if (document.getElementById('pbCss')) return; const st = document.createElement('style'); st.id = 'pbCss'; st.textContent = CSS; document.head.appendChild(st); }
 if (typeof document !== 'undefined') injectCSS();

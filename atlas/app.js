@@ -1474,7 +1474,7 @@
      詰将棋: hero · today's two · tabs (手数別 / テーマ別 / 実戦) · set cards with a position → a set's stage grid with thumbnails → that problem on the 3D table.
      レッスン: tabs by band (入門 / 初級 / 中級 / 有段) · lesson cards with a position → that lesson on the 3D table. */
   const loadJs = (src, ok) => ok() ? Promise.resolve() : new Promise(res => { const sc = document.createElement('script'); sc.src = src; sc.onload = sc.onerror = () => res(); document.head.appendChild(sc); });
-  const needBooks = () => loadJs('../shared/pzbook.js?v=7l14', () => window.PZBook).then(() => loadJs('../shogi/lists-ui.js?v=20261107l14', () => window.ShogiLX));
+  const needBooks = () => loadJs('../shared/pzbook.js?v=8l14', () => window.PZBook).then(() => loadJs('../shogi/lists-ui.js?v=20261107l14', () => window.ShogiLX));
   const TS_TIER = { p1: 0, p3: 1, p5: 2, p7: 3, p9: 4, art: 5, c3: 0, c5: 1, c7: 2, c9: 3, c13: 5, t_sac: 1, t_funari: 2, t_touchi: 2, t_uchifu: 3, t_aigoma: 3, t_aki: 2, t_kwalk: 4 };   // (= shogi/index.html)
   const TS_ICON = { t_sac: '捨', t_funari: '不', t_touchi: '遠', t_uchifu: '歩', t_aigoma: '合', t_aki: '開', t_kwalk: '追' };
   const TS_CAT = { ja: { comp: '手数別', theme: 'テーマ別', prac: '実戦' }, en: { comp: 'By length', theme: 'By theme', prac: 'Practical' }, zh: { comp: '按手数', theme: '按主题', prac: '实战' }, 'zh-TW': { comp: '按手數', theme: '按主題', prac: '實戰' }, ko: { comp: '수별', theme: '테마별', prac: '실전' } };
