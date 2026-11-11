@@ -614,6 +614,24 @@ static inline int moveScore(Move m, Move ttm, int ply) {
   if (m == killers[ply][1]) return (1 << 27) - 1;
   return hist[side][MF(m)][MT(m)];
 }
+// the selection sort's pick: the first of the highest scores in sc[i..n) (2026-11-11: with wasm SIMD the maximum 4 at a
+// time, then its first lane — the same index as the plain loop)
+static inline int firstMax(const int *sc, int i, int n) {
+#ifdef __wasm_simd128__
+  if (n - i >= 8) {
+    int j = i + 4; v128_t m = wasm_v128_load(sc + i);
+    for (; j + 4 <= n; j += 4) m = wasm_i32x4_max(m, wasm_v128_load(sc + j));
+    m = wasm_i32x4_max(m, wasm_i32x4_shuffle(m, m, 2, 3, 0, 1)); m = wasm_i32x4_max(m, wasm_i32x4_shuffle(m, m, 1, 0, 3, 2));
+    int mx = wasm_i32x4_extract_lane(m, 0); for (; j < n; j++) if (sc[j] > mx) mx = sc[j];
+    const v128_t vm = wasm_i32x4_splat(mx);
+    for (j = i; j + 4 <= n; j += 4) { int b = wasm_i32x4_bitmask(wasm_i32x4_eq(wasm_v128_load(sc + j), vm)); if (b) return j + __builtin_ctz(b); }
+    while (sc[j] != mx) j++;
+    return j;
+  }
+#endif
+  int bi = i; for (int j = i + 1; j < n; j++) if (sc[j] > sc[bi]) bi = j;
+  return bi;
+}
 static int qsearch(int alpha, int beta, int ply, int qd) {
   nodes++;
   if (timeUp()) return 0;
@@ -630,7 +648,7 @@ static int qsearch(int alpha, int beta, int ply, int qd) {
   int sc[MAXMV]; for (int i = 0; i < n; i++) sc[i] = moveScore(L[i], 0, ply);
   int legal = 0;
   for (int i = 0; i < n; i++) {
-    int bi = i; for (int j = i + 1; j < n; j++) if (sc[j] > sc[bi]) bi = j;
+    int bi = firstMax(sc, i, n);
     { Move tm = L[bi]; L[bi] = L[i]; L[i] = tm; int ts = sc[bi]; sc[bi] = sc[i]; sc[i] = ts; }
     Move m = L[i];
     if (!inChk && qd > 6 && TYPE(B[MT(m)]) == PAWN) continue;
@@ -705,7 +723,7 @@ static int search(int depth, int alpha, int beta, int ply, int pv, int nullOk) {
       if (s && spFillPos(s)) {
         int lg2 = legal;
         for (int i = k; i < n && ns >= 0; i++) {
-          int bi = i; for (int j = i + 1; j < n; j++) if (sc[j] > sc[bi]) bi = j;
+          int bi = firstMax(sc, i, n);
           { Move tm = L[bi]; L[bi] = L[i]; L[i] = tm; int ts = sc[bi]; sc[bi] = sc[i]; sc[i] = ts; }
           Move m2 = L[i]; int cap2 = B[MT(m2)] != 0; u8 c2 = makeMove(m2);
           if (attackedKing(me)) { unmakeMove(m2, c2); continue; }
@@ -738,14 +756,14 @@ static int search(int depth, int alpha, int beta, int ply, int pv, int nullOk) {
     }
     if (k < n) {
       int i = k;
-      int bi = i; for (int j = i + 1; j < n; j++) if (sc[j] > sc[bi]) bi = j;
+      int bi = firstMax(sc, i, n);
       { Move tm = L[bi]; L[bi] = L[i]; L[i] = tm; int ts = sc[bi]; sc[bi] = sc[i]; sc[i] = ts; }
       m = L[i]; lg = legal + 1;
     } else { m = defM[k - n]; lg = defL[k - n]; }
 #define LG lg
 #else
   for (int i = 0; i < n; i++) {
-    int bi = i; for (int j = i + 1; j < n; j++) if (sc[j] > sc[bi]) bi = j;
+    int bi = firstMax(sc, i, n);
     { Move tm = L[bi]; L[bi] = L[i]; L[i] = tm; int ts = sc[bi]; sc[bi] = sc[i]; sc[i] = ts; }
     Move m = L[i];
 #define LG legal
