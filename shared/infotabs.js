@@ -141,7 +141,10 @@ function init(tries) {
     if (phone) { if (nav.parentElement !== strip) strip.appendChild(nav); }
     else if (nav.parentElement !== navHome) navHome.insertBefore(nav, navNext && navNext.parentNode === navHome ? navNext : null);
     const has = !!kifuEl && kifuEl.children.length > 0 && !kifuEl.querySelector(':scope > .empty');
-    const on = phone && has && !document.body.classList.contains('mtab-online');
+    // (2026-11-11, common rule) phones: only while looking back at a finished game — not during play
+    const rv = document.getElementById('reviewCard'), B = document.body.classList;
+    const review = (rv && rv.classList.contains('show')) || B.contains('rv-on') || B.contains('rvbox-on') || B.contains('st-end');
+    const on = phone && has && review && !B.contains('mtab-online');
     if (document.body.classList.contains('it-nav') !== on) document.body.classList.toggle('it-nav', on);
     // the strip sits right above the tab bar; the game's online chat strip (if any) moves up above it
     const chats = document.querySelectorAll('.mt-strip');
@@ -155,6 +158,8 @@ function init(tries) {
   }
   if (navMq.addEventListener) navMq.addEventListener('change', () => placeNav());
   if (kifuEl) new MutationObserver(() => placeNav()).observe(kifuEl, { childList: true });
+  { const rv = document.getElementById('reviewCard'), mo = new MutationObserver(() => placeNav());
+    if (rv) mo.observe(rv, { attributes: true, attributeFilter: ['class'] }); mo.observe(document.body, { attributes: true, attributeFilter: ['class'] }); }
   addEventListener('resize', () => placeNav());
   // selection: the game's mtab() marks every data-t=game button; keep only the chosen info tab marked
   const fix = () => {
