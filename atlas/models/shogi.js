@@ -64,7 +64,7 @@
     if (set === 'moriage') return glyphsReady;
     if (SHEETS[set]) return SHEETS[set];
     const G = GLY[set] = {};
-    const url = (() => { try { return new URL('../../images/atlas/shogi-glyphs-' + set + '.png?v=10', ME_SRC).href; } catch (e) { return '../images/atlas/shogi-glyphs-' + set + '.png?v=10'; } })();
+    const url = (() => { try { return new URL('../../images/atlas/shogi-glyphs-' + set + '.png?v=11', ME_SRC).href; } catch (e) { return '../images/atlas/shogi-glyphs-' + set + '.png?v=11'; } })();
     return (SHEETS[set] = new Promise(res => { const im = new Image(); im.onload = () => { SHEET_KEYS.forEach((k, i) => { const c = document.createElement('canvas'); c.width = 256; c.height = 296; c.getContext('2d', { willReadFrequently: true }).drawImage(im, (i % 5) * 256, (i / 5 | 0) * 296, 256, 296, 0, 0, 256, 296); G[k] = c; }); res(); upgrade(set); }; im.onerror = () => res(); im.src = url; }));
   }
   const glyphsReady = new Promise(res => {
