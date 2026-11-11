@@ -21,7 +21,8 @@
      PRO.get(level)   → null (nothing changed, or PRO off) | the effective values { limit, book, … , changed: [keys] }
      PRO.active(level) / PRO.tag() (' · PRO' when active) / PRO.sync() (re-render the dialog part)
    Common keys (labels / help in 14 languages here): limit, threads, book, var (0 none / 1 small / 2 large), eval
-   ('nnue' / 'hand'), resign (bool), clock (bool: time from the AI's own clock). Others: type 'bool' | 'int' | 'choice'
+   ('nnue' / 'hand'), resign (bool), clock (bool: time from the AI's own clock), ponder (bool, off: think on the human's time —
+   shared/ponder.js, only with the threads on). Others: type 'bool' | 'int' | 'choice'
    with label / help / unit / opts [{ v, label }]. A param may have when: eff => bool (shown only then), e.g. threads only for
    a time limit. The dialog is edited as a draft: saved on 対局開始 (#btnStart), dropped on 閉じる. */
 (function () {
@@ -155,12 +156,17 @@ const T = {
     id: 'Dengan jam, AI membagi sisa waktunya per langkah (mengalahkan batas berpikir).',
     hi: 'घड़ी होने पर AI अपने बचे समय से हर चाल का समय तय करे (सोचने की सीमा से ऊपर)।',
     ar: 'مع وجود ساعة، يوزّع الذكاء وقته المتبقي على نقلاته (يتقدّم على حدّ التفكير).' },
+  ponder: { ja: '先読み', en: 'Ponder', zh: '后台思考', 'zh-TW': '背景思考', ko: '미리 읽기', es: 'Pensar en tu turno', fr: 'Réflexion permanente', pt: 'Pensar no seu turno', de: 'Mitdenken', ru: 'Думать в ваш ход', tr: 'Sıranızda düşünme', id: 'Berpikir di giliran Anda', hi: 'आपकी बारी में सोचना', ar: 'التفكير في دورك' },
+  'ponder.h': { ja: 'あなたの番のあいだもAIが読み進めます。', en: 'The AI keeps thinking during your turn.', zh: '在你的回合AI也继续思考。', 'zh-TW': '在你的回合AI也繼續思考。',
+    ko: '당신의 차례에도 AI가 계속 생각합니다.', es: 'La IA sigue pensando durante tu turno.', fr: 'L’IA continue de réfléchir pendant votre tour.', pt: 'A IA continua pensando durante o seu turno.',
+    de: 'Die KI rechnet auch während Ihres Zuges weiter.', ru: 'ИИ продолжает думать, пока вы обдумываете ход.', tr: 'Yapay zekâ sizin sıranızda da düşünmeye devam eder.',
+    id: 'AI terus berpikir selama giliran Anda.', hi: 'आपकी बारी के दौरान भी AI सोचता रहता है।', ar: 'يواصل الذكاء التفكير أثناء دورك.' },
   on: { ja: 'オン', en: 'On', zh: '开', 'zh-TW': '開', ko: '켬', es: 'Sí', fr: 'Oui', pt: 'Sim', de: 'An', ru: 'Вкл.', tr: 'Açık', id: 'Aktif', hi: 'चालू', ar: 'تشغيل' },
   off: { ja: 'オフ', en: 'Off', zh: '关', 'zh-TW': '關', ko: '끔', es: 'No', fr: 'Non', pt: 'Não', de: 'Aus', ru: 'Выкл.', tr: 'Kapalı', id: 'Nonaktif', hi: 'बंद', ar: 'إيقاف' },
   reset: { ja: 'レベルの既定に戻す', en: 'Reset to level defaults', zh: '恢复该级别默认', 'zh-TW': '恢復該級別預設', ko: '레벨 기본값으로', es: 'Volver a los valores del nivel', fr: 'Revenir aux valeurs du niveau', pt: 'Voltar ao padrão do nível', de: 'Auf Stufen-Standard', ru: 'Вернуть значения уровня', tr: 'Seviye varsayılanına dön', id: 'Kembali ke bawaan level', hi: 'स्तर के डिफ़ॉल्ट पर लौटें', ar: 'العودة إلى إعدادات المستوى' },
   def: { ja: '既定', en: 'default', zh: '默认', 'zh-TW': '預設', ko: '기본', es: 'predeterminado', fr: 'par défaut', pt: 'padrão', de: 'Standard', ru: 'по умолчанию', tr: 'varsayılan', id: 'bawaan', hi: 'डिफ़ॉल्ट', ar: 'افتراضي' },
 };
-const COMMON = { limit: 'read', threads: 'read', clock: 'read', book: 'play', var: 'play', eval: 'play', resign: 'misc' };
+const COMMON = { limit: 'read', threads: 'read', ponder: 'read', clock: 'read', book: 'play', var: 'play', eval: 'play', resign: 'misc' };
 const CSS = `
 .pro-has{position:relative}
 .pro-has > label:first-child{padding-inline-end:70px}
@@ -256,7 +262,7 @@ function init(cfg) {
     const d = defs(lv), eff = Object.assign({}, d), changed = [];
     for (const p of params.filter(q => !q.when).concat(params.filter(q => q.when))) {   // (conditional ones last: their condition sees the other changes, e.g. threads needs variety off)
       const v = values[p.key]; if (v === undefined) continue;
-      if (p.key === 'threads' && maxThreads() < 2) continue;   // (no threads here: the level's own way)
+      if ((p.key === 'threads' || p.key === 'ponder') && maxThreads() < 2) continue;   // (no threads here: the level's own way; ponder needs them too)
       if (p.when && !p.when(Object.assign({}, eff, { [p.key]: v }))) continue;
       if (!same(v, d[p.key])) { eff[p.key] = v; changed.push(p.key); }
     }
@@ -350,7 +356,7 @@ function init(cfg) {
     const groups = { read: [], play: [], misc: [] };
     const mtCan = () => { const M = mtLib(); return !!(M && M.maxHelpers && M.maxHelpers() > 0); };
     for (const p of params) {
-      const thrOff = p.key === 'threads' && maxThreads() < 2;   // threads not running on this page: shown greyed with how to turn them on
+      const thrOff = (p.key === 'threads' || p.key === 'ponder') && maxThreads() < 2;   // threads not running on this page: shown greyed with how to turn them on (ponder: the same)
       if (thrOff && !mtCan()) continue;
       if (p.hidden && p.hidden()) continue;
       const condOff = p.key === 'threads' && p.when && !p.when(eff);
@@ -364,7 +370,7 @@ function init(cfg) {
         const R = kindRange(p, cur.k), val = cur.v != null ? cur.v : (d.limit && d.limit.k === cur.k ? d.limit.v : R.min);
         const row = numRow('limit', val, val, R.min, R.max, R.step, (p.kunit && p.kunit[cur.k] && pick(p.kunit[cur.k], l)) || tx(UNIT[cur.k]), v => setVal('limit', { k: cur.k, v }));
         ctl += row.html; binds.push(['limit', row.bind]);
-      } else if (p.type === 'threads' && thrOff) {
+      } else if (thrOff) {
         ctl = `<small class="pro-help pro-note">${esc(tx('threads.mt'))}</small>`;
       } else if (p.type === 'threads') {   // a slider 1 … every core the browser reports (e.g. 10 = only the performance cores of a 10+4 chip)
         const mx = maxThreads(), cur = Math.min(mx, eff.threads != null ? eff.threads : d.threads != null ? d.threads : 1), dv = d.threads != null ? Math.min(d.threads, mx) : 1;
