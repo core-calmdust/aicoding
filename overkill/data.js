@@ -36,7 +36,7 @@
   };
   const T = {
     ja: {
-      title: 'わからせ将棋オーバーキル！', sub: 'チート駒でデッキを組んで、強いAIをわからせろ', alpha: 'アルファ版',
+      title: 'わからせ将棋オーバーキル！', sub: 'チート駒でデッキを組んで、強いAIをわからせろ', alpha: 'PRE-ALPHA',
       modeW: 'わからせ', modeWd: '低いデッキコストで強いAIに勝つ。レベルごとの最小コストが記録になる。', modeO: 'オーバーキル', modeOd: 'コスト無制限。好きなだけ盛ってAIを粉砕しよう。',
       lv: 'AIの強さ', best: '最小', none: '—', build: 'デッキを組む', start: '対局開始', back: '戻る', reset: '初期配置', clear: '全部外す', presets: 'プリセット', save: '保存', load: '読込', slot: '枠',
       std: '通常駒', spec: '特殊駒', cost: 'デッキコスト', remove: '外す', placeHint: '駒を選んで、自陣3段（光っているマス）をクリック。置いてある駒をクリックすると外せます。',
@@ -49,7 +49,7 @@
       tier: ['入門', '初級', '中級', '上級', '最上級'],
     },
     en: {
-      title: 'Shogi Overkill!', sub: 'Build a deck of cheat pieces and teach the strong AI a lesson', alpha: 'Alpha',
+      title: 'Shogi Overkill!', sub: 'Build a deck of cheat pieces and teach the strong AI a lesson', alpha: 'PRE-ALPHA',
       modeW: 'Lesson', modeWd: 'Beat a strong AI with the cheapest deck you can. Your lowest winning cost per level is your record.', modeO: 'Overkill', modeOd: 'No cost limit. Pile it on and crush the AI.',
       lv: 'AI strength', best: 'Best', none: '—', build: 'Build a deck', start: 'Start', back: 'Back', reset: 'Standard setup', clear: 'Remove all', presets: 'Presets', save: 'Save', load: 'Load', slot: 'Slot',
       std: 'Shogi pieces', spec: 'Special pieces', cost: 'Deck cost', remove: 'Remove', placeHint: 'Pick a piece, then click a glowing square in your three ranks. Click a placed piece to remove it.',
