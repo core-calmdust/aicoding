@@ -55,7 +55,7 @@ wasm の αβ エンジン（`engine_mt.wasm`、`-DMT`）の**仕事を分ける
 
 | 道具 | 使い方 |
 |---|---|
-| `tools/mtsim/`（`gen.py`・`sim.c`・`simcore.h`・`g_<game>.h`・`dump.js`・`wasm1.js`） | wasm の αβ（シャンチー・チャンギ・チェス・将棋・タフル）の「本当に同時」のシミュレーション：全スレッドが一定の局面数ずつ足並みをそろえ、置換表と busy marks の書き込みはその回の終わりまでほかに見えない。`-DSIM_Q=64`（YBW は細かく）、`SIM_SLOW=k`（k 番以降が 2/5 の速さ＝高効率コア）、`SIM_SLOWSET`・`SIM_MIG`。`wasm1.js` は本物の `engine_mt.wasm` の1スレッドの局面数・手。`gen.py` は Praline のヘッダを取り込んでから書き換える |
+| `tools/mtsim/`（`gen.py`・`sim.c`・`simcore.h`・`g_<game>.h`・`dump.js`・`wasm1.js`） | wasm の αβ（シャンチー・チャンギ・チェス・将棋・タフル、アマゾンズ＝評価数の時計・局面は `amazons/tools/mtsim_pos.js`）の「本当に同時」のシミュレーション：全スレッドが一定の局面数ずつ足並みをそろえ、置換表と busy marks の書き込みはその回の終わりまでほかに見えない。`-DSIM_Q=64`（YBW は細かく）、`SIM_SLOW=k`（k 番以降が 2/5 の速さ＝高効率コア）、`SIM_SLOWSET`・`SIM_MIG`。`wasm1.js` は本物の `engine_mt.wasm` の1スレッドの局面数・手。`gen.py` は Praline のヘッダを取り込んでから書き換える |
 | `checkers/tools/mtsim/`・`morris/tools/mtsim/`・`fanorona/tools/mtsim/` | 同じ方式のゲーム別版（チェッカーの `gen.py` も Praline のヘッダを取り込む） |
 | `shared/tools/mtsim.js`・`mtstep.js`・`mtlazy.js`・`nodematch.js` | JavaScript エンジン（mtsplit.js）の見積もり：局面数の時計、歩調合わせ（`--slow K:R`）、Lazy SMP、時間2倍の強さ |
 | `<game>/bench.html`・`bench-all.html` | ユーザーの Mac で測るページ（1・2・4・8・10・14スレッド、同じ深さまでの時間・nps・最善手の一致、「結果をコピー」）。`bench-all.html` で全ゲームをまとめて |
@@ -77,7 +77,7 @@ wasm の αβ エンジン（`engine_mt.wasm`、`-DMT`）の**仕事を分ける
 | チェス（`chess/`） | C（wasm、NNUE） | YBW 1（補助1番、深さ7・予想カット節は分けない）＋Lazy SMP | mtengine・proset・ponder（C は自前：履歴の共有） |
 | 五目並べ（`gomoku/`） | JS 探索＋wasm の共有の置換表・分割点（`mt.c`） | YBW v2（どの節も） | mtengine・proset |
 | 囲碁（`go/`）・ヘックス（`hex/`） | C（wasm） | 共有木 MCTS（virtual loss） | mtengine・proset |
-| アマゾンズ（`amazons/`） | JS＋wasm コア | αβ は YBW＋共有の置換表（JS 分割）、Lv.19〜23 は共有木 MCTS | mtsplit・mttt・mtengine・proset |
+| アマゾンズ（`amazons/`） | C（wasm、αβ の探索ごと core.c、2026-11-11） | αβ は **YBW**（3）＋busy marks、Lv.19〜23 は共有木 MCTS（同じ `core_mt.wasm`、補助は両方を待つ）。分離できないページは mtsplit の非共有 | mtengine・**praline（2026-11-11）**・proset（mtsplit は非共有だけ） |
 | ウゴルキ・アゴン・コナネ | JS＋wasm コア | YBW＋共有の置換表＋手伝い（JS 分割） | mtsplit・mttt・proset |
 | マンカラ | JS | Lazy SMP（共有の置換表） | mtsplit・mttt・proset |
 | コネクトフォー | JS | 列ごとの完全読み（共有の置換表） | mtsplit＋`connect4/mt.js` |
@@ -170,6 +170,10 @@ JavaScript エンジンは `shared/mtsplit.js`（＋`mttt.js`）、独立な仕�
 - **チェス**：YBW の補助は1つだけで、YBW の補助と主が履歴・カウンター手の表を共有し、分割は予想カット節を除く。上の将棋の足し方の後に。
 - **リバーシ**：元祖の作り（分割点256個、`CHK_Q`＝4096局面ごとの確認、完全読みの分割）で、中盤と終盤の2種類の探索に分割点がある。並行して別の作業が `reversi/engine.c` 以外を触っている間は移さない。最後に回す。
 - **共通にしなかったもの（理由）**：①分割点を開く場所（手の生成・順番・枝刈りがゲームごとに違い、関数にすると1スレッドの読みを変えずに書くのが難しく、性能も落ちうる）、②`timeUp`（ゲームごとに確認の間隔・局面数の上限・`gHit` の見方が違う）、③各スレッドの結果の共有 `gRes`（手の詰め方がゲームごと）、④共有の置換表（局面の鍵と項目の詰め方がゲームごと。作りは同じなので、次の段で `praline_tt.h` にまとめる候補）、⑤スレッドの起動（`mt_stack`・`mt_thread`：ゲームの初期化を呼ぶ。シミュレーションの `gen.py` がこの節を切り取る）。
+
+### アマゾンズ（2026-11-11）：JS の αβ を C に移して Praline に
+- αβ の探索ループ（`search`・解析の全部の手・最善手の反復深化）を `amazons/core.c` に移し、MCTS と同じ `core_mt.wasm` で Praline の YBW（つなぎ：局面は盤100＋アマゾン8＋手番＋鍵2つ、ルートの候補の値 `sc`、`spCutoff` は空＝キラー・履歴なし）。補助は `mt_help` の中で MCTS の木と分割点の両方を待つ。1スレッドは JS の探索と手・値・局面数・評価数が全一致（`amazons/tools/check_ab.js`、246回の探索）。
+- `tools/mtsim`（評価数の時計）深さ6・8局面：2／4／8 ×1.78／3.07／4.76、遅いコアあり 8／10／14 ×4.82／4.79／4.73。前（mtsplit の共有・YBW＋手伝い、`mtstep` を評価数の時計に）×1.43／2.21／3.39。1スレッドも ×1.22（ループを C に）。詳細は claude/amazons-spec.md「αβ を C に」。
 
 ---
 

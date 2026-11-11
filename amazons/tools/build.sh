@@ -1,7 +1,7 @@
 #!/bin/sh
-# Build the WebAssembly core (core.c: the evaluation, the candidate list and the MCTS) into core-wasm.js (the module as base64,
+# Build the WebAssembly core (core.c: the evaluation, the candidate list, the alpha-beta search and the MCTS) into core-wasm.js (the module as base64,
 # so that engine.js can load it synchronously in a worker and in Node). Then check it against the JS: node tools/check_wasm.js
-# core_mt.wasm: the same core for several threads growing one MCTS tree on a shared memory (-DMT: the boards and work areas
+# core_mt.wasm: the same core for several threads (one MCTS tree; the alpha-beta search split by Praline's YBW) on a shared memory (-DMT: the boards and work areas
 # thread-local; shared/mtengine.js, engine.js?…&mt=1 = the lead, mt-helper.js = the helpers).
 cd "$(dirname "$0")/.."
 # (2026-11-11) two builds in core-wasm.js: AMZ_WASM with wasm SIMD (-msimd128), AMZ_WASM0 without it for a browser that has no
