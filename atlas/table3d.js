@@ -949,7 +949,7 @@
   // localStorage 'atlas-table' / 'atlas-bright2'; a change fires window 'atlas-table' (detail { table, bright }) for the labels / floors
   const say = () => { try { dispatchEvent(new CustomEvent('atlas-table', { detail: { table: tableStyle, bright } })); } catch (e) {} };
   function setTable(k) {   // switch the table design (0..5) and rebuild the room (no reload)
-    k = Math.max(0, Math.min(12, k | 0)); if (!TABLES[k] && k) k = 0;
+    k = Math.max(0, Math.min(12, k | 0)); if ((!TABLES[k] && k) || PLACE_OFF.includes(k)) k = 0;
     const same = k === tableStyle; tableStyle = k;
     try { localStorage.setItem('atlas-table', String(k)); } catch (e) {}
     if (R && scene && !same) {
@@ -1002,7 +1002,9 @@
   /* ---------- table designs (prototype): 0 = the toy room's chabudai, 1..5 = the environments in tables3d.js (Table3D.TABLES[k]) ----------
      picked by ?tbl=k (temporary) or localStorage 'atlas-table'; Table3D.setTable(k) rebuilds the room */
   const TABLES = {};
-  let tableStyle = (() => { try { const m = /[?&]tbl=(\d+)/.exec(location.search); if (m) return +m[1]; return +(localStorage.getItem('atlas-table') || 0) || 0; } catch (e) { return 0; } })();
+  // retired places (2026-11-12: ゲーセン 8): no longer offered; a saved one falls back to the chabudai (their builders stay, so the numbers keep)
+  const PLACE_OFF = [8];
+  let tableStyle = (() => { try { const m = /[?&]tbl=(\d+)/.exec(location.search); if (m) return +m[1]; const k = +(localStorage.getItem('atlas-table') || 0) || 0; return PLACE_OFF.includes(k) ? 0 : k; } catch (e) { return 0; } })();
   let tblInfo = null, roomBg = null, viewOnly = [];
   try { const m = /[?&]bright=(\d)/.exec(location.search); if (m) localStorage.setItem('atlas-bright2', m[1]); } catch (e) {}
   const LOOK = {
@@ -2300,5 +2302,5 @@
   try { if (sessionStorage.getItem('t3d-debug')) setTimeout(() => R && dbgToggle(true), 500); } catch (e) {}
   setInterval(() => { if (dbgOn && performance.now() - dbgT > 1000) { dbgFps = 0; dbgT = performance.now(); dbgPaint(); } }, 1000);   // (the loop sleeps when nothing moves: keep the numbers fresh)
 
-  window.Table3D = { fitRect, _texT: texT, _texCache: texCache, _texFile: texFile, decoOn, boSet: on => { BO_OK = !!on; bo.key = ''; kick(400); }, debug: dbgToggle, TABLES, placeMon, setTable, table: () => tableStyle, setBright, bright: () => bright, turn, museum, setShift, quiet, setTimeOfDay, timeOfDayPick: todPick, share, lp, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, tatami: () => tatamiTex(), stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, rvDisc, rvMats, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
+  window.Table3D = { placeOff: PLACE_OFF, fitRect, _texT: texT, _texCache: texCache, _texFile: texFile, decoOn, boSet: on => { BO_OK = !!on; bo.key = ''; kick(400); }, debug: dbgToggle, TABLES, placeMon, setTable, table: () => tableStyle, setBright, bright: () => bright, turn, museum, setShift, quiet, setTimeOfDay, timeOfDayPick: todPick, share, lp, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, tatami: () => tatamiTex(), stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, rvDisc, rvMats, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
 })();

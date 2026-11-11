@@ -111,7 +111,7 @@
   X.placeUi = (key, lang) => pick(PLACES.ui[key], lang);
   // the thumbnails (small real renders, atlas/img/place-k.webp), next to this script whichever page loads it
   const ME = (document.currentScript && document.currentScript.src) || location.href;
-  X.placeThumb = k => new URL('img/place-' + k + '.webp?v=' + (k === 8 ? 5 : k === 12 ? 1 : k >= 2 ? 3 : 1), ME).href;   // (8: the game centre, 2026-11-09)
+  X.placeThumb = k => new URL('img/place-' + k + '.webp?v=' + (k === 8 ? 5 : k === 12 ? 2 : k >= 2 ? 3 : 1), ME).href;   // (8: the game centre, 2026-11-09)
 
   const lin = (c, y0, y1, stops) => { const g = c.createLinearGradient(0, y0, 0, y1); stops.forEach(([k, col]) => g.addColorStop(k, col)); return g; };
   const rad = (c, x, y, r, stops) => { const g = c.createRadialGradient(x, y, 0, x, y, r); stops.forEach(([k, col]) => g.addColorStop(k, col)); return g; };
@@ -2869,6 +2869,16 @@
   TABLES[12] = (o) => {
     const { TT, g, scene } = o, T = TOD(o), FL = -.06, Z0 = 1, night = T === 'night', ev = T === 'evening', day = !lampLit(T);
     const XL = -76, XR = 76, ZB = -72, ZF = 150, Y1 = FL + 58;
+    // the time of day (2026-11-12, the user: make it change properly, and the whole room less bright): morning — cool light low
+    // through the left shoji (east), a lattice of light on the tatami and the fusuma; day — even, soft; evening — the back shoji glow
+    // orange with a branch's shadow, a long warm patch on the floor; night — the shoji dull grey, the room lit by the ceiling panels
+    // and a downlight on the tokonoma
+    const LT = {
+      morning: { wb: .8, hemi: [0xdce4f0, 0x5a4a32, .4], key: [0xffe8c8, .82, [-64, 24, 8]], pt: [0xf4f6ff, .1], exp: .58, board: .2, tint: 'rgba(190,210,240,.10)' },
+      day: { wb: .84, hemi: [0xf0ece2, 0x5a4a32, .46], key: [0xfff4e6, .74, [-8, 40, -30]], pt: [0xfffaf0, .2], exp: .6, board: .22, tint: '' },
+      evening: { wb: .74, hemi: [0xffc49a, 0x3a2416, .3], key: [0xff8c40, 1.0, [-22, 15, -74]], pt: [0xffcf98, .36], exp: .6, board: .22, tint: 'rgba(255,140,60,.12)' },
+      night: { wb: .5, hemi: [0x8c96b8, 0x241a12, .15], key: [0xfff0da, .5, [4, 50, 8]], pt: [0xffe6c4, .62], exp: .6, board: .26, tint: 'rgba(30,30,60,.16)' },
+    }[T];
     // no table (2026-11-12, the user's wish): the board stands right on the tatami
     ao(o, 0, FL, Z0, 30, 26, .25);
     // the floor: tatami with black heri (as in a tournament room), laid in a basket weave: each 40 × 40 square two mats side by side,
@@ -2884,10 +2894,18 @@
           m.position.set(cx + (turn ? 0 : d), FL, cz + (turn ? d : 0)); m.receiveShadow = true; g.add(m); }); } }
     // the walls and the ceiling (painted, their own light)
     const plaster = (c, x0, x1, y0, y1, col) => { c.fillStyle = col; c.fillRect(x0, y0, x1 - x0, y1 - y0); const R = rng((x0 * 7 + y0) | 0); for (let i = 0; i < (x1 - x0) * (y1 - y0) / 6; i++) { c.fillStyle = `rgba(${R() > .5 ? '255,255,250' : '90,80,60'},${.025 + R() * .03})`; ell(c, x0 + R() * (x1 - x0), y0 + R() * (y1 - y0), .4 + R() * 1.4, .4 + R() * 1.4); } };
-    const hinoki = '#d9bc8c', hinokiD = '#b8956a', paper = day ? (T === 'morning' ? '#fbf6ea' : '#fdfbf4') : ev ? '#e6c79e' : '#4a5068';
+    const hinoki = '#d9bc8c', hinokiD = '#b8956a', paper = T === 'morning' ? '#f2f3ee' : day ? '#fbf8ee' : ev ? '#ffc07a' : '#9a9282';
     const NY = FL + 40;   // the nageshi (the beam over the openings)
-    const shoji = (c, x0, x1, y0, y1) => { c.fillStyle = paper; c.fillRect(x0, y0, x1 - x0, y1 - y0);
+    const shoji = (c, x0, x1, y0, y1, sun) => { c.fillStyle = paper; c.fillRect(x0, y0, x1 - x0, y1 - y0);
       if (day) { c.fillStyle = lin(c, y0, y1, [[0, 'rgba(255,255,255,.0)'], [.6, 'rgba(255,255,255,.35)'], [1, 'rgba(255,250,235,.2)']]); c.fillRect(x0, y0, x1 - x0, y1 - y0); }
+      if (ev) { c.fillStyle = lin(c, y0, y1, [[0, 'rgba(255,214,150,.75)'], [.5, 'rgba(255,170,90,.2)'], [1, 'rgba(200,80,40,.25)']]); c.fillRect(x0, y0, x1 - x0, y1 - y0); }
+      if (night) { c.fillStyle = lin(c, y0, y1, [[0, 'rgba(255,236,200,.25)'], [1, 'rgba(40,40,60,.2)']]); c.fillRect(x0, y0, x1 - x0, y1 - y0); }
+      if (sun && (ev || T === 'morning')) {   // the shadow of a branch outside, cast on the paper by the low sun
+        const R = rng(x0 | 0), col = ev ? 'rgba(120,50,20,.28)' : 'rgba(90,110,140,.16)'; c.strokeStyle = col; c.fillStyle = col; c.lineCap = 'round';
+        const br = (x, y, a, l, w, d) => { if (d > 4 || w < .15) return; const x2 = x + Math.cos(a) * l, y2 = y + Math.sin(a) * l; c.lineWidth = w; c.beginPath(); c.moveTo(x, y); c.lineTo(x2, y2); c.stroke();
+          if (d > 1) for (let k = 0; k < 5; k++) { c.beginPath(); c.ellipse(x + (x2 - x) * R() + (R() - .5) * 2.4, y + (y2 - y) * R() + (R() - .5) * 2.4, .7 + R() * .5, .3 + R() * .25, R() * 3, 0, 7); c.fill(); }
+          br(x2, y2, a + .5 + R() * .3, l * .7, w * .62, d + 1); br(x2, y2, a - .4 - R() * .3, l * .66, w * .6, d + 1); };
+        c.save(); c.beginPath(); c.rect(x0, y0, x1 - x0, y1 - y0); c.clip(); br(sun, y1 + 4, -1.25, 13, 1.1, 0); br(sun + 26, y1 + 2, -1.9, 11, .9, 0); c.restore(); }
       c.fillStyle = hinokiD; const n = Math.round((x1 - x0) / 22);
       for (let k = 0; k < n; k++) { const a = x0 + k * (x1 - x0) / n, b = a + (x1 - x0) / n;
         for (let i = 1; i < 6; i++) c.fillRect(a + i * (b - a) / 6 - .14, y0, .28, y1 - y0);
@@ -2896,50 +2914,228 @@
       c.fillStyle = hinoki; c.fillRect(x0, y0 - 1, x1 - x0, 1.6); c.fillRect(x0, y1 - .6, x1 - x0, 1.6); };
     const nageshi = (c, x0, x1) => { c.fillStyle = hinoki; c.fillRect(x0, NY, x1 - x0, 2.2); c.fillStyle = 'rgba(0,0,0,.18)'; c.fillRect(x0, NY - .3, x1 - x0, .3); c.fillStyle = hinoki; c.fillRect(x0, Y1 - 2, x1 - x0, 2); };
     const post = (c, x) => { c.fillStyle = hinoki; c.fillRect(x - 1.3, FL, 2.6, Y1 - FL); c.fillStyle = 'rgba(255,255,255,.12)'; c.fillRect(x - .9, FL, .5, Y1 - FL); };
-    roomBox(o, { key: 'tbl12-room-' + T, xl: XL, xr: XR, zb: ZB, zf: ZF, y0: FL, y1: Y1, px: 2048, pxs: 1536, wb: day ? 1 : ev ? .92 : .82,
+    roomBox(o, { key: 'tbl12-room2-' + T, xl: XL, xr: XR, zb: ZB, zf: ZF, y0: FL, y1: Y1, px: 2048, pxs: 1536, wb: LT.wb,
       back: (c) => { plaster(c, XL - 2, XR + 2, FL - 2, Y1 + 2, '#cfc8b6');
         c.fillStyle = '#c9a85e'; c.fillRect(-64, FL, 50, NY - FL); const R = rng(4); for (let i = 0; i < 1400; i++) { c.fillStyle = `rgba(${R() > .5 ? '255,236,170' : '120,90,30'},${.05 + R() * .07})`; c.fillRect(-64 + R() * 50, FL + R() * (NY - FL), .5 + R() * 2.2, .5 + R() * 2.2); }
         c.fillStyle = lin(c, NY, NY - 8, [[0, 'rgba(70,45,10,.4)'], [1, 'rgba(70,45,10,0)']]); c.fillRect(-64, NY - 8, 50, 8);
-        shoji(c, -6, 70, FL + 1, NY); c.fillStyle = '#e6dcc4'; c.fillRect(-6, FL + 1, 76, 6); c.fillStyle = hinoki; c.fillRect(-6, FL + 6.6, 76, .8);   // the koshi board under the paper
+        shoji(c, -6, 70, FL + 1, NY, ev ? 20 : 0); c.fillStyle = '#e6dcc4'; c.fillRect(-6, FL + 1, 76, 6); c.fillStyle = hinoki; c.fillRect(-6, FL + 6.6, 76, .8);   // the koshi board under the paper
         nageshi(c, XL, XR); post(c, -65.5); post(c, -12.5); post(c, -6.5); post(c, 70.5);
         c.fillStyle = '#b89062'; for (let x = -11; x < 70; x += 4.2) c.fillRect(x, NY + 3.4, .5, Y1 - NY - 6);   // a ranma of thin slats over the shoji
-        c.fillStyle = hinoki; c.fillRect(XL, FL, XR - XL, 1.2); },
+        c.fillStyle = hinoki; c.fillRect(XL, FL, XR - XL, 1.2);
+        if (LT.tint) { c.fillStyle = LT.tint; c.fillRect(XL - 2, FL - 2, XR - XL + 4, Y1 - FL + 4); }
+        if (!day) { c.fillStyle = 'rgba(20,14,8,.22)'; c.fillRect(XL - 2, FL - 2, XR - XL + 4, Y1 - FL + 4);   // (evening / night: the room's corners fall into shade, the tokonoma under its light)
+          c.fillStyle = rad(c, -39, FL + 26, 30, [[0, 'rgba(255,220,150,.42)'], [.6, 'rgba(255,200,120,.14)'], [1, 'rgba(255,200,120,0)']]); c.fillRect(-64, FL, 50, NY - FL); } },
       left: (c) => {   // u = -z: shoji
         plaster(c, -ZF - 2, -ZB + 2, FL - 2, Y1 + 2, '#d2c9b2');
         nageshi(c, -ZF, -ZB); post(c, -ZB - 1.5);
-        shoji(c, -ZF, 66, FL + 1, NY); },
+        shoji(c, -ZF, 66, FL + 1, NY, T === 'morning' ? 10 : 0); if (LT.tint) { c.fillStyle = LT.tint; c.fillRect(-ZF - 2, FL - 2, ZF - ZB + 4, Y1 - FL + 4); } },
       right: (c) => {   // u = z: fusuma (cream, a dark frame and a round pull) between posts
         plaster(c, ZB - 2, ZF + 2, FL - 2, Y1 + 2, '#d2c9b2');
         for (let z = ZB + 4; z < ZF - 4; z += 22) { c.fillStyle = '#ece4d0'; c.fillRect(z, FL + 1, 21, NY - FL - 1); const R = rng(z | 0);
           for (let i = 0; i < 120; i++) { c.fillStyle = `rgba(170,150,110,${.05 + R() * .05})`; ell(c, z + R() * 21, FL + 1 + R() * (NY - FL - 1), .3 + R() * 1.2, .3 + R() * 1.2); }
           c.strokeStyle = '#3a2a1c'; c.lineWidth = .7; c.strokeRect(z + .35, FL + 1.35, 20.3, NY - FL - 1.7);
           c.fillStyle = '#4a3a28'; ell(c, z + 18.5, FL + 20, .9, .9); c.fillStyle = '#c8a860'; ell(c, z + 18.5, FL + 20, .55, .55); }
-        nageshi(c, ZB, ZF); post(c, ZB + 1.5); },
+        nageshi(c, ZB, ZF); post(c, ZB + 1.5);
+        if (T === 'morning' || ev) {   // the low sun through the shoji: a skewed patch of lattice light on the fusuma
+          const z0 = ev ? ZB + 8 : 10, z1 = ev ? 40 : 110, ya = FL + 4, yb = FL + 30, col = ev ? '255,170,80' : '255,246,220';
+          c.save(); c.globalAlpha = ev ? .5 : .42; c.beginPath(); c.moveTo(z0, ya); c.lineTo(z1, ya + 4); c.lineTo(z1 - 10, yb + 6); c.lineTo(z0 - 8, yb); c.closePath(); c.clip();
+          c.fillStyle = `rgba(${col},.55)`; c.fillRect(z0 - 12, ya, z1 - z0 + 14, yb - ya + 8);
+          c.fillStyle = 'rgba(80,60,40,.35)'; for (let z = z0 - 10; z < z1; z += (z1 - z0) / 9) c.fillRect(z, ya, .7, yb - ya + 8); for (let y = ya + 2; y < yb + 6; y += 3.6) c.fillRect(z0 - 12, y, z1 - z0 + 14, .5);
+          c.restore(); }
+        if (LT.tint) { c.fillStyle = LT.tint; c.fillRect(ZB - 2, FL - 2, ZF - ZB + 4, Y1 - FL + 4); } },
       ceil: (c) => { c.fillStyle = '#d6b888'; c.fillRect(XL - 2, ZB - 2, XR - XL + 4, ZF - ZB + 4); const R = rng(9);
         for (let i = 0; i < 260; i++) { c.fillStyle = `rgba(150,110,60,${.05 + R() * .06})`; c.fillRect(XL + R() * (XR - XL), ZB + R() * (ZF - ZB), 6 + R() * 18, .3); }
         c.fillStyle = '#b89062'; for (let x = XL; x <= XR; x += 9.5) c.fillRect(x - .35, ZB, .7, ZF - ZB); for (let z = ZB; z <= ZF; z += 9.5) c.fillRect(XL, z - .35, XR - XL, .7);
-        const lit = day ? '#fffdf6' : '#fff2d8';
+        const lit = T === 'morning' ? '#eceae2' : day ? '#f6f2e6' : '#fffaf0';
         [[-50, -16], [16, 50]].forEach(([x0, x1]) => { c.fillStyle = '#9a7a52'; c.fillRect(x0 - 1.2, -40 - 1.2, x1 - x0 + 2.4, 34 + 2.4); c.fillStyle = lit; c.fillRect(x0, -40, x1 - x0, 34);
           c.fillStyle = 'rgba(160,140,110,.5)'; for (let x = x0 + 2.8; x < x1; x += 2.8) c.fillRect(x - .08, -40, .16, 34); for (let z = -40 + 4.25; z < -6; z += 4.25) c.fillRect(x0, z - .08, x1 - x0, .16); }); },
     });
     // the tokonoma: the raised floor and its lacquered front rail, three hanging scrolls, a vase
     { const black = M({ color: 0x1e1612, roughness: .25, clearcoat: .8 }), board = M({ map: wood('tbl12-toko', '#a07040', '#6a4422', 256, 512, 1.4), roughness: .4, clearcoat: .3 });
       at(g, new TT.Mesh(RB(50, 2.8, 11, .1, 1), [black, black, board, black, black, black]), -39, FL + 1.4, ZB + 5.5, 0, false);
-      const scroll = (key, text, z) => { const tex = canvasTex('tbl12-scroll-' + key, 128, 512, (c, W, H) => {
-          c.fillStyle = '#6e7a5e'; c.fillRect(0, 0, W, H); c.fillStyle = '#b8a678'; c.fillRect(8, 40, W - 16, H - 80); c.fillStyle = '#f2ecdc'; c.fillRect(16, 70, W - 32, H - 140);
-          c.fillStyle = '#1a1612'; c.textAlign = 'center'; c.textBaseline = 'middle'; const n = text.length, fs = Math.min(62, (H - 200) / n);
-          c.font = `bold ${fs}px "Noto Serif CJK JP","Hiragino Mincho ProN","Yu Mincho",serif`;
-          [...text].forEach((ch, i) => c.fillText(ch, W / 2, 110 + fs / 2 + i * fs * 1.04));
-          c.fillStyle = '#b02a1a'; c.fillRect(W / 2 + 14, H - 112, 10, 10); c.fillStyle = '#3a2a1a'; c.fillRect(0, 0, W, 6); c.fillRect(0, H - 10, W, 10); });
-        const m = new TT.Mesh(new TT.PlaneGeometry(6.4, 26), M({ map: tex, roughness: .8, bump: false })); at(g, m, z, FL + 19.5, ZB + .35, 0, false);
-        const rod2 = new TT.Mesh(new TT.CylinderGeometry(.3, .3, 7.4, 8), black); rod2.rotation.z = Math.PI / 2; at(g, rod2, z, FL + 6.4, ZB + .7, 0, false); };
-      scroll('a', '棋道一心', -52); scroll('b', '和敬清寂', -39); scroll('c', '盤上無心', -26);
+    // 掛け軸 (2026-11-12, the user's reference: four kacho-ga scrolls): mounted Japanese paintings — the 天 / 地 of cream silk with two
+    // 風帯 strips, a 中廻し of patterned brocade, gold 一文字 above and below the painting, the 軸 at the bottom; the paintings themselves
+    // are drawn as nihonga: a soft washed ground, ink-brushed branches, layered leaves / blossoms with gold-pale edges, small birds
+    const kake = (c, W, H, kind) => {
+      const R = rng({ momiji: 11, ume: 23, kawa: 37 }[kind] || 5);
+      const BR = { momiji: ['#a88c5c', '#8a6e42'], ume: ['#7d7a52', '#605e3c'], kawa: ['#8fa49c', '#71877f'] }[kind];
+      // the mounting: 天 · 地 (cream silk), 中廻し (brocade), 一文字 (gold)
+      const silk = (x, y, w, h, col) => { c.fillStyle = col; c.fillRect(x, y, w, h); for (let i = 0; i < w * h / 40; i++) { c.fillStyle = `rgba(${R() > .5 ? '255,255,250' : '120,100,60'},${.03 + R() * .04})`; c.fillRect(Math.round(x + R() * w), Math.round(y + R() * h), 1 + Math.round(R() * 3), 1); } };
+      const ten = H * .2, chi = H * .12, mx = W * .075, my = H * .045;
+      silk(0, 0, W, H, '#e6dcc2');
+      c.fillStyle = BR[0]; c.fillRect(0, ten, W, H - ten - chi);
+      for (let y = ten; y < H - chi; y += 7) for (let x = (y / 7 % 2) * 4; x < W; x += 8) { c.fillStyle = 'rgba(255,240,200,.16)'; ell(c, x, y, 1.6, 1.1); c.fillStyle = 'rgba(40,30,10,.12)'; ell(c, x + 1, y + 1.3, 1.4, .7); }   // the brocade's small pattern
+      c.fillStyle = 'rgba(0,0,0,.18)'; c.fillRect(0, ten, W, 2); c.fillRect(0, H - chi - 2, W, 2);
+      [W * .3, W * .7].forEach(x => { c.fillStyle = '#ddd2b6'; c.fillRect(x - W * .045, 0, W * .09, ten * .93); c.fillStyle = 'rgba(150,120,70,.35)'; c.fillRect(x - W * .045, 0, 1.2, ten * .93); c.fillRect(x + W * .045 - 1.2, 0, 1.2, ten * .93); c.fillStyle = BR[1]; c.fillRect(x - W * .045, ten * .93 - 4, W * .09, 4); });   // 風帯
+      const px = mx, py = ten + my, pw = W - 2 * mx, ph = H - ten - chi - 2 * my;
+      const gold = (y) => { c.fillStyle = '#c8aa62'; c.fillRect(px, y, pw, 6); c.fillStyle = 'rgba(255,240,190,.5)'; for (let x = px; x < px + pw; x += 3) c.fillRect(x, y + 1 + (x % 2), 1.4, 1); };
+      gold(py - 6); gold(py + ph);
+      c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(px - 1, py - 7, 1, ph + 14); c.fillRect(px + pw, py - 7, 1, ph + 14);
+      // the painting
+      c.save(); c.beginPath(); c.rect(px, py, pw, ph); c.clip(); c.translate(px, py);
+      const w = pw, h = ph;
+      const ground = { momiji: [[0, '#f3e7c4'], [.55, '#f6ecd0'], [1, '#efdcb0']], ume: [[0, '#f7efd6'], [.5, '#f3e6c0'], [1, '#ecd9a8']], kawa: [[0, '#eef0de'], [.42, '#e6eed8'], [.6, '#bcdcd0'], [1, '#7fbcb4']] }[kind];
+      c.fillStyle = lin(c, 0, h, ground); c.fillRect(0, 0, w, h);
+      for (let i = 0; i < 9; i++) { c.fillStyle = rad(c, R() * w, R() * h, w * (.3 + R() * .5), [[0, 'rgba(255,252,240,.35)'], [1, 'rgba(255,252,240,0)']]); c.fillRect(0, 0, w, h); }   // the washes (ぼかし)
+      for (let i = 0; i < w * h / 25; i++) { c.fillStyle = `rgba(${R() > .5 ? '255,255,255' : '150,120,70'},${.02 + R() * .03})`; c.fillRect(Math.round(R() * w), Math.round(R() * h), 1, 1); }   // silk grain (whole pixels: sub-pixel specks came out as coloured dots)
+      // an ink-brushed branch: a cubic bezier, tapering, with dry-brush streaks
+      const bz = (p, t) => { const u = 1 - t; return [u * u * u * p[0] + 3 * u * u * t * p[2] + 3 * u * t * t * p[4] + t * t * t * p[6], u * u * u * p[1] + 3 * u * u * t * p[3] + 3 * u * t * t * p[5] + t * t * t * p[7]]; };
+      const branch = (p, w0, w1, col = 'rgba(70,58,46,') => {
+        const n = 90; for (let i = 0; i <= n; i++) { const t = i / n, [x, y] = bz(p, t), r = (w0 + (w1 - w0) * t) / 2 * (.85 + R() * .3);
+          c.fillStyle = col + (.5 + R() * .3) + ')'; ell(c, x, y, r, r);
+          if (R() < .5) { c.fillStyle = 'rgba(30,24,18,' + (.25 + R() * .3) + ')'; ell(c, x + (R() - .5) * r, y + (R() - .5) * r, r * .35, r * .25); } }
+        for (let i = 0; i <= n; i += 2) { const t = i / n, [x, y] = bz(p, t), r = (w0 + (w1 - w0) * t) / 2; c.fillStyle = 'rgba(170,150,120,.25)'; ell(c, x - r * .3, y - r * .3, r * .3, r * .15); }
+        return t => bz(p, t);
+      };
+      const twig = (x, y, a, len, w0) => branch([x, y, x + Math.cos(a) * len * .35, y + Math.sin(a) * len * .35, x + Math.cos(a + .15) * len * .7, y + Math.sin(a + .15) * len * .7, x + Math.cos(a + .1) * len, y + Math.sin(a + .1) * len], w0, w0 * .25);
+      // a maple leaf (seven lobes, toothed), its veins
+      const maple = (x, y, s, a, col, col2) => {
+        c.save(); c.translate(x, y); c.rotate(a);
+        c.beginPath(); const L = [.55, .8, .95, 1, .95, .8, .55], A = [-2.4, -1.65, -.85, 0, .85, 1.65, 2.4];
+        c.moveTo(0, s * .12);
+        for (let k = 0; k < 7; k++) { const a0 = A[k] - .28, a1 = A[k] + .28, l = L[k] * s;
+          c.lineTo(Math.sin(a0) * s * .3, -Math.cos(a0) * s * .3);
+          for (let j = 1; j <= 3; j++) { const f = j / 4; c.lineTo(Math.sin(A[k] - .2 * (1 - f)) * l * (.4 + .6 * f) - .9, -Math.cos(A[k] - .2 * (1 - f)) * l * (.4 + .6 * f)); c.lineTo(Math.sin(A[k] - .12 * (1 - f)) * l * (.4 + .6 * f), -Math.cos(A[k] - .12 * (1 - f)) * l * (.4 + .6 * f) + .6); }
+          c.lineTo(Math.sin(A[k]) * l, -Math.cos(A[k]) * l);
+          for (let j = 3; j >= 1; j--) { const f = j / 4; c.lineTo(Math.sin(A[k] + .14 * (1 - f)) * l * (.4 + .6 * f), -Math.cos(A[k] + .14 * (1 - f)) * l * (.4 + .6 * f) + .6); c.lineTo(Math.sin(A[k] + .2 * (1 - f)) * l * (.4 + .6 * f) + .9, -Math.cos(A[k] + .2 * (1 - f)) * l * (.4 + .6 * f)); }
+          c.lineTo(Math.sin(a1) * s * .3, -Math.cos(a1) * s * .3); }
+        c.closePath(); c.fillStyle = rad(c, 0, 0, s, [[0, col2], [.75, col], [1, col]]); c.fill();
+        c.strokeStyle = 'rgba(120,30,10,.35)'; c.lineWidth = .7; c.stroke();
+        c.strokeStyle = 'rgba(255,230,180,.45)'; c.lineWidth = .6; for (let k = 0; k < 7; k++) { c.beginPath(); c.moveTo(0, 0); c.lineTo(Math.sin(A[k]) * L[k] * s * .85, -Math.cos(A[k]) * L[k] * s * .85); c.stroke(); }
+        c.strokeStyle = 'rgba(90,40,20,.6)'; c.lineWidth = .8; c.beginPath(); c.moveTo(0, 0); c.lineTo(0, s * .45); c.stroke();
+        c.restore(); };
+      // a small bird on a perch (body tone, cap, breast)
+      const bird = (x, y, s, flip, body, cap, belly, wing) => {
+        c.save(); c.translate(x, y); c.scale(flip ? -s : s, s);
+        c.fillStyle = wing; c.beginPath(); c.moveTo(6, -2); c.lineTo(22, 6); c.lineTo(20, 9); c.lineTo(4, 4); c.fill();   // tail
+        c.fillStyle = belly; ell(c, 0, 0, 9, 6.5);
+        c.fillStyle = body; c.beginPath(); c.ellipse(1.5, -1.8, 8.6, 5, -.2, Math.PI * .95, Math.PI * 2.1); c.fill();
+        c.fillStyle = wing; c.beginPath(); c.ellipse(3, -1, 7, 3.4, .25, 0, Math.PI * 2); c.fill();
+        c.strokeStyle = 'rgba(30,24,18,.45)'; c.lineWidth = .5; for (let i = 0; i < 4; i++) { c.beginPath(); c.moveTo(-1 + i * 2.2, -2.5 + i * .5); c.lineTo(5 + i * 2.2, 1 + i * .6); c.stroke(); }
+        c.fillStyle = body; ell(c, -7, -5.2, 5, 4.6); c.fillStyle = cap; c.beginPath(); c.ellipse(-7, -6.4, 5, 3.2, 0, Math.PI, Math.PI * 2); c.fill();
+        c.fillStyle = '#f6f0e2'; ell(c, -8.4, -4.4, 2.4, 1.6);
+        c.fillStyle = '#1a1410'; ell(c, -9, -5.8, .9, .9); c.fillStyle = '#fff'; ell(c, -9.3, -6.1, .3, .3);
+        c.fillStyle = '#3a2e22'; c.beginPath(); c.moveTo(-11.6, -5.6); c.lineTo(-15.2, -4.6); c.lineTo(-11.6, -4.2); c.fill();
+        c.strokeStyle = '#5a4a3a'; c.lineWidth = .8; c.beginPath(); c.moveTo(-1, 5.5); c.lineTo(-2, 9); c.moveTo(2, 5.5); c.lineTo(2, 9); c.stroke();
+        c.restore(); };
+      const flower5 = (x, y, r, petal, edge, a = 0) => {   // a plum blossom
+        c.save(); c.translate(x, y); c.rotate(a);
+        for (let k = 0; k < 5; k++) { const t = k / 5 * Math.PI * 2; c.fillStyle = rad(c, Math.cos(t) * r * .55, Math.sin(t) * r * .55, r * .6, [[0, petal], [.8, petal], [1, edge]]); ell(c, Math.cos(t) * r * .55, Math.sin(t) * r * .55, r * .52, r * .52); }
+        c.strokeStyle = 'rgba(120,80,30,.55)'; c.lineWidth = .5; for (let k = 0; k < 12; k++) { const t = R() * 7, l = r * (.35 + R() * .3); c.beginPath(); c.moveTo(0, 0); c.lineTo(Math.cos(t) * l, Math.sin(t) * l); c.stroke(); c.fillStyle = '#d8a828'; ell(c, Math.cos(t) * l, Math.sin(t) * l, .9, .9); }
+        c.fillStyle = '#7a8a2a'; ell(c, 0, 0, r * .16, r * .16); c.restore(); };
+      if (kind === 'momiji') {   // 紅葉に小鳥
+        const b = branch([w * 1.05, h * .12, w * .7, h * .2, w * .45, h * .18, w * .08, h * .34], 13, 4);
+        const b2 = branch([w * .62, h * .19, w * .5, h * .32, w * .42, h * .42, w * .3, h * .55], 6, 2);
+        twig(w * .3, h * .27, 2.2, w * .2, 3); twig(w * .8, h * .16, 1.9, w * .25, 3.5); twig(w * .45, h * .42, .6, w * .25, 2.5);
+        const cols = [['#c8321e', '#e8742a'], ['#d8481c', '#f0a040'], ['#b8281e', '#d85a2a'], ['#e06a22', '#f4c060'], ['#a82418', '#c8402a']];
+        for (let i = 0; i < 46; i++) { const t = R(), src = R() < .65 ? b : b2, [x, y] = src(t), cc = cols[(R() * cols.length) | 0];
+          c.globalAlpha = .75 + R() * .25; maple(x + (R() - .5) * w * .22, y + R() * h * .1 - h * .02, w * (.05 + R() * .035), (R() - .5) * 1.6 + Math.PI, cc[0], cc[1]); }
+        c.globalAlpha = .45; for (let i = 0; i < 10; i++) maple(w * (.1 + R() * .8), h * (.45 + R() * .35), w * (.035 + R() * .02), R() * 6, '#e0905a', '#f2c890');   // falling leaves
+        c.globalAlpha = 1;
+        { const [x, y] = b(.52); bird(x, y - 9, 1.15, false, '#8a7258', '#3a2e24', '#e6c8a0', '#6a5a46'); }
+        c.fillStyle = 'rgba(160,140,100,.18)'; for (let i = 0; i < 5; i++) ell(c, w * (.2 + R() * .6), h * (.85 + R() * .12), w * .3, h * .02);
+      } else if (kind === 'ume') {   // 梅に鶯
+        const b = branch([w * -.05, h * .78, w * .25, h * .66, w * .3, h * .5, w * .62, h * .42], 18, 7);
+        const b2 = branch([w * .58, h * .44, w * .75, h * .34, w * .8, h * .25, w * .95, h * .08], 7, 2);
+        const tw = [twig(w * .62, h * .43, -1.45, h * .3, 3), twig(w * .3, h * .55, -1.3, h * .28, 3), twig(w * .78, h * .3, -1.6, h * .2, 2), twig(w * .18, h * .68, -1.2, h * .2, 2.5), twig(w * .45, h * .46, -.4, w * .4, 2.5)];
+        const pts = []; for (let i = 0; i < 40; i++) { const f = R() < .5 ? (R() < .5 ? b : b2) : tw[(R() * tw.length) | 0]; pts.push(f(.15 + R() * .85)); }
+        pts.forEach(([x, y], i) => { const red = i % 3 !== 0, r = 6 + R() * 4; if (R() < .3) { c.fillStyle = red ? '#b8243a' : '#f4ece0'; ell(c, x + 4, y, r * .35, r * .4); return; }
+          flower5(x + (R() - .5) * 8, y + (R() - .5) * 8, r, red ? '#d8344a' : '#fbf6ec', red ? '#a01a30' : '#e8d8c8', R() * 6); });
+        { const [x, y] = b(.82); bird(x - 4, y - 9, 1.1, true, '#8a8a3a', '#6a6a2a', '#c8c088', '#6a6a30'); }
+      } else {   // 青楓に翡翠, 鮎
+        for (let i = 0; i < 26; i++) { const y = h * (.55 + R() * .45); c.strokeStyle = `rgba(255,255,255,${.25 + R() * .3})`; c.lineWidth = 1 + R() * 1.4; c.beginPath(); const x0 = R() * w; c.moveTo(x0, y); c.bezierCurveTo(x0 + 20, y - 6, x0 + 40, y + 6, x0 + 60 + R() * 40, y - 2); c.stroke(); }
+        const b = branch([w * 1.05, h * .02, w * .8, h * .08, w * .55, h * .1, w * .25, h * .2], 9, 3);
+        twig(w * .55, h * .1, 2.0, h * .14, 2.5); twig(w * .8, h * .07, 1.8, h * .18, 3);
+        for (let i = 0; i < 34; i++) { const [x, y] = b(R()); c.globalAlpha = .7 + R() * .3; maple(x + (R() - .5) * w * .3, y + R() * h * .16, w * (.045 + R() * .03), Math.PI + (R() - .5) * 1.4, '#5a9a3a', '#b8d878'); }
+        c.globalAlpha = 1;
+        // the rock and the kingfisher
+        c.fillStyle = lin(c, h * .5, h * .6, [[0, '#7a7a78'], [1, '#3e4442']]); c.beginPath(); c.moveTo(w * .02, h * .6); c.bezierCurveTo(w * .05, h * .51, w * .25, h * .49, w * .34, h * .55); c.lineTo(w * .36, h * .6); c.closePath(); c.fill();
+        c.fillStyle = 'rgba(255,255,255,.18)'; c.beginPath(); c.ellipse(w * .16, h * .53, w * .1, h * .012, -.1, 0, 7); c.fill();
+        { c.save(); c.translate(w * .2, h * .505); c.scale(1.2, 1.2);
+          c.fillStyle = '#2a7aa8'; c.beginPath(); c.moveTo(4, -2); c.lineTo(14, 3); c.lineTo(12, 5); c.lineTo(2, 3); c.fill();
+          c.fillStyle = '#e8803a'; ell(c, 0, 0, 7, 5.6); c.fillStyle = '#1e8ab0'; c.beginPath(); c.ellipse(2, -1.8, 7, 3.8, .2, 0, 7); c.fill();
+          c.fillStyle = '#3ab0d0'; for (let i = 0; i < 5; i++) ell(c, 1 + i * 1.6, -2 + (i % 2), .7, .7);
+          c.fillStyle = '#1e7aa0'; ell(c, -5.5, -5, 4.4, 4); c.fillStyle = '#e8803a'; ell(c, -6, -3.6, 2.2, 1.2); c.fillStyle = '#fff'; ell(c, -7.4, -2.6, 1.2, .8);
+          c.fillStyle = '#111'; ell(c, -6.6, -5.4, .7, .7); c.fillStyle = '#2a2420'; c.beginPath(); c.moveTo(-9, -5.6); c.lineTo(-17, -4.4); c.lineTo(-9, -3.8); c.fill(); c.restore(); }
+        // ayu in the stream
+        for (let i = 0; i < 4; i++) { c.save(); c.translate(w * (.45 + i * .12 - (i % 2) * .1), h * (.66 + i * .06)); c.rotate(-.35 + (i % 2) * .15); c.scale(1 + (i % 2) * .15, 1);
+          c.fillStyle = lin(c, -4, 4, [[0, 'rgba(90,110,100,.85)'], [.5, 'rgba(200,210,200,.9)'], [1, 'rgba(240,240,230,.8)']]); c.beginPath(); c.moveTo(-18, 0); c.bezierCurveTo(-10, -6, 8, -5, 14, 0); c.bezierCurveTo(8, 4, -10, 4, -18, 0); c.fill();
+          c.fillStyle = 'rgba(90,110,100,.8)'; c.beginPath(); c.moveTo(13, 0); c.lineTo(21, -5); c.lineTo(20, 5); c.fill();
+          c.fillStyle = 'rgba(230,200,60,.8)'; ell(c, -6, -1.4, 2.2, .8); c.fillStyle = '#111'; ell(c, -14, -.8, .7, .7); c.restore(); }
+      }
+      // the painter's signature and seal (bottom left)
+      c.fillStyle = 'rgba(60,40,30,.6)'; for (let i = 0; i < 3; i++) c.fillRect(w * .07 + (R() - .5) * 2, h * .84 + i * 7, 4 + R() * 3, 3);
+      c.fillStyle = '#b02a1a'; c.fillRect(w * .065, h * .88, 9, 9); c.fillStyle = 'rgba(255,230,220,.6)'; c.fillRect(w * .065 + 2, h * .88 + 2, 2, 5); c.fillRect(w * .065 + 5, h * .88 + 2, 2, 5);
+      c.restore();
+      // the frame's shading, the 八双 (top bar) and the 軸 (roller, drawn as a mesh)
+      c.fillStyle = lin(c, 0, 8, [[0, 'rgba(60,40,20,.5)'], [1, 'rgba(60,40,20,0)']]); c.fillRect(0, 0, W, 8);
+      c.fillStyle = 'rgba(0,0,0,.08)'; c.fillRect(0, 0, 2, H); c.fillRect(W - 2, 0, 2, H);
+    };
+      const scroll = (kind, z) => { const tex = canvasTex('tbl12-kake-' + kind, 320, 1280, (c, W, H) => kake(c, W, H, kind));
+        const m = new TT.Mesh(new TT.PlaneGeometry(6.6, 26.4), M({ map: tex, roughness: .85, bump: false })); at(g, m, z, FL + 19.8, ZB + .35, 0, false);
+        const hs = new TT.Mesh(new TT.CylinderGeometry(.12, .12, 6.8, 6), M({ color: 0xa88a5a, roughness: .5 })); hs.rotation.z = Math.PI / 2; at(g, hs, z, FL + 33, ZB + .5, 0, false);   // 八双
+        const cord = new TT.Mesh(new TT.PlaneGeometry(.1, 3.2), M({ color: 0xd8c8a0, roughness: .8 })); at(g, cord, z, FL + 34.6, ZB + .3, 0, false);
+        const rod2 = new TT.Mesh(new TT.CylinderGeometry(.34, .34, 6.8, 10), M({ color: 0xe0d4b8, roughness: .6 })); rod2.rotation.z = Math.PI / 2; at(g, rod2, z, FL + 6.5, ZB + .7, 0, false);
+        [-1, 1].forEach(s => { const e = new TT.Mesh(new TT.CylinderGeometry(.42, .38, .7, 12), black); e.rotation.z = Math.PI / 2; at(g, e, z + s * 3.7, FL + 6.5, ZB + .7, 0, false); }); };   // 軸先
+      scroll('kawa', -53); scroll('momiji', -39.5); scroll('ume', -26);
       const vase = lathe(TT, [[0, 0], [1.2, 0], [1.4, .4], [2, 3], [1.9, 4.8], [1, 6.2], [.7, 7], [.9, 7.6], [0, 7.6]], SEG(o, 24), M({ color: 0x1c2e6a, roughness: .2, clearcoat: .8 }));
       at(g, vase, -21, FL + 2.8, ZB + 5); }
-    // the players' places: navy zabuton, white-draped armrests (脇息) on wooden legs
-    const navy = M({ map: canvasTex('tbl12-zabuton', 256, 256, (c, W) => { c.fillStyle = '#25336a'; c.fillRect(0, 0, W, W); const R = rng(3); for (let i = 0; i < 4000; i++) { c.fillStyle = `rgba(${R() > .5 ? '90,110,170' : '10,16,40'},.18)`; c.fillRect(R() * W, R() * W, 1, 1); }
-      c.strokeStyle = 'rgba(200,210,240,.4)'; c.lineWidth = 3; c.strokeRect(6, 6, W - 12, W - 12); }), roughness: .9, sheen: new TT.Color(0x4a5a9a), bumpScale: .01 });
-    [-31, 33].forEach(z => { at(g, new TT.Mesh(RB(14, 2, 15, 1, 3), navy), 0, FL + 1, z); ao(o, 0, FL, z, 16, 17, .35); });
+    // the players' zabuton (2026-11-12, the user's reference): a plump top-grade one — slate-teal linen, a band of embroidered peonies
+    // with gold leaves, gold scrolls and bronze key-frets (雷文) down the middle, an orange piping round the seam, tassels at the corners
+    const zabTop = canvasTex('tbl12-zab-lux', 512, 544, (c, W, H) => {
+      const R = rng(77);
+      c.fillStyle = '#2b5260'; c.fillRect(0, 0, W, H);
+      for (let y = 0; y < H; y += 2) { c.fillStyle = `rgba(${R() > .5 ? '120,160,170' : '10,30,40'},${.08 + R() * .1})`; c.fillRect(0, y, W, 1); }   // the linen weave
+      for (let x = 0; x < W; x += 2) { c.fillStyle = `rgba(${R() > .5 ? '120,160,170' : '10,30,40'},${.06 + R() * .08})`; c.fillRect(x, 0, 1, H); }
+      for (let i = 0; i < 2600; i++) { c.fillStyle = `rgba(${R() > .5 ? '150,190,200' : '0,20,30'},${.12 + R() * .15})`; c.fillRect(Math.round(R() * W), Math.round(R() * H), 2 + Math.round(R() * 5), 1); }   // slubs
+      const bx0 = W * .37, bx1 = W * .63;
+      c.strokeStyle = 'rgba(214,176,98,.85)'; c.lineWidth = 1.1;   // gold scrolls (couched thread)
+      for (let i = 0; i < 150; i++) { const x = bx0 + R() * (bx1 - bx0), y = R() * H, r = 4 + R() * 6, d = R() < .5 ? 1 : -1;
+        c.beginPath(); for (let k = 0; k <= 30; k++) { const t = k / 30 * Math.PI * 3.2, rr = r * (1 - k / 34); c.lineTo(x + Math.cos(t * d) * rr, y + Math.sin(t * d) * rr); } c.stroke(); }
+      const fret = (x, y, s, f) => {   // a bronze key-fret, satin stitched
+        c.save(); c.translate(x, y); c.scale(f, 1); c.lineCap = 'square';
+        const P = [[0, 1.2], [0, 0], [3, 0], [3, 3], [0, 3], [0, 1.8], [2, 1.8], [2, 1.2], [1, 1.2]];
+        [['#7a4a22', 7], ['#c88a4a', 4.6], ['#e8b070', 1.4]].forEach(([col, lw]) => { c.strokeStyle = col; c.lineWidth = lw; c.beginPath(); P.forEach(([a, b], i) => c[i ? 'lineTo' : 'moveTo'](a * s, b * s)); c.stroke(); });
+        c.restore(); };
+      fret(W * .55, H * .27, 15, 1); fret(W * .45, H * .37, 15, -1); fret(W * .56, H * .66, 15, 1); fret(W * .44, H * .74, 15, -1);
+      const leaf = (x, y, s, a) => { c.save(); c.translate(x, y); c.rotate(a);
+        c.fillStyle = lin(c, -s, s, [[0, '#8a7a3a'], [.5, '#d8c070'], [1, '#a89448']]); c.beginPath(); c.moveTo(0, 0); c.bezierCurveTo(s * .5, -s * .45, s * 1.2, -s * .3, s * 1.6, 0); c.bezierCurveTo(s * 1.2, s * .3, s * .5, s * .45, 0, 0); c.fill();
+        c.strokeStyle = 'rgba(255,240,180,.55)'; c.lineWidth = .7; for (let k = 1; k < 9; k++) { c.beginPath(); c.moveTo(s * k * .17, 0); c.lineTo(s * k * .17 + s * .12, (k % 2 ? -1 : 1) * s * .3 * Math.sin(k / 9 * Math.PI)); c.stroke(); }
+        c.strokeStyle = '#6a5a2a'; c.lineWidth = 1; c.beginPath(); c.moveTo(0, 0); c.lineTo(s * 1.5, 0); c.stroke(); c.restore(); };
+      const peony = (x, y, s) => {   // layered ruffled petals, salmon at the heart to cream at the rim, gold-thread outlines, satin-stitch streaks
+        for (let L = 0; L < 4; L++) { const r = s * (1 - L * .22), n = 7 - L;
+          for (let k = 0; k < n; k++) { const a = k / n * Math.PI * 2 + L * .4 + R() * .2, px = x + Math.cos(a) * r * .45, py = y + Math.sin(a) * r * .38;
+            c.save(); c.translate(px, py); c.rotate(a + Math.PI / 2);
+            c.beginPath(); c.moveTo(-r * .42, r * .1); for (let j = 0; j <= 6; j++) { const t = j / 6, xx = -r * .42 + t * r * .84; c.quadraticCurveTo(xx - r * .07, -r * .5 - (j % 2) * r * .08, xx, -r * .44 + Math.abs(t - .5) * r * .25); } c.lineTo(r * .42, r * .1); c.closePath();
+            c.fillStyle = lin(c, r * .1, -r * .5, [[0, L > 1 ? '#c25a44' : '#d97a60'], [.55, L > 1 ? '#e89a80' : '#efb49a'], [1, '#fbe2d4']]); c.fill();
+            c.strokeStyle = 'rgba(200,150,70,.85)'; c.lineWidth = .9; c.stroke();
+            c.strokeStyle = 'rgba(255,255,255,.22)'; c.lineWidth = .6; for (let j = 0; j < 8; j++) { c.beginPath(); c.moveTo((j / 7 - .5) * r * .6, r * .05); c.lineTo((j / 7 - .5) * r * .75, -r * .38); c.stroke(); }
+            c.restore(); } }
+        c.fillStyle = '#e0b048'; for (let k = 0; k < 14; k++) ell(c, x + (R() - .5) * s * .3, y + (R() - .5) * s * .24, 1.6, 1.6); };
+      [[.5, .51, 70], [.56, .12, 50], [.44, .9, 50]].forEach(([fx, fy, s]) => {
+        for (let k = 0; k < 4; k++) leaf(W * fx + (k < 2 ? -1 : 1) * s * .55, H * fy + (k % 2 ? 1 : -1) * s * .5, s * .45, (k < 2 ? Math.PI : 0) + (k % 2 ? .6 : -.6) * (k < 2 ? -1 : 1));
+        peony(W * fx, H * fy, s); });
+    });
+    const zabSide = M({ color: 0x2b5260, roughness: .9, sheen: new TT.Color(0x5a8a96) });
+    const zabM = [zabSide, zabSide, M({ map: zabTop, roughness: .78, bumpScale: .006, sheen: new TT.Color(0x6a9aa6) }), zabSide, zabSide, zabSide];
+    // the edging: gold thread (2026-11-12, the user: woven gold, not orange) — a twisted cord, its strands in the texture
+    const cordTex = canvasTex('tbl12-goldcord', 64, 16, (c, W, H) => { c.fillStyle = '#b8902e'; c.fillRect(0, 0, W, H); for (let x = -H; x < W + H; x += 6) { c.fillStyle = lin(c, 0, H, [[0, '#7a5a18'], [.45, '#f2d27a'], [.6, '#fff0b8'], [1, '#8a6a20']]); c.beginPath(); c.moveTo(x, 0); c.lineTo(x + 3.4, 0); c.lineTo(x + 3.4 + H, H); c.lineTo(x + H, H); c.fill(); } }, 1);
+    cordTex.repeat.set(70, 1);
+    const pipe = M({ map: cordTex, color: 0xffffff, metalness: .55, roughness: .38, bumpScale: .01 }), tas = M({ color: 0xd8b058, metalness: .45, roughness: .45, sheen: new TT.Color(0xffe8a0) });
+    const zabuton = (z, ry) => { const G = grp(TT, g, 0, FL, z, ry), w = 14.6, d = 15.6, t = 2.8;
+      const m = new TT.Mesh(RB(w, t, d, 1.2, 4), zabM); m.scale.y = 1; at(G, m, 0, t / 2, 0);
+      { const pg = new TT.PlaneGeometry(w - .9, d - .9, 24, 24), P = pg.attributes.position;   // the plump middle: the top bulges
+        for (let i = 0; i < P.count; i++) { const u = P.getX(i) / ((w - .9) / 2), v = P.getY(i) / ((d - .9) / 2); P.setZ(i, .75 * (1 - Math.pow(Math.abs(u), 3)) * (1 - Math.pow(Math.abs(v), 3))); }
+        pg.computeVertexNormals(); const top = new TT.Mesh(pg, zabM[2]); top.rotation.x = -Math.PI / 2; at(G, top, 0, t - .02, 0, 0, false); top.castShadow = true; }
+      const sh = new TT.Shape(), r = 1.2, hw = w / 2 - .05, hd = d / 2 - .05;   // the piping round the seam
+      sh.moveTo(-hw + r, -hd); sh.lineTo(hw - r, -hd); sh.quadraticCurveTo(hw, -hd, hw, -hd + r); sh.lineTo(hw, hd - r); sh.quadraticCurveTo(hw, hd, hw - r, hd); sh.lineTo(-hw + r, hd); sh.quadraticCurveTo(-hw, hd, -hw, hd - r); sh.lineTo(-hw, -hd + r); sh.quadraticCurveTo(-hw, -hd, -hw + r, -hd);
+      const pts = sh.getSpacedPoints(80).map(p => new TT.Vector3(p.x, 0, p.y));
+      const tube = new TT.Mesh(new TT.TubeGeometry(new TT.CatmullRomCurve3(pts, true), 160, .2, 6, true), pipe); at(G, tube, 0, t * .62, 0);
+      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => { const T2 = grp(TT, G, a * (hw - .3), t * .62, b * (hd - .3), 0);   // 房
+        at(T2, new TT.Mesh(new TT.SphereGeometry(.38, 10, 8), tas), 0, 0, 0); const fr = new TT.Mesh(new TT.ConeGeometry(.42, 1.1, 10, 1, true), tas); fr.rotation.set(Math.PI + b * .5, 0, -a * .5); at(T2, fr, a * .3, -.15, b * .3, 0, false); });
+      ao(o, 0, FL, z, w + 2, d + 2, .4); return G; };
+    // closer to the board (2026-11-12): the player kneels with the knees a hand's breadth from it
+    zabuton(-18.5, 0); zabuton(20.5, Math.PI);
     const cloth = M({ map: canvasTex('tbl12-pleat', 256, 64, (c, W, H) => { c.fillStyle = '#f4f2ec'; c.fillRect(0, 0, W, H); for (let x = 0; x < W; x += 8) { c.fillStyle = 'rgba(150,150,140,.35)'; c.fillRect(x, 0, 2, H); c.fillStyle = 'rgba(255,255,255,.6)'; c.fillRect(x + 4, 0, 2, H); } }), roughness: .85, sheen: new TT.Color(0xffffff) });
     const clothTop = M({ color: 0xf6f4ee, roughness: .8, sheen: new TT.Color(0xffffff) }), legW = M({ map: wood('tbl12-leg', '#d8b880', '#a88048', 128, 256, 1), roughness: .45, clearcoat: .3 });
     const kyosoku = (x, z, ry) => { const G = grp(TT, g, x, FL, z, ry); G.scale.setScalar(.8);
@@ -2947,7 +3143,7 @@
       at(G, new TT.Mesh(RB(13, 2, 4.6, .9, 3), clothTop), 0, 5.6, 0);
       [-1, 1].forEach(s => { const sk = new TT.Mesh(new TT.PlaneGeometry(12.4, 2.6), cloth); at(G, sk, 0, 3.6, s * 2.25, s > 0 ? 0 : Math.PI, false); });
       [-1, 1].forEach(s => { const sk = new TT.Mesh(new TT.PlaneGeometry(4.4, 2.6), cloth); at(G, sk, s * 6.3, 3.6, 0, s * Math.PI / 2, false); }); ao(o, x, FL, z, 15, 7, .3); };
-    kyosoku(11, -31, Math.PI / 2); kyosoku(-12, 35, Math.PI / 2);
+    kyosoku(12.5, -19, Math.PI / 2); kyosoku(-13.5, 22, Math.PI / 2);
     // the recorder's place on the right: a low dark desk with the score sheet, a pen and a laptop; a grey zabuton
     { const G = grp(TT, g, 44, FL, -14, -.35), dk = M({ color: 0x3a2a20, roughness: .3, clearcoat: .6 });
       at(G, new TT.Mesh(RB(20, 1, 10, .2, 1), dk), 0, 7.5, 0); [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => at(G, new TT.Mesh(RB(1, 7, 1, .1, 1), dk), a * 9, 3.5, b * 4.2));
@@ -2967,12 +3163,19 @@
       at(G, btl, 2.4, .5, -.6); at(G, new TT.Mesh(new TT.CylinderGeometry(.48, .48, .7, 12), M({ color: 0x2a6ac8, roughness: .4 })), 2.4, 8, -.6);
       at(g, new TT.Mesh(RB(6.4, 2.6, 3.6, .2, 1), M({ map: canvasTex('tbl12-tissue', 128, 64, (c, W, H) => { c.fillStyle = '#f4f2ee'; c.fillRect(0, 0, W, H); c.fillStyle = '#7a9ac8'; c.fillRect(0, H * .7, W, H * .3); }), roughness: .8 })), -27, FL + 1.3, 22, .1); }
     // the lights: daylight through the shoji (back), the ceiling panels, a soft overhead light on the board
-    scene.add(new TT.HemisphereLight(day ? 0xf6f2e8 : 0xffe8c8, 0x6a5a3a, day ? .62 : .5));
-    const key = dirLight(TT, day ? 0xfff8ec : 0xffe4c0, day ? .95 : .7, [-8, 40, -30], 17); scene.add(key);
-    [-33, 33].forEach(x => { const L = new TT.PointLight(day ? 0xfffaf0 : 0xffe6c4, day ? .35 : .6, 120, 2); L.position.set(x, Y1 - 3, -23); scene.add(L); });
+    scene.add(new TT.HemisphereLight(LT.hemi[0], LT.hemi[1], LT.hemi[2]));
+    const key = dirLight(TT, LT.key[0], LT.key[1], LT.key[2], 17); scene.add(key);
+    [-33, 33].forEach(x => { const L = new TT.PointLight(LT.pt[0], LT.pt[1], 120, 2); L.position.set(x, Y1 - 3, -23); scene.add(L); });
+    if (!day) {   // evening / night: the ceiling panels glow, a downlight on the tokonoma
+      [[-33, -23], [33, -23]].forEach(([x, z]) => { const p = new TT.Mesh(new TT.PlaneGeometry(33, 33), new TT.MeshBasicMaterial({ color: night ? 0xfff6e4 : 0xffeacc, transparent: true, opacity: night ? .9 : .55 })); p.rotation.x = Math.PI / 2; p.position.set(x, Y1 - .05, z); g.add(p); });
+      const sp = new TT.SpotLight(0xffd8a0, night ? 1.1 : .6, 70, .5, .6, 1.5); sp.position.set(-39, Y1 - 2, ZB + 14); sp.target.position.set(-39, FL + 16, ZB); scene.add(sp); scene.add(sp.target); }
+    if (T === 'morning') lightPatch(o, -52, FL + .04, 14, 26, 56, 0, 0xfff0d0, [5, 9], .2);   // the low sun through the left shoji
+    if (ev) lightPatch(o, 22, FL + .04, -40, 30, 46, -.35, 0xff9850, [6, 8], .22);   // … and through the back ones
     mons(o, 12, FL);
     try { X.mergeStatic(g); } catch (e) {}
-    return { bg: '#cfc8b6', exp: day ? .74 : .86, board: day ? .3 : .42, key, env: { top: '#f4ead6', bottom: '#5a4a30', panels: [[0, 18, -60, 60, 24, day ? '#fffaf0' : '#e8c8a0', day ? 1.4 : .7], [-33, 40, -23, 34, 30, '#fff8ec', 1.1], [33, 40, -23, 34, 30, '#fff8ec', 1.1]] }, onShow() {} };
+    const SH = { morning: ['#eef0ea', .7], day: ['#fbf6ec', .7], evening: ['#ffa860', .75], night: ['#8a8070', .08] }[T], CL = { morning: .3, day: .45, evening: .55, night: .75 }[T];
+    return { bg: { morning: '#b8b8b0', day: '#c4bca8', evening: '#8a6a50', night: '#3a342c' }[T], exp: LT.exp, minExp: .4, board: LT.board, key,
+      env: { top: night ? '#2a2420' : ev ? '#8a6448' : '#b8b0a0', bottom: night ? '#100c08' : '#3a2c1c', panels: [[0, 18, -60, 60, 24, SH[0], SH[1]], [-60, 18, 10, 60, 24, SH[0], T === 'morning' ? 1.2 : SH[1] * .6], [-33, 40, -23, 34, 30, '#fff6e6', CL], [33, 40, -23, 34, 30, '#fff6e6', CL]] }, onShow() {} };
   };
   TABLES[12].plain = { sun: 0xfff6e8, sunI: .78, hemi: [0xf6f2e8, 0x6a5a3a, .5], exp: .66 };
   TABLES[12].floor = (o) => { const TA = X.tatami(); return { img: TA.map.image, w: 20, h: 40, over: 'radial-gradient(140% 120% at 50% 40%, transparent 55%, rgba(40,30,10,.22))' }; };
