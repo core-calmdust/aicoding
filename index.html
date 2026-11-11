@@ -85,13 +85,14 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700;900&family=Unbounded:wght@500;700&family=RocknRoll+One&family=Noto+Sans+Devanagari:wght@400;700&family=Noto+Sans+Arabic:wght@400;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700;900&family=Syne:wght@500;700&family=RocknRoll+One&family=Noto+Sans+Devanagari:wght@400;700&family=Noto+Sans+Arabic:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#07080d; --bg2:#0d0f17; --line:rgba(255,255,255,.08); --line2:rgba(255,255,255,.14);
   --text:#eef0f6; --muted:#9aa0b4; --dim:#646a80;
   --pink:#ff3fa4; --cyan:#30e6ff; --violet:#8b5cff; --gold:#f2cf7a;
   --radius:20px;
+  --font-en:'Syne';   /* Latin labels, numbers, badges — switch the English face here (and in the Google Fonts link) */
   --wrap:min(1180px, 100% - 48px);
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -104,7 +105,7 @@ body{
 a{color:inherit;text-decoration:none}
 img{display:block;max-width:100%}
 .wrap{width:var(--wrap);margin:0 auto}
-.en{font-family:'Unbounded',sans-serif;letter-spacing:.02em}
+.en{font-family:var(--font-en),sans-serif;letter-spacing:.02em}
 
 /* background atmosphere */
 .aurora{position:fixed;inset:0;z-index:-2;pointer-events:none;
@@ -150,7 +151,7 @@ nav ul a{white-space:nowrap}
 .btn.ghost{border:1px solid var(--line2);color:var(--text)}
 .btn.ghost:hover{background:rgba(255,255,255,.06)}
 .stats{margin-top:64px;display:flex;flex-wrap:wrap;gap:40px 56px}
-.stat b{display:block;font-family:'Unbounded',sans-serif;font-size:30px;font-weight:700}
+.stat b{display:block;font-family:var(--font-en),sans-serif;font-size:32px;font-weight:700}
 .stat span{font-size:12px;color:var(--dim);letter-spacing:.1em}
 
 /* section head */
@@ -243,7 +244,7 @@ section{padding:56px 0}
 .tag.netrank::before{content:'';display:inline-block;width:7px;height:7px;border-radius:2px;background:#ffc94d;box-shadow:0 0 8px #ffc94d;margin-right:6px;vertical-align:1px}
 .tag.online{border-color:rgba(80,220,140,.6);color:#9ff0c0;background:rgba(80,220,140,.08)}
 .tag.online::before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:#4fe08f;box-shadow:0 0 8px #4fe08f;margin-right:6px;vertical-align:1px}
-.gx-icon .ol{position:absolute;left:-6px;top:-6px;height:18px;padding:0 6px;border-radius:9px;display:flex;align-items:center;gap:3px;font:700 9.5px/1 'Unbounded',sans-serif;letter-spacing:.04em;color:#06210f;background:linear-gradient(135deg,#9ff5c4,#3fd27f);box-shadow:0 0 0 2.5px var(--bg),0 0 10px rgba(80,220,140,.6)}
+.gx-icon .ol{position:absolute;left:-6px;top:-6px;height:18px;padding:0 6px;border-radius:9px;display:flex;align-items:center;gap:3px;font:700 10px/1 var(--font-en),sans-serif;letter-spacing:.05em;color:#06210f;background:linear-gradient(135deg,#9ff5c4,#3fd27f);box-shadow:0 0 0 2.5px var(--bg),0 0 10px rgba(80,220,140,.6)}
 .tag.new{border-color:rgba(242,207,122,.55);color:var(--gold)}
 .tag.new.upd{border-color:rgba(48,230,255,.5);color:var(--cyan)}
 .tag.ai{border-color:rgba(139,92,255,.55);color:#c8b6ff}
@@ -271,7 +272,7 @@ section{padding:56px 0}
 .gx-media .shot{position:relative;width:100%;height:100%;object-fit:contain;transition:opacity .3s ease, transform .6s cubic-bezier(.2,.8,.2,1)}
 .gx-media::after{content:"";position:absolute;inset:auto 0 0 0;height:34%;background:linear-gradient(transparent,rgba(10,11,17,.55));pointer-events:none}
 .gx-media:hover .shot{transform:scale(1.025)}
-.gx-count{position:absolute;top:14px;right:14px;z-index:2;font-family:'Unbounded',sans-serif;font-size:10.5px;font-variant-numeric:tabular-nums;letter-spacing:.08em;padding:4px 10px;border-radius:999px;background:rgba(7,8,13,.62);border:1px solid var(--line2);color:var(--muted);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.gx-count{position:absolute;top:14px;right:14px;z-index:2;font-family:var(--font-en),sans-serif;font-size:11px;font-variant-numeric:tabular-nums;letter-spacing:.08em;padding:4px 10px;border-radius:999px;background:rgba(7,8,13,.62);border:1px solid var(--line2);color:var(--muted);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .gx-info{padding:34px 40px 36px;display:flex;flex-direction:column;justify-content:center;min-width:0;border-left:1px solid var(--line)}
 .gx-info > *{transition:opacity .28s ease, transform .5s cubic-bezier(.2,.8,.2,1)}
 .gx-panel:not(.swap) .gx-info > :nth-child(2){transition-delay:40ms}
@@ -292,7 +293,7 @@ section{padding:56px 0}
 .gx-facts{display:flex;flex-wrap:wrap;gap:12px 26px}
 .gx-facts:empty{display:none}
 .gx-facts div{display:flex;flex-direction:column-reverse}
-.gx-facts dd{direction:ltr;unicode-bidi:isolate;font-family:'Unbounded',sans-serif;font-size:20px;font-weight:700;line-height:1.2;color:var(--text)}
+.gx-facts dd{direction:ltr;unicode-bidi:isolate;font-family:var(--font-en),sans-serif;font-size:20px;font-weight:700;line-height:1.2;color:var(--text)}
 .gx-facts dt{font-size:11px;letter-spacing:.08em;color:var(--dim);margin-top:3px}
 .gx-play::after{content:"→";transition:transform .2s}
 .gx-play:hover::after{transform:translateX(4px)}
@@ -303,7 +304,7 @@ section{padding:56px 0}
 .gx-chips{display:flex;flex-wrap:wrap;gap:8px}
 .gx-chip{font:inherit;font-size:12.5px;line-height:1.4;padding:7px 13px;border-radius:999px;border:1px solid var(--line2);background:rgba(255,255,255,.03);color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;gap:7px;white-space:nowrap;transition:background .2s,color .2s,border-color .2s}
 .gx-chip:hover{color:var(--text);border-color:rgba(255,255,255,.28)}
-.gx-chip b{font-family:'Unbounded',sans-serif;font-size:10px;font-weight:500;color:var(--dim)}
+.gx-chip b{font-family:var(--font-en),sans-serif;font-size:10.5px;font-weight:500;color:var(--dim)}
 .gx-chip[aria-pressed=true]{background:var(--text);border-color:var(--text);color:#0a0b10;font-weight:700}
 .gx-chip[aria-pressed=true] b{color:#5b6070}
 .gx-chip:focus-visible,.gx-search input:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
