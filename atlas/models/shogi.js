@@ -282,25 +282,27 @@
   // cr {c0, r0} (詰将棋's close-up, shogi/index.html tzWindow): an n×n window of the 9×9 board — the stars where they fall inside it
   // and that part of the board's grain, so it reads as the same board seen closer (2026-11-10)
   const crStars = (n, cr) => !cr ? (n === 9 ? [[3, 3], [6, 3], [3, 6], [6, 6]] : []) : [[3, 3], [6, 3], [3, 6], [6, 6]].map(([i, j]) => [i - cr.c0, j - cr.r0]).filter(([i, j]) => i > 0 && i < n && j > 0 && j < n);
-  const crKey = (n, cr) => cr ? `-${n}c${cr.c0}r${cr.r0}` : n === 9 ? '' : '-' + n;
+  const crKey = (n, cr, nh = n) => cr ? `-${n}c${cr.c0}r${cr.r0}` : n === 9 && nh === 9 ? '' : '-' + n + (nh !== n ? 'x' + nh : '');
   // ext: the block made that much deeper at the top and the bottom (world units) — the komadai bars of the PC layout lie on it (2026-11-11)
-  function boardTop(n = 9, cr = null, ext = 0, look = 'kaya') {
+  // nh: the number of ranks when it differs from the files (the variants' W × H boards: 平安将棋 9×8, ゴロゴロ 5×6, マイクロ 4×5 …, 2026-11-12)
+  function boardTop(n = 9, cr = null, ext = 0, look = 'kaya', nh = n) {
     const L = LOOK[look] || {}, withTop = L.top ? fn => withImg(L.top, fn) : withKaya;
-    const MG = n === 9 ? MARGIN : MARGIN * n / 9;   // rim scales with the grid (the 5x5 board is fitted to the same screen size)
-    const PX = 100, BW = n * CW + MG * 2, BD = n * CH + MG * 2 + ext * 2;
+    const MG = n === 9 && nh === 9 ? MARGIN : MARGIN * Math.max(n, nh) / 9;   // rim scales with the grid (the 5x5 board is fitted to the same screen size)
+    const PX = 100, BW = n * CW + MG * 2, BD = nh * CH + MG * 2 + ext * 2;
     const grid = (c) => {
       const ox = MG * PX, oy = (MG + ext) * PX, cw = CW * PX, ch = CH * PX;
       c.strokeStyle = L.line || 'rgba(33,19,11,.92)'; c.lineCap = 'square';
-      for (let i = 0; i <= n; i++) {
+      for (let i = 0; i <= Math.max(n, nh); i++) {
         c.lineWidth = i === 0 || i === n ? 3.4 : 2.2;
-        c.beginPath(); c.moveTo(ox + i * cw, oy); c.lineTo(ox + i * cw, oy + n * ch); c.stroke();
-        c.beginPath(); c.moveTo(ox, oy + i * ch); c.lineTo(ox + n * cw, oy + i * ch); c.stroke();
+        if (i <= n) { c.beginPath(); c.moveTo(ox + i * cw, oy); c.lineTo(ox + i * cw, oy + nh * ch); c.stroke(); }
+        c.lineWidth = i === 0 || i === nh ? 3.4 : 2.2;
+        if (i <= nh) { c.beginPath(); c.moveTo(ox, oy + i * ch); c.lineTo(ox + n * cw, oy + i * ch); c.stroke(); }
       }
       c.fillStyle = L.star || 'rgba(33,19,11,.95)';
-      crStars(n, cr).forEach(([i, j]) => { c.beginPath(); c.arc(ox + i * cw, oy + j * ch, 5.5, 0, 7); c.fill(); });
+      (nh === n ? crStars(n, cr) : []).forEach(([i, j]) => { c.beginPath(); c.arc(ox + i * cw, oy + j * ch, 5.5, 0, 7); c.fill(); });
     };
     let tex = null;
-    tex = canvasTex('shogiTop5' + crKey(n, cr) + (ext ? 'e' + ext : '') + (look === 'kaya' || look === 'makie' ? '' : '-' + look), BW * PX | 0, BD * PX | 0, (c0, W, H) => {
+    tex = canvasTex('shogiTop5' + crKey(n, cr, nh) + (ext ? 'e' + ext : '') + (look === 'kaya' || look === 'makie' ? '' : '-' + look), BW * PX | 0, BD * PX | 0, (c0, W, H) => {
       const base = (c) => { const g = c.createLinearGradient(0, 0, W * .14, H); g.addColorStop(0, '#e9cda7'); g.addColorStop(.4, '#e1c197'); g.addColorStop(.75, '#d7b385'); g.addColorStop(1, '#cca476'); c.fillStyle = g; c.fillRect(0, 0, W, H); };
       base(c0); grid(c0);
       withTop(img => {
@@ -316,14 +318,14 @@
     return tex;
   }
   // the lines are raised lacquer too: a bump map with the grid
-  function boardBump(n = 9, cr = null, ext = 0) {
-    const MG = n === 9 ? MARGIN : MARGIN * n / 9;
-    const PX = 100, BW = n * CW + MG * 2, BD = n * CH + MG * 2 + ext * 2;
-    return canvasTex('shogiTopB' + crKey(n, cr) + (ext ? 'e' + ext : ''), BW * PX | 0, BD * PX | 0, (c, W, H) => {
+  function boardBump(n = 9, cr = null, ext = 0, nh = n) {
+    const MG = n === 9 && nh === 9 ? MARGIN : MARGIN * Math.max(n, nh) / 9;
+    const PX = 100, BW = n * CW + MG * 2, BD = nh * CH + MG * 2 + ext * 2;
+    return canvasTex('shogiTopB' + crKey(n, cr, nh) + (ext ? 'e' + ext : ''), BW * PX | 0, BD * PX | 0, (c, W, H) => {
       c.fillStyle = '#000'; c.fillRect(0, 0, W, H);
       const ox = MG * PX, oy = (MG + ext) * PX, cw = CW * PX, ch = CH * PX;
       c.strokeStyle = '#fff'; c.shadowColor = '#fff'; c.shadowBlur = 2;
-      for (let i = 0; i <= n; i++) { c.lineWidth = i === 0 || i === n ? 3.4 : 2.2; c.beginPath(); c.moveTo(ox + i * cw, oy); c.lineTo(ox + i * cw, oy + n * ch); c.stroke(); c.beginPath(); c.moveTo(ox, oy + i * ch); c.lineTo(ox + n * cw, oy + i * ch); c.stroke(); }
+      for (let i = 0; i <= Math.max(n, nh); i++) { c.lineWidth = i === 0 || i === n ? 3.4 : 2.2; if (i <= n) { c.beginPath(); c.moveTo(ox + i * cw, oy); c.lineTo(ox + i * cw, oy + nh * ch); c.stroke(); } c.lineWidth = i === 0 || i === nh ? 3.4 : 2.2; if (i <= nh) { c.beginPath(); c.moveTo(ox, oy + i * ch); c.lineTo(ox + n * cw, oy + i * ch); c.stroke(); } }
     });
   }
   // the sides of the block show end grain: tight growth rings arching across the face (like the photo of a real 榧 board)
@@ -401,12 +403,13 @@
     // o.crop {c0, r0} with o.n 4…8: 詰将棋's close-up — n×n squares of the 9×9 board; block and legs scaled by n/9, so fitted to the
     // screen it is the same board seen closer
     const cr = o.crop && o.n >= 3 && o.n < 9 ? o.crop : null;
-    const n = cr ? o.n : o.n === 5 ? 5 : 9, MG = n === 9 ? MARGIN : MARGIN * n / 9, k = n === 9 ? 1 : cr ? n / 9 : .62, FW = n * CW, FH = n * CH, EXT = Math.max(0, +o.ext || 0), BW = FW + MG * 2, BD = FH + MG * 2 + EXT * 2, THICK = 2.6 * k;
+    // o.w × o.h (2026-11-12): a variant's board (W files × H ranks, the same squares; the block scaled with its size)
+    const n = cr ? o.n : o.w ? o.w : o.n === 5 ? 5 : 9, nh = !cr && o.h ? o.h : n, big = Math.max(n, nh), MG = n === 9 && nh === 9 ? MARGIN : MARGIN * big / 9, k = big === 9 ? 1 : cr ? n / 9 : Math.max(.62, big / 9 * .9), FW = n * CW, FH = nh * CH, EXT = Math.max(0, +o.ext || 0), BW = FW + MG * 2, BD = FH + MG * 2 + EXT * 2, THICK = 2.6 * k;
     const look = lookOf(o), LM = faceMats(look);
     const kaya = LM ? LM.leg : M({ map: X.wood('kayaSide2', '#caa075', '#9c6c3c', 512, 512, 2.4), roughness: .5, bumpScale: .003 });
     const endF = LM ? LM.side : M({ map: endGrain('kayaEndF2', 512, 256, .5, 2.6, .7), roughness: .5, bumpScale: .003 });
     const endS = LM ? LM.end : M({ map: endGrain('kayaEndS2', 512, 256, -1.4, .5, .5), roughness: .5, bumpScale: .003 });
-    const top = new TT.MeshPhysicalMaterial({ map: boardTop(n, cr, EXT, look), bumpMap: boardBump(n, cr, EXT), bumpScale: .006, roughness: look === 'ink' ? .42 : .58, clearcoat: look === 'ink' ? .35 : .15, clearcoatRoughness: .45 });   // soft satin, no glare on the playing field
+    const top = new TT.MeshPhysicalMaterial({ map: boardTop(n, cr, EXT, look, nh), bumpMap: boardBump(n, cr, EXT, nh), bumpScale: .006, roughness: look === 'ink' ? .42 : .58, clearcoat: look === 'ink' ? .35 : .15, clearcoatRoughness: .45 });   // soft satin, no glare on the playing field
     top.map.anisotropy = 8;
     const bottom = LM ? LM.bottom : M({ color: 0x8c643c, roughness: .7 });
     const base = o.legs === false ? 0 : LEG * k;
@@ -422,7 +425,7 @@
     const TONES = { classic: 0xebe4db, grain: 0xd1b59a, kaya: 0xefeae2, metal: 0xb4bcc6, ink: 0x5e5046 };   // kaya: 本榧 (the default). 2026-11-10: near-neutral tints — the kaya picture itself carries the colour (less yellow)
     g.userData.setTone = name => { g.userData.tone = name; const c = new TT.Color(TONES[name] || 0xffffff).convertSRGBToLinear(); tinted.forEach((m, i) => { m.color.copy(base0[i]).multiply(c); }); };
     g.userData.setTone('classic');
-    g.userData.look = look; g.userData.S = FH; g.userData.W = FW; g.userData.top = base + THICK + .001; g.userData.outer = BD / FH; g.userData.n = n; g.userData.mg = MG; g.userData.ext = EXT;
+    g.userData.look = look; g.userData.S = FH; g.userData.W = FW; g.userData.top = base + THICK + .001; g.userData.outer = BD / FH; g.userData.n = n; g.userData.nh = nh; g.userData.mg = MG; g.userData.ext = EXT;
     return g;
   }
   const cell = (c, r) => [-FW / 2 + CW * (c + .5), -FH / 2 + CH * (r + .5)];   // c: 0 = left column on screen, r: 0 = top row

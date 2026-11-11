@@ -83,3 +83,7 @@ AI・評価関数・定跡などは `shogi/MODEL_CARD.md` を参照。ここに�
 ## 別モード
 
 - わからせ将棋オーバーキル！（デッキ構築型、プレイヤーだけ駒のチート）：`claude/overkill-spec.md`（2026-11-11 草案）。
+
+## 3Dビュー（ポータル）での種目（2026-11-12）
+- ポータルの将棋カードから全種目（本将棋・ランダム・二玉・平安3種・5五・ジャドケンス・ゴロゴロ・マイクロ・はさみ）を選んで3D卓で遊べる。詳細は `claude/atlas-portal-spec.md` の「将棋の種目」。
+- `shogi/variants/` のルール・AI・文言をそのまま使う。こちらを変えたら `atlas/games/shogi-play.js` の VFILES / VWORK の `?v=` と、`atlas/games/shogi.js` の文言も合わせる。

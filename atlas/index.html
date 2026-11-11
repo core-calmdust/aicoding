@@ -1909,6 +1909,20 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 .lvs-l button small{grid-column:2 / 4;font-size:12px;font-weight:700;color:var(--ink2);line-height:1.45}.lvs-l button small em{font-style:normal;color:var(--ink)}
 .lvs-l button .meter{display:flex;align-items:flex-end;gap:2px}.lvs-l button .meter i{width:3px;border-radius:2px;background:#e6dcc6}.lvs-l button .meter i.on{background:linear-gradient(#ffb03a,#ff6a3d)}
 .lvsheet:not(.tcsheet) .lvs-in{width:min(640px,100%);max-height:min(88vh,860px)}
+/* 種目 (shogi variants, 2026-11-12): a picker with the board drawn small, and a sheet of cards — each variant's start position, name, size, rule in a line */
+.bvi .vopts{flex-wrap:nowrap}.bvi .vrow{flex:1 1 100%!important;min-width:0}.bvi .vpick{justify-content:flex-start}.bvi .vpick .vico{flex:none;height:30px;width:auto;max-width:40px;margin:-4px 0;filter:drop-shadow(0 1px 1px rgba(90,60,20,.25))}.bvi .vpick i{margin-inline-start:auto}
+@media (min-width:820px){.bvi .vpick .vico{height:36px;max-width:46px}}
+.vsheet .lvs-in{width:min(820px,100%)!important}
+.lvs-l.vgrid{grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:10px;padding:6px 14px 18px}
+.lvs-l .vcard{display:flex;flex-direction:column;align-items:stretch;gap:6px;padding:8px 8px 10px;border-radius:18px;box-shadow:0 3px 0 var(--line);transition:transform .12s}
+.lvs-l .vcard:hover{transform:translateY(-2px)}
+.lvs-l .vcard.on{border-color:var(--sun,#ffb400);background:#fff7df;box-shadow:0 0 0 2px var(--sun,#ffb400),0 3px 0 #e8b640}
+.vcard .vsvg{display:block;width:100%;height:118px;padding:8px;box-sizing:border-box;border-radius:12px;background:radial-gradient(120% 100% at 50% 30%,#8fc79a,#4f8f62);filter:drop-shadow(0 2px 0 rgba(0,0,0,.06))}
+.vcard .vtx{display:flex;align-items:baseline;gap:6px;padding:0 4px;min-width:0}
+.vcard .vnm{font-weight:900;font-size:15px;line-height:1.25;color:var(--ink);min-width:0}
+.vcard .vtx em{margin-inline-start:auto;flex:none;font-style:normal;font-size:11px;font-weight:900;color:#fff;background:#b98a4e;border-radius:999px;padding:2px 7px}
+.lvs-l .vcard small{padding:0 4px;font-size:12px;line-height:1.45;font-weight:700;color:var(--ink2)}
+@media (max-width:560px){.lvs-l.vgrid{grid-template-columns:1fr 1fr;gap:8px;padding:4px 10px 14px}.vcard .vsvg{height:92px;padding:6px}.vcard .vnm{font-size:13.5px}.lvs-l .vcard small{font-size:11px;line-height:1.35}}
 .lvs-boss{display:flex;align-items:center;gap:12px;margin:10px 0 0;padding:6px 12px 6px 6px;border-radius:16px;background:linear-gradient(100deg,#fff1d8,#fffaf0 70%);border:2px solid #f3e2bf}
 .lvs-boss:first-child{margin-top:0}
 .lvs-boss img{width:84px;height:84px;margin:-4px 0;flex:none;object-fit:contain;transform:scale(1.2);filter:drop-shadow(0 3px 4px rgba(90,60,20,.18))}
@@ -2153,7 +2167,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   }, 60);
 };</script>
 <script src="../shared/tapword.js?v=1"></script>
-<script src="lazy.js?v=112"></script>
+<script src="lazy.js?v=113"></script>
 <script src="puzzle-lines.js?v=1"></script>
 <script src="puzzles.js?v=14"></script>
 <script src="lessons3d.js?v=9"></script>
@@ -2170,7 +2184,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=34"></script>
 <script src="npc/npc.js?v=28"></script>
 <script src="avtalk.js?v=2"></script>
-<script src="app.js?v=317"></script>
+<script src="app.js?v=318"></script>
 <script src="../shared/praline-badge.js?v=4" data-portal defer></script>
 </body>
 </html>

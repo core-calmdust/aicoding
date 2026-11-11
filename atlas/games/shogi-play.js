@@ -16,6 +16,28 @@
     { nodes: 18000, time: 12000 }, { nodes: 29000, time: 15000 }, { nodes: 50000, time: 15000 }, { nodes: 100000, time: 15000 }, { nodes: 250000, time: 20000 }, { nodes: 1500000, time: 20000 },
     { time: 4000, mt: 1 }, { time: 9000, mt: 1 }, { time: 20000, mt: 1 }];   // 七段〜九段 (time only; on the table: one worker thread)
   const START = 'lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1';
+  /* ---------- 種目 (2026-11-12): the full game's variants (shogi/variants/) on the table — their rules (mini.js · hasami.js · vshogi.js) here,
+     their AI in variants/worker.js; ランダム将棋 is standard shogi from a shuffled start (this page's own engine) ---------- */
+  const VFILES = ['variants/mini.js?v=20261021vb', 'variants/hasami.js?v=20261021vb', 'variants/vshogi.js?v=20261030sv'], VWORK = 'variants/worker.js?v=20261030sv';
+  const VDIM = { mini: [5, 5], judkins: [6, 6], goro: [5, 6], micro: [4, 5], heian8: [8, 8], heian98: [9, 8] };
+  // the variants' AI steps (shogi/variants/variants.js LV / LV_TIME: 19 steps of depth and looseness)
+  const VLV = {
+    mini: { d: [1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 5, 5, 6, 6, 7, 8, 9, 10, 12], n: [450, 280, 300, 190, 120, 150, 90, 55, 70, 35, 22, 10, 0, 0, 0, 0, 0, 0, 0] },
+    hasami: { d: [1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 5, 5, 6, 6, 7], n: [320, 220, 130, 200, 130, 90, 55, 60, 35, 20, 10, 0, 0, 0, 0, 0, 0, 0, 0] },
+    big: { d: [1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 6, 6, 7, 8, 9, 10], n: [450, 280, 300, 190, 120, 150, 90, 55, 70, 35, 22, 10, 0, 0, 0, 0, 0, 0, 0] } };
+  const VLT = [500, 500, 500, 600, 600, 700, 700, 800, 900, 1000, 1100, 1200, 1400, 1600, 1900, 2300, 2800, 3500, 4500];
+  const VBIG = { heian8: 1, heian98: 1, heian9: 1, nigyoku: 1 };
+  const vLevel = (i, v) => { const L = VLV[v] || (VBIG[v] ? VLV.big : VLV.mini); i = Math.max(0, Math.min(18, i | 0)); return { depth: L.d[i], noise: L.n[i], time: VLT[i] }; };
+  // ランダム将棋: the 18 squares behind the pawns hold K R B G G S S N N L L and 7 blanks, shuffled (gote point-symmetric) — variants.js randomStart
+  function randomStart() {
+    const a = 'KRBGGSSNNLL'.split('').concat(Array(7).fill(''));
+    for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const x = a[i]; a[i] = a[j]; a[j] = x; }
+    const row = cells => { let o = '', e = 0; for (const c of cells) { if (!c) { e++; continue; } if (e) { o += e; e = 0; } o += c; } return o + (e || ''); };
+    const r8 = a.slice(0, 9), r9 = a.slice(9), g1 = r9.slice().reverse().map(c => c.toLowerCase()), g2 = r8.slice().reverse().map(c => c.toLowerCase());
+    return `${row(g1)}/${row(g2)}/ppppppppp/9/9/9/PPPPPPPPP/${row(r8)}/${row(r9)} b - 1`;
+  }
+  let vloading = null;
+  const loadVariants = () => vloading || (vloading = VFILES.reduce((pr, f) => pr.then(() => new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = BASE + f; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); })), Promise.resolve()));
   const SC = .8;                                  // the legged board is life-size: a little smaller on the chabudai
   const HANDS = [6, 5, 7, 4, 3, 2, 1];            // 飛 角 金 銀 桂 香 歩 (stand order)
   const BASET = [0, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6];   // promoted → original
@@ -105,16 +127,22 @@
     const fmt = (s, n) => s.replace('{n}', n);
     const L = { you: t('p.you'), ai: t('p.ai'), turn: t('p.turn'), think: t('p.think'), win: t('res.win'), lose: t('res.lose'), draw: t('res.draw') };
     injectCss();
-    const board = T3.MODELS.shogi(true); board.scale.setScalar(SC); T3.show('shogi', board);
-    const Y = board.userData.top, CW = SG.CW, CH = SG.CH, FW = SG.FW, FH = SG.FH;
+    const VAR = ctx.pz ? '' : ctx.variant || '', VR = VAR === 'random' ? '' : VAR, VA = window.Atlas3D && Atlas3D.shogi && Atlas3D.shogi.variants;   // VR: a variant with rules of its own
+    const [NW, NH] = VDIM[VR] || [9, 9], C0 = 9 - NW;   // its W × H board sits in the top right of the engine's 9 × 9 numbering
+    const VNAME = VAR && VA ? VA.name(VAR, ctx.lang) : '', vtxt = k => VA ? VA.text(ctx.lang, k) : '';
+    const board = T3.MODELS.shogi(true, NW !== 9 || NH !== 9 ? { w: NW, h: NH } : undefined); board.scale.setScalar(SC); T3.show('shogi', board);
+    const Y = board.userData.top, CW = SG.CW, CH = SG.CH, FW = NW * CW, FH = NH * CH;
     const pvp = ctx.mode === 'pvp', PX = PV[ctx.lang] || PV.en;   // pvp: both sides are tapped in turn (sente at the bottom), no AI
     // ctx.pz: a puzzle (詰将棋) driven by atlas/puzzles.js — the position is ctx.pz.sfen, the side to move plays, no AI: after
     // each of the player's moves ctx.pz.moved(usi, info) decides, and the replies come through api.pzPlay (2026-11-10)
     const PZ = ctx.pz || null;
-    let SF = PZ ? PZ.sfen : START;
+    let SF = PZ ? PZ.sfen : VR ? VA.sfen(VR) + ' b - 1' : VAR === 'random' ? randomStart() : START;
     let zoomOn = true, region = null, zbtn = null, pzSol = PZ ? PZ.sol || [] : [], pan = [0, 0], zEase = false;   // zEase: zoom in / out glides (≈0.4 s) instead of cutting (2026-11-10)   // (詰将棋 zoom: declared before layout() first runs)
     let hc = PZ ? (SF.split(' ')[1] === 'w' ? 1 : 0) : pvp ? 0 : ctx.side === 2 ? 1 : 0, ac = hc ^ 1;         // engine colours: 0 = sente (black), 1 = gote
     const lvIdx = Math.max(0, Math.min(LEVELS.length - 1, (ctx.level || 8) - 1)), LV = LEVELS[lvIdx];
+    const vIdx = Math.round(lvIdx * 18 / (LEVELS.length - 1)), VLVL = VR ? vLevel(vIdx, VR) : null;   // (the variants: the level's place on their own 19 steps)
+    const newPos = () => VR === 'mini' ? new MiniShogi() : VR === 'hasami' ? new HasamiShogi() : VR ? VShogi.make(VR) : new E.Position();
+    const BASEV = VR === 'micro' ? { 1: 1, 3: 1, 4: 4, 2: 4, 7: 7, 6: 7, 5: 5, 9: 5 } : null;   // (マイクロ将棋: a captured piece goes to the hand as its front face)
     let E = null, P = null, moves = [], legal = [], sel = null, over = null, stopped = false, busy = true, worker = null, book = null, jobId = 0, popup = null, last = null;
     let ply = 0, hintW = null, hintJ = 0, hint = null;
     const onTurn = () => { if (ctx.onTurn && P) ctx.onTurn(P.side, { human: pvp || P.side === hc, ply }); };   // HUD pills: sente (left) 0, gote 1
@@ -123,9 +151,9 @@
     const io = k => k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
 
     /* ---------- geometry: engine square ↔ screen cell (the player's side at the bottom) ---------- */
-    const disp = sq => { const col = sq % 9, row = (sq / 9) | 0; return hc ? [8 - col, 8 - row] : [col, row]; };
-    const sqAt = (c, r) => hc ? (8 - r) * 9 + (8 - c) : r * 9 + c;
-    const cellXZ = sq => SG.cell(...disp(sq));
+    const disp = sq => { const col = sq % 9 - C0, row = (sq / 9) | 0; return hc ? [NW - 1 - col, NH - 1 - row] : [col, row]; };
+    const sqAt = (c, r) => hc ? (NH - 1 - r) * 9 + (NW - 1 - c) + C0 : r * 9 + c + C0;
+    const cellXZ = sq => { const [c, r] = disp(sq); return [-FW / 2 + CW * (c + .5), -FH / 2 + CH * (r + .5)]; };
 
     /* ---------- piece stands beside the board on wide screens; on tall ones the pieces in hand lie in a row above / below it ---------- */
     const wood = SG.standMat ? SG.standMat() : T3.M({ map: T3.wood('komadai', '#d9a764', '#a06c30', 256, 256, 1.6), roughness: .55, bumpScale: .002 });   // the board's kaya and tone (2026-11-10)
@@ -147,7 +175,7 @@
       board.position.z = tall ? 0 : .25;
       // 詰将棋 (ctx.pz) on phones: the defender's pieces in hand (the row above the board) must be read — more room at the top
       if (PZ && pzFit()) { T3.kick(400); return; }
-      if (T3.fit) T3.fit(Object.assign(tall ? { w: (PZ ? FW + .7 : FW + 1.8) * SC, d: (PZ ? FH + 1.9 : FH + 1 + 2 * 1.45) * SC, y: Y * SC, pitch: 1.53, cz: PZ ? -.3 * SC : 0 } : { w: 17.2 * SC, d: 13.1 * SC, y: Y * SC, pitch: 1.53 }, PZ && zEase ? { ease: true, ek: .14 } : {}));
+      if (T3.fit) T3.fit(Object.assign(tall ? { w: (PZ ? FW + .7 : FW + 1.8) * SC, d: (PZ ? FH + 1.9 : FH + 1 + 2 * 1.45) * SC, y: Y * SC, pitch: 1.53, cz: PZ ? -.3 * SC : 0 } : { w: (FW + 8.2) * SC, d: Math.max(FH + 3.2, 12.4) * SC, y: Y * SC, pitch: 1.53 }, PZ && zEase ? { ease: true, ek: .14 } : {}));
       T3.kick(400);
     }
     const HS = () => tall ? .9 : 1.08;   // a piece in hand (was .82 everywhere)
@@ -234,7 +262,7 @@
         tileAt(hint.to, 0xffb03a, .5); const [x, z] = cellXZ(hint.to); ring(x, z, Y);
       }
       if (last) { if (last.from >= 0) tileAt(last.from, 0xffb347, .28); tileAt(last.to, 0xff9a1f, .38); }
-      if (!over && P.inCheck()) { const k = P.king[P.side]; if (k >= 0) tileAt(k, 0xff2a2a, .45); }
+      if (!over && P.inCheck()) { const k = P.checkSq ? P.checkSq() : P.king[P.side]; if (k >= 0) tileAt(k, 0xff2a2a, .45); }   // (二玉将棋: the king in check)
       if (sel) {
         if (sel.sq != null) tileAt(sel.sq, 0x2fd17a, .55);
         else { const h = hand[sel.who || 0].find(h => h.t === sel.hand); if (h) { const m = new TH.Mesh(padGeo, mat(0x2fd17a, .6)); m.position.set(h.g.position.x, KH + .012, h.g.position.z); marks.add(m); } }
@@ -260,13 +288,14 @@
       const side = c => `<span class="hs ${P && P.side === c && !over ? 'on' : ''}"><i class="sgk">${c ? '☖' : '☗'}</i>${pvp ? PX.n[c] : c === hc ? L.you : L.ai}</span>`;
       ctx.hud(`${side(0)}<span class="hm">${msg || ''}</span>${side(1)}`);
     }
-    const plyTag = () => fmt(S.ply, moves.length + 1);
+    const plyTag = () => (VNAME && moves.length < 2 ? VNAME + ' · ' : '') + fmt(S.ply, moves.length + 1);   // (a variant: its name at the start)
 
     /* ---------- playing a move (both sides): engine first, then the animation ---------- */
     function play(m, done) {
       const c = P.side, who = c === hc ? 0 : 1, from = E.mFrom(m), to = E.mTo(m), drop = E.isDrop(m), promo = E.mPromo(m);
-      const victim = drop ? 0 : P.board[to];
-      moves.push(P.toUsi(m)); P.doMove(m); P.histChk[P.hn - 1] = P.inCheck() ? 1 : 0; P.sp = 0; hint = null; hintJ++; ply++; onTurn();
+      const victim = drop ? 0 : P.board[to], before = VR === 'hasami' ? Object.keys(pcs).map(Number) : null;
+      moves.push(P.toUsi(m)); P.doMove(m);
+      const nt = P.board[to] & 15, extra = before ? before.filter(sq => sq !== from && sq !== to && !P.board[sq] && pcs[sq]) : [];   // (はさみ将棋: the pieces taken by the sandwich) P.histChk[P.hn - 1] = P.inCheck() ? 1 : 0; P.sp = 0; hint = null; hintJ++; ply++; onTurn();
       last = { from: drop ? -1 : from, to }; sel = null; clearMarks();
       const [x1, z1] = cellXZ(to);
       let g, y0;
@@ -283,12 +312,12 @@
       anim(dur, k => {
         const e = io(k); g.position.x = x0 + (x1 - x0) * e; g.position.z = z0 + (z1 - z0) * e;
         g.position.y = Y + (y0 - Y) * (1 - e) + Math.sin(k * Math.PI) * H; g.scale.setScalar(s0 + (1 - s0) * e);
-        if (vg && !capStarted && k > .55) { capStarted = true; toStand(vg, who, c); }
+        if (!capStarted && k > .55) { capStarted = true; if (vg) toStand(vg, who, c); extra.forEach(sq => { const x = pcs[sq]; delete pcs[sq]; if (x) toStand(x, who, c); }); }
       }, () => {
         g.position.set(x1, Y, z1); g.scale.setScalar(1); tok(victim ? 1 : .85); squash(g);
-        if (vg && !capStarted) toStand(vg, who, c);
+        if (!capStarted) { capStarted = true; if (vg) toStand(vg, who, c); extra.forEach(sq => { const x = pcs[sq]; delete pcs[sq]; if (x) toStand(x, who, c); }); }
         const fin = () => { const w = () => flying.size ? later(w, 50) : (verify(), done && done()); later(w, 60); };
-        if (promo) later(() => flip(g, g.userData.ty + 8, fin), 90); else fin();
+        if (nt && nt !== g.userData.ty) later(() => flip(g, nt, fin), 90); else fin();   // promotion (マイクロ将棋: the turn-over after a capture, both ways)
       });
     }
     function squash(g) { anim(150, k => { const s = 1 + Math.sin(k * Math.PI) * .07; g.scale.set(s, 1 / s, s); }, () => g.scale.set(1, 1, 1)); }
@@ -298,7 +327,7 @@
         () => { g.rotation.z = 0; g.position.y = Y; tok(.8); squash(g); done && done(); });
     }
     function toStand(vg, who, c) {   // a captured piece flies to the capturer's stand, turning to face its new owner, back to its plain side
-      const ty0 = vg.userData.ty, base = BASET[ty0], [x1, z1] = slotXZ(who, base), x0 = vg.position.x, z0 = vg.position.z;
+      const ty0 = vg.userData.ty, base = BASEV ? BASEV[ty0] || ty0 : BASET[ty0], [x1, z1] = slotXZ(who, base), x0 = vg.position.x, z0 = vg.position.z;
       const r0 = vg.rotation.y, r1 = c === hc ? 0 : Math.PI; let swapped = base === ty0;
       const dr = ((r1 - r0 + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
       vg.userData.c = c; flying.add(vg);
@@ -308,8 +337,13 @@
     }
 
     /* ---------- game flow ---------- */
-    function checkEnd() {   // same rules as the full game (shogi/index.html checkEnd)
+    function checkEnd() {   // same rules as the full game (shogi/index.html checkEnd; the variants: variants.js checkEnd)
       const n = moves.length;
+      if (VR) {
+        if (VR === 'hasami' && P.result(0) != null) return { winner: P.side ^ 1, reason: 'hasami5', ply: n };
+        if (P.cfg && P.cfg.kk && P.result() === 0) return { winner: -1, reason: 'kk', ply: n };   // 平安将棋: 玉対玉
+        if (!P.legalMoves().length) return { winner: P.side ^ 1, reason: VR === 'hasami' || !P.inCheck() ? 'nomove' : 'mate', ply: n };
+      }
       if (!P.legalMoves(false).length) return { winner: P.side ^ 1, reason: 'mate', ply: n };
       let reps = 0;
       for (let i = P.hn - 1; i >= 0; i -= 2) if (P.histL[i] === P.hl && P.histH[i] === P.hh) reps++;
@@ -319,8 +353,10 @@
         let us = true, them = true;
         for (let j = first; j < P.hn; j += 2) if (!P.histChk[j]) us = false;
         for (let j = first + 1; j < P.hn; j += 2) if (!P.histChk[j]) them = false;
-        return us ? { winner: P.side, reason: 'perp', ply: n } : them ? { winner: P.side ^ 1, reason: 'perp', ply: n } : { winner: -1, reason: 'sen', ply: n };
+        if (VR === 'hasami') return { winner: -1, reason: 'sen', ply: n };
+        return us ? { winner: P.side, reason: 'perp', ply: n } : them ? { winner: P.side ^ 1, reason: 'perp', ply: n } : VR === 'mini' ? { winner: 1, reason: 'sennichiteMini', ply: n } : { winner: -1, reason: 'sen', ply: n };
       }
+      if (VR === 'hasami' && n >= 300) { const a = P.hand[1], b = P.hand[9]; return { winner: a > b ? 0 : b > a ? 1 : -1, reason: 'hmax', ply: n }; }
       if (P.canDeclare()) return { winner: P.side, reason: 'decl', ply: n };
       if (n >= 512) return { winner: -1, reason: 'max', ply: n };
       return null;
@@ -328,10 +364,10 @@
     function end(o) {
       over = o; busy = true; sel = null; hint = null; hintJ++; jobId++; closePopup(); drawMarks(); if (ctx.onTurn) ctx.onTurn(-1);
       const win = !pvp && o.winner === hc, draw = o.winner < 0, wt = pvp && !draw ? PX.win.replace('{p}', PX.n[o.winner]) : '';
-      let sc = o.reason === 'mate' ? fmt(S.mate, o.ply) : o.reason === 'resign' ? fmt(S.resign, o.ply) : o.reason === 'time' ? t('act.timeout') : S[o.reason];
+      let sc = o.reason === 'mate' ? fmt(S.mate, o.ply) : o.reason === 'resign' ? fmt(S.resign, o.ply) : o.reason === 'time' ? t('act.timeout') : S[o.reason] || vtxt('res.' + o.reason) || o.reason;
       if (pvp && o.by != null) sc = t('act.pvpEnd', { p: PX.n[o.by], r: o.reason === 'time' ? t('act.timeout') : t('act.resigned'), w: wt });   // the side to move resigned / ran out of time
       hud(`${draw ? L.draw : pvp ? wt : win ? L.win : L.lose} · ${sc}`);
-      if (o.reason === 'mate') { const k = P.king[o.winner ^ 1], g = pcs[k]; if (g) { const r0 = g.rotation.y; anim(700, k2 => { g.rotation.y = r0 + Math.sin(k2 * Math.PI * 7) * .16 * (1 - k2); }, () => { g.rotation.y = r0; }); } }
+      if (o.reason === 'mate' && P.king) { const k = P.king[o.winner ^ 1], g = pcs[k]; if (g) { const r0 = g.rotation.y; anim(700, k2 => { g.rotation.y = r0 + Math.sin(k2 * Math.PI * 7) * .16 * (1 - k2); }, () => { g.rotation.y = r0; }); } }
       ctx.onEnd(pvp ? { win: false, draw, level: ctx.level, score: sc, pvp: true, winnerText: wt } : { win, draw, level: ctx.level, score: sc });
     }
     function next() {
@@ -343,7 +379,7 @@
       busy = true; legal = []; hud(`${plyTag()} · ${chk}${L.think}`); drawMarks(); aiMove();
     }
     function bookMove() {
-      if (!book || lvIdx < 2 || moves.length > 30) return null;
+      if (!book || VAR || lvIdx < 2 || moves.length > 30) return null;
       const e = book[P.sfen().replace(/ \d+$/, '')]; if (!e) return null;
       const tot = e.reduce((a, b) => a + b[1], 0); let x = Math.random() * tot;
       for (const [u, c] of e) { x -= c; if (x <= 0) return u; }
@@ -363,16 +399,16 @@
         const r = e.data; if (r.id !== id || r.type !== 'result' || stopped || over) return;
         later(() => {
           if (id !== jobId || over) return;
-          if (!r.move) return end({ winner: hc, reason: 'mate', ply: moves.length });
-          if (!LV.noise && r.score <= -E.MATE + 200) return end({ winner: hc, reason: 'resign', ply: moves.length });   // hopeless: the strong levels resign, as in the full game
+          if (!r.move) return end({ winner: hc, reason: VR === 'hasami' ? 'nomove' : 'mate', ply: moves.length });
+          if (!VR && !LV.noise && r.score <= -E.MATE + 200) return end({ winner: hc, reason: 'resign', ply: moves.length });   // hopeless: the strong levels resign, as in the full game
           go(r.move);
         }, 0 /* AIの着手は即時（前の手のアニメは終わっている） */);
       };
       worker.onerror = () => { if (stopped) return; worker.terminate(); worker = newWorker(); later(() => go(null), 50); };
-      worker.postMessage({ type: 'think', id, sfen: SF, moves: moves.slice(), opts: LV });
+      worker.postMessage(VR ? { type: 'think', id, variant: VR, sfen: SF, moves: moves.slice(), opts: VLVL } : { type: 'think', id, sfen: SF, moves: moves.slice(), opts: LV });
     }
     let weights = null;
-    function newWorker() { const w = new Worker(BASE + 'engine.js' + EV); if (weights) w.postMessage({ type: 'weights', buffer: weights.slice(0) }); return w; }
+    function newWorker() { if (VR) return new Worker(BASE + VWORK); const w = new Worker(BASE + 'engine.js' + EV); if (weights) w.postMessage({ type: 'weights', buffer: weights.slice(0) }); return w; }
 
     /* ---------- the player's input ---------- */
     function closePopup() { if (popup) { popup.remove(); popup = null; } }
@@ -380,7 +416,7 @@
     function hit(e) {
       const p0 = T3.pick(e, Y * SC); if (!p0) return null;
       const p = toBoard(p0), c = Math.floor((p.x + FW / 2) / CW), r = Math.floor((p.z + FH / 2) / CH);
-      if (c >= 0 && c < 9 && r >= 0 && r < 9) return { sq: sqAt(c, r) };
+      if (c >= 0 && c < NW && r >= 0 && r < NH) return { sq: sqAt(c, r) };
       const who = meWho();
       for (const h of hand[who]) if (Math.abs(p.x - h.g.position.x) < .42 && Math.abs(p.z - h.g.position.z) < .5) return { hand: h.t, who };
       return null;
@@ -421,10 +457,10 @@
     layout(); lastTall = tall;
     hud('…');
 
-    load().then(r => {
+    Promise.all([load(), VR ? loadVariants() : null]).then(([r]) => {
       if (stopped) return;
       E = r.E; book = r.book; weights = r.weights;
-      P = new E.Position(); P.setSfen(SF);
+      P = newPos(); P.setSfen(SF);
       if (!pvp) worker = newWorker();
       buildBoard(true); buildHands();
       if (PZ) { later(pzReady, 80 + 40 * 14 + 300); return; }
@@ -436,7 +472,7 @@
     const myTurn = () => !!P && !over && !busy && !popup && (pvp || P.side === hc);
     const undoN = () => pvp ? 1 : 2;
     function replay(n) {   // the position after the first n moves (待った), the 3D board rebuilt to match
-      const keep = moves.slice(0, n); P = new E.Position(); P.setSfen(SF); last = null;
+      const keep = moves.slice(0, n); P = newPos(); P.setSfen(SF); last = null;
       for (const u of keep) { const m = P.fromUsi(u); P.doMove(m); P.histChk[P.hn - 1] = P.inCheck() ? 1 : 0; P.sp = 0; last = { from: E.isDrop(m) ? -1 : E.mFrom(m), to: E.mTo(m) }; }
       moves = keep; sel = null; hint = null; hintJ++;
       buildBoard(false); verify(); drawMarks(); T3.kick(300);
@@ -542,7 +578,7 @@
             drawMarks(); res(true);
           };
           hintW.onerror = () => { if (hintW) hintW.terminate(); hintW = null; res(false); };
-          hintW.postMessage({ type: 'think', id: j, sfen: SF, moves: moves.slice(), opts: LEVELS[Math.max(12, Math.min(14, lvIdx + 2))] });
+          hintW.postMessage(VR ? { type: 'think', id: j, variant: VR, sfen: SF, moves: moves.slice(), opts: vLevel(Math.max(12, vIdx + 3), VR) } : { type: 'think', id: j, sfen: SF, moves: moves.slice(), opts: LEVELS[Math.max(12, Math.min(14, lvIdx + 2))] });
         });
       },
       canResign: () => !!P && !over,
