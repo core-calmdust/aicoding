@@ -172,8 +172,10 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
     zD = setTimeout(look, 90); };
   // w = { r0, c0, nr, nc }: the squares that matter (both sides' amazons in play, the target's room), tight — on the shown board
   const ZM = 0;   // (the page's window already has one square of margin all round)
-  const strip = () => { const fr = (document.getElementById('frame') || boardDom).getBoundingClientRect(), tb = matchMedia('(pointer:coarse)').matches ? 96 : 0;
-    return { x0: Math.max(fr.left, 0), x1: Math.min(fr.right, innerWidth), y0: Math.max(fr.top, 0), y1: Math.min(fr.bottom, innerHeight - tb), fr }; };
+  // (the board's place as laid out — not the part that happens to be on the screen: the page may be scrolled, or the cards above
+  //  cover it while the puzzle opens, and the close-up must be right once the board is in view, 2026-11-11 the user)
+  const strip = () => { const fr = (document.getElementById('frame') || boardDom).getBoundingClientRect();
+    return { x0: Math.max(fr.left, 0), x1: Math.min(fr.right, innerWidth), y0: fr.top, y1: fr.bottom, fr }; };
   // (the region's box as drawn: its floor corners, and the top of a standing figure on its far row — a piece there stands up
   //  into the rows behind it, so its head must not be cut by the cards above)
   const drawn = w => { const q = (c, r, h) => T3.project(c - 5, r - 5, Y + (h || 0)), c0 = w.c0 - ZM, c1 = w.c0 + w.nc + ZM, r0 = w.r0 - ZM, r1 = w.r0 + w.nr + ZM;
