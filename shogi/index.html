@@ -1397,6 +1397,7 @@ html[lang=ar] .pf-input{direction:rtl}
   html .board-area > .hand{margin:0!important;left:0!important;align-self:stretch!important;box-shadow:none!important}
   html .board-area > .hand.top{border-radius:12px 12px 0 0!important}
   html .board-area > .hand.bottom{border-radius:0 0 12px 12px!important}
+  html .board-area > #handBottom.hand > .hname{margin-inline-end:auto}   /* (the near side's pieces sit at the right end of its bar, the name stays at the left — 2026-11-11) */
   html .board-area > .frame,html.atlas-skin .board-area > .frame{margin:0!important;border-radius:0!important}
   html.atlas-skin .board-area > .hand.bottom{margin-top:0!important}
   html.atlas-skin:not(.atlas-2d) .board-area > .hand{margin-left:calc(var(--cw) * -0.33)!important}   /* (the 3D board reaches a little further left than the DOM frame: the bars line up with its edge) */
