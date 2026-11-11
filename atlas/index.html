@@ -2058,7 +2058,7 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 <script>/* the places other than the chabudai (tables3d.js, 440 KB): at once when one is chosen, else in idle time after the page has
    loaded (2026-11-10); 'atlas-places' tells the page they are there */
 (function () {
-  var SRC = 'tables3d.js?v=94', k = 0, p = null;
+  var SRC = 'tables3d.js?v=95', k = 0, p = null;
   try { k = +(localStorage.getItem('atlas-table') || 0) || 0; var m = /[?&]tbl=(\d+)/.exec(location.search); if (m) k = +m[1]; } catch (e) {}
   window.AtlasPlaces = function () { return p || (p = new Promise(function (res) { var s = document.createElement('script'); s.src = SRC; s.onload = s.onerror = function () { res(); try { dispatchEvent(new Event('atlas-places')); } catch (e) {} }; document.head.appendChild(s); })); };
   if (k) { document.write('<script src="' + SRC + '"><\/script>'); p = Promise.resolve(); }
