@@ -527,7 +527,7 @@
   /* ---------- the generators ---------- */
   const LONG = [2048, 532];
   const GENS = {
-    'top-grain': () => { const W = 1800, H = 1980, c = pix(W, H, (x, y) => { const o = straight(x, y, W, H, 41, [244, 222, 176], [196, 152, 92], 96, 1.05, true); const sil = (vnoise(x / W * 3, y / H * 40, 43) - .5) * 14; return [o[0] + sil, o[1] + sil * .9, o[2] + sil * .6]; }); vignette(ctx(c), W, H, 'rgba(150,100,40,.28)', .6); return c; },   // 新榧 (2026-11-11 v2: fine 柾目 with a silky sheen, not the 2D SVG)
+    'top-grain': () => { const W = 1800, H = 1980, c = pix(W, H, (x, y) => { const o = straight(x, y, W, H, 41, [226, 198, 146], [176, 130, 72], 96, 1.05, true); const sil = (vnoise(x / W * 3, y / H * 40, 43) - .5) * 14; return [o[0] + sil, o[1] + sil * .9, o[2] + sil * .6]; }); vignette(ctx(c), W, H, 'rgba(150,100,40,.28)', .6); return c; },   // 新榧 (2026-11-11 v2: fine 柾目 with a silky sheen, not the 2D SVG)
     'top-ink': () => top2d('ink'),
     'top-yosegi': () => yosegiTop(1800, 1980, 5),
     'top-sakura': () => sakuraTop(1800, 1980, 9),
@@ -536,13 +536,13 @@
     'stand-makie': () => makie('stand')[0], 'stand-makie-m': () => makie('stand')[1],
     'leg-makie': () => makie('leg')[0],
     // 新榧 (spruce, pale and straight) — the faces show end grain, as the 本榧 board
-    'side-grain': () => pix(...LONG, (x, y) => endg(x, y, ...LONG, 3, [240, 216, 168], [170, 124, 66], .5, 2.6, .7, 120)),
-    'end-grain': () => pix(...LONG, (x, y) => endg(x, y, ...LONG, 4, [240, 216, 168], [170, 124, 66], -1.4, .5, .5, 120)),
-    'stand-grain': () => pix(512, 512, (x, y) => straight(x, y, 512, 512, 6, [244, 222, 176], [190, 146, 86], 40, 1.05, true)),
+    'side-grain': () => pix(...LONG, (x, y) => endg(x, y, ...LONG, 3, [222, 192, 140], [152, 106, 54], .5, 2.6, .7, 120)),
+    'end-grain': () => pix(...LONG, (x, y) => endg(x, y, ...LONG, 4, [222, 192, 140], [152, 106, 54], -1.4, .5, .5, 120)),
+    'stand-grain': () => pix(512, 512, (x, y) => straight(x, y, 512, 512, 6, [226, 198, 146], [172, 126, 70], 40, 1.05, true)),
     // 漆黒: 縞黒檀 (striped ebony) round the board, polished
     'side-ink': () => pix(...LONG, (x, y) => { const o = straight(x, y, ...LONG, 12, [132, 92, 58], [10, 7, 6], 16, 1.9); const st = fbm(x / 2048 * .8, y / 532 * 5, 13, 3), k = st > .55 ? 1 : .55 + st * .6; return [o[0] * k + 6, o[1] * k + 4, o[2] * k + 3]; }),   // 縞黒檀: bold brown stripes on black (v2)
     'end-ink': () => pix(...LONG, (x, y) => { const o = straight(x, y, ...LONG, 14, [132, 92, 58], [10, 7, 6], 16, 1.9); const st = fbm(x / 2048 * .8, y / 532 * 5, 15, 3), k = st > .55 ? 1 : .55 + st * .6; return [o[0] * k + 6, o[1] * k + 4, o[2] * k + 3]; }),   // 縞黒檀: bold brown stripes on black (v2)
-    'stand-ink': () => pix(512, 512, (x, y) => { const o = straight(x, y, 512, 512, 16, [74, 50, 34], [12, 9, 7], 6, 1.4, true); const k = .55 + .45 * fbm(x / 512 * 1.5, y / 512 * 2, 17, 3); return [o[0] * k + 8, o[1] * k + 6, o[2] * k + 5]; }),
+    'stand-ink': () => pix(512, 512, (x, y) => straight(x, y, 512, 512, 16, [40, 30, 23], [17, 12, 9], 8, .45, true)),   // 駒台: ebony with only a whisper of grain (2026-11-11)
     'side-yosegi': () => yosegiSide(...LONG, 21),
     'end-yosegi': () => yosegiSide(...LONG, 22),
     'stand-yosegi': () => yosegiStand(768, 23),
