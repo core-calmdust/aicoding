@@ -38,7 +38,14 @@ const POS = fs.readFileSync('pos_' + G + '.txt', 'utf8').trim().split('\n').map(
     u8().set(b.subarray(o, o + H * 4), X.nue_w2_ptr()); o += H * 4;
     X.nue_set_b2(b.readInt32LE(o)); X.nue_enable(1); X.tt_clear();
   }
+  if (G === 'tafl') {   // (2026-11-11) the Copenhagen net, as tools/mtsim/g_tafl.h
+    const b = fs.readFileSync('net_tafl.bin'); u8().set(b, X.nn_buf()); if (!X.nn_load(b.length)) throw new Error('net'); X.nn_enable(1);
+  }
     let line;
+    if (G === 'tafl') {   // (move, value, depth, nodes)
+      new Int32Array(mem.buffer, X.io_ptr(), 8192).set(POS[i]); if (!X.setup()) throw new Error('setup'); X.best(D, 0, 0);
+      const io = new Int32Array(mem.buffer, X.io_ptr(), 4); const n = X.last_nodes(); sum += n; line = `m${io[0]} v${io[2]} d${io[3]} n${n}`;
+    }
     if (G === 'xiangqi' || G === 'janggi') {
       new Int32Array(mem.buffer, X.io_ptr(), 8192).set(POS[i]); X.setup(); X.best(D, 0, 0);
       const io = new Int32Array(mem.buffer, X.io_ptr(), 4); const n = X.last_nodes(); sum += n; line = `m${io[0]} d${io[2]} n${n}`;
