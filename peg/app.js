@@ -179,6 +179,7 @@ async function userPlay(j) {
   await play(j);
   busy = false; save();
   afterMove();
+  update();   // (the puzzle card's buttons were drawn while busy: 待った・やり直し・答え came back disabled after a failed try)
 }
 function afterMove() {
   if (E.moves(G.B, G.a).length) return;
@@ -218,7 +219,7 @@ function undo() {
   const x0 = pf._x, y0 = pf._y, x1 = X(B, f), y1 = Y(B, f);
   anim(180, q => { const e = ease(q); place(pf, x0 + (x1 - x0) * e, y0 + (y1 - y0) * e - Math.sin(q * Math.PI) * 14); }, () => place(pf, x1, y1));
   sel = -1; hintMarks = null; marks(); update(); save();
-  if (puzzle && !puzzle.solved) puzzle.failed = true;
+  if (puzzle && !puzzle.solved) { puzzle.failed = true; if (!G.over) pzStatus(t('pz.start')); }
 }
 function reset() { if (busy) return; G.a = G.a0.slice(); G.hist = []; G.over = false; sel = -1; hintMarks = null; build(); update(); save(); if (puzzle) { puzzle.solved = false; pzStatus(t('pz.start')); } }
 
@@ -438,6 +439,7 @@ function enterPuzzle(P, pz) {
   document.body.classList.add('in-puzzle'); sel = -1; hintMarks = null;
   build(); update(); renderPuzzleCard(); pzStatus(t('pz.start'));
 }
+window.__pegDbg = { startPuzzle: (i, j) => startPuzzle(i, j), userPlay: j => userPlay(j), G: () => G, E: () => E };   // (tests)
 function startPuzzle(i, j) { const T = PUZZLES.themes[i]; PZBook.lastSet(PZ_LAST, i); enterPuzzle(T.list[j], { L: i, j, T, daily: null }); }
 async function startDaily(kind) { await dlReady; if (!DAILY) return; const d = today(), e = kind === 'e' && DAILY.easy; enterPuzzle((e ? DAILY.easy : DAILY.list)[dailyIdx(d)], { daily: d, dk: e ? 'e' : 'n' }); }
 // the puzzle card's buttons: the same set, order and look as 詰将棋 (shogi, 2026-11-10) — ヒント・やり直し・答え・一覧 as icons with a
