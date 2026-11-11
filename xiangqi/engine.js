@@ -363,7 +363,9 @@ function think(start, moves, level, rand) {
   WX.best(L.dx || 99, L.ms || 0, !L.nk ? 0 : L.nk < 10 ? -Math.round(L.nk * 10) : L.nk);   // (nk < 10: in hundreds of nodes, negative)
   const r = wIO();
   if (r[0] < 0) return { move: all[0] };
-  return { move: fromC(r[0]), v: r[1], depth: r[2], nodes: r[3] * 1000 };
+  const out = { move: fromC(r[0]), v: r[1], depth: r[2], nodes: r[3] * 1000 };
+  if (WX.pv_line) { const n = WX.pv_line(r[0], 2), io = wIO(); if (n >= 2) out.reply = fromC(io[2]); }   // reply: the expected answer — PRO's ponder (shared/ponder.js)
+  return out;
 }
 function analyze(start, moves, ms, onProgress) {
   wNN(true);

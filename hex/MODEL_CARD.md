@@ -151,5 +151,17 @@
 - **入れたもの**：プールが満杯のときは葉の `exp` に CAS を書かずに戻る（満杯のあと、展開できない葉に来るたびに共有の行へ2回書いていた。長い検討で満杯になったとき用。結果は同じ）。1スレッドは前の engine_mt と10局面の手・訪問数・ノード数が一致、通常版 `engine.wasm` はバイト一致。headless Chrome（Playwright）で `hex/bench.html` を2スレッドで動かし、分離・2スレッドの起動・結果の表が正しいことを確認。
 - **次の手**：Mac の測り直しで 8・14スレッドがまだ見込み（8 ×6前後、14 ×6〜7）より低ければ、上の RAVE の取り合いが残りの原因の候補。その場合は対局を多くして（200局程度）強さを確かめてから入れる。
 
+## 1スレッドの高速化（2026-11-11、wasm SIMD）
+- 手の選び方は変えず、同じプレイアウト数で同じ手・同じ勝率・同じプレイアウト数（下の照合）。
+- `engine_simd.wasm`（`-msimd128`）と `engine.wasm`（SIMD なし）の2本。engine.js が `WebAssembly.validate` で SIMD の有無を見て選ぶ（go/ と同じ）。`engine_mt.wasm` は SIMD 版のみ（ほかのゲームと同じ）。
+- 直したところ：
+  - プレイアウトのブリッジ返し（`saveBridge`）：盤の前に盤外3マス（角・青の辺・赤の辺）を置き、周り6マスの「空き」「自分」を6ビットにしてビット演算で候補を出す（同じ候補・同じ乱数）。プレイアウト後の勝ち判定は上の行の赤石からの深さ優先（`connected` と同じ結果）。
+  - 学習した手の予測（`expand`）：全部の空きマスの重みの和を、盤面の状態表と形の表（`pfGeo`）から一度に（`pfSums`、整数の和なので同じ値）。
+  - 1スレッドの選択（`selectV`、UCT 項なし＝既定）：乱数を先に子の順で引き、値は4子ずつ SIMD（割り算3回を1命令ずつ）。値の式は -ffast-math の元のループが作る形と同じで、`#pragma clang fp reassociate(off) contract(off)` で固定（各子の float が同じ）。
+  - 戻り：証明の伝播と RAVE の更新を1回の走査に。
+- 照合（Node、11路6局面の `analyze(0, 6000)`＋`best(6000, must 3)` の全出力の md5、7・9・13路も）：前の engine.wasm と `engine_simd.wasm`・`engine.wasm` が一致。`engine_mt.wasm` を1スレッド（共有メモリ、補助なし）で同じ照合：前の engine_mt.wasm と一致。`tools/wasmtest.js` も通る。
+- 速さ（作業機、Node、1スレッド、プレイアウト/秒）：engine.wasm 4.7万 → SIMD 版 7.0万（×1.5）、SIMD なし版 6.4万（×1.37）、engine_mt.wasm 1スレッド 5.1万 → 6.4万（×1.26。マルチスレッドの選択は virtual loss つきの別のループなので `selectV` は使わない）。
+- 版：engine.js `?v=4-pro1-mt1`（index.html・app.js・bench.html・atlas/games/hex.js）、wasm `?v=4`、engine_mt.wasm `?v=4`。
+
 ## 対局設定の Pro モード（2026-11-08）
 対局設定の「AIの強さ」の PRO ボタン（`shared/proset.js`、addendum「対局設定の Pro モード」）。項目：思考の制限（時間 0.1〜30 秒／プレイアウト 10〜200万）、スレッド数（本編のマルチスレッドがオンのとき、どの制限でも。プレイアウトの上限は全スレッドの合計）、定跡（初手の勝率表で公平な初手を選ぶ幅）、手のばらつき（温度。変えると 小 150／大 500）、AIの投了（既定は Lv.6 以上）。engine.js `think` の `cfg`（`po`／`ms`／`temp`／`rnd`／`must`／`book`）。レート戦では使わない。戦績のキーは `ai:pro…`、相手名に「PRO」。

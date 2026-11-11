@@ -137,13 +137,13 @@ let aiW = makeWorker(), anaW = makeWorker();
 // node-limited levels (Lv.1–18) stay on the one-thread workers (the same moves on every device)
 const mtSetup = (start, mv, v) => { const p = E.Pos.from(start, v), a = [E.VID[p.v], p.turn === P2 ? 1 : 0]; for (let i = 0; i < p.b.length; i++) a.push(p.b[i]); a.push(mv.length); for (const m of mv) a.push(mFrom(m) | (mTo(m) << 8)); return a; };
 const MTP = window.MTEngine ? MTEngine.use({
-  wasm: 'engine_mt.wasm?v=20261109tt2', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=1', slot: 2 << 20, initial: 1152, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
+  wasm: 'engine_mt.wasm?v=20261111ybw1', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=2', slot: 2 << 20, initial: 1152, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => Date.now(), progress: () => {} } }),
   help: m => ({ setup: mtSetup(m.start, m.moves || [], m.v) }),
 }) : null;
 function mtWants(which, msg) {
   if (msg.type === 'analyze' || msg.type === 'cands') return true;
-  if (msg.type === 'think' && msg.cfg) return msg.cfg.threads > 1;   // PRO: any limit   // PRO: a time limit on its own thread count
+  if (msg.type === 'think' && msg.cfg) return msg.cfg.threads > 1 || !!msg.cfg.ponder;   // (ponder: on the pool, whose table pondering filled) PRO: any limit   // PRO: a time limit on its own thread count
   return msg.type === 'think' && msg.level >= 19;   // (rated games too: the user's decision 2026-11-08)
 }
 function request(which, msg, onProgress) {
@@ -164,6 +164,14 @@ function cancelWorker(which) {
   if (which === 'ai') aiW = makeWorker(); else anaW = makeWorker();
 }
 const anaCache = new Map();
+// PRO's 先読み (ponder, shared/ponder.js): on the human's turn the threads read on — the human's position itself (this engine
+// gives no principal variation, so every reply of the human gets into the shared table: 置換表を温める方式)
+const pdAI = () => humanColor === P1 ? P2 : P1;
+const PONDER = window.Ponder && MTP ? Ponder.attach({ mtp: MTP,
+  want: () => { if (settings.mode !== 'ai' || rgame || lesson || puzzle || reviewing || thinking || (window.inStudy && inStudy()) || cur !== moves.length || isAIColor(toMoveAt(cur)) || gameOver(cur)) return false; const c = proCfg(levelFor(pdAI())); return !!(c && c.ponder); },
+  key: () => keyOf(cur),
+  job: cap => { const pc = proCfg(levelFor(pdAI())); if (!pc) return null;
+    return { msg: { type: 'think', start: startSpec, v: gv, moves: moves.slice(0, cur), level: levelFor(pdAI()), cfg: { d: 99, ms: cap, threads: pc.threads }, mtThreads: pc.threads }, target: null }; } }) : null;
 
 // ====================================================================== sound
 let actx = null;
@@ -650,6 +658,7 @@ async function maybeAI(tok) {
   if (typeof res.v === 'number') { aiVals[cur] = res.v; }
   if (settings.mode === 'ai' && aiResigns(p)) return;
   playMove(res.move);
+  if (PONDER) PONDER.kick();
 }
 // ---------------------------------------------------------------- resignation and draw offers in games vs the AI
 let drawAsked = -99;   // ply of the last draw offer, so offers are not repeated every move
@@ -1139,13 +1148,13 @@ const PRO_TN = [0, 0, 0, 0, 0, 0, 0, 0, 7, 12, 21, 27, 36, 49, 55, 57, 90, 260, 
 const PRO_TS = { 19: 1.2, 20: 2.5, 21: 4, 22: 6, 23: 9, 24: 13.5, 25: 20 };   // (= engine.c LEVELS ms of the timed levels, seconds)
 var PRO = window.ProSet ? ProSet.init({ game: 'tafl', lang: () => LANG, level: () => draft.level || settings.level, show: () => (draft.mode === 'ai' || draft.mode === 'watch'),
   store: { get: () => settings.pro, set: v => { settings.pro = v; } },
-  defaults: lv => lv <= 7 ? { limit: { k: 'depth', v: lv <= 4 ? 1 : 2 }, threads: 1 } : lv <= 18 ? { limit: { k: 'nodes', v: PRO_TN[lv] * 100 }, threads: 1 } : { limit: { k: 'time', v: PRO_TS[lv] || 2.5 }, threads: ProSet.defThreads() },
-  params: [{ key: 'limit', kinds: { time: [0.1, 30], depth: [1, 30], nodes: [1000, 50000000] } }, { key: 'threads' }] }) : null;
+  defaults: lv => Object.assign(lv <= 7 ? { limit: { k: 'depth', v: lv <= 4 ? 1 : 2 }, threads: 1 } : lv <= 18 ? { limit: { k: 'nodes', v: PRO_TN[lv] * 100 }, threads: 1 } : { limit: { k: 'time', v: PRO_TS[lv] || 2.5 }, threads: ProSet.defThreads() }, { ponder: false }),
+  params: [{ key: 'limit', kinds: { time: [0.1, 30], depth: [1, 30], nodes: [1000, 50000000] } }, { key: 'threads' }, { key: 'ponder' }] }) : null;
 function proGet(lv) { if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; return PRO.get(lv); }
 function proTag(lv) { return proCfg(lv) ? ' PRO' : ''; }
 function proCfg(lv) {
   const e = proGet(lv); if (!e) return null;
-  const c = { d: 99, ms: 600000, threads: e.threads || 1 };
+  const c = { d: 99, ms: 600000, threads: e.threads || 1 }; if (e.ponder) c.ponder = 1;
   if (e.limit.k === 'depth') c.d = e.limit.v; else if (e.limit.k === 'nodes') c.nk = e.limit.v / 1000; else c.ms = Math.round(e.limit.v * 1000);
   return c;
 }

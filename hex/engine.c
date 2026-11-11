@@ -57,6 +57,7 @@ EXPORT(io_ptr) int *io_ptr(void) { return IO; }
 static int NBR[MAXC][6];      // neighbour cell or -1 (off board, RED edge side), -2 (off board, BLUE edge side), -3 (corner)
 static int NBN[MAXC][6], NBC[MAXC];   // on-board neighbours only
 static int geoN = 0;
+static void pfGeo(void), pbGeo(void);
 static void geometry(int n) {
   if (geoN == n) return;
   geoN = n; N = n; NC = n * n;
@@ -72,6 +73,7 @@ static void geometry(int n) {
       else NBR[c][d] = -3;
     }
   }
+  pfGeo(); pbGeo();
 }
 // does cell c touch edge e of player p? (p RED: 0 top, 1 bottom; BLUE: 0 left, 1 right)
 static inline int onEdge(int c, int p, int e) {
@@ -192,22 +194,33 @@ static int winCells(const u8 *b, int p, int *out, int max) {
 // ---------------------------------------------------------------- playouts
 // fill the board at random; when the opponent's last stone intrudes into one of our bridges (two of our stones — or
 // a stone and our edge — with exactly two common empty neighbours), answer in the other cell of that bridge.
-static TLS u8 PB[MAXC];
+// (2026-11-11) PB has 3 cells in front of it standing for the off-board neighbours (NBR -3 corner, -2 Blue's edge, -1 Red's
+// edge: 3, BLUE, RED), so that "empty?" and "p's (stone or edge)?" are one lookup (NBX = NBR + 3); the same choices.
+static TLS u8 PBX[MAXC + 3];
+#define PB (PBX + 3)
 static TLS short EL[MAXC], EP[MAXC];
 static int edgeOwn(int v, int p) { return v == -1 ? p == RED : v == -2 ? p == BLUE : 0; }
 static inline int ownAt(const u8 *b, int v, int p) { return v >= 0 ? b[v] == p : edgeOwn(v, p); }
-static int saveBridge(const u8 *b, int last, int p) {
-  if (last < 0) return -1;
-  int cand[6], nc = 0;
-  for (int i = 0; i < 6; i++) {
-    int y = NBR[last][i]; if (y < 0 || b[y]) continue;
-    int a = NBR[last][(i + 5) % 6], c = NBR[last][(i + 1) % 6];
-    if (ownAt(b, a, p) && ownAt(b, c, p) && !(a < 0 && c < 0)) cand[nc++] = y;
-  }
-  return nc ? cand[nc == 1 ? 0 : rndN(nc)] : -1;
+static short NBX[MAXC][6]; static u8 NB2[MAXC];   // NBR + 3; bit i: NBR[c][i ± 1] both off the board
+static void pbGeo(void) {
+  for (int c = 0; c < NC; c++) { NB2[c] = 0; for (int i = 0; i < 6; i++) { NBX[c][i] = (short)(NBR[c][i] + 3); if (NBR[c][(i + 5) % 6] < 0 && NBR[c][(i + 1) % 6] < 0) NB2[c] |= (u8)(1 << i); } }
 }
+static int saveBridge(const u8 *b, int last, int p) {   // (b: PB with its 3 cells in front)
+  if (last < 0) return -1;
+  const u8 *B = b - 3; const short *x = NBX[last];
+  // bit i: ring cell i empty (E) / p's (P); a candidate: empty with p's on both sides around `last` (not two off-board cells)
+  int E = 0, P = 0;
+  for (int i = 0; i < 6; i++) { int v = B[x[i]]; E |= (v == 0) << i; P |= (v == p) << i; }
+  int c = E & ((P << 1 | P >> 5) & (P >> 1 | P << 5)) & ~NB2[last] & 63;
+  if (!c) return -1;
+  int nc = __builtin_popcount(c);
+  if (nc > 1) { int k = rndN(nc); while (k--) c &= c - 1; }
+  return x[__builtin_ctz(c)] - 3;
+}
+static TLS int pstk[MAXC + 8]; static TLS u8 pseen[MAXC];
 static int playout(int side, int last) {
   int m = 0;
+  PBX[0] = 3; PBX[1] = BLUE; PBX[2] = RED;
   for (int i = 0; i < NC; i++) if (!PB[i]) { EP[i] = m; EL[m++] = i; }
   while (m) {
     int c = saveBridge(PB, last, side);
@@ -216,7 +229,16 @@ static int playout(int side, int last) {
     int k = EP[c]; m--; EL[k] = EL[m]; EP[EL[k]] = k;
     last = c; side ^= 3;
   }
-  return connected(PB, RED) ? RED : BLUE;
+  // (connected(PB, RED) on the full board: from Red's stones on the top row to the bottom row)
+  int sp = 0, bot = NC - N;
+  for (int i = 0; i < NC; i++) pseen[i] = 0;
+  for (int k = 0; k < N; k++) if (PB[k] == RED) { pseen[k] = 1; pstk[sp++] = k; }
+  while (sp) {
+    int c = pstk[--sp];
+    if (c >= bot) return RED;
+    for (int k = 0; k < NBC[c]; k++) { int d = NBN[c][k]; if (!pseen[d] && PB[d] == RED) { pseen[d] = 1; pstk[sp++] = d; } }
+  }
+  return BLUE;
 }
 
 // ---------------------------------------------------------------- learned move prior (features; weights in prior_w.h, tools/train_prior.c)
@@ -267,6 +289,58 @@ static int pfeat(const u8 *b, int c, int p, int last, int *out) {
 #else
 #include "prior_w.h"
 #endif
+// (2026-11-11) the same sum of weights as pfeat() + PW[], for every empty cell at once (expand): the states of the cells and
+// the edges looked up in a table made once per call (ST, index v + 3), the cells of the ring and of the 6 bridge triples from
+// tables made with the geometry, the last-move features added to the few cells they concern. An integer sum, so the same.
+static short PGR[2][MAXC][6];        // the ring of c seen from RED / BLUE (pfeat's s[d]): index into ST
+static short PGT[MAXC][6][3];        // triple i of c: a, d, x as indices into ST; a = -1: no triple
+static int PGE[2][MAXC];             // the edge feature of c for RED / BLUE (PF_EDGE + dOwn * 6 + dOpp)
+static void pfGeo(void) {
+  for (int c = 0; c < NC; c++) {
+    for (int d = 0; d < 6; d++) { PGR[0][c][d] = (short)(NBR[c][d] + 3); PGR[1][c][d] = (short)(NBR[c][5 - d] + 3); }
+    for (int i = 0; i < 6; i++) {
+      int a = NBR[c][i], d = NBR[c][(i + 1) % 6], x;
+      if (a >= 0) x = NBR[a][(i + 1) % 6]; else if (d >= 0) x = NBR[d][i]; else { PGT[c][i][0] = -1; continue; }
+      PGT[c][i][0] = (short)(a + 3); PGT[c][i][1] = (short)(d + 3); PGT[c][i][2] = (short)(x + 3);
+    }
+    int r = c / N, cc = c % N, dr = r < N - 1 - r ? r : N - 1 - r, dc = cc < N - 1 - cc ? cc : N - 1 - cc;
+    for (int q = 0; q < 2; q++) { int dOwn = q == 0 ? dr : dc, dOpp = q == 0 ? dc : dr; if (dOwn > 5) dOwn = 5; if (dOpp > 5) dOpp = 5; PGE[q][c] = (PF_EDGE + dOwn * 6 + dOpp); }
+  }
+}
+static TLS u8 PST[MAXC + 3]; static TLS int PLS[MAXC];
+// the summed weights of every empty cell for p to move (out[c]; = Σ PW[pfeat(b, c, p, last)])
+static void pfSums(const u8 *b, int p, int last, int *out) {
+  u8 *ST = PST; int q = p == RED ? 0 : 1;
+  ST[0] = 5; ST[1] = p == RED ? 4 : 3; ST[2] = p == RED ? 3 : 4;   // (v = -3 corner, -2, -1: pfSt)
+  for (int i = 0; i < NC; i++) ST[i + 3] = b[i] == 0 ? 0 : b[i] == p ? 1 : 2;
+  int nl = 0, lc[18];
+  if (last >= 0) {   // (pfeat's last-move features, from the last move's side)
+    for (int i = 0; i < 6; i++) {
+      int c = NBR[last][i];
+      if (c >= 0 && !b[c]) {
+        int e1 = NBR[last][(i + 5) % 6], e2 = NBR[last][(i + 1) % 6], w = PW[PF_LAST];
+        if (ownAt(b, e1, p) && ownAt(b, e2, p) && !(e1 < 0 && e2 < 0)) w += PW[PF_LAST + 2];
+        PLS[c] += w; lc[nl++] = c;
+      }
+      int a = NBR[last][i], d = NBR[last][(i + 1) % 6];
+      if (a >= 0 && d >= 0 && !b[a] && !b[d]) { int x = NBR[a][(i + 1) % 6]; if (x >= 0 && !b[x]) { PLS[x] += PW[PF_LAST + 1]; lc[nl++] = x; } }
+    }
+  }
+  for (int c = 0; c < NC; c++) {
+    if (b[c]) continue;
+    const short *R = PGR[q][c];
+    int s0 = ST[R[0]], s1 = ST[R[1]], s2 = ST[R[2]], s3 = ST[R[3]], s4 = ST[R[4]], s5 = ST[R[5]];
+    int i1 = ((((s5 * 6 + s4) * 6 + s3) * 6 + s2) * 6 + s1) * 6 + s0, i2 = ((((s2 * 6 + s1) * 6 + s0) * 6 + s5) * 6 + s4) * 6 + s3;
+    int sum = PW[i1 < i2 ? i1 : i2] + PW[PGE[q][c]] + PLS[c];
+    for (int i = 0; i < 6; i++) {
+      const short *t = PGT[c][i]; if (t[0] < 0) continue;
+      int sa = ST[t[0]], sd = ST[t[1]], sx = ST[t[2]], lo = sa < sd ? sa : sd, hi = sa < sd ? sd : sa;
+      sum += PW[PF_TRI + (lo * 6 + hi) * 6 + sx];
+    }
+    out[c] = sum;
+  }
+  for (int i = 0; i < nl; i++) PLS[lc[i]] = 0;
+}
 
 // ---------------------------------------------------------------- MCTS (UCT + RAVE, MCTS-solver for immediate wins)
 typedef struct { int first; u16 nch; short mv; float n, w, rn, rw; i8 proof; u8 exp; } Node;
@@ -408,7 +482,8 @@ static void expand(int ni, Pos *p) {
   static TLS float lp[MAXC];
   if (PW_ON && LP_ON) {   // learned prior: softmax over the empty cells, then pv = 0.5 + A·tanh(B·log(prob × cells))
     int fs[PF_MAX], m = 0; float mx = -1e30f, z = 0;
-    for (int c = 0; c < NC; c++) { if (p->b[c]) continue; int kk = pfeat(p->b, c, me, p->last, fs); int s = 0; for (int j = 0; j < kk; j++) s += PW[fs[j]]; lp[c] = s / PW_SCALE; if (lp[c] > mx) mx = lp[c]; m++; }
+    static TLS int ps[MAXC]; pfSums(p->b, me, p->last, ps); (void)fs;
+    for (int c = 0; c < NC; c++) { if (p->b[c]) continue; int s = ps[c]; lp[c] = s / PW_SCALE; if (lp[c] > mx) mx = lp[c]; m++; }
     for (int c = 0; c < NC; c++) if (!p->b[c]) { lp[c] = fexp(lp[c] - mx); z += lp[c]; }
     for (int c = 0; c < NC; c++) if (!p->b[c]) { float x = LP_B * flog(lp[c] / z * m + 1e-9f), e = fexp(-2 * (x > 20 ? 20 : x < -20 ? -20 : x)); lp[c] = .5f + LP_A * (1 - e) / (1 + e); }
   }
@@ -505,6 +580,51 @@ static void iterate(void) {
   }
 }
 #else
+// (2026-11-11) the selection without the UCT term (UCT_C = 0, the default) of the one-thread search: the same values and the
+// same random numbers as the loop below it (kept for UCT_C > 0). The random numbers first, in the children's order (one per
+// child not proven, up to a proven win, which is taken), then the values 4 children at a time (wasm SIMD with -msimd128: the 3
+// divisions of 4 children in one instruction each), then the first child with the largest value. The value is written in the
+// form clang -O3 -ffast-math gives that loop, q + (rq − q) · rn / (((n + 1e-6) + rn) + n · B · rn), and kept so here (no
+// reassociation, no contraction), so each child's value is the same float.
+typedef float F4 __attribute__((vector_size(16)));
+typedef int I4 __attribute__((vector_size(16)));
+static float selR[MAXC + 4], selV[MAXC + 4];
+static int selectV(Node *ch, int nch, int *allLost) {
+  int any = 0;
+  for (int i = 0; i < nch; i++) {
+    int pr = ch[i].proof;
+    if (pr > 0) { *allLost = 0; return i; }
+    if (pr < 0) { selR[i] = 0; continue; }
+    any = 1; selR[i] = (float)(rnd() & 0xFFFFFF) * (1e-4f / 16777216.0f);
+  }
+  *allLost = !any; if (!any) return -1;
+  {
+#pragma clang fp reassociate(off) contract(off)
+    const F4 half = { .5f, .5f, .5f, .5f }, eps = { 1e-6f, 1e-6f, 1e-6f, 1e-6f }, zero = { 0, 0, 0, 0 }, rb = { RAVE_B, RAVE_B, RAVE_B, RAVE_B };
+    int i = 0;
+    for (; i + 4 <= nch; i += 4) {
+      Node *c = &ch[i];
+      F4 n = { c[0].n, c[1].n, c[2].n, c[3].n }, w = { c[0].w, c[1].w, c[2].w, c[3].w }, rn = { c[0].rn, c[1].rn, c[2].rn, c[3].rn }, rw = { c[0].rw, c[1].rw, c[2].rw, c[3].rw };
+      I4 mn = n > zero, mr = rn > zero;
+      F4 q = (F4)(((I4)(w / n) & mn) | ((I4)half & ~mn)), rq = (F4)(((I4)(rw / rn) & mr) | ((I4)half & ~mr));
+      F4 d = ((n + eps) + rn) + (n * rb) * rn;
+      F4 v = ((rq - q) * rn) / d + q;
+      F4 r = { selR[i], selR[i + 1], selR[i + 2], selR[i + 3] };
+      v = v + r;
+      selV[i] = v[0]; selV[i + 1] = v[1]; selV[i + 2] = v[2]; selV[i + 3] = v[3];
+    }
+    for (; i < nch; i++) {
+      Node *c = &ch[i];
+      float n = c->n, w = c->w, rn = c->rn, rw = c->rw;
+      float q = n > 0 ? w / n : .5f, rq = rn > 0 ? rw / rn : .5f;
+      float d = ((n + 1e-6f) + rn) + (n * RAVE_B) * rn;
+      selV[i] = (((rq - q) * rn) / d + q) + selR[i];
+    }
+  }
+  int best = -1; float bv = -1e9f;
+  for (int j = 0; j < nch; j++) if (ch[j].proof == 0 && selV[j] > bv) { bv = selV[j]; best = j; }
+  return best;
+}
 static void iterate(void) {
   Pos p = ROOT; int ni = 0; pathL = 0; pathN[pathL++] = 0;
   int res = 0, didPO = 0;   // winner, a playout filled PB
@@ -517,6 +637,7 @@ static void iterate(void) {
     }
     // select
     Node *ch = &T[nd->first]; int best = -1, allLost = 1; float bv = -1e9f;
+    if (UCT_C <= 0) best = selectV(ch, nd->nch, &allLost); else {
     float lg = UCT_C > 0 ? flog(nd->n + 1) : 0;
     for (int i = 0; i < nd->nch; i++) {
       Node *c = &ch[i];
@@ -529,6 +650,7 @@ static void iterate(void) {
       if (UCT_C > 0) v += UCT_C * __builtin_sqrtf(lg / (c->n + 1));
       v += rndF() * 1e-4f;
       if (v > bv) { bv = v; best = i; }
+    }
     }
     if (allLost) { nd->proof = 1; res = p.side ^ 3; break; }   // every move loses for the side to move
     int ci = nd->first + best;
@@ -543,17 +665,20 @@ static void iterate(void) {
     Node *nd = &T[pathN[k]];
     int mover = side ^ 3;   // who moved into nd
     nd->n += 1; if (res == mover) nd->w += 1;
-    // proof propagation
-    if (EXPD(nd) && !nd->proof) {
-      Node *ch = &T[nd->first]; int all = 1, any = 0;
-      for (int i = 0; i < nd->nch; i++) { if (ch[i].proof > 0) any = 1; if (ch[i].proof >= 0) all = 0; }
-      if (any) nd->proof = -1; else if (all) nd->proof = 1;
-    }
-    // RAVE: children of nd whose cell ended up owned by the side to move at nd
-    if (EXPD(nd) && didPO) {
-      Node *ch = &T[nd->first];
-      float win = (res == side) ? 1.f : 0.f;
-      for (int i = 0; i < nd->nch; i++) { int c = ch[i].mv; if (c != SWAP && PB[c] == side) { ch[i].rn += 1; ch[i].rw += win; } }
+    // proof propagation, and RAVE: children of nd whose cell ended up owned by the side to move at nd (one pass)
+    if (EXPD(nd)) {
+      Node *ch = &T[nd->first]; int nch = nd->nch;
+      if (!nd->proof) {
+        int all = 1, any = 0;
+        if (didPO) {
+          float win = (res == side) ? 1.f : 0.f;
+          for (int i = 0; i < nch; i++) { int pr = ch[i].proof; if (pr > 0) any = 1; if (pr >= 0) all = 0; int c = ch[i].mv; if (c != SWAP && PB[c] == side) { ch[i].rn += 1; ch[i].rw += win; } }
+        } else for (int i = 0; i < nch; i++) { if (ch[i].proof > 0) any = 1; if (ch[i].proof >= 0) all = 0; }
+        if (any) nd->proof = -1; else if (all) nd->proof = 1;
+      } else if (didPO) {
+        float win = (res == side) ? 1.f : 0.f;
+        for (int i = 0; i < nch; i++) { int c = ch[i].mv; if (c != SWAP && PB[c] == side) { ch[i].rn += 1; ch[i].rw += win; } }
+      }
     }
     side ^= 3;
   }

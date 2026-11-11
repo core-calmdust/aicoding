@@ -216,14 +216,24 @@ let WA = null;
 (function loadCore() {
   try {
     let b64 = null;
-    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('core-wasm.js?v=3'); b64 = self.AMZ_WASM; }
+    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('core-wasm.js?v=4'); b64 = self.AMZ_WASM; }
     else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') { const g = typeof globalThis !== 'undefined' ? globalThis : global, had = 'self' in g, old = g.self; g.self = g; try { require(require('path').join(__dirname, 'core-wasm.js')); b64 = g.AMZ_WASM; } finally { if (had) g.self = old; else delete g.self; } }
     if (!b64 || (typeof process !== 'undefined' && process.env && process.env.AMZ_NOWASM)) return;
-    const bin = typeof atob === 'function' ? Uint8Array.from(atob(b64), c => c.charCodeAt(0)) : Buffer.from(b64, 'base64');
-    const x = new WebAssembly.Instance(new WebAssembly.Module(bin), { env: { now: () => Date.now() } }).exports;
-    WA = { x }; waViews();
+    // (the SIMD build first; the one without SIMD where that does not compile — AMZ_NOSIMD=1 in Node to check it)
+    const g = typeof self !== 'undefined' ? self : globalThis, list = [b64, g.AMZ_WASM0];
+    if (typeof process !== 'undefined' && process.env && process.env.AMZ_NOSIMD) list.shift();
+    for (const s of list) {
+      if (!s) continue;
+      try {
+        const bin = typeof atob === 'function' ? Uint8Array.from(atob(s), c => c.charCodeAt(0)) : Buffer.from(s, 'base64');
+        const x = new WebAssembly.Instance(new WebAssembly.Module(bin), { env: { now: () => Date.now() } }).exports;
+        WA = { x, simd: s === b64 }; waViews(); return;
+      } catch (e) { WA = null; }
+    }
   } catch (e) { WA = null; }
 })();
+// the search core loaded: 'wasm-simd' (core-wasm.js with SIMD), 'wasm' (without SIMD) or 'js' (bench.html, the 'core' message)
+function coreName() { return WA ? (WA.simd ? 'wasm-simd' : 'wasm') : 'js'; }
 // (again after the memory has grown — the MCTS tree, mcts_alloc — the old views are detached then)
 function waViews() { const x = WA.x, buf = x.memory.buffer; Object.assign(WA, { buf, sq: new Int8Array(buf, x.sqp(), NN), q: new Int8Array(buf, x.qp(), 8), om: new Int32Array(buf, x.omp(), 8192), os: new Int32Array(buf, x.osp(), 8192), rm: new Int32Array(buf, x.rmp(), 64), rn: new Int32Array(buf, x.rnp(), 64), rv: new Int32Array(buf, x.rvp(), 64), rp: new Int32Array(buf, x.rpp(), 64), pv: new Int32Array(buf, x.pvp(), 32) }); }
 function waLoad(pos) { WA.sq.set(pos.sq); WA.q.set(pos.q); }
@@ -478,10 +488,10 @@ function mcViews(C) { if (C.buf !== C.x.memory.buffer) { if (C === WA) waViews()
 // at 96 % the search stops (core.c mcts_run): those waiting visits back up a value without an evaluation — the "superlinear"
 // visits/s of bench.html on many threads (2026-11-10: a 2 s search on 8 threads filled the 3.2 M nodes sized for it and 80〜95 %
 // of its visits were such waits). So the pool is sized by the nodes per ms per thread that the searches here have made (MC_RATE,
-// first 120: the user's M4 Pro ~140 on one thread in the middle game) and the threads of this job, up to MC_MAX_NODES (one
+// first 300: the user's M4 Pro ~140 on one thread in the middle game before the SIMD core of 2026-11-11, ~2.5× that since) and the threads of this job, up to MC_MAX_NODES (one
 // thread, 128 MB) or the lead's maxNodes (several threads: up to 512 MB — Lv.23's 20 s on 10 threads may still fill it).
 const MC_MAX_NODES = 1 << 22;
-let MC_RATE = 120;
+let MC_RATE = 300;
 function mcts(pos, o) {
   const C = mcCore(); if (!C) return null;
   const X = C.x, p = Object.assign({}, MC, o.prm || {});
@@ -932,7 +942,7 @@ const hops = () => 1;
 
 const API = { get nodes() { return nodes; }, get evals() { return evals; }, P1, P2, WIN, WINT, ARROW, RULES, RULE_ORDER, setRule, get rule() { return 'std'; }, N, NN, RC, RAYS, NB, START,
   sqAt, sqName, sqIdx, mv, mFrom, mTo, mArrow, isRemove, hops, Pos, path, arrowPath, captured, name, parse, replay, judge, clearLine,
-  get wasm() { return !!WA; }, LEVELS, MC, mcts, mcPV, useCore: C => { MX = C; }, think, analyze, cands: candsJob, candList: cands, evaluate, evalFor, kindOf, EW, pvOf, bestMove, mtPlan, mtV, mtKids, mtFin, win1, canWin, duelGood, duelReply, trapGood, trapReply, trapWin, trapAll, trapIdx, boxed, guardGood, guardReply, escapes, freeAt, endGood, readGood, readReply, solveWin, fillMax, roomOf, sideMoves, emptyAround, pzGood, set SH(t) { SH = t; }, get SH() { return SH; } };
+  get wasm() { return !!WA; }, get simd() { return !!(WA && WA.simd); }, LEVELS, MC, mcts, mcPV, useCore: C => { MX = C; }, think, analyze, cands: candsJob, candList: cands, evaluate, evalFor, kindOf, EW, pvOf, bestMove, mtPlan, mtV, mtKids, mtFin, win1, canWin, duelGood, duelReply, trapGood, trapReply, trapWin, trapAll, trapIdx, boxed, guardGood, guardReply, escapes, freeAt, endGood, readGood, readReply, solveWin, fillMax, roomOf, sideMoves, emptyAround, pzGood, set SH(t) { SH = t; }, get SH() { return SH; } };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') {
   // ?…&mt=1: the lead of the MCTS on several threads (shared/mtengine.js): core_mt.wasm on the shared memory sent with the first
@@ -965,6 +975,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
           const r = analyze(m.start, m.moves, m.time || 1000, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth }), null, m.extra);
           self.postMessage({ id: m.id, type: 'result', ...r });
         } else if (m.type === 'cands') self.postMessage({ id: m.id, type: 'result', ...candsJob(m.start, m.moves, m.time || 1200, m.k, m.plies, (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth })) });
+        else if (m.type === 'core') self.postMessage({ id: m.id, type: 'result', core: coreName() });
         else if (m.type === 'newgame') { TT.clear(); CC.clear(); self.postMessage({ id: m.id, type: 'result' }); }
         else if (m.type === 'pzgood') { const g = pzGood(m); self.postMessage({ id: m.id, type: 'result', list: g }); }
         else if (m.type === 'duelReply') self.postMessage({ id: m.id, type: 'result', ...(m.kind === 'trap' ? trapReply(m.start, m.moves, m.e, m.n) : m.kind === 'guard' ? guardReply(m.start, m.moves, m.e, 2) : m.kind === 'read' ? readReply(m.start, m.moves) : duelReply(m.start, m.moves, m.n)) });
@@ -972,7 +983,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function' && t
         else if (m.type === 'mtv') self.postMessage({ id: m.id, type: 'result', ...mtV(m) });
         else if (m.type === 'mtkids') self.postMessage({ id: m.id, type: 'result', ...mtKids(m) });
         else if (m.type === 'mtpv') self.postMessage({ id: m.id, type: 'result', pv: pvOf(m.start, m.moves, m.m, m.plies) });
-        else if (m.type === 'mtfin') { const f = mtFin(m); if (f.result) f.result.core = WA ? 'wasm' : 'js'; self.postMessage({ id: m.id, type: 'result', ...f }); }   // (core: the search core of the threads, shown by bench.html)
+        else if (m.type === 'mtfin') { const f = mtFin(m); if (f.result) f.result.core = coreName(); self.postMessage({ id: m.id, type: 'result', ...f }); }   // (core: the search core of the threads, shown by bench.html)
       } catch (err) { self.postMessage({ id: m.id, type: 'result', error: String(err && err.stack || err) }); }
     });
   };

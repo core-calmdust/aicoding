@@ -1372,7 +1372,7 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 <script src="../shared/watchpause.js?v=2l14"></script>
 <script src="../shared/tick.js?v=2l14"></script>
 <script src="../shared/ruletour.js?v=29l14"></script>
-<script src="engine.js?v=9"></script>
+<script src="engine.js?v=10"></script>
 <script src="../shared/resign.js?v=3l14"></script>
 <script src="rvbox.js?v=1-rc1-l14-mt1"></script>
 <script src="../shared/coachkit.js?v=16l14"></script>
@@ -1380,18 +1380,18 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 <script src="coach.js?v=1sq"></script>
 <script src="coach-i18n.js?v=1"></script>
 <script src="../shared/export.js?v=9l14"></script>
-<script src="../shared/mtengine.js?v=8"></script><script src="../shared/mtsplit.js?v=6"></script><script src="../shared/proset.js?v=5t2svhxbf-sp2"></script><script src="app.js?v=19"></script>
+<script src="../shared/mtengine.js?v=8"></script><script src="../shared/mtsplit.js?v=6"></script><script src="../shared/proset.js?v=5t2svhxbf-sp2-pd1"></script><script src="app.js?v=20"></script>
 <nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="tab.game"></button></nav>
 <!-- World Board Game Atlas portal skin: amazons/?skin=atlas — 3D boards (the Temple of Themiscyra on its stylobate / the jungle ruins' dressed stones), sculpted amazons (marble warriors, ivory & ebony archers, bronze & iron queens), fire arrows that scorch the squares, guide speech bubbles, portal look (all features kept) -->
 <script>
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=55l22'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=56l22'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/img/tex/baked.js?v=1')).then(() => load('../atlas/table3d.js?v=147')).then(() => load('../atlas/tables3d.js?v=55')).then(() => load('../atlas/skin/common.js?v=67')).then(() => load('../atlas/models/amazons.js?v=5')).then(() => load('../atlas/skin/amazons.js?v=18'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/img/tex/baked.js?v=1')).then(() => load('../atlas/table3d.js?v=147')).then(() => load('../atlas/tables3d.js?v=55')).then(() => load('../atlas/skin/common.js?v=69')).then(() => load('../atlas/models/amazons.js?v=5')).then(() => load('../atlas/skin/amazons.js?v=18'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>

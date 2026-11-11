@@ -12,16 +12,20 @@ import sys
 s = open(sys.argv[1] if len(sys.argv) > 1 else '../../engine.c').read()
 i = s.index('#ifdef MT\n// ---------------------------------------------------------------- threads (engine_mt.wasm')
 s = s[:i]
-s = s.replace('#include <stdint.h>', '#include <stdint.h>\n#ifndef SIM_Q\n#define SIM_Q 1024\n#endif\nstatic void sim_tick(void);', 1)
+s = s.replace('#include <stdint.h>', '#include <stdint.h>\n#ifndef SIM_Q\n#define SIM_Q 1024\n#endif\nstatic void sim_tick(void);\n'
+              '// (2026-11-11, YBW) a thread\'s nodes per round: SIM_Q, or 2/5 of it on a slow core (sim.c, SIM_SLOW); an idle thread\n'
+              '// (a helper waiting for a split point, an owner waiting for its helpers) spends one round per check\n'
+              'static _Thread_local double simQT = SIM_Q;\n#define SIM_IDLE() do { simNext = (double)nodes + simQT; sim_tick(); } while (0)', 1)
 a = "  if ((nodes & 1023) == 0) { if ((tEnd > 0 && now() > tEnd) || (nodeLimit_on && nodes > nodeLimit) || gStop || (rootK && gHit == rootK)) stopFlag = 1; }"
+if a not in s: a = "  if ((nodes & 1023) == 0) {\n    if ((tEnd > 0 && now() > tEnd) || (nodeLimit_on && nodes > nodeLimit) || gStop || (rootK && gHit == rootK)) stopFlag = 1;"   # (YBW, 2026-11-11)
 assert s.count(a) == 1
-s = s.replace(a, "  if (nodes >= simNext) { simNext += SIM_Q; sim_tick(); }\n" + a)
+s = s.replace(a, "  if (nodes >= simNext) { simNext += simQT; sim_tick(); }\n" + a)
 a = "static TLS u64 nodes; static TLS double tEnd;"
 assert a in s
 s = s.replace(a, "static TLS u64 nodes; static TLS double simNext; static TLS double tEnd;")
 a = "  stopFlag = 0; nodes = 0; tEnd"
 assert s.count(a) == 1
-s = s.replace(a, "  stopFlag = 0; nodes = 0; simNext = SIM_Q; tEnd")
+s = s.replace(a, "  stopFlag = 0; nodes = 0; simNext = simQT; tEnd")
 # delayed table stores
 s = s.replace("static inline void ttGet(u64 key, TTE *e) {", "static inline void ttGetS(u64 key, TTE *e) {", 1)
 s = s.replace("static void ttStore(u64 key, int d, int flag, int v, const Move *m, int ply) {\n  u64 *bk", "static void ttStoreS(u64 key, int d, int flag, int v, const Move *m, int ply) {\n  u64 *bk", 1)
@@ -74,4 +78,6 @@ static inline void busyClear(u64 key, int i) {
 static void busyFlushMine(void) { for (int k = 0; k < nbp; k++) if (bpVal[k]) busyT[bpIdx[k]] = bpVal[k]; nbp = 0; }
 #define HAVE_BUSY 1
 ''' + s[k:]
+a = '  nodes = 0; tEnd = 0; nodeLimit_on = 0; rootK = 0;'   # (YBW, 2026-11-11: mt_idle)
+if a in s: s = s.replace(a, '  nodes = 0; simNext = simQT; tEnd = 0; nodeLimit_on = 0; rootK = 0;')
 open('eng_sim.c', 'w').write(s)
