@@ -109,7 +109,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=6-wa3';
+const ENGINE_URL = 'engine.js?v=7-ab';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -138,6 +138,11 @@ let aiW = makeWorker(), anaW = makeWorker();
 // transposition table (shared/mttt.js); otherwise they run as before, each with its own.
 if (window.MTSplit) MTSplit.init({ sw: 'sw.js?v=1' });
 const MTP = window.MTSplit ? MTSplit.use({ url: ENGINE_URL, drive: MTSplit.ladder.drive }) : null;
+// (2026-11-11) On an isolated page the threads are core_mt.wasm's instead (shared/mtengine.js: the lead engine.js?…&mt=1, the helpers
+// mt-helper.js): Praline's Young Brothers Wait in C splits every node of the search (and the root), one table in the shared memory
+// (claude/agon-spec.md「αβ を C に」). mtsplit.js stays for a page that is not isolated, and while that pool is busy.
+const MCP = window.MTEngine && MTEngine.use ? MTEngine.use({ wasm: 'core_mt.wasm?v=1', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=1', slot: 4 << 20, initial: 1024, maximum: 16384,   // (initial ≥ its declared 530 pages)
+  imports: mem => ({ env: { memory: mem, now: () => Date.now() } }), help: () => ({}) }) : null;
 const mtLevel = lv => { const L = E.LEVELS[lv]; return !!(L && L.s && L.ms && !L.nk); };   // a level that thinks by time
 function mtWants(which, msg) {
   if (msg.type === 'analyze' || msg.type === 'cands') return true;
@@ -147,9 +152,13 @@ function mtWants(which, msg) {
 }
 function request(which, msg, onProgress) {
   // a top level (Lv.21〜) right after the page has opened: wait up to 4 s for the threads rather than start on one
-  if (MTP && which === 'ai' && msg.type === 'think' && msg.level > 20 && MTSplit.on() && !msg.waited) {
-    return (async () => { const t0 = Date.now(); while (!MTP.pool('ai') && Date.now() - t0 < 4000) await new Promise(r => setTimeout(r, 100)); return request(which, Object.assign({}, msg, { waited: 1 }), onProgress); })();
+  const cOn = MCP && MTEngine.on();
+  if ((cOn || (MTP && MTSplit.on())) && which === 'ai' && msg.type === 'think' && msg.level > 20 && !msg.waited) {
+    const P = cOn ? MCP : MTP;
+    return (async () => { const t0 = Date.now(); while (!P.pool('ai') && Date.now() - t0 < 4000) await new Promise(r => setTimeout(r, 100)); return request(which, Object.assign({}, msg, { waited: 1 }), onProgress); })();
   }
+  const cp = cOn && mtWants(which, msg) && MCP.pool(which === 'ai' ? 'ai' : null);
+  if (cp) { const t0 = performance.now(), full = { start: startSpec, rule: gv, ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }; return cp.run(full, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full, onProgress) : r; }); }
   const mp = MTP && mtWants(which, msg) && MTP.pool(which === 'ai' ? 'ai' : null);
   if (mp) { const t0 = performance.now(), full = { start: startSpec, rule: gv, ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }; return mp.run(full, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full, onProgress) : r; }); }
   return requestW(which, msg, onProgress);
@@ -160,6 +169,7 @@ function requestW(which, msg, onProgress) {   // (the one-thread workers)
 }
 function cancelWorker(which) {
   if (MTP) MTP.cancel(which);
+  if (MCP) MCP.cancel(which);
   const w = which === 'ai' ? aiW : anaW;
   if (!w.jobs.size) return;
   w.terminate();
