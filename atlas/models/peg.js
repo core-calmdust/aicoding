@@ -46,7 +46,7 @@
     c.fillStyle = g; c.beginPath(); c.arc(W / 2, W / 2, W / 2, 0, 7); c.fill();
   }), transparent: true, roughness: .9, depthWrite: false, bump: false }));
   const faceMat = (look, id) => mat('face' + look + id, () => {
-    const tx = new (T().TextureLoader)().load(IMG + 'bd-' + look + '-' + id + '.webp?v=4', () => { if (X.kick) X.kick(200); });
+    const tx = new (T().TextureLoader)().load(IMG + 'bd-' + look + '-' + id + '.webp?v=5', () => { if (X.kick) X.kick(200); });
     tx.anisotropy = 4; if (T().sRGBEncoding) tx.encoding = T().sRGBEncoding;
     return new (T().MeshStandardMaterial)({ map: tx, transparent: false, alphaTest: .92, roughness: .45, metalness: 0, polygonOffset: true, polygonOffsetFactor: -1 });   // (opaque + alpha test: no sorting flicker with the marbles)
   });
@@ -115,9 +115,9 @@
   const JEWEL = ['#d10a24', '#102ed1', '#089a4c', '#8c24cc', '#f79a1a', '#59cce6'];
   const PAINT = ['#c72924', '#1f5cb3', '#1f8047', '#e6a81f', '#6b338c', '#ebe6d6'];
   // abstract pieces (for the abstract board): flat matte discs, the top painted with the 2D page's motif (m-mod-<k>.webp)
-  const MOD = ['#d4694a', '#e3b34a', '#2e8f8a', '#f0e6d4', '#29264d', '#ed8c80'];
+  const MOD = ['#d4694a', '#e3b34a', '#2e8f8a', '#f0e6d4', '#ed8c80', '#5473b3'];
   const modTop = k => mat('mmodt' + k, () => {
-    const tx = new (T().TextureLoader)().load(IMG + 'm-mod-' + k + '.webp?v=4', () => { if (X.kick) X.kick(200); });
+    const tx = new (T().TextureLoader)().load(IMG + 'm-mod-' + k + '.webp?v=5', () => { if (X.kick) X.kick(200); });
     tx.anisotropy = 4; if (T().sRGBEncoding) tx.encoding = T().sRGBEncoding;
     return new (T().MeshStandardMaterial)({ map: tx, roughness: .75, metalness: 0 });
   });

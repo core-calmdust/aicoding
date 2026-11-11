@@ -413,3 +413,5 @@
 - （2026-11-11、ユーザー指示）トップページ `index.html` の「開発室」の下に見出し「ソフトウェア」（`#software`、台帳 `SOFTWARE`）を新設し、思考エンジン Praline を「準備中」（台帳の `soon: true`：SOON の印・「準備中」のタグとボタン、遷移しない）で掲載。ロゴは `praline/`（icon.svg・icon-16.svg・logo.svg・card.svg）。詳細は `claude/praline-spec.md` §9。
 - （2026-11-11、ユーザー指示）トップの上のメニュー・下のタブ（4列）に「ソフトウェア」を追加。Praline のパネルの絵 `praline/card.svg` は3:2の暗い版（上下がぼけて溶ける）。praline-spec §9。
 - （2026-11-11、ユーザー指示）トップの「ソフトウェア」に2つ目の項目「MiniMax H3 WebUI」（Google Colab 向けの動画生成AI用 WebUI。note https://note.com/cwonderland で配布）を追加。素材は `software/h3webui/`（ユーザー提供のブランド素材 icon.svg・logo-dark.svg と、パネルの絵 card.webp＝WebUI の画面（ダーク、`screenshot-dark.webp`）をぼかして暗くし、オレンジの光とロゴを重ね、上下22%・左右8%を透明に溶かしたもの。作り方は `build_card_photo.py`）。台帳 `ext: true` はボタンと絵を新しいタブで開く（外部サイト）。ボタンは「note で入手」（14言語 `h3.play`）。見出しの小見出し・説明は「自作のエンジンとツール」「ゲームを支える思考エンジンや、AIでの制作に使うツールを公開しています。」に変更し、英字ラベルは「SOFTWARE」（COMING SOON を外した）。
+- （2026-11-11、ユーザー指示）ソフトウェアの並びは MiniMax H3 WebUI → Praline の順。Praline の名前はカタカナなし（日本語も「Praline」）。
+- （2026-11-11、ユーザー指示）トップの「公開中タイトル数」には公開済みのソフトウェア（`SOFTWARE` のうち `soon` でないもの）も数える。
