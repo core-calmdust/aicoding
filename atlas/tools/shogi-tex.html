@@ -583,19 +583,24 @@
       const sa = Sh[i + 3] / 255;
       if (sa) {
         const kind = Math.round(Kd[i] / 60), sid = Kd[i + 1];
-        // the shell's layers: long wavy bands across each piece, a second finer set, and sparkles
-        const n1 = fbm(x * .004 + sid * .37, y * .016 + sid * .11, s + 3, 4), n2 = vnoise(x * .03 + sid, y * .06, s + 5), sp = hash(x, y, s + 9) > .996 ? .5 : 0;
-        const flash = Math.max(0, Math.min(1, (n1 - .44) * 3.6)), hueSel = vnoise(x * .006 + sid, y * .01, s + 7);
-        let base;
-        if (kind === 0) base = [mix(246, 226, n2), mix(196, 150, n2), mix(210, 178, n2)];             // pink petal
-        else if (kind === 3) base = [mix(244, 230, n2), mix(176, 140, n2), mix(196, 170, n2)];        // bud, a little deeper
-        else if (kind === 1) base = [mix(206, 176, n2), mix(212, 184, n2), mix(222, 200, n2)];        // silvery branch
-        else if (kind === 2) base = [mix(176, 140, n2), mix(206, 176, n2), mix(140, 110, n2)];        // olive-green bird
-        else base = [mix(236, 220, n2), mix(232, 214, n2), mix(206, 186, n2)];                        // pale belly
-        const ir = hueSel < .4 ? [150, 236, 206] : hueSel < .7 ? [156, 196, 252] : [214, 170, 246];   // green / blue / violet flash
-        const k = flash * (kind === 1 ? .9 : kind === 2 ? .8 : .72);
-        let cr = mix(base[0], ir[0], k) + sp * 120, cg = mix(base[1], ir[1], k) + sp * 120, cb = mix(base[2], ir[2], k) + sp * 120;
-        r = mix(r, cr, sa); gg = mix(gg, cg, sa); b = mix(b, cb, sa); rough = mix(rough, 30 + n2 * 20, sa); met = mix(met, 70 + flash * 80, sa); h = Math.max(h, 50 * sa);
+        // 割貝: the shell laid as small irregular cells (voronoi), each its own cut of the shell's layers
+        const cs = 7 * W / 3072 + 4, gx = x / cs, gy = y / cs, ix = Math.floor(gx), iy = Math.floor(gy); let d1 = 9, d2 = 9, cid = 0;
+        for (let oy = -1; oy <= 1; oy++) for (let ox = -1; ox <= 1; ox++) { const cx = ix + ox + hash(ix + ox, iy + oy, s + 21), cy = iy + oy + hash(ix + ox, iy + oy, s + 22), dd = (gx - cx) * (gx - cx) + (gy - cy) * (gy - cy); if (dd < d1) { d2 = d1; d1 = dd; cid = hash(ix + ox, iy + oy, s + 23); } else if (dd < d2) d2 = dd; }
+        const crack = Math.sqrt(d2) - Math.sqrt(d1) < .045;
+        // the layers: long wavy bands (nacre), fine striations, the interference colour cycling through the spectrum
+        const n1 = fbm(x * .006 + sid * .37 + cid * 3, y * .02 + sid * .11, s + 3, 4), n2 = vnoise(x * .03 + sid, y * .06, s + 5);
+        const stri = .92 + .08 * Math.sin(n1 * 90 + cid * 6), hue = (n1 * 2.4 + cid * .35 + n2 * .25 + sid / 255) % 1;
+        const rb = [.5 + .5 * Math.cos(6.283 * (hue)), .5 + .5 * Math.cos(6.283 * (hue - .33)), .5 + .5 * Math.cos(6.283 * (hue - .67))].map(v => 186 + v * 69);
+        let base, k;
+        if (kind === 0) { base = [250, 204, 218]; k = .12 + .38 * Math.max(0, Math.min(1, (n1 - .5) * 3)); }                 // pink petal (pink shell / 蝶貝 tinted)
+        else if (kind === 3) { base = [244, 180, 200]; k = .15; }                                                            // bud
+        else if (kind === 1) { base = [222, 226, 232]; k = .25 + .45 * Math.max(0, Math.min(1, (n1 - .45) * 3)); }          // branch: 夜光貝, strongly rainbow
+        else if (kind === 2) { base = [176, 212, 144]; k = .18 + .25 * Math.max(0, Math.min(1, (n1 - .5) * 3)); }                                                           // 鶯: green shell
+        else { base = [240, 234, 214]; k = .15; }                                                                            // pale belly
+        const sp = hash(x, y, s + 9) > .994 ? 70 : 0;
+        let cr = mix(base[0], rb[0], k) * stri + sp, cg = mix(base[1], rb[1], k) * stri + sp, cb = mix(base[2], rb[2], k) * stri + sp;
+        if (crack) { cr *= .9; cg *= .89; cb *= .91; }
+        r = mix(r, cr, sa); gg = mix(gg, cg, sa); b = mix(b, cb, sa); rough = mix(rough, 18 + n2 * 14, sa); met = mix(met, 60 + n1 * 60, sa); h = Math.max(h, (crack ? 40 : 52) * sa);
       }
       const ca = Ct[i + 3] / 255; if (ca && sa) { r = mix(r, 70, ca * .8); gg = mix(gg, 40, ca * .8); b = mix(b, 46, ca * .8); h *= 1 - ca * .5; }
       const ea = Ey[i + 3] / 255; if (ea) { r = mix(r, 168, ea); gg = mix(gg, 54, ea); b = mix(b, 72, ea); rough = mix(rough, 40, ea); }   // the blossoms' eyes (a red dot); the bird's eye is darker below
