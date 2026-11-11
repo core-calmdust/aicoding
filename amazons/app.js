@@ -606,27 +606,27 @@ function update(anim) { if (!anim) sel = null; renderBoard(anim); renderInfo(); 
 // the camera view (atlas/skin/amazons.js).
 const PZZ = { pr: null, reg: null, on: true, pan: [0, 0], btn: null, bz: null, win: null };
 function pzzRegion(Pz) {
+  // (2026-11-11 the user — one rule for every puzzle: every amazon of both sides on the screen, the room the play needs round the
+  //  target (its empty neighbours) free to see, and one square more all round — at the board's edge that square is the frame)
   const N = NS_(), pos = E.Pos.from(Pz.P.s), me = pos.turn, op = 3 - me, T = [];
   if (Pz.kind === 'trap' || Pz.kind === 'guard') T.push(Pz.P.e);
   else if (Pz.kind === 'duel') { for (let k = 0; k < 8; k++) { const f = pos.q[k]; if (f >= 0 && pos.sq[f] === op) T.push(f); } }
-  else return null;
-  const rc = i => [(i / N) | 0, i % N], ch = (a, b) => { const [r1, c1] = rc(a), [r2, c2] = rc(b); return Math.max(Math.abs(r1 - r2), Math.abs(c1 - c2)); };
-  const S = new Set(T);
+  const rc = i => [(i / N) | 0, i % N];
+  const S = new Set();
+  for (let k = 0; k < 8; k++) { const f = pos.q[k]; if (f >= 0) S.add(f); }
   for (const t of T) for (const x of E.NB[t]) if (!pos.sq[x]) S.add(x);
-  // the amazons near the targets (5 squares), and in any case the nearest amazon of the other side to each target — both sides on
-  // the screen (2026-11-11 the user: sometimes only one side was shown)
-  for (let k = 0; k < 8; k++) { const f = pos.q[k]; if (f >= 0 && !T.includes(f) && T.some(t => ch(t, f) <= 5)) S.add(f); }
-  for (const t of T) { const ts = pos.sq[t]; let best = -1, bd = 99; for (let k = 0; k < 8; k++) { const f = pos.q[k]; if (f >= 0 && pos.sq[f] !== ts) { const d = ch(t, f); if (d < bd) { bd = d; best = f; } } } if (best >= 0) S.add(best); }
   let r0 = N, r1 = -1, c0 = N, c1 = -1;
   for (const i of S) { let [r, c] = rc(i); if (flip) { r = N - 1 - r; c = N - 1 - c; } r0 = Math.min(r0, r); r1 = Math.max(r1, r); c0 = Math.min(c0, c); c1 = Math.max(c1, c); }
-  const t = { r0, c0, nr: r1 - r0 + 1, nc: c1 - c0 + 1 };   // (the pieces and squares that matter, tight: the 3D close-up fits exactly this)
-  r0--; c0--; r1++; c1++;
-  const n = Math.max(5, r1 - r0 + 1, c1 - c0 + 1); if (n >= 9) return null;
+  r0--; c0--; r1++; c1++;   // (one square more all round: -1 or N = the frame)
+  const t = { r0, c0, nr: r1 - r0 + 1, nc: c1 - c0 + 1 };   // (the 3D close-up fits exactly this)
+  // 2D: a square window inside the board (9 squares or more: the whole board)
+  const q0 = Math.max(0, r0), q1 = Math.min(N - 1, r1), d0 = Math.max(0, c0), d1 = Math.min(N - 1, c1);
+  const n = Math.max(5, q1 - q0 + 1, d1 - d0 + 1);
   const fit = (a0, a1) => { let a = Math.round((a0 + a1 + 1 - n) / 2); return Math.max(0, Math.min(N - n, a)); };
-  return { r0: fit(r0, r1), c0: fit(c0, c1), n, t };
+  return n >= 9 ? { n: 0, r0: 0, c0: 0, t } : { r0: fit(q0, q1), c0: fit(d0, d1), n, t };
 }
 const pzz3D = () => document.documentElement.classList.contains('atlas-skin') && !document.documentElement.classList.contains('atlas-2d');
-function pzzWindow() { const R = PZZ.reg; if (!R || !PZZ.on) return null; const N = NS_(); return { n: R.n, r0: Math.max(0, Math.min(N - R.n, R.r0 + PZZ.pan[1])), c0: Math.max(0, Math.min(N - R.n, R.c0 + PZZ.pan[0])) }; }
+function pzzWindow() { const R = PZZ.reg; if (!R || !PZZ.on || (!R.n && !pzz3D())) return null; if (!R.n) return { n: 10, r0: 0, c0: 0, whole: true }; const N = NS_(); return { n: R.n, r0: Math.max(0, Math.min(N - R.n, R.r0 + PZZ.pan[1])), c0: Math.max(0, Math.min(N - R.n, R.c0 + PZZ.pan[0])) }; }
 function pzzApply() {
   const N = NS_(), w = PZZ.win = pzzWindow();
   if (!PZZ.bz) { const bz = PZZ.bz = document.createElement('div'); bz.className = 'bz'; while (boardEl.firstChild) bz.appendChild(boardEl.firstChild); boardEl.appendChild(bz); }
@@ -637,7 +637,7 @@ function pzzApply() {
   pzzBtn();
 }
 function pzzBtn() {
-  const show = !!puzzle && !!PZZ.reg;
+  const show = !!puzzle && !!PZZ.reg && (!!PZZ.reg.n || pzz3D());
   if (!PZZ.btn) {
     if (!show) return;
     const b = PZZ.btn = document.createElement('button'); b.type = 'button'; b.className = 'pzz-btn';
