@@ -44,7 +44,7 @@
     const d = LVD[lang] || LVD.en, w = WHO[lang] || WHO.en;
     return { name: 'Lv.' + n, desc: d[n <= 4 ? 0 : n <= 9 ? 1 : n <= 15 ? 2 : 3], rating: RATING[n], who: w[n <= 2 ? 0 : n <= 5 ? 1 : n <= 8 ? 2 : n <= 11 ? 3 : n <= 15 ? 4 : n <= 18 ? 5 : 6] };
   }
-  const BASE = '../senet/', EV = '?v=5';
+  const BASE = '../senet/', EV = '?v=6';
   const loadJS = (src, ok) => ok() ? Promise.resolve() : new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
   const loadEngine = () => loadJS(BASE + 'engine.js' + EV, () => !!window.SenetEngine).then(() => window.SenetEngine);
   const TX = {
