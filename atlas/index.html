@@ -1387,6 +1387,10 @@ html.bv-pland .urtoast{top:calc(52px + env(safe-area-inset-top));left:calc(50% +
   #pg-home .prof > .pfbg{display:block;position:absolute;inset:0;z-index:0;border-radius:inherit;overflow:hidden;pointer-events:none}
   #pg-home .prof > .pfbg::after{content:'';position:absolute;inset:0;background:rgba(255,253,247,.3)}#pg-home .prof > .pfbg.dk::after{background:rgba(255,253,247,.55)}
   #pg-home .prof .pf-r > *{position:relative;z-index:1}   /* (.pf-r is display:contents here: its items over the background) */
+  /* the boxes inside the opened name row: one frosted-glass look over the chosen background (2026-11-11) */
+  #pg-home .prof .pt,#pg-home .prof .lgw,#pg-home .prof .accw > .acc{background:rgba(255,253,247,.62)!important;-webkit-backdrop-filter:blur(10px) saturate(1.15);backdrop-filter:blur(10px) saturate(1.15);border:1.5px solid rgba(255,255,255,.75)!important;box-shadow:0 2px 10px -4px rgba(80,50,10,.25)!important;border-radius:16px}
+  #pg-home .prof .accw > .acc{padding:6px 8px 6px 6px;margin-top:0}
+  #pg-home .prof .lgd .d{background:rgba(255,255,255,.55)}#pg-home .prof .lgd .d.got{background:rgba(255,241,191,.9)}
   #pg-home .prof .pf-r input{text-shadow:0 1px 0 #fff,0 0 6px #fff,0 0 12px rgba(255,255,255,.9)}
   /* wearing an SSR / UR: the glow and the running light wrap the title and the name row as one card (2026-11-11) */
   #pg-home .prof.nr3,#pg-home .prof.nr4{overflow:visible;box-shadow:0 6px 0 #e9dcc0!important}
