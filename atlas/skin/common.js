@@ -703,7 +703,7 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
     const paint = () => {
       const l = lang(), k = X.table(), b = X.bright(), N = X.PLACES.name[l] || X.PLACES.name.en, B = X.placeUi('b', l);
       f.innerHTML = `<label>${X.placeUi('place', l)}</label><b class="dsg-now">${N[k]}</b>`
-        + `<div class="dsg atlas-plrow">${N.map((n, i) => `<button type="button" data-k="${i}" class="${i === k ? 'sel' : ''}" aria-pressed="${i === k}" title="${n}"><img class="th" src="${X.placeThumb(i)}" alt="" loading="lazy"><span class="nm">${n}</span></button>`).join('')}</div>`
+        + `<div class="dsg atlas-plrow">${N.map((n, i) => (X.placeOff || []).includes(i) ? '' : `<button type="button" data-k="${i}" class="${i === k ? 'sel' : ''}" aria-pressed="${i === k}" title="${n}"><img class="th" src="${X.placeThumb(i)}" alt="" loading="lazy"><span class="nm">${n}</span></button>`).join('')}</div>`
         + `<div class="atlas-brh">${X.placeUi('bright', l)}</div><div class="seg atlas-br">${B.map((n, i) => `<button type="button" data-b="${i}" class="${i === b ? 'sel' : ''}" aria-pressed="${i === b}">${n}</button>`).join('')}</div>`;
     };
     f.addEventListener('click', e => {
