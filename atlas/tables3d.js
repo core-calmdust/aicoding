@@ -24,58 +24,58 @@
   /* ---------- names and labels (10 languages): name = the picker, go = 「〜へ」 (today's card), play = 「〜で遊ぶ」 (the board card) ---------- */
   const PLACES = {
     name: {
-      ja: ['ちゃぶ台', '2D準拠', 'ダイニング', 'フェルト卓', 'テラス', '書斎', '縁側', '山小屋', 'ゲーセン', 'スカイラウンジ', 'キャンプ場', '茶館'],
-      en: ['Chabudai', 'Like 2D', 'Dining table', 'Green felt', 'Terrace', 'Study', 'Engawa', 'Mountain lodge', 'Arcade', 'Sky lounge', 'Campsite', 'Teahouse'],
-      zh: ['矮桌', '2D风格', '餐桌', '绿色绒布', '露台', '书房', '缘侧', '山间小屋', '游戏厅', '空中酒廊', '露营地', '茶馆'],
-      ko: ['밥상', '2D 스타일', '식탁', '초록 펠트', '테라스', '서재', '툇마루', '산장', '오락실', '스카이 라운지', '캠핑장', '찻집'],
-      es: ['Mesa baja', 'Como en 2D', 'Comedor', 'Tapete verde', 'Terraza', 'Estudio', 'Engawa', 'Refugio', 'Salón arcade', 'Sky lounge', 'Campamento', 'Casa de té'],
-      fr: ['Table basse', 'Comme en 2D', 'Salle à manger', 'Tapis vert', 'Terrasse', 'Bureau', 'Engawa', 'Chalet', 'Salle d\'arcade', 'Sky lounge', 'Camping', 'Maison de thé'],
-      pt: ['Mesa baixa', 'Como no 2D', 'Sala de jantar', 'Feltro verde', 'Terraço', 'Escritório', 'Engawa', 'Chalé', 'Fliperama', 'Sky lounge', 'Acampamento', 'Casa de chá'],
-      de: ['Teetisch', 'Wie in 2D', 'Esstisch', 'Grüner Filz', 'Terrasse', 'Lesezimmer', 'Engawa', 'Berghütte', 'Spielhalle', 'Sky-Lounge', 'Zeltplatz', 'Teehaus'],
-      hi: ['चाबुदाई', '2D जैसा', 'डाइनिंग टेबल', 'हरा फ़ेल्ट', 'टैरेस', 'स्टडी रूम', 'एंगावा बरामदा', 'पहाड़ी कॉटेज', 'आर्केड', 'स्काई लाउंज', 'कैंपसाइट', 'चायघर'],
-      ar: ['طاولة واطئة', 'كما في 2D', 'طاولة الطعام', 'اللباد الأخضر', 'الشرفة', 'المكتب', 'إنغاوا', 'كوخ جبلي', 'صالة الألعاب', 'صالة علوية', 'مخيم', 'بيت الشاي'],
-      ru: ['Столик', 'Как в 2D', 'Обеденный стол', 'Зелёное сукно', 'Терраса', 'Кабинет', 'Энгава', 'Горный домик', 'Игровой зал', 'Скай-лаунж', 'Кемпинг', 'Чайный дом'],
-      'zh-TW': ['矮桌', '同2D', '餐桌', '綠色絨布桌', '露台', '書房', '緣側', '山間小屋', '電玩遊樂場', '空中酒廊', '露營地', '茶館'],
-      id: ['Meja rendah', 'Seperti 2D', 'Meja makan', 'Kain hijau', 'Teras', 'Ruang baca', 'Engawa', 'Pondok gunung', 'Arena game', 'Sky lounge', 'Perkemahan', 'Rumah teh'],
-      tr: ['Alçak masa', '2D gibi', 'Yemek masası', 'Yeşil çuha', 'Teras', 'Çalışma odası', 'Engawa', 'Dağ evi', 'Oyun salonu', 'Sky lounge', 'Kamp alanı', 'Çay evi'],
+      ja: ['ちゃぶ台', '2D準拠', 'ダイニング', 'フェルト卓', 'テラス', '書斎', '縁側', '山小屋', 'ゲーセン', 'スカイラウンジ', 'キャンプ場', '茶館', '和室'],
+      en: ['Chabudai', 'Like 2D', 'Dining table', 'Green felt', 'Terrace', 'Study', 'Engawa', 'Mountain lodge', 'Arcade', 'Sky lounge', 'Campsite', 'Teahouse', 'Tatami room'],
+      zh: ['矮桌', '2D风格', '餐桌', '绿色绒布', '露台', '书房', '缘侧', '山间小屋', '游戏厅', '空中酒廊', '露营地', '茶馆', '和室'],
+      ko: ['밥상', '2D 스타일', '식탁', '초록 펠트', '테라스', '서재', '툇마루', '산장', '오락실', '스카이 라운지', '캠핑장', '찻집', '다다미방'],
+      es: ['Mesa baja', 'Como en 2D', 'Comedor', 'Tapete verde', 'Terraza', 'Estudio', 'Engawa', 'Refugio', 'Salón arcade', 'Sky lounge', 'Campamento', 'Casa de té', 'Sala de tatami'],
+      fr: ['Table basse', 'Comme en 2D', 'Salle à manger', 'Tapis vert', 'Terrasse', 'Bureau', 'Engawa', 'Chalet', 'Salle d\'arcade', 'Sky lounge', 'Camping', 'Maison de thé', 'Salle tatami'],
+      pt: ['Mesa baixa', 'Como no 2D', 'Sala de jantar', 'Feltro verde', 'Terraço', 'Escritório', 'Engawa', 'Chalé', 'Fliperama', 'Sky lounge', 'Acampamento', 'Casa de chá', 'Sala de tatame'],
+      de: ['Teetisch', 'Wie in 2D', 'Esstisch', 'Grüner Filz', 'Terrasse', 'Lesezimmer', 'Engawa', 'Berghütte', 'Spielhalle', 'Sky-Lounge', 'Zeltplatz', 'Teehaus', 'Tatami-Zimmer'],
+      hi: ['चाबुदाई', '2D जैसा', 'डाइनिंग टेबल', 'हरा फ़ेल्ट', 'टैरेस', 'स्टडी रूम', 'एंगावा बरामदा', 'पहाड़ी कॉटेज', 'आर्केड', 'स्काई लाउंज', 'कैंपसाइट', 'चायघर', 'तातामी कक्ष'],
+      ar: ['طاولة واطئة', 'كما في 2D', 'طاولة الطعام', 'اللباد الأخضر', 'الشرفة', 'المكتب', 'إنغاوا', 'كوخ جبلي', 'صالة الألعاب', 'صالة علوية', 'مخيم', 'بيت الشاي', 'غرفة التاتامي'],
+      ru: ['Столик', 'Как в 2D', 'Обеденный стол', 'Зелёное сукно', 'Терраса', 'Кабинет', 'Энгава', 'Горный домик', 'Игровой зал', 'Скай-лаунж', 'Кемпинг', 'Чайный дом', 'Комната с татами'],
+      'zh-TW': ['矮桌', '同2D', '餐桌', '綠色絨布桌', '露台', '書房', '緣側', '山間小屋', '電玩遊樂場', '空中酒廊', '露營地', '茶館', '和室'],
+      id: ['Meja rendah', 'Seperti 2D', 'Meja makan', 'Kain hijau', 'Teras', 'Ruang baca', 'Engawa', 'Pondok gunung', 'Arena game', 'Sky lounge', 'Perkemahan', 'Rumah teh', 'Ruang tatami'],
+      tr: ['Alçak masa', '2D gibi', 'Yemek masası', 'Yeşil çuha', 'Teras', 'Çalışma odası', 'Engawa', 'Dağ evi', 'Oyun salonu', 'Sky lounge', 'Kamp alanı', 'Çay evi', 'Tatami odası'],
     },
     go: {
-      ja: ['ちゃぶ台へ', '盤へ', 'ダイニングへ', 'フェルト卓へ', 'テラスへ', '書斎へ', '縁側へ', '山小屋へ', 'ゲーセンへ', 'スカイラウンジへ', 'キャンプ場へ', '茶館へ'],
-      en: ['To the table', 'To the board', 'To the dining table', 'To the felt table', 'To the terrace', 'To the study', 'To the engawa', 'To the lodge', 'To the arcade', 'To the sky lounge', 'To the campsite', 'To the teahouse'],
-      zh: ['前往棋桌', '前往棋盘', '前往餐桌', '前往牌桌', '前往露台', '前往书房', '前往缘侧', '前往山间小屋', '前往游戏厅', '前往空中酒廊', '前往露营地', '前往茶馆'],
-      ko: ['판으로 가기', '보드로 가기', '식탁으로 가기', '펠트 테이블로 가기', '테라스로 가기', '서재로 가기', '툇마루로 가기', '산장으로 가기', '오락실로 가기', '스카이 라운지로 가기', '캠핑장으로 가기', '찻집으로 가기'],
-      es: ['Ir a la mesa', 'Ir al tablero', 'Ir al comedor', 'Ir al tapete', 'Ir a la terraza', 'Ir al estudio', 'Ir al engawa', 'Ir al refugio', 'Ir al salón arcade', 'Ir al sky lounge', 'Ir al campamento', 'Ir a la casa de té'],
-      fr: ['Vers la table', 'Vers le plateau', 'Vers la salle à manger', 'Vers le tapis vert', 'Vers la terrasse', 'Vers le bureau', 'Vers l\'engawa', 'Vers le chalet', 'Vers la salle d\'arcade', 'Vers le sky lounge', 'Vers le camping', 'Vers la maison de thé'],
-      pt: ['Ir para a mesa', 'Ir para o tabuleiro', 'Ir para a sala de jantar', 'Ir para o feltro', 'Ir para o terraço', 'Ir para o escritório', 'Ir para o engawa', 'Ir para o chalé', 'Ir para o fliperama', 'Ir para o sky lounge', 'Ir para o acampamento', 'Ir para a casa de chá'],
-      de: ['Zum Tisch', 'Zum Brett', 'Zum Esstisch', 'Zum Filztisch', 'Auf die Terrasse', 'Ins Lesezimmer', 'Zur Engawa', 'Zur Berghütte', 'In die Spielhalle', 'In die Sky-Lounge', 'Zum Zeltplatz', 'Ins Teehaus'],
-      hi: ['बोर्ड पर चलें', 'बोर्ड पर चलें', 'डाइनिंग टेबल पर चलें', 'फ़ेल्ट टेबल पर चलें', 'टैरेस पर चलें', 'स्टडी रूम में चलें', 'बरामदे पर चलें', 'कॉटेज में चलें', 'आर्केड में चलें', 'स्काई लाउंज में चलें', 'कैंपसाइट पर चलें', 'चायघर में चलें'],
-      ar: ['إلى الطاولة', 'إلى اللوحة', 'إلى طاولة الطعام', 'إلى طاولة اللباد', 'إلى الشرفة', 'إلى المكتب', 'إلى الإنغاوا', 'إلى الكوخ', 'إلى صالة الألعاب', 'إلى الصالة العلوية', 'إلى المخيم', 'إلى بيت الشاي'],
-      ru: ['К столику', 'К доске', 'К обеденному столу', 'К суконному столу', 'На террасу', 'В кабинет', 'На энгаву', 'В горный домик', 'В игровой зал', 'В скай-лаунж', 'В кемпинг', 'В чайный дом'],
-      'zh-TW': ['前往矮桌', '前往棋盤', '前往餐桌', '前往絨布桌', '前往露台', '前往書房', '前往緣側', '前往山間小屋', '前往電玩遊樂場', '前往空中酒廊', '前往露營地', '前往茶館'],
-      id: ['Ke meja', 'Ke papan', 'Ke meja makan', 'Ke meja kain', 'Ke teras', 'Ke ruang baca', 'Ke engawa', 'Ke pondok', 'Ke arena game', 'Ke sky lounge', 'Ke perkemahan', 'Ke rumah teh'],
-      tr: ['Masaya', 'Tahtaya', 'Yemek masasına', 'Çuha masaya', 'Terasa', 'Çalışma odasına', 'Engawa\'ya', 'Dağ evine', 'Oyun salonuna', 'Sky lounge’a', 'Kamp alanına', 'Çay evine'],
+      ja: ['ちゃぶ台へ', '盤へ', 'ダイニングへ', 'フェルト卓へ', 'テラスへ', '書斎へ', '縁側へ', '山小屋へ', 'ゲーセンへ', 'スカイラウンジへ', 'キャンプ場へ', '茶館へ', '和室へ'],
+      en: ['To the table', 'To the board', 'To the dining table', 'To the felt table', 'To the terrace', 'To the study', 'To the engawa', 'To the lodge', 'To the arcade', 'To the sky lounge', 'To the campsite', 'To the teahouse', 'To the tatami room'],
+      zh: ['前往棋桌', '前往棋盘', '前往餐桌', '前往牌桌', '前往露台', '前往书房', '前往缘侧', '前往山间小屋', '前往游戏厅', '前往空中酒廊', '前往露营地', '前往茶馆', '前往和室'],
+      ko: ['판으로 가기', '보드로 가기', '식탁으로 가기', '펠트 테이블로 가기', '테라스로 가기', '서재로 가기', '툇마루로 가기', '산장으로 가기', '오락실로 가기', '스카이 라운지로 가기', '캠핑장으로 가기', '찻집으로 가기', '다다미방으로 가기'],
+      es: ['Ir a la mesa', 'Ir al tablero', 'Ir al comedor', 'Ir al tapete', 'Ir a la terraza', 'Ir al estudio', 'Ir al engawa', 'Ir al refugio', 'Ir al salón arcade', 'Ir al sky lounge', 'Ir al campamento', 'Ir a la casa de té', 'Ir a la sala de tatami'],
+      fr: ['Vers la table', 'Vers le plateau', 'Vers la salle à manger', 'Vers le tapis vert', 'Vers la terrasse', 'Vers le bureau', 'Vers l\'engawa', 'Vers le chalet', 'Vers la salle d\'arcade', 'Vers le sky lounge', 'Vers le camping', 'Vers la maison de thé', 'Vers la salle tatami'],
+      pt: ['Ir para a mesa', 'Ir para o tabuleiro', 'Ir para a sala de jantar', 'Ir para o feltro', 'Ir para o terraço', 'Ir para o escritório', 'Ir para o engawa', 'Ir para o chalé', 'Ir para o fliperama', 'Ir para o sky lounge', 'Ir para o acampamento', 'Ir para a casa de chá', 'Ir para a sala de tatame'],
+      de: ['Zum Tisch', 'Zum Brett', 'Zum Esstisch', 'Zum Filztisch', 'Auf die Terrasse', 'Ins Lesezimmer', 'Zur Engawa', 'Zur Berghütte', 'In die Spielhalle', 'In die Sky-Lounge', 'Zum Zeltplatz', 'Ins Teehaus', 'Ins Tatami-Zimmer'],
+      hi: ['बोर्ड पर चलें', 'बोर्ड पर चलें', 'डाइनिंग टेबल पर चलें', 'फ़ेल्ट टेबल पर चलें', 'टैरेस पर चलें', 'स्टडी रूम में चलें', 'बरामदे पर चलें', 'कॉटेज में चलें', 'आर्केड में चलें', 'स्काई लाउंज में चलें', 'कैंपसाइट पर चलें', 'चायघर में चलें', 'तातामी कक्ष में चलें'],
+      ar: ['إلى الطاولة', 'إلى اللوحة', 'إلى طاولة الطعام', 'إلى طاولة اللباد', 'إلى الشرفة', 'إلى المكتب', 'إلى الإنغاوا', 'إلى الكوخ', 'إلى صالة الألعاب', 'إلى الصالة العلوية', 'إلى المخيم', 'إلى بيت الشاي', 'إلى غرفة التاتامي'],
+      ru: ['К столику', 'К доске', 'К обеденному столу', 'К суконному столу', 'На террасу', 'В кабинет', 'На энгаву', 'В горный домик', 'В игровой зал', 'В скай-лаунж', 'В кемпинг', 'В чайный дом', 'В комнату с татами'],
+      'zh-TW': ['前往矮桌', '前往棋盤', '前往餐桌', '前往絨布桌', '前往露台', '前往書房', '前往緣側', '前往山間小屋', '前往電玩遊樂場', '前往空中酒廊', '前往露營地', '前往茶館', '前往和室'],
+      id: ['Ke meja', 'Ke papan', 'Ke meja makan', 'Ke meja kain', 'Ke teras', 'Ke ruang baca', 'Ke engawa', 'Ke pondok', 'Ke arena game', 'Ke sky lounge', 'Ke perkemahan', 'Ke rumah teh', 'Ke ruang tatami'],
+      tr: ['Masaya', 'Tahtaya', 'Yemek masasına', 'Çuha masaya', 'Terasa', 'Çalışma odasına', 'Engawa\'ya', 'Dağ evine', 'Oyun salonuna', 'Sky lounge’a', 'Kamp alanına', 'Çay evine', 'Tatami odasına'],
     },
     play: {
-      ja: ['ちゃぶ台で遊ぶ', '盤で遊ぶ', 'ダイニングで遊ぶ', 'フェルト卓で遊ぶ', 'テラスで遊ぶ', '書斎で遊ぶ', '縁側で遊ぶ', '山小屋で遊ぶ', 'ゲーセンで遊ぶ', 'スカイラウンジで遊ぶ', 'キャンプ場で遊ぶ', '茶館で遊ぶ'],
-      en: ['Play on the table', 'Play on the board', 'Play at the dining table', 'Play on the felt', 'Play on the terrace', 'Play in the study', 'Play on the engawa', 'Play in the lodge', 'Play at the arcade', 'Play in the sky lounge', 'Play at the campsite', 'Play in the teahouse'],
-      zh: ['在矮桌上玩', '在棋盘上玩', '在餐桌上玩', '在牌桌上玩', '在露台上玩', '在书房里玩', '在缘侧上玩', '在山间小屋里玩', '在游戏厅玩', '在空中酒廊里玩', '在露营地玩', '在茶馆里玩'],
-      ko: ['밥상에서 플레이', '보드에서 플레이', '식탁에서 플레이', '펠트 테이블에서 플레이', '테라스에서 플레이', '서재에서 플레이', '툇마루에서 플레이', '산장에서 플레이', '오락실에서 플레이', '스카이 라운지에서 플레이', '캠핑장에서 플레이', '찻집에서 플레이'],
-      es: ['Jugar en la mesa', 'Jugar en el tablero', 'Jugar en el comedor', 'Jugar en el tapete', 'Jugar en la terraza', 'Jugar en el estudio', 'Jugar en el engawa', 'Jugar en el refugio', 'Jugar en el salón arcade', 'Jugar en el sky lounge', 'Jugar en el campamento', 'Jugar en la casa de té'],
-      fr: ['Jouer sur la table', 'Jouer sur le plateau', 'Jouer dans la salle à manger', 'Jouer sur le tapis vert', 'Jouer sur la terrasse', 'Jouer au bureau', 'Jouer sur l\'engawa', 'Jouer au chalet', 'Jouer à la salle d\'arcade', 'Jouer au sky lounge', 'Jouer au camping', 'Jouer à la maison de thé'],
-      pt: ['Jogar na mesa', 'Jogar no tabuleiro', 'Jogar na sala de jantar', 'Jogar no feltro', 'Jogar no terraço', 'Jogar no escritório', 'Jogar no engawa', 'Jogar no chalé', 'Jogar no fliperama', 'Jogar no sky lounge', 'Jogar no acampamento', 'Jogar na casa de chá'],
-      de: ['Am Tisch spielen', 'Am Brett spielen', 'Am Esstisch spielen', 'Am Filztisch spielen', 'Auf der Terrasse spielen', 'Im Lesezimmer spielen', 'Auf der Engawa spielen', 'In der Berghütte spielen', 'In der Spielhalle spielen', 'In der Sky-Lounge spielen', 'Auf dem Zeltplatz spielen', 'Im Teehaus spielen'],
-      hi: ['मेज़ पर खेलें', 'बोर्ड पर खेलें', 'डाइनिंग टेबल पर खेलें', 'फ़ेल्ट टेबल पर खेलें', 'टैरेस पर खेलें', 'स्टडी रूम में खेलें', 'बरामदे पर खेलें', 'कॉटेज में खेलें', 'आर्केड में खेलें', 'स्काई लाउंज में खेलें', 'कैंपसाइट पर खेलें', 'चायघर में खेलें'],
-      ar: ['العب على الطاولة', 'العب على اللوحة', 'العب على طاولة الطعام', 'العب على طاولة اللباد', 'العب في الشرفة', 'العب في المكتب', 'العب في الإنغاوا', 'العب في الكوخ', 'العب في صالة الألعاب', 'العب في الصالة العلوية', 'العب في المخيم', 'العب في بيت الشاي'],
-      ru: ['Играть на столике', 'Играть на доске', 'Играть за обеденным столом', 'Играть на сукне', 'Играть на террасе', 'Играть в кабинете', 'Играть на энгаве', 'Играть в горном домике', 'Играть в игровом зале', 'Играть в скай-лаунже', 'Играть в кемпинге', 'Играть в чайном доме'],
-      'zh-TW': ['在矮桌上玩', '在棋盤上玩', '在餐桌上玩', '在絨布桌上玩', '在露台上玩', '在書房裡玩', '在緣側上玩', '在山間小屋裡玩', '在電玩遊樂場玩', '在空中酒廊裡玩', '在露營地玩', '在茶館裡玩'],
-      id: ['Main di meja', 'Main di papan', 'Main di meja makan', 'Main di kain hijau', 'Main di teras', 'Main di ruang baca', 'Main di engawa', 'Main di pondok', 'Main di arena game', 'Main di sky lounge', 'Main di perkemahan', 'Main di rumah teh'],
-      tr: ['Masada oyna', 'Tahtada oyna', 'Yemek masasında oyna', 'Çuhada oyna', 'Terasta oyna', 'Çalışma odasında oyna', 'Engawa\'da oyna', 'Dağ evinde oyna', 'Oyun salonunda oyna', 'Sky lounge’da oyna', 'Kamp alanında oyna', 'Çay evinde oyna'],
+      ja: ['ちゃぶ台で遊ぶ', '盤で遊ぶ', 'ダイニングで遊ぶ', 'フェルト卓で遊ぶ', 'テラスで遊ぶ', '書斎で遊ぶ', '縁側で遊ぶ', '山小屋で遊ぶ', 'ゲーセンで遊ぶ', 'スカイラウンジで遊ぶ', 'キャンプ場で遊ぶ', '茶館で遊ぶ', '和室で遊ぶ'],
+      en: ['Play on the table', 'Play on the board', 'Play at the dining table', 'Play on the felt', 'Play on the terrace', 'Play in the study', 'Play on the engawa', 'Play in the lodge', 'Play at the arcade', 'Play in the sky lounge', 'Play at the campsite', 'Play in the teahouse', 'Play in the tatami room'],
+      zh: ['在矮桌上玩', '在棋盘上玩', '在餐桌上玩', '在牌桌上玩', '在露台上玩', '在书房里玩', '在缘侧上玩', '在山间小屋里玩', '在游戏厅玩', '在空中酒廊里玩', '在露营地玩', '在茶馆里玩', '在和室里玩'],
+      ko: ['밥상에서 플레이', '보드에서 플레이', '식탁에서 플레이', '펠트 테이블에서 플레이', '테라스에서 플레이', '서재에서 플레이', '툇마루에서 플레이', '산장에서 플레이', '오락실에서 플레이', '스카이 라운지에서 플레이', '캠핑장에서 플레이', '찻집에서 플레이', '다다미방에서 플레이'],
+      es: ['Jugar en la mesa', 'Jugar en el tablero', 'Jugar en el comedor', 'Jugar en el tapete', 'Jugar en la terraza', 'Jugar en el estudio', 'Jugar en el engawa', 'Jugar en el refugio', 'Jugar en el salón arcade', 'Jugar en el sky lounge', 'Jugar en el campamento', 'Jugar en la casa de té', 'Jugar en la sala de tatami'],
+      fr: ['Jouer sur la table', 'Jouer sur le plateau', 'Jouer dans la salle à manger', 'Jouer sur le tapis vert', 'Jouer sur la terrasse', 'Jouer au bureau', 'Jouer sur l\'engawa', 'Jouer au chalet', 'Jouer à la salle d\'arcade', 'Jouer au sky lounge', 'Jouer au camping', 'Jouer à la maison de thé', 'Jouer dans la salle tatami'],
+      pt: ['Jogar na mesa', 'Jogar no tabuleiro', 'Jogar na sala de jantar', 'Jogar no feltro', 'Jogar no terraço', 'Jogar no escritório', 'Jogar no engawa', 'Jogar no chalé', 'Jogar no fliperama', 'Jogar no sky lounge', 'Jogar no acampamento', 'Jogar na casa de chá', 'Jogar na sala de tatame'],
+      de: ['Am Tisch spielen', 'Am Brett spielen', 'Am Esstisch spielen', 'Am Filztisch spielen', 'Auf der Terrasse spielen', 'Im Lesezimmer spielen', 'Auf der Engawa spielen', 'In der Berghütte spielen', 'In der Spielhalle spielen', 'In der Sky-Lounge spielen', 'Auf dem Zeltplatz spielen', 'Im Teehaus spielen', 'Im Tatami-Zimmer spielen'],
+      hi: ['मेज़ पर खेलें', 'बोर्ड पर खेलें', 'डाइनिंग टेबल पर खेलें', 'फ़ेल्ट टेबल पर खेलें', 'टैरेस पर खेलें', 'स्टडी रूम में खेलें', 'बरामदे पर खेलें', 'कॉटेज में खेलें', 'आर्केड में खेलें', 'स्काई लाउंज में खेलें', 'कैंपसाइट पर खेलें', 'चायघर में खेलें', 'तातामी कक्ष में खेलें'],
+      ar: ['العب على الطاولة', 'العب على اللوحة', 'العب على طاولة الطعام', 'العب على طاولة اللباد', 'العب في الشرفة', 'العب في المكتب', 'العب في الإنغاوا', 'العب في الكوخ', 'العب في صالة الألعاب', 'العب في الصالة العلوية', 'العب في المخيم', 'العب في بيت الشاي', 'العب في غرفة التاتامي'],
+      ru: ['Играть на столике', 'Играть на доске', 'Играть за обеденным столом', 'Играть на сукне', 'Играть на террасе', 'Играть в кабинете', 'Играть на энгаве', 'Играть в горном домике', 'Играть в игровом зале', 'Играть в скай-лаунже', 'Играть в кемпинге', 'Играть в чайном доме', 'Играть в комнате с татами'],
+      'zh-TW': ['在矮桌上玩', '在棋盤上玩', '在餐桌上玩', '在絨布桌上玩', '在露台上玩', '在書房裡玩', '在緣側上玩', '在山間小屋裡玩', '在電玩遊樂場玩', '在空中酒廊裡玩', '在露營地玩', '在茶館裡玩', '在和室裡玩'],
+      id: ['Main di meja', 'Main di papan', 'Main di meja makan', 'Main di kain hijau', 'Main di teras', 'Main di ruang baca', 'Main di engawa', 'Main di pondok', 'Main di arena game', 'Main di sky lounge', 'Main di perkemahan', 'Main di rumah teh', 'Main di ruang tatami'],
+      tr: ['Masada oyna', 'Tahtada oyna', 'Yemek masasında oyna', 'Çuhada oyna', 'Terasta oyna', 'Çalışma odasında oyna', 'Engawa\'da oyna', 'Dağ evinde oyna', 'Oyun salonunda oyna', 'Sky lounge’da oyna', 'Kamp alanında oyna', 'Çay evinde oyna', 'Tatami odasında oyna'],
     },
     // the updates list (shared/atlas.js) says ちゃぶ台 / chabudai for the portal's own 3D play: the word that replaces it
     news: {
-      ja: ['ちゃぶ台', '盤', 'ダイニング', 'フェルト卓', 'テラス', '書斎', '縁側', '山小屋', 'ゲーセン', 'スカイラウンジ', 'キャンプ場', '茶館'],
-      en: ['chabudai', 'table', 'table', 'table', 'table', 'table', 'table', 'table', 'table', 'table', 'table', 'table'],
-      hi: ['चाबुदाई', 'मेज़', 'मेज़', 'मेज़', 'मेज़', 'मेज़', 'मेज़', 'मेज़', 'मेज़', 'मेज़', 'मेज़', 'मेज़'],
+      ja: ['ちゃぶ台', '盤', 'ダイニング', 'フェルト卓', 'テラス', '書斎', '縁側', '山小屋', 'ゲーセン', 'スカイラウンジ', 'キャンプ場', '茶館', '和室'],
+      en: ['chabudai', 'table', 'table', 'table', 'table', 'table', 'table', 'table', 'table', 'table', 'table', 'table', 'table'],
+      hi: ['चाबुदाई', 'मेज़', 'मेज़', 'मेज़', 'मेज़', 'मेज़', 'मेज़', 'मेज़', 'मेज़', 'मेज़', 'मेज़', 'मेज़', 'मेज़'],
     },
     ui: {
       place: { ja: '場所', en: 'Place', zh: '场所', ko: '장소', es: 'Lugar', fr: 'Lieu', pt: 'Local', de: 'Ort', hi: 'जगह', ar: 'المكان', ru: 'Место', 'zh-TW': '場所', id: 'Tempat', tr: 'Mekân' },
@@ -100,6 +100,7 @@
     8: [['disc', 5.5, -18, -40, .1], ['dice', 4.5, -52, -27, 1.4], ['tile', 6, 7, -17.5, -.1], ['gem', 5, 44, -8, -1.2]],
     9: [['gem', 5, -9, -16, .2], ['gold', 4.5, -50, -20, 1.2], ['owl', 6, 34, -46, -.4], ['knight', 9, 50, -6, -1.4]],
     10: [['puffin', 7.5, 31, -74, 1.2], ['crab', 6, -45, -69, .3], ['plop', 5.5, -7, -15, .1], ['stone', 9, -60, -22, .9]],
+    12: [['shogi', 5.5, -36, -46, .6], ['owl', 5, 58, -40, -.8], ['stone', 4.6, -52, 10, 1.2]],
     11: [['tile', 5.5, 7, -14.6, -.1], ['dot', 4.5, -34, -33, .5], ['shogi', 7.5, 14, -46, -.2], ['gold', 5, 32, 14, -2.4]],
   };
   const mons = (o, k, FL) => { if (!X.placeMon || !MONS_AT[k]) return; const TT = o.TT, rc = new TT.Raycaster(), dn = new TT.Vector3(0, -1, 0), from = new TT.Vector3(); o.g.updateMatrixWorld(true);
@@ -110,7 +111,7 @@
   X.placeUi = (key, lang) => pick(PLACES.ui[key], lang);
   // the thumbnails (small real renders, atlas/img/place-k.webp), next to this script whichever page loads it
   const ME = (document.currentScript && document.currentScript.src) || location.href;
-  X.placeThumb = k => new URL('img/place-' + k + '.webp?v=' + (k === 8 ? 5 : k >= 2 ? 3 : 1), ME).href;   // (8: the game centre, 2026-11-09)
+  X.placeThumb = k => new URL('img/place-' + k + '.webp?v=' + (k === 8 ? 5 : k === 12 ? 1 : k >= 2 ? 3 : 1), ME).href;   // (8: the game centre, 2026-11-09)
 
   const lin = (c, y0, y1, stops) => { const g = c.createLinearGradient(0, y0, 0, y1); stops.forEach(([k, col]) => g.addColorStop(k, col)); return g; };
   const rad = (c, x, y, r, stops) => { const g = c.createRadialGradient(x, y, 0, x, y, r); stops.forEach(([k, col]) => g.addColorStop(k, col)); return g; };
@@ -2860,6 +2861,121 @@
   };
   TABLES[11].plain = { sun: 0xffecd8, sunI: .76, hemi: [0xf2e8dc, 0x3a1408, .46], exp: .66 };
   TABLES[11].floor = (o) => ({ img: rosewood(o).image, w: 36, h: 36, dark: true, over: 'radial-gradient(140% 120% at 50% 40%, transparent 55%, rgba(20,4,0,.35))' });
+
+  /* ---------- 12 和室 (2026-11-12): a shogi / go tournament room — tatami, navy zabuton and
+     white-draped armrests (脇息) for the two players, the recorder's low desk, the board right on the tatami (no table), shoji lit from outside on the back wall, a tokonoma
+     with hanging scrolls on the left, fusuma on the right, a light-wood coffered ceiling with two light panels (the user's reference
+     photos of 対局室). Morning / day: daylight through the shoji; evening / night: the shoji dim, the ceiling lights warm. ---------- */
+  TABLES[12] = (o) => {
+    const { TT, g, scene } = o, T = TOD(o), FL = -.06, Z0 = 1, night = T === 'night', ev = T === 'evening', day = !lampLit(T);
+    const XL = -76, XR = 76, ZB = -72, ZF = 150, Y1 = FL + 58;
+    // no table (2026-11-12, the user's wish): the board stands right on the tatami
+    ao(o, 0, FL, Z0, 30, 26, .25);
+    // the floor: tatami with black heri (as in a tournament room), laid in a basket weave: each 40 × 40 square two mats side by side,
+    // turned a quarter between neighbours
+    { const TA = X.tatami(), src = TA.map.image, HW = Math.round(src.width * 54 / 1024);
+      const tt = canvasTex('tbl12-tatami', src.width, src.height, (c, W, H) => { c.drawImage(src, 0, 0, W, H);
+        const hw = Math.round(HW * .5);   // (a narrower heri: the rest of the old one becomes rush)
+        c.drawImage(src, HW * 2, 0, HW - hw, H, hw, 0, HW - hw, H); c.drawImage(src, HW * 2, 0, HW - hw, H, W - HW, 0, HW - hw, H);
+        [0, W - hw].forEach(x0 => { c.fillStyle = '#1e1c18'; c.fillRect(x0, 0, hw, H); for (let y = 0; y < H; y += 6) { c.fillStyle = 'rgba(255,255,255,.05)'; c.fillRect(x0, y, hw, 2); } c.fillStyle = 'rgba(255,255,255,.12)'; c.fillRect(x0 + (x0 ? 1 : hw - 3), 0, 2, H); }); });
+      const tm = M({ map: tt, bumpMap: TA.bump, roughness: .8, bumpScale: .006, sheen: new TT.Color(0x3a3a24) }), geo = new TT.PlaneGeometry(20, 40);
+      for (let i = -3; i <= 2; i++) for (let j = -2; j <= 4; j++) { const cx = i * 40 + 10, cz = Z0 + j * 40, turn = (i + j) % 2 !== 0;
+        [-10, 10].forEach(d => { const m = new TT.Mesh(geo, tm); m.rotation.x = -Math.PI / 2; m.rotation.z = turn ? Math.PI / 2 : 0;
+          m.position.set(cx + (turn ? 0 : d), FL, cz + (turn ? d : 0)); m.receiveShadow = true; g.add(m); }); } }
+    // the walls and the ceiling (painted, their own light)
+    const plaster = (c, x0, x1, y0, y1, col) => { c.fillStyle = col; c.fillRect(x0, y0, x1 - x0, y1 - y0); const R = rng((x0 * 7 + y0) | 0); for (let i = 0; i < (x1 - x0) * (y1 - y0) / 6; i++) { c.fillStyle = `rgba(${R() > .5 ? '255,255,250' : '90,80,60'},${.025 + R() * .03})`; ell(c, x0 + R() * (x1 - x0), y0 + R() * (y1 - y0), .4 + R() * 1.4, .4 + R() * 1.4); } };
+    const hinoki = '#d9bc8c', hinokiD = '#b8956a', paper = day ? (T === 'morning' ? '#fbf6ea' : '#fdfbf4') : ev ? '#e6c79e' : '#4a5068';
+    const NY = FL + 40;   // the nageshi (the beam over the openings)
+    const shoji = (c, x0, x1, y0, y1) => { c.fillStyle = paper; c.fillRect(x0, y0, x1 - x0, y1 - y0);
+      if (day) { c.fillStyle = lin(c, y0, y1, [[0, 'rgba(255,255,255,.0)'], [.6, 'rgba(255,255,255,.35)'], [1, 'rgba(255,250,235,.2)']]); c.fillRect(x0, y0, x1 - x0, y1 - y0); }
+      c.fillStyle = hinokiD; const n = Math.round((x1 - x0) / 22);
+      for (let k = 0; k < n; k++) { const a = x0 + k * (x1 - x0) / n, b = a + (x1 - x0) / n;
+        for (let i = 1; i < 6; i++) c.fillRect(a + i * (b - a) / 6 - .14, y0, .28, y1 - y0);
+        for (let y = y0 + 4.2; y < y1 - 1; y += 4.2) c.fillRect(a, y - .14, b - a, .28);
+        c.fillStyle = hinoki; c.fillRect(a - .6, y0, 1.2, y1 - y0); c.fillRect(b - .6, y0, 1.2, y1 - y0); c.fillStyle = hinokiD; }
+      c.fillStyle = hinoki; c.fillRect(x0, y0 - 1, x1 - x0, 1.6); c.fillRect(x0, y1 - .6, x1 - x0, 1.6); };
+    const nageshi = (c, x0, x1) => { c.fillStyle = hinoki; c.fillRect(x0, NY, x1 - x0, 2.2); c.fillStyle = 'rgba(0,0,0,.18)'; c.fillRect(x0, NY - .3, x1 - x0, .3); c.fillStyle = hinoki; c.fillRect(x0, Y1 - 2, x1 - x0, 2); };
+    const post = (c, x) => { c.fillStyle = hinoki; c.fillRect(x - 1.3, FL, 2.6, Y1 - FL); c.fillStyle = 'rgba(255,255,255,.12)'; c.fillRect(x - .9, FL, .5, Y1 - FL); };
+    roomBox(o, { key: 'tbl12-room-' + T, xl: XL, xr: XR, zb: ZB, zf: ZF, y0: FL, y1: Y1, px: 2048, pxs: 1536, wb: day ? 1 : ev ? .92 : .82,
+      back: (c) => { plaster(c, XL - 2, XR + 2, FL - 2, Y1 + 2, '#cfc8b6');
+        c.fillStyle = '#c9a85e'; c.fillRect(-64, FL, 50, NY - FL); const R = rng(4); for (let i = 0; i < 1400; i++) { c.fillStyle = `rgba(${R() > .5 ? '255,236,170' : '120,90,30'},${.05 + R() * .07})`; c.fillRect(-64 + R() * 50, FL + R() * (NY - FL), .5 + R() * 2.2, .5 + R() * 2.2); }
+        c.fillStyle = lin(c, NY, NY - 8, [[0, 'rgba(70,45,10,.4)'], [1, 'rgba(70,45,10,0)']]); c.fillRect(-64, NY - 8, 50, 8);
+        shoji(c, -6, 70, FL + 1, NY); c.fillStyle = '#e6dcc4'; c.fillRect(-6, FL + 1, 76, 6); c.fillStyle = hinoki; c.fillRect(-6, FL + 6.6, 76, .8);   // the koshi board under the paper
+        nageshi(c, XL, XR); post(c, -65.5); post(c, -12.5); post(c, -6.5); post(c, 70.5);
+        c.fillStyle = '#b89062'; for (let x = -11; x < 70; x += 4.2) c.fillRect(x, NY + 3.4, .5, Y1 - NY - 6);   // a ranma of thin slats over the shoji
+        c.fillStyle = hinoki; c.fillRect(XL, FL, XR - XL, 1.2); },
+      left: (c) => {   // u = -z: shoji
+        plaster(c, -ZF - 2, -ZB + 2, FL - 2, Y1 + 2, '#d2c9b2');
+        nageshi(c, -ZF, -ZB); post(c, -ZB - 1.5);
+        shoji(c, -ZF, 66, FL + 1, NY); },
+      right: (c) => {   // u = z: fusuma (cream, a dark frame and a round pull) between posts
+        plaster(c, ZB - 2, ZF + 2, FL - 2, Y1 + 2, '#d2c9b2');
+        for (let z = ZB + 4; z < ZF - 4; z += 22) { c.fillStyle = '#ece4d0'; c.fillRect(z, FL + 1, 21, NY - FL - 1); const R = rng(z | 0);
+          for (let i = 0; i < 120; i++) { c.fillStyle = `rgba(170,150,110,${.05 + R() * .05})`; ell(c, z + R() * 21, FL + 1 + R() * (NY - FL - 1), .3 + R() * 1.2, .3 + R() * 1.2); }
+          c.strokeStyle = '#3a2a1c'; c.lineWidth = .7; c.strokeRect(z + .35, FL + 1.35, 20.3, NY - FL - 1.7);
+          c.fillStyle = '#4a3a28'; ell(c, z + 18.5, FL + 20, .9, .9); c.fillStyle = '#c8a860'; ell(c, z + 18.5, FL + 20, .55, .55); }
+        nageshi(c, ZB, ZF); post(c, ZB + 1.5); },
+      ceil: (c) => { c.fillStyle = '#d6b888'; c.fillRect(XL - 2, ZB - 2, XR - XL + 4, ZF - ZB + 4); const R = rng(9);
+        for (let i = 0; i < 260; i++) { c.fillStyle = `rgba(150,110,60,${.05 + R() * .06})`; c.fillRect(XL + R() * (XR - XL), ZB + R() * (ZF - ZB), 6 + R() * 18, .3); }
+        c.fillStyle = '#b89062'; for (let x = XL; x <= XR; x += 9.5) c.fillRect(x - .35, ZB, .7, ZF - ZB); for (let z = ZB; z <= ZF; z += 9.5) c.fillRect(XL, z - .35, XR - XL, .7);
+        const lit = day ? '#fffdf6' : '#fff2d8';
+        [[-50, -16], [16, 50]].forEach(([x0, x1]) => { c.fillStyle = '#9a7a52'; c.fillRect(x0 - 1.2, -40 - 1.2, x1 - x0 + 2.4, 34 + 2.4); c.fillStyle = lit; c.fillRect(x0, -40, x1 - x0, 34);
+          c.fillStyle = 'rgba(160,140,110,.5)'; for (let x = x0 + 2.8; x < x1; x += 2.8) c.fillRect(x - .08, -40, .16, 34); for (let z = -40 + 4.25; z < -6; z += 4.25) c.fillRect(x0, z - .08, x1 - x0, .16); }); },
+    });
+    // the tokonoma: the raised floor and its lacquered front rail, three hanging scrolls, a vase
+    { const black = M({ color: 0x1e1612, roughness: .25, clearcoat: .8 }), board = M({ map: wood('tbl12-toko', '#a07040', '#6a4422', 256, 512, 1.4), roughness: .4, clearcoat: .3 });
+      at(g, new TT.Mesh(RB(50, 2.8, 11, .1, 1), [black, black, board, black, black, black]), -39, FL + 1.4, ZB + 5.5, 0, false);
+      const scroll = (key, text, z) => { const tex = canvasTex('tbl12-scroll-' + key, 128, 512, (c, W, H) => {
+          c.fillStyle = '#6e7a5e'; c.fillRect(0, 0, W, H); c.fillStyle = '#b8a678'; c.fillRect(8, 40, W - 16, H - 80); c.fillStyle = '#f2ecdc'; c.fillRect(16, 70, W - 32, H - 140);
+          c.fillStyle = '#1a1612'; c.textAlign = 'center'; c.textBaseline = 'middle'; const n = text.length, fs = Math.min(62, (H - 200) / n);
+          c.font = `bold ${fs}px "Noto Serif CJK JP","Hiragino Mincho ProN","Yu Mincho",serif`;
+          [...text].forEach((ch, i) => c.fillText(ch, W / 2, 110 + fs / 2 + i * fs * 1.04));
+          c.fillStyle = '#b02a1a'; c.fillRect(W / 2 + 14, H - 112, 10, 10); c.fillStyle = '#3a2a1a'; c.fillRect(0, 0, W, 6); c.fillRect(0, H - 10, W, 10); });
+        const m = new TT.Mesh(new TT.PlaneGeometry(6.4, 26), M({ map: tex, roughness: .8, bump: false })); at(g, m, z, FL + 19.5, ZB + .35, 0, false);
+        const rod2 = new TT.Mesh(new TT.CylinderGeometry(.3, .3, 7.4, 8), black); rod2.rotation.z = Math.PI / 2; at(g, rod2, z, FL + 6.4, ZB + .7, 0, false); };
+      scroll('a', '棋道一心', -52); scroll('b', '和敬清寂', -39); scroll('c', '盤上無心', -26);
+      const vase = lathe(TT, [[0, 0], [1.2, 0], [1.4, .4], [2, 3], [1.9, 4.8], [1, 6.2], [.7, 7], [.9, 7.6], [0, 7.6]], SEG(o, 24), M({ color: 0x1c2e6a, roughness: .2, clearcoat: .8 }));
+      at(g, vase, -21, FL + 2.8, ZB + 5); }
+    // the players' places: navy zabuton, white-draped armrests (脇息) on wooden legs
+    const navy = M({ map: canvasTex('tbl12-zabuton', 256, 256, (c, W) => { c.fillStyle = '#25336a'; c.fillRect(0, 0, W, W); const R = rng(3); for (let i = 0; i < 4000; i++) { c.fillStyle = `rgba(${R() > .5 ? '90,110,170' : '10,16,40'},.18)`; c.fillRect(R() * W, R() * W, 1, 1); }
+      c.strokeStyle = 'rgba(200,210,240,.4)'; c.lineWidth = 3; c.strokeRect(6, 6, W - 12, W - 12); }), roughness: .9, sheen: new TT.Color(0x4a5a9a), bumpScale: .01 });
+    [-31, 33].forEach(z => { at(g, new TT.Mesh(RB(14, 2, 15, 1, 3), navy), 0, FL + 1, z); ao(o, 0, FL, z, 16, 17, .35); });
+    const cloth = M({ map: canvasTex('tbl12-pleat', 256, 64, (c, W, H) => { c.fillStyle = '#f4f2ec'; c.fillRect(0, 0, W, H); for (let x = 0; x < W; x += 8) { c.fillStyle = 'rgba(150,150,140,.35)'; c.fillRect(x, 0, 2, H); c.fillStyle = 'rgba(255,255,255,.6)'; c.fillRect(x + 4, 0, 2, H); } }), roughness: .85, sheen: new TT.Color(0xffffff) });
+    const clothTop = M({ color: 0xf6f4ee, roughness: .8, sheen: new TT.Color(0xffffff) }), legW = M({ map: wood('tbl12-leg', '#d8b880', '#a88048', 128, 256, 1), roughness: .45, clearcoat: .3 });
+    const kyosoku = (x, z, ry) => { const G = grp(TT, g, x, FL, z, ry); G.scale.setScalar(.8);
+      [-1, 1].forEach(s => { at(G, new TT.Mesh(RB(1.4, 3.6, 3.4, .3, 1), legW), s * 4.6, 1.8, 0); at(G, new TT.Mesh(RB(3.4, .8, 4.6, .3, 1), legW), s * 4.6, .4, 0); });
+      at(G, new TT.Mesh(RB(13, 2, 4.6, .9, 3), clothTop), 0, 5.6, 0);
+      [-1, 1].forEach(s => { const sk = new TT.Mesh(new TT.PlaneGeometry(12.4, 2.6), cloth); at(G, sk, 0, 3.6, s * 2.25, s > 0 ? 0 : Math.PI, false); });
+      [-1, 1].forEach(s => { const sk = new TT.Mesh(new TT.PlaneGeometry(4.4, 2.6), cloth); at(G, sk, s * 6.3, 3.6, 0, s * Math.PI / 2, false); }); ao(o, x, FL, z, 15, 7, .3); };
+    kyosoku(11, -31, Math.PI / 2); kyosoku(-12, 35, Math.PI / 2);
+    // the recorder's place on the right: a low dark desk with the score sheet, a pen and a laptop; a grey zabuton
+    { const G = grp(TT, g, 44, FL, -14, -.35), dk = M({ color: 0x3a2a20, roughness: .3, clearcoat: .6 });
+      at(G, new TT.Mesh(RB(20, 1, 10, .2, 1), dk), 0, 7.5, 0); [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => at(G, new TT.Mesh(RB(1, 7, 1, .1, 1), dk), a * 9, 3.5, b * 4.2));
+      at(G, new TT.Mesh(new TT.BoxGeometry(5.6, .05, 7.6), M({ color: 0xf8f6ee, roughness: .9 })), -4, 8.05, .4, .1);
+      at(G, new TT.Mesh(new TT.BoxGeometry(5.6, .05, 7.6), M({ map: canvasTex('tbl12-kifu', 128, 172, (c, W, H) => { c.fillStyle = '#f8f6ee'; c.fillRect(0, 0, W, H); c.strokeStyle = 'rgba(40,40,80,.4)'; for (let y = 12; y < H; y += 8) { c.beginPath(); c.moveTo(6, y); c.lineTo(W - 6, y); c.stroke(); } c.fillStyle = '#222'; for (let y = 18; y < H * .6; y += 8) c.fillRect(10 + (y * 7) % 20, y - 4, 26 + (y * 3) % 30, 2.4); }), roughness: .9 })), 2, 8.06, .2, -.05);
+      const pen = new TT.Mesh(new TT.CylinderGeometry(.12, .12, 4, 6), M({ color: 0x111111, roughness: .3 })); pen.rotation.z = Math.PI / 2; at(G, pen, 6.4, 8.2, 2.6, .3);
+      const lap = grp(TT, G, 4, 8, -1.6, .2), alu = M({ color: 0xc8ccd2, metalness: .7, roughness: .35 });
+      at(lap, new TT.Mesh(RB(7, .3, 4.8, .2, 1), alu), 0, .15, 0); const scr = new TT.Mesh(RB(7, 4.6, .25, .2, 1), [alu, alu, alu, alu, M({ color: 0x1a2a3a, emissive: new TT.Color(0x2a3a4a), emissiveIntensity: .6, roughness: .2 }), alu]); scr.rotation.x = -.3; at(lap, scr, 0, 2.4, -2.6);
+      ao(o, 44, FL, -14, 24, 14, .3);
+      at(g, new TT.Mesh(RB(13, 1.8, 14, .9, 3), M({ color: 0x6a6e74, roughness: .9 })), 46, FL + .9, -1, -.35); }
+    // by the near player: a lacquer tray with yunomi, a bottle of water, a box of tissues
+    { const G = grp(TT, g, -19, FL, 16, .2);
+      at(G, new TT.Mesh(RB(9, .5, 6, .4, 2), M({ color: 0x2a1610, roughness: .2, clearcoat: 1 })), 0, .25, 0);
+      const yuno = lathe(TT, [[0, 0], [.8, 0], [.9, .2], [1.05, 2.4], [1.0, 2.45], [.92, .4], [0, .35]], SEG(o, 20), M({ color: 0xd8d2c0, roughness: .4, clearcoat: .5 }));
+      at(G, yuno, -2.2, .5, 0); const tea = new TT.Mesh(new TT.CircleGeometry(.9, 16), M({ color: 0x8a9a48, roughness: .1 })); tea.rotation.x = -Math.PI / 2; at(G, tea, -2.2, 2.6, 0, 0, false);
+      const btl = lathe(TT, [[0, 0], [1, 0], [1.05, .2], [1.05, 5], [.6, 6.4], [.45, 6.5], [.45, 7.2], [0, 7.2]], SEG(o, 18), M({ color: 0xe8f4ff, roughness: .05, transparent: true, opacity: .55, clearcoat: 1 }));
+      at(G, btl, 2.4, .5, -.6); at(G, new TT.Mesh(new TT.CylinderGeometry(.48, .48, .7, 12), M({ color: 0x2a6ac8, roughness: .4 })), 2.4, 8, -.6);
+      at(g, new TT.Mesh(RB(6.4, 2.6, 3.6, .2, 1), M({ map: canvasTex('tbl12-tissue', 128, 64, (c, W, H) => { c.fillStyle = '#f4f2ee'; c.fillRect(0, 0, W, H); c.fillStyle = '#7a9ac8'; c.fillRect(0, H * .7, W, H * .3); }), roughness: .8 })), -27, FL + 1.3, 22, .1); }
+    // the lights: daylight through the shoji (back), the ceiling panels, a soft overhead light on the board
+    scene.add(new TT.HemisphereLight(day ? 0xf6f2e8 : 0xffe8c8, 0x6a5a3a, day ? .62 : .5));
+    const key = dirLight(TT, day ? 0xfff8ec : 0xffe4c0, day ? .95 : .7, [-8, 40, -30], 17); scene.add(key);
+    [-33, 33].forEach(x => { const L = new TT.PointLight(day ? 0xfffaf0 : 0xffe6c4, day ? .35 : .6, 120, 2); L.position.set(x, Y1 - 3, -23); scene.add(L); });
+    mons(o, 12, FL);
+    try { X.mergeStatic(g); } catch (e) {}
+    return { bg: '#cfc8b6', exp: day ? .74 : .86, board: day ? .3 : .42, key, env: { top: '#f4ead6', bottom: '#5a4a30', panels: [[0, 18, -60, 60, 24, day ? '#fffaf0' : '#e8c8a0', day ? 1.4 : .7], [-33, 40, -23, 34, 30, '#fff8ec', 1.1], [33, 40, -23, 34, 30, '#fff8ec', 1.1]] }, onShow() {} };
+  };
+  TABLES[12].plain = { sun: 0xfff6e8, sunI: .78, hemi: [0xf6f2e8, 0x6a5a3a, .5], exp: .66 };
+  TABLES[12].floor = (o) => { const TA = X.tatami(); return { img: TA.map.image, w: 20, h: 40, over: 'radial-gradient(140% 120% at 50% 40%, transparent 55%, rgba(40,30,10,.22))' }; };
 
   TABLES[5].floor = (o) => ({ img: leatherFloor(o).image, w: 24, h: 18, dark: true,
     over: 'radial-gradient(80% 70% at 20% 10%, rgba(255,196,120,.20), transparent 62%), radial-gradient(130% 120% at 50% 46%, transparent 52%, rgba(4,8,5,.55))' });
