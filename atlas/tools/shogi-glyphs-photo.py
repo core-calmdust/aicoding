@@ -28,7 +28,9 @@ LAY = {   # rows of the photo, the pieces of each kind (row, column), and whethe
                    'FU': [(r, c) for r in range(1, 6) for c in (0, 5)] + [(r, c) for r in (6, 7) for c in range(6)]}),
     # 錦旗: 玉將 王將 / 角 角 飛 飛 / 歩 金×4 歩 / 歩 銀×4 歩 / 歩 桂×4 歩 / 歩 香×4 歩 / 歩×6 / 歩×6
     'kinki': dict(rows=[2, 4, 6, 6, 6, 6, 6, 6], glare=False, kind={'GY': [(0, 0)], 'OU': [(0, 1)], 'KA': [(1, 0), (1, 1)], 'HI': [(1, 2), (1, 3)], 'KI': four(2), 'GI': four(3), 'KE': four(4), 'KY': four(5),
-                  'FU': [(r, c) for r in range(2, 6) for c in (0, 5)] + [(r, c) for r in (6, 7) for c in range(6)]})}[SET]
+                  'FU': [(r, c) for r in range(2, 6) for c in (0, 5)] + [(r, c) for r in (6, 7) for c in range(6)]})}
+LAY['ryoko'] = dict(LAY['kinki'], thr=.58)   # 菱湖: the photo is laid out as 錦旗's; fine strokes — the outline taken a little inside
+LAY = LAY[SET]
 KIND = LAY['kind']; BW = float(sys.argv[3]) if len(sys.argv) > 3 else 25   # (the wood's Lab b threshold)
 SZ = {'FU': 1, 'KY': 2, 'KE': 2, 'GI': 3, 'KI': 3, 'KA': 4, 'HI': 4, 'GY': 5, 'OU': 5}
 ASP3D = lambda sz: 2 * (.385 + .009 * (sz - 1)) / .94          # the 3D face's width / height (pieceGeo)
@@ -53,7 +55,7 @@ def pieces():
             if j == 0 and len(row) == 1: cuts = [0, (x1 - x0) // 2, x1 - x0]         # (the two kings: glare can break the mask)
             else:
                 col = ndi.gaussian_filter1d(filled[y0:y1, x0:x1].sum(0).astype(float), 1.2)
-                pk, _ = find_peaks(-col, prominence=4, distance=40); cuts = [0] + [p for p in pk if 20 < p < len(col) - 20] + [len(col)]
+                pk, _ = find_peaks(-col, prominence=4, distance=70); cuts = [0] + [p for p in pk if 20 < p < len(col) - 20] + [len(col)]
             ps += [(y0, y1, x0 + a, x0 + c) for a, c in zip(cuts, cuts[1:])]
         out.append(ps)
     return out
@@ -100,7 +102,7 @@ def glyph(code):
     if len(al) == 1 and LAY['glare']: avg = king(avg)
     RAW[code] = avg; cen = lambda m: np.array(ndi.center_of_mass(m))
     if len(al) > 1: avg = ndi.shift(avg, np.mean([cen(m) for m in ms], 0) - cen(avg), order=1)   # placed where the copies have it on average
-    a = np.clip((G(avg, 3.0 if len(al) > 2 else 5.0) - .5) / .22 + .5, 0, 1)   # (two copies: the mean is rougher)
+    a = np.clip((G(avg, 3.0 if len(al) > 2 else 5.0) - LAY.get('thr', .5)) / .22 + .5, 0, 1)   # (two copies: the mean is rougher)
     return clean(a, 400), len(al), float(np.mean(asp))
 
 def king(a):

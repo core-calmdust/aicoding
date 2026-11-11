@@ -1,14 +1,15 @@
-# Redraws the inscriptions of the unpromoted 2D 水無瀬 / 錦旗 pieces (shogi/pieces/<set>/{0,1}{FU,KY,KE,GI,KA,HI,KI,GY,OU}.svg) from
+# Redraws the inscriptions of the unpromoted 2D 水無瀬 / 錦旗 / 菱湖 pieces (shogi/pieces/<set>/{0,1}{FU,KY,KE,GI,KA,HI,KI,GY,OU}.svg) from
 # shogi/pieces/<set>/traced.png — the inscriptions traced from a photo of a real 盛り上げ set by
 # atlas/tools/shogi-glyphs-photo.py (2026-11-12). The piece itself (face, band, maker's mark) stays LuffyKudo's drawing; its
 # black ink path is replaced by the traced outline, placed on the top face (the face minus the band) where the photo has it on the
 # piece, widened across by the photo piece's width/height over the drawn face's so the characters keep their shape.
-# Needs rsvg-convert. python3 atlas/tools/shogi-traced-svg.py [minase|kinki]
+# Needs rsvg-convert. python3 atlas/tools/shogi-traced-svg.py [minase|kinki|ryoko]
 import io, os, re, subprocess, sys, numpy as np, cv2
 from scipy.ndimage import binary_fill_holes
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..'); SET = sys.argv[1] if len(sys.argv) > 1 else 'minase'; DIR = os.path.join(ROOT, 'shogi', 'pieces', SET)
 TR = ['FU', 'KY', 'KE', 'GI', 'KA', 'HI', 'KI', 'GY', 'OU']
 ASP = {'minase': {'GY': 1.0, 'OU': 1.0, 'KA': .953, 'HI': .961, 'KI': .954, 'GI': .934, 'KE': .922, 'KY': .844, 'FU': .835},   # (printed by the photo tool)
+       'ryoko': {'KA': .902, 'HI': .914, 'KI': .902, 'GI': .890, 'KE': .863, 'KY': .815, 'FU': .830, 'GY': .882, 'OU': .898},
        'kinki': {'GY': .919, 'OU': .935, 'KA': .921, 'HI': .922, 'KI': .923, 'GI': .906, 'KE': .883, 'KY': .834, 'FU': .842}}[SET]
 S = 1200
 PATH = re.compile(r'<path\b[^>]*?/>', re.S)
