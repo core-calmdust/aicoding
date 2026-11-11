@@ -1464,10 +1464,27 @@ $('#lessonList').onclick = e => { const b = e.target.closest('.lesson-item'); if
 function fenPieces(fen) { const out = {}; const rows = fen.split(' ')[0].split('/'); rows.forEach((row, i) => { let f = 0; for (const ch of row) { if (/\d/.test(ch)) { f += +ch; continue; } out['abcdefgh'[f] + (8 - i)] = ch; f++; } }); return out; }
 function openIntro(i) {
   introIdx = i; const s = LESSONS.steps[i]; openChoiceIdx = -1; $('#btnLessonStart').classList.remove('hidden');
-  $('#liStep').textContent = t('course.' + (s.course || 'tactics')) + ' · STEP ' + stepNo(i);
-  $('#liTitle').textContent = t('ls.' + s.id + '.title');
-  const d = s.diagram;
-  $('#liBody').innerHTML = (d ? `<div class="mini">${miniBoard(fenPieces(d.fen), { arrows: d.arrows || [], hl: d.hl || [], dots: d.dots || [] })}</div>` : '') + t('ls.' + s.id + '.intro');
+  const d = s.diagram, step = t('course.' + (s.course || 'tactics')) + ' · STEP ' + stepNo(i), title = t('ls.' + s.id + '.title');
+  const fig = d ? `<div class="mini">${miniBoard(fenPieces(d.fen), { arrows: d.arrows || [], hl: d.hl || [], dots: d.dots || [] })}</div>` : '';
+  // the common lesson page (shared/luxintro.js, 2026-11-11): the board, the facts in a row, then goal · how to think · tips · trivia · how it works
+  if (window.LuxIntro) {
+    LuxIntro.load('lux.json?v=1').then(X => {
+      if (introIdx !== i || openChoiceIdx >= 0) return;
+      const U = LL((X.ui) || {}) || {}, x = (X.lessons || {})[s.id] || {}, H = k => LuxIntro.head(k, LANG), f = (k, v) => (U[k] || '').replace('{n}', v);
+      const drill = s.kind === 'drill', n = (s.stages || s.problems || []).length, goal = LL(x.goal) || (t('ls.' + s.id + '.goal') !== 'ls.' + s.id + '.goal' ? t('ls.' + s.id + '.goal') : '');
+      const tips = LL(x.tips), tr = LL(x.trivia);
+      LuxIntro.lesson({ step, title, fig, cap: U.figL,
+        chips: [[U.course, t('course.' + (s.course || 'tactics'))], [U.kind, f(drill ? 'stages' : 'probs', n)], [U.pass, drill ? U.passDrill : U.passPts]],
+        secs: [goal && { h: H('goal'), html: goal }, { h: H('think'), html: t('ls.' + s.id + '.intro') },
+          tips && tips.length && { h: H('tips'), html: `<ul>${tips.map(x => `<li>${x}</li>`).join('')}</ul>` },
+          tr && { h: H('trivia'), html: tr, cls: 'lx-trivia' }, { h: H('how'), html: f(drill ? 'howDrill' : 'howProbs', n) }].filter(Boolean) });
+    });
+    $('#liStep').textContent = step; $('#liTitle').textContent = title;
+    showLessonView('lessonIntroView'); return;
+  }
+  $('#liStep').textContent = step;
+  $('#liTitle').textContent = title;
+  $('#liBody').innerHTML = fig + t('ls.' + s.id + '.intro');
   showLessonView('lessonIntroView');
 }
 $('#btnLessonBack').onclick = () => openChoiceIdx >= 0 ? openOpenings() : openLessons();
@@ -1766,6 +1783,19 @@ function openOpeningChoice(i) {
   $('#liStep').textContent = t('op.title') + ' · ' + t(g.side === 'w' ? 'op.forWhite' : 'op.forBlack');
   $('#liTitle').textContent = LL(g.title);
   const last = pre[pre.length - 1];
+  // the common opening page (shared/luxintro.js, 2026-11-11): the board, the lead, the two ways in, then plans · history · players · trivia
+  if (window.LuxIntro) {
+    const fig = `<div class="mini">${miniBoard(lineAfter(pre), { arrows: [[last.slice(0, 2), last.slice(2, 4)]], hl: [], dots: [] })}</div>`;
+    LuxIntro.load('lux.json?v=1').then(X => {
+      if (openChoiceIdx !== i) return;
+      const U = LL((X.ui) || {}) || {}, x = (X.openings || {})[g.id] || {}, H = k => LuxIntro.head(k, LANG);
+      LuxIntro.opening({ step: $('#liStep').textContent, title: LL(g.title), fig, cap: U.figO, lead: LL(g.intro),
+        choices: [{ ic: '📖', b: t('op.study'), small: t('op.studyDesc', { n: g.study.steps.length }), attrs: 'data-study="1"' }, { ic: '✎', b: t('op.practice'), small: t('op.practiceDesc'), attrs: 'data-practice="1"' }],
+        secs: [LL(x.plan) && { h: H('plan'), html: LL(x.plan) }, LL(x.hist) && { h: H('hist'), html: LL(x.hist) }, LL(x.who) && { h: H('who'), html: LL(x.who) }, LL(x.trivia) && { h: H('trivia'), html: LL(x.trivia), cls: 'lx-trivia' }].filter(Boolean) });
+    });
+    $('#btnLessonStart').classList.add('hidden');
+    showLessonView('lessonIntroView'); showOverlay('#lessonOverlay'); return;
+  }
   $('#liBody').innerHTML = `<div class="mini">${miniBoard(lineAfter(pre), { arrows: [[last.slice(0, 2), last.slice(2, 4)]], hl: [], dots: [] })}</div>` + LL(g.intro).map(x => `<p>${x}</p>`).join('') +
     `<div class="op-choice"><button class="lesson-item" data-study="1"><span class="no">📖</span><span class="tx"><b>${t('op.study')}</b><small>${t('op.studyDesc', { n: g.study.steps.length })}</small></span></button>` +
     `<button class="lesson-item" data-practice="1"><span class="no">✎</span><span class="tx"><b>${t('op.practice')}</b><small>${t('op.practiceDesc')}</small></span></button></div>`;
