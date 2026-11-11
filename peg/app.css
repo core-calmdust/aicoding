@@ -164,7 +164,7 @@ body.in-puzzle .daily-card,body.in-puzzle .rec-card{display:none}
 .pz-view[hidden]{display:none}
 #pzLevels{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain}
 #pzGridView #pzGrid{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain}
-.pz-view .modal-actions{flex:none;margin-top:12px}
+.pz-view .modal-actions{flex:none;margin-top:auto;padding-top:12px}
 .pz-view .modal-actions .mbtn{flex:1}
 .rules-modal #rulesBody{flex:1;min-height:0}
 /* the stage grid: square tiles, the board drawn inside (as the other games) */

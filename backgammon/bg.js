@@ -533,6 +533,34 @@ function wbForward(net) {
 }
 function wbEval(p, s) { const race = !contact(p), net = race ? WB.race : WB.contact; wbInputs(p, s, race, net.x); return wbForward(net); }
 
+// ---- the C engine (engine.c → engine_simd.wasm / engine.wasm, 2026-11-11): the same evaluators and search, loaded by the
+// AI worker (engine.js) — then evalPos / evalFast / evalPly / plyRoll run there (BG.wasm() tells). j = weights.json, wbBuf =
+// wildbg.bin, boBuf = the bear-off database (decompressed). Returns false (and the JavaScript stays) when anything is missing.
+let WX = null, WIO = null, WRES = null;
+function setWasm(x, j, man, wbBuf, boBuf) {
+  WX = null;
+  try {
+    const C = man && man.nets && man.nets.contact, R = man && man.nets && man.nets.race;
+    const offs = l => l.layers.map(y => y.offset + ':' + y.n).join(',');
+    if (!x || !j || !j.contact || !j.race || !wbBuf || man.format !== 'f16' || C.inputs !== 202 || R.inputs !== 186 ||
+      offs(C) !== '0:60900,60900:75250,136150:50200,186350:1206' || offs(R) !== '187556:56100,243656:75250,318906:50200,369106:1206' ||
+      wbBuf.byteLength < 370312 * 2 || j.contact.w.length > 29317 || j.race.w.length > 29317) return false;
+    const mem = x.memory.buffer;
+    new Uint16Array(mem, x.bg_wbraw(), 370312).set(new Uint16Array(wbBuf, 0, 370312));
+    new Float32Array(mem, x.bg_fn(0), j.contact.w.length).set(j.contact.w);
+    new Float32Array(mem, x.bg_fn(1), j.race.w.length).set(j.race.w);
+    const bo = boBuf && boBuf.byteLength <= 1172090 ? new Uint8Array(boBuf) : null;
+    if (bo) new Uint8Array(mem, x.bg_boraw(), bo.length).set(bo);
+    if (!x.bg_init(j.contact.nh, j.race.nh, 1, bo ? 1 : 0)) return false;
+    WX = x; WIO = new Int8Array(mem, x.bg_io(), 52 * 64); WRES = new Float64Array(mem, x.bg_res(), 5 * 64);
+    return true;
+  } catch (e) { WX = null; return false; }
+}
+const wRes = () => [WRES[0], WRES[1], WRES[2], WRES[3], WRES[4]];
+function wEval(p, s) { WIO.set(p); WX.bg_eval(1, s); return wRes(); }
+function wFast(p, s) { WIO.set(p); WX.bg_evalfast(1, s); return wRes(); }
+function wPly(q, o, ply) { WIO.set(q); WX.bg_ply(o, ply); return wRes(); }
+
 // probabilities from the perspective of the side on roll: [win, winG, winBG, loseG, loseBG] (gammons include backgammons)
 function sanitize(y) {
   let w = Math.min(1, Math.max(0, y[0]));
@@ -630,6 +658,7 @@ function setNet(net) { NET = net; }
 function setNets(j) { NET = j && j.contact ? new Net(j.contact.nh, Float32Array.from(j.contact.w)) : null; NETR = j && j.race ? new Net(j.race.nh, Float32Array.from(j.race.w)) : null; }
 // static evaluation of position p with side s on roll -> probabilities (on-roll perspective)
 function evalPos(p, s) {
+  if (WX) return wEval(p, s);
   const w = winner(p);
   if (w >= 0) { const k = winKind(p, w); const me = w === s; return me ? [1, k >= 2 ? 1 : 0, k >= 3 ? 1 : 0, 0, 0] : [0, 0, 0, k >= 2 ? 1 : 0, k >= 3 ? 1 : 0]; }
   if (isBearoffPos(p)) return bearoffEval(p, s);
@@ -697,6 +726,7 @@ function eval2(q, o) {
 // ---- hybrid search used when the wildbg evaluator is loaded: the fast net (GNUbg-style inputs) pre-selects the
 // opponent's replies (like GNUbg's pruning nets) and only the best few are valued by the strong evaluator.
 function evalFast(p, s) {
+  if (WX) return wFast(p, s);
   const w = winner(p);
   if (w >= 0 || isBearoffPos(p)) return evalPos(p, s);
   if (NETR && !contact(p)) return sanitize(NETR.forward(p, s));
@@ -719,10 +749,11 @@ function hybReply(q, o, a, b, k) {
 }
 const HYB_K = 2;
 // value of the position after a play (o to roll) at a given depth, with the best available evaluator
-function evalPly(q, o, ply) { return ply >= 2 ? (WB ? hyb2(q, o) : eval2(q, o)) : ply >= 1 ? (WB ? hyb1(q, o) : eval1(q, o)) : flip(evalPos(q, o)); }
+function evalPly(q, o, ply) { if (WX && ply >= 1) return wPly(q, o, ply); return ply >= 3 && WB ? hybN(q, o, ply) : ply >= 2 ? (WB ? hyb2(q, o) : eval2(q, o)) : ply >= 1 ? (WB ? hyb1(q, o) : eval1(q, o)) : flip(evalPos(q, o)); }
 function hasWildbg() { return !!WB; }
 // 1-ply: position q, o to roll; probs from the perspective of 1-o (the player who just moved)
 function hyb1(q, o) {
+  if (WX) return wPly(q, o, 1);
   const w = winner(q);
   if (w >= 0 || isBearoffPos(q)) return flip(evalPos(q, o));
   const acc = [0, 0, 0, 0, 0];
@@ -734,6 +765,7 @@ function hyb1(q, o) {
 }
 // 2-ply: o replies (hybrid choice), then the reply is valued by our hybrid 1-ply
 function hyb2(q, o) {
+  if (WX) return wPly(q, o, 2);
   const w = winner(q);
   if (w >= 0 || isBearoffPos(q)) return flip(evalPos(q, o));
   const acc = [0, 0, 0, 0, 0];
@@ -748,9 +780,23 @@ function hyb2(q, o) {
 // term of ROLLS[i] (o's perspective, as the loops of eval1 / hyb1 / eval2 / hyb2 compute it), plySum → the value from the 21
 // terms (the same additions in the same order: the same numbers). plyWhole(q): evalPly does not roll here (the game is over or
 // a bear-off position) — then evalPly(q, o, ply) itself is the value.
+// n plies (n >= 3; the JavaScript fallback of the C engine's bg_ply): o replies, then the reply is valued n-1 plies deep
+function hybN(q, o, n) {
+  if (n <= 2) return n === 2 ? hyb2(q, o) : hyb1(q, o);
+  if (winner(q) >= 0 || isBearoffPos(q)) return flip(evalPos(q, o));
+  const acc = [0, 0, 0, 0, 0];
+  for (const [a, b, pr] of ROLLS) {
+    const r = hybReply(q, o, a, b, HYB_K);
+    const v = winner(r.pos) >= 0 || isBearoffPos(r.pos) ? r.v : hybN(r.pos, 1 - o, n - 1);
+    acc[0] += pr * (1 - v[0]); acc[1] += pr * v[3]; acc[2] += pr * v[4]; acc[3] += pr * v[1]; acc[4] += pr * v[2];
+  }
+  return acc;
+}
 const plyWhole = q => winner(q) >= 0 || !!isBearoffPos(q);
 function plyRoll(q, o, ply, i) {
+  if (WX) { WIO.set(q); if (!WX.bg_plyroll(o, ply, i)) return wRes(); }
   const [a, b] = ROLLS[i];
+  if (ply >= 3 && WB) { const r = hybReply(q, o, a, b, HYB_K); return winner(r.pos) >= 0 || isBearoffPos(r.pos) ? r.v : hybN(r.pos, 1 - o, ply - 1); }
   if (ply >= 2) {
     if (WB) { const r = hybReply(q, o, a, b, HYB_K); return winner(r.pos) >= 0 || isBearoffPos(r.pos) ? r.v : hyb1(r.pos, 1 - o); }
     const plays = genPlays(q, o, a, b);
@@ -999,7 +1045,7 @@ function aiCube(level, pos, side, ctx, takerView) {
 
 
 Object.assign(BG, {
-  aiChoosePlay, aiCube, LEVEL_OPTS, planPly, setNets, escapes, loadWildbg, wbEval, wbInputs, setWildbg: w => { WB = w; },
+  aiChoosePlay, aiCube, LEVEL_OPTS, planPly, setNets, setWasm, wasm: () => !!WX, hybN, escapes, loadWildbg, wbEval, wbInputs, setWildbg: w => { WB = w; },
   OFF, BAR, initial, clone, key, pips, onBoard, allHome, contact, winner, winKind, dest, apply, mvFrom, mvTo, mvHit,
   genPlays, maxUse, legalSteps, notation, ptName, cyrb128, DiceStream, randomSeed, sha256, replay, encodeGame, decodeGame,
   NIN, features, Net, sanitize, flip, equity, choose, BO_N, boIndex, boIndexPos, loadBearoff, boDist, isBearoffPos, bearoffEval,

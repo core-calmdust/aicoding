@@ -46,7 +46,7 @@
     c.fillStyle = g; c.beginPath(); c.arc(W / 2, W / 2, W / 2, 0, 7); c.fill();
   }), transparent: true, roughness: .9, depthWrite: false, bump: false }));
   const faceMat = (look, id) => mat('face' + look + id, () => {
-    const tx = new (T().TextureLoader)().load(IMG + 'bd-' + look + '-' + id + '.webp?v=1', () => { if (X.kick) X.kick(200); });
+    const tx = new (T().TextureLoader)().load(IMG + 'bd-' + look + '-' + id + '.webp?v=2', () => { if (X.kick) X.kick(200); });
     tx.anisotropy = 4; if (T().sRGBEncoding) tx.encoding = T().sRGBEncoding;
     return new (T().MeshStandardMaterial)({ map: tx, transparent: true, alphaTest: .92, roughness: .45, metalness: 0 });
   });
