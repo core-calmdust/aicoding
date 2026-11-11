@@ -1677,7 +1677,7 @@ html.rb-study .frame{outline:3px solid var(--accent);outline-offset:3px}
 <script src="../shared/rulesoffer.js?v=17l14j"></script>
 <script src="../shared/headerbar.js?v=51l14s"></script>
 <script src="../shared/flipbtn.js?v=3l14"></script>
-<script src="../shared/cardbar.js?v=15l14"></script>
+<script src="../shared/cardbar.js?v=15l14"></script><script src="../shared/luxintro.js?v=3"></script>
 <script src="../shared/watchpause.js?v=2l14"></script>
 <script src="../shared/tick.js?v=2l14"></script>
 <script src="../shared/fischer.js?v=1"></script>
@@ -3323,7 +3323,7 @@ function openIntro(i) {
   introIdx = i; const l = curSets()[i];
   const x = LT(l);
   $('#liStep').textContent = (lessonSrc === 'open' ? t('tab.open') + ' · ' : '') + `STEP ${i + 1}`; $('#liTitle').textContent = x.title;
-  $('#lessonIntroView').classList.toggle('op-intro', l.kind === 'opening');
+  $('#lessonIntroView').classList.toggle('op-intro', l.kind === 'opening'); if (l.kind === 'opening' && window.LuxIntro) LuxIntro.off();
   if (l.kind === 'opening') {   // keep the overview light: one lead line, cards with name / moves / one concept line; the long texts live in the lesson itself
     // hero: the shared starting moves on a board; cards: the position each line reaches, with its last move marked
     const mvs = l.lines.map(n => n.moves.match(/../g) || []);
@@ -3334,6 +3334,14 @@ function openIntro(i) {
       + `<div class="oh-chips">${l.lines.map((n, li) => `<span>${li + 1}. ${PT(n.name)}</span>`).join('')}</div>`
       + `<details class="op-more"><summary>${t('op.more')}</summary>${x.intro.map(p => `<p>${p}</p>`).join('')}${x.note ? `<p class="note">${x.note}</p>` : ''}<p class="note">${t('op.drillNote')}</p></details></div></div>`
       + `<div class="op-book">${l.lines.map((n, li) => `<div class="ob" data-ob="${li}" title="${esc(t('op.studyTitle'))}"><span class="ob-th">${thumb(n.moves)}</span><div class="ob-c"><div class="ob-h"><span class="ob-no">${li + 1}</span><span class="nm">${PT(n.name)}</span></div><div class="mv">${(n.moves.match(/../g) || []).map((m, i) => `<i>${i + 1}</i>${i < k0 ? m : `<b>${m}</b>`}`).join(' ')}</div>${n.aim ? `<div class="ob-aim">${PT(n.aim)}</div>` : ''}<span class="op-dr"><button data-li="${li}" data-c="1">● ${t('op.drillB')}</button><button data-li="${li}" data-c="2">○ ${t('op.drillW')}</button></span></div></div>`).join('')}</div>`;
+  } else if (window.LuxIntro) {   // the common lesson page (shared/luxintro.js, 2026-11-11): board · facts · goal · how to think · trivia
+    const P0 = (l.problems || [])[0], fig = P0 && P0.cells ? rlSVG(P0.cells.split('').map(Number), {}) : '', think = x.intro.map(p => `<p>${p}</p>`).join('') + (x.note ? `<p class="note">${x.note}</p>` : '') + (l.warm && l.warm.length ? `<p class="note">📘 ${t('wu.intro', { n: l.warm.length })}</p>` : '');
+    LuxIntro.load('lux.json?v=1').then(X => {
+      if (introIdx !== i) return;
+      const U = (X.ui && (X.ui[LANG] || X.ui.en)) || {}, tr = LuxIntro.pick(((X.lessons || {})[l.id] || {}).trivia, LANG), H = k => LuxIntro.head(k, LANG);
+      LuxIntro.lesson({ step: $('#liStep').textContent, title: x.title, fig, cap: U.figL, chips: [[U.kind, (U.probs || '').replace('{n}', 5)], [U.pass, U.passPts]],
+        secs: [x.short && { h: H('goal'), html: x.short }, { h: H('think'), html: think }, tr && { h: H('trivia'), html: tr, cls: 'lx-trivia' }].filter(Boolean) });
+    });
   } else $('#liBody').innerHTML = x.intro.map(p => `<p>${p}</p>`).join('') + (x.note ? `<p class="note">${x.note}</p>` : '') + (l.warm && l.warm.length ? `<p class="note">📘 ${t('wu.intro', { n: l.warm.length })}</p>` : '');
   showLessonView('intro');
 }
