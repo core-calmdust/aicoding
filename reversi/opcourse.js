@@ -126,20 +126,22 @@ const tagged = txt => String(txt).split(/(?=【)|(?=\[[\p{L}\p{M}]{1,16}\])/u).m
 const stepId = st => 'opl:' + st.ln.moves;
 const evFmt = v => (v > 0 ? '+' : '') + (+v).toFixed(1);
 // ---------------------------------------------------------------- the list: three tabs, chapters inside, a card per line
-async function list() {
+async function list(focus) {
   await loadOpenings(); loadEv();
   lessonSrc = 'open'; selTab('open'); STEPS = null; const S = steps();
+  const F = focus != null ? S[focus] : null; if (F) { lxTab('opc', F.tab); lxTab('opc:' + F.tab, F.chap); }   // (back from a step: its tab and chapter)
   $('#lsListTitle').textContent = t('op.title'); $('#lsListDesc').textContent = '';
   const cats = TABS.map(([key, , mv]) => ({ key, mv, tab: tx('tab.' + key), name: tx('tab.' + key), desc: tx('tab.' + key + '.d'), items: [] }));
   let chap = null, no = 0;
   S.forEach((st, i) => {
     const c = cats.find(x => x.key === st.tab) || cats[0];
-    if (st.chap !== chap) { chap = st.chap; no = 0; const x = LT(st.set); c.items.push({ head: true, html: `<div class="oc-ch"><b>${x.title}</b><small>${x.short}</small></div>` }); }
+    if (st.chap !== chap) { chap = st.chap; no = 0; const x = LT(st.set); (c.chaps = c.chaps || []).push({ id: chap, title: x.title, short: x.short }); }
     const s = lxState(stepId(st)), p = lxAfter(st.ln.moves), board = rlSVG(p.cells, { marks: p.last >= 0 ? { [p.last]: 'new' } : {} });
-    c.items.push({ done: s.done, html: lxCard({ i, op: 1, board, no: 'STEP ' + (++no), st: s.st, title: PT2(st.ln.name), sub: PT2(st.ln.aim), desc: splitM(st.ln.moves).join(' '), p: s.pr ? s.pr.best / 100 : 0, done: s.done }) });
+    c.items.push({ chap, done: s.done, html: lxCard({ i, op: 1, board, no: 'STEP ' + (++no), st: s.st, title: PT2(st.ln.name), sub: PT2(st.ln.aim), desc: splitM(st.ln.moves).join(' '), p: s.pr ? s.pr.best / 100 : 0, done: s.done }) });
   });
   render(cats);
   showLessonView('list'); showOverlay('#lessonOverlay');
+  if (F) { const el = $('#lessonList').querySelector(`[data-i="${focus}"]`); if (el) el.scrollIntoView({ block: 'center' }); }
 }
 function render(cats) {
   const kind = 'opc'; let curK = lxTab(kind);
@@ -147,10 +149,16 @@ function render(cats) {
   const L = $('#lessonList'); L.classList.add('lx-on');
   const ic = c => { const p = lxAfter(c.mv); return rlSVG(p.cells, { crop: [2, 1, 4, 4], marks: { [p.last]: 'new' } }); };
   const c = cats.find(x => x.key === curK), its = c.items.filter(x => !x.head), n = its.filter(x => x.done).length, m = its.length;
+  // the tab's chapters as a second row of categories (2026-11-11: 51 steps in one list were too many)
+  const chaps = c.chaps || []; let ch = lxTab(kind + ':' + curK); if (!chaps.some(x => x.id === ch)) ch = (chaps.find(x => c.items.some(y => y.chap === x.id && !y.done)) || chaps[0] || {}).id;
+  const cur = chaps.find(x => x.id === ch), inCh = c.items.filter(x => x.chap === ch);
+  const sub = chaps.length > 1 ? `<div class="oc-sub" role="tablist">${chaps.map(x => { const z = c.items.filter(y => y.chap === x.id), k = z.filter(y => y.done).length; return `<button role="tab" data-occ="${x.id}" class="${x.id === ch ? 'sel' : ''}"><span class="nm">${x.title}</span><span class="ct${k === z.length && k ? ' ok' : ''}">${k}/${z.length}</span></button>`; }).join('')}</div>` : '';
   L.innerHTML = `<div class="lx"><div class="lx-tabs" role="tablist">${cats.map(x => { const z = x.items.filter(y => !y.head), k = z.filter(y => y.done).length; return `<button role="tab" data-oct="${x.key}" class="${x.key === curK ? 'sel' : ''}"><span class="ic">${ic(x)}</span><span class="nm">${x.tab}</span><span class="ct${k === z.length && k ? ' ok' : ''}">${k}/${z.length}</span></button>`; }).join('')}</div>` +
     `<div class="lx-banner"><span class="ic">${ic(c)}</span><span class="tx"><b>${c.name}</b><small>${c.desc}</small></span><span class="pg"><small>${t('lx.prog', { n, m })}</small>${lxBar(m ? n / m : 0, true)}</span></div>` +
-    `<div class="lx-grid">${c.items.map(x => x.html).join('')}</div>${openData.credit ? `<p class="lx-credit">${PT2(openData.credit)}</p>` : ''}</div>`;
+    sub + (cur ? `<div class="oc-ch"><b>${cur.title}</b><small>${cur.short}</small></div>` : '') +
+    `<div class="lx-grid">${inCh.map(x => x.html).join('')}</div>${openData.credit ? `<p class="lx-credit">${PT2(openData.credit)}</p>` : ''}</div>`;
   L.querySelectorAll('[data-oct]').forEach(b => b.onclick = () => { lxTab(kind, b.dataset.oct); render(cats); L.scrollTop = 0; });
+  L.querySelectorAll('[data-occ]').forEach(b => b.onclick = () => { lxTab(kind + ':' + curK, b.dataset.occ); render(cats); });
 }
 // ---------------------------------------------------------------- a step's page
 function intro(i) {
@@ -334,6 +342,8 @@ const CSS = `#liBody .oc-seq{display:flex;flex-wrap:wrap;gap:4px 6px;margin:8px 
 #liBody .oc-tg{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.06em;color:#1a1408;background:var(--brass,#d8b56a);border-radius:5px;padding:0 7px;margin-inline-end:8px;vertical-align:1px}
 #liBody .oc-kids{display:flex;flex-wrap:wrap;gap:8px}#liBody .oc-kid{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:8px 12px;border-radius:10px;border:1px solid rgba(201,169,97,.35);background:rgba(201,169,97,.06);color:inherit;font:inherit;cursor:pointer;text-align:start}
 #liBody .oc-kid:hover{border-color:var(--brass,#d8b56a)}#liBody .oc-kid b{font-size:14px}#liBody .oc-kid small{font:500 11.5px "JetBrains Mono",monospace;opacity:.75}
+#lessonList .oc-sub{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}#lessonList .oc-sub button{display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:99px;border:1px solid var(--line,rgba(255,255,255,.15));background:rgba(0,0,0,.18);color:var(--muted,#bbb);font:inherit;font-size:13px;cursor:pointer}#lessonList .oc-sub button.sel{border-color:var(--brass,#d8b56a);color:var(--brass,#d8b56a);background:rgba(201,169,97,.12)}#lessonList .oc-sub .ct{font:600 11px "JetBrains Mono",monospace;opacity:.75}#lessonList .oc-sub .ct.ok{color:#6fd3a0;opacity:1}
+html.atlas-skin #lessonList .oc-sub button{background:#fff;border:2px solid #ead9b6;color:#4a5068;box-shadow:0 2px 0 #ead9b6}html.atlas-skin #lessonList .oc-sub button.sel{border-color:#ff8a7a;color:#d93c3c;background:#fff1ee}
 #lessonList .oc-ch{grid-column:1/-1;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:14px 2px 2px;padding-bottom:6px;border-bottom:1px solid rgba(201,169,97,.25)}#lessonList .oc-ch:first-child{margin-top:0}#lessonList .oc-ch b{font-size:15px;color:var(--brass,#d8b56a)}#lessonList .oc-ch small{font-size:12px;color:var(--dim,#9aa)}
 #ocNote p{margin:4px 0;font-size:14px;line-height:1.75}#ocNote .oc-ply{font-size:15px}#ocNote .oc-fact{font-size:12.5px;color:var(--dim,#9aa)}#ocNote .oc-named{color:var(--brass,#d8b56a)}#ocNote .oc-dim{font-size:12px;color:var(--dim,#9aa)}
 #ocNote .oc-br{display:flex;flex-wrap:wrap;gap:4px 10px;margin:6px 0;padding:8px 10px;border-radius:10px;background:rgba(0,0,0,.18)}#ocNote .oc-br small{flex-basis:100%;font-size:11.5px;color:var(--dim,#9aa)}#ocNote .oc-br span{font-size:13px}#ocNote .oc-br span.on b{color:var(--brass,#d8b56a)}
