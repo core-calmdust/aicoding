@@ -972,7 +972,7 @@
   window.__fitStage = () => fitStage();
   // the SSR / UR name card's running light (index.html .prof > .rfx / .dprev > .rfx): its angle turned here, ~30 fps, only while one is on screen
   (function rfxTurn() {
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    // (runs also with reduce-motion on: the rarity light is part of the reward's look, 2026-11-11)
     let last = 0;
     const step = now => {
       requestAnimationFrame(step);
