@@ -1818,6 +1818,14 @@
     ['nameIn', 'dpName'].forEach(id => { const ni = $(id); if (ni && ni.value !== W.name) ni.value = W.name; });
     const mn = document.querySelector('#dmini .mnm'); if (mn) mn.textContent = W.name || t('pf.player');
   }
+  // the character flies up big and talks (atlas/avtalk.js); without it, straight to dress-up (the home card) / nothing (きせかえ)
+  function talk(from, onDress) {
+    if (!window.AvTalk) return onDress && onDress();
+    const st = profStats(), tg = todayGame(), un = A_.GAMES.filter(g => !P[g.id].touched), fg = un.length ? un[Math.floor(Math.random() * un.length)] : null;
+    AvTalk.open({ from, av: W.av, name: W.name || t('pf.player'), lang, lv: st.lv, streak: st.s, coins: C.balance, done: st.done, achTotal: ACH.length,
+      touched: st.touched, gamesTotal: A_.GAMES.length, today: { id: tg.id, name: gname(tg) }, fresh: fg ? { id: fg.id, name: gname(fg) } : null,
+      gameName: id => { const g = A_.GAMES.find(x => x.id === id); return g ? gname(g) : id; }, onDress, onPlay: id => openBoard(id) });
+  }
   function renderProfile() {
     const { touched, done, s, pos, lv } = profStats();
     // profile card: big avatar on its own backdrop · name · three stat tiles · the login week as a row of coin stamps
@@ -1834,13 +1842,7 @@
       el.querySelectorAll(':scope > .rfx, :scope > .ntw').forEach(x => x.remove());
       if (top >= 3) el.insertAdjacentHTML('beforeend', `<i class="rfx ${top === 4 ? 'u' : 's'}"></i><i class="ntw"></i>`); }
     $('pfMore').onclick = () => { pfOpen = !pfOpen; $('prof').classList.toggle('open', pfOpen); $('pfMore').setAttribute('aria-expanded', pfOpen); };   // phones: the one-line profile opens its stats · login week · Google sign-in
-    $('avBtn').onclick = () => {   // the character flies up big and talks (atlas/avtalk.js); without it, straight to dress-up
-      if (!window.AvTalk) return go('dress');
-      const st = profStats(), tg = todayGame(), un = A_.GAMES.filter(g => !P[g.id].touched), fg = un.length ? un[Math.floor(Math.random() * un.length)] : null;
-      AvTalk.open({ from: $('avBtn'), av: W.av, name: W.name || t('pf.player'), lang, lv: st.lv, streak: st.s, coins: C.balance, done: st.done, achTotal: ACH.length,
-        touched: st.touched, gamesTotal: A_.GAMES.length, today: { id: tg.id, name: gname(tg) }, fresh: fg ? { id: fg.id, name: gname(fg) } : null,
-        gameName: id => { const g = A_.GAMES.find(x => x.id === id); return g ? gname(g) : id; }, onDress: () => go('dress'), onPlay: id => openBoard(id) });
-    };
+    $('avBtn').onclick = () => talk($('avBtn'), () => go('dress'));
     renderAcc();
     $('nameIn').onchange = e => setName(e.target.value);
   }
@@ -2078,7 +2080,7 @@
     el.classList.toggle('dark', ART.isDark(W.av.bg));
     el.classList.toggle('wk', ncWk);
     el.innerHTML = `<div class="pfbg${ART.isDark(W.av.bg) ? ' dk' : ''}" style="background:${ART.bgDataUri(W.av.bg)}" aria-hidden="true"></div><div class="nc-l"><div class="bgfill" style="background:${ART.bgDataUri(W.av.bg)}"></div>
-        <button class="av poke" aria-label="${esc(iname(ART.byId(W.av.icon) || ART.byId(ART.DEFAULT_ICON)))}" style="background:none;box-shadow:none">${ART.avatar(W.av, PS, { pop: true, clear: true, noChar: true })}${popChar(W.av, PS)}</button>
+        <span class="nc-av"><button class="av poke" aria-label="${esc(iname(ART.byId(W.av.icon) || ART.byId(ART.DEFAULT_ICON)))}" style="background:none;box-shadow:none">${ART.avatar(W.av, PS, { pop: true, clear: true, noChar: true })}${popChar(W.av, PS)}</button><button type="button" class="nc-talk">${esc(t('dress.talk'))}</button></span>
         ${phone ? '' : `<div class="dname">${worn}</div>`}</div>
       <div class="nc-side"><div class="nc-top"><input id="dpName" maxlength="16" value="${esc(W.name)}" placeholder="${esc(t('pf.name'))}" aria-label="${esc(t('pf.name'))}"><span class="coin nc-coin"><i>¢</i><span class="coinM">${C.balance.toLocaleString()}</span></span></div>
         <div class="nc-lv"><b>Lv.${lv}</b><span class="nc-lvb" role="img" aria-label="${nx}">${[0, 1, 2].map(i => `<i class="${i < got ? 'on' : ''}"></i>`).join('')}</span><small>${nx}</small></div>
@@ -2086,6 +2088,7 @@
       <div class="nc-tiles">${tile('🏆', `${done}<small>/${ACH.length}</small>`, t('pf.ach'), ' data-go="ach"', '<span class="nc-ar" aria-hidden="true">›</span>')}${tile('🎲', `${touched}<small>/${A_.GAMES.length}</small>`, t('pf.games'))}${tile('🔥', `${s}<small> ${esc(t('mp.d'))}</small>`, t('mp.streak'), ` data-wk aria-expanded="${ncWk}" aria-controls="ncWk"`, '<svg class="nc-v" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>')}${tile('🎀', `${W.owned.length}<small>/${ART.items.length}</small>`, t('g.coll'))}</div>
       <div class="nc-wk" id="ncWk">${weekHtml(esc(t('login.h')), pos)}<div class="accw"></div></div>`;
     el.querySelector('.poke').onclick = () => pokeAvatar();
+    el.querySelector('.nc-talk').onclick = () => talk(el.querySelector('.poke'), null);   // (talking from きせかえ: its 「きせかえ」 button just closes)
     el.querySelector('[data-go=ach]').onclick = () => go('ach');
     el.querySelector('[data-wk]').onclick = e => { ncWk = !ncWk; el.classList.toggle('wk', ncWk); e.currentTarget.setAttribute('aria-expanded', ncWk); };
     $('dpName').onchange = e => setName(e.target.value);
