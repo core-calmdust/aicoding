@@ -1816,7 +1816,13 @@
       el.querySelectorAll(':scope > .rfx, :scope > .ntw').forEach(x => x.remove());
       if (top >= 3) el.insertAdjacentHTML('beforeend', `<i class="rfx ${top === 4 ? 'u' : 's'}"></i><i class="ntw"></i>`); }
     $('pfMore').onclick = () => { pfOpen = !pfOpen; $('prof').classList.toggle('open', pfOpen); $('pfMore').setAttribute('aria-expanded', pfOpen); };   // phones: the one-line profile opens its stats · login week · Google sign-in
-    $('avBtn').onclick = () => go('dress');
+    $('avBtn').onclick = () => {   // the character flies up big and talks (atlas/avtalk.js); without it, straight to dress-up
+      if (!window.AvTalk) return go('dress');
+      const st = profStats(), tg = todayGame(), un = A_.GAMES.filter(g => !P[g.id].touched), fg = un.length ? un[Math.floor(Math.random() * un.length)] : null;
+      AvTalk.open({ from: $('avBtn'), av: W.av, name: W.name || t('pf.player'), lang, lv: st.lv, streak: st.s, coins: C.balance, done: st.done, achTotal: ACH.length,
+        touched: st.touched, gamesTotal: A_.GAMES.length, today: { id: tg.id, name: gname(tg) }, fresh: fg ? { id: fg.id, name: gname(fg) } : null,
+        gameName: id => { const g = A_.GAMES.find(x => x.id === id); return g ? gname(g) : id; }, onDress: () => go('dress'), onPlay: id => openBoard(id) });
+    };
     renderAcc();
     $('nameIn').onchange = e => setName(e.target.value);
   }
