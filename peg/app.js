@@ -79,7 +79,7 @@ function defs(id) {
   return `<defs>
     <radialGradient id="${id}wood" cx=".5" cy=".42" r=".62"><stop offset="0" style="stop-color:var(--wood1)"/><stop offset=".8" style="stop-color:var(--wood2)"/><stop offset="1" style="stop-color:var(--wood3)"/></radialGradient>
     <radialGradient id="${id}hole" cx=".5" cy=".35" r=".7"><stop offset="0" style="stop-color:var(--hole)"/><stop offset=".75" style="stop-color:var(--hole)"/><stop offset="1" stop-color="rgba(255,255,255,.18)"/></radialGradient>
-    <radialGradient id="${id}sh" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="rgba(0,0,0,.5)"/><stop offset="1" stop-color="rgba(0,0,0,0)"/></radialGradient>
+    <radialGradient id="${id}sh" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="rgba(0,0,0,.62)"/><stop offset=".55" stop-color="rgba(0,0,0,.32)"/><stop offset="1" stop-color="rgba(0,0,0,0)"/></radialGradient>
     ${GLASS.map((c, k) => rg('g' + k, c)).join('')}
     ${rg('pearl', ['#fffdf6', '#efe4cf', '#a8987a'])}${rg('steel', ['#ffffff', '#a9b0ba', '#3b4048'])}${rg('peg', ['#f2c98e', '#c58a48', '#6a3f16'])}
     <pattern id="${id}grain" width="40" height="400" patternUnits="userSpaceOnUse" patternTransform="rotate(8)"><path d="M0 0v400M14 0c6 100-6 200 0 400M27 0c-5 120 6 260 0 400" style="stroke:var(--grain)" stroke-width="3" fill="none"/></pattern>
@@ -87,7 +87,7 @@ function defs(id) {
 }
 // the boards and marbles are pictures (peg/tools/render_boards.py, 2026-11-11: realistic, detailed sets — user): the board image
 // covers the whole viewBox (its cups, groove and shadow line up with the holes), a marble image sits on each peg
-const IMGV = 2;
+const IMGV = 3;
 const bdImg = (look, id) => `img/bd-${look}-${id}.webp?v=${IMGV}`;
 function boardBody(B, id, look) {
   const g = geo(B), h = g.size * K / 2;
@@ -105,7 +105,7 @@ function roundTri(p, r) {
 }
 function marble(id, i, pg) {   // a marble centred at 0,0 (radius 33)
   const sk = pg || settings.pg, k = (i * 7 + 3) % 6;   // (every set has six colours)
-  return `<g class="mb"><ellipse cx="6" cy="11" rx="32" ry="27" fill="url(#${id}sh)"/><image href="img/m-${sk}-${k}.webp?v=${IMGV}" x="-34" y="-34" width="68" height="68"/></g>`;
+  return `<g class="mb"><ellipse cx="11" cy="16" rx="35" ry="30" fill="url(#${id}sh)"/><image href="img/m-${sk}-${k}.webp?v=${IMGV}" x="-34" y="-34" width="68" height="68"/></g>`;
 }
 // a whole board as a static picture (dialogs, puzzle thumbnails, the rules)
 let uid = 0;
@@ -416,7 +416,7 @@ async function openPuzzles() {
     daily: k => startDaily(k === 'e' ? 'e' : 'n'),
     card: i => openPzGrid(+i),
   });
-  $('#pzListView').hidden = false; $('#pzGridView').hidden = true; selTab('puzzle'); show('#puzzleOverlay');
+  learn('puzzle', '#pzListView');
 }
 let pzLevel = 0;
 function openPzGrid(i, cur) {
@@ -424,7 +424,7 @@ function openPzGrid(i, cur) {
   $('#pzLevelHead').innerHTML = PZBook.ghead({ badge: PZ_IC[T.board ? 'world' : T.id], name: thName(T), desc: thSub(T), chips: [t('pz.grp.' + T.grp), PZBook.t('count', { n: T.list.length })], tier: tierOf(i) });
   $('#pzGrid').innerHTML = PZBook.grid({ recs: pzRecs(T), cur });
   $('#pzGrid').querySelectorAll('.pb-tile[data-j]').forEach(el => { const P = T.list[+el.dataset.j]; if (P) el.insertAdjacentHTML('afterbegin', `<span class="th">${pzThumb(P)}</span>`); });
-  $('#pzListView').hidden = true; $('#pzGridView').hidden = false; show('#puzzleOverlay');
+  learn('puzzle', '#pzGridView');
 }
 $('#pzGrid').onclick = e => { const b = e.target.closest('[data-j]'); if (!b) return; if (b.getAttribute('aria-disabled')) { toast(PZBook.t('locked')); return; } startPuzzle(pzLevel, +b.dataset.j); };
 $('#pzBack').onclick = () => openPuzzles();
@@ -502,15 +502,16 @@ $('#pzQuit').onclick = quitPuzzle;
 // the title (top left): back to this game's top — dialogs closed, a puzzle left, the free game on the board (as chess / shogi)
 function backToBoard() { $$('.overlay.show').forEach(o => o.classList.remove('show')); if (puzzle) quitPuzzle(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 { const h = $('.brand h1.to-board'); if (h) { h.addEventListener('click', backToBoard); h.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); backToBoard(); } }); } }
-// ルール | パズル: one tabbed dialog (as the other games: the same box, switching in place)
+// ルール | パズル: one box; a tab switches the page inside it (no second dialog, so nothing flashes)
 function selTab(v) { $$('.ls-tabs').forEach(g => g.querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.v === v))); }
+function learn(v, view) {
+  if (v !== 'rules' && window.PegRules) PegRules.stop();
+  ['#rulesView', '#pzListView', '#pzGridView'].forEach(x => { $(x).hidden = x !== (v === 'rules' ? '#rulesView' : view); });
+  selTab(v); show('#puzzleOverlay');
+}
 $$('.ls-tabs').forEach(g => g.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b || b.classList.contains('sel')) return;
-  // no flash: the new page is put up first (instantly, over the old one), the old one goes away after it has been drawn
-  const inst = on => ['#puzzleOverlay', '#rulesOverlay'].forEach(x => $(x).classList.toggle('instant', on)); inst(true);
-  const after = f => requestAnimationFrame(() => requestAnimationFrame(f));
-  if (b.dataset.v === 'rules') { window.PegRules && PegRules.open(); after(() => { hide('#puzzleOverlay'); setTimeout(() => inst(false), 60); }); }
-  else openPuzzles().then(() => after(() => { if (window.PegRules) PegRules.close(true); setTimeout(() => inst(false), 60); }));
+  if (b.dataset.v === 'rules') window.PegRules && PegRules.open(); else openPuzzles();
 }));
 $('#dailyGo').onclick = () => startDaily('n');
 if ($('#dailyEasy')) $('#dailyEasy').onclick = () => startDaily('e');
@@ -529,7 +530,7 @@ $('#btnRules').onclick = () => window.PegRules && PegRules.open();
 $('#resUndo').onclick = () => { hide('#resultOverlay'); undo(); };
 $('#resAgain').onclick = () => { hide('#resultOverlay'); reset(); };
 $('#resNew').onclick = () => { hide('#resultOverlay'); openNew(); };
-['#newOverlay', '#resultOverlay', '#puzzleOverlay'].forEach(s => $(s).addEventListener('click', e => { if (e.target === $(s)) hide(s); }));
+['#newOverlay', '#resultOverlay', '#puzzleOverlay'].forEach(s => $(s).addEventListener('click', e => { if (e.target === $(s)) { if (s === '#puzzleOverlay' && window.PegRules) PegRules.stop(); hide(s); } }));
 $('#btnSound').onclick = () => { settings.sound = !settings.sound; $('#btnSound').classList.toggle('off', !settings.sound); save(); };
 $('#btnSound').classList.toggle('off', !settings.sound);
 document.addEventListener('keydown', e => {
@@ -549,7 +550,7 @@ $('#langSel').onchange = e => { LANG = e.target.value; settings.lang = LANG; try
 
 if (window.GameRecord) GameRecord.init({ game: 'peg', lang: () => LANG, menu: '.controls', variant: () => ({ k: G ? G.board : settings.board, n: boardName(G ? G.board : settings.board) }), variants: () => E.IDS, variantName: k => boardName(k), defVariant: 'english' });
 const HB = window.HeaderBar ? HeaderBar.init({ brand: '.brand', controls: '.controls', order: ['#btnNew', '#btnUndo', '#btnReset', '#btnHint', '#btnRules', '#btnPuzzle'], lang: () => LANG }) : null;
-if (window.RulesOffer) RulesOffer.init({ game: 'peg', lang: () => LANG, open: () => window.PegRules && PegRules.open(), watch: '#rulesOverlay' });
+if (window.RulesOffer) RulesOffer.init({ game: 'peg', lang: () => LANG, open: () => window.PegRules && PegRules.open(), watch: '#puzzleOverlay' });
 applyI18n();
 const svgEl = () => $('#board');
 $('#board').addEventListener('pointerdown', e => { if (SV) onDown(e); });
@@ -561,5 +562,5 @@ renderRecs(); renderDaily(); dlReady.then(renderDaily);
 // ?pz=<theme>:<j> / ?daily: open straight into a puzzle (the portal's links)
 { const q = new URLSearchParams(location.search); if (q.has('daily')) startDaily(q.get('daily') === 'easy' ? 'e' : 'n'); else if (q.get('mode') === 'puzzle') pzReady.then(() => openPuzzles()); }
 
-window.PegApp = { get G() { return G; }, get puzzle() { return puzzle; }, t, get LANG() { return LANG; }, boardSVG, marble, defs, geo, X, Y, E, newGame, startPuzzle, startDaily, openPuzzles, undo, hint, play: j => userPlay(j), show, hide, SND };
+window.PegApp = { learn, get G() { return G; }, get puzzle() { return puzzle; }, t, get LANG() { return LANG; }, boardSVG, marble, defs, geo, X, Y, E, newGame, startPuzzle, startDaily, openPuzzles, undo, hint, play: j => userPlay(j), show, hide, SND };
 })();
