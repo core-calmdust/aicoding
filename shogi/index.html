@@ -2133,7 +2133,7 @@ function tzRegion(pr) {
 // its outer line, the stars that fall inside, the window's own coordinates), with the 3D skin an n×n kaya board cut from the same
 // grain (atlas/models/shogi.js o.crop) — no scaled picture clipped at the board's edge any more
 function tzWindow() {
-  if (!TZ.on || !TZ.reg || !tzActive()) return null;
+  if (TZ.drag || !TZ.on || !TZ.reg || !tzActive()) return null;   // (TZ.drag: the whole board while a slide moves it)
   const g = TZ.reg, n = Math.max(5, g.c1 - g.c0 + 1, g.r1 - g.r0 + 1); if (n >= 9) return null;
   const at = (a, b, p) => Math.max(0, Math.min(9 - n, Math.round((a + b + 1) / 2 - n / 2) + p));
   return { n, c0: at(g.c0, g.c1, TZ.pan[0]), r0: at(g.r0, g.r1, TZ.pan[1]) };
@@ -2185,26 +2185,49 @@ function tzSync() {
   tzStyle();
 }
 addEventListener('resize', () => requestAnimationFrame(tzBtn));
-// close-up: a slide that does not start on one of your own pieces moves the window a square at a time
+// close-up: a slide that does not start on one of your own pieces moves the window — smoothly (2026-11-11 the user: it jumped a
+// square at a time). While the finger is down the whole 9×9 board is shown at the close-up's scale and slid with it (a CSS transform
+// on the board, window.__boardZoom for the 3D board — it follows, atlas/skin/common.js), cut to the board's place; on release the
+// window settles on the nearest square and the close-up (the cropped board) comes back.
 { let pd = null;
+  const frameEl = boardEl.parentElement;
+  const dragStart = () => {
+    const w = TZ.win, W = boardEl.offsetWidth, H = boardEl.offsetHeight;
+    pd.w = w; pd.cw = W / w.n; pd.ch = H / w.n; pd.s = 9 / w.n; pd.tx = -w.c0 * pd.cw; pd.ty = -w.r0 * pd.ch;
+    const fr = frameEl.getBoundingClientRect(), br = boardEl.getBoundingClientRect();
+    frameEl.style.clipPath = `inset(${(br.top - fr.top).toFixed(1)}px ${(fr.right - br.right).toFixed(1)}px ${(fr.bottom - br.bottom).toFixed(1)}px ${(br.left - fr.left).toFixed(1)}px)`;
+    TZ.drag = true; tzStyle();   // (the whole board, laid out in the board's place)
+    try { document.dispatchEvent(new CustomEvent('shogi-crop', { detail: null })); } catch (e) {}
+    boardEl.style.transformOrigin = '0 0';
+    dragMove(0, 0);
+  };
+  const dragMove = (dx, dy) => {
+    const W = boardEl.offsetWidth, H = boardEl.offsetHeight, n = pd.w.n;
+    pd.tx = Math.max(-(9 - n) * pd.cw, Math.min(0, pd.tx + dx)); pd.ty = Math.max(-(9 - n) * pd.ch, Math.min(0, pd.ty + dy));   // (stops at the board's edges)
+    boardEl.style.transform = `translate(${pd.tx.toFixed(1)}px, ${pd.ty.toFixed(1)}px) scale(${pd.s})`;
+    window.__boardZoom = { s: pd.s, tx: pd.tx, ty: pd.ty };
+    if (window.Table3D && Table3D.kick) Table3D.kick(200);
+  };
+  const dragEnd = () => {
+    const n = pd.w.n, c0 = Math.round(-pd.tx / pd.cw), r0 = Math.round(-pd.ty / pd.ch);
+    boardEl.style.transform = ''; boardEl.style.transformOrigin = ''; window.__boardZoom = null; frameEl.style.clipPath = '';
+    TZ.drag = false;
+    { const p0 = TZ.pan; TZ.pan = [0, 0]; const wb = tzWindow(); TZ.pan = wb ? [c0 - wb.c0, r0 - wb.r0] : p0; }
+    TZ.key = ''; tzStyle();   // (the cropped close-up again, at the settled window)
+  };
   boardEl.addEventListener('pointerdown', e => {
     if (!TZ.win || (e.pointerType === 'mouse' && e.button)) return;
     const s = sqFromPoint(e.clientX, e.clientY); if (s >= 0 && P.board[s] && E.colorOf(P.board[s]) === P.side) return;
-    pd = { id: e.pointerId, x: e.clientX, y: e.clientY, m: 0, ax: 0, ay: 0 };
+    pd = { id: e.pointerId, x: e.clientX, y: e.clientY, m: 0, on: false };
   });
   addEventListener('pointermove', e => {
-    if (!pd || e.pointerId !== pd.id || !TZ.win) return;
-    const dx = e.clientX - pd.x, dy = e.clientY - pd.y; pd.m += Math.abs(dx) + Math.abs(dy); pd.x = e.clientX; pd.y = e.clientY; pd.ax += dx; pd.ay += dy;
-    if (pd.m < 8) return;
+    if (!pd || e.pointerId !== pd.id) return;
+    const dx = e.clientX - pd.x, dy = e.clientY - pd.y; pd.m += Math.abs(dx) + Math.abs(dy); pd.x = e.clientX; pd.y = e.clientY;
+    if (!pd.on) { if (pd.m < 8 || !TZ.win) return; pd.on = true; dragStart(); }
     suppressClick = Date.now();
-    const cw = boardEl.offsetWidth / TZ.win.n, ch = boardEl.offsetHeight / TZ.win.n;
-    const sx = Math.trunc(pd.ax / cw), sy = Math.trunc(pd.ay / ch); if (!sx && !sy) return;
-    pd.ax -= sx * cw; pd.ay -= sy * ch;
-    TZ.pan[0] -= sx; TZ.pan[1] -= sy;
-    { const w1 = tzWindow(), p0 = TZ.pan; TZ.pan = [0, 0]; const wb = tzWindow(); TZ.pan = w1 && wb ? [w1.c0 - wb.c0, w1.r0 - wb.r0] : p0; }   // (stops at the board's edges)
-    tzStyle();
-  });
-  const up = () => { if (pd && pd.m >= 8) suppressClick = Date.now(); pd = null; };
+    dragMove(dx, dy); e.preventDefault();
+  }, { passive: false });
+  const up = () => { if (pd && pd.m >= 8) suppressClick = Date.now(); if (pd && pd.on) dragEnd(); pd = null; };
   addEventListener('pointerup', up); addEventListener('pointercancel', up);
 }
 function renderBoard(anim) {
