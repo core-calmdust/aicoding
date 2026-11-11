@@ -16,6 +16,8 @@
   const tsSolo = () => document.body.classList.contains('ts-noopp');   // 詰将棋: gote's stand hidden
   let board = T3.MODELS.shogi(true), FH = board.userData.S, Y = board.userData.top, OUT = board.userData.outer;
 
+  // PC windows up to 3:2 (shogi/index.html, 2026-11-11): the komadai as bars above and below the board, as on phones
+  const STK = matchMedia('(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4) and (max-aspect-ratio: 3/2)');
   const skin = AtlasSkin.init({
     margin: 0.2,   // canvas margin around the board (less = fewer pixels to draw; enough for the bezel and its shadow)
     board: boardDom,
@@ -25,6 +27,16 @@
     pc: { vars: ['--cw'], extras: '.board-area > .hand', fit2d: true, k2d: { l: .0506, r: .0511, t: .0502, b: .0516 },   // (the 2D board: laid out exactly as the 3D one)
       place(F) {
         const top = document.getElementById('handTop'), bot = document.getElementById('handBottom'); if (!top || !bot) return;
+        if (STK.matches) {   // a PC window up to 3:2: the bars above and below the frame, its full width, touching it (3D: 13px onto its rim, as on phones)
+          const o = is3() ? 13 : 0, w = (F.r - F.l).toFixed(1) + 'px', de = document.documentElement;
+          [top, bot].forEach(h => { if (h.style.getPropertyValue('width') !== w) h.style.setProperty('width', w, 'important'); });
+          const mv = (h, x, y) => { const cs = getComputedStyle(h), l = parseFloat(cs.left) || 0, t = parseFloat(cs.top) || 0;
+            if (Math.abs(x) > .3) h.style.setProperty('left', (l + x) + 'px', 'important'); if (Math.abs(y) > .3) h.style.setProperty('top', (t + y) + 'px', 'important'); };
+          let r = top.getBoundingClientRect(); if (r.width) mv(top, F.l - r.left, F.t + o - r.bottom);
+          r = bot.getBoundingClientRect(); mv(bot, F.l - r.left, F.b - o - r.top);
+          de.style.setProperty('--kdth', top.offsetHeight + 'px'); de.style.setProperty('--kdbh', bot.offsetHeight + 'px');   // (the 2D designs: the plate runs on under the bars)
+          return;
+        }
         const G = (top.offsetWidth || bot.offsetWidth) / 1.25 * .22;   // (詰将棋 hides gote's stand: sente's gives the width)
         const put = (h, x, y) => {   // move the box by (x, y) from where it is now (position: relative)
           const cs = getComputedStyle(h), l = parseFloat(cs.left) || 0, t = parseFloat(cs.top) || 0;
@@ -37,13 +49,14 @@
       },
       // 詰将棋 (gote's stand hidden, body.ts-noopp): sente's stand stands under the column, its left edge on the column's and its
       // bottom on the frame's — the board takes the width the stands had (2026-11-10)
-      extraOff: e => tsSolo() && e.id === 'handBottom',
+      sideOnExtent: () => STK.matches,
+      extraOff: e => tsSolo() && !STK.matches && e.id === 'handBottom',
       afterSide(F, sr) {
-        const bot = document.getElementById('handBottom'); if (!bot || !tsSolo()) return;
+        const bot = document.getElementById('handBottom'); if (!bot || !tsSolo() || STK.matches) return;
         const cs = getComputedStyle(bot), r = bot.getBoundingClientRect(), l = parseFloat(cs.left) || 0, t = parseFloat(cs.top) || 0;
         bot.style.setProperty('left', (l + sr.left - r.left) + 'px', 'important'); bot.style.setProperty('top', (t + F.b - r.bottom) + 'px', 'important');
       },
-      unplace() { ['handTop', 'handBottom'].forEach(id => { const h = document.getElementById(id); if (h) { h.style.removeProperty('left'); h.style.removeProperty('top'); } }); } },
+      unplace() { ['handTop', 'handBottom'].forEach(id => { const h = document.getElementById(id); if (h) { h.style.removeProperty('left'); h.style.removeProperty('top'); h.style.removeProperty('width'); } }); } },
     outer: r => { const H = r.height * OUT; return { top: r.top + r.height / 2 - H / 2, height: H }; },
     guide: '../images/atlas/g-shogi.webp', guideFallback: '../images/atlas/shogi.webp',
     bubbles: [['lsPrompt', 'lsFb']], floor: 'tatami',
@@ -122,6 +135,7 @@
     const fit = () => {
       const top = document.getElementById('handTop'), bot = document.getElementById('handBottom'), bd = document.getElementById('board');
       if (!top || !bot || !bd) return;
+      if (STK.matches) return;   // (PC: pcFit's place() lays the bars)
       const on = MQ.matches && !document.documentElement.classList.contains('atlas-land');   // (3D and the 2D designs alike: both are laid out with the same overhang)
       [top, bot].forEach(h => ['margin-left', 'width', 'margin-top', 'margin-bottom', 'transform'].forEach(k => h.style.removeProperty(k)));
       const de = document.documentElement; de.style.removeProperty('--kdth'); de.style.removeProperty('--kdbh');

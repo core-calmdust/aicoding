@@ -1183,7 +1183,7 @@ var PRO = PRO_L ? ProSet.init({ game: 'agon', lang: () => LANG, level: () => dra
   store: { get: () => settings.pro, set: v => { settings.pro = v; } },
   // threads (本編のマルチスレッド, shared/mtsplit.js): with any limit of the search; the default is the levels' own count for the
   // levels that think by time, else one
-  defaults: MTP ? lv => Object.assign(PRO_L.defaults(lv), { threads: mtLevel(lv) ? Math.min(ProSet.maxThreads(), MTSplit.autoThreads()) : 1 }) : PRO_L.defaults,   // (threads: the levels' own count, min(cores − 1, 7) + 1 — on the user's Mac 14 threads were slower than 8, 2026-11-09)
+  defaults: MTP ? lv => Object.assign(PRO_L.defaults(lv), { threads: mtLevel(lv) ? ProSet.defThreads() : 1 }) : PRO_L.defaults,   // (threads: up to the performance cores, MTEngine.perfThreads() — 10 on the user's Mac — as the other games; 2026-11-11, the Mac's bench-all: 10 threads as fast as 8 or faster. Before: min(cores − 1, 7) + 1 = 8)
   params: MTP ? [PRO_L.params[0], { key: 'threads' }].concat(PRO_L.params.slice(1)) : PRO_L.params }) : null;
 // a rated game (5 min + 3 s): the timed top levels (Lv.21〜) never think longer than the clock allows — about a twentieth of the
 // time left plus most of the increment (on every thread, as without the cap)

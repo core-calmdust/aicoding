@@ -1390,7 +1390,7 @@ html[lang=ar] .pf-input{direction:rtl}
 #lessonOverlay.ls-solo #segLs,#lessonOverlay.ls-solo #lsListTitle,#lessonOverlay.ls-solo #lsListDesc{display:none!important}
 /* phones (portrait), 2D and the 3D skin: the komadai bars run the board's full width and touch it (one block: bar · board · bar),
    and the room the gaps took goes to a bigger board (2026-11-11) */
-@media (pointer: coarse) and (max-aspect-ratio: 1/1) and (max-width: 600px){
+@media (pointer: coarse) and (max-aspect-ratio: 1/1) and (max-width: 600px), (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4) and (max-aspect-ratio: 3/2){
   html .board-area,html.atlas-skin.atlas-shogi .board-area{gap:0!important;width:100%!important;max-width:calc(var(--bw) + var(--fp) + var(--cw)*0.16)}
   html .board-area > .hand{margin:0!important;left:0!important;align-self:stretch!important;box-shadow:none!important}
   html .board-area > .hand.top{border-radius:12px 12px 0 0!important}
@@ -1421,7 +1421,25 @@ html[lang=ar] .pf-input{direction:rtl}
   html.atlas-shogi:not(.atlas-2d) body .board-area > .hand.hand::before{display:none!important}
   html.atlas-shogi:not(.atlas-2d) body .board-area > .hand.top.hand{background:url(../images/atlas/shogi-kd3d-top.webp?v=3) center/100% 100% no-repeat,#e5cba8!important}
   html.atlas-shogi:not(.atlas-2d) body .board-area > .hand.bottom.hand{background:url(../images/atlas/shogi-kd3d-bot.webp?v=3) center/100% 100% no-repeat,#e5cba8!important}
-  html:not(.atlas-skin) .app{padding-left:4px!important;padding-right:4px!important}
+}
+@media (pointer: coarse) and (max-aspect-ratio: 1/1) and (max-width: 600px){ html:not(.atlas-skin) .app{padding-left:4px!important;padding-right:4px!important} }
+/* PC windows that are not wide (up to 3:2, 2026-11-11): the komadai as on phones — bars above and below the board, attached, the
+   board's full width — so the board is sized by the height (bars included) and the width the side stands took goes to a wider info
+   column (形勢 · コーチ · 棋譜). Wider windows keep the stands beside the board (the board is height-bound there anyway) */
+@media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4) and (max-aspect-ratio: 3/2){
+  :root, body:not(.no-online), html.side-col:not(.atlas-skin) body.ts-noopp{
+    --cwh:calc((var(--vh) - var(--pad) * 2 - 8px - var(--top)) / 12.55);
+    --rw:clamp(360px, calc(100vw - var(--padx) * 2 - var(--gap) - var(--cwh) * 9.8), 640px);
+    --cw:min(var(--cwh), calc((100vw - var(--padx) * 2 - var(--gap) - var(--rw)) / 9.8), 120px)}
+  html .board-area,html.atlas-skin.atlas-shogi .board-area,html.side-col:not(.atlas-skin) body.ts-noopp .board-area{display:flex!important;flex-direction:column;width:calc(var(--bw) + var(--fp) + var(--cw)*0.16)!important;max-width:none!important}
+  .board-area > .hand,html.side-col:not(.atlas-skin) body.ts-noopp .board-area > .hand.bottom{flex-direction:row!important;min-height:0!important;height:calc(var(--ch)*0.95);width:auto!important;padding:2px calc(var(--cw)*.14);align-items:center;gap:calc(var(--cw)*.04);grid-area:auto}
+  .board-area > .hand .hname{writing-mode:horizontal-tb;width:auto;max-width:30%;font-size:calc(var(--cw)*.25);letter-spacing:.04em;margin-inline-end:calc(var(--cw)*.12)}
+  .board-area > .hand .hn-s{display:none}
+  .board-area > .hand .hn-n{display:inline}
+  .board-area > .hand .hslot{height:100%;width:calc(var(--cw)*1.02);flex:none}
+  .board-area > .hand .hslot .pc{height:100%;width:calc(var(--cw)*0.95)}
+  .side{height:calc(var(--bh) + var(--fp) + var(--cw) * 0.16 + var(--ch) * 1.9)}
+  body.ts-noopp .side{height:calc(var(--bh) + var(--fp) + var(--cw) * 0.16 + var(--ch) * 0.95)}   /* (詰将棋: only the attacker's bar) */
 }
 /* lesson intro on phones (2026-11-11, a quieter, luxury layout): centred heading over a hairline; the sample board alone and centred on a
    soft plate; the four facts as one row of columns split by hairlines; sections as open text under small spaced gold heads; two equal
@@ -6356,7 +6374,7 @@ if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStar
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/img/tex/baked.js?v=1')).then(() => load('../atlas/table3d.js?v=147')).then(() => load('../atlas/tables3d.js?v=55')).then(() => load('../atlas/skin/common.js?v=67')).then(() => load('../atlas/models/shogi.js?v=33k')).then(() => load('../atlas/skin/shogi.js?v=34k'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/img/tex/baked.js?v=1')).then(() => load('../atlas/table3d.js?v=147')).then(() => load('../atlas/tables3d.js?v=55')).then(() => load('../atlas/skin/common.js?v=68')).then(() => load('../atlas/models/shogi.js?v=33k')).then(() => load('../atlas/skin/shogi.js?v=34l'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
