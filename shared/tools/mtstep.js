@@ -11,6 +11,8 @@
 //
 //   node shared/tools/mtstep.js <game> [--threads 1,2,4,8] [--tests best,ana] [--depth N] [--ana MS] [--pos K]
 //        [--modes sh,alt] [--stepms 2.2] [--set key=value,…  (fields merged into the plan, e.g. help=0)]
+//        [--slow K:R  (2026-11-11: the K-th worker of a pool and later run at R of the speed, e.g. 8:0.4 = the user's Mac,
+//         10 performance + 4 efficiency cores at about 2/5: such a worker takes 1/R steps of the clock per poll)]
 //   game: konane | ugolki | agon | amazons (the positions of <game>/bench.html)
 'use strict';
 const { Worker: TWorker, isMainThread, workerData, parentPort } = require('worker_threads');
@@ -23,7 +25,13 @@ if (!isMainThread) {
   const S = new Int32Array(workerData.step), me = workerData.slot, dir = workerData.dir, T0 = workerData.t0, MS = workerData.stepMs;
   let busy = false;
   const setBusy = v => { if (busy === v) return; busy = v; if (v) Atomics.store(S, DONE + me, Atomics.load(S, G0) - 1); Atomics.store(S, ACT + me, v ? 1 : 0); Atomics.add(S, NOTE, 1); Atomics.notify(S, NOTE); };
-  const step = () => { const t = Atomics.load(S, G0); Atomics.store(S, DONE + me, t); Atomics.add(S, NOTE, 1); Atomics.notify(S, NOTE); Atomics.wait(S, G0, t); };
+  const RATE = workerData.rate || 1; let acc = 0;   // (--slow: a slow core's poll lasts 1/RATE steps of the clock)
+  const step = () => {
+    const t = Atomics.load(S, G0); let k = 1;
+    if (RATE < 1) { acc += 1 / RATE; k = Math.max(1, Math.floor(acc)); acc -= k; }
+    Atomics.store(S, DONE + me, t + k - 1); Atomics.add(S, NOTE, 1); Atomics.notify(S, NOTE);
+    for (let c = t; c < t + k; c = Atomics.load(S, G0)) Atomics.wait(S, G0, c);
+  };
   Date.now = () => { if (busy) step(); return T0 + Atomics.load(S, G0) * MS; };
   global.self = global;
   global.importScripts = (...urls) => { for (const u of urls) { const f = path.resolve(dir, String(u).replace(/\?.*$/, '')); vm.runInThisContext(fs.readFileSync(f, 'utf8'), { filename: f }); } };
@@ -46,6 +54,8 @@ if (!CFG) throw new Error('game?');
 const THREADS = (opt('threads') || '1,2,4,8').split(',').map(Number);
 const TESTS = (opt('tests') || 'best').split(',');
 const MODES = (opt('modes') || 'sh').split(',');
+const SLOW = (opt('slow') || '').split(':').map(Number), SLOWK = SLOW[0] || 0, SLOWR = SLOW[1] || 1;
+let poolBase = 0;   // (the first slot of the current pool: the rank of a worker = its slot − poolBase)
 const D = +(opt('depth') || CFG.depth), TA = +(opt('ana') || 1000), STEPMS = +(opt('stepms') || CFG.stepMs);
 const SET = {}; (opt('set') || '').split(',').filter(Boolean).forEach(kv => { const [k, v] = kv.split('='); SET[k] = isNaN(+v) ? v : +v; });
 const DIR = path.join(ROOT, GAME), URL = 'engine.js';
@@ -68,8 +78,8 @@ let pacing = true;
 const vnow = () => T0 + Atomics.load(S, G0) * STEPMS;
 class FakeWorker {
   constructor(url) {
-    const i = slot++ % SLOTS; this.i = i; live.add(i); Atomics.store(S, ACT + i, 0);
-    this.w = new TWorker(__filename, { workerData: { step, slot: i, dir: DIR, url: String(url).replace(/\?.*$/, ''), t0: T0, stepMs: STEPMS } });
+    const rank = slot - poolBase, i = slot++ % SLOTS; this.i = i; live.add(i); Atomics.store(S, ACT + i, 0);
+    this.w = new TWorker(__filename, { workerData: { step, slot: i, dir: DIR, url: String(url).replace(/\?.*$/, ''), t0: T0, stepMs: STEPMS, rate: SLOWK && rank >= SLOWK - 1 ? SLOWR : 1 } });
     this.w.on('message', d => { if (this.onmessage) this.onmessage({ data: d }); });
     this.w.on('error', e => { if (this.onerror) this.onerror(e); else console.error(e); });
   }
@@ -112,7 +122,7 @@ function drive(msg, X, prog) {
 }
 (async () => {
   const P = positions();
-  console.log(`${GAME}: ${P.length} positions, best to depth ${D}, analysis ${TA} ms (virtual, ${STEPMS} ms / step), set ${JSON.stringify(SET)}`);
+  console.log(`${GAME}: ${P.length} positions, best to depth ${D}, analysis ${TA} ms (virtual, ${STEPMS} ms / step), set ${JSON.stringify(SET)}${SLOWK ? `, slow from worker ${SLOWK} at ×${SLOWR}` : ''}`);
   const R = {}; let lastCores = '';
   for (const p of P) for (const test of TESTS) for (const mode of MODES) {
     const row = [`${p.name} ${test} ${mode}`];
@@ -121,6 +131,7 @@ function drive(msg, X, prog) {
       const msg = test === 'best' ? { type: 'think', start: null, moves: p.moves, rule: CFG.rule, level: 20, cfg: { s: 1, d: 99, dx: D, ms: 600000 } }
         : { type: 'analyze', start: null, moves: p.moves, rule: CFG.rule, time: TA };
       if (mode === 'alt') msg.lazy = 1;
+      poolBase = slot;
       const pool = MS.pool({ url: URL, drive, tt: true, ttBytes: 32 << 20 });
       const t0 = Atomics.load(S, G0), w0 = Date.now();
       const r = await pool.run(Object.assign({}, msg, { mtThreads: n }), null, 'sim');

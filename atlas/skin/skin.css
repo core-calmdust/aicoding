@@ -436,7 +436,7 @@ html.atlas-skin:not(.atlas-land) .card.controls .btn:disabled{background:#fbf7ee
 /* shogi, phones (portrait), the 3D board: sized so the whole board area — both komadai bars and the board — fits between the
    menu bar and the bottom tabs, as the 2D page shows it (the board sized from the width alone hid the lower komadai, 2026-11-11) */
 @media (pointer: coarse) and (max-aspect-ratio: 1/1) and (max-width: 600px){
-  html.atlas-skin.atlas-shogi:not(.atlas-2d):not(.atlas-land),html.atlas-skin.atlas-shogi:not(.atlas-2d):not(.atlas-land) body{--cw:min(calc((100vw - 8px) / 9.75), calc((100dvh - 56px - var(--ctlh, 64px) - 8px - 58px - env(safe-area-inset-bottom)) / 12.6), 90px)!important}
+  html.atlas-skin.atlas-shogi:not(.atlas-2d):not(.atlas-land),html.atlas-skin.atlas-shogi:not(.atlas-2d):not(.atlas-land) body{--cw:min(calc((100vw - 8px) / 9.75), calc((100svh - 56px - var(--ctlh, 64px) - 8px - 58px - env(safe-area-inset-bottom)) / 12.6), 90px)!important}
 }
 @media (pointer: coarse) and (max-aspect-ratio: 1/1) and (max-width: 600px){html.atlas-skin.atlas-shogi:not(.atlas-land) .app{padding-left:4px!important;padding-right:4px!important}}
 /* 戦績 (shared/record.js) in the portal's colours (2026-11-11): cream sheet, white boxes, sky wins / coral losses, the portal's coral button */
@@ -456,3 +456,6 @@ html.atlas-skin .grc-row,html.atlas-skin .grc-g{background:#fff!important}
 html.atlas-skin .grc-ft button{border:2px solid #efe3c8!important;border-radius:99px!important;background:#fff!important;color:#2b3044!important;font-weight:800!important;box-shadow:0 3px 0 #efe3c8}
 html.atlas-skin .grc-ft .grc-go{background:#ff5d5d!important;color:#fff!important;border-color:transparent!important;box-shadow:0 4px 0 #d93c3c!important;font-weight:900!important}
 html.atlas-skin .grc-cf .grc-warn{background:#ff5d5d!important;box-shadow:0 3px 0 #d93c3c}
+/* shogi, phones: no per-piece face grain on the 3D renders (2026-11-11) — each piece re-rasterised an SVG noise filter under a mask with
+   a blend mode, ~40 offscreen layers re-made on every move: iPhone ran out of memory and reloaded the page */
+@media (pointer:coarse){html.atlas-shogi .pc.atlas3d .k::after{content:none!important;display:none!important}}
