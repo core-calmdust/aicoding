@@ -14,7 +14,7 @@ const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAl
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 let LANG = (() => { try { const s = (JSON.parse(localStorage.getItem(STORE) || '{}').settings || {}).lang || localStorage.getItem('aicoding-lang'); if (LANGS.includes(s)) return s; } catch (e) {} const n = (navigator.language || 'ja'); if (/^zh-(tw|hk|mo|hant)/i.test(n)) return 'zh-TW'; const b = n.slice(0, 2); return LANGS.includes(b) ? b : 'en'; })();
 function t(k, v) { const o = I[k]; let s = o ? (o[LANG] || o.en || o.ja || k) : k; if (v) s = s.replace(/\{(\w+)\}/g, (_, x) => v[x] !== undefined ? v[x] : ''); return s; }
-const BD = ['walnut', 'maple', 'stone', 'night'], PG = ['glass', 'pearl', 'steel', 'peg'];
+const BD = ['walnut', 'maple', 'stone', 'night'], PG = ['glass', 'pearl', 'steel', 'peg', 'mod'];
 
 /* ---------------------------------------------------------------- state */
 const DEF = { board: 'english', startMode: 'classic', start: -1, goalMode: 'hole', bd: 'walnut', pg: 'glass', sound: true, lang: LANG };
@@ -87,7 +87,7 @@ function defs(id) {
 }
 // the boards and marbles are pictures (peg/tools/render_boards.py, 2026-11-11: realistic, detailed sets — user): the board image
 // covers the whole viewBox (its cups, groove and shadow line up with the holes), a marble image sits on each peg
-const IMGV = 3;
+const IMGV = 4;
 const bdImg = (look, id) => `img/bd-${look}-${id}.webp?v=${IMGV}`;
 function boardBody(B, id, look) {
   const g = geo(B), h = g.size * K / 2;

@@ -17,7 +17,8 @@
 // node (board, key, the repetition history since the last capture, …) and per move what the one-thread loop decides (the
 // reduction or the move's place for LMR, gives check, …). Optional: NSP (split points, 128), SPLIT_D (the least remaining
 // depth of a split, 3), BUSY_D (the least remaining depth of a busy mark, 2), BUSY_BITS (15), BUSY_DEF (moves put off per
-// node, 32).
+// node, 32), PL_VAL (the type of a value: int, or e.g. double; the window and the values of a split point), PL_NO_VALS (no
+// root values in the split point: the game keeps them, PL_ROOT_VAL / PL_ROOT_GET in praline_ybw.h).
 // Without -DMT nothing of this is compiled: the game's normal engine.wasm stays byte for byte as before.
 #ifndef PRALINE_H
 #define PRALINE_H 1
@@ -38,6 +39,14 @@
 #endif
 #ifndef BUSY_DEF
 #define BUSY_DEF 32
+#endif
+#ifndef PL_VAL
+#define PL_VAL int   /* (a value: alpha, beta, the best value, the root values) */
+#define PL_ALPHA_LOAD(s) __atomic_load_n(&(s)->alpha, __ATOMIC_ACQUIRE)
+#define PL_ALPHA_STORE(s, v) __atomic_store_n(&(s)->alpha, (v), __ATOMIC_RELEASE)
+#else   /* (a value that is not an integer: the generic atomics) */
+#define PL_ALPHA_LOAD(s) ({ PL_VAL a_; __atomic_load(&(s)->alpha, &a_, __ATOMIC_ACQUIRE); a_; })
+#define PL_ALPHA_STORE(s, v) do { PL_VAL v_ = (v); __atomic_store(&(s)->alpha, &v_, __ATOMIC_RELEASE); } while (0)
 #endif
 #define MT_YBW 1   /* (for a simulator: the helpers wait in mt_idle) */
 #ifndef SIM_IDLE
@@ -83,12 +92,17 @@ static struct { volatile int idle, waitN, openN, hi; } __attribute__((aligned(64
 #define gSPHi (GS.hi)       /* the slots used so far */
 struct SPt {
   volatile int word;   // seq << 9 | open (256) | the helpers on it (0..255)
-  volatile int lock, stop, next, alpha, best, inuse, waiting;
+  volatile int lock, stop, next;
+  volatile PL_VAL alpha, best;
+  volatile int inuse, waiting;
   Move bestMove;       // (under the lock)
-  int beta, n, depth, ply, root, all, pv, pidx;
+  PL_VAL beta; int n, depth, ply, root, all, pv, pidx;
   const void *own; SPt *parent;   // the owner thread (the address of its curIdx); the split point above (pidx: its move)
   volatile u8 busy[SP_MV], done[SP_MV], dup[SP_MV];   // the moves taken, finished, searched a second time
-  Move mv[SP_MV]; int vals[SP_MV];                    // the moves; root: their values
+  Move mv[SP_MV];                                      // the moves
+#ifndef PL_NO_VALS
+  PL_VAL vals[SP_MV];                                  // root: their values
+#endif
   PL_SP_FIELDS                                        // the game's: the node's position, the moves' reductions, …
 } __attribute__((aligned(64)));
 static SPt SPS[NSP] __attribute__((aligned(64)));
@@ -102,7 +116,7 @@ static SPt *spAlloc(void) {
 static inline void spRelease(SPt *s) { __atomic_store_n(&s->inuse, 0, __ATOMIC_RELEASE); }   // (never opened)
 // the owner: s (moves, position, window filled in) is opened, searched with the helpers; *best / *bestM updated (the root:
 // the values of the finished moves into vals) — praline_ybw.h
-static void spRun(SPt *s, int *best, Move *bestM, int *vals);
+static void spRun(SPt *s, PL_VAL *best, Move *bestM, PL_VAL *vals);
 // a split is wanted below a split point whose owner waits for its helpers (split then even without an idle helper)
 static int spWanted(void);
 #endif

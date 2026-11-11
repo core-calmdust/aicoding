@@ -64,3 +64,10 @@
 
 ## 7. ヒストリア
 - ヒストリア（2026-11-07）：`atlas/historia/s/senet.json`（地図：サッカラ・テーベ・キプロス・ボストン、3×10の盤図と逆S字の矢印）と14言語の本文 `atlas/historia/<lang>/senet.json`。案内役は av/camel-2。
+
+## AIの探索の C 化（2026-11-11、`engine.c`）
+- **移したもの**：手の生成（壁・守り・美の家・水の家）・移動、評価ネットとレースの表 `T`（`engine.js` が渡す）、期待値の探索 `V`／`bestAfter`／`wpAfter`（時間を過ぎたら静的評価に戻すのも同じ）。`engine.js` は C があれば `V`・`bestAfter` を C に回す（`evaluate`・`think`・`splitEval`／`rollTask`・`winProb` がそのまま C で読む）。`worker.js` が `engine_simd.wasm`／`engine.wasm` を `WebAssembly.validate` で選び、読めないとき・`?nowasm` は今までの JavaScript。マルチスレッド（`shared/mtworkers.js`）はそのまま。ビルド `tools/build.sh`。
+- **一致の確認**（`node tools/cmatch.js`）：2ルール × 20局面、深さ3（Lv.19・20）の全部の手の勝率・`winProb`・`rollTask` が JavaScript と差 **1.1e-16 以下**、**最善手 40/40 一致**、SIMD 版となし版はビット単位で同じ。
+- **速さ**（作業機）：深さ3の1局面 JavaScript 43.0 → C 15.0 ミリ秒（**×2.9**）。
+- **強さ（レベルは変えていない）**：Lv.20 を深さ4にした版と今の Lv.20（深さ3）を対局（C、同じ投げで先後入れ替え、各ルール100組＝200局）：標準 97-103（48.5%）、ロング 95-105（47.5%）。前の記録（深さ4は3より強くならない）と同じく差がないので、Lv.19・20 は深さ3のまま、`RT_LV` もそのまま。
+- headless Chrome（作業機）：対局ページ（PC・スマホ幅）の Worker・大百科の Worker が `wasm-simd`、Lv.20 の手とスレッドの仕事が返る。ページのエラーなし。

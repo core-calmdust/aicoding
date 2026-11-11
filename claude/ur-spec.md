@@ -117,3 +117,10 @@ UrBoard2D.mini(state, { design, orient, marks, crop }) → SVG文字列（チュ
 - スマホ下部タブ（`shared/infotabs.js`）：コーチ｜形勢｜棋譜｜戦績｜オンライン。スマホ縦の間隔は全部8px。
 - コーチ候補の盤上の印は明るい緑 #3df59a＋暗い縁。
 - 3D版：ポータルから `?skin=atlas` で起動、PCでロゴの右にゲーム名（headerbar.js が行う）。
+
+## AIの探索の C 化（2026-11-11、`engine.c`）
+- **移したもの**：3ルール（フィンケル・ブリッツ・マスターズ）の道・手の生成・移動、評価ネット（`engine.js` に埋め込みの int16 のネットを `engine.js` が渡し、C で同じ float32 に戻す）、期待値の探索 `valueToRoll`／`bestAfterRoll`／`wpAfter`（時間の上限も同じ）。`engine.js` は C があれば `valueToRoll`・`bestAfterRoll` を C に回す（`evaluate`・`think`・`splitEval`／`rollTask`・`winProb` がそのまま C で読む）。`worker.js` が `engine_simd.wasm`（SIMD）か `engine.wasm`（SIMD なし）を `WebAssembly.validate` で選んで読み、読めないとき・`?nowasm` は今までの JavaScript（ページ側の `engine.js` も JavaScript のまま）。マルチスレッド（`shared/mtworkers.js`、手 × 出目の仕事）はそのまま、各 Worker が C を持つ。ビルド `tools/build.sh`。
+- **一致の確認**（`node tools/cmatch.js`）：3ルール × 20局面、深さ2（Lv.20）の全部の手の勝率・`winProb`・スレッドの `rollTask` が JavaScript と差 **1.1e-16 以下**（e^x の実装差だけ）、**最善手 60/60 一致**、SIMD 版となし版はビット単位で同じ。
+- **速さ**（作業機）：深さ2の1局面 JavaScript 30.7 → C 7.0 ミリ秒（**×4.4**）。
+- **強さ（レベルは変えていない）**：C で深く読めるようになったので、Lv.20 を3投先（深さ3）にした版と今の Lv.20（深さ2）を対局させた（C、同じ出目で先後入れ替え、各ルール100組＝200局）：フィンケル 100-100（50.0%）、ブリッツ 96-104（48.0%）、マスターズ 96-104（48.0%）。**深くしても強くならない**（Lv.20 は完全解析表に対し平均損失 約0.01%／手で、すでに読み切りに近い）ので、Lv.20 は深さ2のまま。`RT_LV` もそのまま。
+- headless Chrome（作業機）：対局ページ（PC・スマホ幅）の Worker・大百科の Worker が `wasm-simd`、Lv.20 の手とスレッドの仕事（`roll`）が返る。ページのエラーなし。

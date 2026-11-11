@@ -35,7 +35,12 @@ static void g_main(int D, int *mv, int *dd, double *nn) { think(0, 0, D, 0); *mv
 static double gHelpN;   /* the helpers' nodes in the run (G_STAT) */
 static void g_helper(void) {
   if (noSplit) { for (int k = 0; k < 200 && !gStop; k++) think(0, 0, 64, 0); return; }   /* (a Lazy SMP helper: g_thread_init) */
-  const double n = mt_idle(); pthread_mutex_lock(&simMu); gHelpN += n; pthread_mutex_unlock(&simMu);
+#ifdef PRALINE_YBW_H   /* (2026-11-11, Praline's mt_idle: no time limit) */
+  const double n = mt_idle(0, 1);
+#else
+  const double n = mt_idle();
+#endif
+  pthread_mutex_lock(&simMu); gHelpN += n; pthread_mutex_unlock(&simMu);
 }
 #else
 static void g_helper(void) { for (int k = 0; k < 200 && !gStop; k++) think(0, 0, 64, 0); }

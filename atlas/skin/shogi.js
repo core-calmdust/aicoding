@@ -247,6 +247,22 @@
     const r2 = document.getElementById('segSkin');   // 3D chosen: no 2D board shows as selected
     if (r2 && on) r2.querySelectorAll('button').forEach(b => { if (b.classList.contains('sel')) b.classList.remove('sel'); if (b.getAttribute('aria-pressed') === 'true') b.setAttribute('aria-pressed', 'false'); });
     const now = document.getElementById('skNow'); if (now && on && T3.boardName) now.textContent = '3D · ' + T3.boardName(cur, l, 'shogi');
+    // 3D駒: the six sets of the raised-lacquer pieces (selected while the page shows the 3D pieces)
+    const P = T3.PIECES && T3.PIECES.shogi, pr = f3.querySelector('.bdrow.pc3'), pl = f3.querySelector('label.pc3l');
+    if (P && pr) {
+      pl.textContent = PCL[l] || PCL.en;
+      if (!pr.children.length) P.list.forEach(k => { const bt = document.createElement('button'); bt.type = 'button'; bt.dataset.pc = k; const im = document.createElement('img'); im.src = P.thumb(k); im.alt = ''; im.draggable = false; bt.append(im, document.createElement('span')); bt.onclick = () => setPcSet(k); pr.appendChild(bt); });
+      const pc = P.get(); pr.querySelectorAll('button').forEach(bt => { const k = bt.dataset.pc, sel = mine && pc === k; bt.querySelector('span').textContent = T3.pieceName ? T3.pieceName('shogi', k, l) : k; bt.classList.toggle('sel', sel); bt.setAttribute('aria-pressed', String(sel)); });
+    }
+  }
+  const PCL = { ja: '3D駒', en: '3D pieces', zh: '3D棋子', ko: '3D 말', es: 'Piezas 3D', fr: 'Pièces 3D', pt: 'Peças 3D', de: '3D-Steine', hi: '3D मोहरे', ar: 'قطع ثلاثية الأبعاد', ru: '3D-фигуры', 'zh-TW': '3D棋子', id: 'Bidak 3D', tr: '3D taşlar' };
+  function setPcSet(k) {
+    if (T3.setPieces) T3.setPieces('shogi', k); else if (T3.PIECES && T3.PIECES.shogi) T3.PIECES.shogi.set(k);
+    mine = true; try { localStorage.setItem(PCK, '1'); } catch (e) {}
+    if (V && !V.is3d()) V.set(true);
+    try { look(); } catch (e) {}
+    if (window.__shogiPcSet) window.__shogiPcSet();
+    paint3();
   }
   {
     const r2 = document.getElementById('segSkin'), fd = r2 && r2.closest('.field');
@@ -255,13 +271,16 @@
       st.textContent = `html.atlas-skin #f3D{margin:12px 0 0;padding:10px 12px 12px;border-radius:14px;background:#f7efe1;border:2px solid #e3cfa6}
 html.atlas-skin #f3D > label{display:block;font-weight:700;font-size:14px;color:#7a4e1c;margin:0 0 8px}
 html.atlas-skin #f3D .bdrow{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:8px}
+#newOverlay > .modal.ngl.ngt-pc[data-ngt=design] [data-ng=design] #f3D .bdrow{grid-template-columns:repeat(6,minmax(0,1fr))!important}
 @media (max-width:760px){html.atlas-skin #f3D .bdrow{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
 html.atlas-skin #f3D .bdrow button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 4px 7px;border-radius:12px;border:2px solid transparent;background:#fffaf0;cursor:pointer;font:600 13px/1.25 inherit;color:#5a3a16}
 html.atlas-skin #f3D .bdrow button img{display:block;width:100%;aspect-ratio:1/1;object-fit:contain;border-radius:8px}
 html.atlas-skin #f3D .bdrow button.sel{border-color:#e09a00;background:#fff3d6;box-shadow:0 0 0 2px rgba(224,154,0,.25)}
-html.atlas-skin #f3D .bdrow button span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}`;
+html.atlas-skin #f3D .bdrow button span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+html.atlas-skin #f3D > label.pc3l{margin-top:12px}
+html.atlas-skin #f3D .bdrow.pc3 button img{aspect-ratio:3/2;background:radial-gradient(80% 80% at 50% 40%,#5a4636,#2a1f17);padding:4%;box-sizing:border-box}`;
       document.head.appendChild(st);
-      f3 = document.createElement('div'); f3.id = 'f3D'; f3.innerHTML = '<label></label><div class="bdrow"></div>';
+      f3 = document.createElement('div'); f3.id = 'f3D'; f3.innerHTML = '<label></label><div class="bdrow"></div><label class="pc3l"></label><div class="bdrow pc3"></div>';
       r2.after(f3);
       r2.addEventListener('click', e => { if (e.target.closest('button') && V) { V.set(false); setTimeout(paint3, 0); } }, true);   // a 2D board: the 2D page
       paint3(); const ls = document.getElementById('langSel'); if (ls) ls.addEventListener('change', () => setTimeout(paint3, 30));
@@ -270,7 +289,7 @@ html.atlas-skin #f3D .bdrow button span{white-space:nowrap;overflow:hidden;text-
     }
   }
   standLook();
-  addEventListener('storage', e => { if (e.key === 'atlas-shogi-look') { standLook(); setBoard(boardN, curCrop, extW); paint3(); } });
+  addEventListener('storage', e => { if (e.key === 'atlas-shogi-look') { standLook(); setBoard(boardN, curCrop, extW); paint3(); } if (e.key === 'atlas-shogi-pc3') { if (window.__shogiPcSet) window.__shogiPcSet(); paint3(); } });
 
   window.pieceEl = function (code, promoted) {
     const el = orig(code, promoted);
@@ -287,15 +306,20 @@ html.atlas-skin #f3D .bdrow button span{white-space:nowrap;overflow:hidden;text-
     return el;
   };
   // pre-rendered sheet of the 3D pieces (images/atlas/shogi-pieces.png, made with Table3D.shogi.images); live render as fallback
-  const sheet = () => new Promise((res, rej) => { const im = new Image(); im.onload = () => {
+  const pset = () => (SG.curSet ? SG.curSet() : 'moriage');
+  const sheetSrc = k => k === 'moriage' ? '../images/atlas/shogi-pieces.png?v=3' : '../images/atlas/shogi-pieces-' + k + '.png?v=1';   // (the six 3D piece sets, 2026-11-11)
+  const sheet = (k = pset()) => new Promise((res, rej) => { const im = new Image(); im.onload = () => {
     const out = {}, keys = ['k1', 'k2', 'k3', 'k4', 'k5', 'k6', 'k7', 'k8', 'k9', 'k10', 'k11', 'k12', 'k13', 'k14', 'k8o'];
     // blob: URLs, not data: URLs (2026-11-11) — every board redraw (each move, 待った) makes ~40 <img>; a long data: URL is parsed and
     // decoded again each time on iPhone (the board flashed as if redrawn, and the phone ran hot); a blob: URL is decoded once and cached
     Promise.all(keys.map((k, i) => new Promise(ok => { const c = document.createElement('canvas'); c.width = 256; c.height = 282; c.getContext('2d').drawImage(im, (i % 5) * 256, (i / 5 | 0) * 282, 256, 282, 0, 0, 256, 282);
-      if (c.toBlob) c.toBlob(b => { out[k] = b ? URL.createObjectURL(b) : c.toDataURL('image/png'); ok(); }, 'image/png'); else { out[k] = c.toDataURL('image/png'); ok(); } }))).then(() => res(out)); }; im.onerror = rej; im.src = '../images/atlas/shogi-pieces.png?v=3'; });
-  sheet().catch(() => SG.images(256)).then(o => {
+      if (c.toBlob) c.toBlob(b => { out[k] = b ? URL.createObjectURL(b) : c.toDataURL('image/png'); ok(); }, 'image/png'); else { out[k] = c.toDataURL('image/png'); ok(); } }))).then(() => res(out)); }; im.onerror = rej; im.src = sheetSrc(k); });
+  let imgTok = 0;
+  function loadSet() { const k = pset(), t = ++imgTok; sheet(k).catch(() => SG.images(256, k)).then(o => { if (t !== imgTok) return;
     IMG = o;
     window.__shogiAtlasPre = Object.values(o).map(src => { const im = new Image(); im.src = src; if (im.decode) im.decode().catch(() => {}); return im; });   // decoded up front: promotions show at once
     try { renderBoard(false); renderHands(); } catch (e) {}
-  });
+  }); }
+  loadSet();
+  window.__shogiPcSet = loadSet;
 })();
