@@ -9,7 +9,7 @@
 import asyncio, base64, io, os, re, sys
 import numpy as np
 from PIL import Image, ImageFilter
-from scipy.ndimage import binary_fill_holes
+from scipy.ndimage import binary_fill_holes, gaussian_filter, sobel
 from playwright.async_api import async_playwright
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
@@ -22,6 +22,60 @@ SETS = {'ryoko': ('ryoko', 'f5e5c6', '908768', False), 'minase': ('minase', 'f5e
 FACE, BAND = '', ''
 BODY, SH3D = {'ichiji'}, (.47 - .25) / .94
 ANGLE = {}   # e.g. {'ryoko': {'HI': -0.8}}
+# fine adjustments by eye against photos of the real sets (2026-11-11): the two characters of a piece each centred on the piece's
+# axis (their bodies: the ink between the 6% and 94% points across), the pair set in the body of the piece below the shoulders and a
+# little smaller (scale), and single characters turned (TURN: {code: (upper, lower)} degrees, counter-clockwise +)
+TUNE = {'ryoko': {'scale': .9, 'turn': {}}, 'minase': {'scale': .9, 'turn': {}, 'up': {'OU': .78, 'GY': .78}}, 'kinki': {'scale': .9, 'turn': {}, 'up': {'OU': .78, 'GY': .78, 'KE': .86}}}
+TWO = {'FU', 'KY', 'KE', 'GI', 'KA', 'HI', 'KI', 'GY', 'OU'}
+
+def axis(g):
+    cols = np.array(g).astype(np.float64).sum(0); c = np.cumsum(cols) / max(1, cols.sum())
+    return (np.searchsorted(c, .06) + np.searchsorted(c, .94)) / 2
+
+def lean(a):
+    """(v, h): the mean slant of the vertical strokes' edges (+: the top to the right) and of the horizontal ones (+: rising to the
+    right), in degrees, weighted by edge strength"""
+    a = gaussian_filter(a.astype(float), 1.5); gx, gy = sobel(a, 1), sobel(a, 0); m = np.hypot(gx, gy); out = []
+    for ang in (np.degrees(np.arctan2(gy, gx)), np.degrees(np.arctan2(gx, gy))):
+        ang = (ang + 90) % 180 - 90; sel = (m > m.max() * .2) & (abs(ang) < 20); w = m[sel]
+        out.append(float((ang[sel] * w).sum() / max(1e-9, w.sum())))
+    return out[0], out[1]
+
+def upright(p):
+    """a character stood up as a carver lays it out: its vertical strokes made plumb by a slight shear across (the horizontal strokes
+    keep the brush's own rising slope), damped (the measure is rough; checked by eye afterwards)"""
+    v, _ = lean(np.array(p)); t = np.tan(np.radians(float(np.clip(v, -5, 5))))
+    if abs(t) < 1e-3: return p
+    W, H = p.size; pad = int(abs(t) * H) + 2; q = Image.new('L', (W + 2 * pad, H), 0); q.paste(p, (pad, 0))
+    # x_src = x_dst − t·(y − H/2): the top moves left when the verticals lean right
+    q = q.transform(q.size, Image.AFFINE, (1, -t, t * H / 2, 0, 1, 0), resample=Image.BICUBIC)
+    bb = q.getbbox(); return q.crop(bb) if bb else q
+
+def body_w(p):
+    cols = np.array(p).astype(np.float64).sum(0); c = np.cumsum(cols) / max(1, cols.sum())
+    return max(1, np.searchsorted(c, .94) - np.searchsorted(c, .06))
+
+def restack(g, turn, up=0):
+    """the two characters of g cut apart at the emptiest row of its middle, each turned and centred on one axis"""
+    a = np.array(g).astype(np.float64); rows = a.sum(1); H = a.shape[0]
+    lo, hi = int(H * .35), int(H * .65); cut = lo + int(np.argmin(rows[lo:hi]))
+    parts = []
+    for (y0, y1), ang in zip(((0, cut), (cut, H)), turn):
+        p = upright(upright(g.crop((0, y0, g.width, y1))))   # (twice: the measure moves with the shear)
+        if ang: p = p.rotate(ang, resample=Image.BICUBIC, expand=True)
+        bb = p.getbbox(); p = p.crop(bb); parts.append((p, y0 + (g.crop((0, y0, g.width, y1)).getbbox() or (0, 0))[1]))
+    if up and len(parts) == 2:
+        # the upper character at least `up` times the lower one's body width (水無瀬's 王 is drawn small and squat; on real pieces the
+        # two read as one size), the pair kept in place by moving the lower one down by the growth
+        (p0, y0_), (p1, y1_) = parts; f = min(1.35, up * body_w(p1) / body_w(p0))
+        if f > 1:
+            q = p0.resize((round(p0.width * f), round(p0.height * f)), Image.LANCZOS)
+            parts = [(q, y0_ - (q.height - p0.height) // 2), (p1, y1_ + (q.height - p0.height) // 2)]
+    top0 = min(y for _, y in parts); parts = [(p, y - top0) for p, y in parts]
+    W = int(max(max(axis(p), p.width - axis(p)) for p, _ in parts) * 2) + 4
+    out = Image.new('L', (W, max(y + p.height for p, y in parts)), 0)
+    for p, y in parts: out.paste(p, (int(round(W / 2 - axis(p))), y), p)
+    bb = out.getbbox(); return out.crop(bb)
 
 def only(svg, keep):
     """keep the face (keep='face'), the band ('band') or everything else, the ink ('ink')"""
@@ -63,12 +117,16 @@ async def cell(pg, folder, code, set_):
     gcx, gcy = (gx0 + gx1) / 2, (gy0 + gy1) / 2
     g = g.crop(bb); gl = gl.crop(bb)
     if ang: g = g.rotate(ang, resample=Image.BICUBIC, expand=True); gl = gl.rotate(ang, resample=Image.BICUBIC, expand=True, fillcolor=255)
+    T = TUNE.get(set_)
+    if T and code in TWO: g = restack(g, T['turn'].get(code, (0, 0)), T.get('up', {}).get(code, 0)); gl = Image.new('L', g.size, 0)
     # one scale keeps the drawing's proportions (the 2D face is a little squatter than the 3D one: the mean of the width and height
     # scales); the centre goes where it sits on the face
-    k = (CW / (fx1 - fx0) * CH / (fy1 - fy0)) ** .5
+    k = (CW / (fx1 - fx0) * CH / (fy1 - fy0)) ** .5 * (T['scale'] if T else 1)
     sz = (max(1, round(g.width * k)), max(1, round(g.height * k))); g = g.resize(sz, Image.LANCZOS); gl = gl.resize(sz, Image.LANCZOS)
     cx, cy = (gcx - fx0) / (fx1 - fx0) * CW, (gcy - fy0) / (fy1 - fy0) * CH
-    if set_ in BODY:
+    if T:
+        cx = CW / 2 - (axis(g) - g.width / 2)   # on the piece's axis
+    if set_ in BODY or T:
         # one character sits in the body of the piece (below the shoulders): the 3D piece's roof is steeper (shoulders at 23.4% from the
         # tip, atlas/models/shogi.js pieceGeo) than the 2D drawing's, so the centre is placed by the body (shoulder → bottom), not the bbox
         w = top.sum(1)[fy0:fy1].astype(float); y = np.arange(len(w)); n = len(w)
