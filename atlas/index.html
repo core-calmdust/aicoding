@@ -1622,6 +1622,9 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 .bvi .mxb.mxic{width:48px;padding:0}.bvi .mxb.mxic svg{width:22px;height:22px}
 .lvs-l .lvpvp{width:100%;text-align:start;font:inherit;cursor:pointer;background:linear-gradient(100deg,#e3f3ff,#f6fbff 70%);border-color:#cfe6f7;padding:6px 12px 6px 10px}
 .lvs-l .lvpvp svg{width:96px;height:80px;flex:none;margin:-2px 0}.lvs-l .lvpvp small{color:#4f7fa3}
+.lvs-sec{display:flex;align-items:center;gap:12px;margin:10px 4px 2px;font:900 15px var(--font);color:var(--sun2);letter-spacing:.08em;white-space:nowrap}
+.lvs-sec::before,.lvs-sec::after{content:'';flex:1;height:2px;border-radius:2px;background:linear-gradient(90deg,transparent,#f3d48a)}.lvs-sec::after{background:linear-gradient(90deg,#f3d48a,transparent)}
+.lvs-sec span::before,.lvs-sec span::after{content:'✦';margin:0 8px;font-size:11px;color:#f2b630;vertical-align:2px}
 .lvs-l .lvpvp{display:flex;align-items:center;gap:12px}.lvs-l .lvpvp b{grid-row:auto;min-width:0;font-size:17px;font-weight:900;color:var(--ink)}.lvs-l .lvpvp small{display:block;font-size:12.5px;font-weight:700;color:#3f74a0}
 .lvs-l .lvpvp.on{border-color:#ff5d5d;box-shadow:0 0 0 2px rgba(255,93,93,.25)}
 .pzsheet .lvs-h{gap:8px}.pzsheet .pzs-t{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -2028,11 +2031,11 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 <script src="../shared/atlas.js?v=20261111nw1"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261109ac2"></script>
-<script src="i18n/v.js?v=72ph"></script>
+<script src="i18n/v.js?v=72pi"></script>
 <script>/* the UI strings: only ja, en and the page language (atlas/i18n/<lang>.js, made from i18n.js by tools/i18n-split.js — 2026-11-10);
    when they were made from another version of i18n.js than FULL, the whole i18n.js loads instead. Edit i18n.js, bump FULL's ?v=, run the tool. */
 (function () {
-  var FULL = 'i18n.js?v=72ph', S = window.ATLAS_I18N_SPLIT, v = FULL.split('v=')[1], l = 'ja';
+  var FULL = 'i18n.js?v=72pi', S = window.ATLAS_I18N_SPLIT, v = FULL.split('v=')[1], l = 'ja';
   try { l = localStorage.getItem('aicoding-lang') || (function (x) { return /^zh-(tw|hk|mo|hant)/i.test(x) ? 'zh-TW' : String(x).slice(0, 2); })(navigator.language || 'ja'); } catch (e) {}
   if (!S || S.v !== v) { document.write('<script src="' + FULL + '"><\/script>'); return; }
   var L = ['ja', 'en']; if (S.langs.indexOf(l) >= 0 && L.indexOf(l) < 0) L.push(l);
@@ -2083,7 +2086,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=34"></script>
 <script src="npc/npc.js?v=24"></script>
 <script src="avtalk.js?v=2"></script>
-<script src="app.js?v=312"></script>
+<script src="app.js?v=313"></script>
 <script src="../shared/praline-badge.js?v=2" data-portal defer></script>
 </body>
 </html>
