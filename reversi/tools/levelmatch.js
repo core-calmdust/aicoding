@@ -3,15 +3,15 @@
 // shared memory, the lead runs think() with the level's settings, the helpers wait in engine.c mt_idle and take the
 // remaining moves at the lead's split points (YBW: engine.js LAZY.plan 'ybw', engine_mt.wasm v4.1 — MODEL_CARD.md
 // 「マルチスレッド v4 / v4.1」). Each side has its own pool (its own transposition table). Several games can run at once (--conc).
-// Levels 17–29, T<s> and D… use all the threads of the pool (the page: MT_CFG); levels 14–16 only the lead (the page plays them
-// on its one-thread worker), so the whole ladder Lv.14 … Lv.29 can be measured in one run (--plan full).
+// Levels 17–28, T<s> and D… use all the threads of the pool (the page: MT_CFG); levels 14–16 only the lead (the page plays them
+// on its one-thread worker), so the whole ladder Lv.14 … Lv.28 can be measured in one run (--plan full).
 //
 //   node tools/levelmatch.js [run] [--plan default|full|low|adjacent|ladder|top|depth|L20:L21,T2:T4,…] [--games 40] [--scale 1]
-//                                  [--conc 2] [--threads N] [--out tools/levelmatch-out/results-29.jsonl] [--dry]
+//                                  [--conc 2] [--threads N] [--out tools/levelmatch-out/results-28.jsonl] [--dry]
 //   node tools/levelmatch.js report [--out …]        the summary to paste back (also written to report.txt)
 //
-// Players: L<n> = engine.js LEVELS[n] (time and max × scale; Lv.17–28 read to a fixed depth since 2026-11-11, their time is
-// only a guard for slow devices, so they play the same at any --scale / --threads and only Lv.29 depends on the machine);
+// Players: L<n> = engine.js LEVELS[n] (time and max × scale; Lv.17–27 read to a fixed depth since 2026-11-11, their time is
+// only a guard for slow devices, so they play the same at any --scale / --threads and only Lv.28 depends on the machine);
 // T<s> = the old Lv.20 shape with a soft time of s seconds ({ depth 60, exact 20, wld 22, time s×1000×scale, mpc }), for the
 // Elo per doubling of the time; D<depth>[e<exact>][w<wld>][n<million nodes>] = a depth- / node-capped player of one's own
 // (e.g. D16e20w22, D60e20w22n8; the node cap counts the lead's nodes only — the helpers' are not added, engine.c TLS).
@@ -59,16 +59,16 @@ const SCALE = +(opt.scale || 1);
 const GAMES = Math.max(2, Math.round(+(opt.games || 40) / 2) * 2);
 const CONC = Math.max(1, +(opt.conc || (CORES >= 8 ? 2 : 1)));
 const THREADS = Math.max(1, +(opt.threads || Math.min(8, Math.floor(CORES / CONC))));   // (the page: 1 + min(cores − 1, 7))
-const OUT = path.resolve(opt.out || path.join(__dirname, 'levelmatch-out', 'results-29.jsonl'));   // (2026-11-11, later: a new file for the 29 levels — the level numbers changed; results-depth.jsonl: Lv.17–24 by depth on the 25-level ladder; 2026-11-10's YBW run is results-ybw.jsonl, 2026-11-10: a new file for the YBW threads and the gentle low levels; the 2026-11-09 run is results.jsonl)
+const OUT = path.resolve(opt.out || path.join(__dirname, 'levelmatch-out', 'results-28.jsonl'));   // (2026-11-11, later: a new file for the 28 levels — the level numbers changed; results-depth.jsonl: Lv.17–24 by depth on the 25-level ladder; 2026-11-10's YBW run is results-ybw.jsonl, 2026-11-10: a new file for the YBW threads and the gentle low levels; the 2026-11-09 run is results.jsonl)
 const PLANS = {
-  adjacent: ['L20:L21', 'L21:L22', 'L22:L23', 'L23:L24', 'L24:L25', 'L25:L26', 'L26:L27', 'L27:L28', 'L28:L29'],   // (2026-11-11: 29 levels)
+  adjacent: ['L20:L21', 'L21:L22', 'L22:L23', 'L23:L24', 'L24:L25', 'L25:L26', 'L26:L27', 'L27:L28'],   // (2026-11-11: 28 levels)
   ladder: ['T2:T4', 'T4:T8', 'T8:T16'],
   low: ['L14:L15', 'L15:L16', 'L16:L17', 'L17:L18', 'L18:L19', 'L19:L20'],   // (Lv.14 = the fixed anchor of the ratings: MODEL_CARD.md)
 };
-PLANS.top = ['L25:L26', 'L26:L27', 'L27:L28', 'L28:L29', 'L26:L28', 'L27:L29'];   // (2026-11-11: the deepest levels and the timed strongest, with two skips; Lv.28↔29 could not be measured on the 2-core machine)
-PLANS.depth = ['L16:L17', 'L17:L18', 'L18:L19', 'L19:L20', 'L20:L21', 'L21:L22', 'L22:L23', 'L23:L24', 'L24:L25'].concat(PLANS.top);   // (2026-11-11: Lv.16 … 29, the levels by depth and the timed top)
+PLANS.top = ['L24:L25', 'L25:L26', 'L26:L27', 'L27:L28', 'L25:L27', 'L26:L28'];   // (2026-11-11: the deepest levels and the timed strongest, with two skips; Lv.27↔28 could not be measured on the 2-core machine)
+PLANS.depth = ['L16:L17', 'L17:L18', 'L18:L19', 'L19:L20', 'L20:L21', 'L21:L22', 'L22:L23', 'L23:L24'].concat(PLANS.top);   // (2026-11-11: Lv.16 … 28, the levels by depth and the timed top)
 PLANS.default = PLANS.adjacent.concat(PLANS.ladder);
-PLANS.full = PLANS.low.concat(PLANS.adjacent, PLANS.ladder);   // the whole ladder Lv.14 … Lv.29 and the time doublings
+PLANS.full = PLANS.low.concat(PLANS.adjacent, PLANS.ladder);   // the whole ladder Lv.14 … Lv.28 and the time doublings
 const planOf = p => (PLANS[p] || String(p).split(',')).map(s => s.trim()).filter(Boolean).map(s => { const [a, b] = s.split(':'); return { id: `${a}-${b}`, a, b }; });
 const PLAN = planOf(opt.plan || 'default');
 
@@ -81,20 +81,20 @@ const { legal, play, start } = require('./eng-lite.js');
 function cfgOf(p, scale) {
   let m;
   if ((m = /^L(\d+)$/.exec(p))) {
-    const n = +m[1]; if (n < 14 || !E0.LEVELS[n]) throw new Error(p + ': Lv.14 … Lv.29 (the lower levels play by chance: tools/match.js)');
+    const n = +m[1]; if (n < 14 || !E0.LEVELS[n]) throw new Error(p + ': Lv.14 … Lv.28 (the lower levels play by chance: tools/match.js)');
     const L = Object.assign({}, E0.LEVELS[n]);
     if (L.time) L.time = Math.round(L.time * scale); if (L.max) L.max = Math.round(L.max * scale);
-    L.mt = n >= 17;   // (the page: levels 17–29 on the threads, the others on one thread)
+    L.mt = n >= 17;   // (the page: levels 17–28 on the threads, the others on one thread)
     return L;
   }
   if ((m = /^T([\d.]+)$/.exec(p))) return { depth: 60, exact: 20, wld: 22, time: Math.round(+m[1] * 1000 * scale), mpc: 1, mt: true };
   // D<depth>[m<depth2>][e<exact>][w<wld>][n<nodes in M>]: a depth-capped player of one's own (for trying level settings), e.g. D16e20w22n40;
   // m: about half of the positions read to depth2 instead (engine.js lv.mix, 2026-11-11), e.g. D16m13e20w22
   if ((m = /^D(\d+)(?:m(\d+))?(?:e(\d+))?(?:w(\d+))?(?:n([\d.]+))?$/.exec(p))) { const c = { depth: +m[1], exact: +(m[3] || 0), mpc: 1, mt: true }; if (m[2]) c.mix = +m[2]; if (m[4]) c.wld = +m[4]; if (m[5]) c.nodes = Math.round(+m[5] * 1e6); return c; }
-  throw new Error('player? ' + p + ' (L14…L29, T<seconds> or D<depth>m<depth2>e<exact>w<wld>n<Mnodes>)');
+  throw new Error('player? ' + p + ' (L14…L28, T<seconds> or D<depth>m<depth2>e<exact>w<wld>n<Mnodes>)');
 }
 // rough time used per move (s, scale 1, all threads) for the estimate before any game is played; replaced by the measured times
-const USE = { L14: 0.3, L15: 0.1, L16: 0.2, L17: 0.05, L18: 0.05, L19: 0.05, L20: 0.1, L21: 0.1, L22: 0.15, L23: 0.2, L24: 0.3, L25: 0.5, L26: 0.8, L27: 1.2, L28: 2, L29: 4.3 };   // (2026-11-11: Lv.17–28 by depth, Lv.29 the timed top)
+const USE = { L14: 0.3, L15: 0.1, L16: 0.2, L17: 0.05, L18: 0.05, L19: 0.05, L20: 0.05, L21: 0.1, L22: 0.3, L23: 0.5, L24: 0.8, L25: 1.2, L26: 1.5, L27: 3, L28: 4.3 };   // (2026-11-11: Lv.17–27 by depth, Lv.28 the timed top)
 const useOf = p => USE[p] || (/^T/.test(p) ? 0.58 * +p.slice(1) : 3);
 const MOVES_FULL = 13;   // moves per side that use their full time (from the book's end, before the endgame solve)
 

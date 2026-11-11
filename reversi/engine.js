@@ -957,7 +957,7 @@ function orderRoot(moves, prev) {
   return moves.slice().sort((a, b) => (prev.get(b) ?? -1e9) - (prev.get(a) ?? -1e9));
 }
 
-// 29 strength levels (v4.1: 20, 2026-11-08: +21-25, 2026-11-11: 17-28 re-cut by depth, the strongest is Lv.29). noise: random jitter added to every move's score (eval units, 100 = 1 disc);
+// 28 strength levels (v4.1: 20, 2026-11-08: +21-25, 2026-11-11: 17-27 re-cut by depth, the strongest is Lv.28). noise: random jitter added to every move's score (eval units, 100 = 1 disc);
 // mpc: Multi-ProbCut + opening book; time: soft time per move in ms (levels 17-25 also split the root over several workers in the page).
 // The old 10 levels were the same settings as 4, 7, 9 (≈ old 3), 11, 13, 14, 16, 17, 19, 20 (Lv.1-13 made gentler on 2026-11-10).
 // Lv.1-13 (2026-11-10, "gentle"): rnd = the chance of a random move, greedy = the chance of a beginner's move (most discs
@@ -981,26 +981,25 @@ const LEVELS = [
   { depth: 8, exact: 14 },                          // 14 (old Lv.6)
   { depth: 9, exact: 15, time: 700, mpc: 1 },       // 15
   { depth: 10, exact: 16, time: 1000, mpc: 1 },     // 16 (old Lv.7)
-  // 17-28 (2026-11-11, steps of about +40–60 Elo from Lv.16): a fixed depth (depth; mix: half of the positions to that depth instead,
+  // 17-27 (2026-11-11, steps of about +25–110 Elo from Lv.16): a fixed depth (depth; mix: half of the positions to that depth instead,
   // by a hash of the position) and endgame (exact / wld), the same strength on any device and thread count (the threads only make
   // them faster). time / use / max are only a guard for slow devices (one thread on a slow phone): no new depth after time × use,
-  // the hard stop at max (MODEL_CARD.md「Lv.17〜28 を深さで等間隔に」).
+  // the hard stop at max (MODEL_CARD.md「28段階：Lv.17〜27 を深さで刻み直し」).
   { depth: 10, exact: 18, wld: 20, time: 10000, use: 1, max: 20000, mpc: 1 },   // 17
   { depth: 11, exact: 18, wld: 20, time: 10000, use: 1, max: 20000, mpc: 1 },   // 18
   { depth: 12, exact: 18, wld: 20, time: 10000, use: 1, max: 20000, mpc: 1 },   // 19
-  { depth: 13, mix: 12, exact: 19, wld: 21, time: 10000, use: 1, max: 20000, mpc: 1 },   // 20
-  { depth: 13, exact: 19, wld: 21, time: 10000, use: 1, max: 20000, mpc: 1 },   // 21
-  { depth: 16, mix: 13, exact: 20, wld: 22, time: 10000, use: 1, max: 20000, mpc: 1 },   // 22
-  { depth: 16, exact: 22, wld: 24, time: 15000, use: 1, max: 30000, mpc: 1 },   // 23
-  { depth: 20, mix: 16, exact: 22, wld: 24, time: 20000, use: 1, max: 40000, mpc: 1 },   // 24
-  { depth: 20, exact: 22, wld: 24, time: 20000, use: 1, max: 40000, mpc: 1 },   // 25
-  { depth: 25, mix: 20, exact: 23, wld: 25, time: 30000, use: 1, max: 60000, mpc: 1 },   // 26
-  { depth: 25, exact: 23, wld: 25, time: 30000, use: 1, max: 60000, mpc: 1 },   // 27
-  { depth: 28, exact: 24, wld: 26, time: 30000, use: 1, max: 60000, mpc: 1 },   // 28
-  // 29 (2026-11-08, Lv.25 until 2026-11-11): the strongest, by time on all threads (page: MT_CFG). max = the hard limit per move in ms
+  { depth: 13, exact: 19, wld: 21, time: 10000, use: 1, max: 20000, mpc: 1 },   // 20
+  { depth: 16, exact: 22, wld: 24, time: 15000, use: 1, max: 30000, mpc: 1 },   // 21
+  { depth: 20, mix: 16, exact: 22, wld: 24, time: 20000, use: 1, max: 40000, mpc: 1 },   // 22
+  { depth: 20, exact: 22, wld: 24, time: 20000, use: 1, max: 40000, mpc: 1 },   // 23
+  { depth: 22, exact: 23, wld: 24, time: 25000, use: 1, max: 50000, mpc: 1 },   // 24
+  { depth: 25, mix: 20, exact: 23, wld: 25, time: 30000, use: 1, max: 60000, mpc: 1 },   // 25
+  { depth: 25, exact: 23, wld: 25, time: 30000, use: 1, max: 60000, mpc: 1 },   // 26
+  { depth: 28, exact: 24, wld: 26, time: 30000, use: 1, max: 60000, mpc: 1 },   // 27
+  // 28 (2026-11-08, Lv.25 until 2026-11-11): the strongest, by time on all threads (page: MT_CFG). max = the hard limit per move in ms
   // (else 2.5 × time); use = start a new depth until this share of time (else 0.45), and a depth cut by max still counts when another
   // root move was already proved better there (think: PART).
-  { depth: 60, exact: 23, wld: 25, time: 18000, use: 0.8, max: 20000, mpc: 1 },   // 29
+  { depth: 60, exact: 23, wld: 25, time: 18000, use: 0.8, max: 20000, mpc: 1 },   // 28
 ];
 const NLEVELS = LEVELS.length - 1, DEF_LEVEL = 15;
 
@@ -1154,7 +1153,7 @@ function think(cells, toMove, opts, onProgress) {
   // ---- midgame iterative deepening
   let prev = null, depthDone = 0;
   // lv.mix (2026-11-11): about half of the positions — chosen by a hash of the position, so the same on every device and thread count —
-  // are read to depth lv.mix instead of lv.depth: a level between two depths (the strength gain by depth comes in steps: MODEL_CARD.md「Lv.17〜28」)
+  // are read to depth lv.mix instead of lv.depth: a level between two depths (the strength gain by depth comes in steps: MODEL_CARD.md「28段階：Lv.17〜27 を深さで刻み直し」)
   const maxDepth = Math.min(lv.mix && mixPick(pl, ph, ol, oh) ? lv.mix : lv.depth, empties);
   const doExact = empties <= lv.exact;
   const wldNow = !doExact && lv.wld && empties <= lv.wld && !variety;
