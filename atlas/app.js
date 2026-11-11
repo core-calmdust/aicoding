@@ -122,7 +122,7 @@
 
   /* ---------- common renderers ---------- */
   const R3 = new Set(['peg', 'reversi', 'shogi', 'chess', 'gomoku', 'dots', 'connect4', 'mancala', 'backgammon', 'morris', 'sudoku', 'speedsudoku', 'checkers', 'samegame', 'go', 'hex', 'tafl', 'xiangqi', 'jailbreak', 'solitaire', 'poker', 'baccarat', 'blackjack', 'fanorona', 'alquerque', 'ur', 'ugolki', 'agon', 'konane', 'senet', 'janggi', 'ludo', 'carrom', 'crokinole', 'hockey', 'amazons']);   // images/atlas/<id>.webp exists
-  const artSrc = g => R3.has(g.id) ? `../images/atlas/${g.id}.webp?v=${g.id === 'fanorona' || g.id === 'janggi' || g.id === 'morris' ? 11 : 10}` : `../${g.icon}`;
+  const artSrc = g => R3.has(g.id) ? `../images/atlas/${g.id}.webp?v=${g.id === 'fanorona' || g.id === 'janggi' || g.id === 'morris' || g.id === 'peg' ? 11 : 10}` : `../${g.icon}`;
   const artImg = (g, extra = '') => `<img src="${artSrc(g)}" alt="" loading="lazy" decoding="async"${R3.has(g.id) ? '' : ' class="flat"'}${extra}>`;
   const g3 = g => `<span class="g3" style="--c:${g.color}">${artImg(g)}</span>`;
   const gno = g => 'No.' + String(A_.GAMES.indexOf(g) + 1).padStart(2, '0');
@@ -592,7 +592,7 @@
   /* ---------- 3D board viewer ---------- */
   let glOK = false, bvGame = null, session = null;
   // card games are 2D only, like the puzzle games (no 3D table): the board card says so and Play opens the game
-  const CARD2D = { poker: true, blackjack: true, baccarat: true, solitaire: true, peg: true };   // (peg: its 3D table is still to come)
+  const CARD2D = { poker: true, blackjack: true, baccarat: true, solitaire: true };
   const pref = (() => { try { return JSON.parse(localStorage.getItem('atlas-play') || '{}'); } catch (e) { return {}; } })();
   // the textures of the room and of each board are drawn in workers (texgen.js): the work is tagged per board,
   // and a board is only shown once its pictures are done (texReady)
@@ -1621,7 +1621,7 @@
     const g = bvGame; stopSession();
     $('bv').classList.add('playing', 'rules'); $('endc').classList.remove('on');
     session = AtlasRules[g.id].start({ el: $('gl'), Table3D, lang, panel: $('bv'),
-      onStart: () => { stopSession(); startPlay(Atlas3D[g.id] && Atlas3D[g.id].table ? 'table' : undefined); },
+      onStart: () => { stopSession(); if (!FULL_SKIN[g.id] && !(window.Atlas3D && Atlas3D[g.id])) { location.href = '../' + g.href; return; } startPlay(Atlas3D[g.id] && Atlas3D[g.id].table ? 'table' : undefined); },   // (a game without a table or a full skin: its own page)
       onExit: () => { if (rulesFromList) { rulesFromList = false; closeBoard(); } else openBoard(g.id); } });   // back: to the game list when started from there, else to the chabudai (settings card)
     if (session.panel && window.ResizeObserver) new ResizeObserver(fitStage).observe(session.panel);
     fitStage();
