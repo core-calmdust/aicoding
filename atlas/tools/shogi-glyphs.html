@@ -14,7 +14,8 @@
   const img = txt => new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = no; im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(txt); });
   async function cell(folder, code) {
     const txt = await (await fetch('../../shogi/pieces/' + folder + '/0' + code + '.svg')).text();
-    const im = await img(txt), c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d', { willReadFrequently: true });
+    const im = await img(txt.replace(/rotate\([^)]*\)/g, '')),   // (the 菱湖 SVGs tilt their pieces by 3°: upright here)
+      _ = 0, c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d', { willReadFrequently: true });
     g.drawImage(im, 0, 0, S, S); const d = g.getImageData(0, 0, S, S).data;
     // the piece's own outline: the opaque pixels → its bounding box and an eroded inside (the edge / border strokes are not ink)
     let x0 = S, y0 = S, x1 = 0, y1 = 0; for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) if (d[(y * S + x) * 4 + 3] > 128) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }

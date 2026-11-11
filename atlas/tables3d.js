@@ -255,7 +255,7 @@
   };
   // shogi (atlas/models/shogi.js PSETS, 2026-11-11): the raised-lacquer pieces with the inscriptions of the six 2D sets; 'atlas-shogi-pc3'
   PIECES.shogi = { list: ['moriage', 'ichiji', 'kinki', 'minase', 'ryoko', 'kaisho'], get: () => { const v = ls.get('atlas-shogi-pc3'); return PIECES.shogi.list.includes(v) ? v : 'moriage'; }, set: k => ls.set('atlas-shogi-pc3', k),
-    thumb: k => new URL('img/pc3-shogi-' + k + '.webp?v=2', ME).href,
+    thumb: k => new URL('img/pc3-shogi-' + k + '.webp?v=3', ME).href,
     names: {
       moriage: { ja: '盛り上げ', en: 'Raised lacquer', zh: '盛上', 'zh-TW': '盛上', ko: '모리아게', es: 'Laca en relieve', fr: 'Laque en relief', pt: 'Laca em relevo', de: 'Lack-Relief', ru: 'Рельефный лак', tr: 'Kabartma lake', id: 'Pernis timbul', hi: 'उभरी लाह', ar: 'ورنيش بارز' },
       ichiji: { ja: '一字書き', en: 'One character', zh: '一字书', 'zh-TW': '一字書', ko: '한 글자', es: 'Un carácter', fr: 'Un caractère', pt: 'Um caractere', de: 'Ein Zeichen', ru: 'Один иероглиф', tr: 'Tek karakter', id: 'Satu karakter', hi: 'एक अक्षर', ar: 'حرف واحد' },
