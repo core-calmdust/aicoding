@@ -34,6 +34,9 @@ if (!isMainThread) {
   };
   Date.now = () => { if (busy) step(); return T0 + Atomics.load(S, G0) * MS; };
   global.self = global;
+  // (2026-11-11) a Worker's location: the engines read location.search (amazons / ugolki / agon / konane: '?…&mt=1' = the lead of
+  // core_mt.wasm's threads) — here a plain worker of mtsplit.js, as the page starts it without the query
+  if (!global.location) global.location = { search: '', href: 'file://' + path.join(dir, String(workerData.url)) };
   global.importScripts = (...urls) => { for (const u of urls) { const f = path.resolve(dir, String(u).replace(/\?.*$/, '')); vm.runInThisContext(fs.readFileSync(f, 'utf8'), { filename: f }); } };
   global.postMessage = d => { if (d && d.type !== 'progress') setBusy(false); parentPort.postMessage(d); };
   parentPort.on('message', d => { if (!d || d.type !== 'mtshare') setBusy(true); if (self.onmessage) self.onmessage({ data: d }); });
