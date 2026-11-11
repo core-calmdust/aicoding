@@ -111,7 +111,7 @@
   X.placeUi = (key, lang) => pick(PLACES.ui[key], lang);
   // the thumbnails (small real renders, atlas/img/place-k.webp), next to this script whichever page loads it
   const ME = (document.currentScript && document.currentScript.src) || location.href;
-  X.placeThumb = k => new URL('img/place-' + k + '.webp?v=' + (k === 8 ? 5 : k === 12 ? 3 : k >= 2 ? 3 : 1), ME).href;   // (8: the game centre, 2026-11-09)
+  X.placeThumb = k => new URL('img/place-' + k + '.webp?v=' + (k === 8 ? 5 : k === 12 ? 4 : k >= 2 ? 3 : 1), ME).href;   // (8: the game centre, 2026-11-09)
 
   const lin = (c, y0, y1, stops) => { const g = c.createLinearGradient(0, y0, 0, y1); stops.forEach(([k, col]) => g.addColorStop(k, col)); return g; };
   const rad = (c, x, y, r, stops) => { const g = c.createRadialGradient(x, y, 0, x, y, r); stops.forEach(([k, col]) => g.addColorStop(k, col)); return g; };
@@ -2884,18 +2884,18 @@
     // the floor: tatami with black heri (as in a tournament room), laid in a basket weave: each 40 × 40 square two mats side by side,
     // turned a quarter between neighbours
     // (2026-11-12, the user: finer) drawn here at 512 × 1024 per mat: the rush (igusa) across the mat in rows of ~1.2 cm, each row a ribbed
-    // band with its strands' own tones, the hemp warp threads along the mat, a woven black heri with its stitched edge along the long sides
-    { const tt = canvasTex('tbl12-tatami3', 512, 1024, (c, W, H) => {
+    // band with its strands' own tones, a woven black heri with its stitched edge along the long sides
+    { const tt = canvasTex('tbl12-tatami4', 512, 1024, (c, W, H) => {
         const R = rng(31), hw = 22, row = 8;
         c.fillStyle = '#c6bd8a'; c.fillRect(0, 0, W, H);
-        for (let y = 0; y < H; y += row) {   // one row of the weave: rushes side by side, rounded (lit along their middle)
-          const k = .96 + R() * .06;
-          for (let x = hw; x < W - hw; x += 3 + (R() * 3 | 0)) { const l = 3 + (R() * 4 | 0), g0 = (192 + R() * 18) * k | 0, g1 = (186 + R() * 16) * k | 0, b0 = (132 + R() * 20) * k | 0;
-            const gr = c.createLinearGradient(0, y, 0, y + row); gr.addColorStop(0, `rgb(${g0 - 11},${g1 - 10},${b0 - 8})`); gr.addColorStop(.45, `rgb(${g0 + 6},${g1 + 6},${b0 + 4})`); gr.addColorStop(1, `rgb(${g0 - 15},${g1 - 14},${b0 - 11})`);
-            c.fillStyle = gr; c.fillRect(x, y, l + 1, row); }
-          c.fillStyle = 'rgba(60,50,20,.1)'; c.fillRect(hw, y + row - 1, W - 2 * hw, 1); }
-        for (let x = hw + 9; x < W - hw; x += 17) { c.fillStyle = 'rgba(90,80,40,.12)'; c.fillRect(x, 0, 1, H); }   // the warp threads
-        for (let i = 0; i < 900; i++) { c.fillStyle = `rgba(${R() > .5 ? '255,250,210' : '90,80,30'},${.05 + R() * .08})`; c.fillRect(hw + (R() * (W - 2 * hw) | 0), R() * H | 0, 2 + (R() * 6 | 0), 1); }   // single strands catching the light / darker
+        // (2026-11-12, the user: not a grid — the stripes of the rush rows are the pattern, with fine woven lines between them)
+        for (let y = 0; y < H; y += row) {   // one row of rush: a rounded band, its strands as faint streaks along it
+          const k = .97 + R() * .05, g0 = 198 * k | 0, g1 = 191 * k | 0, b0 = 140 * k | 0;
+          const gr = c.createLinearGradient(0, y, 0, y + row); gr.addColorStop(0, `rgb(${g0 - 12},${g1 - 11},${b0 - 9})`); gr.addColorStop(.45, `rgb(${g0 + 6},${g1 + 6},${b0 + 4})`); gr.addColorStop(1, `rgb(${g0 - 16},${g1 - 15},${b0 - 12})`);
+          c.fillStyle = gr; c.fillRect(hw, y, W - 2 * hw, row);
+          for (let i = 0; i < 7; i++) { c.fillStyle = `rgba(${R() > .5 ? '255,250,215' : '110,96,50'},${.07 + R() * .08})`; c.fillRect(hw + (R() * (W - 2 * hw) | 0), y + 1 + (R() * (row - 2) | 0), 30 + (R() * 160 | 0), 1); }
+          c.fillStyle = 'rgba(70,58,24,.16)'; c.fillRect(hw, y + row - 1, W - 2 * hw, 1);   // the fine woven line between rows: short stitches, offset row by row
+          c.fillStyle = 'rgba(70,58,24,.18)'; for (let x = hw + ((y / row) % 2) * 4; x < W - hw; x += 8) c.fillRect(x, y + row - 1, 3, 1); }
         [0, W - hw].forEach(x0 => { c.fillStyle = '#1c1a17'; c.fillRect(x0, 0, hw, H);   // the heri: a black cloth, finely woven, its fold and stitches
           for (let y = 0; y < H; y += 3) { c.fillStyle = `rgba(255,255,255,${.03 + (y % 6 ? .02 : .05)})`; c.fillRect(x0, y, hw, 1); }
           for (let x = x0; x < x0 + hw; x += 2) { c.fillStyle = 'rgba(0,0,0,.18)'; c.fillRect(x, 0, 1, H); }
