@@ -1406,7 +1406,21 @@ html[lang=ar] .pf-input{direction:rtl}
   html:root:not(.atlas-skin) body.skin-metal .board-area > .hand.hand{background:linear-gradient(160deg,#c9d0d6 0%,#9aa3ab 45%,#b8c0c7 70%,#8a939b 100%)!important}
   html:root:not(.atlas-skin) body.skin-ink .board-area > .hand.hand{background:linear-gradient(170deg,#2b2622 0%,#1f1b18 100%)!important}
   html:root:not(.atlas-skin) body:not(.skin-ink) .board-area > .hand .hname{color:#3a2412}
-  html.atlas-shogi:not(.atlas-2d) body .board-area > .hand.hand{background:url(../images/atlas/shogi-kaya.webp?v=3) 20% 10%/120% auto,#d9be98!important}   /* 3D: 本榧, as the 3D board (no grey veil) */
+  /* the 2D designs of the full version: the board's own plate (::before colour, ::after grain) runs on under both bars — one
+     piece, no seam, whatever the design; the bars themselves are see-through (atlas/skin/shogi.js sets --kdth / --kdbh) */
+  html.atlas-2d body .board-area > .hand.hand{background:transparent!important;border:0!important;position:relative;z-index:2}
+  html.atlas-2d body .board-area > .hand.hand::before{display:none!important}
+  html.atlas-2d body .board-area .board.board::before,html.atlas-2d body .board-area .board.board::after{top:calc(-1 * (var(--k2t, 0px) + var(--kdth, 0px)))!important;bottom:calc(-1 * (var(--k2b, 0px) + var(--kdbh, 0px)))!important;border-radius:12px!important}
+  /* 3D: the bars' wood is the 3D board's own rim as drawn (images/atlas/shogi-kd3d-*.webp: its rim between the edge and the grid, mirrored at
+     the joint), stretched to the board's width — the grain runs straight on across the joint; the bars lie over the board's rounded edge */
+  html.atlas-shogi:not(.atlas-2d) body .board-area > .hand.hand{border:0!important;z-index:4}
+  html.atlas-shogi:not(.atlas-2d) body .board-area .coords{z-index:5}
+  /* (the bars run 13px onto the board's rim and fade into it there: the 3D lighting never leaves a line at the joint) */
+  html.atlas-shogi:not(.atlas-2d) body .board-area > .hand.top.hand{-webkit-mask:linear-gradient(to bottom,#000 calc(100% - 7px),transparent);mask:linear-gradient(to bottom,#000 calc(100% - 7px),transparent);border-radius:12px 12px 0 0!important}
+  html.atlas-shogi:not(.atlas-2d) body .board-area > .hand.bottom.hand{-webkit-mask:linear-gradient(to top,#000 calc(100% - 7px),transparent);mask:linear-gradient(to top,#000 calc(100% - 7px),transparent);border-radius:0 0 12px 12px!important}
+  html.atlas-shogi:not(.atlas-2d) body .board-area > .hand.hand::before{display:none!important}
+  html.atlas-shogi:not(.atlas-2d) body .board-area > .hand.top.hand{background:url(../images/atlas/shogi-kd3d-top.webp?v=3) center/100% 100% no-repeat,#e5cba8!important}
+  html.atlas-shogi:not(.atlas-2d) body .board-area > .hand.bottom.hand{background:url(../images/atlas/shogi-kd3d-bot.webp?v=3) center/100% 100% no-repeat,#e5cba8!important}
   html:not(.atlas-skin) .app{padding-left:4px!important;padding-right:4px!important}
 }
 </style>
@@ -6245,7 +6259,7 @@ if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStar
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/img/tex/baked.js?v=1')).then(() => load('../atlas/table3d.js?v=147')).then(() => load('../atlas/tables3d.js?v=55')).then(() => load('../atlas/skin/common.js?v=66')).then(() => load('../atlas/models/shogi.js?v=33k')).then(() => load('../atlas/skin/shogi.js?v=26k'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/img/tex/baked.js?v=1')).then(() => load('../atlas/table3d.js?v=147')).then(() => load('../atlas/tables3d.js?v=55')).then(() => load('../atlas/skin/common.js?v=66')).then(() => load('../atlas/models/shogi.js?v=33k')).then(() => load('../atlas/skin/shogi.js?v=31k'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
@@ -6253,7 +6267,7 @@ if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStar
 <script src="../shared/atlas.js?v=20261111am1" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1l14" defer></script>
 <script src="../shared/atlas-account.js?v=20261109ac2l14" defer></script>
-<script src="../shared/infotabs.js?v=19l14" defer></script>
+<script src="../shared/infotabs.js?v=20l14" defer></script>
 <script src="../shared/pickdrop.js?v=8l14"></script>
 <script src="../shared/ngtabs.js?v=25l14"></script>
 <script src="../shared/nglux.js?v=17l14"></script>
