@@ -1958,11 +1958,11 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 <script src="../shared/atlas.js?v=20261111ai5"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261109ac2"></script>
-<script src="i18n/v.js?v=71an"></script>
+<script src="i18n/v.js?v=72pg"></script>
 <script>/* the UI strings: only ja, en and the page language (atlas/i18n/<lang>.js, made from i18n.js by tools/i18n-split.js — 2026-11-10);
    when they were made from another version of i18n.js than FULL, the whole i18n.js loads instead. Edit i18n.js, bump FULL's ?v=, run the tool. */
 (function () {
-  var FULL = 'i18n.js?v=71an', S = window.ATLAS_I18N_SPLIT, v = FULL.split('v=')[1], l = 'ja';
+  var FULL = 'i18n.js?v=72pg', S = window.ATLAS_I18N_SPLIT, v = FULL.split('v=')[1], l = 'ja';
   try { l = localStorage.getItem('aicoding-lang') || (function (x) { return /^zh-(tw|hk|mo|hant)/i.test(x) ? 'zh-TW' : String(x).slice(0, 2); })(navigator.language || 'ja'); } catch (e) {}
   if (!S || S.v !== v) { document.write('<script src="' + FULL + '"><\/script>'); return; }
   var L = ['ja', 'en']; if (S.langs.indexOf(l) >= 0 && L.indexOf(l) < 0) L.push(l);
@@ -1970,7 +1970,7 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
   L.forEach(function (x) { document.write('<script src="i18n/' + x + '.js?v=' + v + '"><\/script>'); });
 })();
 </script>
-<script src="gamelist-i18n.js?v=13am"></script>
+<script src="gamelist-i18n.js?v=14pg"></script>
 <script src="img/tex/baked.js?v=1"></script>
 <script src="table3d.js?v=147"></script>
 <script>/* the places other than the chabudai (tables3d.js, 440 KB): at once when one is chosen, else in idle time after the page has
@@ -2001,17 +2001,17 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="lessons3d.js?v=6"></script>
 <script src="missions.js?v=8"></script>
 <link rel="stylesheet" href="historia.css?v=15">
-<script src="historia.js?v=39"></script>
+<script src="historia.js?v=40"></script>
 <link rel="stylesheet" href="skin/loading.css?v=2">
 <script src="skin/loading.js?v=5"></script>
 <script src="gacha3d.js?v=7"></script>
 <script src="../shared/resign.js?v=3"></script><script src="../shared/drawoffer.js?v=1"></script>
 <script src="../shared/tick.js?v=2"></script>
-<script src="gamelist.js?v=33"></script>
+<script src="gamelist.js?v=34"></script>
 <link rel="stylesheet" href="worldmap.css?v=18">
-<script src="worldmap.js?v=32"></script>
+<script src="worldmap.js?v=33"></script>
 <script src="npc/npc.js?v=23"></script>
 <script src="avtalk.js?v=2"></script>
-<script src="app.js?v=301"></script>
+<script src="app.js?v=302"></script>
 </body>
 </html>
