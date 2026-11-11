@@ -1,4 +1,4 @@
-# Writes images/atlas/shogi-glyphs-<set>.png for the 3D piece sets made from 2D SVGs (菱湖 ryoko, 水無瀬 minase, 錦旗 kinki, 楷書 kaisho,
+# Writes images/atlas/shogi-glyphs-<set>.png for the 3D piece sets made from 2D SVGs (菱湖 ryoko, 水無瀬 minase, 錦旗 kinki,
 # 一字 ichiji) — 2026-11-11, second version (replaces shogi-glyphs.html / .py).
 # The inscription is reproduced exactly as the 2D piece draws it (shogi/pieces/<set>/0<code>.svg): the ink paths are rendered on
 # their own (with the SVG's own transforms, so 菱湖's 3° correction stays), clipped to the piece's top face (the light #f5e5c6 path
@@ -16,9 +16,9 @@ ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
 CODES = ['FU', 'KY', 'KE', 'GI', 'KA', 'HI', 'KI', 'GY', 'TO', 'NY', 'NK', 'NG', 'UM', 'RY', 'OU']
 CW, CH, S = 256, 296, 1600
 # set → (folder, face colour, band colour, layered): the LuffyKudo sets draw flat ink (the height is made here, as a blurred stroke);
-# orangain / 1kanji_3d stack grey (red) layers to look raised, light at the edge to dark on top — kept as the height, like 盛り上げ
+# 1kanji_3d (red pieces) stack grey (red) layers to look raised, light at the edge to dark on top — kept as the height, like 盛り上げ
 SETS = {'ryoko': ('ryoko', 'f5e5c6', '908768', False), 'minase': ('minase', 'f5e5c6', '908768', False), 'kinki': ('kinki', 'f5e5c6', '908768', False),
-        'kaisho': ('orangain', 'e7d5b8', 'ab865e', True), 'ichiji': ('1kanji_3d', 'e7d5b8', 'ab865e', True)}
+        'ichiji': ('1kanji_3d', 'e7d5b8', 'ab865e', True)}
 FACE, BAND = '', ''
 BODY, SH3D = {'ichiji'}, (.47 - .25) / .94
 ANGLE = {}   # e.g. {'ryoko': {'HI': -0.8}}

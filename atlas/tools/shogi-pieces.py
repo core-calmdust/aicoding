@@ -3,7 +3,7 @@
 import asyncio, base64, os, sys
 from playwright.async_api import async_playwright
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
-SETS = sys.argv[1:] or ['moriage', 'ichiji', 'kinki', 'minase', 'ryoko', 'kaisho']
+SETS = sys.argv[1:] or ['moriage', 'ichiji', 'kinki', 'minase', 'ryoko', 'reisho']
 async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch(args=['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'])

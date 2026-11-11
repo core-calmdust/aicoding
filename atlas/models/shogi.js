@@ -54,9 +54,9 @@
   const SHEET = (() => { try { return new URL('../../images/atlas/shogi-glyphs.png?v=1', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../images/atlas/shogi-glyphs.png?v=1'; } })();
   const SHEET_KEYS = ['k1', 'k2', 'k3', 'k4', 'k5', 'k6', 'k7', 'k8', 'k9', 'k10', 'k11', 'k12', 'k13', 'k14', 'k8o'];
   /* ---------- the six 3D piece sets (2026-11-11, Table3D.PIECES.shogi, key 'atlas-shogi-pc3'): the same raised-lacquer boxwood pieces with
-     the inscriptions of the 2D sets — 盛り上げ (2kanji_3d, the original) · 一字書き (1kanji_3d) · 錦旗 · 水無瀬 · 菱湖 (LuffyKudo) · 楷書 (orangain).
+     the inscriptions of the 2D sets — 盛り上げ (2kanji_3d, the original) · 一字書き (1kanji_3d) · 錦旗 · 水無瀬 · 菱湖 (LuffyKudo) · 隷書 (青柳隷書しも, atlas/tools/shogi-glyphs-font.py).
      Sheets: images/atlas/shogi-glyphs-<set>.png (atlas/tools/shogi-glyphs-faithful.py; licences in shogi/pieces/README.md) ---------- */
-  const PSETS = ['moriage', 'ichiji', 'kinki', 'minase', 'ryoko', 'kaisho'];
+  const PSETS = ['moriage', 'ichiji', 'kinki', 'minase', 'ryoko', 'reisho'];
   const GLY = { moriage: GLYPHS };
   const curSet = () => { try { const v = X.PIECES && X.PIECES.shogi ? X.PIECES.shogi.get() : 'moriage'; return PSETS.includes(v) ? v : 'moriage'; } catch (e) { return 'moriage'; } };
   const SHEETS = {};
