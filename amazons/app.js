@@ -619,10 +619,11 @@ function pzzRegion(Pz) {
   for (const t of T) { const ts = pos.sq[t]; let best = -1, bd = 99; for (let k = 0; k < 8; k++) { const f = pos.q[k]; if (f >= 0 && pos.sq[f] !== ts) { const d = ch(t, f); if (d < bd) { bd = d; best = f; } } } if (best >= 0) S.add(best); }
   let r0 = N, r1 = -1, c0 = N, c1 = -1;
   for (const i of S) { let [r, c] = rc(i); if (flip) { r = N - 1 - r; c = N - 1 - c; } r0 = Math.min(r0, r); r1 = Math.max(r1, r); c0 = Math.min(c0, c); c1 = Math.max(c1, c); }
+  const t = { r0, c0, nr: r1 - r0 + 1, nc: c1 - c0 + 1 };   // (the pieces and squares that matter, tight: the 3D close-up fits exactly this)
   r0--; c0--; r1++; c1++;
   const n = Math.max(5, r1 - r0 + 1, c1 - c0 + 1); if (n >= 9) return null;
   const fit = (a0, a1) => { let a = Math.round((a0 + a1 + 1 - n) / 2); return Math.max(0, Math.min(N - n, a)); };
-  return { r0: fit(r0, r1), c0: fit(c0, c1), n };
+  return { r0: fit(r0, r1), c0: fit(c0, c1), n, t };
 }
 const pzz3D = () => document.documentElement.classList.contains('atlas-skin') && !document.documentElement.classList.contains('atlas-2d');
 function pzzWindow() { const R = PZZ.reg; if (!R || !PZZ.on) return null; const N = NS_(); return { n: R.n, r0: Math.max(0, Math.min(N - R.n, R.r0 + PZZ.pan[1])), c0: Math.max(0, Math.min(N - R.n, R.c0 + PZZ.pan[0])) }; }
@@ -632,7 +633,7 @@ function pzzApply() {
   const d3 = pzz3D();
   boardEl.classList.toggle('zoomed', !!w && !d3);
   PZZ.bz.style.transform = w && !d3 ? `scale(${N / w.n}) translate(${-w.c0 / N * 100}%, ${-w.r0 / N * 100}%)` : '';
-  const zk = d3 ? JSON.stringify(w) : 'flat'; if (zk !== PZZ.zk && typeof window.__amzZoom === 'function') { PZZ.zk = zk; window.__amzZoom(d3 ? w : null); }
+  const w3 = w && PZZ.reg.t, zk = d3 ? JSON.stringify(w3) : 'flat'; if (zk !== PZZ.zk && typeof window.__amzZoom === 'function') { PZZ.zk = zk; window.__amzZoom(d3 ? w3 : null); }   // (3D: the tight rectangle { r0, c0, nr, nc })
   pzzBtn();
 }
 function pzzBtn() {
