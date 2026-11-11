@@ -1504,6 +1504,17 @@ function openIntro(i) {
   introIdx = i; $('#btnLessonStart').classList.remove('hidden'); const s = LESSONS.steps[i];
   $('#liStep').textContent = t('course.' + cOf(s)) + ' · STEP ' + stepNo(i);
   $('#liTitle').textContent = t('ls.' + s.id + '.title');
+  // the common lesson page (shared/luxintro.js, 2026-11-11): board · facts · how to think · trivia — as much as shogi's page
+  if (window.LuxIntro) {
+    const FIG = stepPic(s, 'mini'), THK = t('ls.' + s.id + '.intro');
+    LuxIntro.load('lux.json?v=1').then(X => {
+      if (introIdx !== i || $('#lessonIntroView').classList.contains('hidden')) return;
+      const P = LuxIntro.pick, U = P(X.ui || {}) || {}, x = (X.lessons || {})[s.id] || {}, H = k => LuxIntro.head(k, LANG), tr = P(x.trivia), n = (s.problems || []).length;
+      LuxIntro.lesson({ step: $('#liStep').textContent, title: $('#liTitle').textContent, fig: FIG, cap: U.figL, chips: [[U.kind, (U.probs || '').replace('{n}', n)], [U.pass, U.passPts]],
+        secs: [{ h: H('think'), html: THK }, tr && { h: H('trivia'), html: tr, cls: 'lx-trivia' }].filter(Boolean) });
+    });
+    showLessonView('lessonIntroView'); return;
+  }
   $('#liBody').innerHTML = stepPic(s, 'mini') + t('ls.' + s.id + '.intro');
   showLessonView('lessonIntroView');
 }
