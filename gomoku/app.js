@@ -1354,7 +1354,20 @@ function openIntro(i) {
   introIdx = i; const s = LESSONS.steps[i]; openChoiceIdx = -1; $('#btnLessonStart').classList.remove('hidden');
   $('#liStep').textContent = t('course.' + s.course) + ' · STEP ' + stepNo(i);
   $('#liTitle').textContent = t('ls.' + s.id + '.title');
-  $('#liBody').innerHTML = (s.diagram ? `<div class="mini">${miniBoard(s.diagram)}</div>` : '') + t('ls.' + s.id + '.intro');
+  const P0 = (s.problems || [])[0], A = v => typeof v === 'string' ? v.split(' ').filter(Boolean) : v || [];
+  const dg = s.diagram || (P0 && { b: A(P0.b), w: A(P0.w) });   // (no diagram: the first problem's position)
+  const fig = dg ? `<div class="mini">${miniBoard(dg)}</div>` : '';
+  // the common lesson page (shared/luxintro.js, 2026-11-11): board · facts · how to think · trivia — as much as shogi's page
+  if (window.LuxIntro) {
+    LuxIntro.load('lux.json?v=1').then(X => {
+      if (introIdx !== i || openChoiceIdx >= 0) return;
+      const U = LL(X.ui || {}) || {}, x = (X.lessons || {})[s.id] || {}, H = k => LuxIntro.head(k, LANG), n = (s.problems || []).length, tr = LL(x.trivia);
+      LuxIntro.lesson({ step: $('#liStep').textContent, title: $('#liTitle').textContent, fig, cap: U.figL, chips: [[U.kind, (U.probs || '').replace('{n}', n)], [U.pass, U.passPts]],
+        secs: [{ h: H('think'), html: t('ls.' + s.id + '.intro') }, tr && { h: H('trivia'), html: tr, cls: 'lx-trivia' }].filter(Boolean) });
+    });
+    showLessonView('lessonIntroView'); return;
+  }
+  $('#liBody').innerHTML = fig + t('ls.' + s.id + '.intro');
   showLessonView('lessonIntroView');
 }
 $('#btnLessonBack').onclick = () => openChoiceIdx >= 0 ? openOpenings() : openLessons(LESSONS.steps[introIdx] && LESSONS.steps[introIdx].course);

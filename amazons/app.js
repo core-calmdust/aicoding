@@ -108,7 +108,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=10';
+const ENGINE_URL = 'engine.js?v=11';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -138,7 +138,7 @@ const mtLevel = lv => { const L = E.LEVELS[lv]; return !!(L && L.s && L.ms && !L
 // The MCTS on several threads (2026-11-10, claude/amazons-spec.md「MCTS」): Lv.19〜23 (mc in LEVELS; rated games, the coach's deeper
 // pass and PRO's MCTS too) grow ONE tree on every thread (tree-parallel with virtual loss): core_mt.wasm on a shared memory,
 // the lead engine.js?…&mt=1, the helpers mt-helper.js (shared/mtengine.js; only on an isolated page). Without it: one thread.
-const MCP = window.MTEngine && MTEngine.use ? MTEngine.use({ wasm: 'core_mt.wasm?v=3', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=1', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = core_mt.wasm's (1 GiB)
+const MCP = window.MTEngine && MTEngine.use ? MTEngine.use({ wasm: 'core_mt.wasm?v=4', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=1', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = core_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => Date.now() } }), help: m => m.type === 'think' ? {} : null }) : null;
 const mcJob = msg => msg.type === 'think' && (msg.cfg ? !!(msg.cfg.s && msg.cfg.mc) : !!(E.LEVELS[msg.level] || {}).mc);
 // the MCTS's default thread count (2026-11-10): the performance cores (shared/mtengine.js perfThreads — 10 of the user's M4 Pro's

@@ -1243,9 +1243,9 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 <script src="../shared/pzbook.js?v=8l14"></script>
 <script src="../shared/placement.js?v=1l14"></script>
 <script src="../shared/rulesoffer.js?v=17l14j"></script>
-<script src="../shared/headerbar.js?v=51l14r"></script>
+<script src="../shared/headerbar.js?v=51l14s"></script>
 <script src="../shared/flipbtn.js?v=3l14"></script>
-<script src="../shared/cardbar.js?v=14l14"></script>
+<script src="../shared/cardbar.js?v=15l14"></script>
 <script src="../shared/watchpause.js?v=2l14"></script>
 <script src="../shared/tick.js?v=2l14"></script>
 <script src="../shared/ruletour.js?v=29l14"></script>
@@ -1255,25 +1255,25 @@ body.hb-on .hb .controls.hb-menu{display:flex!important}
 <script src="online.js?v=stale2pf"></script>
 <script src="../shared/resign.js?v=3l14"></script><script src="../shared/drawoffer.js?v=1l14"></script>
 <script src="rvbox.js?v=2a-rc1-l14-mt1"></script>
-<script src="../shared/coachkit.js?v=16l14"></script>
+<script src="../shared/coachkit.js?v=17l14"></script>
 <script src="../shared/seqprac.js?v=6"></script>
 <script src="../shared/seqgame.js?v=4"></script>
 <script src="../shared/record.js?v=12l14"></script>
-<script src="coach.js?v=8sq"></script>
+<script src="coach.js?v=8sq-ls"></script>
 <script src="coach-i18n.js?v=6"></script>
 <script src="../shared/export.js?v=9l14"></script>
-<script src="../shared/mtengine.js?v=9"></script><script>MTEngine.init({ sw: "sw.js?v=1", light: true }); if (MTEngine.coi && window.CheckersOnline) CheckersOnline.available = false;</script><script src="../shared/proset.js?v=5t2svhxbf-sp2-pd1"></script><script src="app.js?v=20261104rhlv-dr1-rc1-l14-ai1-pro1-aim-n43-mt3-pt1sq-ybw1"></script>
+<script src="../shared/mtengine.js?v=9"></script><script>MTEngine.init({ sw: "sw.js?v=1", light: true }); if (MTEngine.coi && window.CheckersOnline) CheckersOnline.available = false;</script><script src="../shared/proset.js?v=5t2svhxbf-sp2-pd1"></script><script src="../shared/luxintro.js?v=3"></script><script src="app.js?v=20261104rhlv-dr1-rc1-l14-ai1-pro1-aim-n43-mt3-pt1sq-lx2-ybw1"></script>
 <script src="online-ui.js?v=3sec1l9ck1p-dr1"></script>
 <!-- World Board Game Atlas portal skin: checkers/?skin=atlas — 3D luxury board (lacquer field, black lacquer frame, gold & silver metal checkers), guide speech bubbles, portal look (all features kept) -->
 <script>
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=56l22'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=56l23'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/img/tex/baked.js?v=1')).then(() => load('../atlas/table3d.js?v=147')).then(() => load('../atlas/tables3d.js?v=55')).then(() => load('../atlas/skin/common.js?v=69')).then(() => load('../atlas/models/checkers.js?v=16l14')).then(() => load('../atlas/skin/checkers.js?v=7l14'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/img/tex/baked.js?v=1')).then(() => load('../atlas/table3d.js?v=147')).then(() => load('../atlas/tables3d.js?v=55')).then(() => load('../atlas/skin/common.js?v=70')).then(() => load('../atlas/models/checkers.js?v=16l14')).then(() => load('../atlas/skin/checkers.js?v=7l14'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>

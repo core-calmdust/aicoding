@@ -1675,9 +1675,9 @@ html.rb-study .frame{outline:3px solid var(--accent);outline-offset:3px}
 <script src="../shared/pzbook.js?v=8l14"></script>
 <script src="../shared/placement.js?v=1l14"></script>
 <script src="../shared/rulesoffer.js?v=17l14j"></script>
-<script src="../shared/headerbar.js?v=51l14r"></script>
+<script src="../shared/headerbar.js?v=51l14s"></script>
 <script src="../shared/flipbtn.js?v=3l14"></script>
-<script src="../shared/cardbar.js?v=14l14"></script>
+<script src="../shared/cardbar.js?v=15l14"></script><script src="../shared/luxintro.js?v=3"></script>
 <script src="../shared/watchpause.js?v=2l14"></script>
 <script src="../shared/tick.js?v=2l14"></script>
 <script src="../shared/fischer.js?v=1"></script>
@@ -1690,9 +1690,9 @@ html.rb-study .frame{outline:3px solid var(--accent);outline-offset:3px}
 <script src="online.js?v=stale2fis"></script>
 <script src="../shared/mtengine.js?v=9"></script><script src="../shared/proset.js?v=5t2svhxbf-sp2-pd1"></script><script src="../shared/ponder.js?v=1"></script><script>MTEngine.init({ sw: 'sw.js' });</script>
 <script src="rbox.js?v=3-rc2"></script>
-<script src="../shared/coachkit.js?v=16l14"></script>
+<script src="../shared/coachkit.js?v=17l14"></script>
 <script src="../shared/record.js?v=12l14"></script>
-<script src="coach.js?v=7sq"></script>
+<script src="coach.js?v=7sq-ls"></script>
 <script src="coach-i18n.js?v=5"></script>
 <script>
 'use strict';
@@ -3323,7 +3323,7 @@ function openIntro(i) {
   introIdx = i; const l = curSets()[i];
   const x = LT(l);
   $('#liStep').textContent = (lessonSrc === 'open' ? t('tab.open') + ' · ' : '') + `STEP ${i + 1}`; $('#liTitle').textContent = x.title;
-  $('#lessonIntroView').classList.toggle('op-intro', l.kind === 'opening');
+  $('#lessonIntroView').classList.toggle('op-intro', l.kind === 'opening'); if (l.kind === 'opening' && window.LuxIntro) LuxIntro.off();
   if (l.kind === 'opening') {   // keep the overview light: one lead line, cards with name / moves / one concept line; the long texts live in the lesson itself
     // hero: the shared starting moves on a board; cards: the position each line reaches, with its last move marked
     const mvs = l.lines.map(n => n.moves.match(/../g) || []);
@@ -3334,6 +3334,14 @@ function openIntro(i) {
       + `<div class="oh-chips">${l.lines.map((n, li) => `<span>${li + 1}. ${PT(n.name)}</span>`).join('')}</div>`
       + `<details class="op-more"><summary>${t('op.more')}</summary>${x.intro.map(p => `<p>${p}</p>`).join('')}${x.note ? `<p class="note">${x.note}</p>` : ''}<p class="note">${t('op.drillNote')}</p></details></div></div>`
       + `<div class="op-book">${l.lines.map((n, li) => `<div class="ob" data-ob="${li}" title="${esc(t('op.studyTitle'))}"><span class="ob-th">${thumb(n.moves)}</span><div class="ob-c"><div class="ob-h"><span class="ob-no">${li + 1}</span><span class="nm">${PT(n.name)}</span></div><div class="mv">${(n.moves.match(/../g) || []).map((m, i) => `<i>${i + 1}</i>${i < k0 ? m : `<b>${m}</b>`}`).join(' ')}</div>${n.aim ? `<div class="ob-aim">${PT(n.aim)}</div>` : ''}<span class="op-dr"><button data-li="${li}" data-c="1">● ${t('op.drillB')}</button><button data-li="${li}" data-c="2">○ ${t('op.drillW')}</button></span></div></div>`).join('')}</div>`;
+  } else if (window.LuxIntro) {   // the common lesson page (shared/luxintro.js, 2026-11-11): board · facts · goal · how to think · trivia
+    const P0 = (l.problems || [])[0], fig = P0 && P0.cells ? rlSVG(P0.cells.split('').map(Number), {}) : '', think = x.intro.map(p => `<p>${p}</p>`).join('') + (x.note ? `<p class="note">${x.note}</p>` : '') + (l.warm && l.warm.length ? `<p class="note">📘 ${t('wu.intro', { n: l.warm.length })}</p>` : '');
+    LuxIntro.load('lux.json?v=1').then(X => {
+      if (introIdx !== i) return;
+      const U = (X.ui && (X.ui[LANG] || X.ui.en)) || {}, tr = LuxIntro.pick(((X.lessons || {})[l.id] || {}).trivia, LANG), H = k => LuxIntro.head(k, LANG);
+      LuxIntro.lesson({ step: $('#liStep').textContent, title: x.title, fig, cap: U.figL, chips: [[U.kind, (U.probs || '').replace('{n}', 5)], [U.pass, U.passPts]],
+        secs: [x.short && { h: H('goal'), html: x.short }, { h: H('think'), html: think }, tr && { h: H('trivia'), html: tr, cls: 'lx-trivia' }].filter(Boolean) });
+    });
   } else $('#liBody').innerHTML = x.intro.map(p => `<p>${p}</p>`).join('') + (x.note ? `<p class="note">${x.note}</p>` : '') + (l.warm && l.warm.length ? `<p class="note">📘 ${t('wu.intro', { n: l.warm.length })}</p>` : '');
   showLessonView('intro');
 }
@@ -5705,11 +5713,11 @@ accRender();
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=56l22'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=56l23'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/img/tex/baked.js?v=1')).then(() => load('../atlas/table3d.js?v=147')).then(() => load('../atlas/tables3d.js?v=55')).then(() => load('../atlas/skin/common.js?v=69')).then(() => load('../atlas/skin/reversi.js?v=23l14'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/img/tex/baked.js?v=1')).then(() => load('../atlas/table3d.js?v=147')).then(() => load('../atlas/tables3d.js?v=55')).then(() => load('../atlas/skin/common.js?v=70')).then(() => load('../atlas/skin/reversi.js?v=23l14'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>

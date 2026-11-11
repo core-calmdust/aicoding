@@ -121,6 +121,25 @@
     hammer(c, L) { const g = new T.Group(); put(g, cyl(.035, .04, .5, pl(0x8a5a3a), 8), [0, .1, 0]); K.sq(g, L ? goldM() : pl(0xb8bcc8, { rough: .45 }), [0, .4, 0], [.36, .2, .2], .4); return g; },
     broom(c) { const g = new T.Group(); put(g, cyl(.03, .035, 1.1, pl(0x8a5a3a), 8), [0, .3, 0]); put(g, cone(.16, .36, pl(0xe0b860, { rough: .95 }), 12), [0, -.32, 0], [Math.PI, 0, 0]); return g; },
     tea(c) { const g = new T.Group(); const m = pl(0xd8a040, { rough: .4 }); blob(g, m, [0, .1, 0], [.18, .2, .18]); put(g, cyl(.07, .1, .1, m, 12), [0, .32, 0]); blob(g, m, [.18, .14, 0], [.08, .04, .04]); return g; },
+    // (Amazons, 2026-11-11: the archers' bow and the game's fire arrow)
+    bow(c, L) {
+      const g = new T.Group(), wood = L ? goldM() : pl(c && c[2] ? shade(c[2], -.15) : 0x9a6a40, { rough: .55 });
+      put(g, tor(.5, .045, wood, Math.PI * .9), [0, .3, 0], [0, 0, Math.PI * .55]);   // (the limbs: an arc, open to the string)
+      [-1, 1].forEach(s => blob(g, wood, [Math.cos(Math.PI * .55 + (s > 0 ? Math.PI * .9 : 0)) * .5, .3 + Math.sin(Math.PI * .55 + (s > 0 ? Math.PI * .9 : 0)) * .5, 0], .06));
+      const tip = a => [Math.cos(a) * .5, .3 + Math.sin(a) * .5], t0 = tip(Math.PI * .55), t1 = tip(Math.PI * 1.45);
+      const len = Math.hypot(t1[0] - t0[0], t1[1] - t0[1]), str = put(g, cyl(.008, .008, len, fixed(0xfffaf0), 6), [(t0[0] + t1[0]) / 2, (t0[1] + t1[1]) / 2, 0]);
+      str.rotation.z = Math.atan2(t1[1] - t0[1], t1[0] - t0[0]) - Math.PI / 2;
+      const ar = PROPS.arrow(c, L); ar.position.set(-.02, .3, .04); ar.rotation.z = -Math.PI / 2; ar.scale.setScalar(.9); g.add(ar);   // (an arrow on the string)
+      return g;
+    },
+    arrow(c, L) {
+      const g = new T.Group();
+      put(g, cyl(.018, .018, .86, pl(0xc8a070), 8), [0, .2, 0]);                                       // shaft
+      put(g, cone(.06, .16, L ? goldM() : fixed(0xd8dce6, { rough: .3 }), 12), [0, .7, 0]);            // head
+      blob(g, gemM(0xff7a2a), [0, .7, 0], [.06, .1, .06]).material.emissive = new T.Color(0xff5a1a);   // (the fire on its tip)
+      [0, 1, 2].forEach(i => { const f = blob(g, pl(c && c[2] ? c[2] : 0xd83a4a), [0, -.17, 0], [.012, .1, .06]); f.rotation.y = i * Math.PI * 2 / 3; f.position.x = Math.cos(i * 2.09) * .04; f.position.z = Math.sin(i * 2.09) * .04; });   // fletching
+      return g;
+    },
     none() { return null; },
   };
   /* ---------------- the creature ---------------- */
@@ -138,7 +157,7 @@
     bull: { e: 'floppy', s: 'muzzle', t: 'long', x: ['horns'] }, croc: { e: 'none', s: 'croc', t: 'dragon', x: ['spikes'] }, jackal: { e: 'tall', s: 'fox', t: 'fluffy' },
     hippo: { e: 'round', s: 'hippo', t: 'nub' }, goat: { e: 'floppy', s: 'nose', t: 'nub', x: ['goathorns', 'goatee'] }, seal: { e: 'none', s: 'muzzle', t: 'none', w: 1 },
     horse: { e: 'point', s: 'muzzle', t: 'long', x: ['horsemane'] }, boar: { e: 'point', s: 'pig', t: 'nub', x: ['tusks'] }, koala: { e: 'big', s: 'koala', t: 'none' },
-    lizard: { e: 'none', s: 'snout', t: 'dragon' }, bat: { e: 'tall', s: 'nose', t: 'none', x: ['batwings'] }, otter: { e: 'round', s: 'muzzle', t: 'long' },
+    lizard: { e: 'none', s: 'snout', t: 'dragon' }, jaguar: { e: 'round', s: 'muzzle', t: 'long', x: ['spots'] }, bat: { e: 'tall', s: 'nose', t: 'none', x: ['batwings'] }, otter: { e: 'round', s: 'muzzle', t: 'long' },
   };
   // a cape: the back half of a soft bell hanging from the shoulders (never in front of the belly)
   function capeOn(g, cm) {
@@ -196,6 +215,11 @@
     X.forEach(x => {
       if (x === 'mane') for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; blob(g, pl(c[2] || 0xd8823a), [Math.cos(a) * .82, 1.45 + Math.sin(a) * .7, -.12], [.26, .26, .2]); }
       else if (x === 'horsemane') for (let i = 0; i < 5; i++) blob(g, acc, [0, 2.1 - i * .18, -.3 - i * .1], [.14, .16, .14]);
+      else if (x === 'spots') {   // (the jaguar's rosettes: on the head's surface round the face, and on the body's sides and back)
+        const sp = pl(shade(c[0], -.45));
+        [[-.52, .42], [.5, .45], [-.66, .12], [.68, .1], [-.22, .6], [.24, .58]].forEach(([u, v]) => { const q = surf(u, v); blob(g, sp, [q.p.x, q.p.y, q.p.z], [.075, .06, .04]).lookAt(q.p.x + q.n.x, q.p.y + q.n.y, q.p.z + q.n.z); });
+        [[-.42, .66], [.42, .62], [-.47, .4], [.46, .44], [-.3, .82], [.3, .84]].forEach(([x0, y0]) => { const k = 1 - (x0 / .52) ** 2 - ((y0 - .52) / .5) ** 2, z0 = k > 0 ? .46 * Math.sqrt(k) : 0; blob(g, sp, [x0 * 1.02, y0, z0 * .55 - .12], [.07, .06, .06]); });
+      }
       else if (x === 'stripes') [-1, 1].forEach(s => [0, 1].forEach(i => blob(g, dark, [s * (.6 - i * .08), 1.7 - i * .2, .3], [.05, .14, .03], [0, s * .6, s * .5])));
       else if (x === 'crest') for (let i = 0; i < 3; i++) blob(g, acc, [0, 2.12 + i * .02, -.1 - i * .14], [.05, .16, .07], [-.5 - i * .3, 0, 0]);
       else if (x === 'shell') { blob(g, pl(c[2] || 0x7ab060), [0, .66, -.36], [.56, .5, .34]); for (let i = 0; i < 5; i++) blob(g, pl(shade(c[2] || 0x7ab060, -.1)), [Math.cos(i * 1.26) * .3, .72 + Math.sin(i * 1.26) * .28, -.64], [.12, .12, .05]); }

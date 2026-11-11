@@ -1147,9 +1147,9 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
 <script src="i18n-learn.js?v=20261107l14"></script><!-- learn-ui -->
 <script src="../shared/placement.js?v=1l14"></script>
 <script src="../shared/pzbook.js?v=8l14"></script><!-- learn-ui -->
-<script src="../shared/headerbar.js?v=51l14r"></script>
+<script src="../shared/headerbar.js?v=51l14s"></script>
 <script src="../shared/flipbtn.js?v=3l14"></script>
-<script src="../shared/cardbar.js?v=14l14"></script>
+<script src="../shared/cardbar.js?v=15l14"></script>
 <script src="../shared/watchpause.js?v=2l14"></script>
 <script src="../shared/resign.js?v=3l14"></script>
 <script src="../shared/tick.js?v=2l14"></script>
@@ -1157,14 +1157,14 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
 <link rel="stylesheet" href="learn.css?v=20261028sk"><!-- learn-ui -->
 <script src="engine.js?v=20261110mt5"></script><script src="../shared/mtengine.js?v=8"></script><script src="../shared/mtworkers.js?v=3"></script><script>MTWorkers.init({ sw: 'sw.js?v=1' });</script>
 <script src="rvbox.js?v=20261107l14"></script><!-- 振り返りボックス (PC): 候補手・読み筋・検討 -->
-<script src="learn.js?v=20261101fl"></script>
+<script src="../shared/luxintro.js?v=3"></script><script src="learn.js?v=20261111lx"></script>
 <script src="i18n-online.js?v=20261107l14"></script>
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2l14"></script>
 <script src="online.js?v=stale2pf"></script>
-<script src="../shared/coachkit.js?v=16l14"></script>
+<script src="../shared/coachkit.js?v=17l14"></script>
 <script src="../shared/record.js?v=12l14"></script>
-<script src="coach.js?v=9sq"></script>
+<script src="coach.js?v=9sq-ls"></script>
 <script src="../shared/export.js?v=9l14"></script>
 <script src="coach-i18n.js?v=4"></script>
 <script>
@@ -2294,12 +2294,12 @@ document.querySelector('#rsResume').onclick = () => { document.querySelector('#r
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=56l22'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=56l23'; document.head.appendChild(css);
   const css2 = document.createElement('link'); css2.rel = 'stylesheet'; css2.href = '../atlas/skin/dots.css?v=2l14'; document.head.appendChild(css2);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&family=Kalam:wght@400;700&family=Zen+Kurenaido&family=Nanum+Pen+Script&family=Long+Cang&family=Aref+Ruqaa:wght@700&display=swap'; document.head.appendChild(f);   // (Kalam … Aref Ruqaa: the handwritten box initials and tally on the notebook page)
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/img/tex/baked.js?v=1')).then(() => load('../atlas/table3d.js?v=147')).then(() => load('../atlas/tables3d.js?v=55')).then(() => load('../atlas/skin/common.js?v=69')).then(() => load('../atlas/models/dots.js?v=3l14')).then(() => load('../atlas/skin/dots.js?v=7l14'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/img/tex/baked.js?v=1')).then(() => load('../atlas/table3d.js?v=147')).then(() => load('../atlas/tables3d.js?v=55')).then(() => load('../atlas/skin/common.js?v=70')).then(() => load('../atlas/models/dots.js?v=3l14')).then(() => load('../atlas/skin/dots.js?v=7l14'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>

@@ -201,7 +201,10 @@ function build(card, spec) {
     // no coach (2026-11-10; shogi does this itself in tsBar)
     if (!spec.puzzle && GAME_ID !== 'shogi' && q && sh) {
       let L = null; try { L = typeof lesson !== 'undefined' ? lesson : null; } catch (e) {}
-      const st = !!(L && L.study), sq = !!(L && window.SeqPrac && SeqPrac.active()), cm = st || sq;   // (sq: the 3-move opening practice, 2026-11-10)
+      const st = !!(L && L.study), sq = !!(L && window.SeqPrac && SeqPrac.active());   // (sq: the 3-move opening practice, 2026-11-10)
+      // a lesson's problems (2026-11-11): the opening practice's compact card too — ヒント as a captioned icon, quit at the head row
+      const ls = !!(L && !st && !sq && !L.ramp && document.body.classList.contains('in-lesson')), cm = st || sq || ls;
+      if (ls !== card.classList.contains('cb-ls')) { card.classList.toggle('cb-ls', ls); lsHint(ls); }
       if (st !== card.classList.contains('cb-st')) card.classList.toggle('cb-st', st);
       if (sq !== card.classList.contains('cb-sq')) card.classList.toggle('cb-sq', sq);
       if (cm !== card.classList.contains('cb-cmp')) {
@@ -215,6 +218,7 @@ function build(card, spec) {
       const C = CAP[pageLang()] || CAP.en; let n = 0;
       bar.querySelectorAll('.cb-tools .cb-ic').forEach(b => { const k = CAPK[b.dataset.cb], c = b.dataset.cb === 'auto' ? PLAYCAP[pageLang()] || PLAYCAP.en : k != null ? C[k] : null; if (c && b.dataset.cap !== c) b.dataset.cap = c; if (getComputedStyle(b).display !== 'none') n++; });
       if (q && q.dataset.cap !== C[5]) q.dataset.cap = C[5];
+      { const h = $('lsHint'); if (h && card.classList.contains('cb-ls') && h.classList.contains('cb-ic')) { const l = label(h) || C[0]; if (h.dataset.cap !== l) h.dataset.cap = l; } }
       card.classList.toggle('cb-5', n >= 5);
     }
     if (q && card.contains(q)) { const l = quitLabel(card); if (q.textContent !== l) q.textContent = l; if (q.getAttribute('aria-label') !== l) q.setAttribute('aria-label', l); if (q.title) q.removeAttribute('title'); }
@@ -226,6 +230,12 @@ function build(card, spec) {
       if (r && r.classList.contains('cb-go') !== failed) r.classList.toggle('cb-go', failed);
     }
   };
+  // the lesson's ヒント button: a captioned icon at the front of the tools in the compact lesson card, a text button otherwise
+  function lsHint(on) {
+    const b = $('lsHint'); if (!b || !card.contains(b)) return;
+    if (on) { icon(b, 'hint'); b.classList.remove('cb-t'); tools.insertBefore(b, tools.firstElementChild); }
+    else { b.classList.remove('cb-ic'); delete b.dataset.cb; delete b.dataset.cap; b.style.removeProperty('--cb-i'); b.classList.add('cb-t'); main.insertBefore(b, nx && main.contains(nx) ? nx : null); }
+  }
   // the practice's own buttons (made once): ヒント・やり直し・答え before 一覧, enabled by the practice's state
   function sqButtons() {
     const S = SeqPrac.state(); if (!S) return;
