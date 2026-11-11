@@ -29,7 +29,7 @@ LAY = {   # rows of the photo, the pieces of each kind (row, column), and whethe
     # 錦旗: 玉將 王將 / 角 角 飛 飛 / 歩 金×4 歩 / 歩 銀×4 歩 / 歩 桂×4 歩 / 歩 香×4 歩 / 歩×6 / 歩×6
     'kinki': dict(rows=[2, 4, 6, 6, 6, 6, 6, 6], glare=False, kind={'GY': [(0, 0)], 'OU': [(0, 1)], 'KA': [(1, 0), (1, 1)], 'HI': [(1, 2), (1, 3)], 'KI': four(2), 'GI': four(3), 'KE': four(4), 'KY': four(5),
                   'FU': [(r, c) for r in range(2, 6) for c in (0, 5)] + [(r, c) for r in (6, 7) for c in range(6)]})}
-LAY['ryoko'] = dict(LAY['kinki'], thr=.58)   # 菱湖: the photo is laid out as 錦旗's; fine strokes — the outline taken a little inside
+LAY['ryoko'] = dict(LAY['kinki'], thr=.58, drop={'GY': (.35, 0, .52, .11)})   # 菱湖: the photo is laid out as 錦旗's; fine strokes — the outline taken a little inside
 LAY = LAY[SET]
 KIND = LAY['kind']; BW = float(sys.argv[3]) if len(sys.argv) > 3 else 25   # (the wood's Lab b threshold)
 SZ = {'FU': 1, 'KY': 2, 'KE': 2, 'GI': 3, 'KI': 3, 'KA': 4, 'HI': 4, 'GY': 5, 'OU': 5}
@@ -144,6 +144,11 @@ for code in [c for c in KIND if c not in ('GY', 'OU')] + ['GY', 'OU']:
     if code == 'OU' and 'OU' not in KIND: a, n, asp = no_dot(gy), 1, gasp
     else: a, n, asp = glyph(code)
     if code == 'GY': gy, gasp = a, asp
+    dr = LAY.get('drop', {}).get(code)   # (a speck that is not ink — 菱湖's 玉將: the photo's glare at the piece's tip; the user, 2026-11-12)
+    if dr:
+        lb, _ = ndi.label(a > .3); H_, W_ = a.shape
+        for j, sl in enumerate(ndi.find_objects(lb)):
+            if sl[1].start >= dr[0] * W_ and sl[0].start >= dr[1] * H_ and sl[1].stop <= dr[2] * W_ and sl[0].stop <= dr[3] * H_: a[sl][ndi.binary_dilation(lb[sl] == j + 1, iterations=4)] = 0
     dy = LAY.get('dy', {}).get(code, 0)
     if dy: a = ndi.shift(a, (dy * a.shape[0], 0), order=1)
     i = CODES.index(code); box = ((i % 5) * CW, (i // 5) * CH)
