@@ -8,8 +8,12 @@
 #   gcc -O3 -march=native -DNATIVE -DMT -w -o sim sim.c -lpthread -lm
 #   ./sim 1,2,4,8 3 -1 1 1      (threads, 1-thread budget in M nodes → the depth D, positions (-1 all / 0,3,…),
 #                                 delayed stores, delayed marks)
-import sys
-s = open(sys.argv[1] if len(sys.argv) > 1 else '../../engine.c').read()
+import sys, os, re
+src = sys.argv[1] if len(sys.argv) > 1 else '../../engine.c'
+s = open(src).read()
+# (2026-11-11) Praline (shared/praline/, claude/praline-spec.md): its headers inlined, so that the rewrites below reach them
+pr = os.path.join(os.path.dirname(os.path.abspath(src)), '..', 'shared', 'praline')
+s = re.sub(r'#include "\.\./shared/praline/([a-z_]+\.h)"\n', lambda m: open(os.path.join(pr, m.group(1))).read(), s)
 i = s.index('#ifdef MT\n// ---------------------------------------------------------------- threads (engine_mt.wasm')
 s = s[:i]
 s = s.replace('#include <stdint.h>', '#include <stdint.h>\n#ifndef SIM_Q\n#define SIM_Q 1024\n#endif\nstatic void sim_tick(void);\n'
@@ -61,6 +65,8 @@ static void flushPend(PendE *pe, int n, int *px) {
 if 'busySet' in s:
     s = s.replace("static inline int busySet(u64 key) {", "static inline int busySetS(u64 key) {", 1)
     s = s.replace("static inline void busyClear(u64 key, int i) {", "static inline void busyClearS(u64 key, int i) {", 1)
+    s = s.replace("static inline int busySet(u64 k) {", "static inline int busySetS(u64 k) {", 1)   # (Praline's names)
+    s = s.replace("static inline void busyClear(u64 k, int i) {", "static inline void busyClearS(u64 k, int i) {", 1)
     anchor = "static inline int timeUp(void) {"
     k = s.index(anchor)
     s = s[:k] + r'''static int busyDelay;

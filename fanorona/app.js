@@ -158,7 +158,7 @@ let aiW = makeWorker(), anaW = makeWorker();
 // table, so it reads deeper in the same time). The levels decided by depth / positions (15級〜三段) stay on the one-thread
 // workers, as does Fanoron-Telo (solved in JavaScript).
 const MTP = window.MTEngine && GID === 'fanorona' ? MTEngine.use({
-  wasm: 'engine_mt.wasm?v=4', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=2', slot: 4 << 20, initial: 1024, maximum: 16384,   // slot: TLS + the 1 MB move stack + the stack; maximum = engine_mt.wasm's (1 GiB)
+  wasm: 'engine_mt.wasm?v=5', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=2', slot: 4 << 20, initial: 1024, maximum: 16384,   // slot: TLS + the 1 MB move stack + the stack; maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => Date.now(), progress: () => {} } }),
   help: m => m.rule === 'telo' ? null : { io: E.setupIO(m.start, m.moves || []), rk: E.ruleKey() },   // (the page's rule is the job's: gv)
 }) : null;
