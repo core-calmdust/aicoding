@@ -1,14 +1,15 @@
-// Praline (プラリネ) — the site's common thinking engine, C part: the multi-thread machinery of the wasm alpha-beta engines
-// (engine_mt.wasm, -DMT). Nuts (many cores) bound into one by caramel (shared memory). claude/praline-spec.md.
+// Praline (プラリネ) — a common thinking engine, C part: the multi-thread machinery of the wasm alpha-beta engines
+// (a game's multi-thread build, -DMT). Nuts (many cores) bound into one by caramel (shared memory). Game-independent:
+// everything about one game comes from its own engine through the "glue" listed below (design: claude/praline-spec.md in the
+// site's repository).
 //
 // Part 1 of 2 — the shared state (included where the game's engine_mt.wasm state is declared, before its search):
 //   • gStop, threadId                       the search is over (the helpers stop); 0 = the main thread
 //   • busy marks (busyT, busyOther / busySet / busyClear)   Kerrigan's "simplified ABDADA": a move whose position another
-//     thread is on is put off to the end of the node (2026-11-10, morris → checkers / fanorona / xiangqi / janggi / shogi)
+//     thread is on is put off to the end of the node
 //   • split points (struct SPt, SPS, spAlloc / spRelease, splitD) and their counters on a cache line of their own (GS)
 //   • curSP / curIdx / dupMode (the split point a thread works under, its move there, a straggler searched a second time)
-// Part 2 — praline_ybw.h, included after the game's search(): Young Brothers Wait (reversi/engine.c v4 / v4.1, the same
-// code as xiangqi / janggi / checkers had each on its own, 2026-11-10 / 11): split, join, the owner helping below its split
+// Part 2 — praline_ybw.h, included after the game's search(): Young Brothers Wait: split, join, the owner helping below its split
 // point while it waits, the waiting owner's mark, the second search of a straggler's move, mt_idle, mt_split.
 //
 // The game provides (before this file): the types u8 / u64 and Move, TLS (_Thread_local in engine_mt.wasm), EXPORT(name),
@@ -38,9 +39,9 @@
 #ifndef BUSY_DEF
 #define BUSY_DEF 32
 #endif
-#define MT_YBW 1   /* (tools/mtsim: the helpers wait in mt_idle) */
+#define MT_YBW 1   /* (for a simulator: the helpers wait in mt_idle) */
 #ifndef SIM_IDLE
-#define SIM_IDLE() ((void)0)   /* (tools/mtsim: an idle thread's tick of the clock) */
+#define SIM_IDLE() ((void)0)   /* (a simulator's hook: an idle thread's tick of the clock) */
 #endif
 
 static volatile int gStop;            // shared: set when the main thread's search is over (the helpers stop)
@@ -50,7 +51,7 @@ static TLS int threadId;              // 0 = the main thread (time control, resu
 // speed, so they search the same subtree at the same time and none gets the other's result from the table. A thread marks the
 // position of the move it searches (remaining depth >= BUSY_D); a move after the first whose position another thread has
 // marked is put off to the end of the node (by then its result is usually in the table). One thread alone never meets
-// another's mark: its search is as before. (tools/mtsim rewrites these three accessors for its simulation.)
+// another's mark: its search is as before. (a lockstep simulator may rewrite these three accessors.)
 static u64 busyT[1 << BUSY_BITS];
 static inline int busyOther(u64 k) {
   u64 v = __atomic_load_n(&busyT[(k >> 32) & ((1u << BUSY_BITS) - 1)], __ATOMIC_RELAXED);

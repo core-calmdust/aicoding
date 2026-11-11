@@ -205,3 +205,10 @@ v2 を出発点に、自己対局データを約8,287万局面（学習に約6,8
 - **一致の確認**（`node tools/check_wasm.js`、bench の12局面の `best` の手・評価値・深さ・局面数の md5）：`engine_simd.wasm`（NNUE、深さ12）・`engine_simd512.wasm`（線形評価、深さ9）・`engine.wasm`（深さ10）・`engine_mt.wasm` の1スレッド（NNUE、深さ11、局面数は1局面ずつ正確）が前のビルドと一致。
 - **速さ（作業機、Node、1スレッド、局面数／秒）**：`engine_simd.wasm`（NNUE）203万 → 231万（**+14%**）、線形評価 140万 → 151万（+8%）、`engine_simd512.wasm` +10%、`engine_mt.wasm` 1スレッド 184万 → 197万（+7%）。王手の判定と手の生成は配列のレイを辿る形のままで、ビットボード化は手の順・結果を変えずに直すのが大きいので見送り。
 - バージョン：`engine.js?v=20261111fm`（wasm は `?v=20261111fm`、nnue.bin.gz はそのまま）、`engine_mt.wasm?v=5`（`app.js`・`bench.html`・`pro/pro.js`）、`atlas/games/xiangqi.js?v=10`・`atlas/lazy.js?v=44`。
+
+## Praline に移行（2026-11-11、`claude/praline-spec.md`）
+- マルチスレッドの仕組み（busy marks・YBW の分割点・合流と取り合い・待つ持ち主の手伝いと印・二度読み・`mt_idle`・`mt_split`）を、サイト共通の思考エンジン **Praline** の C の共通ヘッダ（`shared/praline/praline.h`・`praline_ybw.h`）に移した。`engine.c` に残したのはシャンチーの「つなぎ」：分割点の欄（`PL_SP_FIELDS`：盤・鍵・ビットボード・玉・最後の駒取り以降の履歴・NNUE のオン、各手の順番 `lg` と王手 `gc`）、`spFillPos`／`spLoadPos`（NNUE の累積を作り直す）、`spSearch`（1スレッドのループと同じ LMR・null window → 読み直し）、`spCutoff`、`spTop`（`xqTop`）、`waitCheck`、`spIdleReset`。分割点を開く所（`search()`・`rootSearch()`）と `timeUp`・`gRes` はそのまま。
+- **一致**：通常版（`engine.wasm`・`engine_simd.wasm`・`engine_simd512.wasm`）は前処理後のソースが前と同じ（作り直していない）。`engine_mt.wasm` の1スレッドは `tools/mtsim/wasm1.js` の24局面・深さ10 で局面数・手・評価値・深さが前の配信版と全一致。宣言するメモリは 1118 ページのまま。
+- **マルチスレッド**（`tools/mtsim`、64局面ごとに同期、24局面、1スレッド100万局面の深さまで。前＝移行前のソース、同じ日に同じ設定で）：<!-- XQ-SIM -->
+- headless Chrome（Playwright、作業機）：`bench.html`（1秒、1・2スレッド）と対局ページ（2スレッドの組で解析、補助の局面数あり）がエラーなく動く。
+- `engine_mt.wasm?v=6`（`app.js`・`bench.html`）、`pro/` は `?v=6`。Mac で測るページは今まで通り `xiangqi/bench.html`（前回の YBW と同じ数字になるはず）。

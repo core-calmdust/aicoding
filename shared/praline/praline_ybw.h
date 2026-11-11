@@ -1,6 +1,6 @@
-// Praline (プラリネ) — part 2 of 2: Young Brothers Wait on the split points of praline.h (claude/praline-spec.md).
-// The method of reversi/engine.c v4 / v4.1 (MODEL_CARD.md「マルチスレッド v4」「v4.1」). Lazy SMP (every thread searching the
-// root, helping each other only through the table, with busy marks) grew to x4-5 at 8-14 threads on the Mac and no further.
+// Praline (プラリネ) — part 2 of 2: Young Brothers Wait on the split points of praline.h 
+// Lazy SMP (every thread searching the
+// root, helping each other only through the table, with busy marks) grew to x4-5 at 8-14 threads on a 14-core machine and no further.
 // Here the helpers do not search on their own: they wait in mt_idle. A node of the search (remaining depth >= SPLIT_D) whose
 // first move is done opens a split point when a helper is idle (or an owner above waits): its other moves (in the one-thread
 // order, pruned and reduced as there — the game fills them in) are taken one at a time by the owner and the idle threads,
@@ -27,7 +27,7 @@
 #ifndef PRALINE_YBW_H
 #define PRALINE_YBW_H 1
 #ifdef SIM_STAT
-static double ST[16];   // (tools/mtsim) 0 splits, 1 helper joins, 2 their moves, 3 empty joins, 4 idle ticks, 5 waiting ticks, 6 second searches
+static double ST[16];   // (a simulator's counters) 0 splits, 1 helper joins, 2 their moves, 3 empty joins, 4 idle ticks, 5 waiting ticks, 6 second searches
 #define STAT(k, v) (ST[k] += (v))
 EXPORT(mt_stat) double mt_stat(int k) { return ST[k]; }
 #else
@@ -205,7 +205,7 @@ static void spRun(SPt *s, int *best, Move *bestM, int *vals) {
   spFree(s);
 }
 EXPORT(mt_split) void mt_split(int d) { if (d > 0) splitD = d; }
-// a helper (mt-helper.js): take moves at the split points until the search is over (mt_stop) — or, with ms > 0, until it
+// a helper thread (the page's helper worker calls it): take moves at the split points until the search is over (mt_stop) — or, with ms > 0, until it
 // has nothing to do after ms milliseconds (the page then counts its nodes and calls again); returns its nodes. fresh: a new
 // job (spIdleReset: the history decays and the killers are cleared, as the game's search does when it begins)
 EXPORT(mt_idle) double mt_idle(double ms, int fresh) {

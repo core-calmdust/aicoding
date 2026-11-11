@@ -158,3 +158,81 @@ JavaScript エンジンは `shared/mtsplit.js`（＋`mttt.js`）、独立な仕�
 - **チェス**：YBW の補助は1つだけで、YBW の補助と主が履歴・カウンター手の表を共有し、分割は予想カット節を除く。上の将棋の足し方の後に。
 - **リバーシ**：元祖の作り（分割点256個、`CHK_Q`＝4096局面ごとの確認、完全読みの分割）で、中盤と終盤の2種類の探索に分割点がある。並行して別の作業が `reversi/engine.c` 以外を触っている間は移さない。最後に回す。
 - **共通にしなかったもの（理由）**：①分割点を開く場所（手の生成・順番・枝刈りがゲームごとに違い、関数にすると1スレッドの読みを変えずに書くのが難しく、性能も落ちうる）、②`timeUp`（ゲームごとに確認の間隔・局面数の上限・`gHit` の見方が違う）、③各スレッドの結果の共有 `gRes`（手の詰め方がゲームごと）、④共有の置換表（局面の鍵と項目の詰め方がゲームごと。作りは同じなので、次の段で `praline_tt.h` にまとめる候補）、⑤スレッドの起動（`mt_stack`・`mt_thread`：ゲームの初期化を呼ぶ。シミュレーションの `gen.py` がこの節を切り取る）。
+
+---
+
+## 7. エンジン本体とサイト側のつなぎの境目（別リポジトリでの公開を前提に、2026-11-11）
+
+Praline は将来、別リポジトリで公開する予定（ユーザーの方針。リポジトリの作成・公開はユーザーが判断する）。そのため、どこが**エンジン本体（ゲームにもこのサイトにも依存しない）**で、どこが**サイト側のつなぎ**かをはっきり分けておく。
+
+| 区分 | ファイル | サイト固有のものへの依存 | 公開の扱い |
+|---|---|---|---|
+| **本体（C）** | `shared/praline/praline.h`・`praline_ybw.h` | なし（ゲームの型と `PL_SP_FIELDS` 等のつなぎは引数として受ける。コメントにもゲーム名・ページ名を書かない） | そのまま公開 |
+| **本体（JS）** | `shared/mttt.js`（共有の置換表） | なし | そのまま公開 |
+| 本体（JS）＋サイトの UI | `shared/mtsplit.js`・`shared/mtworkers.js` | 歯車の項目（`HeaderBar.addOption`）、`localStorage` の `aicoding-mt`／`aicoding-mt-w`、14言語の文言 | 公開前に「プールと分担（本体）」と「選択の保存・歯車の項目（サイト）」を分ける。本体側は `options: { storageKey, onToggle }` のように外から受け取る形にする |
+| 本体（JS）＋サイトの UI | `shared/mtengine.js`・`shared/mt-sw.js` | `HeaderBar`、`Online.available`（オンライン対戦）、`atlas`、`aicoding-*` のキー、Firebase のドメインの扱い（mt-sw.js） | 同上。分離（Document-Isolation-Policy／COOP・COEP の Service Worker）とスレッドの組は本体、オンライン・ログインとの調停と歯車はサイト |
+| サイト専用 | `shared/proset.js`（PRO の画面、大百科の配色）・`shared/ponder.js`（PRO の先読み）・`shared/bench-auto.js`・`bench-all.html` | 対局設定の画面・大百科・サイトの計測の流れ | 公開しない（ponder の「人の手番に読み続ける」考え方はサンプルとして README で紹介だけ） |
+| **シミュレータ本体** | `tools/mtsim/sim.c`・`simcore.h`、`shared/tools/mtstep.js` の歩調合わせ部分 | なし（`GAME_H` で差し込む） | 公開 |
+| シミュレータのつなぎ | `tools/mtsim/gen.py`（ゲームごとの書き換え規則）・`g_<game>.h`・`dump.js`・`wasm1.js`、`checkers/tools/mtsim/` 等 | ゲームの `engine.c`・`bench.html` の局面 | サンプルとして1〜2ゲーム分だけ |
+| ゲームのつなぎ | 各 `engine.c` の `PL_SP_FIELDS`・`spFillPos`／`spLoadPos`・`spSearch`・`spCutoff`・`spTop`・`waitCheck`・`spIdleReset`、`mt-helper.js`、`app.js` の `MTEngine.use` | ゲームそのもの | サンプルとして公開（下記） |
+
+今回は移動はせず、境目だけをはっきりさせた（C のヘッダは本体のみ・コメントからもサイトの参照を外した）。切り出すときは `shared/praline/` を `praline/`（c/・js/・sim/・examples/・bench/）の1つのフォルダにまとめる。
+
+## 8. 別リポジトリでの公開の計画（案。実行はユーザーの判断）
+
+### 公開する範囲
+1. **本体**：C のヘッダ（`praline.h`・`praline_ybw.h`、次の段で共有の置換表 `praline_tt.h`）、JS の汎用部品（`mttt.js`、UI を外した `mtsplit`・`mtworkers`・`mtengine` のプールと分離の部分、Service Worker の部品）。
+2. **サンプルのつなぎ**：小さく自己完結した例を1つ新しく作る（例：コネクトフォー程度の小さな αβ を C で書き、つなぎ一式・`mt-helper.js`・ページ1枚）。サイトのゲームからは、つなぎが短く評価関数の重みを含まないチャンギ（手作りの評価）を「実戦の例」として載せられるか検討（ゲームのルール・評価は公開してよいかユーザーが判断）。
+3. **シミュレータ**：`sim.c`・`simcore.h`・サンプルのゲーム用の `g_<game>.h` と `gen.py` の考え方（「本当に同時」：一定の局面数ごとに歩調をそろえ、共有表への書き込みを回の終わりまで見せない／遅いコアのモデル）。
+4. **ベンチ**：`bench.html` の汎用版（スレッド数ごとの nps・同じ深さまでの時間・最善手の一致・幾何平均）。
+
+### 公開しない範囲
+- 各ゲームの画面・レッスン・パズル・オンライン（Firebase の設定・DB ルール）・大百科（atlas）・キャラクター・PRO の画面・計測の自動化（bench-all）。
+- **学習した重み・学習データ**（NNUE の `nnue.bin.gz`・`evalnet.bin.gz` 等）。Praline は探索の並列化だけで、重みは含めない。
+- 未発表の企画、ユーザーの Mac の計測の生データ（数字の要約は README に載せてよい）。
+
+### ライセンス（確認した事実と候補）
+- サイトのリポジトリ直下に LICENSE はない（2026-11-11 時点）。ゲーム単位では `reversi/LICENSE`・`shogi/LICENSE` が **Apache License 2.0**。ほかのゲームのフォルダには LICENSE がない。
+- **候補：Apache-2.0**（既存の reversi・shogi と同じ。特許条項があり、ゲームやエンジンに組み込みやすい）または MIT（より短い）。Praline の C・JS はこのリポジトリで書いたもので外部のコードを含まないので、どちらでも選べる。決めるのはユーザー。
+- **GPL のエンジン**（Stockfish・Pikafish・Rapfi・GNU Go 等）は、ユーザーの Mac 上で教師役・物差しとして使っただけで、**コードはサイトにも Praline にも含めない**（`handoff-common-rules.md` §2、各 MODEL_CARD）。Praline の公開物に GPL のコードが入っていないことを公開前に確認する（下のチェックリスト）。
+- **重み・データの出所**（Praline には含めないが、例やベンチで触れるときの注意）：チェスの NNUE は Lichess の評価済み局面データベース（**CC0**）＋自己対局（Stockfish で付け直し）、シャンチーの NNUE は Pikafish（GPL-3.0）の自己対局の局面と評価で学習（エンジンの出力を学習に使ったもので、コードは含まない）、五目並べは Gomocup の局面と Rapfi（GPL-3.0）の採点、囲碁のネットは sanderland/vibego（**CC BY 4.0**、教師は KataGo）。サンプルやベンチに重みを同梱するなら、それぞれのライセンス・クレジットを付ける（同梱しないのが簡単）。
+- 参照した手法の名前（Young Brothers Wait、Kerrigan の simplified ABDADA、Lazy SMP）は README の参考文献に書く（コードの借用はない）。
+
+### 英語の README の骨子
+```
+# Praline — multi-core search glue for WebAssembly game engines
+Many cores (nuts) held together by shared memory (caramel).
+## What it is   — YBW split points + busy marks for alpha-beta engines compiled to wasm with threads (SharedArrayBuffer),
+                   plus the browser side: a worker pool, cross-origin isolation via a service worker, a lockless shared TT.
+## Why          — Lazy SMP plateaus around 8 threads in the browser; YBW with helpful masters, second searches of stragglers
+                   and waiting-owner marks keeps scaling on big.LITTLE CPUs (numbers from a 14-core M-series machine).
+## Quick start  — the glue a game provides (PL_SP_FIELDS, spFillPos/spLoadPos, spSearch, spCutoff, spTop, waitCheck,
+                   spIdleReset), where to open a split point in search(), the helper worker loop (mt_idle), building with
+                   clang --target=wasm32 -matomics -mbulk-memory -DMT, the page side.
+## Guarantees   — one thread searches exactly as without Praline (how to check: node counts per position).
+## Simulator    — the lockstep "truly concurrent" simulator, slow-core model; how to reproduce the tables.
+## Benchmarks   — the bench page; results table.
+## Browser notes — Document-Isolation-Policy vs COOP/COEP, Safari/Firefox, memory `initial` pages.
+## License / credits / references
+```
+
+### サイトのリポジトリからの取り込み方（比較とおすすめ）
+| 方法 | 良いところ | 困るところ |
+|---|---|---|
+| git submodule | 版がはっきり（コミットで固定） | GitHub Pages で submodule の中身を配るには公開リポジトリ・Actions の設定が要る。GitHub Desktop でのクローン・複数アカウントの作業で「中身が空」の事故が起きやすい |
+| git subtree | 中身が普通のファイルとしてサイトのリポジトリに入る（Pages・クローンはそのまま）。`git subtree pull/push` で行き来できる | コマンドが長く、履歴が混ざる。複数のエージェント・アカウントが同時に触ると push の順番の調整が要る |
+| コピー＋同期スクリプト | いちばん単純（`tools/praline-sync.sh` が公開リポジトリの決まったタグからファイルを写し、版と差分を表示） | 逆向き（サイトで直した分を公開側へ）を手で行う必要 |
+
+- **おすすめ：最初は「コピー＋同期スクリプト」、慣れたら subtree**。今の作業の流れ（PR → main、GitHub Pages がそのまま配る、複数アカウント）を崩さず、公開リポジトリを正本にして、サイトは `shared/praline/` にタグの版を写す（写したファイルの先頭に `Praline vX.Y` を入れる）。サイトで先に直したときは、同じ PR の中で公開リポジトリ側への反映メモを残す。
+- どの方法でも、ヘッダを更新したら読む全ゲームの `engine_mt.wasm` を作り直し、§5 の確認をする。
+
+### 公開前のチェックリスト
+- [ ] 本体のファイルにサイト固有の名前（ゲーム名・`aicoding-*` のキー・`HeaderBar`・`Online`・`atlas`・Firebase）が残っていない（`grep`）。
+- [ ] GPL のコード・他者のコードが入っていない（Stockfish・Pikafish・Rapfi 等は使っていないことを確認、参考にした手法は README の参考文献へ）。
+- [ ] 重み・学習データを同梱しない（同梱するならライセンスとクレジット）。
+- [ ] LICENSE（Apache-2.0 か MIT をユーザーが決める）と各ファイルの先頭の SPDX 表記、著作権者の表記（ユーザーの希望の名義）。
+- [ ] サンプルのゲームが単体で build・実行できる（clang のコマンド、Node での1スレッドの一致テスト、2スレッドのブラウザのテスト）。
+- [ ] シミュレータの手順が README のとおりに再現できる。
+- [ ] 秘密の企画・個人情報・内部の計測ログ・ユーザーの端末の情報が入っていない。
+- [ ] 英語の README・コメント（日本語のコメントは英語に）。
+- [ ] サイト側が公開版を取り込んでも全ゲームの1スレッドの一致・ベンチが前と同じ。

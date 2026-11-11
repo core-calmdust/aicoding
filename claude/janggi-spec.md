@@ -73,3 +73,10 @@
   - 分割の深さ 4 は ×1.80／×2.67／×4.17、遅いコアあり ×4.17／×4.29／×3.68。同じ設定でも ±10% ほど揺れるので、遅いコアありの 10・14 は前とほぼ同じ（伸びは 2〜8スレッドと、遅いコアのない 8 まで）。手の空いた割合が 14スレッドで 23%（シャンチーより木が小さく、分割できる節が少ない）。
   - headless Chrome（作業機）の `bench.html`（1秒、1・2スレッド）で壊れずに動くこと、node の worker_threads（実際の wasm、4スレッド）で止まらず最後まで読むことを確認。
 - Mac で測るページ：`janggi/bench.html`（`bench-all.html`）。
+
+### Praline に移行（2026-11-11、`claude/praline-spec.md`）
+- マルチスレッドの仕組み（busy marks・YBW の分割点・待つ持ち主の手伝いと印・二度読み・`mt_idle`）を共通の思考エンジン **Praline** の C のヘッダ（`shared/praline/`）に移した。`janggi/engine.c` にはチャンギのつなぎ（分割点の欄 `PL_SP_FIELDS`、`spFillPos`／`spLoadPos`、`spSearch`、`spCutoff`、`spTop`＝0、`waitCheck`、`spIdleReset`）だけを残した。手のない側のパスなど、分割点を開く `search()` はそのまま。
+- **一致**：通常版 `engine.wasm` は前処理後のソースが同じ（作り直していない）。`engine_mt.wasm` の1スレッドは `tools/mtsim/wasm1.js` の24局面・深さ10 で局面数・手・評価値・深さが前の配信版と全一致。宣言するメモリは 1102 ページのまま。
+- **マルチスレッド**（`tools/mtsim`、64局面ごとに同期、24局面、1スレッド100万局面の深さまで。前＝移行前のソース）：<!-- JG-SIM -->
+- headless Chrome（Playwright）：`bench.html`（1秒、1・2スレッド）と対局ページ（2スレッドで解析）がエラーなく動く。
+- `engine_mt.wasm?v=5`（`app.js`・`bench.html`）、`pro/` は `?v=5`。

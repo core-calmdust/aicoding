@@ -167,6 +167,13 @@ addendum「本編のマルチスレッド」の方式。`engine.c` を `-DMT` �
   - headless Chrome（この作業機、2コアを他のシミュレーションと共用）の `bench.html`（1秒、1・2スレッド）：分離・スレッド起動・12局面とも最後まで動く、エラーなし。CPU が空いていないので壁時計の速さは測れない。
 - **Mac で測るページ**：`checkers/bench.html`。前の ×5.06／×5.19／×5.81（8／10／14）より伸びていれば採用のまま。
 
+### Praline に移行（2026-11-11、`claude/praline-spec.md`）
+- マルチスレッドの仕組み（busy marks・YBW の分割点・合流と取り合い・待つ持ち主の手伝いと印・二度読み・`mt_idle`・`mt_split`）を、サイト共通の思考エンジン **Praline** の C の共通ヘッダ（`shared/praline/praline.h`・`praline_ybw.h`）に移した。`engine.c` にはチェッカーのつなぎ（分割点の欄 `PL_SP_FIELDS`：局面・鍵・繰り返しの判定用の履歴・静かな手数、各手の減らし方 `red`。`spFillPos`／`spLoadPos`（学習評価の累積を作り直す）、`spSearch`、`spCutoff`、`spTop`＝0、`waitCheck`、`spIdleReset`）と、分割点を開く `search()`・`rootSearch()`、`timeUp` を残した。シミュレーションの `tools/mtsim/gen.py` はヘッダを取り込んでから書き換える。
+- **一致**：通常版 `engine.wasm`・`engine_simd.wasm` は前処理後のソースが同じ（作り直していない）。`engine_mt.wasm` の1スレッドは `bench.html` の12局面・深さ14（Node で本編と同じ共有メモリ・学習評価・終盤DB）で局面数・手・評価値・深さが前の配信版と全一致。宣言するメモリは 830 ページのまま。
+- **マルチスレッド**（`tools/mtsim`、64局面ごとに同期、`bench.html` の12局面のうち6局面、1スレッド500万局面の深さまで。前＝移行前のソース）：<!-- CK-SIM -->
+- headless Chrome（Playwright）：`bench.html`（1秒、1・2スレッド）と対局ページ（2スレッドで解析）がエラーなく動く。
+- `engine_mt.wasm?v=5`（`app.js`・`bench.html`）、`app.js?v=` も上げた。
+
 ## 限界
 - 学習データは自分自身の対局だけで、人間の名局やプロ用データベース（Chinook の8駒DBなど）は使っていない。
 - 4駒を超える終盤は探索で読む。長い終盤（キング同士の追い込みなど）は最善でないことがある。
