@@ -41,8 +41,8 @@ def wood_walnut(sh, seed=1):
     """natural flat-sawn walnut: long, gently wavering grain lines with a soft cathedral in the middle, medium-light tone"""
     h, w = sh
     yy, xx = np.mgrid[0:h, 0:w].astype(np.float32) / max(h, w)
-    drift = fbm(sh, [160, 60], [1, .4], seed=seed) * .035                      # the grain wanders slowly
-    y = yy + drift + .045 * np.exp(-((xx - .5) / .22) ** 2) * np.sin(yy * 9)  # a soft arch in the middle
+    drift = fbm(sh, [200, 80], [1, .4], seed=seed) * .012                      # the grain runs nearly straight
+    y = yy + drift
     lines = np.zeros(sh, np.float32)
     rr = np.random.default_rng(seed)
     pos = np.sort(rr.random(70))
@@ -51,7 +51,7 @@ def wood_walnut(sh, seed=1):
     lines = np.clip(lines, 0, 1.2)
     streak = fbm(sh, [1.4, .6], [1, .5], aniso=(1, 20), seed=seed + 1)            # fine fibres along the board
     tone = norm01(fbm(sh, [120], [1], seed=seed + 2))
-    t = np.clip(.35 + .45 * lines + .06 * streak - .12 * tone, 0, 1)
+    t = np.clip(.38 + .22 * lines + .05 * streak - .08 * tone, 0, 1)   # (faint grain — user)
     alb = lerp((176, 122, 78), (92, 56, 32), t)
     pores = fbm(sh, [.5], [1], aniso=(1, 12), seed=seed + 3) > 2.3
     alb[pores] *= .82
@@ -329,19 +329,25 @@ def build(g, look):
         put(ma.arr(.5), verde, .85); put(mb.arr(.5), sienna, .85); put(mr.arr(.5), BRASS, .85, 1, .003)
         cm = cup > 0; A[cm] *= (.8 + .2 * (1 - cup[cm]))[..., None]; G[cm] = .3
         gm = (gd < gw) & m; A[gm] = A[gm] * .9; G[gm] = .4
-    else:   # night: modern urushi — sumi-black lacquer, hairline gold, a gold-leaf groove
-        grad = smooth_step(np.hypot(c.u + .8, c.v + 1.2) / (g['size'] * .7), 0, 1)
-        A[:] = (np.array([.05, .048, .055]) * (1 - grad[..., None]) + np.array([.018, .016, .02]) * grad[..., None])
-        G[:] = .95
-        leaf = GOLD[None] * (.82 + .18 * norm01(fbm((N, N), [2.5, .8], [1, .5], seed=43)))[..., None]
-        sq = (np.floor((c.u + 50) / .34) + np.floor((c.v + 50) / .34)) % 2           # gold-leaf squares (kinpaku)
-        leaf = leaf * (.94 + .06 * sq)[..., None]
-        gm = (gd < gw) & m; put(gm, leaf, .55, 1)
-        put(m & (ed < .12), np.array([.02, .018, .02]), .9)
-        put(line(.14, .01), GOLD, .7, 1)
-        put(line(inner, .009), GOLD, .7, 1); put(line(inner + .06, .004), GOLD * .9, .7, 1)
-        rim = m & (np.abs(cd - CUP_R - .02) < .011); put(rim, GOLD, .8, 1, .004)
-        cm = (cup > 0) & ~rim; A[cm] = np.array([.012, .01, .012]); G[cm] = .8
+    else:   # night: an abstract board — flat colour fields like a print, no realism (user 2026-11-11)
+        H[:] = np.where(m, .5 * smooth_step(ed, 0, .05), 0)          # flat: only a crisp edge
+        A[:] = np.array([.13, .12, .24])
+        fields = [((-1.6, -1.4), 2.3, (.83, .41, .29)), ((1.9, -1.0), 1.5, (.89, .7, .29)), ((1.1, 1.8), 2.0, (.18, .56, .54)), ((-1.9, 2.0), 1.1, (.94, .9, .83))]
+        if tri: fields = [((-1.2, .9), 1.9, (.83, .41, .29)), ((1.3, .4), 1.3, (.89, .7, .29)), ((0, -1.6), 1.0, (.18, .56, .54))]
+        for (fx, fy), fr, col in fields:
+            f = m & (np.hypot(c.u - fx, c.v - fy) < fr); A[f] = A[f] * .12 + np.array(col) * .88
+        # a few thin arcs and a line across, in cream
+        cream = np.array([.94, .9, .83])
+        for (fx, fy), fr, col in fields[:2]:
+            arc = m & (np.abs(np.hypot(c.u - fx, c.v - fy) - fr - .18) < .025) & (c.u > fx)
+            A[arc] = cream
+        bar = m & (np.abs((c.u * .5 + c.v) - .3) < .03); A[bar] = cream
+        G[:] = .12
+        gm = (gd < gw) & m; A[gm] = np.array([.94, .9, .83])                 # a cream groove band
+        put(m & (ed < .14), np.array([.07, .065, .13]), .15)                 # a dark rim
+        H[:] = np.where(m, .5 * smooth_step(ed, 0, .05), 0)
+        cm = m & (cd < CUP_R); A[cm] = np.array([.07, .065, .13])            # holes: flat dark discs with a cream ring
+        ring = m & (np.abs(cd - CUP_R - .02) < .016); A[ring] = cream
     return shade(H, A, G, Mt, m, px, look)
 
 # ---------------------------------------------------------------- marbles (seen from above, 160 px, transparent)
@@ -377,32 +383,27 @@ def marble_img(kind, k):
         win2 = np.exp(-(((x - .42) / .1) ** 2 + ((y - .5) / .05) ** 2)) * .18
         col = col + (spec + win + win2)[..., None]
         alpha = ins * 1.0
-    elif kind == 'pearl':   # six natural pearl colours: white, rosé, golden, silver, Tahitian black, peacock
-        body, over = [((.95, .93, .88), (.06, .02, .05)), ((.97, .86, .84), (.04, .0, .03)), ((.95, .84, .58), (.05, .03, .0)),
-                      ((.82, .84, .88), (.0, .03, .06)), ((.26, .26, .3), (.10, .06, .14)), ((.36, .42, .36), (.12, .02, .16))][k]
-        body = np.array(body); over = np.array(over)
-        irid = .5 + .5 * np.sin((x * 3.1 + y * 2.3 + rim * 7) * 1.6)
-        lus = ndh ** 26 * .45 + ndh ** 220 * .9                                  # the pearl's deep lustre + a sharp highlight
-        col = body * (.36 + .7 * ndl[..., None]) + over * irid[..., None] * 1.4 + lus[..., None] * (.75 + .25 * body)
-        col += np.dstack([rim, rim, rim]) * (over * 1.2 + .03)                    # orient at the edge
-        win = np.exp(-(((x + .36) / .17) ** 2 + ((y + .44) / .09) ** 2)) * .35
-        col += win[..., None]
+    elif kind == 'pearl':   # glazed ceramic balls: celadon, indigo, ochre, vermilion, ivory, charcoal (user: away from pearls)
+        body = np.array([[.55, .74, .66], [.17, .25, .52], [.82, .6, .24], [.8, .24, .16], [.93, .9, .82], [.2, .2, .22]][k])
+        speck = (rng.random((MS, MS)) < .012)
+        glaze = body * (.92 + .08 * norm01(fbm((MS, MS), [4, 1.5], [1, .5], seed=80 + k)))[..., None]
+        glaze[speck] *= .7
+        col = glaze * (.4 + .68 * ndl[..., None]) + (ndh ** 70 * .55 + ndh ** 400 * .9)[..., None]
+        col *= (.82 + .18 * (1 - rim ** 3))[..., None]
         alpha = ins * 1.0
-    elif kind == 'steel':   # jewels: brilliant-cut stones seen from above (ruby, sapphire, emerald, amethyst, topaz, aquamarine)
-        base = np.array([[.85, .05, .16], [.08, .2, .85], [.05, .62, .32], [.55, .16, .8], [.98, .62, .12], [.38, .8, .9]][k])
-        r = np.hypot(x, y); ang = np.arctan2(y, x)
-        table = r < .42 * (1 / np.cos((ang % (math.pi / 4)) - math.pi / 8)) * math.cos(math.pi / 8)     # the octagonal table
-        sec = np.floor((ang + math.pi) / (math.pi / 8)).astype(int) % 16                    # 16 crown facets
-        ring = (r > .72).astype(int)
-        fac = (sec * 7 + ring * 5 + k) % 11 / 10.0                                          # each facet catches the light differently
-        bright = np.where(table, .55 + .25 * (1 - r), .25 + .75 * fac)
-        sparkle = np.where(table, 0, (fac > .85) * .9)
-        col = base * (.35 + 1.1 * bright[..., None]) + sparkle[..., None] * (.6 + .4 * base)
-        # facet edges: thin bright lines
-        edge = (np.abs(((ang + math.pi) % (math.pi / 8)) - .0) < .03) & ~table | (np.abs(r - .72) < .012) | (np.abs(r - .97) < .02)
-        col[edge] = col[edge] * .6 + .35
-        col += (ndh ** 200 * 1.5)[..., None]
-        col *= (.75 + .25 * (1 - rim ** 4))[..., None]
+    elif kind == 'steel':   # round jewels: polished gem spheres (ruby, sapphire, emerald, amethyst, topaz, aquamarine)
+        base = np.array([[.82, .04, .14], [.06, .18, .82], [.03, .6, .3], [.55, .14, .8], [.97, .6, .1], [.35, .8, .9]][k])
+        r = np.hypot(x, y)
+        # deep colour at the edge, light gathered inside on the far side, a few sparkling inclusions
+        inner = np.clip((x * .5 + y * .65) * 1.3 + .4, 0, 1) ** 1.6 * z
+        col = base * (.18 + .55 * (1 - rim[..., None]) ** 1.5) + (base * .6 + .4) * inner[..., None] * .75
+        spark = (rng.random((MS, MS)) < .004) & (r < .8)
+        spark = nd.binary_dilation(spark, iterations=1)
+        col[spark] = col[spark] * .4 + .65
+        col += (ndh ** 500 * 2.6 + ndh ** 60 * .3)[..., None]
+        win = np.exp(-(((x + .34) / .15) ** 2 + ((y + .42) / .08) ** 2)) * .8
+        col += win[..., None]
+        col *= (.6 + .4 * (1 - rim ** 5))[..., None]
         alpha = ins * 1.0
     else:   # turned wooden pegs, lacquered in six colours (the wood shows through at the turned rings)
         r = np.hypot(x, y)
