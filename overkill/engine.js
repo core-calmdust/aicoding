@@ -156,7 +156,7 @@
     else if (m.k === 'shoot' || m.k === 'fire' || m.k === 'igui') {
       const pc = b[m.f];
       capture(P, m.x, side, U);
-      if (m.k === 'fire') { U.push(['sq', m.f, pc]); b[m.f] = { t: 'FU', s: side }; }
+      if (m.k === 'fire' && b[m.f]) { U.push(['sq', m.f, pc]); b[m.f] = { t: 'FU', s: side }; }   // (unless the blast took the musketeer)
     }
     else if (m.k === 'alch') { const q = b[m.x]; U.push(['sq', m.x, q]); b[m.x] = { t: 'KI', s: side }; const al = b[m.f]; U.push(['sq', m.f, al]); b[m.f] = Object.assign({}, al, { rdy: P.ply + 2 * COOL.ALCH }); }
     else {
@@ -168,7 +168,7 @@
       else if (pc.t === 'PAWN' && !pc.m) np = Object.assign({}, pc, { m: 1 });
       // a 爆弾兵 captured: the capturer standing on its square is caught in the blast too
       const blown = U.some(u => u[0] === 'boom' && u[1] === m.to);
-      U.push(['sq', m.to, b[m.to]]); b[m.to] = blown ? null : np;
+      U.push(['sq', m.to, b[m.to]]); b[m.to] = blown && !ROYAL(np.t) ? null : np;   // (a royal survives the blast)
     }
     P.side = 1 - side; P.ply++;
     return U;
