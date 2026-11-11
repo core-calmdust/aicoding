@@ -17,6 +17,7 @@
   const STAGE = 10, UNLOCK = 6;   // shared/pzbook.js: puzzles come in stages of 10; 6 cleared opens the next stage
   const G = {
     chess: { guide: '../images/atlas/g-knight.webp', name: { ja: 'ナイトン', en: 'Knighton', zh: '奈顿', ko: '나이톤', es: 'Caballón', fr: 'Chevalou', pt: 'Cavalinho', de: 'Springolin', hi: 'नाइटन', ar: 'فارسون', ru: 'Найтон', 'zh-TW': '奈頓', id: 'Knighton', tr: 'Knighton' } },
+    reversi: { guide: '../images/atlas/g-disc.webp', name: { ja: 'リバガメ', en: 'Flipturtle', zh: '翻翻龟', ko: '리바거북', es: 'Tortugavuelta', fr: 'Tortuflip', pt: 'Tartavira', de: 'Wendekröte', hi: 'पलटकछुआ', ar: 'سلحفاة القلب', ru: 'Перевертуша', 'zh-TW': '翻翻龜', id: 'Kurakura Balik', tr: 'Çevirkaplumbağa' } },
     shogi: { guide: '../images/atlas/g-shogi.webp', name: { ja: 'ショウギツネ', en: 'Shogitsune', zh: '将棋狐', ko: '쇼기여우', es: 'Shogizorro', fr: 'Shogirenard', pt: 'Shogiraposa', de: 'Shogifuchs', hi: 'शोगी लोमड़ी', ar: 'ثعلب الشوغي', ru: 'Сёгицунэ', 'zh-TW': '將棋狐', id: 'Shogitsune', tr: 'Shogitsune' } },
   };
   // the guide's lines ({n}, {c}, {a}, {b}: filled in; arrays: one is picked at random)
@@ -120,6 +121,24 @@
       notCheck: 'Tsume\'de <b>her hamle şah olmalı</b>.', escaped: 'Şah kaçtı…', out: '{n} hamlede mat yok…', retry: 'Rövanş için "Tekrar"a dokun!',
       solved: ['Çözdün!', 'Muhteşem!', 'Tam isabet!'], solvedHelp: 'Geçtin! Bir dahakine ipucusuz?', hintSay: 'Parlayan karelere bak.', allDone: 'Buradaki tüm bulmacaları çözdün. Harika!', loading: 'Bulmaca hazırlanıyor…' },
   };
+  // reversi (2026-11-11): the goal (win / by N discs / wipe-out / at least a draw, played out to the end against the best defence)
+  const RV = {
+    ja: { hi: 'リバガメだよ。終盤の読み切りパズルに挑戦しよう！', gWin: '{c}の番。最後まで打って<b>勝って</b>みよう！', gMargin: '{c}の番。<b>{n}石差以上</b>で勝とう！', gWipe: '{c}の番。相手の石を<b>全滅</b>させよう！', gDraw: '{c}の番。<b>引き分け以上</b>にしよう！', miss: '{m}だと目標に届かないみたい。最善は{b}だよ。', empties: '空きマスはあと{n}。' },
+    en: { hi: 'Flipturtle here! Let\'s read endgames out to the last disc.', gWin: '{c} to move. Play it out and <b>win</b>!', gMargin: '{c} to move. Win by <b>{n} discs or more</b>!', gWipe: '{c} to move. <b>Wipe out</b> every opposing disc!', gDraw: '{c} to move. Get <b>at least a draw</b>!', miss: '{m} can\'t reach the goal. The best was {b}.', empties: '{n} empty squares left.' },
+    zh: { hi: '我是翻翻龟！来挑战算清终盘的谜题吧！', gWin: '轮到{c}。下到最后<b>赢下来</b>吧！', gMargin: '轮到{c}。以<b>{n}子以上</b>的差距获胜！', gWipe: '轮到{c}。把对方的子<b>全部吃光</b>！', gDraw: '轮到{c}。至少下成<b>和棋</b>！', miss: '下{m}好像达不到目标。最佳是{b}。', empties: '还剩{n}个空格。' },
+    'zh-TW': { hi: '我是翻翻龜！來挑戰算清終盤的謎題吧！', gWin: '輪到{c}。下到最後<b>贏下來</b>吧！', gMargin: '輪到{c}。以<b>{n}子以上</b>的差距獲勝！', gWipe: '輪到{c}。把對方的子<b>全部吃光</b>！', gDraw: '輪到{c}。至少下成<b>和棋</b>！', miss: '下{m}好像達不到目標。最佳是{b}。', empties: '還剩{n}個空格。' },
+    ko: { hi: '리바거북이야! 종반을 끝까지 읽는 퍼즐에 도전하자!', gWin: '{c} 차례. 끝까지 두어 <b>이겨</b> 보자!', gMargin: '{c} 차례. <b>{n}개 차 이상</b>으로 이기자!', gWipe: '{c} 차례. 상대 돌을 <b>전멸</b>시키자!', gDraw: '{c} 차례. <b>무승부 이상</b>을 만들자!', miss: '{m}(으)로는 목표에 닿지 않아. 최선은 {b}야.', empties: '빈칸이 {n}개 남았어.' },
+    es: { hi: '¡Soy Tortugavuelta! Vamos a leer finales hasta la última ficha.', gWin: 'Juegan {c}. ¡Juega hasta el final y <b>gana</b>!', gMargin: 'Juegan {c}. ¡Gana por <b>{n} fichas o más</b>!', gWipe: 'Juegan {c}. ¡<b>Elimina</b> todas las fichas rivales!', gDraw: 'Juegan {c}. ¡Consigue <b>al menos tablas</b>!', miss: 'Con {m} no se llega al objetivo. Lo mejor era {b}.', empties: 'Quedan {n} casillas vacías.' },
+    fr: { hi: 'Ici Tortuflip ! Lisons les finales jusqu\'au dernier pion.', gWin: 'Aux {c}. Jouez jusqu\'au bout et <b>gagnez</b> !', gMargin: 'Aux {c}. Gagnez de <b>{n} pions ou plus</b> !', gWipe: 'Aux {c}. <b>Éliminez</b> tous les pions adverses !', gDraw: 'Aux {c}. Obtenez <b>au moins la nulle</b> !', miss: '{m} n\'atteint pas l\'objectif. Le meilleur était {b}.', empties: 'Encore {n} cases vides.' },
+    pt: { hi: 'Sou a Tartavira! Vamos ler finais até a última peça.', gWin: 'Jogam as {c}. Jogue até o fim e <b>vença</b>!', gMargin: 'Jogam as {c}. Vença por <b>{n} peças ou mais</b>!', gWipe: 'Jogam as {c}. <b>Elimine</b> todas as peças do rival!', gDraw: 'Jogam as {c}. Consiga <b>pelo menos um empate</b>!', miss: 'Com {m} não dá para chegar ao objetivo. O melhor era {b}.', empties: 'Faltam {n} casas vazias.' },
+    de: { hi: 'Hier ist Wendekröte! Rechnen wir Endspiele bis zum letzten Stein.', gWin: '{c} am Zug. Spiel bis zum Ende und <b>gewinne</b>!', gMargin: '{c} am Zug. Gewinne mit <b>{n} Steinen oder mehr</b>!', gWipe: '{c} am Zug. <b>Räume</b> alle gegnerischen Steine ab!', gDraw: '{c} am Zug. Hol <b>mindestens ein Remis</b>!', miss: 'Mit {m} ist das Ziel nicht erreichbar. Am besten war {b}.', empties: 'Noch {n} leere Felder.' },
+    hi: { hi: 'मैं पलटकछुआ हूँ! आओ, अंत के खेल को आख़िरी गोटी तक पढ़ें।', gWin: '{c} की बारी। अंत तक खेलकर <b>जीतो</b>!', gMargin: '{c} की बारी। <b>{n} गोटियों या ज़्यादा</b> के अंतर से जीतो!', gWipe: '{c} की बारी। विरोधी की सारी गोटियाँ <b>ख़त्म</b> करो!', gDraw: '{c} की बारी। <b>कम से कम ड्रॉ</b> करो!', miss: '{m} से लक्ष्य तक नहीं पहुँचा जा सकता। सबसे अच्छी चाल {b} थी।', empties: 'अभी {n} ख़ाली खाने बचे हैं।' },
+    ar: { hi: 'أنا سلحفاة القلب! لنقرأ النهايات حتى آخر قطعة.', gWin: 'دور {c}. العب حتى النهاية <b>واربح</b>!', gMargin: 'دور {c}. اربح بفارق <b>{n} قطعة أو أكثر</b>!', gWipe: 'دور {c}. <b>امحُ</b> كل قطع الخصم!', gDraw: 'دور {c}. احصل على <b>التعادل على الأقل</b>!', miss: 'لا يمكن بلوغ الهدف بـ{m}. الأفضل كان {b}.', empties: 'بقي {n} مربعات فارغة.' },
+    ru: { hi: 'Я Перевертуша! Давайте просчитывать эндшпили до последней фишки.', gWin: 'Ход: {c}. Доиграйте до конца и <b>победите</b>!', gMargin: 'Ход: {c}. Выиграйте с перевесом <b>в {n} фишек и больше</b>!', gWipe: 'Ход: {c}. <b>Уничтожьте</b> все фишки соперника!', gDraw: 'Ход: {c}. Добейтесь <b>хотя бы ничьей</b>!', miss: 'Ходом {m} цели не достичь. Лучшим был {b}.', empties: 'Пустых клеток: {n}.' },
+    id: { hi: 'Aku Kurakura Balik! Ayo hitung akhir permainan sampai keping terakhir.', gWin: 'Giliran {c}. Mainkan sampai akhir dan <b>menang</b>!', gMargin: 'Giliran {c}. Menang dengan selisih <b>{n} keping atau lebih</b>!', gWipe: 'Giliran {c}. <b>Habiskan</b> semua keping lawan!', gDraw: 'Giliran {c}. Dapatkan <b>minimal seri</b>!', miss: 'Dengan {m} target tak tercapai. Terbaik adalah {b}.', empties: 'Sisa {n} petak kosong.' },
+    tr: { hi: 'Ben Çevirkaplumbağa! Oyun sonlarını son taşa kadar hesaplayalım.', gWin: 'Sıra {c} tarafında. Sonuna kadar oyna ve <b>kazan</b>!', gMargin: 'Sıra {c} tarafında. <b>{n} taş ya da daha fazla</b> farkla kazan!', gWipe: 'Sıra {c} tarafında. Rakibin tüm taşlarını <b>sil</b>!', gDraw: 'Sıra {c} tarafında. <b>En az beraberlik</b> al!', miss: '{m} ile hedefe ulaşılamıyor. En iyisi {b} idi.', empties: '{n} boş kare kaldı.' },
+  };
+  for (const l in TX) { const r = RV[l] || RV.en; TX[l].hi.reversi = r.hi; TX[l].rv = r; }
   const fill = (s, v) => String(s).replace(/\{(\w+)\}/g, (_, k) => v[k] != null ? v[k] : '');
   const pick = a => Array.isArray(a) ? a[Math.floor(Math.random() * a.length)] : a;
   const store = { get(k, d) { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v)); } catch (e) {} }, raw(k) { try { return localStorage.getItem(k); } catch (e) { return null; } } };
@@ -173,11 +192,33 @@
       save(p, stars) { const st = this.stars(); st[p.P.id] = Math.max(st[p.P.id] || 0, stars); store.set(this.KEY, st); store.set(this.LAST, String(p.i)); },
     },
   };
+  // reversi/index.html: 'reversi-emerald-puzzles' { "<level id>:<k>": stars, _v: 2, '@o:'/'@n:' markers }; puzzleData.old["<id>:<k>"] = a
+  // slot's previous content, kept by players who already met it (pzUseOld); PZ_LAST = the level index
+  BOOK.reversi = {
+    url: '../reversi/puzzles.json?v=5', KEY: 'reversi-emerald-puzzles', LAST: 'reversi-pz-last', data: null,
+    sv: x => x === true ? 3 : x === 'h' ? 2 : (+x || 0),
+    pr() { const pr = store.get(this.KEY, {}); if (!pr._v) { for (const k of Object.keys(pr)) { const x = pr[k]; pr[k] = x === 'h' ? 2 : x ? 3 : 0; } pr._v = 2; } return pr; },
+    at(i, j, pr) { const lv = this.data.levels[i], k = lv.id + ':' + j, O = this.data.old || {}; const old = O[k] && (pr['@o:' + k] || (!pr['@n:' + k] && k in pr)); return { P: old ? O[k] : lv.puzzles[j], rk: k, old: !!O[k] && old }; },
+    sets() { const pr = this.pr(); return this.data.levels.map((L, i) => ({ key: i, recs: L.puzzles.map((_, j) => this.sv(pr[L.id + ':' + j])), cat: L.cat || 'level' })); },
+    title(i, lang) { const n = this.data.levels[i].name; return (n && (n[lang] || n.en)) || this.data.levels[i].id; },
+    problem(i, j, X, lang) {
+      const pr = this.pr(), { P, rk, old } = this.at(i, j, pr), O = this.data.old || {};
+      if (O[rk] && !pr['@o:' + rk] && !pr['@n:' + rk]) { pr[(old ? '@o:' : '@n:') + rk] = 1; store.set(this.KEY, pr); }   // (pzMarkSeen)
+      return { i, j, rk, P, cells: P.cells, toMove: P.toMove, me: P.toMove, goal: P.goal, kind: 'rv', n: P.e || 0, count: this.data.levels[i].puzzles.length, set: this.title(i, lang) };
+    },
+    save(p, stars) { const pr = this.pr(); pr[p.rk] = Math.max(this.sv(pr[p.rk]), stars); store.set(this.KEY, pr); store.set(this.LAST, String(p.i)); },
+  };
   /* ---------- the daily puzzles: the same problem of the day as the full games, and their streak record ---------- */
   const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  const DAILY = { chess: { d1: 'aicoding-chess-daily' }, shogi: { d1: 'shogi-kaya-daily', d2: 'shogi-kaya-daily-easy' } };
+  const DAILY = { reversi: { d1: 'reversi-emerald-daily' }, chess: { d1: 'aicoding-chess-daily' }, shogi: { d1: 'shogi-kaya-daily', d2: 'shogi-kaya-daily-easy' } };
   function dailyPick(id, which) {
     const B = BOOK[id], now = new Date(), date = ymd(now), wd = now.getDay(), day = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 864e5);
+    if (id === 'reversi') {   // (reversi/index.html dailyPick: Mon–Tue level 2, Wed–Thu 3, Fri–Sat 4, Sun 5)
+      const D = B.data; if (!D || D.levels.length < 5) return null;
+      const li = wd === 0 ? 4 : wd <= 2 ? 1 : wd <= 4 ? 2 : 3;
+      let h = day * 2654435761 >>> 0; h ^= h >>> 15;
+      return { date, i: li, j: (h >>> 0) % D.levels[li].puzzles.length };
+    }
     if (id === 'chess') {   // (chess/app.js dailyPick)
       const D = B.data; if (!D || D.levels.length < 4) return null;
       const T = D.levels.map((x, i) => x.kind === 'line' ? i : -1).filter(i => i >= 0);
@@ -202,6 +243,7 @@
     const d = dailyPick(id, which); if (!d) return null;
     const B = BOOK[id]; let p;
     if (id === 'chess') p = B.problem(d.i, d.j, X);
+    else if (id === 'reversi') p = B.problem(d.i, d.j, X, lang);
     else { const g = B.data.sets[d.i], P = (g.base || g.problems)[d.j]; p = { i: d.i, j: d.j, P, sfen: P.sfen, kind: 'tsume', n: P.n, count: g.problems.length, set: (g.title && (g.title[lang] || g.title.en)) || g.id }; }
     p.daily = { date: d.date, key: DAILY[id][which] || DAILY[id].d1, which };
     return p;
@@ -217,7 +259,7 @@
   function setsOf(id, lang) {
     const X = TX[lang] || TX.en;
     return loadBook(id).then(B => B.sets().map((x, n) => {
-      const title = id === 'chess' ? B.problem(x.key, 0, X).set : ((g => (g.title && (g.title[lang] || g.title.en)) || g.id)(B.data.sets[x.key]));
+      const title = B.title ? B.title(x.key, lang) : id === 'chess' ? B.problem(x.key, 0, X).set : ((g => (g.title && (g.title[lang] || g.title.en)) || g.id)(B.data.sets[x.key]));
       return { key: x.key, title, cat: x.cat, recs: x.recs, open: x.recs.map((_, j) => stageOpen(x.recs, j)), stage: STAGE };
     }));
   }
@@ -295,6 +337,7 @@
     function head() { $('.pg').textContent = !cur ? '' : cur.daily ? ` · ${ctx.dailyTitle ? ctx.dailyTitle(cur.daily.which) : '★'} · ${+cur.daily.date.slice(5, 7)}/${+cur.daily.date.slice(8)}` : ` · ${cur.set} · No.${cur.j + 1}`; }
     const side = c => c ? X.black : X.white;
     function goal(p) {
+      if (p.kind === 'rv') { const c = p.me === 1 ? X.black : X.white, g = p.goal || {}; return fill(g.type === 'wipe' ? X.rv.gWipe : g.type === 'margin' ? X.rv.gMargin : g.type === 'draw' ? X.rv.gDraw : X.rv.gWin, { c, n: g.value }) + ' ' + fill(X.rv.empties, { n: p.n }); }
       if (p.kind === 'tsume') return fill(X.goalTsume, { n: p.n });
       if (p.kind === 'tac') return fill(X.goalTac, { c: side(p.me), n: p.n });
       return fill(p.n === 1 ? X.goalMate1 : X.goalMate, { c: side(p.me), n: p.n });
@@ -308,14 +351,15 @@
       const opts = { ready: () => onReady(p), moved: (u, info) => onMoved(p, u, info) };
       if (!sess) {
         sess = ad.start({ el: ctx.el, Table3D: ctx.Table3D, lang: ctx.lang, t: ctx.t, mode: 'pz', level: 20, side: 1, bar: false, hud: () => {}, onTurn: () => {}, onEnd: () => {},
-          pz: Object.assign({ fen: p.fen, sfen: p.sfen, sol: p.P.sol }, { ready: () => cur && cur.ready && cur.ready(), moved: (u, i) => cur && cur.moved && cur.moved(u, i) }) });
+          pz: Object.assign({ fen: p.fen, sfen: p.sfen, sol: p.P.sol, cells: p.cells, toMove: p.toMove }, { ready: () => cur && cur.ready && cur.ready(), moved: (u, i) => cur && cur.moved && cur.moved(u, i) }) });
         ctx.Table3D.play(true);   // (after start(): the adapter's show() puts its board on the table in the showcase view)
-      } else pz().load(p.fen || p.sfen, p.P.sol);
+      } else pz().load(p.fen || p.sfen || p.cells, p.P.sol, p.toMove);
       cur.ready = opts.ready; cur.moved = opts.moved;
       say((first ? (line('hi') || X.hi[id]) : line('intro')) + ' ' + goal(p)); first = false;
     }
     async function onReady(p) {
       if (p !== cur || stopped) return;
+      if (p.kind === 'rv') { p.state = 'play'; p.ex = pz().exact(); pz().wait(); buttons(); return; }
       if (p.kind === 'tac') { p.state = 'busy'; buttons(); await sleep(250); if (p !== cur) return; await pz().play(p.P.line[0]); if (p !== cur) return; }
       p.state = 'play'; pz().wait(); buttons();
     }
@@ -329,6 +373,7 @@
       if (p !== cur || stopped) return;
       p.state = 'busy'; buttons(); pz().mark(null);
       const mv = pz().moves();
+      if (p.kind === 'rv') return rvMoved(p, u);
       if (info.mate) return solved(p);
       // mate puzzles (chess mate in N, 詰将棋): any move may be played — nothing is judged until the N moves are used up;
       // the defender answers each move, and mating within N clears it (the user's rule, 2026-11-10: no "wrong move")
@@ -366,18 +411,43 @@
       say(line('mid') + ' ' + fill(X.left, { n: Math.ceil((remain - 1) / 2) }));
       p.state = 'play'; pz().wait(); buttons();
     }
+    // reversi: the move must keep the goal against the best defence (exact scores, the full game's solver); the opponent then
+    // answers with its best move until it is the player's turn again or the game ends — reaching the end solves it.
+    // (Simplified from the full game, which lets a missed goal be played out: here a miss is shown at once.)
+    const rvMeets = (g, v) => g.type === 'wipe' ? v >= 64 : g.type === 'margin' ? v >= g.value : g.type === 'draw' ? v >= 0 : v > 0;
+    const sqN = sq => 'abcdefgh'[sq & 7] + ((sq >> 3) + 1);
+    async function rvMoved(p, u) {
+      const list = await p.ex; if (p !== cur || stopped) return;
+      const mine = (list.find(x => x.move === u) || { score: -99 }).score;
+      if (list.length && !rvMeets(p.goal, mine)) {
+        const top = Math.max(...list.map(x => x.score)), best = list.filter(x => x.score === top);
+        return wrong(p, 1, best[0].move, fill(X.rv.miss, { m: sqN(u), b: best.map(x => sqN(x.move)).join(' / ') }));
+      }
+      for (;;) {
+        const st = pz().state(); if (st.over) return solved(p);
+        if (st.turn === p.me) break;
+        await sleep(160); if (p !== cur) return;
+        const ol = await pz().exact(); if (p !== cur || stopped) return;
+        if (!ol.length) return solved(p);
+        const b = ol.reduce((a, x) => x.score > a.score ? x : a, ol[0]);
+        await pz().play(b.move); if (p !== cur) return;
+      }
+      const st = pz().state();
+      say(pick(X.good) + ' ' + fill(X.rv.empties, { n: 64 - st.b - st.w }));
+      p.ex = pz().exact(); p.state = 'play'; pz().wait(); buttons();
+    }
     async function wrong(p, back, ans, msg) {
       p.failed = true; p.state = 'busy'; buttons(); chime(false);
       say(msg + ' ' + (line('retry') || X.retry)); streak = 0;
       await sleep(700); if (p !== cur) return;
       if (back) pz().undo(back);
-      if (ans) pz().mark(ans);
+      if (ans || ans === 0) pz().mark(ans);
       p.state = 'fail'; buttons();
     }
     function solved(p) {
       const n = p.hinted || p.failed ? 2 : 3;
       p.state = 'solved'; chime(true); stars(n);
-      if (p.daily) { dailySolved(p, p.hinted || p.failed); if (id === 'chess') { const pr = store.get(B.KEY, {}); pr[p.rk] = Math.max(B.sv(pr[p.rk]), n); store.set(B.KEY, pr); } }   // (as the full games: chess also keeps the stars, shogi only the streak)
+      if (p.daily) { dailySolved(p, p.hinted || p.failed); if (id === 'reversi') { const pr = B.pr(); pr[p.rk] = Math.max(B.sv(pr[p.rk]), n); store.set(B.KEY, pr); } if (id === 'chess') { const pr = store.get(B.KEY, {}); pr[p.rk] = Math.max(B.sv(pr[p.rk]), n); store.set(B.KEY, pr); } }   // (as the full games: chess also keeps the stars, shogi only the streak)
       else B.save(p, n);
       streak = n === 3 ? streak + 1 : 0;
       say(n === 3 ? (streak >= 3 && line('streak', { n: streak })) || line('solved') || pick(X.solved) : line('help') || X.solvedHelp);
@@ -386,6 +456,7 @@
     }
     async function hint() {
       const p = cur; if (!p || p.state !== 'play') return;
+      if (p.kind === 'rv') { p.state = 'busy'; buttons(); const L = await p.ex; if (p !== cur) return; p.state = 'play'; buttons(); if (!L.length) return; const b = L.reduce((a, x) => x.score > a.score ? x : a, L[0]); p.hinted = true; pz().mark(b.move); say(line('hint') || X.hintSay); return; }
       let u = expected(p);
       if (!u && p.kind === 'tsume') { p.hinted = true; if (sess.canHint && sess.canHint()) { sess.hint(); say(line('hint') || X.hintSay); } return; }   // off the stored line: the engine's move
       if (!u && p.kind === 'mate') { p.state = 'busy'; buttons(); u = await pz().best(20); if (p !== cur) return; p.state = 'play'; pz().wait(); buttons(); }
