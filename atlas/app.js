@@ -2040,7 +2040,7 @@
     const tile = (ic, v, lbl, attr = '', end = '') => `<${attr ? 'button type="button"' : 'div'} class="nct"${attr}><span class="ic">${ic}</span><b>${v}</b><em>${esc(lbl)}</em>${end}</${attr ? 'button' : 'div'}>`;
     el.classList.toggle('dark', ART.isDark(W.av.bg));
     el.classList.toggle('wk', ncWk);
-    el.innerHTML = `<div class="nc-l"><div class="bgfill" style="background:${ART.bgDataUri(W.av.bg)}"></div>
+    el.innerHTML = `<div class="pfbg${ART.isDark(W.av.bg) ? ' dk' : ''}" style="background:${ART.bgDataUri(W.av.bg)}" aria-hidden="true"></div><div class="nc-l"><div class="bgfill" style="background:${ART.bgDataUri(W.av.bg)}"></div>
         <button class="av poke" aria-label="${esc(iname(ART.byId(W.av.icon) || ART.byId(ART.DEFAULT_ICON)))}" style="background:none;box-shadow:none">${ART.avatar(W.av, PS, { pop: true, clear: true, noChar: true })}${popChar(W.av, PS)}</button>
         ${phone ? '' : `<div class="dname">${worn}</div>`}</div>
       <div class="nc-side"><div class="nc-top"><input id="dpName" maxlength="16" value="${esc(W.name)}" placeholder="${esc(t('pf.name'))}" aria-label="${esc(t('pf.name'))}"><span class="coin nc-coin"><i>¢</i><span class="coinM">${C.balance.toLocaleString()}</span></span></div>
