@@ -1622,6 +1622,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 .bvi .mxb.mxic{width:48px;padding:0}.bvi .mxb.mxic svg{width:22px;height:22px}
 .lvs-l .lvpvp{width:100%;text-align:start;font:inherit;cursor:pointer;background:linear-gradient(100deg,#e3f3ff,#f6fbff 70%);border-color:#cfe6f7;padding:6px 12px 6px 10px}
 .lvs-l .lvpvp svg{width:96px;height:80px;flex:none;margin:-2px 0}.lvs-l .lvpvp small{color:#4f7fa3}
+.lvs-l .lvpvp{display:flex;align-items:center;gap:12px}.lvs-l .lvpvp b{grid-row:auto;min-width:0;font-size:17px;font-weight:900;color:var(--ink)}.lvs-l .lvpvp small{display:block;font-size:12.5px;font-weight:700;color:#3f74a0}
 .lvs-l .lvpvp.on{border-color:#ff5d5d;box-shadow:0 0 0 2px rgba(255,93,93,.25)}
 .pzsheet .lvs-h{gap:8px}.pzsheet .pzs-t{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pzs-bk{flex:none;width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:#fff;font:900 20px/1 var(--font);color:var(--ink);cursor:pointer;padding:0 0 2px}
@@ -1772,6 +1773,9 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 .lvs-boss.on{border-color:#ffb27a;background:linear-gradient(100deg,#ffe4cc,#fff6ee 70%)}
 .lvs-boss.ur{background:linear-gradient(100deg,#f3e6ff,#fff6e0 55%,#e6f6ff);border-color:#e0cdfa}
 @media (max-width:520px){.lvs-boss img{width:68px;height:68px}.lvs-boss b{font-size:16px}}
+/* the choices change colour under the mouse (二人で対戦 was easy to miss, 2026-11-11) */
+@media (hover:hover){.lvs-l button[data-v]:hover{border-color:#ffb27a;background:#fff3e6;box-shadow:0 0 0 3px rgba(255,160,90,.18)}
+  .lvs-l button.lvpvp:hover{border-color:#6fb6ea;background:linear-gradient(100deg,#cbe8ff,#eaf6ff 70%);box-shadow:0 0 0 3px rgba(80,160,230,.2)}}
 .lvs-l button.on{border-color:var(--coral,#ff5d5d);background:#fff4f0;box-shadow:0 0 0 2px rgba(255,93,93,.15)}
 .bvi.mini .R{pointer-events:none}.bvi.mini{padding-bottom:12px!important}
 
@@ -1960,11 +1964,11 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 <script src="../shared/atlas.js?v=20261111ai8"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261109ac2"></script>
-<script src="i18n/v.js?v=72pg"></script>
+<script src="i18n/v.js?v=72ph"></script>
 <script>/* the UI strings: only ja, en and the page language (atlas/i18n/<lang>.js, made from i18n.js by tools/i18n-split.js — 2026-11-10);
    when they were made from another version of i18n.js than FULL, the whole i18n.js loads instead. Edit i18n.js, bump FULL's ?v=, run the tool. */
 (function () {
-  var FULL = 'i18n.js?v=72pg', S = window.ATLAS_I18N_SPLIT, v = FULL.split('v=')[1], l = 'ja';
+  var FULL = 'i18n.js?v=72ph', S = window.ATLAS_I18N_SPLIT, v = FULL.split('v=')[1], l = 'ja';
   try { l = localStorage.getItem('aicoding-lang') || (function (x) { return /^zh-(tw|hk|mo|hant)/i.test(x) ? 'zh-TW' : String(x).slice(0, 2); })(navigator.language || 'ja'); } catch (e) {}
   if (!S || S.v !== v) { document.write('<script src="' + FULL + '"><\/script>'); return; }
   var L = ['ja', 'en']; if (S.langs.indexOf(l) >= 0 && L.indexOf(l) < 0) L.push(l);
@@ -2015,6 +2019,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=34"></script>
 <script src="npc/npc.js?v=23"></script>
 <script src="avtalk.js?v=2"></script>
-<script src="app.js?v=306"></script>
+<script src="app.js?v=307"></script>
 </body>
 </html>

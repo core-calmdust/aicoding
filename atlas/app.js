@@ -968,7 +968,8 @@
   function bossTitles(sh, g) {   // the bosses' titles live in the talk's language files (npc/t/<lang>.js), loaded on demand
     const N = window.AtlasNPC; if (!N || !N.ensure || !sh.querySelector('.lvs-boss')) return;
     N.ensure(N.lang()).then(() => { const T = N.T && (N.T[N.lang()] || N.T.en), L = T && T.bosses && T.bosses[g]; if (!L) return;
-      sh.querySelectorAll('.lvs-boss').forEach(h => { const s = h.querySelector('small'); if (s) s.textContent = L[+h.dataset.bi] || ''; }); }).catch(() => {});
+      sh.querySelectorAll('.lvs-boss:not(.lvpvp)').forEach(h => {   // (not 二人で対戦: its subtitle was blanked here)
+      const s = h.querySelector('small'); if (s) s.textContent = L[+h.dataset.bi] || ''; }); }).catch(() => {});
   }
   function lvNm(x, n, lang, max) {
     if (!x || !x.name) return '';
