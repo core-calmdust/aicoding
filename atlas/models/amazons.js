@@ -251,6 +251,17 @@
     g.add(mesh(G(key + 'crest', () => crestGeo(r * 1.3, r * 1.25, r * .34)), M.body, 0, y + r * .86, -r * .12, 0, Math.PI / 2));
     g.add(mesh(G(key + 'hold', () => new TT.CylinderGeometry(r * .1, r * .14, r * .3, 8, 1, true)), M.trim, 0, y + r * .98));
   }
+  // an arm in the abstract style of the figures: a tapered sleeve from the shoulder to a round fist closed on the weapon
+  // (no fingers: the fist sits where the grip is, so the weapon reads as held and not stuck on)
+  function arm(g, M, a, b, r) {
+    const TT = T(), A = new TT.Vector3(a[0], a[1], a[2]), B = new TT.Vector3(b[0], b[1], b[2]), d = B.clone().sub(A), L = d.length();
+    const sl = mesh(G('arm' + r, () => new TT.CylinderGeometry(r * .78, r, 1, 8, 1, true)), M.body);
+    sl.scale.set(1, L, 1); sl.position.copy(A).add(B).multiplyScalar(.5); sl.quaternion.setFromUnitVectors(new TT.Vector3(0, 1, 0), d.normalize()); g.add(sl);
+    g.add(mesh(G('sho' + r, () => new TT.SphereGeometry(r * 1.12, 8, 6)), M.body, A.x, A.y, A.z));
+    g.add(mesh(G('fist' + r, () => new TT.SphereGeometry(r * 1.35, 8, 6)), M.body, B.x, B.y, B.z, 0, 0, 0, 1, 1.15, 1));
+  }
+  // where a point of a child group lies in the figure (for an arm reaching the grip)
+  const at = (grp, x, y, z) => { grp.updateMatrix(); const v = new (T().Vector3)(x, y, z).applyMatrix4(grp.matrix); return [v.x, v.y, v.z]; };
   function statue(g, M) {   // a marble bust on a moulded plinth: crested helmet, cloak and brooch, a spear behind the shoulder
     const TT = T();
     g.add(mesh(G('st-pl', () => lathe([[0, 0], [.56, 0], [.56, .06], [.53, .09], [.5, .1], [.5, .24], [.53, .27], [.54, .29], [.48, .34], [0, .34]])), M.body));
@@ -266,15 +277,21 @@
     g.add(mesh(G('st-nose', () => new TT.ConeGeometry(.024, .075, 8)), M.body, 0, 1.25, .2, Math.PI / 2 + .4));
     helmet(g, M, 'st-h', .205, 1.32, true);
     g.add(mesh(G('st-hair', () => new TT.CylinderGeometry(.08, .15, .36, 10, 1, true)), M.body, 0, 1.1, -.13, .32));
-    g.add(mesh(G('st-shaft', () => new TT.CylinderGeometry(.016, .016, 1.55, 5, 1, true)), M.trim, .42, 1.08, -.16, 0, 0, -.08));
-    g.add(mesh(G('st-tip', () => new TT.SphereGeometry(.06, 8, 5)), M.trim, .488, 1.965, -.16, 0, 0, -.08, .55, 2.3, .22));
+    const sp = new TT.Group();   // the spear, upright beside the bust, its butt on the plinth; the right arm comes up and grips it
+    sp.add(mesh(G('st-shaft', () => new TT.CylinderGeometry(.016, .016, 1.55, 5, 1, true)), M.trim));
+    sp.add(mesh(G('st-tip', () => new TT.SphereGeometry(.06, 8, 5)), M.trim, 0, .89, 0, 0, 0, 0, .55, 2.3, .22));
+    sp.position.set(.44, 1.08, .02); sp.rotation.z = -.08; g.add(sp);
+    arm(g, M, [.3, .8, .02], at(sp, 0, -.2, 0), .052);
   }
   function bronze(g, M) {   // a tall queen: a fluted stem and a wide collar, crowned by a crested helmet
     const TT = T();
     g.add(mesh(G('br-body', () => lathe([[0, 0], [.58, 0], [.6, .05], [.58, .1], [.48, .13], [.5, .18], [.42, .22], [.32, .25], [.27, .32], [.22, .48], [.17, .7], [.14, .86], [.15, .9], [.3, .93], [.36, .97], [.3, 1.0], [.18, 1.02], [.15, 1.06], [0, 1.06]])), M.body));
     for (const [y, r] of [[.1, .585], [.96, .355]]) g.add(mesh(G('br-r' + r, () => new TT.TorusGeometry(r, .018, 6, SEG())), M.trim, 0, y, 0, Math.PI / 2));
-    const fl = G('br-fl', () => new TT.CylinderGeometry(.01, .014, .52, 4, 1, true));
-    for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2; g.add(mesh(fl, M.trim, Math.cos(a) * .2, .58, Math.sin(a) * .2)); }
+    // the flutes run on the stem itself (they follow its taper) from a ring at its foot to a ring under the collar
+    const PR = [[.27, .32], [.22, .48], [.17, .7], [.14, .86]], rAt = y => { for (let i = 1; i < PR.length; i++) if (y <= PR[i][1]) { const [r0, y0] = PR[i - 1], [r1, y1] = PR[i]; return r0 + (r1 - r0) * (y - y0) / (y1 - y0); } return PR[PR.length - 1][0]; };
+    const fl = G('br-fl2', () => { const pts = []; for (let k = 0; k <= 8; k++) { const y = .34 + k / 8 * .5; pts.push(new TT.Vector3(rAt(y) + .002, y, 0)); } return new TT.TubeGeometry(new TT.CatmullRomCurve3(pts), 8, .011, 4, false); });
+    for (let k = 0; k < 12; k++) { const o = mesh(fl, M.trim); o.rotation.y = k / 12 * Math.PI * 2; g.add(o); }
+    for (const [y, r] of [[.335, .265], [.85, .147]]) g.add(mesh(G('br-fr' + y, () => new TT.TorusGeometry(r, .016, 5, SEG())), M.trim, 0, y, 0, Math.PI / 2));
     helmet(g, M, 'br-h', .25, 1.2, false);
   }
   // an abstract Scythian archer: a robe turned like a chess piece, a Phrygian cap bent forward, a recurve bow across the body,
@@ -310,6 +327,7 @@
     bow.add(mesh(G('ar-arrow', () => new TT.CylinderGeometry(.006, .006, .3, 3, 1, true)), M.body, .02, .0, 0, 0, 0, Math.PI / 2));   // the nocked arrow
     bow.add(mesh(G('ar-arrowhead', () => new TT.ConeGeometry(.018, .05, 4)), M.trim, -.15, 0, 0, 0, 0, Math.PI / 2));
     bow.position.set(.27, .72, .1); bow.rotation.set(0, -.25, -.08); g.add(bow);
+    arm(g, M, [.15, .92, .01], at(bow, -.035, 0, 0), .038);   // the bow arm: down from the shoulder to the grip
     // the quiver (a gorytos) on the back, three arrows with gold nocks and fletchings standing out of it
     const q = new TT.Group();
     q.add(mesh(G('ar-quiver', () => lathe([[0, 0], [.06, 0], [.075, .08], [.08, .32], [.085, .36], [0, .36]], 12)), M.body));
@@ -380,7 +398,9 @@
     const blade = G('po-blade', () => { const sh = new TT.Shape(); sh.moveTo(0, -.03); sh.lineTo(.1, -.08); sh.quadraticCurveTo(.14, 0, .1, .08); sh.lineTo(0, .03); sh.lineTo(0, -.03);
       return new TT.ExtrudeGeometry(sh, { depth: .014, bevelEnabled: false, curveSegments: LO() ? 4 : 6 }); });
     for (const s of [0, Math.PI]) { const b = mesh(blade, M.trim, 0, .26, 0, 0, s, 0); b.position.z = s ? .007 : -.007; ax.add(b); }
-    ax.position.set(.24, 1.0, -.02); ax.rotation.set(0, 0, -.18); g.add(ax);
+    ax.position.set(.25, 1.0, -.02); ax.rotation.set(0, 0, -.18); g.add(ax);
+    arm(g, M, [.15, .88, 0], at(ax, 0, -.1, 0), .036);    // the axe hand, the haft gripped below the blades
+    arm(g, M, [-.15, .88, 0], [-.11, .74, .13], .036);   // the shield arm (its fist behind the pelta)
   }
   const BUILD = { statue, bronze, archer, totem, jade, pottery };
   const SCALE = { statue: .76, bronze: .78, archer: .84, totem: .84, jade: .8, pottery: .86 };   // the base ≈ .36 across a square of 1.0
