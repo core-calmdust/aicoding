@@ -265,13 +265,17 @@ html.atlas-chess .frame::before{transition:opacity .2s}html.atlas-turning.atlas-
 html.atlas-chess .star{display:flex!important}
 html.atlas-chess .star,html.atlas-chess .dot,html.atlas-chess .fxsvg{z-index:12!important}html.atlas-chess .hintlbl{z-index:13!important}
 
-/* dialogs: the games' dark-theme panels (black at low alpha) → light portal tones (lists, tabs, banners, cards) */
-html.atlas-skin .modal :is(.lx-card,.lx-tabs button,.lesson-item,.op-book .ob,.rt-card,.ru-hand,.ru-pair,.ru-chip,.ru-win,.syncbox,.ed-pal button,.ed-tools button,.ed-hands button,.ol-list > div,.st-nav button,.lesson-actions button:not(.go)){background:#f8f0e0!important;border-color:var(--line)!important}
-html.atlas-skin .modal :is(.lx-card,.lesson-item,.op-book .ob):hover{background:#fff6e3!important;border-color:rgba(196,138,58,.55)!important}
-html.atlas-skin .modal .lx-card.done{background:#ecf6ee!important;border-color:rgba(30,163,108,.35)!important}
-html.atlas-skin .modal .lx-tabs button.sel{background:#fff3d6!important;border-color:var(--brass)!important}
-html.atlas-skin .modal .lx-banner{background:#fbf0d8!important;border-color:rgba(196,138,58,.35)!important}
+/* dialogs: the games' dark-theme panels (black at low alpha) → light portal tones (lists, tabs, banners, cards) — 2026-11-11 the
+   user: the rules, lessons and openings boxes in the same flat style as the puzzles (cream, a 2px sand border, a solid shadow
+   under; the chosen tab red-tinted, the way-on button red) */
+html.atlas-skin .modal :is(.lx-card,.lx-tabs button,.lesson-item,.op-book .ob,.rt-card,.ru-hand,.ru-pair,.ru-chip,.ru-win,.syncbox,.ed-pal button,.ed-tools button,.ed-hands button,.ol-list > div,.st-nav button,.lesson-actions button:not(.go)){background:#fffaf0!important;border:2px solid #ead9b6!important;box-shadow:0 3px 0 #ead9b6!important;background-image:none!important}
+html.atlas-skin .modal :is(.lx-card,.lesson-item,.op-book .ob):hover{background:#fff6e3!important;border-color:#e0b65a!important}
+html.atlas-skin .modal .lx-card.done{background:#ecf6ee!important;border-color:#9fd8b8!important;box-shadow:0 3px 0 #9fd8b8!important}
+html.atlas-skin .modal .lx-tabs button.sel{background:#fff1ee!important;border-color:#ff8a7a!important;color:#d93c3c!important;box-shadow:0 3px 0 #ffb3a8!important}
+html.atlas-skin .modal .lx-tabs button.sel *{color:#d93c3c!important}
+html.atlas-skin .modal :is(.lx-banner,.rt-intro-sec){background:#fffaf0!important;border:2px solid #ead9b6!important;box-shadow:0 3px 0 #ead9b6!important;background-image:none!important}
 html.atlas-skin .modal .lx-bar{background:rgba(120,90,40,.14)!important}
+html.atlas-skin .modal .mbtn:not(.go):not(.primary){background:#fff!important;border:2px solid #ead9b6!important;box-shadow:0 3px 0 #ead9b6!important}
 
 /* hints that "light up" a piece / square / hand slot: a bright pulsing glow that reads on the wooden 3D boards */
 @keyframes atlasGlow{0%,100%{box-shadow:0 0 0 2px rgba(255,255,255,.85),0 0 14px 4px rgba(255,196,40,.85)}50%{box-shadow:0 0 0 2px rgba(255,255,255,.95),0 0 26px 10px rgba(255,196,40,.95)}}
@@ -425,9 +429,9 @@ html.atlas-skin:not(.atlas-land) .card.controls .btn{border-radius:14px!importan
 html.atlas-skin:not(.atlas-land) .card.controls .btn:disabled{background:#fbf7ee!important;border-color:#f3ead6!important}
 /* phones (portrait): the menu bar's buttons right under the portal bar, edge to edge (2026-11-11); the page starts below them */
 @media (max-width:760px) and (orientation:portrait){
-  html.atlas-skin:not(.atlas-land):not(.atlas-2d) .card.controls{position:fixed!important;z-index:40;top:56px;left:0;right:0;width:auto!important;margin:0!important;border-radius:0 0 18px 18px!important;border-width:0 0 2px!important;padding-left:8px!important;padding-right:8px!important;box-shadow:0 3px 0 #efe3c8,0 8px 16px -10px rgba(80,40,0,.35)!important}
-  html.atlas-skin:not(.atlas-land):not(.atlas-2d) .app{padding-top:calc(56px + var(--ctlh,64px) + 8px)!important}
-  html.atlas-skin.hb-atlas:not(.atlas-land):not(.atlas-2d) body{padding-top:0!important}
+  html.atlas-skin:not(.atlas-land) .card.controls{position:fixed!important;z-index:40;top:56px;left:0;right:0;width:auto!important;margin:0!important;border-radius:0 0 18px 18px!important;border-width:0 0 2px!important;padding-left:8px!important;padding-right:8px!important;box-shadow:0 3px 0 #efe3c8,0 8px 16px -10px rgba(80,40,0,.35)!important}
+  html.atlas-skin:not(.atlas-land) .app,html.atlas-skin.hb-atlas:not(.atlas-land) .app{padding-top:calc(56px + var(--ctlh,64px) + 8px)!important}
+  html.atlas-skin.hb-atlas:not(.atlas-land) body{padding-top:0!important}
 }
 /* shogi, phones (portrait), the 3D board: sized so the whole board area — both komadai bars and the board — fits between the
    menu bar and the bottom tabs, as the 2D page shows it (the board sized from the width alone hid the lower komadai, 2026-11-11) */
