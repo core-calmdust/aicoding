@@ -341,6 +341,19 @@ section{padding:56px 0}
 }
 /* narrower PC / tablet widths: no clamp — the info column scrolls, so the whole text can always be read */
 @media (min-width: 761px) and (max-width: 1239px){ .gx-desc{display:block;-webkit-line-clamp:unset;overflow:visible} }
+/* PC ≥1240: the info column must show the play button without scrolling. fitInfo() (JS) first switches to .tight
+   (less padding and spacing), then shortens the clamped description a line at a time (6 → 3) until everything fits. */
+@media (min-width: 1240px){
+  .gx-info.tight{padding-top:24px;padding-bottom:24px}
+  .gx-info.tight .gx-desc{margin-top:6px;line-height:1.7}
+  .gx-info.tight .tags{margin-top:10px;gap:5px}
+  .gx-info.tight .tag{padding:2px 8px}
+  .gx-info.tight .gx-foot{margin-top:14px}
+  .gx-info.tight .gx-facts{gap:6px 18px}
+  .gx-info.tight h3{font-size:clamp(24px,2.3vw,32px)}
+  .gx-info.stack .gx-foot{flex-wrap:wrap}   /* figures in one row, the button on its own row (when a long button squeezes the figures into a column) */
+  .gx-info.stack .gx-foot .gx-facts{flex-basis:100%}
+}
 @media (max-width: 760px){
   /* phone: compact panel (image, title, play; details on demand) + big wrapping icon grid right below */
   .gx-panel{grid-template-columns:1fr;border-radius:20px;scroll-margin-top:72px}
@@ -1071,6 +1084,20 @@ function makeGallery(C) {
     if (!ag) return g.isNew ? 'new' : null; const bs = A.badges(ag); return bs.includes('new') ? 'new' : bs.includes('update') ? 'update' : null; };
   const statHtml = (g, cls) => { const s = stat(g); return s === 'new' ? `<span class="${cls}">NEW</span>` : s === 'update' ? `<span class="${cls} upd">${esc(window.Atlas.badgeText('update', lang))}</span>` : ''; };
   document.addEventListener('atlasready', () => { if (cur) paint(byId(cur)); });
+  const wide = matchMedia('(min-width: 1240px)');
+  function fitInfo() {
+    const info = panel.querySelector('.gx-info'), d = $(C.p + '-desc'); if (!info || !d) return;
+    info.classList.remove('tight', 'stack'); d.style.webkitLineClamp = '';
+    if (!wide.matches || phone.matches) return;
+    const over = () => { const a = info.firstElementChild, z = info.lastElementChild, cs = getComputedStyle(info);
+      return z.offsetTop + z.offsetHeight - a.offsetTop + parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) - info.clientHeight; };
+    if (over() <= 0) return;
+    info.classList.add('tight');
+    if (over() > 0) { const o = over(); info.classList.add('stack'); if (over() >= o) info.classList.remove('stack'); }
+    for (let n = 5; n >= 3 && over() > 0; n--) d.style.webkitLineClamp = n;
+  }
+  addEventListener('resize', () => { clearTimeout(fitInfo.t); fitInfo.t = setTimeout(fitInfo, 120); });
+  if (document.fonts) document.fonts.ready.then(fitInfo);
   function paint(g) {
     const i = C.games.indexOf(g), t = title(g);
     $(C.p + '-shot').src = g.thumb; $(C.p + '-shot').alt = plain(t);
@@ -1093,6 +1120,7 @@ function makeGallery(C) {
     panel.classList.remove('open'); $(C.p + '-more').setAttribute('aria-expanded', 'false');
     if (navEl) { const many = visible().length > 1; navEl.querySelectorAll('button').forEach(b => b.hidden = !many); }
     [-1, 1].forEach(d => { const n = neighbor(d); if (n) { const im = new Image(); im.src = byId(n.dataset.id).thumb; } });   // preload neighbours
+    fitInfo();
     requestAnimationFrame(() => { const d = $(C.p + '-desc'); $(C.p + '-more').hidden = phone.matches || panel.classList.contains('open') ? false : d.scrollHeight <= d.clientHeight + 2; });
   }
 
