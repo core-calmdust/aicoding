@@ -9,10 +9,10 @@ ss = Image.open(sys.argv[1]).convert('RGB')
 sw, sh = ss.size
 ch = int(sw * H / W)
 ss = ss.crop((0, 0, sw, min(sh, ch))).resize((W, H), Image.LANCZOS)
-bg = ss.filter(ImageFilter.GaussianBlur(7))
-bg = ImageEnhance.Brightness(bg).enhance(1.15)
+bg = ss.filter(ImageFilter.GaussianBlur(5))
+bg = ImageEnhance.Brightness(bg).enhance(1.6)
 # darker oval behind the logo so it stays legible
-sh_ = Image.new('L', (W, H), 0); ImageDraw.Draw(sh_).ellipse((W*.12, H*.30, W*.88, H*.70), fill=120)
+sh_ = Image.new('L', (W, H), 0); ImageDraw.Draw(sh_).ellipse((W*.12, H*.30, W*.88, H*.70), fill=95)
 sh_ = sh_.filter(ImageFilter.GaussianBlur(110))
 bg = Image.composite(Image.new('RGB', (W, H), (12, 11, 10)), bg, sh_)
 # orange glow above and below the logo band
