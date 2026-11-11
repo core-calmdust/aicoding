@@ -8,8 +8,8 @@ static void g_global_init(void) {
   init();
   FILE *f = fopen("net_chess.bin", "rb"); if (!f) { fprintf(stderr, "no net\n"); exit(1); }
   static u8 buf[sizeof NN]; int n = (int)fread(buf, 1, sizeof buf, f); fclose(f);
-  if (n != NN_LEGACY) { fprintf(stderr, "net size %d\n", n); exit(1); }
-  memcpy(&NN, buf, n); nn_enable(1);   // (as the page: the file at nn_ptr, then nn_enable)
+  memcpy(&NN, buf, n); if (!nn_load(n)) { fprintf(stderr, "net size %d\n", n); exit(1); }
+  nn_enable(1);   // (as the page: the file at nn_ptr, then nn_load — the v3 net with king buckets or v1 / v2 without)
   new_game();
 }
 static void g_thread_init(int id) {
