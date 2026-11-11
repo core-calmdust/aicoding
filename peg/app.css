@@ -161,7 +161,7 @@ body.in-puzzle .daily-card,body.in-puzzle .rec-card{display:none}
 .pz-head h2{margin:0}
 .xbtn{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);color:var(--muted)}
 .pz-view{flex:1;min-height:0;display:flex;flex-direction:column}
-.pz-view[hidden]{display:none}
+.pz-view[hidden]{display:none!important}   /* (the rule tour's own CSS .modal:has(.rt) > :has(.rt){display:flex} beat it: the rules showed through the puzzles) */
 #pzLevels{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain}
 #pzGridView #pzGrid{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain}
 .pz-view .modal-actions{flex:none;margin-top:auto;padding-top:12px}
