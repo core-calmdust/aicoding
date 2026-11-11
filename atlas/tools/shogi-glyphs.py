@@ -11,7 +11,10 @@ def boxes(a):
         c = a[(i // 5) * CH:(i // 5) * CH + CH, (i % 5) * CW:(i % 5) * CW + CW]; ys, xs = np.where(c > 100)
         out.append((xs.min(), ys.min(), xs.max() + 1, ys.max() + 1))
     return out
-TWO = {0, 1, 2, 3, 4, 5, 6, 7, 12, 13, 14}   # the two-character pieces (歩兵 … 王将, 龍馬, 龍王, 玉将)
+KEYS = ['k1', 'k2', 'k3', 'k4', 'k5', 'k6', 'k7', 'k8', 'k9', 'k10', 'k11', 'k12', 'k13', 'k14', 'k8o']
+# per-piece turns in degrees (counter-clockwise +), set by eye on the sheets (2026-11-11): the automatic levelling misread the calligraphy
+ANGLE = {}
+SET = ''
 def lean(g):
     # the slope of the column of ink: x of each row's ink centre against y (a two-character inscription should stand upright)
     a = np.array(g)[:, :, 3].astype(float); ys = np.arange(a.shape[0]); w = a.sum(1); m = w > a.shape[1] * 8
@@ -31,7 +34,8 @@ def fit(png, ref, one):
     for i in range(15):
         ox, oy = (i % 5) * CW, (i // 5) * CH
         x0, y0, x1, y1 = src[i]; g = im.crop((ox + x0, oy + y0, ox + x1, oy + y1))
-        if not one and i in TWO: g = upright(g)
+        ang = ANGLE.get(SET, {}).get(KEYS[i], 0)
+        if ang: g = g.rotate(ang, resample=Image.BICUBIC, expand=True); bb = g.getbbox(); g = g.crop(bb) if bb else g
         tx0, ty0, tx1, ty1 = (0.13 * CW, 0.27 * CH, 0.87 * CW, 0.88 * CH) if one else ref[i]
         G.append((g, (tx0, ty0, tx1, ty1))); K.append(min((tx1 - tx0) / g.width, (ty1 - ty0) / g.height))
     cap = float(np.median(K)) * 1.06   # one scale for the set: no piece's inscription much larger than the others
@@ -49,6 +53,7 @@ async def main():
         ref = boxes(np.array(Image.open(os.path.join(ROOT, 'images', 'atlas', 'shogi-glyphs.png')).convert('RGBA'))[:, :, 3])
         for s in (sys.argv[1:] or await pg.evaluate('window.SETS')):
             u = await pg.evaluate('s => SHEET(s)', s)
+            global SET; SET = s
             open(os.path.join(ROOT, 'images', 'atlas', f'shogi-glyphs-{s}.png'), 'wb').write(fit(base64.b64decode(u.split(',', 1)[1]), ref, s == 'ichiji')); print(s)
         await b.close()
 asyncio.run(main())
