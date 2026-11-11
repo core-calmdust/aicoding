@@ -112,7 +112,7 @@ static void init_zobrist(void) { for (int p = 0; p < 12; p++) for (int s = 0; s 
    A net file says how many it uses: 1 = the v1 / v2 nets without king buckets (read as before, same evaluation), or 4 / 8 /
    16 / 32: the own king's square (seen from its side) picks the block (nn_setmap). */
 #ifndef NN_KB
-#define NN_KB 4
+#define NN_KB 8   /* (2026-11-11: 8, was 4 — the site's v3 net has 4; room for 8 so that a KB=8 net can replace it without a new wasm) */
 #endif
 #define NN_IN 768
 #define NN_BUCKETS 8
@@ -695,8 +695,26 @@ static void score_moves(const Pos *p, const int *ml, int *sc, int n, int ttm, in
     else sc[i] = history[p->side][M_FROM(m)][M_TO(m)] + (M_PROMO(m) ? -(1 << 21) : 0);
   }
 }
-static inline int pick(int *ml, int *sc, int n, int i) {
+/* the selection sort's pick: the first of the highest scores in sc[i..n) (2026-11-11: with wasm SIMD the maximum 4 at a
+   time, then its first lane — the same index as the plain loop, so the same moves in the same order; as xiangqi #1665) */
+static inline int firstMax(const int *sc, int i, int n) {
+#ifdef __wasm_simd128__
+  if (n - i >= 8) {
+    int j = i + 4; v128_t m = wasm_v128_load(sc + i);
+    for (; j + 4 <= n; j += 4) m = wasm_i32x4_max(m, wasm_v128_load(sc + j));
+    m = wasm_i32x4_max(m, wasm_i32x4_shuffle(m, m, 2, 3, 0, 1)); m = wasm_i32x4_max(m, wasm_i32x4_shuffle(m, m, 1, 0, 3, 2));
+    int mx = wasm_i32x4_extract_lane(m, 0); for (; j < n; j++) if (sc[j] > mx) mx = sc[j];
+    const v128_t vm = wasm_i32x4_splat(mx);
+    for (j = i; j + 4 <= n; j += 4) { int b = wasm_i32x4_bitmask(wasm_i32x4_eq(wasm_v128_load(sc + j), vm)); if (b) return j + __builtin_ctz(b); }
+    while (sc[j] != mx) j++;
+    return j;
+  }
+#endif
   int b = i; for (int j = i + 1; j < n; j++) if (sc[j] > sc[b]) b = j;
+  return b;
+}
+static inline int pick(int *ml, int *sc, int n, int i) {
+  int b = firstMax(sc, i, n);
   int t = ml[i]; ml[i] = ml[b]; ml[b] = t; t = sc[i]; sc[i] = sc[b]; sc[b] = t;
   return ml[i];
 }

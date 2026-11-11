@@ -6,7 +6,7 @@
    app.js calls AtlasMap.render(section, ctx) whenever the tab is shown or the language changes. */
 (function () {
   'use strict';
-  const V = 10;
+  const V = 12;
   const UI = {
     ja: { more: 'もっと読む', less: '閉じる', hist: 'ヒストリア', title: '地図', sub: '世界のどこで生まれたゲーム？ ピンをタップすると、そのゲームの旅をたどれます。', all: 'すべて', asia: 'アジア', europe: 'ヨーロッパ', mea: '中東・アフリカ', americas: 'アメリカ', play: '遊ぶ', born: '発祥', era: '年代', route: 'ゲームの旅', hint: 'ドラッグで移動・ホイール／ピンチで拡大・矢印キーで選択', pick: 'ピンを選ぶと、ここにゲームの物語が出ます', reset: '全体を表示', n: '{n}タイトル', load: '地図をひらいています…' },
     en: { more: 'Read more', less: 'Show less', hist: 'Historia', title: 'Atlas', sub: 'Where in the world was each game born? Tap a pin to follow its journey.', all: 'All', asia: 'Asia', europe: 'Europe', mea: 'Middle East & Africa', americas: 'Americas', play: 'Play', born: 'Born in', era: 'Era', route: 'Its journey', hint: 'Drag to move · wheel / pinch to zoom · arrow keys to pick', pick: 'Pick a pin to read the story of that game', reset: 'Whole world', n: '{n} games', load: 'Unfolding the map…' },

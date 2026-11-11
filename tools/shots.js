@@ -37,7 +37,7 @@ const clickBoard = async (page, sel, n, wait = 700) => {     // random taps on t
 const GAMES = {
   shogi: {}, chess: {}, checkers: { zoom: .84 }, ugolki: {}, konane: {}, senet: { zoom: .84 }, fanorona: {}, alquerque: { zoom: .84 }, xiangqi: {}, janggi: {}, ludo: {}, tafl: {},
   reversi: { img: 'reversi_v4.webp', zoom: .84 }, go: {}, gomoku: {}, dots: { zoom: .84 }, connect4: { img: 'connect4_v2.webp', zoom: .84 }, morris: { zoom: .84 },
-  hex: {}, mancala: { zoom: .8 }, backgammon: { img: 'backgammon_v2.webp' },
+  amazons: {}, peg: {}, hex: {}, mancala: { zoom: .8 }, backgammon: { img: 'backgammon_v2.webp' },
   sudoku: { path: 'sudoku/' }, speedsudoku: { img: 'speed-sudoku.webp', path: 'speed-sudoku/' }, samegame: { fx: .62 }, jailbreak: {},
   poker: {}, baccarat: {}, blackjack: {}, solitaire: {},
 };

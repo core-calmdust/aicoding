@@ -443,8 +443,12 @@
     }
     let waveT = 0;
     function neonTick() {   // the RGB keeps flowing for the whole game (frames all along, but only while the window is in front)
-      clearInterval(waveT); if (stopped || !board || board.userData.look !== 'neon') return;
-      waveT = setInterval(() => { if (stopped) return clearInterval(waveT); if (!document.hidden && document.hasFocus() && (!T3.decoOn || T3.decoOn())) kick(160); }, 100);
+      // (2026-11-11) driven by the frame loop (rAF), not a timer: a timer was held back while the mouse pulled the striker and the
+      // colours stood still while aiming; the board is looked up on every frame, so a board picked after this started counts too
+      cancelAnimationFrame(waveT); if (stopped) return;
+      const step = () => { if (stopped) return; waveT = requestAnimationFrame(step);
+        if (board && U && U.look === 'neon' && !document.hidden && document.hasFocus() && (!T3.decoOn || T3.decoOn() || document.documentElement.classList.contains('hand-drag'))) kick(160); };
+      waveT = requestAnimationFrame(step);
     }
 
 
@@ -693,7 +697,7 @@
         hand.stop();
         document.removeEventListener('keydown', onKey); removeEventListener('resize', onResize); ctx.el.style.touchAction = prevTouch;
         css.remove(); powEl.remove(); if (toastEl) toastEl.remove(); if (cardEl) cardEl.remove(); if (worker) worker.terminate();
-        cancelAnimationFrame(viewRaf); clearInterval(waveT); cancelAnimationFrame(flashRaf); flipBtn.remove(); viewBtn.remove(); document.removeEventListener('keydown', onFlipKey); if (T3.turn) T3.turn(null);
+        cancelAnimationFrame(viewRaf); cancelAnimationFrame(waveT); cancelAnimationFrame(flashRaf); flipBtn.remove(); viewBtn.remove(); document.removeEventListener('keydown', onFlipKey); if (T3.turn) T3.turn(null);
         Object.values(MAT).forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose());
       },
       _debug: { st: () => st, phase: () => phase, shoot: (x, ang, pw) => { if (phase !== 'place') return false; sx = E.nearestFree(st, st.turn, x); stroke({ x: sx, ang, v: 40 + pw * (E.VMAX - 40) }); return true; }, setStriker: x => { moveStriker(x); showGuides(); }, at: (x, y) => { const [a, b] = wx(x, y); return T3.project(a, b, Y); }, striker: () => sx, pc: i => i === st.pcs.length ? striker : pcs[i] },
