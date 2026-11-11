@@ -3351,7 +3351,7 @@ function openIntro(i) {
 }
 $('#lessonList').addEventListener('click', e => { const b = e.target.closest('.lesson-item'); if (b) openIntro(+b.dataset.i); });
 $('#btnLessonClose').onclick = () => hideOverlay('#lessonOverlay');
-$('#btnLessonBack').onclick = () => (lessonSrc === 'open' ? openOpenings() : openLessons());
+$('#btnLessonBack').onclick = () => (lessonSrc === 'open' ? (window.OC ? OC.list(introIdx) : openOpenings()) : openLessons());
 $('#btnLessonStart').onclick = () => { hideOverlay('#lessonOverlay'); startLesson(introIdx); };
 $('#btnLessonRetry').onclick = () => { hideOverlay('#lessonOverlay'); if (lessonSrc === 'open' && window.OC) { OC.practice(introIdx); return; } startLesson(introIdx, true); };   // a retry goes straight to the scored problems
 $('#btnLessonNextStep').onclick = () => { const n = introIdx + 1; if (lessonSrc === 'open' && window.OC) { endLesson(); if (n < OC.steps().length) OC.intro(n); else openOpenings(); return; } if (n < curSets().length) openIntro(n); else { endLesson(); lessonSrc === 'open' ? openOpenings() : openLessons(); } };
@@ -3840,8 +3840,8 @@ $('#lsNext').onclick = () => {
 $('#lsQuit').onclick = () => endLesson();
 $('#lsList').onclick = () => { if (!lesson) return; if (lesson.study || lesson.drill || lesson.opc) openOpenings(); else openLessons(); };
 // finished screen: 「レッスンに戻る」 (「定石に戻る」 for a set from the openings list) ends the lesson and reopens that list, on its tab, scrolled to the item
-function lxReveal(sel) { const L = $('#lessonList'); let el = L.querySelector(sel); if (!el) for (const b of L.querySelectorAll('[data-lx],[data-oct]')) { b.click(); if ((el = L.querySelector(sel))) break; } if (el) el.scrollIntoView({ block: 'center' }); }
-$('#btnLessonQuit2').onclick = async () => { const src = lessonSrc, i = lesson ? lesson.idx : introIdx; endLesson(); if (src === 'open') { lessonSrc = 'open'; await openOpenings(); } else await openLessons(); lxReveal(`[data-i="${i}"]`); };
+function lxReveal(sel) { const L = $('#lessonList'); let el = L.querySelector(sel); if (!el) for (const b of L.querySelectorAll('[data-lx],[data-oct],[data-occ]')) { b.click(); if ((el = L.querySelector(sel))) break; } if (el) el.scrollIntoView({ block: 'center' }); }
+$('#btnLessonQuit2').onclick = async () => { const src = lessonSrc, i = lesson ? lesson.idx : introIdx; endLesson(); if (src === 'open' && window.OC) { await OC.list(i); return; } if (src === 'open') { lessonSrc = 'open'; await openOpenings(); } else await openLessons(); lxReveal(`[data-i="${i}"]`); };
 // ---- opening drill (通し稽古): play one side of a named line from the start; the other side is played automatically
 const decMoves = str => (str.match(/../g) || []).map(m => (m.charCodeAt(0) - 97) + (+m[1] - 1) * 8);
 $('#liBody').addEventListener('click', e => {
@@ -5722,7 +5722,7 @@ accRender();
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=56l23'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=56l25'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
@@ -5731,7 +5731,7 @@ accRender();
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/seqprac.js?v=3"></script><script src="opcourse.js?v=1"></script>
+<script src="../shared/seqprac.js?v=3"></script><script src="opcourse.js?v=2"></script>
 <script src="../shared/atlas.js?v=20261111ai4" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1l14" defer></script>
 <script src="../shared/atlas-account.js?v=20261109ac2l14" defer></script>
