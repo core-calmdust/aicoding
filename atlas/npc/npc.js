@@ -269,10 +269,10 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
     // phones (the bar's buttons are under it for a few seconds; a click puts it away) (2026-11-12)
     const band = window.__tbar && __tbar.band;
     try {
-      const fr = window.Table3D && Table3D.fitRect && Table3D.fitRect(), f = el && el.getBoundingClientRect();
+      const fr = window.Table3D && ((Table3D.modelRect && Table3D.modelRect()) || (Table3D.fitRect && Table3D.fitRect())), f = el && el.getBoundingClientRect();
       if (band && fr && f && f.width && bar && bar.getClientRects().length) {
         const w = f.width, x0 = innerWidth / 2 - w / 2, x1 = innerWidth / 2 + w / 2, h = f.height, yb = innerHeight - band - 10, yt = yb - h;
-        if (x1 > fr.left + 8 && x0 < fr.right - 8 && yt < fr.bottom - 6) { const r = bar.getBoundingClientRect(); return Math.max(0, innerHeight - r.bottom) - 4; }
+        if (x1 > fr.left + 8 && x0 < fr.right - 8 && yt < fr.bottom - 10) { const r = bar.getBoundingClientRect(); return Math.max(0, innerHeight - r.bottom) - 4; }
       }
     } catch (e) {}
     return band;

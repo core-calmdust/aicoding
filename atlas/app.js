@@ -1524,6 +1524,11 @@
   const needBooks = () => loadJs('../shared/pzbook.js?v=8l14', () => window.PZBook).then(() => loadJs('../shogi/lists-ui.js?v=20261107l14', () => window.ShogiLX));
   const TS_TIER = { p1: 0, p3: 1, p5: 2, p7: 3, p9: 4, art: 5, c3: 0, c5: 1, c7: 2, c9: 3, c13: 5, t_sac: 1, t_funari: 2, t_touchi: 2, t_uchifu: 3, t_aigoma: 3, t_aki: 2, t_kwalk: 4 };   // (= shogi/index.html)
   const TS_ICON = { t_sac: '捨', t_funari: '不', t_touchi: '遠', t_uchifu: '歩', t_aigoma: '合', t_aki: '開', t_kwalk: '追' };
+  const TS_CDESC = { ja: { comp: '3手詰から長手数まで、手数で分けた基本コース。短い詰みから少しずつ読みを長くしよう。', theme: '捨て駒・不成・遠打など、詰将棋の手筋をテーマごとに練習。', prac: '実戦に現れた詰みの局面。玉の逃げ道を読み切ろう。' },
+    en: { comp: 'The core course by length, from mate-in-3 to long problems. Read a little further each time.', theme: 'Practise the classic tsume techniques one theme at a time: sacrifices, non-promotion, long-range drops…', prac: 'Mates from real games. Read every escape of the king.' },
+    zh: { comp: '按手数分的基础课程，从3手诘到长手数，一点点加深计算。', theme: '按主题练习弃子、不成、远打等诘将棋手筋。', prac: '实战中出现的将死局面，算清玉的每条退路。' },
+    'zh-TW': { comp: '按手數分的基礎課程，從3手詰到長手數，一點點加深計算。', theme: '按主題練習棄子、不成、遠打等詰將棋手筋。', prac: '實戰中出現的將死局面，算清玉的每條退路。' },
+    ko: { comp: '3수 외통부터 긴 수까지, 수별로 나눈 기본 코스. 조금씩 길게 읽어 봐요.', theme: '버림 말, 불성, 원타 등 츠메쇼기의 수법을 테마별로 연습.', prac: '실전에 나온 외통 국면. 왕의 도망길을 끝까지 읽어요.' } };
   const TS_CAT = { ja: { comp: '手数別', theme: 'テーマ別', prac: '実戦' }, en: { comp: 'By length', theme: 'By theme', prac: 'Practical' }, zh: { comp: '按手数', theme: '按主题', prac: '实战' }, 'zh-TW': { comp: '按手數', theme: '按主題', prac: '實戰' }, ko: { comp: '수별', theme: '테마별', prac: '실전' } };
   const LSX = { ja: { clear: 'クリア', best: '最高 {p}点', nw: 'NEW', dg: '今日の詰将棋', de: 'やさしい詰将棋', go: '解く', ttl: '詰将棋', lsT: 'レッスン' }, en: { clear: 'Cleared', best: 'Best {p} pts', nw: 'NEW', dg: 'Daily tsume', de: 'Easy tsume', go: 'Solve', ttl: 'Tsume', lsT: 'Lessons' } };
   const lsx = k => (LSX[lang] || LSX.en)[k];
@@ -1548,21 +1553,30 @@
       const recsOf = i => B.sets.find(x => String(x.key) === String(i)).recs;
       const shown = i => { const r = recsOf(i), j = PZBook.nextIndex(r); return B.problems(i)[j >= 0 ? j : r.length - 1]; };
       let cur = 'comp';
+      // the home in the portal's look like リバーシの問題一覧 (2026-11-12): ショウギツネ over the total, 続きから, the two dailies,
+      // the chapter tabs, the chapter's banner, a card per set (its board, its mark, its record)
       const home = () => {
-        S0.back.hidden = true; S0.title.textContent = lsx('ttl'); S0.body.className = 'lesson-list pz-home';
+        S0.back.hidden = true; S0.title.textContent = lsx('ttl'); S0.body.className = 'lesson-list lx-on';
         const cats = ['comp', 'theme', 'prac'].filter(k => SETS.some(s => grp(s) === k)); if (!cats.includes(cur)) cur = cats[0];
-        const daily = ['d1', 'd2'].map(w => { const d = B.daily(w); if (!d) return null; const s = SETS[d.i], P = (s.base || s.problems)[d.j]; let rec = {}; try { rec = JSON.parse(localStorage.getItem(B.DAILY[w]) || '{}') || {}; } catch (e) {}
-          return { key: w, board: thumb(P), title: (w === 'd2' ? '☆ ' : '★ ') + lsx(w === 'd2' ? 'de' : 'dg'), date: d.date.slice(5).replace('-', '/'), sub: L(s.title), done: !!(rec.days && rec.days[d.date]), go: lsx('go') }; }).filter(Boolean);
+        const GD = (AtlasPuzzles.G || {}).shogi || {}, nm = (GD.name && (GD.name[lang] || GD.name.en)) || '';
+        const allR = SETS.map((s, i) => recsOf(i)).flat(), got = allR.filter(x => x > 0).length, stars = allR.reduce((a, v) => a + v, 0);
         const cont = PZBook.resume(SETS.map((s, i) => ({ key: i, recs: recsOf(i), cat: grp(s) })), B.LAST);
-        S0.body.innerHTML = PZBook.home({ title: lsx('ttl'), all: SETS.map((s, i) => recsOf(i)), style: '--pbh-tint:rgba(176,122,58,.45)',
-          cont: cont && { key: cont.key + ':' + cont.j, no: cont.j + 1, name: L(SETS[cont.key].title) }, daily,
-          cats: cats.map(k => { const r = SETS.map((s, i) => grp(s) === k ? recsOf(i) : []).flat(); return { key: k, icon: PZBook.icon({ comp: 'level', theme: 'theme', prac: 'real' }[k]), name: (TS_CAT[lang] || TS_CAT.en)[k], done: r.filter(x => x > 0).length, total: r.length }; }),
-          cur, cards: SETS.map((s, i) => grp(s) !== cur ? null : { key: i, board: thumb(shown(i)), bdCls: 'tall', badge: badge(s), name: L(s.title), desc: L(s.short), recs: recsOf(i), tier: tier(s, i) }).filter(Boolean) });
-        PZBook.bindHome(S0.body, {
-          cat: k => { cur = k; home(); S0.body.parentNode.scrollTop = 0; },
-          cont: v => { const [i, j] = v.split(':').map(Number); S0.close(); startPuzzle({ pick: { i, j } }); },
-          daily: w => { S0.close(); startPuzzle({ daily: w }); },
-          card: v => gridOf(+v) });
+        const ICN = { comp: PZBook.icon('level'), theme: PZBook.icon('theme'), prac: PZBook.icon('real') }, CN = TS_CAT[lang] || TS_CAT.en, CD = TS_CDESC[lang] || TS_CDESC.en;
+        const hero = `<div class="pzh-hero">${GD.guide ? `<img class="pzh-ch" src="${GD.guide}" alt="">` : ''}<div class="pzh-tx"><small>${esc(nm)}</small><b>${esc(lsx('ttl'))}</b><span class="pzh-bar"><i style="width:${allR.length ? Math.round(got * 100 / allR.length) : 0}%"></i></span><span class="pzh-n">${got} / ${allR.length}<span class="pzh-sn">★ ${stars}/${allR.length * 3}</span></span></div>${cont ? `<button type="button" class="pzh-go" data-cont="${cont.key}:${cont.j}"><b>${esc(PZBook.t('cont'))} ▶ No.${cont.j + 1}</b><small>${esc(L(SETS[cont.key].title))}</small></button>` : ''}</div>`;
+        const daily = ['d1', 'd2'].map(w => { const d = B.daily(w); if (!d) return ''; const sd = SETS[d.i], P = (sd.base || sd.problems)[d.j]; let rec = {}; try { rec = JSON.parse(localStorage.getItem(B.DAILY[w]) || '{}') || {}; } catch (e) {}
+          const ok = !!(rec.days && rec.days[d.date]);
+          return `<button type="button" class="lx-card pzh-day${ok ? ' done' : ''}" data-daily="${w}"><span class="lx-th">${thumb(P)}</span><span class="lx-tx"><span class="lx-top"><span class="lx-no">${d.date.slice(5).replace('-', '/')}</span><span class="lx-st${ok ? ' ok' : ' new'}">${ok ? '✓' : esc(lsx('go'))}</span></span><span class="lx-t">${(w === 'd2' ? '☆ ' : '★ ') + esc(lsx(w === 'd2' ? 'de' : 'dg'))}</span><span class="lx-desc">${esc(L(sd.title))}</span></span></button>`; }).join('');
+        const tabs = `<div class="lx-tabs">${cats.map(k => { const r = SETS.map((x, i) => grp(x) === k ? recsOf(i) : []).flat(), d = r.filter(x => x > 0).length; return `<button type="button" data-cat="${k}" class="${k === cur ? 'sel' : ''}"><span class="ic pzh-ic">${ICN[k]}</span><span class="nm">${esc(CN[k])}</span><span class="ct${d >= r.length ? ' ok' : ''}">${d}/${r.length}</span></button>`; }).join('')}</div>`;
+        const ban = `<div class="lx-banner"><span class="ic pzh-ic">${ICN[cur]}</span><div class="tx"><b>${esc(CN[cur])}</b><small>${esc(CD[cur])}</small></div></div>`;
+        const card = i => { const sx = SETS[i], r = recsOf(i), d = r.filter(v => v > 0).length, n = r.length, full = d >= n, st = r.reduce((a, v) => a + v, 0), tr = tier(sx, i);
+          return `<button type="button" class="lx-card${full ? ' done' : ''}" data-set="${i}"><span class="lx-th sg">${thumb(shown(i))}</span><span class="lx-tx"><span class="lx-top"><span class="pzh-ic sm gl t${tr}">${no(sx)}</span><span class="pzh-dif">${'<i></i>'.repeat(tr + 1)}</span><span class="lx-st${full ? ' ok' : d ? ' so' : ' new'}">${full ? '✓' : d ? d + '/' + n : 'NEW'}</span></span><span class="lx-t">${esc(L(sx.title))}</span>${sx.short ? `<span class="lx-desc">${esc(L(sx.short))}</span>` : ''}<span class="pzh-row"><span class="pzh-bar"><i style="width:${Math.round(d * 100 / n)}%"></i></span><span class="pzh-st">★ ${st}/${n * 3}</span></span></span></button>`; };
+        S0.body.innerHTML = hero + (daily ? `<div class="lx-grid pzh-days">${daily}</div>` : '') + tabs + ban + `<div class="lx-grid">${SETS.map((x, i) => grp(x) === cur ? card(i) : '').join('')}</div>`;
+        S0.body.onclick = e => {
+          const tb = e.target.closest('[data-cat]'); if (tb) { cur = tb.dataset.cat; try { SFX.tap && SFX.tap(); } catch (x) {} home(); return; }
+          const c = e.target.closest('[data-cont]'); if (c) { const [i, j] = c.dataset.cont.split(':').map(Number); S0.close(); startPuzzle({ pick: { i, j } }); return; }
+          const dy = e.target.closest('[data-daily]'); if (dy) { S0.close(); startPuzzle({ daily: dy.dataset.daily }); return; }
+          const st = e.target.closest('[data-set]'); if (st) { try { SFX.tap && SFX.tap(); } catch (x) {} gridOf(+st.dataset.set); }
+        };
       };
       const gridOf = i => {
         const s = SETS[i]; S0.back.hidden = false; S0.title.textContent = L(s.title); S0.body.className = 'lesson-list';
@@ -1571,7 +1585,7 @@
         S0.body.parentNode.scrollTop = 0;
         S0.body.onclick = e => { const b = e.target.closest('#tsGrid button[data-j]'); if (!b) return; if (b.getAttribute('aria-disabled')) { toast(PZBook.t('locked')); return; } S0.close(); startPuzzle({ pick: { i, j: +b.dataset.j } }); };
       };
-      S0.back.onclick = () => { S0.body.onclick = null; home(); };
+      S0.back.onclick = () => home();
       home();
     }).catch(() => { S0.body.textContent = '⚠'; });
   }

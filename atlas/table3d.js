@@ -1636,6 +1636,16 @@
       for (let i = 0; i < 4; i++) { const v = ctrV[i].set(i & 1 ? F.w / 2 : -F.w / 2, yy, i & 2 ? F.d / 2 : -F.d / 2).project(cam); const X = r.left + (v.x + 1) / 2 * r.width, Y = r.top + (1 - v.y) / 2 * r.height; x0 = Math.min(x0, X); x1 = Math.max(x1, X); y0 = Math.min(y0, Y); y1 = Math.max(y1, Y); }
       return { left: x0, right: x1, top: y0, bottom: y1 }; } catch (e) { return null; }
   }
+  // the game's model as drawn (board, pieces, stands — its world bounding box projected): the screen rect it really covers,
+  // tighter than fitRect's frame (which carries the fit's margin) — the bubble asks whether it fits below it (2026-11-12)
+  function modelRect() {
+    try { if (!cur || !cam || !R) return null; const TT = T(); cam.updateMatrixWorld(); cur.updateMatrixWorld(true);
+      const B = new TT.Box3().setFromObject(cur); if (B.isEmpty()) return null; const r = R.domElement.getBoundingClientRect(), v = new TT.Vector3();
+      let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+      for (let i = 0; i < 8; i++) { v.set(i & 1 ? B.max.x : B.min.x, i & 2 ? B.max.y : B.min.y, i & 4 ? B.max.z : B.min.z).project(cam);
+        const X = r.left + (v.x + 1) / 2 * r.width, Y = r.top + (1 - v.y) / 2 * r.height; x0 = Math.min(x0, X); x1 = Math.max(x1, X); y0 = Math.min(y0, Y); y1 = Math.max(y1, Y); }
+      return { left: x0, right: x1, top: y0, bottom: y1 }; } catch (e) { return null; }
+  }
   function camPose(k) {
     // the free part of the view: the shift lens (Historia's page beside the board) leaves (width − 2·shift) for the board
     const a = (cam.aspect || 1) * (hshift ? Math.max(.3, (cw - 2 * Math.abs(hshift)) / cw) : 1), th = Math.tan(cam.fov * Math.PI / 360);
@@ -2302,5 +2312,5 @@
   try { if (sessionStorage.getItem('t3d-debug')) setTimeout(() => R && dbgToggle(true), 500); } catch (e) {}
   setInterval(() => { if (dbgOn && performance.now() - dbgT > 1000) { dbgFps = 0; dbgT = performance.now(); dbgPaint(); } }, 1000);   // (the loop sleeps when nothing moves: keep the numbers fresh)
 
-  window.Table3D = { placeOff: PLACE_OFF, fitRect, _texT: texT, _texCache: texCache, _texFile: texFile, decoOn, boSet: on => { BO_OK = !!on; bo.key = ''; kick(400); }, debug: dbgToggle, TABLES, placeMon, setTable, table: () => tableStyle, setBright, bright: () => bright, turn, museum, setShift, quiet, setTimeOfDay, timeOfDayPick: todPick, share, lp, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, tatami: () => tatamiTex(), stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, rvDisc, rvMats, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
+  window.Table3D = { placeOff: PLACE_OFF, fitRect, modelRect, _texT: texT, _texCache: texCache, _texFile: texFile, decoOn, boSet: on => { BO_OK = !!on; bo.key = ''; kick(400); }, debug: dbgToggle, TABLES, placeMon, setTable, table: () => tableStyle, setBright, bright: () => bright, turn, museum, setShift, quiet, setTimeOfDay, timeOfDayPick: todPick, share, lp, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, tatami: () => tatamiTex(), stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, rvDisc, rvMats, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
 })();
