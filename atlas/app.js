@@ -774,7 +774,7 @@
       const setMode = m => { $('bvMode').dataset.v = m; $('bvMode').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.m === m));
         if (!bodyH) measure();
         layout(m);
-        if ($('bvTable')) $('bvTable').disabled = MX ? false : !(ad.tableModes || ['ai']).includes(m);   // rated / online games need the full game
+        if ($('bvTable')) $('bvTable').disabled = MX ? false : !((ad.tableModes || ['ai']).includes(m) || (m === 'rated' && RTG[g.id]));   // online games need the full game; rated vs the AI also on the table (shogi / chess, RTG — 2026-11-11)
         fitStage(); };
       if (window.__bvModeRz) removeEventListener('resize', window.__bvModeRz);
       window.__bvModeRz = () => { if (!$('bvOpts') || !$('bvMode') || !$('bvMode').getClientRects().length) return; bodyH = 0; setMode($('bvMode').dataset.v); }; addEventListener('resize', window.__bvModeRz);
@@ -801,7 +801,7 @@
       if (lvi) { const w = document.createElement('div'); w.className = 'more lvw'; lvi.before(w); w.appendChild(lvi); D.push(w); }
       // three states: 1 = open (tags + progress shown), 0 = settings (default), -1 = mini (only the name row: the board can be seen)
       const RC = card.querySelector('.R');
-      let st = 0, fold = true;
+      let st = 0, fold = true, toTok = 0;
       const fullOf = el => { const h = el.style.height; el.style.height = 'auto'; const v = el.scrollHeight; el.style.height = h; return v; };
       let Hs = [], Hr = 1;
       const apply = k => {   // k in [-1, 1] (a little beyond while rubber-banding)
@@ -816,7 +816,9 @@
         els.forEach(el => { el.style.transition = anim ? 'height .32s cubic-bezier(.3,1.15,.5,1), opacity .25s' : 'none'; });
         apply(s);
         card.classList.toggle('fold', s < 1); card.classList.toggle('mini', s < 0);
+        const tok = ++toTok;
         setTimeout(() => {
+          if (tok !== toTok) return;   // (a newer move started meanwhile — a tap's touchend and its click: the drawer opened again, empty)
           els.forEach(el => { el.style.transition = 'none'; });
           if (s === 1) D.forEach(el => { el.style.height = 'auto'; });
           if (RC && s >= 0) { RC.style.height = 'auto'; RC.style.overflow = ''; }
@@ -833,7 +835,8 @@
         const p = p0 + (y0 - y); let k = p >= 0 ? p / Hup : p / Hr;
         if (k > 1) k = 1 + (k - 1) * .25; if (k < -1) k = -1 + (k + 1) * .25;   // rubber band past the ends
         kNow = k; apply(k); if (Math.abs(y - y0) > 6) e.preventDefault(); }, { passive: false });
-      card.addEventListener('touchend', () => { if (y0 === null) return; y0 = null;
+      card.addEventListener('touchend', () => { if (y0 === null) return; const y0s = y0; y0 = null;
+        if (Math.abs(last - (y0s || last)) < 6 && Math.abs(kNow - s0) < .05) { apply(st); return; }   // a tap, not a swipe: the click (the handle) decides
         const t = vy < -.3 ? Math.min(1, s0 + 1) : vy > .3 ? Math.max(-1, s0 - 1) : Math.max(-1, Math.min(1, Math.round(kNow)));
         to(t); }, { passive: true });
       grab.onclick = () => to(st === 0 ? 1 : 0);   // tap the handle: settings ↔ open, and from mini back to settings
