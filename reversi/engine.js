@@ -981,17 +981,20 @@ const LEVELS = [
   { depth: 8, exact: 14 },                          // 14 (old Lv.6)
   { depth: 9, exact: 15, time: 700, mpc: 1 },       // 15
   { depth: 10, exact: 16, time: 1000, mpc: 1 },     // 16 (old Lv.7)
-  { depth: 60, exact: 18, wld: 20, time: 1500, mpc: 1 },     // 17 (old Lv.8)
-  { depth: 60, exact: 18, wld: 21, time: 2200, mpc: 1 },     // 18
-  { depth: 60, exact: 19, wld: 21, time: 3000, mpc: 1 },     // 19 (old Lv.9)
-  { depth: 60, exact: 20, wld: 22, time: 5000, mpc: 1 },     // 20 (old Lv.10)
-  // 21-25 (2026-11-08, rebuilt the same day): longer thinking on all threads (page: MT_CFG). max = the hard limit per move in ms
-  // (else 2.5 × time); use = start a new depth until this share of time (else 0.45), and a depth cut by max still counts
-  // when another root move was already proved better there (think: PART). The levels' thinking time grows ×1.4–1.6 a step.
-  { depth: 60, exact: 21, wld: 23, time: 6000, use: 0.6, max: 12000, mpc: 1 },    // 21
-  { depth: 60, exact: 22, wld: 23, time: 8000, use: 0.65, max: 15000, mpc: 1 },   // 22
-  { depth: 60, exact: 22, wld: 24, time: 11000, use: 0.7, max: 18000, mpc: 1 },   // 23
-  { depth: 60, exact: 23, wld: 24, time: 14000, use: 0.75, max: 20000, mpc: 1 },  // 24
+  // 17-24 (2026-11-11): a fixed depth (depth) and endgame (exact / wld), the same strength on any device and thread count
+  // (the threads only make them faster). time / use / max are only a guard for slow devices (one thread on a slow phone):
+  // no new depth after time × use, the hard stop at max — far above what a PC with threads needs (MODEL_CARD.md「Lv.17〜24 を深さで」).
+  { depth: 11, exact: 17, wld: 19, time: 10000, use: 1, max: 20000, mpc: 1 },   // 17
+  { depth: 12, exact: 17, wld: 19, time: 10000, use: 1, max: 20000, mpc: 1 },   // 18
+  { depth: 14, exact: 18, wld: 20, time: 10000, use: 1, max: 20000, mpc: 1 },   // 19
+  { depth: 16, exact: 20, wld: 22, time: 10000, use: 1, max: 20000, mpc: 1 },   // 20
+  { depth: 18, exact: 21, wld: 23, time: 15000, use: 1, max: 30000, mpc: 1 },   // 21
+  { depth: 20, exact: 22, wld: 24, time: 20000, use: 1, max: 40000, mpc: 1 },   // 22
+  { depth: 22, exact: 23, wld: 24, time: 25000, use: 1, max: 50000, mpc: 1 },   // 23
+  { depth: 25, exact: 23, wld: 25, time: 30000, use: 1, max: 60000, mpc: 1 },   // 24
+  // 25 (2026-11-08): the strongest, by time on all threads (page: MT_CFG). max = the hard limit per move in ms (else 2.5 × time);
+  // use = start a new depth until this share of time (else 0.45), and a depth cut by max still counts when another root move
+  // was already proved better there (think: PART).
   { depth: 60, exact: 23, wld: 25, time: 18000, use: 0.8, max: 20000, mpc: 1 },   // 25
 ];
 const NLEVELS = LEVELS.length - 1, DEF_LEVEL = 15;

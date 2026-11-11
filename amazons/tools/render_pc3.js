@@ -4,7 +4,7 @@ const { chromium } = require('/opt/node-tools/node_modules/playwright-core');
 const { execFileSync } = require('child_process');
 (async () => {
   const b = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox', '--use-gl=swiftshader', '--enable-unsafe-swiftshader'] });
-  for (const set of ['statue', 'archer', 'bronze']) for (const [col, sd] of [[1, 'w'], [2, 'b']]) {
+  for (const set of (process.argv[2] ? process.argv[2].split(',') : ['statue', 'archer', 'bronze', 'totem', 'jade', 'pottery'])) for (const [col, sd] of [[1, 'w'], [2, 'b']]) {
     const p = await b.newPage();
     if (process.env.THREE_LOCAL) await p.route(/three\.min\.js/, r => r.fulfill({ path: process.env.THREE_LOCAL, contentType: 'application/javascript' }));
     await p.goto(`http://localhost:8765/atlas/tools/amzpiece.html?game=amazons&set=${set}&col=${col}&el=12&w=640&h=640`);
