@@ -284,18 +284,28 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
     const img = el.querySelector('img'), nm = el.querySelector('.npc-nm b'), tag = el.querySelector('.npc-tag'), tx = el.querySelector('.npc-tx'), pic = el.querySelector('.npc-pic'), ttl = el.querySelector('.npc-ttl');
     (o.body ? document.body : document.getElementById('bv') || document.body).appendChild(el);   // (inside the portal's 3D view: over the table, under its end-of-game card)
     let hideT = 0;
-    addEventListener('resize', () => { if (phoneLand()) { clearTimeout(hideT); el.classList.remove('on'); } });   // (turned sideways while talking)
+    // where it goes (the side column / centred, and the height: above the bar, or over it when the board is in the way)
+    const place = () => {
+      try { const l = o.left && o.left(); el.style.left = l ? Math.round(l[0]) + 'px' : ''; el.style.width = l ? `min(600px, ${Math.round(l[1] - 24)}px)` : ''; } catch (e) {}
+      try { const b = o.bottom ? o.bottom(el) : tableBottom(el); if (b != null) el.style.setProperty('--npc-bot', Math.round(b) + 'px'); } catch (e) {}
+    };
+    // the window resized while talking: placed again at once, and once more after the 3D view has framed the board anew (2026-11-12)
+    let rzT = 0, rzF = 0;
+    addEventListener('resize', () => {
+      if (phoneLand()) { clearTimeout(hideT); el.classList.remove('on'); return; }   // (turned sideways while talking)
+      if (!el.classList.contains('on')) return;
+      cancelAnimationFrame(rzF); rzF = requestAnimationFrame(place); clearTimeout(rzT); rzT = setTimeout(place, 450);
+    });
     el.addEventListener('click', e => { e.stopPropagation(); clearTimeout(hideT); el.classList.remove('on'); });   // tap the guide or the bubble: it steps away
     return {
       el,
       say(who, html, m) {
         if (phoneLand() || !A.on()) { clearTimeout(hideT); el.classList.remove('on'); return; }
-        try { const l = o.left && o.left(); el.style.left = l ? Math.round(l[0]) + 'px' : ''; el.style.width = l ? `min(600px, ${Math.round(l[1] - 24)}px)` : ''; } catch (e) {}
         el.dataset.who = who; el.classList.toggle('npc-ur', !!m.ur);
         if (img.getAttribute('src') !== m.img) img.src = m.img;
         nm.textContent = m.name; tag.textContent = m.tag; tag.classList.toggle('tv', !!m.tv); ttl.textContent = m.title || ''; tx.innerHTML = html;
         // (after the text: the place may depend on the bubble's height — the skins centre it between the board and the bar)
-        try { const b = o.bottom ? o.bottom(el) : tableBottom(el); if (b != null) el.style.setProperty('--npc-bot', Math.round(b) + 'px'); } catch (e) {}
+        place();
         el.classList.add('on'); pic.classList.remove('talk'); void pic.offsetWidth; pic.classList.add('talk');
         clearTimeout(hideT); hideT = setTimeout(() => el.classList.remove('on'), Math.max(7500, tx.textContent.length * 170));
       },
