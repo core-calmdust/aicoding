@@ -1,0 +1,492 @@
+<!doctype html>
+<!-- Dev tool: the pictures of the shogi 3D boards (images/atlas/shogi3d/*.webp, 2026-11-11).
+     Serve the repo root (python3 -m http.server 8765), then python3 atlas/tools/shogi-tex.py — or open
+     shogi-tex.html?t=side-makie to see one. window.GEN(name) → a webp data URL; window.NAMES = every picture.
+     Boards: makie (黒漆の側面に蒔絵) · grain (新榧, the 2D 木目) · ink (漆黒, the 2D 漆黒) · yosegi (箱根寄木細工) · sakura (山桜と樺細工).
+     The top of 本榧 / 蒔絵 is images/atlas/shogi-kaya.webp (unchanged). Per board: top-<b> (the playing surface with its rim),
+     side-<b> (the long faces), end-<b> (the short faces), stand-<b> (駒台 / the page's stands), and for the lacquer
+     the -m maps (R = height for the bump, G = roughness, B = metalness). -->
+<html><head><meta charset="utf-8"><title>shogi 3D board textures</title>
+<style>body{margin:0;background:#333;color:#ddd;font:13px system-ui}img{max-width:100%;display:block;margin:6px 0}</style></head>
+<body><div id="out"></div>
+<script>
+(function () {
+  'use strict';
+  /* ---------- noise ---------- */
+  function hash(i, j, s) { let h = (i * 374761393 + j * 668265263 + s * 2147483647) | 0; h = (h ^ (h >>> 13)) * 1274126177 | 0; return ((h ^ (h >>> 16)) >>> 0) / 4294967296; }
+  function vnoise(x, y, s) {
+    const i = Math.floor(x), j = Math.floor(y), fx = x - i, fy = y - j, u = fx * fx * (3 - 2 * fx), v = fy * fy * (3 - 2 * fy);
+    const a = hash(i, j, s), b = hash(i + 1, j, s), c = hash(i, j + 1, s), d = hash(i + 1, j + 1, s);
+    return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+  }
+  function fbm(x, y, s, o = 4) { let t = 0, a = .5, f = 1, n = 0; for (let k = 0; k < o; k++) { t += vnoise(x * f, y * f, s + k * 17) * a; n += a; a *= .5; f *= 2.03; } return t / n; }
+  let seed = 1; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const R = (a, b) => a + (b - a) * rnd();
+  const cv = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
+  const clamp = v => v < 0 ? 0 : v > 255 ? 255 : v;
+  const mix = (a, b, t) => a + (b - a) * t;
+
+  /* ---------- 2D boards (shogi/index.html body.skin-grain / skin-ink): the same gradient + SVG grain, so 3D = 2D ---------- */
+  let SRC = null;
+  const page = () => SRC || (SRC = fetch('../../shogi/index.html').then(r => r.text()));
+  const svgOf = (txt, sel) => { const i = txt.indexOf(sel); const m = txt.slice(i).match(/url\("(data:image\/svg\+xml,[^"]+)"\)/); return decodeURIComponent(m[1].slice('data:image/svg+xml,'.length)); };
+  const loadImg = src => new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = no; im.src = src; });
+  async function top2d(kind) {
+    const W = 1800, H = 1980, c = cv(W, H), g = c.getContext('2d'), txt = await page();
+    const stops = kind === 'grain' ? [['#e4c48e', 0], ['#dbb780', .38], ['#d3ac72', .7], ['#c9a066', 1]] : [['#2b2622', 0], ['#1f1b18', 1]];
+    const a = (kind === 'grain' ? 172 : 170) * Math.PI / 180, dx = Math.sin(a), dy = -Math.cos(a), L = Math.abs(W * dx) + Math.abs(H * dy);
+    const gr = g.createLinearGradient(W / 2 - dx * L / 2, H / 2 - dy * L / 2, W / 2 + dx * L / 2, H / 2 + dy * L / 2);
+    stops.forEach(([col, t]) => gr.addColorStop(t, col)); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+    // the inner shadow of the 2D board (inset 0 0 26px)
+    const sh = kind === 'grain' ? 'rgba(120,72,20,.22)' : 'rgba(0,0,0,.45)';
+    [[0, 0, W, 0, 0, 1], [0, H, W, H, 0, -1], [0, 0, 0, H, 1, 0], [W, 0, W, H, -1, 0]].forEach(([x0, y0, x1, y1, nx, ny]) => {
+      const lg = g.createLinearGradient(x0, y0, x0 + nx * 70, y0 + ny * 70); lg.addColorStop(0, sh); lg.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = lg; g.fillRect(0, 0, W, H); });
+    const svg = svgOf(txt, kind === 'grain' ? 'body.skin-grain .board::after' : 'body.skin-ink .board::after');
+    const im = await loadImg('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg.replace(/width='900' height='990'/, "width='1800' height='1980'")));
+    g.save(); g.globalAlpha = kind === 'grain' ? .24 : .09 * 2.2; g.globalCompositeOperation = kind === 'grain' ? 'multiply' : 'screen'; g.drawImage(im, 0, 0, W, H); g.restore();
+    return c;
+  }
+
+  /* ---------- a wood field by pixels: f(u, v) → [r, g, b] ---------- */
+  function pix(W, H, f) { const c = cv(W, H), g = c.getContext('2d'), im = g.createImageData(W, H), d = im.data;
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const o = f(x, y), i = (y * W + x) * 4; d[i] = clamp(o[0]); d[i + 1] = clamp(o[1]); d[i + 2] = clamp(o[2]); d[i + 3] = 255; }
+    g.putImageData(im, 0, 0); return c; }
+  // straight grain along x (柾目): thin late-wood lines, uneven, broadly warped; fibres; colour from light a → dark b
+  function straight(x, y, W, H, s, a, b, rings = 60, str = 1, vert = false) {
+    const u = vert ? y / H : x / W, v = vert ? x / W : y / H;   // u along the grain, v across
+    const ph = v * rings + (fbm(u * 1.3, v * 1.1, s, 3) - .5) * 3.2 + (fbm(u * 5, v * 3, s + 5, 2) - .5) * .4;
+    const k = Math.floor(ph), f = ph - k, pos = .5 + hash(k, 7, s) * .4, st = (.35 + hash(k, 13, s) * .65) * str, w0 = .6 + hash(k, 3, s) * .8;
+    const line = Math.exp(-Math.pow((f - pos) / (.03 * w0), 2)) * st + Math.exp(-Math.pow((f - pos) / (.12 * w0), 2)) * st * .25;
+    const fib = (vnoise(u * 6, v * 520, s + 9) - .5) * .09 + (vnoise(u * 180, v * 9, s + 11) - .5) * .05;
+    const tone = (fbm(u * 1.5, v * 1.2, s + 21, 2) - .5) * .22;
+    const t = Math.max(0, Math.min(1, .15 + line * .6 + fib * 1.5 + tone));
+    return [mix(a[0], b[0], t), mix(a[1], b[1], t), mix(a[2], b[2], t)];
+  }
+  // end grain (木口): tight rings arching across the face, centre (cx, cy) off the face
+  function endg(x, y, W, H, s, a, b, cx, cy, k, n = 60) {
+    const u = x / W, v = y / H, dx = (u - cx) * k, dy = v - cy;
+    const r = Math.sqrt(dx * dx + dy * dy) * n + fbm(u * 4, v * 4, s, 3) * 3 + vnoise(u * 40, v * 40, s + 3) * .2;
+    const f = r % 1, late = Math.exp(-Math.pow((f - .8) / .08, 2)), pores = vnoise(u * 900, v * 300, s + 7) > .86 ? .12 : 0;
+    const t = Math.max(0, Math.min(1, .2 + late * .45 + (fbm(u * 2, v * 2, s + 2, 2) - .5) * .25 + pores));
+    return [mix(a[0], b[0], t), mix(a[1], b[1], t), mix(a[2], b[2], t)];
+  }
+  const vignette = (g, W, H, col, k = .6) => { const r = g.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .3, W / 2, H / 2, Math.hypot(W, H) * .55); r.addColorStop(0, 'rgba(0,0,0,0)'); r.addColorStop(1, col); g.save(); g.globalAlpha = k; g.fillStyle = r; g.fillRect(0, 0, W, H); g.restore(); };
+
+  /* ---------- 蒔絵 (maki-e, 2026-11-11 v2 — the level of real 蒔絵盤: dense scenes, ぼかし powder, 付描 lines) ----------
+     Long faces: 山水楼閣図 (a pavilion on stilts over the water, pines on gold-powdered hills, a distant pagoda, waves, birds, mist).
+     Short faces: 扇流し (open fans floating on flowing water, plum painted on the fans). 駒台: 唐草 with a plum roundel.
+     Drawn as masks, then composed by pixels: powder layers are densities (each grain on / off), the raised gold lit from the upper left. */
+  const GOLD = [224, 178, 94], AOKIN = [212, 202, 150], AKAKIN = [212, 160, 102], SILVER = [200, 202, 206], BLUE = [126, 146, 176], RED = [170, 60, 38];
+  const LAYERS = ['pao', 'pgold', 'flat', 'akakin', 'blue', 'silver', 'raised', 'aokin', 'red', 'line', 'cut', 'flake'];
+  function masks(W, H) { const o = {}; LAYERS.forEach(k => { o[k] = cv(W, H); }); return o; }
+  const ctx = c => c.getContext('2d');
+  const G = (m, k) => { const g = ctx(m[k]); g.fillStyle = g.strokeStyle = '#fff'; g.lineCap = 'round'; g.lineJoin = 'round'; return g; };
+  // a ridge line: points from x0 to x1, y from a profile with noise
+  function ridge(x0, x1, yb, hgt, s, peaks = 2) { const P = []; for (let k = 0; k <= 60; k++) { const t = k / 60, x = x0 + (x1 - x0) * t;
+    const prof = Math.pow(Math.sin(Math.PI * t), .8) * (.6 + .4 * Math.sin(t * Math.PI * peaks + s)) + (fbm(t * 6, s, s * 7 | 0, 3) - .5) * .35; P.push([x, yb - hgt * Math.max(0, prof)]); } return P; }
+  const path = (g, P) => { g.beginPath(); P.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); };
+  // a hill: gold powder densest along the ridge, thinning downwards (ぼかし); the ridge drawn in gold; 皴 strokes inside
+  function hill(m, W, H, x0, x1, yb, hgt, s, k = 1, layer = 'pgold') {
+    const P = ridge(x0, x1, yb, hgt, s), sc = W / 3072, g = G(m, layer);
+    const yz = yb >= H * .98 ? H + 10 : yb + 6 * sc; g.save(); path(g, P); g.lineTo(x1, yz); g.lineTo(x0, yz); g.closePath(); g.clip();
+    g.globalAlpha = .1 * k; g.fillRect(0, 0, W, H);
+    g.globalAlpha = .95 * k; g.filter = `blur(${14 * sc}px)`; g.lineWidth = 46 * sc; path(g, P.map(([x, y]) => [x, y + 16 * sc])); g.stroke();
+    g.filter = `blur(${26 * sc}px)`; g.globalAlpha = .45 * k; g.lineWidth = 120 * sc; path(g, P.map(([x, y]) => [x, y + 60 * sc])); g.stroke();
+    g.restore();
+    const l = G(m, 'line'); l.lineWidth = 2.4 * sc; path(l, P); l.stroke();
+    // 付描: contour strokes following the ridge, broken
+    l.lineWidth = 1.3 * sc;
+    for (let r = 1; r <= 5; r++) { const off = r * 15 * sc; for (let i = 2; i < P.length - 3; i += 5) { if (rnd() < .35) continue; l.globalAlpha = .75; l.beginPath(); l.moveTo(P[i][0], P[i][1] + off); l.lineTo(P[i + 1][0], P[i + 1][1] + off); l.lineTo(P[i + 2][0], P[i + 2][1] + off * 1.05); l.stroke(); } }
+    // 皴: short hooked strokes on the slope
+    for (let i = 0; i < 26 * (x1 - x0) / W * 3; i++) { const t = R(.1, .9), j = Math.floor(t * 60), x = P[j][0], y = P[j][1] + R(20, 90) * sc; l.globalAlpha = R(.5, .9); l.beginPath(); l.moveTo(x, y); l.quadraticCurveTo(x + 10 * sc, y + 6 * sc, x + R(18, 32) * sc, y + R(2, 14) * sc); l.stroke(); }
+    l.globalAlpha = 1;
+    return P;
+  }
+  // a pine: a twisting trunk in raised gold with bark cut in, branches ending in flat pads of needles (gold, the needles cut in)
+  function pineTree(m, W, H, x, y, h, lean, s) {
+    const sc = W / 3072, g = G(m, 'raised'), c = G(m, 'cut');
+    const T = []; for (let k = 0; k <= 12; k++) { const t = k / 12; T.push([x + lean * h * t + Math.sin(t * 5 + s) * h * .06, y - h * t]); }
+    for (let k = 0; k < 12; k++) { g.lineWidth = (26 - k * 1.6) * sc * h / 300; g.beginPath(); g.moveTo(...T[k]); g.lineTo(...T[k + 1]); g.stroke(); }
+    c.lineWidth = 1.3 * sc; for (let k = 0; k < 30; k++) { const t = R(.05, .85), i = Math.floor(t * 12), [px, py] = T[i], w = (24 - i * 1.6) * sc * h / 300; c.beginPath(); c.moveTo(px - w * .4, py + R(-4, 4)); c.quadraticCurveTo(px, py + R(-6, 6), px + w * .4, py + R(-4, 4)); c.stroke(); }
+    const pad = (cx, cy, w, hh) => {   // 葉叢: a flat rounded pad, needles as fans cut into the gold, a gold rim
+      g.beginPath(); g.ellipse(cx, cy, w, hh, 0, 0, Math.PI * 2); g.fill();
+      c.lineWidth = 1.1 * sc; for (let f = -w * .8; f <= w * .8; f += 9 * sc) { const bx = cx + f, by = cy + hh * .55; for (let a = -1; a <= 1; a += .25) { c.beginPath(); c.moveTo(bx, by); c.lineTo(bx + Math.sin(a) * hh * 1.1, by - Math.cos(a) * hh * 1.05); c.stroke(); } }
+      const l = G(m, 'line'); l.lineWidth = 1.6 * sc; l.beginPath(); l.ellipse(cx, cy, w + 1.5 * sc, hh + 1.5 * sc, 0, Math.PI * 1.05, Math.PI * 1.95); l.stroke();
+    };
+    const tiers = 4 + (h > 300 ? 1 : 0);
+    for (let k = 0; k < tiers; k++) {
+      const t = .45 + k * (.55 / tiers), i = Math.min(12, Math.floor(t * 12)), [bx, by] = T[i], side = k & 1 ? 1 : -1, len = h * R(.28, .42) * (1 - k * .1);
+      const ex = bx + side * len, ey = by - R(4, 22) * sc;
+      g.lineWidth = (11 - k * 1.5) * sc * h / 300; g.beginPath(); g.moveTo(bx, by); g.quadraticCurveTo((bx + ex) / 2, by - 24 * sc, ex, ey); g.stroke();
+      pad(ex, ey - 12 * sc, h * R(.17, .23), h * R(.055, .07)); if (rnd() < .7) pad((bx + ex) / 2 + side * 10 * sc, ey - 34 * sc, h * R(.11, .15), h * .045);
+    }
+    pad(T[12][0], T[12][1] - 8 * sc, h * .2, h * .065);
+  }
+  // 楼閣: a pavilion on stilts — hip roof with tiles, bracketed eaves, red-gold panels between the pillars, a railing
+  function pavilion(m, W, H, x, y, w, s) {
+    const sc = W / 3072, f = G(m, 'flat'), r = G(m, 'raised'), a = G(m, 'akakin'), l = G(m, 'line'), c = G(m, 'cut');
+    const fl = y, hgt = w * .34, roofH = w * .3;
+    // stilts into the water
+    l.lineWidth = 3 * sc; for (let k = 0; k <= 8; k++) { const px = x + w * k / 8; l.beginPath(); l.moveTo(px, fl); l.lineTo(px, fl + w * .28); l.stroke(); }
+    l.lineWidth = 1.8 * sc; for (let k = 0; k < 8; k++) { const px = x + w * k / 8; l.beginPath(); l.moveTo(px, fl + w * .08); l.lineTo(px + w / 8, fl + w * .2); l.moveTo(px + w / 8, fl + w * .08); l.lineTo(px, fl + w * .2); l.stroke(); }
+    f.fillRect(x - w * .04, fl - 6 * sc, w * 1.08, 12 * sc);   // the floor
+    // railing
+    l.lineWidth = 2 * sc; l.beginPath(); l.moveTo(x - w * .04, fl - 26 * sc); l.lineTo(x + w * 1.04, fl - 26 * sc); l.stroke();
+    l.lineWidth = 1.2 * sc; for (let px = x; px <= x + w; px += 9 * sc) { l.beginPath(); l.moveTo(px, fl - 26 * sc); l.lineTo(px, fl - 6 * sc); l.stroke(); }
+    // walls: pillars and panels (red gold / bare lacquer windows with lattice)
+    const cols = 6, cw = w / cols;
+    for (let k = 0; k < cols; k++) { const px = x + k * cw; if (k % 2 === 0) { a.fillRect(px + 3 * sc, fl - hgt, cw - 6 * sc, hgt - 30 * sc); } else { l.lineWidth = 1 * sc; for (let q = 1; q < 5; q++) { l.beginPath(); l.moveTo(px + cw * q / 5, fl - hgt); l.lineTo(px + cw * q / 5, fl - 30 * sc); l.stroke(); } for (let q = 1; q < 6; q++) { l.beginPath(); l.moveTo(px, fl - hgt + (hgt - 30 * sc) * q / 6); l.lineTo(px + cw, fl - hgt + (hgt - 30 * sc) * q / 6); l.stroke(); } } }
+    f.save(); for (let k = 0; k <= cols; k++) f.fillRect(x + k * cw - 3 * sc, fl - hgt, 6 * sc, hgt - 26 * sc); f.restore();
+    f.fillRect(x - w * .02, fl - hgt - 8 * sc, w * 1.04, 10 * sc);   // beam
+    // the roof: a curved hip roof with upturned eaves
+    const ey = fl - hgt - 10 * sc, ex0 = x - w * .2, ex1 = x + w * 1.2, ry = ey - roofH;
+    r.beginPath(); r.moveTo(ex0 - 14 * sc, ey - 20 * sc); r.quadraticCurveTo(ex0 + w * .1, ey + 4 * sc, ex0 + w * .25, ey); r.lineTo(ex1 - w * .25, ey); r.quadraticCurveTo(ex1 - w * .1, ey + 4 * sc, ex1 + 14 * sc, ey - 20 * sc);
+    r.quadraticCurveTo(ex1 - w * .2, ey - roofH * .5, x + w * .85, ry); r.lineTo(x + w * .15, ry); r.quadraticCurveTo(ex0 + w * .2, ey - roofH * .5, ex0 - 14 * sc, ey - 20 * sc); r.closePath(); r.fill();
+    c.lineWidth = 1.2 * sc; for (let t = .04; t < .97; t += .022) { const bx = ex0 + (ex1 - ex0) * t, tx = x + w * .15 + w * .7 * Math.min(1, Math.max(0, (t - .12) / .76)); c.beginPath(); c.moveTo(bx, ey - 2 * sc); c.lineTo(tx, ry + 3 * sc); c.stroke(); }
+    c.lineWidth = 2 * sc; c.beginPath(); c.moveTo(ex0 + w * .1, ey - 8 * sc); c.lineTo(ex1 - w * .1, ey - 8 * sc); c.stroke();
+    // ridge with 鴟尾
+    f.fillRect(x + w * .12, ry - 7 * sc, w * .76, 9 * sc); r.beginPath(); r.ellipse(x + w * .12, ry - 12 * sc, 7 * sc, 13 * sc, -.4, 0, 7); r.ellipse(x + w * .88, ry - 12 * sc, 7 * sc, 13 * sc, .4, 0, 7); r.fill();
+  }
+  // a distant pagoda (五重塔), smaller, in pale gold
+  function pagoda(m, W, H, x, y, w, tiers = 5) {
+    const sc = W / 3072, a = G(m, 'aokin'), l = G(m, 'line'); let yy = y, ww = w;
+    for (let k = 0; k < tiers; k++) {
+      const bh = w * .28;
+      l.lineWidth = 1.2 * sc; l.strokeRect(x - ww * .3, yy - bh, ww * .6, bh); for (let q = 1; q < 3; q++) { l.beginPath(); l.moveTo(x - ww * .3 + ww * .6 * q / 3, yy - bh); l.lineTo(x - ww * .3 + ww * .6 * q / 3, yy); l.stroke(); }
+      yy -= bh; a.beginPath(); a.moveTo(x - ww * .75, yy - 6 * sc); a.quadraticCurveTo(x - ww * .4, yy + 2 * sc, x - ww * .3, yy); a.lineTo(x + ww * .3, yy); a.quadraticCurveTo(x + ww * .4, yy + 2 * sc, x + ww * .75, yy - 6 * sc); a.lineTo(x + ww * .25, yy - w * .2); a.lineTo(x - ww * .25, yy - w * .2); a.closePath(); a.fill();
+      yy -= w * .2; ww *= .86;
+    }
+    l.lineWidth = 2 * sc; l.beginPath(); l.moveTo(x, yy); l.lineTo(x, yy - w * .9); l.stroke();
+    for (let k = 1; k <= 9; k++) { l.lineWidth = 1 * sc; l.beginPath(); l.moveTo(x - 6 * sc, yy - w * .08 * k); l.lineTo(x + 6 * sc, yy - w * .08 * k); l.stroke(); }
+  }
+  // waves: many fine gold lines rolling across, with small crests (波頭) breaking here and there
+  function waves(m, W, H, y0, y1, s, dens = 1) {
+    const sc = W / 3072, l = G(m, 'line');
+    for (let y = y0; y < y1; y += 9 * sc / dens) {
+      l.lineWidth = R(.9, 1.6) * sc; l.globalAlpha = R(.6, .95); l.beginPath(); let started = false;
+      for (let x = -10; x < W + 10; x += 5 * sc) { const yy = y + Math.sin(x / (60 * sc) + y * .05 + s) * 4 * sc + Math.sin(x / (210 * sc) + s * 2) * 6 * sc;
+        if (vnoise(x / (90 * sc), y / (20 * sc), s * 3 | 0) < .3) { if (started) { l.stroke(); l.beginPath(); started = false; } continue; }
+        started ? l.lineTo(x, yy) : (l.moveTo(x, yy), started = true); }
+      if (started) l.stroke();
+    }
+    l.globalAlpha = 1;
+    // crests: little curling heads with spray
+    for (let k = 0; k < 40 * dens; k++) { const cx = R(0, W), cy = R(y0, y1), r = R(7, 14) * sc; l.lineWidth = 1.4 * sc; l.beginPath(); l.arc(cx, cy, r, Math.PI * .9, Math.PI * 2.1); l.stroke(); l.beginPath(); l.arc(cx + r * .45, cy - r * .1, r * .45, Math.PI, Math.PI * 2.3); l.stroke();
+      const f = G(m, 'flake'); for (let q = 0; q < 5; q++) { f.beginPath(); f.arc(cx + r + R(0, 10) * sc, cy - r + R(-6, 6) * sc, R(1, 2) * sc, 0, 7); f.fill(); } }
+  }
+  // rocks / islets in blue-silver with gold contours
+  function rock(m, W, H, x, y, w, h) { const sc = W / 3072, b = G(m, 'blue'), l = G(m, 'line'); const P = []; for (let k = 0; k <= 16; k++) { const t = k / 16 * Math.PI; P.push([x + Math.cos(t) * w * (.8 + rnd() * .3), y - Math.sin(t) * h * (.75 + rnd() * .35)]); }
+    path(b, P); b.closePath(); b.fill(); l.lineWidth = 1.6 * sc; path(l, P); l.stroke(); for (let k = 0; k < 4; k++) { l.lineWidth = 1.1 * sc; l.beginPath(); const sx = x + R(-.6, .4) * w; l.moveTo(sx, y - h * R(.2, .6)); l.quadraticCurveTo(sx + w * .2, y - h * R(.2, .8), sx + w * R(.3, .5), y - h * R(.1, .4)); l.stroke(); } }
+  function birds(m, W, H, x, y, n, sz) { const l = G(m, 'line'), sc = W / 3072; l.lineWidth = 1.8 * sc; for (let k = 0; k < n; k++) { const bx = x + R(-1, 1) * sz * 12, by = y + R(-1, 1) * sz * 3, w = sz * R(.7, 1.1); l.beginPath(); l.moveTo(bx - w, by - w * .2); l.quadraticCurveTo(bx - w * .4, by - w * .45, bx, by); l.quadraticCurveTo(bx + w * .4, by - w * .45, bx + w, by - w * .3); l.stroke(); } }
+  // すやり霞: long rounded bands of dense gold powder, feathered
+  function mist(m, W, H, x, y, w, h) {
+    const g = G(m, 'pgold'), sc = W / 3072;
+    const band = (x, y, w, h) => { g.beginPath(); g.moveTo(x + h / 2, y); g.lineTo(x + w - h / 2, y); g.arc(x + w - h / 2, y + h / 2, h / 2, -Math.PI / 2, Math.PI / 2); g.lineTo(x + h / 2, y + h); g.arc(x + h / 2, y + h / 2, h / 2, Math.PI / 2, Math.PI * 1.5); g.fill(); };
+    g.save(); g.filter = `blur(${10 * sc}px)`; g.globalAlpha = .9; band(x, y, w, h); band(x + w * .18, y + h * .72, w * .62, h * .7); g.restore();
+    const l = G(m, 'line'); l.lineWidth = 1.4 * sc; l.globalAlpha = .8; l.beginPath(); l.moveTo(x + h / 2, y); l.lineTo(x + w - h / 2, y); l.stroke(); l.globalAlpha = 1;
+    const f = G(m, 'flake'); for (let k = 0; k < 70; k++) { const px = x + R(-.05, 1.05) * w, py = y + R(-.4, 1.5) * h, s = R(3, 8) * sc; f.save(); f.translate(px, py); f.rotate(R(0, Math.PI)); f.fillRect(-s / 2, -s / 2, s, s); f.restore(); }   // 切金
+  }
+  // 梅: angular branches, five-petal blossoms in 青金 with red centres and stamens
+  function plum(m, W, H, x0, y0, ang, len, sc0, layer = 'raised') {
+    const g = G(m, layer), a = G(m, 'aokin'), rd = G(m, 'red'), c = G(m, 'cut'), sc = W / 3072 * sc0;
+    const bloom = (cx, cy, r) => { const rot = R(0, Math.PI);
+      for (let k = 0; k < 5; k++) { const t = rot + k * Math.PI * 2 / 5; a.beginPath(); a.arc(cx + Math.cos(t) * r * .6, cy + Math.sin(t) * r * .6, r * .48, 0, Math.PI * 2); a.fill(); }
+      rd.beginPath(); rd.arc(cx, cy, r * .24, 0, 7); rd.fill();
+      c.lineWidth = .9 * sc; for (let k = 0; k < 5; k++) { const t = rot + k * Math.PI * 2 / 5 + Math.PI / 5; c.beginPath(); c.moveTo(cx + Math.cos(t) * r * .3, cy + Math.sin(t) * r * .3); c.lineTo(cx + Math.cos(t) * r * .9, cy + Math.sin(t) * r * .9); c.stroke(); }
+      const l = G(m, 'line'); l.lineWidth = .8 * sc; for (let k = 0; k < 9; k++) { const t = rot + k * .7, q = r * R(.4, .6); l.beginPath(); l.moveTo(cx, cy); l.lineTo(cx + Math.cos(t) * q, cy + Math.sin(t) * q); l.stroke(); }
+    };
+    const seg = (x, y, an, ln, w, d) => {
+      if (d > 4 || ln < 10 * sc) return;
+      const ex = x + Math.cos(an) * ln, ey = y + Math.sin(an) * ln;
+      g.lineWidth = w; g.beginPath(); g.moveTo(x, y); g.lineTo(ex, ey); g.stroke();
+      c.lineWidth = .9 * sc; c.beginPath(); c.moveTo(x, y + w * .25); c.lineTo(ex, ey + w * .25); c.stroke();
+      if (rnd() < .65) bloom(ex + R(-6, 6) * sc, ey + R(-6, 6) * sc, R(13, 19) * sc);
+      if (rnd() < .5) { a.beginPath(); a.arc((x + ex) / 2 + R(-4, 4) * sc, (y + ey) / 2 - w, R(3, 5) * sc, 0, 7); a.fill(); }
+      seg(ex, ey, an + R(.3, .65) * (rnd() < .5 ? -1 : 1), ln * R(.55, .8), w * .66, d + 1);
+      if (rnd() < .7) seg(ex, ey, an + R(-.9, .9), ln * R(.4, .65), w * .55, d + 2);
+    };
+    seg(x0, y0, ang, len * sc, 12 * sc, 0);
+  }
+  // 扇: an open folding fan — ribs, the paper (地紙) in red-gold powder with a plum painted on it, a gold rim
+  function fan(m, W, H, cx, cy, r, a0, a1, s) {
+    const sc = W / 3072, l = G(m, 'line'), f = G(m, 'flat'), ak = G(m, 'akakin'), pg = G(m, 'pgold');
+    const r0 = r * .42;
+    // ribs below the paper
+    l.lineWidth = 2.2 * sc; for (let k = 0; k <= 14; k++) { const t = a0 + (a1 - a0) * k / 14; l.beginPath(); l.moveTo(cx, cy); l.lineTo(cx + Math.cos(t) * r0, cy + Math.sin(t) * r0); l.stroke(); }
+    f.beginPath(); f.arc(cx, cy, 7 * sc, 0, 7); f.fill();   // the pivot (要)
+    // the paper: an annular sector, red gold, folds as fine lines, a gold powder ぼかし at the top edge
+    const sector = g => { g.beginPath(); g.arc(cx, cy, r, a0, a1); g.arc(cx, cy, r0, a1, a0, true); g.closePath(); };
+    sector(ak); ak.fill();
+    pg.save(); sector(pg); pg.clip(); pg.filter = `blur(${12 * sc}px)`; pg.globalAlpha = .9; pg.lineWidth = 40 * sc; pg.beginPath(); pg.arc(cx, cy, r - 14 * sc, a0, a1); pg.stroke(); pg.restore();
+    const c = G(m, 'cut'); c.lineWidth = 1 * sc; c.globalAlpha = .6; for (let k = 1; k < 28; k++) { const t = a0 + (a1 - a0) * k / 28; c.beginPath(); c.moveTo(cx + Math.cos(t) * r0, cy + Math.sin(t) * r0); c.lineTo(cx + Math.cos(t) * r, cy + Math.sin(t) * r); c.stroke(); } c.globalAlpha = 1;
+    l.lineWidth = 2.4 * sc; sector(l); l.stroke();
+    // a plum branch painted on the paper (in the paper's clip)
+    const sv = seed; ['raised', 'aokin', 'red', 'cut', 'line'].forEach(k => { const g = ctx(m[k]); g.save(); sector(g); g.clip(); });
+    const am = (a0 + a1) / 2, a2 = a0 + (a1 - a0) * .12; plum(m, W, H, cx + Math.cos(a2) * r * .66, cy + Math.sin(a2) * r * .66, am + Math.PI / 2 - .25, r * .55 / sc, 1); plum(m, W, H, cx + Math.cos(am) * r * .62, cy + Math.sin(am) * r * .62, am - .3, r * .3 / sc, .9); plum(m, W, H, cx + Math.cos(a1 - .25) * r * .58, cy + Math.sin(a1 - .25) * r * .58, am - 1.1, r * .32 / sc, .9);
+    ['raised', 'aokin', 'red', 'cut', 'line'].forEach(k => ctx(m[k]).restore()); seed = sv + 1;
+  }
+  // 流水: bundles of flowing lines, ending in a curl
+  function stream(m, W, H, pts, n, gap, s) {
+    const sc = W / 3072, l = G(m, 'line');
+    for (let k = 0; k < n; k++) { const off = (k - n / 2) * gap * sc; l.lineWidth = (k % 4 === 0 ? 2.4 : 1.5) * sc; l.beginPath();
+      for (let t = 0; t <= 1.0001; t += .004) { const i = Math.min(pts.length - 2, Math.floor(t * (pts.length - 1))), u = t * (pts.length - 1) - i, [ax, ay] = pts[i], [bx, by] = pts[i + 1], x = ax + (bx - ax) * u, y = ay + (by - ay) * (1 - Math.cos(u * Math.PI)) / 2 + off * (1 + .3 * Math.sin(t * 6 + k)); t ? l.lineTo(x, y) : l.moveTo(x, y); }
+      l.stroke(); }
+    const [ex, ey] = pts[0]; for (let k = 0; k < 4; k++) { l.lineWidth = 1.6 * sc; l.beginPath(); const r = (14 + k * 9) * sc; l.arc(ex + r * .6, ey - n * gap * sc * .2, r, Math.PI * .6, Math.PI * 1.9); l.stroke(); }
+  }
+  // 唐草 with a roundel (駒台)
+  function karakusa(m, W, H, s) {
+    const sc = W / 1024, l = G(m, 'line'), f = G(m, 'flat');
+    const leaf = (x, y, a, z) => { f.save(); f.translate(x, y); f.rotate(a); f.beginPath(); f.moveTo(0, 0); f.bezierCurveTo(z * .5, -z * .55, z * 1.1, -z * .2, z, z * .2); f.bezierCurveTo(z * .7, z * .45, z * .3, z * .1, 0, 0); f.fill(); f.restore(); };
+    const N = 6, cs = W / (N - .5);
+    for (let gy = -1; gy <= N; gy++) for (let gx = -1; gx <= N; gx++) {
+      const cx = (gx + .25 + (gy & 1) * .5) * cs, cy = (gy + .5) * cs * .9, rr = cs * .42, dir = (gx + gy) & 1 ? 1 : -1;
+      l.lineWidth = 3.4 * sc; l.beginPath(); for (let t = 0; t < 3.6 * Math.PI; t += .08) { const q = rr * (1 - t / (4 * Math.PI)); l.lineTo(cx + Math.cos(t * dir) * q, cy + Math.sin(t * dir) * q); } l.stroke();
+      l.beginPath(); l.moveTo(cx + rr, cy); l.bezierCurveTo(cx + rr * 1.3, cy + rr * .9 * dir, cx + cs * .8, cy - rr * .6 * dir, cx + cs - rr * .1, cy + rr * .2 * dir); l.stroke();
+      for (let t = .3; t < 3 * Math.PI; t += .7) { const q = rr * (1 - t / (4 * Math.PI)); leaf(cx + Math.cos(t * dir) * q, cy + Math.sin(t * dir) * q, t * dir + (dir > 0 ? 1.4 : -1.4 + Math.PI), (40 - t * 2.4) * sc); }
+      leaf(cx + rr * 1.25, cy + rr * .45 * dir, .6 * dir, 36 * sc); leaf(cx + cs * .62, cy - rr * .15 * dir, -.9 * dir, 32 * sc);
+    }
+    // the roundel: a ring, a plum blossom
+    const cx = W / 2, cy = H / 2, R0 = W * .2, r = G(m, 'raised'), k = ctx(m.line), F = ['pao', 'pgold', 'flat', 'akakin', 'line', 'cut'].map(q => ctx(m[q]));
+    F.forEach(g => { g.save(); g.globalCompositeOperation = 'destination-out'; g.beginPath(); g.arc(cx, cy, R0 + 8 * sc, 0, 7); g.fill(); g.restore(); });
+    k.lineWidth = 7 * sc; k.beginPath(); k.arc(cx, cy, R0, 0, 7); k.stroke(); k.lineWidth = 2 * sc; k.beginPath(); k.arc(cx, cy, R0 - 10 * sc, 0, 7); k.stroke();
+    const a = G(m, 'aokin'), rd = G(m, 'red'), c = G(m, 'cut');
+    for (let q = 0; q < 5; q++) { const t = -Math.PI / 2 + q * Math.PI * 2 / 5; r.beginPath(); r.arc(cx + Math.cos(t) * R0 * .42, cy + Math.sin(t) * R0 * .42, R0 * .36, 0, 7); r.fill(); }
+    c.lineWidth = 2 * sc; for (let q = 0; q < 5; q++) { const t = -Math.PI / 2 + q * Math.PI * 2 / 5 + Math.PI / 5; c.beginPath(); c.moveTo(cx + Math.cos(t) * R0 * .2, cy + Math.sin(t) * R0 * .2); c.lineTo(cx + Math.cos(t) * R0 * .62, cy + Math.sin(t) * R0 * .62); c.stroke(); }
+    rd.beginPath(); rd.arc(cx, cy, R0 * .17, 0, 7); rd.fill();
+    for (let q = 0; q < 12; q++) { const t = q * Math.PI / 6; a.beginPath(); a.arc(cx + Math.cos(t) * R0 * .27, cy + Math.sin(t) * R0 * .27, 4 * sc, 0, 7); a.fill(); }
+  }
+  // 梨子地: gold flakes scattered thinly
+  function nashiji(m, W, H, n) { const f = G(m, 'flake'), sc = W / 3072; for (let k = 0; k < n; k++) { const x = R(0, W), y = R(0, H), s = R(1, 2.6) * Math.max(sc, .5); f.save(); f.globalAlpha = R(.4, .9); f.translate(x, y); f.rotate(R(0, 3)); f.fillRect(-s / 2, -s / 3, s, s * .7); f.restore(); } }
+  function rim(m, W, H, inset) { const g = G(m, 'line'); g.lineWidth = 2.2 * W / 3072; g.strokeRect(inset, inset * .5, W - inset * 2, H - inset); }
+  function blurMask(c, px) { const o = cv(c.width, c.height), g = ctx(o); g.filter = `blur(${px}px)`; g.drawImage(c, 0, 0); return o; }
+  // compose → [colour canvas, map canvas (R height, G roughness, B metalness)]
+  function composeMakie(m, W, H, s) {
+    const rd = k => ctx(m[k]).getImageData(0, 0, W, H).data, D = {}; LAYERS.forEach(k => D[k] = rd(k));
+    const Hb = ctx(blurMask(m.raised, 2.4 * W / 3072)).getImageData(0, 0, W, H).data, Ab = ctx(blurMask(m.aokin, 1.8 * W / 3072)).getImageData(0, 0, W, H).data;
+    const c = cv(W, H), cm = cv(W, H), g = ctx(c), gm = ctx(cm), im = g.createImageData(W, H), mm = gm.createImageData(W, H), d = im.data, e = mm.data;
+    const lit = (B, i, W) => (B[i] - (B[i + (2 * W + 2) * 4] || 0)) / 255;
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const i = (y * W + x) * 4, a = i + 3;
+      const lq = 9 + (vnoise(x * .003, y * .008, s) - .5) * 4;
+      let r = lq + 2, gg = lq, b = lq - 1, h = 0, rough = 26 + vnoise(x * .02, y * .02, s + 4) * 10, met = 0;
+      const gr = hash(x, y, s) - .5, gr2 = vnoise(x * .35, y * .35, s + 8) - .5;
+      const put = (col, k, rg, mt, ht, sp = 1) => { if (k <= 0) return; const L = 1 + gr * .28 * sp + gr2 * .22 * sp; r = mix(r, col[0] * L, k); gg = mix(gg, col[1] * L, k); b = mix(b, col[2] * L, k); rough = mix(rough, rg + gr * 30, k); met = mix(met, mt, k); h = Math.max(h, ht * k); };
+      // powders (蒔きぼかし): each grain on or off by the density
+      const pa = D.pao[a] / 255; if (pa > 0 && hash(x, y, s + 41) < pa) put(AOKIN, Math.min(1, .5 + pa * .5), 96, 255, 10, 1.4);
+      const pg = D.pgold[a] / 255; if (pg > 0 && hash(x, y, s + 31) < pg * (.85 + fbm(x * .01, y * .02, s + 60, 2) * .3)) put(GOLD, Math.min(1, .55 + pg * .5), 92, 255, 16, 1.4);
+      put(GOLD, D.flat[a] / 255, 80, 255, 40);
+      put(AKAKIN, D.akakin[a] / 255, 88, 255, 36, 1.8);
+      put(BLUE, D.blue[a] / 255 * (.85 + (fbm(x * .03, y * .03, s + 70, 3) - .5) * .4), 90, 200, 30, 1.2);
+      put(SILVER, D.silver[a] / 255, 74, 255, 30, 1.6);
+      const rk = D.raised[a] / 255; if (rk > 0) { const hl = lit(Hb, a, W); put([GOLD[0] * (1 + hl * 1.5), GOLD[1] * (1 + hl * 1.5), GOLD[2] * (1 + hl * 1.3)], rk, 70, 255, 70 + Hb[a] / 255 * 185); }
+      const ak = D.aokin[a] / 255; if (ak > 0) { const hl = lit(Ab, a, W); put([AOKIN[0] * (1 + hl * 1.4), AOKIN[1] * (1 + hl * 1.4), AOKIN[2] * (1 + hl * 1.3)], ak, 64, 255, 60 + Ab[a] / 255 * 150); }
+      put(RED, D.red[a] / 255, 90, 0, 110);
+      put(GOLD, D.line[a] / 255, 76, 255, 30, .8);   // 付描 (fine gold lines)
+      const ck = D.cut[a] / 255; if (ck > 0) { r = mix(r, 52, ck * .85); gg = mix(gg, 28, ck * .85); b = mix(b, 14, ck * .85); met = mix(met, 80, ck); h *= 1 - ck * .5; }   // 描割り / 錆 cut into the gold
+      put([238, 198, 112], D.flake[a] / 255, 40, 255, 22, .4);   // 切金 / 梨子地
+      d[i] = clamp(r); d[i + 1] = clamp(gg); d[i + 2] = clamp(b); d[i + 3] = 255;
+      e[i] = clamp(h); e[i + 1] = clamp(rough); e[i + 2] = clamp(met); e[i + 3] = 255;
+    }
+    g.putImageData(im, 0, 0); gm.putImageData(mm, 0, 0);
+    return [c, cm];
+  }
+  const MK = {};
+  function makie(kind) {
+    if (MK[kind]) return MK[kind];
+    seed = kind === 'side' ? 11 : kind === 'end' ? 23 : kind === 'stand' ? 37 : 51;
+    const W = kind === 'stand' ? 1024 : kind === 'leg' ? 512 : 3072, H = kind === 'stand' ? 1024 : kind === 'leg' ? 512 : 800, m = masks(W, H), sc = W / 3072;
+    if (kind === 'side') {   // 山水楼閣図
+      // distant mountains (pale gold powder), a pagoda on the far shore, mist
+      [[W * .3, W * .62, H * .42, H * .22, 3], [W * .52, W * .9, H * .44, H * .26, 5], [W * .1, W * .4, H * .4, H * .14, 7]].forEach(([a, b, y, h, s]) => hill(m, W, H, a, b, y, h, s, .55, 'pao'));
+      mist(m, W, H, W * .36, H * .12, W * .3, H * .06); mist(m, W, H, W * .7, H * .3, W * .24, H * .05);
+      hill(m, W, H, W * .5, W * .76, H * .56, H * .14, 4, .8);
+      pagoda(m, W, H, W * .6, H * .5, 70 * sc, 5);
+      [[W * .54, H * .5], [W * .66, H * .52], [W * .7, H * .5]].forEach(([x, y]) => pineTree(m, W, H, x, y, 70 * sc, R(-.1, .1), R(0, 6)));
+      birds(m, W, H, W * .44, H * .22, 9, 13 * sc); birds(m, W, H, W * .52, H * .3, 5, 10 * sc);
+      // the near shore: a big hill on the left with pines and the pavilion over the water; rocks and pines on the right
+      waves(m, W, H, H * .6, H * .97, 2.3, 1);
+      hill(m, W, H, -W * .05, W * .36, H * 1.02, H * .62, 1.7, 1);
+      pineTree(m, W, H, W * .07, H * .82, 380 * sc, .18, 1); pineTree(m, W, H, W * .2, H * .7, 250 * sc, -.12, 2);
+      pavilion(m, W, H, W * .25, H * .66, W * .16, 3);
+      hill(m, W, H, W * .74, W * 1.06, H * 1.02, H * .48, 3.1, 1);
+      pineTree(m, W, H, W * .86, H * .72, 300 * sc, -.25, 4);
+      rock(m, W, H, W * .7, H * .93, 80 * sc, 34 * sc); rock(m, W, H, W * .47, H * .9, 50 * sc, 20 * sc); rock(m, W, H, W * .2, H * .97, 70 * sc, 26 * sc);
+      plum(m, W, H, W * .97, H * .9, -Math.PI + .7, 160, .9);
+      nashiji(m, W, H, 9000); rim(m, W, H, 24 * sc);
+    } else if (kind === 'end') {   // 扇流し
+      stream(m, W, H, [[W * .06, H * .6], [W * .3, H * .7], [W * .55, H * .64], [W * .8, H * .74], [W * 1.02, H * .7]], 11, 9, 1);
+      fan(m, W, H, W * .3, H * .78, H * .5, -Math.PI * .92, -Math.PI * .28, 1);
+      fan(m, W, H, W * .7, H * .86, H * .36, -Math.PI * .8, -Math.PI * .32, 2);
+      mist(m, W, H, W * .55, H * .14, W * .32, H * .05);
+      nashiji(m, W, H, 7000); rim(m, W, H, 24 * sc);
+    } else if (kind === 'stand') {   // 唐草 with a plum roundel
+      karakusa(m, W, H, 3); rim(m, W, H, 26 * sc * 3);
+    } else nashiji(m, W, H, 3000);
+    return (MK[kind] = composeMakie(m, W, H, seed));
+  }
+
+  /* ---------- 箱根寄木細工: 麻の葉 / 矢羽根 / 市松 of natural woods, each piece with its own grain ---------- */
+  const WOODS = {
+    white: [236, 226, 204], yellow: [226, 192, 96], brown: [150, 98, 58], dark: [64, 52, 44], green: [138, 136, 100], red: [168, 82, 54], katsura: [196, 150, 104],
+  };
+  const pieceGrain = (x, y, ang, s) => { const cs = Math.cos(ang), sn = Math.sin(ang), u = x * cs + y * sn, v = -x * sn + y * cs; return (vnoise(u * .012, v * .32, s) - .5) * .32 + (vnoise(u * .002, v * .05, s + 3) - .5) * .25 + (hash(u | 0, v * 3 | 0, s) - .5) * .05; };
+  // 麻の葉 on a triangular lattice of side a: the colour of each small triangle by the direction of its outer edge
+  const SQ3 = Math.sqrt(3);
+  function asanoha(x, y, a) {
+    const h = a * SQ3 / 2, j = Math.floor(y / h), fy = y / h - j, xx = x / a + (j & 1) * .5, i = Math.floor(xx), fx = xx - i;
+    let V;   // the triangle's vertices in (xx, row) units
+    if (fy <= 2 * fx && fy <= 2 * (1 - fx)) V = [[i, 0], [i + 1, 0], [i + .5, 1]];
+    else if (fx > .5) V = [[i + .5, 1], [i + 1.5, 1], [i + 1, 0]];
+    else V = [[i - .5, 1], [i + .5, 1], [i, 0]];
+    const P = V.map(([vx, vy]) => [(vx - (j & 1) * .5) * a, (j + vy) * h]), cx = (P[0][0] + P[1][0] + P[2][0]) / 3, cy = (P[0][1] + P[1][1] + P[2][1]) / 3;
+    const down = V[0][1] === 0 && V[1][1] === 0;
+    // which small triangle (centre, Pk, Pk+1): the sign tests
+    const cr = (p, q) => (p[0] - cx) * (q[1] - cy) - (p[1] - cy) * (q[0] - cx), pt = [x, y];
+    let k = 0; for (let t = 0; t < 3; t++) { const p = P[t], q = P[(t + 1) % 3], s1 = cr(p, pt), s2 = cr(pt, q), s0 = cr(p, q); if (Math.sign(s1) === Math.sign(s0) && Math.sign(s2) === Math.sign(s0)) { k = t; break; } }
+    const p = P[k], q = P[(k + 1) % 3], dir = Math.round(((Math.atan2(q[1] - p[1], q[0] - p[0]) * 3 / Math.PI) % 3 + 3) % 3);
+    const mx = (p[0] + q[0]) / 2, my = (p[1] + q[1]) / 2, half = ((mx - cx) * (y - cy) - (my - cy) * (x - cx)) > 0 ? 1 : 0;   // which side of the centre → edge-midpoint line
+    // glue lines: distance to the triangle's edges and to the spokes from the centre
+    const dl = (ax, ay, bx, by) => { const vx = bx - ax, vy = by - ay, t = Math.max(0, Math.min(1, ((x - ax) * vx + (y - ay) * vy) / (vx * vx + vy * vy))); return Math.hypot(x - ax - vx * t, y - ay - vy * t); };
+    let dm = 1e9; for (let t = 0; t < 3; t++) { dm = Math.min(dm, dl(P[t][0], P[t][1], P[(t + 1) % 3][0], P[(t + 1) % 3][1]), dl(cx, cy, P[t][0], P[t][1])); }
+    dm = Math.min(dm, dl(cx, cy, mx, my) + .6);
+    const light = down ? ['white', 'yellow', 'white'] : ['yellow', 'white', 'yellow'], dark = down ? ['brown', 'dark', 'green'] : ['dark', 'brown', 'red'];
+    return { col: (half ^ (down ? 0 : 1)) ? dark[dir] : light[dir], ang: Math.atan2(q[1] - p[1], q[0] - p[0]) + half * .4, dm, id: (i * 7 + j * 13 + k * 2 + half) };
+  }
+  function yosegiPx(x, y, region, s) {
+    // region: { kind: 'asa' | 'yabane' | 'ichi' | 'stripe' | 'field', ... }
+    let col, ang = 0, dm = 9, id = 0;
+    if (region.kind === 'asa') { const q = asanoha(x - region.x0, y - region.y0, region.a); col = WOODS[q.col]; ang = q.ang; dm = q.dm; id = q.id; }
+    else if (region.kind === 'yabane') {   // 矢羽根: columns of chevrons
+      const w = region.a, cx = Math.floor((x - region.x0) / w), lx = (x - region.x0) / w - cx, ly = (y - region.y0) / w + Math.abs(lx - .5) * (cx & 1 ? -1 : 1), r = Math.floor(ly * 1.2);
+      col = WOODS[region.calm ? [['brown', 'white'], ['white', 'dark']][cx & 1][r & 1] : [['dark', 'white'], ['red', 'yellow']][cx & 1][r & 1]]; ang = (lx < .5 ? 1 : -1) * .5 + Math.PI / 2; dm = Math.min(Math.abs(lx) * w, Math.abs(1 - lx) * w, Math.abs(ly * 1.2 - r) * w / 1.2, Math.abs(r + 1 - ly * 1.2) * w / 1.2); id = cx * 31 + r;
+    } else if (region.kind === 'ichi') {   // 市松
+      const a = region.a, i = Math.floor((x - region.x0) / a), j = Math.floor((y - region.y0) / a);
+      col = WOODS[(i + j) & 1 ? 'dark' : 'white']; ang = (i + j) & 1 ? 0 : Math.PI / 2; dm = Math.min(((x - region.x0) % a + a) % a, ((y - region.y0) % a + a) % a); id = i * 17 + j;
+    } else if (region.kind === 'stripe') { const k = Math.floor((y - region.y0) / region.a); col = WOODS[region.cols[((k % region.cols.length) + region.cols.length) % region.cols.length]]; ang = 0; dm = (((y - region.y0) % region.a) + region.a) % region.a; id = k; }
+    else { col = WOODS[region.wood]; ang = region.ang || 0; id = 999; }
+    const gr = pieceGrain(x + id * 97, y + id * 53, ang, s + (id & 7));
+    let k = 1 + gr; if (dm < 1.1) k *= .58 + dm * .3;
+    return [col[0] * k, col[1] * k, col[2] * k];
+  }
+  function yosegiSide(W, H, s) {
+    // (2026-11-11: calmer — plain 桂 wood with one band of large 矢羽根 in three quiet woods, edged with thin stripes)
+    const bands = [[0, .3, { kind: 'field', wood: 'katsura' }], [.3, .34, { kind: 'stripe', a: H * .013, y0: H * .3, cols: ['dark', 'white', 'dark'] }], [.34, .66, { kind: 'yabane', a: H * .14, x0: 0, y0: H * .34, calm: true }], [.66, .7, { kind: 'stripe', a: H * .013, y0: H * .66, cols: ['dark', 'white', 'dark'] }], [.7, 1, { kind: 'field', wood: 'katsura' }]];
+    return pix(W, H, (x, y) => { const v = y / H, b = bands.find(b => v >= b[0] && v < b[1]) || bands[4]; let o = yosegiPx(x, y, b[2], s); if (b[2].kind === 'field') o = straight(x, y, W, H, s + 40, [206, 160, 112], [150, 102, 62], 26, .8); return o; });
+  }
+  function yosegiTop(W, H, s) {   // a pale ホオ field; the rim (the margin around the grid) a band of 矢羽根 with 市松 corners
+    const mg = W * .05, bw = mg * .62, b0 = mg * .16;   // the board's margin is .5 of the 10-unit width
+    return pix(W, H, (x, y) => {
+      const inB = (x > b0 && x < W - b0 && y > b0 && y < H - b0) && !(x > b0 + bw && x < W - b0 - bw && y > b0 + bw && y < H - b0 - bw);
+      if (inB) {
+        const corner = (x < b0 + bw || x > W - b0 - bw) && (y < b0 + bw || y > H - b0 - bw);
+        if (corner) return yosegiPx(x, y, { kind: 'ichi', a: bw / 3, x0: x < W / 2 ? b0 : W - b0 - bw, y0: y < H / 2 ? b0 : H - b0 - bw }, s);
+        const horiz = y < b0 + bw || y > H - b0 - bw;
+        const lx = horiz ? x : y, ly = horiz ? (y < H / 2 ? y - b0 : y - (H - b0 - bw)) : (x < W / 2 ? x - b0 : x - (W - b0 - bw));
+        const o = yosegiPx(lx, ly, { kind: 'yabane', a: bw / 2, x0: 0, y0: 0 }, s); return o;
+      }
+      const edge = Math.min(Math.abs(x - b0), Math.abs(y - b0), Math.abs(W - b0 - x), Math.abs(H - b0 - y), Math.abs(x - b0 - bw), Math.abs(y - b0 - bw), Math.abs(W - b0 - bw - x), Math.abs(H - b0 - bw - y));
+      const o = straight(x, y, W, H, s, [232, 214, 174], [196, 166, 118], 48, .7, true);
+      if (edge < 2.2 && x > b0 - 2 && x < W - b0 + 2 && y > b0 - 2 && y < H - b0 + 2) return [70, 54, 40];
+      return o;
+    });
+  }
+  function yosegiStand(W, s) {   // 駒台: a 麻の葉 panel framed with 矢羽根 strips
+    const f = W * .14;
+    return pix(W, W, (x, y) => {
+      if (x < f || y < f || x > W - f || y > W - f) { const horiz = (y < f || y > W - f) && x > f && x < W - f; if ((x < f || x > W - f) && (y < f || y > W - f)) return yosegiPx(x, y, { kind: 'ichi', a: f / 3, x0: 0, y0: 0 }, s);
+        return yosegiPx(horiz ? x : y, horiz ? (y < f ? y : y - (W - f)) : (x < f ? x : x - (W - f)), { kind: 'yabane', a: f / 2, x0: 0, y0: 0 }, s); }
+      return yosegiPx(x, y, { kind: 'asa', a: W * .19, x0: f, y0: f }, s);
+    });
+  }
+
+  /* ---------- 山桜 (top) and 樺細工 (cherry bark, the sides) with sakura inlays ---------- */
+  function sakuraTop(W, H, s) {
+    const c = pix(W, H, (x, y) => {
+      const o = straight(x, y, W, H, s, [212, 158, 118], [138, 84, 54], 64, 1.2, true);
+      const gum = fbm(x / W * 3, y / H * .4, s + 60, 3); if (gum > .7) { const k = (gum - .7) * 1.2; o[0] *= 1 - k; o[1] *= 1 - k * 1.25; o[2] *= 1 - k * 1.3; }   // 山桜's dark gum streaks
+      return o;
+    });
+    const g = ctx(c); vignette(g, W, H, 'rgba(90,44,22,.3)', .5);
+    // 螺鈿 (mother of pearl) blossoms in the four corners of the rim, and a few loose petals along it
+    const mg = W * .05;
+    [[mg * .5, mg * .5, 1], [W - mg * .5, mg * .5, -1], [mg * .5, H - mg * .5, -1], [W - mg * .5, H - mg * .5, 1]].forEach(([x, y, d], i) => { blossomShell(g, x, y, mg * .36, i * .7 + .3); });
+    [[W * .5, mg * .5, .8], [W * .5, H - mg * .5, 2.1], [mg * .5, H * .5, 1.4], [W - mg * .5, H * .5, 2.7]].forEach(([x, y, r]) => petalShell(g, x, y, mg * .2, r));
+    return c;
+  }
+  const petalPath = (g, len, wd) => { g.beginPath(); g.moveTo(0, 0); g.bezierCurveTo(wd * .9, -len * .25, wd * .8, -len * .82, wd * .22, -len); g.lineTo(0, -len * .86); g.lineTo(-wd * .22, -len); g.bezierCurveTo(-wd * .8, -len * .82, -wd * .9, -len * .25, 0, 0); g.closePath(); };
+  function shellFill(g, x, y, r, s) {   // an iridescent pearl: pink / green / blue shimmer
+    const gr = g.createLinearGradient(x - r, y - r, x + r, y + r);
+    gr.addColorStop(0, `hsl(${330 + s * 40},60%,90%)`); gr.addColorStop(.35, `hsl(${160 + s * 30},40%,88%)`); gr.addColorStop(.7, `hsl(${210 + s * 25},45%,90%)`); gr.addColorStop(1, `hsl(${345},55%,88%)`);
+    return gr;
+  }
+  function blossomShell(g, x, y, r, rot) {
+    g.save(); g.translate(x, y); g.rotate(rot); g.fillStyle = shellFill(g, 0, 0, r, rot); g.strokeStyle = 'rgba(90,40,24,.55)'; g.lineWidth = 1.4;
+    for (let k = 0; k < 5; k++) { g.save(); g.rotate(k * Math.PI * 2 / 5); petalPath(g, r, r * .62); g.fill(); g.stroke(); g.restore(); }
+    g.fillStyle = 'rgba(160,60,60,.75)'; g.beginPath(); g.arc(0, 0, r * .14, 0, 7); g.fill();
+    g.restore();
+  }
+  function petalShell(g, x, y, r, rot) { g.save(); g.translate(x, y); g.rotate(rot); g.fillStyle = shellFill(g, 0, 0, r, rot); g.strokeStyle = 'rgba(90,40,24,.55)'; g.lineWidth = 1.2; g.translate(0, r * .5); petalPath(g, r, r * .66); g.fill(); g.stroke(); g.restore(); }
+  // 樺細工: deep red-brown glossy bark, horizontal lenticels; inlays of pale 霜降り bark (blossoms) and a dark branch
+  function bark(W, H, s) {
+    const c = pix(W, H, (x, y) => {
+      const u = x / W, v = y / H, t = fbm(u * 2, v * 6, s, 4), str = vnoise(u * 3, v * 140, s + 3);
+      const k = .55 + t * .5 + (str - .5) * .25;
+      return [122 * k + 10, 50 * k + 6, 36 * k + 4];
+    });
+    const g = ctx(c);
+    for (let i = 0; i < W * H / 900; i++) {   // lenticels: short pale horizontal dashes with a dark lower lip
+      const x = R(0, W), y = R(0, H), l = R(6, 60) * (rnd() < .1 ? 2 : 1), h = R(1.2, 3.2);
+      g.fillStyle = `rgba(60,22,14,${R(.25, .5)})`; g.fillRect(x, y + h * .7, l, h * .5);
+      g.fillStyle = `rgba(${R(190, 220) | 0},${R(140, 170) | 0},${R(110, 130) | 0},${R(.35, .75)})`; g.beginPath(); g.ellipse(x + l / 2, y, l / 2, h / 2, 0, 0, 7); g.fill();
+    }
+    // gloss of the polished bark: a soft band
+    const lg = g.createLinearGradient(0, 0, 0, H); lg.addColorStop(0, 'rgba(255,220,200,0)'); lg.addColorStop(.3, 'rgba(255,220,200,.07)'); lg.addColorStop(.5, 'rgba(255,220,200,0)'); g.fillStyle = lg; g.fillRect(0, 0, W, H);
+    return c;
+  }
+  function sakuraInlay(g, W, H, x0, y0, sc, dir) {   // a branch of dark bark with blossoms of pale bark, cut in (型もの)
+    g.save(); g.strokeStyle = '#3a1810'; g.lineCap = 'round';
+    const br = (x, y, a, len, w, d) => { if (d > 3) return; const ex = x + Math.cos(a) * len, ey = y + Math.sin(a) * len; g.lineWidth = w; g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo((x + ex) / 2 + R(-8, 8), (y + ey) / 2 + R(-8, 8), ex, ey); g.stroke();
+      if (d > 0 || rnd() < .5) flower(ex, ey, R(16, 24) * sc); br(ex, ey, a + R(.3, .6) * (rnd() < .5 ? -1 : 1), len * .65, w * .6, d + 1); if (rnd() < .7) br(ex, ey, a + R(-.8, .8), len * .5, w * .5, d + 2); };
+    const flower = (cx, cy, r) => { const rot = R(0, 6.3);
+      for (let k = 0; k < 5; k++) { g.save(); g.translate(cx, cy); g.rotate(rot + k * Math.PI * 2 / 5); const gr = g.createLinearGradient(0, 0, 0, -r); gr.addColorStop(0, '#d9b0a2'); gr.addColorStop(1, '#f1d8cc'); g.fillStyle = gr; petalPath(g, r, r * .66); g.fill(); g.strokeStyle = 'rgba(70,26,16,.7)'; g.lineWidth = 1.2; g.stroke(); g.restore(); }
+      g.fillStyle = '#9b4a3a'; g.beginPath(); g.arc(cx, cy, r * .16, 0, 7); g.fill(); };
+    br(x0, y0, dir > 0 ? -.35 : -Math.PI + .35, H * .55 * sc, 9 * sc, 0);
+    g.restore();
+    // loose petals drifting
+    for (let k = 0; k < 6; k++) { const px = x0 + dir * R(60, 480) * sc, py = y0 - R(-20, 140) * sc; g.save(); g.translate(px, py); g.rotate(R(0, 6.3)); g.fillStyle = '#ead0c4'; petalPath(g, 13 * sc, 9 * sc); g.fill(); g.strokeStyle = 'rgba(70,26,16,.6)'; g.lineWidth = 1; g.stroke(); g.restore(); }
+  }
+
+  /* ---------- the generators ---------- */
+  const LONG = [2048, 532];
+  const GENS = {
+    'top-grain': () => top2d('grain'),
+    'top-ink': () => top2d('ink'),
+    'top-yosegi': () => yosegiTop(1800, 1980, 5),
+    'top-sakura': () => sakuraTop(1800, 1980, 9),
+    'side-makie': () => makie('side')[0], 'side-makie-m': () => makie('side')[1],
+    'end-makie': () => makie('end')[0], 'end-makie-m': () => makie('end')[1],
+    'stand-makie': () => makie('stand')[0], 'stand-makie-m': () => makie('stand')[1],
+    'leg-makie': () => makie('leg')[0],
+    // 新榧 (spruce, pale and straight) — the faces show end grain, as the 本榧 board
+    'side-grain': () => pix(...LONG, (x, y) => endg(x, y, ...LONG, 3, [236, 214, 170], [186, 146, 92], .5, 2.6, .7)),
+    'end-grain': () => pix(...LONG, (x, y) => endg(x, y, ...LONG, 4, [236, 214, 170], [186, 146, 92], -1.4, .5, .5)),
+    'stand-grain': () => pix(512, 512, (x, y) => straight(x, y, 512, 512, 6, [238, 216, 172], [196, 160, 108], 26, .8, true)),
+    // 漆黒: 縞黒檀 (striped ebony) round the board, polished
+    'side-ink': () => pix(...LONG, (x, y) => { const o = straight(x, y, ...LONG, 12, [74, 50, 34], [12, 9, 7], 9, 1.4); const k = .5 + .45 * fbm(x / 2048 * 2, y / 532 * 1.5, 13, 3); return [o[0] * k + 8, o[1] * k + 6, o[2] * k + 5]; }),
+    'end-ink': () => pix(...LONG, (x, y) => { const o = straight(x, y, ...LONG, 14, [74, 50, 34], [12, 9, 7], 9, 1.4); const k = .5 + .45 * fbm(x / 2048 * 2, y / 532 * 1.5, 15, 3); return [o[0] * k + 8, o[1] * k + 6, o[2] * k + 5]; }),
+    'stand-ink': () => pix(512, 512, (x, y) => { const o = straight(x, y, 512, 512, 16, [74, 50, 34], [12, 9, 7], 6, 1.4, true); const k = .55 + .45 * fbm(x / 512 * 1.5, y / 512 * 2, 17, 3); return [o[0] * k + 8, o[1] * k + 6, o[2] * k + 5]; }),
+    'side-yosegi': () => yosegiSide(...LONG, 21),
+    'end-yosegi': () => yosegiSide(...LONG, 22),
+    'stand-yosegi': () => yosegiStand(768, 23),
+    'side-sakura': () => { const c = bark(...LONG, 31), g = ctx(c); seed = 5; sakuraInlay(g, ...LONG, 2048 * .6, 532 * .9, 1.6, 1); seed = 8; sakuraInlay(g, ...LONG, 2048 * .32, 532 * .92, 1.3, -1); return c; },
+    'end-sakura': () => { const c = bark(...LONG, 32), g = ctx(c); seed = 12; sakuraInlay(g, ...LONG, 2048 * .72, 532 * .9, 1.5, -1); return c; },
+    'stand-sakura': () => { const c = bark(768, 768, 33), g = ctx(c); seed = 3; sakuraInlay(g, 768, 768, 768 * .2, 768 * .85, 1.2, 1); return c; },
+  };
+  window.NAMES = Object.keys(GENS);
+  window.GEN = async (name, q = .88) => { const c = await GENS[name](); return c.toDataURL('image/webp', /-m$/.test(name) ? .9 : /makie/.test(name) ? .82 : q); };
+  const t = new URLSearchParams(location.search).get('t');
+  if (t) GEN(t).then(u => { const im = new Image(); im.src = u; document.getElementById('out').append(t, im); });
+  window.READY = true;
+})();
+</script>
+</body></html>
