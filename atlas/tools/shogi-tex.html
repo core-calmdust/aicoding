@@ -382,7 +382,7 @@
     const bands = [[0, .3, { kind: 'field', wood: 'katsura' }], [.3, .34, { kind: 'stripe', a: H * .013, y0: H * .3, cols: ['dark', 'white', 'dark'] }], [.34, .66, { kind: 'zig', a: H * .055, p: H * .16, amp: H * .1, x0: 0, y0: H * .34 - H * .1, cols: ['dark', 'white', 'brown', 'white'] }], [.66, .7, { kind: 'stripe', a: H * .013, y0: H * .66, cols: ['dark', 'white', 'dark'] }], [.7, 1, { kind: 'field', wood: 'katsura' }]];
     return pix(W, H, (x, y) => { const v = y / H, b = bands.find(b => v >= b[0] && v < b[1]) || bands[4]; let o = yosegiPx(x, y, b[2], s); if (b[2].kind === 'field') o = straight(x, y, W, H, s + 40, [214, 170, 122], [150, 100, 58], 46, .85, false, 2.6); return o; });
   }
-  function yosegiTop(W, H, s) {   // a pale ホオ field; the rim (the margin around the grid) a band of 矢羽根 with 市松 corners
+  function yosegiTop(W, H, s, kd) {   // kd: the 本榧 top's pixels (the same grain, recoloured to 桂)   // a pale ホオ field; the rim (the margin around the grid) a band of 矢羽根 with 市松 corners
     const mg = W * .05, bw = mg * .62, b0 = mg * .16;   // the board's margin is .5 of the 10-unit width
     return pix(W, H, (x, y) => {
       const inB = (x > b0 && x < W - b0 && y > b0 && y < H - b0) && !(x > b0 + bw && x < W - b0 - bw && y > b0 + bw && y < H - b0 - bw);
@@ -394,7 +394,7 @@
         const o = yosegiPx(lx, ly, { kind: 'yabane', a: bw / 2, x0: 0, y0: 0 }, s); return o;
       }
       const edge = Math.min(Math.abs(x - b0), Math.abs(y - b0), Math.abs(W - b0 - x), Math.abs(H - b0 - y), Math.abs(x - b0 - bw), Math.abs(y - b0 - bw), Math.abs(W - b0 - bw - x), Math.abs(H - b0 - bw - y));
-      const o = straight(x, y, W, H, s + 40, [214, 170, 122], [150, 100, 58], 74, .85, true, 2.6);   // 桂, the same tone as the 駒台 (2026-11-11)
+      const o = kd ? (() => { const i = (y * W + x) * 4, t = Math.max(0, Math.min(1, (226 - (kd[i] * .5 + kd[i + 1] * .35 + kd[i + 2] * .15)) / 95)); return [mix(216, 132, t), mix(172, 86, t), mix(124, 48, t)]; })() : straight(x, y, W, H, s + 40, [214, 170, 122], [150, 100, 58], 74, .85, true, 2.6);   // 桂, the same tone as the 駒台 (2026-11-11)
       if (edge < 2.2 && x > b0 - 2 && x < W - b0 + 2 && y > b0 - 2 && y < H - b0 + 2) return [70, 54, 40];
       return o;
     });
@@ -641,7 +641,7 @@
   const GENS = {
     'top-grain': () => { const W = 1800, H = 1980, c = pix(W, H, (x, y) => { const o = straight(x, y, W, H, 41, [226, 198, 146], [176, 130, 72], 96, 1.05, true); const sil = (vnoise(x / W * 3, y / H * 40, 43) - .5) * 14; return [o[0] + sil, o[1] + sil * .9, o[2] + sil * .6]; }); vignette(ctx(c), W, H, 'rgba(150,100,40,.28)', .6); return c; },   // 新榧 (2026-11-11 v2: fine 柾目 with a silky sheen, not the 2D SVG)
     'top-ink': () => top2d('ink'),
-    'top-yosegi': () => yosegiTop(1800, 1980, 5),
+    'top-yosegi': async () => { const im = await loadImg('../../images/atlas/shogi-kaya.webp?v=3'), c = cv(1800, 1980), g = ctx(c); g.drawImage(im, 0, 0, 1800, 1980); return yosegiTop(1800, 1980, 5, g.getImageData(0, 0, 1800, 1980).data); },   // (2026-11-11: the 本榧 grain in 桂's colour)
     'top-sakura': () => sakuraTop(1800, 1980, 9),
     'side-makie': () => makie('side')[0], 'side-makie-m': () => makie('side')[1],
     'end-makie': () => makie('end')[0], 'end-makie-m': () => makie('end')[1],
