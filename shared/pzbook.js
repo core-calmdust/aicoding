@@ -381,6 +381,13 @@ html[lang=ar] .pbh :is(.pb-ring, .pbh-prog, .pbh-stats .pb-st, .pbh-tabs .ct, .p
   .pbh-ic{width:34px;height:34px}
   .pbh-desc{min-height:3.1em}
 }
+
+/* the 3D skin's colours on every game (2026-11-11 the user: puzzle list buttons red like 3D, flat): the way-on buttons red with a
+   solid shadow under, the chosen tab red-tinted — no gradient, no glow */
+.pb-cont,.pbh-daily .go:not(.ok){background:#ff5d5d!important;color:#fff!important;border:0!important;box-shadow:0 3px 0 #d93c3c!important;background-image:none!important;filter:none!important}
+.pb-cont b{color:#fff!important}
+.pbh-tabs button.sel{color:#d93c3c!important;border:2px solid #ff8a7a!important;background:#fff1ee!important;box-shadow:0 3px 0 #ffb3a8!important}
+.pbh-tabs button.sel .ic,.pbh-tabs button.sel .ct{color:#d93c3c!important}
 `;
 function injectCSS() { if (document.getElementById('pbCss')) return; const st = document.createElement('style'); st.id = 'pbCss'; st.textContent = CSS; document.head.appendChild(st); }
 if (typeof document !== 'undefined') injectCSS();
