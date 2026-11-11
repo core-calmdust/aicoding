@@ -64,7 +64,7 @@
     if (set === 'moriage') return glyphsReady;
     if (SHEETS[set]) return SHEETS[set];
     const G = GLY[set] = {};
-    const url = (() => { try { return new URL('../../images/atlas/shogi-glyphs-' + set + '.png?v=9', ME_SRC).href; } catch (e) { return '../images/atlas/shogi-glyphs-' + set + '.png?v=9'; } })();
+    const url = (() => { try { return new URL('../../images/atlas/shogi-glyphs-' + set + '.png?v=10', ME_SRC).href; } catch (e) { return '../images/atlas/shogi-glyphs-' + set + '.png?v=10'; } })();
     return (SHEETS[set] = new Promise(res => { const im = new Image(); im.onload = () => { SHEET_KEYS.forEach((k, i) => { const c = document.createElement('canvas'); c.width = 256; c.height = 296; c.getContext('2d', { willReadFrequently: true }).drawImage(im, (i % 5) * 256, (i / 5 | 0) * 296, 256, 296, 0, 0, 256, 296); G[k] = c; }); res(); upgrade(set); }; im.onerror = () => res(); im.src = url; }));
   }
   const glyphsReady = new Promise(res => {
@@ -336,10 +336,13 @@
   const geoCache = {};
   function pieceGeo(sz) {
     if (geoCache[sz]) return geoCache[sz];
-    const TT = T(), s = .8 + sz * .045, bw = .4 * s, sw = .335 * s, sy = .25 * s, tip = .47 * s, bot = -.47 * s;
-    const sh = new TT.Shape(); sh.moveTo(0, tip); sh.lineTo(sw, sy); sh.lineTo(bw, bot); sh.lineTo(-bw, bot); sh.lineTo(-sw, sy); sh.closePath();
+    // (2026-11-11) the shape of real pieces (the user's reference drawing and measured outlines of 歩 … 王将): sides at about 81° to
+    // the base, the shoulders 2/3 of the base's width, a flat roof (11% of the height, an apex of about 144°), the tip itself a little
+    // rounded; the larger pieces a little wider for their height (歩 41% → 王将 45%)
+    const TT = T(), s = .8 + sz * .045, bw = (.385 + .009 * (sz - 1)) * s, sw = .67 * bw, sy = .367 * s, tip = .47 * s, bot = -.47 * s, rx = .05 * s, ry = rx * (tip - sy) / sw;
+    const sh = new TT.Shape(); sh.moveTo(sw, sy); sh.lineTo(bw, bot); sh.lineTo(-bw, bot); sh.lineTo(-sw, sy); sh.lineTo(-rx, tip - ry); sh.quadraticCurveTo(0, tip + ry * .15, rx, tip - ry); sh.closePath();
     const bev = .045 * s;
-    const geo = new TT.ExtrudeGeometry(sh, { depth: 1, bevelEnabled: true, bevelThickness: bev, bevelSize: bev, bevelSegments: 3, curveSegments: 1 });
+    const geo = new TT.ExtrudeGeometry(sh, { depth: 1, bevelEnabled: true, bevelThickness: bev, bevelSize: bev, bevelSegments: 3, curveSegments: 5 });
     // taper: thick at the bottom, thinner towards the tip (as real pieces are)
     const P = geo.attributes.position, UV = geo.attributes.uv;
     for (let i = 0; i < P.count; i++) {
