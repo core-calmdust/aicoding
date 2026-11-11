@@ -613,17 +613,21 @@ function pzzRegion(Pz) {
   else if (Pz.kind === 'duel') { for (let k = 0; k < 8; k++) { const f = pos.q[k]; if (f >= 0 && pos.sq[f] === op) T.push(f); } }
   const rc = i => [(i / N) | 0, i % N];
   const S = new Set();
-  for (let k = 0; k < 8; k++) { const f = pos.q[k]; if (f >= 0) S.add(f); }
+  let a0 = N, a1 = -1, b0 = N, b1 = -1;   // (the amazons alone: the 3D close-up keeps every one of them on the screen)
+  for (let k = 0; k < 8; k++) { const f = pos.q[k]; if (f >= 0) { S.add(f); let [r, c] = rc(f); if (flip) { r = N - 1 - r; c = N - 1 - c; } a0 = Math.min(a0, r); a1 = Math.max(a1, r); b0 = Math.min(b0, c); b1 = Math.max(b1, c); } }
   for (const t of T) for (const x of E.NB[t]) if (!pos.sq[x]) S.add(x);
   let r0 = N, r1 = -1, c0 = N, c1 = -1;
   for (const i of S) { let [r, c] = rc(i); if (flip) { r = N - 1 - r; c = N - 1 - c; } r0 = Math.min(r0, r); r1 = Math.max(r1, r); c0 = Math.min(c0, c); c1 = Math.max(c1, c); }
   r0--; c0--; r1++; c1++;   // (one square more all round: -1 or N = the frame)
-  const t = { r0, c0, nr: r1 - r0 + 1, nc: c1 - c0 + 1 };   // (the 3D close-up fits exactly this)
   // 2D: a square window inside the board (9 squares or more: the whole board)
   const q0 = Math.max(0, r0), q1 = Math.min(N - 1, r1), d0 = Math.max(0, c0), d1 = Math.min(N - 1, c1);
   const n = Math.max(5, q1 - q0 + 1, d1 - d0 + 1);
   const fit = (a0, a1) => { let a = Math.round((a0 + a1 + 1 - n) / 2); return Math.max(0, Math.min(N - n, a)); };
-  return n >= 9 ? { n: 0, r0: 0, c0: 0, t } : { r0: fit(q0, q1), c0: fit(d0, d1), n, t };
+  // (3D too uses that square window, filled across the board's width — as 詰将棋's close-up does, 2026-11-11 the user: the lower
+  //  right part that is never used was shown and the pieces stayed small)
+  if (n >= 9) return { n: 0, r0: 0, c0: 0, t: null };
+  const w = { r0: fit(q0, q1), c0: fit(d0, d1), n };
+  return Object.assign(w, { t: { r0: w.r0, c0: w.c0, nr: n, nc: n, p: { r0: a0, r1: a1, c0: b0, c1: b1 } } });
 }
 const pzz3D = () => document.documentElement.classList.contains('atlas-skin') && !document.documentElement.classList.contains('atlas-2d');
 function pzzWindow() { const R = PZZ.reg; if (!R || !PZZ.on || (!R.n && !pzz3D())) return null; if (!R.n) return { n: 10, r0: 0, c0: 0, whole: true }; const N = NS_(); return { n: R.n, r0: Math.max(0, Math.min(N - R.n, R.r0 + PZZ.pan[1])), c0: Math.max(0, Math.min(N - R.n, R.c0 + PZZ.pan[0])) }; }
@@ -637,7 +641,7 @@ function pzzApply() {
   pzzBtn();
 }
 function pzzBtn() {
-  const show = !!puzzle && !!PZZ.reg && (!!PZZ.reg.n || pzz3D());
+  const show = !!puzzle && !!PZZ.reg && !!PZZ.reg.n;
   if (!PZZ.btn) {
     if (!show) return;
     const b = PZZ.btn = document.createElement('button'); b.type = 'button'; b.className = 'pzz-btn';
