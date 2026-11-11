@@ -85,19 +85,13 @@ function defs(id) {
     <pattern id="${id}grain" width="40" height="400" patternUnits="userSpaceOnUse" patternTransform="rotate(8)"><path d="M0 0v400M14 0c6 100-6 200 0 400M27 0c-5 120 6 260 0 400" style="stroke:var(--grain)" stroke-width="3" fill="none"/></pattern>
   </defs>`;
 }
-function boardBody(B, id) {
-  const g = geo(B);
-  if (g.tri) {
-    const pts = g.P.map(([x, y]) => [(x - g.cx) * K, (y - g.cy) * K]);
-    const path = roundTri(pts, 70);
-    const gy = (g.groove.y - g.cy) * K, gx0 = (g.groove.x0 - g.cx) * K, gx1 = (g.groove.x1 - g.cx) * K;
-    return `<path d="${path}" fill="rgba(0,0,0,.35)" transform="translate(10 18)" filter="blur(6px)"/><path d="${path}" fill="url(#${id}wood)"/><path d="${path}" fill="url(#${id}grain)"/><path d="${path}" fill="none" style="stroke:var(--rim)" stroke-opacity=".5" stroke-width="5"/>
-      <line x1="${gx0}" y1="${gy}" x2="${gx1}" y2="${gy}" style="stroke:var(--hole)" stroke-opacity=".75" stroke-width="44" stroke-linecap="round"/>`;
-  }
-  const R = g.R * K;
-  return `<circle r="${R}" cx="10" cy="18" fill="rgba(0,0,0,.4)" filter="blur(8px)"/><circle r="${R}" fill="url(#${id}wood)"/><circle r="${R}" fill="url(#${id}grain)"/>
-    <circle r="${R - 4}" fill="none" style="stroke:var(--rim)" stroke-opacity=".45" stroke-width="5"/>
-    <circle r="${g.gr * K}" fill="none" style="stroke:var(--hole)" stroke-opacity=".7" stroke-width="44"/><circle r="${g.gr * K + 22}" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="2"/>`;
+// the boards and marbles are pictures (peg/tools/render_boards.py, 2026-11-11: realistic, detailed sets — user): the board image
+// covers the whole viewBox (its cups, groove and shadow line up with the holes), a marble image sits on each peg
+const IMGV = 1;
+const bdImg = (look, id) => `img/bd-${look}-${id}.webp?v=${IMGV}`;
+function boardBody(B, id, look) {
+  const g = geo(B), h = g.size * K / 2;
+  return `<image href="${bdImg(look || settings.bd, B.id)}" x="${-h}" y="${-h}" width="${h * 2}" height="${h * 2}" preserveAspectRatio="none"/>`;
 }
 function roundTri(p, r) {
   const n = p.length; let d = '';
@@ -110,20 +104,15 @@ function roundTri(p, r) {
   return d + 'Z';
 }
 function marble(id, i, pg) {   // a marble centred at 0,0 (radius 33)
-  const sk = pg || settings.pg;
-  if (sk === 'peg') return `<g class="mb"><ellipse cx="4" cy="8" rx="30" ry="26" fill="url(#${id}sh)"/><circle r="27" fill="url(#${id}peg)"/><circle r="17" fill="none" stroke="rgba(80,40,10,.45)" stroke-width="3"/><circle r="9" fill="rgba(255,236,200,.35)"/></g>`;
-  const fill = sk === 'glass' ? `url(#${id}g${(i * 7 + 3) % GLASS.length})` : `url(#${id}${sk})`;
-  return `<g class="mb"><ellipse cx="5" cy="10" rx="33" ry="28" fill="url(#${id}sh)"/><circle r="33" fill="${fill}"/>` +
-    (sk === 'glass' ? `<path d="M-18 6c8-14 22-16 34-10" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="5" stroke-linecap="round"/>` : '') +
-    `<ellipse cx="-11" cy="-13" rx="11" ry="7" fill="rgba(255,255,255,.75)" transform="rotate(-30 -11 -13)"/></g>`;
+  const sk = pg || settings.pg, k = sk === 'glass' || sk === 'steel' ? (i * 7 + 3) % 6 : 0;
+  return `<g class="mb"><ellipse cx="6" cy="11" rx="32" ry="27" fill="url(#${id}sh)"/><image href="img/m-${sk}-${k}.webp?v=${IMGV}" x="-34" y="-34" width="68" height="68"/></g>`;
 }
 // a whole board as a static picture (dialogs, puzzle thumbnails, the rules)
 let uid = 0;
 function boardSVG(B, a, opt) {
   opt = opt || {};
   const id = 'p' + (uid++), g = geo(B), h = g.size * K / 2;
-  let s = `<svg viewBox="${-h} ${-h} ${h * 2} ${h * 2}" class="${opt.cls || ''}">${defs(id)}${boardBody(B, id)}`;
-  B.cells.forEach((_, i) => { s += `<circle cx="${X(B, i)}" cy="${Y(B, i)}" r="${opt.simple ? 20 : 22}" fill="url(#${id}hole)"/>`; });
+  let s = `<svg viewBox="${-h} ${-h} ${h * 2} ${h * 2}" class="${opt.cls || ''}">${defs(id)}${boardBody(B, id, opt.look)}`;
   if (opt.goal !== undefined && opt.goal >= 0) s += `<circle cx="${X(B, opt.goal)}" cy="${Y(B, opt.goal)}" r="42" fill="none" stroke="#f1c879" stroke-width="7" stroke-dasharray="11 8"/>`;
   if (opt.mark !== undefined && opt.mark >= 0) s += `<circle cx="${X(B, opt.mark)}" cy="${Y(B, opt.mark)}" r="44" fill="rgba(127,224,255,.25)" stroke="#7fe0ff" stroke-width="7"/>`;
   B.cells.forEach((_, i) => { if (a[i]) s += `<g transform="translate(${X(B, i)} ${Y(B, i)})">${marble(id, i, opt.pg)}</g>`; });
@@ -134,7 +123,7 @@ function boardSVG(B, a, opt) {
 let SV = null, PEGS = {}, GROOVE = [], VB = 0, SID = '';
 function build() {
   const B = G.B, g = geo(B), h = g.size * K / 2; VB = h; SID = 'b' + (uid++);
-  $('#board').innerHTML = `<svg viewBox="${-h} ${-h} ${h * 2} ${h * 2}" id="bsvg">${defs(SID)}<g class="body">${boardBody(B, SID)}</g><g class="holes">${B.cells.map((_, i) => `<circle class="hole" data-i="${i}" cx="${X(B, i)}" cy="${Y(B, i)}" r="22" fill="url(#${SID}hole)"/>`).join('')}</g><g class="marks" id="mk"></g><g class="groove" id="gv"></g><g class="pegs" id="pg"></g><g class="dsts" id="ds"></g></svg>`;
+  $('#board').innerHTML = `<svg viewBox="${-h} ${-h} ${h * 2} ${h * 2}" id="bsvg">${defs(SID)}<g class="body">${boardBody(B, SID)}</g><g class="holes">${B.cells.map((_, i) => `<circle class="hole" data-i="${i}" cx="${X(B, i)}" cy="${Y(B, i)}" r="30" fill="transparent"/>`).join('')}</g><g class="marks" id="mk"></g><g class="groove" id="gv"></g><g class="pegs" id="pg"></g><g class="dsts" id="ds"></g></svg>`;
   SV = $('#bsvg'); PEGS = {}; GROOVE = [];
   const pg = $('#pg');
   B.cells.forEach((_, i) => { if (G.a[i]) addPeg(i, pg); });
@@ -352,8 +341,8 @@ function renderNew() {
 }
 const WOODS = { walnut: '--wood1:#8a5532;--wood2:#5a321a;--wood3:#3a1e0e;--grain:rgba(255,220,180,.10);--hole:#1c0e06;--rim:#c99a5a', maple: '--wood1:#e2bd84;--wood2:#c0905a;--wood3:#8a5e30;--grain:rgba(120,70,20,.12);--hole:#5b3818;--rim:#f3dcae',
   stone: '--wood1:#d6d1c8;--wood2:#a29c92;--wood3:#6f6a62;--grain:rgba(60,55,50,.10);--hole:#2f2b27;--rim:#efe9de', night: '--wood1:#3a2a55;--wood2:#22173a;--wood3:#120b20;--grain:rgba(200,170,255,.07);--hole:#07040d;--rim:#e2bd6a' };
-function designSwatch(bd) {   // the English board in that wood (the board's colour tokens set on the swatch itself)
-  const B = E.BOARDS.english; return `<span class="sw" style="display:block;${WOODS[bd]}">${boardSVG(B, E.startPos(B, B.center), { simple: true })}</span>`;
+function designSwatch(bd) {   // the English board in that design
+  const B = E.BOARDS.english; return `<span class="sw" style="display:block">${boardSVG(B, E.startPos(B, B.center), { simple: true, look: bd })}</span>`;
 }
 function pegSwatch(pg) { const id = 'ps' + (uid++); return `<svg viewBox="-60 -60 120 120">${defs(id)}<g transform="translate(-22 -10) scale(.9)">${marble(id, 2, pg)}</g><g transform="translate(24 16) scale(.9)">${marble(id, 4, pg)}</g></svg>`; }
 $('#ngBoards').onclick = e => { const b = e.target.closest('[data-b]'); if (!b) return; draft.board = b.dataset.b; draft.start = -1; renderNew(); };
@@ -365,7 +354,7 @@ $('#ngPrev').onclick = e => {   // pick the start hole on the preview
   const B = E.BOARDS[draft.board]; let best = -1, bd = 1e9; B.cells.forEach((_, i) => { const d = Math.hypot(X(B, i) - p.x, Y(B, i) - p.y); if (d < bd) { bd = d; best = i; } });
   if (bd < 50) { draft.start = best; renderNew(); }
 };
-$('#bdRow').onclick = e => { const b = e.target.closest('[data-bd]'); if (!b) return; settings.bd = b.dataset.bd; document.documentElement.dataset.bd = settings.bd; save(); renderNew(); };
+$('#bdRow').onclick = e => { const b = e.target.closest('[data-bd]'); if (!b) return; settings.bd = b.dataset.bd; document.documentElement.dataset.bd = settings.bd; save(); if (G) build(); renderRecs(); renderNew(); };
 $('#pgRow').onclick = e => { const b = e.target.closest('[data-pg]'); if (!b) return; settings.pg = b.dataset.pg; document.documentElement.dataset.pg = settings.pg; save(); if (G) build(); renderRecs(); renderNew(); };
 $('#btnCancelNew').onclick = () => hide('#newOverlay');
 $('#btnStartNew').onclick = () => {
@@ -376,17 +365,17 @@ $('#btnStartNew').onclick = () => {
 /* ---------------------------------------------------------------- puzzles (PZBook) */
 let PUZZLES = null, DAILY = null;
 // the collection: 基本 (first steps, shapes) · 世界の盤 (a theme per board) · 全面 (full boards)
-const pzReady = fetch('puzzles.json?v=1').then(r => r.json()).then(d => {
+const pzReady = fetch('puzzles.json?v=2').then(r => r.json()).then(d => {
   const by = id => (d.themes.find(T => T.id === id) || { list: [] }).list, out = [];
-  out.push({ id: 'first', grp: 'basic', list: by('first') }, { id: 'shape', grp: 'basic', list: by('shape') });
+  out.push({ id: 'first', grp: 'basic', list: by('first') }, { id: 'shape', grp: 'basic', list: by('shape') }, { id: 'mid', grp: 'basic', list: by('mid') }, { id: 'chain', grp: 'basic', list: by('chain') });
   for (const b of ['triangle', 'french', 'diamond', 'german']) out.push({ id: 'w-' + b, grp: 'world', board: b, list: by('world').filter(P => P.b === b) });
   out.push({ id: 'full', grp: 'full', list: by('full') });
-  PUZZLES = { themes: out }; return PUZZLES;
+  PUZZLES = { themes: out.filter(T => T.list.length) }; return PUZZLES;
 }).catch(() => null);
 const thName = T => T.board ? boardName(T.board) : t('pz.th.' + T.id), thSub = T => T.board ? t('pz.wb.sub', { b: boardName(T.board) }) : t('pz.th.' + T.id + '.sub');
 const GRPS = ['basic', 'world', 'full'];
-const dlReady = fetch('daily.json?v=1').then(r => r.json()).then(d => { DAILY = d; return d; }).catch(() => null);
-const PZ_IC = { basic: '<svg viewBox="0 0 24 24"><circle cx="8" cy="12" r="3"/><circle cx="16" cy="12" r="3"/></svg>', first: '<svg viewBox="0 0 24 24"><circle cx="8" cy="12" r="3"/><circle cx="16" cy="12" r="3"/></svg>', shape: '<svg viewBox="0 0 24 24"><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z"/></svg>', world: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg>', full: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/></svg>' };
+const dlReady = fetch('daily.json?v=2').then(r => r.json()).then(d => { DAILY = d; return d; }).catch(() => null);
+const PZ_IC = { mid: '<svg viewBox="0 0 24 24"><circle cx="6" cy="12" r="2.4"/><circle cx="12" cy="12" r="2.4"/><circle cx="18" cy="12" r="2.4"/><circle cx="12" cy="6" r="2.4"/><circle cx="12" cy="18" r="2.4"/></svg>', chain: '<svg viewBox="0 0 24 24"><circle cx="5" cy="17" r="2.4"/><path d="M6.5 14.5C8 9 11 9 12 13M12.5 12C14 6.5 17 6.5 18.5 11"/><path d="M17 9.5l1.6 1.8 1.9-1.5"/></svg>', basic: '<svg viewBox="0 0 24 24"><circle cx="8" cy="12" r="3"/><circle cx="16" cy="12" r="3"/></svg>', first: '<svg viewBox="0 0 24 24"><circle cx="8" cy="12" r="3"/><circle cx="16" cy="12" r="3"/></svg>', shape: '<svg viewBox="0 0 24 24"><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z"/></svg>', world: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg>', full: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/></svg>' };
 const pzKey = (T, j) => T.id + ':' + j;
 const pzRecs = (T, m) => T.list.map((_, j) => (m || pzRecMap())[pzKey(T, j)] || 0);
 const tierOf = i => [0, 2, 1, 2, 3, 4, 5][i] || 1;
@@ -395,25 +384,28 @@ function pzThumb(P) { return boardSVG(E.BOARDS[P.b], pzArr(P), { simple: true, g
 function today() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
 function dailyIdx(date) { const d = new Date(date + 'T00:00:00'), y0 = new Date(d.getFullYear(), 0, 0); return Math.floor((d - y0) / 864e5) % 366; }
 function dailyInfo() { let o = {}; try { o = JSON.parse(localStorage.getItem(DLS) || '{}') || {}; } catch (e) {} o.days = o.days || {}; const y = new Date(); y.setDate(y.getDate() - 1); const yd = y.getFullYear() + '-' + String(y.getMonth() + 1).padStart(2, '0') + '-' + String(y.getDate()).padStart(2, '0'); return { today: !!o.days[today()], streak: o.days[today()] || o.days[yd] ? o.streak || 0 : 0, best: o.best || 0, o }; }
-function dailyDone() {
+function easyDone(d) { let o = {}; try { o = JSON.parse(localStorage.getItem(DLS) || '{}') || {}; } catch (e) {} return !!(o.easy && o.easy[d || today()]); }
+function dailyDone(kind) {
+  if (kind === 'e') { let o = {}; try { o = JSON.parse(localStorage.getItem(DLS) || '{}') || {}; } catch (e) {} o.easy = o.easy || {}; o.easy[today()] = 1; try { localStorage.setItem(DLS, JSON.stringify(o)); } catch (e) {} return; }
   const i = dailyInfo(), o = i.o, d = today(); if (o.days[d]) return;
   const y = new Date(); y.setDate(y.getDate() - 1); const yd = y.getFullYear() + '-' + String(y.getMonth() + 1).padStart(2, '0') + '-' + String(y.getDate()).padStart(2, '0');
   o.streak = o.days[yd] ? (o.streak || 0) + 1 : 1; o.best = Math.max(o.best || 0, o.streak); o.days[d] = 1; o.last = d;
   try { localStorage.setItem(DLS, JSON.stringify(o)); } catch (e) {}
 }
-function renderDaily() { const i = dailyInfo(); $('#dailySub').textContent = t('daily.sub', { n: i.streak }); $('#dailySt').textContent = i.today ? '✓' : ''; }
+function renderDaily() { const i = dailyInfo(); $('#dailySub').textContent = t('daily.sub', { n: i.streak }); $('#dailySt').textContent = i.today ? '✓' : ''; const e = $('#dailyEasy'); if (e) e.classList.toggle('ok', easyDone()); }
 async function openPuzzles() {
   const d = await pzReady; if (!d) { toast(t('msg.loadfail')); return; }
   PZBook.setLang(LANG);
   const m = pzRecMap(), Ts = d.themes, idx = Ts.map((_, i) => i);
   let cur = ''; try { cur = localStorage.getItem(PZ_TAB) || ''; } catch (e) {} if (!GRPS.includes(cur)) cur = GRPS[0];
   const cont = PZBook.resume(idx.map(i => ({ key: String(i), recs: pzRecs(Ts[i], m), cat: Ts[i].grp })), PZ_LAST);
-  await dlReady; const di = dailyInfo(), dp = DAILY && DAILY.list[dailyIdx(today())];
+  await dlReady; const di = dailyInfo(), dp = DAILY && DAILY.list[dailyIdx(today())], dpe = DAILY && DAILY.easy && DAILY.easy[dailyIdx(today())];
   const box = $('#pzLevels');
   box.innerHTML = PZBook.home({
     title: t('pz.title'), lead: t('pz.lead'), all: idx.map(i => pzRecs(Ts[i], m)),
     cont: cont && { key: cont.key + ':' + cont.j, no: cont.j + 1, name: thName(Ts[+cont.key]) },
-    daily: dp ? [{ key: 'd', board: pzThumb(dp), title: '★ ' + t('daily.title'), date: today().slice(5).replace('-', '/'), done: di.today, go: t('daily.go'), sub: `${boardName(dp.b)} · 🔥 ${t('daily.streak', { n: di.streak })}` }] : [],
+    daily: [dpe && { key: 'e', board: pzThumb(dpe), title: '★ ' + t('daily.title') + ' · EASY', date: today().slice(5).replace('-', '/'), done: easyDone(), go: t('daily.go'), sub: `${boardName(dpe.b)} · ${t('pz.goal', { n: dpe.n })}` },
+      dp && { key: 'n', board: pzThumb(dp), title: '★ ' + t('daily.title'), date: today().slice(5).replace('-', '/'), done: di.today, go: t('daily.go'), sub: `${boardName(dp.b)} · 🔥 ${t('daily.streak', { n: di.streak })}` }].filter(Boolean),
     cats: GRPS.map(g => { const r = Ts.filter(T => T.grp === g).map(T => pzRecs(T, m)).flat(); return { key: g, icon: PZ_IC[g === 'basic' ? 'basic' : g], name: t('pz.grp.' + g), done: r.filter(x => x > 0).length, total: r.length }; }),
     cur, catDesc: t('pz.grp.' + cur + '.sub'),
     cards: idx.filter(i => Ts[i].grp === cur).map(i => { const T = Ts[i], r = pzRecs(T, m), nx = Math.max(0, PZBook.nextIndex(r)); return { key: i, badge: PZ_IC[T.board ? 'world' : T.id], name: thName(T), desc: thSub(T), recs: r, tier: tierOf(i), board: pzThumb(T.list[nx]) }; }),
@@ -421,7 +413,7 @@ async function openPuzzles() {
   PZBook.bindHome(box, {
     cat: k => { try { localStorage.setItem(PZ_TAB, k); } catch (e) {} openPuzzles(); },
     cont: x => { const [i, j] = x.split(':'); startPuzzle(+i, +j); },
-    daily: () => startDaily(),
+    daily: k => startDaily(k === 'e' ? 'e' : 'n'),
     card: i => openPzGrid(+i),
   });
   $('#pzListView').hidden = false; $('#pzGridView').hidden = true; selTab('puzzle'); show('#puzzleOverlay');
@@ -447,7 +439,7 @@ function enterPuzzle(P, pz) {
   build(); update(); renderPuzzleCard(); pzStatus(t('pz.start'));
 }
 function startPuzzle(i, j) { const T = PUZZLES.themes[i]; PZBook.lastSet(PZ_LAST, i); enterPuzzle(T.list[j], { L: i, j, T, daily: null }); }
-async function startDaily() { await dlReady; if (!DAILY) return; const d = today(); enterPuzzle(DAILY.list[dailyIdx(d)], { daily: d }); }
+async function startDaily(kind) { await dlReady; if (!DAILY) return; const d = today(), e = kind === 'e' && DAILY.easy; enterPuzzle((e ? DAILY.easy : DAILY.list)[dailyIdx(d)], { daily: d, dk: e ? 'e' : 'n' }); }
 // the puzzle card's buttons: the same set, order and look as 詰将棋 (shogi, 2026-11-10) — ヒント・やり直し・答え・一覧 as icons with a
 // small caption, a wide 「次の問題 ›」, and やめる at the top right
 const PZ_CAP = {   // hint, retry, answer, list, quit
@@ -460,10 +452,10 @@ function renderPuzzleCard() {
   const C = PZ_CAP[LANG] || PZ_CAP.en;
   ['#pzHint', '#pzRetry', '#pzAnswer', '#pzList'].forEach((k, i) => { $(k + ' span').textContent = C[i]; });
   $('#pzQuitL').textContent = C[4];
-  $('#pzStep').textContent = p.daily ? `★ ${t('daily.title')} · ${p.daily.slice(5).replace('-', '/')}` : `${thName(p.T)} · ${PZBook.t('stage', { n: Math.floor(p.j / PZBook.STAGE) + 1 })} · No.${p.j + 1}`;
+  $('#pzStep').textContent = p.daily ? `★ ${t('daily.title')}${p.dk === 'e' ? ' · EASY' : ''} · ${p.daily.slice(5).replace('-', '/')}` : `${thName(p.T)} · ${PZBook.t('stage', { n: Math.floor(p.j / PZBook.STAGE) + 1 })} · No.${p.j + 1}`;
   $('#pzTitle').textContent = p.P.k && p.P.k !== 'sym' ? t('shape.' + p.P.k) : t('pz.goal', { n: p.P.n });
   $('#pzNo').textContent = p.T ? `${p.j + 1}/${p.T.list.length}` : '';
-  const st = p.daily ? (dailyInfo().today ? 3 : 0) : (pzRecMap()[pzKey(p.T, p.j)] || 0);
+  const st = p.daily ? ((p.dk === 'e' ? easyDone() : dailyInfo().today) ? 3 : 0) : (pzRecMap()[pzKey(p.T, p.j)] || 0);
   $('#pzStars').textContent = '★'.repeat(st) + '☆'.repeat(3 - st);
   pzButtons();
 }
@@ -481,7 +473,7 @@ function puzzleEnd(left, onGoal) {
   if (left === 1 && onGoal) {
     p.solved = true; SND.win();
     const stars = PZBook.starsFor(p);
-    if (p.daily) { dailyDone(); renderDaily(); pzStatus(`<b class="ok">${esc(t('pz.solved'))}</b> 🔥 ${esc(t('daily.streak', { n: dailyInfo().streak }))}`); }
+    if (p.daily) { dailyDone(p.dk); renderDaily(); pzStatus(`<b class="ok">${esc(t('pz.solved'))}</b> 🔥 ${esc(t('daily.streak', { n: dailyInfo().streak }))}`); }
     else {
       const m = pzRecMap(), k = pzKey(p.T, p.j), before = pzRecs(p.T, m); if (!m[k] || m[k] < stars) m[k] = stars;
       try { localStorage.setItem(PZS, JSON.stringify(m)); } catch (e) {}
@@ -519,7 +511,8 @@ $$('.ls-tabs').forEach(g => g.addEventListener('click', e => {
   else { window.PegRules && PegRules.close(); openPuzzles(); }
   setTimeout(() => inst(false), 150);
 }));
-$('#dailyGo').onclick = startDaily;
+$('#dailyGo').onclick = () => startDaily('n');
+if ($('#dailyEasy')) $('#dailyEasy').onclick = () => startDaily('e');
 function loadSaved() {
   let g = null; try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); if (d.game && E.BOARDS[d.game.board]) g = gameFrom(d.game); } catch (e) {}
   if (g) { G = g; G.over = !E.moves(G.B, G.a).length; build(); update(); } else newGame(settings.board, -1, settings.goalMode);
@@ -565,7 +558,7 @@ $('#board').addEventListener('pointercancel', e => { if (SV) onUp(e); });
 if (G) { G.over = !E.moves(G.B, G.a).length; build(); update(); } else newGame(settings.board, -1, settings.goalMode);
 renderRecs(); renderDaily(); dlReady.then(renderDaily);
 // ?pz=<theme>:<j> / ?daily: open straight into a puzzle (the portal's links)
-{ const q = new URLSearchParams(location.search); if (q.has('daily')) startDaily(); else if (q.get('mode') === 'puzzle') pzReady.then(() => openPuzzles()); }
+{ const q = new URLSearchParams(location.search); if (q.has('daily')) startDaily(q.get('daily') === 'easy' ? 'e' : 'n'); else if (q.get('mode') === 'puzzle') pzReady.then(() => openPuzzles()); }
 
 window.PegApp = { get G() { return G; }, get puzzle() { return puzzle; }, t, get LANG() { return LANG; }, boardSVG, marble, defs, geo, X, Y, E, newGame, startPuzzle, startDaily, openPuzzles, undo, hint, play: j => userPlay(j), show, hide, SND };
 })();
