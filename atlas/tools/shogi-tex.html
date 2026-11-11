@@ -52,9 +52,9 @@
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const o = f(x, y), i = (y * W + x) * 4; d[i] = clamp(o[0]); d[i + 1] = clamp(o[1]); d[i + 2] = clamp(o[2]); d[i + 3] = 255; }
     g.putImageData(im, 0, 0); return c; }
   // straight grain along x (柾目): thin late-wood lines, uneven, broadly warped; fibres; colour from light a → dark b
-  function straight(x, y, W, H, s, a, b, rings = 60, str = 1, vert = false) {
+  function straight(x, y, W, H, s, a, b, rings = 60, str = 1, vert = false, warp = 1) {
     const u = vert ? y / H : x / W, v = vert ? x / W : y / H;   // u along the grain, v across
-    const ph = v * rings + (fbm(u * 1.3, v * 1.1, s, 3) - .5) * 3.2 + (fbm(u * 5, v * 3, s + 5, 2) - .5) * .4;
+    const ph = v * rings + (fbm(u * 1.3, v * 1.1, s, 3) - .5) * 3.2 * warp + (fbm(u * 5, v * 3, s + 5, 2) - .5) * .4 * warp + (warp > 1 ? Math.exp(-Math.pow((v - .5 - (fbm(u * .7, 3, s + 9, 2) - .5) * .6) / .22, 2)) * Math.sin(u * 7 + s) * warp * .9 : 0);
     const k = Math.floor(ph), f = ph - k, pos = .5 + hash(k, 7, s) * .4, st = (.35 + hash(k, 13, s) * .65) * str, w0 = .6 + hash(k, 3, s) * .8;
     const line = Math.exp(-Math.pow((f - pos) / (.03 * w0), 2)) * st + Math.exp(-Math.pow((f - pos) / (.12 * w0), 2)) * st * .25;
     const fib = (vnoise(u * 6, v * 520, s + 9) - .5) * .09 + (vnoise(u * 180, v * 9, s + 11) - .5) * .05;
@@ -278,17 +278,17 @@
       const put = (col, k, rg, mt, ht, sp = 1) => { if (k <= 0) return; const L = 1 + gr * .28 * sp + gr2 * .22 * sp; r = mix(r, col[0] * L, k); gg = mix(gg, col[1] * L, k); b = mix(b, col[2] * L, k); rough = mix(rough, rg + gr * 30, k); met = mix(met, mt, k); h = Math.max(h, ht * k); };
       // powders (蒔きぼかし): each grain on or off by the density
       const pa = D.pao[a] / 255; if (pa > 0 && hash(x, y, s + 41) < pa) put(AOKIN, Math.min(1, .5 + pa * .5), 96, 255, 10, 1.4);
-      const pg = D.pgold[a] / 255; if (pg > 0 && hash(x, y, s + 31) < Math.min(1, pg * 1.35) * (.85 + fbm(x * .01, y * .02, s + 60, 2) * .3)) put(GOLD, Math.min(1, .6 + pg * .5), 66, 255, 16, 1.2);
-      put(GOLD, D.flat[a] / 255, 58, 255, 40);
+      const pg = D.pgold[a] / 255; if (pg > 0 && hash(x, y, s + 31) < Math.min(1, pg * 1.35) * (.85 + fbm(x * .01, y * .02, s + 60, 2) * .3)) put(GOLD, Math.min(1, .6 + pg * .5), 66, 150, 16, 1.2);
+      put(GOLD, D.flat[a] / 255, 58, 150, 40);
       put(AKAKIN, D.akakin[a] / 255, 88, 255, 36, 1.8);
       put(BLUE, D.blue[a] / 255 * (.85 + (fbm(x * .03, y * .03, s + 70, 3) - .5) * .4), 90, 200, 30, 1.2);
       put(SILVER, D.silver[a] / 255, 74, 255, 30, 1.6);
-      const rk = D.raised[a] / 255; if (rk > 0) { const hl = lit(Hb, a, W); put([GOLD[0] * (1 + hl * 1.5), GOLD[1] * (1 + hl * 1.5), GOLD[2] * (1 + hl * 1.3)], rk, 52, 255, 70 + Hb[a] / 255 * 185); }
-      const ak = D.aokin[a] / 255; if (ak > 0) { const hl = lit(Ab, a, W); put([AOKIN[0] * (1 + hl * 1.4), AOKIN[1] * (1 + hl * 1.4), AOKIN[2] * (1 + hl * 1.3)], ak, 64, 255, 60 + Ab[a] / 255 * 150); }
+      const rk = D.raised[a] / 255; if (rk > 0) { const hl = lit(Hb, a, W); put([GOLD[0] * (1 + hl * 1.5), GOLD[1] * (1 + hl * 1.5), GOLD[2] * (1 + hl * 1.3)], rk, 52, 160, 70 + Hb[a] / 255 * 185); }
+      const ak = D.aokin[a] / 255; if (ak > 0) { const hl = lit(Ab, a, W); put([AOKIN[0] * (1 + hl * 1.4), AOKIN[1] * (1 + hl * 1.4), AOKIN[2] * (1 + hl * 1.3)], ak, 64, 150, 60 + Ab[a] / 255 * 150); }
       put(RED, D.red[a] / 255, 90, 0, 110);
-      put(GOLD, D.line[a] / 255, 58, 255, 30, .8);   // 付描 (fine gold lines)
+      put(GOLD, D.line[a] / 255, 58, 150, 30, .8);   // 付描 (fine gold lines)
       const ck = D.cut[a] / 255; if (ck > 0) { r = mix(r, 52, ck * .85); gg = mix(gg, 28, ck * .85); b = mix(b, 14, ck * .85); met = mix(met, 80, ck); h *= 1 - ck * .5; }   // 描割り / 錆 cut into the gold
-      put([238, 198, 112], D.flake[a] / 255, 40, 255, 22, .4);   // 切金 / 梨子地
+      put([248, 210, 120], D.flake[a] / 255, 40, 170, 22, .4);   // 切金 / 梨子地
       d[i] = clamp(r); d[i + 1] = clamp(gg); d[i + 2] = clamp(b); d[i + 3] = 255;
       e[i] = clamp(h); e[i + 1] = clamp(rough); e[i + 2] = clamp(met); e[i + 3] = 255;
     }
@@ -380,7 +380,7 @@
   function yosegiSide(W, H, s) {
     // (2026-11-11: calmer — plain 桂 wood with one band of large 矢羽根 in three quiet woods, edged with thin stripes)
     const bands = [[0, .3, { kind: 'field', wood: 'katsura' }], [.3, .34, { kind: 'stripe', a: H * .013, y0: H * .3, cols: ['dark', 'white', 'dark'] }], [.34, .66, { kind: 'zig', a: H * .055, p: H * .16, amp: H * .1, x0: 0, y0: H * .34 - H * .1, cols: ['dark', 'white', 'brown', 'white'] }], [.66, .7, { kind: 'stripe', a: H * .013, y0: H * .66, cols: ['dark', 'white', 'dark'] }], [.7, 1, { kind: 'field', wood: 'katsura' }]];
-    return pix(W, H, (x, y) => { const v = y / H, b = bands.find(b => v >= b[0] && v < b[1]) || bands[4]; let o = yosegiPx(x, y, b[2], s); if (b[2].kind === 'field') o = straight(x, y, W, H, s + 40, [206, 160, 112], [150, 102, 62], 26, .8); return o; });
+    return pix(W, H, (x, y) => { const v = y / H, b = bands.find(b => v >= b[0] && v < b[1]) || bands[4]; let o = yosegiPx(x, y, b[2], s); if (b[2].kind === 'field') o = straight(x, y, W, H, s + 40, [214, 170, 122], [150, 100, 58], 46, .85, false, 2.6); return o; });
   }
   function yosegiTop(W, H, s) {   // a pale ホオ field; the rim (the margin around the grid) a band of 矢羽根 with 市松 corners
     const mg = W * .05, bw = mg * .62, b0 = mg * .16;   // the board's margin is .5 of the 10-unit width
@@ -394,7 +394,7 @@
         const o = yosegiPx(lx, ly, { kind: 'yabane', a: bw / 2, x0: 0, y0: 0 }, s); return o;
       }
       const edge = Math.min(Math.abs(x - b0), Math.abs(y - b0), Math.abs(W - b0 - x), Math.abs(H - b0 - y), Math.abs(x - b0 - bw), Math.abs(y - b0 - bw), Math.abs(W - b0 - bw - x), Math.abs(H - b0 - bw - y));
-      const o = straight(x, y, W, H, s + 40, [214, 170, 122], [160, 110, 66], 44, .8, true);   // 桂, the same tone as the 駒台 (2026-11-11)
+      const o = straight(x, y, W, H, s + 40, [214, 170, 122], [150, 100, 58], 74, .85, true, 2.6);   // 桂, the same tone as the 駒台 (2026-11-11)
       if (edge < 2.2 && x > b0 - 2 && x < W - b0 + 2 && y > b0 - 2 && y < H - b0 + 2) return [70, 54, 40];
       return o;
     });
@@ -404,7 +404,7 @@
     return pix(W, W, (x, y) => {
       const e = Math.min(x, y, W - x, W - y);
       if (e < f) { const k = Math.floor(e / (f / 5)); const col = WOODS[['dark', 'white', 'brown', 'white', 'dark'][k] || 'dark']; const gr = pieceGrain(x, y, (x < f || x > W - f) && !(y < f || y > W - f) ? Math.PI / 2 : 0, s + k); return [col[0] * (1 + gr), col[1] * (1 + gr), col[2] * (1 + gr)]; }
-      return straight(x, y, W, W, s + 40, [214, 170, 122], [160, 110, 66], 22, .8);
+      return straight(x, y, W, W, s + 40, [214, 170, 122], [150, 100, 58], 46, .85, false, 2.6);
     });
   }
 
@@ -524,6 +524,113 @@
       const gr = g.createLinearGradient(0, 0, 0, -r); gr.addColorStop(0, '#e98aa4'); gr.addColorStop(1, '#fde7ee'); g.fillStyle = gr; petalPath(g, r, r * .8); g.fill(); g.restore(); }
   }
 
+  /* ---------- 螺鈿の桜 (2026-11-11 v3, ユーザーの参考写真：黒・朱の漆に貝の桜、金の平蒔絵の線) ----------
+     朱溜 (deep red lacquer). Each petal / branch piece / bird part is its own cut of shell (gaps of lacquer between), with the
+     shell's layered shimmer: pink petals flashing green and blue, silvery branches, an olive-green 鶯 with engraved feathers. */
+  function radenMasks(W, H) { const o = {}; ['shell', 'kind', 'flat', 'cut', 'eye'].forEach(k => o[k] = cv(W, H)); return o; }
+  // a piece of shell: kind 0 = pink petal, 1 = silver branch, 2 = green bird, 3 = pale bud; path(g) draws it
+  function piece(m, kind, path) { const sid = (rnd() * 255) | 0;
+    const s = ctx(m.shell); s.fillStyle = '#fff'; path(s); s.fill();
+    const k = ctx(m.kind); k.fillStyle = `rgb(${kind * 60},${sid},0)`; path(k); k.fill(); }
+  function rPetal(m, cx, cy, r, rot, kind = 0) {
+    for (let i = 0; i < 5; i++) { const a = rot + i * Math.PI * 2 / 5; piece(m, kind, g => { g.save(); g.translate(cx + Math.cos(a - Math.PI / 2) * r * .06, cy + Math.sin(a - Math.PI / 2) * r * .06); g.rotate(a); g.beginPath(); const len = r, wd = r * .78;
+      g.moveTo(0, -len * .1); g.bezierCurveTo(wd * .9, -len * .3, wd * .8, -len * .84, wd * .24, -len); g.lineTo(0, -len * .84); g.lineTo(-wd * .24, -len); g.bezierCurveTo(-wd * .8, -len * .84, -wd * .9, -len * .3, 0, -len * .1); g.closePath(); g.restore(); }); }
+    const c = ctx(m.cut); c.strokeStyle = '#fff'; c.lineWidth = Math.max(.6, r * .016);   // 毛彫り: fine engraved stamens
+    for (let i = 0; i < 10; i++) { const a = rot + i * Math.PI / 5 + .3; c.beginPath(); c.moveTo(cx + Math.cos(a) * r * .1, cy + Math.sin(a) * r * .1); c.lineTo(cx + Math.cos(a) * r * .3, cy + Math.sin(a) * r * .3); c.stroke(); }
+    const e = ctx(m.eye); e.fillStyle = '#fff'; e.beginPath(); e.arc(cx, cy, r * .11, 0, 7); e.fill();
+  }
+  function rBud(m, cx, cy, r, rot) { piece(m, 3, g => { g.save(); g.translate(cx, cy); g.rotate(rot); g.beginPath(); g.ellipse(0, 0, r * .5, r * .75, 0, 0, 7); g.restore(); });
+    const c = ctx(m.cut); c.strokeStyle = '#fff'; c.lineWidth = 1.2; c.save(); c.translate(cx, cy); c.rotate(rot); c.beginPath(); c.moveTo(0, -r * .7); c.quadraticCurveTo(r * .15, 0, 0, r * .7); c.stroke(); c.restore(); }
+  function rFall(m, x, y, r, rot) { piece(m, 0, g => { g.save(); g.translate(x, y); g.rotate(rot); g.scale(1, R(.6, 1)); g.beginPath(); g.moveTo(0, r * .5); g.bezierCurveTo(r * .8, r * .2, r * .7, -r * .4, r * .2, -r * .5); g.lineTo(0, -r * .35); g.lineTo(-r * .2, -r * .5); g.bezierCurveTo(-r * .7, -r * .4, -r * .8, r * .2, 0, r * .5); g.closePath(); g.restore(); }); }
+  // a branch of shell: cut into pieces along its length, a slightly ragged outline; twigs end in blossoms / buds
+  function rBranch(m, x, y, ang, len, w, d, sc, blooms) {
+    const n = Math.max(3, Math.round(len / ((d ? 110 : 150) * sc))), P = []; let a = ang, px = x, py = y;
+    for (let k = 0; k <= n; k++) { P.push([px, py]); a += R(-.25, .25); px += Math.cos(a) * len / n; py += Math.sin(a) * len / n; }
+    for (let k = 0; k < n; k++) { const [ax, ay] = P[k], [bx, by] = P[k + 1], w0 = w * (1 - k / n * .55), w1 = w * (1 - (k + 1) / n * .55), nx = -(by - ay), ny = bx - ax, L = Math.hypot(nx, ny) || 1, ux = nx / L, uy = ny / L, gap = 2.2 * sc;
+      const tx = (bx - ax) / (L || 1) * gap, ty = (by - ay) / (L || 1) * gap;
+      piece(m, 1, g => { g.beginPath(); g.moveTo(ax + tx + ux * w0 / 2 * R(.85, 1.1), ay + ty + uy * w0 / 2); g.lineTo(bx - tx + ux * w1 / 2 * R(.85, 1.1), by - ty + uy * w1 / 2); g.lineTo(bx - tx - ux * w1 / 2, by - ty - uy * w1 / 2 * R(.85, 1.1)); g.lineTo(ax + tx - ux * w0 / 2, ay + ty - uy * w0 / 2); g.closePath(); }); }
+    if (d < 2) for (let k = 1; k < n; k++) if (rnd() < (d ? .25 : .5)) rBranch(m, P[k][0], P[k][1], a + R(.5, 1) * (rnd() < .5 ? -1 : 1), len * R(.3, .5), w * .45, d + 1, sc, blooms);
+    for (let k = 2; k < n; k++) if (rnd() < .55) blooms.push([P[k][0], P[k][1], a + (rnd() < .5 ? -1.2 : 1.2)]);   // blossoms along the branch too
+    const [ex, ey] = P[n]; blooms.push([ex, ey, a]);
+    return P;
+  }
+  // 鶯: plump body, head, wing and tail as separate shell pieces, an eye and beak in black, engraved feathers
+  function uguisu(m, x, y, s, dir) {
+    const T = (g, f) => { g.save(); g.translate(x, y); g.scale(dir * s, s); f(g); g.restore(); };
+    piece(m, 2, g => T(g, g => { g.beginPath(); g.moveTo(-60, 4); g.lineTo(-118, 26); g.lineTo(-112, 36); g.lineTo(-52, 22); g.closePath(); }));            // tail
+    piece(m, 2, g => T(g, g => { g.beginPath(); g.ellipse(-4, 6, 56, 34, -.12, 0, 7); }));                                                                 // body
+    piece(m, 4, g => T(g, g => { g.beginPath(); g.ellipse(4, 18, 40, 20, -.05, 0, Math.PI); g.closePath(); }));                                          // pale belly
+    piece(m, 2, g => T(g, g => { g.beginPath(); g.arc(46, -22, 25, 0, 7); }));                                                                             // head
+    piece(m, 2, g => T(g, g => { g.beginPath(); g.moveTo(-34, -8); g.bezierCurveTo(-4, -26, 30, -12, 34, 8); g.bezierCurveTo(10, 22, -26, 20, -56, 12); g.closePath(); }));   // wing
+    const e = ctx(m.eye); e.fillStyle = '#fff'; T(e, g => { g.beginPath(); g.arc(56, -26, 4.6, 0, 7); g.fill(); g.beginPath(); g.moveTo(68, -24); g.lineTo(86, -20); g.lineTo(68, -15); g.closePath(); g.fill(); });
+    const c = ctx(m.cut); c.strokeStyle = '#fff'; c.lineWidth = 1.3 / s; T(c, g => { g.lineWidth = 1.4;
+      for (let k = 0; k < 7; k++) { g.beginPath(); g.moveTo(-40 + k * 9, -6 + k * .5); g.quadraticCurveTo(-30 + k * 9, 4, -46 + k * 9, 14); g.stroke(); }   // feathers on the wing
+      for (let k = 0; k < 4; k++) { g.beginPath(); g.moveTo(-64, 8 + k * 6); g.lineTo(-108, 28 + k * 2); g.stroke(); }                                // tail barbs
+      g.beginPath(); g.arc(46, -22, 15, Math.PI * 1.1, Math.PI * 1.6); g.stroke();                                                                       // brow
+      g.lineWidth = 3; g.beginPath(); g.moveTo(-20, 38); g.lineTo(-26, 52); g.moveTo(8, 38); g.lineTo(4, 52); g.stroke(); });                         // feet on the branch
+  }
+  function goldLines(m, W, H, y0, n, s) { const g = ctx(m.flat); g.strokeStyle = '#fff'; g.lineCap = 'round';
+    for (let k = 0; k < n; k++) { g.lineWidth = (k === 0 ? 7 : 3.5) * W / 3072; g.beginPath(); for (let x = -10; x <= W + 10; x += 8) { const y = y0 + k * 16 * W / 3072 + Math.sin(x / W * 4.2 + s) * H * .06 + Math.sin(x / W * 11 + s * 2) * H * .012; x < 0 ? g.moveTo(x, y) : g.lineTo(x, y); } g.stroke(); } }
+  // compose → [colour, map (R height, G roughness, B metalness)]
+  function composeRaden(m, W, H, s, ground) {
+    const rd = k => ctx(m[k]).getImageData(0, 0, W, H).data, Sh = rd('shell'), Kd = rd('kind'), F = rd('flat'), Ct = rd('cut'), Ey = rd('eye');
+    const c = cv(W, H), cm = cv(W, H), g = ctx(c), gm = ctx(cm), im = g.createImageData(W, H), mm = gm.createImageData(W, H), d = im.data, e = mm.data;
+    const G0 = ground === 'black' ? [12, 9, 8] : [86, 16, 14], G1 = ground === 'black' ? [6, 5, 5] : [46, 8, 8];
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const i = (y * W + x) * 4, t = fbm(x / W * 2.2, y / H * 1.4, s, 3), lq = .5 + (t - .5) * 1.2;
+      let r = mix(G1[0], G0[0], lq), gg = mix(G1[1], G0[1], lq), b = mix(G1[2], G0[2], lq), h = 0, rough = 22, met = 0;
+      const fa = F[i + 3] / 255; if (fa) { const L = 1 + (hash(x, y, s) - .5) * .3; r = mix(r, 236 * L, fa); gg = mix(gg, 190 * L, fa); b = mix(b, 98 * L, fa); rough = mix(rough, 60, fa); met = mix(met, 255, fa); h = 30 * fa; }
+      const sa = Sh[i + 3] / 255;
+      if (sa) {
+        const kind = Math.round(Kd[i] / 60), sid = Kd[i + 1];
+        // the shell's layers: long wavy bands across each piece, a second finer set, and sparkles
+        const n1 = fbm(x * .004 + sid * .37, y * .016 + sid * .11, s + 3, 4), n2 = vnoise(x * .03 + sid, y * .06, s + 5), sp = hash(x, y, s + 9) > .996 ? .5 : 0;
+        const flash = Math.max(0, Math.min(1, (n1 - .44) * 3.6)), hueSel = vnoise(x * .006 + sid, y * .01, s + 7);
+        let base;
+        if (kind === 0) base = [mix(246, 226, n2), mix(196, 150, n2), mix(210, 178, n2)];             // pink petal
+        else if (kind === 3) base = [mix(244, 230, n2), mix(176, 140, n2), mix(196, 170, n2)];        // bud, a little deeper
+        else if (kind === 1) base = [mix(206, 176, n2), mix(212, 184, n2), mix(222, 200, n2)];        // silvery branch
+        else if (kind === 2) base = [mix(176, 140, n2), mix(206, 176, n2), mix(140, 110, n2)];        // olive-green bird
+        else base = [mix(236, 220, n2), mix(232, 214, n2), mix(206, 186, n2)];                        // pale belly
+        const ir = hueSel < .4 ? [150, 236, 206] : hueSel < .7 ? [156, 196, 252] : [214, 170, 246];   // green / blue / violet flash
+        const k = flash * (kind === 1 ? .9 : kind === 2 ? .8 : .72);
+        let cr = mix(base[0], ir[0], k) + sp * 120, cg = mix(base[1], ir[1], k) + sp * 120, cb = mix(base[2], ir[2], k) + sp * 120;
+        r = mix(r, cr, sa); gg = mix(gg, cg, sa); b = mix(b, cb, sa); rough = mix(rough, 30 + n2 * 20, sa); met = mix(met, 70 + flash * 80, sa); h = Math.max(h, 50 * sa);
+      }
+      const ca = Ct[i + 3] / 255; if (ca && sa) { r = mix(r, 70, ca * .8); gg = mix(gg, 40, ca * .8); b = mix(b, 46, ca * .8); h *= 1 - ca * .5; }
+      const ea = Ey[i + 3] / 255; if (ea) { r = mix(r, 168, ea); gg = mix(gg, 54, ea); b = mix(b, 72, ea); rough = mix(rough, 40, ea); }   // the blossoms' eyes (a red dot); the bird's eye is darker below
+      d[i] = clamp(r); d[i + 1] = clamp(gg); d[i + 2] = clamp(b); d[i + 3] = 255; e[i] = clamp(h); e[i + 1] = clamp(rough); e[i + 2] = clamp(met); e[i + 3] = 255;
+    }
+    g.putImageData(im, 0, 0); gm.putImageData(mm, 0, 0); return [c, cm];
+  }
+  const RD = {};
+  function raden(kind) {
+    if (RD[kind]) return RD[kind];
+    seed = kind === 'side' ? 61 : kind === 'end' ? 67 : 71;
+    const W = kind === 'stand' ? 1024 : 3072, H = kind === 'stand' ? 1024 : 800, m = radenMasks(W, H), sc = W / 3072, blooms = [];
+    const bloomAll = (big) => blooms.forEach(([x, y, a], i) => { const n = 2 + Math.floor(rnd() * 3);
+      for (let k = 0; k < n; k++) { const q = a + R(-1.6, 1.6), dd = R(20, 70) * sc * big; if (rnd() < .2) rBud(m, x + Math.cos(q) * dd, y + Math.sin(q) * dd, R(14, 18) * sc * big, q + 1.57); else rPetal(m, x + Math.cos(q) * dd, y + Math.sin(q) * dd, R(36, 50) * sc * big, R(0, 6.3)); } });
+    if (kind === 'side') {
+      goldLines(m, W, H, H * .72, 3, 1.1);
+      const P = rBranch(m, -30, H * .95, -.3, W * .5, 46 * sc, 0, sc, blooms);
+      rBranch(m, W + 30, H * .2, Math.PI - .25, W * .24, 30 * sc, 1, sc, blooms);
+      bloomAll(1);
+      const bp = P.reduce((a, p) => Math.abs(p[1] - H * .62) < Math.abs(a[1] - H * .62) ? p : a, P[1]); uguisu(m, bp[0] + 10 * sc, bp[1] - 62 * sc, 1.7 * sc, 1);
+      for (let k = 0; k < 14; k++) rFall(m, R(W * .45, W * .95), R(H * .25, H * .95), R(16, 24) * sc, R(0, 6.3));
+    } else if (kind === 'end') {
+      goldLines(m, W, H, H * .6, 2, 2.3);
+      rBranch(m, W + 30, H * .9, Math.PI + .35, W * .45, 40 * sc, 0, sc, blooms);
+      bloomAll(1);
+      for (let k = 0; k < 10; k++) rFall(m, R(W * .05, W * .5), R(H * .2, H * .9), R(16, 24) * sc, R(0, 6.3));
+    } else {
+      goldLines(m, W, H, H * .7, 2, .4);
+      rBranch(m, -20, H * .85, -.55, W * .7, 30 * sc * 3, 1, sc * 3, blooms);
+      bloomAll(3);
+      for (let k = 0; k < 6; k++) rFall(m, R(W * .4, W * .95), R(H * .1, H * .9), R(16, 24) * sc * 3, R(0, 6.3));
+    }
+    return (RD[kind] = composeRaden(m, W, H, seed, 'red'));
+  }
+
   /* ---------- the generators ---------- */
   const LONG = [2048, 532];
   const GENS = {
@@ -546,12 +653,12 @@
     'side-yosegi': () => yosegiSide(...LONG, 21),
     'end-yosegi': () => yosegiSide(...LONG, 22),
     'stand-yosegi': () => yosegiStand(768, 23),
-    'side-sakura': () => { const W = 3072, H = 800, c = bark(W, H, 31), g = ctx(c); seed = 5; sakuraFull(g, W, H, [[-20, H * .95, -.35, 900, 30], [W * .38, H * 1.02, -.75, 560, 24], [W + 20, H * .9, -Math.PI + .3, 950, 30], [W * .7, H * 1.03, -Math.PI + .9, 420, 18]], 1, 1); return c; },
-    'end-sakura': () => { const W = 3072, H = 800, c = bark(W, H, 32), g = ctx(c); seed = 12; sakuraFull(g, W, H, [[W + 20, H * .95, -Math.PI + .35, 1000, 30], [-20, H * .7, -.15, 700, 22]], 1, .9); return c; },
-    'stand-sakura': () => { const c = bark(1024, 1024, 33), g = ctx(c); seed = 3; sakuraFull(g, 1024, 1024, [[-10, 1000, -.8, 700, 24], [1030, 860, -Math.PI + .5, 520, 18]], 1, .8); return c; },
+    'side-sakura': () => raden('side')[0], 'side-sakura-m': () => raden('side')[1],
+    'end-sakura': () => raden('end')[0], 'end-sakura-m': () => raden('end')[1],
+    'stand-sakura': () => raden('stand')[0], 'stand-sakura-m': () => raden('stand')[1],
   };
   window.NAMES = Object.keys(GENS);
-  window.GEN = async (name, q = .88) => { const c = await GENS[name](); return c.toDataURL('image/webp', /-m$/.test(name) ? .9 : /makie/.test(name) ? .82 : q); };
+  window.GEN = async (name, q = .88) => { const c = await GENS[name](); return c.toDataURL('image/webp', /-m$/.test(name) ? .9 : /makie|sakura/.test(name) ? .84 : q); };
   const t = new URLSearchParams(location.search).get('t');
   if (t) GEN(t).then(u => { const im = new Image(); im.src = u; document.getElementById('out').append(t, im); });
   window.READY = true;

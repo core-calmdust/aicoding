@@ -182,10 +182,10 @@
     grain: { top: 'top-grain', side: 'grain', stand: 'grain', leg: ['#dcc192', '#a97e48'], bottom: 0x9c7646, line: 'rgba(52,32,12,.9)', satin: true },
     ink: { top: 'top-ink', side: 'ink', stand: 'ink', leg: ['#3a2a20', '#120c09'], bottom: 0x16100c, line: 'rgba(214,180,110,.85)', star: '#d6b46e', gloss: true },
     yosegi: { top: 'top-yosegi', side: 'yosegi', stand: 'yosegi', leg: ['#c99a68', '#8a5a34'], bottom: 0x7a5232, line: 'rgba(40,26,14,.9)' },
-    sakura: { top: 'top-sakura', side: 'sakura', stand: 'sakura', leg: ['#8a3a26', '#4a1c12'], bottom: 0x5a2a1c, line: 'rgba(48,20,10,.92)', bark: true },
+    sakura: { top: 'top-sakura', side: 'sakura', stand: 'sakura', leg: ['#8a3a26', '#4a1c12'], bottom: 0x2a0806, line: 'rgba(48,20,10,.92)', raden: true },   // (v3: 朱溜 lacquer with 螺鈿 cherry blossoms and a 鶯)
   };
   const SH3 = (() => { try { return new URL('../../images/atlas/shogi3d/', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../images/atlas/shogi3d/'; } })();
-  const SH3V = '?v=4';
+  const SH3V = '?v=5';
   const lookOf = o => { const k = (o && o.look) || (X.BOARDS && X.BOARDS.shogi ? X.BOARDS.shogi.get() : 'kaya'); return LOOK[k] ? k : 'kaya'; };
   const imgs = {};
   function withImg(name, fn) {
@@ -209,9 +209,13 @@
     if (look === 'kaya') return null;
     let side, end, leg;
     if (L.lacq) {   // 蒔絵: the colour + (R height, G roughness, B metalness); a deep clear lacquer over all
-      const lq = (c, mm) => M({ map: imgTex(c), roughnessMap: imgTex(mm, false), metalnessMap: imgTex(mm, false), bumpMap: imgTex(mm, false), bumpScale: .0035, roughness: 1, metalness: 1, clearcoat: .8, clearcoatRoughness: .08, envMapIntensity: 1.25 });
+      const lq = (c, mm) => M({ map: imgTex(c), roughnessMap: imgTex(mm, false), metalnessMap: imgTex(mm, false), bumpMap: imgTex(mm, false), bumpScale: .0035, roughness: 1, metalness: 1, clearcoat: .8, clearcoatRoughness: .08, envMapIntensity: 1.5 });
       side = lq('side-makie', 'side-makie-m'); end = lq('end-makie', 'end-makie-m');
       leg = M({ map: imgTex('leg-makie'), bumpScale: .0005, roughness: .14, clearcoat: .9, clearcoatRoughness: .06 });
+    } else if (L.raden) {   // 螺鈿: 朱溜 lacquer, shell pieces (the same maps as 蒔絵)
+      const lq = (c, mm) => M({ map: imgTex(c), roughnessMap: imgTex(mm, false), metalnessMap: imgTex(mm, false), bumpMap: imgTex(mm, false), bumpScale: .002, roughness: 1, metalness: 1, clearcoat: .9, clearcoatRoughness: .06, envMapIntensity: 1.4 });
+      side = lq('side-sakura', 'side-sakura-m'); end = lq('end-sakura', 'end-sakura-m');
+      leg = M({ color: 0x4a0d0b, roughness: .16, clearcoat: .9, clearcoatRoughness: .06 });
     } else {
       const fin = L.gloss ? { roughness: .2, clearcoat: .8, clearcoatRoughness: .1 } : L.bark ? { roughness: .26, clearcoat: .65, clearcoatRoughness: .14 } : L.satin ? { roughness: .5 } : { roughness: .42, clearcoat: .3, clearcoatRoughness: .3 };
       side = M(Object.assign({ map: imgTex('side-' + L.side), bumpScale: .002 }, fin));
@@ -238,7 +242,8 @@
     const L = LOOK[look];
     let m;
     if (L.lacq) m = M({ map: imgTex('stand-makie'), roughnessMap: imgTex('stand-makie-m', false), metalnessMap: imgTex('stand-makie-m', false), bumpMap: imgTex('stand-makie-m', false), bumpScale: .003, roughness: 1, metalness: 1, clearcoat: .8, clearcoatRoughness: .08 });
-    else if (L.stand) m = M({ map: imgTex('stand-' + L.stand), roughness: L.gloss || L.bark ? .24 : .5, bumpScale: .001 });
+    else if (L.raden) m = M({ map: imgTex('stand-sakura'), roughnessMap: imgTex('stand-sakura-m', false), metalnessMap: imgTex('stand-sakura-m', false), bumpMap: imgTex('stand-sakura-m', false), bumpScale: .002, roughness: 1, metalness: 1, clearcoat: .9, clearcoat: .9, clearcoatRoughness: .06 });
+    else if (L.stand) m = M({ map: imgTex('stand-' + L.stand), roughness: L.gloss ? .24 : .5, bumpScale: .001 });
     else m = M({ map: kayaPlain('kayaStand'), roughness: .55, bumpScale: .001 });
     m.color.multiply(new (T().Color)(STAND_TONE).convertSRGBToLinear());
     return (standMs[look] = m);
