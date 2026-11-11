@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>わからせ将棋オーバーキル！ — Shogi Overkill!</title>
+<meta name="description" content="チート駒でデッキを組んで、強い将棋AIをわからせるデッキ構築型の将棋（アルファ版）">
+<link rel="icon" href="../images/icons/overkill.svg">
+<style>
+/* 作戦卓 (the war table): gunmetal, a hologram grid, the deployment zone glowing (claude/overkill-spec.md §7) */
+:root{--bg:#0b1017;--panel:#121a24;--panel2:#18222f;--line:#2a3a4d;--ink:#e8f1fa;--sub:#93a6ba;--cyan:#38e1ff;--cy2:rgba(56,225,255,.35);--red:#ff4d5e;--amber:#ffb238;--violet:#b48bff;--green:#46e3a0;
+  --sq:min(calc((100vh - 120px) / 9.6), calc((100vw - 440px) / 9.6), 78px)}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:radial-gradient(120% 80% at 50% 0%,#14202e 0%,#0b1017 60%,#06090d 100%);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif}
+button{font:inherit;color:inherit;cursor:pointer}
+header.bar{display:flex;align-items:center;gap:14px;height:60px;padding:0 18px;border-bottom:1px solid var(--line);background:rgba(10,16,24,.85);position:sticky;top:0;z-index:5}
+.logo{font-weight:900;font-size:20px;letter-spacing:.04em;white-space:nowrap}
+.logo b{color:var(--cyan);text-shadow:0 0 12px var(--cy2)}
+.logo .k{color:var(--red);text-shadow:0 0 12px rgba(255,77,94,.5)}
+.tag{font-size:12px;font-weight:700;color:#0b1017;background:var(--amber);border-radius:6px;padding:2px 8px}
+header .sp{flex:1}
+.hb{height:40px;min-width:40px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);font-weight:700;font-size:15px;white-space:nowrap}
+.hb:hover{border-color:var(--cyan)}
+a.hb{color:var(--ink)}select.hb{color:var(--ink);background:var(--panel2)}
+select.hb{appearance:none;padding:0 12px}
+main{padding:18px;display:flex;justify-content:center}
+.scr{display:none;width:100%;max-width:1320px}
+.scr.on{display:block}
+/* ---- title ---- */
+.hero{text-align:center;padding:26px 0 10px}
+.hero h1{margin:0;font-size:clamp(34px,5vw,64px);font-weight:900;letter-spacing:.03em;line-height:1.15}
+.hero h1 .a{color:var(--cyan);text-shadow:0 0 22px var(--cy2)}
+.hero h1 .b{color:var(--red);text-shadow:0 0 22px rgba(255,77,94,.55);font-style:italic}
+.hero p{color:var(--sub);font-size:18px;margin:10px 0 0}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:900px;margin:26px auto 0}
+.mode{padding:20px 22px;border-radius:18px;border:2px solid var(--line);background:linear-gradient(160deg,var(--panel2),var(--panel));text-align:left}
+.mode h2{margin:0 0 6px;font-size:24px}
+.mode p{margin:0;color:var(--sub);font-size:15px}
+.mode.sel{border-color:var(--cyan);box-shadow:0 0 0 3px var(--cy2),0 10px 30px rgba(0,0,0,.4)}
+.mode.o.sel{border-color:var(--red);box-shadow:0 0 0 3px rgba(255,77,94,.3),0 10px 30px rgba(0,0,0,.4)}
+.lvbox{max-width:900px;margin:18px auto 0;padding:16px 18px;border-radius:18px;background:var(--panel);border:1px solid var(--line)}
+.lvbox h3{margin:0 0 10px;font-size:16px;color:var(--sub)}
+.lvs{display:grid;grid-template-columns:repeat(10,1fr);gap:8px}
+.lv{padding:8px 4px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);text-align:center}
+.lv b{display:block;font-size:17px}
+.lv span{display:block;font-size:12px;color:var(--sub);white-space:nowrap}
+.lv.sel{border-color:var(--cyan);background:#163042}
+.go{display:block;margin:20px auto 0;padding:16px 46px;border-radius:16px;border:0;background:linear-gradient(180deg,#ff5d6c,#e8384a);color:#fff;font-size:20px;font-weight:900;box-shadow:0 8px 24px rgba(232,56,74,.35)}
+/* ---- the war table ---- */
+.table{display:flex;gap:18px;align-items:flex-start;justify-content:center}
+.side{width:380px;flex:none;display:flex;flex-direction:column;gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+.card h3{margin:0 0 8px;font-size:15px;color:var(--sub);font-weight:700}
+.wt{padding:calc(var(--sq) * .3);border-radius:22px;background:linear-gradient(145deg,#26313d,#151c25 55%,#0f141b);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),inset 0 0 0 2px #0a0e13,0 20px 50px rgba(0,0,0,.55);position:relative}
+.wt::before{content:"";position:absolute;inset:8px;border-radius:16px;border:1px solid rgba(56,225,255,.18);pointer-events:none}
+.board{display:grid;grid-template-columns:repeat(9,var(--sq));grid-template-rows:repeat(9,var(--sq));position:relative;background:
+  linear-gradient(rgba(56,225,255,.05),rgba(56,225,255,.02)),repeating-linear-gradient(0deg,transparent 0 3px,rgba(56,225,255,.025) 3px 4px),#0d151e;
+  border:2px solid rgba(56,225,255,.55);box-shadow:0 0 18px rgba(56,225,255,.25),inset 0 0 30px rgba(56,225,255,.08)}
+.cell{position:relative;border-right:1px solid rgba(56,225,255,.35);border-bottom:1px solid rgba(56,225,255,.35);display:flex;align-items:center;justify-content:center}
+.cell:nth-child(9n){border-right:0}.cell:nth-last-child(-n+9){border-bottom:0}
+.cell.zone{background:rgba(56,225,255,.09);box-shadow:inset 0 0 14px rgba(56,225,255,.18)}
+.cell.zone.ed{cursor:pointer}.cell.zone.ed:hover{background:rgba(56,225,255,.2)}
+.cell.dim .pc{opacity:.55}
+.cell.last{background:rgba(255,178,56,.16)}
+.cell.tgt::after{content:"";position:absolute;width:28%;height:28%;border-radius:50%;background:rgba(56,225,255,.75);box-shadow:0 0 10px var(--cyan)}
+.cell.cap::after{content:"";position:absolute;inset:8%;border-radius:12%;border:3px solid rgba(56,225,255,.8);box-shadow:0 0 10px var(--cyan)}
+.cell.aim::after{content:"";position:absolute;inset:10%;border-radius:50%;border:3px solid var(--red);box-shadow:0 0 12px var(--red);background:
+  linear-gradient(var(--red),var(--red)) center/3px 100% no-repeat,linear-gradient(var(--red),var(--red)) center/100% 3px no-repeat;opacity:.85}
+.cell.selc{background:rgba(255,178,56,.28)}
+.star{position:absolute;width:7px;height:7px;border-radius:50%;background:rgba(56,225,255,.8);transform:translate(-50%,-50%);pointer-events:none;box-shadow:0 0 6px var(--cyan)}
+/* pieces: the pentagon in boxwood; special pieces with a glowing rim by kind */
+.pc{position:relative;width:86%;height:92%;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 3px 3px rgba(0,0,0,.55))}
+.pc i{position:absolute;inset:0;clip-path:polygon(50% 0,86% 16%,100% 100%,0 100%,14% 16%);background:linear-gradient(170deg,#f6e7c4,#e2c793 60%,#cfb07a)}
+.pc.sp i{inset:0}
+.pc.sp::before{content:"";position:absolute;inset:-5%;clip-path:polygon(50% 0,86% 16%,100% 100%,0 100%,14% 16%);background:var(--rim)}
+.pc span{position:relative;font-weight:900;color:#1c1209;font-size:calc(var(--sq) * .44);line-height:1;writing-mode:vertical-rl;text-orientation:upright;letter-spacing:-.06em;margin-top:12%;font-family:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",serif}
+.pc.two span{font-size:calc(var(--sq) * .27)}
+.pc.pr span{color:#c0161e}
+.pc.en span{writing-mode:horizontal-tb;font-family:system-ui,sans-serif;font-size:calc(var(--sq) * .3);letter-spacing:0}
+.pc.g{transform:rotate(180deg)}
+.pc.sm{width:100%;height:100%}
+.pc.c-chess{--rim:linear-gradient(160deg,#c4a3ff,#6b3cf0)}
+.pc.c-power{--rim:linear-gradient(160deg,#ffd27a,#e07b00)}
+.pc.c-tech{--rim:linear-gradient(160deg,#7ff2ff,#0aa0c8)}
+.pc.c-royal{--rim:linear-gradient(160deg,#ff8a95,#c4102a)}
+.pc .ab{position:absolute;right:-6%;top:-4%;width:28%;height:28%;border-radius:50%;background:var(--amber);box-shadow:0 0 8px var(--amber);transform:none}
+.pc.g .ab{display:none}
+/* hands */
+.hand{display:flex;flex-wrap:wrap;gap:6px;min-height:calc(var(--sq) * .8)}
+.hp{width:calc(var(--sq) * .72);height:calc(var(--sq) * .8);position:relative;border:0;background:none;padding:0}
+.hp .n{position:absolute;right:-4px;bottom:-4px;min-width:20px;height:20px;border-radius:10px;background:var(--cyan);color:#06222c;font-size:13px;font-weight:900;display:flex;align-items:center;justify-content:center;padding:0 5px}
+.hp.selh{outline:3px solid var(--amber);border-radius:8px}
+/* deck builder palette */
+.tabs{display:flex;gap:6px;margin-bottom:10px}
+.tabs button{flex:1;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);font-weight:700;font-size:15px}
+.tabs button.on{border-color:var(--cyan);background:#163042}
+.pal{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-height:330px;overflow:auto;padding-right:4px}
+.pi{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px 6px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);--sq:56px}
+.pi .pc{width:40px;height:44px}
+.pi b{font-size:13px;white-space:nowrap}
+.pi em{font-style:normal;font-size:12px;color:var(--amber);font-weight:800}
+.pi.on{border-color:var(--amber);box-shadow:0 0 0 2px rgba(255,178,56,.35)}
+.info{font-size:14px;color:var(--sub);min-height:60px}
+.info b{color:var(--ink);font-size:16px}
+.mv{display:grid;grid-template-columns:repeat(5,14px);grid-template-rows:repeat(5,14px);gap:2px;float:right;margin:0 0 6px 10px}
+.mv i{background:#1f2a37;border-radius:2px}.mv i.me{background:var(--amber)}.mv i.st{background:var(--cyan)}.mv i.sl{background:linear-gradient(var(--cyan),#2b86a8)}.mv i.jp{background:var(--violet)}
+.meter{display:flex;align-items:baseline;gap:10px}
+.meter b{font-size:44px;font-weight:900;line-height:1}
+.meter b.neg{color:var(--cyan)}.meter b.pos{color:var(--red)}
+.probs{margin:8px 0 0;padding:0;list-style:none;font-size:14px}
+.probs li{color:var(--red)}.probs li.ok{color:var(--green)}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.btn{padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);font-weight:700;font-size:15px;white-space:nowrap}
+.btn:hover{border-color:var(--cyan)}
+.btn.pri{background:linear-gradient(180deg,#ff5d6c,#e8384a);border:0;color:#fff}
+.btn.cy{background:linear-gradient(180deg,#46e9ff,#13b3d6);border:0;color:#062430}
+.btn.red{background:#3a0f16;border-color:var(--red);color:#ffd5d9}
+.btn:disabled{opacity:.4;cursor:default}
+.status{font-size:20px;font-weight:900}
+.status.th{color:var(--amber)}.status.ck{color:var(--red)}
+.log{max-height:160px;overflow:auto;font-size:14px;color:var(--sub);font-family:ui-monospace,monospace}
+.abil{display:flex;flex-direction:column;gap:8px}
+.abil .btn{text-align:left}
+/* dialogs */
+.dlg{position:fixed;inset:0;background:rgba(3,6,10,.7);display:none;align-items:center;justify-content:center;z-index:20}
+.dlg.on{display:flex}
+.dlg .box{min-width:340px;max-width:560px;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:24px;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.dlg h2{margin:0 0 10px;font-size:28px}
+.dlg .row{margin-top:16px;justify-content:center}
+.dlg .row .btn{min-width:130px;text-align:center}
+.flash{position:fixed;inset:0;pointer-events:none;background:#fff;opacity:0;z-index:30}
+.flash.go{animation:fl 1.6s ease-out}
+@keyframes fl{0%{opacity:0}8%{opacity:1}100%{opacity:0}}
+.boomtx{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%) scale(.6);font-size:72px;font-weight:900;color:var(--amber);text-shadow:0 0 30px #ff6a00;opacity:0;pointer-events:none;z-index:31}
+.boomtx.go{animation:bt 1s ease-out}
+@keyframes bt{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.4)}}
+@media (max-width:900px){
+  :root{--sq:min(calc((100vw - 40px) / 9.6), 60px)}
+  .table{flex-direction:column;align-items:center}.side{width:100%;max-width:560px}
+  .modes{grid-template-columns:1fr}.lvs{grid-template-columns:repeat(5,1fr)}
+  header.bar{height:54px}.logo{font-size:16px}
+}
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="logo"><b>わからせ将棋</b><span class="k">オーバーキル！</span></div>
+  <span class="tag" id="tAlpha">アルファ版</span>
+  <span class="sp"></span>
+  <button class="hb" id="bRules">ルール</button>
+  <select class="hb" id="lang" aria-label="Language"><option value="ja">日本語</option><option value="en">English</option></select>
+  <a class="hb" href="../" title="Home" style="display:flex;align-items:center;text-decoration:none"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg></a>
+</header>
+<main>
+  <!-- title -->
+  <section class="scr on" id="sTitle">
+    <div class="hero"><h1><span class="a" id="hT1">わからせ将棋</span><br><span class="b" id="hT2">オーバーキル！</span></h1><p id="hSub"></p></div>
+    <div class="modes">
+      <button class="mode w sel" data-m="w"><h2 id="mW"></h2><p id="mWd"></p></button>
+      <button class="mode o" data-m="o"><h2 id="mO"></h2><p id="mOd"></p></button>
+    </div>
+    <div class="lvbox"><h3 id="lvH"></h3><div class="lvs" id="lvs"></div></div>
+    <button class="go" id="bBuild"></button>
+  </section>
+  <!-- deck builder -->
+  <section class="scr" id="sDeck">
+    <div class="table">
+      <div class="wt"><div class="board" id="bDeck"></div></div>
+      <div class="side">
+        <div class="card"><h3 id="cH"></h3><div class="meter"><b id="cost">0</b><span id="cModeLv"></span></div><ul class="probs" id="probs"></ul></div>
+        <div class="card"><div class="tabs"><button class="on" data-tab="spec" id="tSpec"></button><button data-tab="std" id="tStd"></button></div><div class="pal" id="pal"></div></div>
+        <div class="card info" id="pinfo"></div>
+        <div class="card"><div class="row"><button class="btn" id="bReset"></button><button class="btn" id="bClear"></button><select class="btn" id="preset"></select></div>
+          <div class="row" style="margin-top:8px"><select class="btn" id="slot"></select><button class="btn" id="bSave"></button><button class="btn" id="bLoad"></button></div></div>
+        <div class="row"><button class="btn" id="bBack1"></button><button class="btn pri" id="bStart" style="flex:1"></button></div>
+      </div>
+    </div>
+  </section>
+  <!-- game -->
+  <section class="scr" id="sGame">
+    <div class="table">
+      <div class="wt"><div class="board" id="bGame"></div></div>
+      <div class="side">
+        <div class="card"><h3><span id="gAiN"></span> · <span id="gLv"></span></h3><div class="hand" id="hAI"></div></div>
+        <div class="card"><div class="status" id="gStat"></div><div style="color:var(--sub);font-size:14px;margin-top:4px" id="gCost"></div></div>
+        <div class="card abil" id="gAbil"></div>
+        <div class="card"><h3 id="gYouN"></h3><div class="hand" id="hMe"></div></div>
+        <div class="card"><h3 id="gLogH"></h3><div class="log" id="gLog"></div></div>
+        <div class="row"><button class="btn" id="bResign"></button></div>
+      </div>
+    </div>
+  </section>
+</main>
+<div class="dlg" id="dPromo"><div class="box" style="text-align:center"><h2 id="pQ"></h2><div class="row"><button class="btn pri" id="pY"></button><button class="btn" id="pN"></button></div></div></div>
+<div class="dlg" id="dEnd"><div class="box" style="text-align:center"><h2 id="eT"></h2><p id="eB" style="color:var(--sub);font-size:17px"></p><div class="row"><button class="btn pri" id="eAgain"></button><button class="btn" id="eDeck"></button><button class="btn" id="eHome"></button></div></div></div>
+<div class="dlg" id="dRules"><div class="box"><h2 id="rT"></h2><div id="rB" style="color:var(--sub)"></div><div class="row"><button class="btn" id="rC">OK</button></div></div></div>
+<div class="flash" id="flash"></div><div class="boomtx" id="boomtx"></div>
+<script src="engine.js?v=1"></script>
+<script src="data.js?v=1"></script>
+<script>
+(function () {
+  'use strict';
+  const E = OverkillEngine, D = OverkillData, $ = id => document.getElementById(id);
+  const ls = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
+  let lang = ls.get('overkill-lang', (navigator.language || 'ja').startsWith('ja') ? 'ja' : 'en');
+  const t = k => (D.T[lang] || D.T.en)[k] ?? D.T.ja[k] ?? k;
+  const fmt = (s, o) => s.replace(/\{(\w+)\}/g, (_, k) => o[k]);
+  const KIND = { PAWN: 'chess', KNIGHT: 'chess', BISHOP: 'chess', ROOK: 'chess', QUEEN: 'chess', AMAZON: 'chess', CANNON: 'power', LION: 'power', ARCHER: 'tech', MUSKET: 'tech', MERC: 'tech', BARRIER: 'tech', BOMBER: 'power', ALCH: 'tech', SAGE: 'tech', CHRONO: 'royal', KAGE: 'royal', GENERAL: 'royal' };
+  const ABIL = { ARCHER: 1, MUSKET: 1, ALCH: 1, SAGE: 1, CHRONO: 1, GENERAL: 1, LION: 1, BOMBER: 1 };
+  const STARS = [[3, 3], [3, 6], [6, 3], [6, 6]];
+
+  /* ---------- piece element ---------- */
+  function pieceEl(p, opts = {}) {
+    const el = document.createElement('div'), sp = E.SPECIALS.includes(p.t), L = D.LABEL[lang] || D.LABEL.ja;
+    let lab = p.t === 'OU' && p.s === 1 ? L.OU1 : L[p.t];
+    el.className = 'pc' + (p.s === 1 && !opts.up ? ' g' : '') + (sp ? ' sp c-' + KIND[p.t] : '') + (E.UNPROMO[p.t] ? ' pr' : '') + ((lab || '').length > 1 && lang === 'ja' ? ' two' : '') + (lang !== 'ja' ? ' en' : '') + (opts.sm ? ' sm' : '');
+    el.innerHTML = '<i></i><span></span>'; el.querySelector('span').textContent = lab || p.t;
+    if (sp && ABIL[p.t] && p.s === 0) { const a = document.createElement('b'); a.className = 'ab'; el.appendChild(a); }
+    return el;
+  }
+  function gridFor(el) {
+    el.innerHTML = '';
+    for (let i = 0; i < 81; i++) { const c = document.createElement('div'); c.className = 'cell'; c.dataset.i = i; el.appendChild(c); }
+    STARS.forEach(([r, c]) => { const s = document.createElement('div'); s.className = 'star'; s.style.left = (c / 9 * 100) + '%'; s.style.top = (r / 9 * 100) + '%'; el.appendChild(s); });
+  }
+
+  /* ---------- title ---------- */
+  let mode = ls.get('overkill-mode', 'w'), lv = ls.get('overkill-lv', 5);
+  const best = () => ls.get('overkill-best', {});
+  const tierOf = n => t('tier')[Math.min(4, Math.floor((n - 1) / 4))];
+  function paintTitle() {
+    $('hSub').textContent = t('sub'); $('mW').textContent = t('modeW'); $('mWd').textContent = t('modeWd'); $('mO').textContent = t('modeO'); $('mOd').textContent = t('modeOd');
+    $('lvH').textContent = t('lv'); $('bBuild').textContent = t('build');
+    document.querySelectorAll('.mode').forEach(b => b.classList.toggle('sel', b.dataset.m === mode));
+    const B = best(), box = $('lvs'); box.innerHTML = '';
+    for (let n = 1; n <= 20; n++) { const b = document.createElement('button'); b.className = 'lv' + (n === lv ? ' sel' : ''); b.innerHTML = `<b>Lv.${n}</b><span>${tierOf(n)}</span><span>${t('best')} ${B[n] != null ? B[n] : t('none')}</span>`; b.onclick = () => { lv = n; ls.set('overkill-lv', n); paintTitle(); }; box.appendChild(b); }
+  }
+  document.querySelectorAll('.mode').forEach(b => b.onclick = () => { mode = b.dataset.m; ls.set('overkill-mode', mode); paintTitle(); });
+  $('bBuild').onclick = () => show('sDeck');
+
+  /* ---------- deck builder ---------- */
+  let deck = ls.get('overkill-deck', null);
+  if (!deck) deck = E.initial().map((p, i) => i >= 54 && p ? { t: p.t } : null);
+  let palSel = 'QUEEN', tab = 'spec';
+  const STDS = ['FU', 'KY', 'KE', 'GI', 'KI', 'KA', 'HI', 'OU'];
+  function moveDiagram(tp) {
+    const g = document.createElement('div'); g.className = 'mv'; const M = E.MOVES[tp] || {}, cells = [];
+    for (let i = 0; i < 25; i++) { const c = document.createElement('i'); cells.push(c); g.appendChild(c); }
+    const at = (dx, dy, cls) => { const x = 2 + dx, y = 2 - dy; if (x >= 0 && x < 5 && y >= 0 && y < 5) cells[y * 5 + x].className = cls; };
+    at(0, 0, 'me');
+    (M.step || []).forEach(([dx, dy]) => at(dx, dy, 'st')); (M.jump || []).forEach(([dx, dy]) => at(dx, dy, 'jp'));
+    (M.slide || []).forEach(([dx, dy]) => { at(dx, dy, 'sl'); at(2 * dx, 2 * dy, 'sl'); });
+    if (tp === 'PAWN') { at(0, 1, 'st'); at(0, 2, 'st'); at(-1, 1, 'jp'); at(1, 1, 'jp'); }
+    if (tp === 'CANNON') [[0, 1], [0, -1], [1, 0], [-1, 0]].forEach(([dx, dy]) => { at(dx, dy, 'sl'); at(2 * dx, 2 * dy, 'sl'); });
+    if (tp === 'LION') for (let dx = -2; dx <= 2; dx++) for (let dy = -2; dy <= 2; dy++) if (dx || dy) at(dx, dy, 'jp');
+    return g;
+  }
+  function paintPalette() {
+    $('tSpec').textContent = t('spec'); $('tStd').textContent = t('std');
+    document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
+    const pal = $('pal'); pal.innerHTML = '';
+    const list = tab === 'std' ? STDS : E.SPECIALS.slice().sort((a, b) => E.COST[a] - E.COST[b]);
+    list.forEach(tp => { const b = document.createElement('button'); b.className = 'pi' + (palSel === tp ? ' on' : ''); b.appendChild(pieceEl({ t: tp, s: 0 }));
+      const nm = document.createElement('b'); nm.textContent = (D.NAME[lang] || D.NAME.ja)[tp]; const em = document.createElement('em'); em.textContent = t('costOf') + ' ' + E.COST[tp];
+      b.append(nm, em); b.onclick = () => { palSel = tp; paintPalette(); paintInfo(); }; pal.appendChild(b); });
+    paintInfo();
+  }
+  function paintInfo() {
+    const el = $('pinfo'); el.innerHTML = ''; const tp = palSel; if (!tp) { el.textContent = t('placeHint'); return; }
+    el.appendChild(moveDiagram(tp));
+    const h = document.createElement('div'); h.innerHTML = `<b></b> <span style="color:var(--amber);font-weight:800"></span>`; h.querySelector('b').textContent = (D.NAME[lang] || D.NAME.ja)[tp]; h.querySelector('span').textContent = t('costOf') + ' ' + E.COST[tp];
+    const p = document.createElement('div'); p.textContent = (D.DESC[lang] || D.DESC.ja)[tp] || (D.DESC[lang] || D.DESC.ja).std;
+    const hint = document.createElement('div'); hint.style.cssText = 'margin-top:8px;font-size:13px;clear:both'; hint.textContent = t('placeHint');
+    el.append(h, p, hint);
+  }
+  function deckBoard() { const b = new Array(81).fill(null); for (let i = 54; i < 81; i++) if (deck[i]) b[i] = { t: deck[i].t, s: 0 }; return b; }
+  function paintDeck() {
+    const el = $('bDeck'); if (!el.children.length) gridFor(el);
+    const ini = E.initial();
+    for (let i = 0; i < 81; i++) { const c = el.children[i]; c.innerHTML = ''; c.className = 'cell' + (i >= 54 ? ' zone ed' : ' dim');
+      const p = i >= 54 ? (deck[i] && { t: deck[i].t, s: 0 }) : ini[i]; if (p) c.appendChild(pieceEl(p)); }
+    const cost = E.deckCost(deckBoard()); const cb = $('cost'); cb.textContent = cost; cb.className = cost < 0 ? 'neg' : cost > 0 ? 'pos' : '';
+    $('cH').textContent = t('cost'); $('cModeLv').textContent = (mode === 'w' ? t('modeW') : t('modeO')) + ' · Lv.' + lv;
+    const pr = E.deckProblems(deckBoard()), ul = $('probs'); ul.innerHTML = '';
+    if (!pr.length) { const li = document.createElement('li'); li.className = 'ok'; li.textContent = t('ok'); ul.appendChild(li); }
+    pr.forEach(k => { const li = document.createElement('li'); li.textContent = t('p_' + k); ul.appendChild(li); });
+    $('bStart').disabled = pr.length > 0;
+    ls.set('overkill-deck', deck);
+  }
+  $('bDeck').addEventListener('click', e => { const c = e.target.closest('.cell'); if (!c) return; const i = +c.dataset.i; if (i < 54) return;
+    if (deck[i]) deck[i] = null; else if (palSel) deck[i] = { t: palSel };
+    paintDeck(); });
+  document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => { tab = b.dataset.tab; palSel = tab === 'std' ? 'GI' : 'QUEEN'; paintPalette(); });
+  $('bReset').onclick = () => { deck = E.initial().map((p, i) => i >= 54 && p ? { t: p.t } : null); paintDeck(); };
+  $('bClear').onclick = () => { deck = new Array(81).fill(null); deck[76] = { t: 'OU' }; paintDeck(); };
+  function paintDeckCtl() {
+    $('bReset').textContent = t('reset'); $('bClear').textContent = t('clear'); $('bSave').textContent = t('save'); $('bLoad').textContent = t('load'); $('bBack1').textContent = t('back'); $('bStart').textContent = t('start');
+    const ps = $('preset'); ps.innerHTML = `<option value="">${t('presets')}</option>` + D.PRESETS.map((p, i) => `<option value="${i}">${p[lang] || p.en}</option>`).join('');
+    const sl = $('slot'); const saved = ls.get('overkill-slots', []); sl.innerHTML = [0, 1, 2, 3, 4].map(i => `<option value="${i}">${t('slot')} ${i + 1}${saved[i] ? ' (' + saved[i].c + ')' : ''}</option>`).join('');
+  }
+  $('preset').onchange = e => { const P = D.PRESETS[+e.target.value]; if (!P) return; deck = new Array(81).fill(null);
+    P.rows.forEach((row, ri) => row.split(' ').forEach((tp, ci) => { if (tp !== '.') deck[(6 + ri) * 9 + ci] = { t: tp }; })); e.target.value = ''; paintDeck(); };
+  $('bSave').onclick = () => { const s = ls.get('overkill-slots', []); s[+$('slot').value] = { d: deck, c: E.deckCost(deckBoard()) }; ls.set('overkill-slots', s); paintDeckCtl(); };
+  $('bLoad').onclick = () => { const s = ls.get('overkill-slots', [])[+$('slot').value]; if (s) { deck = s.d; paintDeck(); } };
+  $('bBack1').onclick = () => show('sTitle');
+  $('bStart').onclick = () => startGame();
+
+  /* ---------- the game ---------- */
+  let P = null, snaps = [], sel = null, selHand = null, busy = false, over = null, lastTo = -1, worker = null, reqId = 0, gameCost = 0, myKills = 0;
+  try { worker = new Worker('engine.js?v=1'); } catch (e) { worker = null; }
+  function startGame() {
+    P = E.newGame(deckBoard()); snaps = [E.clonePos(P)]; sel = null; selHand = null; busy = false; over = null; lastTo = -1; myKills = 0;
+    gameCost = E.deckCost(deckBoard());
+    show('sGame'); paintGame();
+  }
+  function legalFrom(f) { return E.legal(P).filter(m => (f === 'hand' ? m.k === 'd' && m.t === selHand : m.f === f)); }
+  function paintGame() {
+    const el = $('bGame'); if (!el.children.length) gridFor(el);
+    const ms = sel != null ? legalFrom(sel) : selHand ? legalFrom('hand') : [];
+    for (let i = 0; i < 81; i++) { const c = el.children[i]; c.innerHTML = ''; c.className = 'cell' + (i === lastTo ? ' last' : '') + (i === sel ? ' selc' : '');
+      const p = P.b[i]; if (p) c.appendChild(pieceEl(p)); }
+    ms.forEach(m => { const c = el.children[m.k === 'm' || m.k === 'd' || m.k === 'revive' ? m.to : m.x]; if (m.k === 'shoot' || m.k === 'fire' || m.k === 'igui') c.classList.add('aim'); else c.classList.add(P.b[m.to] ? 'cap' : 'tgt'); });
+    // hands
+    const hand = (side, box) => { box.innerHTML = ''; for (const ht of E.HANDS) { const n = P.hand[side][ht]; if (!n) continue; const b = document.createElement('button'); b.className = 'hp' + (side === 0 && selHand === ht ? ' selh' : ''); b.appendChild(pieceEl({ t: ht, s: side }, { up: true, sm: true }));
+      if (n > 1) { const s = document.createElement('span'); s.className = 'n'; s.textContent = n; b.appendChild(s); }
+      if (side === 0) b.onclick = () => { if (busy || over || P.side !== 0) return; sel = null; selHand = selHand === ht ? null : ht; paintGame(); };
+      box.appendChild(b); } };
+    hand(1, $('hAI')); hand(0, $('hMe'));
+    $('gAiN').textContent = t('ai'); $('gLv').textContent = 'Lv.' + lv + ' ' + tierOf(lv); $('gYouN').textContent = t('you') + ' · ' + t('hand'); $('gLogH').textContent = t('log'); $('bResign').textContent = t('resign');
+    const st = $('gStat');
+    if (over) { st.className = 'status'; st.textContent = over.winner === 0 ? t('win') : over.winner === 1 ? t('lose') : t('draw'); }
+    else if (busy) { st.className = 'status th'; st.textContent = t('thinking'); }
+    else { const ck = E.inCheck(P, 0); st.className = 'status' + (ck ? ' ck' : ''); st.textContent = t('yourTurn') + (ck ? ' — ' + t('check') : ''); }
+    $('gCost').textContent = (mode === 'w' ? t('modeW') : t('modeO')) + ' · ' + t('cost') + ' ' + gameCost;
+    paintAbilities();
+  }
+  function paintAbilities() {
+    const box = $('gAbil'); box.innerHTML = ''; const h = document.createElement('h3'); h.textContent = t('ability'); box.appendChild(h);
+    let any = false;
+    const myTurn = !busy && !over && P.side === 0;
+    for (let i = 0; i < 81; i++) { const p = P.b[i]; if (!p || p.s !== 0) continue;
+      if (p.t === 'GENERAL') { any = true; const b = document.createElement('button'); b.className = 'btn red'; b.textContent = '☢ ' + t('nuke') + (p.used ? ' — ' + t('used') : ''); b.disabled = !myTurn || p.used; b.onclick = () => nuke(i); box.appendChild(b); }
+      if (p.t === 'CHRONO') { any = true; const b = document.createElement('button'); b.className = 'btn cy'; b.textContent = '⟲ ' + t('undo2') + (p.used ? ' — ' + t('used') : ''); b.disabled = !myTurn || p.used || snaps.length < 3; b.onclick = () => chrono(); box.appendChild(b); }
+      if (p.t === 'SAGE' || p.t === 'ALCH') { any = true; const d = document.createElement('div'); d.style.fontSize = '14px'; const left = Math.max(0, Math.ceil(((p.rdy || 0) - P.ply) / 2));
+        d.textContent = (D.NAME[lang] || D.NAME.ja)[p.t] + ' — ' + (left ? fmt(t('cool'), { n: left }) : t('ready')); box.appendChild(d); }
+      if (p.t === 'MUSKET') { any = true; const d = document.createElement('div'); d.style.fontSize = '14px'; d.textContent = (D.NAME[lang] || D.NAME.ja).MUSKET + ' — ' + t('ready'); box.appendChild(d); }
+    }
+    box.style.display = any ? '' : 'none';
+  }
+  function logMove(m, side) {
+    const L = (D.NAME[lang] || D.NAME.ja), sqn = s => (9 - s % 9) + '' + ((s / 9 | 0) + 1);
+    const p = m.f >= 0 ? (snaps[snaps.length - 1].b[m.f] || {}).t : m.t;
+    const tx = (side === 0 ? '▲' : '△') + sqn(m.k === 'm' || m.k === 'd' || m.k === 'revive' ? m.to : m.x) + (L[p] || D.LABEL.ja[p] || p) + (m.k === 'd' ? (lang === 'ja' ? '打' : '*') : '') + (m.pr ? '+' : '') + (m.k !== 'm' && m.k !== 'd' ? ' [' + m.k + ']' : '');
+    const lg = $('gLog'); const d = document.createElement('div'); d.textContent = (P.ply) + '. ' + tx; lg.appendChild(d); lg.scrollTop = 1e9;
+  }
+  function doMove(m) {
+    const side = P.side, before = P.b.filter(Boolean).length;
+    const boomed = (m.k === 'm' && P.b[m.to] && P.b[m.to].t === 'BOMBER') || ((m.k === 'shoot' || m.k === 'fire' || m.k === 'igui') && P.b[m.x] && P.b[m.x].t === 'BOMBER');
+    if (side === 0 && ((m.k === 'm' && P.b[m.to]) || m.k === 'shoot' || m.k === 'fire' || m.k === 'igui')) myKills++;
+    const st = E.play(P, m); logMove(m, side); snaps.push(E.clonePos(P));
+    lastTo = m.k === 'm' || m.k === 'd' || m.k === 'revive' ? m.to : m.x;
+    if (boomed) boom();
+    sel = null; selHand = null;
+    if (st) finish(st); paintGame();
+    if (!st && P.side === 1) aiMove();
+  }
+  function boom() { const f = $('boomtx'); f.textContent = t('boom'); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); }
+  function aiMove() {
+    busy = true; paintGame();
+    const id = ++reqId, pos = { b: P.b, hand: P.hand, side: P.side, ply: P.ply, hist: [], keys: [], nuked: false };
+    const done = r => { if (id !== reqId || over) return; busy = false; if (r && r.move) doMove(r.move); else paintGame(); };
+    const delay = Date.now();
+    if (worker) { worker.onmessage = e => { if (e.data.id !== id) return; setTimeout(() => done(e.data), Math.max(0, 350 - (Date.now() - delay))); }; worker.postMessage({ pos, lv, id }); }
+    else setTimeout(() => done(E.search(P, E.level(lv))), 30);
+  }
+  function finish(st) {
+    over = st; busy = false;
+    let body = st.why === 'nuke' ? t('nukeDraw') : st.why === 'repetition' ? t('rep') : '';
+    if (st.winner === 0) {
+      if (mode === 'w') { const B = best(); const isRec = B[lv] == null || gameCost < B[lv]; if (isRec) { B[lv] = gameCost; ls.set('overkill-best', B); }
+        body = (isRec ? '★ ' + t('record') + ' — ' : '') + fmt(t('rec'), { lv, c: B[lv] }); }
+      else body = t('over') + ' ' + fmt(t('crush'), { n: Math.ceil(P.ply / 2) }) + ' · ' + fmt(t('kills'), { n: myKills });
+    }
+    setTimeout(() => { $('eT').textContent = st.winner === 0 ? (mode === 'o' ? t('over') : t('win')) : st.winner === 1 ? t('lose') : t('draw'); $('eB').textContent = body;
+      $('eAgain').textContent = t('again'); $('eDeck').textContent = t('toDeck'); $('eHome').textContent = t('home'); $('dEnd').classList.add('on'); }, st.why === 'nuke' ? 1400 : 500);
+  }
+  function nuke(i) { if (busy || over) return; P.b[i] = Object.assign({}, P.b[i], { used: 1 }); P.nuked = true; const f = $('flash'); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); finish({ winner: null, why: 'nuke' }); paintGame(); }
+  function chrono() {
+    if (busy || over || snaps.length < 3) return;
+    snaps.splice(-2); P = E.clonePos(snaps[snaps.length - 1]);
+    for (let i = 0; i < 81; i++) if (P.b[i] && P.b[i].s === 0 && P.b[i].t === 'CHRONO') P.b[i].used = 1;
+    snaps[snaps.length - 1] = E.clonePos(P); lastTo = -1; sel = null; selHand = null;
+    const lg = $('gLog'); for (let k = 0; k < 2 && lg.lastChild; k++) lg.removeChild(lg.lastChild);
+    paintGame();
+  }
+  let pending = null;
+  $('bGame').addEventListener('click', e => {
+    const c = e.target.closest('.cell'); if (!c || busy || over || P.side !== 0) return; const i = +c.dataset.i;
+    const ms = sel != null ? legalFrom(sel) : selHand ? legalFrom('hand') : [];
+    const hits = ms.filter(m => (m.k === 'm' || m.k === 'd' || m.k === 'revive' ? m.to : m.x) === i);
+    if (hits.length) {
+      if (hits.length === 2 && hits.some(m => m.pr) && hits.some(m => !m.pr) && hits.every(m => m.k === 'm')) { pending = hits; $('pQ').textContent = t('promote'); $('pY').textContent = t('yes'); $('pN').textContent = t('no'); $('dPromo').classList.add('on'); return; }
+      doMove(hits.find(m => m.pr) || hits[0]); return;
+    }
+    const p = P.b[i];
+    if (p && p.s === 0) { sel = sel === i ? null : i; selHand = null; } else { sel = null; selHand = null; }
+    paintGame();
+  });
+  $('pY').onclick = () => { $('dPromo').classList.remove('on'); const m = pending.find(m => m.pr); pending = null; doMove(m); };
+  $('pN').onclick = () => { $('dPromo').classList.remove('on'); const m = pending.find(m => !m.pr); pending = null; doMove(m); };
+  $('bResign').onclick = () => { if (over) return; reqId++; finish({ winner: 1, why: 'resign' }); paintGame(); };
+  $('eAgain').onclick = () => { $('dEnd').classList.remove('on'); startGame(); };
+  $('eDeck').onclick = () => { $('dEnd').classList.remove('on'); show('sDeck'); };
+  $('eHome').onclick = () => { $('dEnd').classList.remove('on'); show('sTitle'); };
+  $('bRules').onclick = () => { $('rT').textContent = t('rules'); $('rB').innerHTML = t('rulesBody'); $('dRules').classList.add('on'); };
+  $('rC').onclick = () => $('dRules').classList.remove('on');
+
+  /* ---------- screens & language ---------- */
+  function show(id) { document.querySelectorAll('.scr').forEach(s => s.classList.toggle('on', s.id === id)); paint(); }
+  function paint() {
+    document.documentElement.lang = lang; $('lang').value = lang; $('tAlpha').textContent = t('alpha'); $('bRules').textContent = t('rules');
+    document.title = t('title') + (lang === 'ja' ? ' — Shogi Overkill!' : '');
+    const on = (document.querySelector('.scr.on') || {}).id;
+    if (on === 'sTitle') paintTitle(); else if (on === 'sDeck') { paintDeckCtl(); paintPalette(); paintDeck(); } else if (on === 'sGame' && P) paintGame();
+  }
+  $('lang').onchange = e => { lang = e.target.value; ls.set('overkill-lang', lang); paint(); };
+  paint();
+})();
+</script>
+</body>
+</html>
