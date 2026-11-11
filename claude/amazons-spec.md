@@ -117,3 +117,11 @@ URL: https://core-calmdust.github.io/aicoding/amazons/ ／ トップは「囲碁
 - atlas-amazons-look（3D盤）、atlas-amazons-pc3（3D駒）、atlas-amazons-view（3D / 2D 表示）。
 - aicoding-amazons（設定・対局）、-rated、-rules、-lessons、-puzzles、-pz-last、-pz-tab、-daily、aicoding-amazons-rules-seen。
 - AIのボス（2026-11-11 ユーザー指定「他のゲームと同じようにレベルボスを。アマゾンの感じを前面に」、`atlas/npc/roster.js` の amazons、全23レベル＝8体）：アマゾンの熱帯雨林の生き物と、ギリシア神話の女戦士アマゾネス。みんな弓か火矢を持つ（`atlas/avatars/sp-boss.js` に弓 `bow`・火矢 `arrow` の持ち物と、斑点のある `jaguar` を追加）。Lv.1〜3 オオカワウソ（火矢）・4〜6 リスザルの射手（羽根飾り・弓）・7〜9 オオハシ商人・10〜12 ヤドクガエル（花・弓）・13〜15 オウギワシ（弓）・16〜18 ジャガー戦士（兜・鎧・弓）・19〜21 ペンテシレイア（白馬、兜・盾・赤いマント）・22〜23 女王ヒッポリュテ（ジャガー、王冠・弓・マント、UR）。称号・まめちしき（考案1988年アルゼンチンのワルテル・ザムカウスカス、1992年 El Acertijo 初出、ルール、コンピューター・オリンピアード）は `atlas/npc/t/<lang>.js` に14言語。画像は `images/atlas/av/boss-amazons-<1〜8>-<0〜3>.webp`（atlas/tools/bosses.html で書き出し）。
+
+## ヒストリア・ルールコース・地図・スクリーンショット（2026-11-11）
+- ヒストリア：`atlas/historia/s/amazons.json`（地図のピン＝アルゼンチン〔ブエノスアイレスの位置〕・ロンドン・マーストリヒト・北京・金沢、盤の図＝10×10で白がd1→d7、g7へ矢）と14言語の本文。案内役はカエルのアバター（`av/frog-0`、名前はケロ）。盤の図の焼けたマスは grid の `burn`（historia.js）。
+  - 事実の出典（2026-11 確認）：Wikipedia「Game of the Amazons」（1988年 Zamkauskas、El Acertijo 1992年12月、Keller の英訳 World Game Review 1994年1月と最初のコンピューター版、Buro 2000 NP困難、2005 PSPACE完全）、ICGA の大会記録（2000 ロンドンから種目、Invader 2008〜11 の4連覇、2001・02 マーストリヒト、2008 北京、2010 金沢）。白の第1手 2176 通りはエンジンで数えた値、最長 92 手は空きマス 92 から。
+- 地図：`atlas/mapdata.js` に amazons（ヒストリアの最初の章から）。
+- 3Dルールコース：`atlas/rules/amazons.js`（10ステップ、案内役ケロ、あなたは白）：はじめの配置 → クイーンの動き（矢なし）→ 動いたら矢（g7へ）→ 飛び越えられない → 元いたマスへ矢 → 閉じ込め → 黒を動けなくして勝ち → 部屋に分かれたら陣地の広さ（金と緑で色分け）→ 対局へ。判定はすべて amazons/engine.js。
+- スクリーンショット：トップ `images/amazons.webp`（2D既定の神殿盤＋カメオ駒、16手目の局面、盤だけを 1200×900 の緑の地に）、一覧 `atlas/shots/amazons.webp`（tools/shots.js）。
+
