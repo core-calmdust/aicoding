@@ -11,7 +11,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const GUIDE = '../images/atlas/g-owl.webp', ENG = '../ugolki/engine.js?v=4';
+  const GUIDE = '../images/atlas/g-owl.webp', ENG = '../ugolki/engine.js?v=7-ab';
   const loadEngine = () => window.UgolkiEngine ? Promise.resolve(window.UgolkiEngine) : new Promise((res, rej) => { const s = document.createElement('script'); s.src = ENG; s.onload = () => window.UgolkiEngine ? res(window.UgolkiEngine) : rej(); s.onerror = rej; document.head.appendChild(s); });
   const rect = (c0, c1, r0, r1) => { const o = []; for (let c = c0; c <= c1; c++) for (let r = r0; r <= r1; r++) o.push('abcdefgh'[c] + r); return o; };
   const WH = rect(0, 2, 1, 3), BH = rect(5, 7, 6, 8);
