@@ -155,7 +155,7 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
   // the page's puzzle close-up (amazons/app.js pzzApply): w = { r0, c0, n } on the shown board, null = the whole board — the view
   // glides there (0.4 s)
   let zT = 0;
-  let zw = null, zR = 0;
+  let zw = null, zR = 0, zD = 0;
   // (the page's layout may still move after a puzzle opens — the cards fill in: the close-up is aimed again once it settles)
   let zAt = 0;   // (re-aimed when the board's place moves — but not just after a tap: a card's text changing must not move the board under the finger)
   let zPtr = 0; addEventListener('pointerdown', () => { zPtr = performance.now(); }, true);
