@@ -6,7 +6,7 @@
 // Levels 17–25, T<s> and D… use all the threads of the pool (the page: MT_CFG); levels 14–16 only the lead (the page plays them
 // on its one-thread worker), so the whole ladder Lv.14 … Lv.25 can be measured in one run (--plan full).
 //
-//   node tools/levelmatch.js [run] [--plan default|full|low|adjacent|ladder|top|L20:L21,T2:T4,…] [--games 40] [--scale 1]
+//   node tools/levelmatch.js [run] [--plan default|full|low|adjacent|ladder|top|depth|L20:L21,T2:T4,…] [--games 40] [--scale 1]
 //                                  [--conc 2] [--threads N] [--out tools/levelmatch-out/results-depth.jsonl] [--dry]
 //   node tools/levelmatch.js report [--out …]        the summary to paste back (also written to report.txt)
 //
@@ -65,7 +65,8 @@ const PLANS = {
   ladder: ['T2:T4', 'T4:T8', 'T8:T16'],
   low: ['L14:L15', 'L15:L16', 'L16:L17', 'L17:L18', 'L18:L19', 'L19:L20'],   // (Lv.14 = the fixed anchor of the ratings: MODEL_CARD.md)
 };
-PLANS.top = ['L21:L22', 'L22:L23', 'L23:L24', 'L24:L25'];   // (2026-11-11: the deep levels the 2-core machine could not measure)
+PLANS.top = ['L21:L22', 'L22:L23', 'L23:L24', 'L24:L25'];   // (2026-11-11: the deep levels; Lv.24↔25 could not be measured on the 2-core machine)
+PLANS.depth = ['L16:L17', 'L17:L18', 'L18:L19', 'L19:L20', 'L20:L21'].concat(PLANS.top);   // (2026-11-11: Lv.16 … 25, the levels by depth and the timed top)
 PLANS.default = PLANS.adjacent.concat(PLANS.ladder);
 PLANS.full = PLANS.low.concat(PLANS.adjacent, PLANS.ladder);   // the whole ladder Lv.14 … Lv.25 and the time doublings
 const planOf = p => (PLANS[p] || String(p).split(',')).map(s => s.trim()).filter(Boolean).map(s => { const [a, b] = s.split(':'); return { id: `${a}-${b}`, a, b }; });

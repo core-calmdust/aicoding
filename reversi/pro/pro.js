@@ -117,7 +117,7 @@
   async function goFB(time) {
     if (!FB) { FB = new Worker('../engine.js?v=60'); const wt = await loadWeights(); FB.postMessage({ type: 'weights', buffer: wt.buffer, nphase: wt.nphase }); }
     const { c, me } = replay(line);
-    return new Promise(res => { FB.onmessage = e => { if (e.data.type === 'result') res({ ...e.data, me }); }; FB.postMessage({ type: 'think', id: 1, cells: c, toMove: me, opts: { level: 20, time } }); });
+    return new Promise(res => { FB.onmessage = e => { if (e.data.type === 'result') res({ ...e.data, me }); }; FB.postMessage({ type: 'think', id: 1, cells: c, toMove: me, opts: { cfg: { depth: 60, exact: 20, wld: 22, mpc: 1 }, time } }); });   // (the old Lv.20 shape by time: Lv.20 reads to a fixed depth since 2026-11-11)
   }
 
   // ------------------------------------------------------------------ board
