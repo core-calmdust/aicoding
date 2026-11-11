@@ -58,10 +58,11 @@ const BOARDS = {
   german: sqBoard('german', ['...ooo...', '...ooo...', '...ooo...', 'ooooooooo', 'ooooooooo', 'ooooooooo', '...ooo...', '...ooo...', '...ooo...']),
 };
 const IDS = ['english', 'french', 'triangle', 'diamond', 'german'];
-// each board's classic start (the empty hole) and the hole of the finish that counts as perfect (null = anywhere)
-// english: the middle → the middle. french: the middle has no one-peg finish; the classic start leaves the hole just
-// above-left of the middle's column empty (r1 c2 is one of the solvable starts). triangle: a corner (top).
-const START = { english: 'center', french: [1, 3], triangle: [0, 0], diamond: 'center', german: 'center' };
+// each board's classic start (the empty hole) and the hole of the finish that counts as perfect
+// (the position classes: on the French and diamond boards no hole can be both the start and the finish, and the
+// diamond's middle has no one-peg finish at all — checked by the "rule of three" colourings and the solver)
+const START = { english: 'center', french: [1, 3], triangle: [0, 0], diamond: [2, 4], german: 'center' };
+const GOAL = { english: 'center', french: [5, 3], triangle: [0, 0], diamond: [6, 4], german: 'center' };
 
 // ---------------------------------------------------------------- positions
 // a position: { lo, hi } bitset. helpers on plain arrays of 0/1 for the UI
@@ -74,7 +75,19 @@ function startPos(B, hole) {
   const h = hole === undefined || hole === 'center' ? B.center : Array.isArray(hole) ? B.at[hole[0] + ',' + hole[1]] : hole;
   const a = new Array(B.n).fill(1); a[h] = 0; return a;
 }
-function startHole(id) { const B = BOARDS[id], s = START[id]; return s === 'center' ? B.center : B.at[s[0] + ',' + s[1]]; }
+const holeOf = (B, s) => s === 'center' ? B.center : B.at[s[0] + ',' + s[1]];
+function startHole(id) { return holeOf(BOARDS[id], START[id]); }
+function goalHole(id) { return holeOf(BOARDS[id], GOAL[id]); }
+// the "rule of three": colour the holes by (r + c) mod 3 and (r − c) mod 3; every jump takes one peg off each colour and
+// adds one, so the parities of the colour counts' pairwise sums never change. Two positions with different signatures can
+// never reach each other (square boards only; the triangle returns '' = no test)
+function sig(B, a) {
+  if (B.tri) return '';
+  let out = '';
+  for (const f of [(r, c) => (r + c) % 3, (r, c) => ((r - c) % 3 + 3) % 3]) { const n = [0, 0, 0]; B.cells.forEach(([r, c], i) => { if (a[i]) n[f(r, c)]++; }); out += ((n[0] + n[1]) & 1) + '' + ((n[1] + n[2]) & 1); }
+  return out;
+}
+function canEnd(B, a, target) { if (target === undefined || target < 0) return true; const z = new Array(B.n).fill(0); z[target] = 1; return sig(B, a) === sig(B, z); }
 // legal jumps of an array position: [from, over, to]
 function moves(B, a) { const out = []; for (const j of B.jumps) if (a[j[0]] && a[j[1]] && !a[j[2]]) out.push(j); return out; }
 function apply(a, j) { const b = a.slice(); b[j[0]] = 0; b[j[1]] = 0; b[j[2]] = 1; return b; }
@@ -116,6 +129,49 @@ function solve(B, a0, opt) {
   const ok = rec();
   return { ok, path: ok ? path.map(k => J[k]) : null, nodes, timeout: stop };
 }
+// beam search by peg count: each level keeps the K most promising positions (no twins by symmetry), scored by how far
+// the pegs are from the goal and how many stand alone. Not complete, but finds a finish on the big boards in a fraction of
+// a second where the depth-first search gets lost (German 45 from the middle: ~0.6 s with K = 500)
+function beam(B, a0, opt) {
+  opt = opt || {};
+  const target = opt.target === undefined || opt.target === null ? -1 : opt.target, K = opt.K || 500, n = B.n;
+  const syms = target < 0 ? B.syms : B.syms.filter(s => s[target] === target);
+  const ck = a => { let best = -1; for (const s of syms) { let lo = 0, hi = 0; for (let i = 0; i < n; i++) if (a[i]) { const k = s[i]; if (k < 32) lo = (lo | (1 << k)) >>> 0; else hi |= 1 << (k - 32); } const v = lo + hi * W32; if (best < 0 || v < best) best = v; } return best; };
+  const D = target < 0 ? B.dist : B.pos.map(([x, y]) => Math.hypot(x - B.pos[target][0], y - B.pos[target][1]));
+  const nbr = B.nbr || (B.nbr = B.cells.map(([r, c]) => B.dirs.map(([dr, dc]) => B.at[(r + dr) + ',' + (c + dc)]).filter(x => x !== undefined)));
+  const score = a => { let s = 0; for (let i = 0; i < n; i++) if (a[i]) { s += D[i]; let lone = true; for (const j of nbr[i]) if (a[j]) { lone = false; break; } if (lone) s += 3; } return s; };
+  let level = [{ a: Uint8Array.from(a0.map(v => v ? 1 : 0)), par: -1, mv: null }]; const levels = [level];
+  let pegs = level[0].a.reduce((s, v) => s + v, 0);
+  if (!canEnd(B, a0, target)) return null;
+  while (pegs > 1) {
+    const seen = new Set(), next = [];
+    level.forEach((st, pi) => {
+      const a = st.a;
+      for (const j of B.jumps) { const f = j[0], o = j[1], t = j[2]; if (!a[f] || !a[o] || a[t]) continue;
+        const b = a.slice(); b[f] = 0; b[o] = 0; b[t] = 1;
+        const k = ck(b); if (seen.has(k)) continue; seen.add(k); next.push({ a: b, par: pi, mv: j, sc: score(b) }); }
+    });
+    if (!next.length) return null;
+    next.sort((x, y) => x.sc - y.sc); level = next.length > K ? next.slice(0, K) : next; levels.push(level); pegs--;
+  }
+  const end = level.findIndex(st => target < 0 || st.a[target]); if (end < 0) return null;
+  const path = []; for (let L = levels.length - 1, i = end; L > 0; i = levels[L][i].par, L--) path.unshift(levels[L][i].mv);
+  return path;
+}
+// a way to finish from here (the hint): small positions by the exact search (so "no way any more" is known for sure),
+// big ones by the beam (wider and wider), then the exact search with what time is left.
+// → { ok: true, path } | { ok: false, sure: true } (no finish exists) | { ok: false, sure: false } (none found in time)
+function findPath(B, a, opt) {
+  opt = opt || {};
+  const target = opt.target === undefined || opt.target === null ? -1 : opt.target, t0 = Date.now(), time = opt.time || 6000;
+  let pegs = 0; for (let i = 0; i < B.n; i++) if (a[i]) pegs++;
+  if (pegs === 1) return { ok: target < 0 || !!a[target], path: [], sure: true };
+  if (!canEnd(B, a, target)) return { ok: false, sure: true };
+  if (pegs <= 18) { const r = solve(B, a, { target, time }); return r.ok ? { ok: true, path: r.path } : { ok: false, sure: !r.timeout }; }
+  for (const K of [300, 1200, 5000]) { const p = beam(B, a, { target, K }); if (p) return { ok: true, path: p }; if (Date.now() - t0 > time * .6) break; }
+  const r = solve(B, a, { target, time: Math.max(500, time - (Date.now() - t0)) });
+  return r.ok ? { ok: true, path: r.path } : { ok: false, sure: !r.timeout };
+}
 // how many of the legal jumps keep a solution (the puzzles' "fun": few good jumps among many = hard)
 function goodMoves(B, a, opt) {
   const ms = moves(B, a), good = [];
@@ -126,14 +182,14 @@ function goodMoves(B, a, opt) {
 function sq(B, i) { const [r, c] = B.cells[i]; return String.fromCharCode(97 + c) + (r + 1); }
 function moveText(B, j) { return sq(B, j[0]) + '-' + sq(B, j[2]); }
 
-const API = { BOARDS, IDS, START, make, has, arr, key, count, startPos, startHole, moves, apply, canon, solve, goodMoves, sq, moveText };
+const API = { BOARDS, IDS, START, GOAL, make, has, arr, key, count, startPos, startHole, goalHole, moves, apply, canon, sig, canEnd, solve, beam, findPath, goodMoves, sq, moveText };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.PegEngine = API;
-// as a Web Worker: { id, board, pegs, target, left, time, good } → { id, ok, path, timeout, good }
+// as a Web Worker: { id, board, pegs (0/1 per hole), target (hole or -1), time } → { id, ok, path, sure }
 if (typeof window === 'undefined' && typeof self !== 'undefined' && typeof importScripts === 'function') {
   self.onmessage = e => {
-    const d = e.data, B = BOARDS[d.board], opt = { target: d.target, left: d.left, time: d.time || 8000 };
-    const r = solve(B, d.pegs, opt);
-    self.postMessage({ id: d.id, ok: r.ok, path: r.path, timeout: r.timeout, nodes: r.nodes });
+    const d = e.data, B = BOARDS[d.board];
+    const r = findPath(B, d.pegs, { target: d.target, time: d.time || 6000 });
+    self.postMessage({ id: d.id, ok: r.ok, path: r.path || null, sure: !!r.sure });
   };
 }
 })(typeof self !== 'undefined' ? self : this);
