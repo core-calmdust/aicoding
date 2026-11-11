@@ -221,6 +221,25 @@
   X.boardThumb = (id, k) => new URL('img/board-' + id + '-' + k + '.webp?v=' + (id === 'senet' ? 3 : id === 'carrom' ? 5 : id === 'crokinole' ? 5 : id === 'konane' ? 2 : id === 'ludo' ? 2 : id === 'hockey' ? 2 : 1), ME).href;
   // choose a board for a game: the shared key is written and the showcase board (if it is that game's) is rebuilt at once
   X.setBoard = (id, k) => { const B = BOARDS[id]; if (!B || !B.list.includes(k)) return; B.set(k); try { dispatchEvent(new CustomEvent('atlas-board', { detail: { id, look: k } })); } catch (e) {} };
+  // 駒: the games whose 3D figures come in sets (the board view's panel shows them as a row under 盤; the full game's 「3D駒」 too)
+  // amazons (atlas/models/amazons.js SETS): 'atlas-amazons-pc3'; the pictures are the full game's own (amazons/img/pc3-<set>-w.webp)
+  const PIECES = {
+    amazons: { list: ['statue', 'archer', 'bronze', 'totem', 'jade', 'pottery'], get: () => { const v = ls.get('atlas-amazons-pc3'); return PIECES.amazons.list.includes(v) ? v : 'statue'; }, set: k => ls.set('atlas-amazons-pc3', k),
+      thumb: k => new URL('../amazons/img/pc3-' + k + '-w.webp?v=2', ME).href,
+      names: {
+        statue: { ja: '大理石の女戦士像', en: 'Marble warriors', zh: '大理石女战士像', 'zh-TW': '大理石女戰士像', ko: '대리석 여전사상', es: 'Guerreras de mármol', fr: 'Guerrières de marbre', pt: 'Guerreiras de mármore', de: 'Marmorkriegerinnen', ru: 'Мраморные воительницы', tr: 'Mermer savaşçılar', id: 'Prajurit marmer', hi: 'संगमरमर की योद्धा', ar: 'محاربات من الرخام' },
+        archer: { ja: '象牙と黒檀の弓兵', en: 'Ivory & ebony archers', zh: '象牙与乌木弓手', 'zh-TW': '象牙與烏木弓手', ko: '상아와 흑단 궁수', es: 'Arqueras de marfil y ébano', fr: 'Archères ivoire et ébène', pt: 'Arqueiras de marfim e ébano', de: 'Bogenschützinnen aus Elfenbein & Ebenholz', ru: 'Лучницы из слоновой кости и эбена', tr: 'Fildişi ve abanoz okçular', id: 'Pemanah gading & eboni', hi: 'हाथीदाँत और आबनूस की धनुर्धर', ar: 'رامياتٌ من العاج والأبنوس' },
+        bronze: { ja: 'ブロンズと鉄のクイーン', en: 'Bronze & iron queens', zh: '青铜与铁女王', 'zh-TW': '青銅與鐵女王', ko: '청동과 철의 여왕', es: 'Reinas de bronce y hierro', fr: 'Reines de bronze et de fer', pt: 'Rainhas de bronze e ferro', de: 'Königinnen aus Bronze & Eisen', ru: 'Королевы из бронзы и железа', tr: 'Bronz ve demir kraliçeler', id: 'Ratu perunggu & besi', hi: 'काँसे और लोहे की रानियाँ', ar: 'ملكاتٌ من البرونز والحديد' },
+        totem: { ja: '森の守り神トーテム', en: 'Forest totems', zh: '森林守护图腾', 'zh-TW': '森林守護圖騰', ko: '숲의 수호 토템', es: 'Tótems de la selva', fr: 'Totems de la forêt', pt: 'Totens da floresta', de: 'Waldtotems', ru: 'Лесные тотемы', tr: 'Orman totemleri', id: 'Totem hutan', hi: 'वन के टोटम', ar: 'طواطم الغابة' },
+        jade: { ja: '翡翠と黒曜石の女王', en: 'Jade & obsidian queens', zh: '翡翠与黑曜石女王', 'zh-TW': '翡翠與黑曜石女王', ko: '비취와 흑요석 여왕', es: 'Reinas de jade y obsidiana', fr: 'Reines de jade et d’obsidienne', pt: 'Rainhas de jade e obsidiana', de: 'Königinnen aus Jade & Obsidian', ru: 'Королевы из нефрита и обсидиана', tr: 'Yeşim ve obsidyen kraliçeler', id: 'Ratu giok & obsidian', hi: 'जेड और ओब्सीडियन की रानियाँ', ar: 'ملكاتٌ من اليشم والسبج' },
+        pottery: { ja: 'テラコッタと黒釉の戦士', en: 'Terracotta & black-glaze warriors', zh: '赤陶与黑釉战士', 'zh-TW': '赤陶與黑釉戰士', ko: '테라코타와 흑유 전사', es: 'Guerreras de terracota y barniz negro', fr: 'Guerrières de terre cuite et vernis noir', pt: 'Guerreiras de terracota e verniz negro', de: 'Kriegerinnen aus Terrakotta & Schwarzfirnis', ru: 'Воительницы из терракоты и чёрного лака', tr: 'Pişmiş toprak ve siyah sırlı savaşçılar', id: 'Pejuang terakota & glasir hitam', hi: 'टेराकोटा और काली चमक की योद्धा', ar: 'محاربات من الفخار والطلاء الأسود' },
+      } },
+  };
+  X.PIECES = PIECES;
+  X.pieceName = (id, k, lang) => { const o = PIECES[id] && PIECES[id].names[k]; return o ? o[lang] || o.en : k; };
+  X.pieceThumb = (id, k) => PIECES[id] ? PIECES[id].thumb(k) : '';
+  X.setPieces = (id, k) => { const P = PIECES[id]; if (!P || !P.list.includes(k)) return; P.set(k); try { dispatchEvent(new CustomEvent('atlas-pieces', { detail: { id, set: k } })); } catch (e) {} };
+  PLACES.ui.pieces = { ja: '駒', en: 'Pieces', zh: '棋子', ko: '말', es: 'Piezas', fr: 'Pièces', pt: 'Peças', de: 'Figuren', hi: 'मोहरे', ar: 'القطع', ru: 'Фигуры', 'zh-TW': '棋子', id: 'Bidak', tr: 'Taşlar' };
   PLACES.ui.board = { ja: '盤', en: 'Board', zh: '棋盘', ko: '판', es: 'Tablero', fr: 'Plateau', pt: 'Tabuleiro', de: 'Brett', hi: 'बोर्ड', ar: 'اللوحة', ru: 'Доска', 'zh-TW': '棋盤', id: 'Papan', tr: 'Tahta' };
 
   /* ---------- 1 · 2D準拠: each game's own 2D page background ---------- */
