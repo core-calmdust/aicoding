@@ -19,10 +19,23 @@ const CK = {
   white: { c1: '#ffffff', c2: '#f3efe6', c3: '#d2cbbd', c4: '#8a8273', ring: 'rgba(255,255,255,.75)', inner: 'rgba(90,80,60,.35)', txt: '#3a352c', sh: .3,
     flat: '#f1ede4', edge: '#8a8273', dot: '#efeae0', last: 'rgba(60,50,30,.7)',
     die: { face: [250, 249, 245], edge: [205, 200, 188], pip: '#1d1d22', css: ['#ffffff', '#f1eee6', '#cfc9bb'], cpip: ['#2a2a30', '#0c0c10'] } },
+  // (2026-11-11) four more, the 3D set's stone / shell / leather faces: malachite green, lapis blue, mother-of-pearl, cognac
+  green: { c1: '#9fe2bd', c2: '#2f9a66', c3: '#11613c', c4: '#04291a', ring: 'rgba(240,214,140,.55)', inner: 'rgba(4,30,18,.55)', txt: '#f6e6b8', sh: .24,
+    flat: '#1f7a50', edge: '#e2bf72', dot: '#2f9a66', last: 'rgba(255,244,214,.85)',
+    die: { face: [24, 108, 70], edge: [10, 60, 38], pip: '#f2d27e', css: ['#3aa874', '#1d7a4f', '#0d4a2f'], cpip: ['#ffe7a4', '#d7a94e'] } },
+  blue: { c1: '#a9bdf6', c2: '#2f4fb4', c3: '#172b78', c4: '#060d33', ring: 'rgba(220,226,236,.55)', inner: 'rgba(6,12,46,.55)', txt: '#f4e6bc', sh: .24,
+    flat: '#24409a', edge: '#d6d8dc', dot: '#2f4fb4', last: 'rgba(255,246,220,.85)',
+    die: { face: [34, 62, 150], edge: [16, 30, 90], pip: '#f0cf7e', css: ['#4565c8', '#25409a', '#13235e'], cpip: ['#ffe9a8', '#d2a44a'] } },
+  pearl: { c1: '#ffffff', c2: '#f3ece8', c3: '#d9d4e2', c4: '#8e8597', ring: 'rgba(255,236,190,.7)', inner: 'rgba(90,80,90,.3)', txt: '#3e3430', sh: .34,
+    flat: '#efe9ea', edge: '#c9a457', dot: '#ece4e6', last: 'rgba(70,50,40,.75)',
+    die: { face: [246, 240, 236], edge: [206, 198, 204], pip: '#5a3a26', css: ['#ffffff', '#f2ebe8', '#d4ccd6'], cpip: ['#7a5236', '#3e2414'] } },
+  brown: { c1: '#f0b98c', c2: '#a8622f', c3: '#6a3514', c4: '#2a1206', ring: 'rgba(240,206,170,.5)', inner: 'rgba(40,16,4,.55)', txt: '#fbeedb', sh: .2,
+    flat: '#8f5226', edge: '#e6b48f', dot: '#a8622f', last: 'rgba(255,240,220,.85)',
+    die: { face: [140, 78, 38], edge: [86, 44, 18], pip: '#fbeedb', css: ['#b4703c', '#8a4c22', '#5a2c10'], cpip: ['#fff6e6', '#e6cfae'] } },
 };
-const CK_IDS = ['gold', 'black', 'red', 'white'];
+const CK_IDS = ['gold', 'black', 'red', 'white', 'green', 'blue', 'pearl', 'brown'];
 // sensible partner when the chosen colour equals the other side's
-const PARTNER = { gold: 'black', black: 'gold', red: 'white', white: 'red' };
+const PARTNER = { gold: 'black', black: 'gold', red: 'white', white: 'red', green: 'pearl', blue: 'white', pearl: 'black', brown: 'white' };
 function fixPair(a, b, changed) {
   if (!CK[a]) a = 'gold'; if (!CK[b]) b = 'black';
   if (a === b) { if (changed === 1) a = PARTNER[b]; else b = PARTNER[a]; }
