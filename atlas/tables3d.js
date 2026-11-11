@@ -225,7 +225,7 @@
   // amazons (atlas/models/amazons.js SETS): 'atlas-amazons-pc3'; the pictures are the full game's own (amazons/img/pc3-<set>-w.webp)
   const PIECES = {
     amazons: { list: ['statue', 'archer', 'bronze', 'totem', 'jade', 'pottery'], get: () => { const v = ls.get('atlas-amazons-pc3'); return PIECES.amazons.list.includes(v) ? v : 'statue'; }, set: k => ls.set('atlas-amazons-pc3', k),
-      thumb: k => new URL('../amazons/img/pc3-' + k + '-w.webp?v=2', ME).href,
+      thumb: k => new URL('../amazons/img/pc3-' + k + '-w.webp?v=3', ME).href,
       names: {
         statue: { ja: '大理石の女戦士像', en: 'Marble warriors', zh: '大理石女战士像', 'zh-TW': '大理石女戰士像', ko: '대리석 여전사상', es: 'Guerreras de mármol', fr: 'Guerrières de marbre', pt: 'Guerreiras de mármore', de: 'Marmorkriegerinnen', ru: 'Мраморные воительницы', tr: 'Mermer savaşçılar', id: 'Prajurit marmer', hi: 'संगमरमर की योद्धा', ar: 'محاربات من الرخام' },
         archer: { ja: '象牙と黒檀の弓兵', en: 'Ivory & ebony archers', zh: '象牙与乌木弓手', 'zh-TW': '象牙與烏木弓手', ko: '상아와 흑단 궁수', es: 'Arqueras de marfil y ébano', fr: 'Archères ivoire et ébène', pt: 'Arqueiras de marfim e ébano', de: 'Bogenschützinnen aus Elfenbein & Ebenholz', ru: 'Лучницы из слоновой кости и эбена', tr: 'Fildişi ve abanoz okçular', id: 'Pemanah gading & eboni', hi: 'हाथीदाँत और आबनूस की धनुर्धर', ar: 'رامياتٌ من العاج والأبنوس' },
