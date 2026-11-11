@@ -255,7 +255,7 @@
   };
   // shogi (atlas/models/shogi.js PSETS, 2026-11-11): the raised-lacquer pieces with the inscriptions of the six 2D sets; 'atlas-shogi-pc3'
   PIECES.shogi = { list: ['ryoko', 'moriage', 'ichiji', 'kinki', 'minase', 'futofude'], get: () => { let v = ls.get('atlas-shogi-pc3'); if (v === 'kaisho' || v === 'reisho') v = 'futofude';   // (楷書, then 隷書, were replaced by 浮木, 2026-11-11)
-    return PIECES.shogi.list.includes(v) ? v : 'ryoko'; }   // (default 菱湖, 2026-11-12), set: k => ls.set('atlas-shogi-pc3', k),
+    return PIECES.shogi.list.includes(v) ? v : 'ryoko'; }, set: k => ls.set('atlas-shogi-pc3', k),   // (default 菱湖, 2026-11-12)
     thumb: k => new URL('img/pc3-shogi-' + k + '.webp?v=20', ME).href,
     names: {
       moriage: { ja: '盛り上げ', en: 'Raised lacquer', zh: '盛上', 'zh-TW': '盛上', ko: '모리아게', es: 'Laca en relieve', fr: 'Laque en relief', pt: 'Laca em relevo', de: 'Lack-Relief', ru: 'Рельефный лак', tr: 'Kabartma lake', id: 'Pernis timbul', hi: 'उभरी लाह', ar: 'ورنيش بارز' },
