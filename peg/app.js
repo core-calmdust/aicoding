@@ -56,10 +56,10 @@ function geo(B) {
     const m = 1.05, dy = .9, s3 = Math.sqrt(3);
     const P = [[top[0], top[1] - m * 2], [bl[0] - m * s3, bl[1] + m + dy], [br[0] + m * s3, br[1] + m + dy]];
     const span = Math.max(P[2][0] - P[1][0], P[1][1] - P[0][1]);
-    g = { tri: true, cx, cy: (P[0][1] + P[1][1]) / 2, P, groove: { y: bl[1] + 1.35, x0: bl[0] - 1.1, x1: br[0] + 1.1 }, size: span + .6 };
+    g = { tri: true, cx, cy: (P[0][1] + P[1][1]) / 2, P, groove: { y: bl[1] + 1.35, x0: bl[0] - 1.1, x1: br[0] + 1.1 }, size: span + .3 };
   } else {
-    const R = Math.max(...B.pos.map(([x, y]) => Math.hypot(x - cx, y - cy))) + 1.35;
-    g = { tri: false, cx, cy, R, gr: R - .5, size: R * 2 + .3 };
+    const R = Math.max(...B.pos.map(([x, y]) => Math.hypot(x - cx, y - cy))) + 1.22;   // (a slim rim: the holes as big as the frame allows)
+    g = { tri: false, cx, cy, R, gr: R - .48, size: R * 2 + .12 };
   }
   return (B.geo = g);
 }
@@ -203,6 +203,8 @@ function afterMove() {
   if (better) recs[rk] = { best: left, perfect: perfect || !!r.perfect };
   else if (perfect) recs[rk].perfect = true;
   save(); renderRecs();
+  // 戦績 (shared/record.js, as the other games): one line per finished free game — 1 left = a win, 2 or more = a loss
+  try { if (window.GameRecord) GameRecord.add({ mode: 'ai', res: left === 1 ? 'w' : 'l', opp: boardName(G.board), key: G.board, n: G.hist.length, why: rating(left, perfect)[1] + ' · ' + t('res.left', { n: left }) }); } catch (e) {}
   setTimeout(() => showResult(left, perfect, better && r.best !== undefined), 380);
 }
 function rating(left, perfect) {
@@ -300,6 +302,7 @@ function update() {
   $('#stMsg').innerHTML = G.over ? `<span class="${left === 1 ? 'ok' : 'ng'}">${esc(left === 1 ? t('st.done1') : t('st.done', { n: left }))}</span>` : esc(t('st.legal', { n: legal }));
   $('#btnUndo').disabled = !G.hist.length; $('#btnReset').disabled = !G.hist.length;
   if (HB && HB.info) HB.info.innerHTML = `<span class="hb-chip"><b>${esc(boardName(G.board))}</b></span><span class="hb-chip">${esc(t('st.left', { n: left }))}</span><span class="hb-chip">${esc(t('st.moves', { n: G.hist.length }))}</span>`;
+  if (puzzle) pzButtons();
 }
 function renderRecs() {
   $('#recList').innerHTML = E.IDS.map(id => {
@@ -421,7 +424,7 @@ async function openPuzzles() {
     daily: () => startDaily(),
     card: i => openPzGrid(+i),
   });
-  $('#pzListView').hidden = false; $('#pzGridView').hidden = true; show('#puzzleOverlay');
+  $('#pzListView').hidden = false; $('#pzGridView').hidden = true; selTab('puzzle'); show('#puzzleOverlay');
 }
 let pzLevel = 0;
 function openPzGrid(i, cur) {
@@ -445,13 +448,32 @@ function enterPuzzle(P, pz) {
 }
 function startPuzzle(i, j) { const T = PUZZLES.themes[i]; PZBook.lastSet(PZ_LAST, i); enterPuzzle(T.list[j], { L: i, j, T, daily: null }); }
 async function startDaily() { await dlReady; if (!DAILY) return; const d = today(); enterPuzzle(DAILY.list[dailyIdx(d)], { daily: d }); }
+// the puzzle card's buttons: the same set, order and look as 詰将棋 (shogi, 2026-11-10) — ヒント・やり直し・答え・一覧 as icons with a
+// small caption, a wide 「次の問題 ›」, and やめる at the top right
+const PZ_CAP = {   // hint, retry, answer, list, quit
+  ja: ['ヒント', 'やり直し', '答え', '一覧', 'やめる'], en: ['Hint', 'Retry', 'Answer', 'List', 'Quit'], zh: ['提示', '重试', '答案', '列表', '退出'], 'zh-TW': ['提示', '重試', '答案', '列表', '退出'],
+  ko: ['힌트', '다시', '정답', '목록', '그만'], es: ['Pista', 'Otra vez', 'Solución', 'Lista', 'Salir'], fr: ['Indice', 'Rejouer', 'Solution', 'Liste', 'Quitter'], pt: ['Dica', 'De novo', 'Solução', 'Lista', 'Sair'],
+  de: ['Tipp', 'Nochmal', 'Lösung', 'Liste', 'Beenden'], hi: ['संकेत', 'फिर से', 'उत्तर', 'सूची', 'छोड़ें'], ar: ['تلميح', 'أعد', 'الحل', 'القائمة', 'خروج'], ru: ['Подсказка', 'Ещё раз', 'Ответ', 'Список', 'Выйти'],
+  id: ['Petunjuk', 'Ulangi', 'Jawaban', 'Daftar', 'Keluar'], tr: ['İpucu', 'Tekrar', 'Çözüm', 'Liste', 'Çık'] };
 function renderPuzzleCard() {
   const p = puzzle; if (!p) return;
+  const C = PZ_CAP[LANG] || PZ_CAP.en;
+  ['#pzHint', '#pzRetry', '#pzAnswer', '#pzList'].forEach((k, i) => { $(k + ' span').textContent = C[i]; });
+  $('#pzQuitL').textContent = C[4];
   $('#pzStep').textContent = p.daily ? `★ ${t('daily.title')} · ${p.daily.slice(5).replace('-', '/')}` : `${thName(p.T)} · ${PZBook.t('stage', { n: Math.floor(p.j / PZBook.STAGE) + 1 })} · No.${p.j + 1}`;
   $('#pzTitle').textContent = p.P.k && p.P.k !== 'sym' ? t('shape.' + p.P.k) : t('pz.goal', { n: p.P.n });
+  $('#pzNo').textContent = p.T ? `${p.j + 1}/${p.T.list.length}` : '';
   const st = p.daily ? (dailyInfo().today ? 3 : 0) : (pzRecMap()[pzKey(p.T, p.j)] || 0);
   $('#pzStars').textContent = '★'.repeat(st) + '☆'.repeat(3 - st);
-  $('#pzNext').disabled = !!p.daily || !p.T || p.j + 1 >= p.T.list.length || !PZBook.isOpen(pzRecs(p.T), p.j + 1);
+  pzButtons();
+}
+function pzButtons() {
+  const p = puzzle; if (!p) return;
+  $('#pzNext').disabled = !!p.daily || !p.T || p.j + 1 >= p.T.list.length || !(p.solved || p.answered || PZBook.isOpen(pzRecs(p.T), p.j + 1));
+  $('#pzNext').classList.toggle('go', !!(p.solved || p.answered));
+  $('#pzRetry').disabled = busy || (!G.hist.length && !G.over);
+  $('#pzHint').disabled = busy || G.over || !!p.answered;
+  $('#pzAnswer').disabled = busy || !!p.answered;
 }
 function pzStatus(h) { $('#pzStatus').innerHTML = h; }
 function puzzleEnd(left, onGoal) {
@@ -478,11 +500,25 @@ async function showAnswer() {
   for (const j of S) { await new Promise(r => setTimeout(r, 260)); await play(j, true); }
   busy = false; G.over = true; update(); pzStatus(esc(t('pz.shown')));
 }
+$('#pzHint').onclick = () => hint();
 $('#pzRetry').onclick = () => { if (puzzle) { puzzle.failed = puzzle.failed || G.hist.length > 0; reset(); } };
 $('#pzAnswer').onclick = showAnswer;
 $('#pzNext').onclick = () => { if (puzzle && puzzle.T) startPuzzle(puzzle.L, puzzle.j + 1); };
 $('#pzList').onclick = () => { if (puzzle && puzzle.T) openPzGrid(puzzle.L, puzzle.j); else openPuzzles(); };
-$('#pzQuit').onclick = () => { puzzle = null; document.body.classList.remove('in-puzzle'); loadSaved(); };
+function quitPuzzle() { puzzle = null; document.body.classList.remove('in-puzzle'); loadSaved(); }
+$('#pzQuit').onclick = quitPuzzle;
+// the title (top left): back to this game's top — dialogs closed, a puzzle left, the free game on the board (as chess / shogi)
+function backToBoard() { $$('.overlay.show').forEach(o => o.classList.remove('show')); if (puzzle) quitPuzzle(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+{ const h = $('.brand h1.to-board'); if (h) { h.addEventListener('click', backToBoard); h.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); backToBoard(); } }); } }
+// ルール | パズル: one tabbed dialog (as the other games: the same box, switching in place)
+function selTab(v) { $$('.ls-tabs').forEach(g => g.querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.v === v))); }
+$$('.ls-tabs').forEach(g => g.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b || b.classList.contains('sel')) return;
+  const inst = on => ['#puzzleOverlay', '#rulesOverlay'].forEach(x => $(x).classList.toggle('instant', on)); inst(true);
+  if (b.dataset.v === 'rules') { hide('#puzzleOverlay'); window.PegRules && PegRules.open(); }
+  else { window.PegRules && PegRules.close(); openPuzzles(); }
+  setTimeout(() => inst(false), 150);
+}));
 $('#dailyGo').onclick = startDaily;
 function loadSaved() {
   let g = null; try { const d = JSON.parse(localStorage.getItem(STORE) || '{}'); if (d.game && E.BOARDS[d.game.board]) g = gameFrom(d.game); } catch (e) {}
@@ -517,6 +553,7 @@ function applyI18n() {
 }
 $('#langSel').onchange = e => { LANG = e.target.value; settings.lang = LANG; try { localStorage.setItem('aicoding-lang', LANG); } catch (x) {} save(); applyI18n(); update(); renderRecs(); renderDaily(); if (puzzle) renderPuzzleCard(); if (HB && HB.relabel) HB.relabel(); };
 
+if (window.GameRecord) GameRecord.init({ game: 'peg', lang: () => LANG, menu: '.controls', variant: () => ({ k: G ? G.board : settings.board, n: boardName(G ? G.board : settings.board) }), variants: () => E.IDS, variantName: k => boardName(k), defVariant: 'english' });
 const HB = window.HeaderBar ? HeaderBar.init({ brand: '.brand', controls: '.controls', order: ['#btnNew', '#btnUndo', '#btnReset', '#btnHint', '#btnRules', '#btnPuzzle'], lang: () => LANG }) : null;
 if (window.RulesOffer) RulesOffer.init({ game: 'peg', lang: () => LANG, open: () => window.PegRules && PegRules.open(), watch: '#rulesOverlay' });
 applyI18n();

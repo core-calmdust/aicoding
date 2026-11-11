@@ -63,7 +63,7 @@
 - **画面確認**：PC 1440×900 と 1280×720（ルール説明は 1280×720 でスクロールなしで下ボタンまで見えること）、縦長気味 PC 1100×1300、スマホ 390×844（ルール説明は 390×664 目安）をタッチで。
 - **報告**：日本語・簡潔。遊べるページはアーティファクトのカードで出す。
 - **ドキュメント**：仕様の決定はリポジトリの `claude/*.md` に残し、同じPRに含める（共通ルールは addendum へ追記）。共通ルールの追補は全員が触るので、更新したら早めにマージする。リポジトリは公開なので、未発表の企画など秘密にしたいことは書かない。
-- **ライセンス**：GPLのエンジン（Pikafish・Rapfi 等）はユーザーの Mac 上で教師役・物差しとして使うのは可、**サイトには含めない**。素材は出典明記（例：Figma「Classic Playing Cards」CC BY 4.0、Freepik）。
+- **ライセンス**：サイト全体・各ゲームのコードと重みは**ライセンス未設定**（2026-11-11 時点。ユーザーが今後決める）。`LICENSE` ファイルや「Apache-2.0」等の表記を勝手に付けない（Hugging Face 用の MODEL_CARD の front matter にも `license:` を書かない。外部の素材・データの出所とそのライセンスの記述は残す）。GPLのエンジン（Pikafish・Rapfi 等）はユーザーの Mac 上で教師役・物差しとして使うのは可、**サイトには含めない**。素材は出典明記（例：Figma「Classic Playing Cards」CC BY 4.0、Freepik）。
 - データセットの公開：公開データが乏しいゲームの自己対局データは Hugging Face（アカウント `corechan`）で配布する方針。
 
 ---
@@ -89,6 +89,7 @@
 | `onlinesec.js` ＋ `tools/secrules.py` | オンライン改ざん対策（クライアント精算＋DBルール生成） |
 | `atlas.js` / `atlas-account.js` / `atlas-firebase-config.js` | ポータル共通アカウント・同期・タグ／バッジ |
 | `mtengine.js` / `mt-sw.js` | 本編のマルチスレッド（分離の Service Worker、オプション「マルチスレッド」、スレッドの組。addendum「本編のマルチスレッド」） |
+| `praline/`（C）＋ `claude/praline-spec.md` | 思考エンジン「Praline」：wasm の αβ の YBW（分割点・busy marks・`mt_idle`）の共通ヘッダ。画面側の `mtengine.js` 等もまとめて Praline と呼ぶ（2026-11-11） |
 | `proset.js` | 対局設定の Pro モード（AIの強さの横の PRO ボタンと高度な設定のパネル。addendum「対局設定の Pro モード」） |
 | その他 | `langsel.js`（言語選択）、`flipbtn.js`、`rangetouch.js`、`watchpause.js`、`phonesnd.js`、`latinfs.js`、`export.js`、`rulelink.js` |
 

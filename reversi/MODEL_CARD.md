@@ -1,5 +1,4 @@
 ---
-license: apache-2.0
 tags:
   - othello
   - reversi
@@ -447,6 +446,10 @@ AIの強さは**28段階**です（2026-11-11 に Lv.17〜27 を読みの深さ�
 - **（それ以前）2026-11-11 に Lv.15〜25 を測り直し・Lv.17〜24 を作り直しました**（下の「Lv.17〜24 を深さで」）。Lv.15・16 は Mac の実測（Lv.14 = 1810 から）、Lv.17〜24 はこの作業機で Lv.16 から隣どうしを各40局、Lv.25 は推定。Lv.17〜24 の「平均ms/手」の欄は1手あたりの平均局面数（どの端末でも同じ。Mac の全スレッドで約4,000万局面/秒の見込み）。
 - Lv.15・16・25 は思考時間でも止まるため、端末の速さによって実際の強さが多少上下します（Lv.15・16 は PC ならほぼ深さの上限まで届く）。Lv.17〜24 は深さで決まり、どの端末・スレッド数でもほぼ同じ強さです（遅い端末の見張りの時間に当たるときだけ浅くなる）。
 
+## ライセンス
+
+このゲームのコード・重みのライセンスは**未設定**です（今後決めます。2026-11-11 時点）。学習データの出所とそのライセンスは上の「学習データ」の節のとおりです。
+
 ## 想定用途
 
 - Reversi V4 の対戦AI・ヒント表示・形勢グラフ。
@@ -470,8 +473,6 @@ const buf = await (await fetch('weights.bin.gz')).arrayBuffer();
 const raw = await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
 ReversiEngine.setWeights(new Int16Array(raw), 30); // 1フェーズあたりのサイズから v1/v2 を自動判別
 ```
-
-詳しくは同じフォルダの `LICENSE` を参照してください。
 
 ## 対局設定の Pro モード（2026-11-08）
 対局設定の「AIの強さ」の PRO ボタン（`shared/proset.js`、addendum「対局設定の Pro モード」）。項目：思考の制限（時間 0.1〜60 秒／深さ 1〜30）、スレッド数（時間制限のとき、マルチスレッドがオンのとき）、完全読み（残り 0〜28 マスから）、勝敗読み（0〜30、0 で使わない）、定石、手のばらつき（Lv.1〜13 の既定はそのレベルの noise と rnd・greedy。変えると variety：最善から 小 1.5石／大 4石 以内の手から選ぶ）。値は engine.js `think` の `opts.cfg`（LEVELS と同じキー）・`opts.book`／`noBook`・`variety`／`varietyMargin` で渡す（ページの `LEVELS_UI` は engine.js LEVELS の写し）。PRO のときは根分割の並列探索（PAR_LEVELS）は使わない。レート戦では使わない。戦績は `ai:pro`。

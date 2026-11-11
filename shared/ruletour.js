@@ -33,6 +33,8 @@
 //   setTask(html)
 (function () {
 'use strict';
+// スマホ＝タップ、PC＝クリック (shared/tapword.js, loaded next to this file)
+if (!window.TapWord && document.currentScript) { try { const sc = document.createElement('script'); sc.src = new URL('tapword.js?v=1', document.currentScript.src).href; document.head.appendChild(sc); } catch (e) {} }
 const S = {
   ja: { prev: '前へ', next: '次へ', close: '閉じる', again: 'もう一度', watch: 'まず見てみましょう…', play: '対局してみる', lessons: 'レッスンへ進む', finT: 'これで遊べます！', finB: 'ルールはここまでです。まずはやさしいAIと対局してみましょう。上達のコツや作戦はレッスンで学べます。', step: 'ステップ {n}', ok: '正解！', ng: 'ちがいます' },
   en: { prev: 'Back', next: 'Next', close: 'Close', again: 'Try again', watch: 'Watch first…', play: 'Play a game', lessons: 'Go to the lessons', finT: 'You are ready to play!', finB: 'That is all the rules. Try a game against an easy AI first. Tips and strategy are in the lessons.', step: 'Step {n}', ok: 'Correct!', ng: 'Not quite' },
@@ -194,7 +196,8 @@ function create(o) {
   const L = () => { const l = o.lang ? o.lang() : 'ja'; return S[l] ? l : 'en'; };
   const tx = (k, v) => { let s = S[L()][k]; if (v) s = s.replace(/\{(\w+)\}/g, (_, x) => v[x]); return s; };
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const val = x => typeof x === 'function' ? x() : x;
+  const TW = x => window.TapWord ? TapWord.fix(x, o.lang ? o.lang() : undefined) : x;
+  const val = x => TW(typeof x === 'function' ? x() : x);
   const pages = o.pages.concat([{ id: '_finish', finish: true }]);
   const get = () => { try { return JSON.parse(localStorage.getItem(o.store) || '{}'); } catch (e) { return {}; } };
   const mark = id => { const d = get(); if (d[id]) return; d[id] = 1; try { localStorage.setItem(o.store, JSON.stringify(d)); } catch (e) {} const m = mount(); const b = m && m.querySelector(`.rt-steps button[data-rt="${tour.page}"]`); if (b) b.classList.add('ok'); if (o.onMark) o.onMark(id); };
@@ -240,7 +243,7 @@ function create(o) {
       const q = val(P.task);
       // the ✓/✗ line and the 「もう一度」 button always keep their space (empty / hidden until used),
       // so a message never pushes the board around or makes it shrink
-      task.innerHTML = (q ? `<span class="rt-q">👉 ${q}</span>` : '') + st.extra + `<div class="rt-fb"><div class="rt-msg ${st.msg ? st.cls : 'is-empty'}" aria-live="polite">${st.msg || '&nbsp;'}</div>` +
+      task.innerHTML = (q ? `<span class="rt-q">👉 ${q}</span>` : '') + st.extra + `<div class="rt-fb"><div class="rt-msg ${st.msg ? st.cls : 'is-empty'}" aria-live="polite">${TW(st.msg) || '&nbsp;'}</div>` +
         `<button type="button" class="rt-again${st.done ? '' : ' is-idle'}" data-rt-act="again"${st.done ? '' : ' tabindex="-1" aria-hidden="true" disabled'}>↺ ${esc(tx('again'))}</button></div>`;
     };
     board.innerHTML = '';

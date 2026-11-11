@@ -12,7 +12,7 @@
 // Every candidate is classified by the runtime solver (go/tsumego.js): exactly one first move reaches the goal in the
 // fewest moves n, the status depends on who moves first (the opponent moving first defends), the main line is legal,
 // has no pass and no ko, and reaches the goal. LD shapes are minimised (stones that do not matter are removed).
-// Copyright 2026 core-calmdust — Apache License 2.0
+// Copyright 2026 core-calmdust — license not set yet (to be decided)
 import fs from 'fs';
 import path from 'path';
 import { createRequire } from 'module';
