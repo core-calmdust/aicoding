@@ -3,7 +3,7 @@
  * Position / Searcher parts of engine.js (same move encoding, same evaluation,
  * same search), so results match the JavaScript engine move for move.
  *
- * Copyright 2026 core-calmdust — Apache License 2.0
+ * Copyright 2026 core-calmdust — license not set yet (to be decided)
  */
 typedef signed char i8;
 typedef unsigned char u8;
