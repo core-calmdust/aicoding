@@ -1474,10 +1474,8 @@ function openIntro(i) {
       const drill = s.kind === 'drill', n = (s.stages || s.problems || []).length, goal = LL(x.goal) || (t('ls.' + s.id + '.goal') !== 'ls.' + s.id + '.goal' ? t('ls.' + s.id + '.goal') : '');
       const tips = LL(x.tips), tr = LL(x.trivia);
       LuxIntro.lesson({ step, title, fig, cap: U.figL,
-        chips: [[U.course, t('course.' + (s.course || 'tactics'))], [U.kind, f(drill ? 'stages' : 'probs', n)], [U.pass, drill ? U.passDrill : U.passPts]],
-        secs: [goal && { h: H('goal'), html: goal }, { h: H('think'), html: t('ls.' + s.id + '.intro') },
-          tips && tips.length && { h: H('tips'), html: `<ul>${tips.map(x => `<li>${x}</li>`).join('')}</ul>` },
-          tr && { h: H('trivia'), html: tr, cls: 'lx-trivia' }, { h: H('how'), html: f(drill ? 'howDrill' : 'howProbs', n) }].filter(Boolean) });
+        chips: [[U.kind, f(drill ? 'stages' : 'probs', n)], [U.pass, drill ? U.passDrill : U.passPts]],
+        secs: [goal && { h: H('goal'), html: goal }, { h: H('think'), html: t('ls.' + s.id + '.intro') }, tr && { h: H('trivia'), html: tr, cls: 'lx-trivia' }].filter(Boolean) });   // (as much as shogi's page: no tips / how-to — the facts row says it, 2026-11-11)
     });
     $('#liStep').textContent = step; $('#liTitle').textContent = title;
     showLessonView('lessonIntroView'); return;
@@ -1791,7 +1789,7 @@ function openOpeningChoice(i) {
       const U = LL((X.ui) || {}) || {}, x = (X.openings || {})[g.id] || {}, H = k => LuxIntro.head(k, LANG);
       LuxIntro.opening({ step: $('#liStep').textContent, title: LL(g.title), fig, cap: U.figO, lead: LL(g.intro),
         choices: [{ ic: '📖', b: t('op.study'), small: t('op.studyDesc', { n: g.study.steps.length }), attrs: 'data-study="1"' }, { ic: '✎', b: t('op.practice'), small: t('op.practiceDesc'), attrs: 'data-practice="1"' }],
-        secs: [LL(x.plan) && { h: H('plan'), html: LL(x.plan) }, LL(x.hist) && { h: H('hist'), html: LL(x.hist) }, LL(x.who) && { h: H('who'), html: LL(x.who) }, LL(x.trivia) && { h: H('trivia'), html: LL(x.trivia), cls: 'lx-trivia' }].filter(Boolean) });
+        secs: [LL(x.hist) && { h: H('hist'), html: [LL(x.hist), LL(x.trivia)].filter(Boolean) }, LL(x.who) && { h: H('who'), html: LL(x.who) }].filter(Boolean) });   // (shogi's two sections: history with the trivia, the players)
     });
     $('#btnLessonStart').classList.add('hidden');
     showLessonView('lessonIntroView'); showOverlay('#lessonOverlay'); return;
