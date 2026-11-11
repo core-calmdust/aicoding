@@ -195,7 +195,7 @@ main{padding:18px;display:flex;justify-content:center}
 <div class="dlg" id="dEnd"><div class="box" style="text-align:center"><h2 id="eT"></h2><p id="eB" style="color:var(--sub);font-size:17px"></p><div class="row"><button class="btn pri" id="eAgain"></button><button class="btn" id="eDeck"></button><button class="btn" id="eHome"></button></div></div></div>
 <div class="dlg" id="dRules"><div class="box"><h2 id="rT"></h2><div id="rB" style="color:var(--sub)"></div><div class="row"><button class="btn" id="rC">OK</button></div></div></div>
 <div class="flash" id="flash"></div><div class="boomtx" id="boomtx"></div>
-<script src="engine.js?v=1"></script>
+<script src="engine.js?v=2"></script>
 <script src="data.js?v=1"></script>
 <script>
 (function () {
@@ -307,7 +307,7 @@ main{padding:18px;display:flex;justify-content:center}
 
   /* ---------- the game ---------- */
   let P = null, snaps = [], sel = null, selHand = null, busy = false, over = null, lastTo = -1, worker = null, reqId = 0, gameCost = 0, myKills = 0;
-  try { worker = new Worker('engine.js?v=1'); } catch (e) { worker = null; }
+  try { worker = new Worker('ok-ai.js?v=2'); } catch (e) { worker = null; }
   function startGame() {
     P = E.newGame(deckBoard()); snaps = [E.clonePos(P)]; sel = null; selHand = null; busy = false; over = null; lastTo = -1; myKills = 0;
     gameCost = E.deckCost(deckBoard());
