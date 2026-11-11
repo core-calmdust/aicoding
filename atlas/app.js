@@ -319,13 +319,21 @@
     const SPLIT = { ja: ['世界の', 'ボドゲ大百科'], fr: ['ATLAS MONDIAL', 'Jeux de société'], es: ['ATLAS MUNDIAL', 'Juegos de Mesa'], pt: ['ATLAS MUNDIAL', 'Jogos de Tabuleiro'],
       de: ['WELT', 'Brettspiel-Atlas'], id: ['ATLAS DUNIA', 'Permainan Papan'], tr: ['DÜNYA ATLASI', 'Masa Oyunları'], ru: ['АТЛАС', 'Настольные игры'],
       zh: ['世界', '桌游大全'], 'zh-TW': ['世界', '桌遊大百科'], ko: ['세계의', '보드게임 대전'], hi: ['विश्व', 'बोर्ड गेम एटलस'] }[lang];
+    // a redraw (the font arrived, a sync / place change in the background) carries on where the old logo and pieces were:
+    // the ring's turn and each piece's bob don't snap back to their start (a jolt), and a logo drawn while the window is
+    // not in front / the hero is off screen starts paused (it used to turn on, unfocused, after such a redraw — 2026-11-11)
+    const o = $('ttl').querySelector('svg'), ct = o && o.getCurrentTime ? o.getCurrentTime() : 0;
     $('ttl').innerHTML = emblem(SPLIT ? SPLIT[1] : t('title'), SPLIT ? SPLIT[0] : '', A_.GAMES.length);
+    const n = $('ttl').querySelector('svg'); try { if (ct && n && n.setCurrentTime) n.setCurrentTime(ct); } catch (e) {}
+    svgSync([n]);
     $('ttl').setAttribute('aria-label', t('title') + ' — World Board Game Atlas');
     fitTitle();
     if (titleOnly && $('props').childElementCount) return;   // (the font arrived: only the title is redrawn, the pieces keep floating)
+    const bob = [...$('props').querySelectorAll('.pp img')].map(i => { try { const a = i.getAnimations()[0]; return a ? a.currentTime : null; } catch (e) { return null; } });
     $('props').innerHTML = PROPS.filter((_, i) => !phone || i < 17).map(([img, gid, x, y, w, r], i) => `<span class="pp" data-g="${gid}" style="--x:${x}%;--y:${y}%;--w:${Math.round(w * (phone ? .44 : 1))}px;--r:${r}deg"><span class="pb"><img src="../images/atlas/p-${img}.webp?v=2" alt="" decoding="async"></span></span>`).join('');
     $('props').querySelectorAll('[data-g]').forEach(b => b.onclick = () => { hop(b, true); SFX.shimmer(60); SFX.chime(290); setTimeout(() => openBoard(b.dataset.g), 380); });   // (the sparkle a game icon ends on when its board appears)
     startProps();
+    if (bob.length) $('props').querySelectorAll('.pp img').forEach((i, k) => { try { const a = i.getAnimations()[0]; if (a && bob[k] != null) a.currentTime = bob[k]; } catch (e) {} });
   }
   /* floating pieces: bob + sway (CSS animations: the compositor draws them, no script runs — battery, 2026-11-10), random
      hops / spins (Web Animations, also on the compositor), and a little parallax that follows the pointer / phone tilt (a frame
@@ -354,9 +362,19 @@
   }
   function propSync() {   // pause / resume everything with the visibility
     const on = propOn(), box = $('props'); if (!box) return;
-    box.classList.toggle('pz', !on);
+    box.classList.toggle('pz', !on); svgSync([$('ttl').querySelector('svg')]);
     clearTimeout(propHopT);
     if (on) { const next = () => { propHopT = setTimeout(() => { if (!propOn()) return; hop(propEls[Math.random() * propEls.length | 0]); next(); }, 900 + Math.random() * 1400); }; next(); propMove(); }
+  }
+  /* SVG (SMIL) animations — the logo's turning ring and a few icons: CSS animation-play-state doesn't reach them, so they are
+     paused here: every one while the window is not in front (svgIdle), the logo's also while the hero can't be seen (as the
+     pieces). paused ↔ running only when it changes; the time stands still while paused, so they go on where they stopped. */
+  let svgIdle = false;
+  function svgSync(list) {
+    const hero = $('hero');
+    (list || document.querySelectorAll('svg')).forEach(s => { if (!s || !s.pauseAnimations) return;
+      const stop = svgIdle || (!!hero && hero.contains(s) && !propOn());
+      try { if (stop !== s.animationsPaused()) { if (stop) s.pauseAnimations(); else s.unpauseAnimations(); } } catch (e) {} });
   }
   function startProps() {
     cancelAnimationFrame(propRaf); propRaf = 0;
@@ -2361,8 +2379,14 @@
   /* ---------- idle: pause CSS/SVG animations while the tab is hidden or the window isn't focused ---------- */
   (function idle() {
     const st = document.createElement('style'); st.textContent = 'html.atlas-idle *,html.atlas-idle *::before,html.atlas-idle *::after{animation-play-state:paused!important}'; document.head.appendChild(st);
-    const set = () => { const on = document.hidden || !document.hasFocus(); document.documentElement.classList.toggle('atlas-idle', on); document.querySelectorAll('svg').forEach(s => { try { on ? s.pauseAnimations() : s.unpauseAnimations(); } catch (e) {} }); };
-    document.addEventListener('visibilitychange', set); addEventListener('blur', set); addEventListener('focus', set);
+    // an SVG added while idle (the home redrawn by a sync, a place change … in the background) is paused as it arrives: it
+    // used to start turning on its own while the window was still behind (the logo's ring, 2026-11-11)
+    const mo = window.MutationObserver ? new MutationObserver(rs => { const l = []; rs.forEach(r => r.addedNodes.forEach(n => { if (n.nodeType !== 1) return; if (n.tagName.toLowerCase() === 'svg') l.push(n); else if (n.querySelector) n.querySelectorAll('svg').forEach(x => l.push(x)); })); if (l.length) svgSync(l); }) : null;
+    const set = () => { const on = document.hidden || !document.hasFocus(); document.documentElement.classList.toggle('atlas-idle', on);
+      if (on !== svgIdle) { svgIdle = on; if (mo) { if (on) mo.observe(document.body, { childList: true, subtree: true }); else mo.disconnect(); } }
+      svgSync(); };
+    document.addEventListener('visibilitychange', set); addEventListener('blur', set); addEventListener('blur', () => setTimeout(set, 0)); addEventListener('focus', set); addEventListener('pageshow', set);
+    set();
   })();
 
   // ミッション (atlas/missions.js, 2026-11-11): the button at the bottom right and its popup
