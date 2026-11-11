@@ -78,7 +78,7 @@ const POS = (() => {
 })();
 const mtSetup = mv => { const p = E.Pos.from(null, V), a = [E.VID[p.v], p.turn === E.P2 ? 1 : 0]; for (let i = 0; i < p.b.length; i++) a.push(p.b[i]); a.push(mv.length); for (const m of mv) a.push(E.mFrom(m) | (E.mTo(m) << 8)); return a; };
 const ENG = 'engine.js?v=nn2sr-lv25';
-const POOL = { wasm: 'engine_mt.wasm?v=20261111ybw1', lead: ENG + '&mt=1', helper: 'mt-helper.js?v=2', slot: 2 << 20, initial: 1152, maximum: 16384,
+const POOL = { wasm: 'engine_mt.wasm?v=20261111pl1', lead: ENG + '&mt=1', helper: 'mt-helper.js?v=2', slot: 2 << 20, initial: 1152, maximum: 16384,
   imports: mem => ({ env: { memory: mem, now: () => Date.now(), progress: () => {} } }),
   help: m => m.type === 'think' ? { setup: mtSetup(m.moves) } : null };
 const think = (moves, cfg, threads) => ({ type: 'think', start: null, v: V, moves, level: 20, cfg: { d: cfg.d < 99 ? cfg.d : 99, ms: cfg.ms || 0, nk: 0 }, mtThreads: threads });

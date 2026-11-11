@@ -3,7 +3,7 @@
 (() => {
   'use strict';
   const E = window.TaflEngine;
-  const VER = '?v=7', NETV = '?v=20261106tw1';
+  const VER = '?v=8', NETV = '?v=20261106tw1';
   const LANG = (() => { try { return (localStorage.getItem('aicoding-lang') || 'ja') === 'ja' ? 'ja' : 'en'; } catch (e) { return 'ja'; } })();
   const VNAME = { ja: { copenhagen: 'コペンハーゲン・ヘネフタフル', brandubh: 'ブランダブ', tablut: 'タブル', tawlbwrdd: 'タウルブルズ', fetlar: 'フェトラー', ardri: 'アルド・リー' },
     en: { copenhagen: 'Copenhagen Hnefatafl', brandubh: 'Brandubh', tablut: 'Tablut', tawlbwrdd: 'Tawlbwrdd', fetlar: 'Fetlar', ardri: 'Ard Rí' } }[LANG];

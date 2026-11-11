@@ -56,7 +56,7 @@ wasm の αβ エンジン（`engine_mt.wasm`、`-DMT`）の**仕事を分ける
 | 道具 | 使い方 |
 |---|---|
 | `tools/mtsim/`（`gen.py`・`sim.c`・`simcore.h`・`g_<game>.h`・`dump.js`・`wasm1.js`） | wasm の αβ（シャンチー・チャンギ・チェス・将棋・タフル、アマゾンズ＝評価数の時計・局面は `amazons/tools/mtsim_pos.js`）の「本当に同時」のシミュレーション：全スレッドが一定の局面数ずつ足並みをそろえ、置換表と busy marks の書き込みはその回の終わりまでほかに見えない。`-DSIM_Q=64`（YBW は細かく）、`SIM_SLOW=k`（k 番以降が 2/5 の速さ＝高効率コア）、`SIM_SLOWSET`・`SIM_MIG`。`wasm1.js` は本物の `engine_mt.wasm` の1スレッドの局面数・手。`gen.py` は Praline のヘッダを取り込んでから書き換える |
-| `checkers/tools/mtsim/`・`morris/tools/mtsim/`・`fanorona/tools/mtsim/` | 同じ方式のゲーム別版（チェッカーの `gen.py` も Praline のヘッダを取り込む） |
+| `checkers/tools/mtsim/`・`morris/tools/mtsim/`・`fanorona/tools/mtsim/` | 同じ方式のゲーム別版（3つとも `gen.py` が Praline のヘッダを取り込んでから書き換える） |
 | `shared/tools/mtsim.js`・`mtstep.js`・`mtlazy.js`・`nodematch.js` | JavaScript エンジン（mtsplit.js）の見積もり：局面数の時計、歩調合わせ（`--slow K:R`）、Lazy SMP、時間2倍の強さ |
 | `<game>/bench.html`・`bench-all.html` | ユーザーの Mac で測るページ（1・2・4・8・10・14スレッド、同じ深さまでの時間・nps・最善手の一致、「結果をコピー」）。`bench-all.html` で全ゲームをまとめて |
 
@@ -69,16 +69,17 @@ wasm の αβ エンジン（`engine_mt.wasm`、`-DMT`）の**仕事を分ける
 | シャンチー（`xiangqi/`） | C（wasm、NNUE） | **YBW**（分割の深さ3）＋busy marks | mtengine・**praline.h／praline_ybw.h（移行済み）**・proset・ponder |
 | チャンギ（`janggi/`） | C（wasm） | **YBW**（3）＋busy marks | mtengine・**praline（移行済み）**・proset・ponder |
 | チェッカー（`checkers/`） | C（wasm、NNUE・終盤DB） | **YBW**（3）＋busy marks | mtengine・**praline（移行済み）**・proset |
-| タフル（`tafl/`） | C（wasm） | YBW（3）＋busy marks | mtengine・proset・ponder（C は自前の写し） |
-| モリス（`morris/`） | C（wasm） | YBW（3）＋busy marks | mtengine・proset（C は自前の写し） |
-| ファノロナ（`fanorona/`、アルケルケは1スレッド） | C（wasm） | YBW（3）＋busy marks | mtengine・proset（C は自前の写し） |
+| タフル（`tafl/`） | C（wasm、NNUE） | **YBW**（3、busy marks なし） | mtengine・**praline（移行済み）**・proset・ponder |
+| モリス（`morris/`） | C（wasm） | **YBW**（3）＋busy marks | mtengine・**praline（移行済み）**・proset |
+| ファノロナ（`fanorona/`、アルケルケは1スレッド） | C（wasm） | **YBW**（3）＋busy marks | mtengine・**praline（移行済み）**・proset |
 | リバーシ（`reversi/`） | C（wasm）＋JS | YBW v4.1（中盤は深さ5、完全読みは14マス） | mtengine・proset・ponder（C は元祖の作り：分割点256個・`CHK_Q`） |
 | 将棋（`shogi/`） | C（wasm、NNUE） | YBW（4）＋10スレッドより先は Lazy SMP（`YBW_MAX`） | mtengine・proset・ponder（C は自前：読み筋の受け渡し・継続履歴の共有） |
 | チェス（`chess/`） | C（wasm、NNUE） | YBW 1（補助1番、深さ7・予想カット節は分けない）＋Lazy SMP | mtengine・proset・ponder（C は自前：履歴の共有） |
 | 五目並べ（`gomoku/`） | JS 探索＋wasm の共有の置換表・分割点（`mt.c`） | YBW v2（どの節も） | mtengine・proset |
 | 囲碁（`go/`）・ヘックス（`hex/`） | C（wasm） | 共有木 MCTS（virtual loss） | mtengine・proset |
 | アマゾンズ（`amazons/`） | C（wasm、αβ の探索ごと core.c、2026-11-11） | αβ は **YBW**（3）＋busy marks、Lv.19〜23 は共有木 MCTS（同じ `core_mt.wasm`、補助は両方を待つ）。分離できないページは mtsplit の非共有 | mtengine・**praline（2026-11-11）**・proset（mtsplit は非共有だけ） |
-| ウゴルキ・アゴン・コナネ | JS＋wasm コア | YBW＋共有の置換表＋手伝い（JS 分割） | mtsplit・mttt・proset |
+| ウゴルキ（`ugolki/`） | C（wasm、ルートのループも 2026-11-11） | **YBW**（3）（`core_mt.wasm`）。分離できないページは mtsplit | mtengine・**praline（2026-11-11）**・proset（mtsplit は非共有・予備） |
+| アゴン・コナネ | JS のルート＋wasm の探索 | YBW＋共有の置換表＋手伝い（JS 分割） | mtsplit・mttt・proset |
 | マンカラ | **C（wasm、2026-11-11）**：探索・評価・置換表（`engine.c`、SIMD 版となし版） | 各 Worker が自分の置換表でルートの手と本筋を分担（YBW。C では Lazy SMP は使わない） | mtsplit・proset（`claude/mancala-spec.md`） |
 | コネクトフォー | JS | 列ごとの完全読み（共有の置換表） | mtsplit＋`connect4/mt.js` |
 | ドット＆ボックス | JS＋wasm（5×5） | 手の分担（共有の置換表）・補助 Worker | mtworkers（共有モード）・wasm `dots5mt.wasm` |
@@ -165,8 +166,25 @@ JavaScript エンジンは `shared/mtsplit.js`（＋`mttt.js`）、独立な仕�
 
 作業機のローカルサーバー（このブランチ）で、`xiangqi`・`janggi`・`checkers` の `bench.html`（1秒、1・2スレッド：分離あり・12局面とも最後まで・最善手の一致 9〜10/12）、対局ページ（分離・マルチスレッドオン・2スレッドの組で解析：補助の局面数 22万〜67万）、`pro/`（シャンチー・チャンギ）で、新しい `engine_mt.wasm?v=…` を読み、ページのエラーなし（外部の読み込みが作業機のプロキシで失敗するのは別）。2コアがシミュレーションで埋まっていたため、壁時計の速さは測れない（2スレッドが1スレッドより遅いのはそのため）。
 
+### 第2段（2026-11-11）：タフル・モリス・ファノロナ
+- 3ゲームの `engine.c` の分割点・YBW を Praline に移し、つなぎだけを残した（合わせて約 −850 行）。ヘッダは変えていない（シャンチー・チャンギ・チェッカーの wasm はそのまま）。
+- **一致**：通常版 wasm は3ゲームとも前処理後のソースが同じ（作り直していない）。`engine_mt.wasm` の1スレッドは前の配信版と全一致（タフル：`tools/mtsim/wasm1.js` に追加、24局面・深さ9。モリス：`morris/tools/check_wasm.js` の30局面の md5、深さ15・13。ファノロナ：`bench.html` の12局面・深さ14 を Node で）。
+- タフルは busy marks を使わない（共通ヘッダの表は呼ばれないので最適化で消え、宣言するメモリは同じ）。モリスは手が `int`（`typedef int Move`）、停止の変数が `aborted`（`#define stopFlag aborted`）、busy marks の鍵は `busyK(p)`（表の位置は前と同じ `h2` から）。モリスは分割点に根の値の欄が増え、宣言するメモリが 1036 → 1038 ページ（プールの `initial` 1152 のまま）。
+- **マルチスレッド（`tools/mtsim`、64局面ごとに同期、2回の平均）**：同じ深さまでの時間の1スレッド比（全部同じ速さ 2／4／8、遅いコアあり 8／10／14）。
+
+| ゲーム | 版 | 2 | 4 | 8 | 遅いコアあり 8 | 10 | 14 |
+|---|---|---|---|---|---|---|---|
+| タフル（12局面・150万） | 前 | ×2.17 | ×4.12 | ×7.10 | ×7.34 | ×7.82 | ×9.45 |
+| タフル | **Praline** | ×2.36 | ×4.16 | ×7.38 | ×7.61 | ×8.80 | ×8.99 |
+| モリス（12局面・300万） | 前 | ×1.70 | ×2.78 | ×5.15 | ×5.18 | ×4.79 | ×5.09 |
+| モリス | **Praline** | ×1.75 | ×2.69 | ×4.85 | ×5.32 | ×4.85 | ×5.26 |
+| ファノロナ（12局面・300万） | 前 | ×1.75 | ×2.98 | ×5.28 | ×5.44 | ×5.45 | ×6.19 |
+| ファノロナ | **Praline** | ×1.76 | ×3.10 | ×5.47 | ×5.31 | ×5.83 | ×6.30 |
+
+  - どれも回ごとの揺れ（同じ版・同じ設定で ±10〜20%：例 モリス前の8スレッド ×5.53 と ×4.77）の内で同等。各回の数字は各 MODEL_CARD／spec。
+- headless Chrome（Playwright）：3ゲームの `bench.html`（1秒、1・2スレッド）、対局ページ（2スレッドの組で解析）、タフルの `pro/` がエラーなく新しい `engine_mt.wasm` で動く。
+
 ### 移行の判断と次の候補
-- **次に広げる候補：タフル・モリス・ファノロナ**。分割点の作りはチェッカーと同じ形（つなぎの差だけ）で、同じ手順でそのまま乗る見込み。各ゲームの `tools/mtsim`（モリス・ファノロナは自前の `gen.py`）にもヘッダの取り込みを足す。
 - **将棋**：読み筋を分割点経由で戻す（`pvTable` の写し）・継続履歴の共有・`YBW_MAX`（10スレッドより先の補助は Lazy SMP：`lazyRun`・`gRootSeq`・`gRootP`）がある。Praline に「手が alpha を上げたときのつなぎ（読み筋）」と「Lazy の補助の上限 `YBW_MAX`」（`mt_idle` の入口で `threadId >= ybwMax` なら Lazy の根の読みへ、`mtCheck` で主の根の更新を見る）を足してから移す。将棋の移行と同時に、将棋の12局面で全一致を確かめて入れる（使うゲームのない共通コードは先に入れない）。
 - **チェス**：YBW の補助は1つだけで、YBW の補助と主が履歴・カウンター手の表を共有し、分割は予想カット節を除く。上の将棋の足し方の後に。
 - **リバーシ**：元祖の作り（分割点256個、`CHK_Q`＝4096局面ごとの確認、完全読みの分割）で、中盤と終盤の2種類の探索に分割点がある。並行して別の作業が `reversi/engine.c` 以外を触っている間は移さない。最後に回す。
@@ -175,6 +193,9 @@ JavaScript エンジンは `shared/mtsplit.js`（＋`mttt.js`）、独立な仕�
 ### アマゾンズ（2026-11-11）：JS の αβ を C に移して Praline に
 - αβ の探索ループ（`search`・解析の全部の手・最善手の反復深化）を `amazons/core.c` に移し、MCTS と同じ `core_mt.wasm` で Praline の YBW（つなぎ：局面は盤100＋アマゾン8＋手番＋鍵2つ、ルートの候補の値 `sc`、`spCutoff` は空＝キラー・履歴なし）。補助は `mt_help` の中で MCTS の木と分割点の両方を待つ。1スレッドは JS の探索と手・値・局面数・評価数が全一致（`amazons/tools/check_ab.js`、246回の探索）。
 - `tools/mtsim`（評価数の時計）深さ6・8局面：2／4／8 ×1.78／3.07／4.76、遅いコアあり 8／10／14 ×4.82／4.79／4.73。前（mtsplit の共有・YBW＋手伝い、`mtstep` を評価数の時計に）×1.43／2.21／3.39。1スレッドも ×1.22（ループを C に）。詳細は claude/amazons-spec.md「αβ を C に」。
+
+### ウゴルキ（2026-11-11）：ルートのループを C に、Praline に
+- 探索はすでに C（core.c）で、JS はルートのループと mtsplit。ルートのループを `ab_best`／`ab_values` に移し、`core_mt.wasm` で Praline の YBW（つなぎ：局面・繰り返しの履歴・各手の元の順番 `lg`）。1スレッドは前の版と848回の探索で全一致。`tools/mtsim`（局面数の時計、5局面・深さ8）2／4／8 ×1.97／3.71／6.79、遅いコアあり 8／10／14 ×6.74／7.04／7.62（前の mtsplit ×1.37／2.18／3.30）。詳細は claude/ugolki-spec.md。
 
 ---
 
@@ -253,3 +274,24 @@ Many cores (nuts) held together by shared memory (caramel).
 - [ ] 秘密の企画・個人情報・内部の計測ログ・ユーザーの端末の情報が入っていない。
 - [ ] 英語の README・コメント（日本語のコメントは英語に）。
 - [ ] サイト側が公開版を取り込んでも全ゲームの1スレッドの一致・ベンチが前と同じ。
+
+---
+
+## 9. ロゴとトップページの掲載（2026-11-11）
+
+**ロゴ（ユーザーが決めたデザイン、白ベース＝明るい背景用の横組み）**：`praline/`
+| ファイル | 中身 |
+|---|---|
+| `icon.svg` | アイコン（案A Cluster）：キャラメル #C9823F の角丸正方形に、クリーム #F5EADB とココア #2A1E17 の丸4つ（縁取りはキャラメル） |
+| `icon-16.svg` | 16px 用の簡略版（丸3つ、縁取りなし） |
+| `logo.svg` | 横組み：白い背景＋アイコン＋「Praline」（Outfit 600、letter-spacing −0.03em、ココア #2A1E17。i の点はキャラメルの丸＝点なしの ı ＋直径0.2em の丸を Outfit の i の点の高さに）＋下に「THINKING ENGINE」（Outfit 500、letter-spacing 0.32em、#7A5A44） |
+| `card.svg` | トップページのパネル用（4:3・1600×1200、白地の中央にロゴ、幅の約62%） |
+| `tools/build.py`・`tools/outline.py` | 上の4つを作るスクリプト（`python3 praline/tools/build.py praline`、fontTools） |
+
+- 文字は**アウトライン化済み**（`<img>` で使ってもフォントを読まない）。作業機に Outfit の可変フォントがなかったため、Outfit の Regular（400）と Bold（700）の輪郭（同じ点の構成）を補間して 600・500 相当を作り、カーニング（GPOS kern）も同じく補間。可変フォントで作り直すときは `outline.py` を差し替える。
+- Outfit は SIL Open Font License 1.1（Copyright 2021 The Outfit Project Authors）。ロゴのような図案（アウトライン化した文字）は自由に使え、フォントのファイル自体は同梱しないので OFL の文書の同梱は不要。
+
+**トップページ（`index.html`）**：「開発室」の下に新しい見出し「ソフトウェア」（`#software`、14言語 `sw.h2`・`sw.sub`・`sw.desc`）を作り、開発室と同じギャラリー（`makeGallery`、`p: 'sw'`、台帳 `SOFTWARE`）で Praline を1項目置く。
+- 箱は開発室と同じ形（`.lab.sw`、キャラメル色の破線・方眼）、カードはパネル＋アイコンの並び。パネルの絵は `card.svg`（`white: true` でパネルの絵の地を白に）。
+- **準備中**：台帳の `soon: true` で、アイコンの左上に「SOON」（バッジは英語表記の規則どおり）、タグと再生ボタンの位置に「準備中」（`tag.soon`、14言語）。ボタンは破線の押せない形（`aria-disabled`）、パネルの絵・アイコンをクリックしても遷移しない（Enter も選ぶだけ）。公開したら `soon` を外して `href` を入れる。
+- 説明は `pl.desc`（14言語、PC 幅392px・6行に収まることを計測済み）。上のメニュー・下のタブには足していない（1項目・準備中のため。項目が増えたら検討）。公開タイトル数（`stat-titles`）にも数えない。

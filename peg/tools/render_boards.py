@@ -38,19 +38,23 @@ def lerp(c0, c1, t):
 
 # ---------------------------------------------------------------- materials (albedo 0..1, gloss 0..1, metal 0/1)
 def wood_walnut(sh, seed=1):
+    """natural flat-sawn walnut: long, gently wavering grain lines with a soft cathedral in the middle, medium-light tone"""
     h, w = sh
     yy, xx = np.mgrid[0:h, 0:w].astype(np.float32) / max(h, w)
-    low = fbm(sh, [90, 30], [1, .5], seed=seed)
-    arch = (yy - .5) * 34 + 11 * (xx - .52) ** 2 * (1 + .2 * low) + low * .55            # flat-sawn cathedral figure
-    rings = .5 + .5 * np.sin(arch * math.pi * 2)
-    rings = rings ** 2.2
-    streak = fbm(sh, [1.2, .5], [1, .5], aniso=(1, 14), seed=seed + 1)             # fine grain lines along the board
-    t = np.clip(.66 * rings + .2 * streak + .1 * norm01(low), 0, 1.3)
-    t = norm01(t)
-    alb = lerp((138, 88, 52), (46, 24, 12), t)
-    alb *= (1 + .06 * streak[..., None])
-    pores = fbm(sh, [.6], [1], aniso=(1, 9), seed=seed + 3) > 2.1          # open pores
-    alb[pores] *= .7
+    drift = fbm(sh, [160, 60], [1, .4], seed=seed) * .035                      # the grain wanders slowly
+    y = yy + drift + .045 * np.exp(-((xx - .5) / .22) ** 2) * np.sin(yy * 9)  # a soft arch in the middle
+    lines = np.zeros(sh, np.float32)
+    rr = np.random.default_rng(seed)
+    pos = np.sort(rr.random(70))
+    for p_ in pos:                                                           # growth rings of uneven spacing and strength
+        lines += rr.uniform(.4, 1) * np.exp(-((y - p_) / rr.uniform(.0025, .006)) ** 2)
+    lines = np.clip(lines, 0, 1.2)
+    streak = fbm(sh, [1.4, .6], [1, .5], aniso=(1, 20), seed=seed + 1)            # fine fibres along the board
+    tone = norm01(fbm(sh, [120], [1], seed=seed + 2))
+    t = np.clip(.35 + .45 * lines + .06 * streak - .12 * tone, 0, 1)
+    alb = lerp((176, 122, 78), (92, 56, 32), t)
+    pores = fbm(sh, [.5], [1], aniso=(1, 12), seed=seed + 3) > 2.3
+    alb[pores] *= .82
     return alb
 
 def wood_box(sh, seed=5):     # pale boxwood stringing
@@ -135,7 +139,7 @@ def shade(H, A, G, Mt, mask, px, look, env_tint=(1, 1, 1)):
     V = np.array([0, 0, 1.0]); Hh = (L + V); Hh /= np.linalg.norm(Hh)
     ndl = np.clip(n @ L, 0, 1); ndh = np.clip(n @ Hh, 0, 1)
     # ambient occlusion: hollows darker
-    ao = np.clip(1 - np.clip(nd.gaussian_filter(H, 6) - H, 0, None) * 5.5 - np.clip(nd.gaussian_filter(H, 18) - H, 0, None) * 2.2, .25, 1)
+    ao = np.clip(1 - np.clip(nd.gaussian_filter(H, 6) - H, 0, None) * 3.2 - np.clip(nd.gaussian_filter(H, 18) - H, 0, None) * 1.2, .45, 1)
     # a soft studio reflection: bright above-left, dark below-right (by the normal's tilt) + the window strip
     tilt = n[..., 0] * -.6 + n[..., 1] * -.8
     envv = np.clip(.55 + tilt * 1.6, 0, 1.4)
@@ -271,9 +275,9 @@ def build(g, look):
     gc = (g['R'] - g['gr']) if not tri else None        # groove centre as an edge distance (round boards)
     H = np.zeros((N, N), np.float32)
     # the turned edge: a rounded shoulder, a small bead, then the flat face
-    H += np.where(m, .5 * smooth_step(ed, 0, .13) + .025 * np.exp(-((ed - .2) / .025) ** 2), 0)
+    H += np.where(m, .5 * smooth_step(ed, 0, .16), 0)
     gd = c.groove_dist()
-    H -= np.where(m, .17 * np.clip(1 - (gd / gw) ** 2, 0, 1) ** .6, 0)
+    H -= np.where(m, .11 * (.5 + .5 * np.cos(np.clip(gd / gw, 0, 1) * math.pi)), 0)
     cd = c.cups()
     cup = np.clip(1 - (cd / CUP_R) ** 2, 0, 1)
     H -= .2 * cup ** .5
@@ -287,12 +291,11 @@ def build(g, look):
         G[mm] = gl; Mt[mm] = met
         if lift: H[mm] += lift
     def line(at, w): return m & (np.abs(ed - at) < w)
-    sp = tri_spots(c, g) if tri else spots(c, g, (g['gr'] - gw - .1))
+    sp = []   # (no corner ornaments — user 2026-11-11: too much to look at)
     if look == 'walnut':
         A[:] = wood_walnut((N, N), 1); G[:] = .66
         box, eb = wood_box((N, N)), ebony((N, N))
         put(line(inner, .018), box, .55); put(line(inner + .045, .014), eb, .6); put(line(inner + .085, .018), box, .55)
-        put(line(.2, .02), box, .6)                                                      # the bead in boxwood
         if not tri: put(line(gc - gw - .015, .016), BRASS, .85, 1, .004)                 # a brass lip outside the groove
         ml, md = Mask(c), Mask(c)
         for x, y, room, a in sp:
@@ -303,8 +306,7 @@ def build(g, look):
         gm = (gd < gw) & m; A[gm] *= .62; G[gm] = .4
     elif look == 'maple':   # Versailles
         A[:] = ebony((N, N), 7) * 1.3 + np.array([.03, .018, .012]); G[:] = .82
-        put(m & (ed < .15), GOLD * .97, .78, 1)                                         # gilt-bronze edge
-        put(line(.2, .02), GOLD, .82, 1, .004)
+        put(m & (gd >= gw) & (ed < (gc - gw if not tri else .2)), GOLD * .97, .78, 1)      # gilt-bronze edge, right up to the groove (no dark strip)
         put(line(inner, .02), GOLD, .82, 1, .004); put(line(inner + .05, .008), GOLD * .9, .8, 1)
         mg = Mask(c)
         for x, y, room, a in sp:
@@ -319,8 +321,7 @@ def build(g, look):
     elif look == 'stone':
         A[:] = marble_carrara((N, N)); G[:] = .72
         verde = marble_verde((N, N))
-        put(line(inner + .07, .07), verde, .82); put(line(inner, .012), BRASS, .85, 1, .003); put(line(inner + .14, .012), BRASS, .85, 1, .003)
-        put(line(.2, .015), BRASS, .85, 1, .003)
+        put(line(inner, .012), BRASS, .85, 1, .003)   # (one brass line; no dark band round the face — user)
         ma, mb, mr = Mask(c), Mask(c), Mask(c)
         for x, y, room, a in sp:
             r = min(room, .95); mv = Mask(c); mv.circle(x, y, r * .95); put(mv.arr(.5), marble_verde((N, N)) * .0 + np.array([.93, .9, .84]), .8); star8(ma, mb, x, y, r * .9, a); mr.circle(x, y, r * .95, width=.03)
@@ -328,25 +329,19 @@ def build(g, look):
         put(ma.arr(.5), verde, .85); put(mb.arr(.5), sienna, .85); put(mr.arr(.5), BRASS, .85, 1, .003)
         cm = cup > 0; A[cm] *= (.8 + .2 * (1 - cup[cm]))[..., None]; G[cm] = .3
         gm = (gd < gw) & m; A[gm] = A[gm] * .9; G[gm] = .4
-    else:   # night: urushi + maki-e
-        A[:] = np.array([.03, .024, .026]) + .018 * norm01(fbm((N, N), [40, 6], [1, .3], seed=41))[..., None]; G[:] = .96
-        gold = GOLD[None] * (.8 + .2 * norm01(fbm((N, N), [1.2], [1], seed=43)))[..., None]
-        put(m & (ed < .15), gold, .6, 1)
-        put(line(inner, .012), gold, .6, 1); put(line(.2, .012), gold, .6, 1)
-        mk = Mask(c); ml = Mask(c)
-        for k, (x, y, room, a) in enumerate(sp):
-            r = min(room, .95)
-            if k % 2 == 0: plum(mk, x, y, r * .62, a, ml)
-            else: pine_wave(mk, x, y, r * .85, a)
-            mk.circle(x, y, r * .95, width=.018)
-        orn = mk.arr(.6); put(orn > .45, gold, .55, 1); H += orn * .008
-        put(ml.arr(.4) > .45, np.array([.42, .05, .04]), .9)
-        fl = rng.random((N, N)) < (.002 + .03 * smooth_step(-ed, -1.0, -.15))      # nashiji gold flakes
-        fl = nd.binary_dilation(fl, iterations=1) & m & (gd > gw)
-        A[fl] = GOLD * .85; Mt[fl] = .8; G[fl] = .5
-        rim = m & (np.abs(cd - CUP_R - .028) < .016); put(rim, GOLD, .8, 1, .005)
-        gm = (gd < gw) & m; put(gm, np.array([.6, .11, .06]), .92)                    # shu lacquer groove
-        cm = (cup > 0) & ~rim; A[cm] = np.array([.018, .012, .012]); G[cm] = .7
+    else:   # night: modern urushi — sumi-black lacquer, hairline gold, a gold-leaf groove
+        grad = smooth_step(np.hypot(c.u + .8, c.v + 1.2) / (g['size'] * .7), 0, 1)
+        A[:] = (np.array([.05, .048, .055]) * (1 - grad[..., None]) + np.array([.018, .016, .02]) * grad[..., None])
+        G[:] = .95
+        leaf = GOLD[None] * (.82 + .18 * norm01(fbm((N, N), [2.5, .8], [1, .5], seed=43)))[..., None]
+        sq = (np.floor((c.u + 50) / .34) + np.floor((c.v + 50) / .34)) % 2           # gold-leaf squares (kinpaku)
+        leaf = leaf * (.94 + .06 * sq)[..., None]
+        gm = (gd < gw) & m; put(gm, leaf, .55, 1)
+        put(m & (ed < .12), np.array([.02, .018, .02]), .9)
+        put(line(.14, .01), GOLD, .7, 1)
+        put(line(inner, .009), GOLD, .7, 1); put(line(inner + .06, .004), GOLD * .9, .7, 1)
+        rim = m & (np.abs(cd - CUP_R - .02) < .011); put(rim, GOLD, .8, 1, .004)
+        cm = (cup > 0) & ~rim; A[cm] = np.array([.012, .01, .012]); G[cm] = .8
     return shade(H, A, G, Mt, m, px, look)
 
 # ---------------------------------------------------------------- marbles (seen from above, 160 px, transparent)
@@ -382,32 +377,44 @@ def marble_img(kind, k):
         win2 = np.exp(-(((x - .42) / .1) ** 2 + ((y - .5) / .05) ** 2)) * .18
         col = col + (spec + win + win2)[..., None]
         alpha = ins * 1.0
-    elif kind == 'pearl':
-        irid = .5 + .5 * np.sin((x * 3 + y * 2 + rim * 6) * 1.7)
-        base = np.array([.94, .9, .84]) * (.85 + .15 * irid[..., None]) + np.dstack([irid * .04, irid * .0, (1 - irid) * .05])
-        col = base * (.42 + .62 * ndl[..., None]) + (ndh ** 30 * .5 + ndh ** 200 * .8)[..., None]
-        col += np.dstack([rim * .05, rim * .08, rim * .12]) * .8
+    elif kind == 'pearl':   # six natural pearl colours: white, rosé, golden, silver, Tahitian black, peacock
+        body, over = [((.95, .93, .88), (.06, .02, .05)), ((.97, .86, .84), (.04, .0, .03)), ((.95, .84, .58), (.05, .03, .0)),
+                      ((.82, .84, .88), (.0, .03, .06)), ((.26, .26, .3), (.10, .06, .14)), ((.36, .42, .36), (.12, .02, .16))][k]
+        body = np.array(body); over = np.array(over)
+        irid = .5 + .5 * np.sin((x * 3.1 + y * 2.3 + rim * 7) * 1.6)
+        lus = ndh ** 26 * .45 + ndh ** 220 * .9                                  # the pearl's deep lustre + a sharp highlight
+        col = body * (.36 + .7 * ndl[..., None]) + over * irid[..., None] * 1.4 + lus[..., None] * (.75 + .25 * body)
+        col += np.dstack([rim, rim, rim]) * (over * 1.2 + .03)                    # orient at the edge
+        win = np.exp(-(((x + .36) / .17) ** 2 + ((y + .44) / .09) ** 2)) * .35
+        col += win[..., None]
         alpha = ins * 1.0
-    elif kind == 'steel':   # polished stone: agate / lapis / malachite / carnelian / tiger's eye / jade
-        st = k % 6; sh = (MS, MS)
-        f = norm01(fbm(sh, [6, 2], [1, .5], seed=60 + k))
-        ox, oy = [(.6, -.3), (-.5, .6), (.2, .7), (-.7, -.2), (.4, .4), (-.3, -.6)][st]
-        dd = np.hypot(x - ox, y - oy) + f * .35
-        bands = (.5 + .5 * np.sin(dd * (22 if st in (1, 3) else 14))) ** (2 if st in (1,) else 1)   # agate / malachite rings round a centre
-        pal = [((.05, .12, .45), (.15, .3, .75)), ((.02, .32, .16), (.12, .6, .32)), ((.55, .12, .05), (.85, .35, .15)), ((.3, .18, .05), (.8, .55, .2)), ((.2, .45, .3), (.55, .78, .55)), ((.25, .22, .3), (.75, .72, .8))][st]
-        alb = lerp(np.array(pal[0]) * 255, np.array(pal[1]) * 255, np.clip(bands * .85 + f * .15, 0, 1))
-        if st == 0: alb = alb + (rng.random(sh) < .01)[..., None] * np.array([.6, .5, .2])          # lapis pyrite flecks
-        col = alb * (.38 + .7 * ndl[..., None]) + (ndh ** 120 * 1.3 + ndh ** 18 * .12)[..., None]
-        col *= (.7 + .3 * (1 - rim ** 3))[..., None]
+    elif kind == 'steel':   # jewels: brilliant-cut stones seen from above (ruby, sapphire, emerald, amethyst, topaz, aquamarine)
+        base = np.array([[.85, .05, .16], [.08, .2, .85], [.05, .62, .32], [.55, .16, .8], [.98, .62, .12], [.38, .8, .9]][k])
+        r = np.hypot(x, y); ang = np.arctan2(y, x)
+        table = r < .42 * (1 / np.cos((ang % (math.pi / 4)) - math.pi / 8)) * math.cos(math.pi / 8)     # the octagonal table
+        sec = np.floor((ang + math.pi) / (math.pi / 8)).astype(int) % 16                    # 16 crown facets
+        ring = (r > .72).astype(int)
+        fac = (sec * 7 + ring * 5 + k) % 11 / 10.0                                          # each facet catches the light differently
+        bright = np.where(table, .55 + .25 * (1 - r), .25 + .75 * fac)
+        sparkle = np.where(table, 0, (fac > .85) * .9)
+        col = base * (.35 + 1.1 * bright[..., None]) + sparkle[..., None] * (.6 + .4 * base)
+        # facet edges: thin bright lines
+        edge = (np.abs(((ang + math.pi) % (math.pi / 8)) - .0) < .03) & ~table | (np.abs(r - .72) < .012) | (np.abs(r - .97) < .02)
+        col[edge] = col[edge] * .6 + .35
+        col += (ndh ** 200 * 1.5)[..., None]
+        col *= (.75 + .25 * (1 - rim ** 4))[..., None]
         alpha = ins * 1.0
-    else:   # a turned boxwood peg seen from above: a domed top with lathe rings
+    else:   # turned wooden pegs, lacquered in six colours (the wood shows through at the turned rings)
         r = np.hypot(x, y)
-        alb = lerp((236, 200, 140), (180, 128, 70), norm01(fbm((MS, MS), [5, 2], [1, .5], aniso=(1, 5), seed=70 + k)))
-        ringline = (np.abs(r - .62) < .025) | (np.abs(r - .86) < .02)
-        alb[ringline] *= .55
+        paint = np.array([[.78, .16, .14], [.12, .36, .7], [.12, .5, .28], [.9, .66, .12], [.42, .2, .55], [.92, .9, .84]][k])
+        grain = norm01(fbm((MS, MS), [5, 2], [1, .5], aniso=(1, 5), seed=70 + k))
+        wood = lerp((236, 200, 140), (180, 128, 70), grain)
+        alb = paint[None, None, :] * (.9 + .1 * grain[..., None])
+        ringline = (np.abs(r - .62) < .035) | (np.abs(r - .86) < .03)
+        alb[ringline] = wood[ringline] * .9
         h = np.where(r < .62, np.sqrt(np.clip(1 - (r / .62) ** 2, 0, 1)) * .5 + .5, np.where(r < .86, .45, .45 * (1 - (r - .86) / .14)))
         gy, gx = np.gradient(h * 30); nn = np.dstack([-gx, -gy, np.ones_like(h)]); nn /= np.linalg.norm(nn, axis=2, keepdims=True)
-        col = alb * (.4 + .7 * np.clip(nn @ L, 0, 1)[..., None]) + (np.clip(nn @ Hh, 0, 1) ** 60 * .45)[..., None]
+        col = alb * (.38 + .72 * np.clip(nn @ L, 0, 1)[..., None]) + (np.clip(nn @ Hh, 0, 1) ** 90 * .7)[..., None]
         alpha = (r <= 1).astype(np.float32)
     col = np.clip(col, 0, 1)
     # soft anti-aliased edge
@@ -425,7 +432,7 @@ if __name__ == '__main__':
             img.save(os.path.join(OUT, f'bd-{look}-{bid}.webp'), 'WEBP', quality=86, method=6)
             print('board', look, bid, flush=True)
     if not only or 'marbles' in only:
-        for kind, n in (('glass', 6), ('pearl', 1), ('steel', 6), ('peg', 1)):
+        for kind, n in (('glass', 6), ('pearl', 6), ('steel', 6), ('peg', 6)):
             for k in range(n):
                 marble_img(kind, k).save(os.path.join(OUT, f'm-{kind}-{k}.webp'), 'WEBP', quality=90, method=6)
         print('marbles')

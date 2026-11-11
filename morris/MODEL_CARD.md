@@ -105,6 +105,21 @@ Lv.9 対 Lv.10 は4勝16分0敗（Lv.9から見て）で、ほぼ互角でした
   - headless Chrome（この作業機、2コアを他のシミュレーションと共用）の `bench.html`（1秒、1・2スレッド）：分離・スレッド起動・12局面とも最後まで動く、エラーなし。CPU が空いていないので壁時計の速さは測れない。
 - **Mac で測るページ**：`morris/bench.html`（busy marks 版の Mac の数字はまだ無い。その前の Lazy SMP は 8／10／14 で ×1.51／×1.49／×1.70）。
 
+### Praline に移行（2026-11-11、`claude/praline-spec.md`）
+- マルチスレッドの仕組み（busy marks・YBW の分割点・合流と取り合い・待つ持ち主の手伝いと印・二度読み・`mt_idle`・`mt_split`）を、サイト共通の思考エンジン **Praline** の C の共通ヘッダ（`shared/praline/praline.h`・`praline_ybw.h`）に移した。`engine.c` にはモリスのつなぎ（`typedef int Move`、分割点の欄 `PL_SP_FIELDS`：盤・持ち駒・ビットボード・鍵・繰り返しの判定用の履歴、各手の LMR `red`。`spFillPos`／`spLoadPos`、`spSearch`、`spCutoff`、`spTop`＝0、`waitCheck`、`spIdleReset`。Praline の `stopFlag` はこのエンジンの `aborted`）と、分割点を開く `search()`・`best()`、`checkAbort`／`ybwCheck` を残した。
+- busy marks は共通ヘッダの `busyOther`／`busySet`／`busyClear`（64ビットの鍵）を `busyK(p)`＝`h2 << 32 | h1` で呼ぶ（表の位置は前と同じ `h2` から）。
+- **一致**：通常版 `engine.wasm`・`engine_simd.wasm` は前処理後のソースが同じ（作り直していない）。`engine_mt.wasm` の1スレッドは `tools/check_wasm.js`（30局面の `best` と根の値）で深さ15・13 とも md5 が前の配信版と一致（深さ15 `a4599410…`、8003万局面。深さ13 は先頭のコメントの `2ca7cf15…`）。宣言するメモリは 1036 → 1038 ページ（分割点に根の値の欄が増えた。プールの `initial` 1152 のまま）。
+- **マルチスレッド**（`tools/mtsim`、64局面ごとに同期、`bench.html` の12局面、1スレッド300万局面の深さまで。前＝移行前のソース、同じ設定。全部同じ速さ・遅いコアあり（`SIM_SLOW=8`）とも2回の平均、カッコは各回）：
+
+| 同じ深さまでの時間 | 2 | 4 | 8 | 遅いコアあり 8 | 10 | 14 |
+|---|---|---|---|---|---|---|
+| 前 | ×1.70（1.72・1.68） | ×2.78（2.81・2.75） | ×5.15（5.53・4.77） | ×5.18（5.30・5.06） | ×4.79（4.46・5.11） | ×5.09（5.20・4.97） |
+| **Praline** | ×1.75（1.74・1.76） | ×2.69（2.93・2.45） | ×4.85（4.85・4.84） | ×5.32（5.36・5.27） | ×4.85（4.94・4.75） | ×5.26（5.17・5.34） |
+
+  - 揺れの内で同等（前の版の同じ設定でも 8スレッドが回ごとに ±10% 動く）。
+- headless Chrome（Playwright）：`bench.html`（1秒、1・2スレッド）と対局ページ（2スレッドの組で解析）がエラーなく動く。
+- `engine_mt.wasm?v=6`（`index.html`・`bench.html`）。
+
 ## 1スレッドの高速化（2026-11-11、wasm SIMD）
 - **ファイル**：`engine_simd.wasm`（`-msimd128`）と `engine.wasm`（SIMD なし）の2本。engine.js が `WebAssembly.validate` で SIMD の有無を見て選ぶ（hex・go・amazons と同じ）。`engine_mt.wasm` は SIMD 版のみ（ほかのゲームと同じ）。ビルドは `tools/build.sh`。それまでの `engine.wasm` は実は `-msimd128` 付きでビルドされていて（コンパイラの自動ベクトル化だけ）、SIMD の無いブラウザでは読めずに JavaScript 版の探索になっていた。`engine_mt.wasm` は SIMD なしだった。
 - **直したこと（`engine.c`、読みは同じ）**：
