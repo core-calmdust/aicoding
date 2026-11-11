@@ -981,7 +981,7 @@ const LAB = [
 /* ソフトウェア（soon = 遷移しない・「準備中」表示 / ext = 外部サイトを新しいタブで開く） */
 const SOFTWARE = [
   { id:'h3webui', href:'https://note.com/cwonderland', ext:true, thumb:'software/h3webui/card.webp?v=3', icon:'software/h3webui/icon.svg', kind:'VIDEO AI · COLAB', key:'h3', name:'MiniMax H3 WebUI', soft:true, tags:[], facts:{} },
-  { id:'praline', href:'#software=praline', thumb:'praline/card.svg?v=4', icon:'praline/icon.svg?v=2', kind:'THINKING ENGINE', key:'pl', soon:true, soft:true, tags:[], facts:{} },
+  { id:'praline', href:'#software=praline', thumb:'praline/card.svg?v=5', icon:'praline/icon.svg?v=3', kind:'THINKING ENGINE', key:'pl', soon:true, soft:true, tags:[], facts:{} },
 ];
 // published-title count: every game linked from this page (galleries + lab) and released software — updates automatically when games are added
 (function () { const el = document.getElementById('stat-titles'); if (el) el.textContent = GAMES.length + ARCADE.length + LAB.length + SOFTWARE.filter(g => !g.soon).length; })();   // + released software (soon = not yet public)   // chip order; label keys: gx.all, sub.ai, sub.classic, sub.old
