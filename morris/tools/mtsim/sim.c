@@ -41,9 +41,13 @@ static void sim_leave(void) {
   if (np > 0 && arrived >= np) { flushAll(); arrived = 0; sgen++; rounds++; pthread_cond_broadcast(&cv); }
   pthread_mutex_unlock(&mu);
 }
+#ifdef SIM_STAT
+static double gst[16][8]; static int gstN, gstT[16];
+#endif
 static int GEO[256], ng; static int SETUP[16][256], ns[16], npos;
 static void thread_init(int id) {
   threadId = id; jr = 0x9e3779b9u * (id + 1);
+  { const char *e = getenv("SIM_SLOW"); if (e && *e && id >= atoi(e)) simQT = SIM_Q * 2 / 5; }   // (slow cores: simhook.h)
   pend = malloc(sizeof(PendE) * PEND_MAX); npend = 0; pidx = calloc(PH, sizeof(int)); allPend[id] = pend; allN[id] = &npend; allX[id] = pidx;
   buf = malloc(sizeof(int) * (MAXPLY + 8) * MAXMV); scb = malloc(sizeof(int) * (MAXPLY + 8) * MAXMV);
   for (int i = 0; i < (MAXPLY + 8) * 2; i++) killer[i] = -1;
@@ -61,7 +65,11 @@ static void *helper(void *a) {
     if (FRESH) { for (int i = 0; i < 32 * 32; i++) histT[i] = 0; for (int i = 0; i < (MAXPLY + 8) * 2; i++) killer[i] = -1; }
     memcpy(IO, SETUP[curPos], sizeof(int) * ns[curPos]);
     simOn = 1;
+#ifdef MT_YBW   /* (2026-11-11, YBW: the helpers wait for split points, as mt-helper.js) */
+    setup(); mt_idle(0, 1);
+#else
     if (setup() > 1) for (int k = 0; k < 200 && !gStop; k++) best(60, 0, 0);
+#endif
     sim_leave();
     pthread_mutex_lock(&mu); running--; pthread_cond_broadcast(&jcv); pthread_mutex_unlock(&mu);
   }
@@ -106,9 +114,15 @@ int main(int argc, char **argv) {
       double tm = t > 1 && LOCK ? (double)R0 * SIM_Q : mainNodes / MSPD; if (t == 1) r1 = tm;
       sumR[ti] += tm; lg[ti] += log(r1 / tm);
       printf(" t%d %.2fM x%.2f m%d d%d |", t, tm / 1e6, r1 / tm, mv, dd); fflush(stdout);
+#ifdef SIM_STAT   /* (-DSIM_STAT: the split points' counters, summed over the positions) */
+      { int k_ = 0; while (k_ < gstN && gstT[k_] != t) k_++; if (k_ == gstN) gstT[gstN++] = t; for (int q_ = 0; q_ < 7; q_++) gst[k_][q_] += ST[q_]; gst[k_][7] += (double)R0 * t; for (int q_ = 0; q_ < 16; q_++) ST[q_] = 0; }
+#endif
     }
     printf("\n");
   }
+#ifdef SIM_STAT
+  for (int k_ = 0; k_ < gstN; k_++) if (gstT[k_] > 1) printf("t%d: splits %.0f, helper joins %.0f (moves/join %.1f), empty joins %.0f, idle %.1f%%, owners waiting %.1f%%, second searches %.0f\n", gstT[k_], gst[k_][0], gst[k_][1], gst[k_][2] / (gst[k_][1] > 0 ? gst[k_][1] : 1), gst[k_][3], 100 * gst[k_][4] / gst[k_][7], 100 * gst[k_][5] / gst[k_][7], gst[k_][6]);
+#endif
   printf("SUM");
   for (int ti = 0; ti < nt; ti++) printf(" t%d x%.2f (geo x%.2f)", T[ti], sumR[0] / sumR[ti], exp(lg[ti] / cnt));
   printf("\n");
