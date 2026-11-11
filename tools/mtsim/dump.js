@@ -1,5 +1,5 @@
 // The 12 positions of <game>/bench.html (the same seeded random games) for sim.c, and the game's network, into the current
-// folder: node dump.js <repo> <game>   (game: xiangqi, janggi, chess, shogi) → pos_<game>.txt (+ net_<game>.bin)
+// folder: node dump.js <repo> <game>   (game: xiangqi, janggi, chess, shogi, tafl) → pos_<game>.txt (+ net_<game>.bin)
 const W = process.argv[2], G = process.argv[3], fs = require('fs'), zlib = require('zlib');
 const E = require(W + '/' + G + '/engine.js');
 const out = [], NPOS = +process.env.NPOS || 12;   // (NPOS: more positions of the same seeded games — the YBW runs vary by ±15% on 12)
@@ -36,6 +36,18 @@ if (G === 'xiangqi' || G === 'janggi') {
   }
   fs.writeFileSync('net_shogi.bin', gunzip(W + '/shogi/nnue.bin.gz'));
   if (E.defaultWeights) fs.writeFileSync('w_shogi.bin', Buffer.from(Int16Array.from(E.defaultWeights()).buffer));
+}
+if (G === 'tafl') {   // (2026-11-11) Copenhagen: tafl/bench.html's positions, IO = [variant, side, cells, nmoves, moves]
+  const V = 'copenhagen';
+  while (out.length < NPOS) {
+    const pos = E.Pos.from(null, V), moves = [], len = 10 + rnd(30); let ok = true;
+    for (let i = 0; i < len && ok; i++) { const L = pos.moves(); if (!L.length || pos.res) { ok = false; break; } const m = L[rnd(L.length)]; pos.play(m); moves.push(m); if (pos.res) ok = false; }
+    if (!ok) continue;
+    const p = E.Pos.from(null, V), a = [E.VID[p.v], p.turn === E.P2 ? 1 : 0]; for (let i = 0; i < p.b.length; i++) a.push(p.b[i]);
+    a.push(moves.length); for (const m of moves) a.push(E.mFrom(m) | (E.mTo(m) << 8));
+    out.push('P ' + a.join(' '));
+  }
+  fs.writeFileSync('net_tafl.bin', gunzip(W + '/tafl/nnue-copenhagen.bin.gz'));
 }
 fs.writeFileSync('pos_' + G + '.txt', out.join('\n') + '\n');
 console.log(out.length + ' positions');

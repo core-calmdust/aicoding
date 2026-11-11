@@ -3,7 +3,7 @@
 (() => {
   'use strict';
   const E = window.JanggiEngine;
-  const VER = '?v=4', ENG = '../engine.js?v=2-pro1-mt1';
+  const VER = '?v=4', ENG = '../engine.js?v=2-pro1-mt1-pd1';
   const LANG = (() => { try { return (localStorage.getItem('aicoding-lang') || 'ja') === 'ja' ? 'ja' : 'en'; } catch (e) { return 'ja'; } })();
   const T = {
     ja: { back: '← チャンギ', gname: 'チャンギ', ttl: '最強解析', depth: '深さ', nps: '局面/秒', threads: 'スレッド', sel: 'スレッド数', ana: '解析', stop: '停止', play: 'AIに指させる',

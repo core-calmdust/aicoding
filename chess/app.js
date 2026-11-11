@@ -194,7 +194,7 @@ function noteNps(nodes, ms) {
 }
 let jobId = 0;
 function makeWorker() {
-  const w = new Worker('engine.js?v=20261109nn2'); w.jobs = new Map();
+  const w = new Worker('engine.js?v=20261111pd1'); w.jobs = new Map();
   w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (!j) return; if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; } w.jobs.delete(m.id); noteNps(m.nodes, performance.now() - j.t0); j.resolve(m); };
   return w;
 }
@@ -203,14 +203,14 @@ let aiW = makeWorker(), anaW = makeWorker();
 // timed AI levels outside rated games go to the pool of threads when it is free; rated games and the node-limited levels stay
 // on the one-thread workers (the same moves as before)
 const MTP = window.MTEngine ? MTEngine.use({
-  wasm: 'engine_mt.wasm?v=3', lead: 'engine.js?v=20261109nn2&mt=1', helper: 'mt-helper.js?v=2', slot: 2 << 20, initial: 1152, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
+  wasm: 'engine_mt.wasm?v=3', lead: 'engine.js?v=20261111pd1&mt=1', helper: 'mt-helper.js?v=2', slot: 2 << 20, initial: 1152, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => performance.now(), progress: () => {} } }),
   help: m => { const p = E.Pos.fromFEN(m.fen || E.START), u = []; for (const x of m.moves || []) { u.push(p.uci(x)); p.make(x); } return { setup: (m.fen || E.START) + (u.length ? ' moves ' + u.join(' ') : '') }; },
 }) : null;
 function mtWants(which, msg) {
   if (msg.type === 'analyze' || msg.type === 'multipv' || msg.type === 'mpvLoop') return true;
   if (msg.type !== 'think') return false;   // (rated games too: the user's decision 2026-11-08, device differences accepted)
-  if (msg.cfg) return msg.cfg.threads > 1;   // PRO: its own thread count with any limit (time, depth or nodes — the lead's limit; the helpers fill the shared table)   // PRO: its own thread count (mtThreads)
+  if (msg.cfg) return msg.cfg.threads > 1 || !!msg.cfg.ponder;   // (ponder: the AI's own search on the pool too — its table is the one pondering filled) PRO: its own thread count with any limit (time, depth or nodes — the lead's limit; the helpers fill the shared table)   // PRO: its own thread count (mtThreads)
   const L = E.LEVELS[msg.level]; return !!L && !L.wnodes && L.noise === undefined && L.ms > 0;   // the timed levels 18–25
 }
 function request(which, msg, onProgress) {
@@ -233,6 +233,21 @@ function cancelWorker(which) {
   if (which === 'ai') aiW = makeWorker(); else anaW = makeWorker();
 }
 const anaCache = new Map();
+// PRO's 先読み (ponder, shared/ponder.js): on the human's turn the threads read on — after the reply the AI expects, else here
+let aiReply = null;   // { key: the position after the AI's move, reply: UCI }
+const pdAI = () => humanColor === P1 ? P2 : P1;
+const PONDER = window.Ponder && MTP ? Ponder.attach({ mtp: MTP,
+  want: () => { if (settings.mode !== 'ai' || rgame || lesson || puzzle || reviewing || thinking || inStudy() || cur !== moves.length || isAIColor(toMoveAt(cur)) || gameOver(cur)) return false; const c = proCfg(levelFor(pdAI())); return !!(c && c.ponder); },
+  key: () => keyOf(cur),
+  job: cap => {
+    const pc = proCfg(levelFor(pdAI())); if (!pc || pc.noise !== undefined) return null;   // (not for the root-scoring weak steps)
+    const cfg = Object.assign({}, pc, { d: 64, ms: cap, book: false }); delete cfg.wnodes; delete cfg.noise; delete cfg.blunder;
+    let mv = moves.slice(0, cur), target = null;
+    if (aiReply && aiReply.key === keyOf(cur) && aiReply.reply) {
+      try { const p = E.replay(startFen, mv).pos, m = p.fromUci(aiReply.reply); if (m && p.legal().includes(m) && E.replay(startFen, mv.concat([m])).pos.legal().length) { mv = mv.concat([m]); target = keyOf(cur) + (cur ? ',' : '') + m; } } catch (e) {}
+    }
+    return { msg: { type: 'think', fen: startFen, moves: mv, level: levelFor(pdAI()), cfg, mtThreads: pc.threads }, target };
+  } }) : null;
 
 // ====================================================================== sound
 let actx = null;
@@ -719,7 +734,9 @@ async function maybeAI(tok) {
   }
   thinking = 0;
   if (!res.move) { renderInfo(); return; }
+  aiReply = res.reply ? { key: keyOf(cur) + (cur ? ',' : '') + res.move, reply: res.reply } : null;
   playMove(res.move);
+  if (PONDER) PONDER.kick();
 }
 // AI同士の対局で千日手模様（今の局面か、指そうとしている手の後の局面が前にも出ている）のとき、
 // はっきり不利な側（評価 1ポーン以上の差）を返す。互角なら 0（そのまま千日手の引き分けへ）。
@@ -1132,10 +1149,10 @@ $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
 // games. The changed values make a level of their own (engine.js: think with cfg, the same keys as LEVELS).
 const PRO_DEF = lv => { const L = E.LEVELS[lv] || E.LEVELS[12];
   return { limit: L.noise !== undefined ? { k: 'depth', v: L.d } : L.wnodes ? { k: 'nodes', v: L.wnodes } : { k: 'time', v: L.ms / 1000 },
-    threads: !L.wnodes && L.noise === undefined && L.ms > 0 ? ProSet.defThreads() : 1, book: !!L.book, var: L.noise === undefined ? 0 : L.noise >= 100 ? 2 : 1, eval: 'nnue' }; };
+    threads: !L.wnodes && L.noise === undefined && L.ms > 0 ? ProSet.defThreads() : 1, ponder: false, book: !!L.book, var: L.noise === undefined ? 0 : L.noise >= 100 ? 2 : 1, eval: 'nnue' }; };
 var PRO = window.ProSet ? ProSet.init({ game: 'chess', lang: () => LANG, level: () => draft.level || settings.level, show: () => draft.mode === 'ai' || draft.mode === 'watch',
   store: { get: () => settings.pro, set: v => { settings.pro = v; } }, defaults: PRO_DEF,
-  params: [{ key: 'limit', kinds: { time: [0.1, 60], depth: [1, 30], nodes: [1000, 1e8] } }, { key: 'threads' },
+  params: [{ key: 'limit', kinds: { time: [0.1, 60], depth: [1, 30], nodes: [1000, 1e8] } }, { key: 'threads' }, { key: 'ponder' },
     { key: 'book' }, { key: 'var' }, { key: 'eval' }] }) : null;
 // the PRO level for an AI side (null: the level as it is; never in rated / online games)
 function proCfg(lv) {
@@ -1146,6 +1163,7 @@ function proCfg(lv) {
   if (e.var) { if (!e.changed.includes('var') && L.noise !== undefined) { c.noise = L.noise; if (L.blunder) c.blunder = L.blunder; } else c.noise = e.var === 1 ? 25 : 70; }
   if (e.eval === 'hand') c.hand = 1;
   c.threads = e.threads || 1;
+  if (e.ponder) c.ponder = 1;
   return c;
 }
 $('#btnStart').onclick = () => {

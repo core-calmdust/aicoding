@@ -116,7 +116,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=2-pro1-mt1';
+const ENGINE_URL = 'engine.js?v=2-pro1-mt1-pd1';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -149,7 +149,7 @@ const mtLevel = lv => { const L = E.LEVELS[lv]; return !!(L && L.s && L.ms); }; 
 function mtWants(which, msg) {
   if (msg.type === 'analyze' || msg.type === 'multipv' || msg.type === 'mpvLoop') return true;
   if (msg.type !== 'think') return false;
-  if (msg.cfg) return msg.cfg.threads > 1;   // PRO: its own thread count with any limit
+  if (msg.cfg) return msg.cfg.threads > 1 || !!msg.cfg.ponder;   // PRO: its own thread count with any limit (ponder: on the pool, whose table pondering filled)
   return mtLevel(msg.level) || (which === 'ana' && msg.level === COACH_DEEP);   // (rated games too: the user's decision 2026-11-08; the coach's deeper pass)
 }
 function request(which, msg, onProgress) {
@@ -170,6 +170,21 @@ function cancelWorker(which) {
   if (which === 'ai') aiW = makeWorker(); else anaW = makeWorker();
 }
 const anaCache = new Map();
+// PRO's 先読み (ponder, shared/ponder.js): on the human's turn the threads read on — after the reply the AI expects, else here
+let aiReply = null;   // { key: the position after the AI's move, reply }
+const pdAI = () => humanColor === P1 ? P2 : P1;
+const PONDER = window.Ponder && MTP ? Ponder.attach({ mtp: MTP,
+  want: () => { if (settings.mode !== 'ai' || rgame || lesson || puzzle || reviewing || thinking || inStudy() || cur !== moves.length || isAIColor(toMoveAt(cur)) || gameOver(cur)) return false; const c = proCfg(levelFor(pdAI())); return !!(c && c.ponder); },
+  key: () => keyOf(cur),
+  job: cap => {
+    const pc = proCfg(levelFor(pdAI())); if (!pc || !pc.s) return null;   // (not for the root-scoring weak steps)
+    const cfg = Object.assign({}, pc, { d: 99, ms: cap }); ['nk', 'dx', 'book', 'noise', 'blunder', 'look', 'hand'].forEach(k => delete cfg[k]);
+    let mv = moves.slice(0, cur), target = null;
+    if (aiReply && aiReply.key === keyOf(cur) && aiReply.reply != null) {
+      try { const p = E.replay(startSpec, mv).pos, m = aiReply.reply; if (p.moves().includes(m) && E.replay(startSpec, mv.concat([m])).pos.moves().length) { mv = mv.concat([m]); target = keyOf(cur) + (cur ? ',' : '') + m; } } catch (e) {}
+    }
+    return { msg: { type: 'think', start: startSpec, moves: mv, level: levelFor(pdAI()), cfg, mtThreads: pc.threads }, target };
+  } }) : null;
 
 // ====================================================================== sound
 let actx = null;
@@ -654,7 +669,9 @@ async function maybeAI(tok) {
   if (res.move === undefined || res.move < 0) { renderInfo(); return; }
   if (typeof res.v === 'number') { aiVals[cur] = res.v; }
   if (settings.mode === 'ai' && aiResigns(p)) return;
+  aiReply = res.reply != null ? { key: keyOf(cur) + (cur ? ',' : '') + res.move, reply: res.reply } : null;
   playMove(res.move);
+  if (PONDER) PONDER.kick();
   if (settings.mode === 'ai') aiMaybeOfferDraw(p);
 }
 // ---------------------------------------------------------------- resignation and draw offers in games vs the AI
@@ -1152,9 +1169,9 @@ $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 const PRO_L = window.ProSet ? ProSet.ladder(E.LEVELS, { dmax: 30, nmax: 50000000 }) : null;
 // threads (本編のマルチスレッド): with any limit; the default is every thread for the levels with a time limit, else one
 var PRO = PRO_L ? ProSet.init({ game: 'janggi', lang: () => LANG, level: () => draft.level || settings.level, show: () => draft.mode === 'ai' || draft.mode === 'watch',
-  store: { get: () => settings.pro, set: v => { settings.pro = v; } }, defaults: lv => Object.assign(PRO_L.defaults(lv), { threads: mtLevel(lv) ? ProSet.defThreads() : 1 }),
-  params: [PRO_L.params[0], { key: 'threads' }].concat(PRO_L.params.slice(1)) }) : null;
-function proCfg(lv) { if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; const e = PRO.get(lv); return e ? Object.assign(PRO_L.cfg(e, lv), { threads: e.threads || 1 }) : null; }
+  store: { get: () => settings.pro, set: v => { settings.pro = v; } }, defaults: lv => Object.assign(PRO_L.defaults(lv), { threads: mtLevel(lv) ? ProSet.defThreads() : 1, ponder: false }),
+  params: [PRO_L.params[0], { key: 'threads' }, { key: 'ponder' }].concat(PRO_L.params.slice(1)) }) : null;
+function proCfg(lv) { if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; const e = PRO.get(lv); return e ? Object.assign(PRO_L.cfg(e, lv), { threads: e.threads || 1 }, e.ponder ? { ponder: 1 } : {}) : null; }
 function proTag(lv) { return proCfg(lv) ? ' PRO' : ''; }
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');

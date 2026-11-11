@@ -1688,7 +1688,7 @@ html.rb-study .frame{outline:3px solid var(--accent);outline-offset:3px}
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2l14"></script>
 <script src="online.js?v=stale2fis"></script>
-<script src="../shared/mtengine.js?v=9"></script><script src="../shared/proset.js?v=5t2svhxbf-sp2"></script><script>MTEngine.init({ sw: 'sw.js' });</script>
+<script src="../shared/mtengine.js?v=9"></script><script src="../shared/proset.js?v=5t2svhxbf-sp2-pd1"></script><script src="../shared/ponder.js?v=1"></script><script>MTEngine.init({ sw: 'sw.js' });</script>
 <script src="rbox.js?v=3-rc2"></script>
 <script src="../shared/coachkit.js?v=16l14"></script>
 <script src="../shared/record.js?v=12l14"></script>
@@ -1866,9 +1866,20 @@ function cancelAna() { if (anaJob) { if (anaJob.mt) MTP.cancel('ana'); else { an
 // the AI's move on the threads (levels 17–25); null: use the usual search
 // pc: the PRO settings (proCfg): threads only for a time limit, with its own thread count
 function mtThink(cells, toMove, level, onProgress, pc) {
-  const mp = (pc ? pc.threads > 1 : MT_CFG[level]) && mtPool('ai'); if (!mp) return null;   // (rated games too: 2026-11-08)
+  const mp = (pc ? pc.threads > 1 || pc.ponder : MT_CFG[level]) && mtPool('ai'); if (!mp) return null;   // (rated games too: 2026-11-08; pc.ponder: PRO's 先読み — on the pool, whose table pondering filled)
   return mp.run({ type: 'think', cells, toMove, opts: pc ? { level, ...pc.opts } : { level }, ...(pc ? { mtThreads: pc.threads } : {}) }, onProgress, 'ai').then(r => { if (r) noteNps(r); return r; });
 }
+// PRO's 先読み (ponder, shared/ponder.js): on the human's turn the threads read on — the human's position itself (no principal
+// variation from this engine: every reply gets into the shared tables, 置換表を温める方式)
+const pdAI = () => humanColor === BLACK ? WHITE : BLACK;
+const PONDER = window.Ponder && MTP ? Ponder.attach({ mtp: MTP,
+  want: () => { const p = positions[cur]; if (settings.mode !== 'ai' || rtGame() || reviewing || lesson || puzzle || net || !p || cur !== positions.length - 1 || !p.toMove || !isHumanTurn()) return false; const c = proCfg(levelFor(pdAI())); return !!(c && c.ponder); },
+  key: () => { const p = positions[cur]; return p ? cur + ':' + p.toMove + ':' + p.cells.join('') : ''; },
+  job: cap => {
+    const pc = proCfg(levelFor(pdAI())), p = positions[cur]; if (!pc || !p || pc.opts.cfg.noise) return null;   // (not for the weak steps' random play)
+    const cfg = Object.assign({}, pc.opts.cfg, { depth: 60, time: cap }); ['nodes', 'max', 'use', 'noise', 'rnd', 'greedy'].forEach(k => delete cfg[k]);
+    return { msg: { type: 'think', cells: p.cells.slice(), toMove: p.toMove, opts: { level: levelFor(pdAI()), cfg, noBook: true }, mtThreads: pc.threads }, target: null };
+  } }) : null;
 function think(cells, toMove, level, onProgress, pc) {
   return new Promise(resolve => {
     aiJob = { id: ++jobId, resolve, onProgress };
@@ -2364,6 +2375,7 @@ async function schedule(animInfo) {
     playPlace(a.flips.length);
     update(a); moveFx(a);
     setStatus(color, info, false);
+    if (PONDER) PONDER.kick();
   } else {
     // human's turn: background analysis for eval/hints
     if (settings.mode !== 'online' && !rtLive() && (settings.hint || settings.eval || (settings.coach && settings.mode !== 'watch'))) {
@@ -2852,11 +2864,11 @@ const PRO_T = {
   book: { ja: '定石' },
 };
 const PRO_DEF = lv => { const L = LEVELS_UI[lv] || LEVELS_UI[15];
-  return { limit: L.time ? { k: 'time', v: L.time / 1000 } : { k: 'depth', v: L.depth }, threads: MT_CFG[lv] ? ProSet.defThreads() : 1, book: !!L.mpc,
+  return { limit: L.time ? { k: 'time', v: L.time / 1000 } : { k: 'depth', v: L.depth }, threads: MT_CFG[lv] ? ProSet.defThreads() : 1, ponder: false, book: !!L.mpc,
     var: !L.noise ? 0 : L.noise >= 400 ? 2 : 1, exact: L.exact, wld: L.wld || 0 }; };
 var PRO = window.ProSet ? ProSet.init({ game: 'reversi', lang: () => LANG, level: () => draft.level || settings.level, show: () => draft.mode === 'ai' || draft.mode === 'watch', stone: true,
   store: { get: () => settings.pro, set: v => { settings.pro = v; } }, defaults: PRO_DEF,
-  params: [{ key: 'limit', kinds: { time: [0.1, 60], depth: [1, 30], nodes: [10000, 1e9] } }, { key: 'threads' },
+  params: [{ key: 'limit', kinds: { time: [0.1, 60], depth: [1, 30], nodes: [10000, 1e9] } }, { key: 'threads' }, { key: 'ponder' },
     { key: 'exact', type: 'int', group: 'read', min: 0, max: 28, label: PRO_T.exact, help: PRO_T.exactH, unit: PRO_T.u },
     { key: 'wld', type: 'int', group: 'read', min: 0, max: 30, label: PRO_T.wld, help: PRO_T.wldH, unit: PRO_T.u },
     { key: 'book', label: Object.assign({}, ProSet.T.book, PRO_T.book) }, { key: 'var' }] }) : null;
@@ -2871,7 +2883,7 @@ function proCfg(lv) {
   if (e.var && !e.changed.includes('var') && L.noise) { c.noise = L.noise; if (L.rnd) c.rnd = L.rnd; if (L.greedy) c.greedy = L.greedy; c.depth = e.limit.k === 'depth' ? e.limit.v : L.depth; }   // (the level's own randomness and slips: a fixed depth)
   else if (e.var) { o.variety = true; o.varietyMargin = e.var === 1 ? 150 : 400; }
   if (e.book) o.book = true; else o.noBook = true;
-  return { opts: o, threads: e.threads || 1 };
+  return { opts: o, threads: e.threads || 1, ponder: !!e.ponder };
 }
 function openNew(resume) {
   Object.assign(draft, settings);

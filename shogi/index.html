@@ -1841,7 +1841,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2l14"></script>
 <script src="online.js?v=stale2fis"></script>
-<script src="../shared/mtengine.js?v=9"></script><script src="../shared/proset.js?v=5t2svhxbf-sp2"></script><script>MTEngine.init({ sw: 'sw.js?v=2', light: true });</script>
+<script src="../shared/mtengine.js?v=9"></script><script src="../shared/proset.js?v=5t2svhxbf-sp2-pd1"></script><script src="../shared/ponder.js?v=1"></script><script>MTEngine.init({ sw: 'sw.js?v=2', light: true });</script>
 <script src="variants/search.js?v=20261030sv"></script>
 <script src="variants/vshogi.js?v=20261030sv"></script>
 <script src="variants/vtext.js?v=20261107l14"></script>
@@ -2034,7 +2034,7 @@ const MTP = window.MTEngine ? MTEngine.use({
 function mtPool(msg, prio) {
   if (!MTP || (game && game.variant) || msg.variant) return null;
   const o = msg.opts || {};
-  const ok = msg.type === 'coach' || msg.type === 'multipv' || msg.type === 'mpvLoop' || msg.type === 'analyze' || (msg.type === 'think' && (msg.mtThreads > 1 || (o.time && !o.nodes && !o.noise && !o.linear)));
+  const ok = msg.type === 'coach' || msg.type === 'multipv' || msg.type === 'mpvLoop' || msg.type === 'analyze' || (msg.type === 'think' && (msg.mtThreads > 1 || msg.mtPonder || (o.time && !o.nodes && !o.noise && !o.linear)));
   return ok ? MTP.pool(prio) : null;
 }
 // the speed of a search on the threads, in the info line under the moves (as after the AI's moves)
@@ -2042,9 +2042,26 @@ function mtNps(r, t0) { const ms = performance.now() - t0; if (r && r.nodes > 50
 function cancelAI() { if (aiJob) { if (aiJob.mt) MTP.cancel('ai'); else if (aiJob.vw) Variants.kill('ai'); else { aiWorker.terminate(); aiWorker = makeWorker(aiMsg); } const j = aiJob; aiJob = null; j.resolve(null); } }
 function cancelAna() { if (anaJob) { if (anaJob.mt) MTP.cancel('ana'); else if (anaJob.vw) Variants.kill('ana'); else { anaWorker.terminate(); anaWorker = makeWorker(anaMsg); } const j = anaJob; anaJob = null; j.resolve(null); } }
 function aiCall(msg, onProgress) { return new Promise(resolve => { aiJob = { id: ++jobId, resolve, onProgress };
-  const mp = (msg.mtThreads > 1 || msg.mtAll) && mtPool(msg, 'ai');   // PRO mode: a time limit on that many threads; mtAll: the timed top steps (七段〜九段, rated games too) on every thread
+  const mp = (msg.mtThreads > 1 || msg.mtAll || msg.mtPonder) && mtPool(msg, 'ai');   // (mtPonder: PRO's 先読み — the AI's search on the pool, whose table pondering filled)
+    // PRO mode: a time limit on that many threads; mtAll: the timed top steps (七段〜九段, rated games too) on every thread
   if (mp) { const j = aiJob; j.mt = 1; mp.run(msg, m => { if (aiJob === j && j.onProgress) j.onProgress(m); }, 'ai').then(r => { if (aiJob !== j) return; if (r === undefined) { j.mt = 0; aiWorker.postMessage({ ...msg, id: j.id }); return; } aiJob = null; resolve(r); }); return; }
   const vw = window.Variants && Variants.wk(msg, 'ai', aiMsg, aiJob.id); if (vw) aiJob.vw = 1; (vw || aiWorker).postMessage({ ...msg, id: aiJob.id }); }); }
+// PRO's 先読み (ponder, shared/ponder.js): on the human's turn the threads read on — after the reply the AI expects, else here
+let aiReply = null;   // { key: the position after the AI's move, reply: USI }
+const pdKey = () => game ? game.start + '|' + game.moves.slice(0, cur).join(',') : '';
+const pdAI = () => game ? game.human ^ 1 : 1;
+const PONDER = window.Ponder && MTP ? Ponder.attach({ mtp: MTP,
+  want: () => { if (!game || settings.mode !== 'ai' || game.rated || game.variant || game.over || lesson || edit || reviewing || inStudy() || cur !== game.moves.length || isAI(P.side)) return false; const c = proCfg(levelOf(pdAI())); return !!(c && c.ponder); },
+  key: pdKey,
+  job: cap => {
+    const pc = proCfg(levelOf(pdAI())); if (!pc || pc.opts.noise) return null;   // (not for the root-scoring weak steps)
+    const opts = Object.assign({}, pc.opts, { time: cap }); delete opts.depth; delete opts.nodes; delete opts.greedy;
+    let mv = game.moves.slice(0, cur), target = null;
+    if (aiReply && aiReply.key === pdKey() && aiReply.reply) {
+      try { const q = posAt(cur), m = q.fromUsi(aiReply.reply); if (m && q.legalMoves(false).includes(m)) { q.doMove(m); q.sp = 0; if (q.legalMoves(false).length) { mv = mv.concat([aiReply.reply]); target = pdKey() + (cur ? ',' : '') + aiReply.reply; } } } catch (e) {}
+    }
+    return { msg: { type: 'think', sfen: game.start, moves: mv, opts, mtThreads: pc.threads, mtPonder: 1 }, target };
+  } }) : null;
 function anaCall(msg, onProgress) { cancelAna(); return new Promise(resolve => { anaJob = { id: ++jobId, resolve, onProgress };
   const mp = mtPool(msg);
   if (mp) { const j = anaJob, t0 = performance.now(); j.mt = 1; mp.run(msg, m => { if (anaJob === j && j.onProgress) j.onProgress(m, false); }, 'ana').then(r => { if (anaJob !== j) return; anaJob = null; mtNps(r, t0); resolve(r); }); return; } const vw = window.Variants && Variants.wk(msg, 'ana', anaMsg, anaJob.id); if (vw) anaJob.vw = 1; (vw || anaWorker).postMessage({ ...msg, id: anaJob.id }); }); }
@@ -2881,7 +2898,7 @@ async function schedule() {
       return;
     }
     if (!pc && lv.mt && MTP) { await Promise.race([MTP.ready(), sleep(4000)]); if (token !== busyToken) return; }   // the timed top steps: wait for the threads once (just after the page opened)
-    const res = await aiCall({ type: 'think', sfen: game.start, moves: game.moves.slice(0, idx), opts: Variants.eng(game.variant) ? Variants.levelOpts(levelOf(side), game.variant) : lv, ...(pc && pc.threads > 1 ? { mtThreads: pc.threads } : !pc && lv.mt ? { mtAll: 1 } : {}) }, m => {
+    const res = await aiCall({ type: 'think', sfen: game.start, moves: game.moves.slice(0, idx), opts: Variants.eng(game.variant) ? Variants.levelOpts(levelOf(side), game.variant) : lv, ...(pc && (pc.threads > 1 || pc.ponder) ? { mtThreads: pc.threads, ...(pc.ponder ? { mtPonder: 1 } : {}) } : !pc && lv.mt ? { mtAll: 1 } : {}) }, m => {
       if (token === busyToken) setStatus(side, rtLive() ? t('thinking.d', { d: m.depth }) : `${t('thinking.d', { d: m.depth })}  ${fmtScore(m.score)}`, true);
     });
     if (!res || token !== busyToken) return;
@@ -2914,8 +2931,9 @@ async function schedule() {
       if (token !== busyToken) return;
       if (g) res.move = g;
     }
-    const m = P.fromUsi(res.move);
+    const m = P.fromUsi(res.move), rp = res.pv && res.pv[0] === res.move ? res.pv[1] : null;
     commitMove(m, false);
+    aiReply = rp ? { key: pdKey(), reply: rp } : null; if (PONDER) PONDER.kick();
     setStatus(side, rtLive() ? t('thinking.d', { d: res.depth }) : `${t('thinking.d', { d: res.depth })}  ${fmtScore(res.score)}`, false);
     $('#infoLine').textContent = res.time ? t('info', { nps: Math.round(res.nodes / Math.max(1, res.time) * 1000).toLocaleString() }) : '';
   } else {
@@ -3411,12 +3429,12 @@ $('#rngLevel').oninput = updDialog; $('#rngLevel2').oninput = updDialog;
 // PRO mode (shared/proset.js; common rule「対局設定の Pro モード」): advanced settings for the AI beside the level — standard shogi
 // (and ランダム将棋, which keeps these levels) against the AI / AI vs AI, never rated. The changed values make engine opts of their own.
 const PRO_DEF = lv => { const L = LEVELS[lv] || LEVELS[LV_DEFAULT];
-  return { limit: L.noise ? { k: 'depth', v: L.depth } : L.nodes ? { k: 'nodes', v: L.nodes } : { k: 'time', v: (L.time || 1000) / 1000 }, threads: L.mt ? ProSet.defThreads() : 1,
+  return { limit: L.noise ? { k: 'depth', v: L.depth } : L.nodes ? { k: 'nodes', v: L.nodes } : { k: 'time', v: (L.time || 1000) / 1000 }, threads: L.mt ? ProSet.defThreads() : 1, ponder: false,
     book: lv >= 2, var: !L.noise ? 0 : L.noise >= 60 ? 2 : 1, eval: L.noise || L.linear ? 'hand' : 'nnue', resign: !L.noise }; };
 const proVariantEng = () => { const c = document.querySelector('#newOverlay .ngt-gcard.sel[data-v]'); return !!(c && c.dataset.v && window.Variants && Variants.eng(c.dataset.v)); };
 var PRO = window.ProSet ? ProSet.init({ game: 'shogi', lang: () => LANG, level: () => +$('#rngLevel').value, show: () => (dlg.mode === 'ai' || dlg.mode === 'watch') && !proVariantEng(),
   store: { get: () => settings.pro, set: v => { settings.pro = v; } }, defaults: PRO_DEF,
-  params: [{ key: 'limit', kinds: { time: [0.1, 60], depth: [1, 30], nodes: [100, 1e8] } }, { key: 'threads' },
+  params: [{ key: 'limit', kinds: { time: [0.1, 60], depth: [1, 30], nodes: [100, 1e8] } }, { key: 'threads' }, { key: 'ponder' },
     { key: 'book' }, { key: 'var' }, { key: 'eval' }, { key: 'resign' }] }) : null;
 // the PRO settings of an AI side: { opts (for engine.js 'think'), book, resign, threads } or null (the level as it is; rated / online / variants with their own engine)
 function proCfg(lv) {
@@ -3426,7 +3444,7 @@ function proCfg(lv) {
   if (e.limit.k === 'depth') o.depth = e.limit.v; else if (e.limit.k === 'nodes') o.nodes = e.limit.v; else o.time = Math.round(e.limit.v * 1000);
   if (e.var) { o.noise = !e.changed.includes('var') && L.noise ? L.noise : e.var === 1 ? 30 : 80; if (L.greedy && !e.changed.includes('var')) o.greedy = 1; if (e.eval === 'nnue') o.nnue = 1; }
   else if (e.eval === 'hand') o.linear = 1;
-  return { opts: o, book: !!e.book, resign: !!e.resign, threads: e.threads || 1 };
+  return { opts: o, book: !!e.book, resign: !!e.resign, threads: e.threads || 1, ponder: !!e.ponder };
 }
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
 $('#btnStart').onclick = () => {
