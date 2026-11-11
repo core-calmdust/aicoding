@@ -387,7 +387,16 @@ function openIntroL(i) {
   const fin = finalAt(ex, best);
   const body = tA('ls.' + s.id + '.body').map(x => `<p>${x}</p>`).join('');
   const figs = (LFIGS[s.id] || []).map(f => `<figure class="mini">${miniSVG(f.fig)}<figcaption>${t(f.cap)}</figcaption></figure>`).join('');
-  $('#liBody').innerHTML = body + figs + `<figure class="mini">${miniSVG(fig)}<figcaption>${t('ls.exampleCap', { a: fin[0], b: fin[1] })} ${t('ls.' + s.id + '.ex')}</figcaption></figure>` + `<p class="note">${t('ls.scoring')}</p>`;
+  // the common lesson page (shared/luxintro.js, 2026-11-11): the worked example · facts · how to think · trivia — as much as shogi's page
+  if (window.LuxIntro) {
+    LuxIntro.load('lux.json?v=1').then(X => {
+      if (introI !== i || lessonSrc !== 'lesson') return;
+      const P = LuxIntro.pick, U = P(X.ui || {}) || {}, x = (X.lessons || {})[s.id] || {}, H = k => LuxIntro.head(k, LANG), tr = P(x.trivia);
+      LuxIntro.lesson({ step: $('#liStep').textContent, title: $('#liTitle').textContent, fig: miniSVG(fig), cap: t('ls.exampleCap', { a: fin[0], b: fin[1] }) + ' ' + t('ls.' + s.id + '.ex'),
+        chips: [[U.kind, (U.probs || '').replace('{n}', 5)], [U.pass, U.passPts]],
+        secs: [{ h: H('think'), html: body + figs }, tr && { h: H('trivia'), html: tr, cls: 'lx-trivia' }].filter(Boolean) });
+    });
+  } else $('#liBody').innerHTML = body + figs + `<figure class="mini">${miniSVG(fig)}<figcaption>${t('ls.exampleCap', { a: fin[0], b: fin[1] })} ${t('ls.' + s.id + '.ex')}</figcaption></figure>` + `<p class="note">${t('ls.scoring')}</p>`;
   showLView('lessonIntroView'); $('#lessonOverlay').classList.add('show');
   $('#lessonOverlay .modal').scrollTop = 0;
 }

@@ -20,16 +20,23 @@
 #include <semaphore.h>
 static double now(void) { struct timespec t; clock_gettime(CLOCK_MONOTONIC, &t); return t.tv_sec * 1000.0 + t.tv_nsec / 1e6; }
 static void simHook(int res, int didPO);
-static void simW(int node);
+static void simW(int node), simWR(int node);
 #define MTSIM_HOOK simHook
 #define MTSIM_W simW
+#define MTSIM_WR simWR
 #ifdef ENGINE_C
 #include ENGINE_C
 #else
 #include "../engine.c"
 #endif
 
+#ifdef RN
+// (2026-11-11) the RAVE results of the nodes in RV, apart from the nodes: their lines after the nodes' lines
+#define NLINES ((NODES * (int)sizeof(Node) + 63) / 64 + 1)
+#define LINES (NLINES + (NODES * (int)sizeof(Rave) + 63) / 64 + 1)
+#else
 #define LINES ((NODES * (int)sizeof(Node) + 63) / 64 + 1)
+#endif
 static signed char owner[LINES];      // the thread holding the line modified, or -1
 static unsigned short sharers[LINES]; // threads with a copy
 static long long nRead, nWrite;       // transfers
@@ -40,6 +47,15 @@ static void wrLine(int l, int t) { if (owner[l] != t) { if (sharers[l] != (1 << 
 static void rdNodes(int a, int n, int t) { if (n <= 0) return; int l0 = a * (int)sizeof(Node) / 64, l1 = ((a + n) * (int)sizeof(Node) - 1) / 64; for (int l = l0; l <= l1; l++) rdLine(l, t); }
 static void wrNode(int a, int t) { int l0 = a * (int)sizeof(Node) / 64, l1 = ((a + 1) * (int)sizeof(Node) - 1) / 64; for (int l = l0; l <= l1; l++) wrLine(l, t); }
 static void wrNodes(int a, int n, int t) { for (int i = 0; i < n; i++) wrNode(a + i, t); }
+#ifdef RN
+static void rdRave(int a, int n, int t) { if (n <= 0) return; int l0 = a * (int)sizeof(Rave) / 64, l1 = ((a + n) * (int)sizeof(Rave) - 1) / 64; for (int l = l0; l <= l1; l++) rdLine(NLINES + l, t); }
+static void wrRave(int a, int t) { int l0 = a * (int)sizeof(Rave) / 64, l1 = ((a + 1) * (int)sizeof(Rave) - 1) / 64; for (int l = l0; l <= l1; l++) wrLine(NLINES + l, t); }
+static void wrRaves(int a, int n, int t) { for (int i = 0; i < n; i++) wrRave(a + i, t); }
+#else
+#define rdRave(a, n, t)
+#define wrRave wrNode
+#define wrRaves(a, n, t)
+#endif
 
 static int NTH, PO; static sem_t sem[32]; static volatile int left;
 static __thread int me, nn0;
@@ -55,10 +71,10 @@ static void simHook(int res, int didPO) {
   if (!simOn) return;   // (the 1-thread searches of the ref mode)
   int t = me;
   // going down: new nodes, the children read at each level, the virtual loss of the child gone through
-  cat = 0; lvl = 7; if (nNodes > nn0) wrNodes(nn0, nNodes - nn0, t);
+  cat = 0; lvl = 7; if (nNodes > nn0) { wrNodes(nn0, nNodes - nn0, t); wrRaves(nn0, nNodes - nn0, t); }
   for (int k = 0; k < pathL; k++) {
     Node *nd = &T[pathN[k]]; lvl = k;
-    if (k < pathL - 1 && nd->exp == 1) { cat = SLOT(k) ? 2 : 3; rdNodes(nd->first, nd->nch, t); }
+    if (k < pathL - 1 && nd->exp == 1) { cat = SLOT(k) ? 2 : 3; rdNodes(nd->first, nd->nch, t); rdRave(nd->first, nd->nch, t); }
 #ifdef RB_SLOTS
     if (k && !SLOT(k - 1)) { cat = 1; wrNode(pathN[k], t); }
     if (!k && rbThreads < 2) { cat = 1; wrNode(0, t); }
@@ -72,11 +88,12 @@ static void simHook(int res, int didPO) {
   for (int k = 0; k < pathL; k++) {
     Node *nd = &T[pathN[k]]; int mover = side ^ 3; lvl = k;
     if (res == mover && !(k ? SLOT(k - 1) : 0)) { cat = 1; wrNode(pathN[k], t); }
-    if (didPO && k < pathL - 1 && nd->exp == 1 && !SLOT(k)) { cat = 4; for (int i = 0; i < nd->nch; i++) { int c = T[nd->first + i].mv; if (c != SWAP && PB[c] == side) wrNode(nd->first + i, t); } }
+    if (didPO && k < pathL - 1 && nd->exp == 1 && !SLOT(k)) { cat = 4; for (int i = 0; i < nd->nch; i++) { int c = T[nd->first + i].mv; if (c != SWAP && PB[c] == side) wrRave(nd->first + i, t); } }
     side ^= 3;
   }
 }
 static void simW(int node) { if (simOn) { int c = cat, l = lvl; cat = 5; lvl = 7; wrNode(node, me); cat = c; lvl = l; } }   // (a slot added to the tree)
+static void simWR(int node) { if (simOn) { int c = cat, l = lvl; cat = 5; lvl = 7; wrRave(node, me); cat = c; lvl = l; } }
 static void *runner(void *a) {
   int t = (int)(long)a; me = t; mt_thread_native(t);
   for (;;) {

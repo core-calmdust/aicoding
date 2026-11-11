@@ -244,5 +244,56 @@ function flash(msg, ms) {
   flashEl.textContent = msg; flashEl.classList.remove('show'); void flashEl.offsetWidth; flashEl.classList.add('show');
   clearTimeout(flashT); flashT = setTimeout(() => flashEl.classList.remove('show'), ms || 1300);
 }
-window.CoachKit = { flash, css, sw, summary, rec, branches, tips, verdict, gloss, glossBind, bind, esc, ICON };
+
+// ---- the coach during a lesson (2026-11-11, every game): instead of resting, the box shows the lesson's point, the score so far
+// against the pass line and each answered problem with its explanation (newest first). It reads the game's global `lesson`
+// (results / pts per problem, i / k = the current one, answered) and the lesson card (#lsStep k/n, #lsTitle, #lsFb); the point
+// comes from the lesson page (shared/luxintro.js keeps it). coach.js: put(CoachKit.lessonRest(card, restHtml)) in its resting branch.
+const LSC = { ja: ['コーチ', 'このレッスンのポイント', 'ここまで {p}点', '合格（{n}点）まであと {r}点', '合格ラインに届きました', '{i}問目 — {p}点', '{i}問目', '1問ずつ、解いた問題の解説をここに残します。'],
+  en: ['Coach', 'Point of this lesson', '{p} pts so far', '{r} more to pass ({n})', 'You have reached the pass line', 'Puzzle {i} — {p} pts', 'Puzzle {i}', 'Each puzzle you solve is explained here.'],
+  zh: ['教练', '本课要点', '目前 {p}分', '距合格（{n}分）还差 {r}分', '已达到合格线', '第{i}题 — {p}分', '第{i}题', '每解一题，这里会留下解说。'],
+  'zh-TW': ['教練', '本課要點', '目前 {p}分', '距合格（{n}分）還差 {r}分', '已達到合格線', '第{i}題 — {p}分', '第{i}題', '每解一題，這裡會留下解說。'],
+  ko: ['코치', '이번 레슨의 포인트', '지금까지 {p}점', '합격({n}점)까지 {r}점', '합격선에 도달했습니다', '{i}번 문제 — {p}점', '{i}번 문제', '문제를 풀 때마다 여기에 해설을 남깁니다.'],
+  es: ['Entrenador', 'Clave de la lección', '{p} pts hasta ahora', 'Faltan {r} para aprobar ({n})', 'Has alcanzado el aprobado', 'Ejercicio {i} — {p} pts', 'Ejercicio {i}', 'Aquí se explica cada ejercicio que resuelvas.'],
+  fr: ['Coach', 'Le point clé', '{p} pts pour l’instant', 'Encore {r} pour réussir ({n})', 'Vous avez atteint la réussite', 'Exercice {i} — {p} pts', 'Exercice {i}', 'Chaque exercice résolu est expliqué ici.'],
+  pt: ['Treinador', 'Ponto-chave da lição', '{p} pts até agora', 'Faltam {r} para passar ({n})', 'Você atingiu a aprovação', 'Exercício {i} — {p} pts', 'Exercício {i}', 'Cada exercício resolvido é explicado aqui.'],
+  de: ['Coach', 'Kern der Lektion', 'Bisher {p} Pkt.', 'Noch {r} bis bestanden ({n})', 'Bestehensgrenze erreicht', 'Aufgabe {i} — {p} Pkt.', 'Aufgabe {i}', 'Jede gelöste Aufgabe wird hier erklärt.'],
+  hi: ['कोच', 'इस पाठ की मुख्य बात', 'अब तक {p} अंक', 'पास ({n}) के लिए {r} और', 'आप पास रेखा तक पहुँच गए', 'पहेली {i} — {p} अंक', 'पहेली {i}', 'हर हल की गई पहेली की व्याख्या यहाँ मिलेगी।'],
+  ar: ['المدرّب', 'فكرة الدرس', '{p} نقطة حتى الآن', 'بقي {r} للنجاح ({n})', 'بلغتَ حدّ النجاح', 'اللغز {i} — {p} نقطة', 'اللغز {i}', 'يُشرح هنا كل لغز تحلّه.'],
+  ru: ['Тренер', 'Главное в уроке', 'Пока {p} очк.', 'До зачёта ({n}) ещё {r}', 'Зачёт набран', 'Задача {i} — {p} очк.', 'Задача {i}', 'Здесь появляется разбор каждой решённой задачи.'],
+  id: ['Pelatih', 'Inti pelajaran', '{p} poin sejauh ini', 'Kurang {r} untuk lulus ({n})', 'Kamu sudah mencapai batas lulus', 'Soal {i} — {p} poin', 'Soal {i}', 'Setiap soal yang diselesaikan dijelaskan di sini.'],
+  tr: ['Koç', 'Dersin özü', 'Şimdiye kadar {p} puan', 'Geçmek için {r} daha ({n})', 'Geçme sınırına ulaştın', 'Soru {i} — {p} puan', 'Soru {i}', 'Çözdüğün her soru burada açıklanır.'] };
+const lscLang = () => { const l = (s => /^zh-(tw|hk|mo|hant)/i.test(s) ? 'zh-TW' : s.slice(0, 2).toLowerCase())(document.documentElement.lang || 'ja'); return LSC[l] ? l : 'en'; };
+function lessonPanel() {
+  let L = null; try { L = typeof lesson !== 'undefined' ? lesson : null; } catch (e) {}
+  if (!L || L.study || L.ramp || L.review || L.endless || L.exam || L.virt || L.seq || !document.body.classList.contains('in-lesson')) return '';
+  try { if (window.SeqPrac && SeqPrac.active && SeqPrac.active()) return ''; } catch (e) {}
+  const R = Array.isArray(L.results) ? L.results : Array.isArray(L.pts) ? L.pts : null; if (!R) return '';
+  const X = LSC[lscLang()], f = (s, o) => s.replace(/\{(\w)\}/g, (_, k) => o[k]), $ = id => document.getElementById(id);
+  const i = (L.i != null ? L.i : L.k) | 0, m = (($('lsStep') || {}).textContent || '').match(/(\d+)\s*\/\s*(\d+)/), n = m ? +m[2] : R.length;
+  const fb = $('lsFb'); if (L.answered && fb && fb.textContent.trim()) (L.__fbs || (L.__fbs = {}))[i] = fb.innerHTML;
+  const head = ((document.querySelector('#coachCard .ck-h span') || {}).textContent || '').trim() || X[0];
+  let h = `<h3 class="ck-h">${ICON.coach}<span>${esc(head)}</span><small>${Math.min(i + 1, n)}/${n}</small></h3>`;
+  const title = (($('lsTitle') || {}).textContent || '').trim(), cur = window.LuxIntro && LuxIntro.cur;
+  const pt = cur && cur.goal && (!title || !cur.title || cur.title === title) ? cur.goal : '';
+  if (pt) h += `<div class="ck-sec"><h4 style="margin:0 0 4px;font-size:12px;letter-spacing:.12em;opacity:.8">${esc(X[1])}</h4><p style="margin:0">${pt}</p></div>`;
+  const nums = R.filter(x => typeof x === 'number'), scored = n === 5 && R.every(x => x === undefined || x === null || typeof x === 'number') && (nums.length === 0 || Math.max(...nums) > 3);
+  if (scored) { const sum = nums.reduce((a, b) => a + b, 0); h += `<p class="ck-muted" style="margin:8px 0">${esc(f(X[2], { p: sum }))}　${esc(sum >= 75 ? X[4] : f(X[3], { n: 75, r: 75 - sum }))}</p>`; }
+  const done = R.map((p, k) => [p, k]).filter(x => x[0] !== undefined && x[0] !== null).reverse();
+  if (!done.length) h += `<p class="ck-muted">${esc(X[7])}</p>`;
+  for (const [p, k] of done) { const sc = typeof p === 'number' && scored; h += verdict(sc ? (p >= 16 ? 0 : p >= 8 ? 2 : 3) : 1, esc(sc ? f(X[5], { i: k + 1, p }) : f(X[6], { i: k + 1 })), (L.__fbs && L.__fbs[k]) || ''); }
+  return h;
+}
+function lessonRest(card, rest) { const h = lessonPanel(); if (!h) return rest; if (card) { card.classList.remove('ck-off'); card.classList.add('ck-ls'); } return h; }
+// the lesson card changes (an answer, the next problem) without the coach rendering: refresh the box from here
+(function () {
+  let q = 0;
+  const go = () => { q = 0; const card = document.getElementById('coachCard'); if (!card || !card.classList.contains('ck-rest')) { if (card) card.classList.remove('ck-ls'); return; }
+    const h = lessonPanel(); if (!h) { card.classList.remove('ck-ls'); return; }
+    if (card.dataset.h !== h) { card.dataset.h = h; card.innerHTML = h; } card.classList.remove('ck-off'); card.classList.add('ck-ls'); };
+  const later = () => { if (!q) q = setTimeout(go, 60); };
+  const hook = () => { const lc = document.getElementById('lessonCard'); if (!lc) return false; new MutationObserver(later).observe(lc, { subtree: true, childList: true, characterData: true }); new MutationObserver(later).observe(document.body, { attributes: true, attributeFilter: ['class'] }); return true; };
+  if (!hook()) document.addEventListener('DOMContentLoaded', hook);
+})();
+window.CoachKit = { flash, css, sw, summary, rec, branches, tips, verdict, gloss, glossBind, bind, esc, ICON, lessonPanel, lessonRest };
 })();

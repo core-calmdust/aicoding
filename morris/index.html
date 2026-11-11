@@ -1337,12 +1337,12 @@ body.in-online #coachCard{display:none!important}
 <script src="i18n.js?v=20261107l14"></script>
 <script src="i18n_more.js?v=20261107l14"></script>
 <script src="i18n_perfect.js?v=1"></script>
-<script src="i18n_coach.js?v=5sq"></script>
-<script src="../shared/coachkit.js?v=16l14"></script>
+<script src="i18n_coach.js?v=5sq-ls"></script>
+<script src="../shared/coachkit.js?v=17l14"></script>
 <script src="../shared/seqprac.js?v=6"></script>
 <script src="../shared/seqgame.js?v=4"></script>
 <script src="../shared/record.js?v=12l14"></script>
-<script src="coach.js?v=7sq"></script>
+<script src="coach.js?v=7sq-ls"></script>
 <script src="coach-i18n.js?v=5"></script>
 <script src="../shared/export.js?v=9l14"></script>
 <script src="../shared/pzbook.js?v=8l14"></script>
@@ -1350,7 +1350,7 @@ body.in-online #coachCard{display:none!important}
 <script src="../shared/rulesoffer.js?v=17l14j"></script>
 <script src="../shared/headerbar.js?v=51l14s"></script>
 <script src="../shared/flipbtn.js?v=3l14"></script>
-<script src="../shared/cardbar.js?v=14l14"></script>
+<script src="../shared/cardbar.js?v=15l14"></script>
 <script src="../shared/watchpause.js?v=2l14"></script>
 <script src="../shared/resign.js?v=3l14"></script><script src="../shared/drawoffer.js?v=1l14"></script>
 <script src="../shared/tick.js?v=2l14"></script>
@@ -2790,7 +2790,18 @@ function openIntro(i) {
   $('#liTitle').textContent = t('ls.' + s.id + '.title');
   const d = s.diagram;
   const dv = d && (d.v || (lsVar === 'nine' ? 'nine' : null));
-  $('#liBody').innerHTML = (d && dv ? miniSVG(dv, bOf(dv, d.p1 || [], d.p2 || []), { marks: Object.fromEntries((d.marks || []).map(([n, k]) => [E.geom(dv).index[n], k])), arrows: (d.arrows || []).map(a => nm(dv, ...a)), mills: (d.mills || []).map(a => nm(dv, ...a)) }) : '') + t('ls.' + s.id + '.intro');
+  const fig = d && dv ? miniSVG(dv, bOf(dv, d.p1 || [], d.p2 || []), { marks: Object.fromEntries((d.marks || []).map(([n, k]) => [E.geom(dv).index[n], k])), arrows: (d.arrows || []).map(a => nm(dv, ...a)), mills: (d.mills || []).map(a => nm(dv, ...a)) }) : '';
+  // the common lesson page (shared/luxintro.js, 2026-11-11): board · facts · how to think · trivia — as much as shogi's page
+  if (window.LuxIntro) {
+    LuxIntro.load('lux.json?v=1').then(X => {
+      if (introIdx !== i || openChoiceIdx >= 0) return;
+      const U = LL(X.ui || {}) || {}, x = (X.lessons || {})[s.id] || {}, H = k => LuxIntro.head(k, LANG), n = (s.problems || []).length, tr = LL(x.trivia);
+      LuxIntro.lesson({ step: $('#liStep').textContent, title: $('#liTitle').textContent, fig, cap: U.figL, chips: [[U.kind, (U.probs || '').replace('{n}', n)], [U.pass, U.passPts]],
+        secs: [{ h: H('think'), html: t('ls.' + s.id + '.intro') }, tr && { h: H('trivia'), html: tr, cls: 'lx-trivia' }].filter(Boolean) });
+    });
+    showLessonView('lessonIntroView'); return;
+  }
+  $('#liBody').innerHTML = fig + t('ls.' + s.id + '.intro');
   showLessonView('lessonIntroView');
 }
 $('#btnLessonBack').onclick = () => openChoiceIdx >= 0 ? openOpenings(OPEN.sets[openChoiceIdx] && OPEN.sets[openChoiceIdx].grp) : openLessons(null, LESSONS.steps[introIdx] && (LESSONS.steps[introIdx].course || 'tactics'));
@@ -3000,6 +3011,17 @@ function openOpeningChoice(i) {
   openChoiceIdx = i; const g = OPEN.sets[i], pre = g.study.line.slice(0, g.show || 2), last = pre[pre.length - 1];
   $('#liStep').textContent = t('op.title') + ' · ' + t(g.side === 2 ? 'op.forBlack' : 'op.forWhite');
   $('#liTitle').textContent = LL(g.title);
+  if (window.LuxIntro) {   // the common opening page (shared/luxintro.js, 2026-11-11): board · lead · the two ways in
+    const fig = miniSVG('nine', lineBoard(pre), { marks: last !== undefined ? { [mTo(last)]: 'ring' } : {} });
+    LuxIntro.load('lux.json?v=1').then(X => {
+      if (openChoiceIdx !== i) return;
+      const U = LL(X.ui || {}) || {};
+      LuxIntro.opening({ step: $('#liStep').textContent, title: LL(g.title), fig, cap: U.figO, lead: LL(g.intro),
+        choices: [{ ic: '📖', b: t('op.study'), small: t('op.studyDesc', { n: g.study.line.length }), attrs: 'data-study="1"' }, { ic: '✎', b: t('op.practice'), small: t('op.practiceDesc'), attrs: 'data-practice="1"' }], secs: [] });
+    });
+    $('#btnLessonStart').classList.add('hidden');
+    showLessonView('lessonIntroView'); showOverlay('#lessonOverlay'); return;
+  }
   $('#liBody').innerHTML = miniSVG('nine', lineBoard(pre), { marks: last !== undefined ? { [mTo(last)]: 'ring' } : {} }) + LL(g.intro).map(x => `<p>${x}</p>`).join('') +
     `<div class="op-choice"><button class="lesson-item" data-study="1"><span class="no">📖</span><span class="tx"><b>${t('op.study')}</b><small>${t('op.studyDesc', { n: g.study.line.length })}</small></span></button>` +
     `<button class="lesson-item" data-practice="1"><span class="no">✎</span><span class="tx"><b>${t('op.practice')}</b><small>${t('op.practiceDesc')}</small></span></button></div>`;
@@ -3875,12 +3897,12 @@ window.addEventListener('resize', () => renderFx());
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/img/tex/baked.js?v=1')).then(() => load('../atlas/table3d.js?v=147')).then(() => load('../atlas/tables3d.js?v=55')).then(() => load('../atlas/skin/common.js?v=69')).then(() => load('../atlas/models/morris.js?v=6l14')).then(() => load('../atlas/games/morris-pieces.js?v=2l14')).then(() => load('../atlas/skin/morris.js?v=6l14'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/img/tex/baked.js?v=1')).then(() => load('../atlas/table3d.js?v=147')).then(() => load('../atlas/tables3d.js?v=57')).then(() => load('../atlas/skin/common.js?v=70')).then(() => load('../atlas/models/morris.js?v=6l14')).then(() => load('../atlas/games/morris-pieces.js?v=2l14')).then(() => load('../atlas/skin/morris.js?v=6l14'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=20261111ai1" defer></script>
+<script src="../shared/atlas.js?v=20261111ai3" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1l14" defer></script>
 <script src="../shared/atlas-account.js?v=20261109ac2l14" defer></script>
 <script src="../shared/infotabs.js?v=22l14" data-strips defer></script>
@@ -3890,5 +3912,6 @@ window.addEventListener('resize', () => renderFx());
 <script src="../shared/resumeng.js?v=1l14"></script>
 <script src="../shared/langsel.js?v=2l14" defer></script>
 <script src="../shared/rulelink.js?v=1l14"></script>
+<script src="../shared/luxintro.js?v=3"></script>
 </body>
 </html>

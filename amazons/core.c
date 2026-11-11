@@ -291,6 +291,8 @@ static Node *T = 0; static int NODES = 0, CAP = 0;   // NODES: the pool in use (
 typedef struct { volatile int v; int pad[15]; } __attribute__((aligned(64))) LineV;
 static LineV nNodes_, gStop_, gTree_, gActive_, gHS_, gHE_;
 #define nNodes nNodes_.v
+static LineV vNodes_;
+#define vNodes vNodes_.v
 #define gStop gStop_.v
 #define gTree gTree_.v
 #define gActive gActive_.v
@@ -301,13 +303,22 @@ static TLS int threadId = 0;
 #define EXPD(nd) (__atomic_load_n(&(nd)->exp, __ATOMIC_ACQUIRE) == 1)
 static int newNodes(int k) { if (__atomic_load_n(&nNodes, __ATOMIC_SEQ_CST) + k > NODES) return -1; int f = __atomic_fetch_add(&nNodes, k, __ATOMIC_SEQ_CST); if (f + k > NODES) return -1; return f; }
 #else
-static int nNodes = 0;
+static int nNodes = 0, vNodes = 0;
 #define EXPD(nd) ((nd)->exp == 1)
 static int newNodes(int k) { if (nNodes + k > NODES) return -1; int f = nNodes; nNodes += k; return f; }
 #endif
 // the parameters (mcts_set): tuned by self-play against the alpha-beta search (tools/mcts_match.js)
 static int P_QK = 10, P_K = 24, P_QKR = 20, P_KR = 48, P_PO = 0;
 static float P_S = 400.f, P_NP = 2.f, P_C = 0.25f, P_A = 0.3f, P_PWA = 3.f, P_PWK = 1.f, P_PWB = 0.5f, P_POM = 0.5f, VLOSS = 1.f;
+// (2026-11-11) The children of a node (not the root) beyond the first P_LA are made only when progressive widening first
+// reaches them (lazy children, below): with K = 24 a node expanded on its first visit allocated 24 children of which the
+// window lets it see 4 at N = 1 and 9 only at N = 35 — most of them never. P_LA = 0: every child at once (as before).
+static int P_LA = 8;
+// The pool's fill that raises expT (mcts_run) is the larger of the nodes made / the pool and the nodes the search would have
+// made with every child at once (vNodes: K per expansion) / VPOOL: with VPOOL = the pool (a search by visits or evaluations,
+// engine.js) the waits come exactly where they came before (the same tree, the same result); VPOOL = 0 (a search by time):
+// only the nodes made count.
+static double VPOOL = 0;
 static i8 RSQ[NN], RQ[8]; static int RSIDE = 1;   // the root position (shared)
 // The evaluation right after a move leans to the player who has just moved (in the middle game by ~3 squares: the score of the
 // best move and of the best reply to it are both positive). A leaf's value is the mean of the two ((sc − best reply) / 2: one
@@ -346,6 +357,57 @@ static int rndMove(int p) {
   for (int d = 0; d < 8; d++) for (int j = 0; j < RAYN[t][d]; j++) { int a = RAY[t][d][j]; if (SQ[a]) break; as[na++] = a; }
   SQ[as[rnd() % na]] = 3; return 1;
 }
+// how the visits ended (mcts_vk; bench.html, tools/mt_node.js): per thread, each row on its own cache line
+// 0 an expansion (the evaluations), 1 a proven node, 2 a leaf waiting for expT visits, 3 a leaf another thread is expanding or
+// the pool full, 4 the depth cap; 5 (of 1) a proven-lost child taken because every child in the window was lost; 6 the rest of
+// a node's children made (makeRest, lazy children), 7 the evaluations of those
+#define VKT 128
+static double VK[VKT][8] __attribute__((aligned(64)));
+#ifdef MT
+#define VKR VK[threadId & (VKT - 1)]
+#else
+#define VKR VK[0]
+#endif
+// the best K of cand's list first (ties: cand's order)
+static void topK(int n, int K) {
+  for (int j = 0; j < K; j++) {
+    int b = j; for (int i = j + 1; i < n; i++) if (OS[i] > OS[b]) b = i;
+    if (b != j) { int x = OM[j]; OM[j] = OM[b]; OM[b] = x; x = OS[j]; OS[j] = OS[b]; OS[b] = x; }
+  }
+}
+static void initChild(Node *c, int j, float bias) {
+  c->m = OM[j]; c->first = 0; c->n = 0; c->w = 0; c->nch = 0; c->exp = 0; c->full = 0; c->sc = (float)OS[j];
+  if (OS[j] > WINT) { c->proof = 1; c->p = 1.f; } else { c->proof = 0; c->p = sig((float)OS[j] - bias); }
+  c->mm = c->p;
+}
+// Lazy children (2026-11-11): a node other than the root with K > P_LA children gets the first la = P_LA at its expansion and
+// one more node, the header, after them: the rest (K − la, sorted after them) are made when the window first passes la
+// (makeRest: cand() once more on the same position — the same list, the same order — and the expansion's bias, so each is
+// the child it would have been). Until then they are seen only through the header: mm = the p of the first of them (the
+// largest: the rest have no visit, no proof but a win, which would sort first), so the minimax value and the proofs of the
+// node are those of every child. In a tree of K = 24 most nodes are leaves with 1–3 visits: ~9 nodes instead of 24.
+#define LAZY(root, K) ((root) || P_LA <= 0 || P_PWK <= 0 || (K) <= P_LA ? (K) : P_LA)
+static inline int lazyN(const Node *nd) { return nd->nch > P_LA && P_LA > 0 && P_PWK > 0 && nd != T ? P_LA : nd->nch; }   // (the children in the first block)
+static inline Node *childAt(const Node *nd, int la, int i) { return i < la ? &T[nd->first + i] : &T[T[nd->first + la].first + (i - la)]; }
+static inline int childIdx(const Node *nd, int la, int i) { return i < la ? nd->first + i : T[nd->first + la].first + (i - la); }
+// make the rest of nd's children (its position on the board, `side` to move); 1 = they are there
+static int makeRest(Node *nd, int side, int la) {
+  Node *h = &T[nd->first + la];
+  if (EXPD(h)) return 1;
+#ifdef MT
+  u8 z = 0; if (!__atomic_compare_exchange_n(&h->exp, &z, 2, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)) return 0;   // (another thread makes them)
+#endif
+  int K = nd->nch, r = K - la, e0 = evn;
+  int f = newNodes(r);
+  if (f < 0) { __atomic_store_n(&h->exp, 0, __ATOMIC_RELEASE); return 0; }
+  int n = cand(side, P_QK, 0);
+  VKR[7] += evn - e0; evn = e0; VKR[6] += 1;   // (its evaluations not in the budget: a search by evaluations stays the same)
+  topK(n, K);
+  for (int j = la; j < K; j++) initChild(&T[f + j - la], j, h->p);
+  h->first = f;
+  __atomic_store_n(&h->exp, 1, __ATOMIC_RELEASE);
+  return 1;
+}
 // expand node ni (the board SQ / Q is its position, side to move `side`); returns the visit's result for the player who moved
 // into it (−1: not expanded — another thread is at it or the pool is full: the caller uses the node's own value)
 static float expand(int ni, int side) {
@@ -357,19 +419,22 @@ static float expand(int ni, int side) {
   if (n == 0) { nd->proof = 1; nd->mm = 1.f; nd->nch = 0; nd->full = 1; __atomic_store_n(&nd->exp, 1, __ATOMIC_RELEASE); return 1.f; }   // (the side to move cannot move)
   if (K > n) K = n;
   if (K > 64) K = 64;
-  int f = newNodes(K);
+  int la = LAZY(root, K);   // (the children made now; with la < K one more node: the header of the rest, see childAt)
+  if (VPOOL > 0 && __atomic_load_n(&vNodes, __ATOMIC_RELAXED) + K > VPOOL) { __atomic_store_n(&nd->exp, 0, __ATOMIC_RELEASE); return -1.f; }   // (as the pool of before would)
+  int f = newNodes(la < K ? la + 1 : K);
   if (f < 0) { __atomic_store_n(&nd->exp, 0, __ATOMIC_RELEASE); return -1.f; }
-  for (int j = 0; j < K; j++) {   // the best K, best first (ties: cand's order)
-    int b = j; for (int i = j + 1; i < n; i++) if (OS[i] > OS[b]) b = i;
-    if (b != j) { int x = OM[j]; OM[j] = OM[b]; OM[b] = x; x = OS[j]; OS[j] = OS[b]; OS[b] = x; }
-  }
+  __atomic_fetch_add(&vNodes, K, __ATOMIC_RELAXED);
+  topK(n, K);
   int win = OS[0] > WINT; float s1 = (float)OS[0], v = 0.f;
   if (!root && !win) { float b = (nd->sc + s1) * .5f; if (b > -3000.f && b < 3000.f) { biasSum += b; biasCnt += 1.f; } }
   float bias = biasCnt > 0 ? biasSum / biasCnt : BIAS0, bp = 0.f;
-  for (int j = 0; j < K; j++) {
-    Node *c = &T[f + j]; c->m = OM[j]; c->first = 0; c->n = 0; c->w = 0; c->nch = 0; c->exp = 0; c->full = 0; c->sc = (float)OS[j];
-    if (OS[j] > WINT) { c->proof = 1; c->p = 1.f; } else { c->proof = 0; c->p = sig((float)OS[j] - bias); }
-    c->mm = c->p; if (c->p > bp) bp = c->p;
+  for (int j = 0; j < la; j++) {
+    Node *c = &T[f + j]; initChild(c, j, bias);
+    if (c->p > bp) bp = c->p;
+  }
+  if (la < K) {   // the header: first = the rest's nodes (exp 1 once made), p = the bias of this expansion, mm = the first one's p
+    Node *h = &T[f + la]; h->m = -1; h->first = 0; h->n = 0; h->w = 0; h->sc = 0; h->nch = (u8)(K - la); h->exp = 0; h->full = 0; h->proof = 0;
+    h->p = bias; h->mm = OS[la] > WINT ? 1.f : sig((float)OS[la] - bias);   // (≤ the p of every child before it: sorted)
   }
   nd->first = f; nd->nch = (u8)K; nd->full = (u8)(K == n && candNQ <= qk);
   nd->mm = 1.f - bp; if (win) nd->proof = -1;
@@ -386,16 +451,6 @@ static float expand(int ni, int side) {
   return v;
 }
 static TLS int pathN[200]; static TLS int pathL;
-// how the visits ended (mcts_vk; bench.html, tools/mt_node.js): per thread, each row on its own cache line
-// 0 an expansion (the evaluations), 1 a proven node, 2 a leaf waiting for expT visits, 3 a leaf another thread is expanding or
-// the pool full, 4 the depth cap; 5 (of 1) a proven-lost child taken because every child in the window was lost
-#define VKT 128
-static double VK[VKT][8] __attribute__((aligned(64)));
-#ifdef MT
-#define VKR VK[threadId & (VKT - 1)]
-#else
-#define VKR VK[0]
-#endif
 static void iterate(void) {
   for (int i = 0; i < NN; i++) SQ[i] = RSQ[i]; for (int k = 0; k < 8; k++) Q[k] = RQ[k];
   int side = RSIDE, ni = 0; pathL = 0; pathN[pathL++] = 0;
@@ -413,11 +468,13 @@ static void iterate(void) {
       v = ex ? expand(ni, side) : -1.f; VKR[v >= 0 ? 0 : ex ? 3 : 2] += 1; if (v < 0) v = nd->mm; break;
     }
     // select
-    Node *ch = &T[nd->first]; int nch = nd->nch, best = -1; float bv = -1e30f, N = nd->n;
+    int nch = nd->nch, la = lazyN(nd), best = -1; float bv = -1e30f, N = nd->n;
     int wd = nch; if (P_PWK > 0) { wd = (int)(P_PWA + P_PWK * fexp(P_PWB * flog(N + 1.f))); if (wd > nch) wd = nch; if (wd < 1) wd = 1; }
+    int seen = la < nch && wd > la && !makeRest(nd, side, la) ? la : nch;   // (the children there: la while the rest is not made)
+    if (wd > seen) wd = seen;
     float lg = flog(N + 1.f);
     for (int i = 0; i < wd; i++) {
-      Node *c = &ch[i];
+      Node *c = childAt(nd, la, i);
       if (c->proof > 0) { best = i; break; }
       if (c->proof < 0) continue;
       float cn = c->n, q = (c->w + P_NP * c->p) / (cn + P_NP);
@@ -425,13 +482,16 @@ static void iterate(void) {
       if (s > bv) { bv = s; best = i; }
     }
     if (best < 0) {   // (every child in the window is lost: the best of the rest, else the first)
-      for (int i = wd; i < nch; i++) if (ch[i].proof >= 0) { best = i; break; }
+      for (int i = wd; i < nch; i++) {
+        if (i == seen) { if (!makeRest(nd, side, la)) break; seen = nch; }
+        if (childAt(nd, la, i)->proof >= 0) { best = i; break; }
+      }
       if (best < 0) best = 0;
     }
-    Node *c = &ch[best];
+    Node *c = childAt(nd, la, best);
     if (c->proof < 0) VKR[5] += 1;
     playM(c->m); side = 3 - side;
-    ni = nd->first + best; if (pathL < 199) pathN[pathL++] = ni; else { v = c->mm; VKR[4] += 1; break; }
+    ni = childIdx(nd, la, best); if (pathL < 199) pathN[pathL++] = ni; else { v = c->mm; VKR[4] += 1; break; }
 #ifdef MT
     c->n += VLOSS;   // (virtual loss: a visit without its result yet)
 #endif
@@ -446,8 +506,13 @@ static void iterate(void) {
 #endif
     nd->w += v;
     if (EXPD(nd) && nd->nch) {   // the implicit minimax value and the proofs from the children
-      Node *ch = &T[nd->first]; float b = 0.f; int any = 0, all = nd->full;
-      for (int i = 0; i < nd->nch; i++) { float x = ch[i].proof > 0 ? 1.f : ch[i].proof < 0 ? 0.f : ch[i].mm; if (x > b) b = x; if (ch[i].proof > 0) any = 1; if (ch[i].proof >= 0) all = 0; }
+      Node *ch = &T[nd->first]; float b = 0.f; int any = 0, all = nd->full, la = lazyN(nd);
+      for (int i = 0; i < la; i++) { float x = ch[i].proof > 0 ? 1.f : ch[i].proof < 0 ? 0.f : ch[i].mm; if (x > b) b = x; if (ch[i].proof > 0) any = 1; if (ch[i].proof >= 0) all = 0; }
+      if (la < nd->nch) {
+        Node *h = &T[nd->first + la];
+        if (EXPD(h)) { Node *cr = &T[h->first]; for (int i = 0; i < nd->nch - la; i++) { float x = cr[i].proof > 0 ? 1.f : cr[i].proof < 0 ? 0.f : cr[i].mm; if (x > b) b = x; if (cr[i].proof > 0) any = 1; if (cr[i].proof >= 0) all = 0; } }
+        else { if (h->mm > b) b = h->mm; all = 0; }   // (not made yet: no visit, no proof; the largest p is the first one's)
+      }
       nd->mm = 1.f - b;
       if (any) nd->proof = -1; else if (all) nd->proof = 1;
     }
@@ -475,7 +540,7 @@ EXPORT(mcts_set) void mcts_set(int k, float v) {
   switch (k) {
     case 0: P_QK = (int)v; break; case 1: P_K = (int)v; break; case 2: P_QKR = (int)v; break; case 3: P_KR = (int)v; break;
     case 4: P_PO = (int)v; break; case 5: P_S = v; break; case 6: P_NP = v; break; case 7: P_C = v; break; case 8: P_A = v; break;
-    case 9: P_PWA = v; break; case 10: P_PWK = v; break; case 11: P_PWB = v; break; case 12: P_POM = v; break; case 13: VLOSS = v; break; case 14: BIAS0 = v; break;
+    case 9: P_PWA = v; break; case 10: P_PWK = v; break; case 11: P_PWB = v; break; case 12: P_POM = v; break; case 13: VLOSS = v; break; case 14: BIAS0 = v; break; case 15: P_LA = (int)v; break; case 16: VPOOL = v; break;
   }
 }
 // a new tree on the position SQ / Q with `side` to move (the root expanded); seed: the random numbers (the playouts).
@@ -485,7 +550,7 @@ EXPORT(mcts_begin) int mcts_begin(int side, int seed) {
   if (!NODES && !mcts_alloc(1 << 18)) return 0;
   for (int i = 0; i < NN; i++) RSQ[i] = SQ[i]; for (int k = 0; k < 8; k++) RQ[k] = Q[k]; RSIDE = side;
   rs = 0x9E3779B97F4A7C15ULL ^ ((unsigned long long)(unsigned)seed * 0xD1B54A32D192ED03ULL); rnd();
-  nNodes = 1; Node *r = &T[0]; r->m = -1; r->first = 0; r->n = 0; r->w = 0; r->p = 0.5f; r->mm = 0.5f; r->sc = 0; r->nch = 0; r->exp = 0; r->full = 0; r->proof = 0;
+  nNodes = 1; vNodes = 1; Node *r = &T[0]; r->m = -1; r->first = 0; r->n = 0; r->w = 0; r->p = 0.5f; r->mm = 0.5f; r->sc = 0; r->nch = 0; r->exp = 0; r->full = 0; r->proof = 0;
   biasSum = 0; biasCnt = 0;
   for (int i = 0; i < VKT; i++) for (int k = 0; k < 8; k++) VK[i][k] = 0;
   sims = 0; evalsUsed = 0; evn = 0; expT = 0;
@@ -514,7 +579,7 @@ EXPORT(mcts_run) double mcts_run(double ms, double evalLimit, double simLimit) {
     if (__atomic_load_n(&gStop, __ATOMIC_RELAXED)) break;
 #endif
     // keep the pool from running out: past half full, a leaf waits for more visits before it is expanded
-    { double fl = (double)nNodes / NODES; float x = fl < .5 ? 0.f : fl < .7 ? 1.f : fl < .8 ? 2.f : fl < .87 ? 4.f : fl < .92 ? 8.f : fl < .96 ? 32.f : -1.f; if (x < 0) break; if (x > expT) expT = x; }   // (full: stop)
+    { double fl = (double)nNodes / NODES, fv = VPOOL > 0 ? (double)vNodes / VPOOL : 0; if (fv > fl) fl = fv; float x = fl < .5 ? 0.f : fl < .7 ? 1.f : fl < .8 ? 2.f : fl < .87 ? 4.f : fl < .92 ? 8.f : fl < .96 ? 32.f : -1.f; if (x < 0) break; if (x > expT) expT = x; }   // (full: stop)
   }
 #ifdef MT
   __atomic_store_n(&gTree, 0, __ATOMIC_SEQ_CST);
@@ -526,6 +591,7 @@ EXPORT(mcts_run) double mcts_run(double ms, double evalLimit, double simLimit) {
 EXPORT(mcts_evals) double mcts_evals(void) { return evalsUsed; }
 EXPORT(mcts_vk) double mcts_vk(int k) { double t = 0; for (int i = 0; i < VKT; i++) t += VK[i][k & 7]; return t; }
 EXPORT(mcts_nodes) int mcts_nodes(void) { return nNodes; }
+EXPORT(mcts_vnodes) int mcts_vnodes(void) { return vNodes; }   // (the nodes with every child made at once)
 EXPORT(mcts_proof) int mcts_proof(void) { return T[0].proof; }
 // the root's children, most visited first: RM move, RN visits, RV value (σ⁻¹ of the mixed value, in the evaluation's units:
 // ~100 = one square; ±(WIN − 1 / 2) when proven), RP the prior's score
@@ -552,10 +618,11 @@ EXPORT(mcts_pv) int mcts_pv(int m) {
   if (!EXPD(nd)) return 0;
   { Node *ch = &T[nd->first]; int f = -1; for (int i = 0; i < nd->nch; i++) if (ch[i].m == m) { f = i; break; } if (f < 0) return 0; nd = &ch[f]; }
   while (k < 30 && EXPD(nd) && nd->nch) {
-    Node *ch = &T[nd->first]; int b = 0;
-    for (int i = 1; i < nd->nch; i++) if (ch[i].n > ch[b].n || (ch[i].n == ch[b].n && ch[i].mm > ch[b].mm)) b = i;
-    if (ch[b].n < 1) break;
-    PVA[k++] = ch[b].m; nd = &ch[b];
+    int la = lazyN(nd), nc = la < nd->nch && !EXPD(&T[nd->first + la]) ? la : nd->nch, b = 0;   // (children not made: no visit)
+    for (int i = 1; i < nc; i++) { Node *x = childAt(nd, la, i), *y = childAt(nd, la, b); if (x->n > y->n || (x->n == y->n && x->mm > y->mm)) b = i; }
+    Node *c = childAt(nd, la, b);
+    if (c->n < 1) break;
+    PVA[k++] = c->m; nd = c;
   }
   return k;
 }

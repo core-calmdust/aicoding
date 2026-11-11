@@ -108,7 +108,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=10';
+const ENGINE_URL = 'engine.js?v=11';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -138,7 +138,7 @@ const mtLevel = lv => { const L = E.LEVELS[lv]; return !!(L && L.s && L.ms && !L
 // The MCTS on several threads (2026-11-10, claude/amazons-spec.md「MCTS」): Lv.19〜23 (mc in LEVELS; rated games, the coach's deeper
 // pass and PRO's MCTS too) grow ONE tree on every thread (tree-parallel with virtual loss): core_mt.wasm on a shared memory,
 // the lead engine.js?…&mt=1, the helpers mt-helper.js (shared/mtengine.js; only on an isolated page). Without it: one thread.
-const MCP = window.MTEngine && MTEngine.use ? MTEngine.use({ wasm: 'core_mt.wasm?v=3', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=1', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = core_mt.wasm's (1 GiB)
+const MCP = window.MTEngine && MTEngine.use ? MTEngine.use({ wasm: 'core_mt.wasm?v=4', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=1', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = core_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => Date.now() } }), help: m => m.type === 'think' ? {} : null }) : null;
 const mcJob = msg => msg.type === 'think' && (msg.cfg ? !!(msg.cfg.s && msg.cfg.mc) : !!(E.LEVELS[msg.level] || {}).mc);
 // the MCTS's default thread count (2026-11-10): the performance cores (shared/mtengine.js perfThreads — 10 of the user's M4 Pro's
@@ -1504,6 +1504,17 @@ function openIntro(i) {
   introIdx = i; $('#btnLessonStart').classList.remove('hidden'); const s = LESSONS.steps[i];
   $('#liStep').textContent = t('course.' + cOf(s)) + ' · STEP ' + stepNo(i);
   $('#liTitle').textContent = t('ls.' + s.id + '.title');
+  // the common lesson page (shared/luxintro.js, 2026-11-11): board · facts · how to think · trivia — as much as shogi's page
+  if (window.LuxIntro) {
+    const FIG = stepPic(s, 'mini'), THK = t('ls.' + s.id + '.intro');
+    LuxIntro.load('lux.json?v=1').then(X => {
+      if (introIdx !== i || $('#lessonIntroView').classList.contains('hidden')) return;
+      const P = LuxIntro.pick, U = P(X.ui || {}) || {}, x = (X.lessons || {})[s.id] || {}, H = k => LuxIntro.head(k, LANG), tr = P(x.trivia), n = (s.problems || []).length;
+      LuxIntro.lesson({ step: $('#liStep').textContent, title: $('#liTitle').textContent, fig: FIG, cap: U.figL, chips: [[U.kind, (U.probs || '').replace('{n}', n)], [U.pass, U.passPts]],
+        secs: [{ h: H('think'), html: THK }, tr && { h: H('trivia'), html: tr, cls: 'lx-trivia' }].filter(Boolean) });
+    });
+    showLessonView('lessonIntroView'); return;
+  }
   $('#liBody').innerHTML = stepPic(s, 'mini') + t('ls.' + s.id + '.intro');
   showLessonView('lessonIntroView');
 }

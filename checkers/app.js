@@ -130,7 +130,7 @@ let aiW = makeWorker(), anaW = makeWorker();
 // keeps the level's own limits; the helpers fill the shared table, so it reads deeper in the same time). The levels decided by
 // depth / positions (15級〜三段) stay on the one-thread workers.
 const MTP = window.MTEngine ? MTEngine.use({
-  wasm: 'engine_mt.wasm?v=3', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=1', slot: 4 << 20, initial: 1024, maximum: 16384,   // slot: TLS + the accumulators + the stack; maximum = engine_mt.wasm's (1 GiB)
+  wasm: 'engine_mt.wasm?v=4', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=2', slot: 4 << 20, initial: 1024, maximum: 16384,   // slot: TLS + the accumulators + the stack; maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => Date.now(), progress: () => {} } }),
   help: m => ({ io: E.setupIO(m.start, m.moves || []) }),
 }) : null;
@@ -1345,7 +1345,7 @@ $('#lessonList').onclick = e => {
 function stepNo(i) { const c = LESSONS.steps[i].course || 'tactics'; let n = 0; for (let k = 0; k <= i; k++) if ((LESSONS.steps[k].course || 'tactics') === c) n++; return n; }
 function openIntro(i) {
   introIdx = i; openChoiceIdx = -1; $('#btnLessonStart').classList.remove('hidden'); const s = LESSONS.steps[i];
-  const step = t('course.' + (s.course || 'tactics')) + ' · STEP ' + stepNo(i), title = t('ls.' + s.id + '.title'), fig = s.diagram ? diagSVG(s.diagram, 'mini') : '';
+  const step = t('course.' + (s.course || 'tactics')) + ' · STEP ' + stepNo(i), title = t('ls.' + s.id + '.title'), fig = s.diagram ? diagSVG(s.diagram, 'mini') : (typeof lessonThumb === 'function' ? lessonThumb(s) : '');   // (no diagram: the first problem's position)
   $('#liStep').textContent = step; $('#liTitle').textContent = title;
   // the common lesson page (shared/luxintro.js, 2026-11-11): board · facts · goal · how to think · trivia — as much as shogi's page
   if (window.LuxIntro) {

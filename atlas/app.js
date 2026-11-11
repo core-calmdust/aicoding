@@ -1643,7 +1643,7 @@
     const k = X.table(), b = X.bright(), names = X.PLACES.name[lang] || X.PLACES.name.en, B = X.placeUi('b', lang);
     return `<div class="plp${big ? ' big' : ''}"><div class="plh">${esc(X.placeUi('place', lang))}<small>${esc(names[k])}</small></div>
       <div class="plrow" role="group">${names.map((n, i) => `<button type="button" class="plcb" data-k="${i}" aria-pressed="${i === k}"><img src="${X.placeThumb(i)}" alt="" loading="lazy" width="160" height="107"><span>${esc(n)}</span></button>`).join('')}</div>
-      ${boardRowHtml(big)}
+      ${boardRowHtml(big)}${pieceRowHtml(big)}
       <div class="plh">${esc(X.placeUi('bright', lang))}</div>
       <div class="plbr" role="group">${B.map((n, i) => `<button type="button" data-b="${i}" aria-pressed="${i === b}"><i></i>${esc(n)}</button>`).join('')}</div>${big || k === 1 ? '' : todRowHtml()}</div>`;
   }
@@ -1663,10 +1663,23 @@
     return `<div class="plh">${esc(X.placeUi('board', lang))}<small>${esc(X.boardName(k, lang, bvGame.id))}</small></div>
       <div class="plrow plbd" role="group">${B.list.map(v => `<button type="button" class="plcb" data-bd="${v}" aria-pressed="${v === k}"><img src="${X.boardThumb(bvGame.id, v)}" alt="" loading="lazy" width="160" height="107"><span>${esc(X.boardName(v, lang, bvGame.id))}</span></button>`).join('')}</div>`;
   }
+  // 駒: the game's 3D figures come in sets (Table3D.PIECES: amazons) → a row under 盤, the same tiles (a figure on a dark plate)
+  function pieceRowHtml(big) {
+    const X = P3(), P = !big && bvGame && X && X.PIECES && X.PIECES[bvGame.id]; if (!P) return '';
+    const k = P.get();
+    return `<div class="plh">${esc(X.placeUi('pieces', lang))}<small>${esc(X.pieceName(bvGame.id, k, lang))}</small></div>
+      <div class="plrow plpc" role="group">${P.list.map(v => `<button type="button" class="plcb" data-pc="${v}" aria-pressed="${v === k}"><img src="${X.pieceThumb(bvGame.id, v)}" alt="" loading="lazy" width="160" height="107"><span>${esc(X.pieceName(bvGame.id, v, lang))}</span></button>`).join('')}</div>`;
+  }
+  function setPieces(v) {
+    const X = P3(), g = bvGame; if (!X || !g || !X.PIECES || !X.PIECES[g.id] || X.PIECES[g.id].get() === v) return;
+    X.setPieces(g.id, v); rebuildTable(g);
+  }
   // another 3D board: the shared key is written (the full game shows it too) and the board on the table is rebuilt at once
   function setBoard(v) {
     const X = P3(), g = bvGame; if (!X || !g || !X.BOARDS[g.id] || X.BOARDS[g.id].get() === v) return;
-    X.setBoard(g.id, v);
+    X.setBoard(g.id, v); rebuildTable(g);
+  }
+  function rebuildTable(g) {
     const m = $('bvPlMenu'); if (m && !m.hidden) placeInto(m);
     if (!glOK || !$('bv').classList.contains('on') || $('bv').classList.contains('playing')) return;
     const gl = $('gl'); clearTimeout(plFade); gl.style.transition = 'opacity .12s ease-out'; gl.style.opacity = '0';
@@ -1696,7 +1709,7 @@
       if (!i && root.scrollHeight > root.clientHeight + 1) { const qr = root.getBoundingClientRect(), b2 = b.getBoundingClientRect(); if (b2.top < qr.top || b2.bottom > qr.bottom) root.scrollTop += (b2.top + b2.height / 2) - (qr.top + qr.height / 2); } });
   }
   function bindPlace(root) {
-    root.querySelectorAll('.plcb').forEach(b => b.onclick = e => { e.stopPropagation(); if (b.dataset.bd) setBoard(b.dataset.bd); else setPlace(+b.dataset.k); });
+    root.querySelectorAll('.plcb').forEach(b => b.onclick = e => { e.stopPropagation(); if (b.dataset.bd) setBoard(b.dataset.bd); else if (b.dataset.pc) setPieces(b.dataset.pc); else setPlace(+b.dataset.k); });
     root.querySelectorAll('.plbr button[data-b]').forEach(b => b.onclick = e => { e.stopPropagation(); P3().setBright(+b.dataset.b); });
     root.querySelectorAll('.plbr button[data-t]').forEach(b => b.onclick = e => { e.stopPropagation(); if (window.Table3D && Table3D.setTimeOfDay) Table3D.setTimeOfDay(b.dataset.t); renderTod(); const m = $('bvPlMenu'); if (m && !m.hidden) placeInto(m); });
   }
@@ -2040,7 +2053,7 @@
     const tile = (ic, v, lbl, attr = '', end = '') => `<${attr ? 'button type="button"' : 'div'} class="nct"${attr}><span class="ic">${ic}</span><b>${v}</b><em>${esc(lbl)}</em>${end}</${attr ? 'button' : 'div'}>`;
     el.classList.toggle('dark', ART.isDark(W.av.bg));
     el.classList.toggle('wk', ncWk);
-    el.innerHTML = `<div class="nc-l"><div class="bgfill" style="background:${ART.bgDataUri(W.av.bg)}"></div>
+    el.innerHTML = `<div class="pfbg${ART.isDark(W.av.bg) ? ' dk' : ''}" style="background:${ART.bgDataUri(W.av.bg)}" aria-hidden="true"></div><div class="nc-l"><div class="bgfill" style="background:${ART.bgDataUri(W.av.bg)}"></div>
         <button class="av poke" aria-label="${esc(iname(ART.byId(W.av.icon) || ART.byId(ART.DEFAULT_ICON)))}" style="background:none;box-shadow:none">${ART.avatar(W.av, PS, { pop: true, clear: true, noChar: true })}${popChar(W.av, PS)}</button>
         ${phone ? '' : `<div class="dname">${worn}</div>`}</div>
       <div class="nc-side"><div class="nc-top"><input id="dpName" maxlength="16" value="${esc(W.name)}" placeholder="${esc(t('pf.name'))}" aria-label="${esc(t('pf.name'))}"><span class="coin nc-coin"><i>¢</i><span class="coinM">${C.balance.toLocaleString()}</span></span></div>

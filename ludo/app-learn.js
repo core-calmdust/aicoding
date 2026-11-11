@@ -175,6 +175,17 @@
     const d = LESSONS, s = d.steps.find(x => x.id === id); introId = id;
     $('#liStep').textContent = t('lsc.' + s.cat);
     $('#liTitle').textContent = kTitle(s.kind, s.rule);
+    // the common lesson page (shared/luxintro.js, 2026-11-11): board · facts · how to think · trivia — as much as shogi's page
+    if (window.LuxIntro) {
+      const FIG = `<div class="dg" style="width:min(340px,80vw);margin:0">${miniSVG(unpack(s.diagram.s), s.diagram.marks, { crop: false })}</div>`, THK = `<p><b>${esc(kTip(s.kind, s.rule))}</b></p><p>${esc(t('lb.' + s.kind + '.' + s.rule))}</p>`;
+      LuxIntro.load('lux.json?v=1').then(X => {
+        if (introId !== id || $('#lessonIntroView').classList.contains('hidden')) return;
+        const P = LuxIntro.pick, U = P(X.ui || {}) || {}, x = (X.lessons || {})[s.id] || {}, H = k => LuxIntro.head(k, LANG), tr = P(x.trivia), n = typeof s.problems === 'number' ? s.problems : (s.problems || []).length;
+        LuxIntro.lesson({ step: $('#liStep').textContent, title: $('#liTitle').textContent, fig: FIG, cap: U.figL, chips: [[U.kind, (U.probs || '').replace('{n}', n)], [U.pass, U.passPts]],
+          secs: [{ h: H('think'), html: THK }, tr && { h: H('trivia'), html: tr, cls: 'lx-trivia' }].filter(Boolean) });
+      });
+      showLessonView('lessonIntroView'); showOv('#lessonOverlay'); return;
+    }
     $('#liBody').innerHTML = `<p><b>${esc(kTip(s.kind, s.rule))}</b></p><p>${esc(t('lb.' + s.kind + '.' + s.rule))}</p><div class="dg">${miniSVG(unpack(s.diagram.s), s.diagram.marks, { crop: false })}</div><p style="font-size:12.5px;color:var(--dim)">${esc(t('ls.needPass'))}</p>`;
     showLessonView('lessonIntroView'); showOv('#lessonOverlay');
   }

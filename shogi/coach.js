@@ -587,6 +587,10 @@ function render() {
   const sq = typeof lesson !== 'undefined' && lesson && lesson.seq && typeof seqCoachHtml === 'function';
   card.classList.toggle('ck-seq', !!sq);
   if (sq) { card.classList.remove('hidden', 'ck-off', 'ck-rest'); document.body.classList.add('ck-tab'); arrows(null); put(seqCoachHtml()); const pb = card.querySelector('[data-sq=play]'); if (pb) pb.onclick = () => seqPlayIdeal(); return; }
+  // a lesson's problems (index.html lessonCoachHtml): the lesson's point, the score and the explanations (2026-11-11)
+  const lsh = !sq && typeof lesson !== 'undefined' && lesson && typeof lessonCoachHtml === 'function' ? lessonCoachHtml() : '';
+  card.classList.toggle('ck-seq', !!lsh || !!sq);
+  if (lsh) { card.classList.remove('hidden', 'ck-off', 'ck-rest'); document.body.classList.add('ck-tab'); arrows(null); put(lsh); return; }
   if (ShogiCoach.sw) ShogiCoach.sw.sync();
   const rv = !!document.querySelector('#reviewCard.show');
   // the coach is for the game in progress: after the game (or while browsing earlier moves) it steps aside and the
