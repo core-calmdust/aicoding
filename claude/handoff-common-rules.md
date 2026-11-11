@@ -89,6 +89,7 @@
 | `onlinesec.js` ＋ `tools/secrules.py` | オンライン改ざん対策（クライアント精算＋DBルール生成） |
 | `atlas.js` / `atlas-account.js` / `atlas-firebase-config.js` | ポータル共通アカウント・同期・タグ／バッジ |
 | `mtengine.js` / `mt-sw.js` | 本編のマルチスレッド（分離の Service Worker、オプション「マルチスレッド」、スレッドの組。addendum「本編のマルチスレッド」） |
+| `praline/`（C）＋ `claude/praline-spec.md` | 思考エンジン「Praline」：wasm の αβ の YBW（分割点・busy marks・`mt_idle`）の共通ヘッダ。画面側の `mtengine.js` 等もまとめて Praline と呼ぶ（2026-11-11） |
 | `proset.js` | 対局設定の Pro モード（AIの強さの横の PRO ボタンと高度な設定のパネル。addendum「対局設定の Pro モード」） |
 | その他 | `langsel.js`（言語選択）、`flipbtn.js`、`rangetouch.js`、`watchpause.js`、`phonesnd.js`、`latinfs.js`、`export.js`、`rulelink.js` |
 

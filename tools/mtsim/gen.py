@@ -15,6 +15,9 @@
 import sys, re
 repo, game = sys.argv[1], sys.argv[2]
 s = open(f'{repo}/{game}/engine.c').read()
+# (2026-11-11) Praline (shared/praline/, claude/praline-spec.md): the engines that include its headers get them inlined here,
+# so that the rewrites below (the busy marks' accessors) reach the common code too
+s = re.sub(r'#include "\.\./shared/praline/([a-z_]+\.h)"\n', lambda m: open(f'{repo}/shared/praline/{m.group(1)}').read(), s)
 
 def rep(a, b, count=1):
     global s
