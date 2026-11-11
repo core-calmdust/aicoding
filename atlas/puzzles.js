@@ -208,6 +208,31 @@
     },
     save(p, stars) { const pr = this.pr(); pr[p.rk] = Math.max(this.sv(pr[p.rk]), stars); store.set(this.KEY, pr); store.set(this.LAST, String(p.i)); },
   };
+  // the set list's look (atlas/app.js puzzleSheet, 2026-11-11): chapters (the full game's レベル別・テーマ別・特選 with their
+  // texts), each set's icon (reversi/index.html PZI) and a small board of its first problem
+  const RV_CAT = {"ja":{"level":["レベル別","空きマスの数で分けた基本コース。入門の2マスから超名人の18マスまで、少しずつ読みを長くしよう。"],"theme":["テーマ別","終盤の考え方ごとの問題集。偶数理論・パス・X打ちなど、テーマを意識して解こう。"],"unique":["ユニーク","意外な一手、大逆転、全滅、対称形…ひと味ちがう問題と傑作選。"]},"en":{"level":["By level","The core course by number of empty squares — from 2 empties up to 18, read a little further at each step."],"theme":["By theme","Puzzles grouped by endgame idea — parity, passes, X/C squares and more. Solve with the theme in mind."],"unique":["Specials","Surprising moves, comebacks, wipe-outs, symmetric shapes… unusual problems and the masterpieces."]},"zh":{"level":["按级别","按空格数分级的基础课程。从入门的2格到超名人的18格，一步步算得更远。"],"theme":["按主题","按残局思路分类的题集：奇偶理论、跳过、X位等，带着主题去解吧。"],"unique":["特色题","意外的一手、大逆转、全歼、对称形……别具一格的题目与精选佳作。"]},"ko":{"level":["레벨별","빈칸 수로 나눈 기본 코스. 입문의 2칸부터 초명인의 18칸까지 조금씩 수읽기를 늘려 가자."],"theme":["테마별","종반의 사고방식별 문제집. 짝수 이론·패스·X 두기 등 테마를 의식하며 풀어 보자."],"unique":["유니크","의외의 한 수, 대역전, 전멸, 대칭형… 색다른 문제와 걸작선."]},"es":{"level":["Por nivel","El curso básico por número de casillas vacías: de 2 a 18, calcula un poco más en cada paso."],"theme":["Por tema","Problemas agrupados por idea de final: paridad, pases, casillas X/C y más. Resuélvelos pensando en el tema."],"unique":["Especiales","Jugadas sorprendentes, remontadas, barridas, formas simétricas… problemas distintos y las obras maestras."]},"fr":{"level":["Par niveau","Le parcours de base selon le nombre de cases vides : de 2 à 18, calculez un peu plus loin à chaque étape."],"theme":["Par thème","Problèmes classés par idée de finale : parité, passes, cases X/C, etc. Résolvez-les en pensant au thème."],"unique":["Spéciaux","Coups surprenants, retournements, anéantissements, formes symétriques… des problèmes à part et les chefs-d’œuvre."]},"pt":{"level":["Por nível","O curso básico pelo número de casas vazias — de 2 até 18, calcule um pouco mais a cada etapa."],"theme":["Por tema","Problemas agrupados por ideia de final — paridade, passes, casas X/C e mais. Resolva pensando no tema."],"unique":["Especiais","Lances surpreendentes, viradas, varridas, formas simétricas… problemas diferentes e as obras-primas."]},"de":{"level":["Nach Stufe","Der Grundkurs nach Anzahl leerer Felder – von 2 bis 18, rechne mit jeder Stufe etwas weiter."],"theme":["Nach Thema","Aufgaben nach Endspiel-Ideen sortiert – Parität, Passen, X/C-Felder und mehr. Löse sie mit dem Thema im Kopf."],"unique":["Besondere","Überraschende Züge, Aufholjagden, Komplett-Auslöschungen, Symmetrien… besondere Aufgaben und die Meisterwerke."]},"hi":{"level":["स्तर अनुसार","ख़ाली ख़ानों की संख्या के अनुसार मूल कोर्स — 2 से 18 तक, हर क़दम पर थोड़ा आगे तक पढ़ें।"],"theme":["विषय अनुसार","एंडगेम के विचारों के हिसाब से पहेलियाँ — पैरिटी, पास, X/C ख़ाने और भी। विषय ध्यान में रखकर हल करें।"],"unique":["ख़ास","चौंकाने वाली चालें, वापसी, सफ़ाया, सममित आकृतियाँ… अलग तरह की पहेलियाँ और उत्कृष्ट कृतियाँ।"]},"ar":{"level":["حسب المستوى","الدورة الأساسية حسب عدد الخانات الفارغة: من 2 إلى 18، احسب أبعد قليلًا في كل خطوة."],"theme":["حسب الموضوع","ألغاز مجمّعة حسب فكرة النهاية: التكافؤ والتمرير ومربعات X/C وغيرها. حُلّها وأنت تفكر في الموضوع."],"unique":["مميزة","نقلات مفاجئة، قلب الطاولة، إبادة، أشكال متناظرة… ألغاز مختلفة والروائع."]},"ru":{"level":["По уровню","Основной курс по числу пустых полей — от 2 до 18: на каждом шаге считаем чуть дальше."],"theme":["По теме","Задачи по идеям эндшпиля — чётность, пасы, поля X/C и другое. Решайте, держа тему в уме."],"unique":["Особые","Неожиданные ходы, камбэки, полный разгром, симметричные формы… необычные задачи и шедевры."]},"zh-TW":{"level":["依程度","依空格數排列的基本課程 — 從空2格到18格，每一步多算一點。"],"theme":["依主題","依殘局觀念分類的題目 — 奇偶、Pass、X/C位等。邊想主題邊解題。"],"unique":["特選","出人意料的一手、逆轉、全滅、對稱形…獨特的題目與名作。"]},"id":{"level":["Per level","Kursus inti menurut jumlah petak kosong — dari 2 hingga 18, hitung sedikit lebih jauh di tiap tahap."],"theme":["Per tema","Soal dikelompokkan menurut ide akhir permainan — paritas, pas, petak X/C, dan lainnya. Pecahkan dengan mengingat temanya."],"unique":["Spesial","Langkah mengejutkan, comeback, sapu bersih, bentuk simetris… soal tak biasa dan mahakarya."]},"tr":{"level":["Seviyeye göre","Boş kare sayısına göre temel kurs — 2'den 18'e kadar, her adımda biraz daha ileri okuyun."],"theme":["Temaya göre","Oyun sonu fikirlerine göre gruplanmış bulmacalar — parite, pas, X/C kareleri ve dahası. Temayı aklınızda tutarak çözün."],"unique":["Özel","Şaşırtıcı hamleler, geri dönüşler, silip süpürmeler, simetrik şekiller… sıra dışı sorular ve başyapıtlar."]}};
+  const RV_ICO = {
+  level: '<path d="M3 20h5v-5h5v-5h5V5h3"/>', theme: '<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="7.5" r="1.4"/>', unique: '<path d="M12 3l2.2 6.3L20.5 11l-6.3 2.2L12 19.5l-2.2-6.3L3.5 11l6.3-1.7z"/>',
+  parityOk: '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M7.5 12h.01M12 12h.01M16.5 12h.01" stroke-width="3.4"/>',
+  parity: '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M9 12h.01M15 12h.01" stroke-width="3.4"/><path d="M4 20 20 4"/>',
+  pass: '<path d="M4 6l6 6-6 6M12 6l6 6-6 6"/>', greedy: '<circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l2.8 2.8M16.2 16.2 19 19M19 5l-2.8 2.8M7.8 16.2 5 19"/>',
+  corner: '<path d="M4 20V4h16"/><circle cx="9" cy="9" r="2.6"/><path d="M14 14l6 6M20 14l-6 6"/>', xc: '<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 8l8 8M16 8l-8 8"/>',
+  quiet: '<path d="M20 4C11 4 6 9 5 20M5 20c7 0 12-5 13-12M9.5 15H14"/>', edge: '<path d="M3 20h18"/><circle cx="7" cy="14.5" r="2.6"/><circle cx="17" cy="14.5" r="2.6"/><path d="M12 4v7M9.5 8.5 12 11l2.5-2.5"/>',
+  block: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>', draw: '<circle cx="12" cy="12" r="9"/><path d="M8 10h8M8 14h8"/>',
+  margin: '<path d="M5 20V12M11 20V5M17 20v-9M2 20h20"/>', surprise: '<circle cx="12" cy="12" r="9"/><path d="M12 7v6.5M12 16.8v.2"/>',
+  only: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="M12 12h.01" stroke-width="3.4"/>', comeback: '<path d="M3 17l6-6 4 4 8-8M15 7h6v6"/>',
+  wipe: '<path d="M4 19h16M7 15l4-9M11 15l4-9M15 15l3-7"/>', sym: '<path d="M12 3v18" stroke-dasharray="2 2.5"/><path d="M9 7 4 12l5 5M15 7l5 5-5 5"/>',
+  close: '<path d="M5 21V4h13l-2.5 4L18 12H5"/>', gem: '<path d="M6 3h12l3.5 6L12 21 2.5 9zM2.5 9h19M9 3l3 6 3-6M12 9v12"/>',
+};;
+  Object.assign(BOOK.reversi, {
+    cats(lang) { const C = RV_CAT[lang] || RV_CAT.en; return ['level', 'theme', 'unique'].map(k => ({ k, name: C[k][0], desc: C[k][1], icon: `<svg viewBox="0 0 24 24">${RV_ICO[k]}</svg>` })); },
+    look(i, lang) {
+      const lv = this.data.levels[i], cat = lv.cat || (lv.id === 'p6' ? 'unique' : 'level'), L = o => o ? (o[lang] || o.en || o.ja || '') : '';
+      const ic = lv.icon && lv.icon !== 'lv' ? lv.icon : cat === 'level' ? 'level' : 'gem', p0 = lv.puzzles[0];
+      return { cat, desc: L(lv.desc), icon: `<svg viewBox="0 0 24 24">${RV_ICO[ic] || RV_ICO.theme}</svg>`, board: p0 ? p0.cells : '' };
+    },
+    guide: '../images/atlas/g-disc.webp',
+  });
   /* ---------- the daily puzzles: the same problem of the day as the full games, and their streak record ---------- */
   const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   const DAILY = { reversi: { d1: 'reversi-emerald-daily' }, chess: { d1: 'aicoding-chess-daily' }, shogi: { d1: 'shogi-kaya-daily', d2: 'shogi-kaya-daily-easy' } };
@@ -260,10 +285,11 @@
     const X = TX[lang] || TX.en;
     return loadBook(id).then(B => B.sets().map((x, n) => {
       const title = B.title ? B.title(x.key, lang) : id === 'chess' ? B.problem(x.key, 0, X).set : ((g => (g.title && (g.title[lang] || g.title.en)) || g.id)(B.data.sets[x.key]));
-      return { key: x.key, title, cat: x.cat, recs: x.recs, open: x.recs.map((_, j) => stageOpen(x.recs, j)), stage: STAGE };
+      return Object.assign({ key: x.key, title, cat: x.cat, recs: x.recs, open: x.recs.map((_, j) => stageOpen(x.recs, j)), stage: STAGE }, B.look ? B.look(x.key, lang) : {});
     }));
   }
 
+  const catsOf = (id, lang) => loadBook(id).then(B => B.cats ? { cats: B.cats(lang), guide: B.guide } : null);
   function loadBook(id) {
     const B = BOOK[id]; if (B.data) return Promise.resolve(B);
     return B.p || (B.p = fetch(B.url).then(r => r.json()).then(d => { B.data = id === 'shogi' ? B.prep(d) : d; return B; }).catch(e => { B.p = null; throw e; }));
@@ -495,5 +521,5 @@
   // the raw collection for the portal's illustrated 問題一覧 (atlas/app.js tsumeBook): the sets, each set's problems as the
   // full game lists them (pinned old / new versions), the daily picks
   const book = id => loadBook(id).then(B => ({ sets: B.sets(), data: B.data, problems: i => id === 'shogi' ? B.list(B.data.sets[i], B.stars()) : B.data.levels[i].puzzles, daily: w => dailyPick(id, w), LAST: B.LAST, DAILY: DAILY[id] }));
-  window.AtlasPuzzles = { has: id => !!G[id], start, G, sets: setsOf, book };   // (G: the guides — atlas/lessons3d.js too)
+  window.AtlasPuzzles = { has: id => !!G[id], start, G, sets: setsOf, cats: catsOf, book };   // (G: the guides — atlas/lessons3d.js too)
 })();
