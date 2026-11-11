@@ -25,7 +25,7 @@ ANGLE = {}   # e.g. {'ryoko': {'HI': -0.8}}
 # fine adjustments by eye against photos of the real sets (2026-11-11): the two characters of a piece each centred on the piece's
 # axis (their bodies: the ink between the 6% and 94% points across), the pair set in the body of the piece below the shoulders and a
 # little smaller (scale), and single characters turned (TURN: {code: (upper, lower)} degrees, counter-clockwise +)
-TUNE = {'ryoko': {'turn': {}, 'dx': {'KE': (0, .05), 'HI': (.09, .04)}, 'up': {'KI': .95}, 'fill': {'KI': 1.06}},
+TUNE = {'ryoko': {'turn': {}, 'dx': {'KE': (0, .05), 'HI': (.12, .06)}, 'fill': {'OU': 1.1, 'GY': 1.1}},
         'minase': {'turn': {'KI': (-3, 0)}, 'up': {'OU': .52, 'GY': .52}, 'fill': {'FU': 1.16}, 'thin': {'FU': 5}, 'gap': {'FU': .07}},
         'kinki': {'turn': {}, 'up': {'OU': .78, 'GY': .78, 'KE': .86}, 'dx': {'KE': (0, .05)}}}
 # turn: degrees (counter-clockwise +) for the (upper, lower) character; dx: shift across, a fraction of the character's width
