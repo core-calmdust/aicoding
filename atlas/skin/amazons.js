@@ -171,7 +171,7 @@ html.atlas-skin #f3D .bdrow.pc3 button img{background:radial-gradient(80% 80% at
       same = k === last ? same + 1 : 0; last = k; if ((same >= 2 && performance.now() - t0 > 250) || performance.now() - t0 > 1500) { zAt = performance.now(); zoom0(w); } else zD = setTimeout(look, 90); };
     zD = setTimeout(look, 90); };
   // w = { r0, c0, nr, nc }: the squares that matter (both sides' amazons in play, the target's room), tight — on the shown board
-  const ZM = .55;   // (half a square of margin round it)
+  const ZM = .1;   // (the page's region already has one square of margin all round)
   const strip = () => { const fr = (document.getElementById('frame') || boardDom).getBoundingClientRect(), tb = matchMedia('(pointer:coarse)').matches ? 96 : 0;
     return { x0: Math.max(fr.left, 0), x1: Math.min(fr.right, innerWidth), y0: Math.max(fr.top, 0), y1: Math.min(fr.bottom, innerHeight - tb), fr }; };
   // (the region's box as drawn: its floor corners, and the top of a standing figure on its far row — a piece there stands up
