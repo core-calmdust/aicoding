@@ -116,3 +116,4 @@ URL: https://core-calmdust.github.io/aicoding/amazons/ ／ トップは「囲碁
 ## 保存キー
 - atlas-amazons-look（3D盤）、atlas-amazons-pc3（3D駒）、atlas-amazons-view（3D / 2D 表示）。
 - aicoding-amazons（設定・対局）、-rated、-rules、-lessons、-puzzles、-pz-last、-pz-tab、-daily、aicoding-amazons-rules-seen。
+- AIのボス（2026-11-11 ユーザー指定「他のゲームと同じようにレベルボスを。アマゾンの感じを前面に」、`atlas/npc/roster.js` の amazons、全23レベル＝8体）：アマゾンの熱帯雨林の生き物と、ギリシア神話の女戦士アマゾネス。みんな弓か火矢を持つ（`atlas/avatars/sp-boss.js` に弓 `bow`・火矢 `arrow` の持ち物と、斑点のある `jaguar` を追加）。Lv.1〜3 オオカワウソ（火矢）・4〜6 リスザルの射手（羽根飾り・弓）・7〜9 オオハシ商人・10〜12 ヤドクガエル（花・弓）・13〜15 オウギワシ（弓）・16〜18 ジャガー戦士（兜・鎧・弓）・19〜21 ペンテシレイア（白馬、兜・盾・赤いマント）・22〜23 女王ヒッポリュテ（ジャガー、王冠・弓・マント、UR）。称号・まめちしき（考案1988年アルゼンチンのワルテル・ザムカウスカス、1992年 El Acertijo 初出、ルール、コンピューター・オリンピアード）は `atlas/npc/t/<lang>.js` に14言語。画像は `images/atlas/av/boss-amazons-<1〜8>-<0〜3>.webp`（atlas/tools/bosses.html で書き出し）。

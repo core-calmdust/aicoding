@@ -14,7 +14,7 @@
   'use strict';
   const A = window.AtlasNPC = window.AtlasNPC || {};
   A.LEVELS = { chess: 25, shogi: 26, go: 32, reversi: 25, gomoku: 20, checkers: 20, xiangqi: 20, janggi: 20, tafl: 25, ur: 20, senet: 20, morris: 10,
-    connect4: 8, dots: 10, mancala: 10, backgammon: 10, hex: 20, fanorona: 20, ugolki: 23, agon: 23, konane: 23, ludo: 20, carrom: 20, crokinole: 20, hockey: 20, alquerque: 20 };
+    connect4: 8, dots: 10, mancala: 10, backgammon: 10, hex: 20, fanorona: 20, ugolki: 23, agon: 23, konane: 23, ludo: 20, carrom: 20, crokinole: 20, hockey: 20, alquerque: 20, amazons: 23 };
   const N = s => { const p = s.split('|'), k = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'ru', 'hi', 'ar'], o = {}; k.forEach((l, i) => { o[l] = p[i] || p[1]; }); ['es', 'fr', 'pt', 'de', 'id', 'tr'].forEach(l => { o[l] = o.en; }); return o; };
   const b = (v, m, n) => ({ v, m, n: N(n) });
   // colours: [body, belly / face, accent]
@@ -196,6 +196,18 @@
       b('cool', { a: 'bird', c: [0x2a8ad8, 0xc8e8ff, 0x46c890], beak: 0x5a5a6a, held: 'fan', ex: ['crest'] }, '水晶宮クジャク|Crystal Palace Peacock|水晶宫孔雀|水晶宮孔雀|수정궁공작|Павлин Хрустального дворца|क्रिस्टल पैलेस मोर|طاووس القصر البلوري'),
       b('hothead', { a: 'bull', c: [0xc8703a, 0xf4dcc0, 0x3a6ad8], hat: 'tophat', hc: [0x3a3a48, 0xd83a4a], held: 'flag', ex: ['scarf'], sc: 0x3a6ad8 }, 'ジョン・ブル|John Bull|约翰牛|約翰牛|존불|Джон Булль|जॉन बुल|جون بول'),
       b('lady', { a: 'lion', c: [0xf0c070, 0xfff4e0, 0x6a3ad8], hat: 'bigcrown', held: 'staff', ex: ['cape', 'necklace'], cape: 0x6a3ad8 }, 'ヴィクトリア女王ライオン|Queen Victoria Lion|维多利亚女王狮|維多利亞女王獅|빅토리아여왕사자|Львица королева Виктория|महारानी विक्टोरिया शेरनी|اللبؤة الملكة فيكتوريا'),
+    ],
+    // amazons (2026-11-11 the user: the Amazon feel up front) — the rainforest of the Amazon and the Amazon warriors of the Greek
+    // myths: bows and the game's fire arrows; the top two are the myths' queens Penthesilea and Hippolyta
+    amazons: [
+      b('sleepy', { a: 'otter', c: [0x7a5238, 0xf0d8b8, 0x3aa86a], held: 'arrow', ex: ['necklace'] }, 'オオカワウソ|Giant Otter|大水獭|大水獺|큰수달|Гигантская выдра|विशाल ऊदबिलाव|ثعلب الماء العملاق'),
+      b('trickster', { a: 'monkey', c: [0xd8a048, 0xfff0d8, 0x3aa86a], hat: 'feathers', hc: [0x3aa86a, 0xffd65a], held: 'bow', mouth: 'w' }, 'リスザルの射手|Squirrel Monkey Archer|松鼠猴射手|松鼠猴射手|다람쥐원숭이궁수|Беличья обезьяна-лучник|गिलहरी बंदर तीरंदाज़|قرد السنجاب الرامي'),
+      b('merchant', { a: 'bird', c: [0x2a2a30, 0xfff2d0, 0xff8a2a], beak: 0xff8a2a, hat: 'feathers', hc: [0xff8a2a, 0x3aa86a], held: 'arrow', ex: ['necklace'] }, 'オオハシ商人|Toucan Trader|巨嘴鸟商人|巨嘴鳥商人|큰부리새상인|Тукан-торговец|टूकेन व्यापारी|الطوقان التاجر'),
+      b('lady', { a: 'frog', c: [0x2a7ae8, 0xbfe4ff, 0xffd030], hat: 'flowers', held: 'bow', ex: ['necklace'] }, 'ヤドクガエル|Dart Frog|箭毒蛙|箭毒蛙|독화살개구리|Древолаз|डार्ट मेंढक|ضفدع السهم'),
+      b('cool', { a: 'hawk', c: [0x8a8e96, 0xf4f4f0, 0x2a2a30], beak: 0x2a2a30, hat: 'feathers', hc: [0x2a2a30, 0xc8ccd8], held: 'bow', ex: ['crest'] }, 'オウギワシ|Harpy Eagle|角雕|角鵰|부채머리수리|Гарпия|हार्पी ईगल|عقاب الهاربي'),
+      b('knight', { a: 'jaguar', c: [0xe8b058, 0xfff2d8, 0xc83a3a], hat: 'helmet', hc: [0xc83a3a, 0xd8c8a0], held: 'bow', ex: ['armor', 'necklace'] }, 'ジャガー戦士|Jaguar Warrior|美洲豹战士|美洲豹戰士|재규어전사|Ягуар-воин|जगुआर योद्धा|المحارب الجاغوار'),
+      b('hothead', { a: 'horse', c: [0xf4f0e8, 0xfffaf2, 0xb83a3a], hat: 'helmet', hc: [0xb83a3a, 0xd8b048], held: 'shield', ex: ['armor', 'cape'], cape: 0xb83a3a, brow: 1 }, 'ペンテシレイア|Penthesilea|彭忒西勒亚|彭忒西勒亞|펜테실레이아|Пентесилея|पेंथेसिलिया|بنثيسيليا'),
+      b('king', { a: 'jaguar', c: [0xf0b850, 0xfff4dc, 0xd8a020], hat: 'crown', held: 'bow', ex: ['cape', 'necklace', 'armor'], cape: 0x2a8a5a }, '女王ヒッポリュテ|Queen Hippolyta|希波吕忒女王|希波呂忒女王|히폴리테여왕|Царица Ипполита|रानी हिप्पोलिटा|الملكة هيبوليتا'),
     ],
     konane: [
       b('sleepy', { a: 'seal', c: [0x9aa0aa, 0xe8ecf0, 0xff8fb0], hat: 'flowers', held: 'stone' }, 'モンクアザラシ|Monk Seal|僧海豹|僧海豹|몽크물범|Тюлень-монах|मंक सील|فقمة الراهب'),
