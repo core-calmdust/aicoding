@@ -68,12 +68,13 @@ html.atlas-skin .cb-bar .cb-t{flex:none;white-space:nowrap}
 /* (2026-11-11 later, the user: the sizes looked off — four equal tiles, a gap before the next button, the next button the same
    height and a rounded box like the tiles, not a pill pressed against them) */
 html.atlas-skin .cb-cmp .cb-bar{gap:8px!important}
+html.atlas-skin .puzzle-card .pz-goal{font-size:min(14px,3.7vw)!important;line-height:1.35!important}   /* (the goal on one line, 2026-11-11 the user) */
 html.atlas-skin .cb-cmp .cb-bar > .cb-main{width:auto!important;min-width:0!important;max-width:none!important}
 html.atlas-skin .cb-cmp .cb-tools{gap:6px!important;flex:0 0 auto!important;min-width:0}
-html.atlas-skin .cb-cmp .cb-bar .cb-tools > .cb-ic[data-cap]{flex:0 0 58px!important;min-width:0!important;width:58px!important;height:58px!important;padding:6px 2px!important;gap:5px!important;box-sizing:border-box}   /* (square, 2026-11-11 the user) */
-html.atlas-skin .cb-cmp .cb-bar .cb-ic[data-cap]::after{font-size:11px}
+html.atlas-skin .cb-cmp .cb-bar .cb-tools > .cb-ic[data-cap]{flex:0 0 49px!important;min-width:0!important;width:49px!important;height:48px!important;padding:4px 2px!important;gap:3px!important;box-sizing:border-box;border-radius:14px!important}   /* (the size of the menu bar's buttons — 対局 · 待った …, 2026-11-11 the user) */
+html.atlas-skin .cb-cmp .cb-bar .cb-ic[data-cap]::after{font-size:10px}
 html.atlas-skin .cb-cmp .cb-bar > .cb-main{flex:1 1 auto!important}
-html.atlas-skin .cb-cmp .cb-bar .cb-t{flex:1 1 auto!important;width:100%;height:58px!important;padding:0 14px!important;min-width:0!important;border-radius:14px!important;font-size:14px!important;box-sizing:border-box}
+html.atlas-skin .cb-cmp .cb-bar .cb-t{flex:1 1 auto!important;width:100%;height:48px!important;padding:0 12px!important;min-width:0!important;border-radius:14px!important;font-size:13px!important;box-sizing:border-box}
 html.atlas-skin #f3D{margin:12px 0 0;padding:10px 12px 12px;border-radius:14px;background:#f6f1e4;border:2px solid #e2cf9e}
 html.atlas-skin #f3D > label{display:block;font-weight:700;font-size:13px;color:#7a5a1c;margin:0 0 8px}
 html.atlas-skin #f3D > label.pc3l{margin-top:12px}
