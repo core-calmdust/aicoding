@@ -86,6 +86,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Unbounded:wght@300;500;700;900&family=JetBrains+Mono:wght@500&family=Noto+Sans+Devanagari:wght@400;500;700&family=Noto+Sans+Arabic:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&text=CALMDUST&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#07080d; --bg2:#0d0f17; --line:rgba(255,255,255,.08); --line2:rgba(255,255,255,.14);
@@ -425,7 +426,7 @@ html[lang=ar] .gx-chip{direction:rtl}
 /* about */
 .about{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:48px;align-items:center;padding:40px;border-radius:28px;border:1px solid var(--line);background:rgba(255,255,255,.025)}
 .about p{color:var(--muted);font-size:14px;margin-top:14px}
-.prof-name{margin-top:10px;font-size:clamp(34px,3.6vw,54px);font-weight:700;line-height:1.1;letter-spacing:.06em;background:linear-gradient(100deg,var(--text) 0%,var(--text) 40%,var(--cyan) 100%);-webkit-background-clip:text;background-clip:text;color:transparent;width:max-content;max-width:100%}
+.prof-name{margin-top:12px;font-family:'Cormorant Garamond','Cormorant',Garamond,'Times New Roman',serif;font-size:clamp(28px,3vw,42px);font-weight:600;line-height:1.1;letter-spacing:.16em;margin-right:-.16em;color:#efe6d4;width:max-content;max-width:100%}
 .prof-role{display:flex;flex-wrap:wrap;gap:6px 30px;overflow:hidden;margin-top:12px;font-size:11px;font-weight:300;letter-spacing:.26em;text-transform:uppercase;color:var(--muted)}
 .prof-role span{position:relative;white-space:nowrap}
 .prof-role span+span::before{content:"/";position:absolute;left:-19px;color:var(--cyan);opacity:.6;letter-spacing:0}
@@ -468,7 +469,7 @@ footer a:hover{color:var(--text)}
 /* Arabic: keep the page layout LTR; text blocks read right-to-left */
 html[lang=ar] :is(h1, h2, h3, p){direction:rtl;text-align:right}
 html[lang=ar] .prof{direction:rtl;text-align:right}
-html[lang=ar] .prof-name{direction:ltr}
+html[lang=ar] .prof-name{direction:ltr;margin-right:0}
 html[lang=ar] .prof-role span+span::before{left:auto;right:-19px}
 html[lang=ar] .about{direction:rtl}
 html[lang=ar] .prof-bio{padding:0 40px 0 0;border-left:0;border-right:1px solid var(--line)}
@@ -764,7 +765,7 @@ html[lang=ar] :is(.btn, .play, .tag, .stat span, footer a, footer span, .logo sp
     <div class="about reveal">
       <div class="prof">
         <div class="sec-head" style="margin-bottom:0"><div><div class="k en">ABOUT</div></div></div>
-        <h2 class="prof-name en">CALMDUST</h2>
+        <h2 class="prof-name">CALMDUST</h2>
         <div class="prof-role en"><span>Composer</span><span>Artist</span><span>Software Architect</span></div>
         <ul class="prof-aff">
           <li><span class="chip"><b>Archetypes Inc.</b><small data-i18n="about.ceo">代表</small></span></li>
