@@ -468,7 +468,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
     const netP = simd && typeof DecompressionStream !== 'undefined' ? fetchNet().catch(() => null) : Promise.resolve(null);
     readyP = netP.then(net => {
       const H = net ? new DataView(net.buffer, net.byteOffset, net.byteLength).getInt32(4, true) : 256;
-      const url = new URL((!simd ? 'engine.wasm?' : H === 512 ? 'engine_simd512.wasm?' : 'engine_simd.wasm?') + V, self.location.href);
+      const url = new URL((!simd ? 'engine.wasm?' : H === 512 ? 'engine_simd512.wasm?' : 'engine_simd.wasm?') + 'v=20261111fm', self.location.href);   // (2026-11-11: the SIMD pick of the selection sort, MODEL_CARD.md)
       return (WebAssembly.instantiateStreaming ? WebAssembly.instantiateStreaming(fetch(url), imp).catch(() => fetch(url).then(r => r.arrayBuffer()).then(b => WebAssembly.instantiate(b, imp))) : fetch(url).then(r => r.arrayBuffer()).then(b => WebAssembly.instantiate(b, imp)))
         .then(r => { WX = r.instance.exports; if (net && WX.xq_nnue) loadNet(net); });
     }).catch(() => { WX = null; });

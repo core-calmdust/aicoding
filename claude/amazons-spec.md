@@ -1,6 +1,6 @@
 # アマゾンズ（amazons/）仕様
 
-URL: https://core-calmdust.github.io/aicoding/amazons/ ／ トップは「囲碁」の前（cat: line、also: chess、定番タグ、BETA）。テーマ色 #3f8a5c（ジャングルグリーン、アクセント #d6ec86）。
+URL: https://core-calmdust.github.io/aicoding/amazons/ ／ トップは「囲碁」の前（cat: line、also: chess、定番タグ。2026-11-10 BETA公開→2026-11-11 正式リリース）。テーマ色 #3f8a5c（ジャングルグリーン、アクセント #d6ec86）。
 
 ## ルール（10×10、標準ルールのみ）
 - 白のアマゾン a4・d1・g1・j4、黒 a7・d10・g10・j7。白が先手。
