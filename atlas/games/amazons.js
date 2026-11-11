@@ -242,6 +242,9 @@
       deselect(); hud('');
     }
     ctx.el.addEventListener('click', onClick);
+    // the board view's 駒 row (Table3D.PIECES) during a game: the figures on the board are rebuilt in the new set at once
+    const onPcs = e => { if (!stopped && pos && e.detail && e.detail.id === 'amazons') rebuild(); };
+    addEventListener('atlas-pieces', onPcs);
 
     function begin() {
       timers.forEach(clearTimeout); timers.length = 0; clear(mv); clear(hl);
@@ -295,7 +298,7 @@
       stop() {
         stopped = true; jid++;
         timers.forEach(clearTimeout); clearTimeout(toastT); if (toastEl) toastEl.remove();
-        ctx.el.removeEventListener('click', onClick);
+        ctx.el.removeEventListener('click', onClick); removeEventListener('atlas-pieces', onPcs);
         if (worker) worker.terminate(); worker = null; if (hintW) hintW.terminate(); hintW = null;
         Object.values(MAT).forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose());
         if (window.Atlas3D.amazons._dbg === dbg) delete window.Atlas3D.amazons._dbg;
