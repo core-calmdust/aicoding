@@ -1408,8 +1408,8 @@ html[lang=ar] .pf-input{direction:rtl}
   html:root:not(.atlas-skin) body:not(.skin-ink) .board-area > .hand .hname{color:#3a2412}
   /* the 2D designs of the full version: the board's own plate (::before colour, ::after grain) runs on under both bars — one
      piece, no seam, whatever the design; the bars themselves are see-through (atlas/skin/shogi.js sets --kdth / --kdbh) */
-  html.atlas-2d body .board-area > .hand.hand{background:transparent!important;border:0!important;position:relative;z-index:2}
-  html.atlas-2d body .board-area > .hand.hand::before{display:none!important}
+  html.atlas-2d body .board-area > .hand.hand,html.atlas-2d body .board-area > #handTop.hand,html.atlas-2d body .board-area > #handBottom.hand{background:transparent!important;border:0!important;box-shadow:none!important;position:relative;z-index:2}   /* (ids: over the 標準 design's own bar rule, 2026-11-11) */
+  html.atlas-2d body .board-area > .hand.hand::before,html.atlas-2d body .board-area > #handTop.hand::before,html.atlas-2d body .board-area > #handBottom.hand::before{display:none!important}
   html.atlas-2d body .board-area .board.board::before,html.atlas-2d body .board-area .board.board::after{top:calc(-1 * (var(--k2t, 0px) + var(--kdth, 0px)))!important;bottom:calc(-1 * (var(--k2b, 0px) + var(--kdbh, 0px)))!important;border-radius:12px!important}
   /* 3D: the bars' wood is the 3D board's own rim as drawn (images/atlas/shogi-kd3d-*.webp: its rim between the edge and the grid, mirrored at
      the joint), stretched to the board's width — the grain runs straight on across the joint; the bars lie over the board's rounded edge */
