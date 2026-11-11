@@ -24,6 +24,12 @@ def svg(w, h, body, title):
             f'<title>{title}</title>{body}</svg>\n')
 
 
+def lsb(name, t):
+    """the glyph's left ink edge (font units) at weight t"""
+    rec = o.lerp_rec(o.glyph_rec(o.R, name), o.glyph_rec(o.B, name), t)
+    return min(px for _, pts in rec for px, _ in pts)
+
+
 def mark(x, y, size, ink='#2A1E17', sub_ink='#7A5A44'):
     """the horizontal mark (icon + wordmark) with its top-left at x,y; returns (svg, width, height).
     ink / sub_ink: light-background colours by default; the dark version uses #F5EADB / #C8B29C."""
@@ -38,7 +44,9 @@ def mark(x, y, size, ink='#2A1E17', sub_ink='#7A5A44'):
     dot = f'<circle cx="{o.fmt(ix + sx)}" cy="{o.fmt(base - cy)}" r="{o.fmt(0.2 * fs / 2)}" fill="#C9823F"/>'
     fs2 = 0.135 * size
     sub = 'THINKING ENGINE'
-    d2, pos2, x2 = o.layout(sub, W500, fs2, tx + 0.02 * fs, y + 0.88 * size, 0.32)
+    # THINKING ENGINE starts exactly under the left edge of the P's stem (ink to ink: each glyph's left side bearing taken off)
+    sx0 = tx + lsb('P', W600) * fs / 1000 - lsb('T', W500) * fs2 / 1000
+    d2, pos2, x2 = o.layout(sub, W500, fs2, sx0, y + 0.88 * size, 0.32)
     body = (f'<g transform="translate({o.fmt(x)} {o.fmt(y)}) scale({o.fmt(k)})">{ICON}</g>'
             f'<path fill="{ink}" d="{d1}"/>{dot}<path fill="{sub_ink}" d="{d2}"/>')
     return body, max(x1, x2) - x, size
