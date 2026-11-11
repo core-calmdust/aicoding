@@ -116,7 +116,7 @@ Lv.9 対 Lv.10 は4勝16分0敗（Lv.9から見て）で、ほぼ互角でした
 - **一致の確認**（`node tools/check_wasm.js`：bench.html の12局面＋ナイン終盤6・トゥエルブ6・シックス6局面の、`best`（深さ13・15）の手・評価値・深さ・局面数と、全ての根の手の値（深さ−6）の md5）：前の `engine.c` と `engine_simd.wasm`・`engine.wasm` が一致（深さ13 `037f3504…`、深さ15 `45b53bab…`、局面数 9,689万）。`engine_mt.wasm` の1スレッドも前の `engine_mt.wasm` と一致（深さ15 `a4599410…`）。
 - **速さ（作業機、Node、1スレッド、深さ15 の 30局面、局面数／秒）**：前の engine.wasm 372万 → `engine_simd.wasm` **678万（×1.83）**、`engine.wasm`（SIMD なし）323万（前は SIMD の無いブラウザでは使えなかった）、`engine_mt.wasm` 1スレッド 287万 → **636万（×2.2）**。時間で考えるレベル（Lv.9〜11）・分析・ヒント・検討ボックスは同じ時間でより深く読む。
 - headless Chrome（Playwright）：対局ページの worker が `engine_simd.wasm` と `evalnet.bin` を読み Lv.10 が指す（深さ16）、`bench.html`（1秒、1・2スレッド、`engine_mt.wasm?v=5`）が12局面とも最後まで動く。1スレッド 510万〜710万 nps。Mac で見るページ：`morris/bench.html`（1スレッドの nps が前の約1.8〜2倍の見込み）。
-- バージョン：`engine.js?v=20261111simd`（`index.html`・`bench.html`・`atlas/games/morris.js`・`atlas/rules/morris.js`）、`engine_mt.wasm?v=5`、`atlas/lazy.js` の games/rules `morris.js` と `lazy.js?v=40`。
+- バージョン：`engine.js?v=20261111simd`（`index.html`・`bench.html`・`atlas/games/morris.js`・`atlas/rules/morris.js`）、`engine_mt.wasm?v=5`、`atlas/lazy.js` の games/rules `morris.js` と `lazy.js?v=42`。
 
 ## 完全解析データベース（ツール・2026-11-08）
 サイトのルール（50手ルール込み）での完全解析データベースのツールは `tools/solve.c`・`tools/solvedb.js`（Mac での作り方は `tools/SOLVE.md`）。

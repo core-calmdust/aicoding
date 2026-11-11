@@ -151,6 +151,7 @@ function openOpItem(id) {
       + `<div class="mv">${opSeqText(it, ln, 0)}</div><div class="ob-aim">${opLineAim(it, ln)}</div>${num}</div></div>`;
   }).join('') + `</div>`;
   if (it.kind === 'open') h += opPlaysTable(it.plays, null, t('op.allPlays', { d: it.d.join('') }));
+  if (window.LuxIntro) LuxIntro.off();   // (the opening book keeps its own page)
   $('#liBody').innerHTML = h;
   $('#btnLessonStart').textContent = t('op.drillStart');
   showLessonView('lessonIntroView'); showOverlay('#lessonOverlay');
