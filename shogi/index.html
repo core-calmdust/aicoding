@@ -77,7 +77,7 @@ html:not(.atlas-skin) .board-area > .hand.bottom{position:relative;left:0}
 }
 .hand .hname{font-size:calc(var(--cw)*0.16);color:rgba(226,194,117,.7);text-align:center;letter-spacing:.1em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hand .hn-n{display:none}
-.hand .hname{font-family:'Shippori Mincho B1','Hiragino Mincho ProN','Yu Mincho','Noto Serif JP',serif!important;font-weight:700}   /* ☗あなた / ☖AI… on the stands: mincho in every design (2026-11-11) */
+.hand .hname{font-family:'Shippori Mincho B1','Hiragino Mincho ProN','Yu Mincho','Noto Serif JP',serif!important;font-weight:400!important}   /* ☗あなた / ☖AI… on the stands: mincho in every design (2026-11-11) */
 .hslot{touch-action:none;position:relative;height:var(--ch);width:100%;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .hslot .cnt{position:absolute;right:2%;bottom:4%;z-index:3;font-family:'JetBrains Mono',monospace;font-size:calc(var(--cw)*0.2);color:#fff;background:rgba(0,0,0,.7);border-radius:9px;padding:0 5px;line-height:1.4}
 .hslot.sel{background:rgba(226,194,117,.25);box-shadow:inset 0 0 0 2px var(--accent)}
@@ -6432,7 +6432,7 @@ if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStar
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=56l22'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=56l23'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
