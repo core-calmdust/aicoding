@@ -8,14 +8,14 @@ import outline as o
 OUT = sys.argv[1]
 os.makedirs(OUT, exist_ok=True)
 ICON = ('<rect width="100" height="100" rx="24" fill="#C9823F"/>'
-        '<circle cx="66" cy="37" r="12" fill="#2A1E17" stroke="#C9823F" stroke-width="4"/>'
-        '<circle cx="42" cy="45" r="18" fill="#F5EADB" stroke="#C9823F" stroke-width="4"/>'
-        '<circle cx="63" cy="65" r="14" fill="#F5EADB" stroke="#C9823F" stroke-width="4"/>'
-        '<circle cx="35" cy="70" r="10" fill="#2A1E17" stroke="#C9823F" stroke-width="4"/>')
+        '<circle cx="69" cy="33.9" r="14.4" fill="#2A1E17" stroke="#C9823F" stroke-width="4.5"/>'
+        '<circle cx="40.2" cy="43.5" r="21.6" fill="#F5EADB" stroke="#C9823F" stroke-width="4.5"/>'
+        '<circle cx="65.4" cy="67.5" r="16.8" fill="#F5EADB" stroke="#C9823F" stroke-width="4.5"/>'
+        '<circle cx="31.8" cy="73.5" r="12" fill="#2A1E17" stroke="#C9823F" stroke-width="4.5"/>')
 ICON16 = ('<rect width="100" height="100" rx="22" fill="#C9823F"/>'
-          '<circle cx="42" cy="45" r="20" fill="#F5EADB"/>'
-          '<circle cx="64" cy="66" r="15" fill="#F5EADB"/>'
-          '<circle cx="67" cy="35" r="13" fill="#2A1E17"/>')
+          '<circle cx="40.2" cy="43.5" r="24" fill="#F5EADB"/>'
+          '<circle cx="66.6" cy="68.7" r="18" fill="#F5EADB"/>'
+          '<circle cx="70.2" cy="31.5" r="15.6" fill="#2A1E17"/>')
 W600, W500 = 2 / 3, 1 / 3   # Outfit 600 / 500 between Regular 400 and Bold 700
 
 
