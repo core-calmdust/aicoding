@@ -276,6 +276,6 @@ async function main() {
   }
   await Promise.all(slots.map(async slot => { while (next < jobs.length) { const j = jobs[next++]; await playGame(slot, j); } }));
   slots.forEach(s => s.forEach(p => p.close()));
-  console.log('\n終わりました。次のコマンドの出力を Claude に貼り付けてください:  node tools/levelmatch.js report');
+  console.log('\n終わりました。次のコマンドの出力を Claude に貼り付けてください:  node tools/levelmatch.js report' + (opt.out ? ' --out ' + opt.out : ''));
 }
 main().catch(e => { console.error(e); process.exit(1); });
