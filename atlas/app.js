@@ -1741,7 +1741,15 @@
   }
   // 駒: the game's 3D figures come in sets (Table3D.PIECES: amazons) → a row under 盤, the same tiles (a figure on a dark plate)
   function pieceRowHtml(big) {
-    const X = P3(), P = !big && bvGame && X && X.PIECES && X.PIECES[bvGame.id]; if (!P) return '';
+    const X = P3(), P = !big && bvGame && X && X.PIECES && X.PIECES[bvGame.id];
+    // 駒の色 (backgammon, 2026-11-11): each player's colour, two rows of swatches
+    const CC = !big && bvGame && X && X.CKCOL && X.CKCOL[bvGame.id];
+    if (!P && CC) {
+      const cur = CC.get();
+      return `<div class="plh">${esc(CC.ui('head', lang))}<small>${esc(CC.name(cur[0], lang))} / ${esc(CC.name(cur[1], lang))}</small></div>` +
+        [0, 1].map(s => `<div class="plckr"><b>${esc(CC.ui(s ? 'opp' : 'you', lang))}</b><div class="plck" role="group">${CC.list.map(v => `<button type="button" data-cs="${s}" data-cc="${v}" aria-pressed="${cur[s] === v}" title="${esc(CC.name(v, lang))}"><i style="background:${CC.sw(v)}"></i><span>${esc(CC.name(v, lang))}</span></button>`).join('')}</div></div>`).join('');
+    }
+    if (!P) return '';
     const k = P.get();
     return `<div class="plh">${esc(X.placeUi('pieces', lang))}<small>${esc(X.pieceName(bvGame.id, k, lang))}</small></div>
       <div class="plrow plpc" role="group">${P.list.map(v => `<button type="button" class="plcb" data-pc="${v}" aria-pressed="${v === k}"><img src="${X.pieceThumb(bvGame.id, v)}" alt="" loading="lazy" width="160" height="107"><span>${esc(X.pieceName(bvGame.id, v, lang))}</span></button>`).join('')}</div>`;
@@ -1786,6 +1794,7 @@
   }
   function bindPlace(root) {
     root.querySelectorAll('.plcb').forEach(b => b.onclick = e => { e.stopPropagation(); if (b.dataset.bd) setBoard(b.dataset.bd); else if (b.dataset.pc) setPieces(b.dataset.pc); else setPlace(+b.dataset.k); });
+    root.querySelectorAll('.plck button[data-cc]').forEach(b => b.onclick = e => { e.stopPropagation(); const X = P3(), g = bvGame, CC = X && g && X.CKCOL && X.CKCOL[g.id]; if (!CC) return; CC.set(+b.dataset.cs, b.dataset.cc); rebuildTable(g); });
     root.querySelectorAll('.plbr button[data-b]').forEach(b => b.onclick = e => { e.stopPropagation(); P3().setBright(+b.dataset.b); });
     root.querySelectorAll('.plbr button[data-t]').forEach(b => b.onclick = e => { e.stopPropagation(); if (window.Table3D && Table3D.setTimeOfDay) Table3D.setTimeOfDay(b.dataset.t); renderTod(); const m = $('bvPlMenu'); if (m && !m.hidden) placeInto(m); });
   }

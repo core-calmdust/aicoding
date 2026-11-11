@@ -40,7 +40,7 @@
   X.mount(document.getElementById('gl'));
   const g = X.MODELS[id](id === 'senet' || id === 'amazons' || id === 'shogi');   // (amazons: the board alone, without the showcase's game)
   X.show(id, g, { still: true }); X.quiet(true); X.snap();
-  setTimeout(() => { X.kick(3000); setTimeout(shoot, 5000); }, 800);
+  setTimeout(() => { X.kick(3000); setTimeout(() => (window.AtlasTexGen ? AtlasTexGen.settle() : Promise.resolve()).then(() => { X.kick(1500); setTimeout(shoot, 1200); }), 5000); }, 800);   // (waits for the procedural textures)
   function shoot() {
     const T = THREE, scene = X._scene(), R = X.renderer();
     const mine = new Set(); g.traverse(o => mine.add(o));

@@ -26,8 +26,10 @@
   const geoH = () => { try { return G.H || 12; } catch (e) { return 12; } };
 
   /* ---------- look: 'marq' | 'scarlet' | '' (the game's own 2D drawing) ---------- */
-  const LK = 'atlas-bg-look';
-  let mine = null; try { const v = localStorage.getItem(LK); mine = v === '0' ? '' : v === 'scarlet' ? 'scarlet' : v === 'marq' ? 'marq' : null; } catch (e) {}
+  const LK = 'atlas-bg-look', LOOKS = BG3.LOOKS || ['marq', 'scarlet'];
+  // (2026-11-11) six 3D boards; under each the 2D page keeps a related 2D skin (labels, the 2D thumbnails)
+  const SK2D = { marq: 'marquetry', scarlet: 'scarlet', nacre: 'andalus', malachite: 'emerald', marble: 'marble', shagreen: 'midnight' };
+  let mine = null; try { const v = localStorage.getItem(LK); mine = v === '0' ? '' : LOOKS.includes(v) ? v : null; } catch (e) {}
   if (mine === null) { let sk = ''; try { sk = settings.skin; } catch (e) {} mine = sk === 'scarlet' ? 'scarlet' : 'marq'; }
 
   // the dice take the 3D set's colours (resting dice, the rolling dice and the small diagrams); restored for the 2D boards
@@ -86,7 +88,7 @@
   let SPR = null;
   let shownPair = null;   // the colours the game last applied (online: as shown, mine on my side), or a live preview from the dialog
   const ckPair = () => { if (shownPair) return shownPair; try { return (typeof CKV !== 'undefined' && CKV) || settings.ck || ['gold', 'black']; } catch (e) { return ['gold', 'black']; } };
-  const TXT = { gold: '#4a3414', black: '#efe6cf', white: '#3a3630', red: '#fff1e0' };
+  const TXT = { gold: '#4a3414', black: '#efe6cf', white: '#3a3630', red: '#fff1e0', green: '#f6e6b8', blue: '#f4e6bc', pearl: '#3e3430', brown: '#fbeedb' };
   function paintSprites() {
     if (!SPR) return;
     const st = de.style;
@@ -106,7 +108,7 @@
     try { oCk.call(BGTheme, ckPair()); } catch (e) {}   // the dice colours (CSS + the rolling dice) follow the look
     paintSprites();
   }
-  BG3.sprites(192).then(o => { SPR = o; look(); try { applyCk(); render(); } catch (e) {} });
+  BG3.sprites(192).then(o => { SPR = o; look(); try { applyCk(); render(); ckSprites(); } catch (e) {} });
 
   /* ---------- hooks into the game ---------- */
   // dice carry their value, so each shows the render of its own face
@@ -159,39 +161,59 @@
   if (ckRows) ckRows.addEventListener('click', () => setTimeout(() => { try { if (draft && draft.ck) { shownPair = draft.ck.slice(); paintSprites(); } } catch (e) {} }, 0));
   if (newOv) new MutationObserver(() => { if (!newOv.classList.contains('show')) { try { shownPair = null; applyCk(); } catch (e) {} } }).observe(newOv, { attributes: true, attributeFilter: ['class'] });
 
-  /* ---------- the two 3D looks in the board-design row (new-game dialog) ---------- */
-  const LBL = {
-    marq: { ja: '寄木細工 3D', en: 'Marquetry 3D', zh: '镶嵌木 3D', ko: '상감 목재 3D', es: 'Marquetería 3D', fr: 'Marqueterie 3D', pt: 'Marchetaria 3D', de: 'Intarsie 3D', hi: 'मार्केट्री 3D', ar: 'تطعيم خشبي ثلاثي', ru: 'Маркетри 3D', 'zh-TW': '拼花3D', id: '3D marketri', tr: 'Marketeri 3D' },
-    scarlet: { ja: 'レザー 3D', en: 'Leather 3D', zh: '皮革 3D', ko: '가죽 3D', es: 'Cuero 3D', fr: 'Cuir 3D', pt: 'Couro 3D', de: 'Leder 3D', hi: 'लेदर 3D', ar: 'جلد ثلاثي', ru: 'Кожа 3D', 'zh-TW': '皮革3D', id: '3D kulit', tr: 'Deri 3D' },
-  };
-  const lang = () => (document.getElementById('langSel') || {}).value || 'ja';
+  /* ---------- 3D盤 (2026-11-11): the six 3D boards in a 「3D盤」 box under the 2D boards (the standard of the other
+     games, atlas/skin/shogi.js); a 2D board picked = the 2D page. 3D駒: the colour swatches show the 3D checkers ---------- */
+  const T3L = { ja: '3D盤', en: '3D boards', zh: '3D棋盘', ko: '3D 판', es: 'Tableros 3D', fr: 'Plateaux 3D', pt: 'Tabuleiros 3D', de: '3D-Bretter', hi: '3D बोर्ड', ar: 'رقع ثلاثية الأبعاد', ru: '3D-доски', 'zh-TW': '3D棋盤', id: 'Papan 3D', tr: '3D tahtalar' };
+  const lang = () => (l => /^zh-(tw|hk|mo|hant)/i.test(l) ? 'zh-TW' : String(l).slice(0, 2))((document.getElementById('langSel') || {}).value || 'ja');
   const row = document.getElementById('skinRow');
+  let f3 = null;
+  function paint3() {
+    if (!f3) return;
+    const l = lang();
+    f3.querySelector('label').textContent = T3L[l] || T3L.en;
+    const r3 = f3.querySelector('.bdrow');
+    if (!r3.children.length) LOOKS.forEach(k => {
+      const bt = document.createElement('button'); bt.type = 'button'; bt.dataset.look = k;
+      const im = document.createElement('img'); im.src = T3.boardIcon ? T3.boardIcon('backgammon', k) : ''; im.alt = ''; im.draggable = false;
+      bt.append(im, document.createElement('span')); bt.onclick = () => setLook(k); r3.appendChild(bt);
+    });
+    r3.querySelectorAll('button').forEach(bt => { const k = bt.dataset.look, sel = mine === k; bt.querySelector('span').textContent = T3.boardName ? T3.boardName(k, l, 'backgammon') : k; bt.classList.toggle('sel', sel); bt.setAttribute('aria-pressed', String(sel)); });
+    if (row && mine) row.querySelectorAll('button.sel').forEach(b => b.classList.remove('sel'));
+  }
+  function setLook(k) {
+    mine = k; try { localStorage.setItem(LK, mine); } catch (x) {}
+    settings.skin = SK2D[k] || 'marquetry'; try { save(); } catch (x) {}
+    try { dispatchEvent(new CustomEvent('atlas-board', { detail: { id: 'backgammon', look: k } })); } catch (x) {}
+    applySkinNow(); skinSync(); paint3();
+  }
+  // the colour swatches of the new-game dialog: the renders of the 3D checkers while a 3D board is on
+  function ckSprites() {
+    if (!SPR) return;
+    document.querySelectorAll('#ckRows .cksw button[data-c]').forEach(b => { const i = b.querySelector('.sw'); if (!i) return; if (mine && SPR.ck[b.dataset.c]) { i.style.background = `url("${SPR.ck[b.dataset.c]}") center/100% 100% no-repeat`; i.style.boxShadow = '0 1px 3px rgba(0,0,0,.45)'; i.classList.add('sw3'); } });
+  }
+  if (typeof window.ckSync === 'function') { const oc = window.ckSync; window.ckSync = function () { const r = oc.apply(this, arguments); try { ckSprites(); } catch (e) {} return r; }; }
   if (row && typeof window.skinSync === 'function') {
     const oSync = window.skinSync;
-    window.skinSync = function () {
-      const r = oSync.apply(this, arguments);
-      try {
-        if (mine) row.querySelectorAll('button[data-skin]').forEach(b => b.classList.remove('sel'));
-        ['scarlet', 'marq'].forEach(k => {
-          const b = document.createElement('button'); b.type = 'button'; b.dataset.look = k; b.className = 'a3d' + (mine === k ? ' sel' : '');
-          b.innerHTML = `${BGTheme.thumbSVG(k === 'marq' ? 'marquetry' : 'scarlet', ckPair()[0], ckPair()[1])}<i class="b3d">3D</i><span></span>`;
-          b.querySelector('span').textContent = (LBL[k][lang()] || LBL[k].en);
-          row.prepend(b);
-        });
-      } catch (e) {}
-      return r;
-    };
-    row.addEventListener('click', e => {
-      const b = e.target.closest('button'); if (!b) return;
-      if (b.dataset.look) {
-        e.stopImmediatePropagation();
-        mine = b.dataset.look; try { localStorage.setItem(LK, mine); } catch (x) {}
-        settings.skin = mine === 'scarlet' ? 'scarlet' : 'marquetry'; try { save(); } catch (x) {}
-        applySkinNow(); skinSync();
-      } else if (b.dataset.skin) { mine = ''; try { localStorage.setItem(LK, '0'); } catch (x) {} setTimeout(look, 0); }
-    }, true);
+    window.skinSync = function () { const r = oSync.apply(this, arguments); try { paint3(); ckSprites(); } catch (e) {} return r; };
+    row.addEventListener('click', e => { const b = e.target.closest('button'); if (b && b.dataset.skin) { mine = ''; try { localStorage.setItem(LK, '0'); } catch (x) {} setTimeout(() => { look(); paint3(); try { ckSync(); } catch (x) {} }, 0); } }, true);
+    const fd = document.getElementById('fSkin') || row.parentNode;
+    const st = document.createElement('style');
+    st.textContent = `html.atlas-skin #f3D{margin:12px 0 0;padding:10px 12px 12px;border-radius:14px;background:#f7efe1;border:2px solid #e3cfa6}
+html.atlas-skin #f3D > label{display:block;font-weight:700;font-size:14px;color:#7a4e1c;margin:0 0 8px}
+html.atlas-skin #f3D .bdrow{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px}
+html.atlas-skin #f3D .bdrow button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 4px 7px;border-radius:12px;border:2px solid transparent;background:#fffaf0;cursor:pointer;font:600 13px/1.25 inherit;color:#5a3a16;min-width:0}
+html.atlas-skin #f3D .bdrow button img{display:block;width:100%;aspect-ratio:4/3;object-fit:contain;border-radius:8px}
+html.atlas-skin #f3D .bdrow button.sel{border-color:#e09a00;background:#fff3d6;box-shadow:0 0 0 2px rgba(224,154,0,.25)}
+html.atlas-skin #f3D .bdrow button span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+html.atlas-skin #ckRows .cksw{grid-template-columns:repeat(4,minmax(0,1fr))}
+html.atlas-skin #ckRows .sw.sw3{border-radius:50%}`;
+    document.head.appendChild(st);
+    f3 = document.createElement('div'); f3.id = 'f3D'; f3.innerHTML = '<label></label><div class="bdrow"></div>';
+    fd.appendChild(f3);
+    const ls = document.getElementById('langSel'); if (ls) ls.addEventListener('change', () => setTimeout(paint3, 30));
     try { skinSync(); } catch (e) {}
   }
+  addEventListener('storage', e => { if (e.key === LK) { const v = e.newValue; mine = v === '0' ? '' : LOOKS.includes(v) ? v : mine; look(); paint3(); } });
   if (skin.view) V = skin.view({ key: 'atlas-bg-view', init: !!mine, on() { setTimeout(() => { try { render(); } catch (e) {} }, 0); } });
   look();
 

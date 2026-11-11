@@ -76,6 +76,103 @@
         const N = makeNoise(41), A = p.A;
         for (let y = 0; y < N0; y++) for (let x = 0; x < N0; x++) { const k = (Math.random() - .5) * 18 + (N(x / 2, y / 2, 2) - .5) * 16 + (N(x / 30, y / 30, 2) - .5) * 14, i = (y * N0 + x) * 4; d[i] = A[0] + k; d[i + 1] = A[1] + k; d[i + 2] = A[2] + k; d[i + 3] = 255; }
       },
+      // polished marble (a slab, not a tile): a ground with clouds, a web of fine veins and a few bold ones (warped
+      // turbulence), p.G = a second vein colour (gold / grey) — Calacatta, Nero Marquina, Rosso Levanto
+      marble(d, W, H, p) {
+        const N = makeNoise(p.seed), M = makeNoise(p.seed + 7), A = p.A, B = p.B, V = p.V, G = p.G || p.V, s = p.s || 1, bold = p.bold == null ? 1 : p.bold;
+        const ang = p.ang || .6, ca = Math.cos(ang), sa = Math.sin(ang), asp = W / H;
+        for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+          const u = x / W * asp * s, v = y / H * s, ru = u * ca - v * sa, rv = u * sa + v * ca;
+          const w1 = N(u * 1.6, v * 1.6, 5), w2 = M(u * 3.1 + 4, v * 3.1, 4);
+          const cl = N(u * .9 + 9, v * .9 + 3, 4);   // clouds of the ground
+          const f1 = Math.abs(Math.sin((ru * 2.2 + w1 * 4.2) * Math.PI)), f2 = Math.abs(Math.sin((rv * 5.5 + w2 * 6 + w1 * 2) * Math.PI)), f3 = Math.abs(Math.sin((ru * 9 + rv * 3 + w2 * 9) * Math.PI));
+          const v1 = (Math.pow(1 - f1, 16) * .8 + Math.pow(1 - f1, 60) * .4) * bold, v2 = Math.pow(1 - f2, 60) * .75, v3 = Math.pow(1 - f3, 90) * .45;
+          let t = Math.max(0, Math.min(1, (cl - .5) * 1.6 + .5));
+          let r = A[0] + (B[0] - A[0]) * t, g = A[1] + (B[1] - A[1]) * t, b = A[2] + (B[2] - A[2]) * t;
+          const vv = Math.min(1, v1 + v3), gg = Math.min(1, v2 * (.6 + .4 * w2));
+          r += (V[0] - r) * vv; g += (V[1] - g) * vv; b += (V[2] - b) * vv;
+          r += (G[0] - r) * gg; g += (G[1] - g) * gg; b += (G[2] - b) * gg;
+          const k = (N(x * .7, y * .7, 1) - .5) * 6, i = (y * W + x) * 4;
+          d[i] = r + k; d[i + 1] = g + k; d[i + 2] = b + k; d[i + 3] = 255;
+        }
+      },
+      // malachite (a slab): bands round a few nodules and along a wavy layering, dark hairlines between the bands
+      malachite(d, W, H, p) {
+        const N = makeNoise(p.seed), M = makeNoise(p.seed + 3), asp = W / H;
+        let r0 = p.seed * 7919 + 3; const rnd = () => ((r0 = (r0 * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+        const C = []; for (let i = 0; i < 5; i++) C.push([rnd() * asp, rnd(), .7 + rnd() * .8]);
+        const D = [3, 34, 20], L = [64, 178, 116], Mi = [12, 96, 58];
+        for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+          const u = x / W * asp, v = y / H, w = N(u * 2.4, v * 2.4, 5), w2 = M(u * 7, v * 7, 3);
+          let f = 9; for (const [cx, cy, k] of C) f = Math.min(f, Math.hypot((u - cx) * k, (v - cy) * k * 1.15));
+          f = Math.min(f * 1.0, .55 + (v + w * .5) * .45) + w * .3 + w2 * .025;   // nodules, then the layering
+          const b = (f * 40) % 1, hair = Math.pow(Math.abs(Math.sin(f * 40 * 3.7 * Math.PI)), 40);
+          let c;
+          if (b < .07) c = D;
+          else if (b < .55) { const t = (b - .07) / .48; c = [L[0] + (Mi[0] - L[0]) * t, L[1] + (Mi[1] - L[1]) * t, L[2] + (Mi[2] - L[2]) * t]; }
+          else { const t = (b - .55) / .45; c = [Mi[0] + (D[0] + 6 - Mi[0]) * t * .8, Mi[1] + (D[1] + 20 - Mi[1]) * t * .8, Mi[2] + (D[2] + 12 - Mi[2]) * t * .8]; }
+          const k = (w2 - .5) * 14 + (N(x * .8, y * .8, 1) - .5) * 5 - hair * 30, i = (y * W + x) * 4;
+          d[i] = c[0] + k * .5; d[i + 1] = c[1] + k; d[i + 2] = c[2] + k * .7; d[i + 3] = 255;
+        }
+      },
+      // mother-of-pearl as it is inlaid: small irregular pieces (a wrapping cell grid → seamless), each cut from another
+      // part of the shell — its own tint and its own direction of the fine growth lines; dark mastic joints between
+      nacre(d, N0, H, p) {
+        const GN = p.cells || 9, N = makeNoise(p.seed || 5);
+        let r = (p.seed || 5) * 7919 + 17; const rnd = () => ((r = (r * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+        const P = new Float32Array(GN * GN * 4); for (let i = 0; i < GN * GN; i++) { P[i * 4] = .15 + rnd() * .7; P[i * 4 + 1] = .15 + rnd() * .7; P[i * 4 + 2] = rnd() * Math.PI; P[i * 4 + 3] = rnd(); }
+        const PAL = [[250, 242, 234], [242, 210, 226], [206, 238, 224], [216, 216, 250], [248, 232, 198], [212, 236, 250]];
+        if (p.sat) for (const c of PAL) { const m = (c[0] + c[1] + c[2]) / 3; for (let j = 0; j < 3; j++) c[j] = Math.max(0, Math.min(255, m + (c[j] - m) * p.sat)); }
+        const pal = t => { t = ((t % 1) + 1) % 1 * PAL.length; const a = PAL[Math.floor(t) % PAL.length], b = PAL[(Math.floor(t) + 1) % PAL.length], f = t - Math.floor(t); return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f]; };
+        if (p.whole) {   // one polished disc of shell (the checkers): the growth lines round an off-centre umbo, the colours shifting along them
+          for (let y = 0; y < N0; y++) for (let x = 0; x < N0; x++) {
+            const u = x / N0, v = y / N0, wv = N(u * 3, v * 3, 4), r = Math.hypot(u - .28, v - .2) + wv * .18;
+            const lines = Math.sin((r * 34 + wv * 3) * Math.PI) * .5 + .5, broad = N(u * 1.6 + 5, v * 1.6, 3);
+            const c = pal(r * 1.4 + broad * 1.1 + lines * .1), sh = .84 + lines * .12 + Math.pow(lines, 10) * .1 + (broad - .5) * .1;
+            const i = (y * N0 + x) * 4; d[i] = c[0] * sh; d[i + 1] = c[1] * sh; d[i + 2] = c[2] * sh; d[i + 3] = 255;
+          }
+          return;
+        }
+        for (let y = 0; y < N0; y++) for (let x = 0; x < N0; x++) {
+          const gx = x / N0 * GN, gy = y / N0 * GN, cx = Math.floor(gx), cy = Math.floor(gy);
+          let f1 = 9, f2 = 9, best = 0, bx = 0, by = 0;
+          for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) {
+            const X0 = cx + i, Y0 = cy + j, ci = ((Y0 % GN + GN) % GN) * GN + ((X0 % GN + GN) % GN);
+            const dx = X0 + P[ci * 4] - gx, dy = Y0 + P[ci * 4 + 1] - gy, dd = dx * dx + dy * dy;
+            if (dd < f1) { f2 = f1; f1 = dd; best = ci; bx = dx; by = dy; } else if (dd < f2) f2 = dd;
+          }
+          const e = Math.sqrt(f2) - Math.sqrt(f1), a = P[best * 4 + 2], ca = Math.cos(a), sa = Math.sin(a);
+          const lu = -bx * ca - by * sa, lv = bx * sa - by * ca;   // the piece's own frame (continuous inside it)
+          const wv = N(lu * 3 + best, lv * 3, 3);
+          const lines = Math.sin((lv * 46 + wv * 5) * Math.PI) * .5 + .5, broad = N(lu * 1.2 + best * 3, lv * 1.2, 3);
+          const c = pal(P[best * 4 + 3] + broad * .9 + lines * .08);
+          const sh = .86 + lines * .1 + Math.pow(lines, 8) * .08 + (broad - .5) * .12;
+          let R = c[0] * sh, G = c[1] * sh, B = c[2] * sh;
+          if (e < .035) { const k = e / .035; R = R * k + 70 * (1 - k); G = G * k + 62 * (1 - k); B = B * k + 50 * (1 - k); }   // the joint
+          const i = (y * N0 + x) * 4; d[i] = R; d[i + 1] = G; d[i + 2] = B; d[i + 3] = 255;
+        }
+      },
+      // shagreen (galuchat): dense small domed beads of polished ray skin, the dye settled in the creases between them;
+      // here and there a larger bead. Wrapping grid → seamless
+      shagreen(d, N0, H, p) {
+        const GN = p.cells || 56, N = makeNoise(p.seed || 9), A = p.A, B = p.B;
+        let r = (p.seed || 9) * 7919 + 17; const rnd = () => ((r = (r * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+        const P = new Float32Array(GN * GN * 3); for (let i = 0; i < GN * GN; i++) { P[i * 3] = .2 + rnd() * .6; P[i * 3 + 1] = .2 + rnd() * .6; P[i * 3 + 2] = rnd() < .04 ? 1.5 : .85 + rnd() * .3; }
+        for (let y = 0; y < N0; y++) for (let x = 0; x < N0; x++) {
+          const gx = x / N0 * GN, gy = y / N0 * GN, cx = Math.floor(gx), cy = Math.floor(gy);
+          let best = 9, sz = 1;
+          for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) {
+            const X0 = cx + i, Y0 = cy + j, ci = ((Y0 % GN + GN) % GN) * GN + ((X0 % GN + GN) % GN);
+            const dx = X0 + P[ci * 3] - gx, dy = Y0 + P[ci * 3 + 1] - gy, dd = Math.sqrt(dx * dx + dy * dy) / P[ci * 3 + 2];
+            if (dd < best) { best = dd; sz = P[ci * 3 + 2]; }
+          }
+          const dome = Math.max(0, 1 - best / .5), top = Math.pow(dome, 1.2);
+          const t = Math.min(1, top * 1.35 + (N(x / 40, y / 40, 2) - .5) * .15);
+          const hl = Math.pow(Math.max(0, dome - .55) / .45, 2) * .5;
+          const i = (y * N0 + x) * 4;
+          d[i] = A[0] + (B[0] - A[0]) * t + hl * 60; d[i + 1] = A[1] + (B[1] - A[1]) * t + hl * 60; d[i + 2] = A[2] + (B[2] - A[2]) * t + hl * 60; d[i + 3] = 255;
+        }
+      },
     };
   }
   // the heavy pixel loops live in KL() (self-contained): on the portal they run in a worker (atlas/texgen.js) and the
@@ -127,23 +224,333 @@
     dOrange: () => veneer('vdOra', '#e8a24a', '#b46c22', { ring: 2, seed: 48 }),
     dBrown: () => veneer('vdBro', '#6a4024', '#3a2010', { ring: 3, seed: 49 }),
     dBlack: () => veneer('vdBlk', '#1e1a18', '#0a0808', { ring: 3, seed: 50 }),
+    dam: () => veneer('vDam', '#5e3c22', '#1e1108', { ring: 5, stripe: .25, seed: 61 }),       // Damascus walnut
+    lemon: () => veneer('vLem', '#ecd59a', '#c4a062', { ring: 2, seed: 62 }),
+    macD: () => veneer('vMacD', '#4c2c18', '#0b0604', { stripe: .8, ring: 3, seed: 66 }),   // the shagreen case's darker macassar
+    ivory: () => veneer('vIvo', '#f4ecd8', '#ddd0b2', { ring: 9, seed: 63 }),                   // bone / ivory: a fine straight grain
   };
+
+  /* ---------- the four luxury looks (2026-11-11): Damascus mother-of-pearl mosaic · malachite & ormolu ·
+     Calacatta marble & brass · Art Deco shagreen & ivory. Slabs are painted once (not tiled) and laid whole;
+     the gilt / brass inlays also go into a roughness-metalness picture so they shine as metal ---------- */
+  const slab = (key, W, H, kind, p) => SW[key] || (SW[key] = paint(cv(W, H), kind, p));
+  const SL = {
+    cala: s => slab('slCala' + s, 560, 1000, 'marble', { seed: 30 + s, A: [248, 245, 239], B: [228, 224, 216], V: [96, 94, 98], G: [190, 156, 92], s: 1.05, ang: .55, bold: 1.2 }),
+    nero: () => slab('slNero', 512, 512, 'marble', { seed: 71, A: [18, 18, 20], B: [36, 35, 38], V: [232, 228, 220], G: [140, 140, 144], s: 1.3, ang: .9, bold: .85 }),
+    nero2: () => slab('slNero2', 1024, 256, 'marble', { seed: 72, A: [16, 16, 18], B: [34, 33, 36], V: [226, 222, 214], G: [130, 130, 134], s: .8, ang: .25, bold: .7 }),
+    rosso: () => slab('slRosso', 512, 512, 'marble', { seed: 83, A: [118, 26, 30], B: [76, 14, 20], V: [238, 218, 208], G: [178, 112, 102], s: 1.5, ang: 1.1, bold: .7 }),
+    mala: s => slab('slMala' + s, 560, 1000, 'malachite', { seed: 90 + s }),
+    malaB: () => slab('slMalaB', 256, 1024, 'malachite', { seed: 97 }),
+    nacre: () => slab('slNac', 512, 512, 'nacre', { seed: 5, cells: 9, sat: 1.3 }),
+    nacreS: () => slab('slNacS', 256, 256, 'nacre', { seed: 8, cells: 4 }),
+    pearl: () => slab('slPearl', 256, 256, 'nacre', { seed: 12, whole: 1, sat: 1.9 }),
+    lapis: () => slab('slLapis', 256, 256, 'marble', { seed: 44, A: [30, 52, 150], B: [16, 30, 104], V: [196, 204, 228], G: [214, 176, 92], s: 1.6, ang: .4, bold: .35 }),
+    shag: () => slab('slShag', 512, 512, 'shagreen', { seed: 9, cells: 40, A: [34, 86, 80], B: [226, 240, 230] }),
+  };
+  const TAU0 = Math.PI * 2;
+  const triPts = (g, x0, i, top, hw) => { const cx = x0 + i + .5, y0 = top ? g.TOP : g.BOT, y1 = top ? g.TOP + g.PL : g.BOT - g.PL; return [[cx - hw, y0], [cx + hw, y0], [cx, y1]]; };
+  // a triangle shrunk by d (about its incentre: every edge moves in by d)
+  function insetTri(P, d) {
+    const L = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]), a = L(P[1], P[2]), b = L(P[0], P[2]), c = L(P[0], P[1]), s = a + b + c;
+    const I = [(a * P[0][0] + b * P[1][0] + c * P[2][0]) / s, (a * P[0][1] + b * P[1][1] + c * P[2][1]) / s];
+    const ar = Math.abs((P[1][0] - P[0][0]) * (P[2][1] - P[0][1]) - (P[2][0] - P[0][0]) * (P[1][1] - P[0][1])) / 2, r = 2 * ar / s, f = (r - d) / r;
+    return P.map(p => [I[0] + (p[0] - I[0]) * f, I[1] + (p[1] - I[1]) * f]);
+  }
+  const poly = (c, U, P) => { c.beginPath(); P.forEach((p, j) => j ? c.lineTo(U(p[0]), U(p[1])) : c.moveTo(U(p[0]), U(p[1]))); c.closePath(); };
+  const star = (c, U, cx, cy, r, n, k, rot = 0) => { c.beginPath(); for (let j = 0; j < 2 * n; j++) { const a = rot + j * Math.PI / n, rr = j % 2 ? r * k : r; const px = U(cx + Math.cos(a) * rr), py = U(cy + Math.sin(a) * rr); j ? c.lineTo(px, py) : c.moveTo(px, py); } c.closePath(); };
+  const RMC = (rough, metal) => `rgb(0,${Math.round(rough * 255)},${Math.round(metal * 255)})`;
+  // a band round a rectangle (mitred corners): paint(c, len, w) draws one side in local units, x along the side, y from the outer edge in
+  function ringBand(c, U, x0, y0, w, h, bw, paint) {
+    const S = [[x0, y0, w, 0], [x0 + w, y0, h, Math.PI / 2], [x0 + w, y0 + h, w, Math.PI], [x0, y0 + h, h, -Math.PI / 2]];
+    S.forEach(([sx, sy, L, a]) => {
+      c.save(); c.translate(U(sx), U(sy)); c.rotate(a);
+      c.beginPath(); c.moveTo(0, 0); c.lineTo(U(L), 0); c.lineTo(U(L - bw), U(bw)); c.lineTo(U(bw), U(bw)); c.closePath(); c.clip();
+      paint(c, L, bw); c.restore();
+    });
+  }
+  // khatam: the Damascus inlaid band — lemonwood ground, ebony edges, a dog-tooth of bone and ebony, tiny pearl lozenges
+  function khatamBand(c, U, L, w) {
+    const R = (a, b, cc, d, col) => { c.fillStyle = col; c.fillRect(U(a), U(b), U(cc), U(d)); };
+    R(0, 0, L, w, '#d8b673'); R(0, 0, L, w * .13, '#1a110a'); R(0, w * .87, L, w * .13, '#1a110a');
+    R(0, w * .13, L, w * .05, '#f1e8d2'); R(0, w * .82, L, w * .05, '#f1e8d2');
+    const n = Math.max(2, Math.round(L / (w * .62))), cl = L / n, y0 = w * .2, y1 = w * .8;
+    for (let j = -1; j <= n; j++) {
+      const a = j * cl;
+      c.fillStyle = '#efe5cc'; c.beginPath(); c.moveTo(U(a), U(y1)); c.lineTo(U(a + cl), U(y1)); c.lineTo(U(a + cl / 2), U(y0)); c.closePath(); c.fill();
+      c.fillStyle = '#20150d'; c.beginPath(); c.moveTo(U(a + cl / 2), U(y0)); c.lineTo(U(a + cl * 1.5), U(y0)); c.lineTo(U(a + cl), U(y1)); c.closePath(); c.fill();
+      const mx = a + cl / 2, my = (y0 + y1) / 2 + (y1 - y0) * .12, r = (y1 - y0) * .16;
+      c.fillStyle = j % 2 ? '#e8f1ee' : '#f6e8ee'; c.beginPath(); c.moveTo(U(mx), U(my - r)); c.lineTo(U(mx + r * .6), U(my)); c.lineTo(U(mx), U(my + r)); c.lineTo(U(mx - r * .6), U(my)); c.closePath(); c.fill();
+    }
+  }
+  // the Greek key (meander) in gilt along a band, as on Empire malachite pieces
+  function meander(c, U, L, w, col) {
+    const u = w / 6, P = u * 7, n = Math.max(1, Math.round(L / P)), p = L / n;
+    c.strokeStyle = col; c.lineWidth = U(u * .78); c.lineCap = 'square'; c.lineJoin = 'miter';
+    c.beginPath(); c.moveTo(0, U(w - u)); c.lineTo(U(L), U(w - u)); c.stroke();
+    c.beginPath(); c.moveTo(0, U(u)); c.lineTo(U(L), U(u)); c.stroke();
+    for (let j = 0; j < n; j++) {
+      const a = j * p + p * .14, sx = (p / P);
+      const pts = [[0, 5], [0, 2], [4.2, 2], [4.2, 3.6], [2.1, 3.6]].map(([X0, Y0]) => [a + X0 * u * sx, Y0 * u]);
+      c.beginPath(); pts.forEach((q, i) => i ? c.lineTo(U(q[0]), U(q[1])) : c.moveTo(U(q[0]), U(q[1]))); c.stroke();
+    }
+  }
+  // the khatam micro-mosaic filling a point: a triangular lattice of bone, lemonwood and ebony
+  function mosaic(c, U, P, s) {
+    const xs = Math.min(P[0][0], P[1][0], P[2][0]) - s, xe = Math.max(P[0][0], P[1][0], P[2][0]) + s, ys = Math.min(P[0][1], P[1][1], P[2][1]) - s, ye = Math.max(P[0][1], P[1][1], P[2][1]) + s;
+    const h = s * .866, COL = ['#efe5cc', '#d6b06a', '#1d130c'];
+    c.fillStyle = '#1d130c'; c.fillRect(U(xs), U(ys), U(xe - xs), U(ye - ys));
+    for (let r = 0, y = ys; y < ye; r++, y += h) for (let q = 0, x = xs - (r % 2) * s / 2; x < xe; q++, x += s) {
+      c.fillStyle = COL[(q + r) % 3]; c.beginPath(); c.moveTo(U(x), U(y + h)); c.lineTo(U(x + s), U(y + h)); c.lineTo(U(x + s / 2), U(y)); c.closePath(); c.fill();
+      if ((q + 2 * r) % 5 === 0) { c.fillStyle = '#f3ecf0'; c.beginPath(); c.moveTo(U(x + s / 2), U(y)); c.lineTo(U(x + s), U(y + h)); c.lineTo(U(x + s * 1.5), U(y)); c.closePath(); c.fill(); }
+    }
+    // the mastic between the tesserae
+    c.strokeStyle = 'rgba(30,18,8,.55)'; c.lineWidth = Math.max(1, U(s * .06));
+    c.beginPath(); for (let y = ys; y < ye; y += h) { c.moveTo(U(xs), U(y)); c.lineTo(U(xe), U(y)); } c.stroke();
+  }
+  const goldGrad = (c, x0, y0, x1, y1) => { const gr = c.createLinearGradient(x0, y0, x1, y1); gr.addColorStop(0, '#f6dc94'); gr.addColorStop(.3, '#d7a84f'); gr.addColorStop(.55, '#f3d58a'); gr.addColorStop(.8, '#bb8a3c'); gr.addColorStop(1, '#ecc874'); return gr; };
+
+  // each look: deps (swatches the pictures are made from), field(C) / frame(C) drawing (C = { x, R (the rough/metal
+  // picture, same coordinates), U, g, Wc, Hc, k, lay }), mats, extras(3D fittings)
+  const LUX = {
+    nacre: {
+      noRM: true,
+      fdeps: () => [W_.dam(), SL.nacre(), SL.nacreS(), suede('sdGrn', '#163a2b')],
+      field(C) {
+        const { x, U, g, lay } = C, mid = g.MID, gap = Math.min(1, (g.H - 1 - 2 * g.PL) / 1.8);
+        for (const x0 of [g.LX, g.RX]) {
+          x.save(); x.beginPath(); x.rect(U(x0), U(g.TOP), U(6), U(g.H - 1)); x.clip();
+          lay(W_.dam(), 0, 0, 0, 1.25);
+          ringBand(x, U, x0, g.TOP, 6, g.H - 1, .2, (c2, L2, w2) => khatamBand(c2, U, L2, w2));
+          for (let i = 0; i < 6; i++) for (const top of [true, false]) {
+            const a = (i % 2 === 0) === top, P = triPts(g, x0, i, top, .4);
+            x.save(); x.shadowColor = 'rgba(0,0,0,.5)'; x.shadowBlur = U(.04); x.shadowOffsetY = U(.012); poly(x, U, P); x.fillStyle = '#140c07'; x.fill(); x.restore();
+            const P2 = insetTri(P, .03);
+            poly(x, U, P2); x.save(); x.clip();
+            if (a) lay(SL.nacre(), .3 + i, U(x0 + i), U(mid), .62);
+            else { x.fillStyle = '#efe5cc'; x.fill(); poly(x, U, insetTri(P, .07)); x.clip(); mosaic(x, U, P, .1); }
+            x.restore();
+            poly(x, U, insetTri(P, .1)); x.strokeStyle = a ? 'rgba(40,26,14,.6)' : '#f3ece6'; x.lineWidth = U(.014); x.stroke();
+            if (a) { poly(x, U, insetTri(P, .2)); x.strokeStyle = 'rgba(40,26,14,.35)'; x.lineWidth = U(.008); x.stroke(); }
+          }
+          // the rosette between the points' tips: a pearl star in an ebony ring, a ring of pearl beads
+          const cx = x0 + 3, r = .3 * gap;
+          x.beginPath(); x.arc(U(cx), U(mid), U(r * 1.55), 0, TAU0); x.fillStyle = '#1a110a'; x.fill();
+          star(x, U, cx, mid, r * 1.3, 8, .72, Math.PI / 8); x.save(); x.clip(); lay(SL.nacreS(), .4, U(cx), U(mid), .5); x.restore();
+          star(x, U, cx, mid, r * .62, 8, .6); x.fillStyle = '#d6b06a'; x.fill();
+          x.beginPath(); x.arc(U(cx), U(mid), U(r * .18), 0, TAU0); x.fillStyle = '#1a110a'; x.fill();
+          for (const sx of [-1, 1]) { const bx = cx + sx * 1.05 * gap; star(x, U, bx, mid, r * .55, 4, .4); x.save(); x.clip(); lay(SL.nacreS(), 1, U(bx), U(mid), .4); x.restore(); }
+          x.restore();
+        }
+        x.beginPath(); x.rect(U(g.TX), U(g.TOP), U(g.TW), U(g.H - 1)); x.save(); x.clip(); lay(suede('sdGrn', '#163a2b'), 0, 0, 0); x.restore();
+      },
+      rdeps: () => [W_.walnutR(), W_.walnut(), SL.nacreS()],
+      frame(C) {
+        const { x, U, g, k, lay, strip, mitre } = C;
+        strip(hz => lay(W_.walnutR(), !hz, k / 150)); mitre();
+        for (const [x0, w] of C.inner) { x.save(); x.beginPath(); x.rect(U(x0), U(g.TOP), U(w), U(g.H - 1)); x.clip(); lay(W_.walnut(), true, k / 140); x.restore(); }
+        ringBand(x, U, .035, .035, g.W - .07, g.H - .07, .14, (c2, L2, w2) => khatamBand(c2, U, L2, w2));   // (near the outer edge: the point numbers sit on plain walnut)
+        // pearl stars on the corners, pearl stringing along both halves of the bar
+        for (const [cx, cy] of [[.25, .25], [g.W - .25, .25], [.25, g.H - .25], [g.W - .25, g.H - .25]]) {
+          x.beginPath(); x.arc(U(cx), U(cy), U(.2), 0, TAU0); x.fillStyle = '#1a110a'; x.fill();
+          star(x, U, cx, cy, .17, 8, .68, Math.PI / 8); x.save(); x.clip(); x.drawImage(SL.nacreS(), U(cx - .2), U(cy - .2), U(.4), U(.4)); x.restore();
+        }
+        const pl = (x0) => { x.save(); x.beginPath(); x.rect(U(x0), U(g.TOP + .2), U(.045), U(g.H - 1.4)); x.clip(); lay(SL.nacreS(), true, .5); x.restore(); };
+        pl(g.BX + .12); pl(g.BX + g.B - .165); pl(g.RE + .15);
+        x.fillStyle = 'rgba(10,4,0,.7)'; x.fillRect(U(g.BX + g.B / 2) - 1.5, U(g.TOP), 3, U(g.H - 1));
+      },
+      mats(TT, C) {
+        const wt = tex(veneer('vDamSide', '#6a4428', '#24140a', { ring: 6, seed: 64 })); wt.wrapS = wt.wrapT = TT.RepeatWrapping; wt.repeat.set(.18, 1.4);
+        return { side: new TT.MeshPhysicalMaterial({ map: wt, roughness: .36, clearcoat: .8, clearcoatRoughness: .16 }),
+          metal: new TT.MeshPhysicalMaterial({ color: C(0xcfa461), metalness: 1, roughness: .3, clearcoat: .3, clearcoatRoughness: .25 }),
+          metalDark: new TT.MeshStandardMaterial({ color: C(0x4a3410), metalness: 1, roughness: .45 }),
+          top: { roughness: .32, clearcoat: .85, clearcoatRoughness: .12, bump: .0012 }, field: { roughness: .26, clearcoat: .9, clearcoatRoughness: .08, bump: .001 }, bottom: 0x24140a };
+      },
+    },
+    malachite: {
+      fdeps: () => [SL.mala(1), SL.nero(), suede('sdGrnV', '#0d3423')],
+      field(C) {
+        const { x, R, U, g, lay } = C, mid = g.MID, gap = Math.min(1, (g.H - 1 - 2 * g.PL) / 1.8);
+        R.fillStyle = RMC(.16, 0); R.fillRect(0, 0, C.Wc, C.Hc);
+        [g.LX, g.RX].forEach((x0, fi) => {
+          x.save(); x.beginPath(); x.rect(U(x0), U(g.TOP), U(6), U(g.H - 1)); x.clip();
+          // book-matched slabs: the right field is the left one mirrored
+          x.save(); x.translate(U(x0 + (fi ? 6 : 0)), U(g.TOP)); x.scale(fi ? -1 : 1, 1); x.drawImage(SL.mala(1), 0, 0, U(6), U(g.H - 1)); x.restore();
+          for (let i = 0; i < 6; i++) for (const top of [true, false]) {
+            const a = (i % 2 === 0) === top, P = triPts(g, x0, i, top, .43);
+            x.save(); x.shadowColor = 'rgba(0,0,0,.55)'; x.shadowBlur = U(.05); x.shadowOffsetY = U(.014); poly(x, U, P); x.fillStyle = '#0c0b0a'; x.fill(); x.restore();
+            poly(x, U, P); x.save(); x.clip();
+            if (a) {   // water gilding with the burnisher's long strokes
+              x.fillStyle = goldGrad(x, U(P[0][0]), 0, U(P[1][0]), 0); x.fill();
+              x.globalAlpha = .18; x.strokeStyle = '#6a4a14'; x.lineWidth = 1; x.beginPath(); for (let t = -.5; t <= .5; t += .045) { x.moveTo(U(P[2][0] + t), U(P[0][1])); x.lineTo(U(P[2][0] + t * .2), U(P[2][1])); } x.stroke(); x.globalAlpha = 1;
+              poly(R, U, P); R.fillStyle = RMC(.26, 1); R.fill();
+            } else { const N = SL.nero(), o = (i * 61 + (top ? 0 : 217)) % 300; x.drawImage(N, o, 0, 180, 512, U(P[0][0]), U(Math.min(P[0][1], P[2][1])), U(.86), U(g.PL)); }
+            x.restore();
+            poly(x, U, P); x.strokeStyle = '#e8c06a'; x.lineWidth = U(.026); x.stroke(); poly(R, U, P); R.strokeStyle = RMC(.22, 1); R.lineWidth = U(.026); R.stroke();
+          }
+          // a gilt ormolu rosette between the tips, small gilt bosses either side
+          const cx = x0 + 3, r = .28 * gap, gilt = (c) => { c.fillStyle = c === R ? RMC(.24, 1) : goldGrad(c, U(cx - r), U(mid - r), U(cx + r), U(mid + r)); };
+          for (const c of [x, R]) { star(c, U, cx, mid, r * 1.35, 12, .62); gilt(c); c.fill(); }
+          x.beginPath(); x.arc(U(cx), U(mid), U(r * .55), 0, TAU0); x.fillStyle = '#0d0c0b'; x.fill(); R.beginPath(); R.arc(U(cx), U(mid), U(r * .55), 0, TAU0); R.fillStyle = RMC(.1, 0); R.fill();
+          for (const c of [x, R]) { c.beginPath(); c.arc(U(cx), U(mid), U(r * .3), 0, TAU0); gilt(c); c.fill(); for (const sx of [-1, 1]) { c.beginPath(); c.arc(U(cx + sx * 1.05 * gap), U(mid), U(r * .32), 0, TAU0); gilt(c); c.fill(); } }
+          // gilt fillet round the field
+          for (const c of [x, R]) { c.strokeStyle = c === R ? RMC(.22, 1) : '#e2b862'; c.lineWidth = U(.04); c.strokeRect(U(x0 + .07), U(g.TOP + .07), U(5.86), U(g.H - 1.14)); }
+          x.restore();
+        });
+        x.beginPath(); x.rect(U(g.TX), U(g.TOP), U(g.TW), U(g.H - 1)); x.save(); x.clip(); lay(suede('sdGrnV', '#0d3423'), 0, 0, 0); x.restore();
+        R.fillStyle = RMC(1, 0); R.fillRect(U(g.TX), U(g.TOP), U(g.TW), U(g.H - 1));
+      },
+      rdeps: () => [SL.malaB()],
+      frame(C) {
+        const { x, R, U, g } = C;
+        // black lacquer (a faint depth in it), the gilt Greek key round the rails, gilt fillets on every edge
+        const gr = x.createLinearGradient(0, 0, C.Wc, C.Hc); gr.addColorStop(0, '#141315'); gr.addColorStop(.5, '#0a0a0b'); gr.addColorStop(1, '#121113'); x.fillStyle = gr; x.fillRect(0, 0, C.Wc, C.Hc);
+        R.fillStyle = RMC(.07, 0); R.fillRect(0, 0, C.Wc, C.Hc);
+        for (const c of [x, R]) ringBand(c, U, .1, .1, g.W - .2, g.H - .2, .28, (cc, L, w) => meander(cc, U, L, w, cc === R ? RMC(.24, 1) : '#dcb35e'));
+        // the bar: a malachite panel in a gilt frame on each half
+        for (const [x0, w] of [[g.BX + .1, g.B / 2 - .16], [g.BX + g.B / 2 + .06, g.B / 2 - .16]]) {
+          x.drawImage(SL.malaB(), U(x0), U(g.TOP + .15), U(w), U(g.H - 1.3));
+          for (const c of [x, R]) { c.strokeStyle = c === R ? RMC(.22, 1) : '#e2b862'; c.lineWidth = U(.03); c.strokeRect(U(x0), U(g.TOP + .15), U(w), U(g.H - 1.3)); }
+        }
+        for (const c of [x, R]) { c.strokeStyle = c === R ? RMC(.22, 1) : '#d6ab58'; c.lineWidth = U(.03); c.strokeRect(U(.03), U(.03), U(g.W - .06), U(g.H - .06)); c.strokeRect(U(g.LX - .05), U(g.TOP - .05), U(g.RE - g.LX + .1), U(g.H - .9)); c.strokeRect(U(g.TX - .05), U(g.TOP - .05), U(g.TW + .1), U(g.H - .9)); }
+        x.fillStyle = 'rgba(0,0,0,.8)'; x.fillRect(U(g.BX + g.B / 2) - 1.5, U(g.TOP), 3, U(g.H - 1));
+      },
+      mats(TT, C) {
+        return { side: new TT.MeshPhysicalMaterial({ color: C(0x0b0b0c), roughness: .22, clearcoat: 1, clearcoatRoughness: .04 }),
+          metal: new TT.MeshPhysicalMaterial({ color: C(0xf2c873), metalness: 1, roughness: .2, clearcoat: .4, clearcoatRoughness: .1 }),
+          metalDark: new TT.MeshStandardMaterial({ color: C(0x6a4c14), metalness: 1, roughness: .4 }),
+          top: { roughness: 1, clearcoat: 1, clearcoatRoughness: .04, bump: .0004 }, field: { roughness: 1, clearcoat: .95, clearcoatRoughness: .05, bump: .0005 }, bottom: 0x0b0b0c, corners: true };
+      },
+    },
+    marble: {
+      fdeps: () => [SL.cala(1), SL.nero(), SL.rosso(), suede('sdChar', '#1b1b1d')],
+      field(C) {
+        const { x, R, U, g, lay } = C, mid = g.MID, gap = Math.min(1, (g.H - 1 - 2 * g.PL) / 1.8);
+        R.fillStyle = RMC(.12, 0); R.fillRect(0, 0, C.Wc, C.Hc);
+        const brass = (c, w) => { c.strokeStyle = c === R ? RMC(.24, 1) : '#d9b46a'; c.lineWidth = U(w); };
+        [g.LX, g.RX].forEach((x0, fi) => {
+          x.save(); x.beginPath(); x.rect(U(x0), U(g.TOP), U(6), U(g.H - 1)); x.clip();
+          x.save(); x.translate(U(x0 + (fi ? 6 : 0)), U(g.TOP)); x.scale(fi ? -1 : 1, 1); x.drawImage(SL.cala(1), 0, 0, U(6), U(g.H - 1)); x.restore();
+          for (let i = 0; i < 6; i++) for (const top of [true, false]) {
+            const a = (i % 2 === 0) === top, P = triPts(g, x0, i, top, .44), S = a ? SL.nero() : SL.rosso(), o = (i * 53 + (top ? 0 : 160) + fi * 90) % 320;
+            poly(x, U, P); x.save(); x.clip(); x.drawImage(S, o, (i * 37) % 60, 190, 450, U(P[0][0]), U(Math.min(P[0][1], P[2][1])), U(.88), U(g.PL)); x.restore();
+            for (const c of [x, R]) { poly(c, U, P); brass(c, .032); c.stroke(); }
+          }
+          // a brass compass star between the tips
+          const cx = x0 + 3, r = .3 * gap;
+          for (const c of [x, R]) { star(c, U, cx, mid, r * 1.3, 4, .28); c.fillStyle = c === R ? RMC(.22, 1) : goldGrad(c, U(cx - r), U(mid - r), U(cx + r), U(mid + r)); c.fill(); star(c, U, cx, mid, r * .8, 4, .3, Math.PI / 4); c.fill(); }
+          x.beginPath(); x.arc(U(cx), U(mid), U(r * .22), 0, TAU0); x.fillStyle = '#151416'; x.fill();
+          for (const c of [x, R]) { brass(c, .05); c.strokeRect(U(x0 + .03), U(g.TOP + .03), U(5.94), U(g.H - 1.06)); }
+          x.restore();
+        });
+        x.beginPath(); x.rect(U(g.TX), U(g.TOP), U(g.TW), U(g.H - 1)); x.save(); x.clip(); lay(suede('sdChar', '#1b1b1d'), 0, 0, 0); x.restore();
+        R.fillStyle = RMC(1, 0); R.fillRect(U(g.TX), U(g.TOP), U(g.TW), U(g.H - 1));
+      },
+      rdeps: () => [SL.nero2(), SL.cala(2)],
+      frame(C) {
+        const { x, R, U, g } = C, N = SL.nero2();
+        // Nero Marquina rails (each cut along its length), the bar a Calacatta slab, brass fillets
+        x.save(); x.beginPath(); x.rect(0, 0, U(g.W), U(.5)); x.rect(0, U(g.H - .5), U(g.W), U(.5)); x.clip(); x.drawImage(N, 0, 0, 1024, 128, 0, 0, U(g.W), U(.5)); x.drawImage(N, 0, 128, 1024, 128, 0, U(g.H - .5), U(g.W), U(.5)); x.restore();
+        for (const [x0, w] of [[0, .5], [g.W - .5, .5], [g.RE, g.TX - g.RE]]) { x.save(); x.translate(U(x0 + w), U(.5)); x.rotate(Math.PI / 2); x.drawImage(N, (x0 * 37) % 400, 0, 600, 256, 0, 0, U(g.H - 1), U(w)); x.restore(); }
+        x.save(); x.translate(U(g.BX), U(g.TOP)); x.drawImage(SL.cala(2), 100, 0, 200, 1000, 0, 0, U(g.B), U(g.H - 1)); x.restore();
+        R.fillStyle = RMC(.1, 0); R.fillRect(0, 0, C.Wc, C.Hc);
+        for (const c of [x, R]) {
+          c.strokeStyle = c === R ? RMC(.24, 1) : '#d9b46a'; c.lineWidth = U(.03);
+          c.strokeRect(U(.12), U(.12), U(g.W - .24), U(g.H - .24)); c.lineWidth = U(.05); c.strokeRect(U(.02), U(.02), U(g.W - .04), U(g.H - .04));
+          c.lineWidth = U(.035); c.strokeRect(U(g.BX + .08), U(g.TOP + .08), U(g.B - .16), U(g.H - 1.16));
+        }
+        x.fillStyle = 'rgba(0,0,0,.6)'; x.fillRect(U(g.BX + g.B / 2) - 1.5, U(g.TOP), 3, U(g.H - 1));
+      },
+      mats(TT, C) {
+        const nt = tex(SL.nero2()); nt.wrapS = nt.wrapT = TT.RepeatWrapping; nt.repeat.set(.4, .6);
+        return { side: new TT.MeshPhysicalMaterial({ map: nt, roughness: .12, clearcoat: .9, clearcoatRoughness: .05 }),
+          metal: new TT.MeshPhysicalMaterial({ color: C(0xe4bd70), metalness: 1, roughness: .18, clearcoat: .3, clearcoatRoughness: .1 }),
+          metalDark: new TT.MeshStandardMaterial({ color: C(0x5a4212), metalness: 1, roughness: .4 }),
+          top: { roughness: 1, clearcoat: .9, clearcoatRoughness: .05, bump: .0003 }, field: { roughness: 1, clearcoat: .9, clearcoatRoughness: .04, bump: .0003 }, bottom: 0x161618 };
+      },
+    },
+    shagreen: {
+      fdeps: () => [SL.shag(), W_.ivory(), W_.macassar(), suede('sdBlk', '#141416')],
+      field(C) {
+        const { x, R, U, g, lay } = C, mid = g.MID, gap = Math.min(1, (g.H - 1 - 2 * g.PL) / 1.8);
+        R.fillStyle = RMC(.45, 0); R.fillRect(0, 0, C.Wc, C.Hc);
+        const gold = (c, w) => { c.strokeStyle = c === R ? RMC(.22, 1) : '#e0b95f'; c.lineWidth = U(w); };
+        for (const x0 of [g.LX, g.RX]) {
+          x.save(); x.beginPath(); x.rect(U(x0), U(g.TOP), U(6), U(g.H - 1)); x.clip();
+          lay(SL.shag(), 0, 0, 0, .8);
+          // ivory border with a gilt line inside
+          x.fillStyle = '#efe6d0'; x.save(); x.beginPath(); x.rect(U(x0), U(g.TOP), U(6), U(g.H - 1)); x.rect(U(x0 + .09), U(g.TOP + .09), U(5.82), U(g.H - 1.18)); x.clip('evenodd'); lay(W_.ivory(), 0, 0, 0, .8); x.restore();
+          for (const c of [x, R]) { gold(c, .022); c.strokeRect(U(x0 + .12), U(g.TOP + .12), U(5.76), U(g.H - 1.24)); }
+          for (let i = 0; i < 6; i++) for (const top of [true, false]) {
+            const a = (i % 2 === 0) === top, P = triPts(g, x0, i, top, .42);
+            x.save(); x.shadowColor = 'rgba(0,0,0,.4)'; x.shadowBlur = U(.04); x.shadowOffsetY = U(.01); poly(x, U, P); x.fillStyle = '#20160e'; x.fill(); x.restore();
+            poly(x, U, P); x.save(); x.clip(); lay(a ? W_.ivory() : W_.macassar(), Math.PI / 2 + (top ? .01 : -.01), U(x0 + i + .5), U(mid), a ? .8 : 1.1); x.restore();
+            if (a) { poly(R, U, P); R.fillStyle = RMC(.3, 0); R.fill(); } else { poly(R, U, P); R.fillStyle = RMC(.22, 0); R.fill(); }
+            for (const c of [x, R]) { poly(c, U, P); gold(c, .02); c.stroke(); }
+            // an inlaid gilt chevron near the base of every point (Art Deco)
+            const b = top ? 1 : -1, cx = x0 + i + .5, y0 = (top ? g.TOP : g.BOT) + b * .5;
+            for (const c of [x, R]) { c.beginPath(); c.moveTo(U(cx - .2), U(y0)); c.lineTo(U(cx), U(y0 + b * .2)); c.lineTo(U(cx + .2), U(y0)); gold(c, .03); c.stroke(); }
+          }
+          // a stepped Deco lozenge between the tips: gilt outline, ivory inside, a black onyx centre
+          const cx = x0 + 3, r = .34 * gap, lz = (c, s) => { c.beginPath(); [[0, -1], [.32, -.55], [.55, -.55], [.55, -.32], [1, 0], [.55, .32], [.55, .55], [.32, .55], [0, 1], [-.32, .55], [-.55, .55], [-.55, .32], [-1, 0], [-.55, -.32], [-.55, -.55], [-.32, -.55]].forEach(([px, py], j) => { const X0 = U(cx + px * r * s), Y0 = U(mid + py * r * s); j ? c.lineTo(X0, Y0) : c.moveTo(X0, Y0); }); c.closePath(); };
+          for (const c of [x, R]) { lz(c, 1.25); c.fillStyle = c === R ? RMC(.22, 1) : goldGrad(c, U(cx - r), U(mid - r), U(cx + r), U(mid + r)); c.fill(); }
+          lz(x, 1.08); x.save(); x.clip(); lay(W_.ivory(), 0, 0, 0, .8); x.restore(); lz(R, 1.08); R.fillStyle = RMC(.3, 0); R.fill();
+          x.beginPath(); x.arc(U(cx), U(mid), U(r * .32), 0, TAU0); x.fillStyle = '#111013'; x.fill();
+          x.restore();
+        }
+        x.beginPath(); x.rect(U(g.TX), U(g.TOP), U(g.TW), U(g.H - 1)); x.save(); x.clip(); lay(suede('sdBlk', '#141416'), 0, 0, 0); x.restore();
+        R.fillStyle = RMC(1, 0); R.fillRect(U(g.TX), U(g.TOP), U(g.TW), U(g.H - 1));
+      },
+      rdeps: () => [W_.macD(), W_.ivory(), SL.shag()],
+      frame(C) {
+        const { x, R, U, g, k, lay, strip, mitre } = C;
+        strip(hz => lay(W_.macD(), !hz, k / 150)); mitre();
+        for (const [x0, w] of C.inner) { x.save(); x.beginPath(); x.rect(U(x0), U(g.TOP), U(w), U(g.H - 1)); x.clip(); lay(SL.shag(), false, .64); x.restore(); }
+        R.fillStyle = RMC(.24, 0); R.fillRect(0, 0, C.Wc, C.Hc);
+        // ivory stringing (two lines) round the rails, gilt stepped corners
+        x.strokeStyle = '#efe6d0'; x.lineWidth = U(.035); x.strokeRect(U(.1), U(.1), U(g.W - .2), U(g.H - .2)); x.lineWidth = U(.02); x.strokeRect(U(.38), U(.38), U(g.W - .76), U(g.H - .76));
+        for (const [x0, w] of C.inner) { x.strokeStyle = '#efe6d0'; x.lineWidth = U(.025); x.strokeRect(U(x0 + .05), U(g.TOP + .05), U(w - .1), U(g.H - 1.1)); }
+        for (const [sx, sy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) {
+          const ox = sx ? g.W : 0, oy = sy ? g.H : 0, fx = sx ? -1 : 1, fy = sy ? -1 : 1;
+          for (const c of [x, R]) {
+            c.beginPath(); [[.04, .04], [.46, .04], [.46, .14], [.28, .14], [.28, .28], [.14, .28], [.14, .46], [.04, .46]].forEach(([px, py], j) => { const X0 = U(ox + fx * px), Y0 = U(oy + fy * py); j ? c.lineTo(X0, Y0) : c.moveTo(X0, Y0); }); c.closePath();
+            c.fillStyle = c === R ? RMC(.2, 1) : goldGrad(c, U(ox), U(oy), U(ox + fx * .5), U(oy + fy * .5)); c.fill();
+          }
+        }
+        x.fillStyle = 'rgba(10,4,0,.7)'; x.fillRect(U(g.BX + g.B / 2) - 1.5, U(g.TOP), 3, U(g.H - 1));
+      },
+      mats(TT, C) {
+        const wt = tex(veneer('vMacSide', '#4c2c18', '#0b0604', { stripe: .8, ring: 3, seed: 65 })); wt.wrapS = wt.wrapT = TT.RepeatWrapping; wt.repeat.set(.18, 1.4);
+        return { side: new TT.MeshPhysicalMaterial({ map: wt, roughness: .3, clearcoat: .85, clearcoatRoughness: .12 }),
+          metal: new TT.MeshPhysicalMaterial({ color: C(0xeac27a), metalness: 1, roughness: .2, clearcoat: .3, clearcoatRoughness: .1 }),
+          metalDark: new TT.MeshStandardMaterial({ color: C(0x5a4212), metalness: 1, roughness: .4 }),
+          top: { roughness: 1, clearcoat: .8, clearcoatRoughness: .14, bump: .0015 }, field: { roughness: 1, clearcoat: .55, clearcoatRoughness: .3, bump: .0045 }, bottom: 0x120a06 };
+      },
+    },
+  };
+  const LOOKS = ['marq', 'scarlet', 'nacre', 'malachite', 'marble', 'shagreen'];
+  const normLook = l => LOOKS.includes(l) ? l : 'marq';
+  const RM = new WeakMap();   // top picture → its roughness / metalness picture (the luxury looks)
 
   /* ---------- the top of the case (field level): fields, points, trays ---------- */
   const PX = () => matchMedia('(pointer: coarse)').matches ? 2048 : 2560;
   function fieldCanvas(look, g) {
     const k = PX() / g.W, Wc = Math.round(g.W * k), Hc = Math.round(g.H * k), c = cv(Wc, Hc);
     // (drawn once its veneers / leather are there — on the portal they are made in a worker)
-    const deps = look === 'scarlet' ? [leatherTile(), suede('sdBlk', '#141416')]
+    const L = LUX[look], rm = L && !L.noRM ? cv(Math.round(Wc / 2), Math.round(Hc / 2)) : null;
+    if (rm) RM.set(c, rm);
+    const deps = L ? L.fdeps() : look === 'scarlet' ? [leatherTile(), suede('sdBlk', '#141416')]
       : ['walnut', 'walnutR', 'dCream', 'holly', 'pointL', 'dBrown', 'dRed', 'dGold', 'dCyan', 'dNavy', 'dGreen', 'dBlack', 'dBlue', 'dOrange'].map(n => W_[n]()).concat([suede('sdTray', '#16120f')]);
-    return later(deps, c, (x) => {
+    const out = later(deps, c, (x) => {
     const U = v => v * k;
     const fields = [g.LX, g.RX];
     const triN = (x0, i, top) => { const cx = U(x0 + i + .5), y0 = U(top ? g.TOP : g.BOT), y1 = U(top ? g.TOP + g.PL : g.BOT - g.PL), hw = U(.31); x.beginPath(); x.moveTo(cx - hw, y0); x.lineTo(cx + hw, y0); x.lineTo(cx, y1); x.closePath(); };   // the marquetry board's slimmer points
     const tri = (x0, i, top) => { const cx = U(x0 + i + .5), y0 = U(top ? g.TOP : g.BOT), y1 = U(top ? g.TOP + g.PL : g.BOT - g.PL), hw = U(.455); x.beginPath(); x.moveTo(cx - hw, y0); x.lineTo(cx + hw, y0); x.lineTo(cx, y1); x.closePath(); };
     // a swatch laid along a direction (angle) to fill the current clip
     const lay = (sw, ang, cx, cy, sc = 1) => { x.save(); x.translate(cx, cy); x.rotate(ang); const s = Math.max(Wc, Hc) * 1.5; x.scale(sc, sc); const p = x.createPattern(sw, 'repeat'); x.fillStyle = p; x.fillRect(-s, -s, 2 * s, 2 * s); x.restore(); };
-    if (look === 'scarlet') {
+    if (L) {
+      const R = rm ? rm.getContext('2d') : cv(2, 2).getContext('2d'); if (rm) R.setTransform(.5, 0, 0, .5, 0, 0);
+      L.field({ x, R, U, g, Wc, Hc, k, lay });
+    } else if (look === 'scarlet') {
       const L = leatherTile();
       const leather = (col, op, sc = .3, lift = 0) => { x.fillStyle = col; x.fill(); x.save(); x.clip(); const p = x.createPattern(L, 'repeat'); p.setTransform && p.setTransform(new DOMMatrix().scale(sc * k / 160)); x.fillStyle = p; x.globalCompositeOperation = 'overlay'; x.globalAlpha = op; x.fillRect(0, 0, Wc, Hc); if (lift) { x.globalCompositeOperation = 'screen'; x.globalAlpha = lift; x.fillRect(0, 0, Wc, Hc); } x.restore(); };
       x.beginPath(); x.rect(0, 0, Wc, Hc); leather('#18181a', .9, .3, .07);
@@ -221,16 +628,24 @@
     };
     ao(g.LX, g.TOP, 6, g.H - 1); ao(g.RX, g.TOP, 6, g.H - 1); ao(g.TX, g.TOP, g.TW, g.H - 1);
     });
+    if (rm) later([out], rm, () => {});   // (the metal picture is drawn with the top one: re-uploaded when it is done)
+    return out;
   }
   /* ---------- the rails (frame, bar, tray divider), seen from above ---------- */
   function frameCanvas(look, g) {
     const k = 2048 / g.W, Wc = 2048, Hc = Math.round(g.H * k), c = cv(Wc, Hc), U = v => v * k;
-    return later(look === 'scarlet' ? [leatherTile()] : [W_.walnutR(), W_.walnut()], c, (x) => {
+    const L = LUX[look], rm = L && !L.noRM ? cv(1024, Math.round(Hc / 2)) : null;
+    if (rm) RM.set(c, rm);
+    const out = later(L ? L.rdeps() : look === 'scarlet' ? [leatherTile()] : [W_.walnutR(), W_.walnut()], c, (x) => {
     const IN = [[g.LX, g.TOP], [g.W - .5, g.TOP], [g.W - .5, g.BOT], [g.LX, g.BOT]], OUT = [[0, 0], [g.W, 0], [g.W, g.H], [0, g.H]];
     const strip = (draw) => { for (let i = 0; i < 4; i++) { const j = (i + 1) % 4; x.save(); x.beginPath(); x.moveTo(U(OUT[i][0]), U(OUT[i][1])); x.lineTo(U(OUT[j][0]), U(OUT[j][1])); x.lineTo(U(IN[j][0]), U(IN[j][1])); x.lineTo(U(IN[i][0]), U(IN[i][1])); x.closePath(); x.clip(); draw(i % 2 === 0); x.restore(); } };
     const lay = (sw, vert, sc) => { const p = x.createPattern(sw, 'repeat'); p.setTransform && p.setTransform(new DOMMatrix().rotate(vert ? 90 : 0).scale(sc)); x.fillStyle = p; x.fillRect(0, 0, Wc, Hc); };
     const inner = [[g.BX, g.B], [g.RE, g.TX - g.RE]];
-    if (look === 'scarlet') {
+    if (L) {
+      const R = rm ? rm.getContext('2d') : cv(2, 2).getContext('2d'); if (rm) R.setTransform(.5, 0, 0, .5, 0, 0);
+      const lay2 = (sw, vert, sc) => lay(sw, vert, sc), mitre = () => { x.strokeStyle = 'rgba(20,8,2,.55)'; x.lineWidth = 1.5; x.beginPath(); for (let i = 0; i < 4; i++) { x.moveTo(U(OUT[i][0]), U(OUT[i][1])); x.lineTo(U(IN[i][0]), U(IN[i][1])); } x.stroke(); };
+      L.frame({ x, R, U, g, Wc, Hc, k, inner, strip, mitre, lay: (sw, vert, sc) => lay2(sw, vert, sc) });
+    } else if (look === 'scarlet') {
       const L = leatherTile();
       x.fillStyle = '#161618'; x.fillRect(0, 0, Wc, Hc);
       x.globalCompositeOperation = 'overlay'; x.globalAlpha = .95; lay(L, false, .3 * k / 160); x.globalCompositeOperation = 'screen'; x.globalAlpha = .07; lay(L, false, .3 * k / 160); x.globalCompositeOperation = 'source-over'; x.globalAlpha = 1;
@@ -252,6 +667,8 @@
       x.fillStyle = 'rgba(10,4,0,.7)'; x.fillRect(U(g.BX + g.B / 2) - 1.5, U(g.TOP), 3, U(g.H - 1));
     }
     });
+    if (rm) later([out], rm, () => {});
+    return out;
   }
 
   /* ---------- materials ---------- */
@@ -260,6 +677,7 @@
   function mats(look) {
     if (MAT[look]) return MAT[look];
     const TT = T(), C = h => new TT.Color(h).convertSRGBToLinear();
+    if (LUX[look]) return (MAT[look] = LUX[look].mats(TT, C));
     const o = {};
     if (look === 'scarlet') {
       const lt = tex(leatherTile()); lt.wrapS = lt.wrapT = TT.RepeatWrapping; lt.repeat.set(3.5, 3.5);
@@ -285,11 +703,15 @@
     let e = TOPS.find(t => t.key === key);
     if (!e) {
       const m = mats(look), TT = T();
-      const ft = tex(fieldCanvas(look, g), 8), rt = tex(frameCanvas(look, g), 8);
-      const mk = (map, p) => { const mt = new TT.MeshPhysicalMaterial({ map, roughness: p.roughness, clearcoat: p.clearcoat, clearcoatRoughness: p.clearcoatRoughness }); mt.bumpMap = map; mt.bumpScale = p.bump; return mt; };
-      e = { key, field: mk(ft, m.field), rail: mk(rt, m.top) };
+      const fc = fieldCanvas(look, g), rc = frameCanvas(look, g), ft = tex(fc, 8), rt = tex(rc, 8);
+      const mk = (map, p, rmc) => {
+        const mt = new TT.MeshPhysicalMaterial({ map, roughness: p.roughness, clearcoat: p.clearcoat, clearcoatRoughness: p.clearcoatRoughness }); mt.bumpMap = map; mt.bumpScale = p.bump;
+        if (rmc) { const t = new TT.CanvasTexture(rmc); t.anisotropy = 4; mt.roughnessMap = mt.metalnessMap = t; mt.roughness = 1; mt.metalness = 1; mt.envMapIntensity = 1.15; }
+        return mt;
+      };
+      e = { key, field: mk(ft, m.field, RM.get(fc)), rail: mk(rt, m.top, RM.get(rc)) };
       TOPS.unshift(e);
-      while (TOPS.length > 3) { const old = TOPS.pop(); [old.field, old.rail].forEach(mt => { mt.map.dispose(); mt.dispose(); }); }
+      while (TOPS.length > 3) { const old = TOPS.pop(); [old.field, old.rail].forEach(mt => { mt.map.dispose(); if (mt.roughnessMap) mt.roughnessMap.dispose(); mt.dispose(); }); }
     }
     return e;
   }
@@ -361,9 +783,9 @@
 
   /* ---------- the board ---------- */
   function board(look = 'marq', H = 12) {
-    look = look === 'scarlet' ? 'scarlet' : 'marq';
+    look = normLook(look);
     const TT = T(), g = geom(H), grp = new TT.Group(), m = mats(look), tm = topMats(look, g);
-    const bottom = new TT.MeshStandardMaterial({ color: look === 'scarlet' ? 0x111112 : 0x2a1608, roughness: .9 });
+    const bottom = new TT.MeshStandardMaterial({ color: m.bottom || (look === 'scarlet' ? 0x111112 : 0x2a1608), roughness: .9 });
     const base = new TT.Mesh(new TT.BoxGeometry(g.W - .02, FY, g.H - .02), [m.side, m.side, tm.field, bottom, m.side, m.side]);
     base.position.y = FY / 2; base.receiveShadow = true; base.castShadow = true; grp.add(base);
     // outer rails (mitred), the bar (two rails meeting at the fold), the divider between field and tray
@@ -377,6 +799,7 @@
     // hinges across the fold
     const bx = g.BX + half - W / 2, hl = Math.min(1.1, (g.H - 1) * .16);
     for (const uy of [g.TOP + 1.25, g.BOT - 1.25]) grp.add(hinge(m, bx, uy - g.H / 2, hl));
+    if (m.corners) for (const sx of [1, -1]) for (const sz of [1, -1]) grp.add(corner(m, g, sx, sz));
     if (look === 'scarlet') {
       grp.add(piping(m, g, g.LX, g.TOP, 6, g.H - 1)); grp.add(piping(m, g, g.RX, g.TOP, 6, g.H - 1)); grp.add(piping(m, g, g.TX, g.TOP, g.TW, g.H - 1));
       for (const sx of [1, -1]) for (const sz of [1, -1]) grp.add(corner(m, g, sx, sz));
@@ -388,9 +811,12 @@
 
   /* ---------- checkers, dice, cube ---------- */
   // id → rim metal + face leather (the light colours get light faces)
-  const CKL = { gold: ['gold', 'ivory'], black: ['plat', 'black'], white: ['silver', 'white'], red: ['gold', 'scarlet'] };
-  const RIM = { gold: [0xe2bf72, .26], plat: [0xd6d8dc, .2], silver: [0xdfe2e7, .14] };
-  const FACE = { ivory: '#e9dfc8', black: '#1c1c1f', white: '#f5f2ea', scarlet: '#a8141d' };
+  // (2026-11-11) + malachite in gold, lapis lazuli in platinum, mother-of-pearl in gold, cognac leather in rose gold
+  const CKL = { gold: ['gold', 'ivory'], black: ['plat', 'black'], white: ['silver', 'white'], red: ['gold', 'scarlet'],
+    green: ['gold', 'malachite'], blue: ['plat', 'lapis'], pearl: ['gold', 'nacre'], brown: ['rose', 'cognac'] };
+  const RIM = { gold: [0xe2bf72, .26], plat: [0xd6d8dc, .2], silver: [0xdfe2e7, .14], rose: [0xe6b296, .24] };
+  const FACE = { ivory: '#e9dfc8', black: '#1c1c1f', white: '#f5f2ea', scarlet: '#a8141d', malachite: '#1d7a4f', lapis: '#1f3a8a', nacre: '#f2ece8', cognac: '#6a3214' };
+  const STONE = { malachite: 1, lapis: 1, nacre: 1 };
   const CK_R = .47, CK_H = .2;
   const ckMats = {};
   function checkerMats(id) {
@@ -399,7 +825,14 @@
     const metal = new TT.MeshPhysicalMaterial({ color: new TT.Color(col).convertSRGBToLinear(), metalness: 1, roughness: rough, clearcoat: .4, clearcoatRoughness: .2, envMapIntensity: 1.2 });
     // the inset face: leather grain, a slightly darker edge where it meets the ring
     const c = cv(256, 256);
-    later([leatherTile()], c, (x) => {
+    if (STONE[face]) {   // a polished slice of stone / shell, a soft shade where it meets the ring
+      const src = face === 'malachite' ? SL.malaB() : face === 'lapis' ? SL.lapis() : SL.pearl();
+      later([src], c, (x) => {
+        if (face === 'malachite') x.drawImage(src, 0, 380, 256, 256, 0, 0, 256, 256); else x.drawImage(src, 0, 0, 256, 256);
+        if (face === 'lapis') { let r = 77; const rnd = () => ((r = (r * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff); for (let j = 0; j < 46; j++) { x.fillStyle = `rgba(${236 - j % 3 * 14},${196 - j % 3 * 12},${110},${.55 + rnd() * .4})`; x.beginPath(); x.arc(rnd() * 256, rnd() * 256, .6 + rnd() * 1.6, 0, TAU); x.fill(); } }   // pyrite flecks
+        const gr = x.createRadialGradient(128, 128, 96, 128, 128, 128); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, face === 'nacre' ? 'rgba(80,60,40,.25)' : 'rgba(0,0,0,.4)'); x.fillStyle = gr; x.fillRect(0, 0, 256, 256);
+      });
+    } else later([leatherTile()], c, (x) => {
     x.fillStyle = FACE[face]; x.fillRect(0, 0, 256, 256);
     x.globalCompositeOperation = 'overlay'; x.globalAlpha = face === 'black' ? 1 : face === 'white' ? .12 : .7; const p = x.createPattern(leatherTile(), 'repeat'); p.setTransform && p.setTransform(new DOMMatrix().scale(.45)); x.fillStyle = p; x.fillRect(0, 0, 256, 256);
     if (face === 'black') { x.globalCompositeOperation = 'screen'; x.globalAlpha = .05; x.fillRect(0, 0, 256, 256); }
@@ -407,8 +840,8 @@
     const gr = x.createRadialGradient(128, 128, 90, 128, 128, 128); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, face === 'black' ? 'rgba(0,0,0,.5)' : 'rgba(60,40,10,.28)'); x.fillStyle = gr; x.fillRect(0, 0, 256, 256);
     });
     const ft = tex(c, 4);
-    const en = face === 'white';   // white = glossy enamel, the others leather
-    const faceM = new TT.MeshPhysicalMaterial({ map: ft, bumpMap: ft, bumpScale: en ? .0012 : .006, roughness: en ? .18 : face === 'black' ? .42 : .5, sheen: new TT.Color(face === 'black' ? 0x303036 : en ? 0x000000 : 0x6a6050), clearcoat: en ? 1 : .1, clearcoatRoughness: en ? .05 : .5 });
+    const en = face === 'white' || STONE[face];   // white = glossy enamel, stone / shell polished, the others leather
+    const faceM = new TT.MeshPhysicalMaterial({ map: ft, bumpMap: ft, bumpScale: STONE[face] ? .0004 : en ? .0012 : .006, roughness: STONE[face] ? .14 : en ? .18 : face === 'black' ? .42 : .5, sheen: new TT.Color(face === 'black' ? 0x303036 : en ? 0x000000 : face === 'cognac' ? 0x8a5a3a : 0x6a6050), clearcoat: en ? 1 : face === 'cognac' ? .25 : .1, clearcoatRoughness: en ? .05 : .45 });
     faceM.polygonOffset = true; faceM.polygonOffsetFactor = -2; faceM.polygonOffsetUnits = -6;
     return (ckMats[id] = { metal, face: faceM });
   }
@@ -426,7 +859,8 @@
     g.userData.ck = id; return g;
   }
   // dice: rounded ivory / ebony / scarlet cubes with drilled, painted pips; faces +y 1, −y 6, +x 3, −x 4, +z 2, −z 5
-  const DIE = { gold: ['#efe6d2', '#2a0e0b', 0], black: ['#1c1c1f', '#e0be6e', 1], white: ['#f8f6f0', '#141418', 0], red: ['#ab1822', '#f6eedc', 0] };
+  const DIE = { gold: ['#efe6d2', '#2a0e0b', 0], black: ['#1c1c1f', '#e0be6e', 1], white: ['#f8f6f0', '#141418', 0], red: ['#ab1822', '#f6eedc', 0],
+    green: ['#14603e', '#e8c56e', 1], blue: ['#1c357e', '#e8c56e', 1], pearl: ['#f6f0ec', '#6a4428', 0], brown: ['#7e4320', '#f6eadb', 0] };
   const PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
   const dieMats = {};
   function dieMat(id) {
@@ -643,5 +1077,5 @@
     };
   }
 
-  X.backgammon = { board, frameOn, checker, die, dieRot, dieG, dieGTop, dieGPose, cube, sprites, geom, slotX, stackXZ, toWorld, FY, RH, CKL, DIE, CK_R, CK_H };
+  X.backgammon = { LOOKS, board, frameOn, checker, die, dieRot, dieG, dieGTop, dieGPose, cube, sprites, geom, slotX, stackXZ, toWorld, FY, RH, CKL, DIE, CK_R, CK_H };
 })();

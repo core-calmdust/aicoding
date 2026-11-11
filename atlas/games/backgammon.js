@@ -37,13 +37,16 @@
     id: { roll: 'Lempar', undo: 'Urungkan', ok: 'Selesai', tapCk: 'Ketuk bidak yang menyala', tapDest: 'Ketuk tujuan', noMove: 'Tidak ada langkah sah', aiNoMove: 'AI tidak bisa bergerak', youFirst: 'Kamu jalan duluan!', aiFirst: 'AI jalan duluan', k1: 'Tunggal (1 poin)', k2: 'Gammon (2 poin)', k3: 'Backgammon (3 poin)' },
     tr: { roll: 'At', undo: 'Geri al', ok: 'Tamam', tapCk: 'Parlayan pula dokun', tapDest: 'Gideceği yere dokun', noMove: 'Yasal hamle yok', aiNoMove: 'YZ oynayamıyor', youFirst: 'İlk sen başlıyorsun!', aiFirst: 'İlk YZ başlıyor', k1: 'Tek (1 puan)', k2: 'Mars (2 puan)', k3: 'Katmerli mars (3 puan)' },
   };
-  const CN = { ja: { gold: '金', black: '黒', white: '白', red: '赤' }, en: { gold: 'Gold', black: 'Black', white: 'White', red: 'Red' }, zh: { gold: '金', black: '黑', white: '白', red: '红' }, ko: { gold: '금', black: '검정', white: '흰색', red: '빨강' },
-    es: { gold: 'Oro', black: 'Negro', white: 'Blanco', red: 'Rojo' }, fr: { gold: 'Or', black: 'Noir', white: 'Blanc', red: 'Rouge' }, pt: { gold: 'Ouro', black: 'Preto', white: 'Branco', red: 'Vermelho' }, de: { gold: 'Gold', black: 'Schwarz', white: 'Weiß', red: 'Rot' } };
+  const CN = { ja: { gold: '金', black: '黒', white: '白', red: '赤', green: '緑', blue: '青', pearl: 'パール', brown: '茶' }, en: { gold: 'Gold', black: 'Black', white: 'White', red: 'Red', green: 'Green', blue: 'Blue', pearl: 'Pearl', brown: 'Brown' },
+    zh: { gold: '金', black: '黑', white: '白', red: '红', green: '绿', blue: '蓝', pearl: '珍珠', brown: '棕' }, 'zh-TW': { gold: '金', black: '黑', white: '白', red: '紅', green: '綠', blue: '藍', pearl: '珍珠', brown: '棕' }, ko: { gold: '금', black: '검정', white: '흰색', red: '빨강', green: '녹색', blue: '파랑', pearl: '진주', brown: '갈색' },
+    es: { gold: 'Oro', black: 'Negro', white: 'Blanco', red: 'Rojo', green: 'Verde', blue: 'Azul', pearl: 'Perla', brown: 'Marrón' }, fr: { gold: 'Or', black: 'Noir', white: 'Blanc', red: 'Rouge', green: 'Vert', blue: 'Bleu', pearl: 'Nacre', brown: 'Brun' }, pt: { gold: 'Ouro', black: 'Preto', white: 'Branco', red: 'Vermelho', green: 'Verde', blue: 'Azul', pearl: 'Pérola', brown: 'Marrom' }, de: { gold: 'Gold', black: 'Schwarz', white: 'Weiß', red: 'Rot', green: 'Grün', blue: 'Blau', pearl: 'Perlmutt', brown: 'Braun' },
+    ru: { gold: 'Золотые', black: 'Чёрные', white: 'Белые', red: 'Красные', green: 'Зелёные', blue: 'Синие', pearl: 'Перламутровые', brown: 'Коричневые' }, tr: { gold: 'Altın', black: 'Siyah', white: 'Beyaz', red: 'Kırmızı', green: 'Yeşil', blue: 'Mavi', pearl: 'İnci', brown: 'Kahverengi' }, id: { gold: 'Emas', black: 'Hitam', white: 'Putih', red: 'Merah', green: 'Hijau', blue: 'Biru', pearl: 'Mutiara', brown: 'Cokelat' },
+    hi: { gold: 'सुनहरा', black: 'काला', white: 'सफ़ेद', red: 'लाल', green: 'हरा', blue: 'नीला', pearl: 'मोती', brown: 'भूरा' }, ar: { gold: 'الذهبي', black: 'الأسود', white: 'الأبيض', red: 'الأحمر', green: 'الأخضر', blue: 'الأزرق', pearl: 'اللؤلؤي', brown: 'البني' } };
   const PV = { ja: { turnC: '{c}の番', firstC: '{c}が先攻！', winC: '{c}の勝ち', noMoveC: '{c}は動かせません' }, en: { turnC: "{c}'s turn", firstC: '{c} goes first!', winC: '{c} wins', noMoveC: '{c} cannot move' },
     zh: { turnC: '轮到{c}', firstC: '{c}先走！', winC: '{c}获胜', noMoveC: '{c}无法移动' }, ko: { turnC: '{c} 차례', firstC: '{c}이(가) 먼저!', winC: '{c} 승리', noMoveC: '{c}은(는) 움직일 수 없어요' },
     ru: { turnC: 'Ход: {c}', firstC: '{c} ходят первыми!', winC: 'Победа: {c}', noMoveC: '{c}: нет ходов' }, 'zh-TW': { turnC: '輪到{c}', firstC: '{c}先走！', winC: '{c}獲勝', noMoveC: '{c}無法移動' },
     id: { turnC: 'Giliran {c}', firstC: '{c} jalan duluan!', winC: '{c} menang', noMoveC: '{c} tidak bisa bergerak' }, tr: { turnC: 'Sıra: {c}', firstC: 'İlk {c} başlıyor!', winC: '{c} kazandı', noMoveC: '{c} oynayamıyor' } };
-  const DOT = { gold: 'radial-gradient(circle,#e9dfc8 52%,#d8b25e 56%)', black: 'radial-gradient(circle,#1c1c1f 52%,#d6d8dc 56%)', white: 'radial-gradient(circle,#f5f2ea 52%,#c9ccd2 56%)', red: 'radial-gradient(circle,#a8141d 52%,#d8b25e 56%)' };
+  const DOT = { gold: 'radial-gradient(circle,#e9dfc8 52%,#d8b25e 56%)', black: 'radial-gradient(circle,#1c1c1f 52%,#d6d8dc 56%)', white: 'radial-gradient(circle,#f5f2ea 52%,#c9ccd2 56%)', red: 'radial-gradient(circle,#a8141d 52%,#d8b25e 56%)', green: 'radial-gradient(circle,#1d7a4f 52%,#d8b25e 56%)', blue: 'radial-gradient(circle,#1f3a8a 52%,#d6d8dc 56%)', pearl: 'radial-gradient(circle,#f2ece8 52%,#d8b25e 56%)', brown: 'radial-gradient(circle,#8a4a22 52%,#e6b296 56%)' };
   const NOSFX = { tok() {}, rattle() {}, blip() {}, chime() {} };
 
   function tableStart(ctx) {
@@ -55,7 +58,7 @@
     let look = 'marq', ck = ['gold', 'black'];
     try {
       const v = localStorage.getItem('atlas-bg-look'), st = (JSON.parse(localStorage.getItem('aicoding-backgammon-v2') || '{}') || {}).settings || {};
-      look = v === 'scarlet' ? 'scarlet' : v === 'marq' ? 'marq' : st.skin === 'scarlet' ? 'scarlet' : 'marq';
+      look = (M3.LOOKS || ['marq', 'scarlet']).includes(v) ? v : st.skin === 'scarlet' ? 'scarlet' : 'marq';   // (six 3D boards, 2026-11-11)
       if (st.ck && M3.CKL[st.ck[0]] && M3.CKL[st.ck[1]] && st.ck[0] !== st.ck[1]) ck = st.ck.slice();
     } catch (e) {}
     const CID = [ck[0], ck[1]];
@@ -104,7 +107,7 @@
       return [ux - W2, uy - H2];
     }
     // the count on a stack's top checker (flat board: more than min(5, cap) checkers), in the checker's own ink as in the full game
-    const INK = { gold: '#4a3414', black: '#efe6cf', white: '#3a3630', red: '#fff1e0' }, cntTex = {}, cnts = new TH.Group(); board.add(cnts);
+    const INK = { gold: '#4a3414', black: '#efe6cf', white: '#3a3630', red: '#fff1e0', green: '#f6e6b8', blue: '#f4e6bc', pearl: '#3e3430', brown: '#fbeedb' }, cntTex = {}, cnts = new TH.Group(); board.add(cnts);
     function cntMesh(n, id) {
       const k = id + n; if (!cntTex[k]) { const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'); x.fillStyle = INK[id] || '#2b3044'; x.font = '800 78px "Shippori Mincho B1", Georgia, "Times New Roman", serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(String(n), 64, 70); cntTex[k] = new TH.CanvasTexture(c); cntTex[k].encoding = TH.sRGBEncoding; }
       const m = new TH.Mesh(new TH.PlaneGeometry(.7, .7), new TH.MeshBasicMaterial({ map: cntTex[k], transparent: true, depthWrite: false, toneMapped: false })); m.rotation.x = -Math.PI / 2; m.renderOrder = 3; return m;

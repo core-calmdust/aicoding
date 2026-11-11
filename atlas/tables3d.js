@@ -171,6 +171,7 @@
     mcm: { ja: 'ミッドセンチュリー 3D', en: 'Mid-century 3D', zh: '中世纪现代 3D', ko: '미드센추리 3D', es: 'Mid-century 3D', fr: 'Mid-century 3D', pt: 'Mid-century 3D', de: 'Mid-Century 3D', hi: 'मिड-सेंचुरी 3D', ar: 'منتصف القرن ثلاثي', ru: 'Мид-сенчури 3D', 'zh-TW': '中世紀現代 3D', id: '3D mid-century', tr: 'Mid-century 3D' },
     tycoon: { ja: '大富豪 3D', en: 'Tycoon 3D', zh: '大富豪 3D', ko: '대부호 3D', es: 'Magnate 3D', fr: 'Magnat 3D', pt: 'Magnata 3D', de: 'Tycoon 3D', hi: 'रईस 3D', ar: 'الثري ثلاثي', ru: 'Магнат 3D', 'zh-TW': '大富豪 3D', id: '3D Konglomerat', tr: 'Milyoner 3D' },
   };
+  const BGSK = { marq: 'marquetry', scarlet: 'scarlet', nacre: 'andalus', malachite: 'emerald', marble: 'marble', shagreen: 'midnight' };   // backgammon: the 3D board → its 2D skin
   const BOARDS = {
     // atlas/skin/chess.js: 'atlas-chess-pc' = the piece set ('1' lux · 'wood' · '0' the 2D pieces), '-bd' = the board's wood
     chess: { list: ['lux', 'wood'],
@@ -179,10 +180,11 @@
     // atlas/skin/go.js / gomoku.js: 'kaya' | 'lacquer' ('0': the 2D stones)
     go: { list: ['kaya', 'lacquer'], get: () => ls.get('atlas-go-look') === 'lacquer' ? 'lacquer' : 'kaya', set: k => ls.set('atlas-go-look', k) },
     gomoku: { list: ['lacquer', 'kaya'], get: () => ls.get('atlas-gomoku-look') === 'kaya' ? 'kaya' : 'lacquer', set: k => ls.set('atlas-gomoku-look', k) },
-    // atlas/skin/backgammon.js: 'atlas-bg-look' + the game's own settings.skin (marquetry / scarlet)
-    backgammon: { list: ['marq', 'scarlet'],
-      get: () => { const v = ls.get('atlas-bg-look'); if (v === 'scarlet' || v === 'marq') return v; try { return (JSON.parse(ls.get('aicoding-backgammon-v2') || '{}').settings || {}).skin === 'scarlet' ? 'scarlet' : 'marq'; } catch (e) { return 'marq'; } },
-      set: k => { ls.set('atlas-bg-look', k); try { const o = JSON.parse(ls.get('aicoding-backgammon-v2') || '{}') || {}; o.settings = o.settings || {}; o.settings.skin = k === 'scarlet' ? 'scarlet' : 'marquetry'; ls.set('aicoding-backgammon-v2', JSON.stringify(o)); } catch (e) {} } },
+    // atlas/skin/backgammon.js: 'atlas-bg-look' + the game's own settings.skin (marquetry / scarlet); 2026-11-11: six boards —
+    // 寄木細工 · レザー · ダマスカス螺鈿 · 孔雀石 · 大理石と真鍮 · シャグリーン (the 2D page under a new look keeps a related 2D skin)
+    backgammon: { list: ['marq', 'scarlet', 'nacre', 'malachite', 'marble', 'shagreen'],
+      get: () => { const v = ls.get('atlas-bg-look'); if (BOARDS.backgammon.list.includes(v)) return v; try { return (JSON.parse(ls.get('aicoding-backgammon-v2') || '{}').settings || {}).skin === 'scarlet' ? 'scarlet' : 'marq'; } catch (e) { return 'marq'; } },
+      set: k => { ls.set('atlas-bg-look', k); try { const o = JSON.parse(ls.get('aicoding-backgammon-v2') || '{}') || {}; o.settings = o.settings || {}; o.settings.skin = BGSK[k] || 'marquetry'; ls.set('aicoding-backgammon-v2', JSON.stringify(o)); } catch (e) {} } },
     // atlas/skin/agon.js: 'atlas-agon-look' ('victorian' | 'folk' | '2d') + 'atlas-agon-look3' (the last 3D board)
     agon: { list: ['victorian', 'folk'],
       get: () => (ls.get('atlas-agon-look3') || ls.get('atlas-agon-look')) === 'folk' ? 'folk' : 'victorian',
@@ -212,8 +214,40 @@
     ludo: { list: ['classic', 'peg', 'street', 'mondrian', 'cutout', 'marble'], get: () => { const v = ls.get('atlas-ludo-look'); return ['marble', 'street', 'peg', 'mondrian', 'cutout'].includes(v) ? v : 'classic'; }, set: k => ls.set('atlas-ludo-look', k) },
   };
   X.BOARDS = BOARDS;
+  // backgammon (2026-11-11): each player picks the colour of their checkers (eight 3D sets) — the game's own settings.ck
+  // ('aicoding-backgammon-v2'); [0] = you / the near side, [1] = the opponent. The board view's panel shows them as two rows of swatches
+  const CKN = { ja: ['金', '黒', '赤', '白', '緑', '青', 'パール', '茶', 'あなた', '相手', '駒の色'], en: ['Gold', 'Black', 'Red', 'White', 'Green', 'Blue', 'Pearl', 'Brown', 'You', 'Opponent', 'Checker colours'],
+    zh: ['金', '黑', '红', '白', '绿', '蓝', '珍珠', '棕', '你', '对手', '棋子颜色'], 'zh-TW': ['金', '黑', '紅', '白', '綠', '藍', '珍珠', '棕', '你', '對手', '棋子顏色'], ko: ['금', '검정', '빨강', '흰색', '녹색', '파랑', '진주', '갈색', '나', '상대', '말 색'],
+    es: ['Oro', 'Negro', 'Rojo', 'Blanco', 'Verde', 'Azul', 'Perla', 'Marrón', 'Tú', 'Rival', 'Color de las fichas'], fr: ['Or', 'Noir', 'Rouge', 'Blanc', 'Vert', 'Bleu', 'Nacre', 'Brun', 'Vous', 'Adversaire', 'Couleur des pions'],
+    pt: ['Ouro', 'Preto', 'Vermelho', 'Branco', 'Verde', 'Azul', 'Pérola', 'Marrom', 'Você', 'Adversário', 'Cor das pedras'], de: ['Gold', 'Schwarz', 'Rot', 'Weiß', 'Grün', 'Blau', 'Perlmutt', 'Braun', 'Du', 'Gegner', 'Steinfarben'],
+    ru: ['Золото', 'Чёрный', 'Красный', 'Белый', 'Зелёный', 'Синий', 'Перламутр', 'Коричневый', 'Вы', 'Соперник', 'Цвет шашек'], tr: ['Altın', 'Siyah', 'Kırmızı', 'Beyaz', 'Yeşil', 'Mavi', 'İnci', 'Kahverengi', 'Sen', 'Rakip', 'Pul renkleri'],
+    id: ['Emas', 'Hitam', 'Merah', 'Putih', 'Hijau', 'Biru', 'Mutiara', 'Cokelat', 'Kamu', 'Lawan', 'Warna bidak'], hi: ['सुनहरा', 'काला', 'लाल', 'सफ़ेद', 'हरा', 'नीला', 'मोती', 'भूरा', 'आप', 'विरोधी', 'गोटियों का रंग'],
+    ar: ['الذهبي', 'الأسود', 'الأحمر', 'الأبيض', 'الأخضر', 'الأزرق', 'اللؤلؤي', 'البني', 'أنت', 'الخصم', 'لون القطع'] };
+  const BGCK = ['gold', 'black', 'red', 'white', 'green', 'blue', 'pearl', 'brown'];
+  const BGSW = { gold: ['#efe4cc', '#d8b25e'], black: ['#26262a', '#d6d8dc'], red: ['#b0222a', '#d8b25e'], white: ['#faf8f2', '#c9ccd2'], green: ['#1d7a4f', '#d8b25e'], blue: ['#24408f', '#d6d8dc'], pearl: ['#f4eef0', '#d8b25e'], brown: ['#8a4a22', '#e6b296'] };
+  const BGPART = { gold: 'black', black: 'gold', red: 'white', white: 'red', green: 'pearl', blue: 'white', pearl: 'black', brown: 'white' };
+  const bgSt = () => { try { return JSON.parse(ls.get('aicoding-backgammon-v2') || '{}') || {}; } catch (e) { return {}; } };
+  X.CKCOL = { backgammon: {
+    list: BGCK,
+    get: () => { const c = (bgSt().settings || {}).ck; return c && BGCK.includes(c[0]) && BGCK.includes(c[1]) && c[0] !== c[1] ? c.slice() : ['gold', 'black']; },
+    set(side, id) {
+      if (!BGCK.includes(id)) return; const o = bgSt(); o.settings = o.settings || {}; const c = X.CKCOL.backgammon.get(); c[side] = id;
+      if (c[0] === c[1]) c[1 - side] = BGPART[id];
+      o.settings.ck = c; ls.set('aicoding-backgammon-v2', JSON.stringify(o));
+    },
+    sw: id => { const [f, r] = BGSW[id] || BGSW.gold; return `radial-gradient(circle at 38% 32%,rgba(255,255,255,.45),rgba(255,255,255,0) 38%),radial-gradient(circle,${f} 56%,${r} 60%,${r} 72%,rgba(0,0,0,.35) 76%,transparent 78%)`; },
+    name: (id, lang) => (CKN[lang] || CKN.en)[BGCK.indexOf(id)] || id,
+    ui: (k, lang) => (CKN[lang] || CKN.en)[{ you: 8, opp: 9, head: 10 }[k]],
+  } };
   // a game's own board names (the board is part of its game, so no '3D'): table hockey
-  const NG = { shogi: {
+  const NG = { backgammon: {
+    marq: { ja: '寄木細工', en: 'Marquetry', zh: '镶嵌木', 'zh-TW': '鑲嵌木', ko: '상감 목재', es: 'Marquetería', fr: 'Marqueterie', pt: 'Marchetaria', de: 'Intarsie', ru: 'Маркетри', tr: 'Marketeri', id: 'Marketri', hi: 'मार्केट्री', ar: 'تطعيم خشبي' },
+    scarlet: { ja: 'レザー', en: 'Leather', zh: '皮革', 'zh-TW': '皮革', ko: '가죽', es: 'Cuero', fr: 'Cuir', pt: 'Couro', de: 'Leder', ru: 'Кожа', tr: 'Deri', id: 'Kulit', hi: 'लेदर', ar: 'جلد' },
+    nacre: { ja: 'ダマスカス螺鈿', en: 'Damascus pearl', zh: '大马士革螺钿', 'zh-TW': '大馬士革螺鈿', ko: '다마스쿠스 자개', es: 'Nácar de Damasco', fr: 'Nacre de Damas', pt: 'Madrepérola de Damasco', de: 'Damaszener Perlmutt', ru: 'Дамасский перламутр', tr: 'Şam sedefi', id: 'Mutiara Damaskus', hi: 'दमिश्क सीप', ar: 'صدف دمشقي' },
+    malachite: { ja: '孔雀石', en: 'Malachite', zh: '孔雀石', 'zh-TW': '孔雀石', ko: '공작석', es: 'Malaquita', fr: 'Malachite', pt: 'Malaquita', de: 'Malachit', ru: 'Малахит', tr: 'Malakit', id: 'Malakit', hi: 'मैलाकाइट', ar: 'ملكيت' },
+    marble: { ja: '大理石と真鍮', en: 'Marble & brass', zh: '大理石与黄铜', 'zh-TW': '大理石與黃銅', ko: '대리석과 황동', es: 'Mármol y latón', fr: 'Marbre et laiton', pt: 'Mármore e latão', de: 'Marmor & Messing', ru: 'Мрамор и латунь', tr: 'Mermer ve pirinç', id: 'Marmer & kuningan', hi: 'संगमरमर और पीतल', ar: 'رخام ونحاس' },
+    shagreen: { ja: 'シャグリーン', en: 'Shagreen', zh: '鲨鱼革', 'zh-TW': '鯊魚革', ko: '샤그린', es: 'Zapa', fr: 'Galuchat', pt: 'Shagreen', de: 'Chagrin', ru: 'Шагрень', tr: 'Şagren', id: 'Shagreen', hi: 'शैग्रीन', ar: 'شاغرين' } },
+  shogi: {
     kaya: { ja: '本榧', en: 'Kaya', zh: '本榧', 'zh-TW': '本榧', ko: '본비자', es: 'Kaya', fr: 'Kaya', pt: 'Kaya', de: 'Kaya', ru: 'Кая', tr: 'Kaya', id: 'Kaya', hi: 'काया', ar: 'كايا' },
     makie: { ja: '蒔絵', en: 'Maki-e lacquer', zh: '莳绘', 'zh-TW': '蒔繪', ko: '마키에', es: 'Laca maki-e', fr: 'Laque maki-e', pt: 'Laca maki-e', de: 'Maki-e-Lack', ru: 'Лак макиэ', tr: 'Maki-e lake', id: 'Pernis maki-e', hi: 'माकी-ए लाख', ar: 'ورنيش ماكي-إي' },
     grain: { ja: '新榧', en: 'Spruce', zh: '新榧', 'zh-TW': '新榧', ko: '신비자', es: 'Abeto', fr: 'Épicéa', pt: 'Abeto', de: 'Fichte', ru: 'Ель', tr: 'Ladin', id: 'Cemara', hi: 'स्प्रूस', ar: 'التنوب' },

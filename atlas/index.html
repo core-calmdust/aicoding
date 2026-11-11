@@ -315,6 +315,13 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
 .bvplm .plp .plh{margin-bottom:7px;font-size:15px}.bvplm .plp .plh + .plrow + .plh,.bvplm .plp .plh + .sgw + .plh,.bvplm .plp .plbr + .pltodh{margin-top:10px}
 .plcb{display:flex;flex-direction:column;align-items:center;gap:6px;padding:5px 5px 8px;border-radius:15px;border:2px solid var(--line);background:#fffdf7;cursor:pointer;font:800 15px var(--round,inherit);color:var(--ink);min-width:0;transition:transform .12s,border-color .12s}
 .plcb:hover{transform:translateY(-2px)}
+.plckr{display:flex;align-items:center;gap:8px;margin:0 0 6px}
+.plckr > b{flex:0 0 auto;min-width:4.2em;font:800 13px var(--round,inherit);color:var(--ink)}
+.plck{flex:1;display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:4px}
+.plck button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 2px;border-radius:12px;border:2px solid transparent;background:#fffdf7;cursor:pointer;min-width:0;font:700 11px var(--round,inherit);color:var(--ink)}
+.plck button i{display:block;width:100%;max-width:34px;aspect-ratio:1;border-radius:50%;box-shadow:0 2px 3px rgba(0,0,0,.35)}
+.plck button span{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plck button[aria-pressed=true]{border-color:var(--sun);background:#fff3d2;box-shadow:0 0 0 2px var(--sun)}
 .plpc .plcb img{object-fit:contain;background:radial-gradient(80% 80% at 50% 40%,#5a6a5c,#26302a);padding:4px;box-sizing:border-box}
 .plcb img{width:100%;aspect-ratio:3/2;border-radius:10px;object-fit:cover;display:block;background:#efe6d6}
 .plcb span{max-width:100%;line-height:1.2;min-height:2.4em;display:flex;align-items:center;justify-content:center;text-align:center;overflow-wrap:anywhere}
@@ -2030,7 +2037,7 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 <script src="texgen.js?v=1"></script>
 <script src="npc/roster.js?v=6"></script>
 <script src="art.js?v=11"></script>
-<script src="../shared/atlas.js?v=20261111nw1"></script>
+<script src="../shared/atlas.js?v=20261112bg1"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261109ac2"></script>
 <script src="i18n/v.js?v=72pj"></script>
@@ -2051,7 +2058,7 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 <script>/* the places other than the chabudai (tables3d.js, 440 KB): at once when one is chosen, else in idle time after the page has
    loaded (2026-11-10); 'atlas-places' tells the page they are there */
 (function () {
-  var SRC = 'tables3d.js?v=87', k = 0, p = null;
+  var SRC = 'tables3d.js?v=88', k = 0, p = null;
   try { k = +(localStorage.getItem('atlas-table') || 0) || 0; var m = /[?&]tbl=(\d+)/.exec(location.search); if (m) k = +m[1]; } catch (e) {}
   window.AtlasPlaces = function () { return p || (p = new Promise(function (res) { var s = document.createElement('script'); s.src = SRC; s.onload = s.onerror = function () { res(); try { dispatchEvent(new Event('atlas-places')); } catch (e) {} }; document.head.appendChild(s); })); };
   if (k) { document.write('<script src="' + SRC + '"><\/script>'); p = Promise.resolve(); }
@@ -2071,7 +2078,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   }, 60);
 };</script>
 <script src="../shared/tapword.js?v=1"></script>
-<script src="lazy.js?v=102"></script>
+<script src="lazy.js?v=103"></script>
 <script src="puzzle-lines.js?v=1"></script>
 <script src="puzzles.js?v=13"></script>
 <script src="lessons3d.js?v=9"></script>
@@ -2088,7 +2095,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=34"></script>
 <script src="npc/npc.js?v=24"></script>
 <script src="avtalk.js?v=2"></script>
-<script src="app.js?v=315"></script>
+<script src="app.js?v=316"></script>
 <script src="../shared/praline-badge.js?v=4" data-portal defer></script>
 </body>
 </html>
