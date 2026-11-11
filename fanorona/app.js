@@ -1449,7 +1449,7 @@ $('#lessonList').onclick = e => {
 function stepNo(i) { const c = LESSONS.steps[i].course || 'tactics'; let n = 0; for (let k = 0; k <= i; k++) if ((LESSONS.steps[k].course || 'tactics') === c) n++; return n; }
 function openIntro(i) {
   introIdx = i; openChoiceIdx = -1; $('#btnLessonStart').classList.remove('hidden'); const s = LESSONS.steps[i];
-  const step = t('course.' + (s.course || 'tactics')) + ' · STEP ' + stepNo(i), title = t('ls.' + s.id + '.title'), fig = (s.diagram ? diagSVG(s.diagram, 'mini') : '');
+  const step = t('course.' + (s.course || 'tactics')) + ' · STEP ' + stepNo(i), title = t('ls.' + s.id + '.title'), fig = s.diagram ? diagSVG(s.diagram, 'mini') : (typeof lessonThumb === 'function' ? lessonThumb(s) : '');   // (no diagram: the first problem's position)
   $('#liStep').textContent = step; $('#liTitle').textContent = title;
   // the common lesson page (shared/luxintro.js, 2026-11-11): board · facts · goal · how to think · trivia — as much as shogi's page
   if (window.LuxIntro) {
