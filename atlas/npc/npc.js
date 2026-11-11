@@ -344,6 +344,8 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
           const bx = boardBox(), yb = bx && bx.bottom;
           const h = el ? el.offsetHeight : 0;
           if (yb != null && yd > yb) b = Math.max(b, innerHeight - (yb + yd) / 2 - h / 2 - 10);   // (the float sits at --npc-bot + 10px)
+          // no room between the board and the bar: over the online box itself (it covers the board no more), 2026-11-12
+          if (yb != null && vis(d) && yd - yb < h + 16) { const r = d.getBoundingClientRect(); b = Math.max(4, innerHeight - r.bottom + Math.max(6, (r.height - h) / 2)) - 10; }
           return b;
         }
         // phones (portrait): on the bottom tab bar itself, for a few seconds (a tap puts it away) — the one place that stays put
