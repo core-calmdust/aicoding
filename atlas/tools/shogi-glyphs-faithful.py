@@ -9,7 +9,7 @@
 import asyncio, base64, io, os, re, sys
 import numpy as np
 from PIL import Image, ImageFilter
-from scipy.ndimage import binary_fill_holes, gaussian_filter, sobel
+from scipy.ndimage import binary_fill_holes, gaussian_filter, sobel, label
 from playwright.async_api import async_playwright
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
@@ -20,12 +20,14 @@ CW, CH, S = 256, 296, 1600
 SETS = {'ryoko': ('ryoko', 'f5e5c6', '908768', False), 'minase': ('minase', 'f5e5c6', '908768', False), 'kinki': ('kinki', 'f5e5c6', '908768', False),
         'ichiji': ('1kanji_3d', 'e7d5b8', 'ab865e', True)}
 FACE, BAND = '', ''
-BODY, SH3D = {'ichiji'}, (.47 - .25) / .94
+BODY, SH3D = {'ichiji'}, (.47 - .367) / .94   # (the 3D piece's shoulders, atlas/models/shogi.js pieceGeo)
 ANGLE = {}   # e.g. {'ryoko': {'HI': -0.8}}
 # fine adjustments by eye against photos of the real sets (2026-11-11): the two characters of a piece each centred on the piece's
 # axis (their bodies: the ink between the 6% and 94% points across), the pair set in the body of the piece below the shoulders and a
 # little smaller (scale), and single characters turned (TURN: {code: (upper, lower)} degrees, counter-clockwise +)
-TUNE = {'ryoko': {'scale': .9, 'turn': {}}, 'minase': {'scale': .9, 'turn': {}, 'up': {'OU': .78, 'GY': .78}}, 'kinki': {'scale': .9, 'turn': {}, 'up': {'OU': .78, 'GY': .78, 'KE': .86}}}
+TUNE = {'ryoko': {'turn': {}}, 'minase': {'turn': {}, 'up': {'OU': .52, 'GY': .52}}, 'kinki': {'turn': {}, 'up': {'OU': .78, 'GY': .78, 'KE': .86}}}
+# every two-character inscription of these sets fills the same block of the face (as the user's photos: the 王將 of 錦旗 the model)
+FILL, WMAX, CY = .78, .80, .535
 TWO = {'FU', 'KY', 'KE', 'GI', 'KA', 'HI', 'KI', 'GY', 'OU'}
 
 def axis(g):
@@ -56,21 +58,28 @@ def body_w(p):
     return max(1, np.searchsorted(c, .94) - np.searchsorted(c, .06))
 
 def restack(g, turn, up=0):
-    """the two characters of g cut apart at the emptiest row of its middle, each turned and centred on one axis"""
-    a = np.array(g).astype(np.float64); rows = a.sum(1); H = a.shape[0]
-    lo, hi = int(H * .35), int(H * .65); cut = lo + int(np.argmin(rows[lo:hi]))
+    """the two characters of g taken apart — by connected strokes, each stroke going to the character its centre lies in (a horizontal
+    cut would split strokes that reach past the other character, as 飛's hook beside 車), each made upright and centred on one axis"""
+    a = np.array(g); H = a.shape[0]; rows = a.astype(np.float64).sum(1)
+    lo, hi = int(H * .3), int(H * .7); cut = lo + int(np.argmin(rows[lo:hi]))
+    lab, n = label(a > 30); cy = np.zeros(n + 1)
+    for i in range(1, n + 1):
+        ys = np.nonzero(lab == i)[0]; cy[i] = ys.mean() if len(ys) else 0
+    up_m = np.isin(lab, [i for i in range(1, n + 1) if cy[i] < cut])
+    halo = np.array(Image.fromarray((up_m * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(5))) > 0   # (the soft edges with it)
     parts = []
-    for (y0, y1), ang in zip(((0, cut), (cut, H)), turn):
-        p = upright(upright(g.crop((0, y0, g.width, y1))))   # (twice: the measure moves with the shear)
+    for m, ang in ((halo, turn[0]), (~halo, turn[1])):
+        p = Image.fromarray(np.where(m, a, 0).astype(np.uint8)); bb0 = p.getbbox(); p = p.crop(bb0)
+        p = upright(upright(p))   # (twice: the measure moves with the shear)
         if ang: p = p.rotate(ang, resample=Image.BICUBIC, expand=True)
-        bb = p.getbbox(); p = p.crop(bb); parts.append((p, y0 + (g.crop((0, y0, g.width, y1)).getbbox() or (0, 0))[1]))
+        bb = p.getbbox(); p = p.crop(bb); parts.append((p, bb0[1]))
     if up and len(parts) == 2:
         # the upper character at least `up` times the lower one's body width (水無瀬's 王 is drawn small and squat; on real pieces the
-        # two read as one size), the pair kept in place by moving the lower one down by the growth
-        (p0, y0_), (p1, y1_) = parts; f = min(1.35, up * body_w(p1) / body_w(p0))
-        if f > 1:
+        # two read as one size), its foot kept in place
+        (p0, y0_), (p1, y1_) = parts; f = min(1.35, max(.7, up * body_w(p1) / body_w(p0)))   # (the upper body made `up` times the lower one's)
+        if abs(f - 1) > .02:
             q = p0.resize((round(p0.width * f), round(p0.height * f)), Image.LANCZOS)
-            parts = [(q, y0_ - (q.height - p0.height) // 2), (p1, y1_ + (q.height - p0.height) // 2)]
+            parts = [(q, y0_ + p0.height - q.height - (int(.04 * a.shape[0]) if f < 1 else 0)), (p1, y1_)]   # (the upper one's foot kept where it was)
     top0 = min(y for _, y in parts); parts = [(p, y - top0) for p, y in parts]
     W = int(max(max(axis(p), p.width - axis(p)) for p, _ in parts) * 2) + 4
     out = Image.new('L', (W, max(y + p.height for p, y in parts)), 0)
@@ -121,12 +130,14 @@ async def cell(pg, folder, code, set_):
     if T and code in TWO: g = restack(g, T['turn'].get(code, (0, 0)), T.get('up', {}).get(code, 0)); gl = Image.new('L', g.size, 0)
     # one scale keeps the drawing's proportions (the 2D face is a little squatter than the 3D one: the mean of the width and height
     # scales); the centre goes where it sits on the face
-    k = (CW / (fx1 - fx0) * CH / (fy1 - fy0)) ** .5 * (T['scale'] if T else 1)
+    k = (CW / (fx1 - fx0) * CH / (fy1 - fy0)) ** .5
+    if T and code in TWO: k = min(FILL * CH / g.height, WMAX * CW / g.width)
     sz = (max(1, round(g.width * k)), max(1, round(g.height * k))); g = g.resize(sz, Image.LANCZOS); gl = gl.resize(sz, Image.LANCZOS)
     cx, cy = (gcx - fx0) / (fx1 - fx0) * CW, (gcy - fy0) / (fy1 - fy0) * CH
     if T:
         cx = CW / 2 - (axis(g) - g.width / 2)   # on the piece's axis
-    if set_ in BODY or T:
+    if T and code in TWO: cy = CY * CH
+    elif set_ in BODY or T:
         # one character sits in the body of the piece (below the shoulders): the 3D piece's roof is steeper (shoulders at 23.4% from the
         # tip, atlas/models/shogi.js pieceGeo) than the 2D drawing's, so the centre is placed by the body (shoulder → bottom), not the bbox
         w = top.sum(1)[fy0:fy1].astype(float); y = np.arange(len(w)); n = len(w)
