@@ -245,15 +245,19 @@
       let el = host.querySelector('.acc'); if (!el) { el = document.createElement('div'); el.className = 'acc'; host.appendChild(el); }
       el.title = '';
       if (!s.available) { el.innerHTML = `<span>🔒 ${t('acc.soon')}</span>`; el.title = t('acc.note'); return; }
-      if (!s.user) { el.innerHTML = `<button class="gbtn" title="${esc(t('acc.note'))}">${GLOGO}${t('acc.in')}</button>`; el.querySelector('.gbtn').onclick = () => AtlasAccount.signIn(); return; }
+      if (!s.user) { el.dataset.u = ''; el.innerHTML = `<button class="gbtn" title="${esc(t('acc.note'))}">${GLOGO}${t('acc.in')}</button>`; el.querySelector('.gbtn').onclick = () => AtlasAccount.signIn(); return; }
+      const st = s.syncing ? t('acc.syncing') : s.err ? t('acc.err') : '✓ ' + t('acc.synced') + ' ' + when, uk = lang + '|' + (s.user.email || s.user.name) + '|' + (s.user.photo || '');
+      if (el.dataset.u === uk && el.querySelector('.st')) { const sp = el.querySelector('.st'); if (s.syncing) return; sp.className = 'st' + (s.err ? '' : ' ok'); sp.textContent = st; return; }   // (only the status words change: the photo isn't loaded again, and 「同期中…」 isn't flashed every 2 minutes)
+      el.dataset.u = uk;
       el.innerHTML = `${s.user.photo ? `<img src="${esc(s.user.photo)}" alt="" referrerpolicy="no-referrer">` : ''}<span>${esc(s.user.email || s.user.name)}</span>
-      <span class="${s.err ? '' : 'ok'}">${s.syncing ? t('acc.syncing') : s.err ? t('acc.err') : '✓ ' + t('acc.synced') + ' ' + when}</span><button class="btn sm ghost">${t('acc.out')}</button>`;
+      <span class="st${s.err ? '' : ' ok'}">${esc(st)}</span><button class="btn sm ghost">${t('acc.out')}</button>`;
       el.querySelector('.btn').onclick = () => AtlasAccount.signOut();
     });
   }
   if (window.AtlasAccount) {
     AtlasAccount.on(() => renderAcc());
-    window.addEventListener('atlas-synced', () => { W = A_.load(); refresh(); if (!session) render(page); });
+    // (the 2-minute cloud sync: the page is drawn again only when what it shows changed — it made the home jump every 2 minutes, 2026-11-11)
+    window.addEventListener('atlas-synced', () => { const sg = lsSig(); if (sg === renderSig) return; W = A_.load(); refresh(); if (!session) render(page); });
     // when the name changes, fill it in from Google if empty
     AtlasAccount.on(st => { if (st.user && !W.name && st.user.name) { W.name = st.user.name.slice(0, 16); A_.save(W); if (A_.shareName) A_.shareName(W.name, true); ['nameIn', 'dpName'].forEach(id => { const ni = $(id); if (ni) ni.value = W.name; }); } });
   }
@@ -2380,7 +2384,9 @@
   // the header's house: the Atlas's own home tab (not the CALMDUST top page); over a board it reloads the portal's home
   { const hb = $('homeBtn'); if (hb) hb.addEventListener('click', e => { if (document.querySelector('#bv.on,#hist.on') || document.documentElement.classList.contains('hs-open')) return;
     e.preventDefault(); if (page !== 'home') go('home'); scrollTo({ top: 0, behavior: 'smooth' }); }); }
+  let renderSig = '';
   function render(k) {
+    try { renderSig = lsSig(); } catch (e) {}
     sfxIcon(); npcIcon();
     if (window.AtlasMissions) AtlasMissions.page(k);   // (ミッション: the pages opened)
     renderUpdLine();
@@ -2390,7 +2396,7 @@
   // progress may change in another tab (a game) — re-read when coming back
   // (only when something was saved meanwhile or the day changed: re-rendering the same page restarted its animations and
   // the updates row, a jolt on every return to the tab, 2026-11-11)
-  const lsSig = () => { let h = 0; try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k === 'atlas-avtalk-recent') continue; const v = k + '=' + localStorage.getItem(k); for (let j = 0; j < v.length; j++) h = (h * 31 + v.charCodeAt(j)) | 0; } } catch (e) { return Math.random(); } return A_.ymd(Date.now()) + ':' + h; };
+  const lsSig = () => { let h = 0; try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k === 'atlas-avtalk-recent' || k === 'atlas-sync-meta') continue; const v = k + '=' + localStorage.getItem(k); for (let j = 0; j < v.length; j++) h = (h * 31 + v.charCodeAt(j)) | 0; } } catch (e) { return Math.random(); } return A_.ymd(Date.now()) + ':' + h; };
   let visSig = '';
   document.addEventListener('visibilitychange', () => { if (document.hidden) { visSig = lsSig(); return; } if (!session) { const sg = lsSig(); if (sg !== visSig) { W = A_.load(); refresh(); render(page); } welcome(); } });
   /* ---------- idle: pause CSS/SVG animations while the tab is hidden or the window isn't focused ---------- */
