@@ -100,7 +100,11 @@ body.in-puzzle .daily-card,body.in-puzzle .rec-card{display:none}
 .brand h1.to-board{cursor:pointer;transition:opacity .15s;-webkit-tap-highlight-color:transparent}
 .brand h1.to-board:hover{opacity:.78}
 .brand h1.to-board:focus-visible{outline:1px solid currentColor;outline-offset:4px;border-radius:4px}
-.daily-go{display:flex;align-items:center;gap:12px;width:100%;text-align:start}
+.daily-card{display:flex;align-items:center;gap:10px}
+.daily-easy{flex:none;height:40px;padding:0 14px;border-radius:12px;border:1px solid var(--line);font-size:12.5px;font-weight:800;letter-spacing:.08em;color:var(--accent2)}
+.daily-easy:hover{border-color:var(--accent);color:var(--text)}
+.daily-easy.ok::after{content:' ✓';color:var(--good)}
+.daily-go{flex:1;min-width:0;display:flex;align-items:center;gap:12px;width:100%;text-align:start}
 .dg-ic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(180deg,#f3cf86,#cf9c4c);color:#3a2208;font-size:20px;flex:none}
 .dg-tx{display:flex;flex-direction:column;min-width:0;flex:1}
 .dg-tx b{font-size:15px}.dg-tx small{font-size:12.5px;color:var(--dim)}
