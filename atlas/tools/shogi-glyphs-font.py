@@ -32,7 +32,7 @@ def ink(font, ch):
     im = im.point(lambda v: 0 if v < 100 else 255 if v > 156 else int((v - 100) * 255 / 56))
     bb = im.getbbox(); return im.crop(bb)
 
-R = 14   # half the least stroke width, in font units of EM = 600
+R = 26   # half the least stroke width, in font units of EM = 600
 
 def inside(cw, ch, inset):
     """the 3D face in the cell, shrunk by inset (fraction of the width)"""
@@ -40,33 +40,66 @@ def inside(cw, ch, inset):
     d.polygon([(cw / 2, 0), (cw / 2 + SW * cw / 2, SH * ch), (cw, ch), (0, ch), (cw / 2 - SW * cw / 2, SH * ch)], fill=255)
     return np.array(m.filter(ImageFilter.MinFilter(2 * int(inset * cw) + 1))) > 128
 
-FLAT = .74   # 隷書 on pieces: wide and flat characters
+FLAT = .7     # 隷書 on pieces: wide and flat characters
+ASPECT = .82   # ... no character taller than this times its width (将・馬 are tall in the font)
+SS = 4         # laid out and drawn at 4× the cell, then reduced (clean edges)
 
-def place(g, ok, cy, hmax, A):
-    """the largest size at which g, centred on (0.5, cy), stays inside ok and within hmax of the height; pasted into A"""
-    lo, hi = .01, 4.0
-    for _ in range(30):
-        k = (lo + hi) / 2; w, h = max(1, round(g.width * k)), max(1, round(g.height * k * FLAT))
-        if h > hmax * CH: hi = k; continue
-        t = Image.new('L', (CW, CH), 0); t.paste(g.resize((w, h), Image.LANCZOS), (round(CW / 2 - w / 2), round(cy * CH - h / 2)))
-        if ((np.array(t) > 60) & ~ok).any(): hi = k
-        else: lo = k
-    k = lo; w, h = max(1, round(g.width * k)), max(1, round(g.height * k * FLAT))
-    A.paste(g.resize((w, h), Image.LANCZOS), (round(CW / 2 - w / 2), round(cy * CH - h / 2)), g.resize((w, h), Image.LANCZOS))
-    return h / CH
+def body(g):
+    """the width of a character's body: its ink between the 8% and 92% points across (long flared strokes and lone dots do not
+    make a character look wider, its mass does)"""
+    cols = np.array(g).astype(np.float64).sum(0); c = np.cumsum(cols) / max(1, cols.sum())
+    return max(1, (g.width * (np.searchsorted(c, .92) - np.searchsorted(c, .08))) ** .5)   # (with its full width: the mean)
+
+def shaped(g, w):
+    """g with its body w wide (in SS pixels), flattened"""
+    k = w / body(g); W = g.width * k; h = g.height * k * FLAT; h = min(h, W * ASPECT)
+    return g.resize((max(1, round(W)), max(1, round(h))), Image.LANCZOS)
+
+def cx_of(g):
+    """the optical centre across: halfway between the box's middle and the ink's centre of mass"""
+    a = np.array(g).astype(np.float64); cols = a.sum(0)
+    return .5 * (g.width / 2 + (cols * np.arange(g.width)).sum() / max(1, cols.sum()))
+
+def fits(parts, ok):
+    for g, x, y in parts:
+        if x < 0 or y < 0 or x + g.width > ok.shape[1] or y + g.height > ok.shape[0]: return False
+        if ((np.array(g) > 60) & ~ok[y:y + g.height, x:x + g.width]).any(): return False
+    return True
+
+def layout(gs, ok, y0, y1, yc, wmax, ratio, gap):
+    """the widest layout of the stacked characters gs inside the face mask ok, between y0 and y1 (fractions of the height), as near
+    as it can to a block centred on yc. The upper character is ratio times the lower one's width, or narrower where the roof of the
+    piece does not leave room for that (it never shrinks the lower one)"""
+    W, H = ok.shape[1], ok.shape[0]
+    def stack(sh):
+        bh = sum(g.height for g in sh) + gap * H * (len(sh) - 1)
+        if bh > (y1 - y0) * H: return None
+        for top in sorted(np.arange(y0 * H, y1 * H - bh + 1, 2), key=lambda t: abs(t + bh / 2 - yc * H)):
+            parts, y = [], top
+            for g in sh: parts.append((g, int(round(W / 2 - cx_of(g))), int(round(y)))); y += g.height + gap * H
+            if fits(parts, ok): return parts
+        return None
+    for w in np.arange(wmax, .2, -.01):
+        if len(gs) == 1:
+            p = stack([shaped(gs[0], w * W)])
+            if p: return p
+            continue
+        bot = shaped(gs[-1], w * W)
+        for r in np.arange(ratio, .86, -.02):
+            p = stack([shaped(gs[0], w * W * r), bot])
+            if p: return p
+    return []
 
 def cell(font, text, ok):
-    A = Image.new('L', (CW, CH), 0)
-    if len(text) == 1: place(ink(font, text), ok, .58, .5, A)
+    if len(text) == 1:
+        parts = layout([ink(font, text)], ok, .3, .93, .6, .56, 1, 0)
     else:
-        # as on real 隷書 pieces: each character as wide as the face lets it be at its height (so the lower one is the larger),
-        # the two close together, the pair filling the face from under the tip to near the bottom
-        top, bot = ink(font, text[0]), ink(font, text[1])
-        Y0, Y1, GAP = .12, .955, .02
-        hb = place(bot, ok, Y1 - .22, .44, Image.new('L', (CW, CH), 0))
-        place(bot, ok, Y1 - hb / 2, .44, A)
-        yt1 = Y1 - hb - GAP; ht = place(top, ok, (Y0 + yt1) / 2, yt1 - Y0, Image.new('L', (CW, CH), 0))
-        place(top, ok, yt1 - ht / 2, yt1 - Y0, A)
+        # as on real 隷書 pieces (compared with the user's photos): the two characters of nearly the same width (the upper one a
+        # little narrower), close together, the pair as wide as the face allows and centred a little below the middle
+        parts = layout([ink(font, c) for c in text], ok, .15, .97, .575, .84, .96, .02)
+    A = Image.new('L', (CW * SS, CH * SS), 0)
+    for g, x, y in parts: A.paste(g, (x, y), g)
+    A = A.resize((CW, CH), Image.LANCZOS)
     a = np.array(A).astype(np.float32) / 255
     h = np.power(np.clip(np.array(A.filter(ImageFilter.BoxBlur(3))).astype(np.float32) / 255, 0, 1), .7)
     out = np.zeros((CH, CW, 4), np.uint8); v = np.round(255 * (1 - h)).astype(np.uint8)
@@ -75,7 +108,7 @@ def cell(font, text, ok):
 
 def main():
     font = ImageFont.truetype(sys.argv[1], EM)
-    ok = inside(CW, CH, .025)
+    ok = inside(CW * SS, CH * SS, .02)
     sheet = Image.new('RGBA', (CW * 5, CH * 3), (255, 255, 255, 0))
     # the promoted sides: real 隷書 sets carve them in cursive (草書), so they are taken from the 水無瀬 sheet (its licence:
     # shogi/pieces/README.md); the rest in 隷書
