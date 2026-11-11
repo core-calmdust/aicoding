@@ -2,7 +2,7 @@
 // The page is made cross-origin isolated by coi-sw.js (SharedArrayBuffer); without it, one thread (the normal engine).
 (() => {
   'use strict';
-  const VER = '?v=14';
+  const VER = '?v=15';
   const LANG = (() => { try { return (localStorage.getItem('aicoding-lang') || 'ja') === 'ja' ? 'ja' : 'en'; } catch (e) { return 'ja'; } })();
   const T = {
     ja: { back: '← リバーシ', ttl: '最強解析', depth: '深さ', nps: '局面/秒', threads: 'スレッド', sel: 'スレッド数', ana: '解析', stop: '停止', play: 'AIに指させる',
@@ -74,7 +74,7 @@
     const need = MT.base + (MAXT + 1) * SLOT;
     if (need > MT.mem.buffer.byteLength) MT.mem.grow(Math.ceil((need - MT.mem.buffer.byteLength) / 65536));
     X.mt_stack(MT.base + MAXT * SLOT + SLOT - 16); X.mt_thread(MT.base + MAXT * SLOT);
-    X.init();
+    if (X.w_defer) X.w_defer(); X.init();
     MT.ctl = new Int32Array(new SharedArrayBuffer(512));   // [0]: 1 = stop; the root split of the endgame solve (engine.js rootSplit)
     MT.weights = await loadWeights();
     MT.X = X;
@@ -115,7 +115,7 @@
   const stopMT = () => { if (MT.X) { Atomics.store(MT.ctl, 0, 1); MT.X.mt_stop(1); } };
   let FB = null;
   async function goFB(time) {
-    if (!FB) { FB = new Worker('../engine.js?v=61'); const wt = await loadWeights(); FB.postMessage({ type: 'weights', buffer: wt.buffer, nphase: wt.nphase }); }
+    if (!FB) { FB = new Worker('../engine.js?v=63'); const wt = await loadWeights(); FB.postMessage({ type: 'weights', buffer: wt.buffer, nphase: wt.nphase }); }
     const { c, me } = replay(line);
     return new Promise(res => { FB.onmessage = e => { if (e.data.type === 'result') res({ ...e.data, me }); }; FB.postMessage({ type: 'think', id: 1, cells: c, toMove: me, opts: { cfg: { depth: 60, exact: 20, wld: 22, mpc: 1 }, time } }); });   // (the old Lv.20 shape by time: Lv.20 reads to a fixed depth since 2026-11-11)
   }

@@ -8,7 +8,11 @@ typedef unsigned int u32;
 typedef signed char i8;
 typedef unsigned char u8;
 typedef short i16;
+#ifdef __wasm__
 #define EXPORT(n) __attribute__((export_name(#n)))
+#else
+#define EXPORT(n)   /* (a native build: tools/train/rvlabel.c includes this file) */
+#endif
 /* MT (engine_mt.wasm): several threads search together on one shared memory ("Lazy SMP"); per-thread state is TLS,
    the weights, the tables and the transposition tables are shared. Without MT TLS is nothing (same build as before). */
 #ifdef MT
@@ -30,7 +34,11 @@ static struct { volatile int idle, waitN, openN, hi; } __attribute__((aligned(64
 #else
 #define TLS
 #endif
+#ifdef __wasm__
 extern double now(void) __attribute__((import_module("env"), import_name("now")));
+#else
+extern double now(void);
+#endif
 
 static inline int pc(u64 x) { return __builtin_popcountll(x); }
 static inline int lsb(u64 x) { return __builtin_ctzll(x); }
@@ -214,20 +222,52 @@ static int finalScore(u64 P, u64 O) {
 // ------------------------------------------------------------------ pattern evaluation (tables set by engine.js)
 #define MAXI 80
 #define NSTK 96
-#define WMAX 13000000
-static i16 W[WMAX];
+#define WMAX 40000000
+/* (v5, 2026-11) the weights live in memory grown to their size (w_alloc; before, a fixed table of 13M): v4 = 12.1M, v5 with
+   one phase per ply 24-31M. The same address for every thread (MT: one shared memory, the first thread grows it). */
+static i16 *W; static int WCAP;
 static int NINST, NPHASE, PHASE_SIZE, USE_EXT, EXT_OFF;
 static int I_OFF[MAXI], SQ_START[65], SQI[MAXI * 10], SQP[MAXI * 10];
 static TLS unsigned short STA[NSTK * MAXI], STB[NSTK * MAXI];   // pattern indices (< 3^10, fit 16 bits), a fixed stride of MAXI per ply so a child copies whole vectors
-EXPORT(w_ptr) i16 *w_ptr(void) { return W; }
-EXPORT(w_max) int w_max(void) { return WMAX; }
+#ifdef MT
+static volatile int wLock;
+#endif
+EXPORT(w_alloc) i16 *w_alloc(int n) {
+  if (n <= 0 || n > WMAX) return 0;
+#ifdef MT
+  while (__atomic_exchange_n(&wLock, 1, __ATOMIC_ACQUIRE)) {}
+#endif
+  if (n > WCAP) {
+#ifdef __wasm__
+    const u32 pages = (u32)(((unsigned long)n * 2 + 65535) >> 16), at = (u32)__builtin_wasm_memory_size(0);
+    if (__builtin_wasm_memory_grow(0, pages) != (__SIZE_TYPE__)-1) { W = (i16 *)(at << 16); WCAP = n; }
+#else
+    i16 *p = (i16 *)ENGINE_ALLOC((unsigned long)n * 2); if (p) { W = p; WCAP = n; }   /* (native builds: tools/train/rvlabel.c) */
+#endif
+  }
+  i16 *r = n <= WCAP ? W : 0;
+#ifdef MT
+  __atomic_store_n(&wLock, 0, __ATOMIC_RELEASE);
+#endif
+  return r;
+}
+/* the old interface (an engine.js from before v5 with this module, e.g. from a cache): a table of 13M at w_ptr, there from
+   init() on (that engine.js takes the memory's buffer before calling w_ptr, so w_ptr must not grow it). A caller that knows
+   w_alloc calls w_defer() before init() and gets memory only for the weights it loads. */
+#define WMAX_OLD 13000000
+static int wDefer;
+EXPORT(w_defer) void w_defer(void) { wDefer = 1; }
+EXPORT(w_ptr) i16 *w_ptr(void) { return W && WCAP >= WMAX_OLD ? W : w_alloc(WMAX_OLD); }
+EXPORT(w_max) int w_max(void) { return WMAX_OLD; }
 EXPORT(tab_ptr) int *tab_ptr(int k) { return k == 0 ? I_OFF : k == 1 ? SQ_START : k == 2 ? SQI : SQP; }
-EXPORT(set_patterns) void set_patterns(int ninst, int nphase, int phaseSize, int useExt, int extOff) { NINST = ninst; NPHASE = nphase; PHASE_SIZE = phaseSize; USE_EXT = useExt; EXT_OFF = extOff; }
+EXPORT(set_patterns) void set_patterns(int ninst, int nphase, int phaseSize, int useExt, int extOff) { NINST = ninst; NPHASE = nphase; PHASE_SIZE = phaseSize; USE_EXT = useExt == 1 ? 4 : useExt; EXT_OFF = extOff; }
 static inline int phaseOf(int discs) { int ply = discs - 4, ph = (ply * NPHASE / 61); return ph < NPHASE ? ph : NPHASE - 1; }
 static inline int extSum(u64 P, u64 O, int base) {
   int mp = pc(genMoves(P, O)), mo = pc(genMoves(O, P));
   u64 e = ~(P | O); int pp = pc(neighbours(O) & e), po = pc(neighbours(P) & e);
-  return W[base + EXT_OFF + mp] + W[base + EXT_OFF + 64 + mo] + W[base + EXT_OFF + 128 + pp] + W[base + EXT_OFF + 192 + po];
+  int s = W[base + EXT_OFF + mp] + W[base + EXT_OFF + 64 + mo] + W[base + EXT_OFF + 128 + pp] + W[base + EXT_OFF + 192 + po];
+  if (USE_EXT >= 5) { const int d = pc(P); s += W[base + EXT_OFF + 256 + (d > 63 ? 63 : d)]; }   /* (v5) own discs */
+  return s;
 }
 static int evalFull(u64 P, u64 O) {   // = engine.js evalPattern
   int idx[MAXI]; for (int i = 0; i < NINST; i++) idx[i] = 0;
@@ -1085,6 +1125,7 @@ EXPORT(init) void init(void) {
   for (int i = 0; i < NSP; i++) SPS[i].word = 256;   /* (closed until a split point is opened there) */
 #endif
   clear_tt();
+  if (!wDefer && !W) w_alloc(WMAX_OLD);   /* (see w_defer) */
 }
 
 #ifdef MT

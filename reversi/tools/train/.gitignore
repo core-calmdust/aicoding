@@ -1,0 +1,9 @@
+# built tools and the data / outputs of a training run (tools/train/README.md)
+rvtrain
+rvlabel
+*.bin
+*.bin.gz
+*.part[0-9]*
+*.mpc[0-9]*
+*.mpcfit*
+*.log

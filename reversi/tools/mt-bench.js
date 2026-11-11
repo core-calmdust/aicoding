@@ -43,7 +43,7 @@ async function makePool(n, split) {
   const base = Math.ceil(X.mt_heap_base() / 65536) * 65536, need = base + (n + 1) * SLOT;
   if (need > mem.buffer.byteLength) mem.grow(Math.ceil((need - mem.buffer.byteLength) / 65536));
   X.mt_stack(base + n * SLOT + SLOT - 16); X.mt_thread(base + n * SLOT);
-  X.init();
+  if (X.w_defer) X.w_defer(); X.init();
   const ctl = new Int32Array(new SharedArrayBuffer(512));
   const ws = [];
   for (let id = 0; id < n; id++) ws.push(new Worker(__filename, { workerData: { module, mem, id, tls: base + id * SLOT, top: base + id * SLOT + SLOT - 16, ctl, split } }));
