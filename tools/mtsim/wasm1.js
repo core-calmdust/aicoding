@@ -25,8 +25,8 @@ const POS = fs.readFileSync('pos_' + G + '.txt', 'utf8').trim().split('\n').map(
   }
   if (G === 'chess') {
     X.init(); X.new_game();
-    const b = fs.readFileSync('net_chess.bin'); if (b.length !== X.nn_size()) throw new Error('net size');
-    u8().set(b, X.nn_ptr()); X.nn_enable(1);
+    const b = fs.readFileSync('net_chess.bin'); if (b.length > X.nn_cap()) throw new Error('net size');
+    u8().set(b, X.nn_ptr()); if (!X.nn_load(b.length)) throw new Error('net format'); X.nn_enable(1);   // (king buckets or not)
   }
   if (G === 'shogi') {
     X.init();

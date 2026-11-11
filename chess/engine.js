@@ -776,8 +776,11 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
       let buf;
       if (typeof DecompressionStream === 'function') buf = new Uint8Array(await new Response(res.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
       else throw new Error('no DecompressionStream');
-      if (buf.length !== x.nn_size()) throw new Error('nnue size');
-      new Uint8Array(MEM.buffer).set(buf, x.nn_ptr()); x.nn_enable(1);
+      // (2026-11-11) nn_load(length): the v3 net with king buckets (a trailer "CKB1") or a net without them (v1 / v2) alike
+      if (buf.length > x.nn_cap()) throw new Error('nnue size');
+      new Uint8Array(MEM.buffer).set(buf, x.nn_ptr());
+      if (!x.nn_load(buf.length)) throw new Error('nnue format');
+      x.nn_enable(1);
       X = x;
     } catch (err) { X = null; if (MTL) self.postMessage({ type: 'mtready', error: String(err && err.message || err) }); return; }
     if (MTL) self.postMessage({ type: 'mtready' });

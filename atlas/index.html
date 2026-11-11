@@ -895,6 +895,7 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
 [dir=rtl] .nc-talk::after{transform:rotate(45deg) skew(14deg,14deg)}
 .nc-talk:hover{background:#fff8e2}.nc-talk:active{transform:translateY(2px);box-shadow:0 1px 0 #e0a92e}
 @keyframes ncTalk{0%,70%,100%{transform:rotate(0)}76%{transform:rotate(-6deg) scale(1.06)}84%{transform:rotate(5deg)}92%{transform:rotate(-2deg)}}
+.pf-l .nc-av{z-index:2}.pf-talk{top:-4px;inset-inline-end:-18px}
 @media (max-width:760px){.nc-talk{font-size:14px;padding:5px 9px 6px;inset-inline-end:-6px;top:-4px}}
 .nc-l > *:not(.bgfill){position:relative}
 .nc-side{grid-area:side;min-width:0;padding:16px 18px 0;display:flex;flex-direction:column;gap:8px}
@@ -1419,14 +1420,15 @@ html.bv-pland .urtoast{top:calc(52px + env(safe-area-inset-top));left:calc(50% +
   #pg-home .prof > .rfx{top:-188px;border-radius:24px}
   #pg-home .prof > .ntw{top:-180px}
   /* name row: avatar · name · coins · streak · ⌄ — the stats, the login week and Google sign-in open under it */
-  #pg-home .prof{display:grid!important;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;column-gap:10px;padding:8px 10px 8px 8px!important}
+  #pg-home .prof{display:grid!important;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;column-gap:10px;padding:8px 10px 13px 8px!important}
   #pg-home .prof .pf-r{display:contents}
   #pg-home .prof .pf-l{width:auto;border-radius:50%;overflow:visible;background:none;align-self:center}
   #pg-home .prof .pf-l .bgfill,#pg-home .prof .pf-l::after{display:none}
   #pg-home .prof .pf-l .av svg,#pg-home .prof .pf-l .av img{width:46px;height:46px}
   #pg-home .prof .pf-l .av{box-shadow:0 3px 0 rgba(0,0,0,.1),0 0 0 3px #fff}
   #pg-home .prof .pf-l .av.framed{box-shadow:none}
-  #pg-home .prof .pf-l .av .lv{bottom:-7px;font-size:10px;padding:0 6px;line-height:15px}
+  #pg-home .prof .pf-talk{font-size:10px;padding:3px 6px 4px;border-width:2px;border-radius:9px;top:-3px;inset-inline-end:-24px;box-shadow:0 2px 0 #e0a92e}#pg-home .prof .pf-talk::after{width:6px;height:6px;bottom:-4.5px;inset-inline-start:7px;border-width:0 2px 2px 0}
+  #pg-home .prof .pf-l .av .lv{bottom:-4px;font-size:10px;padding:0 6px;line-height:15px}   /* (inside the card edge, 2026-11-11) */
   #pg-home .prof .pf-r input{font-size:16px;min-width:0}
   #pg-home .pf-sum{display:inline-flex;align-items:center;gap:6px;border:0;background:none;padding:4px 0;cursor:pointer;color:var(--ink);font:inherit}
   .pf-sum .pfc,.pf-sum .pfs{display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 9px 0 4px;border-radius:99px;background:#fff;border:2px solid var(--line);font:700 13px var(--round);white-space:nowrap}
@@ -1955,7 +1957,7 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 <script src="texgen.js?v=1"></script>
 <script src="npc/roster.js?v=5"></script>
 <script src="art.js?v=11"></script>
-<script src="../shared/atlas.js?v=20261111ai5"></script>
+<script src="../shared/atlas.js?v=20261111ai7"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261109ac2"></script>
 <script src="i18n/v.js?v=72pg"></script>
@@ -1995,7 +1997,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
     if (!btn.classList.contains('rgd-auto')) { btn.style.setProperty('--rgd0', -Math.round(el) + 'ms'); btn.classList.add('rgd-auto'); }   // the tour redrew its buttons: carry on where it was
   }, 60);
 };</script>
-<script src="lazy.js?v=46"></script>
+<script src="lazy.js?v=47"></script>
 <script src="puzzle-lines.js?v=1"></script>
 <script src="puzzles.js?v=11"></script>
 <script src="lessons3d.js?v=6"></script>
@@ -2012,6 +2014,6 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=34"></script>
 <script src="npc/npc.js?v=23"></script>
 <script src="avtalk.js?v=2"></script>
-<script src="app.js?v=304"></script>
+<script src="app.js?v=306"></script>
 </body>
 </html>

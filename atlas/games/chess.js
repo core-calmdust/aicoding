@@ -12,7 +12,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../chess/', VER = '?v=20261109nn2';   // same file / version as chess/index.html → shared cache
+  const BASE = '../chess/', VER = '?v=20261111kb4';   // same file / version as chess/index.html → shared cache
   let engP = null;
   function loadEngine() {
     if (window.ChessEngine) return Promise.resolve(window.ChessEngine);
