@@ -148,6 +148,12 @@ html.atlas-skin .cb-bar .cb-ic.cb-x{position:absolute;top:10px;inset-inline-end:
 html.atlas-skin .cb-bar .cb-ic.cb-x:hover{background:#f6efdd!important;color:#2b3044!important}
 html.atlas-skin .cb-card > .lh{padding-inline-end:38px}
 html.atlas-skin .cb-foot:has(.cb-tools > :nth-child(5)) .pic{display:none}   /* five tools (‹ prev too): the primary needs the guide's room */
+/* the compact cards (study · practice · lesson problems): captioned icons keep the room for their caption (the 38px tiles above cut it, 2026-11-11);
+   with four tools or more the guide steps aside so every button fits */
+html.atlas-skin .cb-cmp .cb-bar .cb-ic[data-cap]:not(.cb-x){height:50px!important;width:auto!important;min-width:46px!important;padding:4px 4px 3px!important;gap:4px!important;justify-content:center!important}
+html.atlas-skin .cb-cmp .cb-bar .cb-ic[data-cap]:not(.cb-x)::after{font-size:10.5px;line-height:1.1}
+html.atlas-skin .cb-cmp .cb-bar .cb-t{height:50px!important}
+html.atlas-skin .cb-cmp .cb-foot:has(.cb-tools > :nth-child(4)) .pic{display:none}
 @media (max-width:520px){html.atlas-skin .cb-foot .pic{width:48px;height:48px}html.atlas-skin .atlas-foot.cb-foot{gap:8px}}
 html.atlas-land .cb-bar :is(.cb-ic,.cb-t):not(.cb-x){height:34px!important}
 html.atlas-land .cb-bar .cb-ic:not(.cb-x){width:34px!important}
@@ -459,3 +465,16 @@ html.atlas-skin .grc-cf .grc-warn{background:#ff5d5d!important;box-shadow:0 3px 
 /* shogi, phones: no per-piece face grain on the 3D renders (2026-11-11) — each piece re-rasterised an SVG noise filter under a mask with
    a blend mode, ~40 offscreen layers re-made on every move: iPhone ran out of memory and reloaded the page */
 @media (pointer:coarse){html.atlas-shogi .pc.atlas3d .k::after{content:none!important;display:none!important}}
+/* the puzzle home of reversi / connect4 (.pzx-*, the games' own copy of shared/pzbook.js's look): the atlas tone — cream boxes
+   with the cream rim, cards tinted with their level colour, no dark glass (2026-11-11) */
+html.atlas-skin :is(.pzx-hero,.pzx-daily){background:#fffaf0!important;background-image:none!important;border:2px solid #ead9b6!important;box-shadow:0 3px 0 #ead9b6!important;color:#2b3044!important}
+html.atlas-skin .pzx-hero::after{opacity:.05!important}
+html.atlas-skin .pzx-card{background:color-mix(in srgb,var(--c2) 9%,#fffaf0)!important;background-image:none!important;border:2px solid color-mix(in srgb,var(--c) 40%,#ead9b6)!important;box-shadow:0 3px 0 color-mix(in srgb,var(--c) 30%,#ead9b6)!important;color:#2b3044!important}
+html.atlas-skin .pzx-card:hover{transform:translateY(-2px);box-shadow:0 5px 0 color-mix(in srgb,var(--c) 40%,#ead9b6)!important}
+html.atlas-skin .pzx-card.full{border-color:#f0c050!important;box-shadow:0 3px 0 #e8c070!important}
+html.atlas-skin .pzx-hero .pb-ring{background:radial-gradient(closest-side,#fffaf0 79%,transparent 81%),conic-gradient(#ff5d5d calc(var(--p)*360deg),#efe4cc 0)!important;color:#2b3044!important}
+html.atlas-skin .pzx-daily .go:not(.ok){background:#ff5d5d!important;color:#fff!important;border:0!important;box-shadow:0 3px 0 #d93c3c!important;background-image:none!important}
+html.atlas-skin .pzx-daily .go.ok{color:#2f9a6a!important;background:#eaf7ef!important;border:2px solid #9fd8b8!important;box-shadow:0 3px 0 #9fd8b8!important}
+html.atlas-skin :is(.pzx-lead,.pzx-cat,.pzx-stats,.pzx-daily .tx small,.pzx-desc,.pzx-meta){color:#6b6f80!important}
+html.atlas-skin .pzx-title{color:#2b3044!important}html.atlas-skin .pzx-title small{color:#c47a12!important;border-color:#ead9b6!important}
+html.atlas-skin .pzx-bd > svg,html.atlas-skin .pzx-daily .th > svg{box-shadow:0 2px 0 rgba(0,0,0,.12)!important}

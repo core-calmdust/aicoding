@@ -2418,6 +2418,7 @@ function onCellClick(sq) {
   if (rbS) { RBox.play(sq); return; }
   if (lesson && !lesson.drill && !lesson.study && lesson.probs && lesson.probs[lesson.i].moves && (lesson.animating || cur !== positions.length - 1)) { opView(positions.length - 1); return; }
   if (lesson && lesson.study) return;
+  if (lesson && lesson.opc) { OC.click(sq); return; }
   if (lesson) { lesson.w ? warmAnswer(sq) : lesson.drill ? drillAnswer(sq) : lessonAnswer(sq); return; }
   if (puzzle) { puzzleMove(sq); return; }
   if (net) { netMove(sq); return; }
@@ -3258,6 +3259,7 @@ function lxState(id) {
   return { pr, done: !!(pr && pr.clear), st: pr ? (pr.clear ? { text: '✓ ' + t('u.pt', { n: pr.best }), cls: 'ok' } : { text: t('u.pt', { n: pr.best }) }) : { text: t('ls.notyet'), cls: 'new' } };
 }
 async function openOpenings() {
+  if (window.OC) return OC.list();   // the opening course: a step per named line (reversi/opcourse.js, 2026-11-11)
   const d = await loadOpenings();
   lessonSrc = 'open'; selTab('open');
   $('#lsListTitle').textContent = t('op.title'); $('#lsListDesc').textContent = t('op.desc');
@@ -3320,6 +3322,8 @@ function showLessonView(v) {
 }
 let introIdx = 0;
 function openIntro(i) {
+  if (lessonSrc === 'open' && window.OC) { introIdx = i; return OC.intro(i); }
+  $('#btnLessonStart').classList.remove('hidden');
   introIdx = i; const l = curSets()[i];
   const x = LT(l);
   $('#liStep').textContent = (lessonSrc === 'open' ? t('tab.open') + ' · ' : '') + `STEP ${i + 1}`; $('#liTitle').textContent = x.title;
@@ -3347,10 +3351,10 @@ function openIntro(i) {
 }
 $('#lessonList').addEventListener('click', e => { const b = e.target.closest('.lesson-item'); if (b) openIntro(+b.dataset.i); });
 $('#btnLessonClose').onclick = () => hideOverlay('#lessonOverlay');
-$('#btnLessonBack').onclick = () => (lessonSrc === 'open' ? openOpenings() : openLessons());
+$('#btnLessonBack').onclick = () => (lessonSrc === 'open' ? (window.OC ? OC.list(introIdx) : openOpenings()) : openLessons());
 $('#btnLessonStart').onclick = () => { hideOverlay('#lessonOverlay'); startLesson(introIdx); };
-$('#btnLessonRetry').onclick = () => { hideOverlay('#lessonOverlay'); startLesson(introIdx, true); };   // a retry goes straight to the scored problems
-$('#btnLessonNextStep').onclick = () => { const n = introIdx + 1; if (n < curSets().length) openIntro(n); else { endLesson(); lessonSrc === 'open' ? openOpenings() : openLessons(); } };
+$('#btnLessonRetry').onclick = () => { hideOverlay('#lessonOverlay'); if (lessonSrc === 'open' && window.OC) { OC.practice(introIdx); return; } startLesson(introIdx, true); };   // a retry goes straight to the scored problems
+$('#btnLessonNextStep').onclick = () => { const n = introIdx + 1; if (lessonSrc === 'open' && window.OC) { endLesson(); if (n < OC.steps().length) OC.intro(n); else openOpenings(); return; } if (n < curSets().length) openIntro(n); else { endLesson(); lessonSrc === 'open' ? openOpenings() : openLessons(); } };
 $('#btnLesson').onclick = openLessons;
 
 let savedGame = null;
@@ -3803,6 +3807,7 @@ function lessonReason(kind, pr, F, sq, bm, ok, p) {
 }
 $('#lsHint').onclick = () => {
   if (lesson && lesson.study) { studyBack(); return; }
+  if (lesson && lesson.opc) { if (window.SeqPrac) SeqPrac.hint(); return; }
   if (lesson && lesson.drill) { drillHint(); return; }
   if (lesson && lesson.w) { warmHint(); return; }
   if (!lesson || lesson.answered) return;
@@ -3817,6 +3822,7 @@ $('#lsHint').onclick = () => {
   $('#lsFb').innerHTML = preAnswerText();
 };
 $('#lsNext').onclick = () => {
+  if (lesson && lesson.opc) { OC.next(); return; }
   if (lesson && lesson.drill) { if (lesson.done) startDrill(lesson.si, lesson.li, lesson.color); return; }
   if (lesson && lesson.w) { warmNext(); return; }
   if (!lesson || !lesson.answered) return;
@@ -3832,10 +3838,10 @@ $('#lsNext').onclick = () => {
   showLessonView('done'); showOverlay('#lessonOverlay');
 };
 $('#lsQuit').onclick = () => endLesson();
-$('#lsList').onclick = () => { if (!lesson) return; if (lesson.study || lesson.drill) openOpenings(); else openLessons(); };
+$('#lsList').onclick = () => { if (!lesson) return; if (lesson.study || lesson.drill || lesson.opc) openOpenings(); else openLessons(); };
 // finished screen: 「レッスンに戻る」 (「定石に戻る」 for a set from the openings list) ends the lesson and reopens that list, on its tab, scrolled to the item
-function lxReveal(sel) { const L = $('#lessonList'); let el = L.querySelector(sel); if (!el) for (const b of L.querySelectorAll('[data-lx]')) { b.click(); if ((el = L.querySelector(sel))) break; } if (el) el.scrollIntoView({ block: 'center' }); }
-$('#btnLessonQuit2').onclick = async () => { const src = lessonSrc, i = lesson ? lesson.idx : introIdx; endLesson(); if (src === 'open') { lessonSrc = 'open'; await openOpenings(); } else await openLessons(); lxReveal(`[data-i="${i}"]`); };
+function lxReveal(sel) { const L = $('#lessonList'); let el = L.querySelector(sel); if (!el) for (const b of L.querySelectorAll('[data-lx],[data-oct],[data-occ]')) { b.click(); if ((el = L.querySelector(sel))) break; } if (el) el.scrollIntoView({ block: 'center' }); }
+$('#btnLessonQuit2').onclick = async () => { const src = lessonSrc, i = lesson ? lesson.idx : introIdx; endLesson(); if (src === 'open' && window.OC) { await OC.list(i); return; } if (src === 'open') { lessonSrc = 'open'; await openOpenings(); } else await openLessons(); lxReveal(`[data-i="${i}"]`); };
 // ---- opening drill (通し稽古): play one side of a named line from the start; the other side is played automatically
 const decMoves = str => (str.match(/../g) || []).map(m => (m.charCodeAt(0) - 97) + (+m[1] - 1) * 8);
 $('#liBody').addEventListener('click', e => {
@@ -3893,10 +3899,11 @@ function studyRender() {
   $('#lsDots').innerHTML = '';
   $('#lsPrompt').innerHTML = `<div class="op-seq"><button data-sply="0" class="${cur === 0 ? 'cur' : ''}">${t('op.start')}</button> ${seq.map((m, i) => `<button data-sply="${i + 1}" class="${cur === i + 1 ? 'cur' : ''}">${i + 1}.${m}</button>`).join(' ')}</div>`
     + `<div class="op-nav"><button data-snav="first">⏮</button><button data-snav="prev">◀</button><button data-snav="play">${L.timer ? '⏸ ' + t('op.pause') : '▶ ' + t('op.replay')}</button><button data-snav="next">▶</button><button data-snav="last">⏭</button><span class="pos">${cur === 0 ? t('op.start') : t('op.navAt', { n: cur })}</span></div>`;
-  $('#lsFb').innerHTML = opAimHtml(L.ln) + (L.ln.info ? `<div class="ob-info op-info-s">${opInfoHtml(PT(L.ln.info))}</div>` : '')
+  $('#lsFb').innerHTML = (window.OC ? `<div id="ocNote"></div>` : opAimHtml(L.ln) + (L.ln.info ? `<div class="ob-info op-info-s">${opInfoHtml(PT(L.ln.info))}</div>` : ''))
     + `<div class="op-dr" style="margin-top:10px"><button data-sdr="1">● ${t('op.drillB')}</button><button data-sdr="2">○ ${t('op.drillW')}</button></div>`;
   $('#lsHint').textContent = t('ls.back'); $('#lsHint').disabled = false; $('#lsHint').style.opacity = 1;
-  $('#lsNext').style.display = 'none';
+  $('#lsNext').style.setProperty('display', 'none', 'important');   // (the compact card's CSS shows it otherwise)
+  if (window.OC) OC.studyFill();   // each move's value, rank and the branches here (reversi/opcourse.js)
 }
 $('#lessonCard').addEventListener('click', e => {
   if (!lesson || !lesson.study) return;
@@ -3905,7 +3912,7 @@ $('#lessonCard').addEventListener('click', e => {
   const d = e.target.closest('[data-sdr]'); if (d) { startDrill(lesson.si, lesson.li, +d.dataset.sdr); return; }
   const g = e.target.closest('[data-spg]'); if (g && !g.disabled) studyPage(+g.dataset.spg);
 });
-async function studyBack() { const si = lesson.si; endLesson(); lessonSrc = 'open'; await openOpenings(); openIntro(si); }
+async function studyBack() { const si = lesson.si, li = lesson.li; endLesson(); lessonSrc = 'open'; await openOpenings(); if (window.OC) { OC.intro(Math.max(0, OC.indexOf(si, li))); return; } openIntro(si); }
 function startDrill(si, li, color) {
   const set = openData.sets[si], ln = set.lines[li];
   busyToken++; cancelAI(); cancelAna();
@@ -3977,6 +3984,7 @@ function drillRender() {
 function endLesson() {
   if (!lesson) return;
   if (lesson.timer) clearInterval(lesson.timer);
+  if (window.SeqPrac) SeqPrac.stop();
   sfxStop();
   $('#lsNext').style.display = ''; $('#lsHint').textContent = t('ls.hint'); $('#lsSkip').hidden = true;
   lesson = null;
@@ -5187,6 +5195,7 @@ $('#langSel').onchange = e => {
   if (lesson && lesson.study) studyRender();
   else if (lesson && lesson.drill) drillRender();
   else if (lesson && lesson.w) warmRender(true);
+  else if (lesson && lesson.opc) OC.card();
   else if (lesson) {
     renderLessonCard();
     $('#lsFb').innerHTML = lesson.answered ? answerFeedback(lesson.lastSq) : preAnswerText();
@@ -5713,7 +5722,7 @@ accRender();
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=56l23'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=56l25'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
@@ -5722,7 +5731,8 @@ accRender();
 })();
 </script>
 <!-- World Board Game Atlas: shared account sync -->
-<script src="../shared/atlas.js?v=20261111ai4" defer></script>
+<script src="../shared/seqprac.js?v=3"></script><script src="opcourse.js?v=2"></script>
+<script src="../shared/atlas.js?v=20261111ai5" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1l14" defer></script>
 <script src="../shared/atlas-account.js?v=20261109ac2l14" defer></script>
 <script src="../shared/infotabs.js?v=22l14" defer></script>

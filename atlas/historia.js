@@ -6,7 +6,7 @@
    app.js calls Historia.sync(game, lang) when a board opens, and defers its stage framing to Historia.fit() while open. */
 (function () {
   'use strict';
-  const V = 18;                     // data version (bump when historia/*.json change)
+  const V = 19;                     // data version (bump when historia/*.json change)
   const BGM_SRC = 'historia/bgm.mp3', BGM_VOL = .28;
   const LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];   // (a game without text in a language falls back to English)
   const UI = {
@@ -29,7 +29,7 @@
   const GUIDE = { shogi: 'm-shogi', chess: 'm-knight', reversi: 'm-disc', sudoku: 'm-tile', speedsudoku: 'av/tile-2', samegame: 'av/hippo-0', jailbreak: 'av/mole-0',
     poker: 'av/joker-0', baccarat: 'av/joker-1', blackjack: 'av/joker-2', solitaire: 'av/ghost-0', checkers: 'm-crab', ugolki: 'av/daruma-0', agon: 'av/teddy-0', fanorona: 'av/monkey-0',
     alquerque: 'av/camel-0', xiangqi: 'av/ryuou-0', tafl: 'av/seal-0', go: 'av/goke-0', gomoku: 'm-stone', dots: 'm-dot', connect4: 'm-plop', mancala: 'm-gem',
-    backgammon: 'm-dice', morris: 'm-owl', hex: 'av/bee-0', ur: 'av/goat-0', konane: 'av/hermit-0', senet: 'av/camel-2', janggi: 'av/ryuou-0', ludo: 'av/monkey-1', carrom: 'av/otter-1', crokinole: 'av/beaver-1', hockey: 'av/seal-1' };
+    backgammon: 'm-dice', morris: 'm-owl', hex: 'av/bee-0', ur: 'av/goat-0', konane: 'av/hermit-0', senet: 'av/camel-2', janggi: 'av/ryuou-0', ludo: 'av/monkey-1', carrom: 'av/otter-1', crokinole: 'av/beaver-1', hockey: 'av/seal-1', amazons: 'av/frog-0' };
   const guideSrc = id => '../images/atlas/' + (GUIDE[id] || 'm-tile') + '.webp';
   const BOOK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v15H5.5A1.5 1.5 0 0 0 4 20.5z"/><path d="M20 5.5c0-.8-.7-1.5-1.5-1.5H13v15h5.5c.8 0 1.5.7 1.5 1.5z"/><path d="M7 8h2M15 8h2M7 11h2M15 11h2"/></svg>';
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -50,7 +50,7 @@
 
   /* ---------- entry button (in the board view, top-left of the 3D scene) ---------- */
   // the games that have a history (historia/s/<id>.json); a newer game without one shows no ヒストリア button
-  const IDS = new Set('agon alquerque baccarat backgammon blackjack checkers chess connect4 dots fanorona go gomoku hex jailbreak konane mancala morris poker reversi samegame shogi solitaire speedsudoku sudoku tafl ugolki ur xiangqi senet janggi ludo carrom crokinole hockey'.split(' ')), has = id => IDS.has(id);
+  const IDS = new Set('agon alquerque baccarat backgammon blackjack checkers chess connect4 dots fanorona go gomoku hex jailbreak konane mancala morris poker reversi samegame shogi solitaire speedsudoku sudoku tafl ugolki ur xiangqi senet janggi ludo carrom crokinole hockey amazons'.split(' ')), has = id => IDS.has(id);
   function sync(g, l, c) {
     game = g; lang = LANGS.includes(l) ? l : 'en'; if (c) ctx = c;
     const b = $('bvHist'); if (!b) return;
@@ -722,6 +722,7 @@
         for (let j = 0; j < m; j++) for (let i = 0; i < n; i++) { if (mask.has(i + ',' + j)) continue; const dark = s.check && (i + j) % 2 === 1;
           out.push(`<rect class="cl" style="--d:${(i + j) * 18}ms" x="${PD + i * cell}" y="${PD + j * cell}" width="${cell}" height="${cell}" fill="${dark ? (s.dark || '#8a5a32') : (s.light || 'rgba(255,255,255,.18)')}" stroke="${line}" stroke-width="${s.check ? 0 : 1.1}"/>`); }
         (s.marks || []).forEach(([i, j]) => out.push(`<rect class="cl" x="${PD + i * cell + 3}" y="${PD + j * cell + 3}" width="${cell - 6}" height="${cell - 6}" rx="4" fill="none" stroke="${line}" stroke-width="1.6" stroke-dasharray="3 2"/>`));
+        (s.burn || []).forEach(([i, j]) => out.push(`<g class="cl" transform="translate(${PD + i * cell + cell / 2} ${PD + j * cell + cell / 2})"><rect x="${-cell / 2 + 2}" y="${-cell / 2 + 2}" width="${cell - 4}" height="${cell - 4}" rx="4" fill="#3a2a1c"/><path d="M${-cell * .26} ${cell * .26}L${cell * .2} ${-cell * .2}M${cell * .2} ${-cell * .2}l-7 1.5M${cell * .2} ${-cell * .2}l-1.5 7" stroke="#f0c46a" stroke-width="2.2" stroke-linecap="round" fill="none"/></g>`));   // amazons: a burnt square with its arrow
         (s.ros || []).forEach(([i, j]) => out.push(`<g class="cl" transform="translate(${X(i)} ${Y(j)})">${[0, 45, 90, 135].map(a => `<ellipse rx="11" ry="3.6" transform="rotate(${a})" fill="#d8423a" opacity=".75"/>`).join('')}<circle r="3" fill="#f5c23c"/></g>`));
         if (s.box) { const [bw, bh] = s.box; for (let i = 0; i <= n; i += bw) out.push(ln(PD + i * cell, PD, PD + i * cell, PD + m * cell, 'gl th')); for (let j = 0; j <= m; j += bh) out.push(ln(PD, PD + j * cell, PD + n * cell, PD + j * cell, 'gl th')); }
       } else {

@@ -198,3 +198,10 @@ v2 を出発点に、自己対局データを約8,287万局面（学習に約6,8
   - headless Chrome（この作業機、2コアを他のシミュレーションと共用）の `bench.html`（1秒、1・2スレッド）：壊れずに動く（12局面、最善手は基準と 11/12 一致）。CPU が空いていないので壁時計の速さは測れない。node の worker_threads（実際の wasm、4スレッド）でも止まらず最後まで読む。
 - `engine_mt.wasm?v=4`・`mt-helper.js?v=2`（`app.js`・`bench.html`）、`pro/` は `?v=4`。
 - **Mac で測るページ**：`xiangqi/bench.html`（または `bench-all.html`）。前の ×4.11／×4.97／×4.75（8／10／14）より伸びていれば採用のまま。
+
+## 1スレッドの高速化（2026-11-11）
+- **プロファイル**（Node、`engine_simd.wasm`＋NNUE、bench の12局面）：探索の本体 38%（大半が手の並べ替えの選択ソート：残りの手から最高点を1手ずつ探す）、NNUE の評価 21%、王手の判定 13%、手の生成 12%。NNUE（差分更新・SCReLU）はすでに SIMD 化済み。
+- **直したこと（`engine.c`）**：選択ソートの「残りの最初の最高点」を、残りが8手以上なら SIMD で4つずつ最大値を求めてから最初のレーンを探す（`firstMax`、静止探索・探索・分割点の4か所）。選ぶ手は前のループと同じ。SIMD なしの `engine.wasm` は前と同じループ。
+- **一致の確認**（`node tools/check_wasm.js`、bench の12局面の `best` の手・評価値・深さ・局面数の md5）：`engine_simd.wasm`（NNUE、深さ12）・`engine_simd512.wasm`（線形評価、深さ9）・`engine.wasm`（深さ10）・`engine_mt.wasm` の1スレッド（NNUE、深さ11、局面数は1局面ずつ正確）が前のビルドと一致。
+- **速さ（作業機、Node、1スレッド、局面数／秒）**：`engine_simd.wasm`（NNUE）203万 → 231万（**+14%**）、線形評価 140万 → 151万（+8%）、`engine_simd512.wasm` +10%、`engine_mt.wasm` 1スレッド 184万 → 197万（+7%）。王手の判定と手の生成は配列のレイを辿る形のままで、ビットボード化は手の順・結果を変えずに直すのが大きいので見送り。
+- バージョン：`engine.js?v=20261111fm`（wasm は `?v=20261111fm`、nnue.bin.gz はそのまま）、`engine_mt.wasm?v=5`（`app.js`・`bench.html`・`pro/pro.js`）、`atlas/games/xiangqi.js?v=10`・`atlas/lazy.js?v=44`。
