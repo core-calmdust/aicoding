@@ -35,4 +35,6 @@ URL: https://core-calmdust.github.io/aicoding/peg/ ／ 2026-11-11 BETA公開（2
 
 ## 大百科・トップページ
 - `shared/atlas.js` の GAMES（BETA、total pz 145、進み具合 peg()）と更新情報、`atlas/i18n.js` の about.peg／hist.peg、`atlas/gamelist-i18n.js`、一覧の絵 `atlas/shots/peg.webp`（tools/shots.js）、トップページ `index.html`（key pg、pg.title／pg.desc 14言語）、アイコン `images/icons/peg.svg`、`images/peg.webp`（盤だけ）。
-- 3D卓・フル機能（3Dスキン）・3Dルールコース・ヒストリアは次の段階。それまでは大百科のボードカードは2D専用（atlas/app.js の CARD2D）、`images/atlas/peg.webp` は2Dの盤の絵（3Dアイコンができたら差し替え）。
+- 大百科の3D（2026-11-11）：`atlas/models/peg.js`（ろくろ挽きの丸い盤／三角の盤、盤4種＝2D版のデザイン設定 settings.bd と共通、玉4種＝settings.pg）。`Table3D.BOARDS.peg`、盤のサムネ `atlas/img/board-peg-<look>.webp`（tools/boards.html）。3Dアイコン `images/atlas/peg.webp`（icons3d.js の peg：ウォルナットの盤の角で青い玉が赤い玉を跳び越える）。遊ぶのは専用ページ（lazy F.peg play:false。ルールコースの「遊んでみる」は peg/ へ）。フル機能の3Dスキンはまだ。
+- 3Dルールコース `atlas/rules/peg.js`：案内役はベレー帽のビー玉「ビーユ」（av/marble-2）。全7ステップ：盤の紹介 → 跳び越えて取る → ななめは跳べない → 続けて跳ぶ → 十字架を◎へ（失敗したら言葉をかけてやり直し）→ 三角の盤（盤ごと入れ替え）→ 定番の問題と最短18手。取った玉は盤の縁の溝へ転がる。
+- ヒストリア：historia/s/peg.json ＋14言語、盤の図は新しい type 'peg'（historia.js の diag）。地図はヴェルサイユ・ベルリン・ロンドン・ケンブリッジ・テネシー（mapdata.js）。

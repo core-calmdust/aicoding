@@ -1978,7 +1978,7 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 <script>/* the places other than the chabudai (tables3d.js, 440 KB): at once when one is chosen, else in idle time after the page has
    loaded (2026-11-10); 'atlas-places' tells the page they are there */
 (function () {
-  var SRC = 'tables3d.js?v=57', k = 0, p = null;
+  var SRC = 'tables3d.js?v=58', k = 0, p = null;
   try { k = +(localStorage.getItem('atlas-table') || 0) || 0; var m = /[?&]tbl=(\d+)/.exec(location.search); if (m) k = +m[1]; } catch (e) {}
   window.AtlasPlaces = function () { return p || (p = new Promise(function (res) { var s = document.createElement('script'); s.src = SRC; s.onload = s.onerror = function () { res(); try { dispatchEvent(new Event('atlas-places')); } catch (e) {} }; document.head.appendChild(s); })); };
   if (k) { document.write('<script src="' + SRC + '"><\/script>'); p = Promise.resolve(); }
@@ -1986,7 +1986,7 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 })();
 </script>
 <script src="models/cardtables.js?v=4"></script>
-<script src="icons3d.js?v=38"></script>
+<script src="icons3d.js?v=39"></script>
 <script>/* rules tours: after a solved step, the ▶ button fills up like a timer until the tour moves on by itself */
 window.AtlasRgdTimer = function (btn, ms, alive) {
   if (!btn) return; btn.classList.remove('rgd-auto'); void btn.offsetWidth; btn.style.setProperty('--rgt', ms + 'ms'); btn.classList.add('rgd-auto');
@@ -1997,13 +1997,13 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
     if (!btn.classList.contains('rgd-auto')) { btn.style.setProperty('--rgd0', -Math.round(el) + 'ms'); btn.classList.add('rgd-auto'); }   // the tour redrew its buttons: carry on where it was
   }, 60);
 };</script>
-<script src="lazy.js?v=46"></script>
+<script src="lazy.js?v=47"></script>
 <script src="puzzle-lines.js?v=1"></script>
 <script src="puzzles.js?v=11"></script>
 <script src="lessons3d.js?v=6"></script>
 <script src="missions.js?v=8"></script>
 <link rel="stylesheet" href="historia.css?v=15">
-<script src="historia.js?v=40"></script>
+<script src="historia.js?v=41"></script>
 <link rel="stylesheet" href="skin/loading.css?v=2">
 <script src="skin/loading.js?v=5"></script>
 <script src="gacha3d.js?v=7"></script>
@@ -2011,9 +2011,9 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="../shared/tick.js?v=2"></script>
 <script src="gamelist.js?v=34"></script>
 <link rel="stylesheet" href="worldmap.css?v=18">
-<script src="worldmap.js?v=33"></script>
+<script src="worldmap.js?v=34"></script>
 <script src="npc/npc.js?v=23"></script>
 <script src="avtalk.js?v=2"></script>
-<script src="app.js?v=305"></script>
+<script src="app.js?v=306"></script>
 </body>
 </html>

@@ -1,0 +1,139 @@
+/* =====================================================================
+   Peg Solitaire on the 3D table — the 2D page's boards turned in wood (Table3D.BOARDS.peg, the page's own design setting):
+   · a round board turned on a lathe (English, European, diamond, German): a flat face drilled with shallow cups, a groove
+     round the rim where the taken marbles roll, a bead and a soft edge; the triangle: a thick triangular block with rounded
+     corners and a straight groove along its foot.
+   · woods: 'walnut' (the default), 'maple', 'stone' (pale marble), 'night' (dark lacquer with a gilt bead).
+   · marbles: 'glass' (six colours, the default), 'pearl', 'steel', 'peg' (turned wooden pegs).
+   Registers into Table3D:
+     Table3D.MODELS.peg(live)   board (+ a game in progress unless live)
+     Table3D.peg = { board(id, look), marble(i, set), LOOKS, SETS, R }
+     userData: { id, B (PegEngine board), top, pt(i) → [x, z], groove(k) → [x, y, z], marble(i) → Group, R }
+   Units: one hole spacing is 1.0. Needs ../peg/engine.js (window.PegEngine), loaded first by atlas/lazy.js.
+   ===================================================================== */
+(function () {
+  'use strict';
+  const X = window.Table3D; if (!X) return;
+  const T = () => window.THREE;
+  const LO = () => !!(X.coarse || X.lite);
+  const LOOKS = ['walnut', 'maple', 'stone', 'night'], SETS = ['glass', 'pearl', 'steel', 'peg'];
+  const R = .32, TOP = .5, CUP = .26;
+  const pref = () => { try { return (JSON.parse(localStorage.getItem('aicoding-peg') || '{}') || {}).settings || {}; } catch (e) { return {}; } };
+  const lookNow = () => { const v = pref().bd; return LOOKS.includes(v) ? v : 'walnut'; };
+  const setNow = () => { const v = pref().pg; return SETS.includes(v) ? v : 'glass'; };
+  const mats = {}, mat = (k, f) => mats[k] || (mats[k] = f());
+  const geos = {}, geo = (k, f) => geos[k + (LO() ? 'l' : 'h')] || (geos[k + (LO() ? 'l' : 'h')] = (g => { if (X.share) X.share(g); return g; })(f()));
+
+  /* ---------- woods ---------- */
+  function woodMat(look) {
+    return mat('w' + look, () => {
+      if (look === 'maple') return X.M({ map: X.wood('pgMaple', '#e4c08a', '#b98a52'), roughness: .5, clearcoat: .35, clearcoatRoughness: .4 });
+      if (look === 'stone') return X.M({ map: X.canvasTex('pgMarble', 512, 512, (c, W) => {
+        c.fillStyle = '#e4e0d8'; c.fillRect(0, 0, W, W);
+        let s = 7; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
+        for (let k = 0; k < 26; k++) { c.strokeStyle = `rgba(${120 + r() * 40},${115 + r() * 40},${110 + r() * 40},${.15 + r() * .3})`; c.lineWidth = .6 + r() * 2.2; c.beginPath(); let x = r() * W, y = r() * W; c.moveTo(x, y); for (let i = 0; i < 14; i++) { x += (r() - .5) * 90; y += (r() - .3) * 60; c.lineTo(x, y); } c.stroke(); }
+      }), roughness: .28, clearcoat: .7, clearcoatRoughness: .2 });
+      if (look === 'night') return X.M({ color: '#2b1f42', roughness: .22, clearcoat: 1, clearcoatRoughness: .12 });
+      return X.M({ map: X.wood('pgWalnut', '#8f5a36', '#4a2a16'), roughness: .48, clearcoat: .4, clearcoatRoughness: .35 });
+    });
+  }
+  const rimMat = look => mat('rim' + look, () => look === 'night' ? X.M({ color: '#e2bd6a', metalness: 1, roughness: .3 }) : woodMat(look));
+  // a drilled cup: dark at the bottom, lit on the far wall (a disc with a radial picture, the face stays one piece)
+  const cupMat = look => mat('cup' + look, () => X.M({ map: X.canvasTex('pgCup' + look, 128, 128, (c, W) => {
+    const dark = { walnut: '#1a0d05', maple: '#4f3014', stone: '#3a3631', night: '#05030a' }[look];
+    const g = c.createRadialGradient(W * .5, W * .56, W * .05, W * .5, W * .5, W * .5); g.addColorStop(0, dark); g.addColorStop(.72, dark); g.addColorStop(.86, 'rgba(255,240,220,.25)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    c.fillStyle = g; c.beginPath(); c.arc(W / 2, W / 2, W / 2, 0, 7); c.fill();
+  }), transparent: true, roughness: .9, depthWrite: false, bump: false }));
+  const grooveMat = look => mat('gr' + look, () => X.M({ color: { walnut: '#2a170c', maple: '#7a5530', stone: '#8e8a82', night: '#0b0714' }[look], roughness: .8 }));
+
+  /* ---------- the boards ---------- */
+  function shape(B) {
+    if (B.geoT) return B.geoT;
+    const xs = B.pos.map(p => p[0]), ys = B.pos.map(p => p[1]);
+    const cx = (Math.min(...xs) + Math.max(...xs)) / 2, cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+    const pts = B.pos.map(([x, y]) => [x - cx, y - cy]);
+    if (B.tri) {
+      const top = Math.min(...pts.map(p => p[1])), bot = Math.max(...pts.map(p => p[1])), half = (Math.max(...pts.map(p => p[0])) - Math.min(...pts.map(p => p[0]))) / 2;
+      const s3 = Math.sqrt(3), m = 1.05, dy = .9;
+      const P = [[0, top - m * 2], [-half - m * s3, bot + m + dy], [half + m * s3, bot + m + dy]];
+      return (B.geoT = { tri: true, pts, P, groove: { z: bot + 1.35, x0: -half - 1.1, x1: half + 1.1 } });
+    }
+    const Rr = Math.max(...pts.map(([x, y]) => Math.hypot(x, y))) + 1.35;
+    return (B.geoT = { tri: false, pts, R: Rr, gr: Rr - .5 });
+  }
+  function board(id, look) {
+    id = id || 'english'; look = LOOKS.includes(look) ? look : lookNow();
+    const TT = T(), E = window.PegEngine, B = E.BOARDS[id], S = shape(B), g = new TT.Group();
+    const W = woodMat(look);
+    if (!S.tri) {
+      const Rr = S.R, gr = S.gr, prof = [[0, TOP], [gr - .34, TOP], [gr - .3, TOP - .03], [gr - .22, TOP - .12], [gr, TOP - .16], [gr + .22, TOP - .12], [gr + .3, TOP - .03], [gr + .34, TOP], [Rr - .14, TOP + .02], [Rr - .04, TOP - .04], [Rr, TOP - .14], [Rr + .02, .12], [Rr - .06, 0], [0, 0]];
+      const body = X.mesh(geo('pgBody' + id, () => new TT.LatheGeometry(prof.map(([a, b]) => new TT.Vector2(a, b)).reverse(), LO() ? 48 : 96)), W);
+      g.add(body);
+      // the groove's dark floor and a bead (gilt on the lacquer board) on the rim
+      const gf = X.mesh(geo('pgGF' + id, () => { const r = new TT.RingGeometry(gr - .2, gr + .2, LO() ? 48 : 96); r.rotateX(-Math.PI / 2); return r; }), grooveMat(look), 0, TOP - .155, 0); gf.castShadow = false; g.add(gf);
+      const bead = X.mesh(geo('pgBead' + id, () => { const t = new TT.TorusGeometry(Rr - .1, .035, 6, LO() ? 60 : 120); t.rotateX(Math.PI / 2); return t; }), rimMat(look), 0, TOP + .015, 0); g.add(bead);
+    } else {
+      const sh = new TT.Shape(), P = S.P, rr = .7;
+      for (let i = 0; i < 3; i++) {
+        const a = P[(i + 2) % 3], b = P[i], c = P[(i + 1) % 3], v1 = [a[0] - b[0], a[1] - b[1]], v2 = [c[0] - b[0], c[1] - b[1]], l1 = Math.hypot(...v1), l2 = Math.hypot(...v2);
+        const s = [b[0] + v1[0] / l1 * rr, b[1] + v1[1] / l1 * rr], e = [b[0] + v2[0] / l2 * rr, b[1] + v2[1] / l2 * rr];
+        if (i) sh.lineTo(s[0], -s[1]); else sh.moveTo(s[0], -s[1]); sh.quadraticCurveTo(b[0], -b[1], e[0], -e[1]);
+      }
+      const ex = new TT.ExtrudeGeometry(sh, { depth: TOP - .08, bevelEnabled: true, bevelThickness: .08, bevelSize: .08, bevelSegments: 2, curveSegments: 8 });
+      ex.rotateX(-Math.PI / 2); ex.translate(0, .0, 0);
+      g.add(X.mesh(geo('pgTri', () => ex), W));
+      const gz = S.groove.z, gl = S.groove.x1 - S.groove.x0;
+      const gv = X.mesh(geo('pgTriG', () => { const p = new TT.PlaneGeometry(gl, .42); p.rotateX(-Math.PI / 2); return p; }), grooveMat(look), (S.groove.x0 + S.groove.x1) / 2, TOP + .002, gz); gv.castShadow = false; g.add(gv);
+    }
+    // the cups
+    const cupG = geo('pgCup', () => { const c = new TT.CircleGeometry(CUP, 28); c.rotateX(-Math.PI / 2); return c; });
+    S.pts.forEach(([x, z]) => { const m = new TT.Mesh(cupG, cupMat(look)); m.position.set(x, TOP + .003, z); m.renderOrder = 1; g.add(m); });
+    g.userData = {
+      id, B, look, top: TOP, R, W: S.tri ? S.P[2][0] * 2 : S.R * 2, H: S.tri ? S.P[1][1] - S.P[0][1] : S.R * 2, sink: 0,
+      pt: i => S.pts[i].slice(),
+      groove: k => { if (S.tri) { const n = 13, x = S.groove.x0 + (S.groove.x1 - S.groove.x0) * ((k % n) + .5) / n; return [x, TOP + R * .55, S.groove.z]; } const step = Math.min(.66 / S.gr, Math.PI * 2 / B.n), a = -Math.PI / 2 + (k + .5) * step * 1.02; return [Math.cos(a) * S.gr, TOP - .16 + R * .9, Math.sin(a) * S.gr]; },
+      marble: (i, set) => marble(i, set),
+    };
+    return g;
+  }
+
+  /* ---------- marbles ---------- */
+  const GLASS = ['#3a8be0', '#36b678', '#f0a030', '#e04656', '#9a66e8', '#2fc2b0'];
+  function marbleMat(i, set) {
+    if (set === 'pearl') return mat('mpearl', () => X.M({ color: '#f2eadb', roughness: .22, clearcoat: .9, clearcoatRoughness: .15, sheen: 1 }));
+    if (set === 'steel') return mat('msteel', () => X.M({ color: '#c9ced6', metalness: 1, roughness: .14 }));
+    if (set === 'peg') return mat('mpeg', () => X.M({ map: X.wood('pgPeg', '#e6c48c', '#b88a50'), roughness: .5, clearcoat: .3 }));
+    const c = GLASS[(i * 7 + 3) % GLASS.length];
+    return mat('mg' + c, () => X.M({ color: c, roughness: .04, clearcoat: 1, clearcoatRoughness: .03, envMapIntensity: 1.6 }));
+  }
+  function marble(i, set) {
+    set = SETS.includes(set) ? set : setNow();
+    const TT = T(), g = new TT.Group();
+    if (set === 'peg') {   // a turned wooden peg standing in its cup
+      const prof = [[0, 0], [.13, 0], [.14, .22], [.2, .3], [.24, .4], [.22, .48], [.14, .54], [0, .56]].map(([a, b]) => new TT.Vector2(a, b));
+      g.add(X.mesh(geo('pgPegG', () => new TT.LatheGeometry(prof, LO() ? 12 : 20)), marbleMat(i, set), 0, -.12, 0));
+    } else {
+      const s = X.mesh(geo('pgBall', () => new TT.SphereGeometry(R, LO() ? 16 : 28, LO() ? 12 : 20)), marbleMat(i, set), 0, R * .78, 0);
+      g.add(s);
+      if (set === 'glass') {   // a twist of white inside the glass
+        const sw = X.mesh(geo('pgSwirl', () => new TT.TorusGeometry(R * .48, R * .07, 6, 24, Math.PI * 1.2)), mat('mswirl', () => X.M({ color: '#ffffff', roughness: .3, transparent: true, opacity: .55 })), 0, R * .78, 0);
+        sw.rotation.set(.9 + (i % 5) * .3, (i % 7) * .9, .4); g.add(sw);
+      }
+    }
+    g.userData = { i, set, h: R * 1.6 };
+    return g;
+  }
+
+  X.MODELS.peg = function (live) {
+    const E = window.PegEngine; if (!E) return new (T().Group)();
+    const B = E.BOARDS.english, g = board('english'), U = g.userData;
+    if (live) return g;
+    // a game in progress: the classic start after eleven jumps of a solution, the taken marbles in the groove
+    let a = E.startPos(B, B.center); const path = E.findPath(B, a, { target: B.center, time: 800 }).path || [];
+    path.slice(0, 11).forEach(j => { a = E.apply(a, j); });
+    B.cells.forEach((_, i) => { if (!a[i]) return; const m = marble(i), [x, z] = U.pt(i); m.position.set(x, TOP, z); g.add(m); const sh = X.contact(R * 1.05, .5); sh.position.set(x, TOP + .004, z); g.add(sh); });
+    for (let k = 0; k < Math.min(11, path.length); k++) { const m = marble(path[k][1]), [x, y, z] = U.groove(k); m.position.set(x, y - R * .78, z); m.scale.setScalar(.85); g.add(m); }
+    return g;
+  };
+  X.peg = { board, marble, LOOKS, SETS, R, look: lookNow, set: setNow };
+})();

@@ -194,6 +194,10 @@
       set: k => { try { const o = JSON.parse(ls.get('aicoding-senet') || '{}') || {}; o.settings = o.settings || {}; o.settings.design = k; ls.set('aicoding-senet', JSON.stringify(o)); } catch (e) {} } },
     // atlas/skin/amazons.js: 'atlas-amazons-look' ('temple' the default | 'ruins'); the figures: 'atlas-amazons-pc3'
     amazons: { list: ['temple', 'ruins', 'krater', 'navy', 'camp', 'minimal'], get: () => { const v = ls.get('atlas-amazons-look'); return ['ruins', 'krater', 'navy', 'camp', 'minimal'].includes(v) ? v : 'temple'; }, set: k => ls.set('atlas-amazons-look', k) },
+    // peg solitaire (atlas/models/peg.js): the 2D page's own board design ('aicoding-peg' settings.bd), as senet
+    peg: { list: ['walnut', 'maple', 'stone', 'night'],
+      get: () => { try { const d = (JSON.parse(ls.get('aicoding-peg') || '{}').settings || {}).bd; return ['maple', 'stone', 'night'].includes(d) ? d : 'walnut'; } catch (e) { return 'walnut'; } },
+      set: k => { try { const o = JSON.parse(ls.get('aicoding-peg') || '{}') || {}; o.settings = o.settings || {}; o.settings.bd = k; ls.set('aicoding-peg', JSON.stringify(o)); } catch (e) {} } },
     konane: { list: ['papamu', 'quilt'], get: () => ls.get('atlas-konane-look') === 'quilt' ? 'quilt' : 'papamu', set: k => ls.set('atlas-konane-look', k) },
     // carrom (3D only): 'atlas-carrom-look' ('neon' the default | 'modern' | 'classic' | 'rajasthan' | 'bauhaus' | 'tycoon')
     carrom: { list: ['neon', 'modern', 'classic', 'rajasthan', 'bauhaus', 'tycoon'], get: () => { const v = ls.get('atlas-carrom-look'); return ['modern', 'classic', 'rajasthan', 'bauhaus', 'tycoon'].includes(v) ? v : 'neon'; }, set: k => ls.set('atlas-carrom-look', k) },
@@ -207,7 +211,12 @@
   };
   X.BOARDS = BOARDS;
   // a game's own board names (the board is part of its game, so no '3D'): table hockey
-  const NG = { hockey: {
+  const NG = { peg: {
+    walnut: {ja: "ウォルナット", en: "Walnut", zh: "胡桃木", ko: "월넛", es: "Nogal", fr: "Noyer", pt: "Nogueira", de: "Nussbaum", ru: "Орех", tr: "Ceviz", id: "Walnut", hi: "अखरोट", ar: "جوز", 'zh-TW': "胡桃木"},
+    maple: {ja: "メープル", en: "Maple", zh: "枫木", ko: "메이플", es: "Arce", fr: "Érable", pt: "Bordo", de: "Ahorn", ru: "Клён", tr: "Akçaağaç", id: "Maple", hi: "मेपल", ar: "قيقب", 'zh-TW': "楓木"},
+    stone: {ja: "大理石", en: "Marble", zh: "大理石", ko: "대리석", es: "Mármol", fr: "Marbre", pt: "Mármore", de: "Marmor", ru: "Мрамор", tr: "Mermer", id: "Marmer", hi: "संगमरमर", ar: "رخام", 'zh-TW': "大理石"},
+    night: {ja: "夜の漆", en: "Night lacquer", zh: "夜漆", ko: "밤의 옻칠", es: "Laca nocturna", fr: "Laque de nuit", pt: "Laca noturna", de: "Nachtlack", ru: "Ночной лак", tr: "Gece laki", id: "Pernis malam", hi: "रात की लाख", ar: "ورنيش ليلي", 'zh-TW': "夜漆"} },
+  hockey: {
     classic: { ja: 'クラシック', en: 'Classic', zh: '经典', 'zh-TW': '經典', ko: '클래식', es: 'Clásico', fr: 'Classique', pt: 'Clássico', de: 'Klassisch', ru: 'Классика', tr: 'Klasik', id: 'Klasik', hi: 'क्लासिक', ar: 'كلاسيك' },
     air: { ja: 'エアホッケー', en: 'Air hockey', zh: '气垫球', 'zh-TW': '氣墊球', ko: '에어하키', es: 'Air hockey', fr: 'Air-hockey', pt: 'Air hockey', de: 'Airhockey', ru: 'Аэрохоккей', tr: 'Hava hokeyi', id: 'Air hockey', hi: 'एयर हॉकी', ar: 'هوكي الهواء' },
     neon: { ja: 'ネオン', en: 'Neon', zh: '霓虹', 'zh-TW': '霓虹', ko: '네온', es: 'Neón', fr: 'Néon', pt: 'Neon', de: 'Neon', ru: 'Неон', tr: 'Neon', id: 'Neon', hi: 'नियॉन', ar: 'نيون' },

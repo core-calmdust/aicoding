@@ -29,7 +29,7 @@
   const GUIDE = { shogi: 'm-shogi', chess: 'm-knight', reversi: 'm-disc', sudoku: 'm-tile', speedsudoku: 'av/tile-2', samegame: 'av/hippo-0', jailbreak: 'av/mole-0',
     poker: 'av/joker-0', baccarat: 'av/joker-1', blackjack: 'av/joker-2', solitaire: 'av/ghost-0', checkers: 'm-crab', ugolki: 'av/daruma-0', agon: 'av/teddy-0', fanorona: 'av/monkey-0',
     alquerque: 'av/camel-0', xiangqi: 'av/ryuou-0', tafl: 'av/seal-0', go: 'av/goke-0', gomoku: 'm-stone', dots: 'm-dot', connect4: 'm-plop', mancala: 'm-gem',
-    backgammon: 'm-dice', morris: 'm-owl', hex: 'av/bee-0', ur: 'av/goat-0', konane: 'av/hermit-0', senet: 'av/camel-2', janggi: 'av/ryuou-0', ludo: 'av/monkey-1', carrom: 'av/otter-1', crokinole: 'av/beaver-1', hockey: 'av/seal-1', amazons: 'av/frog-0' };
+    backgammon: 'm-dice', morris: 'm-owl', hex: 'av/bee-0', ur: 'av/goat-0', konane: 'av/hermit-0', senet: 'av/camel-2', janggi: 'av/ryuou-0', ludo: 'av/monkey-1', carrom: 'av/otter-1', crokinole: 'av/beaver-1', hockey: 'av/seal-1', amazons: 'av/frog-0', peg: 'av/marble-2' };
   const guideSrc = id => '../images/atlas/' + (GUIDE[id] || 'm-tile') + '.webp';
   const BOOK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v15H5.5A1.5 1.5 0 0 0 4 20.5z"/><path d="M20 5.5c0-.8-.7-1.5-1.5-1.5H13v15h5.5c.8 0 1.5.7 1.5 1.5z"/><path d="M7 8h2M15 8h2M7 11h2M15 11h2"/></svg>';
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -50,7 +50,7 @@
 
   /* ---------- entry button (in the board view, top-left of the 3D scene) ---------- */
   // the games that have a history (historia/s/<id>.json); a newer game without one shows no ヒストリア button
-  const IDS = new Set('agon alquerque baccarat backgammon blackjack checkers chess connect4 dots fanorona go gomoku hex jailbreak konane mancala morris poker reversi samegame shogi solitaire speedsudoku sudoku tafl ugolki ur xiangqi senet janggi ludo carrom crokinole hockey amazons'.split(' ')), has = id => IDS.has(id);
+  const IDS = new Set('agon alquerque baccarat backgammon blackjack checkers chess connect4 dots fanorona go gomoku hex jailbreak konane mancala morris poker reversi samegame shogi solitaire speedsudoku sudoku tafl ugolki ur xiangqi senet janggi ludo carrom crokinole hockey amazons peg'.split(' ')), has = id => IDS.has(id);
   function sync(g, l, c) {
     game = g; lang = LANGS.includes(l) ? l : 'en'; if (c) ctx = c;
     const b = $('bvHist'); if (!b) return;
@@ -764,6 +764,13 @@
       if (s.diag) [0, 2, 4, 6].forEach(k => { const a = pos(0, k), b = pos(rings - 1, k); out.push(ln(a[0], a[1], b[0], b[1], 'gl', 450)); });
       for (let r = 0; r < rings; r++) for (let k = 0; k < 8; k++) { const p = pos(r, k); out.push(`<circle class="cl" cx="${p[0]}" cy="${p[1]}" r="4" fill="${line}"/>`); }
       pcs(s.pcs).forEach(([r, k, c], j) => { const p = pos(r, k); body += piece(p[0], p[1], c, null, 12, null, dd + j * step); });
+    } else if (T === 'peg') {   // peg solitaire: the round English board (33 holes in a cross), marbles, a jump arrow and the ◎ goal hole
+      const cell = 30, n = 7; W = H = n * cell + PD * 2; const c0 = W / 2, X = i => PD + i * cell + cell / 2, rad = n * cell / 2 + 6;
+      out.push(`<circle class="bd" cx="${c0}" cy="${c0}" r="${rad + 12}" fill="${wood}"/><circle class="cl" cx="${c0}" cy="${c0}" r="${rad + 3}" fill="none" stroke="${line}" stroke-width="5" opacity=".35"/>`);
+      for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) if ((i >= 2 && i <= 4) || (j >= 2 && j <= 4)) out.push(`<circle class="cl" style="--d:${(i + j) * 18}ms" cx="${X(i)}" cy="${X(j)}" r="6.5" fill="${line}"/>`);
+      if (s.goal) out.push(`<circle class="cl" cx="${X(s.goal[0])}" cy="${X(s.goal[1])}" r="13" fill="none" stroke="#e0a83a" stroke-width="2" stroke-dasharray="3 2.5"/>`);
+      pcs(s.pcs).forEach(([i, j, c, g], k) => { body += piece(X(i), X(j), c, g, cell * .36, s.ps, dd + k * step); });
+      (s.arrows || []).forEach(([a, b, c2, d2], k) => { body += `<path class="ar" pathLength="1" style="--d:${dd + (s.pcs || []).length * step + 200 + k * 300}ms" d="M${X(a)} ${X(b)}Q${(X(a) + X(c2)) / 2} ${Math.min(X(b), X(d2)) - 26} ${X(c2)} ${X(d2)}" marker-end="url(#hsArr2)"/>`; });
     } else if (T === 'hex') {
       const n = s.n || 5, a = 13, dx = a * Math.sqrt(3), dy = a * 1.5;
       const C = (i, j) => [PD + 10 + i * dx + j * dx / 2, PD + 10 + j * dy];

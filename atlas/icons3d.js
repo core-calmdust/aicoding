@@ -529,6 +529,28 @@
       for (let i = 0; i < 5; i++) { const t = (i + .5) / 5, d = ball(.07, dotM); d.position.set(p(0) + (p(1) - .25 - p(0)) * t, .62 + t * .55, p(2) + (p(0) + .25 - p(2)) * t); g.add(d); }
       return g;
     },
+    peg() {   // a corner of the walnut peg-solitaire board: cupped holes and glass marbles; the big blue marble arcs over the red one into the empty hole (gold ring)
+      const top = M({ map: X.canvasTex('icpg', 512, 512, (c, W) => {
+        c.drawImage(softWood('icpgw', '#a8703e', '#6a4020').image, 0, 0, W, W); const s = W / 3;
+        for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) { const x = (i + .5) * s, y = (j + .5) * s;
+          c.fillStyle = 'rgba(255,226,180,.35)'; c.beginPath(); c.arc(x + 3, y + 3, s * .29, 0, 7); c.fill();
+          const gr = c.createRadialGradient(x - 8, y - 8, 4, x, y, s * .27); gr.addColorStop(0, '#120802'); gr.addColorStop(.8, '#2a1406'); gr.addColorStop(1, '#4a2a12');
+          c.fillStyle = gr; c.beginPath(); c.arc(x, y, s * .27, 0, 7); c.fill(); }
+      }), roughness: .45 });
+      const g = boardChunk(3, 3.6, top, M({ map: softWood('icpgs', '#8a5430', '#4a2a14'), roughness: .4 }));
+      const S = 3.3 / 3, p = i => -1.65 + S * (i + .5);
+      const marble = (hex, r) => { const m = new T.Group(); m.add(ball(r, C(hex, { roughness: .08 })));
+        const sw = mesh(new T.TorusGeometry(r * .62, r * .1, 8, 40, Math.PI * 1.2), C(0xffffff, { roughness: .2 })); sw.rotation.set(.9, .2, .5); m.add(sw);
+        const hl = ball(r * .2, M({ color: 0xffffff, roughness: .05, emissive: 0xffffff, emissiveIntensity: .4 })); hl.position.set(-r * .4, r * .58, r * .36); m.add(hl); return m; };
+      const r = .38, y0 = .5 + r * .62;
+      [[0, 2, 0x3fb9a8], [2, 0, 0xf0b43c], [0, 1, 0x9a6ad8], [1, 2, 0x5cc06a], [1, 1, 0xe0594a]].forEach(([i, j, c]) => g.add(at(marble(c, r), p(i), y0, p(j))));
+      const ring = mesh(new T.TorusGeometry(.36, .055, 10, 40), gloss(0xf1c879)); g.add(at(ring, p(2), .53, p(2), Math.PI / 2));
+      const arc = t => [p(0) + (p(2) - p(0)) * t, y0 + Math.sin(t * Math.PI) * 1.15, p(0) + (p(2) - p(0)) * t];
+      const dotM = gloss(0xf1c879);
+      [.1, .2].forEach(t => { const d = ball(.07, dotM), q = arc(t); d.position.set(q[0], q[1], q[2]); g.add(d); });
+      const q = arc(.36); g.add(at(marble(0x3d7fe0, .56), q[0], q[1] + .12, q[2]));
+      return g;
+    },
     tafl() {   // a corner of the hnefatafl board: the king steps onto the knotted corner square, attackers too late
       const top = M({ map: X.canvasTex('ictf', 512, 512, (c, W) => {
         c.drawImage(X.wood('ictfw', '#d4a66a', '#8a5e34').image, 0, 0, W, W); const s = W / 3;
