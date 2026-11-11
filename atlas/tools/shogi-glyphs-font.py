@@ -8,7 +8,9 @@ import os, sys
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from scipy.ndimage import label
-from skimage.morphology import skeletonize, dilation, disk
+from skimage.morphology import medial_axis
+import cv2, functools
+from scipy.ndimage import distance_transform_edt
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
 CW, CH = 256, 296
@@ -16,23 +18,27 @@ TEXT = ['歩兵', '香車', '桂馬', '銀將', '角行', '飛車', '金將', '�
 EM = 600
 SH, SW = (.47 - .25) / .94, .335 / .4   # the face: shoulder height (from the tip) and width (of the full width)
 
+@functools.lru_cache(maxsize=None)
 def ink(font, ch):
-    """one character, recut as a carved 隷書 piece inscription (compared by eye with photos of real 隷書 pieces, 2026-11-11):
-    the scanned brush font's loose specks are dropped and its ragged edges smoothed; every stroke is then made at least 2·R thick
-    along its centre line (the skeleton), keeping the font's own wider parts (the flared ends, 波磔) and the open counters; the edges
-    rounded as cut with a chisel"""
+    """one character as a raised-lacquer inscription (2026-11-11, by eye against the user's photos of real 隷書 pieces): the
+    inscription is calligraphy, written with a brush, so every stroke is thickened in proportion to its own width along its centre
+    line (the medial axis) — the thick body of a stroke grows, the brush's thin tails and hooks (ハネ・払い) stay thin; the scanned
+    font's loose specks are dropped and its ragged edges smoothed"""
     m = font.getmask(ch); im = Image.frombytes('L', m.size, bytes(m)); a = np.array(im) > 100
     lab, n = label(a); sizes = np.bincount(lab.ravel()); keep = np.zeros_like(a)
     for i in range(1, n + 1):
         if sizes[i] >= a.sum() * .004: keep |= lab == i
     im = Image.fromarray((keep * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(5)).point(lambda v: 255 if v > 110 else 0)
-    a = np.pad(np.array(im) > 0, 40)
-    b = a | dilation(skeletonize(a), disk(R))
-    im = Image.fromarray((b * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(5))
+    a = np.pad(np.array(im) > 0, 60)
+    sk, d = medial_axis(a, return_distance=True)
+    b = a.astype(np.uint8) * 255
+    for y, x in zip(*np.nonzero(sk)): cv2.circle(b, (int(x), int(y)), int(round(d[y, x] * GROW)), 255, -1)
+    b = b > 0
+    im = Image.fromarray((b * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(4))
     im = im.point(lambda v: 0 if v < 100 else 255 if v > 156 else int((v - 100) * 255 / 56))
     bb = im.getbbox(); return im.crop(bb)
 
-R = 26   # half the least stroke width, in font units of EM = 600
+GROW = 1.05   # each stroke's new half-width, times its old one
 
 def inside(cw, ch, inset):
     """the 3D face in the cell, shrunk by inset (fraction of the width)"""
@@ -56,9 +62,10 @@ def shaped(g, w):
     return g.resize((max(1, round(W)), max(1, round(h))), Image.LANCZOS)
 
 def cx_of(g):
-    """the optical centre across: halfway between the box's middle and the ink's centre of mass"""
-    a = np.array(g).astype(np.float64); cols = a.sum(0)
-    return .5 * (g.width / 2 + (cols * np.arange(g.width)).sum() / max(1, cols.sum()))
+    """the axis a character stands on: the middle of its ink between the 6% and 94% points across (a long sweep or a lone dot at one
+    side does not pull it; the two characters of a piece share this axis, on the piece's centre line)"""
+    cols = np.array(g).astype(np.float64).sum(0); c = np.cumsum(cols) / max(1, cols.sum())
+    return (np.searchsorted(c, .06) + np.searchsorted(c, .94)) / 2
 
 def fits(parts, ok):
     for g, x, y in parts:
@@ -99,9 +106,13 @@ def cell(font, text, ok):
         parts = layout([ink(font, c) for c in text], ok, .15, .97, .575, .84, .96, .02)
     A = Image.new('L', (CW * SS, CH * SS), 0)
     for g, x, y in parts: A.paste(g, (x, y), g)
-    A = A.resize((CW, CH), Image.LANCZOS)
+    # 盛り上げ: the lacquer heaped up along each stroke, a rounded ridge (highest on the stroke's centre line, higher on its thick
+    # body than on its thin tails)
+    dt = distance_transform_edt(np.array(A) > 127); ref = np.percentile(dt[dt > 0], 92) if (dt > 0).any() else 1
+    H = Image.fromarray(np.round(255 * np.sqrt(np.clip(dt / ref, 0, 1)) * (.55 + .45 * np.clip(dt / ref, 0, 1))).astype(np.uint8)).filter(ImageFilter.GaussianBlur(SS))
+    A = A.resize((CW, CH), Image.LANCZOS); H = H.resize((CW, CH), Image.LANCZOS)
     a = np.array(A).astype(np.float32) / 255
-    h = np.power(np.clip(np.array(A.filter(ImageFilter.BoxBlur(3))).astype(np.float32) / 255, 0, 1), .7)
+    h = np.array(H).astype(np.float32) / 255
     out = np.zeros((CH, CW, 4), np.uint8); v = np.round(255 * (1 - h)).astype(np.uint8)
     out[:, :, 0] = out[:, :, 1] = out[:, :, 2] = v; out[:, :, 3] = np.round(a * 255).astype(np.uint8)
     return Image.fromarray(out, 'RGBA')
