@@ -989,17 +989,30 @@
   addEventListener('resize', () => fitStage());
   window.__fitStage = () => fitStage();
   // the SSR / UR name card's running light (index.html .prof > .rfx / .dprev > .rfx): its angle turned here, ~30 fps, only while one is on screen
-  (function rfxTurn() {
-    // (runs also with reduce-motion on: the rarity light is part of the reward's look, 2026-11-11)
-    let last = 0;
-    const step = now => {
-      requestAnimationFrame(step);
-      if (now - last < 33) return; const dt = Math.min(100, now - (last || now)); last = now;
-      document.querySelectorAll('.prof > .rfx, .dprev > .rfx').forEach(e => { if (!e.getClientRects().length) return;
-        e.__a = ((e.__a || 0) + dt * 360 / (e.classList.contains('u') ? 3200 : 2600)) % 360; e.style.setProperty('--ra', e.__a.toFixed(1) + 'deg'); });
-    };
-    requestAnimationFrame(step);
-  })();   // (the 詰将棋 hand chips appear / change: atlas/games/shogi-play.js)
+  // (2026-11-11, battery) frames only while such a card can be seen: none on the page, scrolled off (IntersectionObserver),
+  // another tab (the section hidden), the 3D view up, or the window not in front → no frame is asked for at all. The angle is
+  // kept per kind (s / u), so it goes on where it stopped and a redrawn card starts at the same angle (no jump).
+  let rfxIO = null, rfxRaf = 0, rfxLast = 0; const rfxSeen = new Set(), rfxA = { s: 0, u: 0 };
+  const rfxK = e => e.classList.contains('u') ? 'u' : 's';
+  const rfxOn = () => { if (document.hidden || !document.hasFocus() || $('bv').classList.contains('on')) return false;
+    for (const e of rfxSeen) { if (!e.isConnected) { rfxSeen.delete(e); if (rfxIO) rfxIO.unobserve(e); } } return rfxSeen.size > 0; };
+  function rfxStep(now) {
+    rfxRaf = 0; if (!rfxOn()) { rfxLast = 0; return; }
+    rfxRaf = requestAnimationFrame(rfxStep);
+    if (now - rfxLast < 33) return; const dt = rfxLast ? Math.min(100, now - rfxLast) : 0; rfxLast = now;
+    rfxA.s = (rfxA.s + dt * 360 / 2600) % 360; rfxA.u = (rfxA.u + dt * 360 / 3200) % 360;
+    rfxSeen.forEach(e => { if (e.getClientRects().length) e.style.setProperty('--ra', rfxA[rfxK(e)].toFixed(1) + 'deg'); });
+  }
+  function rfxWake() { if (!rfxRaf && rfxOn()) rfxRaf = requestAnimationFrame(rfxStep); }
+  function rfxTrack() {   // after a .rfx is drawn (the home profile card, the きせかえ name card)
+    if (!rfxIO) {
+      if (!window.IntersectionObserver) { rfxIO = { observe: e => { rfxSeen.add(e); }, unobserve() {} }; }
+      else rfxIO = new IntersectionObserver(es => { es.forEach(x => { if (x.isIntersecting) rfxSeen.add(x.target); else rfxSeen.delete(x.target); }); rfxWake(); });
+      document.addEventListener('visibilitychange', rfxWake); addEventListener('focus', rfxWake); addEventListener('pageshow', rfxWake);
+      try { new MutationObserver(rfxWake).observe($('bv'), { attributes: true, attributeFilter: ['class'] }); } catch (e) {}
+    }
+    document.querySelectorAll('.prof > .rfx, .dprev > .rfx').forEach(e => { if (e.__rfx) return; e.__rfx = 1; e.style.setProperty('--ra', rfxA[rfxK(e)].toFixed(1) + 'deg'); rfxIO.observe(e); });
+  }   // (the 詰将棋 hand chips appear / change: atlas/games/shogi-play.js)
   // games opened from here (cards, puzzles …) send their home button back here instead of the top page (shared/homeback.js)
   const homeMark = () => { try { sessionStorage.setItem('aicoding-home', location.pathname + '#' + page); } catch (e) {} };
   homeMark(); addEventListener('pagehide', homeMark);
@@ -1840,7 +1853,7 @@
       const el = $('prof'), top = Math.max(-1, ...['icon', 'bg', 'frame'].map(k => { const it = ART.byId(W.av[k]); return it ? it.rar : -1; }));
       el.classList.toggle('nr3', top === 3); el.classList.toggle('nr4', top === 4);
       el.querySelectorAll(':scope > .rfx, :scope > .ntw').forEach(x => x.remove());
-      if (top >= 3) el.insertAdjacentHTML('beforeend', `<i class="rfx ${top === 4 ? 'u' : 's'}"></i><i class="ntw"></i>`); }
+      if (top >= 3) { el.insertAdjacentHTML('beforeend', `<i class="rfx ${top === 4 ? 'u' : 's'}"></i><i class="ntw"></i>`); rfxTrack(); } }
     $('pfMore').onclick = () => { pfOpen = !pfOpen; $('prof').classList.toggle('open', pfOpen); $('pfMore').setAttribute('aria-expanded', pfOpen); };   // phones: the one-line profile opens its stats · login week · Google sign-in
     $('avBtn').onclick = () => talk($('avBtn'), () => go('dress'));
     renderAcc();
@@ -2095,7 +2108,7 @@
     // wearing an SSR / UR (icon, background or frame): the name card gets the same running light and glow
     const top = Math.max(-1, ...['icon', 'bg', 'frame'].map(k => { const it = ART.byId(W.av[k]); return it ? it.rar : -1; }));
     el.classList.toggle('nr3', top === 3); el.classList.toggle('nr4', top === 4);
-    if (top >= 3) el.insertAdjacentHTML('beforeend', `<i class="rfx ${top === 4 ? 'u' : 's'}"></i><i class="ntw"></i>`);
+    if (top >= 3) { el.insertAdjacentHTML('beforeend', `<i class="rfx ${top === 4 ? 'u' : 's'}"></i><i class="ntw"></i>`); rfxTrack(); }
     renderAcc();
     renderMini();
   }
