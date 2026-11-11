@@ -13,7 +13,7 @@
 (function () {
   'use strict';
   const A = window.AtlasNPC = window.AtlasNPC || {};
-  A.LEVELS = { chess: 25, shogi: 26, go: 32, reversi: 25, gomoku: 20, checkers: 20, xiangqi: 20, janggi: 20, tafl: 25, ur: 20, senet: 20, morris: 10,
+  A.LEVELS = { chess: 25, shogi: 26, go: 32, reversi: 28, gomoku: 20, checkers: 20, xiangqi: 20, janggi: 20, tafl: 25, ur: 20, senet: 20, morris: 10,
     connect4: 8, dots: 10, mancala: 10, backgammon: 10, hex: 20, fanorona: 20, ugolki: 23, agon: 23, konane: 23, ludo: 20, carrom: 20, crokinole: 20, hockey: 20, alquerque: 20, amazons: 23 };
   const N = s => { const p = s.split('|'), k = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'ru', 'hi', 'ar'], o = {}; k.forEach((l, i) => { o[l] = p[i] || p[1]; }); ['es', 'fr', 'pt', 'de', 'id', 'tr'].forEach(l => { o[l] = o.en; }); return o; };
   const b = (v, m, n) => ({ v, m, n: N(n) });
@@ -64,6 +64,8 @@
       b('trickster', { a: 'fox', c: [0x6a5a7a, 0xe8e0f0, 0x2a2a38], hat: 'beret', hc: [0x2a2a38], held: 'disc', mouth: 'w' }, 'イアーゴギツネ|Iago Fox|伊阿古狐|伊阿古狐|이아고여우|Лис Яго|इआगो लोमड़ी|ثعلب ياغو'),
       b('scholar', { a: 'cat', c: [0xd8b890, 0xfff4e6, 0x2a2a38], held: 'quill', ex: ['ruff', 'mustache'] }, 'シェイクスピアネコ|Shakespurr|莎士比猫|莎士比貓|셰익스피어냥|Кот Шекспир|शेक्सपियर बिल्ली|قط شكسبير'),
       b('villain', { a: 'bird', c: [0x26262e, 0xfbfaf4, 0x3a6ad8], beak: 0x3a3a48, hat: 'bigcrown', held: 'disc', ex: ['cape'], cape: 0x26262e }, '四隅の覇王カササギ|Corner-Lord Magpie|四角霸王喜鹊|四角霸王喜鵲|네모서리패왕까치|Сорока — владыка углов|कोनों का स्वामी मैगपाई|العقعق سيد الزوايا'),
+      // (2026-11-11: the 10th, for Lv.28 when the AI went to 28 levels — Logistello, the program that beat world champion Takeshi Murakami 6–0 in 1997)
+      b('king', { a: 'owl', c: [0x5a6aa8, 0xf6f4ff, 0x3ad8c8], beak: 0xffc040, hat: 'bigcrown', held: 'orb', ex: ['glasses', 'cape'], cape: 0x26305a }, 'ロジステロフクロウ|Logistello Owl|罗吉斯特洛猫头鹰|羅吉斯特洛貓頭鷹|로지스텔로부엉이|Сова Логистелло|लॉजिस्टेलो उल्लू|بومة لوجيستيلو'),
     ],
     gomoku: [
       b('sleepy', { a: 'mouse', c: [0xd8d0c8, 0xfff4ee, 0x3a8ad8], hat: 'bandana', hc: [0x3a8ad8], held: 'stone' }, '寺子屋ネズミ|Terakoya Mouse|寺子屋鼠|寺子屋鼠|데라코야쥐|Мышка из тэракоя|तेराकोया चूहा|فأر تيراكويا'),

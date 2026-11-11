@@ -10,7 +10,7 @@
 //   BGMT.prep(msg, prio) → Promise<msg with pre | msg>   (msg: a worker request 'move' or 'analyze'; unchanged when off / busy)
 //   BGMT.cancel(tag), BGMT.on(), BGMT.threads, BGMT.rate (the last job: candidates / s)
 window.BGMT = (function () {
-  const MW = window.MTWorkers ? (MTWorkers.init(), MTWorkers).use({ url: 'engine.js?v=20261109mt2', warm: { type: 'ping' }, all: true }) : null;
+  const MW = window.MTWorkers ? (MTWorkers.init(), MTWorkers).use({ url: 'engine.js?v=20261111c1', warm: { type: 'ping' }, all: true }) : null;
   let rate = 0;
   async function prep(msg, prio) {
     if (!MW || !msg || !msg.pos) return msg;
