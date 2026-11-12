@@ -2257,7 +2257,7 @@
   let swapCv = null, swapN = 0;
   // pre (optional): a promise to wait for under the picture before the work (a board whose textures are still being drawn, 2026-11-12).
   // The work always runs (the caller checks whether it is still wanted); only the newest swap's picture is kept and faded.
-  function swap(work, pre) {
+  function swap(work, pre, cut) {   // cut: the held picture simply goes when the new one is drawn (no fade)
     const run = () => { try { work(); } catch (e) { console.warn(e); } };
     if (!R || !el || !R.domElement.width) { if (pre) Promise.resolve(pre).catch(() => {}).then(run); else run(); return; }
     const n = ++swapN; kick(200);
@@ -2276,7 +2276,8 @@
         if (n !== swapN) return;
         texReady(2500).then(() => requestAnimationFrame(() => requestAnimationFrame(() => {   // (two frames: the new picture is on screen)
           if (n !== swapN || !swapCv || !swapCv.parentNode) return;
-          kick(600); swapCv.style.transition = 'opacity .3s ease-in'; swapCv.style.opacity = '0';
+          kick(600); if (cut) { swapCv.remove(); return; }
+          swapCv.style.transition = 'opacity .3s ease-in'; swapCv.style.opacity = '0';
           setTimeout(() => { if (n === swapN && swapCv.parentNode) swapCv.remove(); }, 340);
         })));
       });

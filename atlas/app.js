@@ -770,7 +770,7 @@
         const tok = ++show3dTok, gl = $('gl');
         if (Table3D.swap) {   // (2026-11-12) the picture of the moment stays over the view meanwhile (it was hidden: the page's one colour showed)
           gl.style.visibility = '';
-          pend3d = new Promise(res => Table3D.swap(() => { if (tok === show3dTok) { pend3d = null; if (bvGame === g && $('bv').classList.contains('on')) show3d(); } res(); }, texReady(id)));
+          pend3d = new Promise(res => Table3D.swap(() => { if (tok === show3dTok) { pend3d = null; if (bvGame === g && $('bv').classList.contains('on')) show3d(); } res(); }, texReady(id), true));   // (no fade: the new board simply appears)
         } else {
           gl.style.visibility = 'hidden';
           pend3d = texReady(id).then(() => { if (tok !== show3dTok) return; pend3d = null; gl.style.visibility = ''; if (bvGame === g && $('bv').classList.contains('on')) show3d(); });
