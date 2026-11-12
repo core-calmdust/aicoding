@@ -288,9 +288,13 @@
   const crKey = (n, cr, nh = n) => cr ? `-${n}c${cr.c0}r${cr.r0}` : n === 9 && nh === 9 ? '' : '-' + n + (nh !== n ? 'x' + nh : '');
   // ext: the block made that much deeper at the top and the bottom (world units) — the komadai bars of the PC layout lie on it (2026-11-11)
   // nh: the number of ranks when it differs from the files (the variants' W × H boards: 平安将棋 9×8, ゴロゴロ 5×6, マイクロ 4×5 …, 2026-11-12)
+  // the rim round the grid, the same for the block and its top / bump pictures (they drifted apart once: the lines were drawn a rim's
+  // difference away from the squares, 2026-11-12): 詰将棋's close-up scales it with the window (the same board seen closer); a variant's
+  // W×H board keeps the 9×9 board's rim, so its coordinates stay on the wood
+  const mgOf = (n, nh, cr) => cr ? MARGIN * Math.max(n, nh) / 9 : MARGIN;
   function boardTop(n = 9, cr = null, ext = 0, look = 'kaya', nh = n) {
     const L = LOOK[look] || {}, withTop = L.top ? fn => withImg(L.top, fn) : withKaya;
-    const MG = n === 9 && nh === 9 ? MARGIN : MARGIN * Math.max(n, nh) / 9;   // rim scales with the grid (the 5x5 board is fitted to the same screen size)
+    const MG = mgOf(n, nh, cr);
     const PX = 100, BW = n * CW + MG * 2, BD = nh * CH + MG * 2 + ext * 2;
     const grid = (c) => {
       const ox = MG * PX, oy = (MG + ext) * PX, cw = CW * PX, ch = CH * PX;
@@ -322,7 +326,7 @@
   }
   // the lines are raised lacquer too: a bump map with the grid
   function boardBump(n = 9, cr = null, ext = 0, nh = n) {
-    const MG = n === 9 && nh === 9 ? MARGIN : MARGIN * Math.max(n, nh) / 9;
+    const MG = mgOf(n, nh, cr);
     const PX = 100, BW = n * CW + MG * 2, BD = nh * CH + MG * 2 + ext * 2;
     return canvasTex('shogiTopB' + crKey(n, cr, nh) + (ext ? 'e' + ext : ''), BW * PX | 0, BD * PX | 0, (c, W, H) => {
       c.fillStyle = '#000'; c.fillRect(0, 0, W, H);
@@ -407,7 +411,7 @@
     // screen it is the same board seen closer
     const cr = o.crop && o.n >= 3 && o.n < 9 ? o.crop : null;
     // o.w × o.h (2026-11-12): a variant's board (W files × H ranks, the same squares; the block scaled with its size)
-    const n = cr ? o.n : o.w ? o.w : o.n === 5 ? 5 : 9, nh = !cr && o.h ? o.h : n, big = Math.max(n, nh), MG = cr ? MARGIN * big / 9 : MARGIN, k = big === 9 ? 1 : cr ? n / 9 : Math.max(.62, big / 9 * .9), FW = n * CW, FH = nh * CH, EXT = Math.max(0, +o.ext || 0), BW = FW + MG * 2, BD = FH + MG * 2 + EXT * 2, THICK = 4.4 * k;   // (a 足付き盤 of about 6 寸 — the block half its width, the user's photo, 2026-11-12; was 2.6)
+    const n = cr ? o.n : o.w ? o.w : o.n === 5 ? 5 : 9, nh = !cr && o.h ? o.h : n, big = Math.max(n, nh), MG = mgOf(n, nh, cr), k = big === 9 ? 1 : cr ? n / 9 : Math.max(.62, big / 9 * .9), FW = n * CW, FH = nh * CH, EXT = Math.max(0, +o.ext || 0), BW = FW + MG * 2, BD = FH + MG * 2 + EXT * 2, THICK = 4.4 * k;   // (a 足付き盤 of about 6 寸 — the block half its width, the user's photo, 2026-11-12; was 2.6)
     const look = lookOf(o), LM = faceMats(look);
     const kaya = LM ? LM.leg : M({ map: X.wood('kayaSide2', '#caa075', '#9c6c3c', 512, 512, 2.4), roughness: .5, bumpScale: .003 });
     const endF = LM ? LM.side : M({ map: endGrain('kayaEndF2', 512, 256, .5, 2.6, .7), roughness: .5, bumpScale: .003 });

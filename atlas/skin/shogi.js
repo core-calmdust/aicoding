@@ -51,6 +51,12 @@
           de.style.setProperty('--kdth', top.offsetHeight + 'px'); de.style.setProperty('--kdbh', bot.offsetHeight + 'px');   // (the 2D designs: the plate runs on under the bars)
           return;
         }
+        // (a short variant board — マイクロ 5 ranks — with many kinds in hand: the pieces in hand made smaller so each stand stays
+        // within the board's height, as on 本将棋, 2026-11-12)
+        { const r0 = boardDom.getBoundingClientRect(), cw = r0.width / (boardN || 9), FH0 = F.b - F.t;
+          [top, bot].forEach(h => { const sl = h.querySelectorAll(':scope > .hslot').length, nm = h.querySelector(':scope > .hname'), nh = nm ? nm.offsetHeight + 8 : 0;
+            const need = sl * cw * 1.1 * 1.12 + nh + 16, k = sl && need > FH0 ? Math.max(.4, (FH0 - nh - 16) / (sl * cw * 1.1 * 1.12)) : 1, v = k < 1 ? (cw * k).toFixed(2) + 'px' : '';
+            if (h.style.getPropertyValue('--cw') !== v) { if (v) { h.style.setProperty('--cw', v); h.style.setProperty('--ch', 'calc(' + v + ' * 1.1)'); } else { h.style.removeProperty('--cw'); h.style.removeProperty('--ch'); } } }); }
         const G = (top.offsetWidth || bot.offsetWidth) / 1.25 * .22;   // (詰将棋 hides gote's stand: sente's gives the width)
         const put = (h, x, y) => {   // move the box by (x, y) from where it is now (position: relative)
           const cs = getComputedStyle(h), l = parseFloat(cs.left) || 0, t = parseFloat(cs.top) || 0;
