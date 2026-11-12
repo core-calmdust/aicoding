@@ -1185,7 +1185,7 @@ html:not(.pc2) body:not(.in-lesson):not(.in-puzzle):not(.in-online:not(.ol-over)
 <script src="../shared/export.js?v=9l14"></script>
 <script src="../shared/mtengine.js?v=8"></script><script>MTEngine.init({ sw: 'sw.js?v=1', light: true }); if (MTEngine.coi && window.HexOnline) HexOnline.available = false;</script>
 <script src="../shared/proset.js?v=5t2svhxbf-sp2-pd1p"></script><script src="../shared/luxintro.js?v=3"></script><script src="app.js?v=12lplv-an1-rc1-l14-ai1-pro1-aim-mt3-s1-lx2"></script>
-<script src="online-ui.js?v=5lx1"></script>
+<script src="online-ui.js?v=5lx1c"></script>
 <script>
 /* PC layout (shared/headerbar.js HeaderBar.MEDIA): html.pc2 = board + one fixed-width info column (2026-10-28); every other
    layout (phones, tablets, narrow / clearly tall windows) is the one stacked column */
@@ -1202,7 +1202,7 @@ html:not(.pc2) body:not(.in-lesson):not(.in-puzzle):not(.in-online:not(.ol-over)
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=75l42'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=76l42'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net

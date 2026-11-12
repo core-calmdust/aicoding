@@ -5569,7 +5569,7 @@ function chatStart() {
 }
 function chatTime(ts) { if (typeof ts !== 'number') return ''; const d = new Date(ts); return d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0'); }
 // (2026-11-13) the chat box's placeholder / Send follow a language change (not only the next message)
-document.addEventListener('change', e => { if (e.target && e.target.id === 'langSel') setTimeout(() => { try { chatRender(); } catch (err) {} }, 0); });
+document.addEventListener('change', e => { if (e.target && e.target.id === 'langSel') setTimeout(() => { try { chatRender(); } catch (err) {} }, 0); }, true);   // (capture: the portal skin's language list fires a change that does not bubble)
 function chatRender() {
   const el = $('#dkChat'), inp = $('#dkChatIn'); if (!el) return;
   if (inp && inp.dataset.l !== LANG) { inp.dataset.l = LANG; inp.placeholder = matchMedia('(hover: hover) and (pointer: fine)').matches ? t('ol.chatPh') : t('ol.chatPh').split(' · ')[0]; inp.setAttribute('aria-label', t('ol.chat')); $('#dkChatSend').textContent = t('ol.chatSend'); $('#dkChatHead').title = t('ol.chatNote'); }
@@ -5883,7 +5883,7 @@ accRender();
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=75l42'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=76l42'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
