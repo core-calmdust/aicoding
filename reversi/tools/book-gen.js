@@ -350,22 +350,54 @@ function build() {
   // (how far ahead the value looks: ply + depth of the search it comes from; a child's value replaces the node's own search
   // of that move only when it looks at least as far, so a deep main-line node is not overwritten by a shallower side node)
   const [k0, b0] = canon(...START);
+  // (2026-11-12, MODEL_CARD.md「先後の偏り」) the tempo of a fixed-depth search: a move's value from the node's own search (the child
+  // read to depth d-1) and from the child's own search (depth d, one ply further) differ by ~1.7 discs in the mover's favour on
+  // average, at every ply and for both colours (book v3: 1.65-1.75 at plies 4-26). So a book value depends on the parity of the
+  // ply where its line ends. The main lines all end at the last ply (--max-ply, even: black to move), but a side line can end at an
+  // odd ply (white to move) and was then worth ~1.7 more to black than a main line: black chose such lines in the book and lost
+  // (self-play with the same book: white won about 2/3). --tempo-mode frontier (the default): the value of a node whose best move
+  // comes from its own search, at the other parity than the last ply, is moved by 2T in its mover's favour (T = half the measured
+  // difference, per depth), as if read one ply further: all the book's lines then end at the same parity.
+  // --tempo-mode all: +T on every own search value instead (also balanced, but weaker in tests);
+  // --tempo 0: no correction (as up to v4); --tempo x: T = x discs.
+  const tempo = new Map();
+  if (A.tempo === undefined || A.tempo === 'auto') {
+    const acc = new Map();
+    for (const [k, r] of done) {
+      if (r.x || r.d >= 99) continue;
+      const bits = keyBits(k);
+      for (const [m, v] of r.m) {
+        const [ck] = childKey(bits, m), cr = done.get(ck);
+        if (!cr || cr.x || cr.d !== r.d || !cr.m.length) continue;
+        const a = acc.get(r.d) || { n: 0, s: 0 }; a.n++; a.s += -cr.m[0][1] - v; acc.set(r.d, a);
+      }
+    }
+    for (const [d, a] of acc) if (a.n >= 100) tempo.set(d, Math.round(a.s / a.n / 2));
+    const all = [...acc.values()].reduce((x, a) => ({ n: x.n + a.n, s: x.s + a.s }), { n: 0, s: 0 });
+    tempo.def = all.n ? Math.round(all.s / all.n / 2) : 0;
+  } else tempo.def = Math.round(+A.tempo * 100);
+  const T = r => r.x || r.d >= 99 ? 0 : tempo.has(r.d) ? tempo.get(r.d) : tempo.def;
+  console.log(`手番の補正 T（石、読みの深さごと）${JSON.stringify(Object.fromEntries([...tempo].map(([d, t]) => [d, t / 100])))}、既定 ${tempo.def / 100}`);
+  const MODE = A['tempo-mode'] || 'frontier';
+  if (MODE !== 'frontier' && MODE !== 'all') { console.error('--tempo-mode は frontier か all'); process.exit(1); }
+  const FRONT = MODE === 'frontier' ? { par: cfg.maxPly & 1 } : null, ALL = MODE === 'all';
   const value = (k, bits, stack) => {
     if (val.has(k)) return val.get(k);
     const r = done.get(k); bitsOf.set(k, bits);
-    const hn = Math.min(60, plyOf(bits) + r.d);
+    const hn = Math.min(60, plyOf(bits) + r.d), t = ALL ? T(r) : 0;
     const sc = [];
     stack.add(k);
-    for (const [m, v] of r.m) {
-      const [ck, cb] = childKey(bits, m);
-      let s = v, h = hn, kid = false;
-      if (done.has(ck) && !stack.has(ck)) { const [cv, ch] = value(ck, cb, stack); kid = true; if (ch >= hn) { s = -cv; h = ch; } }
-      sc.push([m, s, kid, h]);
+    for (const [m, v0] of r.m) {
+      const [ck, cb] = childKey(bits, m), v = v0 + t;
+      let s = v, h = hn, kid = false, own = true;
+      if (done.has(ck) && !stack.has(ck)) { const [cv, ch] = value(ck, cb, stack); kid = true; if (ch >= hn) { s = -cv; h = ch; own = false; } }
+      sc.push([m, s, kid, h, own]);
     }
     stack.delete(k);
     sc.sort((a, b) => b[1] - a[1] || a[0] - b[0]);
     const kept = sc.filter(x => x[1] >= sc[0][1] - outW || x[2]).map(x => [x[0], x[1]]);   // (a worse move that leads to a book node stays: the opponent may play it)
-    list.set(k, kept); val.set(k, [sc[0][1], sc[0][3]]);
+    const adj = FRONT && sc[0][4] && (plyOf(bits) & 1) !== FRONT.par ? 2 * T(r) : 0;
+    list.set(k, kept); val.set(k, [sc[0][1] + adj, sc[0][3]]);
     return val.get(k);
   };
   if (!done.has(k0)) { console.error('nodes.jsonl に初期局面がありません'); process.exit(1); }
