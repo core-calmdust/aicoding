@@ -624,6 +624,13 @@
     if (M[n]) pref['reversi:lv'] = M[n];
     pref['reversi:lvV'] = 3; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {}
   }
+  // 2026-11-13: 28 → 36 levels (Lv.1–28 = the old Lv.1–20 and 8 new ones; 天上 Lv.29–36 = the old Lv.21–28: reversi/index.html LV_28TO36).
+  // The portal's AI picker shows Lv.1–28 for now, so a saved 天上 level becomes Lv.28.
+  if (pref['reversi:lvV'] !== 4) {
+    const n = Math.round(+pref['reversi:lv']) || 0, M = [0, 1, 2, 3, 4, 5, 6, 7, 9, 11, 12, 14, 16, 18, 20, 22, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36];
+    if (M[n]) pref['reversi:lv'] = Math.min(28, M[n]);
+    pref['reversi:lvV'] = 4; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {}
+  }
   // the textures of the room and of each board are drawn in workers (texgen.js): the work is tagged per board,
   // and a board is only shown once its pictures are done (texReady)
   const TG = window.AtlasTexGen;
@@ -1130,7 +1137,7 @@
     shogi: { key: 'shogi-rated-v1', start: 900, flag: 'k', off: 1, from: 0, tc: { id: 'rt', main: 600, byo: 30 },
       lv: [150, 300, 450, 550, 650, 750, 850, 950, 1050, 1150, 1250, 1350, 1450, 1550, 1650, 1750, 1850, 2000, 2200, 2300, 2400, 2500, 2600, 2700, 2800, 2900] },
     reversi: { key: 'reversi-rated-v1', start: 1000, flag: 'lvV', off: 0, from: 1, tc: { id: 'rt', main: 600, byo: 30 },   // (reversi/index.html RT_LV / RT_CLOCK)
-      lv: (window.Atlas3D && Atlas3D.reversi && Atlas3D.reversi.ratings) || [0, 10, 50, 110, 170, 240, 340, 430, 550, 680, 780, 930, 1090, 1290, 1440, 1582, 1687, 1732, 1767, 1837, 1901, 1954, 1991, 2017, 2054, 2067, 2084, 2140, 2201] },   // (= RT_LV, Lv.1–28 since #1692)
+      lv: (window.Atlas3D && Atlas3D.reversi && Atlas3D.reversi.ratings) || [0, 10, 50, 110, 170, 240, 340, 430, 490, 550, 615, 680, 780, 855, 930, 1010, 1090, 1190, 1290, 1365, 1440, 1511, 1582, 1634, 1687, 1732, 1767, 1837, 1916, 1954, 1991, 2017, 2054, 2067, 2084, 2140, 2201], flagV: 4 },   // (= RT_LV, Lv.1–28 since #1692)
     chess: { key: 'aicoding-chess-rated', start: 1000, flag: 'lvv', off: 0, from: 1, tc: { id: 'rt', main: 600, inc: 5 },
       lv: [0, 200, 350, 500, 650, 800, 1000, 1250, 1400, 1600, 1700, 1800, 1900, 2150, 2295, 2385, 2495, 2705, 2885, 2985, 3075, 3160, 3240, 3305, 3370, 3440] },
   };
@@ -1139,7 +1146,7 @@
   const rtKey = (id, v) => RTG[id].key + (v ? ':' + v : '');
   const UNPL = { ja: '未プレイ', en: 'Not played yet', zh: '尚未对局', ko: '아직 플레이 안 함', es: 'Sin partidas', fr: 'Pas encore joué', pt: 'Ainda não jogado', de: 'Noch nicht gespielt', hi: 'अभी तक नहीं खेला', ar: 'لم تُلعب بعد', ru: 'Ещё не играли', 'zh-TW': '尚未對局', id: 'Belum dimainkan', tr: 'Henüz oynanmadı' };
   const rtNowTxt = (id, v) => { if (!RTG[id]) return ''; let raw = null; try { raw = localStorage.getItem(rtKey(id, v)); } catch (e) {} const S = rtLoadG(id, v); return raw && S.n ? 'R ' + S.r : UNPL[lang] || UNPL.en; };
-  function rtLoadG(id, v) { const C = RTG[id]; let s = null; try { s = JSON.parse(localStorage.getItem(rtKey(id, v)) || 'null'); } catch (e) {} if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: C.start, n: 0, w: 0, l: 0, d: 0, hist: [] }; if (!Array.isArray(s.hist)) s.hist = []; if (!s.hist.length) s[C.flag] = 2; return s; }
+  function rtLoadG(id, v) { const C = RTG[id]; let s = null; try { s = JSON.parse(localStorage.getItem(rtKey(id, v)) || 'null'); } catch (e) {} if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: C.start, n: 0, w: 0, l: 0, d: 0, hist: [] }; if (!Array.isArray(s.hist)) s.hist = []; if (!s.hist.length) s[C.flag] = C.flagV || 2; return s; }
   function rtSaveG(id, s, v) { try { localStorage.setItem(rtKey(id, v), JSON.stringify(s)); } catch (e) {} }
   function rtPickG(id, S) {   // (the full games' rtPick: mostly within ±100, sometimes clearly stronger / weaker)
     const C = RTG[id], idx = C.lv.map((x, i) => [i, x]).slice(C.from);

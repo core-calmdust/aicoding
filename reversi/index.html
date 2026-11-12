@@ -1510,14 +1510,14 @@ html.ng-disp-gear #newOverlay #fDisplay{display:none!important}   /* 表示 opti
     <div class="field" id="fLevel">
       <label id="levelLabel"></label>
       <div class="level-wrap">
-        <input type="range" min="1" max="28" step="1" id="levelRange">
+        <input type="range" min="1" max="36" step="1" id="levelRange">
         <div class="level-name" id="levelName"></div>
       </div>
     </div>
     <div class="field hidden" id="fLevel2">
       <label data-i18n="ng.levelW"></label>
       <div class="level-wrap">
-        <input type="range" min="1" max="28" step="1" id="levelRange2">
+        <input type="range" min="1" max="36" step="1" id="levelRange2">
         <div class="level-name" id="levelName2"></div>
       </div>
     </div>
@@ -1713,7 +1713,7 @@ html.ng-disp-gear #newOverlay #fDisplay{display:none!important}   /* 表示 opti
   </div>
 </div>
 
-<script src="i18n.js?v=20261113rt"></script>
+<script src="i18n.js?v=20261113lv36"></script>
 <script src="../shared/pzbook.js?v=8l14"></script>
 <script src="../shared/placement.js?v=1l14"></script>
 <script src="../shared/rulesoffer.js?v=17l14j"></script>
@@ -1759,7 +1759,7 @@ function counts(cells) { let b = 0, w = 0; for (const v of cells) { if (v === 1)
 
 // ====================================================================== state
 const STORE = 'reversi-emerald-v1';
-const settings = { mode: 'ai', color: 1, clock: 0, level: 14, level2: 14, lvV: 3, legal: true, last: true, eval: true, anim: true, sound: true, hint: false, coach: true, lang: '' };
+const settings = { mode: 'ai', color: 1, clock: 0, level: 20, level2: 20, lvV: 4, legal: true, last: true, eval: true, anim: true, sound: true, hint: false, coach: true, lang: '' };
 const SUPPORTED = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); if (n.startsWith('zh')) return /^zh-(tw|hk|mo|hant)/.test(n) ? 'zh-TW' : 'zh'; return SUPPORTED.find(l => n.startsWith(l)) || 'en'; }
 let LANG = detectLang();
@@ -1802,19 +1802,27 @@ let clock = null;           // game clock of an offline game (see "game clock" b
 let clockHold = false;
 
 // v4.1: 10 AI levels became 20. Old level n is the same engine setting as new level LV_OLD2NEW[n].
-const LV_OLD2NEW = [0, 4, 7, 9, 11, 13, 14, 16, 17, 19, 20], LV_MAX = 28;   // (2026-11-08: Lv.21–25 above the old top; 2026-11-11: 28 levels)
+const LV_OLD2NEW = [0, 4, 7, 9, 11, 13, 14, 16, 17, 19, 20], LV_MAX = 36;   // (2026-11-08: Lv.21–25 above the old top; 2026-11-11: 28 levels)
 const lvMig = n => LV_OLD2NEW[Math.max(1, Math.min(10, Math.round(+n) || 6))];
 // 2026-11-11 (lvV 3): 25 levels became 28 — Lv.17–27 re-cut by depth, the strongest (by time) is Lv.28. Old Lv.17–25 → the new level
 // of about the same measured strength (old 17 = depth 11 → 18, 18 = depth 12 → 19, 19 = depth 14 → 20 (depth 13–15 play alike),
 // 20 / 21 = depth 16 / 18 → 21 (alike too), 22 = depth 20 → 23, 23 = depth 22 → 24, 24 = depth 25 → 26, 25 → 28). Lv.1–16 are unchanged.
 const LV_25TO28 = { 17: 18, 18: 19, 19: 20, 20: 21, 21: 21, 22: 23, 23: 24, 24: 26, 25: 28 };
-const lvMig3 = n => { n = Math.round(+n) || 0; return LV_25TO28[n] || Math.max(1, Math.min(LV_MAX, n)); };
+const lvMig3 = n => { n = Math.round(+n) || 0; return LV_25TO28[n] || Math.max(1, Math.min(28, n)); };
+// 2026-11-13 (lvV 4): 28 levels became 36 — Lv.1-28 are the levels a person plays (the old Lv.1-20 and 8 new ones between them), Lv.29-36
+// ("天上") are the old Lv.21-28. The same engine settings under the new number.
+const LV_28TO36 = [0, 1, 2, 3, 4, 5, 6, 7, 9, 11, 12, 14, 16, 18, 20, 22, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36];
+const lvMig4 = n => LV_28TO36[Math.max(1, Math.min(28, Math.round(+n) || 1))];
 function migrateLevels(st) {   // st: a settings object (saved game / synced settings) from before the 20- or 28-level ladder
-  if (!st || st.lvV === 3) return st;
-  if (st.lvV !== 2) { if (st.level != null) st.level = lvMig(st.level); if (st.level2 != null) st.level2 = lvMig(st.level2); }
-  if (st.level != null) st.level = lvMig3(st.level);
-  if (st.level2 != null) st.level2 = lvMig3(st.level2);
-  st.lvV = 3; return st;
+  if (!st || st.lvV === 4) return st;
+  if (st.lvV !== 3) {
+    if (st.lvV !== 2) { if (st.level != null) st.level = lvMig(st.level); if (st.level2 != null) st.level2 = lvMig(st.level2); }
+    if (st.level != null) st.level = lvMig3(st.level);
+    if (st.level2 != null) st.level2 = lvMig3(st.level2);
+  }
+  if (st.level != null) st.level = lvMig4(st.level);
+  if (st.level2 != null) st.level2 = lvMig4(st.level2);
+  st.lvV = 4; return st;
 }
 function load() {
   try {
@@ -1826,7 +1834,8 @@ function load() {
       const rv = d.rated.lvV || Math.min(sv, 2);
       if (rv < 2) d.rated.lv = lvMig(d.rated.lv);
       if (rv < 3) d.rated.lv = lvMig3(d.rated.lv);
-      d.rated.lvV = 3;
+      if (rv < 4) d.rated.lv = lvMig4(d.rated.lv);
+      d.rated.lvV = 4;
     }
     if (d.positions && d.positions.length) {
       positions = d.positions.map(p => ({ ...p, cells: p.cells.split('').map(Number) }));
@@ -1874,7 +1883,7 @@ weightsReady = (async () => {
 let book = null;
 const bookReady = fetch('book.bin?v=3').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null).then(b => (book = b));   // (the opening book: tools/book-gen.js; each worker decodes it, engine.js decodeBook)
 function makeWorker(onmsg) {
-  const w = new Worker('engine.js?v=68');
+  const w = new Worker('engine.js?v=69');
   w.onmessage = onmsg;
   const send = wt => { if (wt) w.postMessage({ type: 'weights', buffer: wt.buffer.slice(0), nphase: wt.nphase }); };
   if (weights) send(weights); else weightsReady.then(send);
@@ -1910,10 +1919,9 @@ let jobId = 0;
 // multi-threaded search (shared/mtengine.js; common rule 2026-11-08): analysis, hints, the coach, the review box and the
 // strongest levels (17–28, rated games too; 17–27 read to a fixed depth, so the threads only make them faster) go to the pool of threads when it is free (Lazy SMP on engine_mt.wasm,
 // the helpers start from other root moves). Without the threads: one thread, or the root split below (4+ cores).
-const MT_CFG = { 17: { exact: 18, wld: 20 }, 18: { exact: 18, wld: 20 }, 19: { exact: 18, wld: 20 }, 20: { exact: 20, wld: 22 }, 21: { exact: 22, wld: 24 }, 22: { exact: 22, wld: 24 }, 23: { exact: 22, wld: 24 },
-  24: { exact: 23, wld: 24, wtry: 27, xtry: 25 }, 25: { exact: 23, wld: 25, wtry: 28, xtry: 25 }, 26: { exact: 23, wld: 25, wtry: 28, xtry: 25 }, 27: { exact: 24, wld: 26, wtry: 29, xtry: 26 }, 28: { exact: 23, wld: 25, wtry: 32, xtry: 28 } };   // the helpers' settings (engine.js LEVELS)
+const MT_CFG = { 25: { exact: 18, wld: 20 }, 26: { exact: 18, wld: 20 }, 27: { exact: 18, wld: 20 }, 28: { exact: 20, wld: 22 }, 29: { exact: 22, wld: 24 }, 30: { exact: 22, wld: 24 }, 31: { exact: 22, wld: 24 }, 32: { exact: 23, wld: 24, wtry: 27, xtry: 25 }, 33: { exact: 23, wld: 25, wtry: 28, xtry: 25 }, 34: { exact: 23, wld: 25, wtry: 28, xtry: 25 }, 35: { exact: 24, wld: 26, wtry: 29, xtry: 26 }, 36: { exact: 23, wld: 25, wtry: 32, xtry: 28 } };   // the helpers' settings (engine.js LEVELS)
 const MTP = window.MTEngine ? MTEngine.use({
-  wasm: 'engine_mt.wasm?v=11', lead: 'mt-worker.js?v=21', helper: 'mt-worker.js?v=21', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
+  wasm: 'engine_mt.wasm?v=11', lead: 'mt-worker.js?v=22', helper: 'mt-worker.js?v=22', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => Date.now() } }),
   after: async (X, mem, ws) => {
     if (X.w_defer) X.w_defer(); X.init();   // (the tables in the shared memory, once; w_defer: the weights get memory of their size when they come — engine.c w_alloc)
@@ -1953,7 +1961,7 @@ function think(cells, toMove, level, onProgress, pc) {
 // ---------------------------------------------------------------- parallel root search (levels 17-28, when the threads are not there)
 // Root moves are split across several workers (no shared memory): the first move is searched with a full window,
 // the rest with a null window around the current best, re-searching on fail-high.
-const PAR_LEVELS = { 28: { exact: 23, time: 18000, use: 0.8, max: 30000 } };   // same as engine.js LEVELS (only the timed Lv.28: Lv.17–27 read to a fixed depth, which a root split without the wld solve would change)
+const PAR_LEVELS = { 36: { exact: 23, time: 18000, use: 0.8, max: 30000 } };   // same as engine.js LEVELS (only the timed Lv.28: Lv.17–27 read to a fixed depth, which a root split without the wld solve would change)
 const NPAR = Math.max(1, Math.min(4, (navigator.hardwareConcurrency || 2) - 1));
 let pool = null;
 function makePool() {
@@ -2705,13 +2713,14 @@ setInterval(clockTick, 250);
 // Each AI level has a fixed rating (ladder in MODEL_CARD.md); the opponent is picked around the player's rating
 // (mostly close, sometimes clearly stronger or weaker) and the result moves the rating (Elo).
 const RT_STORE = 'reversi-rated-v1', RT_START = 1000;
-const RT_LV = [0, 10, 50, 110, 170, 240, 340, 430, 550, 680, 780, 930, 1090, 1290, 1440, 1582, 1687, 1732, 1767, 1837, 1916, 1954, 1991, 2017, 2054, 2067, 2084, 2140, 2201];   // index = level 1..28: 50 + 0.77 × the measured level Elo (MODEL_CARD.md; 1–13: the gentle levels of 2026-11-10, Lv.14 = 1810 as the anchor; 15–16: the Mac's matches of 2026-11-11; 17–27: by depth, measured from Lv.16 = 2126 on 2026-11-11 (12 steps of about +55); 28: the strongest by time, estimated)
+const RT_LV = [0, 10, 50, 110, 170, 240, 340, 430, 490, 550, 615, 680, 780, 855, 930, 1010, 1090, 1190, 1290, 1365, 1440, 1511, 1582, 1634, 1687, 1732, 1767, 1837, 1916, 1954, 1991, 2017, 2054, 2067, 2084, 2140, 2201];   // index = level 1..28: 50 + 0.77 × the measured level Elo (MODEL_CARD.md; 1–13: the gentle levels of 2026-11-10, Lv.14 = 1810 as the anchor; 15–16: the Mac's matches of 2026-11-11; 17–27: by depth, measured from Lv.16 = 2126 on 2026-11-11 (12 steps of about +55); 28: the strongest by time, estimated)
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };
   if (!Array.isArray(s.hist)) s.hist = [];
   if (!s.lvV) { s.hist.forEach(h => { if (h.lv) h.lv = lvMig(h.lv); }); s.lvV = 2; if (s.n || s.hist.length) rtStore(s); }   // 10 → 20 levels
   if (s.lvV === 2) { s.hist.forEach(h => { if (h.lv) h.lv = lvMig3(h.lv); }); s.lvV = 3; if (s.n || s.hist.length) rtStore(s); }   // 25 → 28 levels (2026-11-11; the ratings in the history stay as played)
+  if (s.lvV === 3) { s.hist.forEach(h => { if (h.lv) h.lv = lvMig4(h.lv); }); s.lvV = 4; if (s.n || s.hist.length) rtStore(s); }   // 28 → 36 levels (2026-11-13)
   return s;
 }
 function rtStore(s) { try { localStorage.setItem(RT_STORE, JSON.stringify(s)); } catch (e) {} }
@@ -2799,7 +2808,7 @@ function rtStart() {
   if (Placement.gate(rtLoad(), rtStore, () => rtStart())) return;
   const st = rtLoad(), pk = rtPick(st.r);
   settings.mode = 'ai';
-  newGame({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), lv: pk.lv, lvV: 3, or: pk.or, my: st.r, tag: pk.tag });
+  newGame({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), lv: pk.lv, lvV: 4, or: pk.or, my: st.r, tag: pk.tag });
   toast(t('rt.vs', { lv: rtLvName(pk.lv), r: pk.or, tag: t('rt.' + pk.tag) }), 4000);
 }
 function rtStatsHtml() {
@@ -2869,34 +2878,44 @@ $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
 // never rated. The changed values make a level of their own (engine.js think: opts.cfg / variety / book).
 const LEVELS_UI = [   // (= engine.js LEVELS: the defaults the PRO panel shows)
   null,
-  { depth: 1, exact: 0, rnd: 0.7, greedy: 0.2, noise: 3000 },     // 1  almost random (Lv.1-13: gentler, 2026-11-10)
-  { depth: 1, exact: 0, rnd: 0.5, greedy: 0.3, noise: 1800 },     // 2
-  { depth: 1, exact: 0, rnd: 0.32, greedy: 0.3, noise: 1300 },    // 3
+  { depth: 1, exact: 0, rnd: 0.7, greedy: 0.2, noise: 3000 },   // 1
+  { depth: 1, exact: 0, rnd: 0.5, greedy: 0.3, noise: 1800 },   // 2
+  { depth: 1, exact: 0, rnd: 0.32, greedy: 0.3, noise: 1300 },   // 3
   { depth: 1, exact: 2, rnd: 0.22, greedy: 0.28, noise: 1100 },   // 4
-  { depth: 1, exact: 4, rnd: 0.14, greedy: 0.22, noise: 900 },    // 5
-  { depth: 2, exact: 4, rnd: 0.12, greedy: 0.16, noise: 900 },    // 6
-  { depth: 2, exact: 5, rnd: 0.08, greedy: 0.12, noise: 700 },    // 7
-  { depth: 2, exact: 6, rnd: 0.05, greedy: 0.07, noise: 550 },    // 8
-  { depth: 3, exact: 7, rnd: 0.04, greedy: 0.05, noise: 450 },    // 9
-  { depth: 4, exact: 8, rnd: 0.03, greedy: 0.03, noise: 450 },    // 10
-  { depth: 4, exact: 9, rnd: 0.02, noise: 400 },                  // 11
-  { depth: 5, exact: 10, rnd: 0.01, noise: 300 },                 // 12
-  { depth: 6, exact: 12, noise: 180 },                            // 13
-  { depth: 8, exact: 14 },                          // 14 (old Lv.6)
-  { depth: 9, exact: 15, time: 700, mpc: 1 },       // 15
-  { depth: 10, exact: 16, time: 1000, mpc: 1 },     // 16 (old Lv.7)
-  { depth: 10, exact: 18, wld: 20, time: 10000, use: 1, max: 20000, mpc: 1 },   // 17
-  { depth: 11, exact: 18, wld: 20, time: 10000, use: 1, max: 20000, mpc: 1 },   // 18
-  { depth: 12, exact: 18, wld: 20, time: 10000, use: 1, max: 20000, mpc: 1 },   // 19
-  { depth: 13, exact: 20, wld: 22, time: 10000, use: 1, max: 20000, mpc: 1 },   // 20
-  { depth: 16, exact: 22, wld: 24, time: 15000, use: 1, max: 30000, mpc: 1 },   // 21
-  { depth: 20, mix: 16, exact: 22, wld: 24, time: 20000, use: 1, max: 40000, mpc: 1 },   // 22
-  { depth: 20, exact: 22, wld: 24, time: 20000, use: 1, max: 40000, mpc: 1 },   // 23
-  { depth: 22, exact: 23, wld: 24, time: 25000, use: 1, max: 50000, mpc: 1 },   // 24
-  { depth: 25, mix: 20, exact: 23, wld: 25, time: 30000, use: 1, max: 60000, mpc: 1 },   // 25
-  { depth: 25, exact: 23, wld: 25, time: 30000, use: 1, max: 60000, mpc: 1 },   // 26
-  { depth: 28, exact: 24, wld: 26, time: 30000, use: 1, max: 60000, mpc: 1 },   // 27
-  { depth: 60, exact: 23, wld: 25, time: 18000, use: 0.8, max: 20000, mpc: 1 },   // 28
+  { depth: 1, exact: 4, rnd: 0.14, greedy: 0.22, noise: 900 },   // 5
+  { depth: 2, exact: 4, rnd: 0.12, greedy: 0.16, noise: 900 },   // 6
+  { depth: 2, exact: 5, rnd: 0.08, greedy: 0.12, noise: 700 },   // 7
+  { depth: 2, exact: 5, rnd: 0.065, greedy: 0.095, noise: 620 },   // 8 (2026-11-13: new, between the levels beside it)
+  { depth: 2, exact: 6, rnd: 0.05, greedy: 0.07, noise: 550 },   // 9 (Lv.8 until 2026-11-13)
+  { depth: 3, exact: 6, rnd: 0.045, greedy: 0.06, noise: 500 },   // 10 (2026-11-13: new, between the levels beside it)
+  { depth: 3, exact: 7, rnd: 0.04, greedy: 0.05, noise: 450 },   // 11 (Lv.9 until 2026-11-13)
+  { depth: 4, exact: 8, rnd: 0.03, greedy: 0.03, noise: 450 },   // 12 (Lv.10 until 2026-11-13)
+  { depth: 4, exact: 8, rnd: 0.025, greedy: 0.015, noise: 425 },   // 13 (2026-11-13: new, between the levels beside it)
+  { depth: 4, exact: 9, rnd: 0.02, noise: 400 },   // 14 (Lv.11 until 2026-11-13)
+  { depth: 5, exact: 9, rnd: 0.015, noise: 350 },   // 15 (2026-11-13: new, between the levels beside it)
+  { depth: 5, exact: 10, rnd: 0.01, noise: 300 },   // 16 (Lv.12 until 2026-11-13)
+  { depth: 5, exact: 11, rnd: 0.005, noise: 240 },   // 17 (2026-11-13: new, between the levels beside it)
+  { depth: 6, exact: 12, noise: 180 },   // 18 (Lv.13 until 2026-11-13)
+  { depth: 7, exact: 13, noise: 90 },   // 19 (2026-11-13: new, between the levels beside it)
+  { depth: 8, exact: 14 },   // 20 (Lv.14 until 2026-11-13)
+  { depth: 9, exact: 14 },   // 21 (2026-11-13: new, between the levels beside it)
+  { depth: 9, exact: 15, time: 700, mpc: 1 },   // 22 (Lv.15 until 2026-11-13)
+  { depth: 9, exact: 16, time: 850, mpc: 1 },   // 23 (2026-11-13: new, between the levels beside it)
+  { depth: 10, exact: 16, time: 1000, mpc: 1 },   // 24 (Lv.16 until 2026-11-13)
+  { depth: 10, exact: 18, wld: 20, end: 24, time: 10000, use: 1, max: 20000, mpc: 1 },   // 25 (Lv.17 until 2026-11-13)
+  { depth: 11, exact: 18, wld: 20, end: 24, time: 10000, use: 1, max: 20000, mpc: 1 },   // 26 (Lv.18 until 2026-11-13)
+  { depth: 12, exact: 18, wld: 20, end: 24, time: 10000, use: 1, max: 20000, mpc: 1 },   // 27 (Lv.19 until 2026-11-13)
+  { depth: 13, exact: 20, wld: 22, end: 26, time: 10000, use: 1, max: 20000, mpc: 1 },   // 28 (Lv.20 until 2026-11-13)
+  // 29-36 (2026-11-13, "天上" — beyond what a person plays against: no rewards in the portal): Lv.21-28 until then. 29-35 read to a fixed depth,
+  // 36 is the strongest, by time on all threads (wtry / xtry / tryMs / end: MODEL_CARD.md「上位レベルの追加の読み切り」「終局まで読む」)
+  { depth: 16, exact: 22, wld: 24, end: 28, time: 15000, use: 1, max: 30000, mpc: 1 },   // 29 (Lv.21 until 2026-11-13)
+  { depth: 20, mix: 16, exact: 22, wld: 24, end: 28, time: 20000, use: 1, max: 40000, mpc: 1 },   // 30 (Lv.22 until 2026-11-13)
+  { depth: 20, exact: 22, wld: 24, end: 28, time: 20000, use: 1, max: 40000, mpc: 1 },   // 31 (Lv.23 until 2026-11-13)
+  { depth: 22, exact: 23, wld: 24, wtry: 27, xtry: 25, tryMs: 4000, end: 30, time: 25000, use: 1, max: 50000, mpc: 1 },   // 32 (Lv.24 until 2026-11-13)
+  { depth: 25, mix: 20, exact: 23, wld: 25, wtry: 28, xtry: 25, tryMs: 5000, end: 30, time: 30000, use: 1, max: 60000, mpc: 1 },   // 33 (Lv.25 until 2026-11-13)
+  { depth: 25, exact: 23, wld: 25, wtry: 28, xtry: 25, tryMs: 5000, end: 30, time: 30000, use: 1, max: 60000, mpc: 1 },   // 34 (Lv.26 until 2026-11-13)
+  { depth: 28, exact: 24, wld: 26, wtry: 29, xtry: 26, tryMs: 6000, end: 30, time: 30000, use: 1, max: 60000, mpc: 1 },   // 35 (Lv.27 until 2026-11-13)
+  { depth: 60, exact: 23, wld: 25, wtry: 32, xtry: 28, time: 18000, use: 0.8, max: 30000, mpc: 1 },   // 36 (Lv.28 until 2026-11-13)
 ];
 
 const PRO_T = {

@@ -64,12 +64,12 @@ const CONC = Math.max(1, +(opt.conc || (CORES >= 8 ? 2 : 1)));
 const THREADS = Math.max(1, +(opt.threads || Math.min(8, Math.floor(CORES / CONC))));   // (the page: 1 + min(cores − 1, 7))
 const OUT = path.resolve(opt.out || path.join(__dirname, 'levelmatch-out', 'results-28.jsonl'));   // (2026-11-11, later: a new file for the 28 levels — the level numbers changed; results-depth.jsonl: Lv.17–24 by depth on the 25-level ladder; 2026-11-10's YBW run is results-ybw.jsonl, 2026-11-10: a new file for the YBW threads and the gentle low levels; the 2026-11-09 run is results.jsonl)
 const PLANS = {
-  adjacent: ['L20:L21', 'L21:L22', 'L22:L23', 'L23:L24', 'L24:L25', 'L25:L26', 'L26:L27', 'L27:L28'],   // (2026-11-11: 28 levels)
+  adjacent: ['L28:L29', 'L29:L30', 'L30:L31', 'L31:L32', 'L32:L33', 'L33:L34', 'L34:L35', 'L35:L36'],   // (2026-11-11: 28 levels)
   ladder: ['T2:T4', 'T4:T8', 'T8:T16'],
-  low: ['L14:L15', 'L15:L16', 'L16:L17', 'L17:L18', 'L18:L19', 'L19:L20'],   // (Lv.14 = the fixed anchor of the ratings: MODEL_CARD.md)
+  low: ['L20:L22', 'L22:L24', 'L24:L25', 'L25:L26', 'L26:L27', 'L27:L28'],   // (Lv.14 = the fixed anchor of the ratings: MODEL_CARD.md)
 };
-PLANS.top = ['L24:L25', 'L25:L26', 'L26:L27', 'L27:L28', 'L25:L27', 'L26:L28'];   // (2026-11-11: the deepest levels and the timed strongest, with two skips; Lv.27↔28 could not be measured on the 2-core machine)
-PLANS.depth = ['L16:L17', 'L17:L18', 'L18:L19', 'L19:L20', 'L20:L21', 'L21:L22', 'L22:L23', 'L23:L24'].concat(PLANS.top);   // (2026-11-11: Lv.16 … 28, the levels by depth and the timed top)
+PLANS.top = ['L32:L33', 'L33:L34', 'L34:L35', 'L35:L36', 'L33:L35', 'L34:L36'];   // (2026-11-11: the deepest levels and the timed strongest, with two skips; Lv.27↔28 could not be measured on the 2-core machine)
+PLANS.depth = ['L24:L25', 'L25:L26', 'L26:L27', 'L27:L28', 'L28:L29', 'L29:L30', 'L30:L31', 'L31:L32'].concat(PLANS.top);   // (2026-11-11: Lv.16 … 28, the levels by depth and the timed top)
 PLANS.default = PLANS.adjacent.concat(PLANS.ladder);
 PLANS.full = PLANS.low.concat(PLANS.adjacent, PLANS.ladder);   // the whole ladder Lv.14 … Lv.28 and the time doublings
 const planOf = p => (PLANS[p] || String(p).split(',')).map(s => s.trim()).filter(Boolean).map(s => { const [a, b] = s.split(':'); return { id: `${a}-${b}${WTAG}`, a, b }; });
@@ -86,7 +86,7 @@ const { legal, play, start } = require('./eng-lite.js');
 function cfgOf(p, scale) {
   let m;
   if ((m = /^L(\d+)$/.exec(p))) {
-    const n = +m[1]; if (n < 14 || !E0.LEVELS[n]) throw new Error(p + ': Lv.14 … Lv.28 (the lower levels play by chance: tools/match.js)');
+    const n = +m[1]; if (n < 20 || !E0.LEVELS[n]) throw new Error(p + ': Lv.20 … Lv.36 (the lower levels play by chance: tools/match.js)');
     const L = Object.assign({}, E0.LEVELS[n]);
     if (L.time) L.time = Math.round(L.time * scale); if (L.max) L.max = Math.round(L.max * scale);
     L.mt = n >= 17;   // (the page: levels 17–28 on the threads, the others on one thread)
