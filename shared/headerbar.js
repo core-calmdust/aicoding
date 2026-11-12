@@ -1130,7 +1130,9 @@ function sideSplitInit() {
   (function sideSplit() {
     if (window.__sideSplit) return; window.__sideSplit = 1;
     { const st = document.createElement('style'); st.textContent = CSS_SPLIT; document.head.appendChild(st); }
-    const si = document.querySelector('.side-in'), ev = document.getElementById('evalCard'), co = document.getElementById('coachCard'), ki = document.querySelector('.side-in > .kifu-card');
+    const si = document.querySelector('.side-in'), ev = document.getElementById('evalCard'), co0 = document.getElementById('coachCard'), rv = document.getElementById('reviewCard'), ki = document.querySelector('.side-in > .kifu-card');
+    // 振り返り (#reviewCard) takes the coach card's place while it is shown: the drag works on it then (2026-11-13)
+    let co = co0;
     if (!si || !ki) return;
     const KEY = 'atlas-side-split', de = document.documentElement;
     let S = { e: 0, k: 0 }; try { Object.assign(S, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
@@ -1147,6 +1149,7 @@ function sideSplitInit() {
     const fill = () => coachOn() ? co : ki;   // the card that gives and takes the room
     function apply() {
       if (busy) return; busy = true;
+      co = rv && vis(rv) && !rv.classList.contains('hidden') ? rv : co0;
       clear();
       const on = live(); si.classList.toggle('a-split', on);
       if (on) {
@@ -1188,7 +1191,7 @@ function sideSplitInit() {
     addEventListener('storage', e => { if (e.key === KEY) { try { S = Object.assign({ e: 0, k: 0 }, JSON.parse(e.newValue || '{}')); } catch (x) {} apply(); } });
     const later = () => requestAnimationFrame(apply);
     addEventListener('resize', later);
-    if (co) new MutationObserver(later).observe(co, { attributes: true, attributeFilter: ['class', 'style'] });
+    [co0, rv].forEach(el => { if (el) new MutationObserver(later).observe(el, { attributes: true, attributeFilter: ['class', 'style', 'hidden'] }); });
     new MutationObserver(later).observe(de, { attributes: true, attributeFilter: ['class'] });
     if (window.ResizeObserver) { const ro = new ResizeObserver(() => { if (!busy) later(); }); ro.observe(si); }
     si.addEventListener('scroll', () => place(si.classList.contains('a-split')));
