@@ -462,6 +462,64 @@
     if (window.ResizeObserver) new ResizeObserver(() => requestAnimationFrame(fit)).observe(boardDom);
     fit(); setTimeout(fit, 120); setTimeout(fit, 600); setTimeout(fit, 1200); if (document.fonts) document.fonts.ready.then(fit);
   })();
+  /* ---------- 形勢 / コーチ / 棋譜: drag the gaps between the cards to share the column's height (2026-11-12) ----------
+     One setting for every game with this column (localStorage atlas-side-split: e = px added to the 形勢 graph, k = the 棋譜
+     card's height). Only while the coach card is shown beside the board; a double-click on a gap puts it back. */
+  (function sideSplit() {
+    const si = document.querySelector('.side-in'), ev = document.getElementById('evalCard'), co = document.getElementById('coachCard'), ki = document.querySelector('.side-in > .kifu-card');
+    if (!si || !co || !ki) return;
+    const KEY = 'atlas-side-split', de = document.documentElement;
+    let S = { e: 0, k: 0 }; try { Object.assign(S, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
+    const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+    const vis = el => !!(el && el.getClientRects().length && getComputedStyle(el).display !== 'none');
+    const gr = () => ev && ev.querySelector('.graph');
+    const live = () => innerWidth >= 900 && !de.classList.contains('atlas-2d') && vis(co) && vis(ki) && getComputedStyle(si).flexDirection === 'column' && si.clientHeight > 300;
+    let gh0 = 0, busy = false;
+    const clear = () => { const g = gr(); if (g) { g.style.removeProperty('height'); g.style.removeProperty('flex'); } ki.style.removeProperty('flex'); };
+    const MINC = 90, MINK = 110;
+    function apply() {
+      if (busy) return; busy = true;
+      clear();
+      const on = live(); si.classList.toggle('a-split', on);
+      if (on) {
+        const g = vis(ev) && gr(); gh0 = g ? g.getBoundingClientRect().height : 0;
+        const room = co.getBoundingClientRect().height + ki.getBoundingClientRect().height - MINC;   // what the coach and the kifu share
+        const k = S.k ? Math.max(MINK, Math.min(S.k, room - (g ? S.e : 0))) : 0;
+        if (k) ki.style.setProperty('flex', '0 0 ' + k + 'px', 'important');
+        if (g && S.e) { const e = Math.max(-Math.max(0, gh0 - 30), Math.min(S.e, room - (k || ki.getBoundingClientRect().height))); g.style.setProperty('height', (gh0 + e) + 'px', 'important'); g.style.setProperty('flex', 'none', 'important'); }
+      }
+      place(on); busy = false;
+    }
+    const hs = [0, 1].map(i => { const h = document.createElement('div'); h.className = 'a-split-h'; h.dataset.i = i; si.appendChild(h); return h; });
+    function place(on) {
+      const pairs = [[ev, co], [co, ki]], r0 = si.getBoundingClientRect();
+      hs.forEach((h, i) => { const [a, b] = pairs[i]; const ok = on && vis(a) && vis(b) && (i === 1 || gr());
+        h.style.display = ok ? '' : 'none'; if (!ok) return;
+        const y = (a.getBoundingClientRect().bottom + b.getBoundingClientRect().top) / 2 - r0.top + si.scrollTop; h.style.top = (y - 7) + 'px'; });
+    }
+    hs.forEach(h => {
+      h.addEventListener('pointerdown', e => {
+        e.preventDefault(); h.setPointerCapture(e.pointerId); h.classList.add('on');
+        const i = +h.dataset.i, y0 = e.clientY, g = gr();
+        const c0 = co.getBoundingClientRect().height, k0 = ki.getBoundingClientRect().height, g0 = g ? g.getBoundingClientRect().height : 0;
+        const mv = ev2 => { const d = ev2.clientY - y0;
+          if (i === 0 && g) { const nd = Math.max(30 - g0, Math.min(d, c0 - MINC)); S.e = Math.round(g0 + nd - gh0); }
+          else { const nd = Math.max(-(c0 - MINC), Math.min(d, k0 - MINK)); S.k = Math.round(k0 - nd); }
+          apply(); };
+        const up = () => { h.classList.remove('on'); h.removeEventListener('pointermove', mv); save(); };
+        h.addEventListener('pointermove', mv); h.addEventListener('pointerup', up, { once: true }); h.addEventListener('pointercancel', up, { once: true });
+      });
+      h.addEventListener('dblclick', () => { if (+h.dataset.i === 0) S.e = 0; else S.k = 0; save(); apply(); });
+    });
+    addEventListener('storage', e => { if (e.key === KEY) { try { S = Object.assign({ e: 0, k: 0 }, JSON.parse(e.newValue || '{}')); } catch (x) {} apply(); } });
+    const later = () => requestAnimationFrame(apply);
+    addEventListener('resize', later);
+    new MutationObserver(later).observe(co, { attributes: true, attributeFilter: ['class', 'style'] });
+    new MutationObserver(later).observe(de, { attributes: true, attributeFilter: ['class'] });
+    if (window.ResizeObserver) { const ro = new ResizeObserver(() => { if (!busy) later(); }); ro.observe(si); }
+    si.addEventListener('scroll', () => place(si.classList.contains('a-split')));
+    [0, 300, 1200, 3000].forEach(ms => setTimeout(apply, ms));
+  })();
   // the board is drawn and the game is set up → lift the "loading" overlay (after a couple of rendered frames)
   function ready(waitStart) {
     const t0 = performance.now();
