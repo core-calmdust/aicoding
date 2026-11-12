@@ -127,8 +127,9 @@
   /* ---------- idle: pause CSS/SVG animations while the tab is hidden or the window isn't focused ---------- */
   (function idle() {
     const st = document.createElement('style'); st.textContent = 'html.atlas-idle *,html.atlas-idle *::before,html.atlas-idle *::after{animation-play-state:paused!important}'; document.head.appendChild(st);
-    const set = () => { const on = document.hidden || !document.hasFocus(); document.documentElement.classList.toggle('atlas-idle', on); document.querySelectorAll('svg').forEach(s => { try { on ? s.pauseAnimations() : s.unpauseAnimations(); } catch (e) {} }); };
+    const set = () => { const on = !document.body.classList.contains('in-online') && (document.hidden || !document.hasFocus()); /* (a live online game keeps moving: the opponent's moves, 2026-11-12) */ document.documentElement.classList.toggle('atlas-idle', on); document.querySelectorAll('svg').forEach(s => { try { on ? s.pauseAnimations() : s.unpauseAnimations(); } catch (e) {} }); };
     document.addEventListener('visibilitychange', set); addEventListener('blur', set); addEventListener('focus', set);
+    new MutationObserver(set).observe(document.body, { attributes: true, attributeFilter: ['class'] });
   })();
   /* ---------- light theme: convert the game's dark-theme colours rule by rule ---------- */
   (function retheme() {
