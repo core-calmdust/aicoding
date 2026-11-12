@@ -14,8 +14,9 @@ typedef signed char i8;
 typedef unsigned char u8;
 /* MT (engine_mt.wasm): several threads search together on one shared memory; per-thread state is TLS, the tables, the
    network and the transposition table are shared. Without MT TLS is nothing and the build is as before. Since 2026-11-10
-   (MODEL_CARD.md「マルチスレッド v2（YBW と Lazy SMP の併用）」) the first helper takes moves at the lead's split points (Young
-   Brothers Wait, mt_idle) and the others search the root on their own ("Lazy SMP", mt_lazy). */
+   (MODEL_CARD.md「マルチスレッド v2（YBW と Lazy SMP の併用）」) helpers take moves at the split points (Young Brothers Wait,
+   mt_idle) and the others search the root on their own ("Lazy SMP", mt_lazy): v2 the first helper only, since 2026-11-12
+   (「マルチスレッド v3」) the first 10 threads (the pages' mt-helper.js / pro/mt-worker.js choose), with busy marks. */
 #ifdef MT
 #define TLS _Thread_local
 #else
@@ -640,7 +641,7 @@ static TLS u64 rootK;
    the remaining moves of a node whose first move is done. stopFlag 2 / 3: praline.h. A split point carries the node's position,
    the keys back to the last irreversible move, the stacks the children read, per move its order score and its number among
    the legal moves, the line of its best move (PL_ON_RAISE) and the thread whose move cut off. No busy marks, no root values. */
-#define SPLIT_D 7          /* the split depth (mt_split) */
+#define SPLIT_D 6          /* the split depth (mt_split; 7 until 2026-11-12) */
 typedef int Move;   /* (a move is an int here) */
 #define SP_MV 256
 #define SP_HK 128
@@ -658,19 +659,41 @@ typedef int Move;   /* (a move is an int here) */
 #define SIM_IDLE() MT_PAUSE()
 #endif
 #include "../shared/praline/praline.h"
-/* the moves searched before a split at an expected cut node (256: none there — the simulation: the moves after the first one
-   there are mostly not needed) */
-static int SP_CUTN = 256;
+/* the moves searched before a split at an expected cut node (256: none there, as until 2026-11-12) */
+static int SP_CUTN = 1, SP_ALLN = 1;   /* (2026-11-12: 1 = split there too after the first move, 256 until then; SP_ALLN: the same at an expected all node) */
 #endif
-static void check_time(void) {
 #ifdef MT
+/* (2026-11-12, MODEL_CARD.md「マルチスレッド v3」) the stops of the threads (the search is over, a split point above was cut off)
+   every CHK_MASK + 1 nodes, the clock and a straggler's second search every 2048 as before (one thread: no stop of this kind,
+   the same search) */
+#ifndef CHK_MASK
+#define CHK_MASK 255
+#endif
+static void check_time_(int full) {
   if (gStop || (rootK && gHit == rootK)) { stopFlag = 1; return; }
   if (curSP && chainStopped(curSP, curIdx)) { stopFlag = 2; return; }
+  if (!full) return;
   if (dupMode && gOpenN > 0 && dupLeave()) { stopFlag = 3; return; }
-#endif
   if (nodeLimit > 0 && nodes >= nodeLimit) { stopFlag = 1; return; }
   if (tHard > 0 && js_now() - tStart >= tHard) stopFlag = 1;
 }
+#define check_time() check_time_(((long long)nodes & 2047) == 0)
+#define check_time_all() check_time_(1)
+/* (2026-11-12) busy marks (praline.h's busyOther / busySet / busyClear on the child's key): a move after the first whose position
+   another thread is on is put off to the end of the node (it keeps its number among the legal moves for the pruning and
+   LMR). From remaining depth busyD (0: none; mt_busy). One thread never meets another's mark: the same search. */
+#ifndef CHESS_BUSY_D
+#define CHESS_BUSY_D 2
+#endif
+static int busyD = CHESS_BUSY_D;
+#else
+#define CHK_MASK 2047
+#define lgv legal
+static void check_time(void) {
+  if (nodeLimit > 0 && nodes >= nodeLimit) { stopFlag = 1; return; }
+  if (tHard > 0 && js_now() - tStart >= tHard) stopFlag = 1;
+}
+#endif
 static int is_repetition(const Pos *p) {
   int n = histLen + sp, lim = p->half; if (lim > n) lim = n;
   for (int i = 2; i <= lim; i += 2) if (keyHist[n - i] == p->key) return 1;
@@ -724,7 +747,7 @@ static inline int pick(int *ml, int *sc, int n, int i) {
 }
 
 static int qsearch(Pos *p, int alpha, int beta, int ply) {
-  if ((++nodes, ((long long)nodes & 2047) == 0)) check_time();
+  if ((++nodes, ((long long)nodes & CHK_MASK) == 0)) check_time();
   if (stopFlag) return 0;
   if (ply > selDepth) selDepth = ply;
   if (ply >= MAXPLY) return evaluate(p);
@@ -774,13 +797,13 @@ static int qsearch(Pos *p, int alpha, int beta, int ply) {
 }
 
 #ifdef MT
-static int splitHere(Pos *p, int alpha, int beta, int depth, int ply, int cutNode, int pvNode, int chk, int improving, int ev, int *ml, int *sc, int i0, int n, int legal, int *best, int *bestMove);
+static int splitHere(Pos *p, int alpha, int beta, int depth, int ply, int cutNode, int pvNode, int chk, int improving, int ev, int *ml, int *sc, int i0, int n, int nR, int legal, int *best, int *bestMove);
 #endif
 static int search(Pos *p, int alpha, int beta, int depth, int ply, int cutNode, int excluded) {
   int pvNode = beta - alpha > 1;
   pvLen[ply] = ply;
   if (depth <= 0) return qsearch(p, alpha, beta, ply);
-  if ((++nodes, ((long long)nodes & 2047) == 0)) check_time();
+  if ((++nodes, ((long long)nodes & CHK_MASK) == 0)) check_time();
   if (stopFlag) return 0;
   if (ply > selDepth) selDepth = ply;
   if (ply > 0) {
@@ -836,27 +859,36 @@ static int search(Pos *p, int alpha, int beta, int depth, int ply, int cutNode, 
   score_moves(p, ml, sc, n, ttm, ply);
   int best = -INF, bestMove = 0, legal = 0, a0 = alpha;
   int quiets[64], nq = 0, caps[32], nc = 0;
+#ifdef MT
+  int nReal = n, defL[BUSY_DEF], nDef = 0;   /* (busy marks: the moves put off are appended after nReal) */
+#endif
   for (int i = 0; i < n; i++) {
 #ifdef MT
     /* (YBW) the first move is done and a thread is idle (or an owner above waits): the remaining moves to a split point
        (the picks there are the loop's own: it goes on with the same moves when nothing is split) */
-    if (legal >= (cutNode ? SP_CUTN : 1) && depth >= splitD && !excluded && n - i >= 2 && !noSplit && (gIdle > 0 || (gWaitN > 0 && spWanted())) &&
-        splitHere(p, alpha, beta, depth, ply, cutNode, pvNode, chk, improving, ev, ml, sc, i, n, legal, &best, &bestMove)) {
+    if (legal >= (cutNode ? SP_CUTN : pvNode ? 1 : SP_ALLN) && depth >= splitD && !excluded && n - i >= 2 && !noSplit && (gIdle > 0 || (gWaitN > 0 && spWanted())) &&
+        splitHere(p, alpha, beta, depth, ply, cutNode, pvNode, chk, improving, ev, ml, sc, i, n, nReal, legal, &best, &bestMove)) {
       if (stopFlag) return 0;
       break;
     }
-#endif
+    int m = i < nReal ? pick(ml, sc, nReal, i) : ml[i];
+#else
     int m = pick(ml, sc, n, i);
+#endif
     if (m == excluded) continue;
     if (ply == 0 && nExcluded) { int skip = 0; for (int k = 0; k < nExcluded; k++) if (excludedRoot[k] == m) skip = 1; if (skip) continue; }
     if (!is_legal(p, m)) continue;
+#ifdef MT
+    const int lgv = i < nReal ? ++legal : defL[i - nReal];   /* (a move put off: its number when it was put off) */
+#else
     legal++;
+#endif
     int isCap = M_SPEC(m) == 1 || p->board[M_TO(m)] != EMPTY, isQuiet = !isCap && M_PROMO(m) != 4;
     int gc = gives_check(p, m);
     if (ply > 0 && best > -MATE_IN_MAX && non_pawn(p, p->side)) {
       if (isQuiet && !gc) {
-        if (!pvNode && !chk && depth <= 8 && legal > (3 + depth * depth) / (2 - improving)) continue;   /* late move pruning */
-        int lmrD = depth - 1 - lmrTable[depth < 63 ? depth : 63][legal < 63 ? legal : 63];
+        if (!pvNode && !chk && depth <= 8 && lgv > (3 + depth * depth) / (2 - improving)) continue;   /* late move pruning */
+        int lmrD = depth - 1 - lmrTable[depth < 63 ? depth : 63][lgv < 63 ? lgv : 63];
         if (!chk && lmrD <= 8 && ev + 90 + 90 * lmrD <= alpha) continue;                        /* futility */
         if (lmrD <= 8 && !see_ge(p, m, -25 * lmrD * lmrD)) continue;
       } else if (depth <= 6 && !see_ge(p, m, -90 * depth)) continue;
@@ -874,12 +906,19 @@ static int search(Pos *p, int alpha, int beta, int depth, int ply, int cutNode, 
     } else if (chk) ext = 1;
     moveStack[ply] = m; pieceStack[ply] = p->board[M_FROM(m)];
     make_move(p, m);
+#ifdef MT
+    const u64 bk = p->key;
+    if (busyD > 0 && i < nReal && lgv > 1 && depth >= busyD && n < 256 && nDef < BUSY_DEF && busyOther(bk)) {   /* put off */
+      unmake_move(p, m); ml[n] = m; sc[n] = sc[i]; defL[nDef++] = lgv; n++; continue;
+    }
+    const int mk = busyD > 0 && depth >= busyD ? busySet(bk) : -1;
+#endif
     int nd = depth - 1 + ext, s;
-    if (legal == 1) s = -search(p, -beta, -alpha, nd, ply + 1, pvNode ? 0 : !cutNode, 0);
+    if (lgv == 1) s = -search(p, -beta, -alpha, nd, ply + 1, pvNode ? 0 : !cutNode, 0);
     else {
       int r = 0;
-      if (depth >= 3 && legal > 1 + (pvNode ? 1 : 0) && (isQuiet || sc[i] < 0)) {
-        r = lmrTable[depth < 63 ? depth : 63][legal < 63 ? legal : 63];
+      if (depth >= 3 && lgv > 1 + (pvNode ? 1 : 0) && (isQuiet || sc[i] < 0)) {
+        r = lmrTable[depth < 63 ? depth : 63][lgv < 63 ? lgv : 63];
         r -= pvNode; r += !improving; r += cutNode;
         if (gc) r--;
         if (isQuiet) r -= history[p->side ^ 1][M_FROM(m)][M_TO(m)] / 8000;
@@ -891,6 +930,9 @@ static int search(Pos *p, int alpha, int beta, int depth, int ply, int cutNode, 
       if (s > alpha && s < beta) s = -search(p, -beta, -alpha, nd, ply + 1, 0, 0);
     }
     unmake_move(p, m);
+#ifdef MT
+    if (mk >= 0) busyClear(bk, mk);
+#endif
     if (stopFlag) return 0;
     if (s > best) {
       best = s;
@@ -993,7 +1035,11 @@ static double ln_(double x) { /* natural log for x >= 1 without libm */ int k = 
 static void init_search_tables(void) {
   for (int d = 0; d < 64; d++) for (int m = 0; m < 64; m++) lmrTable[d][m] = (d && m) ? (int)(0.75 + ln_(d) * ln_(m) / 2.25) : 0;
 }
-EXPORT(new_game) void new_game(void) { tt_clear(); memset(history, 0, sizeof history); memset(counterMove, 0, sizeof counterMove); }
+EXPORT(new_game) void new_game(void) { tt_clear(); memset(history, 0, sizeof history); memset(counterMove, 0, sizeof counterMove);
+#ifdef MT
+  memset(busyT, 0, sizeof busyT);
+#endif
+}
 
 /* softMs: stop starting new iterations after this; hardMs: abort. maxDepth, nodeLim (0 = none) */
 EXPORT(think) int think(double softMs, double hardMs, int maxDepth, double nodeLim) {
@@ -1110,9 +1156,9 @@ EXPORT(perft_root) double perft_root(int d) { sp = 0; return (double)perft(&P, d
 
 #ifdef MT
 /* ------------------------------------------------------------------ Young Brothers Wait (2026-11-10, MODEL_CARD.md「マルチスレッド v2」)
-   As reversi's v4 / v4.1 (reversi/engine.c): a node of the search (remaining depth >= SPLIT_D = 7, not a singular test, not
-   an expected cut node: SP_CUTN) whose first move is done opens a split point when a YBW helper is idle (the pages: helper 1;
-   the others are Lazy SMP helpers, mt_lazy, whose searches never split): its other legal moves (in the loop's order, with their
+   As reversi's v4 / v4.1 (reversi/engine.c): a node of the search (remaining depth >= SPLIT_D = 6, not a singular test; v2:
+   7 and not at an expected cut node, SP_CUTN) whose first move is done opens a split point when a YBW helper is idle (the
+   pages since 2026-11-12: helpers 1..9; the others are Lazy SMP helpers, mt_lazy, whose searches never split): its other legal moves (in the loop's order, with their
    number among the legal moves and their order score) are taken one at a time (an atomic counter) by the owner and the idle
    threads (a YBW helper waits in mt_idle instead of searching the root on their own: mt-helper.js, pro/mt-worker.js), each
    with the loop's pruning, reductions and PVS against the split point's alpha. A cut-off stops the split point: the threads
@@ -1189,7 +1235,7 @@ static void spClosed(SPt *s) {
   if (s->pvNode && s->pvl > 0) { for (int q = 0; q < s->pvl; q++) pvTable[ply][ply + q] = s->pvm[q]; pvLen[ply] = ply + s->pvl; }
   if (!stopFlag && s->best >= s->beta && s->cutter != (const void *)&curIdx) spCutBonus(&P, s->bestMove, s->depth, ply);
 }
-static void waitCheck(void) { check_time(); MT_PAUSE(); }   /* (the lead's deadline) */
+static void waitCheck(void) { check_time_all(); MT_PAUSE(); }   /* (the lead's deadline) */
 static void spIdleReset(int fresh) {   /* mt_idle (mt-helper.js, pro/mt-worker.js: mt_idle() — no time limit) */
   (void)fresh;
   nodes = 0; nodeLimit = 0; tHard = 0; tSoft = 0; rootK = 0; sp = 0;
@@ -1209,11 +1255,11 @@ static double spIdleNodes(void) { resNodes = nodes; resBuf[3] = (i32)nodes; retu
 #include "../shared/praline/praline_ybw.h"
 /* the owner: a split point for the moves ml[i0..n) (picked in the loop's order; the legal ones, numbered after `legal`);
    0 when no slot is free or fewer than two legal moves are left (the loop goes on alone with the same moves) */
-static int splitHere(Pos *p, int alpha, int beta, int depth, int ply, int cutNode, int pvNode, int chk, int improving, int ev, int *ml, int *sc, int i0, int n, int legal, int *best, int *bestMove) {
+static int splitHere(Pos *p, int alpha, int beta, int depth, int ply, int cutNode, int pvNode, int chk, int improving, int ev, int *ml, int *sc, int i0, int n, int nR, int legal, int *best, int *bestMove) {
   SPt *s = spAlloc(); if (!s) return 0;
   int k = 0;
   for (int i = i0; i < n; i++) {
-    const int m = pick(ml, sc, n, i);
+    const int m = i < nR ? pick(ml, sc, nR, i) : ml[i];   /* (after nR: the moves put off by the busy marks) */
     if (ply == 0 && nExcluded) { int skip = 0; for (int q = 0; q < nExcluded; q++) if (excludedRoot[q] == m) skip = 1; if (skip) continue; }
     if (!is_legal(p, m)) continue;
     s->mv[k] = m; s->sc[k] = sc[i]; s->lg[k] = legal + 1 + k; k++;
@@ -1235,6 +1281,8 @@ EXPORT(mt_lazy) void mt_lazy(int on) { histP = on ? &historyT : &historyS; cmP =
 /* the split depth; (maxT, dup: the most threads on a split point and the second searches — Praline's are any and on, the
    values these had by default); the moves searched before a split at an expected cut node */
 EXPORT(mt_split) void mt_split(int d, int maxT, int dup, int cutn) { (void)maxT; (void)dup; if (d > 0) splitD = d; if (cutn > 0) SP_CUTN = cutn; }
+/* the busy marks from remaining depth d (0: none) */
+EXPORT(mt_busy) void mt_busy(int d) { busyD = d > 0 ? d : 0; }
 /* a helper (mt-helper.js, pro/mt-worker.js): mt_idle (praline_ybw.h) */
 #endif
 

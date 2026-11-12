@@ -1,9 +1,11 @@
-// Chess — strongest analysis: the NNUE engine on several threads (engine_mt.wasm, Lazy SMP over a shared memory).
+// Chess — strongest analysis: the NNUE engine on several threads (engine_mt.wasm over a shared memory: YBW for the first 10
+// threads, Lazy SMP beyond — ../MODEL_CARD.md「マルチスレッド v3」).
 // The page is made cross-origin isolated by coi-sw.js (SharedArrayBuffer); without it, one thread (the normal engine).
 (() => {
   'use strict';
   const E = window.ChessEngine;
-  const VER = '?v=6';
+  const VER = '?v=7';
+  const YBWQ = (q => q && /^\d+$/.test(q) ? '&ybw=' + q : '')(new URLSearchParams(location.search).get('ybw'));   // (?ybw=N: the YBW helpers, mt-worker.js)
   const LANG = (() => { try { return (localStorage.getItem('aicoding-lang') || 'ja') === 'ja' ? 'ja' : 'en'; } catch (e) { return 'ja'; } })();
   const T = {
     ja: { ttl: '最強解析', depth: '深さ', nps: '局面/秒', threads: 'スレッド', sel: 'スレッド数', ana: '解析', stop: '停止', play: 'AIに指させる',
@@ -68,7 +70,7 @@
   async function setThreads(n) {
     while (MT.workers.length > n) MT.workers.pop().terminate();
     while (MT.workers.length < n) {
-      const id = MT.workers.length, w = new Worker('mt-worker.js' + VER);
+      const id = MT.workers.length, w = new Worker('mt-worker.js' + VER + YBWQ);
       await new Promise((res, rej) => {
         w.onmessage = e => { if (e.data.type === 'ready') res(); };
         w.onerror = rej;

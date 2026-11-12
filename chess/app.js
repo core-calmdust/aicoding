@@ -203,7 +203,7 @@ let aiW = makeWorker(), anaW = makeWorker();
 // timed AI levels outside rated games go to the pool of threads when it is free; rated games and the node-limited levels stay
 // on the one-thread workers (the same moves as before)
 const MTP = window.MTEngine ? MTEngine.use({
-  wasm: 'engine_mt.wasm?v=5', lead: 'engine.js?v=20261111kb4&mt=1', helper: 'mt-helper.js?v=2', slot: 2 << 20, initial: 1152, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
+  wasm: 'engine_mt.wasm?v=6', lead: 'engine.js?v=20261111kb4&mt=1', helper: 'mt-helper.js?v=3', slot: 2 << 20, initial: 1152, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => performance.now(), progress: () => {} } }),
   help: m => { const p = E.Pos.fromFEN(m.fen || E.START), u = []; for (const x of m.moves || []) { u.push(p.uci(x)); p.make(x); } return { setup: (m.fen || E.START) + (u.length ? ' moves ' + u.join(' ') : '') }; },
 }) : null;

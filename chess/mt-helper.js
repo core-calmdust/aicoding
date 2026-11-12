@@ -1,10 +1,13 @@
 // A helper thread of the main page's multi-thread search (shared/mtengine.js): engine_mt.wasm on the shared memory. While
 // the lead (engine.js?…&mt=1) works on a job, until the page stops every thread (ctl[0] = 1 and mt_stop):
-//  - helper 1 waits in engine_mt.wasm's mt_idle and takes the remaining moves of the lead's split points (Young Brothers Wait),
+//  - helpers 1..YBW_HELPERS wait in engine_mt.wasm's mt_idle and take the remaining moves of the split points (Young Brothers
+//    Wait; the lead counted, the first 10 threads = the performance cores of the user's Mac),
 //  - the others search the same root position again and again with history tables of their own (Lazy SMP: the threads
 //    share the transposition table).
-// (2026-11-10, MODEL_CARD.md「マルチスレッド v2（YBW と Lazy SMP の併用）」; before: every helper Lazy SMP.)
-const YBW_HELPERS = 1;
+// (2026-11-12, MODEL_CARD.md「マルチスレッド v3」; 2026-11-10 v2: helper 1 only; before: every helper Lazy SMP.)
+// (the bench page can pass another count for a comparison on the user's Mac: bench.html?ybw=1 → mt-helper.js?…&ybw=1;
+// 0 = every helper Lazy SMP as before 2026-11-10)
+const YBW_HELPERS = (q => q !== null && q !== '' && q >= 0 ? +q : 9)(new URLSearchParams(self.location.search).get('ybw'));
 let X = null, mem = null, ctl = null, cnt = null, id = 0, acc = 0;
 self.onmessage = e => {
   const m = e.data;

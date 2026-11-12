@@ -19,6 +19,10 @@ static void g_thread_init(int id) {
      own from the warm-up on: identical histories would walk the same tree in lockstep) */
   mt_lazy(id > 0 && ((getenv("SIM_LAZY") && atoi(getenv("SIM_LAZY"))) || (getenv("SIM_YBWN") && id > atoi(getenv("SIM_YBWN")))));
   /* SIM_SPLIT=depth[,most threads on a split point[,second searches 0/1[,moves searched before a split at a cut node]]] (engine.c mt_split) */
+  /* SIM_HTLS=1: the YBW helpers with history / counter-move tables of their own (the lead's otherwise) */
+  if (id > 0 && !noSplit && getenv("SIM_HTLS") && atoi(getenv("SIM_HTLS"))) { histP = &historyT; cmP = &counterMoveT; }
+  if (getenv("SIM_ALLN")) SP_ALLN = atoi(getenv("SIM_ALLN"));   /* (2026-11-12) moves before a split at an expected all node */
+  if (getenv("SIM_BUSY")) mt_busy(atoi(getenv("SIM_BUSY")));   /* (2026-11-12) busy marks from this remaining depth (0: none) */
   if (getenv("SIM_SPLIT")) { int d = 0, t = -1, u = -1, c = 0; sscanf(getenv("SIM_SPLIT"), "%d,%d,%d,%d", &d, &t, &u, &c); mt_split(d, t, u, c); }
 #endif
 }
