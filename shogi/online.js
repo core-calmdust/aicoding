@@ -40,7 +40,7 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
   // anti-tamper protocol (shared/onlinesec.js): 'secure' once the new rules are published, else exactly the old behaviour
   const SEC = window.OnlineSec ? OnlineSec.make({ db: () => db, uid: () => uid, mock: MOCK, initial: INITIAL, opts: {},
     decorate: typeof secDecorate === 'function' ? (...a) => secDecorate(...a) : null,
-    onProfile: p => { profile = p; if (presOn) db.update('presence/' + uid, { rating: p.rating }).catch(() => {}); } }) : null;
+    onProfile: p => { profile = p; cacheRt(); if (presOn) db.update('presence/' + uid, { rating: p.rating }).catch(() => {}); } }) : null;
   const secure = () => !!(SEC && SEC.secure());
 
   // ---------------------------------------------------------------- backend adapters
@@ -173,7 +173,10 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
     if (serverName) { try { localStorage.setItem(NAME_KEY, profile.name); } catch (e) {} }
     else if (ln && ln !== profile.name) { profile.name = ln; await db.update('players/' + uid, { name: ln }); }
     db.set('profiles/' + uid, { n: profile.name }).catch(() => {});
+    cacheRt();
   }
+  // the online rating on this device, for the portal's レート戦 tab (atlas/app.js: <game>-online-rt; one rating for every variant)
+  function cacheRt() { try { if (!MOCK && profile && typeof profile.rating === 'number') localStorage.setItem('shogi-online-rt', JSON.stringify({ r: profile.rating, n: profile.games || 0 })); } catch (e) {} }
   const NAME_KEY = 'shogi-online-name';
   function localName() { try { return localStorage.getItem(NAME_KEY) || ''; } catch (e) { return ''; } }
   function defaultName() { const n = localName(); if (n) return n; const d = 'Player' + Math.floor(1000 + Math.random() * 9000); try { localStorage.setItem(NAME_KEY, d); } catch (e) {} return d; }
@@ -707,7 +710,7 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
       if (game.rated) { if (score === 1) p.wins = (p.wins || 0) + 1; else if (score === 0) p.losses = (p.losses || 0) + 1; else p.draws = (p.draws || 0) + 1; }
       p.last = gid; return p;
     });
-    if (r.committed && r.value) { out = { old: profile.rating, now: r.value.rating, rated: !!game.rated }; profile = r.value; if (presOn) db.update('presence/' + uid, { rating: profile.rating }); }
+    if (r.committed && r.value) { out = { old: profile.rating, now: r.value.rating, rated: !!game.rated }; profile = r.value; cacheRt(); if (presOn) db.update('presence/' + uid, { rating: profile.rating }); }
     return out;
   }
 
