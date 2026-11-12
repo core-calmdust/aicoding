@@ -1870,6 +1870,9 @@
   // (a frame is drawn only if it did) — for layout changes nobody announces (a class, a transition, a scroll, a late font)
   let checkUntil = 0, wasHidden = false;
   let parked = true;   // the loop has stopped: its first frame again starts the clock afresh (no jump for the time it slept)
+  // draw now, in the caller's own frame (an action game: its state has just been stepped — the loop's own callback of this frame may
+  // have drawn the state before it, a frame late; and not held to the 60 fps cap: a 120 Hz screen gets 120) (2026-11-12, table hockey)
+  function drawNow() { if (!R || document.hidden) return; cancelAnimationFrame(rafId); rafId = 0; lastT = 0; dirty = true; loop(performance.now()); }
   function wake() { if (!rafId && R && !document.hidden && (!blurred || performance.now() < blurBurst)) rafId = requestAnimationFrame(loop); }
   // (quiet — Historia's page over the room on phones — : the page's own class changes, animations and scrolling are not looked at;
   // Historia announces every change of the stage itself — setInset / play / museum kick)
@@ -2352,5 +2355,5 @@
   try { if (sessionStorage.getItem('t3d-debug')) setTimeout(() => R && dbgToggle(true), 500); } catch (e) {}
   setInterval(() => { if (dbgOn && performance.now() - dbgT > 1000) { dbgFps = 0; dbgT = performance.now(); dbgPaint(); } }, 1000);   // (the loop sleeps when nothing moves: keep the numbers fresh)
 
-  window.Table3D = { swap, swapCancel, placeOff: PLACE_OFF, fitRect, modelRect, _texT: texT, _texCache: texCache, _texFile: texFile, decoOn, boSet: on => { BO_OK = !!on; bo.key = ''; kick(400); }, debug: dbgToggle, TABLES, placeMon, setTable, table: () => tableStyle, setBright, bright: () => bright, turn, museum, setShift, quiet, setTimeOfDay, timeOfDayPick: todPick, share, lp, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, tatami: () => tatamiTex(), stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, rvDisc, rvMats, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
+  window.Table3D = { swap, swapCancel, drawNow, placeOff: PLACE_OFF, fitRect, modelRect, _texT: texT, _texCache: texCache, _texFile: texFile, decoOn, boSet: on => { BO_OK = !!on; bo.key = ''; kick(400); }, debug: dbgToggle, TABLES, placeMon, setTable, table: () => tableStyle, setBright, bright: () => bright, turn, museum, setShift, quiet, setTimeOfDay, timeOfDayPick: todPick, share, lp, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, tatami: () => tatamiTex(), stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, rvDisc, rvMats, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
 })();
