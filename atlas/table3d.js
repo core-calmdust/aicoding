@@ -46,10 +46,14 @@
       const c0 = document.createElement('canvas'); c0.width = c0.height = 2;
       t = new (T().Texture)(c0); t.__baked = true; t.needsUpdate = true;
       const img = new Image(); img.decoding = 'async'; texWaitN++;
+      // (2026-11-12) the picture is drawn INTO the first canvas (c0): a board that took texture.image before the picture came
+      // (tafl 11×11: wood('tfw').image under its grid) composited the empty 2×2 stand-in and kept it for good; c0.__bakeP lets
+      // later() wait for it
+      let doneP; c0.__bakeP = new Promise(r => { doneP = r; });
+      const fill = src => { try { c0.width = Math.max(2, src.width > w * 1.2 && w > 8 && h > 8 ? w : src.width); c0.height = Math.max(2, src.width > w * 1.2 && w > 8 && h > 8 ? h : src.height); c0.getContext('2d').drawImage(src, 0, 0, c0.width, c0.height); return c0; } catch (e) { return src; } };
       img.onload = () => { texDone();   // (baked at full size: a phone asking for half the size gets it shrunk, as its drawing would have been)
-        let im = img; if (img.width > w * 1.2 && w > 8 && h > 8) { try { const c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(img, 0, 0, w, h); im = c; } catch (e) {} }
-        t.image = im; t.needsUpdate = true; kickSoon(); };
-      img.onerror = () => { texDone(); t.image = drawTex(key, w, h, draw); t.__baked = false; t.needsUpdate = true; kickSoon(); };
+        t.image = fill(img); t.needsUpdate = true; c0.__bakeDone = true; doneP(); kickSoon(); };
+      img.onerror = () => { texDone(); t.image = fill(drawTex(key, w, h, draw)); t.__baked = false; t.needsUpdate = true; c0.__bakeDone = true; doneP(); kickSoon(); };
       img.src = new URL(texFile(key) + '?v=' + v, TEX_HERE).href;
     } else t = new (T().CanvasTexture)(drawTex(key, w, h, draw));
     t.anisotropy = 4; t.encoding = T().sRGBEncoding;
@@ -111,7 +115,16 @@
     if (after) after(g, c.width, c.height); return c;
   }
   // draw fn once the source canvases are filled (composites of the textures above)
-  const later = (deps, c, fn) => window.AtlasTexGen ? AtlasTexGen.later(deps, c, fn) : (fn(c.getContext('2d'), c.width, c.height), c);
+  const later0 = (deps, c, fn) => window.AtlasTexGen ? AtlasTexGen.later(deps, c, fn) : (fn(c.getContext('2d'), c.width, c.height), c);
+  // a dep that is a baked picture still on its way (canvasTex: its canvas is filled when it comes): wait for it first, then redraw
+  // the composite and upload it again (2026-11-12)
+  const later = (deps, c, fn) => {
+    const ps = deps.filter(d => d && d.__bakeP && !d.__bakeDone).map(d => d.__bakeP);
+    if (!ps.length) return later0(deps, c, fn);
+    texWaitN++;
+    Promise.all(ps).then(() => { later0(deps, c, fn); Object.values(texCache).forEach(t => { if (t && t.image === c) t.needsUpdate = true; }); texDone(); kickSoon(); });
+    return c;
+  };
   // realistic wood: long fibres, growth rings, pores, gentle colour drift
   function wood(key, base, dark, w = 512, h = 512, grain = 1) {
     return canvasTex(key, w, h, (g) => { paintPx(g.canvas, 'wood', { seed: key.length * 31 + key.charCodeAt(0), A: hex(base), B: hex(dark), ringF: 9 * grain }); });
