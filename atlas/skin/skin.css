@@ -751,7 +751,7 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) .modal.ng-fit:not(#_):not(#_) .modal
 /* (2026-11-13) 新しい対局 = the game's settings only (表示 options in the gear): a game opts in with
    <div class="modal" data-ngl-order="fLevel,fLevel2,fColor,fClock"> (shared/nglux.js: that order of the panels) and gets
    this layout — the AI's level as the panel's centrepiece, 手番 as stone tiles, 持ち時間 as tiles, the settings centred in their panels */
-html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order][data-ngt=rules] .ng-col:not(#_):not(:has(.pro-panel:not(.hidden))){justify-content:center!important;gap:34px!important;padding-top:26px!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order][data-ngt=rules] .ng-col:not(#_){justify-content:flex-start!important;gap:34px!important;padding-top:26px!important}   /* (top-aligned, PRO open or not: nothing moves up and down) */
 html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] :is(#fLevel,#fLevel2) .level-wrap{display:flex!important;flex-direction:column;gap:16px}
 html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] :is(#fLevel,#fLevel2) .level-name:not(#_){order:-1;display:block!important;text-align:center;font-size:32px!important;line-height:1.2!important;letter-spacing:.03em;margin:6px 0 0!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] :is(#fLevel,#fLevel2) .level-name small:not(#_){font-size:15px!important;line-height:1.6!important;letter-spacing:.02em;min-height:0!important;margin-top:10px!important;color:#8a7552;-webkit-line-clamp:3;max-width:30em;margin-inline:auto!important}
