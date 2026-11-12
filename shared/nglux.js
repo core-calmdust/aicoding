@@ -35,7 +35,7 @@ ${P} :is(.ng-col,[data-ng=design]) > .field > label:first-child,${P} [data-ng=de
 ${P} :is(.ng-col,[data-ng=design]) > .field > label:first-child::after,${P} [data-ng=design] > label:first-child::after{content:'';flex:1;min-width:12px;height:1px;background:linear-gradient(90deg, color-mix(in srgb, var(--ngl-a) 40%, transparent), transparent)}
 [dir=rtl] ${P} :is(.ng-col,[data-ng=design]) > .field > label:first-child::after,[dir=rtl] ${P} [data-ng=design] > label:first-child::after{background:linear-gradient(270deg, color-mix(in srgb, var(--ngl-a) 40%, transparent), transparent)}
 ${P} .ng-col .level-name{font-family:var(--ngl-serif,inherit);font-size:22px;color:var(--ngl-hi);letter-spacing:.04em;line-height:1.25;height:auto}
-${P} .ng-col .level-name small{font-family:var(--ngl-sans,inherit);letter-spacing:0;font-size:11.5px}
+${P} .ng-col .level-name small{font-family:var(--ngl-sans,inherit);letter-spacing:.02em;font-size:14.5px;color:color-mix(in srgb, var(--text,#eee) 78%, transparent)}   /* (2026-11-13: larger, easier to read) */
 /* the level description on its own fixed two-line row, so the slider never jumps */
 ${P} .level-name{flex-wrap:wrap!important}
 ${P} .level-name small{flex:0 0 100%!important;width:100%;display:block!important;margin:6px 0 0!important;line-height:1.5!important;min-height:3em;display:-webkit-box!important;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;white-space:normal!important}
@@ -54,9 +54,9 @@ ${P} [data-ng=design]:not(.ngt-hide):has(> .dsg-now){display:grid!important;grid
 ${P} [data-ng=design]:has(> .dsg-now) > *{grid-column:1 / -1;min-width:0}
 ${P} [data-ng=design]:has(> .dsg-now) > label:first-child{grid-column:1}
 ${P} [data-ng=design] > .dsg-now{grid-column:2;margin:0 0 10px 10px!important;font-size:12.5px;color:var(--ngl-hi)}
-/* the footer band: 閉じる / 対局開始 share the full width (as shogi) */
-${P}.ngt-pc .ngt-foot .modal-actions{display:flex!important;justify-self:stretch!important;gap:10px!important;justify-content:stretch!important;width:auto!important;max-width:none!important;margin-left:0!important;margin-right:0!important}
-${P}.ngt-pc .ngt-foot .modal-actions > :is(.mbtn,button){flex:1 1 0!important;width:auto!important;max-width:none!important;padding-top:13px!important;padding-bottom:13px!important}
+/* the footer band: 閉じる / 対局開始, 220 px each, centred (as the full version) */
+${P}.ngt-pc .ngt-foot .modal-actions{display:flex!important;justify-self:stretch!important;gap:10px!important;justify-content:center!important;width:auto!important;max-width:none!important;margin-left:0!important;margin-right:0!important}
+${P}.ngt-pc .ngt-foot .modal-actions > :is(.mbtn,button){flex:0 0 220px!important;width:220px!important;max-width:none!important;min-height:50px;padding-top:12px!important;padding-bottom:12px!important;font-size:17px!important}   /* (2026-11-13: the full version's size — 220 × 50, centred) */
 /* the mode row (outside the panels): a little more air */
 ${P} > :is(.ngt-modef,.ng-cols){order:0!important}
 ${P}.ngt-pc[data-ngt=rules] .ngt-modef{margin-bottom:16px!important}
