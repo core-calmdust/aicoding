@@ -1117,3 +1117,5 @@ if (olOn()) {
   setTimeout(() => { dockStart().then(() => { if (signedIn()) syncNow(true); }); }, 800);
 } else dockRender();
 try { renderInfo(); } catch (e) {}
+// (2026-11-13) the chat box's placeholder / Send follow a language change (not only the next message)
+document.addEventListener('change', e => { if (e.target && e.target.id === 'langSel') setTimeout(() => { try { chatRender(); } catch (err) {} }, 0); });
