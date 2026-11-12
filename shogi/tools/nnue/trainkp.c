@@ -12,6 +12,12 @@
    Writes out.bin (NUEK, for the engine) after every epoch, and out.bin.ckpt (weights + Adam state + position) every
    few minutes: the same command continues from the checkpoint (delete it to start over).
 
+   --oscale s: the net is trained so that its output = s x the data's scale (sigmoid(output / s) is fitted). The site's
+     search is tuned to the scale of the site's net, whose output layer was multiplied by 0.805 (MODEL_CARD v6): a net for
+     the site (starting from the site's net or not) is trained with --oscale 0.805. Without it, training starting from the
+     site's net first undoes the 0.805 (the evaluation grows 1.24 times) and the search no longer suits the net.
+   trainkp --scale net data.psv n         the net's scale against the data's scores (the best-fit factor)
+   trainkp --rescale in.bin out.bin f     multiply the output layer by f
    trainkp --check net.bin data.psv n [dump.txt]
      prints the evaluation (side to move) of the first n quiet positions as the engine computes it (integer accumulators),
      and optionally writes the positions as text (board[81] hand[16] side) for kpcheck.py
@@ -41,6 +47,7 @@ static int H = 256, NTH = 4, BS = 16384, KB = 9, FACT = 1;
 static long ROWS;                           /* KB * BASE (+ BASE for the shared copy) */
 static uint8_t KMAP[84];
 static float LAMBDA = 0.75f;
+static float OSCALE = 1.f;                 /* --oscale: the net's output is OSCALE x the data's scale (the site's search is tuned to 0.805) */
 static float *W1, *B1, *W2, *B2;
 static float *mW1, *vW1, *mB1, *vB1, *mW2, *vW2, *mB2, *vB2;
 static float **gW1, **gB1, **gW2, **gB2;
@@ -99,9 +106,9 @@ static void *grad_job(void *arg) {
   for (long k = j->b0; k < j->b0 + j->n; k++) {
     const PSV *r = &D[k]; Pos p;
     if (psv_decode(r, &p)) continue;
-    float o = forward(&p, fu, &nu, ft, &nt, au, at), pr = sigm(o), t = target(r), e = pr - t;
+    float o = forward(&p, fu, &nu, ft, &nt, au, at), pr = sigm(o / OSCALE), t = target(r), e = pr - t;
     loss += e * e;
-    float g = 2 * e * pr * (1 - pr) / BS;
+    float g = 2 * e * pr * (1 - pr) / BS / OSCALE;
     for (int i = 0; i < H; i++) {
       float x = au[i], y = at[i];
       float cx = x < 0 ? 0 : x > 1 ? 1 : x, cy = y < 0 ? 0 : y > 1 ? 1 : y;
@@ -161,7 +168,7 @@ static void *val_job(void *arg) {
   VJob *j = arg; float *au = malloc(H * 4), *at = malloc(H * 4); uint32_t fu[96], ft[96]; int nu, nt;
   for (long k = 0; k < j->n; k++) {
     const PSV *r = &j->v[k]; Pos p; if (psv_decode(r, &p) || psv_in_check(&p)) continue;
-    float pr = sigm(forward(&p, fu, &nu, ft, &nt, au, at)), e = pr - target(r), ee = pr - sigm(r->score / 600.f);
+    float pr = sigm(forward(&p, fu, &nu, ft, &nt, au, at) / OSCALE), e = pr - target(r), ee = pr - sigm(r->score / 600.f);
     j->l += e * e; j->le += ee * ee; j->c++;
   }
   free(au); free(at); return NULL;
@@ -240,13 +247,17 @@ static const PSV *mapf(const char *path, long *n) {
 static int check(int argc, char **argv) {
   if (argc < 5) { fprintf(stderr, "usage: trainkp --check net.bin data.psv n [dump.txt]\n"); return 1; }
   FILE *f = fopen(argv[2], "rb"); if (!f) { perror(argv[2]); return 1; }
-  int32_t hd[4]; if (fread(hd, 4, 4, f) != 4 || hd[0] != MAGIC_K) { fprintf(stderr, "not a NUEK net\n"); return 1; }
-  int h = hd[1], in = hd[2]; KB = hd[3]; if (fread(KMAP, 1, 84, f) != 84) return 1;
+  int32_t hd[4]; if (fread(hd, 4, 3, f) != 3) return 1;
+  if (hd[0] == MAGIC_Q) { KB = 1; memset(KMAP, 0, sizeof KMAP); }   /* the site's net: one bucket */
+  else if (hd[0] != MAGIC_K || fread(hd + 3, 4, 1, f) != 1 || fread(KMAP, 1, 84, f) != 84) { fprintf(stderr, "not a NUEK / NUEQ net\n"); return 1; }
+  else KB = hd[3];
+  int h = hd[1], in = hd[2]; int scale = !strcmp(argv[1], "--scale");
   int16_t *w1 = malloc((size_t)in * h * 2); int32_t *b1 = malloc(h * 4); int16_t *w2 = malloc(h * 4); int32_t b2;
   if (fread(w1, 2, (size_t)in * h, f) != (size_t)in * h || fread(b1, 4, h, f) != (size_t)h || fread(w2, 2, 2 * h, f) != (size_t)(2 * h) || fread(&b2, 4, 1, f) != 1) { fprintf(stderr, "short net\n"); return 1; }
   fclose(f);
   long n; const PSV *d = mapf(argv[3], &n); long want = atol(argv[4]);
-  FILE *dump = argc > 5 ? fopen(argv[5], "w") : NULL;
+  FILE *dump = argc > 5 && !scale ? fopen(argv[5], "w") : NULL;
+  float *ev = scale ? malloc((size_t)(want > 0 ? want : 1) * 4) : NULL, *sc = scale ? malloc((size_t)(want > 0 ? want : 1) * 4) : NULL;
   int16_t *acc = malloc(h * 2 * 2);
   for (long k = 0, shown = 0; k < n && shown < want; k++) {
     Pos p; if (psv_decode(&d[k], &p) || psv_in_check(&p)) continue;
@@ -260,17 +271,47 @@ static int check(int argc, char **argv) {
     long long sum = 0;
     for (int c = 0; c < 2; c++) for (int i = 0; i < h; i++) { int x = acc[c * h + i] < 0 ? 0 : acc[c * h + i] > QA ? QA : acc[c * h + i]; sum += (long long)x * x * w2[c * h + i]; }
     long long v = sum / QA + b2;
+    if (scale) { ev[shown] = (float)((double)v / (QA * QB)); sc[shown] = d[k].score / 600.f; shown++; continue; }
     printf("%.6f\n", (double)v * 600 / (QA * QB));
     if (dump) { for (int s = 0; s < 81; s++) fprintf(dump, "%d ", p.board[s]); for (int i = 0; i < 16; i++) fprintf(dump, "%d ", p.hand[i]); fprintf(dump, "%d\n", p.side); }
     shown++;
   }
   if (dump) fclose(dump);
+  if (scale) {
+    /* the factor s that makes sigmoid(s x net) fit sigmoid(data score / 600) best: s = 1 for a net trained as is on such
+       data, 1 / 0.805 = 1.24 for the site's net (its output layer was multiplied by 0.805 to suit the search) */
+    long m = 0; for (long k = 0; k < n && m < want; k++) { Pos p; if (psv_decode(&d[k], &p) || psv_in_check(&p)) continue; m++; }
+    double best = 1e9, bs = 1, at1 = 0, ma = 0, md = 0;
+    for (int q = 40; q <= 250; q++) {
+      double s = q / 100.0, l = 0; for (long i = 0; i < m; i++) { double e = sigm(s * ev[i]) - sigm(sc[i]); l += e * e; }
+      l /= m ? m : 1; if (q == 100) at1 = l; if (l < best) { best = l; bs = s; }
+    }
+    for (long i = 0; i < m; i++) { ma += fabs(ev[i]) * 600; md += fabs(sc[i]) * 600; }
+    printf("positions %ld  mean |net| %.0f  mean |data score| %.0f  loss as is %.5f  best fit: net x %.2f (loss %.5f)\n", m, ma / (m ? m : 1), md / (m ? m : 1), at1, bs, best);
+    printf("to match a net whose best fit is F (the site's net: measure it the same way), rescale this net by %.2f / F\n", bs);
+  }
+  return 0;
+}
+/* --rescale in.bin out.bin f: multiply the output layer (W2, B2) by f = the evaluation x f */
+static int rescale(int argc, char **argv) {
+  if (argc < 5) { fprintf(stderr, "usage: trainkp --rescale in.bin out.bin factor\n"); return 1; }
+  FILE *f = fopen(argv[2], "rb"); if (!f) { perror(argv[2]); return 1; }
+  fseek(f, 0, SEEK_END); long sz = ftell(f); fseek(f, 0, SEEK_SET);
+  uint8_t *buf = malloc(sz); if (fread(buf, 1, sz, f) != (size_t)sz) return 1; fclose(f);
+  int32_t *hd = (int32_t *)buf; if (sz < 16 || (hd[0] != MAGIC_K && hd[0] != MAGIC_Q)) { fprintf(stderr, "not a NUEK / NUEQ net\n"); return 1; }
+  int h = hd[1]; double fac = atof(argv[4]);
+  int16_t *w2 = (int16_t *)(buf + sz - 4 - 4 * (long)h); int32_t *b2 = (int32_t *)(buf + sz - 4);
+  for (int i = 0; i < 2 * h; i++) { long v = lrint(w2[i] * fac); w2[i] = (int16_t)(v > 32767 ? 32767 : v < -32767 ? -32767 : v); }
+  *b2 = (int32_t)lrint(*b2 * fac);
+  f = fopen(argv[3], "wb"); if (!f) { perror(argv[3]); return 1; } fwrite(buf, 1, sz, f); fclose(f);
+  printf("%s = %s x %g\n", argv[3], argv[2], fac);
   return 0;
 }
 
 int main(int argc, char **argv) {
-  if (argc > 1 && !strcmp(argv[1], "--check")) return check(argc, argv);
-  if (argc < 3) { fprintf(stderr, "usage: trainkp train.bin out.bin [--kb k9] [--hidden 256] [--epochs 8] [--lr 0.001] [--lambda 0.75] [--batch 16384] [--threads N] [--val val.bin] [--init nnue.bin] [--max N] [--save-min 10]\n       trainkp --check net.bin data.psv n [dump.txt]\n"); return 1; }
+  if (argc > 1 && (!strcmp(argv[1], "--check") || !strcmp(argv[1], "--scale"))) return check(argc, argv);
+  if (argc > 1 && !strcmp(argv[1], "--rescale")) return rescale(argc, argv);
+  if (argc < 3) { fprintf(stderr, "usage: trainkp train.bin out.bin [--kb k9] [--hidden 256] [--epochs 8] [--lr 0.001] [--lambda 0.75] [--oscale 1] [--batch 16384] [--threads N] [--val val.bin] [--init nnue.bin] [--max N] [--save-min 10]\n       trainkp --check net.bin data.psv n [dump.txt]\n"); return 1; }
   const char *data = argv[1], *outp = argv[2], *valp = NULL, *initp = NULL, *kb = "k9";
   int epochs = 8; float lr0 = 0.001f; long maxn = 0; double savemin = 10;
   long nc = sysconf(_SC_NPROCESSORS_ONLN); NTH = nc > 0 ? (int)nc : 4;
@@ -280,6 +321,7 @@ int main(int argc, char **argv) {
     else if (!strcmp(argv[a], "--epochs")) epochs = atoi(argv[++a]);
     else if (!strcmp(argv[a], "--lr")) lr0 = atof(argv[++a]);
     else if (!strcmp(argv[a], "--lambda")) LAMBDA = atof(argv[++a]);
+    else if (!strcmp(argv[a], "--oscale")) OSCALE = atof(argv[++a]);
     else if (!strcmp(argv[a], "--batch")) BS = atoi(argv[++a]);
     else if (!strcmp(argv[a], "--threads")) NTH = atoi(argv[++a]);
     else if (!strcmp(argv[a], "--val")) valp = argv[++a];
@@ -294,8 +336,8 @@ int main(int argc, char **argv) {
   const PSV *V; long NV;
   if (valp) { V = mapf(valp, &NV); if (NV > 1000000) NV = 1000000; NT = N; }
   else { NV = N / 100 < 1000000 ? N / 100 : 1000000; NT = N - NV; V = D + NT; }
-  fprintf(stderr, "train %ld  valid %ld  kb %s (%d buckets)  H %d  epochs %d  lr %g  lambda %g  batch %d  threads %d  (W1 %.0f MB)\n",
-          NT, NV, kb, KB, H, epochs, lr0, LAMBDA, BS, NTH, ROWS * H * 4 / 1e6);
+  fprintf(stderr, "train %ld  valid %ld  kb %s (%d buckets)  H %d  epochs %d  lr %g  lambda %g  oscale %g  batch %d  threads %d  (W1 %.0f MB)\n",
+          NT, NV, kb, KB, H, epochs, lr0, LAMBDA, OSCALE, BS, NTH, ROWS * H * 4 / 1e6);
   size_t n1 = (size_t)ROWS * H;
   W1 = fz(n1); B1 = fz(H); W2 = fz(2 * H); B2 = fz(1);
   mW1 = fz(n1); vW1 = fz(n1); mB1 = fz(H); vB1 = fz(H); mW2 = fz(2 * H); vW2 = fz(2 * H); mB2 = fz(1); vB2 = fz(1);
@@ -314,12 +356,20 @@ int main(int argc, char **argv) {
   double vl, vle;
   if (ep0 == 0 && bres == 0) { validate(V, NV, &vl, &vle); fprintf(stderr, "epoch 0  valid %.5f (eval only %.5f)\n", vl, vle); }
   long nb = NT / BS; double lastSave = now();
+  long *order = malloc((size_t)(nb ? nb : 1) * sizeof(long));
   for (int ep = ep0; ep < epochs; ep++) {
     float lr = lr0 * (ep >= epochs * 0.75 ? 0.1f : ep >= epochs * 0.5 ? 0.3f : 1.f);
-    if (start < 0) start = nb ? (long)(xr() % nb) : 0;   /* the file is shuffled: read it in order from a random batch */
+    if (start < 0) start = (long)(xr() >> 2);            /* this epoch's seed (kept in the checkpoint) */
+    {                                                    /* blocks of 64 batches (about 1M positions) in a new random order every epoch */
+      long nblk = (nb + 63) / 64, *bo = malloc((size_t)(nblk ? nblk : 1) * sizeof(long)); unsigned long long keep = rs; rs = (unsigned long long)start | 1;
+      for (long i = 0; i < nblk; i++) bo[i] = i;
+      for (long i = nblk - 1; i > 0; i--) { long j = (long)(xr() % (unsigned long long)(i + 1)), t = bo[i]; bo[i] = bo[j]; bo[j] = t; }
+      long k = 0; for (long i = 0; i < nblk; i++) for (long q = bo[i] * 64; q < bo[i] * 64 + 64 && q < nb; q++) order[k++] = q;
+      rs = keep; free(bo);
+    }
     double t0 = now(), loss = 0; long done = 0;
     for (long b = bres; b < nb; b++) {
-      long b0 = ((start + b) % nb) * BS;
+      long b0 = order[b] * BS;
       step(b0, ++it, lr);
       for (int t = 0; t < NTH; t++) loss += tLoss[t];
       done += BS;
@@ -330,6 +380,7 @@ int main(int argc, char **argv) {
     validate(V, NV, &vl, &vle);
     fprintf(stderr, "\repoch %d  train %.5f  valid %.5f (eval only %.5f)  lr %g  %.0fs            \n", ep + 1, loss / (done ? done : 1), vl, vle, lr, now() - t0);
     save(outp);
+    { char en[1200]; snprintf(en, sizeof en, "%s.ep%d", outp, ep + 1); save(en); }   /* every epoch's net is kept: match the one with the best valid */
     save_ckpt(ck, ep + 1, 0, it, -1); lastSave = now();
   }
   fprintf(stderr, "saved %s\n", outp);
