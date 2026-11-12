@@ -531,5 +531,5 @@ function showSeed(g) {
   el.hidden = !on; if (!on) return;
   const t = tx('seedTag') + ' ' + g.seed; if (el.textContent !== t) el.textContent = t;
 }
-window.Variants = { dlgKey: () => { const v = gameOf(dlg.variant, dlg.heianB); return START[v] ? v : ''; }, seed: () => lastSeed, showSeed, START, MODES, WR, pos, startOf, eng, vName, dims, sfenVariant, newWorker, rvNote, rvFeat, forGame, geom, hasamiName, inZone: MiniShogi.inZone, zoneOf, checkEnd, levelOpts, lvName, worker, wk, kill, dlgOpen, dlgUpdate, dlgRead, openRules, relabel };
+window.Variants = { label: () => tx('label'), gName: i => i ? tx(['', 'gMicro', 'gIshu'][i]) : (GSTD[lang()] || GSTD.en), dlgKey: () => { const v = gameOf(dlg.variant, dlg.heianB); return START[v] ? v : ''; }, seed: () => lastSeed, showSeed, START, MODES, WR, pos, startOf, eng, vName, dims, sfenVariant, newWorker, rvNote, rvFeat, forGame, geom, hasamiName, inZone: MiniShogi.inZone, zoneOf, checkEnd, levelOpts, lvName, worker, wk, kill, dlgOpen, dlgUpdate, dlgRead, openRules, relabel };
 })();
