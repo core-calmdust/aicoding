@@ -111,7 +111,7 @@
   X.placeUi = (key, lang) => pick(PLACES.ui[key], lang);
   // the thumbnails (small real renders, atlas/img/place-k.webp), next to this script whichever page loads it
   const ME = (document.currentScript && document.currentScript.src) || location.href;
-  X.placeThumb = k => new URL('img/place-' + k + '.webp?v=' + (k === 8 ? 5 : k === 12 ? 6 : k >= 2 ? 3 : 1), ME).href;   // (8: the game centre, 2026-11-09)
+  X.placeThumb = k => new URL('img/place-' + k + '.webp?v=' + (k === 8 ? 5 : k === 12 ? 7 : k >= 2 ? 3 : 1), ME).href;   // (8: the game centre, 2026-11-09)
 
   const lin = (c, y0, y1, stops) => { const g = c.createLinearGradient(0, y0, 0, y1); stops.forEach(([k, col]) => g.addColorStop(k, col)); return g; };
   const rad = (c, x, y, r, stops) => { const g = c.createRadialGradient(x, y, 0, x, y, r); stops.forEach(([k, col]) => g.addColorStop(k, col)); return g; };
@@ -2885,8 +2885,8 @@
     // turned a quarter between neighbours
     // (2026-11-12, the user: finer) drawn here at 512 × 1024 per mat: the rush (igusa) across the mat in rows of ~1.2 cm, each row a ribbed
     // band with its strands' own tones, a woven black heri with its stitched edge along the long sides
-    { const tt = canvasTex('tbl12-tatami6', 512, 1024, (c, W, H) => {
-        const R = rng(31), hw = 22, row = 8;
+    { const tt = canvasTex('tbl12-tatami7', 512, 1024, (c, W, H) => {
+        const R = rng(31), hw = 0, row = 8;   // (the heri are strips of their own now, below)
         c.fillStyle = '#c6bd8a'; c.fillRect(0, 0, W, H);
         // (2026-11-12, the user: not a grid — the stripes of the rush rows are the pattern, with fine woven lines between them)
         // (2026-11-12, the user's photos: the rows run along the mat, parallel to its heri)
@@ -2899,19 +2899,30 @@
             const x0 = x + R() * 1.5, x1 = x + w - R() * 1.5, dy = (R() - .5) * 1.2;
             c.strokeStyle = col; c.lineWidth = .6; c.beginPath(); c.moveTo(x0, y); c.lineTo(x1, y + dy); c.stroke(); }
           c.fillStyle = 'rgba(70,58,24,.22)'; c.fillRect(x + w - 1, 0, 1, H); }   // the groove where the warp binds the rows
-        [0, W - hw].forEach(x0 => { c.fillStyle = '#1c1a17'; c.fillRect(x0, 0, hw, H);   // the heri: a black cloth, finely woven, its fold and stitches
-          for (let y = 0; y < H; y += 3) { c.fillStyle = `rgba(255,255,255,${.03 + (y % 6 ? .02 : .05)})`; c.fillRect(x0, y, hw, 1); }
-          for (let x = x0; x < x0 + hw; x += 2) { c.fillStyle = 'rgba(0,0,0,.18)'; c.fillRect(x, 0, 1, H); }
-          const ex = x0 ? x0 + 2 : hw - 4; c.fillStyle = 'rgba(255,255,255,.14)'; c.fillRect(ex, 0, 2, H);
-          const sx = x0 ? x0 + 6 : hw - 8; for (let y = 2; y < H; y += 9) { c.fillStyle = 'rgba(200,190,160,.18)'; c.fillRect(sx, y, 1, 4); }
-          const ox = x0 ? W - 2 : 0; c.fillStyle = 'rgba(0,0,0,.7)'; c.fillRect(ox, 0, 2, H); c.fillStyle = 'rgba(255,255,255,.16)'; c.fillRect(x0 ? W - 4 : 2, 0, 2, H); });   // (the outer seam: two heri side by side read as two, 2026-11-12)
-        c.fillStyle = 'rgba(60,50,20,.28)'; c.fillRect(hw - 1, 0, 1, H); c.fillRect(W - hw, 0, 1, H);
       });
       tt.anisotropy = 8;
       const tm = M({ map: tt, roughness: .78, bumpScale: .007, sheen: new TT.Color(0x4a4a2a) }), geo = new TT.PlaneGeometry(20, 40);
+      const mats = [];
       for (let i = -3; i <= 2; i++) for (let j = -2; j <= 4; j++) { const cx = i * 40 + 10, cz = Z0 + j * 40, turn = (i + j) % 2 !== 0;
         [-10, 10].forEach(d => { const m = new TT.Mesh(geo, tm); m.rotation.x = -Math.PI / 2; m.rotation.z = turn ? Math.PI / 2 : 0;
-          m.position.set(cx + (turn ? 0 : d), FL, cz + (turn ? d : 0)); m.receiveShadow = true; g.add(m); }); } }
+          m.position.set(cx + (turn ? 0 : d), FL, cz + (turn ? d : 0)); m.receiveShadow = true; g.add(m); mats.push({ x0: cx + (turn ? -20 : d - 10), x1: cx + (turn ? 20 : d + 10), z0: cz + (turn ? d - 10 : -20), z1: cz + (turn ? d + 10 : 20), v: !turn }); }); }
+      // the heri (2026-11-12, the user: the dark lines straight across the room): a strip along each mat's long sides — where two long
+      // sides meet, each mat's own heri inside it (the pair centred on the seam); where a long side meets a neighbour's short end, its one
+      // heri centred on the seam — so a line keeps its place from one row of mats to the next
+      const HW = .86, ht = canvasTex('tbl12-heri', 44, 1024, (c, W, H) => {
+        c.fillStyle = '#1c1a17'; c.fillRect(0, 0, W, H);
+        for (let y = 0; y < H; y += 3) { c.fillStyle = `rgba(255,255,255,${.03 + (y % 6 ? .02 : .05)})`; c.fillRect(0, y, W, 1); }
+        for (let x = 0; x < W; x += 2) { c.fillStyle = 'rgba(0,0,0,.18)'; c.fillRect(x, 0, 1, H); }
+        c.fillStyle = 'rgba(255,255,255,.14)'; c.fillRect(W - 6, 0, 2, H); for (let y = 2; y < H; y += 9) { c.fillStyle = 'rgba(200,190,160,.18)'; c.fillRect(W - 12, y, 1, 4); }   // the fold and the stitches (mat side)
+        c.fillStyle = 'rgba(0,0,0,.7)'; c.fillRect(0, 0, 2, H); c.fillStyle = 'rgba(255,255,255,.16)'; c.fillRect(2, 0, 2, H);   // the outer seam
+      }), hm = M({ map: ht, roughness: .7 }), hg = new TT.PlaneGeometry(HW, 40);
+      mats.forEach(m => [-1, 1].forEach(sd => {
+        const e = m.v ? (sd < 0 ? m.x0 : m.x1) : (sd < 0 ? m.z0 : m.z1);
+        const pair = mats.some(o => o.v === m.v && (m.v ? o.z0 === m.z0 && (sd < 0 ? o.x1 === e : o.x0 === e) : o.x0 === m.x0 && (sd < 0 ? o.z1 === e : o.z0 === e)));
+        const c = pair ? e - sd * HW / 2 : e, h = new TT.Mesh(hg, hm); h.rotation.x = -Math.PI / 2;
+        if (m.v) { h.rotation.z = sd > 0 ? Math.PI : 0; h.position.set(c, FL + .012, (m.z0 + m.z1) / 2); }
+        else { h.rotation.z = sd > 0 ? -Math.PI / 2 : Math.PI / 2; h.position.set((m.x0 + m.x1) / 2, FL + .012 + (pair ? 0 : .002), c); }
+        h.receiveShadow = true; g.add(h); })); }
     // the walls and the ceiling (painted, their own light)
     const plaster = (c, x0, x1, y0, y1, col) => { c.fillStyle = col; c.fillRect(x0, y0, x1 - x0, y1 - y0); const R = rng((x0 * 7 + y0) | 0); for (let i = 0; i < (x1 - x0) * (y1 - y0) / 6; i++) { c.fillStyle = `rgba(${R() > .5 ? '255,255,250' : '90,80,60'},${.025 + R() * .03})`; ell(c, x0 + R() * (x1 - x0), y0 + R() * (y1 - y0), .4 + R() * 1.4, .4 + R() * 1.4); } };
     const hinoki = '#d9bc8c', hinokiD = '#b8956a', paper = T === 'morning' ? '#f2f3ee' : day ? '#fbf8ee' : ev ? '#ffc07a' : '#9a9282';
