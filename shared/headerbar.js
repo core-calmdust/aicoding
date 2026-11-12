@@ -1096,7 +1096,8 @@ const CSS_SPLIT = `.side-in.a-split{position:relative}
 .side-in:hover .a-split-h::after{opacity:.8}
 .a-split-h:hover::after,.a-split-h.on::after{opacity:1;background:#e09a00}
 .side-in.a-split > #coachCard.ck-off:not(.hidden){flex:1 1 0!important;min-height:90px!important;overflow-y:auto}
-.side-in.a-split:has(> #coachCard.ck-off:not(.hidden)) > #evalCard .graph{height:40px!important}`;
+.side-in.a-split:has(> #coachCard.ck-off:not(.hidden)) > #evalCard .graph{height:40px!important}
+#dock .dk-tc{display:none!important}`;   // (2026-11-12: the time controls are chosen in the online dialog — レート戦を探す / 部屋を作る — not in the dock)
 function sideSplitInit() {
   /* ---------- 形勢 / コーチ / 棋譜: drag the gaps between the cards to share the column's height (2026-11-12) ----------
      One setting for every game with this column, in the 2D pages and the full version alike (localStorage atlas-side-split: e = px added to the 形勢 graph, k = the 棋譜
