@@ -661,6 +661,26 @@ html.dock-fit.dock-rvb:not(#_), html.dock-fit.dock-rvb:not(#_) body{--rvbh:clamp
     setTimeout(() => { if (my !== gen || !isOpen()) return; const [t2, b2] = region();
       if (rg && (Math.abs(b2 - rg[1]) > 2 || Math.abs(t2 - rg[0]) > 2)) settle(); else moveTo(delta()); }, 300);
   };
+  // Safari (2026-11-12): the panel's height transition (laid out anew every frame) moved in jerks — there the new height is set at
+  // once and the dock is slid by a translate (compositor only) from where it was; closing keeps the old height until it has slid
+  // down. (registered before the observer below: the dock's own animation exists when settle measures it)
+  { const panel = dock.querySelector('.dock-panel'), UA = navigator.userAgent || '';
+    const safari = /AppleWebKit/.test(UA) && !/Chrome|Chromium|CriOS|FxiOS|EdgiOS|Android/.test(UA);
+    if (panel && safari && dock.animate) {
+      panel.style.setProperty('transition', 'none', 'important');
+      let h0 = panel.getBoundingClientRect().height, o0 = document.body.classList.contains('dock-open'), anim = null;
+      new MutationObserver(() => {
+        const o = document.body.classList.contains('dock-open'); if (o === o0) return; o0 = o;
+        if (anim) { try { anim.cancel(); } catch (e) {} anim = null; panel.style.removeProperty('height'); }
+        const h1 = panel.getBoundingClientRect().height, d = h1 - h0;
+        if (Math.abs(d) > 2 && getComputedStyle(dock).position === 'fixed') {
+          if (d > 0) anim = dock.animate([{ translate: `0 ${d}px` }, { translate: '0 0' }], { duration: 250, easing: 'ease' });
+          else { panel.style.setProperty('height', h0 + 'px', 'important'); anim = dock.animate([{ translate: '0 0' }, { translate: `0 ${-d}px` }], { duration: 250, easing: 'ease', fill: 'forwards' });
+            const a = anim; a.finished.then(() => { if (anim !== a) return; panel.style.removeProperty('height'); try { a.cancel(); } catch (e) {} anim = null; }, () => {}); }
+        }
+        h0 = h1;
+      }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    } }
   let wasOpen = isOpen(), wasBox = boxOn();
   // the dock opened / closed, or (while it is open) the review box came or went: settle again
   const mo = () => { if (sync) return; const o = isOpen(), b = o && boxOn(); if (o !== wasOpen) { wasOpen = o; wasBox = b; settle(); } else if (o && b !== wasBox) { wasBox = b; clearTimeout(rt); rt = setTimeout(() => { if (isOpen()) settle(); }, 150); } };
