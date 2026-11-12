@@ -90,6 +90,25 @@ node book-match.js book-v4.bin ../book.bin 200 bm-v4-lv23.jsonl 23 --threads 12 
 node book-match.js book-v4.bin ../book.bin 100 bm-v4-lv26.jsonl 26 --threads 12   # Lv.26（深さ25）で 200局（約1〜2時間、余裕があれば）
 ```
 
+### 先後の偏りの修正（2026-11-12）
+`build` は既定で「手番の補正」（`--tempo-mode frontier`）をかけます（読み直しは不要、数秒。理由と測定：MODEL_CARD.md「先後の偏り」）。
+最初の行に `手番の補正 T（石、読みの深さごと）{"20":0.85,"24":…}` と出ます。v4 の作業フォルダもそのまま `build` し直すだけです。
+
+```sh
+cd reversi/tools
+git pull
+node book-gen.js build --dir book-work-v4 --book book-v4.bin                        # v4（補正あり）
+node book-gen.js build --tempo 0 --book book-v3-raw.bin                             # 比較用：補正なしの v3（以前の book.bin と同じ）
+# 1) 先後の釣り合い：同じ定石どうし（黒番・白番の勝率がそれぞれ 50% 前後になるか）
+node book-match.js ../book.bin ../book.bin 200 self-v3-lv20.jsonl 20 --threads 12    # 補正済み v3（今の book.bin）
+node book-match.js book-v4.bin book-v4.bin 200 self-v4-lv20.jsonl 20 --threads 12
+node book-match.js book-v4.bin book-v4.bin 200 self-v4-lv23.jsonl 23 --threads 12
+# 2) v4 と v3（どちらも補正済み）
+node book-match.js book-v4.bin ../book.bin 200 bm-v4-lv20.jsonl 20 --threads 12
+node book-match.js book-v4.bin ../book.bin 200 bm-v4-lv23.jsonl 23 --threads 12
+```
+- 補正ありと補正なしの直接対決（`book-match.js ../book.bin book-v3-raw.bin …`）は、同じ木から作った定石どうしで補正なしの白が強く出るので強さの比較には使いません（MODEL_CARD.md）。強さは Egaroucid との対局（黒番・白番を分けて）で確かめてください。
+
 - `book-match.js` は同じエンジン・同じレベルで、定石だけ A（v4）と B（v3）にして先後入れ替えで対局します。Lv.17〜27 は深さで決まるので、Mac の速さに左右されません。
   結果は「全体」「A が黒」「A が白」の勝率・Elo・平均石差と、定石を抜けた手数。止めても同じコマンドで続きから。
 - `build` の表示の「gzip ◯ KB」と「◯ KB」がページで読み込む大きさの目安です。v4 は約 7〜9万局面・600〜800 KB（gzip 450〜550 KB）の見込み
@@ -133,7 +152,7 @@ AI は最善から 0.8 石以内の手から選ぶ（Lv.15〜28・PRO の定石�
 | 版 | 日付 | 環境 | 設定 | 局面数 | 読みの時間 | book.bin |
 |---|---|---|---|---|---|---|
 | v2 | 2026-11-08 | 作業環境（2コア共用） | `--depth 16 --max-ply 22 --cap 200 --err 3 --window 2.5 --keep 3`（旧 book.json の10手目までを seed） | 3,041 | 約1時間 | 23 KB |
-| **v3** | 2026-11-08 | Mac（14コア） | `--depth 20 --max-ply 26 --cap 3000 --err 4 --window 3 --keep 3 --exact 0` | 44,343（14〜26手目は各3,000） | 43.9 時間（スレッド合計） | 340 KB（gzip 244 KB）・101,395 手、`build --out-window 3` |
+| **v3** | 2026-11-08 | Mac（14コア） | `--depth 20 --max-ply 26 --cap 3000 --err 4 --window 3 --keep 3 --exact 0` | 44,343（14〜26手目は各3,000） | 43.9 時間（スレッド合計） | 340 KB（gzip 244 KB）・101,395 手、`build --out-window 3`。2026-11-12 に手番の補正で値を付け直し：348 KB（gzip 248 KB）・103,852 手（`book.bin?v=3`） |
 
 - v3 は `book-work/` の `nodes.jsonl.gz`（1.4MB）と `config.json` から、作業環境の `node book-gen.js build` でも Mac と**同じバイト列**の book.bin になることを確認済み（v4 の book-gen.js でも同じ）。
 - `--out-window` を狭めた場合：2 石で 284 KB（gzip 200 KB）、1.5 石で 262 KB（gzip 181 KB）。局面数は同じで、AI が選ぶ手（最善から 0.8 石以内）も同じ。分析で「定石にない手は最善 −3 石以下」と出せるよう、3 石のままにしました。

@@ -20,7 +20,7 @@
       const meta = await fetch(BASE + 'weights.json').then(r => r.json()).catch(() => ({ nphase: 12 }));
       weights = { buffer: buf, nphase: meta.nphase };
     } catch (e) { weights = null; }
-    book = await fetch(BASE + 'book.bin?v=2').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null);   // (the opening book, decoded in each worker: engine.js decodeBook)
+    book = await fetch(BASE + 'book.bin?v=3').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null);   // (the opening book, decoded in each worker: engine.js decodeBook)
   })());
 
   /* ---------- sounds (respect the portal's sound switch): a plastic disc clacking onto the board, light ticks as discs turn ---------- */
