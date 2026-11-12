@@ -93,21 +93,22 @@
   T3.show('shogi', board, { still: true });
   skin.alignTo(FH, Y);
   // 5五将棋 (shogi/variants/): the page switches its board to 5×5 → a 5×5 kaya board, the camera fitted to it again
-  let boardN = 9, cropK = '', variantN = 9, extW = 0, curCrop = null;
+  let boardN = 9, boardH = 9, cropK = '', variantN = 9, variantH = 9, extW = 0, curCrop = null;   // (W files × H ranks: every variant's board, 2026-11-12)
   // crop {n, c0, r0}: 詰将棋's close-up (shogi/index.html tzStyle) — an n×n kaya board cut from the whole one
   // ext: the PC layout up to 3:2 (STK) — the 3D board made deeper at the top and the bottom by the komadai bars' height, so the bars
   // lie on the board's own wood (one block, no joint to see — 2026-11-11)
   const curLook = () => T3.BOARDS && T3.BOARDS.shogi ? T3.BOARDS.shogi.get() : 'kaya';   // the six 3D boards (2026-11-11)
-  function setBoard(n, crop, ext = extW) {
+  function setBoard(n, crop, ext = extW, h = crop ? n : variantH) {
+    if (crop) h = n;
     const ck = (crop ? crop.n + ':' + crop.c0 + ':' + crop.r0 : '') + '|' + ext + '|' + curLook();
-    if (n === boardN && ck === cropK) return; boardN = n; cropK = ck; curCrop = crop || null; extW = ext;
-    board = T3.MODELS.shogi(true, crop ? { n: crop.n, crop, ext } : { n, ext }); FH = board.userData.S; Y = board.userData.top; OUT = board.userData.outer;
+    if (n === boardN && h === boardH && ck === cropK) return; boardN = n; boardH = h; cropK = ck; curCrop = crop || null; extW = ext;
+    board = T3.MODELS.shogi(true, crop ? { n: crop.n, crop, ext } : n === 9 && h === 9 ? { n, ext } : n === 5 && h === 5 ? { n, ext } : { w: n, h, ext }); FH = board.userData.S; Y = board.userData.top; OUT = board.userData.outer;
     T3.show('shogi', board, { still: true }); skin.alignTo(FH, Y);
     try { look(); } catch (e) {}
     if (T3.kick) T3.kick(600);
   }
-  document.addEventListener('shogi-geom', e => { try { variantN = e.detail && e.detail.n === 5 ? 5 : 9; setBoard(variantN); setTimeout(syncExt, 120); } catch (x) { console.warn(x); } });
-  document.addEventListener('shogi-crop', e => { try { const c = e.detail; if (c) setBoard(c.n, c); else setBoard(variantN); setTimeout(syncExt, 120); } catch (x) { console.warn(x); } });
+  document.addEventListener('shogi-geom', e => { try { const d = e.detail || {}; variantN = d.w || d.n || 9; variantH = d.h || variantN; setBoard(variantN, null, extW, variantH); setTimeout(syncExt, 120); } catch (x) { console.warn(x); } });
+  document.addEventListener('shogi-crop', e => { try { const c = e.detail; if (c) setBoard(c.n, c); else setBoard(variantN, null, extW, variantH); setTimeout(syncExt, 120); } catch (x) { console.warn(x); } });
   // the depth the bars need, in board units (rounded: the model is not rebuilt for a fraction of a px); 0 = the board as it is
   function wantExt() {
     if (!STK.matches || !is3()) return 0;
@@ -118,7 +119,7 @@
   function syncExt() { try { const e = wantExt(); if (e !== extW) setBoard(boardN, curCrop, e); } catch (x) { console.warn(x); } }
   STK.addEventListener ? STK.addEventListener('change', () => setTimeout(syncExt, 60)) : STK.addListener(() => setTimeout(syncExt, 60));
   addEventListener('resize', () => setTimeout(syncExt, 200)); [500, 1500, 3500].forEach(ms => setTimeout(syncExt, ms));
-  { const b0 = document.getElementById('board'); if (b0 && b0.classList.contains('v5')) setBoard(variantN = 5); if (window.__tzCrop) setBoard(window.__tzCrop.n, window.__tzCrop); }
+  { const b0 = document.getElementById('board'); if (b0 && b0.classList.contains('v5')) { variantH = 5; setBoard(variantN = 5); } else if (b0 && b0.classList.contains('vg')) { const cs = getComputedStyle(b0), w = +cs.getPropertyValue('--vw') || 9, h = +cs.getPropertyValue('--vhh') || w; variantH = h; setBoard(variantN = w, null, extW, h); } if (window.__tzCrop) setBoard(window.__tzCrop.n, window.__tzCrop); }
 
   /* ---------- komadai: a light kaya wood-grain texture (procedural, drawn once; skin.css uses --kdwood / --kdwoodh) ---------- */
   try {
