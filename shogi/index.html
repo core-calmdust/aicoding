@@ -2444,6 +2444,13 @@ function renderBoard(anim) {
   if (lesson && lesson.ramp) rampFx();
   tzSync();
 }
+// the name on the stand: the whole name (an online player's name and rating), the type made smaller to fit instead of "…" (2026-11-12)
+function hnFit(n) {
+  const go = () => { if (!n.isConnected) return; n.style.fontSize = ''; const w = n.clientWidth; if (!w || n.scrollWidth <= w + 1) return;
+    const f = parseFloat(getComputedStyle(n).fontSize) || 12; n.style.fontSize = Math.max(f * .5, f * w / n.scrollWidth * .97).toFixed(2) + 'px'; };
+  requestAnimationFrame(go); setTimeout(go, 300);
+}
+addEventListener('resize', () => document.querySelectorAll('.hand .hname').forEach(hnFit));
 function renderHands() {
   const bottomCol = flip ? 1 : 0;
   for (const [el, col] of [[$('#handBottom'), bottomCol], [$('#handTop'), bottomCol ^ 1]]) {
@@ -2453,7 +2460,7 @@ function renderHands() {
     nm.innerHTML = `<span class="hn-m">${col ? '☖' : '☗'}</span><span class="hn-s"></span><span class="hn-n"></span>`;
     nm.querySelector('.hn-s').textContent = cname(col); nm.querySelector('.hn-n').textContent = playerName(col);
     el.classList.toggle('turn', !!game && !game.over && P.side === col);
-    el.appendChild(nm);
+    el.appendChild(nm); hnFit(nm);
     for (const { tp, n } of (P.handList ? P.handList(col) : [HI, KA, KI, GI, KE, KY, FU].map(tp => ({ tp, n: P.hand[col * 8 + tp] })))) {   // (マイクロ将棋: both faces)
       if (!n) continue;
       const slot = document.createElement('div'); slot.className = 'hslot'; slot.dataset.tp = tp; slot.dataset.col = col;
