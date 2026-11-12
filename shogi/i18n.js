@@ -180,3 +180,15 @@ for (const l in I18N) { const d = I18N[l], x = X[l]; if (!x || !d.lv || !d.lvd |
   for (const l in I18N) I18N[l]['ol.toLobby'] = L[l] || L.en;
 })();
 // <<< 2026-11-12 online lobby
+// >>> 2026-11-12 online dialog: the two panels
+(function () {
+  const K = {
+    'ol.paneRated': { ja: 'レート戦', en: 'Rated game', zh: '等级分对局', ko: '레이팅전', es: 'Partida puntuada', fr: 'Partie classée', pt: 'Partida ranqueada', de: 'Gewertete Partie', hi: 'रेटेड खेल', ar: 'مباراة مصنّفة', ru: 'Рейтинговая партия', 'zh-TW': '積分對局', id: 'Permainan berperingkat', tr: 'Puanlı oyun' },
+    'ol.paneRatedSub': { ja: '近いレートの相手と自動で対局', en: 'Matched automatically with a player near your rating', zh: '自动匹配等级分相近的对手', ko: '비슷한 레이팅의 상대와 자동 매칭', es: 'Emparejamiento automático con un rival de nivel parecido', fr: 'Appariement automatique avec un joueur de niveau proche', pt: 'Pareamento automático com alguém de rating próximo', de: 'Automatisch gegen einen Gegner mit ähnlicher Wertung', hi: 'मिलती-जुलती रेटिंग वाले खिलाड़ी से अपने-आप मुकाबला', ar: 'مطابقة تلقائية مع لاعب قريب من تصنيفك', ru: 'Автоподбор соперника близкого рейтинга', 'zh-TW': '自動配對積分相近的對手', id: 'Dipasangkan otomatis dengan pemain berperingkat mirip', tr: 'Yakın puanlı bir rakiple otomatik eşleşme' },
+    'ol.paneRoom': { ja: '部屋で対戦', en: 'Play in a room', zh: '房间对局', ko: '방에서 대국', es: 'Jugar en una sala', fr: 'Jouer dans un salon', pt: 'Jogar em uma sala', de: 'In einem Raum spielen', hi: 'कमरे में खेलें', ar: 'اللعب في غرفة', ru: 'Игра в комнате', 'zh-TW': '房間對局', id: 'Main di ruang', tr: 'Odada oyna' },
+    'ol.paneRoomSub': { ja: '友達と・レート変動なし', en: 'With friends · no rating change', zh: '和朋友 · 不计等级分', ko: '친구와 · 레이팅 변동 없음', es: 'Con amigos · sin cambio de puntuación', fr: 'Entre amis · sans effet sur le classement', pt: 'Com amigos · sem mudar o rating', de: 'Mit Freunden · ohne Wertung', hi: 'दोस्तों के साथ · रेटिंग में बदलाव नहीं', ar: 'مع الأصدقاء · دون تغيير التصنيف', ru: 'С друзьями · без изменения рейтинга', 'zh-TW': '和朋友 · 不計積分', id: 'Dengan teman · peringkat tetap', tr: 'Arkadaşlarla · puan değişmez' },
+    'ol.rulesMore': { ja: '持ち時間とレートのしくみ', en: 'Time controls and rating', zh: '用时与等级分说明', ko: '시간 규칙과 레이팅', es: 'Tiempo y puntuación', fr: 'Cadences et classement', pt: 'Tempo e rating', de: 'Bedenkzeit und Wertung', hi: 'समय नियम और रेटिंग', ar: 'الوقت والتصنيف', ru: 'Контроль времени и рейтинг', 'zh-TW': '用時與積分說明', id: 'Waktu dan peringkat', tr: 'Süre ve puan' },
+  };
+  for (const l in I18N) for (const k in K) I18N[l][k] = K[k][l] || K[k].en;
+})();
+// <<< 2026-11-12 online dialog
