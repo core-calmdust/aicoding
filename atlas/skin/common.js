@@ -734,6 +734,11 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
     return { T3, ready, alignTo, view };
   }
   /* ---------- 場所 (the table design, shared with the portal) and 明るさ: the first row of the new-game dialog's デザイン tab ---------- */
+  // 時間帯 (the room's time of day: 自動 = the clock), beside 明るさ in the デザイン tab (2026-11-13; the same as the portal's board view)
+  const TODK = ['auto', 'morning', 'day', 'evening', 'night'];
+  const TOD = { ja: ['自動', '朝', '昼', '夕方', '夜'], en: ['Auto', 'Morning', 'Day', 'Evening', 'Night'], zh: ['自动', '早晨', '白天', '傍晚', '夜晚'], ko: ['자동', '아침', '낮', '저녁', '밤'], es: ['Auto', 'Mañana', 'Día', 'Tarde', 'Noche'], fr: ['Auto', 'Matin', 'Jour', 'Soir', 'Nuit'], pt: ['Auto', 'Manhã', 'Dia', 'Tarde', 'Noite'], de: ['Auto', 'Morgen', 'Tag', 'Abend', 'Nacht'], hi: ['ऑटो', 'सुबह', 'दिन', 'शाम', 'रात'], ar: ['تلقائي', 'صباح', 'نهار', 'مساء', 'ليل'], ru: ['Авто', 'Утро', 'День', 'Вечер', 'Ночь'], 'zh-TW': ['自動', '早晨', '白天', '傍晚', '夜晚'], id: ['Otomatis', 'Pagi', 'Siang', 'Sore', 'Malam'], tr: ['Otomatik', 'Sabah', 'Gündüz', 'Akşam', 'Gece'] };
+  const TODH = { ja: '時間帯', en: 'Time of day', zh: '时间段', 'zh-TW': '時段', ko: '시간대', es: 'Hora del día', fr: 'Moment de la journée', pt: 'Hora do dia', de: 'Tageszeit', ru: 'Время суток', tr: 'Günün saati', id: 'Waktu', hi: 'दिन का समय', ar: 'وقت اليوم' };
+  const TODSW = { auto: 'conic-gradient(#ffd36b 0 25%,#ffe9a8 0 50%,#ff9d6b 0 75%,#3b4a8a 0)', morning: 'linear-gradient(#ffe7b0,#ffc9a0)', day: 'linear-gradient(#bfe6ff,#7fc8ff)', evening: 'linear-gradient(#ffb36b,#e0607a)', night: 'linear-gradient(#3b4a8a,#151a3a)' };
   function placeField() {
     const X = window.Table3D; if (!X || !X.PLACES || !X.TABLES[5]) return;
     const modal = document.querySelector('#newOverlay .modal'), first = modal && modal.querySelector('[data-ng=design]'); if (!first) return;
@@ -749,21 +754,34 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
 #newOverlay #fPlace.atlas-place > .dsg-now{font-size:15px!important;font-weight:800}
 #newOverlay #fPlace.atlas-place .atlas-brh{margin:14px 0 8px;font-size:14px;font-weight:800;opacity:.8}
 #newOverlay #fPlace.atlas-place .atlas-br{display:flex!important;gap:6px}
-#newOverlay #fPlace.atlas-place .atlas-br > button{flex:1 1 0;min-width:0;white-space:nowrap;font-size:15px!important;padding:10px 6px!important}`;
+#newOverlay #fPlace.atlas-place .atlas-br > button{flex:1 1 0;min-width:0;white-space:nowrap;font-size:15px!important;padding:10px 6px!important}
+#newOverlay #fPlace.atlas-place .atlas-tod > button{display:inline-flex!important;align-items:center;justify-content:center;gap:7px}
+#newOverlay #fPlace.atlas-place .atlas-tod .sw{flex:none;width:14px;height:14px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+@container (min-width:760px){#newOverlay #fPlace.atlas-place .atlas-lt{display:grid;grid-template-columns:3fr 5fr;gap:14px}}   /* (PC: 明るさ and 時間帯 in one row) */
+@container (max-width:520px){#newOverlay #fPlace.atlas-place .atlas-tod{flex-wrap:wrap}#newOverlay #fPlace.atlas-place .atlas-tod > button{flex:1 1 30%}}`;
       document.head.appendChild(st);
     }
     const f = document.createElement('div'); f.className = 'field dsg-field atlas-place'; f.id = 'fPlace'; f.dataset.ng = 'design';
-    first.parentNode.insertBefore(f, first);
+    // the デザイン tab in one order for every game (2026-11-13): the board first, then the pieces, then the place (room) last
+    { const all = [...modal.querySelectorAll('[data-ng=design]')], host = first.parentNode;
+      const rank = e => /^(fBoard|fDesign)$/.test(e.id) || e.querySelector('.bdrow, .dsg-bd, [id*=Board], [id*=board]') ? 0 : e.matches('[data-ng-credit], #pcCredit') ? 2 : 1;
+      const list = all.filter(e => e.parentNode === host).sort((a, b) => rank(a) - rank(b) || (a.compareDocumentPosition(b) & 4 ? -1 : 1));
+      const anchor = list.length ? list[list.length - 1].nextSibling : null;
+      list.forEach(e => host.insertBefore(e, anchor));
+      const cr = list.find(e => rank(e) === 2); host.insertBefore(f, cr || anchor); }
     const lang = () => (l => /^zh-(tw|hk|mo|hant)/i.test(l) ? 'zh-TW' : String(l).slice(0, 2))((document.getElementById('langSel') || {}).value || document.documentElement.lang || 'ja');
     const paint = () => {
+      const td = X.timeOfDayPick ? X.timeOfDayPick() : 'auto';
       const l = lang(), k = X.table(), b = X.bright(), N = X.PLACES.name[l] || X.PLACES.name.en, B = X.placeUi('b', l);
       f.innerHTML = `<label>${X.placeUi('place', l)}</label><b class="dsg-now">${N[k]}</b>`
         + `<div class="dsg atlas-plrow">${N.map((n, i) => (X.placeOff || []).includes(i) ? '' : `<button type="button" data-k="${i}" class="${i === k ? 'sel' : ''}" aria-pressed="${i === k}" title="${n}"><img class="th" src="${X.placeThumb(i)}" alt="" loading="lazy"><span class="nm">${n}</span></button>`).join('')}</div>`
-        + `<div class="atlas-brh">${X.placeUi('bright', l)}</div><div class="seg atlas-br">${B.map((n, i) => `<button type="button" data-b="${i}" class="${i === b ? 'sel' : ''}" aria-pressed="${i === b}">${n}</button>`).join('')}</div>`;
+        + `<div class="atlas-lt"><div><div class="atlas-brh">${X.placeUi('bright', l)}</div><div class="seg atlas-br">${B.map((n, i) => `<button type="button" data-b="${i}" class="${i === b ? 'sel' : ''}" aria-pressed="${i === b}">${n}</button>`).join('')}</div></div>`
+        + (X.setTimeOfDay ? `<div><div class="atlas-brh">${TODH[l] || TODH.en}</div><div class="seg atlas-br atlas-tod">${TODK.map((v, i) => `<button type="button" data-t="${v}" class="${v === td ? 'sel' : ''}" aria-pressed="${v === td}"><span class="sw" style="background:${TODSW[v]}"></span>${(TOD[l] || TOD.en)[i]}</button>`).join('')}</div></div>` : '') + '</div>';
     };
     f.addEventListener('click', e => {
       const p = e.target.closest('[data-k]'), q = e.target.closest('[data-b]');
       if (p) { e.stopPropagation(); X.setTable(+p.dataset.k); } else if (q) { e.stopPropagation(); X.setBright(+q.dataset.b); }
+      const tq = e.target.closest('[data-t]'); if (tq && X.setTimeOfDay) { e.stopPropagation(); X.setTimeOfDay(tq.dataset.t); paint(); }
     });
     addEventListener('atlas-table', paint);
     addEventListener('storage', e => { if (e.key === 'atlas-table') X.setTable(+e.newValue || 0); else if (e.key === 'atlas-bright2') X.setBright(+e.newValue); });
