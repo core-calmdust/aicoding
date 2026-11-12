@@ -820,3 +820,6 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-or
 /* (2026-11-13) phones (ngt-on): the panels stack and the dialog itself scrolls — no frosted foot inside each panel, a smaller gap */
 html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl.ngt-on .ng-cols > .ng-col::after{display:none!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl.ngt-on[data-ngl-order] .ng-col:not(#_):not(#_){gap:22px!important;padding-bottom:18px!important}
+/* (2026-11-13) 棋譜・局面図: the text (棋譜 / GGF / URL…) and the picture's stage on the dialog's cream, not a dark grey */
+html.atlas-skin:not(.atlas-2d) body:not(#_) .rx-text:not(#_){background:#fffdf7!important;border:1px solid #ecdab4!important;color:var(--a-ink)!important;box-shadow:inset 0 1px 3px rgba(120,90,40,.08)!important;border-radius:14px!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .rx-img:not(#_){background:#f6efdd!important;border-radius:14px!important}
