@@ -520,6 +520,22 @@
     si.addEventListener('scroll', () => place(si.classList.contains('a-split')));
     [0, 300, 1200, 3000].forEach(ms => setTimeout(apply, ms));
   })();
+  /* ---------- ルール（RuleTour）: the text card reaches up to the mini board (the board box is often wider than the board drawn in it) ---------- */
+  (function rtFit() {
+    let q = 0;
+    const fit = () => { q = 0;
+      document.querySelectorAll('.rt-row .rt-main.has-board').forEach(m => {
+        const b = m.querySelector(':scope > .rt-board'), sd = m.querySelector(':scope > .rt-side'); if (!b || !sd) return;
+        let el = b.firstElementChild;
+        while (el && el.children.length === 1 && el.firstElementChild.children.length) el = el.firstElementChild;
+        if (!el) return; let l = 1e9; for (const c of (el.children.length ? el.children : [el])) { const r = c.getBoundingClientRect(); if (r.width) l = Math.min(l, r.left); }
+        const free = l - b.getBoundingClientRect().left - 26;   // (room for the frame)
+        sd.style.marginInlineEnd = free > 8 && !de.classList.contains('atlas-2d') ? -Math.floor(free) + 'px' : '';
+      }); };
+    const de = document.documentElement;
+    new MutationObserver(() => { if (!q && document.querySelector('.rt-row')) q = requestAnimationFrame(fit); }).observe(document.body, { childList: true, subtree: true });
+    addEventListener('resize', () => setTimeout(fit, 200));
+  })();
   // the board is drawn and the game is set up → lift the "loading" overlay (after a couple of rendered frames)
   function ready(waitStart) {
     const t0 = performance.now();

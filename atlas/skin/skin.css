@@ -679,3 +679,46 @@ html.atlas-skin .a-split-h{position:absolute;left:12%;right:12%;height:14px;z-in
 html.atlas-skin .a-split-h::after{content:"";position:absolute;left:50%;top:5px;width:44px;height:4px;margin-left:-22px;border-radius:4px;background:#e6d6b2;opacity:0;transition:opacity .15s,background .15s}
 html.atlas-skin .side-in:hover .a-split-h::after{opacity:.8}
 html.atlas-skin .a-split-h:hover::after,html.atlas-skin .a-split-h.on::after{opacity:1;background:#e09a00}
+/* ルール（RuleTour, shared/ruletour.js）— the full version's look (2026-11-12): step chips, the text on a card with the task as a
+   callout, the mini board in a wooden frame. Every game's rules tutorial shares it. */
+html.atlas-skin body:not(#_) .rt-steps{gap:8px;margin:0 0 16px;padding:6px 0}
+html.atlas-skin body:not(#_) .rt-steps button{width:36px;height:36px;border-radius:50%;border:2px solid #efe3c8;background:#fffdf8;color:#9a8762;font:800 13.5px/1 inherit;box-shadow:0 3px 0 #efe3c8;transition:transform .15s,background .15s}
+html.atlas-skin body:not(#_) .rt-steps button:hover{transform:translateY(-1px);background:#fff}
+html.atlas-skin body:not(#_) .rt-steps button.ok{background:#eaf7ef;border-color:#a8dfc0;color:#2e9a66;box-shadow:0 3px 0 #cbead7}
+html.atlas-skin body:not(#_) .rt-steps button.cur{background:#ff5d5d;border-color:#ff5d5d;color:#fff;box-shadow:0 3px 0 #d93c3c;transform:scale(1.1)}
+html.atlas-skin body:not(#_) .rt-row .rt-main.has-board > .rt-side{background:linear-gradient(180deg,#fffdf8,#fff8ea);border:2px solid #efe3c8;border-radius:22px;padding:26px 28px 20px;box-shadow:0 4px 0 #efe3c8,0 14px 30px -18px rgba(120,80,20,.35);align-self:stretch}
+html.atlas-skin body:not(#_) .rt h2.rt-title{font-size:27px;letter-spacing:.02em;color:#2b3044;margin-bottom:16px}
+html.atlas-skin body:not(#_) .rt h2.rt-title::after{content:"";display:block;width:44px;height:4px;margin:12px auto 0;border-radius:4px;background:linear-gradient(90deg,#ff5d5d,#ffc928)}
+html.atlas-skin body:not(#_) .rt-row .rt-main.has-board .rt-text > h2.rt-title::after{margin-left:0}
+html[lang=ar].atlas-skin body:not(#_) .rt-row .rt-main.has-board .rt-text > h2.rt-title::after{margin-left:auto;margin-right:0}
+html.atlas-skin body:not(#_) .rt-body{color:#4a5068}
+html.atlas-skin body:not(#_) .rt-body b{color:#d48a00}
+html.atlas-skin body:not(#_) .rt-task{margin-top:16px}
+html.atlas-skin body:not(#_) .rt-q{display:block;padding:14px 18px;border-radius:16px;background:#fff4d2;border:2px solid #ffe08a;color:#5e4300;font-weight:800;line-height:1.55}
+html.atlas-skin body:not(#_) .rt-msg.ok{color:#2e9a66;font-weight:800}html.atlas-skin body:not(#_) .rt-msg.ng{color:#d93c3c;font-weight:800}
+html.atlas-skin body:not(#_) .rt-again{border:2px solid #efe3c8;background:#fffdf8;color:#4a5068;border-radius:12px;font-weight:800;box-shadow:0 2px 0 #efe3c8}
+html.atlas-skin body:not(#_) .rt > .rt-nav{border-top:2px dashed #efe3c8}
+/* the mini board: a wooden frame round it (shogi .rb: black grid lines on the wood, as on a real board) */
+html.atlas-skin body:not(#_) .rt-board .rb{background:#4a2f12!important;border:0!important;border-radius:2px;box-shadow:0 0 0 9px #8a5a26,0 0 0 11px #4a2f12,0 20px 34px -12px rgba(60,30,0,.5)!important}
+html.atlas-skin body:not(#_) .rt-row .rt-main.has-board{overflow:visible}
+html.atlas-skin body:not(#_) .rt-row .rt-main.has-board > .rt-board{justify-content:flex-end;padding:11px 11px 0 0;box-sizing:border-box}
+html.atlas-skin body:not(#_) .rt-board .rb > .rc{box-shadow:inset 0 0 0 .5px rgba(60,35,10,.35)}
+/* レッスン一覧（lists-ui.js .lx-*）— the full version (2026-11-12): roomier cards, the thumbnail on a mat, status pills, 2-line text */
+html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonList .lx-grid{gap:14px}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonList .lx-card{gap:18px;padding:16px 18px 16px 16px;border-radius:20px!important;transition:transform .15s,border-color .15s}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonList .lx-card:hover{transform:translateY(-2px)}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonList .lx-th{width:112px;align-self:stretch;padding:8px;border-radius:14px;background:linear-gradient(160deg,#f7ecd2,#efdfbb);box-shadow:inset 0 0 0 1px rgba(150,110,50,.18)}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonList .lx-th > svg{filter:drop-shadow(0 3px 5px rgba(90,55,10,.3))}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonList .lx-tx{gap:5px}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonList .lx-no{font:900 12px/1 inherit;letter-spacing:.04em;color:#b07a00;background:#fff1cc;border-radius:8px;padding:5px 9px}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonList .lx-st{font-size:12px;font-weight:800;padding:4px 10px;border-radius:99px;background:#f3ead6;color:#9a8762}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonList .lx-st.ok{background:#e4f5ea;color:#2e9a66}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonList .lx-st:empty{display:none}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonList .lx-t{font-size:19px;font-weight:900;color:#2b3044;margin-top:2px}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonList .lx-sub{font-size:13.5px;font-weight:800;color:#d48a00}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonList .lx-desc{font-size:13px;line-height:1.65;color:#6a7088;-webkit-line-clamp:2}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonList .lx-card .lx-bar{height:6px;margin-top:auto;border-radius:6px}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonList .lx-banner{padding:16px 20px;border-radius:20px!important;background:linear-gradient(120deg,#fff3d1,#fffaf0 60%)!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonList .lx-banner .ic{width:54px;height:54px;border-radius:15px}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonList .lx-banner .tx b{font-size:21px;color:#b07a00}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonList .lx-banner .pg{width:160px}
