@@ -475,9 +475,9 @@
     const gr = () => ev && ev.querySelector('.graph');
     // the coach card open (the 形勢 / 棋譜 sizes share its room) or off — closed or turned off: then the 棋譜 card takes the room
     // and the one gap (形勢 ↔ next card) sizes the 形勢 graph against it (2026-11-12: with the coach off the drag did nothing)
-    const coachOn = () => vis(co) && !co.classList.contains('ck-off') && !co.classList.contains('hidden') && co.getBoundingClientRect().height > 70;
+    const coachOn = () => vis(co) && !co.classList.contains('hidden') && co.getBoundingClientRect().height > 70;   // (turned off it keeps its size: skin.css, 2026-11-12)
     const live = () => innerWidth >= 900 && !de.classList.contains('atlas-2d') && vis(ki) && getComputedStyle(si).flexDirection === 'column' && si.clientHeight > 300;
-    let gh0 = 0, busy = false;
+    let gh0 = 0, busy = false, kOn = 0;
     const clear = () => { const g = gr(); if (g) ['height', 'flex', 'max-height', 'min-height'].forEach(k => g.style.removeProperty(k)); ki.style.removeProperty('flex'); };
     const MINC = 90, MINK = 110;
     const fill = () => coachOn() ? co : ki;   // the card that gives and takes the room
@@ -489,8 +489,10 @@
         const g = vis(ev) && gr(); gh0 = g ? g.getBoundingClientRect().height : 0;
         const cOn = coachOn();
         let k = 0;
-        if (cOn) { const room = co.getBoundingClientRect().height + ki.getBoundingClientRect().height - MINC;
-          k = S.k ? Math.max(MINK, Math.min(S.k, room - (g ? S.e : 0))) : 0;
+        if (cOn) { const room = co.getBoundingClientRect().height + ki.getBoundingClientRect().height - MINC, off = co.classList.contains('ck-off');
+          if (!off && !S.k) kOn = ki.getBoundingClientRect().height;   // (the 棋譜 card's height with the coach on: kept when it is switched off)
+          const want = S.k || (off ? kOn || Math.round(room * .5) : 0);
+          k = want ? Math.max(MINK, Math.min(want, room - (g ? S.e : 0))) : 0;
           if (k) ki.style.setProperty('flex', '0 0 ' + k + 'px', 'important'); }
         if (g && S.e) { const F = fill(), spare = F.getBoundingClientRect().height - (cOn ? MINC : MINK);
           const e = Math.max(-Math.max(0, gh0 - 30), Math.min(S.e, spare)); g.style.setProperty('height', (gh0 + e) + 'px', 'important'); g.style.setProperty('flex', 'none', 'important'); g.style.setProperty('max-height', 'none', 'important'); g.style.setProperty('min-height', '0', 'important'); }
