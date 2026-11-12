@@ -5,7 +5,8 @@
      AtlasNPC.LEVELS[game]   the game's AI levels (as on the portal's board card)
      AtlasNPC.BOSSES[game]   [{ v: voice, m: 3D model spec (avatars/sp-boss.js), n: names }]
      AtlasNPC.band(game, lv) → index of the boss for that level (0 = Lv.1–3)
-     AtlasNPC.tier(game, lv) → the avatar a win gives: 0 N / 1 R / 2 SR (Lv.1 N, Lv.2 R, Lv.3 SR, Lv.4 N …)
+     AtlasNPC.tier(game, lv) → the avatar a win gives: 0 N / 1 R / 2 SR (Lv.1 N, Lv.2 R, Lv.3 SR, Lv.4 N …), −1 = nothing
+     AtlasNPC.CEL[game]      the last level people play; the levels above are celestial (no rewards; their boss is a gacha-only UR)
      AtlasNPC.VOICE[species] the voice of the 50 gacha creatures when they talk at the table
    Titles, lines and trivia (14 languages) live in npc/t/<lang>.js; the talk itself in npc/npc.js.
    Names: 'ja|en|zh|zh-TW|ko|ru|hi|ar' (es fr pt de id tr use the English name).
@@ -13,7 +14,7 @@
 (function () {
   'use strict';
   const A = window.AtlasNPC = window.AtlasNPC || {};
-  A.LEVELS = { chess: 25, shogi: 26, go: 32, reversi: 28, gomoku: 20, checkers: 20, xiangqi: 20, janggi: 20, tafl: 25, ur: 20, senet: 20, morris: 10,
+  A.LEVELS = { chess: 25, shogi: 26, go: 32, reversi: 36, gomoku: 20, checkers: 20, xiangqi: 20, janggi: 20, tafl: 25, ur: 20, senet: 20, morris: 10,
     connect4: 8, dots: 10, mancala: 10, backgammon: 10, hex: 20, fanorona: 20, ugolki: 23, agon: 23, konane: 23, ludo: 20, carrom: 20, crokinole: 20, hockey: 20, alquerque: 20, amazons: 23 };
   const N = s => { const p = s.split('|'), k = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'ru', 'hi', 'ar'], o = {}; k.forEach((l, i) => { o[l] = p[i] || p[1]; }); ['es', 'fr', 'pt', 'de', 'id', 'tr'].forEach(l => { o[l] = o.en; }); return o; };
   const b = (v, m, n) => ({ v, m, n: N(n) });
@@ -66,6 +67,9 @@
       b('villain', { a: 'bird', c: [0x26262e, 0xfbfaf4, 0x3a6ad8], beak: 0x3a3a48, hat: 'bigcrown', held: 'disc', ex: ['cape'], cape: 0x26262e }, '四隅の覇王カササギ|Corner-Lord Magpie|四角霸王喜鹊|四角霸王喜鵲|네모서리패왕까치|Сорока — владыка углов|कोनों का स्वामी मैगपाई|العقعق سيد الزوايا'),
       // (2026-11-11: the 10th, for Lv.28 when the AI went to 28 levels — Logistello, the program that beat world champion Takeshi Murakami 6–0 in 1997)
       b('king', { a: 'owl', c: [0x5a6aa8, 0xf6f4ff, 0x3ad8c8], beak: 0xffc040, hat: 'bigcrown', held: 'orb', ex: ['glasses', 'cape'], cape: 0x26305a }, 'ロジステロフクロウ|Logistello Owl|罗吉斯特洛猫头鹰|羅吉斯特洛貓頭鷹|로지스텔로부엉이|Сова Логистелло|लॉजिस्टेलो उल्लू|بومة لوجيستيلو'),
+      // (2026-11-13: the celestial levels Lv.29–36 — beyond what people play; no rewards for a win, the only avatar is a gacha-only UR.
+      //  Janus, the Roman god with two faces: one black side, one white, like a disc)
+      Object.assign(b('god', { a: 'cat', c: [0xfbfaf4, 0xffffff, 0xffd65a], split: 0x2b2b36, hat: 'laurel', hat2: 'halo', held: 'disc', ex: ['robe', 'belt', 'angelwings'], rc: 0xfffdf6 }, '白黒の神ヤヌスネコ|Janus, the Two-Sided Cat|黑白之神雅努斯猫|黑白之神雅努斯貓|흑백의 신 야누스냥|Кот Янус, бог двух сторон|दो पहलुओं का देव जेनस बिल्ला|القط يانوس إله الوجهين'), { cel: 1 }),
     ],
     gomoku: [
       b('sleepy', { a: 'mouse', c: [0xd8d0c8, 0xfff4ee, 0x3a8ad8], hat: 'bandana', hc: [0x3a8ad8], held: 'stone' }, '寺子屋ネズミ|Terakoya Mouse|寺子屋鼠|寺子屋鼠|데라코야쥐|Мышка из тэракоя|तेराकोया चूहा|فأر تيراكويا'),
@@ -267,12 +271,22 @@
       b('king', { a: 'lion', c: [0xf0c070, 0xfff4e0, 0x9a2a24], hat: 'crown', held: 'book', ex: ['cape', 'longbeard'], bc: 0x6a4a3a, cape: 0x9a2a24 }, 'アルフォンソ賢王ライオン|Alfonso the Wise Lion|智者阿方索狮|智者阿方索獅|현왕알폰소사자|Лев Альфонсо Мудрый|बुद्धिमान अल्फ़ोंसो शेर|أسد ألفونسو الحكيم'),
     ],
   };
+  // celestial levels (2026-11-13): the levels above CEL[game] are beyond what people play — no rewards for a win. Their boss is the
+  // last of the roster (cel: 1), whose only avatar is a gacha-only UR. The bosses before it keep their bands of three.
+  A.CEL = { reversi: 28 };
+  A.isCel = (g, lv) => !!A.CEL[g] && (lv | 0) > A.CEL[g];
+  const nb = g => { const L = A.BOSSES[g] || []; return L.length - (L.length && L[L.length - 1].cel ? 1 : 0); };   // the bosses people play
   // a game's boss for an AI level (levels beyond the roster count as the last boss)
-  A.band = (g, lv) => { const L = A.BOSSES[g]; if (!L) return -1; return Math.max(0, Math.min(L.length - 1, Math.floor((Math.max(1, lv | 0) - 1) / 3))); };
+  A.band = (g, lv) => { const L = A.BOSSES[g]; if (!L) return -1; if (A.isCel(g, lv)) return L.length - 1; return Math.max(0, Math.min(nb(g) - 1, Math.floor((Math.max(1, lv | 0) - 1) / 3))); };
   A.bossId = (g, i) => `boss-${g}-${i + 1}`;
-  // the avatar tier a win at this level gives: 0 = N, 1 = R, 2 = SR (Lv.1 N, 2 R, 3 SR, 4 N …; levels past the roster: SR)
-  A.tier = (g, lv) => { const i = A.band(g, lv); return i < 0 ? 2 : Math.max(0, Math.min(2, (Math.max(1, lv | 0) - 1) - i * 3)); };
-  A.range = (g, i) => { const lo = i * 3 + 1, hi = Math.min((A.LEVELS[g] || 20), i * 3 + 3); return lo === hi ? 'Lv.' + lo : `Lv.${lo}–${hi}`; };
+  // the strongest boss people play, and the celestial one: UR (the image is tier 3)
+  A.top = (g, i) => { const L = A.BOSSES[g]; return !!L && (i === nb(g) - 1 || !!(L[i] && L[i].cel)); };
+  // the avatar tier a win at this level gives: 0 = N, 1 = R, 2 = SR (Lv.1 N, 2 R, 3 SR, 4 N …; levels past the roster: SR); −1 = nothing (celestial)
+  A.tier = (g, lv) => { if (A.isCel(g, lv)) return -1; const i = A.band(g, lv); return i < 0 ? 2 : Math.max(0, Math.min(2, (Math.max(1, lv | 0) - 1) - i * 3)); };
+  A.range = (g, i) => {
+    const L = A.BOSSES[g], top = A.LEVELS[g] || 20, human = A.CEL[g] || top;
+    if (L && L[i] && L[i].cel) return `Lv.${human + 1}–${top}`;
+    const lo = i * 3 + 1, hi = Math.min(human, i * 3 + 3); return lo === hi ? 'Lv.' + lo : `Lv.${lo}–${hi}`; };
   // the 50 gacha creatures: how they talk when they come to watch (default: cute)
   A.VOICE = { shogi: 'samurai', knight: 'knight', disc: 'sleepy', tile: 'scholar', stone: 'cool', dot: 'cute', plop: 'cute', gem: 'merchant', dice: 'hothead', owl: 'trickster', crab: 'pirate',
     rook: 'sleepy', bishop: 'priest', pawn: 'cute', ryuou: 'king', keima: 'trickster', flippanda: 'sleepy', goke: 'merchant', renju: 'cute', camel: 'sage', ringsnake: 'cool', joker: 'trickster',

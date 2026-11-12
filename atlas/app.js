@@ -625,10 +625,10 @@
     pref['reversi:lvV'] = 3; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {}
   }
   // 2026-11-13: 28 → 36 levels (Lv.1–28 = the old Lv.1–20 and 8 new ones; 天上 Lv.29–36 = the old Lv.21–28: reversi/index.html LV_28TO36).
-  // The portal's AI picker shows Lv.1–28 for now, so a saved 天上 level becomes Lv.28.
+  // (The portal's picker shows the 天上 levels too since the same day: the boss is a gacha-only UR and a win gives nothing.)
   if (pref['reversi:lvV'] !== 4) {
     const n = Math.round(+pref['reversi:lv']) || 0, M = [0, 1, 2, 3, 4, 5, 6, 7, 9, 11, 12, 14, 16, 18, 20, 22, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36];
-    if (M[n]) pref['reversi:lv'] = Math.min(28, M[n]);
+    if (M[n]) pref['reversi:lv'] = M[n];
     pref['reversi:lvV'] = 4; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {}
   }
   // the textures of the room and of each board are drawn in workers (texgen.js): the work is tagged per board,
@@ -1026,18 +1026,18 @@
   // the AI boss of a level band (npc/roster.js): a header above the band's first level in the level sheet
   function bossHead(g, n, cur) {
     const N = window.AtlasNPC, L = N && N.BOSSES && N.BOSSES[g];
-    if (!L || (n - 1) % 3) return '';
-    const i = N.band(g, n), b = L[i], top = i === L.length - 1, on = N.band(g, cur) === i;
-    return `<div class="lvs-boss${top ? ' ur' : ''}${on ? ' on' : ''}" data-bi="${i}"><img src="../images/atlas/av/${N.bossId(g, i)}-${top ? 3 : 2}.webp?v=1" alt="" loading="lazy"><div><span>${esc(N.range(g, i))}${top ? ' <i>UR</i>' : ''}</span><b>${esc(b.n[lang] || b.n.en)}</b><small></small></div></div>`;
+    if (!L || (N.isCel(g, n) ? n !== N.CEL[g] + 1 : (n - 1) % 3)) return '';   // (the celestial levels: one head, above the first of them)
+    const i = N.band(g, n), b = L[i], top = N.top(g, i), on = N.band(g, cur) === i;
+    return `<div class="lvs-boss${top ? ' ur' : ''}${b.cel ? ' cel' : ''}${on ? ' on' : ''}" data-bi="${i}"><img src="../images/atlas/av/${N.bossId(g, i)}-${top ? 3 : 2}.webp?v=1" alt="" loading="lazy"><div><span>${esc(N.range(g, i))}${top ? ' <i>UR</i>' : ''}</span><b>${esc(b.n[lang] || b.n.en)}</b><small></small></div></div>`;
   }
   function bossImg(g, n) {   // the level's boss, small, in the level button (the N / R / SR a win there gives)
     const N = window.AtlasNPC; if (!N || !N.tier || !(N.BOSSES || {})[g] || !n) return '';
-    return `<img class="lvb" src="../images/atlas/av/${N.bossId(g, N.band(g, n))}-${N.tier(g, n)}.webp?v=1" alt="">`;
+    return `<img class="lvb" src="../images/atlas/av/${N.bossId(g, N.band(g, n))}-${N.tier(g, n) < 0 ? 3 : N.tier(g, n)}.webp?v=1" alt="">`;
   }
-  function bossOwn(g, n) { const N = window.AtlasNPC; if (!N || !N.tier || !(N.BOSSES || {})[g]) return false; return (W.owned || []).includes(`av-${N.bossId(g, N.band(g, n))}-${N.tier(g, n)}`); }
+  function bossOwn(g, n) { const N = window.AtlasNPC; if (!N || !N.tier || !(N.BOSSES || {})[g] || N.tier(g, n) < 0) return false; return (W.owned || []).includes(`av-${N.bossId(g, N.band(g, n))}-${N.tier(g, n)}`); }
   function bossRw(g, n) {   // what a win at this level gives: the boss's N / R / SR (dimmed once owned; the ✓ sits after the name — 2026-11-10)
     const N = window.AtlasNPC; if (!N || !N.tier || !(N.BOSSES || {})[g]) return '';
-    const t = N.tier(g, n);
+    const t = N.tier(g, n); if (t < 0) return '';   // (celestial levels: a win gives nothing)
     return `<i class="rw r${t}${bossOwn(g, n) ? ' got' : ''}">${['N', 'R', 'SR'][t]}</i>`;
   }
   function bossTitles(sh, g) {   // the bosses' titles live in the talk's language files (npc/t/<lang>.js), loaded on demand

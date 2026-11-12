@@ -192,6 +192,14 @@
     else if (E === 'elephant') [-1, 1].forEach(s => { blob(g, B, [s * .86, 1.48, -.08], [.12, .5, .44], [0, s * .3, 0]); blob(g, inner, [s * .9, 1.48, 0], [.06, .36, .3], [0, s * .3, 0]); });
     else if (E === 'horns') [-1, 1].forEach(s => put(g, cone(.1, .4, L ? goldM() : pl(0xfff4dc), 16), [s * .36, 2.12, -.1], [-.2, 0, -s * .3]));
     else if (E === 'frog') [-1, 1].forEach(s => blob(g, B, [s * .36, 2.0, .12], [.24, .22, .22]));
+    // (the celestial Janus) two-sided: the left half of the body, head, ear, paw and foot in the other colour, with a white patch round its eye
+    if (m.split != null) {
+      const D2 = pl(m.split, { under: shade(m.split, -.08) });
+      g.children.forEach(ch => { if (ch.material === B && ch.position.x < -.05) ch.material = D2; });
+      const half = (p, sc) => { const h = mesh(new T.SphereGeometry(1, 40, 24, -Math.PI / 2, Math.PI), D2); h.position.set(...p); h.scale.set(sc[0] * 1.012, sc[1] * 1.012, sc[2] * 1.012); g.add(h); };
+      half([0, .52, 0], [.52, .5, .46]); half([hc.x, hc.y, hc.z], HR);
+      const q = surf(-.28, eyeV); blob(g, fixed(0xffffff), [q.p.x + q.n.x * .012, q.p.y + q.n.y * .012, q.p.z + q.n.z * .012], [.155, .15, .008]).lookAt(q.p.x + q.n.x, q.p.y + q.n.y, q.p.z + q.n.z);
+    }
     // snout / beak
     let mouthSurf = null, mouth = m.mouth || A.m || 'smile', my = .34;
     const S = A.s;
@@ -235,6 +243,11 @@
       else if (x === 'longbeard') { const bm = pl(m.bc || 0xfaf6f0); blob(g, bm, [0, 1.02, .52], [.34, .28, .2]); blob(g, bm, [0, .72, .5], [.22, .3, .14]); blob(g, bm, [0, .48, .46], [.1, .18, .08]); }
       else if (x === 'mustache') [-1, 1].forEach(s => blob(g, pl(m.bc || 0x5a4030), [s * .14, 1.17, .74], [.16, .05, .05], [0, 0, s * -.25]));
       else if (x === 'tusks') [-1, 1].forEach(s => put(g, cone(.04, .16, fixed(0xffffff), 8), [s * .16, 1.2, .76], [0, 0, 0]));
+      else if (x === 'angelwings') [-1, 1].forEach(s => {   // (feathered wings behind the shoulders: a fan of long feathers over a row of short ones)
+        const wm = fixed(0xffffff, { under: 0xdfe6ff, uk: .55, sheen: 0xffffff, sheenK: .4 });
+        const fan = (n, a0, a1, len, w, z) => { for (let i = 0; i < n; i++) { const a = a0 + (a1 - a0) * i / (n - 1), l = len * (1 - .12 * Math.abs(i - (n - 1) * .35)); blob(g, wm, [s * (.34 + Math.cos(a) * l), 1.0 + Math.sin(a) * l, z], [w, l, .06], [0, 0, s * (a - Math.PI / 2)]); } };
+        fan(5, .15, 1.15, .62, .15, -.5); fan(4, -.25, .6, .4, .13, -.44); blob(g, wm, [s * .4, 1.0, -.42], [.2, .2, .1]);
+      });
       else if (x === 'batwings') [-1, 1].forEach(s => blob(g, dark, [s * .8, 1.0, -.2], [.4, .3, .05], [0, s * .5, s * .3]));
       else if (x === 'glasses') [-1, 1].forEach(s => { const p = surf(s * .28, eyeV); const r = put(g, tor(.15, .02, fixed(L ? 0xffd65a : 0x2a2233)), [p.p.x, p.p.y, p.p.z + .05]); });
       else if (x === 'monocle') { const p = surf(.28, eyeV); put(g, tor(.16, .022, fixed(0xffd65a)), [p.p.x, p.p.y, p.p.z + .05]); }
@@ -264,7 +277,7 @@
     // prop in the right paw
     const pr = (PROPS[m.held || 'none'] || PROPS.none)(c, L);
     if (pr) { pr.position.set(-.58, .66, .38); g.add(pr); }
-    if (L && rank >= .99 && !(X.includes('cape'))) { capeOn(g, pl(m.cape || 0x8a3ad8)); }
+    if (L && rank >= .99 && !(X.includes('cape')) && !X.includes('angelwings')) { capeOn(g, pl(m.cape || 0x8a3ad8)); }
     // the strongest boss (UR): a ring of stars behind and above the head
     if (L && rank >= .99) { const n0 = g.children.length; for (let i = 0; i < 7; i++) { const a = Math.PI * (1.05 + i / 6 * .9); K.sparkle(g, [Math.cos(a) * 1.25, 1.75 - Math.sin(a) * .7, -.45 + Math.sin(a) * .2], .07 + (i % 3) * .025); } g.children.forEach((ch, j) => { if (j >= n0) ch.userData.fx = true; }); }
     g.userData.head = [1.55, .95, .05]; g.userData.top = [0, hy + .2, -.04, 0];
@@ -273,7 +286,7 @@
   // register every boss as an avatar species (ids boss-<game>-<n>; tiers 0–2 = N / R / SR won at the AI levels, 3 = SSR / UR in the gacha)
   const B = AtlasNPC.BOSSES;
   Object.keys(B).forEach(gid => B[gid].forEach((sp, i) => {
-    const n = B[gid].length; sp.rank = n > 1 ? i / (n - 1) : 1;
+    const n = B[gid].length - (B[gid][B[gid].length - 1].cel ? 1 : 0); sp.rank = sp.cel ? 1 : n > 1 ? i / (n - 1) : 1;   // (the celestial boss is outside the ranks: the others keep theirs)
     D(`boss-${gid}-${i + 1}`, { name: sp.n, boss: true, ur: false,   // (the UR aura is drawn by build(), behind the head: the shared one crossed the face)
       build: (o, t) => build(sp, t),
       v: [{ acc: [] }, { acc: [] }, { acc: [] }, { acc: [], finish: 'none' }] });
