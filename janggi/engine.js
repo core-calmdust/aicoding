@@ -241,12 +241,14 @@ const LEVELS = [null,
   { d: 3.5, noise: 35, blunder: 0.015 },
   { d: 4, noise: 30, blunder: 0.012 },
   { d: 4, noise: 20 },
-  { s: 1, nk: 3.4 },
-  { s: 1, nk: 16.5 },
-  { s: 1, nk: 60 },
-  { s: 1, nk: 150 },
-  { s: 1, nk: 350 },
-  { s: 1, nk: 800 },
+  // (2026-11-13, search v2: the same strength with fewer positions — x0.7 / x0.6 of 3.4, 16.5, 60, 150, 350, 800; Lv.19-20 keep
+  //  theirs and are stronger. claude/janggi-spec.md「探索 v2」)
+  { s: 1, nk: 2.4 },
+  { s: 1, nk: 11.5 },
+  { s: 1, nk: 36 },
+  { s: 1, nk: 90 },
+  { s: 1, nk: 210 },
+  { s: 1, nk: 480 },
   { s: 1, nk: 2500, ms: 8000, book: 1 },
   { s: 1, nk: 7000, ms: 12000, book: 1 },
 ];
@@ -401,7 +403,7 @@ const API = { P1, P2, WIN, WINT, DRAW_PLIES, KING, ADVISOR, ELEPHANT, HORSE, ROO
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.JanggiEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  const V = 'v=2';
+  const V = 'v=3';
   // ?…&mt=1: the lead thread of the page's multi-thread pool (shared/mtengine.js): engine_mt.wasm on the shared memory sent with
   // the first message ('mtinit'); the helpers (mt-helper.js) search the same root meanwhile. The rest is the usual API.
   const MTL = /[?&]mt=1\b/.test(self.location.search || '');

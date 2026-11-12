@@ -418,6 +418,72 @@ static inline int moveScore(Move m, Move ttm, int ply) {
   if (m == killers[ply][1]) return (1 << 27) - 1;
   return hist[side][MF(m)][MT(m)];
 }
+// ---- search v2 (2026-11-13): the pruning of the tafl / chess engines (each part can be switched off for a measurement: -DSV_x=0)
+#ifndef SV_LMR
+#define SV_LMR 1   // late move reductions by a log table (was 1..3 by the move's place)
+#endif
+#ifndef SV_LMP
+#define SV_LMP 1   // late move pruning: at a shallow depth the late quiet moves are not searched
+#endif
+#ifndef SV_NMP
+#define SV_NMP 1   // null move: a deeper reduction (3 + depth/4 + by the margin)
+#endif
+#ifndef SV_RFP
+#define SV_RFP 1   // reverse futility up to depth 6
+#endif
+#ifndef SV_FUT
+#define SV_FUT 1   // futility up to depth 4
+#endif
+#ifndef SV_IIR
+#define SV_IIR 1   // no table move: one ply shallower
+#endif
+#ifndef SV_MALUS
+#define SV_MALUS 1 // the quiet moves tried before a cut-off lose history
+#endif
+#ifndef SV_DELTA
+#define SV_DELTA 1 // quiescence: a capture that cannot reach alpha is skipped
+#endif
+#ifndef SV_TTEV
+#define SV_TTEV 1  // the table's value as a better static evaluation
+#endif
+#ifndef LMR_BASE
+#define LMR_BASE 300
+#endif
+#ifndef LMR_DIV
+#define LMR_DIV 22
+#endif
+#ifndef LMP_A
+#define LMP_A 6
+#endif
+#ifndef LMP_B
+#define LMP_B 3
+#endif
+static u8 lmrT[64][64]; static int lmrInit;
+static int svOff;   // 1 during values(): the fixed-depth search of the weak levels (Lv.1-12) stays as it was (shared: only the main thread sets it)
+static void initLmr(void) {   // floor(0.3 + ln(d) ln(n) / 2.2) without libm: the logs by a table of ln(1..63) x 1000
+  static const short LN[64] = { 0, 0, 693, 1099, 1386, 1609, 1792, 1946, 2079, 2197, 2303, 2398, 2485, 2565, 2639, 2708, 2773, 2833, 2890, 2944, 2996,
+    3045, 3091, 3135, 3178, 3219, 3258, 3296, 3332, 3367, 3401, 3434, 3466, 3497, 3526, 3555, 3584, 3611, 3638, 3664, 3689, 3714, 3738, 3761,
+    3784, 3807, 3829, 3850, 3871, 3892, 3912, 3932, 3951, 3970, 3989, 4007, 4025, 4043, 4060, 4078, 4094, 4111, 4127, 4143 };
+  for (int d = 1; d < 64; d++) for (int n = 1; n < 64; n++) lmrT[d][n] = (u8)((LMR_BASE * 1000 + (long)LN[d] * LN[n] * 10 / LMR_DIV) / 1000000);
+  lmrInit = 1;
+}
+// the reduction of the move in place lg (1 = first) at this depth: a quiet move that gives no check, not in check, not a killer
+static inline int lmrRed(int depth, int lg, int pv, int h) {
+#if SV_LMR
+  if (svOff) { int r0 = 1 + (lg > 10) + (depth >= 8 && lg > 20); if (pv && r0) r0--; return r0; }
+  int red = lmrT[depth > 63 ? 63 : depth][lg > 63 ? 63 : lg];
+  if (pv && red) red--;
+  if (h > 4000 && red) red--;       // a move that has cut off often
+  else if (h < -4000) red++;        // one that has failed often
+  return red;
+#else
+  int red = 1 + (lg > 10) + (depth >= 8 && lg > 20);
+  if (pv && red) red--;
+  return red;
+#endif
+}
+// late move pruning: the number of moves searched at this depth before the quiet ones are dropped
+static inline int lmpCount(int depth) { return LMP_A + LMP_B * depth * depth; }
 static int qsearch(int alpha, int beta, int ply, int qd) {
   nodes++;
   if (timeUp()) return 0;
@@ -438,6 +504,9 @@ static int qsearch(int alpha, int beta, int ply, int qd) {
     { Move tm = L[bi]; L[bi] = L[i]; L[i] = tm; int ts = sc[bi]; sc[bi] = sc[i]; sc[i] = ts; }
     Move m = L[i];
     if (!inChk && qd > 6 && TYPE(B[MT(m)]) == PAWN) continue;
+#if SV_DELTA
+    if (!svOff && !inChk && best + PV_[TYPE(B[MT(m)])] + 250 <= alpha && alpha > -WINT) continue;   // (best = the static evaluation or better)
+#endif
     u8 c = makeMove(m);
     if (attackedKing(me)) { unmakeMove(m, c); continue; }
     legal++;
@@ -477,13 +546,19 @@ static int search(int depth, int alpha, int beta, int ply, int pv, int nullOk) {
     }
   }
   int stat = -INF;
+#if SV_IIR
+  if (!svOff && !ttm && depth >= 4 && !inChk) depth--;   // (no move from the table: this node was not worth a full search yet)
+#endif
   if (!inChk && !pv) {
     stat = evaluate();
+#if SV_TTEV
+    if (!svOff && e->key == KEY) { int tv = vFromTT(e->v, ply); if (tv > -WINT && tv < WINT && (e->flag == TT_EXACT || (e->flag == TT_LOWER && tv > stat) || (e->flag == TT_UPPER && tv < stat))) stat = tv; }
+#endif
     // reverse futility
-    if (depth <= 3 && stat - 110 * depth >= beta && beta > -WINT && beta < WINT) return stat;
+    if ((SV_RFP && !svOff ? depth <= 6 && stat - 90 * depth >= beta : depth <= 3 && stat - 110 * depth >= beta) && beta > -WINT && beta < WINT) return stat;
     // null move
     if (nullOk && depth >= 3 && stat >= beta && bigPieces(me) && beta > -WINT && beta < WINT) {
-      int R = 2 + (depth >= 7);
+      int R = SV_NMP && !svOff ? 3 + depth / 4 + ((stat - beta) / 200 > 2 ? 2 : (stat - beta) / 200) : 2 + (depth >= 7);
       side ^= 1; KEY ^= ZSIDE; HK[hn] = KEY; HC[hn] = 0; hn++;
       int saveIrr = hirr; hirr = hn - 1;   // the null move cuts repetition chains
       int v = -search(depth - 1 - R, -beta, -beta + 1, ply + 1, 0, 0);
@@ -495,7 +570,9 @@ static int search(int depth, int alpha, int beta, int ply, int pv, int nullOk) {
   Move L[MAXMV]; int n = gen(L, 0);
   int sc[MAXMV]; for (int i = 0; i < n; i++) sc[i] = moveScore(L[i], ttm, ply);
   int best = -INF, oldAlpha = alpha, legal = 0; Move bestM = 0;
-  int futile = !inChk && !pv && depth <= 2 && stat > -INF && stat + 150 * depth <= alpha && alpha > -WINT;
+  int futile = !inChk && !pv && stat > -INF && alpha > -WINT && (SV_FUT && !svOff ? depth <= 4 && stat + 120 * depth + 60 <= alpha : depth <= 2 && stat + 150 * depth <= alpha);
+  const int lmpN = SV_LMP && !svOff && !inChk && !pv && depth <= 5 && alpha > -WINT ? lmpCount(depth) : 999;
+  Move qm[48]; int nq = 0;   // the quiet moves searched (their history is lowered by a later move's cut-off)
 #ifdef JG_THREADS
   // (2026-11-10) busy marks (see busyT): a move whose position another thread is searching right now is put off until the
   // other moves are done; it keeps its place in the order (lg) for the reductions
@@ -514,13 +591,13 @@ static int search(int depth, int alpha, int beta, int ply, int pv, int nullOk) {
           Move m2 = L[i]; int cap2 = B[MT(m2)] != 0; u8 c2 = makeMove(m2);
           if (attackedKing(me)) { unmakeMove(m2, c2); continue; }
           int g2 = attackedKing(side); unmakeMove(m2, c2); lg2++;
-          if (futile && lg2 > 1 && !cap2 && !g2) continue;
+          if ((futile || lg2 > lmpN) && lg2 > 1 && !cap2 && !g2) continue;
           if (ns == SP_MV) { ns = -1; break; }
           s->mv[ns] = m2; s->lg[ns] = (u8)lg2; s->gc[ns] = (u8)g2; ns++;
         }
         for (int j = 0; j < nDef && ns >= 0; j++) {
           Move m2 = defM[j]; int cap2 = B[MT(m2)] != 0; u8 c2 = makeMove(m2); int g2 = attackedKing(side); unmakeMove(m2, c2);
-          if (futile && defL[j] > 1 && !cap2 && !g2) continue;
+          if ((futile || defL[j] > lmpN) && defL[j] > 1 && !cap2 && !g2) continue;
           if (ns == SP_MV) { ns = -1; break; }
           s->mv[ns] = m2; s->lg[ns] = defL[j]; s->gc[ns] = (u8)g2; ns++;
         }
@@ -562,7 +639,7 @@ static int search(int depth, int alpha, int beta, int ply, int pv, int nullOk) {
 #endif
     legal++;
     int givesChk = attackedKing(side);
-    if (futile && LG > 1 && !isCap && !givesChk) { unmakeMove(m, c); continue; }
+    if ((futile || LG > lmpN) && LG > 1 && !isCap && !givesChk) { unmakeMove(m, c); continue; }
     HK[hn] = KEY; HC[hn] = (u8)givesChk; hn++;
     int saveIrr = hirr; if (c) hirr = hn - 1;
 #ifdef JG_THREADS
@@ -573,8 +650,7 @@ static int search(int depth, int alpha, int beta, int ply, int pv, int nullOk) {
     else {
       int red = 0;
       if (depth >= 3 && LG > 3 && !isCap && !inChk && !givesChk && m != killers[ply][0] && m != killers[ply][1]) {
-        red = 1 + (LG > 10) + (depth >= 8 && LG > 20);
-        if (pv && red) red--;
+        red = lmrRed(depth, LG, pv, hist[me][MF(m)][MT(m)]);
         if (red > d1 - 1) red = d1 - 1 > 0 ? d1 - 1 : 0;
       }
       v = -search(d1 - red, -alpha - 1, -alpha, ply + 1, 0, 1);
@@ -588,6 +664,7 @@ static int search(int depth, int alpha, int beta, int ply, int pv, int nullOk) {
     hn--; hirr = saveIrr;
     unmakeMove(m, c);
     if (stopFlag) return best > -INF ? best : 0;
+    if (v < beta && !isCap && nq < 48) qm[nq++] = m;
     if (v > best) {
       best = v; bestM = m;
       if (v > alpha) {
@@ -597,6 +674,9 @@ static int search(int depth, int alpha, int beta, int ply, int pv, int nullOk) {
             if (killers[ply][0] != m) { killers[ply][1] = killers[ply][0]; killers[ply][0] = m; }
             i32 *h = &hist[me][MF(m)][MT(m)]; *h += depth * depth;
             if (*h > (1 << 24)) for (int a = 0; a < 2; a++) for (int b = 0; b < 90; b++) for (int q = 0; q < 90; q++) hist[a][b][q] >>= 1;
+#if SV_MALUS
+            if (!svOff) for (int j = 0; j < nq; j++) { i32 *g = &hist[me][MF(qm[j])][MT(qm[j])]; *g -= depth * depth; if (*g < -(1 << 24)) *g = -(1 << 24); }
+#endif
           }
           break;
         }
@@ -631,8 +711,7 @@ static int spSearch(SPt *s, int i, int a) {
   } else {
     const int LG = s->lg[i]; int red = 0;
     if (s->depth >= 3 && LG > 3 && !isCap && !s->inChk && !gc && m != killers[ply][0] && m != killers[ply][1]) {
-      red = 1 + (LG > 10) + (s->depth >= 8 && LG > 20);
-      if (s->pv && red) red--;
+      red = lmrRed(s->depth, LG, s->pv, hist[side ^ 1][MF(m)][MT(m)]);   // (after makeMove: the mover is side ^ 1)
       if (red > d1 - 1) red = d1 - 1 > 0 ? d1 - 1 : 0;
     }
     v = -search(d1 - red, -a - 1, -a, ply + 1, 0, 1);
@@ -671,7 +750,7 @@ static TLS int rootHn, rootHirr;
 static void loadRoot(void) { memcpy(B, RB, 90); side = rootSide; findKings(); KEY = rootKey; hn = rootHn; hirr = rootHirr; }
 // setup: IO = [90 point codes, side, nmoves, moves..., nexcl, excluded root moves...]. Returns 1 if all moves were legal.
 EXPORT(setup) int setup(void) {
-  initGeo(); initEval();
+  initGeo(); initEval(); if (!lmrInit) initLmr();
   for (int s = 0; s < 90; s++) { int v = IO[s]; B[s] = (u8)(v >= 0 && v < 16 && (v & 7) ? v : 0); }
   side = IO[90] ? 1 : 0; findKings();
   if (KSQ[0] < 0 || KSQ[1] < 0) return 0;
@@ -743,6 +822,7 @@ static void sortRoot(void) {
   for (int i = 1; i < rootN; i++) { Move m = rootL[i]; int v = rootVal[i], j = i - 1; while (j >= 0 && rootVal[j] < v) { rootL[j + 1] = rootL[j]; rootVal[j + 1] = rootVal[j]; j--; } rootL[j + 1] = m; rootVal[j + 1] = v; }
 }
 static void beginSearch(int ms) {
+  if (!lmrInit) initLmr();
   loadRoot();
   stopFlag = 0; nodes = 0; tEnd = ms > 0 ? now() + ms : 0;
 #ifdef JG_THREADS
@@ -884,7 +964,9 @@ EXPORT(pv_line) int pv_line(int m0, int maxLen) {
 // fixed-depth values of all root moves (weak levels)
 EXPORT(values) void values(int depth) {
   beginSearch(0); nodeLimitOn = 0;
+  svOff = 1;   // (the weak levels' noise and depths were tuned on the search before v2)
   for (int d = 1; d <= depth; d++) { rootSearch(d, 1, -INF, INF); sortRoot(); }
+  svOff = 0;
   loadRoot();
   writeList(depth, rootL, rootVal, rootN);
 }
