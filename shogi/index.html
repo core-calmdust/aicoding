@@ -1849,7 +1849,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <script src="variants/vtext.js?v=20261107l14"></script>
 <script src="variants/mini.js?v=20261021vb"></script>
 <script src="variants/hasami.js?v=20261021vb"></script>
-<script src="variants/variants.js?v=20261107l14"></script>
+<script src="variants/variants.js?v=20261112rv"></script>
 <script src="rvbox.js?v=20261107l14"></script>
 <script src="rvtip.js?v=20261107l14"></script>
 <script src="../shared/coachkit.js?v=17l14"></script>
@@ -2900,7 +2900,7 @@ async function schedule() {
       return;
     }
     if (!pc && lv.mt && MTP) { await Promise.race([MTP.ready(), sleep(4000)]); if (token !== busyToken) return; }   // the timed top steps: wait for the threads once (just after the page opened)
-    const res = await aiCall({ type: 'think', sfen: game.start, moves: game.moves.slice(0, idx), opts: Variants.eng(game.variant) ? Variants.levelOpts(levelOf(side), game.variant) : lv, ...(pc && (pc.threads > 1 || pc.ponder) ? { mtThreads: pc.threads, ...(pc.ponder ? { mtPonder: 1 } : {}) } : !pc && lv.mt ? { mtAll: 1 } : {}) }, m => {
+    const res = await aiCall({ type: 'think', sfen: game.start, moves: game.moves.slice(0, idx), opts: Variants.eng(game.variant) ? Variants.levelOpts(game.rated ? Math.round(game.rated.lv * 18 / 25) : levelOf(side), game.variant) : lv, ...(pc && (pc.threads > 1 || pc.ponder) ? { mtThreads: pc.threads, ...(pc.ponder ? { mtPonder: 1 } : {}) } : !pc && lv.mt ? { mtAll: 1 } : {}) }, m => {
       if (token === busyToken) setStatus(side, rtLive() ? t('thinking.d', { d: m.depth }) : `${t('thinking.d', { d: m.depth })}  ${fmtScore(m.score)}`, true);
     });
     if (!res || token !== busyToken) return;
@@ -3176,14 +3176,18 @@ document.addEventListener('click', e => { if (sel && !e.target.closest('.board')
 // around the player's rating (mostly close, sometimes clearly stronger or weaker) and the result moves the rating (Elo).
 const RT_STORE = 'shogi-rated-v1', RT_START = 900, RT_CLOCK = 2;      // RT_CLOCK: 10 min + 30 s byoyomi (CLOCKS[2])
 const RT_LV = [150, 300, 450, 550, 650, 750, 850, 950, 1050, 1150, 1250, 1350, 1450, 1550, 1650, 1750, 1850, 2000, 2200, 2300, 2400, 2500, 2600, 2700, 2800, 2900];   // per step (入門 … 六段・七段・八段・九段; 七段〜九段 added 2026-11-08 from the time-doubling matches, MODEL_CARD.md)
-function rtLoad() {
-  let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
+// 種目 (2026-11-12): each variant has a rating of its own — the standard game under RT_STORE, a variant under RT_STORE + ':' + its
+// key ('mini', 'heian8', 'random' …; the same store as the portal's 3D table). v omitted: the variant of the game being set up / played
+const rtV = v => v !== undefined ? v || '' : (game && game.rated && !game.over ? game.variant || '' : (window.Variants ? Variants.forGame() : '')) || '';
+const rtKeyOf = v => RT_STORE + (rtV(v) ? ':' + rtV(v) : '');
+function rtLoad(v) {
+  let s = null; try { s = JSON.parse(localStorage.getItem(rtKeyOf(v)) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };
   if (!Array.isArray(s.hist)) s.hist = [];
-  if (s.k !== 2) { s.hist.forEach(h => { h.lv = lvMig(h.lv); }); s.k = 2; if (s.hist.length) rtStore(s); }   // history from the 10-level days
+  if (s.k !== 2) { s.hist.forEach(h => { h.lv = lvMig(h.lv); }); s.k = 2; if (s.hist.length) rtStore(s, v); }   // history from the 10-level days
   return s;
 }
-function rtStore(s) { try { localStorage.setItem(RT_STORE, JSON.stringify(s)); } catch (e) {} }
+function rtStore(s, v) { try { localStorage.setItem(rtKeyOf(v), JSON.stringify(s)); } catch (e) {} }
 // rating → 24 rank: 15級 = 400–499 … 1級 = 1800–1899, 初段 = 1900–2099, then 200 points per dan
 function rtRank(r) {
   const k = r < 400 ? t('rt.below') : r < 1900 ? t('rt.kyu', { n: 15 - Math.floor((r - 400) / 100) }) : t('rt.dan', { n: Math.min(9, 1 + Math.floor((r - 1900) / 200)) });
@@ -3192,8 +3196,8 @@ function rtRank(r) {
 const rtD = d => (d >= 0 ? '+' : '−') + Math.abs(d);
 const rtLvName = lv => t('lv')[lv] || '?';
 // opponent: target = rating + offset (80%: within ±100, 10%: +150..+300 stronger, 10%: −150..−300 weaker) → nearest level
-function rtPick(r, rnd = Math.random) {
-  { const S0 = rtLoad(); if (Placement.on(S0)) return Placement.pick(S0, RT_LV.map((x, i) => [i, x])); }
+function rtPick(r, rnd = Math.random, vk) {
+  { const S0 = rtLoad(vk); if (Placement.on(S0)) return Placement.pick(S0, RT_LV.map((x, i) => [i, x])); }
   const u = rnd(), v = rnd();
   const off = u < 0.1 ? 150 + v * 150 : u < 0.2 ? -(150 + v * 150) : (v * 2 - 1) * 100;
   const target = r + off;
@@ -3206,7 +3210,7 @@ function rtLive() { return !!(game && game.rated && !game.over && !lesson && !ed
 function rtSettle(g) {
   const R = g && g.rated; if (!R || !g.over) return null;
   if (R.done) return R.done;
-  const st = rtLoad(), prev = st.hist.find(h => h.id === R.id);
+  const gv = g.variant || '', st = rtLoad(gv), prev = st.hist.find(h => h.id === R.id);
   if (prev) { R.done = { old: prev.r - prev.d, now: prev.r, d: prev.d }; return R.done; }
   const s = g.over.winner < 0 ? 0.5 : g.over.winner === g.human ? 1 : 0;
   const old = st.r, pl = Placement.on(st) ? Placement.record(st, R.or, s) : null;   // 予備選: the first 3 games set the rating
@@ -3215,7 +3219,7 @@ function rtSettle(g) {
   st.r = now; st.n++; if (s === 1) st.w++; else if (s === 0) st.l++; else st.d++;
   st.hist.push({ id: R.id, t: Date.now(), lv: R.lv, or: R.or, s, d: now - old, r: now, why: g.over.reason, pl: pl ? pl.k : undefined });
   if (st.hist.length > 100) st.hist = st.hist.slice(-100);
-  rtStore(st);
+  rtStore(st, gv);
   R.done = { old, now, d: now - old, pl }; if (pl && pl.final) Placement.reveal(st, rtRank(now));
   save();
   return R.done;
@@ -3231,15 +3235,16 @@ function rtForfeit() {
   return x;
 }
 function rtStart() {
-  if (Placement.gate(rtLoad(), rtStore, () => rtStart())) return;
-  const st = rtLoad(), pk = rtPick(st.r);
+  const v = window.Variants ? Variants.forGame() : '';   // (settings.mode is 'ai' here: the chosen variant)
+  if (Placement.gate(rtLoad(v), s => rtStore(s, v), () => rtStart())) return;
+  const st = rtLoad(v), pk = rtPick(st.r, Math.random, v);
   settings.mode = 'ai';
   newGame({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), lv: pk.lv, k: 3, or: pk.or, my: st.r, tag: pk.tag });
   toast(t('rt.vs', { lv: rtLvName(pk.lv), r: pk.or, tag: t('rt.' + pk.tag) }), 4000);
 }
-function rtStatsHtml() {
-  const st = rtLoad(), h = st.hist.slice(-10).reverse();
-  let html = `<div class="rt-card"><div class="rt-head"><span class="rt-lbl">${olX(t('rt.title'))}</span><b class="rt-r">R ${st.r}</b><span class="rt-rank">${olX(rtRank(st.r))}</span>${Placement.on(st) ? Placement.badge(st) : st.n < 10 ? `<span class="rt-prov">${olX(t('rt.prov'))}</span>` : ''}</div>`;
+function rtStatsHtml(v) {
+  const st = rtLoad(v), h = st.hist.slice(-10).reverse(), vn = v && window.Variants ? Variants.vName(v) : '';
+  let html = `<div class="rt-card"><div class="rt-head"><span class="rt-lbl">${olX(t('rt.title'))}${vn ? ' · ' + olX(vn) : ''}</span><b class="rt-r">R ${st.r}</b><span class="rt-rank">${olX(rtRank(st.r))}</span>${Placement.on(st) ? Placement.badge(st) : st.n < 10 ? `<span class="rt-prov">${olX(t('rt.prov'))}</span>` : ''}</div>`;
   html += `<div class="rt-rec">${olX(st.n ? t('rt.rec', { n: st.n, w: st.w, l: st.l, d: st.d }) : t('rt.none'))}</div>`;
   html += Placement.note(st);
   const sp = st.hist.slice(-30);
@@ -3322,7 +3327,7 @@ function updDialog() {
   // rated vs AI: everything is fixed (even game, random colour, 10 min + 30 s), so only the description and the rating card are shown
   const rt = dlg.mode === 'rated';
   $('#fRatedInfo').classList.toggle('hidden', !rt);
-  if (rt) { ['#fHandi', '#fClock', '#fColor', '#fLevel', '#fLevel2', '#lvNote', '#handiNote'].forEach(q => $(q).classList.add('hidden')); $('#rtStats').innerHTML = rtStatsHtml(); }
+  if (rt) { ['#fHandi', '#fClock', '#fColor', '#fLevel', '#fLevel2', '#lvNote', '#handiNote'].forEach(q => $(q).classList.add('hidden')); $('#rtStats').innerHTML = rtStatsHtml(window.Variants && Variants.dlgKey ? Variants.dlgKey() : ''); }
   $('#optEval').disabled = rt; $('#optCoach').disabled = rt;
   $('#newOverlay').classList.toggle('ng-watch', dlg.mode === 'watch');
   if (window.CpuStyle) CpuStyle.dlgUpdate(dlg, settings, t);   // CPU strategy dropdowns (even games, vs AI / AI vs AI)
@@ -3461,6 +3466,7 @@ $('#btnStart').onclick = () => {
   if (dlg.resume && game) { resumeWith(); return; }
   if (dlg.mode === 'rated') {
     Object.assign(settings, { mode: 'ai', legal: $('#optLegal').checked, last: $('#optLast').checked, eval: $('#optEval').checked, coach: $('#optCoach').checked });
+    if (window.Variants) Variants.dlgRead();   // (種目: rated games per variant)
     rtStart(); return;
   }
   Object.assign(settings, { clock: dlg.clock, fis: dlg.fis, mode: dlg.mode, color: dlg.color, handicap: dlg.handicap, level: +$('#rngLevel').value, level2: +$('#rngLevel2').value,

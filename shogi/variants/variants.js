@@ -35,7 +35,7 @@ function randomStart(seed) {
 const startOf = (v, seed) => v === 'random' ? randomStart(seed !== undefined ? seed : (typeof settings !== 'undefined' ? settings.rseed : '')) : START[v];
 // the variant's engine ('' = the page's own: 本将棋 and ランダム将棋)
 const eng = v => (v && v !== 'random' && START[v]) ? v : '';
-const MODES = ['ai', 'pvp', 'watch'];   // modes a variant can be played in
+const MODES = ['ai', 'pvp', 'watch', 'rated'];   // modes a variant can be played in (rated: each variant its own rating, 2026-11-12)
 
 // ---------------------------------------------------------------- texts (10 languages)
 const TX = {
@@ -136,7 +136,7 @@ for (const v in VS) WR[v] = 600;
 // the variant a new game uses (settings.variant is the card: 'heian' + settings.heianB for the board)
 const cardOf = v => HB[v] ? 'heian' : v || '';
 const gameOf = (card, hb) => card === 'heian' ? 'heian' + ({ 8: '8', 98: '98', 9: '9' }[hb] || '8') : card;
-const forGame = rated => { if (rated || !MODES.includes(settings.mode)) return ''; const v = gameOf(settings.variant, settings.heianB); return START[v] ? v : ''; };
+const forGame = rated => { if (!MODES.includes(settings.mode)) return ''; const v = gameOf(settings.variant, settings.heianB); return START[v] ? v : ''; };
 
 // ---------------------------------------------------------------- board geometry (W×H inside the 9×9 grid of cells)
 let gKey = '';
@@ -531,5 +531,5 @@ function showSeed(g) {
   el.hidden = !on; if (!on) return;
   const t = tx('seedTag') + ' ' + g.seed; if (el.textContent !== t) el.textContent = t;
 }
-window.Variants = { seed: () => lastSeed, showSeed, START, MODES, WR, pos, startOf, eng, vName, dims, sfenVariant, newWorker, rvNote, rvFeat, forGame, geom, hasamiName, inZone: MiniShogi.inZone, zoneOf, checkEnd, levelOpts, lvName, worker, wk, kill, dlgOpen, dlgUpdate, dlgRead, openRules, relabel };
+window.Variants = { dlgKey: () => { const v = gameOf(dlg.variant, dlg.heianB); return START[v] ? v : ''; }, seed: () => lastSeed, showSeed, START, MODES, WR, pos, startOf, eng, vName, dims, sfenVariant, newWorker, rvNote, rvFeat, forGame, geom, hasamiName, inZone: MiniShogi.inZone, zoneOf, checkEnd, levelOpts, lvName, worker, wk, kill, dlgOpen, dlgUpdate, dlgRead, openRules, relabel };
 })();
