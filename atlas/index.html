@@ -1917,6 +1917,18 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 .vgh{display:flex;align-items:center;gap:10px;margin:10px 16px 2px;font-weight:900;font-size:14px;color:var(--ink)}.vgh::after{content:'';flex:1;height:2px;border-radius:2px;background:var(--line)}
 .bvi .vopts{display:flex;align-items:stretch;gap:10px}.bvi .vopts .vrow{flex:1 1 50%!important}
 .bvi .rtnow2{flex:1 1 50%;min-width:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:2px;padding:6px 14px;border-radius:16px;background:#fff;border:2px solid var(--line);line-height:1.1}.bvi .rtnow2[hidden]{display:none}.bvi .rtnow2 small{font-size:11px;font-weight:800;color:var(--ink2)}.bvi .rtnow2 b{font-size:18px;font-weight:900;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+/* (games with a 種目 row — shogi: every box the same height and every gap the same, in each tab, 2026-11-12) */
+.bvi .mbody:has(#bvVarRow){--bh:38px;--bg:10px}
+@media (min-width:820px){.bvi .mbody:has(#bvVarRow){--bh:48px;--bg:12px}}
+.bvi .mbody:has(#bvVarRow){gap:var(--bg)}
+.bvi .mbody:has(#bvVarRow) .opts{gap:var(--bg) 14px!important}
+.bvi .mbody:has(#bvVarRow) #bvRt .mxrow{gap:14px}
+.bvi .mbody:has(#bvVarRow) .opts label{min-height:0}
+.bvi .mbody:has(#bvVarRow) .sidetg{box-sizing:border-box;height:var(--bh);align-items:stretch}
+.bvi .mbody:has(#bvVarRow) .sidetg button{padding-block:0;display:flex;align-items:center;justify-content:center}
+.bvi .mbody:has(#bvVarRow) .lvpick,.bvi .mbody:has(#bvVarRow) #bvRtRec{box-sizing:border-box;height:var(--bh)}
+.bvi .mbody:has(#bvVarRow) .rtnow2{box-sizing:border-box;height:var(--bh);padding-block:0;overflow:hidden}
+.bvi .mbody:has(#bvVarRow) .vopts{align-items:center}
 .vcard .vrt{align-self:flex-start;margin:0 4px;padding:2px 8px;border-radius:999px;background:#eef6ff;color:#2a5a9a;font-size:11.5px;font-weight:900}
 .lvs-l.vgrid{grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:10px;padding:6px 14px 10px}
 .lvs-l .vcard{display:flex;flex-direction:column;align-items:stretch;gap:6px;padding:8px 8px 10px;border-radius:18px;box-shadow:0 3px 0 var(--line);transition:transform .12s}
