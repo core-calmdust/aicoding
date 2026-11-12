@@ -750,7 +750,7 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
     getGame: gid => db.get('games/' + gid), resumeRoom,
     init, setName, setPresence, watchPresence, watchRooms, watchLobby, enterLobby, createRoom, joinRoom, leave, leaveLobby, closeRoom, extendRoom, onRoom,
     setPost, requestRematch, answerRematch, expireRematch, watchChat, sendChat, roomGameOf, spectate, watchCount,
-    watchGame, sendMove, moveCount, USI_RE, resign, claimTimeout, markOver, applyResult, topPlayers, elo,
+    watchGame, sendMove, moveCount, fetchGame: gid => db.get('games/' + gid), USI_RE, resign, claimTimeout, markOver, applyResult, topPlayers, elo,
     account, google, logout, onAuth, pull, push, cleanName, defaultName, localName, configured: !!CFG,
     get uid() { return uid; }, get profile() { return profile; }, get ready() { return !!(db && uid && profile); }, now: () => (db ? db.now() : Date.now()),
     get secure() { return secure(); }, secMsg: k => (window.OnlineSec ? OnlineSec.msg(k) : ''),
