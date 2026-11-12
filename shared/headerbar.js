@@ -1196,5 +1196,67 @@ function sideSplitInit() {
   })();
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(sideSplitInit, 0)); else setTimeout(sideSplitInit, 0);
+// ---------------------------------------------------------------- the card games' right column (2026-11-13)
+// The same drag as above for the pages whose right column is a stack of cards (aside#side > .card: blackjack, baccarat, poker,
+// solitaire…): drag the gap under a card to give it a height of its own (it scrolls inside); a double-click puts it back.
+// Remembered per game (localStorage 'side-split:<game folder>'), not shared — every game's column is different.
+function cardSplitInit() {
+  if (window.__cardSplit) return;
+  const side = document.querySelector('aside.side#side, aside#side'); if (!side || document.querySelector('.side-in')) return;
+  window.__cardSplit = 1;
+  { const st = document.createElement('style'); st.textContent = `#side.c-split{position:relative}
+#side.c-split > .card.c-sized{overflow-y:auto;scrollbar-width:thin}
+#side > .c-split-h{position:absolute;left:12%;right:12%;height:14px;z-index:5;cursor:row-resize;touch-action:none}
+#side > .c-split-h::after{content:"";position:absolute;left:50%;top:5px;width:44px;height:4px;margin-left:-22px;border-radius:4px;background:#e6d6b2;opacity:0;transition:opacity .15s,background .15s}
+#side:hover > .c-split-h::after{opacity:.8}
+#side > .c-split-h:hover::after,#side > .c-split-h.on::after{opacity:1;background:#e09a00}`; document.head.appendChild(st); }
+  const game = (location.pathname.split('/').filter(Boolean).slice(-2, -1)[0] || location.pathname.split('/').filter(Boolean).pop() || 'game').replace(/\.html$/, '');
+  const KEY = 'side-split:' + game, MIN = 60;
+  let S = {}; try { S = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) {}
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+  const vis = el => !!(el && el.getClientRects().length && getComputedStyle(el).display !== 'none');
+  const cards = () => [...side.children].filter(c => c.classList.contains('card') && vis(c));
+  const idOf = (c, i) => (c.id || [...c.classList].filter(k => k !== 'card' && k !== 'c-sized').join('.') || 'c') + ':' + i;
+  const live = () => innerWidth >= 900 && vis(side) && getComputedStyle(side).flexDirection === 'column';
+  let busy = false;
+  function apply() {
+    if (busy) return; busy = true;
+    try {
+      const on = live(); side.classList.toggle('c-split', on);
+      const cs = cards();
+      cs.forEach((c, i) => { const h = on ? S[idOf(c, i)] : 0;
+        if (h) { c.style.setProperty('flex', '0 0 ' + Math.max(MIN, h) + 'px', 'important'); c.style.setProperty('height', Math.max(MIN, h) + 'px', 'important'); c.style.setProperty('max-height', 'none', 'important'); c.classList.add('c-sized'); }
+        else if (c.classList.contains('c-sized')) { ['flex', 'height', 'max-height'].forEach(k => c.style.removeProperty(k)); c.classList.remove('c-sized'); } });
+      place(on, cs);
+    } finally { busy = false; }
+  }
+  // one handle under every card but the last (re-added when the game redraws the column)
+  function place(on, cs) {
+    const hs = [...side.querySelectorAll(':scope > .c-split-h')], need = on ? Math.max(0, cs.length - 1) : 0;
+    while (hs.length < need) { const h = document.createElement('div'); h.className = 'c-split-h'; side.appendChild(h); hs.push(h); bind(h); }
+    const r0 = side.getBoundingClientRect();
+    hs.forEach((h, i) => { if (i >= need) { h.style.display = 'none'; return; } h.style.display = ''; h.dataset.i = i;
+      const y = (cs[i].getBoundingClientRect().bottom + cs[i + 1].getBoundingClientRect().top) / 2 - r0.top + side.scrollTop; h.style.top = (y - 7) + 'px'; });
+  }
+  function bind(h) {
+    h.addEventListener('pointerdown', e => {
+      e.preventDefault(); h.setPointerCapture(e.pointerId); h.classList.add('on');
+      const i = +h.dataset.i, c = cards()[i]; if (!c) return; const id = idOf(c, i), y0 = e.clientY, h0 = c.getBoundingClientRect().height;
+      const mv = ev => { S[id] = Math.round(Math.max(MIN, h0 + ev.clientY - y0)); apply(); };
+      const up = () => { h.classList.remove('on'); h.removeEventListener('pointermove', mv); save(); };
+      h.addEventListener('pointermove', mv); h.addEventListener('pointerup', up, { once: true }); h.addEventListener('pointercancel', up, { once: true });
+    });
+    h.addEventListener('dblclick', () => { const i = +h.dataset.i, c = cards()[i]; if (c) { delete S[idOf(c, i)]; save(); apply(); } });
+  }
+  const later = () => requestAnimationFrame(apply);
+  addEventListener('resize', later);
+  new MutationObserver(ms => { if (!busy && ms.some(m => [...m.addedNodes, ...m.removedNodes].some(n => !(n.classList && n.classList.contains('c-split-h'))))) later(); }).observe(side, { childList: true });
+  new MutationObserver(later).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+  if (window.ResizeObserver) new ResizeObserver(() => { if (!busy) later(); }).observe(side);
+  side.addEventListener('scroll', () => place(side.classList.contains('c-split'), cards()));
+  addEventListener('storage', e => { if (e.key === KEY) { try { S = JSON.parse(e.newValue || '{}') || {}; } catch (x) {} apply(); } });
+  [0, 300, 1200, 3000].forEach(ms => setTimeout(apply, ms));
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(cardSplitInit, 0)); else setTimeout(cardSplitInit, 0);
 window.HeaderBar = { init, MEDIA: MQ, HEIGHT: H, ICON_RULES, options, addOption, syncOptions: syncAll, OPTIONS_T: OT };
 })();
