@@ -627,9 +627,6 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) .dock-bar{background:transparent!imp
 /* the pickers' tiles (designs, boards, pieces): rectangles */
 html.atlas-skin:not(.atlas-2d) body:not(#_) .modal :is(.dsg, .bdrow, .atlas-plrow, .pcrow) > button{border-radius:16px!important}
 /* the long boxes (lessons · openings · puzzles): the close button always there at the bottom, the rest scrolls above it */
-html.atlas-skin:not(.atlas-2d) body:not(#_) .modal .modal-actions{position:sticky;bottom:0;z-index:4;background:var(--a-paper)!important;box-shadow:0 -14px 14px -4px var(--a-paper);padding-top:12px!important;padding-bottom:4px!important;margin-top:12px!important}
-html.atlas-skin:not(.atlas-2d) body:not(#_) .modal .modal-actions > :is(.mbtn, button){min-height:56px!important;font-size:18px!important;flex:1 1 0!important}
-html.atlas-skin:not(.atlas-2d) body:not(#_) .modal .modal-actions > :is(.mbtn, button):only-child{flex:0 1 calc(50% - 6px)!important;margin-inline:auto!important}
 /* backgammon: both players' boxes the same height (the line under the side to move — 「6-1 を移動中」 — keeps its room in both) */
 html.atlas-skin.atlas-backgammon:not(.atlas-2d) body:not(#_) .card.players .player > .status{display:block!important;min-height:15px!important;visibility:visible!important}
 /* shogi: the info column stays narrow (it reached 500px on windows up to 3:2) */
@@ -638,3 +635,33 @@ html.atlas-skin.atlas-shogi:not(.atlas-2d), html.atlas-skin.atlas-shogi:not(.atl
 html.atlas-skin:not(.atlas-2d) body:not(#_) .kifu-head{display:flex!important;flex-wrap:wrap!important;align-items:center!important;gap:8px!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .kifu-head > .label{flex:1 1 auto}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .kifu-head > span:last-child{flex:1 1 100%;justify-content:flex-start!important}
+
+/* ---- (2026-11-12, round 4) the boxes' bottom buttons: all as the rules' (前へ · 閉じる · 次へ) — 220 × 50 rounded rectangles in a
+   centred row, the plain ones white with dark text, the main one coral; always at the bottom of the box (the rest scrolls above),
+   the scroll's edge a soft fade, no line ---- */
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav){position:sticky;bottom:0;z-index:4;flex-wrap:wrap;justify-content:center!important;gap:10px!important;background:var(--a-paper)!important;border-top:0!important;box-shadow:none!important;padding:12px 0 2px!important;margin-top:14px!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav)::before{content:'';position:absolute;left:0;right:0;top:-22px;height:22px;background:linear-gradient(rgba(255,253,247,0),var(--a-paper));pointer-events:none}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav) > :is(button, .mbtn){flex:0 1 220px!important;width:auto!important;min-width:0!important;height:50px!important;min-height:50px!important;padding:0 14px!important;border-radius:12px!important;font-size:17px!important;font-weight:900!important;letter-spacing:.04em!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav) > :is(button, .mbtn):not(.go):not(.primary):not(.gbtn){background:#fff!important;color:var(--a-ink)!important;border:2px solid var(--a-line)!important;box-shadow:0 4px 0 var(--a-line)!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav) > :is(button, .mbtn):is(.go, .primary, .gbtn){background:var(--a-coral)!important;color:#fff!important;border:0!important;box-shadow:0 4px 0 var(--a-coral2)!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav) > :is(button, .mbtn):disabled{opacity:.45!important;box-shadow:none!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav) > :is(button, .mbtn):is(.hidden, [hidden]){display:none!important}
+@media (max-width:760px){ html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav) > :is(button, .mbtn){flex:1 1 0!important} }
+/* backgammon: room between the two players' boxes */
+html.atlas-skin.atlas-backgammon:not(.atlas-2d) body:not(#_) .card.players{gap:10px!important}
+html.atlas-skin.atlas-backgammon:not(.atlas-2d) body:not(#_) .card.players > .player + .player{margin-top:0!important}
+/* the design tab: 3D / 2D switch inside the 盤 and 駒 boxes (atlas/skin/common.js splitDesign) */
+html.atlas-skin body:not(#_) .modal .a32{display:inline-flex!important;width:auto!important;max-width:none!important;flex:none!important;justify-self:start!important;align-self:start!important;grid-column:1 / -1;margin:0 0 10px 10px!important;vertical-align:middle;gap:3px;padding:3px;border-radius:99px;background:#f3ead6}
+html.atlas-skin .a32 > button{min-width:64px;padding:5px 14px!important;border:0!important;border-radius:99px!important;background:transparent!important;font-weight:900!important;font-size:14px!important;color:#6a7088!important;box-shadow:none!important;cursor:pointer}
+html.atlas-skin .a32 > button.sel{background:#fff!important;color:#2b3044!important;box-shadow:0 3px 0 #efe3c8!important}
+html.atlas-skin .a32-off:not(#_):not(#_):not(#_){display:none!important}
+html.atlas-skin #f3D.a32-box{margin:0!important;padding:0!important;border:0!important;background:none!important}
+html.atlas-skin #f3D.a32-box > label:not(.pc3l){display:none!important}
+html.atlas-skin .a32-pc3 > label.pc3l{display:none!important}
+/* the 3D pieces moved into the 駒 box: the look they had in #f3D */
+html.atlas-skin body:not(#_) .a32-pc3 .bdrow{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:8px!important}
+@media (max-width:760px){html.atlas-skin body:not(#_) .a32-pc3 .bdrow{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+html.atlas-skin body:not(#_) .a32-pc3 .bdrow button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 4px 7px;border-radius:14px!important;border:2px solid #efe3c8;background:#fff;cursor:pointer;font:700 13px/1.25 inherit;color:#2b3044;min-width:0}
+html.atlas-skin body:not(#_) .a32-pc3 .bdrow button img{display:block;width:100%;aspect-ratio:3/2;object-fit:contain;border-radius:9px;background:radial-gradient(80% 80% at 50% 40%,#5a4636,#2a1f17);padding:4%;box-sizing:border-box}
+html.atlas-skin body:not(#_) .a32-pc3 .bdrow button span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+html.atlas-skin body:not(#_) .a32-pc3 .bdrow button.sel{border-color:#ff8a7a;background:#fff1ee;box-shadow:0 3px 0 #ffb3a8}

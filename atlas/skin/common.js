@@ -733,5 +733,68 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
       new MutationObserver(apply).observe(de, { attributes: true, attributeFilter: ['lang'] }); };
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
   })();
+  /* (2026-11-12) the design tab: the 3D boards / 3D pieces no longer in a box of their own under the 2D ones — the 盤 box and the
+     駒 box each get a 3D | 2D switch that shows one list or the other (picking a tile works as before: a 3D one turns the table 3D,
+     a 2D one the 2D board). The games build #f3D (label + .bdrow = the 3D boards, label.pc3l + .bdrow.pc3 = the 3D pieces) in the 盤
+     field; the 3D pieces move into the 駒 field (#segPieces / #pcRow), and #f3D's own lookups keep finding them there. */
+  (function splitDesign() {
+    const L = { '3d': '3D', '2d': '2D' };
+    function sw(field, onPick) {
+      const t = document.createElement('div'); t.className = 'seg a32'; t.setAttribute('role', 'tablist');
+      t.innerHTML = '<button type="button" data-m="3d">3D</button><button type="button" data-m="2d">2D</button>';
+      const lab = field.querySelector(':scope > label'); if (lab) lab.after(t); else field.prepend(t);
+      t.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; e.stopPropagation(); onPick(b.dataset.m); });
+      return t;
+    }
+    const show = (t, m) => t.querySelectorAll('button').forEach(b => { const on = b.dataset.m === m; b.classList.toggle('sel', on); b.setAttribute('aria-selected', String(on)); });
+    let parts = null;
+    function build() {
+      const f3 = document.getElementById('f3D'); if (!f3 || f3.dataset.a32) return parts;
+      const bf = f3.closest('.field'); if (!bf) return null;
+      f3.dataset.a32 = '1'; f3.classList.add('a32-box');
+      const P = { f3, bf };
+      P.b2 = () => [...bf.children].filter(e => e !== f3 && e.tagName !== 'LABEL' && !e.classList.contains('a32') && !e.classList.contains('dsg-now'));
+      P.bt = sw(bf, m => { P.bm = m; apply(); });
+      // the 3D pieces → the 駒 field
+      const pl = f3.querySelector('label.pc3l'), pr = f3.querySelector('.bdrow.pc3'), p2 = document.getElementById('segPieces') || document.getElementById('pcRow'), pf = p2 && p2.closest('.field');
+      if (pr) {
+        // the 駒 field: the game's own (with its 2D pieces) when the full version shows it, else a new one with the 3D pieces alone
+        const own = pf && pf !== bf && getComputedStyle(pf).display !== 'none';
+        let host = own ? pf : null;
+        if (!host) { host = document.createElement('div'); host.className = bf.className + ' a32-pcf'; host.removeAttribute('id'); if (bf.dataset.ng) host.dataset.ng = bf.dataset.ng; bf.after(host); }
+        const box = document.createElement('div'); box.className = 'a32-pc3';
+        if (pl) (own ? box : host).appendChild(pl);
+        box.appendChild(pr); host.appendChild(box);
+        const q1 = f3.querySelector.bind(f3), qa = f3.querySelectorAll.bind(f3);
+        f3.querySelector = sel => q1(sel) || host.querySelector(sel);
+        f3.querySelectorAll = sel => [...qa(sel), ...host.querySelectorAll(sel)];
+        P.pbox = box;
+        if (own) { P.p2 = () => [...pf.children].filter(e => e !== box && e.tagName !== 'LABEL' && !e.classList.contains('a32') && !e.classList.contains('dsg-now')); P.pt = sw(pf, m => { P.pm = m; apply(); }); }
+      }
+      parts = P; return P;
+    }
+    function apply() {
+      const P = parts; if (!P) return;
+      const has3 = !P.f3.classList.contains('hidden') && P.f3.querySelector('.bdrow button');
+      P.bt.classList.toggle('a32-off', !has3); if (!has3) P.bm = '2d';
+      show(P.bt, P.bm); P.f3.classList.toggle('a32-off', P.bm !== '3d'); P.b2().forEach(e => e.classList.toggle('a32-off', P.bm === '3d'));
+      if (P.pt) { show(P.pt, P.pm); P.pbox.classList.toggle('a32-off', P.pm !== '3d'); P.p2().forEach(e => e.classList.toggle('a32-off', P.pm === '3d')); }
+    }
+    // each time the box opens: the lists of what is in use now (a chosen 3D tile → 3D, else 2D)
+    function reset() {
+      const P = build(); if (!P) return;
+      const sel3 = row => !!(row && row.querySelector('button.sel, button[aria-pressed=true]'));
+      P.bm = sel3(P.f3.querySelector('.bdrow:not(.pc3)')) || !document.documentElement.classList.contains('atlas-2d') ? '3d' : '2d';
+      if (P.pt) P.pm = sel3(P.pbox.querySelector('.bdrow')) ? '3d' : '2d';
+      apply();
+    }
+    const go = () => {
+      reset();
+      const ov = document.getElementById('newOverlay');
+      if (ov) new MutationObserver(() => { if (/\b(show|on|open)\b/.test(ov.className)) setTimeout(reset, 30); }).observe(ov, { attributes: true, attributeFilter: ['class'] });
+      document.addEventListener('click', e => { if (e.target.closest && e.target.closest('.ngt-bar > button, #btnNew')) setTimeout(reset, 60); }, true);
+    };
+    if (document.readyState === 'complete') setTimeout(go, 400); else addEventListener('load', () => setTimeout(go, 400));
+  })();
   window.AtlasSkin = { init };
 })();
