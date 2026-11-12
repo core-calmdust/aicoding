@@ -89,7 +89,7 @@ wasm の αβ エンジン（`engine_mt.wasm`、`-DMT`）の**仕事を分ける
 | リバーシ（`reversi/`） | C（wasm）＋JS | YBW v4.1（中盤は深さ5、完全読みは14マス） | mtengine・proset・ponder（C は元祖の作り：分割点256個・`CHK_Q`） |
 | 将棋（`shogi/`） | C（wasm、NNUE） | **YBW**（4）＋busy marks＋10スレッドより先は Lazy SMP（`YBW_MAX`） | mtengine・**praline（移行済み、`PL_VAL` double・読み筋・`PL_IDLE_HOOK`）**・proset・ponder |
 | チェス（`chess/`） | C（wasm、NNUE） | **YBW**（6、予想カット節も）＋busy marks＋10スレッドより先は Lazy SMP（2026-11-12、v3。前は YBW 1＋Lazy SMP） | mtengine・**praline（移行済み、読み筋・カットの印・`PL_MT_SPLIT`）**・proset・ponder |
-| 五目並べ（`gomoku/`） | JS 探索＋wasm の共有の置換表・分割点（`mt.c`） | YBW v2（どの節も） | mtengine・proset |
+| 五目並べ（`gomoku/`） | **C（wasm、2026-11-12）**：盤の形・禁手・VCF/VCT・αβ・評価ネットごと `core.c`（`core_simd.wasm`／`core.wasm`、スレッドは `core_mt.wasm`）。JS は予備（`?nowasm`） | **YBW**（4、読み筋の節は2）＋busy marks、解析は候補手を分割点に | mtengine・**praline（2026-11-12）**・proset |
 | 囲碁（`go/`）・ヘックス（`hex/`） | C（wasm） | 共有木 MCTS（virtual loss） | mtengine・proset |
 | アマゾンズ（`amazons/`） | C（wasm、αβ の探索ごと core.c、2026-11-11） | αβ は **YBW**（3）＋busy marks、Lv.19〜23 は共有木 MCTS（同じ `core_mt.wasm`、補助は両方を待つ）。分離できないページは mtsplit の非共有 | mtengine・**praline（2026-11-11）**・proset（mtsplit は非共有だけ） |
 | ウゴルキ（`ugolki/`） | C（wasm、ルートのループも 2026-11-11） | **YBW**（3）（`core_mt.wasm`）。分離できないページは mtsplit | mtengine・**praline（2026-11-11）**・proset（mtsplit は非共有・予備） |
@@ -247,6 +247,11 @@ JavaScript エンジンは `shared/mtsplit.js`（＋`mttt.js`）、独立な仕�
 ### コナネ（2026-11-11）：ウゴルキ・アゴンと同じ手順
 - ルートのループを `ab_best`／`ab_values` に、`core_mt.wasm` で Praline の YBW。1スレッドは前の版と520回の探索で全一致。`tools/mtsim`（局面数の時計、深さ11）2／4／8 ×1.83／3.10／4.93、遅いコアあり 8／10／14 ×4.48／4.81／4.67（前の mtsplit ×1.39／2.19／3.16）。
 - `shared/tools/mtstep.js`：Worker の `location` を用意（アマゾンズ・ウゴルキ・アゴン・コナネの engine.js が `location.search` の `mt=1` を見るので、それまでアマゾンズで止まっていた）。αβ を C に移したアマゾンズは JS が時計をほとんど呼ばないので、mtstep の値は分離できないページの予備の方式の参考だけ。
+
+### 五目並べ（2026-11-12）：JS の探索を丸ごと C に移して Praline に
+- 盤の形の差分更新・禁手・VCF/VCT・αβ・評価ネットを `gomoku/core.c` に（`core_simd.wasm`／`core.wasm`／`core_mt.wasm`、表と重みは `engine.js` が写す）。1スレッドは JavaScript と 374回の探索（Lv.10〜16 の `think`・深さ固定の `best`・解析・`resist`）で手・値・深さ・局面数が全一致、`core_mt.wasm` の1スレッドも共有の置換表の JavaScript と全一致（`gomoku/tools/check-core.js`）。CPU 時間で約2〜2.8倍（SIMD 版）。
+- つなぎ：分割点に節の `Pos`（約28KB）・各手の順番 `lg`（7手目からの減らし）・相手の脅威 `opp`、`spCutoff` は共有の履歴。各スレッドの状態（勝ち筋の読みの表 4MB）は `mt_thread` の `memory.grow`。分割の深さ4（読み筋の節は2）、busy marks、解析は候補手を深さ2から1つの分割点に。
+- `tools/mtsim`（`g_gomoku.h`、時計は打った手の数、遅らせる書き込みは busy marks だけ）：1手の読み 2／4／8 幾何平均 ×1.44／2.17／2.71（前の JS 版 ×1.40／2.12／2.75）、解析 合計 ×2.02／3.89／5.51（前 ×1.74／2.75／3.80）。詳細は gomoku/MODEL_CARD.md。
 
 ---
 

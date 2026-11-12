@@ -1196,7 +1196,7 @@ function think(rule, moves, level, start, rand) {
   if (!pos.legal().length) return { move: -1, nomove: true };   // renju: black has only forbidden points left (lost by the rules)
   const om = openingMove(pos, level, rand);
   if (om >= 0 && pos.isLegal(om)) return { move: om, book: true };
-  const E = eng();
+  const E = engX();
   const res = thinkRaw(E, pos, L, level, rand);
   if (res.move === null || res.move === undefined || !pos.isLegal(res.move)) {   // safety net: never a forbidden / illegal point
     const i = E.resist(pos, -1); return { move: i >= 0 ? I2M[i] : -1 };
@@ -1226,7 +1226,7 @@ function thinkRaw(E, pos, L, level, rand) {
 function analyze(rule, moves, ms, start, onProgress, maxD) {
   const pos = replay(rule, moves, start);
   if (pos.status().over) return { list: [], depth: 0 };
-  const E = eng();
+  const E = engX();
   const r = E.rootList(pos, ms || 1000, onProgress, 12, maxD);
   r.nodes = E.nodes;
   return r;
@@ -1236,7 +1236,7 @@ function analyze(rule, moves, ms, start, onProgress, maxD) {
 function cands(rule, moves, ms, start, k, plies, onProgress) {
   const pos = replay(rule, moves, start);
   if (pos.status().over) return { list: [], depth: 0 };
-  const E = eng();
+  const E = engX();
   const r = E.rootList(pos, ms || 1200, onProgress, 12);
   const list = r.list.slice().sort((a, b) => b.v - a.v).slice(0, k || 5);
   const yb = E.ybw; E.ybw = false;   // (the lines start at other positions than the helpers' root: no split points)
@@ -1263,6 +1263,69 @@ function solve(rule, moves, start, n, defend, maxNodes) {
   return list.map(e => ({ m: I2M[e.i], need: e.need }));
 }
 
+// ---------------------------------------------------------------- the C search (2026-11-12: core.c → core_simd.wasm / core.wasm,
+// core_mt.wasm for the page's threads). The same Pos / Solver / Engine as above in C (gomoku/tools/check-core.js: the same moves,
+// values, depths and node counts); think / analyze / cands use it when it is loaded (engX), the JavaScript search stays the
+// fallback (no WebAssembly, ?nowasm). The core keeps its own table and history between the requests, as the Engine above.
+let CX = null;   // { x: the core's exports, mem, opt (Float64), out / om / ov (Int32), prog, kind }
+const RULE_I = { renju: 0, standard: 1, free: 2 };
+const NNB = { renju: null, std: null };   // the nets' weight bytes (also for the core)
+function coreUse(x, mem, kind) {   // the tables (built above) into the core's memory
+  const B = mem.buffer;
+  new Uint8Array(B, x.tab_texact(), 59049).set(T_EXACT); new Uint8Array(B, x.tab_tfree(), 59049).set(T_FREE);
+  new Int32Array(B, x.tab_combn(), 65536).set(COMB_N); new Int32Array(B, x.tab_combr(), 65536).set(COMB_R); new Int16Array(B, x.tab_combo(), 65536).set(COMBO);
+  new Int32Array(B, x.tab_za(), SIZE * 3).set(ZA); new Int32Array(B, x.tab_zb(), SIZE * 3).set(ZB); new Int32Array(B, x.tab_zs(), 2).set([ZS1, ZS2]);
+  new Int32Array(B, x.tab_tag1(), 512).set(TAG1); new Int32Array(B, x.tab_tag2(), 512).set(TAG2);
+  x.c_init();
+  CX = { x, mem, kind, prog: null, opt: new Float64Array(B, x.opt_p(), 16), out: new Int32Array(B, x.out_p(), 8), om: new Int32Array(B, x.om_p(), 256), ov: new Int32Array(B, x.ov_p(), 256) };
+}
+function coreWeights() {   // the learned weights (eval_std.bin, the nets) into the core
+  if (!CX) return;
+  const x = CX.x, B = CX.mem.buffer;
+  if (LW.std && LW2.std) {
+    new Int32Array(B, x.lw_p(), BIAS + 2).set(LW.std);
+    const a = new Int32Array(B, x.lw2_p(), 4 * 59049); a.set(LW2.std.A[1], 0); a.set(LW2.std.A[2], 59049); a.set(LW2.std.B[1], 2 * 59049); a.set(LW2.std.B[2], 3 * 59049);
+    x.lw_set(1);
+  }
+  [NNB.renju, NNB.std].forEach((b, g) => { if (b && b.byteLength === x.nn_weights_size(g)) { new Uint8Array(B, x.nn_weights(g), b.byteLength).set(new Uint8Array(b)); x.nn_set(g, 1); } });
+}
+function cSync(pos) {   // the core's position = pos (the same stones, passes, side and opening flag: the same hash)
+  const x = CX.x; x.c_reset(RULE_I[pos.rule]);
+  for (let k = 0; k < pos.ply; k++) { const i = pos.stack[k]; if (x.c_side() !== pos.b[i]) x.c_pass(); x.c_make(I2M[i]); }
+  if (x.c_side() !== pos.side) x.c_pass();
+  x.c_fresh(pos.fresh ? 1 : 0);
+}
+const cList = n => { const out = []; for (let j = 0; j < n; j++) out.push({ m: I2M[CX.om[j]], v: CX.ov[j] }); return out; };
+const CE = {   // the Engine's interface on the core (positions are synced from the JavaScript Pos at every call)
+  best(pos, opt) {
+    cSync(pos); const o = CX.opt; o.fill(0);
+    o[0] = opt.ms || 0; o[1] = opt.nodes || 0; o[2] = opt.depth || 0; o[3] = opt.vct || 0; o[4] = opt.defend || 0; o[5] = opt.vctNodes || 0; o[6] = opt.vcfNodes || 0; o[7] = opt.minDepth || 0; o[8] = opt.d0 || 0; o[9] = opt.threats === false ? 1 : 0;
+    CX.x.c_best();
+    const r = CX.out, kind = r[3] === 1 ? 'vcf' : r[3] === 2 ? 'vct' : '';
+    return kind ? { i: r[0], v: r[1], depth: r[2], kind } : { i: r[0], v: r[1], depth: r[2] };
+  },
+  rootList(pos, ms, onProgress, maxN, maxD) {
+    cSync(pos);
+    CX.prog = onProgress ? (d, n) => onProgress(cList(n), d) : null;
+    try { const n = CX.x.c_rootList(ms, maxN || 0, maxD || 0, onProgress ? 1 : 0); return { list: cList(n), depth: CX.out[0] }; } finally { CX.prog = null; }
+  },
+  resist(pos, keep) { cSync(pos); return CX.x.c_resist(keep); },
+  gen(pos) { cSync(pos); const n = CX.x.c_gen(); return { list: Array.from(CX.om.subarray(0, n)) }; },
+  clear() { CX.x.c_clear(); },
+  get nodes() { return CX.x.c_nodes(); },
+};
+const engX = () => CX ? CE : eng();
+const coreImports = mem => ({ env: Object.assign(mem ? { memory: mem } : {}, { now: () => now(), progress: (d, n) => { if (CX && CX.prog) CX.prog(d, n); } }) });
+let SIMD = null;
+const simdOk = () => SIMD !== null ? SIMD : (SIMD = (() => { try { return WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11])); } catch (e) { return false; } })());
+// Node (tests): the core from bytes (core.wasm / core_simd.wasm), or off (null)
+function useCore(bytes, kind) {
+  if (!bytes) { CX = null; return false; }
+  const inst = new WebAssembly.Instance(new WebAssembly.Module(bytes), coreImports(null));
+  coreUse(inst.exports, inst.exports.memory, kind || 'wasm'); coreWeights();
+  return true;
+}
+
 // neural evaluation (nn.c compiled to WebAssembly), one instance per rule group
 const NNI = { renju: null, std: null };
 function makeNN(wasmBytes, weightBytes) {
@@ -1273,9 +1336,9 @@ function makeNN(wasmBytes, weightBytes) {
   return { eval: x.nn_eval, board: new Uint8Array(x.memory.buffer, x.nn_board(), 225), forb: new Uint8Array(x.memory.buffer, x.nn_forb(), 225) };
 }
 function setNN(group, wasmBytes, weightBytes) {
-  if (!wasmBytes) { NNI[group] = null; return true; }
+  if (!wasmBytes) { NNI[group] = null; NNB[group] = null; return true; }
   const nn = makeNN(wasmBytes, weightBytes); if (!nn) return false;
-  NNI[group] = nn; return true;
+  NNI[group] = nn; NNB[group] = weightBytes; return true;
 }
 // learned weights file: Int8 [combo/pair/bias part (BIAS + 2) | line part (4 * NL)]
 function loadWeightsBuffer(group, buf) {
@@ -1284,30 +1347,48 @@ function loadWeightsBuffer(group, buf) {
   setWeights(group, a.subarray(0, nf)); setLineWeights(group, a.subarray(nf));
   return true;
 }
-const API = { setNN, makeNN, loadWeightsBuffer, setWeights, setLineWeights, NCOMB, COMBO, N, BLACK, WHITE, EMPTY, WIN, WINT, CENTER, RULES, Pos, Engine, Solver, LEVELS, replay, setup, think, analyze, cands, solve, sqName, sqOf, sym, exactForbid, M2I, I2M,
+const API = { useCore, coreUse, coreWeights, coreImports, engX, useEngine: e => { ENG = e; }, get core() { return CX ? CX.kind : 'js'; }, NNB, setNN, makeNN, loadWeightsBuffer, setWeights, setLineWeights, NCOMB, COMBO, N, BLACK, WHITE, EMPTY, WIN, WINT, CENTER, RULES, Pos, Engine, Solver, LEVELS, replay, setup, think, analyze, cands, solve, sqName, sqOf, sym, exactForbid, M2I, I2M,
   C: { NONE: C_NONE, TWO: C_2, F2: C_F2, T3: C_3, F3: C_F3, B4: C_B4, F33: C_F33, F43: C_F43, F4: C_F4, FIVE: C_FIVE } };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.RenjuEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  // the learned evaluation for standard / freestyle (renju keeps the hand-made one for now)
+  // ?…&mt=1: the lead thread of the page's multi-thread pool (shared/mtengine.js), ?…&mt=2: a helper of the JavaScript search.
+  // The lead gets the pool's module and shared memory with the first message ('mtinit'): core_mt.wasm (2026-11-12: the C search,
+  // Praline's Young Brothers Wait — its helpers are mt-helper.js), or engine_mt.wasm (mt.c: the JavaScript search's shared
+  // table and split points — ?nowasm, bench.html's JavaScript engine; its helpers are engine.js?…&mt=2).
+  const MTQ = (/[?&]mt=([12])\b/.exec(self.location.search || '') || [])[1];
+  const NOWASM = /[?&]nowasm\b/.test(self.location.search || '');
+  // the one-thread workers: the C search (core_simd.wasm where the browser has wasm SIMD, else core.wasm)
+  const coreP = MTQ || NOWASM || typeof WebAssembly !== 'object' || typeof fetch !== 'function' ? Promise.resolve() : (async () => {
+    const simd = simdOk();
+    const r = await fetch(new URL((simd ? 'core_simd.wasm' : 'core.wasm') + '?v=1', self.location.href));
+    if (!r.ok) throw new Error('core ' + r.status);
+    const inst = (await WebAssembly.instantiate(await r.arrayBuffer(), coreImports(null))).instance;
+    coreUse(inst.exports, inst.exports.memory, simd ? 'wasm-simd' : 'wasm');
+  })().catch(err => { console.warn('[gomoku] core', err); CX = null; });
+  // the learned evaluation for standard / freestyle, the nets for renju / standard (also into the core)
   const gunzip = r => typeof DecompressionStream === 'function' ? new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer() : Promise.reject(new Error('no gzip'));
-  const ready = typeof fetch !== 'function' ? Promise.resolve() : Promise.all([
+  const ready = typeof fetch !== 'function' ? Promise.resolve() : Promise.all([coreP,
     fetch('eval_std.bin?v=1').then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (b) loadWeightsBuffer('std', b); }).catch(() => {}),
     // renju: neural evaluation (nn.c -> nn.wasm + weights); falls back to the hand-made evaluation if anything fails
     Promise.all([fetch('nn48.wasm?v=1').then(r => r.ok ? r.arrayBuffer() : null), fetch('nn_renju.bin.gz?v=4').then(r => r.ok ? gunzip(r) : null)])
       .then(([w, b]) => { if (w && b) setNN('renju', w, b); }).catch(() => {}),
     Promise.all([fetch('nn.wasm?v=1').then(r => r.ok ? r.arrayBuffer() : null), fetch('nn_std.bin.gz?v=2').then(r => r.ok ? gunzip(r) : null)])
       .then(([w, b]) => { if (w && b) setNN('std', w, b); }).catch(() => {}),
-  ]);
-  // ?…&mt=1: the lead thread of the page's multi-thread pool (shared/mtengine.js), ?…&mt=2: a helper. Both get the shared memory
-  // of engine_mt.wasm (mt.c: the transposition table) with the first message ('mtinit') and search with one table; the
-  // lead serves the usual API, a helper takes the root moves the lead shares out ('help': splitHelp) until the page stops it.
-  const MTQ = (/[?&]mt=([12])\b/.exec(self.location.search || '') || [])[1];
+  ]).then(() => coreWeights());
   let mtReady = null, mtCtl = null, mtCnt = null, mtId = 0;
   if (MTQ) mtReady = new Promise(res => self.addEventListener('message', function f(e) {
     const m = e.data; if (!m || m.type !== 'mtinit') return;
     self.removeEventListener('message', f);
     try {
+      if (WebAssembly.Module.exports(m.module).some(e => e.name === 'c_best')) {   // core_mt.wasm: the C search on the shared memory
+        const x = new WebAssembly.Instance(m.module, coreImports(m.mem)).exports;
+        x.mt_stack(m.top); if (!x.mt_thread(m.tls, m.id)) throw new Error('memory');
+        mtCtl = m.ctl; mtCnt = m.cnt; mtId = m.id;
+        coreUse(x, m.mem, 'wasm-mt');
+        ready.then(() => { coreWeights(); self.postMessage({ type: 'mtready' }); res(); });
+        return;
+      }
       const x = new WebAssembly.Instance(m.module, { env: { memory: m.mem } }).exports, B = m.mem.buffer, n = x.tt_size();
       x.mt_stack(m.top); x.mt_thread(m.tls, m.id);
       mtCtl = m.ctl; mtCnt = m.cnt; mtId = m.id;
@@ -1332,18 +1413,18 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
     await ready;
     const m = e.data;
     if (m.type === 'help') { help(m); return; }
-    if (MTQ === '1') { const E = eng(); E.split = m.type === 'analyze' || m.type === 'cands'; E.rsplit = m.type === 'think'; E.ybw = E.split || E.rsplit; }   // (the lead: rootList / best share their moves with the helpers — split points at any node, see splitRun)
+    if (MTQ === '1' && !CX) { const E = eng(); E.split = m.type === 'analyze' || m.type === 'cands'; E.rsplit = m.type === 'think'; E.ybw = E.split || E.rsplit; }   // (the lead: rootList / best share their moves with the helpers — split points at any node, see splitRun)
     try {
-      if (m.type === 'info') self.postMessage({ id: m.id, type: 'result', nnRenju: !!NNI.renju, nnStd: !!NNI.std, learnedStd: !!LW.std });
-      else if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', ...(() => { PRO_CFG = m.cfg || null; try { return think(m.rule, m.moves, m.level, m.start); } finally { PRO_CFG = null; } })() });
+      if (m.type === 'info') { const ci = CX ? CX.x.c_info() : -1; self.postMessage({ id: m.id, type: 'result', core: CX ? CX.kind : 'js', nnRenju: CX ? !!(ci & 1) : !!NNI.renju, nnStd: CX ? !!(ci & 2) : !!NNI.std, learnedStd: CX ? !!(ci & 4) : !!LW.std }); }
+      else if (m.type === 'think') self.postMessage({ id: m.id, type: 'result', core: CX ? CX.kind : 'js', ...(() => { PRO_CFG = m.cfg || null; try { return think(m.rule, m.moves, m.level, m.start); } finally { PRO_CFG = null; } })() });
       else if (m.type === 'analyze') {
         const prog = (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth });
-        self.postMessage({ id: m.id, type: 'result', ...analyze(m.rule, m.moves, m.time || 1000, m.start, prog, m.depth) });
+        self.postMessage({ id: m.id, type: 'result', core: CX ? CX.kind : 'js', ...analyze(m.rule, m.moves, m.time || 1000, m.start, prog, m.depth) });
       } else if (m.type === 'cands') {
         const prog = (list, depth) => self.postMessage({ id: m.id, type: 'progress', list, depth });
-        self.postMessage({ id: m.id, type: 'result', ...cands(m.rule, m.moves, m.time || 1200, m.start, m.k, m.plies, prog) });
+        self.postMessage({ id: m.id, type: 'result', core: CX ? CX.kind : 'js', ...cands(m.rule, m.moves, m.time || 1200, m.start, m.k, m.plies, prog) });
       } else if (m.type === 'solve') self.postMessage({ id: m.id, type: 'result', list: solve(m.rule, m.moves, m.start, m.n, m.defend, m.maxNodes) });
-      else if (m.type === 'newgame') { eng().clear(); self.postMessage({ id: m.id, type: 'result' }); }   // (an empty table: bench.html)
+      else if (m.type === 'newgame') { engX().clear(); self.postMessage({ id: m.id, type: 'result' }); }   // (an empty table: bench.html)
     } catch (err) { self.postMessage({ id: m.id, type: 'result', error: String(err && err.stack || err) }); }
   };
 }

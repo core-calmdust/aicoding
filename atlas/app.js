@@ -149,13 +149,17 @@
      games, the game's other progress (puzzles, lessons…) and its achievements (2026-11-09). */
   const recLoad = id => { try { const a = JSON.parse(localStorage.getItem('atlas-rec-' + id) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } };
   function recPush(id, r) { try { const a = recLoad(id); a.push(Object.assign({ t: Date.now() }, r)); localStorage.setItem('atlas-rec-' + id, JSON.stringify(a.slice(-500))); } catch (e) {} }
-  let recMode = 'all', recTab = 'rec';
+  let recMode = 'all', recTab = 'rec', recVar = 'all';
+  // 種目 (2026-11-12): records of a game with variants (shogi) carry v (the full game's key: 'hon' · 'mini' · …) and vn (its name) —
+  // the page can show one variant at a time. Older records without v: the name after " · " in the opponent, else the standard game
+  const ALLV = {"ja":"全ルール","en":"All variants","zh":"全部规则","ko":"모든 규칙","es":"Todas las variantes","fr":"Toutes les variantes","pt":"Todas as variantes","de":"Alle Varianten","hi":"सभी नियम","ar":"كل الأنواع","ru":"Все варианты","zh-TW":"所有變體","id":"Semua varian","tr":"Tüm varyantlar"};
+  const recVOf = r => r.v || (r.opp && r.opp.indexOf(' · ') > 0 ? r.opp.split(' · ').pop() : 'hon');
   function openRec(g, mode, tab) {
     let ov = $('recOv');
     if (!ov) { ov = document.createElement('div'); ov.id = 'recOv'; ov.className = 'recov'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); document.body.appendChild(ov);
       ov.addEventListener('click', e => { if (e.target === ov) closeRec(); });
       addEventListener('keydown', e => { if (e.key === 'Escape' && ov.classList.contains('on')) closeRec(); }); }
-    recMode = mode || 'all'; recTab = tab || 'rec'; renderRec(g); requestAnimationFrame(() => ov.classList.add('on'));
+    recMode = mode || 'all'; recTab = tab || 'rec'; recVar = 'all'; renderRec(g); requestAnimationFrame(() => ov.classList.add('on'));
   }
   function rtHtml(g, resChip, dt) {   // the レート戦 tab: the rating, its curve and the rated games
     const C = RTG[g.id], S = rtLoadG(g.id), H = S.hist.slice(-40), ol = recLoad(g.id).filter(r => r && r.res && r.mode === 'online');
@@ -176,7 +180,12 @@
     const rtOn = !!RTG[g.id], all = recLoad(g.id).filter(r => r && r.res && r.mode !== 'pvp' && !(rtOn && (r.mode === 'rated' || r.mode === 'online'))), ov = $('recOv');
     const versus = all.length || (g.tags || []).some(x => x === 'ai' || x === 'online' || x === 'rated') || !!(window.Atlas3D && Atlas3D[g.id]) || !!(window.AtlasLazy && AtlasLazy.hasPlay(g.id));   // a game with opponents (puzzles / solo games: no empty record box)
     const has = { ai: all.some(r => r.mode === 'ai'), rated: all.some(r => r.mode === 'rated'), online: all.some(r => r.mode === 'online'), t3d: all.some(r => r.via === '3d') };
-    const L = recMode === 'all' ? all : recMode === 't3d' ? all.filter(r => r.via === '3d') : all.filter(r => r.mode === recMode);
+    const VA = window.Atlas3D && Atlas3D[g.id] && Atlas3D[g.id].variants, vnm = new Map();
+    all.forEach(r => { const k = recVOf(r); if (!vnm.has(k) || r.vn) vnm.set(k, r.vn || vnm.get(k) || (VA ? VA.name(k === 'hon' ? '' : k, lang) : k)); });
+    const vkeys = [...vnm.keys()]; if (VA) vkeys.sort((a, b) => (VA.list.indexOf(a === 'hon' ? '' : a) + 1 || 99) - (VA.list.indexOf(b === 'hon' ? '' : b) + 1 || 99));
+    if (recVar !== 'all' && !vnm.has(recVar)) recVar = 'all';
+    const LM = recMode === 'all' ? all : recMode === 't3d' ? all.filter(r => r.via === '3d') : all.filter(r => r.mode === recMode);
+    const L = recVar === 'all' ? LM : LM.filter(r => recVOf(r) === recVar);
     const n = { w: 0, l: 0, d: 0 }; L.forEach(r => { n[r.res] = (n[r.res] || 0) + 1; });
     const tot = n.w + n.l + n.d, wr = tot ? Math.round(n.w / Math.max(1, n.w + n.l) * 100) : 0;
     let cur = 0, best = 0, run = 0; L.forEach(r => { if (r.res === 'w') { run++; best = Math.max(best, run); } else if (r.res === 'l') run = 0; }); cur = run;
@@ -202,7 +211,8 @@
     const tabs = [['rec', '🏆', t('rec.title'), versus], ['rt', '📈', t('bv.m.rated'), rtOn], ['play', '📊', t('rec.play'), tiles.length], ['ach', '🏅', t('tab.ach'), achs.length]].filter(x => x[3]);
     if (!tabs.some(x => x[0] === recTab)) recTab = tabs.length ? tabs[0][0] : 'rec';
     const modes = [['all', 1], ['ai', has.ai], ['rated', has.rated], ['online', has.online], ['t3d', has.t3d]].filter(x => x[1]).map(x => x[0]);
-    const recHtml = all.length ? `${modes.length > 1 ? `<div class="rdd"><button type="button" class="rddb" aria-haspopup="listbox" aria-expanded="false"><span>${esc(t('rec.m.' + recMode))}</span><i>▾</i></button><div class="rddl" role="listbox" hidden>${modes.map(k => `<button type="button" role="option" data-m="${k}" class="${k === recMode ? 'on' : ''}">${esc(t('rec.m.' + k))}</button>`).join('')}</div></div>` : ''}
+    const vdd = vkeys.length > 1 ? `<div class="rdd rddv"><button type="button" class="rddb" aria-haspopup="listbox" aria-expanded="false"><span>${esc(recVar === 'all' ? ALLV[lang] || ALLV.en : vnm.get(recVar))}</span><i>▾</i></button><div class="rddl" role="listbox" hidden>${['all', ...vkeys].map(k => `<button type="button" role="option" data-vv="${esc(k)}" class="${k === recVar ? 'on' : ''}">${esc(k === 'all' ? ALLV[lang] || ALLV.en : vnm.get(k))}</button>`).join('')}</div></div>` : '';
+    const recHtml = all.length ? `${vdd || modes.length > 1 ? '<div class="rdds">' : ''}${vdd}${modes.length > 1 ? `<div class="rdd"><button type="button" class="rddb" aria-haspopup="listbox" aria-expanded="false"><span>${esc(t('rec.m.' + recMode))}</span><i>▾</i></button><div class="rddl" role="listbox" hidden>${modes.map(k => `<button type="button" role="option" data-m="${k}" class="${k === recMode ? 'on' : ''}">${esc(t('rec.m.' + k))}</button>`).join('')}</div></div>` : ''}${vdd || modes.length > 1 ? '</div>' : ''}
         <section class="rsum card">
           <span class="rring"><svg viewBox="0 0 80 80"><circle cx="40" cy="40" r="${R}" fill="none" stroke="#efe8d6" stroke-width="9"/><circle cx="40" cy="40" r="${R}" fill="none" stroke="${g.color}" stroke-width="9" stroke-linecap="round" stroke-dasharray="${C * wr / 100} ${C}" transform="rotate(-90 40 40)"/></svg><b>${wr}<i>%</i></b><em>${esc(t('rec.rate'))}</em></span>
           <div class="rnums"><div class="w"><b>${n.w}</b><span>${esc(t('rec.w'))}</span></div><div class="l"><b>${n.l}</b><span>${esc(t('rec.l'))}</span></div><div class="d"><b>${n.d}</b><span>${esc(t('rec.d'))}</span></div></div>
@@ -224,11 +234,10 @@
     </div>`;
     ov.querySelector('.rx').onclick = closeRec;
     ov.querySelectorAll('.rtabs [data-tab]').forEach(b => b.onclick = () => { if (recTab === b.dataset.tab) return; recTab = b.dataset.tab; try { SFX.tap && SFX.tap(); } catch (e) {} renderRec(g); });
-    const dd = ov.querySelector('.rdd');
-    if (dd) { const bt = dd.querySelector('.rddb'), ls = dd.querySelector('.rddl');
-      bt.onclick = e => { e.stopPropagation(); const op = ls.hidden; ls.hidden = !op; bt.setAttribute('aria-expanded', String(op)); };
-      ls.onclick = e => { const b = e.target.closest('[data-m]'); if (b) { recMode = b.dataset.m; renderRec(g); } };
-      ov.querySelector('.recp').addEventListener('click', e => { if (!dd.contains(e.target)) { ls.hidden = true; bt.setAttribute('aria-expanded', 'false'); } }); }
+    ov.querySelectorAll('.rdd').forEach(dd => { const bt = dd.querySelector('.rddb'), ls = dd.querySelector('.rddl');
+      bt.onclick = e => { e.stopPropagation(); const op = ls.hidden; ov.querySelectorAll('.rddl').forEach(x => { x.hidden = true; }); ls.hidden = !op; bt.setAttribute('aria-expanded', String(op)); };
+      ls.onclick = e => { const b = e.target.closest('[data-m]'), v = e.target.closest('[data-vv]'); if (b) { recMode = b.dataset.m; renderRec(g); } else if (v) { recVar = v.dataset.vv; renderRec(g); } };
+      ov.querySelector('.recp').addEventListener('click', e => { if (!dd.contains(e.target)) { ls.hidden = true; bt.setAttribute('aria-expanded', 'false'); } }); });
   }
   function itemCard(it, foot, extraCls = '') {
     return `<div class="card item r${it.rar} ${extraCls}" data-kind="${it.kind}" data-id="${it.id}"><span class="rar">${ART.RAR[it.rar]}</span>
@@ -782,8 +791,8 @@
     bt.onclick = () => {
       try { SFX.tap && SFX.tap(); } catch (x) {}
       const cur = bt.dataset.v || '', sh = document.createElement('div'); sh.className = 'lvsheet vsheet';
-      sh.innerHTML = `<div class="lvs-in" role="listbox"><div class="lvs-h">${esc(V.label(lang))}<button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div><div class="lvs-l vgrid">${V.list.map(v => { const [W, H] = V.dims(v);
-        return `<button type="button" role="option" data-v="${esc(v)}" class="vcard${v === cur ? ' on' : ''}">${vSvg(ad, v, 'vsvg')}<span class="vtx"><span class="vnm">${esc(V.name(v, lang))}</span><em>${W}×${H}</em></span><small>${esc(V.desc(v, lang))}</small></button>`; }).join('')}</div></div>`;
+      sh.innerHTML = `<div class="lvs-in" role="listbox"><div class="lvs-h">${esc(V.label(lang))}<button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div><div class="vgrps">${(V.groups ? V.groups(lang) : [['', V.list]]).map(([gn, vs]) => `${gn ? `<div class="vgh">${esc(gn)}</div>` : ''}<div class="lvs-l vgrid">${vs.map(v => { const [W, H] = V.dims(v);
+        return `<button type="button" role="option" data-v="${esc(v)}" class="vcard${v === cur ? ' on' : ''}">${vSvg(ad, v, 'vsvg')}<span class="vtx"><span class="vnm">${esc(V.name(v, lang))}</span><em>${W}×${H}</em></span><small>${esc(V.desc(v, lang))}</small></button>`; }).join('')}</div>`).join('')}</div></div>`;   // (grouped as in the full game: 本将棋系 · マイクロ系 · 異種遊戯)
       document.body.appendChild(sh); requestAnimationFrame(() => sh.classList.add('on'));
       const on = sh.querySelector('.vcard.on'); if (on) setTimeout(() => on.scrollIntoView({ block: 'nearest' }), 60);
       const close = () => { if (sh.classList.contains('out')) return; sh.classList.add('out'); sh.classList.remove('on'); setTimeout(() => sh.remove(), 240); };
@@ -1293,7 +1302,7 @@
       onEnd: res => {
         if (session === sess) TB.end();
         const rtX = rtR && rtCur && rtCur.R === rtR ? rtSettleG(g.id, rtR, res.draw ? .5 : res.win ? 1 : 0, String(res.score || '').replace(/<[^>]*>/g, '').slice(0, 40)) : null;
-        if (!res.pvp) { A_.recordPlay(W, g.id, res); recPush(g.id, { mode: pmode === 'rated' ? 'rated' : 'ai', res: res.draw ? 'd' : res.win ? 'w' : 'l', side: side === 2 ? 1 : 0, opp: res.solo ? res.opp : 'AI Lv.' + (res.level || level), key: res.solo ? res.key : (pmode === 'rated' ? 'rt:' : 'ai:') + (res.level || level), why: res.solo ? res.why : String(res.score || '').replace(/<[^>]*>/g, '').slice(0, 60), via: '3d' }); }
+        if (!res.pvp) { A_.recordPlay(W, g.id, res); recPush(g.id, { mode: pmode === 'rated' ? 'rated' : 'ai', res: res.draw ? 'd' : res.win ? 'w' : 'l', side: side === 2 ? 1 : 0, opp: res.solo ? res.opp : 'AI Lv.' + (res.level || level) + (variant && ad.variants ? ' · ' + ad.variants.name(variant, lang) : ''), key: res.solo ? res.key : (pmode === 'rated' ? 'rt:' : 'ai:') + (res.level || level) + (variant ? ':' + variant : ''), ...(ad.variants ? { v: variant || 'hon', vn: ad.variants.name(variant, lang) } : {}), why: res.solo ? res.why : String(res.score || '').replace(/<[^>]*>/g, '').slice(0, 60), via: '3d' }); }
         refresh();   // two players on one device: no win / loss for the player's record
         if (npcT && session === sess && !res.pvp) { npcT.end(res); W = A_.load(); refresh(); }   // (a boss beaten: its N / R / SR was added to the saved wallet)
         setTimeout(() => {

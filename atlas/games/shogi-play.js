@@ -112,9 +112,9 @@
 .sghs .op .c{transform:none}
 .sghs button.c{cursor:pointer}.sghs button.c.on{background:#bdf0d2;border-color:#2fa864;box-shadow:0 2px 0 #1f7a46}
 .sghs .c i{position:absolute;right:-6px;top:-6px;min-width:17px;height:17px;border-radius:9px;background:#2a1a0e;color:#fff;font:800 11px/17px system-ui,sans-serif;font-style:normal;text-align:center;padding:0 3px}
-@media (min-width:820px){.sghs{top:calc(14px + env(safe-area-inset-top));gap:10px}.sghs .r{gap:8px}.sghs .lb{font-size:15px;padding:8px 13px;margin-inline-end:4px}
-.sghs .c{min-width:52px;height:56px;padding:0 6px;border-radius:13px;border-width:2.5px;box-shadow:0 4px 0 #8a6232;font-size:30px}
-.sghs .c i{right:-9px;top:-9px;min-width:24px;height:24px;border-radius:12px;font-size:14px;line-height:24px}}   /* PC: big enough to read at a glance (2026-11-12) */
+@media (min-width:820px){.sghs{top:calc(16px + env(safe-area-inset-top));gap:14px}.sghs .r{gap:12px}.sghs .lb{font-size:19px;padding:10px 16px;margin-inline-end:6px}
+.sghs .c{min-width:78px;height:86px;padding:0 8px;border-radius:18px;border-width:3px;box-shadow:0 5px 0 #8a6232;font-size:48px}
+.sghs .c i{right:-11px;top:-11px;min-width:32px;height:32px;border-radius:16px;font-size:18px;line-height:32px}}   /* PC: big enough to read at a glance (2026-11-12; larger again the same day) */
 .sgzoom{position:fixed;z-index:75;top:calc(12px + env(safe-area-inset-top));right:106px;display:grid;place-items:center;width:44px;height:44px;padding:0;border-radius:50%;border:2px solid var(--line,#eadfcb);background:#fff;box-shadow:0 3px 0 var(--line,#eadfcb);font:800 13px/1 var(--round,system-ui,sans-serif);color:#3a2e24;cursor:pointer}
 .sgzoom.in-rgd{position:absolute;top:auto;right:auto}
 .sgzoom svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
@@ -165,10 +165,11 @@
       const r = ctx.el.getBoundingClientRect();
       tall = r.width < r.height * .95;
       const BWd = FW + 1, BDd = FH + 1;
+      const SZ = FH / 2 + (board.userData.mg || 0) - 3.55 / 2;   // (3.55: the stand's top plate, models/shogi.js komadai)
       // phones (tall): no stands — the pieces in hand lie in a row on the table just below (yours) / above (the AI's) the board, so
       // the board itself can be framed much larger (2026-11-09)
       ST = tall ? [{ x: 0, z: BDd / 2 + .72 }, { x: 0, z: -(BDd / 2 + .72) }]
-        : [{ x: FW / 2 + 2.15, z: 3.7 }, { x: -FW / 2 - 2.15, z: -3.7 }];
+        : [{ x: FW / 2 + 2.15, z: SZ }, { x: -FW / 2 - 2.15, z: -SZ }];   // (the stands' near / far edge in line with the board's, whatever its size, 2026-11-12)
       KH = tall ? .01 : Y;
       stands.forEach((k, i) => { k.position.set(ST[i].x, 0, ST[i].z); k.rotation.y = 0; k.visible = !tall; });
       // wide: the player's stand sits a little nearer the bottom — shift the scene so the HUD stays clear

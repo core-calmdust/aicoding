@@ -1,5 +1,6 @@
 // Book A vs book B with the same engine and settings, from the initial position (the books' own variety on both sides).
-//   node book-match.js <bookA (.bin | .json)> <bookB> <pairs> <out.jsonl> [level=15] [timeMs] [--threads N]
+//   node book-match.js <bookA (.bin | .json)> <bookB> <pairs> <out.jsonl> [level=15] [timeMs] [--threads N] [--wa w.bin.gz] [--wb w.bin.gz]
+// Both books the same = the colour balance of the engine itself (2026-11-12: white won 68% at Lv.20 with v4 weights, either book).
 // Game 2k and 2k+1 use the same random seeds with the colours swapped. Results are appended per game (resumable; with
 // --threads the games are shared out to N worker threads, one game per thread at a time, and the file stays in any order).
 // Lv.17–27 play to a fixed depth (their time is only a guard), so the result does not depend on the machine's speed.
@@ -32,11 +33,13 @@ function playGame(EA, EB, cfg, g) {
 }
 
 function engines() {
-  const raw = zlib.gunzipSync(fs.readFileSync(path.join(RV, 'weights.bin.gz')));
-  const W = new Int16Array(raw.buffer, raw.byteOffset, raw.length / 2);
+  const readW = f => { let b = fs.readFileSync(f); if (b[0] === 0x1f && b[1] === 0x8b) b = zlib.gunzipSync(b); b = new Uint8Array(b); return new Int16Array(b.buffer, 0, b.length >> 1); };
+  const W = readW(path.join(RV, 'weights.bin.gz'));
+  const o = isMainThread ? opt : workerData.opt;   // --wa / --wb: other evaluation weights for A / B (e.g. v5, tools/train/README.md)
+  const WA = o.wa ? readW(path.resolve(o.wa)) : W, WB = o.wb ? readW(path.resolve(o.wb)) : W;
   const readBook = f => /\.json$/.test(f) ? JSON.parse(fs.readFileSync(f, 'utf8')) : fs.readFileSync(f);
-  const load = book => { const f = require.resolve(path.join(RV, 'engine.js')); delete require.cache[f]; const E = require(f); E.setWeights(W, 30); E.setBook(readBook(book)); return E; };
-  const EA = load(fa), EB = load(fb);
+  const load = (book, w) => { const f = require.resolve(path.join(RV, 'engine.js')); delete require.cache[f]; const E = require(f); E.setWeights(w, 30); E.setBook(readBook(book)); return E; };
+  const EA = load(fa, WA), EB = load(fb, WB);
   return { EA, EB, cfg: Object.assign({}, EA.LEVELS[+level], timeMs ? { time: +timeMs } : {}) };
 }
 
@@ -71,7 +74,7 @@ function report() {
   if (todo.length) await new Promise(resolve => {
     let next = 0, busy = 0;
     const pool = [];
-    for (let i = 0; i < threads; i++) pool.push(new Worker(__filename, { workerData: { pos } }));
+    for (let i = 0; i < threads; i++) pool.push(new Worker(__filename, { workerData: { pos, opt } }));
     const feed = w => {
       if (next >= todo.length) { if (!busy) { pool.forEach(x => x.terminate()); resolve(); } return; }
       busy++; w.postMessage(todo[next++]);
