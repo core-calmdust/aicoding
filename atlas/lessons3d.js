@@ -449,6 +449,7 @@
       const max = cur.probs.length * PTS, pts = cur.res.reduce((a, b) => a + (b || 0), 0), q = Math.ceil(max * PASS), pass = cur.save(pts, max);
       say(pass ? fill(X.pass, { p: pts, m: max }) : fill(X.fail, { p: pts, m: max, q }));
       if (pass && window.AtlasConfetti) try { AtlasConfetti(70); } catch (e) {}
+      if (pass) setTimeout(fanfare, 350);   // (2026-11-12) the lesson passed: a little fanfare
       act(pass ? X.nextL : X.again, { again: true });
       $('[data-a=again]').onclick = () => open(cur.key);
       $('[data-a=next]').onclick = pass ? nextItem : () => open(cur.key);
@@ -460,6 +461,13 @@
       if (nx) open(nx.key); else say(X.endOnly);
     }
     let ac0 = null;
+    function fanfare() {   // C E G C' then a held C-major chord, soft triangle + a quiet octave sparkle
+      try { if (localStorage.getItem('atlas-sfx') === '0') return; const C = window.__atlasAC || (window.__atlasAC = new (window.AudioContext || window.webkitAudioContext)()); if (C.state === 'suspended') C.resume();
+        const t0 = C.currentTime + .02, note = (f, d, len, v, type) => { const o = C.createOscillator(), g = C.createGain(); o.type = type || 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(0, t0 + d); g.gain.linearRampToValueAtTime(v, t0 + d + .015); g.gain.exponentialRampToValueAtTime(.001, t0 + d + len); o.connect(g).connect(C.destination); o.start(t0 + d); o.stop(t0 + d + len + .05); };
+        [[523, 0], [659, .11], [784, .22], [1047, .34]].forEach(([f, d]) => { note(f, d, .32, .09); note(f * 2, d, .18, .025, 'sine'); });
+        [523, 659, 784, 1047].forEach(f => note(f, .5, 1.1, .06));
+      } catch (e) {}
+    }
     function chime(ok) {
       try { if (localStorage.getItem('atlas-sfx') === '0') return; const C = window.__atlasAC || (window.__atlasAC = new (window.AudioContext || window.webkitAudioContext)()); if (C.state === 'suspended') C.resume(); ac0 = C;
         const t0 = C.currentTime, F = ok ? [523, 659, 784] : [392, 330];
