@@ -674,12 +674,6 @@ html.atlas-skin body:not(#_) .dock :is(.dk-btn:not(.go), .dk-name, .dk-vsel, .dk
 /* (2026-11-12) the settings popup's icons (the game's own sound button moved there): plain icons, not the boxes' white pills */
 html.atlas-skin body:not(#_):not(#_) .hbo-pop .hbo-ic > :is(button, a, span){background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important;outline:none!important}
 
-/* 形勢 / コーチ / 棋譜: the draggable gaps (common.js sideSplit, 2026-11-12) */
-html.atlas-skin .side-in.a-split{position:relative}
-html.atlas-skin .a-split-h{position:absolute;left:12%;right:12%;height:14px;z-index:5;cursor:row-resize;touch-action:none}
-html.atlas-skin .a-split-h::after{content:"";position:absolute;left:50%;top:5px;width:44px;height:4px;margin-left:-22px;border-radius:4px;background:#e6d6b2;opacity:0;transition:opacity .15s,background .15s}
-html.atlas-skin .side-in:hover .a-split-h::after{opacity:.8}
-html.atlas-skin .a-split-h:hover::after,html.atlas-skin .a-split-h.on::after{opacity:1;background:#e09a00}
 /* ルール（RuleTour, shared/ruletour.js）— the full version's look (2026-11-12): step chips, the text on a card with the task as a
    callout, the mini board in a wooden frame. Every game's rules tutorial shares it. */
 html.atlas-skin body:not(#_) .rt-steps{gap:8px;margin:0 0 16px;padding:6px 0}
@@ -737,7 +731,3 @@ html.atlas-skin body:not(#_) .grc-hd .grc-ic svg{stroke:#e09a00!important}
    (the credits) clear the frosted band above the buttons */
 html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_) :is(#segLs, .seg.ls-tabs){position:sticky;top:-14px;z-index:6;box-shadow:0 0 0 16px var(--a-paper)!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_) :has(+ .modal-actions){margin-bottom:52px}
-/* the coach turned off keeps the same room as when on (the 形勢 / コーチ / 棋譜 sizes don't jump with the switch, and the gaps
-   still drag) — the games' own on-layout — the coach card fills, the 棋譜 card keeps its on-height (common.js sideSplit) (2026-11-12) */
-html.atlas-skin:not(.atlas-2d) body:not(#_) .side-in.a-split > #coachCard.ck-off:not(.hidden){flex:2.4 1 0;min-height:120px;overflow-y:auto}
-html.atlas-skin:not(.atlas-2d) body:not(#_) .side-in.a-split:has(> #coachCard.ck-off:not(.hidden)) > #evalCard .graph{height:40px!important}

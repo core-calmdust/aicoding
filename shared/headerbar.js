@@ -1069,5 +1069,86 @@ function auto2d() {
 }
 // (after the deferred scripts — langsel.js turns #langSel into its button first)
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(auto2d, 0)); else setTimeout(auto2d, 0);
+// ---------------------------------------------------------------- 形勢 / コーチ / 棋譜 の境目ドラッグ (moved from atlas/skin/common.js, 2026-11-12)
+const CSS_SPLIT = `.side-in.a-split{position:relative}
+.a-split-h{position:absolute;left:12%;right:12%;height:14px;z-index:5;cursor:row-resize;touch-action:none}
+.a-split-h::after{content:"";position:absolute;left:50%;top:5px;width:44px;height:4px;margin-left:-22px;border-radius:4px;background:#e6d6b2;opacity:0;transition:opacity .15s,background .15s}
+.side-in:hover .a-split-h::after{opacity:.8}
+.a-split-h:hover::after,.a-split-h.on::after{opacity:1;background:#e09a00}
+.side-in.a-split > #coachCard.ck-off:not(.hidden){flex:1 1 0!important;min-height:90px!important;overflow-y:auto}
+.side-in.a-split:has(> #coachCard.ck-off:not(.hidden)) > #evalCard .graph{height:40px!important}`;
+function sideSplitInit() {
+  /* ---------- 形勢 / コーチ / 棋譜: drag the gaps between the cards to share the column's height (2026-11-12) ----------
+     One setting for every game with this column, in the 2D pages and the full version alike (localStorage atlas-side-split: e = px added to the 形勢 graph, k = the 棋譜
+     card's height). Only while the coach card is shown beside the board; a double-click on a gap puts it back. */
+  (function sideSplit() {
+    if (window.__sideSplit) return; window.__sideSplit = 1;
+    { const st = document.createElement('style'); st.textContent = CSS_SPLIT; document.head.appendChild(st); }
+    const si = document.querySelector('.side-in'), ev = document.getElementById('evalCard'), co = document.getElementById('coachCard'), ki = document.querySelector('.side-in > .kifu-card');
+    if (!si || !ki) return;
+    const KEY = 'atlas-side-split', de = document.documentElement;
+    let S = { e: 0, k: 0 }; try { Object.assign(S, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
+    const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+    const vis = el => !!(el && el.getClientRects().length && getComputedStyle(el).display !== 'none');
+    const gr = () => ev && ev.querySelector('.graph');
+    // the coach card open (the 形勢 / 棋譜 sizes share its room) or off — closed or turned off: then the 棋譜 card takes the room
+    // and the one gap (形勢 ↔ next card) sizes the 形勢 graph against it (2026-11-12: with the coach off the drag did nothing)
+    const coachOn = () => vis(co) && !co.classList.contains('hidden') && co.getBoundingClientRect().height > 70;   // (turned off it keeps its size: skin.css, 2026-11-12)
+    const live = () => innerWidth >= 900 && vis(ki) && getComputedStyle(si).flexDirection === 'column' && si.clientHeight > 300;
+    let gh0 = 0, busy = false, kOn = 0;
+    const clear = () => { const g = gr(); if (g) ['height', 'flex', 'max-height', 'min-height'].forEach(k => g.style.removeProperty(k)); ki.style.removeProperty('flex'); };
+    const MINC = 90, MINK = 110;
+    const fill = () => coachOn() ? co : ki;   // the card that gives and takes the room
+    function apply() {
+      if (busy) return; busy = true;
+      clear();
+      const on = live(); si.classList.toggle('a-split', on);
+      if (on) {
+        const g = vis(ev) && gr(); gh0 = g ? g.getBoundingClientRect().height : 0;
+        const cOn = coachOn();
+        let k = 0;
+        if (cOn) { const room = co.getBoundingClientRect().height + ki.getBoundingClientRect().height - MINC, off = co.classList.contains('ck-off');
+          if (!off && !S.k) kOn = ki.getBoundingClientRect().height;   // (the 棋譜 card's height with the coach on: kept when it is switched off)
+          const want = S.k || (off ? kOn || Math.round(room * .5) : 0);
+          k = want ? Math.max(MINK, Math.min(want, room - (g ? S.e : 0))) : 0;
+          if (k) ki.style.setProperty('flex', '0 0 ' + k + 'px', 'important'); }
+        if (g && S.e) { const F = fill(), spare = F.getBoundingClientRect().height - (cOn ? MINC : MINK);
+          const e = Math.max(-Math.max(0, gh0 - 30), Math.min(S.e, spare)); g.style.setProperty('height', (gh0 + e) + 'px', 'important'); g.style.setProperty('flex', 'none', 'important'); g.style.setProperty('max-height', 'none', 'important'); g.style.setProperty('min-height', '0', 'important'); }
+      }
+      place(on); busy = false;
+    }
+    const hs = [0, 1].map(i => { const h = document.createElement('div'); h.className = 'a-split-h'; h.dataset.i = i; si.appendChild(h); return h; });
+    function place(on) {
+      const cOn = coachOn(), r0 = si.getBoundingClientRect();
+      const pairs = [[ev, cOn ? co : (vis(co) ? co : ki)], [co, ki]];
+      hs.forEach((h, i) => { const [a, b] = pairs[i]; const ok = on && vis(a) && vis(b) && (i === 1 ? cOn : !!gr());
+        h.style.display = ok ? '' : 'none'; if (!ok) return;
+        const y = (a.getBoundingClientRect().bottom + b.getBoundingClientRect().top) / 2 - r0.top + si.scrollTop; h.style.top = (y - 7) + 'px'; });
+    }
+    hs.forEach(h => {
+      h.addEventListener('pointerdown', e => {
+        e.preventDefault(); h.setPointerCapture(e.pointerId); h.classList.add('on');
+        const i = +h.dataset.i, y0 = e.clientY, g = gr(), cOn = coachOn(), F = fill();
+        const c0 = co ? co.getBoundingClientRect().height : 0, k0 = ki.getBoundingClientRect().height, f0 = F.getBoundingClientRect().height, g0 = g ? g.getBoundingClientRect().height : 0;
+        const mv = ev2 => { const d = ev2.clientY - y0;
+          if (i === 0 && g) { const nd = Math.max(30 - g0, Math.min(d, f0 - (cOn ? MINC : MINK))); S.e = Math.round(g0 + nd - gh0); }
+          else if (i === 1) { const nd = Math.max(-(c0 - MINC), Math.min(d, k0 - MINK)); S.k = Math.round(k0 - nd); }
+          apply(); };
+        const up = () => { h.classList.remove('on'); h.removeEventListener('pointermove', mv); save(); };
+        h.addEventListener('pointermove', mv); h.addEventListener('pointerup', up, { once: true }); h.addEventListener('pointercancel', up, { once: true });
+      });
+      h.addEventListener('dblclick', () => { if (+h.dataset.i === 0) S.e = 0; else S.k = 0; save(); apply(); });
+    });
+    addEventListener('storage', e => { if (e.key === KEY) { try { S = Object.assign({ e: 0, k: 0 }, JSON.parse(e.newValue || '{}')); } catch (x) {} apply(); } });
+    const later = () => requestAnimationFrame(apply);
+    addEventListener('resize', later);
+    if (co) new MutationObserver(later).observe(co, { attributes: true, attributeFilter: ['class', 'style'] });
+    new MutationObserver(later).observe(de, { attributes: true, attributeFilter: ['class'] });
+    if (window.ResizeObserver) { const ro = new ResizeObserver(() => { if (!busy) later(); }); ro.observe(si); }
+    si.addEventListener('scroll', () => place(si.classList.contains('a-split')));
+    [0, 300, 1200, 3000].forEach(ms => setTimeout(apply, ms));
+  })();
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(sideSplitInit, 0)); else setTimeout(sideSplitInit, 0);
 window.HeaderBar = { init, MEDIA: MQ, HEIGHT: H, ICON_RULES, options, addOption, syncOptions: syncAll, OPTIONS_T: OT };
 })();
