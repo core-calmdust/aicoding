@@ -50,7 +50,9 @@
 .prlb .prlb-ic{width:15px;height:15px;flex:none;display:block}
 .prlb .prlb-t{display:flex;align-items:center;gap:6px}
 .prlb .prlb-by{opacity:.85;text-transform:uppercase}
-.prlb .prlb-w{height:11px;width:auto;aspect-ratio:222/57;flex:none;display:block;margin-inline-start:-1px;transform:translateY(.5px)}
+.prlb .prlb-w{height:11px;width:auto;aspect-ratio:222/57;flex:none;display:block;margin-inline-start:-1px;transform:translateY(-.08em)}
+/* (2026-11-12) one line: "POWERED BY" sat ~2px above the wordmark's baseline — both moved onto one baseline, centred on the icon */
+.prlb:not(.prlb-pc):not(.prlb-3d) .prlb-by{transform:translateY(.14em)}
 .prlb:focus-visible{outline:2px solid var(--accent,#C9823F);outline-offset:3px;border-radius:6px}
 /* PC: fixed at the bottom right, quiet */
 .prlb-pc{position:fixed;z-index:30;right:var(--prlb-r,14px);bottom:calc(var(--prlb-b,10px) + var(--prlb-lift,0px));padding:5px 8px;border-radius:8px;
@@ -79,7 +81,7 @@ html.prlb-on-pc .prlb-foot{display:none!important}
 .hbo-atlas .prlb-foot .prlb{opacity:.75;font-weight:700}
 /* the Atlas portal: ① the footer line (inline, the footer's colour) */
 .prlb-fsep{white-space:pre}
-.prlb.prlb-inl{gap:5px;vertical-align:middle;opacity:.85;font-size:9.5px;font-weight:700;padding:2px 4px;border-radius:6px;transform:translateY(-1px)}
+.prlb.prlb-inl{gap:5px;vertical-align:middle;opacity:.85;font-size:9.5px;font-weight:700;padding:2px 4px;border-radius:6px;transform:translateY(-1px);line-height:1}
 .prlb.prlb-inl .prlb-ic{width:14px;height:14px}.prlb.prlb-inl .prlb-t{gap:5px}.prlb.prlb-inl .prlb-w{height:10.5px}
 .prlb.prlb-inl:hover{opacity:1}
 @media (max-width:519px){.prlb-fsep{display:none}.prlb.prlb-inl{display:flex;width:max-content;margin:8px auto 0;transform:none}}
