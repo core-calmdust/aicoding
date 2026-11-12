@@ -1913,7 +1913,9 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 .bvi .vopts{flex-wrap:nowrap}.bvi .vrow{flex:1 1 100%!important;min-width:0}.bvi .vpick{justify-content:flex-start}.bvi .vpick .vico{flex:none;height:30px;width:auto;max-width:40px;margin:-4px 0;filter:drop-shadow(0 1px 1px rgba(90,60,20,.25))}.bvi .vpick i{margin-inline-start:auto}
 @media (min-width:820px){.bvi .vpick .vico{height:36px;max-width:46px}}
 .vsheet .lvs-in{width:min(820px,100%)!important}
-.lvs-l.vgrid{grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:10px;padding:6px 14px 18px}
+.vsheet .vgrps{overflow:auto;min-height:0;flex:1 1 auto;padding-bottom:12px}.vsheet .vgrps .lvs-l{overflow:visible;max-height:none;flex:none}
+.vgh{display:flex;align-items:center;gap:10px;margin:10px 16px 2px;font-weight:900;font-size:14px;color:var(--ink)}.vgh::after{content:'';flex:1;height:2px;border-radius:2px;background:var(--line)}
+.lvs-l.vgrid{grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:10px;padding:6px 14px 10px}
 .lvs-l .vcard{display:flex;flex-direction:column;align-items:stretch;gap:6px;padding:8px 8px 10px;border-radius:18px;box-shadow:0 3px 0 var(--line);transition:transform .12s}
 .lvs-l .vcard:hover{transform:translateY(-2px)}
 .lvs-l .vcard.on{border-color:var(--sun,#ffb400);background:#fff7df;box-shadow:0 0 0 2px var(--sun,#ffb400),0 3px 0 #e8b640}
@@ -2184,7 +2186,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=34"></script>
 <script src="npc/npc.js?v=28"></script>
 <script src="avtalk.js?v=2"></script>
-<script src="app.js?v=318"></script>
+<script src="app.js?v=319"></script>
 <script src="../shared/praline-badge.js?v=4" data-portal defer></script>
 </body>
 </html>

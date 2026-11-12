@@ -165,10 +165,11 @@
       const r = ctx.el.getBoundingClientRect();
       tall = r.width < r.height * .95;
       const BWd = FW + 1, BDd = FH + 1;
+      const SZ = FH / 2 + (board.userData.mg || 0) - 3.55 / 2;   // (3.55: the stand's top plate, models/shogi.js komadai)
       // phones (tall): no stands — the pieces in hand lie in a row on the table just below (yours) / above (the AI's) the board, so
       // the board itself can be framed much larger (2026-11-09)
       ST = tall ? [{ x: 0, z: BDd / 2 + .72 }, { x: 0, z: -(BDd / 2 + .72) }]
-        : [{ x: FW / 2 + 2.15, z: 3.7 }, { x: -FW / 2 - 2.15, z: -3.7 }];
+        : [{ x: FW / 2 + 2.15, z: SZ }, { x: -FW / 2 - 2.15, z: -SZ }];   // (the stands' near / far edge in line with the board's, whatever its size, 2026-11-12)
       KH = tall ? .01 : Y;
       stands.forEach((k, i) => { k.position.set(ST[i].x, 0, ST[i].z); k.rotation.y = 0; k.visible = !tall; });
       // wide: the player's stand sits a little nearer the bottom — shift the scene so the HUD stays clear
