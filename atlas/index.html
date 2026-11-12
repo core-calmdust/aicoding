@@ -2036,6 +2036,10 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
   .recp .rach{grid-template-columns:1fr}
   .bvi .recb.ph{margin-left:4px}
 }
+/* (2026-11-12) the white buttons and pills: the off-white of the full games' boxes (#fffaf0) — calmer, one tone with them */
+:root{--btnw:#fffaf0}
+:is(.coin,.icbtn,.lbtn,.btn.ghost,.gbtn,.chip,.gsearch,.drar>button,.bvtodb,.seg,.plic,.gml,.stats .st,.dsort,.pzs-bk,.bk-x,.bk-bk,.ps-back,.rgd-act .sfx,.bvi select,.bvi .lvpick,.bvi .rulesb,.bvi .opts #bvHouse,.bvi .act.act3 #bvTable.mxw,.bvi .row .inhd){background:var(--btnw)!important}
+.tab:not([aria-selected=true]):hover,.bvi .mtab3 button.on,.bvi .sidetg button.on,.plbr button[aria-pressed=true]{background:var(--btnw)!important}
 </style>
 </head>
 <body>

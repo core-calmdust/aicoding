@@ -90,9 +90,9 @@ html.atlas-skin .brand{display:none!important}
 .atlas-brand .wk{font-style:normal;display:flex;align-items:center;gap:.7em;font-size:.42em;letter-spacing:.55em;padding-left:.55em;margin:0 0 .3em;color:#6b5f4c;line-height:1}.atlas-brand .wk::before,.atlas-brand .wk::after{content:'';flex:1;height:1px;background:#a48a5c;border-radius:1px}.atlas-brand b:has(.wk){font-size:17px;letter-spacing:.01em;overflow:visible}.atlas-brand:has(.wk){flex:0 1 auto}.atlas-brand b:has(.wk){overflow:hidden}.atlas-brand:has(.wk) small{font-size:9.5px;letter-spacing:.05em}html.atlas-land .atlas-brand .wk{display:none}
 .atlas-brand b{font-family:'RocknRoll One','Zen Maru Gothic',sans-serif;font-weight:400;font-size:20px;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .atlas-brand small{text-align:end;font-family:'RocknRoll One','Fredoka',sans-serif;font-weight:400;font-size:11px;letter-spacing:.08em;color:#6a7088;white-space:nowrap}
-.atlas-coin{display:inline-flex;align-items:center;gap:6px;background:#fff;border:2px solid #efe3c8;border-radius:99px;padding:4px 12px 4px 5px;font:700 16px 'Fredoka',sans-serif;box-shadow:0 2px 0 #efe3c8}
+.atlas-coin{display:inline-flex;align-items:center;gap:6px;background:#fffaf0;border:2px solid #efe3c8;border-radius:99px;padding:4px 12px 4px 5px;font:700 16px 'Fredoka',sans-serif;box-shadow:0 2px 0 #efe3c8}
 .atlas-coin i{width:24px;height:24px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3a8,#ffc928 45%,#e09a00);display:grid;place-items:center;font-style:normal;font-size:12px;color:#a66a00}
-.atlas-ic,.atlas-lbtn{height:40px;min-width:40px;border-radius:99px;border:2px solid #efe3c8;background:#fff;display:inline-grid;place-items:center;box-shadow:0 2px 0 #efe3c8;color:#2b3044;cursor:pointer;padding:0}
+.atlas-ic,.atlas-lbtn{height:40px;min-width:40px;border-radius:99px;border:2px solid #efe3c8;background:#fffaf0;display:inline-grid;place-items:center;box-shadow:0 2px 0 #efe3c8;color:#2b3044;cursor:pointer;padding:0}
 .atlas-ic svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .atlas-ic.off .on-w,.atlas-ic:not(.off) .off-x{display:none}
 /* 盤面反転 (on: turned round) and 戦績 icons of the game, mirrored into the portal bar; the phones' tab bar has its own 戦績 tab */
@@ -667,3 +667,6 @@ html.atlas-skin body:not(#_) .a32-pc3 .bdrow button span{white-space:nowrap;over
 html.atlas-skin body:not(#_) .a32-pc3 .bdrow button.sel{border-color:#ff8a7a;background:#fff1ee;box-shadow:0 3px 0 #ffb3a8}
 /* (2026-11-12) toned down: the cards a step creamier than the portal's paper and the tiles / buttons off-white — over the dark
    rooms the near-white boxes glared and stood out from the table */
+/* (2026-11-12) the portal bar's round buttons and the dock's pills in the same off-white as the boxes (all designs, 2D too) */
+html.atlas-skin body:not(#_) :is(.atlas-ic, .atlas-lbtn, .atlas-coin){background:#fffaf0!important}
+html.atlas-skin body:not(#_) .dock :is(.dk-btn:not(.go), .dk-name, .dk-vsel, .dk-vpick, .dk-g, .dk-myroom){background:#fffaf0!important}
