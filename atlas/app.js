@@ -291,10 +291,13 @@
     const cjk = /[\u3000-\u9fff\uac00-\ud7af]/.test(main);
     const big = cjk ? (main.length <= 5 ? 76 : Math.max(30, Math.round(380 / (main.length * .92)))) : 56;   // (Latin etc.: start large, fitTitle shrinks it to the ribbon)
     const pts = (len, w) => [0, 90, 180, 270].map(a => `<path d="M320 ${200 - len}L${320 + w} 200H${320 - w}z" transform="rotate(${a} 320 200)"/>`).join('');
-    return `<svg viewBox="0 0 640 400" role="img" aria-hidden="true">
-      <defs><path id="ringP" d="M320 200m-153 0a153 153 0 1 1 306 0a153 153 0 1 1-306 0"/></defs>
-      <circle cx="320" cy="200" r="176" fill="#111"/>
-      <g><animateTransform attributeName="transform" type="rotate" from="0 320 200" to="360 320 200" dur="20s" repeatCount="indefinite"/><text font-family="Fredoka,'Zen Maru Gothic',sans-serif" font-weight="700" font-size="15.5" letter-spacing="3.2" fill="#fff"><textPath href="#ringP" textLength="955" lengthAdjust="spacing">${ring}</textPath></text></g>
+    // three layers (2026-11-12, GPU): the black disc, the turning ring of text, and the rest on top. The ring turns as a CSS
+    // transform of its own layer (the compositor moves the picture; the old SMIL turn re-drew the whole emblem — and its drop
+    // shadow — every frame), and the shadows sit on the two still layers, drawn once
+    return `<svg class="ttlBase" viewBox="0 0 640 400" aria-hidden="true"><circle cx="320" cy="200" r="176" fill="#111"/></svg>
+      <svg class="ttlRing" viewBox="0 0 640 400" aria-hidden="true"><defs><path id="ringP" d="M320 200m-153 0a153 153 0 1 1 306 0a153 153 0 1 1-306 0"/></defs>
+      <g><text font-family="Fredoka,'Zen Maru Gothic',sans-serif" font-weight="700" font-size="15.5" letter-spacing="3.2" fill="#fff"><textPath href="#ringP" textLength="955" lengthAdjust="spacing">${ring}</textPath></text></g>
+      </svg><svg class="ttlTop" viewBox="0 0 640 400" role="img" aria-hidden="true">
       <circle cx="320" cy="200" r="136" fill="#fff"/>
       <circle cx="320" cy="200" r="128" fill="none" stroke="#111" stroke-width="2" stroke-dasharray="3 5"/>
       <g fill="#111" opacity=".16">${pts(118, 22)}</g>
@@ -340,10 +343,10 @@
     // a redraw (the font arrived, a sync / place change in the background) carries on where the old logo and pieces were:
     // the ring's turn and each piece's bob don't snap back to their start (a jolt), and a logo drawn while the window is
     // not in front / the hero is off screen starts paused (it used to turn on, unfocused, after such a redraw — 2026-11-11)
-    const o = $('ttl').querySelector('svg'), ct = o && o.getCurrentTime ? o.getCurrentTime() : 0;
+    const o = $('ttl').querySelector('.ttlRing'), ct = (() => { try { const a = o && o.getAnimations()[0]; return a ? a.currentTime : null; } catch (e) { return null; } })();
     $('ttl').innerHTML = emblem(SPLIT ? SPLIT[1] : t('title'), SPLIT ? SPLIT[0] : '', A_.GAMES.length);
-    const n = $('ttl').querySelector('svg'); try { if (ct && n && n.setCurrentTime) n.setCurrentTime(ct); } catch (e) {}
-    svgSync([n]);
+    { const r = $('ttl').querySelector('.ttlRing'); try { const a = r && r.getAnimations()[0]; if (a && ct != null) a.currentTime = ct; } catch (e) {} }
+    svgSync();
     $('ttl').setAttribute('aria-label', t('title') + ' — World Board Game Atlas');
     fitTitle();
     if (titleOnly && $('props').childElementCount) return;   // (the font arrived: only the title is redrawn, the pieces keep floating)
@@ -380,7 +383,7 @@
   }
   function propSync() {   // pause / resume everything with the visibility
     const on = propOn(), box = $('props'); if (!box) return;
-    box.classList.toggle('pz', !on); svgSync([$('ttl').querySelector('svg')]);
+    box.classList.toggle('pz', !on); svgSync();
     clearTimeout(propHopT);
     if (on) { const next = () => { propHopT = setTimeout(() => { if (!propOn()) return; hop(propEls[Math.random() * propEls.length | 0]); next(); }, 900 + Math.random() * 1400); }; next(); propMove(); }
   }
@@ -393,6 +396,7 @@
     (list || document.querySelectorAll('svg')).forEach(s => { if (!s || !s.pauseAnimations) return;
       const stop = svgIdle || (!!hero && hero.contains(s) && !propOn());
       try { if (stop !== s.animationsPaused()) { if (stop) s.pauseAnimations(); else s.unpauseAnimations(); } } catch (e) {} });
+    const tt = $('ttl'); if (tt) tt.classList.toggle('pz', svgIdle || !propOn());   // (the logo's ring: a CSS animation, paused the same way)
   }
   function startProps() {
     cancelAnimationFrame(propRaf); propRaf = 0;

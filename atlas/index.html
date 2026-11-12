@@ -163,8 +163,15 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
 .props .pp img{display:block;width:100%;filter:drop-shadow(0 12px 10px rgba(0,0,0,.16));transition:filter .2s;-webkit-user-drag:none;user-select:none}
 .props .pp:hover img{filter:drop-shadow(0 18px 14px rgba(0,0,0,.22)) brightness(1.04)}
 @keyframes float{from{transform:translate(-50%,-50%) rotate(var(--r)) translateY(0)}to{transform:translate(-50%,-50%) rotate(calc(var(--r) + 6deg)) translateY(-12px)}}
-.ttl{position:relative;z-index:2;margin:0;pointer-events:none;/* (the emblem never takes clicks: the pieces round it stay tappable) */ width:min(640px,96%);line-height:0;filter:drop-shadow(0 14px 18px rgba(0,0,0,.12))}
+.ttl{position:relative;z-index:2;margin:0;pointer-events:none;/* (the emblem never takes clicks: the pieces round it stay tappable) */ width:min(640px,96%);line-height:0}
 .ttl svg{width:100%;height:auto;overflow:visible}
+/* (2026-11-12, GPU) three layers: the disc and the top drawn once with their shadow, the ring of text turned by the compositor
+   (it was an SMIL turn inside one SVG under a drop-shadow filter: the whole emblem and its blur were re-drawn every frame) */
+.ttl .ttlBase,.ttl .ttlTop{filter:drop-shadow(0 14px 18px rgba(0,0,0,.12))}
+.ttl .ttlRing,.ttl .ttlTop{position:absolute;left:0;top:0}
+.ttl .ttlRing{transform-origin:50% 50%;will-change:transform;animation:ttlSpin 20s linear infinite}
+.ttl.pz .ttlRing{animation-play-state:paused}
+@keyframes ttlSpin{to{transform:rotate(360deg)}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @media (max-width:760px){.hero{height:250px;border-radius:24px}.ttl{width:88%}}
 
@@ -2207,7 +2214,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=34"></script>
 <script src="npc/npc.js?v=29"></script>
 <script src="avtalk.js?v=2"></script>
-<script src="app.js?v=328"></script>
+<script src="app.js?v=329"></script>
 <script src="../shared/praline-badge.js?v=6" data-portal defer></script>
 </body>
 </html>
