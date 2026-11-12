@@ -189,7 +189,7 @@ function init() {
     try {
       if (mf && wrap.contains(mf)) wrap.before(mf);   // the mode row always above the panels (reversi keeps it in a column)
       const vis = items.filter(shown); if (!vis.length && items.length) return;
-      const h = vis.map(e => e.offsetHeight + 20 - [...e.querySelectorAll('.pro-panel:not(.hidden)')].reduce((a, p) => a + p.offsetHeight, 0)), tot = h.reduce((a, b) => a + b, 0);   // (an open PRO panel does not move the settings to the other side, 2026-11-13)
+      const h = vis.map(e => e.offsetHeight + 20 - [...e.querySelectorAll('.pro-panel:not(.hidden), #fisPick:not(.hidden)')].reduce((a, p) => a + p.offsetHeight, 0)), tot = h.reduce((a, b) => a + b, 0);   // (an open PRO panel / the フィッシャー presets do not move the settings to the other side, 2026-11-13)
       let k = vis.length, best = Infinity, acc = 0;
       if (vis.length >= 2) for (let i = 1; i < vis.length; i++) { acc += h[i - 1]; const d = Math.abs(tot - 2 * acc); if (d < best) { best = d; k = i; } }
       const cut = k < vis.length ? items.indexOf(vis[k]) : items.length;
