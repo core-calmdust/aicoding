@@ -16,7 +16,7 @@
   const A = window.AtlasNPC = window.AtlasNPC || {};
   if (A.skin) return;
   const SRC = (document.currentScript && document.currentScript.src) || location.href;
-  const BASE = new URL('./', SRC).href, ATLAS = new URL('../', BASE).href, IMG = new URL('../images/atlas/', ATLAS).href, V = '8';
+  const BASE = new URL('./', SRC).href, ATLAS = new URL('../', BASE).href, IMG = new URL('../images/atlas/', ATLAS).href, V = '9';
   const LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
   const loaded = {};
   const load = src => loaded[src] || (loaded[src] = new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); }));
@@ -29,7 +29,7 @@
   function ensure(lang) {
     const need = [];
     if (!A.BOSSES) need.push(load(BASE + 'roster.js?v=' + V));
-    if (!window.AtlasArt) need.push(load(ATLAS + 'art.js?v=11').catch(() => {}));
+    if (!window.AtlasArt) need.push(load(ATLAS + 'art.js?v=12').catch(() => {}));
     return Promise.all(need).then(() => load(BASE + 't/' + lang + '.js?v=' + V).catch(() => load(BASE + 't/en.js?v=' + V)))
       .then(() => load(BASE + 't2/' + lang + '.js?v=' + V).catch(() => {}));   // more lines + the watchers' own ways of talking (t2/, where there is one)
   }
@@ -119,7 +119,7 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
       if (bi !== S.bi) { S.bi = bi; S.boss = A.BOSSES[game][bi]; S.greeted = false; }
       S.level = lv; return true;
     }
-    const bossMeta = () => { const n = A.BOSSES[game].length; return { name: bossName(S.boss, langNow()), img: avUrl(A.bossId(game, S.bi) + '-' + (S.bi === n - 1 ? 3 : 2)), tag: (TX().ui.boss) + ' ' + A.range(game, S.bi), ur: S.bi === n - 1, title: ((TX().bosses || {})[game] || [])[S.bi] || '' }; };
+    const bossMeta = () => { const top = A.top(game, S.bi); return { name: bossName(S.boss, langNow()), img: avUrl(A.bossId(game, S.bi) + '-' + (top ? 3 : 2)), tag: (TX().ui.boss) + ' ' + A.range(game, S.bi), ur: top, title: ((TX().bosses || {})[game] || [])[S.bi] || '' }; };
     const fanMeta = tv => ({ name: S.fan.name(), img: S.fan.img, tag: tv ? TX().ui.trivia : TX().ui.watch, tv });
     // what is being said, as (where, key, index) — the lists are the same in every language, so a language change mid-game
     // can put the same line in the new language on the bubble at once (2026-11-09: it stayed in the old one)
@@ -213,6 +213,7 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
     // beating a boss: the 1st / 2nd / 3rd level of its three gives its N / R / SR avatar (once each)
     function grant() {
       const t = A.tier(game, S.level), id = 'av-' + A.bossId(game, S.bi) + '-' + t;
+      if (t < 0) return;   // (celestial levels: no reward)
       try {
         if (!window.Atlas || !Atlas.load) return;
         const W = Atlas.load(); if (!W || W.owned.includes(id)) return;

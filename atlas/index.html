@@ -1962,6 +1962,7 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 .lvs-l button .nm .lvck{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;margin-inline-start:8px;vertical-align:1px;border-radius:50%;background:#2fb37a;color:#fff;font:900 13px/1 var(--round,system-ui);font-style:normal;box-shadow:0 1px 3px rgba(0,0,0,.18)}   /* a cleared level (its reward owned): ✓ after the name, before the meter (2026-11-10) */
 .lvs-boss.on{border-color:#ffb27a;background:linear-gradient(100deg,#ffe4cc,#fff6ee 70%)}
 .lvs-boss.ur{background:linear-gradient(100deg,#f3e6ff,#fff6e0 55%,#e6f6ff);border-color:#e0cdfa}
+.lvs-boss.cel{background:linear-gradient(100deg,#3a3a48 0,#f4f6ff 16%,#fffdf2 70%,#fff3c4);border-color:#e6d28a}   /* (the celestial levels: black to white to gold) */
 @media (max-width:520px){.lvs-boss img{width:68px;height:68px}.lvs-boss b{font-size:16px}}
 /* the choices change colour under the mouse (二人で対戦 was easy to miss, 2026-11-11) */
 @media (hover:hover){.lvs-l button[data-v]:hover{border-color:#ffb27a;background:#fff3e6;box-shadow:0 0 0 3px rgba(255,160,90,.18)}
@@ -2178,8 +2179,8 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="texgen.js?v=2"></script>
-<script src="npc/roster.js?v=6"></script>
-<script src="art.js?v=11"></script>
+<script src="npc/roster.js?v=7"></script>
+<script src="art.js?v=12"></script>
 <script src="../shared/atlas.js?v=20261112gm1"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261109ac2as1"></script>
@@ -2221,7 +2222,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   }, 60);
 };</script>
 <script src="../shared/tapword.js?v=1"></script>
-<script src="lazy.js?v=136"></script>
+<script src="lazy.js?v=137"></script>
 <script src="puzzle-lines.js?v=1"></script>
 <script src="puzzles.js?v=15"></script>
 <script src="lessons3d.js?v=12"></script>
@@ -2236,9 +2237,9 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="gamelist.js?v=34"></script>
 <link rel="stylesheet" href="worldmap.css?v=18">
 <script src="worldmap.js?v=34"></script>
-<script src="npc/npc.js?v=29"></script>
+<script src="npc/npc.js?v=30"></script>
 <script src="avtalk.js?v=2"></script>
-<script src="app.js?v=331"></script>
+<script src="app.js?v=332"></script>
 <script src="../shared/praline-badge.js?v=6" data-portal defer></script>
 </body>
 </html>
