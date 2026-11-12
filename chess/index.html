@@ -905,6 +905,42 @@ body.in-online #evalCard .navbar{margin-top:0}
 .ol-code{font-family:'JetBrains Mono',monospace;font-size:38px;letter-spacing:.25em;color:var(--accent)}
 .ol-spin{width:34px;height:34px;border-radius:50%;border:3px solid rgba(201,169,97,.2);border-top-color:var(--accent);animation:olspin 1s linear infinite}
 @keyframes olspin{to{transform:rotate(360deg)}}
+/* the online dialog in the new-game dialog's luxury look (2026-11-12): the profile strip, then two framed panels — レート戦 and
+   部屋で対戦 — each with its own action at the bottom (レート戦を探す / 部屋を作る), labels in brass with a hairline */
+.ol-lux .ol-pane{display:flex;flex-direction:column;min-width:0;padding:18px 20px 20px;border-radius:16px;border:1px solid color-mix(in srgb, var(--brass,#c9a961) 28%, var(--line));
+  background:linear-gradient(180deg, color-mix(in srgb, var(--accent) 7%, transparent), rgba(0,0,0,.16) 55%, rgba(0,0,0,.24));box-shadow:inset 0 1px 0 rgba(255,255,255,.04), 0 10px 30px -18px rgba(0,0,0,.8)}
+.ol-lux .ol-ph{margin:0 0 6px;font-family:'Shippori Mincho B1',serif;font-weight:700;font-size:20px;letter-spacing:.08em;color:var(--accent);display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.ol-lux .ol-ph small{font-family:inherit;font-weight:400;font-size:11.5px;letter-spacing:.04em;color:var(--muted)}
+.ol-lux :is(.ol-sub,.ol-tcl){display:flex;align-items:center;gap:10px;color:var(--brass,#c9a961);letter-spacing:.12em;font-size:11.5px;margin:14px 0 7px}
+.ol-lux :is(.ol-sub,.ol-tcl)::after{content:'';flex:1;min-width:12px;height:1px;background:linear-gradient(90deg, color-mix(in srgb, var(--brass,#c9a961) 45%, transparent), transparent)}
+.ol-lux .ol-tcbox{margin:0}
+.ol-lux .ol-bot{margin-top:auto;padding-top:18px}
+.ol-lux .ol-bot .mbtn{padding:13px 10px;font-size:15px;letter-spacing:.1em}
+.ol-lux .ol-pane > .ol-acts:last-child{margin-top:auto;padding-top:18px}
+.ol-lux .ol-rooms{max-height:180px}
+.ol-rulesd{margin-top:10px}
+.ol-rulesd summary{cursor:pointer;font-size:12px;color:var(--muted);list-style:none}
+.ol-rulesd summary::-webkit-details-marker{display:none}
+.ol-rulesd summary::before{content:'▸ ';color:var(--brass,#c9a961)}
+.ol-rulesd[open] summary::before{content:'▾ '}
+.ol-rulesd p{margin:6px 0 0}
+#onlineOverlay .ol-me{padding:12px 16px;border-radius:14px;border:1px solid color-mix(in srgb, var(--brass,#c9a961) 22%, var(--line));background:rgba(0,0,0,.18)}
+@media (min-width: 760px){ .ol-grid.ol-lux{gap:16px;align-items:stretch} }
+#onlineOverlay .modal{max-height:calc(100dvh - 24px);overflow-y:auto}
+html.atlas-skin .ol-lux .ol-pane{background:linear-gradient(180deg,#fffcf4,#f7eedb)!important;border-color:#e6d3ab!important;box-shadow:0 10px 26px -18px rgba(90,60,20,.55)!important}
+html.atlas-skin #onlineOverlay .ol-me{background:#fffaf0!important;border-color:#ead9b6!important}
+html.atlas-skin .ol-lux .ol-ph{color:#b07a1e!important}
+@media (max-width: 759px){ .ol-grid.ol-lux{display:flex;flex-direction:column;gap:14px} }
+#onlineOverlay .modal{max-height:calc(100dvh - 24px);overflow-y:auto}
+html.atlas-skin .ol-lux .ol-pane{background:linear-gradient(180deg,#fffcf4,#f7eedb)!important;border-color:#e6d3ab!important;box-shadow:0 10px 26px -18px rgba(90,60,20,.55)!important}
+html.atlas-skin #onlineOverlay .ol-me{background:#fffaf0!important;border-color:#ead9b6!important}
+html.atlas-skin .ol-lux .ol-ph{color:#b07a1e!important}
+/* open rooms: two lines — the title + the host, then R · time control · variant (2026-11-12) */
+.ol-list > div.ol-r2{align-items:center;gap:10px}
+.ol-list > div.ol-r2 > span{display:flex;flex-direction:column;gap:2px;flex:1 1 auto}
+.ol-r2a{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ol-r2b{font-size:11.5px;opacity:.85;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ol-list > div.ol-r2 > small,.ol-list > div.ol-r2 > button{flex:none;white-space:nowrap}
 @media (min-width: 760px){
   #onlineOverlay .modal{width:min(920px,94vw);padding:28px 32px}
   .ol-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px 32px;align-items:start}
@@ -1462,7 +1498,7 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
       <button class="mbtn" id="btnReview" data-i18n="res.review"></button>
       <button class="mbtn" id="btnResAnalyze" data-i18n="rv.btn"></button>
       <button class="mbtn hidden" id="btnMistakes"></button>
-      <button class="mbtn go" id="btnAgain" data-i18n="res.again"></button>
+      <button class="mbtn hidden" id="btnLobby"></button><button class="mbtn go" id="btnAgain" data-i18n="res.again"></button>
     </div>
   </div>
 </div>
@@ -1578,7 +1614,7 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
 <script src="coach.js?v=6sq-ls"></script>
 <script src="coach-i18n.js?v=3-i14"></script>
 <script src="../shared/luxintro.js?v=3"></script>
-<script src="app.js?v=20261112dp-ybw4-pd3-kb4-pl1"></script>
+<script src="app.js?v=20261112dplx-ybw4-pd3-kb4-pl1"></script>
 <script src="rules.js?v=20261021rb"></script>
 <!-- World Board Game Atlas portal skin: chess/?skin=atlas — 3D luxury board, guide speech bubbles, portal look (all features kept) -->
 <script>
