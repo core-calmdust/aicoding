@@ -1659,9 +1659,10 @@
     // the gallery's showcase: the board is the exhibit — its turning footprint fills ~88% of the free area's limiting side
     // (width: the half-diagonal; height: the footprint seen from the camera's low angle plus the pieces' height)
     const mr = museumOn && !k ? boardR() / .9 : 0, mh = mr ? (boardR() * .5 + ((cur && cur.userData._h) || 1) * .7) / .9 : 0;
+    // (2026-11-12: every screen, not just phones — a wide, short laptop showed the board small above the info card)
     // phones (a narrow view): the showcase frames the board by its own size, so it reads ~1.45× larger than the fixed ~11-unit frame
     // (a chess board fills ~60% of the width); never further than that frame (big boards such as the legged goban stay as they were)
-    const pr = !k && !mr && cw && cw < 700 ? Math.min(6.5, Math.max((boardR(), (cur && cur.userData._rb) || 6.5) * .92, ((cur && cur.userData._s) || 0) * 1.06)) : 0;   // (a long board such as Ur's: its long side kept clear of the edges)
+    const pr = !k && !mr && cw ? Math.min(6.5, Math.max((boardR(), (cur && cur.userData._rb) || 6.5) * .92, ((cur && cur.userData._s) || 0) * 1.06)) : 0;   // (a long board such as Ur's: its long side kept clear of the edges)
     const needW = (k ? fw : mr || pr || 6.5) / (th * a), needH = (k ? fd : mh || (pr ? 6.8 * pr / 6.5 : 6.8)) / th;
     const dist = Math.max(needW, needH) * (k ? 1 : mr ? 1 : 1.08) * (1 + ((mr ? 1 : zoom) - 1) * (1 - k)) * (1 + (pzoom - 1) * k) * (orthoWant ? 1 + .14 * k : 1);   // ortho plan: the whole depth shows unforeshortened, so a little more room   // zoom applies to the showcase view only
     const pitch = .52 + k * ((orthoWant ? 1.5703 : F && F.pitch ? F.pitch : 1.34) - .52);   // ortho (Historia's diagram view): straight down   // play: nearly top-down (fit can ask for straight down)                       // view: low 3/4 so the room shows · play: nearly top-down
