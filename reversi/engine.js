@@ -1042,16 +1042,20 @@ const LEVELS = [
   { depth: 16, exact: 22, wld: 24, time: 15000, use: 1, max: 30000, mpc: 1 },   // 21
   { depth: 20, mix: 16, exact: 22, wld: 24, time: 20000, use: 1, max: 40000, mpc: 1 },   // 22
   { depth: 20, exact: 22, wld: 24, time: 20000, use: 1, max: 40000, mpc: 1 },   // 23
-  { depth: 22, exact: 23, wld: 24, time: 25000, use: 1, max: 50000, mpc: 1 },   // 24
-  { depth: 25, mix: 20, exact: 23, wld: 25, time: 30000, use: 1, max: 60000, mpc: 1 },   // 25
-  { depth: 25, exact: 23, wld: 25, time: 30000, use: 1, max: 60000, mpc: 1 },   // 26
-  { depth: 28, exact: 24, wld: 26, time: 30000, use: 1, max: 60000, mpc: 1 },   // 27
+  { depth: 22, exact: 23, wld: 24, wtry: 27, xtry: 25, tryMs: 4000, time: 25000, use: 1, max: 50000, mpc: 1 },   // 24 (wtry / xtry / tryMs: below)
+  { depth: 25, mix: 20, exact: 23, wld: 25, wtry: 28, xtry: 25, tryMs: 5000, time: 30000, use: 1, max: 60000, mpc: 1 },   // 25
+  { depth: 25, exact: 23, wld: 25, wtry: 28, xtry: 25, tryMs: 5000, time: 30000, use: 1, max: 60000, mpc: 1 },   // 26
+  { depth: 28, exact: 24, wld: 26, wtry: 29, xtry: 26, tryMs: 6000, time: 30000, use: 1, max: 60000, mpc: 1 },   // 27
   // 28 (2026-11-08, Lv.25 until 2026-11-11): the strongest, by time on all threads (page: MT_CFG). max = the hard limit per move in ms
   // (else 2.5 × time); use = start a new depth until this share of time (else 0.45), and a depth cut by max still counts when another
   // root move was already proved better there (think: PART).
   // wtry / xtry (2026-11-11): after the midgame deepening (which reaches the end of the game at ~30 empties within seconds on a PC), the time
   // left is used for a win/draw/loss solve up to wtry empties and then an exact solve up to xtry; a solve cut by max is dropped (MODEL_CARD.md「Lv.28 の読み切りを広げる」)
-  { depth: 60, exact: 23, wld: 25, wtry: 30, xtry: 26, time: 18000, use: 0.8, max: 20000, mpc: 1 },   // 28
+  // tryMs (2026-11-12, Lv.24-27): the same extra solves for the fixed-depth levels, each within tryMs — a fast device solves 2-4 empties
+  // earlier (Lv.24: 23/24 → 24/26 is +23 ± 6 Elo), a slow one drops the try and plays as before (never weaker than the fixed exact / wld).
+  // A try cut by its limit lowers the cap (TRY_W / TRY_X: three empties below it) so a slow device stops trying; a quick solve raises it again.
+  // Lv.28 (2026-11-12): wtry 30 → 32, xtry 26 → 28, the hard limit 20 → 30 s (MODEL_CARD.md「上位レベルの追加の読み切り」)
+  { depth: 60, exact: 23, wld: 25, wtry: 32, xtry: 28, time: 18000, use: 0.8, max: 30000, mpc: 1 },   // 28
 ];
 const NLEVELS = LEVELS.length - 1, DEF_LEVEL = 15;
 
@@ -1135,6 +1139,7 @@ function mixPick(pl, ph, ol, oh) {   // one bit from a hash of the position (lv.
   h ^= h >>> 15; h = Math.imul(h, 0x2C1B3C6D); h ^= h >>> 12;
   return (h >>> 7) & 1;
 }
+let TRY_W = 99, TRY_X = 99;   // the most empties the timed extra solves (lv.tryMs) are tried at on this device (99: no limit yet)
 function think(cells, toMove, opts, onProgress) {
   const lv = opts.cfg || LEVELS[opts.level] || LEVELS[DEF_LEVEL];
   MPC.on = !!lv.mpc; // keep the weaker levels as plain full-width searches
@@ -1208,8 +1213,9 @@ function think(cells, toMove, opts, onProgress) {
   // are read to depth lv.mix instead of lv.depth: a level between two depths (the strength gain by depth comes in steps: MODEL_CARD.md「28段階：Lv.17〜27 を深さで刻み直し」)
   const maxDepth = Math.min(lv.mix && mixPick(pl, ph, ol, oh) ? lv.mix : lv.depth, empties);
   const doExact = empties <= lv.exact;
-  const wldNow = !doExact && lv.wld && empties <= Math.max(lv.wld, lv.wtry || 0) && !variety;   // (lv.wtry: Lv.28 tries the solve further out)
-  const xTry = !doExact && !variety && lv.xtry && empties <= lv.xtry;
+  const tryMs = !opts.rot && lv.tryMs || 0;   // (the lead only: the helpers are stopped by it)
+  const wldNow = !doExact && lv.wld && empties <= Math.max(lv.wld, Math.min(lv.wtry || 0, tryMs ? TRY_W : 99)) && !variety;   // (lv.wtry: Lv.24-28 try the solve further out)
+  const xTry = !doExact && !variety && lv.xtry && empties <= Math.min(lv.xtry, tryMs ? TRY_X : 99);
   const SPL = !opts.rot && (doExact ? !variety : wldNow || xTry) && !ybwOn() ? splitAnnounce(pos) : null;   // (threads: the lead's solve is split at the root)
   const LZ = !variety && lzArr(), lzk = LZ ? lzKey(pos) : 0;   // (threads: the helpers' deeper midgame results)
   const HP = opts.rot ? helperPlan(opts.rot) : null;   // (a helper thread: how it differs from the lead)
@@ -1306,6 +1312,8 @@ function think(cells, toMove, opts, onProgress) {
     // else a drawing one; a lost position keeps the midgame choice. Bounded by the same deadline as the exact solve.
     // Beyond lv.wld (Lv.28's wtry) it is only tried with the time left: a solve cut by the deadline changes nothing.
     if (time) deadline = t0 + (empties <= lv.wld ? Math.max(hardTime, 2000) : hardTime);   // (helper threads: no time, stopped by the lead)
+    const tw0 = Date.now(), tryW = tryMs && empties > lv.wld;
+    if (tryW) deadline = Math.min(deadline, tw0 + tryMs);
     let wldDone = false;
     try {
       if (opts.rot) splitHelp(pos, empties, opts.rot);
@@ -1314,6 +1322,12 @@ function think(cells, toMove, opts, onProgress) {
       if (r.score > 0) result = { move: r.move, score: Math.max(result.score, SCALE) };
       else if (r.score === 0 && result.score < 0) result = { move: r.move, score: 0 };
     } catch (e) { if (e !== ABORT) throw e; }
+    if (tryMs) {   // (this device's range of the timed tries)
+      if (!wldDone) { if (tryW) TRY_W = empties - 3; }
+      else if (TRY_W < 99 && Date.now() - tw0 < tryMs / 4) TRY_W = Math.max(TRY_W, empties + 1);
+      if (xTry && wldDone) deadline = Math.min(t0 + hardTime, Date.now() + tryMs);
+    }
+    const tx0 = Date.now();
     if (xTry && wldDone && Date.now() < deadline) {
       // Lv.28 (lv.xtry): an exact solve with the time still left (aspiration window around the result so far); kept only when it finishes
       try {
@@ -1331,6 +1345,7 @@ function think(cells, toMove, opts, onProgress) {
         }
         result = r; exactDone = true;
       } catch (e) { if (e !== ABORT) throw e; }
+      if (tryMs) { if (!exactDone) TRY_X = empties - 3; else if (TRY_X < 99 && Date.now() - tx0 < tryMs / 4) TRY_X = Math.max(TRY_X, empties + 1); }
     }
   }
 
