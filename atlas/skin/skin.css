@@ -550,10 +550,10 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) .ck-bt > :is(span, small, i, em){bor
 html.atlas-skin:not(.atlas-2d) body:not(#_) .ck-sw.on{background:var(--a-sun)!important}
 
 /* ---- tabs: the portal's segmented tabs (a cream track, the chosen one a white pill) ---- */
-html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.seg, .lx-tabs, .pbh-tabs, .ngt-bar, .ol-tc, .ol-rk, .dk-tc, .modal .tabs){gap:4px!important;padding:4px!important;border-radius:99px!important;background:var(--a-track)!important;border:0!important;box-shadow:none!important}
-html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.seg, .lx-tabs, .pbh-tabs, .ngt-bar, .ol-tc, .ol-rk, .dk-tc, .modal .tabs) > :is(button, a, [role=tab]){border:0!important;border-radius:99px!important;background:transparent!important;box-shadow:none!important;color:var(--a-ink2)!important;font-weight:900!important}
-html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.seg, .lx-tabs, .pbh-tabs, .ngt-bar, .ol-tc, .ol-rk, .dk-tc, .modal .tabs) > :is(button, a, [role=tab]) *{color:inherit!important}
-html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.seg, .lx-tabs, .pbh-tabs, .ngt-bar, .ol-tc, .ol-rk, .dk-tc, .modal .tabs) > :is(.sel, .on, .active, [aria-selected=true], [aria-pressed=true]){background:var(--a-tile)!important;color:var(--a-ink)!important;box-shadow:0 3px 0 var(--a-line)!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.seg, .lx-tabs, .pbh-tabs, .ngt-bar, .ol-tc, .ol-rk, .dk-tc, .modal .tabs, .pro-seg){gap:4px!important;padding:4px!important;border-radius:99px!important;background:var(--a-track)!important;border:0!important;box-shadow:none!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.seg, .lx-tabs, .pbh-tabs, .ngt-bar, .ol-tc, .ol-rk, .dk-tc, .modal .tabs, .pro-seg) > :is(button, a, [role=tab]){border:0!important;border-radius:99px!important;background:transparent!important;box-shadow:none!important;color:var(--a-ink2)!important;font-weight:900!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.seg, .lx-tabs, .pbh-tabs, .ngt-bar, .ol-tc, .ol-rk, .dk-tc, .modal .tabs, .pro-seg) > :is(button, a, [role=tab]) *{color:inherit!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.seg, .lx-tabs, .pbh-tabs, .ngt-bar, .ol-tc, .ol-rk, .dk-tc, .modal .tabs, .pro-seg) > :is(.sel, .on, .active, [aria-selected=true], [aria-pressed=true]){background:var(--a-tile)!important;color:var(--a-ink)!important;box-shadow:0 3px 0 var(--a-line)!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.ngt-bar, .modal .tabs) > *::after{display:none!important}   /* (the underline of the old tabs) */
 html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.ol-tc, .ol-rk, .dk-tc) > button small{color:var(--a-ink2)!important;font-weight:700!important}
 
@@ -793,9 +793,9 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) .pro-panel .pro-intro{font-size:14px
 html.atlas-skin:not(.atlas-2d) body:not(#_) .pro-panel .pro-gh{font-size:13px!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .pro-panel .pro-lab b{font-size:16px!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .pro-panel .pro-help{font-size:14px!important;line-height:1.6}
-html.atlas-skin:not(.atlas-2d) body:not(#_) .pro-panel .pro-seg button{font-size:15px!important;padding:9px 4px!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .pro-panel .pro-seg button{font-size:13px!important;padding:7px 4px!important}   /* (the same look and size as the dialog's own tabs) */
 html.atlas-skin:not(.atlas-2d) body:not(#_) .pro-panel :is(.pro-u,.pro-dv){font-size:14px!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .pro-panel .pro-num input[type=number]{font-size:16px!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .pro-btn{height:30px!important;padding:0 14px!important;font-size:14px!important}
 /* (2026-11-13) the level's note always takes two lines: the slider under it does not move with the note's length */
-html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] :is(#fLevel,#fLevel2) .level-name small:not(#_):not(#_){min-height:3.2em!important;-webkit-line-clamp:2!important;text-wrap:balance}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] :is(#fLevel,#fLevel2) .level-name small:not(#_):not(#_){min-height:3.2em!important;-webkit-line-clamp:2!important;word-break:auto-phrase}
