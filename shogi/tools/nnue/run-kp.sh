@@ -8,12 +8,12 @@
 #   COUNT   tanuki- data files to download (default 100, ~0.31 GB / ~7.8M positions each)   ROUND (default 1)
 #   DATA    PackedSfenValue files to use instead of downloading (then VAL = a validation file, default: the last 1%)
 #   KMAP    king buckets: k9 (default), k3, k81, or a file of 81 numbers      H  hidden size (default 512, as the site's net)
-#   EPOCHS (8)  LR (0.0005)  LAMBDA (0.75)  THREADS (all cores)  INIT (default: the site's nnue.bin.gz; "none" = random)
+#   EPOCHS (4)  LR (0.0001)  OSCALE (0.805: the scale of the site's net, which the search is tuned to)  LAMBDA (0.75)  THREADS (all cores)  INIT (default: the site's nnue.bin.gz; "none" = random)
 #   MNODES  match nodes per move (default 30000)  MTIME (default 300ms; "" = skip)  MGAMES (games per process, 20)  P (cores - 1)
 set -e
 HERE=$(cd "$(dirname "$0")" && pwd); SHOGI=$(cd "$HERE/../.." && pwd)
 WORK=${WORK:-$HOME/shogi-kp-work}; export WORK
-KMAP=${KMAP:-k9}; H=${H:-512}; EPOCHS=${EPOCHS:-8}; LR=${LR:-0.0005}; LAMBDA=${LAMBDA:-0.75}
+KMAP=${KMAP:-k9}; H=${H:-512}; EPOCHS=${EPOCHS:-4}; LR=${LR:-0.0001}; LAMBDA=${LAMBDA:-0.75}; OSCALE=${OSCALE:-0.805}
 MNODES=${MNODES:-30000}; MTIME=${MTIME-300ms}; MGAMES=${MGAMES:-20}
 NC=$(getconf _NPROCESSORS_ONLN); P=${P:-$((NC > 2 ? NC - 1 : 1))}; THREADS=${THREADS:-$NC}
 case $KMAP in k1) KB=1 ;; k3) KB=3 ;; k9) KB=9 ;; k81) KB=81 ;; *) KB=$(( $(tr -s ' \n' '\n' < "$KMAP" | sort -n | tail -1) + 1 )) ;; esac
@@ -46,9 +46,14 @@ CHECKDATA=${V:-train.bin}; [ -s "$CHECKDATA" ] || CHECKDATA=train.bin
 INITOPT="--init $WORK/cur.bin"; [ "$INIT" = none ] && INITOPT=""; [ -n "$INIT" ] && [ "$INIT" != none ] && INITOPT="--init $INIT"
 if [ ! -f train.done ]; then
   log "== training: $KMAP ($KB buckets), H $H, $EPOCHS epochs"
-  ./trainkp train.bin kp.bin --kb $KMAP --hidden $H --epochs $EPOCHS --lr $LR --lambda $LAMBDA --threads $THREADS $VALOPT $INITOPT $TRAIN_OPTS 2>&1 | tee -a train.log
+  ./trainkp train.bin kp.bin --kb $KMAP --hidden $H --epochs $EPOCHS --lr $LR --lambda $LAMBDA --oscale $OSCALE --threads $THREADS $VALOPT $INITOPT $TRAIN_OPTS 2>&1 | tee -a train.log
   touch train.done
 fi
+# the net of the epoch with the best valid (kp.bin.epN) becomes kp.bin; the scale of both nets against the data is logged
+BEST=$(tr '\r' '\n' < train.log | awk '/^epoch [1-9]/ { if (b == "" || $6 < b) { b = $6; e = $2 } } END { print e }')
+if [ -n "$BEST" ] && [ -s "kp.bin.ep$BEST" ]; then cp "kp.bin.ep$BEST" kp.bin; log "kp.bin = epoch $BEST (the best valid)"; fi
+printf 'scale current: ' | tee -a log.txt; ./trainkp --scale cur.bin "$CHECKDATA" 200000 | head -1 | tee -a log.txt
+printf 'scale HalfKP:  ' | tee -a log.txt; ./trainkp --scale kp.bin "$CHECKDATA" 200000 | head -1 | tee -a log.txt
 tr '\r' '\n' < train.log | grep "^epoch" | tail -1 | sed 's/^/train: /' | tee -a log.txt
 
 # 3. the engine evaluates the net exactly as the trainer and as an independent Python implementation
