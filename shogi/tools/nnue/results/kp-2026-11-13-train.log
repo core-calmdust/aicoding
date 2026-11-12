@@ -1,0 +1,24 @@
+train 410900586  valid 1000000  kb k9 (9 buckets)  H 512  epochs 8  lr 0.0005  lambda 0.75  batch 16384  threads 14  (W1 52 MB)
+init from /Users/core_tan/shogi-kp-work/cur.bin
+epoch 0  valid 0.03161 (eval only 0.02294)
+
+resumed from kp.bin.ckpt: epoch 1, batch 17727
+
+epoch 1  train 0.01947  valid 0.03059 (eval only 0.02192)  lr 0.0005  468s            
+
+epoch 2  train 0.01898  valid 0.03088 (eval only 0.02220)  lr 0.0005  1713s            
+
+resumed from kp.bin.ckpt: epoch 3, batch 0
+
+epoch 3  train 0.01862  valid 0.03113 (eval only 0.02243)  lr 0.0005  1773s            
+
+epoch 4  train 0.01844  valid 0.03132 (eval only 0.02262)  lr 0.0005  1723s            
+
+epoch 5  train 0.01761  valid 0.03106 (eval only 0.02239)  lr 0.00015  1725s            
+
+epoch 6  train 0.01743  valid 0.03113 (eval only 0.02247)  lr 0.00015  1707s            
+
+epoch 7  train 0.01714  valid 0.03108 (eval only 0.02243)  lr 5e-05  1615s            
+
+epoch 8  train 0.01708  valid 0.03112 (eval only 0.02246)  lr 5e-05  1507s            
+saved kp.bin
