@@ -997,6 +997,15 @@ body.dock-open .dock-panel{padding:4px 18px 16px}
 .ol-rooms .dk-watch{padding:5px 14px;font-size:12.5px}
 .ol-list > div.ingame{background:rgba(0,0,0,.12)}
 .ol-list > div > span{min-width:0}
+/* open rooms: two lines — the title + the host, then R · time control · variant (2026-11-12) */
+.ol-list > div.ol-r2{align-items:center;gap:10px}
+.ol-list > div.ol-r2 > span{display:flex;flex-direction:column;gap:2px;flex:1 1 auto}
+.ol-r2a{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ol-r2b{font-size:11.5px;opacity:.85;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ol-list > div.ol-r2 > small,.ol-list > div.ol-r2 > button{flex:none;white-space:nowrap}
+/* the dock bar with the own room open: the rated-search settings (time control, variant) step aside for the room chip and its close button */
+body.ol-myroom .dock-bar #dkTc,body.ol-myroom .dock-bar #dkVw{display:none!important}
+.dock-bar > *{flex-shrink:0}.dock-bar > .dk-stat{flex-shrink:1;min-width:0}
 .ol-list small.ol-ing{color:#f2c060;white-space:nowrap}
 .ol-list small.st-watch{color:#d4b0ff}
 .ol-watch{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:9px 12px;border-color:rgba(143,227,184,.55);background:linear-gradient(180deg,rgba(143,227,184,.10),rgba(143,227,184,.03)),var(--panel)}
@@ -1737,7 +1746,7 @@ html[lang=ar] .pf-input{direction:rtl}
   <div class="modal">
     <div class="result-big" id="resultTitle"></div>
     <div class="result-sub" id="resultSub"></div><div class="ol-again hidden" id="olAgain"></div>
-    <div class="modal-actions"><button class="mbtn" id="btnReview" data-i18n="res.review"></button><button class="mbtn" id="btnResAnalyze" data-i18n="rv.analyze"></button><button class="mbtn hidden" id="btnMistakes"></button><button class="mbtn go" id="btnAgain" data-i18n="res.again"></button></div>
+    <div class="modal-actions"><button class="mbtn" id="btnReview" data-i18n="res.review"></button><button class="mbtn" id="btnResAnalyze" data-i18n="rv.analyze"></button><button class="mbtn hidden" id="btnMistakes"></button><button class="mbtn hidden" id="btnLobby" data-i18n="ol.toLobby"></button><button class="mbtn go" id="btnAgain" data-i18n="res.again"></button></div>
   </div>
 </div>
 
@@ -1824,7 +1833,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <div class="mt-strip" id="mtStrip" role="button"></div>
 <nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em> <em class="mt-chat" id="mtChat"></em></button></nav>
 
-<script src="i18n.js?v=20261108top"></script>
+<script src="i18n.js?v=20261112lb"></script>
 <script src="rules-i18n.js?v=20261107l14"></script>
 <script src="../shared/placement.js?v=1l14"></script>
 <script src="../shared/export.js?v=9l14"></script>
@@ -3122,6 +3131,8 @@ $('#btnResume').onclick = () => {
 $('#btnLatest').onclick = () => viewAt(game.moves.length);
 $('#btnReview').onclick = () => { hideOverlay('#resultOverlay'); viewAt(Math.max(0, game.moves.length - 1)); };
 $('#btnAgain').onclick = () => { hideOverlay('#resultOverlay'); if (net) { leaveOnlineGame(); openOnline(); return; } if (game && game.rated) { rtStart(); return; } newGame(); };
+// 「ロビーに戻る」 (online games): leave the finished game, the online panel opened (2026-11-12)
+$('#btnLobby').onclick = () => { hideOverlay('#resultOverlay'); if (net) leaveOnlineGame(); if (typeof dockToggle === 'function' && matchMedia('(pointer: coarse)').matches === false) dockToggle(true); else if (typeof mtab === 'function') mtab('online'); dockRender(); };
 // texts built in code (all 10 languages; read via L())
 const DTXT = {
   hl: { ja: '動かす駒を光らせました。', en: 'The piece to move is highlighted.', zh: '已将要走的棋子高亮显示。', ko: '움직일 말을 표시했습니다.', es: 'Se resalta la pieza que hay que mover.', fr: 'La pièce à jouer est surlignée.', pt: 'A peça a mover está destacada.', de: 'Der zu ziehende Stein ist markiert.', hi: 'चलने वाला मोहरा हाइलाइट है।', ar: 'القطعة التي يجب تحريكها مميَّزة.', ru: 'Фигура, которой нужно пойти, выделена.', 'zh-TW': '要移動的棋子已標示。', id: 'Bidak yang harus digerakkan disorot.', tr: 'Oynanacak taş vurgulanır.' },
@@ -5597,10 +5608,10 @@ function olRoomRows(list) {
   const me = Online.uid;
   return list.length ? list.map(r => {
     const tl = r.title ? `<b class="ol-rtitle">${olEsc(r.title)}</b> ` : '';
-    if (!r.game) return `<div class="${r.host === me ? 'me' : ''}"><span>${tl}${olEsc(r.name)} <small>R ${r.rating} · ${olEsc(tcTag(r.tc))}${olVTag(r.v)}</small></span>${r.host === me ? `<small>${t('ol.yourRoom')}</small>` : `<button class="dk-join" data-code="${olEsc(r.id)}">${t('ol.join')}</button>`}</div>`;
+    if (!r.game) return `<div class="ol-r2${r.host === me ? ' me' : ''}"><span><span class="ol-r2a">${tl}${olEsc(r.name)}</span><small class="ol-r2b">R ${r.rating} · ${olEsc(tcTag(r.tc))}${olVTag(r.v)}</small></span>${r.host === me ? `<small>${t('ol.yourRoom')}</small>` : `<button class="dk-join" data-code="${olEsc(r.id)}">${t('ol.join')}</button>`}</div>`;
     // a game is being played in this open room: players' names + 「観戦」 (the own room / own game: no button)
     const mine = r.host === me || r.guest === me, watching = !!(net && net.spectate && net.game && net.game.room === r.id && net.gid === r.game);
-    return `<div class="ingame${mine ? ' me' : ''}"><span>${tl}${olEsc(r.name)}${r.gname ? ' <small>vs</small> ' + olEsc(r.gname) : ''} <small class="ol-ing">${t('ol.st.play')} · ${olEsc(tcTag(r.tc))}${olVTag(r.v)}</small></span>${mine ? `<small>${t(r.host === me ? 'ol.yourRoom' : 'ol.st.play')}</small>` : `<button class="dk-watch" data-code="${olEsc(r.id)}"${watching ? ' disabled' : ''}>${t(watching ? 'ol.st.watch' : 'ol.watch')}</button>`}</div>`;
+    return `<div class="ol-r2 ingame${mine ? ' me' : ''}"><span><span class="ol-r2a">${tl}${olEsc(r.name)}${r.gname ? ' <small>vs</small> ' + olEsc(r.gname) : ''}</span><small class="ol-ing ol-r2b">${t('ol.st.play')} · ${olEsc(tcTag(r.tc))}${olVTag(r.v)}</small></span>${mine ? `<small>${t(r.host === me ? 'ol.yourRoom' : 'ol.st.play')}</small>` : `<button class="dk-watch" data-code="${olEsc(r.id)}"${watching ? ' disabled' : ''}>${t(watching ? 'ol.st.watch' : 'ol.watch')}</button>`}</div>`;
   }).join('') : `<div class="ol-note small">${t('ol.noRooms')}</div>`;
 }
 function olRoomsRender() { const el = $('#olRooms'); if (el) el.innerHTML = olRoomRows(olRooms); }
@@ -5732,6 +5743,7 @@ function olOnRoom(ev) {
 // remaining time of the own room (menu, room view, dock chip)
 function olRoomTick() {
   const r = window.Online && Online.available && Online.room, chip = $('#dkMyRoom'), btn = $('#dkRoom');
+  document.body.classList.toggle('ol-myroom', !!r);
   if (btn) { const k = r ? 'ol.closeRoom' : 'ol.create'; if (btn.dataset.i18n !== k || btn.dataset.l !== LANG) { btn.dataset.i18n = k; btn.dataset.l = LANG; btn.textContent = t(k); btn.classList.toggle('warn', !!r); } }
   if (chip) { chip.classList.toggle('hidden', !r); if (r) { chip.textContent = (r.priv ? '🔒 ' : '🔓 ') + r.code + ' · ' + tcTag(r.tc) + ' · ' + (r.game ? t('ol.st.play') : fmtClockMs(r.left)); chip.title = t('ol.showRoom'); } }
   if (r) document.querySelectorAll('.ol-left').forEach(el => { el.textContent = olLeftText(); });
@@ -5779,6 +5791,7 @@ function startOnlineGame(gid, intro, spec) {
   mtab('game'); olWatchRender(); dockRender();
 }
 function leaveOnlineGame() {
+  { const lb = document.getElementById('btnLobby'); if (lb) lb.classList.add('hidden'); }
   if (!net) return;
   if (!net.spectate) olLiveClear();
   net.unsub && net.unsub(); net.wUnsub && net.wUnsub(); clearInterval(net.timer);
@@ -5893,6 +5906,7 @@ async function finishOnline(g) {
   try { r = await Online.applyResult(gid, g, score, own); syncTouch(); } catch (e) { console.warn(e); }
   if (!net || net.gid !== gid) return;
   $('#resultTitle').textContent = t(score === 1 ? 'res.win' : score === 0 ? 'res.lose' : 'res.draw');
+  $('#btnLobby').classList.remove('hidden');
   const why = g.status === 'resign' ? t(g.loser === Online.uid ? 'ol.youResigned' : 'ol.oppResigned')
     : g.status === 'timeout' ? t(g.loser === Online.uid ? 'ol.youTimeout' : 'ol.oppTimeout')
     : reason === 'mate' ? t('res.mate', { n: game.moves.length }) : t('res.' + reason);
