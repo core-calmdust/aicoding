@@ -75,6 +75,10 @@
     const S = board.userData.S, Y = board.userData.top;
     const RM = T3.rvMats(), DH = T3.rvDisc.H / 2;   // flat, matte Othello discs (half thickness: the centre sits DH above the felt)
     const hintM = new THREE.MeshBasicMaterial({ color: 0xffe27a, transparent: true, opacity: .55 });
+    const cntM = {}, cntMat = n => cntM[n] || (cntM[n] = (() => { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d');
+      g.fillStyle = 'rgba(255,226,122,.85)'; g.beginPath(); g.arc(64, 64, 58, 0, 7); g.fill(); g.lineWidth = 5; g.strokeStyle = 'rgba(160,110,10,.7)'; g.stroke();
+      g.fillStyle = '#3a2a06'; g.font = '800 70px system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(String(n), 64, 68);
+      const t = new THREE.CanvasTexture(c); if (THREE.sRGBEncoding) t.encoding = THREE.sRGBEncoding; return new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false }); })());
     const lastM = new THREE.MeshBasicMaterial({ color: 0xff5d5d });
     const pos = sq => [T3.cellPos(8, S, sq & 7), T3.cellPos(8, S, sq >> 3)];
     const discs = {}, hints = new THREE.Group(); board.add(hints);
@@ -117,6 +121,9 @@
     function showHints() {
       while (hints.children.length) hints.remove(hints.children[0]);
       if (over || (!pvp && turn !== human)) return;
+      // (2026-11-12) the lessons (ctx.pz.counts): each legal square shows how many discs it turns, as the 2D / full game's hints
+      if (PZ && PZ.counts) { legal(cells, turn).forEach(s => { const n = flipsOf(cells, s, turn).length, [x, z] = pos(s), [x1] = pos(s ^ 1), cw = Math.abs(x1 - x) || .9;
+        const m = new THREE.Mesh(new THREE.PlaneGeometry(cw * .62, cw * .62), cntMat(n)); m.rotation.x = -Math.PI / 2; m.position.set(x, Y + .025, z); hints.add(m); }); return; }
       legal(cells, turn).forEach(s => { const m = new THREE.Mesh(new THREE.CylinderGeometry(.16, .16, .02, 20), hintM); const [x, z] = pos(s); m.position.set(x, Y + .02, z); hints.add(m); });
     }
     function hud(msg) {

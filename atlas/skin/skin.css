@@ -730,4 +730,16 @@ html.atlas-skin body:not(#_) .grc-hd .grc-ic svg{stroke:#e09a00!important}
 /* lesson / opening / puzzle dialogs (2026-11-12): the tabs at the top stay put while the list scrolls, and the last lines
    (the credits) clear the frosted band above the buttons */
 html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_) :is(#segLs, .seg.ls-tabs){position:sticky;top:-14px;z-index:6;box-shadow:0 0 0 16px var(--a-paper)!important}
-html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_) :has(+ .modal-actions){margin-bottom:52px}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_) .modal-actions:not(#_){margin-top:52px!important}
+/* online / rated games with a clock (2026-11-12): the player box takes two rows — the name (and rating) across the top, the disc
+   count and the clock under it — so nothing lies on top of anything (the row layout put the clock over the count and the name) */
+html.atlas-skin:not(.atlas-2d):not(.atlas-hex):not(.atlas-backgammon) body:not(#_) .card.players:not(:has(> .pl-info)) > .player:has(> .clk.on){display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;grid-template-areas:"top top" "cnt clk"!important;align-items:center!important;row-gap:4px!important;column-gap:8px!important}
+html.atlas-skin:not(.atlas-2d):not(.atlas-hex):not(.atlas-backgammon) body:not(#_) .card.players > .player:has(> .clk.on) > .top{grid-area:top;min-width:0}
+html.atlas-skin:not(.atlas-2d):not(.atlas-hex):not(.atlas-backgammon) body:not(#_) .card.players > .player:has(> .clk.on) > :is(.count, .side-l){grid-area:cnt;justify-self:start}
+html.atlas-skin:not(.atlas-2d):not(.atlas-hex):not(.atlas-backgammon) body:not(#_) .card.players > .player:has(> .clk.on) > .clk{grid-area:clk;justify-self:end;padding:3px 8px!important}
+html.atlas-skin:not(.atlas-2d):not(.atlas-hex):not(.atlas-backgammon) body:not(#_) .card.players > .player:has(> .clk.on) > .clk b{font-size:20px!important}
+html.atlas-skin:not(.atlas-2d):not(.atlas-hex):not(.atlas-backgammon) body:not(#_) .card.players > .player:has(> .clk.on) > .clk small{display:none!important}
+html.atlas-skin:not(.atlas-2d):not(.atlas-hex):not(.atlas-backgammon) body:not(#_) .card.players > .player:has(> .clk.on) :is(.name, .nm){-webkit-line-clamp:1!important;white-space:nowrap!important;text-overflow:ellipsis}
+/* 新しい対局 (2026-11-12): the two columns scroll each on their own — PRO opened in the left one no longer stretches the right */
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal .ng-cols:has(.pro-panel:not(.hidden)){align-items:start!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal .ng-cols > .ng-col{max-height:min(58vh,560px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}

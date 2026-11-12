@@ -647,6 +647,12 @@ body.in-puzzle .players, body.in-puzzle #evalCard, body.in-puzzle .kifu-card, bo
 .pz-status{font-size:13px;line-height:1.75;color:var(--muted);min-height:44px}
 .pz-status b.ok{color:#8fe3b8}.pz-status b.ng{color:#ff9b90}
 #puzzleCard.pz-daily #pzPrev, #puzzleCard.pz-daily #pzNext{display:none}
+#pzHead{display:flex;align-items:baseline;gap:10px}#pzHead h3{flex:0 1 auto;min-width:0;margin:0}   /* 「黒番：…で勝て …… 10/60問目」 (as the shogi 詰将棋 card, 2026-11-12) */
+#pzNo{flex:none;font-size:12px;font-weight:700;color:var(--brass,#9a7a3a);white-space:nowrap}
+#pzGoal:empty{display:none}
+#puzzleCard > .lh{display:flex;align-items:center;gap:8px}#puzzleCard > .lh .lt{flex:1;min-width:0}
+#puzzleCard > .lh #pzQuit{flex:none;margin-inline-start:auto}
+html.atlas-skin body #puzzleCard #pzPrev{display:none!important}   /* the full version: the same five buttons as 詰将棋 (ヒント やり直し 答え 一覧 · 次の問題) */
 /* puzzle card: primary actions (equal tiles, icon over label) / quieter navigation row / quit in the header */
 body.in-lesson .players, body.in-lesson #evalCard, body.in-lesson .kifu-card, body.in-lesson .info-line{display:none!important}
 body.in-lesson .controls{display:none}
@@ -4235,9 +4241,17 @@ function resetPuzzleBoard() {
 function renderPuzzleCard() {
   const P = puzzle, lv = puzzleData.levels[P.li];
   const best = starVal(pzProgress[pzKey(P.li, P.k)]);
-  $('#pzStep').textContent = (P.daily ? `★ ${t('daily.title')} · ${P.daily.slice(5).replace('-', '/')} · ` : '') + `${PT(lv.name)} · ${PZBook.t('stage', { n: Math.floor(P.k / PZBook.STAGE) + 1 })} · No.${P.k + 1} · ${t('pz.diff')} ${'●'.repeat(pzDiff(P.pz.D))}${'○'.repeat(5 - pzDiff(P.pz.D))}` + (best ? '  ' + '★'.repeat(best) : '');
-  $('#pzTitle').textContent = t('pz.title');
-  $('#pzGoal').textContent = goalText(P.goal, P.me);
+  // (2026-11-12) laid out as the shogi 詰将棋 card: the head row 「詰めオセロ · 入門（空き2〜4） · STAGE 1 · No.10」, the title row the
+  // goal 「黒番：52石差以上で勝て …… 10/60問目」, the guide's words (pzStatus) under it; the difficulty as a small tag on the title row
+  $('#pzStep').textContent = (P.daily ? `★ ${t('daily.title')} · ${P.daily.slice(5).replace('-', '/')} · ` : `${t('pz.title')} · `) + `${PT(lv.name).replace(/\s*[（(][^）)]*[）)]\s*/g, '') || PT(lv.name)} · ${PZBook.t('stage', { n: Math.floor(P.k / PZBook.STAGE) + 1 })} · No.${P.k + 1}` + (best ? '  ' + '★'.repeat(best) : '');
+  let ph = $('#pzHead'); const ti = $('#pzTitle');
+  if (!ph && ti) { ph = document.createElement('div'); ph.id = 'pzHead'; ti.before(ph); ph.appendChild(ti); const n = document.createElement('span'); n.id = 'pzNo'; ph.appendChild(n); }
+  ti.textContent = goalText(P.goal, P.me);
+  const NO = { ja: '{k}/{n}問目', zh: '第{k}/{n}题', 'zh-TW': '第{k}/{n}題', ko: '{k}/{n}번째' };
+  $('#pzNo').textContent = P.daily ? '' : (NO[LANG] || '{k}/{n}').replace('{k}', P.k + 1).replace('{n}', lv.puzzles.length);
+  $('#pzNo').title = `${PT(lv.name)} · ${t('pz.diff')} ${'●'.repeat(pzDiff(P.pz.D))}${'○'.repeat(5 - pzDiff(P.pz.D))}`;
+  $('#pzGoal').textContent = '';
+  const q = $('#pzQuit'), lh = $('#puzzleCard > .lh'); if (q && lh && q.parentElement !== lh) lh.appendChild(q);
   pzButtons();
 }
 // enable / disable the puzzle buttons for the current state; "next" turns gold once the puzzle is solved
@@ -4821,6 +4835,34 @@ function fmtWait(ms) { const s = Math.max(0, Math.floor(ms / 1000)); return Math
 // ---- time control (chosen before searching / creating a room; remembered per browser)
 const OL_TC_KEY = 'reversi-online-tc';
 function olTc() { try { const v = localStorage.getItem(OL_TC_KEY); if (Online.tcOk ? Online.tcOk(v) : Online.TC[v]) return v; } catch (e) {} return 'fast'; }
+// the portal's card / 「あそぶ」 sheet / a link: straight to the puzzles / lessons / a rated game / the online match search
+// (as shogi / chess AtlasDeep; 2026-11-12 — reversi had none: the portal's online rated game opened an ordinary AI game)
+window.AtlasDeep = function (mode, sub, tc) {
+  if (typeof openNew !== 'function' || !$('#btnStart')) return null;
+  if (mode === 'puzzle') {
+    loadPuzzles().then(() => {
+      if (sub === 'd1') { const dl = dailyPick(); if (dl) return startPuzzle(dl.li, dl.k, dl.date); }
+      if (sub === 'cont') { const r = pzResume(); if (r) return startPuzzle(r[0], r[1]); }
+      openPuzzles();
+    });
+    return true;
+  }
+  if (mode === 'lesson') { if (sub === 'open') openOpenings(); else openLessons(); return true; }
+  if (mode === 'online') {
+    if (!window.Online || !$('#dkAuto')) return null;
+    if (tc) olSetTc(tc);
+    $('#dkAuto').click(); return true;
+  }
+  if (mode === 'rated') { openNew(); draft.mode = 'rated'; segSync(); $('#btnStart').click(); return true; }
+  return false;
+};
+{ const q = new URLSearchParams(location.search), m = q.get('mode');
+  if (m && /^(puzzle|lesson|rated|online)$/.test(m) && q.get('skin') !== 'atlas') {   // the plain 2D page opened at a part of it
+    let n = 0; const go = () => { const r = window.AtlasDeep(m, q.get('sub'), q.get('tc')); if (r === null && ++n < 60) return setTimeout(go, 200);
+      ['mode', 'sub', 'tc'].forEach(k => q.delete(k)); history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash); };
+    addEventListener('load', () => setTimeout(go, 300));
+  }
+}
 function olSetTc(v) {
   if (!Online.TC[v]) return;
   try { localStorage.setItem(OL_TC_KEY, v); } catch (e) {}
@@ -5790,11 +5832,11 @@ accRender();
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=68l37'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=68l38'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/img/tex/baked.js?v=2')).then(() => load('../atlas/table3d.js?v=162')).then(() => load('../atlas/tables3d.js?v=104')).then(() => load('../atlas/skin/common.js?v=90')).then(() => load('../atlas/skin/reversi.js?v=23l14'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/img/tex/baked.js?v=2')).then(() => load('../atlas/table3d.js?v=162')).then(() => load('../atlas/tables3d.js?v=104')).then(() => load('../atlas/skin/common.js?v=90')).then(() => load('../atlas/skin/reversi.js?v=23l15'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
