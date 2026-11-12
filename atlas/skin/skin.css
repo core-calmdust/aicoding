@@ -497,7 +497,7 @@ html.atlas-skin .pzx-bd > svg,html.atlas-skin .pzx-daily .th > svg{box-shadow:0 
    own rules. Left alone: the pieces' glyphs (svg, .piece, .koma …) and the portal bar (.atlas-top, shared/headerbar.js).
    ===================================================================== */
 html.atlas-skin{--a-font:'Zen Maru Gothic','Fredoka','Noto Sans Devanagari','Noto Sans Arabic',system-ui,sans-serif;--a-round:'Fredoka','Zen Maru Gothic','Noto Sans Devanagari','Noto Sans Arabic',sans-serif;
-  --a-ink:#2b3044;--a-ink2:#6a7088;--a-line:#efe3c8;--a-paper:#fbf5e7;--a-tile:#fffaf0;--a-track:#f3ead6;--a-coral:#ff5d5d;--a-coral2:#d93c3c;--a-sun:#ffc928;--a-sun2:#e09a00;
+  --a-ink:#2b3044;--a-ink2:#6a7088;--a-line:#efe3c8;--a-paper:#fbf5e7;--a-tile:#fffaf0;--a-btn:#fffdf8;--a-track:#f3ead6;--a-coral:#ff5d5d;--a-coral2:#d93c3c;--a-sun:#ffc928;--a-sun2:#e09a00;
   --a-shadow:0 2px 0 rgba(43,48,68,.06),0 10px 24px -12px rgba(120,80,20,.28)}
 html.atlas-skin.atlas-zh-sc{--a-font:'Noto Sans SC','Fredoka',system-ui,sans-serif;--a-round:'Fredoka','Noto Sans SC',sans-serif}
 html.atlas-skin.atlas-zh-tc{--a-font:'Noto Sans TC','Fredoka',system-ui,sans-serif;--a-round:'Fredoka','Noto Sans TC',sans-serif}
@@ -527,7 +527,7 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) .card.players .player :is(.name, .nm
 html.atlas-skin:not(.atlas-2d) body:not(#_) .card.players .player :is(.side-l, .sl){color:var(--a-ink)!important;font-weight:900!important}
 
 /* ---- buttons in the boxes: the portal's white pills; the main one coral ---- */
-html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.card:not(.hb-menu), .modal, .dlg) :is(.btn, .mbtn, .navbar > button, .kifu-head button):not(.go):not(.primary):not(.sel):not(.on):not([aria-selected=true]):not(:is(.seg, .lx-tabs, .pbh-tabs, .ngt-bar, .mtab3) > *){background:var(--a-tile)!important;border:2px solid var(--a-line)!important;border-radius:99px!important;box-shadow:0 2px 0 var(--a-line)!important;color:var(--a-ink)!important;font-weight:900!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.card:not(.hb-menu), .modal, .dlg) :is(.btn, .mbtn, .navbar > button, .kifu-head button):not(.go):not(.primary):not(.sel):not(.on):not([aria-selected=true]):not(:is(.seg, .lx-tabs, .pbh-tabs, .ngt-bar, .mtab3) > *){background:var(--a-btn)!important;border:2px solid var(--a-line)!important;border-radius:99px!important;box-shadow:0 2px 0 var(--a-line)!important;color:var(--a-ink)!important;font-weight:900!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.card:not(.hb-menu), .modal, .dlg) :is(.btn, .mbtn, .navbar > button, .kifu-head button):not(.go):not(.primary):not(:disabled):hover{background:#fff4e2!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.card:not(.hb-menu), .modal, .dlg) :is(.btn, .mbtn, .navbar > button, .kifu-head button):disabled{opacity:.45!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.card:not(.hb-menu), .modal, .dlg, .dock) :is(.btn, .mbtn, .dk-btn):is(.go, .primary){background:var(--a-coral)!important;color:#fff!important;border:0!important;border-radius:99px!important;box-shadow:0 3px 0 var(--a-coral2)!important;font-weight:900!important}
@@ -569,7 +569,7 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) .dock-bar{background:transparent!imp
 html.atlas-skin:not(.atlas-2d) body:not(#_) .dk-title{font-size:15px!important;font-weight:900!important;color:var(--a-ink)!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .dk-stat{color:var(--a-ink2)!important;font-weight:700!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .dk-dot{box-shadow:0 0 0 3px rgba(60,207,145,.22)!important}
-html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.dk-btn, .dk-name, .dk-vsel, .dk-vpick, .dk-g, .dk-myroom, .dk-acc button){height:36px;display:inline-flex!important;align-items:center;gap:6px;padding:0 14px!important;background:var(--a-tile)!important;border:2px solid var(--a-line)!important;border-radius:99px!important;box-shadow:0 2px 0 var(--a-line)!important;color:var(--a-ink)!important;font-size:13.5px!important;font-weight:900!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.dk-btn, .dk-name, .dk-vsel, .dk-vpick, .dk-g, .dk-myroom, .dk-acc button){height:36px;display:inline-flex!important;align-items:center;gap:6px;padding:0 14px!important;background:var(--a-btn)!important;border:2px solid var(--a-line)!important;border-radius:99px!important;box-shadow:0 2px 0 var(--a-line)!important;color:var(--a-ink)!important;font-size:13.5px!important;font-weight:900!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .dk-name{border-style:solid!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .dk-name span{color:var(--a-ink2)!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .dk-g svg{background:none!important}
@@ -642,7 +642,7 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) .kifu-head > span:last-child{flex:1 
 html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav){position:sticky;bottom:-48px;z-index:4;flex-wrap:wrap;justify-content:center!important;gap:10px!important;background:var(--a-paper)!important;border-top:0!important;box-shadow:none!important;padding:12px 0 50px!important;margin-top:14px!important;margin-bottom:-48px!important}   /* (reaches down over the box's own bottom padding: the list scrolled there and showed below the buttons) */
 html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav)::before{content:'';position:absolute;left:0;right:0;top:-22px;height:22px;background:linear-gradient(rgba(251,245,231,0),var(--a-paper));pointer-events:none}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav) > :is(button, .mbtn){flex:0 1 220px!important;width:auto!important;min-width:0!important;height:50px!important;min-height:50px!important;padding:0 14px!important;border-radius:12px!important;font-size:17px!important;font-weight:900!important;letter-spacing:.04em!important}
-html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav) > :is(button, .mbtn):not(.go):not(.primary):not(.gbtn){background:var(--a-tile)!important;color:var(--a-ink)!important;border:2px solid var(--a-line)!important;box-shadow:0 4px 0 var(--a-line)!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav) > :is(button, .mbtn):not(.go):not(.primary):not(.gbtn){background:var(--a-btn)!important;color:var(--a-ink)!important;border:2px solid var(--a-line)!important;box-shadow:0 4px 0 var(--a-line)!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav) > :is(button, .mbtn):is(.go, .primary, .gbtn){background:var(--a-coral)!important;color:#fff!important;border:0!important;box-shadow:0 4px 0 var(--a-coral2)!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav) > :is(button, .mbtn):disabled{opacity:.45!important;box-shadow:none!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav) > :is(button, .mbtn):is(.hidden, [hidden]){display:none!important}
@@ -668,5 +668,5 @@ html.atlas-skin body:not(#_) .a32-pc3 .bdrow button.sel{border-color:#ff8a7a;bac
 /* (2026-11-12) toned down: the cards a step creamier than the portal's paper and the tiles / buttons off-white — over the dark
    rooms the near-white boxes glared and stood out from the table */
 /* (2026-11-12) the portal bar's round buttons and the dock's pills in the same off-white as the boxes (all designs, 2D too) */
-html.atlas-skin body:not(#_) :is(.atlas-ic, .atlas-lbtn, .atlas-coin){background:#fffaf0!important}
-html.atlas-skin body:not(#_) .dock :is(.dk-btn:not(.go), .dk-name, .dk-vsel, .dk-vpick, .dk-g, .dk-myroom){background:#fffaf0!important}
+html.atlas-skin body:not(#_) :is(.atlas-ic, .atlas-lbtn, .atlas-coin){background:#fffdf8!important}
+html.atlas-skin body:not(#_) .dock :is(.dk-btn:not(.go), .dk-name, .dk-vsel, .dk-vpick, .dk-g, .dk-myroom){background:#fffdf8!important}

@@ -318,22 +318,39 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
     function sideOf(q) { return !pvp ? 0 : q.y > 0 ? 0 : 1; }
     function onDown(e) {
       if (phase !== 'play') { if (paused) resume(); return; }
+      if (e.pointerType === 'mouse' && !pvp) return;   // (the mouse steers by its moves alone: a click changes nothing)
       const q = toCm(e); if (!q) return; const side = sideOf(q); if (!pvp && side !== 0) return;
       ptr.set(e.pointerId, side); try { ctx.el.setPointerCapture(e.pointerId); } catch (er) {}
       onMove(e); if (e.pointerType !== 'mouse') e.preventDefault();
     }
+    // (2026-11-12) the mouse / touchpad moves the mallet by how far it moves (relative), anywhere in the window — with the
+    // absolute mapping, a pointer that had wandered off the table (below it, over the dock …) left the mallet pinned at the
+    // edge until it came back over the field. The move's length is measured on the table's plane (the view's perspective and
+    // the sideways table come with it). Touch stays absolute (the mallet under the finger).
+    let lastM = null;
     function onMove(e) {
-      if (phase !== 'play') return;
+      if (phase !== 'play') { lastM = null; return; }
+      if (e.pointerType === 'mouse' && !ptr.has(e.pointerId) && !pvp) {
+        const prev = lastM; lastM = { clientX: e.clientX, clientY: e.clientY };
+        if (!prev || (prev.clientX === e.clientX && prev.clientY === e.clientY)) return;
+        const a = toCm(prev), b = toCm(e); if (!a || !b) return;
+        const m = s.mal[0], base = tgt[0] || { tx: m.x, ty: m.y };
+        tgt[0] = E.clampXY ? E.clampXY(s, 0, base.tx + (b.x - a.x), base.ty + (b.y - a.y)) : { tx: base.tx + (b.x - a.x), ty: base.ty + (b.y - a.y) }; src[0] = 'ptr';
+        return;
+      }
       const q = toCm(e); if (!q) return;
       let side = ptr.get(e.pointerId);
       if (side == null) { if (e.pointerType !== 'mouse') return; side = 0; }   // the mouse plays the near / left player by hovering
       const lead = e.pointerType === 'touch' ? (side === 0 ? -touchLead : touchLead) : 0;
       tgt[side] = { tx: q.x, ty: q.y + lead }; src[side] = 'ptr';
     }
+    const onMoveW = e => { if (e.pointerType === 'mouse' && e.target !== ctx.el && !ctx.el.contains(e.target)) onMove(e); };   // (the pointer over the dock / the HUD: still steers)
+    const onOutW = e => { if (!e.relatedTarget) lastM = null; };   // (out of the window: no jump when it comes back elsewhere)
     function onUp(e) { ptr.delete(e.pointerId); }
     ctx.el.addEventListener('pointerdown', onDown); ctx.el.addEventListener('pointermove', onMove);
     // (2026-11-10, lower latency) Chrome's pointerrawupdate arrives as soon as the mouse moves, not once per frame
     const raw = 'onpointerrawupdate' in window; if (raw) ctx.el.addEventListener('pointerrawupdate', onMove); addEventListener('pointerup', onUp, true); addEventListener('pointercancel', onUp, true);
+    addEventListener('pointermove', onMoveW, true); addEventListener('mouseout', onOutW);
     const prevTouch = ctx.el.style.touchAction; ctx.el.style.touchAction = 'none';
     // (2026-11-10) no zooming with the mouse wheel (it was set off by accident mid-game), and no pointer drawn over the
     // table while a match is on (the mallet is the pointer)
@@ -474,7 +491,7 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
       timeout() {},
       stop() {
         stopped = true; cancelAnimationFrame(raf); cancelAnimationFrame(padRaf); timers.forEach(clearTimeout);
-        ctx.el.removeEventListener('pointerdown', onDown); ctx.el.removeEventListener('pointermove', onMove); if (raw) ctx.el.removeEventListener('pointerrawupdate', onMove); removeEventListener('pointerup', onUp, true); removeEventListener('pointercancel', onUp, true);
+        ctx.el.removeEventListener('pointerdown', onDown); ctx.el.removeEventListener('pointermove', onMove); removeEventListener('pointermove', onMoveW, true); removeEventListener('mouseout', onOutW); if (raw) ctx.el.removeEventListener('pointerrawupdate', onMove); removeEventListener('pointerup', onUp, true); removeEventListener('pointercancel', onUp, true);
         removeEventListener('keydown', onKey); removeEventListener('keyup', onKey); removeEventListener('resize', onResize); document.removeEventListener('visibilitychange', onVis); removeEventListener('blur', onBlur); removeEventListener('focus', onFocus);
         ctx.el.style.touchAction = prevTouch; css.remove(); if (toastEl) toastEl.remove(); if (menuEl) menuEl.remove(); if (howEl) howEl.remove(); document.querySelectorAll('.hkbig,.hkfx').forEach(e => e.remove());
         if (T3.turn) T3.turn(null);
