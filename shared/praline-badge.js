@@ -29,7 +29,8 @@
   if (framed) { window.PralineBadge = { set() {} }; return; }
   const ds = (me && me.dataset) || {};
   const PORTAL = ds.portal != null;
-  // the full version (?skin=atlas): its side column comes close to the right edge, over the 3D floor — the mark goes into the
+  // the full version (?skin=atlas): at the bottom right above the online dock, as the 2D pages (2026-11-13; it sat in the dock's
+  // bar before) — a light pill (the portal's look, legible on any floor). (old note:) the mark went into the
   // online dock's bar (as data-place="dock"), else a light pill in the corner (the portal's look, legible on any floor)
   const SKIN = !PORTAL && (de.classList.contains('atlas-skin') || /[?&]skin=atlas\b/.test(location.search));
   // the games whose AI thinks with Praline (claude/praline-spec.md §2) — the portal shows the mark only for these
@@ -128,7 +129,7 @@ html:not(.prlb-on-pc) .prlb.prlb-3d .prlb-ic{width:20px;height:20px}
       // data-place="dock" (games whose info column / row reaches down to the dock — Backgammon, Ur, Senet): inside the dock's
       // bar instead, right after its spacer (.dk-sp), so it sits left of the online buttons and the status text gives way
       const inDock = () => {
-        const sp = (ds.place === 'dock' || SKIN) && dock && dock.querySelector('.dock-bar > .dk-sp');
+        const sp = ds.place === 'dock' && dock && dock.querySelector('.dock-bar > .dk-sp');
         const ok = !!(sp && mq.matches && dock.getClientRects().length && getComputedStyle(dock).position === 'fixed');
         if (ok) { if (pc.previousElementSibling !== sp) sp.after(pc); }
         else if (pc.parentNode !== document.body) document.body.appendChild(pc);
