@@ -233,5 +233,55 @@
     clearTimeout(notice.t); notice.t = setTimeout(() => { el.style.opacity = '0'; }, ms || 4200);
   }
 
-  window.OnlineSec = { FB, STALE, PAIR_MAX, WAIT, appCheck, detect, outcome, elo, kOf, make, xferOut, xferIn, msg, notice };
+
+  // ------------------------------------------------------------------ Firebase Auth start (2026-11-12)
+  // Safari: a Google sign-in by redirect left half-done could keep Firebase Auth from ever finishing its start, so the page
+  // never connected (no "N人オンライン", no matching) until the site's data was deleted by hand. authStart(auth): the first auth
+  // state + the redirect result, as before; when Auth has not started after AUTH_WAIT, the redirect leftovers (pendingRedirect /
+  // redirectUser in the storages, a redirect id on the saved user — the account itself is kept) are cleared and the page reloads
+  // once (only right after it opened: never in the middle of a game); a second time it just fails (the online part stays off).
+  const AUTH_WAIT = 12000, AUTH_FIX = 'fb-auth-fix', RE_RD = /^firebase:(pendingRedirect|redirectUser|redirectEvent)/;
+  const within = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);
+  function clearStore(st) { try { for (let i = st.length - 1; i >= 0; i--) { const k = st.key(i); if (k && RE_RD.test(k)) st.removeItem(k); } } catch (e) {} }
+  function clearIdb() {
+    return within(new Promise(res => {
+      let r; try { r = indexedDB.open('firebaseLocalStorageDb'); } catch (e) { return res(); }
+      r.onerror = r.onblocked = () => res();
+      r.onupgradeneeded = () => { try { r.transaction.abort(); } catch (e) {} };
+      r.onsuccess = () => {
+        const db = r.result;
+        try {
+          if (!db.objectStoreNames.contains('firebaseLocalStorage')) { db.close(); return res(); }
+          const tx = db.transaction('firebaseLocalStorage', 'readwrite'), os = tx.objectStore('firebaseLocalStorage');
+          os.openCursor().onsuccess = ev => {
+            const c = ev.target.result; if (!c) return;
+            const v = c.value, k = v && v.fbase_key;
+            if (typeof k === 'string' && RE_RD.test(k)) c.delete();
+            else if (typeof k === 'string' && /^firebase:authUser:/.test(k) && v.value && v.value.redirectEventId) { const nv = Object.assign({}, v, { value: Object.assign({}, v.value) }); delete nv.value.redirectEventId; c.update(nv); }
+            c.continue();
+          };
+          tx.oncomplete = tx.onerror = tx.onabort = () => { db.close(); res(); };
+        } catch (e) { try { db.close(); } catch (x) {} res(); }
+      };
+    }), 4000).catch(() => {});
+  }
+  async function authStart(auth) {
+    const first = new Promise(res => { const off = auth.onAuthStateChanged(u => { off(); res(u); }); });
+    let cur;
+    try { cur = await within(first, AUTH_WAIT); }
+    catch (e) {
+      let tried = false; try { tried = sessionStorage.getItem(AUTH_FIX) === '1'; } catch (x) {}
+      console.warn('Firebase Auth did not start: clearing the redirect state', tried ? '(already tried: giving up)' : '');
+      clearStore(sessionStorage); clearStore(localStorage); await clearIdb();
+      const early = performance.now() < 45000;
+      if (tried || !early) throw new Error('auth-stuck');
+      try { sessionStorage.setItem(AUTH_FIX, '1'); } catch (x) {}
+      location.reload();
+      return new Promise(() => {});
+    }
+    try { sessionStorage.removeItem(AUTH_FIX); } catch (x) {}
+    try { await within(auth.getRedirectResult(), 8000); } catch (e) { console.warn(e); }   // (back from the Google redirect; never waits for ever)
+    return cur;
+  }
+  window.OnlineSec = { FB, STALE, PAIR_MAX, WAIT, appCheck, detect, outcome, elo, kOf, make, xferOut, xferIn, msg, notice, authStart };
 })();

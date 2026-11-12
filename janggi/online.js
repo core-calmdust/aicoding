@@ -179,8 +179,7 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
         if (window.OnlineSec) await OnlineSec.appCheck(firebase.app(), window.FIREBASE_APPCHECK_SITE_KEY, FB_VER);
         const auth = firebase.auth();
         // keep an existing session (Google or anonymous); only create an anonymous one if there is none
-        const cur = await new Promise(res => { const off = auth.onAuthStateChanged(u => { off(); res(u); }); });
-        try { await auth.getRedirectResult(); } catch (e) { console.warn(e); }
+        const cur = await (window.OnlineSec && OnlineSec.authStart ? OnlineSec.authStart(auth) : new Promise(res => { const off = auth.onAuthStateChanged(u => { off(); res(u); }); }).then(async u => { try { await auth.getRedirectResult(); } catch (e) { console.warn(e); } return u; }));   // (OnlineSec.authStart: recovers a Safari start stuck on an old redirect)
         authUser = auth.currentUser || cur || (await auth.signInAnonymously()).user;
         uid = authUser.uid;
         db = db || firebaseDB();

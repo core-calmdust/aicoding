@@ -166,7 +166,8 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
       auth = app.auth(); db = app.database();
     };
     return {
-      restore: async () => { await init(); try { const r = await auth.getRedirectResult(); if (r && r.user) { user = r.user; gamesIn(r.credential); } } catch (e) {} user = user || await new Promise(res => { const off = auth.onAuthStateChanged(u => { off(); res(u); }); }); },
+      restore: async () => { await init(); const T = (p, ms, d) => Promise.race([p, new Promise(r => setTimeout(() => r(d), ms))]);   // (Safari: never wait for ever on an old redirect, 2026-11-12)
+        try { const r = await T(auth.getRedirectResult(), 8000, null); if (r && r.user) { user = r.user; gamesIn(r.credential); } } catch (e) {} user = user || await T(new Promise(res => { const off = auth.onAuthStateChanged(u => { off(); res(u); }); }), 12000, null); },
       signIn: async () => {
         await init(); const prov = new firebase.auth.GoogleAuthProvider();
         try { const r = await auth.signInWithPopup(prov); user = r.user; gamesIn(r.credential); }
