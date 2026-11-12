@@ -807,3 +807,5 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) .card.players .player:not(#_){transi
 html.atlas-skin:not(.atlas-2d) body:not(#_) .card.players .player.active:not(#_){background:linear-gradient(180deg,#fff6cf,#ffeaa0)!important;border:3px solid var(--a-sun)!important;box-shadow:0 3px 0 var(--a-sun2),0 0 0 4px rgba(255,201,40,.28),0 6px 18px -6px rgba(224,154,0,.55)!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .card.players .player.active:not(#_) :is(.name, .nm){color:var(--a-ink)!important;font-weight:900!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .card.players:has(.player.active) .player:not(.active):not(#_){opacity:.72}
+/* (2026-11-13) オンライン in the 新しい対局 dialog: the room screen fits, no room left under it for the dialog to scroll (as .ng-fit) */
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal.ngl-ol:not(#_):not(#_) .modal-actions:not(#_){margin-top:16px!important;margin-bottom:0!important;padding-bottom:4px!important;bottom:0!important}
