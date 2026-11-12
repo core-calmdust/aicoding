@@ -527,10 +527,10 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) .card.players .player :is(.name, .nm
 html.atlas-skin:not(.atlas-2d) body:not(#_) .card.players .player :is(.side-l, .sl){color:var(--a-ink)!important;font-weight:900!important}
 
 /* ---- buttons in the boxes: the portal's white pills; the main one coral ---- */
-html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.card:not(.hb-menu), .modal, .dlg, .dock) :is(button, .btn, .mbtn):not(.go):not(.primary):not(.sel):not(.on):not([aria-selected=true]):not(.ck-sw):not(.ngt-gcard):not(.lesson-item):not(.lx-card):not(.pbh-card):not(.rt-card):not(.ck-bi):not(:is(.seg, .lx-tabs, .pbh-tabs, .ngt-bar, .ol-tc, .ol-rk, .dk-tc, .mtab3) > *):not(.dk-g){background:#fff!important;border:2px solid var(--a-line)!important;border-radius:99px!important;box-shadow:0 2px 0 var(--a-line)!important;color:var(--a-ink)!important;font-weight:900!important}
-html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.card:not(.hb-menu), .modal, .dlg, .dock) :is(button, .btn, .mbtn):not(.go):not(.primary):not(:disabled):hover{background:#fff8ec!important}
-html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.card:not(.hb-menu), .modal, .dlg, .dock) :is(button, .btn, .mbtn):disabled{opacity:.45!important}
-html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.card:not(.hb-menu), .modal, .dlg, .dock) :is(button, .btn, .mbtn, .dk-btn):is(.go, .primary){background:var(--a-coral)!important;color:#fff!important;border:0!important;border-radius:99px!important;box-shadow:0 3px 0 var(--a-coral2)!important;font-weight:900!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.card:not(.hb-menu), .modal, .dlg) :is(.btn, .mbtn, .navbar > button, .kifu-head button):not(.go):not(.primary):not(.sel):not(.on):not([aria-selected=true]):not(:is(.seg, .lx-tabs, .pbh-tabs, .ngt-bar, .mtab3) > *){background:#fff!important;border:2px solid var(--a-line)!important;border-radius:99px!important;box-shadow:0 2px 0 var(--a-line)!important;color:var(--a-ink)!important;font-weight:900!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.card:not(.hb-menu), .modal, .dlg) :is(.btn, .mbtn, .navbar > button, .kifu-head button):not(.go):not(.primary):not(:disabled):hover{background:#fff8ec!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.card:not(.hb-menu), .modal, .dlg) :is(.btn, .mbtn, .navbar > button, .kifu-head button):disabled{opacity:.45!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.card:not(.hb-menu), .modal, .dlg, .dock) :is(.btn, .mbtn, .dk-btn):is(.go, .primary){background:var(--a-coral)!important;color:#fff!important;border:0!important;border-radius:99px!important;box-shadow:0 3px 0 var(--a-coral2)!important;font-weight:900!important}
 /* the move list's controls (⏮ ◀ ▶ ▶ ⏭): round white buttons */
 html.atlas-skin:not(.atlas-2d) body:not(#_) .navbar{gap:8px!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .navbar > button{width:40px!important;height:40px!important;min-width:0!important;padding:0!important;border-radius:50%!important;display:grid!important;place-items:center!important}
@@ -609,3 +609,32 @@ html.atlas-skin:not(.atlas-2d):not(.atlas-hex):not(.atlas-backgammon) body:not(#
 html.atlas-skin:not(.atlas-2d):not(.atlas-hex):not(.atlas-backgammon) body:not(#_) .card.players > .player .count{flex:none;margin:0!important;font-family:var(--a-round)!important;font-size:22px!important;font-weight:700!important;line-height:1!important;color:var(--a-ink)!important}
 html.atlas-skin:not(.atlas-2d):not(.atlas-hex):not(.atlas-backgammon) body:not(#_) .card.players > .player .count small,
 html.atlas-skin:not(.atlas-2d):not(.atlas-hex):not(.atlas-backgammon) body:not(#_) .card.players > .player .status{display:none!important}
+
+/* ---- (2026-11-12, round 3) ---- */
+/* the coach: a size easier to read */
+html.atlas-skin:not(.atlas-2d) body:not(#_) .ck-card :is(p, li, .ck-intro){font-size:14.5px!important;line-height:1.75!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .ck-card .ck-bt{font-size:15px!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .ck-card .ck-sum > span{font-size:13.5px!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .ck-more{padding:4px 2px!important;font-size:13.5px!important;font-weight:900!important;color:var(--a-sun2)!important}
+/* the inner ring of some games' cards (ur / senet .card::before): one edge, as in shogi */
+html.atlas-skin:not(.atlas-2d) body:not(#_) .card:not(.hb-menu)::before{display:none!important}
+/* the dock's time controls: the label in the middle of its pill; no focus ring for a click */
+html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.dk-tc, .ol-tc, .ol-rk) > button{display:inline-flex!important;flex-direction:column;align-items:center!important;justify-content:center!important;line-height:1.15!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .dock :is(button, input, select):focus:not(:focus-visible){outline:none!important}
+/* the dock's ground: the portal's page — its dotted cream, with a soft gradient */
+html.atlas-skin:not(.atlas-2d) body:not(#_) .dock{background:radial-gradient(circle at 1px 1px,rgba(200,150,60,.16) 1.4px,transparent 1.6px) 0 0/22px 22px,linear-gradient(180deg,#fff8e8 0%,#fff1d6 100%)!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .dock-bar{background:transparent!important}
+/* the pickers' tiles (designs, boards, pieces): rectangles */
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal :is(.dsg, .bdrow, .atlas-plrow, .pcrow) > button{border-radius:16px!important}
+/* the long boxes (lessons · openings · puzzles): the close button always there at the bottom, the rest scrolls above it */
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal .modal-actions{position:sticky;bottom:0;z-index:4;background:var(--a-paper)!important;box-shadow:0 -14px 14px -4px var(--a-paper);padding-top:12px!important;padding-bottom:4px!important;margin-top:12px!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal .modal-actions > :is(.mbtn, button){min-height:56px!important;font-size:18px!important;flex:1 1 0!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal .modal-actions > :is(.mbtn, button):only-child{flex:0 1 calc(50% - 6px)!important;margin-inline:auto!important}
+/* backgammon: both players' boxes the same height (the line under the side to move — 「6-1 を移動中」 — keeps its room in both) */
+html.atlas-skin.atlas-backgammon:not(.atlas-2d) body:not(#_) .card.players .player > .status{display:block!important;min-height:15px!important;visibility:visible!important}
+/* shogi: the info column stays narrow (it reached 500px on windows up to 3:2) */
+html.atlas-skin.atlas-shogi:not(.atlas-2d), html.atlas-skin.atlas-shogi:not(.atlas-2d) body:not(#_){--sidew:clamp(300px, calc(100vw - var(--padx) * 2 - var(--gap) - min(var(--cwh), 120px) * 12.6), 380px)}
+/* the move list's head: its title on one line, the tools on the next (two rows of pills read as a mess in the narrow column) */
+html.atlas-skin:not(.atlas-2d) body:not(#_) .kifu-head{display:flex!important;flex-wrap:wrap!important;align-items:center!important;gap:8px!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .kifu-head > .label{flex:1 1 auto}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .kifu-head > span:last-child{flex:1 1 100%;justify-content:flex-start!important}

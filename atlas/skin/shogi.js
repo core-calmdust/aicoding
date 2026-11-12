@@ -17,7 +17,12 @@
   let board = T3.MODELS.shogi(true), FH = board.userData.S, Y = board.userData.top, OUT = board.userData.outer;
 
   // PC windows up to 3:2 (shogi/index.html, 2026-11-11): the komadai as bars above and below the board, as on phones
-  const STK = matchMedia('(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4) and (max-aspect-ratio: 3/2)');
+  // the komadai as bars above / below the board: PC windows up to 3:2 on the 2D board, up to 6:5 on the 3D table (2026-11-12: its
+  // info column stays narrow and the stands beside the board on ordinary windows — shogi/index.html has the same two ranges)
+  const STK32 = matchMedia('(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4) and (max-aspect-ratio: 3/2)');
+  const STK65 = matchMedia('(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4) and (max-aspect-ratio: 6/5)');
+  const STK = { get matches() { return (document.documentElement.classList.contains('atlas-2d') ? STK32 : STK65).matches; },
+    addEventListener(t, f) { STK32.addEventListener(t, f); STK65.addEventListener(t, f); }, addListener(f) { STK32.addListener(f); STK65.addListener(f); } };
   const skin = AtlasSkin.init({
     margin: () => { try { const u = board.userData, H = u.nh * 1.1; return Math.max(.2, ((u.mg || .5) + (u.ext || 0) + .35) / H); } catch (e) { return .2; } },   // (deep enough for the komadai bars' wood on a small variant board — マイクロ, 5五 — else the canvas cut it off, 2026-11-12)   // canvas margin around the board (less = fewer pixels to draw; enough for the bezel and its shadow)
     board: boardDom,
