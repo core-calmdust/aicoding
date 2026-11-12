@@ -767,9 +767,15 @@
       };
       if (TG && !back) try { warm(id); } catch (e) {}   // (built now, so its textures are under way)
       if (!back && texBusy(id)) {   // its textures are still being drawn (opened right after the page loaded): show it when they are done
-        const tok = ++show3dTok, gl = $('gl'); gl.style.visibility = 'hidden';
-        pend3d = texReady(id).then(() => { if (tok !== show3dTok) return; pend3d = null; gl.style.visibility = ''; if (bvGame === g && $('bv').classList.contains('on')) show3d(); });
-      } else { ++show3dTok; pend3d = null; $('gl').style.visibility = ''; show3d(); }
+        const tok = ++show3dTok, gl = $('gl');
+        if (Table3D.swap) {   // (2026-11-12) the picture of the moment stays over the view meanwhile (it was hidden: the page's one colour showed)
+          gl.style.visibility = '';
+          pend3d = new Promise(res => Table3D.swap(() => { if (tok === show3dTok) { pend3d = null; if (bvGame === g && $('bv').classList.contains('on')) show3d(); } res(); }, texReady(id)));
+        } else {
+          gl.style.visibility = 'hidden';
+          pend3d = texReady(id).then(() => { if (tok !== show3dTok) return; pend3d = null; gl.style.visibility = ''; if (bvGame === g && $('bv').classList.contains('on')) show3d(); });
+        }
+      } else { ++show3dTok; pend3d = null; $('gl').style.visibility = ''; if (Table3D.swapCancel) Table3D.swapCancel(); show3d(); }
     }
     else $('gl').innerHTML = `<div style="position:absolute;inset:0;display:grid;place-items:center"><img src="${artSrc(g)}" alt="" style="width:min(70vw,420px)"></div>`;
     bvCard(g, id, push, flown);
@@ -1840,8 +1846,6 @@
   function rebuildTable(g) {
     const m = $('bvPlMenu'); if (m && !m.hidden) placeInto(m);
     if (!glOK || !$('bv').classList.contains('on') || $('bv').classList.contains('playing')) return;
-    const run = () => { try { Table3D.show(g.id, null, { still: true }); Table3D.play(false); } catch (e) { console.warn(e); } };
-    if (Table3D.swap) { Table3D.swap(run); return; }   // (2026-11-12: the old picture stays until the new board is drawn — no blank screen)
     const gl = $('gl'); clearTimeout(plFade); gl.style.transition = 'opacity .12s ease-out'; gl.style.opacity = '0';
     plFade = setTimeout(() => { try { Table3D.show(g.id, null, { still: true }); Table3D.play(false); } catch (e) { console.warn(e); } requestAnimationFrame(() => requestAnimationFrame(() => { gl.style.transition = 'opacity .24s ease-in'; gl.style.opacity = ''; })); }, 130);
   }
@@ -1851,7 +1855,6 @@
     const X = P3(); if (!X || k === X.table()) return;
     const gl = $('gl'), vis = glOK && $('bv').classList.contains('on');
     if (!vis) { X.setTable(k); return; }
-    if (X.swap) { X.swap(() => X.setTable(k)); return; }   // (2026-11-12: under the old picture, as for the boards)
     clearTimeout(plFade); gl.style.transition = 'opacity .16s ease-out'; gl.style.opacity = '0';
     plFade = setTimeout(() => { try { X.setTable(k); } catch (e) { console.warn(e); } requestAnimationFrame(() => requestAnimationFrame(() => { gl.style.transition = 'opacity .28s ease-in'; gl.style.opacity = ''; })); }, 170);
   }
