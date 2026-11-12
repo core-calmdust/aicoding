@@ -1,0 +1,14 @@
+11-12 11:15 == build
+11-12 11:15 == training: k9 (9 buckets), H 512, 8 epochs
+11-12 11:41 == build
+11-12 11:41 == training: k9 (9 buckets), H 512, 8 epochs
+11-13 00:53 == build
+11-13 00:53 == training: k9 (9 buckets), H 512, 8 epochs
+train: epoch 8  train 0.01708  valid 0.03112 (eval only 0.02246)  lr 5e-05  1507s            
+11-13 03:40 check: trainer = engine (= Python: same) on 2000 positions
+walk: 17926 checks, 17074 king moves (9294 changed bucket), 0 mismatches
+nodes 3600397  time 3571 ms  1008 knps  checksum 56b0c28d9e2e6e08
+nodes 3600401  time 3681 ms  978 knps  checksum c69595921c92fe9c
+11-13 03:40 == matches vs the current net
+11-13 03:41 done: /Users/core_tan/shogi-kp-work/kp-candidate.bin.gz ( 13395621 bytes)  (and log.txt, train.log)
+11-13 03:41 send: attach these 3 files in the Claude chat, or commit them to shogi/tools/nnue/results/ on a NEW branch with GitHub Desktop and tell Claude the branch name (not Hugging Face; TRAIN.md section 5)
