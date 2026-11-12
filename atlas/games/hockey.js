@@ -336,12 +336,16 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
     const unlock = () => { if (locked()) try { document.exitPointerLock(); } catch (e) {} };
     const ESCB = { ja: 'Esc：一時停止', en: 'Esc: pause', zh: 'Esc：暂停', 'zh-TW': 'Esc：暫停', ko: 'Esc: 일시 정지', es: 'Esc: pausa', fr: 'Échap : pause', pt: 'Esc: pausa', de: 'Esc: Pause', ru: 'Esc: пауза', tr: 'Esc: duraklat', id: 'Esc: jeda', hi: 'Esc: रोकें', ar: 'Esc: إيقاف مؤقت' };
     let escB = null;
-    const escBadge = on => {   // (2026-11-12) beside the portal's × while the pointer is held: Esc pauses (only this kind of game)
+    const escBadge = on => {   // (2026-11-12) beside the portal's × during a match (a mouse): Esc pauses (only this kind of game)
       if (on && !escB) { escB = document.createElement('div'); escB.className = 'hk-escb'; escB.textContent = ESCB[ctx.lang] || ESCB.en;
-        escB.style.cssText = 'position:fixed;top:60px;right:14px;z-index:60;padding:6px 12px;border-radius:99px;background:rgba(255,253,247,.94);border:2px solid #efe3c8;color:#4a5068;font:800 12.5px/1 system-ui,sans-serif;box-shadow:0 2px 0 #efe3c8;pointer-events:none';
+        escB.style.cssText = 'position:fixed;top:14px;right:70px;z-index:1000;padding:8px 14px;border-radius:99px;background:rgba(255,253,247,.96);border:2px solid #efe3c8;color:#4a5068;font:800 13px/1 system-ui,sans-serif;box-shadow:0 2px 0 #efe3c8;pointer-events:none;white-space:nowrap';
         document.body.appendChild(escB); }
       else if (!on && escB) { escB.remove(); escB = null; }
+      if (escB) { const x = document.getElementById('bvClose'), r = x && x.getClientRects().length ? x.getBoundingClientRect() : null;   // (level with the ×, just left of it)
+        if (r) { escB.style.top = Math.round(r.top + r.height / 2 - escB.offsetHeight / 2) + 'px'; escB.style.right = Math.round(innerWidth - r.left + 8) + 'px'; } }
     };
+    // shown for the whole match with a mouse (not only while the pointer is held: some browsers refuse the lock), gone when paused / over
+    const escTimer = setInterval(() => { if (stopped) { clearInterval(escTimer); escBadge(false); return; } escBadge(canLock && phase === 'play' && !paused && !over); }, 250);
     const onLockChange = () => { escBadge(locked()); if (!locked() && phase === 'play' && !paused && !stopped) pause(); lastM = null; };
     document.addEventListener('pointerlockchange', onLockChange);
     let rawT = 0;
@@ -454,7 +458,7 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
       tick();
     }
     // (2026-11-12) the pointer lock: told on the controls card (mouse)
-    const ESCT = ["試合中はカーソルが固定されます。Escで一時停止、クリックで再開。", "During a match the cursor is held. Esc pauses, a click resumes.", "比赛中鼠标指针会被固定。按 Esc 暂停，点击继续。", "比賽中滑鼠游標會被固定。按 Esc 暫停，點擊繼續。", "경기 중에는 커서가 고정됩니다. Esc로 일시 정지, 클릭하면 재개.", "Durante el partido el cursor queda fijado en la ventana (el mazo sigue moviéndose en el borde). Esc lo libera y pausa; clic para seguir.", "Pendant le match, le curseur reste dans la fenêtre (le maillet bouge même au bord de l'écran). Échap le libère et met en pause ; clic pour reprendre.", "Durante a partida o cursor fica preso na janela (o batedor continua a mover-se na borda). Esc solta e pausa; clique para continuar.", "Während des Spiels bleibt der Mauszeiger im Fenster (der Schläger bewegt sich auch am Bildschirmrand weiter). Esc gibt ihn frei und pausiert; Klick setzt fort.", "Во время матча курсор закреплён в окне (бита двигается и у края экрана). Esc — освободить и пауза, щелчок — продолжить.", "Maç sırasında imleç pencerede sabitlenir (ekran kenarında da raket hareket eder). Esc bırakır ve duraklatır; devam için tıkla.", "Selama pertandingan kursor dikunci di jendela (pemukul tetap bergerak di tepi layar). Esc melepas dan menjeda; klik untuk lanjut.", "मैच के दौरान कर्सर विंडो में बंधा रहता है (स्क्रीन के किनारे पर भी मैलेट चलता रहता है)। Esc से छूटता है और रुकता है; जारी रखने के लिए क्लिक करें।", "أثناء المباراة يبقى المؤشر داخل النافذة (تستمر المضرب في الحركة عند حافة الشاشة). Esc يحرره ويوقف مؤقتًا؛ انقر للمتابعة."];
+    const ESCT = ["Escで一時停止、クリックで再開。", "Esc pauses, a click resumes.", "按 Esc 暂停，点击继续。", "按 Esc 暫停，點擊繼續。", "Esc로 일시 정지, 클릭하면 재개.", "Esc pausa; clic para seguir.", "Échap met en pause ; clic pour reprendre.", "Esc pausa; clique para continuar.", "Esc pausiert, Klick setzt fort.", "Esc — пауза, щелчок — продолжить.", "Esc duraklatır; devam için tıkla.", "Esc menjeda; klik untuk lanjut.", "Esc से रुकता है; जारी रखने के लिए क्लिक करें।", "Esc للإيقاف المؤقت، وانقر للمتابعة."];   // (2026-11-13: only what to do — no note about the cursor)
     // (2026-11-10) the controls first (until 'don't show again'), then the board menu
     function howFirst() {
       if (howOff) { showMenu(); return; }
