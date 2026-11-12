@@ -338,11 +338,14 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
     let escB = null;
     const escBadge = on => {   // (2026-11-12) beside the portal's × during a match (a mouse): Esc pauses (only this kind of game)
       if (on && !escB) { escB = document.createElement('div'); escB.className = 'hk-escb'; escB.textContent = ESCB[ctx.lang] || ESCB.en;
-        escB.style.cssText = 'position:fixed;top:14px;right:70px;z-index:1000;padding:8px 14px;border-radius:99px;background:rgba(255,253,247,.96);border:2px solid #efe3c8;color:#4a5068;font:800 13px/1 system-ui,sans-serif;box-shadow:0 2px 0 #efe3c8;pointer-events:none;white-space:nowrap';
+        escB.style.cssText = 'position:fixed;top:64px;right:14px;z-index:1000;padding:8px 14px;border-radius:99px;background:rgba(255,253,247,.96);border:2px solid #efe3c8;color:#4a5068;font:800 13px/1 system-ui,sans-serif;box-shadow:0 2px 0 #efe3c8;pointer-events:none;white-space:nowrap';
         document.body.appendChild(escB); }
       else if (!on && escB) { escB.remove(); escB = null; }
-      if (escB) { const x = document.getElementById('bvClose'), r = x && x.getClientRects().length ? x.getBoundingClientRect() : null;   // (under the top-right icons (coins · sound · … · ×), its right edge with theirs, 2026-11-13)
-        if (r) { escB.style.top = Math.round(r.bottom + 8) + 'px'; escB.style.right = Math.round(innerWidth - r.right) + 'px'; } }
+      if (escB) {   // (under the top-right icons — sound · talk · language · × — its right edge with the ×'s, 2026-11-13)
+        const sh = e => e && e.getClientRects().length && getComputedStyle(e).visibility !== 'hidden';
+        const x = ['bvX', 'bvClose'].map(id => document.getElementById(id)).find(sh);
+        const icons = ['sfxBtn', 'npcBtn', 'langBtn', 'bvX', 'bvClose', 'homeBtn'].map(id => document.getElementById(id)).filter(sh).map(e => e.getBoundingClientRect()).filter(r => r.top < 120);
+        if (x && icons.length) { const r = x.getBoundingClientRect(); escB.style.top = Math.round(Math.max(...icons.map(q => q.bottom)) + 8) + 'px'; escB.style.right = Math.round(innerWidth - r.right) + 'px'; } }
     };
     // shown for the whole match with a mouse (not only while the pointer is held: some browsers refuse the lock), gone when paused / over
     const escTimer = setInterval(() => { if (stopped) { clearInterval(escTimer); escBadge(false); return; } escBadge(canLock && phase === 'play' && !paused && !over); }, 250);
