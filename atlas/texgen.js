@@ -76,9 +76,44 @@
     }
   }
 
+  /* ---------- baked kernels (2026-11-12): the slow ones are images (atlas/tools/texbake.py → img/tex/k/<key>.webp, window.ATLAS_KL) ----------
+     key = the kernel's source, its name, its parameters and the size: a changed kernel gets a new key (and is drawn live until baked again).
+     The image is the kernel's own output; after() still draws its overlay on top. */
+  const fnv = (str) => { let h = 0x811c9dc5; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193); } return (h >>> 0).toString(36); };
+  const libHash = new WeakMap();
+  function klKey(job) {
+    let lh = libHash.get(job.lib); if (!lh) { let src = libSrc.get(job.lib); if (!src) { src = job.lib.toString(); libSrc.set(job.lib, src); } lh = fnv(src); libHash.set(job.lib, lh); }
+    let ps = ''; try { ps = JSON.stringify(job.p || {}); } catch (e) { return null; }
+    return job.name + '-' + lh + fnv(ps) + '-' + job.c.width + 'x' + job.c.height + (job.c2 ? '-' + job.c2.width + 'x' + job.c2.height : '');
+  }
+  const KL_HERE = (() => { try { return new URL('img/tex/k/', document.currentScript.src).href; } catch (e) { return 'img/tex/k/'; } })();
+  function fromBake(job, key, v) {
+    const load = (f) => new Promise((res, rej) => { const im = new Image(); im.decoding = 'async'; im.onload = () => res(im); im.onerror = rej; im.src = KL_HERE + f + '.webp?v=' + v; });
+    return Promise.all([load(key), job.c2 ? load(key + '-n') : null]).then(([a, b]) => {
+      const g = job.c.getContext('2d'); g.drawImage(a, 0, 0, job.c.width, job.c.height);
+      if (b) job.c2.getContext('2d').drawImage(b, 0, 0, job.c2.width, job.c2.height);
+      if (job.after) job.after(g, job.c.width, job.c.height);
+      touched(job.c); if (job.c2) touched(job.c2);
+    });
+  }
+  // the bake tool: every kernel drawn here and now, timed, its raw output kept (window.__klRec = [])
+  function record(job, key) {
+    const t0 = performance.now(), { c, c2, name, p } = job, img = new ImageData(c.width, c.height), img2 = c2 ? new ImageData(c2.width, c2.height) : null;
+    local(job.lib)[name](img.data, c.width, c.height, p, img2 && img2.data, mk2d);
+    const ms = performance.now() - t0, raw = (im) => { const k = document.createElement('canvas'); k.width = im.width; k.height = im.height; k.getContext('2d').putImageData(im, 0, 0); return k; };
+    window.__klRec.push({ key, ms, c: raw(img), c2: img2 && raw(img2) });
+    put(job, img, img2);
+  }
+
   function paint(c, lib, name, p = {}, after = null, c2 = null) {
     const job = { id: ++seq, c, c2, lib, name, p, after, group: cur };
+    if (window.__klRec && X() && X().makeNoise) { record(job, klKey(job)); return c; }
     if (!OK || !X() || !X().makeNoise) { runHere(job); return c; }
+    const B = window.ATLAS_KL, key = B && klKey(job), v = key && B[key];
+    if (v) {   // a baked one: the image(s), or the worker if they fail to load
+      track(fromBake(job, key, v).catch(() => new Promise(res => { job.done = res; queue.push(job); pump(); })), c, c2);
+      return c;
+    }
     track(new Promise(res => { job.done = res; }), c, c2);
     queue.push(job); pump();
     return c;
