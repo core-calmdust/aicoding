@@ -226,7 +226,8 @@
 
   /* ---------- AI (Lv.1–20) ---------- */
   function aiSkill(level) {
-    const k = Math.pow((Math.max(1, Math.min(20, level)) - 1) / 19, 1.35);   // (eased: the first levels stay gentle)
+    const k0 = Math.pow((Math.max(1, Math.min(20, level)) - 1) / 19, 1.35);   // (eased: the first levels stay gentle)
+    const k = k0 * (1 - .2 * Math.pow(k0, 3));   // (2026-11-13: Lv.16–20 were too strong — the top eased; Lv.20 ≈ the old Lv.17)
     // (2026-11-10) much weaker at the low end: slower to react, less exact, attacks less, and now and then looks away
     return { cap: .22 + .78 * Math.pow(k, 1.1), react: .4 - .37 * Math.pow(k, .7), err: 6 - 5.4 * k, attack: .45 + .45 * k, bank: level >= 9, lead: .6 + .4 * k, lapse: .1 * Math.pow(1 - k, 1.5) };   // (2026-11-10: Lv.1 a little more able — it moves, defends and plays the puck, just slowly)
   }
