@@ -341,8 +341,8 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
         escB.style.cssText = 'position:fixed;top:14px;right:70px;z-index:1000;padding:8px 14px;border-radius:99px;background:rgba(255,253,247,.96);border:2px solid #efe3c8;color:#4a5068;font:800 13px/1 system-ui,sans-serif;box-shadow:0 2px 0 #efe3c8;pointer-events:none;white-space:nowrap';
         document.body.appendChild(escB); }
       else if (!on && escB) { escB.remove(); escB = null; }
-      if (escB) { const x = document.getElementById('bvClose'), r = x && x.getClientRects().length ? x.getBoundingClientRect() : null;   // (level with the ×, just left of it)
-        if (r) { escB.style.top = Math.round(r.top + r.height / 2 - escB.offsetHeight / 2) + 'px'; escB.style.right = Math.round(innerWidth - r.left + 8) + 'px'; } }
+      if (escB) { const x = document.getElementById('bvClose'), r = x && x.getClientRects().length ? x.getBoundingClientRect() : null;   // (under the top-right icons (coins · sound · … · ×), its right edge with theirs, 2026-11-13)
+        if (r) { escB.style.top = Math.round(r.bottom + 8) + 'px'; escB.style.right = Math.round(innerWidth - r.right) + 'px'; } }
     };
     // shown for the whole match with a mouse (not only while the pointer is held: some browsers refuse the lock), gone when paused / over
     const escTimer = setInterval(() => { if (stopped) { clearInterval(escTimer); escBadge(false); return; } escBadge(canLock && phase === 'play' && !paused && !over); }, 250);
