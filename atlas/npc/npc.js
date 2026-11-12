@@ -296,6 +296,9 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
       if (!el.classList.contains('on')) return;
       cancelAnimationFrame(rzF); rzF = requestAnimationFrame(place); clearTimeout(rzT); rzT = setTimeout(place, 450);
     });
+    // and while it talks, placed again now and then: the first line comes while the page is still laying the board out (the 3D view
+    // frames it a moment later) — it was left where the board had not reached yet, over the board's last row (2026-11-12)
+    setInterval(() => { if (el.classList.contains('on')) place(); }, 400);
     el.addEventListener('click', e => { e.stopPropagation(); clearTimeout(hideT); el.classList.remove('on'); });   // tap the guide or the bubble: it steps away
     return {
       el,

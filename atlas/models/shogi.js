@@ -364,7 +364,7 @@
     geo.computeBoundingBox(); geo.translate(0, -geo.boundingBox.min.y, 0);
     // (2026-11-11) seated as on a real board: the piece's base on the near line of its square (its owner's side), not centred — for
     // the other side the group is turned, so the base sits on the far line. The top-down pictures (images()) show the same.
-    geo.translate(0, 0, CH / 2 - .085 - geo.boundingBox.max.z);   // (a small gap above the line, 2026-11-12)
+    geo.translate(0, 0, CH / 2 - .05 - geo.boundingBox.max.z);   // (a small gap above the line, 2026-11-12)
     return (geoCache[sz] = geo);
   }
   const matCache = {};
