@@ -670,3 +670,5 @@ html.atlas-skin body:not(#_) .a32-pc3 .bdrow button.sel{border-color:#ff8a7a;bac
 /* (2026-11-12) the portal bar's round buttons and the dock's pills in the same off-white as the boxes (all designs, 2D too) */
 html.atlas-skin body:not(#_) :is(.atlas-ic, .atlas-lbtn, .atlas-coin){background:#fffdf8!important}
 html.atlas-skin body:not(#_) .dock :is(.dk-btn:not(.go), .dk-name, .dk-vsel, .dk-vpick, .dk-g, .dk-myroom){background:#fffdf8!important}
+/* (2026-11-12) the settings popup's icons (the game's own sound button moved there): plain icons, not the boxes' white pills */
+html.atlas-skin body:not(#_):not(#_) .hbo-pop .hbo-ic > :is(button, a, span){background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important;outline:none!important}
