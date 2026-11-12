@@ -16,7 +16,9 @@ T=$(mktemp -d)
 i=1
 while [ $i -le $P ]; do
   # each process its own share of the openings (--openings is read from the start; a rotated copy per process)
-  tail -n +$(( (i - 1) * G / 2 % 100 + 1 )) "$SHOGI/tools/match/openings.txt" > "$T/op-$i.txt"; head -n $(( (i - 1) * G / 2 % 100 )) "$SHOGI/tools/match/openings.txt" >> "$T/op-$i.txt"
+  # (macOS head refuses -n 0, which stopped the whole script under set -e for the first process: only call it for a positive count)
+  R=$(( (i - 1) * G / 2 % 100 ))
+  tail -n +$(( R + 1 )) "$SHOGI/tools/match/openings.txt" > "$T/op-$i.txt"; if [ $R -gt 0 ]; then head -n $R "$SHOGI/tools/match/openings.txt" >> "$T/op-$i.txt"; fi
   KPNET="$NET" "$WORK/usimatch" "$WORK/cur.bin" "$L" "$KP" "$WORK" "$G" --opt "$OPT" --openings "$T/op-$i.txt" > "$T/m-$i.txt" 2>&1 &
   i=$((i + 1))
 done
