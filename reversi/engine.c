@@ -343,11 +343,6 @@ static inline void checkTime(void) {
   if (nodeMax > 0 && nodes >= nodeMax) aborted = 1;
 }
 
-#ifndef MT
-#define TT_SIZE (1 << 20)
-#define TT_MASK (TT_SIZE - 1)
-static u64 TKP[TT_SIZE], TKO[TT_SIZE]; static i16 T_LO[TT_SIZE], T_HI[TT_SIZE]; static i8 T_D[TT_SIZE], T_M[TT_SIZE];
-#endif
 #define ET_SIZE (1 << 19)
 #define ET_MASK (ET_SIZE - 1)
 #ifndef MT
@@ -359,10 +354,15 @@ static u64 EKP[ET_SIZE], EKO[ET_SIZE]; static i8 E_LO[ET_SIZE], E_HI[ET_SIZE], E
    (the deepest / of this search kept, the shallowest / oldest replaced; before: one entry, always replaced, so the helpers'
    leaves wiped the lead's deep entries), 4M entries (96 MB) placed above the threads' slots by init(), and an age per
    search (tt_new). data: lo (16) | hi (16) | depth + 1 (8) | move (8) | age (8). */
+#endif
+/* (2026-11-13) the one-thread build uses the same midgame table (buckets of 4, the deepest / newest kept): 2^18 buckets = 1M
+   entries, the memory of the old one-entry table, and at depth 20 it reads about half the positions */
 typedef struct { u64 k1, k2, dt; } TTE;
 static TTE *TTB; static u32 TTM; static u32 TT_AGE = 1; static int TT_LOG;
 #define TT_LOG_MAX 20   /* buckets: 2^20 × 4 entries × 24 bytes */
+#ifdef MT
 static TTE ETB[ET_SIZE];   /* the endgame table: dt = empties (8, 0 = free) | move (8) | hi + 128 (8) | lo + 128 (8), low to high */
+#endif
 #define DT_LO(d) ((int)((d) & 0xFFFF) - 32768)
 #define DT_HI(d) ((int)(((d) >> 16) & 0xFFFF) - 32768)
 #define DT_D(d) ((int)(((d) >> 32) & 0xFF) - 1)
@@ -387,10 +387,11 @@ static void ttStore(u64 P, u64 O, u32 h, int depth, int move, int lo, int hi) {
   }
   r->dt = nd; r->k1 = P ^ nd; r->k2 = O ^ nd;
 }
-static TLS int ROT1;
-EXPORT(set_rot1) void set_rot1(int k) { ROT1 = k; }
 EXPORT(tt_new) void tt_new(void) { u32 a = TT_AGE + 1; if (a > 255) a = 1; TT_AGE = a; }   /* the lead, at the start of each search */
 EXPORT(tt_bits) int tt_bits(int n) { if (n > 0 && n <= TT_LOG) TTM = (1u << n) - 1; return TT_LOG; }   /* (tools/mt-sim.js: a smaller table) */
+#ifdef MT
+static TLS int ROT1;
+EXPORT(set_rot1) void set_rot1(int k) { ROT1 = k; }
 static inline int etGet(u64 P, u64 O, int i, int *lo, int *hi, int *mv) {
   for (int k = 0; k < 2; k++) {
     const u64 d = ETB[i + k].dt;
@@ -406,8 +407,11 @@ static u32 hash(u64 P, u64 O) {   // = engine.js hash on the four 32-bit halves
   return h;
 }
 #ifndef MT
+#define TT_LOG_ST 18
+static TTE TTS1[4 << TT_LOG_ST];
 EXPORT(clear_tt) void clear_tt(void) {
-  for (int i = 0; i < TT_SIZE; i++) { T_D[i] = -1; T_M[i] = -1; }
+  TTB = TTS1; TT_LOG = TT_LOG_ST; TTM = (1u << TT_LOG_ST) - 1;
+  for (int i = 0; i < (4 << TT_LOG_ST); i++) { TTS1[i].k1 = 0; TTS1[i].k2 = 0; TTS1[i].dt = 0; }
   for (int i = 0; i < ET_SIZE; i++) { E_V[i] = 0; E_M[i] = -1; }
 }
 #else
@@ -467,19 +471,11 @@ static int searchI(u64 P, u64 O, int depth, int alpha, int beta, int ply, int pa
     }
   }
   if (depth <= 0) return evalAt(ply, P, O);
-#ifndef MT
-  u32 h = hash(P, O); int ti = h & TT_MASK, ttMove = -1;
-  if (TKP[ti] == P && TKO[ti] == O && T_D[ti] >= 0) {
-    ttMove = T_M[ti];
-    if (T_D[ti] >= depth) {
-      int lo = T_LO[ti], hi = T_HI[ti];
-#else
   u32 h = hash(P, O); int ttMove = -1; u64 td;
   if (ttFind(P, O, h, &td)) {
     ttMove = DT_M(td);
     if (DT_D(td) >= depth) {
       int lo = DT_LO(td), hi = DT_HI(td);
-#endif
       if (lo >= beta) return lo;
       if (hi <= alpha) return hi;
       if (lo == hi) return lo;
@@ -573,14 +569,7 @@ static int searchI(u64 P, u64 O, int depth, int alpha, int beta, int ply, int pa
     if (v > best) { best = v; bestMove = s; if (v > alpha) { alpha = v; if (alpha >= beta) break; } }
   }
 store:
-#ifndef MT
-  if (T_D[ti] <= depth || !(TKP[ti] == P && TKO[ti] == O)) {
-    TKP[ti] = P; TKO[ti] = O; T_D[ti] = (i8)depth; T_M[ti] = (i8)bestMove;
-    T_LO[ti] = (i16)(best > alpha0 ? best : -32767); T_HI[ti] = (i16)(best < beta ? best : 32767);
-  }
-#else
   ttStore(P, O, h, depth, bestMove, best > alpha0 ? best : -32767, best < beta ? best : 32767);
-#endif
   return best;
 }
 static int searchE(u64 P, u64 O, int depth, int alpha, int beta, int ply, int passed) { initIdx(ply, P, O); return searchI(P, O, depth, alpha, beta, ply, passed); }
