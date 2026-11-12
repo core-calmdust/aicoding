@@ -838,7 +838,7 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 //     type: 'toggle', get: () => on, set: v => { on = v; } });      // or type: 'button', onClick: () => …
 //     or type: 'select', options: [{ v, label: {…} }, …] (or a function), get: () => v, set: v => …  — a pulldown at the row's end
 //     (the language row's look; the list opens under it, upward when there is no room)
-//   h.sync() (redraw its state), h.remove();   optional: hidden: () => true to leave it out for now, title: {…} (tooltip)
+//   h.sync() (redraw its state), h.remove();   optional: hidden: () => true to leave it out for now, disabled: () => true to grey it out (shown, not usable), title: {…} (tooltip)
 const OT = {
   opts: { ja: 'オプション', en: 'Options', zh: '选项', 'zh-TW': '選項', ko: '옵션', es: 'Opciones', fr: 'Options', pt: 'Opções', de: 'Optionen', ru: 'Параметры', tr: 'Seçenekler', id: 'Opsi', hi: 'विकल्प', ar: 'خيارات' },
   sound: { ja: 'サウンド', en: 'Sound', zh: '声音', 'zh-TW': '聲音', ko: '사운드', es: 'Sonido', fr: 'Son', pt: 'Som', de: 'Ton', ru: 'Звук', tr: 'Ses', id: 'Suara', hi: 'ध्वनि', ar: 'الصوت' },
@@ -864,6 +864,8 @@ const OCSS = `
 .hbo-row + .hbo-row{margin-top:2px}
 .hbo-row:hover{background:color-mix(in srgb,currentColor 8%,transparent)}
 .hbo-row[hidden]{display:none!important}
+.hbo-row.dis{opacity:.42;cursor:not-allowed}
+.hbo-row.dis:hover{background:none!important}
 .hbo-ic{flex:none;width:36px;height:36px;display:grid;place-items:center}
 .hbo-ic > span[aria-hidden]{display:grid;place-items:center}
 .hbo-pop .hbo-ic > :is(button,a){display:inline-flex}   /* (not !important: a game's own display:none!important — the record on phones — still wins) */
@@ -986,7 +988,7 @@ function options(o) {
     }
     const r = document.createElement('button'); r.type = 'button'; r.className = 'hbo-row hbo-x' + (x.type === 'toggle' ? ' tg' : ''); r.setAttribute('role', x.type === 'toggle' ? 'menuitemcheckbox' : 'menuitem'); r.dataset.x = x.id;
     r.innerHTML = `<span class="hbo-ic"><span aria-hidden="true">${x.icon || ''}</span></span><span class="hbo-lb"></span><span class="hbo-sw" aria-hidden="true"></span>`;
-    r.addEventListener('click', e => { e.stopPropagation();
+    r.addEventListener('click', e => { e.stopPropagation(); if (r.classList.contains('dis')) return;
       try { if (x.type === 'toggle') { x.set(!x.get()); syncAll(); } else { close(); if (x.onClick) x.onClick(); } } catch (err) { console.error(err); } });
     return r;
   }
@@ -1031,6 +1033,7 @@ function options(o) {
       const t = pickL(x.title) || (x.type === 'toggle' ? lb + ': ' + (on ? onT : offT) : ''); if (t) r.title = t; else r.removeAttribute('title');
       if (x.type === 'select') { const cur = safe(x.get), o = (typeof x.options === 'function' ? x.options() : x.options).find(e => String(e.v) === String(cur)), sp = r.querySelector('.hbo-sbtn > span'), tx = o ? pickL(o.label) : ''; if (sp && sp.textContent !== tx) sp.textContent = tx; }
       const hid = !!(x.hidden && safe(x.hidden)); if (r.hidden !== hid) r.hidden = hid;
+      const dis = !!(x.disabled && safe(x.disabled)); r.classList.toggle('dis', dis); if (dis) r.setAttribute('aria-disabled', 'true'); else r.removeAttribute('aria-disabled');   // (greyed out: shown, not usable now)
     }
     const any = [...list.children].some(r => !r.hidden), gt = ot('opts', l);
     if (gear.hidden === any) gear.hidden = !any;

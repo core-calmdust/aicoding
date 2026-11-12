@@ -1717,7 +1717,7 @@ html.ng-disp-gear #newOverlay #fDisplay{display:none!important}   /* 表示 opti
 <script src="../shared/pzbook.js?v=8l14"></script>
 <script src="../shared/placement.js?v=1l14"></script>
 <script src="../shared/rulesoffer.js?v=17l14j"></script>
-<script src="../shared/headerbar.js?v=57"></script>
+<script src="../shared/headerbar.js?v=58"></script>
 <script src="../shared/flipbtn.js?v=3l14"></script>
 <script src="../shared/cardbar.js?v=15l14"></script><script src="../shared/luxintro.js?v=3"></script>
 <script src="../shared/watchpause.js?v=2l14"></script>
@@ -3009,7 +3009,7 @@ $('#btnCancelNew').onclick = () => {
   [['optLegal', 'legal'], ['optLast', 'last'], ['optEval', 'eval'], ['optAnim', 'anim'], ['optCoach', 'coach']].forEach(([id, k]) => {
     const cb = $('#' + id); if (!cb) return;
     HeaderBar.addOption({ id: 'disp-' + k, icon: IC[k], type: 'toggle', label: () => (cb.closest('label') || cb).textContent.trim(),
-      hidden: () => rtOff(k), get: () => !!settings[k],
+      disabled: () => rtOff(k), get: () => !!settings[k],
       set: v => { settings[k] = !!v; cb.checked = !!v; renderBoard(null); renderInfo(); save(); } });
   });
 })();
