@@ -2868,8 +2868,9 @@ function segSync() {
   $('#levelLabel').textContent = t(draft.mode === 'watch' ? 'ng.levelB' : 'ng.level');
   const lv = [LV(draft.level), LVD(draft.level)], lv2 = [LV(draft.level2), LVD(draft.level2)];
   $('#levelRange').value = draft.level; $('#levelRange2').value = draft.level2;
-  $('#levelName').innerHTML = `Lv.${draft.level} ${lv[0]}<small>${lv[1]}</small>`;
-  $('#levelName2').innerHTML = `Lv.${draft.level2} ${lv2[0]}<small>${lv2[1]}</small>`;
+  const br = d => String(d || '').replace(/([。．.!！])\s*(?=\S)/g, '$1<br>');   // (two sentences: one per line, not broken mid-word)
+  $('#levelName').innerHTML = `Lv.${draft.level} ${lv[0]}<small>${br(lv[1])}</small>`;
+  $('#levelName2').innerHTML = `Lv.${draft.level2} ${lv2[0]}<small>${br(lv2[1])}</small>`;
 }
 segInit('#segMode', 'mode'); segInit('#segColor', 'color'); segInit('#segClock', 'clock');
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
@@ -5882,7 +5883,7 @@ accRender();
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=74l42'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=75l42'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
