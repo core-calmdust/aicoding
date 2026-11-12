@@ -443,6 +443,7 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
       E.step(s, dt, inp);
       for (const e of s.ev) onEvent(e);
       sync(now); kick(120);
+      if (T3.drawNow) T3.drawNow();   // (2026-11-12) drawn right after the step, every frame of the screen: the mallet follows a touchpad's fine moves without lag
       if (s.over >= 0) end();
     }
     function onEvent(e) {
