@@ -174,3 +174,9 @@ const X = {"ja": [["六段", "七段", "八段", "九段"], ["R3100相当・時�
 for (const l in I18N) { const d = I18N[l], x = X[l]; if (!x || !d.lv || !d.lvd || d.lv.length !== 23) continue; d.lv = d.lv.slice(0, 22).concat(x[0]); d.lvd = d.lvd.slice(0, 23).concat(x[1]); }
 })();
 // <<< 2026-11-08 top steps
+// >>> 2026-11-12 online: 「ロビーに戻る」 on the result of an online game
+(function () {
+  const L = { ja: 'ロビーに戻る', en: 'Back to lobby', zh: '返回大厅', ko: '로비로 돌아가기', es: 'Volver al vestíbulo', fr: 'Retour au salon', pt: 'Voltar ao saguão', de: 'Zurück zur Lobby', hi: 'लॉबी पर लौटें', ar: 'العودة إلى الردهة', ru: 'В лобби', 'zh-TW': '返回大廳', id: 'Kembali ke lobi', tr: 'Lobiye dön' };
+  for (const l in I18N) I18N[l]['ol.toLobby'] = L[l] || L.en;
+})();
+// <<< 2026-11-12 online lobby
