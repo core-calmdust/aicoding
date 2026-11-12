@@ -60,7 +60,7 @@ wasm の αβ エンジン（`engine_mt.wasm`、`-DMT`）の**仕事を分ける
 | `PL_ON_OPEN(s)`／`PL_ON_CLOSE(s)` | `spRun` が分割点を開くとき／閉じる直前（`stopFlag` は結果の理由）：読み筋の初期化／節の読み筋を `pvTable` へ・他スレッドのカットの履歴ボーナス | 将棋・チェス |
 | `PL_IDLE_HOOK(ms)` | `mt_idle` の入口（状態を戻した後）：別の仕事へ（`return`） | 将棋（`threadId >= ybwMax` は Lazy SMP の `lazyRun`） |
 | `PL_NODES()` | `mt_idle` が返す局面数（既定 `(double)nodes`） | 将棋（32ビット）・チェス（結果の欄にも書く） |
-| `PL_MT_SPLIT` | ゲームが自分の `mt_split` を出す（分割の深さ `splitD` に加えてゲームの設定） | チェス（予想カット節の手数） |
+| `PL_MT_SPLIT` | ゲームが自分の `mt_split` を出す（分割の深さ `splitD` に加えてゲームの設定） | チェス（予想カット節の手数。busy marks はゲームの `mt_busy`） |
 | `now()` | ヘッダが使う時計。名前の違うゲームは `#define now() js_now()` | 将棋・チェス |
 
 分割点を開く場所（`search()` の「最初の手を読み終えたら」の分岐、根の `rootSearch`）は、手の生成と順番・枝刈りがゲームごとに違うので**ゲームの `search()` の中**に残す（手は1スレッドのループを最後まで回した順・合法手だけ・枝刈りで落ちる手は落として分割点に並べる）。
@@ -88,7 +88,7 @@ wasm の αβ エンジン（`engine_mt.wasm`、`-DMT`）の**仕事を分ける
 | ファノロナ（`fanorona/`、アルケルケは1スレッド） | C（wasm） | **YBW**（3）＋busy marks | mtengine・**praline（移行済み）**・proset |
 | リバーシ（`reversi/`） | C（wasm）＋JS | YBW v4.1（中盤は深さ5、完全読みは14マス） | mtengine・proset・ponder（C は元祖の作り：分割点256個・`CHK_Q`） |
 | 将棋（`shogi/`） | C（wasm、NNUE） | **YBW**（4）＋busy marks＋10スレッドより先は Lazy SMP（`YBW_MAX`） | mtengine・**praline（移行済み、`PL_VAL` double・読み筋・`PL_IDLE_HOOK`）**・proset・ponder |
-| チェス（`chess/`） | C（wasm、NNUE） | YBW 1（補助1番、深さ7・予想カット節は分けない）＋Lazy SMP | mtengine・**praline（移行済み、読み筋・カットの印・`PL_MT_SPLIT`）**・proset・ponder |
+| チェス（`chess/`） | C（wasm、NNUE） | **YBW**（6、予想カット節も）＋busy marks＋10スレッドより先は Lazy SMP（2026-11-12、v3。前は YBW 1＋Lazy SMP） | mtengine・**praline（移行済み、読み筋・カットの印・`PL_MT_SPLIT`）**・proset・ponder |
 | 五目並べ（`gomoku/`） | **C（wasm、2026-11-12）**：盤の形・禁手・VCF/VCT・αβ・評価ネットごと `core.c`（`core_simd.wasm`／`core.wasm`、スレッドは `core_mt.wasm`）。JS は予備（`?nowasm`） | **YBW**（4、読み筋の節は2）＋busy marks、解析は候補手を分割点に | mtengine・**praline（2026-11-12）**・proset |
 | 囲碁（`go/`）・ヘックス（`hex/`） | C（wasm） | 共有木 MCTS（virtual loss） | mtengine・proset |
 | アマゾンズ（`amazons/`） | C（wasm、αβ の探索ごと core.c、2026-11-11） | αβ は **YBW**（3）＋busy marks、Lv.19〜23 は共有木 MCTS（同じ `core_mt.wasm`、補助は両方を待つ）。分離できないページは mtsplit の非共有 | mtengine・**praline（2026-11-11）**・proset（mtsplit は非共有だけ） |
@@ -119,7 +119,7 @@ wasm の αβ エンジン（`engine_mt.wasm`、`-DMT`）の**仕事を分ける
 | ファノロナ | Lazy＋busy marks（YBW の前） | — | — | ×4.39 | ×4.86 | ×4.37 |
 | リバーシ中盤 | YBW v4（v4.1 の前） | ×1.58 | ×2.52 | ×3.45 | ×3.07 | ×2.87 |
 | リバーシ終盤 | YBW v4 | ×1.75 | ×3.81 | ×6.14 | ×6.81 | ×7.35 |
-| チェス | Lazy SMP（v2 の前） | — | — | ×2.53 | — | ×2.72 |
+| チェス | Lazy SMP（v2 の前） | — | — | ×2.53 | — | ×2.72 → v3（YBW 10＋busy marks＋Lazy）で計測待ち |
 | ウゴルキ／アゴン／コナネ | YBW＋共有（JS） | — | — | ×3.88／×3.32／×2.38 | — | （14 は 8 より遅い） |
 | コナネ | 同上（手伝いの前） | ×1.37 | ×2.23 | ×2.14 | — | ×2.24 |
 | コネクトフォー | 列の完全読み | — | — | ×2.40 | — | ×2.10 |
@@ -216,6 +216,17 @@ JavaScript エンジンは `shared/mtsplit.js`（＋`mttt.js`）、独立な仕�
 
   - 揺れの内で同等。各回の数字は各 MODEL_CARD。
 - headless Chrome（Playwright）：将棋・チェスの `bench.html`・対局ページ・`pro/`（2スレッド）がエラーなく新しい `engine_mt.wasm` で動く。
+
+### チェス v3（2026-11-12）：将棋と同じ「YBW 10＋Lazy SMP」と busy marks
+- 共通ヘッダは変えていない（ほかのゲームの `engine_mt.wasm` はそのまま）。チェスの `engine.c` で：分割の深さ 7 → 6、予想カット節でも分ける、busy marks（Praline の `busyOther`／`busySet`／`busyClear`、残り深さ2、後回しの手は元の番号で枝刈り・LMR）、分割点の停止を見る間隔 256局面。YBW の補助の数はページ側（`mt-helper.js`・`pro/mt-worker.js` の `YBW_HELPERS` 9、計測ページは `?ybw=N`）。1スレッドは12局面・深さ15 で全一致。
+- `tools/mtsim`（24局面・100万、`SIM_Q=64`、2回の平均）：
+
+| ゲーム | 版 | 2 | 4 | 8 | 遅いコアあり 8 | 10 | 14 |
+|---|---|---|---|---|---|---|---|
+| チェス | 前（YBW 1＋Lazy） | ×1.43 | ×1.89 | ×2.60 | ×2.46 | ×2.56 | ×2.68 |
+| チェス | **v3** | ×1.49 | ×2.09 | ×2.76 | ×2.94 | ×2.59 | ×2.89 |
+
+  - 全部 YBW の深さ 4・5・7、カット節で分けない形なども試したが、どれも 8スレッド ×2.4〜2.9 で揺れの近く。チェスは余分な局面（8スレッドで 2.2〜2.5倍）が大きく、将棋ほど YBW で伸びない。Mac の `chess/bench.html` と `?ybw=1`・`?ybw=0` で並べて決める（chess/MODEL_CARD.md「マルチスレッド v3」）。
 
 ### 移行の判断と次の候補
 - **将棋（第3段で移行済み）**：読み筋を分割点経由で戻す（`pvTable` の写し）・継続履歴の共有・`YBW_MAX`（10スレッドより先の補助は Lazy SMP：`lazyRun`・`gRootSeq`・`gRootP`）がある。Praline に「手が alpha を上げたときのつなぎ（読み筋）」と「Lazy の補助の上限 `YBW_MAX`」（`mt_idle` の入口で `threadId >= ybwMax` なら Lazy の根の読みへ、`mtCheck` で主の根の更新を見る）を足してから移す。将棋の移行と同時に、将棋の12局面で全一致を確かめて入れる（使うゲームのない共通コードは先に入れない）。

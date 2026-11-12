@@ -1,8 +1,8 @@
 // One search thread of the strongest analysis (engine_mt.wasm). Thread 0 runs the timed search and reports; the others
-// help until it is over: thread 1 takes the remaining moves of its split points (YBW, mt_idle), the others search the same
-// root with history tables of their own (Lazy SMP: they share its transposition table through the shared memory).
-// (2026-11-10, ../MODEL_CARD.md「マルチスレッド v2（YBW と Lazy SMP の併用）」; before: every helper Lazy SMP.)
-const YBW_HELPERS = 1;
+// help until it is over: threads 1..YBW_HELPERS take the remaining moves of the split points (YBW, mt_idle), the others search
+// the same root with history tables of their own (Lazy SMP: they share its transposition table through the shared memory).
+// (2026-11-12, ../MODEL_CARD.md「マルチスレッド v3」; 2026-11-10 v2: thread 1 only; before: every helper Lazy SMP.)
+const YBW_HELPERS = (q => q !== null && q !== '' && q >= 0 ? +q : 9)(new URLSearchParams(self.location.search).get('ybw'));   // (pro/?ybw=N: another count)
 let X = null, id = 0, mem = null;
 const CMATE = 31000, CMATE_MAX = CMATE - 256;
 const wUci = m => { const a = new Uint8Array(mem.buffer), p = X.move_uci(m); let s = ''; for (let i = p; a[i]; i++) s += String.fromCharCode(a[i]); return s; };
