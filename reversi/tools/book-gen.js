@@ -381,6 +381,20 @@ function build() {
   const MODE = A['tempo-mode'] || 'frontier';
   if (MODE !== 'frontier' && MODE !== 'all') { console.error('--tempo-mode は frontier か all'); process.exit(1); }
   const FRONT = MODE === 'frontier' ? { par: cfg.maxPly & 1 } : null, ALL = MODE === 'all';
+  // (2026-11-12) only the nodes of the planned tree (window / err / cap, as run without --lines and --seed) back their values up.
+  // The nodes added for --lines / --seed (narrow: usually one move each, read at --depth) stay in book.bin for the AI to follow
+  // when an opponent plays into them, but their values do not replace the parent's own search: with them backed up, white
+  // chose lines into WTHOR positions and won (book v4 self-play: black 37%; without: 47–53%, and stronger against other books).
+  // --backup all: every node backs up (as before).
+  let PLAN = null;
+  if (A.backup !== 'all') {
+    PLAN = new Set(); let cur = root(cfg);
+    for (let p = 0; p <= cfg.maxPly && cur.size; p++) {
+      const known = new Map([...cur].filter(([k]) => done.has(k)));
+      for (const k of known.keys()) PLAN.add(k);
+      cur = p < cfg.maxPly ? nextPly(known, p, done, cfg, new Set()) : new Map();
+    }
+  }
   const value = (k, bits, stack) => {
     if (val.has(k)) return val.get(k);
     const r = done.get(k); bitsOf.set(k, bits);
@@ -390,7 +404,7 @@ function build() {
     for (const [m, v0] of r.m) {
       const [ck, cb] = childKey(bits, m), v = v0 + t;
       let s = v, h = hn, kid = false, own = true;
-      if (done.has(ck) && !stack.has(ck)) { const [cv, ch] = value(ck, cb, stack); kid = true; if (ch >= hn) { s = -cv; h = ch; own = false; } }
+      if (done.has(ck) && !stack.has(ck)) { const [cv, ch] = value(ck, cb, stack); kid = true; if (ch >= hn && (!PLAN || PLAN.has(ck))) { s = -cv; h = ch; own = false; } }
       sc.push([m, s, kid, h, own]);
     }
     stack.delete(k);

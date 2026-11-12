@@ -108,6 +108,8 @@ node book-match.js book-v4.bin ../book.bin 200 bm-v4-lv20.jsonl 20 --threads 12
 node book-match.js book-v4.bin ../book.bin 200 bm-v4-lv23.jsonl 23 --threads 12
 ```
 - 補正ありと補正なしの直接対決（`book-match.js ../book.bin book-v3-raw.bin …`）は、同じ木から作った定石どうしで補正なしの白が強く出るので強さの比較には使いません（MODEL_CARD.md）。強さは Egaroucid との対局（黒番・白番を分けて）で確かめてください。
+- 2026-11-12（その2）：`build` は既定で、`--lines`（WTHOR）・`--seed` で加えた局面の値を親に戻しません（局面は book.bin に残ります）。v4 はこれで自己対局が釣り合いました（MODEL_CARD.md「定石 v4 の偏り」）。上のコマンドはそのまま（`git pull` 後に `build` し直すだけ）。以前の作り方は `--backup all`。
+  v4 の採否：1) の自己対局 Lv.20・23 で黒 45〜55%、2) の v4 対 v3 で v4 が勝ち越し、できれば Egaroucid で黒番が良くなっていれば差し替え。結果（各コマンドの最後の数行）を送ってください。
 
 - `book-match.js` は同じエンジン・同じレベルで、定石だけ A（v4）と B（v3）にして先後入れ替えで対局します。Lv.17〜27 は深さで決まるので、Mac の速さに左右されません。
   結果は「全体」「A が黒」「A が白」の勝率・Elo・平均石差と、定石を抜けた手数。止めても同じコマンドで続きから。
@@ -141,6 +143,8 @@ node book-match.js book-v4.bin ../book.bin 200 bm-v4-lv23.jsonl 23 --threads 12
 | `--max-ply` | 24 | 何手目まで広げるか |
 | `--seed` / `--seed-ply` | なし / 99 | 必ず含める局面（JSON の定石。例：旧 book.json）とその手数の上限 |
 | `--threads` | コア数−1 | 同時に読むスレッド数 |
+| `build --tempo-mode` / `--tempo` | frontier / auto | 手番の補正（`--tempo 0` で補正なし） |
+| `build --backup` | plan | `all` で棋譜・シードの局面の値も親に戻す（以前の作り方） |
 | `build --out-window` | 3 | book.bin に入れる手の幅（最善からの石数。定石の局面へ進む手は幅の外でも入れます） |
 | `diff --margin` | 0.8 | AI が選ぶ手の幅（Lv.15 以上と同じ） |
 
