@@ -34,7 +34,10 @@
   const flush = () => { const cbs = [...held.values()]; held.clear(); cbs.forEach(cb => raf0(t => cb((frozen ? since : t) - off))); };
   function freeze() { if (frozen) return; frozen = true; since = pn(); window.__focusGate.frozen = true; }
   function thaw() { if (!frozen) return; off += pn() - since; frozen = false; window.__focusGate.frozen = false; flush(); }
-  const out = () => document.hidden || (document.hasFocus && !document.hasFocus());
+  // a live online game (body.in-online, every game's online UI) never freezes: the opponent's moves, the clocks and the 3D board
+  // keep up while another window is in front (2026-11-12)
+  const live = () => !!(document.body && document.body.classList.contains('in-online'));
+  const out = () => !live() && (document.hidden || (document.hasFocus && !document.hasFocus()));
   const check = () => (out() ? freeze() : thaw());
   addEventListener('blur', () => setTimeout(check, 0)); addEventListener('focus', check); addEventListener('pageshow', check);
   document.addEventListener('visibilitychange', check);
