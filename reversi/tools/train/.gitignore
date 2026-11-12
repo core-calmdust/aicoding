@@ -7,3 +7,6 @@ rvlabel
 *.mpc[0-9]*
 *.mpcfit*
 *.log
+rvmatch
+rveng.so
+rveng.so.b.*
