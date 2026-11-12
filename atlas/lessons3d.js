@@ -437,10 +437,31 @@
       }
       scored(p, D.points(p.P, u));
     }
+    // (2026-11-12) a partial or wrong answer names the best move in words too (not only the glowing squares)
+    const ANSW = { ja: '正解は {m}', en: 'Best move: {m}', zh: '正解：{m}', 'zh-TW': '正解：{m}', ko: '정답: {m}', es: 'Mejor jugada: {m}', fr: 'Meilleur coup : {m}', pt: 'Melhor lance: {m}', de: 'Bester Zug: {m}', ru: 'Лучший ход: {m}', tr: 'En iyi hamle: {m}', id: 'Langkah terbaik: {m}', hi: 'सबसे अच्छी चाल: {m}', ar: 'أفضل نقلة: {m}' };
+    function moveName(pos, u) {
+      if (!pos || !u || typeof u !== 'string') return '';
+      if (id === 'shogi') {
+        const [bd, side] = String(pos).split(' '), KJ = { p: '歩', l: '香', n: '桂', s: '銀', g: '金', b: '角', r: '飛', k: '玉', '+p': 'と', '+l': '成香', '+n': '成桂', '+s': '成銀', '+b': '馬', '+r': '龍' };
+        const ZEN = '０１２３４５６７８９', KAN = ['', '一', '二', '三', '四', '五', '六', '七', '八', '九'], mk = side === 'w' ? '☖' : '☗';
+        const sq = t => ZEN[+t[0]] + KAN[t.charCodeAt(1) - 96];
+        if (u[1] === '*') return mk + sq(u.slice(2, 4)) + KJ[u[0].toLowerCase()] + '打';
+        const rows = bd.split('/'), f = +u[0], r = u.charCodeAt(1) - 97; let x = 0, pc = '', pro = '';
+        for (const ch of rows[r] || '') { if (ch === '+') { pro = '+'; continue; } if (/\d/.test(ch)) { x += +ch; continue; } if (9 - x === f) { pc = pro + ch.toLowerCase(); break; } x++; pro = ''; }
+        return mk + sq(u.slice(2, 4)) + (KJ[pc] || '') + (u[4] === '+' ? '成' : '');
+      }
+      if (/^[a-h][1-8][a-h][1-8]/.test(u)) {   // chess (UCI): the piece's letter + from-to
+        const rows = String(pos).split(' ')[0].split('/'), f = u.charCodeAt(0) - 97, r = 8 - +u[1]; let x = 0, pc = '';
+        for (const ch of rows[r] || '') { if (/\d/.test(ch)) { x += +ch; continue; } if (x === f) { pc = ch; break; } x++; }
+        const SY = { k: '♔', q: '♕', r: '♖', b: '♗', n: '♘', p: '' };
+        return (SY[pc.toLowerCase()] || '') + u.slice(0, 2) + '–' + u.slice(2, 4) + (u[4] ? '=' + u[4].toUpperCase() : '');
+      }
+      return '';
+    }
     function scored(p, pts, msg) {
       p.done = true; const n = Math.max(0, pts - (p.hinted && pts > 0 ? HINT_PEN : 0)); cur.res[cur.k] = n; dots();
       if (pts >= 16) say(`${line('solved') || pick(X.good)} <b>${fill(X.pts, { n })}</b>${p.why ? '<br>' + p.why : ''}`);
-      else { if (p.ans) pz().mark(p.ans); say(`${msg || (pts > 0 ? X.partial : X.wrong)} <b>${fill(X.pts, { n })}</b>${p.why ? '<br>' + p.why : ''}`); }
+      else { if (p.ans) pz().mark(p.ans); const nm = p.kind !== 'tsume' && moveName(p.pos, p.ans); say(`${msg || (pts > 0 ? X.partial : X.wrong)} <b>${fill(X.pts, { n })}</b>${nm ? '<br>' + fill(ANSW[ctx.lang] || ANSW.en, { m: `<b>${nm}</b>` }) : ''}${p.why ? '<br>' + p.why : ''}`); }
       try { chime(pts >= 16); } catch (e) {}
       act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
     }
