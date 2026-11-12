@@ -274,8 +274,8 @@
     let m;
     if (L.lacq) m = M({ map: imgTex('stand-makie'), roughnessMap: imgTex('stand-makie-m', false), metalnessMap: imgTex('stand-makie-m', false), bumpMap: imgTex('stand-makie-m', false), bumpScale: .003, roughness: 1, metalness: 1, clearcoat: .8, clearcoatRoughness: .08 });
     else if (L.raden) m = nacre(M({ map: imgTex('stand-sakura'), roughnessMap: imgTex('stand-sakura-m', false), metalnessMap: imgTex('stand-sakura-m', false), bumpMap: imgTex('stand-sakura-m', false), bumpScale: .002, roughness: 1, metalness: 1, clearcoat: .9, clearcoatRoughness: .06 }));
-    else if (L.stand) m = M({ map: imgTex('stand-' + L.stand), roughness: L.gloss ? .24 : .5, bumpScale: .001 });
-    else m = M({ map: kayaPlain('kayaStand'), roughness: .55, bumpScale: .001 });
+    else if (L.stand) m = M({ map: imgTex('stand-' + L.stand), roughness: L.gloss ? .5 : .9, bumpScale: .001 });
+    else m = M({ map: kayaPlain('kayaStand'), roughness: .92, bumpScale: .001 });   // (matte like the board top, 2026-11-12)
     m.color.multiply(new (T().Color)(STAND_TONE).convertSRGBToLinear());
     // 蒔絵 / 螺鈿 (2026-11-12, the user): the picture on the plate's top only — its thin edges, the base and the column plain lacquer
     // (the picture squeezed onto them read as stray thin inlays)
@@ -416,7 +416,7 @@
     const kaya = LM ? LM.leg : M({ map: X.wood('kayaSide2', '#caa075', '#9c6c3c', 512, 512, 2.4), roughness: .5, bumpScale: .003 });
     const endF = LM ? LM.side : M({ map: endGrain('kayaEndF2', 512, 256, .5, 2.6, .7), roughness: .5, bumpScale: .003 });
     const endS = LM ? LM.end : M({ map: endGrain('kayaEndS2', 512, 256, -1.4, .5, .5), roughness: .5, bumpScale: .003 });
-    const top = new TT.MeshPhysicalMaterial({ map: boardTop(n, cr, EXT, look, nh), bumpMap: boardBump(n, cr, EXT, nh), bumpScale: .006, roughness: look === 'ink' ? .42 : .58, clearcoat: look === 'ink' ? .35 : .15, clearcoatRoughness: .45 });   // soft satin, no glare on the playing field
+    const top = new TT.MeshPhysicalMaterial({ map: boardTop(n, cr, EXT, look, nh), bumpMap: boardBump(n, cr, EXT, nh), bumpScale: .006, roughness: .95, clearcoat: 0, reflectivity: 0, envMapIntensity: .6 });   // matte: no glare from the room's lights on the playing field, in any room (2026-11-12)
     top.map.anisotropy = 8;
     const bottom = LM ? LM.bottom : M({ color: 0x8c643c, roughness: .7 });
     const LEGH = 1.9, base = o.legs === false ? 0 : LEGH * k;   // (the feet taller with it: the carved profile stretched)

@@ -118,6 +118,7 @@
 .sgzoom{position:fixed;z-index:75;top:calc(12px + env(safe-area-inset-top));right:106px;display:grid;place-items:center;width:44px;height:44px;padding:0;border-radius:50%;border:2px solid var(--line,#eadfcb);background:#fff;box-shadow:0 3px 0 var(--line,#eadfcb);font:800 13px/1 var(--round,system-ui,sans-serif);color:#3a2e24;cursor:pointer}
 .sgzoom.in-rgd{position:absolute;top:auto;right:auto}
 .sgzoom svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+@media (min-width:820px) and (hover:hover) and (pointer:fine){.sghs{display:none!important}}   /* (2026-11-12) PC: the pieces on the komadai read well enough — no chips at the top */
 .sghs .nil{color:rgba(255,255,255,.8);font-weight:800;text-shadow:0 1px 2px rgba(0,0,0,.4)}`;
     document.head.appendChild(s);
   }
