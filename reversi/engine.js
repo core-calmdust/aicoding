@@ -1015,51 +1015,52 @@ function orderRoot(moves, prev) {
 // Lv.1-13 (2026-11-10, "gentle"): rnd = the chance of a random move, greedy = the chance of a beginner's move (most discs
 // flipped: corners given away, X squares), else the search with noise; the endgame solve only in the last few squares.
 // The same depths as before (the level descriptions); measured Elo of each level: MODEL_CARD.md「やさしいレベル」.
+// 36 strength levels (2026-11-13; 28 before). Lv.1-28 are the levels a person plays against (the portal's rewards): the 20 levels of the
+// 28-level ladder up to its Lv.20 (about Egaroucid for Web's strongest, Lv.15) with 8 new ones in the widest gaps between them
+// (Lv.8, 10, 13, 15, 17, 19, 21, 23). Lv.29-36 ("天上") are the old Lv.21-28. Old → new: index.html LV_28TO36.
+// Lv.25-35 read to a fixed depth (the same strength on any device; time / use / max are only a guard for slow devices), Lv.36 by time.
 const LEVELS = [
   null,
-  { depth: 1, exact: 0, rnd: 0.7, greedy: 0.2, noise: 3000 },     // 1  almost random
-  { depth: 1, exact: 0, rnd: 0.5, greedy: 0.3, noise: 1800 },     // 2
-  { depth: 1, exact: 0, rnd: 0.32, greedy: 0.3, noise: 1300 },    // 3
+  { depth: 1, exact: 0, rnd: 0.7, greedy: 0.2, noise: 3000 },   // 1
+  { depth: 1, exact: 0, rnd: 0.5, greedy: 0.3, noise: 1800 },   // 2
+  { depth: 1, exact: 0, rnd: 0.32, greedy: 0.3, noise: 1300 },   // 3
   { depth: 1, exact: 2, rnd: 0.22, greedy: 0.28, noise: 1100 },   // 4
-  { depth: 1, exact: 4, rnd: 0.14, greedy: 0.22, noise: 900 },    // 5  (≈ the old Lv.1)
-  { depth: 2, exact: 4, rnd: 0.12, greedy: 0.16, noise: 900 },    // 6
-  { depth: 2, exact: 5, rnd: 0.08, greedy: 0.12, noise: 700 },    // 7
-  { depth: 2, exact: 6, rnd: 0.05, greedy: 0.07, noise: 550 },    // 8
-  { depth: 3, exact: 7, rnd: 0.04, greedy: 0.05, noise: 450 },    // 9
-  { depth: 4, exact: 8, rnd: 0.03, greedy: 0.03, noise: 450 },    // 10
-  { depth: 4, exact: 9, rnd: 0.02, noise: 400 },                  // 11
-  { depth: 5, exact: 10, rnd: 0.01, noise: 300 },                 // 12
-  { depth: 6, exact: 12, noise: 180 },                            // 13
-  { depth: 8, exact: 14 },                          // 14 (old Lv.6)
-  { depth: 9, exact: 15, time: 700, mpc: 1 },       // 15
-  { depth: 10, exact: 16, time: 1000, mpc: 1 },     // 16 (old Lv.7)
-  // 17-27 (2026-11-11, steps of about +25–110 Elo from Lv.16): a fixed depth (depth; mix: half of the positions to that depth instead,
-  // by a hash of the position) and endgame (exact / wld), the same strength on any device and thread count (the threads only make
-  // them faster). time / use / max are only a guard for slow devices (one thread on a slow phone): no new depth after time × use,
-  // the hard stop at max (MODEL_CARD.md「29段階→28段階：Lv.17〜27 を深さで刻み直し」).
-  { depth: 10, exact: 18, wld: 20, end: 24, time: 10000, use: 1, max: 20000, mpc: 1 },   // 17
-  { depth: 11, exact: 18, wld: 20, end: 24, time: 10000, use: 1, max: 20000, mpc: 1 },   // 18
-  { depth: 12, exact: 18, wld: 20, end: 24, time: 10000, use: 1, max: 20000, mpc: 1 },   // 19
-  { depth: 13, exact: 20, wld: 22, end: 26, time: 10000, use: 1, max: 20000, mpc: 1 },   // 20 (2026-11-12: 19/21 → 20/22, black no longer starts its solves a move later than white: MODEL_CARD.md「Lv.20 の読み切りを 20・22 に」)
-  { depth: 16, exact: 22, wld: 24, end: 28, time: 15000, use: 1, max: 30000, mpc: 1 },   // 21
-  { depth: 20, mix: 16, exact: 22, wld: 24, end: 28, time: 20000, use: 1, max: 40000, mpc: 1 },   // 22
-  { depth: 20, exact: 22, wld: 24, end: 28, time: 20000, use: 1, max: 40000, mpc: 1 },   // 23
-  { depth: 22, exact: 23, wld: 24, wtry: 27, xtry: 25, tryMs: 4000, end: 30, time: 25000, use: 1, max: 50000, mpc: 1 },   // 24 (wtry / xtry / tryMs: below)
-  { depth: 25, mix: 20, exact: 23, wld: 25, wtry: 28, xtry: 25, tryMs: 5000, end: 30, time: 30000, use: 1, max: 60000, mpc: 1 },   // 25
-  { depth: 25, exact: 23, wld: 25, wtry: 28, xtry: 25, tryMs: 5000, end: 30, time: 30000, use: 1, max: 60000, mpc: 1 },   // 26
-  { depth: 28, exact: 24, wld: 26, wtry: 29, xtry: 26, tryMs: 6000, end: 30, time: 30000, use: 1, max: 60000, mpc: 1 },   // 27
-  // 28 (2026-11-08, Lv.25 until 2026-11-11): the strongest, by time on all threads (page: MT_CFG). max = the hard limit per move in ms
-  // (else 2.5 × time); use = start a new depth until this share of time (else 0.45), and a depth cut by max still counts when another
-  // root move was already proved better there (think: PART).
-  // wtry / xtry (2026-11-11): after the midgame deepening (which reaches the end of the game at ~30 empties within seconds on a PC), the time
-  // left is used for a win/draw/loss solve up to wtry empties and then an exact solve up to xtry; a solve cut by max is dropped (MODEL_CARD.md「Lv.28 の読み切りを広げる」)
-  // tryMs (2026-11-12, Lv.24-27): the same extra solves for the fixed-depth levels, each within tryMs — a fast device solves 2-4 empties
-  // earlier (Lv.24: 23/24 → 24/26 is +23 ± 6 Elo), a slow one drops the try and plays as before (never weaker than the fixed exact / wld).
-  // A try cut by its limit lowers the cap (TRY_W / TRY_X: three empties below it) so a slow device stops trying; a quick solve raises it again.
-  // Lv.28 (2026-11-12): wtry 30 → 32, xtry 26 → 28, the hard limit 20 → 30 s (MODEL_CARD.md「上位レベルの追加の読み切り」)
-  { depth: 60, exact: 23, wld: 25, wtry: 32, xtry: 28, time: 18000, use: 0.8, max: 30000, mpc: 1 },   // 28
+  { depth: 1, exact: 4, rnd: 0.14, greedy: 0.22, noise: 900 },   // 5
+  { depth: 2, exact: 4, rnd: 0.12, greedy: 0.16, noise: 900 },   // 6
+  { depth: 2, exact: 5, rnd: 0.08, greedy: 0.12, noise: 700 },   // 7
+  { depth: 2, exact: 5, rnd: 0.065, greedy: 0.095, noise: 620 },   // 8 (2026-11-13: new, between the levels beside it)
+  { depth: 2, exact: 6, rnd: 0.05, greedy: 0.07, noise: 550 },   // 9 (Lv.8 until 2026-11-13)
+  { depth: 3, exact: 6, rnd: 0.045, greedy: 0.06, noise: 500 },   // 10 (2026-11-13: new, between the levels beside it)
+  { depth: 3, exact: 7, rnd: 0.04, greedy: 0.05, noise: 450 },   // 11 (Lv.9 until 2026-11-13)
+  { depth: 4, exact: 8, rnd: 0.03, greedy: 0.03, noise: 450 },   // 12 (Lv.10 until 2026-11-13)
+  { depth: 4, exact: 8, rnd: 0.025, greedy: 0.015, noise: 425 },   // 13 (2026-11-13: new, between the levels beside it)
+  { depth: 4, exact: 9, rnd: 0.02, noise: 400 },   // 14 (Lv.11 until 2026-11-13)
+  { depth: 5, exact: 9, rnd: 0.015, noise: 350 },   // 15 (2026-11-13: new, between the levels beside it)
+  { depth: 5, exact: 10, rnd: 0.01, noise: 300 },   // 16 (Lv.12 until 2026-11-13)
+  { depth: 5, exact: 11, rnd: 0.005, noise: 240 },   // 17 (2026-11-13: new, between the levels beside it)
+  { depth: 6, exact: 12, noise: 180 },   // 18 (Lv.13 until 2026-11-13)
+  { depth: 7, exact: 13, noise: 90 },   // 19 (2026-11-13: new, between the levels beside it)
+  { depth: 8, exact: 14 },   // 20 (Lv.14 until 2026-11-13)
+  { depth: 9, exact: 14 },   // 21 (2026-11-13: new, between the levels beside it)
+  { depth: 9, exact: 15, time: 700, mpc: 1 },   // 22 (Lv.15 until 2026-11-13)
+  { depth: 9, exact: 16, time: 850, mpc: 1 },   // 23 (2026-11-13: new, between the levels beside it)
+  { depth: 10, exact: 16, time: 1000, mpc: 1 },   // 24 (Lv.16 until 2026-11-13)
+  { depth: 10, exact: 18, wld: 20, end: 24, time: 10000, use: 1, max: 20000, mpc: 1 },   // 25 (Lv.17 until 2026-11-13)
+  { depth: 11, exact: 18, wld: 20, end: 24, time: 10000, use: 1, max: 20000, mpc: 1 },   // 26 (Lv.18 until 2026-11-13)
+  { depth: 12, exact: 18, wld: 20, end: 24, time: 10000, use: 1, max: 20000, mpc: 1 },   // 27 (Lv.19 until 2026-11-13)
+  { depth: 13, exact: 20, wld: 22, end: 26, time: 10000, use: 1, max: 20000, mpc: 1 },   // 28 (Lv.20 until 2026-11-13)
+  // 29-36 (2026-11-13, "天上" — beyond what a person plays against: no rewards in the portal): Lv.21-28 until then. 29-35 read to a fixed depth,
+  // 36 is the strongest, by time on all threads (wtry / xtry / tryMs / end: MODEL_CARD.md「上位レベルの追加の読み切り」「終局まで読む」)
+  { depth: 16, exact: 22, wld: 24, end: 28, time: 15000, use: 1, max: 30000, mpc: 1 },   // 29 (Lv.21 until 2026-11-13)
+  { depth: 20, mix: 16, exact: 22, wld: 24, end: 28, time: 20000, use: 1, max: 40000, mpc: 1 },   // 30 (Lv.22 until 2026-11-13)
+  { depth: 20, exact: 22, wld: 24, end: 28, time: 20000, use: 1, max: 40000, mpc: 1 },   // 31 (Lv.23 until 2026-11-13)
+  { depth: 22, exact: 23, wld: 24, wtry: 27, xtry: 25, tryMs: 4000, end: 30, time: 25000, use: 1, max: 50000, mpc: 1 },   // 32 (Lv.24 until 2026-11-13)
+  { depth: 25, mix: 20, exact: 23, wld: 25, wtry: 28, xtry: 25, tryMs: 5000, end: 30, time: 30000, use: 1, max: 60000, mpc: 1 },   // 33 (Lv.25 until 2026-11-13)
+  { depth: 25, exact: 23, wld: 25, wtry: 28, xtry: 25, tryMs: 5000, end: 30, time: 30000, use: 1, max: 60000, mpc: 1 },   // 34 (Lv.26 until 2026-11-13)
+  { depth: 28, exact: 24, wld: 26, wtry: 29, xtry: 26, tryMs: 6000, end: 30, time: 30000, use: 1, max: 60000, mpc: 1 },   // 35 (Lv.27 until 2026-11-13)
+  { depth: 60, exact: 23, wld: 25, wtry: 32, xtry: 28, time: 18000, use: 0.8, max: 30000, mpc: 1 },   // 36 (Lv.28 until 2026-11-13)
 ];
-const NLEVELS = LEVELS.length - 1, DEF_LEVEL = 15;
+const NLEVELS = LEVELS.length - 1, DEF_LEVEL = 22;
 
 // ------------------------------------------------------------ opening book (self-generated)
 let BOOK = null;
