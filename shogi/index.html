@@ -6548,6 +6548,8 @@ function chatStart() {
   });
 }
 function chatTime(ts) { if (typeof ts !== 'number') return ''; const d = new Date(ts); return d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0'); }
+// (2026-11-13) the chat box's placeholder / Send follow a language change (not only the next message)
+document.addEventListener('change', e => { if (e.target && e.target.id === 'langSel') setTimeout(() => { try { chatRender(); } catch (err) {} }, 0); });
 function chatRender() {
   const el = $('#dkChat'), inp = $('#dkChatIn'); if (!el) return;
   if (inp && inp.dataset.l !== LANG) { inp.dataset.l = LANG; inp.placeholder = matchMedia('(hover: hover) and (pointer: fine)').matches ? t('ol.chatPh') : t('ol.chatPh').split(' · ')[0]; inp.setAttribute('aria-label', t('ol.chat')); $('#dkChatSend').textContent = t('ol.chatSend'); $('#dkChatHead').title = t('ol.chatNote'); }
