@@ -636,7 +636,7 @@ const QMASK_L = [0x0F0F0F0F, 0xF0F0F0F0 | 0, 0, 0], QMASK_H = [0, 0, 0x0F0F0F0F,
 function quadParity(el, eh, q) { return ((pc(el & QMASK_L[q]) + pc(eh & QMASK_H[q])) & 1) === 1; }
 
 const SMALL = 6;
-const TUNE = { evalMin: 12, searchMin: 14, sDepth: 1, kE: 8 };
+const TUNE = { evalMin: 13, searchMin: 18, sDepth: 2, kE: 8 };   // (2026-11-12: 12 / 14 / 1 before; engine.c also searches a ply deeper every 3 empties above searchMin)
 function solveJS(pl, ph, ol, oh, alpha, beta, empties, ply, passed) {
   if (empties <= SMALL) return solveSmall(pl, ph, ol, oh, alpha, beta, empties, passed);
   if ((++nodes & 16383) === 0) checkTime();
@@ -689,7 +689,7 @@ function solveJS(pl, ph, ol, oh, alpha, beta, empties, ply, passed) {
     }
     sc += SQV[s];
     if (empties >= TUNE.evalMin) {
-      if (empties >= TUNE.searchMin) sc -= (searchJS(nol, noh, npl, nph, TUNE.sDepth, -32000, 32000, ply + 1, false) * TUNE.kE) >> 4;
+      if (empties >= TUNE.searchMin) sc -= (searchJS(nol, noh, npl, nph, TUNE.sDepth + ((empties - TUNE.searchMin) / 3 | 0), -32000, 32000, ply + 1, false) * TUNE.kE) >> 4;
       else sc -= (evaluate(nol, noh, npl, nph) * TUNE.kE) >> 4;
     }
     SC[base + i] = sc;

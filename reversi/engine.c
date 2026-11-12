@@ -307,7 +307,7 @@ static int evalAt(int ply, u64 P, u64 O) {
 // ------------------------------------------------------------------ search state
 static TLS double nodes, deadline, nodeMax; static TLS int aborted;   /* nodeMax: PRO mode's node limit (0 = none) */
 static TLS double MPC_T = 1.5, MPC_A = 357.32, MPC_B = 1.1, MPC_C = -3.14; static TLS int MPC_ON = 1, MPC_MIN = 3;
-static TLS int T_EVALMIN = 12, T_SEARCHMIN = 14, T_SDEPTH = 1, T_KE = 8;
+static TLS int T_EVALMIN = 13, T_SEARCHMIN = 18, T_SDEPTH = 2, T_KE = 8;
 #ifdef MT
 /* (2026-11-10) Young Brothers Wait: split points (SPt) where idle threads take the remaining moves of a node whose first
    move is done. aborted = 2: a split point on this thread's chain was cut off (or stopped) — the search unwinds to it. */
@@ -703,6 +703,7 @@ static int solveN(u64 P, u64 O, int alpha, int beta, int n, u64 E, int par, int 
   return -solveN(O, P, -beta, -alpha, n, E, par, 1);
 }
 #define SMALL 7
+#define SOLVE_STEP 3
 static int solveSmall(u64 P, u64 O, int alpha, int beta, int empties, int passed) {
   const u64 E = ~(P | O);
   /* after a pass (passed) the side to move has a move (solve checked it), so 1 and 2 empties need no flag */
@@ -795,7 +796,9 @@ static int solve(u64 P, u64 O, int alpha, int beta, int empties, int ply, int pa
     sc += SQV[s];
     if (ev) {
       childIdx(ply, s, f);
-      if (empties >= T_SEARCHMIN) { int v = searchI(nO, nP, T_SDEPTH, -32000, 32000, ply + 1, 0); if (aborted) return 0; sc -= (v * T_KE) >> 4; }
+      /* (2026-11-12) the ordering search gets a ply deeper every SOLVE_STEP empties above T_SEARCHMIN: with (13, 18, 2) and
+         step 3 an exact solve at 27 empties takes a third of the time and a win/draw/loss solve half (the same values) */
+      if (empties >= T_SEARCHMIN) { int v = searchI(nO, nP, T_SDEPTH + (empties - T_SEARCHMIN) / SOLVE_STEP, -32000, 32000, ply + 1, 0); if (aborted) return 0; sc -= (v * T_KE) >> 4; }
       else sc -= (evalAt(ply + 1, nO, nP) * T_KE) >> 4;
     }
     SC[base + i] = sc;
