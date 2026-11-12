@@ -93,7 +93,10 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
       set: (p, v) => f.ref(p).set(v),
       update: (p, v) => f.ref(p).update(v),
       remove: p => f.ref(p).remove(),
-      async txn(p, fn) { const r = await f.ref(p).transaction(fn); return { committed: r.committed, value: r.snapshot.val() }; },
+      async txn(p, fn) {   // (one transaction at a time per path, each on the server's own answer: a second one queued on the first's optimistic result — the game-over mark right after the mating move — was sent with them as one write and the rules refused both, 2026-11-12)
+        const Q = window.__fbTxq || (window.__fbTxq = {}), run = (Q[p] || Promise.resolve()).then(() => f.ref(p).transaction(fn)), tail = Q[p] = run.catch(() => {});
+        try { const r = await run; return { committed: r.committed, value: r.snapshot.val() }; } finally { if (Q[p] === tail) delete Q[p]; }
+      },
       onDisconnectRemove: p => { disc.add(p); return f.ref(p).onDisconnect().remove(); },
       cancelDisconnect: p => { disc.delete(p); return f.ref(p).onDisconnect().cancel(); },
       onReconnect: cb => recon.add(cb),
