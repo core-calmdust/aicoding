@@ -810,8 +810,10 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) .card.players:has(.player.active) .p
 /* (2026-11-13) オンライン in the 新しい対局 dialog: the room screen fits, no room left under it for the dialog to scroll (as .ng-fit) */
 html.atlas-skin:not(.atlas-2d) body:not(#_) .modal.ngl-ol:not(#_):not(#_) .modal-actions:not(#_){margin-top:16px!important;margin-bottom:0!important;padding-bottom:4px!important;bottom:0!important}
 /* (2026-11-13) フィッシャー's presets under 持ち時間: small tiles like the clock's own, three to a row */
-html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] #fisPick:not(.hidden){margin-top:12px}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] #fisPick:not(.hidden){margin-top:12px;padding:14px 14px 12px;border-radius:12px;border:1px solid #ecdab4;background:#fffdf7}   /* (an inner box, as the PRO panel) */
 html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] #fisPick .fis-seg:not(#_){display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px!important;padding:0!important;background:none!important;border-radius:0!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] #fisPick .fis-seg > button:not(#_){padding:9px 4px!important;border-radius:12px!important;background:#fffdf7!important;border:1px solid #ecdab4!important;box-shadow:0 1px 0 #efe2c6!important;color:#6b5a3e!important;font-size:13px!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] #fisPick .fis-seg > button.sel:not(#_){background:#fff3d2!important;border-color:#e0a33a!important;box-shadow:inset 0 0 0 1px #e0a33a!important;color:#7a4f0c!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] #fisPick .fis-note{display:block;margin-top:8px;font-size:13px}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] .ng-col:not(#_):not(#_):has(#fisPick:not(.hidden)){gap:20px!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] #fisPick .fis-note:not(#_){margin-top:6px}
