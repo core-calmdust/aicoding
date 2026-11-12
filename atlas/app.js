@@ -831,7 +831,7 @@
     if (g.total.pz) rows.push([t('pg.pz'), r.pz || 0, g.total.pz]);
     if (g.total.ls) rows.push([t('pg.ls'), r.ls || 0, g.total.ls]);
     // shogi / chess on PC (2026-11-10): the tabs are 対戦 · レート戦 · パズル · レッスン — 二人で対戦 is the first choice of the 相手 list
-    const MX = !!(MXG[id] && ad && ad.table && FULL_SKIN[id] && !matchMedia('(max-width: 819px)').matches);
+    const MX = !!(MXG[id] && ad && ad.table && FULL_SKIN[id]);   // (phones too, 2026-11-13: レート戦 vs AI or online, パズル, レッスン)
     const lv = MX && pref[id + ':mode'] === 'pvp' ? 0 : pref[id + ':lv'] || 1, side = pref[id + ':side'] || 1;
     const vcur = ad && ad.variants && ad.variants.list.includes(pref[id + ':var']) ? pref[id + ':var'] : '';   // 種目 (shogi: its variants, 2026-11-12)
     const bsz = ad && ad.sizes ? (ad.sizes.includes(+pref[id + ':size']) ? +pref[id + ':size'] : ad.sizes.includes(ad.size0) ? ad.size0 : ad.sizes[0]) : 0;   // board size (go, hex, tafl); adapter.size0 = the default

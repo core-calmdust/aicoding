@@ -778,7 +778,7 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) .rt-card .rt-head{align-items:baseli
 html.atlas-skin:not(.atlas-2d) body:not(#_) .rt-card .rt-r{display:inline-block;font-size:34px!important;line-height:1.05!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .rt-card .rt-r::first-letter{font-size:16px;margin-inline-end:2px}
 /* (2026-11-13) with the opt-in layout the panels keep their height whether PRO is open or not: the other side stays put */
-html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] .ng-cols:not(#_){align-items:stretch!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl.ngt-pc[data-ngl-order] .ng-cols:not(#_){align-items:stretch!important}
 /* (2026-11-13) a list dialog with little in it (レッスン / 定石 / 詰め… lists): 閉じる stays at the dialog's foot, not right under the list */
 html.atlas-skin:not(.atlas-2d) body:not(#_) .overlay .modal:has(> [id$=ListView]:not(.hidden)){display:flex!important;flex-direction:column}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .overlay .modal > [id$=ListView]:not(.hidden){flex:1 0 auto;display:flex;flex-direction:column}
@@ -817,3 +817,6 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-or
 html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] #fisPick .fis-note{display:block;margin-top:8px;font-size:13px}
 html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] .ng-col:not(#_):not(#_):has(#fisPick:not(.hidden)){gap:20px!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] #fisPick .fis-note:not(#_){margin-top:6px}
+/* (2026-11-13) phones (ngt-on): the panels stack and the dialog itself scrolls — no frosted foot inside each panel, a smaller gap */
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl.ngt-on .ng-cols > .ng-col::after{display:none!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl.ngt-on[data-ngl-order] .ng-col:not(#_):not(#_){gap:22px!important;padding-bottom:18px!important}
