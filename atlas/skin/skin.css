@@ -782,7 +782,7 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-or
 /* (2026-11-13) a list dialog with little in it (レッスン / 定石 / 詰め… lists): 閉じる stays at the dialog's foot, not right under the list */
 html.atlas-skin:not(.atlas-2d) body:not(#_) .overlay .modal:has(> [id$=ListView]:not(.hidden)){display:flex!important;flex-direction:column}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .overlay .modal > [id$=ListView]:not(.hidden){flex:1 0 auto;display:flex;flex-direction:column}
-html.atlas-skin:not(.atlas-2d) body:not(#_) .overlay .modal > [id$=ListView]:not(.hidden) > .modal-actions:last-child{margin-top:auto!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .overlay .modal:not(#_):not(#_) > [id$=ListView]:not(.hidden) > .modal-actions:last-child:not(#_):not(#_){margin-top:auto!important}
 /* (2026-11-13) the online room's rating: "R" beside a large number, the record under them */
 html.atlas-skin:not(.atlas-2d) body:not(#_) .ol-r:not(#_){display:grid!important;grid-template-columns:auto auto;align-items:baseline;justify-content:end;column-gap:5px;font-size:17px!important;font-weight:900;color:var(--a-ink2)!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .ol-r:not(#_) b{font-size:38px!important;line-height:1!important;color:#c07a12!important}
@@ -801,3 +801,9 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) .pro-btn{height:30px!important;paddi
 html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] :is(#fLevel,#fLevel2) .level-name small:not(#_):not(#_){min-height:3.2em!important;-webkit-line-clamp:2!important;word-break:auto-phrase}
 /* (2026-11-13) the chat's 送信 / Send: the word centred in its button, whatever the language */
 html.atlas-skin:not(.atlas-2d) body:not(#_) .chat-form :is(#dkChatSend, button[type=submit]):not(#_){display:inline-flex!important;align-items:center!important;justify-content:center!important;line-height:1!important;padding-top:0!important;padding-bottom:0!important;text-align:center!important;text-indent:0!important;letter-spacing:.04em}
+/* (2026-11-13) the side to move stands out more: a warm yellow fill, a thicker yellow edge with a soft glow, its name dark;
+   the other side a little quieter */
+html.atlas-skin:not(.atlas-2d) body:not(#_) .card.players .player:not(#_){transition:background .25s,border-color .25s,box-shadow .25s,opacity .25s}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .card.players .player.active:not(#_){background:linear-gradient(180deg,#fff6cf,#ffeaa0)!important;border:3px solid var(--a-sun)!important;box-shadow:0 3px 0 var(--a-sun2),0 0 0 4px rgba(255,201,40,.28),0 6px 18px -6px rgba(224,154,0,.55)!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .card.players .player.active:not(#_) :is(.name, .nm){color:var(--a-ink)!important;font-weight:900!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .card.players:has(.player.active) .player:not(.active):not(#_){opacity:.72}
