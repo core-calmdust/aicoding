@@ -1721,6 +1721,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 #lessonOverlay .pzh-go b{font:900 17px var(--font);white-space:nowrap}#lessonOverlay .pzh-go small{font:700 12px var(--font);opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 #lessonOverlay .pzh-go:active{transform:translateY(3px);box-shadow:0 1px 0 var(--coral2)}
 #lessonOverlay .pzh-days{margin:0 0 14px}
+@media (min-width:601px){#lessonOverlay #lessonList .lx-grid.pzh-days{grid-template-columns:repeat(2,minmax(0,1fr))!important}}   /* 今日の詰将棋 / やさしい詰将棋: half and half, as the full game's list (2026-11-12) */
 #lessonOverlay #lessonList .pzh-day{background:linear-gradient(120deg,#fff3cf,#fff 62%)!important;border-color:#f6dfa6!important;box-shadow:0 4px 0 #f6dfa6!important}
 #lessonOverlay #lessonList .pzh-day.done{background:linear-gradient(120deg,#eafaf2,#fff 62%)!important;border-color:#bfe9d3!important;box-shadow:0 4px 0 #bfe9d3!important}
 #lessonOverlay #lessonList .pzh-day .lx-th{width:76px!important}
