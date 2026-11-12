@@ -317,8 +317,8 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
     const touchLead = 4.5;   // cm: on touch the mallet sits a little ahead of the finger (toward the far goal)
     function sideOf(q) { return !pvp ? 0 : q.y > 0 ? 0 : 1; }
     function onDown(e) {
-      if (phase !== 'play') { if (paused) resume(); return; }
-      if (e.pointerType === 'mouse' && !pvp) return;   // (the mouse steers by its moves alone: a click changes nothing)
+      if (phase !== 'play') { if (paused) { resume(); if (e.pointerType === 'mouse') lock(); } return; }
+      if (e.pointerType === 'mouse' && !pvp) { lock(); return; }   // (the mouse steers by its moves alone: a click changes nothing — it takes the pointer back if Esc let it go)
       const q = toCm(e); if (!q) return; const side = sideOf(q); if (!pvp && side !== 0) return;
       ptr.set(e.pointerId, side); try { ctx.el.setPointerCapture(e.pointerId); } catch (er) {}
       onMove(e); if (e.pointerType !== 'mouse') e.preventDefault();
@@ -328,8 +328,27 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
     // edge until it came back over the field. The move's length is measured on the table's plane (the view's perspective and
     // the sideways table come with it). Touch stays absolute (the mallet under the finger).
     let lastM = null;
+    // (2026-11-12) the pointer is locked while a match is on (Pointer Lock): the moves keep coming at the screen's edge too — a
+    // touchpad stroke that reached the bottom of the monitor left the mallet unable to go further back. Esc frees it (and pauses).
+    const canLock = !pvp && !!ctx.el.requestPointerLock && matchMedia('(hover:hover) and (pointer:fine)').matches;
+    const locked = () => document.pointerLockElement === ctx.el;
+    const lock = () => { if (!canLock || locked()) return; try { const r = ctx.el.requestPointerLock({ unadjustedMovement: false }); if (r && r.catch) r.catch(() => {}); } catch (e) {} };
+    const unlock = () => { if (locked()) try { document.exitPointerLock(); } catch (e) {} };
+    const onLockChange = () => { if (!locked() && phase === 'play' && !paused && !stopped) pause(); lastM = null; };
+    document.addEventListener('pointerlockchange', onLockChange);
+    let rawT = 0;
+    function onLocked(e) {
+      if (e.type === 'pointerrawupdate') rawT = e.timeStamp; else if (e.timeStamp - rawT < 120) return;   // (raw updates carry the moves; the frame's pointermove would count them twice)
+      const dx = e.movementX || 0, dy = e.movementY || 0; if (!dx && !dy) return;
+      const m = s.mal[0], base = tgt[0] || { tx: m.x, ty: m.y };
+      let p = null; try { const [a, b] = U.xz(base.tx, base.ty); p = T3.project(a, b, Y); } catch (er) {}
+      const r = ctx.el.getBoundingClientRect(); if (!p || !(p.x > r.left && p.x < r.right && p.y > r.top && p.y < r.bottom)) p = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+      const a = toCm({ clientX: p.x, clientY: p.y }), b = toCm({ clientX: p.x + dx, clientY: p.y + dy }); if (!a || !b) return;
+      tgt[0] = E.clampXY ? E.clampXY(s, 0, base.tx + (b.x - a.x), base.ty + (b.y - a.y)) : { tx: base.tx + (b.x - a.x), ty: base.ty + (b.y - a.y) }; src[0] = 'ptr';
+    }
     function onMove(e) {
       if (phase !== 'play') { lastM = null; return; }
+      if (locked() && !pvp) { if (e.pointerType === 'mouse' || !e.pointerType) onLocked(e); return; }
       if (e.pointerType === 'mouse' && !ptr.has(e.pointerId) && !pvp) {
         const prev = lastM; lastM = { clientX: e.clientX, clientY: e.clientY };
         if (!prev || (prev.clientX === e.clientX && prev.clientY === e.clientY)) return;
@@ -416,6 +435,7 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
       padHeld = true; padRaf = requestAnimationFrame(padMenu);
     }
     function begin() {
+      lock();   // (the 試合開始 click: the pointer is held for the match)
       if (!menuEl) return;
       const nv = menuEl.querySelector('#hkNever'); if (nv && nv.checked) { howOff = true; try { localStorage.setItem('atlas-hockey-howto', 'off'); } catch (e) {} }
       menuEl.remove(); menuEl = null; mode = look;
@@ -444,7 +464,7 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
     /* ---------- AI ---------- */
     const mem = {};
     /* ---------- the loop ---------- */
-    function pause() { if (phase !== 'play' || paused) return; paused = true; document.documentElement.classList.remove('hk-play'); toast(tr('paused', lang)); }
+    function pause() { if (phase !== 'play' || paused) return; paused = true; unlock(); document.documentElement.classList.remove('hk-play'); toast(tr('paused', lang)); }
     function resume() { if (!paused) return; paused = false; document.documentElement.classList.add('hk-play'); last = performance.now(); if (toastEl) toastEl.remove(); }
     const onVis = () => { if (document.hidden) pause(); else if (document.hasFocus()) resume(); };
     const onBlur = () => pause();   // (2026-11-10) the window losing focus (another window / app in front) pauses too, not only a hidden tab
@@ -476,7 +496,7 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
     }
     function end() {
       document.documentElement.classList.remove('hk-play');
-      over = true; phase = 'over'; cancelAnimationFrame(raf);
+      over = true; phase = 'over'; cancelAnimationFrame(raf); unlock();
       const w = s.over, score = `${s.score[0]} − ${s.score[1]}`;
       hud();
       later(() => ctx.onEnd(pvp ? { win: false, draw: false, level, score, pvp: true, winnerText: tr('win', lang).replace('{p}', names[w]) } : { win: w === 0, draw: false, level, score }), 700);
@@ -491,7 +511,7 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
       timeout() {},
       stop() {
         stopped = true; cancelAnimationFrame(raf); cancelAnimationFrame(padRaf); timers.forEach(clearTimeout);
-        ctx.el.removeEventListener('pointerdown', onDown); ctx.el.removeEventListener('pointermove', onMove); removeEventListener('pointermove', onMoveW, true); removeEventListener('mouseout', onOutW); if (raw) ctx.el.removeEventListener('pointerrawupdate', onMove); removeEventListener('pointerup', onUp, true); removeEventListener('pointercancel', onUp, true);
+        unlock(); document.removeEventListener('pointerlockchange', onLockChange); ctx.el.removeEventListener('pointerdown', onDown); ctx.el.removeEventListener('pointermove', onMove); removeEventListener('pointermove', onMoveW, true); removeEventListener('mouseout', onOutW); if (raw) ctx.el.removeEventListener('pointerrawupdate', onMove); removeEventListener('pointerup', onUp, true); removeEventListener('pointercancel', onUp, true);
         removeEventListener('keydown', onKey); removeEventListener('keyup', onKey); removeEventListener('resize', onResize); document.removeEventListener('visibilitychange', onVis); removeEventListener('blur', onBlur); removeEventListener('focus', onFocus);
         ctx.el.style.touchAction = prevTouch; css.remove(); if (toastEl) toastEl.remove(); if (menuEl) menuEl.remove(); if (howEl) howEl.remove(); document.querySelectorAll('.hkbig,.hkfx').forEach(e => e.remove());
         if (T3.turn) T3.turn(null);
