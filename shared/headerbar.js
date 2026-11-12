@@ -195,15 +195,22 @@ function init(o) {
   const mq = window.matchMedia(o.media || MQ);
   const portal = document.documentElement.classList.contains('atlas-skin');   // portal version: use the portal's top bar
   // (2026-11-12) the full version: the game's name beside the portal's logo takes you back to the game's own home — the page as it
-  // opens (what it shows right after launch); a live online game asks first
+  // opens on (the ordinary game) — out of a lesson, a puzzle, the review … in one click
   if (portal) {
     slotT.classList.add('hb-home'); slotT.setAttribute('role', 'link'); slotT.tabIndex = 0;
     const HL = { ja: 'このゲームのホームへ', en: "This game's home", zh: '回到本游戏首页', 'zh-TW': '回到本遊戲首頁', ko: '이 게임의 홈으로', es: 'Inicio de este juego', fr: 'Accueil de ce jeu', pt: 'Início deste jogo', de: 'Start dieses Spiels', ru: 'Начало этой игры', tr: 'Bu oyunun ana ekranı', id: 'Beranda game ini', hi: 'इस खेल का होम', ar: 'الصفحة الرئيسية لهذه اللعبة' };
-    const QL = { ja: 'オンライン対局中です。ホームに戻りますか？', en: 'An online game is in progress. Go back to the home screen?' };
     const lg = () => { const l = (document.getElementById('langSel') || {}).value || document.documentElement.lang || 'ja'; return /^zh-(tw|hk|mo|hant)/i.test(l) ? 'zh-TW' : HL[l] ? l : String(l).slice(0, 2); };
+    // back to the screen the game opens on (the ordinary game): whatever is open over it — a lesson, a puzzle, the review, the
+    // editor, the rules, a dialog — is left by its own exit button (the same as pressing it), a few passes for the layers under
+    // it; the game in play and an online game are left as they are (no reload)
+    const EXITS = ['#edQuit', '#pzQuitL', '#pzQuit', '#lsQuit', '#btnLessonQuit2', '#lsBackOp', '#btnTsGridBack', '#rvClose', '#btnLessonClose', '#pzClose', '#pzClose2', '#rulesClose', '#btnNewClose', '#btnStatsClose', '#btnSetClose', '#exportClose', '#hintClose', '#tuClose', '#rClose', '#btnResClose', '#btnRoadClose', '.grc-x'];
+    const shown = el => !!(el && el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden' && !el.disabled);
     const goHome = () => {
-      if (document.body.classList.contains('in-online') && !confirm(QL[lg()] || QL.en)) return;
-      location.href = location.pathname + location.search;
+      let n = 0;
+      const pass = () => { let hit = false; for (const q of EXITS) document.querySelectorAll(q).forEach(el => { if (shown(el)) { try { el.click(); hit = true; } catch (e) {} } });
+        if (hit && ++n < 4) setTimeout(pass, 140); else { try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) {} } };
+      document.querySelectorAll('.hbo-pop.on').forEach(p => p.classList.remove('on'));
+      pass();
     };
     slotT.addEventListener('click', goHome);
     slotT.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goHome(); } });
