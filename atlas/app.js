@@ -159,16 +159,21 @@
     if (!ov) { ov = document.createElement('div'); ov.id = 'recOv'; ov.className = 'recov'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); document.body.appendChild(ov);
       ov.addEventListener('click', e => { if (e.target === ov) closeRec(); });
       addEventListener('keydown', e => { if (e.key === 'Escape' && ov.classList.contains('on')) closeRec(); }); }
-    recMode = mode || 'all'; recTab = tab || 'rec'; recVar = 'all'; renderRec(g); requestAnimationFrame(() => ov.classList.add('on'));
+    recMode = mode || 'all'; recTab = tab || 'rec'; recVar = 'all'; recRtVar = $('bvVar') && $('bvVar').dataset.v || ''; renderRec(g); requestAnimationFrame(() => ov.classList.add('on'));
   }
+  let recRtVar = '';
   function rtHtml(g, resChip, dt) {   // the レート戦 tab: the rating, its curve and the rated games
-    const C = RTG[g.id], S = rtLoadG(g.id), H = S.hist.slice(-40), ol = recLoad(g.id).filter(r => r && r.res && r.mode === 'online');
-    if (!S.n && !ol.length) return `<div class="rempty card"><span>📈</span><p>${esc(t('rec.none'))}</p></div>`;
+    // 種目 (2026-11-12): a switch among the variants that have a rating (each its own); online games are the standard game's
+    const VA = window.Atlas3D && Atlas3D[g.id] && Atlas3D[g.id].variants, vks = VA ? VA.list.filter(v => { try { return !v || localStorage.getItem(rtKey(g.id, v)); } catch (e) { return !v; } }) : [''];
+    if (!vks.includes(recRtVar)) recRtVar = '';
+    const vsw = vks.length > 1 ? `<div class="rdds"><div class="rdd rddrt"><button type="button" class="rddb" aria-haspopup="listbox" aria-expanded="false"><span>${esc(VA.name(recRtVar, lang))}</span><i>▾</i></button><div class="rddl" role="listbox" hidden>${vks.map(k => `<button type="button" role="option" data-rv="${esc(k)}" class="${k === recRtVar ? 'on' : ''}">${esc(VA.name(k, lang))}</button>`).join('')}</div></div></div>` : '';
+    const C = RTG[g.id], S = rtLoadG(g.id, recRtVar), H = S.hist.slice(-40), ol = recRtVar ? [] : recLoad(g.id).filter(r => r && r.res && r.mode === 'online');
+    if (!S.n && !ol.length) return vsw + `<div class="rempty card"><span>📈</span><p>${esc(t('rec.none'))}</p></div>`;
     let curve = '';
     if (H.length > 1) { const rs = H.map(h => h.r), lo = Math.min(...rs) - 20, hi = Math.max(...rs) + 20, X = i => 8 + i * 304 / (H.length - 1), Y = r => 92 - (r - lo) / (hi - lo) * 84;
       curve = `<svg class="rtcurve" viewBox="0 0 320 100" preserveAspectRatio="none"><polyline points="${H.map((h, i) => X(i).toFixed(1) + ',' + Y(h.r).toFixed(1)).join(' ')}" fill="none" stroke="${g.color}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>`; }
     const res = h => h.s === 1 ? 'w' : h.s === 0 ? 'l' : 'd';
-    return `<section class="rsum card rtsum"><div class="rtnow"><small>${esc(t('rec.rtNow'))}</small><b>R ${S.r}</b></div>
+    return vsw + `<section class="rsum card rtsum"><div class="rtnow"><small>${esc(t('rec.rtNow'))}</small><b>R ${S.r}</b></div>
         <div class="rnums"><div class="w"><b>${S.w || 0}</b><span>${esc(t('rec.w'))}</span></div><div class="l"><b>${S.l || 0}</b><span>${esc(t('rec.l'))}</span></div><div class="d"><b>${S.d || 0}</b><span>${esc(t('rec.d'))}</span></div></div>${curve}</section>
       <h4>${esc(t('rec.recent'))}</h4>
       <div class="rlist card">${S.hist.slice(-20).reverse().map(h => `<div class="rr">${resChip(res(h))}<span class="ro2"><b>AI Lv.${h.lv + C.off}</b><small>${esc(['R' + h.or, h.why || ''].filter(Boolean).join(' · '))}</small></span><span class="rm"><b class="rtd ${h.d >= 0 ? 'up' : 'dn'}">${h.d >= 0 ? '+' : '−'}${Math.abs(h.d)}</b><small>${h.via === '3d' ? '🎲 ' : ''}${dt(h.t)}</small></span></div>`).join('')}
@@ -236,7 +241,7 @@
     ov.querySelectorAll('.rtabs [data-tab]').forEach(b => b.onclick = () => { if (recTab === b.dataset.tab) return; recTab = b.dataset.tab; try { SFX.tap && SFX.tap(); } catch (e) {} renderRec(g); });
     ov.querySelectorAll('.rdd').forEach(dd => { const bt = dd.querySelector('.rddb'), ls = dd.querySelector('.rddl');
       bt.onclick = e => { e.stopPropagation(); const op = ls.hidden; ov.querySelectorAll('.rddl').forEach(x => { x.hidden = true; }); ls.hidden = !op; bt.setAttribute('aria-expanded', String(op)); };
-      ls.onclick = e => { const b = e.target.closest('[data-m]'), v = e.target.closest('[data-vv]'); if (b) { recMode = b.dataset.m; renderRec(g); } else if (v) { recVar = v.dataset.vv; renderRec(g); } };
+      ls.onclick = e => { const b = e.target.closest('[data-m]'), v = e.target.closest('[data-vv]'), rv = e.target.closest('[data-rv]'); if (b) { recMode = b.dataset.m; renderRec(g); } else if (v) { recVar = v.dataset.vv; renderRec(g); } else if (rv) { recRtVar = rv.dataset.rv; renderRec(g); } };
       ov.querySelector('.recp').addEventListener('click', e => { if (!dd.contains(e.target)) { ls.hidden = true; bt.setAttribute('aria-expanded', 'false'); } }); });
   }
   function itemCard(it, foot, extraCls = '') {
@@ -784,15 +789,17 @@
         o += `<g transform="translate(${cx} ${cy})${gote ? ' rotate(180)' : ''}"><path d="M0 -4.6L3.3 -3.1L4 4.4H-4L-3.3 -3.1Z" fill="${q === '?' ? '#fff3d8' : '#fbe7c2'}" stroke="#a8763a" stroke-width=".45"/><text y="2.4" text-anchor="middle" font-size="5.2" font-weight="700" fill="${key === '+p' ? '#c0281c' : '#2a1a0e'}" font-family="'Hiragino Mincho ProN','Yu Mincho','Noto Serif CJK JP',serif">${q}</text></g>`; c++; } });
     return o + '</svg>';
   }
+  let rtNowHook = null;   // (the rated panel's current rating: follows the chosen variant)
   function varBind(g, ad) {
     const bt = $('bvVar'), V = ad.variants;
-    const paint = () => { const v = bt.dataset.v || ''; bt.innerHTML = `${vSvg(ad, v, 'vico')}<span>${esc(V.name(v, lang))}</span><i>▾</i>`; };
+    const paint = () => { const v = bt.dataset.v || ''; bt.innerHTML = `${vSvg(ad, v, 'vico')}<span>${esc(V.name(v, lang))}</span><i>▾</i>`; if (rtNowHook) rtNowHook(); };
     paint();
     bt.onclick = () => {
       try { SFX.tap && SFX.tap(); } catch (x) {}
       const cur = bt.dataset.v || '', sh = document.createElement('div'); sh.className = 'lvsheet vsheet';
+      const rtTab = $('bvMode') && $('bvMode').dataset.v === 'rated' && RTG[g.id];   // (レート戦: each variant's rating on its card)
       sh.innerHTML = `<div class="lvs-in" role="listbox"><div class="lvs-h">${esc(V.label(lang))}<button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div><div class="vgrps">${(V.groups ? V.groups(lang) : [['', V.list]]).map(([gn, vs]) => `${gn ? `<div class="vgh">${esc(gn)}</div>` : ''}<div class="lvs-l vgrid">${vs.map(v => { const [W, H] = V.dims(v);
-        return `<button type="button" role="option" data-v="${esc(v)}" class="vcard${v === cur ? ' on' : ''}">${vSvg(ad, v, 'vsvg')}<span class="vtx"><span class="vnm">${esc(V.name(v, lang))}</span><em>${W}×${H}</em></span><small>${esc(V.desc(v, lang))}</small></button>`; }).join('')}</div>`).join('')}</div></div>`;   // (grouped as in the full game: 本将棋系 · マイクロ系 · 異種遊戯)
+        return `<button type="button" role="option" data-v="${esc(v)}" class="vcard${v === cur ? ' on' : ''}">${vSvg(ad, v, 'vsvg')}<span class="vtx"><span class="vnm">${esc(V.name(v, lang))}</span><em>${W}×${H}</em></span>${rtTab ? `<span class="vrt">${esc(rtNowTxt(g.id, v))}</span>` : ''}<small>${esc(V.desc(v, lang))}</small></button>`; }).join('')}</div>`).join('')}</div></div>`;   // (grouped as in the full game: 本将棋系 · マイクロ系 · 異種遊戯)
       document.body.appendChild(sh); requestAnimationFrame(() => sh.classList.add('on'));
       const on = sh.querySelector('.vcard.on'); if (on) setTimeout(() => on.scrollIntoView({ block: 'nearest' }), 60);
       const close = () => { if (sh.classList.contains('out')) return; sh.classList.add('out'); sh.classList.remove('on'); setTimeout(() => sh.remove(), 240); };
@@ -834,7 +841,7 @@
       // one fixed height for the settings area in every mode (the tallest mode's): the note of a mode without a level fills the space
       const body = $('bvMBody');
       const layout = m => {
-        if ($('bvVarRow')) $('bvVarRow').hidden = m !== 'ai' && m !== 'pvp';   // (種目: AI games and two players, not rated games)
+        if ($('bvVarRow')) $('bvVarRow').hidden = !(m === 'ai' || m === 'pvp' || (m === 'rated' && !($('bvRtOpp') && $('bvRtOpp').value === 'online')));   // (種目: AI games, two players, rated games against the AI)
         if (MX) { $('bvOpts').hidden = m !== 'ai'; $('bvMNote').hidden = true; if ($('bvTcRow')) $('bvTcRow').hidden = m !== 'ai'; mxLayout(m); return; }
         $('bvOpts').hidden = m !== 'ai'; $('bvMNote').hidden = m === 'ai';
         if ($('bvTcRow')) $('bvTcRow').hidden = !(ad.tableModes || ['ai']).includes(m);   // the time control is for table play only
@@ -1116,8 +1123,13 @@
     chess: { key: 'aicoding-chess-rated', start: 1000, flag: 'lvv', off: 0, from: 1, tc: { id: 'rt', main: 600, inc: 5 },
       lv: [0, 200, 350, 500, 650, 800, 1000, 1250, 1400, 1600, 1700, 1800, 1900, 2150, 2295, 2385, 2495, 2705, 2885, 2985, 3075, 3160, 3240, 3305, 3370, 3440] },
   };
-  function rtLoadG(id) { const C = RTG[id]; let s = null; try { s = JSON.parse(localStorage.getItem(C.key) || 'null'); } catch (e) {} if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: C.start, n: 0, w: 0, l: 0, d: 0, hist: [] }; if (!Array.isArray(s.hist)) s.hist = []; if (!s.hist.length) s[C.flag] = 2; return s; }
-  function rtSaveG(id, s) { try { localStorage.setItem(RTG[id].key, JSON.stringify(s)); } catch (e) {} }
+  // 種目 (2026-11-12): each variant has a rating of its own — the standard game keeps the full game's store, a variant 'mini'
+  // is stored under '<key>:mini' (the 3D table only; the same ladder of levels, which the variants map onto their own AI steps)
+  const rtKey = (id, v) => RTG[id].key + (v ? ':' + v : '');
+  const UNPL = { ja: '未プレイ', en: 'Not played yet', zh: '尚未对局', ko: '아직 플레이 안 함', es: 'Sin partidas', fr: 'Pas encore joué', pt: 'Ainda não jogado', de: 'Noch nicht gespielt', hi: 'अभी तक नहीं खेला', ar: 'لم تُلعب بعد', ru: 'Ещё не играли', 'zh-TW': '尚未對局', id: 'Belum dimainkan', tr: 'Henüz oynanmadı' };
+  const rtNowTxt = (id, v) => { if (!RTG[id]) return ''; let raw = null; try { raw = localStorage.getItem(rtKey(id, v)); } catch (e) {} const S = rtLoadG(id, v); return raw && S.n ? 'R ' + S.r : UNPL[lang] || UNPL.en; };
+  function rtLoadG(id, v) { const C = RTG[id]; let s = null; try { s = JSON.parse(localStorage.getItem(rtKey(id, v)) || 'null'); } catch (e) {} if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: C.start, n: 0, w: 0, l: 0, d: 0, hist: [] }; if (!Array.isArray(s.hist)) s.hist = []; if (!s.hist.length) s[C.flag] = 2; return s; }
+  function rtSaveG(id, s, v) { try { localStorage.setItem(rtKey(id, v), JSON.stringify(s)); } catch (e) {} }
   function rtPickG(id, S) {   // (the full games' rtPick: mostly within ±100, sometimes clearly stronger / weaker)
     const C = RTG[id], idx = C.lv.map((x, i) => [i, x]).slice(C.from);
     if (window.Placement && Placement.on(S)) { const r = Placement.pick(S, idx); if (r) return { lv: r.lv, or: r.or }; }
@@ -1126,12 +1138,12 @@
   }
   function rtSettleG(id, R, sc, why) {   // once per game
     if (!R || R.done) return R && R.done;
-    const S = rtLoadG(id), old = S.r, pl = window.Placement && Placement.on(S) ? Placement.record(S, R.or, sc) : null;
+    const S = rtLoadG(id, R.v), old = S.r, pl = window.Placement && Placement.on(S) ? Placement.record(S, R.or, sc) : null;
     const K = S.n < 10 ? 48 : 24, Ex = 1 / (1 + Math.pow(10, (R.or - old) / 400)), now = pl ? pl.r : Math.max(0, Math.round(old + K * (sc - Ex)));
     S.r = now; S.n++; if (sc === 1) S.w++; else if (sc === 0) S.l++; else S.d++;
     S.hist.push({ id: R.id, t: Date.now(), lv: R.lv, or: R.or, s: sc, d: now - old, r: now, why, pl: pl ? pl.k : undefined, via: '3d' });
     if (S.hist.length > 100) S.hist = S.hist.slice(-100);
-    rtSaveG(id, S); R.done = { old, now, d: now - old };
+    rtSaveG(id, S, R.v); R.done = { old, now, d: now - old };
     if (pl && pl.final && window.Placement) try { Placement.reveal(S, 'R ' + now); } catch (e) {}
     return R.done;
   }
@@ -1142,7 +1154,7 @@
   function mxPanels(g) {
     const id = g.id, opp = rtOpp(id), lsk = pref[id + ':lsk'] === 'open' ? 'open' : 'list';
     const daily = id === 'shogi' ? [['d1', '★', t('bv.pz.d1')], ['d2', '☆', t('bv.pz.d2')]] : [['d1', '★', t('bv.pz.dc')]];
-    return `<div class="opts mxp" id="bvRt" hidden><div class="mxrow"><label>${t('bv.opp')}<select id="bvRtOpp"><option value="ai" ${opp === 'ai' ? 'selected' : ''}>AI</option><option value="online" ${opp === 'online' ? 'selected' : ''}>${esc(t('bv.online'))}</option></select></label><button type="button" class="mxb mxic" id="bvRtRec" aria-label="${esc(t('bv.rtRec'))}" title="${esc(t('bv.rtRec'))}"><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg></i></button></div>`
+    return `<div class="opts mxp" id="bvRt" hidden><div class="mxrow"><label>${t('bv.opp')}<select id="bvRtOpp"><option value="ai" ${opp === 'ai' ? 'selected' : ''}>AI</option><option value="online" ${opp === 'online' ? 'selected' : ''}>${esc(t('bv.online'))}</option></select></label><span class="rtnow2" id="bvRtNow"></span><button type="button" class="mxb mxic" id="bvRtRec" aria-label="${esc(t('bv.rtRec'))}" title="${esc(t('bv.rtRec'))}"><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg></i></button></div>`
       + `<label id="bvRtTcL">${t('tc.h')}<button type="button" class="lvpick" id="bvRtTc"></button></label><div class="mxnote" id="bvRtNote" hidden>${esc(t('bv.rtNoTc'))}</div></div>`
       + `<div class="opts mxp" id="bvPz" hidden>${daily.map(([k, ic, lb]) => `<button type="button" class="mxb" data-pz="${k}"><i>${ic}</i>${esc(lb)}</button>`).join('')}<button type="button" class="mxb" data-pz="list"><i>▦</i>${esc(t('bv.pzList'))}</button></div>`
       + `<div class="opts mxp" id="bvLs" hidden><label><select id="bvLsK"><option value="list" ${lsk === 'list' ? 'selected' : ''}>${esc(t('bv.ls'))}</option><option value="open" ${lsk === 'open' ? 'selected' : ''}>${esc(t('bv.lsOp'))}</option></select></label><button type="button" class="mxb" id="bvLsList"><i>▦</i>${esc(t('bv.list'))}</button></div>`;
@@ -1170,7 +1182,9 @@
     $('bvLsK').addEventListener('change', () => { pref[id + ':lsk'] = $('bvLsK').value; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (x) {} const cl = $('bvi').querySelector('.R .act > a.btn'); if (cl && M() === 'lesson') cl.href = mx2d(g, 'lesson'); });
     // レート戦's time control: a picker button + list sheet (the same UI as the level); its list follows 相手
     const bt = $('bvRtTc'), paint = () => { const opp = $('bvRtOpp').value, c = rtTc(id, opp); $('bvRtTcL').hidden = !c; $('bvRtNote').hidden = !!c; if (c) { bt.dataset.v = c.id; bt.innerHTML = `<span>${esc(tcName(c))}</span><i>▾</i>`; } };
-    $('bvRtOpp').addEventListener('change', () => { pref[id + ':rtOpp'] = $('bvRtOpp').value; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (x) {} paint(); mxLayout(M()); });
+    const rtNow = () => { const el = $('bvRtNow'); if (!el) return; const ol = $('bvRtOpp').value === 'online'; el.hidden = ol || !RTG[id]; if (!el.hidden) el.innerHTML = `<small>${esc(t('rec.rtNow'))}</small><b>${esc(rtNowTxt(id, $('bvVar') ? $('bvVar').dataset.v || '' : ''))}</b>`; };
+    rtNowHook = rtNow; rtNow();
+    $('bvRtOpp').addEventListener('change', () => { rtNow(); pref[id + ':rtOpp'] = $('bvRtOpp').value; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (x) {} paint(); mxLayout(M()); if ($('bvVarRow')) $('bvVarRow').hidden = $('bvRtOpp').value === 'online'; });
     paint();
     bt.onclick = () => {
       const opp = $('bvRtOpp').value, L = rtList(id, opp), cur = bt.dataset.v; if (!L) return;
@@ -1258,9 +1272,9 @@
       if (!RTG[g.id]) pmode = 'ai';
       else {
         if (!window.Placement) { needPlacement().then(() => startPlay(kind)); return; }
-        const S = rtLoadG(g.id);
-        if (Placement.gate(S, x => rtSaveG(g.id, x), () => startPlay(kind))) return;   // (a player with games, before placement existed: asked once)
-        const pk = rtPickG(g.id, S); rtR = { id: 'p3' + Date.now().toString(36), lv: pk.lv, or: pk.or, r: S.r }; level = pk.lv + RTG[g.id].off;
+        const rv = $('bvVar') && kind === 'table' ? $('bvVar').dataset.v || '' : '', S = rtLoadG(g.id, rv);   // (the variant's own rating)
+        if (Placement.gate(S, x => rtSaveG(g.id, x, rv), () => startPlay(kind))) return;   // (a player with games, before placement existed: asked once)
+        const pk = rtPickG(g.id, S); rtR = { id: 'p3' + Date.now().toString(36), lv: pk.lv, or: pk.or, r: S.r, v: rv || undefined }; level = pk.lv + RTG[g.id].off;
       }
     }
     const side = $('bvSide') ? +$('bvSide').value : 1, size = $('bvSize') ? +$('bvSize').value : 0;
@@ -1296,7 +1310,7 @@
     clearTimeout(hudPopT); hudPopT = setTimeout(() => { el.classList.add('out'); setTimeout(() => { el.remove(); if (hudPopTxt === txt) hudPopTxt = ''; }, 300); }, Math.max(3500, txt.length * 120));
   }
 
-    const variant = $('bvVar') && pmode !== 'rated' ? $('bvVar').dataset.v || '' : '';
+    const variant = $('bvVar') ? $('bvVar').dataset.v || '' : '';   // (rated games too: each variant its own rating)
     session = sess = ad.start({ el: $('gl'), Table3D, lang, t, level, side, size, variant, mode: pmode, bar: true, hud: h => { $('hud').innerHTML = h; hudFit(); if (tbOn && session === sess) TB.sync(); },   // (the bar's buttons follow every state change at once)
       onTurn: (s, info) => { if (tbOn && session === sess) TB.turn(s, info); if (npcT && session === sess && info) npcT.turn(info.ply); },
       onEnd: res => {
