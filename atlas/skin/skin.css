@@ -489,3 +489,34 @@ html.atlas-skin .pzx-daily .go.ok{color:#2f9a6a!important;background:#eaf7ef!imp
 html.atlas-skin :is(.pzx-lead,.pzx-cat,.pzx-stats,.pzx-daily .tx small,.pzx-desc,.pzx-meta){color:#6b6f80!important}
 html.atlas-skin .pzx-title{color:#2b3044!important}html.atlas-skin .pzx-title small{color:#c47a12!important;border-color:#ead9b6!important}
 html.atlas-skin .pzx-bd > svg,html.atlas-skin .pzx-daily .th > svg{box-shadow:0 2px 0 rgba(0,0,0,.12)!important}
+
+/* =====================================================================
+   (2026-11-12) the full version on the 3D table (not the 2D board: html.atlas-2d keeps the game's own look) takes the
+   portal's look everywhere — the text in the portal's faces, the boxes as its cards, the tabs as its segmented tabs.
+   :not(#_) outweighs each game's own rules. The pieces' own glyphs (svg, .piece / .koma …) and the portal bar keep theirs.
+   ===================================================================== */
+html.atlas-skin{--a-font:'Zen Maru Gothic','Fredoka','Noto Sans Devanagari','Noto Sans Arabic',system-ui,sans-serif;--a-round:'Fredoka','Zen Maru Gothic',sans-serif}
+html.atlas-skin.atlas-zh-sc{--a-font:'Noto Sans SC','Fredoka',system-ui,sans-serif;--a-round:'Fredoka','Noto Sans SC',sans-serif}
+html.atlas-skin.atlas-zh-tc{--a-font:'Noto Sans TC','Fredoka',system-ui,sans-serif;--a-round:'Fredoka','Noto Sans TC',sans-serif}
+/* the text: one face (Chinese: one Chinese face on the 2D board too — the Japanese faces lack many glyphs and the line mixed fonts) */
+html.atlas-skin:not(.atlas-2d) body:not(#_),
+html.atlas-skin:not(.atlas-2d) body:not(#_) :is(*):not(svg, svg *, canvas, .atlas-top *, [class*=piece], [class*=piece] *, [class*=koma], [class*=koma] *, [class*=glyph], .kanji, .pc, .pc *),
+html.atlas-skin:is(.atlas-zh-sc, .atlas-zh-tc) body:not(#_),
+html.atlas-skin:is(.atlas-zh-sc, .atlas-zh-tc) body:not(#_) :is(*):not(svg, svg *, canvas, [class*=piece], [class*=piece] *, [class*=koma], [class*=koma] *, [class*=glyph], .kanji, .pc, .pc *){font-family:var(--a-font)!important}
+html.atlas-skin:is(.atlas-zh-sc, .atlas-zh-tc) .atlas-top :is(.atlas-brand b, .hb-title h1){font-family:var(--a-font)!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) :is(h1, h2, h3, h4, .modal-title, .mh, .ttl, .title):not(.atlas-top *){font-family:var(--a-font)!important;font-weight:900!important;letter-spacing:.02em!important;color:var(--text)}
+/* the boxes: the portal's cards */
+html.atlas-skin:not(.atlas-2d) body:not(#_) .card{background:#fffdf7!important;border:2px solid #efe3c8!important;border-radius:24px!important;box-shadow:0 2px 0 rgba(43,48,68,.06),0 10px 24px -12px rgba(120,80,20,.28)!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.modal, .overlay .box, .dlg){background:#fffdf7!important;border:2px solid #efe3c8!important;border-radius:28px!important;box-shadow:0 2px 0 rgba(43,48,68,.06),0 24px 60px -20px rgba(80,50,10,.45)!important}
+/* the tabs: the portal's segmented tabs (a cream track, the chosen one a white pill) */
+html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.seg, .lx-tabs, .pbh-tabs, .ngt-bar, .tabs, .mtabs:not(.it-on)):not(.atlas-top *){display:flex;gap:4px!important;padding:4px!important;border-radius:99px!important;background:#f3ead6!important;border:0!important;box-shadow:none!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.seg, .lx-tabs, .pbh-tabs, .ngt-bar, .tabs, .mtabs:not(.it-on)):not(.atlas-top *) > :is(button, a, [role=tab]){border:0!important;border-radius:99px!important;background:transparent!important;box-shadow:none!important;color:#6a7088!important;font-weight:900!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.seg, .lx-tabs, .pbh-tabs, .ngt-bar, .tabs, .mtabs:not(.it-on)):not(.atlas-top *) > :is(button, a, [role=tab]) *{color:inherit!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.seg, .lx-tabs, .pbh-tabs, .ngt-bar, .tabs, .mtabs:not(.it-on)):not(.atlas-top *) > :is(.sel, .on, .active, [aria-selected=true], [aria-pressed=true]){background:#fff!important;color:#2b3044!important;box-shadow:0 3px 0 #efe3c8!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.ngt-bar, .tabs) > *::after{display:none!important}   /* (the underline of the old tabs) */
+/* the cards inside a box (games to pick, lessons, puzzle sets, the coach's options): white tiles with the portal's edge */
+html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.ngt-gcard, .lesson-item, .lx-card, .pbh-card, .rt-card, .op-book .ob, .cc-opt, .coach-opt, .ck-opt){background:#fff!important;border:2px solid #efe3c8!important;border-radius:20px!important;box-shadow:0 3px 0 #efe3c8!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.ngt-gcard, .lesson-item, .lx-card, .pbh-card, .rt-card):is(.sel, .on, [aria-selected=true]){background:#fff1ee!important;border-color:#ff8a7a!important;box-shadow:0 3px 0 #ffb3a8!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.ngt-gcard, .lesson-item, .lx-card, .pbh-card, .rt-card):not(:disabled):hover{border-color:#ffc9a8!important}
+/* buttons in the boxes: the portal's pills */
+html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.card, .modal, .dlg) :is(.mbtn, .btn):not(.go):not(.primary):not(.atlas-top *){background:#fff!important;border:2px solid #efe3c8!important;border-radius:99px!important;box-shadow:0 3px 0 #efe3c8!important;color:#2b3044!important;font-weight:900!important}
