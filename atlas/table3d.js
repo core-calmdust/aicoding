@@ -1476,7 +1476,10 @@
     pr = prMax = Math.min(LITE ? 1.25 : coarse ? 1.5 : 2, window.devicePixelRatio || 1);   // (lite: 1.25×, not 1× — 1× looked blurry on phones)   // phones: 1.5x is sharp enough and ~45% fewer pixels than 2x; lite: 1x
     // skin pages drawn at 2x: no MSAA on top (the 2x pixels already smooth the edges; MSAA would multiply the fill and memory again)
     // (no MSAA from 1.5× up: the extra pixels already smooth the edges — 4 samples on a 2× full-window canvas cost the GPU a lot, 2026-11-10)
-    R = new (T().WebGLRenderer)({ antialias: !LITE && pr < 1.5, alpha: true, powerPreference: 'high-performance' });
+    // アンチエイリアス (2026-11-13): the options' switch (localStorage atlas-aa: '1' on / '0' off); unset = auto (on below 1.5×, off on
+    // sharp screens and in the lite mode — the extra pixels already smooth the edges there). Read when the table is made.
+    let aaPref = null; try { aaPref = localStorage.getItem('atlas-aa'); } catch (e) {}
+    R = new (T().WebGLRenderer)({ antialias: aaPref === '1' ? true : aaPref === '0' ? false : !LITE && pr < 1.5, alpha: true, powerPreference: 'high-performance' });
     R.setPixelRatio(pr);
     R.shadowMap.enabled = true; R.shadowMap.type = LITE ? T().PCFShadowMap : T().PCFSoftShadowMap;
     // skin pages: a static shadow map, redrawn only while something moves (kick) or the board changes — not for a scroll / re-alignment
