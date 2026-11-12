@@ -1038,7 +1038,7 @@ const LEVELS = [
   { depth: 10, exact: 18, wld: 20, time: 10000, use: 1, max: 20000, mpc: 1 },   // 17
   { depth: 11, exact: 18, wld: 20, time: 10000, use: 1, max: 20000, mpc: 1 },   // 18
   { depth: 12, exact: 18, wld: 20, time: 10000, use: 1, max: 20000, mpc: 1 },   // 19
-  { depth: 13, exact: 19, wld: 21, time: 10000, use: 1, max: 20000, mpc: 1 },   // 20
+  { depth: 13, exact: 20, wld: 22, time: 10000, use: 1, max: 20000, mpc: 1 },   // 20 (2026-11-12: 19/21 → 20/22, black no longer starts its solves a move later than white: MODEL_CARD.md「Lv.20 の読み切りを 20・22 に」)
   { depth: 16, exact: 22, wld: 24, time: 15000, use: 1, max: 30000, mpc: 1 },   // 21
   { depth: 20, mix: 16, exact: 22, wld: 24, time: 20000, use: 1, max: 40000, mpc: 1 },   // 22
   { depth: 20, exact: 22, wld: 24, time: 20000, use: 1, max: 40000, mpc: 1 },   // 23
