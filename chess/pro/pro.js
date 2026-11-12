@@ -4,7 +4,7 @@
 (() => {
   'use strict';
   const E = window.ChessEngine;
-  const VER = '?v=7';
+  const VER = '?v=8';
   const YBWQ = (q => q && /^\d+$/.test(q) ? '&ybw=' + q : '')(new URLSearchParams(location.search).get('ybw'));   // (?ybw=N: the YBW helpers, mt-worker.js)
   const LANG = (() => { try { return (localStorage.getItem('aicoding-lang') || 'ja') === 'ja' ? 'ja' : 'en'; } catch (e) { return 'ja'; } })();
   const T = {

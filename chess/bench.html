@@ -77,10 +77,10 @@ const POS = (() => {
   return out;
 })();
 const ENG = 'engine.js?v=20261111kb4';
-// (2026-11-12) ?ybw=N: the YBW helpers for the comparison (mt-helper.js: default 9 = the first 10 threads YBW, Lazy SMP beyond;
+// (2026-11-12) ?ybw=N: the YBW helpers for the comparison (mt-helper.js: default 7 = the first 8 threads YBW (9 before 2026-11-12), Lazy SMP beyond;
 // 1 = v2, 0 = every helper Lazy SMP)
 const YBW = (q => q && /^\d+$/.test(q) ? +q : null)(new URLSearchParams(location.search).get('ybw'));
-const POOL = { wasm: 'engine_mt.wasm?v=6', lead: ENG + '&mt=1', helper: 'mt-helper.js?v=3' + (YBW !== null ? '&ybw=' + YBW : ''), slot: 2 << 20, initial: 1152, maximum: 16384,
+const POOL = { wasm: 'engine_mt.wasm?v=6', lead: ENG + '&mt=1', helper: 'mt-helper.js?v=4' + (YBW !== null ? '&ybw=' + YBW : ''), slot: 2 << 20, initial: 1152, maximum: 16384,
   imports: mem => ({ env: { memory: mem, now: () => performance.now(), progress: () => {} } }),
   help: m => { if (m.type !== 'think') return null; const p = E.Pos.fromFEN(m.fen || E.START), u = []; for (const x of m.moves || []) { u.push(p.uci(x)); p.make(x); } return { setup: (m.fen || E.START) + (u.length ? ' moves ' + u.join(' ') : '') }; } };
 const think = (moves, cfg, threads) => ({ type: 'think', fen: null, moves, level: 20, cfg: cfg.d < 99 ? { d: cfg.d } : { ms: cfg.ms }, mtThreads: threads });
