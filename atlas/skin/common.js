@@ -719,5 +719,19 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
     const sel = document.getElementById('langSel'); if (sel) sel.addEventListener('change', () => setTimeout(paint, 40));
     paint();
   }
+  /* (2026-11-12) Chinese: one Chinese face for the whole page (skin.css html.atlas-zh-sc / -tc), as on the portal — the Japanese
+     faces lack many simplified / traditional glyphs and a line mixed two fonts */
+  (function zhFace() {
+    const de = document.documentElement;
+    const cur = () => { const l = (document.getElementById('langSel') || {}).value || de.lang || 'ja'; return /^zh-(tw|hk|mo|hant)/i.test(l) ? 'tc' : /^zh/i.test(l) ? 'sc' : ''; };
+    const apply = () => {
+      const f = cur(); de.classList.toggle('atlas-zh-sc', f === 'sc'); de.classList.toggle('atlas-zh-tc', f === 'tc');
+      if (f && !document.getElementById('atlasZh' + f)) { const l = document.createElement('link'); l.id = 'atlasZh' + f; l.rel = 'stylesheet';
+        l.href = 'https://fonts.googleapis.com/css2?family=Noto+Sans+' + f.toUpperCase() + ':wght@400;500;700;900&display=swap'; document.head.appendChild(l); }
+    };
+    const go = () => { apply(); const s = document.getElementById('langSel'); if (s) s.addEventListener('change', () => setTimeout(apply, 0));
+      new MutationObserver(apply).observe(de, { attributes: true, attributeFilter: ['lang'] }); };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
+  })();
   window.AtlasSkin = { init };
 })();
