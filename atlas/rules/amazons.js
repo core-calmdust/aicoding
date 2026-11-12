@@ -277,6 +277,17 @@
     function dot(i, color) { const m = new TH.Mesh(new TH.CylinderGeometry(.14, .14, .012, 28), bm(color, .9)); const [x, z] = xz(i); m.position.set(x, TOP + .03, z); m.userData.pulse = true; m.renderOrder = 2; marks.add(m); return m; }
     function dia(i, color) { const m = new TH.Mesh(new TH.CylinderGeometry(.16, .16, .012, 4), bm(color, .95)); const [x, z] = xz(i); m.position.set(x, TOP + .03, z); m.userData.pulse = true; m.renderOrder = 2; marks.add(m); return m; }
     function ring(i, color) { const m = new TH.Mesh(new TH.TorusGeometry(.42, .03, 8, 44), bm(color, .95)); m.rotation.x = Math.PI / 2; const [x, z] = xz(i); m.position.set(x, TOP + .05, z); m.userData.pulse = true; m.userData.torus = true; m.renderOrder = 2; marks.add(m); return m; }
+    // 「光っている」 = obviously glowing (2026-11-13, common rule): a bright square, a column of light rising from it and a ring
+    let beamTex = null;
+    function beamMap() { if (beamTex) return beamTex; const c = document.createElement('canvas'); c.width = 4; c.height = 128; const g = c.getContext('2d'), gr = g.createLinearGradient(0, 128, 0, 0);
+      gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.35, 'rgba(255,255,255,.45)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 4, 128); beamTex = new TH.CanvasTexture(c); return beamTex; }
+    function beacon(i, color = 0xffa800) {
+      const [x, z] = xz(i), add = { blending: TH.AdditiveBlending };
+      tile(i, color, .9);   // (normal blending: additive vanishes on a light square)
+      const m = new TH.Mesh(new TH.CylinderGeometry(.46, .46, 1.5, 40, 1, true), new TH.MeshBasicMaterial(Object.assign({ color, map: beamMap(), transparent: true, opacity: 1, side: TH.DoubleSide, toneMapped: false, depthWrite: false }, add)));
+      m.position.set(x, TOP + .75, z); m.userData.pulse = true; m.userData.flat = true; m.userData.op = 1; m.renderOrder = 3; marks.add(m);
+      const r = ring(i, 0xffe066); r.scale.setScalar(1.05); r.userData.op = 1;
+    }
     // the marks' pulse runs only while something pulses (0 frames otherwise); a mark added starts it again
     let pulseOn = false;
     function pulse() { if (stopped) return; const k = .5 + .5 * Math.sin(performance.now() / 260); let any = false; marks.children.forEach(m => { if (m.userData.pulse) { any = true; if (!m.userData.flat) { const s = .88 + k * .24; m.scale.set(s, m.userData.torus ? s : 1, s); } m.material.opacity = (m.userData.op || .9) * (.55 + .45 * k); } }); if (any) { kick(80); requestAnimationFrame(pulse); } else pulseOn = false; }
@@ -296,7 +307,7 @@
     }
     function showTask() {
       clearMarks(); const st = STEPS[step];
-      (st.glow || []).forEach(s => tile(idx(s), 0xffc94a, .4));
+      (st.glow || []).forEach(s => beacon(idx(s)));
       if (st.rooms) { roomTiles(); return; }
       if (!st.act || played) return;
       const A = accepted(st);
@@ -305,12 +316,12 @@
         if (sel.to < 0) new Set(sel.cands.map(E.mTo)).forEach(i => dot(i, A.some(m => E.mFrom(m) === sel.from && E.mTo(m) === i) ? 0x3fe0c4 : 0xc8f07a));
         else sel.cands.filter(m => E.mTo(m) === sel.to).forEach(m => dia(E.mArrow(m), A.includes(m) ? 0x3fe0c4 : 0xff8a60));
         if (st.act === 'back' && sel.to >= 0) tile(sel.from, 0x3fe0c4, .35);
-        if (st.act === 'shoot') (st.target || []).forEach(s => tile(idx(s), 0x3fe0c4, .35));
+        if (st.act === 'shoot') (st.target || []).forEach(s => tile(idx(s), 0x3fe0c4, .7));
         return;
       }
-      new Set(A.map(E.mFrom)).forEach(f => ring(f, 0x3fe0c4));
-      if (st.act === 'go') new Set(A.map(E.mTo)).forEach(i => tile(i, 0x3fe0c4, .35));
-      else (st.target || []).forEach(s => tile(idx(s), 0x3fe0c4, .35));
+      new Set(A.map(E.mFrom)).forEach(f => beacon(f));
+      if (st.act === 'go') new Set(A.map(E.mTo)).forEach(i => tile(i, 0x3fe0c4, .7));
+      else (st.target || []).forEach(s => tile(idx(s), 0x3fe0c4, .7));
       if (st.act === 'trap') { const q = idx(st.trap); E.NB[q].filter(t => !pos.sq[t]).forEach(t => tile(t, 0xff9a4a, .35)); }
       if (st.act === 'win') for (let i = 0; i < N * N; i++) if (pos.owner(i) === E.P2) E.NB[i].filter(t => !pos.sq[t]).forEach(t => tile(t, 0xff9a4a, .35));
     }
