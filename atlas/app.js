@@ -2491,6 +2491,7 @@
     $('homeBtn').setAttribute('aria-label', t('tab.home')); $('footBack').textContent = t('back');
     tabsEl.querySelectorAll('.tab').forEach(b => { b.querySelector('span').textContent = t('tab.' + b.dataset.k); });
     document.querySelectorAll('#gsSeg button').forEach(b => { b.textContent = t('tab.' + b.dataset.v); });
+    if (window.AtlasMissions) try { AtlasMissions.sync(); } catch (e) {}   // (the missions' button / panel follow the language, 2026-11-12)
   }
   // game-styled language picker (the native <select> stays as the source of the options)
   const LNAME = { ja: 'Japanese', en: 'English', zh: 'Chinese', ko: 'Korean', es: 'Spanish', fr: 'French', pt: 'Portuguese', de: 'German', hi: 'Hindi', ar: 'Arabic', ru: 'Russian', 'zh-TW': 'Chinese', id: 'Indonesian', tr: 'Turkish' };
