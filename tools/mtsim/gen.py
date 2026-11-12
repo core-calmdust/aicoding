@@ -17,7 +17,7 @@
 # rewritten only when present).
 import sys, re
 repo, game = sys.argv[1], sys.argv[2]
-s = open(f'{repo}/{game}/' + ('core.c' if game in ('amazons', 'ugolki', 'agon', 'konane') else 'engine.c')).read()
+s = open(f'{repo}/{game}/' + ('core.c' if game in ('amazons', 'ugolki', 'agon', 'konane', 'gomoku') else 'engine.c')).read()
 # (2026-11-11) Praline (shared/praline/, claude/praline-spec.md): the engines that include its headers get them inlined here,
 # so that the rewrites below (the busy marks' accessors) reach the common code too
 s = re.sub(r'#include "\.\./shared/praline/([a-z_]+\.h)"\n', lambda m: open(f'{repo}/shared/praline/{m.group(1)}').read(), s)
@@ -61,7 +61,7 @@ elif game == 'tafl':    # (2026-11-11; built with -DNATIVE: its native block, wi
     rep('u64 w = bk[2 * i + 1], kx = bk[2 * i];', 'u64 w = SIMR(&bk[2 * i + 1]), kx = SIMR(&bk[2 * i]);')
     rep('bk[2 * j + 1] = w; bk[2 * j] = key ^ w;', 'SIMW(&bk[2 * j + 1], w); SIMW(&bk[2 * j], key ^ w);')
     rep('  nodes++;\n', '  nodes++; SIM_NODE();\n', 0)
-elif game in ('ugolki', 'agon', 'konane'):   # (2026-11-11: core.c with -DMT -DNATIVE; SIM_NODE() is in its search(); positions: ugolki/tools/mtsim_pos.js)
+elif game in ('ugolki', 'agon', 'konane', 'gomoku'):   # (gomoku 2026-11-12: clang -O2 -DMT -DNATIVE, SIM_NODE() in core.c's pmake, delayed stores 0; positions / tables: gomoku/tools/mtsim_pos.js)   # (2026-11-11: core.c with -DMT -DNATIVE; SIM_NODE() is in its search(); positions: ugolki/tools/mtsim_pos.js)
     pass
 elif game == 'amazons':
     rep('  init(); initBB(); evn++;\n', '  init(); initBB(); evn++; SIM_NODE();\n')
