@@ -37,6 +37,7 @@ static struct { volatile int idle, waitN, openN, hi; } __attribute__((aligned(64
 #ifdef __wasm__
 extern double now(void) __attribute__((import_module("env"), import_name("now")));
 #elif defined(ENGINE_OWN_NOW)
+#include <stdlib.h>   /* (ENGINE_ALLOC = malloc; clang refuses an undeclared malloc) */
 double now(void) { return 0; }   /* (a native library without a clock: tools/train/rvmatch.c, no deadlines) */
 #else
 extern double now(void);
