@@ -872,7 +872,7 @@ html[lang=ar] .op-info{border-left:0;border-right:3px solid var(--brass);border-
   html.rb-on body.reviewing .app > .side #progCard .graph{height:clamp(30px, 5vh, 60px)}   /* review box open (rvbox.js): a lower board */
 }
 </style>
-<link rel="stylesheet" href="online.css?v=20261028sk">
+<link rel="stylesheet" href="online.css?v=20261028sklx">
 <style>
 /* phones held upright (narrow touch screens): the board is sized from the width only, the same side gutter (10px) in every game —
    not from the height, which differs by browser (iOS Chrome: toolbars) and would make some boards narrower; the page scrolls instead */
@@ -2287,7 +2287,7 @@ document.querySelector('#rsCancel').onclick = () => document.querySelector('#res
 document.querySelector('#rsRestart').onclick = () => { document.querySelector('#resumeOverlay').classList.remove('show'); openNew(); };
 document.querySelector('#rsResume').onclick = () => { document.querySelector('#resumeOverlay').classList.remove('show'); if ((window.rtGame && rtGame()) || settings.mode === 'online') { if (viewPly !== null) viewAt(null); return; } openNew(true); };   // the settings dialog in resume mode (rated games go on as they are)
 </script>
-<script src="online-ui.js?v=20261030rsp"></script>
+<script src="online-ui.js?v=20261030rsplx"></script>
 <script src="rated.js?v=20261021rsg-ai1"></script><!-- learn-ui: レーティング戦 -->
 <!-- World Board Game Atlas portal skin: dots/?skin=atlas — 3D spiral notebook with red / blue ballpoint lines, guide speech bubbles, portal look (all features kept) -->
 <script>
