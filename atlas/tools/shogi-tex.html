@@ -299,7 +299,8 @@
   function makie(kind) {
     if (MK[kind]) return MK[kind];
     seed = kind === 'side' ? 11 : kind === 'end' ? 23 : kind === 'stand' ? 37 : 51;
-    const W = kind === 'stand' ? 1024 : kind === 'leg' ? 512 : 3072, H = kind === 'stand' ? 1024 : kind === 'leg' ? 512 : 800, m = masks(W, H), sc = W / 3072;
+    const W = kind === 'stand' ? 1024 : kind === 'leg' ? 512 : 3072, H = kind === 'stand' ? 1024 : kind === 'leg' ? 512 : 1352,   // (1352: the taller board of 2026-11-12, 10 × 4.4 — was 800 for 2.6)
+    m = masks(W, H), sc = W / 3072;
     if (kind === 'side') {   // 山水楼閣図
       // distant mountains (pale gold powder), a pagoda on the far shore, mist
       [[W * .3, W * .62, H * .42, H * .22, 3], [W * .52, W * .9, H * .44, H * .26, 5], [W * .1, W * .4, H * .4, H * .14, 7]].forEach(([a, b, y, h, s]) => hill(m, W, H, a, b, y, h, s, .55, 'pao'));
@@ -612,7 +613,7 @@
   function raden(kind) {
     if (RD[kind]) return RD[kind];
     seed = kind === 'side' ? 61 : kind === 'end' ? 67 : 71;
-    const W = kind === 'stand' ? 1024 : 3072, H = kind === 'stand' ? 1024 : 800, m = radenMasks(W, H), sc = W / 3072, blooms = [];
+    const W = kind === 'stand' ? 1024 : 3072, H = kind === 'stand' ? 1024 : 1352, m = radenMasks(W, H), sc = W / 3072, blooms = [];
     const bloomAll = (big) => blooms.forEach(([x, y, a], i) => { const n = 2 + Math.floor(rnd() * 3);
       for (let k = 0; k < n; k++) { const q = a + R(-1.6, 1.6), dd = R(20, 70) * sc * big; if (rnd() < .2) rBud(m, x + Math.cos(q) * dd, y + Math.sin(q) * dd, R(14, 18) * sc * big, q + 1.57); else rPetal(m, x + Math.cos(q) * dd, y + Math.sin(q) * dd, R(36, 50) * sc * big, R(0, 6.3)); } });
     if (kind === 'side') {
@@ -637,7 +638,7 @@
   }
 
   /* ---------- the generators ---------- */
-  const LONG = [2048, 532];
+  const LONG = [2048, 900];   // (the faces of the board's block, 10 × 4.4 since 2026-11-12 — was 532 for 2.6)
   const GENS = {
     'top-grain': () => { const W = 1800, H = 1980, c = pix(W, H, (x, y) => { const o = straight(x, y, W, H, 41, [226, 198, 146], [176, 130, 72], 96, 1.05, true); const sil = (vnoise(x / W * 3, y / H * 40, 43) - .5) * 14; return [o[0] + sil, o[1] + sil * .9, o[2] + sil * .6]; }); vignette(ctx(c), W, H, 'rgba(150,100,40,.28)', .6); return c; },   // 新榧 (2026-11-11 v2: fine 柾目 with a silky sheen, not the 2D SVG)
     'top-ink': () => top2d('ink'),

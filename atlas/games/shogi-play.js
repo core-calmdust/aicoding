@@ -171,7 +171,7 @@
       ST = tall ? [{ x: 0, z: BDd / 2 + .72 }, { x: 0, z: -(BDd / 2 + .72) }]
         : [{ x: FW / 2 + 2.15, z: SZ }, { x: -FW / 2 - 2.15, z: -SZ }];   // (the stands' near / far edge in line with the board's, whatever its size, 2026-11-12)
       KH = tall ? .01 : Y;
-      stands.forEach((k, i) => { k.position.set(ST[i].x, 0, ST[i].z); k.rotation.y = 0; k.visible = !tall; });
+      stands.forEach((k, i) => { k.position.set(ST[i].x, 0, ST[i].z); k.rotation.y = i ? Math.PI : 0; k.visible = !tall; });   // (the AI's stand turned round: its picture faces the other way, 2026-11-12)
       // wide: the player's stand sits a little nearer the bottom — shift the scene so the HUD stays clear
       board.position.z = tall ? 0 : .25;
       // 詰将棋 (ctx.pz) on phones: the defender's pieces in hand (the row above the board) must be read — more room at the top
