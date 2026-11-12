@@ -404,7 +404,7 @@
     // screen it is the same board seen closer
     const cr = o.crop && o.n >= 3 && o.n < 9 ? o.crop : null;
     // o.w × o.h (2026-11-12): a variant's board (W files × H ranks, the same squares; the block scaled with its size)
-    const n = cr ? o.n : o.w ? o.w : o.n === 5 ? 5 : 9, nh = !cr && o.h ? o.h : n, big = Math.max(n, nh), MG = n === 9 && nh === 9 ? MARGIN : MARGIN * big / 9, k = big === 9 ? 1 : cr ? n / 9 : Math.max(.62, big / 9 * .9), FW = n * CW, FH = nh * CH, EXT = Math.max(0, +o.ext || 0), BW = FW + MG * 2, BD = FH + MG * 2 + EXT * 2, THICK = 2.6 * k;
+    const n = cr ? o.n : o.w ? o.w : o.n === 5 ? 5 : 9, nh = !cr && o.h ? o.h : n, big = Math.max(n, nh), MG = n === 9 && nh === 9 ? MARGIN : MARGIN * big / 9, k = big === 9 ? 1 : cr ? n / 9 : Math.max(.62, big / 9 * .9), FW = n * CW, FH = nh * CH, EXT = Math.max(0, +o.ext || 0), BW = FW + MG * 2, BD = FH + MG * 2 + EXT * 2, THICK = 4.4 * k;   // (a 足付き盤 of about 6 寸 — the block half its width, the user's photo, 2026-11-12; was 2.6)
     const look = lookOf(o), LM = faceMats(look);
     const kaya = LM ? LM.leg : M({ map: X.wood('kayaSide2', '#caa075', '#9c6c3c', 512, 512, 2.4), roughness: .5, bumpScale: .003 });
     const endF = LM ? LM.side : M({ map: endGrain('kayaEndF2', 512, 256, .5, 2.6, .7), roughness: .5, bumpScale: .003 });
@@ -412,12 +412,12 @@
     const top = new TT.MeshPhysicalMaterial({ map: boardTop(n, cr, EXT, look, nh), bumpMap: boardBump(n, cr, EXT, nh), bumpScale: .006, roughness: look === 'ink' ? .42 : .58, clearcoat: look === 'ink' ? .35 : .15, clearcoatRoughness: .45 });   // soft satin, no glare on the playing field
     top.map.anisotropy = 8;
     const bottom = LM ? LM.bottom : M({ color: 0x8c643c, roughness: .7 });
-    const base = o.legs === false ? 0 : LEG * k;
+    const LEGH = 1.9, base = o.legs === false ? 0 : LEGH * k;   // (the feet taller with it: the carved profile stretched)
     const block = new TT.Mesh(RB(BW, THICK, BD, .05, 2), [endS, endS, top, bottom, endF, endF]);
     block.position.y = base + THICK / 2; block.castShadow = block.receiveShadow = true; g.add(block);
     if (o.legs !== false) {
       const lm = LM ? LM.leg : M({ map: X.wood('kayaLeg', '#d6af88', '#a87747', 256, 256, 2), roughness: .5, bumpScale: .002 });
-      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => { const l = leg(lm); l.scale.setScalar(k); l.position.set(sx * (BW / 2 - 1.15 * k), 0, sz * (BD / 2 - 1.2 * k)); g.add(l); });
+      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => { const l = leg(lm); l.scale.set(k, k * LEGH / LEG, k); l.position.set(sx * (BW / 2 - 1.15 * k), 0, sz * (BD / 2 - 1.2 * k)); g.add(l); });
     }
     // board colour (the game's "board & piece skin"): a tint over the kaya
     const tinted = [top, kaya, endF, endS, bottom]; g.traverse(o => { if (o.isMesh && o.material && !Array.isArray(o.material) && !tinted.includes(o.material)) tinted.push(o.material); });
