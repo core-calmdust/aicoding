@@ -19,7 +19,7 @@
   // PC windows up to 3:2 (shogi/index.html, 2026-11-11): the komadai as bars above and below the board, as on phones
   const STK = matchMedia('(hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4) and (max-aspect-ratio: 3/2)');
   const skin = AtlasSkin.init({
-    margin: 0.2,   // canvas margin around the board (less = fewer pixels to draw; enough for the bezel and its shadow)
+    margin: () => { try { const u = board.userData, H = u.nh * 1.1; return Math.max(.2, ((u.mg || .5) + (u.ext || 0) + .35) / H); } catch (e) { return .2; } },   // (deep enough for the komadai bars' wood on a small variant board — マイクロ, 5五 — else the canvas cut it off, 2026-11-12)   // canvas margin around the board (less = fewer pixels to draw; enough for the bezel and its shadow)
     board: boardDom,
     // PC: board + info column laid out from the 3D frame (AtlasSkin pcFit). The komadai stand against the 3D board's frame with
     // the 2D page's gap (.22 cell — the gote side of the 2D board), both sides the same: gote's top level with the frame's top,
@@ -30,6 +30,10 @@
         if (STK.matches && extW && is3()) {   // the 3D board made deeper for them (setBoard ext): the bars exactly on that wood, see-through
           const r0 = boardDom.getBoundingClientRect(), u = r0.height / FH, mg = board.userData.mg || .5, w = (r0.width + 2 * mg * u).toFixed(1) + 'px', hh = (extW * u).toFixed(1) + 'px';
           [top, bot].forEach(h => { if (h.style.getPropertyValue('width') !== w) h.style.setProperty('width', w, 'important'); if (h.style.getPropertyValue('height') !== hh) h.style.setProperty('height', hh, 'important'); });
+          // (a small variant board — マイクロ 4 files — with many kinds in hand: the pieces in hand made smaller so the row stays on the wood)
+          [top, bot].forEach(h => { const sl = [...h.querySelectorAll(':scope > .hslot')], cw = r0.width / (boardN || 9); if (!cw) return;
+            const room = parseFloat(w) * .92, need = sl.length * cw * 1.08, k = sl.length && need > room ? room / need : 1, v = k < 1 ? (cw * k).toFixed(2) + 'px' : '';
+            if (h.style.getPropertyValue('--cw') !== v) { if (v) { h.style.setProperty('--cw', v); h.style.setProperty('--ch', 'calc(' + v + ' * 1.1)'); } else { h.style.removeProperty('--cw'); h.style.removeProperty('--ch'); } } });
           const mv = (h, x, y) => { const cs = getComputedStyle(h), l = parseFloat(cs.left) || 0, t = parseFloat(cs.top) || 0;
             if (Math.abs(x) > .3) h.style.setProperty('left', (l + x) + 'px', 'important'); if (Math.abs(y) > .3) h.style.setProperty('top', (t + y) + 'px', 'important'); };
           const r1 = boardDom.getBoundingClientRect(), L = r1.left - mg * u;
@@ -112,13 +116,18 @@
   // the depth the bars need, in board units (rounded: the model is not rebuilt for a fraction of a px); 0 = the board as it is
   function wantExt() {
     if (!STK.matches || !is3()) return 0;
-    const r = boardDom.getBoundingClientRect(), h = (document.getElementById('handBottom') || {}).offsetHeight || 0;
+    // (the hands' own height, not the one place() forced on them: a variant's other square size needs other bars, 2026-11-12)
+    const hb = document.getElementById('handBottom'), hs = hb && hb.style.getPropertyValue('height'); if (hs) hb.style.removeProperty('height');
+    const r = boardDom.getBoundingClientRect(), h = (hb || {}).offsetHeight || 0; if (hs) hb.style.setProperty('height', hs, 'important');
     if (r.height < 40 || !h) return extW;
     return Math.round(h / (r.height / FH) * 20) / 20;
   }
   function syncExt() { try { const e = wantExt(); if (e !== extW) setBoard(boardN, curCrop, e); } catch (x) { console.warn(x); } }
   STK.addEventListener ? STK.addEventListener('change', () => setTimeout(syncExt, 60)) : STK.addListener(() => setTimeout(syncExt, 60));
   addEventListener('resize', () => setTimeout(syncExt, 200)); [500, 1500, 3500].forEach(ms => setTimeout(syncExt, ms));
+  // (and whenever the board or the hands change size — a variant's board fitted again after the switch: the bars measured
+  // before that left the hands sticking out of the wood, 2026-11-12)
+  if (window.ResizeObserver) { let rt = 0; const ro = new ResizeObserver(() => { clearTimeout(rt); rt = setTimeout(syncExt, 150); }); ro.observe(boardDom); ['handBottom', 'handTop'].forEach(id => { const h = document.getElementById(id); if (h) ro.observe(h); }); }
   { const b0 = document.getElementById('board'); if (b0 && b0.classList.contains('v5')) { variantH = 5; setBoard(variantN = 5); } else if (b0 && b0.classList.contains('vg')) { const cs = getComputedStyle(b0), w = +cs.getPropertyValue('--vw') || 9, h = +cs.getPropertyValue('--vhh') || w; variantH = h; setBoard(variantN = w, null, extW, h); } if (window.__tzCrop) setBoard(window.__tzCrop.n, window.__tzCrop); }
 
   /* ---------- komadai: a light kaya wood-grain texture (procedural, drawn once; skin.css uses --kdwood / --kdwoodh) ---------- */

@@ -201,9 +201,6 @@ html.atlas-shogi .pc.atlas3d .k img{width:100%;height:100%;margin:0;object-fit:c
    as the 3D board under it — the page's own 9×9 box stretched the squares (4×5, 9×8, 5×6 boards came out of line with the 3D lines,
    the coordinates too), 2026-11-12 */
 html.atlas-shogi body.variant{--bw:calc(var(--cw) * var(--vw, 9))!important;--bh:calc(var(--ch) * var(--vhh, 9))!important}
-/* 後手's pieces against the line on its own side (the top line as 先手 sees it), as 先手's sit on the bottom line: the far edge of
-   a piece shows no thickness, so the same gap looked larger above (2026-11-12) */
-html.atlas-shogi #board .pc.img.g{translate:0 -3%!important}html.atlas-shogi body.variant #board .pc.img.g{translate:0 -7%!important}
 html.atlas-shogi .pc.atlas3d .k img.up{transform:rotate(180deg)}
 html.atlas-shogi .pc.atlas3d .k::after{inset:0}html.atlas-shogi .pc.atlas3d .k.up::after{transform:rotate(180deg)}   /* the face grain (shogi/index.html .pc.img .k::after) on the 3D renders */
 /* komadai (piece stands): light wood trays, at board height — always above the 3D canvas (the board's shadow never falls on them) */
