@@ -18,7 +18,12 @@
 //                             phase holding the same plies; new tables start at 0)
 //        --iters 300 --threads 8 --val 0.02 --lr 0.03
 //        --window 1           also train each phase on the plies this far beyond it, …
-//        --side 0.3           … with this weight (the phase's own plies 1; low, so that one phase per ply keeps the parity)
+//        --side 0.3           … with this weight (the phase's own plies 1)
+//        --wstep 2            … in steps of this many plies (default: 2 with one phase per ply — the neighbours are the plies of
+//                             the same parity, ±2, so the side to move's parity is never mixed; 1 otherwise. 2026-11-12: the mean
+//                             result for the side to move alternates by about ±2.5 discs from ply to ply — rvtrain bias)
+//        --tie 1              the weights of mirrored configurations of a pattern that is its own mirror image (edge, lines,
+//                             diagonals, corner…) are one weight (half the parameters of those tables; default 0)
 //        --l2 0               ridge: pulls every weight towards 0 (as this many observations of 0 error; rare entries most)
 //        --max-pos N          at most N positions per phase (a random part; memory: about 4·(features+2) bytes each)
 //        --quant 2            stored as multiples of 2/32 disc (smaller download, within 1/32 disc; 1 = exact)
@@ -29,6 +34,8 @@
 //      the iteration with the smallest validation error are kept. Writes a v5 weights file (gzip; engine.js decodeV5).
 //   3) rvtrain rmse weights.bin.gz positions.bin [--every K]   error per 4 plies (to compare v4 and v5 on held-out data)
 //   4) rvtrain check weights.bin.gz positions.bin N             evaluations (1/100 disc) as engine.js gives them
+//   4b) rvtrain bias weights.bin.gz positions.bin [--every K]   per ply: the mean target, the mean error (evaluation − target: the
+//                                                                bias for the side to move) and the rmse
 //   5) rvtrain setmpc in.bin.gz out.bin.gz A B C [--quant 2]    rewrite the header's Multi-ProbCut sigma
 #include <math.h>
 #include <dirent.h>
@@ -141,6 +148,7 @@ static double LR0 = 0.03, L2 = 0;
 typedef struct { long a, b; float *G; double se, sw; } Job;
 static long nPos; static uint32_t *FE; static float *YV, *PW; static unsigned char *VAL;   // per phase: features, targets, weights, validation flags
 static long *SEL;   // the records of this phase
+static uint32_t *CANON;   // --tie (buildCanon)
 static void *gradJob(void *arg) {
   Job *j = arg; j->se = 0; j->sw = 0;
   memset(j->G, 0, sizeof(float) * M.phaseSize);
@@ -154,7 +162,7 @@ static void *gradJob(void *arg) {
 }
 static void *featJob(void *arg) {
   Job *j = arg;
-  for (long i = j->a; i < j->b; i++) { const Rec *r = R + SEL[i]; rv_features(&M, r->P, r->O, FE + i * NF); }
+  for (long i = j->a; i < j->b; i++) { const Rec *r = R + SEL[i]; uint32_t *f = FE + i * NF; rv_features(&M, r->P, r->O, f); if (CANON) for (int k = 0; k < NF; k++) f[k] = CANON[f[k]]; }
   return 0;
 }
 static void runJobs(Job *J, int T, long n, void *(*fn)(void *)) {
@@ -181,8 +189,37 @@ static void mapInit(const Model *om, const int16_t *ow, float *all) {
     d[M.phaseSize - 1] = s[om->phaseSize - 1] / 32.f;
   }
 }
+// --tie: CANON[q] = the smaller index of a pattern configuration and its mirror image (q itself where the pattern has none).
+// The mirror: a symmetry of the board (other than the identity) that maps the squares of a table's first instance onto
+// themselves; the other instances of the table are images of the first, so the same permutation of positions holds for them.
+static void buildCanon(void) {
+  CANON = malloc(sizeof(uint32_t) * M.phaseSize); for (int q = 0; q < M.phaseSize; q++) CANON[q] = q;
+  const int s = M.set; int tied = 0, tables = 0;
+  for (int i = 0; i < M.ninst; i++) {
+    if (i > 0 && PT_OFF[s][i] == PT_OFF[s][i - 1]) continue;   // the first instance of each table
+    const int n = PT_LEN[s][i]; int perm[10], found = 0;
+    for (int t = 1; t < 8 && !found; t++) {
+      int ok = 1, nontrivial = 0;
+      for (int k = 0; k < n && ok; k++) {
+        int q = PT_SQ[s][i][k], r = q >> 3, c = q & 7; if (t & 1) c = 7 - c; if (t & 2) r = 7 - r; if (t & 4) { int x = r; r = c; c = x; }
+        const int img = r * 8 + c; int j = -1; for (int z = 0; z < n; z++) if (PT_SQ[s][i][z] == img) j = z;
+        if (j < 0) ok = 0; else { perm[k] = j; if (j != k) nontrivial = 1; }
+      }
+      if (ok && nontrivial) found = 1;
+    }
+    if (!found) continue;
+    tables++;
+    int size = 1; for (int k = 0; k < n; k++) size *= 3;
+    for (int idx = 0; idx < size; idx++) {
+      int dig[10], x = idx; for (int k = n - 1; k >= 0; k--) { dig[k] = x % 3; x /= 3; }   // (rv_features: the first square is the highest digit)
+      int m = 0; for (int k = 0; k < n; k++) { int src = -1; for (int z = 0; z < n; z++) if (perm[z] == k) src = z; m = m * 3 + dig[src]; }
+      if (m < idx) { CANON[PT_OFF[s][i] + idx] = PT_OFF[s][i] + m; tied++; }
+    }
+  }
+  fprintf(stderr, "--tie: %d tables with a mirror image, %d of %d pattern weights per phase tied to their mirror\n", tables, tied, M.total);
+}
 static int train(int argc, char **argv) {
-  const char *out = 0, *init = 0; int iters = 300, T = 8, window = 1, quant = 2, nphase = 60, next = 5; double valFrac = 0.02, side = 0.3; long maxPos = 0; char set = 'C';
+  const char *out = 0, *init = 0; int iters = 300, T = 8, window = 1, wstep = 0, tie = 0, quant = 2, nphase = 60, next = 5; double valFrac = 0.02, side = 0.3; long maxPos = 0; char set = 'C';
   float mpc[3] = { 0, 0, 0 };
   char *files[64]; int nfiles = 0;
   for (int i = 2; i < argc; i++) {
@@ -195,6 +232,8 @@ static int train(int argc, char **argv) {
     else if (!strcmp(argv[i], "--l2")) L2 = atof(argv[++i]);
     else if (!strcmp(argv[i], "--window")) window = atoi(argv[++i]);
     else if (!strcmp(argv[i], "--side")) side = atof(argv[++i]);
+    else if (!strcmp(argv[i], "--wstep")) wstep = atoi(argv[++i]);
+    else if (!strcmp(argv[i], "--tie")) tie = atoi(argv[++i]);
     else if (!strcmp(argv[i], "--max-pos")) maxPos = atol(argv[++i]);
     else if (!strcmp(argv[i], "--quant")) quant = atoi(argv[++i]);
     else if (!strcmp(argv[i], "--set")) set = argv[++i][0];
@@ -207,8 +246,10 @@ static int train(int argc, char **argv) {
   if (!out || !nfiles) { fprintf(stderr, "usage: rvtrain train positions.bin[:weight]… --out weights.bin.gz [--set B|C] [--phases 60] [--ext 5] [--init w.bin.gz] …\n"); return 1; }
   if (model_init(&M, set, nphase, next) || (next != 4 && next != 5)) { fprintf(stderr, "bad --set / --phases / --ext\n"); return 1; }
   memcpy(M.mpc, mpc, sizeof mpc);
+  if (wstep <= 0) wstep = nphase >= 60 ? 2 : 1;   // (one phase per ply: the neighbours of the same parity)
+  if (tie) buildCanon();
   NF = M.nf;
-  fprintf(stderr, "model: set %c, %d phases, %d extras, %d instances, %d weights per phase (%.1fM in all)\n", set, nphase, next, M.ninst, M.phaseSize, (double)nphase * M.phaseSize / 1e6);
+  fprintf(stderr, "model: set %c, %d phases, %d extras, %d instances, %d weights per phase (%.1fM in all); window %d plies in steps of %d, weight %g\n", set, nphase, next, M.ninst, M.phaseSize, (double)nphase * M.phaseSize / 1e6, window, wstep, side);
   if (loadRecs(files, nfiles)) return 1;
   fprintf(stderr, "%ld positions\n", NR);
   float *ALL = calloc((size_t)M.nphase * M.phaseSize, sizeof(float));
@@ -224,12 +265,13 @@ static int train(int argc, char **argv) {
   for (int ph = 0; ph < M.nphase; ph++) {
     int lo = 99, hi = -1; for (int ply = 0; ply <= 60; ply++) if (rv_phase(&M, ply + 4) == ph) { if (ply < lo) lo = ply; if (ply > hi) hi = ply; }
     if (hi < 6) continue;   // the first plies: too few positions (copied from the first phase trained, below)
-    const int wlo = lo - window, whi = hi + window;
-    nPos = 0; for (long i = 0; i < NR; i++) if (RPLY[i] >= wlo && RPLY[i] <= whi) nPos++;
+    const int wlo = lo - window * wstep, whi = hi + window * wstep;
+#define IN_WIN(p) ((p) >= wlo && (p) <= whi && ((p) >= lo ? (p) <= hi || ((p) - hi) % wstep == 0 : (lo - (p)) % wstep == 0))
+    nPos = 0; for (long i = 0; i < NR; i++) if (IN_WIN(RPLY[i])) nPos++;
     if (!nPos) continue;
     const double keep = maxPos && nPos > maxPos ? (double)maxPos / nPos : 1;
     SEL = malloc(sizeof(long) * nPos); long k = 0;
-    for (long i = 0; i < NR; i++) if (RPLY[i] >= wlo && RPLY[i] <= whi && (keep >= 1 || rnd() < keep)) SEL[k++] = i;
+    for (long i = 0; i < NR; i++) if (IN_WIN(RPLY[i]) && (keep >= 1 || rnd() < keep)) SEL[k++] = i;
     nPos = k;
     FE = malloc(sizeof(uint32_t) * NF * nPos); YV = malloc(sizeof(float) * nPos); PW = malloc(sizeof(float) * nPos); VAL = malloc(nPos);
     if (!FE || !YV || !PW || !VAL) { fprintf(stderr, "out of memory (phase %d, %ld positions: try --max-pos)\n", ph, nPos); return 1; }
@@ -244,8 +286,9 @@ static int train(int argc, char **argv) {
     Wt = ALL + (size_t)ph * M.phaseSize;
     if (!init && firstTrained >= 0) memcpy(Wt, ALL + (size_t)(ph - 1) * M.phaseSize, sizeof(float) * M.phaseSize);   // (from scratch: start from the phase before)
     if (firstTrained < 0) firstTrained = ph;
+    if (CANON) for (int q = 0; q < M.total; q++) if (CANON[q] != (uint32_t)q) { const float a = (Wt[q] + Wt[CANON[q]]) / 2; Wt[CANON[q]] = a; }   // (the start: the mean of the two)
     const double v0 = valErr();
-    fprintf(stderr, "phase %2d: plies %d-%d (+%d each side), %ld positions, validation rmse of the initial weights %.3f\n", ph, lo, hi, window, nPos, v0);
+    fprintf(stderr, "phase %2d: plies %d-%d (+%d each side, step %d), %ld positions, validation rmse of the initial weights %.3f\n", ph, lo, hi, window, wstep, nPos, v0);
     double lr = LR0, best = v0 > 0 ? v0 : 1e9; float *bestW = malloc(sizeof(float) * M.phaseSize); memcpy(bestW, Wt, sizeof(float) * M.phaseSize);
     for (int it = 0; it < iters; it++) {
       runJobs(J, T, nPos, gradJob);
@@ -263,6 +306,7 @@ static int train(int argc, char **argv) {
       }
     }
     memcpy(Wt, bestW, sizeof(float) * M.phaseSize); free(bestW);
+    if (CANON) for (int q = 0; q < M.total; q++) Wt[q] = Wt[CANON[q]];
     fprintf(stderr, "\nphase %2d done: val rmse %.3f (initial %.3f)\n", ph, best, v0);
     free(FE); free(YV); free(PW); free(VAL); free(SEL);
   }
@@ -296,6 +340,21 @@ static int rmse(int argc, char **argv) {
   if (N) printf("all    %10ld  %6.3f\n", N, sqrt(S / N));
   return 0;
 }
+// rvtrain bias weights.bin.gz positions.bin [--every K]: per ply, the mean target and the mean error for the side to move
+static int bias(int argc, char **argv) {
+  Model m; int16_t *w = load_weights(argv[2], &m); if (!w) return 1;
+  int every = 1; for (int i = 4; i < argc; i++) if (!strcmp(argv[i], "--every")) every = atoi(argv[++i]);
+  FILE *f = fopen(argv[3], "rb"); if (!f) return 1;
+  double st[61] = { 0 }, se[61] = { 0 }, s2[61] = { 0 }; long n[61] = { 0 }, k = 0; Rec r;
+  while (fread(&r, sizeof r, 1, f) == 1) {
+    if (k++ % every) continue;
+    const int ply = rv_pc(r.P | r.O) - 4; if (ply < 0 || ply > 60) continue;
+    const double e = evalW(&m, w, r.P, r.O) / 32.0 - r.t; st[ply] += r.t; se[ply] += e; s2[ply] += e * e; n[ply]++;
+  }
+  printf("%s on %s (for the side to move, discs)\nply  empties  positions  mean target  mean (evaluation - target)   rmse\n", argv[2], argv[3]);
+  for (int p = 0; p <= 60; p++) if (n[p] >= 100) printf("%3d  %7d  %9ld  %+11.3f  %+26.3f  %6.3f\n", p, 60 - p, n[p], st[p] / n[p], se[p] / n[p], sqrt(s2[p] / n[p]));
+  return 0;
+}
 // rvtrain check weights.bin.gz positions.bin N: the evaluation (1/100 disc, side to move) of the first N positions, as engine.js gives
 static int check(int argc, char **argv) {
   (void)argc; Model m; int16_t *w = load_weights(argv[2], &m); if (!w) return 1;
@@ -314,12 +373,14 @@ static int setmpc(int argc, char **argv) {
 int main(int argc, char **argv) {
   if (argc >= 5 && !strcmp(argv[1], "check")) return check(argc, argv);
   if (argc >= 4 && !strcmp(argv[1], "rmse")) return rmse(argc, argv);
+  if (argc >= 4 && !strcmp(argv[1], "bias")) return bias(argc, argv);
   if (argc >= 7 && !strcmp(argv[1], "setmpc")) return setmpc(argc, argv);
   if (argc >= 3 && !strcmp(argv[1], "extract")) return extract(argc, argv);
   if (argc >= 3 && !strcmp(argv[1], "train")) return train(argc, argv);
   fprintf(stderr, "usage: rvtrain extract positions.bin [--pairs …] [--games [--skip N|auto] [--frac F] …]\n"
                   "       rvtrain train positions.bin[:weight]… --out weights.bin.gz [--set B|C] [--phases 60] [--ext 5] [--init w.bin.gz] [--iters 300] [--threads 8]\n"
                   "       rvtrain rmse weights.bin.gz positions.bin [--every K]\n"
+                  "       rvtrain bias weights.bin.gz positions.bin [--every K]\n"
                   "       rvtrain check weights.bin.gz positions.bin N\n"
                   "       rvtrain setmpc in.bin.gz out.bin.gz A B C\n");
   return 1;

@@ -40,7 +40,8 @@ cc -O3 -o rvlabel rvlabel.c -lz -lm
 ```sh
 ./rvtrain train pairs.bin games.bin --out weights_v5.bin.gz --init ../../weights.bin.gz --threads 10 2>&1 | tee train_v5.log
 ```
-- 既定：セット C・60フェーズ・追加特徴5種・300回・前後1手を重み0.3で含める・重みは 1/16 石単位で保存（`--quant 2`）。
+- 既定：セット C・60フェーズ・追加特徴5種・300回・**同じ偶奇の前後の手（±2手）**を重み0.3で含める（`--wstep 2`。2026-11-12 より。それまでは±1手＝手番の偶奇が逆の局面を混ぜていた）・重みは 1/16 石単位で保存（`--quant 2`）。
+- `--tie 1`：自分自身の鏡像になるパターン（辺・列・対角・隅など）で、鏡像の並びを同じ重みにする（そのテーブルのパラメータが半分になり、少ないデータでも当たりやすい。ファイルの形式とエンジンはそのまま）。
 - v4 の重みから始めます（同じ手数の v4 のフェーズ、増えた cross と石数は0から）。
 - 1フェーズごとに `validation rmse of the initial weights`（v4 の誤差）と `done: val rmse`（学習後）が出ます。経過と残り時間（ETA）も出ます。
 - メモリ：全局面で約7GB＋フェーズごとに最大約5GB。足りなければ `--max-pos 20000000`（1フェーズの局面数の上限）。
@@ -84,8 +85,34 @@ node tools/levelmatch.js report --out tools/levelmatch-out/results-v5.jsonl
 4. MODEL_CARD.md の概要の表（フェーズ・パターン・パラメータ数・大きさ）を v5 に。
 エンジン（engine.js `decodeV5` / engine.c `w_alloc`）はこの時点で v5 対応済みなので変更不要です。
 
+## 強さを測る（rvmatch、2026-11-12）
+重みや設定の差を、**ゲームと同じ探索をネイティブで**、たくさんの互角の序盤から測ります（定石なし・時間なし。1つの序盤を先後入れ替えて2局）。
+`levelmatch.js` の100局では ±30 Elo までしか見分けられませんが、これは数千局が数分で終わり、±5〜10 Elo まで見分けられます。
+```sh
+cd reversi/tools/train
+cc -O3 -shared -fPIC -DENGINE_ALLOC=malloc -DENGINE_OWN_NOW -o rveng.so ../../engine.c     # エンジンをライブラリに（engine.c を変えたら作り直す）
+cc -O3 -o rvmatch rvmatch.c -ldl -lz -lm
+./rvmatch openings pairs.bin op10.bin                                      # 互角の序盤 3000個（10手目・黒番・評価 ±1石以内。1回だけ）
+# 重みの比較：A = 今の重み、B = 新しい重み。深さ10・完全読み16・勝敗読み18 で 3000序盤×2局
+./rvmatch match op10.bin --wb weights_v5m.bin.gz --n 3000
+# 設定の比較（同じ重み）：A は深さ11、B は深さ10
+./rvmatch match op10.bin --a 11,16,18 --b 10,16,18 --n 2000
+# 先後の釣り合い：A・B を同じにして「先に打つ側の成績」を見る
+./rvmatch match op10.bin --n 3000
+```
+- 出力：A の得点率・Elo・平均石差（± は標準誤差。**2倍を超えたら差がある**と見てよい）、先に打つ側／後に打つ側の別。
+- `--a 深さ,完全読み,勝敗読み`（Lv.20 は `13,19,21`）、`--procs`（既定は全コア）、`--ta 0`（MPC なし）、`--games out.txt`（棋譜）。
+- 先後の釣り合いは、**読み切りを始めるマス数の偶奇だけで 1〜1.5石動きます**（偶数なら黒、奇数なら白が先に読み切りに入る）。自己対局の白黒の偏りは、エンジンの良し悪しの物差しにはなりません（MODEL_CARD.md「根本原因の調査」）。
+
+## 評価の片寄りを見る（rvtrain bias）
+```sh
+./rvtrain bias ../../weights.bin.gz games.bin --every 200
+```
+手数ごとに「教師の平均」「評価 − 教師の平均（手番側から見た片寄り）」「誤差」を出します。v4 は偶数手目 +1.8石・奇数手目 −1.8石（黒に甘い）。60フェーズで偶奇を混ぜずに学習した重みは ±0.2 石以内になるはずです。
+
 ## 道具の一覧
-- `rvtrain extract | train | rmse | check | setmpc`：取り出し・学習・誤差（`rvtrain rmse 重み 局面.bin`：4手ごとの誤差）・エンジンと同じ評価値か（`check`）・MPC の値の書き換え。
+- `rvmatch openings | match`：重み・設定どうしの対戦（上の「強さを測る」）。
+- `rvtrain extract | train | rmse | bias | check | setmpc`：取り出し・学習・誤差（`rvtrain rmse 重み 局面.bin`：4手ごとの誤差）・エンジンと同じ評価値か（`check`）・MPC の値の書き換え。
 - `rvlabel label | selfplay | mpc | probe`：ゲームと同じ探索（engine.c をそのままネイティブでビルド）を全コアで（プロセスを分けて）回します。止めても同じコマンドで続きから、進み具合と残り時間を表示。
 - `probe.js`：`rvlabel probe` と同じことを engine.js（engine.wasm）で。両者の出力が一致すれば、Mac で学習・計測したものとページの評価・探索が同じです（この作業機で v4・v5 とも一致を確認済み）。
 - `nps.js`：重みのファイルごとの読みの速さ。
