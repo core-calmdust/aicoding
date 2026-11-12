@@ -66,7 +66,7 @@ static int load(Eng *E, const char *so, const char *wf) {
 }
 #define lo32(x) ((u32)(x))
 #define hi32(x) ((u32)((x) >> 32))
-static void st(Eng *E) { E->set_state(0, 0, E->t > 0, E->t > 0 ? E->t : 1.5, E->A, E->B, E->C, 3, 12, 14, 1, 8); }
+static void st(Eng *E) { E->set_state(0, 0, E->t > 0, E->t > 0 ? E->t : 1.5, E->A, E->B, E->C, 3, 13, 18, 2, 8); }
 // engine.js rootPVS (one thread)
 static int rootPVS(Eng *E, u64 P, u64 O, const int *mv, int n, int depth, int exact, int alpha, int beta, int *bm) {
   const int e = 64 - rv_pc(P | O); int best = -99999; *bm = mv[0];
