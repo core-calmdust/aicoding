@@ -81,7 +81,7 @@ html.prlb-on-pc .prlb-foot{display:none!important}
 .hbo-atlas .prlb-foot .prlb{opacity:.75;font-weight:700}
 /* the Atlas portal: ① the footer line (inline, the footer's colour) */
 .prlb-fsep{white-space:pre}
-.prlb.prlb-inl{gap:5px;vertical-align:middle;opacity:.85;font-size:9.5px;font-weight:700;padding:2px 4px;border-radius:6px;transform:translateY(-1px);line-height:1}
+.prlb.prlb-inl{gap:5px;vertical-align:middle;opacity:.85;font-size:9.5px;font-weight:700;padding:2px 4px;border-radius:6px;transform:translateY(-2.5px);line-height:1}   /* (on the footer's line: sat a little low beside its text) */
 .prlb.prlb-inl .prlb-ic{width:14px;height:14px}.prlb.prlb-inl .prlb-t{gap:5px}.prlb.prlb-inl .prlb-w{height:10.5px}
 .prlb.prlb-inl:hover{opacity:1}
 @media (max-width:519px){.prlb-fsep{display:none}.prlb.prlb-inl{display:flex;width:max-content;margin:8px auto 0;transform:none}}
