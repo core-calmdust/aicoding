@@ -742,7 +742,7 @@ html.atlas-skin:not(.atlas-2d):not(.atlas-hex):not(.atlas-backgammon) body:not(#
 html.atlas-skin:not(.atlas-2d):not(.atlas-hex):not(.atlas-backgammon) body:not(#_) .card.players > .player:has(> .clk.on) :is(.name, .nm){-webkit-line-clamp:1!important;white-space:nowrap!important;text-overflow:ellipsis}
 /* 新しい対局 (2026-11-12): the two columns scroll each on their own — PRO opened in the left one no longer stretches the right */
 html.atlas-skin:not(.atlas-2d) body:not(#_) .modal .ng-cols:has(.pro-panel:not(.hidden)){align-items:start!important}
-html.atlas-skin:not(.atlas-2d) body:not(#_) .modal .ng-cols > .ng-col{max-height:max(240px,min(58vh,560px,calc(100dvh - 440px)));overflow-y:auto;scrollbar-width:thin;padding-bottom:14px}   /* (sized to fit under the dialog's head and above its buttons, and the wheel goes on to the dialog at the column's end — 2026-11-12: a short window could not reach レベルの既定に戻す) */
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal .ng-cols > .ng-col{max-height:max(240px,min(58vh,560px,calc(100dvh - 490px)));overflow-y:auto;scrollbar-width:thin;padding-bottom:14px}   /* (sized to fit under the dialog's head and above its buttons, and the wheel goes on to the dialog at the column's end — 2026-11-12: a short window could not reach レベルの既定に戻す) */
 /* (common rule, 2026-11-12) a scrolling area's bottom edge is frosted, as the dialogs' bottom band: the 新しい対局 columns and the
    coach box. The band is a sticky last child: while scrolling it lies over the content at the bottom; at the end it is the empty strip under the last line */
 html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_):not(#_) .ng-cols > .ng-col:not(#_){padding-bottom:0!important}
