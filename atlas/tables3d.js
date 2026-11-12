@@ -504,6 +504,68 @@
     at(G, lathe(TT, [[0, 1.12], [.36, 1.13], [.95, 1.55], [rAt(top) - .05, top], [0, top]], s, liq), 0, 0, 0, 0, false);
     return G;
   }
+  // the study's drinks tray (2026-11-12): a crystal decanter and a glass, the drink of the hour. Both are drawn with real wall
+  // thickness (an outer and an inner surface, a heavy base), smooth enough not to show facets; the liquid follows the inner wall up
+  // to its level and is drawn before the glass. morning: milk / day: orange juice (a slice on the rim) / evening: iced coffee /
+  // night: brandy in a snifter, the decanter stoppered with a cut-crystal ball.
+  const DRINK = {
+    morning: { col: 0xf6f2e8, op: .97, rough: .32, cc: .3, lv: .62, glv: .72 },
+    day: { col: 0xf39a1a, op: .9, rough: .16, cc: .8, lv: .66, glv: .7 },
+    evening: { col: 0x2a140a, op: .94, rough: .06, cc: 1, lv: .58, glv: .66 },
+    night: { col: 0xb0601a, op: .7, rough: .04, cc: 1, lv: .42, glv: .8 },
+  };
+  // the radius of a profile ([[r, y] … in rising y]) at height y
+  const radAt = (P, y) => { if (y <= P[0][1]) return P[0][0]; for (let i = 1; i < P.length; i++) if (y <= P[i][1]) { const [r0, y0] = P[i - 1], [r1, y1] = P[i]; return r0 + (r1 - r0) * (y - y0) / (y1 - y0 || 1); } return P[P.length - 1][0]; };
+  // liquid inside an inner wall P (rising y) from its floor to height top: the meniscus a hair inside the wall
+  const liquid = (TT, P, top, s, mat) => { const pts = [[0, P[0][1]]]; P.forEach(([r, y]) => { if (y < top) pts.push([Math.max(.01, r - .015), y]); }); pts.push([Math.max(.01, radAt(P, top) - .015), top], [0, top]); const m = lathe(TT, pts, s, mat); m.renderOrder = 1; return m; };
+  function drinkSet(o, Gt, T) {
+    const TT = o.TT, D = DRINK[T] || DRINK.day, s = SEG(o, 48), night = T === 'night';
+    // crystal: nearly clear face-on, brighter and more opaque where the wall turns away (a fresnel edge), so the outline reads
+    const crys = () => { const m = M({ color: 0xf4f8fa, roughness: .015, clearcoat: 1, clearcoatRoughness: .02, transparent: true, opacity: .1, depthWrite: false, envMapIntensity: 2.6 }); if ('reflectivity' in m) m.reflectivity = .9;
+      m.onBeforeCompile = (sh) => { sh.fragmentShader = sh.fragmentShader.replace('gl_FragColor = vec4( outgoingLight, diffuseColor.a );', 'float frs = pow(1.0 - abs(dot(normalize(vViewPosition), normal)), 2.5); outgoingLight += vec3(frs * .22); diffuseColor.a = clamp(diffuseColor.a + frs * .5, 0.0, 1.0);\ngl_FragColor = vec4( outgoingLight, diffuseColor.a );'); };
+      m.customProgramCacheKey = () => 'crys-fresnel'; return m; };
+    const liqM = () => M({ color: D.col, roughness: D.rough, clearcoat: D.cc, transparent: D.op < 1, opacity: D.op, depthWrite: D.op > .9, envMapIntensity: 1.4 });
+    const glassMesh = (pts) => { const m = lathe(TT, pts, s, crys()); m.renderOrder = 2; return m; };
+    // the decanter: a heavy round foot, a full body, a sloping shoulder into a slender neck, a rolled lip
+    { const Gd = grp(TT, Gt, -1, .14, -.6);
+      const OUT = [[0, 0], [1.22, 0], [1.36, .04], [1.44, .16], [1.47, .4], [1.6, 1.1], [1.68, 1.9], [1.66, 2.5], [1.56, 2.95], [1.32, 3.42], [.96, 3.8], [.6, 4.08], [.42, 4.36], [.36, 4.8], [.36, 5.25], [.42, 5.42], [.52, 5.52], [.54, 5.6], [.5, 5.66]];
+      const IN = [[0, .42], [1.26, .48], [1.36, .62], [1.5, 1.12], [1.58, 1.9], [1.56, 2.5], [1.46, 2.92], [1.23, 3.37], [.89, 3.73], [.54, 4.0], [.33, 4.3], [.27, 4.8], [.27, 5.25], [.32, 5.42], [.42, 5.52], [.44, 5.62]];
+      at(Gd, glassMesh(OUT.concat(IN.slice().reverse())), 0, 0, 0, 0, false);
+      at(Gd, liquid(TT, IN, IN[0][1] + (3.3 - IN[0][1]) * (D.lv / .66), s, liqM()), 0, 0, 0, 0, false);
+      // the cut of the foot: a ring of facets catching the light
+      { const cut = new TT.Mesh(new TT.CylinderGeometry(1.45, 1.47, .3, 16, 1, true), M({ color: 0xffffff, roughness: .02, clearcoat: 1, transparent: true, opacity: .14, depthWrite: false, flatShading: true, side: TT.DoubleSide })); cut.renderOrder = 3; at(Gd, cut, 0, .22, 0, 0, false); }
+      if (night) {   // the stopper: a cut-crystal ball on a ground plug
+        const sm = crys(); sm.flatShading = true; sm.opacity = .24;
+        const plug = lathe(TT, [[0, 4.9], [.24, 4.9], [.26, 5.62], [.46, 5.66], [.46, 5.76], [.2, 5.84], [.16, 6.0], [0, 6.0]], SEG(o, 24), crys()); plug.renderOrder = 2; at(Gd, plug, 0, 0, 0, 0, false);
+        const ball = new TT.Mesh(new TT.IcosahedronGeometry(.62, 1), sm); ball.scale.set(1, 1.08, 1); ball.renderOrder = 3; at(Gd, ball, 0, 6.55, 0, 0, false);
+      } }
+    // the glass
+    const Gg = grp(TT, Gt, 1.6, .14, 1); if (night) Gg.scale.setScalar(.84);
+    if (night) {   // a brandy snifter: a short stem, a wide bowl narrowing to the rim, a finger of see-through amber
+      const OUT = [[0, 0], [1.02, 0], [1.08, .05], [1.04, .1], [.2, .16], [.12, .26], [.1, .9], [.18, 1.02], [.5, 1.1], [1.0, 1.42], [1.34, 1.9], [1.46, 2.5], [1.4, 3.1], [1.18, 3.6], [1.0, 3.98], [.98, 4.04]];
+      const IN = [[0, 1.16], [.4, 1.18], [.94, 1.5], [1.27, 1.95], [1.39, 2.5], [1.33, 3.08], [1.12, 3.56], [.94, 4.04]];
+      at(Gg, glassMesh(OUT.concat(IN.slice().reverse())), 0, 0, 0, 0, false);
+      at(Gg, liquid(TT, IN, 1.16 + .9 * D.glv, s, liqM()), 0, 0, 0, 0, false);
+    } else {   // a heavy-based tumbler, the wall a little flared
+      const H = 3.3, OUT = [[0, 0], [.74, 0], [.82, .04], [.86, .14], [.9, 1.2], [.96, H - .04], [.95, H]], IN = [[0, .42], [.72, .44], [.8, .56], [.84, 1.2], [.89, H]];
+      at(Gg, glassMesh(OUT.concat(IN.slice().reverse())), 0, 0, 0, 0, false);
+      const top = .44 + (H - .44) * D.glv; at(Gg, liquid(TT, IN, top, s, liqM()), 0, 0, 0, 0, false);
+      if (T === 'evening') {   // iced coffee: cubes standing out of the coffee, a thin layer of cream on top
+        const im = M({ color: 0xffffff, roughness: .04, clearcoat: 1, transparent: true, opacity: .42, depthWrite: false });
+        [[.3, .1, .1], [-.28, .2, 1.2], [.05, -.32, 2.3]].forEach(([x, z, r], i) => { const c = new TT.Mesh(RB(.6, .6, .6, .1, 2), im); c.rotation.set(.3 + i * .5, r, .2 * i); c.renderOrder = 3; at(Gg, c, x, top - .12 + i * .06, z, 0, false); });
+        const cr = new TT.Mesh(new TT.CircleGeometry(radAt(IN, top) - .03, s), M({ color: 0xc89a6c, roughness: .4, transparent: true, opacity: .55, depthWrite: false })); cr.rotation.x = -Math.PI / 2; cr.renderOrder = 1; at(Gg, cr, 0, top + .005, 0, 0, false);
+      }
+      if (T === 'day') {   // a slice of orange cut to sit on the rim
+        const G2 = grp(TT, Gg, .95, H - .1, 0); G2.rotation.set(0, 0, -.25);
+        const rind = new TT.Mesh(new TT.CylinderGeometry(.62, .62, .16, SEG(o, 28), 1, false, Math.PI * .1, Math.PI * 1.8), M({ color: 0xf08a10, roughness: .55 }));
+        rind.rotation.x = Math.PI / 2; at(G2, rind, 0, 0, 0, 0, false);
+        const fl = canvasTex('orange-slice', 128, 128, (c, W) => { const C = W / 2; c.fillStyle = '#f6a21c'; c.beginPath(); c.arc(C, C, C, 0, 7); c.fill(); c.fillStyle = '#fff3d0'; c.beginPath(); c.arc(C, C, C * .9, 0, 7); c.fill();
+          for (let k = 0; k < 10; k++) { const a0 = k * Math.PI / 5 + .05, a1 = a0 + Math.PI / 5 - .1; c.fillStyle = k % 2 ? '#f7a41e' : '#f9b030'; c.beginPath(); c.moveTo(C + Math.cos(a0 + .1) * 5, C + Math.sin(a0 + .1) * 5); c.arc(C, C, C * .84, a0, a1); c.closePath(); c.fill(); }
+          c.fillStyle = '#fff3d0'; c.beginPath(); c.arc(C, C, 5, 0, 7); c.fill(); });
+        [-1, 1].forEach(sd => { const f = new TT.Mesh(new TT.CircleGeometry(.6, SEG(o, 28), Math.PI * .1, Math.PI * 1.8), M({ map: fl, roughness: .45, clearcoat: .5, bump: false })); f.rotation.y = sd < 0 ? Math.PI : 0; at(G2, f, 0, 0, sd * .081, 0, false); });
+      }
+    }
+  }
   // a stem between two points (flowers in a vase: every stem starts inside the neck)
   function rod(TT, mat, a, b, r, seg = 5) { const v = new TT.Vector3().subVectors(b, a), L = v.length(), m = new TT.Mesh(new TT.CylinderGeometry(r, r * 1.25, L, seg), mat); m.position.copy(a).addScaledVector(v, .5); m.quaternion.setFromUnitVectors(new TT.Vector3(0, 1, 0), v.normalize()); return m; }
   // flowers in a vase standing at (x, 0, z) in G: stems rise from inside the neck (ny: the rim's height, nr: its inner radius) and fan out;
@@ -1295,15 +1357,13 @@
       const sec = new TT.Mesh(new TT.CylinderGeometry(.19, .15, .7, SEG(o, 16)), res); sec.rotation.z = Math.PI / 2; at(Gp, sec, -2.6, .2, 0, 0, false);
       const nib = new TT.Mesh(new TT.ConeGeometry(.16, 1.2, 12, 1, false, 0, Math.PI), gold); nib.rotation.set(0, 0, Math.PI / 2); nib.scale.set(1, 1, .45); at(Gp, nib, -3.5, .2, 0, 0, false); }
     { const Gi = grp(TT, g, 9.6, -MAT, -9.7, .5); at(Gi, new TT.Mesh(RB(2, 1.5, 2, .25, 2), M({ color: 0xcfd8e0, roughness: .03, clearcoat: 1, transparent: true, opacity: .5, depthWrite: false })), 0, .75, 0, 0, false); at(Gi, new TT.Mesh(RB(1.6, .9, 1.6, .2, 2), M({ color: 0x0e1a3a, roughness: .1 })), 0, .5, 0, 0, false); at(Gi, lathe(TT, [[0, 0], [.55, 0], [.58, .3], [.4, .45], [.12, .6], [.18, .75], [0, .8]], SEG(o, 18), brass), 0, 1.5, 0); }
-    // a crystal decanter and a tumbler of whisky on a silver tray (left), a brass carriage clock (back)
+    // a crystal decanter and a glass on a silver tray (left), the drink of the hour (2026-11-12): morning milk, midday orange juice,
+    // evening iced coffee, night brandy (the snifter and the decanter's stopper only at night)
     { const Gt = grp(TT, g, -15.2, .01, -.6, .2), silver = M({ color: 0xd8dadc, metalness: 1, roughness: .2 });
+      Gt.name = 'study-tray';
       for (let k = 0; k < 4; k++) { const f = new TT.Mesh(new TT.CylinderGeometry(.16, .12, .18, 10), silver); at(Gt, f, Math.cos(k * 1.57 + .78) * 3.1, -.08, Math.sin(k * 1.57 + .78) * 3.1, 0, false); }   // little feet: the tray stands just above the desk mat (it sat in it, and the mat showed through its floor)
-      at(Gt, lathe(TT, [[0, 0], [3.4, 0], [3.6, .1], [3.7, .35], [3.5, .38], [3.3, .14], [0, .14]], SEG(o, 32), silver), 0, 0, 0);
-      const crys = M({ color: 0xe8f0f4, roughness: .02, clearcoat: 1, clearcoatRoughness: .02, transparent: true, opacity: .42, depthWrite: false, envMapIntensity: 1.6 });
-      at(Gt, lathe(TT, [[0, .14], [1.3, .14], [1.5, .4], [1.55, 2.6], [1.1, 3.6], [.4, 4.4], [.42, 5.2], [.5, 5.3], [0, 5.3]], SEG(o, 10), crys), -1, 0, -.6, 0, false);
-      at(Gt, lathe(TT, [[0, .22], [1.2, .22], [1.36, .42], [1.4, 1.9], [1.2, 2.25], [0, 2.25]], SEG(o, 10), M({ color: 0xb8641a, roughness: .04, clearcoat: 1, transparent: true, opacity: .4, depthWrite: false })), -1, 0, -.6, 0, false);
-      const st = new TT.Mesh(new TT.OctahedronGeometry(.62, 0), crys); st.scale.set(1, 1.2, 1); at(Gt, st, -1, 5.9, -.6, 0, false);
-      snifter(o, Gt, 1.6, 1, 0xa8561a, .8).position.y = .14; }   // a brandy snifter, the spirit see-through (2026-11-07: was a whisky tumbler)
+      at(Gt, lathe(TT, [[0, 0], [3.4, 0], [3.6, .1], [3.7, .35], [3.5, .38], [3.3, .14], [0, .14]], SEG(o, 40), silver), 0, 0, 0);
+      drinkSet(o, Gt, T); }
     // a mantel clock (2026-11-07: was a brass carriage clock): a round black-faced clock with gold Roman numerals hung in a polished
     // gold frame (two columns with ball finials, a top bar), on a black marble plinth veined with gold
     { const Gc = grp(TT, g, -4.6, -MAT, -10.2, .12); Gc.scale.setScalar(.82); const gold = M({ color: 0xe0b45a, metalness: 1, roughness: .16 });
