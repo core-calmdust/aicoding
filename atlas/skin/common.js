@@ -179,7 +179,7 @@
     let refits = 0, usedK = [], checks = 0, chkT = 0; const ext = f => function () { refits = 0; usedK = []; checks = 0; return f.apply(this, arguments); };
     // the board model on the table (skins call T3.show(id, model) — also for a new board size / variant)
     const show0 = T3.show;
-    T3.show = function (id, m) { const g = show0.apply(this, arguments); if (m) { model = m; K = P.fit2d && de.classList.contains('atlas-2d') ? k2d() : null; refits = 0; usedK = []; checks = 0; remeasure(); } return g; };
+    T3.show = function (id, m) { const g = show0.apply(this, arguments); if (m) { model = m; K = P.fit2d && de.classList.contains('atlas-2d') ? k2d() : K; /* (the last frame stays until the new one is measured: the skins show the board again on the online dock's relayout, and with no frame the page's own layout took over for ~2 s — the board shrank and moved, then came back, 2026-11-12) */ refits = 0; usedK = []; checks = 0; remeasure(); } return g; };
     const align0 = T3.align;   // (the camera follows the DOM board only once a skin has aligned it: measure again then)
     T3.align = function () { const r = align0.apply(this, arguments); refits = 0; usedK = []; checks = 0; remeasure(); return r; };
     if (T3.turn) T3.turn = ext(T3.turn);   // (盤面反転: the frame turns with the board)
@@ -394,6 +394,9 @@
       busy = true;
       try {
         on = true; pcActive = true; unplace();
+        // (the page's own centring shift of .app — shared/headerbar.js, set before this layout took over — is cleared here, not
+        // later: the group placed against it stood a dock's height too high, behind the portal bar, until headerbar.js reset it — if ever, 2026-11-12)
+        if (parseFloat(app.style.top)) app.style.top = '0px';
         const GP = GPc = gaps(), { top, bot } = room(), SW = side.offsetWidth || 360, availH = bot - top, availW = innerWidth - 2 * MX - GP.x - SW;
         size(availW, availH);
         // the place: the group (board + column) centred; the column level with the frame, the page's gap to the right of the board
