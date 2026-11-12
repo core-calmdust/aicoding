@@ -41,8 +41,11 @@
     heian98: 'lnsgkgsnl/9/ppppppppp/9/9/PPPPPPPPP/9/LNSGKGSNL', heian8: 'lnsgksnl/8/pppppppp/8/8/PPPPPPPP/8/LNSKGSNL',
     mini: 'rbsgk/4p/5/P4/KGSBR', judkins: 'rbnsgk/5p/6/6/P5/KGSNBR', goro: 'sgkgs/5/1ppp1/1PPP1/5/SGKGS', micro: 'kbgs/p3/4/3P/SGBK', hasami: '+p+p+p+p+p+p+p+p+p/9/9/9/9/9/9/9/PPPPPPPPP' };
   const vt = (l, k) => (VTX[l] && VTX[l][k]) || VTX.en[k] || '';
+  // the full game's three groups (variants.js GRP / GSTD): 本将棋系 · マイクロ系 · 異種遊戯
+  const GSTD = { ja: '本将棋系', en: 'Standard', zh: '本将棋系列', ko: '본쇼기 계열', es: 'Estándar', fr: 'Standard', pt: 'Padrão', de: 'Standard', hi: 'मानक', ar: 'القياسي', ru: 'Обычные', 'zh-TW': '標準', id: 'Standar', tr: 'Standart' };
+  const VGRP = [['gStd', ['', 'random', 'nigyoku', 'heian9', 'heian98', 'heian8']], ['gMicro', ['mini', 'judkins', 'goro', 'micro']], ['gIshu', ['hasami']]];
   const HB = { heian8: '8', heian98: '98', heian9: '9' };
-  const variants = { list: VLIST, label: l => vt(l, 'label'), dims: v => VDIM[v] || [9, 9], sfen: v => VSFEN[v] || VSFEN[''], text: vt,
+  const variants = { list: VLIST, groups: l => VGRP.map(([k, vs]) => [k === 'gStd' ? GSTD[l] || GSTD.en : vt(l, k), vs]), label: l => vt(l, 'label'), dims: v => VDIM[v] || [9, 9], sfen: v => VSFEN[v] || VSFEN[''], text: vt,
     name: (v, l) => !v ? vt(l, 'hon') : HB[v] ? vt(l, 'heian') + ' ' + vt(l, 'heianB' + HB[v]) : vt(l, v),
     desc: (v, l) => vt(l, (!v ? 'hon' : HB[v] ? 'heian' : v) + 'D') };
   window.Atlas3D = window.Atlas3D || {};

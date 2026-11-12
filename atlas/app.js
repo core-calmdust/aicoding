@@ -782,8 +782,8 @@
     bt.onclick = () => {
       try { SFX.tap && SFX.tap(); } catch (x) {}
       const cur = bt.dataset.v || '', sh = document.createElement('div'); sh.className = 'lvsheet vsheet';
-      sh.innerHTML = `<div class="lvs-in" role="listbox"><div class="lvs-h">${esc(V.label(lang))}<button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div><div class="lvs-l vgrid">${V.list.map(v => { const [W, H] = V.dims(v);
-        return `<button type="button" role="option" data-v="${esc(v)}" class="vcard${v === cur ? ' on' : ''}">${vSvg(ad, v, 'vsvg')}<span class="vtx"><span class="vnm">${esc(V.name(v, lang))}</span><em>${W}×${H}</em></span><small>${esc(V.desc(v, lang))}</small></button>`; }).join('')}</div></div>`;
+      sh.innerHTML = `<div class="lvs-in" role="listbox"><div class="lvs-h">${esc(V.label(lang))}<button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div><div class="vgrps">${(V.groups ? V.groups(lang) : [['', V.list]]).map(([gn, vs]) => `${gn ? `<div class="vgh">${esc(gn)}</div>` : ''}<div class="lvs-l vgrid">${vs.map(v => { const [W, H] = V.dims(v);
+        return `<button type="button" role="option" data-v="${esc(v)}" class="vcard${v === cur ? ' on' : ''}">${vSvg(ad, v, 'vsvg')}<span class="vtx"><span class="vnm">${esc(V.name(v, lang))}</span><em>${W}×${H}</em></span><small>${esc(V.desc(v, lang))}</small></button>`; }).join('')}</div>`).join('')}</div></div>`;   // (grouped as in the full game: 本将棋系 · マイクロ系 · 異種遊戯)
       document.body.appendChild(sh); requestAnimationFrame(() => sh.classList.add('on'));
       const on = sh.querySelector('.vcard.on'); if (on) setTimeout(() => on.scrollIntoView({ block: 'nearest' }), 60);
       const close = () => { if (sh.classList.contains('out')) return; sh.classList.add('out'); sh.classList.remove('on'); setTimeout(() => sh.remove(), 240); };
