@@ -1915,7 +1915,8 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 .vsheet .lvs-in{width:min(820px,100%)!important}
 .vsheet .vgrps{overflow:auto;min-height:0;flex:1 1 auto;padding-bottom:12px}.vsheet .vgrps .lvs-l{overflow:visible;max-height:none;flex:none}
 .vgh{display:flex;align-items:center;gap:10px;margin:10px 16px 2px;font-weight:900;font-size:14px;color:var(--ink)}.vgh::after{content:'';flex:1;height:2px;border-radius:2px;background:var(--line)}
-.bvi .rtnow2{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:1px;padding:0 4px;line-height:1.1}.bvi .rtnow2 small{font-size:10.5px;font-weight:800;color:var(--ink2)}.bvi .rtnow2 b{font-size:16px;font-weight:900;color:var(--ink);white-space:nowrap}
+.bvi .vopts{display:flex;align-items:stretch;gap:10px}.bvi .vopts .vrow{flex:1 1 50%!important}
+.bvi .rtnow2{flex:1 1 50%;min-width:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:2px;padding:6px 14px;border-radius:16px;background:#fff;border:2px solid var(--line);line-height:1.1}.bvi .rtnow2[hidden]{display:none}.bvi .rtnow2 small{font-size:11px;font-weight:800;color:var(--ink2)}.bvi .rtnow2 b{font-size:18px;font-weight:900;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .vcard .vrt{align-self:flex-start;margin:0 4px;padding:2px 8px;border-radius:999px;background:#eef6ff;color:#2a5a9a;font-size:11.5px;font-weight:900}
 .lvs-l.vgrid{grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:10px;padding:6px 14px 10px}
 .lvs-l .vcard{display:flex;flex-direction:column;align-items:stretch;gap:6px;padding:8px 8px 10px;border-radius:18px;box-shadow:0 3px 0 var(--line);transition:transform .12s}
@@ -2189,7 +2190,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=34"></script>
 <script src="npc/npc.js?v=28"></script>
 <script src="avtalk.js?v=2"></script>
-<script src="app.js?v=321"></script>
+<script src="app.js?v=322"></script>
 <script src="../shared/praline-badge.js?v=4" data-portal defer></script>
 </body>
 </html>
