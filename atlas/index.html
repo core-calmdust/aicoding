@@ -1915,6 +1915,8 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 .vsheet .lvs-in{width:min(820px,100%)!important}
 .vsheet .vgrps{overflow:auto;min-height:0;flex:1 1 auto;padding-bottom:12px}.vsheet .vgrps .lvs-l{overflow:visible;max-height:none;flex:none}
 .vgh{display:flex;align-items:center;gap:10px;margin:10px 16px 2px;font-weight:900;font-size:14px;color:var(--ink)}.vgh::after{content:'';flex:1;height:2px;border-radius:2px;background:var(--line)}
+.bvi .rtnow2{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:1px;padding:0 4px;line-height:1.1}.bvi .rtnow2 small{font-size:10.5px;font-weight:800;color:var(--ink2)}.bvi .rtnow2 b{font-size:16px;font-weight:900;color:var(--ink);white-space:nowrap}
+.vcard .vrt{align-self:flex-start;margin:0 4px;padding:2px 8px;border-radius:999px;background:#eef6ff;color:#2a5a9a;font-size:11.5px;font-weight:900}
 .lvs-l.vgrid{grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:10px;padding:6px 14px 10px}
 .lvs-l .vcard{display:flex;flex-direction:column;align-items:stretch;gap:6px;padding:8px 8px 10px;border-radius:18px;box-shadow:0 3px 0 var(--line);transition:transform .12s}
 .lvs-l .vcard:hover{transform:translateY(-2px)}
@@ -2150,7 +2152,7 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 <script>/* the places other than the chabudai (tables3d.js, 440 KB): at once when one is chosen, else in idle time after the page has
    loaded (2026-11-10); 'atlas-places' tells the page they are there */
 (function () {
-  var SRC = 'tables3d.js?v=101', k = 0, p = null;
+  var SRC = 'tables3d.js?v=102', k = 0, p = null;
   try { k = +(localStorage.getItem('atlas-table') || 0) || 0; var m = /[?&]tbl=(\d+)/.exec(location.search); if (m) k = +m[1]; } catch (e) {}
   window.AtlasPlaces = function () { return p || (p = new Promise(function (res) { var s = document.createElement('script'); s.src = SRC; s.onload = s.onerror = function () { res(); try { dispatchEvent(new Event('atlas-places')); } catch (e) {} }; document.head.appendChild(s); })); };
   if (k) { document.write('<script src="' + SRC + '"><\/script>'); p = Promise.resolve(); }
@@ -2187,7 +2189,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=34"></script>
 <script src="npc/npc.js?v=28"></script>
 <script src="avtalk.js?v=2"></script>
-<script src="app.js?v=320"></script>
+<script src="app.js?v=321"></script>
 <script src="../shared/praline-badge.js?v=4" data-portal defer></script>
 </body>
 </html>

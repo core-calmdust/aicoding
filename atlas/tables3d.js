@@ -111,7 +111,7 @@
   X.placeUi = (key, lang) => pick(PLACES.ui[key], lang);
   // the thumbnails (small real renders, atlas/img/place-k.webp), next to this script whichever page loads it
   const ME = (document.currentScript && document.currentScript.src) || location.href;
-  X.placeThumb = k => new URL('img/place-' + k + '.webp?v=' + (k === 8 ? 5 : k === 12 ? 5 : k >= 2 ? 3 : 1), ME).href;   // (8: the game centre, 2026-11-09)
+  X.placeThumb = k => new URL('img/place-' + k + '.webp?v=' + (k === 8 ? 5 : k === 12 ? 6 : k >= 2 ? 3 : 1), ME).href;   // (8: the game centre, 2026-11-09)
 
   const lin = (c, y0, y1, stops) => { const g = c.createLinearGradient(0, y0, 0, y1); stops.forEach(([k, col]) => g.addColorStop(k, col)); return g; };
   const rad = (c, x, y, r, stops) => { const g = c.createRadialGradient(x, y, 0, x, y, r); stops.forEach(([k, col]) => g.addColorStop(k, col)); return g; };
@@ -2885,24 +2885,26 @@
     // turned a quarter between neighbours
     // (2026-11-12, the user: finer) drawn here at 512 × 1024 per mat: the rush (igusa) across the mat in rows of ~1.2 cm, each row a ribbed
     // band with its strands' own tones, a woven black heri with its stitched edge along the long sides
-    { const tt = canvasTex('tbl12-tatami5', 512, 1024, (c, W, H) => {
+    { const tt = canvasTex('tbl12-tatami6', 512, 1024, (c, W, H) => {
         const R = rng(31), hw = 22, row = 8;
         c.fillStyle = '#c6bd8a'; c.fillRect(0, 0, W, H);
         // (2026-11-12, the user: not a grid — the stripes of the rush rows are the pattern, with fine woven lines between them)
-        for (let y = 0; y < H; y += row) {   // one row of rush: a rounded band (lit along its crown, a groove below) made of fine fibres
-          const k = .97 + R() * .05, g0 = 198 * k | 0, g1 = 191 * k | 0, b0 = 140 * k | 0;
-          const gr = c.createLinearGradient(0, y, 0, y + row); gr.addColorStop(0, `rgb(${g0 - 14},${g1 - 13},${b0 - 10})`); gr.addColorStop(.4, `rgb(${g0 + 7},${g1 + 7},${b0 + 5})`); gr.addColorStop(1, `rgb(${g0 - 22},${g1 - 21},${b0 - 16})`);
-          c.fillStyle = gr; c.fillRect(hw, y, W - 2 * hw, row);
-          for (let x = hw; x < W - hw; x += .7 + R() * .9) {   // the fibres: hair-thin, across the row, each its own tone, a little slanted
+        // (2026-11-12, the user's photos: the rows run along the mat, parallel to its heri)
+        for (let x = hw; x < W - hw; x += row) {   // one row of rush: a rounded band (lit along its crown, a groove beside it) made of fine fibres
+          const k = .97 + R() * .05, g0 = 198 * k | 0, g1 = 191 * k | 0, b0 = 140 * k | 0, w = Math.min(row, W - hw - x);
+          const gr = c.createLinearGradient(x, 0, x + row, 0); gr.addColorStop(0, `rgb(${g0 - 14},${g1 - 13},${b0 - 10})`); gr.addColorStop(.4, `rgb(${g0 + 7},${g1 + 7},${b0 + 5})`); gr.addColorStop(1, `rgb(${g0 - 22},${g1 - 21},${b0 - 16})`);
+          c.fillStyle = gr; c.fillRect(x, 0, w, H);
+          for (let y = 0; y < H; y += .7 + R() * .9) {   // the fibres: hair-thin, across the row, each its own tone, a little slanted
             const t = R(), col = t < .45 ? `rgba(255,250,220,${.1 + R() * .16})` : t < .85 ? `rgba(110,98,52,${.08 + R() * .14})` : `rgba(150,160,90,${.08 + R() * .1})`;
-            const y0 = y + R() * 1.5, y1 = y + row - R() * 1.5, dx = (R() - .5) * 1.2;
-            c.strokeStyle = col; c.lineWidth = .6; c.beginPath(); c.moveTo(x, y0); c.lineTo(x + dx, y1); c.stroke(); }
-          c.fillStyle = 'rgba(70,58,24,.22)'; c.fillRect(hw, y + row - 1, W - 2 * hw, 1); }   // the groove where the warp binds the rows
+            const x0 = x + R() * 1.5, x1 = x + w - R() * 1.5, dy = (R() - .5) * 1.2;
+            c.strokeStyle = col; c.lineWidth = .6; c.beginPath(); c.moveTo(x0, y); c.lineTo(x1, y + dy); c.stroke(); }
+          c.fillStyle = 'rgba(70,58,24,.22)'; c.fillRect(x + w - 1, 0, 1, H); }   // the groove where the warp binds the rows
         [0, W - hw].forEach(x0 => { c.fillStyle = '#1c1a17'; c.fillRect(x0, 0, hw, H);   // the heri: a black cloth, finely woven, its fold and stitches
           for (let y = 0; y < H; y += 3) { c.fillStyle = `rgba(255,255,255,${.03 + (y % 6 ? .02 : .05)})`; c.fillRect(x0, y, hw, 1); }
           for (let x = x0; x < x0 + hw; x += 2) { c.fillStyle = 'rgba(0,0,0,.18)'; c.fillRect(x, 0, 1, H); }
           const ex = x0 ? x0 + 2 : hw - 4; c.fillStyle = 'rgba(255,255,255,.14)'; c.fillRect(ex, 0, 2, H);
-          const sx = x0 ? x0 + 6 : hw - 8; for (let y = 2; y < H; y += 9) { c.fillStyle = 'rgba(200,190,160,.18)'; c.fillRect(sx, y, 1, 4); } });
+          const sx = x0 ? x0 + 6 : hw - 8; for (let y = 2; y < H; y += 9) { c.fillStyle = 'rgba(200,190,160,.18)'; c.fillRect(sx, y, 1, 4); }
+          const ox = x0 ? W - 2 : 0; c.fillStyle = 'rgba(0,0,0,.7)'; c.fillRect(ox, 0, 2, H); c.fillStyle = 'rgba(255,255,255,.16)'; c.fillRect(x0 ? W - 4 : 2, 0, 2, H); });   // (the outer seam: two heri side by side read as two, 2026-11-12)
         c.fillStyle = 'rgba(60,50,20,.28)'; c.fillRect(hw - 1, 0, 1, H); c.fillRect(W - hw, 0, 1, H);
       });
       tt.anisotropy = 8;
@@ -3100,7 +3102,7 @@
       at(g, vase, -21, FL + 2.8, ZB + 5); }
     // the players' zabuton (2026-11-12, the user's reference): a plump top-grade one — slate-teal linen, a band of embroidered peonies
     // with gold leaves, gold scrolls and bronze key-frets (雷文) down the middle, an orange piping round the seam, tassels at the corners
-    const zabTop = canvasTex('tbl12-zab-lux', 512, 544, (c, W, H) => {
+    const zabTop = canvasTex('tbl12-zab-lux2', 512, 544, (c, W, H) => {
       const R = rng(77);
       c.fillStyle = '#2b5260'; c.fillRect(0, 0, W, H);
       for (let y = 0; y < H; y += 2) { c.fillStyle = `rgba(${R() > .5 ? '120,160,170' : '10,30,40'},${.08 + R() * .1})`; c.fillRect(0, y, W, 1); }   // the linen weave
@@ -3130,7 +3132,7 @@
             c.strokeStyle = 'rgba(255,255,255,.22)'; c.lineWidth = .6; for (let j = 0; j < 8; j++) { c.beginPath(); c.moveTo((j / 7 - .5) * r * .6, r * .05); c.lineTo((j / 7 - .5) * r * .75, -r * .38); c.stroke(); }
             c.restore(); } }
         c.fillStyle = '#e0b048'; for (let k = 0; k < 14; k++) ell(c, x + (R() - .5) * s * .3, y + (R() - .5) * s * .24, 1.6, 1.6); };
-      [[.5, .51, 70], [.56, .12, 50], [.44, .9, 50]].forEach(([fx, fy, s]) => {
+      [[.5, .51, 70], [.56, .16, 50]].forEach(([fx, fy, s]) => {
         for (let k = 0; k < 4; k++) leaf(W * fx + (k < 2 ? -1 : 1) * s * .55, H * fy + (k % 2 ? 1 : -1) * s * .5, s * .45, (k < 2 ? Math.PI : 0) + (k % 2 ? .6 : -.6) * (k < 2 ? -1 : 1));
         peony(W * fx, H * fy, s); });
     });
