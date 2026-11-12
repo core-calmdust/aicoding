@@ -46,8 +46,10 @@ GAMES = {
     # clients know that these rules accept it (with the older rules they do not offer it)
     'reversi': dict(first='b', alt=False, tckey='tc', tcs={'fast': (300000, 30000, 0), 'long': (600000, 30000, 0), 'blitz': (0, 30000, 0), 'fis': (300000, 0, 10000)},
                     legacy_byo=90000, free=0, imm=['tc'], draw=False, abandon=False, hist=False, moves_max=400, bg=False, fisprobe=True),
+    # shogi: 種目 (2026-11-12) — v = the variant (absent = the standard game, for older clients), sd = the seed of ランダム将棋's start
     'shogi': dict(first='b', alt=True, tckey='tc', tcs={'fast': (300000, 30000, 0), 'long': (600000, 30000, 0), 'blitz': (0, 30000, 0), 'fis': (300000, 0, 10000)},
-                  legacy_byo=90000, free=0, imm=['tc'], draw=False, abandon=False, hist=False, moves_max=4000, bg=False, fisprobe=True),
+                  legacy_byo=90000, free=0, imm=['tc', 'v', 'sd'], draw=False, abandon=False, hist=False, moves_max=4000, bg=False, fisprobe=True,
+                  variant=('v', ['random', 'nigyoku', 'heian9', 'heian98', 'heian8', 'mini', 'judkins', 'goro', 'micro', 'hasami'], True)),
     'chess': dict(first='w', alt=True, tckey='tc', tcs={'blitz': (180000, 0, 2000), 'rapid': (600000, 0, 5000), 'classical': (900000, 0, 10000)},
                   legacy_byo=None, free=0, imm=['tc'], draw=True, abandon=False, hist=False, moves_max=6000, bg=False),
     'gomoku': dict(first='w', alt=True, tckey='tc', tcs={'blitz': (180000, 0, 2000), 'rapid': (600000, 0, 5000), 'classical': (900000, 0, 10000)},
@@ -383,7 +385,10 @@ def build(name, P):
     vfield = P.get('variant')
     shape = AND("newData.hasChildren(['b', 'w', 'moves', 'status'])", "newData.child('moves').isString()",
                 f"newData.child('moves').val().length <= {P['moves_max']}", "newData.child('status').isString()",
-                f"newData.child('{vfield[0]}').isString() && newData.child('{vfield[0]}').val().matches(/^({'|'.join(vfield[1])})$/)" if vfield else None,
+                ((f"(!newData.child('{vfield[0]}').exists() || (" if len(vfield) > 2 and vfield[2] else "") +   # (optional: older clients write none)
+                 f"newData.child('{vfield[0]}').isString() && newData.child('{vfield[0]}').val().matches(/^({'|'.join(vfield[1])})$/)" +
+                 ("))" if len(vfield) > 2 and vfield[2] else "")) if vfield else None,
+                "(!newData.child('sd').exists() || (newData.child('sd').isString() && newData.child('sd').val().length <= 32))" if name == 'shogi' else None,
                 "newData.child('n').isNumber() && newData.child('n').val() >= 2 && newData.child('n').val() <= 6" if name == 'dots' else None)
     part = "(data.child('b').val() === auth.uid || data.child('w').val() === auth.uid)"
     games = {

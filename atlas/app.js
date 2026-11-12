@@ -841,7 +841,7 @@
       // one fixed height for the settings area in every mode (the tallest mode's): the note of a mode without a level fills the space
       const body = $('bvMBody');
       const layout = m => {
-        if ($('bvVarRow')) $('bvVarRow').hidden = !(m === 'ai' || m === 'pvp' || (m === 'rated' && !($('bvRtOpp') && $('bvRtOpp').value === 'online')));
+        if ($('bvVarRow')) $('bvVarRow').hidden = !(m === 'ai' || m === 'pvp' || m === 'rated');   // (online games too: every variant, 2026-11-12)
         if (rtNowHook) rtNowHook();   // (種目: AI games, two players, rated games against the AI)
         if (MX) { $('bvOpts').hidden = m !== 'ai'; $('bvMNote').hidden = true; if ($('bvTcRow')) $('bvTcRow').hidden = m !== 'ai'; mxLayout(m); return; }
         $('bvOpts').hidden = m !== 'ai'; $('bvMNote').hidden = m === 'ai';
@@ -1185,7 +1185,7 @@
     const bt = $('bvRtTc'), paint = () => { const opp = $('bvRtOpp').value, c = rtTc(id, opp); $('bvRtTcL').hidden = !c; $('bvRtNote').hidden = !!c; if (c) { bt.dataset.v = c.id; bt.innerHTML = `<span>${esc(tcName(c))}</span><i>▾</i>`; } };
     const rtNow = () => { const el = $('bvRtNow'); if (!el) return; const ol = $('bvRtOpp').value === 'online'; el.hidden = ol || !RTG[id] || M() !== 'rated'; /* (beside 種目: the right half, rated games only) */ if (!el.hidden) el.innerHTML = `<small>${esc(t('rec.rtNow'))}</small><b>${esc(rtNowTxt(id, $('bvVar') ? $('bvVar').dataset.v || '' : ''))}</b>`; };
     rtNowHook = rtNow; rtNow();
-    $('bvRtOpp').addEventListener('change', () => { rtNow(); pref[id + ':rtOpp'] = $('bvRtOpp').value; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (x) {} paint(); mxLayout(M()); if ($('bvVarRow')) $('bvVarRow').hidden = $('bvRtOpp').value === 'online'; });
+    $('bvRtOpp').addEventListener('change', () => { rtNow(); pref[id + ':rtOpp'] = $('bvRtOpp').value; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (x) {} paint(); mxLayout(M()); });
     paint();
     bt.onclick = () => {
       const opp = $('bvRtOpp').value, L = rtList(id, opp), cur = bt.dataset.v; if (!L) return;
@@ -1261,7 +1261,7 @@
       if (mode === 'rated' && $('bvRtOpp')) { const opp = $('bvRtOpp').value, c = rtTc(g.id, opp); if (opp === 'online') mode = 'online'; if (c) tc = c.id; }
       if (!over) pref[g.id + ':mode'] = mode === 'online' ? 'rated' : mode; pref[g.id + ':lv'] = lv; pref[g.id + ':side'] = side; if (size) pref[g.id + ':size'] = size; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {}
       if (window.AtlasLoading) AtlasLoading.show(lang);   // straight to the loading screen (no camera move behind it)
-      const vq = $('bvVar') && $('bvVar').dataset.v && (mode === 'ai' || mode === 'pvp') ? '&variant=' + encodeURIComponent($('bvVar').dataset.v) : '';   // (種目: the full game's dialog opens with it chosen)
+      const vq = $('bvVar') && $('bvVar').dataset.v && (mode === 'ai' || mode === 'pvp' || mode === 'rated' || mode === 'online') ? '&variant=' + encodeURIComponent($('bvVar').dataset.v) : '';   // (種目: the full game's dialog opens with it chosen)
       setTimeout(() => { location.href = '../' + g.href + '?skin=atlas' + vq + (mode !== 'ai' ? '&mode=' + mode + (sub ? '&sub=' + sub : '') + (tc ? '&tc=' + tc : '') : (lv ? '&lv=' + lv : '') + '&side=' + side + (size ? '&size=' + size : '')); }, 420);
       return;
     }

@@ -372,6 +372,12 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
   }
   function watchLobby(cb) { return db.on('lobby', v => cb(listOf(sweep('lobby', v, lobbyDead)).filter(x => !x.game && (x.me || !lobbyStale(x))))); }
 
+  // ---------------------------------------------------------------- 種目 (2026-11-12): the variants of shogi/variants/ online too.
+  // games / rooms / lobby entries carry v (the variant's key, absent = the standard game) and, for ランダム将棋, sd (the seed of the
+  // shuffled start, the same for both players). Matching pairs only the same variant; the online rating is one for all variants.
+  const VKEYS = ['random', 'nigyoku', 'heian9', 'heian98', 'heian8', 'mini', 'judkins', 'goro', 'micro', 'hasami'];
+  const vOk = v => VKEYS.includes(v) ? v : '';
+  const vFields = v => (v = vOk(v)) ? (v === 'random' ? { v, sd: String(Math.floor(Math.random() * 1e9)).padStart(9, '0') } : { v }) : {};
   // ---------------------------------------------------------------- Elo
   const kFactor = games => games < 10 ? 40 : games < 30 ? 32 : 24;
   function elo(my, opp, score, games) {    // score: 1 win, .5 draw, 0 loss
@@ -384,14 +390,14 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
   // window of acceptable rating difference grows with waiting time
   const windowFor = waitMs => Math.min(400, 100 + 50 * Math.floor(waitMs / 10000));
 
-  async function enterLobby({ onList, onMatched, onStatus, tc }) {
+  async function enterLobby({ onList, onMatched, onStatus, tc, v }) {
     await leave();       // searching for a rated game closes the own room (so two games can not start at once)
     setPresence('lobby');
     const since = db.now();
     tc = tcOk(tc) ? tc : 'fast';
-    lobbyState = { since, onMatched, onStatus, tc };
+    v = vOk(v); lobbyState = { since, onMatched, onStatus, tc, v };
     await secPrepare(lobbyState);
-    await db.set('lobby/' + uid, { name: profile.name, rating: profile.rating, tc, since: db.stamp(), hb: db.stamp(), game: null });
+    await db.set('lobby/' + uid, { name: profile.name, rating: profile.rating, tc, since: db.stamp(), hb: db.stamp(), game: null, ...(v ? { v } : {}) });
     db.onDisconnectRemove('lobby/' + uid);
     lobbyUnsub = db.on('lobby', v => {
       const list = Object.entries(v || {}).map(([id, x]) => ({ id, ...x, me: id === uid })).filter(x => x.me || !lobbyStale(x)).sort((a, b) => b.rating - a.rating);
@@ -418,7 +424,7 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
       if (st.blocked) return;
     }
     const now = db.now(), myWait = now - st.since;
-    const others = st.list.filter(x => !x.me && !x.game && !lobbyStale(x) && typeof x.rating === 'number');
+    const others = st.list.filter(x => !x.me && !x.game && !lobbyStale(x) && typeof x.rating === 'number' && vOk(x.v) === st.v);   // (the same variant only)
     // same time control first; once both have waited CROSS_WAIT, nearer controls, then farther ones; closest rating within each
     let best = null;
     for (const o of others) {
@@ -442,7 +448,7 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
       const gid = db.push('games');
       const black = Math.random() < 0.5 ? uid : best.id, white = black === uid ? best.id : uid;
       const names = { [uid]: profile.name, [best.id]: best.name }, rates = { [uid]: profile.rating, [best.id]: best.rating };
-      const rec = { b: black, w: white, bn: names[black], wn: names[white], br: rates[black], wr: rates[white], moves: '', status: 'play', rated: true, ...tcFields(tcMerge(st.tc, best.tc)), created: db.stamp(), t: db.stamp() };
+      const rec = { b: black, w: white, bn: names[black], wn: names[white], br: rates[black], wr: rates[white], moves: '', status: 'play', rated: true, ...tcFields(tcMerge(st.tc, best.tc)), ...vFields(st.v), created: db.stamp(), t: db.stamp() };
       await (SEC ? SEC.createRated(gid, rec) : db.set('games/' + gid, rec));
       const r = await db.txn('lobby/' + best.id, cur => { if (cur === null) return null; if (cur.game) return; cur.game = gid; return cur; });
       if (r.committed && r.value && r.value.game === gid) await db.update('lobby/' + uid, { game: gid });
@@ -457,16 +463,16 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
   // Otherwise post records why the guest left ('no' declined, 'timeout' no answer in REMATCH_MS, 'left' guest left, 'host' host declined)
   // and the host's client reopens the room (game/guest cleared, fresh expiry) for the next entrant.
   const REMATCH_MS = 10000;
-  let roomCode = null, roomTc = null, roomPriv = false, roomTitle = '', roomExpires = 0, roomUnsub = null, roomTimer = 0, roomCbs = null;
+  let roomV = '', roomCode = null, roomTc = null, roomPriv = false, roomTitle = '', roomExpires = 0, roomUnsub = null, roomTimer = 0, roomCbs = null;
   let roomGame = null, roomG = null, roomGameUnsub = null, roomBusy = false;
   const roomListeners = new Set();
   const roomEmit = (ev, x) => roomListeners.forEach(f => { try { f(ev, room(), x); } catch (e) { console.warn(e); } });
   function onRoom(f) { roomListeners.add(f); return () => roomListeners.delete(f); }   // ev: 'open' | 'extend' | 'closed' | 'expired' | 'gone' | 'matched' | 'reopen' (x = the finished game)
-  const room = () => (roomCode ? { code: roomCode, priv: roomPriv, title: roomTitle, tc: roomTc, expires: roomExpires, left: Math.max(0, roomExpires - db.now()), game: roomGame } : null);
+  const room = () => (roomCode ? { code: roomCode, v: roomV, priv: roomPriv, title: roomTitle, tc: roomTc, expires: roomExpires, left: Math.max(0, roomExpires - db.now()), game: roomGame } : null);
   const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   function roomAttach(code, d, cbs) {
     roomBeatAt = 0; roomIdle = null;
-    roomCode = code; roomTc = d.tc; roomPriv = !!d.priv; roomTitle = d.title || ''; roomExpires = d.expires; roomCbs = cbs;
+    roomCode = code; roomTc = d.tc; roomV = vOk(d.v); roomPriv = !!d.priv; roomTitle = d.title || ''; roomExpires = d.expires; roomCbs = cbs;
     if (!d.game) setPresence('room', { room: d.priv ? null : code });
     db.onDisconnectRemove('rooms/' + code);
     let seen = false;
@@ -496,22 +502,23 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
     const g = await db.get('games/' + s.gid);
     if (!g || g.room !== s.code || g.host !== uid || g.status !== 'play') return null;
     const expires = db.now() + ROOM_TTL, guest = g.b === uid ? g.w : g.b, gname = g.b === uid ? g.wn : g.bn;
-    const r = await db.txn('rooms/' + s.code, cur => cur === null ? { host: uid, name: profile.name, rating: profile.rating, tc: s.tc || g.tc || 'fast', created: db.stamp(), hb: db.stamp(), expires, game: s.gid, guest, gname, priv: !!s.priv, title: s.title || '' } : cur.host === uid ? cur : undefined);
+    const r = await db.txn('rooms/' + s.code, cur => cur === null ? { host: uid, name: profile.name, rating: profile.rating, tc: s.tc || g.tc || 'fast', created: db.stamp(), hb: db.stamp(), expires, game: s.gid, guest, gname, priv: !!s.priv, title: s.title || '', ...(vOk(g.v) ? { v: g.v } : {}) } : cur.host === uid ? cur : undefined);
     if (!r.committed || !r.value || r.value.host !== uid) return null;
     const v = r.value;
-    roomAttach(s.code, { tc: v.tc, priv: v.priv, title: v.title, expires: v.expires, game: v.game }, cbs);
+    roomAttach(s.code, { tc: v.tc, v: v.v, priv: v.priv, title: v.title, expires: v.expires, game: v.game }, cbs);
     return s.code;
   }
-  async function createRoom({ onMatched, onExpired, priv, tc, title }) {
+  async function createRoom({ onMatched, onExpired, priv, tc, title, v }) {
+    v = vOk(v);
     title = String(title || '').replace(/\s+/g, ' ').trim().slice(0, 24);
     tc = tcOk(tc) ? tc : 'fast';
     await leave();
     for (let tries = 0; tries < 6; tries++) {
       const code = Array.from({ length: 5 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join('');
       const expires = db.now() + ROOM_TTL;
-      const r = await db.txn('rooms/' + code, cur => cur === null ? { host: uid, name: profile.name, rating: profile.rating, tc, created: db.stamp(), hb: db.stamp(), expires, game: null, guest: null, priv: !!priv, title } : undefined);
+      const r = await db.txn('rooms/' + code, cur => cur === null ? { host: uid, name: profile.name, rating: profile.rating, tc, created: db.stamp(), hb: db.stamp(), expires, game: null, guest: null, priv: !!priv, title, ...(v ? { v } : {}) } : undefined);
       if (!r.committed || !r.value || r.value.host !== uid || r.value.expires !== expires) continue;
-      roomAttach(code, { tc, priv: !!priv, title, expires }, { onMatched, onExpired });
+      roomAttach(code, { tc, v, priv: !!priv, title, expires }, { onMatched, onExpired });
       return code;
     }
     throw new Error('room');
@@ -552,7 +559,7 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
         const ngid = db.push('games');
         const meB = g.w === uid, me = { n: profile.name, r: profile.rating }, op = g.b === uid ? { n: g.wn, r: g.wr } : { n: g.bn, r: g.br };
         const B = meB ? me : op, W = meB ? op : me;
-        await db.set('games/' + ngid, { b: g.w, w: g.b, bn: B.n, wn: W.n, br: B.r, wr: W.r, moves: '', status: 'play', rated: false, room: code, host: uid, ...tcFields(g.tc), created: db.stamp(), t: db.stamp() });
+        await db.set('games/' + ngid, { b: g.w, w: g.b, bn: B.n, wn: W.n, br: B.r, wr: W.r, moves: '', status: 'play', rated: false, room: code, host: uid, ...tcFields(g.tc), ...vFields(g.v), created: db.stamp(), t: db.stamp() });
         const r = await db.txn('rooms/' + code, cur => { if (cur === null) return null; if (cur.host !== uid || cur.game !== gid) return; cur.game = ngid; return cur; });
         if (r.committed && r.value && r.value.game === ngid) await db.update('games/' + gid, { next: ngid });
         else await db.remove('games/' + ngid);
@@ -596,7 +603,7 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
     const gid = db.push('games');
     const black = Math.random() < 0.5 ? uid : rm.host, white = black === uid ? rm.host : uid;
     const names = { [uid]: profile.name, [rm.host]: rm.name }, rates = { [uid]: profile.rating, [rm.host]: rm.rating };
-    await db.set('games/' + gid, { b: black, w: white, bn: names[black], wn: names[white], br: rates[black], wr: rates[white], moves: '', status: 'play', rated: false, room: code, host: rm.host, ...tcFields(rm.tc), created: db.stamp(), t: db.stamp() });
+    await db.set('games/' + gid, { b: black, w: white, bn: names[black], wn: names[white], br: rates[black], wr: rates[white], moves: '', status: 'play', rated: false, room: code, host: rm.host, ...tcFields(rm.tc), ...vFields(rm.v), created: db.stamp(), t: db.stamp() });
     const r = await db.txn('rooms/' + code, cur => { if (cur === null) return null; if (!roomLive(cur) || cur.host !== rm.host) return; cur.game = gid; cur.guest = uid; cur.gname = profile.name; return cur; });
     if (!(r.committed && r.value && r.value.game === gid)) { await db.remove('games/' + gid); return null; }
     return gid;
@@ -654,7 +661,7 @@ window.maskMail = window.maskMail || (e => { e = String(e || ''); const i = e.in
   }
 
   // ---------------------------------------------------------------- games
-  const USI_RE = /^([1-9][a-i][1-9][a-i]\+?|[PLNSBRG]\*[1-9][a-i])$/;
+  const USI_RE = /^([1-9][a-i][1-9][a-i]\+?|\+?[PLNSBRG]\*[1-9][a-i])$/;   // (+P*: マイクロ将棋 drops a piece on its back face)
   const moveCount = s => (s ? String(s).split(' ').filter(Boolean).length : 0);
   function watchGame(gid, cb) { setPresence('play', { room: null }); if (SEC) SEC.join(gid); return db.on('games/' + gid, cb); }
   // the sender is the side to move: subtract the time since the last move from its main time.
