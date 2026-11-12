@@ -571,7 +571,7 @@
       g.lineWidth = 3; g.beginPath(); g.moveTo(-20, 38); g.lineTo(-26, 52); g.moveTo(8, 38); g.lineTo(4, 52); g.stroke(); });                         // feet on the branch
   }
   function goldLines(m, W, H, y0, n, s) { const g = ctx(m.flat); g.strokeStyle = '#fff'; g.lineCap = 'round';
-    for (let k = 0; k < n; k++) { g.lineWidth = (k === 0 ? 7 : 3.5) * W / 3072; g.beginPath(); for (let x = -10; x <= W + 10; x += 8) { const y = y0 + k * 16 * W / 3072 + Math.sin(x / W * 4.2 + s) * H * .06 + Math.sin(x / W * 11 + s * 2) * H * .012; x < 0 ? g.moveTo(x, y) : g.lineTo(x, y); } g.stroke(); } }
+    for (let k = 0; k < n; k++) { g.lineWidth = (k === 0 ? 7 : 3.5) * W / 3072; g.beginPath(); for (let x = -10; x <= W + 10; x += 8) { const y = y0 + k * 16 * W / 3072 + (s < 0 ? Math.sin(x / W * Math.PI * 2) * H * .05 + Math.sin(x / W * Math.PI * 6) * H * .01 : Math.sin(x / W * 4.2 + s) * H * .06 + Math.sin(x / W * 11 + s * 2) * H * .012); /* (s < 0: whole waves, at y0 on both edges — the line runs on round the board's four faces, 2026-11-12) */ x < 0 ? g.moveTo(x, y) : g.lineTo(x, y); } g.stroke(); } }
   // compose → [colour, map (R height, G roughness, B metalness)]
   function composeRaden(m, W, H, s, ground) {
     const rd = k => ctx(m[k]).getImageData(0, 0, W, H).data, Sh = rd('shell'), Kd = rd('kind'), F = rd('flat'), Ct = rd('cut'), Ey = rd('eye');
@@ -617,14 +617,14 @@
     const bloomAll = (big) => blooms.forEach(([x, y, a], i) => { const n = 2 + Math.floor(rnd() * 3);
       for (let k = 0; k < n; k++) { const q = a + R(-1.6, 1.6), dd = R(20, 70) * sc * big; if (rnd() < .2) rBud(m, x + Math.cos(q) * dd, y + Math.sin(q) * dd, R(14, 18) * sc * big, q + 1.57); else rPetal(m, x + Math.cos(q) * dd, y + Math.sin(q) * dd, R(36, 50) * sc * big, R(0, 6.3)); } });
     if (kind === 'side') {
-      goldLines(m, W, H, H * .72, 3, 1.1);
+      goldLines(m, W, H, H * .72, 3, -1);
       const P = rBranch(m, -30, H * .95, -.3, W * .5, 46 * sc, 0, sc, blooms);
       rBranch(m, W + 30, H * .2, Math.PI - .25, W * .24, 30 * sc, 1, sc, blooms);
       bloomAll(1);
       const bp = P.reduce((a, p) => Math.abs(p[1] - H * .62) < Math.abs(a[1] - H * .62) ? p : a, P[1]); uguisu(m, bp[0] + 10 * sc, bp[1] - 62 * sc, 1.7 * sc, 1);
       for (let k = 0; k < 14; k++) rFall(m, R(W * .45, W * .95), R(H * .25, H * .95), R(16, 24) * sc, R(0, 6.3));
     } else if (kind === 'end') {
-      goldLines(m, W, H, H * .6, 2, 2.3);
+      goldLines(m, W, H, H * .72, 3, -1);
       rBranch(m, W + 30, H * .9, Math.PI + .35, W * .45, 40 * sc, 0, sc, blooms);
       bloomAll(1);
       for (let k = 0; k < 10; k++) rFall(m, R(W * .05, W * .5), R(H * .2, H * .9), R(16, 24) * sc, R(0, 6.3));
