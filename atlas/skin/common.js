@@ -479,6 +479,25 @@
     new MutationObserver(() => { if (!q && document.querySelector('.rt-row')) q = requestAnimationFrame(fit); }).observe(document.body, { childList: true, subtree: true });
     addEventListener('resize', () => setTimeout(fit, 200));
   })();
+  /* ---------- 新しい対局: the two columns are as tall as the dialog has room for (2026-11-13) ----------
+     Their bottom (and its frosted band) ends above the dialog's own band over the buttons, whatever the head above them (the
+     「はじめての方へ」 offer comes and goes) — so the dialog itself has nothing to scroll; only a column that is longer scrolls. */
+  (function ngFit() {
+    const fit = () => document.querySelectorAll('.modal .ng-cols').forEach(cols => {
+      const m = cols.closest('.modal'), act = m && m.querySelector('.modal-actions');
+      if (!m || !act) return;
+      if (!cols.getClientRects().length) { m.classList.remove('ng-fit'); return; }
+      const top = cols.getBoundingClientRect().top - m.getBoundingClientRect().top + m.scrollTop;
+      let avail = m.clientHeight - top - (act.offsetHeight - 48) - 52;   // (the buttons' box reaches 48px under the dialog's edge; 52: the frosted band over the buttons, and a gap)
+      cols.style.setProperty('--ngmax', Math.max(240, Math.floor(avail)) + 'px'); m.classList.toggle('ng-fit', avail >= 240);
+      const over = m.scrollHeight - m.clientHeight;   // (whatever else is in the dialog under the columns: take it off too, so the dialog has nothing to scroll)
+      if (over > 0 && avail - over >= 240) { avail -= over; cols.style.setProperty('--ngmax', Math.floor(avail) + 'px'); }
+    });
+    let q = 0; const later = () => { if (!q) q = requestAnimationFrame(() => { q = 0; fit(); }); };
+    addEventListener('resize', later);
+    if (window.ResizeObserver) { const ro = new ResizeObserver(later); document.querySelectorAll('.modal').forEach(m => { if (m.querySelector('.ng-cols')) ro.observe(m); }); }
+    new MutationObserver(later).observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class'], attributeOldValue: false });
+  })();
   // the board is drawn and the game is set up → lift the "loading" overlay (after a couple of rendered frames)
   function ready(waitStart) {
     const t0 = performance.now();
