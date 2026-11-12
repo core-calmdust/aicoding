@@ -149,6 +149,7 @@ function geom(p) {
     const b = document.getElementById('board');
     b.classList.toggle('vg', !full); b.classList.remove('v5');
     b.style.setProperty('--vw', w); b.style.setProperty('--vhh', h);
+    document.body.style.setProperty('--vw', w); document.body.style.setProperty('--vhh', h);   // (the 3D full version sizes the whole board frame from them)
     sqEls.forEach((c, i) => {
       const r = (i / 9) | 0, col = i % 9, on = full || (r >= r0 && r < r0 + h && col >= c0 && col < c0 + w);
       c.classList.toggle('voff', !on);
