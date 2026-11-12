@@ -326,7 +326,7 @@ html[lang=ar] bdi{unicode-bidi:isolate;direction:ltr}
 #resultOverlay .modal-actions .mbtn{white-space:nowrap;letter-spacing:0;padding-left:4px;padding-right:4px;min-width:0;font-size:clamp(13px,3.8vw,16px)}
 #resultOverlay .modal-actions .mbtn.hidden{display:none}
 body.in-lesson #coachCard:not(.ck-rest),body.in-edit #coachCard:not(.ck-rest),body.in-puzzle #coachCard:not(.ck-rest),body.rated-live #coachCard:not(.ck-rest){display:none!important}   /* coach.js: .ck-rest = the box says the coach is resting */
-body.in-online #coachCard{display:none!important}
+body.in-online:not(.ol-over) #coachCard{display:none!important}
 .review-card.show{display:block}
 body.in-lesson .review-card{display:none!important}
 .rv-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
@@ -972,8 +972,8 @@ html.atlas-skin .ol-vpop .ol-vg{color:#b07a1e!important}
 .ol-code{font-family:'JetBrains Mono',monospace;font-size:38px;letter-spacing:.25em;color:var(--accent)}
 .ol-spin{width:34px;height:34px;border-radius:50%;border:3px solid rgba(201,169,97,.2);border-top-color:var(--accent);animation:olspin 1s linear infinite}
 @keyframes olspin{to{transform:rotate(360deg)}}
-body.in-online #evalCard .evalrow,body.in-online #evalCard .evalbar,body.in-online #evalCard .graph,body.in-online #btnAnalyze,body.in-online #btnPro,body.in-online #btnEdit,body.in-online #btnPaste,body.in-online .review-card,body.in-online .coach,body.in-online #infoLine,body.in-online #btnResAnalyze,body.in-online #btnMistakes{display:none!important}
-body.in-online #evalCard .navbar{margin-top:0}
+body.in-online:not(.ol-over) #evalCard .evalrow,body.in-online:not(.ol-over) #evalCard .evalbar,body.in-online:not(.ol-over) #evalCard .graph,body.in-online:not(.ol-over) #btnAnalyze,body.in-online:not(.ol-over) #btnPro,body.in-online #btnEdit,body.in-online #btnPaste,body.in-online:not(.ol-over) .review-card,body.in-online .coach,body.in-online #infoLine,body.in-online #btnResAnalyze,body.in-online #btnMistakes{display:none!important}
+body.in-online:not(.ol-over) #evalCard .navbar{margin-top:0}
 /* online dock (PC: bar at the bottom) / tab bar (phones) */
 .dock{display:none}
 .mtabs{display:none}
@@ -1657,14 +1657,14 @@ html[lang=ar] .pf-input{direction:rtl}
    are the same height and scroll inside (overrides the older per-layout ratios and the review card's --rvh fit) */
 @media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   html.atlas-skin body .side-in:has(> .review-card.show:not(.slim)) > .kifu-card > .info-line{display:none!important}   /* (portal skin: the info line in the kifu box gives its rows to the moves meanwhile) */
-  body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .review-card.show{flex:1 1 0!important;min-height:120px!important;max-height:none!important;overflow-y:auto!important}
-  body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .kifu-card{flex:1 1 0!important;min-height:120px!important;max-height:none!important}
-  body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .kifu-card .kifu{flex:1 1 0!important;min-height:0!important;max-height:none!important;overflow-y:auto!important}
+  body:not(.in-lesson):not(.in-puzzle):not(.in-online:not(.ol-over)):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .review-card.show{flex:1 1 0!important;min-height:120px!important;max-height:none!important;overflow-y:auto!important}
+  body:not(.in-lesson):not(.in-puzzle):not(.in-online:not(.ol-over)):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .kifu-card{flex:1 1 0!important;min-height:120px!important;max-height:none!important}
+  body:not(.in-lesson):not(.in-puzzle):not(.in-online:not(.ol-over)):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .kifu-card .kifu{flex:1 1 0!important;min-height:0!important;max-height:none!important;overflow-y:auto!important}
 }
 @media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
-  body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > :is(.review-card.show, .kifu-card){flex:none!important;height:clamp(220px, 42vh, 380px)!important;min-height:0!important;max-height:none!important}
-  body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .review-card.show{overflow-y:auto!important}
-  body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .kifu-card .kifu{flex:1 1 0!important;min-height:0!important;max-height:none!important;overflow-y:auto!important;overscroll-behavior:auto}
+  body:not(.in-lesson):not(.in-puzzle):not(.in-online:not(.ol-over)):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > :is(.review-card.show, .kifu-card){flex:none!important;height:clamp(220px, 42vh, 380px)!important;min-height:0!important;max-height:none!important}
+  body:not(.in-lesson):not(.in-puzzle):not(.in-online:not(.ol-over)):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .review-card.show{overflow-y:auto!important}
+  body:not(.in-lesson):not(.in-puzzle):not(.in-online:not(.ol-over)):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .kifu-card .kifu{flex:1 1 0!important;min-height:0!important;max-height:none!important;overflow-y:auto!important;overscroll-behavior:auto}
 }
 </style>
 <style>/* lesson passed: the three buttons never wrap their labels; if they don't fit in one row they go to two (2026-10-30) */
@@ -3904,7 +3904,7 @@ function inStudy() { return !!(rvStudy && game === rvStudy.line); }
 const rvbKey = () => game.start + '|' + game.moves.slice(0, cur).join(',');
 function rvbShow() {
   const g = inStudy() ? rvStudy.orig : game;
-  if (!RVB || !g || lesson || edit || settings.mode === 'online' || rtLive() || !rvOpen || rvRun || !g.rv) return false;
+  if (!RVB || !g || lesson || edit || (settings.mode === 'online' && !(net && net.done)) || rtLive() || !rvOpen || rvRun || !g.rv) return false;
   return true;   // 分析を押したら手数・対局中かどうかに関係なく下の検討ボックスを出す（共通・2026-11-06）
 }
 function rvbStart() {
@@ -5894,7 +5894,7 @@ function startOnlineGame(gid, intro, spec) {
   cur = 0; reviewing = false; hintMoves = null; sel = null; flip = flipA(keepFlip);
   net = { gid, game: null, me: spec ? -1 : 0, opp: null, done: false, first: true, intro, spectate: !!spec, code: spec || null, saved, watchers: 0 };
   if (!spec) olLiveSave(gid);
-  document.body.classList.add('in-online'); document.body.classList.toggle('in-watch', !!spec);
+  document.body.classList.add('in-online'); document.body.classList.remove('ol-over'); document.body.classList.toggle('in-watch', !!spec);
   net.unsub = spec ? Online.spectate(gid, onNetGame) : Online.watchGame(gid, onNetGame);
   net.wUnsub = Online.watchCount(gid, n => { if (net && net.gid === gid) { net.watchers = n; olWatchRender(); } });
   net.timer = setInterval(netTick, 250);
@@ -5907,7 +5907,7 @@ function leaveOnlineGame() {
   if (!net) return;
   if (!net.spectate) olLiveClear();
   net.unsub && net.unsub(); net.wUnsub && net.wUnsub(); clearInterval(net.timer);
-  net = null; document.body.classList.remove('in-online', 'in-watch'); olWatchRender();
+  net = null; document.body.classList.remove('in-online', 'in-watch', 'ol-over'); olWatchRender();
   if (settings.mode === 'online') settings.mode = 'pvp';
   ['#clkBlack', '#clkWhite'].forEach(s => olClkOff($(s)));
   if (window.Online && Online.uid) { const r = Online.room; Online.setPresence(r && !r.game ? 'room' : 'idle', { room: r && !r.game && !r.priv ? r.code : null }).catch(() => {}); }
@@ -5997,7 +5997,7 @@ function netMove(m) {
   });
 }
 async function finishOnline(g) {
-  net.done = true;
+  net.done = true; document.body.classList.add('ol-over'); try { const _O = typeof ON !== 'undefined' && ON ? ON : window.Online; if (_O && _O.setPresence && net && !net.spectate && !net.spec) { const r = _O.room; _O.setPresence(r && !r.game ? 'room' : 'idle', { room: r && !r.game && !r.priv ? r.code : null }).catch(() => {}); } } catch (e) {}   // (2026-11-12: the game is over — 分析 opens, and the players list stops showing 対局中)
   if (!net.spectate) olLiveClear();
   const loc = game.over;      // the end as seen on my own board (null: not finished here)
   let winner, reason;

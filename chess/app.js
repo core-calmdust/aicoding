@@ -2309,7 +2309,7 @@ async function runReview() {
   studyEnd();
   if (lesson || puzzle) return;
   if (rtLive()) { toast(t('rt.noEval')); return; }
-  if (net) return;
+  if (net && !net.done) return;   // (a finished online game can be analysed, 2026-11-12)
   if (moves.length < 1) { toast(t('nokifu')); return; }
   if (rv && rv.key === gameKey() && (rv.running || rv.done === rv.total)) { rvOpen = true; renderReview(); rvbRender(); revealReview(); return; }   // (the box under the board comes back too)
   rvCancel();
@@ -2443,7 +2443,7 @@ var rvStudy = null, rvbHover = null, rvbW = null, RVB = null;
 function inStudy() { return !!(rvStudy && moves === rvStudy.line); }
 function rvbGameKey() { return inStudy() ? (startFen || '') + '|' + rvStudy.orig.join(',') : gameKey(); }
 function rvbShow() {
-  if (!RVB || lesson || puzzle || net || settings.mode === 'online' || rtLive() || !rvOpen || !rv || rv.running || rv.key !== rvbGameKey()) return false;
+  if (!RVB || lesson || puzzle || (net && !net.done) || (settings.mode === 'online' && !(net && net.done)) || rtLive() || !rvOpen || !rv || rv.running || rv.key !== rvbGameKey()) return false;
   return true;   // 分析を押したら手数・対局中かどうかに関係なく下の検討ボックスを出す（共通・2026-11-06）
 }
 function rvbStart() {
@@ -2901,7 +2901,7 @@ function startOnlineGame(gid, intro, spec) {
   startFen = null; moves = []; cur = 0; reviewing = false; evals = []; hintList = null; gameOverShown = false; sel = null; closePromo();
   net = { gid, game: null, me: spec ? 0 : P1, opp: null, done: false, first: true, intro, spectate: !!spec, code: spec || null, saved, watchers: 0 };
   if (!spec) olLiveSave(gid);
-  document.body.classList.add('in-online'); document.body.classList.toggle('in-watch', !!spec);
+  document.body.classList.add('in-online'); document.body.classList.remove('ol-over'); document.body.classList.toggle('in-watch', !!spec);
   net.unsub = spec ? Online.spectate(gid, onNetGame) : Online.watchGame(gid, onNetGame);
   net.wUnsub = Online.watchCount(gid, n => { if (net && net.gid === gid) { net.watchers = n; olWatchRender(); } });
   net.timer = setInterval(netTick, 250);
@@ -2915,7 +2915,7 @@ function leaveOnlineGame() {
   if (!net.spectate) olLiveClear();
   net.unsub && net.unsub(); net.wUnsub && net.wUnsub(); clearInterval(net.timer);
   const wasOver = net.over;
-  net = null; document.body.classList.remove('in-online', 'in-watch'); olWatchRender(); olDrawSync();
+  net = null; document.body.classList.remove('in-online', 'in-watch', 'ol-over'); olWatchRender(); olDrawSync();
   if (settings.mode === 'online') settings.mode = 'pvp';
   gameOverShown = gameOver(moves.length) || !!wasOver;
   if (olOn() && Online.uid) { const r = Online.room; Online.setPresence(r && !r.game ? 'room' : 'idle', { room: r && !r.game && !r.priv ? r.code : null }).catch(() => {}); }
@@ -3015,7 +3015,7 @@ function netMove(m) {
   }).catch(e => { console.warn(e); if (!net) return; net.pending = false; toast(t('ol.error'), 2200); onNetGame(net.game); });
 }
 async function finishOnline(g) {
-  net.done = true;
+  net.done = true; document.body.classList.add('ol-over'); try { const _O = typeof ON !== 'undefined' && ON ? ON : window.Online; if (_O && _O.setPresence && net && !net.spectate && !net.spec) { const r = _O.room; _O.setPresence(r && !r.game ? 'room' : 'idle', { room: r && !r.game && !r.priv ? r.code : null }).catch(() => {}); } } catch (e) {}   // (2026-11-12: the game is over — 分析 opens, and the players list stops showing 対局中)
   if (!net.spectate) olLiveClear();
   const W = g.w, bst = statusAt(moves.length);
   let winner, why;

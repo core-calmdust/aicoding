@@ -2024,7 +2024,7 @@ $('#btnResAnalyze').onclick = () => { hideOverlay('#resultOverlay'); runReview()
 // ====================================================================== review box (PC): commentary + candidate moves with lines + study mode (rbox.js)
 function rbShown() { return rbS ? rbS.pos[rbS.pos.length - 1] : posAt(cur).pos; }
 function rbActive() {
-  if (!document.documentElement.classList.contains('pc2') || lesson || puzzle || settings.mode === 'online' || rtLive()) return false;
+  if (!document.documentElement.classList.contains('pc2') || lesson || puzzle || (settings.mode === 'online' && !(typeof net !== 'undefined' && net && net.done)) || rtLive()) return false;
   if (!rvOpen || !rv || rv.running || rv.key !== gameKey() || !moves.length) return false;
   return true;   // 分析を押したら手数・対局中かどうかに関係なく下の検討ボックスを出す（共通・2026-11-06）
 }

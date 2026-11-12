@@ -456,7 +456,7 @@ body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
 /* coach (coach.js + shared/coachkit.js) */
 #coachCard.hidden{display:none}
 body.in-lesson #coachCard:not(.ck-rest),body.in-puzzle #coachCard:not(.ck-rest),body.rated-live #coachCard:not(.ck-rest){display:none!important}   /* coach.js: .ck-rest = the box says the coach is resting */
-body.in-online #coachCard{display:none!important}
+body.in-online:not(.ol-over) #coachCard{display:none!important}
 .ck-card .ck-sum span{white-space:normal}
 html[lang=ar] #coachCard{direction:rtl;text-align:right}
 #coachCard .ck-rvgo{font:inherit;font-size:14px;font-weight:700;padding:9px 18px;border-radius:10px;border:0;background:linear-gradient(180deg,#f6ab82,#c76c46);color:#1b150a;cursor:pointer;white-space:nowrap}
@@ -946,14 +946,14 @@ body .info-line{font-size:12.5px}
    are the same height and scroll inside (overrides the older per-layout ratios and the review card's --rvh fit) */
 @media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   html.atlas-skin body .side-in:has(> .review-card.show:not(.slim)) > .kifu-card > .info-line{display:none!important}   /* (portal skin: the info line in the kifu box gives its rows to the moves meanwhile) */
-  body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .review-card.show{flex:1 1 0!important;min-height:120px!important;max-height:none!important;overflow-y:auto!important}
-  body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .kifu-card{flex:1 1 0!important;min-height:120px!important;max-height:none!important}
-  body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .kifu-card .kifu{flex:1 1 0!important;min-height:0!important;max-height:none!important;overflow-y:auto!important}
+  body:not(.in-lesson):not(.in-puzzle):not(.in-online:not(.ol-over)):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .review-card.show{flex:1 1 0!important;min-height:120px!important;max-height:none!important;overflow-y:auto!important}
+  body:not(.in-lesson):not(.in-puzzle):not(.in-online:not(.ol-over)):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .kifu-card{flex:1 1 0!important;min-height:120px!important;max-height:none!important}
+  body:not(.in-lesson):not(.in-puzzle):not(.in-online:not(.ol-over)):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .kifu-card .kifu{flex:1 1 0!important;min-height:0!important;max-height:none!important;overflow-y:auto!important}
 }
 @media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
-  body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > :is(.review-card.show, .kifu-card){flex:none!important;height:clamp(220px, 42vh, 380px)!important;min-height:0!important;max-height:none!important}
-  body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .review-card.show{overflow-y:auto!important}
-  body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .kifu-card .kifu{flex:1 1 0!important;min-height:0!important;max-height:none!important;overflow-y:auto!important;overscroll-behavior:auto}
+  body:not(.in-lesson):not(.in-puzzle):not(.in-online:not(.ol-over)):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > :is(.review-card.show, .kifu-card){flex:none!important;height:clamp(220px, 42vh, 380px)!important;min-height:0!important;max-height:none!important}
+  body:not(.in-lesson):not(.in-puzzle):not(.in-online:not(.ol-over)):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .review-card.show{overflow-y:auto!important}
+  body:not(.in-lesson):not(.in-puzzle):not(.in-online:not(.ol-over)):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .kifu-card .kifu{flex:1 1 0!important;min-height:0!important;max-height:none!important;overflow-y:auto!important;overscroll-behavior:auto}
 }
 </style>
 <style>/* lesson passed: the three buttons never wrap their labels; if they don't fit in one row they go to two (2026-10-30) */
@@ -3380,7 +3380,7 @@ document.addEventListener('keydown', e => {
 });
 </script>
 <script src="rated.js?v=20261107l14-ai1"></script><!-- レーティング戦 -->
-<script src="online-ui.js?v=20261030ckplx"></script><!-- オンライン対戦・Google連携 -->
+<script src="online-ui.js?v=20261030ckplx1"></script><!-- オンライン対戦・Google連携 -->
 <!-- World Board Game Atlas portal skin: connect4/?skin=atlas — 3D leather & walnut tile tower (tiles fall between the rails), guide speech bubbles, portal look (all features kept) -->
 <script>
 (function () {

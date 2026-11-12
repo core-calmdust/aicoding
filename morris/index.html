@@ -1017,19 +1017,19 @@ body .info-line{font-size:12.5px}
    are the same height and scroll inside (overrides the older per-layout ratios and the review card's --rvh fit) */
 @media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   html.atlas-skin body .side-in:has(> .review-card.show:not(.slim)) > .kifu-card > .info-line{display:none!important}   /* (portal skin: the info line in the kifu box gives its rows to the moves meanwhile) */
-  body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .review-card.show{flex:1 1 0!important;min-height:120px!important;max-height:none!important;overflow-y:auto!important}
-  body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .kifu-card{flex:1 1 0!important;min-height:120px!important;max-height:none!important}
-  body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .kifu-card .kifu{flex:1 1 0!important;min-height:0!important;max-height:none!important;overflow-y:auto!important}
+  body:not(.in-lesson):not(.in-puzzle):not(.in-online:not(.ol-over)):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .review-card.show{flex:1 1 0!important;min-height:120px!important;max-height:none!important;overflow-y:auto!important}
+  body:not(.in-lesson):not(.in-puzzle):not(.in-online:not(.ol-over)):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .kifu-card{flex:1 1 0!important;min-height:120px!important;max-height:none!important}
+  body:not(.in-lesson):not(.in-puzzle):not(.in-online:not(.ol-over)):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .kifu-card .kifu{flex:1 1 0!important;min-height:0!important;max-height:none!important;overflow-y:auto!important}
 }
 @media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
-  body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > :is(.review-card.show, .kifu-card){flex:none!important;height:clamp(220px, 42vh, 380px)!important;min-height:0!important;max-height:none!important}
-  body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .review-card.show{overflow-y:auto!important}
-  body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .kifu-card .kifu{flex:1 1 0!important;min-height:0!important;max-height:none!important;overflow-y:auto!important;overscroll-behavior:auto}
+  body:not(.in-lesson):not(.in-puzzle):not(.in-online:not(.ol-over)):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > :is(.review-card.show, .kifu-card){flex:none!important;height:clamp(220px, 42vh, 380px)!important;min-height:0!important;max-height:none!important}
+  body:not(.in-lesson):not(.in-puzzle):not(.in-online:not(.ol-over)):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .review-card.show{overflow-y:auto!important}
+  body:not(.in-lesson):not(.in-puzzle):not(.in-online:not(.ol-over)):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .kifu-card .kifu{flex:1 1 0!important;min-height:0!important;max-height:none!important;overflow-y:auto!important;overscroll-behavior:auto}
 }
 /* coach (coach.js, shared/coachkit.js): next to the evaluation; hidden in lessons, puzzles, online games and live rated games */
 #coachCard.hidden{display:none}
 body.in-lesson #coachCard:not(.ck-rest),body.in-puzzle #coachCard:not(.ck-rest),body.rated-live #coachCard:not(.ck-rest){display:none!important}   /* coach.js: .ck-rest = the box says the coach is resting */
-body.in-online #coachCard{display:none!important}
+body.in-online:not(.ol-over) #coachCard{display:none!important}
 #coachCard .ck-rvgo{font:inherit;font-size:14px;font-weight:700;padding:9px 18px;border-radius:10px;border:0;background:linear-gradient(180deg,#d8bb72,#a98a48);color:#1b150a;cursor:pointer;white-space:nowrap}
 #coachCard.ck-off{padding:8px 12px}
 #coachCard.ck-off .ck-h{margin-bottom:4px}
@@ -3887,7 +3887,7 @@ document.addEventListener('keydown', e => {
 });
 window.addEventListener('resize', () => renderFx());
 </script>
-<script src="online-ui.js?v=20261030ckp-dr1lx"></script>
+<script src="online-ui.js?v=20261030ckp-dr1lx1"></script>
 <!-- World Board Game Atlas portal skin: morris/?skin=atlas — 3D jeweller's board (marble, brass lines, gold / platinum pieces in felt channels), guide speech bubbles, portal look (all features kept) -->
 <script>
 (function () {

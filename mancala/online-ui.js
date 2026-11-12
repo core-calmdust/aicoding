@@ -273,7 +273,7 @@ function startOnlineGame(gid, spec) {
   settings.mode = 'online';
   game = { rules: game.rules, seeds: game.seeds, moves: [], human: 0, setup: null, resigned: null };
   recompute(); cur = 0; reviewing = false; evals = []; anaLists = []; fxMarks = []; gameOverShown = true;
-  document.body.classList.add('in-online'); document.body.classList.toggle('in-watch', !!spec);
+  document.body.classList.add('in-online'); document.body.classList.remove('ol-over'); document.body.classList.toggle('in-watch', !!spec);
   net.unsub = spec ? ON.spectate(gid, g => onNetGame(gid, g)) : ON.watchGame(gid, g => onNetGame(gid, g));
   net.wUnsub = ON.watchCount(gid, n => { if (net && net.gid === gid) { net.watchers = n; olWatchRender(); } });
   if (!spec) { try { localStorage.setItem(olLiveKey(), JSON.stringify({ uid: ON.uid, gid })); } catch (e) {} }
@@ -285,7 +285,7 @@ function olDetach(keepMode) {
   const n = net; net = null;
   n.unsub && n.unsub(); n.wUnsub && n.wUnsub();
   olClearLive(n.gid);
-  document.body.classList.remove('in-online', 'in-watch');
+  document.body.classList.remove('in-online', 'in-watch', 'ol-over');
   hideOv('#resultOverlay'); $('#olRes').classList.add('hidden');
   ['Top', 'Bot'].forEach(w => { const c = $('#clk' + w); c.textContent = ''; c.className = 'pclk'; });
   if (olOn() && ON.ready) { const r = ON.room; ON.setPresence(r && !r.game ? 'room' : 'idle', { room: r && !r.game && !r.priv ? r.code : null }).catch(() => {}); }
@@ -451,7 +451,7 @@ function olRecord(rt, gid, g, score) {
 }
 async function finishOnline(g) {
   if (!net || net.done) return;
-  net.done = true; net.pending = false;
+  net.done = true; document.body.classList.add('ol-over'); try { const _O = typeof ON !== 'undefined' && ON ? ON : window.Online; if (_O && _O.setPresence && net && !net.spectate && !net.spec) { const r = _O.room; _O.setPresence(r && !r.game ? 'room' : 'idle', { room: r && !r.game && !r.priv ? r.code : null }).catch(() => {}); } } catch (e) {}   // (2026-11-12: the game is over — 分析 opens, and the players list stops showing 対局中) net.pending = false;
   olClearLive(net.gid);
   olEndBoard(g);
   const gid = net.gid, winner = ON.winnerOf(g) || 0, me = net.spectate ? -1 : net.me;

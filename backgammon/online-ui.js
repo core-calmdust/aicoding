@@ -313,7 +313,7 @@ function startOnlineGame(gid, spec) {
   net = { gid, mid: gid, spec: !!spec, me: -1, recs: [], game: null, R: null, done: false, saved, rolled: '', rollSent: '' };
   settings.mode = 'online';
   match = null; turn = null;
-  document.body.classList.add('in-online'); document.body.classList.toggle('in-watch', !!spec); document.body.classList.remove('ol-done');
+  document.body.classList.add('in-online'); document.body.classList.toggle('in-watch', !!spec); document.body.classList.remove('ol-done', 'ol-over');
   olLoad(gid, !!spec);
   mtab('game'); dockRender();
 }
@@ -657,7 +657,7 @@ async function olGameEnd() {
 }
 async function finishOnline(g) {
   const n = net; if (!n || n.done) return;
-  n.done = true; n.sending = false; selected = null; document.body.classList.add('ol-done');
+  n.done = true; n.sending = false; selected = null; document.body.classList.add('ol-done', 'ol-over'); try { if (ON && ON.setPresence && !n.spec) { const r = ON.room; ON.setPresence(r && !r.game ? 'room' : 'idle', { room: r && !r.game && !r.priv ? r.code : null }).catch(() => {}); } } catch (e) {}   // (2026-11-12: the players list stops showing 対局中)
   if (!n.spec) olClearLive();
   const winner = ON.winnerOf(g), me = n.spec ? -1 : n.me;
   n.result = { winner, why: olWhy(g, me), rating: null };
