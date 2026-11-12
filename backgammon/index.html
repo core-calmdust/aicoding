@@ -1567,14 +1567,14 @@ html.lnd .toast{font-size:13px;padding:9px 16px}
 <script src="mt.js?v=3"></script>
 <script src="../shared/luxintro.js?v=3"></script><script src="app.js?v=20261111c1-lx1"></script>
 <script src="op.js?v=20261021opan-lx1"></script>
-<script src="online-ui.js?v=20261031ck1pnlx1"></script>
+<script src="online-ui.js?v=20261031ck1pnlx1c"></script>
 <script src="land.js?v=10"></script>
 <!-- World Board Game Atlas portal skin: backgammon/?skin=atlas — 3D museum-piece board, guide speech bubbles, portal look (all features kept) -->
 <script>
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=75l42'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=76l42'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
