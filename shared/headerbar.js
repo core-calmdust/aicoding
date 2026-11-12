@@ -105,6 +105,7 @@ body.hb-on{padding-top:${H}px}
 .atlas-top .hb-title h1{margin:0;font-family:'RocknRoll One','Zen Maru Gothic',sans-serif;font-weight:400;font-size:20px;line-height:1.1;color:#111;letter-spacing:.03em;white-space:nowrap;text-shadow:none}
 .atlas-top .hb-title h1 small{display:none}
 .atlas-top .hb-title{flex:none;display:flex;align-items:center;align-self:center;height:30px;padding-left:12px;margin-left:2px;border-left:2px solid #e3d3ad}
+.atlas-top .hb-title.hb-home{cursor:pointer;pointer-events:auto}.atlas-top .hb-title.hb-home:hover h1{color:#d93c3c}.atlas-top .hb-title.hb-home:focus-visible{outline:2px solid #ffc928;outline-offset:3px;border-radius:6px}
 .atlas-top .hb-info{flex:1;min-width:0;display:flex;align-items:center;gap:8px;overflow:hidden;white-space:nowrap;font:700 13px 'Zen Maru Gothic',sans-serif;color:#6a7088}
 .atlas-top .hb-info b{color:#2b3044}
 .atlas-top .hb-info .hb-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:#fff;border:2px solid #efe3c8}
@@ -193,6 +194,22 @@ function init(o) {
   const fns = [];
   const mq = window.matchMedia(o.media || MQ);
   const portal = document.documentElement.classList.contains('atlas-skin');   // portal version: use the portal's top bar
+  // (2026-11-12) the full version: the game's name beside the portal's logo takes you back to the game's own home — the page as it
+  // opens (what it shows right after launch); a live online game asks first
+  if (portal) {
+    slotT.classList.add('hb-home'); slotT.setAttribute('role', 'link'); slotT.tabIndex = 0;
+    const HL = { ja: 'このゲームのホームへ', en: "This game's home", zh: '回到本游戏首页', 'zh-TW': '回到本遊戲首頁', ko: '이 게임의 홈으로', es: 'Inicio de este juego', fr: 'Accueil de ce jeu', pt: 'Início deste jogo', de: 'Start dieses Spiels', ru: 'Начало этой игры', tr: 'Bu oyunun ana ekranı', id: 'Beranda game ini', hi: 'इस खेल का होम', ar: 'الصفحة الرئيسية لهذه اللعبة' };
+    const QL = { ja: 'オンライン対局中です。ホームに戻りますか？', en: 'An online game is in progress. Go back to the home screen?' };
+    const lg = () => { const l = (document.getElementById('langSel') || {}).value || document.documentElement.lang || 'ja'; return /^zh-(tw|hk|mo|hant)/i.test(l) ? 'zh-TW' : HL[l] ? l : String(l).slice(0, 2); };
+    const goHome = () => {
+      if (document.body.classList.contains('in-online') && !confirm(QL[lg()] || QL.en)) return;
+      location.href = location.pathname + location.search;
+    };
+    slotT.addEventListener('click', goHome);
+    slotT.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goHome(); } });
+    const tip = () => { const t = HL[lg()] || HL.en; slotT.title = t; slotT.setAttribute('aria-label', t); };
+    tip(); const ls = document.getElementById('langSel'); if (ls) ls.addEventListener('change', () => setTimeout(tip, 30));
+  }
   let on = null, host = null;
   function portalHost() {
     if (host && host.isConnected) return host;
