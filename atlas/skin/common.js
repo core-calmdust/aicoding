@@ -49,6 +49,9 @@
     // the floor stays put while the online dock is open (or opening / closing): the board moves and shrinks over it, the
     // table does not (its grain followed the board's place and size before) — repainted again only for a new window size
     // (and once the dock has been opened, also after it is closed again: the closed layout may come back a few px different)
+    const todTint = () => { let v = 'auto'; try { v = T3.timeOfDayPick ? T3.timeOfDayPick() : 'auto'; } catch (e) {}
+      if (v === 'auto') { const h = new Date().getHours(); v = h >= 5 && h < 10 ? 'morning' : h >= 10 && h < 16 ? 'day' : h >= 16 && h < 19 ? 'evening' : 'night'; }
+      return { morning: 'rgba(255,196,130,.16)', day: 'rgba(0,0,0,.05)', evening: 'rgba(196,84,30,.32)', night: 'rgba(8,16,52,.6)' }[v] || 'rgba(0,0,0,.05)'; };
     let floorVP = '', floorHeld = false;
     function paintFloor(force) {
       try {
@@ -68,7 +71,8 @@
         const fk = k + ':' + (F.img.__v || 1);   // (the tatami is redrawn from a photo once loaded: a new picture)
         if (!floorURL[fk]) floorURL[fk] = F.img.toDataURL('image/jpeg', .86);
         const over = F.over ? F.over + ',' : '', n = F.over ? (() => { let d = 0, c = 1; for (const ch of F.over) { if (ch === '(') d++; else if (ch === ')') d--; else if (ch === ',' && !d) c++; } return c; })() : 0, rep = (v) => Array(n).fill(v).join(', ') + (n ? ', ' : '');
-        de.setProperty('background-image', `${over}linear-gradient(rgba(0,0,0,.05),rgba(0,0,0,.05)),url("${floorURL[fk]}")`);
+        const tint = todTint();   // 時間帯 (2026-11-13): the floor tinted morning / day / evening / night (the board itself stays lit as by day)
+        de.setProperty('background-image', `${over}linear-gradient(${tint},${tint}),url("${floorURL[fk]}")`);
         de.setProperty('background-size', `${rep('100% 100%')}auto, ${Math.round(F.w * unitPx)}px ${Math.round(F.h * unitPx)}px`);
         de.setProperty('background-repeat', `${rep('no-repeat')}repeat, repeat`); de.setProperty('background-attachment', `${rep('fixed')}scroll, scroll`);
         const r = bRect(boardDom);   // the tile grid is centred on the board, like the 3D floor
@@ -781,7 +785,7 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
     f.addEventListener('click', e => {
       const p = e.target.closest('[data-k]'), q = e.target.closest('[data-b]');
       if (p) { e.stopPropagation(); X.setTable(+p.dataset.k); } else if (q) { e.stopPropagation(); X.setBright(+q.dataset.b); }
-      const tq = e.target.closest('[data-t]'); if (tq && X.setTimeOfDay) { e.stopPropagation(); X.setTimeOfDay(tq.dataset.t); paint(); }
+      const tq = e.target.closest('[data-t]'); if (tq && X.setTimeOfDay) { e.stopPropagation(); X.setTimeOfDay(tq.dataset.t); paint(); try { dispatchEvent(new CustomEvent('atlas-table', { detail: {} })); } catch (err) {} }   // (the page floor follows)
     });
     addEventListener('atlas-table', paint);
     addEventListener('storage', e => { if (e.key === 'atlas-table') X.setTable(+e.newValue || 0); else if (e.key === 'atlas-bright2') X.setBright(+e.newValue); });
