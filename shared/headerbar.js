@@ -110,8 +110,14 @@ body.hb-on{padding-top:${H}px}
 .atlas-top .hb-info .hb-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:#fff;border:2px solid #efe3c8}
 html.atlas-skin .atlas-top .hb-menu{flex:none;display:flex!important;align-items:center;gap:6px;margin:0 6px 0 0!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;width:auto!important;height:auto!important}
 html.atlas-skin .atlas-top .hb-menu::before,html.atlas-skin .atlas-top .hb-menu::after,.hb .hb-menu::before,.hb .hb-menu::after{display:none!important}   /* (the card's inner ring — ur / senet .card::before, inset 3px — drew a short box across the 40px buttons) */
-html.atlas-skin .atlas-top .hb-menu > *{flex:none!important;display:inline-flex;flex-direction:row!important;align-items:center;justify-content:center;min-width:0!important;line-height:1!important;width:auto!important;height:40px!important;margin:0!important;padding:0 13px!important;border-radius:99px!important;font-size:13.5px!important;gap:6px;white-space:nowrap}
-html.atlas-skin .atlas-top .hb-menu > * svg{width:17px!important;height:17px!important;margin:0!important}
+html.atlas-skin .atlas-top .hb-menu > *{flex:none!important;display:inline-flex;flex-direction:row!important;align-items:center;justify-content:center;min-width:0!important;line-height:1!important;width:auto!important;height:40px!important;margin:0!important;padding:0 13px!important;border-radius:99px!important;font-size:15px!important;gap:7px;white-space:nowrap}
+/* (2026-11-12) the look of the portal's own tabs (atlas/index.html .tab) — :not(#_) outweighs each game's own button rules (.card.controls .btn …): no box — an icon and a bold label in the muted ink, a white pill on hover, the navy pill while pressed */
+html.atlas-skin .atlas-top .hb-menu:not(#_) > *{background:transparent!important;border:0!important;box-shadow:none!important;color:#6a7088!important;font-weight:900!important;transition:background .15s,color .15s}
+html.atlas-skin .atlas-top .hb-menu:not(#_) > * *{color:inherit!important}
+html.atlas-skin .atlas-top .hb-menu:not(#_) > *:not(:disabled):hover{background:#fff!important;color:#2b3044!important}
+html.atlas-skin .atlas-top .hb-menu:not(#_) > *:not(:disabled):active,html.atlas-skin .atlas-top .hb-menu:not(#_) > :is(.on,.sel,[aria-pressed=true],[aria-selected=true]){background:#2b3044!important;color:#fff!important;box-shadow:0 3px 0 #161a28!important}
+html.atlas-skin .atlas-top .hb-menu:not(#_) > *:disabled,html.atlas-skin .atlas-top .hb-menu:not(#_) > .disabled{opacity:.4!important;background:transparent!important}
+html.atlas-skin .atlas-top .hb-menu > * svg{width:19px!important;height:19px!important;margin:0!important}
 html.atlas-skin .atlas-top .hb-menu > * span{margin:0!important}
 @media (max-width: 1280px){html.atlas-skin .atlas-top .hb-menu > * span{display:none}html.atlas-skin .atlas-top .hb-menu > *{padding:0 11px!important}}
 body.hb-atlas .atlas-top .hb-info{display:none!important}   /* portal: title only, no game info */
