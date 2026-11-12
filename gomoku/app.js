@@ -118,7 +118,10 @@ function save() {
 
 // ====================================================================== workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=20261111p1-pro1-mt4';
+// (2026-11-12) the search is C (core.c → core_simd.wasm / core.wasm in the workers, core_mt.wasm for the threads); ?nowasm on the
+// page: the JavaScript search (engine.js) everywhere, also for the threads (engine_mt.wasm, mt.c)
+const NOWASM = /[?&]nowasm\b/.test(location.search);
+const ENGINE_URL = 'engine.js?v=20261112c1' + (NOWASM ? '&nowasm=1' : '');
 function makeWorker() {
   const w = new Worker(ENGINE_URL); w.jobs = new Map();
   w.onmessage = e => { const m = e.data, j = w.jobs.get(m.id); if (!j) return; if (m.type === 'progress') { j.onProgress && j.onProgress(m); return; } w.jobs.delete(m.id); noteNps(m.nodes, performance.now() - j.t0); j.resolve(m); };
@@ -133,17 +136,20 @@ function noteNps(nodes, ms) {
   const el = document.getElementById('infoLine'); if (el && el.dataset.base !== undefined) el.textContent = el.dataset.base + npsText();
 }
 let aiW = makeWorker(), anaW = makeWorker(), coachW = null;
-// multi-threaded search (shared/mtengine.js; common rule 2026-11-08「本編のマルチスレッド」): the search is JavaScript (engine.js),
-// the threads share one transposition table on the shared memory of engine_mt.wasm (mt.c). The analysis (rootList: analysis,
-// hints, the coach's grading, the review box) shares out its candidate moves among the threads at every depth; a move search
-// (the coach's deeper pass, PRO's thread count) is Lazy SMP. Analysis, hints, the
-// coach (its quick grading and its deeper pass), the review box and PRO's thread count go to the pool when it is free (the lead
-// keeps the job's own limits; the helpers fill the table, so it reads deeper in the same time / positions). The AI's levels are
-// decided by positions per move and stay on the one-thread workers (rated games too).
-const MTP = window.MTEngine ? MTEngine.use({
+// multi-threaded search (shared/mtengine.js; common rule 2026-11-08「本編のマルチスレッド」, Praline): 2026-11-12 the C search on
+// core_mt.wasm — the lead engine.js?…&mt=1, the helpers mt-helper.js; Young Brothers Wait with busy marks (shared/praline/) at the
+// nodes of a move search and over the candidates of the analysis (rootList: analysis, hints, the coach's grading, the review box).
+// Analysis, hints, the coach (its quick grading and its deeper pass), the review box and PRO's thread count go to the pool when it
+// is free. The AI's levels are decided by positions per move and stay on the one-thread workers (rated games too).
+// ?nowasm: the JavaScript search with the shared table and split points of engine_mt.wasm (mt.c), helpers engine.js?…&mt=2.
+const MTP = window.MTEngine ? MTEngine.use(NOWASM ? {
   wasm: 'engine_mt.wasm?v=3', lead: ENGINE_URL + '&mt=1', helper: ENGINE_URL + '&mt=2', slot: 1 << 20, initial: 512, maximum: 4096,   // slot: a thread's (tiny) wasm stack; maximum = engine_mt.wasm's (256 MiB)
   imports: mem => ({ env: { memory: mem } }),
-  help: m => (m.type === 'think' || m.type === 'analyze' || m.type === 'cands') ? { rule: m.rule, start: m.start, moves: m.moves || [], list: m.type !== 'think' } : null,   // (list: the candidates of the analysis shared among the threads; think: Lazy SMP)
+  help: m => (m.type === 'think' || m.type === 'analyze' || m.type === 'cands') ? { rule: m.rule, start: m.start, moves: m.moves || [], list: m.type !== 'think' } : null,
+} : {
+  wasm: 'core_mt.wasm?v=1', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=1', slot: 2 << 20, initial: 384, maximum: 16384,   // slot: a thread's stack (its search state: 4 MB more each, memory.grow); maximum = core_mt.wasm's (1 GiB)
+  imports: mem => ({ env: { memory: mem, now: () => performance.now(), progress: () => {} } }),
+  help: m => (m.type === 'think' || m.type === 'analyze' || m.type === 'cands') ? {} : null,
 }) : null;
 function mtWants(which, msg) {
   if (msg.type === 'analyze' || msg.type === 'cands') return true;
