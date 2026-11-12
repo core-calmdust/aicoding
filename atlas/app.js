@@ -1840,6 +1840,8 @@
   function rebuildTable(g) {
     const m = $('bvPlMenu'); if (m && !m.hidden) placeInto(m);
     if (!glOK || !$('bv').classList.contains('on') || $('bv').classList.contains('playing')) return;
+    const run = () => { try { Table3D.show(g.id, null, { still: true }); Table3D.play(false); } catch (e) { console.warn(e); } };
+    if (Table3D.swap) { Table3D.swap(run); return; }   // (2026-11-12: the old picture stays until the new board is drawn — no blank screen)
     const gl = $('gl'); clearTimeout(plFade); gl.style.transition = 'opacity .12s ease-out'; gl.style.opacity = '0';
     plFade = setTimeout(() => { try { Table3D.show(g.id, null, { still: true }); Table3D.play(false); } catch (e) { console.warn(e); } requestAnimationFrame(() => requestAnimationFrame(() => { gl.style.transition = 'opacity .24s ease-in'; gl.style.opacity = ''; })); }, 130);
   }
@@ -1849,6 +1851,7 @@
     const X = P3(); if (!X || k === X.table()) return;
     const gl = $('gl'), vis = glOK && $('bv').classList.contains('on');
     if (!vis) { X.setTable(k); return; }
+    if (X.swap) { X.swap(() => X.setTable(k)); return; }   // (2026-11-12: under the old picture, as for the boards)
     clearTimeout(plFade); gl.style.transition = 'opacity .16s ease-out'; gl.style.opacity = '0';
     plFade = setTimeout(() => { try { X.setTable(k); } catch (e) { console.warn(e); } requestAnimationFrame(() => requestAnimationFrame(() => { gl.style.transition = 'opacity .28s ease-in'; gl.style.opacity = ''; })); }, 170);
   }
