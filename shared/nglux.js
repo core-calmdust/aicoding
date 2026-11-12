@@ -129,18 +129,28 @@ function init() {
   modal.classList.add('ngl');
   const st = document.createElement('style'); st.id = 'nglCss'; st.textContent = CSS; document.head.appendChild(st);
   // (2026-11-13, every game) the mode row is for games only: レッスン / 詰め… / パズル leave it (they have their own buttons in the
-  // menu band), and オンライン opens the online room screen at once instead of being a mode to set up here
+  // menu band); オンライン shows the online room screen inside this dialog (below)
   { const sm = modal.querySelector('#segMode');
     if (sm) {
       const gone = sm.querySelectorAll(':scope > [data-v=lesson], :scope > [data-v=puzzle], :scope > [data-v=tsume]');
       gone.forEach(b => b.classList.add('ngl-gone'));
       st.textContent += '#segMode > .ngl-gone{display:none!important}';
       if (gone.length) new MutationObserver(() => { if (!ov.classList.contains('show')) return; const sel = sm.querySelector(':scope > .ngl-gone:is(.sel,.on,.active,[aria-pressed=true])'), ai = sm.querySelector(':scope > [data-v=ai]'); if (sel && ai) ai.click(); }).observe(ov, { attributes: true, attributeFilter: ['class'] });
-      const on = sm.querySelector(':scope > [data-v=online]');
-      if (on) on.addEventListener('click', () => setTimeout(() => {
-        if (typeof window.openOnline === 'function') { if (typeof window.hideOverlay === 'function') window.hideOverlay('#newOverlay'); else ov.classList.remove('show'); window.openOnline(); }
-        else { const b = document.getElementById('btnStart'); if (b) b.click(); }
-      }, 0));
+      // オンライン: the online room screen (#olBody of #onlineOverlay) is shown inside this dialog, in place of the panels (2026-11-13)
+      const on = sm.querySelector(':scope > [data-v=online]'), olo = document.getElementById('onlineOverlay'), olb = document.getElementById('olBody');
+      if (on && olo && olb && typeof window.openOnline === 'function') {
+        st.textContent += '#onlineOverlay.ngl-inline:not(#_){display:none!important}html body:not(#_):not(#_) #newOverlay .modal.ngl-ol:not(#_) :is(.ng-cols,.ng-col,#btnStart):not(#_):not(#_){display:none!important}#newOverlay .modal:not(.ngl-ol) .ngl-online{display:none!important}#newOverlay .ngl-online{flex:1 1 auto;min-height:0;overflow-y:auto;margin:6px 0 4px;padding:4px 2px}';
+        const home = olb.parentNode, next = olb.nextSibling, box = document.createElement('div'); box.className = 'ngl-online';
+        let inl = false, quiet = false;
+        const hideNew = () => { if (typeof window.hideOverlay === 'function') window.hideOverlay('#newOverlay'); else ov.classList.remove('show'); };
+        const enter = () => { if (inl) return; inl = true; const mf = sm.closest('.field') || sm; mf.after(box); box.appendChild(olb); olo.classList.add('ngl-inline'); modal.classList.add('ngl-ol'); try { window.openOnline(); } catch (e) { console.warn(e); } };
+        const leave = closeOl => { if (!inl) return; inl = false; modal.classList.remove('ngl-ol'); home.insertBefore(olb, next && next.parentNode === home ? next : null); olo.classList.remove('ngl-inline');
+          if (closeOl && olo.classList.contains('show')) { quiet = true; const c = document.getElementById('olClose'); try { if (c) c.click(); else olo.classList.remove('show'); } finally { quiet = false; } } };
+        sm.addEventListener('click', e => { const b = e.target.closest('button'); if (!b || b.parentNode !== sm) return; setTimeout(() => { if (b.dataset.v === 'online') enter(); else leave(true); }, 0); });
+        // the room screen closed itself (an online game started, or its own close): the dialog goes too
+        new MutationObserver(() => { if (inl && !quiet && !olo.classList.contains('show')) { leave(false); hideNew(); } }).observe(olo, { attributes: true, attributeFilter: ['class'] });
+        new MutationObserver(() => { if (!ov.classList.contains('show')) leave(true); else if (!inl && on.matches('.sel,.on,[aria-pressed=true]')) enter(); }).observe(ov, { attributes: true, attributeFilter: ['class'] });
+      }
     } }
   // the title's serif for the level name
   try { const h2 = modal.querySelector('h2'); if (h2) modal.style.setProperty('--ngl-serif', getComputedStyle(h2).fontFamily); modal.style.setProperty('--ngl-sans', getComputedStyle(modal).fontFamily); } catch (e) {}
