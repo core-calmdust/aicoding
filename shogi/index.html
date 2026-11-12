@@ -139,7 +139,7 @@ body.skin-kaya .board.tzc .sq{border-color:rgba(70,43,17,.72)}body.skin-metal .b
 .pc.img .k{clip-path:none;background:none!important;width:100%;height:100%;padding:0;transform:none!important}
 .pc.img .k img{width:112%;height:112%;margin:-6%;object-fit:contain;pointer-events:none;user-select:none}
 /* the variants' larger squares (5五将棋…): the picture pieces a little nearer their own side's line, as on a real board (2026-11-12) */
-body.variant #board .pc.img:not(.g){translate:0 4%}body.variant #board .pc.img.g{translate:0 -4%}
+body.variant #board .pc.img:not([data-up="1"]){translate:0 4%}body.variant #board .pc.img[data-up="1"]{translate:0 -4%}
 .pc.img{filter:none}
 /* the image piece sets: a faint wood grain on the face, cut to the piece's own outline (the image as a mask), placed differently for
    every piece kind and side so no two kinds look alike (2026-11-10) */
@@ -2242,6 +2242,7 @@ function pieceEl(code, promoted) {
   const tp = E.typeOf(code), col = E.colorOf(code);
   const el = document.createElement('div');
   el.className = 'pc s' + SIZE[tp] + (tp > OU ? ' p' : '') + ((col === 1) !== flip ? ' g' : '');
+  el.dataset.up = (col === 1) !== flip ? '1' : '';   // (the far side's piece — kept when a skin or a piece set clears .g)
   const k = document.createElement('div'); k.className = 'k';
   const one = tp === OU ? (col ? '王' : '玉') : KANJI[tp];
   if (PIECE_SETS[settings.pieces]) {
@@ -6576,11 +6577,11 @@ if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStar
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=56l29'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=56l30'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/img/tex/baked.js?v=1')).then(() => load('../atlas/table3d.js?v=156')).then(() => load('../atlas/tables3d.js?v=104')).then(() => load('../atlas/skin/common.js?v=79')).then(() => load('../atlas/models/shogi.js?v=78')).then(() => load('../atlas/skin/shogi.js?v=64'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/img/tex/baked.js?v=1')).then(() => load('../atlas/table3d.js?v=156')).then(() => load('../atlas/tables3d.js?v=104')).then(() => load('../atlas/skin/common.js?v=80')).then(() => load('../atlas/models/shogi.js?v=79')).then(() => load('../atlas/skin/shogi.js?v=67'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>

@@ -38,7 +38,7 @@
     const box = () => { let x = 0, y = 0, e = boardDom; while (e && e !== holder) { x += e.offsetLeft; y += e.offsetTop; e = e.offsetParent; } return { x, y, w: boardDom.offsetWidth, h: boardDom.offsetHeight }; };
     const placeHost = () => {   // the canvas covers the board with a margin for the bezel / legs and the shadow
       const b = box(), r = { width: b.w, height: b.h }; if (!b.w) return;
-      const m = Math.round(Math.max(b.w, b.h) * (o.margin ?? .3));   // o.margin: a flat board with a short shadow needs less canvas (fewer pixels to draw)
+      const m = Math.round(Math.max(b.w, b.h) * (typeof o.margin === 'function' ? o.margin() : o.margin ?? .3));   // o.margin: a flat board with a short shadow needs less canvas (fewer pixels to draw)
       Object.assign(host.style, { left: (b.x - m) + 'px', top: (b.y - m) + 'px', width: (b.w + 2 * m) + 'px', height: (b.h + 2 * m) + 'px' });
       if (TILT) boardDom.style.transform = `perspective(${Math.round(b.h * PERSP)}px) rotateX(${TILT}deg)`;   // (untilted: the board's transform is left to the game — senet's phone focus moves it)
       if (o.units) unitPx = r.height / o.units;
@@ -513,7 +513,7 @@
     const b = box();
     if (document.documentElement.classList.contains('atlas-2d') || !host.getClientRects().length || !b.w) { turnRaf = 0; clear(); turnRest(); document.documentElement.classList.remove('atlas-turning'); return; }   // (the 2D board: no turn, the 3D one rests in place for later)
     const front = o.turn === 'y', Y1 = holdYaw(), d = Y1 ? -1 : 1;   // yaw = Y1 + d·a while a goes π → 0
-    const m = Math.round(Math.max(b.w, b.h) * (o.margin ?? .3));
+    const m = Math.round(Math.max(b.w, b.h) * (typeof o.margin === 'function' ? o.margin() : o.margin ?? .3));
     let ow = b.w, oh = b.h;   // the 3D board's outer size on screen (its frame round the field)
     try { const r = boardDom.getBoundingClientRect(), q = o.outer && o.outer(r); if (q && q.height > r.height) { ow = b.w + (q.height - r.height) * b.w / r.width; oh = b.h + (q.height - r.height) * b.h / r.height; } } catch (e) {}
     // the room it may take while turning: the canvas, and the window below the top bar (a board that fills the screen zooms out a little more)
