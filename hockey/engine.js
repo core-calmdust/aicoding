@@ -313,7 +313,9 @@
     return { tx: p.x * f + mem.err * .3, ty: gy + (p.y - gy) * .15 };
   }
 
-  const API = { DIM, MODES, BOARDS, ITEMS, PORTAL, PR, BUMPERS, BR, BAR, newMatch, step, serve, aiTarget, aiSkill, rng, has };
+  // a target clamped to the bounds of a side's mallet (its own half, inside the walls) — the relative mouse / touchpad control
+  function clampXY(s, side, x, y) { const m = { r: s.mal[side].r, tx: x, ty: y }; clampMal(m, side); return { tx: m.tx, ty: m.ty }; }
+  const API = { clampXY, DIM, MODES, BOARDS, ITEMS, PORTAL, PR, BUMPERS, BR, BAR, newMatch, step, serve, aiTarget, aiSkill, rng, has };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   root.HockeyEngine = API;
 })(typeof self !== 'undefined' ? self : this);
