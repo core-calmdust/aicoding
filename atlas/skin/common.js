@@ -429,7 +429,7 @@
     let was2d = de.classList.contains('atlas-2d');
     new MutationObserver(() => { const is2d = de.classList.contains('atlas-2d'); if (is2d !== was2d) { was2d = is2d; K = is2d && P.fit2d ? (K ? k2(K) : k2d()) : null; refits = 0; usedK = []; checks = 0; if (!is2d) { setTimeout(remeasure, 60); setTimeout(ext(remeasure), 700); } } laterX(); }).observe(de, { attributes: true, attributeFilter: ['class'] });
     new MutationObserver(() => { laterX(); setTimeout(laterX, 320); setTimeout(laterX, 700); }).observe(body, { attributes: true, attributeFilter: ['class'] });   // (the online dock opens / closes with a .25s transition: once more at its end)
-    { const dk = document.getElementById('dock') || document.querySelector('.dock'); if (dk) dk.addEventListener('transitionend', laterX); }
+    { const dk = document.getElementById('dock') || document.querySelector('.dock'); if (dk) { dk.addEventListener('transitionend', laterX); if (window.ResizeObserver) new ResizeObserver(laterX).observe(dk); } }   // (and its size: a dock opened while the page was still loading — the portal's オンライン — left the board laid out for the closed dock, behind the open one, 2026-11-12)
     if (document.fonts) document.fonts.ready.then(laterX);
     [800, 2000, 4500].forEach(ms => setTimeout(ext(remeasure), ms));
     setInterval(() => { if (!document.hidden && innerWidth + 'x' + innerHeight !== fitKey) laterX(); }, 700);   // a missed resize (full screen, zoom) never leaves the old size
