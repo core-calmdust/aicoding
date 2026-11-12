@@ -277,6 +277,9 @@
     else if (L.stand) m = M({ map: imgTex('stand-' + L.stand), roughness: L.gloss ? .24 : .5, bumpScale: .001 });
     else m = M({ map: kayaPlain('kayaStand'), roughness: .55, bumpScale: .001 });
     m.color.multiply(new (T().Color)(STAND_TONE).convertSRGBToLinear());
+    // 蒔絵 / 螺鈿 (2026-11-12, the user): the picture on the plate's top only — its thin edges, the base and the column plain lacquer
+    // (the picture squeezed onto them read as stray thin inlays)
+    if (L.lacq || L.raden) m.userData.plain = M({ color: L.raden ? 0x4a0d0b : 0x120d0a, roughness: .16, clearcoat: .9, clearcoatRoughness: .06 });
     return (standMs[look] = m);
   }
   // cr {c0, r0} (詰将棋's close-up, shogi/index.html tzWindow): an n×n window of the 9×9 board — the stars where they fall inside it
@@ -433,15 +436,15 @@
   /* ---------- 駒台: one pedestal — square top plate, waisted column, stepped square base on the floor ---------- */
   let colMat = null;
   function komadai(mat, KH) {
-    const TT = T(), g = new TT.Group();
-    g.add(mesh(RB(2.9, .26, 3.55, .05, 2), mat, 0, KH - .13, 0));                                  // top plate (larger with the larger pieces in hand, 2026-11-11)
-    g.add(mesh(RB(2.3, .32, 2.7, .08, 2), mat, 0, .16, 0));                                        // base
-    g.add(mesh(RB(1.5, .24, 1.8, .06, 2), mat, 0, .32 + .12, 0));                                   // step
+    const TT = T(), g = new TT.Group(), pm = (mat && mat.userData && mat.userData.plain) || mat;
+    g.add(mesh(RB(2.9, .26, 3.55, .05, 2), pm === mat ? mat : [pm, pm, mat, pm, pm, pm], 0, KH - .13, 0));                                  // top plate (larger with the larger pieces in hand, 2026-11-11)
+    g.add(mesh(RB(2.3, .32, 2.7, .08, 2), pm, 0, .16, 0));                                        // base
+    g.add(mesh(RB(1.5, .24, 1.8, .06, 2), pm, 0, .32 + .12, 0));                                   // step
     const H = KH - .26 - .56, pts = [];
     for (let i = 0; i <= 12; i++) { const t = i / 12, w = .26 + .16 * Math.pow(Math.abs(t - .55) / .55, 2); pts.push(new TT.Vector2(w, t * H)); }
     const col = new TT.LatheGeometry(pts, 4); col.rotateY(Math.PI / 4);                             // square, waisted
     // the lathe wraps the texture round the column: use a soft, low-contrast grain there so it doesn't band
-    const cm = mat;
+    const cm = pm;
     const c = mesh(col, cm, 0, .56, 0); c.scale.set(1, 1, 1.15); g.add(c);
     return g;
   }
