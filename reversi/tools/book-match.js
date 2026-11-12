@@ -67,7 +67,15 @@ function report() {
 
 (async () => {
   if (!fa || !fb || !pairs || !out) { console.log('使い方: node book-match.js <定石A> <定石B> <組数> <out.jsonl> [レベル=15] [1手のms] [--threads N]'); return; }
-  const done = new Set(fs.existsSync(out) ? fs.readFileSync(out, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l).g) : []);
+  // the setting's fingerprint (both books' and weights' contents, level, time): a result file made with another setting is not resumed
+  const crypto = require('crypto'), h = f => f ? crypto.createHash('sha1').update(fs.readFileSync(path.resolve(f))).digest('hex').slice(0, 10) : '-';
+  const tag = [h(fa), h(fb), h(opt.wa), h(opt.wb), level, timeMs || '-'].join('/');
+  const old = fs.existsSync(out) ? fs.readFileSync(out, 'utf8').split('\n').filter(Boolean).map(JSON.parse) : [];
+  if (old.some(r => r.tag !== undefined && r.tag !== tag) || (old.length && old.every(r => r.tag === undefined) && !opt.resume)) {
+    console.log(`${out} には別の設定（定石・評価関数・レベルのどれか）か、目印のない前の版の結果が入っています。別のファイル名にするか、消してからやり直してください（目印のない前の結果を続けるときは --resume 1）。`);
+    return;
+  }
+  const done = new Set(old.map(r => r.g));
   const todo = []; for (let g = 0; g < pairs * 2; g++) if (!done.has(g)) todo.push(g);
   const threads = Math.max(1, Math.min(todo.length, +(opt.threads || 1)));
   const t0 = Date.now(); let fin = 0;
@@ -82,7 +90,7 @@ function report() {
     for (const w of pool) {
       w.on('message', r => {
         busy--; fin++;
-        fs.appendFileSync(out, JSON.stringify(r) + '\n');
+        r.tag = tag; fs.appendFileSync(out, JSON.stringify(r) + '\n');
         const el = (Date.now() - t0) / 1000;
         process.stdout.write(`\r${fin}/${todo.length} 局  残り約 ${Math.round(el / fin * (todo.length - fin) / 60)} 分   `);
         feed(w);
