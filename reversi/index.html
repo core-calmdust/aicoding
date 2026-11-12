@@ -1394,6 +1394,7 @@ html:not(.atlas-skin) #lessonList .lx-banner .tx b{font-size:21px}
 html:not(.atlas-skin) #lessonList .lx-banner .tx small, html:not(.atlas-skin) #lessonList .lx-banner .tx span{font-size:13.5px}
 html:not(.atlas-skin) #lessonList .lx-tabs button{font-size:14.5px}
 html:not(.atlas-skin) #lsListDesc{font-size:14px!important}
+#infoLine{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}   /* (one line: the AI's reading now sits here too, 2026-11-13) */
 </style>
 <style>
 /* phones held upright (narrow touch screens): the board is sized from the width only, the same side gutter (10px) in every game —
@@ -1921,7 +1922,7 @@ const npsText = () => lastNps ? '  ·  ' + (lastNps >= 1e6 ? (lastNps / 1e6).toF
 function noteNps(m) {
   if (!(m.nodes > 50000 && m.ms > 20)) return;
   lastNps = m.nodes / m.ms * 1000;
-  const el = $('#infoLine'); if (el && el.dataset.base !== undefined) el.textContent = el.dataset.base + npsText();
+  paintInfoLine();
 }
 function aiMsg(e) {
   const m = e.data;
@@ -2304,7 +2305,7 @@ function renderInfo() {
   if (reviewing) $('#reviewText').textContent = t('review.viewing', { n: cur });
   const [tb, tw] = counts(positions[positions.length - 1].cells);
   const opn = gameOpening();
-  { const il = $('#infoLine'); il.dataset.base = `${t('info.moves', { n: positions.length - 1 })}  ·  ${t('info.empty', { n: 64 - tb - tw })}` + (opn ? `  ·  ${t('info.opening', { n: opn })}` : ''); il.textContent = il.dataset.base + npsText(); }
+  { const il = $('#infoLine'); il.dataset.base = `${t('info.moves', { n: positions.length - 1 })}  ·  ${t('info.empty', { n: 64 - tb - tw })}` + (opn ? `  ·  ${t('info.opening', { n: opn })}` : ''); paintInfoLine(); }
   renderReview();
   if (window.ReversiCoach) ReversiCoach.render();
 }
@@ -2417,10 +2418,16 @@ function update(animInfo) {
   schedule(animInfo);
 }
 
+// the AI's reading (考え中 / 深さ N ±x) goes to the line under the 棋譜 box, not under the player's name — the players' row no
+// longer grows and shrinks with it (2026-11-13). The player tile keeps its 'thinking' pulse.
+var aiInfo = { 1: '', 2: '' };   // (var / function: safe before this line runs)
+function aiInfoText() { return aiInfo ? [BLACK, WHITE].filter(c => aiInfo[c]).map(c => (c === BLACK ? '● ' : '○ ') + aiInfo[c]).join('  ') : ''; }
+function paintInfoLine() { const il = $('#infoLine'); if (il && il.dataset.base !== undefined) { const a = aiInfoText(); il.textContent = il.dataset.base + npsText() + (a ? '  ·  ' + a : ''); } }
 function setStatus(color, text, thinking) {
   const el = color === BLACK ? $('#pBlack') : $('#pWhite');
   el.classList.toggle('thinking', !!thinking);
-  (color === BLACK ? $('#statusBlack') : $('#statusWhite')).textContent = text || '';
+  (color === BLACK ? $('#statusBlack') : $('#statusWhite')).textContent = '';
+  aiInfo[color] = text || ''; paintInfoLine();
 }
 
 async function schedule(animInfo) {
