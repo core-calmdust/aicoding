@@ -128,6 +128,20 @@ function init() {
   if (!modal || modal.classList.contains('ngl')) return;
   modal.classList.add('ngl');
   const st = document.createElement('style'); st.id = 'nglCss'; st.textContent = CSS; document.head.appendChild(st);
+  // (2026-11-13, every game) the mode row is for games only: レッスン / 詰め… / パズル leave it (they have their own buttons in the
+  // menu band), and オンライン opens the online room screen at once instead of being a mode to set up here
+  { const sm = modal.querySelector('#segMode');
+    if (sm) {
+      const gone = sm.querySelectorAll(':scope > [data-v=lesson], :scope > [data-v=puzzle], :scope > [data-v=tsume]');
+      gone.forEach(b => b.classList.add('ngl-gone'));
+      st.textContent += '#segMode > .ngl-gone{display:none!important}';
+      if (gone.length) new MutationObserver(() => { if (!ov.classList.contains('show')) return; const sel = sm.querySelector(':scope > .ngl-gone:is(.sel,.on,.active,[aria-pressed=true])'), ai = sm.querySelector(':scope > [data-v=ai]'); if (sel && ai) ai.click(); }).observe(ov, { attributes: true, attributeFilter: ['class'] });
+      const on = sm.querySelector(':scope > [data-v=online]');
+      if (on) on.addEventListener('click', () => setTimeout(() => {
+        if (typeof window.openOnline === 'function') { if (typeof window.hideOverlay === 'function') window.hideOverlay('#newOverlay'); else ov.classList.remove('show'); window.openOnline(); }
+        else { const b = document.getElementById('btnStart'); if (b) b.click(); }
+      }, 0));
+    } }
   // the title's serif for the level name
   try { const h2 = modal.querySelector('h2'); if (h2) modal.style.setProperty('--ngl-serif', getComputedStyle(h2).fontFamily); modal.style.setProperty('--ngl-sans', getComputedStyle(modal).fontFamily); } catch (e) {}
   if (!modal.querySelector('.ng-cols, .ng-col')) {   // a dialog without columns (dots): its settings after the mode row go into two
