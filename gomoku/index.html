@@ -441,7 +441,7 @@ body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
 /* coach (coach.js + shared/coachkit.js) */
 #coachCard.hidden{display:none}
 body.in-lesson #coachCard:not(.ck-rest),body.in-puzzle #coachCard:not(.ck-rest),body.rated-live #coachCard:not(.ck-rest){display:none!important}   /* coach.js: .ck-rest = the box says the coach is resting */
-body.in-online #coachCard{display:none!important}
+body.in-online:not(.ol-over) #coachCard{display:none!important}
 .hintlbl.ck-mk b{min-width:1.3em;text-align:center}
 /* board marks: visible on every skin (wood / grain / metal / ink) — each coloured ring or dot carries a dark rim, light marks a dark one
    and dark marks a light one; coach candidates are bright green with a dark rim (common rule) */
@@ -760,10 +760,10 @@ body .info-line{font-size:12.5px}
 /* ---------------------------------------------------------------- online play (ported from the Shogi page) */
 .ol-only{display:none!important}
 body.in-online .ol-only{display:flex!important}
-body.in-online #btnHint, body.in-online #btnAnalyze, body.in-online #btnPaste, body.in-online #btnResAnalyze,
-body.in-online .review-card, body.in-online #infoLine, body.in-online #evalCard .evalrow, body.in-online #evalCard .evalbar, body.in-online #evalCard .graph{display:none!important}
-body.in-online #evalCard{flex:none!important;min-height:0!important}
-body.in-online #evalCard .navbar{margin-top:0}
+body.in-online #btnHint, body.in-online:not(.ol-over) #btnAnalyze, body.in-online #btnPaste, body.in-online #btnResAnalyze,
+body.in-online:not(.ol-over) .review-card, body.in-online #infoLine, body.in-online:not(.ol-over) #evalCard .evalrow, body.in-online:not(.ol-over) #evalCard .evalbar, body.in-online:not(.ol-over) #evalCard .graph{display:none!important}
+body.in-online:not(.ol-over) #evalCard{flex:none!important;min-height:0!important}
+body.in-online:not(.ol-over) #evalCard .navbar{margin-top:0}
 .player .count .ol-clk{font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:-.02em;transition:color .2s}
 .player .count .ol-clk.ol-move{color:var(--accent)}
 .player .count .ol-clk.ol-low{color:var(--red);animation:clkPulse 1s ease-in-out infinite}
@@ -1097,14 +1097,14 @@ body.in-online .coach,body.in-online #btnMistakes{display:none!important}
    are the same height and scroll inside (overrides the older per-layout ratios and the review card's --rvh fit) */
 @media (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
   html.atlas-skin body .side-in:has(> .review-card.show:not(.slim)) > .kifu-card > .info-line{display:none!important}   /* (portal skin: the info line in the kifu box gives its rows to the moves meanwhile) */
-  body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .review-card.show{flex:1 1 0!important;min-height:120px!important;max-height:none!important;overflow-y:auto!important}
-  body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .kifu-card{flex:1 1 0!important;min-height:120px!important;max-height:none!important}
-  body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .kifu-card .kifu{flex:1 1 0!important;min-height:0!important;max-height:none!important;overflow-y:auto!important}
+  body:not(.in-lesson):not(.in-puzzle):not(.in-online:not(.ol-over)):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .review-card.show{flex:1 1 0!important;min-height:120px!important;max-height:none!important;overflow-y:auto!important}
+  body:not(.in-lesson):not(.in-puzzle):not(.in-online:not(.ol-over)):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .kifu-card{flex:1 1 0!important;min-height:120px!important;max-height:none!important}
+  body:not(.in-lesson):not(.in-puzzle):not(.in-online:not(.ol-over)):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .kifu-card .kifu{flex:1 1 0!important;min-height:0!important;max-height:none!important;overflow-y:auto!important}
 }
 @media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
-  body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > :is(.review-card.show, .kifu-card){flex:none!important;height:clamp(220px, 42vh, 380px)!important;min-height:0!important;max-height:none!important}
-  body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .review-card.show{overflow-y:auto!important}
-  body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .kifu-card .kifu{flex:1 1 0!important;min-height:0!important;max-height:none!important;overflow-y:auto!important;overscroll-behavior:auto}
+  body:not(.in-lesson):not(.in-puzzle):not(.in-online:not(.ol-over)):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > :is(.review-card.show, .kifu-card){flex:none!important;height:clamp(220px, 42vh, 380px)!important;min-height:0!important;max-height:none!important}
+  body:not(.in-lesson):not(.in-puzzle):not(.in-online:not(.ol-over)):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .review-card.show{overflow-y:auto!important}
+  body:not(.in-lesson):not(.in-puzzle):not(.in-online:not(.ol-over)):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .kifu-card .kifu{flex:1 1 0!important;min-height:0!important;max-height:none!important;overflow-y:auto!important;overscroll-behavior:auto}
 }
 </style>
 <style>/* lesson passed: the three buttons never wrap their labels; if they don't fit in one row they go to two (2026-10-30) */
@@ -1471,7 +1471,7 @@ body.skin-ink .st.b{background:radial-gradient(circle at 34% 28%,#8a8f98 0%,#3c4
 <script src="coach.js?v=8sq-ls"></script>
 <script src="coach-i18n.js?v=4-l14"></script>
 <script src="../shared/export.js?v=9l14"></script>
-<script src="../shared/mtengine.js?v=8"></script><script>MTEngine.init({ sw: "sw.js?v=1", light: true });</script><script src="../shared/proset.js?v=5t2svhxbf-sp2-pd1"></script><script src="../shared/luxintro.js?v=3"></script><script src="app.js?v=20261112c1lx"></script>
+<script src="../shared/mtengine.js?v=8"></script><script>MTEngine.init({ sw: "sw.js?v=1", light: true });</script><script src="../shared/proset.js?v=5t2svhxbf-sp2-pd1"></script><script src="../shared/luxintro.js?v=3"></script><script src="app.js?v=20261112c1lx1"></script>
 <!-- World Board Game Atlas portal skin: gomoku/?skin=atlas — 3D legged go board (lacquer & gold 沈金 or kaya), guide speech bubbles, portal look (all features kept) -->
 <script>
 (function () {

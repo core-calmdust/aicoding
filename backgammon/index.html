@@ -409,7 +409,7 @@ body.in-lesson .review-card, body.in-puzzle .review-card{display:none!important}
 /* coach (coach.js, shared/coachkit.js) */
 #coachCard.hidden{display:none}
 body.in-lesson #coachCard:not(.ck-rest),body.in-puzzle #coachCard:not(.ck-rest){display:none!important}   /* coach.js: .ck-rest = the box says the coach is resting */
-body.in-online #coachCard,body.rvbox-on #coachCard{display:none!important}
+body.in-online:not(.ol-over) #coachCard,body.rvbox-on #coachCard{display:none!important}
 #coachCard.ck-off .ck-muted{font-size:12px;line-height:1.6}
 #coachCard .ck-rvgo{border:1px solid transparent;border-radius:10px;padding:9px 18px;font:700 13.5px inherit;white-space:nowrap;cursor:pointer;background:linear-gradient(180deg,#d8bb72,#a98a48);color:#1b150a}
 #coachCard .ck-sum span{white-space:normal;max-width:100%}
@@ -1116,9 +1116,9 @@ html[lang=ar] .pz-catdesc, html[lang=ar] .pz-alt{direction:rtl;text-align:right}
   html.atlas-skin body .side-in:has(> .review-card.show:not(.slim)) > .kifu-card > .info-line{display:none!important}   /* (portal skin: the info line in the kifu box gives its rows to the moves meanwhile) */
 }
 @media not all and (hover: hover) and (pointer: fine) and (min-width: 1040px) and (min-aspect-ratio: 3/4){
-  body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > :is(.review-card.show, .kifu-card){flex:none!important;height:clamp(220px, 42vh, 380px)!important;min-height:0!important;max-height:none!important}
-  body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .review-card.show{overflow-y:auto!important}
-  body:not(.in-lesson):not(.in-puzzle):not(.in-online):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .kifu-card .kifu{flex:1 1 0!important;min-height:0!important;max-height:none!important;overflow-y:auto!important;overscroll-behavior:auto}
+  body:not(.in-lesson):not(.in-puzzle):not(.in-online:not(.ol-over)):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > :is(.review-card.show, .kifu-card){flex:none!important;height:clamp(220px, 42vh, 380px)!important;min-height:0!important;max-height:none!important}
+  body:not(.in-lesson):not(.in-puzzle):not(.in-online:not(.ol-over)):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .review-card.show{overflow-y:auto!important}
+  body:not(.in-lesson):not(.in-puzzle):not(.in-online:not(.ol-over)):not(.in-edit) .side-in:has(> .review-card.show:not(.slim)) > .kifu-card .kifu{flex:1 1 0!important;min-height:0!important;max-height:none!important;overflow-y:auto!important;overscroll-behavior:auto}
 }
 
 /* ---------------------------------------------------------------- phone landscape layout (land.js: html.lnd — phone held sideways, or the rotated page)
@@ -1567,7 +1567,7 @@ html.lnd .toast{font-size:13px;padding:9px 16px}
 <script src="mt.js?v=3"></script>
 <script src="../shared/luxintro.js?v=3"></script><script src="app.js?v=20261111c1-lx1"></script>
 <script src="op.js?v=20261021opan-lx1"></script>
-<script src="online-ui.js?v=20261030ck1pnlx"></script>
+<script src="online-ui.js?v=20261030ck1pnlx1"></script>
 <script src="land.js?v=10"></script>
 <!-- World Board Game Atlas portal skin: backgammon/?skin=atlas — 3D museum-piece board, guide speech bubbles, portal look (all features kept) -->
 <script>

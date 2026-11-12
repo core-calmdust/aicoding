@@ -1408,7 +1408,7 @@ $('#btnResAnalyze').onclick = () => { hideOverlay('#resultOverlay'); runReview()
 function rbShown() { return rbS ? rbS.pos[rbS.pos.length - 1] : posAt(cur); }
 function rbMoves() { return rbS ? moves.slice(0, rbS.base).concat(rbS.mv) : moves.slice(0, cur); }
 function rbActive() {
-  if (!document.documentElement.classList.contains('pc2') || lesson || puzzle || settings.mode === 'online' || rtLive()) return false;
+  if (!document.documentElement.classList.contains('pc2') || lesson || puzzle || (settings.mode === 'online' && !(typeof net !== 'undefined' && net && net.done)) || rtLive()) return false;
   if (!rvOpen || !rv || rv.running || rv.key !== gameKey() || !moves.length) return false;
   // finished games — also while the dead stones are being marked after both passed (整地), so 分析 works before the count is
   // confirmed — or a loaded / two-player record
