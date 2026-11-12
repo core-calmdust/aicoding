@@ -806,6 +806,8 @@
         o += `<g transform="translate(${cx} ${cy})${gote ? ' rotate(180)' : ''}"><path d="M0 -4.6L3.3 -3.1L4 4.4H-4L-3.3 -3.1Z" fill="${q === '?' ? '#fff3d8' : '#fbe7c2'}" stroke="#a8763a" stroke-width=".45"/><text y="2.4" text-anchor="middle" font-size="5.2" font-weight="700" fill="${key === '+p' ? '#c0281c' : '#2a1a0e'}" font-family="'Hiragino Mincho ProN','Yu Mincho','Noto Serif CJK JP',serif">${q}</text></g>`; c++; } });
     return o + '</svg>';
   }
+  // 種目's button of the game's own card (null for a game without variants — another card's may still be in the page while it slides)
+  const bvVarEl = g => { const A = g && window.Atlas3D && Atlas3D[g.id]; return A && A.variants ? $('bvVar') : null; };
   let rtNowHook = null;   // (the rated panel's current rating: follows the chosen variant)
   function varBind(g, ad) {
     const bt = $('bvVar'), V = ad.variants;
@@ -880,7 +882,7 @@
       setTimeout(() => window.__bvModeRz && window.__bvModeRz(), 0); if (document.fonts) document.fonts.ready.then(() => window.__bvModeRz && window.__bvModeRz());
     }
     if ($('bvRules')) $('bvRules').onclick = startRules;
-    if ($('bvVar')) varBind(g, ad);
+    if ($('bvVar') && ad && ad.variants) varBind(g, ad);   // (a game without variants: a #bvVar still in the page is the card sliding out — 2026-11-13, phones: shogi → its neighbour broke the card)
     if (MX) mxBind(g, ad);
     $('bvRec').setAttribute('aria-label', t('rec.btn')); $('bvRec').title = t('rec.btn'); $('bvRec').onclick = () => { try { SFX.tap && SFX.tap(); } catch (e) {} openRec(g); };   // (the cup: phones right of the ヒストリア pill, PC beside the place chip)
     placeRec();
@@ -1279,7 +1281,7 @@
       if (mode === 'rated' && $('bvRtOpp')) { const opp = $('bvRtOpp').value, c = rtTc(g.id, opp); if (opp === 'online') mode = 'online'; if (c) tc = c.id; }
       if (!over) pref[g.id + ':mode'] = mode === 'online' ? 'rated' : mode; pref[g.id + ':lv'] = lv; pref[g.id + ':side'] = side; if (size) pref[g.id + ':size'] = size; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {}
       if (window.AtlasLoading) AtlasLoading.show(lang);   // straight to the loading screen (no camera move behind it)
-      const vq = $('bvVar') && $('bvVar').dataset.v && (mode === 'ai' || mode === 'pvp' || mode === 'rated' || mode === 'online') ? '&variant=' + encodeURIComponent($('bvVar').dataset.v) : '';   // (種目: the full game's dialog opens with it chosen)
+      const vq = bvVarEl(g) && bvVarEl(g).dataset.v && (mode === 'ai' || mode === 'pvp' || mode === 'rated' || mode === 'online') ? '&variant=' + encodeURIComponent(bvVarEl(g).dataset.v) : '';   // (種目: the full game's dialog opens with it chosen)
       setTimeout(() => { location.href = '../' + g.href + '?skin=atlas' + vq + (mode !== 'ai' ? '&mode=' + mode + (sub ? '&sub=' + sub : '') + (tc ? '&tc=' + tc : '') : (lv ? '&lv=' + lv : '') + '&side=' + side + (size ? '&size=' + size : '')); }, 420);
       return;
     }
@@ -1291,7 +1293,7 @@
       if (!RTG[g.id]) pmode = 'ai';
       else {
         if (!window.Placement) { needPlacement().then(() => startPlay(kind)); return; }
-        const rv = $('bvVar') && kind === 'table' ? $('bvVar').dataset.v || '' : '', S = rtLoadG(g.id, rv);   // (the variant's own rating)
+        const rv = bvVarEl(g) && kind === 'table' ? bvVarEl(g).dataset.v || '' : '', S = rtLoadG(g.id, rv);   // (the variant's own rating)
         if (Placement.gate(S, x => rtSaveG(g.id, x, rv), () => startPlay(kind))) return;   // (a player with games, before placement existed: asked once)
         const pk = rtPickG(g.id, S); rtR = { id: 'p3' + Date.now().toString(36), lv: pk.lv, or: pk.or, r: S.r, v: rv || undefined }; level = pk.lv + RTG[g.id].off;
       }
@@ -1329,7 +1331,7 @@
     clearTimeout(hudPopT); hudPopT = setTimeout(() => { el.classList.add('out'); setTimeout(() => { el.remove(); if (hudPopTxt === txt) hudPopTxt = ''; }, 300); }, Math.max(3500, txt.length * 120));
   }
 
-    const variant = $('bvVar') ? $('bvVar').dataset.v || '' : '';   // (rated games too: each variant its own rating)
+    const variant = bvVarEl(g) ? bvVarEl(g).dataset.v || '' : '';   // (rated games too: each variant its own rating)
     session = sess = ad.start({ el: $('gl'), Table3D, lang, t, level, side, size, variant, mode: pmode, bar: true, hud: h => { $('hud').innerHTML = h; hudFit(); if (tbOn && session === sess) TB.sync(); },   // (the bar's buttons follow every state change at once)
       onTurn: (s, info) => { if (tbOn && session === sess) TB.turn(s, info); if (npcT && session === sess && info) npcT.turn(info.ply); },
       onEnd: res => {
