@@ -640,7 +640,8 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) .kifu-head > span:last-child{flex:1 
    centred row, the plain ones white with dark text, the main one coral; always at the bottom of the box (the rest scrolls above),
    the scroll's edge a soft fade, no line ---- */
 html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav){position:sticky;bottom:-48px;z-index:4;flex-wrap:wrap;justify-content:center!important;gap:10px!important;background:var(--a-paper)!important;border-top:0!important;box-shadow:none!important;padding:12px 0 50px!important;margin-top:14px!important;margin-bottom:-48px!important}   /* (reaches down over the box's own bottom padding: the list scrolled there and showed below the buttons) */
-html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav)::before{content:'';position:absolute;left:0;right:0;top:-22px;height:22px;background:linear-gradient(rgba(251,245,231,0),var(--a-paper));pointer-events:none}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_):not(#_) .rt-nav::before{content:'';position:absolute;left:0;right:0;top:-22px;height:22px;background:linear-gradient(rgba(251,245,231,0),var(--a-paper));pointer-events:none}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_):not(#_) .modal-actions::before{content:'';position:absolute;left:0;right:0;top:-64px;height:64px;background:linear-gradient(rgba(251,245,231,0),rgba(251,245,231,.55) 45%,var(--a-paper));-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);-webkit-mask-image:linear-gradient(transparent,#000 55%);mask-image:linear-gradient(transparent,#000 55%);pointer-events:none}   /* (2026-11-12: a taller frosted band, so the list plainly scrolls on under the buttons) */
 html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav) > :is(button, .mbtn){flex:0 1 220px!important;width:auto!important;min-width:0!important;height:50px!important;min-height:50px!important;padding:0 14px!important;border-radius:12px!important;font-size:17px!important;font-weight:900!important;letter-spacing:.04em!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav) > :is(button, .mbtn):not(.go):not(.primary):not(.gbtn){background:var(--a-btn)!important;color:var(--a-ink)!important;border:2px solid var(--a-line)!important;box-shadow:0 4px 0 var(--a-line)!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav) > :is(button, .mbtn):is(.go, .primary, .gbtn){background:var(--a-coral)!important;color:#fff!important;border:0!important;box-shadow:0 4px 0 var(--a-coral2)!important}
@@ -699,10 +700,15 @@ html.atlas-skin body:not(#_) .rt-msg.ok{color:#2e9a66;font-weight:800}html.atlas
 html.atlas-skin body:not(#_) .rt-again{border:2px solid #efe3c8;background:#fffdf8;color:#4a5068;border-radius:12px;font-weight:800;box-shadow:0 2px 0 #efe3c8}
 html.atlas-skin body:not(#_) .rt > .rt-nav{border-top:2px dashed #efe3c8}
 /* the mini board: a wooden frame round it (shogi .rb: black grid lines on the wood, as on a real board) */
-html.atlas-skin body:not(#_) .rt-board .rb{background:#4a2f12!important;border:0!important;border-radius:2px;box-shadow:0 0 0 9px #8a5a26,0 0 0 11px #4a2f12,0 20px 34px -12px rgba(60,30,0,.5)!important}
+html.atlas-skin body:not(#_) .rt-board .rb{background:#e2b874 url(../../images/atlas/shogi-kaya.webp?v=3) center/cover!important;border:0!important;border-radius:2px;box-shadow:0 0 0 9px #8a5a26,0 0 0 11px #4a2f12,0 20px 34px -12px rgba(60,30,0,.5)!important}
+/* 本榧 under the grid (the same picture as the 3D / 2D board): the squares are clear, their outlines draw the black lines (2026-11-12) */
+html.atlas-skin body:not(#_) .rt-board .rb > .rc{background:transparent!important;outline:1px solid rgba(28,16,6,.88);box-shadow:none}
+html.atlas-skin body:not(#_) .rt-board .rb > .rc.zone{background:rgba(232,110,50,.26)!important}
+html.atlas-skin body:not(#_) .rt-board .rb > .rc.zone2{background:rgba(110,150,50,.24)!important}
+html.atlas-skin body:not(#_) .rt-board .rb > .rc.sel{background:rgba(70,150,215,.34)!important;box-shadow:inset 0 0 0 2px #3c7fb0}
+html.atlas-skin body:not(#_) .rt-board .rb > .rc.bad{background:rgba(220,80,50,.34)!important}
 html.atlas-skin body:not(#_) .rt-row .rt-main.has-board{overflow:visible}
 html.atlas-skin body:not(#_) .rt-row .rt-main.has-board > .rt-board{justify-content:flex-end;padding:11px 11px 0 0;box-sizing:border-box}
-html.atlas-skin body:not(#_) .rt-board .rb > .rc{box-shadow:inset 0 0 0 .5px rgba(60,35,10,.35)}
 /* レッスン一覧（lists-ui.js .lx-*）— the full version (2026-11-12): roomier cards, the thumbnail on a mat, status pills, 2-line text */
 html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonList .lx-grid{gap:14px}
 html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonList .lx-card{gap:18px;padding:16px 18px 16px 16px;border-radius:20px!important;transition:transform .15s,border-color .15s}

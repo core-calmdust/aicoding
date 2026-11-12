@@ -467,44 +467,52 @@
      card's height). Only while the coach card is shown beside the board; a double-click on a gap puts it back. */
   (function sideSplit() {
     const si = document.querySelector('.side-in'), ev = document.getElementById('evalCard'), co = document.getElementById('coachCard'), ki = document.querySelector('.side-in > .kifu-card');
-    if (!si || !co || !ki) return;
+    if (!si || !ki) return;
     const KEY = 'atlas-side-split', de = document.documentElement;
     let S = { e: 0, k: 0 }; try { Object.assign(S, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
     const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
     const vis = el => !!(el && el.getClientRects().length && getComputedStyle(el).display !== 'none');
     const gr = () => ev && ev.querySelector('.graph');
-    const live = () => innerWidth >= 900 && !de.classList.contains('atlas-2d') && vis(co) && vis(ki) && getComputedStyle(si).flexDirection === 'column' && si.clientHeight > 300;
+    // the coach card open (the 形勢 / 棋譜 sizes share its room) or off — closed or turned off: then the 棋譜 card takes the room
+    // and the one gap (形勢 ↔ next card) sizes the 形勢 graph against it (2026-11-12: with the coach off the drag did nothing)
+    const coachOn = () => vis(co) && !co.classList.contains('ck-off') && !co.classList.contains('hidden') && co.getBoundingClientRect().height > 70;
+    const live = () => innerWidth >= 900 && !de.classList.contains('atlas-2d') && vis(ki) && getComputedStyle(si).flexDirection === 'column' && si.clientHeight > 300;
     let gh0 = 0, busy = false;
-    const clear = () => { const g = gr(); if (g) { g.style.removeProperty('height'); g.style.removeProperty('flex'); } ki.style.removeProperty('flex'); };
+    const clear = () => { const g = gr(); if (g) ['height', 'flex', 'max-height', 'min-height'].forEach(k => g.style.removeProperty(k)); ki.style.removeProperty('flex'); };
     const MINC = 90, MINK = 110;
+    const fill = () => coachOn() ? co : ki;   // the card that gives and takes the room
     function apply() {
       if (busy) return; busy = true;
       clear();
       const on = live(); si.classList.toggle('a-split', on);
       if (on) {
         const g = vis(ev) && gr(); gh0 = g ? g.getBoundingClientRect().height : 0;
-        const room = co.getBoundingClientRect().height + ki.getBoundingClientRect().height - MINC;   // what the coach and the kifu share
-        const k = S.k ? Math.max(MINK, Math.min(S.k, room - (g ? S.e : 0))) : 0;
-        if (k) ki.style.setProperty('flex', '0 0 ' + k + 'px', 'important');
-        if (g && S.e) { const e = Math.max(-Math.max(0, gh0 - 30), Math.min(S.e, room - (k || ki.getBoundingClientRect().height))); g.style.setProperty('height', (gh0 + e) + 'px', 'important'); g.style.setProperty('flex', 'none', 'important'); }
+        const cOn = coachOn();
+        let k = 0;
+        if (cOn) { const room = co.getBoundingClientRect().height + ki.getBoundingClientRect().height - MINC;
+          k = S.k ? Math.max(MINK, Math.min(S.k, room - (g ? S.e : 0))) : 0;
+          if (k) ki.style.setProperty('flex', '0 0 ' + k + 'px', 'important'); }
+        if (g && S.e) { const F = fill(), spare = F.getBoundingClientRect().height - (cOn ? MINC : MINK);
+          const e = Math.max(-Math.max(0, gh0 - 30), Math.min(S.e, spare)); g.style.setProperty('height', (gh0 + e) + 'px', 'important'); g.style.setProperty('flex', 'none', 'important'); g.style.setProperty('max-height', 'none', 'important'); g.style.setProperty('min-height', '0', 'important'); }
       }
       place(on); busy = false;
     }
     const hs = [0, 1].map(i => { const h = document.createElement('div'); h.className = 'a-split-h'; h.dataset.i = i; si.appendChild(h); return h; });
     function place(on) {
-      const pairs = [[ev, co], [co, ki]], r0 = si.getBoundingClientRect();
-      hs.forEach((h, i) => { const [a, b] = pairs[i]; const ok = on && vis(a) && vis(b) && (i === 1 || gr());
+      const cOn = coachOn(), r0 = si.getBoundingClientRect();
+      const pairs = [[ev, cOn ? co : (vis(co) ? co : ki)], [co, ki]];
+      hs.forEach((h, i) => { const [a, b] = pairs[i]; const ok = on && vis(a) && vis(b) && (i === 1 ? cOn : !!gr());
         h.style.display = ok ? '' : 'none'; if (!ok) return;
         const y = (a.getBoundingClientRect().bottom + b.getBoundingClientRect().top) / 2 - r0.top + si.scrollTop; h.style.top = (y - 7) + 'px'; });
     }
     hs.forEach(h => {
       h.addEventListener('pointerdown', e => {
         e.preventDefault(); h.setPointerCapture(e.pointerId); h.classList.add('on');
-        const i = +h.dataset.i, y0 = e.clientY, g = gr();
-        const c0 = co.getBoundingClientRect().height, k0 = ki.getBoundingClientRect().height, g0 = g ? g.getBoundingClientRect().height : 0;
+        const i = +h.dataset.i, y0 = e.clientY, g = gr(), cOn = coachOn(), F = fill();
+        const c0 = co ? co.getBoundingClientRect().height : 0, k0 = ki.getBoundingClientRect().height, f0 = F.getBoundingClientRect().height, g0 = g ? g.getBoundingClientRect().height : 0;
         const mv = ev2 => { const d = ev2.clientY - y0;
-          if (i === 0 && g) { const nd = Math.max(30 - g0, Math.min(d, c0 - MINC)); S.e = Math.round(g0 + nd - gh0); }
-          else { const nd = Math.max(-(c0 - MINC), Math.min(d, k0 - MINK)); S.k = Math.round(k0 - nd); }
+          if (i === 0 && g) { const nd = Math.max(30 - g0, Math.min(d, f0 - (cOn ? MINC : MINK))); S.e = Math.round(g0 + nd - gh0); }
+          else if (i === 1) { const nd = Math.max(-(c0 - MINC), Math.min(d, k0 - MINK)); S.k = Math.round(k0 - nd); }
           apply(); };
         const up = () => { h.classList.remove('on'); h.removeEventListener('pointermove', mv); save(); };
         h.addEventListener('pointermove', mv); h.addEventListener('pointerup', up, { once: true }); h.addEventListener('pointercancel', up, { once: true });
@@ -514,7 +522,7 @@
     addEventListener('storage', e => { if (e.key === KEY) { try { S = Object.assign({ e: 0, k: 0 }, JSON.parse(e.newValue || '{}')); } catch (x) {} apply(); } });
     const later = () => requestAnimationFrame(apply);
     addEventListener('resize', later);
-    new MutationObserver(later).observe(co, { attributes: true, attributeFilter: ['class', 'style'] });
+    if (co) new MutationObserver(later).observe(co, { attributes: true, attributeFilter: ['class', 'style'] });
     new MutationObserver(later).observe(de, { attributes: true, attributeFilter: ['class'] });
     if (window.ResizeObserver) { const ro = new ResizeObserver(() => { if (!busy) later(); }); ro.observe(si); }
     si.addEventListener('scroll', () => place(si.classList.contains('a-split')));
