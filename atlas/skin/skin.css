@@ -783,3 +783,17 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-or
 html.atlas-skin:not(.atlas-2d) body:not(#_) .overlay .modal:has(> [id$=ListView]:not(.hidden)){display:flex!important;flex-direction:column}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .overlay .modal > [id$=ListView]:not(.hidden){flex:1 0 auto;display:flex;flex-direction:column}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .overlay .modal > [id$=ListView]:not(.hidden) > .modal-actions:last-child{margin-top:auto!important}
+/* (2026-11-13) the online room's rating: "R" beside a large number, the record under them */
+html.atlas-skin:not(.atlas-2d) body:not(#_) .ol-r:not(#_){display:grid!important;grid-template-columns:auto auto;align-items:baseline;justify-content:end;column-gap:5px;font-size:17px!important;font-weight:900;color:var(--a-ink2)!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .ol-r:not(#_) b{font-size:38px!important;line-height:1!important;color:#c07a12!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .ol-r:not(#_) small{grid-column:1 / -1;text-align:end;font-size:12.5px!important;margin-top:4px}
+/* (2026-11-13) PRO: larger, easier to read */
+html.atlas-skin:not(.atlas-2d) body:not(#_) .pro-panel{font-size:15px!important;line-height:1.55!important;padding:16px 16px 14px!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .pro-panel .pro-intro{font-size:14px!important;line-height:1.6}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .pro-panel .pro-gh{font-size:13px!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .pro-panel .pro-lab b{font-size:16px!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .pro-panel .pro-help{font-size:14px!important;line-height:1.6}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .pro-panel .pro-seg button{font-size:15px!important;padding:9px 4px!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .pro-panel :is(.pro-u,.pro-dv){font-size:14px!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .pro-panel .pro-num input[type=number]{font-size:16px!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .pro-btn{height:30px!important;padding:0 14px!important;font-size:14px!important}

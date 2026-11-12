@@ -1316,14 +1316,14 @@ html[data-pcs=west] .pc .ic svg .f{fill:var(--pCho)}html[data-pcs=west] .pc.p2 .
 <script src="coach-i18n.js?v=2"></script>
 <script src="coach-jg.js?v=1"></script>
 <script src="../shared/mtengine.js?v=9"></script><script>MTEngine.init({ sw: 'sw.js?v=1', light: true }); if (MTEngine.coi && window.JanggiOnline) JanggiOnline.available = false;</script>
-<script src="../shared/proset.js?v=5t2svhxbf-sp2-pd1"></script><script src="../shared/ponder.js?v=1"></script><script src="../shared/luxintro.js?v=3"></script><script src="app.js?v=2-pro1-aim2-mt2-pt1-bm1sq-ybw1-pd1-lx1-pl1"></script>
+<script src="../shared/proset.js?v=5t2svhxbf-sp2-pd1p"></script><script src="../shared/ponder.js?v=1"></script><script src="../shared/luxintro.js?v=3"></script><script src="app.js?v=2-pro1-aim2-mt2-pt1-bm1sq-ybw1-pd1-lx1-pl1"></script>
 <script src="online-ui.js?v=2lx1"></script>
 <!-- World Board Game Atlas portal skin: xiangqi/?skin=atlas — 3D antique lacquer board with boxwood discs, guide speech bubbles, portal look (all features kept) -->
 <script>
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=72l42'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=73l42'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net

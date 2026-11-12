@@ -4,7 +4,7 @@
    game-specific ones). Every setting starts at "the level's default" (marked ●); only what differs from it is used, and it
    is never used in rated games (the game does not ask for it there; the button is hidden).
 
-     <script src="../shared/proset.js?v=1t2svhxbf"></script>     (after the dialog markup)
+     <script src="../shared/proset.js?v=1t2svhxbfp"></script>     (after the dialog markup)
      const PRO = ProSet.init({
        game: 'chess',                               // storage: localStorage 'aicoding-pro:<game>' (or cfg.store)
        field: '#fLevel',                            // the level field: the button and the panel go in it (default)
@@ -29,8 +29,8 @@
 'use strict';
 if (window.ProSet) return;
 const T = {
-  title: { ja: '高度な対局設定（PRO）', en: 'Advanced AI settings (PRO)', zh: '高级对局设置（PRO）', 'zh-TW': '進階對局設定（PRO）', ko: '고급 대국 설정(PRO)', es: 'Ajustes avanzados de la IA (PRO)', fr: 'Réglages avancés de l’IA (PRO)', pt: 'Configurações avançadas da IA (PRO)', de: 'Erweiterte KI-Einstellungen (PRO)', ru: 'Расширенные настройки ИИ (PRO)', tr: 'Gelişmiş yapay zekâ ayarları (PRO)', id: 'Pengaturan AI lanjutan (PRO)', hi: 'उन्नत AI सेटिंग (PRO)', ar: 'إعدادات متقدمة للذكاء الاصطناعي (PRO)' },
-  intro: { ja: '● がこのレベルの既定です。変えた項目だけが使われます（レート戦では使いません）。',
+  title: { ja: 'くわしい設定（PRO）', en: 'Advanced AI settings (PRO)', zh: '高级对局设置（PRO）', 'zh-TW': '進階對局設定（PRO）', ko: '고급 대국 설정(PRO)', es: 'Ajustes avanzados de la IA (PRO)', fr: 'Réglages avancés de l’IA (PRO)', pt: 'Configurações avançadas da IA (PRO)', de: 'Erweiterte KI-Einstellungen (PRO)', ru: 'Расширенные настройки ИИ (PRO)', tr: 'Gelişmiş yapay zekâ ayarları (PRO)', id: 'Pengaturan AI lanjutan (PRO)', hi: 'उन्नत AI सेटिंग (PRO)', ar: 'إعدادات متقدمة للذكاء الاصطناعي (PRO)' },
+  intro: { ja: '● はこのレベルの標準です。変えたところだけ使います（レート戦では使いません）。',
     en: '● marks the level’s default. Only what you change is used (never in rated games).',
     zh: '● 为该级别的默认值。只使用你更改的项目（等级分对局中不使用）。',
     'zh-TW': '● 為該級別的預設值。只使用你變更的項目（積分對局中不使用）。',
@@ -48,8 +48,8 @@ const T = {
   'g.play': { ja: '指し方', en: 'Play style', zh: '下法', 'zh-TW': '下法', ko: '두는 방식', es: 'Estilo', fr: 'Style de jeu', pt: 'Estilo', de: 'Spielweise', ru: 'Стиль игры', tr: 'Oyun tarzı', id: 'Gaya main', hi: 'खेल शैली', ar: 'أسلوب اللعب' },
   'g.play.stone': { ja: '打ち方' },
   'g.misc': { ja: 'その他', en: 'Other', zh: '其他', 'zh-TW': '其他', ko: '기타', es: 'Otros', fr: 'Autres', pt: 'Outros', de: 'Sonstiges', ru: 'Прочее', tr: 'Diğer', id: 'Lainnya', hi: 'अन्य', ar: 'أخرى' },
-  limit: { ja: '思考の制限', en: 'Thinking limit', zh: '思考限制', 'zh-TW': '思考限制', ko: '생각 제한', es: 'Límite de cálculo', fr: 'Limite de réflexion', pt: 'Limite de cálculo', de: 'Bedenkgrenze', ru: 'Предел расчёта', tr: 'Düşünme sınırı', id: 'Batas berpikir', hi: 'सोचने की सीमा', ar: 'حدّ التفكير' },
-  'limit.h': { ja: '1手ごとに、時間・読みの深さ・調べる局面数のどれで考えるのをやめるか。',
+  limit: { ja: '考える量', en: 'Thinking limit', zh: '思考限制', 'zh-TW': '思考限制', ko: '생각 제한', es: 'Límite de cálculo', fr: 'Limite de réflexion', pt: 'Limite de cálculo', de: 'Bedenkgrenze', ru: 'Предел расчёта', tr: 'Düşünme sınırı', id: 'Batas berpikir', hi: 'सोचने की सीमा', ar: 'حدّ التفكير' },
+  'limit.h': { ja: '1手ごとに、時間・深さ・局面数のどれかで考えるのを止めます。',
     en: 'When the AI stops thinking on each move: after a time, a search depth or a number of positions.',
     zh: '每步在何时停止思考：按时间、搜索深度或局面数。', 'zh-TW': '每步在何時停止思考：按時間、搜尋深度或局面數。',
     ko: '한 수마다 시간·수읽기 깊이·조사할 국면 수 중 무엇으로 생각을 멈출지.',
@@ -69,20 +69,20 @@ const T = {
   'u.ply': { ja: '手', en: 'ply', zh: '步', 'zh-TW': '步', ko: '수', es: 'ply', fr: 'ply', pt: 'ply', de: 'Ply', ru: 'пл.', tr: 'ply', id: 'ply', hi: 'प्लाई', ar: 'نقلة' },
   'u.nodes': { ja: '局面', en: 'nodes', zh: '局面', 'zh-TW': '局面', ko: '국면', es: 'nodos', fr: 'nœuds', pt: 'nós', de: 'Knoten', ru: 'узл.', tr: 'düğüm', id: 'node', hi: 'नोड', ar: 'عقدة' },
   threads: { ja: 'スレッド数', en: 'Threads', zh: '线程数', 'zh-TW': '執行緒數', ko: '스레드 수', es: 'Hilos', fr: 'Threads', pt: 'Threads', de: 'Threads', ru: 'Потоки', tr: 'İş parçacığı', id: 'Thread', hi: 'थ्रेड', ar: 'المسارات' },
-  'threads.need': { ja: '思考の制限が「時間」で、手のばらつきが「なし」のときに使われます（今の設定では1スレッド）。', en: 'Used when the thinking limit is Time and variety is None (one thread with the current settings).',
+  'threads.need': { ja: '「時間」で考えて、ばらつきが「なし」のときだけ使えます（今は1スレッド）。', en: 'Used when the thinking limit is Time and variety is None (one thread with the current settings).',
     zh: '思考限制为“时间”且着法变化为“无”时使用（当前设置下为单线程）。', 'zh-TW': '思考限制為「時間」且著法變化為「無」時使用（目前設定為單執行緒）。', ko: '생각 제한이 "시간"이고 수의 변화가 "없음"일 때 사용됩니다(현재 설정은 1스레드).',
     es: 'Se usa con límite por Tiempo y variedad Ninguna (un hilo con la configuración actual).', fr: 'Utilisé avec une limite en Temps et la variété sur Aucune (un seul thread avec les réglages actuels).',
     pt: 'Usado com limite por Tempo e variedade Nenhuma (um thread com a configuração atual).', de: 'Wird genutzt bei Zeitgrenze „Zeit" und Abwechslung „Keine" (mit den aktuellen Einstellungen ein Thread).',
     ru: 'Работает при ограничении «Время» и разнообразии «Нет» (сейчас — один поток).', tr: 'Düşünme sınırı Süre ve çeşitlilik Yok iken kullanılır (şu anki ayarlarla tek iş parçacığı).',
     id: 'Dipakai bila batas berpikir Waktu dan variasi Tidak ada (satu thread dengan pengaturan sekarang).', hi: 'सोचने की सीमा "समय" और विविधता "कोई नहीं" होने पर उपयोग होता है (अभी की सेटिंग में एक थ्रेड)।',
     ar: 'يُستخدم عندما يكون حد التفكير «الوقت» والتنويع «بلا» (مسار واحد بالإعدادات الحالية).' },
-  'threads.mt': { ja: 'オプション（歯車）の「マルチスレッド」をオンにすると選べます。', en: 'Turn on "Multi-thread" in Options (gear) to choose this.',
+  'threads.mt': { ja: '歯車の「マルチスレッド」をオンにすると選べます。', en: 'Turn on "Multi-thread" in Options (gear) to choose this.',
     zh: '在选项（齿轮）中开启“多线程”后可选。', 'zh-TW': '在選項（齒輪）中開啟「多執行緒」後可選。', ko: '옵션(톱니바퀴)에서 "멀티스레드"를 켜면 선택할 수 있습니다.',
     es: 'Activa «Multihilo» en Opciones (engranaje) para elegirlo.', fr: 'Activez « Multithread » dans les Options (roue dentée) pour le choisir.', pt: 'Ative “Multithread” nas Opções (engrenagem) para escolher.',
     de: 'Schalte „Multithreading" in den Optionen (Zahnrad) ein, um dies zu wählen.', ru: 'Включите «Многопоточность» в Опциях (шестерёнка), чтобы выбрать.', tr: 'Seçmek için Seçenekler\'de (dişli) "Çoklu iş parçacığı"nı açın.',
     id: 'Aktifkan "Multi-thread" di Opsi (roda gigi) untuk memilih.', hi: 'चुनने के लिए विकल्प (गियर) में "मल्टी-थ्रेड" चालू करें।', ar: 'شغّل «متعدد المسارات» في الخيارات (الترس) لاختيار ذلك.' },
   book: { ja: '定跡', en: 'Opening book', zh: '开局库', 'zh-TW': '開局庫', ko: '오프닝 북', es: 'Libro de aperturas', fr: 'Livre d’ouvertures', pt: 'Livro de aberturas', de: 'Eröffnungsbuch', ru: 'Дебютная книга', tr: 'Açılış kitabı', id: 'Buku pembukaan', hi: 'ओपनिंग बुक', ar: 'كتاب الافتتاحيات' },
-  'book.h': { ja: '序盤に登録された手順を使うか。オフにすると1手目から自分で読みます。',
+  'book.h': { ja: '序盤は決まった手順で打ちます。オフなら1手目から自分で考えます。',
     en: 'Play the stored opening lines? Off: the AI thinks for itself from the first move.',
     zh: '开局是否使用收录的着法。关闭后AI从第一步起自己计算。', 'zh-TW': '開局是否使用收錄的著法。關閉後AI從第一步起自己計算。',
     ko: '초반에 등록된 수순을 쓸지. 끄면 첫 수부터 스스로 읽습니다.',
@@ -96,7 +96,7 @@ const T = {
     hi: 'सहेजी गई ओपनिंग चालें खेले? बंद: AI पहली चाल से खुद सोचेगा।',
     ar: 'هل يلعب خطوط الافتتاح المحفوظة؟ إيقاف: يفكّر الذكاء بنفسه من النقلة الأولى.' },
   var: { ja: '手のばらつき', en: 'Move variety', zh: '着法变化', 'zh-TW': '著法變化', ko: '수의 다양성', es: 'Variedad de jugadas', fr: 'Variété des coups', pt: 'Variedade de lances', de: 'Zugvielfalt', ru: 'Разнообразие ходов', tr: 'Hamle çeşitliliği', id: 'Variasi langkah', hi: 'चालों में विविधता', ar: 'تنوّع النقلات' },
-  'var.h': { ja: 'ほぼ同じくらいの手から毎回少し違う手を選ぶ度合い。大きいほど弱く、人間らしくなります。',
+  'var.h': { ja: '毎回少し違う手を選びます。大きいほど弱く、人間らしくなります。',
     en: 'How much the AI varies among similar moves. More = weaker and more human-like.',
     zh: '在相近的着法中每次稍作变化的程度。越大越弱、越像人类。', 'zh-TW': '在相近的著法中每次稍作變化的程度。越大越弱、越像人類。',
     ko: '비슷한 수 중에서 매번 조금씩 다른 수를 고르는 정도. 클수록 약하고 사람다워집니다.',
@@ -113,7 +113,7 @@ const T = {
   'var.1': { ja: '小', en: 'Small', zh: '小', 'zh-TW': '小', ko: '작게', es: 'Poca', fr: 'Faible', pt: 'Pouca', de: 'Wenig', ru: 'Мало', tr: 'Az', id: 'Sedikit', hi: 'कम', ar: 'قليل' },
   'var.2': { ja: '大', en: 'Large', zh: '大', 'zh-TW': '大', ko: '크게', es: 'Mucha', fr: 'Forte', pt: 'Muita', de: 'Viel', ru: 'Много', tr: 'Çok', id: 'Banyak', hi: 'ज़्यादा', ar: 'كثير' },
   eval: { ja: '評価関数', en: 'Evaluation', zh: '评估函数', 'zh-TW': '評估函數', ko: '평가 함수', es: 'Evaluación', fr: 'Évaluation', pt: 'Avaliação', de: 'Bewertung', ru: 'Оценка', tr: 'Değerlendirme', id: 'Evaluasi', hi: 'मूल्यांकन', ar: 'دالة التقييم' },
-  'eval.h': { ja: '局面の良し悪しを測る方法。NNUE は学習した強い評価、手作りは昔ながらの計算式。',
+  'eval.h': { ja: '局面の良し悪しの測り方。NNUEは学習した強い評価、手作りは昔ながらの式です。',
     en: 'How positions are judged: NNUE = the trained network (stronger), hand-made = a classic formula.',
     zh: '判断局面优劣的方法。NNUE 为训练得到的强评估，手工为传统公式。', 'zh-TW': '判斷局面優劣的方法。NNUE 為訓練得到的強評估，手工為傳統公式。',
     ko: '국면의 좋고 나쁨을 재는 방법. NNUE는 학습한 강한 평가, 수제는 전통적인 계산식.',
@@ -129,7 +129,7 @@ const T = {
   'eval.nnue': { ja: 'NNUE' },
   'eval.hand': { ja: '手作り', en: 'Hand-made', zh: '手工', 'zh-TW': '手工', ko: '수제', es: 'Clásica', fr: 'Classique', pt: 'Clássica', de: 'Klassisch', ru: 'Ручная', tr: 'Klasik', id: 'Klasik', hi: 'पारंपरिक', ar: 'تقليدي' },
   resign: { ja: 'AIの投了', en: 'AI resigns', zh: 'AI认输', 'zh-TW': 'AI認輸', ko: 'AI 기권', es: 'La IA abandona', fr: 'L’IA abandonne', pt: 'A IA desiste', de: 'KI gibt auf', ru: 'ИИ сдаётся', tr: 'YZ terk eder', id: 'AI menyerah', hi: 'AI हार माने', ar: 'استسلام الذكاء' },
-  'resign.h': { ja: '負けが決まった局面でAIが投了するか。オフにすると最後まで指します。',
+  'resign.h': { ja: '負けが決まったらAIが投了します。オフなら最後まで指します。',
     en: 'Does the AI resign once the game is clearly lost? Off: it plays to the end.',
     zh: '必败局面时AI是否认输。关闭后会下到最后。', 'zh-TW': '必敗局面時AI是否認輸。關閉後會下到最後。',
     ko: '진 것이 확실한 국면에서 AI가 기권할지. 끄면 끝까지 둡니다.',
@@ -143,7 +143,7 @@ const T = {
     hi: 'साफ़ हार वाली स्थिति में AI हार माने? बंद: अंत तक खेलेगा।',
     ar: 'هل يستسلم الذكاء عندما تكون الخسارة مؤكدة؟ إيقاف: يلعب حتى النهاية.' },
   clock: { ja: '持ち時間に合わせる', en: 'Follow its clock', zh: '按用时分配', 'zh-TW': '按用時分配', ko: '남은 시간에 맞추기', es: 'Según su reloj', fr: 'Selon sa pendule', pt: 'Conforme o relógio', de: 'Nach eigener Uhr', ru: 'По своим часам', tr: 'Saatine göre', id: 'Sesuai jam', hi: 'अपनी घड़ी के अनुसार', ar: 'حسب ساعته' },
-  'clock.h': { ja: '対局時計があるとき、AIが自分の残り時間から1手の時間を決めます（思考の制限より優先）。',
+  'clock.h': { ja: '時計があるとき、AIが残り時間から1手の時間を決めます。',
     en: 'With a game clock, the AI budgets each move from its own remaining time (overrides the thinking limit).',
     zh: '有对局时钟时，AI根据自己的剩余时间分配每步用时（优先于思考限制）。', 'zh-TW': '有對局時鐘時，AI根據自己的剩餘時間分配每步用時（優先於思考限制）。',
     ko: '대국 시계가 있을 때 AI가 자신의 남은 시간으로 한 수의 시간을 정합니다(생각 제한보다 우선).',
@@ -157,7 +157,7 @@ const T = {
     hi: 'घड़ी होने पर AI अपने बचे समय से हर चाल का समय तय करे (सोचने की सीमा से ऊपर)।',
     ar: 'مع وجود ساعة، يوزّع الذكاء وقته المتبقي على نقلاته (يتقدّم على حدّ التفكير).' },
   ponder: { ja: '先読み', en: 'Ponder', zh: '后台思考', 'zh-TW': '背景思考', ko: '미리 읽기', es: 'Pensar en tu turno', fr: 'Réflexion permanente', pt: 'Pensar no seu turno', de: 'Mitdenken', ru: 'Думать в ваш ход', tr: 'Sıranızda düşünme', id: 'Berpikir di giliran Anda', hi: 'आपकी बारी में सोचना', ar: 'التفكير في دورك' },
-  'ponder.h': { ja: 'あなたの番のあいだもAIが読み進めます。', en: 'The AI keeps thinking during your turn.', zh: '在你的回合AI也继续思考。', 'zh-TW': '在你的回合AI也繼續思考。',
+  'ponder.h': { ja: 'あなたの番のあいだもAIが考えます。', en: 'The AI keeps thinking during your turn.', zh: '在你的回合AI也继续思考。', 'zh-TW': '在你的回合AI也繼續思考。',
     ko: '당신의 차례에도 AI가 계속 생각합니다.', es: 'La IA sigue pensando durante tu turno.', fr: 'L’IA continue de réfléchir pendant votre tour.', pt: 'A IA continua pensando durante o seu turno.',
     de: 'Die KI rechnet auch während Ihres Zuges weiter.', ru: 'ИИ продолжает думать, пока вы обдумываете ход.', tr: 'Yapay zekâ sizin sıranızda da düşünmeye devam eder.',
     id: 'AI terus berpikir selama giliran Anda.', hi: 'आपकी बारी के दौरान भी AI सोचता रहता है।', ar: 'يواصل الذكاء التفكير أثناء دورك.' },

@@ -1730,7 +1730,7 @@ html.ng-disp-gear #newOverlay #fDisplay{display:none!important}   /* 表示 opti
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2l14as1"></script>
 <script src="online.js?v=stale2fisas1tq"></script>
-<script src="../shared/mtengine.js?v=9"></script><script src="../shared/proset.js?v=5t2svhxbf-sp2-pd1"></script><script src="../shared/ponder.js?v=1"></script><script>MTEngine.init({ sw: 'sw.js' });</script>
+<script src="../shared/mtengine.js?v=9"></script><script src="../shared/proset.js?v=5t2svhxbf-sp2-pd1p"></script><script src="../shared/ponder.js?v=1"></script><script>MTEngine.init({ sw: 'sw.js' });</script>
 <script src="rbox.js?v=3-rc2"></script>
 <script src="../shared/coachkit.js?v=17l14"></script>
 <script src="../shared/record.js?v=12l14"></script>
@@ -2920,7 +2920,7 @@ const LEVELS_UI = [   // (= engine.js LEVELS: the defaults the PRO panel shows)
 
 const PRO_T = {
   exact: { ja: '完全読み', en: 'Perfect endgame', zh: '完全计算', 'zh-TW': '完全計算', ko: '완전 수읽기', es: 'Final perfecto', fr: 'Finale parfaite', pt: 'Final perfeito', de: 'Perfektes Endspiel', ru: 'Точный эндшпиль', tr: 'Kusursuz oyun sonu', id: 'Akhir sempurna', hi: 'पूर्ण अंत गणना', ar: 'حساب النهاية الكامل' },
-  exactH: { ja: '空きマスがこの数以下になったら最後まで読み切り、石数が最大になる手を打ちます（時間の制限内で）。',
+  exactH: { ja: '空きマスがこの数以下になったら最後まで読んで、石がいちばん多くなる手を打ちます。',
     en: 'From this many empty squares, the AI reads to the very end and plays for the best final disc count (within its time).',
     zh: '空格少于等于此数时计算到终局，下出子数最多的一手（在时间限制内）。', 'zh-TW': '空格少於等於此數時計算到終局，下出子數最多的一手（在時間限制內）。',
     ko: '빈칸이 이 수 이하가 되면 끝까지 읽어 돌 수가 가장 많아지는 수를 둡니다(시간 제한 안에서).',
@@ -2934,7 +2934,7 @@ const PRO_T = {
     hi: 'इतने खाली खाने बचने पर AI अंत तक गणना कर सबसे ज़्यादा गोटियों वाली चाल चलेगा (अपने समय में)।',
     ar: 'ابتداءً من هذا العدد من الخانات الفارغة يحسب الذكاء حتى النهاية ويلعب لأفضل عدد أقراص (ضمن وقته).' },
   wld: { ja: '勝敗読み', en: 'Win/loss endgame', zh: '胜负计算', 'zh-TW': '勝負計算', ko: '승패 수읽기', es: 'Final gana/pierde', fr: 'Finale gain/perte', pt: 'Final vitória/derrota', de: 'Sieg/Niederlage-Endspiel', ru: 'Эндшпиль на результат', tr: 'Kazan/kaybet oyun sonu', id: 'Akhir menang/kalah', hi: 'जीत/हार अंत गणना', ar: 'حساب الفوز/الخسارة' },
-  wldH: { ja: '完全読みより手前から、勝ち・引き分け・負けだけを読み切ります（石数を見ない分速い）。0 で使いません。',
+  wldH: { ja: '完全読みより早くから、勝ち・引き分け・負けだけを読み切ります（速い）。0で使いません。',
     en: 'Earlier than the perfect endgame, reads out only win / draw / loss (faster: the disc count is ignored). 0 = off.',
     zh: '比完全计算更早，只计算胜/和/负（不看子数所以更快）。0 为不使用。', 'zh-TW': '比完全計算更早，只計算勝/和/負（不看子數所以更快）。0 為不使用。',
     ko: '완전 수읽기보다 앞서 승·무·패만 끝까지 읽습니다(돌 수를 보지 않아 빠름). 0이면 사용 안 함.',
@@ -5882,7 +5882,7 @@ accRender();
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=72l42'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=73l42'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
