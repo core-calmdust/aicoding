@@ -6,6 +6,8 @@
 //   jg evmatch i v lv N seed          evaluation weight evW[i] = v (A) vs the built-in (B), same level
 //   jg mates N level seed out.txt     harvest mate puzzles from self-play games
 //   jg mate "<fen>" maxK checks       solve one position
+//   jg serve                          a game over stdin/stdout for tools/duel.py (two builds against each other):
+//                                     new <cho> <han> | mv <move> | rnd <n> | go n <nodesK> | go t <ms> | quit
 // Game end here (as janggi/engine.js judge): checkmate; a position seen 3 times or 200 plies: the points decide
 // (chariot 13, cannon 7, horse 5, elephant 3, guard 3, soldier 2; Han +1.5).
 #include "../engine.c"
@@ -78,8 +80,8 @@ static void initLevels(void) {
   const Level T[21] = { { 0 },
     { 1, 300, 380, 0, 0 }, { 1, 230, 280, 0, 0 }, { 1.3, 200, 220, 0, 0 }, { 1.7, 170, 160, 0, 0 }, { 2.1, 135, 110, 0, 0 },
     { 2.5, 100, 75, 0, 0 }, { 2.8, 80, 55, 0, 0 }, { 3, 60, 40, 0, 0 }, { 3, 42, 22, 0, 0 }, { 3.5, 35, 15, 0, 0 },
-    { 4, 30, 12, 0, 0 }, { 4, 20, 0, 0, 0 }, { 0, 0, 0, 3.4, 0 }, { 0, 0, 0, 16.5, 0 }, { 0, 0, 0, 60, 0 },
-    { 0, 0, 0, 150, 0 }, { 0, 0, 0, 350, 0 }, { 0, 0, 0, 800, 0 }, { 0, 0, 0, 2500, 8000 }, { 0, 0, 0, 7000, 12000 } };
+    { 4, 30, 12, 0, 0 }, { 4, 20, 0, 0, 0 }, { 0, 0, 0, 2.4, 0 }, { 0, 0, 0, 11.5, 0 }, { 0, 0, 0, 36, 0 },
+    { 0, 0, 0, 90, 0 }, { 0, 0, 0, 210, 0 }, { 0, 0, 0, 480, 0 }, { 0, 0, 0, 2500, 8000 }, { 0, 0, 0, 7000, 12000 } };
   memcpy(LV, T, sizeof(T));
 }
 static u64 rng = 88172645463325252ull;
@@ -250,6 +252,36 @@ int main(int argc, char **argv) {
     int k = mateLen(atoi(argv[3]), atoi(argv[4]), 100000); Move fm = 0; int c1 = 0;
     if (k > 0) { loadRoot(); c1 = mateFirstMoves(k, atoi(argv[4]), 100000, &fm); }
     char nm[8]; mvName(nm, fm); printf("mate %d first %s count %d\n", k, nm, c1);
+    return 0;
+  }
+  if (argc > 1 && !strcmp(argv[1], "serve")) {
+    static u8 gb[90]; static int gsd, gnh; char ln[256];
+    setvbuf(stdout, 0, _IOLBF, 0);
+    while (fgets(ln, sizeof ln, stdin)) {
+      if (!strncmp(ln, "quit", 4)) break;
+      if (!strncmp(ln, "new", 3)) { int a = 3, b = 3; sscanf(ln + 3, "%d %d", &a, &b); char f[128]; startFen(f, a, b); loadFen(f, gb, &gsd); gnh = 0; new_game(); setupBoard(gb, gsd, GH, 0, 0, 0); GK[0] = KEY; printf("ok\n"); continue; }
+      setupBoard(gb, gsd, GH, gnh, 0, 0);
+      if (!strncmp(ln, "mv", 2)) {   // -> ok | end R (R: 1 Cho wins, -1 Han wins)
+        char nm[8], w[8]; sscanf(ln + 2, "%7s", w); Move m = 0; int ok = 0;
+        for (int i = 0; i < rootN; i++) { mvName(nm, rootL[i]); if (!strcmp(nm, w)) { m = rootL[i]; ok = 1; } }
+        if (!ok) { printf("bad\n"); continue; }
+        makeMove(m); GH[gnh++] = m; GK[gnh] = KEY;
+        int cnt = 0; for (int i = gnh; i >= 0; i--) if (GK[i] == KEY) cnt++;
+        if (cnt >= 3 || gnh >= 200) { printf("end %d\n", pointsResult()); continue; }
+        setupBoard(gb, gsd, GH, gnh, 0, 0);
+        if (!rootN) { printf("end %d\n", side ? 1 : -1); continue; }
+        printf("ok\n"); continue;
+      }
+      char nm[8];
+      if (!strncmp(ln, "rnd", 3)) { mvName(nm, rootL[(u32)atoi(ln + 3) % rootN]); printf("%s\n", nm); continue; }
+      if (!strncmp(ln, "go", 2)) {
+        char k = 'n'; int x = 10; sscanf(ln + 2, " %c %d", &k, &x);
+        if (rootN == 1) { mvName(nm, rootL[0]); printf("%s 0 0 0\n", nm); continue; }
+        if (k == 't') best(99, x, 0); else best(99, 0, x);
+        mvName(nm, (Move)IO[0]); printf("%s %d %d %llu\n", nm, IO[1], IO[2], (unsigned long long)nodes); continue;
+      }
+      printf("?\n");
+    }
     return 0;
   }
   fprintf(stderr, "usage: see the comment at the top\n");

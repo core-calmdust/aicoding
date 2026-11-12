@@ -116,7 +116,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=2-pro1-mt1-pd1';
+const ENGINE_URL = 'engine.js?v=3-pro1-mt1-pd1';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -141,7 +141,7 @@ let aiW = makeWorker(), anaW = makeWorker();
 // lead keeps the level's own limits; the helpers fill the shared table, so it reads deeper in the same time). The levels
 // decided by depth / positions only (Lv.1–18) stay on the one-thread workers.
 const MTP = window.MTEngine ? MTEngine.use({
-  wasm: 'engine_mt.wasm?v=5', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=2', slot: 2 << 20, initial: 1152, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
+  wasm: 'engine_mt.wasm?v=6', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=2', slot: 2 << 20, initial: 1152, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => Date.now(), progress: () => {} } }),
   help: m => ({ io: E.setupIO(m.start, m.moves || [], []) }),
 }) : null;
@@ -761,7 +761,7 @@ async function analyzeCurrent(tok) {
 // coach: a second, deeper pass. The all-moves analysis above is quick but shallow (its first choice only
 // matched the 初段 AI level),
 // so the coach then runs the AI's own stronger search and puts that move at the top of the candidates.
-const COACH_DEEP = 17;   // engine LEVELS: 二段, 400,000 positions (about 1 s on a PC)
+const COACH_DEEP = 17;   // engine LEVELS: Lv.17, 210,000 positions (search v2: as strong as 350,000 before)
 async function coachDeep(idx, key, apply) {
   const list = anaCache.get(key);
   if (!list || !list.length || list.deep || !(window.XqCoach && XqCoach.active() && (settings.mode === 'pvp' || toMoveAt(idx) === humanColor))) return;
@@ -1192,7 +1192,7 @@ $('#btnStart').onclick = () => {
 // ====================================================================== rated games vs the AI (solo)
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_CLOCK = { base: 600000, inc: 5000 };
 // rating of each AI step on the kyu / dan scale, from the calibration matches (tools/native.c match, see MODEL_CARD.md)
-const RT_LV = [0, 450, 535, 680, 795, 920, 1095, 1245, 1395, 1510, 1730, 1825, 1880, 1977, 2087, 2212, 2302, 2337, 2362, 2487, 2552];
+const RT_LV = [0, 450, 535, 680, 795, 920, 1095, 1245, 1395, 1510, 1730, 1825, 1880, 1977, 2087, 2212, 2302, 2337, 2362, 2587, 2652];   // (2026-11-13, search v2: Lv.19-20 +100, an estimate from +142 Elo at 100k positions)
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };
