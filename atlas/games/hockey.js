@@ -334,7 +334,15 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
     const locked = () => document.pointerLockElement === ctx.el;
     const lock = () => { if (!canLock || locked()) return; try { const r = ctx.el.requestPointerLock({ unadjustedMovement: false }); if (r && r.catch) r.catch(() => {}); } catch (e) {} };
     const unlock = () => { if (locked()) try { document.exitPointerLock(); } catch (e) {} };
-    const onLockChange = () => { if (!locked() && phase === 'play' && !paused && !stopped) pause(); lastM = null; };
+    const ESCB = { ja: 'Esc：一時停止', en: 'Esc: pause', zh: 'Esc：暂停', 'zh-TW': 'Esc：暫停', ko: 'Esc: 일시 정지', es: 'Esc: pausa', fr: 'Échap : pause', pt: 'Esc: pausa', de: 'Esc: Pause', ru: 'Esc: пауза', tr: 'Esc: duraklat', id: 'Esc: jeda', hi: 'Esc: रोकें', ar: 'Esc: إيقاف مؤقت' };
+    let escB = null;
+    const escBadge = on => {   // (2026-11-12) beside the portal's × while the pointer is held: Esc pauses (only this kind of game)
+      if (on && !escB) { escB = document.createElement('div'); escB.className = 'hk-escb'; escB.textContent = ESCB[ctx.lang] || ESCB.en;
+        escB.style.cssText = 'position:fixed;top:60px;right:14px;z-index:60;padding:6px 12px;border-radius:99px;background:rgba(255,253,247,.94);border:2px solid #efe3c8;color:#4a5068;font:800 12.5px/1 system-ui,sans-serif;box-shadow:0 2px 0 #efe3c8;pointer-events:none';
+        document.body.appendChild(escB); }
+      else if (!on && escB) { escB.remove(); escB = null; }
+    };
+    const onLockChange = () => { escBadge(locked()); if (!locked() && phase === 'play' && !paused && !stopped) pause(); lastM = null; };
     document.addEventListener('pointerlockchange', onLockChange);
     let rawT = 0;
     function onLocked(e) {
@@ -446,7 +454,7 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
       tick();
     }
     // (2026-11-12) the pointer lock: told on the controls card (mouse)
-    const ESCT = ["試合中はマウスカーソルが画面に固定されます（画面の端でもパッドが動き続けます）。Escで解除＝一時停止、クリックで再開。", "During a match the cursor is held in the window (the mallet keeps moving at the screen's edge). Esc lets it go and pauses; click to resume.", "比赛中鼠标指针会被锁定在画面内（到了屏幕边缘也能继续移动）。按 Esc 解除并暂停，点击继续。", "比賽中滑鼠游標會鎖定在畫面內（到了螢幕邊緣也能繼續移動）。按 Esc 解除並暫停，點擊繼續。", "경기 중에는 마우스 커서가 화면에 고정됩니다(화면 끝에서도 패들이 계속 움직입니다). Esc로 해제 = 일시 정지, 클릭하면 재개.", "Durante el partido el cursor queda fijado en la ventana (el mazo sigue moviéndose en el borde). Esc lo libera y pausa; clic para seguir.", "Pendant le match, le curseur reste dans la fenêtre (le maillet bouge même au bord de l'écran). Échap le libère et met en pause ; clic pour reprendre.", "Durante a partida o cursor fica preso na janela (o batedor continua a mover-se na borda). Esc solta e pausa; clique para continuar.", "Während des Spiels bleibt der Mauszeiger im Fenster (der Schläger bewegt sich auch am Bildschirmrand weiter). Esc gibt ihn frei und pausiert; Klick setzt fort.", "Во время матча курсор закреплён в окне (бита двигается и у края экрана). Esc — освободить и пауза, щелчок — продолжить.", "Maç sırasında imleç pencerede sabitlenir (ekran kenarında da raket hareket eder). Esc bırakır ve duraklatır; devam için tıkla.", "Selama pertandingan kursor dikunci di jendela (pemukul tetap bergerak di tepi layar). Esc melepas dan menjeda; klik untuk lanjut.", "मैच के दौरान कर्सर विंडो में बंधा रहता है (स्क्रीन के किनारे पर भी मैलेट चलता रहता है)। Esc से छूटता है और रुकता है; जारी रखने के लिए क्लिक करें।", "أثناء المباراة يبقى المؤشر داخل النافذة (تستمر المضرب في الحركة عند حافة الشاشة). Esc يحرره ويوقف مؤقتًا؛ انقر للمتابعة."];
+    const ESCT = ["試合中はカーソルが固定されます。Escで一時停止、クリックで再開。", "During a match the cursor is held. Esc pauses, a click resumes.", "比赛中鼠标指针会被固定。按 Esc 暂停，点击继续。", "比賽中滑鼠游標會被固定。按 Esc 暫停，點擊繼續。", "경기 중에는 커서가 고정됩니다. Esc로 일시 정지, 클릭하면 재개.", "Durante el partido el cursor queda fijado en la ventana (el mazo sigue moviéndose en el borde). Esc lo libera y pausa; clic para seguir.", "Pendant le match, le curseur reste dans la fenêtre (le maillet bouge même au bord de l'écran). Échap le libère et met en pause ; clic pour reprendre.", "Durante a partida o cursor fica preso na janela (o batedor continua a mover-se na borda). Esc solta e pausa; clique para continuar.", "Während des Spiels bleibt der Mauszeiger im Fenster (der Schläger bewegt sich auch am Bildschirmrand weiter). Esc gibt ihn frei und pausiert; Klick setzt fort.", "Во время матча курсор закреплён в окне (бита двигается и у края экрана). Esc — освободить и пауза, щелчок — продолжить.", "Maç sırasında imleç pencerede sabitlenir (ekran kenarında da raket hareket eder). Esc bırakır ve duraklatır; devam için tıkla.", "Selama pertandingan kursor dikunci di jendela (pemukul tetap bergerak di tepi layar). Esc melepas dan menjeda; klik untuk lanjut.", "मैच के दौरान कर्सर विंडो में बंधा रहता है (स्क्रीन के किनारे पर भी मैलेट चलता रहता है)। Esc से छूटता है और रुकता है; जारी रखने के लिए क्लिक करें।", "أثناء المباراة يبقى المؤشر داخل النافذة (تستمر المضرب في الحركة عند حافة الشاشة). Esc يحرره ويوقف مؤقتًا؛ انقر للمتابعة."];
     // (2026-11-10) the controls first (until 'don't show again'), then the board menu
     function howFirst() {
       if (howOff) { showMenu(); return; }
@@ -513,7 +521,7 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
       timeout() {},
       stop() {
         stopped = true; cancelAnimationFrame(raf); cancelAnimationFrame(padRaf); timers.forEach(clearTimeout);
-        unlock(); document.removeEventListener('pointerlockchange', onLockChange); ctx.el.removeEventListener('pointerdown', onDown); ctx.el.removeEventListener('pointermove', onMove); removeEventListener('pointermove', onMoveW, true); removeEventListener('mouseout', onOutW); if (raw) ctx.el.removeEventListener('pointerrawupdate', onMove); removeEventListener('pointerup', onUp, true); removeEventListener('pointercancel', onUp, true);
+        unlock(); escBadge(false); document.removeEventListener('pointerlockchange', onLockChange); ctx.el.removeEventListener('pointerdown', onDown); ctx.el.removeEventListener('pointermove', onMove); removeEventListener('pointermove', onMoveW, true); removeEventListener('mouseout', onOutW); if (raw) ctx.el.removeEventListener('pointerrawupdate', onMove); removeEventListener('pointerup', onUp, true); removeEventListener('pointercancel', onUp, true);
         removeEventListener('keydown', onKey); removeEventListener('keyup', onKey); removeEventListener('resize', onResize); document.removeEventListener('visibilitychange', onVis); removeEventListener('blur', onBlur); removeEventListener('focus', onFocus);
         ctx.el.style.touchAction = prevTouch; css.remove(); if (toastEl) toastEl.remove(); if (menuEl) menuEl.remove(); if (howEl) howEl.remove(); document.querySelectorAll('.hkbig,.hkfx').forEach(e => e.remove());
         if (T3.turn) T3.turn(null);

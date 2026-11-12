@@ -336,11 +336,21 @@
       const x = pick(a); lastL[k] = x; return fill(x, v || {});
     }
     let streak = 0;
+    // reversi (2026-11-12): a move that misses the goal is not stopped — the game is played out, judged at the end; the right line
+    // only with 答え (as the full game)
+    const RVX = {
+      ja: { lb: '答え', fail: '結果は {b}–{w}。お題には届かなかったね…。「やり直し」でもう一度挑戦しよう！ 正解は「答え」で見られるよ。', ans: '正解の手順を見せるね。', done: 'これが正解の手順だよ（結果 {b}–{w}）。「やり直し」で自分でも打ってみよう！' },
+      en: { lb: 'Answer', fail: 'It ended {b}–{w} — the goal wasn\'t reached. Tap "Retry" to try again! "Answer" shows the solution.', ans: 'Here is the solution.', done: 'That\'s the solution ({b}–{w}). Tap "Retry" and play it yourself!' },
+      zh: { lb: '答案', fail: '结果 {b}–{w}，没有达成目标…点「重来」再挑战一次吧！按「答案」可以看正解。', ans: '给你看正解的手顺。', done: '这就是正解（结果 {b}–{w}）。点「重来」自己下一遍吧！' },
+      'zh-TW': { lb: '答案', fail: '結果 {b}–{w}，沒有達成目標…點「重來」再挑戰一次吧！按「答案」可以看正解。', ans: '給你看正解的手順。', done: '這就是正解（結果 {b}–{w}）。點「重來」自己下一遍吧！' },
+      ko: { lb: '정답', fail: '결과 {b}–{w}. 목표에 닿지 못했어… "다시"로 한 번 더 도전하자! 정답은 "정답" 버튼으로 볼 수 있어.', ans: '정답 수순을 보여 줄게.', done: '이게 정답 수순이야 (결과 {b}–{w}). "다시"로 직접 두어 보자!' },
+    };
+    const RVA = Object.assign({}, RVX.en, RVX[ctx.lang] || {});
 
     /* ---------- the guide's panel (the rules tour's .rgd) ---------- */
     const el = document.createElement('div'); el.className = 'rgd pzg';
     el.innerHTML = `<div class="rgd-in"><div class="pic"><img src="${GD.guide}" alt=""></div><div class="bub"><div class="nm">${name}<span class="pg"></span></div><div class="tx"></div><div class="rvn" hidden></div><div class="cnt"></div></div></div>
-      <div class="rgd-act"><button type="button" class="btn ghost sm ic" data-a="hint" aria-label="${X.hint}" title="${X.hint}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2h5c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/></svg><small>${X.hint}</small></button><button type="button" class="btn ghost sm ic" data-a="again" aria-label="${X.again}" title="${X.again}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4.5h4.5"/></svg><small>${X.again}</small></button>${ctx.onList ? `<button type="button" class="btn ghost sm ic" data-a="list" aria-label="${ctx.t ? ctx.t('bv.list') : ''}" title="${ctx.t ? ctx.t('bv.list') : ''}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg><small>${ctx.t ? ctx.t('bv.list') : ''}</small></button>` : ''}<span class="sp"></span><button type="button" class="btn big" data-a="next">${X.next} ▶</button></div>`;
+      <div class="rgd-act"><button type="button" class="btn ghost sm ic" data-a="hint" aria-label="${X.hint}" title="${X.hint}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2h5c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/></svg><small>${X.hint}</small></button><button type="button" class="btn ghost sm ic" data-a="again" aria-label="${X.again}" title="${X.again}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4.5h4.5"/></svg><small>${X.again}</small></button>${ctx.onList ? `<button type="button" class="btn ghost sm ic" data-a="list" aria-label="${ctx.t ? ctx.t('bv.list') : ''}" title="${ctx.t ? ctx.t('bv.list') : ''}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg><small>${ctx.t ? ctx.t('bv.list') : ''}</small></button>` : ''}${id === 'reversi' ? `<button type="button" class="btn ghost sm ic" data-a="ans" aria-label="${RVA.lb}" title="${RVA.lb}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><small>${RVA.lb}</small></button>` : ''}<span class="sp"></span><button type="button" class="btn big" data-a="next">${X.next} ▶</button></div>`;
     ctx.panel.appendChild(el);
     const $ = s => el.querySelector(s);
     function say(html) {   // typed speech; a tap on the bubble shows it all
@@ -358,6 +368,7 @@
       $('[data-a=again]').disabled = !cur || st === 'load' || st === 'busy';
       $('[data-a=next]').disabled = !cur || st === 'busy' || st === 'load';
       $('[data-a=next]').classList.toggle('ghost', st === 'play');
+      if ($('[data-a=ans]')) $('[data-a=ans]').disabled = !cur || st === 'busy' || st === 'load' || st === 'answer';
     }
     // リバーシ: the discs of each side under the guide's words, kept up after every move (2026-11-12)
     const DSC = c => `<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.2" fill="${c === 1 ? '#1d1f26' : '#fbf7ec'}" stroke="${c === 1 ? '#000' : '#b9b19c'}" stroke-width="1.4"/></svg>`;
@@ -394,7 +405,7 @@
     }
     async function onReady(p) {
       if (p !== cur || stopped) return;
-      if (p.kind === 'rv') { p.state = 'play'; p.ex = pz().exact(); pz().wait(); buttons(); rvCount(); return; }
+      if (p.kind === 'rv') { rvCount(); if (p.auto) return rvAuto(p); p.state = 'play'; p.ex = pz().exact(); pz().wait(); buttons(); return; }
       if (p.kind === 'tac') { p.state = 'busy'; buttons(); await sleep(250); if (p !== cur) return; await pz().play(p.P.line[0]); if (p !== cur) return; }
       p.state = 'play'; pz().wait(); buttons();
     }
@@ -454,22 +465,38 @@
     async function rvMoved(p, u) {
       rvCount(); const list = await p.ex; if (p !== cur || stopped) return;
       const mine = (list.find(x => x.move === u) || { score: -99 }).score;
-      if (list.length && !rvMeets(p.goal, mine)) {
-        const top = Math.max(...list.map(x => x.score)), best = list.filter(x => x.score === top);
-        return wrong(p, 1, best[0].move, fill(X.rv.miss, { m: sqN(u), b: best.map(x => sqN(x.move)).join(' / ') }));
-      }
+      if (list.length && !rvMeets(p.goal, mine)) p.missed = true;   // (not told yet: played out, judged at the end)
       for (;;) {
-        const st = pz().state(); if (st.over) return solved(p);
+        const st = pz().state(); if (st.over) return rvEnd(p);
         if (st.turn === p.me) break;
         await sleep(160); if (p !== cur) return;
         const ol = await pz().exact(); if (p !== cur || stopped) return;
-        if (!ol.length) return solved(p);
+        if (!ol.length) return rvEnd(p);
         const b = ol.reduce((a, x) => x.score > a.score ? x : a, ol[0]);
         await pz().play(b.move); if (p !== cur) return; rvCount();
       }
       const st = pz().state();
-      say(pick(X.good) + ' ' + fill(X.rv.empties, { n: 64 - st.b - st.w }));
+      say(fill(X.rv.empties, { n: 64 - st.b - st.w }));
       p.ex = pz().exact(); p.state = 'play'; pz().wait(); buttons();
+    }
+    function rvEnd(p) {
+      const st = pz().state(), d = p.me === 1 ? st.b - st.w : st.w - st.b, me = p.me === 1 ? st.b : st.w, op = p.me === 1 ? st.w : st.b;
+      if (p.auto) { p.state = 'answer'; say(fill(RVA.done, { b: me, w: op })); buttons(); return; }
+      if (!p.missed && rvMeets(p.goal, d)) return solved(p);
+      p.failed = true; p.state = 'fail'; streak = 0; chime(false); rvCount();
+      say(fill(RVA.fail, { b: me, w: op })); buttons();
+    }
+    async function rvAuto(p) {   // 答え: the right line played out from the start (the best move for either side, by the solver)
+      p.state = 'busy'; buttons(); say(RVA.ans);
+      for (;;) {
+        await sleep(650); if (p !== cur || stopped) return;
+        const st = pz().state(); if (st.over) return rvEnd(p);
+        const L = await pz().exact(); if (p !== cur || stopped) return;
+        if (!L.length) return rvEnd(p);
+        const b = L.reduce((a, x) => x.score > a.score ? x : a, L[0]);
+        pz().mark(b.move); await sleep(350); if (p !== cur) return; pz().mark(null);
+        await pz().play(b.move); if (p !== cur) return; rvCount();
+      }
     }
     async function wrong(p, back, ans, msg) {
       p.failed = true; p.state = 'busy'; buttons(); chime(false);
@@ -510,6 +537,7 @@
     if ($('[data-a=list]')) $('[data-a=list]').onclick = () => ctx.onList();   // 一覧 (the portal's list sheet: pick another problem)
     $('[data-a=again]').onclick = () => { if (!cur) return; begin(B.problem(cur.i, cur.j, X, ctx.lang), false); const a = line('again'); if (a) say(a + ' ' + goal(cur)); };
     $('[data-a=next]').onclick = () => nextPuzzle();
+    if ($('[data-a=ans]')) $('[data-a=ans]').onclick = () => { if (!cur || cur.kind !== 'rv') return; const np = B.problem(cur.i, cur.j, X, ctx.lang); np.auto = true; begin(np, false); cur.failed = true; };
 
     requestAnimationFrame(() => el.classList.add('on'));
     say(X.loading); buttons();
@@ -519,7 +547,7 @@
       if (ctx.pick && B.sets()[ctx.pick.i]) return begin(B.problem(ctx.pick.i, ctx.pick.j, X, ctx.lang), true);   // one chosen in 問題一覧
       nextPuzzle(); }).catch(() => { if (!stopped) say('⚠'); });
 
-    const dbg = { state: () => cur && { kind: cur.kind, i: cur.i, j: cur.j, state: cur.state, used: cur.used, k: cur.k, answer: cur.P.answer || cur.P.line || cur.P.sol, moves: pz() ? pz().moves() : [], say: $('.tx').textContent }, go: (i, j) => begin(B.problem(i, j, X, ctx.lang), true) };
+    const dbg = { state: () => cur && { kind: cur.kind, i: cur.i, j: cur.j, state: cur.state, used: cur.used, k: cur.k, answer: cur.P.answer || cur.P.line || cur.P.sol, moves: pz() ? pz().moves() : [], say: $('.tx').textContent }, go: (i, j) => begin(B.problem(i, j, X, ctx.lang), true), ex: () => cur && cur.ex, user: async u => { const p = cur; await pz().play(u); onMoved(p, u, {}); } };
     window.__atlasPz = dbg;   // (test hook)
     return {
       stop() { stopped = true; if (window.__atlasPz === dbg) delete window.__atlasPz; clearInterval(typeT); timers.forEach(clearTimeout); if (sess) sess.stop(); sess = null; el.remove(); },

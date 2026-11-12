@@ -25,6 +25,8 @@
     bubbles: [['lsPrompt', 'lsFb'], ['pzGoal', 'pzStatus']],
     start(lv, side, mode) {
       if (typeof openNew !== 'function' || typeof draft !== 'object' || !document.getElementById('btnStart')) return null;
+      // the portal: straight to the puzzles / lessons / online match search (reversi/index.html AtlasDeep, 2026-11-12)
+      if (/^(puzzle|lesson|online)$/.test(mode)) { if (!window.AtlasDeep) return null; const q = new URLSearchParams(location.search); return AtlasDeep(mode, q.get('sub'), q.get('tc')); }
       openNew(); draft.mode = mode === 'rated' || mode === 'pvp' ? mode : 'ai';
       if (lv >= 1 && lv <= 20) draft.level = lv;
       if (side === 1 || side === 2) draft.color = side;

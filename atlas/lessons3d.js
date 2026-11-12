@@ -374,7 +374,7 @@
         onReady = res;
         if (!sess) {
           sess = ad.start({ el: ctx.el, Table3D: ctx.Table3D, lang: ctx.lang, t: ctx.t, mode: 'pz', level: 20, side: 1, bar: false, hud: () => {}, onTurn: () => {}, onEnd: () => {},
-            pz: { fen: pos, sfen: pos, sol: sol || [], ready: () => { const f = onReady; onReady = null; if (f) f(); }, moved: (u, i) => onMoved && onMoved(u, i) } });
+            pz: { fen: pos, sfen: pos, sol: sol || [], counts: id === 'reversi', ready: () => { const f = onReady; onReady = null; if (f) f(); }, moved: (u, i) => onMoved && onMoved(u, i) } });
           ctx.Table3D.play(true);
         } else pz().load(pos, sol || []);
       });
@@ -411,11 +411,18 @@
       };
       $('[data-a=next]').onclick = stepOn; stepOn();
     }
+    // (2026-11-12) every problem says first whose turn it is (the side the player plays): 「あなたは●黒番。」
+    const SIDE = { ja: ['あなたは<b>●黒番</b>。', 'あなたは<b>○白番</b>。'], en: ['You play <b>● Black</b>. ', 'You play <b>○ White</b>. '], zh: ['你执<b>●黑</b>。', '你执<b>○白</b>。'], 'zh-TW': ['你執<b>●黑</b>。', '你執<b>○白</b>。'], ko: ['당신은 <b>●흑</b> 차례. ', '당신은 <b>○백</b> 차례. '], es: ['Juegas con <b>● negras</b>. ', 'Juegas con <b>○ blancas</b>. '], fr: ['Vous jouez les <b>● noirs</b>. ', 'Vous jouez les <b>○ blancs</b>. '], pt: ['Você joga de <b>● pretas</b>. ', 'Você joga de <b>○ brancas</b>. '], de: ['Du spielst <b>● Schwarz</b>. ', 'Du spielst <b>○ Weiß</b>. '], ru: ['Вы играете <b>● чёрными</b>. ', 'Вы играете <b>○ белыми</b>. '], tr: ['<b>● Siyah</b> oynuyorsun. ', '<b>○ Beyaz</b> oynuyorsun. '], id: ['Kamu main <b>● Hitam</b>. ', 'Kamu main <b>○ Putih</b>. '], hi: ['आप <b>● काले</b> से खेल रहे हैं। ', 'आप <b>○ सफ़ेद</b> से खेल रहे हैं। '], ar: ['أنت تلعب <b>● بالأسود</b>. ', 'أنت تلعب <b>○ بالأبيض</b>. '] };
+    function sideLine(p) {
+      if (id !== 'reversi' || !p || !p.pos) return '';
+      const s = String(p.pos).split(':')[1]; if (s !== '1' && s !== '2') return '';
+      return ((SIDE[ctx.lang] || SIDE.en)[+s - 1]) + (ctx.lang === 'ja' || /^zh/.test(ctx.lang) ? '' : '');
+    }
     // one problem
     async function prob() {
       phase = 'prob'; const p = cur.probs[cur.k]; if (!p) return finish();
       p.hinted = false; p.used = 0; dots(); act(X.next, { nextOn: false });
-      say(p.ask || X.opGoal);
+      say(sideLine(p) + (p.ask || X.opGoal));
       await board(p.pos, p.sol); if (stopped || cur.probs[cur.k] !== p) return;
       onMoved = (u, info) => moved(p, u, info);
       pz().wait(); act(X.next, { hint: true, nextOn: false });
