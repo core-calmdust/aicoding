@@ -9,11 +9,11 @@
 //       balanced openings from Egaroucid's position / value pairs (rvtrain extract --pairs): positions of that ply whose
 //       value is within --max discs, spread evenly over the file (ply 10 = black to move, 11 = white to move; up to ply 11
 //       the values are a negamax of Lv.17 evaluations of every line, so "0" means balanced, not one game's result).
-//   rvmatch match openings.bin [--wa a.bin.gz] [--wb b.bin.gz] [--a depth,exact,wld] [--b depth,exact,wld]
+//   rvmatch match openings.bin [--wa a.bin.gz] [--wb b.bin.gz] [--a depth,exact,wld[,end]] [--b depth,exact,wld[,end]]
 //                 [--ta 1.5] [--tb 1.5] [--n 1000] [--procs N] [--games out.txt]
 //       A against B: both play every opening as the side to move and as the other side (2 games an opening). The levels'
 //       search (iterative deepening with Multi-ProbCut to `depth`, win/draw/loss solve from `wld` empties, exact from
-//       `exact`), no book, no clock: the result depends only on the settings. Defaults: ../../weights.bin.gz, 10,16,18.
+//       `exact`; with `end` empties or fewer the search goes on to the end of the game — engine.js lv.end), no book, no clock: the result depends only on the settings. Defaults: ../../weights.bin.gz, 10,16,18.
 //       --ta / --tb: Multi-ProbCut's t (1.5 in the game; 0 = off). The same weights and settings on both sides = the
 //       balance between the side to move first and the other (black and white with --ply 10 openings).
 //       Prints A's score, Elo and mean disc difference with their standard errors (by opening pair).
@@ -33,7 +33,7 @@ typedef struct {   // one engine instance (its own copy of the library: its own 
   int (*solve)(u32, u32, u32, u32, int, int, int, int, int);
   void (*set_state)(double, double, int, double, double, double, double, int, int, int, int, int);
   void (*clear_tt)(void);
-  int depth, exact, wld;
+  int depth, exact, wld, end;   // end: engine.js lv.end (with this many empties or fewer the search goes on to the end of the game)
 } Eng;
 static int copyFile(const char *a, const char *b) {
   FILE *f = fopen(a, "rb"), *o = fopen(b, "wb"); if (!f || !o) return 1; char buf[1 << 16]; size_t r;
@@ -61,6 +61,7 @@ static int load(Eng *E, const char *so, const char *wf) {
   E->solve = (int (*)(u32, u32, u32, u32, int, int, int, int, int))dlsym(E->h, "solve_");
   E->set_state = (void (*)(double, double, int, double, double, double, double, int, int, int, int, int))dlsym(E->h, "set_state");
   E->clear_tt = (void (*)(void))dlsym(E->h, "clear_tt");
+  ((void (*)(int))dlsym(E->h, "set_end"))(12);   // (engine.js END_SW)
   return 0;
 }
 #define lo32(x) ((u32)(x))
@@ -86,6 +87,11 @@ static int think(Eng *E, u64 P, u64 O) {
   const int e = 64 - rv_pc(P | O), doExact = e <= E->exact; int maxD = E->depth < e ? E->depth : e; if (doExact && maxD > 10) maxD = 10;
   int pri[64]; for (int i = 0; i < 64; i++) pri[i] = -1; int bm = mv[0], sc = 0;
   for (int d = doExact ? 2 : 1; d <= maxD; d++) { order(mv, n, pri); st(E); sc = rootPVS(E, P, O, mv, n, d, 0, -32001, 32001, &bm); pri[bm] = 1000 + d; }
+  if (E->end && !doExact && e <= E->end && e > maxD) {   // engine.js lv.end: on to the end of the game (aspiration window of 2 discs)
+    order(mv, n, pri); int lo = sc - 200, hi = sc + 200, v;
+    for (;;) { st(E); v = rootPVS(E, P, O, mv, n, e, 0, lo, hi, &bm); if (v <= lo && lo > -32001) { hi = v + 1; lo = -32001; } else if (v >= hi && hi < 32001) { lo = v - 1; hi = 32001; } else break; }
+    sc = v; pri[bm] = 1000 + e;
+  }
   if (doExact) {
     order(mv, n, pri); int g = (int)lrint(sc / 100.0); g = g > 60 ? 60 : g < -60 ? -60 : g; int lo = g - 3, hi = g + 3;
     for (;;) { st(E); const int v = rootPVS(E, P, O, mv, n, 0, 1, lo, hi, &bm); if (v <= lo && lo > -65) { hi = v + 1; lo = -65; } else if (v >= hi && hi < 65) { lo = v - 1; hi = 65; } else break; }
@@ -109,7 +115,7 @@ static int game(Eng *X, Eng *Y, u64 P, u64 O, char *rec) {
   int p = rv_pc(P), o = rv_pc(O), d = p - o; const int em = 64 - p - o; d = d > 0 ? d + em : d < 0 ? d - em : 0;
   return side == 0 ? d : -d;
 }
-static void levelOf(Eng *E, const char *s) { if (sscanf(s, "%d,%d,%d", &E->depth, &E->exact, &E->wld) != 3) { fprintf(stderr, "level: depth,exact,wld (e.g. 10,16,18)\n"); exit(1); } }
+static void levelOf(Eng *E, const char *s) { E->end = 0; if (sscanf(s, "%d,%d,%d,%d", &E->depth, &E->exact, &E->wld, &E->end) < 3) { fprintf(stderr, "level: depth,exact,wld[,end] (e.g. 13,20,22,26)\n"); exit(1); } }
 
 static int openings(int argc, char **argv) {
   int ply = 10, mx = 1; long want = 3000;

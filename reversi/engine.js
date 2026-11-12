@@ -726,6 +726,7 @@ function solveJS(pl, ph, ol, oh, alpha, beta, empties, ply, passed) {
 }
 
 // ---- the same search in WebAssembly (engine.c, built by tools/build-wasm.sh): used when available, same nodes and values
+const END_SW = 12;   // a search that reaches the end of the game hands over to the exact solver with this many empties or fewer (engine.c set_end)
 let WX = null, WON = false;
 (function loadWasm() {
   // pro/ (several threads): the worker has already set up an instance on the shared memory (engine_mt.wasm)
@@ -743,6 +744,7 @@ let WX = null, WON = false;
     WX = new WebAssembly.Instance(new WebAssembly.Module(bytes), { env: { now: () => Date.now() } }).exports;
     if (WX.w_defer) WX.w_defer();   // (v5: memory for the weights when they come — engine.c w_alloc)
     WX.init();
+    if (WX.set_end) WX.set_end(END_SW);   // (a search that reaches the end of the game: exact solver below END_SW empties — engine.c)
   } catch (e) { WX = null; }
 })();
 function wasmWeights() {
@@ -1035,17 +1037,17 @@ const LEVELS = [
   // by a hash of the position) and endgame (exact / wld), the same strength on any device and thread count (the threads only make
   // them faster). time / use / max are only a guard for slow devices (one thread on a slow phone): no new depth after time × use,
   // the hard stop at max (MODEL_CARD.md「29段階→28段階：Lv.17〜27 を深さで刻み直し」).
-  { depth: 10, exact: 18, wld: 20, time: 10000, use: 1, max: 20000, mpc: 1 },   // 17
-  { depth: 11, exact: 18, wld: 20, time: 10000, use: 1, max: 20000, mpc: 1 },   // 18
-  { depth: 12, exact: 18, wld: 20, time: 10000, use: 1, max: 20000, mpc: 1 },   // 19
-  { depth: 13, exact: 20, wld: 22, time: 10000, use: 1, max: 20000, mpc: 1 },   // 20 (2026-11-12: 19/21 → 20/22, black no longer starts its solves a move later than white: MODEL_CARD.md「Lv.20 の読み切りを 20・22 に」)
-  { depth: 16, exact: 22, wld: 24, time: 15000, use: 1, max: 30000, mpc: 1 },   // 21
-  { depth: 20, mix: 16, exact: 22, wld: 24, time: 20000, use: 1, max: 40000, mpc: 1 },   // 22
-  { depth: 20, exact: 22, wld: 24, time: 20000, use: 1, max: 40000, mpc: 1 },   // 23
-  { depth: 22, exact: 23, wld: 24, wtry: 27, xtry: 25, tryMs: 4000, time: 25000, use: 1, max: 50000, mpc: 1 },   // 24 (wtry / xtry / tryMs: below)
-  { depth: 25, mix: 20, exact: 23, wld: 25, wtry: 28, xtry: 25, tryMs: 5000, time: 30000, use: 1, max: 60000, mpc: 1 },   // 25
-  { depth: 25, exact: 23, wld: 25, wtry: 28, xtry: 25, tryMs: 5000, time: 30000, use: 1, max: 60000, mpc: 1 },   // 26
-  { depth: 28, exact: 24, wld: 26, wtry: 29, xtry: 26, tryMs: 6000, time: 30000, use: 1, max: 60000, mpc: 1 },   // 27
+  { depth: 10, exact: 18, wld: 20, end: 24, time: 10000, use: 1, max: 20000, mpc: 1 },   // 17
+  { depth: 11, exact: 18, wld: 20, end: 24, time: 10000, use: 1, max: 20000, mpc: 1 },   // 18
+  { depth: 12, exact: 18, wld: 20, end: 24, time: 10000, use: 1, max: 20000, mpc: 1 },   // 19
+  { depth: 13, exact: 20, wld: 22, end: 26, time: 10000, use: 1, max: 20000, mpc: 1 },   // 20 (2026-11-12: 19/21 → 20/22, black no longer starts its solves a move later than white: MODEL_CARD.md「Lv.20 の読み切りを 20・22 に」)
+  { depth: 16, exact: 22, wld: 24, end: 28, time: 15000, use: 1, max: 30000, mpc: 1 },   // 21
+  { depth: 20, mix: 16, exact: 22, wld: 24, end: 28, time: 20000, use: 1, max: 40000, mpc: 1 },   // 22
+  { depth: 20, exact: 22, wld: 24, end: 28, time: 20000, use: 1, max: 40000, mpc: 1 },   // 23
+  { depth: 22, exact: 23, wld: 24, wtry: 27, xtry: 25, tryMs: 4000, end: 30, time: 25000, use: 1, max: 50000, mpc: 1 },   // 24 (wtry / xtry / tryMs: below)
+  { depth: 25, mix: 20, exact: 23, wld: 25, wtry: 28, xtry: 25, tryMs: 5000, end: 30, time: 30000, use: 1, max: 60000, mpc: 1 },   // 25
+  { depth: 25, exact: 23, wld: 25, wtry: 28, xtry: 25, tryMs: 5000, end: 30, time: 30000, use: 1, max: 60000, mpc: 1 },   // 26
+  { depth: 28, exact: 24, wld: 26, wtry: 29, xtry: 26, tryMs: 6000, end: 30, time: 30000, use: 1, max: 60000, mpc: 1 },   // 27
   // 28 (2026-11-08, Lv.25 until 2026-11-11): the strongest, by time on all threads (page: MT_CFG). max = the hard limit per move in ms
   // (else 2.5 × time); use = start a new depth until this share of time (else 0.45), and a depth cut by max still counts when another
   // root move was already proved better there (think: PART).
@@ -1148,6 +1150,7 @@ function think(cells, toMove, opts, onProgress) {
   const moves = legalList(pl, ph, ol, oh);
   const t0 = Date.now();
   nodes = 0; aborted = false;
+  if (WON && WX.set_end) WX.set_end(END_SW);   // (threads: every instance of the shared module)
   if (moves.length === 0) return { move: -1, score: 0, depth: 0, nodes: 0, ms: 0 };
   if ((lv.mpc || opts.book) && !opts.noBook) {   // (opts.book: PRO mode's opening book at any level)
     const bk = bookLookup(pl, ph, ol, oh);
@@ -1268,6 +1271,21 @@ function think(cells, toMove, opts, onProgress) {
       }
       onProgress && onProgress({ depth: d, move: r.move, score: r.score / SCALE, nodes, ms: Date.now() - t0 });
       if (Date.now() - t0 > softTime * (lv.use || 0.45) && !doExact) break;   // (lv.use: Lv.21-25 start a new depth later and use more of their time)
+    }
+    // lv.end (2026-11-12): with lv.end empties or fewer, straight on from the level's depth to the end of the game — the same search with
+    // depth = empties (Multi-ProbCut above END_SW empties, the exact solver below: engine.c), an aspiration window of 2 discs around the
+    // value so far. Lv.20: +72 Elo for 1.76× the time with end 26 (MODEL_CARD.md「終局まで読む（lv.end）」). The win/draw/loss and exact solves follow as before.
+    if (lv.end && WON && WX.set_end && !opts.rot && !doExact && !variety && result && empties <= lv.end && empties > depthDone && depthDone === midMax) {
+      const ordered = orderRoot(moves, prev);
+      let lo = result.score - 200, hi = result.score + 200, r;
+      for (;;) {
+        r = rootPVS(pos, ordered, empties, 'mid', lo, hi);
+        if (r.score <= lo && lo > -32001) { hi = r.score + 1; lo = -32001; }
+        else if (r.score >= hi && hi < 32001) { lo = r.score - 1; hi = 32001; }
+        else break;
+      }
+      result = r; depthDone = empties; prev.set(r.move, 1e8 + empties);
+      onProgress && onProgress({ depth: empties, move: r.move, score: r.score / SCALE, nodes, ms: Date.now() - t0 });
     }
   } catch (e) {
     if (e !== ABORT) throw e;

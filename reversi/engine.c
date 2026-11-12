@@ -447,8 +447,25 @@ static int SPLIT_D = 5, SPLIT_E = 14;
 #else
 #define CHECK_NODES() if (((long long)(++nodes) & 4095) == 0) { checkTime(); if (aborted) return 0; }
 #endif
+/* (2026-11-12) END_SW: a midgame search whose depth reaches the end of the game (depth >= empties: the top levels near the
+   end, and the levels' selective read to the end — engine.js lv.end) hands the position to the exact solver once END_SW empties
+   or fewer are left: exact values below, Multi-ProbCut above. 0 (the default, and the JS fallback): as before. */
+static int END_SW;
+EXPORT(set_end) void set_end(int e) { END_SW = e; }
+static int solve(u64 P, u64 O, int alpha, int beta, int empties, int ply, int passed);
 static int searchI(u64 P, u64 O, int depth, int alpha, int beta, int ply, int passed) {
   CHECK_NODES()
+  if (END_SW) {
+    const int e = 64 - pc(P | O);
+    if (e <= END_SW && depth >= e) {   /* (the window in discs: alpha rounded down, beta up) */
+      int a = alpha >= 0 ? alpha / 100 : -((-alpha + 99) / 100), b = beta >= 0 ? (beta + 99) / 100 : -((-beta) / 100);
+      if (a < -64) a = -64;
+      if (b > 64) b = 64;
+      if (b <= a) b = a + 1;
+      const int v = solve(P, O, a, b, e, ply, passed);
+      return aborted ? 0 : v * 100;
+    }
+  }
   if (depth <= 0) return evalAt(ply, P, O);
 #ifndef MT
   u32 h = hash(P, O); int ti = h & TT_MASK, ttMove = -1;
