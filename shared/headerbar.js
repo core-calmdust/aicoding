@@ -838,7 +838,8 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 //     type: 'toggle', get: () => on, set: v => { on = v; } });      // or type: 'button', onClick: () => …
 //     or type: 'select', options: [{ v, label: {…} }, …] (or a function), get: () => v, set: v => …  — a pulldown at the row's end
 //     (the language row's look; the list opens under it, upward when there is no room)
-//   h.sync() (redraw its state), h.remove();   optional: hidden: () => true to leave it out for now, disabled: () => true to grey it out (shown, not usable), title: {…} (tooltip)
+//   h.sync() (redraw its state), h.remove();   optional: group: true + groupLabel: {…14} / () => '…' — in the game's own box
+//     (above the system box, under that heading), hidden: () => true to leave it out for now, disabled: () => true to grey it out (shown, not usable), title: {…} (tooltip)
 const OT = {
   opts: { ja: 'オプション', en: 'Options', zh: '选项', 'zh-TW': '選項', ko: '옵션', es: 'Opciones', fr: 'Options', pt: 'Opções', de: 'Optionen', ru: 'Параметры', tr: 'Seçenekler', id: 'Opsi', hi: 'विकल्प', ar: 'خيارات' },
   sound: { ja: 'サウンド', en: 'Sound', zh: '声音', 'zh-TW': '聲音', ko: '사운드', es: 'Sonido', fr: 'Son', pt: 'Som', de: 'Ton', ru: 'Звук', tr: 'Ses', id: 'Suara', hi: 'ध्वनि', ar: 'الصوت' },
@@ -846,6 +847,7 @@ const OT = {
   rec: { ja: '戦績', en: 'Record', zh: '战绩', 'zh-TW': '戰績', ko: '전적', es: 'Historial', fr: 'Bilan', pt: 'Histórico', de: 'Bilanz', ru: 'Статистика', tr: 'Kayıt', id: 'Rekor', hi: 'रिकॉर्ड', ar: 'السجل' },
   set: { ja: '設定', en: 'Settings', zh: '设置', 'zh-TW': '設定', ko: '설정', es: 'Ajustes', fr: 'Réglages', pt: 'Configurações', de: 'Einstellungen', ru: 'Настройки', tr: 'Ayarlar', id: 'Pengaturan', hi: 'सेटिंग्स', ar: 'الإعدادات' },
   on: { ja: 'オン', en: 'On', zh: '开', 'zh-TW': '開', ko: '켬', es: 'Sí', fr: 'Activé', pt: 'Ligado', de: 'An', ru: 'Вкл', tr: 'Açık', id: 'Aktif', hi: 'चालू', ar: 'تشغيل' },
+  sys: { ja: 'システム', en: 'System', zh: '系统', 'zh-TW': '系統', ko: '시스템', es: 'Sistema', fr: 'Système', pt: 'Sistema', de: 'System', ru: 'Система', tr: 'Sistem', id: 'Sistem', hi: 'सिस्टम', ar: 'النظام' },
   off: { ja: 'オフ', en: 'Off', zh: '关', 'zh-TW': '關', ko: '끔', es: 'No', fr: 'Désactivé', pt: 'Desligado', de: 'Aus', ru: 'Выкл', tr: 'Kapalı', id: 'Nonaktif', hi: 'बंद', ar: 'إيقاف' },
 };
 const GEAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
@@ -865,6 +867,15 @@ const OCSS = `
 .hbo-row:hover{background:color-mix(in srgb,currentColor 8%,transparent)}
 .hbo-row[hidden]{display:none!important}
 .hbo-row.dis{opacity:.42;cursor:not-allowed}
+.hbo-box[hidden]{display:none!important}
+.hbo-bh{display:none}
+.hbo-pop.hbo-grp .hbo-box{padding:4px;border-radius:12px;background:color-mix(in srgb,currentColor 5%,transparent);border:1px solid color-mix(in srgb,currentColor 10%,transparent)}
+.hbo-pop.hbo-grp .hbo-box + .hbo-box{margin-top:8px}
+.hbo-pop.hbo-grp .hbo-bh{display:block;padding:5px 8px 4px;font-size:11.5px;font-weight:700;letter-spacing:.06em;opacity:.6}
+.hbo-pop.hbo-atlas.hbo-grp .hbo-box{padding:6px;border-radius:18px;background:#fbf6ea;border:2px solid #f1e6cc}
+.hbo-pop.hbo-atlas.hbo-grp .hbo-bh{font-weight:900;color:#a08250;opacity:1;padding:4px 10px 6px}
+.hbo-pop.hbo-atlas.hbo-grp .hbo-row{background:#fffdf7}
+.hbo-pop.hbo-atlas.hbo-grp .hbo-row:hover{background:#f6efdd}
 .hbo-row.dis:hover{background:none!important}
 .hbo-ic{flex:none;width:36px;height:36px;display:grid;place-items:center}
 .hbo-ic > span[aria-hidden]{display:grid;place-items:center}
@@ -926,7 +937,12 @@ function options(o) {
   const gear = document.createElement('button'); gear.type = 'button'; gear.className = (o.gearClass || 'snd') + ' hbo-gear'; gear.id = o.id || 'btnOpts';
   gear.innerHTML = GEAR; gear.setAttribute('aria-haspopup', 'true'); gear.setAttribute('aria-expanded', 'false');
   const pop = document.createElement('div'); pop.className = 'hbo-pop' + (o.theme === 'atlas' ? ' hbo-atlas' : ''); pop.setAttribute('role', 'menu');
-  const list = document.createElement('div'); list.className = 'hbo-list'; pop.appendChild(list); document.body.appendChild(pop);
+  // two boxes (2026-11-13): the game's own items (addOption with group: true — e.g. reversi's 表示) above, the system ones
+  // (sound, language, threads, …) below, each under its heading; with no game items there is one plain list as before
+  const box = c => { const b = document.createElement('div'); b.className = 'hbo-box ' + c; const h = document.createElement('div'); h.className = 'hbo-bh'; b.appendChild(h); pop.appendChild(b); return b; };
+  const gbox = box('hbo-gbox'), sbox = box('hbo-sbox');
+  const glist = document.createElement('div'); glist.className = 'hbo-list hbo-glist'; gbox.appendChild(glist);
+  const list = document.createElement('div'); list.className = 'hbo-list'; sbox.appendChild(list); document.body.appendChild(pop);
   // the gear: right before the orientation button / home (o.after), so 盤面反転 stays on its left
   const after = o.after || '#btnLand, #btnRot, .land, a';
   const seat = () => {
@@ -1007,8 +1023,10 @@ function options(o) {
     for (const [u, r] of rows) if (!ins.includes(u)) { r.remove(); rows.delete(u); }
     // the game's own items (HeaderBar.addOption): before the language row (the language stays last)
     const xs = EXTRA.filter(x => x.alive);
-    list.querySelectorAll(':scope > .hbo-x').forEach(r => { if (!xs.some(x => x.id === r.dataset.x)) r.remove(); });
-    const xr = xs.map(x => [...list.querySelectorAll(':scope > .hbo-x')].find(e => e.dataset.x === x.id) || xRow(x));   // (no CSS.escape: CSS here is this file's style text)
+    pop.querySelectorAll('.hbo-list > .hbo-x').forEach(r => { if (!xs.some(x => x.id === r.dataset.x)) r.remove(); });
+    const xrow = x => [...pop.querySelectorAll('.hbo-list > .hbo-x')].find(e => e.dataset.x === x.id) || xRow(x);   // (no CSS.escape: CSS here is this file's style text)
+    const xr = xs.filter(x => !x.group).map(xrow), gr = xs.filter(x => x.group).map(xrow);
+    gr.forEach((r, k) => { if (glist.children[k] !== r) glist.insertBefore(r, glist.children[k] || null); });
     const li = want.findIndex(r => r.querySelector(':scope > .hbo-end'));
     want.splice(li < 0 ? want.length : li, 0, ...xr);
     want.forEach((r, k) => { if (list.children[k] !== r) list.insertBefore(r, list.children[k] || null); });   // (only what is out of place: no endless re-sorting)
@@ -1025,7 +1043,7 @@ function options(o) {
       if (tg) { r.setAttribute('role', 'menuitemcheckbox'); r.setAttribute('aria-checked', on ? 'true' : 'false'); r.title = lb + ': ' + (on ? onT : offT); } else r.removeAttribute('title');
       if (r.hidden === sh) r.hidden = !sh;
     }
-    for (const r of list.querySelectorAll(':scope > .hbo-x')) {
+    for (const r of pop.querySelectorAll('.hbo-list > .hbo-x')) {
       const x = EXTRA.find(e => e.id === r.dataset.x); if (!x) continue;
       const lb = pickL(x.label), on = x.type === 'toggle' && !!safe(x.get);
       const lbe = r.querySelector('.hbo-lb'); if (lbe.textContent !== lb) lbe.textContent = lb;
@@ -1035,7 +1053,10 @@ function options(o) {
       const hid = !!(x.hidden && safe(x.hidden)); if (r.hidden !== hid) r.hidden = hid;
       const dis = !!(x.disabled && safe(x.disabled)); r.classList.toggle('dis', dis); if (dis) r.setAttribute('aria-disabled', 'true'); else r.removeAttribute('aria-disabled');   // (greyed out: shown, not usable now)
     }
-    const any = [...list.children].some(r => !r.hidden), gt = ot('opts', l);
+    const gAny = [...glist.children].some(r => !r.hidden), sAny = [...list.children].some(r => !r.hidden), any = gAny || sAny, gt = ot('opts', l);
+    gbox.hidden = !gAny; pop.classList.toggle('hbo-grp', gAny && sAny);
+    { const gx = EXTRA.find(x => x.alive && x.group), gh = gx ? pickL(gx.groupLabel) : '', sh = ot('sys', l), a = gbox.firstChild, b = sbox.firstChild;
+      if (a.textContent !== gh) a.textContent = gh; if (b.textContent !== sh) b.textContent = sh; }
     if (gear.hidden === any) gear.hidden = !any;
     if (gear.title !== gt) { gear.title = gt; gear.setAttribute('aria-label', gt); }
     if (!any && open) close();
@@ -1067,6 +1088,7 @@ function options(o) {
   const mo = new MutationObserver(later);
   mo.observe(host, { childList: true });
   mo.observe(list, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'hidden', 'style', 'aria-pressed', 'aria-label', 'title'] });
+  mo.observe(glist, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'hidden', 'style', 'aria-pressed', 'aria-label', 'title'] });
   new MutationObserver(() => setTimeout(paint, 0)).observe(document.documentElement, { attributes: true, attributeFilter: ['lang', 'class'] });
   new MutationObserver(later).observe(document.body, { attributes: true, attributeFilter: ['class'] });   // (body.it-on … hides the record)
   addEventListener('resize', later); setTimeout(later, 700); setTimeout(later, 2500);

@@ -754,7 +754,7 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) .modal.ng-fit:not(#_):not(#_) .modal
 html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order][data-ngt=rules] .ng-col:not(#_):not(:has(.pro-panel:not(.hidden))){justify-content:center!important;gap:34px!important;padding-top:26px!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] :is(#fLevel,#fLevel2) .level-wrap{display:flex!important;flex-direction:column;gap:16px}
 html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] :is(#fLevel,#fLevel2) .level-name:not(#_){order:-1;display:block!important;text-align:center;font-size:32px!important;line-height:1.2!important;letter-spacing:.03em;margin:6px 0 0!important}
-html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] :is(#fLevel,#fLevel2) .level-name small:not(#_){font-size:13px!important;letter-spacing:.02em;min-height:0!important;margin-top:8px!important;color:#9a8664;-webkit-line-clamp:3}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] :is(#fLevel,#fLevel2) .level-name small:not(#_){font-size:15px!important;line-height:1.6!important;letter-spacing:.02em;min-height:0!important;margin-top:10px!important;color:#8a7552;-webkit-line-clamp:3;max-width:30em;margin-inline:auto!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] :is(#fLevel,#fLevel2) input[type=range]{width:100%;margin:4px 0 0}
 /* AI同士: a stone before each side's label */
 html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order]:has(#fLevel2:not(.hidden)) :is(#fLevel,#fLevel2) > label:first-child::before{content:'';flex:none;width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#5a5a5a,#111 70%);box-shadow:0 1px 2px rgba(0,0,0,.35)}
@@ -777,3 +777,5 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) .dk-me > b::first-letter{font-size:1
 html.atlas-skin:not(.atlas-2d) body:not(#_) .rt-card .rt-head{align-items:baseline!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .rt-card .rt-r{display:inline-block;font-size:34px!important;line-height:1.05!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .rt-card .rt-r::first-letter{font-size:16px;margin-inline-end:2px}
+/* (2026-11-13) with the opt-in layout the panels keep their height whether PRO is open or not: the other side stays put */
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] .ng-cols:not(#_){align-items:stretch!important}

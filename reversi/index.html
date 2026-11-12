@@ -1713,11 +1713,11 @@ html.ng-disp-gear #newOverlay #fDisplay{display:none!important}   /* 表示 opti
   </div>
 </div>
 
-<script src="i18n.js?v=20261113lv36"></script>
+<script src="i18n.js?v=20261113lv36p"></script>
 <script src="../shared/pzbook.js?v=8l14"></script>
 <script src="../shared/placement.js?v=1l14"></script>
 <script src="../shared/rulesoffer.js?v=17l14j"></script>
-<script src="../shared/headerbar.js?v=58"></script>
+<script src="../shared/headerbar.js?v=59"></script>
 <script src="../shared/flipbtn.js?v=3l14"></script>
 <script src="../shared/cardbar.js?v=15l14"></script><script src="../shared/luxintro.js?v=3"></script>
 <script src="../shared/watchpause.js?v=2l14"></script>
@@ -3024,10 +3024,11 @@ $('#btnCancelNew').onclick = () => {
     eval: `<svg ${S}><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>`,
     anim: `<svg ${S}><path d="M4 12h3M2 7h5M3 17h4"/><circle cx="15" cy="12" r="6"/></svg>`,
     coach: `<svg ${S}><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M9 12h.01M12 12h.01M15 12h.01"/></svg>` };
+  const GL = { ja: 'リバーシ', en: 'Reversi', zh: '黑白棋', 'zh-TW': '黑白棋', ko: '리버시', es: 'Reversi', fr: 'Reversi', pt: 'Reversi', de: 'Reversi', ru: 'Реверси', tr: 'Reversi', id: 'Reversi', hi: 'रिवर्सी', ar: 'ريفرسي' };   // (the game's box in the options)
   const rtOff = k => (k === 'eval' || k === 'coach') && typeof rtLive === 'function' && rtLive();
   [['optLegal', 'legal'], ['optLast', 'last'], ['optEval', 'eval'], ['optAnim', 'anim'], ['optCoach', 'coach']].forEach(([id, k]) => {
     const cb = $('#' + id); if (!cb) return;
-    HeaderBar.addOption({ id: 'disp-' + k, icon: IC[k], type: 'toggle', label: () => (cb.closest('label') || cb).textContent.trim(),
+    HeaderBar.addOption({ id: 'disp-' + k, icon: IC[k], type: 'toggle', group: true, groupLabel: GL, label: () => (cb.closest('label') || cb).textContent.trim(),
       disabled: () => rtOff(k), get: () => !!settings[k],
       set: v => { settings[k] = !!v; cb.checked = !!v; renderBoard(null); renderInfo(); save(); } });
   });
@@ -5879,7 +5880,7 @@ accRender();
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=69l42'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=70l42'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net

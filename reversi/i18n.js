@@ -1699,3 +1699,34 @@ for (const l in window.I18N) { const d = window.I18N[l]; if (!d.lv || !d.lvd || 
   nd[28] = nd[28].replace('19', '20');   // (Lv.28, the old Lv.20: its exact solve from 20 empties since 2026-11-12)
   d.lv = d.lv.slice(0, 29).concat(heaven(l, d.lv)); d.lvd = nd; }
 })();
+// 2026-11-13: the AI levels in plain words in the new-game dialog (ja / en, made from the short notes above; others keep them)
+(function () {
+const JA = s => {
+  if (!s) return s;
+  if (/^ほぼでたらめ/.test(s)) return 'ほとんど適当に打ちます。オセロをはじめて打つ人向けです。';
+  const sec = s.match(/^約(\d+)秒・終盤(\d+)マス/); if (sec) return `1手に約${sec[1]}秒かけて深く考え、残り${sec[2]}マスからは最後まで読み切ります。速い端末ほど強くなります。`;
+  const m = s.match(/^(かなり気まぐれ|気まぐれ)?・?(最大)?(\d+(?:\/\d+)?)手読み(?:・(.*))?$/); if (!m) return s;
+  const n = m[3].replace('/', '〜'), rest = m[4] || '';
+  let a = (m[1] === 'かなり気まぐれ' ? 'かなり気まぐれに打ちます。' : m[1] ? '少し気まぐれに打ちます。' : '') + (m[2] ? '最大' : '') + (n === '1' ? '1手先だけを見て' : n + '手先まで考えて');
+  const e = rest.match(/終盤(\d+)マス/);
+  if (e) return a.replace(/考えて$/, '考え') + `、残り${e[1]}マスからは最後まで読み切ります。`;
+  const miss = { 'ミス多め': 'ミスが多めです。', 'ミスあり': 'ミスもします。', 'ときどきミス': 'ときどきミスをします。' }[rest];
+  if (!miss && m[1]) return a + '、よく悪い手を打ちます。';
+  return a + '打ちます。' + (miss || 'ミスはほとんどしません。');
+};
+const EN = s => {
+  if (!s) return s;
+  if (/^almost random/.test(s)) return 'Plays almost at random. For your very first games.';
+  const sec = s.match(/^~(\d+) s, solves last (\d+)/); if (sec) return `Thinks about ${sec[1]} seconds a move and reads the last ${sec[2]} empty squares to the end. Stronger on faster devices.`;
+  const m = s.match(/^(very erratic, |erratic, )?(up to )?(\d+(?:\/\d+)?)-ply(?: search)?(?:, (.*))?$/); if (!m) return s;
+  const n = m[3].replace('/', '–'), rest = m[4] || '';
+  let a = (m[1] === 'very erratic, ' ? 'Plays on a whim. ' : m[1] ? 'A little erratic. ' : '') + 'Thinks ' + (m[2] ? 'up to ' : '') + (n === '1' ? 'one move' : n + ' moves') + ' ahead';
+  const e = rest.match(/solves last (\d+)/);
+  if (e) return a + ` and reads the last ${e[1]} empty squares to the very end.`;
+  const miss = { 'many mistakes': 'Makes quite a few mistakes.', 'makes mistakes': 'Makes mistakes.', 'some mistakes': 'Makes a mistake now and then.' }[rest];
+  if (!miss && m[1]) return a + ' and often makes bad moves.';
+  return a + '. ' + (miss || 'Hardly ever makes a mistake.');
+};
+const F = { ja: JA, en: EN };
+for (const l in F) { const d = window.I18N[l]; if (d && d.lvd) d.lvd = d.lvd.map(F[l]); }
+})();
