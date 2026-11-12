@@ -1056,7 +1056,7 @@
     // the card's resting top (layout only: its slide-in animation must not move the framing — that made the camera return in two steps)
     let top = 0; for (let e = card; e; e = e.offsetParent) top += e.offsetTop;
     if (!card.offsetParent) top = card.getBoundingClientRect().top;
-    Table3D.setInset(playing ? (window.__tbar ? __tbar.band : 0) : !$('bv').classList.contains('on') ? 0 : innerHeight - top + 4, playing ? (window.__land && __land.top()) || (window.__hudTop ? __hudTop() : 0) : 0);   // playing: the board is framed above the action bar
+    Table3D.setInset(playing ? (window.__tbar ? __tbar.band : 0) + (innerWidth >= 820 ? Math.round(innerHeight * .035) : 0) : !$('bv').classList.contains('on') ? 0 : innerHeight - top + 4, playing ? (window.__land && __land.top()) || (window.__hudTop ? __hudTop() : 0) : 0);   // playing: the board is framed above the action bar
     $('bv').style.setProperty('--bvcard', Math.max(0, innerHeight - top) + 'px');
   }
   addEventListener('resize', () => fitStage());
