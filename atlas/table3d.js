@@ -45,17 +45,21 @@
     if (v) {
       const c0 = document.createElement('canvas'); c0.width = c0.height = 2;
       t = new (T().Texture)(c0); t.__baked = true; t.needsUpdate = true;
-      const img = new Image(); img.decoding = 'async';
-      img.onload = () => {   // (baked at full size: a phone asking for half the size gets it shrunk, as its drawing would have been)
+      const img = new Image(); img.decoding = 'async'; texWaitN++;
+      img.onload = () => { texDone();   // (baked at full size: a phone asking for half the size gets it shrunk, as its drawing would have been)
         let im = img; if (img.width > w * 1.2 && w > 8 && h > 8) { try { const c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(img, 0, 0, w, h); im = c; } catch (e) {} }
         t.image = im; t.needsUpdate = true; kickSoon(); };
-      img.onerror = () => { t.image = drawTex(key, w, h, draw); t.__baked = false; t.needsUpdate = true; kickSoon(); };
+      img.onerror = () => { texDone(); t.image = drawTex(key, w, h, draw); t.__baked = false; t.needsUpdate = true; kickSoon(); };
       img.src = new URL(texFile(key) + '?v=' + v, TEX_HERE).href;
     } else t = new (T().CanvasTexture)(drawTex(key, w, h, draw));
     t.anisotropy = 4; t.encoding = T().sRGBEncoding;
     if (rep) { t.wrapS = t.wrapT = T().RepeatWrapping; t.repeat.set(rep, rep); }
     return (texCache[key] = t);
   }
+  // the baked pictures still on their way (swap() waits for them before it shows the new board / room)
+  let texWaitN = 0, texWaiters = [];
+  function texDone() { texWaitN = Math.max(0, texWaitN - 1); if (!texWaitN) { const w = texWaiters; texWaiters = []; w.forEach(f => f()); } }
+  const texReady = (ms) => new Promise(res => { if (!texWaitN) return res(); texWaiters.push(res); setTimeout(res, ms); });
   const kickSoon = () => { try { if (window.Table3D && Table3D.kick) Table3D.kick(300); } catch (e) {} };
   // value noise / fbm for natural-looking textures
   function makeNoise(seed) {
@@ -2245,6 +2249,42 @@
   function turn(a, s) { if (a == null) { tYaw = null; tS = 1; yaw = 0; } else { tYaw = a; tS = s || 1; } rootDirty = true; kick(250); }
   function project(x, z, y) { const v = new (T().Vector3)(x, y || 0, z); cur.localToWorld(v); v.project(cam); const r = el.getBoundingClientRect(); return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height }; }
   // snap the camera to where it is heading (after a game: the showcase view at once, framed above the info card)
+  /* ---------- swap (2026-11-12): a board or a room is rebuilt behind the picture of the moment ----------
+     The build (models, textures, merging) and the first frame's shaders block the page for a moment, and the baked pictures arrive
+     after it. The canvas used to be faded out meanwhile, so the page's one colour filled the screen. Now the last frame is copied onto
+     a canvas laid over the 3D view, the work runs under it, and once the new frame is drawn and its pictures are in (≤ 2.5 s) the copy
+     fades out. */
+  let swapCv = null, swapN = 0;
+  // pre (optional): a promise to wait for under the picture before the work (a board whose textures are still being drawn, 2026-11-12).
+  // The work always runs (the caller checks whether it is still wanted); only the newest swap's picture is kept and faded.
+  function swap(work, pre, cut) {   // cut: the held picture simply goes when the new one is drawn (no fade)
+    const run = () => { try { work(); } catch (e) { console.warn(e); } };
+    if (!R || !el || !R.domElement.width) { if (pre) Promise.resolve(pre).catch(() => {}).then(run); else run(); return; }
+    const n = ++swapN; kick(200);
+    requestAnimationFrame(() => {   // (after the loop's own callback of this frame: its picture is still in the drawing buffer)
+      if (n === swapN) {
+        const src = R.domElement;
+        if (!swapCv) { swapCv = document.createElement('canvas'); swapCv.className = 't3-swap'; swapCv.style.cssText = 'position:absolute;left:0;top:0;pointer-events:none;z-index:2;'; }
+        try {
+          if (!swapCv.parentNode) { swapCv.width = src.width; swapCv.height = src.height; swapCv.getContext('2d').drawImage(src, 0, 0); }   // (a swap over a swap: the picture already held stays)
+          Object.assign(swapCv.style, { width: src.clientWidth + 'px', height: src.clientHeight + 'px', left: src.offsetLeft + 'px', top: src.offsetTop + 'px', transition: 'none', opacity: '1' });
+          if (swapCv.parentNode !== el) el.appendChild(swapCv);
+        } catch (e) { if (swapCv.parentNode) swapCv.remove(); }
+      }
+      Promise.resolve(pre).catch(() => {}).then(() => {
+        run(); kick(600);
+        if (n !== swapN) return;
+        texReady(2500).then(() => requestAnimationFrame(() => requestAnimationFrame(() => {   // (two frames: the new picture is on screen)
+          if (n !== swapN || !swapCv || !swapCv.parentNode) return;
+          kick(600); if (cut) { swapCv.remove(); return; }
+          swapCv.style.transition = 'opacity .3s ease-in'; swapCv.style.opacity = '0';
+          setTimeout(() => { if (n === swapN && swapCv.parentNode) swapCv.remove(); }, 340);
+        })));
+      });
+    });
+  }
+  // a board shown at once (no swap): a picture still held from an earlier swap goes now
+  function swapCancel() { swapN++; if (swapCv && swapCv.parentNode) swapCv.remove(); }
   function snap() { camK = camTo; zoom = zoomTo = 1; pzoom = pzoomTo; tilt = 0; vel = 0; inset = insetTo; insetT = insetTTo; frame(); kick(300); }
   const _dbg = () => ({ camK, camTo, inset, insetTo, insetT, vsh, zoom, zoomTo, yaw, tilt, mode, fitTo, orthoW, museum: museumOn, aspect: cam && cam.aspect });
   const _scene = () => scene;
@@ -2312,5 +2352,5 @@
   try { if (sessionStorage.getItem('t3d-debug')) setTimeout(() => R && dbgToggle(true), 500); } catch (e) {}
   setInterval(() => { if (dbgOn && performance.now() - dbgT > 1000) { dbgFps = 0; dbgT = performance.now(); dbgPaint(); } }, 1000);   // (the loop sleeps when nothing moves: keep the numbers fresh)
 
-  window.Table3D = { placeOff: PLACE_OFF, fitRect, modelRect, _texT: texT, _texCache: texCache, _texFile: texFile, decoOn, boSet: on => { BO_OK = !!on; bo.key = ''; kick(400); }, debug: dbgToggle, TABLES, placeMon, setTable, table: () => tableStyle, setBright, bright: () => bright, turn, museum, setShift, quiet, setTimeOfDay, timeOfDayPick: todPick, share, lp, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, tatami: () => tatamiTex(), stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, rvDisc, rvMats, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
+  window.Table3D = { swap, swapCancel, placeOff: PLACE_OFF, fitRect, modelRect, _texT: texT, _texCache: texCache, _texFile: texFile, decoOn, boSet: on => { BO_OK = !!on; bo.key = ''; kick(400); }, debug: dbgToggle, TABLES, placeMon, setTable, table: () => tableStyle, setBright, bright: () => bright, turn, museum, setShift, quiet, setTimeOfDay, timeOfDayPick: todPick, share, lp, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, tatami: () => tatamiTex(), stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, rvDisc, rvMats, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
 })();

@@ -767,9 +767,15 @@
       };
       if (TG && !back) try { warm(id); } catch (e) {}   // (built now, so its textures are under way)
       if (!back && texBusy(id)) {   // its textures are still being drawn (opened right after the page loaded): show it when they are done
-        const tok = ++show3dTok, gl = $('gl'); gl.style.visibility = 'hidden';
-        pend3d = texReady(id).then(() => { if (tok !== show3dTok) return; pend3d = null; gl.style.visibility = ''; if (bvGame === g && $('bv').classList.contains('on')) show3d(); });
-      } else { ++show3dTok; pend3d = null; $('gl').style.visibility = ''; show3d(); }
+        const tok = ++show3dTok, gl = $('gl');
+        if (Table3D.swap) {   // (2026-11-12) the picture of the moment stays over the view meanwhile (it was hidden: the page's one colour showed)
+          gl.style.visibility = '';
+          pend3d = new Promise(res => Table3D.swap(() => { if (tok === show3dTok) { pend3d = null; if (bvGame === g && $('bv').classList.contains('on')) show3d(); } res(); }, texReady(id), true));   // (no fade: the new board simply appears)
+        } else {
+          gl.style.visibility = 'hidden';
+          pend3d = texReady(id).then(() => { if (tok !== show3dTok) return; pend3d = null; gl.style.visibility = ''; if (bvGame === g && $('bv').classList.contains('on')) show3d(); });
+        }
+      } else { ++show3dTok; pend3d = null; $('gl').style.visibility = ''; if (Table3D.swapCancel) Table3D.swapCancel(); show3d(); }
     }
     else $('gl').innerHTML = `<div style="position:absolute;inset:0;display:grid;place-items:center"><img src="${artSrc(g)}" alt="" style="width:min(70vw,420px)"></div>`;
     bvCard(g, id, push, flown);
