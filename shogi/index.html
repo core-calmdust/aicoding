@@ -934,6 +934,23 @@ html[lang=ar] :is(.ru-txt, .ru-win p, .ls-gh, .ls-note){text-align:right}
 .ol-tcl{font-size:12px;color:var(--muted);letter-spacing:.1em;margin:0 0 6px}
 .ol-vsel{width:100%;padding:8px 10px;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--line);color:var(--text);font:inherit;font-size:14px}.ol-vsel option,.ol-vsel optgroup{background:#1e1a16;color:#eee}
 .ol-vsel.dk-vsel{width:auto;max-width:150px;padding:5px 8px;font-size:12.5px}
+.ol-vpick{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 12px;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--line);color:var(--text);font:inherit;font-size:14px;cursor:pointer;text-align:start}
+.ol-vpick:hover{border-color:color-mix(in srgb, var(--brass,#c9a961) 55%, var(--line))}
+.ol-vpick i{font-style:normal;font-size:11px;color:var(--brass,#c9a961)}
+.ol-vpick > span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ol-vpick.dk-vpick{width:auto;max-width:170px;padding:5px 10px;font-size:12.5px}
+.ol-vpop{position:fixed;z-index:400;overflow-y:auto;padding:6px;border-radius:14px;background:var(--panel,#1e1a16);border:1px solid color-mix(in srgb, var(--brass,#c9a961) 35%, var(--line));box-shadow:0 18px 40px -12px rgba(0,0,0,.7)}
+.ol-vpop .ol-vg{display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.12em;color:var(--brass,#c9a961);padding:9px 10px 4px}
+.ol-vpop .ol-vg::after{content:'';flex:1;height:1px;background:linear-gradient(90deg, color-mix(in srgb, var(--brass,#c9a961) 45%, transparent), transparent)}
+.ol-vpop button{display:flex;width:100%;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;border:0;border-radius:9px;background:none;color:var(--text);font:inherit;font-size:14px;cursor:pointer;text-align:start}
+.ol-vpop button:hover{background:rgba(255,255,255,.06)}
+.ol-vpop button.on{background:color-mix(in srgb, var(--accent) 18%, transparent);color:var(--accent);font-weight:700}
+.ol-vpop button i{font-style:normal}
+html.atlas-skin .ol-vpop{background:#fffcf4!important;border-color:#e6d3ab!important;box-shadow:0 18px 40px -16px rgba(90,60,20,.5)!important}
+html.atlas-skin .ol-vpop button:hover{background:#f6ecd8!important}
+html.atlas-skin .ol-vpop button.on{background:#f3e3bf!important;color:#8a5a12!important}
+html.atlas-skin .ol-vpop .ol-vg{color:#b07a1e!important}
+
 .ol-tc{display:flex;gap:3px;padding:3px;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--line)}
 .ol-tc button{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 4px;border-radius:7px;color:var(--muted);font:inherit;font-size:13px;line-height:1.25;background:none;border:0;cursor:pointer;white-space:nowrap}
 .ol-tc button small{font-size:10.5px;color:var(--dim)}
@@ -5596,15 +5613,29 @@ const tcTag = id => (window.Online && Online.TC[id] ? t('ol.tcn.' + id) : t('ol.
 const OL_V_KEY = 'shogi-online-v', OL_VS = ['', 'random', 'nigyoku', 'heian9', 'heian98', 'heian8', 'mini', 'judkins', 'goro', 'micro', 'hasami'];
 const OL_VG = [[0, 6], [6, 10], [10, 11]];   // 本将棋系 · マイクロ系 · 異種遊戯
 function olV() { try { const u = new URLSearchParams(location.search).get('variant'); if (u && OL_VS.includes(u) && !olV.url) { olV.url = 1; localStorage.setItem(OL_V_KEY, u); } const v = localStorage.getItem(OL_V_KEY) || ''; return OL_VS.includes(v) ? v : ''; } catch (e) { return ''; } }
-function olSetV(v) { try { localStorage.setItem(OL_V_KEY, OL_VS.includes(v) ? v : ''); } catch (e) {} document.querySelectorAll('.ol-vsel').forEach(el => { el.value = olV(); }); }
+function olSetV(v) { try { localStorage.setItem(OL_V_KEY, OL_VS.includes(v) ? v : ''); } catch (e) {} document.querySelectorAll('.ol-vpick > span').forEach(el => { el.textContent = olVName(olV()); }); }
 const olVName = v => window.Variants ? Variants.vName(v || '') : (v || '');
 const olVTag = v => v ? ' · ' + olEsc(olVName(v)) : '';
+// 種目: a button that opens the grouped list in the dialog's own look (not the browser's select menu, 2026-11-12)
 function olVSel(cls, id) {
   if (!window.Variants) return '';
-  const cur = olV(), gl = ['gStd', 'gMicro', 'gIshu'];
-  return `<select class="ol-vsel ${cls || ''}"${id ? ` id="${id}"` : ''} aria-label="${olEsc(Variants.label())}">` + OL_VG.map(([a, b], i) => `<optgroup label="${olEsc(Variants.gName(i))}">` + OL_VS.slice(a, b).map(v => `<option value="${v}"${v === cur ? ' selected' : ''}>${olEsc(olVName(v))}</option>`).join('') + '</optgroup>').join('') + '</select>';
+  return `<button type="button" class="ol-vpick ${cls || ''}"${id ? ` id="${id}"` : ''} aria-haspopup="listbox" aria-label="${olEsc(Variants.label())}"><span>${olEsc(olVName(olV()))}</span><i aria-hidden="true">▾</i></button>`;
 }
-document.addEventListener('change', e => { const el = e.target.closest && e.target.closest('.ol-vsel'); if (el) olSetV(el.value); });
+function olVPop(btn) {
+  let pop = document.getElementById('olVPop');
+  if (pop) { const same = pop.__btn === btn; pop.remove(); if (same) return; }
+  const cur = olV();
+  pop = document.createElement('div'); pop.id = 'olVPop'; pop.className = 'ol-vpop'; pop.setAttribute('role', 'listbox'); pop.__btn = btn;
+  pop.innerHTML = OL_VG.map(([a, b], i) => `<div class="ol-vg">${olEsc(Variants.gName(i))}</div>` + OL_VS.slice(a, b).map(v => `<button type="button" role="option" data-v="${v}" class="${v === cur ? 'on' : ''}"><span>${olEsc(olVName(v))}</span>${v === cur ? '<i>✓</i>' : ''}</button>`).join('')).join('');
+  document.body.appendChild(pop);
+  const r = btn.getBoundingClientRect(), w = Math.max(r.width, 220), ph = pop.offsetHeight, below = innerHeight - r.bottom - 8;
+  pop.style.width = w + 'px'; pop.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left)) + 'px';
+  if (ph <= below || below >= r.top) { pop.style.top = (r.bottom + 6) + 'px'; pop.style.maxHeight = (below - 6) + 'px'; } else { pop.style.top = Math.max(8, r.top - 6 - ph) + 'px'; pop.style.maxHeight = (r.top - 14) + 'px'; }
+  pop.onclick = e => { const o = e.target.closest('button[data-v]'); if (!o) return; olSetV(o.dataset.v); pop.remove(); };
+  setTimeout(() => { const off = e => { if (!pop.isConnected) return document.removeEventListener('pointerdown', off, true); if (!pop.contains(e.target) && !btn.contains(e.target)) { pop.remove(); document.removeEventListener('pointerdown', off, true); } }; document.addEventListener('pointerdown', off, true); }, 0);
+}
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('.ol-vpick'); if (b) { e.stopPropagation(); olVPop(b); } }, true);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { const p = document.getElementById('olVPop'); if (p) { p.remove(); e.stopPropagation(); } } }, true);
 function olTcSel(cls) {
   const cur = olTc();
   return `<div class="ol-tc ${cls || ''}" role="radiogroup" aria-label="${olEsc(t('ol.tc'))}">` + Online.TC_IDS.map(id => `<button type="button" role="radio" data-tc="${id}" class="${id === cur ? 'sel' : ''}" aria-checked="${id === cur}" title="${olEsc(t('ol.tc.' + id))}"><b>${t('ol.tcn.' + id)}</b><small>${t('ol.tcd.' + id)}</small></button>`).join('') + '</div>';
@@ -5970,7 +6001,7 @@ function dockRender() {
   $('#dkStat').textContent = t('ol.dockStat', { n: dock.players.length, w: dock.lobby.length, r: dock.rooms.length });
   $('#mtCount').textContent = dock.players.length ? String(dock.players.length) : '';
   const tcEl = $('#dkTc'), tcL = LANG + (Online.fis ? '+fis' : ''); if (tcEl.dataset.l !== tcL) tcEl.outerHTML = olTcSel('dk-tc').replace('class="ol-tc dk-tc"', 'class="ol-tc dk-tc" id="dkTc" data-l="' + tcL + '"');
-  const vw = $('#dkVw'); if (vw && vw.dataset.l !== LANG) { vw.dataset.l = LANG; vw.innerHTML = olVSel('dk-vsel'); }   // (種目)
+  const vw = $('#dkVw'); if (vw && vw.dataset.l !== LANG) { vw.dataset.l = LANG; vw.innerHTML = olVSel('dk-vpick'); }   // (種目)
   if (!dock.editing) $('#dkMe').innerHTML = me ? `<button class="dk-name" title="${olEsc(t('ol.rename'))}">${olEsc(me.name)} <span>✎</span></button> <b>R ${me.rating}</b>` + (net && net.spectate ? ` · ${t('ol.st.watch')}` : net && !net.done && net.game ? ` · ${t('ol.st.play')}` : olView === 'search' && $('#onlineOverlay').classList.contains('show') ? ` · ${t('ol.st.lobby')}` : Online.room ? ` · ${t('ol.st.room')}` : '') : '';
   $('#dkPlayers').innerHTML = dock.players.length ? dock.players.map(p => `<div class="${p.me ? 'me' : ''}"><span>${olEsc(p.name)} <small class="st st-${olEsc(p.st || 'idle')}">${t(OL_ST[p.st] || 'ol.st.idle')}</small></span><b>${p.rating ?? ''}</b></div>`).join('') : `<div class="ol-note small">${t('ol.nobody')}</div>`;
   $('#dkRooms').innerHTML = olRoomRows(dock.rooms);
