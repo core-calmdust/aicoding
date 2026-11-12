@@ -1211,6 +1211,7 @@ function cardSplitInit() {
 #side:hover > .c-split-h::after{opacity:.8}
 #side > .c-split-h:hover::after,#side > .c-split-h.on::after{opacity:1;background:#e09a00}`; document.head.appendChild(st); }
   const game = (location.pathname.split('/').filter(Boolean).slice(-2, -1)[0] || location.pathname.split('/').filter(Boolean).pop() || 'game').replace(/\.html$/, '');
+  if (['solitaire'].includes(game) || side.hasAttribute('data-no-split')) { window.__cardSplit = 0; return; }   // (ソリティア: its column is fixed — nothing worth resizing, 2026-11-13)
   const KEY = 'side-split:' + game, MIN = 60;
   let S = {}; try { S = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) {}
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
