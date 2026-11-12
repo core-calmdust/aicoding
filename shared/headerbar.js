@@ -970,7 +970,7 @@ function options(o) {
     r.addEventListener('click', e => {
       if (synth) return;
       const t = target(u);
-      if (kind(u) === 'lang' && o.onLang) { e.stopPropagation(); e.preventDefault(); const g = gear.getBoundingClientRect(); close(); synth = true; try { o.onLang(t, g); } finally { synth = false; } return; }   // (portal: its own language list, under the gear)
+      if (kind(u) === 'lang' && o.onLang) { e.stopPropagation(); e.preventDefault(); const g = gear.getBoundingClientRect(), side = { row: r.getBoundingClientRect(), panel: pop.getBoundingClientRect(), close: () => close() }; synth = true; try { if (o.onLang(t, g, side) !== 'side') close(); } finally { synth = false; } return; }   // (onLang may open the list beside the panel, at the language row: 'side' keeps the panel open, 2026-11-13)   // (portal: its own language list, under the gear)
       if (!u.contains(e.target)) { e.stopPropagation(); e.preventDefault(); synth = true; try { t.click(); } finally { synth = false; } }
       if (kind(u) === 'lang') return;   // the language list opens beside the panel; picking closes both
       if (isTg(u)) setTimeout(paint, 0); else close();
@@ -1076,7 +1076,7 @@ function options(o) {
   }
   function show() { sort(); open = true; pop.classList.add('on'); gear.setAttribute('aria-expanded', 'true'); place();
     const f = pop.querySelector('.hbo-row:not([hidden])'); if (f && matchMedia('(hover: hover)').matches) { const t = f.querySelector('button, a') || f; try { t.focus({ preventScroll: true }); } catch (e) {} } }
-  function close(focus) { spClose(); if (!open) return; open = false; pop.classList.remove('on'); gear.setAttribute('aria-expanded', 'false'); if (focus) try { gear.focus({ preventScroll: true }); } catch (e) {} }
+  function close(focus) { spClose(); if (open && o.onClose) try { o.onClose(); } catch (e) {} if (!open) return; open = false; pop.classList.remove('on'); gear.setAttribute('aria-expanded', 'false'); if (focus) try { gear.focus({ preventScroll: true }); } catch (e) {} }
   gear.addEventListener('click', e => { e.stopPropagation(); open ? close() : show(); });
   // (the language lists — shared/langsel.js .lsel-pop, the portal's .atlas-lpop — count as inside)
   document.addEventListener('pointerdown', e => { if (open && !pop.contains(e.target) && !gear.contains(e.target) && !(e.target.closest && e.target.closest('.lsel-pop, .atlas-lpop'))) close(); }, true);

@@ -696,7 +696,22 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
     if (window.HeaderBar && HeaderBar.options) HeaderBar.options({ host: bar, theme: 'atlas', id: 'atlasOpts', gearClass: 'atlas-ic',
       after: '#atlasLand, a.atlas-ic',
       keep: el => !/^(atlasSnd|atlasLang)$/.test(el.id) && !el.classList.contains('hbo-x'),   // (atlasRec: kept outside by headerbar.js, before the gear)
-      onLang: (b, g) => { const br = bar.getBoundingClientRect(), rtl = getComputedStyle(bar).direction === 'rtl';
+      onClose: () => { if (pop.dataset.side) pop.hidden = true; },
+      onLang: (b, g, side) => { const br = bar.getBoundingClientRect(), rtl = getComputedStyle(bar).direction === 'rtl';
+        // beside the options panel, level with the language row, when there is room (2026-11-13); otherwise under the gear
+        if (side && !pop.hidden && pop.dataset.side) { pop.hidden = true; return 'side'; }
+        if (side && pop.hidden) {
+          pop.style.visibility = 'hidden'; lbtn.click(); const w = pop.offsetWidth, h = pop.offsetHeight, P = side.panel, R = side.row, M = 8;
+          const left = rtl ? P.right + 10 : P.left - 10 - w;
+          if (left >= M && left + w <= innerWidth - M) {
+            const top = Math.max(M, Math.min(R.top + R.height / 2 - h / 2, innerHeight - M - h));
+            if (!pop._home) pop._home = pop.parentNode; pop.style.fontFamily = getComputedStyle(pop).fontFamily; document.body.appendChild(pop);   // (above the page: the bar's own stacking put it under the dock / the talk bubble)
+            pop.style.position = 'fixed'; pop.style.left = Math.round(left) + 'px'; pop.style.right = 'auto'; pop.style.top = Math.round(top) + 'px'; pop.style.zIndex = '1000';
+            pop.dataset.side = '1'; pop.style.visibility = ''; return 'side';
+          }
+          pop.hidden = true; pop.style.visibility = '';
+        }
+        delete pop.dataset.side; pop.style.zIndex = ''; pop.style.position = ''; if (pop._home && pop.parentNode !== pop._home) pop._home.appendChild(pop);
         pop.style.top = Math.round(g.bottom - br.top + 8) + 'px';
         if (rtl) { pop.style.left = Math.max(0, Math.round(g.left - br.left)) + 'px'; pop.style.right = 'auto'; } else { pop.style.right = Math.max(0, Math.round(br.right - g.right)) + 'px'; pop.style.left = 'auto'; }
         if (pop.hidden) lbtn.click(); } });
