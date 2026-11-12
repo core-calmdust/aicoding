@@ -672,3 +672,10 @@ html.atlas-skin body:not(#_) :is(.atlas-ic, .atlas-lbtn, .atlas-coin){background
 html.atlas-skin body:not(#_) .dock :is(.dk-btn:not(.go), .dk-name, .dk-vsel, .dk-vpick, .dk-g, .dk-myroom){background:#fffdf8!important}
 /* (2026-11-12) the settings popup's icons (the game's own sound button moved there): plain icons, not the boxes' white pills */
 html.atlas-skin body:not(#_):not(#_) .hbo-pop .hbo-ic > :is(button, a, span){background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important;outline:none!important}
+
+/* 形勢 / コーチ / 棋譜: the draggable gaps (common.js sideSplit, 2026-11-12) */
+html.atlas-skin .side-in.a-split{position:relative}
+html.atlas-skin .a-split-h{position:absolute;left:12%;right:12%;height:14px;z-index:5;cursor:row-resize;touch-action:none}
+html.atlas-skin .a-split-h::after{content:"";position:absolute;left:50%;top:5px;width:44px;height:4px;margin-left:-22px;border-radius:4px;background:#e6d6b2;opacity:0;transition:opacity .15s,background .15s}
+html.atlas-skin .side-in:hover .a-split-h::after{opacity:.8}
+html.atlas-skin .a-split-h:hover::after,html.atlas-skin .a-split-h.on::after{opacity:1;background:#e09a00}
