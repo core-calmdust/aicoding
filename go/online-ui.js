@@ -5,6 +5,17 @@
    both clients count it with the engine (light net); the first to finish settles the record, the other checks it with its own count. */
 'use strict';
 const ON = window.GoOnline;
+
+// 2026-11-12 (shogi's online look for every game): the two panels' titles, 「ロビーに戻る」 — their own small dictionary
+const OLX = {
+  paneRated: { ja: 'レート戦', en: 'Rated game', zh: '等级分对局', ko: '레이팅전', es: 'Partida puntuada', fr: 'Partie classée', pt: 'Partida ranqueada', de: 'Gewertete Partie', hi: 'रेटेड खेल', ar: 'مباراة مصنّفة', ru: 'Рейтинговая партия', 'zh-TW': '積分對局', id: 'Permainan berperingkat', tr: 'Puanlı oyun' },
+  paneRatedSub: { ja: '近いレートの相手と自動で対局', en: 'Matched automatically with a player near your rating', zh: '自动匹配等级分相近的对手', ko: '비슷한 레이팅의 상대와 자동 매칭', es: 'Emparejamiento automático con un rival de nivel parecido', fr: 'Appariement automatique avec un joueur de niveau proche', pt: 'Pareamento automático com alguém de rating próximo', de: 'Automatisch gegen einen Gegner mit ähnlicher Wertung', hi: 'मिलती-जुलती रेटिंग वाले खिलाड़ी से अपने-आप मुकाबला', ar: 'مطابقة تلقائية مع لاعب قريب من تصنيفك', ru: 'Автоподбор соперника близкого рейтинга', 'zh-TW': '自動配對積分相近的對手', id: 'Dipasangkan otomatis dengan pemain berperingkat mirip', tr: 'Yakın puanlı bir rakiple otomatik eşleşme' },
+  paneRoom: { ja: '部屋で対戦', en: 'Play in a room', zh: '房间对局', ko: '방에서 대국', es: 'Jugar en una sala', fr: 'Jouer dans un salon', pt: 'Jogar em uma sala', de: 'In einem Raum spielen', hi: 'कमरे में खेलें', ar: 'اللعب في غرفة', ru: 'Игра в комнате', 'zh-TW': '房間對局', id: 'Main di ruang', tr: 'Odada oyna' },
+  paneRoomSub: { ja: '友達と・レート変動なし', en: 'With friends · no rating change', zh: '和朋友 · 不计等级分', ko: '친구와 · 레이팅 변동 없음', es: 'Con amigos · sin cambio de puntuación', fr: 'Entre amis · sans effet sur le classement', pt: 'Com amigos · sem mudar o rating', de: 'Mit Freunden · ohne Wertung', hi: 'दोस्तों के साथ · रेटिंग में बदलाव नहीं', ar: 'مع الأصدقاء · دون تغيير التصنيف', ru: 'С друзьями · без изменения рейтинга', 'zh-TW': '和朋友 · 不計積分', id: 'Dengan teman · peringkat tetap', tr: 'Arkadaşlarla · puan değişmez' },
+  rulesMore: { ja: 'マッチングとレートのしくみ', en: 'How matching and rating work', zh: '匹配与等级分说明', ko: '매칭과 레이팅 안내', es: 'Cómo funcionan el emparejamiento y la puntuación', fr: 'Appariement et classement', pt: 'Como funcionam o pareamento e o rating', de: 'So funktionieren Zuordnung und Wertung', hi: 'मिलान और रेटिंग कैसे काम करते हैं', ar: 'كيف تعمل المطابقة والتصنيف', ru: 'Как работают подбор и рейтинг', 'zh-TW': '配對與積分說明', id: 'Cara kerja pencocokan dan peringkat', tr: 'Eşleşme ve puan nasıl işler' },
+  toLobby: { ja: 'ロビーに戻る', en: 'Back to lobby', zh: '返回大厅', ko: '로비로 돌아가기', es: 'Volver al vestíbulo', fr: 'Retour au salon', pt: 'Voltar ao saguão', de: 'Zurück zur Lobby', hi: 'लॉबी पर लौटें', ar: 'العودة إلى الردهة', ru: 'В лобби', 'zh-TW': '返回大廳', id: 'Kembali ke lobi', tr: 'Lobiye dön' },
+};
+const olx = k => { const L = typeof LANG === 'string' ? LANG : (document.documentElement.lang || 'en'); return (OLX[k] && (OLX[k][L] || OLX[k].en)) || k; };
 const olOn = () => !!(ON && ON.available);
 const olEsc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const GLOGO = '<svg class="glogo" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.5 12.3c0-.8-.1-1.5-.2-2.3H12v4.3h5.9a5 5 0 0 1-2.2 3.3v2.7h3.5c2.1-1.9 3.3-4.7 3.3-8z"/><path fill="#34A853" d="M12 23c3 0 5.4-1 7.2-2.7l-3.5-2.7c-1 .7-2.2 1-3.7 1-2.9 0-5.3-1.9-6.2-4.5H2.2v2.8A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.8 14.1a6.6 6.6 0 0 1 0-4.2V7.1H2.2a11 11 0 0 0 0 9.8z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3 .6 4.2 1.6l3.1-3.1A11 11 0 0 0 2.2 7.1l3.6 2.8C6.7 7.3 9.1 5.4 12 5.4z"/></svg>';
@@ -109,7 +120,7 @@ const OL_ST = { idle: 'ol.st.idle', lobby: 'ol.st.lobby', play: 'ol.st.play', ro
 function olRoomRows(list) {
   const me = ON.uid;
   if (!list.length) return `<div class="ol-note small">${t('ol.noRooms')}</div>`;
-  return list.map(r => `<div class="${r.host === me ? 'me' : ''}${r.game ? ' ingame' : ''}"><span>${olEsc(r.name)} <small>R${r.rating ?? ''} · ${olEsc(varName(r.v))}</small>${r.game ? ` <small class="ol-ing">${t('ol.st.play')}</small>` : ''}</span>${r.host === me || r.guest === me ? '' : r.game ? `<button class="dk-watch" data-code="${olEsc(r.id)}">${t('ol.watch')}</button>` : `<button class="dk-join" data-code="${olEsc(r.id)}">${t('ol.join')}</button>`}</div>`).join('');
+  return list.map(r => `<div class="ol-r2${r.host === me ? ' me' : ''}${r.game ? ' ingame' : ''}"><span><span class="ol-r2a">${olEsc(r.name)}</span><small class="ol-r2b">R${r.rating ?? ''} · ${olEsc(varName(r.v))}</small>${r.game ? ` <small class="ol-ing">${t('ol.st.play')}</small>` : ''}</span>${r.host === me || r.guest === me ? '' : r.game ? `<button class="dk-watch" data-code="${olEsc(r.id)}">${t('ol.watch')}</button>` : `<button class="dk-join" data-code="${olEsc(r.id)}">${t('ol.join')}</button>`}</div>`).join('');
 }
 async function olJoin(code, btn) {
   if (olLive() || (typeof rtLive === 'function' && rtLive())) { olGate(() => olJoin(code)); return; }
@@ -154,21 +165,19 @@ function olRender(v) {
   const P = ON.profile;
   if (olView === 'menu') {
     const R = ON.room;
-    B.innerHTML = `<div class="ol-grid"><div class="ol-col">
-      <div class="ol-me"><input id="olName" maxlength="16" value="${olEsc(P.name)}" aria-label="${olEsc(t('pf.name'))}"><div class="ol-r"><small>${t('ol.rating')}</small><b>${P.rating}</b><small>${t('ol.record', { w: P.wins || 0, l: P.losses || 0, d: P.draws || 0 })}</small></div></div>
+    B.innerHTML = `<div class="ol-me"><input id="olName" maxlength="16" value="${olEsc(P.name)}" aria-label="${olEsc(t('pf.name'))}"><div class="ol-r"><small>${t('ol.rating')}</small><b>${P.rating}</b><small>${t('ol.record', { w: P.wins || 0, l: P.losses || 0, d: P.draws || 0 })}</small></div></div><div class="ol-grid ol-lux"><section class="ol-col ol-pane"><h3 class="ol-ph">${olx('paneRated')}<small>${olx('paneRatedSub')}</small></h3>
       <div class="ol-tcbox"><div class="ol-tcl">${t('ng.size')} · ${t('ol.tc')}</div>${olVarSeg()}<p class="ol-note small ol-rule">${olEsc(t('ol.endNote'))}</p></div>
-      <div class="ol-acts"><button class="mbtn go" id="olFind">${t('ol.find')}</button></div>
-      <p class="ol-note small" style="margin-top:6px">${t('ol.findDesc')}</p>
-      <div class="ol-sub">${t('ol.privTitle')}</div>
-      ${R ? `<div class="ol-myroom"><span>${t('ol.myRoom')}</span><span class="ol-mcode">${R.code}</span><small>${R.game ? t('ol.st.play') : t('ol.roomLeft', { t: olClock(R.left) })}</small><button class="dk-btn" id="olShowRoom">${t('ol.showRoom')}</button></div>` : ''}
-      <div class="ol-rk" role="radiogroup"><button type="button" data-rk="open" class="${olRk() === 'open' ? 'sel' : ''}"><b>${t('ol.openRoom')}</b><small>${t('ol.openDesc')}</small></button><button type="button" data-rk="key" class="${olRk() === 'key' ? 'sel' : ''}"><b>${t('ol.keyRoom')}</b><small>${t('ol.keyDesc')}</small></button></div>
-      <div class="ol-acts"><button class="mbtn" id="olMake">${t('ol.makeRoom')}</button></div>
-      <div class="ol-join"><input id="olCode" maxlength="8" placeholder="${olEsc(t('ol.codePh'))}" autocomplete="off"><button class="mbtn" id="olJoinBtn">${t('ol.join')}</button></div>
-    </div><div class="ol-col">
-      <div class="ol-sub">${t('ol.rooms')}</div><div class="ol-list ol-rooms" id="olRooms">${olRoomRows(olRoomsList)}</div>
+      <details class="ol-rulesd"><summary>${olx('rulesMore')}</summary><p class="ol-note small">${t('ol.findDesc')}</p></details>
       ${olHistHtml()}
       <div class="ol-sub">${t('ol.rank')}</div><div class="ol-list" id="olRank"><div class="ol-note small">…</div></div>
-    </div></div>`;
+      <div class="ol-acts ol-bot"><button class="mbtn go" id="olFind">${t('ol.find')}</button></div>
+    </section><section class="ol-col ol-pane"><h3 class="ol-ph">${olx('paneRoom')}<small>${olx('paneRoomSub')}</small></h3>
+      <div class="ol-sub">${t('ol.rooms')}</div><div class="ol-list ol-rooms" id="olRooms">${olRoomRows(olRoomsList)}</div>
+      <div class="ol-join"><input id="olCode" maxlength="8" placeholder="${olEsc(t('ol.codePh'))}" autocomplete="off"><button class="mbtn" id="olJoinBtn">${t('ol.join')}</button></div>
+      ${R ? `<div class="ol-myroom"><span>${t('ol.myRoom')}</span><span class="ol-mcode">${R.code}</span><small>${R.game ? t('ol.st.play') : t('ol.roomLeft', { t: olClock(R.left) })}</small><button class="dk-btn" id="olShowRoom">${t('ol.showRoom')}</button></div>` : ''}
+      <div class="ol-sub">${t('ol.privTitle')}</div><div class="ol-rk" role="radiogroup"><button type="button" data-rk="open" class="${olRk() === 'open' ? 'sel' : ''}"><b>${t('ol.openRoom')}</b><small>${t('ol.openDesc')}</small></button><button type="button" data-rk="key" class="${olRk() === 'key' ? 'sel' : ''}"><b>${t('ol.keyRoom')}</b><small>${t('ol.keyDesc')}</small></button></div>
+      <div class="ol-acts ol-bot"><button class="mbtn" id="olMake">${t('ol.makeRoom')}</button></div>
+    </section></div>`;
     $('#olName').onchange = async e => { try { e.target.value = await ON.setName(e.target.value); syncNameTouched(); dockRender(); } catch (_) {} };
     $('#olFind').onclick = olStartSearch;
     $('#olMake').onclick = olMakeRoom;
@@ -472,6 +481,7 @@ function olShowResult() {
 // rematch area in the result dialog (room games) / "find another" (rated)
 function olResRender() {
   const box = $('#olRes'), again = $('#btnAgain');
+  { let lb = $('#btnLobby'); if (!lb) { again.insertAdjacentHTML('beforebegin', '<button class="mbtn" id="btnLobby"></button>'); lb = $('#btnLobby'); lb.onclick = () => { hideOv('#resultOverlay'); olDetach(); if (typeof dockToggle === 'function' && !matchMedia('(pointer: coarse)').matches) dockToggle(true); else if (typeof mtab === 'function') mtab('online'); if (typeof dockRender === 'function') dockRender(); }; } lb.textContent = olx('toLobby'); lb.classList.toggle('hidden', !(net && net.done && !net.spectate)); }   // (2026-11-12)
   if (!net || !net.done || !net.game) { box.classList.add('hidden'); again.textContent = t('res.again'); again.disabled = false; return; }
   const g = net.game, me = ON.uid;
   box.classList.remove('hidden');
