@@ -722,3 +722,8 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonList .lx-banner{padding:16px 
 html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonList .lx-banner .ic{width:54px;height:54px;border-radius:15px}
 html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonList .lx-banner .tx b{font-size:21px;color:#b07a00}
 html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonList .lx-banner .pg{width:160px}
+/* 戦績 (shared/record.js): the page behind dims like the other dialogs (the light theme had turned its dark wash cream), and the
+   trophy tile takes the header's gold (2026-11-12) */
+html.atlas-skin body:not(#_) .grc-ov{background:rgba(4,8,7,.62)!important;-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px)}
+html.atlas-skin body:not(#_) .grc-hd .grc-ic{background:#fffdf8!important;box-shadow:inset 0 0 0 2px #f3dca0,0 2px 0 #f3dca0}
+html.atlas-skin body:not(#_) .grc-hd .grc-ic svg{stroke:#e09a00!important}
