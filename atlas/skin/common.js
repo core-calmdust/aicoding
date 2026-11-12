@@ -743,6 +743,18 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
   const TOD = { ja: ['自動', '朝', '昼', '夕方', '夜'], en: ['Auto', 'Morning', 'Day', 'Evening', 'Night'], zh: ['自动', '早晨', '白天', '傍晚', '夜晚'], ko: ['자동', '아침', '낮', '저녁', '밤'], es: ['Auto', 'Mañana', 'Día', 'Tarde', 'Noche'], fr: ['Auto', 'Matin', 'Jour', 'Soir', 'Nuit'], pt: ['Auto', 'Manhã', 'Dia', 'Tarde', 'Noite'], de: ['Auto', 'Morgen', 'Tag', 'Abend', 'Nacht'], hi: ['ऑटो', 'सुबह', 'दिन', 'शाम', 'रात'], ar: ['تلقائي', 'صباح', 'نهار', 'مساء', 'ليل'], ru: ['Авто', 'Утро', 'День', 'Вечер', 'Ночь'], 'zh-TW': ['自動', '早晨', '白天', '傍晚', '夜晚'], id: ['Otomatis', 'Pagi', 'Siang', 'Sore', 'Malam'], tr: ['Otomatik', 'Sabah', 'Gündüz', 'Akşam', 'Gece'] };
   const TODH = { ja: '時間帯', en: 'Time of day', zh: '时间段', 'zh-TW': '時段', ko: '시간대', es: 'Hora del día', fr: 'Moment de la journée', pt: 'Hora do dia', de: 'Tageszeit', ru: 'Время суток', tr: 'Günün saati', id: 'Waktu', hi: 'दिन का समय', ar: 'وقت اليوم' };
   const TODSW = { auto: 'conic-gradient(#ffd36b 0 25%,#ffe9a8 0 50%,#ff9d6b 0 75%,#3b4a8a 0)', morning: 'linear-gradient(#ffe7b0,#ffc9a0)', day: 'linear-gradient(#bfe6ff,#7fc8ff)', evening: 'linear-gradient(#ffb36b,#e0607a)', night: 'linear-gradient(#3b4a8a,#151a3a)' };
+  // アンチエイリアス (2026-11-13): a system switch in the options (gear). The renderer takes it when it is made, so the page
+  // reloads to apply it (not during an online game: then it applies the next time the page opens).
+  (function aaOpt() {
+    if (!window.HeaderBar || !HeaderBar.addOption) return;
+    const L = { ja: 'アンチエイリアス', en: 'Anti-aliasing', zh: '抗锯齿', 'zh-TW': '反鋸齒', ko: '안티에일리어싱', es: 'Antialiasing', fr: 'Anticrénelage', pt: 'Antisserrilhado', de: 'Kantenglättung', ru: 'Сглаживание', tr: 'Kenar yumuşatma', id: 'Anti-aliasing', hi: 'एंटी-एलियासिंग', ar: 'تنعيم الحواف' };
+    const auto = () => { const pr = Math.min(matchMedia('(pointer: coarse)').matches ? 1.5 : 2, devicePixelRatio || 1); return pr < 1.5; };
+    const get = () => { let v = null; try { v = localStorage.getItem('atlas-aa'); } catch (e) {} return v === '1' ? true : v === '0' ? false : auto(); };
+    HeaderBar.addOption({ id: 'aa', type: 'toggle', label: L,
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20 20 4"/><path d="M4 14l2-2M8 18l2-2M10 8l2-2M14 12l2-2" opacity=".5"/></svg>',
+      get, set: v => { try { localStorage.setItem('atlas-aa', v ? '1' : '0'); } catch (e) {}
+        if (!document.body.classList.contains('in-online')) setTimeout(() => location.reload(), 150); } });
+  })();
   function placeField() {
     const X = window.Table3D; if (!X || !X.PLACES || !X.TABLES[5]) return;
     const modal = document.querySelector('#newOverlay .modal'), first = modal && modal.querySelector('[data-ng=design]'); if (!first) return;
