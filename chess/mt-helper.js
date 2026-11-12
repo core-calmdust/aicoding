@@ -7,7 +7,8 @@
 // (2026-11-12, MODEL_CARD.md「マルチスレッド v3」; 2026-11-10 v2: helper 1 only; before: every helper Lazy SMP.)
 // (the bench page can pass another count for a comparison on the user's Mac: bench.html?ybw=1 → mt-helper.js?…&ybw=1;
 // 0 = every helper Lazy SMP as before 2026-11-10)
-const YBW_HELPERS = (q => q !== null && q !== '' && q >= 0 ? +q : 9)(new URLSearchParams(self.location.search).get('ybw'));
+// (2026-11-12, Mac bench: YBW for all 10 threads ×3.58 at 10 vs ×4.81 at 8 → YBW for the first 8 threads, Lazy SMP beyond)
+const YBW_HELPERS = (q => q !== null && q !== '' && q >= 0 ? +q : 7)(new URLSearchParams(self.location.search).get('ybw'));
 let X = null, mem = null, ctl = null, cnt = null, id = 0, acc = 0;
 self.onmessage = e => {
   const m = e.data;
