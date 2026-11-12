@@ -497,7 +497,7 @@ html.atlas-skin .pzx-bd > svg,html.atlas-skin .pzx-daily .th > svg{box-shadow:0 
    own rules. Left alone: the pieces' glyphs (svg, .piece, .koma …) and the portal bar (.atlas-top, shared/headerbar.js).
    ===================================================================== */
 html.atlas-skin{--a-font:'Zen Maru Gothic','Fredoka','Noto Sans Devanagari','Noto Sans Arabic',system-ui,sans-serif;--a-round:'Fredoka','Zen Maru Gothic','Noto Sans Devanagari','Noto Sans Arabic',sans-serif;
-  --a-ink:#2b3044;--a-ink2:#6a7088;--a-line:#efe3c8;--a-paper:#fffdf7;--a-track:#f3ead6;--a-coral:#ff5d5d;--a-coral2:#d93c3c;--a-sun:#ffc928;--a-sun2:#e09a00;
+  --a-ink:#2b3044;--a-ink2:#6a7088;--a-line:#efe3c8;--a-paper:#fbf5e7;--a-tile:#fffaf0;--a-track:#f3ead6;--a-coral:#ff5d5d;--a-coral2:#d93c3c;--a-sun:#ffc928;--a-sun2:#e09a00;
   --a-shadow:0 2px 0 rgba(43,48,68,.06),0 10px 24px -12px rgba(120,80,20,.28)}
 html.atlas-skin.atlas-zh-sc{--a-font:'Noto Sans SC','Fredoka',system-ui,sans-serif;--a-round:'Fredoka','Noto Sans SC',sans-serif}
 html.atlas-skin.atlas-zh-tc{--a-font:'Noto Sans TC','Fredoka',system-ui,sans-serif;--a-round:'Fredoka','Noto Sans TC',sans-serif}
@@ -521,14 +521,14 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) .card:not(.hb-menu) :is(.label, .ck-
 html.atlas-skin:not(.atlas-2d) body:not(#_) .card:not(.hb-menu) .ck-h small{font-weight:700!important;color:var(--a-ink2)!important}
 
 /* ---- the players: white tiles, the side to move outlined in the portal's yellow ---- */
-html.atlas-skin:not(.atlas-2d) body:not(#_) .card.players .player{background:#fff!important;border:2px solid var(--a-line)!important;border-radius:18px!important;box-shadow:0 2px 0 var(--a-line)!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .card.players .player{background:var(--a-tile)!important;border:2px solid var(--a-line)!important;border-radius:18px!important;box-shadow:0 2px 0 var(--a-line)!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .card.players .player.active{border-color:var(--a-sun)!important;box-shadow:0 3px 0 var(--a-sun2)!important;background:#fffaf0!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .card.players .player :is(.name, .nm){color:var(--a-ink2)!important;font-weight:700!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .card.players .player :is(.side-l, .sl){color:var(--a-ink)!important;font-weight:900!important}
 
 /* ---- buttons in the boxes: the portal's white pills; the main one coral ---- */
-html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.card:not(.hb-menu), .modal, .dlg) :is(.btn, .mbtn, .navbar > button, .kifu-head button):not(.go):not(.primary):not(.sel):not(.on):not([aria-selected=true]):not(:is(.seg, .lx-tabs, .pbh-tabs, .ngt-bar, .mtab3) > *){background:#fff!important;border:2px solid var(--a-line)!important;border-radius:99px!important;box-shadow:0 2px 0 var(--a-line)!important;color:var(--a-ink)!important;font-weight:900!important}
-html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.card:not(.hb-menu), .modal, .dlg) :is(.btn, .mbtn, .navbar > button, .kifu-head button):not(.go):not(.primary):not(:disabled):hover{background:#fff8ec!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.card:not(.hb-menu), .modal, .dlg) :is(.btn, .mbtn, .navbar > button, .kifu-head button):not(.go):not(.primary):not(.sel):not(.on):not([aria-selected=true]):not(:is(.seg, .lx-tabs, .pbh-tabs, .ngt-bar, .mtab3) > *){background:var(--a-tile)!important;border:2px solid var(--a-line)!important;border-radius:99px!important;box-shadow:0 2px 0 var(--a-line)!important;color:var(--a-ink)!important;font-weight:900!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.card:not(.hb-menu), .modal, .dlg) :is(.btn, .mbtn, .navbar > button, .kifu-head button):not(.go):not(.primary):not(:disabled):hover{background:#fff4e2!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.card:not(.hb-menu), .modal, .dlg) :is(.btn, .mbtn, .navbar > button, .kifu-head button):disabled{opacity:.45!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.card:not(.hb-menu), .modal, .dlg, .dock) :is(.btn, .mbtn, .dk-btn):is(.go, .primary){background:var(--a-coral)!important;color:#fff!important;border:0!important;border-radius:99px!important;box-shadow:0 3px 0 var(--a-coral2)!important;font-weight:900!important}
 /* the move list's controls (⏮ ◀ ▶ ▶ ⏭): round white buttons */
@@ -541,10 +541,10 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) .kifu-head > span:last-child{display
 html.atlas-skin:not(.atlas-2d) body:not(#_) .evalbar{background:var(--a-track)!important;border:0!important;border-radius:99px!important;overflow:hidden}
 
 /* ---- the coach: chips and option tiles in the portal's look ---- */
-html.atlas-skin:not(.atlas-2d) body:not(#_) .ck-sum > span{background:#fff!important;border:2px solid var(--a-line)!important;border-radius:99px!important;color:var(--a-ink2)!important;font-weight:700!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .ck-sum > span{background:var(--a-tile)!important;border:2px solid var(--a-line)!important;border-radius:99px!important;color:var(--a-ink2)!important;font-weight:700!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .ck-sum > span b{color:var(--a-ink)!important;font-weight:900!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .ck-sec-h{color:var(--a-sun2)!important;font-weight:900!important}
-html.atlas-skin:not(.atlas-2d) body:not(#_) .ck-bi{background:#fff!important;border:2px solid var(--a-line)!important;border-left-width:2px!important;border-radius:18px!important;box-shadow:0 2px 0 var(--a-line)!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .ck-bi{background:var(--a-tile)!important;border:2px solid var(--a-line)!important;border-left-width:2px!important;border-radius:18px!important;box-shadow:0 2px 0 var(--a-line)!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .ck-bi.best, html.atlas-skin:not(.atlas-2d) body:not(#_) .ck-bi.sel{border-color:#9be3c1!important;box-shadow:0 2px 0 #9be3c1!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .ck-bt > :is(span, small, i, em){border-radius:99px!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .ck-sw.on{background:var(--a-sun)!important}
@@ -553,15 +553,15 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) .ck-sw.on{background:var(--a-sun)!im
 html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.seg, .lx-tabs, .pbh-tabs, .ngt-bar, .ol-tc, .ol-rk, .dk-tc, .modal .tabs){gap:4px!important;padding:4px!important;border-radius:99px!important;background:var(--a-track)!important;border:0!important;box-shadow:none!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.seg, .lx-tabs, .pbh-tabs, .ngt-bar, .ol-tc, .ol-rk, .dk-tc, .modal .tabs) > :is(button, a, [role=tab]){border:0!important;border-radius:99px!important;background:transparent!important;box-shadow:none!important;color:var(--a-ink2)!important;font-weight:900!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.seg, .lx-tabs, .pbh-tabs, .ngt-bar, .ol-tc, .ol-rk, .dk-tc, .modal .tabs) > :is(button, a, [role=tab]) *{color:inherit!important}
-html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.seg, .lx-tabs, .pbh-tabs, .ngt-bar, .ol-tc, .ol-rk, .dk-tc, .modal .tabs) > :is(.sel, .on, .active, [aria-selected=true], [aria-pressed=true]){background:#fff!important;color:var(--a-ink)!important;box-shadow:0 3px 0 var(--a-line)!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.seg, .lx-tabs, .pbh-tabs, .ngt-bar, .ol-tc, .ol-rk, .dk-tc, .modal .tabs) > :is(.sel, .on, .active, [aria-selected=true], [aria-pressed=true]){background:var(--a-tile)!important;color:var(--a-ink)!important;box-shadow:0 3px 0 var(--a-line)!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.ngt-bar, .modal .tabs) > *::after{display:none!important}   /* (the underline of the old tabs) */
 html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.ol-tc, .ol-rk, .dk-tc) > button small{color:var(--a-ink2)!important;font-weight:700!important}
 
 /* ---- cards inside a box (games to pick, lessons, puzzle sets): white tiles, the chosen one coral ---- */
-html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.ngt-gcard, .lesson-item, .lx-card, .pbh-card, .rt-card, .op-book .ob){background:#fff!important;border:2px solid var(--a-line)!important;border-radius:20px!important;box-shadow:0 3px 0 var(--a-line)!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.ngt-gcard, .lesson-item, .lx-card, .pbh-card, .rt-card, .op-book .ob){background:var(--a-tile)!important;border:2px solid var(--a-line)!important;border-radius:20px!important;box-shadow:0 3px 0 var(--a-line)!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.ngt-gcard, .lesson-item, .lx-card, .pbh-card, .rt-card):is(.sel, .on, [aria-selected=true]){background:#fff1ee!important;border-color:#ff8a7a!important;box-shadow:0 3px 0 #ffb3a8!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.ngt-gcard, .lesson-item, .lx-card, .pbh-card, .rt-card):not(:disabled):hover{border-color:#ffc9a8!important}
-html.atlas-skin:not(.atlas-2d) body:not(#_) .modal :is(select, input[type=text], input[type=number], input:not([type])){background:#fff!important;border:2px solid var(--a-line)!important;border-radius:14px!important;color:var(--a-ink)!important;font-weight:700!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal :is(select, input[type=text], input[type=number], input:not([type])){background:var(--a-tile)!important;border:2px solid var(--a-line)!important;border-radius:14px!important;color:var(--a-ink)!important;font-weight:700!important}
 
 /* ---- the online dock: the portal's bar, pills and lists ---- */
 html.atlas-skin:not(.atlas-2d) body:not(#_) .dock{background:#fff6e2!important;border:0!important;border-top:2px solid var(--a-line)!important;box-shadow:none!important}   /* (the same as the portal bar on top) */
@@ -569,20 +569,20 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) .dock-bar{background:transparent!imp
 html.atlas-skin:not(.atlas-2d) body:not(#_) .dk-title{font-size:15px!important;font-weight:900!important;color:var(--a-ink)!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .dk-stat{color:var(--a-ink2)!important;font-weight:700!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .dk-dot{box-shadow:0 0 0 3px rgba(60,207,145,.22)!important}
-html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.dk-btn, .dk-name, .dk-vsel, .dk-vpick, .dk-g, .dk-myroom, .dk-acc button){height:36px;display:inline-flex!important;align-items:center;gap:6px;padding:0 14px!important;background:#fff!important;border:2px solid var(--a-line)!important;border-radius:99px!important;box-shadow:0 2px 0 var(--a-line)!important;color:var(--a-ink)!important;font-size:13.5px!important;font-weight:900!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.dk-btn, .dk-name, .dk-vsel, .dk-vpick, .dk-g, .dk-myroom, .dk-acc button){height:36px;display:inline-flex!important;align-items:center;gap:6px;padding:0 14px!important;background:var(--a-tile)!important;border:2px solid var(--a-line)!important;border-radius:99px!important;box-shadow:0 2px 0 var(--a-line)!important;color:var(--a-ink)!important;font-size:13.5px!important;font-weight:900!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .dk-name{border-style:solid!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .dk-name span{color:var(--a-ink2)!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .dk-g svg{background:none!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .dk-btn.tg{width:36px!important;padding:0!important;justify-content:center}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .dk-btn.go{background:var(--a-coral)!important;color:#fff!important;border:0!important;box-shadow:0 3px 0 var(--a-coral2)!important}
-html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.dk-btn, .dk-name, .dk-vsel, .dk-vpick, .dk-g):not(.go):hover{background:#fff8ec!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.dk-btn, .dk-name, .dk-vsel, .dk-vpick, .dk-g):not(.go):hover{background:#fff4e2!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .dk-me{color:var(--a-ink2)!important;font-weight:700!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .dk-me b{color:var(--a-ink)!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .dk-tc{height:36px;box-sizing:border-box;align-items:stretch}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .dk-tc > button{padding:0 12px!important;font-size:13px!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .dock-panel h4{font-size:14px!important;font-weight:900!important;color:var(--a-ink)!important;margin:6px 0 10px!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .ol-list{gap:6px!important}
-html.atlas-skin:not(.atlas-2d) body:not(#_) .ol-list > div{background:#fff!important;border:2px solid var(--a-line)!important;border-radius:14px!important;box-shadow:0 2px 0 var(--a-line)!important;padding:7px 12px!important;color:var(--a-ink)!important;font-weight:700}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .ol-list > div{background:var(--a-tile)!important;border:2px solid var(--a-line)!important;border-radius:14px!important;box-shadow:0 2px 0 var(--a-line)!important;padding:7px 12px!important;color:var(--a-ink)!important;font-weight:700}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .ol-list > div.me{border-color:var(--a-sun)!important;box-shadow:0 2px 0 var(--a-sun2)!important;background:#fffaf0!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .ol-list > div:not(:has(*))  {color:var(--a-ink2)!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .ol-list b{color:var(--a-ink)!important}
@@ -590,13 +590,13 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) .ol-list small.st{border-radius:99px
 html.atlas-skin:not(.atlas-2d) body:not(#_) .ol-list small.st-play{background:#fff3cf!important;color:#b07a00!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .ol-list small.st-lobby{background:#dcf6ea!important;color:#1ea36c!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .ol-list small.st-room{background:#e2f1ff!important;color:#1789d6!important}
-html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.dk-join, .dk-watch){border-radius:99px!important;padding:3px 12px!important;font-weight:900!important;border:2px solid!important;background:#fff!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.dk-join, .dk-watch){border-radius:99px!important;padding:3px 12px!important;font-weight:900!important;border:2px solid!important;background:var(--a-tile)!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .dk-join{border-color:#ffb3a8!important;color:var(--a-coral2)!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .dk-watch{border-color:#9be3c1!important;color:#1ea36c!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .dock-panel section{border-color:var(--a-line)!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .chat-list{color:var(--a-ink)!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .chat-list b{color:var(--a-ink)!important;font-weight:900!important}
-html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.chat-form input, .dk-input, .ol-title input){background:#fff!important;border:2px solid var(--a-line)!important;border-radius:99px!important;color:var(--a-ink)!important;font-weight:700!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.chat-form input, .dk-input, .ol-title input){background:var(--a-tile)!important;border:2px solid var(--a-line)!important;border-radius:99px!important;color:var(--a-ink)!important;font-weight:700!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) :is(.dk-tc, .dk-vsel, .dk-vpick, .dk-name, .dk-me):empty{display:none!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .dock :is(button, div, span):is([hidden], .hidden){display:none!important}   /* (the pills' display above must not show hidden ones: 自分の部屋 / 未読) */
 /* ---- the two players in one row, as in shogi (2026-11-12): name on the left, the figure on the right; the figure's caption
@@ -639,10 +639,10 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) .kifu-head > span:last-child{flex:1 
 /* ---- (2026-11-12, round 4) the boxes' bottom buttons: all as the rules' (前へ · 閉じる · 次へ) — 220 × 50 rounded rectangles in a
    centred row, the plain ones white with dark text, the main one coral; always at the bottom of the box (the rest scrolls above),
    the scroll's edge a soft fade, no line ---- */
-html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav){position:sticky;bottom:0;z-index:4;flex-wrap:wrap;justify-content:center!important;gap:10px!important;background:var(--a-paper)!important;border-top:0!important;box-shadow:none!important;padding:12px 0 2px!important;margin-top:14px!important}
-html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav)::before{content:'';position:absolute;left:0;right:0;top:-22px;height:22px;background:linear-gradient(rgba(255,253,247,0),var(--a-paper));pointer-events:none}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav){position:sticky;bottom:-48px;z-index:4;flex-wrap:wrap;justify-content:center!important;gap:10px!important;background:var(--a-paper)!important;border-top:0!important;box-shadow:none!important;padding:12px 0 50px!important;margin-top:14px!important;margin-bottom:-48px!important}   /* (reaches down over the box's own bottom padding: the list scrolled there and showed below the buttons) */
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav)::before{content:'';position:absolute;left:0;right:0;top:-22px;height:22px;background:linear-gradient(rgba(251,245,231,0),var(--a-paper));pointer-events:none}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav) > :is(button, .mbtn){flex:0 1 220px!important;width:auto!important;min-width:0!important;height:50px!important;min-height:50px!important;padding:0 14px!important;border-radius:12px!important;font-size:17px!important;font-weight:900!important;letter-spacing:.04em!important}
-html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav) > :is(button, .mbtn):not(.go):not(.primary):not(.gbtn){background:#fff!important;color:var(--a-ink)!important;border:2px solid var(--a-line)!important;box-shadow:0 4px 0 var(--a-line)!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav) > :is(button, .mbtn):not(.go):not(.primary):not(.gbtn){background:var(--a-tile)!important;color:var(--a-ink)!important;border:2px solid var(--a-line)!important;box-shadow:0 4px 0 var(--a-line)!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav) > :is(button, .mbtn):is(.go, .primary, .gbtn){background:var(--a-coral)!important;color:#fff!important;border:0!important;box-shadow:0 4px 0 var(--a-coral2)!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav) > :is(button, .mbtn):disabled{opacity:.45!important;box-shadow:none!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav) > :is(button, .mbtn):is(.hidden, [hidden]){display:none!important}
@@ -653,7 +653,7 @@ html.atlas-skin.atlas-backgammon:not(.atlas-2d) body:not(#_) .card.players > .pl
 /* the design tab: 3D / 2D switch inside the 盤 and 駒 boxes (atlas/skin/common.js splitDesign) */
 html.atlas-skin body:not(#_) .modal .a32{display:inline-flex!important;width:auto!important;max-width:none!important;flex:none!important;justify-self:start!important;align-self:start!important;grid-column:1 / -1;margin:0 0 10px 10px!important;vertical-align:middle;gap:3px;padding:3px;border-radius:99px;background:#f3ead6}
 html.atlas-skin .a32 > button{min-width:64px;padding:5px 14px!important;border:0!important;border-radius:99px!important;background:transparent!important;font-weight:900!important;font-size:14px!important;color:#6a7088!important;box-shadow:none!important;cursor:pointer}
-html.atlas-skin .a32 > button.sel{background:#fff!important;color:#2b3044!important;box-shadow:0 3px 0 #efe3c8!important}
+html.atlas-skin .a32 > button.sel{background:var(--a-tile)!important;color:#2b3044!important;box-shadow:0 3px 0 #efe3c8!important}
 html.atlas-skin .a32-off:not(#_):not(#_):not(#_){display:none!important}
 html.atlas-skin #f3D.a32-box{margin:0!important;padding:0!important;border:0!important;background:none!important}
 html.atlas-skin #f3D.a32-box > label:not(.pc3l){display:none!important}
@@ -661,7 +661,9 @@ html.atlas-skin .a32-pc3 > label.pc3l{display:none!important}
 /* the 3D pieces moved into the 駒 box: the look they had in #f3D */
 html.atlas-skin body:not(#_) .a32-pc3 .bdrow{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:8px!important}
 @media (max-width:760px){html.atlas-skin body:not(#_) .a32-pc3 .bdrow{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
-html.atlas-skin body:not(#_) .a32-pc3 .bdrow button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 4px 7px;border-radius:14px!important;border:2px solid #efe3c8;background:#fff;cursor:pointer;font:700 13px/1.25 inherit;color:#2b3044;min-width:0}
+html.atlas-skin body:not(#_) .a32-pc3 .bdrow button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 4px 7px;border-radius:14px!important;border:2px solid #efe3c8;background:var(--a-tile);cursor:pointer;font:700 13px/1.25 inherit;color:#2b3044;min-width:0}
 html.atlas-skin body:not(#_) .a32-pc3 .bdrow button img{display:block;width:100%;aspect-ratio:3/2;object-fit:contain;border-radius:9px;background:radial-gradient(80% 80% at 50% 40%,#5a4636,#2a1f17);padding:4%;box-sizing:border-box}
 html.atlas-skin body:not(#_) .a32-pc3 .bdrow button span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 html.atlas-skin body:not(#_) .a32-pc3 .bdrow button.sel{border-color:#ff8a7a;background:#fff1ee;box-shadow:0 3px 0 #ffb3a8}
+/* (2026-11-12) toned down: the cards a step creamier than the portal's paper and the tiles / buttons off-white — over the dark
+   rooms the near-white boxes glared and stood out from the table */
