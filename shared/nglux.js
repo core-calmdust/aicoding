@@ -147,7 +147,9 @@ function init() {
   const mf = (() => { const sm = modal.querySelector('#segMode'); return sm && sm.closest('.field'); })();
   if (mf && mf.parentNode === wrap.parentNode && (wrap.compareDocumentPosition(mf) & Node.DOCUMENT_POSITION_FOLLOWING)) wrap.before(mf);
   const items = [...c1.children, ...c2.children].filter(e => own(e) && e !== mf);   // the settings in their original order
-  const side = items.find(e => e.id === 'fColor'); if (side && side.parentNode === c2) { items.splice(items.indexOf(side), 1); const i = items.findIndex(e => e.parentNode === c1 && !/Info$/.test(e.id)); items.splice(i < 0 ? 0 : i, 0, side); }   // your side first, as in every game
+  const ord = (modal.dataset.nglOrder || '').split(',').filter(Boolean);   // a game's own order of the panels' settings (data-ngl-order="fLevel,fColor,…", 2026-11-13)
+  if (ord.length) items.sort((a, b) => { const i = ord.indexOf(a.id), j = ord.indexOf(b.id); return (i < 0 ? 99 : i) - (j < 0 ? 99 : j); });
+  const side = ord.length ? null : items.find(e => e.id === 'fColor'); if (side && side.parentNode === c2) { items.splice(items.indexOf(side), 1); const i = items.findIndex(e => e.parentNode === c1 && !/Info$/.test(e.id)); items.splice(i < 0 ? 0 : i, 0, side); }   // your side first, as in every game
   // (a field in a column hidden as empty has no height: it still counts as shown when it is not hidden itself — otherwise a
   //  column emptied by a mode with few settings (レッスン…) never came back, 2026-11-10)
   const shown = e => !e.classList.contains('hidden') && !e.hidden && getComputedStyle(e).display !== 'none' && (e.offsetHeight > 0 || !!e.closest('.ngl-empty'));
@@ -162,7 +164,7 @@ function init() {
     try {
       if (mf && wrap.contains(mf)) wrap.before(mf);   // the mode row always above the panels (reversi keeps it in a column)
       const vis = items.filter(shown); if (!vis.length && items.length) return;
-      const h = vis.map(e => e.offsetHeight + 20), tot = h.reduce((a, b) => a + b, 0);
+      const h = vis.map(e => e.offsetHeight + 20 - [...e.querySelectorAll('.pro-panel:not(.hidden)')].reduce((a, p) => a + p.offsetHeight, 0)), tot = h.reduce((a, b) => a + b, 0);   // (an open PRO panel does not move the settings to the other side, 2026-11-13)
       let k = vis.length, best = Infinity, acc = 0;
       if (vis.length >= 2) for (let i = 1; i < vis.length; i++) { acc += h[i - 1]; const d = Math.abs(tot - 2 * acc); if (d < best) { best = d; k = i; } }
       const cut = k < vis.length ? items.indexOf(vis[k]) : items.length;
