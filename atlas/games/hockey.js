@@ -452,7 +452,7 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
       const nv = menuEl.querySelector('#hkNever'); if (nv && nv.checked) { howOff = true; try { localStorage.setItem('atlas-hockey-howto', 'off'); } catch (e) {} }
       menuEl.remove(); menuEl = null; mode = look;
       // (the pace grows with the AI level; 2 players: a little brisker)
-      s = E.newMatch({ board: look, target, first: 0, speed: pvp ? 1.2 : 1 + .5 * (level - 1) / 19 }); setupMode(); hud(); sync(performance.now()); kick(300); barFit();
+      s = E.newMatch({ board: look, target, first: 0, speed: pvp ? 1.2 : 1 + .4 * (level - 1) / 19 }); setupMode(); hud(); sync(performance.now()); kick(300); barFit();
       phase = 'count'; let n = 3;
       const tick = () => { if (stopped) return; if (n > 0) { big(String(n)); SND.beep(false); n--; later(tick, 600); } else { big('GO!', 'g', 600); SND.beep(true); phase = 'play'; document.documentElement.classList.add('hk-play'); last = performance.now(); loop(last); } };
       tick();
