@@ -139,7 +139,7 @@ function init() {
       // オンライン: the online room screen (#olBody of #onlineOverlay) is shown inside this dialog, in place of the panels (2026-11-13)
       const on = sm.querySelector(':scope > [data-v=online]'), olo = document.getElementById('onlineOverlay'), olb = document.getElementById('olBody');
       if (on && olo && olb && typeof window.openOnline === 'function') {
-        st.textContent += '#onlineOverlay.ngl-inline:not(#_){display:none!important}html body:not(#_):not(#_) #newOverlay .modal.ngl-ol:not(#_) :is(.ng-cols,.ng-col,#btnStart):not(#_):not(#_){display:none!important}#newOverlay .modal:not(.ngl-ol) .ngl-online{display:none!important}#newOverlay .ngl-online{flex:1 1 auto;min-height:0;overflow-y:auto;margin:6px 0 4px;padding:4px 2px}';
+        st.textContent += '#onlineOverlay.ngl-inline:not(#_){display:none!important}html body:not(#_):not(#_) #newOverlay .modal.ngl-ol:not(#_) :is(.ng-cols,.ng-col,#btnStart):not(#_):not(#_){display:none!important}#newOverlay .modal:not(.ngl-ol) .ngl-online{display:none!important}#newOverlay .ngl-online{flex:none;overflow:visible;margin:6px 0 4px;padding:4px 2px}#newOverlay .modal.ngl-ol{overflow-y:auto!important}';
         const home = olb.parentNode, next = olb.nextSibling, box = document.createElement('div'); box.className = 'ngl-online';
         let inl = false, quiet = false;
         const hideNew = () => { if (typeof window.hideOverlay === 'function') window.hideOverlay('#newOverlay'); else ov.classList.remove('show'); };
