@@ -87,6 +87,17 @@ const settings = { mode: 'ai', color: 1, level: 12, level2: 12, lvv: 2, style: '
 const SUPPORTED = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); if (/^zh-(tw|hk|mo|hant)/.test(n)) return 'zh-TW'; return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'].find(c => n.split('-')[0] === c) || 'en'; }
 let LANG = detectLang();
+
+// 2026-11-12 (shogi's online look for every game): the two panels' titles, 「ロビーに戻る」 — their own small dictionary
+const OLX = {
+  paneRated: { ja: 'レート戦', en: 'Rated game', zh: '等级分对局', ko: '레이팅전', es: 'Partida puntuada', fr: 'Partie classée', pt: 'Partida ranqueada', de: 'Gewertete Partie', hi: 'रेटेड खेल', ar: 'مباراة مصنّفة', ru: 'Рейтинговая партия', 'zh-TW': '積分對局', id: 'Permainan berperingkat', tr: 'Puanlı oyun' },
+  paneRatedSub: { ja: '近いレートの相手と自動で対局', en: 'Matched automatically with a player near your rating', zh: '自动匹配等级分相近的对手', ko: '비슷한 레이팅의 상대와 자동 매칭', es: 'Emparejamiento automático con un rival de nivel parecido', fr: 'Appariement automatique avec un joueur de niveau proche', pt: 'Pareamento automático com alguém de rating próximo', de: 'Automatisch gegen einen Gegner mit ähnlicher Wertung', hi: 'मिलती-जुलती रेटिंग वाले खिलाड़ी से अपने-आप मुकाबला', ar: 'مطابقة تلقائية مع لاعب قريب من تصنيفك', ru: 'Автоподбор соперника близкого рейтинга', 'zh-TW': '自動配對積分相近的對手', id: 'Dipasangkan otomatis dengan pemain berperingkat mirip', tr: 'Yakın puanlı bir rakiple otomatik eşleşme' },
+  paneRoom: { ja: '部屋で対戦', en: 'Play in a room', zh: '房间对局', ko: '방에서 대국', es: 'Jugar en una sala', fr: 'Jouer dans un salon', pt: 'Jogar em uma sala', de: 'In einem Raum spielen', hi: 'कमरे में खेलें', ar: 'اللعب في غرفة', ru: 'Игра в комнате', 'zh-TW': '房間對局', id: 'Main di ruang', tr: 'Odada oyna' },
+  paneRoomSub: { ja: '友達と・レート変動なし', en: 'With friends · no rating change', zh: '和朋友 · 不计等级分', ko: '친구와 · 레이팅 변동 없음', es: 'Con amigos · sin cambio de puntuación', fr: 'Entre amis · sans effet sur le classement', pt: 'Com amigos · sem mudar o rating', de: 'Mit Freunden · ohne Wertung', hi: 'दोस्तों के साथ · रेटिंग में बदलाव नहीं', ar: 'مع الأصدقاء · دون تغيير التصنيف', ru: 'С друзьями · без изменения рейтинга', 'zh-TW': '和朋友 · 不計積分', id: 'Dengan teman · peringkat tetap', tr: 'Arkadaşlarla · puan değişmez' },
+  rulesMore: { ja: 'マッチングとレートのしくみ', en: 'How matching and rating work', zh: '匹配与等级分说明', ko: '매칭과 레이팅 안내', es: 'Cómo funcionan el emparejamiento y la puntuación', fr: 'Appariement et classement', pt: 'Como funcionam o pareamento e o rating', de: 'So funktionieren Zuordnung und Wertung', hi: 'मिलान और रेटिंग कैसे काम करते हैं', ar: 'كيف تعمل المطابقة والتصنيف', ru: 'Как работают подбор и рейтинг', 'zh-TW': '配對與積分說明', id: 'Cara kerja pencocokan dan peringkat', tr: 'Eşleşme ve puan nasıl işler' },
+  toLobby: { ja: 'ロビーに戻る', en: 'Back to lobby', zh: '返回大厅', ko: '로비로 돌아가기', es: 'Volver al vestíbulo', fr: 'Retour au salon', pt: 'Voltar ao saguão', de: 'Zurück zur Lobby', hi: 'लॉबी पर लौटें', ar: 'العودة إلى الردهة', ru: 'В лобби', 'zh-TW': '返回大廳', id: 'Kembali ke lobi', tr: 'Lobiye dön' },
+};
+const olx = k => { const L = typeof LANG === 'string' ? LANG : (document.documentElement.lang || 'en'); return (OLX[k] && (OLX[k][L] || OLX[k].en)) || k; };
 // result reason for a resigned game (投了)
 { const RW = { ja: '投了', en: 'Resignation', zh: '认输', ko: '기권', es: 'Abandono', fr: 'Abandon', pt: 'Desistência', de: 'Aufgabe', hi: 'हार मान ली', ar: 'استسلام', ru: 'Сдача', 'zh-TW': '認輸', id: 'Menyerah', tr: 'Terk' };
   for (const l in RW) if (I18N[l] && I18N[l]['res.why.resign'] === undefined) I18N[l]['res.why.resign'] = RW[l]; }
@@ -2706,9 +2717,9 @@ function olRoomRows(list) {
   const me = Online.uid;
   return list.length ? list.map(r => {
     const tl = r.title ? `<b class="ol-rtitle">${olEsc(r.title)}</b> ` : '';
-    if (!r.game) return `<div class="${r.host === me ? 'me' : ''}"><span>${tl}${olEsc(r.name)} <small>R ${r.rating} · ${olEsc(tcTag(r.tc))}</small></span>${r.host === me ? `<small>${t('ol.yourRoom')}</small>` : `<button class="dk-join" data-code="${olEsc(r.id)}">${t('ol.join')}</button>`}</div>`;
+    if (!r.game) return `<div class="ol-r2${r.host === me ? ' me' : ''}"><span><span class="ol-r2a">${tl}${olEsc(r.name)}</span><small class="ol-r2b">R ${r.rating} · ${olEsc(tcTag(r.tc))}</small></span>${r.host === me ? `<small>${t('ol.yourRoom')}</small>` : `<button class="dk-join" data-code="${olEsc(r.id)}">${t('ol.join')}</button>`}</div>`;
     const mine = r.host === me || r.guest === me, watching = !!(net && net.spectate && net.game && net.game.room === r.id && net.gid === r.game);
-    return `<div class="ingame${mine ? ' me' : ''}"><span>${tl}${olEsc(r.name)}${r.gname ? ' <small>vs</small> ' + olEsc(r.gname) : ''} <small class="ol-ing">${t('ol.st.play')} · ${olEsc(tcTag(r.tc))}</small></span>${mine ? `<small>${t(r.host === me ? 'ol.yourRoom' : 'ol.st.play')}</small>` : `<button class="dk-watch" data-code="${olEsc(r.id)}"${watching ? ' disabled' : ''}>${t(watching ? 'ol.st.watch' : 'ol.watch')}</button>`}</div>`;
+    return `<div class="ol-r2 ingame${mine ? ' me' : ''}"><span><span class="ol-r2a">${tl}${olEsc(r.name)}${r.gname ? ' <small>vs</small> ' + olEsc(r.gname) : ''}</span><small class="ol-ing ol-r2b">${t('ol.st.play')} · ${olEsc(tcTag(r.tc))}</small></span>${mine ? `<small>${t(r.host === me ? 'ol.yourRoom' : 'ol.st.play')}</small>` : `<button class="dk-watch" data-code="${olEsc(r.id)}"${watching ? ' disabled' : ''}>${t(watching ? 'ol.st.watch' : 'ol.watch')}</button>`}</div>`;
   }).join('') : `<div class="ol-note small">${t('ol.noRooms')}</div>`;
 }
 function olRoomsRender() { const el = $('#olRooms'); if (el) el.innerHTML = olRoomRows(olRooms); }
@@ -2740,18 +2751,20 @@ function olRender(view) {
   if (olView === 'menu') {
     B.innerHTML = `
       <p class="ol-note" style="margin:-8px 0 14px">${t('ol.desc')}</p>
-      <div class="ol-grid"><div class="ol-col">
       <div class="ol-me"><input id="olName" maxlength="16" value="${olEsc(Pr.name)}" aria-label="name"><span class="ol-r">R <b>${Pr.rating}</b><small>${t('ol.record', { g: Pr.games || 0, w: Pr.wins || 0, l: Pr.losses || 0, d: Pr.draws || 0 })}</small></span></div>
+      <div class="ol-grid ol-lux"><section class="ol-col ol-pane">
+      <h3 class="ol-ph">${olx('paneRated')}<small>${olx('paneRatedSub')}</small></h3>
       <div class="ol-tcbox"><div class="ol-tcl">${t('ol.tc')}</div>${olTcSel()}</div>
-      <div class="ol-acts"><button class="mbtn go" id="olAuto">${t('ol.auto')}</button></div>
-      <p class="ol-note small">${t('ol.rules')}</p>
+      <details class="ol-rulesd"><summary>${olx('rulesMore')}</summary><p class="ol-note small">${t('ol.rules')}</p></details>
       <div class="ol-sub">${t('ol.ranking')}</div><div class="ol-list" id="olRank"><div class="ol-note small">…</div></div>
-      </div><div class="ol-col">
+      <div class="ol-acts ol-bot"><button class="mbtn go" id="olAuto">${t('ol.auto')}</button></div>
+      </section><section class="ol-col ol-pane">
+      <h3 class="ol-ph">${olx('paneRoom')}<small>${olx('paneRoomSub')}</small></h3>
       <div class="ol-sub">${t('ol.rooms')}</div><div class="ol-list ol-rooms" id="olRooms">${olRoomRows(olRooms)}</div>
-      ${olMyRoomHtml()}
       <div class="ol-sub">${t('ol.joinKey')}</div>
       <div class="ol-join"><input id="olCode" maxlength="5" placeholder="${t('ol.codePh')}" autocapitalize="characters"><button class="mbtn" id="olJoin">${t('ol.join')}</button></div>
-      </div></div>`;
+      ${olMyRoomHtml()}
+      </section></div>`;
     $('#olName').onchange = async e => { try { e.target.value = await Online.setName(e.target.value); syncTouch(); dockRender(); } catch (_) {} };
     $('#olAuto').onclick = olStartSearch;
     olWatchRooms();
@@ -2897,6 +2910,7 @@ function startOnlineGame(gid, intro, spec) {
   mtab('game'); olWatchRender(); dockRender();
 }
 function leaveOnlineGame() {
+  { const lb = document.getElementById('btnLobby'); if (lb) lb.classList.add('hidden'); }
   if (!net) return;
   if (!net.spectate) olLiveClear();
   net.unsub && net.unsub(); net.wUnsub && net.wUnsub(); clearInterval(net.timer);
@@ -3030,6 +3044,7 @@ async function finishOnline(g) {
   if (!net || net.gid !== gid) return;
   $('#resultDisc').innerHTML = winner ? `<div class="pdisc p${winner}"></div>` : '';
   $('#resultTitle').textContent = t(score === 1 ? 'res.youWin' : score === 0 ? 'ol.lose' : 'res.draw');
+  { const lb = document.getElementById('btnLobby'); if (lb) { lb.textContent = olx('toLobby'); lb.classList.remove('hidden'); } }
   const diff = r.now - r.old;
   $('#resultSub').innerHTML = olEsc(whyTxt(true)) + '<br>' + t('res.sub', { n: Math.ceil(moves.length / 2) }) + '<br>' + (r.rated ? `<span class="rt-res">R ${r.old} → <b>${r.now}</b> (${rtD(diff)})</span>` : olEsc(r.note ? Online.secMsg(r.note) : t('ol.unrated')));
   showOverlay('#resultOverlay');
@@ -3753,3 +3768,5 @@ window.addEventListener('resize', () => renderFx());
 
 // first-time banner in the new-game dialog → illustrated rules
 if (window.RulesOffer) RulesOffer.init({ game: 'chess', lang: () => LANG, open: () => openRules('move'), watch: '#rulesOverlay' });
+// 「ロビーに戻る」 (online games): leave the finished game, the online panel opened (2026-11-12)
+{ const lb = document.getElementById('btnLobby'); if (lb) lb.onclick = () => { hideOverlay('#resultOverlay'); if (net) leaveOnlineGame(); if (typeof dockToggle === 'function' && !matchMedia('(pointer: coarse)').matches) dockToggle(true); else if (typeof mtab === 'function') mtab('online'); if (typeof dockRender === 'function') dockRender(); }; }
