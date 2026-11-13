@@ -122,13 +122,17 @@ def art(src, out):
             if k <= 8: lab[inkm & (lab != 1)] = 3
         p = paint(C(c, r), force)
         y, x = divmod(k, 8); sheet[y * GH:(y + 1) * GH, x * GW:(x + 1) * GW] = p
-    # 一索 (cell 9): our own design — a sparrow on bamboo (atlas/tools/shanghai-bird.svg, rendered with rsvg-convert), not the
-    # photo's peacock (ユーザー 2026-11-14：写真そのままの孔雀なので独自の解釈を)
+    # 筒子 (cells 0–8) and 一索 (cell 9): drawn clean as vectors (atlas/tools/shanghai-svg/pin1–9.svg, bird.svg; rendered with
+    # rsvg-convert) — the photo's circles came out smeared, and 一索 is our own drawing of the classic layout (2026-11-14)
     import os, subprocess, io
-    svg = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'shanghai-bird.svg')
-    png = subprocess.run(['rsvg-convert', '-w', str(GW), '-h', str(GH), svg], capture_output=True, check=True).stdout
-    b = np.array(Image.open(io.BytesIO(png)).convert('RGBA')).astype(float); b[:, :, 3] /= 255
-    sheet[GH:2 * GH, GW:2 * GW] = b
+    here = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'shanghai-svg')
+    def vec(name, k):
+        png = subprocess.run(['rsvg-convert', '-w', str(GW), '-h', str(GH), os.path.join(here, name)], capture_output=True, check=True).stdout
+        b = np.array(Image.open(io.BytesIO(png)).convert('RGBA')).astype(float); b[:, :, 3] /= 255
+        y, x = divmod(k, 8); sheet[y * GH:(y + 1) * GH, x * GW:(x + 1) * GW] = b
+    for n in range(1, 10): vec('pin%d.svg' % n, n - 1)
+    vec('bird.svg', 9)
+    for n in range(2, 10): vec('sou%d.svg' % n, 8 + n)   # 索子 too (cells 10–17)
     s = sheet.copy(); s[:, :, 3] *= 255
     Image.fromarray(s.astype('uint8'), 'RGBA').save(out, optimize=True)
 
