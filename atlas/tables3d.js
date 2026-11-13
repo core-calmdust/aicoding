@@ -971,8 +971,20 @@
     if (drape) [[W0 - 7, W0 + 1], [W1 - 1, W1 + 7]].forEach(([a, b]) => { for (let x = a; x < b; x += .6) { const k = .5 + .5 * Math.sin((x - a) * 3.1); c.fillStyle = `rgb(${drape[0] + k * 40 | 0},${drape[1] + k * 14 | 0},${drape[2] + k * 16 | 0})`; c.fillRect(x, Y0 - 4, .62, Y1 - Y0 + 6); } });
     if (T !== 'night') { blur(c, 2 * ppu); c.fillStyle = P.glow; c.fillRect(W0 - 6, Y0 - 6, W1 - W0 + 12, Y1 - Y0 + 12); blur(c, 0); }
   }
+  // the felt room by the hour (2026-11-13, rebuilt). The walls and the ceiling are unlit pictures, so the room's brightness is theirs
+  // (wb × the picture, wash = the ambient light lifting the dark panelling, sconce = how strongly the wall lamps glow), not the lights':
+  // the lights only shape the table — hemi (sky colour, ground colour, strength), win (the window's light: colour, strength, from),
+  // lamp (the shade over the table: colour, strength), exp, board (the soft board light). The lamp carries the night; by day the
+  // window and the room do, and the lamp steps back so the board never burns out.
+  const FELT = {
+    morning: { wb: 1.8, wash: 'rgba(168,150,128,.2)', sconce: .3, hemi: [0xdfe9f6, 0x4a3c2c, .44], win: [0xffe0a8, .62, [-44, 13, -14]], lamp: [0xfff0d8, 1.75], exp: .86, board: .3, bg: '#1c1510', envTop: '#4a4238' },
+    day: { wb: 2.0, wash: 'rgba(170,160,146,.22)', sconce: .2, hemi: [0xf2f4f8, 0x4c4034, .5], win: [0xfffaf2, .5, [-36, 30, -14]], lamp: [0xfff2dc, 1.6], exp: .86, board: .3, bg: '#201913', envTop: '#545048' },
+    evening: { wb: 1.55, wash: 'rgba(190,96,58,.17)', sconce: .8, hemi: [0xf0a878, 0x2c1c1a, .27], win: [0xff8e4e, .55, [-46, 7, -12]], lamp: [0xffe6c0, 2.2], exp: .9, board: .32, bg: '#150d0a', envTop: '#3a2a20' },
+    night: { wb: 1, wash: null, sconce: 1, hemi: [0x7f8eaa, 0x0a0a0a, .1], win: null, lamp: [0xffe4bc, 2.6], exp: .95, board: .34, bg: '#060607', envTop: '#2b2620' },
+  };
   TABLES[3] = (o) => {
-    const { TT, g, scene } = o, FL = -16, T = TOD(o), day = T === 'morning' || T === 'day';
+    const { TT, g, scene } = o, FL = -16, T = TOD(o), day = T === 'morning' || T === 'day', F = FELT[T];
+    const wash = c => { if (!F.wash) return; c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.fillStyle = F.wash; c.fillRect(0, 0, c.canvas.width, c.canvas.height); c.restore(); };
     const ft = feltTex(o);
     ft.wrapS = ft.wrapT = TT.RepeatWrapping; ft.repeat.set(3, 2.2);
     const feltM = M({ map: ft, roughness: .95, bumpScale: .006, sheen: new TT.Color(0x2c7a50) });
@@ -1032,26 +1044,27 @@
     const XL = -70, XR = 70, ZB = -60, ZF = 150, Y1 = 50;
     const carpet = canvasTex('tbl3-carpet', sz(o, 512), sz(o, 512), (c, W) => { c.fillStyle = '#3a1416'; c.fillRect(0, 0, W, W); const u = W / 8; for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { c.fillStyle = (i + j) % 2 ? '#4a1c1c' : '#2c1012'; c.beginPath(); c.moveTo(i * u + u / 2, j * u); c.lineTo(i * u + u, j * u + u / 2); c.lineTo(i * u + u / 2, j * u + u); c.lineTo(i * u, j * u + u / 2); c.fill(); c.fillStyle = 'rgba(190,150,80,.35)'; c.beginPath(); c.arc(i * u + u / 2, j * u + u / 2, u * .08, 0, 7); c.fill(); }
       const N = makeNoise(4), img = c.getImageData(0, 0, W, W), d = img.data; for (let p = 0; p < d.length; p += 4) { const k = (Math.random() - .5) * 18; d[p] += k; d[p + 1] += k * .6; d[p + 2] += k * .6; } c.putImageData(img, 0, 0); });
-    roomBox(o, { key: 'tbl3-room-' + T, xl: XL, xr: XR, zb: ZB, zf: ZF, y0: FL, y1: Y1, px: 2048, pxs: 1024,
+    roomBox(o, { key: 'tbl3-room2-' + T, wb: F.wb, xl: XL, xr: XR, zb: ZB, zf: ZF, y0: FL, y1: Y1, px: 2048, pxs: 1024,
       floor: M({ map: rep(TT, carpet, 10, 12), roughness: .95, color: 0x8a7a70, bumpScale: .006 }),
       back: (c, ppu) => {
         const R = rng(11);
         c.fillStyle = '#0d0907'; c.fillRect(XL - 2, FL - 2, XR - XL + 4, Y1 - FL + 4);
         c.fillStyle = '#17100a'; c.fillRect(XL - 2, FL - 2, XR - XL + 4, 16); c.fillStyle = 'rgba(200,160,90,.25)'; c.fillRect(XL - 2, FL + 14, XR - XL + 4, .4);   // wainscot + brass rail
         for (let x = XL; x < XR; x += 12) { c.strokeStyle = 'rgba(70,46,26,.6)'; c.lineWidth = .35; c.strokeRect(x + 1.2, FL + 2, 9.6, 10.5); c.strokeRect(x + 1.2, FL + 17, 9.6, 26); }
+        wash(c);
         blur(c, .8 * ppu);
-        [[-30, 26], [30, 26], [-56, 26], [56, 26]].forEach(([x, y]) => { c.fillStyle = rad(c, x, y, 12, [[0, 'rgba(255,190,110,.55)'], [.18, 'rgba(255,170,90,.22)'], [1, 'rgba(255,150,80,0)']]); c.fillRect(x - 13, y - 13, 26, 26); });
+        [[-30, 26], [30, 26], [-56, 26], [56, 26]].forEach(([x, y]) => { c.fillStyle = rad(c, x, y, 12, [[0, `rgba(255,190,110,${.55 * F.sconce / F.wb})`], [.18, `rgba(255,170,90,${.22 * F.sconce / F.wb})`], [1, 'rgba(255,150,80,0)']]); c.fillRect(x - 13, y - 13, 26, 26); });
         for (let i = 0; i < 30; i++) { const x = XL + R() * (XR - XL), y = FL + 18 + R() * 30, r = .5 + R() * 1.3, warm = R() > .3; c.fillStyle = warm ? `rgba(255,${190 + R() * 40 | 0},120,${.06 + R() * .12})` : `rgba(120,200,190,${.05 + R() * .08})`; ell(c, x, y, r, r); }
         blur(c, 0);
         [[-30, 26], [30, 26], [-56, 26], [56, 26]].forEach(([x, y]) => { c.fillStyle = 'rgba(200,160,90,.7)'; c.fillRect(x - .2, y - 3, .4, 3); c.fillStyle = 'rgba(255,226,170,.9)'; c.beginPath(); c.moveTo(x - 1.6, y + 1.6); c.lineTo(x + 1.6, y + 1.6); c.lineTo(x + 1, y - .6); c.lineTo(x - 1, y - .6); c.fill(); });
         c.fillStyle = 'rgba(190,150,80,.55)'; c.fillRect(-9, 18, 18, 14); c.fillStyle = 'rgba(30,22,16,1)'; c.fillRect(-8.2, 18.8, 16.4, 12.4); c.fillStyle = 'rgba(110,80,52,.55)'; ell(c, -2, 24.6, 4.6, 3.2); c.fillStyle = 'rgba(70,90,70,.45)'; ell(c, 3.6, 22.4, 3, 1.8);   // a gilt-framed painting
         c.fillStyle = rad(c, 0, 16, 60, [[0, 'rgba(60,44,30,.35)'], [1, 'rgba(0,0,0,0)']]); c.fillRect(XL - 2, FL - 2, XR - XL + 4, Y1 - FL + 4);
       },
-      left: (c, ppu) => { c.fillStyle = day ? '#1a120c' : '#0b0806'; c.fillRect(-ZF - 2, FL - 2, ZF - ZB + 4, Y1 - FL + 4); c.fillStyle = 'rgba(200,160,90,.2)'; c.fillRect(-ZF - 2, FL + 14, ZF - ZB + 4, .4); c.fillStyle = rad(c, 54, 26, 10, [[0, `rgba(255,180,100,${day ? .18 : .4})`], [1, 'rgba(255,170,90,0)']]); c.fillRect(44, 16, 20, 20);
+      left: (c, ppu) => { c.fillStyle = day ? '#1a120c' : '#0b0806'; c.fillRect(-ZF - 2, FL - 2, ZF - ZB + 4, Y1 - FL + 4); c.fillStyle = 'rgba(200,160,90,.2)'; c.fillRect(-ZF - 2, FL + 14, ZF - ZB + 4, .4); wash(c); c.fillStyle = rad(c, 54, 26, 10, [[0, `rgba(255,180,100,${.4 * F.sconce / F.wb})`], [1, 'rgba(255,170,90,0)']]); c.fillRect(44, 16, 20, 20);
         paintWindow(c, ppu, T, 10, 34, FL + 16, Y1 - 8, '#1a120a', [60, 20, 22], 31);   // a tall window with velvet drapes: the hour shows here
         if (day) { c.fillStyle = rad(c, 22, 14, 40, [[0, 'rgba(255,240,215,.16)'], [1, 'rgba(0,0,0,0)']]); c.fillRect(-20, FL, 84, Y1 - FL); } },
-      right: (c) => { c.fillStyle = '#0b0806'; c.fillRect(ZB - 2, FL - 2, ZF - ZB + 4, Y1 - FL + 4); c.fillStyle = 'rgba(200,160,90,.2)'; c.fillRect(ZB - 2, FL + 14, ZF - ZB + 4, .4); c.fillStyle = rad(c, -40, 26, 10, [[0, 'rgba(255,180,100,.4)'], [1, 'rgba(255,170,90,0)']]); c.fillRect(-50, 16, 20, 20); },
-      ceil: (c) => { c.fillStyle = '#080605'; c.fillRect(XL - 2, ZB - 2, XR - XL + 4, ZF - ZB + 4); c.strokeStyle = 'rgba(60,40,24,.6)'; c.lineWidth = .6; for (let x = XL; x < XR; x += 14) for (let z = ZB; z < ZF; z += 14) c.strokeRect(x + 1, z + 1, 12, 12); },
+      right: (c) => { c.fillStyle = '#0b0806'; c.fillRect(ZB - 2, FL - 2, ZF - ZB + 4, Y1 - FL + 4); c.fillStyle = 'rgba(200,160,90,.2)'; c.fillRect(ZB - 2, FL + 14, ZF - ZB + 4, .4); wash(c); c.fillStyle = rad(c, -40, 26, 10, [[0, `rgba(255,180,100,${.4 * F.sconce / F.wb})`], [1, 'rgba(255,170,90,0)']]); c.fillRect(-50, 16, 20, 20); },
+      ceil: (c) => { c.fillStyle = '#080605'; c.fillRect(XL - 2, ZB - 2, XR - XL + 4, ZF - ZB + 4); c.strokeStyle = 'rgba(60,40,24,.6)'; c.lineWidth = .6; for (let x = XL; x < XR; x += 14) for (let z = ZB; z < ZF; z += 14) c.strokeRect(x + 1, z + 1, 12, 12); wash(c); },
     });
     // the lampshade over the table (a green-glass billiard shade; hidden in the play view)
     { const Gp = grp(TT, g, 0, 0, cz); Gp.userData.viewOnly = 1; Gp.userData.keep = 1;
@@ -1060,15 +1073,14 @@
       at(Gp, new TT.Mesh(new TT.CylinderGeometry(.08, .08, Y1 - 36.6, 5), M({ color: 0xb08850, metalness: 1, roughness: .3 })), 0, 36.6 + (Y1 - 36.6) / 2, 0, 0, false); }
     mons(o, 3, FL);
     try { X.mergeStatic(g); } catch (e) {}
-    // (2026-11-13) the room lit by the hour: by day the window and the ceiling light the whole room (the walls, shelves, chairs read
-    // clearly), in the evening softer, at night only the lamp over the table
-    scene.add(new TT.HemisphereLight(day ? 0xeef0f4 : T === 'evening' ? 0xe0b090 : 0x8a96a8, day ? 0x3a3024 : 0x0a0a0a, day ? 1.0 : T === 'evening' ? .55 : .1));
-    if (day || T === 'evening') { const wl = new TT.DirectionalLight(day ? 0xfff6e8 : 0xffb888, day ? 1.3 : .7); wl.position.set(-40, 20, -10); scene.add(wl);
-      const fill = new TT.PointLight(day ? 0xfff0dc : 0xffc89a, day ? 1.1 : .6, 0, 0); fill.position.set(0, 30, 24); scene.add(fill); }   // (the room's ceiling light, toward the walls)   // daylight through the window
-    const key = new TT.SpotLight(0xfff0d4, 4.4, 90, .3, .85, 1.1); key.position.set(0, 36, 3); key.target.position.set(0, 0, 0); scene.add(key); scene.add(key.target);
+    scene.add(new TT.HemisphereLight(F.hemi[0], F.hemi[1], F.hemi[2]));
+    if (F.win) { const wl = new TT.DirectionalLight(F.win[0], F.win[1]); wl.position.set(...F.win[2]); scene.add(wl); }   // the window (left wall): low and golden in the morning, high and white by day, low and orange in the evening
+    // the lamp over the table. (r186: a spot light's range fades later than r128's — at the table ×0.95 where r128 gave ×0.57 — so the
+    // strengths here are the r128 look's 4.4 × 0.57 ≈ 2.5 at night, less by day)
+    const key = new TT.SpotLight(F.lamp[0], F.lamp[1], 90, .3, .85, 1.1); key.position.set(0, 36, 3); key.target.position.set(0, 0, 0); scene.add(key); scene.add(key.target);
     key.shadow.camera.near = 10; key.shadow.camera.far = 60; key.shadow.bias = -.0002;
     const rim = new TT.DirectionalLight(0xffd7a0, .18); rim.position.set(-12, 8, -18); scene.add(rim);
-    return { bg: day ? '#120d09' : '#060607', exp: day ? .86 : .95, board: .34, boardCol: 0xfff0dc, key, env: { top: '#2b2620', bottom: '#040404', panels: [[0, 22, 3, 12, 12, '#fff0d8', 4], [-16, 8, -10, 5, 9, '#ffcf96', .9], [16, 8, -10, 5, 9, '#ffcf96', .7], [0, 9, 20, 22, 5, '#d8c8b0', .55], [-18, 6, 8, 5, 8, '#ffe2b8', .5]] } };
+    return { bg: F.bg, exp: F.exp, board: F.board, boardCol: 0xfff0dc, key, env: { top: F.envTop, bottom: '#040404', panels: [[0, 22, 3, 12, 12, '#fff0d8', day ? 2.6 : T === 'evening' ? 3.2 : 4], [-16, 8, -10, 5, 9, '#ffcf96', .9 * F.sconce], [16, 8, -10, 5, 9, '#ffcf96', .7 * F.sconce], [0, 9, 20, 22, 5, '#d8c8b0', .55], [-18, 6, 8, 5, 8, F.win ? '#' + F.win[0].toString(16).padStart(6, '0') : '#ffe2b8', F.win ? 1.1 : .3]] } };
   };
   TABLES[3].plain = { sun: 0xfff0d4, sunI: .8, hemi: [0xc8d4c8, 0x203020, .42], exp: .66 };
   TABLES[3].floor = (o) => ({ img: feltTex(o).image, w: 15, h: 15, dark: true,
@@ -1092,7 +1104,7 @@
     morning: { sky: ['#7fa8d6', '#c9dcec', '#f7e4cc'], sea: ['#8fb0c8', '#4d7f9e'], sun: [-38, 26, '#fff4dc'], hill: ['#8a9cb0', '#6f8a8a'], key: [0xffe6c4, 1.35, [-26, 14, -22]], hemi: [0xe2ecfa, 0xd8b896, .5], exp: .76, board: .26, light: 0 },
     day: { sky: ['#3f86d6', '#8cc0ea', '#dcedf8'], sea: ['#4f93c2', '#25638f'], sun: [-20, 120, '#ffffff'], hill: ['#7f97a8', '#5d7f5a'], key: [0xfff6ea, 1.45, [-10, 30, -12]], hemi: [0xf2f6ff, 0xe0c0a0, .5], exp: .72, board: .24, light: 0 },
     evening: { sky: ['#33407e', '#b06fa0', '#ffc086'], sea: ['#9a7fae', '#434b88'], sun: [-12, 8, '#fff2d0'], hill: ['#6a5788', '#4e3e66'], key: [0xffc896, 1.2, [-22, 9, -8]], hemi: [0xfbe4e0, 0xffd0b0, .48], exp: .8, board: .32, light: 1 },
-    night: { sky: ['#03060f', '#0b1530', '#1d2b4e'], sea: ['#13203c', '#070d1c'], sun: [18, 60, '#f4f0dc'], hill: ['#0e1426', '#0a0f1c'], key: [0xaebce8, .55, [14, 26, -16]], hemi: [0x34405e, 0x1a1410, .34], exp: .9, board: .5, light: 2 },
+    night: { sky: ['#03060f', '#0b1530', '#1d2b4e'], sea: ['#13203c', '#070d1c'], sun: [18, 60, '#f4f0dc'], hill: ['#0e1426', '#0a0f1c'], key: [0xb4c2ee, .8, [14, 26, -16]], hemi: [0x5c6e9e, 0x2c221a, .6], exp: 1.0, board: .5, light: 2 }   // (2026-11-13: the night lifted — the moon and the sky light the terrace, the floor and the wall read),
   };
   TABLES[4] = (o) => {
     const { TT, g, scene } = o, T = TOD(o), D = TER[T], FL = -16, Z0 = 1;
@@ -1259,10 +1271,10 @@
     // lights of the hour
     scene.add(new TT.HemisphereLight(D.hemi[0], D.hemi[1], D.hemi[2]));
     const key = dirLight(TT, D.key[0], D.key[1], D.key[2], 17); scene.add(key);
-    const fill = new TT.DirectionalLight(T === 'night' ? 0xffc890 : 0xffe4dc, T === 'night' ? .2 : .32); fill.position.set(5, 12, 16); scene.add(fill);
+    const fill = new TT.DirectionalLight(T === 'night' ? 0xffc890 : 0xffe4dc, T === 'night' ? .3 : .32); fill.position.set(5, 12, 16); scene.add(fill);
     mons(o, 4, FL);
     try { X.mergeStatic(g); } catch (e) {}
-    const env = { top: D.sky[1], bottom: T === 'night' ? '#141010' : '#f0d8c0', panels: [[-12, 3, -20, 10, 4, T === 'night' ? '#c8d0f0' : '#ffe8c8', T === 'night' ? .6 : 3], [0, 16, -8, 26, 8, D.sky[1], .8], [0, 6, 18, 20, 5, '#ffe2d4', .55]] };
+    const env = { top: D.sky[1], bottom: T === 'night' ? '#241c18' : '#f0d8c0', panels: [[-12, 3, -20, 10, 4, T === 'night' ? '#c8d0f0' : '#ffe8c8', T === 'night' ? 1.4 : 3], [0, 16, -8, 26, 8, D.sky[1], .8], [0, 6, 18, 20, 5, '#ffe2d4', .55]] };
     return { bg: D.sky[1], exp: D.exp, board: D.board, boardCol: T === 'night' ? 0xffe6cc : 0xfff0e6, key, env };
   };
   TABLES[4].plain = { sun: 0xffd8b0, sunI: .74, hemi: [0xfbeee8, 0xffdcc4, .5], exp: .64 };
