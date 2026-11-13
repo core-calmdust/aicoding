@@ -38,6 +38,8 @@ static TLS int rhN = 0;
 // the rule (setup): homes, distances, neighbours, jumps
 static int LIMIT = 40, CAP = 80, NHOME = 9;
 static i8 HOME[3][64], DIST[3][64]; static int BASE[3];
+typedef unsigned long long u64b; static u64b HOMEB[3];
+static int SCF[3][64], SCT[3][64];   // (the ordering score of a move = SCF[pl][from] + SCT[pl][to])   // (the camps as bit masks, bit = the square)
 static int NBR[64][8], NBRN[64], JO[64][8], JL[64][8], JN[64];
 __attribute__((export_name("setup"))) void setup(int rows, int cols, int diag, int limit, int cap) {
   LIMIT = limit; CAP = cap; NHOME = 0;
@@ -57,6 +59,8 @@ __attribute__((export_name("setup"))) void setup(int rows, int cols, int diag, i
   }
   BASE[1] = BASE[2] = 0;
   for (int i = 0; i < 64; i++) { if (HOME[2][i]) BASE[1] += DIST[1][i]; if (HOME[1][i]) BASE[2] += DIST[2][i]; }
+  for (int pl = 1; pl <= 2; pl++) for (int i = 0; i < 64; i++) { SCF[pl][i] = DIST[pl][i] * 100 + (HOME[pl][i] ? 15 : 0); SCT[pl][i] = -DIST[pl][i] * 100 + (HOME[3 - pl][i] ? 30 : 0); }
+  HOMEB[1] = HOMEB[2] = 0; for (int i = 0; i < 64; i++) { if (HOME[1][i]) HOMEB[1] |= 1ULL << i; if (HOME[2][i]) HOMEB[2] |= 1ULL << i; }
 }
 static TLS double nodes = 0, nodeLimit = 1e300;
 static TLS int stopF = 0, useSH = 0;
@@ -124,12 +128,15 @@ static void tset(u32 h1, u32 h2, int d, int v, int f, int m, int ply) {
 EXPORT(ttprobe) int ttprobe(u32 h1, u32 h2) { return tlook(h1, h2, IO, IO + 1, IO + 2, IO + 3, IO + 4); }
 #endif
 // ---- positions
-typedef struct { i8 sq[64]; int side, ply, fr; u32 h1, h2; } P;
+// (2026-11-13, speed: bb[colour - 1] = the colour's pieces as bits, kept by play(). The loops over the 64 squares walk the
+// bits instead, in the same order; the counts in a camp are popcounts. claude/ugolki-spec.md「高速化」)
+typedef struct { i8 sq[64]; int side, ply, fr; u32 h1, h2; u64b bb[2]; } P;
+static void syncBB(P *p) { p->bb[0] = p->bb[1] = 0; for (int i = 0; i < 64; i++) if (p->sq[i]) p->bb[p->sq[i] - 1] |= 1ULL << i; }
 #define Z1(c, i) ZT[(c) * 64 + (i)]
 #define Z2(c, i) ZT[128 + (c) * 64 + (i)]
 static void play(P *q, const P *p, int m) {
   *q = *p;
-  if (m != PASS) { int f = m % 64, t = m / 64, x = q->sq[f]; q->sq[f] = 0; q->sq[t] = (i8)x; q->h1 ^= Z1(x - 1, f) ^ Z1(x - 1, t); q->h2 ^= Z2(x - 1, f) ^ Z2(x - 1, t); }
+  if (m != PASS) { int f = m % 64, t = m / 64, x = q->sq[f]; q->sq[f] = 0; q->sq[t] = (i8)x; q->bb[x - 1] ^= (1ULL << f) | (1ULL << t); q->h1 ^= Z1(x - 1, f) ^ Z1(x - 1, t); q->h2 ^= Z2(x - 1, f) ^ Z2(x - 1, t); }
   q->side ^= 1; q->ply++; q->h1 ^= ZT[256]; q->h2 ^= ZT[257];
 }
 static TLS int stamp[64], stampN = 1; static TLS i8 queue[64];
@@ -153,21 +160,22 @@ static int reach(P *p, int f, int *out, int n) {
 }
 static int genMoves(P *p, int *out) {
   int pl = p->side + 1, n = 0;
-  for (int i = 0; i < 64; i++) if (p->sq[i] == pl) n = reach(p, i, out, n);
+  for (u64b w = p->bb[pl - 1]; w; w &= w - 1) n = reach(p, __builtin_ctzll(w), out, n);
   if (!n && p->fr) out[n++] = PASS;
   return n;
 }
 static int hasMove(const P *p) {
   if (p->fr) return 1;
   int pl = p->side + 1;
-  for (int i = 0; i < 64; i++) if (p->sq[i] == pl) {
+  for (u64b w = p->bb[pl - 1]; w; w &= w - 1) {
+    const int i = __builtin_ctzll(w);
     for (int k = 0; k < NBRN[i]; k++) if (!p->sq[NBR[i][k]]) return 1;
     for (int k = 0; k < JN[i]; k++) if (p->sq[JO[i][k]] && !p->sq[JL[i][k]]) return 1;
   }
   return 0;
 }
-static int inTarget(const P *p, int pl) { int n = 0; for (int i = 0; i < 64; i++) if (p->sq[i] == pl && HOME[3 - pl][i]) n++; return n; }
-static int inHome(const P *p, int pl) { int n = 0; for (int i = 0; i < 64; i++) if (p->sq[i] == pl && HOME[pl][i]) n++; return n; }
+static int inTarget(const P *p, int pl) { return __builtin_popcountll(p->bb[pl - 1] & HOMEB[3 - pl]); }
+static int inHome(const P *p, int pl) { return __builtin_popcountll(p->bb[pl - 1] & HOMEB[pl]); }
 static int done(const P *p, int pl) { return inTarget(p, pl) == NHOME; }
 // terminal(): 1 = not over; else the value for the side to move (0 draw)
 #define NOTOVER 99999
@@ -192,17 +200,40 @@ static int terminal(const P *p, int ply) {
   if (!hasMove(p)) return countRes(p, ply);
   return NOTOVER;
 }
-static int sideScore(const P *p, int pl) {
-  int s = 0, mx = 0, home = 0, n = 0, inT = 0;
-  for (int i = 0; i < 64; i++) if (p->sq[i] == pl) { int d = DIST[pl][i]; s += d; if (d > mx) mx = d; n++; if (HOME[pl][i]) home++; if (HOME[3 - pl][i]) inT++; }
+typedef struct { int s, mx, home, n, inT; } SS;
+static inline int sideScoreOf(const P *p, int pl, const SS *c) {
+  const int s = c->s, mx = c->mx, home = c->home, n = c->n, inT = c->inT;
   int v = -(s - BASE[pl]) * 34 - mx * 9;
   int mvs = pl == 1 ? (p->ply + 1) >> 1 : p->ply >> 1;
   if (home) { int k = mvs - (LIMIT - 14); if (k < 0) k = 0; v -= home * (12 + k * k * 6); }
   if (inT >= n - 2 && inT < n) v -= 20;
   return v;
 }
-static int evaluate(const P *p) { int me = p->side + 1; return sideScore(p, me) - sideScore(p, 3 - me) + 18; }
-static int seenBefore(u32 h1, u32 h2) { for (int i = 0; i < rhN; i++) if (RH1[i] == h1 && RH2[i] == h2) return 1; return 0; }
+static int evaluate(const P *p) {   // (2026-11-13, speed: the pieces by their bits, the camp counts by popcount — the same value)
+  SS c[3];
+  for (int pl = 1; pl <= 2; pl++) {
+    const u64b own = p->bb[pl - 1]; int sum = 0, mx = 0;
+    for (u64b w = own; w; w &= w - 1) { const int d = DIST[pl][__builtin_ctzll(w)]; sum += d; if (d > mx) mx = d; }
+    c[pl].s = sum; c[pl].mx = mx; c[pl].n = __builtin_popcountll(own); c[pl].home = __builtin_popcountll(own & HOMEB[pl]); c[pl].inT = __builtin_popcountll(own & HOMEB[3 - pl]);
+  }
+  const int me = p->side + 1;
+  return sideScoreOf(p, me, &c[me]) - sideScoreOf(p, 3 - me, &c[3 - me]) + 18;
+}
+// (2026-11-13, speed) the game's positions before the search (RH[0 .. rhBase), fixed during a search) behind a 4096-bit filter
+// of their h1: a position whose bit is not set is in none of them, so only the line being searched is compared one by one.
+// rhBuild at every place that loads the history (abRoot, search() from the page, a helper's spLoadPos). The same answers.
+static TLS u64 RHF[64]; static TLS int rhBase = 0;
+static void rhBuild(int n) {
+  for (int i = 0; i < 64; i++) RHF[i] = 0;
+  for (int i = 0; i < n; i++) { const u32 k = RH1[i] & 4095; RHF[k >> 6] |= 1ULL << (k & 63); }
+  rhBase = n;
+}
+static int seenBefore(u32 h1, u32 h2) {
+  const int base = rhBase <= rhN ? rhBase : 0;
+  if (base) { const u32 k = h1 & 4095; if ((RHF[k >> 6] >> (k & 63)) & 1) for (int i = 0; i < base; i++) if (RH1[i] == h1 && RH2[i] == h2) return 1; }
+  for (int i = base; i < rhN; i++) if (RH1[i] == h1 && RH2[i] == h2) return 1;
+  return 0;
+}
 // ---- search v2 (2026-11-13, claude/ugolki-spec.md「探索 v2」): on for ab_best (the levels by positions / time) and the analysis
 // (ab_values2 with v2 = 1); off — the search as before, exact to its depth — for the levels by depth, the resistance and
 // search() called from the page (the puzzles). A change of mode clears the table. (-DUV_x=0: a part left out, for measuring)
@@ -279,19 +310,34 @@ static inline int lmrOf(const P *p, int m, int d, int i, int ply) {   // the red
   if (red > d - 2) red = d - 2;
   return red < 0 ? 0 : red;
 }
-static TLS double OSC[MAXMV];
-static void orderMoves(const P *p, int *L, int n, int ttm, int ply) {
+// (2026-11-13, speed) the moves by their score, the higher first and equal scores in the generator's order — as the insertion
+// sort on doubles before, by one whole-number key per move (the score × 16 + the history, then the place) sorted by insertion
+typedef long long i64;
+// the key of every move of the node into K (the same place as the move in L)
+static void orderKeys(const P *p, const int *L, i64 *K, int n, int ttm, int ply) {
   int pl = p->side + 1, k = (ply >= 0 && ply < MAXPLY && killers[ply]) ? killers[ply] : -1;
-  int out[MAXMV];
   for (int i = 0; i < n; i++) {
-    int m = L[i]; double v;
-    if (m == ttm) v = 1e9; else if (m == k) v = 1e8;
-    else if (m == PASS) v = __builtin_nan("");   // (the JS reads past its tables: NaN, which never moves in the sort)
-    else { int f = m % 64, t = m / 64; v = (DIST[pl][f] - DIST[pl][t]) * 100 + (HOME[3 - pl][t] ? 30 : 0) - (HOME[pl][f] ? -15 : 0); if (UV_HIST && sv2) v += (double)*histAt(p, m) / HIST_W; }
-    int j = i; while (j > 0 && OSC[j - 1] < v) { OSC[j] = OSC[j - 1]; out[j] = out[j - 1]; j--; }
-    OSC[j] = v; out[j] = m;
+    const int m = L[i]; i64 v;
+    if (m == ttm) v = 16000000000LL; else if (m == k) v = 1600000000LL;
+    else if (m == PASS) v = 0;   // (PASS comes alone)
+    else { const int f = m & 63, t = m >> 6; v = (i64)(SCF[pl][f] + SCT[pl][t]) * 16; if (UV_HIST && sv2) v += hist[p->side][f][t]; }
+    K[i] = v * 1024 + (1023 - i);
   }
-  for (int i = 0; i < n; i++) L[i] = out[i];
+}
+// the best of the moves from place i on to place i (search() takes the moves one at a time: a node that is cut off after a
+// few moves, or drops its late moves, never sorts the rest)
+static inline void orderPick(int *L, i64 *K, int i, int n) {
+  int bi = i; i64 bk = K[i];
+  for (int j = i + 1; j < n; j++) if (K[j] > bk) { bk = K[j]; bi = j; }
+  if (bi != i) { K[bi] = K[i]; K[i] = bk; const int t = L[bi]; L[bi] = L[i]; L[i] = t; }
+}
+// the moves from place i on in order (all of them: the root, a split point)
+static void orderRest(int *L, i64 *K, int i0, int n) {
+  for (int i = i0 + 1; i < n; i++) { const i64 x = K[i]; const int m = L[i]; int j = i; while (j > i0 && K[j - 1] < x) { K[j] = K[j - 1]; L[j] = L[j - 1]; j--; } K[j] = x; L[j] = m; }
+}
+static void orderMoves(const P *p, int *L, int n, int ttm, int ply) {
+  if (n <= 1) return;
+  i64 K[MAXMV]; orderKeys(p, L, K, n, ttm, ply); orderRest(L, K, 0, n);
 }
 static TLS P ST[MAXPLY + 2];
 typedef int Move;
@@ -316,6 +362,7 @@ static int spFillPos(SPt *s, const P *p) {
 }
 static void spLoadPos(const SPt *s, int top, int fresh) {
   ST[s->ply < MAXPLY ? s->ply : MAXPLY] = s->pos; rhN = s->rhn; for (int i = 0; i < rhN; i++) { RH1[i] = s->rh1[i]; RH2[i] = s->rh2[i]; }
+  rhBuild(rhN);
   (void)top; (void)fresh;
 }
 #endif
@@ -360,7 +407,8 @@ static int search(P *p, int d, int a, int b, int ply) {
   }
   if (UV_IIR && v2 && d >= 4 && !(hit && em >= 0)) d--;
   int L[MAXMV], n = genMoves(p, L);
-  orderMoves(p, L, n, hit ? em : -1, ply);
+  i64 K[MAXMV]; orderKeys(p, L, K, n, hit ? em : -1, ply);
+  if (n > 1) orderPick(L, K, 0, n);
   int best = 0, any = 0, bm = n ? L[0] : 0, a0 = a;
   int qm[32], nq = 0;   // v2: the moves searched before a cut-off (their history goes down)
   RH1[rhN] = p->h1; RH2[rhN] = p->h2; rhN++;
@@ -373,6 +421,7 @@ static int search(P *p, int d, int a, int b, int ply) {
     if (i >= 1 && !noSplit && d >= splitD && n - i >= 2 && n - i <= SP_MV && (gIdle > 0 || (gWaitN > 0 && spWanted()))) {
       SPt *s = spAlloc();
       if (s && spFillPos(s, p)) {
+        orderRest(L, K, i, n);
         int k = 0; for (int j = i; j < n; j++) { s->mv[k] = L[j]; s->lg[k++] = (short)j; }
         s->n = k; s->depth = d; s->ply = ply; s->root = 0; s->all = 0; s->pv = 0; s->beta = b; s->alpha = a;
         Move bmm = bm; spRun(s, &best, &bmm, 0); bm = bmm;
@@ -384,8 +433,9 @@ static int search(P *p, int d, int a, int b, int ply) {
       noSplit = 1;
     }
 #endif
+    if (any && best > -WINT && ((futile && i >= 3) || i >= lmpN)) break;   // (the later moves are dropped as well)
+    if (i > 0 && i + 1 < n) orderPick(L, K, i, n);
     int m = L[i];
-    if (any && best > -WINT && ((futile && i >= 3) || i >= lmpN)) continue;
     play(q, p, m);
     int v;
     if (i == 0) v = -search(q, d - 1, -b, -a, ply + 1);
@@ -434,7 +484,8 @@ static void spIdleReset(int fresh) { nodes = 0; tEnd = 1e300; nodeLimit = 1e300;
 __attribute__((export_name("search"))) int csearch(int d, int a, int b, int ply) {
   P *p = &ST[0];
   for (int i = 0; i < 64; i++) p->sq[i] = SQ[i];
-  p->side = IO[8]; p->ply = IO[9]; p->h1 = (u32)IO[10]; p->h2 = (u32)IO[11]; p->fr = IO[12]; rhN = IO[13];
+  syncBB(p);
+  p->side = IO[8]; p->ply = IO[9]; p->h1 = (u32)IO[10]; p->h2 = (u32)IO[11]; p->fr = IO[12]; rhN = IO[13]; rhBuild(rhN);
   setMode(0);   // (the page's own searches: the puzzles' proofs, the search before v2)
   return search(p, d, a, b, ply);
 }
@@ -444,7 +495,7 @@ __attribute__((export_name("search"))) int csearch(int d, int a, int b, int ply)
 // (a stable sort), returns how many. The caller sets the counters (setn) and the killers (kclear) as for a JS bestMove.
 int AOM[MAXMV], AOV[MAXMV];
 static TLS int histN;
-static void abRoot(void) { P *p = &ST[0]; for (int i = 0; i < 64; i++) p->sq[i] = SQ[i]; p->side = IO[8]; p->ply = IO[9]; p->h1 = (u32)IO[10]; p->h2 = (u32)IO[11]; p->fr = IO[12]; histN = rhN = IO[13]; }
+static void abRoot(void) { P *p = &ST[0]; for (int i = 0; i < 64; i++) p->sq[i] = SQ[i]; syncBB(p); p->side = IO[8]; p->ply = IO[9]; p->h1 = (u32)IO[10]; p->h2 = (u32)IO[11]; p->fr = IO[12]; histN = rhN = IO[13]; rhBuild(rhN); }
 static int rootChild(int m, int d, int a, int b) { play(&ST[1], &ST[0], m); rhN = histN; return -search(&ST[1], d - 1, a, b, 1); }
 EXPORT(ab_best) void ab_best(int maxD) {
   setMode(1);

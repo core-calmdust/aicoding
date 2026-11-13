@@ -226,7 +226,7 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
 .g3 img.flat{width:76%;border-radius:22%}
 
 /* ---------- board viewer (3D) ---------- */
-.bv{position:fixed;inset:0;z-index:70;display:none;background:#b57a45}
+.bv{position:fixed;inset:0;z-index:70;display:none;background:#fff}   /* (white behind the 3D view: the place / board switch fades through it — was brown, 2026-11-13) */
 /* PC: the header's icon row (coins, sound, talk, language) in the 3D view too, the × at its end (back to where you came from;
    in a game it is the quit button); under it the place chip and 戦績 in their order — in a game only the icon row (2026-11-10) */
 .bvtop{display:none}
@@ -2219,7 +2219,7 @@ else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.j
 <script src="texgen.js?v=2"></script>
 <script src="npc/roster.js?v=7"></script>
 <script src="art.js?v=12"></script>
-<script src="../shared/atlas.js?v=20261113bb2"></script>
+<script src="../shared/atlas.js?v=20261113sp1"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261109ac2as1"></script>
 <script src="i18n/v.js?v=73pj"></script>
@@ -2260,7 +2260,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   }, 60);
 };</script>
 <script src="../shared/tapword.js?v=1"></script>
-<script src="lazy.js?v=181"></script>
+<script src="lazy.js?v=182"></script>
 <script src="puzzle-lines.js?v=1"></script>
 <script src="puzzles.js?v=22"></script>
 <script src="lessons3d.js?v=13"></script>
