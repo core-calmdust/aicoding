@@ -38,6 +38,7 @@
     'it.freeze': ['相手のパッドが凍った！', 'Opponent frozen!', '对手被冻住！', '對手被凍住！', '상대 패드가 얼었다！', '¡Rival congelado!', 'Adversaire gelé !', 'Rival congelado!', 'Gegner eingefroren!', 'Соперник заморожен!', 'Rakip dondu!', 'Lawan membeku!', 'विरोधी जम गया!', 'تجمّد الخصم!'],
     'it.worm': ['{p}がワームホールを広げた！', '{p} widened the wormholes!', '{p}扩大了虫洞！', '{p}擴大了蟲洞！', '{p}이(가) 웜홀을 넓혔다!', '¡{p} agrandó los agujeros de gusano!', '{p} élargit les trous de ver !', '{p} alargou os buracos de minhoca!', '{p} vergrößert die Wurmlöcher!', '{p} расширил червоточины!', '{p} solucan deliklerini büyüttü!', '{p} memperbesar lubang cacing!', '{p} ने वर्महोल बड़े किए!', '{p} وسّع الثقوب الدودية!'],
     paused: ['一時停止中（クリックで再開）', 'Paused (click to resume)', '已暂停（点击继续）', '已暫停（點擊繼續）', '일시 정지 (클릭하면 재개)', 'En pausa (clic para seguir)', 'En pause (clic pour reprendre)', 'Pausado (clique para continuar)', 'Pause (Klick zum Weiterspielen)', 'Пауза (нажми, чтобы продолжить)', 'Duraklatıldı (devam için tıkla)', 'Dijeda (klik untuk lanjut)', 'रुका (जारी रखने के लिए क्लिक)', 'متوقف (انقر للمتابعة)'],
+    pausedEsc: ['一時停止中（クリックで再開・もう一度Escでやめる）', 'Paused (click to resume · Esc again to quit)', '已暂停（点击继续 · 再按 Esc 退出）', '已暫停（點擊繼續 · 再按 Esc 離開）', '일시 정지 (클릭하면 재개 · Esc를 한 번 더 누르면 종료)', 'En pausa (clic para seguir · Esc otra vez para salir)', 'En pause (clic pour reprendre · Échap encore pour quitter)', 'Pausado (clique para continuar · Esc de novo para sair)', 'Pause (Klick zum Weiterspielen · nochmal Esc zum Beenden)', 'Пауза (нажми, чтобы продолжить · ещё раз Esc — выйти)', 'Duraklatıldı (devam için tıkla · çıkmak için tekrar Esc)', 'Dijeda (klik untuk lanjut · Esc lagi untuk keluar)', 'रुका (जारी रखने के लिए क्लिक · बाहर निकलने के लिए फिर Esc)', 'متوقف (انقر للمتابعة · Esc مرة أخرى للخروج)'],
   };
   // (2026-11-10) the boards: each one plays differently (hockey/engine.js BOARDS) — [name, one line], in LG order
   const BT = {
@@ -481,7 +482,7 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
     /* ---------- AI ---------- */
     const mem = {};
     /* ---------- the loop ---------- */
-    function pause() { if (phase !== 'play' || paused) return; paused = true; unlock(); document.documentElement.classList.remove('hk-play'); toast(tr('paused', lang)); }
+    function pause() { if (phase !== 'play' || paused) return; paused = true; unlock(); document.documentElement.classList.remove('hk-play'); toast(tr(canLock ? 'pausedEsc' : 'paused', lang)); }   // (a mouse: Esc once more quits — the portal's Esc, 2026-11-13)
     function resume() { if (!paused) return; paused = false; document.documentElement.classList.add('hk-play'); last = performance.now(); if (toastEl) toastEl.remove(); }
     const onVis = () => { if (document.hidden) pause(); else if (document.hasFocus()) resume(); };
     const onBlur = () => pause();   // (2026-11-10) the window losing focus (another window / app in front) pauses too, not only a hidden tab
