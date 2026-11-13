@@ -711,7 +711,7 @@
     morning: { tint: '#fff3e6', glow: 'rgba(255,236,210,.55)', sky: ['#bcd8f2', '#f8e6cf'], trees: '#7d9a6a', key: [0xffe4c0, 1.5, [-34, 15, -8]], hemi: [0xe8eefa, 0xb08a62, .42], exp: .74, board: .26, patch: 0x1a150c },
     day: { tint: '#ffffff', glow: 'rgba(255,255,250,.45)', sky: ['#8cc2ee', '#e2f1fb'], trees: '#6f9a5c', key: [0xfff6ea, 1.45, [-24, 26, -4]], hemi: [0xf2f4fb, 0xb8976c, .44], exp: .72, board: .24, patch: 0x181612 },
     evening: { tint: '#f6dcc0', glow: 'rgba(255,190,120,.5)', sky: ['#e9a07a', '#ffd59a'], trees: '#5d5a3a', key: [0xffb36e, 1.35, [-36, 8, -10]], hemi: [0xffd8b8, 0x7a4c30, .38], exp: .78, board: .3, patch: 0x241406 },
-    night: { tint: '#9c8a7c', glow: 'rgba(255,196,130,.55)', sky: ['#0b1328', '#1d2a4c'], trees: '#0c1418', key: [0xffd2a0, 3.6, [0, 25, 1]], hemi: [0x55607e, 0x2a1c12, .3], exp: .86, board: .44, patch: 0 },
+    night: { tint: '#9c8a7c', glow: 'rgba(255,196,130,.55)', sky: ['#0b1328', '#1d2a4c'], trees: '#0c1418', key: [0xffd2a0, 3.2, [0, 25, 1]], hemi: [0x55607e, 0x2a1c12, .3], exp: .86, board: .44, patch: 0 },
   };
   TABLES[2] = (o) => {
     const { TT, g, scene } = o, T = TOD(o), D = DIN[T], FL = -16, Z0 = 1;
@@ -977,10 +977,10 @@
   // lamp (the shade over the table: colour, strength), exp, board (the soft board light). The lamp carries the night; by day the
   // window and the room do, and the lamp steps back so the board never burns out.
   const FELT = {
-    morning: { wb: 1.8, wash: 'rgba(168,150,128,.2)', sconce: .3, hemi: [0xdfe9f6, 0x4a3c2c, .44], win: [0xffe0a8, .62, [-44, 13, -14]], lamp: [0xfff0d8, 1.75], exp: .86, board: .3, bg: '#1c1510', envTop: '#4a4238' },
-    day: { wb: 2.0, wash: 'rgba(170,160,146,.22)', sconce: .2, hemi: [0xf2f4f8, 0x4c4034, .5], win: [0xfffaf2, .5, [-36, 30, -14]], lamp: [0xfff2dc, 1.6], exp: .86, board: .3, bg: '#201913', envTop: '#545048' },
-    evening: { wb: 1.55, wash: 'rgba(190,96,58,.17)', sconce: .8, hemi: [0xf0a878, 0x2c1c1a, .27], win: [0xff8e4e, .55, [-46, 7, -12]], lamp: [0xffe6c0, 2.2], exp: .9, board: .32, bg: '#150d0a', envTop: '#3a2a20' },
-    night: { wb: 1, wash: null, sconce: 1, hemi: [0x7f8eaa, 0x0a0a0a, .1], win: null, lamp: [0xffe4bc, 2.6], exp: .95, board: .34, bg: '#060607', envTop: '#2b2620' },
+    morning: { wb: 1.8, wash: 'rgba(168,150,128,.2)', sconce: .3, hemi: [0xdfe9f6, 0x4a3c2c, .44], win: [0xffe0a8, .62, [-44, 13, -14]], lamp: [0xfff0d8, 2.9], exp: .86, board: .3, bg: '#1c1510', envTop: '#4a4238' },
+    day: { wb: 2.0, wash: 'rgba(170,160,146,.22)', sconce: .2, hemi: [0xf2f4f8, 0x4c4034, .5], win: [0xfffaf2, .5, [-36, 30, -14]], lamp: [0xfff2dc, 2.7], exp: .86, board: .3, bg: '#201913', envTop: '#545048' },
+    evening: { wb: 1.55, wash: 'rgba(190,96,58,.17)', sconce: .8, hemi: [0xf0a878, 0x2c1c1a, .27], win: [0xff8e4e, .55, [-46, 7, -12]], lamp: [0xffe6c0, 3.7], exp: .9, board: .32, bg: '#150d0a', envTop: '#3a2a20' },
+    night: { wb: 1, wash: null, sconce: 1, hemi: [0x7f8eaa, 0x0a0a0a, .1], win: null, lamp: [0xffe4bc, 4.3], exp: .95, board: .34, bg: '#060607', envTop: '#2b2620' },
   };
   TABLES[3] = (o) => {
     const { TT, g, scene } = o, FL = -16, T = TOD(o), day = T === 'morning' || T === 'day', F = FELT[T];
@@ -1075,8 +1075,7 @@
     try { X.mergeStatic(g); } catch (e) {}
     scene.add(new TT.HemisphereLight(F.hemi[0], F.hemi[1], F.hemi[2]));
     if (F.win) { const wl = new TT.DirectionalLight(F.win[0], F.win[1]); wl.position.set(...F.win[2]); scene.add(wl); }   // the window (left wall): low and golden in the morning, high and white by day, low and orange in the evening
-    // the lamp over the table. (r186: a spot light's range fades later than r128's — at the table ×0.95 where r128 gave ×0.57 — so the
-    // strengths here are the r128 look's 4.4 × 0.57 ≈ 2.5 at night, less by day)
+    // the lamp over the table (at the table its range fade leaves ×0.57 of these strengths)
     const key = new TT.SpotLight(F.lamp[0], F.lamp[1], 90, .3, .85, 1.1); key.position.set(0, 36, 3); key.target.position.set(0, 0, 0); scene.add(key); scene.add(key.target);
     key.shadow.camera.near = 10; key.shadow.camera.far = 60; key.shadow.bias = -.0002;
     const rim = new TT.DirectionalLight(0xffd7a0, .18); rim.position.set(-12, 8, -18); scene.add(rim);
@@ -2436,7 +2435,7 @@
     // the lights: the window's daylight (or the city's glow) from the back, warm downlights over the table
     scene.add(new TT.HemisphereLight(T === 'day' || T === 'morning' ? 0xe8f0fa : night ? 0x404a70 : 0xd8b0a8, 0x1a1210, T === 'day' || T === 'morning' ? .5 : .3));
     const key = new TT.DirectionalLight(T === 'day' || T === 'morning' ? 0xf4f6ff : T === 'evening' ? 0xffb080 : 0x8090c0, T === 'day' || T === 'morning' ? 1.1 : T === 'evening' ? .8 : .3); key.position.set(-24, 22, -40); key.castShadow = true; key.shadow.mapSize.set(1024, 1024);   // (from the back-left: its mirror image falls off the table, not as white glare on the board) Object.assign(key.shadow.camera, { left: -30, right: 30, top: 30, bottom: -30, near: 1, far: 120 }); key.shadow.bias = -.0004; scene.add(key);
-    const down = new TT.SpotLight(0xffd8a8, lit ? 2.6 : 1.2, 70, .55, .8, 1.1); down.position.set(0, Y1 - 1, Z0 + 2); down.target.position.set(0, 0, Z0); scene.add(down); scene.add(down.target);
+    const down = new TT.SpotLight(0xffd8a8, lit ? 2.3 : 1.2, 70, .55, .8, 1.1); down.position.set(0, Y1 - 1, Z0 + 2); down.target.position.set(0, 0, Z0); scene.add(down); scene.add(down.target);
     const bar = new TT.PointLight(0xffb070, .5, 80, 2); bar.position.set(XL + 6, 4, -24); scene.add(bar);
     mons(o, 9, FL);
     try { X.mergeStatic(g); } catch (e) {}
