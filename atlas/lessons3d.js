@@ -351,7 +351,7 @@
   /* the same texts without coordinates, for the 3D board (2026-11-14): atlas/nocoord/<game>.json { '<lesson id>/<ramp index>/<field>': { lang: text } }
      (the full games keep their own texts: their boards show coordinates) */
   const NC = {};
-  const ncLoad = id => NC[id] ? Promise.resolve(NC[id]) : fetch('nocoord/' + id + '.json?v=2').then(r => r.ok ? r.json() : {}).catch(() => ({})).then(o => (NC[id] = o));
+  const ncLoad = id => NC[id] ? Promise.resolve(NC[id]) : fetch('nocoord/' + id + '.json?v=3').then(r => r.ok ? r.json() : {}).catch(() => ({})).then(o => (NC[id] = o));
   function ncApply(id, L2) {
     const T = NC[id] || {}; if (!L2 || !L2.ramp) return L2;
     L2.ramp = L2.ramp.map((it, j) => { const o = Object.assign({}, it); ['body', 'h', 'y', 'b', 'g', 't'].forEach(f => { const v = T[L2.id + '/' + j + '/' + f]; if (v) o[f] = v; }); return o; });
