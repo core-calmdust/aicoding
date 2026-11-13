@@ -17,7 +17,7 @@
   const fill = (s, v) => String(s || '').replace(/\{(\w+)\}/g, (m, k) => v[k] != null ? v[k] : m);
   const pick = a => a && a.length ? a[Math.floor(Math.random() * a.length)] : '';
   // the creature's game, for its trivia (the others talk about today's game)
-  const GAME = { tile: 'sudoku', joker: 'poker', hedgehog: 'solitaire', momonga: 'blackjack', koala: 'baccarat', camel: 'speedsudoku', marble: 'peg', mole: 'jailbreak', shogi: 'shogi', knight: 'chess', rook: 'chess', bishop: 'chess', pawn: 'chess', ryuou: 'shogi', keima: 'shogi', disc: 'reversi', flippanda: 'reversi', stone: 'go', goke: 'go', dot: 'dots', plop: 'connect4', gem: 'mancala', dice: 'backgammon', owl: 'morris', crab: 'checkers', renju: 'gomoku', bee: 'hex', frog: 'ludo', sealion: 'carrom' };
+  const GAME = { tile: 'sudoku', joker: 'poker', hedgehog: 'solitaire', momonga: 'blackjack', koala: 'baccarat', camel: 'speedsudoku', marble: 'peg', mole: 'jailbreak', otter: 'shanghai', shogi: 'shogi', knight: 'chess', rook: 'chess', bishop: 'chess', pawn: 'chess', ryuou: 'shogi', keima: 'shogi', disc: 'reversi', flippanda: 'reversi', stone: 'go', goke: 'go', dot: 'dots', plop: 'connect4', gem: 'mancala', dice: 'backgammon', owl: 'morris', crab: 'checkers', renju: 'gomoku', bee: 'hex', frog: 'ludo', sealion: 'carrom' };
   // lines said lately (kept across visits) are skipped while there are others
   const RK = 'atlas-avtalk-recent';
   const recent = () => { try { return JSON.parse(localStorage.getItem(RK) || '[]'); } catch (e) { return []; } };
