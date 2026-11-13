@@ -61,34 +61,37 @@ SOU = {
 
 
 # ---------------------------------------------------------------- 筒子
+def petals(x, y, n, r0, r1, w, cols, rot=0):
+    """花びら n 枚：中心側がとがり、外側が丸いしずく形（放射状）。"""
+    o = []
+    for i in range(n):
+        a = i * 360 / n + rot
+        o.append('<path d="M%s 0 C%s %s %s %s %s 0 C%s %s %s %s %s 0 Z" fill="%s" transform="translate(%s %s) rotate(%s)"/>' % (
+            f(r0), f(r0 + (r1 - r0) * .35), f(-w), f(r1), f(-w), f(r1), f(r1), f(w), f(r0 + (r1 - r0) * .35), f(w), f(r0), cols[i % len(cols)], f(x), f(y), f(a)))
+    return ''.join(o)
+
+
 def pin(x, y, r, col):
-    """丸1つ：外の輪・白いすき間・中の円。大きい丸だけ中に白い花びら（6つの点）を入れ、小さい丸は中心の白い点だけ。"""
-    o = ['<circle cx="%s" cy="%s" r="%s" fill="%s"/>' % (f(x), f(y), f(r), col),
-         '<circle cx="%s" cy="%s" r="%s" fill="%s"/>' % (f(x), f(y), f(r * .74), W),
-         '<circle cx="%s" cy="%s" r="%s" fill="%s"/>' % (f(x), f(y), f(r * .58), col)]
+    """丸1つ（筒子の定番の柄、2026-11-14 ユーザー：特有の柄をちゃんと再現）：太い外の輪 → 白いすき間 → 細い内の輪 → 6枚の花びら → 芯。
+    小さい丸（6〜9筒）は線が潰れないよう内の輪を省き、外の輪と花びらを太めにする。"""
+    c = lambda rr, k: '<circle cx="%s" cy="%s" r="%s" fill="%s"/>' % (f(x), f(y), f(rr), k)
     if r >= 44:
-        for i in range(6):
-            a = math.radians(i * 60 + 30)
-            px, py = x + math.cos(a) * r * .33, y + math.sin(a) * r * .33
-            o.append('<ellipse cx="%s" cy="%s" rx="%s" ry="%s" fill="%s" transform="rotate(%s %s %s)"/>' % (f(px), f(py), f(r * .15), f(r * .085), W, f(i * 60 + 30), f(px), f(py)))
-        o.append('<circle cx="%s" cy="%s" r="%s" fill="%s"/>' % (f(x), f(y), f(r * .1), W))
+        o = [c(r, col), c(r * .82, W), c(r * .73, col), c(r * .645, W), petals(x, y, 6, r * .2, r * .58, r * .2, [col], 30), c(r * .13, col)]
     else:
-        o.append('<circle cx="%s" cy="%s" r="%s" fill="%s"/>' % (f(x), f(y), f(r * .2), W))
+        o = [c(r, col), c(r * .76, W), petals(x, y, 6, r * .2, r * .66, r * .23, [col], 30), c(r * .15, col)]
     return ''.join(o)
 
 
 def pin1():
+    """一筒：太い外の輪 → 葉の帯（赤と紺が交互）→ 内の輪 → 8枚の大きな花（紺と赤が交互）→ 芯。"""
     x, y = 140, 195
     c = lambda r, col: '<circle cx="%s" cy="%s" r="%s" fill="%s"/>' % (x, y, f(r), col)
-    o = [c(102, B), c(80, W), c(72, R), c(47, W), c(39, B), c(21, W), c(12, R)]
-    for i in range(12):   # 外の輪の白い珠
-        a = math.radians(i * 30)
-        o.append('<circle cx="%s" cy="%s" r="6" fill="%s"/>' % (f(x + math.cos(a) * 91), f(y + math.sin(a) * 91), W))
-    for i in range(8):    # 赤い輪の白い花びら
-        a = i * 45 + 22.5
-        o.append('<ellipse cx="%s" cy="%s" rx="8" ry="4.6" fill="%s" transform="rotate(%s %s %s)"/>' % (
-            f(x + math.cos(math.radians(a)) * 59.5), f(y + math.sin(math.radians(a)) * 59.5), W, f(a),
-            f(x + math.cos(math.radians(a)) * 59.5), f(y + math.sin(math.radians(a)) * 59.5)))
+    o = [c(104, B), c(91, W)]
+    for i in range(12):   # 葉の帯
+        a = i * 30
+        px, py = x + math.cos(math.radians(a)) * 78, y + math.sin(math.radians(a)) * 78
+        o.append('<ellipse cx="%s" cy="%s" rx="6.5" ry="13" fill="%s" transform="rotate(%s %s %s)"/>' % (f(px), f(py), R if i % 2 else B, f(a), f(px), f(py)))
+    o += [c(64, B), c(56, W), petals(x, y, 8, 15, 50, 13, [B, R], 22.5), c(10, R)]
     return ''.join(o)
 
 
