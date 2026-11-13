@@ -1682,7 +1682,11 @@
     // phones (a narrow view): the showcase frames the board by its own size, so it reads ~1.45× larger than the fixed ~11-unit frame
     // (a chess board fills ~60% of the width); never further than that frame (big boards such as the legged goban stay as they were)
     const pr = !k && !mr && cw ? Math.min(6.5, Math.max((boardR(), (cur && cur.userData._rb) || 6.5) * .92, ((cur && cur.userData._s) || 0) * 1.06)) : 0;   // (a long board such as Ur's: its long side kept clear of the edges)
-    const needW = (k ? fw : mr || pr || 6.5) / (th * a), needH = (k ? fd : mh || (pr ? 6.8 * pr / 6.5 : 6.8)) / th;
+    // (2026-11-13) a mouse screen whose free area is tall for its width (a squarish or portrait window: the view above the card is
+    // nearly as tall as wide): the board, framed by the height alone, filled the width edge to edge — there it keeps to ~60% of the
+    // width (×1.67). A wide window (the height is the limit, ~45% of the width) and phones / tablets are as they were.
+    const wk = pr && !COARSE ? 1.67 : 1;
+    const needW = (k ? fw : mr || pr * wk || 6.5) / (th * a), needH = (k ? fd : mh || (pr ? 6.8 * pr / 6.5 : 6.8)) / th;
     const dist = Math.max(needW, needH) * (k ? 1 : mr ? 1 : 1.08) * (1 + ((mr ? 1 : zoom) - 1) * (1 - k)) * (1 + (pzoom - 1) * k) * (orthoWant ? 1 + .14 * k : 1);   // ortho plan: the whole depth shows unforeshortened, so a little more room   // zoom applies to the showcase view only
     const pitch = .52 + k * ((orthoWant ? 1.5703 : F && F.pitch ? F.pitch : 1.34) - .52);   // ortho (Historia's diagram view): straight down   // play: nearly top-down (fit can ask for straight down)                       // view: low 3/4 so the room shows · play: nearly top-down
     return [0, dist * Math.sin(pitch), dist * Math.cos(pitch)];
