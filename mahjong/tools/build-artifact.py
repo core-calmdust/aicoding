@@ -47,6 +47,10 @@ for f in sorted(os.listdir(chara)):
     if f.endswith('.webp'):
         files[f'img/chara/{f}'] = os.path.join(chara, f)
 
+# the tile sheets (tiles.js reads them from JANKA_ASSETS + 'tiles/' in the bundle)
+for f in ('shanghai-glyphs.png', 'shanghai-art.png'):
+    files[f'img/tiles/{f}'] = os.path.join(ROOT, 'atlas', 'img', f)
+
 # copy everything into OUT_DIR so the publish sources sit under one root
 fmap = {}
 for pub, srcp in files.items():

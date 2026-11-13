@@ -110,8 +110,8 @@ const HONOR = ['東', '南', '西', '北', '', '發', '中'];
 const GW = 280, GH = 390, SHEET = new URL('../atlas/img/', (document.currentScript && document.currentScript.src) || location.href).href;
 let gImg = null, aImg = null, readyP = null;
 function ready() {
-  const one = (u, set) => new Promise(res => { const im = new Image(); im.onload = () => { set(im); res(); }; im.onerror = () => res(); im.src = SHEET + u; setTimeout(res, 5000); });
-  return readyP || (readyP = Promise.all([one('shanghai-glyphs.png?v=1', im => { gImg = im; }), one('shanghai-art.png?v=7', im => { aImg = im; })]));
+  const one = (u, set) => new Promise(res => { const im = new Image(); im.onload = () => { set(im); res(); }; im.onerror = () => res(); im.src = (root.JANKA_ASSETS ? root.JANKA_ASSETS + 'tiles/' : SHEET) + u; setTimeout(res, 5000); });
+  return readyP || (readyP = Promise.all([one('shanghai-glyphs.png?v=2', im => { gImg = im; }), one('shanghai-art.png?v=8', im => { aImg = im; })]));
 }
 const GROUND = '#fafaf6';
 // one cell of a sheet in a colour (glyph sheet: channel ch; art sheet: ch < 0 keeps its colours, or recolours all to `col`)
@@ -185,16 +185,48 @@ function paint(type, red) {
   return cv;
 }
 
-// the carving: the paint fills the cut flat; the white just outside each stroke slopes down into it (a tangent-space normal map)
-function normalOf(cv) {
-  const W = cv.width, H = cv.height, src = cv.getContext('2d').getImageData(0, 0, W, H).data, h = new Float32Array(W * H), t = new Float32Array(W * H);
-  for (let i = 0, p = 0; i < W * H; i++, p += 4) { const d = Math.max(Math.abs(src[p] - 250), Math.abs(src[p + 1] - 250), Math.abs(src[p + 2] - 246)); h[i] = d < 14 ? 0 : Math.min(1, (d - 14) / 70); }
-  const h0 = h.slice(), box = (a, b, dx, dy) => { for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const i = y * W + x; let s = a[i], n = 1; if (x - dx >= 0 && y - dy >= 0) { s += a[i - dy * W - dx]; n++; } if (x + dx < W && y + dy < H) { s += a[i + dy * W + dx]; n++; } b[i] = s / n; } };
+// ---- the carving (2026-11-14, Fable) ----
+// A real tile is cut with a round bit and the paint lies in the cut: the groove is a shallow U — its walls fall from the
+// white face into the paint and the floor is flat. depthOf() gives that profile (0 = the face, 1 = the floor of a wide cut;
+// hairlines are narrower than the bit and so stay shallower, as on real tiles):
+//   the paint's coverage (how far a pixel is from the white ground) → blurred (≈ the bit's radius) → the wall starts just
+//   outside the stroke's edge and reaches the floor ~3 px inside it.
+// From it: normalOf() (the 3D tiles' normal map) and lit() (the 2D tiles: the same cut under a light from the top left,
+// baked — a soft shade under the wall nearest the light, a glint on the far wall; the paint keeps its own colour, no ink line).
+function depthOf(cv) {
+  const W = cv.width, H = cv.height, src = cv.getContext('2d').getImageData(0, 0, W, H).data, a = new Float32Array(W * H), t = new Float32Array(W * H);
+  for (let i = 0, p = 0; i < W * H; i++, p += 4) { const d = Math.max(Math.abs(src[p] - 250), Math.abs(src[p + 1] - 250), Math.abs(src[p + 2] - 246)); a[i] = d < 10 ? 0 : Math.min(1, (d - 10) / 60); }
+  const box = (A, B, dx, dy) => { for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const i = y * W + x; let v = A[i], n = 1; if (x - dx >= 0 && y - dy >= 0) { v += A[i - dy * W - dx]; n++; } if (x + dx < W && y + dy < H) { v += A[i + dy * W + dx]; n++; } B[i] = v / n; } };
+  const h = a.slice();
   for (let k = 0; k < 3; k++) { box(h, t, 1, 0); box(t, h, 0, 1); }
-  for (let i = 0; i < W * H; i++) h[i] = h0[i] > .5 ? 1 : Math.max(h0[i], Math.min(1, h[i] * 1.8));
-  const out = document.createElement('canvas'); out.width = W; out.height = H; const oc = out.getContext('2d'), im = oc.createImageData(W, H), o = im.data, S = 7;
+  for (let i = 0; i < W * H; i++) { const v = Math.min(1, Math.max(0, (h[i] - .4) / .52)); h[i] = v * v * (3 - 2 * v); }
+  return { W, H, h, src };
+}
+const SLOPE = 3.6;   // how steep the walls read (the cut's depth against a pixel)
+function normalOf(cv) {
+  const { W, H, h } = depthOf(cv);
+  const out = document.createElement('canvas'); out.width = W; out.height = H; const oc = out.getContext('2d'), im = oc.createImageData(W, H), o = im.data, S = SLOPE;
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const i = y * W + x, l = h[x > 0 ? i - 1 : i], r = h[x < W - 1 ? i + 1 : i], u = h[y > 0 ? i - W : i], d = h[y < H - 1 ? i + W : i];
     let nx = (r - l) * S, ny = (u - d) * S, nz = 1; const k = 1 / Math.hypot(nx, ny, nz); const p = i * 4; o[p] = (nx * k * .5 + .5) * 255; o[p + 1] = (ny * k * .5 + .5) * 255; o[p + 2] = (nz * k * .5 + .5) * 255; o[p + 3] = 255; }
+  oc.putImageData(im, 0, 0); return out;
+}
+function lit(cv) {
+  const { W, H, h, src } = depthOf(cv);
+  const out = document.createElement('canvas'); out.width = W; out.height = H; const oc = out.getContext('2d'), im = oc.createImageData(W, H), o = im.data, S = SLOPE;
+  const lx = -.42, ly = -.58, lz = .7, hx = lx, hy = ly, hz = lz + 1, hk = 1 / Math.hypot(hx, hy, hz), flat = Math.pow(hz * hk, 60);   // the light (from the top left) and its half vector
+  const at = (x, y) => h[Math.min(H - 1, Math.max(0, y)) * W + Math.min(W - 1, Math.max(0, x))];
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const i = y * W + x, p = i * 4, gx = (at(x + 1, y) - at(x - 1, y)) * S, gy = (at(x, y + 1) - at(x, y - 1)) * S;
+    // the surface z = −depth: its normal (gx, gy, 1) normalised
+    const k = 1 / Math.hypot(gx, gy, 1), nx = gx * k, ny = gy * k, nz = k;
+    let dif = (nx * lx + ny * ly + nz * lz) / lz;                                  // 1 on the flat
+    dif = dif < 1 ? 1 - (1 - Math.max(.2, dif)) * .5 : 1 + Math.min(.5, dif - 1) * .5;
+    const sh = Math.max(0, h[i] - at(Math.round(x + lx * 4.5), Math.round(y + ly * 4.5))) * .2;   // the wall nearest the light shades the floor under it
+    const dark = 1 + (1 - (src[p] * .3 + src[p + 1] * .5 + src[p + 2] * .2) / 255) * 1.1;   // (a dark paint shows its cut by the glint alone)
+    const sp = (Math.max(0, Math.pow(Math.max(0, (nx * hx + ny * hy + nz * hz) * hk), 60) - flat) * 150 + (dif > 1 ? (dif - 1) * 90 : 0)) * dark;   // the glint on the far wall
+    const f = dif * (1 - sh);
+    o[p] = Math.min(255, src[p] * f + sp); o[p + 1] = Math.min(255, src[p + 1] * f + sp); o[p + 2] = Math.min(255, src[p + 2] * f + sp); o[p + 3] = 255;
+  }
   oc.putImageData(im, 0, 0); return out;
 }
 const ncache = new Map();
@@ -209,7 +241,7 @@ function canvas(type, red) {
 function url(type, red) {
   const k = key(type, red);
   let u = urls.get(k);
-  if (!u) { u = canvas(type, red).toDataURL('image/png'); urls.set(k, u); }
+  if (!u) { const c = canvas(type, red); u = (gImg && aImg ? lit(c) : c).toDataURL('image/png'); urls.set(k, u); }   // (the 2D tiles: the carving baked in)
   return u;
 }
 function reset() { cache.clear(); urls.clear(); ncache.clear(); }
