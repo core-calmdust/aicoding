@@ -931,3 +931,7 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) .modal.ngt-on .ngt-foot .ngt-bar:not
 html.atlas-skin:not(.atlas-2d) body:not(#_) .modal.ngt-on .ngt-foot .ngt-bar button:not(#_):not(#_):not(#_){min-height:0!important;height:37px!important;padding:0 2px!important;font-size:13px!important;border-radius:99px!important;border:0!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .modal.ngt-on .ngt-foot .ngt-bar button small:not(#_){display:none!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .modal.ngt-on .ngt-foot > .modal-actions{position:relative;z-index:2}
+/* (2026-11-13) phones: the dialogs' bottom buttons (閉じる / 前へ / 次へ / 対局開始 …) one compact size everywhere */
+@media (pointer: coarse) and (max-width: 760px){
+  html.atlas-skin body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav) :is(button, .mbtn, a.mbtn):not(#_):not(#_):not(#_){min-height:40px!important;height:40px!important;padding:0 12px!important;font-size:15px!important;line-height:1!important;border-radius:12px!important}
+}
