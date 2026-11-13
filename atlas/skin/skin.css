@@ -895,3 +895,6 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) .modal.ngt-on > .ngt-foot:not(#_){ma
   html.atlas-skin body:not(#_) .modal .rt > .rt-nav{position:sticky}
   html.atlas-skin body:not(#_) .modal .rt > .rt-nav:not(#_)::before{content:''!important;position:absolute!important;left:0;right:0;top:-44px!important;height:44px!important;background:linear-gradient(rgba(251,245,231,0),rgba(251,245,231,.5) 60%,rgba(251,245,231,.85));-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);-webkit-mask-image:linear-gradient(transparent,#000 40%);mask-image:linear-gradient(transparent,#000 40%);pointer-events:none}
 }
+/* (2026-11-13) phones: the 戦績 tab's page — the record laid flat on it, no card of its own */
+html.atlas-skin body:not(#_) .grc-card .grc.grc-inl{background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+html.atlas-skin body:not(#_) .grc-card .grc.grc-inl .grc-hd{background:transparent!important}
