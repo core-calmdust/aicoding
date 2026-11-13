@@ -200,7 +200,7 @@
     sakura: { top: 'top-sakura', side: 'sakura', stand: 'sakura', leg: ['#8a3a26', '#4a1c12'], bottom: 0x2a0806, line: 'rgba(48,20,10,.92)', raden: true },   // (v3: 朱溜 lacquer with 螺鈿 cherry blossoms and a 鶯)
   };
   const SH3 = (() => { try { return new URL('../../images/atlas/shogi3d/', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../images/atlas/shogi3d/'; } })();
-  const SH3V = '?v=11';
+  const SH3V = '?v=12';
   const lookOf = o => { const k = (o && o.look) || (X.BOARDS && X.BOARDS.shogi ? X.BOARDS.shogi.get() : 'kaya'); return LOOK[k] ? k : 'kaya'; };
   const imgs = {};
   function withImg(name, fn) {
@@ -227,10 +227,10 @@
         if ( shl > 0. ) { float vd = dot( normal, normalize( -vViewPosition ) ); float lum = dot( diffuseColor.rgb, vec3( .3, .5, .2 ) );
           float ph = fract( vd * 2.6 + lum * 2.6 + vUv.x * 4. + vUv.y * 2. );
           vec3 rb = .55 + .45 * cos( 6.2832 * ( ph + vec3( 0., .33, .67 ) ) );
-          diffuseColor.rgb = mix( diffuseColor.rgb, diffuseColor.rgb * .5 + rb * lum * .85, shl * .8 ); } }
+          diffuseColor.rgb = mix( diffuseColor.rgb, diffuseColor.rgb * .72 + rb * lum * .8, shl * .8 ); } }
       #endif`);
     };
-    m.customProgramCacheKey = () => 'nacre';
+    m.customProgramCacheKey = () => 'nacre2';
     return m;
   }
   const lookMats = {};
@@ -244,7 +244,7 @@
       side = lq('side-makie', 'side-makie-m'); end = lq('end-makie', 'end-makie-m');
       leg = M({ map: imgTex('leg-makie'), bumpScale: .0005, roughness: .14, clearcoat: .9, clearcoatRoughness: .06 });
     } else if (L.raden) {   // 螺鈿: 朱溜 lacquer, shell pieces (the same maps as 蒔絵)
-      const lq = (c, mm) => nacre(M({ map: imgTex(c), roughnessMap: imgTex(mm, false), metalnessMap: imgTex(mm, false), bumpMap: imgTex(mm, false), bumpScale: .002, roughness: 1, metalness: 1, clearcoat: .9, clearcoatRoughness: .06, envMapIntensity: 1.4 }));
+      const lq = (c, mm) => nacre(M({ map: imgTex(c), roughnessMap: imgTex(mm, false), metalnessMap: imgTex(mm, false), bumpMap: imgTex(mm, false), bumpScale: .002, roughness: 1, metalness: .6, clearcoat: .9, clearcoatRoughness: .06, envMapIntensity: 1.4 }));   // (2026-11-13: the shell brighter — its own colour kept under the shimmer, less of it given to mirroring the room)
       side = lq('side-sakura', 'side-sakura-m'); end = lq('end-sakura', 'end-sakura-m');
       leg = M({ color: 0x4a0d0b, roughness: .16, clearcoat: .9, clearcoatRoughness: .06 });
     } else {
