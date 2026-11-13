@@ -327,7 +327,7 @@
     id: ['Pemula: kadang mengambil jalan memutar', 'Dasar–menengah: membaca jalur lompatan beberapa langkah ke depan', 'Mahir: membangun jalur dan blok', 'Ahli: pencarian mendalam yang menghitung balapan'],
     tr: ['Başlangıç: bazen uzun yolu seçer', 'Acemi–orta: birkaç hamle ilerideki atlama yollarını okur', 'İleri: yollar ve bloklar kurar', 'Uzman: yarışı hesaplayan derin arama'],
   };
-  const RATING = [0, 450, 575, 700, 825, 950, 1075, 1200, 1325, 1450, 1575, 1700, 1825, 1950, 2030, 2090, 2150, 2200, 2250, 2470, 2520, 2580, 2625, 2640];   // ugolki RT_LV (rated games)
+  const RATING = [0, 450, 575, 700, 825, 950, 1075, 1200, 1325, 1450, 1575, 1700, 1825, 1950, 2030, 2090, 2150, 2200, 2250, 2530, 2580, 2640, 2685, 2700];   // ugolki RT_LV (rated games)
   const W7 = (a, b, c, d, e, f) => [a, a, a, a, b, b, b, b, b, c, c, c, c, c, c, d, d, d, e, f];
   const WHO = {
     ja: W7('はじめての人に', 'ルールを覚えた人に', '慣れてきた人に', '強い人に', '上級者でも手ごわい', '最強レベル'),
