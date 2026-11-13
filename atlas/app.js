@@ -1649,7 +1649,7 @@
         const ban = `<div class="lx-banner"><span class="ic pzh-ic">${ICN[cur]}</span><div class="tx"><b>${esc(CN[cur])}</b><small>${esc(CD[cur])}</small></div></div>`;
         const card = i => { const sx = SETS[i], r = recsOf(i), d = r.filter(v => v > 0).length, n = r.length, full = d >= n, st = r.reduce((a, v) => a + v, 0), tr = tier(sx, i);
           return `<button type="button" class="lx-card${full ? ' done' : ''}" data-set="${i}"><span class="lx-th sg">${thumb(shown(i))}</span><span class="lx-tx"><span class="lx-top"><span class="pzh-ic sm gl t${tr}">${no(sx)}</span><span class="pzh-dif">${'<i></i>'.repeat(tr + 1)}</span><span class="lx-st${full ? ' ok' : d ? ' so' : ' new'}">${full ? '✓' : d ? d + '/' + n : 'NEW'}</span></span><span class="lx-t">${esc(L(sx.title))}</span>${sx.short ? `<span class="lx-desc">${esc(L(sx.short))}</span>` : ''}<span class="pzh-row"><span class="pzh-bar"><i style="width:${Math.round(d * 100 / n)}%"></i></span><span class="pzh-st">★ ${st}/${n * 3}</span></span></span></button>`; };
-        S0.body.innerHTML = hero + (daily ? `<div class="lx-grid pzh-days">${daily}</div>` : '') + tabs + ban + `<div class="lx-grid">${SETS.map((x, i) => grp(x) === cur ? card(i) : '').join('')}</div>`;
+        S0.body.innerHTML = `<div class="pzh-box">${hero}${tabs}</div>` + (daily ? `<div class="lx-grid pzh-days">${daily}</div>` : '') + ban + `<div class="lx-grid">${SETS.map((x, i) => grp(x) === cur ? card(i) : '').join('')}</div>`;
         S0.body.onclick = e => {
           const tb = e.target.closest('[data-cat]'); if (tb) { cur = tb.dataset.cat; try { SFX.tap && SFX.tap(); } catch (x) {} home(); return; }
           const c = e.target.closest('[data-cont]'); if (c) { const [i, j] = c.dataset.cont.split(':').map(Number); S0.close(); startPuzzle({ pick: { i, j } }); return; }
@@ -1706,7 +1706,7 @@
       const card = x => { const d = done(x), n = x.recs.length, full = d >= n, st = x.recs.reduce((a, v) => a + v, 0); const th = pzMini(x.board);
         return `<button type="button" class="lx-card${full ? ' done' : ''}" data-set="${x.key}">${th ? `<span class="lx-th">${th}</span>` : ''}<span class="lx-tx"><span class="lx-top">${x.icon ? `<span class="pzh-ic sm">${x.icon}</span>` : ''}<span class="lx-st${full ? ' ok' : d ? ' so' : ' new'}">${full ? '✓' : d ? d + '/' + n : 'NEW'}</span></span><span class="lx-t">${esc(x.title)}</span>${x.desc ? `<span class="lx-desc">${esc(x.desc)}</span>` : ''}<span class="pzh-row"><span class="pzh-bar"><i style="width:${Math.round(d * 100 / n)}%"></i></span><span class="pzh-st">★ ${st}/${n * 3}</span></span></span></button>`; };
       S0.body.className = 'lesson-list lx-on';
-      S0.body.innerHTML = hero + tabs + ban + `<div class="lx-grid">${list.map(card).join('')}</div>`;
+      S0.body.innerHTML = `<div class="pzh-box">${hero}${tabs}</div>` + ban + `<div class="lx-grid">${list.map(card).join('')}</div>`;
     };
     const showSet = k => { const x = sets.find(y => String(y.key) === String(k)); if (!x) return; S0.back.hidden = false; S0.title.textContent = x.title;
       S0.body.className = 'lesson-list lx-on lvs-l';
