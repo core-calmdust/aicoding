@@ -329,35 +329,37 @@ def build(g, look):
         put(ma.arr(.5), verde, .85); put(mb.arr(.5), sienna, .85); put(mr.arr(.5), BRASS, .85, 1, .003)
         cm = cup > 0; A[cm] *= (.8 + .2 * (1 - cup[cm]))[..., None]; G[cm] = .3
         gm = (gd < gw) & m; A[gm] = A[gm] * .9; G[gm] = .4
-    elif look == 'art':   # colourful art: a white matte ceramic plate with painted pastel rainbows in the empty corners and a hue ring
-        A[:] = np.array([1.2, 1.19, 1.16]) * (.985 + .015 * norm01(fbm((N, N), [3, 1], [1, .5], seed=41)))[..., None]; G[:] = .22
-        lip = m & (gd >= gw) & (ed < (gc - gw if not tri else .2)); H[lip] += .03
-        import colorsys
-        hue = (np.arctan2(c.v, c.u) / (2 * math.pi)) % 1
-        hr = np.dstack([np.array(colorsys.hls_to_rgb(0, 0, 0))[None, None, :].repeat(1, 0)] * 0) if False else None
-        ring = line(inner, .028)
-        hh = hue[ring]; rgb = np.array([colorsys.hls_to_rgb(h, .7, .6) for h in hh], np.float32) * 1.12
-        A[ring] = rgb; G[ring] = .3
-        PAST = [(.96, .55, .55), (.98, .74, .45), (.98, .9, .5), (.6, .85, .6), (.55, .75, .95), (.75, .62, .92)]
-        corners = spots(c, g, g['gr'] - gw - .12) if not tri else tri_spots(c, g)
-        for x, y, room, a in corners:
-            R0 = min(room * (1.25 if tri else 1.05), 1.6)
-            for b, col in enumerate(PAST):   # a rainbow: six arcs, its feet toward the board's centre
-                r1 = R0 * (1 - b * .14); r2 = r1 - R0 * .11
-                d = np.hypot(c.u - x, c.v - y)
-                ang = np.arctan2(c.v - y, c.u - x) - math.atan2(-y, -x)
-                ang = (ang + math.pi) % (2 * math.pi) - math.pi
-                arc = m & (d < r1) & (d >= r2) & (np.abs(ang) > math.pi / 2)
-                A[arc] = np.array(col) * 1.1; G[arc] = .3
-            cl = m & (np.hypot(c.u - x - math.cos(math.atan2(-y, -x)) * R0 * .25, c.v - y - math.sin(math.atan2(-y, -x)) * R0 * .25) < R0 * .14)
-        cm = cup > 0; A[cm] *= (.9 + .1 * (1 - cup[cm]))[..., None]; G[cm] = .12
-        gm = (gd < gw) & m; A[gm] *= .93; G[gm] = .15
+    elif look == 'art':   # colourful abstract art (2026-11-13): cut-paper circles, a wave, triangles and thin black lines on cream
+        H[:] = np.where(m, .5 * smooth_step(ed, 0, .05), 0)
+        u, v = c.u, c.v
+        A[:] = np.array([1.1, 1.07, .98])
+        sz = g['size'] / 9.0
+        col = {'coral': (1.05, .45, .36), 'mustard': (1.02, .78, .25), 'teal': (.18, .62, .6), 'cobalt': (.2, .36, .85), 'pink': (1.05, .66, .72), 'mint': (.55, .86, .7), 'ink': (.06, .06, .1)}
+        for (x, y, r, k) in [(-2.4, -1.8, 1.9, 'coral'), (2.3, -2.2, 1.3, 'mustard'), (2.0, 1.9, 1.7, 'teal'), (-1.9, 2.3, 1.2, 'pink'), (.2, .1, 1.1, 'mint')]:
+            ci = m & (np.hypot(u - x * sz, v - y * sz) < r * sz); A[ci] = np.array(col[k])
+        wave = m & (np.abs(v - (np.sin(u / sz * 1.3) * .55 + .2) * sz) < .22 * sz); A[wave] = np.array(col['cobalt'])
+        for (x, y, r, a0, k) in [(1.3, -.6, .9, .3, 'cobalt'), (-1.2, .7, .75, 2.2, 'mustard'), (-.2, -2.9, .6, 1.0, 'teal')]:
+            pts = [(x * sz + math.cos(a0 + q * 2.094) * r * sz, y * sz + math.sin(a0 + q * 2.094) * r * sz) for q in range(3)]
+            mk = Mask(c); mk.poly(pts); A[m & (mk.arr(0) > .5)] = np.array(col[k])
+        for (x, y, r) in [(-2.4, -1.8, 2.25), (2.0, 1.9, 2.05)]:
+            arc = m & (np.abs(np.hypot(u - x * sz, v - y * sz) - r * sz) < .035 * sz); A[arc] = np.array(col['ink'])
+        lin = m & (np.abs((u * .8 - v) - .9 * sz) < .03 * sz); A[lin] = np.array(col['ink'])
+        rr_ = np.random.default_rng(91)
+        for _ in range(40):   # confetti dots
+            x, y = rr_.uniform(-g['size'] / 2, g['size'] / 2, 2); r = rr_.uniform(.05, .11) * sz
+            A[m & (np.hypot(u - x, v - y) < r)] = np.array(col[rr_.choice(list(col))])
+        G[:] = .2
+        rimz = m & (ed < (gc - gw if not tri else .2)) & (gd >= gw); A[rimz] = np.array(col['ink'])
+        put(line(inner, .02), np.array(col['mustard']), .3)
+        gm = (gd < gw) & m; A[gm] = np.array([.95, .92, .84])
+        cm = m & (cd < CUP_R); A[cm] = np.array([1.12, 1.1, 1.04]) * (.8 + .2 * (cd[cm] / CUP_R))[..., None]
+        ring = m & (np.abs(cd - CUP_R) < .03); A[ring] = np.array(col['ink'])
     elif look == 'pop':   # pop art (2026-11-13): white with uneven red polka dots, a radiant heart and dancing figures in thick black line
         H[:] = np.where(m, .5 * smooth_step(ed, 0, .05), 0)
         u, v = c.u, c.v
         A[:] = np.array([1.12, 1.1, 1.06])
         rr_ = np.random.default_rng(77); dots = np.zeros((N, N), bool)
-        for _ in range(int(g['size'] ** 2 * 5)):   # polka dots of uneven size, a little wobbly
+        for _ in range(int(g['size'] ** 2 * 3)):   # polka dots of uneven size, a little wobbly
             x, y = rr_.uniform(-g['size'] / 2, g['size'] / 2, 2); r = rr_.uniform(.06, .2) * (1 if rr_.random() > .12 else 1.6)
             wob = 1 + .08 * np.sin(np.arctan2(v - y, u - x) * rr_.integers(3, 6) + rr_.uniform(0, 6))
             dots |= np.hypot(u - x, v - y) < r * wob
@@ -378,14 +380,27 @@ def build(g, look):
             dr.line([P(cx - f * s * .55, cy + s * .95), P(cx + f * s * .1, cy + s * .2), P(cx + f * s * .7, cy + s * .7), P(cx + f * s * .5, cy + s * 1.05)], fill=255, width=int(W * 1.3), joint='curve')   # legs mid-step
             for t in range(3):   # motion marks
                 a = -math.pi / 2 + (t - 1) * .5; dr.line([P(cx + math.cos(a) * s * 1.45, cy - s * .2 + math.sin(a) * s * 1.45), P(cx + math.cos(a) * s * 1.75, cy - s * .2 + math.sin(a) * s * 1.75)], fill=255, width=W)
+        blue = Image.new('L', (N, N), 0); db = ImageDraw.Draw(blue)
+        def peace(cx, cy, r):   # a peace sign: blue disc, thick black ring and the three strokes
+            db.ellipse([P(cx - r, cy - r), P(cx + r, cy + r)], fill=255)
+            dr.ellipse([P(cx - r, cy - r), P(cx + r, cy + r)], outline=255, width=int(W * 1.2))
+            dr.line([P(cx, cy - r), P(cx, cy + r)], fill=255, width=int(W * 1.2))
+            dr.line([P(cx, cy), P(cx - r * .707, cy + r * .707)], fill=255, width=int(W * 1.2)); dr.line([P(cx, cy), P(cx + r * .707, cy + r * .707)], fill=255, width=int(W * 1.2))
+        def flower(cx, cy, r):   # a daisy in thick black line
+            for q in range(6): a = q * math.pi / 3; dr.ellipse([P(cx + math.cos(a) * r * .55 - r * .32, cy + math.sin(a) * r * .55 - r * .32), P(cx + math.cos(a) * r * .55 + r * .32, cy + math.sin(a) * r * .55 + r * .32)], outline=255, width=W)
+            df.ellipse([P(cx - r * .26, cy - r * .26), P(cx + r * .26, cy + r * .26)], fill=255)
         if not tri:
             S = g['R'] / 4.3
             heart(0, .15, 1.7 * S)
-            for x, y, room, a in spots(c, g, g['gr'] - .3):
-                dancer(x, y + .1, min(room, 1.3) * .8, x < 0)
+            for q, (x, y, room, a) in enumerate(spots(c, g, g['gr'] - .3)):
+                (peace if q % 2 == 0 else flower)(x, y, min(room * 1.15, 1.4))
+            for (x, y) in [(-2.2, 0), (2.2, 0), (0, -2.3), (0, 2.5)]:
+                heart(x * S, y * S, .38 * S)
         else:
-            heart(0, .7, 1.25); [dancer(x, y, min(r_, 1) * .55, x < 0) for x, y, r_, a in tri_spots(c, g)[:2]]
+            heart(0, .7, 1.25); sp2 = tri_spots(c, g)
+            for q, (x, y, r_, a) in enumerate(sp2): (peace if q % 2 == 0 else flower)(x, y, min(r_ * 1.2, 1.1))
         fm = np.array(fill) > 127; ln = np.array(im) > 127
+        A[m & (np.array(blue) > 127)] = np.array([.2, .5, 1.0])
         A[m & fm & ~dots] = np.array([.95, .14, .2]); A[m & fm & dots] = np.array([1.1, 1.06, 1.0])   # the heart: red, its dots white
         A[m & ln] = .03
         rimz = m & (ed < (gc - gw if not tri else .2)) & (gd >= gw)

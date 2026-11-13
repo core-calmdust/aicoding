@@ -1658,6 +1658,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 .bksheet.on{background:rgba(20,12,4,.5)}
 .bk-in{width:min(980px,100%);height:min(92dvh,900px);display:flex;flex-direction:column;background:#fdf8ee;color:var(--text);border-radius:24px 24px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,.5);transform:translateY(105%);transition:transform .28s cubic-bezier(.3,1.1,.5,1);overflow:hidden}
 .bksheet.on .bk-in{transform:none}
+.bk-in{will-change:transform}.bksheet.out .bk-in{transition:transform .26s cubic-bezier(.45,0,.75,.45)}#lessonOverlay .pzh-hero{transform:translateZ(0);contain:paint}#lessonOverlay .pzh-ch{will-change:transform}.bksheet.out .pzh-ch{animation-play-state:paused}   /* (closing: the header's picture and its rays no longer stutter, 2026-11-13) */
 .bk-h{flex:none;display:flex;align-items:center;gap:10px;padding:14px 16px 10px;border-bottom:1px solid var(--line)}
 .bk-t{flex:1;min-width:0;font-size:17px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--accent)}
 .bk-x,.bk-bk{flex:none;width:38px;height:38px;border-radius:50%;border:2px solid var(--line);background:#fff;color:var(--text);font:900 17px/1 var(--font);cursor:pointer}.bk-bk{font-size:22px;padding-bottom:3px}
@@ -1869,6 +1870,7 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 .bvi .mxb{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:0;height:48px;padding:0 12px;border-radius:14px;border:2px solid var(--line);background:#fff;box-shadow:0 3px 0 var(--line);font:900 14.5px var(--font);color:var(--ink);cursor:pointer;white-space:nowrap}
 .bvi .mxb.pzok,.mxb.pzok{position:relative;background:#eef8f1!important;border-color:#9fd8b8!important;box-shadow:0 3px 0 #9fd8b8!important;color:#2e7d55}.mxb.pzok::after{content:'✓';flex:none;display:inline-grid;place-items:center;width:20px;height:20px;margin-left:2px;border-radius:50%;background:#2f9a6a;color:#fff;font-size:12px;font-weight:900}   /* (today's puzzle solved, 2026-11-13) */
 .bvi .mxb:hover{background:#fffaf0}
+.bvi #bvMBody > #bvPz:not([hidden]){height:100%;box-sizing:border-box;align-content:stretch}.bvi #bvMBody > #bvPz:not([hidden]) > .mxb{height:auto;min-height:48px}   /* (the パズル panel fills the settings' height like the other tabs: the rows below no longer sit higher, 2026-11-13) */
 .bvi .pgbest{flex:1 1 100%;box-sizing:border-box;display:flex;align-items:center;gap:12px;margin:0!important;padding:10px 16px;border-radius:14px;background:#fff;border:2px solid var(--line);box-shadow:0 3px 0 var(--line);font-size:15px;font-weight:900;color:#2b3044}.bvi .pgbest b{margin-inline-start:auto;font-size:23px;line-height:1.1;font-weight:900;color:#e5484d;letter-spacing:.02em;text-shadow:0 2px 0 rgba(229,72,77,.15)}.bvi .pgbest .pgd{font-size:12.5px;font-weight:700;color:#9a8762}.bvi .pgbest em + .pgd{margin-inline-start:0}.bvi .pgbest em{margin-inline-start:0;font-style:normal;font-weight:900;font-size:15px;color:#b07a00;background:#fff;border:2px solid #f3dca0;border-radius:99px;padding:3px 12px}   /* (ペグ: the chosen board's best, large; the same gap as the rows above — 2026-11-13) */
 .bvi #bvPz{display:grid;grid-template-columns:1fr 1fr;gap:10px}.bvi #bvPz .mxb[data-pz="list"]:nth-child(3){grid-column:1 / -1}
 .bvi .act.act3.act1 > a.btn{grid-column:1 / -1}
@@ -2211,7 +2213,7 @@ else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.j
 <script src="texgen.js?v=2"></script>
 <script src="npc/roster.js?v=7"></script>
 <script src="art.js?v=12"></script>
-<script src="../shared/atlas.js?v=20261113pg2"></script>
+<script src="../shared/atlas.js?v=20261113pg3"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261109ac2as1"></script>
 <script src="i18n/v.js?v=73pj"></script>
@@ -2232,7 +2234,7 @@ else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.j
 <script>/* the places other than the chabudai (tables3d.js, 440 KB): at once when one is chosen, else in idle time after the page has
    loaded (2026-11-10); 'atlas-places' tells the page they are there */
 (function () {
-  var SRC = 'tables3d.js?v=109', k = 0, p = null;
+  var SRC = 'tables3d.js?v=110', k = 0, p = null;
   try { k = +(localStorage.getItem('atlas-table') || 0) || 0; var m = /[?&]tbl=(\d+)/.exec(location.search); if (m) k = +m[1]; } catch (e) {}
   window.AtlasPlaces = function () { return p || (p = new Promise(function (res) { var s = document.createElement('script'); s.src = SRC; s.onload = s.onerror = function () { res(); try { dispatchEvent(new Event('atlas-places')); } catch (e) {} }; document.head.appendChild(s); })); };
   if (k) { document.write('<script src="' + SRC + '"><\/script>'); p = Promise.resolve(); }
@@ -2252,9 +2254,9 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   }, 60);
 };</script>
 <script src="../shared/tapword.js?v=1"></script>
-<script src="lazy.js?v=167"></script>
+<script src="lazy.js?v=168"></script>
 <script src="puzzle-lines.js?v=1"></script>
-<script src="puzzles.js?v=21"></script>
+<script src="puzzles.js?v=22"></script>
 <script src="lessons3d.js?v=13"></script>
 <script src="missions.js?v=8"></script>
 <link rel="stylesheet" href="historia.css?v=15">
