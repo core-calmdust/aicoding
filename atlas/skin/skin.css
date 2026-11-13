@@ -911,3 +911,18 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) .modal.ngt-on .ngt-foot > .modal-act
 html.atlas-skin:not(.atlas-2d) body:not(#_) .modal.ngt-on .ngt-bar button:not(#_):not(#_){min-height:42px!important;padding:5px 6px!important;font-size:13px!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngt-on > h2:not(#_){font-size:20px!important;margin-bottom:8px!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngt-on .credit:not(#_):not(#_){margin-bottom:44px!important}   /* (the last line clear of the frosted band at the end) */
+/* (2026-11-13) phones, new game: the mode pulldown as the 戦型 one — the same cream button, its list a popover over the dialog
+   (it pushed the page down and greyed); the settings under the level without a box of their own and no scroll inside a panel */
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngt-on .pd{position:relative}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngt-on .pd-btn:not(#_):not(#_){background:#f3ead6!important;border:2px solid #eadcbc!important;border-radius:10px!important;color:var(--a-ink,#2b3044)!important;box-shadow:none!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngt-on .pd.open .pd-btn:not(#_):not(#_){border-color:#e3c48a!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngt-on .pd-list:not(#_){position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:30;display:none;margin:0!important;transition:none}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngt-on .pd.open .pd-list:not(#_){display:block}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngt-on .pd.open .pd-list > div:not(#_){padding:8px!important;border-radius:14px!important;border:2px solid #ead9b6!important;background:#fffaf0!important;box-shadow:0 18px 40px -12px rgba(80,50,10,.35)!important;overflow:visible!important;max-height:none!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngt-on .pd-opt:not(#_){border-radius:9px!important;color:#6b5a3a!important;background:transparent!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngt-on .pd-opt.sel:not(#_){background:#f3ead6!important;color:var(--a-ink,#2b3044)!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngt-on .field:has(.pd.open){position:relative;z-index:12}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl.ngt-on .ng-cols > .ng-col:not(#_):not(#_):not(#_){max-height:none!important;overflow:visible!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl.ngt-on[data-ngl-order] .ng-cols > .ng-col:not(:has(#fLevel:not(.hidden))):not(#_):not(#_):not(#_){background:none!important;border:0!important;box-shadow:none!important;padding:6px 2px 8px!important;border-radius:0!important}
+/* (2026-11-13) phones: the デザイン tab's panel as wide as the other tabs' (the rules tab's column padding had reached it) */
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl.ngt-on[data-ngt=design] .ng-cols > .ng-col:not(#_):not(#_):not(#_):not(#_){padding:0!important;background:none!important;border:0!important;box-shadow:none!important}
