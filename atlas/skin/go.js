@@ -79,6 +79,8 @@
     skip: 'pdisc|p[12]\\b|st\\b|gstar|gl\\b|gco|lm\\b|ko\\b|mnum|terr|own\\b|mk-|arrow|goban|bsvg|frame|hc\\b',
     start(lv, side, mode) {
       if (typeof openNewDialog !== 'function' || typeof draft !== 'object' || typeof segSync !== 'function' || !document.getElementById('btnStart')) return null;
+      // the portal's card: straight to 詰碁 / the lessons / the online match search (go/online-ui.js AtlasDeep, 2026-11-13)
+      if (/^(puzzle|lesson|online)$/.test(mode)) { if (!window.AtlasDeep) return null; const q = new URLSearchParams(location.search); return AtlasDeep(mode, q.get('sub'), q.get('tc')); }
       openNewDialog();
       draft.mode = mode === 'rated' || mode === 'pvp' ? mode : 'ai';
       if (side === 1 || side === 2) draft.color = side;

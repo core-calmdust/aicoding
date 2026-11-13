@@ -914,3 +914,22 @@ if (olOn()) {
 renderInfo();
 // (2026-11-13) the chat box's placeholder / Send follow a language change (not only the next message)
 document.addEventListener('change', e => { if (e.target && e.target.id === 'langSel') setTimeout(() => { try { chatRender(); } catch (err) {} }, 0); }, true);   // (capture: the portal skin's language list fires a change that does not bubble)
+
+// ---- the portal's 3D view card opens this page at a part of it (2026-11-13, as chess/app.js): ?mode=puzzle|lesson|rated|online &sub=… &tc=…
+// (tc for online: the board size '9' | '13' | '19'). The 3D skin calls it from its start(); the plain 2D page on load, below. null: not ready yet
+window.AtlasDeep = function (mode, sub, tc) {
+  if (typeof openPuzzles !== 'function' || typeof openNewDialog !== 'function' || !document.getElementById('btnStart')) return null;
+  const click = (sel, n = 0) => { const b = document.querySelector(sel); if (b) b.click(); else if (n < 30) setTimeout(() => click(sel, n + 1), 150); };
+  if (mode === 'puzzle') { Promise.resolve(openPuzzles()).then(() => { if (sub === 'd1') click('#pzLevels [data-pbh-daily]'); else if (sub === 'cont') { const b = document.querySelector('#pzLevels [data-pbh-cont]'); if (b) b.click(); } }); return true; }
+  if (mode === 'lesson') { if (sub === 'open') openOpenings(); else openLessons(); return true; }
+  if (mode === 'online') { if (tc && ON.VARIANTS.includes(String(tc))) olSetV(String(tc)); olStartSearch(); return true; }
+  if (mode === 'rated') { openNewDialog(); draft.mode = 'rated'; segSync(); document.getElementById('btnStart').click(); return true; }
+  return false;
+};
+{ const q = new URLSearchParams(location.search), m = q.get('mode');
+  if (m && /^(puzzle|lesson|rated|online)$/.test(m) && q.get('skin') !== 'atlas') {   // the plain 2D page opened at a part of it
+    let n = 0; const go = () => { const r = window.AtlasDeep(m, q.get('sub'), q.get('tc')); if (r === null && ++n < 60) return setTimeout(go, 200);
+      ['mode', 'sub', 'tc'].forEach(k => q.delete(k)); history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash); };
+    if (document.readyState === 'complete') setTimeout(go, 1200); else addEventListener('load', () => setTimeout(go, 1200));
+  }
+}
