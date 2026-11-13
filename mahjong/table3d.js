@@ -189,7 +189,7 @@ class Table3D {
     this.envTex = studioEnv();
     const stone = stoneTex();
     this.matBacks = [0, 1, 2, 3].map(k => { const t = stone.clone(); t.needsUpdate = true; t.offset.set(k * .27, k * .41);
-      return new THREE.MeshPhysicalMaterial({ map: t, roughness: .3, metalness: 0, clearcoat: .6, clearcoatRoughness: .14, envMap: this.envTex, envMapIntensity: .45 }); });
+      return new THREE.MeshPhysicalMaterial({ map: t, roughness: .3, metalness: 0, ior: 2.1, clearcoat: .8, clearcoatRoughness: .32, envMap: this.envTex, envMapIntensity: 1 }); });   // (2026-11-14, ユーザー: a little more sheen — stone polished by hand, not a gloss coat: a denser stone (ior 2.1: it gives back about three times the light of the plain 1.5) under a soft coat, both rough enough that the room shows as a broad glow, never as a mirror image)
     this.matBack = this.matBacks[0];
     this.matHi = new THREE.MeshStandardMaterial({ color: 0xfff1b8, roughness: .35, emissive: 0x6a5208, emissiveIntensity: .45 });
     this.setInfo({ round: 0, kyoku: 0, honba: 0, kyotaku: 0, left: 70, scores: [25000, 25000, 25000, 25000], dealer: 0, turn: -1 });
