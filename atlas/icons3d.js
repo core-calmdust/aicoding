@@ -931,7 +931,7 @@
   const V3 = (x, y, z) => new T.Vector3(x, y, z);
   const SOFT_FS = 'uniform float uWrap; uniform vec3 uUnder; uniform float uUK; uniform float uGlow; uniform float uRim; varying vec3 vWN;\n';
   const LIGHTS_WRAP = () => T.ShaderChunk.lights_physical_pars_fragment.replace('vec3 irradiance = dotNL * directLight.color;',
-    'vec3 irradiance = saturate((dot(geometry.normal, directLight.direction) + uWrap) / (1. + uWrap)) * directLight.color;');
+    'vec3 irradiance = saturate((dot(' + (+T.REVISION >= 154 ? 'geometryNormal' : 'geometry.normal') + ', directLight.direction) + uWrap) / (1. + uWrap)) * directLight.color;');   // (r154+: the normal is its own argument, geometryNormal)
   function softHook(sh) {
     Object.assign(sh.uniforms, this.userData.u);
     sh.vertexShader = 'varying vec3 vWN;\n' + sh.vertexShader.replace('#include <beginnormal_vertex>', '#include <beginnormal_vertex>\n vWN = normalize(mat3(modelMatrix) * objectNormal);');
