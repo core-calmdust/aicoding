@@ -285,12 +285,14 @@ const LEVELS = [null,
   { d: 3.5, noise: 35, blunder: 0.015 },  // 6級
   { d: 4, noise: 30, blunder: 0.012 },    // 5級
   { d: 4, noise: 20 },                    // 4級
-  { s: 1, nk: 3.4 },                      // 3級  (NNUE; node budgets re-measured with the NNUE so each step keeps the Elo gap of the
-  { s: 1, nk: 16.5 },                     // 2級   original ladder, see MODEL_CARD.md)
-  { s: 1, nk: 95 },                       // 1級
-  { s: 1, nk: 343 },                      // 初段
-  { s: 1, nk: 540 },                      // 二段
-  { s: 1, nk: 740 },                      // 三段
+  // (2026-11-13, search v2: Lv.13-18 the same strength with x0.7 of the positions — 3.4, 16.5, 95, 343, 540, 740 before; Lv.19-20
+  //  keep theirs and are stronger. MODEL_CARD.md「探索 v2」)
+  { s: 1, nk: 2.4 },                      // Lv.13  (NNUE; node budgets re-measured with the NNUE so each step keeps the Elo gap of the
+  { s: 1, nk: 11.5 },                     // Lv.14   original ladder, see MODEL_CARD.md)
+  { s: 1, nk: 66 },                       // Lv.15
+  { s: 1, nk: 240 },                      // Lv.16
+  { s: 1, nk: 380 },                      // Lv.17
+  { s: 1, nk: 520 },                      // Lv.18
   { s: 1, nk: 4300, ms: 10000, book: 1 }, // 四段
   { s: 1, nk: 12000, ms: 12000, book: 1 }, // 五段  (the strongest: 12 million positions, at most 12 s)
 ];
@@ -446,7 +448,7 @@ const API = { P1, P2, WIN, WINT, DRAW_PLIES, KING, ADVISOR, ELEPHANT, HORSE, ROO
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.XiangqiEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  const V = 'v=20261108p1';
+  const V = 'v=20261113sv2';
   // ?…&mt=1: the lead thread of the page's multi-thread pool (shared/mtengine.js): engine_mt.wasm on the shared memory sent with
   // the first message ('mtinit'); the helpers (mt-helper.js) search the same root meanwhile. The rest is the usual API.
   const MTL = /[?&]mt=1\b/.test(self.location.search || '');

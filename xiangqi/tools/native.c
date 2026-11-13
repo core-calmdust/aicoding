@@ -6,6 +6,8 @@
 //   xq selfplay N nodes seed out.bin       self-play games; every quiet position's features + game result (for tools/tune.py)
 //   xq match A B N seed                    level A vs level B (engine.js LEVELS, mirrored here), N games, colours alternate
 //   xq mates N seed out.txt                harvest mate puzzles from self-play games (see tools/build_puzzles.py)
+//   xq serve [net.bin]                     a game over stdin/stdout for tools/duel.py (two builds against each other; NNUE with a net):
+//                                          new | mv <move> | rnd <n> | go n <nodesK> | go t <ms> | quit
 #include "../engine.c"
 #include <math.h>
 
@@ -75,8 +77,8 @@ static void initLevels(void) {
   const Level T[21] = { { 0 },
     { 1, 300, 380, 0, 0 }, { 1, 230, 280, 0, 0 }, { 1.3, 200, 220, 0, 0 }, { 1.7, 170, 160, 0, 0 }, { 2.1, 135, 110, 0, 0 },
     { 2.5, 100, 75, 0, 0 }, { 2.8, 80, 55, 0, 0 }, { 3, 60, 40, 0, 0 }, { 3, 42, 22, 0, 0 }, { 3.5, 35, 15, 0, 0 },
-    { 4, 30, 12, 0, 0 }, { 4, 20, 0, 0, 0 }, { 0, 0, 0, 3.4, 0 }, { 0, 0, 0, 16.5, 0 }, { 0, 0, 0, 95, 0 },
-    { 0, 0, 0, 343, 0 }, { 0, 0, 0, 540, 0 }, { 0, 0, 0, 740, 0 }, { 0, 0, 0, 4300, 10000 }, { 0, 0, 0, 12000, 12000 } };   // 13+: NNUE when a net is loaded
+    { 4, 30, 12, 0, 0 }, { 4, 20, 0, 0, 0 }, { 0, 0, 0, 2.4, 0 }, { 0, 0, 0, 11.5, 0 }, { 0, 0, 0, 66, 0 },
+    { 0, 0, 0, 240, 0 }, { 0, 0, 0, 380, 0 }, { 0, 0, 0, 520, 0 }, { 0, 0, 0, 4300, 10000 }, { 0, 0, 0, 12000, 12000 } };   // 13+: NNUE when a net is loaded
   memcpy(LV, T, sizeof(T));
 }
 static u64 rng = 88172645463325252ull;
@@ -204,6 +206,39 @@ static int mateFirstMoves(int k, int checks, u64 budgetK, Move *first) {
 int main(int argc, char **argv) {
   initGeo(); initEval(); initLevels();
   u8 sb[90]; int ss; loadFen(START_FEN, sb, &ss);
+  if (argc > 1 && !strcmp(argv[1], "serve")) {
+    static u8 gb[90]; static int gsd, gnh, glc; char ln[256];
+    if (argc > 2) { if (!loadNet(argv[2])) return 1; xq_nnue(1); }
+    setvbuf(stdout, 0, _IOLBF, 0);
+    while (fgets(ln, sizeof ln, stdin)) {
+      if (!strncmp(ln, "quit", 4)) break;
+      if (!strncmp(ln, "new", 3)) { memcpy(gb, sb, 90); gsd = ss; gnh = 0; glc = 0; new_game(); setupBoard(gb, gsd, GH, 0, 0, 0); GK[0] = KEY; GC[0] = (u8)attackedKing(side); printf("ok\n"); continue; }
+      setupBoard(gb, gsd, GH, gnh, 0, 0);
+      char nm[8];
+      if (!strncmp(ln, "mv", 2)) {   // -> ok | end R (R: 1 red wins, -1 black wins, 0 draw), as playGame
+        char w[8]; sscanf(ln + 2, "%7s", w); Move m = 0; int ok = 0;
+        for (int i = 0; i < rootN; i++) { mvName(nm, rootL[i]); if (!strcmp(nm, w)) { m = rootL[i]; ok = 1; } }
+        if (!ok) { printf("bad\n"); continue; }
+        u8 c = makeMove(m); GH[gnh++] = m; GK[gnh] = KEY; GC[gnh] = (u8)attackedKing(side); if (c) glc = gnh;
+        int rep = judgeRep(gnh + 1);
+        if (rep) { printf("end %d\n", rep == 1 ? 0 : rep == 2 ? 1 : -1); continue; }
+        if (gnh - glc >= DRAW_PLIES || gnh >= 400) { printf("end 0\n"); continue; }
+        setupBoard(gb, gsd, GH, gnh, 0, 0);
+        if (!rootN) { printf("end %d\n", side ? 1 : -1); continue; }
+        if (noAttackers()) { printf("end 0\n"); continue; }
+        printf("ok\n"); continue;
+      }
+      if (!strncmp(ln, "rnd", 3)) { mvName(nm, rootL[(u32)atoi(ln + 3) % rootN]); printf("%s\n", nm); continue; }
+      if (!strncmp(ln, "go", 2)) {
+        char k = 'n'; int x = 10; sscanf(ln + 2, " %c %d", &k, &x);
+        if (rootN == 1) { mvName(nm, rootL[0]); printf("%s 0 0 0\n", nm); continue; }
+        if (k == 't') best(99, x, 0); else best(99, 0, x);
+        mvName(nm, (Move)IO[0]); printf("%s %d %d %llu\n", nm, IO[1], IO[2], (unsigned long long)nodes); continue;
+      }
+      printf("?\n");
+    }
+    return 0;
+  }
   if (argc > 1 && !strcmp(argv[1], "perft")) {
     int d = argc > 2 ? atoi(argv[2]) : 4; u8 b[90]; int sd;
     loadFen(argc > 3 ? argv[3] : START_FEN, b, &sd); setupBoard(b, sd, 0, 0, 0, 0); loadRoot();
