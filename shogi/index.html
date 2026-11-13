@@ -444,6 +444,13 @@ html.atlas-skin .dsg button.sel{background:#fff3d6;border-color:var(--brass)}
 body.in-lesson .lesson-card{display:block}
 .edit-card{display:none}
 body.in-edit .edit-card{display:block}
+.ed-pop{position:fixed;z-index:70;display:flex;gap:6px;padding:6px;border-radius:12px;background:var(--panel2,#2a2118);border:1px solid var(--line);box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.ed-pop button{font:inherit;font-size:13px;font-weight:700;padding:7px 12px;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--text);cursor:pointer;white-space:nowrap}
+.ed-pop button:disabled{opacity:.4;cursor:default}
+.ed-help{margin:2px 0 8px;font-size:12.5px;line-height:1.6;color:var(--muted)}
+.ed-file{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.ed-file button{font:inherit;font-size:12.5px;padding:7px 4px;border-radius:9px;border:1px solid var(--line);background:rgba(0,0,0,.18);color:var(--text);cursor:pointer}
+body.in-edit .hand{cursor:pointer}
 body.in-edit .players,body.in-edit #evalCard,body.in-edit .kifu-card,body.in-edit .info-line,body.in-edit .controls,body.in-edit .review-card,body.in-edit .lesson-card{display:none!important}
 .ed-pal{display:grid;grid-template-columns:repeat(9,1fr);gap:4px;margin:8px 0}
 .ed-pal button{position:relative;aspect-ratio:1/1.1;border-radius:7px;background:rgba(0,0,0,.2);border:1px solid var(--line)}
@@ -1706,13 +1713,12 @@ html.atlas-skin #newOverlay #lvNote{display:none!important}   /* (the long note 
     <div class="side-in">
     <div class="card edit-card" id="editCard">
       <div class="lh"><span class="lt" data-i18n="ed.title"></span></div>
-      <div class="ed-pal" id="edPal"></div>
-      <label class="ed-promo"><input type="checkbox" id="edPromo"><span data-i18n="ed.promo"></span></label>
-      <div class="ed-hands" id="edHands"></div>
+      <div class="ed-row"><span id="edModeL"></span><div class="seg" id="edMode"><button data-v="0" data-i18n="ed.init"></button><button data-v="1" data-i18n="ed.tsume"></button></div></div>
       <div class="ed-row"><span data-i18n="ed.side"></span><div class="seg" id="edSide"><button data-v="0" data-i18n="black"></button><button data-v="1" data-i18n="white"></button></div></div>
-      <div class="ed-row ed-tools"><button id="edInit" data-i18n="ed.init"></button><button id="edTsume" data-i18n="ed.tsume"></button><button id="edClear" data-i18n="ed.clear"></button></div>
+      <p class="ed-help" id="edHelp"></p>
       <div class="ed-msg" id="edMsg"></div>
       <div class="lesson-actions"><button id="edStudy" class="go" data-i18n="ed.study"></button><button id="edPlay" data-i18n="ed.play"></button><button id="edMate" data-i18n="ed.mate"></button><button id="edQuit" data-i18n="ls.quit"></button></div>
+      <div class="ed-file"><button id="edSave"></button><button id="edLoad"></button><button id="edCopy"></button><input type="file" id="edFile" accept=".json,.txt,.sfen,application/json,text/plain" hidden></div>
     </div>
     <div class="card lesson-card" id="lessonCard">
       <div class="lh"><span class="lt" id="lsStep"></span><div class="dots" id="lsDots"></div></div>
@@ -2646,7 +2652,7 @@ function onSquare(s, fromDrag) {
 }
 function onHand(col, tp) {
   ctx();
-  if (edit) { editHand(col, tp, -1); return; }
+  if (edit) { editHandClick(col, tp); return; }
   if (!canInteract() || col !== P.side || P.variant === 'hasami') return;   // はさみ将棋: the stands only count captures
   if (sel && sel.hand === tp) { clearSel(); return; }
   sel = { hand: tp }; renderSelOnly();
@@ -3720,7 +3726,7 @@ function startEdit(fromCurrent) {
   exitLesson(true);
   const p = new E.Position();
   if (fromCurrent && game) p.setSfen(posAt(cur).sfen()); else p.setSfen(HANDI[0]);
-  edit = { b: Array.from(p.board), h: Array.from(p.hand), side: p.side, pick: FU, color: 0, saved: game && !game.lessonGame ? game : null };
+  edit = { b: Array.from(p.board), h: Array.from(p.hand), side: p.side, sel: null, mode: fromCurrent && game ? null : 0, saved: game && !game.lessonGame ? game : null };
   document.body.classList.add('in-edit');
   flip = flipA(false); hideOverlay('#newOverlay');
   renderEdit();
@@ -3742,59 +3748,153 @@ function editCheck() {
   if (k[p.side ^ 1] !== 1) return { ok: false, msg: t('ed.needKing') };
   return { ok: true, both: k[0] === 1 && k[1] === 1 };
 }
+// 局面編集 (2026-11-13, redone as the board itself): it starts from the usual set-up; pieces are moved as in play — click one, then
+// a square (or drag it); a piece on the board clicked shows a small menu (promote / turn to the other side / to the stand);
+// dragged (or sent) onto a stand it becomes a piece in hand of that stand's side, unpromoted, whoever owned it. Every piece of the
+// set is somewhere (board or stands), so the counts always hold. 平手 / 詰将棋 set the board up; the position saves to a file
+// (JSON with the SFEN — the format every game's position files share, see claude/game-conventions-addendum.md) and loads back.
+const ED_T = {
+  ja: { help: '駒はクリックかドラッグで動かせます。置いた駒をクリックすると、成り・先後の入れ替え・駒台へ。駒台へドラッグすると、その側の持ち駒になります。', mode: '初期配置', promo: '成る', unpromo: '成りを戻す', turn: '先後を入れ替え', toHand: '駒台へ', save: '保存', load: '読込', copy: 'SFENをコピー', copied: 'SFENをコピーしました', loaded: '局面を読み込みました', bad: '局面のファイルを読めませんでした', king: '玉は駒台に置けません' },
+  en: { help: 'Move pieces by clicking or dragging. Click a placed piece to promote it, give it to the other side or put it in hand. Drag a piece onto a stand to make it that side’s piece in hand.', mode: 'Set-up', promo: 'Promote', unpromo: 'Unpromote', turn: 'Other side', toHand: 'To the stand', save: 'Save', load: 'Load', copy: 'Copy SFEN', copied: 'SFEN copied', loaded: 'Position loaded', bad: 'Could not read the position file', king: 'A king cannot go in hand' },
+  zh: { help: '点击或拖动即可移动棋子。点击已放的棋子可升变、换成对方的棋子或放到驹台。拖到驹台即成为该方的持驹。', mode: '初始配置', promo: '升变', unpromo: '取消升变', turn: '换边', toHand: '放到驹台', save: '保存', load: '读取', copy: '复制 SFEN', copied: '已复制 SFEN', loaded: '已读取局面', bad: '无法读取局面文件', king: '王不能放到驹台' },
+  'zh-TW': { help: '點選或拖曳即可移動棋子。點選已放的棋子可升變、換成對方的棋子或放到駒台。拖到駒台即成為該方的持駒。', mode: '初始配置', promo: '升變', unpromo: '取消升變', turn: '換邊', toHand: '放到駒台', save: '儲存', load: '讀取', copy: '複製 SFEN', copied: '已複製 SFEN', loaded: '已讀取局面', bad: '無法讀取局面檔案', king: '王不能放到駒台' },
+  ko: { help: '말을 클릭하거나 끌어서 옮깁니다. 놓인 말을 클릭하면 승격·상대 말로 바꾸기·말 받침으로. 말 받침으로 끌면 그쪽의 지닌 말이 됩니다.', mode: '초기 배치', promo: '승격', unpromo: '승격 취소', turn: '선후 바꾸기', toHand: '말 받침으로', save: '저장', load: '불러오기', copy: 'SFEN 복사', copied: 'SFEN을 복사했습니다', loaded: '국면을 불러왔습니다', bad: '국면 파일을 읽을 수 없습니다', king: '왕은 말 받침에 둘 수 없습니다' },
+};
+const et = k => (ED_T[LANG] || ED_T.en)[k] || ED_T.en[k];
 function renderEdit() {
   P = new E.Position(); P.setSfen(editSfen());
   game = newRecord(editSfen(), 0); game.lessonGame = true; cur = 0; reviewing = false; hintMoves = null; sel = null;
   renderCoords(); renderBoard(false);
-  const promo = $('#edPromo').checked;
-  let pal = '';
-  for (const col of [0, 1]) for (const tp of ED_TYPES) {
-    const code = (promo && E.CAN_PROMOTE[tp] ? tp + 8 : tp) + (col ? WF : 0);
-    pal += `<button data-c="${col}" data-t="${tp}" class="${edit.pick === tp && edit.color === col ? 'sel' : ''}">${pieceEl(code).outerHTML}</button>`;
-    if (tp === OU && col === 0) pal += `<button class="erase ${edit.pick === 0 ? 'sel' : ''}" data-t="0" style="grid-row:span 2">✕</button>`;
-  }
-  $('#edPal').innerHTML = pal;
-  let hh = '<span></span>' + [HI, KA, KI, GI, KE, KY, FU].map(tp => `<span class="hn">${KANJI[tp]}</span>`).join('');
-  for (const col of [0, 1]) {
-    hh += `<span>${col ? '☖' : '☗'}</span>` + [HI, KA, KI, GI, KE, KY, FU].map(tp => `<span style="display:grid;grid-template-columns:1fr auto 1fr;gap:2px;align-items:center"><button data-h="${col},${tp},-1">−</button><b style="text-align:center;font-weight:500">${edit.h[col * 8 + tp]}</b><button data-h="${col},${tp},1">＋</button></span>`).join('');
-  }
-  $('#edHands').innerHTML = hh;
-  segSel('edSide', edit.side);
+  if (edit.sel && edit.sel.b != null) { const c = sqEls[sqToDisp(edit.sel.b)]; if (c) c.classList.add('sel'); }
+  if (edit.sel && edit.sel.h) document.querySelectorAll(`.hslot[data-col="${edit.sel.h.col}"][data-tp="${edit.sel.h.tp}"]`).forEach(x => x.classList.add('sel'));
+  segSel('edSide', edit.side); segSel('edMode', edit.mode == null ? -1 : edit.mode);
+  $('#edModeL').textContent = et('mode'); $('#edHelp').textContent = et('help');
+  $('#edSave').textContent = et('save'); $('#edLoad').textContent = et('load'); $('#edCopy').textContent = et('copy');
   const chk = editCheck();
   $('#edMsg').innerHTML = chk.ok ? `<span class="ok">${t(chk.both ? 'ed.ok' : 'ed.okTsume')}</span>` : `<span class="ng">${chk.msg}</span>`;
   $('#edPlay').disabled = !chk.ok || !chk.both; $('#edStudy').disabled = !chk.ok; $('#edMate').disabled = !chk.ok;
 }
+const edCol = q => E.colorOf(q), edType = q => E.typeOf(q), edBase = q => E.UNPROMOTE[E.typeOf(q)];
+const edCode = (tp, col) => tp + (col ? WF : 0);
+function edDead(code, s) { const tp = edType(code); return tp <= 8 && E.CAN_PROMOTE[tp] && E.deadEnd(edCol(code), tp, s); }
+function edPopClose() { const x = document.querySelector('.ed-pop'); if (x) x.remove(); }
+// a piece to a square: from the board (the two swap) or from a stand (a piece already there goes to that stand)
+function edPlace(src, s) {
+  const b = edit.b;
+  if (src.b != null) {
+    if (src.b === s) return false;
+    const a = b[src.b], o = b[s];
+    if (edDead(a, s) || (o && edDead(o, src.b))) { toast(t('ed.dead'), 1400); return false; }
+    b[s] = a; b[src.b] = o; return true;
+  }
+  const { col, tp } = src.h, code = edCode(tp, col), o = b[s];
+  if (!edit.h[col * 8 + tp]) return false;
+  if (edDead(code, s)) { toast(t('ed.dead'), 1400); return false; }
+  if (o && edType(o) === OU) { toast(et('king'), 1400); return false; }
+  edit.h[col * 8 + tp]--; if (o) edit.h[col * 8 + edBase(o)]++;
+  b[s] = code; return true;
+}
+// to a stand: the piece becomes that side's, unpromoted
+function edToHand(src, col) {
+  if (src.b != null) { const q = edit.b[src.b]; if (!q) return false; if (edType(q) === OU) { toast(et('king'), 1400); return false; } edit.b[src.b] = 0; edit.h[col * 8 + edBase(q)]++; return true; }
+  const { col: c0, tp } = src.h; if (c0 === col || !edit.h[c0 * 8 + tp]) return false;
+  edit.h[c0 * 8 + tp]--; edit.h[col * 8 + tp]++; return true;
+}
+function edDone() { edit.sel = null; edit.mode = null; edPopClose(); renderEdit(); }
+function edPop(s) {
+  edPopClose();
+  const q = edit.b[s]; if (!q) return;
+  const tp = edType(q), base = edBase(q), canP = E.CAN_PROMOTE[base], cell = sqEls[sqToDisp(s)].getBoundingClientRect();
+  const box = document.createElement('div'); box.className = 'ed-pop';
+  const btn = (k, fn, dis) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = et(k); b.disabled = !!dis; b.onclick = e => { e.stopPropagation(); fn(); }; box.appendChild(b); };
+  if (canP) btn(tp === base ? 'promo' : 'unpromo', () => { const nq = tp === base ? q + 8 : q - 8; if (tp !== base && edDead(nq, s)) { toast(t('ed.dead'), 1400); return; } edit.b[s] = nq; edDone(); });
+  btn('turn', () => { const nq = edCol(q) ? q - WF : q + WF; if (edDead(nq, s)) { toast(t('ed.dead'), 1400); return; } edit.b[s] = nq; edDone(); });
+  btn('toHand', () => { if (edToHand({ b: s }, edCol(q))) edDone(); }, tp === OU);
+  document.body.appendChild(box);
+  const w = box.offsetWidth, h = box.offsetHeight;
+  let x = cell.left + cell.width / 2 - w / 2, y = cell.bottom + 6;
+  if (y + h > innerHeight - 8) y = cell.top - h - 6;
+  box.style.left = Math.max(8, Math.min(innerWidth - w - 8, x)) + 'px'; box.style.top = Math.max(8, y) + 'px';
+}
+document.addEventListener('pointerdown', e => { if (!e.target.closest || e.target.closest('.ed-pop')) return; if (!edit) return; const x = document.querySelector('.ed-pop'); if (x && !e.target.closest('#board')) edPopClose(); }, true);
 function editClick(s) {
-  if (edit.pick === 0) { edit.b[s] = 0; renderEdit(); return; }
-  const promo = $('#edPromo').checked && E.CAN_PROMOTE[edit.pick];
-  const tp = promo ? edit.pick + 8 : edit.pick, code = tp + (edit.color ? WF : 0);
-  if (edit.b[s] === code) { edit.b[s] = 0; renderEdit(); return; }
-  if (!promo && E.deadEnd(edit.color, edit.pick, s)) { toast(t('ed.dead'), 1400); return; }
-  const old = edit.b[s]; edit.b[s] = code;
-  const { c, k } = editCounts();
-  if (k[edit.color] > 1 || (edit.pick !== OU && c[edit.pick] > TOTAL[edit.pick])) { edit.b[s] = old; toast(t('ed.tooMany', { p: NAME[edit.pick] }), 1400); return; }
-  renderEdit();
+  if (Date.now() - suppressClick < 300) return;
+  const q = edit.b[s], sl = edit.sel;
+  if (sl && !(sl.b === s)) { edPopClose(); if (edPlace(sl, s)) edDone(); else { edit.sel = null; renderEdit(); } return; }
+  if (sl && sl.b === s) { edit.sel = null; edPopClose(); renderEdit(); return; }
+  if (q) { edit.sel = { b: s }; renderEdit(); edPop(s); }
 }
-function editHand(col, tp, d) {
-  const i = col * 8 + tp, n = edit.h[i] + d;
-  if (n < 0) return;
-  if (d > 0) { const { c } = editCounts(); if (c[tp] >= TOTAL[tp]) { toast(t('ed.tooMany', { p: NAME[tp] }), 1400); return; } }
-  edit.h[i] = n; renderEdit();
+function editHandClick(col, tp) {
+  const sl = edit.sel;
+  if (sl && sl.b != null) { if (edToHand(sl, col)) edDone(); return; }
+  if (sl && sl.h) { if (sl.h.col === col && sl.h.tp === tp) { edit.sel = null; renderEdit(); return; } if (sl.h.col !== col) { if (edToHand(sl, col)) edDone(); return; } }
+  edit.sel = { h: { col, tp } }; edPopClose(); renderEdit();
 }
-$('#edPal').onclick = e => { const b = e.target.closest('button'); if (!b) return; edit.pick = +b.dataset.t; edit.color = +(b.dataset.c || 0); renderEdit(); };
-$('#edPromo').onchange = () => renderEdit();
-$('#edHands').onclick = e => { const b = e.target.closest('button[data-h]'); if (!b) return; const [c, tp, d] = b.dataset.h.split(',').map(Number); editHand(c, tp, d); };
+const edStandCol = el => { const bottom = flip ? 1 : 0; return el.id === 'handBottom' ? bottom : bottom ^ 1; };
+['#handTop', '#handBottom'].forEach(id => $(id).addEventListener('click', e => {   // (a click on a stand's empty part: the selected piece goes there)
+  if (!edit || e.target.closest('.hslot')) return; if (Date.now() - suppressClick < 300) return;
+  if (edit.sel && edToHand(edit.sel, edStandCol(e.currentTarget))) edDone();
+}));
+// dragging: a piece from the board or a stand, onto a square or a stand
+let edDrag = null;
+function edDown(e, src) {
+  if (e.pointerType === 'mouse' && e.button) return;
+  e.stopPropagation(); edDrag = { id: e.pointerId, x: e.clientX, y: e.clientY, on: false, src };
+}
+$('#board').addEventListener('pointerdown', e => { if (!edit) return; const s = sqFromPoint(e.clientX, e.clientY); if (s >= 0 && edit.b[s]) edDown(e, { b: s }); else e.stopPropagation(); }, true);
+['#handTop', '#handBottom'].forEach(id => $(id).addEventListener('pointerdown', e => { if (!edit) return; const sl = e.target.closest('.hslot'); if (sl) edDown(e, { h: { col: +sl.dataset.col, tp: +sl.dataset.tp } }); else e.stopPropagation(); }, true));
+document.addEventListener('pointermove', e => {
+  const d = edDrag; if (!d || e.pointerId !== d.id) return;
+  if (!d.on) {
+    if (Math.hypot(e.clientX - d.x, e.clientY - d.y) < 8) return;
+    d.on = true; edPopClose();
+    const code = d.src.b != null ? edit.b[d.src.b] : edCode(d.src.h.tp, d.src.h.col);
+    const g = pieceEl(code); g.style.cssText = 'position:fixed;inset:auto;width:var(--cw);height:var(--ch);z-index:60;pointer-events:none;transform:translate(-50%,-55%) scale(1.12)';
+    document.body.appendChild(g); d.ghost = g;
+    if (d.src.b != null) { const pe = sqEls[sqToDisp(d.src.b)].querySelector('.pc'); if (pe) pe.style.opacity = '.35'; }
+  }
+  d.ghost.style.left = e.clientX + 'px'; d.ghost.style.top = e.clientY + 'px'; e.preventDefault();
+}, { passive: false });
+function edUp(e) {
+  const d = edDrag; if (!d || e.pointerId !== d.id) return; edDrag = null;
+  if (!d.on) return;
+  d.ghost.remove(); suppressClick = Date.now();
+  if (!edit) return;
+  const s = sqFromPoint(e.clientX, e.clientY), st = document.elementFromPoint(e.clientX, e.clientY), hand = st && st.closest && st.closest('#handTop, #handBottom');
+  let ok = false;
+  if (s >= 0) ok = edPlace(d.src, s); else if (hand) ok = edToHand(d.src, edStandCol(hand));
+  if (ok) edDone(); else { edit.sel = null; renderEdit(); }
+}
+document.addEventListener('pointerup', edUp); document.addEventListener('pointercancel', e => { if (edDrag && edDrag.ghost) edDrag.ghost.remove(); edDrag = null; if (edit) renderEdit(); });
 $('#edSide').onclick = e => { const b = e.target.closest('button'); if (b) { edit.side = +b.dataset.v; renderEdit(); } };
-$('#edInit').onclick = () => { const p = new E.Position(); p.setSfen(HANDI[0]); edit.b = Array.from(p.board); edit.h = Array.from(p.hand); edit.side = 0; renderEdit(); };
-$('#edClear').onclick = () => { edit.b = edit.b.map(q => q && E.typeOf(q) === OU ? q : 0); edit.h = new Array(16).fill(0); renderEdit(); };
-$('#edTsume').onclick = () => {
-  // tsume convention: no attacker (sente) king, defender holds every remaining piece
-  edit.b = edit.b.map(q => q && E.typeOf(q) === OU && E.colorOf(q) === 0 ? 0 : q);
-  const { c } = editCounts();
-  for (let tp = 1; tp <= 7; tp++) edit.h[8 + tp] += TOTAL[tp] - c[tp];
-  edit.side = 0; renderEdit();
+function edSet(sf) { const p = new E.Position(); p.setSfen(sf); edit.b = Array.from(p.board); edit.h = Array.from(p.hand); edit.side = p.side; edit.sel = null; edPopClose(); }
+$('#edMode').onclick = e => {
+  const b = e.target.closest('button'); if (!b) return;
+  edSet(HANDI[0]);
+  if (b.dataset.v === '1') {   // 詰将棋: the defender's king alone on the board; every other piece in the defender's hand (the attacker's hand empty)
+    edit.b = edit.b.map(q => q && edType(q) === OU && edCol(q) === 1 ? q : 0);
+    edit.h = new Array(16).fill(0); for (let tp = 1; tp <= 7; tp++) edit.h[8 + tp] = TOTAL[tp];
+  }
+  edit.side = 0; edit.mode = +b.dataset.v; renderEdit();
 };
-function endEdit() { edit = null; document.body.classList.remove('in-edit'); }
+// the position as a file: { format: 'wbga-position', version: 1, game: 'shogi', sfen } (JSON); a plain SFEN text loads too
+$('#edSave').onclick = () => {
+  const sf = editSfen(), d = new Date(), pad = n => String(n).padStart(2, '0');
+  const blob = new Blob([JSON.stringify({ format: 'wbga-position', version: 1, game: 'shogi', sfen: sf, created: d.toISOString() }, null, 2) + '\n'], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `shogi-position-${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}.json`;
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+};
+$('#edCopy').onclick = () => { const sf = editSfen(); (navigator.clipboard ? navigator.clipboard.writeText(sf) : Promise.reject()).then(() => toast(et('copied'), 1400), () => prompt('SFEN', sf)); };
+$('#edLoad').onclick = () => { $('#edFile').value = ''; $('#edFile').click(); };
+function edParse(txt) {
+  let sf = null; txt = String(txt || '').trim();
+  try { const j = JSON.parse(txt); if (j && typeof j.sfen === 'string' && (!j.game || j.game === 'shogi')) sf = j.sfen; } catch (e) {}
+  if (!sf) { const m = txt.match(/(?:sfen\s+)?([1-9lnsgkrpbLNSGKRPB+]+(?:\/[1-9lnsgkrpbLNSGKRPB+]+){8})\s+([bw])\s+(-|[0-9rbgsnlpRBGSNLP]+)(?:\s+\d+)?/); if (m) sf = `${m[1]} ${m[2]} ${m[3]} 1`; }
+  if (!sf) return null;
+  try { const p = new E.Position(); p.setSfen(sf); return p.sfen(); } catch (e) { return null; }
+}
+$('#edFile').onchange = () => { const f = $('#edFile').files[0]; if (!f || !edit) return; f.text().then(txt => { const sf = edParse(txt); if (!sf) { toast(et('bad'), 1800); return; } edSet(sf); edit.mode = null; renderEdit(); toast(et('loaded'), 1400); }); };
+function endEdit() { edit = null; edPopClose(); document.body.classList.remove('in-edit'); }
 $('#edQuit').onclick = () => { const sv = edit && edit.saved; endEdit(); if (sv) { game = sv; cur = game.moves.length; flip = flipA(settings.mode === 'ai' && game.human === 1); refresh(false); } else newGame(); };
 $('#edStudy').onclick = () => {
   const sf = editSfen(); endEdit();
@@ -6666,7 +6766,7 @@ if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStar
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=90l45'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=90l46'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
