@@ -4,6 +4,29 @@
 (function (root) {
 'use strict';
 const W = 1, H = 1.36, D = 0.78;
+// a rounded tile part (w × h, d thick along z, centred): corner radius r, edges rounded by b. withFace: group 0 is the +z face
+// (uv 0..1 over the tile), group 1 everything else; otherwise one group. ~120 triangles.
+function roundTile(w, h, d, r, b, withFace) {
+  const s = new THREE.Shape(), x0 = -w / 2 + b, y0 = -h / 2 + b, x1 = w / 2 - b, y1 = h / 2 - b, q = Math.max(.01, r - b);
+  s.moveTo(x0 + q, y0); s.lineTo(x1 - q, y0); s.quadraticCurveTo(x1, y0, x1, y0 + q); s.lineTo(x1, y1 - q); s.quadraticCurveTo(x1, y1, x1 - q, y1);
+  s.lineTo(x0 + q, y1); s.quadraticCurveTo(x0, y1, x0, y1 - q); s.lineTo(x0, y0 + q); s.quadraticCurveTo(x0, y0, x0 + q, y0);
+  let g = new THREE.ExtrudeGeometry(s, { depth: d - 2 * b, bevelEnabled: true, bevelThickness: b, bevelSize: b, bevelSegments: 2, curveSegments: 3 });
+  g.translate(0, 0, -(d - 2 * b) / 2);
+  const P = g.attributes.position, N = g.attributes.normal, UV = g.attributes.uv;
+  for (let i = 0; i < P.count; i++) UV.setXY(i, (P.getX(i) + w / 2) / w, (P.getY(i) + h / 2) / h);
+  // the face: the +z cap only (the extrude's caps are group 0 — front and back); faces of the −z cap go to the plain group
+  g.clearGroups();
+  if (withFace) {
+    const idx = []; for (let i = 0; i < P.count; i += 3) idx.push(i);
+    const isFace = i => N.getZ(i) > .99 && N.getZ(i + 1) > .99 && N.getZ(i + 2) > .99 && P.getZ(i) > d / 2 - 1e-3;
+    const face = idx.filter(isFace), rest = idx.filter(i => !isFace(i)), order = face.concat(rest);
+    const ng = new THREE.BufferGeometry();
+    for (const k of ['position', 'normal', 'uv']) { const A = g.attributes[k], n = A.itemSize, out = new Float32Array(order.length * 3 * n); order.forEach((i, j) => { for (let v = 0; v < 3; v++) for (let c = 0; c < n; c++) out[(j * 3 + v) * n + c] = A.array[(i + v) * n + c]; }); ng.setAttribute(k, new THREE.BufferAttribute(out, n)); }
+    ng.addGroup(0, face.length * 3, 0); ng.addGroup(face.length * 3, rest.length * 3, 1);
+    g.dispose(); g = ng;
+  }
+  return g;
+}
 const ROW = 6;
 const PI = Math.PI;
 
@@ -121,10 +144,12 @@ class Table3D {
     });
 
     // shared tile geometry/materials
-    this.geoFront = new THREE.BoxGeometry(W, H, 0.5);
-    this.geoBack = new THREE.BoxGeometry(W, H, 0.28);
-    this.matIvory = new THREE.MeshStandardMaterial({ color: 0xf6f0e0, roughness: .35, metalness: 0 });
-    this.matBack = new THREE.MeshStandardMaterial({ color: 0x6b3fc4, roughness: .3, metalness: .05 });
+    // the tiles (2026-11-14, as 上海's): rounded white blocks with a purple back — corners and edges rounded, the face
+    // carved (normal map from tiles.js). One shared geometry for the white part and one for the back.
+    this.geoFront = roundTile(W, H, 0.5, 0.13, 0.05, true);
+    this.geoBack = roundTile(W, H, 0.28, 0.13, 0.05, false);
+    this.matIvory = new THREE.MeshStandardMaterial({ color: new THREE.Color(0xf7f7f3).convertSRGBToLinear(), roughness: .38, metalness: 0 });
+    this.matBack = new THREE.MeshStandardMaterial({ color: new THREE.Color(0x6a3cc0).convertSRGBToLinear(), roughness: .32, metalness: .05 });
     this.matHi = new THREE.MeshStandardMaterial({ color: 0xfff1b8, roughness: .35, emissive: 0x6a5208, emissiveIntensity: .45 });
     this.setInfo({ round: 0, kyoku: 0, honba: 0, kyotaku: 0, left: 70, scores: [25000, 25000, 25000, 25000], dealer: 0, turn: -1 });
   }
@@ -136,7 +161,8 @@ class Table3D {
     if (!m) {
       const tex = new THREE.CanvasTexture(MJTiles.canvas(t, red));
       tex.encoding = THREE.sRGBEncoding; tex.anisotropy = 8;
-      m = { normal: new THREE.MeshStandardMaterial({ map: tex, roughness: .3 }), hi: new THREE.MeshStandardMaterial({ map: tex, roughness: .3, emissive: 0xffd36a, emissiveIntensity: .28 }), dim: new THREE.MeshStandardMaterial({ map: tex, roughness: .3, color: 0x9c9c9c }) };
+      const nrm = MJTiles.sheets() ? new THREE.CanvasTexture(MJTiles.normal(t, red)) : null; if (nrm) nrm.anisotropy = 8;
+      m = { normal: new THREE.MeshStandardMaterial({ map: tex, normalMap: nrm, roughness: .38 }), hi: new THREE.MeshStandardMaterial({ map: tex, normalMap: nrm, roughness: .38, emissive: 0xffd36a, emissiveIntensity: .28 }), dim: new THREE.MeshStandardMaterial({ map: tex, normalMap: nrm, roughness: .38, color: 0x9c9c9c }) };
       this.faceTex.set(k, m);
     }
     return m;
@@ -146,7 +172,7 @@ class Table3D {
     if (g) return g;
     g = new THREE.Group();
     const fm = this.faceMat(id);
-    const front = new THREE.Mesh(this.geoFront, [this.matIvory, this.matIvory, this.matIvory, this.matIvory, fm.normal, this.matIvory]);
+    const front = new THREE.Mesh(this.geoFront, [fm.normal, this.matIvory]);   // (group 0: the face cap, 1: the rest)
     front.position.z = D / 2 - 0.25;
     const back = new THREE.Mesh(this.geoBack, this.matBack);
     back.position.z = -D / 2 + 0.14;
@@ -161,7 +187,7 @@ class Table3D {
   }
   setTileLook(g, look) {
     const fm = g.userData.fm;
-    g.userData.front.material[4] = look === 'hi' ? fm.hi : look === 'dim' ? fm.dim : fm.normal;
+    g.userData.front.material[0] = look === 'hi' ? fm.hi : look === 'dim' ? fm.dim : fm.normal;
   }
 
   // local (lx right of seat, lz toward seat) -> world

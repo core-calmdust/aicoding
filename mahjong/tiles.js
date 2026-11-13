@@ -103,10 +103,48 @@ function bird(ctx) {
 const MAN = ['一', '二', '三', '四', '伍', '六', '七', '八', '九'];
 const HONOR = ['東', '南', '西', '北', '', '發', '中'];
 
+// 2026-11-14: the faces of 上海 (大百科) — characters and pictures traced from photos of real Japanese tiles
+// (atlas/tools/shanghai-glyphs.py → ../atlas/img/shanghai-glyphs.png: ink per channel R black / G red / B green, 8×3 cells;
+// shanghai-art.png: RGBA pictures, 8×4 cells: 0–8 筒子, 9–17 索子). Drawn once the two sheets are in (MJTiles.ready()); until then
+// (or if they fail) the older drawn faces below.
+const GW = 280, GH = 390, SHEET = new URL('../atlas/img/', (document.currentScript && document.currentScript.src) || location.href).href;
+let gImg = null, aImg = null, readyP = null;
+function ready() {
+  const one = (u, set) => new Promise(res => { const im = new Image(); im.onload = () => { set(im); res(); }; im.onerror = () => res(); im.src = SHEET + u; setTimeout(res, 5000); });
+  return readyP || (readyP = Promise.all([one('shanghai-glyphs.png?v=1', im => { gImg = im; }), one('shanghai-art.png?v=1', im => { aImg = im; })]));
+}
+const GROUND = '#fafaf6';
+// one cell of a sheet in a colour (glyph sheet: channel ch; art sheet: ch < 0 keeps its colours, or recolours all to `col`)
+function cell(img, k, ch, col) {
+  const cv = document.createElement('canvas'); cv.width = GW; cv.height = GH; const c = cv.getContext('2d');
+  c.drawImage(img, (k % 8) * GW, Math.floor(k / 8) * GH, GW, GH, 0, 0, GW, GH);
+  if (ch >= 0 || col) {
+    const im = c.getImageData(0, 0, GW, GH), d = im.data, rgb = col ? [1, 3, 5].map(i => parseInt(col.slice(i, i + 2), 16)) : null;
+    for (let p = 0; p < d.length; p += 4) { const a = ch >= 0 ? d[p + ch] : d[p + 3]; if (rgb) { d[p] = rgb[0]; d[p + 1] = rgb[1]; d[p + 2] = rgb[2]; } d[p + 3] = a; }
+    c.putImageData(im, 0, 0);
+  }
+  return cv;
+}
+const INK = '#141414', RED2 = '#d0122a', GRN2 = '#127040';
+function paintSheet(ctx, type, red) {
+  const put = cv => ctx.drawImage(cv, 0, 0, FW, FH);
+  if (type < 9) { put(cell(gImg, type, 0, red ? RED2 : INK)); put(cell(gImg, type, 1, RED2)); return true; }
+  if (type < 27) { put(cell(aImg, type < 18 ? type - 9 : 9 + type - 18, -1, red ? RED2 : null)); return true; }
+  const k = type - 27;
+  if (k < 4) { put(cell(gImg, 9 + k, 0, INK)); return true; }
+  if (k === 5) { put(cell(gImg, 13, 2, GRN2)); return true; }
+  if (k === 6) { put(cell(gImg, 14, 1, RED2)); return true; }
+  return false;   // 白: the frame below
+}
 function paint(type, red) {
   const cv = (typeof document !== 'undefined') ? document.createElement('canvas') : null;
   cv.width = FW; cv.height = FH;
   const ctx = cv.getContext('2d');
+  if (gImg && aImg) {
+    ctx.fillStyle = GROUND; ctx.fillRect(0, 0, FW, FH);
+    if (!paintSheet(ctx, type, red)) { ctx.strokeStyle = C_BLU; ctx.lineWidth = 10; rr(ctx, 46, 58, FW - 92, FH - 116, 14); ctx.stroke(); ctx.lineWidth = 3; rr(ctx, 62, 74, FW - 124, FH - 148, 8); ctx.stroke(); }
+    return cv;
+  }
   ground(ctx);
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   if (type < 9) {
@@ -150,6 +188,20 @@ function paint(type, red) {
   return cv;
 }
 
+// the carving: the paint fills the cut flat; the white just outside each stroke slopes down into it (a tangent-space normal map)
+function normalOf(cv) {
+  const W = cv.width, H = cv.height, src = cv.getContext('2d').getImageData(0, 0, W, H).data, h = new Float32Array(W * H), t = new Float32Array(W * H);
+  for (let i = 0, p = 0; i < W * H; i++, p += 4) { const d = Math.max(Math.abs(src[p] - 250), Math.abs(src[p + 1] - 250), Math.abs(src[p + 2] - 246)); h[i] = d < 14 ? 0 : Math.min(1, (d - 14) / 70); }
+  const h0 = h.slice(), box = (a, b, dx, dy) => { for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const i = y * W + x; let s = a[i], n = 1; if (x - dx >= 0 && y - dy >= 0) { s += a[i - dy * W - dx]; n++; } if (x + dx < W && y + dy < H) { s += a[i + dy * W + dx]; n++; } b[i] = s / n; } };
+  for (let k = 0; k < 3; k++) { box(h, t, 1, 0); box(t, h, 0, 1); }
+  for (let i = 0; i < W * H; i++) h[i] = h0[i] > .5 ? 1 : Math.max(h0[i], Math.min(1, h[i] * 1.8));
+  const out = document.createElement('canvas'); out.width = W; out.height = H; const oc = out.getContext('2d'), im = oc.createImageData(W, H), o = im.data, S = 7;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const i = y * W + x, l = h[x > 0 ? i - 1 : i], r = h[x < W - 1 ? i + 1 : i], u = h[y > 0 ? i - W : i], d = h[y < H - 1 ? i + W : i];
+    let nx = (r - l) * S, ny = (u - d) * S, nz = 1; const k = 1 / Math.hypot(nx, ny, nz); const p = i * 4; o[p] = (nx * k * .5 + .5) * 255; o[p + 1] = (ny * k * .5 + .5) * 255; o[p + 2] = (nz * k * .5 + .5) * 255; o[p + 3] = 255; }
+  oc.putImageData(im, 0, 0); return out;
+}
+const ncache = new Map();
+function normal(type, red) { const k = key(type, red); let n = ncache.get(k); if (!n) { n = normalOf(canvas(type, red)); ncache.set(k, n); } return n; }
 function key(type, red) { return type + (red ? 'r' : ''); }
 function canvas(type, red) {
   const k = key(type, red);
@@ -163,8 +215,8 @@ function url(type, red) {
   if (!u) { u = canvas(type, red).toDataURL('image/png'); urls.set(k, u); }
   return u;
 }
-function reset() { cache.clear(); urls.clear(); }
+function reset() { cache.clear(); urls.clear(); ncache.clear(); }
 const RED = new Set([16, 52, 88]);
-const MJTiles = { FW, FH, canvas, url, reset, ofId: id => ({ t: id >> 2, red: RED.has(id) }), urlId: id => url(id >> 2, RED.has(id)) };
+const MJTiles = { FW, FH, canvas, url, reset, normal, ready, sheets: () => !!(gImg && aImg), ofId: id => ({ t: id >> 2, red: RED.has(id) }), urlId: id => url(id >> 2, RED.has(id)) };
 root.MJTiles = MJTiles;
 })(window);
