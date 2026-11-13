@@ -88,8 +88,15 @@
   const GW = 280, GH = 390, GLYPH_URL = new URL('../img/shanghai-glyphs.png?v=1', (document.currentScript && document.currentScript.src) || location.href).href;
   let glyphImg = null, glyphPr = null; const glyphCv = {};
   function glyphP() {
-    return glyphPr || (glyphPr = new Promise(res => { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { glyphImg = im; res(); }; im.onerror = () => res(); im.src = GLYPH_URL; setTimeout(res, 4000); }));
+    const one = (url, set) => new Promise(res => { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { set(im); res(); }; im.onerror = () => res(); im.src = url; setTimeout(res, 4000); });
+    return glyphPr || (glyphPr = Promise.all([one(GLYPH_URL, im => { glyphImg = im; }), one(ART_URL, im => { artImg = im; })]));
   }
+  // 筒子・索子・花／季節: the pictures traced in colour from the same photos (atlas/tools/shanghai-glyphs.py art →
+  // atlas/img/shanghai-art.png, 8×4 RGBA cells: 0–8 筒子, 9–17 索子 (9 = 一索の鳥), 18–21 梅蘭菊竹, 22–25 春夏秋冬), 2026-11-14
+  const ART_URL = new URL('../img/shanghai-art.png?v=1', (document.currentScript && document.currentScript.src) || location.href).href;
+  let artImg = null;
+  const artCell = f => f >= 9 && f < 27 ? f - 9 : f >= 34 && f < 42 ? 18 + (f - 34) : -1;
+  function art(c, f) { const k = artCell(f); if (!artImg || k < 0) return false; c.drawImage(artImg, (k % 8) * GW, Math.floor(k / 8) * GH, GW, GH, 0, 0, 256, 362); return true; }
   // one glyph (cell k, channel ch) as a canvas in the colour given (the ink's density = its alpha); cached
   function glyphCanvas(k, ch, color) {
     const key = k + ':' + ch + ':' + color; if (glyphCv[key]) return glyphCv[key];
@@ -221,6 +228,7 @@
   function drawFace(c, f) {
     ground(c);
     if (f < 9) { if (glyph(c, f, 0, INK)) glyph(c, f, 1, RED); else { kanji(c, '一二三四五六七八九'[f], 128, 104, 132, INK); kanji(c, '萬', 128, 262, 140, RED); } return; }
+    if (art(c, f)) return;
     if (f < 18) {
       const n = f - 8;
       const L = {
