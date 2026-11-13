@@ -3,7 +3,7 @@
 (() => {
   'use strict';
   const E = window.XiangqiEngine;
-  const VER = '?v=7', NETV = '?v=20261113sv2', ENG = '../engine.js?v=20261113sv2';
+  const VER = '?v=7', NETV = '?v=20261113sv2', ENG = '../engine.js?v=20261114w';
   const LANG = (() => { try { return (localStorage.getItem('aicoding-lang') || 'ja') === 'ja' ? 'ja' : 'en'; } catch (e) { return 'ja'; } })();
   const T = {
     ja: { back: '← シャンチー', gname: 'シャンチー', ttl: '最強解析', depth: '深さ', nps: '局面/秒', threads: 'スレッド', sel: 'スレッド数', ana: '解析', stop: '停止', play: 'AIに指させる',
