@@ -81,6 +81,10 @@
      (VOICE; other languages: the plain lines above). The lesson texts themselves come from the full games' data, written
      politely (です・ます): in Japanese the guide says them in plain, friendly speech (casualJa). */
   const VOICE = {
+    gomoku: {
+      ja: { hi: 'ゴイシペンだよ！ いっしょに五目並べのお勉強をしよう。', partial: 'いい手だね。でもいちばんは光ってる点なんだ。', wrong: 'おしい！ 正解は光ってる点だよ。', hintSay: 'ヒントだよ。光ってるあたりに注目してみて。', opGoal: 'この局面、いちばん良い次の一手はどこかな？' },
+      en: { hi: "Stoneguin here! Let's study gomoku together.", partial: 'A nice move! But the glowing point is the best.', wrong: 'So close! The glowing point is the answer.', hintSay: 'Psst — look around the glowing points!', opGoal: 'What is the best next move here?' },
+    },
     chess: {
       ja: { hi: 'やあ、ナイトンだよ！ 今日のレッスン、いっしょにピョンピョンがんばろう！', partial: 'いい手だね！ でもいちばんは光ってる手なんだ。', wrong: 'おしい〜！ 正解は光ってる手だよ。',
         pass: 'やったね、合格！ {p} / {m}点。ぼく、うれしくて跳ねちゃう！', fail: '{p} / {m}点。合格は{q}点だよ。もう一回いってみよう！', end: '手順はここまで！ 次は練習問題で腕だめしだ！',
@@ -305,7 +309,69 @@
       return Math.max(0, Math.round(PTS * (all.length - 1 - all.filter(v => v > mine + 1e-9).length) / (all.length - 1)));
     },
   };
-  const DATA = { shogi: SHOGI, chess: CHESS, reversi: REVERSI };
+  /* gomoku / renju (2026-11-13): the lessons (gomoku/lessons.json: steps of 5 one-move problems, a warm-up ramp before some; 'pick'
+     problems: tap the point, no stone is played — the forbidden points) and the 26 opening shapes (openings.json: the line with the
+     AI's values and notes, then 5 practice positions scored by the stored values). Progress = the full game's ('aicoding-gomoku-lessons'
+     { id: { best, clear } }, 'aicoding-gomoku-open' { id: { best, pass } }). Texts: gomoku/i18n.js, read into a sandbox. A position here is
+     { start: { b, w, side }, rule, me, last, pick, noForbid } (cells: row × 15 + column, a1 = 0). */
+  const GSQ = x => typeof x === 'number' ? x : (+String(x).slice(1) - 1) * 15 + String(x).charCodeAt(0) - 97;
+  const GNM = m => 'abcdefghijklmno'[m % 15] + (Math.floor(m / 15) + 1);
+  const gCells = a => (Array.isArray(a) ? a : String(a || '').split(/\s+/)).filter(Boolean).map(GSQ);
+  const gPos = (P, o) => Object.assign({ start: { b: gCells(P.b), w: gCells(P.w), side: P.side || 1 }, rule: P.rule || 'renju', me: P.side || 1, last: P.last ? GSQ(P.last) : -1 }, o || {});
+  const GMK = { ok: 'ok', ng: 'ng', hl2: 'ring', t4: 'hl', t3: 'hl', hang: 'ng' };
+  const GOMOKU = {
+    LKEY: 'aicoding-gomoku-lessons', OKEY: 'aicoding-gomoku-open', data: null, I: null,
+    load() {
+      if (this.p) return this.p;
+      return (this.p = Promise.all([getJ('../gomoku/lessons.json?v=20261113'), getJ('../gomoku/openings.json?v=20261113'), fetch('../gomoku/i18n.js?v=20261112c1').then(r => r.text())])
+        .then(([ls, op, tx]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] gomoku texts', e); } this.I = w.I18N || {}; this.data = { ls, op }; return this; })
+        .catch(e => { this.p = null; throw e; }));
+    },
+    tx(k, lang, v) { const I = this.I || {}; let x = (I[lang] && I[lang][k]) || (I.en && I.en[k]) || (I.ja && I.ja[k]) || ''; return v ? fill(x, v) : x; },
+    mini: P => window.AtlasMini && AtlasMini.gomoku ? AtlasMini.gomoku(Array.isArray(P.b) ? P.b.join(' ') : P.b, Array.isArray(P.w) ? P.w.join(' ') : P.w) : '',
+    name(g, lang) { return lang === 'ja' ? g.kanji : lang === 'zh' || lang === 'zh-TW' ? g.zh || g.kanji : lang === 'ko' ? g.ko || g.name : g.name; },
+    list(kind, lang) {
+      const D = this.data;
+      if (kind === 'open') { const pr = J(this.OKEY, {}); return D.op.sets.map(g => { const L = g.line.split(' '); return { key: g.id, cat: g.kind, catName: this.tx('op.tab.' + g.kind, lang), title: this.name(g, lang), sub: this.tx('op.d.' + g.id, lang), tag: (g.kind === 'direct' ? 'D' : 'I') + g.no, svg: this.mini({ b: [L[0], L[2]], w: [L[1]] }), st: pr[g.id] ? (pr[g.id].pass ? 'pass' : 'try') : '' }; }); }
+      const pr = J(this.LKEY, {});
+      return D.ls.steps.map((s, i) => ({ key: String(i), cat: s.course, catName: this.tx('course.' + s.course, lang), title: this.tx('ls.' + s.id + '.title', lang) || s.id, sub: this.tx('ls.' + s.id + '.sub', lang), svg: s.problems && s.problems[0] ? this.mini(s.problems[0]) : '', st: pr[s.id] ? (pr[s.id].clear ? 'pass' : 'try') : '', full: false }));
+    },
+    lesson(key, lang) {
+      const s = this.data.ls.steps[+key]; if (!s) return null;
+      const T = (k, v) => this.tx('ls.' + s.id + '.' + k, lang, v), RU = (k, v) => fill(L((this.data.ls.rampUi || {})[k], lang), v || {});
+      return { id: s.id, title: T('title'), intro: T('intro'), ramp: s.ramp && s.ramp.length ? s.ramp : null, RU,
+        probs: (s.problems || []).map(P => { const ok = gCells(P.ok || []), pick = P.kind === 'pick';
+          return { pos: gPos(P, { pick, noForbid: !!(s.hideForbid || pick) }), kind: 'best', P: { ok }, ask: T('goal'), ans: ok[0], why: '', ng: (u) => T('ng', { m: ok.slice(0, 4).map(GNM).join(' / '), x: GNM(u) }), good: u => T('why', { m: GNM(u), n: ok.length }), hintTx: T('hint'), hint: P.hint ? gCells(P.hint) : null }; }),
+        save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }, pass = pts >= 75; pr[s.id] = { best: Math.max(o.best || 0, pts), clear: o.clear || pass }; put(this.LKEY, pr); return pass; } };
+    },
+    opening(key, lang) {
+      const g = this.data.op.sets.find(x => x.id === key); if (!g) return null;
+      const steps = g.study.map(x => GSQ(x[0])), notes = {};
+      g.study.forEach((x, i) => { const v = x[1], n = x[2]; let t = `<b>${i + 1}. ${this.tx(i % 2 ? 'p2' : 'p1', lang)} ${GNM(GSQ(x[0]))}</b>`;   // (every move: its number, colour and point)
+        if (i === 2) t += '<br>' + this.tx('op.ev.' + g.ev, lang);
+        if (n) t += '<br>' + (String(n).startsWith('op.n.') ? this.tx(n, lang, { c: this.tx(v > 0 ? 'p1' : 'p2', lang) }) : L(n, lang));
+        notes[String(i)] = t; });
+      const probs = shuffle(g.problems || []).slice(0, 5);
+      return { id: g.id, title: this.name(g, lang), intro: this.tx('op.read', lang, { k: g.kanji, r: g.kana, n: g.name }) + '<br>' + this.tx('op.d.' + g.id, lang), start: { start: null, rule: 'renju', me: 1, last: -1 },
+        steps, notes, probs: probs.map(P => { const sc = (P.sc || []).map(([u, v]) => [GSQ(u), v]), b = sc.slice().sort((a, c) => c[1] - a[1])[0]; return { pos: gPos(P, { rule: 'renju' }), kind: 'best', P: { sc }, ask: this.tx('op.goal', lang), ans: b ? b[0] : -1 }; }),
+        save: (pts, max) => { const pr = J(this.OKEY, {}), o = pr[g.id] || { best: 0, pass: false }, pass = pts >= 75; pr[g.id] = { best: Math.max(o.best || 0, pts), pass: o.pass || pass }; put(this.OKEY, pr); return pass; } };
+    },
+    points(P, u) {   // = gomoku/app.js problemPoints
+      if (P.sc && P.sc.length) {
+        const val = new Map(P.sc), best = Math.max(...P.sc.map(e => e[1])), mine = val.has(u) ? val.get(u) : Math.min(...P.sc.map(e => e[1])) - 200, WINT = 9000;
+        if (best > WINT) return mine > WINT ? 20 : 0;
+        if (mine >= best - 25) return 20;
+        const sv = v => 2 / (1 + Math.exp(-v / 200)) - 1;   // (≈ the game's sOfV)
+        return Math.max(0, Math.round(20 * (1 - (sv(best) - sv(mine)) / 0.4)));
+      }
+      return (P.ok || []).includes(u) ? 20 : 0;
+    },
+    // the warm-up: its position, its marks, whether a move is right
+    rampPos: it => gPos(it, { noForbid: false }), rampBody: (it, lang) => L(it.body, lang),
+    rampMarks: it => (it.marks || []).map(([q, c]) => [GSQ(q), GMK[c] || 'hl']),
+    rampOk: (it, u) => gCells(it.ok || []).includes(u), rampAns: it => GSQ((it.ok || [])[0]), rampLook: it => gCells(it.look || []).map(q => [q, 'ring']),
+  };
+  const DATA = { shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU };
 
   function list(id, kind, lang) { const D = DATA[id]; return D.load().then(() => D.list(kind, lang)); }
   function next(id, kind, lang) { return list(id, kind, lang).then(L2 => { const x = L2.find(i => !i.full && i.st !== 'pass') || L2.find(i => !i.full); return x ? x.key : null; }); }
@@ -376,11 +442,13 @@
     function board(pos, sol, drill) {   // a position on the table (the first one starts the adapter); drill: chess's ★ stage { stars, safe }
       return new Promise(res => {
         onReady = res;
+        const G = pos && typeof pos === 'object' ? pos : null;   // (gomoku: { start, rule, me, last, pick, noForbid })
         if (!sess) {
           sess = ad.start({ el: ctx.el, Table3D: ctx.Table3D, lang: ctx.lang, t: ctx.t, mode: 'pz', level: 20, side: 1, bar: false, hud: () => {}, onTurn: () => {}, onEnd: () => {},
-            pz: { fen: pos, sfen: pos, sol: sol || [], drill: drill || null, counts: id === 'reversi', ready: () => { const f = onReady; onReady = null; if (f) f(); }, moved: (u, i) => onMoved && onMoved(u, i) } });
+            pz: Object.assign({ fen: pos, sfen: pos, sol: sol || [], drill: drill || null, counts: id === 'reversi', ready: () => { const f = onReady; onReady = null; if (f) f(); }, moved: (u, i) => onMoved && onMoved(u, i) }, G || {}) });
           ctx.Table3D.play(true);
-        } else if (drill && pz().drill) pz().drill(Object.assign({ fen: pos }, drill));
+        } else if (G) pz().load(G.start, G.rule, G.me, G.last, { pick: G.pick, noForbid: G.noForbid });
+        else if (drill && pz().drill) pz().drill(Object.assign({ fen: pos }, drill));
         else pz().load(pos, sol || []);
       });
     }
@@ -392,29 +460,38 @@
       phase = 'ramp'; cur.ri = i; dots(); onMoved = null; let rh = 0, ok = false;
       head(cur.title + ' · ' + RU('step', { i: i + 1, n: cur.ramp.length }));
       const goOn = () => (last ? (cur.k = 0, prob()) : ramp(i + 1));
-      if (it.k === 'explain') say(`💡 <b>${L(it.t, ctx.lang)}</b><br>${L(it.b, ctx.lang)}`);
+      if (it.k === 'explain') say(`💡 <b>${L(it.t, ctx.lang)}</b><br>${D.rampBody ? D.rampBody(it, ctx.lang) : L(it.b, ctx.lang)}`);
       else say(`${L(it.g, ctx.lang)}<br><small>${RU('note')}</small>`);
       act(last ? RU('main') : RU('next'), { hint: it.k === 'try', nextOn: it.k === 'explain' });
       $('[data-a=next]').onclick = goOn;
       $('[data-a=hint]').onclick = () => {
         if (it.k !== 'try' || ok || !pz()) return; rh = Math.min(3, rh + 1);
+        if (D.rampMarks) {   // gomoku: marks on points
+          if (rh === 1) { say(L(it.h, ctx.lang)); pz().mark(D.rampMarks(it)); }
+          else if (rh === 2) { say(L(it.h, ctx.lang) + '<br>' + RU('look')); pz().mark(D.rampMarks(it).concat(D.rampLook(it))); }
+          else { const a = D.rampAns(it); say(RU('ans', { m: GNM(a) })); pz().mark(D.rampMarks(it).concat([[a, 'ok']])); }
+          return;
+        }
         if (rh === 1) { say(L(it.h, ctx.lang)); pz().annot && pz().annot(null); }
         else if (rh === 2) { say(L(it.h, ctx.lang) + '<br>' + RU('look')); pz().annot && pz().annot((it.look || []).map(q => ({ at: q, cls: 'ok' }))); }
         else { say(RU('ans', { m: moveName(it.fen, it.ok[0]) || it.ok[0] })); pz().annot && pz().annot([{ arrow: [it.ok[0].slice(0, 2), it.ok[0].slice(2, 4)], cls: '' }, { at: it.ok[0].slice(0, 2), cls: 'ok' }]); }
       };
-      await board(it.fen); if (stopped || phase !== 'ramp' || cur.ri !== i) return;
-      if (pz().annot) pz().annot(it.k === 'explain' ? rmk(it) : null);
+      await board(D.rampPos ? D.rampPos(it) : it.fen); if (stopped || phase !== 'ramp' || cur.ri !== i) return;
+      const marks0 = () => { if (D.rampMarks) pz().mark(D.rampMarks(it)); else if (pz().annot) pz().annot(it.k === 'explain' ? rmk(it) : null); };
+      if (it.k === 'explain' && it.seq && it.seq.length) { for (const q of it.seq) { await sleep(420); if (stopped || phase !== 'ramp' || cur.ri !== i) return; await pz().play(GSQ(q)); } }   // (an example sequence, played out)
+      marks0();
       onMoved = u => {
         if (stopped || phase !== 'ramp' || cur.ri !== i) return;
-        if (it.k === 'explain') { pz().undo(1); if (pz().annot) pz().annot(rmk(it)); pz().wait(); return; }   // (the explanation's board is for looking)
-        if (it.ok.includes(u)) {
-          ok = true; if (pz().annot) pz().annot(null); say(`✓ ${L(it.y, ctx.lang)}`); try { chime(true); } catch (e) {}
+        if (it.k === 'explain') { pz().undo(1); marks0(); pz().wait(); return; }   // (the explanation's board is for looking)
+        if (D.rampOk ? D.rampOk(it, u) : it.ok.includes(u)) {
+          ok = true; if (D.rampMarks) pz().mark(null); else if (pz().annot) pz().annot(null); say(`✓ ${L(it.y, ctx.lang)}`); try { chime(true); } catch (e) {}
           act(last ? RU('main') : RU('next'), {});
           later(() => { if (cur && phase === 'ramp' && cur.ri === i && !more.length) goOn(); }, 2600);   // (right: on to the next step by itself)
           return;
         }
         say(RU('ng')); try { chime(false); } catch (e) {}
-        later(() => { if (cur && phase === 'ramp' && cur.ri === i && !ok) { pz().undo(1); pz().wait(); } }, 1100);
+        if (D.rampMarks) pz().mark([[u, 'ng']]);
+        later(() => { if (cur && phase === 'ramp' && cur.ri === i && !ok) { if (!(it.pick)) pz().undo(1); marks0(); pz().wait(); } }, 1100);
       };
       pz().wait();
     }
@@ -488,6 +565,7 @@
     // (2026-11-12) every problem says first whose turn it is (the side the player plays): 「あなたは●黒番。」
     const SIDE = { ja: ['あなたは<b>●黒番</b>。', 'あなたは<b>○白番</b>。'], en: ['You play <b>● Black</b>. ', 'You play <b>○ White</b>. '], zh: ['你执<b>●黑</b>。', '你执<b>○白</b>。'], 'zh-TW': ['你執<b>●黑</b>。', '你執<b>○白</b>。'], ko: ['당신은 <b>●흑</b> 차례. ', '당신은 <b>○백</b> 차례. '], es: ['Juegas con <b>● negras</b>. ', 'Juegas con <b>○ blancas</b>. '], fr: ['Vous jouez les <b>● noirs</b>. ', 'Vous jouez les <b>○ blancs</b>. '], pt: ['Você joga de <b>● pretas</b>. ', 'Você joga de <b>○ brancas</b>. '], de: ['Du spielst <b>● Schwarz</b>. ', 'Du spielst <b>○ Weiß</b>. '], ru: ['Вы играете <b>● чёрными</b>. ', 'Вы играете <b>○ белыми</b>. '], tr: ['<b>● Siyah</b> oynuyorsun. ', '<b>○ Beyaz</b> oynuyorsun. '], id: ['Kamu main <b>● Hitam</b>. ', 'Kamu main <b>○ Putih</b>. '], hi: ['आप <b>● काले</b> से खेल रहे हैं। ', 'आप <b>○ सफ़ेद</b> से खेल रहे हैं। '], ar: ['أنت تلعب <b>● بالأسود</b>. ', 'أنت تلعب <b>○ بالأبيض</b>. '] };
     function sideLine(p) {
+      if (id === 'gomoku' && p && p.pos && p.pos.me && !p.pos.pick && D.tx) return D.tx('ls.turn', ctx.lang, { c: '<b>' + D.tx(p.pos.me === 1 ? 'p1' : 'p2', ctx.lang) + '</b>' }) + ' ';   // (「白の番です。」)
       if (id !== 'reversi' || !p || !p.pos) return '';
       const s = String(p.pos).split(':')[1]; if (s !== '1' && s !== '2') return '';
       return ((SIDE[ctx.lang] || SIDE.en)[+s - 1]) + (ctx.lang === 'ja' || /^zh/.test(ctx.lang) ? '' : '');
@@ -501,7 +579,9 @@
       onMoved = (u, info) => moved(p, u, info);
       pz().wait(); act(X.next, { hint: true, nextOn: false });
       $('[data-a=next]').onclick = () => { cur.k++; if (cur.k < cur.probs.length) prob(); else finish(); };
-      $('[data-a=hint]').onclick = () => { if (!p.ans || p.done) return; p.hinted = true; pz().mark(p.ans); say(X.hintSay); };
+      $('[data-a=hint]').onclick = () => { if (p.ans == null || p.ans < 0 || p.ans === '' || p.done) return; p.hinted = true;
+        if (p.hint && p.hint.length) { pz().mark(p.hint.map(q => [q, 'ring'])); say(p.hintTx || X.hintSay); return; }   // (gomoku: the lesson's own hint points and words)
+        pz().mark(p.ans); say(p.hintTx || X.hintSay); };
     }
     async function moved(p, u, info) {
       if (stopped || p.done) return;
@@ -516,7 +596,7 @@
         await sleep(120); await pz().play(reply); if (stopped) return;
         pz().wait(); return;
       }
-      scored(p, D.points(p.P, u));
+      scored(p, D.points(p.P, u), undefined, u);
     }
     // (2026-11-12) a partial or wrong answer names the best move in words too (not only the glowing squares)
     const ANSW = { ja: '正解は {m}', en: 'Best move: {m}', zh: '正解：{m}', 'zh-TW': '正解：{m}', ko: '정답: {m}', es: 'Mejor jugada: {m}', fr: 'Meilleur coup : {m}', pt: 'Melhor lance: {m}', de: 'Bester Zug: {m}', ru: 'Лучший ход: {m}', tr: 'En iyi hamle: {m}', id: 'Langkah terbaik: {m}', hi: 'सबसे अच्छी चाल: {m}', ar: 'أفضل نقلة: {m}' };
@@ -539,8 +619,17 @@
       }
       return '';
     }
-    function scored(p, pts, msg) {
+    function scored(p, pts, msg, u) {
       p.done = true; const n = Math.max(0, pts - (p.hinted && pts > 0 ? HINT_PEN : 0)); cur.res[cur.k] = n; dots();
+      if (id === 'gomoku' && typeof u === 'number') {   // (gomoku: the lesson's own words — why it wins / which points were right; the points marked)
+        const okA = (p.P.ok && p.P.ok.length ? p.P.ok : [p.ans]).filter(q => q >= 0);
+        if (pts < 16 || !p.good) pz().mark([...okA.filter(q => q !== u).slice(0, 4).map(q => [q, 'ok']), [u, pts >= 16 ? 'ok' : 'ng']]);
+        say(`${pts >= 16 ? line('solved') || pick(X.good) : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (pts >= 16 ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : '<br>' + fill(ANSW[ctx.lang] || ANSW.en, { m: GNM(p.ans) })));
+        try { chime(pts >= 16); } catch (e) {}
+        act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
+        if (pts >= 16 && cur.k + 1 < cur.probs.length) { const k = cur.k; later(() => { if (cur && cur.k === k && phase === 'prob' && !more.length) { cur.k++; prob(); } }, 2400); }   // (right: on to the next one by itself)
+        return;
+      }
       if (pts >= 16) say(`${line('solved') || pick(X.good)} <b>${fill(X.pts, { n })}</b>${p.why ? '<br>' + p.why : ''}`);
       else { if (p.ans) pz().mark(p.ans); const nm = p.kind !== 'tsume' && moveName(p.pos, p.ans); say(`${msg || (pts > 0 ? X.partial : X.wrong)} <b>${fill(X.pts, { n })}</b>${nm ? '<br>' + fill(ANSW[ctx.lang] || ANSW.en, { m: `<b>${nm}</b>` }) : ''}${p.why ? '<br>' + p.why : ''}`); }
       try { chime(pts >= 16); } catch (e) {}
