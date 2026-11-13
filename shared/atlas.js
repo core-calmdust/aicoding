@@ -442,7 +442,7 @@
   function achMeta() {
     let m = {}; try { m = JSON.parse(localStorage.getItem('atlas-ach-meta') || '{}') || {}; } catch (e) {}
     m.l3 = m.l3 || {}; let ch = false;
-    if (window.Atlas3D) GAMES.forEach(g => { const a = window.Atlas3D[g.id]; if (a && a.levels && m.l3[g.id] !== a.levels) { m.l3[g.id] = a.levels; ch = true; } });
+    if (window.Atlas3D) GAMES.forEach(g => { const a = window.Atlas3D[g.id], L = a && (a.reward || a.levels); if (L && m.l3[g.id] !== L) { m.l3[g.id] = L; ch = true; } });   // (reward: the top level that counts for the awards — reversi's 天上 levels are a benchmark, outside them, 2026-11-14)
     if (window.AtlasArt && AtlasArt.items && m.art !== AtlasArt.items.length) { m.art = AtlasArt.items.length; ch = true; }
     if (ch) try { localStorage.setItem('atlas-ach-meta', JSON.stringify(m)); } catch (e) {}
     m.art = m.art || 0; return m;
