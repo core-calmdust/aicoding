@@ -4,9 +4,13 @@
 #   bash shogi/tools/match/run-gikou.sh
 # Settings: NET (default shogi/nnue.bin.gz of the repo), NODES (our nodes per move, default 1500000 = 四段, the strongest),
 #   DEPTHS (Gikou depth limits, default "5 6 7"), GAMES (per depth, default 40), WORK (default ~/shogi-gikou-work)
+#   FULL (ms per move for Gikou WITHOUT a depth limit, 1 thread, e.g. FULL=5000; default: not played), P (processes for FULL,
+#   default 6: Gikou plays on time here, so leave cores free), then GAMES = games per process (P x GAMES in all).
+#   NODES may also be a time, e.g. NODES=4000ms (our engine, 1 thread, native: about the speed of the browser's wasm).
+#   e.g. the strongest node level vs full Gikou:  DEPTHS="" FULL=5000 NODES=2200000 GAMES=4 bash shogi/tools/match/run-gikou.sh
 set -e
 HERE=$(cd "$(dirname "$0")" && pwd); REPO=$(cd "$HERE/../../.." && pwd)
-WORK=${WORK:-$HOME/shogi-gikou-work}; NODES=${NODES:-1500000}; DEPTHS=${DEPTHS:-"5 6 7"}; GAMES=${GAMES:-40}
+WORK=${WORK:-$HOME/shogi-gikou-work}; NODES=${NODES:-1500000}; DEPTHS=${DEPTHS-"5 6 7"}; GAMES=${GAMES:-40}; FULL=${FULL:-}; P=${P:-6}
 NET=${NET:-$REPO/shogi/nnue.bin.gz}
 mkdir -p "$WORK"; cd "$WORK"
 gunzip -c "$NET" > net.bin 2>/dev/null || cp "$NET" net.bin
@@ -48,6 +52,7 @@ echo "Gikou check (after 7g7f 3c3d): $R"
 if grep -q "illegal\|stopped" check.log || ! grep -q "game 4" check.log; then echo "Gikou plays wrong moves in a real game:"; cat check.log; exit 1; fi
 echo "Gikou OK"
 
+if [ -n "$DEPTHS" ]; then
 echo "== matches: our $NODES nodes per move vs Gikou depth $DEPTHS, $GAMES games each (running in parallel)"
 for D in $DEPTHS; do
   ./usimatch net.bin $NODES "$WORK/gikou/release" "$WORK/gikou" $GAMES --opt DepthLimit=$D --opt Threads=1 --opt USI_Hash=256 --opt OwnBook=false --opt USI_Ponder=false \
@@ -57,3 +62,22 @@ wait
 echo
 for D in $DEPTHS; do printf 'Gikou depth %s: ' $D; tail -1 "match-n$NODES-d$D.log"; done
 echo "(logs: $WORK/match-n$NODES-d*.log)"
+fi
+
+if [ -n "$FULL" ]; then
+  echo "== matches: our $NODES per move vs Gikou without a depth limit, $FULL ms per move, 1 thread: $P processes x $GAMES games"
+  i=1
+  while [ $i -le $P ]; do
+    R=$(( (i - 1) * 7 % 100 ))   # each process starts at another opening
+    tail -n +$(( R + 1 )) "$HERE/openings.txt" > "op-$i.txt"; if [ $R -gt 0 ]; then head -n $R "$HERE/openings.txt" >> "op-$i.txt"; fi
+    ./usimatch net.bin $NODES "$WORK/gikou/release" "$WORK/gikou" $GAMES --opt Threads=1 --opt USI_Hash=256 --opt OwnBook=false --opt USI_Ponder=false \
+      --openings "op-$i.txt" --byoyomi $FULL > "match-n$NODES-full$FULL-$i.log" 2>&1 &
+    i=$((i + 1))
+  done
+  wait
+  for f in match-n$NODES-full$FULL-*.log; do grep "total" "$f" | tail -1; done | sed 's/.*total +\([0-9]*\) -\([0-9]*\) =\([0-9]*\).*/\1 \2 \3/' | awk -v l="$NODES" -v b="$FULL" '
+    { w += $1; lo += $2; d += $3 }
+    END { n = w + lo + d; if (!n) { print "no games finished"; exit 1 } s = (w + d / 2) / n; c = s; if (c < 0.01) c = 0.01; if (c > 0.99) c = 0.99;
+          printf "ours (%s) vs Gikou full (%s ms): +%d -%d =%d  score %.3f  Elo %+.0f%s\n", l, b, w, lo, d, s, -400 * log(1 / c - 1) / log(10), (s < 0.01 || s > 0.99) ? " (or beyond: one-sided)" : "" }'
+  echo "(logs: $WORK/match-n$NODES-full$FULL-*.log)"
+fi
