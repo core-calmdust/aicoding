@@ -2988,15 +2988,16 @@ const PRO_DEF = lv => { const L = LEVELS_UI[lv] || LEVELS_UI[15];
 var PRO = window.ProSet ? ProSet.init({ game: 'reversi', lang: () => LANG, level: () => draft.level || settings.level, show: () => draft.mode === 'ai' || draft.mode === 'watch', stone: true,
   store: { get: () => settings.pro, set: v => { settings.pro = v; } }, defaults: PRO_DEF,
   params: [{ key: 'limit', kinds: { time: [0.1, 60], depth: [1, 30], nodes: [10000, 1e9] } }, { key: 'threads' }, { key: 'ponder' },
-    { key: 'exact', type: 'int', group: 'read', min: 0, max: 28, label: PRO_T.exact, help: PRO_T.exactH, unit: PRO_T.u },
-    { key: 'wld', type: 'int', group: 'read', min: 0, max: 30, label: PRO_T.wld, help: PRO_T.wldH, unit: PRO_T.u },
+    // (2026-11-14) exact up to 34 / wld up to 36: the user's PRO test (depth 15 + exact 28) beat Egaroucid with only 1–2 slow moves on the Mac
+    { key: 'exact', type: 'int', group: 'read', min: 0, max: 34, label: PRO_T.exact, help: PRO_T.exactH, unit: PRO_T.u },
+    { key: 'wld', type: 'int', group: 'read', min: 0, max: 36, label: PRO_T.wld, help: PRO_T.wldH, unit: PRO_T.u },
     { key: 'book', label: Object.assign({}, ProSet.T.book, PRO_T.book) }, { key: 'var' }] }) : null;
 // AI同士: the white AI has a PRO of its own (2026-11-13), beside its level (#fLevel2)
 var PRO2 = window.ProSet ? ProSet.init({ game: 'reversi-w', field: '#fLevel2', lang: () => LANG, level: () => draft.level2 || settings.level2, show: () => draft.mode === 'watch', stone: true,
   store: { get: () => settings.pro2, set: v => { settings.pro2 = v; } }, defaults: PRO_DEF,
   params: [{ key: 'limit', kinds: { time: [0.1, 60], depth: [1, 30], nodes: [10000, 1e9] } }, { key: 'threads' }, { key: 'ponder' },
-    { key: 'exact', type: 'int', group: 'read', min: 0, max: 28, label: PRO_T.exact, help: PRO_T.exactH, unit: PRO_T.u },
-    { key: 'wld', type: 'int', group: 'read', min: 0, max: 30, label: PRO_T.wld, help: PRO_T.wldH, unit: PRO_T.u },
+    { key: 'exact', type: 'int', group: 'read', min: 0, max: 34, label: PRO_T.exact, help: PRO_T.exactH, unit: PRO_T.u },
+    { key: 'wld', type: 'int', group: 'read', min: 0, max: 36, label: PRO_T.wld, help: PRO_T.wldH, unit: PRO_T.u },
     { key: 'book', label: Object.assign({}, ProSet.T.book, PRO_T.book) }, { key: 'var' }] }) : null;
 // the PRO settings of an AI side: { opts (engine.js think: cfg, book / noBook, variety), threads } or null (the level as it is)
 function proCfg(lv, color) {
