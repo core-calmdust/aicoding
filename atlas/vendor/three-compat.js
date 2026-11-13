@@ -15,7 +15,8 @@
   Object.defineProperty(T.Texture.prototype, 'encoding', { configurable: true, get() { return enc(this.colorSpace); }, set(v) { this.colorSpace = cs(v); } });
   Object.defineProperty(T.WebGLRenderer.prototype, 'outputEncoding', { configurable: true, get() { return enc(this.outputColorSpace); }, set(v) { this.outputColorSpace = cs(v); } });
   // copyFramebufferToTexture(position, texture) became (texture, position) in r165 (an own method of each renderer: wrapped per instance)
-  X.WebGLRenderer = class extends T.WebGLRenderer { constructor(...a) { super(...a); const f = this.copyFramebufferToTexture.bind(this);
+  X.WebGLRenderer = class extends T.WebGLRenderer { constructor(...a) { super(...a); (window.__three186R = window.__three186R || []).push(this); { const sm = this.shadowMap; let ty = sm.type; Object.defineProperty(sm, 'type', { configurable: true, get: () => ty, set: v => { ty = v === T.PCFSoftShadowMap ? T.PCFShadowMap : v; } }); sm.type = ty; }   // (PCFSoftShadowMap is gone in r186: asked for it, the materials were built for it and sampled the depth-compare shadow map wrongly — no shadows; PCF instead, before anything compiles)
+    const f = this.copyFramebufferToTexture.bind(this);
     this.copyFramebufferToTexture = (p, t, l) => p && p.isVector2 && t && t.isTexture ? f(t, p, l) : f(p, t, l); } };
   // a texture whose image (a canvas) changed size: r128 re-allocated it; r186 keeps immutable storage (texStorage2D) and the upload
   // fails ("offset overflows texture dimensions" — a black texture). Dispose it first so it is made again at the new size.
