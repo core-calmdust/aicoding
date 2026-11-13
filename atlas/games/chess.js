@@ -196,8 +196,12 @@
     }
 
     /* ---------- position ---------- */
-    function refresh() { const r = E.replay(startFen, moves); pos = r.pos; hashes = r.hashes; }
+    function refresh() {
+      if (DR) { pos = drillPos(startFen); for (const m of moves) { pos.make(m); pos.side = 0; pos.ep = -1; } hashes = [pos.h1]; return; }   // (a drill: White moves on and on)
+      const r = E.replay(startFen, moves); pos = r.pos; hashes = r.hashes;
+    }
     function status() {
+      if (DR) return { over: false, legal: drillLegal(pos, DR.safe) };
       const leg = pos.legal();
       if (!leg.length) return pos.inCheck() ? { over: true, winner: pos.side ^ 1, why: 'mate' } : { over: true, draw: true, why: 'stale' };
       if (pos.half >= 100) return { over: true, draw: true, why: 'fifty' };
@@ -215,7 +219,8 @@
     function showMarks() {
       clear(hl); hintMv = 0; hintJ++;
       if (moves.length) { const m = moves[moves.length - 1]; mark(hl, GEO.tile, MAT.last, m & 127); mark(hl, GEO.tile, MAT.last, (m >> 7) & 127); }
-      if (pos.inCheck()) { const k = mark(hl, GEO.tile, MAT.check, pos.ksq[pos.side], .01); anim(420, e => { const s = 1 + Math.sin(e * Math.PI) * .12; k.scale.set(s, 1, s); }); }
+      if (!DR && pos.inCheck()) { const k = mark(hl, GEO.tile, MAT.check, pos.ksq[pos.side], .01); anim(420, e => { const s = 1 + Math.sin(e * Math.PI) * .12; k.scale.set(s, 1, s); }); }
+      if (DR) drillMarks();
     }
 
     /* ---------- selection ---------- */
@@ -340,7 +345,7 @@
         if (cands.length) { commit(cands[0]); return; }
       }
       const p = pos.b[q];
-      if (q === sel) { deselect(); return; }
+      if (q === sel) { if (!DR) deselect(); return; }   // (a drill's piece is picked up for you: a tap on it keeps it)
       if (p && ((p & 8) ? 1 : 0) === mover() && legal.some(m => (m & 127) === q)) { select(q); return; }
       deselect();
     }
@@ -355,7 +360,7 @@
       later(() => { busy = false; showMarks(); next(); }, wait + 200);
     }
     hud('');
-    loadEngine().then(e => { if (stopped) return; E = e; if (!pvp) worker = new Worker(BASE + 'engine.js' + VER); if (PZ) pzLoad(PZ.fen, PZ.sol, PZ.toMove, PZ.me); else begin(null); }).catch(() => hud('⚠'));
+    loadEngine().then(e => { if (stopped) return; E = e; if (!pvp) worker = new Worker(BASE + 'engine.js' + VER); if (PZ && PZ.drill && !DR) DR = { stars: (PZ.drill.stars || []).slice(), safe: !!PZ.drill.safe, sm: {} }; if (PZ) pzLoad(PZ.fen, PZ.sol, PZ.toMove, PZ.me, !!DR); else begin(null); }).catch(() => hud('⚠'));
 
     // test hooks (positions on screen, state, a set-up position)
     const dbg = {
@@ -388,12 +393,14 @@
     /* ---------- puzzle mode (ctx.pz) ---------- */
     let pzOn = false;
     const uciOf = m => E.sqName(m & 127) + E.sqName((m >> 7) & 127) + (((m >> 14) & 7) ? ' pnbrqk'[(m >> 14) & 7] : '');
-    function pzWait() { const st = status(); legal = st.legal || []; busy = false; pzOn = true; showMarks(); if (!imgs && legal.some(m => (m >> 14) & 7)) loadImgs(); }
+    function pzWait() { const st = status(); legal = st.legal || []; busy = false; pzOn = true; showMarks(); if (!imgs && legal.some(m => (m >> 14) & 7)) loadImgs();
+      if (DR) { const mine = Object.keys(pcs).map(Number).filter(q => !(pos.b[q] & 8)); if (mine.length === 1 && legal.some(m => (m & 127) === mine[0])) select(mine[0]); } }   // (a drill with one piece: it is picked up at once, its squares shown)
     function pzAfter() {
       pzOn = false; const st = status(); legal = [];
       PZ.moved(uciOf(moves[moves.length - 1]), { mate: st.over && st.why === 'mate', over: st.over, why: st.why, check: pos.inCheck(), n: moves.length });
     }
-    function pzLoad(fen, sol, toMove, me) {   // a new puzzle: the player's side (me; else the side to move) is put at the bottom, the pieces drop in
+    function pzLoad(fen, sol, toMove, me, drill) {   // a new puzzle: the player's side (me; else the side to move) is put at the bottom, the pieces drop in
+      if (!drill && DR) { DR = null; clear(sg); clear(dg); }
       if (me === 0 || me === 1) PZ.me = me; else delete PZ.me;
       if (!E) { PZ.fen = fen; return; }   // (the engine is still loading: it starts from PZ.fen)
       timers.forEach(clearTimeout); timers.length = 0; closePromo(); clear(mv); clear(hl);
@@ -402,7 +409,62 @@
       refresh(); const wait = setup();
       later(() => { showMarks(); pzWait(); if (PZ.ready) PZ.ready(); }, wait + 200);
     }
+    /* ---------- drills (the beginner course: one side's pieces only, the black ones stand still, ★ to collect) ----------
+       = chess/app.js drillPos / drillLegal: no kings needed; in a 'safe' stage the squares a black piece attacks are barred (red stripes) */
+    let DR = null;   // { stars: ['a6', …], safe, sm: { sq: mesh } }
+    const DSENT = 0x08;
+    function drillPos(fen) {
+      const p = E.Pos.fromFEN(fen);
+      for (const c of [0, 1]) if (p.b[p.ksq[c]] !== (6 | (c ? 8 : 0))) p.ksq[c] = DSENT;
+      const at = p.attacked.bind(p); p.attacked = (q, by) => q === DSENT ? false : at(q, by);
+      return p;
+    }
+    function drillDanger(p, q) { const f = p.b[q]; p.b[q] = 0; const a = p.attacked(q, 1); p.b[q] = f; return a; }
+    function drillLegal(p, safe) {
+      const buf = new Int32Array(256), n = p.gen(buf, false), out = [];
+      for (let i = 0; i < n; i++) if (p.make(buf[i])) { p.unmake(buf[i]); out.push(buf[i]); }
+      if (!safe) return out;
+      return out.filter(m => { const f = m & 127, pc = p.b[f]; p.b[f] = 0; const a = drillDanger(p, (m >> 7) & 127); p.b[f] = pc; return !a; });
+    }
+    const sqOf = n => (n.charCodeAt(0) - 97) + ((+n[1] - 1) << 4);
+    const drillGot = () => new Set(moves.map(m => E.sqName((m >> 7) & 127)));
+    const drillLeft = () => DR ? DR.stars.filter(q => !drillGot().has(q)) : [];
+    const dg = new TH.Group(), sg = new TH.Group(); board.add(dg, sg);
+    let STAR = null, STRIPE = null;
+    function starGeo() {
+      if (STAR) return STAR;
+      const sh = new TH.Shape(), R1 = .3, R2 = .13;
+      for (let i = 0; i < 10; i++) { const a = Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? R2 : R1, x = Math.cos(a) * r, y = Math.sin(a) * r; if (i) sh.lineTo(x, y); else sh.moveTo(x, y); }
+      const g = new TH.ExtrudeGeometry(sh, { depth: .07, bevelEnabled: true, bevelThickness: .025, bevelSize: .02, bevelSegments: 2 }); g.center();
+      const m = new TH.MeshStandardMaterial({ color: 0xffc42e, emissive: 0xffa300, emissiveIntensity: .45, metalness: .35, roughness: .3 });
+      return (STAR = { g, m });
+    }
+    function stripeMat() {
+      if (STRIPE) return STRIPE;
+      const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d');
+      g.fillStyle = 'rgba(230,40,40,.28)'; g.fillRect(0, 0, 64, 64); g.strokeStyle = 'rgba(220,20,20,.75)'; g.lineWidth = 7;
+      for (let k = -64; k < 128; k += 16) { g.beginPath(); g.moveTo(k, 0); g.lineTo(k + 64, 64); g.stroke(); }
+      const tx = new TH.CanvasTexture(c); tx.encoding = TH.sRGBEncoding;
+      return (STRIPE = new TH.MeshBasicMaterial({ map: tx, transparent: true, depthWrite: false, toneMapped: false }));
+    }
+    function drillStars() {   // the ★ still to collect, floating and turning a little over their squares
+      if (!DR) return; const S = starGeo(), left = new Set(drillLeft());
+      Object.keys(DR.sm).forEach(q => { if (left.has(q)) return; const o = DR.sm[q]; delete DR.sm[q]; tok(1.6);
+        anim(360, k => { o.scale.setScalar(1 + k * .8); o.position.y = Y + .45 + k * .5; o.material.opacity = 1 - k; }, () => sg.remove(o)); });
+      left.forEach(q => { if (DR.sm[q]) return; const o = new TH.Mesh(S.g, S.m.clone()); o.material.transparent = true; const [x, z] = xz(sqOf(q)); o.position.set(x, Y + .45, z); o.rotation.x = -.35; o.userData.ph = Math.random() * 6; sg.add(o); DR.sm[q] = o; });
+      if (!DR.spin) { DR.spin = true; const d = DR; (function s() { if (stopped || DR !== d) return; const t = performance.now() / 1000; sg.children.forEach(o => { o.rotation.y = Math.sin(t * 1.4 + o.userData.ph) * .5; }); if (T3.kick) T3.kick(60); requestAnimationFrame(s); })(); }
+    }
+    function drillMarks() {   // a 'safe' stage: the barred squares (attacked by Black) in red stripes
+      clear(dg); drillStars(); if (!DR || !DR.safe) return; const M = stripeMat();
+      for (let q = 0; q < 120; q++) { if (q & 0x88) continue; const pc = pos.b[q]; if ((!pc || !(pc & 8)) && drillDanger(pos, q)) { const t = new TH.Mesh(GEO.tile, M); const [x, z] = xz(q); t.position.set(x, Y + .007, z); t.renderOrder = 2; dg.add(t); } }
+    }
+    function drillLoad(o) {
+      clear(sg); DR = { stars: (o.stars || []).slice(), safe: !!o.safe, sm: {} };
+      pzLoad(o.fen.split(' ').length > 1 ? o.fen : o.fen + ' w - - 0 1', [], undefined, 0, true);
+    }
     const pz = {
+      drill: drillLoad,   // a drill stage: { fen, stars, safe } — the player moves on until every ★ is taken (pz.left() → the ★ still to take)
+      left: () => drillLeft().length,
       play: u => new Promise(res => { let m = 0; try { m = pos.fromUci(u); } catch (e) {} if (!m) return res(false); busy = true; pzOn = false; play(m, () => { if (!stopped) res(true); }); }),
       wait: pzWait,
       undo(n = 1) { timers.forEach(clearTimeout); timers.length = 0; deselect(); moves.splice(Math.max(0, moves.length - n)); refresh(); rebuild(); showMarks(); },
