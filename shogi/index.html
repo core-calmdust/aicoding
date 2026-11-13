@@ -1645,6 +1645,8 @@ html[lang=ar] .pf-input{direction:rtl}
   #lessonIntroView.li-open .op-lead{margin-bottom:18px}
   #lessonIntroView.li-open .op-choice{margin-bottom:28px}
 }
+html.ng-disp-gear #newOverlay #fOpts{display:none!important}   /* 表示 options: in the gear (2026-11-13) */
+html.atlas-skin #newOverlay #lvNote{display:none!important}   /* (the long note on the levels: the full version shows the level's own line only) */
 </style>
 <style>
 /* phones held upright (narrow touch screens): the board is sized from the width only, the same side gutter (10px) in every game —
@@ -1764,14 +1766,14 @@ html[lang=ar] .pf-input{direction:rtl}
 
 <!-- new game -->
 <div class="overlay" id="newOverlay">
-  <div class="modal">
+  <div class="modal" data-ngl-order="fLevel,lvNote,fLevel2,fHandi,fColor,fClock">
     <h2 data-i18n="ng.title"></h2>
     <div class="field"><label data-i18n="ng.mode"></label>
       <div class="seg" id="segMode"><button data-v="ai" data-i18n="ng.ai"></button><button data-v="rated" data-i18n="ng.rated"></button><button data-v="pvp" data-i18n="ng.pvp"></button><button data-v="watch" data-i18n="ng.watch"></button><button data-v="lesson" data-i18n="ng.lesson"></button><button data-v="tsume" data-i18n="ng.tsume"></button><button data-v="edit" data-i18n="ng.edit"></button><button data-v="online" data-i18n="ng.online"></button></div>
     </div>
     <div class="ng-cols"><div class="ng-col">
     <div class="field ng-info hidden" id="fOnlineInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="ol.desc"></p></div>
-    <div class="field ng-info hidden" id="fRatedInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="rt.desc"></p><div id="rtStats"></div></div>
+    <div class="field ng-info hidden" id="fRatedInfo"><p class="rt-desc" style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="rt.desc"></p><div id="rtStats"></div></div>
     <div class="field ng-info hidden" id="fLessonInfo"><p style="font-size:13px;color:var(--muted);line-height:1.7" data-i18n="ls.desc"></p></div>
     <div class="field" id="fHandi"><label data-i18n="ng.handicap"></label><div class="seg" id="segHandi"></div><div class="note hidden" id="handiNote" data-i18n="ng.handiNote"></div></div>
     <div class="field" id="fColor"><label data-i18n="ng.color"></label>
@@ -1921,7 +1923,7 @@ html[lang=ar] .pf-input{direction:rtl}
 <div class="mt-strip" id="mtStrip" role="button"></div>
 <nav class="mtabs" id="mtabs"><button data-t="game" class="sel" data-i18n="ol.tabGame"></button><button data-t="online"><span data-i18n="ol.title"></span> <em id="mtCount"></em> <em class="mt-chat" id="mtChat"></em></button></nav>
 
-<script src="i18n.js?v=20261112ol2"></script>
+<script src="i18n.js?v=20261113rt"></script>
 <script src="rules-i18n.js?v=20261107l14"></script>
 <script src="../shared/placement.js?v=1l14"></script>
 <script src="../shared/export.js?v=9l14"></script>
@@ -3563,6 +3565,25 @@ function proCfg(lv) {
   else if (e.eval === 'hand') o.linear = 1;
   return { opts: o, book: !!e.book, resign: !!e.resign, threads: e.threads || 1, ponder: !!e.ponder };
 }
+// 表示 options in the options (gear), in the game's own box (2026-11-13, as reversi): they work at once; the dialog keeps its
+// checkboxes (hidden), which the game still reads when a game starts
+(function dispGear() {
+  if (!window.HeaderBar || !HeaderBar.addOption) return;
+  document.documentElement.classList.add('ng-disp-gear');
+  const S = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"';
+  const IC = { legal: `<svg ${S}><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="12" cy="12" r="2.6"/></svg>`,
+    last: `<svg ${S}><circle cx="12" cy="12" r="7"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>`,
+    eval: `<svg ${S}><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>`,
+    coach: `<svg ${S}><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M9 12h.01M12 12h.01M15 12h.01"/></svg>` };
+  const GL = { ja: '将棋', en: 'Shogi', zh: '将棋', 'zh-TW': '將棋', ko: '쇼기', es: 'Shogi', fr: 'Shogi', pt: 'Shogi', de: 'Shogi', ru: 'Сёги', tr: 'Shogi', id: 'Shogi', hi: 'शोगी', ar: 'شوغي' };
+  const rtOff = k => (k === 'eval' || k === 'coach') && typeof rtLive === 'function' && rtLive();
+  [['optLegal', 'legal'], ['optLast', 'last'], ['optEval', 'eval'], ['optCoach', 'coach']].forEach(([id, k]) => {
+    const cb = $('#' + id); if (!cb) return;
+    HeaderBar.addOption({ id: 'disp-' + k, icon: IC[k], type: 'toggle', group: true, groupLabel: GL, label: () => (cb.closest('label') || cb).textContent.trim(),
+      disabled: () => rtOff(k), get: () => !!settings[k],
+      set: v => { settings[k] = !!v; cb.checked = !!v; try { renderBoard(); renderInfo(); } catch (e) {} save(); } });
+  });
+})();
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
 $('#btnStart').onclick = () => {
   hideOverlay('#newOverlay');
@@ -6622,7 +6643,7 @@ if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStar
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=89l42'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=90l42'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
