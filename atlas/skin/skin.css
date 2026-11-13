@@ -853,3 +853,9 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-or
 /* (2026-11-13, common) the 検討 box's 検討する / 元に戻す buttons: the red action button, as shogi's box (reversi / go / hex rbox.js) */
 html.atlas-skin body:not(#_) #rbox .rb-acts :is(.rb-study,.rb-restore):not(#_){background:#ff5d5d!important;color:#fff!important;box-shadow:0 3px 0 #d93c3c!important;border:0!important;font-weight:900;border-radius:10px}
 html.atlas-skin body:not(#_) #rbox .rb-acts :is(.rb-study,.rb-restore):hover{filter:brightness(1.05)}
+/* (2026-11-13) 局面編集 in the full version: the coach and the record step aside (they come back when editing ends); the piece menu and the file buttons in the portal's colours */
+html.atlas-skin body.in-edit:not(#_) :is(#coachCard, .kifu-card, #reviewCard, #rvBox){display:none!important}
+html.atlas-skin body:not(#_) .ed-pop{background:#fffaf0!important;border:2px solid #ead9b6!important;box-shadow:0 10px 26px rgba(80,50,10,.25)!important}
+html.atlas-skin body:not(#_) .ed-pop button,html.atlas-skin body:not(#_) .ed-file button{background:#f3ead6!important;border:2px solid #eadcbc!important;color:#4a3a22!important;border-radius:10px!important}
+html.atlas-skin body:not(#_) .ed-pop button:hover,html.atlas-skin body:not(#_) .ed-file button:hover{border-color:#e3c48a!important}
+html.atlas-skin body:not(#_) .ed-help{color:#8a7552!important;font-size:13.5px!important}
