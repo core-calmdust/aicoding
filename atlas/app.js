@@ -1192,7 +1192,7 @@
     return `<div class="opts mxp" id="bvRt" hidden><div class="mxrow"><label>${t('bv.opp')}<select id="bvRtOpp"><option value="ai" ${opp === 'ai' ? 'selected' : ''}>AI</option><option value="online" ${opp === 'online' ? 'selected' : ''}>${esc(t('bv.online'))}</option></select></label><button type="button" class="mxb mxic" id="bvRtRec" aria-label="${esc(t('bv.rtRec'))}" title="${esc(t('bv.rtRec'))}"><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg></i></button></div>`
       + `<label id="bvRtTcL">${t('tc.h')}<button type="button" class="lvpick" id="bvRtTc"></button></label><div class="mxnote" id="bvRtNote" hidden>${esc(t('bv.rtNoTc'))}</div></div>`
       + `<div class="opts mxp" id="bvPz" hidden>${daily.map(([k, ic, lb]) => `<button type="button" class="mxb${pzDone(g.id, k) ? ' pzok' : ''}" data-pz="${k}"><i>${ic}</i>${esc(lb)}</button>`).join('')}<button type="button" class="mxb" data-pz="list"><i>▦</i>${esc(t('bv.pzList'))}</button></div>`
-      + `<div class="opts mxp" id="bvLs" hidden><label><select id="bvLsK"><option value="list" ${lsk === 'list' ? 'selected' : ''}>${esc(t('bv.ls'))}</option><option value="open" ${lsk === 'open' ? 'selected' : ''}>${esc(t('bv.lsOp'))}</option></select></label><button type="button" class="mxb" id="bvLsList"><i>▦</i>${esc(t('bv.list'))}</button></div>`;
+      + `<div class="opts mxp" id="bvLs" hidden><label><select id="bvLsK"><option value="list" ${lsk === 'list' ? 'selected' : ''}>${esc(t('bv.ls'))}</option><option value="open" ${lsk === 'open' ? 'selected' : ''}>${esc(t('bv.lsOp'))}</option></select></label><button type="button" class="mxb mxwide" id="bvLsList"><i>▦</i>${esc(t('bv.pzList'))}</button></div>`;
   }
   const mx2d = (g, m) => '../' + g.href + (m === 'puzzle' ? '?mode=puzzle&sub=cont' : m === 'lesson' ? '?mode=lesson&sub=' + ($('bvLsK') ? $('bvLsK').value : 'list') : '');
   function mxLayout(m) {
@@ -1637,6 +1637,32 @@
     sh.addEventListener('click', e => { if (e.target === sh || e.target.closest('.bk-x')) close(); });
     return { sh, close, body: sh.querySelector('#lessonList'), back: sh.querySelector('.bk-bk'), title: sh.querySelector('.bk-t') };
   }
+  // レッスン・定跡の一覧 (2026-11-13, every game): the same header as 詰将棋 / 問題一覧 — the guide, the title, the progress over all the
+  // chapters and 続きから (the first card not yet passed), with the chapter tabs along its bottom. Kept up as the list re-renders.
+  function lxHead(S0, g, title) {
+    const GD = (window.AtlasPuzzles && AtlasPuzzles.G || {})[g.id] || {}, nm = (GD.name && (GD.name[lang] || GD.name.en)) || '';
+    const CONT = { ja: '続きから', en: 'Continue', zh: '继续', 'zh-TW': '繼續', ko: '이어서', es: 'Continuar', fr: 'Continuer', pt: 'Continuar', de: 'Weiter', ru: 'Продолжить', tr: 'Devam', id: 'Lanjut', hi: 'जारी रखें', ar: 'متابعة' };
+    let busy = false;
+    const apply = () => {
+      if (busy) return; const body = S0.body, tabs = body.querySelector('.lx-tabs');
+      if (body.querySelector('.pzh-box, .pzs-head, .pbh')) return;   // (already done / another page of the sheet)
+      busy = true;
+      let n = 0, m = 0;
+      (tabs ? [...tabs.children] : []).forEach(b => { const x = (b.textContent || '').match(/(\d+)\s*\/\s*(\d+)/); if (x) { n += +x[1]; m += +x[2]; } });
+      const cards = [...body.querySelectorAll('.lx-grid .lx-card, .lx-grid .lesson-item')];
+      if (!m) { m = cards.length; n = cards.filter(c => c.classList.contains('done')).length; }
+      const nx = cards.find(c => !c.classList.contains('done') && !c.disabled), tt = nx && nx.querySelector('.lx-t'), no = nx && nx.querySelector('.lx-no');
+      const box = document.createElement('div'); box.className = 'pzh-box';
+      box.innerHTML = `<div class="pzh-hero">${GD.guide ? `<img class="pzh-ch" src="${GD.guide}" alt="">` : ''}<div class="pzh-tx"><small>${esc(nm)}</small><b>${esc(title)}</b><span class="pzh-bar"><i style="width:${m ? Math.round(n * 100 / m) : 0}%"></i></span><span class="pzh-n">${n} / ${m}</span></div>${nx ? `<button type="button" class="pzh-go"><b>${esc(CONT[lang] || CONT.en)} ▶${no ? ' ' + esc(no.textContent.trim()) : ''}</b><small>${esc(tt ? ((tt.firstChild && tt.firstChild.textContent) || tt.textContent).trim() : '')}</small></button>` : ''}</div>`;
+      if (nx) box.querySelector('.pzh-go').onclick = e => { e.stopPropagation(); nx.click(); };
+      const first = body.querySelector('.lx') || body; first.prepend(box);
+      if (tabs) box.appendChild(tabs);
+      body.querySelectorAll('.ls-head, .lx-head').forEach(h => h.remove());
+      busy = false;
+    };
+    new MutationObserver(() => apply()).observe(S0.body, { childList: true, subtree: true });
+    apply();
+  }
   function tsumeBook(g) {
     const S0 = bookSheet(lsx('ttl'));
     Promise.all([needBooks(), AtlasPuzzles.book('shogi')]).then(([, B]) => {
@@ -1687,7 +1713,7 @@
     }).catch(() => { S0.body.textContent = '⚠'; });
   }
   function lessonBook(g) {
-    const S0 = bookSheet(lsx('lsT'));
+    const S0 = bookSheet(lsx('lsT')); lxHead(S0, g, lsx('lsT'));
     Promise.all([needBooks(), AtlasLessons.data('shogi')]).then(([, D]) => {
       if (!window.ShogiLX) return S0.body.textContent = '⚠';
       let pr = {}; try { pr = JSON.parse(localStorage.getItem('shogi-kaya-lessons-v1') || '{}') || {}; } catch (e) {}
@@ -1750,7 +1776,7 @@
   function lessonSheet(g, kind) {
     if (g.id === 'shogi' && kind !== 'open' && window.AtlasLessons && AtlasLessons.data) return lessonBook(g);
     if (!window.AtlasLessons) return startPlay('full', 'lesson', kind);
-    const S0 = bookSheet(t(kind === 'open' ? 'bv.lsOp' : 'bv.ls')), TK = 'atlas-lxtab-' + g.id + '-' + (kind === 'open' ? 'o' : 'l');
+    const S0 = bookSheet(t(kind === 'open' ? 'bv.lsOp' : 'bv.ls')); lxHead(S0, g, t(kind === 'open' ? 'bv.lsOp' : 'bv.ls')); const TK = 'atlas-lxtab-' + g.id + '-' + (kind === 'open' ? 'o' : 'l');
     AtlasLessons.list(g.id, kind === 'open' ? 'open' : 'lesson', lang).then(items => {
       const cats = []; items.forEach((x, i) => { x.i = i; const k = x.cat || ''; let c = cats.find(y => y.k === k); if (!c) cats.push(c = { k, name: x.catName || '', items: [] }); c.items.push(x); });
       let cur = null; try { cur = localStorage.getItem(TK); } catch (e) {}

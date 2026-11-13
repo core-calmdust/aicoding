@@ -405,6 +405,7 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
 .endc.on{display:flex;animation:pop .4s cubic-bezier(.3,1.5,.5,1)}
 .endc h3{margin:0;font-family:var(--round);font-size:min(30px,7.2vw);white-space:nowrap}.endc{max-width:calc(100vw - 24px);box-sizing:border-box}
 .endc .sc{font-family:var(--round);font-weight:700;font-size:20px;color:var(--ink2)}
+@media (min-width:900px) and (pointer:fine){.endc{gap:16px;padding:36px 48px;min-width:460px;border-radius:34px}.endc h3{font-size:42px}.endc .sc{font-size:28px}.endc .gnote{font-size:17px}.endc .gbest{font-size:19px;font-weight:800}.endc .btn{min-width:170px!important;height:60px!important;font-size:20px!important;padding:0 26px!important}}   /* (PC: the end card larger, 2026-11-13) */
 /* table play: the action bar (待った · 投了 · ヒント) with the clocks at its ends — bottom centre, the board is framed above it */
 .tbar{position:absolute;z-index:3;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;align-items:center;gap:6px;padding:5px;border-radius:99px;background:rgba(255,253,247,.95);border:2px solid #fff;box-shadow:0 10px 24px -12px rgba(80,40,0,.5);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .3s}
 .bv.playing.tbon .tbar{opacity:1;visibility:visible;pointer-events:auto}
@@ -1865,7 +1866,9 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 .bvi #bvRt{flex-direction:column;align-items:stretch;flex-wrap:nowrap}.bvi #bvRt > label{flex:none!important;width:100%}.bvi #bvRt > label[hidden]{display:none}
 .bvi #bvRt .mxrow{display:flex;gap:10px;align-items:center}.bvi #bvRt .mxrow > label{flex:1 1 auto!important;min-width:0;display:flex;align-items:center;gap:8px;white-space:nowrap}.bvi #bvRt .mxrow .mxb{flex:none}
 .bvi #bvRt .sidetg,.bvi #bvLs .sidetg{flex:1}.bvi #bvRt .sidetg button,.bvi #bvLs .sidetg button{flex:1}
-.bvi #bvLs > label{flex:1 1 100%!important}
+.bvi #bvLs > label{flex:1 1 100%!important}.mxb.pzok{overflow:visible}.mxb.pzok::after{position:absolute;top:-8px;right:-8px;margin:0!important;box-shadow:0 0 0 2px #fff}.bvi .mxb{min-width:0}.bvi .mxb i{flex:none}   /* (the ✓ on the corner: it no longer pushes the label out — phones, 2026-11-13) */
+@media (max-width:819px){.bvi #bvOpts:has(#bvPegBest) select,.bvi #bvOpts:has(#bvPegBest) .lvpick{height:56px!important;min-height:56px!important;box-sizing:border-box}.bvi #bvPegBest{min-height:56px;padding:6px 16px}.bvi #bvPegBest b{font-size:20px}}   /* (phones: the board pulldown and the best box the same height) */
+.bvi #bvLs .mxwide{flex:1 1 100%;width:100%;height:auto;min-height:48px}   /* (問題一覧 as big as the puzzles' one, 2026-11-13) */
 .bvi .mxnote{font-size:12.5px;font-weight:700;color:var(--ink2);padding:2px}
 .bvi .mxb{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:0;height:48px;padding:0 12px;border-radius:14px;border:2px solid var(--line);background:#fff;box-shadow:0 3px 0 var(--line);font:900 14.5px var(--font);color:var(--ink);cursor:pointer;white-space:nowrap}
 .bvi .mxb.pzok,.mxb.pzok{position:relative;background:#eef8f1!important;border-color:#9fd8b8!important;box-shadow:0 3px 0 #9fd8b8!important;color:#2e7d55}.mxb.pzok::after{content:'✓';flex:none;display:inline-grid;place-items:center;width:20px;height:20px;margin-left:2px;border-radius:50%;background:#2f9a6a;color:#fff;font-size:12px;font-weight:900}   /* (today's puzzle solved, 2026-11-13) */
@@ -2208,7 +2211,7 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 <canvas id="confetti"></canvas>
 
 <script>/* three.js r186 + the r128 compatibility layer (2026-11-13: the default; ?three=128 loads the old version) */
-if (!/[?&]three=128\b/.test(location.search)) document.write('<script src="vendor/three-r186.min.js?v=1"><\/script><script src="vendor/three-compat.js?v=13"><\/script>');
+if (!/[?&]three=128\b/.test(location.search)) document.write('<script src="vendor/three-r186.min.js?v=1"><\/script><script src="vendor/three-compat.js?v=14"><\/script>');
 else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');</script>
 <script src="texgen.js?v=2"></script>
 <script src="npc/roster.js?v=7"></script>
@@ -2234,7 +2237,7 @@ else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.j
 <script>/* the places other than the chabudai (tables3d.js, 440 KB): at once when one is chosen, else in idle time after the page has
    loaded (2026-11-10); 'atlas-places' tells the page they are there */
 (function () {
-  var SRC = 'tables3d.js?v=112', k = 0, p = null;
+  var SRC = 'tables3d.js?v=113', k = 0, p = null;
   try { k = +(localStorage.getItem('atlas-table') || 0) || 0; var m = /[?&]tbl=(\d+)/.exec(location.search); if (m) k = +m[1]; } catch (e) {}
   window.AtlasPlaces = function () { return p || (p = new Promise(function (res) { var s = document.createElement('script'); s.src = SRC; s.onload = s.onerror = function () { res(); try { dispatchEvent(new Event('atlas-places')); } catch (e) {} }; document.head.appendChild(s); })); };
   if (k) { document.write('<script src="' + SRC + '"><\/script>'); p = Promise.resolve(); }
@@ -2254,7 +2257,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   }, 60);
 };</script>
 <script src="../shared/tapword.js?v=1"></script>
-<script src="lazy.js?v=172"></script>
+<script src="lazy.js?v=173"></script>
 <script src="puzzle-lines.js?v=1"></script>
 <script src="puzzles.js?v=22"></script>
 <script src="lessons3d.js?v=13"></script>
@@ -2271,7 +2274,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=34"></script>
 <script src="npc/npc.js?v=30"></script>
 <script src="avtalk.js?v=2"></script>
-<script src="app.js?v=342"></script>
+<script src="app.js?v=343"></script>
 <script src="../shared/praline-badge.js?v=8" data-portal defer></script>
 </body>
 </html>

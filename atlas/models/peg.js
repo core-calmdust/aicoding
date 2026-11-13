@@ -48,7 +48,7 @@
     c.fillStyle = g; c.beginPath(); c.arc(W / 2, W / 2, W / 2, 0, 7); c.fill();
   }), transparent: true, roughness: .9, depthWrite: false, bump: false }));
   const faceMat = (look, id) => mat('face' + look + id, () => {
-    const tx = new (T().TextureLoader)().load(IMG + 'bd-' + look + '-' + id + '.webp?v=7', () => { if (X.kick) X.kick(200); });
+    const tx = new (T().TextureLoader)().load(IMG + 'bd-' + look + '-' + id + '.webp?v=8', () => { if (X.kick) X.kick(200); });
     tx.anisotropy = 4; if (T().sRGBEncoding) tx.encoding = T().sRGBEncoding;
     return new (T().MeshStandardMaterial)({ map: tx, transparent: false, alphaTest: .92, roughness: .45, metalness: 0, polygonOffset: true, polygonOffsetFactor: -1 });   // (opaque + alpha test: no sorting flicker with the marbles)
   });
@@ -128,8 +128,8 @@
   function marbleMat(i, set) {
     const k = (i * 7 + 3) % 6;
     if (set === 'rainbow') {   // the painted wooden rainbow set: colours mixed over the board (2026-11-13: random, not a sweep) — rich and pastel tones
-      let hh = (i * 2654435761 >>> 0) / 4294967296, q = ((i + 7) * 2246822519 >>> 0) / 4294967296;
-      const h = Math.round(hh * 30) * 12, L = [.5, .6, .7, .78][Math.floor(q * 4)], S2 = L > .72 ? .7 : .78;
+      const hh = (i * 2654435761 >>> 0) / 4294967296, q = ((i + 7) * 2246822519 >>> 0) / 4294967296, rr = Math.floor(q * 4) / 3;
+      const h = Math.round(hh * 30) * 12, L = Math.round((.74 - .34 * rr) * 100) / 100, S2 = Math.round((.5 + .2 * rr) * 100) / 100;   // (the same tones as before — deep to pastel — only the places mixed)
       return mat('mrb' + h + ':' + L, () => { const c = new (T().Color)().setHSL(h / 360, S2, L); return X.M({ color: '#' + c.getHexString(), roughness: .6 }); });
     }
     if (set === 'mod') return mat('mmod' + k, () => X.M({ color: MOD[k], roughness: .75 }));

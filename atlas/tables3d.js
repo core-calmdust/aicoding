@@ -273,7 +273,7 @@
   X.boardName = (k, lang, id) => { const g = id && NG[id] && NG[id][k]; if (g) return g[lang] || g.en; const o = N3[k]; if (!o) return k; const n = o[lang] || o.en, c = n.replace(/\s*(?:3D|ثلاثي(?: الأبعاد)?)$/, '').trim(); return c || n; };   // (2026-11-10: the boards' names without '3D')
   // the full games' 「3D盤」 tiles: the board alone, from straight above, no room (atlas/tools/boardicon.html, 2026-11-09)
   X.boardIcon = (id, k) => new URL('img/boardic-' + id + '-' + k + '.webp?v=' + (id === 'backgammon' ? 2 : 1), ME).href;
-  X.boardThumb = (id, k) => new URL('img/board-' + id + '-' + k + '.webp?v=' + (id === 'senet' ? 3 : id === 'carrom' ? 5 : id === 'crokinole' ? 5 : id === 'konane' ? 2 : id === 'ludo' ? 2 : id === 'hockey' ? 2 : id === 'peg' ? 9 : id === 'backgammon' ? 2 : 1), ME).href;
+  X.boardThumb = (id, k) => new URL('img/board-' + id + '-' + k + '.webp?v=' + (id === 'senet' ? 3 : id === 'carrom' ? 5 : id === 'crokinole' ? 5 : id === 'konane' ? 2 : id === 'ludo' ? 2 : id === 'hockey' ? 2 : id === 'peg' ? 10 : id === 'backgammon' ? 2 : 1), ME).href;
   // choose a board for a game: the shared key is written and the showcase board (if it is that game's) is rebuilt at once
   X.setBoard = (id, k) => { const B = BOARDS[id]; if (!B || !B.list.includes(k)) return; B.set(k); try { dispatchEvent(new CustomEvent('atlas-board', { detail: { id, look: k } })); } catch (e) {} };
   // 駒: the games whose 3D figures come in sets (the board view's panel shows them as a row under 盤; the full game's 「3D駒」 too)
@@ -313,7 +313,7 @@
       steel: { ja: "宝石", en: "Jewels", zh: "宝石", 'zh-TW': "寶石", ko: "보석", es: "Joyas", fr: "Joyaux", pt: "Joias", de: "Edelsteine", ru: "Драгоценности", tr: "Mücevherler", id: "Permata", hi: "रत्न", ar: "جواهر" },
       peg: { ja: "木のペグ", en: "Wooden pegs", zh: "木钉", 'zh-TW': "木釘", ko: "나무 페그", es: "Clavijas de madera", fr: "Chevilles en bois", pt: "Pinos de madeira", de: "Holzstifte", ru: "Деревянные колышки", tr: "Ahşap çiviler", id: "Pasak kayu", hi: "लकड़ी की खूँटियाँ", ar: "أوتاد خشبية" },
       rainbow: { ja: "レインボー", en: "Rainbow", zh: "彩虹", 'zh-TW': "彩虹", ko: "레인보우", es: "Arcoíris", fr: "Arc-en-ciel", pt: "Arco-íris", de: "Regenbogen", ru: "Радуга", tr: "Gökkuşağı", id: "Pelangi", hi: "इंद्रधनुष", ar: "قوس قزح" },
-      pop: { ja: "ポップ", en: "Pop", zh: "波普", 'zh-TW': "普普", ko: "팝", es: "Pop", fr: "Pop", pt: "Pop", de: "Pop", ru: "Поп", tr: "Pop", id: "Pop", hi: "पॉप", ar: "بوب" },
+      pop: { ja: "ポップアート", en: "Pop art", zh: "波普艺术", 'zh-TW': "普普藝術", ko: "팝아트", es: "Pop art", fr: "Pop art", pt: "Pop art", de: "Pop-Art", ru: "Поп-арт", tr: "Pop art", id: "Seni pop", hi: "पॉप आर्ट", ar: "فن البوب" },
       mod: { ja: "アブストラクトの駒", en: "Abstract pieces", zh: "抽象棋子", 'zh-TW': "抽象棋子", ko: "추상 말", es: "Fichas abstractas", fr: "Pions abstraits", pt: "Peças abstratas", de: "Abstrakte Steine", ru: "Абстрактные фишки", tr: "Soyut taşlar", id: "Bidak abstrak", hi: "अमूर्त गोटियाँ", ar: "قطع تجريدية" }
     } };
   X.PIECES = PIECES;
