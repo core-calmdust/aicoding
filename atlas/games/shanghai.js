@@ -163,7 +163,7 @@
       const on = alive[i] && S.s > .5 && S.dy < .05, sp = 1 + Math.min(.6, S.lift * 1.2);
       o4.position.set(x + .05, y + .003, z + .07); o4.scale.setScalar(on && S.lift < .45 ? sp : .0001); o4.updateMatrix(); shm.setMatrixAt(k, o4.matrix); shm.instanceMatrix.needsUpdate = true; }
     function tint(i) {
-      const fr = alive[i] && K.isFree(G, alive, i);
+      const fr = st8[i].fly || (alive[i] && K.isFree(G, alive, i));   // (a tile in the air keeps its bright face until it is gone)
       let r = 1, gg = 1, b = 1;
       if (gold.has(i) && alive[i]) { r = 1.05; gg = .86; b = .46; }
       if (i === sel) { r *= 1.04; gg *= .93; b *= .66; }
@@ -221,7 +221,7 @@
       }
       return -1;
     }
-    function lift(i, h, ms) { const S = st8[i], h0 = S.lift; anim(ms || 120, k => { S.lift = h0 + (h - h0) * io(k); place(i); im.instanceMatrix.needsUpdate = true; }); }
+    function lift(i, h, ms) { const S = st8[i], h0 = S.lift; anim(ms || 120, k => { if (!alive[i]) return; S.lift = h0 + (h - h0) * io(k); place(i); im.instanceMatrix.needsUpdate = true; }); }
     function wiggle(i) { const S = st8[i]; anim(260, k => { S.rz = Math.sin(k * Math.PI * 4) * .06 * (1 - k); place(i); im.instanceMatrix.needsUpdate = true; }, () => { S.rz = 0; place(i); im.instanceMatrix.needsUpdate = true; }); }
     function onClick(e) {
       if (busy || over || (T3.wasDrag && T3.wasDrag())) return;
@@ -235,24 +235,30 @@
     }
     ctx.el.addEventListener('click', onClick);
 
-    /* ---------- taking a pair: both lift, glide together and vanish ---------- */
+    /* ---------- taking a pair: both lift, glide together and vanish ----------
+       The game is a race against the clock (ユーザー 2026-11-14), so the board never waits for the flourish: the pair is out of the
+       game the moment it is tapped (the tiles under it are free at once, the next pair can be tapped while this one is still in
+       the air) and the flight itself is short (TAKE_MS). Each flying tile carries a ticket (st8.fly); an undo that puts the tile
+       back tears the ticket up, so a flight still in the air leaves the restored tile alone. */
+    const TAKE_MS = 200;
+    let flyN = 0;
     function take(a, b, own) {
-      busy = true; sel = -1; hintPair = null; ply++;
+      sel = -1; hintPair = null; ply++;
       alive[a] = alive[b] = 0; hist.push({ t: 'p', a, b });
       if (plan) plan = K.patch(plan, a, b);
       got++; if (gold.has(a)) goldGot++; if (gold.has(b)) goldGot++;
       SFX.pair();
       const A = st8[a], B = st8[b], ax = pos[a], bx = pos[b], mx = (ax[0] + bx[0]) / 2, mz = (ax[2] + bx[2]) / 2, my = Math.max(ax[1], bx[1]) + 1.1;
-      const la = A.lift, lb = B.lift;
-      anim(460, k => {
-        const q = io(k);
-        A.lift = la + (my - ax[1] - la) * Math.min(1, k * 1.6); B.lift = lb + (my - bx[1] - lb) * Math.min(1, k * 1.6);
-        const m = Math.max(0, (k - .35) / .65); A.dx = (mx - ax[0]) * io(m) * .7; A.dz = (mz - ax[2]) * io(m) * .7; B.dx = (mx - bx[0]) * io(m) * .7; B.dz = (mz - bx[2]) * io(m) * .7;
-        const s = 1 - Math.max(0, (k - .6) / .4); A.s = B.s = Math.max(.001, s); A.rz = q * .4; B.rz = -q * .4;
-        place(a); place(b); im.instanceMatrix.needsUpdate = true;
-      }, () => { A.lift = B.lift = 0; A.dx = A.dz = B.dx = B.dz = 0; A.rz = B.rz = 0; A.s = B.s = .001; place(a); place(b); for (let i = 0; i < n; i++) tint(i); im.instanceColor.needsUpdate = true; im.instanceMatrix.needsUpdate = true; kick(); after(); });
+      const la = A.lift, lb = B.lift, tk = ++flyN; A.fly = B.fly = tk;
+      const end = (S, i) => { if (S.fly !== tk) return; S.fly = 0; S.lift = 0; S.dx = S.dz = 0; S.rz = 0; S.s = .001; place(i); };
+      anim(TAKE_MS, k => {
+        const q = io(k), m = Math.max(0, (k - .25) / .75), s = Math.max(.001, 1 - Math.max(0, (k - .5) / .5));
+        if (A.fly === tk) { A.lift = la + (my - ax[1] - la) * Math.min(1, k * 1.8); A.dx = (mx - ax[0]) * io(m) * .7; A.dz = (mz - ax[2]) * io(m) * .7; A.s = s; A.rz = q * .4; place(a); }
+        if (B.fly === tk) { B.lift = lb + (my - bx[1] - lb) * Math.min(1, k * 1.8); B.dx = (mx - bx[0]) * io(m) * .7; B.dz = (mz - bx[2]) * io(m) * .7; B.s = s; B.rz = -q * .4; place(b); }
+        im.instanceMatrix.needsUpdate = true;
+      }, () => { end(A, a); end(B, b); im.instanceMatrix.needsUpdate = true; kick(); });
       for (let i = 0; i < n; i++) tint(i); im.instanceColor.needsUpdate = true;
-      hud();
+      after();
     }
     function after() {
       busy = false; hud(); turn();
@@ -327,7 +333,7 @@
       undo() {
         if (!api.canUndo()) return; const h = hist.pop(); ply++; hintPair = null;
         if (sel >= 0) { st8[sel].lift = 0; sel = -1; }
-        if (h.t === 'p') { alive[h.a] = alive[h.b] = 1; st8[h.a].s = st8[h.b].s = 1; got--; if (gold.has(h.a)) goldGot--; if (gold.has(h.b)) goldGot--; }
+        if (h.t === 'p') { alive[h.a] = alive[h.b] = 1; [h.a, h.b].forEach(i => { const S = st8[i]; S.fly = 0; S.lift = 0; S.dx = S.dz = 0; S.rz = 0; S.s = 1; }); got--; if (gold.has(h.a)) goldGot--; if (gold.has(h.b)) goldGot--; }
         else { face = h.face; faces(); }
         plan = null; paintAll(); hud(); turn(); SFX.tap();
       },
@@ -340,7 +346,7 @@
         hints++; plan = h.plan; hintPair = h.pair;
         if (sel >= 0 && !h.pair.includes(sel)) { st8[sel].lift = 0; place(sel); sel = -1; }
         for (let i = 0; i < n; i++) tint(i); im.instanceColor.needsUpdate = true; im.instanceMatrix.needsUpdate = true;
-        h.pair.forEach(i => { const S = st8[i]; anim(900, k => { S.lift = Math.sin(k * Math.PI * 3) * .1 * (1 - k * .6); place(i); im.instanceMatrix.needsUpdate = true; }, () => { S.lift = i === sel ? .14 : 0; place(i); im.instanceMatrix.needsUpdate = true; }); });
+        h.pair.forEach(i => { const S = st8[i]; anim(900, k => { if (!alive[i]) return; S.lift = Math.sin(k * Math.PI * 3) * .1 * (1 - k * .6); place(i); im.instanceMatrix.needsUpdate = true; }, () => { if (!alive[i]) return; S.lift = i === sel ? .14 : 0; place(i); im.instanceMatrix.needsUpdate = true; }); });
         if (!h.safe) toast(tx('msg.unsafe'), 3600);
         return Promise.resolve(true);
       },
