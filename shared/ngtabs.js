@@ -170,15 +170,15 @@ const CSS = `
 /* (2026-11-13, common) phones: the rules / lessons / puzzles dialogs' tabs (.ls-tabs, #segLs) at the bottom, as the new-game dialog —
    the dialog's buttons right above them, both kept in view while the list scrolls */
 @media (pointer: coarse) and (max-width: 760px){
-  .modal :is(div,section):has(> :is(.seg.ls-tabs, #segLs)), .modal:has(> :is(.seg.ls-tabs, #segLs)){display:flex!important;flex-direction:column}
+  .modal :is(div,section):not(.hidden):not([hidden]):has(> :is(.seg.ls-tabs, #segLs)), .modal:has(> :is(.seg.ls-tabs, #segLs)){display:flex!important;flex-direction:column}   /* (a hidden view stays hidden: the lesson / puzzle lists hide while an item opens) */
   .modal:has(> :is(.seg.ls-tabs, #segLs)) > :not(.ls-tabs):not(#segLs){flex:none}
   html body:not(#_) .modal:not(#_):not(#_) :is(.seg.ls-tabs, #segLs):not(#_):not(#_){order:100;position:sticky!important;top:auto!important;bottom:0!important;z-index:7;margin:10px 0 0!important;flex:none}
-  html body:not(#_) .modal:not(#_):not(#_) :has(> :is(.seg.ls-tabs, #segLs)) > .modal-actions:not(#_):not(#_){order:99;position:sticky!important;bottom:var(--lsT,58px)!important;z-index:6;margin-bottom:0!important}
+  html body:not(#_) .modal:not(#_):not(#_) :has(> :is(.seg.ls-tabs, #segLs)) > .modal-actions:not(#_):not(#_){order:99;position:sticky!important;bottom:var(--lsT,58px)!important;z-index:8;margin-bottom:0!important}
   html.atlas-skin body:not(#_) .modal:not(#_):not(#_) :is(.seg.ls-tabs, #segLs):not(#_):not(#_){box-shadow:0 0 0 12px var(--a-paper,#fbf5e7)!important}
   html body:not(#_) .modal:not(#_):not(#_) :has(> :is(.seg.ls-tabs, #segLs)) > .modal-actions:not(#_):not(#_){bottom:var(--lsT,50px)!important;padding:10px 0 8px!important;margin-top:40px!important;background:var(--a-paper,var(--panel,#1b130d))!important}
   .modal :is(div,section):has(> :is(.seg.ls-tabs, #segLs)):has(> .rt-host){height:100%;min-height:0}
   .modal :has(> :is(.seg.ls-tabs, #segLs)) > .rt-host{flex:1 1 auto!important;min-height:0!important}
-  .modal:has(> :is(.seg.ls-tabs, #segLs)) .rt > .rt-nav{position:sticky;bottom:var(--lsT,50px);z-index:6;background:var(--a-paper,var(--panel,#1b130d));padding-bottom:8px}
+  .modal:has(> :is(.seg.ls-tabs, #segLs)) .rt > .rt-nav{position:sticky;bottom:var(--lsT,50px);z-index:8;background:var(--a-paper,var(--panel,#1b130d));padding-bottom:8px}
 }
 `;
 const lang = () => (s => /^zh-(tw|hk|mo|hant)/i.test(s) ? 'zh-TW' : s.slice(0, 2).toLowerCase())(document.documentElement.lang || 'ja');

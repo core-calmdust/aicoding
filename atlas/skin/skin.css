@@ -926,3 +926,8 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl.ngt-on .ng-
 html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl.ngt-on[data-ngl-order] .ng-cols > .ng-col:not(:has(#fLevel:not(.hidden))):not(#_):not(#_):not(#_){background:none!important;border:0!important;box-shadow:none!important;padding:6px 2px 8px!important;border-radius:0!important}
 /* (2026-11-13) phones: the デザイン tab's panel as wide as the other tabs' (the rules tab's column padding had reached it) */
 html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl.ngt-on[data-ngt=design] .ng-cols > .ng-col:not(#_):not(#_):not(#_):not(#_){padding:0!important;background:none!important;border:0!important;box-shadow:none!important}
+/* (2026-11-13) phones: the new-game tabs the size of the rules / lessons tabs (one pill row, 45px; the game's name beside ルール dropped) */
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal.ngt-on .ngt-foot .ngt-bar:not(#_):not(#_){min-height:0!important;padding:4px!important;margin:6px 0 8px!important;border:0!important;border-radius:99px!important;background:#f3ead6!important;gap:2px!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal.ngt-on .ngt-foot .ngt-bar button:not(#_):not(#_):not(#_){min-height:0!important;height:37px!important;padding:0 2px!important;font-size:13px!important;border-radius:99px!important;border:0!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal.ngt-on .ngt-foot .ngt-bar button small:not(#_){display:none!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal.ngt-on .ngt-foot > .modal-actions{position:relative;z-index:2}
