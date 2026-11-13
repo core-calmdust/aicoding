@@ -95,7 +95,18 @@ html.rvb-study .rvb-boardring{outline:3px solid rgba(232,163,60,.75);outline-off
 .rvbox .rvb-wait,.rvbox .rvb-none{font-size:14px}
 .rvbox .rvb-foot{font-size:12px}
 html.rvb-study .rvb-boardflag{font-size:13.5px}
+/* (2026-11-13) the candidate list as reversi's box: column heads, the rank in a round badge (the best one in the accent colour),
+   rows without a fill until hovered */
+.rvbox .rvb-hd,.rvbox .rvb-row{grid-template-columns:24px 6.4em 62px minmax(0,1fr);gap:8px}
+.rvbox .rvb-hd{flex:none;display:grid;align-items:center;padding:0 10px;font-size:12.5px;color:var(--muted,#999)}
+.rvbox .rvb-hd .h2{text-align:end}
+.rvbox .rvb-hd .h3,.rvbox .rvb-row .pv{padding-inline-start:10px}
+.rvbox .rvb-row{background:transparent;min-height:32px}
+.rvbox .rvb-row .rk{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;background:rgba(127,127,127,.16);color:inherit}
+.rvbox .rvb-row:first-child .rk{background:var(--accent,#e2c275);color:#1b150a}
 `;
+  // the candidate list's column heads (as reversi's box, 2026-11-13: one layout for every game's box)
+  const HV = { ja: ['評価', '読み筋'], en: ['Eval', 'Line'], zh: ['评估', '变化'], 'zh-TW': ['評估', '變化'], ko: ['평가', '수순'], es: ['Eval.', 'Línea'], fr: ['Éval.', 'Variante'], pt: ['Aval.', 'Linha'], de: ['Bew.', 'Variante'], hi: ['मूल्यांकन', 'लाइन'], ar: ['التقييم', 'التسلسل'], ru: ['Оценка', 'Вариант'], id: ['Eval', 'Jalur'], tr: ['Değer', 'Hat'] };
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   function create(o) {
     if (!document.getElementById('rvbox-css')) { const st = document.createElement('style'); st.id = 'rvbox-css'; st.textContent = CSS; document.head.appendChild(st); }
@@ -104,7 +115,7 @@ html.rvb-study .rvb-boardflag{font-size:13.5px}
     el.className = 'rvbox ' + (o.cls || 'card'); el.id = 'rvBox';
     el.innerHTML = `<div class="rvb-top"><div class="rvb-head"></div><span class="rvb-flagS" hidden></span><button class="rvb-btn ic" data-a="back" hidden>◀</button><button class="rvb-btn go" data-a="study"></button><button class="rvb-btn rs" data-a="restore" hidden></button></div>
 <div class="rvb-cols"><div class="rvb-col"><div class="rvb-lbl"><span class="l1"></span></div><div class="rvb-ex"></div></div>
-<div class="rvb-col"><div class="rvb-lbl"><span class="l2"></span><span class="rvb-st"><i></i><span></span></span><button class="rvb-mini" data-a="anl" hidden></button><small class="unit"></small></div><div class="rvb-list"></div><div class="rvb-foot"></div></div></div>`;
+<div class="rvb-col"><div class="rvb-lbl"><span class="l2"></span><span class="rvb-st"><i></i><span></span></span><button class="rvb-mini" data-a="anl" hidden></button><small class="unit"></small></div><div class="rvb-hd"><span></span><span class="h1"></span><span class="h2"></span><span class="h3"></span></div><div class="rvb-list"></div><div class="rvb-foot"></div></div></div>`;
     const $ = s => el.querySelector(s);
     let flag = null;
     if (o.boardWrap) { flag = document.createElement('div'); flag.className = 'rvb-boardflag'; o.boardWrap.appendChild(flag); if (getComputedStyle(o.boardWrap).position === 'static') o.boardWrap.style.position = 'relative'; }
@@ -214,6 +225,7 @@ html.rvb-study .rvb-boardflag{font-size:13.5px}
       if (!on) { if (el.isConnected) el.remove(); stop(); rowsKey = ''; A = null; rowEls.forEach(b => b.remove()); rowEls.clear(); shown = []; if (hovId != null) { hovId = null; o.onHover && o.onHover(null); } return; }
       $('.rvb-head').innerHTML = st.head || '';
       $('.l1').textContent = T('expl'); $('.l2').textContent = T('cands');
+      { const hv = HV[o.lang()] || HV.en; $('.rvb-hd .h1').textContent = T('cands'); $('.rvb-hd .h2').textContent = hv[0]; $('.rvb-hd .h3').textContent = hv[1]; }
       $('.unit').textContent = st.unit || '';
       $('.rvb-ex').innerHTML = st.study ? (st.explain || '') + `<p class="tip">${esc(T('help'))}</p>` : (st.explain || '');
       const fS = $('.rvb-flagS'); fS.hidden = !st.study; fS.textContent = T('studying');
