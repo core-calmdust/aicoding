@@ -159,6 +159,17 @@
     return null;
   }
 
+  /* ---------- small boards for the lists (2026-11-13): chess from a FEN (the portal's lesson / puzzle cards) ---------- */
+  window.AtlasMini = window.AtlasMini || {};
+  window.AtlasMini.chess = fen => {
+    const rows = String(fen || '').split(' ')[0].split('/'); if (rows.length !== 8) return '';
+    const G = { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' };
+    let o = '<svg viewBox="0 0 84 84" aria-hidden="true"><rect width="84" height="84" rx="5" fill="#7a4a24"/>';
+    for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) o += `<rect x="${2 + f * 10}" y="${2 + r * 10}" width="10" height="10" fill="${(r + f) & 1 ? '#b58863' : '#f0d9b5'}"/>`;
+    rows.forEach((row, r) => { let f = 0; for (const ch of row) { if (/\d/.test(ch)) { f += +ch; continue; } const w = ch === ch.toUpperCase(), g = G[ch.toLowerCase()];
+      if (g) o += `<text x="${7 + f * 10}" y="${10.6 + r * 10}" font-size="9.6" text-anchor="middle" font-family="'Segoe UI Symbol','Noto Sans Symbols 2','DejaVu Sans',serif" fill="${w ? '#fffaf0' : '#1c1a17'}" stroke="${w ? '#3a2a1a' : '#000'}" stroke-width="${w ? .55 : .2}" paint-order="stroke">${g}\uFE0E</text>`; f++; } });
+    return o + '</svg>';
+  };
   /* ---------- the two collections: problems, records ---------- */
   const BOOK = {
     chess: {
@@ -175,6 +186,7 @@
           set: tac ? fill(X.setTac, { a: L.band ? L.band[0] : '', b: L.band ? L.band[1] : '' }) : fill(X.setMate, { n: L.n || 1 }) };
       },
       save(p, stars) { const pr = store.get(this.KEY, {}); pr[p.rk] = Math.max(this.sv(pr[p.rk]), stars); store.set(this.KEY, pr); store.set(this.LAST, String(p.i)); },
+      look(i) { const L = this.data.levels[i], p0 = L && L.puzzles[0]; return { board: p0 && p0.fen ? 'fen:' + p0.fen : '' }; },
     },
     shogi: {
       // shogi/index.html: problems sorted by d; stars per problem id in 'shogi-kaya-tsume-v2' (v1: solved → ★3); replaced
