@@ -1953,7 +1953,7 @@ html.atlas-skin #newOverlay #lvNote{display:none!important}   /* (the long note 
 <script src="variants/mini.js?v=20261021vb"></script>
 <script src="variants/hasami.js?v=20261021vb"></script>
 <script src="variants/variants.js?v=20261112bw"></script>
-<script src="rvbox.js?v=20261113hd"></script>
+<script src="rvbox.js?v=20261113hd2"></script>
 <script src="rvtip.js?v=20261107l14"></script>
 <script src="../shared/coachkit.js?v=17l14"></script>
 <script src="../shared/record.js?v=12l14"></script>
@@ -3997,7 +3997,7 @@ function rvbCands(push, done) {
   const names = pv => { const p = vr ? Variants.pos(vr) : new E.Position(), out = []; let prevTo = -1; try { p.setSfen(sf); for (const u of pv.slice(0, 10)) { const m = p.fromUsi(u); if (!p.legalMoves(true).includes(m)) break; out.push((p.side ? '△' : '▲') + kifName(p, m, prevTo)); prevTo = E.mTo(m); p.doMove(m); p.sp = 0; } } catch (e) {} return out; };
   const val = s => Math.abs(s) >= E.MATE - 200 ? fmtScore(s) : Math.round(winRate(s) * 100) + '%';
   const conv = list => (list || []).map(e => { const pv = e.pv && e.pv.length ? e.pv : [e.move], nm = names(pv); const wr = winRate(e.score);
-    return { id: e.move, move: escHb(nm[0] || e.move), val: val(e.score), cls: wr > 0.56 ? 'pos' : wr < 0.44 ? 'neg' : '', pv: escHb(nm.slice(1).join(' ')), played: e.move === played, ref: { u: e.move, pv, key } }; });
+    return { id: e.move, move: escHb(nm[0] || e.move), val: val(e.score), cls: wr > 0.505 ? 'pos' : wr < 0.495 ? 'neg' : '', pv: escHb(nm.slice(1).join(' ')), played: e.move === played, ref: { u: e.move, pv, key } }; });
   rvbKill();
   const mp = !vr && MTP && MTP.pool();   // (the threads when free)
   if (mp) {
