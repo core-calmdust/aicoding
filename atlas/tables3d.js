@@ -1060,8 +1060,11 @@
       at(Gp, new TT.Mesh(new TT.CylinderGeometry(.08, .08, Y1 - 36.6, 5), M({ color: 0xb08850, metalness: 1, roughness: .3 })), 0, 36.6 + (Y1 - 36.6) / 2, 0, 0, false); }
     mons(o, 3, FL);
     try { X.mergeStatic(g); } catch (e) {}
-    scene.add(new TT.HemisphereLight(day ? 0xdde6f4 : T === 'evening' ? 0xd8a888 : 0x8a96a8, 0x0a0a0a, day ? .3 : T === 'evening' ? .17 : .1));
-    if (day || T === 'evening') { const wl = new TT.DirectionalLight(day ? 0xeef2ff : 0xffb888, day ? .5 : .3); wl.position.set(-40, 20, -10); scene.add(wl); }   // daylight through the window
+    // (2026-11-13) the room lit by the hour: by day the window and the ceiling light the whole room (the walls, shelves, chairs read
+    // clearly), in the evening softer, at night only the lamp over the table
+    scene.add(new TT.HemisphereLight(day ? 0xeef0f4 : T === 'evening' ? 0xe0b090 : 0x8a96a8, day ? 0x3a3024 : 0x0a0a0a, day ? 1.0 : T === 'evening' ? .55 : .1));
+    if (day || T === 'evening') { const wl = new TT.DirectionalLight(day ? 0xfff6e8 : 0xffb888, day ? 1.3 : .7); wl.position.set(-40, 20, -10); scene.add(wl);
+      const fill = new TT.PointLight(day ? 0xfff0dc : 0xffc89a, day ? 1.1 : .6, 0, 0); fill.position.set(0, 30, 24); scene.add(fill); }   // (the room's ceiling light, toward the walls)   // daylight through the window
     const key = new TT.SpotLight(0xfff0d4, 4.4, 90, .3, .85, 1.1); key.position.set(0, 36, 3); key.target.position.set(0, 0, 0); scene.add(key); scene.add(key.target);
     key.shadow.camera.near = 10; key.shadow.camera.far = 60; key.shadow.bias = -.0002;
     const rim = new TT.DirectionalLight(0xffd7a0, .18); rim.position.set(-12, 8, -18); scene.add(rim);
