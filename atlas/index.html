@@ -2219,14 +2219,14 @@ else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.j
 <script src="texgen.js?v=2"></script>
 <script src="npc/roster.js?v=7"></script>
 <script src="art.js?v=12"></script>
-<script src="../shared/atlas.js?v=20261113sp1"></script>
+<script src="../shared/atlas.js?v=20261113sh2"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261109ac2as1"></script>
-<script src="i18n/v.js?v=73pj"></script>
+<script src="i18n/v.js?v=73sh"></script>
 <script>/* the UI strings: only ja, en and the page language (atlas/i18n/<lang>.js, made from i18n.js by tools/i18n-split.js — 2026-11-10);
    when they were made from another version of i18n.js than FULL, the whole i18n.js loads instead. Edit i18n.js, bump FULL's ?v=, run the tool. */
 (function () {
-  var FULL = 'i18n.js?v=73pj', S = window.ATLAS_I18N_SPLIT, v = FULL.split('v=')[1], l = 'ja';
+  var FULL = 'i18n.js?v=73sh', S = window.ATLAS_I18N_SPLIT, v = FULL.split('v=')[1], l = 'ja';
   try { l = localStorage.getItem('aicoding-lang') || (function (x) { return /^zh-(tw|hk|mo|hant)/i.test(x) ? 'zh-TW' : String(x).slice(0, 2); })(navigator.language || 'ja'); } catch (e) {}
   if (!S || S.v !== v) { document.write('<script src="' + FULL + '"><\/script>'); return; }
   var L = ['ja', 'en']; if (S.langs.indexOf(l) >= 0 && L.indexOf(l) < 0) L.push(l);
@@ -2234,7 +2234,7 @@ else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.j
   L.forEach(function (x) { document.write('<script src="i18n/' + x + '.js?v=' + v + '"><\/script>'); });
 })();
 </script>
-<script src="gamelist-i18n.js?v=14pg"></script>
+<script src="gamelist-i18n.js?v=14pgs"></script>
 <script src="img/tex/baked.js?v=2"></script>
 <script src="table3d.js?v=166"></script>
 <script>/* the places other than the chabudai (tables3d.js, 440 KB): at once when one is chosen, else in idle time after the page has
@@ -2248,7 +2248,7 @@ else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.j
 })();
 </script>
 <script src="models/cardtables.js?v=4"></script>
-<script src="icons3d.js?v=40"></script>
+<script src="icons3d.js?v=41"></script>
 <script>/* rules tours: after a solved step, the ▶ button fills up like a timer until the tour moves on by itself */
 window.AtlasRgdTimer = function (btn, ms, alive) {
   if (!btn) return; btn.classList.remove('rgd-auto'); void btn.offsetWidth; btn.style.setProperty('--rgt', ms + 'ms'); btn.classList.add('rgd-auto');
@@ -2260,7 +2260,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   }, 60);
 };</script>
 <script src="../shared/tapword.js?v=1"></script>
-<script src="lazy.js?v=183"></script>
+<script src="lazy.js?v=184"></script>
 <script src="puzzle-lines.js?v=1"></script>
 <script src="puzzles.js?v=22"></script>
 <script src="lessons3d.js?v=13"></script>
@@ -2272,12 +2272,12 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="gacha3d.js?v=7"></script>
 <script src="../shared/resign.js?v=3"></script><script src="../shared/drawoffer.js?v=1"></script>
 <script src="../shared/tick.js?v=2"></script>
-<script src="gamelist.js?v=35"></script>
+<script src="gamelist.js?v=36"></script>
 <link rel="stylesheet" href="worldmap.css?v=18">
 <script src="worldmap.js?v=34"></script>
 <script src="npc/npc.js?v=30"></script>
 <script src="avtalk.js?v=2"></script>
-<script src="app.js?v=347"></script>
+<script src="app.js?v=348"></script>
 <script src="../shared/praline-badge.js?v=8" data-portal defer></script>
 </body>
 </html>
