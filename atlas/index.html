@@ -418,6 +418,7 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
 .tbar button[data-a=resign]{background:#ffe3de;color:#a5321f;box-shadow:0 3px 0 #f5c2b8}
 .tbar button[data-a=hint]{background:#fff6c2;color:#7a5a00;box-shadow:0 3px 0 #efdc7c}
 .tbar button[data-a=draw]{background:#e6f1ff;color:#2d5a8c;box-shadow:0 3px 0 #bcd4ef}
+.tbar button[data-a=view]{background:#e9f3ee;color:#1f5a44;box-shadow:0 3px 0 #bcd9cb}.tbar button[data-a=view].on{background:#2f7d5f;color:#fff;box-shadow:0 3px 0 #1f5a44}
 .tbar button:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.1)}
 .tbar button:disabled{opacity:.38;cursor:default}
 .tbar button.busy svg{animation:tbBusy .8s ease-in-out infinite}
@@ -1877,7 +1878,7 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 .bvi .mxb.pzok,.mxb.pzok{position:relative;background:#eef8f1!important;border-color:#9fd8b8!important;box-shadow:0 3px 0 #9fd8b8!important;color:#2e7d55}.mxb.pzok::after{content:'✓';flex:none;display:inline-grid;place-items:center;width:20px;height:20px;margin-left:2px;border-radius:50%;background:#2f9a6a;color:#fff;font-size:12px;font-weight:900}   /* (today's puzzle solved, 2026-11-13) */
 .bvi .mxb:hover{background:#fffaf0}
 .bvi #bvMBody > #bvPz:not([hidden]){height:100%;box-sizing:border-box;align-content:stretch}.bvi #bvMBody > #bvPz:not([hidden]) > .mxb{height:auto;min-height:48px}
-@media (max-width:819px){.bvi #bvMBody > #bvPz:not([hidden]) > .mxb{min-height:42px}.bvi #bvPz{gap:10px 10px}.bvi #bvPegBest{min-height:44px;padding:4px 14px}.bvi #bvPegBest b{font-size:19px}}   /* (phones, 2026-11-13: ペグ's boxes the size of the other games' — the board pulldown is the usual 38px, the best box and the puzzle buttons a little over it) */   /* (the パズル panel fills the settings' height like the other tabs: the rows below no longer sit higher, 2026-11-13) */
+@media (max-width:819px){.bvi #bvMBody > #bvPz:not([hidden]) > .mxb{min-height:42px}.bvi #bvPz{gap:10px 10px}.bvi #bvPegBest,.bvi .opts > .pgbest{min-height:44px;padding:4px 14px}.bvi #bvPegBest b,.bvi .opts > .pgbest b{font-size:19px}}   /* (phones, 2026-11-13: ペグ's boxes the size of the other games' — the board pulldown is the usual 38px, the best box and the puzzle buttons a little over it) */   /* (the パズル panel fills the settings' height like the other tabs: the rows below no longer sit higher, 2026-11-13) */
 .bvi .pgbest{flex:1 1 100%;box-sizing:border-box;display:flex;align-items:center;gap:12px;margin:0!important;padding:10px 16px;border-radius:14px;background:#fff;border:2px solid var(--line);box-shadow:0 3px 0 var(--line);font-size:15px;font-weight:900;color:#2b3044}.bvi .pgbest b{margin-inline-start:auto;font-size:23px;line-height:1.1;font-weight:900;color:#e5484d;letter-spacing:.02em;text-shadow:0 2px 0 rgba(229,72,77,.15)}.bvi .pgbest .pgd{font-size:12.5px;font-weight:700;color:#9a8762}.bvi .pgbest em + .pgd{margin-inline-start:0}.bvi .pgbest em{margin-inline-start:0;font-style:normal;font-weight:900;font-size:15px;color:#b07a00;background:#fff;border:2px solid #f3dca0;border-radius:99px;padding:3px 12px}   /* (ペグ: the chosen board's best, large; the same gap as the rows above — 2026-11-13) */
 .bvi #bvPz{display:grid;grid-template-columns:1fr 1fr;gap:10px}.bvi #bvPz .mxb[data-pz="list"]:nth-child(3){grid-column:1 / -1}
 .bvi .act.act3.act1 > a.btn{grid-column:1 / -1}
@@ -2261,7 +2262,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   }, 60);
 };</script>
 <script src="../shared/tapword.js?v=1"></script>
-<script src="lazy.js?v=217"></script>
+<script src="lazy.js?v=218"></script>
 <script src="puzzle-lines.js?v=1"></script>
 <script src="puzzles.js?v=26"></script>
 <script src="lessons3d.js?v=34"></script>
@@ -2278,7 +2279,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=34"></script>
 <script src="npc/npc.js?v=32"></script>
 <script src="avtalk.js?v=3"></script>
-<script src="app.js?v=353"></script>
+<script src="app.js?v=354"></script>
 <script src="../shared/praline-badge.js?v=8" data-portal defer></script>
 </body>
 </html>

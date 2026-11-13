@@ -1400,10 +1400,11 @@
           TB.hide();
           const head = res.solo ? (res.win ? '🎉 ' : '') + res.title : res.pvp ? (res.draw ? t('res.draw') : '🎉 ' + (res.winnerText || res.score || '')) : (res.win ? '🎉 ' : '') + t(res.draw ? 'res.draw' : res.win ? 'res.win' : 'res.lose');
           $('endc').innerHTML = `<h3>${esc(head)}</h3>${res.score && !(res.pvp && !res.winnerText && !res.draw) ? `<div class="sc">${esc(res.score)}</div>` : ''}${res.best ? `<div class="gnote gbest">${esc(res.best)}</div>` : ''}${res.pvp || res.solo ? '' : `<div class="gnote">Lv.${res.level}</div>`}${rtX ? `<div class="rtres"><b>R ${rtX.old} → ${rtX.now}</b><i class="${rtX.d >= 0 ? 'up' : 'dn'}">${rtX.d >= 0 ? '+' : '−'}${Math.abs(rtX.d)}</i></div>` : ''}
-            <div class="eacts${res.next ? ' e3' : ''}" style="display:flex;gap:10px;flex-wrap:nowrap;justify-content:center"><button class="btn ghost" id="eBack">${t('bv.quit')}</button><button class="btn" id="eAgain">${t('bv.again')}</button>${res.next ? `<button class="btn" id="eNext">${esc(res.next.label)} ▶</button>` : ''}</div>`;
+            <div class="eacts${res.next ? ' e3' : ''}" style="display:flex;gap:10px;flex-wrap:nowrap;justify-content:center"><button class="btn ghost" id="eBack">${t('bv.quit')}</button><button class="btn" id="eAgain">${res.again ? esc(res.again.label) : t('bv.again')}</button>${res.next ? `<button class="btn" id="eNext">${esc(res.next.label)} ▶</button>` : ''}</div>`;
           $('endc').classList.add('on'); if (res.win || (res.pvp && !res.draw)) confetti(120);
           try { SFX[res.draw ? 'draw' : res.win || res.pvp ? 'win' : res.solo ? 'draw' : 'lose'](); } catch (e) {}   // (respects the sound setting)
-          $('eAgain').onclick = () => { stopSession(); Table3D.show(g.id); setTimeout(() => startPlay(lastKind), 50); };
+          const restart = pre => { stopSession(); Table3D.show(g.id); if (pre) pre(); setTimeout(() => startPlay(lastKind), 50); };
+          $('eAgain').onclick = () => { if (res.again) res.again.go(restart); else restart(); };   // (res.again: the adapter's own second button — 上海's stages: マップへ opens the star map, which restarts with the stage picked there)
           if (res.next && $('eNext')) $('eNext').onclick = () => { stopSession(); Table3D.show(g.id); res.next.go(); setTimeout(() => startPlay(lastKind), 50); };   // (上海's stages: 次のステージ)
           $('eBack').onclick = () => openBoard(g.id);
           welcome();
@@ -1438,7 +1439,7 @@
       hint: '<svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2h5c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/></svg>',
     };
     const bar = document.createElement('div'); bar.className = 'tbar'; bar.id = 'tbar';
-    bar.innerHTML = '<span class="tclk" data-s="0" hidden></span><span class="tbtns"><button type="button" data-a="undo"></button><button type="button" data-a="resign"></button><button type="button" data-a="hint"></button><button type="button" data-a="draw" hidden></button></span><span class="tclk" data-s="1" hidden></span>';
+    bar.innerHTML = '<span class="tclk" data-s="0" hidden></span><span class="tbtns"><button type="button" data-a="undo"></button><button type="button" data-a="view" hidden></button><button type="button" data-a="resign"></button><button type="button" data-a="hint"></button><button type="button" data-a="draw" hidden></button></span><span class="tclk" data-s="1" hidden></span>';
     $('bv').appendChild(bar);
     const ck = [...bar.querySelectorAll('.tclk')], btn = k => bar.querySelector(`[data-a="${k}"]`);
     let S = null, ended = false, hinting = false, drawing = false, iv = 0, ro = null;
@@ -1483,6 +1484,7 @@
       // buttons
       const can = k => !!(S && !ended && S[k] && S[k]());
       btn('undo').disabled = !can('canUndo');
+      { const vb = btn('view'), V = S.view; vb.hidden = !V; if (V) { vb.disabled = ended; vb.classList.toggle('on', !!V.on()); const h = `${V.icon}<span>${esc(V.label())}</span>`; if (vb._h !== h) { vb.innerHTML = h; vb._h = h; vb.setAttribute('aria-label', vb.textContent); vb.title = vb.textContent; } } }   // (session.view = { icon, label(), on(), toggle() }: the adapter's own button right of 待った — 上海: 真上から見る)
       btn('hint').disabled = hinting || !can('canHint'); btn('hint').classList.toggle('busy', hinting);
       btn('resign').disabled = ended || (S.canResign ? !S.canResign() : false); btn('resign').hidden = !!S.noResign;
       btn('draw').hidden = !S.offerDraw; btn('draw').disabled = drawing || !can('canDraw');   // 引き分け: games with draws (adapter offerDraw / draw)
@@ -1510,6 +1512,7 @@
       e.stopPropagation();
       const a = b.dataset.a, s = S;
       if (a === 'undo') { if (s.canUndo()) { s.undo(); SFX.tok(); } }
+      else if (a === 'view') { if (s.view) { s.view.toggle(); SFX.tok(); sync(); } }
       else if (a === 'hint') {
         if (!s.canHint()) return; hinting = true; sync(); SFX.tok();
         Promise.resolve(s.hint()).then(ok => { if (ok === false && S === s) toast(t('act.noHint')); }).catch(() => {}).then(() => { hinting = false; if (S === s) sync(); });

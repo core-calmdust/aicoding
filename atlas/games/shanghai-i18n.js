@@ -61,6 +61,8 @@
   add('b.land', '縦横切り替え', 'Portrait / landscape', '横竖屏切换', '橫直切換', '가로/세로 전환', 'Vertical / horizontal', 'Portrait / paysage', 'Retrato / paisagem', 'Hoch / Quer', 'Книжная / альбомная', 'Dikey / yatay', 'Tegak / mendatar', 'खड़ा / आड़ा', 'عمودي / أفقي');
   add('msg.hold', 'スマホを横に持ってください', 'Hold your phone sideways', '请把手机横过来', '請把手機橫過來', '휴대폰을 가로로 들어 주세요', 'Sujeta el móvil en horizontal', 'Tenez le téléphone à l’horizontale', 'Segure o celular na horizontal', 'Halte das Handy quer', 'Держите телефон горизонтально', 'Telefonu yan tutun', 'Pegang ponsel mendatar', 'फ़ोन को आड़ा पकड़ें', 'أمسك الهاتف بالعرض');
   add('b.shuffle', 'シャッフル', 'Shuffle', '洗牌', '洗牌', '셔플', 'Barajar', 'Mélanger', 'Embaralhar', 'Mischen', 'Перемешать', 'Karıştır', 'Acak', 'फेंटो', 'خلط');
+  add('b.toMap', 'マップへ', 'Map', '地图', '地圖', '지도로', 'Mapa', 'Carte', 'Mapa', 'Karte', 'Карта', 'Harita', 'Peta', 'नक्शा', 'الخريطة');
+  add('b.top', '真上', 'Top view', '俯视', '俯視', '위에서', 'Cenital', 'Dessus', 'De cima', 'Von oben', 'Сверху', 'Üstten', 'Dari atas', 'ऊपर से', 'من الأعلى');
   add('b.map', '星座マップ', 'Star map', '星座地图', '星座地圖', '별자리 지도', 'Mapa estelar', 'Carte du ciel', 'Mapa estelar', 'Sternkarte', 'Звёздная карта', 'Yıldız haritası', 'Peta bintang', 'तारा मानचित्र', 'خريطة النجوم');
   add('b.start', 'スタート', 'Start', '开始', '開始', '시작', 'Empezar', 'Commencer', 'Começar', 'Start', 'Старт', 'Başla', 'Mulai', 'शुरू', 'ابدأ');
   add('b.close', '閉じる', 'Close', '关闭', '關閉', '닫기', 'Cerrar', 'Fermer', 'Fechar', 'Schließen', 'Закрыть', 'Kapat', 'Tutup', 'बंद', 'إغلاق');
