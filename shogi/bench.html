@@ -61,7 +61,7 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);ma
 <div class="card"><h2>結果</h2><div class="tw"><table id="tbl"><thead><tr><th>スレッド</th><th>局面数/秒</th><th>1スレッド比</th><th>平均の深さ</th><th>同じ深さまで</th><th>速さ（深さ）</th><th>基準と一致</th><th>起動</th></tr></thead><tbody></tbody></table></div><pre id="log"></pre></div>
 </main>
 <script src="../shared/mtengine.js?v=9"></script>
-<script src="engine.js?v=20261109s4"></script>
+<script src="engine.js?v=20261113n7"></script>
 <script>
 'use strict';
 // 12 positions (seeded random games from the start, 10–39 plies, not over), the same engine and pool as the game page
@@ -76,7 +76,7 @@ const POS = (() => {
   }
   return out;
 })();
-const ENG = 'engine.js?v=20261109s4';
+const ENG = 'engine.js?v=20261113n7';
 const POOL = { wasm: 'engine_mt.wasm?v=7', lead: ENG + '&mt=1', helper: 'mt-helper.js?v=3', slot: 8 << 20, initial: 1536, maximum: 16384,
   imports: mem => ({ env: { memory: mem, now: () => Date.now(), progress: () => {}, aprogress: () => {} } }),
   help: m => { if (m.type !== 'think') return null; const p = new E.Position(); p.setSfen(m.sfen); const board = Array.from(p.board), hand = Array.from(p.hand), side = p.side, moves = [];
