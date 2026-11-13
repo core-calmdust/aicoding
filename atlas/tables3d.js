@@ -1576,7 +1576,7 @@
       const m = flat(TT, sh, 180, Y1 + 4 - FL); m.rotation.y = Math.PI / 2; m.position.set(-62, (FL + Y1 + 4) / 2, 60); g.add(m); }
     // the garden (2026-11-09, a proper karesansui): raked gravel with straight lines across the field and rings rippling out round the
     // moss islands and their rocks, standing stones set in threes, cloud-pruned pines, a tsukubai and stepping stones by the veranda,
-    // a white earthen wall with a tiled cap at the back, and beyond it a temple hall and a five-storey pagoda over the trees
+    // a white earthen wall with a tiled cap at the back, and beyond it the Golden Pavilion (金閣) on its pond over the trees
     const night = T === 'night', GX0 = -120, GX1 = 120, GZ0 = EDGE - 1, GZ1 = EDGE - 165, WZ = GZ1 - 1.5;
     const isl = [   // islands: centre, radii, moss or not, shape seed (the rocks and trees on them are placed below)
       { x: -30, z: -84, rx: 17, rz: 10, moss: 1, s: 1 }, { x: 34, z: -118, rx: 14, rz: 8, moss: 1, s: 2 }, { x: 8, z: -60, rx: 4.6, rz: 3.4, moss: 0, s: 3 },
@@ -1693,7 +1693,7 @@
         const en = new TT.Mesh(new TT.PlaneGeometry(WL, .7), M({ map: rep(TT, endT, WL / 1.5, 1), roughness: .6, bump: false, color: night ? 0x6a7088 : 0xffffff })); en.rotation.x = .2; at(Gc, en, 0, -Math.sin(sl) * L - .2, Math.cos(sl) * L + .05, 0, false); });
       at(g, new TT.Mesh(new TT.BoxGeometry(WL, 1.1, 1), M({ color: night ? 0x1a1c24 : 0x34363c, roughness: .6 })), 0, WT + 2, WZ - 1.5, 0, false);   // the ridge
       at(g, new TT.Mesh(new TT.BoxGeometry(WL, .8, 3.3), M({ color: 0x2a2620, roughness: .9 })), 0, WT + .2, WZ - 1.5, 0, false); }   // the shadowed band under the cap
-    // the far garden (painted, beyond the wall): a temple hall and a five-storey pagoda among cedars and maples, hills, the sky of the hour
+    // the far garden (painted, beyond the wall): the Golden Pavilion on its pond among cedars, pines and maples, hills, the sky of the hour
     skyDome(o, T, 520, night ? '#0c1218' : '#5a6a48');
     panoBand(o, 'tbl6-pano2-' + T, 300, -100, 110, GL - 40, 170, 4096, (c, ppu, ax) => {
       const R = rng(66), W0 = ax(110), W1 = ax(-100), HZ = GL + 46, sk = SKY[T], ev = T === 'evening', sh = (d, e, n) => night ? n : ev ? e : d;
@@ -1707,27 +1707,72 @@
       blur(c, .25 * ppu);
       const cedar = sh('#2c3e2c', '#2c2a28', '#070a0a'), tile = sh('#454a54', '#3e3846', '#08090d'), red = sh('#b4452e', '#8a3a30', '#0c0a0e'), wall = sh('#ece4d0', '#c0aca0', '#0e0e12'), dark = sh('#1e1a18', '#1a1416', '#050506'), eave = sh('rgba(220,224,232,.55)', 'rgba(255,200,170,.35)', 'rgba(80,90,120,.25)');
       const cone = (x, b, h, w, col) => { c.fillStyle = col; c.beginPath(); c.moveTo(x - w, b); c.lineTo(x - w * .3, b + h * .5); c.lineTo(x, b + h); c.lineTo(x + w * .3, b + h * .5); c.lineTo(x + w, b); c.fill(); };
-      for (let i = 0; i < 80; i++) { const a = -100 + R() * 210; cone(ax(a), -6 + R() * 6, 26 + R() * 24, 3 + R() * 2.4, cedar); }   // tall cedars behind the temple
+      for (let i = 0; i < 80; i++) { const a = -100 + R() * 210; cone(ax(a), -6 + R() * 6, 22 + R() * 20, 3 + R() * 2.4, cedar); }   // tall cedars behind the pavilion
       // a roof with upturned eaves: y = the eave line, h = its rise, w = its span
       const roof = (x, y, w, h, top) => { c.beginPath(); c.moveTo(x - w / 2, y + h * .5); c.quadraticCurveTo(x - w / 2 + w * .16, y - .3, x - w * .28, y); c.lineTo(x + w * .28, y); c.quadraticCurveTo(x + w / 2 - w * .16, y - .3, x + w / 2, y + h * .5); c.lineTo(x + top / 2, y + h); c.lineTo(x - top / 2, y + h); c.closePath(); };
       const tiles = (x, w, y0, y1) => { c.save(); c.clip(); c.fillStyle = 'rgba(0,0,0,.28)'; for (let k = x - w / 2; k < x + w / 2; k += 1.1) c.fillRect(k, y0, .35, y1 - y0); c.fillStyle = lin(c, y1, y0, [[0, 'rgba(255,255,255,.12)'], [1, 'rgba(0,0,0,.25)']]); c.fillRect(x - w / 2, y0, w, y1 - y0); c.restore(); };
       const eaveLine = (x, y, w, h) => { c.strokeStyle = eave; c.lineWidth = .5; c.beginPath(); c.moveTo(x - w / 2, y + h * .5); c.quadraticCurveTo(x - w / 2 + w * .16, y - .3, x - w * .28, y); c.lineTo(x + w * .28, y); c.quadraticCurveTo(x + w / 2 - w * .16, y - .3, x + w / 2, y + h * .5); c.stroke(); };
-      { const x = ax(-14), y = 14, W = 96;   // the main hall (hondo): white walls between vermilion posts, a deep hipped-and-gabled roof
-        c.fillStyle = wall; c.fillRect(x - 38, y - 14, 76, 14); c.fillStyle = red; for (let k = 0; k <= 8; k++) c.fillRect(x - 38 + k * 9.5 - .8, y - 14, 1.6, 14); c.fillRect(x - 38, y - 3, 76, 1.2); c.fillStyle = lin(c, y, y - 5, [[0, 'rgba(0,0,0,.55)'], [1, 'rgba(0,0,0,0)']]); c.fillRect(x - 38, y - 5, 76, 5);
-        c.fillStyle = tile; roof(x, y, W, 15, W - 36); c.fill(); tiles(x, W, y - 1, y + 15); eaveLine(x, y, W, 15);
-        c.fillStyle = sh('#4e535e', '#463e4c', '#0a0b0f'); c.beginPath(); c.moveTo(x - W / 2 + 17, y + 14.4); c.lineTo(x - W / 2 + 27, y + 26); c.lineTo(x + W / 2 - 27, y + 26); c.lineTo(x + W / 2 - 17, y + 14.4); c.closePath(); c.fill(); tiles(x, W, y + 14, y + 26);
-        c.fillStyle = dark; c.fillRect(x - W / 2 + 26, y + 25.6, W - 52, 1.8); [-1, 1].forEach(sd => { c.beginPath(); c.moveTo(x + sd * (W / 2 - 26), y + 25.6); c.quadraticCurveTo(x + sd * (W / 2 - 24), y + 29, x + sd * (W / 2 - 25.6), y + 30.4); c.lineTo(x + sd * (W / 2 - 28), y + 27.4); c.fill(); });   // the ridge and its shibi
-        c.fillStyle = sh('#c8a050', '#a07840', '#0a0a0a'); ell(c, x, y + 20, 1.4, 1.4); }
-      { const x = ax(26), y0 = 4;   // the five-storey pagoda
-        for (let i = 0; i < 5; i++) { const w = 27 - i * 3.3, yb = y0 + i * 12.6, bw = w * .44;
-          c.fillStyle = wall; c.fillRect(x - bw / 2, yb, bw, 7.4); c.fillStyle = red; for (let k = 0; k <= 4; k++) c.fillRect(x - bw / 2 + k * bw / 4 - .5, yb, 1, 7.4); c.fillRect(x - bw / 2, yb + 5.6, bw, .9);
-          c.fillStyle = lin(c, yb + 7.4, yb + 4, [[0, 'rgba(0,0,0,.6)'], [1, 'rgba(0,0,0,0)']]); c.fillRect(x - bw / 2, yb + 4, bw, 3.4);
-          c.fillStyle = tile; roof(x, yb + 7.4, w, 5.2, w * .34); c.fill(); tiles(x, w, yb + 7, yb + 12.6); eaveLine(x, yb + 7.4, w, 5.2); }
-        const yt = y0 + 5 * 12.6; c.fillStyle = sh('#6a5a3e', '#5a4838', '#08080a'); c.fillRect(x - .45, yt - 1, .9, 24); for (let k = 0; k < 9; k++) ell(c, x, yt + 4 + k * 1.9, 1.7 - k * .05, .45); ell(c, x, yt + 23.5, 1.2, 1.6); }
+      // 金閣 (2026-11-13: the Golden Pavilion in place of a hall that read as Chinese): three storeys on the edge of its pond —
+      // the 法水院 below in plain wood with white shoji, the 潮音洞 and the 究竟頂 above in gold leaf, each under a thin, wide eave of
+      // cypress-bark shingles with a gold edge, a pyramidal top roof and the gilt phoenix on it; the pond (鏡湖池) mirrors it
+      const KX = ax(-14), KB = 2;
+      const gold = sh('#e2b94e', '#d08e3c', '#1c160a'), gold2 = sh('#b88a2c', '#9a6428', '#120e06'), goldHi = sh('rgba(255,244,200,.7)', 'rgba(255,214,160,.55)', 'rgba(90,80,40,.15)');
+      const bark = sh('#4a3628', '#3e2c26', '#080606'), barkHi = sh('rgba(255,236,210,.18)', 'rgba(255,200,170,.14)', 'rgba(0,0,0,0)'), wood = sh('#8e7a5c', '#7a5e4c', '#0c0a08'), shoji = sh('#efe9d8', '#d8bca6', '#141418');
+      const goldWall = (x0, y0, w, h, bays) => { c.fillStyle = lin(c, y0 + h, y0, [[0, gold], [.55, gold2], [1, gold]]); c.fillRect(x0, y0, w, h);
+        c.fillStyle = goldHi; c.fillRect(x0 + w * .08, y0 + h * .15, w * .06, h * .7); c.fillRect(x0 + w * .55, y0 + h * .2, w * .03, h * .6);
+        c.fillStyle = sh('rgba(110,70,10,.45)', 'rgba(90,50,10,.45)', 'rgba(0,0,0,.4)'); for (let k = 0; k <= bays; k++) c.fillRect(x0 + k * w / bays - .3, y0, .6, h);
+        for (let k = 0; k < bays; k++) { const bx = x0 + k * w / bays + w / bays * .22, bw = w / bays * .56; c.fillRect(bx, y0 + h * .2, bw, .35); c.fillRect(bx, y0 + h * .75, bw, .35); } };   // (bays: posts and the panel doors' frames)
+      const rail = (x0, y0, w) => { c.fillStyle = sh('#5a4430', '#4a3428', '#060504'); c.fillRect(x0 - 1.4, y0, w + 2.8, .7); c.fillRect(x0 - 1.4, y0 + 2.1, w + 2.8, .45); for (let k = 0; k <= w + 2.8; k += 1.6) c.fillRect(x0 - 1.4 + k, y0, .3, 2.5); };   // a balcony railing (高欄)
+      // a thin shingled eave with a slight upward sweep and a gold edge: y = the eave's lower line, w = its span, top = its upper width, h = its rise
+      const eaveR = (x, y, w, h, top) => { c.fillStyle = bark; c.beginPath(); c.moveTo(x - w / 2, y + .9); c.quadraticCurveTo(x - w / 2 + w * .12, y - .2, x - w * .3, y); c.lineTo(x + w * .3, y); c.quadraticCurveTo(x + w / 2 - w * .12, y - .2, x + w / 2, y + .9);
+        c.lineTo(x + top / 2, y + h); c.lineTo(x - top / 2, y + h); c.closePath(); c.fill();
+        c.save(); c.clip(); c.fillStyle = 'rgba(0,0,0,.22)'; for (let k = x - w / 2; k < x + w / 2; k += .8) c.fillRect(k, y, .22, h); c.fillStyle = barkHi; c.fillRect(x - w / 2, y + h * .55, w, h * .45); c.restore();
+        c.strokeStyle = gold; c.lineWidth = .45; c.beginPath(); c.moveTo(x - w / 2, y + .9); c.quadraticCurveTo(x - w / 2 + w * .12, y - .2, x - w * .3, y); c.lineTo(x + w * .3, y); c.quadraticCurveTo(x + w / 2 - w * .12, y - .2, x + w / 2, y + .9); c.stroke();
+        c.fillStyle = 'rgba(0,0,0,.35)'; c.fillRect(x - w * .3, y - 1.1, w * .6, 1.1); };   // (the eave's shadow on the wall below)
+      const KS = 1.6;   // (drawn at 1.6×: it is the garden's focus, read in detail from the engawa)
+      const pavilion = (flip) => { c.save(); if (flip) { c.translate(0, 2 * KB); c.scale(1, -1); } c.translate(KX, KB); c.scale(KS, KS); c.translate(-KX, -KB);
+        // 1F 法水院: wood posts, white shoji, an open veranda; a small annex (漱清) to the right
+        const w1 = 44, h1 = 11, y1 = KB; c.fillStyle = wood; c.fillRect(KX - w1 / 2, y1, w1, h1);
+        c.fillStyle = shoji; for (let k = 0; k < 7; k++) { const bx = KX - w1 / 2 + 1.2 + k * (w1 - 2.4) / 7; c.fillRect(bx + .5, y1 + 1.4, (w1 - 2.4) / 7 - 1, h1 - 3.4); }
+        c.fillStyle = sh('rgba(120,100,70,.5)', 'rgba(100,80,60,.5)', 'rgba(0,0,0,.4)'); for (let k = 0; k < 7; k++) { const bx = KX - w1 / 2 + 1.2 + k * (w1 - 2.4) / 7; for (let r = 1; r < 4; r++) c.fillRect(bx + .5, y1 + 1.4 + r * (h1 - 3.4) / 4, (w1 - 2.4) / 7 - 1, .2); }
+        c.fillStyle = sh('#3a2c20', '#30241c', '#050404'); c.fillRect(KX - w1 / 2 - 2, y1 - .6, w1 + 4, 1.2); for (let k = 0; k <= 8; k++) c.fillRect(KX - w1 / 2 - 2 + k * (w1 + 4) / 8 - .35, y1 - 2.4, .7, 2);   // the floor on its piles over the water
+        c.fillStyle = wood; c.fillRect(KX + w1 / 2, y1, 8, 7); c.fillStyle = shoji; c.fillRect(KX + w1 / 2 + 1, y1 + 1, 6, 4.4); eaveR(KX + w1 / 2 + 4.6, y1 + 7, 13, 3, 5);
+        eaveR(KX, y1 + h1, w1 + 14, 4.2, w1 - 8);
+        // 2F 潮音洞: gold, a railing round it
+        const w2 = 38, h2 = 9.5, y2 = y1 + h1 + 4.2; goldWall(KX - w2 / 2, y2, w2, h2, 5); rail(KX - w2 / 2, y2, w2);
+        eaveR(KX, y2 + h2, w2 + 14, 4, w2 - 10);
+        // 3F 究竟頂: gold, square, cusped (花頭) windows
+        const w3 = 22, h3 = 8.5, y3 = y2 + h2 + 4; goldWall(KX - w3 / 2, y3, w3, h3, 3); rail(KX - w3 / 2, y3, w3);
+        c.fillStyle = sh('#3a2a14', '#30200e', '#050402'); [-1, 1].forEach(sd => { const wx = KX + sd * w3 * .22; c.beginPath(); c.moveTo(wx - 2, y3 + 1.6); c.lineTo(wx - 2, y3 + 5); c.quadraticCurveTo(wx - 1.6, y3 + 6.6, wx, y3 + 6.9); c.quadraticCurveTo(wx + 1.6, y3 + 6.6, wx + 2, y3 + 5); c.lineTo(wx + 2, y3 + 1.6); c.fill(); });
+        // the top roof: pyramidal (宝形造), shingled, steep at the top
+        const yr = y3 + h3, wr = w3 + 16; c.fillStyle = bark; c.beginPath(); c.moveTo(KX - wr / 2, yr + 1); c.quadraticCurveTo(KX - wr / 2 + wr * .14, yr - .2, KX - wr * .3, yr); c.lineTo(KX + wr * .3, yr); c.quadraticCurveTo(KX + wr / 2 - wr * .14, yr - .2, KX + wr / 2, yr + 1);
+        c.quadraticCurveTo(KX + wr * .16, yr + 4, KX + 1.4, yr + 11); c.lineTo(KX - 1.4, yr + 11); c.quadraticCurveTo(KX - wr * .16, yr + 4, KX - wr / 2, yr + 1); c.fill();
+        c.save(); c.clip(); c.fillStyle = 'rgba(0,0,0,.2)'; for (let k = KX - wr / 2; k < KX + wr / 2; k += .8) c.fillRect(k, yr, .22, 12); c.fillStyle = barkHi; c.fillRect(KX - wr / 2, yr + 5, wr, 6); c.restore();
+        c.strokeStyle = gold; c.lineWidth = .45; c.beginPath(); c.moveTo(KX - wr / 2, yr + 1); c.quadraticCurveTo(KX - wr / 2 + wr * .14, yr - .2, KX - wr * .3, yr); c.lineTo(KX + wr * .3, yr); c.quadraticCurveTo(KX + wr / 2 - wr * .14, yr - .2, KX + wr / 2, yr + 1); c.stroke();
+        // the gilt phoenix (鳳凰) on its post
+        c.fillStyle = gold; c.fillRect(KX - .35, yr + 11, .7, 2); c.beginPath(); c.moveTo(KX - 2.6, yr + 13); c.quadraticCurveTo(KX - 1, yr + 13.6, KX + .4, yr + 16.6); c.lineTo(KX + 1.2, yr + 15.4); c.quadraticCurveTo(KX + 1.6, yr + 14, KX + 2.8, yr + 13.6); c.quadraticCurveTo(KX + 1, yr + 12.4, KX - 2.6, yr + 13); c.fill();
+        c.fillStyle = goldHi; ell(c, KX + .6, yr + 15.6, .5, .5);
+        c.restore(); };
+      pavilion(false);
       // the near trees: round broadleaf crowns and maples in autumn, closing round the feet of the buildings
       const broad = [sh('#3e5a32', '#3a3a2c', '#080c0a'), sh('#4e6a3a', '#4a4634', '#0a0e0c'), sh('#5e7a44', '#56503c', '#0c100e')], momi = night ? ['#1c0a08', '#220e0a'] : ev ? ['#a8402a', '#b8602a', '#8a3a2a'] : ['#c8402a', '#e07a2a', '#d8a030', '#b83a26'];
-      for (let i = 0; i < 720; i++) { const a = -100 + R() * 210, x = ax(a), top = 4 + 6 * Math.sin(a / 9) + 4 * Math.sin(a / 3.7), y = -14 + R() * (top + 14), r = 3 + R() * 4, mp = R() < .16;
+      for (let i = 0; i < 720; i++) { const a = -100 + R() * 210, x = ax(a), near = Math.abs(x - KX) < 66, top = near ? -14 : 4 + 6 * Math.sin(a / 9) + 4 * Math.sin(a / 3.7), y = -14 + R() * (top + 14), r = 3 + R() * 4, mp = R() < .16;   // (none before the pavilion: the pond is there)
+        if (near && Math.abs(x - KX) < 58) continue;
         c.fillStyle = mp ? momi[i % momi.length] : broad[i % 3]; ell(c, x, y, r, r * .8); c.fillStyle = night ? 'rgba(0,0,0,0)' : 'rgba(255,250,220,.1)'; ell(c, x - r * .2, y + r * .25, r * .6, r * .45); }
+      // the pond (鏡湖池) in front: still water with the pavilion mirrored in it, pine islets, ripples of light
+      { const PY0 = -13, PY1 = KB - 3.4, PX0 = KX - 80, PX1 = KX + 80;
+        c.save(); c.beginPath(); c.moveTo(PX0, PY1); c.quadraticCurveTo(KX, PY1 + 1.2, PX1, PY1); c.lineTo(PX1 + 6, PY0); c.lineTo(PX0 - 6, PY0); c.closePath(); c.clip();
+        c.fillStyle = lin(c, PY1, PY0, [[0, sh('#5e7480', '#5a4e5c', '#0a0e14')], [1, sh('#3e5462', '#3a3442', '#06080c')]]); c.fillRect(PX0 - 6, PY0, PX1 - PX0 + 12, PY1 - PY0);
+        c.globalAlpha = .62; pavilion(true); c.globalAlpha = 1;   // (the reflection)
+        c.fillStyle = sh('rgba(70,96,110,.35)', 'rgba(80,70,90,.35)', 'rgba(5,8,12,.4)'); c.fillRect(PX0 - 6, PY0, PX1 - PX0 + 12, PY1 - PY0);
+        c.fillStyle = sh('rgba(255,255,255,.28)', 'rgba(255,220,190,.25)', 'rgba(200,210,255,.12)'); for (let i = 0; i < 90; i++) { const yy = PY0 + 1 + R() * (PY1 - PY0 - 2), xx = PX0 + R() * (PX1 - PX0); c.fillRect(xx, yy, 2 + R() * 6, .18); }
+        c.restore();
+        // pine islets (with rocks) on the water, the stone edge of the far shore
+        const pine = sh('#2e4a2e', '#2e3428', '#060a08'), rock = sh('#7e7a70', '#6a5e5a', '#0c0c0e');
+        [[-62, -7, 10], [-40, -10.5, 6], [46, -7.5, 11], [66, -11, 5], [28, -11.5, 4]].forEach(([dx, yy, r]) => { const x = KX + dx;
+          c.fillStyle = rock; ell(c, x, yy, r * .9, 1.1); c.fillStyle = sh('#6a7a4a', '#5a5444', '#0a0c08'); ell(c, x, yy + .6, r * .75, .9);
+          c.fillStyle = sh('#4a3426', '#3e2c24', '#060404'); c.beginPath(); c.moveTo(x - .4, yy + .8); c.quadraticCurveTo(x + r * .2, yy + r * .7, x + r * .5, yy + r * .9); c.lineTo(x + r * .5 + .5, yy + r * .9); c.quadraticCurveTo(x + r * .25, yy + r * .7, x + .4, yy + .8); c.fill();
+          c.fillStyle = pine; [[.5, .95, .55], [.15, .75, .42], [.75, .7, .38]].forEach(([fx, fy, fr]) => ell(c, x + r * fx, yy + r * fy, r * fr, r * fr * .38)); }); }
       c.fillStyle = broad[0]; c.fillRect(W0, GL - 40, W1 - W0, -12 - (GL - 40));
       blur(c, 0);
     });
