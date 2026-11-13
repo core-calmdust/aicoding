@@ -200,7 +200,7 @@
     sakura: { top: 'top-sakura', side: 'sakura', stand: 'sakura', leg: ['#8a3a26', '#4a1c12'], bottom: 0x2a0806, line: 'rgba(48,20,10,.92)', raden: true },   // (v3: 朱溜 lacquer with 螺鈿 cherry blossoms and a 鶯)
   };
   const SH3 = (() => { try { return new URL('../../images/atlas/shogi3d/', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../images/atlas/shogi3d/'; } })();
-  const SH3V = '?v=13';
+  const SH3V = '?v=14';
   const lookOf = o => { const k = (o && o.look) || (X.BOARDS && X.BOARDS.shogi ? X.BOARDS.shogi.get() : 'kaya'); return LOOK[k] ? k : 'kaya'; };
   const imgs = {};
   function withImg(name, fn) {
@@ -246,7 +246,7 @@
     } else if (L.raden) {   // 螺鈿: 朱溜 lacquer, shell pieces (the same maps as 蒔絵)
       const lq = (c, mm) => nacre(M({ map: imgTex(c), roughnessMap: imgTex(mm, false), metalnessMap: imgTex(mm, false), bumpMap: imgTex(mm, false), bumpScale: .002, roughness: 1, metalness: .6, clearcoat: .9, clearcoatRoughness: .06, envMapIntensity: 1.4 }));   // (2026-11-13: the shell brighter — its own colour kept under the shimmer, less of it given to mirroring the room)
       side = lq('side-sakura', 'side-sakura-m'); end = lq('end-sakura', 'end-sakura-m');
-      leg = M({ color: 0x4a0d0b, roughness: .16, clearcoat: .9, clearcoatRoughness: .06 });
+      leg = M({ color: 0x220706, roughness: .16, clearcoat: .9, clearcoatRoughness: .06 });   // (2026-11-13: the dark 溜塗 of the faces)
     } else {
       const fin = L.gloss ? { roughness: .2, clearcoat: .8, clearcoatRoughness: .1 } : L.bark ? { roughness: .26, clearcoat: .65, clearcoatRoughness: .14 } : L.satin ? { roughness: .5 } : { roughness: .42, clearcoat: .3, clearcoatRoughness: .3 };
       side = M(Object.assign({ map: imgTex('side-' + L.side), bumpScale: .002 }, fin));
@@ -273,13 +273,13 @@
     const L = LOOK[look];
     let m;
     if (L.lacq) m = M({ map: imgTex('stand-makie'), roughnessMap: imgTex('stand-makie-m', false), metalnessMap: imgTex('stand-makie-m', false), bumpMap: imgTex('stand-makie-m', false), bumpScale: .003, roughness: 1, metalness: 1, clearcoat: .8, clearcoatRoughness: .08 });
-    else if (L.raden) m = nacre(M({ map: imgTex('stand-sakura'), roughnessMap: imgTex('stand-sakura-m', false), metalnessMap: imgTex('stand-sakura-m', false), bumpMap: imgTex('stand-sakura-m', false), bumpScale: .002, roughness: 1, metalness: 1, clearcoat: .9, clearcoatRoughness: .06 }));
+    else if (L.raden) m = nacre(M({ map: imgTex('stand-sakura'), roughnessMap: imgTex('stand-sakura-m', false), metalnessMap: imgTex('stand-sakura-m', false), bumpMap: imgTex('stand-sakura-m', false), bumpScale: .002, roughness: 1, metalness: .6, clearcoat: .9, clearcoatRoughness: .06 }));
     else if (L.stand) m = M({ map: imgTex('stand-' + L.stand), roughness: L.gloss ? .5 : .9, bumpScale: .001 });
     else m = M({ map: kayaPlain('kayaStand'), roughness: .92, bumpScale: .001 });   // (matte like the board top, 2026-11-12)
     m.color.multiply(new (T().Color)(STAND_TONE).convertSRGBToLinear());
     // 蒔絵 / 螺鈿 (2026-11-12, the user): the picture on the plate's top only — its thin edges, the base and the column plain lacquer
     // (the picture squeezed onto them read as stray thin inlays)
-    if (L.lacq || L.raden) m.userData.plain = M({ color: L.raden ? 0x4a0d0b : 0x120d0a, roughness: .16, clearcoat: .9, clearcoatRoughness: .06 });
+    if (L.lacq || L.raden) m.userData.plain = M({ color: L.raden ? 0x220706 : 0x120d0a, roughness: .16, clearcoat: .9, clearcoatRoughness: .06 });
     return (standMs[look] = m);
   }
   // cr {c0, r0} (詰将棋's close-up, shogi/index.html tzWindow): an n×n window of the 9×9 board — the stars where they fall inside it
