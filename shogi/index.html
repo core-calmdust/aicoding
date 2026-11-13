@@ -1766,7 +1766,7 @@ html.atlas-skin #newOverlay #lvNote{display:none!important}   /* (the long note 
 
 <!-- new game -->
 <div class="overlay" id="newOverlay">
-  <div class="modal" data-ngl-order="fLevel,lvNote,fLevel2,fHandi,fColor,fClock">
+  <div class="modal" data-ngl-order="fLevel,lvNote,fLevel2,|,fColor,fHandi,fClock">
     <h2 data-i18n="ng.title"></h2>
     <div class="field"><label data-i18n="ng.mode"></label>
       <div class="seg" id="segMode"><button data-v="ai" data-i18n="ng.ai"></button><button data-v="rated" data-i18n="ng.rated"></button><button data-v="pvp" data-i18n="ng.pvp"></button><button data-v="watch" data-i18n="ng.watch"></button><button data-v="lesson" data-i18n="ng.lesson"></button><button data-v="tsume" data-i18n="ng.tsume"></button><button data-v="edit" data-i18n="ng.edit"></button><button data-v="online" data-i18n="ng.online"></button></div>
@@ -1790,6 +1790,7 @@ html.atlas-skin #newOverlay #lvNote{display:none!important}   /* (the long note 
         <label><input type="checkbox" id="optLast"><span data-i18n="ng.last"></span></label>
         <label><input type="checkbox" id="optEval"><span data-i18n="ng.eval"></span></label>
         <label><input type="checkbox" id="optCoach"><span data-i18n="ng.coach"></span></label>
+        <label><input type="checkbox" id="optAnim"><span id="optAnimL"></span></label>
       </div>
     </div>
     <div class="field dsg-field" data-ng="design"><label data-i18n="ng.pieces"></label><b class="dsg-now" id="pcNow"></b><div class="dsg dsg-pc" id="segPieces"><button type="button" data-v="2kanji_3d"><span class="th pth"></span><span class="nm" data-i18n="pc.3d"></span></button><button type="button" data-v="orangain"><span class="th pth"></span><span class="nm" data-i18n="pc.orangain"></span></button><button type="button" data-v="1kanji_3d"><span class="th pth"></span><span class="nm" data-i18n="pc.ryoko"></span></button><button type="button" data-v="ryoko"><span class="th pth"></span><span class="nm" data-i18n="pc.ryokoL"></span></button><button type="button" data-v="kinki"><span class="th pth"></span><span class="nm" data-i18n="pc.kinki"></span></button><button type="button" data-v="minase"><span class="th pth"></span><span class="nm" data-i18n="pc.minase"></span></button><button type="button" data-v="one"><span class="th pth"></span><span class="nm" data-i18n="pc.one"></span></button><button type="button" data-v="two"><span class="th pth"></span><span class="nm" data-i18n="pc.two"></span></button><button type="button" data-v="intl"><span class="th pth"></span><span class="nm" data-i18n="pc.intl"></span></button><button type="button" data-v="intl0"><span class="th pth"></span><span class="nm" data-i18n="pc.intl0"></span></button></div></div>
@@ -1797,7 +1798,7 @@ html.atlas-skin #newOverlay #lvNote{display:none!important}   /* (the long note 
     <div class="pc-credit" id="pcCredit" data-ng="design" data-ng-credit></div>
     </div></div>
     <div class="modal-actions"><button class="mbtn" id="btnCancelNew" data-i18n="close"></button><button class="mbtn go" id="btnStart" data-i18n="start"></button></div>
-    <div class="credit"><span data-i18n="credit"></span> <a href="https://wdoor.c.u-tokyo.ac.jp/shogi/" target="_blank" rel="noopener">Floodgate</a> · <a href="MODEL_CARD.md" target="_blank" data-i18n="modelcard"></a><br><span data-i18n="sndCredit"></span> <a href="http://notanomori.net/" target="_blank" rel="noopener">notanomori</a> (<a href="https://creativecommons.org/licenses/by/3.0/deed.ja" target="_blank" rel="noopener">CC BY 3.0</a>)</div>
+    <div class="credit"><span data-i18n="sndCredit"></span> <a href="http://notanomori.net/" target="_blank" rel="noopener">notanomori</a> (<a href="https://creativecommons.org/licenses/by/3.0/deed.ja" target="_blank" rel="noopener">CC BY 3.0</a>)</div>
   </div>
 </div>
 
@@ -3411,7 +3412,7 @@ function ngPlace(rt) {
     if (l2.previousElementSibling !== ln) ln.after(l2);
   }
   if (m === 'pvp') put(ck, c2, () => c2.prepend(ck)); else put(ck, c1, () => $('#fColor').after(ck));
-  if (rt) put(rs, c2, () => c2.prepend(rs)); else put(rs, $('#fRatedInfo'), () => $('#fRatedInfo').append(rs));
+  if (rt && !c1.closest('.modal[data-ngl-order]')) put(rs, c2, () => c2.prepend(rs)); else put(rs, $('#fRatedInfo'), () => $('#fRatedInfo').append(rs));   // (the full version's panels: the card stays under the text, 2026-11-13)
   c1.classList.toggle('ng-spread', m === 'ai');
   for (const c of cols) c.classList.toggle('ng-empty', ![...c.children].some(e => !e.hasAttribute('data-ng') && !e.classList.contains('hidden') && !(e.id === 'rtStats' && !rt)));
 }
@@ -3574,13 +3575,18 @@ function proCfg(lv) {
   const IC = { legal: `<svg ${S}><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="12" cy="12" r="2.6"/></svg>`,
     last: `<svg ${S}><circle cx="12" cy="12" r="7"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>`,
     eval: `<svg ${S}><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>`,
-    coach: `<svg ${S}><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M9 12h.01M12 12h.01M15 12h.01"/></svg>` };
+    coach: `<svg ${S}><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M9 12h.01M12 12h.01M15 12h.01"/></svg>`,
+    anim: `<svg ${S}><path d="M4 12h3M2 7h5M3 17h4"/><circle cx="15" cy="12" r="6"/></svg>` };
+  // アニメーション (the pieces' slide and the promotion's turn-over; 2026-11-13, as reversi)
+  const AN = { ja: 'アニメーション', en: 'Animation', zh: '动画', 'zh-TW': '動畫', ko: '애니메이션', es: 'Animación', fr: 'Animation', pt: 'Animação', de: 'Animation', ru: 'Анимация', tr: 'Animasyon', id: 'Animasi', hi: 'एनिमेशन', ar: 'الرسوم المتحركة' };
+  { const cb = $('#optAnim'), l = $('#optAnimL'); if (cb) cb.checked = settings.anim !== false; if (l) l.textContent = AN[LANG] || AN.en;
+    addEventListener('langchange', () => { if (l) l.textContent = AN[LANG] || AN.en; }); }
   const GL = { ja: '将棋', en: 'Shogi', zh: '将棋', 'zh-TW': '將棋', ko: '쇼기', es: 'Shogi', fr: 'Shogi', pt: 'Shogi', de: 'Shogi', ru: 'Сёги', tr: 'Shogi', id: 'Shogi', hi: 'शोगी', ar: 'شوغي' };
   const rtOff = k => (k === 'eval' || k === 'coach') && typeof rtLive === 'function' && rtLive();
-  [['optLegal', 'legal'], ['optLast', 'last'], ['optEval', 'eval'], ['optCoach', 'coach']].forEach(([id, k]) => {
+  [['optLegal', 'legal'], ['optLast', 'last'], ['optEval', 'eval'], ['optCoach', 'coach'], ['optAnim', 'anim']].forEach(([id, k]) => {
     const cb = $('#' + id); if (!cb) return;
-    HeaderBar.addOption({ id: 'disp-' + k, icon: IC[k], type: 'toggle', group: true, groupLabel: GL, label: () => (cb.closest('label') || cb).textContent.trim(),
-      disabled: () => rtOff(k), get: () => !!settings[k],
+    HeaderBar.addOption({ id: 'disp-' + k, icon: IC[k], type: 'toggle', group: true, groupLabel: GL, label: () => k === 'anim' ? AN[LANG] || AN.en : (cb.closest('label') || cb).textContent.trim(),
+      disabled: () => rtOff(k), get: () => k === 'anim' ? settings.anim !== false : !!settings[k],
       set: v => { settings[k] = !!v; cb.checked = !!v; try { renderBoard(); renderInfo(); } catch (e) {} save(); } });
   });
 })();
@@ -3636,6 +3642,15 @@ function fisSync() {   // the new-game dialog: the Fischer button shows the chos
   $('#btnFis').textContent = Fischer.name(LANG);
   $('#fisPick').classList.toggle('hidden', dlg.clock !== 4); fisUi.sync();
 }
+// the clock stands still while the window is not in front (shared/focusgate.js freezes the page then), except against a person:
+// two players on one device (pvp) and online games keep running (2026-11-13, common rule)
+let clkFrz = 0;
+const clkNow = () => clkFrz || Date.now();
+setInterval(() => {
+  const g = window.__focusGate, c = game && game.clock, stop = !!(g && g.frozen) && settings.mode !== 'pvp' && settings.mode !== 'online' && !net;
+  if (stop && !clkFrz) clkFrz = Date.now();
+  else if (!stop && clkFrz) { if (c) c.t0 += Date.now() - Math.max(clkFrz, c.t0); clkFrz = 0; }
+}, 200);
 const clockSpec = i => { if (i !== 4) return CLOCKS[i]; const f = window.Fischer && Fischer.parse(fisId()) || { main: 300, inc: 10 }; return { main: f.main, byo: 0, inc: f.inc }; };
 function clockInit() {
   const c = clockSpec(game.rated ? RT_CLOCK : settings.clock || 0);
@@ -3648,7 +3663,7 @@ function clockOnMove(side) {
   const c = game && game.clock; if (!c) return;
   if (c.hold) { delete c.hold; c.byoLeft = c.byo; c.t0 = Date.now(); return; }
   if (clockActive(side)) {
-    let el = (Date.now() - c.t0) / 1000;
+    let el = Math.max(0, clkNow() - c.t0) / 1000;
     if (c.left[side] > 0) { const use = Math.min(el, c.left[side]); c.left[side] -= use; el -= use; }
     if (c.inc) c.left[side] += c.inc;
   }
@@ -3664,7 +3679,7 @@ function clockTick() {
     el.classList.add('on');
     let main = c.left[side], byo = c.byo;
     if (P && P.side === side && clockActive(side)) {
-      let used = (Date.now() - c.t0) / 1000;
+      let used = Math.max(0, clkNow() - c.t0) / 1000;
       const m = Math.min(used, main); main -= m; used -= m; byo = c.byo - used;
       if (main <= 0 && byo <= 0) {
         game.over = { winner: side ^ 1, reason: 'time', ply: game.moves.length };
@@ -6643,7 +6658,7 @@ if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStar
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=90l42'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=90l43'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
@@ -6658,7 +6673,7 @@ if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStar
 <script src="../shared/infotabs.js?v=22l14" defer></script>
 <script src="../shared/pickdrop.js?v=8l14"></script>
 <script src="../shared/ngtabs.js?v=25l14"></script>
-<script src="../shared/nglux.js?v=24l14"></script>
+<script src="../shared/nglux.js?v=24l15"></script>
 <script src="../shared/resumeng.js?v=1l14"></script>
 <script src="../shared/langsel.js?v=2l14" defer></script>
 <script src="../shared/praline-badge.js?v=7" defer></script>

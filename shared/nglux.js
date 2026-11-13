@@ -173,6 +173,7 @@ function init() {
   if (mf && mf.parentNode === wrap.parentNode && (wrap.compareDocumentPosition(mf) & Node.DOCUMENT_POSITION_FOLLOWING)) wrap.before(mf);
   const items = [...c1.children, ...c2.children].filter(e => own(e) && e !== mf);   // the settings in their original order
   const ord = (modal.dataset.nglOrder || '').split(',').filter(Boolean);   // a game's own order of the panels' settings (data-ngl-order="fLevel,fColor,…", 2026-11-13)
+  const bar = ord.indexOf('|');   // ('|' in the order: the split between the two panels, fixed — e.g. shogi's level alone on the left, 2026-11-13)
   if (ord.length) items.sort((a, b) => { const i = ord.indexOf(a.id), j = ord.indexOf(b.id); return (i < 0 ? 99 : i) - (j < 0 ? 99 : j); });
   const side = ord.length ? null : items.find(e => e.id === 'fColor'); if (side && side.parentNode === c2) { items.splice(items.indexOf(side), 1); const i = items.findIndex(e => e.parentNode === c1 && !/Info$/.test(e.id)); items.splice(i < 0 ? 0 : i, 0, side); }   // your side first, as in every game
   // (a field in a column hidden as empty has no height: it still counts as shown when it is not hidden itself — otherwise a
@@ -192,7 +193,8 @@ function init() {
       const h = vis.map(e => e.offsetHeight + 20 - [...e.querySelectorAll('.pro-panel:not(.hidden), #fisPick:not(.hidden)')].reduce((a, p) => a + p.offsetHeight, 0)), tot = h.reduce((a, b) => a + b, 0);   // (an open PRO panel / the フィッシャー presets do not move the settings to the other side, 2026-11-13)
       let k = vis.length, best = Infinity, acc = 0;
       if (vis.length >= 2) for (let i = 1; i < vis.length; i++) { acc += h[i - 1]; const d = Math.abs(tot - 2 * acc); if (d < best) { best = d; k = i; } }
-      const cut = k < vis.length ? items.indexOf(vis[k]) : items.length;
+      let cut = k < vis.length ? items.indexOf(vis[k]) : items.length;
+      if (bar >= 0) { const r = items.findIndex(e => { const i = ord.indexOf(e.id); return i < 0 || i > bar; }); cut = r < 0 ? items.length : r; }
       place(c1, items.slice(0, cut)); place(c2, items.slice(cut));
       const e1 = !items.slice(0, cut).some(shown) && ![...c1.children].some(e => !own(e) && shown(e)), e2 = !items.slice(cut).some(shown);
       [c1, c2].forEach(c => { const v = [...c.children].filter(e => own(e) && shown(e)); v.forEach((e, i) => e.classList.toggle('ngl-foot', i > 0 && i === v.length - 1 && /^(fDisplay|fOpts|fOptions)$/.test(e.id))); });   // display options at the foot of a panel that has more
