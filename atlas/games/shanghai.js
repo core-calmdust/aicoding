@@ -78,6 +78,11 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
 .shstg .nx{font-size:15px;opacity:.8}
 .shstg .mapb{display:flex;align-items:center;justify-content:center;gap:10px;font:inherit;font-weight:800;font-size:18px;padding:14px;border-radius:16px;border:0;cursor:pointer;color:#fff;background:linear-gradient(135deg,#1b2350,#3a2a6e 60%,#5a3a8a);box-shadow:0 8px 20px -10px rgba(30,20,80,.8);white-space:nowrap}
 .shstg .mapb i{font-style:normal;font-size:22px}
+.shstg .stbox{display:flex;flex-direction:column;gap:10px}
+/* phones: the card's boxes are the size of the other games' (ユーザー 2026-11-14) — one 38px line (next stage · progress) and a 44px map button */
+@media (max-width:819px){.shstg{gap:14px;align-items:stretch!important;flex-wrap:nowrap!important}.shstg > *{align-self:stretch;width:100%;box-sizing:border-box;flex:none!important}.shstg .stbox{flex-direction:row-reverse;align-items:center;justify-content:space-between;gap:8px;min-height:38px;box-sizing:border-box;padding:0 12px;border:2px solid var(--line,#eadfc6);border-radius:12px;background:#fffdf7}
+.shstg .stbox .nx{flex:1 1 auto;min-width:0;font-size:12.5px;font-weight:800;opacity:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.shstg .stbox .pg{flex:none;font-size:11.5px;font-weight:800;color:#9a8762;white-space:nowrap}
+.shstg .mapb{min-height:44px;padding:4px 14px;font-size:16px;border-radius:14px;gap:8px}.shstg .mapb i{font-size:18px}}
 .shbest{display:flex;align-items:baseline;gap:10px;margin-top:6px;font-size:16px}.shbest b{font-size:22px;color:#b3222c}.shbest small{opacity:.7}
 .shmap{position:fixed;inset:0;z-index:120;color:#eef0ff;display:flex;flex-direction:column;font-family:inherit;opacity:0;transition:opacity .25s;background:#070a1c}
 .shmap.on{opacity:1}
@@ -224,7 +229,8 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
        rolls 90° (the layout gets the long side of the screen) and the page's UI turns with it; a short guide says to hold the
        phone sideways. The choice is remembered (atlas-shanghai-land). Only where it means something: a touch screen held upright. */
     const bvEl = ctx.el.parentNode, mqC = matchMedia('(pointer: coarse)'), mqP = matchMedia('(orientation: portrait)');
-    let landOn = false, turnedNow = false; try { landOn = localStorage.getItem('atlas-shanghai-land') === '1'; } catch (e) {}
+    let landOn = false, turnedNow = false, topOn = false; try { topOn = localStorage.getItem('atlas-shanghai-top') === '1'; } catch (e) {}   // (真上から見る: remembered)
+    try { landOn = localStorage.getItem('atlas-shanghai-land') === '1'; } catch (e) {}
     css();
     const lb = document.createElement('button'); lb.type = 'button'; lb.className = 'shlb'; lb.title = tx('b.land'); lb.setAttribute('aria-label', tx('b.land'));
     lb.innerHTML = '<svg viewBox="0 0 24 24"><rect x="3.5" y="2.5" width="8" height="13" rx="1.8"/><rect x="8.5" y="13.5" width="13" height="8" rx="1.8" stroke-dasharray="2.4 2.2"/><path d="M15 4.5a5.5 5.5 0 0 1 5.5 5.5"/><path d="M22.4 8 20.5 10.2 18.3 8.4"/></svg>';
@@ -234,14 +240,19 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
       el.innerHTML = `<div><svg viewBox="0 0 48 48"><g class="ph"><rect x="15" y="6" width="18" height="36" rx="3.5"/><path d="M21.5 37.5h5"/></g></svg><span>${esc(tx('msg.hold'))}</span></div>`;
       document.body.appendChild(el); setTimeout(() => el.classList.add('off'), 2300); setTimeout(() => el.remove(), 2750);
     }
+    let framed = false;
     function frame() {
       const can = mqC.matches && mqP.matches, tn = landOn && can;
       lb.classList.toggle('can', can); lb.classList.toggle('on', tn); if (bvEl) bvEl.classList.toggle('shb', can);
       if (bvEl) { bvEl.classList.toggle('land', tn); bvEl.classList.toggle('shl', tn); const q = document.getElementById('bvQuit'); if (q && q.offsetWidth) bvEl.style.setProperty('--shq', q.offsetWidth + 'px'); }
       document.documentElement.classList.toggle('sh-land', tn);
       const tall = innerHeight > innerWidth * 1.15;
-      if (T3.fit) T3.fit(tn ? { w: W + 1.2, d: D + 1.6, y: base + THh, pitch: 1.12, roll: 1 }
-        : tall ? { w: W + 1.1, d: D + 1.6, y: base + THh, pitch: 1.28 } : { w: W + 1.0, d: D + 1.1, y: base + THh, pitch: 1.12 });   // (a little room round the mat: never touching the edges)
+      // 真上から見る (the bar's button right of 待った, ユーザー 2026-11-14): the camera looks straight down — every layer's faces are square on
+      const F = tn ? { w: W + 1.2, d: D + 1.6, y: base + THh, pitch: 1.12, roll: 1 }
+        : tall ? { w: W + 1.1, d: D + 1.6, y: base + THh, pitch: 1.28 } : { w: W + 1.0, d: D + 1.1, y: base + THh, pitch: 1.12 };   // (a little room round the mat: never touching the edges)
+      if (topOn) F.pitch = 1.56;
+      if (framed) F.ease = true;   // (a switch glides; the first framing is set at once)
+      if (T3.fit) T3.fit(F); framed = true;
       try { if (window.__tbar) window.__tbar.place(); } catch (e) {}
       if (tn && !turnedNow) guide();
       turnedNow = tn; kick(400);
@@ -387,6 +398,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
         title: tx('r.stage') + ' ' + '★'.repeat(stars) + '☆'.repeat(3 - stars), score: stageName(s, lang) + ' · ' + tx('r.time', { t: mmss(tt) }),
         best: (nb && S[s] ? tx('r.best', { t: mmss(B[s]) }) : tx('r.best', { t: mmss(B[s]) })) + ' · ' + '★'.repeat(S[s]),
         opp: stageName(s, lang), key: 'st' + s, why: tx('r.stage') + ' ' + stars + '★',
+        again: { label: tx('b.toMap'), go: restart => stageMap({ lang, play: p => restart(() => { AD.pending = p; AD.last = p; }) }) },   // (a cleared stage: マップへ instead of もう一局 — back to the course, ユーザー 2026-11-14)
         next: nx != null ? { label: tx('b.next'), go: () => { AD.pending = nx; AD.last = nx; } } : null }), 800);
     }
     function fail(why) {
@@ -424,6 +436,8 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
         return Promise.resolve(true);
       },
       canDraw: () => false, canResign: () => false, resign() {}, timeout() {},
+      view: { icon: '<svg viewBox="0 0 24 24"><rect x="5" y="13.5" width="14" height="7.5" rx="1.6"/><path d="M12 3v7"/><path d="M8.6 6.8 12 10.2l3.4-3.4"/></svg>', label: () => tx('b.top'), on: () => topOn,
+        toggle() { topOn = !topOn; try { localStorage.setItem('atlas-shanghai-top', topOn ? '1' : '0'); } catch (e) {} frame(); } },
       stop() {
         stopped = true; clearInterval(clockT); timers.forEach(clearTimeout); clearTimeout(toastT);
         if (toastEl) toastEl.remove(); if (askEl) askEl.remove();
@@ -451,7 +465,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
   }
   function stagePanel(lang) {
     css(); const P = prog(), c = Object.keys(P.st).filter(s => P.st[s] > 0).length, s = Object.values(P.st).reduce((a, v) => a + v, 0), nx = nextStage(P);
-    return `<div class="pg">${esc(TX('st.progress', lang, { c, n: 120, s, t: 360 }))}</div><div class="nx">${esc(TX('st.next', lang, { s: stageName(nx, lang) + ' ' + TX('ar.' + C().AREAS[Math.floor(nx / 10)], lang) }))}</div><button type="button" class="mapb" data-shmap><i>✦</i>${esc(TX('b.map', lang))}</button>`;
+    return `<div class="stbox"><div class="pg">${esc(TX('st.progress', lang, { c, n: 120, s, t: 360 }))}</div><div class="nx">${esc(TX('st.next', lang, { s: stageName(nx, lang) + ' ' + TX('ar.' + C().AREAS[Math.floor(nx / 10)], lang) }))}</div></div><button type="button" class="mapb" data-shmap><i>✦</i>${esc(TX('b.map', lang))}</button>`;
   }
   function stageBind(host, lang, play) {
     host.addEventListener('click', e => { if (e.target.closest('[data-shmap]')) stageMap({ lang, play }); });
