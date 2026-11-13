@@ -151,9 +151,11 @@ svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.9;stroke
 .rl{font-size:12px;color:var(--muted);font-weight:700}
 .tbtns{position:absolute;top:max(10px,var(--st));right:max(10px,var(--sr));display:flex;gap:6px}
 /* tiles in html */
-.tl{position:relative;display:inline-block;width:var(--tw);aspect-ratio:3/4;border-radius:calc(var(--tw)*.12);background:#fafaf6;flex:none;
-  box-shadow:inset 0 -4px 0 #e6e4dc,0 calc(var(--tw)*.1) 0 #5a3787,0 calc(var(--tw)*.1 + 2px) 0 #3a2260,0 8px 14px rgba(0,0,0,.35);transition:transform .12s, filter .12s;margin-bottom:calc(var(--tw)*.1)}
-.tl img{position:absolute;inset:4%;width:92%;height:88%;border-radius:calc(var(--tw)*.08);display:block;pointer-events:none}
+/* (2026-11-14: a polished white face — a soft sheen from the top left, a bright top lip and a shaded lower lip; the picture is laid over it
+   with multiply so the sheen runs under the carving) */
+.tl{position:relative;display:inline-block;width:var(--tw);aspect-ratio:3/4;border-radius:calc(var(--tw)*.12);background:linear-gradient(166deg,#fff 0%,#fbfbf7 40%,#f1f0e9 100%);flex:none;
+  box-shadow:inset 0 1px 0 #fff,inset 0 -3px 2px rgba(150,138,108,.3),0 calc(var(--tw)*.1) 0 #5a3787,0 calc(var(--tw)*.1 + 2px) 0 #3a2260,0 8px 14px rgba(0,0,0,.35);transition:transform .12s, filter .12s;margin-bottom:calc(var(--tw)*.1)}
+.tl img{position:absolute;inset:4%;width:92%;height:88%;border-radius:calc(var(--tw)*.08);display:block;pointer-events:none;mix-blend-mode:multiply}
 .tl.back{background:radial-gradient(120% 80% at 30% 20%,rgba(220,200,250,.18),transparent 55%),linear-gradient(135deg,transparent 40%,rgba(220,205,245,.12) 46%,transparent 52%),linear-gradient(160deg,#66408f,#55337f 55%,#5f3a8c);box-shadow:inset 0 0 0 2px rgba(255,255,255,.35),0 3px 0 #fafaf6,0 5px 8px rgba(0,0,0,.3)}   /* (pale polished lavender stone, as the 3D tile backs, 2026-11-14) */
 .tl.xs{--tw:22px;box-shadow:0 2px 0 #5a3787,0 3px 5px rgba(0,0,0,.3);margin:0}
 .tl.sm{--tw:34px;box-shadow:0 3px 0 #5a3787,0 4px 8px rgba(0,0,0,.3);margin:0}
@@ -392,7 +394,7 @@ html[lang=en] .ci-word{font-family:'Cinzel',serif;font-weight:800;font-size:min(
 #game{--th:min(calc((var(--W) - 90px) / 15.6), calc(calc(var(--H) * 0.16) * .75), 86px);--bf:66px}
 #game .hand .tl:not(.sm):not(.xs){--tw:var(--th)}
 #game .hand .melds .tl.sm{--tw:calc(var(--th) * .7)}
-#game .hand .tl{box-shadow:inset 0 -3px 0 #ddd3bb,0 calc(var(--tw)*.12) 0 #5a3787,0 calc(var(--tw)*.12 + 2px) 0 #3c2077,0 10px 18px rgba(0,0,0,.45)}
+#game .hand .tl{box-shadow:inset 0 1.5px 0 #fff,inset 1px 0 0 rgba(255,255,255,.7),inset 0 calc(var(--tw)*-.045) calc(var(--tw)*.04) rgba(150,134,100,.34),0 calc(var(--tw)*.12) 0 #5a3787,0 calc(var(--tw)*.12 + 2px) 0 #3c2077,0 10px 18px rgba(0,0,0,.45)}
 #game .hand.active .tl.can:hover,#game .hand .tl.up{transform:translateY(calc(var(--th) * -.24))}
 #game .hand{bottom:max(6px,var(--sb));gap:calc(var(--th) * .3)}
 #game .hand .hrow{gap:1px}

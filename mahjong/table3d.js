@@ -11,11 +11,10 @@ function stoneTex() {
   let seed = 7; const R = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   const base = g.createLinearGradient(0, 0, S, S); base.addColorStop(0, '#5f3a8c'); base.addColorStop(.5, '#55337f'); base.addColorStop(1, '#5c3889');   // (a deep 袱紗 purple, ユーザー 2026-11-14)
   g.fillStyle = base; g.fillRect(0, 0, S, S);
-  for (let i = 0; i < 26; i++) { const x = R() * S, y = R() * S, r = 40 + R() * 140, gr = g.createRadialGradient(x, y, 0, x, y, r), light = R() < .5;
-    gr.addColorStop(0, light ? 'rgba(180,150,220,.10)' : 'rgba(40,20,70,.10)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, S, S); }
+  // (no clouds: ユーザー「模様はもっと目立たなくていい」— only the faintest veins and grain)
   const vein = (col, w, blur, n) => { g.save(); g.strokeStyle = col; g.lineWidth = w; g.shadowColor = col; g.shadowBlur = blur; g.lineCap = 'round';
     for (let k = 0; k < n; k++) { let x = R() * S, y = R() * S, a = R() * 6.28; g.beginPath(); g.moveTo(x, y); for (let i = 0; i < 18; i++) { a += (R() - .5) * .9; x += Math.cos(a) * 26; y += Math.sin(a) * 26; g.lineTo(x, y); } g.stroke(); } g.restore(); };
-  vein('rgba(200,180,235,.14)', 2, 10, 4); vein('rgba(220,205,245,.18)', .7, 2, 5);   // (only a hint of stone: ユーザー「素材感強すぎ」)
+  vein('rgba(200,180,235,.06)', 2, 10, 3); vein('rgba(220,205,245,.08)', .7, 2, 3);   // (only a hint of stone: ユーザー「素材感強すぎ」)
   for (let i = 0; i < 300; i++) { g.fillStyle = `rgba(255,255,255,${.04 + R() * .1})`; g.fillRect(R() * S, R() * S, 1, 1); }
   const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; return t;
 }
@@ -176,7 +175,7 @@ class Table3D {
     // (a clear coat over it, a little studio light reflected in it) — four cuts of the same slab so neighbours don't match
     this.envTex = studioEnv();
     const stone = stoneTex();
-    this.matBacks = [0, 1, 2, 3].map(k => { const t = stone.clone(); t.needsUpdate = true; t.offset.set(k * .27, k * .41); t.rotation = k * .9; t.center.set(.5, .5);
+    this.matBacks = [0, 1, 2, 3].map(k => { const t = stone.clone(); t.needsUpdate = true; t.offset.set(k * .27, k * .41);
       return new THREE.MeshPhysicalMaterial({ map: t, roughness: .3, metalness: 0, clearcoat: .6, clearcoatRoughness: .14, envMap: this.envTex, envMapIntensity: .45 }); });
     this.matBack = this.matBacks[0];
     this.matHi = new THREE.MeshStandardMaterial({ color: 0xfff1b8, roughness: .35, emissive: 0x6a5208, emissiveIntensity: .45 });

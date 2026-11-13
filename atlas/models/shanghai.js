@@ -85,7 +85,7 @@
   }
   // the hand of the characters (萬子・風牌・發・中・花／季節): traced from photos of real Japanese tiles into one sheet
   // (atlas/tools/shanghai-glyphs.py → atlas/img/shanghai-glyphs.png): 8×3 cells of GW×GH, ink per channel (R black, G red, B green)
-  const GW = 280, GH = 390, GLYPH_URL = new URL('../img/shanghai-glyphs.png?v=1', (document.currentScript && document.currentScript.src) || location.href).href;
+  const GW = 280, GH = 390, GLYPH_URL = new URL('../img/shanghai-glyphs.png?v=2', (document.currentScript && document.currentScript.src) || location.href).href;
   let glyphImg = null, glyphPr = null; const glyphCv = {};
   function glyphP() {
     const one = (url, set) => new Promise(res => { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { set(im); res(); }; im.onerror = () => res(); im.src = url; setTimeout(res, 4000); });
@@ -93,7 +93,7 @@
   }
   // 筒子・索子・花／季節: the pictures traced in colour from the same photos (atlas/tools/shanghai-glyphs.py art →
   // atlas/img/shanghai-art.png, 8×4 RGBA cells: 0–8 筒子, 9–17 索子 (9 = 一索の鳥), 18–21 梅蘭菊竹, 22–25 春夏秋冬), 2026-11-14
-  const ART_URL = new URL('../img/shanghai-art.png?v=6', (document.currentScript && document.currentScript.src) || location.href).href;
+  const ART_URL = new URL('../img/shanghai-art.png?v=8', (document.currentScript && document.currentScript.src) || location.href).href;
   let artImg = null;
   const artCell = f => f >= 9 && f < 27 ? f - 9 : f >= 34 && f < 42 ? 18 + (f - 34) : -1;
   function art(c, f) { const k = artCell(f); if (!artImg || k < 0) return false; c.drawImage(artImg, (k % 8) * GW, Math.floor(k / 8) * GH, GW, GH, 0, 0, 256, 362); return true; }
@@ -118,30 +118,50 @@
     const c = cv.getContext('2d');
     c.fillStyle = GROUND; c.fillRect(0, 0, cv.width, cv.height);
     for (let f = 0; f < 42; f++) { const x = (f % COLS) * W0, y = Math.floor(f / COLS) * H0; c.save(); c.beginPath(); c.rect(x, y, W0, H0); c.clip(); c.translate(x, y); c.scale(W0 / 256, H0 / 362); drawFace(c, f); c.restore(); }
+    const D = depthOf(cv); bakeLight(cv, D); normalFrom(cv, D);
     const t = new TT.CanvasTexture(cv);
     if ('colorSpace' in t && TT.SRGBColorSpace) t.colorSpace = TT.SRGBColorSpace; else if (TT.sRGBEncoding) t.encoding = TT.sRGBEncoding;
     t.anisotropy = LO() ? 2 : 8; t.generateMipmaps = true; t.minFilter = TT.LinearMipmapLinearFilter; t.needsUpdate = true;
-    normalFrom(cv);
     return t;
   }
-  // the carving: every painted pixel is cut into the face (paint = how far its colour is from the white ground), the edges of
-  // the cut softened a little, and its slopes written as a tangent-space normal map — the light then catches the walls of the
-  // strokes as on a real engraved tile. One pass over the atlas when it is drawn (no per-frame cost).
-  function normalFrom(cv) {
-    const TT = T(), W = cv.width, H = cv.height, src = cv.getContext('2d').getImageData(0, 0, W, H).data;
-    const g0 = [1, 3, 5].map(k => parseInt(GROUND.slice(k, k + 2), 16)), h = new Float32Array(W * H), tmp = new Float32Array(W * H);
-    for (let i = 0, p = 0; i < W * H; i++, p += 4) { const d = Math.max(Math.abs(src[p] - g0[0]), Math.abs(src[p + 1] - g0[1]), Math.abs(src[p + 2] - g0[2])); h[i] = d < 14 ? 0 : Math.min(1, (d - 14) / 70); }
-    // soften the cut's edges (two box passes, radius ~1 px at 256): a rounded groove rather than a stair
+  // the carving (2026-11-14, Fable — the same cut as mahjong/tiles.js depthOf): a real tile is cut with a round bit and the paint
+  // lies in the cut, so the groove is a shallow U — its walls fall from the white face into the paint, the floor is flat, and a
+  // hairline (narrower than the bit) stays shallower. The paint's coverage (how far a pixel is from the white ground) is blurred
+  // by about the bit's radius; the wall starts just outside the stroke's edge and reaches the floor ~3 px inside it. Its slopes
+  // are written as a tangent-space normal map — the light then catches the walls as on an engraved tile (the paint keeps its own
+  // colour: no ink line, ユーザー 2026-11-14). One pass over the atlas when it is drawn (no per-frame cost).
+  function depthOf(cv) {
+    const W = cv.width, H = cv.height, src = cv.getContext('2d').getImageData(0, 0, W, H);
+    const d8 = src.data, g0 = [1, 3, 5].map(k => parseInt(GROUND.slice(k, k + 2), 16)), h = new Float32Array(W * H), tmp = new Float32Array(W * H);
+    for (let i = 0, p = 0; i < W * H; i++, p += 4) { const d = Math.max(Math.abs(d8[p] - g0[0]), Math.abs(d8[p + 1] - g0[1]), Math.abs(d8[p + 2] - g0[2])); h[i] = d < 10 ? 0 : Math.min(1, (d - 10) / 60); }
     const box = (a, b, dx, dy) => { for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const i = y * W + x; let s = a[i], n = 1; if (x - dx >= 0 && y - dy >= 0) { s += a[i - dy * W - dx]; n++; } if (x + dx < W && y + dy < H) { s += a[i + dy * W + dx]; n++; } b[i] = s / n; } };
-    // the cut's walls stand on the white just outside the paint, never on the paint itself (2026-11-14, ユーザー：象牙を彫っても
-    //黒い線は出ない — the paint fills the cut flat and keeps its own colour; only the white rim round it slopes down into it):
-    // the ink blurred outward, and inside the stroke the bottom stays flat
-    const h0 = h.slice();
     for (let k = 0; k < (LO() ? 2 : 3); k++) { box(h, tmp, 1, 0); box(tmp, h, 0, 1); }
-    for (let i = 0; i < W * H; i++) h[i] = h0[i] > .5 ? 1 : Math.max(h0[i], Math.min(1, h[i] * 1.8));
-    // (no darkened rim round the strokes: ユーザー 2026-11-14「文字の縁の黒線は不要」— the depth is the normal map's light alone)
+    for (let i = 0; i < W * H; i++) { const v = Math.min(1, Math.max(0, (h[i] - .4) / .52)); h[i] = v * v * (3 - 2 * v); }
+    return { W, H, h, src };
+  }
+  // the cut under the table's light, painted into the atlas itself (the tiles all lie the same way up and the key light comes
+  // from the top left, so it can be baked): the wall nearest the light shades the floor under it, the far wall catches a glint.
+  // The normal map alone reads too faintly under the soft room light; with this the carving shows at any size.
+  function bakeLight(cv, D) {
+    const { W, H, h, src } = D, o = src.data, S = LO() ? 3 : 3.6;
+    const lx = -.42, ly = -.58, lz = .7, hx = lx, hy = ly, hz = lz + 1, hk = 1 / Math.hypot(hx, hy, hz), flat = Math.pow(hz * hk, 60), R = LO() ? 3 : 4.5;
+    const at = (x, y) => h[Math.min(H - 1, Math.max(0, y)) * W + Math.min(W - 1, Math.max(0, x))];
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const i = y * W + x; if (!h[i] && !at(x + 1, y) && !at(x - 1, y) && !at(x, y + 1) && !at(x, y - 1)) continue;
+      const p = i * 4, gx = (at(x + 1, y) - at(x - 1, y)) * S, gy = (at(x, y + 1) - at(x, y - 1)) * S, k = 1 / Math.hypot(gx, gy, 1), nx = gx * k, ny = gy * k, nz = k;
+      let dif = (nx * lx + ny * ly + nz * lz) / lz;
+      dif = dif < 1 ? 1 - (1 - Math.max(.2, dif)) * .5 : 1 + Math.min(.5, dif - 1) * .5;
+      const sh = Math.max(0, h[i] - at(Math.round(x + lx * R), Math.round(y + ly * R))) * .2;
+      const dark = 1 + (1 - (o[p] * .3 + o[p + 1] * .5 + o[p + 2] * .2) / 255) * 1.1;
+      const sp = (Math.max(0, Math.pow(Math.max(0, (nx * hx + ny * hy + nz * hz) * hk), 60) - flat) * 150 + (dif > 1 ? (dif - 1) * 90 : 0)) * dark, f = dif * (1 - sh);
+      o[p] = Math.min(255, o[p] * f + sp); o[p + 1] = Math.min(255, o[p + 1] * f + sp); o[p + 2] = Math.min(255, o[p + 2] * f + sp);
+    }
+    cv.getContext('2d').putImageData(src, 0, 0);
+  }
+  function normalFrom(cv, D) {
+    const TT = T(), { W, H, h } = D;
     const out = document.createElement('canvas'); out.width = W; out.height = H;
-    const oc = out.getContext('2d'), im = oc.createImageData(W, H), o = im.data, S = (LO() ? 4.5 : 7);   // (depth: deep cut walls, 2026-11-13 ユーザー「堀はもっと深い」)   // (depth: steeper walls on the finer PC atlas)
+    const oc = out.getContext('2d'), im = oc.createImageData(W, H), o = im.data, S = (LO() ? 3 : 3.6);   // (how steep the walls read)
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
       const i = y * W + x, l = h[x > 0 ? i - 1 : i], r = h[x < W - 1 ? i + 1 : i], u = h[y > 0 ? i - W : i], d = h[y < H - 1 ? i + W : i];
       // the surface height is −h (cut down): its slope along u (x) and v (up = −y on the canvas)
