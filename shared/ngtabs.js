@@ -175,7 +175,7 @@ const CSS = `
   html body:not(#_) .modal:not(#_):not(#_) :is(.seg.ls-tabs, #segLs):not(#_):not(#_){order:100;position:sticky!important;top:auto!important;bottom:0!important;z-index:7;margin:10px 0 0!important;flex:none}
   html body:not(#_) .modal:not(#_):not(#_) :has(> :is(.seg.ls-tabs, #segLs)) > .modal-actions:not(#_):not(#_){order:99;position:sticky!important;bottom:var(--lsT,58px)!important;z-index:6;margin-bottom:0!important}
   html.atlas-skin body:not(#_) .modal:not(#_):not(#_) :is(.seg.ls-tabs, #segLs):not(#_):not(#_){box-shadow:0 0 0 12px var(--a-paper,#fbf5e7)!important}
-  html body:not(#_) .modal:not(#_):not(#_) :has(> :is(.seg.ls-tabs, #segLs)) > .modal-actions:not(#_):not(#_){bottom:var(--lsT,50px)!important;padding:10px 0 8px!important;background:var(--a-paper,var(--panel,#1b130d))!important}
+  html body:not(#_) .modal:not(#_):not(#_) :has(> :is(.seg.ls-tabs, #segLs)) > .modal-actions:not(#_):not(#_){bottom:var(--lsT,50px)!important;padding:10px 0 8px!important;margin-top:40px!important;background:var(--a-paper,var(--panel,#1b130d))!important}
   .modal :is(div,section):has(> :is(.seg.ls-tabs, #segLs)):has(> .rt-host){height:100%;min-height:0}
   .modal :has(> :is(.seg.ls-tabs, #segLs)) > .rt-host{flex:1 1 auto!important;min-height:0!important}
   .modal:has(> :is(.seg.ls-tabs, #segLs)) .rt > .rt-nav{position:sticky;bottom:var(--lsT,50px);z-index:6;background:var(--a-paper,var(--panel,#1b130d));padding-bottom:8px}
