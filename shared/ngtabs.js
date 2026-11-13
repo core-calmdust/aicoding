@@ -167,6 +167,19 @@ const CSS = `
 :is(html.ngt-land,html.rot) .modal.ngt-on .ngt-gcards.few:not(.n3) p{font-size:12px;line-height:1.55}
 @media (min-width: 600px){ .modal:not(.ngt-on) .ngt-gcards{grid-template-columns:repeat(var(--ngt-cols,2),minmax(0,1fr));gap:10px}
   .modal:not(.ngt-on) .ngt-gcard{padding:10px 12px}.modal:not(.ngt-on) .ngt-gcard p{font-size:11.5px} }
+/* (2026-11-13, common) phones: the rules / lessons / puzzles dialogs' tabs (.ls-tabs, #segLs) at the bottom, as the new-game dialog —
+   the dialog's buttons right above them, both kept in view while the list scrolls */
+@media (pointer: coarse) and (max-width: 760px){
+  .modal :is(div,section):has(> :is(.seg.ls-tabs, #segLs)), .modal:has(> :is(.seg.ls-tabs, #segLs)){display:flex!important;flex-direction:column}
+  .modal:has(> :is(.seg.ls-tabs, #segLs)) > :not(.ls-tabs):not(#segLs){flex:none}
+  html body:not(#_) .modal:not(#_):not(#_) :is(.seg.ls-tabs, #segLs):not(#_):not(#_){order:100;position:sticky!important;top:auto!important;bottom:0!important;z-index:7;margin:10px 0 0!important;flex:none}
+  html body:not(#_) .modal:not(#_):not(#_) :has(> :is(.seg.ls-tabs, #segLs)) > .modal-actions:not(#_):not(#_){order:99;position:sticky!important;bottom:var(--lsT,58px)!important;z-index:6;margin-bottom:0!important}
+  html.atlas-skin body:not(#_) .modal:not(#_):not(#_) :is(.seg.ls-tabs, #segLs):not(#_):not(#_){box-shadow:0 0 0 12px var(--a-paper,#fbf5e7)!important}
+  html body:not(#_) .modal:not(#_):not(#_) :has(> :is(.seg.ls-tabs, #segLs)) > .modal-actions:not(#_):not(#_){bottom:var(--lsT,50px)!important;padding:10px 0 8px!important;background:var(--a-paper,var(--panel,#1b130d))!important}
+  .modal :is(div,section):has(> :is(.seg.ls-tabs, #segLs)):has(> .rt-host){height:100%;min-height:0}
+  .modal :has(> :is(.seg.ls-tabs, #segLs)) > .rt-host{flex:1 1 auto!important;min-height:0!important}
+  .modal:has(> :is(.seg.ls-tabs, #segLs)) .rt > .rt-nav{position:sticky;bottom:var(--lsT,50px);z-index:6;background:var(--a-paper,var(--panel,#1b130d));padding-bottom:8px}
+}
 `;
 const lang = () => (s => /^zh-(tw|hk|mo|hant)/i.test(s) ? 'zh-TW' : s.slice(0, 2).toLowerCase())(document.documentElement.lang || 'ja');
 const isSel = b => b.classList.contains('sel') || b.classList.contains('on') || b.classList.contains('active') || b.getAttribute('aria-pressed') === 'true' || b.getAttribute('aria-checked') === 'true';
