@@ -2178,7 +2178,7 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 <canvas id="confetti"></canvas>
 
 <script>/* three.js r186 trial (2026-11-13): ?three=186 loads the new version and the r128 compatibility layer; otherwise r128 as before */
-if (/[?&]three=186\b/.test(location.search)) document.write('<script src="vendor/three-r186.min.js?v=1"><\/script><script src="vendor/three-compat.js?v=6"><\/script>');
+if (/[?&]three=186\b/.test(location.search)) document.write('<script src="vendor/three-r186.min.js?v=1"><\/script><script src="vendor/three-compat.js?v=7"><\/script>');
 else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');</script>
 <script src="texgen.js?v=2"></script>
 <script src="npc/roster.js?v=7"></script>
@@ -2204,7 +2204,7 @@ else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.j
 <script>/* the places other than the chabudai (tables3d.js, 440 KB): at once when one is chosen, else in idle time after the page has
    loaded (2026-11-10); 'atlas-places' tells the page they are there */
 (function () {
-  var SRC = 'tables3d.js?v=106', k = 0, p = null;
+  var SRC = 'tables3d.js?v=107', k = 0, p = null;
   try { k = +(localStorage.getItem('atlas-table') || 0) || 0; var m = /[?&]tbl=(\d+)/.exec(location.search); if (m) k = +m[1]; } catch (e) {}
   window.AtlasPlaces = function () { return p || (p = new Promise(function (res) { var s = document.createElement('script'); s.src = SRC; s.onload = s.onerror = function () { res(); try { dispatchEvent(new Event('atlas-places')); } catch (e) {} }; document.head.appendChild(s); })); };
   if (k) { document.write('<script src="' + SRC + '"><\/script>'); p = Promise.resolve(); }
@@ -2212,7 +2212,7 @@ else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.j
 })();
 </script>
 <script src="models/cardtables.js?v=4"></script>
-<script src="icons3d.js?v=39"></script>
+<script src="icons3d.js?v=40"></script>
 <script>/* rules tours: after a solved step, the ▶ button fills up like a timer until the tour moves on by itself */
 window.AtlasRgdTimer = function (btn, ms, alive) {
   if (!btn) return; btn.classList.remove('rgd-auto'); void btn.offsetWidth; btn.style.setProperty('--rgt', ms + 'ms'); btn.classList.add('rgd-auto');
