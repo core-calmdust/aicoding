@@ -882,5 +882,44 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
     };
     if (document.readyState === 'complete') setTimeout(go, 400); else addEventListener('load', () => setTimeout(go, 400));
   })();
+  /* ---------- (2026-11-13) lesson / opening lists (.lx, every game): a header like the puzzles' (title, short text, a progress ring
+     over all the categories), the category tabs right under it; on PC the dialog's tabs, the header and the category tabs stay put
+     while the cards scroll ---------- */
+  (function lxHero() {
+    const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+    const phone = matchMedia('(pointer: coarse) and (max-width: 760px)');
+    function one(lx) {
+      const list = lx.parentElement, view = list && list.parentElement; if (!view) return;
+      const h2 = view.querySelector(':scope > h2'); if (!h2) return;
+      const p = h2.nextElementSibling && h2.nextElementSibling.tagName === 'P' ? h2.nextElementSibling : null;
+      const tabs = lx.querySelector(':scope > .lx-tabs, :scope > .lxh-fix > .lx-tabs');
+      let n = 0, m = 0;
+      (tabs ? [...tabs.children] : [lx.querySelector('.lx-banner .pg')].filter(Boolean)).forEach(e => { const x = (e.textContent || '').match(/(\d+)\s*\/\s*(\d+)/); if (x) { n += +x[1]; m += +x[2]; } });
+      let fix = lx.querySelector(':scope > .lxh-fix');
+      if (!fix) { fix = document.createElement('div'); fix.className = 'lxh-fix'; lx.prepend(fix); }
+      const sig = h2.textContent + '|' + (p ? p.textContent : '') + '|' + n + '/' + m;
+      if (fix.dataset.sig !== sig) {
+        fix.dataset.sig = sig;
+        let hero = fix.querySelector(':scope > .lxh'); if (!hero) { hero = document.createElement('div'); hero.className = 'lxh'; fix.prepend(hero); }
+        hero.innerHTML = (m ? `<span class="lxh-ring" style="--p:${n / m}"><b>${n}</b><small>/${m}</small></span>` : '') +
+          `<span class="lxh-tx"><b>${esc(h2.textContent.trim())}</b>${p && p.textContent.trim() ? `<small>${esc(p.textContent.trim())}</small>` : ''}</span>`;
+      }
+      if (tabs && tabs.parentElement !== fix) fix.appendChild(tabs);
+      view.classList.add('lxh-on');
+      // PC: pinned under the dialog's own tabs
+      const seg = view.querySelector(':scope > .seg.ls-tabs, :scope > #segLs');
+      let top = '';
+      if (!phone.matches && seg && getComputedStyle(seg).position === 'sticky') top = Math.round((parseFloat(getComputedStyle(seg).top) || 0) + seg.offsetHeight + 12) + 'px';
+      if (fix.style.top !== top) fix.style.top = top;
+      fix.classList.toggle('pin', !!top);
+    }
+    function scan() {
+      document.querySelectorAll('.modal .lesson-list > .lx').forEach(one);
+      document.querySelectorAll('.lxh-on').forEach(v => { if (!v.querySelector('.lesson-list > .lx > .lxh-fix')) v.classList.remove('lxh-on'); });
+    }
+    let q = 0; const later = () => { if (!q) q = setTimeout(() => { q = 0; scan(); }, 30); };
+    const go = () => { scan(); new MutationObserver(later).observe(document.body, { childList: true, subtree: true }); addEventListener('resize', later); };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
+  })();
   window.AtlasSkin = { init };
 })();

@@ -982,3 +982,25 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) .ol-rkbtn:hover{border-color:#e0b65a
   html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonOverlay .modal > div > :has(+ .modal-actions){padding-bottom:40px!important}
 }
 @media (min-width:761px){ html.atlas-skin:not(.atlas-2d) body:not(#_) .pbh-meta .pb-medals:not(#_){flex-wrap:nowrap;overflow:hidden;min-width:0} }
+/* ---- (2026-11-13) lesson / opening lists: a header like the puzzles' (atlas/skin/common.js lxHero) ---- */
+html.atlas-skin body:not(#_) .lxh-on > h2, html.atlas-skin body:not(#_) .lxh-on > h2 + p{display:none!important}
+html.atlas-skin body:not(#_) .lxh-fix{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+html.atlas-skin body:not(#_) .lxh-fix.pin{position:sticky;z-index:5;background:var(--a-paper,#fbf5e7);box-shadow:0 0 0 14px var(--a-paper,#fbf5e7);padding-bottom:2px}
+html.atlas-skin body:not(#_) .lxh-fix > .lx-tabs{margin:0!important}
+html.atlas-skin body:not(#_) .lxh{display:flex;align-items:center;gap:16px;padding:12px 18px;border-radius:20px;background:#fffaf0;border:2px solid #ead9b6;box-shadow:0 3px 0 #ead9b6;color:#2b3044}
+html.atlas-skin body:not(#_) .lxh-ring{flex:none;width:62px;height:62px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;background:radial-gradient(closest-side,#fffaf0 79%,transparent 81%),conic-gradient(#ff5d5d calc(var(--p)*360deg),#efe4cc 0)}
+html.atlas-skin body:not(#_) .lxh-ring b{font-size:18px;font-weight:900}
+html.atlas-skin body:not(#_) .lxh-ring small{font-size:10.5px;color:#8a8fa3;margin-top:2px}
+html.atlas-skin body:not(#_) .lxh-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+html.atlas-skin body:not(#_) .lxh-tx b{font-size:22px;font-weight:900;letter-spacing:.04em}
+html.atlas-skin body:not(#_) .lxh-tx small{font-size:13px;line-height:1.5;color:#6b6f80}
+@media (max-width:760px){ html.atlas-skin body:not(#_) .lxh{padding:10px 12px;gap:12px} html.atlas-skin body:not(#_) .lxh-ring{width:52px;height:52px} html.atlas-skin body:not(#_) .lxh-tx b{font-size:18px} html.atlas-skin body:not(#_) .lxh-tx small{font-size:12px} }
+/* PC: the rules / lessons / puzzles dialogs' top tabs as the new-game dialog's (thin underline tabs) */
+@media not ((pointer: coarse) and (max-width: 760px)){
+  html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_) :is(#segLs, .seg.ls-tabs):not(#_):not(#_){padding:0!important;gap:0!important;border-radius:0!important;background:var(--a-paper,#fbf5e7)!important;border-bottom:2px solid #efe3c8!important;box-shadow:0 0 0 14px var(--a-paper,#fbf5e7)!important;clip-path:inset(-14px -14px 0 -14px)}
+  html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_) :is(#segLs, .seg.ls-tabs) > button:not(#_):not(#_){min-height:0!important;height:40px;padding:0 8px!important;margin-bottom:-2px!important;border-radius:0!important;border-bottom:3px solid transparent!important;background:none!important;box-shadow:none!important;font-size:15px!important;color:#8a8fa3!important}
+  html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_) :is(#segLs, .seg.ls-tabs) > button:hover:not(.sel){color:var(--a-ink)!important}
+  html.atlas-skin:not(.atlas-2d) body:not(#_) .modal:not(#_) :is(#segLs, .seg.ls-tabs) > button.sel:not(#_):not(#_){color:#e5484d!important;border-bottom-color:#ff5d5d!important;background:none!important;box-shadow:none!important}
+}
+/* online: the two boxes (レート戦 / 部屋で対戦) as the other tabs' boxes — cream, a thin sand border, a solid foot, no gradient */
+html.atlas-skin body:not(#_) .ol-lux .ol-pane:not(#_):not(#_){background:#fffaf0!important;background-image:none!important;border:1px solid #ecdab4!important;border-radius:16px!important;box-shadow:0 3px 0 #ecdab4!important}
