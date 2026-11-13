@@ -199,6 +199,7 @@
         probs: probs.map(p => ({ pos: p.sfen, kind: 'best', P: p, ans: (p.accept || p.pv || (p.cand && [p.cand[0][0]]) || [])[0] })),
         save: (pts, max) => { const pr = J(this.OKEY, {}), o = pr[s.id] || { best: 0, pass: false }, pass = pts >= Math.ceil(max * PASS); pr[s.id] = { best: Math.max(o.best || 0, Math.round(pts * 100 / max)), pass: o.pass || pass }; put(this.OKEY, pr); return pass; } };
     },
+    introPos() { return { pos: 'lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1', lock: true }; },   // (no diagram in lessons.json: the starting position, for looking only, while the intro is read)
     points(P, u) {   // = shogi/index.html movePoints (without the engine's runtime score)
       if (P.mode === 'material' || P.mode === 'freq') { const best = P.cand[0][1], c = P.cand.find(x => x[0] === u); return c ? Math.round(PTS * c[1] / best) : 0; }
       if ((P.accept || []).includes(u)) return PTS;
@@ -297,6 +298,7 @@
       if (kind === 'open') return D.steps.map(x => ({ key: x.ln.moves, cat: x.set.id, catName: this.T(x.set, lang).title || x.set.id, title: L(x.ln.name, lang), sub: L(x.ln.aim, lang), svg: rvSvg(rvAfter(x.ln.moves)), st: this.pr('opl:' + x.ln.moves) }));
       return D.ls.lessons.map((l, i) => { const T = this.T(l, lang); const p0 = (l.problems || [])[0]; return { key: String(i), cat: 'lesson', catName: '', title: T.title || l.id, sub: T.short || '', desc: T.goal || '', svg: p0 ? rvSvg(p0.cells) : '', st: this.pr(l.id) }; });
     },
+    introPos() { return { pos: rvAfter(''), lock: true }; },   // (no diagram in lessons.json: the four starting discs, for looking only, while the intro is read)
     save(id, pts, max) { const pr = J(this.LKEY, {}), o = pr[id] || { best: 0, clear: false, v: 2 }, n = Math.round(pts * 100 / max), pass = n >= 75; pr[id] = { best: Math.max(o.best || 0, n), clear: !!o.clear || pass, v: 2 }; put(this.LKEY, pr); return pass; },
     lesson(key, lang) {
       const l = this.data.ls.lessons[+key]; if (!l) return null;
@@ -543,18 +545,19 @@
     }
     function dots() { if (!cur || !cur.probs.length || phase === 'study' || phase === 'intro') { $('.cnt').innerHTML = ''; return; } $('.cnt').innerHTML = cur.probs.map((_, i) => { const r = cur.res[i]; return `<i class="lsd ${r === undefined ? '' : r >= 16 ? 'ok' : r > 0 ? 'mid' : 'ng'}${i === cur.k && phase === 'prob' ? ' on' : ''}"></i>`; }).join(''); }
     const pz = () => sess && sess.pz;
-    function board(pos, sol, drill) {   // a position on the table (the first one starts the adapter); drill: chess's ★ stage { stars, safe }
+    function board(pos, sol, drill, lock) {   // lock: shogi / reversi — for looking only (the intro's picture)   // a position on the table (the first one starts the adapter); drill: chess's ★ stage { stars, safe }
       return new Promise(res => {
         onReady = res;
         const G = pos && typeof pos === 'object' ? pos : null;   // (gomoku: { start, rule, me, last, pick, noForbid } · go: { spec, me, view, marks })
         if (sess && id === 'go' && G && pz() && pz().n !== (G.spec.n || 9)) { sess.stop(); sess = null; }   // (go: another board size — a new board)
         if (!sess) {
           sess = ad.start({ el: ctx.el, Table3D: ctx.Table3D, lang: ctx.lang, t: ctx.t, mode: 'pz', level: 20, side: 1, bar: false, hud: () => {}, onTurn: () => {}, onEnd: () => {},
-            pz: Object.assign({ fen: pos, sfen: pos, sol: sol || [], drill: drill || null, counts: id === 'reversi', ready: () => { const f = onReady; onReady = null; if (f) f(); }, moved: (u, i) => onMoved && onMoved(u, i) }, G || {}) });
+            pz: Object.assign({ fen: pos, sfen: pos, sol: sol || [], drill: drill || null, lock: !!lock, counts: id === 'reversi', ready: () => { const f = onReady; onReady = null; if (f) f(); }, moved: (u, i) => onMoved && onMoved(u, i) }, G || {}) });
           ctx.Table3D.play(true);
         } else if (G && id === 'go') pz().load(G.spec, G.me, { view: G.view, marks: G.marks, lock: !!G.lock });
         else if (G) pz().load(G.start, G.rule, G.me, G.last, { pick: G.pick, noForbid: G.noForbid, lock: !!G.lock });
         else if (drill && pz().drill) pz().drill(Object.assign({ fen: pos }, drill));
+        else if (id === 'shogi') pz().load(pos, sol || [], { lock: !!lock });
         else pz().load(pos, sol || []);
       });
     }
@@ -645,7 +648,7 @@
       say(`${fill((TOPIC[ctx.lang] || TOPIC.en)[ctx.kind === 'open' ? 1 : 0], { t: `<b>${cur.title}</b>` })}<br>${cur.intro || ''}`);   // (「今日は『ルーク』について学ぶよ！」 — not the bare title, 2026-11-14)
       // (2026-11-14) while the introduction is read, the board shows the lesson's own picture (its diagram) for looking only — never the
       // first problem: no ★, no answer marks, nothing to move until はじめる
-      const intro = () => { const ip = D.introPos && D.introPos(cur); if (!ip) return; board(ip.pos, [], ip.drill).then(() => { if (stopped || phase !== 'intro' || !pz()) return; if (ip.annot && pz().annot) pz().annot(ip.annot); if (ip.marks && pz().mark) pz().mark(ip.marks); }); };
+      const intro = () => { const ip = D.introPos && D.introPos(cur); if (!ip) return; board(ip.pos, [], ip.drill, ip.lock).then(() => { if (stopped || phase !== 'intro' || !pz()) return; if (ip.annot && pz().annot) pz().annot(ip.annot); if (ip.marks && pz().mark) pz().mark(ip.marks); }); };
       if (cur.drill) { cur.stars = []; cur.probs = cur.drill.map(() => ({})); act(X.start); $('[data-a=next]').onclick = () => drill(0); intro(); return; }
       act(X.start); $('[data-a=next]').onclick = () => (ctx.kind === 'open' && cur.steps.length ? study() : cur.ramp ? ramp(0) : prob());
       if (ctx.kind === 'open' && cur.start) board(cur.start);   // (the opening's start position is on the table while reading)
@@ -763,6 +766,11 @@
       if (nx) open(nx.key); else say(X.endOnly);
     }
     let ac0 = null;
+    function clearJingle(C, v) {   // the problem-clear sound (2026-11-14): テレレレッ・レレー！ — four quick notes up, a stop, then two with the last held over a chord
+      const t0 = C.currentTime + .02, note = (f, d, len, g0, type) => { const o = C.createOscillator(), g = C.createGain(); o.type = type || 'square'; o.frequency.value = f; g.gain.setValueAtTime(0, t0 + d); g.gain.linearRampToValueAtTime(g0, t0 + d + .008); g.gain.setValueAtTime(g0 * .8, t0 + d + Math.min(len * .6, .25)); g.gain.exponentialRampToValueAtTime(.001, t0 + d + len); o.connect(g).connect(C.destination); o.start(t0 + d); o.stop(t0 + d + len + .05); };
+      [[784, 0, .07], [880, .075, .07], [988, .15, .07], [1047, .225, .09], [880, .39, .08], [1047, .475, .62]].forEach(([f, d, len]) => { note(f, d, len, v * .45); note(f, d, len, v * .35, 'triangle'); });
+      [523, 659, 784].forEach(f => note(f, .475, .62, v * .4, 'triangle'));
+    }
     function fanfare() {   // C E G C' then a held C-major chord, soft triangle + a quiet octave sparkle
       try { if (localStorage.getItem('atlas-sfx') === '0') return; const C = window.__atlasAC || (window.__atlasAC = new (window.AudioContext || window.webkitAudioContext)()); if (C.state === 'suspended') C.resume();
         const t0 = C.currentTime + .02, note = (f, d, len, v, type) => { const o = C.createOscillator(), g = C.createGain(); o.type = type || 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(0, t0 + d); g.gain.linearRampToValueAtTime(v, t0 + d + .015); g.gain.exponentialRampToValueAtTime(.001, t0 + d + len); o.connect(g).connect(C.destination); o.start(t0 + d); o.stop(t0 + d + len + .05); };
@@ -772,11 +780,21 @@
     }
     function chime(ok) {
       try { if (localStorage.getItem('atlas-sfx') === '0') return; const C = window.__atlasAC || (window.__atlasAC = new (window.AudioContext || window.webkitAudioContext)()); if (C.state === 'suspended') C.resume(); ac0 = C;
+        if (ok) return clearJingle(C, .08);
         const t0 = C.currentTime, F = ok ? [523, 659, 784] : [392, 330];
         F.forEach((f, i) => { const o = C.createOscillator(), g = C.createGain(); o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(0, t0 + i * .09); g.gain.linearRampToValueAtTime(.08, t0 + i * .09 + .01); g.gain.exponentialRampToValueAtTime(.001, t0 + i * .09 + .3); o.connect(g).connect(C.destination); o.start(t0 + i * .09); o.stop(t0 + i * .09 + .32); });
       } catch (e) {}
     }
     $('[data-a=again]').onclick = () => cur && open(cur.key);
+    /* Enter = 次へ / はじめる (2026-11-14, a common rule for every lesson): not while typing in a field, nor on a focused button (its own Enter) */
+    const onKey = e => {
+      if (e.key !== 'Enter' || e.isComposing || e.keyCode === 229 || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey || e.repeat || stopped || !el.isConnected) return;
+      const a = document.activeElement; if (a && a !== document.body && a.closest && a.closest('input,textarea,select,[contenteditable="true"]')) return;
+      if (a && a.matches && a.matches('button:focus-visible,a:focus-visible,[role=button]:focus-visible')) return;
+      const b = nextB(); if (!b || b.disabled || !b.getClientRects().length) return;
+      e.preventDefault(); e.stopImmediatePropagation(); autoCancel(); b.click();
+    };
+    document.addEventListener('keydown', onKey, true);
     if ($('[data-a=list]')) $('[data-a=list]').onclick = () => ctx.onList(ctx.kind);   // 一覧 (the portal's list sheet)
     requestAnimationFrame(() => el.classList.add('on'));
     say(X.loading); act(X.next, { nextOn: false });
@@ -785,7 +803,7 @@
       answer: async u => { const p = cur && cur.probs[cur.k]; if (!p || !pz()) return; u = u || p.ans; await pz().play(u); moved(p, u, { mate: false }); } };   // (test hook)
     window.__atlasLs = dbg;
     return {
-      stop() { autoCancel(); stopped = true; if (window.__atlasLs === dbg) delete window.__atlasLs; clearInterval(typeT); timers.forEach(clearTimeout); if (sess) sess.stop(); sess = null; el.remove(); },
+      stop() { autoCancel(); stopped = true; document.removeEventListener('keydown', onKey, true); if (window.__atlasLs === dbg) delete window.__atlasLs; clearInterval(typeT); timers.forEach(clearTimeout); if (sess) sess.stop(); sess = null; el.remove(); },
       panel: el, _debug: dbg,
     };
   }

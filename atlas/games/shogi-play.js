@@ -482,15 +482,15 @@
     }
     /* ---------- puzzle mode (ctx.pz) ---------- */
     let pzOn = false;
-    function pzReady() { if (stopped) return; if (!region && zoomOn) pzZoom(); legal = P.legalMoves(true); busy = false; pzOn = true; drawMarks(); if (PZ.ready) PZ.ready(); }
+    function pzReady() { if (stopped) return; if (!region && zoomOn) pzZoom(); legal = P.legalMoves(true); busy = false; pzOn = !PZ.lock; drawMarks(); if (PZ.ready) PZ.ready(); }   // (lock: a lesson's opening picture, for looking only)
     function pzAfter() {   // the player's move has landed: the puzzle decides what happens next
       legal = []; pzOn = false; drawMarks();
       PZ.moved(moves[moves.length - 1], { check: P.inCheck(), mate: !P.legalMoves(false).length, n: moves.length });
     }
     const hasCheck = () => P.legalMoves(true).some(m => { P.doMove(m); const c = P.inCheck(); P.undoMove(); return c; });
-    function pzLoad(sfen, sol) {   // the next puzzle: a new position, the pieces drop in again
+    function pzLoad(sfen, sol, o) {   // the next puzzle: a new position, the pieces drop in again
       timers.forEach(clearTimeout); timers.length = 0; jobId++; closePopup();
-      SF = sfen; hc = SF.split(' ')[1] === 'w' ? 1 : 0; ac = hc ^ 1; pzSol = sol || []; region = null;
+      SF = sfen; PZ.lock = !!(o && o.lock); hc = SF.split(' ')[1] === 'w' ? 1 : 0; ac = hc ^ 1; pzSol = sol || []; region = null;
       if (!E) return;   // (the engine is still loading: load() starts from SF)
       P = new E.Position(); P.setSfen(SF); moves = []; last = null; sel = null; hint = null; hintJ++; over = null; busy = true; pzOn = false;
       buildBoard(true); buildHands(); drawMarks();
