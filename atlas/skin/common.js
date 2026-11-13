@@ -906,12 +906,26 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
         const desc = (p && p.textContent.trim()) || (kind.v === 'open' ? (ja ? '定石の手順を覚えて、その局面で練習しよう。' : 'Learn the lines, then practise them.') : (ja ? '考え方を学んで練習問題に挑戦しよう。' : 'Learn the ideas, then try the problems.'));
         hero.innerHTML = (m ? `<span class="lxh-ring" style="--p:${n / m}"><b>${n}</b><small>/${m}</small></span>` : '') +
           `<span class="lxh-tx"><b>${esc(h2.textContent.trim())}</b><small>${esc(desc)}</small></span>` +
-          `<button type="button" class="lxh-cont hidden"><span></span><small></small></button>`;
+          `<span class="lxh-acts"><button type="button" class="lxh-ex hidden"><span></span><small></small></button><button type="button" class="lxh-cont hidden"><span></span><small></small></button></span>`;
+      }
+      // a card above the categories (shogi 棋力認定テスト): a white button in the header instead
+      const ex = fix.querySelector('.lxh-ex');
+      if (ex) {
+        const g = [...lx.querySelectorAll(':scope > .lx-grid')].find(x => x.nextElementSibling && x.nextElementSibling.classList.contains('lx-banner')), card = g && g.querySelector('.lx-card, .lesson-item');
+        ex.classList.toggle('hidden', !card);
+        if (card) {
+          g.classList.add('lxh-moved');
+          const tt = card.querySelector('.lx-t'), st = card.querySelector('.lx-st');
+          const a1 = tt ? (tt.firstChild && tt.firstChild.textContent.trim()) || tt.textContent.trim() : '', a2 = st ? st.textContent.trim() : '';
+          if (ex.firstChild.textContent !== a1) ex.firstChild.textContent = a1;
+          if (ex.lastChild.textContent !== a2) ex.lastChild.textContent = a2;
+          ex.onclick = () => card.click();
+        }
       }
       // 続きから: the first card of the shown category not yet passed
       const cont = fix.querySelector('.lxh-cont');
       if (cont) {
-        const card = [...lx.querySelectorAll('.lx-grid .lx-card, .lx-grid .lesson-item')].find(c => !c.classList.contains('done') && !c.disabled);
+        const card = [...lx.querySelectorAll('.lx-grid:not(.lxh-moved) .lx-card, .lx-grid:not(.lxh-moved) .lesson-item')].find(c => !c.classList.contains('done') && !c.disabled);
         cont.classList.toggle('hidden', !card);
         if (card) {
           const ja = /^ja/.test(document.documentElement.lang || 'ja'), no = card.querySelector('.lx-no'), tt = card.querySelector('.lx-t');
@@ -931,13 +945,33 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
       if (fix.style.top !== top) fix.style.top = top;
       fix.classList.toggle('pin', !!top);
     }
+    // the puzzles' hubs (shared/pzbook.js .pbh, reversi .pzx): the same — the header and the category tabs in one box (pinned on PC);
+    // 今日の一問 stays under it on every tab, the cards below change
+    function pz(c) {
+      const hero = c.querySelector(':scope > :is(.pbh-hero, .pzx-hero), :scope > .lxh-fix > .lxh-box > :is(.pbh-hero, .pzx-hero)');
+      const tabs = c.querySelector(':scope > :is(.pbh-tabs, .lx-tabs), :scope > .lxh-fix > .lxh-box > :is(.pbh-tabs, .lx-tabs)');
+      if (!hero) return;
+      let fix = c.querySelector(':scope > .lxh-fix');
+      if (!fix) { fix = document.createElement('div'); fix.className = 'lxh-fix pz'; fix.innerHTML = '<div class="lxh-box"></div>'; c.prepend(fix); }
+      const box = fix.firstElementChild;
+      if (hero.parentElement !== box) box.prepend(hero);
+      if (tabs && tabs.parentElement !== box) box.appendChild(tabs);
+      box.classList.toggle('tabs', !!tabs);
+      const view = c.closest('.modal > div') || c.closest('.modal');
+      const seg = view && view.querySelector(':scope > .seg.ls-tabs, :scope > #segLs');
+      let top = '';
+      if (!phone.matches && seg && getComputedStyle(seg).position === 'sticky') top = Math.round((parseFloat(getComputedStyle(seg).top) || 0) + seg.offsetHeight + 12) + 'px';
+      if (fix.style.top !== top) fix.style.top = top;
+      fix.classList.toggle('pin', !!top);
+    }
     function scan() {
+      document.querySelectorAll('.modal :is(.pbh, .pzx)').forEach(pz);
       document.querySelectorAll('.modal .lesson-list > .lx').forEach(one);
       document.querySelectorAll('.lxh-on').forEach(v => { if (!v.querySelector('.lesson-list > .lx > .lxh-fix')) v.classList.remove('lxh-on'); });
     }
     // (run in the observer's own callback — before the page paints — so a re-rendered list never shows a frame without its header:
     //  a timer let the bare list flash on every tab switch, 2026-11-13 the user)
-    const ours = rs => rs.some(r => { const t = r.target; return t.nodeType === 1 && (t.closest('.lesson-list') || t.querySelector && t.querySelector(':scope > .lesson-list, :scope .lesson-list > .lx')); });
+    const ours = rs => rs.some(r => { const t = r.target; return t.nodeType === 1 && (t.closest('.lesson-list, .pbh, .pzx') || t.querySelector && t.querySelector(':scope > .lesson-list, :scope .lesson-list > .lx, .pbh, .pzx')); });
     let q = 0; const later = () => { if (!q) q = setTimeout(() => { q = 0; scan(); }, 30); };
     const go = () => { scan(); new MutationObserver(rs => { if (ours(rs)) scan(); }).observe(document.body, { childList: true, subtree: true }); addEventListener('resize', later); };
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
