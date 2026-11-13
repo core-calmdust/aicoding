@@ -1753,7 +1753,17 @@
         c.fillStyle = gold; c.fillRect(KX - .35, yr + 11, .7, 2); c.beginPath(); c.moveTo(KX - 2.6, yr + 13); c.quadraticCurveTo(KX - 1, yr + 13.6, KX + .4, yr + 16.6); c.lineTo(KX + 1.2, yr + 15.4); c.quadraticCurveTo(KX + 1.6, yr + 14, KX + 2.8, yr + 13.6); c.quadraticCurveTo(KX + 1, yr + 12.4, KX - 2.6, yr + 13); c.fill();
         c.fillStyle = goldHi; ell(c, KX + .6, yr + 15.6, .5, .5);
         c.restore(); };
-      pavilion(false);
+      // drawn level on the painted band, the pavilion's eaves read as sloping down to the right (the band is a cylinder round the
+      // room, seen from above its centre and to one side: lines high on it sag towards the view's centre) — so it is painted with a
+      // slight counter-tilt that grows with height: drawn apart, then copied back column by column, each column stretched about the
+      // water line (pixel-wide columns: no seams). (2026-11-13)
+      const pavS = (flip) => { const T0 = c.getTransform(), cv = c.canvas, oc = document.createElement('canvas'); oc.width = cv.width; oc.height = cv.height;
+        const o2 = oc.getContext('2d'); o2.setTransform(T0); const c0 = c; c = o2; try { pavilion(flip); } finally { c = c0; }
+        const K = .0006, yd0 = T0.d * KB + T0.f, H = cv.height, p0 = Math.max(0, Math.floor(T0.a * (KX + 72) + T0.e)), p1 = Math.min(cv.width, Math.ceil(T0.a * (KX - 72) + T0.e));
+        c.save(); c.setTransform(1, 0, 0, 1, 0, 0);
+        for (let px = Math.min(p0, p1); px < Math.max(p0, p1); px++) { const m = 1 - K * ((px + .5 - T0.e) / T0.a - KX); c.drawImage(oc, px, 0, 1, H, px, yd0 * (1 - m), 1, H * m); }
+        c.restore(); };
+      pavS(false);
       // the near trees: round broadleaf crowns and maples in autumn, closing round the feet of the buildings
       const broad = [sh('#3e5a32', '#3a3a2c', '#080c0a'), sh('#4e6a3a', '#4a4634', '#0a0e0c'), sh('#5e7a44', '#56503c', '#0c100e')], momi = night ? ['#1c0a08', '#220e0a'] : ev ? ['#a8402a', '#b8602a', '#8a3a2a'] : ['#c8402a', '#e07a2a', '#d8a030', '#b83a26'];
       for (let i = 0; i < 720; i++) { const a = -100 + R() * 210, x = ax(a), near = Math.abs(x - KX) < 66, top = near ? -14 : 4 + 6 * Math.sin(a / 9) + 4 * Math.sin(a / 3.7), y = -14 + R() * (top + 14), r = 3 + R() * 4, mp = R() < .16;   // (none before the pavilion: the pond is there)
@@ -1763,7 +1773,7 @@
       { const PY0 = -13, PY1 = KB - 3.4, PX0 = KX - 80, PX1 = KX + 80;
         c.save(); c.beginPath(); c.moveTo(PX0, PY1); c.quadraticCurveTo(KX, PY1 + 1.2, PX1, PY1); c.lineTo(PX1 + 6, PY0); c.lineTo(PX0 - 6, PY0); c.closePath(); c.clip();
         c.fillStyle = lin(c, PY1, PY0, [[0, sh('#5e7480', '#5a4e5c', '#0a0e14')], [1, sh('#3e5462', '#3a3442', '#06080c')]]); c.fillRect(PX0 - 6, PY0, PX1 - PX0 + 12, PY1 - PY0);
-        c.globalAlpha = .62; pavilion(true); c.globalAlpha = 1;   // (the reflection)
+        c.globalAlpha = .62; pavS(true); c.globalAlpha = 1;   // (the reflection)
         c.fillStyle = sh('rgba(70,96,110,.35)', 'rgba(80,70,90,.35)', 'rgba(5,8,12,.4)'); c.fillRect(PX0 - 6, PY0, PX1 - PX0 + 12, PY1 - PY0);
         c.fillStyle = sh('rgba(255,255,255,.28)', 'rgba(255,220,190,.25)', 'rgba(200,210,255,.12)'); for (let i = 0; i < 90; i++) { const yy = PY0 + 1 + R() * (PY1 - PY0 - 2), xx = PX0 + R() * (PX1 - PX0); c.fillRect(xx, yy, 2 + R() * 6, .18); }
         c.restore();
