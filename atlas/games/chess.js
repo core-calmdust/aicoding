@@ -401,6 +401,7 @@
     }
     function pzLoad(fen, sol, toMove, me, drill) {   // a new puzzle: the player's side (me; else the side to move) is put at the bottom, the pieces drop in
       if (!drill && DR) { DR = null; clear(sg); clear(dg); }
+      clear(an);
       if (me === 0 || me === 1) PZ.me = me; else delete PZ.me;
       if (!E) { PZ.fen = fen; return; }   // (the engine is still loading: it starts from PZ.fen)
       timers.forEach(clearTimeout); timers.length = 0; closePromo(); clear(mv); clear(hl);
@@ -462,7 +463,26 @@
       clear(sg); DR = { stars: (o.stars || []).slice(), safe: !!o.safe, sm: {} };
       pzLoad(o.fen.split(' ').length > 1 ? o.fen : o.fen + ' w - - 0 1', [], undefined, 0, true);
     }
+    /* ---------- notes on the board (the lessons' warm-up, chess/app.js rampMarks): frames on squares and flat arrows ---------- */
+    const an = new TH.Group(); board.add(an);
+    const ANC = { ok: 0x2fd17a, hang: 0xff3b30, ng: 0xff3b30, '': 0xffb21a };
+    const anMat = {}, am = c => anMat[c] || (anMat[c] = basic(ANC[c] != null ? ANC[c] : ANC[''], c === 'ok' || c === 'hang' ? .5 : .9));
+    function annot(list) {
+      clear(an); if (!list || !list.length) return;
+      for (const o of list) {
+        if (o.at) { const t = new TH.Mesh(GEO.tile, am(o.cls || 'ok')); const [x, z] = xz(sqOf(o.at)); t.position.set(x, Y + .012, z); t.renderOrder = 2; an.add(t); continue; }
+        if (!o.arrow) continue;
+        const [a, b] = o.arrow.map(q => xz(sqOf(q))), dx = b[0] - a[0], dz = b[1] - a[1], len = Math.hypot(dx, dz); if (!len) continue;
+        const ang = Math.atan2(dx, dz), mat = am(o.cls || ''), head = .34, L = Math.max(.05, len - head - .18);
+        const shaft = new TH.Mesh(new TH.BoxGeometry(.12, .01, L), mat); shaft.position.set(a[0] + Math.sin(ang) * (L / 2 + .1), Y + .05, a[1] + Math.cos(ang) * (L / 2 + .1)); shaft.rotation.y = ang;
+        const tri = new TH.Shape(); tri.moveTo(-.2, 0); tri.lineTo(.2, 0); tri.lineTo(0, head); tri.lineTo(-.2, 0);
+        const hg = new TH.ShapeGeometry(tri); hg.rotateX(-Math.PI / 2); hg.rotateY(Math.PI);   // (facing up, pointing along +z before the turn)
+        const hm = new TH.Mesh(hg, mat); hm.position.set(a[0] + Math.sin(ang) * (L + .1), Y + .055, a[1] + Math.cos(ang) * (L + .1)); hm.rotation.y = ang;
+        shaft.renderOrder = hm.renderOrder = 3; an.add(shaft, hm);
+      }
+    }
     const pz = {
+      annot,   // [{ at: 'd5', cls: 'ok'|'hang' } | { arrow: ['d1', 'a4'], cls: ''|'ng' }] — null clears
       drill: drillLoad,   // a drill stage: { fen, stars, safe } — the player moves on until every ★ is taken (pz.left() → the ★ still to take)
       left: () => drillLeft().length,
       play: u => new Promise(res => { let m = 0; try { m = pos.fromUci(u); } catch (e) {} if (!m) return res(false); busy = true; pzOn = false; play(m, () => { if (!stopped) res(true); }); }),

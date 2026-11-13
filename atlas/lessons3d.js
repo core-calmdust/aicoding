@@ -212,7 +212,8 @@
       const T = k => this.tx('ls.' + s.id + '.' + k, lang);
       if (s.kind === 'drill') return { id: s.id, title: T('title'), intro: T('intro'), goal: T('goal'), drill: s.stages, probs: [], dx: k => this.tx(k, lang),   // ★ stages (= chess/app.js drillMove: 3 ★ within par, 2 within par + 2, else 1; always passed)
         save: n => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }; pr[s.id] = { best: Math.max(o.best || 0, n), clear: true }; put(this.LKEY, pr); return true; } };
-      return { id: s.id, title: T('title'), intro: T('intro'),
+      const RU = (k, v) => fill(L((this.data.ls.rampUi || {})[k], lang), v || {});
+      return { id: s.id, title: T('title'), intro: T('intro'), ramp: s.ramp && s.ramp.length ? s.ramp : null, RU,   // (the warm-up before the scored problems: explain / try — not scored)
         probs: (s.problems || []).map(p => ({ pos: p.fen, kind: 'best', P: p, ask: T('goal'), why: T('why'), ans: p.best || (p.ok || [])[0] })),
         save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }, pass = pts >= 75; pr[s.id] = { best: Math.max(o.best || 0, pts), clear: o.clear || pass }; put(this.LKEY, pr); return pass; } };
     },
@@ -383,6 +384,40 @@
         else pz().load(pos, sol || []);
       });
     }
+    /* ---------- the warm-up before a lesson's problems (chess lessons.json step.ramp = chess/app.js loadRamp / rampMove): first the
+       idea on a board with arrows and frames (explain), then a guided move or two (try: any move in ok; a miss is taken back) ---------- */
+    const rmk = it => [...(it.hl || []).map(([q, c]) => ({ at: q, cls: c })), ...(it.ar || []).map(([a, b, c]) => ({ arrow: [a, b], cls: c || '' }))];
+    async function ramp(i) {
+      const it = cur.ramp[i], RU = cur.RU, last = i + 1 >= cur.ramp.length; if (!it) return prob();
+      phase = 'ramp'; cur.ri = i; dots(); onMoved = null; let rh = 0, ok = false;
+      head(cur.title + ' · ' + RU('step', { i: i + 1, n: cur.ramp.length }));
+      const goOn = () => (last ? (cur.k = 0, prob()) : ramp(i + 1));
+      if (it.k === 'explain') say(`💡 <b>${L(it.t, ctx.lang)}</b><br>${L(it.b, ctx.lang)}`);
+      else say(`${L(it.g, ctx.lang)}<br><small>${RU('note')}</small>`);
+      act(last ? RU('main') : RU('next'), { hint: it.k === 'try', nextOn: it.k === 'explain' });
+      $('[data-a=next]').onclick = goOn;
+      $('[data-a=hint]').onclick = () => {
+        if (it.k !== 'try' || ok || !pz()) return; rh = Math.min(3, rh + 1);
+        if (rh === 1) { say(L(it.h, ctx.lang)); pz().annot && pz().annot(null); }
+        else if (rh === 2) { say(L(it.h, ctx.lang) + '<br>' + RU('look')); pz().annot && pz().annot((it.look || []).map(q => ({ at: q, cls: 'ok' }))); }
+        else { say(RU('ans', { m: moveName(it.fen, it.ok[0]) || it.ok[0] })); pz().annot && pz().annot([{ arrow: [it.ok[0].slice(0, 2), it.ok[0].slice(2, 4)], cls: '' }, { at: it.ok[0].slice(0, 2), cls: 'ok' }]); }
+      };
+      await board(it.fen); if (stopped || phase !== 'ramp' || cur.ri !== i) return;
+      if (pz().annot) pz().annot(it.k === 'explain' ? rmk(it) : null);
+      onMoved = u => {
+        if (stopped || phase !== 'ramp' || cur.ri !== i) return;
+        if (it.k === 'explain') { pz().undo(1); if (pz().annot) pz().annot(rmk(it)); pz().wait(); return; }   // (the explanation's board is for looking)
+        if (it.ok.includes(u)) {
+          ok = true; if (pz().annot) pz().annot(null); say(`✓ ${L(it.y, ctx.lang)}`); try { chime(true); } catch (e) {}
+          act(last ? RU('main') : RU('next'), {});
+          later(() => { if (cur && phase === 'ramp' && cur.ri === i && !more.length) goOn(); }, 2600);   // (right: on to the next step by itself)
+          return;
+        }
+        say(RU('ng')); try { chime(false); } catch (e) {}
+        later(() => { if (cur && phase === 'ramp' && cur.ri === i && !ok) { pz().undo(1); pz().wait(); } }, 1100);
+      };
+      pz().wait();
+    }
     /* ---------- chess's beginner drills (2026-11-13): move the piece and take every ★ — the full game's stages, texts and ★ ---------- */
     const dfen = st => st.fen.split(' ').length > 1 ? st.fen : st.fen + ' w - - 0 1';
     async function drill(i) {
@@ -426,7 +461,7 @@
       phase = 'intro'; dots();
       say(`<b>${cur.title}</b><br>${cur.intro || ''}`);
       if (cur.drill) { cur.stars = []; cur.probs = cur.drill.map(() => ({})); act(X.start); $('[data-a=next]').onclick = () => drill(0); board(dfen(cur.drill[0]), [], { stars: cur.drill[0].stars, safe: !!cur.drill[0].safe }); return; }
-      act(X.start); $('[data-a=next]').onclick = () => (ctx.kind === 'open' && cur.steps.length ? study() : prob());
+      act(X.start); $('[data-a=next]').onclick = () => (ctx.kind === 'open' && cur.steps.length ? study() : cur.ramp ? ramp(0) : prob());
       if (ctx.kind === 'open' && cur.start) board(cur.start);   // (the opening's start position is on the table while reading)
       else if (cur.probs[0]) board(cur.probs[0].pos, cur.probs[0].sol);
     }
