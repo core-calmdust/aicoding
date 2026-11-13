@@ -116,7 +116,7 @@
   const CERAMIC = ['#8cbca8', '#2b4085', '#d19a3d', '#cc3d29', '#ede6d1', '#333338'];
   const JEWEL = ['#d10a24', '#102ed1', '#089a4c', '#8c24cc', '#f79a1a', '#59cce6'];
   const POP = ['#f2242f', '#ff6f9e', '#ffc61f', '#3f80ff', '#f4f2ea', '#1a1a1e'];   // (the pop board's colours)
-  const RAINBOW = ['#ff5f6d', '#ff8a5c', '#ffb347', '#ffd84a', '#d9f25a', '#8ee86a', '#4fe0a0', '#3fe0d0', '#4cc9ff', '#6aa8ff', '#9a8cff', '#c37bff', '#f07cf0', '#ff7cbf', '#ff9fb2', '#ffc0e0', '#b8f0ff', '#c8ffb0'];   // (vivid pastels — bright, clean, nothing dull or dark; 2026-11-13)
+  const RAINBOW = ['#71c74d', '#f85454', '#85b45c', '#f8e982', '#fab707', '#c94959', '#15897c', '#b4db35', '#f7d720', '#fc9c3f', '#b75959', '#1ea193', '#ece45d', '#fad50f', '#fb7b4f', '#9ce2b1', '#e9c0ce', '#08ade1', '#b8e2d7', '#f3d6d4', '#fc8e96', '#2a5b74', '#a1d7e8', '#a1bae3', '#cda8d9', '#bf6ecb', '#1f73a3', '#2fd4ea', '#8f59ba', '#a97fb0', '#01bddc', '#7c5e74'];   // (the 32 balls of the user's reference photo, their colours exactly as photographed; one ball each)
   const PAINT = ['#c72924', '#1f5cb3', '#1f8047', '#e6a81f', '#6b338c', '#ebe6d6'];
   // abstract pieces (for the abstract board): flat matte discs, the top painted with the 2D page's motif (m-mod-<k>.webp)
   const MOD = ['#d4694a', '#e3b34a', '#2e8f8a', '#f0e6d4', '#ed8c80', '#5473b3'];
@@ -129,8 +129,8 @@
   function marbleMat(i, set) {
     const k = (i * 7 + 3) % 6;
     if (set === 'rainbow') {   // the painted wooden rainbow set: the 32 colours of the user's reference photo, mixed over the board (2026-11-13)
-      const c = RAINBOW[(i * 13 + 5) % RAINBOW.length];
-      return mat('mrb' + c, () => { const m = X.M({ color: c, roughness: .5 }); m.emissive.set(c).convertSRGBToLinear().multiplyScalar(.32); return m; });   // (a little of its own colour glowing: the room's light and the tone mapping no longer dull it)
+      const c = RAINBOW[((i === 32 ? 16 : i) * 13 + 5) % 32];   // (the 32 colours, each once on the 33-hole board)
+      return mat('mrb' + c, () => X.M({ color: c, roughness: .5 }));   // the photo's colour exactly, no extra processing
     }
     if (set === 'mod') return mat('mmod' + k, () => X.M({ color: MOD[k], roughness: .75 }));
     if (set === 'pearl') return mat('mcer' + k, () => X.M({ color: CERAMIC[k], roughness: .28, clearcoat: .8, clearcoatRoughness: .2 }));
