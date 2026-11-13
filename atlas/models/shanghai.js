@@ -126,10 +126,15 @@
     for (let i = 0, p = 0; i < W * H; i++, p += 4) { const d = Math.max(Math.abs(src[p] - g0[0]), Math.abs(src[p + 1] - g0[1]), Math.abs(src[p + 2] - g0[2])); h[i] = d < 14 ? 0 : Math.min(1, (d - 14) / 70); }
     // soften the cut's edges (two box passes, radius ~1 px at 256): a rounded groove rather than a stair
     const box = (a, b, dx, dy) => { for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const i = y * W + x; let s = a[i], n = 1; if (x - dx >= 0 && y - dy >= 0) { s += a[i - dy * W - dx]; n++; } if (x + dx < W && y + dy < H) { s += a[i + dy * W + dx]; n++; } b[i] = s / n; } };
-    for (let k = 0; k < (LO() ? 2 : 3); k++) { box(h, tmp, 1, 0); box(tmp, h, 0, 1); }   // (wider walls: a deeper cut, 2026-11-14)
+    // the cut's walls stand on the white just outside the paint, never on the paint itself (2026-11-14, ユーザー：象牙を彫っても
+    //黒い線は出ない — the paint fills the cut flat and keeps its own colour; only the white rim round it slopes down into it):
+    // the ink blurred outward, and inside the stroke the bottom stays flat
+    const h0 = h.slice();
+    for (let k = 0; k < (LO() ? 2 : 3); k++) { box(h, tmp, 1, 0); box(tmp, h, 0, 1); }
+    for (let i = 0; i < W * H; i++) h[i] = h0[i] > .5 ? 1 : Math.max(h0[i], Math.min(1, h[i] * 1.8));
     // (no darkened rim round the strokes: ユーザー 2026-11-14「文字の縁の黒線は不要」— the depth is the normal map's light alone)
     const out = document.createElement('canvas'); out.width = W; out.height = H;
-    const oc = out.getContext('2d'), im = oc.createImageData(W, H), o = im.data, S = (LO() ? 6.5 : 10);   // (depth: deep cut walls, 2026-11-13 ユーザー「堀はもっと深い」)   // (depth: steeper walls on the finer PC atlas)
+    const oc = out.getContext('2d'), im = oc.createImageData(W, H), o = im.data, S = (LO() ? 4.5 : 7);   // (depth: deep cut walls, 2026-11-13 ユーザー「堀はもっと深い」)   // (depth: steeper walls on the finer PC atlas)
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
       const i = y * W + x, l = h[x > 0 ? i - 1 : i], r = h[x < W - 1 ? i + 1 : i], u = h[y > 0 ? i - W : i], d = h[y < H - 1 ? i + W : i];
       // the surface height is −h (cut down): its slope along u (x) and v (up = −y on the canvas)
