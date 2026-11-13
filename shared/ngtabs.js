@@ -122,6 +122,7 @@ const CSS = `
 /* PC ルール tab: mode on top across the width, the other settings in two balanced columns (no empty half) */
 .modal.ngt-pc > :not(.ngt-note):not(.ngt-foot){order:0!important}
 .modal.ngt-pc[data-ngt=rules] .ngt-modef{margin-bottom:18px!important}
+.modal.ngt-pc .ngt-modef > label{display:none!important}   /* (2026-11-13: no 「モード」 caption over the mode tabs on PC) */
 .modal.ngt-pc[data-ngt=rules] .ng-cols:not(.ngt-hide){display:block!important;columns:2;column-gap:36px;column-fill:balance}
 .modal.ngt-pc[data-ngt=rules] .ng-col:not(.ngt-hide){display:contents!important}
 .modal.ngt-pc[data-ngt=rules] .ng-cols > *, .modal.ngt-pc[data-ngt=rules] .ng-col > *{break-inside:avoid;margin-top:0!important}

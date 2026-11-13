@@ -938,3 +938,47 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) .modal.ngt-on .ngt-foot > .modal-act
 /* (2026-11-13) the dialogs' white buttons (閉じる …) raised like the red one: the same depth (a 4px foot of their edge colour) */
 html.atlas-skin body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav, .lesson-actions) :is(button, .mbtn):not(.go):not(.primary):not(:disabled):not(#_):not(#_){box-shadow:0 4px 0 #e6d6b2!important;border:2px solid #efe3c8!important;background:#fffdf8!important}
 html.atlas-skin body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav, .lesson-actions) :is(button, .mbtn):not(.go):not(.primary):active{transform:translateY(2px);box-shadow:0 2px 0 #e6d6b2!important}
+/* ---- (2026-11-13) PC: compacter dialogs ---- */
+/* the new-game dialog's top tabs (ゲーム / ルール / デザイン): thin underline tabs, unlike the pill tabs inside (モード, 系統) */
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal.ngt-pc .ngt-bar:not(#_):not(#_){padding:0!important;gap:0!important;margin:0 0 16px!important;border-radius:0!important;background:none!important;border-bottom:2px solid #efe3c8!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal.ngt-pc .ngt-bar > button:not(#_):not(#_){flex-direction:row!important;align-items:baseline;gap:8px;min-height:0!important;height:40px;padding:0 8px!important;margin-bottom:-2px!important;border-radius:0!important;border-bottom:3px solid transparent!important;background:none!important;box-shadow:none!important;font-size:15px!important;color:#8a8fa3!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal.ngt-pc .ngt-bar > button:hover:not(.sel){color:var(--a-ink)!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal.ngt-pc .ngt-bar > button.sel:not(#_):not(#_){color:#e5484d!important;border-bottom-color:#ff5d5d!important;background:none!important;box-shadow:none!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal.ngt-pc .ngt-bar > button small:not(#_){font-size:12px;font-weight:700;opacity:.75}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal.ngt-pc .ngt-bar > button:focus-visible{outline:2px solid #ffb3a8;outline-offset:-2px}
+/* 手番 / 手合い / 持ち時間 tiles: lower */
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl.ngt-pc[data-ngl-order] :is(#segColor,#segClock,#segHandi):not(#_){gap:8px!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl.ngt-pc[data-ngl-order]:not(.ngl-stones) #segColor > button:not(#_):not(#_),
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl.ngt-pc[data-ngl-order] :is(#segClock,#segHandi) > button:not(#_):not(#_){padding:8px 6px!important;border-radius:12px!important}
+/* online: no ranking list in the panel (a button opens it) */
+html.atlas-skin:not(.atlas-2d) body:not(#_) .ol-rkbtn:not(#_){flex:none;align-self:center;height:36px;padding:0 16px;border-radius:99px;border:2px solid var(--a-line);background:var(--a-btn);box-shadow:0 3px 0 var(--a-line);color:var(--a-ink);font:inherit;font-size:13.5px;font-weight:900;cursor:pointer;white-space:nowrap}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .ol-rkbtn:hover{border-color:#e0b65a}
+@media (min-width:761px){
+  /* lessons / openings: smaller cards, one line of text each */
+  html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonList .lx-grid{gap:10px}
+  html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonList .lx-card:not(#_){gap:12px;padding:9px 12px 9px 9px;border-radius:16px!important}
+  html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonList .lx-th:not(#_){width:68px;padding:4px;border-radius:10px}
+  html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonList .lx-tx:not(#_){gap:3px}
+  html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonList :is(.lx-desc,.lx-mv):not(#_){display:none!important}
+  html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonList .lx-t:not(#_){font-size:16px;margin-top:0}
+  html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonList .lx-sub:not(#_){font-size:12.5px;display:block!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonList .lx-no{padding:3px 8px;font-size:11px}
+  html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonList .lx-st{padding:2px 8px;font-size:11px}
+  html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonList .lx-banner:not(#_){padding:9px 16px}
+  html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonList .lx-banner .ic:not(#_){width:38px;height:38px;border-radius:11px}
+  html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonList .lx-banner .tx b:not(#_){font-size:17px}
+  /* puzzles (pzbook): cards side by side as rows — the board on the left, smaller */
+  html.atlas-skin:not(.atlas-2d) body:not(#_) .pbh{gap:10px}
+  html.atlas-skin:not(.atlas-2d) body:not(#_) .pbh-hero:not(#_){padding:10px 16px;gap:14px}
+  html.atlas-skin:not(.atlas-2d) body:not(#_) .pbh-hero .pb-ring:not(#_){width:62px;height:62px}
+  html.atlas-skin:not(.atlas-2d) body:not(#_) .pbh-hero .pb-ring b{font-size:17px}
+  html.atlas-skin:not(.atlas-2d) body:not(#_) .pbh-card:not(#_){flex-direction:row;align-items:center;padding:8px 10px 8px 8px;gap:10px}
+  html.atlas-skin:not(.atlas-2d) body:not(#_) .pbh-th:not(#_){width:72px;padding:0;background:none}
+  html.atlas-skin:not(.atlas-2d) body:not(#_) .pbh-bd:not(#_),html.atlas-skin:not(.atlas-2d) body:not(#_) .pbh-bd.tall:not(#_){width:100%}
+  html.atlas-skin:not(.atlas-2d) body:not(#_) .pbh-bd > svg:not(#_){max-height:84px}
+  html.atlas-skin:not(.atlas-2d) body:not(#_) .pbh-ic:not(#_){width:26px;height:26px;padding:4px}
+  html.atlas-skin:not(.atlas-2d) body:not(#_) .pbh-desc:not(#_){min-height:0;-webkit-line-clamp:1}
+  /* the last lines clear the frosted band above the buttons */
+  html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonOverlay .modal > div > :has(+ .modal-actions){padding-bottom:40px!important}
+}
+@media (min-width:761px){ html.atlas-skin:not(.atlas-2d) body:not(#_) .pbh-meta .pb-medals:not(#_){flex-wrap:nowrap;overflow:hidden;min-width:0} }

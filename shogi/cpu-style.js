@@ -219,13 +219,13 @@ function pick(w, sel, t) {
     w.appendChild(pk);
     const btn = pk.querySelector('.csp-btn'), pop = pk.querySelector('.csp-pop');
     w.addEventListener('click', e => { if (e.target.closest('.csp')) e.preventDefault(); });   // (the label would forward clicks to the hidden select)
-    btn.addEventListener('click', e => { e.stopPropagation(); const open = !pk.classList.contains('open'); closeAll(); pk.classList.toggle('open', open); btn.setAttribute('aria-expanded', open); });
+    btn.addEventListener('click', e => { e.stopPropagation(); const open = !pk.classList.contains('open'); closeAll(); pk.classList.toggle('open', open); btn.setAttribute('aria-expanded', open); if (open) place(pk); });
     pop.addEventListener('click', e => {
       const o = e.target.closest('[data-v]'); if (!o) return; e.stopPropagation();
       sel.value = o.dataset.v; sel.dispatchEvent(new Event('change', { bubbles: true }));
       closeAll(); paint(pk, sel);
     });
-    if (!pickDoc) { pickDoc = true; document.addEventListener('click', closeAll); document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAll(); }); }
+    if (!pickDoc) { pickDoc = true; document.addEventListener('click', closeAll); document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAll(); }); addEventListener('scroll', e => { if (!(e.target.closest && e.target.closest('.csp-pop')) && document.querySelector('.csp.open .csp-pop[style*=fixed]')) closeAll(); }, true); addEventListener('resize', closeAll); }
   }
   const pop = pk.querySelector('.csp-pop');
   pop.innerHTML = STYLES.map(s => `<button type="button" role="option" data-v="${s}"${s === 'auto' ? ' class="all"' : ''}>${t('cs.s.' + s)}</button>`).join('');
@@ -234,6 +234,24 @@ function pick(w, sel, t) {
 function paint(pk, sel) {
   const o = sel.selectedOptions[0]; pk.querySelector('.csp-cur').textContent = o ? o.text : '';
   pk.querySelectorAll('.csp-pop [data-v]').forEach(b => { const on = b.dataset.v === sel.value; b.classList.toggle('sel', on); b.setAttribute('aria-selected', on); });
+}
+// a panel a scrolling box would cut (PC new-game dialog: the level column scrolls) floats over it instead — below the button
+// when it fits inside the dialog, otherwise above
+function place(pk) {
+  const pop = pk.querySelector('.csp-pop'); pop.style.cssText = '';
+  if (pk.closest('.ngt-on')) return;
+  const m = pk.closest('.modal'); if (!m) return;
+  const r = pop.getBoundingClientRect(), b = pk.querySelector('.csp-btn').getBoundingClientRect(), mr = m.getBoundingClientRect();
+  let cut = false;
+  for (let e = pk.parentElement; e && e !== m.parentElement; e = e.parentElement) {
+    if (getComputedStyle(e).overflowY === 'visible') continue;
+    const er = e.getBoundingClientRect(); if (r.bottom > er.bottom - 2 || r.top < er.top) { cut = true; break; }
+  }
+  if (!cut) return;
+  const h = r.height, top = b.bottom + 6 + h <= Math.min(innerHeight, mr.bottom) - 10 ? b.bottom + 6 : Math.max(mr.top + 10, b.top - 6 - h);
+  Object.assign(pop.style, { position: 'fixed', width: r.width + 'px', left: r.left + 'px', right: 'auto', top: top + 'px', bottom: 'auto', zIndex: 1000 });
+  const q = pop.getBoundingClientRect();   // (a transformed ancestor would offset a fixed box: correct by what landed)
+  pop.style.left = (2 * r.left - q.left) + 'px'; pop.style.top = (2 * top - q.top) + 'px';
 }
 function closeAll() { document.querySelectorAll('.csp.open').forEach(p => { p.classList.remove('open'); p.querySelector('.csp-btn').setAttribute('aria-expanded', 'false'); }); }
 function dlgOpen() { document.querySelectorAll('#csWrap1 select, #csWrap2 select').forEach(s => { delete s.dataset.ready; }); }

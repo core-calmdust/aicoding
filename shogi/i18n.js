@@ -32,7 +32,7 @@ const I18N = {
     'hint.none': '候補手なし',
     mateIn: '{n}手詰', mated: '詰み',
     // lessons
-    'ls.title': '段級位別レッスン', 'ls.desc': '20級から三段まで、段級位の目安（当サイト基準）に合わせた14ステップ。各ステップ5問・1問20点満点で、75点以上で合格です。',
+    'ls.title': '段級位別レッスン', 'ls.desc': '20級〜三段の14ステップ。各5問、75点以上で合格。',
     'ls.hint': 'ヒント', 'ls.answer': '答えを見る', 'ls.next': '次の問題', 'ls.finish': '結果を見る', 'ls.quit': 'やめる', 'ls.back': '一覧へ', 'ls.start': 'はじめる',
     'ls.retry': 'もう一度', 'ls.nextStep': '次のステップ', 'ls.toGame': '対局へ', 'ls.toList': 'レッスンに戻る', 'ls.toOpen': '定跡に戻る', 'ls.pass': '{g} 合格', 'ls.fail': 'あと一歩',
     'ls.score': '{n}問中{k}問正解', 'ls.clear': '合格', 'ls.best': '最高 {k}/{n}', 'ls.new': '未挑戦',
