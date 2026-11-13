@@ -833,3 +833,14 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-or
 /* shogi (its level's row also holds 戦型): the name and 戦型 above, the slider under them */
 html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] :is(#fLevel,#fLevel2) .lv-row:not(#_){order:-1;display:flex!important;align-items:center;justify-content:space-between;gap:14px}
 html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] :is(#fLevel,#fLevel2) .lv-row .level-name:not(#_):not(#_){text-align:left;margin:0!important}
+/* (2026-11-13) shogi's 新しい対局 as reversi's: the level centred (name, then the slider), 戦型 under them in a tile of the mode
+   row's colour; 手合い on the right with 手番 and 持ち時間 (shogi/index.html data-ngl-order with '|'); the 駒音 credit beside the
+   buttons, so the panels reach down to them */
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] :is(#fLevel,#fLevel2) .lv-row:not(#_):not(#_){display:contents!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] :is(#fLevel,#fLevel2) .lv-row .level-name:not(#_):not(#_):not(#_){order:-1;text-align:center;margin:6px 0 0!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] :is(#fLevel,#fLevel2) .cs-wrap:not(.hidden):not(#_){order:1;display:flex!important;max-width:none;width:100%;margin-top:14px;gap:12px;padding:0;border-radius:0;background:none;font-size:13px;letter-spacing:.12em;color:#8a7552;box-sizing:border-box}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] :is(#fLevel,#fLevel2) .cs-wrap .csp{flex:1 1 auto}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] :is(#fLevel,#fLevel2) .cs-wrap .csp-btn:not(#_){height:40px;border-radius:10px;background:#f3ead6!important;border:2px solid #eadcbc!important;font-size:14.5px;letter-spacing:.02em}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order].ng-fit:has(> .credit){position:relative}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order].ng-fit > .credit:not(#_){position:absolute;right:30px;bottom:34px;margin:0!important;text-align:right;font-size:11px;line-height:1.5;max-width:200px;z-index:7}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] .ng-cols > .ng-col::after{bottom:-12px;height:52px}   /* (a deeper frosted band at the panels' foot: PRO's long list visibly runs under it) */
