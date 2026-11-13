@@ -240,7 +240,7 @@
     if (look === 'kaya') return null;
     let side, end, leg;
     if (L.lacq) {   // 蒔絵: the colour + (R height, G roughness, B metalness); a deep clear lacquer over all
-      const lq = (c, mm) => M({ map: imgTex(c), roughnessMap: imgTex(mm, false), metalnessMap: imgTex(mm, false), bumpMap: imgTex(mm, false), bumpScale: .0035, roughness: 1, metalness: 1, clearcoat: .8, clearcoatRoughness: .08, envMapIntensity: 1.5 });
+      const lq = (c, mm) => M({ map: imgTex(c), roughnessMap: imgTex(mm, false), metalnessMap: imgTex(mm, false), bumpMap: imgTex(mm, false), bumpScale: .0035, roughness: 1, metalness: .5, clearcoat: .8, clearcoatRoughness: .08, envMapIntensity: 1.5 });   // (2026-11-13: metalness ×.5 — as pure metal the solid gold of the fans' paper only mirrored the room, and in a dim room (the study) it went black: only the ribs showed. Half metal keeps the gold's own colour under any light)
       side = lq('side-makie', 'side-makie-m'); end = lq('end-makie', 'end-makie-m');
       leg = M({ map: imgTex('leg-makie'), bumpScale: .0005, roughness: .14, clearcoat: .9, clearcoatRoughness: .06 });
     } else if (L.raden) {   // 螺鈿: 朱溜 lacquer, shell pieces (the same maps as 蒔絵)
