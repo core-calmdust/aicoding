@@ -1870,7 +1870,7 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 .bvi #bvLs > label{flex:1 1 100%!important}.mxb.pzok{overflow:visible}.mxb.pzok::after{position:absolute;top:-8px;right:-8px;margin:0!important;box-shadow:0 0 0 2px #fff}.bvi .mxb{min-width:0}.bvi .mxb i{flex:none}   /* (the ✓ on the corner: it no longer pushes the label out — phones, 2026-11-13) */
 .bvi .mxb.pzd{gap:6px;padding:0 8px}.bvi .mxb.pzd span{min-width:0}.mxb .ez{flex:none;font-style:normal;font-size:10.5px;line-height:1;font-weight:900;letter-spacing:.05em;padding:3px 6px;border-radius:99px;background:#e9f5ee;color:#2e7d55;border:1.5px solid #9fd8b8}   /* (ペグ: 今日のパズル / 今日のパズル EASY — no stars, EASY a small pill: the label fits, 2026-11-13) */
 @media (max-width:819px){.bvi .mxb.pzd{font-size:13.5px}}
-.bvi #bvLs .mxwide{flex:1 1 100%;width:100%;height:auto;min-height:48px}   /* (問題一覧 as big as the puzzles' one, 2026-11-13) */
+.bvi #bvLs .mxwide{flex:1 1 100%;width:100%;height:auto;min-height:48px}.bvi #bvPz .mxb[data-pz="list"]:only-child,.ps-ch.pz .mxb[data-pz="list"]:only-child{grid-column:1 / -1}   /* (a game with no puzzle of the day — gomoku: 問題一覧 alone, across the width) */   /* (問題一覧 as big as the puzzles' one, 2026-11-13) */
 .bvi .mxnote{font-size:12.5px;font-weight:700;color:var(--ink2);padding:2px}
 .bvi .mxb{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:0;height:48px;padding:0 12px;border-radius:14px;border:2px solid var(--line);background:#fff;box-shadow:0 3px 0 var(--line);font:900 14.5px var(--font);color:var(--ink);cursor:pointer;white-space:nowrap}
 .bvi .mxb.pzok,.mxb.pzok{position:relative;background:#eef8f1!important;border-color:#9fd8b8!important;box-shadow:0 3px 0 #9fd8b8!important;color:#2e7d55}.mxb.pzok::after{content:'✓';flex:none;display:inline-grid;place-items:center;width:20px;height:20px;margin-left:2px;border-radius:50%;background:#2f9a6a;color:#fff;font-size:12px;font-weight:900}   /* (today's puzzle solved, 2026-11-13) */
@@ -2260,10 +2260,10 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   }, 60);
 };</script>
 <script src="../shared/tapword.js?v=1"></script>
-<script src="lazy.js?v=192"></script>
+<script src="lazy.js?v=193"></script>
 <script src="puzzle-lines.js?v=1"></script>
-<script src="puzzles.js?v=22"></script>
-<script src="lessons3d.js?v=14"></script>
+<script src="puzzles.js?v=23"></script>
+<script src="lessons3d.js?v=15"></script>
 <script src="missions.js?v=8"></script>
 <link rel="stylesheet" href="historia.css?v=15">
 <script src="historia.js?v=41"></script>

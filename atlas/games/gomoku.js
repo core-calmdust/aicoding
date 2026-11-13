@@ -59,7 +59,8 @@
     const U = board.userData, Y = U.top, c = U.cell;
     const tall = innerHeight > innerWidth * 1.15;   // phones held upright: the width decides, so frame a little wider and keep the board centred
     if (T3.fit) T3.fit(tall ? { w: U.W + 1.9, d: U.W + 3.4, y: Y - 1.3, cy: Y, pitch: 1.0 } : { w: U.W + .6, d: U.W + 3.4, y: Y - 2.4, cy: Y, pitch: 1.0 });   // the whole board from the player's side: the near side and the legs show
-    const pvp = ctx.mode === 'pvp', human = pvp ? 1 : ctx.side === 2 ? 2 : 1, ai = 3 - human;
+    const pvp = ctx.mode === 'pvp', PZ = ctx.pz || null;   // PZ: a puzzle / lesson position driven by atlas/puzzles.js · lessons3d.js (no AI: ctx.pz.moved decides)
+    let human = PZ ? (PZ.me || 1) : pvp ? 1 : ctx.side === 2 ? 2 : 1, ai = 3 - human, rule = PZ ? PZ.rule || RULE : RULE, startP = PZ ? PZ.start || null : null, lastP = PZ ? PZ.last : -1;
     const pname = col => X.n[col - 1], fmt = (s, p) => s.replace('{p}', p);
     const xz = m => U.pt(m % 15, 14 - Math.floor(m / 15));
 
@@ -88,9 +89,10 @@
     }
     /* ---------- marks: the last move, black's forbidden points, the opening area, the winning five ---------- */
     const basic = (color, op) => new TH.MeshBasicMaterial({ color, transparent: true, opacity: op, toneMapped: false, depthWrite: false });
-    const MAT = { last: basic(0xff3b2b, .95), forb: basic(0xe0301e, .85), area: basic(0xff2e5b, .16), ring: basic(0xffc928, .9), win: basic(0xffd24a, .9) };
+    const MAT = { last: basic(0xff3b2b, .95), forb: basic(0xe0301e, .85), area: basic(0xff2e5b, .16), ring: basic(0xffc928, .9), win: basic(0xffd24a, .9), ok: basic(0x2fd17a, .7), hl: basic(0xffb21a, .55) };
     const GEO = { last: new TH.CylinderGeometry(c * .1, c * .1, .01, 24), bar: new TH.BoxGeometry(c * .42, .012, c * .07), area: new TH.PlaneGeometry(1, 1), ring: new TH.TorusGeometry(c * .3, c * .045, 8, 36), win: new TH.TorusGeometry(c * .5, c * .05, 8, 40) };
     GEO.ring.rotateX(Math.PI / 2); GEO.win.rotateX(Math.PI / 2); GEO.area.rotateX(-Math.PI / 2);
+    GEO.dot = new TH.CylinderGeometry(c * .3, c * .3, .008, 28);   // (puzzles / lessons: a marked point — green good, red wrong, gold "look here")
     const H = c * .47 * GB.SH * 2;   // stone height
     let pulsing = [], pulseOn = false;
     function clearMarks() { while (marks.children.length) marks.remove(marks.children[0]); pulsing = []; kick(); }
@@ -98,8 +100,14 @@
     function showMarks() {
       clearMarks(); hintM = -1; hintJ++;
       if (moves.length) addMark(GEO.last, MAT.last, moves[moves.length - 1], H + .004);
+      else if (lastP >= 0 && st[lastP]) addMark(GEO.last, MAT.last, lastP, H + .004);   // (a puzzle: the move that made the position)
+      if (PZ) pzMarks.forEach(([m, k]) => {
+        if (k === 'ring' && !pos.at(m)) { const g = GB.tapMark(c), [x, z] = xz(m); g.position.set(x, Y, z); marks.add(g); pulsing.push(g); return; }   // (the vivid "here" marker of an empty point)
+        if (k === 'ring') { addMark(GEO.ring, MAT.ring, m, H + .02); return; }
+        addMark(GEO.dot, k === 'ng' ? MAT.forb : k === 'ok' ? MAT.ok : MAT.hl, m, pos.at(m) ? H + .006 : .008); });
       if (over) return;
       const blackTurn = pos.side === 1, mine = pvp || pos.side === human;
+      if (PZ && (!pzOn || PZ.noForbid)) { if (pulsing.length && !pulseOn) { pulseOn = true; pulse(); } return; }
       if (!mine) return;
       if (pos.renju && blackTurn) pos.forbiddenList().forEach(f => { [1, -1].forEach(sg => { const b = addMark(GEO.bar, MAT.forb, f.m, .01); b.rotation.y = sg * Math.PI / 4; }); });
       if (pos.renju && pos.fresh && pos.ply <= 2) {   // the renju opening: where the next stone may go
@@ -182,17 +190,72 @@
       return (14 - j) * 15 + i;
     }
     function onClick(e) {
-      if (over || busy || !pos || T3.wasDrag()) return;
+      if (over || busy || !pos || T3.wasDrag() || (PZ && !pzOn)) return;
       if (!pvp && pos.side !== human) return;
       const m = cellOf(e); if (m < 0 || pos.at(m)) return;
+      if (PZ && PZ.pick) { pzOn = false; pachi(1.2); pzMarks = [[m, 'ring']]; showMarks(); if (PZ.moved) PZ.moved(m, { pick: true, n: 0 }); return; }   // (a lesson's "tap the point": no stone is played — e.g. black's forbidden points)
       if (!pos.isLegal(m)) {
         if (pos.renju && pos.fresh && pos.ply <= 2 && !pos.openingOk(E.M2I[m])) toast(X.o[pos.ply]);
         else { const f = pos.side === 1 ? pos.forbidden(m) : 0; if (f) toast(X.f.replace('{k}', X.k[f - 1])); }
         pachi(.6); return;
       }
-      busy = true; const w = play(m, pos.side); hud(''); later(next, w + 60);
+      const bl = PZ && PZ.judge ? blunder(m, PZ.judge === 'vcf') : '';   // (a puzzle: an obvious mistake is judged on the position before the move)
+      busy = true; const w = play(m, pos.side); hud('');
+      if (PZ) { pzOn = false; pzMarks = []; later(() => pzAfter(bl), w + 60); return; }
+      later(next, w + 60);
     }
     ctx.el.addEventListener('click', onClick);
+
+    /* ---------- puzzle / lesson mode (ctx.pz, 2026-11-13): a position from the puzzles / lessons, no AI; the caller judges each move
+       (ctx.pz.moved(m, info)) and plays the replies (api.pz.play). The solver and the evaluation come from the game's worker, as gomoku/app.js
+       asks them ({ type: 'solve' | 'analyze', rule, start, moves }) ---------- */
+    let pzOn = false, pzMarks = [], pzW = null, pzJ = 0;
+    const pzReq = msg => new Promise(res => {
+      if (!pzW) pzW = new Worker(BASE + 'engine.js' + VER);
+      const id = ++pzJ; pzW.onmessage = e => { const r = e.data; if (r.id !== id || r.type !== 'result') return; res(stopped ? null : r); };
+      pzW.onerror = () => { pzW = null; res(null); };
+      pzW.postMessage(Object.assign({ rule, start: startP, moves: moves.slice(), id }, msg));
+    });
+    function pzStatus() { const s = status(); return { over: !!s.over, winner: s.winner || 0, five: !!(s.over && s.winner && s.line), why: s.why || '' }; }
+    function pzAfter(bl) { const m = moves[moves.length - 1]; showMarks(); if (PZ.moved) PZ.moved(m, Object.assign({ n: moves.length, blunder: bl || '' }, pzStatus())); }
+    function pzWait() { busy = false; pzOn = true; showMarks(); }
+    function pzLoad(start, r, me, last, o) {
+      PZ.start = start; PZ.rule = r; PZ.me = me; PZ.last = last; PZ.noForbid = !!(o && o.noForbid); PZ.judge = (o && o.judge) || ''; PZ.pick = !!(o && o.pick);
+      if (!E) return;   // (the engine is still loading: it starts from PZ)
+      timers.forEach(clearTimeout); timers.length = 0; jid++; pzJ++; pzOn = false; pzMarks = [];
+      Object.values(st).forEach(g => stones.remove(g)); for (const k in st) delete st[k];
+      rule = r || RULE; startP = start || null; lastP = last >= 0 ? last : -1; human = me || 1; ai = 3 - human;
+      moves = []; pos = E.replay(rule, [], startP); over = false; busy = true; clearMarks();
+      const all = [...((startP && startP.b) || []).map(m => [m, 1]), ...((startP && startP.w) || []).map(m => [m, 2])];
+      all.forEach(([m, col], i) => later(() => place(m, col, true), 40 + i * 28));
+      later(() => { showMarks(); pzWait(); if (PZ.ready) PZ.ready(); }, 40 + all.length * 28 + 380);
+    }
+    // an "obvious mistake" in a puzzle (gomoku/app.js pzBlunder): '' | 'opp' (the opponent's five is not stopped) | 'four' (VCF: not a four) | 'threat' (neither four nor three)
+    const fiveCells = (p, col) => { const out = []; for (let q = 0; q < 225; q++) if (!p.at(q) && p.cls[col][E.M2I[q]] === E.C.FIVE) out.push(q); return out; };
+    const winCell = (p, col) => { for (let q = 0; q < 225; q++) if (!p.at(q) && p.cls[col][E.M2I[q]] === E.C.F4 && !(col === 1 && p.renju && p.forbidden(q))) return true; return false; };
+    function blunder(m, vcf) {
+      const p = pos, me = p.side, op = 3 - me;
+      if (p.cls[me][E.M2I[m]] === E.C.FIVE) return '';
+      const of = fiveCells(p, op); if (of.length) return of.includes(m) ? '' : 'opp';
+      p.make(m); const four = fiveCells(p, me).length > 0, three = !four && winCell(p, me); p.unmake();
+      return vcf ? (four ? '' : 'four') : four || three ? '' : 'threat';
+    }
+    const pzApi = {
+      load: (start, r, me, last, o) => pzLoad(start, r, me, last, o),
+      wait: pzWait,
+      play: m => new Promise(res => { if (!pos || !(m >= 0) || !pos.isLegal(m)) return res(false); pzOn = false; pzMarks = []; busy = true; const w = play(m, pos.side); later(() => { showMarks(); res(true); }, w + 60); }),
+      undo(n = 1) { timers.forEach(clearTimeout); timers.length = 0; moves.splice(Math.max(0, moves.length - n)).forEach(m => { const g = st[m]; if (g) { stones.remove(g); delete st[m]; } }); pos = E.replay(rule, moves, startP); over = false; pzMarks = []; showMarks(); kick(300); },
+      moves: () => moves.slice(),
+      state: () => Object.assign({ side: pos ? pos.side : 1, n: moves.length }, pos ? pzStatus() : {}),
+      // marks: [[m, 'ok' | 'ng' | 'hl' | 'ring'], …] (null: none) — a number alone is the "here" ring
+      mark(list) { pzMarks = list == null ? [] : typeof list === 'number' ? [[list, 'ring']] : list.slice(); showMarks(); kick(400); },
+      solve: (n, defend, mvs) => pzReq(Object.assign({ type: 'solve', n, defend: !!defend, maxNodes: 3e6 }, mvs ? { moves: mvs } : {})).then(r => (r && r.list) || null),   // (mvs: the moves to solve after — e.g. before the move just played)
+      analyze: (time) => pzReq({ type: 'analyze', time: time || 400 }).then(r => (r && r.list) || []),
+      blunder: (m, vcf) => pos ? blunder(m, vcf) : '',
+      canAttack(vcf) { if (!pos) return false; for (let q = 0; q < 225; q++) if (!pos.at(q) && pos.isLegal(q) && !blunder(q, vcf)) return true; return false; },
+      forbidden: m => pos && pos.side === 1 && pos.renju ? pos.forbidden(m) : 0,
+      name: m => E ? E.sqName(m) : '',
+    };
 
     function begin() {
       timers.forEach(clearTimeout); timers.length = 0; jid++;
@@ -201,7 +264,7 @@
       hud(''); later(next, 650);
     }
     hud('');
-    loadEngine().then(e => { if (stopped) return; E = e; worker = new Worker(BASE + 'engine.js' + VER); begin(); }).catch(() => hud('⚠'));
+    loadEngine().then(e => { if (stopped) return; E = e; if (PZ) { pzLoad(PZ.start, PZ.rule, PZ.me, PZ.last, { noForbid: PZ.noForbid, judge: PZ.judge, pick: PZ.pick }); return; } worker = new Worker(BASE + 'engine.js' + VER); begin(); }).catch(() => hud('⚠'));
 
     // test hooks (positions on screen, state)
     const dbg = {
@@ -220,13 +283,13 @@
       hud(L.lose); later(() => ctx.onEnd({ win: false, draw: false, level: ctx.level, score: r }), 200);
     }
     const api = {
-      human: human - 1,
+      human: human - 1, pz: PZ ? pzApi : null,
       canUndo: () => myTurn() && moves.length >= undoN() + (pvp || human === 1 ? 0 : 1),
       undo() {
         if (!api.canUndo()) return;
         timers.forEach(clearTimeout); timers.length = 0; jid++;
         moves.splice(moves.length - undoN()).forEach(m => { const g = st[m]; if (g) { stones.remove(g); delete st[m]; } });
-        pos = E.replay(RULE, moves); ply++; kick(300);
+        pos = E.replay(rule, moves, startP); ply++; kick(300);
         busy = true; next();
       },
       canHint: () => myTurn(),
@@ -256,7 +319,7 @@
         stopped = true; jid++;
         timers.forEach(clearTimeout); clearTimeout(toastT); if (toastEl) toastEl.remove();
         ctx.el.removeEventListener('click', onClick);
-        if (worker) worker.terminate(); worker = null; if (hintW) hintW.terminate(); hintW = null;
+        if (worker) worker.terminate(); worker = null; if (hintW) hintW.terminate(); hintW = null; if (pzW) pzW.terminate(); pzW = null;
         Object.values(MAT).forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose());
         if (window.Atlas3D.gomoku._dbg === dbg) delete window.Atlas3D.gomoku._dbg;
       },

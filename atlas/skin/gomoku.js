@@ -44,6 +44,8 @@
     skip: 'st\\b|\\.st|\\.mk|winline|hintlbl|grid|frame|coach',
     start(lv, side, mode) {
       if (typeof openNewDialog !== 'function' || typeof draft !== 'object' || typeof segSync !== 'function' || !document.getElementById('btnStart')) return null;
+      // the portal's card: straight to 詰め連珠 / the lessons / the online match search (gomoku/app.js AtlasDeep, 2026-11-13)
+      if (/^(puzzle|lesson|online)$/.test(mode)) { if (!window.AtlasDeep) return null; const q = new URLSearchParams(location.search); return AtlasDeep(mode, q.get('sub'), q.get('tc')); }
       openNewDialog();
       draft.mode = mode === 'rated' || mode === 'pvp' ? mode : 'ai';
       if (side === 1 || side === 2) draft.color = side;
