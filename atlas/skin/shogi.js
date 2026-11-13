@@ -328,7 +328,7 @@ html.atlas-skin #f3D .bdrow.pc3 button img{aspect-ratio:3/2;background:radial-gr
   };
   // pre-rendered sheet of the 3D pieces (images/atlas/shogi-pieces.png, made with Table3D.shogi.images); live render as fallback
   const pset = () => (SG.curSet ? SG.curSet() : 'ryoko');
-  const sheetSrc = k => k === 'moriage' ? '../images/atlas/shogi-pieces.png?v=5' : '../images/atlas/shogi-pieces-' + k + '.png?v=24';   // (the six 3D piece sets, 2026-11-11)
+  const sheetSrc = k => k === 'moriage' ? '../images/atlas/shogi-pieces.png?v=5' : '../images/atlas/shogi-pieces-' + k + '.png?v=25';   // (the six 3D piece sets, 2026-11-11)
   const sheet = (k = pset()) => new Promise((res, rej) => { const im = new Image(); im.onload = () => {
     const out = {}, keys = ['k1', 'k2', 'k3', 'k4', 'k5', 'k6', 'k7', 'k8', 'k9', 'k10', 'k11', 'k12', 'k13', 'k14', 'k8o'];
     // blob: URLs, not data: URLs (2026-11-11) — every board redraw (each move, 待った) makes ~40 <img>; a long data: URL is parsed and
