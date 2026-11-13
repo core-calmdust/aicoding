@@ -48,6 +48,8 @@ INITOPT="--init $WORK/cur.bin"; [ "$INIT" = none ] && INITOPT=""; [ -n "$INIT" ]
 if [ ! -f train.done ]; then
   log "== training: $KMAP ($KB buckets), H $H, $EPOCHS epochs, $OB output bucket(s)"
   ./trainkp train.bin kp.bin --kb $KMAP --hidden $H --epochs $EPOCHS --lr $LR --lambda $LAMBDA --oscale $OSCALE --ob $OB --threads $THREADS $VALOPT $INITOPT $TRAIN_OPTS 2>&1 | tee -a train.log
+  # a failed training stops here (and is not marked as done: the same command starts it again)
+  if [ "${PIPESTATUS[0]}" != 0 ] || [ ! -s kp.bin ]; then log "training failed (see the message above); nothing was trained"; exit 1; fi
   touch train.done
 fi
 # the net of the epoch with the best valid (kp.bin.epN) becomes kp.bin; the scale of both nets against the data is logged
