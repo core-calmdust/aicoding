@@ -18,7 +18,7 @@
   const T = () => window.THREE;
   const LO = () => !!(X.coarse || X.lite);
   const LOOKS = ['walnut', 'maple', 'stone', 'night'], SETS = ['glass', 'pearl', 'steel', 'peg', 'mod'];
-  const R = .32, TOP = .5, CUP = .26;
+  const R = .32, TOP = .5, CUP = .26, SINK = .1;   // (SINK: how far a ball sits down into its cup)
   const pref = () => { try { return (JSON.parse(localStorage.getItem('aicoding-peg') || '{}') || {}).settings || {}; } catch (e) { return {}; } };
   const lookNow = () => { const v = pref().bd; return LOOKS.includes(v) ? v : 'walnut'; };
   const setNow = () => { const v = pref().pg; return SETS.includes(v) ? v : 'glass'; };
@@ -125,7 +125,7 @@
     const k = (i * 7 + 3) % 6;
     if (set === 'mod') return mat('mmod' + k, () => X.M({ color: MOD[k], roughness: .75 }));
     if (set === 'pearl') return mat('mcer' + k, () => X.M({ color: CERAMIC[k], roughness: .28, clearcoat: .8, clearcoatRoughness: .2 }));
-    if (set === 'steel') return mat('mjw' + k, () => { const m = X.M({ color: JEWEL[k], roughness: 0, metalness: .2, clearcoat: 1, clearcoatRoughness: 0, envMapIntensity: 3.4, transparent: true, opacity: .8, flatShading: true }); try { m.ior = 2.4; if ('iridescence' in m) { m.iridescence = .55; m.iridescenceIOR = 1.6; } } catch (e) {} return m; });   // (jewels, 2026-11-13: cut facets that each catch the light, see-through, a play of colour — sparkle, not a glass ball)
+    if (set === 'steel') return mat('mjw' + k, () => { const m = X.M({ color: JEWEL[k], roughness: 0, metalness: .1, clearcoat: 1, clearcoatRoughness: 0, envMapIntensity: 4.5, transparent: true, opacity: .84, flatShading: true }); m.emissive.set(JEWEL[k]).convertSRGBToLinear().multiplyScalar(.28); try { m.ior = 2.4; if ('iridescence' in m) { m.iridescence = 1; m.iridescenceIOR = 1.9; } } catch (e) {} return m; });   // (jewels, 2026-11-13: cut facets that each catch the light, see-through, a play of colour — sparkle, not a glass ball)
     if (set === 'peg') return mat('mpeg' + k, () => X.M({ color: PAINT[k], roughness: .3, clearcoat: .7, clearcoatRoughness: .25 }));
     const c = GLASS[k];
     return mat('mg' + c, () => X.M({ color: c, roughness: .04, clearcoat: 1, clearcoatRoughness: .03, envMapIntensity: 1.6 }));
@@ -143,12 +143,17 @@
       const prof = [[0, 0], [.13, 0], [.14, .22], [.2, .3], [.24, .4], [.22, .48], [.14, .54], [0, .56]].map(([a, b]) => new TT.Vector2(a, b));
       g.add(X.mesh(geo('pgPegG', () => new TT.LatheGeometry(prof, LO() ? 12 : 20)), marbleMat(i, set), 0, -.12, 0));
     } else {
-      const s = set === 'steel' ? X.mesh(geo('pgGem', () => new TT.IcosahedronGeometry(R * 1.02, 1)), marbleMat(i, set), 0, R * .97, 0)   // (a cut stone: flat facets)
-        : X.mesh(geo('pgBall', () => new TT.SphereGeometry(R, LO() ? 16 : 28, LO() ? 12 : 20)), marbleMat(i, set), 0, R * .97, 0);   // (sits on the flat painted face)
-      if (set === 'steel') s.rotation.set(i * .7, i * 1.3, i * .4);
+      const s = set === 'steel' ? X.mesh(geo('pgGem', () => new TT.IcosahedronGeometry(R, 2)), marbleMat(i, set), 0, R * .97 - SINK, 0)   // (a cut stone: big flat facets that flash)
+        : X.mesh(geo('pgBall', () => new TT.SphereGeometry(R, LO() ? 14 : 22, LO() ? 10 : 15)), marbleMat(i, set), 0, R * .97 - SINK, 0);   // (sunk a little into its cup: it sits in the hole, not on it — 2026-11-13)
+      if (set === 'steel') {
+        s.rotation.set(i * .7, i * 1.3, i * .4);
+        // a light inside the stone (a smaller, brighter stone glowing through the facets): the sparkle of a cut gem
+        const k = (i * 7 + 3) % 6, core = new TT.Mesh(geo('pgGemCore', () => new TT.IcosahedronGeometry(R * .62, 1)), mat('mjwc' + k, () => new TT.MeshBasicMaterial({ color: new TT.Color(JEWEL[k]).lerp(new TT.Color('#ffffff'), .55), transparent: true, opacity: .7, blending: TT.AdditiveBlending, depthWrite: false, toneMapped: false })));
+        core.position.copy(s.position); core.rotation.set(i * 1.1, i * .5, i * .9); g.add(core);
+      }
       g.add(s);
       if (set === 'glass') {   // a twist of white inside the glass
-        const sw = X.mesh(geo('pgSwirl', () => new TT.TorusGeometry(R * .48, R * .07, 6, 24, Math.PI * 1.2)), mat('mswirl', () => X.M({ color: '#ffffff', roughness: .3, transparent: true, opacity: .55 })), 0, R * .97, 0);
+        const sw = X.mesh(geo('pgSwirl', () => new TT.TorusGeometry(R * .48, R * .07, 6, 24, Math.PI * 1.2)), mat('mswirl', () => X.M({ color: '#ffffff', roughness: .3, transparent: true, opacity: .55 })), 0, R * .97 - SINK, 0);
         sw.rotation.set(.9 + (i % 5) * .3, (i % 7) * .9, .4); g.add(sw);
       }
     }
