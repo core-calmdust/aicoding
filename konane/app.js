@@ -107,7 +107,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=6-sv2';
+const ENGINE_URL = 'engine.js?v=7-bb';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -139,7 +139,7 @@ const MTP = window.MTSplit ? MTSplit.use({ url: ENGINE_URL, drive: MTSplit.ladde
 // (2026-11-11) On an isolated page the threads are core_mt.wasm's instead (shared/mtengine.js: the lead engine.js?…&mt=1, the helpers
 // mt-helper.js): Praline's Young Brothers Wait in C splits every node of the search (and the root), one table in the shared memory
 // (claude/konane-spec.md「αβ を C に」). mtsplit.js stays for a page that is not isolated, and while that pool is busy.
-const MCP = window.MTEngine && MTEngine.use ? MTEngine.use({ wasm: 'core_mt.wasm?v=2', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=1', slot: 4 << 20, initial: 1024, maximum: 16384,   // (initial ≥ its declared 521 pages)
+const MCP = window.MTEngine && MTEngine.use ? MTEngine.use({ wasm: 'core_mt.wasm?v=3', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=1', slot: 4 << 20, initial: 1024, maximum: 16384,   // (initial ≥ its declared 521 pages)
   imports: mem => ({ env: { memory: mem, now: () => Date.now() } }), help: () => ({}) }) : null;
 const mtLevel = lv => { const L = E.LEVELS[lv]; return !!(L && L.s && L.ms && !L.nk); };   // a level that thinks by time
 function mtWants(which, msg) {
@@ -1187,7 +1187,7 @@ $('#btnStart').onclick = () => {
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_CLOCK = { base: 300000, inc: 3000 };
 // rating of each AI step on the kyu / dan scale (100 points per kyu: 15級 = 450 … 1級 = 1850, then 200 per dan)
 // measured: adjacent levels played each other (tools/native.c lv, see MODEL_CARD.md); about +125 per step up to 3級, smaller above
-const RT_LV = [0, 450, 575, 700, 825, 950, 1075, 1200, 1325, 1450, 1575, 1700, 1825, 1950, 2030, 2090, 2150, 2200, 2250, 2350, 2400, 2510, 2600, 2615];   // (2026-11-13, search v2: Lv.19-23 +50, an estimate)   // (Lv.21〜23: measured steps, see the spec「最上位レベル」)
+const RT_LV = [0, 450, 575, 700, 825, 950, 1075, 1200, 1325, 1450, 1575, 1700, 1825, 1950, 2030, 2090, 2150, 2200, 2250, 2450, 2500, 2610, 2700, 2715];   // (2026-11-13, search v2: Lv.19-23 +50, an estimate)   // (Lv.21〜23: measured steps, see the spec「最上位レベル」)
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };

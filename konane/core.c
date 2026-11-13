@@ -100,6 +100,20 @@ static void tset(u32 h1, u32 h2, int d, int v, int f, int m) {
 }
 EXPORT(ttprobe) int ttprobe(u32 h1, u32 h2) { return tlook(h1, h2, IO, IO + 1, IO + 2, IO + 3); }
 #endif
+typedef struct { u64 lo, hi; } BB;
+static BB VALID; static unsigned char BITI[MAXN], FOFB[128];
+static inline BB bAnd(BB a, BB b) { BB r = { a.lo & b.lo, a.hi & b.hi }; return r; }
+static inline BB bOr(BB a, BB b) { BB r = { a.lo | b.lo, a.hi | b.hi }; return r; }
+static inline BB bNot(BB a) { BB r = { ~a.lo, ~a.hi }; return r; }
+static inline BB bShl(BB a, int n) { BB r = { a.lo << n, (a.hi << n) | (a.lo >> (64 - n)) }; return r; }   // (0 < n < 64)
+static inline BB bShr(BB a, int n) { BB r = { (a.lo >> n) | (a.hi << (64 - n)), a.hi >> n }; return r; }
+static inline int bAny(BB a) { return (a.lo | a.hi) != 0; }
+static inline int bCnt(BB a) { return __builtin_popcountll(a.lo) + __builtin_popcountll(a.hi); }
+static inline void bSet(BB *a, int i) { if (i < 64) a->lo |= 1ULL << i; else a->hi |= 1ULL << (i - 64); }
+static inline void bClr(BB *a, int i) { if (i < 64) a->lo &= ~(1ULL << i); else a->hi &= ~(1ULL << (i - 64)); }
+// one step in the direction d of RAY (0 up, 1 down, 2 left, 3 right); bDirBack: the step against it
+static inline BB bDir(BB a, int d) { return d == 0 ? bShr(a, 12) : d == 1 ? bShl(a, 12) : d == 2 ? bShr(a, 1) : bShl(a, 1); }
+static inline BB bDirBack(BB a, int d) { return bDir(a, d ^ 1); }
 __attribute__((export_name("setup"))) void setup(int n) {
   N = n; NN = n * n; NOPEN1 = 0;
   static const int DR[4] = { -1, 1, 0, 0 }, DC[4] = { 0, 0, -1, 1 };
@@ -112,6 +126,8 @@ __attribute__((export_name("setup"))) void setup(int n) {
       RAYN[i][d] = k; if (k) ADJ[i][ADJN[i]++] = RAY[i][d][0];
     }
   }
+  VALID.lo = VALID.hi = 0;
+  for (int i = 0; i < NN; i++) { BITI[i] = (unsigned char)((i / N) * 12 + i % N); FOFB[BITI[i]] = (unsigned char)i; bSet(&VALID, BITI[i]); }
   int h = N / 2, cand[8] = { 0, N - 1, NN - N, NN - 1, (h - 1) * N + h - 1, (h - 1) * N + h, h * N + h - 1, h * N + h };
   for (int j = 0; j < 8; j++) if (COLOR[cand[j]] == 1) OPEN1[NOPEN1++] = cand[j];
   for (int a = 1; a < NOPEN1; a++) { int x = OPEN1[a], b = a; while (b > 0 && OPEN1[b - 1] > x) { OPEN1[b] = OPEN1[b - 1]; b--; } OPEN1[b] = x; }
@@ -122,7 +138,14 @@ __attribute__((export_name("setn"))) void setn(double n, double lim, int sh) { n
 __attribute__((export_name("getn"))) double getn(void) { return nodes; }
 __attribute__((export_name("stopped"))) int stopped(void) { return stopF; }
 // ---- a position: the board, the side (0 Black, 1 White), plies played, the two hash halves
-typedef struct { i8 sq[MAXN]; int side, ply; u32 h1, h2; } P;
+// (2026-11-13, bitboards: bb[colour - 1] = the colour's stones on a 12-wide board, bit r * 12 + c (two 64-bit halves, up to
+// 10×10). The counting functions (mobility, movers) and the move generator's choice of stones work on them; sq[] stays for the
+// rest. Same results as the square loops, move order included: claude/konane-spec.md「ビットボード」.)
+typedef struct { i8 sq[MAXN]; int side, ply; u32 h1, h2; BB bb[2]; } P;
+static void syncBB(P *p) {   // the bitboards from sq[] (a position that came from the page)
+  p->bb[0].lo = p->bb[0].hi = p->bb[1].lo = p->bb[1].hi = 0;
+  for (int i = 0; i < NN; i++) if (p->sq[i]) bSet(&p->bb[p->sq[i] - 1], BITI[i]);
+}
 static TLS P ST[MAXPLY + 2];
 typedef int Move;
 #ifdef MT
@@ -145,30 +168,34 @@ static inline void mtCheck(void) {
 #define Z2(c, i) ZT[2 * MAXN + (c) * MAXN + (i)]
 #define ZS1 ZT[4 * MAXN]
 #define ZS2 ZT[4 * MAXN + 1]
+// the stones of pl with a first jump (in any direction)
+static inline BB moverSet(const P *p, int pl) {
+  const BB own = p->bb[pl - 1], opp = p->bb[2 - pl], empty = bAnd(VALID, bNot(bOr(own, opp)));
+  BB m = { 0, 0 };
+  for (int d = 0; d < 4; d++) m = bOr(m, bAnd(own, bDirBack(bAnd(opp, bDirBack(empty, d)), d)));
+  return m;
+}
 static int jumpsOf(const P *p, int pl, int *out, int n) {
   int o = 3 - pl;
-  for (int f = 0; f < NN; f++) {
-    if (p->sq[f] != pl) continue;
+  BB ms = moverSet(p, pl);   // (only the stones that can jump, in the order of the squares)
+  for (int half = 0; half < 2; half++) for (u64 w = half ? ms.hi : ms.lo; w; w &= w - 1) {
+    const int f = FOFB[__builtin_ctzll(w) + 64 * half];
     for (int d = 0; d < 4; d++) { int *ray = RAY[f][d], L = RAYN[f][d]; for (int k = 1; k < L; k += 2) { if (p->sq[ray[k - 1]] != o || p->sq[ray[k]]) break; out[n++] = f + 128 * ray[k]; } }
   }
   return n;
 }
+// the number of jumps of pl (every landing square of every stone, multiple jumps in a line included): in each direction the
+// stones step over an enemy stone onto an empty square, again and again
 static int mobility(const P *p, int pl) {
-  int o = 3 - pl, n = 0;
-  for (int f = 0; f < NN; f++) {
-    if (p->sq[f] != pl) continue;
-    for (int d = 0; d < 4; d++) { int *ray = RAY[f][d], L = RAYN[f][d]; for (int k = 1; k < L; k += 2) { if (p->sq[ray[k - 1]] != o || p->sq[ray[k]]) break; n++; } }
+  const BB own = p->bb[pl - 1], opp = p->bb[2 - pl], empty = bAnd(VALID, bNot(bOr(own, opp)));
+  int n = 0;
+  for (int d = 0; d < 4; d++) {
+    BB cur = own;
+    for (;;) { cur = bAnd(bDir(bAnd(bDir(cur, d), opp), d), empty); if (!bAny(cur)) break; n += bCnt(cur); }
   }
   return n;
 }
-static int movers(const P *p, int pl) {
-  int o = 3 - pl, n = 0;
-  for (int f = 0; f < NN; f++) {
-    if (p->sq[f] != pl) continue;
-    for (int d = 0; d < 4; d++) { int *ray = RAY[f][d]; if (RAYN[f][d] > 1 && p->sq[ray[0]] == o && !p->sq[ray[1]]) { n++; break; } }
-  }
-  return n;
-}
+static int movers(const P *p, int pl) { return bCnt(moverSet(p, pl)); }
 static int genMoves(const P *p, int *out) {
   if (p->ply == 0) {
     int empty = 0; for (int i = 0; i < NN; i++) if (!p->sq[i]) empty++;
@@ -191,15 +218,15 @@ static int dirOf(int f, int t) { int r0 = f / N, c0 = f % N, r1 = t / N, c1 = t 
 static void play(P *q, const P *p, int m) {
   *q = *p;
   int f = m % 128, t = m / 128, x = q->sq[f];
-  if (f == t) { q->sq[f] = 0; q->h1 ^= Z1(x - 1, f); q->h2 ^= Z2(x - 1, f); }
+  if (f == t) { q->sq[f] = 0; bClr(&q->bb[x - 1], BITI[f]); q->h1 ^= Z1(x - 1, f); q->h2 ^= Z2(x - 1, f); }
   else {
     int d = dirOf(f, t), *ray = RAY[f][d], L = RAYN[f][d];
     for (int k = 0; k < L; k += 2) {
       int o = ray[k], y = q->sq[o]; q->sq[o] = 0;
-      if (y) { q->h1 ^= Z1(y - 1, o); q->h2 ^= Z2(y - 1, o); }
+      if (y) { bClr(&q->bb[y - 1], BITI[o]); q->h1 ^= Z1(y - 1, o); q->h2 ^= Z2(y - 1, o); }
       if (k + 1 < L && ray[k + 1] == t) break;
     }
-    q->sq[f] = 0; q->sq[t] = (i8)x;
+    q->sq[f] = 0; q->sq[t] = (i8)x; bClr(&q->bb[x - 1], BITI[f]); bSet(&q->bb[x - 1], BITI[t]);
     q->h1 ^= Z1(x - 1, f) ^ Z1(x - 1, t); q->h2 ^= Z2(x - 1, f) ^ Z2(x - 1, t);
   }
   q->side ^= 1; q->ply++;
@@ -388,6 +415,7 @@ static void spIdleReset(int fresh) { nodes = 0; tEnd = 1e300; nodeLimit = 1e300;
 __attribute__((export_name("search"))) int csearch(int d, int a, int b, int ply) {
   P *p = &ST[0];
   for (int i = 0; i < NN; i++) p->sq[i] = SQ[i];
+  syncBB(p);
   p->side = IO[8]; p->ply = IO[9]; p->h1 = (u32)IO[10]; p->h2 = (u32)IO[11];
   setMode(0);   // (the page's own searches: the puzzles' proofs, the search before v2)
   return search(p, d, a, b, ply);
@@ -397,7 +425,7 @@ __attribute__((export_name("search"))) int csearch(int d, int a, int b, int ply)
 // ab_best(maxD): IO[0] move, IO[1] value, IO[2] depth; ab_values(d): the finished root moves in AOM / AOV best first (a stable
 // sort), returns how many. The caller sets the counters (setn) and the killers (kclear) as for a JS bestMove.
 int AOM[MAXMV], AOV[MAXMV];
-static void abRoot(void) { P *p = &ST[0]; for (int i = 0; i < NN; i++) p->sq[i] = SQ[i]; p->side = IO[8]; p->ply = IO[9]; p->h1 = (u32)IO[10]; p->h2 = (u32)IO[11]; }
+static void abRoot(void) { P *p = &ST[0]; for (int i = 0; i < NN; i++) p->sq[i] = SQ[i]; syncBB(p); p->side = IO[8]; p->ply = IO[9]; p->h1 = (u32)IO[10]; p->h2 = (u32)IO[11]; }
 static int rootChild(int m, int d, int a, int b) { play(&ST[1], &ST[0], m); return -search(&ST[1], d - 1, a, b, 1); }
 EXPORT(ab_best) void ab_best(int maxD) {
   setMode(1);
