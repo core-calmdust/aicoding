@@ -1615,7 +1615,10 @@
     const sh = document.createElement('div'); sh.className = 'bksheet';
     sh.innerHTML = `<div class="bk-in" id="lessonOverlay"><div class="bk-h"><button type="button" class="bk-bk" hidden aria-label="${esc(t('bv.back'))}">‹</button><b class="bk-t">${esc(title)}</b><button type="button" class="bk-x" aria-label="${esc(t('bv.close'))}">✕</button></div><div class="bk-body"><div id="lessonList" class="lesson-list"><p class="bk-wait">…</p></div></div></div>`;
     document.body.appendChild(sh); requestAnimationFrame(() => sh.classList.add('on'));
-    const close = () => { if (sh.classList.contains('out')) return; sh.classList.add('out'); sh.classList.remove('on'); setTimeout(() => sh.remove(), 260); };
+    // Esc closes the sheet only (back to the game's 3D view), before the page's own Esc (which went back to the top and left the sheet up)
+    const esc = e => { if (e.key !== 'Escape' || !sh.isConnected) return; e.preventDefault(); e.stopImmediatePropagation(); close(); };
+    const close = () => { if (sh.classList.contains('out')) return; removeEventListener('keydown', esc, true); sh.classList.add('out'); sh.classList.remove('on'); setTimeout(() => sh.remove(), 260); };
+    addEventListener('keydown', esc, true);
     sh.addEventListener('click', e => { if (e.target === sh || e.target.closest('.bk-x')) close(); });
     return { sh, close, body: sh.querySelector('#lessonList'), back: sh.querySelector('.bk-bk'), title: sh.querySelector('.bk-t') };
   }
