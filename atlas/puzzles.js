@@ -225,10 +225,11 @@
   // peg solitaire (2026-11-13: the 2D page's collection, played on the 3D table): peg/puzzles.json regrouped as the page does —
   // 基本 (first · shape · mid · chain), 世界の盤 (a theme per board), 全面; stars per problem in 'aicoding-peg-pz' { '<theme>:<j>': 1..3 }
   BOOK.peg = {
-    url: '../peg/puzzles.json?v=2', KEY: 'aicoding-peg-pz', LAST: 'aicoding-peg-pz-last', data: null,
+    url: '../peg/puzzles.json?v=3', KEY: 'aicoding-peg-pz', LAST: 'aicoding-peg-pz-last', data: null,
     prep(d) { const by = id => (d.themes.find(T => T.id === id) || { list: [] }).list, out = [];
-      out.push({ id: 'first', grp: 'basic', list: by('first') }, { id: 'shape', grp: 'basic', list: by('shape') }, { id: 'mid', grp: 'basic', list: by('mid') }, { id: 'chain', grp: 'basic', list: by('chain') });
+      out.push({ id: 'first', grp: 'basic', list: by('first') }, { id: 'shape', grp: 'basic', list: by('shape') }, { id: 'mid', grp: 'basic', list: by('mid') }, { id: 'chain', grp: 'basic', list: by('chain') }, { id: 'edge', grp: 'basic', list: by('edge') }, { id: 'island', grp: 'basic', list: by('island') });
       for (const b of ['triangle', 'french', 'diamond', 'german']) out.push({ id: 'w-' + b, grp: 'world', board: b, list: by('world').filter(P => P.b === b) });
+      out.push({ id: 'wmix', grp: 'world', list: by('wmix') }, { id: 'wbig', grp: 'world', list: by('wbig') });   // (2026-11-13: two more themes in each)
       out.push({ id: 'full', grp: 'full', list: by('full') });
       return { themes: out.filter(T => T.list.length) }; },
     PT(k, lang, v) { const D = window.PEG_I18N && PEG_I18N[k]; return D ? fill(D[lang] || D.en || D.ja || '', v || {}) : ''; },
