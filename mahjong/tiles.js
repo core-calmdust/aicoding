@@ -111,7 +111,7 @@ const GW = 280, GH = 390, SHEET = new URL('../atlas/img/', (document.currentScri
 let gImg = null, aImg = null, readyP = null;
 function ready() {
   const one = (u, set) => new Promise(res => { const im = new Image(); im.onload = () => { set(im); res(); }; im.onerror = () => res(); im.src = (root.JANKA_ASSETS ? root.JANKA_ASSETS + 'tiles/' : SHEET) + u; setTimeout(res, 5000); });
-  return readyP || (readyP = Promise.all([one('shanghai-glyphs.png?v=2', im => { gImg = im; }), one('shanghai-art.png?v=8', im => { aImg = im; })]));
+  return readyP || (readyP = Promise.all([one('shanghai-glyphs.png?v=2', im => { gImg = im; }), one('shanghai-art.png?v=9', im => { aImg = im; })]));
 }
 const GROUND = '#fafaf6';
 // one cell of a sheet in a colour (glyph sheet: channel ch; art sheet: ch < 0 keeps its colours, or recolours all to `col`)
