@@ -111,7 +111,7 @@ const GW = 280, GH = 390, SHEET = new URL('../atlas/img/', (document.currentScri
 let gImg = null, aImg = null, readyP = null;
 function ready() {
   const one = (u, set) => new Promise(res => { const im = new Image(); im.onload = () => { set(im); res(); }; im.onerror = () => res(); im.src = SHEET + u; setTimeout(res, 5000); });
-  return readyP || (readyP = Promise.all([one('shanghai-glyphs.png?v=1', im => { gImg = im; }), one('shanghai-art.png?v=1', im => { aImg = im; })]));
+  return readyP || (readyP = Promise.all([one('shanghai-glyphs.png?v=1', im => { gImg = im; }), one('shanghai-art.png?v=2', im => { aImg = im; })]));
 }
 const GROUND = '#fafaf6';
 // one cell of a sheet in a colour (glyph sheet: channel ch; art sheet: ch < 0 keeps its colours, or recolours all to `col`)
@@ -142,7 +142,7 @@ function paint(type, red) {
   const ctx = cv.getContext('2d');
   if (gImg && aImg) {
     ctx.fillStyle = GROUND; ctx.fillRect(0, 0, FW, FH);
-    if (!paintSheet(ctx, type, red)) { ctx.strokeStyle = C_BLU; ctx.lineWidth = 10; rr(ctx, 46, 58, FW - 92, FH - 116, 14); ctx.stroke(); ctx.lineWidth = 3; rr(ctx, 62, 74, FW - 124, FH - 148, 8); ctx.stroke(); }
+    paintSheet(ctx, type, red);   // (白: nothing drawn — a plain white tile, as Japanese sets, ユーザー 2026-11-14)
     return cv;
   }
   ground(ctx);
@@ -171,10 +171,7 @@ function paint(type, red) {
     }
   } else {
     const k = type - 27;
-    if (k === 4) {        // haku: blue frame
-      ctx.strokeStyle = C_BLU; ctx.lineWidth = 10;
-      rr(ctx, 46, 58, FW - 92, FH - 116, 14); ctx.stroke();
-      ctx.lineWidth = 3; rr(ctx, 62, 74, FW - 124, FH - 148, 8); ctx.stroke();
+    if (k === 4) {        // haku: plain white
     } else {
       ctx.fillStyle = k === 5 ? C_GRN : k === 6 ? C_RED : C_BLK;
       ctx.font = `800 ${k >= 5 ? 168 : 176}px ${KANJI_FONT}`;
