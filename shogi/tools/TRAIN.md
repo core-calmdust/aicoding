@@ -186,6 +186,7 @@ $W/trainkp --rescale a.bin b.bin 0.805                       # 出力層を 0.80
 ```
 
 - **出力の区分つき（8区分）で学習する**：`OB=8 KMAP=k1 WORK=~/shogi-ob8 caffeinate -i bash tools/nnue/run-kp.sh`（前処理済みのデータを使い回すなら、先に `mkdir -p ~/shogi-ob8 && ln -s <前の作業フォルダ>/train.bin <前の作業フォルダ>/val.bin ~/shogi-ob8/`）。ネットのファイルは先頭が `NUEO` の形式（`trainkp.c` の冒頭）。サイトに載せるには読み込み側（`engine.js`・`pro/pro.js`・`overkill/ok-ai.js`）の対応が必要（勝ち越したら Claude 側で）。
+- **中間層を広げて学習する**（例：1024）：`H=1024 KMAP=k1 WORK=~/shogi-h1024 caffeinate -i bash tools/nnue/run-kp.sh`。サイトのネット（512）を出発点に、今の512個はそのまま、増やした分は出力への重み0で始める（最初の評価値は今のネットと完全一致）。速さは落ちる（作業環境で 1024 は約 −36%）ので、同じ局面数での勝ち越しがそれを上回るかを見る。
 - **今の形のまま追加学習する**（玉の区分なし。2026-11-13 の v7 はこの方法）：`ROUND=4 KMAP=k1 WORK=~/shogi-k1-r4 caffeinate -i bash tools/nnue/run-kp.sh`。できた `kp-candidate.bin.gz` は `python3 tools/nnue/kp2site.py <候補> nnue.bin.gz` でサイトの形式になる（重みは同じ）。
 - `-DNUE_KB=1` で作った `kptool` は今の `nnue.bin` をそのまま読み、サイトのエンジンと同じ探索になります（ベンチのチェックサムが一致することを確認済み）。
 - 区分の境目（`k9`）：自陣から見た段 8（一段目）／7（二段目）／それ以外 × 筋 0〜2（9〜7筋）／3〜5（6〜4筋）／6〜8（3〜1筋）。後手は盤を180°回して同じ表。
