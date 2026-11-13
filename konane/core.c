@@ -213,6 +213,65 @@ static int evaluate(const P *p) {
   if (!a) return -WIN + 1;
   return (a - b) * 34 + (pa - pb) * 52 + 30;
 }
+// ---- search v2 (2026-11-13, claude/konane-spec.md「探索 v2」): on for ab_best (the levels by positions / time) and the analysis
+// (ab_values2 with v2 = 1); off — the search as before, exact to its depth — for the levels by depth, the resistance and
+// search() called from the page (the puzzles). A change of mode clears the table. (-DKV_x=0: a part left out, for measuring)
+#ifndef KV_LMR
+#define KV_LMR 1
+#endif
+#ifndef KV_HIST
+#define KV_HIST 1
+#endif
+#ifndef KV_RFP
+#define KV_RFP 1
+#endif
+#ifndef KV_FUT
+#define KV_FUT 1
+#endif
+#ifndef KV_IIR
+#define KV_IIR 1
+#endif
+#ifndef LMR_BASE
+#define LMR_BASE 300
+#endif
+#ifndef LMR_DIV
+#define LMR_DIV 22
+#endif
+#ifndef LMR_I
+#define LMR_I 2
+#endif
+#ifndef RFP_M
+#define RFP_M 120
+#endif
+#ifndef RFP_D
+#define RFP_D 3
+#endif
+#ifndef FUT_M
+#define FUT_M 150
+#endif
+#ifndef HIST_W
+#define HIST_W 16
+#endif
+static int sv2 = 0;   // (the job's mode: the lead sets it, the helpers read it)
+static TLS short hist[2][MAXN][MAXN];   // by the side, from, to: -512 .. 512
+static unsigned char lmrT[64][64]; static int lmrInit = 0;
+static void initLmr(void) {   // floor(LMR_BASE/1000 + ln(d) ln(n) / (LMR_DIV/10)) by a table of ln(1..63) x 1000 (no libm)
+  static const short LN[64] = { 0, 0, 693, 1099, 1386, 1609, 1792, 1946, 2079, 2197, 2303, 2398, 2485, 2565, 2639, 2708, 2773, 2833, 2890, 2944, 2996,
+    3045, 3091, 3135, 3178, 3219, 3258, 3296, 3332, 3367, 3401, 3434, 3466, 3497, 3526, 3555, 3584, 3611, 3638, 3664, 3689, 3714, 3738, 3761,
+    3784, 3807, 3829, 3850, 3871, 3892, 3912, 3932, 3951, 3970, 3989, 4007, 4025, 4043, 4060, 4078, 4094, 4111, 4127, 4143 };
+  for (int d = 1; d < 64; d++) for (int n = 1; n < 64; n++) lmrT[d][n] = (unsigned char)((LMR_BASE * 1000 + (long)LN[d] * LN[n] * 10 / LMR_DIV) / 1000000);
+  lmrInit = 1;
+}
+static void setMode(int v) { if (!lmrInit) initLmr(); v = v ? 1 : 0; if (v != sv2) { ttclear(); sv2 = v; } }
+static inline short *histAt(const P *p, int m) { return &hist[p->side][(m % 128) % MAXN][(m / 128) % MAXN]; }
+static inline void histAdd(const P *p, int m, int bonus) { short *h = histAt(p, m); *h += bonus - *h * (bonus < 0 ? -bonus : bonus) / 512; }
+static inline int lmrOf(const P *p, int m, int d, int i, int ply) {   // the reduction of the move in place i (0 = first)
+  if (d < 3 || i < LMR_I || (ply >= 0 && ply < MAXPLY && killers[ply] == m)) return 0;
+  int red = lmrT[d > 63 ? 63 : d][i + 1 > 63 ? 63 : i + 1];
+  if (KV_HIST) { const int h = *histAt(p, m); if (h > 200 && red) red--; else if (h < -200) red++; }
+  if (red > d - 2) red = d - 2;
+  return red < 0 ? 0 : red;
+}
 static P OP;   // (orderMoves' scratch child)
 static TLS double OSC[MAXMV];
 static void orderMoves(const P *p, int *L, int n, int ttm, int ply) {
@@ -221,7 +280,7 @@ static void orderMoves(const P *p, int *L, int n, int ttm, int ply) {
   int out[MAXMV];
   for (int i = 0; i < n; i++) {
     int m = L[i]; double v;
-    if (m == ttm) v = 1e9; else if (m == k) v = 1e8; else { play(&OP, p, m); v = -mobility(&OP, op) * 10 + mobility(&OP, me) * 6 + hops(m); }
+    if (m == ttm) v = 1e9; else if (m == k) v = 1e8; else { play(&OP, p, m); v = -mobility(&OP, op) * 10 + mobility(&OP, me) * 6 + hops(m); if (KV_HIST && sv2) v += (double)*histAt(p, m) / HIST_W; }
     int j = i; while (j > 0 && OSC[j - 1] < v) { OSC[j] = OSC[j - 1]; out[j] = out[j - 1]; j--; }
     OSC[j] = v; out[j] = m;
   }
@@ -247,8 +306,16 @@ static int search(P *p, int d, int a, int b, int ply) {
   int L[MAXMV], n = genMoves(p, L);
   if (!n) return -(WIN - ply);
   if (d <= 0) return evaluate(p);
+  const int v2 = sv2; int futile = 0;
+  if (v2 && b - a == 1 && a > -WINT && b < WINT && ply > 0 && p->ply >= 2) {
+    const int stat = evaluate(p);
+    if (KV_RFP && d <= RFP_D && stat - RFP_M * d >= b) return stat;
+    if (KV_FUT && d <= 2 && stat + FUT_M * d <= a) futile = 1;
+  }
+  if (KV_IIR && v2 && d >= 4 && !(hit && em >= 0)) d--;
   orderMoves(p, L, n, hit ? em : -1, ply);
   int best = -2000000000, bm = L[0], a0 = a, any = 0;
+  int qm[32], nq = 0;   // v2: the moves searched before a cut-off (their history goes down)
   P *q = &ST[ply + 1 < MAXPLY ? ply + 1 : MAXPLY];
 #ifdef MT
   int noSplit = 0;
@@ -269,16 +336,22 @@ static int search(P *p, int d, int a, int b, int ply) {
       noSplit = 1;
     }
 #endif
-    int m = L[i]; play(q, p, m);
+    int m = L[i];
+    if (futile && i >= 3 && any && best > -WINT) continue;
+    play(q, p, m);
     int v;
     if (i == 0) v = -search(q, d - 1, -b, -a, ply + 1);
     else {
-      int red = (d >= 3 && i >= 5) ? 1 : 0;
+      int red = v2 && KV_LMR ? lmrOf(p, m, d, i, ply) : (d >= 3 && i >= 5) ? 1 : 0;
       v = -search(q, d - 1 - red, -a - 1, -a, ply + 1);
       if (v > a && (red || v < b)) { play(q, p, m); v = -search(q, d - 1, -b, -a, ply + 1); }
     }
     if (stopF) return any ? best : 0;
-    if (v > best) { best = v; any = 1; bm = m; if (v > a) { a = v; if (a >= b) { if (ply >= 0 && ply < MAXPLY) killers[ply] = m; break; } } }
+    if (v > best) { best = v; any = 1; bm = m; if (v > a) { a = v; if (a >= b) {
+      if (ply >= 0 && ply < MAXPLY) killers[ply] = m;
+      if (KV_HIST && v2) { const int bo = d * d * 4 > 200 ? 200 : d * d * 4; histAdd(p, m, bo); for (int j = 0; j < nq; j++) histAdd(p, qm[j], -bo); }
+      break; } } }
+    if (nq < 32) qm[nq++] = m;
   }
   int sv = best > WINT ? best + ply : best < -WINT ? best - ply : best;
   int fl = best <= a0 ? 2 : best >= b ? 1 : 0;
@@ -299,7 +372,7 @@ static int spSearch(SPt *s, int i, int a) {
   int v;
   if (s->root) v = s->all ? -search(q, d - 1, -WIN - 1, WIN + 1, 1) : -search(q, d - 1, -WIN - 1, -a, 1);   // (the root: as ab_best / ab_values)
   else {
-    int red = (d >= 3 && s->lg[i] >= 5) ? 1 : 0;
+    int red = sv2 && KV_LMR ? lmrOf(p, m, d, s->lg[i], ply) : (d >= 3 && s->lg[i] >= 5) ? 1 : 0;
     v = -search(q, d - 1 - red, -a - 1, -a, ply + 1);
     if (v > a && (red || v < b)) { play(q, p, m); v = -search(q, d - 1, -b, -a, ply + 1); }
   }
@@ -316,6 +389,7 @@ __attribute__((export_name("search"))) int csearch(int d, int a, int b, int ply)
   P *p = &ST[0];
   for (int i = 0; i < NN; i++) p->sq[i] = SQ[i];
   p->side = IO[8]; p->ply = IO[9]; p->h1 = (u32)IO[10]; p->h2 = (u32)IO[11];
+  setMode(0);   // (the page's own searches: the puzzles' proofs, the search before v2)
   return search(p, d, a, b, ply);
 }
 // ---- the root's loops (2026-11-11: engine.js bestMove / rootValues in C, the same order and counters; on core_mt.wasm the root
@@ -326,6 +400,7 @@ int AOM[MAXMV], AOV[MAXMV];
 static void abRoot(void) { P *p = &ST[0]; for (int i = 0; i < NN; i++) p->sq[i] = SQ[i]; p->side = IO[8]; p->ply = IO[9]; p->h1 = (u32)IO[10]; p->h2 = (u32)IO[11]; }
 static int rootChild(int m, int d, int a, int b) { play(&ST[1], &ST[0], m); return -search(&ST[1], d - 1, a, b, 1); }
 EXPORT(ab_best) void ab_best(int maxD) {
+  setMode(1);
   abRoot();
   int G[MAXMV], n = genMoves(&ST[0], G), O[MAXMV];
   for (int i = 0; i < n; i++) O[i] = G[i];
@@ -359,7 +434,10 @@ EXPORT(ab_best) void ab_best(int maxD) {
   }
   IO[0] = bestM; IO[1] = bestV; IO[2] = bestD;
 }
-EXPORT(ab_values) int ab_values(int d) {
+EXPORT(ab_values2) int ab_values2(int d, int v2);
+EXPORT(ab_values) int ab_values(int d) { return ab_values2(d, 0); }
+int ab_values2(int d, int v2) {   // v2 = 1: the analysis (search v2); 0: the levels by depth, the resistance (as before)
+  setMode(v2);
   abRoot();
   int O[MAXMV], n = genMoves(&ST[0], O), vals[MAXMV], k = 0;
   orderMoves(&ST[0], O, n, -1, 0);
