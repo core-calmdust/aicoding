@@ -17,7 +17,7 @@
   const IMG = new URL('../../peg/img/', (document.currentScript && document.currentScript.src) || location.href).href;
   const T = () => window.THREE;
   const LO = () => !!(X.coarse || X.lite);
-  const LOOKS = ['walnut', 'maple', 'stone', 'night'], SETS = ['glass', 'pearl', 'steel', 'peg', 'mod'];
+  const LOOKS = ['walnut', 'maple', 'stone', 'night', 'art', 'pop'], SETS = ['glass', 'pearl', 'steel', 'peg', 'mod', 'rainbow'];   // (art: colourful art — a white plate; pop: pop art; rainbow: soft rainbow balls, 2026-11-13)
   const R = .32, TOP = .5, CUP = .26, SINK = .1;   // (SINK: how far a ball sits down into its cup)
   const pref = () => { try { return (JSON.parse(localStorage.getItem('aicoding-peg') || '{}') || {}).settings || {}; } catch (e) { return {}; } };
   const lookNow = () => { const v = pref().bd; return LOOKS.includes(v) ? v : 'walnut'; };
@@ -35,13 +35,15 @@
         for (let k = 0; k < 26; k++) { c.strokeStyle = `rgba(${120 + r() * 40},${115 + r() * 40},${110 + r() * 40},${.15 + r() * .3})`; c.lineWidth = .6 + r() * 2.2; c.beginPath(); let x = r() * W, y = r() * W; c.moveTo(x, y); for (let i = 0; i < 14; i++) { x += (r() - .5) * 90; y += (r() - .3) * 60; c.lineTo(x, y); } c.stroke(); }
       }), roughness: .28, clearcoat: .7, clearcoatRoughness: .2 });
       if (look === 'night') return X.M({ color: '#2b1f42', roughness: .22, clearcoat: 1, clearcoatRoughness: .12 });
+      if (look === 'art') return X.M({ color: '#f6f5f1', roughness: .7 });
+      if (look === 'pop') return X.M({ color: '#111111', roughness: .45 });
       return X.M({ map: X.wood('pgWalnut', '#8f5a36', '#4a2a16'), roughness: .48, clearcoat: .4, clearcoatRoughness: .35 });
     });
   }
-  const rimMat = look => mat('rim' + look, () => look === 'night' ? X.M({ color: '#e2bd6a', metalness: 1, roughness: .3 }) : woodMat(look));
+  const rimMat = look => mat('rim' + look, () => look === 'night' ? X.M({ color: '#e2bd6a', metalness: 1, roughness: .3 }) : look === 'pop' ? X.M({ color: '#ffdb1e', roughness: .5 }) : woodMat(look));
   // a drilled cup: dark at the bottom, lit on the far wall (a disc with a radial picture, the face stays one piece)
   const cupMat = look => mat('cup' + look, () => X.M({ map: X.canvasTex('pgCup' + look, 128, 128, (c, W) => {
-    const dark = { walnut: '#1a0d05', maple: '#4f3014', stone: '#3a3631', night: '#05030a' }[look];
+    const dark = { walnut: '#1a0d05', maple: '#4f3014', stone: '#3a3631', night: '#05030a', art: '#c9c7c0', pop: '#111111' }[look];
     const g = c.createRadialGradient(W * .5, W * .56, W * .05, W * .5, W * .5, W * .5); g.addColorStop(0, dark); g.addColorStop(.72, dark); g.addColorStop(.86, 'rgba(255,240,220,.25)'); g.addColorStop(1, 'rgba(0,0,0,0)');
     c.fillStyle = g; c.beginPath(); c.arc(W / 2, W / 2, W / 2, 0, 7); c.fill();
   }), transparent: true, roughness: .9, depthWrite: false, bump: false }));
@@ -50,7 +52,7 @@
     tx.anisotropy = 4; if (T().sRGBEncoding) tx.encoding = T().sRGBEncoding;
     return new (T().MeshStandardMaterial)({ map: tx, transparent: false, alphaTest: .92, roughness: .45, metalness: 0, polygonOffset: true, polygonOffsetFactor: -1 });   // (opaque + alpha test: no sorting flicker with the marbles)
   });
-  const grooveMat = look => mat('gr' + look, () => X.M({ color: { walnut: '#2a170c', maple: '#7a5530', stone: '#8e8a82', night: '#0b0714' }[look], roughness: .8 }));
+  const grooveMat = look => mat('gr' + look, () => X.M({ color: { walnut: '#2a170c', maple: '#7a5530', stone: '#8e8a82', night: '#0b0714', art: '#dedcd5', pop: '#111111' }[look], roughness: .8 }));
 
   /* ---------- the boards ---------- */
   function shape(B) {
@@ -70,7 +72,7 @@
   }
   function board(id, look) {
     id = id || 'english'; look = LOOKS.includes(look) ? look : lookNow();
-    const TT = T(), E = window.PegEngine, B = E.BOARDS[id], S = shape(B), g = new TT.Group();
+    const TT = T(), E = window.PegEngine, B = E.BOARDS[id], S = shape(B), g = new TT.Group(); rbN = B.n;
     // this board's own materials, swapped in place by setSet (the portal's 盤 row: a board kept from before / merged meshes
     // still show the chosen design — the same fix as chess)
     const W = woodMat(look).clone(), RM = rimMat(look).clone(), GM = grooveMat(look).clone(), FM = faceMat(look, id).clone();
@@ -121,8 +123,10 @@
     tx.anisotropy = 4; if (T().sRGBEncoding) tx.encoding = T().sRGBEncoding;
     return new (T().MeshStandardMaterial)({ map: tx, roughness: .75, metalness: 0 });
   });
+  let rbN = 33;   // (the board in use: its hole count, for the rainbow sweep)
   function marbleMat(i, set) {
     const k = (i * 7 + 3) % 6;
+    if (set === 'rainbow') { const h = Math.round((i % rbN) / rbN * 36) / 36; return mat('mrb' + h, () => { const c = new (T().Color)().setHSL(h * .92, .62, .62); return X.M({ color: '#' + c.getHexString(), roughness: .62 }); }); }
     if (set === 'mod') return mat('mmod' + k, () => X.M({ color: MOD[k], roughness: .75 }));
     if (set === 'pearl') return mat('mcer' + k, () => X.M({ color: CERAMIC[k], roughness: .28, clearcoat: .8, clearcoatRoughness: .2 }));
     if (set === 'steel') return mat('mjw' + k, () => { const m = X.M({ color: JEWEL[k], roughness: 0, metalness: .1, clearcoat: 1, clearcoatRoughness: 0, envMapIntensity: 4.5, transparent: true, opacity: .84, flatShading: true }); m.emissive.set(JEWEL[k]).convertSRGBToLinear().multiplyScalar(.28); try { m.ior = 2.4; if ('iridescence' in m) { m.iridescence = 1; m.iridescenceIOR = 1.9; } } catch (e) {} return m; });   // (jewels, 2026-11-13: cut facets that each catch the light, see-through, a play of colour — sparkle, not a glass ball)

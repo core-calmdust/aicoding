@@ -329,6 +329,39 @@ def build(g, look):
         put(ma.arr(.5), verde, .85); put(mb.arr(.5), sienna, .85); put(mr.arr(.5), BRASS, .85, 1, .003)
         cm = cup > 0; A[cm] *= (.8 + .2 * (1 - cup[cm]))[..., None]; G[cm] = .3
         gm = (gd < gw) & m; A[gm] = A[gm] * .9; G[gm] = .4
+    elif look == 'art':   # colourful art (2026-11-13): a white matte ceramic plate, a raised lip, soft round dimples — the marbles are the colour
+        A[:] = np.array([1.2, 1.19, 1.16]) * (.985 + .015 * norm01(fbm((N, N), [3, 1], [1, .5], seed=41)))[..., None]; G[:] = .22
+        lip = m & (gd >= gw) & (ed < (gc - gw if not tri else .2)); H[lip] += .03
+        put(line(inner, .01), np.array([1.1, 1.09, 1.06]), .2, 0, -.006)                       # a faint pressed line round the face
+        cm = cup > 0; A[cm] *= (.9 + .1 * (1 - cup[cm]))[..., None]; G[cm] = .12
+        gm = (gd < gw) & m; A[gm] *= .93; G[gm] = .15
+    elif look == 'pop':   # pop art (2026-11-13): comic-print yellow with red Ben-Day dots, a blue burst, thick black outlines, flat colour
+        H[:] = np.where(m, .5 * smooth_step(ed, 0, .05), 0)
+        u, v = c.u, c.v
+        A[:] = np.array([1.0, .86, .12])
+        # Ben-Day dots: a rotated grid, the dots growing toward one corner
+        ru, rv = (u + v) * .7071, (v - u) * .7071, 
+        cell = .32; du = (ru / cell) % 1 - .5; dv = (rv / cell) % 1 - .5
+        grow = np.clip((u * .25 - v * .3 + 1.4) / 2.6, .12, .46)
+        dot = m & (np.hypot(du, dv) < grow)
+        A[dot] = np.array([.93, .16, .2])
+        # a starburst behind the middle, flat blue with a black outline
+        ang = np.arctan2(v + .2, u - .3); rb = 1.5 + .55 * (np.sin(ang * 9) > 0)
+        rr = np.hypot(u - .3, v + .2)
+        burst = m & (rr < rb * .9 + .35 * np.cos(ang * 9))
+        A[burst] = np.array([.14, .42, .92])
+        edge = m & (np.abs(rr - (rb * .9 + .35 * np.cos(ang * 9))) < .05)
+        A[edge] = 0.03
+        # the rim: white, between thick black lines; the groove black
+        rimz = m & (ed < (gc - gw if not tri else .2)) & (gd >= gw)
+        A[rimz] = np.array([1.0, .99, .96])
+        for at, w in ((.035, .035), ((gc - gw) if not tri else .2, .04), (inner, .04)):
+            A[m & (np.abs(ed - at) < w)] = 0.03
+        gm = (gd < gw) & m; A[gm] = 0.03
+        # holes: white discs with a thick black outline and a comic shine
+        cm = m & (cd < CUP_R); A[cm] = np.array([1.0, .99, .96]) * (.82 + .18 * (cd[cm] / CUP_R))[..., None]
+        ring = m & (np.abs(cd - CUP_R) < .045); A[ring] = 0.03
+        G[:] = .15
     else:   # night: an abstract board — flat colour fields like a print, no realism (user 2026-11-11)
         H[:] = np.where(m, .5 * smooth_step(ed, 0, .05), 0)          # flat: only a crisp edge
         A[:] = np.array([.13, .12, .24])
@@ -405,6 +438,11 @@ def marble_img(kind, k):
         col += win[..., None]
         col *= (.6 + .4 * (1 - rim ** 5))[..., None]
         alpha = ins * 1.0
+    elif kind == 'rainbow':   # colourful art: matte painted wooden balls in soft rainbow tones
+        c = np.array([[.93, .36, .34], [.98, .66, .22], [.98, .86, .3], [.45, .78, .42], [.3, .66, .9], [.62, .45, .86]][k])
+        col = c * (.42 + .62 * ndl[..., None]) + (ndh ** 30 * .12)[..., None]
+        col *= (.85 + .15 * (1 - rim ** 3))[..., None]
+        alpha = ins * 1.0
     elif kind == 'mod':     # abstract pieces for the abstract board: plain flat colour discs (user: もっとシンプルに)
         r = np.hypot(x, y)
         c = np.array([[.83, .41, .29], [.89, .7, .29], [.18, .56, .54], [.94, .9, .83], [.93, .55, .5], [.33, .45, .7]][k])
@@ -432,14 +470,14 @@ if __name__ == '__main__':
     geo = json.load(open(sys.argv[1] if len(sys.argv) > 1 else '/tmp/claude-0/pegs/geo.json'))
     os.makedirs(OUT, exist_ok=True)
     only = sys.argv[2].split(',') if len(sys.argv) > 2 else None
-    for look in ['walnut', 'maple', 'stone', 'night']:
+    for look in ['walnut', 'maple', 'stone', 'night', 'art', 'pop']:
         for bid, g in geo.items():
             if only and f'{look}-{bid}' not in only and look not in only: continue
             img = to_img(build(g, look))
             img.save(os.path.join(OUT, f'bd-{look}-{bid}.webp'), 'WEBP', quality=86, method=6)
             print('board', look, bid, flush=True)
     if not only or 'marbles' in only:
-        for kind, n in (('glass', 6), ('pearl', 6), ('steel', 6), ('peg', 6), ('mod', 6)):
+        for kind, n in (('glass', 6), ('pearl', 6), ('steel', 6), ('peg', 6), ('mod', 6), ('rainbow', 6)):
             for k in range(n):
                 marble_img(kind, k).save(os.path.join(OUT, f'm-{kind}-{k}.webp'), 'WEBP', quality=90, method=6)
         print('marbles')

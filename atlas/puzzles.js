@@ -175,9 +175,10 @@
   window.AtlasMini.peg = cells => {
     const E = window.PegEngine, [b, p, t] = String(cells || '').split(':'), B = E && E.BOARDS[b]; if (!B) return '';
     const xs = B.pos.map(q => q[0]), ys = B.pos.map(q => q[1]), x0 = Math.min(...xs), y0 = Math.min(...ys), w = Math.max(...xs) - x0 + 1, h = Math.max(...ys) - y0 + 1, S = Math.max(w, h), k = 76 / S, ox = 4 + (S - w) * k / 2 + k / 2, oy = 4 + (S - h) * k / 2 + k / 2;
-    let o = `<svg viewBox="0 0 84 84" aria-hidden="true"><circle cx="42" cy="42" r="41" fill="#8f5a36"/><circle cx="42" cy="42" r="37.5" fill="#a86c40" stroke="#5a321a" stroke-width="1"/>`;
-    B.pos.forEach(([x, y], i) => { const cx = ox + (x - x0) * k, cy = oy + (y - y0) * k, on = p[i] === '1';
-      o += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(k * .3).toFixed(1)}" fill="#3a1e0e"/>` + (on ? `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(k * .36).toFixed(1)}" fill="#e2493f" stroke="#7a1a12" stroke-width=".5"/>` : '') + (+t === i ? `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(k * .44).toFixed(1)}" fill="none" stroke="#ffd36b" stroke-width="1.2"/>` : ''); });
+    const tri = !!B.tri, kk = tri ? k * .6 : k, ox2 = tri ? 42 - (w - 1) * kk / 2 : ox, oy2 = tri ? 50 - (h - 1) * kk / 2 : oy;   // (the triangle: a triangular plate, the holes smaller to fit it)
+    let o = `<svg viewBox="0 0 84 84" aria-hidden="true">` + (tri ? `<path d="M42 3 L81 76 Q82 80 78 80 L6 80 Q2 80 3 76 Z" fill="#8f5a36" stroke-linejoin="round"/><path d="M42 9 L75 74 L9 74 Z" fill="#a86c40" stroke="#5a321a" stroke-width="1" stroke-linejoin="round"/>` : `<circle cx="42" cy="42" r="41" fill="#8f5a36"/><circle cx="42" cy="42" r="37.5" fill="#a86c40" stroke="#5a321a" stroke-width="1"/>`);
+    B.pos.forEach(([x, y], i) => { const K = tri ? kk : k, cx = (tri ? ox2 : ox) + (x - x0) * K, cy = (tri ? oy2 : oy) + (y - y0) * K, on = p[i] === '1';
+      o += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(K * .3).toFixed(1)}" fill="#3a1e0e"/>` + (on ? `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(K * .36).toFixed(1)}" fill="#e2493f" stroke="#7a1a12" stroke-width=".5"/>` : '') + (+t === i ? `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(K * .44).toFixed(1)}" fill="none" stroke="#ffd36b" stroke-width="1.2"/>` : ''); });
     return o + '</svg>';
   };
   /* ---------- the two collections: problems, records ---------- */
