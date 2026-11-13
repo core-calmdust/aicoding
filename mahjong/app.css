@@ -151,15 +151,15 @@ svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.9;stroke
 .rl{font-size:12px;color:var(--muted);font-weight:700}
 .tbtns{position:absolute;top:max(10px,var(--st));right:max(10px,var(--sr));display:flex;gap:6px}
 /* tiles in html */
-.tl{position:relative;display:inline-block;width:var(--tw);aspect-ratio:3/4;border-radius:calc(var(--tw)*.12);background:#f6f0e0;flex:none;
-  box-shadow:inset 0 -4px 0 #ddd3bb,0 calc(var(--tw)*.1) 0 #6b3fc4,0 calc(var(--tw)*.1 + 2px) 0 #3c2077,0 8px 14px rgba(0,0,0,.35);transition:transform .12s, filter .12s;margin-bottom:calc(var(--tw)*.1)}
+.tl{position:relative;display:inline-block;width:var(--tw);aspect-ratio:3/4;border-radius:calc(var(--tw)*.12);background:#fafaf6;flex:none;
+  box-shadow:inset 0 -4px 0 #ddd3bb,0 calc(var(--tw)*.1) 0 #a58cd6,0 calc(var(--tw)*.1 + 2px) 0 #3c2077,0 8px 14px rgba(0,0,0,.35);transition:transform .12s, filter .12s;margin-bottom:calc(var(--tw)*.1)}
 .tl img{position:absolute;inset:4%;width:92%;height:88%;border-radius:calc(var(--tw)*.08);display:block;pointer-events:none}
-.tl.back{background:linear-gradient(180deg,#8a5ce0,#5b34b0);box-shadow:inset 0 0 0 2px rgba(255,255,255,.15),0 3px 0 #f6f0e0,0 5px 8px rgba(0,0,0,.3)}
-.tl.xs{--tw:22px;box-shadow:0 2px 0 #6b3fc4,0 3px 5px rgba(0,0,0,.3);margin:0}
-.tl.sm{--tw:34px;box-shadow:0 3px 0 #6b3fc4,0 4px 8px rgba(0,0,0,.3);margin:0}
-.tl.md{--tw:40px;box-shadow:0 4px 0 #6b3fc4,0 6px 10px rgba(0,0,0,.3);margin:0}
+.tl.back{background:radial-gradient(120% 80% at 30% 20%,rgba(250,244,255,.55),transparent 55%),linear-gradient(135deg,transparent 40%,rgba(245,238,255,.5) 46%,transparent 52%),linear-gradient(160deg,#c3b0e6,#a58cd6 55%,#b9a6e0);box-shadow:inset 0 0 0 2px rgba(255,255,255,.35),0 3px 0 #fafaf6,0 5px 8px rgba(0,0,0,.3)}   /* (pale polished lavender stone, as the 3D tile backs, 2026-11-14) */
+.tl.xs{--tw:22px;box-shadow:0 2px 0 #a58cd6,0 3px 5px rgba(0,0,0,.3);margin:0}
+.tl.sm{--tw:34px;box-shadow:0 3px 0 #a58cd6,0 4px 8px rgba(0,0,0,.3);margin:0}
+.tl.md{--tw:40px;box-shadow:0 4px 0 #a58cd6,0 6px 10px rgba(0,0,0,.3);margin:0}
 .tl.side{transform:rotate(-90deg);margin:0 calc(var(--tw)*.17)}
-.tl.win{box-shadow:0 0 0 3px #ffd24a,0 4px 0 #6b3fc4,0 0 20px rgba(255,210,74,.7)}
+.tl.win{box-shadow:0 0 0 3px #ffd24a,0 4px 0 #a58cd6,0 0 20px rgba(255,210,74,.7)}
 .tl.hl{box-shadow:0 0 0 2px #ffd24a,0 2px 0 #6b3fc4}
 .hand{position:absolute;left:0;right:0;bottom:max(8px,var(--sb));display:flex;align-items:flex-end;justify-content:center;gap:18px;padding:0 12px;pointer-events:none}
 .hand .hrow{display:flex;align-items:flex-end;gap:2px;pointer-events:auto}
@@ -392,7 +392,7 @@ html[lang=en] .ci-word{font-family:'Cinzel',serif;font-weight:800;font-size:min(
 #game{--th:min(calc((var(--W) - 90px) / 15.6), calc(calc(var(--H) * 0.16) * .75), 86px);--bf:66px}
 #game .hand .tl:not(.sm):not(.xs){--tw:var(--th)}
 #game .hand .melds .tl.sm{--tw:calc(var(--th) * .7)}
-#game .hand .tl{box-shadow:inset 0 -3px 0 #ddd3bb,0 calc(var(--tw)*.12) 0 #6b3fc4,0 calc(var(--tw)*.12 + 2px) 0 #3c2077,0 10px 18px rgba(0,0,0,.45)}
+#game .hand .tl{box-shadow:inset 0 -3px 0 #ddd3bb,0 calc(var(--tw)*.12) 0 #a58cd6,0 calc(var(--tw)*.12 + 2px) 0 #3c2077,0 10px 18px rgba(0,0,0,.45)}
 #game .hand.active .tl.can:hover,#game .hand .tl.up{transform:translateY(calc(var(--th) * -.24))}
 #game .hand{bottom:max(6px,var(--sb));gap:calc(var(--th) * .3)}
 #game .hand .hrow{gap:1px}
@@ -868,7 +868,7 @@ html.ds #game .rbox{padding:10px 14px;gap:7px}
 html.ds #game .rk b{font-size:22px}
 html.ds #game .rk span,html.ds #game .rl{font-size:13px}
 html.ds #game .rd small{font-size:13px}
-html.ds #game .rd .tl.xs{--tw:clamp(30px, calc(var(--GH) * .05), 42px);box-shadow:0 3px 0 #6b3fc4,0 4px 8px rgba(0,0,0,.4)}
+html.ds #game .rd .tl.xs{--tw:clamp(30px, calc(var(--GH) * .05), 42px);box-shadow:0 3px 0 #a58cd6,0 4px 8px rgba(0,0,0,.4)}
 html.ds .khelp{left:calc(max(10px,var(--sl)) + 262px)}
 
 /* ================= PC: pull the UI in from the window edges ================= */
