@@ -920,7 +920,8 @@
         fitStage(); };
       if (window.__bvModeRz) removeEventListener('resize', window.__bvModeRz);
       window.__bvModeRz = () => { if (!$('bvOpts') || !$('bvMode') || !$('bvMode').getClientRects().length) return; bodyH = 0; setMode($('bvMode').dataset.v); }; addEventListener('resize', window.__bvModeRz);
-      $('bvMode').onclick = e => { const b = e.target.closest('button'); if (b) setMode(b.dataset.m); };
+      $('bvMode').onclick = e => { const b = e.target.closest('button'); if (!b) return; setMode(b.dataset.m);
+        if (MX) { pref[id + ':mode'] = b.dataset.m; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (x) {} } };   // (the tab is kept: back from a lesson / puzzle — or the next visit — opens on it, 2026-11-14)
       setMode(mode);
       // measure again once the custom pickers below are in place and the web fonts have loaded
       setTimeout(() => window.__bvModeRz && window.__bvModeRz(), 0); if (document.fonts) document.fonts.ready.then(() => window.__bvModeRz && window.__bvModeRz());
@@ -1632,6 +1633,7 @@
     if ($('bvPS')) $('bvPS').classList.remove('on');
     if (pend3d) { pend3d.then(() => startPuzzle(o)); return; }   // the board isn't on the table yet
     const g = bvGame; stopSession();
+    if (MXG[g.id]) { pref[g.id + ':mode'] = 'puzzle'; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {} }   // (back from it: the card opens on this tab)
     $('bv').classList.add('playing', 'rules'); $('endc').classList.remove('on');
     session = AtlasPuzzles.start({ id: g.id, el: $('gl'), Table3D, lang, t, panel: $('bv'), adapter: Atlas3D[g.id], onExit: () => openBoard(g.id),
       daily: o.daily, pick: o.pick, onList: () => puzzleSheet(g), dailyTitle: w => g.id === 'peg' ? t('bv.pz.dc') + (w === 'd2' ? ' EASY' : '') : t(g.id !== 'shogi' ? 'bv.pz.dc' : w === 'd2' ? 'bv.pz.d2' : 'bv.pz.d1') });
@@ -1644,6 +1646,7 @@
     if (renderPlace.close) renderPlace.close();
     if (pend3d) { pend3d.then(() => startLesson3D(kind, key)); return; }
     const g = bvGame; stopSession();
+    if (MXG[g.id]) { pref[g.id + ':mode'] = 'lesson'; try { localStorage.setItem('atlas-play', JSON.stringify(pref)); } catch (e) {} }   // (back from it: the card opens on this tab)
     $('bv').classList.add('playing', 'rules'); $('endc').classList.remove('on');
     session = AtlasLessons.start({ id: g.id, kind: kind === 'open' ? 'open' : 'lesson', key, el: $('gl'), Table3D, lang, t, panel: $('bv'), adapter: Atlas3D[g.id], onExit: () => openBoard(g.id),
       onFull: k => startPlay('full', 'lesson', k === 'open' ? 'open' : 'list'), onList: k => lessonSheet(g, k === 'open' ? 'open' : 'list'), onDone: () => { try { refresh(); } catch (e) {} } });

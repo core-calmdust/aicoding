@@ -75,6 +75,16 @@
   };
   // shogi opening categories (= shogi/openings-ui.js tabs)
   const OPCAT = {"ja":{"beg":"初級","mid":"中級","adv":"上級","sp":"特殊","new":"流行","castle":"囲い","handi":"駒落ち"},"en":{"beg":"Beginner","mid":"Standard","adv":"Advanced","sp":"Surprise","new":"Trending","castle":"Castles","handi":"Handicap"},"zh":{"beg":"入门","mid":"中级","adv":"高级","sp":"奇袭","new":"流行","castle":"围","handi":"让子"},"ko":{"beg":"초급","mid":"중급","adv":"고급","sp":"특수","new":"유행","castle":"성","handi":"접장기"},"es":{"beg":"Inicial","mid":"Medio","adv":"Avanzado","sp":"Sorpresa","new":"Moda","castle":"Castillos","handi":"Hándicap"},"fr":{"beg":"Débutant","mid":"Moyen","adv":"Avancé","sp":"Surprise","new":"Tendance","castle":"Châteaux","handi":"Handicap"},"pt":{"beg":"Inicial","mid":"Médio","adv":"Avançado","sp":"Surpresa","new":"Moda","castle":"Castelos","handi":"Handicap"},"de":{"beg":"Einstieg","mid":"Mittel","adv":"Profi","sp":"Exoten","new":"Trend","castle":"Burgen","handi":"Vorgabe"},"hi":{"beg":"शुरुआती","mid":"मध्यम","adv":"उन्नत","sp":"अनोखे","new":"ट्रेंड","castle":"किले","handi":"हैंडीकैप"},"ar":{"beg":"مبتدئ","mid":"متوسط","adv":"متقدم","sp":"مفاجآت","new":"رائج","castle":"القلاع","handi":"الإعاقة"},"ru":{"beg":"Начальный","mid":"Стандарт","adv":"Продвинутый","sp":"Сюрпризы","new":"Тренды","castle":"Крепости","handi":"Фора"},"zh-TW":{"beg":"入門","mid":"標準","adv":"進階","sp":"奇襲","new":"流行","castle":"圍","handi":"讓子"},"id":{"beg":"Pemula","mid":"Standar","adv":"Mahir","sp":"Kejutan","new":"Tren","castle":"Benteng","handi":"Handikap"},"tr":{"beg":"Başlangıç","mid":"Standart","adv":"İleri","sp":"Sürpriz","new":"Popüler","castle":"Kaleler","handi":"Handikap"}};
+  // the lesson's / opening's topic, said as a sentence: [lesson, opening]
+  const TOPIC = {
+    ja: ['今日は「{t}」について学ぶよ！', '今日は「{t}」の進み方を見ていこう！'], en: ["Today we'll learn about {t}!", "Today let's look at how {t} goes!"],
+    zh: ['今天来学习「{t}」吧！', '今天来看看「{t}」的下法吧！'], 'zh-TW': ['今天來學習「{t}」吧！', '今天來看看「{t}」的下法吧！'],
+    ko: ['오늘은 「{t}」에 대해 배워 보자!', '오늘은 「{t}」의 진행을 살펴보자!'], es: ['¡Hoy aprendemos sobre {t}!', '¡Hoy vemos cómo se juega {t}!'],
+    fr: ['Aujourd’hui, on apprend : {t} !', 'Aujourd’hui, voyons comment se joue {t} !'], pt: ['Hoje vamos aprender sobre {t}!', 'Hoje vamos ver como se joga {t}!'],
+    de: ['Heute lernen wir: {t}!', 'Heute schauen wir uns {t} an!'], ru: ['Сегодня учим: {t}!', 'Сегодня разбираем: {t}!'],
+    tr: ['Bugün {t} konusunu öğreniyoruz!', 'Bugün {t} nasıl oynanır, bakalım!'], id: ['Hari ini kita belajar tentang {t}!', 'Hari ini kita lihat jalannya {t}!'],
+    hi: ['आज हम {t} के बारे में सीखेंगे!', 'आज देखें {t} कैसे खेला जाता है!'], ar: ['اليوم نتعلّم عن {t}!', 'اليوم نرى كيف تُلعب {t}!'],
+  };
   const fill = (s, v) => String(s).replace(/\{(\w+)\}/g, (_, k) => v[k] != null ? v[k] : '');
   /* ---------- the guides' own voice (2026-11-11) ----------
      Knighton (chess, ぼく) and Shogitsune (shogi, わたし, コン now and then) say the lesson's fixed lines in their own words
@@ -602,7 +612,7 @@
       if (!L2) { say(X.drill); act(X.full, {}); $('[data-a=next]').onclick = () => ctx.onFull && ctx.onFull(ctx.kind, key); return; }
       cur = Object.assign(L2, { key, k: 0, res: [], si: 0 }); head(cur.title);
       phase = 'intro'; dots();
-      say(`<b>${cur.title}</b><br>${cur.intro || ''}`);
+      say(`${fill((TOPIC[ctx.lang] || TOPIC.en)[ctx.kind === 'open' ? 1 : 0], { t: `<b>${cur.title}</b>` })}<br>${cur.intro || ''}`);   // (「今日は『ルーク』について学ぶよ！」 — not the bare title, 2026-11-14)
       if (cur.drill) { cur.stars = []; cur.probs = cur.drill.map(() => ({})); act(X.start); $('[data-a=next]').onclick = () => drill(0); board(dfen(cur.drill[0]), [], { stars: cur.drill[0].stars, safe: !!cur.drill[0].safe }); return; }
       act(X.start); $('[data-a=next]').onclick = () => (ctx.kind === 'open' && cur.steps.length ? study() : cur.ramp ? ramp(0) : prob());
       if (ctx.kind === 'open' && cur.start) board(cur.start);   // (the opening's start position is on the table while reading)
