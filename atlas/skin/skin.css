@@ -935,3 +935,6 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) .modal.ngt-on .ngt-foot > .modal-act
 @media (pointer: coarse) and (max-width: 760px){
   html.atlas-skin body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav) :is(button, .mbtn, a.mbtn):not(#_):not(#_):not(#_){min-height:40px!important;height:40px!important;padding:0 12px!important;font-size:15px!important;line-height:1!important;border-radius:12px!important}
 }
+/* (2026-11-13) the dialogs' white buttons (閉じる …) raised like the red one: the same depth (a 4px foot of their edge colour) */
+html.atlas-skin body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav, .lesson-actions) :is(button, .mbtn):not(.go):not(.primary):not(:disabled):not(#_):not(#_){box-shadow:0 4px 0 #e6d6b2!important;border:2px solid #efe3c8!important;background:#fffdf8!important}
+html.atlas-skin body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav, .lesson-actions) :is(button, .mbtn):not(.go):not(.primary):active{transform:translateY(2px);box-shadow:0 2px 0 #e6d6b2!important}
