@@ -93,4 +93,4 @@
   - シートの白（彫り残し）は透明にする（赤ドラは塗った画素だけを赤に塗り替えるため）。
   - 彫り（`tiles.js` depthOf）：塗りの範囲をぼかして溝の断面（U字：縁のすぐ外から壁が落ち、約3px内側で平らな底。細い線は浅い）を作る。3Dの牌はそこから法線マップ（`MJTiles.normal`）。**2Dの牌（手牌・ドラ表示など `MJTiles.url`）は左上からの光で焼き込む**（`lit`：光に近い壁の下に淡い陰、反対の壁に光の筋。塗りは自分の色のまま＝墨入れなし）。
   - 2Dの牌の白い面（app.css `.tl`）：左上からのごく淡い艶のグラデーション＋上の縁の光・下の縁の陰。絵は multiply で重ねる。
-  - アーティファクト版もシートを同梱（`build-artifact.py` → `img/tiles/`、`tiles.js` は `JANKA_ASSETS + 'tiles/'` から読む）。
+  - アーティファクト版もシートを同梱（`build-artifact.py` → `img/tiles/`、`tiles.js` は `JANKA_ASSETS + 'tiles/'` から読む）。束は `index.html`（ページ全体）＋three.js（`atlas/vendor`）＋`shared-*.js` も含む。
