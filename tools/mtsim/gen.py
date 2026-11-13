@@ -66,6 +66,27 @@ elif game in ('ugolki', 'agon', 'konane', 'gomoku'):   # (gomoku 2026-11-12: cla
     pass
 elif game == 'amazons':
     rep('  init(); initBB(); evn++;\n', '  init(); initBB(); evn++; SIM_NODE();\n')
+elif game == 'reversi':   # (2026-11-13: engine.c with -DMT -DNATIVE -DENGINE_ALLOC=malloc; v4.1 before Praline too — g_reversi.h, dump.js)
+    cut_threads('/* ------------------------------------------------------------------ threads (engine_mt.wasm')
+    # the midgame table (buckets of 4) and the solver's table (pairs): the words through SIMR / SIMW
+    rep('const u64 d = b[i].dt; if ((b[i].k1 ^ d) == P && (b[i].k2 ^ d) == O) { *out = d; return b + i; }',
+        'const u64 d = SIMR(&b[i].dt); if ((SIMR(&b[i].k1) ^ d) == P && (SIMR(&b[i].k2) ^ d) == O) { *out = d; return b + i; }')
+    rep('    const u64 d = b[i].dt;\n    if ((b[i].k1 ^ d) == P && (b[i].k2 ^ d) == O) {',
+        '    const u64 d = SIMR(&b[i].dt);\n    if ((SIMR(&b[i].k1) ^ d) == P && (SIMR(&b[i].k2) ^ d) == O) {')
+    rep('  r->dt = nd; r->k1 = P ^ nd; r->k2 = O ^ nd;', '  SIMW(&r->dt, nd); SIMW(&r->k1, P ^ nd); SIMW(&r->k2, O ^ nd);')
+    rep('    const u64 d = ETB[i + k].dt;\n    if ((d & 0xFF) && (ETB[i + k].k1 ^ d) == P && (ETB[i + k].k2 ^ d) == O)',
+        '    const u64 d = SIMR(&ETB[i + k].dt);\n    if ((d & 0xFF) && (SIMR(&ETB[i + k].k1) ^ d) == P && (SIMR(&ETB[i + k].k2) ^ d) == O)')
+    rep('const int e0 = (int)(ETB[hb].dt & 0xFF), e1 = (int)(ETB[hb + 1].dt & 0xFF)', 'const int e0 = (int)(SIMR(&ETB[hb].dt) & 0xFF), e1 = (int)(SIMR(&ETB[hb + 1].dt) & 0xFF)')
+    rep('    ETB[ti].dt = nd; ETB[ti].k1 = P ^ nd; ETB[ti].k2 = O ^ nd;', '    SIMW(&ETB[ti].dt, nd); SIMW(&ETB[ti].k1, P ^ nd); SIMW(&ETB[ti].k2, O ^ nd);')
+    # the midgame table in malloc'ed memory (the wasm build grows its memory)
+    i = s.index('static void ttAlloc(void) {'); j = s.index('\n}\n', i)
+    s = s[:i] + 'static void ttAlloc(void) {\n  if (TTB) return;\n  TT_LOG = TT_LOG_MAX; TTM = (1u << TT_LOG) - 1; TTB = calloc((size_t)4 << TT_LOG, sizeof(TTE));' + s[j:]
+    # every node ticks the clock (the midgame, the solver and its last moves)
+    rep('++nodes', '(SIM_NODE_E(), ++nodes)', 0)
+    # v4.1 (before Praline): an idle helper's / a waiting owner's tick was the clock now()
+    if 'splitHere(' in s:
+        rep('(void)now();', 'SIM_IDLE();', 0)
+        rep('      checkTime();   /* (the lead\'s deadline; the simulation\'s clock) */', '      SIM_IDLE(); checkTime();')
 else:
     raise SystemExit('game?')
 

@@ -41,7 +41,7 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);ma
 <body>
 <main>
 <h1>リバーシ マルチスレッド ベンチマーク</h1>
-<p class="sub">対局ページと同じ方式（Document-Isolation-Policy の分離、engine_mt.wasm の YBW 分割探索）で、スレッド数ごとの読みの速さを測ります。PC の Chrome で開き、ほかのアプリを閉じて「開始」。終わったら「結果をコピー」を押して貼り付けてください（約5分）。</p>
+<p class="sub">対局ページと同じ方式（Document-Isolation-Policy の分離、engine_mt.wasm の YBW 分割探索）で、スレッド数ごとの読みの速さを測ります。PC の Chrome で開き、ほかのアプリを閉じて「開始」。終わったら「結果をコピー」を押して貼り付けてください（約5分）。前の方式（Praline 以前の v4.1）と比べるときは、このページを <code>?prev=1</code> を付けて開き、もう一度測ります。</p>
 
 <div class="card"><div class="kv" id="env"></div></div>
 
@@ -77,13 +77,19 @@ const COUNTS = (() => { const a = []; for (let t = 1; t < HC; t *= 2) a.push(t);
 const sq = m => m < 0 ? 'pass' : 'abcdefgh'[m & 7] + ((m >> 3) + 1);
 const ua = (() => { const d = navigator.userAgentData; const b = d && (d.brands || []).filter(x => !/Not/.test(x.brand)).map(x => x.brand + ' ' + x.version).join(', '); return (b ? b + ' / ' + (d.platform || '') : '') || navigator.userAgent; })();
 let started = 0, lines = [], pool = null, PX = null;
+// (2026-11-13) ?prev=1: the multi-thread engine before Praline (v4.1, engine_mt_v41.wasm) — to compare with the current one
+// (v5, Praline) on the same machine. ?split=d,e,bd,be,chk: the current engine's split settings (engine.c mt_split: the
+// midgame's split depth, the solver's split empties, the busy marks' depth / empties (99 none), the clock's interval).
+const QS = new URLSearchParams(location.search), PREV = QS.get('prev') === '1';
+const SPLIT = QS.get('split') ? QS.get('split').split(',').map(Number) : null;
+const ENGINE = PREV ? 'v4.1 (prev, engine_mt_v41.wasm)' : 'v5 Praline' + (SPLIT ? ' split ' + SPLIT.join(',') : '');
 
 function env() {
   $('#env').innerHTML = [
     ['crossOriginIsolated', ISO ? '<span class="y">true</span>' : '<span class="n">false</span>'],
     ['hardwareConcurrency', HC], ['測るスレッド数', COUNTS.join(', ')],
     ['起動できたスレッド（最大）', started ? started : '—'], ['対局ページの既定', Math.min(HC - 1, 7) + 1 + ' スレッド（補助 min(コア数−1, 7) ＋主）'],
-    ['ブラウザ', ua.replace(/</g, '&lt;')],
+    ['ブラウザ', ua.replace(/</g, '&lt;')], ['エンジン', ENGINE],
   ].map(([k, v]) => `<b>${k}</b><span>${v}</span>`).join('');
 }
 env();
@@ -114,9 +120,12 @@ async function setup() {
   const wt = await loadWeights();
   // the same pool as the game page (index.html MTP): lead and helpers are mt-worker.js on a shared engine_mt.wasm
   pool = MTEngine.pool({
-    wasm: 'engine_mt.wasm?v=11', lead: 'mt-worker.js?v=22', helper: 'mt-worker.js?v=22', slot: 2 << 20, initial: 1024, maximum: 16384,
+    wasm: PREV ? 'engine_mt_v41.wasm?v=1' : 'engine_mt.wasm?v=12', lead: 'mt-worker.js?v=23', helper: 'mt-worker.js?v=23', slot: 2 << 20, initial: 1024, maximum: 16384,
     imports: mem => ({ env: { memory: mem, now: () => Date.now() } }),
-    after: async (X, mem, ws) => { if (!PX) { PX = X; if (X.w_defer) X.w_defer(); X.init(); } ws.forEach(w => w.postMessage({ type: 'weights', buffer: wt.buffer.slice(0), nphase: wt.nphase })); },
+    after: async (X, mem, ws) => {
+      if (!PX) { PX = X; if (X.w_defer) X.w_defer(); X.init(); if (SPLIT && !PREV && X.mt_split) X.mt_split(...SPLIT); }   // (?split=: the split settings of every thread — shared memory)
+      ws.forEach(w => w.postMessage({ type: 'weights', buffer: wt.buffer.slice(0), nphase: wt.nphase }));
+    },
     help: m => { const o = m.opts || {}, ex = o.cfg.exact; return { cells: m.cells, toMove: m.toMove, cfg: { depth: 60, exact: ex, wld: o.cfg.wld || ex + 2, mpc: 1 } }; },   // (= index.html MTP.help with opts.cfg)
     isDone: m => m.type === 'result', isProg: m => m.type === 'progress',
   });
@@ -141,7 +150,7 @@ async function run() {
   const t00 = performance.now(); let doneW = 0;
   const totalW = COUNTS.length * (MP.length * T + EP.length * 6000) + 1500;   // (rough weights for the bar)
   const tick = (add, msg) => { doneW += add; $('#bar i').style.width = Math.min(100, doneW / totalW * 100) + '%'; if (msg) $('#st').textContent = msg + `　経過 ${Math.round((performance.now() - t00) / 1000)}秒`; };
-  lines = [`reversi bench (mt v4 ybw, 2026-11-10) ${new Date().toISOString()} | ${ua} | isolated ${ISO} | hc ${HC} | mid ${MP.length}x${T}ms (36 empties) | end ${EP.length}x24 empties exact`];
+  lines = [`reversi bench (mt ${ENGINE}, 2026-11-13) ${new Date().toISOString()} | ${ua} | isolated ${ISO} | hc ${HC} | mid ${MP.length}x${T}ms (36 empties) | end ${EP.length}x24 empties exact`];
   const M = {}, E = {};   // per thread count
   // midgame: iterative deepening for T ms (use 1.0: a new depth may start until T, cut at T); per depth the time and move
   const midCfg = { depth: 60, exact: 0, time: T, use: 1, max: T, mpc: 1 };

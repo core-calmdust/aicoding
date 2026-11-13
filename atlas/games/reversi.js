@@ -158,7 +158,7 @@
       await ready();
       if (stopped) return;
       if (!worker) {
-        worker = new Worker(BASE + 'engine.js?v=69');
+        worker = new Worker(BASE + 'engine.js?v=70');
         if (weights) worker.postMessage({ type: 'weights', buffer: weights.buffer.slice(0), nphase: weights.nphase });
         if (book) worker.postMessage({ type: 'book', book });
       }
@@ -222,7 +222,7 @@
       exact: () => ready().then(() => new Promise(res => {   // exact final scores of every move here (side-to-move view) — the full game's analysis
         if (stopped || over) return res([]);
         const j = ++anaJ;
-        if (!anaW) { anaW = new Worker(BASE + 'engine.js?v=69'); if (weights) anaW.postMessage({ type: 'weights', buffer: weights.buffer.slice(0), nphase: weights.nphase }); }
+        if (!anaW) { anaW = new Worker(BASE + 'engine.js?v=70'); if (weights) anaW.postMessage({ type: 'weights', buffer: weights.buffer.slice(0), nphase: weights.nphase }); }
         anaW.onmessage = e => { const m = e.data; if (m.type !== 'analysis' || m.id !== j) return; res(stopped ? [] : (m.list || []).map(x => ({ move: x.move, score: x.score }))); };
         anaW.postMessage({ type: 'analyze', id: j, cells: cells.slice(), toMove: turn, opts: { time: 20000, exact: 24 } });
       })),
@@ -268,7 +268,7 @@
         const j = ++hintJ, c0 = cells.slice(), me = turn;
         return ready().then(() => new Promise(res => {
           if (stopped || j !== hintJ) return res(true);
-          if (!hintW) { hintW = new Worker(BASE + 'engine.js?v=69'); if (weights) hintW.postMessage({ type: 'weights', buffer: weights.buffer.slice(0), nphase: weights.nphase }); if (book) hintW.postMessage({ type: 'book', book }); }
+          if (!hintW) { hintW = new Worker(BASE + 'engine.js?v=70'); if (weights) hintW.postMessage({ type: 'weights', buffer: weights.buffer.slice(0), nphase: weights.nphase }); if (book) hintW.postMessage({ type: 'book', book }); }
           hintW.onmessage = e => {
             const m = e.data; if (m.type !== 'result') return;
             if (stopped || j !== hintJ || turn !== me || over) return res(true);

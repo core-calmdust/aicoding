@@ -1907,7 +1907,7 @@ weightsReady = (async () => {
 let book = null;
 const bookReady = fetch('book.bin?v=3').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null).then(b => (book = b));   // (the opening book: tools/book-gen.js; each worker decodes it, engine.js decodeBook)
 function makeWorker(onmsg) {
-  const w = new Worker('engine.js?v=69');
+  const w = new Worker('engine.js?v=70');
   w.onmessage = onmsg;
   const send = wt => { if (wt) w.postMessage({ type: 'weights', buffer: wt.buffer.slice(0), nphase: wt.nphase }); };
   if (weights) send(weights); else weightsReady.then(send);
@@ -1945,7 +1945,7 @@ let jobId = 0;
 // the helpers start from other root moves). Without the threads: one thread, or the root split below (4+ cores).
 const MT_CFG = { 25: { exact: 18, wld: 20 }, 26: { exact: 18, wld: 20 }, 27: { exact: 18, wld: 20 }, 28: { exact: 20, wld: 22 }, 29: { exact: 22, wld: 24 }, 30: { exact: 22, wld: 24 }, 31: { exact: 22, wld: 24 }, 32: { exact: 23, wld: 24, wtry: 27, xtry: 25 }, 33: { exact: 23, wld: 25, wtry: 28, xtry: 25 }, 34: { exact: 23, wld: 25, wtry: 28, xtry: 25 }, 35: { exact: 24, wld: 26, wtry: 29, xtry: 26 }, 36: { exact: 23, wld: 25, wtry: 32, xtry: 28 } };   // the helpers' settings (engine.js LEVELS)
 const MTP = window.MTEngine ? MTEngine.use({
-  wasm: 'engine_mt.wasm?v=11', lead: 'mt-worker.js?v=22', helper: 'mt-worker.js?v=22', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
+  wasm: 'engine_mt.wasm?v=12', lead: 'mt-worker.js?v=23', helper: 'mt-worker.js?v=23', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => Date.now() } }),
   after: async (X, mem, ws) => {
     if (X.w_defer) X.w_defer(); X.init();   // (the tables in the shared memory, once; w_defer: the weights get memory of their size when they come — engine.c w_alloc)

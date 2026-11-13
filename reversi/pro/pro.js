@@ -2,7 +2,7 @@
 // The page is made cross-origin isolated by coi-sw.js (SharedArrayBuffer); without it, one thread (the normal engine).
 (() => {
   'use strict';
-  const VER = '?v=21';
+  const VER = '?v=22';
   const LANG = (() => { try { return (localStorage.getItem('aicoding-lang') || 'ja') === 'ja' ? 'ja' : 'en'; } catch (e) { return 'ja'; } })();
   const T = {
     ja: { back: '← リバーシ', ttl: '最強解析', depth: '深さ', nps: '局面/秒', threads: 'スレッド', sel: 'スレッド数', ana: '解析', stop: '停止', play: 'AIに指させる',
@@ -86,7 +86,7 @@
       await new Promise((res, rej) => {
         w.onmessage = e => { if (e.data.type === 'mtready') res(); };
         w.onerror = rej;
-        w.postMessage({ type: 'mtinit', module: MT.module, mem: MT.mem, tls: MT.base + id * SLOT, top: MT.base + id * SLOT + SLOT - 16, ctl: MT.ctl });
+        w.postMessage({ type: 'mtinit', module: MT.module, mem: MT.mem, id, tls: MT.base + id * SLOT, top: MT.base + id * SLOT + SLOT - 16, ctl: MT.ctl });
       });
       w.postMessage({ type: 'weights', buffer: MT.weights.buffer.slice(0), nphase: MT.weights.nphase });
       MT.workers.push(w);
@@ -115,7 +115,7 @@
   const stopMT = () => { if (MT.X) { Atomics.store(MT.ctl, 0, 1); MT.X.mt_stop(1); } };
   let FB = null;
   async function goFB(time) {
-    if (!FB) { FB = new Worker('../engine.js?v=69'); const wt = await loadWeights(); FB.postMessage({ type: 'weights', buffer: wt.buffer, nphase: wt.nphase }); }
+    if (!FB) { FB = new Worker('../engine.js?v=70'); const wt = await loadWeights(); FB.postMessage({ type: 'weights', buffer: wt.buffer, nphase: wt.nphase }); }
     const { c, me } = replay(line);
     return new Promise(res => { FB.onmessage = e => { if (e.data.type === 'result') res({ ...e.data, me }); }; FB.postMessage({ type: 'think', id: 1, cells: c, toMove: me, opts: { cfg: { depth: 60, exact: 20, wld: 22, mpc: 1 }, time } }); });   // (the old Lv.20 shape by time: Lv.20 reads to a fixed depth since 2026-11-11)
   }

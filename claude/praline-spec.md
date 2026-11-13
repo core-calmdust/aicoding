@@ -54,13 +54,13 @@ wasm の αβ エンジン（`engine_mt.wasm`、`-DMT`）の**仕事を分ける
 | つなぎ | 中身 | 使うゲーム |
 |---|---|---|
 | `PL_VAL`（praline.h の前） | 値の型（窓・最善値・根の値）。既定 `int`。`int` 以外は汎用の atomics（`PL_ALPHA_LOAD`／`PL_ALPHA_STORE`） | 将棋（`double`） |
-| `PL_NO_VALS` ＋ `PL_ROOT_VAL(s, i, v)`／`PL_ROOT_GET(s, j)` | 分割点に根の値の欄を持たず、ゲームが持つ（既定は `s->vals[i]`） | 将棋（`spRootV`、一度に根は1つ）・チェス（根の値を返さない） |
+| `PL_NO_VALS` ＋ `PL_ROOT_VAL(s, i, v)`／`PL_ROOT_GET(s, j)` | 分割点に根の値の欄を持たず、ゲームが持つ（既定は `s->vals[i]`） | 将棋（`spRootV`、一度に根は1つ）・チェス（根の値を返さない）・リバーシ（根は最善手だけ） |
 | `PL_WANT_A` | `spResult` に渡す手を読んだときの alpha を `plA` に（`PL_ROOT_VAL` で「fail-low は値なし」） | 将棋 |
 | `PL_ON_RAISE(s, i)` | 手が分割点の alpha を上げたとき（ロックの中）：その手の下の読み筋を写す・カットしたスレッドの印 | 将棋・チェス |
 | `PL_ON_OPEN(s)`／`PL_ON_CLOSE(s)` | `spRun` が分割点を開くとき／閉じる直前（`stopFlag` は結果の理由）：読み筋の初期化／節の読み筋を `pvTable` へ・他スレッドのカットの履歴ボーナス | 将棋・チェス |
 | `PL_IDLE_HOOK(ms)` | `mt_idle` の入口（状態を戻した後）：別の仕事へ（`return`） | 将棋（`threadId >= ybwMax` は Lazy SMP の `lazyRun`） |
 | `PL_NODES()` | `mt_idle` が返す局面数（既定 `(double)nodes`） | 将棋（32ビット）・チェス（結果の欄にも書く） |
-| `PL_MT_SPLIT` | ゲームが自分の `mt_split` を出す（分割の深さ `splitD` に加えてゲームの設定） | チェス（予想カット節の手数。busy marks はゲームの `mt_busy`） |
+| `PL_MT_SPLIT` | ゲームが自分の `mt_split` を出す（分割の深さ `splitD` に加えてゲームの設定） | チェス（予想カット節の手数。busy marks はゲームの `mt_busy`）・リバーシ（読み切りの分割のマス数・busy marks の深さ／マス数・時計の間隔・分割前に読む手数） |
 | `now()` | ヘッダが使う時計。名前の違うゲームは `#define now() js_now()` | 将棋・チェス |
 
 分割点を開く場所（`search()` の「最初の手を読み終えたら」の分岐、根の `rootSearch`）は、手の生成と順番・枝刈りがゲームごとに違うので**ゲームの `search()` の中**に残す（手は1スレッドのループを最後まで回した順・合法手だけ・枝刈りで落ちる手は落として分割点に並べる）。
@@ -69,7 +69,7 @@ wasm の αβ エンジン（`engine_mt.wasm`、`-DMT`）の**仕事を分ける
 
 | 道具 | 使い方 |
 |---|---|
-| `tools/mtsim/`（`gen.py`・`sim.c`・`simcore.h`・`g_<game>.h`・`dump.js`・`wasm1.js`） | wasm の αβ（シャンチー・チャンギ・チェス・将棋・タフル、アマゾンズ＝評価数の時計・局面は `amazons/tools/mtsim_pos.js`）の「本当に同時」のシミュレーション：全スレッドが一定の局面数ずつ足並みをそろえ、置換表と busy marks の書き込みはその回の終わりまでほかに見えない。`-DSIM_Q=64`（YBW は細かく）、`SIM_SLOW=k`（k 番以降が 2/5 の速さ＝高効率コア）、`SIM_SLOWSET`・`SIM_MIG`。`wasm1.js` は本物の `engine_mt.wasm` の1スレッドの局面数・手。`gen.py` は Praline のヘッダを取り込んでから書き換える |
+| `tools/mtsim/`（`gen.py`・`sim.c`・`simcore.h`・`g_<game>.h`・`dump.js`・`wasm1.js`） | wasm の αβ（シャンチー・チャンギ・チェス・将棋・タフル、リバーシ＝`g_reversi.h` が engine.js の反復深化・読み切りの代わり（`SIM_END`・`SIM_YBWN`）、アマゾンズ＝評価数の時計・局面は `amazons/tools/mtsim_pos.js`）の「本当に同時」のシミュレーション：全スレッドが一定の局面数ずつ足並みをそろえ、置換表と busy marks の書き込みはその回の終わりまでほかに見えない。`-DSIM_Q=64`（YBW は細かく）、`SIM_SLOW=k`（k 番以降が 2/5 の速さ＝高効率コア）、`SIM_SLOWSET`・`SIM_MIG`。`wasm1.js` は本物の `engine_mt.wasm` の1スレッドの局面数・手。`gen.py` は Praline のヘッダを取り込んでから書き換える |
 | `checkers/tools/mtsim/`・`morris/tools/mtsim/`・`fanorona/tools/mtsim/` | 同じ方式のゲーム別版（3つとも `gen.py` が Praline のヘッダを取り込んでから書き換える） |
 | `shared/tools/mtsim.js`・`mtstep.js`・`mtlazy.js`・`nodematch.js` | JavaScript エンジン（mtsplit.js）の見積もり：局面数の時計、歩調合わせ（`--slow K:R`）、Lazy SMP、時間2倍の強さ |
 | `<game>/bench.html`・`bench-all.html` | ユーザーの Mac で測るページ（1・2・4・8・10・14スレッド、同じ深さまでの時間・nps・最善手の一致、「結果をコピー」）。`bench-all.html` で全ゲームをまとめて |
@@ -86,7 +86,7 @@ wasm の αβ エンジン（`engine_mt.wasm`、`-DMT`）の**仕事を分ける
 | タフル（`tafl/`） | C（wasm、NNUE） | **YBW**（3、busy marks なし） | mtengine・**praline（移行済み）**・proset・ponder |
 | モリス（`morris/`） | C（wasm） | **YBW**（3）＋busy marks | mtengine・**praline（移行済み）**・proset |
 | ファノロナ（`fanorona/`、アルケルケは1スレッド） | C（wasm） | **YBW**（3）＋busy marks | mtengine・**praline（移行済み）**・proset |
-| リバーシ（`reversi/`） | C（wasm）＋JS | YBW v4.1（中盤は深さ5、完全読みは14マス） | mtengine・proset・ponder（C は元祖の作り：分割点256個・`CHK_Q`） |
+| リバーシ（`reversi/`） | C（wasm）＋JS | **YBW**（中盤は深さ5、読み切りは12マス）＋10スレッドより先は Lazy SMP（2026-11-13、v5。busy marks は入れたが効かず既定でなし） | mtengine・**praline（2026-11-13、分割点256個・`PL_NO_VALS`・`PL_MT_SPLIT`）**・proset・ponder |
 | 将棋（`shogi/`） | C（wasm、NNUE） | **YBW**（4）＋busy marks＋10スレッドより先は Lazy SMP（`YBW_MAX`） | mtengine・**praline（移行済み、`PL_VAL` double・読み筋・`PL_IDLE_HOOK`）**・proset・ponder |
 | チェス（`chess/`） | C（wasm、NNUE） | **YBW**（6、予想カット節も）＋busy marks＋10スレッドより先は Lazy SMP（2026-11-12、v3。前は YBW 1＋Lazy SMP） | mtengine・**praline（移行済み、読み筋・カットの印・`PL_MT_SPLIT`）**・proset・ponder |
 | 五目並べ（`gomoku/`） | **C（wasm、2026-11-12）**：盤の形・禁手・VCF/VCT・αβ・評価ネットごと `core.c`（`core_simd.wasm`／`core.wasm`、スレッドは `core_mt.wasm`）。JS は予備（`?nowasm`） | **YBW**（4、読み筋の節は2）＋busy marks、解析は候補手を分割点に | mtengine・**praline（2026-11-12）**・proset |
@@ -117,8 +117,8 @@ wasm の αβ エンジン（`engine_mt.wasm`、`-DMT`）の**仕事を分ける
 | 将棋 | YBW（その4の前） | ×2.16 | ×3.59 | ×4.78 | ×4.48 | ×3.31 → その4（YBW 10＋Lazy）で再計測待ち |
 | チェッカー | Lazy＋busy marks（YBW の前） | — | — | ×5.06 | ×5.19 | ×5.81 |
 | ファノロナ | Lazy＋busy marks（YBW の前） | — | — | ×4.39 | ×4.86 | ×4.37 |
-| リバーシ中盤 | YBW v4（v4.1 の前） | ×1.58 | ×2.52 | ×3.45 | ×3.07 | ×2.87 |
-| リバーシ終盤 | YBW v4 | ×1.75 | ×3.81 | ×6.14 | ×6.81 | ×7.35 |
+| リバーシ中盤 | YBW v4（v4.1 の前） | ×1.58 | ×2.52 | ×3.45 | ×3.07 | ×2.87 → v5（Praline、YBW 10＋Lazy）で再計測待ち（`bench.html` と `?prev=1`） |
+| リバーシ終盤 | YBW v4 | ×1.75 | ×3.81 | ×6.14 | ×6.81 | ×7.35 → v5 で再計測待ち |
 | チェス | Lazy SMP（v2 の前） | — | — | ×2.53 | — | ×2.72 → v3（YBW 10＋busy marks＋Lazy）で計測待ち |
 | ウゴルキ／アゴン／コナネ | YBW＋共有（JS） | — | — | ×3.88／×3.32／×2.38 | — | （14 は 8 より遅い） |
 | コナネ | 同上（手伝いの前） | ×1.37 | ×2.23 | ×2.14 | — | ×2.24 |
@@ -231,7 +231,7 @@ JavaScript エンジンは `shared/mtsplit.js`（＋`mttt.js`）、独立な仕�
 ### 移行の判断と次の候補
 - **将棋（第3段で移行済み）**：読み筋を分割点経由で戻す（`pvTable` の写し）・継続履歴の共有・`YBW_MAX`（10スレッドより先の補助は Lazy SMP：`lazyRun`・`gRootSeq`・`gRootP`）がある。Praline に「手が alpha を上げたときのつなぎ（読み筋）」と「Lazy の補助の上限 `YBW_MAX`」（`mt_idle` の入口で `threadId >= ybwMax` なら Lazy の根の読みへ、`mtCheck` で主の根の更新を見る）を足してから移す。将棋の移行と同時に、将棋の12局面で全一致を確かめて入れる（使うゲームのない共通コードは先に入れない）。
 - **チェス（第3段で移行済み）**：YBW の補助は1つだけで、YBW の補助と主が履歴・カウンター手の表を共有し、分割は予想カット節を除く。上の将棋の足し方の後に。
-- **リバーシ**：元祖の作り（分割点256個、`CHK_Q`＝4096局面ごとの確認、完全読みの分割）で、中盤と終盤の2種類の探索に分割点がある。並行して別の作業が `reversi/engine.c` 以外を触っている間は移さない。最後に回す。
+- **リバーシ（2026-11-13 に移行済み、下の「リバーシ」）**：元祖の作り（分割点256個、`CHK_Q`＝4096局面ごとの確認、完全読みの分割）で、中盤と終盤の2種類の探索に分割点がある。最後に回した。
 - **共通にしなかったもの（理由）**：①分割点を開く場所（手の生成・順番・枝刈りがゲームごとに違い、関数にすると1スレッドの読みを変えずに書くのが難しく、性能も落ちうる）、②`timeUp`（ゲームごとに確認の間隔・局面数の上限・`gHit` の見方が違う）、③各スレッドの結果の共有 `gRes`（手の詰め方がゲームごと）、④共有の置換表（局面の鍵と項目の詰め方がゲームごと。作りは同じなので、次の段で `praline_tt.h` にまとめる候補）、⑤スレッドの起動（`mt_stack`・`mt_thread`：ゲームの初期化を呼ぶ。シミュレーションの `gen.py` がこの節を切り取る）。
 
 ### アマゾンズ（2026-11-11）：JS の αβ を C に移して Praline に
@@ -252,6 +252,12 @@ JavaScript エンジンは `shared/mtsplit.js`（＋`mttt.js`）、独立な仕�
 - 盤の形の差分更新・禁手・VCF/VCT・αβ・評価ネットを `gomoku/core.c` に（`core_simd.wasm`／`core.wasm`／`core_mt.wasm`、表と重みは `engine.js` が写す）。1スレッドは JavaScript と 374回の探索（Lv.10〜16 の `think`・深さ固定の `best`・解析・`resist`）で手・値・深さ・局面数が全一致、`core_mt.wasm` の1スレッドも共有の置換表の JavaScript と全一致（`gomoku/tools/check-core.js`）。CPU 時間で約2〜2.8倍（SIMD 版）。
 - つなぎ：分割点に節の `Pos`（約28KB）・各手の順番 `lg`（7手目からの減らし）・相手の脅威 `opp`、`spCutoff` は共有の履歴。各スレッドの状態（勝ち筋の読みの表 4MB）は `mt_thread` の `memory.grow`。分割の深さ4（読み筋の節は2）、busy marks、解析は候補手を深さ2から1つの分割点に。
 - `tools/mtsim`（`g_gomoku.h`、時計は打った手の数、遅らせる書き込みは busy marks だけ）：1手の読み 2／4／8 幾何平均 ×1.44／2.17／2.71（前の JS 版 ×1.40／2.12／2.75）、解析 合計 ×2.02／3.89／5.51（前 ×1.74／2.75／3.80）。詳細は gomoku/MODEL_CARD.md。
+
+### リバーシ（2026-11-13）：最後の移行、YBW 10＋Lazy SMP
+- `reversi/engine.c` の自前の分割点・YBW（v4／v4.1：Praline の元になったコード）を Praline に置き換え、つなぎだけを残した（`engine.c` は 1155 → 1058 行、busy marks・Lazy の分を含む）。共通ヘッダは変えていない（ほかのゲームの `engine_mt.wasm` はそのまま）。つなぎ：分割点に節の局面（P・O）・種類（中盤／読み切り）・各手の返る石・探索の設定（Multi-ProbCut、読み切りの並べ替え、終盤の表の根の空き）、`spLoadPos` はパターン番号をその段に作り直す、`PL_NO_VALS`、`#define stopFlag aborted`、`PL_MT_SPLIT`（`mt_split(d, e, bd, be, chk, sn)`）。`mt_thread(tls, id)` で busy marks の持ち主の番号を受け取るようにした。
+- 設定：中盤の分割の深さ5、読み切りの分割12マス（14 から）、時計の確認 256局面ごと（4096 から）、busy marks は効かず既定でなし、10スレッドより先は Lazy SMP（`engine_mt.wasm` の `mt_lazy`＝自分の分割点を開かない・根の結果はスレッドごと、`engine.js` の `LAZY.ybwHelpers` 9、深さの受け渡しは v3 の `lzPut`／`JMP`）。
+- **一致**：通常版 `engine.wasm` は前処理後のソースが同じ（作り直していない）。`engine_mt.wasm` の1スレッドは `reversi/tools/mt-one.js` の40局面（中盤 MPC あり／なし、`lv.end`、勝敗読み、完全読み）で手・評価値・深さ・局面数が前の配信版と全一致。JS だけの読みも一致。
+- `tools/mtsim`（`g_reversi.h`：engine.js の反復深化・読み切りを C で。中盤15局面・1スレッド300万局面、終盤12局面・20マス）：中盤 2／4／8 ×1.49／2.50／3.35（前 ×1.50／2.41／3.37）、遅いコアあり 8／10／14 ×3.40／3.33／3.36（前 ×3.35／3.13／2.91）。終盤 ×1.70／3.04／5.19（前 ×1.67／2.93／4.87）、遅いコアあり ×5.47／5.45／5.48（前 ×4.72／4.51／4.56）。中盤は余分な局面（8スレッドで1スレッドの約1.9倍）が大きく、同じ速さのコアでは伸びない。詳細は reversi/MODEL_CARD.md「マルチスレッド v5（Praline）」。Mac は `reversi/bench.html` と `?prev=1`（前の `engine_mt_v41.wasm`）で並べて測る。
 
 ---
 

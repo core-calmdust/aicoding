@@ -974,11 +974,13 @@ function splitHelp(pos, empties, id) {
 // control block ([100] the position's key, set by the lead; [101] depth << 24 | move << 18 | score + 2^17). The lead takes
 // a deeper one at the end of each of its depths (and when its time is up) and goes on from there; a helper that falls
 // behind it skips ahead. Without helpers nothing changes (one thread: the same moves and nodes as before).
-const LZ_KEY = 100, LZ_BEST = 101;
+const LZ_KEY = 100, LZ_BEST = 101, LZ_MAXD = 102;   // (LZ_MAXD, 2026-11-13: the lead's deepest midgame depth — a Lazy helper of a
+// fixed-depth level (Lv.25-35) stops there, so the level reads to its depth on any thread count)
 const lzArr = () => { const s = root.REVERSI_SPLIT; return s && s.length >= 104 ? s : null; };
 const lzKey = pos => (Math.imul(pos[0] ^ 0x9E3779B9, 0x85EBCA6B) ^ Math.imul(pos[1] + 0x7F4A7C15, 0xC2B2AE35) ^ Math.imul(pos[2] ^ 0x165667B1, 0x27D4EB2F) ^ Math.imul(pos[3] + 0x61C88647, 0x9E3779B1)) | 1;
 function lzPut(L, k, d, mv, sc) {
   if (Atomics.load(L, LZ_KEY) !== k || mv < 0 || d > 127) return;
+  { const lim = Atomics.load(L, LZ_MAXD); if (lim > 0 && d > lim) return; }
   const x = (d << 24) | (mv << 18) | (Math.max(-131000, Math.min(131000, sc)) + 131072);
   for (;;) { const c = Atomics.load(L, LZ_BEST); if ((c >>> 24) >= d) return; if (Atomics.compareExchange(L, LZ_BEST, c, x) === c) break; }
   if (WX && WX.mt_jump_set && Atomics.load(L, LZ_KEY) === k) WX.mt_jump_set(d);   // (the lead's search of depth d stops at once: engine.c jumpAt)
@@ -995,7 +997,11 @@ function lzGet(L, k) {
 // 'ybw' (2026-11-10, MODEL_CARD.md「マルチスレッド v4」): no Lazy SMP — the helpers wait in engine.c mt_idle and take the
 // remaining moves of the nodes whose first move is done (Young Brothers Wait split points, midgame and solver, the root too:
 // rootPVS → root_mt); the lead's think is the only search. 'mix' and the others: Lazy SMP (+ rootSplit / splitHelp in the solve).
-const LAZY = { plan: 'ybw', idle: true };   // (idle: splitHelp's help on the root moves still being solved)
+// (2026-11-13, v5 Praline, MODEL_CARD.md「マルチスレッド v5（Praline）」) ybwHelpers: in 'ybw', the helpers past the first 9
+// (threads 11-14 of a 14-core Mac) are Lazy SMP — they deepen the root on their own ('mix' above, engine_mt.wasm mt_lazy: no
+// split points of their own) and hand a finished depth to the lead (lzPut / JMP); the YBW threads never wait for them (a
+// thread on an efficiency core holds nobody up). As chess / shogi (YBW 10 + Lazy).
+const LAZY = { plan: 'ybw', idle: true, ybwHelpers: 9 };   // (idle: splitHelp's help on the root moves still being solved)
 const ybwOn = () => LAZY.plan === 'ybw' && WON && !!WX.root_mt && !!root.REVERSI_SPLIT;
 function helperPlan(id) {
   if (LAZY.plan === 'rot') return { rk: id, r1: 0, d0: 0 };
@@ -1162,8 +1168,10 @@ function think(cells, toMove, opts, onProgress) {
     }
   }
   const empties = 64 - pc(pl | ol) - pc(ph | oh);
-  if (opts.rot && ybwOn()) {   // a helper (YBW): take moves at the lead's split points until the pool stops the threads
-    nodes = WX.mt_idle();
+  const lazyH = !!(opts.rot && ybwOn() && WX.mt_lazy && opts.rot > LAZY.ybwHelpers);   // (a Lazy SMP helper past the YBW ones: v5)
+  if (WON && WX.mt_lazy) WX.mt_lazy(lazyH ? 1 : 0);
+  if (opts.rot && ybwOn() && !lazyH) {   // a helper (YBW): take moves at the lead's split points until the pool stops the threads
+    nodes = WX.mt_idle(0, 1);   // (Praline: no time limit, a new job)
     return { move: -1, score: 0, depth: 0, nodes, ms: Date.now() - t0 };
   }
   if (!opts.rot && WON && WX.tt_new) WX.tt_new();   // (engine_mt.wasm: a new age for the shared table's entries)
@@ -1224,13 +1232,14 @@ function think(cells, toMove, opts, onProgress) {
   const LZ = !variety && lzArr(), lzk = LZ ? lzKey(pos) : 0;   // (threads: the helpers' deeper midgame results)
   const HP = opts.rot ? helperPlan(opts.rot) : null;   // (a helper thread: how it differs from the lead)
   if (WON && WX.set_rot1) WX.set_rot1(HP ? HP.r1 : 0);
-  if (LZ && !opts.rot) { Atomics.store(LZ, LZ_KEY, lzk); Atomics.store(LZ, LZ_BEST, 0); if (WX && WX.mt_jump_reset) WX.mt_jump_reset(); }
+  if (LZ && !opts.rot) { Atomics.store(LZ, LZ_KEY, lzk); Atomics.store(LZ, LZ_BEST, 0); Atomics.store(LZ, LZ_MAXD, doExact ? Math.min(maxDepth, 10) : maxDepth); if (WX && WX.mt_jump_reset) WX.mt_jump_reset(); }
+  const lzLim = m => { if (!LZ || !opts.rot || Atomics.load(LZ, LZ_KEY) !== lzk) return m; const x = Atomics.load(LZ, LZ_MAXD); return x > 0 ? Math.min(m, x) : m; };   // (a helper: the lead's depth)
   const JMP = LZ && !opts.rot && !variety && WX && WX.mt_jump_at ? WX.mt_jump_at : null;   // (the lead: a depth a helper has finished is given up at once, 2026-11-09)
   let partial = false;
   try {
     const midMax = doExact ? Math.min(maxDepth, 10) : maxDepth;
     const startD = Math.min((doExact ? 2 : 1) + (opts.d0 ?? (HP ? HP.d0 : 0)), midMax);   // d0: a helper thread starting a ply ahead (pro/)
-    for (let d = startD; d <= midMax; d++) {
+    for (let d = startD; d <= lzLim(midMax); d++) {
       let ordered = orderRoot(moves, prev);
       if (HP && HP.rk && ordered.length > 1) { const k = HP.rk % ordered.length; ordered = ordered.slice(k).concat(ordered.slice(0, k)); }   // helper threads: another first move (Lazy SMP diversity)
       let r;
@@ -1247,7 +1256,7 @@ function think(cells, toMove, opts, onProgress) {
           catch (e) {   // (stopped because a helper finished this depth — not the deadline: take its result, on to the next depth)
             JMP(0);
             const h = e === ABORT && Date.now() <= deadline && !(nodeMax && nodes >= nodeMax) ? lzGet(LZ, lzk) : null;
-            if (!h || h.depth < d) throw e;
+            if (!h || h.depth < d || h.depth > midMax) throw e;
             aborted = false; PART = null;
             result = r = { move: h.move, score: h.score }; depthDone = d = h.depth;
             prev = prev || new Map(); prev.set(h.move, 1e8 + d);
@@ -1265,7 +1274,7 @@ function think(cells, toMove, opts, onProgress) {
       if (LZ && !(variety && !doExact)) {
         if (opts.rot) lzPut(LZ, lzk, d, r.move, r.score);
         const h = lzGet(LZ, lzk);
-        if (h && h.depth > d) {
+        if (h && h.depth > d && (opts.rot || h.depth <= midMax)) {
           if (!opts.rot) { result = r = { move: h.move, score: h.score }; depthDone = d = h.depth; prev.set(h.move, 1e8 + d); }
           else d = Math.max(d, h.depth + ((opts.d0 ?? HP.d0) ? 1 : 0));   // (a helper behind the others: on to their next depth, + d0)
         }
@@ -1295,7 +1304,7 @@ function think(cells, toMove, opts, onProgress) {
   }
   if (LZ && !opts.rot && !doExact) {   // (the time is up: a deeper depth finished by a helper)
     const h = lzGet(LZ, lzk);
-    if (h && (h.depth > depthDone || (partial && h.depth >= depthDone))) { result = { move: h.move, score: h.score }; depthDone = h.depth; }
+    if (h && h.depth <= maxDepth && (h.depth > depthDone || (partial && h.depth >= depthDone))) { result = { move: h.move, score: h.score }; depthDone = h.depth; }
   }
 
   let exactDone = false;
@@ -1315,7 +1324,7 @@ function think(cells, toMove, opts, onProgress) {
         // aspiration window around the midgame estimate
         const g = result ? Math.max(-60, Math.min(60, Math.round(result.score / SCALE))) : 0;
         let lo = g - 3, hi = g + 3;
-        if (opts.rot) splitHelp(pos, empties, opts.rot);   // a helper thread: join the lead's split solve (if it has one)
+        if (opts.rot && !ybwOn()) splitHelp(pos, empties, opts.rot);   // a helper thread: join the lead's split solve (if it has one; YBW: a Lazy helper solves on its own)
         for (;;) {
           r = SPL ? rootSplit(SPL, pos, ordered, lo, hi) : rootPVS(pos, ordered, 0, 'exact', lo, hi);
           const v = r.score / SCALE;
@@ -1335,7 +1344,7 @@ function think(cells, toMove, opts, onProgress) {
     if (tryW) deadline = Math.min(deadline, tw0 + tryMs);
     let wldDone = false;
     try {
-      if (opts.rot) splitHelp(pos, empties, opts.rot);
+      if (opts.rot && !ybwOn()) splitHelp(pos, empties, opts.rot);
       const r = SPL ? rootSplit(SPL, pos, orderRoot(moves, prev), -1, 1) : rootPVS(pos, orderRoot(moves, prev), 0, 'exact', -1, 1);
       wldDone = true;
       if (r.score > 0) result = { move: r.move, score: Math.max(result.score, SCALE) };
@@ -1354,7 +1363,7 @@ function think(cells, toMove, opts, onProgress) {
         const ordered = orderRoot(moves, prev);
         const g = Math.max(-60, Math.min(60, Math.round(result.score / SCALE)));
         let lo = g - 3, hi = g + 3, r;
-        if (opts.rot) splitHelp(pos, empties, opts.rot);
+        if (opts.rot && !ybwOn()) splitHelp(pos, empties, opts.rot);
         for (;;) {
           r = SPL ? rootSplit(SPL, pos, ordered, lo, hi) : rootPVS(pos, ordered, 0, 'exact', lo, hi);
           const v = r.score / SCALE;
