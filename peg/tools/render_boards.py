@@ -329,15 +329,33 @@ def build(g, look):
         put(ma.arr(.5), verde, .85); put(mb.arr(.5), sienna, .85); put(mr.arr(.5), BRASS, .85, 1, .003)
         cm = cup > 0; A[cm] *= (.8 + .2 * (1 - cup[cm]))[..., None]; G[cm] = .3
         gm = (gd < gw) & m; A[gm] = A[gm] * .9; G[gm] = .4
-    elif look == 'art':   # colourful art (2026-11-13): made for the rainbow pieces — two tones like a wooden rainbow toy: pale beech and white paint
+    elif look == 'art':   # colourful art (2026-11-13): white with a spot painting between the holes — small round spots of many colours
+        # on a regular grid (offset half a hole from the holes), quiet enough for the coloured marbles to lead
         u, v = c.u, c.v
-        WH = np.array([1.13, 1.12, 1.08])
-        A[:] = lerp((250, 220, 168), (230, 190, 132), norm01(fbm((N, N), [40, 3, 1], [1, .5, .3], aniso=(1, 9), seed=61)))   # pale beech, a faint grain
+        WH = np.array([1.14, 1.13, 1.1]); A[:] = WH; G[:] = .3
+        SP = [(232, 74, 92), (246, 160, 60), (250, 214, 64), (150, 206, 92), (60, 170, 120), (60, 190, 196), (64, 140, 222), (60, 70, 160), (150, 110, 210), (226, 120, 180), (176, 150, 120), (110, 116, 120), (238, 170, 160), (190, 220, 170), (160, 200, 236), (90, 60, 80)]
+        rr_ = np.random.default_rng(5)
+        H0 = np.array(g['holes'], np.float32)
+        xs = np.arange(math.floor(-g['size'] / 2), math.ceil(g['size'] / 2) + 1) + .5
+        pts_ = [(x, y) for x in xs for y in xs]
+        if tri:   # (the triangle: the spots between its holes — the middle of each small triangle of three holes)
+            pts_ = []
+            for i1, (x1, y1) in enumerate(H0):
+                for i2, (x2, y2) in enumerate(H0):
+                    for i3, (x3, y3) in enumerate(H0):
+                        if i1 < i2 < i3 and max(math.hypot(x1 - x2, y1 - y2), math.hypot(x2 - x3, y2 - y3), math.hypot(x1 - x3, y1 - y3)) < 1.05: pts_.append(((x1 + x2 + x3) / 3, (y1 + y2 + y3) / 3))
+        face = m & (ed > (gc + gw + .12 if not tri else .45))
+        sp = np.zeros((N, N, 3), np.float32); spm = np.zeros((N, N), bool)
+        for x, y in pts_:
+                if not tri and math.hypot(x, y) > g['gr'] - gw - .35: continue
+                if np.min(np.hypot(H0[:, 0] - x, H0[:, 1] - y)) < CUP_R + (.12 if tri else .2): continue
+                col = np.array(SP[rr_.integers(len(SP))], np.float32) / 255 * 1.08
+                d = np.hypot(u - x, v - y) < (.13 if tri else .2); d &= face; A[d] = col
         G[:] = .3
-        rimz = m & (ed < (gc - gw if not tri else .2)) & (gd >= gw); A[rimz] = WH; G[rimz] = .35       # the turned rim painted white
-        put(line(inner, .05), WH, .35)                                                                  # a white band round the face
-        gm = (gd < gw) & m; A[gm] = WH * .94
-        cm = cup > 0; A[cm] *= (.78 + .22 * (1 - cup[cm]))[..., None]; G[cm] = .25
+        rimz = m & (ed < (gc - gw if not tri else .2)) & (gd >= gw); A[rimz] = WH
+        put(line(inner, .012), np.array([.8, .8, .8]), .3)
+        gm = (gd < gw) & m; A[gm] = WH * .93
+        cm = cup > 0; A[cm] *= (.86 + .14 * (1 - cup[cm]))[..., None]; G[cm] = .2
     elif look == 'pop':   # pop art (2026-11-13): hearts everywhere, painted by hand (brushy fill, a wobbly thick black outline), the big one in the middle
         H[:] = np.where(m, .5 * smooth_step(ed, 0, .05), 0)
         u, v = c.u, c.v
@@ -347,15 +365,15 @@ def build(g, look):
         brush = norm01(fbm((N, N), [1.2, .5], [1, .6], aniso=(1, 6), seed=29))   # brush streaks
         PAL = [np.array([.95, .14, .2]), np.array([1.05, .45, .62]), np.array([1.02, .78, .2]), np.array([.25, .5, 1.0])]
         def heart(cx, cy, s, col, rot=0):
-            pts = []
-            for t in np.linspace(0, 2 * math.pi, 90):
+            pts = []; ph1, ph2 = rr_.uniform(0, 6, 2)
+            for t in np.linspace(0, 2 * math.pi, 180):
                 x, y = s * 16 * math.sin(t) ** 3 / 17, -s * (13 * math.cos(t) - 5 * math.cos(2 * t) - 2 * math.cos(3 * t) - math.cos(4 * t)) / 17
-                w = 1 + rr_.normal(0, .025); x, y = rot_(x * w, y * w, rot); pts.append((cx + x, cy + y))
+                w = 1 + .018 * math.sin(t * 3 + ph1) + .012 * math.sin(t * 5 + ph2); x, y = rot_(x * w, y * w, rot); pts.append((cx + x, cy + y))
             fm = Image.new('L', (N, N), 0); ImageDraw.Draw(fm).polygon([P(*p) for p in pts], fill=255)
             f = (np.array(fm.filter(ImageFilter.GaussianBlur(1.2))) > 127) & m
             # hand-painted: the colour a little uneven along the brush, a few bare streaks, slightly inside the outline
-            A[f] = col * (.88 + .16 * brush[f])[..., None]; bare = f & (brush > .9); A[bare] = A[bare] * .5 + .5
-            off = [(p[0] + rr_.normal(0, .02), p[1] + rr_.normal(0, .02)) for p in pts]
+            A[f] = col * (.9 + .12 * brush[f])[..., None]
+            q1 = rr_.uniform(0, 6); off = [(p[0] + .025 * math.sin(k * .07 + q1), p[1] + .025 * math.cos(k * .05 + q1)) for k, p in enumerate(pts)]   # (the line a touch off the fill, as by hand)
             dr.line([P(*p) for p in off + off[:1]], fill=255, width=W, joint='curve')
         def rot_(x, y, a): return x * math.cos(a) - y * math.sin(a), x * math.sin(a) + y * math.cos(a)
         heart(0, .15 if not tri else .7, (1.7 * g['R'] / 4.3) if not tri else 1.25, PAL[0])
@@ -368,7 +386,7 @@ def build(g, look):
             if any(math.hypot(x - a, y - b) < (r + s_) * 1.05 for a, b, r in placed): continue
             placed.append((x, y, s_)); heart(x, y, s_, PAL[len(placed) % 4], rr_.uniform(-.5, .5))
             if len(placed) > 26: break
-        ln = np.array(im) > 127; A[m & ln] = .03
+        la = np.array(im.filter(ImageFilter.GaussianBlur(1.1)), np.float32) / 255; la[~m] = 0; A[:] = A * (1 - la[..., None]) + .03 * la[..., None]   # (soft line edges)
         rimz = m & (ed < (gc - gw if not tri else .2)) & (gd >= gw); A[rimz] = np.array([.95, .14, .2])
         for at, w in ((.035, .035), ((gc - gw) if not tri else .2, .04), (inner, .04)):
             A[m & (np.abs(ed - at) < w)] = 0.03
