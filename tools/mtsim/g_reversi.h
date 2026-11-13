@@ -7,7 +7,7 @@
 //       -DPOS_FILE='"pos_reversi.txt"' -DSIM_Q=64 -DSIM_STAT -o sim_reversi sim.c -lpthread -lm -lz
 //   (the endgame: -DPOS_FILE='"pos_reversi_end.txt"' -o sim_reversi_end, run with SIM_END=1; the engine before Praline,
 //    v4.1: the same without -DSIM_STAT)
-// SIM_SPLIT=d,e,bd,be,chk,sn: engine.c mt_split (the midgame's split depth, the solver's split empties, the busy marks' depth /
+// SIM_SPLIT=d,e,bd,be,chk,sn[,mtv]: engine.c mt_split (the midgame's split depth, the solver's split empties, the busy marks' depth /
 // empties, the clock's interval, the moves before a split at a null-window node); SIM_YBWN=k: the helpers past k Lazy SMP;
 // SIM_W: another weights file.
 #include "eng_reversi.c"
@@ -34,9 +34,13 @@ static void g_global_init(void) {
   set_end(12);   // (engine.js END_SW)
   gMode = getenv("SIM_END") ? atoi(getenv("SIM_END")) : 0;
   if (getenv("SIM_SPLIT")) {
-    int d = 0, e = 0, bd = 0, be = 0, ck = 0, sn = 0; sscanf(getenv("SIM_SPLIT"), "%d,%d,%d,%d,%d,%d", &d, &e, &bd, &be, &ck, &sn);
+    int d = 0, e = 0, bd = 0, be = 0, ck = 0, sn = 0, mtv = 0; sscanf(getenv("SIM_SPLIT"), "%d,%d,%d,%d,%d,%d,%d", &d, &e, &bd, &be, &ck, &sn, &mtv);
 #ifdef PRALINE_YBW_H
+#ifdef RV_MT_SPLIT7   /* (v6: mtv 5 = the split points as v5, MODEL_CARD.md「マルチスレッド v6」) */
+    mt_split(d, e, bd, be, ck, sn, mtv);
+#else
     mt_split(d, e, bd, be, ck, sn);
+#endif
 #else
     mt_split(d, e);
 #endif
