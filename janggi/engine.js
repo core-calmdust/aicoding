@@ -269,8 +269,10 @@ function jsSearch(p, d, a, b, ply, tEnd) {
 function jsValues(p, depth, ms) { const tEnd = Date.now() + (ms || 2000); return p.moves().map(m => ({ m, v: -jsSearch(p.clone().play(m), depth - 1, -Infinity, Infinity, 1, tEnd) })).sort((a, b) => b.v - a.v); }
 
 // ---------------------------------------------------------------- WebAssembly side
-let WX = null;
-function wNN() {}
+let WX = null, wNNReady = false, wNNCur = false;
+// NNUE (engine_simd.wasm + nnue.bin.gz, tools/nnue/; only once a network is shipped — NET below): the search levels, analysis
+// and the coach; the noisy fixed-depth levels keep the hand evaluation they were tuned with
+function wNN(on) { on = !!(on && wNNReady); if (on !== wNNCur && WX) { WX.xq_nnue(on ? 1 : 0); WX.new_game(); wNNCur = on; } }
 const wIO = () => new Int32Array(WX.memory.buffer, WX.io_ptr(), 8192);
 const toC = m => mFrom(m) | (mTo(m) << 7), fromC = x => mv(x & 127, (x >> 7) & 127);   // (a pass: from == to on both sides)
 // the setup buffer of engine.c setup(): [90 point codes, side, nmoves, moves..., nexcl, excluded...] (also the page's helper threads)
@@ -403,24 +405,50 @@ const API = { P1, P2, WIN, WINT, DRAW_PLIES, KING, ADVISOR, ELEPHANT, HORSE, ROO
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 else if (typeof window !== 'undefined') window.JanggiEngine = API;
 else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
-  const V = 'v=3';
+  const V = 'v=4';
+  const NET = '';   // the version of nnue.bin.gz ('' = no network yet: the hand evaluation; claude/janggi-spec.md「NNUE の準備」)
   // ?…&mt=1: the lead thread of the page's multi-thread pool (shared/mtengine.js): engine_mt.wasm on the shared memory sent with
   // the first message ('mtinit'); the helpers (mt-helper.js) search the same root meanwhile. The rest is the usual API.
   const MTL = /[?&]mt=1\b/.test(self.location.search || '');
   let readyP = null;
   if (MTL) {
     readyP = new Promise(res => self.addEventListener('message', function f(e) { if (e.data && e.data.type === 'mtinit') { self.removeEventListener('message', f); res(e.data); } }))
-      .then(m => {
+      .then(async m => {
         const x = new WebAssembly.Instance(m.module, { env: { memory: m.mem, now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } }).exports;
         x.mt_stack(m.top); x.mt_thread(m.tls, 0);
         WX = Object.assign({}, x, { memory: m.mem });   // (the memory is imported: WX.memory as in the normal build)
+        const net = await fetchNet().catch(() => null);
+        if (net) loadNet(net);   // (into the shared memory: the helpers use the same network)
         self.postMessage({ type: 'mtready' });
       }).catch(err => { WX = null; self.postMessage({ type: 'mtready', error: String(err && err.message || err) }); });
   } else if (typeof WebAssembly === 'object' && typeof fetch === 'function') {
     const imp = { env: { now: () => Date.now(), progress: d => { if (progressCb) progressCb(d); } } };
-    const url = new URL('engine.wasm?' + V, self.location.href);
-    readyP = (WebAssembly.instantiateStreaming ? WebAssembly.instantiateStreaming(fetch(url), imp).catch(() => fetch(url).then(r => r.arrayBuffer()).then(b => WebAssembly.instantiate(b, imp))) : fetch(url).then(r => r.arrayBuffer()).then(b => WebAssembly.instantiate(b, imp)))
-      .then(r => { WX = r.instance.exports; }).catch(() => { WX = null; });
+    const simd = (() => { try { return WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11])); } catch (e) { return false; } })();
+    // the network first: with one (and SIMD) the engine_simd.wasm build, else engine.wasm and the hand evaluation
+    readyP = (simd ? fetchNet().catch(() => null) : Promise.resolve(null)).then(net => {
+      const url = new URL((net ? 'engine_simd.wasm?' : 'engine.wasm?') + V, self.location.href);
+      return (WebAssembly.instantiateStreaming ? WebAssembly.instantiateStreaming(fetch(url), imp).catch(() => fetch(url).then(r => r.arrayBuffer()).then(b => WebAssembly.instantiate(b, imp))) : fetch(url).then(r => r.arrayBuffer()).then(b => WebAssembly.instantiate(b, imp)))
+        .then(r => { WX = r.instance.exports; if (net && WX.xq_nnue) loadNet(net); });
+    }).catch(() => { WX = null; });
+  }
+  async function fetchNet() {
+    if (!NET || typeof DecompressionStream === 'undefined') return null;
+    const res = await fetch(new URL('nnue.bin.gz?v=' + NET, self.location.href)); if (!res.ok) return null;
+    let buf = new Uint8Array(await res.arrayBuffer());
+    if (buf[0] === 0x1f && buf[1] === 0x8b) buf = new Uint8Array(await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
+    return buf;
+  }
+  function loadNet(buf) {   // the file of tools/nnue/ (the format of xiangqi's): "NUEX", H, 1260, int16 W1, int32 B1, int16 W2, int32 B2
+    try {
+      const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength), H = dv.getInt32(4, true);
+      if (dv.getUint32(0, true) !== 0x5845554E || dv.getInt32(8, true) !== 1260 || H !== (WX.xq_h ? WX.xq_h() : 256)) return;
+      const IN = 1260, b = buf.buffer; let o = buf.byteOffset + 12;
+      new Int16Array(WX.memory.buffer, WX.xq_w1_ptr(), IN * H).set(new Int16Array(b.slice(o, o + IN * H * 2))); o += IN * H * 2;
+      new Int32Array(WX.memory.buffer, WX.xq_b1_ptr(), H).set(new Int32Array(b.slice(o, o + H * 4))); o += H * 4;
+      new Int16Array(WX.memory.buffer, WX.xq_w2_ptr(), 2 * H).set(new Int16Array(b.slice(o, o + H * 4))); o += H * 4;
+      WX.xq_set_b2(dv.getInt32(o - buf.byteOffset, true));
+      wNNReady = true;
+    } catch (e) { wNNReady = false; }
   }
   let queue = Promise.resolve();
   self.onmessage = e => {

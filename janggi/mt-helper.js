@@ -3,8 +3,8 @@
 // mt_idle, Young Brothers Wait, 2026-11-10; xiangqi/MODEL_CARD.md「マルチスレッド その3：YBW」; an engine_mt.wasm without it:
 // Lazy SMP, the same root position again and again — the threads
 // share the transposition table), until the page stops every thread (ctl[0] = 1 and mt_stop).
-// The job: { io: the setup buffer of engine.c setup() (JanggiEngine.setupIO) }.
-let X = null, mem = null, ctl = null, cnt = null, id = 0;
+// The job: { io: the setup buffer of engine.c setup() (JanggiEngine.setupIO), nn: 1 = the NNUE evaluation like the lead }.
+let X = null, mem = null, ctl = null, cnt = null, id = 0, net = false;
 self.onmessage = e => {
   const m = e.data;
   if (m.type === 'mtinit') {
@@ -12,6 +12,7 @@ self.onmessage = e => {
       mem = m.mem; ctl = m.ctl; cnt = m.cnt; id = m.id;
       X = new WebAssembly.Instance(m.module, { env: { memory: mem, now: () => Date.now(), progress: () => {} } }).exports;
       X.mt_stack(m.top); X.mt_thread(m.tls, m.id);
+      net = !!X.xq_w2_ptr && new Int16Array(mem.buffer, X.xq_w2_ptr(), 2 * X.xq_h()).some(v => v);   // (the lead has loaded the network into the shared memory)
       self.postMessage({ type: 'mtready' });
     } catch (err) { self.postMessage({ type: 'mtready', error: String(err && err.message || err) }); }
     return;
@@ -19,6 +20,7 @@ self.onmessage = e => {
   if (m.type === 'help') {
     let nodes = 0;
     try {
+      if (X.xq_nnue) X.xq_nnue(m.nn && net ? 1 : 0);
       if (X.mt_idle) {   // (back every 250 ms while it has nothing to do: its nodes for the page's nps readout)
         for (let f = 1; !Atomics.load(ctl, 0); f = 0) { nodes += X.mt_idle(250, f); cnt[id] = nodes; }
         self.postMessage({ type: 'done', job: m.job, nodes });

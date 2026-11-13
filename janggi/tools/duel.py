@@ -9,7 +9,7 @@ A, B, kind, N, seed = sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[5]), i
 X = [int(v) for v in (sys.argv[4].split(':') * 2)[:2]]   # 20 = both, 10:20 = the first build 10, the second 20
 pre = int(sys.argv[7]) if len(sys.argv) > 7 else 4
 rnd = random.Random(seed)
-def start(p): return subprocess.Popen([p, 'serve'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, bufsize=1)
+def start(p): return subprocess.Popen([p.split('@')[0], 'serve'] + p.split('@')[1:], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, bufsize=1)   # build@net.bin: with the NNUE
 E = [start(A), start(B)]
 def ask(e, s):
     e.stdin.write(s + '\n'); e.stdin.flush(); return e.stdout.readline().strip()
