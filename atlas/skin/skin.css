@@ -844,3 +844,6 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-or
 html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order].ng-fit:has(> .credit){position:relative}
 html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order].ng-fit > .credit:not(#_){position:absolute;right:30px;bottom:34px;margin:0!important;text-align:right;font-size:11px;line-height:1.5;max-width:200px;z-index:7}
 html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] .ng-cols > .ng-col::after{bottom:-12px;height:52px}   /* (a deeper frosted band at the panels' foot: PRO's long list visibly runs under it) */
+/* (2026-11-13) the panels' shadow is never washed out by the frosted band over the buttons (it was, while PRO was closed and the
+   panels reached down under it): the panels lie above that band; the dialog does not scroll then (ng-fit), so nothing slides under it */
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order].ng-fit[data-ngt=rules] .ng-cols:not(.ngt-hide){position:relative;z-index:8}

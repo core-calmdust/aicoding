@@ -172,9 +172,13 @@ function init() {
   const mf = (() => { const sm = modal.querySelector('#segMode'); return sm && sm.closest('.field'); })();
   if (mf && mf.parentNode === wrap.parentNode && (wrap.compareDocumentPosition(mf) & Node.DOCUMENT_POSITION_FOLLOWING)) wrap.before(mf);
   const items = [...c1.children, ...c2.children].filter(e => own(e) && e !== mf);   // the settings in their original order
-  const ord = (modal.dataset.nglOrder || '').split(',').filter(Boolean);   // a game's own order of the panels' settings (data-ngl-order="fLevel,fColor,…", 2026-11-13)
-  const bar = ord.indexOf('|');   // ('|' in the order: the split between the two panels, fixed — e.g. shogi's level alone on the left, 2026-11-13)
-  if (ord.length) items.sort((a, b) => { const i = ord.indexOf(a.id), j = ord.indexOf(b.id); return (i < 0 ? 99 : i) - (j < 0 ? 99 : j); });
+  let ord = (modal.dataset.nglOrder || '').split(',').filter(Boolean);   // a game's own order of the panels' settings (data-ngl-order="fLevel,fColor,…", 2026-11-13)
+  let bar = ord.indexOf('|');   // ('|' in the order: the split between the two panels, fixed — e.g. shogi's level alone on the left, 2026-11-13)
+  const items0 = items.slice();
+  const order = () => { const o = (modal.dataset.nglOrder || '').split(',').filter(Boolean); if (!o.length && !ord.length) return; ord = o; bar = ord.indexOf('|');   // (read again on each pass: a game may change it with the mode)
+    items.length = 0; items.push(...items0);
+    if (ord.length) items.sort((a, b) => { const i = ord.indexOf(a.id), j = ord.indexOf(b.id); return (i < 0 ? 99 : i) - (j < 0 ? 99 : j); }); };
+  order();
   const side = ord.length ? null : items.find(e => e.id === 'fColor'); if (side && side.parentNode === c2) { items.splice(items.indexOf(side), 1); const i = items.findIndex(e => e.parentNode === c1 && !/Info$/.test(e.id)); items.splice(i < 0 ? 0 : i, 0, side); }   // your side first, as in every game
   // (a field in a column hidden as empty has no height: it still counts as shown when it is not hidden itself — otherwise a
   //  column emptied by a mode with few settings (レッスン…) never came back, 2026-11-10)
@@ -188,6 +192,7 @@ function init() {
     if (busy || !ov.classList.contains('show') || (modal.dataset.ngt && modal.dataset.ngt !== 'rules')) return;
     busy = true;
     try {
+      order();
       if (mf && wrap.contains(mf)) wrap.before(mf);   // the mode row always above the panels (reversi keeps it in a column)
       const vis = items.filter(shown); if (!vis.length && items.length) return;
       const h = vis.map(e => e.offsetHeight + 20 - [...e.querySelectorAll('.pro-panel:not(.hidden), #fisPick:not(.hidden)')].reduce((a, p) => a + p.offsetHeight, 0)), tot = h.reduce((a, b) => a + b, 0);   // (an open PRO panel / the フィッシャー presets do not move the settings to the other side, 2026-11-13)
@@ -204,7 +209,7 @@ function init() {
   }
   let q = 0;
   const later = () => { if (q) return; q = requestAnimationFrame(() => { q = 0; balance(); }); };
-  new MutationObserver(later).observe(modal, { subtree: true, attributes: true, attributeFilter: ['class', 'hidden', 'style', 'data-ngt'] });
+  new MutationObserver(later).observe(modal, { subtree: true, attributes: true, attributeFilter: ['class', 'hidden', 'style', 'data-ngt', 'data-ngl-order'] });
   new MutationObserver(later).observe(ov, { attributes: true, attributeFilter: ['class'] });
   addEventListener('resize', later);
   later();
