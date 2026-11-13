@@ -70,7 +70,7 @@ let WA = null;
 function loadCore() {
   try {
     let b64 = null;
-    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('core-wasm.js?v=2'); b64 = self.KN_WASM; }
+    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('core-wasm.js?v=3'); b64 = self.KN_WASM; }
     else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') { const g = globalThis, had = 'self' in g, old = g.self; g.self = g; try { require(require('path').join(__dirname, 'core-wasm.js')); b64 = g.KN_WASM; } finally { if (had) g.self = old; else delete g.self; } }
     if (!b64 || (typeof process !== 'undefined' && process.env && process.env.KN_NOWASM)) return;
     const bin = typeof atob === 'function' ? Uint8Array.from(atob(b64), c => c.charCodeAt(0)) : Buffer.from(b64, 'base64');
@@ -276,13 +276,15 @@ const LEVELS = [null,
   { d: 4, noise: 8 },                    // 9
   { d: 4, noise: 4 },                    // 10
   { d: 5, noise: 3 },                    // 11
-  { s: 1, nk: 4 },                       // 12  (about 4,000 positions per move)
-  { s: 1, nk: 8 },                       // 13
-  { s: 1, nk: 15 },                      // 14
-  { s: 1, nk: 28 },                      // 15
-  { s: 1, nk: 45 },                      // 16
-  { s: 1, nk: 70 },                      // 17
-  { s: 1, nk: 100 },                     // 18
+  // (2026-11-13, search v2: Lv.12-18 the same strength with fewer positions — x0.8 / x0.65 of 4, 8, 15, 28, 45, 70, 100; the
+  //  levels by time are stronger. claude/konane-spec.md「探索 v2」)
+  { s: 1, nk: 3.2 },                     // 12  (about 3,200 positions per move)
+  { s: 1, nk: 6.5 },                     // 13
+  { s: 1, nk: 10 },                      // 14
+  { s: 1, nk: 18 },                      // 15
+  { s: 1, nk: 29 },                      // 16
+  { s: 1, nk: 45 },                      // 17
+  { s: 1, nk: 65 },                      // 18
   { s: 1, ms: 1200 },                    // 19
   { s: 1, ms: 2500 },                    // 20
   // the top levels (2026-11-09, common rule「最上位のレベルの追加」): twice the time per step up to 20 s, every thread of the
@@ -375,9 +377,9 @@ function search(pos, d, a, b, ply) {
   TT.set(key, { h2: pos.h2, d, v: sv, f: best <= a0 ? 2 : best >= b ? 1 : 0, m: bm });
   return best;
 }
-function rootValues(pos, d) {
+function rootValues(pos, d, v2) {   // v2: the analysis reads with search v2 (core.c); the levels by depth as before
   const A = abCore();
-  if (A) { abRoot(A, pos); const k = A.x.ab_values(d); abBack(A); const out = []; for (let i = 0; i < k; i++) out.push({ m: A.aom[i], v: A.aov[i] }); return out; }
+  if (A) { abRoot(A, pos); const k = v2 && A.x.ab_values2 ? A.x.ab_values2(d, 1) : A.x.ab_values(d); abBack(A); const out = []; for (let i = 0; i < k; i++) out.push({ m: A.aom[i], v: A.aov[i] }); return out; }
   const L = orderMoves(pos, pos.moves(), -1, 0), out = [];
   for (const m of L) {
     const q = pos.clone().play(m);
@@ -466,7 +468,7 @@ function analyze(start, moves, ms, onProgress, rule) {
   let list = [], depth = 0;
   const n = pos.moves().length;
   for (let d = 1; d <= 40; d++) {
-    const vals = rootValues(pos, d);
+    const vals = rootValues(pos, d, 1);
     if (stop && vals.length < n) break;
     list = vals.map(e => ({ ...e, kind: kindOf(e.v) })); depth = d;
     if (onProgress) onProgress(list, d);
