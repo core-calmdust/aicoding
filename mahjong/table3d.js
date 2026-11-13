@@ -9,14 +9,14 @@ const W = 1, H = 1.36, D = 0.78;
 function stoneTex() {
   const S = 512, c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d');
   let seed = 7; const R = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-  const base = g.createLinearGradient(0, 0, S, S); base.addColorStop(0, '#b7a2e0'); base.addColorStop(.5, '#a68ed6'); base.addColorStop(1, '#b3a0dc');
+  const base = g.createLinearGradient(0, 0, S, S); base.addColorStop(0, '#5f3a8c'); base.addColorStop(.5, '#55337f'); base.addColorStop(1, '#5c3889');   // (a deep 袱紗 purple, ユーザー 2026-11-14)
   g.fillStyle = base; g.fillRect(0, 0, S, S);
   for (let i = 0; i < 26; i++) { const x = R() * S, y = R() * S, r = 40 + R() * 140, gr = g.createRadialGradient(x, y, 0, x, y, r), light = R() < .5;
-    gr.addColorStop(0, light ? 'rgba(236,226,255,.28)' : 'rgba(120,92,180,.22)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, S, S); }
+    gr.addColorStop(0, light ? 'rgba(180,150,220,.10)' : 'rgba(40,20,70,.10)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, S, S); }
   const vein = (col, w, blur, n) => { g.save(); g.strokeStyle = col; g.lineWidth = w; g.shadowColor = col; g.shadowBlur = blur; g.lineCap = 'round';
     for (let k = 0; k < n; k++) { let x = R() * S, y = R() * S, a = R() * 6.28; g.beginPath(); g.moveTo(x, y); for (let i = 0; i < 18; i++) { a += (R() - .5) * .9; x += Math.cos(a) * 26; y += Math.sin(a) * 26; g.lineTo(x, y); } g.stroke(); } g.restore(); };
-  vein('rgba(246,240,255,.55)', 2.2, 10, 6); vein('rgba(250,246,255,.8)', .8, 2, 8); vein('rgba(110,80,170,.35)', .7, 1, 10);
-  for (let i = 0; i < 900; i++) { g.fillStyle = `rgba(255,255,255,${.1 + R() * .35})`; g.fillRect(R() * S, R() * S, 1, 1); }
+  vein('rgba(200,180,235,.14)', 2, 10, 4); vein('rgba(220,205,245,.18)', .7, 2, 5);   // (only a hint of stone: ユーザー「素材感強すぎ」)
+  for (let i = 0; i < 300; i++) { g.fillStyle = `rgba(255,255,255,${.04 + R() * .1})`; g.fillRect(R() * S, R() * S, 1, 1); }
   const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; return t;
 }
 // a small studio around the table for the polished surfaces to reflect: a soft ceiling light, a window strip, dark walls
@@ -177,7 +177,7 @@ class Table3D {
     this.envTex = studioEnv();
     const stone = stoneTex();
     this.matBacks = [0, 1, 2, 3].map(k => { const t = stone.clone(); t.needsUpdate = true; t.offset.set(k * .27, k * .41); t.rotation = k * .9; t.center.set(.5, .5);
-      return new THREE.MeshPhysicalMaterial({ map: t, roughness: .2, metalness: 0, clearcoat: 1, clearcoatRoughness: .06, envMap: this.envTex, envMapIntensity: .75 }); });
+      return new THREE.MeshPhysicalMaterial({ map: t, roughness: .3, metalness: 0, clearcoat: .6, clearcoatRoughness: .14, envMap: this.envTex, envMapIntensity: .45 }); });
     this.matBack = this.matBacks[0];
     this.matHi = new THREE.MeshStandardMaterial({ color: 0xfff1b8, roughness: .35, emissive: 0x6a5208, emissiveIntensity: .45 });
     this.setInfo({ round: 0, kyoku: 0, honba: 0, kyotaku: 0, left: 70, scores: [25000, 25000, 25000, 25000], dealer: 0, turn: -1 });
