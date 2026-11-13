@@ -57,7 +57,9 @@
   add('r.time', 'タイム {t}', 'Time {t}', '用时 {t}', '用時 {t}', '시간 {t}', 'Tiempo {t}', 'Temps {t}', 'Tempo {t}', 'Zeit {t}', 'Время {t}', 'Süre {t}', 'Waktu {t}', 'समय {t}', 'الوقت {t}');
   add('r.best', 'ベスト {t}', 'Best {t}', '最佳 {t}', '最佳 {t}', '베스트 {t}', 'Mejor {t}', 'Record {t}', 'Melhor {t}', 'Bestzeit {t}', 'Лучшее {t}', 'En iyi {t}', 'Terbaik {t}', 'सर्वश्रेष्ठ {t}', 'الأفضل {t}');
   add('r.newBest', '自己ベスト更新！', 'New personal best!', '刷新个人最佳！', '刷新個人最佳！', '자기 최고 기록!', '¡Nuevo récord!', 'Nouveau record !', 'Novo recorde!', 'Neue Bestzeit!', 'Новый рекорд!', 'Yeni rekor!', 'Rekor baru!', 'नया रिकॉर्ड!', 'رقم شخصي جديد!');
-  add('b.next', '次のステージ', 'Next stage', '下一关', '下一關', '다음 스테이지', 'Siguiente', 'Suivante', 'Próxima', 'Weiter', 'Дальше', 'Sonraki', 'Berikutnya', 'अगला', 'التالية');
+  add('b.next', '次へ', 'Next', '下一关', '下一關', '다음', 'Siguiente', 'Suivant', 'Próxima', 'Weiter', 'Дальше', 'Sonraki', 'Lanjut', 'अगला', 'التالي');
+  add('b.land', '縦横切り替え', 'Portrait / landscape', '横竖屏切换', '橫直切換', '가로/세로 전환', 'Vertical / horizontal', 'Portrait / paysage', 'Retrato / paisagem', 'Hoch / Quer', 'Книжная / альбомная', 'Dikey / yatay', 'Tegak / mendatar', 'खड़ा / आड़ा', 'عمودي / أفقي');
+  add('msg.hold', 'スマホを横に持ってください', 'Hold your phone sideways', '请把手机横过来', '請把手機橫過來', '휴대폰을 가로로 들어 주세요', 'Sujeta el móvil en horizontal', 'Tenez le téléphone à l’horizontale', 'Segure o celular na horizontal', 'Halte das Handy quer', 'Держите телефон горизонтально', 'Telefonu yan tutun', 'Pegang ponsel mendatar', 'फ़ोन को आड़ा पकड़ें', 'أمسك الهاتف بالعرض');
   add('b.shuffle', 'シャッフル', 'Shuffle', '洗牌', '洗牌', '셔플', 'Barajar', 'Mélanger', 'Embaralhar', 'Mischen', 'Перемешать', 'Karıştır', 'Acak', 'फेंटो', 'خلط');
   add('b.map', '星座マップ', 'Star map', '星座地图', '星座地圖', '별자리 지도', 'Mapa estelar', 'Carte du ciel', 'Mapa estelar', 'Sternkarte', 'Звёздная карта', 'Yıldız haritası', 'Peta bintang', 'तारा मानचित्र', 'خريطة النجوم');
   add('b.start', 'スタート', 'Start', '开始', '開始', '시작', 'Empezar', 'Commencer', 'Começar', 'Start', 'Старт', 'Başla', 'Mulai', 'शुरू', 'ابدأ');
