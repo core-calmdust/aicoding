@@ -73,9 +73,13 @@ static u32 DROPM[2][8][3];    /* [colour][type]: the squares a piece of that typ
 static u32 FILEM[9][3];       /* the squares of a file */
 #define deadEnd(col, t, s) DEADT[col][t][s]
 
-/* zobrist (same xorshift sequence as engine.js) */
-static u32 seed = 0x2545F491;
-static i32 rnd32(void) { seed ^= seed << 13; seed ^= seed >> 17; seed ^= seed << 5; return (i32)seed; }
+/* zobrist: 64 independent bits per key (splitmix64), the low half in *_L and the high half in *_H.
+   (Until 2026-11-14 both halves came from one xorshift32 stream, L then H. Xorshift is linear over GF(2), so every H was
+   the same linear function of its L, and so was the XOR of any set of them: hh was a function of hl and the "64-bit" key
+   held 32 bits. With the table indexed by 20 bits of hl and verified by hh, a probe that met another position's entry
+   took it for its own once in 4096.) */
+static unsigned long long zseed = 0x2545F4914F6CDD1DULL;
+static unsigned long long rnd64(void) { unsigned long long z = (zseed += 0x9E3779B97F4A7C15ULL); z = (z ^ (z >> 30)) * 0xBF58476D1CE4E5B9ULL; z = (z ^ (z >> 27)) * 0x94D049BB133111EBULL; return z ^ (z >> 31); }
 static i32 ZB_L[81 * 32], ZB_H[81 * 32], ZHD_L[2 * 8 * 20], ZHD_H[2 * 8 * 20], ZSIDE_L, ZSIDE_H;
 
 /* ------------------------------------------------------------------ evaluation layout */
@@ -2031,10 +2035,10 @@ EXPORT(init) void init(void) {
   }
   for (int p = 0; p < 32; p++) { NDIRS[p] = 0; for (int d = 0; d < 8; d++) { if (STEP[p * 8 + d]) DIRS[p][NDIRS[p]++] = d; if (SLIDE[p * 8 + d]) DIRS[p][NDIRS[p]++] = d | 8; } }
   lmrInit(2.0);
-  seed = 0x2545F491;
-  for (int i = 0; i < 81 * 32; i++) { ZB_L[i] = rnd32(); ZB_H[i] = rnd32(); }
-  for (int i = 0; i < 2 * 8 * 20; i++) { ZHD_L[i] = rnd32(); ZHD_H[i] = rnd32(); }
-  ZSIDE_L = rnd32(); ZSIDE_H = rnd32();
+  zseed = 0x2545F4914F6CDD1DULL;
+  for (int i = 0; i < 81 * 32; i++) { const unsigned long long r = rnd64(); ZB_L[i] = (i32)r; ZB_H[i] = (i32)(r >> 32); }
+  for (int i = 0; i < 2 * 8 * 20; i++) { const unsigned long long r = rnd64(); ZHD_L[i] = (i32)r; ZHD_H[i] = (i32)(r >> 32); }
+  { const unsigned long long r = rnd64(); ZSIDE_L = (i32)r; ZSIDE_H = (i32)(r >> 32); }
 }
 EXPORT(reset_search) void reset_search(void) { memset(history, 0, sizeof history); memset(killers, 0, sizeof killers); memset(contH, 0, sizeof contH); }
 

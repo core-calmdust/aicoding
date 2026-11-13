@@ -75,13 +75,19 @@ const dropType = m => (m & 127) - 80;
 const mkMove = (f, t, p) => f | (t << 7) | (p << 14);
 
 // ===================================================================== zobrist
+// The two halves of a key must be independent. (Until 2026-11-14 both came from one xorshift32 stream, L then H: xorshift is
+// linear over GF(2), so every H was the same linear function of its L and so was any XOR of them — the "64-bit" key held
+// 32 bits, and the table took another position's entry for its own far too often. engine.c had the same.) The high halves
+// now come from a different, non-linear generator (a counter through the murmur3 finalizer).
 let seed = 0x2545F491;
 function rnd32() { seed ^= seed << 13; seed ^= seed >>> 17; seed ^= seed << 5; return seed | 0; }
+let zc = 0x4F6CDD1D;
+function rndH() { zc = (zc + 0x9E3779B9) | 0; let x = zc; x = Math.imul(x ^ (x >>> 16), 0x85EBCA6B); x = Math.imul(x ^ (x >>> 13), 0xC2B2AE35); return (x ^ (x >>> 16)) | 0; }
 const ZB_L = new Int32Array(81 * 32), ZB_H = new Int32Array(81 * 32);
-for (let i = 0; i < ZB_L.length; i++) { ZB_L[i] = rnd32(); ZB_H[i] = rnd32(); }
+for (let i = 0; i < ZB_L.length; i++) { ZB_L[i] = rnd32(); ZB_H[i] = rndH(); }
 const ZHD_L = new Int32Array(2 * 8 * 20), ZHD_H = new Int32Array(2 * 8 * 20);
-for (let i = 0; i < ZHD_L.length; i++) { ZHD_L[i] = rnd32(); ZHD_H[i] = rnd32(); }
-const ZSIDE_L = rnd32(), ZSIDE_H = rnd32();
+for (let i = 0; i < ZHD_L.length; i++) { ZHD_L[i] = rnd32(); ZHD_H[i] = rndH(); }
+const ZSIDE_L = rnd32(), ZSIDE_H = rndH();
 
 // ===================================================================== evaluation layout
 // perspective c: rotate board 180 for white, then mirror left-right so the own king is on files 9..5 side (col <= 4)
