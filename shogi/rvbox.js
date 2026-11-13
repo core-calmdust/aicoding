@@ -97,10 +97,11 @@ html.rvb-study .rvb-boardring{outline:3px solid rgba(232,163,60,.75);outline-off
 html.rvb-study .rvb-boardflag{font-size:13.5px}
 /* (2026-11-13) the candidate list as reversi's box: column heads, the rank in a round badge (the best one in the accent colour),
    rows without a fill until hovered */
-.rvbox .rvb-hd,.rvbox .rvb-row{grid-template-columns:24px 6.4em 62px minmax(0,1fr);gap:8px}
+.rvbox .rvb-hd,.rvbox .rvb-row{grid-template-columns:24px 100px 64px minmax(0,1fr)!important;gap:8px!important;box-sizing:border-box}
+.rvbox .rvb-hd{border:1px solid transparent;padding:0 10px}   /* (the same box as a row: px columns, as the heads' smaller text made the em widths differ) */
 .rvbox .rvb-hd{flex:none;display:grid;align-items:center;padding:0 10px;font-size:12.5px;color:var(--muted,#999)}
 .rvbox .rvb-hd .h2{text-align:end}
-.rvbox .rvb-hd .h3,.rvbox .rvb-row .pv{padding-inline-start:10px}
+.rvbox .rvb-hd .h3,.rvbox .rvb-row .pv{padding-inline-start:0}
 .rvbox .rvb-row{background:transparent;min-height:32px}
 .rvbox .rvb-row .rk{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;background:rgba(127,127,127,.16);color:inherit}
 .rvbox .rvb-row:first-child .rk{background:var(--accent,#e2c275);color:#1b150a}
