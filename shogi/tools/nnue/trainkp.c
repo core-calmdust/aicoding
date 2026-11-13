@@ -16,6 +16,9 @@
      search is tuned to the scale of the site's net, whose output layer was multiplied by 0.805 (MODEL_CARD v6): a net for
      the site (starting from the site's net or not) is trained with --oscale 0.805. Without it, training starting from the
      site's net first undoes the 0.805 (the evaluation grows 1.24 times) and the search no longer suits the net.
+   --ob 8: 8 output buckets (one output layer per stage of the game: by the number of pieces in hand, engine.c nueBucket;
+     the shipped engine already has them, nue_set_nb). Starting from a net with one output, every bucket starts as it.
+     The file then is NUEO: int32 "NUEO" 0x4F45554E, H, IN, KB, NB; kmap[84]; W1; B1; W2[NB][2H]; B2[NB].
    trainkp --scale net data.psv n         the net's scale against the data's scores (the best-fit factor)
    trainkp --rescale in.bin out.bin f     multiply the output layer by f
    trainkp --check net.bin data.psv n [dump.txt]
@@ -43,7 +46,9 @@
 #define W2CLIP 60.f
 #define MAGIC_K 0x4B45554E
 #define MAGIC_Q 0x5145554E
-static int H = 256, NTH = 4, BS = 16384, KB = 9, FACT = 1;
+#define MAGIC_O 0x4F45554E
+#define NB_MAX 8
+static int H = 256, NTH = 4, BS = 16384, KB = 9, FACT = 1, OB = 1;   /* OB: output buckets (1, or 8 = engine.c nueBucket) */
 static long ROWS;                           /* KB * BASE (+ BASE for the shared copy) */
 static uint8_t KMAP[84];
 static float LAMBDA = 0.75f;
@@ -82,18 +87,25 @@ static int feats(const Pos *p, int persp, uint32_t *f, int shared) {
   for (int i = 0; i < n; i++) { f[k++] = (uint32_t)(off + b[i]); if (shared) f[k++] = (uint32_t)(KB * BASE + b[i]); }
   return k;
 }
+/* the output bucket of engine.c (nueBucket): by the number of pieces in hand, both sides */
+static inline int obucket(const Pos *p, int nb) {
+  if (nb == 1) return 0;
+  int t = 0; for (int i = 1; i < 8; i++) t += p->hand[i] + p->hand[8 + i];
+  return t < 1 ? 0 : t < 3 ? 1 : t < 5 ? 2 : t < 7 ? 3 : t < 9 ? 4 : t < 12 ? 5 : t < 16 ? 6 : 7;
+}
 static inline float target(const PSV *r) {
   float e = sigm(r->score / 600.f), w = r->result > 0 ? 1.f : r->result < 0 ? 0.f : .5f;
   return LAMBDA * e + (1 - LAMBDA) * w;
 }
-static float forward(const Pos *p, uint32_t *fu, int *nu, uint32_t *ft, int *nt, float *au, float *at) {
+static float forward(const Pos *p, uint32_t *fu, int *nu, uint32_t *ft, int *nt, float *au, float *at, int *bk) {
   *nu = feats(p, p->side, fu, FACT); *nt = feats(p, p->side ^ 1, ft, FACT);
   memcpy(au, B1, H * 4); memcpy(at, B1, H * 4);
   for (int k = 0; k < *nu; k++) { const float *w = W1 + (size_t)fu[k] * H; for (int i = 0; i < H; i++) au[i] += w[i]; }
   for (int k = 0; k < *nt; k++) { const float *w = W1 + (size_t)ft[k] * H; for (int i = 0; i < H; i++) at[i] += w[i]; }
-  float o = B2[0];
-  for (int i = 0; i < H; i++) { float x = au[i] < 0 ? 0 : au[i] > 1 ? 1 : au[i]; o += x * x * W2[i]; }
-  for (int i = 0; i < H; i++) { float x = at[i] < 0 ? 0 : at[i] > 1 ? 1 : at[i]; o += x * x * W2[H + i]; }
+  int b = obucket(p, OB); *bk = b; const float *w2 = W2 + (size_t)b * 2 * H;
+  float o = B2[b];
+  for (int i = 0; i < H; i++) { float x = au[i] < 0 ? 0 : au[i] > 1 ? 1 : au[i]; o += x * x * w2[i]; }
+  for (int i = 0; i < H; i++) { float x = at[i] < 0 ? 0 : at[i] > 1 ? 1 : at[i]; o += x * x * w2[H + i]; }
   return o;
 }
 
@@ -102,22 +114,23 @@ static void *grad_job(void *arg) {
   Job *j = arg; int tid = j->tid;
   float *gw1 = gW1[tid], *gb1 = gB1[tid], *gw2 = gW2[tid], *gb2 = gB2[tid]; uint8_t *tc = touch[tid];
   float *au = malloc(H * 4), *at = malloc(H * 4), *du = malloc(H * 4), *dt = malloc(H * 4);
-  uint32_t fu[96], ft[96]; int nu, nt; double loss = 0;
+  uint32_t fu[96], ft[96]; int nu, nt, bk; double loss = 0;
   for (long k = j->b0; k < j->b0 + j->n; k++) {
     const PSV *r = &D[k]; Pos p;
     if (psv_decode(r, &p)) continue;
-    float o = forward(&p, fu, &nu, ft, &nt, au, at), pr = sigm(o / OSCALE), t = target(r), e = pr - t;
+    float o = forward(&p, fu, &nu, ft, &nt, au, at, &bk), pr = sigm(o / OSCALE), t = target(r), e = pr - t;
     loss += e * e;
     float g = 2 * e * pr * (1 - pr) / BS / OSCALE;
+    float *gw2b = gw2 + (size_t)bk * 2 * H; const float *w2b = W2 + (size_t)bk * 2 * H;
     for (int i = 0; i < H; i++) {
       float x = au[i], y = at[i];
       float cx = x < 0 ? 0 : x > 1 ? 1 : x, cy = y < 0 ? 0 : y > 1 ? 1 : y;
-      gw2[i] += g * cx * cx; gw2[H + i] += g * cy * cy;
-      du[i] = (x > 0 && x < 1) ? g * W2[i] * 2 * x : 0;
-      dt[i] = (y > 0 && y < 1) ? g * W2[H + i] * 2 * y : 0;
+      gw2b[i] += g * cx * cx; gw2b[H + i] += g * cy * cy;
+      du[i] = (x > 0 && x < 1) ? g * w2b[i] * 2 * x : 0;
+      dt[i] = (y > 0 && y < 1) ? g * w2b[H + i] * 2 * y : 0;
       gb1[i] += du[i] + dt[i];
     }
-    gb2[0] += g;
+    gb2[bk] += g;
     for (int q = 0; q < nu; q++) { float *w = gw1 + (size_t)fu[q] * H; tc[fu[q]] = 1; for (int i = 0; i < H; i++) w[i] += du[i]; }
     for (int q = 0; q < nt; q++) { float *w = gw1 + (size_t)ft[q] * H; tc[ft[q]] = 1; for (int i = 0; i < H; i++) w[i] += dt[i]; }
   }
@@ -156,19 +169,19 @@ static void step(long b0, int it, float lr) {
   float c1 = 1 - powf(0.9f, it), c2 = 1 - powf(0.999f, it);
   for (int t = 0; t < NTH; t++) { uj[t].tid = t; uj[t].lr = lr; uj[t].c1 = c1; uj[t].c2 = c2; pthread_create(&th[t], NULL, update_job, &uj[t]); }
   for (int t = 0; t < NTH; t++) pthread_join(th[t], NULL);
-  for (int t = 1; t < NTH; t++) { for (int i = 0; i < 2 * H; i++) { gW2[0][i] += gW2[t][i]; gW2[t][i] = 0; } for (int i = 0; i < H; i++) { gB1[0][i] += gB1[t][i]; gB1[t][i] = 0; } gB2[0][0] += gB2[t][0]; gB2[t][0] = 0; }
+  for (int t = 1; t < NTH; t++) { for (int i = 0; i < OB * 2 * H; i++) { gW2[0][i] += gW2[t][i]; gW2[t][i] = 0; } for (int i = 0; i < H; i++) { gB1[0][i] += gB1[t][i]; gB1[t][i] = 0; } for (int i = 0; i < OB; i++) { gB2[0][i] += gB2[t][i]; gB2[t][i] = 0; } }
   adam1(B1, gB1[0], mB1, vB1, 0, H, lr, c1, c2, 1e9f);
-  adam1(W2, gW2[0], mW2, vW2, 0, 2 * H, lr, c1, c2, W2CLIP);
-  adam1(B2, gB2[0], mB2, vB2, 0, 1, lr, c1, c2, 1e9f);
-  memset(gB1[0], 0, H * 4); memset(gW2[0], 0, 2 * H * 4); gB2[0][0] = 0;
+  adam1(W2, gW2[0], mW2, vW2, 0, (size_t)OB * 2 * H, lr, c1, c2, W2CLIP);
+  adam1(B2, gB2[0], mB2, vB2, 0, OB, lr, c1, c2, 1e9f);
+  memset(gB1[0], 0, H * 4); memset(gW2[0], 0, (size_t)OB * 2 * H * 4); memset(gB2[0], 0, OB * 4);
 }
 
 typedef struct { const PSV *v; long n; double l, le; long c; } VJob;
 static void *val_job(void *arg) {
-  VJob *j = arg; float *au = malloc(H * 4), *at = malloc(H * 4); uint32_t fu[96], ft[96]; int nu, nt;
+  VJob *j = arg; float *au = malloc(H * 4), *at = malloc(H * 4); uint32_t fu[96], ft[96]; int nu, nt, bk;
   for (long k = 0; k < j->n; k++) {
     const PSV *r = &j->v[k]; Pos p; if (psv_decode(r, &p) || psv_in_check(&p)) continue;
-    float pr = sigm(forward(&p, fu, &nu, ft, &nt, au, at) / OSCALE), e = pr - target(r), ee = pr - sigm(r->score / 600.f);
+    float pr = sigm(forward(&p, fu, &nu, ft, &nt, au, at, &bk) / OSCALE), e = pr - target(r), ee = pr - sigm(r->score / 600.f);
     j->l += e * e; j->le += ee * ee; j->c++;
   }
   free(au); free(at); return NULL;
@@ -184,7 +197,7 @@ static int rq(float x, float s, int lim) { long v = lrintf(x * s); return v > li
 static void save(const char *path) {
   char tmp[1100]; snprintf(tmp, sizeof tmp, "%s.tmp", path);
   FILE *f = fopen(tmp, "wb"); if (!f) { perror(tmp); return; }
-  int32_t hd[4] = { MAGIC_K, H, KB * BASE, KB }; fwrite(hd, 4, 4, f); fwrite(KMAP, 1, 84, f);
+  int32_t hd[5] = { OB > 1 ? MAGIC_O : MAGIC_K, H, KB * BASE, KB, OB }; fwrite(hd, 4, OB > 1 ? 5 : 4, f); fwrite(KMAP, 1, 84, f);
   int16_t *row = malloc((size_t)H * 2);
   for (long r = 0; r < (long)KB * BASE; r++) {
     const float *w = W1 + (size_t)r * H, *sh = FACT ? W1 + ((size_t)KB * BASE + r % BASE) * H : NULL;
@@ -193,30 +206,31 @@ static void save(const char *path) {
   }
   free(row);
   for (int i = 0; i < H; i++) { int32_t b = rq(B1[i], QA, 32767); fwrite(&b, 4, 1, f); }
-  for (int i = 0; i < 2 * H; i++) { int16_t w = (int16_t)rq(W2[i], QB, 32767); fwrite(&w, 2, 1, f); }
-  int32_t b2 = (int32_t)lrint((double)B2[0] * QA * QB); fwrite(&b2, 4, 1, f);
+  for (int i = 0; i < OB * 2 * H; i++) { int16_t w = (int16_t)rq(W2[i], QB, 32767); fwrite(&w, 2, 1, f); }
+  for (int i = 0; i < OB; i++) { int32_t b2 = (int32_t)lrint((double)B2[i] * QA * QB); fwrite(&b2, 4, 1, f); }
   fclose(f); rename(tmp, path);
 }
 /* checkpoint: everything needed to continue exactly */
 static void save_ckpt(const char *path, int ep, long b, int it, long start) {
   char tmp[1100]; snprintf(tmp, sizeof tmp, "%s.tmp", path);
   FILE *f = fopen(tmp, "wb"); if (!f) { perror(tmp); return; }
-  long hd[8] = { 0x4B43, H, ROWS, ep, b, it, start, (long)rs }; fwrite(hd, sizeof(long), 8, f);
+  long hd[8] = { 0x4B43 + (OB - 1) * 0x10000L, H, ROWS, ep, b, it, start, (long)rs }; fwrite(hd, sizeof(long), 8, f);
   size_t n1 = (size_t)ROWS * H;
   fwrite(W1, 4, n1, f); fwrite(mW1, 4, n1, f); fwrite(vW1, 4, n1, f);
   fwrite(B1, 4, H, f); fwrite(mB1, 4, H, f); fwrite(vB1, 4, H, f);
-  fwrite(W2, 4, 2 * H, f); fwrite(mW2, 4, 2 * H, f); fwrite(vW2, 4, 2 * H, f);
-  fwrite(B2, 4, 1, f); fwrite(mB2, 4, 1, f); fwrite(vB2, 4, 1, f);
+  size_t n2 = (size_t)OB * 2 * H;
+  fwrite(W2, 4, n2, f); fwrite(mW2, 4, n2, f); fwrite(vW2, 4, n2, f);
+  fwrite(B2, 4, OB, f); fwrite(mB2, 4, OB, f); fwrite(vB2, 4, OB, f);
   fclose(f); rename(tmp, path);
 }
 static int load_ckpt(const char *path, int *ep, long *b, int *it, long *start) {
   FILE *f = fopen(path, "rb"); if (!f) return 0;
-  long hd[8]; if (fread(hd, sizeof(long), 8, f) != 8 || hd[0] != 0x4B43 || hd[1] != H || hd[2] != ROWS) { fprintf(stderr, "%s: a checkpoint of other settings (delete it to start over)\n", path); exit(1); }
-  size_t n1 = (size_t)ROWS * H; int ok = 1;
+  long hd[8]; if (fread(hd, sizeof(long), 8, f) != 8 || hd[0] != 0x4B43 + (OB - 1) * 0x10000L || hd[1] != H || hd[2] != ROWS) { fprintf(stderr, "%s: a checkpoint of other settings (delete it to start over)\n", path); exit(1); }
+  size_t n1 = (size_t)ROWS * H, n2 = (size_t)OB * 2 * H; int ok = 1;
   ok &= fread(W1, 4, n1, f) == n1 && fread(mW1, 4, n1, f) == n1 && fread(vW1, 4, n1, f) == n1;
   ok &= fread(B1, 4, H, f) == (size_t)H && fread(mB1, 4, H, f) == (size_t)H && fread(vB1, 4, H, f) == (size_t)H;
-  ok &= fread(W2, 4, 2 * H, f) == (size_t)(2 * H) && fread(mW2, 4, 2 * H, f) == (size_t)(2 * H) && fread(vW2, 4, 2 * H, f) == (size_t)(2 * H);
-  ok &= fread(B2, 4, 1, f) == 1 && fread(mB2, 4, 1, f) == 1 && fread(vB2, 4, 1, f) == 1;
+  ok &= fread(W2, 4, n2, f) == n2 && fread(mW2, 4, n2, f) == n2 && fread(vW2, 4, n2, f) == n2;
+  ok &= fread(B2, 4, OB, f) == (size_t)OB && fread(mB2, 4, OB, f) == (size_t)OB && fread(vB2, 4, OB, f) == (size_t)OB;
   fclose(f); if (!ok) { fprintf(stderr, "%s: short checkpoint\n", path); exit(1); }
   *ep = (int)hd[3]; *b = hd[4]; *it = (int)hd[5]; *start = hd[6]; rs = (unsigned long long)hd[7];
   return 1;
@@ -234,6 +248,7 @@ static int load_init(const char *path) {
   for (int i = 0; i < H; i++) { int32_t b; if (fread(&b, 4, 1, f) != 1) return 0; B1[i] = b / (float)QA; }
   for (int i = 0; i < 2 * H; i++) { int16_t w; if (fread(&w, 2, 1, f) != 1) return 0; W2[i] = w / (float)QB; }
   int32_t b2; if (fread(&b2, 4, 1, f) != 1) return 0; B2[0] = (float)(b2 / ((double)QA * QB));
+  for (int b = 1; b < OB; b++) { memcpy(W2 + (size_t)b * 2 * H, W2, (size_t)2 * H * 4); B2[b] = B2[0]; }   /* every output bucket starts as the one output */
   fclose(f); return 1;
 }
 static const PSV *mapf(const char *path, long *n) {
@@ -247,13 +262,13 @@ static const PSV *mapf(const char *path, long *n) {
 static int check(int argc, char **argv) {
   if (argc < 5) { fprintf(stderr, "usage: trainkp --check net.bin data.psv n [dump.txt]\n"); return 1; }
   FILE *f = fopen(argv[2], "rb"); if (!f) { perror(argv[2]); return 1; }
-  int32_t hd[4]; if (fread(hd, 4, 3, f) != 3) return 1;
+  int32_t hd[4], nb = 1; if (fread(hd, 4, 3, f) != 3) return 1;
   if (hd[0] == MAGIC_Q) { KB = 1; memset(KMAP, 0, sizeof KMAP); }   /* the site's net: one bucket */
-  else if (hd[0] != MAGIC_K || fread(hd + 3, 4, 1, f) != 1 || fread(KMAP, 1, 84, f) != 84) { fprintf(stderr, "not a NUEK / NUEQ net\n"); return 1; }
-  else KB = hd[3];
+  else if ((hd[0] != MAGIC_K && hd[0] != MAGIC_O) || fread(hd + 3, 4, 1, f) != 1) { fprintf(stderr, "not a NUEK / NUEO / NUEQ net\n"); return 1; }
+  else { KB = hd[3]; if (hd[0] == MAGIC_O && (fread(&nb, 4, 1, f) != 1 || nb < 1 || nb > NB_MAX)) return 1; if (fread(KMAP, 1, 84, f) != 84) return 1; }
   int h = hd[1], in = hd[2]; int scale = !strcmp(argv[1], "--scale");
-  int16_t *w1 = malloc((size_t)in * h * 2); int32_t *b1 = malloc(h * 4); int16_t *w2 = malloc(h * 4); int32_t b2;
-  if (fread(w1, 2, (size_t)in * h, f) != (size_t)in * h || fread(b1, 4, h, f) != (size_t)h || fread(w2, 2, 2 * h, f) != (size_t)(2 * h) || fread(&b2, 4, 1, f) != 1) { fprintf(stderr, "short net\n"); return 1; }
+  int16_t *w1 = malloc((size_t)in * h * 2); int32_t *b1 = malloc(h * 4); int16_t *w2a = malloc((size_t)nb * h * 4); int32_t b2a[NB_MAX];
+  if (fread(w1, 2, (size_t)in * h, f) != (size_t)in * h || fread(b1, 4, h, f) != (size_t)h || fread(w2a, 2, (size_t)nb * 2 * h, f) != (size_t)nb * 2 * h || fread(b2a, 4, nb, f) != (size_t)nb) { fprintf(stderr, "short net\n"); return 1; }
   fclose(f);
   long n; const PSV *d = mapf(argv[3], &n); long want = atol(argv[4]);
   FILE *dump = argc > 5 && !scale ? fopen(argv[5], "w") : NULL;
@@ -268,7 +283,7 @@ static int check(int argc, char **argv) {
       int16_t *a = acc + c * h; for (int i = 0; i < h; i++) a[i] = (int16_t)b1[i];
       for (int q = 0; q < nf; q++) { const int16_t *w = w1 + (size_t)fs[q] * h; for (int i = 0; i < h; i++) a[i] = (int16_t)(a[i] + w[i]); }
     }
-    long long sum = 0;
+    long long sum = 0; const int ob = obucket(&p, nb); const int16_t *w2 = w2a + (size_t)ob * 2 * h; const int32_t b2 = b2a[ob];
     for (int c = 0; c < 2; c++) for (int i = 0; i < h; i++) { int x = acc[c * h + i] < 0 ? 0 : acc[c * h + i] > QA ? QA : acc[c * h + i]; sum += (long long)x * x * w2[c * h + i]; }
     long long v = sum / QA + b2;
     if (scale) { ev[shown] = (float)((double)v / (QA * QB)); sc[shown] = d[k].score / 600.f; shown++; continue; }
@@ -298,11 +313,11 @@ static int rescale(int argc, char **argv) {
   FILE *f = fopen(argv[2], "rb"); if (!f) { perror(argv[2]); return 1; }
   fseek(f, 0, SEEK_END); long sz = ftell(f); fseek(f, 0, SEEK_SET);
   uint8_t *buf = malloc(sz); if (fread(buf, 1, sz, f) != (size_t)sz) return 1; fclose(f);
-  int32_t *hd = (int32_t *)buf; if (sz < 16 || (hd[0] != MAGIC_K && hd[0] != MAGIC_Q)) { fprintf(stderr, "not a NUEK / NUEQ net\n"); return 1; }
-  int h = hd[1]; double fac = atof(argv[4]);
-  int16_t *w2 = (int16_t *)(buf + sz - 4 - 4 * (long)h); int32_t *b2 = (int32_t *)(buf + sz - 4);
-  for (int i = 0; i < 2 * h; i++) { long v = lrint(w2[i] * fac); w2[i] = (int16_t)(v > 32767 ? 32767 : v < -32767 ? -32767 : v); }
-  *b2 = (int32_t)lrint(*b2 * fac);
+  int32_t *hd = (int32_t *)buf; if (sz < 20 || (hd[0] != MAGIC_K && hd[0] != MAGIC_Q && hd[0] != MAGIC_O)) { fprintf(stderr, "not a NUEK / NUEO / NUEQ net\n"); return 1; }
+  int h = hd[1], nb = hd[0] == MAGIC_O ? hd[4] : 1; double fac = atof(argv[4]);
+  int16_t *w2 = (int16_t *)(buf + sz - 4 * (long)nb - 4 * (long)h * nb); int32_t *b2 = (int32_t *)(buf + sz - 4 * (long)nb);
+  for (int i = 0; i < nb * 2 * h; i++) { long v = lrint(w2[i] * fac); w2[i] = (int16_t)(v > 32767 ? 32767 : v < -32767 ? -32767 : v); }
+  for (int i = 0; i < nb; i++) b2[i] = (int32_t)lrint(b2[i] * fac);
   f = fopen(argv[3], "wb"); if (!f) { perror(argv[3]); return 1; } fwrite(buf, 1, sz, f); fclose(f);
   printf("%s = %s x %g\n", argv[3], argv[2], fac);
   return 0;
@@ -311,7 +326,7 @@ static int rescale(int argc, char **argv) {
 int main(int argc, char **argv) {
   if (argc > 1 && (!strcmp(argv[1], "--check") || !strcmp(argv[1], "--scale"))) return check(argc, argv);
   if (argc > 1 && !strcmp(argv[1], "--rescale")) return rescale(argc, argv);
-  if (argc < 3) { fprintf(stderr, "usage: trainkp train.bin out.bin [--kb k9] [--hidden 256] [--epochs 8] [--lr 0.001] [--lambda 0.75] [--oscale 1] [--batch 16384] [--threads N] [--val val.bin] [--init nnue.bin] [--max N] [--save-min 10]\n       trainkp --check net.bin data.psv n [dump.txt]\n"); return 1; }
+  if (argc < 3) { fprintf(stderr, "usage: trainkp train.bin out.bin [--kb k9] [--hidden 256] [--epochs 8] [--lr 0.001] [--lambda 0.75] [--oscale 1] [--ob 1] [--batch 16384] [--threads N] [--val val.bin] [--init nnue.bin] [--max N] [--save-min 10]\n       trainkp --check net.bin data.psv n [dump.txt]\n"); return 1; }
   const char *data = argv[1], *outp = argv[2], *valp = NULL, *initp = NULL, *kb = "k9";
   int epochs = 8; float lr0 = 0.001f; long maxn = 0; double savemin = 10;
   long nc = sysconf(_SC_NPROCESSORS_ONLN); NTH = nc > 0 ? (int)nc : 4;
@@ -322,6 +337,7 @@ int main(int argc, char **argv) {
     else if (!strcmp(argv[a], "--lr")) lr0 = atof(argv[++a]);
     else if (!strcmp(argv[a], "--lambda")) LAMBDA = atof(argv[++a]);
     else if (!strcmp(argv[a], "--oscale")) OSCALE = atof(argv[++a]);
+    else if (!strcmp(argv[a], "--ob")) OB = atoi(argv[++a]);
     else if (!strcmp(argv[a], "--batch")) BS = atoi(argv[++a]);
     else if (!strcmp(argv[a], "--threads")) NTH = atoi(argv[++a]);
     else if (!strcmp(argv[a], "--val")) valp = argv[++a];
@@ -330,20 +346,22 @@ int main(int argc, char **argv) {
     else if (!strcmp(argv[a], "--save-min")) savemin = atof(argv[++a]);
   }
   if (!set_kmap(kb)) return 1;
+  if (OB != 1 && OB != NB_MAX) { fprintf(stderr, "--ob: 1 or %d\n", NB_MAX); return 1; }
   FACT = KB > 1; ROWS = (long)(KB + FACT) * BASE;
   if (NTH > 256) NTH = 256; if (NTH < 1) NTH = 1;
   long N; D = mapf(data, &N); if (maxn && maxn < N) N = maxn;
   const PSV *V; long NV;
   if (valp) { V = mapf(valp, &NV); if (NV > 1000000) NV = 1000000; NT = N; }
   else { NV = N / 100 < 1000000 ? N / 100 : 1000000; NT = N - NV; V = D + NT; }
-  fprintf(stderr, "train %ld  valid %ld  kb %s (%d buckets)  H %d  epochs %d  lr %g  lambda %g  oscale %g  batch %d  threads %d  (W1 %.0f MB)\n",
-          NT, NV, kb, KB, H, epochs, lr0, LAMBDA, OSCALE, BS, NTH, ROWS * H * 4 / 1e6);
+  fprintf(stderr, "train %ld  valid %ld  kb %s (%d buckets)  H %d  epochs %d  lr %g  lambda %g  oscale %g  ob %d  batch %d  threads %d  (W1 %.0f MB)\n",
+          NT, NV, kb, KB, H, epochs, lr0, LAMBDA, OSCALE, OB, BS, NTH, ROWS * H * 4 / 1e6);
   size_t n1 = (size_t)ROWS * H;
-  W1 = fz(n1); B1 = fz(H); W2 = fz(2 * H); B2 = fz(1);
-  mW1 = fz(n1); vW1 = fz(n1); mB1 = fz(H); vB1 = fz(H); mW2 = fz(2 * H); vW2 = fz(2 * H); mB2 = fz(1); vB2 = fz(1);
+  size_t n2o = (size_t)OB * 2 * H;
+  W1 = fz(n1); B1 = fz(H); W2 = fz(n2o); B2 = fz(OB);
+  mW1 = fz(n1); vW1 = fz(n1); mB1 = fz(H); vB1 = fz(H); mW2 = fz(n2o); vW2 = fz(n2o); mB2 = fz(OB); vB2 = fz(OB);
   gW1 = malloc(NTH * sizeof(float *)); gB1 = malloc(NTH * sizeof(float *)); gW2 = malloc(NTH * sizeof(float *)); gB2 = malloc(NTH * sizeof(float *));
   touch = malloc(NTH * sizeof(uint8_t *)); tLoss = calloc(NTH, sizeof(double));
-  for (int t = 0; t < NTH; t++) { gW1[t] = fz(n1); gB1[t] = fz(H); gW2[t] = fz(2 * H); gB2[t] = fz(1); touch[t] = zalloc(ROWS); }
+  for (int t = 0; t < NTH; t++) { gW1[t] = fz(n1); gB1[t] = fz(H); gW2[t] = fz(n2o); gB2[t] = fz(OB); touch[t] = zalloc(ROWS); }
   char ck[1100]; snprintf(ck, sizeof ck, "%s.ckpt", outp);
   int ep0 = 0, it = 0; long bres = 0, start = -1;
   if (load_ckpt(ck, &ep0, &bres, &it, &start)) fprintf(stderr, "resumed from %s: epoch %d, batch %ld\n", ck, ep0 + 1, bres);
@@ -351,7 +369,7 @@ int main(int argc, char **argv) {
   else {
     for (size_t i = 0; i < n1; i++) W1[i] = randn() * (FACT && i < (size_t)KB * BASE * H ? 0.01f : 0.05f);
     for (int i = 0; i < H; i++) B1[i] = 0.25f;
-    for (int i = 0; i < 2 * H; i++) W2[i] = randn() * 0.5f;
+    for (size_t i = 0; i < n2o; i++) W2[i] = randn() * 0.5f;
   }
   double vl, vle;
   if (ep0 == 0 && bres == 0) { validate(V, NV, &vl, &vle); fprintf(stderr, "epoch 0  valid %.5f (eval only %.5f)\n", vl, vle); }
