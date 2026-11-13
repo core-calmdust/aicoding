@@ -45,5 +45,51 @@ def main(src_a, src_b, out):
         put(15 + i, 1, cell)
     Image.fromarray((sheet * 255).astype('uint8')).save(out, optimize=True)
 
-if __name__ == '__main__':
+if __name__ == '__main__' and sys.argv[1:2] != ['art']:
     main(*sys.argv[1:4])
+
+# ---- 筒子・索子・花／季節の絵（2026-11-14）：日本式の牌の写真（2枚目）から、色つきのまま抜き出す ----
+# 使い方: python3 atlas/tools/shanghai-glyphs.py art <花牌入りの画像> atlas/img/shanghai-art.png
+# シート: 8列×4段の RGBA セル（GW×GH）。インクの濃さ＝不透明度、色は牌の塗り5色に寄せる（黒・赤・緑・紺・金）。
+# セルの順: 0〜8 一〜九筒、9〜17 一〜九索（9＝一索の鳥）、18〜21 梅蘭菊竹、22〜25 春夏秋冬
+PAL = {'k': (20, 20, 20), 'r': (208, 18, 42), 'g': (18, 112, 64), 'b': (28, 60, 134), 'y': (224, 168, 28)}
+def paint(a):
+    r, g, b = a[:, :, 0], a[:, :, 1], a[:, :, 2]
+    alpha = ink(a, 38, 110)
+    mx, mn = a.max(axis=2), a.min(axis=2); sat = (mx - mn) / np.maximum(mx, 1)
+    out = np.zeros(a.shape[:2] + (4,))
+    # by hue (the photo's dark teal sticks and leaves are green on the tile; navy circles blue); greys and near-blacks: black
+    d = np.maximum(mx - mn, 1e-6); h = np.zeros(r.shape)
+    m = mx == r; h[m] = ((g - b)[m] / d[m]) % 6
+    m = mx == g; h[m] = (b - r)[m] / d[m] + 2
+    m = mx == b; h[m] = (r - g)[m] / d[m] + 4
+    h *= 60; col = (sat > .2) & (mx - mn > 22)
+    cls = np.full(a.shape[:2], 'k')
+    cls[col & ((h < 22) | (h >= 330))] = 'r'
+    cls[col & (h >= 22) & (h < 70)] = 'y'
+    cls[col & (h >= 70) & (h < 196)] = 'g'
+    cls[col & (h >= 196) & (h < 330)] = 'b'
+    for k, c in PAL.items():
+        m = cls == k; out[m, 0], out[m, 1], out[m, 2] = c
+    out[:, :, 3] = alpha
+    return out
+
+def art(src, out):
+    C = cells(src); sheet = np.zeros((4 * GH, 8 * GW, 4))
+    order = [(c, 0) for c in range(9)] + [(c, 1) for c in range(9)] + [(c, 4) for c in (4, 5, 6, 7, 0, 1, 2, 3)]
+    G, B = np.array(PAL['g']), np.array(PAL['b'])
+    for k, (c, r) in enumerate(order):
+        p = paint(C(c, r)); rgb = p[:, :, :3]
+        isb = (rgb == B).all(2); isk = (rgb == np.array(PAL['k'])).all(2)
+        # 索子: the photo's navy sticks in the green of the tiles (ユーザー：色は先の版の色彩感で); the red sticks stay red
+        if 10 <= k <= 17: rgb[isb | isk] = G
+        # 花／季節: the navy foliage green, the number (top right) stays navy
+        if k >= 18:
+            yy, xx = np.mgrid[0:GH, 0:GW]; num = (xx > GW * .68) & (yy < GH * .24)
+            rgb[(isb | isk) & ~num] = G
+        y, x = divmod(k, 8); sheet[y * GH:(y + 1) * GH, x * GW:(x + 1) * GW] = p
+    s = sheet.copy(); s[:, :, 3] *= 255
+    Image.fromarray(s.astype('uint8'), 'RGBA').save(out, optimize=True)
+
+if __name__ == '__main__' and len(sys.argv) > 1 and sys.argv[1] == 'art':
+    art(sys.argv[2], sys.argv[3])
