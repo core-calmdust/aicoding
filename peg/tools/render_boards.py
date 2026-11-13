@@ -329,33 +329,12 @@ def build(g, look):
         put(ma.arr(.5), verde, .85); put(mb.arr(.5), sienna, .85); put(mr.arr(.5), BRASS, .85, 1, .003)
         cm = cup > 0; A[cm] *= (.8 + .2 * (1 - cup[cm]))[..., None]; G[cm] = .3
         gm = (gd < gw) & m; A[gm] = A[gm] * .9; G[gm] = .4
-    elif look == 'art':   # colourful art (2026-11-13): white with a spot painting between the holes — small round spots of many colours
-        # on a regular grid (offset half a hole from the holes), quiet enough for the coloured marbles to lead
-        u, v = c.u, c.v
-        WH = np.array([1.14, 1.13, 1.1]); A[:] = WH; G[:] = .3
-        SP = [(232, 74, 92), (246, 160, 60), (250, 214, 64), (150, 206, 92), (60, 170, 120), (60, 190, 196), (64, 140, 222), (60, 70, 160), (150, 110, 210), (226, 120, 180), (176, 150, 120), (110, 116, 120), (238, 170, 160), (190, 220, 170), (160, 200, 236), (90, 60, 80)]
-        rr_ = np.random.default_rng(5)
-        H0 = np.array(g['holes'], np.float32)
-        xs = np.arange(math.floor(-g['size'] / 2), math.ceil(g['size'] / 2) + 1) + .5
-        pts_ = [(x, y) for x in xs for y in xs]
-        if tri:   # (the triangle: the spots between its holes — the middle of each small triangle of three holes)
-            pts_ = []
-            for i1, (x1, y1) in enumerate(H0):
-                for i2, (x2, y2) in enumerate(H0):
-                    for i3, (x3, y3) in enumerate(H0):
-                        if i1 < i2 < i3 and max(math.hypot(x1 - x2, y1 - y2), math.hypot(x2 - x3, y2 - y3), math.hypot(x1 - x3, y1 - y3)) < 1.05: pts_.append(((x1 + x2 + x3) / 3, (y1 + y2 + y3) / 3))
-        face = m & (ed > (gc + gw + .12 if not tri else .45))
-        sp = np.zeros((N, N, 3), np.float32); spm = np.zeros((N, N), bool)
-        for x, y in pts_:
-                if not tri and math.hypot(x, y) > g['gr'] - gw - .35: continue
-                if np.min(np.hypot(H0[:, 0] - x, H0[:, 1] - y)) < CUP_R + (.12 if tri else .2): continue
-                col = np.array(SP[rr_.integers(len(SP))], np.float32) / 255 * 1.08
-                d = np.hypot(u - x, v - y) < (.13 if tri else .2); d &= face; A[d] = col
-        G[:] = .3
-        rimz = m & (ed < (gc - gw if not tri else .2)) & (gd >= gw); A[rimz] = WH
-        put(line(inner, .012), np.array([.8, .8, .8]), .3)
-        gm = (gd < gw) & m; A[gm] = WH * .93
-        cm = cup > 0; A[cm] *= (.86 + .14 * (1 - cup[cm]))[..., None]; G[cm] = .2
+    elif look == 'art':   # colourful art (2026-11-13, final): a plain white ceramic plate — the coloured balls are the art
+        A[:] = np.array([1.16, 1.15, 1.12]) * (.99 + .01 * norm01(fbm((N, N), [3, 1], [1, .5], seed=41)))[..., None]; G[:] = .3
+        lip = m & (gd >= gw) & (ed < (gc - gw if not tri else .2)); H[lip] += .03
+        put(line(inner, .01), np.array([1.08, 1.07, 1.04]), .3, 0, -.006)
+        cm = cup > 0; A[cm] *= (.88 + .12 * (1 - cup[cm]))[..., None]; G[cm] = .2
+        gm = (gd < gw) & m; A[gm] *= .95; G[gm] = .2
     elif look == 'pop':   # pop art (2026-11-13): hearts everywhere, painted by hand (brushy fill, a wobbly thick black outline), the big one in the middle
         H[:] = np.where(m, .5 * smooth_step(ed, 0, .05), 0)
         u, v = c.u, c.v
