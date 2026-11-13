@@ -995,7 +995,11 @@ function lzGet(L, k) {
 // 'ybw' (2026-11-10, MODEL_CARD.md「マルチスレッド v4」): no Lazy SMP — the helpers wait in engine.c mt_idle and take the
 // remaining moves of the nodes whose first move is done (Young Brothers Wait split points, midgame and solver, the root too:
 // rootPVS → root_mt); the lead's think is the only search. 'mix' and the others: Lazy SMP (+ rootSplit / splitHelp in the solve).
-const LAZY = { plan: 'ybw', idle: true };   // (idle: splitHelp's help on the root moves still being solved)
+// (2026-11-13, v5 Praline, MODEL_CARD.md「マルチスレッド v5（Praline）」) ybwHelpers: in 'ybw', the helpers past the first 9
+// (threads 11-14 of a 14-core Mac) are Lazy SMP — they deepen the root on their own ('mix' above, engine_mt.wasm mt_lazy: no
+// split points of their own) and hand a finished depth to the lead (lzPut / JMP); the YBW threads never wait for them (a
+// thread on an efficiency core holds nobody up). As chess / shogi (YBW 10 + Lazy).
+const LAZY = { plan: 'ybw', idle: true, ybwHelpers: 9 };   // (idle: splitHelp's help on the root moves still being solved)
 const ybwOn = () => LAZY.plan === 'ybw' && WON && !!WX.root_mt && !!root.REVERSI_SPLIT;
 function helperPlan(id) {
   if (LAZY.plan === 'rot') return { rk: id, r1: 0, d0: 0 };
@@ -1162,8 +1166,10 @@ function think(cells, toMove, opts, onProgress) {
     }
   }
   const empties = 64 - pc(pl | ol) - pc(ph | oh);
-  if (opts.rot && ybwOn()) {   // a helper (YBW): take moves at the lead's split points until the pool stops the threads
-    nodes = WX.mt_idle();
+  const lazyH = !!(opts.rot && ybwOn() && WX.mt_lazy && opts.rot > LAZY.ybwHelpers);   // (a Lazy SMP helper past the YBW ones: v5)
+  if (WON && WX.mt_lazy) WX.mt_lazy(lazyH ? 1 : 0);
+  if (opts.rot && ybwOn() && !lazyH) {   // a helper (YBW): take moves at the lead's split points until the pool stops the threads
+    nodes = WX.mt_idle(0, 1);   // (Praline: no time limit, a new job)
     return { move: -1, score: 0, depth: 0, nodes, ms: Date.now() - t0 };
   }
   if (!opts.rot && WON && WX.tt_new) WX.tt_new();   // (engine_mt.wasm: a new age for the shared table's entries)
@@ -1315,7 +1321,7 @@ function think(cells, toMove, opts, onProgress) {
         // aspiration window around the midgame estimate
         const g = result ? Math.max(-60, Math.min(60, Math.round(result.score / SCALE))) : 0;
         let lo = g - 3, hi = g + 3;
-        if (opts.rot) splitHelp(pos, empties, opts.rot);   // a helper thread: join the lead's split solve (if it has one)
+        if (opts.rot && !ybwOn()) splitHelp(pos, empties, opts.rot);   // a helper thread: join the lead's split solve (if it has one; YBW: a Lazy helper solves on its own)
         for (;;) {
           r = SPL ? rootSplit(SPL, pos, ordered, lo, hi) : rootPVS(pos, ordered, 0, 'exact', lo, hi);
           const v = r.score / SCALE;
@@ -1335,7 +1341,7 @@ function think(cells, toMove, opts, onProgress) {
     if (tryW) deadline = Math.min(deadline, tw0 + tryMs);
     let wldDone = false;
     try {
-      if (opts.rot) splitHelp(pos, empties, opts.rot);
+      if (opts.rot && !ybwOn()) splitHelp(pos, empties, opts.rot);
       const r = SPL ? rootSplit(SPL, pos, orderRoot(moves, prev), -1, 1) : rootPVS(pos, orderRoot(moves, prev), 0, 'exact', -1, 1);
       wldDone = true;
       if (r.score > 0) result = { move: r.move, score: Math.max(result.score, SCALE) };
@@ -1354,7 +1360,7 @@ function think(cells, toMove, opts, onProgress) {
         const ordered = orderRoot(moves, prev);
         const g = Math.max(-60, Math.min(60, Math.round(result.score / SCALE)));
         let lo = g - 3, hi = g + 3, r;
-        if (opts.rot) splitHelp(pos, empties, opts.rot);
+        if (opts.rot && !ybwOn()) splitHelp(pos, empties, opts.rot);
         for (;;) {
           r = SPL ? rootSplit(SPL, pos, ordered, lo, hi) : rootPVS(pos, ordered, 0, 'exact', lo, hi);
           const v = r.score / SCALE;

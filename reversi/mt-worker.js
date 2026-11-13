@@ -5,16 +5,17 @@
 // below; a deeper finished depth is shared with the lead, 2026-11-09), until the page stops every thread.
 // In the exact / win-draw-loss solve of think the root moves are shared out instead (engine.js rootSplit / splitHelp).
 // (2026-11-10, engine.js LAZY.plan 'ybw', the default: a helper's think waits in engine.c mt_idle and takes the remaining
-// moves at the lead's split points instead — Young Brothers Wait, MODEL_CARD.md「マルチスレッド v4」.)
+// moves at the lead's split points instead — Young Brothers Wait, MODEL_CARD.md「マルチスレッド v4」; since 2026-11-13 the
+// split points are Praline's, the site's common thinking engine — MODEL_CARD.md「マルチスレッド v5（Praline）」.)
 self.addEventListener('message', function boot(e) {
   const m = e.data; if (m.type !== 'mtinit') return;
   self.removeEventListener('message', boot);
   try {
     const X = new WebAssembly.Instance(m.module, { env: { memory: m.mem, now: () => Date.now() } }).exports;
-    X.mt_stack(m.top); X.mt_thread(m.tls);
+    X.mt_stack(m.top); X.mt_thread(m.tls, m.id);   // (id: the busy marks' owner, Praline)
     self.REVERSI_WX = Object.assign({}, X, { memory: m.mem });   // engine.js reads WX.memory
     self.REVERSI_SPLIT = m.ctl;   // (the endgame solve is split at the root over the threads: engine.js rootSplit)
-    importScripts('engine.js?v=69');
+    importScripts('engine.js?v=70');
   } catch (err) { self.postMessage({ type: 'mtready', error: String(err && err.message || err) }); return; }
   const id = m.id, ctl = m.ctl, cnt = m.cnt, R = self.ReversiEngine;
   if (id > 0) {

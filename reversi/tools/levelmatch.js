@@ -1,8 +1,8 @@
 // Level matches at real time on all threads (for a multi-core Mac; guide: LEVELS-MAC.md).
 // Each player is a pool of threads like the game page's (shared/mtengine.js + mt-worker.js): engine_mt.wasm on its own
 // shared memory, the lead runs think() with the level's settings, the helpers wait in engine.c mt_idle and take the
-// remaining moves at the lead's split points (YBW: engine.js LAZY.plan 'ybw', engine_mt.wasm v4.1 — MODEL_CARD.md
-// 「マルチスレッド v4 / v4.1」). Each side has its own pool (its own transposition table). Several games can run at once (--conc).
+// remaining moves at the lead's split points (YBW: engine.js LAZY.plan 'ybw', engine_mt.wasm v5 on Praline, helpers past 9 Lazy SMP — MODEL_CARD.md
+// 「マルチスレッド v4 / v4.1 / v5（Praline）」). Each side has its own pool (its own transposition table). Several games can run at once (--conc).
 // Levels 17–28, T<s> and D… use all the threads of the pool (the page: MT_CFG); levels 14–16 only the lead (the page plays them
 // on its one-thread worker), so the whole ladder Lv.14 … Lv.28 can be measured in one run (--plan full).
 //
@@ -31,7 +31,7 @@ const RV = path.join(__dirname, '..');
 if (!isMainThread) {
   const m = workerData;
   const X = new WebAssembly.Instance(m.module, { env: { memory: m.mem, now: () => Date.now() } }).exports;
-  X.mt_stack(m.top); X.mt_thread(m.tls);
+  X.mt_stack(m.top); X.mt_thread(m.tls, m.id);   // (id: the busy marks' owner, Praline)
   global.self = { REVERSI_WX: Object.assign({}, X, { memory: m.mem }), REVERSI_SPLIT: m.ctl };   // (as mt-worker.js)
   const E = require(path.join(RV, 'engine.js'));
   const ctl = m.ctl;

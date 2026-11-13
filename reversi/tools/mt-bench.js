@@ -12,7 +12,7 @@ const RV = path.join(__dirname, '..');
 if (!isMainThread) {
   const m = workerData;
   const X = new WebAssembly.Instance(m.module, { env: { memory: m.mem, now: () => Date.now() } }).exports;
-  X.mt_stack(m.top); X.mt_thread(m.tls);
+  X.mt_stack(m.top); X.mt_thread(m.tls, m.id);   // (id: the busy marks' owner, Praline)
   global.self = { REVERSI_WX: Object.assign({}, X, { memory: m.mem }) };
   if (m.split) self.REVERSI_SPLIT = m.ctl;
   const E = require(path.join(RV, 'engine.js'));

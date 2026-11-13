@@ -54,13 +54,13 @@ wasm の αβ エンジン（`engine_mt.wasm`、`-DMT`）の**仕事を分ける
 | つなぎ | 中身 | 使うゲーム |
 |---|---|---|
 | `PL_VAL`（praline.h の前） | 値の型（窓・最善値・根の値）。既定 `int`。`int` 以外は汎用の atomics（`PL_ALPHA_LOAD`／`PL_ALPHA_STORE`） | 将棋（`double`） |
-| `PL_NO_VALS` ＋ `PL_ROOT_VAL(s, i, v)`／`PL_ROOT_GET(s, j)` | 分割点に根の値の欄を持たず、ゲームが持つ（既定は `s->vals[i]`） | 将棋（`spRootV`、一度に根は1つ）・チェス（根の値を返さない） |
+| `PL_NO_VALS` ＋ `PL_ROOT_VAL(s, i, v)`／`PL_ROOT_GET(s, j)` | 分割点に根の値の欄を持たず、ゲームが持つ（既定は `s->vals[i]`） | 将棋（`spRootV`、一度に根は1つ）・チェス（根の値を返さない）・リバーシ（根は最善手だけ） |
 | `PL_WANT_A` | `spResult` に渡す手を読んだときの alpha を `plA` に（`PL_ROOT_VAL` で「fail-low は値なし」） | 将棋 |
 | `PL_ON_RAISE(s, i)` | 手が分割点の alpha を上げたとき（ロックの中）：その手の下の読み筋を写す・カットしたスレッドの印 | 将棋・チェス |
 | `PL_ON_OPEN(s)`／`PL_ON_CLOSE(s)` | `spRun` が分割点を開くとき／閉じる直前（`stopFlag` は結果の理由）：読み筋の初期化／節の読み筋を `pvTable` へ・他スレッドのカットの履歴ボーナス | 将棋・チェス |
 | `PL_IDLE_HOOK(ms)` | `mt_idle` の入口（状態を戻した後）：別の仕事へ（`return`） | 将棋（`threadId >= ybwMax` は Lazy SMP の `lazyRun`） |
 | `PL_NODES()` | `mt_idle` が返す局面数（既定 `(double)nodes`） | 将棋（32ビット）・チェス（結果の欄にも書く） |
-| `PL_MT_SPLIT` | ゲームが自分の `mt_split` を出す（分割の深さ `splitD` に加えてゲームの設定） | チェス（予想カット節の手数。busy marks はゲームの `mt_busy`） |
+| `PL_MT_SPLIT` | ゲームが自分の `mt_split` を出す（分割の深さ `splitD` に加えてゲームの設定） | チェス（予想カット節の手数。busy marks はゲームの `mt_busy`）・リバーシ（読み切りの分割のマス数・busy marks の深さ／マス数・時計の間隔・分割前に読む手数） |
 | `now()` | ヘッダが使う時計。名前の違うゲームは `#define now() js_now()` | 将棋・チェス |
 
 分割点を開く場所（`search()` の「最初の手を読み終えたら」の分岐、根の `rootSearch`）は、手の生成と順番・枝刈りがゲームごとに違うので**ゲームの `search()` の中**に残す（手は1スレッドのループを最後まで回した順・合法手だけ・枝刈りで落ちる手は落として分割点に並べる）。
@@ -86,7 +86,7 @@ wasm の αβ エンジン（`engine_mt.wasm`、`-DMT`）の**仕事を分ける
 | タフル（`tafl/`） | C（wasm、NNUE） | **YBW**（3、busy marks なし） | mtengine・**praline（移行済み）**・proset・ponder |
 | モリス（`morris/`） | C（wasm） | **YBW**（3）＋busy marks | mtengine・**praline（移行済み）**・proset |
 | ファノロナ（`fanorona/`、アルケルケは1スレッド） | C（wasm） | **YBW**（3）＋busy marks | mtengine・**praline（移行済み）**・proset |
-| リバーシ（`reversi/`） | C（wasm）＋JS | YBW v4.1（中盤は深さ5、完全読みは14マス） | mtengine・proset・ponder（C は元祖の作り：分割点256個・`CHK_Q`） |
+| リバーシ（`reversi/`） | C（wasm）＋JS | **YBW**（中盤は深さ5、読み切りは12マス）＋10スレッドより先は Lazy SMP（2026-11-13、v5。busy marks は入れたが効かず既定でなし） | mtengine・**praline（2026-11-13、分割点256個・`PL_NO_VALS`・`PL_MT_SPLIT`）**・proset・ponder |
 | 将棋（`shogi/`） | C（wasm、NNUE） | **YBW**（4）＋busy marks＋10スレッドより先は Lazy SMP（`YBW_MAX`） | mtengine・**praline（移行済み、`PL_VAL` double・読み筋・`PL_IDLE_HOOK`）**・proset・ponder |
 | チェス（`chess/`） | C（wasm、NNUE） | **YBW**（6、予想カット節も）＋busy marks＋10スレッドより先は Lazy SMP（2026-11-12、v3。前は YBW 1＋Lazy SMP） | mtengine・**praline（移行済み、読み筋・カットの印・`PL_MT_SPLIT`）**・proset・ponder |
 | 五目並べ（`gomoku/`） | **C（wasm、2026-11-12）**：盤の形・禁手・VCF/VCT・αβ・評価ネットごと `core.c`（`core_simd.wasm`／`core.wasm`、スレッドは `core_mt.wasm`）。JS は予備（`?nowasm`） | **YBW**（4、読み筋の節は2）＋busy marks、解析は候補手を分割点に | mtengine・**praline（2026-11-12）**・proset |
@@ -231,7 +231,7 @@ JavaScript エンジンは `shared/mtsplit.js`（＋`mttt.js`）、独立な仕�
 ### 移行の判断と次の候補
 - **将棋（第3段で移行済み）**：読み筋を分割点経由で戻す（`pvTable` の写し）・継続履歴の共有・`YBW_MAX`（10スレッドより先の補助は Lazy SMP：`lazyRun`・`gRootSeq`・`gRootP`）がある。Praline に「手が alpha を上げたときのつなぎ（読み筋）」と「Lazy の補助の上限 `YBW_MAX`」（`mt_idle` の入口で `threadId >= ybwMax` なら Lazy の根の読みへ、`mtCheck` で主の根の更新を見る）を足してから移す。将棋の移行と同時に、将棋の12局面で全一致を確かめて入れる（使うゲームのない共通コードは先に入れない）。
 - **チェス（第3段で移行済み）**：YBW の補助は1つだけで、YBW の補助と主が履歴・カウンター手の表を共有し、分割は予想カット節を除く。上の将棋の足し方の後に。
-- **リバーシ**：元祖の作り（分割点256個、`CHK_Q`＝4096局面ごとの確認、完全読みの分割）で、中盤と終盤の2種類の探索に分割点がある。並行して別の作業が `reversi/engine.c` 以外を触っている間は移さない。最後に回す。
+- **リバーシ（2026-11-13 に移行済み、下の「リバーシ」）**：元祖の作り（分割点256個、`CHK_Q`＝4096局面ごとの確認、完全読みの分割）で、中盤と終盤の2種類の探索に分割点がある。最後に回した。
 - **共通にしなかったもの（理由）**：①分割点を開く場所（手の生成・順番・枝刈りがゲームごとに違い、関数にすると1スレッドの読みを変えずに書くのが難しく、性能も落ちうる）、②`timeUp`（ゲームごとに確認の間隔・局面数の上限・`gHit` の見方が違う）、③各スレッドの結果の共有 `gRes`（手の詰め方がゲームごと）、④共有の置換表（局面の鍵と項目の詰め方がゲームごと。作りは同じなので、次の段で `praline_tt.h` にまとめる候補）、⑤スレッドの起動（`mt_stack`・`mt_thread`：ゲームの初期化を呼ぶ。シミュレーションの `gen.py` がこの節を切り取る）。
 
 ### アマゾンズ（2026-11-11）：JS の αβ を C に移して Praline に
