@@ -72,7 +72,7 @@
   }
   function board(id, look) {
     id = id || 'english'; look = LOOKS.includes(look) ? look : lookNow();
-    const TT = T(), E = window.PegEngine, B = E.BOARDS[id], S = shape(B), g = new TT.Group(); rbPts = S.pts; rbR = Math.max(...S.pts.map(([x, y]) => Math.hypot(x, y))) || 3;
+    const TT = T(), E = window.PegEngine, B = E.BOARDS[id], S = shape(B), g = new TT.Group(); rbPts = S.pts;
     // this board's own materials, swapped in place by setSet (the portal's 盤 row: a board kept from before / merged meshes
     // still show the chosen design — the same fix as chess)
     const W = woodMat(look).clone(), RM = rimMat(look).clone(), GM = grooveMat(look).clone(), FM = faceMat(look, id).clone();
@@ -116,7 +116,11 @@
   const CERAMIC = ['#8cbca8', '#2b4085', '#d19a3d', '#cc3d29', '#ede6d1', '#333338'];
   const JEWEL = ['#d10a24', '#102ed1', '#089a4c', '#8c24cc', '#f79a1a', '#59cce6'];
   const POP = ['#f2242f', '#ff6f9e', '#ffc61f', '#3f80ff', '#f4f2ea', '#1a1a1e'];   // (the pop board's colours)
-  const RAINBOW = ['#71c74d', '#f85454', '#85b45c', '#f8e982', '#fab707', '#c94959', '#15897c', '#b4db35', '#f7d720', '#fc9c3f', '#b75959', '#1ea193', '#ece45d', '#fad50f', '#fb7b4f', '#9ce2b1', '#e9c0ce', '#08ade1', '#b8e2d7', '#f3d6d4', '#fc8e96', '#2a5b74', '#a1d7e8', '#a1bae3', '#cda8d9', '#bf6ecb', '#1f73a3', '#2fd4ea', '#8f59ba', '#a97fb0', '#01bddc', '#7c5e74'];   // (the 32 balls of the user's reference photo, their colours exactly as photographed; one ball each)
+  // the rainbow set: the 32 balls of the user's reference photo, each in its own place. The photo is the English board turned 45°
+  // (green arm upper left, blue upper right, purple lower right, red lower left); here it is turned back: green left, blue top, purple right, red bottom.
+  // key 'u,v' = the hole in board steps (u → right, v → toward the player); the centre hole (empty in the photo) gets a cream ball.
+  const RAINBOW = { '-3,-1': '#0a8172', '-3,0': '#83b259', '-3,1': '#6dc449', '-2,-1': '#189f90', '-2,0': '#b2da30', '-2,1': '#f9e87c', '-1,-3': '#104964', '-1,-2': '#02aadf', '-1,-1': '#95e0ad', '-1,0': '#ebe35a', '-1,1': '#f6d713', '-1,2': '#fab604', '-1,3': '#f74b4f', '0,-3': '#0b6496', '0,-2': '#a0d6e7', '0,-1': '#b4ded6', '0,1': '#fad405', '0,2': '#fe9633', '0,3': '#c84052', '1,-3': '#03bbdb', '1,-2': '#1fd1e9', '1,-1': '#9eb6e5', '1,0': '#f4d7d4', '1,1': '#e7bdcc', '1,2': '#fa7546', '1,3': '#ad4b4f', '2,-1': '#8951b6', '2,0': '#c9a5d7', '2,1': '#fd8a93', '3,-1': '#77586d', '3,0': '#a77cac', '3,1': '#ba66c6', '0,0': '#f4eee2' };
+  const RB_KEYS = Object.keys(RAINBOW).map(k => k.split(',').map(Number));
   const PAINT = ['#c72924', '#1f5cb3', '#1f8047', '#e6a81f', '#6b338c', '#ebe6d6'];
   // abstract pieces (for the abstract board): flat matte discs, the top painted with the 2D page's motif (m-mod-<k>.webp)
   const MOD = ['#d4694a', '#e3b34a', '#2e8f8a', '#f0e6d4', '#ed8c80', '#5473b3'];
@@ -125,12 +129,21 @@
     tx.anisotropy = 4; if (T().sRGBEncoding) tx.encoding = T().sRGBEncoding;
     return new (T().MeshStandardMaterial)({ map: tx, roughness: .75, metalness: 0 });
   });
-  let rbPts = [], rbR = 3;   // (the board in use: its holes, for the rainbow set's colours)
+  let rbPts = [];   // (the board in use: its holes, for the rainbow set's colours)
   function marbleMat(i, set) {
     const k = (i * 7 + 3) % 6;
-    if (set === 'rainbow') {   // the painted wooden rainbow set: the 32 colours of the user's reference photo, mixed over the board (2026-11-13)
-      const c = RAINBOW[((i === 32 ? 16 : i) * 13 + 5) % 32];   // (the 32 colours, each once on the 33-hole board)
-      return mat('mrb' + c, () => X.M({ color: c, roughness: .5 }));   // the photo's colour exactly, no extra processing
+    if (set === 'rainbow') {   // the painted wooden rainbow set: the photo's colours in the photo's places (2026-11-13)
+      const n = rbPts.length || 1, cx = rbPts.reduce((t, q) => t + q[0], 0) / n, cz = rbPts.reduce((t, q) => t + q[1], 0) / n;
+      const rr = Math.max(...rbPts.map(q => Math.hypot(q[0] - cx, q[1] - cz)), 1e-6), sc = Math.sqrt(10) / rr, q = rbPts[i] || [cx, cz];   // (the English board: one step = 1; other boards scaled to the same reach)
+      const u = (q[0] - cx) * sc, v = (q[1] - cz) * sc;
+      const near = RB_KEYS.map(k => [(k[0] - u) * (k[0] - u) + (k[1] - v) * (k[1] - v), RAINBOW[k[0] + ',' + k[1]]]).sort((p1, p2) => p1[0] - p2[0]);
+      let c = near[0][1];
+      if (near[0][0] > 1e-4) {   // a hole the photo's board doesn't have (the other boards): the colours of the three nearest balls, blended
+        let w = 0; const rgb = [0, 0, 0];
+        near.slice(0, 3).forEach(([d, h]) => { const k = 1 / (d * d + 1e-4); w += k; for (let j = 0; j < 3; j++) rgb[j] += k * parseInt(h.substr(1 + j * 2, 2), 16); });
+        c = '#' + rgb.map(x => Math.round(x / w).toString(16).padStart(2, '0')).join('');
+      }
+      return mat('mrb' + c, () => X.M({ color: c, roughness: .6 }));   // the photo's colour as it is, matte
     }
     if (set === 'mod') return mat('mmod' + k, () => X.M({ color: MOD[k], roughness: .75 }));
     if (set === 'pearl') return mat('mcer' + k, () => X.M({ color: CERAMIC[k], roughness: .28, clearcoat: .8, clearcoatRoughness: .2 }));
