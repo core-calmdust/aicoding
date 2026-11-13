@@ -1504,7 +1504,10 @@
         const pm = new TT.PMREMGenerator(R); scene.environment = pm.fromScene(env, .03).texture; pm.dispose(); envOK = true; return;
       }
       const Lk = LOOK[opts.plain ? 'day' : curTod()], tint = new TT.Color(Lk.hemi[0]).convertSRGBToLinear(), sunC = new TT.Color(Lk.sun).convertSRGBToLinear(), amt = Lk.hemi[2] / .5;
-      for (let i = 0; i < pos.count; i++) { const y = Math.max(0, pos.getY(i) / 30), k = (.06 + .3 * y) * amt; c.setRGB(tint.r * k, tint.g * k, tint.b * k); col.push(c.r, c.g, c.b); }
+      // (r186, 2026-11-13: its reflections at a glossy ball's edge look at the env's dark underside — a black ring round the
+      //  marbles / stones that r128 did not draw; a soft ground bounce below the horizon gives the old look back)
+      const G = window.__three186R ? .15 : 0;
+      for (let i = 0; i < pos.count; i++) { const yy = pos.getY(i) / 30, y = Math.max(0, yy), k = (.06 + .3 * y + (yy < .15 ? G * Math.min(1, (.15 - yy) / .4) : 0)) * amt; c.setRGB(tint.r * k, tint.g * k, tint.b * k); col.push(c.r, c.g, c.b); }
       sky.geometry.setAttribute('color', new TT.Float32BufferAttribute(col, 3)); env.add(sky);
       [[-8, 16, 6, 12, 7, 1.6], [10, 10, -6, 8, 6, .8], [0, 6, 18, 18, 4, .4]].forEach(([x, y, z, w, h, k]) => {
         const kk = k * Math.min(1.2, Lk.sunI + (Lk.lamp ? .25 : 0)), lc = Lk.lamp > 1 ? new TT.Color(0xffc98a).convertSRGBToLinear() : sunC;

@@ -8,6 +8,16 @@ set -e
 WORK=${WORK:-$HOME/shogi-nnue-work}; COUNT=${COUNT:-30}; ROUND=${ROUND:-1}
 mkdir -p "$WORK/raw"; cd "$WORK"
 REPO=nodchip/tanuki-.nnue-pytorch-2024-07-30.1
+# one file: a broken connection (curl 92 / 18 / 56, HTTP/2 stream cancelled...) continues from where it stopped, up to 30 times
+get() {
+  local t=0
+  until curl -fL -C - --http1.1 --retry 5 -o "$1" "$2"; do
+    rc=$?; t=$((t+1))
+    [ $rc -eq 33 ] || [ $rc -eq 22 ] && { [ $t -ge 3 ] && rm -f "$1"; }   # the server refused the range: after 3 tries start this file over
+    [ $t -ge 30 ] && { echo "download failed: $2 (run the same command again to continue)"; return 1; }
+    echo "  connection broken (curl $rc), continuing ($t/30)"; sleep 3
+  done
+}
 curl -sSfL "https://huggingface.co/api/datasets/$REPO/tree/main" | grep -o '"path":"[^"]*\.bin"' | sed 's/"path":"//;s/"$//' | sort > files.txt
 TOTAL=$(wc -l < files.txt | tr -d ' ')
 echo "tanuki- dataset: $TOTAL files, taking $COUNT spread across it"
@@ -18,10 +28,10 @@ while read -r f; do
     n=$((n+1)); out="raw/$(printf '%03d' $n).bin"
     echo "[$n/$COUNT] $f"
     url="https://huggingface.co/datasets/$REPO/resolve/main/$(echo "$f" | sed 's/=/%3D/g')"
-    curl -fL -C - --retry 5 -o "$out" "$url" || curl -fL --retry 5 -o "$out" "$url"
+    get "$out" "$url"
   fi
   i=$((i+1))
 done < files.txt
 echo "validation set (Suisho5 depth 9)"
-curl -fL -C - --retry 5 -o val.bin "https://huggingface.co/datasets/nodchip/shogi_suisho5_depth9/resolve/main/shuffled.bin" || true
+get val.bin "https://huggingface.co/datasets/nodchip/shogi_suisho5_depth9/resolve/main/shuffled.bin" || true
 du -sh raw val.bin

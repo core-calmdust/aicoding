@@ -1025,3 +1025,41 @@ html.atlas-skin body:not(#_) :is(.modal, .dock, #dock) :is(input:not([type]), in
 /* (2026-11-13) the pinned header's paper ring only above and at the sides (below it covered the banner's top line); its own
    bottom padding hides the cards scrolling under it */
 html.atlas-skin body:not(#_) .lxh-fix.pin:not(#_){clip-path:inset(-14px -14px 0 -14px);padding-bottom:10px;margin-bottom:2px}
+/* (2026-11-13) the lesson / opening header and its category tabs as one box: the tabs run along the box's bottom */
+html.atlas-skin body:not(#_) .lxh-fix > .lxh-box:not(#_):not(#_){display:flex!important;flex-direction:column!important;gap:0!important;padding:0!important;border-radius:20px!important;background:#fffaf0!important;border:2px solid #ead9b6!important;box-shadow:0 3px 0 #ead9b6!important;overflow:hidden}
+html.atlas-skin body:not(#_) .lxh-box > .lxh:not(#_){border:0!important;box-shadow:none!important;border-radius:0!important;background:none!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal .lxh-box > .lx-tabs:not(#_):not(#_){margin:0!important;border-radius:0!important;background:#f5ecd8!important;border-top:2px solid #efe3c8!important;padding:5px 8px!important}
+/* the puzzles' 続きから as big as the lessons' */
+html.atlas-skin body:not(#_) :is(.pbh-hero,.pzx-hero,.pb-head) .pb-cont:not(#_){padding:12px 22px!important;min-width:190px;border-radius:14px!important;font-size:17px!important;font-weight:900!important;box-shadow:0 4px 0 #d93c3c!important}
+html.atlas-skin body:not(#_) :is(.pbh-hero,.pzx-hero,.pb-head) .pb-cont small:not(#_){font-size:12px!important}
+@media (max-width:760px){ html.atlas-skin body:not(#_) :is(.pbh-hero,.pzx-hero,.pb-head) .pb-cont:not(#_){min-width:0;padding:9px 12px!important;font-size:15px!important} }
+/* PC: every list's last lines clear the frosted band above the buttons (rules / lessons / puzzles dialogs of every game) */
+@media (min-width:761px){ html.atlas-skin:not(.atlas-2d) body:not(#_) .modal :has(> :is(.seg.ls-tabs, #segLs)) > :has(+ .modal-actions){padding-bottom:40px!important} }
+/* (2026-11-13) puzzles' hubs: header + category tabs in one box like the lessons'; every header the same height and the same 続きから */
+html.atlas-skin body:not(#_) .lxh-box > :is(.pbh-hero,.pzx-hero):not(#_):not(#_){border:0!important;box-shadow:none!important;border-radius:0!important;background:none!important;margin:0!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal .lxh-box > :is(.pbh-tabs,.lx-tabs):not(#_):not(#_){margin:0!important;border-radius:0!important;background:#f5ecd8!important;border-top:2px solid #efe3c8!important;padding:5px 8px!important;display:flex!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal .lxh-box > :is(.pbh-tabs,.lx-tabs) > button:not(#_):not(#_){flex:1 1 0;min-width:0;border:0!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal .lxh-box > .pbh-tabs > button:not(.sel):not(#_):not(#_){background:transparent!important;box-shadow:none!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal .lxh-box > .pbh-tabs > button.sel:not(#_):not(#_){background:var(--a-tile)!important;color:var(--a-ink)!important;box-shadow:0 3px 0 var(--a-line)!important;border-radius:99px!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal .lxh-box > .pbh-tabs > button.sel :is(.ic,.ct):not(#_){color:inherit!important}
+html.atlas-skin body:not(#_) :is(.lxh, .pbh-hero, .pzx-hero):not(#_):not(#_){min-height:133px;box-sizing:border-box;padding:16px 18px!important}
+html.atlas-skin body:not(#_) :is(.pbh-hero, .pzx-hero) .pb-ring:not(#_):not(#_){width:84px!important;height:84px!important}
+html.atlas-skin body:not(#_) :is(.lxh-cont, :is(.pbh-hero,.pzx-hero,.pb-head) .pb-cont):not(#_):not(#_){box-sizing:border-box;width:220px!important;min-width:0!important;max-width:220px!important;height:64px;padding:11px 16px!important;display:block!important;text-align:center;line-height:1.3!important;white-space:nowrap;overflow:hidden;font-size:17px!important;border-radius:14px!important}
+html.atlas-skin body:not(#_) :is(.lxh-cont, :is(.pbh-hero,.pzx-hero,.pb-head) .pb-cont) small:not(#_):not(#_){display:block;font-size:12px!important;font-weight:600;overflow:hidden;text-overflow:ellipsis}
+html.atlas-skin body:not(#_) :is(.lxh-cont, :is(.pbh-hero,.pzx-hero,.pb-head) .pb-cont) > :is(span,b):not(#_){display:inline;color:#fff!important}
+@media (max-width:760px){ html.atlas-skin body:not(#_) :is(.lxh, .pbh-hero, .pzx-hero):not(#_):not(#_){min-height:0;padding:12px!important} html.atlas-skin body:not(#_) :is(.lxh-cont, :is(.pbh-hero,.pzx-hero,.pb-head) .pb-cont):not(#_):not(#_){width:auto!important;max-width:none!important;flex:1 1 100%;height:auto;font-size:15px!important} html.atlas-skin body:not(#_) :is(.pbh-hero, .pzx-hero) .pb-ring:not(#_):not(#_){width:62px!important;height:62px!important} }
+html.atlas-skin body:not(#_) .lxh-fix.pz{margin-bottom:12px}
+/* (2026-11-13) a top card (shogi 棋力認定テスト) moves into the header as a second, white button */
+html.atlas-skin body:not(#_) .lxh-acts{flex:none;display:flex;gap:10px;align-items:center}
+html.atlas-skin body:not(#_) .lxh-ex{box-sizing:border-box;width:200px;height:64px;padding:11px 14px;border-radius:14px;border:2px solid var(--a-line,#efe3c8);background:var(--a-btn,#fffdf7);box-shadow:0 4px 0 #e6d6b2;color:var(--a-ink,#2b3044);font:inherit;font-size:16px;font-weight:900;line-height:1.3;text-align:center;white-space:nowrap;overflow:hidden;cursor:pointer}
+html.atlas-skin body:not(#_) .lxh-ex small{display:block;font-size:12px;font-weight:700;color:#8a8fa3;overflow:hidden;text-overflow:ellipsis}
+html.atlas-skin body:not(#_) .lxh-ex:hover{border-color:#e0b65a}
+html.atlas-skin body:not(#_) .lxh-ex:active{transform:translateY(2px);box-shadow:0 2px 0 #e6d6b2}
+html.atlas-skin body:not(#_) .lx > .lx-grid.lxh-moved{display:none!important}
+@media (max-width:760px){ html.atlas-skin body:not(#_) .lxh-acts{flex:1 1 100%} html.atlas-skin body:not(#_) .lxh-acts > *{flex:1 1 0;width:auto!important} html.atlas-skin body:not(#_) .lxh-ex{height:auto;font-size:14px} }
+/* (2026-11-13) every red button raised like the white ones (a 2px edge and a 4px foot of a softer shade — the deep red foot made
+   the red buttons look lower than the white ones beside them) */
+html.atlas-skin body:not(#_) :is(.modal, .ngt-foot, .dock, #dock, .grc-ov, .card) :is(.modal-actions, .rt-nav, .lesson-actions, .ngt-foot, .ol-acts, .ol-bot) :is(button, .mbtn, a.mbtn):is(.go, .primary, .gbtn):not(:disabled):not(#_):not(#_):not(#_),
+html.atlas-skin body:not(#_) :is(.lxh-cont, .pb-cont, .pbh-daily .go:not(.ok), .pzx-daily .go:not(.ok)):not(#_):not(#_):not(#_){border:2px solid #f25454!important;box-shadow:0 4px 0 #e24a4a!important;box-sizing:border-box}
+html.atlas-skin body:not(#_) :is(.modal, .ngt-foot, .dock, #dock, .grc-ov, .card) :is(.modal-actions, .rt-nav, .lesson-actions, .ngt-foot, .ol-acts, .ol-bot) :is(button, .mbtn, a.mbtn):is(.go, .primary, .gbtn):not(:disabled):active:not(#_):not(#_):not(#_),
+html.atlas-skin body:not(#_) :is(.lxh-cont, .pb-cont):active:not(#_):not(#_):not(#_){transform:translateY(2px);box-shadow:0 2px 0 #e24a4a!important}

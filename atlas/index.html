@@ -1705,6 +1705,12 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 @media (max-width:600px){#lessonOverlay #lessonList .lx-grid{grid-template-columns:1fr!important}#lessonOverlay #lessonList .lx-th{width:76px!important}
   #lessonOverlay #lessonList .lx-tabs{grid-auto-columns:minmax(76px,1fr)!important}#lessonOverlay #lessonList .lx-tabs button{flex-direction:column!important;gap:3px!important;padding:8px 6px!important;font-size:12.5px!important}}
 /* 問題一覧 (atlas/app.js puzzleSheet): the guide over the total, icons on the chapters and sets (2026-11-11) */
+/* (2026-11-13) the header and the chapter tabs in one box: the tabs run along the box's bottom */
+#lessonOverlay .pzh-box{margin:0 0 14px;border-radius:24px;overflow:hidden;background:#fff8e4;box-shadow:0 4px 0 #f0b440}
+#lessonOverlay .pzh-box > .pzh-hero{margin:0!important;border-radius:0!important;box-shadow:none!important}
+#lessonOverlay #lessonList .pzh-box > .lx-tabs{margin:0!important;border-radius:0!important;padding:6px 8px!important;gap:6px!important;background:#fff3d2!important;border:0!important;border-top:2px solid #f6d48a!important;box-shadow:none!important}
+#lessonOverlay #lessonList .pzh-box > .lx-tabs button{padding:7px 10px!important;border-radius:14px!important;background:transparent!important;border:0!important;box-shadow:none!important}
+#lessonOverlay #lessonList .pzh-box > .lx-tabs button.sel{background:#fff!important;box-shadow:0 3px 0 #f0c66a!important}
 #lessonOverlay .pzh-hero{position:relative;display:flex;align-items:center;gap:16px;margin:0 0 14px;padding:14px 20px 14px 150px;min-height:118px;border-radius:24px;background:radial-gradient(130% 120% at 10% 0%,#fff6c9 0%,#ffd76a 55%,#ffb43d 100%);box-shadow:0 4px 0 #f0b440;overflow:hidden}
 #lessonOverlay .pzh-hero::before{content:'';position:absolute;left:-60px;top:-140px;width:360px;height:360px;border-radius:50%;background:repeating-conic-gradient(rgba(255,255,255,.45) 0 8deg,rgba(255,255,255,0) 8deg 22deg);pointer-events:none}
 #lessonOverlay .pzh-ch{position:absolute;left:14px;bottom:-12px;width:132px;height:132px;object-fit:contain;filter:drop-shadow(0 8px 8px rgba(120,60,0,.28));animation:lbBob 2.4s ease-in-out infinite;transform-origin:50% 100%}
@@ -1740,6 +1746,16 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 #lessonOverlay .pzh-dif{display:inline-flex;gap:2px}#lessonOverlay .pzh-dif i{width:5px;height:12px;border-radius:2px;background:#f2b630}
 #lessonOverlay #lessonList .lx-th.sg svg{border-radius:6px!important}
 .bksheet .sh-mini text[fill="#e9d9b5"]{fill:#8a6234}   /* (the hand under a small board: was drawn for the dark page) */
+/* (2026-11-13) the lists' cards: the board picture large on top, the title and one short line under it — no cut-off text */
+@media (min-width:601px){
+  #lessonOverlay #lessonList .lx-grid:not(.pzh-days){grid-template-columns:repeat(auto-fill,minmax(230px,1fr))!important;gap:14px!important}
+  #lessonOverlay #lessonList .lx-grid:not(.pzh-days) > .lx-card{flex-direction:column!important;gap:10px!important;padding:12px!important}
+  #lessonOverlay #lessonList .lx-grid:not(.pzh-days) > .lx-card > .lx-th{width:100%!important;height:168px!important;align-self:stretch!important;padding:10px!important;box-sizing:border-box;border-radius:14px!important;background:radial-gradient(closest-side,rgba(120,80,30,.16),transparent 75%),linear-gradient(160deg,#f8efd9,#efdfbb)!important}
+  #lessonOverlay #lessonList .lx-grid:not(.pzh-days) > .lx-card > .lx-th svg{width:auto!important;height:100%!important;max-width:100%!important;filter:drop-shadow(0 4px 6px rgba(90,55,10,.28))}
+  #lessonOverlay #lessonList .lx-grid:not(.pzh-days) > .lx-card .lx-sub{display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important}
+}
+#lessonOverlay #lessonList .lx-grid:not(.pzh-days) > .lx-card:not([data-set]) :is(.lx-desc,.lx-mv){display:none!important}
+#lessonOverlay #lessonList .lx-grid:not(.pzh-days) > .lx-card[data-set] .lx-desc{display:block!important;-webkit-line-clamp:unset!important;overflow:visible!important}
 @media (max-width:600px){#lessonOverlay .pzh-hero{flex-wrap:wrap}#lessonOverlay .pzh-go{width:100%;max-width:none}}
 @media (max-width:600px){#lessonOverlay .pzh-hero{padding-left:112px;min-height:96px}#lessonOverlay .pzh-ch{width:100px;height:100px}#lessonOverlay .pzh-tx b{font-size:19px}}
 /* (the full game's lists are drawn for its dark page: here in the portal's cream and white) */
@@ -1879,7 +1895,7 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 .ps-subv .ps-sx{flex:1;display:flex;flex-direction:column;gap:14px;padding:14px 12px 14px}
 .ps-prog{display:flex;align-items:center;gap:12px}.ps-prog .bar{flex:1}.ps-prog em{font-style:normal;font-weight:800;font-size:13px;color:var(--ink2)}
 .ps-ch{display:grid;grid-template-columns:1fr 1fr;gap:10px}.ps-ch.pz .mxb[data-pz="list"]:nth-child(3){grid-column:1 / -1}.ps-ch.pz .mxb[data-pz="list"]:nth-child(2){grid-column:auto}
-.ps-ch.ls{grid-template-columns:minmax(0,1fr) auto;align-items:center}.ps-ch .mxb{width:100%}.ps-ch.ls .mxb{width:auto}.ps-ch .mtab3{margin:0}
+.ps-ch.ls{grid-template-columns:minmax(0,1fr);align-items:center}.ps-ch .mxb{width:100%}.ps-ch .mtab3{margin:0}   /* (2026-11-13: 一覧 across the width, under the lesson / opening switch) */
 .ps-subv .ps-act.ps-act3{margin-top:auto;grid-template-columns:1fr 1fr}.ps-act3 .ps-go{grid-column:1 / -1}
 .ps-act3 .ps-full{background:#ffeccc;color:#7a4a12;box-shadow:0 4px 0 #f0cf98;border:2px solid #f6dcae}   /* (the 書斎で遊ぶ colours, 2026-11-11) */
 .ps-ic{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:#fff;background:linear-gradient(150deg,color-mix(in srgb,var(--c) 80%,#fff),var(--c));box-shadow:inset 0 -2px 0 rgba(0,0,0,.15)}
@@ -2179,7 +2195,7 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 <canvas id="confetti"></canvas>
 
 <script>/* three.js r186 + the r128 compatibility layer (2026-11-13: the default; ?three=128 loads the old version) */
-if (!/[?&]three=128\b/.test(location.search)) document.write('<script src="vendor/three-r186.min.js?v=1"><\/script><script src="vendor/three-compat.js?v=9"><\/script>');
+if (!/[?&]three=128\b/.test(location.search)) document.write('<script src="vendor/three-r186.min.js?v=1"><\/script><script src="vendor/three-compat.js?v=12"><\/script>');
 else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');</script>
 <script src="texgen.js?v=2"></script>
 <script src="npc/roster.js?v=7"></script>
@@ -2201,7 +2217,7 @@ else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.j
 </script>
 <script src="gamelist-i18n.js?v=14pg"></script>
 <script src="img/tex/baked.js?v=2"></script>
-<script src="table3d.js?v=163"></script>
+<script src="table3d.js?v=164"></script>
 <script>/* the places other than the chabudai (tables3d.js, 440 KB): at once when one is chosen, else in idle time after the page has
    loaded (2026-11-10); 'atlas-places' tells the page they are there */
 (function () {
@@ -2225,10 +2241,10 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   }, 60);
 };</script>
 <script src="../shared/tapword.js?v=1"></script>
-<script src="lazy.js?v=154"></script>
+<script src="lazy.js?v=159"></script>
 <script src="puzzle-lines.js?v=1"></script>
-<script src="puzzles.js?v=15"></script>
-<script src="lessons3d.js?v=12"></script>
+<script src="puzzles.js?v=17"></script>
+<script src="lessons3d.js?v=13"></script>
 <script src="missions.js?v=8"></script>
 <link rel="stylesheet" href="historia.css?v=15">
 <script src="historia.js?v=41"></script>
@@ -2242,7 +2258,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=34"></script>
 <script src="npc/npc.js?v=30"></script>
 <script src="avtalk.js?v=2"></script>
-<script src="app.js?v=334"></script>
+<script src="app.js?v=337"></script>
 <script src="../shared/praline-badge.js?v=8" data-portal defer></script>
 </body>
 </html>

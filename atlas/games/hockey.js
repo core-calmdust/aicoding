@@ -38,6 +38,7 @@
     'it.freeze': ['相手のパッドが凍った！', 'Opponent frozen!', '对手被冻住！', '對手被凍住！', '상대 패드가 얼었다！', '¡Rival congelado!', 'Adversaire gelé !', 'Rival congelado!', 'Gegner eingefroren!', 'Соперник заморожен!', 'Rakip dondu!', 'Lawan membeku!', 'विरोधी जम गया!', 'تجمّد الخصم!'],
     'it.worm': ['{p}がワームホールを広げた！', '{p} widened the wormholes!', '{p}扩大了虫洞！', '{p}擴大了蟲洞！', '{p}이(가) 웜홀을 넓혔다!', '¡{p} agrandó los agujeros de gusano!', '{p} élargit les trous de ver !', '{p} alargou os buracos de minhoca!', '{p} vergrößert die Wurmlöcher!', '{p} расширил червоточины!', '{p} solucan deliklerini büyüttü!', '{p} memperbesar lubang cacing!', '{p} ने वर्महोल बड़े किए!', '{p} وسّع الثقوب الدودية!'],
     paused: ['一時停止中（クリックで再開）', 'Paused (click to resume)', '已暂停（点击继续）', '已暫停（點擊繼續）', '일시 정지 (클릭하면 재개)', 'En pausa (clic para seguir)', 'En pause (clic pour reprendre)', 'Pausado (clique para continuar)', 'Pause (Klick zum Weiterspielen)', 'Пауза (нажми, чтобы продолжить)', 'Duraklatıldı (devam için tıkla)', 'Dijeda (klik untuk lanjut)', 'रुका (जारी रखने के लिए क्लिक)', 'متوقف (انقر للمتابعة)'],
+    pausedEsc: ['一時停止中（クリックで再開・もう一度ESCでやめる）', 'Paused (click to resume · ESC again to quit)', '已暂停（点击继续 · 再按 ESC 退出）', '已暫停（點擊繼續 · 再按 ESC 離開）', '일시 정지 (클릭하면 재개 · ESC를 한 번 더 누르면 종료)', 'En pausa (clic para seguir · ESC otra vez para salir)', 'En pause (clic pour reprendre · Échap encore pour quitter)', 'Pausado (clique para continuar · ESC de novo para sair)', 'Pause (Klick zum Weiterspielen · nochmal ESC zum Beenden)', 'Пауза (нажми, чтобы продолжить · ещё раз ESC — выйти)', 'Duraklatıldı (devam için tıkla · çıkmak için tekrar ESC)', 'Dijeda (klik untuk lanjut · ESC lagi untuk keluar)', 'रुका (जारी रखने के लिए क्लिक · बाहर निकलने के लिए फिर ESC)', 'متوقف (انقر للمتابعة · ESC مرة أخرى للخروج)'],
   };
   // (2026-11-10) the boards: each one plays differently (hockey/engine.js BOARDS) — [name, one line], in LG order
   const BT = {
@@ -317,7 +318,7 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
     const touchLead = 4.5;   // cm: on touch the mallet sits a little ahead of the finger (toward the far goal)
     function sideOf(q) { return !pvp ? 0 : q.y > 0 ? 0 : 1; }
     function onDown(e) {
-      if (phase !== 'play') { if (paused) { resume(); if (e.pointerType === 'mouse') lock(); } return; }
+      if (paused || phase !== 'play') { if (paused) { resume(); if (e.pointerType === 'mouse' && !pvp) lock(); } return; }   // (2026-11-13: a click while paused resumes — it only took the pointer back and the game stayed still)
       if (e.pointerType === 'mouse' && !pvp) { lock(); return; }   // (the mouse steers by its moves alone: a click changes nothing — it takes the pointer back if Esc let it go)
       const q = toCm(e); if (!q) return; const side = sideOf(q); if (!pvp && side !== 0) return;
       ptr.set(e.pointerId, side); try { ctx.el.setPointerCapture(e.pointerId); } catch (er) {}
@@ -334,7 +335,7 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
     const locked = () => document.pointerLockElement === ctx.el;
     const lock = () => { if (!canLock || locked()) return; try { const r = ctx.el.requestPointerLock({ unadjustedMovement: false }); if (r && r.catch) r.catch(() => {}); } catch (e) {} };
     const unlock = () => { if (locked()) try { document.exitPointerLock(); } catch (e) {} };
-    const ESCB = { ja: 'Esc：一時停止', en: 'Esc: pause', zh: 'Esc：暂停', 'zh-TW': 'Esc：暫停', ko: 'Esc: 일시 정지', es: 'Esc: pausa', fr: 'Échap : pause', pt: 'Esc: pausa', de: 'Esc: Pause', ru: 'Esc: пауза', tr: 'Esc: duraklat', id: 'Esc: jeda', hi: 'Esc: रोकें', ar: 'Esc: إيقاف مؤقت' };
+    const ESCB = { ja: 'ESC：一時停止', en: 'ESC: pause', zh: 'ESC：暂停', 'zh-TW': 'ESC：暫停', ko: 'ESC: 일시 정지', es: 'ESC: pausa', fr: 'Échap : pause', pt: 'ESC: pausa', de: 'ESC: Pause', ru: 'ESC: пауза', tr: 'ESC: duraklat', id: 'ESC: jeda', hi: 'ESC: रोकें', ar: 'ESC: إيقاف مؤقت' };
     let escB = null;
     const escBadge = on => {   // (2026-11-12) beside the portal's × during a match (a mouse): Esc pauses (only this kind of game)
       if (on && !escB) { escB = document.createElement('div'); escB.className = 'hk-escb'; escB.textContent = ESCB[ctx.lang] || ESCB.en;
@@ -461,7 +462,7 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
       tick();
     }
     // (2026-11-12) the pointer lock: told on the controls card (mouse)
-    const ESCT = ["Escで一時停止、クリックで再開。", "Esc pauses, a click resumes.", "按 Esc 暂停，点击继续。", "按 Esc 暫停，點擊繼續。", "Esc로 일시 정지, 클릭하면 재개.", "Esc pausa; clic para seguir.", "Échap met en pause ; clic pour reprendre.", "Esc pausa; clique para continuar.", "Esc pausiert, Klick setzt fort.", "Esc — пауза, щелчок — продолжить.", "Esc duraklatır; devam için tıkla.", "Esc menjeda; klik untuk lanjut.", "Esc से रुकता है; जारी रखने के लिए क्लिक करें।", "Esc للإيقاف المؤقت، وانقر للمتابعة."];   // (2026-11-13: only what to do — no note about the cursor)
+    const ESCT = ["ESCで一時停止、クリックで再開。", "ESC pauses, a click resumes.", "按 ESC 暂停，点击继续。", "按 ESC 暫停，點擊繼續。", "ESC로 일시 정지, 클릭하면 재개.", "ESC pausa; clic para seguir.", "Échap met en pause ; clic pour reprendre.", "ESC pausa; clique para continuar.", "ESC pausiert, Klick setzt fort.", "ESC — пауза, щелчок — продолжить.", "ESC duraklatır; devam için tıkla.", "ESC menjeda; klik untuk lanjut.", "ESC से रुकता है; जारी रखने के लिए क्लिक करें।", "ESC للإيقاف المؤقت، وانقر للمتابعة."];   // (2026-11-13: only what to do — no note about the cursor)
     // (2026-11-10) the controls first (until 'don't show again'), then the board menu
     function howFirst() {
       if (howOff) { showMenu(); return; }
@@ -481,7 +482,7 @@ html.hk-on #bv > .npc-float .npc-pic{width:46px!important;height:46px!important}
     /* ---------- AI ---------- */
     const mem = {};
     /* ---------- the loop ---------- */
-    function pause() { if (phase !== 'play' || paused) return; paused = true; unlock(); document.documentElement.classList.remove('hk-play'); toast(tr('paused', lang)); }
+    function pause() { if (phase !== 'play' || paused) return; paused = true; unlock(); document.documentElement.classList.remove('hk-play'); toast(tr(canLock ? 'pausedEsc' : 'paused', lang)); }   // (a mouse: Esc once more quits — the portal's Esc, 2026-11-13)
     function resume() { if (!paused) return; paused = false; document.documentElement.classList.add('hk-play'); last = performance.now(); if (toastEl) toastEl.remove(); }
     const onVis = () => { if (document.hidden) pause(); else if (document.hasFocus()) resume(); };
     const onBlur = () => pause();   // (2026-11-10) the window losing focus (another window / app in front) pauses too, not only a hidden tab

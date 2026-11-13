@@ -318,9 +318,10 @@
     return out;
   }
   // level 1..20: how many shots are looked at, how carefully, and how well the hand obeys
+  // (2026-11-13: Lv.20 was close to unbeatable — above Lv.6 the steps are gentler: the old Lv.15 is now about Lv.18, Lv.20 ≈ the old Lv.16.5)
   function skill(level) {
-    const k = (Math.max(1, Math.min(20, level)) - 1) / 19;
-    return { n: Math.round(6 + 170 * k * k + 24 * k), robust: level >= 11 ? (level >= 17 ? 5 : 3) : 0, angSd: (4.6 * Math.pow(1 - k, 1.5) + .22) * Math.PI / 180, vSd: .17 * Math.pow(1 - k, 1.3) + .025, pickTop: level <= 3 ? 4 : level <= 6 ? 2 : 1 };
+    const L = Math.max(1, Math.min(20, level)), e = L <= 6 ? L : 6 + (L - 6) * .75, k = (e - 1) / 19;
+    return { n: Math.round(6 + 170 * k * k + 24 * k), robust: e >= 11 ? (e >= 17 ? 5 : 3) : 0, angSd: (4.6 * Math.pow(1 - k, 1.5) + .22) * Math.PI / 180, vSd: .17 * Math.pow(1 - k, 1.3) + .025, pickTop: level <= 3 ? 4 : level <= 6 ? 2 : 1 };
   }
   function jitter(shot, sk, R) { return { x: shot.x, ang: shot.ang + gauss(R) * sk.angSd, v: Math.max(30, shot.v * (1 + gauss(R) * sk.vSd)) }; }
   // think(state, level, seed) → { x, ang, v, kind }: the shot the AI means (the hand's error is added by perform())
