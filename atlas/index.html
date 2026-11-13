@@ -1868,13 +1868,15 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 .bvi #bvRt .mxrow{display:flex;gap:10px;align-items:center}.bvi #bvRt .mxrow > label{flex:1 1 auto!important;min-width:0;display:flex;align-items:center;gap:8px;white-space:nowrap}.bvi #bvRt .mxrow .mxb{flex:none}
 .bvi #bvRt .sidetg,.bvi #bvLs .sidetg{flex:1}.bvi #bvRt .sidetg button,.bvi #bvLs .sidetg button{flex:1}
 .bvi #bvLs > label{flex:1 1 100%!important}.mxb.pzok{overflow:visible}.mxb.pzok::after{position:absolute;top:-8px;right:-8px;margin:0!important;box-shadow:0 0 0 2px #fff}.bvi .mxb{min-width:0}.bvi .mxb i{flex:none}   /* (the ✓ on the corner: it no longer pushes the label out — phones, 2026-11-13) */
-@media (max-width:819px){.bvi #bvOpts:has(#bvPegBest) select,.bvi #bvOpts:has(#bvPegBest) .lvpick{height:56px!important;min-height:56px!important;box-sizing:border-box}.bvi #bvPegBest{min-height:56px;padding:6px 16px}.bvi #bvPegBest b{font-size:20px}}   /* (phones: the board pulldown and the best box the same height) */
+.bvi .mxb.pzd{gap:6px;padding:0 8px}.bvi .mxb.pzd span{min-width:0}.mxb .ez{flex:none;font-style:normal;font-size:10.5px;line-height:1;font-weight:900;letter-spacing:.05em;padding:3px 6px;border-radius:99px;background:#e9f5ee;color:#2e7d55;border:1.5px solid #9fd8b8}   /* (ペグ: 今日のパズル / 今日のパズル EASY — no stars, EASY a small pill: the label fits, 2026-11-13) */
+@media (max-width:819px){.bvi .mxb.pzd{font-size:13.5px}}
 .bvi #bvLs .mxwide{flex:1 1 100%;width:100%;height:auto;min-height:48px}   /* (問題一覧 as big as the puzzles' one, 2026-11-13) */
 .bvi .mxnote{font-size:12.5px;font-weight:700;color:var(--ink2);padding:2px}
 .bvi .mxb{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:0;height:48px;padding:0 12px;border-radius:14px;border:2px solid var(--line);background:#fff;box-shadow:0 3px 0 var(--line);font:900 14.5px var(--font);color:var(--ink);cursor:pointer;white-space:nowrap}
 .bvi .mxb.pzok,.mxb.pzok{position:relative;background:#eef8f1!important;border-color:#9fd8b8!important;box-shadow:0 3px 0 #9fd8b8!important;color:#2e7d55}.mxb.pzok::after{content:'✓';flex:none;display:inline-grid;place-items:center;width:20px;height:20px;margin-left:2px;border-radius:50%;background:#2f9a6a;color:#fff;font-size:12px;font-weight:900}   /* (today's puzzle solved, 2026-11-13) */
 .bvi .mxb:hover{background:#fffaf0}
-.bvi #bvMBody > #bvPz:not([hidden]){height:100%;box-sizing:border-box;align-content:stretch}.bvi #bvMBody > #bvPz:not([hidden]) > .mxb{height:auto;min-height:48px}   /* (the パズル panel fills the settings' height like the other tabs: the rows below no longer sit higher, 2026-11-13) */
+.bvi #bvMBody > #bvPz:not([hidden]){height:100%;box-sizing:border-box;align-content:stretch}.bvi #bvMBody > #bvPz:not([hidden]) > .mxb{height:auto;min-height:48px}
+@media (max-width:819px){.bvi #bvMBody > #bvPz:not([hidden]) > .mxb{min-height:42px}.bvi #bvPz{gap:10px 10px}.bvi #bvPegBest{min-height:44px;padding:4px 14px}.bvi #bvPegBest b{font-size:19px}}   /* (phones, 2026-11-13: ペグ's boxes the size of the other games' — the board pulldown is the usual 38px, the best box and the puzzle buttons a little over it) */   /* (the パズル panel fills the settings' height like the other tabs: the rows below no longer sit higher, 2026-11-13) */
 .bvi .pgbest{flex:1 1 100%;box-sizing:border-box;display:flex;align-items:center;gap:12px;margin:0!important;padding:10px 16px;border-radius:14px;background:#fff;border:2px solid var(--line);box-shadow:0 3px 0 var(--line);font-size:15px;font-weight:900;color:#2b3044}.bvi .pgbest b{margin-inline-start:auto;font-size:23px;line-height:1.1;font-weight:900;color:#e5484d;letter-spacing:.02em;text-shadow:0 2px 0 rgba(229,72,77,.15)}.bvi .pgbest .pgd{font-size:12.5px;font-weight:700;color:#9a8762}.bvi .pgbest em + .pgd{margin-inline-start:0}.bvi .pgbest em{margin-inline-start:0;font-style:normal;font-weight:900;font-size:15px;color:#b07a00;background:#fff;border:2px solid #f3dca0;border-radius:99px;padding:3px 12px}   /* (ペグ: the chosen board's best, large; the same gap as the rows above — 2026-11-13) */
 .bvi #bvPz{display:grid;grid-template-columns:1fr 1fr;gap:10px}.bvi #bvPz .mxb[data-pz="list"]:nth-child(3){grid-column:1 / -1}
 .bvi .act.act3.act1 > a.btn{grid-column:1 / -1}
@@ -2238,7 +2240,7 @@ else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.j
 <script>/* the places other than the chabudai (tables3d.js, 440 KB): at once when one is chosen, else in idle time after the page has
    loaded (2026-11-10); 'atlas-places' tells the page they are there */
 (function () {
-  var SRC = 'tables3d.js?v=115', k = 0, p = null;
+  var SRC = 'tables3d.js?v=116', k = 0, p = null;
   try { k = +(localStorage.getItem('atlas-table') || 0) || 0; var m = /[?&]tbl=(\d+)/.exec(location.search); if (m) k = +m[1]; } catch (e) {}
   window.AtlasPlaces = function () { return p || (p = new Promise(function (res) { var s = document.createElement('script'); s.src = SRC; s.onload = s.onerror = function () { res(); try { dispatchEvent(new Event('atlas-places')); } catch (e) {} }; document.head.appendChild(s); })); };
   if (k) { document.write('<script src="' + SRC + '"><\/script>'); p = Promise.resolve(); }
@@ -2275,7 +2277,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=34"></script>
 <script src="npc/npc.js?v=30"></script>
 <script src="avtalk.js?v=2"></script>
-<script src="app.js?v=344"></script>
+<script src="app.js?v=345"></script>
 <script src="../shared/praline-badge.js?v=8" data-portal defer></script>
 </body>
 </html>
