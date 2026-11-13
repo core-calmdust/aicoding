@@ -221,7 +221,7 @@
   // whose map's R (height) is about 52/255 (cracks 40); the shift follows the normal against the view and the shell's own pattern
   function nacre(m) {
     m.onBeforeCompile = sh => {
-      sh.fragmentShader = sh.fragmentShader.replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+      sh.fragmentShader = (T().__uvDefs || '') + sh.fragmentShader.replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
       #ifdef USE_ROUGHNESSMAP
       { vec4 nmr = texture2D( roughnessMap, vUv ); float shl = smoothstep( .13, .17, nmr.r ) * ( 1. - smoothstep( .23, .27, nmr.r ) );
         if ( shl > 0. ) { float vd = dot( normal, normalize( -vViewPosition ) ); float lum = dot( diffuseColor.rgb, vec3( .3, .5, .2 ) );

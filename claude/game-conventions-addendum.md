@@ -504,3 +504,7 @@
   - 編集中はコーチ・棋譜（振り返り・検討ボックス）を隠し、編集を終えると元に戻る。
   - 局面の保存／読込：共通の局面ファイル形式 `{ "format": "wbga-position", "version": 1, "game": "<game>", "sfen"（将棋。ほかのゲームはそのゲームの標準表記のキー）, "created" }` の JSON（.json）。SFEN だけのテキストも読める。SFEN のコピーもできる。
 - r186 試験の修正：ぬいぐるみキャラの陰影シェーダー（icons3d.js）は r154+ で geometryNormal を使う（透明になっていた）。ガラスの縁の光（tables3d.js）は opaque_fragment を展開してから置き換え。互換層：データなしの DataTexture（被写界深度のコピー先）にバッファを与える（奥の背景が暗くなっていた）。
+- three.js を r186 に切り替え（2026-11-13、全ゲーム・ポータル・麻雀・ウルの2Dサイコロ）：`atlas/vendor/three-r186.min.js` ＋ 互換層 `three-compat.js`。`?three=128` を付けると従来の r128。
+  - 互換層は r128 のまま書かれたコードを動かすためのもの：色管理オフ、encoding ↔ colorSpace、光の強さ ×π、copyFramebufferToTexture の引数順、PCFSoft→PCF、opaque_fragment の展開、`THREE.__uvDefs`（onBeforeCompile で vUv を使うときに先頭へ付ける）。
+  - 新しく onBeforeCompile を書くときは r186 の書き方（vMapUv 等・geometryNormal）で。
+- 局面編集の駒メニュー：ボタンを大きめに、メニューは常に駒の上に（盤の最上段だけ下）。

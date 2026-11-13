@@ -345,7 +345,7 @@
       if (mode !== 'uv') {
         sh.vertexShader = 'varying vec3 vCrP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvCrP = position;');
       }
-      sh.fragmentShader = 'uniform float uT;\n' + (mode !== 'uv' ? 'varying vec3 vCrP;\n' : '') + HUE + sh.fragmentShader;
+      sh.fragmentShader = (T().__uvDefs || '') + 'uniform float uT;\n' + (mode !== 'uv' ? 'varying vec3 vCrP;\n' : '') + HUE + sh.fragmentShader;
       const hue = mode === 'uv' ? 'vec2 crp = vUv - 0.5; float crh = atan(crp.y, crp.x) / 6.2831853 + length(crp) * 0.9 - uT * 0.16;'
         : mode === 'ring' ? 'float crh = atan(vCrP.z, vCrP.x) / 6.2831853 - uT * 0.5;'
         : mode === 'halo' ? 'float crh = atan(vCrP.z, vCrP.x) / 6.2831853 + uT * 1.4;'
