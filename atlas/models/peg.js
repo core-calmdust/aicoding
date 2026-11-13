@@ -76,7 +76,7 @@
     const W = woodMat(look).clone(), RM = rimMat(look).clone(), GM = grooveMat(look).clone(), FM = faceMat(look, id).clone();
     if (!S.tri) {
       const Rr = S.R, gr = S.gr, prof = [[0, TOP], [gr - .34, TOP], [gr - .3, TOP - .03], [gr - .22, TOP - .12], [gr, TOP - .16], [gr + .22, TOP - .12], [gr + .3, TOP - .03], [gr + .34, TOP], [Rr - .14, TOP - .012], [Rr - .04, TOP - .04], [Rr, TOP - .14], [Rr + .02, .12], [Rr - .06, 0], [0, 0]];
-      const body = X.mesh(geo('pgBody' + id, () => new TT.LatheGeometry(prof.map(([a, b]) => new TT.Vector2(a, b)).reverse(), LO() ? 48 : 96)), W);
+      const body = X.mesh(geo('pgBody' + id, () => { const L = new TT.LatheGeometry(prof.map(([a, b]) => new TT.Vector2(a, b)).reverse(), LO() ? 48 : 96), uv = L.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setX(i, 1 - Math.abs(uv.getX(i) * 2 - 1)); return L; }), W);   // (the wood picture mirrored half way round: no seam where its two ends met, 2026-11-13)
       g.add(body);
       // the groove's dark floor and a bead (gilt on the lacquer board) on the rim
       const gf = X.mesh(geo('pgGF' + id, () => { const r = new TT.RingGeometry(gr - .2, gr + .2, LO() ? 48 : 96); r.rotateX(-Math.PI / 2); return r; }), GM, 0, TOP - .155, 0); gf.castShadow = false; g.add(gf);
@@ -125,7 +125,7 @@
     const k = (i * 7 + 3) % 6;
     if (set === 'mod') return mat('mmod' + k, () => X.M({ color: MOD[k], roughness: .75 }));
     if (set === 'pearl') return mat('mcer' + k, () => X.M({ color: CERAMIC[k], roughness: .28, clearcoat: .8, clearcoatRoughness: .2 }));
-    if (set === 'steel') return mat('mjw' + k, () => X.M({ color: JEWEL[k], roughness: .03, clearcoat: 1, clearcoatRoughness: .02, envMapIntensity: 2 }));
+    if (set === 'steel') return mat('mjw' + k, () => X.M({ color: JEWEL[k], roughness: .03, clearcoat: 1, clearcoatRoughness: .02, envMapIntensity: 2, transparent: true, opacity: .72 }));   // (jewels: see-through, 2026-11-13)
     if (set === 'peg') return mat('mpeg' + k, () => X.M({ color: PAINT[k], roughness: .3, clearcoat: .7, clearcoatRoughness: .25 }));
     const c = GLASS[k];
     return mat('mg' + c, () => X.M({ color: c, roughness: .04, clearcoat: 1, clearcoatRoughness: .03, envMapIntensity: 1.6 }));
