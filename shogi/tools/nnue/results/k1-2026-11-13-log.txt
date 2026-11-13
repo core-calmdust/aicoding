@@ -1,0 +1,23 @@
+KMAP=k1 ROUND=3 (the net adopted as NNUE 512 v7)
+train 410947740  valid 1000000  kb k1 (1 buckets)  H 512  epochs 4  lr 0.0001  lambda 0.75  oscale 0.805  batch 16384  threads 14  (W1 5 MB)
+epoch 0  valid 0.02973 (eval only 0.02105)
+epoch 1  train 0.02036  valid 0.02940 (eval only 0.02071)  lr 0.0001  590s
+epoch 2  train 0.02008  valid 0.02940 (eval only 0.02073)  lr 0.0001  584s
+epoch 3  train 0.01991  valid 0.02930 (eval only 0.02062)  lr 3e-05  585s
+epoch 4  train 0.01985  valid 0.02930 (eval only 0.02062)  lr 1e-05  585s
+kp.bin = epoch 3 (the best valid)
+scale current: positions 200000  mean |net| 818  mean |data score| 3983  loss as is 0.02278  best fit: net x 1.49 (loss 0.02035)
+scale HalfKP:  positions 200000  mean |net| 819  mean |data score| 3983  loss as is 0.02247  best fit: net x 1.50 (loss 0.01996)
+speed current: nodes 3600397  time 3556 ms  1012 knps  checksum 56b0c28d9e2e6e08
+speed HalfKP:  nodes 3600397  time 3489 ms  1032 knps  checksum 41322f6b19f8bd37
+HalfKP vs current (30000): +163 -95 =2  score 0.631  Elo +93 (+51 .. +138)
+HalfKP vs current (300ms): +133 -120 =7  score 0.525  Elo +17 (-24 .. +60)
+HalfKP vs current (300ms, 6 processes): +115 -120 =5  score 0.490  Elo -7 (-51 .. +36)
+HalfKP vs current (300000): +139 -115 =6  score 0.546  Elo +32 (-9 .. +75)
+
+KMAP=k9 ROUND=3 (not adopted)
+epoch 0  valid 0.02973   epoch 1  0.02898   epoch 2  0.02913   epoch 3  0.02897   epoch 4  0.02895
+scale HalfKP:  positions 200000  mean |net| 847  mean |data score| 3983  loss as is 0.02198  best fit: net x 1.46 (loss 0.01981)
+speed current 996 knps, HalfKP 949 knps
+HalfKP vs current (30000): +136 -123 =1  score 0.525  Elo +17 (-25 .. +60)
+HalfKP vs current (300ms): +135 -122 =3  score 0.525  Elo +17 (-25 .. +60)

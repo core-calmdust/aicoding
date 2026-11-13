@@ -184,6 +184,7 @@ $W/trainkp --scale a.bin $W/val.bin 200000                   # 評価値の尺�
 $W/trainkp --rescale a.bin b.bin 0.805                       # 出力層を 0.805倍したネットを作る（尺度の合っていないネットの手直し）
 ```
 
+- **今の形のまま追加学習する**（玉の区分なし。2026-11-13 の v7 はこの方法）：`ROUND=4 KMAP=k1 WORK=~/shogi-k1-r4 caffeinate -i bash tools/nnue/run-kp.sh`。できた `kp-candidate.bin.gz` は `python3 tools/nnue/kp2site.py <候補> nnue.bin.gz` でサイトの形式になる（重みは同じ）。
 - `-DNUE_KB=1` で作った `kptool` は今の `nnue.bin` をそのまま読み、サイトのエンジンと同じ探索になります（ベンチのチェックサムが一致することを確認済み）。
 - 区分の境目（`k9`）：自陣から見た段 8（一段目）／7（二段目）／それ以外 × 筋 0〜2（9〜7筋）／3〜5（6〜4筋）／6〜8（3〜1筋）。後手は盤を180°回して同じ表。
 
