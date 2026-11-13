@@ -151,10 +151,17 @@
     const W = (Math.max(...xs) / 2 + 1) * TW, D = (Math.max(...ys) / 2 + 1) * TD;
     const g = new TH3.Group(), mat = M3.mat(W, D), base = mat.userData.top; g.add(mat);
     const im = M3.tiles(n); g.add(im);
+    const shI = P.map((p, i) => p[2] > 0 ? i : -1).filter(i => i >= 0), shOf = {}; shI.forEach((i, k) => { shOf[i] = k; });
+    const shm = M3.shades(Math.max(1, shI.length)); if (!shI.length) shm.count = 0; g.add(shm);   // (the soft shade each upper tile throws on the ones below)
     const pos = P.map(([x, y, z]) => [(x / 2 + .5) * TW - W / 2, base + z * THh, (y / 2 + .5) * TD - D / 2]);
     const st8 = P.map(() => ({ lift: 0, s: 1, dx: 0, dz: 0, dy: 0, rz: 0 }));
     const o3 = new TH3.Object3D(), col = new TH3.Color();
-    function place(i) { const S = st8[i], [x, y, z] = pos[i]; o3.position.set(x + S.dx, y + S.lift + S.dy, z + S.dz); o3.rotation.set(0, 0, S.rz); o3.scale.setScalar(S.s); o3.updateMatrix(); im.setMatrixAt(i, o3.matrix); }
+    const o4 = new TH3.Object3D();
+    function place(i) { const S = st8[i], [x, y, z] = pos[i]; o3.position.set(x + S.dx, y + S.lift + S.dy, z + S.dz); o3.rotation.set(0, 0, S.rz); o3.scale.setScalar(S.s); o3.updateMatrix(); im.setMatrixAt(i, o3.matrix);
+      const k = shOf[i]; if (k === undefined) return;
+      // the shade stays on the tile below while the tile sits; it spreads and goes as the tile rises
+      const on = alive[i] && S.s > .5 && S.dy < .05, sp = 1 + Math.min(.6, S.lift * 1.2);
+      o4.position.set(x + .05, y + .003, z + .07); o4.scale.setScalar(on && S.lift < .45 ? sp : .0001); o4.updateMatrix(); shm.setMatrixAt(k, o4.matrix); shm.instanceMatrix.needsUpdate = true; }
     function tint(i) {
       const fr = alive[i] && K.isFree(G, alive, i);
       let r = 1, gg = 1, b = 1;
@@ -342,7 +349,7 @@
         stopped = true; clearInterval(clockT); timers.forEach(clearTimeout); clearTimeout(toastT);
         if (toastEl) toastEl.remove(); if (askEl) askEl.remove();
         ctx.el.removeEventListener('click', onClick);
-        if (im.userData.dispose) im.userData.dispose();
+        if (im.userData.dispose) im.userData.dispose(); if (shm.userData.dispose) shm.userData.dispose();
         if (window.__shPlay === dbg) delete window.__shPlay;
       },
     };

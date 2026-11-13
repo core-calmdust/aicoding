@@ -19,8 +19,9 @@
   const TW = 1.0, TD = 1.36, TH = .74, RE = .085, CR = .15;   // width (x), depth (z), height; the top edge's round; the corners' round
   const SPLIT = .42;   // the ivory / back line (part of the height from the bottom)
   const BACKS = ['jade', 'lapis', 'ebony', 'coral'];
-  const BACK_COL = { jade: '#1f6a4c', lapis: '#22427e', ebony: '#2b1d16', coral: '#b24a3a' };
-  const IVORY = '#f3ead6';
+  const BACK_COL = { jade: '#2b8a62', lapis: '#2c56a8', ebony: '#3a2a20', coral: '#d8763c' };   // (lighter than the stone itself: the side band sits in the shade)
+  const IVORY = '#f7f7f3';   // (2026-11-13: a clean milky white, as modern tiles — the yellowed ivory read old-fashioned)
+  const GROUND = '#fafaf6';   // the face itself (flat: the carving's depth is read from how far a pixel is from it)
   const pref = () => { try { return (JSON.parse(localStorage.getItem('aicoding-shanghai') || '{}') || {}).settings || {}; } catch (e) { return {}; } };
   const backNow = () => { const v = pref().back; return BACKS.includes(v) ? v : 'jade'; };
 
@@ -67,31 +68,82 @@
   /* ---------- the face atlas ---------- */
   const COLS = 8, ROWS = 6;   // 48 cells: 42 faces, the ivory cell (47)
   let atlasTex = null, cellW = 0, cellH = 0, fontP = null;
-  const FONT = '"Noto Serif JP","Noto Serif CJK JP","Hiragino Mincho ProN","Yu Mincho","YuMincho",serif';
-  function ready() {   // the face font (a subset of Noto Serif JP: only the glyphs on the tiles), at most ~1.6 s
+  // the brush hand of real tiles: Yuji Syuku (Google Fonts, a subset with only the glyphs on the tiles)
+  const FONT = '"Yuji Syuku","Noto Serif JP","Noto Serif CJK JP","Hiragino Mincho ProN","Yu Mincho",serif';
+  function ready() {   // the face font, at most ~1.6 s
     if (fontP) return fontP;
-    const GL = '一二三四五六七八九萬東南西北中發白梅蘭菊竹春夏秋冬';
+    const GL = '一二三四五六七八九萬東南西北中發白梅蘭菊竹春夏秋冬1234';
     fontP = new Promise(res => {
       try {
-        if (!document.getElementById('shFont')) { const l = document.createElement('link'); l.id = 'shFont'; l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@700;900&display=block&text=' + encodeURIComponent(GL); document.head.appendChild(l); }
+        if (!document.getElementById('shFont')) { const l = document.createElement('link'); l.id = 'shFont'; l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Yuji+Syuku&display=block&text=' + encodeURIComponent(GL); document.head.appendChild(l); }
         const to = setTimeout(res, 1600);
-        const go = () => document.fonts.load('900 64px "Noto Serif JP"', GL).then(() => { clearTimeout(to); res(); }, () => { clearTimeout(to); res(); });
+        const go = () => document.fonts.load('64px "Yuji Syuku"', GL).then(() => { clearTimeout(to); res(); }, () => { clearTimeout(to); res(); });
         setTimeout(go, 60);
       } catch (e) { res(); }
-    });
+    }).then(() => glyphP());
     return fontP;
   }
-  const INK = '#1a2440', RED = '#b3222c', GRN = '#17704a', BLU = '#1d4f9a';
+  // the hand of the characters (萬子・風牌・發・中・花／季節): traced from photos of real Japanese tiles into one sheet
+  // (atlas/tools/shanghai-glyphs.py → atlas/img/shanghai-glyphs.png): 8×3 cells of GW×GH, ink per channel (R black, G red, B green)
+  const GW = 280, GH = 390, GLYPH_URL = new URL('../img/shanghai-glyphs.png?v=1', (document.currentScript && document.currentScript.src) || location.href).href;
+  let glyphImg = null, glyphPr = null; const glyphCv = {};
+  function glyphP() {
+    return glyphPr || (glyphPr = new Promise(res => { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { glyphImg = im; res(); }; im.onerror = () => res(); im.src = GLYPH_URL; setTimeout(res, 4000); }));
+  }
+  // one glyph (cell k, channel ch) as a canvas in the colour given (the ink's density = its alpha); cached
+  function glyphCanvas(k, ch, color) {
+    const key = k + ':' + ch + ':' + color; if (glyphCv[key]) return glyphCv[key];
+    const cv = document.createElement('canvas'); cv.width = GW; cv.height = GH; const c = cv.getContext('2d');
+    c.drawImage(glyphImg, (k % 8) * GW, Math.floor(k / 8) * GH, GW, GH, 0, 0, GW, GH);
+    const im = c.getImageData(0, 0, GW, GH), d = im.data, rgb = [1, 3, 5].map(i => parseInt(color.slice(i, i + 2), 16));
+    for (let p = 0; p < d.length; p += 4) { const a = d[p + ch]; d[p] = rgb[0]; d[p + 1] = rgb[1]; d[p + 2] = rgb[2]; d[p + 3] = a; }
+    c.putImageData(im, 0, 0);
+    return (glyphCv[key] = cv);
+  }
+  // draw it on the 256 × 362 face (default: the whole face, as it sits on the real tile); false when the sheet is not there
+  function glyph(c, k, ch, color, x = 0, y = 0, w = 256, h = 362) { if (!glyphImg) return false; c.drawImage(glyphCanvas(k, ch, color), x, y, w, h); return true; }
+  const INK = '#141414', RED = '#d0122a', GRN = '#127040', BLU = '#1c3c86';   // the paint in the carving (red clearer, 2026-11-13)   // the paint in the carving
+  let normalTex = null;
   function drawAtlas() {
     const TT = T(), W0 = LO() ? 160 : 256, H0 = Math.round(W0 * (TD - 2 * RE) / (TW - 2 * RE));
     cellW = W0; cellH = H0;
     const cv = document.createElement('canvas'); cv.width = W0 * COLS; cv.height = H0 * ROWS;
     const c = cv.getContext('2d');
-    c.fillStyle = IVORY; c.fillRect(0, 0, cv.width, cv.height);
-    for (let f = 0; f < 42; f++) { const x = (f % COLS) * W0, y = Math.floor(f / COLS) * H0; c.save(); c.translate(x, y); c.scale(W0 / 256, H0 / 362); drawFace(c, f); c.restore(); }
+    c.fillStyle = GROUND; c.fillRect(0, 0, cv.width, cv.height);
+    for (let f = 0; f < 42; f++) { const x = (f % COLS) * W0, y = Math.floor(f / COLS) * H0; c.save(); c.beginPath(); c.rect(x, y, W0, H0); c.clip(); c.translate(x, y); c.scale(W0 / 256, H0 / 362); drawFace(c, f); c.restore(); }
     const t = new TT.CanvasTexture(cv);
     if ('colorSpace' in t && TT.SRGBColorSpace) t.colorSpace = TT.SRGBColorSpace; else if (TT.sRGBEncoding) t.encoding = TT.sRGBEncoding;
     t.anisotropy = LO() ? 2 : 8; t.generateMipmaps = true; t.minFilter = TT.LinearMipmapLinearFilter; t.needsUpdate = true;
+    normalFrom(cv);
+    return t;
+  }
+  // the carving: every painted pixel is cut into the face (paint = how far its colour is from the white ground), the edges of
+  // the cut softened a little, and its slopes written as a tangent-space normal map — the light then catches the walls of the
+  // strokes as on a real engraved tile. One pass over the atlas when it is drawn (no per-frame cost).
+  function normalFrom(cv) {
+    const TT = T(), W = cv.width, H = cv.height, src = cv.getContext('2d').getImageData(0, 0, W, H).data;
+    const g0 = [1, 3, 5].map(k => parseInt(GROUND.slice(k, k + 2), 16)), h = new Float32Array(W * H), tmp = new Float32Array(W * H);
+    for (let i = 0, p = 0; i < W * H; i++, p += 4) { const d = Math.max(Math.abs(src[p] - g0[0]), Math.abs(src[p + 1] - g0[1]), Math.abs(src[p + 2] - g0[2])); h[i] = d < 14 ? 0 : Math.min(1, (d - 14) / 70); }
+    // soften the cut's edges (two box passes, radius ~1 px at 256): a rounded groove rather than a stair
+    const box = (a, b, dx, dy) => { for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const i = y * W + x; let s = a[i], n = 1; if (x - dx >= 0 && y - dy >= 0) { s += a[i - dy * W - dx]; n++; } if (x + dx < W && y + dy < H) { s += a[i + dy * W + dx]; n++; } b[i] = s / n; } };
+    const h0 = h.slice();
+    for (let k = 0; k < (LO() ? 1 : 2); k++) { box(h, tmp, 1, 0); box(tmp, h, 0, 1); }
+    // the cut's wall just outside each stroke sits in its own shade: a thin soft darkening of the white round the paint (the
+    // colour atlas is touched up in place, so a stroke reads as cut into the face, not printed on it)
+    { const c = cv.getContext('2d'), img = c.getImageData(0, 0, W, H), D = img.data;
+      for (let i = 0, p = 0; i < W * H; i++, p += 4) { const w = h[i] - h0[i]; if (w > .02) { const k = 1 - Math.min(.5, w * 1.05); D[p] *= k; D[p + 1] *= k; D[p + 2] *= k; } }
+      c.putImageData(img, 0, 0); }
+    const out = document.createElement('canvas'); out.width = W; out.height = H;
+    const oc = out.getContext('2d'), im = oc.createImageData(W, H), o = im.data, S = (LO() ? 4.2 : 6.5);   // (depth: deep cut walls, 2026-11-13 ユーザー「堀はもっと深い」)   // (depth: steeper walls on the finer PC atlas)
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const i = y * W + x, l = h[x > 0 ? i - 1 : i], r = h[x < W - 1 ? i + 1 : i], u = h[y > 0 ? i - W : i], d = h[y < H - 1 ? i + W : i];
+      // the surface height is −h (cut down): its slope along u (x) and v (up = −y on the canvas)
+      let nx = (r - l) * S, ny = (u - d) * S, nz = 1; const k = 1 / Math.hypot(nx, ny, nz); nx *= k; ny *= k; nz *= k;
+      const p = i * 4; o[p] = (nx * .5 + .5) * 255; o[p + 1] = (ny * .5 + .5) * 255; o[p + 2] = (nz * .5 + .5) * 255; o[p + 3] = 255;
+    }
+    oc.putImageData(im, 0, 0);
+    const t = normalTex || (normalTex = new TT.CanvasTexture(out));
+    t.image = out; t.generateMipmaps = true; t.minFilter = TT.LinearMipmapLinearFilter; t.anisotropy = LO() ? 2 : 8; t.needsUpdate = true;
     return t;
   }
   function atlas() { return atlasTex || (atlasTex = drawAtlas()); }
@@ -100,28 +152,21 @@
   const cellSize = () => [1 / COLS, 1 / ROWS];
 
   /* the faces, drawn on a 256 × 362 design box: an ivory ground with a soft rim, ink inlaid (a shade below and right, a glint above) */
-  function ground(c) {
-    const g = c.createLinearGradient(0, 0, 0, 362); g.addColorStop(0, '#fbf6ea'); g.addColorStop(1, '#f1e7d1'); c.fillStyle = g; c.fillRect(0, 0, 256, 362);
-    const v = c.createRadialGradient(128, 181, 120, 128, 181, 240); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(120,96,60,.16)'); c.fillStyle = v; c.fillRect(0, 0, 256, 362);
-  }
-  function inlay(c, paint) {   // engraved and filled: a dark cut just below, then the ink, then a faint highlight on its top edge
-    c.save(); c.translate(1.6, 2.2); c.globalAlpha = .28; paint('#3a2a14'); c.restore();
-    c.save(); paint(null); c.restore();
-    c.save(); c.translate(-.8, -1.2); c.globalAlpha = .18; c.globalCompositeOperation = 'source-atop'; paint('#ffffff'); c.restore();
-  }
+  function ground(c) { c.fillStyle = GROUND; c.fillRect(0, 0, 256, 362); }   // flat white (the 3D light gives the shading)
+  function inlay(c, paint) { c.save(); paint(null); c.restore(); }   // the paint in the cut (its depth: normalFrom)
   function kanji(c, ch, x, y, size, color, weight) {
-    inlay(c, col => { c.fillStyle = col || color; c.font = `${weight || 900} ${size}px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(ch, x, y); });
+    inlay(c, col => { c.fillStyle = col || color; c.font = `${weight || 400} ${size}px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(ch, x, y); });
   }
   function pin(c, x, y, r, color) {   // a 筒子 circle: a coloured ring, an ivory gap, a patterned middle
     inlay(c, col => {
       const k = col || color;
       c.fillStyle = k; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill();
       if (col) return;
-      c.fillStyle = '#f6efdf'; c.beginPath(); c.arc(x, y, r * .8, 0, 7); c.fill();
+      c.fillStyle = GROUND; c.beginPath(); c.arc(x, y, r * .8, 0, 7); c.fill();
       c.strokeStyle = k; c.lineWidth = r * .13; c.beginPath(); c.arc(x, y, r * .58, 0, 7); c.stroke();
       if (r > 40) for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4; c.fillStyle = i % 2 ? RED : k; c.beginPath(); c.arc(x + Math.cos(a) * r * .38, y + Math.sin(a) * r * .38, r * .07, 0, 7); c.fill(); }
       c.fillStyle = k === RED ? GRN : RED; c.beginPath(); c.arc(x, y, r * .22, 0, 7); c.fill();
-      c.fillStyle = '#f6efdf'; c.beginPath(); c.arc(x, y, r * .08, 0, 7); c.fill();
+      c.fillStyle = GROUND; c.beginPath(); c.arc(x, y, r * .08, 0, 7); c.fill();
     });
   }
   function stick(c, x, y, h, color, rot) {   // a 索子 bamboo stick: a rounded rod with three joints
@@ -131,7 +176,7 @@
       const k = col || color; c.fillStyle = k; rr(c, -w / 2, -h / 2, w, h, w / 2); c.fill();
       if (!col) {
         c.fillStyle = 'rgba(255,255,255,.28)'; rr(c, -w / 2 + 6, -h / 2 + 6, 7, h - 12, 3.5); c.fill();
-        c.fillStyle = '#f6efdf'; [-.5, 0, .5].forEach(t => { const yy = t * (h - 14); c.fillRect(-w / 2, yy - 2.2, w, 4.4); c.fillStyle = k; c.fillRect(-w / 2 + 3, yy - 6, w - 6, 3); c.fillRect(-w / 2 + 3, yy + 3, w - 6, 3); c.fillStyle = '#f6efdf'; });
+        c.fillStyle = GROUND; [-.5, 0, .5].forEach(t => { const yy = t * (h - 14); c.fillRect(-w / 2, yy - 2.2, w, 4.4); c.fillStyle = k; c.fillRect(-w / 2 + 3, yy - 6, w - 6, 3); c.fillRect(-w / 2 + 3, yy + 3, w - 6, 3); c.fillStyle = GROUND; });
       }
       c.restore();
     });
@@ -143,7 +188,7 @@
       // the tail: a fan of feathers with eyes
       for (let i = -3; i <= 3; i++) { const a = Math.PI / 2 + i * .26; c.save(); c.translate(128, 250); c.rotate(a - Math.PI / 2);
         c.fillStyle = k(i % 2 ? GRN : BLU); c.beginPath(); c.ellipse(0, 62, 15, 50, 0, 0, 7); c.fill();
-        if (!col) { c.fillStyle = '#f6efdf'; c.beginPath(); c.arc(0, 92, 9, 0, 7); c.fill(); c.fillStyle = RED; c.beginPath(); c.arc(0, 92, 5, 0, 7); c.fill(); }
+        if (!col) { c.fillStyle = GROUND; c.beginPath(); c.arc(0, 92, 9, 0, 7); c.fill(); c.fillStyle = RED; c.beginPath(); c.arc(0, 92, 5, 0, 7); c.fill(); }
         c.restore(); }
       // the body and the neck
       c.fillStyle = k(GRN); c.beginPath(); c.ellipse(128, 196, 40, 58, -.15, 0, 7); c.fill();
@@ -151,7 +196,7 @@
       c.fillStyle = k(BLU); c.beginPath(); c.arc(134, 82, 18, 0, 7); c.fill();
       c.fillStyle = k(RED); c.beginPath(); c.moveTo(148, 80); c.lineTo(172, 86); c.lineTo(148, 92); c.closePath(); c.fill();   // the beak
       c.strokeStyle = k(RED); c.lineWidth = 4; [-1, 0, 1].forEach(i => { c.beginPath(); c.moveTo(132, 66); c.lineTo(126 + i * 12, 44); c.stroke(); c.fillStyle = k(RED); c.beginPath(); c.arc(126 + i * 12, 42, 5, 0, 7); c.fill(); });
-      if (!col) { c.fillStyle = '#f6efdf'; c.beginPath(); c.arc(138, 78, 5, 0, 7); c.fill(); c.fillStyle = INK; c.beginPath(); c.arc(139, 78, 2.6, 0, 7); c.fill(); }
+      if (!col) { c.fillStyle = GROUND; c.beginPath(); c.arc(138, 78, 5, 0, 7); c.fill(); c.fillStyle = INK; c.beginPath(); c.arc(139, 78, 2.6, 0, 7); c.fill(); }
       // the wing
       c.fillStyle = k(RED); c.beginPath(); c.ellipse(118, 200, 20, 36, .3, 0, 7); c.fill();
       // the twig and the feet
@@ -170,12 +215,12 @@
       if (fl) for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6; c.fillStyle = kk; c.globalAlpha = cc ? c.globalAlpha : .22; c.beginPath(); c.ellipse(128 + Math.cos(a) * 82, 196 + Math.sin(a) * 82, 13, 22, a + Math.PI / 2, 0, 7); c.fill(); c.globalAlpha = cc ? c.globalAlpha : 1; }
       else { c.strokeStyle = kk; c.globalAlpha = cc ? c.globalAlpha : .3; c.lineWidth = 5; c.beginPath(); for (let i = 0; i <= 8; i++) { const a = i * Math.PI / 4 + Math.PI / 8, r = 98; c[i ? 'lineTo' : 'moveTo'](128 + Math.cos(a) * r, 196 + Math.sin(a) * r); } c.stroke(); c.globalAlpha = cc ? c.globalAlpha : 1; }
     });
-    kanji(c, ch, 128, 200, 150, col);
-    kanji(c, String(k + 1), 40, 44, 52, RED, 700);
+    if (!glyph(c, 15 + (fl ? 4 : 0) + k, 1, RED, 66, 128, 124, 136)) kanji(c, ch, 128, 200, 150, col);   // (the traced kanji, in red as on Japanese tiles)
+    kanji(c, String(k + 1), 216, 46, 50, BLU, 400);
   }
   function drawFace(c, f) {
     ground(c);
-    if (f < 9) { kanji(c, '一二三四五六七八九'[f], 128, 104, 132, INK); kanji(c, '萬', 128, 262, 140, RED); return; }
+    if (f < 9) { if (glyph(c, f, 0, INK)) glyph(c, f, 1, RED); else { kanji(c, '一二三四五六七八九'[f], 128, 104, 132, INK); kanji(c, '萬', 128, 262, 140, RED); } return; }
     if (f < 18) {
       const n = f - 8;
       const L = {
@@ -206,10 +251,10 @@
       }[n];
       S.forEach(([x, y, h, k, rot]) => stick(c, x, y, h, k || GRN, rot)); return;
     }
-    if (f < 31) { kanji(c, '東南西北'[f - 27], 128, 186, 196, INK); return; }
+    if (f < 31) { if (!glyph(c, 9 + f - 27, 0, INK)) kanji(c, '東南西北'[f - 27], 128, 186, 196, INK); return; }
     if (f === 31) { frame(c, BLU); return; }
-    if (f === 32) { kanji(c, '發', 128, 186, 196, GRN); return; }
-    if (f === 33) { kanji(c, '中', 128, 186, 210, RED); return; }
+    if (f === 32) { if (!glyph(c, 13, 2, GRN)) kanji(c, '發', 128, 186, 196, GRN); return; }
+    if (f === 33) { if (!glyph(c, 14, 1, RED)) kanji(c, '中', 128, 186, 210, RED); return; }
     bloom(c, f);
   }
 
@@ -218,23 +263,27 @@
   function tileMat(back) {
     if (mats[back]) return mats[back];
     const TT = T(), [cw, ch] = cellSize(), wo = faceOff(47);
-    const m = new TT.MeshStandardMaterial({ map: atlas(), vertexColors: true, roughness: .42, metalness: 0, envMapIntensity: .6 });
+    const m = new TT.MeshStandardMaterial({ map: atlas(), normalMap: normalTex, vertexColors: true, roughness: .38, metalness: 0, envMapIntensity: .7 });   // (a polished resin face; the carving in the normal map)
     const back3 = new TT.Color(BACK_COL[back] || BACK_COL.jade).convertSRGBToLinear();
     m.onBeforeCompile = sh => {
       sh.uniforms.uCell = { value: new TT.Vector2(cw, ch) }; sh.uniforms.uWhite = { value: new TT.Vector2(wo[0] + cw * .5, wo[1] + ch * .5) };
       sh.uniforms.uBack = { value: back3 };
       sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute float aCap;\nattribute vec2 aFace;\nuniform vec2 uCell;\nuniform vec2 uWhite;\nuniform vec3 uBack;')
         .replace('#include <uv_vertex>', `#include <uv_vertex>
+        vec2 shUv = aCap > .5 ? aFace + uv * uCell : uWhite;
         #ifdef USE_MAP
-          vec2 shUv = aCap > .5 ? aFace + uv * uCell : uWhite;
           #if defined( MAP_UV )
             vMapUv = shUv;
           #else
             vUv = shUv;
           #endif
+        #endif
+        #if defined( USE_NORMALMAP ) && defined( NORMALMAP_UV )
+          vNormalMapUv = shUv;
         #endif`)
         .replace('#include <color_vertex>', '#include <color_vertex>\n#if defined( USE_COLOR ) || defined( USE_COLOR_ALPHA ) || defined( USE_INSTANCING_COLOR )\nif (aCap < -.5) vColor.rgb *= uBack;\n#endif');
     };
+    m.shadowSide = TT.BackSide;   // (the shadow pass from the inner faces: no striped self-shadow on the tile walls)
     m.customProgramCacheKey = () => 'shanghai-tile';
     return (mats[back] = m);
   }
@@ -245,7 +294,7 @@
     g.setAttribute('aFace', new TT.InstancedBufferAttribute(new Float32Array(n * 2), 2));
     const im = new TT.InstancedMesh(g, tileMat(back || backNow()), n);
     im.instanceMatrix.setUsage(TT.DynamicDrawUsage);
-    im.castShadow = !LO(); im.receiveShadow = true; im.frustumCulled = false;
+    im.castShadow = !LO(); im.receiveShadow = false; im.frustumCulled = false;   // (onto the mat and the table only: tile-on-tile shade is the soft quads of shades(), no striped self-shadow on the walls)
     const c = new TT.Color(1, 1, 1); for (let i = 0; i < n; i++) im.setColorAt(i, c);
     im.userData.setFace = (i, f) => { const [u, v] = faceOff(f), A = g.attributes.aFace; A.setXY(i, u, v); A.needsUpdate = true; };
     im.userData.dispose = () => g.dispose();
@@ -280,10 +329,25 @@
     idx.forEach((i, k) => { const [x, y, z] = P[i]; o.position.set((x / 2 + .5) * TW - w / 2, m.userData.top + z * TH + (i === lift ? .18 : 0), (y / 2 + .5) * TD - d / 2); o.updateMatrix(); im.setMatrixAt(k, o.matrix); im.userData.setFace(k, face[i]);
       const c = new TT.Color(); const f = free(i) ? 1 : .62; if (i === lift) c.setRGB(1.04, .93, .66); else c.setRGB(f, f, f); im.setColorAt(k, c); });
     g.add(im);
+    const up = idx.filter(i => P[i][2] > 0), sh = shades(up.length || 1);
+    up.forEach((i, k) => { const [x, y, z] = P[i]; o.position.set((x / 2 + .5) * TW - w / 2 + .05, m.userData.top + z * TH + .003, (y / 2 + .5) * TD - d / 2 + .07); o.updateMatrix(); sh.setMatrixAt(k, o.matrix); });
+    if (!up.length) sh.count = 0; g.add(sh);
     g.userData = { top: m.userData.top + TH, im, _rb: Math.max(w, d) / 2 + .4, _h: TH * 3 };
     return g;
   };
   // the face font arrives a little later than the first frame: redraw the atlas once it is in
   ready().then(() => { if (atlasTex) { const n = drawAtlas(); atlasTex.image = n.image; atlasTex.needsUpdate = true; n.dispose(); if (X.kick) X.kick(300); } });
-  X.shanghai = { TW, TD, TH, BACKS, BACK_COL, back: backNow, tiles, setBack, mat, atlas, faceOff, ready, drawFace };
+  // the soft shade a tile throws on the tiles it lies on: one flat quad per upper tile (an InstancedMesh, 2 triangles each)
+  let shadeTex = null;
+  function shades(n) {
+    const TT = T();
+    shadeTex = shadeTex || X.canvasTex('shShade', 128, 160, (c, W, H) => { H = H || 160; const g = c.createRadialGradient(64, 80, 20, 64, 80, 78); g.addColorStop(0, 'rgba(0,0,0,.9)'); g.addColorStop(.62, 'rgba(0,0,0,.55)'); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; c.fillRect(0, 0, 128, 160); });
+    const gq = new TT.PlaneGeometry(TW * 1.22, TD * 1.18); gq.rotateX(-Math.PI / 2);
+    const m = new TT.MeshBasicMaterial({ map: shadeTex, color: 0x000000, transparent: true, opacity: .42, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+    const im = new TT.InstancedMesh(gq, m, n); im.renderOrder = 1; im.frustumCulled = false; im.castShadow = false; im.receiveShadow = false;
+    im.instanceMatrix.setUsage(TT.DynamicDrawUsage);
+    im.userData.dispose = () => { gq.dispose(); m.dispose(); };
+    return im;
+  }
+  X.shanghai = { TW, TD, TH, BACKS, BACK_COL, back: backNow, tiles, shades, setBack, mat, atlas, faceOff, ready, drawFace };
 })();
