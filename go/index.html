@@ -965,7 +965,7 @@ html.rb-study #frame{outline:3px solid var(--accent);outline-offset:3px}
 <script src="../shared/coachkit.js?v=17l14"></script>
 <script src="../shared/seqprac.js?v=6"></script>
 <script src="../shared/seqgame.js?v=4"></script>
-<script src="../shared/record.js?v=12l14"></script>
+<script src="../shared/record.js?v=14"></script>
 <script src="coach.js?v=7sq-ls"></script>
 <script src="coach-i18n.js?v=5"></script>
 <script src="../shared/luxintro.js?v=3"></script><script src="learn.js?v=20261111lx"></script>
@@ -990,14 +990,14 @@ html.rb-study #frame{outline:3px solid var(--accent);outline-offset:3px}
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  (/[?&]three=128\b/.test(location.search) ? load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js') : load('../atlas/vendor/three-r186.min.js?v=1').then(() => load('../atlas/vendor/three-compat.js?v=9'))).then(() => load('../atlas/img/tex/baked.js?v=2')).then(() => load('../atlas/table3d.js?v=163')).then(() => load('../atlas/tables3d.js?v=107')).then(() => load('../atlas/skin/common.js?v=96')).then(() => load('../atlas/models/goban.js?v=11l14')).then(() => load('../atlas/skin/go.js?v=6l14'))
+  (/[?&]three=128\b/.test(location.search) ? load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js') : load('../atlas/vendor/three-r186.min.js?v=1').then(() => load('../atlas/vendor/three-compat.js?v=9'))).then(() => load('../atlas/img/tex/baked.js?v=2')).then(() => load('../atlas/table3d.js?v=163')).then(() => load('../atlas/tables3d.js?v=107')).then(() => load('../atlas/skin/common.js?v=97')).then(() => load('../atlas/models/goban.js?v=11l14')).then(() => load('../atlas/skin/go.js?v=6l14'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
 <script src="../shared/atlas.js?v=20261113sv4" defer></script>
 <script src="../shared/atlas-firebase-config.js?v=4l14" defer></script>
 <script src="../shared/atlas-account.js?v=20261109ac2l14as1" defer></script>
-<script src="../shared/infotabs.js?v=22l14" defer></script>
+<script src="../shared/infotabs.js?v=23" defer></script>
 <script src="../shared/pickdrop.js?v=8l14"></script>
 <script src="../shared/ngtabs.js?v=29"></script>
 <script src="../shared/nglux.js?v=24l16"></script>
