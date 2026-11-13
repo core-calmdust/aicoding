@@ -508,3 +508,4 @@
   - 互換層は r128 のまま書かれたコードを動かすためのもの：色管理オフ、encoding ↔ colorSpace、光の強さ ×π、copyFramebufferToTexture の引数順、PCFSoft→PCF、opaque_fragment の展開、`THREE.__uvDefs`（onBeforeCompile で vUv を使うときに先頭へ付ける）。
   - 新しく onBeforeCompile を書くときは r186 の書き方（vMapUv 等・geometryNormal）で。
 - 局面編集の駒メニュー：ボタンを大きめに、メニューは常に駒の上に（盤の最上段だけ下）。
+- スマホの不具合修正（2026-11-13）：新しい対局の箱の高さ固定・前面化・クレジット位置は PC（.ngt-pc）だけに（スマホで箱が巨大になりボタンに重なっていた）。上部ツール行のボタンは角丸の四角（円にならない）。3D卓でのプラリネのアイコンはスマホも右下。ポータルでゲーム中は全体を文字選択不可（Chrome のダブルタップで拡大鏡が出ないように）。

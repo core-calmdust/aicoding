@@ -841,15 +841,15 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-or
 html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] :is(#fLevel,#fLevel2) .cs-wrap:not(.hidden):not(#_){order:1;display:flex!important;max-width:none;width:100%;margin-top:14px;gap:12px;padding:0;border-radius:0;background:none;font-size:13px;letter-spacing:.12em;color:#8a7552;box-sizing:border-box}
 html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] :is(#fLevel,#fLevel2) .cs-wrap .csp{flex:1 1 auto}
 html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] :is(#fLevel,#fLevel2) .cs-wrap .csp-btn:not(#_){height:40px;border-radius:10px;background:#f3ead6!important;border:2px solid #eadcbc!important;font-size:14.5px;letter-spacing:.02em}
-html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order].ng-fit:has(> .credit){position:relative}
-html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order].ng-fit > .credit:not(#_){position:absolute;right:30px;bottom:34px;margin:0!important;text-align:right;font-size:11px;line-height:1.5;max-width:200px;z-index:7}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl.ngt-pc[data-ngl-order].ng-fit:has(> .credit){position:relative}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl.ngt-pc[data-ngl-order].ng-fit > .credit:not(#_){position:absolute;right:30px;bottom:34px;margin:0!important;text-align:right;font-size:11px;line-height:1.5;max-width:200px;z-index:7}
 html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] .ng-cols > .ng-col::after{bottom:-12px;height:52px}   /* (a deeper frosted band at the panels' foot: PRO's long list visibly runs under it) */
 /* (2026-11-13) the panels' shadow is never washed out by the frosted band over the buttons (it was, while PRO was closed and the
    panels reached down under it): the panels lie above that band; the dialog does not scroll then (ng-fit), so nothing slides under it */
-html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order].ng-fit[data-ngt=rules] .ng-cols:not(.ngt-hide){position:relative;z-index:8}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl.ngt-pc[data-ngl-order].ng-fit[data-ngt=rules] .ng-cols:not(.ngt-hide){position:relative;z-index:8}
 /* (2026-11-13) the panels exactly the room's height, PRO open or not (open, they were cut to it; closed, they stretched a little past) */
-html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order].ng-fit[data-ngt=rules] .ng-cols:not(.ngt-hide):not(#_){align-items:start!important}
-html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order].ng-fit[data-ngt=rules] .ng-cols > .ng-col:not(.ngt-hide):not(.ngl-empty):not(#_){height:var(--ngmax)!important;box-sizing:border-box}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl.ngt-pc[data-ngl-order].ng-fit[data-ngt=rules] .ng-cols:not(.ngt-hide):not(#_){align-items:start!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl.ngt-pc[data-ngl-order].ng-fit[data-ngt=rules] .ng-cols > .ng-col:not(.ngt-hide):not(.ngl-empty):not(#_){height:var(--ngmax)!important;box-sizing:border-box}
 /* (2026-11-13, common) the 検討 box's 検討する / 元に戻す buttons: the red action button, as shogi's box (reversi / go / hex rbox.js) */
 html.atlas-skin body:not(#_) #rbox .rb-acts :is(.rb-study,.rb-restore):not(#_){background:#ff5d5d!important;color:#fff!important;box-shadow:0 3px 0 #d93c3c!important;border:0!important;font-weight:900;border-radius:10px}
 html.atlas-skin body:not(#_) #rbox .rb-acts :is(.rb-study,.rb-restore):hover{filter:brightness(1.05)}
@@ -859,3 +859,5 @@ html.atlas-skin body:not(#_) .ed-pop{background:#fffaf0!important;border:2px sol
 html.atlas-skin body:not(#_) .ed-pop button,html.atlas-skin body:not(#_) .ed-file button{background:#f3ead6!important;border:2px solid #eadcbc!important;color:#4a3a22!important;border-radius:10px!important}
 html.atlas-skin body:not(#_) .ed-pop button:hover,html.atlas-skin body:not(#_) .ed-file button:hover{border-color:#e3c48a!important}
 html.atlas-skin body:not(#_) .ed-help{color:#8a7552!important;font-size:13.5px!important}
+/* (2026-11-13) phones: the tool row's buttons rounded squares, not circles (the card-button pill rule had reached them) */
+html.atlas-skin:not(.atlas-land):not(.atlas-2d) body:not(#_) .card.controls .btn:not(#_):not(#_){border-radius:14px!important}
