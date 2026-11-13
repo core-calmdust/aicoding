@@ -16,6 +16,7 @@
   const loadEngine = () => window.PegEngine ? Promise.resolve(window.PegEngine) : new Promise((res, rej) => { const s = document.createElement('script'); s.src = ENG; s.onload = () => window.PegEngine ? res(window.PegEngine) : rej(new Error('engine')); s.onerror = () => rej(new Error('engine')); document.head.appendChild(s); });
   const IDS = ['english', 'french', 'triangle', 'diamond', 'german'];
   const PT = (k, lang, v) => { const D = window.PEG_I18N && PEG_I18N[k]; let s = D ? D[lang] || D.en || '' : ''; if (v) for (const x in v) s = s.split('{' + x + '}').join(v[x]); return s; };
+  const BEST = { ja: 'ベスト', en: 'Best', zh: '最佳', 'zh-TW': '最佳', ko: '베스트', es: 'Mejor', fr: 'Record', pt: 'Melhor', de: 'Bestwert', ru: 'Лучший', tr: 'En iyi', id: 'Terbaik', hi: 'सर्वश्रेष्ठ', ar: 'الأفضل' };
   const BOARD_LBL = { ja: '盤', en: 'Board', zh: '棋盘', 'zh-TW': '棋盤', ko: '판', es: 'Tablero', fr: 'Plateau', pt: 'Tabuleiro', de: 'Brett', ru: 'Доска', tr: 'Tahta', id: 'Papan', hi: 'बोर्ड', ar: 'اللوحة' };
   const io = k => k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
 
@@ -45,7 +46,10 @@
 
   function start(ctx) {
     const T3 = ctx.Table3D, TH = window.THREE, P3 = T3.peg, lang = ctx.lang, tx = (k, v) => PT(k, lang, v);
-    const bid = IDS[(ctx.size || 1) - 1] || 'english';
+    // ctx.pz (atlas/puzzles.js, 2026-11-13): a puzzle — its cells 'board:pegs:goal' (peg/puzzles.json b · p · t); no end card, each
+    // finished jump goes to ctx.pz.moved(u, { over, left, onGoal }) (u = 'from.to'); the puzzle's flow drives the rest
+    const PZ = ctx.pz || null, pzParse = c => { const [b, p, t] = String(c || '').split(':'); return { b: IDS.includes(b) ? b : 'english', p: p || '', t: t === undefined || t === '' ? -1 : +t }; };
+    let bid = PZ ? pzParse(PZ.cells).b : IDS[(ctx.size || 1) - 1] || 'english';
     let E = null, B = null, board = null, U = null, TOP = .5;
     let a = null, a0 = null, goal = -1, hist = [], pcs = {}, taken = [], sel = -1, over = false, busy = true, stopped = false, ply = 0;
     let worker = null, jid = 0, toastEl = null, toastT = 0;
@@ -75,6 +79,7 @@
 
     /* ---------- the HUD and a toast ---------- */
     function hud(msg) {
+      if (PZ) return;
       const n = a ? count() : 0;
       ctx.hud(`<span class="hs on"><b>${n}</b>${tx('st.unit')}</span><span class="hm">${msg == null ? (goal >= 0 ? tx('st.goal') : tx('st.any')) : msg}</span><span class="hs">${tx('st.moves', { n: hist.length })}</span>`);
     }
@@ -126,16 +131,30 @@
       hud(); later(after, 520);
     }
     function after() {
+      if (PZ) {   // a puzzle: its flow decides (and calls wait())
+        const over0 = !E.moves(B, a).length, left = count(), last = hist[hist.length - 1];
+        if (over0) { over = true; marks(); }
+        if (pzRes) { const r = pzRes; pzRes = null; r(true); }
+        if (pzOwn) { pzOwn = false; PZ.moved(last[0] + '.' + last[2], { over: over0, left, onGoal: left === 1 && (goal < 0 || !!a[goal]) }); }
+        return;
+      }
       busy = false;
       if (E.moves(B, a).length) { marks(); hud(); turn(); return; }
       // no jump left: the game is over
       over = true; marks(); turn();
       const left = count(), perfect = left === 1 && goal >= 0 && !!a[goal];
+      // the best record (the same store as the 2D page: 'aicoding-peg' recs['<board>:<start hole>'] = { best, perfect }, 2026-11-13)
+      let rec = null, nb = false;
+      try { const d = JSON.parse(localStorage.getItem('aicoding-peg') || '{}') || {}, R = d.recs = d.recs || {}, k = bid + ':' + E.startHole(bid), r = R[k] || {};
+        nb = r.best === undefined || left < r.best || (left === r.best && perfect && !r.perfect);
+        if (nb) R[k] = { best: left, perfect: perfect || !!r.perfect }; else if (perfect) R[k].perfect = true;
+        localStorage.setItem('aicoding-peg', JSON.stringify(d)); rec = R[k]; } catch (e) {}
+      const BL = BEST[lang] || BEST.en, bestTx = rec ? (nb && hist.length ? '🏅 ' + tx('res.best') + ' · ' : '') + BL + ': ' + tx('res.left', { n: rec.best }) + (rec.perfect ? ' · 👑 ' + tx('rec.perfect') : '') : '';
       const title = left === 1 ? (perfect ? tx('res.perfect') : tx('res.one')) : left === 2 ? tx('res.two') : left === 3 ? tx('res.three') : left <= 5 ? tx('res.five') : tx('res.many');
       const score = tx('res.left', { n: left }) + (left === 1 && !perfect && goal >= 0 ? ' · ' + tx('res.goalHint') : '');
       hud(left === 1 ? tx('st.done1') : tx('st.done', { n: left }));
       if (left === 1) Object.values(pcs).forEach(g => anim(700, k => lift(g, Math.sin(k * Math.PI) * .7)));
-      later(() => ctx.onEnd({ win: left === 1, draw: false, solo: true, level: 0, title: (perfect ? '👑 ' : '') + title, score, opp: tx('bd.' + bid), key: bid, why: title + ' · ' + tx('res.left', { n: left }), left, perfect }), 700);
+      later(() => ctx.onEnd({ win: left === 1, draw: false, solo: true, level: 0, title: (perfect ? '👑 ' : '') + title, score, best: bestTx, opp: tx('bd.' + bid), key: bid, why: title + ' · ' + tx('res.left', { n: left }), left, perfect }), 700);
     }
 
     /* ---------- input: a marble, then the hole it lands in ---------- */
@@ -155,6 +174,7 @@
       if (sel < 0) return;
       const j = E.moves(B, a).find(m => m[0] === sel && m[2] === i);
       if (!j) { SFX.nope(); deselect(); marks(); return; }
+      if (PZ) pzOwn = true;
       jump(j);
     }
     ctx.el.addEventListener('click', onClick);
@@ -176,16 +196,44 @@
       T3.show('peg', board);
       const tall = innerHeight > innerWidth * 1.15;
       if (T3.fit) T3.fit(tall ? { w: U.W + .6, d: U.H + 1.6, y: TOP + .3, pitch: 1.0 } : { w: U.W + .4, d: U.H + 1.0, y: TOP + .3, pitch: 1.0 });
+      if (PZ) { pzSet(PZ.cells, true); return; }
       const s = E.startHole(bid); a0 = E.startPos(B, s); a = a0.slice(); goal = E.goalHole(bid);
       hud(); const ms = rebuild(true);
       later(() => { busy = false; marks(); turn(); }, ms);
     }
+    /* ---------- puzzle mode (ctx.pz) ---------- */
+    let pzOwn = false, pzRes = null;
+    function pzSet(cells, first) {   // a puzzle's position (a new board when the puzzle is on another one)
+      const q = pzParse(cells);
+      timers.forEach(clearTimeout); timers.length = 0; jid++; sel = -1; over = false; busy = true; hist = []; pzOwn = false;
+      if (q.b !== bid || !board) {
+        if (board) { board.remove(hl); }
+        bid = q.b; B = E.BOARDS[bid]; board = P3.board(bid); U = board.userData; TOP = U.top; board.add(hl); T3.show('peg', board);
+        const tall = innerHeight > innerWidth * 1.15;
+        if (T3.fit) T3.fit(tall ? { w: U.W + .6, d: U.H + 1.6, y: TOP + .3, pitch: 1.0 } : { w: U.W + .4, d: U.H + 1.0, y: TOP + .3, pitch: 1.0 });
+      }
+      a0 = q.p.split('').map(Number); if (a0.length !== B.n) a0 = E.startPos(B, E.startHole(bid)); a = a0.slice(); goal = q.t;
+      const ms = rebuild(true);
+      later(() => { marks(); if (PZ.ready) PZ.ready(); }, ms + 100);
+    }
+    const jOf = u => { const [f, t] = String(u || '').split('.').map(Number); return E && B ? E.moves(B, a).find(j => j[0] === f && j[2] === t) || null : null; };
+    const pz = {
+      load: cells => { if (!E) { PZ.cells = cells; return; } pzSet(cells); },
+      wait: () => { busy = false; marks(); },
+      play: u => new Promise(res => { const j = jOf(u); if (!j) return res(false); pzRes = res; deselect(); jump(j); }),
+      moves: () => hist.map(j => j[0] + '.' + j[2]),
+      undo(n = 1) { timers.forEach(clearTimeout); timers.length = 0; jid++; sel = -1; hist.splice(Math.max(0, hist.length - n)); over = false; a = a0.slice(); hist.forEach(j => { a = E.apply(a, j); }); rebuild(false); marks(); },
+      mark(u) { if (!u) { marks(); return; } const j = jOf(u); if (j) marks(j); },
+      best: () => solve().then(r => r && r.ok && r.path && r.path.length ? r.path[0][0] + '.' + r.path[0][2] : null),
+      state: () => ({ left: a ? count() : 0, over, onGoal: a && count() === 1 && (goal < 0 || !!a[goal]) }),
+    };
+
     // (the engine is normally loaded with this file: set up at once, so the camera framing comes before the portal's play())
     if (window.PegEngine) setup(window.PegEngine);
     else loadEngine().then(setup).catch(() => { hud('⚠ ' + tx('msg.loadfail')); });
 
     const api = {
-      human: 0, noResign: true,
+      human: 0, noResign: true, pz,
       canUndo: () => !busy && !!hist.length,
       undo() { if (!api.canUndo()) return; jid++; sel = -1; hist.pop(); ply++; over = false; a = a0.slice(); hist.forEach(j => { a = E.apply(a, j); }); rebuild(false); marks(); hud(); turn(); },
       canHint: () => !busy && !over && !!E,
@@ -211,7 +259,7 @@
         if (window.__pgPlay === dbg) delete window.__pgPlay;
       },
     };
-    const dbg = { state: () => ({ a, hist: hist.length, over, busy, sel, left: a ? count() : 0 }), at: i => { const [x, z] = U.pt(i); return T3.project ? T3.project(x, z, TOP) : null; }, moves: () => E.moves(B, a), board: () => B, play: j => jump(j) };
+    const dbg = { state: () => ({ a, hist: hist.length, over, busy, sel, left: a ? count() : 0 }), at: i => { const [x, z] = U.pt(i); return T3.project ? T3.project(x, z, TOP) : null; }, moves: () => E.moves(B, a), board: () => B, play: j => jump(j), own: j => { if (PZ) pzOwn = true; jump(j); } };
     window.__pgPlay = dbg; api._debug = dbg;
     return api;
   }

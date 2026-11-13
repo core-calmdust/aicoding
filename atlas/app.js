@@ -835,7 +835,9 @@
     const lv = MX && pref[id + ':mode'] === 'pvp' ? 0 : pref[id + ':lv'] || 1, side = pref[id + ':side'] || 1;
     const vcur = ad && ad.variants && ad.variants.list.includes(pref[id + ':var']) ? pref[id + ':var'] : '';   // 種目 (shogi: its variants, 2026-11-12)
     const bsz = ad && ad.sizes ? (ad.sizes.includes(+pref[id + ':size']) ? +pref[id + ':size'] : ad.sizes.includes(ad.size0) ? ad.size0 : ad.sizes[0]) : 0;   // board size (go, hex, tafl); adapter.size0 = the default
-    const modes = MX ? mxModes(id) : ad && ad.modes, mode = modes && modes.includes(pref[id + ':mode']) ? pref[id + ':mode'] : 'ai';
+    // ペグソリテール (2026-11-13: 3D only): フリー · パズル — the puzzles (today's two, the list) on this 3D table
+    const PZX = !MX && id === 'peg' && !!(ad && window.AtlasPuzzles && AtlasPuzzles.has(id));
+    const modes = MX ? mxModes(id) : PZX ? ['ai', 'puzzle'] : ad && ad.modes, mode = modes && modes.includes(pref[id + ':mode']) ? pref[id + ':mode'] : 'ai';
     // board size (go): on the same row as the time control when there is one
     const sizeHtml = ad && ad.sizes ? `<label>${esc(ad.sizeLabel ? ad.sizeLabel(lang) : '')}<select id="bvSize">${ad.sizes.map(z => `<option value="${z}" ${z === bsz ? 'selected' : ''}>${ad.sizeName ? esc(ad.sizeName(z, lang)) : z + '×' + z}</option>`).join('')}</select></label>` : '';
     headIcons(false);   // (ヒストリア / 戦績 back out of the old card before it is rebuilt)
@@ -843,16 +845,17 @@
       <div class="tags">${g.tags.filter(k => k !== 'mobile').map(tagHtml).join('')}</div>
       <p class="bvab">${esc(t('about.' + id))}</p>
       ${rows.length ? `<div class="pgl">${rows.map(([l, a, b]) => `<span>${l}</span><span class="bar" style="--c:${g.color}"><i style="width:${Math.min(100, a / b * 100)}%"></i></span><b>${Math.min(a, b)}/${b}</b>`).join('')}</div>` : ''}
-      </div><div class="R">${modes ? `<div class="mtab3${MX ? ' mtab4' : ''}" id="bvMode">${modes.map(m => `<button type="button" data-m="${m}" class="${m === mode ? 'on' : ''}">${MX ? t(MX_LBL[m]) : t('bv.m.' + m)}</button>`).join('')}</div>` : ''}${ad ? `<div class="mbody" id="bvMBody">${modes ? `<div class="mnote" id="bvMNote"></div>` : ''}${ad.variants ? `<div class="opts vopts" id="bvVarRow"><label class="vrow">${esc(ad.variants.label(lang))}<button type="button" class="lvpick vpick" id="bvVar" data-v="${esc(vcur)}"></button></label><span class="rtnow2" id="bvRtNow" hidden></span></div>` : ''}<div class="opts" id="bvOpts">${ad.levels ? `<label>${t(MX ? 'bv.opp' : 'bv.level')}<select id="bvLv">${MX ? `<option value="0" ${lv === 0 ? 'selected' : ''}>${esc(t('bv.m.pvp'))}</option>` : ''}${Array.from({ length: ad.levels }, (_, i) => `<option value="${i + 1}" ${i + 1 === lv ? 'selected' : ''}>Lv.${i + 1}${ad.levelInfo && lvNm(ad.levelInfo(i + 1, lang), i + 1, lang, ad.levels) ? ' ' + esc(lvNm(ad.levelInfo(i + 1, lang), i + 1, lang, ad.levels)) : ''}</option>`).join('')}</select></label>` : ''}
+      </div><div class="R">${modes ? `<div class="mtab3${MX ? ' mtab4' : ''}" id="bvMode">${modes.map(m => `<button type="button" data-m="${m}" class="${m === mode ? 'on' : ''}">${MX ? t(MX_LBL[m]) : PZX ? (m === 'puzzle' ? t('pg.pz') : PEG_FREE[lang] || PEG_FREE.en) : t('bv.m.' + m)}</button>`).join('')}</div>` : ''}${ad ? `<div class="mbody" id="bvMBody">${modes ? `<div class="mnote" id="bvMNote"></div>` : ''}${ad.variants ? `<div class="opts vopts" id="bvVarRow"><label class="vrow">${esc(ad.variants.label(lang))}<button type="button" class="lvpick vpick" id="bvVar" data-v="${esc(vcur)}"></button></label><span class="rtnow2" id="bvRtNow" hidden></span></div>` : ''}<div class="opts" id="bvOpts">${ad.levels ? `<label>${t(MX ? 'bv.opp' : 'bv.level')}<select id="bvLv">${MX ? `<option value="0" ${lv === 0 ? 'selected' : ''}>${esc(t('bv.m.pvp'))}</option>` : ''}${Array.from({ length: ad.levels }, (_, i) => `<option value="${i + 1}" ${i + 1 === lv ? 'selected' : ''}>Lv.${i + 1}${ad.levelInfo && lvNm(ad.levelInfo(i + 1, lang), i + 1, lang, ad.levels) ? ' ' + esc(lvNm(ad.levelInfo(i + 1, lang), i + 1, lang, ad.levels)) : ''}</option>`).join('')}</select></label>` : ''}
         ${ad.sides ? `<label>${t('bv.side')}<select id="bvSide"><option value="1" ${side === 1 ? 'selected' : ''}>${t('bv.first')}</option><option value="2" ${side === 2 ? 'selected' : ''}>${t('bv.second')}</option></select></label>` : ''}
         ${ad.sizes && !(ad.table && TCS[ad.clock]) && !ad.house ? sizeHtml : ''}${ad.house ? `<button type="button" class="hrb" id="bvHouse"><span>${esc(ad.house.label(lang))}</span><b></b><i aria-hidden="true">⚙</i></button>` : ''}</div>
-        ${ad.table && TCS[ad.clock] ? `<div class="opts tcrow" id="bvTcRow"><label>${t('tc.h')}<button type="button" class="lvpick" id="bvTc" data-v="${esc(tcOf(ad, pref[id + ':tc']).id)}"></button></label>${ad.sizes ? sizeHtml : ''}</div>` : ''}${MX ? mxPanels(g, ad) : ''}</div>${ad.house && ad.sizes ? `<div class="opts szrow" id="bvSzRow">${sizeHtml}</div>` : ''}` : (g.id === 'sudoku' || g.id === 'speedsudoku' || g.id === 'samegame' || g.id === 'jailbreak' || g.id === 'amazons' || g.id === 'peg' ? `<div class="soon ext"><b>${t('bv.ext')}</b><span>${t('bv.extSub', { name: esc(gname(g)) })}</span></div>` : CARD2D[g.id] ? `<div class="soon ext"><b>${t('bv.card2d')}</b><span>${t('bv.card2dSub', { name: esc(gname(g)) })}</span></div>` : `<div class="soon">${t('bv.soon')}</div>`)}
+        ${ad.table && TCS[ad.clock] ? `<div class="opts tcrow" id="bvTcRow"><label>${t('tc.h')}<button type="button" class="lvpick" id="bvTc" data-v="${esc(tcOf(ad, pref[id + ':tc']).id)}"></button></label>${ad.sizes ? sizeHtml : ''}</div>` : ''}${MX ? mxPanels(g, ad) : PZX ? `<div class="opts mxp" id="bvPz" hidden>${[['d1', '★', t('bv.pz.dc')], ['d2', '☆', t('bv.pz.dc') + ' EASY']].map(([k, ic, lb]) => `<button type="button" class="mxb" data-pz="${k}"><i>${ic}</i>${esc(lb)}</button>`).join('')}<button type="button" class="mxb" data-pz="list"><i>▦</i>${esc(t('bv.pzList'))}</button></div>` : ''}</div>${ad.house && ad.sizes ? `<div class="opts szrow" id="bvSzRow">${sizeHtml}</div>` : ''}` : (g.id === 'sudoku' || g.id === 'speedsudoku' || g.id === 'samegame' || g.id === 'jailbreak' || g.id === 'amazons' || g.id === 'peg' ? `<div class="soon ext"><b>${t('bv.ext')}</b><span>${t('bv.extSub', { name: esc(gname(g)) })}</span></div>` : CARD2D[g.id] ? `<div class="soon ext"><b>${t('bv.card2d')}</b><span>${t('bv.card2dSub', { name: esc(gname(g)) })}</span></div>` : `<div class="soon">${t('bv.soon')}</div>`)}
       <div class="act${ad && ad.table && FULL_SKIN[g.id] ? ' act3' : ''}">${!ad ? `<a class="btn big" href="../${g.href}">${t('play')} ▶</a>`
         : ad.table && FULL_SKIN[g.id] ? `<button class="btn big pk" id="bvFull"><b>${t('bv.full')} ▶</b><small>${t('bv.fullSub')}</small></button><button class="btn big2 pk" id="bvTable"><b>${esc(placeT('play'))}</b><small>${t('bv.tableSub')}</small></button><a class="btn ghost big2 pk" href="../${g.href}"><b>${t('bv.classic')}</b><small>${t('bv.classicSub')}</small></a>`
         : `<button class="btn big" id="bvStart">${t('bv.start')} ▶</button>${g.only3d ? '' : `<a class="btn ghost big2" href="../${g.href}">${t('bv.classic')}</a>`}`}</div></div></div>`;   // (only3d: a game made for the 3D table alone — carrom — has no 2D page)
     if (window.AtlasGameList && AtlasGameList.fitTitle) AtlasGameList.fitTitle($('bvi').querySelector('.row h3'));   // the whole name, never "…"
     // three ways to play: on the chabudai (the portal's own 3D play), the full game in the 3D skin, or the 2D game
-    if ($('bvStart')) $('bvStart').onclick = () => startPlay();
+    if ($('bvStart')) $('bvStart').onclick = () => { if (PZX && $('bvMode') && $('bvMode').dataset.v === 'puzzle') startPuzzle(); else startPlay(); };   // (peg's パズル: 続きから on the table)
+    if (PZX && $('bvPz')) $('bvPz').onclick = e => { const b = e.target.closest('[data-pz]'); if (!b) return; try { SFX.tap && SFX.tap(); } catch (x) {} if (b.dataset.pz === 'list') puzzleSheet(g); else startPuzzle({ daily: b.dataset.pz }); };
     if ($('bvTable')) $('bvTable').onclick = () => startPlay('table');
     if ($('bvFull')) $('bvFull').onclick = () => startPlay('full');
     if ($('bvMode')) {   // AI / rated / two players: only the AI game has a level and a side to pick
@@ -863,6 +866,7 @@
         if ($('bvVarRow')) $('bvVarRow').hidden = !(m === 'ai' || m === 'pvp' || m === 'rated');   // (online games too: every variant, 2026-11-12)
         if (rtNowHook) rtNowHook();   // (種目: AI games, two players, rated games against the AI)
         if (MX) { $('bvOpts').hidden = m !== 'ai'; $('bvMNote').hidden = true; if ($('bvTcRow')) $('bvTcRow').hidden = m !== 'ai'; mxLayout(m); return; }
+        if (PZX) { $('bvOpts').hidden = m !== 'ai'; $('bvMNote').hidden = true; if ($('bvPz')) $('bvPz').hidden = m !== 'puzzle'; return; }
         $('bvOpts').hidden = m !== 'ai'; $('bvMNote').hidden = m === 'ai';
         if ($('bvTcRow')) $('bvTcRow').hidden = !(ad.tableModes || ['ai']).includes(m);   // the time control is for table play only
         $('bvMNote').textContent = m === 'ai' ? '' : t('bv.m.' + m + 'Note');
@@ -1120,6 +1124,7 @@
     [rb, hb].forEach(b => { if (b) { b.classList.add('inhd'); sub.appendChild(b); } });
   }
   const PS_GAMES = { shogi: true, chess: true };
+  const PEG_FREE = { ja: 'フリー', en: 'Free play', zh: '自由', 'zh-TW': '自由', ko: '자유', es: 'Libre', fr: 'Libre', pt: 'Livre', de: 'Frei', ru: 'Свободно', tr: 'Serbest', id: 'Bebas', hi: 'खुला', ar: 'حر' };
   /* ---------- shogi / chess, PC: the card's tabs 対戦 · レート戦 · パズル · レッスン (2026-11-10) ----------
      対戦: the usual settings, 相手 (the level list) headed by 二人で対戦. レート戦: 相手 AI / オンライン and the time control (the online
      ones — the AI's rated games of shogi take the local clocks, chess's have none), and the rated games' record. パズル: the daily
@@ -1344,7 +1349,7 @@
           if (session !== sess) return;
           TB.hide();
           const head = res.solo ? (res.win ? '🎉 ' : '') + res.title : res.pvp ? (res.draw ? t('res.draw') : '🎉 ' + (res.winnerText || res.score || '')) : (res.win ? '🎉 ' : '') + t(res.draw ? 'res.draw' : res.win ? 'res.win' : 'res.lose');
-          $('endc').innerHTML = `<h3>${esc(head)}</h3>${res.score && !(res.pvp && !res.winnerText && !res.draw) ? `<div class="sc">${esc(res.score)}</div>` : ''}${res.pvp || res.solo ? '' : `<div class="gnote">Lv.${res.level}</div>`}${rtX ? `<div class="rtres"><b>R ${rtX.old} → ${rtX.now}</b><i class="${rtX.d >= 0 ? 'up' : 'dn'}">${rtX.d >= 0 ? '+' : '−'}${Math.abs(rtX.d)}</i></div>` : ''}
+          $('endc').innerHTML = `<h3>${esc(head)}</h3>${res.score && !(res.pvp && !res.winnerText && !res.draw) ? `<div class="sc">${esc(res.score)}</div>` : ''}${res.best ? `<div class="gnote gbest">${esc(res.best)}</div>` : ''}${res.pvp || res.solo ? '' : `<div class="gnote">Lv.${res.level}</div>`}${rtX ? `<div class="rtres"><b>R ${rtX.old} → ${rtX.now}</b><i class="${rtX.d >= 0 ? 'up' : 'dn'}">${rtX.d >= 0 ? '+' : '−'}${Math.abs(rtX.d)}</i></div>` : ''}
             <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center"><button class="btn ghost" id="eBack">${t('bv.quit')}</button><button class="btn" id="eAgain">${t('bv.again')}</button></div>`;
           $('endc').classList.add('on'); if (res.win || (res.pvp && !res.draw)) confetti(120);
           try { SFX[res.draw ? 'draw' : res.win || res.pvp ? 'win' : res.solo ? 'draw' : 'lose'](); } catch (e) {}   // (respects the sound setting)
@@ -1579,7 +1584,7 @@
     const g = bvGame; stopSession();
     $('bv').classList.add('playing', 'rules'); $('endc').classList.remove('on');
     session = AtlasPuzzles.start({ id: g.id, el: $('gl'), Table3D, lang, t, panel: $('bv'), adapter: Atlas3D[g.id], onExit: () => openBoard(g.id),
-      daily: o.daily, pick: o.pick, onList: () => puzzleSheet(g), dailyTitle: w => t(g.id !== 'shogi' ? 'bv.pz.dc' : w === 'd2' ? 'bv.pz.d2' : 'bv.pz.d1') });
+      daily: o.daily, pick: o.pick, onList: () => puzzleSheet(g), dailyTitle: w => g.id === 'peg' ? t('bv.pz.dc') + (w === 'd2' ? ' EASY' : '') : t(g.id !== 'shogi' ? 'bv.pz.dc' : w === 'd2' ? 'bv.pz.d2' : 'bv.pz.d1') });
     if (session.panel && window.ResizeObserver) new ResizeObserver(fitStage).observe(session.panel);
     fitStage(); Table3D.play(true);
   }
@@ -1706,7 +1711,7 @@
       const hero = `<div class="pzh-hero">${GD.guide ? `<img class="pzh-ch" src="${GD.guide}" alt="">` : ''}<div class="pzh-tx"><small>${esc(nm)}</small><b>${esc(t('bv.pzList'))}</b><span class="pzh-bar"><i style="width:${all ? Math.round(got * 100 / all) : 0}%"></i></span><span class="pzh-n">${got} / ${all}</span></div></div>`;
       const tabs = C.length > 1 ? `<div class="lx-tabs">${C.map(c => { const xs = sets.filter(x => x.cat === c.k), d = xs.reduce((a, x) => a + done(x), 0), n = xs.reduce((a, x) => a + x.recs.length, 0); return `<button type="button" data-cat="${c.k}" class="${c.k === cur ? 'sel' : ''}"><span class="ic pzh-ic">${c.icon}</span><span class="nm">${esc(c.name)}</span><span class="ct${d >= n ? ' ok' : ''}">${d}/${n}</span></button>`; }).join('')}</div>` : '';
       const ban = cc ? `<div class="lx-banner"><span class="ic pzh-ic">${cc.icon}</span><div class="tx"><b>${esc(cc.name)}</b><small>${esc(cc.desc || '')}</small></div></div>` : '';
-      const card = x => { const d = done(x), n = x.recs.length, full = d >= n, st = x.recs.reduce((a, v) => a + v, 0); const th = /^fen:/.test(x.board || '') ? (window.AtlasMini ? AtlasMini.chess(x.board.slice(4)) : '') : pzMini(x.board);
+      const card = x => { const d = done(x), n = x.recs.length, full = d >= n, st = x.recs.reduce((a, v) => a + v, 0); const th = /^fen:/.test(x.board || '') ? (window.AtlasMini ? AtlasMini.chess(x.board.slice(4)) : '') : /^peg:/.test(x.board || '') ? (window.AtlasMini && AtlasMini.peg ? AtlasMini.peg(x.board.slice(4)) : '') : pzMini(x.board);
         return `<button type="button" class="lx-card${full ? ' done' : ''}" data-set="${x.key}">${th ? `<span class="lx-th">${th}</span>` : ''}<span class="lx-tx"><span class="lx-top">${x.icon ? `<span class="pzh-ic sm">${x.icon}</span>` : ''}<span class="lx-st${full ? ' ok' : d ? ' so' : ' new'}">${full ? '✓' : d ? d + '/' + n : 'NEW'}</span></span><span class="lx-t">${esc(x.title)}</span>${x.desc ? `<span class="lx-desc">${esc(x.desc)}</span>` : ''}<span class="pzh-row"><span class="pzh-bar"><i style="width:${Math.round(d * 100 / n)}%"></i></span><span class="pzh-st">★ ${st}/${n * 3}</span></span></span></button>`; };
       S0.body.className = 'lesson-list lx-on';
       S0.body.innerHTML = `<div class="pzh-box">${hero}${tabs}</div>` + ban + `<div class="lx-grid">${list.map(card).join('')}</div>`;
