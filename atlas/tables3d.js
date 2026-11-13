@@ -260,7 +260,7 @@
     maple: { ja: "ヴェルサイユ", en: "Versailles", zh: "凡尔赛", 'zh-TW': "凡爾賽", ko: "베르사유", es: "Versalles", fr: "Versailles", pt: "Versalhes", de: "Versailles", ru: "Версаль", tr: "Versay", id: "Versailles", hi: "वर्साय", ar: "فرساي" },
     stone: { ja: "大理石と真鍮", en: "Marble & brass", zh: "大理石与黄铜", 'zh-TW': "大理石與黃銅", ko: "대리석과 황동", es: "Mármol y latón", fr: "Marbre et laiton", pt: "Mármore e latão", de: "Marmor & Messing", ru: "Мрамор и латунь", tr: "Mermer ve pirinç", id: "Marmer & kuningan", hi: "संगमरमर और पीतल", ar: "رخام ونحاس" },
     night: { ja: "アブストラクト", en: "Abstract", zh: "抽象", 'zh-TW': "抽象", ko: "추상", es: "Abstracto", fr: "Abstrait", pt: "Abstrato", de: "Abstrakt", ru: "Абстракция", tr: "Soyut", id: "Abstrak", hi: "अमूर्त", ar: "تجريدي" } },
-    art: { ja: "カラフルアート", en: "Colourful art", zh: "缤纷艺术", 'zh-TW': "繽紛藝術", ko: "컬러풀 아트", es: "Arte de colores", fr: "Art coloré", pt: "Arte colorida", de: "Bunte Kunst", ru: "Цветное искусство", tr: "Renkli sanat", id: "Seni warna-warni", hi: "रंगीन कला", ar: "فن ملوّن" },
+    art: { ja: "ホワイト", en: "White", zh: "白色", 'zh-TW': "白色", ko: "화이트", es: "Blanco", fr: "Blanc", pt: "Branco", de: "Weiß", ru: "Белая", tr: "Beyaz", id: "Putih", hi: "सफ़ेद", ar: "أبيض" },   // (2026-11-13: was カラフルアート)
     pop: { ja: "ポップアート", en: "Pop art", zh: "波普艺术", 'zh-TW': "普普藝術", ko: "팝아트", es: "Pop art", fr: "Pop art", pt: "Pop art", de: "Pop-Art", ru: "Поп-арт", tr: "Pop art", id: "Seni pop", hi: "पॉप आर्ट", ar: "فن البوب" },
   hockey: {
     classic: { ja: 'クラシック', en: 'Classic', zh: '经典', 'zh-TW': '經典', ko: '클래식', es: 'Clásico', fr: 'Classique', pt: 'Clássico', de: 'Klassisch', ru: 'Классика', tr: 'Klasik', id: 'Klasik', hi: 'क्लासिक', ar: 'كلاسيك' },
