@@ -19,6 +19,7 @@
     chess: { guide: '../images/atlas/g-knight.webp', name: { ja: 'ナイトン', en: 'Knighton', zh: '奈顿', ko: '나이톤', es: 'Caballón', fr: 'Chevalou', pt: 'Cavalinho', de: 'Springolin', hi: 'नाइटन', ar: 'فارسون', ru: 'Найтон', 'zh-TW': '奈頓', id: 'Knighton', tr: 'Knighton' } },
     reversi: { guide: '../images/atlas/g-disc.webp', name: { ja: 'リバガメ', en: 'Flipturtle', zh: '翻翻龟', ko: '리바거북', es: 'Tortugavuelta', fr: 'Tortuflip', pt: 'Tartavira', de: 'Wendekröte', hi: 'पलटकछुआ', ar: 'سلحفاة القلب', ru: 'Перевертуша', 'zh-TW': '翻翻龜', id: 'Kurakura Balik', tr: 'Çevirkaplumbağa' } },
     shogi: { guide: '../images/atlas/g-shogi.webp', name: { ja: 'ショウギツネ', en: 'Shogitsune', zh: '将棋狐', ko: '쇼기여우', es: 'Shogizorro', fr: 'Shogirenard', pt: 'Shogiraposa', de: 'Shogifuchs', hi: 'शोगी लोमड़ी', ar: 'ثعلب الشوغي', ru: 'Сёгицунэ', 'zh-TW': '將棋狐', id: 'Shogitsune', tr: 'Shogitsune' } },
+    peg: { guide: '../images/atlas/av/marble-2.webp', name: { ja: 'ビーユ', en: 'Bille', zh: '比尤', ko: '비유', es: 'Bille', fr: 'Bille', pt: 'Bille', de: 'Bille', hi: 'बिय', ar: 'بيّ', ru: 'Бий', 'zh-TW': '比尤', id: 'Bille', tr: 'Bille' } },
   };
   // the guide's lines ({n}, {c}, {a}, {b}: filled in; arrays: one is picked at random)
   const TX = {
@@ -170,6 +171,15 @@
       if (g) o += `<text x="${7 + f * 10}" y="${10.6 + r * 10}" font-size="9.6" text-anchor="middle" font-family="'Segoe UI Symbol','Noto Sans Symbols 2','DejaVu Sans',serif" fill="${w ? '#fffaf0' : '#1c1a17'}" stroke="${w ? '#3a2a1a' : '#000'}" stroke-width="${w ? .55 : .2}" paint-order="stroke">${g}\uFE0E</text>`; f++; } });
     return o + '</svg>';
   };
+  // peg solitaire (2026-11-13): 'board:pegs:goal' (peg/puzzles.json b · p · t) on the board's own hole layout (PegEngine)
+  window.AtlasMini.peg = cells => {
+    const E = window.PegEngine, [b, p, t] = String(cells || '').split(':'), B = E && E.BOARDS[b]; if (!B) return '';
+    const xs = B.pos.map(q => q[0]), ys = B.pos.map(q => q[1]), x0 = Math.min(...xs), y0 = Math.min(...ys), w = Math.max(...xs) - x0 + 1, h = Math.max(...ys) - y0 + 1, S = Math.max(w, h), k = 76 / S, ox = 4 + (S - w) * k / 2 + k / 2, oy = 4 + (S - h) * k / 2 + k / 2;
+    let o = `<svg viewBox="0 0 84 84" aria-hidden="true"><circle cx="42" cy="42" r="41" fill="#8f5a36"/><circle cx="42" cy="42" r="37.5" fill="#a86c40" stroke="#5a321a" stroke-width="1"/>`;
+    B.pos.forEach(([x, y], i) => { const cx = ox + (x - x0) * k, cy = oy + (y - y0) * k, on = p[i] === '1';
+      o += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(k * .3).toFixed(1)}" fill="#3a1e0e"/>` + (on ? `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(k * .36).toFixed(1)}" fill="#e2493f" stroke="#7a1a12" stroke-width=".5"/>` : '') + (+t === i ? `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(k * .44).toFixed(1)}" fill="none" stroke="#ffd36b" stroke-width="1.2"/>` : ''); });
+    return o + '</svg>';
+  };
   /* ---------- the two collections: problems, records ---------- */
   const BOOK = {
     chess: {
@@ -203,6 +213,28 @@
       },
       save(p, stars) { const st = this.stars(); st[p.P.id] = Math.max(st[p.P.id] || 0, stars); store.set(this.KEY, st); store.set(this.LAST, String(p.i)); },
     },
+  };
+  // peg solitaire (2026-11-13: the 2D page's collection, played on the 3D table): peg/puzzles.json regrouped as the page does —
+  // 基本 (first · shape · mid · chain), 世界の盤 (a theme per board), 全面; stars per problem in 'aicoding-peg-pz' { '<theme>:<j>': 1..3 }
+  BOOK.peg = {
+    url: '../peg/puzzles.json?v=2', KEY: 'aicoding-peg-pz', LAST: 'aicoding-peg-pz-last', data: null,
+    prep(d) { const by = id => (d.themes.find(T => T.id === id) || { list: [] }).list, out = [];
+      out.push({ id: 'first', grp: 'basic', list: by('first') }, { id: 'shape', grp: 'basic', list: by('shape') }, { id: 'mid', grp: 'basic', list: by('mid') }, { id: 'chain', grp: 'basic', list: by('chain') });
+      for (const b of ['triangle', 'french', 'diamond', 'german']) out.push({ id: 'w-' + b, grp: 'world', board: b, list: by('world').filter(P => P.b === b) });
+      out.push({ id: 'full', grp: 'full', list: by('full') });
+      return { themes: out.filter(T => T.list.length) }; },
+    PT(k, lang, v) { const D = window.PEG_I18N && PEG_I18N[k]; return D ? fill(D[lang] || D.en || D.ja || '', v || {}) : ''; },
+    recs(T) { const m = store.get(this.KEY, {}); return T.list.map((_, j) => +m[T.id + ':' + j] || 0); },
+    sets() { return this.data.themes.map((T, i) => ({ key: i, recs: this.recs(T), cat: T.grp })); },
+    title(i, lang) { const T = this.data.themes[i]; return (T.board ? this.PT('bd.' + T.board, lang) : this.PT('pz.th.' + T.id, lang)) || T.id; },
+    cells: P => P.b + ':' + P.p + ':' + P.t,
+    problem(i, j, X, lang) { const T = this.data.themes[i], P = T.list[j]; return { i, j, P, kind: 'peg', cells: this.cells(P), n: P.n, count: T.list.length, set: this.title(i, lang) }; },
+    save(p, stars) { const m = store.get(this.KEY, {}), k = this.data.themes[p.i].id + ':' + p.j; m[k] = Math.max(+m[k] || 0, stars); store.set(this.KEY, m); store.set(this.LAST, String(p.i)); },
+    cats(lang) { const IC = { basic: '<circle cx="8" cy="12" r="3"/><circle cx="16" cy="12" r="3"/>', world: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>', full: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/>' };
+      return ['basic', 'world', 'full'].map(k => ({ k, name: this.PT('pz.grp.' + k, lang) || k, desc: this.PT('pz.grp.' + k + '.sub', lang), icon: `<svg viewBox="0 0 24 24">${IC[k]}</svg>` })); },
+    look(i, lang) { const T = this.data.themes[i], P = T.list[0]; return { desc: T.board ? this.PT('pz.wb.sub', lang, { b: this.PT('bd.' + T.board, lang) }) : this.PT('pz.th.' + T.id + '.sub', lang), board: P ? 'peg:' + this.cells(P) : '' }; },
+    guide: '../images/atlas/av/marble-2.webp',
+    daily: null,
   };
   // reversi/index.html: 'reversi-emerald-puzzles' { "<level id>:<k>": stars, _v: 2, '@o:'/'@n:' markers }; puzzleData.old["<id>:<k>"] = a
   // slot's previous content, kept by players who already met it (pzUseOld); PZ_LAST = the level index
@@ -247,7 +279,7 @@
   });
   /* ---------- the daily puzzles: the same problem of the day as the full games, and their streak record ---------- */
   const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  const DAILY = { reversi: { d1: 'reversi-emerald-daily' }, chess: { d1: 'aicoding-chess-daily' }, shogi: { d1: 'shogi-kaya-daily', d2: 'shogi-kaya-daily-easy' } };
+  const DAILY = { reversi: { d1: 'reversi-emerald-daily' }, chess: { d1: 'aicoding-chess-daily' }, shogi: { d1: 'shogi-kaya-daily', d2: 'shogi-kaya-daily-easy' }, peg: { d1: 'aicoding-peg-daily', d2: 'aicoding-peg-daily' } };
   function dailyPick(id, which) {
     const B = BOOK[id], now = new Date(), date = ymd(now), wd = now.getDay(), day = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 864e5);
     if (id === 'reversi') {   // (reversi/index.html dailyPick: Mon–Tue level 2, Wed–Thu 3, Fri–Sat 4, Sun 5)
@@ -255,6 +287,11 @@
       const li = wd === 0 ? 4 : wd <= 2 ? 1 : wd <= 4 ? 2 : 3;
       let h = day * 2654435761 >>> 0; h ^= h >>> 15;
       return { date, i: li, j: (h >>> 0) % D.levels[li].puzzles.length };
+    }
+    if (id === 'peg') {   // (peg/app.js dailyIdx: the day of the year; d1 = the day's puzzle, d2 = its EASY one)
+      const D = B.daily; if (!D) return null;
+      const y0 = new Date(now.getFullYear(), 0, 0), k = Math.floor((new Date(date + 'T00:00:00') - y0) / 864e5) % 366, L = which === 'd2' ? D.easy : D.list;
+      return L && L[k] ? { date, P: L[k], easy: which === 'd2' } : null;
     }
     if (id === 'chess') {   // (chess/app.js dailyPick)
       const D = B.data; if (!D || D.levels.length < 4) return null;
@@ -281,11 +318,13 @@
     const B = BOOK[id]; let p;
     if (id === 'chess') p = B.problem(d.i, d.j, X);
     else if (id === 'reversi') p = B.problem(d.i, d.j, X, lang);
+    else if (id === 'peg') p = { i: -1, j: 0, P: d.P, kind: 'peg', cells: B.cells(d.P), n: d.P.n, count: 1, set: '' };
     else { const g = B.data.sets[d.i], P = (g.base || g.problems)[d.j]; p = { i: d.i, j: d.j, P, sfen: P.sfen, kind: 'tsume', n: P.n, count: g.problems.length, set: (g.title && (g.title[lang] || g.title.en)) || g.id }; }
     p.daily = { date: d.date, key: DAILY[id][which] || DAILY[id].d1, which };
     return p;
   }
   function dailySolved(p, hinted) {   // (the full games' dailySolved: the streak)
+    if (p.kind === 'peg' && p.daily.which === 'd2') { const o = store.get(p.daily.key, {}) || {}; o.easy = o.easy || {}; o.easy[p.daily.date] = 1; store.set(p.daily.key, o); return; }   // (peg's EASY: a mark of the day, no streak)
     const k = p.daily.key, R = Object.assign({ last: '', streak: 0, best: 0, days: {} }, store.get(k, {})), date = p.daily.date;
     if (R.days[date]) return;
     const y = new Date(date + 'T12:00:00'); y.setDate(y.getDate() - 1);
@@ -304,7 +343,7 @@
   const catsOf = (id, lang) => loadBook(id).then(B => B.cats ? { cats: B.cats(lang), guide: B.guide } : null);
   function loadBook(id) {
     const B = BOOK[id]; if (B.data) return Promise.resolve(B);
-    return B.p || (B.p = fetch(B.url).then(r => r.json()).then(d => { B.data = id === 'shogi' ? B.prep(d) : d; return B; }).catch(e => { B.p = null; throw e; }));
+    return B.p || (B.p = Promise.all([fetch(B.url).then(r => r.json()), id === 'peg' ? fetch('../peg/daily.json?v=2').then(r => r.json()).catch(() => null) : null]).then(([d, dl]) => { B.data = id === 'shogi' || id === 'peg' ? B.prep(d) : d; if (id === 'peg') B.daily = dl; return B; }).catch(e => { B.p = null; throw e; }));
   }
 
   /* ---------- sounds ---------- */
@@ -348,6 +387,7 @@
       const x = pick(a); lastL[k] = x; return fill(x, v || {});
     }
     let streak = 0;
+    const PEG_HI = { ja: 'わたしはビーユ。ペグソリテールのパズルに挑戦しよう！', en: "I'm Bille. Let's try some peg solitaire puzzles!", zh: '我是比尤。来挑战孔明棋谜题吧！', 'zh-TW': '我是比尤。來挑戰孔明棋謎題吧！', ko: '난 비유야. 페그 솔리테어 퍼즐에 도전하자!', es: '¡Soy Bille! Probemos unos problemas de solitario.', fr: "Je suis Bille ! Essayons des problèmes de solitaire.", pt: 'Sou a Bille! Vamos tentar uns problemas de resta um.', de: 'Ich bin Bille! Lösen wir ein paar Solitär-Aufgaben.', ru: 'Я Бий! Решим задачи по солитеру.', tr: 'Ben Bille! Birkaç peg solitaire bulmacası çözelim.', id: 'Aku Bille! Ayo coba teka-teki peg solitaire.', hi: 'मैं बिय हूँ! पेग सॉलिटेयर की पहेलियाँ हल करें।', ar: 'أنا بيّ! لنجرّب ألغاز السوليتير.' };
     // reversi (2026-11-12): a move that misses the goal is not stopped — the game is played out, judged at the end; the right line
     // only with 答え (as the full game)
     const RVX = {
@@ -397,6 +437,7 @@
     function goal(p) {
       if (p.kind === 'rv') { const c = p.me === 1 ? X.black : X.white, g = p.goal || {}; return fill(g.type === 'wipe' ? X.rv.gWipe : g.type === 'margin' ? X.rv.gMargin : g.type === 'draw' ? X.rv.gDraw : X.rv.gWin, { c, n: g.value }) + ' ' + fill(X.rv.empties, { n: p.n }); }
       if (p.kind === 'tsume') return fill(X.goalTsume, { n: p.n });
+      if (p.kind === 'peg') return '<b>' + (BOOK.peg.PT('pz.goal', ctx.lang, { n: p.n }) || '◎') + '</b>';
       if (p.kind === 'tac') return fill(X.goalTac, { c: side(p.me), n: p.n });
       return fill(p.n === 1 ? X.goalMate1 : X.goalMate, { c: side(p.me), n: p.n });
     }
@@ -413,7 +454,7 @@
         ctx.Table3D.play(true);   // (after start(): the adapter's show() puts its board on the table in the showcase view)
       } else pz().load(p.fen || p.sfen || p.cells, p.P.sol, p.toMove, p.me);
       cur.ready = opts.ready; cur.moved = opts.moved;
-      say((first ? (line('hi') || X.hi[id]) : line('intro')) + ' ' + goal(p)); first = false;
+      say((first ? (line('hi') || X.hi[id] || PEG_HI[ctx.lang] || PEG_HI.en) : line('intro') || '') + ' ' + goal(p)); first = false;
     }
     async function onReady(p) {
       if (p !== cur || stopped) return;
@@ -425,6 +466,7 @@
       const mv = pz().moves();
       if (p.kind === 'tac') return p.P.line[p.k] || '';
       if (p.kind === 'mate') return mv.length === 0 ? p.P.answer : '';
+      if (p.kind === 'peg') { const S = String(p.P.s || '').split(' ').filter(Boolean); return mv.every((u, i) => u === S[i]) ? S[mv.length] || '' : ''; }
       return mv.every((u, i) => u === p.P.sol[i]) ? p.P.sol[mv.length] || '' : '';
     }
     async function onMoved(p, u, info) {
@@ -432,6 +474,12 @@
       p.state = 'busy'; buttons(); pz().mark(null);
       const mv = pz().moves();
       if (p.kind === 'rv') return rvMoved(p, u);
+      if (p.kind === 'peg') {   // nothing is judged on the way: only the end counts — one marble left on ◎
+        if (!info.over) { p.state = 'play'; pz().wait(); buttons(); return; }
+        if (info.left === 1 && info.onGoal) return solved(p);
+        p.failed = true; p.state = 'fail'; streak = 0; chime(false);
+        say((info.left === 1 ? BOOK.peg.PT('pz.offgoal', ctx.lang) : BOOK.peg.PT('pz.stuck', ctx.lang, { n: info.left })) + ' ' + (line('retry') || X.retry)); buttons(); return;
+      }
       if (info.mate) return solved(p);
       // mate puzzles (chess mate in N, 詰将棋): any move may be played — nothing is judged until the N moves are used up;
       // the defender answers each move, and mating within N clears it (the user's rule, 2026-11-10: no "wrong move")
@@ -534,6 +582,7 @@
       if (p.kind === 'rv') { p.state = 'busy'; buttons(); const L = await p.ex; if (p !== cur) return; p.state = 'play'; buttons(); if (!L.length) return; const b = L.reduce((a, x) => x.score > a.score ? x : a, L[0]); p.hinted = true; pz().mark(b.move); say(line('hint') || X.hintSay); return; }
       let u = expected(p);
       if (!u && p.kind === 'tsume') { p.hinted = true; if (sess.canHint && sess.canHint()) { sess.hint(); say(line('hint') || X.hintSay); } return; }   // off the stored line: the engine's move
+      if (!u && p.kind === 'peg') { p.state = 'busy'; buttons(); u = await pz().best(); if (p !== cur) return; p.state = 'play'; pz().wait(); buttons(); if (!u) { say(BOOK.peg.PT('msg.dead', ctx.lang) || X.wrongNo); return; } }
       if (!u && p.kind === 'mate') { p.state = 'busy'; buttons(); u = await pz().best(20); if (p !== cur) return; p.state = 'play'; pz().wait(); buttons(); }
       if (!u) return;
       p.hinted = true; pz().mark(u); say(line('hint') || X.hintSay);
@@ -547,7 +596,7 @@
     }
     $('[data-a=hint]').onclick = hint;
     if ($('[data-a=list]')) $('[data-a=list]').onclick = () => ctx.onList();   // 一覧 (the portal's list sheet: pick another problem)
-    $('[data-a=again]').onclick = () => { if (!cur) return; begin(B.problem(cur.i, cur.j, X, ctx.lang), false); const a = line('again'); if (a) say(a + ' ' + goal(cur)); };
+    $('[data-a=again]').onclick = () => { if (!cur) return; begin(cur.daily && cur.kind === 'peg' ? dailyProblem(id, cur.daily.which, X, ctx.lang) : B.problem(cur.i, cur.j, X, ctx.lang), false); const a = line('again'); if (a) say(a + ' ' + goal(cur)); };
     $('[data-a=next]').onclick = () => nextPuzzle();
     if ($('[data-a=ans]')) $('[data-a=ans]').onclick = () => { if (!cur || cur.kind !== 'rv') return; const np = B.problem(cur.i, cur.j, X, ctx.lang); np.auto = true; begin(np, false); cur.failed = true; };
 
@@ -559,7 +608,7 @@
       if (ctx.pick && B.sets()[ctx.pick.i]) return begin(B.problem(ctx.pick.i, ctx.pick.j, X, ctx.lang), true);   // one chosen in 問題一覧
       nextPuzzle(); }).catch(() => { if (!stopped) say('⚠'); });
 
-    const dbg = { state: () => cur && { kind: cur.kind, i: cur.i, j: cur.j, state: cur.state, used: cur.used, k: cur.k, answer: cur.P.answer || cur.P.line || cur.P.sol, moves: pz() ? pz().moves() : [], say: $('.tx').textContent }, go: (i, j) => begin(B.problem(i, j, X, ctx.lang), true), ex: () => cur && cur.ex, user: async u => { const p = cur; await pz().play(u); onMoved(p, u, {}); } };
+    const dbg = { state: () => cur && { kind: cur.kind, i: cur.i, j: cur.j, state: cur.state, used: cur.used, k: cur.k, answer: cur.P.answer || cur.P.line || cur.P.sol || cur.P.s, moves: pz() ? pz().moves() : [], say: $('.tx').textContent }, go: (i, j) => begin(B.problem(i, j, X, ctx.lang), true), ex: () => cur && cur.ex, user: async u => { const p = cur; await pz().play(u); onMoved(p, u, {}); } };
     window.__atlasPz = dbg;   // (test hook)
     return {
       stop() { stopped = true; if (window.__atlasPz === dbg) delete window.__atlasPz; clearInterval(typeT); timers.forEach(clearTimeout); if (sess) sess.stop(); sess = null; el.remove(); },
