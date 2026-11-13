@@ -189,7 +189,7 @@
       const probs = g.rules ? pool : shuffle(pool).slice(0, 5);
       return { id: g.id, title: `${L(g.grade, lang)} · ${L(g.title, lang)}`, intro: (L(g.intro, lang) || []).join('<br>'),
         probs: probs.map(p => ({ pos: p.sfen, kind: p.kind === 'tsume' ? 'tsume' : 'best', n: p.n, sol: p.sol, P: p,
-          ask: L(p.q, lang) || (p.kind === 'tsume' ? fill(X.tsume, { n: p.n }) : L(g.prompt, lang)), why: L(p.expl, lang), ans: p.sol ? p.sol[0] : (p.accept || p.pv || [])[0] })),
+          ask: L(p.q, lang) || (p.kind === 'tsume' ? fill(X.tsume, { n: p.n }) : L(g.prompt, lang)), why: L((NC.shogi || {})[g.id + '/p' + g.problems.indexOf(p) + '/expl'] || p.expl, lang), ans: p.sol ? p.sol[0] : (p.accept || p.pv || [])[0] })),
         save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[g.id] || { best: 0, pass: false }, pass = pts >= Math.ceil(max * PASS); pr[g.id] = { best: Math.max(o.best || 0, Math.round(pts * 100 / max)), pass: o.pass || pass }; put(this.LKEY, pr); return pass; } };
     },
     opening(key, lang) {
@@ -346,6 +346,15 @@
   function goSpots(txt, N, ok, u, right, lang, hl) {   // go's own texts: each point named by its mark (the answer green, the player's move red, any other orange)
     return String(txt || '').replace(GO_RX, (a, c) => { const q = goPc(c, N); if (q == null || q < 0) return a;
       if (ok.includes(q)) return SP(right && q === u ? 'here' : 'ok', lang); if (q === u) return SP(right ? 'here' : 'ng', lang); if (!hl.includes(q)) hl.push(q); return SP('hl', lang); });
+  }
+  /* the same texts without coordinates, for the 3D board (2026-11-14): atlas/nocoord/<game>.json { '<lesson id>/<ramp index>/<field>': { lang: text } }
+     (the full games keep their own texts: their boards show coordinates) */
+  const NC = {};
+  const ncLoad = id => NC[id] ? Promise.resolve(NC[id]) : fetch('nocoord/' + id + '.json?v=1').then(r => r.ok ? r.json() : {}).catch(() => ({})).then(o => (NC[id] = o));
+  function ncApply(id, L2) {
+    const T = NC[id] || {}; if (!L2 || !L2.ramp) return L2;
+    L2.ramp = L2.ramp.map((it, j) => { const o = Object.assign({}, it); ['body', 'h', 'y', 'b', 'g', 't'].forEach(f => { const v = T[L2.id + '/' + j + '/' + f]; if (v) o[f] = v; }); return o; });
+    return L2;
   }
   const GSQ = x => typeof x === 'number' ? x : (+String(x).slice(1) - 1) * 15 + String(x).charCodeAt(0) - 97;
   const GNM = m => 'abcdefghijklmno'[m % 15] + (Math.floor(m / 15) + 1);
@@ -654,7 +663,7 @@
     function open(key) {
       const L2 = ctx.kind === 'open' ? D.opening(key, ctx.lang) : D.lesson(key, ctx.lang, X);
       if (!L2) { say(X.drill); act(X.full, {}); $('[data-a=next]').onclick = () => ctx.onFull && ctx.onFull(ctx.kind, key); return; }
-      cur = Object.assign(L2, { key, k: 0, res: [], si: 0 }); head(cur.title);
+      cur = Object.assign(ncApply(id, L2), { key, k: 0, res: [], si: 0 }); head(cur.title);
       phase = 'intro'; dots();
       say(`${fill((TOPIC[ctx.lang] || TOPIC.en)[ctx.kind === 'open' ? 1 : 0], { t: `<b>${cur.title}</b>` })}<br>${cur.intro || ''}`);   // (「今日は『ルーク』について学ぶよ！」 — not the bare title, 2026-11-14)
       // (2026-11-14) while the introduction is read, the board shows the lesson's own picture (its diagram) for looking only — never the
@@ -811,7 +820,7 @@
     if ($('[data-a=list]')) $('[data-a=list]').onclick = () => ctx.onList(ctx.kind);   // 一覧 (the portal's list sheet)
     requestAnimationFrame(() => el.classList.add('on'));
     say(X.loading); act(X.next, { nextOn: false });
-    D.load().then(() => { if (stopped) return; const go = k => k != null ? open(String(k)) : say(X.endOnly); if (ctx.key != null) go(ctx.key); else next(id, ctx.kind, ctx.lang).then(go); }).catch(() => { if (!stopped) say('⚠'); });
+    Promise.all([D.load(), ncLoad(id)]).then(() => { if (stopped) return; const go = k => k != null ? open(String(k)) : say(X.endOnly); if (ctx.key != null) go(ctx.key); else next(id, ctx.kind, ctx.lang).then(go); }).catch(() => { if (!stopped) say('⚠'); });
     const dbg = { state: () => cur && { key: cur.key, phase, k: cur.k, si: cur.si, res: cur.res.slice(), ans: cur.probs[cur.k] && cur.probs[cur.k].ans, say: $('.tx').textContent },
       answer: async u => { const p = cur && cur.probs[cur.k]; if (!p || !pz()) return; u = u || p.ans; await pz().play(u); moved(p, u, { mate: false }); } };   // (test hook)
     window.__atlasLs = dbg;
