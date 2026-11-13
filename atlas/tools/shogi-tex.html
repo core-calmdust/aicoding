@@ -694,7 +694,7 @@
   function composeRaden(m, W, H, s, ground, base) {   // base: [colour, map] canvases of a 蒔絵 picture under the shell (the 山桜 board)
     const rd = k => ctx(m[k]).getImageData(0, 0, W, H).data, Sh = rd('shell'), Kd = rd('kind'), F = rd('flat'), Ct = rd('cut'), Ey = rd('eye'), Dk = rd('dark');
     const c = cv(W, H), cm = cv(W, H), g = ctx(c), gm = ctx(cm), im = g.createImageData(W, H), mm = gm.createImageData(W, H), d = im.data, e = mm.data;
-    const G0 = ground === 'black' ? [12, 9, 8] : [40, 9, 8], G1 = ground === 'black' ? [6, 5, 5] : [16, 4, 4];   // (red = 溜塗: nearly black, a deep red where the light catches — the shell needs the dark)
+    const G0 = ground === 'black' ? [12, 9, 8] : [66, 12, 11], G1 = ground === 'black' ? [6, 5, 5] : [30, 6, 6];   // (red = 溜塗: nearly black, a deep red where the light catches — the shell needs the dark)
     const Sb = ctx(blurMask(m.shell, 2.6 * W / 3072)).getImageData(0, 0, W, H).data;
     const Bc = base ? ctx(base[0]).getImageData(0, 0, W, H).data : null, Bm = base ? ctx(base[1]).getImageData(0, 0, W, H).data : null;
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
@@ -770,7 +770,7 @@
     // (2026-11-13, the user: 螺鈿のまま、伝統工芸の作品として「山桜」を) 吉野の山桜: far hills in gold powder under bands of 霞, a bough of
     // mountain cherry in raised gold with shell blossoms and red-gold young leaves, petals of shell on the air, gold dust rising from the foot
     if (kind === 'side' || kind === 'end') {
-      const mk = masks(W, H), red = (x, y) => { const t = fbm(x / W * 2.2, y / H * 1.4, seed, 3), q = .5 + (t - .5) * 1.2; return [mix(16, 40, q), mix(4, 9, q), mix(4, 8, q)]; };
+      const mk = masks(W, H), red = (x, y) => { const t = fbm(x / W * 2.2, y / H * 1.4, seed, 3), q = .5 + (t - .5) * 1.2; return [mix(30, 66, q), mix(6, 12, q), mix(6, 11, q)]; };   /* (2026-11-14, the user: 朱を少し戻す — a dark 朱溜, between the first red and the near-black) */
       // gold dust drifting across the lacquer (梨子地の蒔きぼかし): a soft diagonal cloud, no edges — the only gold besides the bough
       const dust = (x, y, rx, ry, a2, k) => { const g = G(mk, 'pgold'); g.save(); g.translate(x, y); g.rotate(a2); g.scale(1, ry / rx); const gr = g.createRadialGradient(0, 0, 0, 0, 0, rx); gr.addColorStop(0, `rgba(255,255,255,${k})`); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.beginPath(); g.arc(0, 0, rx, 0, 7); g.fill(); g.restore(); };
       if (kind === 'side') {
@@ -804,7 +804,7 @@
       }
       return (RD[kind] = composeRaden(m, W, H, seed, 'red', composeMakie(mk, W, H, seed, red)));
     } else {   // the 駒台: one small spray on the dark lacquer, gold dust (the same hand as the faces)
-      const mk = masks(W, H), s3 = sc * 3, red = (x, y) => { const t = fbm(x / W * 2.2, y / H * 1.4, seed, 3), q = .5 + (t - .5) * 1.2; return [mix(16, 40, q), mix(4, 9, q), mix(4, 8, q)]; };
+      const mk = masks(W, H), s3 = sc * 3, red = (x, y) => { const t = fbm(x / W * 2.2, y / H * 1.4, seed, 3), q = .5 + (t - .5) * 1.2; return [mix(30, 66, q), mix(6, 12, q), mix(6, 11, q)]; };   /* (2026-11-14, the user: 朱を少し戻す — a dark 朱溜, between the first red and the near-black) */
       { const g = G(mk, 'pgold'), gr = g.createRadialGradient(W * .6, H * .6, 0, W * .6, H * .6, W * .6); gr.addColorStop(0, 'rgba(255,255,255,.2)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, W, H); }
       sakuraBough(mk, m, W * 3, -20, H * .92, -.7, 300, 16, .05, []);
       for (let k = 0; k < 4; k++) rFall(m, R(W * .5, W * .92), R(H * .5, H * .92), R(26, 34) * s3, R(0, 6.3));
