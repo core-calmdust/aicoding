@@ -125,7 +125,7 @@
     const k = (i * 7 + 3) % 6;
     if (set === 'mod') return mat('mmod' + k, () => X.M({ color: MOD[k], roughness: .75 }));
     if (set === 'pearl') return mat('mcer' + k, () => X.M({ color: CERAMIC[k], roughness: .28, clearcoat: .8, clearcoatRoughness: .2 }));
-    if (set === 'steel') return mat('mjw' + k, () => X.M({ color: JEWEL[k], roughness: .03, clearcoat: 1, clearcoatRoughness: .02, envMapIntensity: 2, transparent: true, opacity: .72 }));   // (jewels: see-through, 2026-11-13)
+    if (set === 'steel') return mat('mjw' + k, () => { const m = X.M({ color: JEWEL[k], roughness: 0, metalness: .2, clearcoat: 1, clearcoatRoughness: 0, envMapIntensity: 3.4, transparent: true, opacity: .8, flatShading: true }); try { m.ior = 2.4; if ('iridescence' in m) { m.iridescence = .55; m.iridescenceIOR = 1.6; } } catch (e) {} return m; });   // (jewels, 2026-11-13: cut facets that each catch the light, see-through, a play of colour — sparkle, not a glass ball)
     if (set === 'peg') return mat('mpeg' + k, () => X.M({ color: PAINT[k], roughness: .3, clearcoat: .7, clearcoatRoughness: .25 }));
     const c = GLASS[k];
     return mat('mg' + c, () => X.M({ color: c, roughness: .04, clearcoat: 1, clearcoatRoughness: .03, envMapIntensity: 1.6 }));
@@ -143,7 +143,9 @@
       const prof = [[0, 0], [.13, 0], [.14, .22], [.2, .3], [.24, .4], [.22, .48], [.14, .54], [0, .56]].map(([a, b]) => new TT.Vector2(a, b));
       g.add(X.mesh(geo('pgPegG', () => new TT.LatheGeometry(prof, LO() ? 12 : 20)), marbleMat(i, set), 0, -.12, 0));
     } else {
-      const s = X.mesh(geo('pgBall', () => new TT.SphereGeometry(R, LO() ? 16 : 28, LO() ? 12 : 20)), marbleMat(i, set), 0, R * .97, 0);   // (sits on the flat painted face)
+      const s = set === 'steel' ? X.mesh(geo('pgGem', () => new TT.IcosahedronGeometry(R * 1.02, 1)), marbleMat(i, set), 0, R * .97, 0)   // (a cut stone: flat facets)
+        : X.mesh(geo('pgBall', () => new TT.SphereGeometry(R, LO() ? 16 : 28, LO() ? 12 : 20)), marbleMat(i, set), 0, R * .97, 0);   // (sits on the flat painted face)
+      if (set === 'steel') s.rotation.set(i * .7, i * 1.3, i * .4);
       g.add(s);
       if (set === 'glass') {   // a twist of white inside the glass
         const sw = X.mesh(geo('pgSwirl', () => new TT.TorusGeometry(R * .48, R * .07, 6, 24, Math.PI * 1.2)), mat('mswirl', () => X.M({ color: '#ffffff', roughness: .3, transparent: true, opacity: .55 })), 0, R * .97, 0);
