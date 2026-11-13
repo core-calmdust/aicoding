@@ -360,7 +360,7 @@
       later(() => { busy = false; showMarks(); next(); }, wait + 200);
     }
     hud('');
-    loadEngine().then(e => { if (stopped) return; E = e; if (!pvp) worker = new Worker(BASE + 'engine.js' + VER); if (PZ && PZ.drill && !DR) DR = { stars: (PZ.drill.stars || []).slice(), safe: !!PZ.drill.safe, sm: {} }; if (PZ) pzLoad(PZ.fen, PZ.sol, PZ.toMove, PZ.me, !!DR); else begin(null); }).catch(() => hud('⚠'));
+    loadEngine().then(e => { if (stopped) return; E = e; if (!pvp) worker = new Worker(BASE + 'engine.js' + VER); if (PZ && PZ.drill && !DR) DR = { stars: (PZ.drill.stars || []).slice(), safe: !!PZ.drill.safe, lock: !!PZ.drill.lock, sm: {} }; if (PZ) pzLoad(PZ.fen, PZ.sol, PZ.toMove, PZ.me, !!DR); else begin(null); }).catch(() => hud('⚠'));
 
     // test hooks (positions on screen, state, a set-up position)
     const dbg = {
@@ -393,7 +393,7 @@
     /* ---------- puzzle mode (ctx.pz) ---------- */
     let pzOn = false;
     const uciOf = m => E.sqName(m & 127) + E.sqName((m >> 7) & 127) + (((m >> 14) & 7) ? ' pnbrqk'[(m >> 14) & 7] : '');
-    function pzWait() { const st = status(); legal = st.legal || []; busy = false; pzOn = true; showMarks(); if (!imgs && legal.some(m => (m >> 14) & 7)) loadImgs();
+    function pzWait() { const st = status(); legal = st.legal || []; busy = false; pzOn = !(DR && DR.lock); showMarks(); if (DR && DR.lock) return;   // (a lesson's opening picture: for looking only) if (!imgs && legal.some(m => (m >> 14) & 7)) loadImgs();
       if (DR) { const mine = Object.keys(pcs).map(Number).filter(q => !(pos.b[q] & 8)); if (mine.length === 1 && legal.some(m => (m & 127) === mine[0])) select(mine[0]); } }   // (a drill with one piece: it is picked up at once, its squares shown)
     function pzAfter() {
       pzOn = false; const st = status(); legal = [];
@@ -460,7 +460,7 @@
       for (let q = 0; q < 120; q++) { if (q & 0x88) continue; const pc = pos.b[q]; if ((!pc || !(pc & 8)) && drillDanger(pos, q)) { const t = new TH.Mesh(GEO.tile, M); const [x, z] = xz(q); t.position.set(x, Y + .007, z); t.renderOrder = 2; dg.add(t); } }
     }
     function drillLoad(o) {
-      clear(sg); DR = { stars: (o.stars || []).slice(), safe: !!o.safe, sm: {} };
+      clear(sg); DR = { stars: (o.stars || []).slice(), safe: !!o.safe, lock: !!o.lock, sm: {} };
       pzLoad(o.fen.split(' ').length > 1 ? o.fen : o.fen + ' w - - 0 1', [], undefined, 0, true);
     }
     /* ---------- notes on the board (the lessons' warm-up, chess/app.js rampMarks): frames on squares and flat arrows ---------- */
