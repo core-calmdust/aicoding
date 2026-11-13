@@ -623,7 +623,7 @@
       myRec.onclick = () => { if (window.GameRecord && GameRecord.open) GameRecord.open(); else rec.click(); };
       sync(); new MutationObserver(sync).observe(rec, { attributes: true, childList: true, subtree: true });
       // phones: the record is a tab in the bottom bar (shared/infotabs.js) — no second way in up here while that tab is shown
-      const tabbed = () => { const t = document.querySelector('.grc-tab'); myRec.hidden = !!(t && t.getClientRects().length); };
+      const tabbed = () => { const t = document.querySelector('.grc-tab, .grc-tab-it'); myRec.hidden = !!(t && t.getClientRects().length); };
       tabbed(); addEventListener('resize', () => setTimeout(tabbed, 60)); setTimeout(tabbed, 600); setTimeout(tabbed, 2000);
     })(0);
     const sel = document.getElementById('langSel'), pop = bar.querySelector('#atlasLangPop'), lbtn = bar.querySelector('#atlasLang');

@@ -32,7 +32,7 @@ const TX = {
 };
 const ICON = '<svg viewBox="0 0 24 24"><path d="M8 21h8M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4"/></svg>';
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-let O = null, vpOpen = false, vtab = 'all', tab = 'all', ov = null, confirmOn = false;
+let inl = null, O = null, vpOpen = false, vtab = 'all', tab = 'all', ov = null, confirmOn = false;
 const L = () => { const l = (O && O.lang && O.lang()) || 'ja'; return TX[l] ? l : 'en'; };
 const tx = (k, v) => { let x = TX[L()][k]; if (x === undefined) x = TX.en[k]; if (v) x = x.replace(/\{(\w+)\}/g, (_, y) => v[y] != null ? v[y] : ''); return x; };
 const KEY = () => 'atlas-rec-' + O.game;
@@ -43,7 +43,7 @@ function add(r) {
   const v = O.variant ? O.variant() : null, x = Object.assign({ t: Date.now() }, r);
   if (v && x.v == null) { x.v = typeof v === 'string' ? v : v.k; if (v.n) x.vn = v.n; }
   const a = load(); a.push(x); store(a);
-  if (ov && ov.classList.contains('show')) render();
+  if ((ov && ov.classList.contains('show')) || inl) render();
 }
 const CSS = `
 .grc-ov{position:fixed;inset:0;z-index:300;display:none;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));background:rgba(0,0,0,.6);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
@@ -184,7 +184,13 @@ html[dir=rtl] .grc,html[lang=ar] .grc{direction:rtl}
 @media (pointer: coarse) and (max-width: 760px) and (orientation: portrait){
   body.it-on .mtabs .grc-tab{display:flex}
   body.it-on .grc-menu, body.it-on .grc-ic{display:none!important}
+  body.it-on .grc-card{display:block}
 }
+.grc-card{display:none;padding:0!important;overflow:hidden}
+.grc.grc-inl{width:auto!important;height:auto!important;max-height:none!important;display:block!important;border:0!important;box-shadow:none!important;border-radius:0!important;background:transparent!important}
+.grc-inl .grc-bd{overflow:visible!important;max-height:none!important}
+.grc-inl :is(.grc-x, [data-act=close]){display:none!important}
+.grc-inl .grc-ft{border-top:0}
 `;
 function stats(list) {
   const s = { w: 0, l: 0, d: 0, n: list.length, cur: 0, curL: 0, best: 0, side: [{ w: 0, l: 0, d: 0 }, { w: 0, l: 0, d: 0 }], opp: {} };
@@ -246,6 +252,7 @@ function render() {
   }
   h += `</div><div class="grc-ft"><small>${esc(tx('note'))}</small>${every.length ? `<button type="button" class="grc-warn" data-act="reset">${esc(tx('reset'))}</button>` : ''}<button type="button" class="grc-go" data-act="close">${esc(tx('close'))}</button></div>`;
   ov.firstChild.innerHTML = h;
+  if (inl) { inl.innerHTML = h; }
 }
 function open() { if (!ov) return; confirmOn = false; vpOpen = false; if (O.variant) { const v = O.variant(); const k = v == null ? null : typeof v === 'string' ? v : v.k; if (k != null && load().some(g => vOf(g) === k) && new Set(load().map(vOf)).size > 1) vtab = k; } render(); ov.classList.add('show'); }
 function close() { if (ov) ov.classList.remove('show'); }
@@ -253,17 +260,18 @@ function init(o) {
   O = o;
   const st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st);
   ov = document.createElement('div'); ov.className = 'grc-ov'; ov.innerHTML = '<div class="grc" role="dialog" aria-modal="true"></div>'; document.body.appendChild(ov);
-  ov.addEventListener('click', e => {
+  const onClick = e => {
     if (e.target === ov) return close();
     const b = e.target.closest('button'); if (!b) return;
     if (b.dataset.act === 'vp') { vpOpen = !vpOpen; render(); return; }
     if (b.dataset.vt) { vtab = b.dataset.vt; vpOpen = false; render(); }
     else if (b.dataset.tab) { tab = b.dataset.tab; render(); }
     else if (b.dataset.act === 'close') close();
-    else if (b.dataset.act === 'reset') { confirmOn = true; render(); ov.querySelector('.grc-bd').scrollTop = 0; }
+    else if (b.dataset.act === 'reset') { confirmOn = true; render(); { const bd = (inl && inl.isConnected && !ov.classList.contains('show') ? inl : ov).querySelector('.grc-bd'); if (bd) bd.scrollTop = 0; } }
     else if (b.dataset.cf === 'no') { confirmOn = false; render(); }
     else if (b.dataset.cf === 'yes') { store([]); confirmOn = false; render(); }
-  });
+  };
+  ov.addEventListener('click', onClick);
   ov.addEventListener('pointerdown', e => { if (vpOpen && !e.target.closest('.grc-vs')) { vpOpen = false; render(); } }, true);
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && ov.classList.contains('show')) { if (vpOpen) { vpOpen = false; render(); } else close(); } });
   // PC (and every layout without the phones' tab bar): a menu button
@@ -281,12 +289,23 @@ function init(o) {
   const relabel = () => {
     if (mb) { const h = mb.classList.contains('grc-ic') ? ICON : ICON + `<span>${esc(tx('btn'))}</span>`; if (mb.innerHTML !== h) mb.innerHTML = h; mb.title = tx('btnT'); mb.setAttribute('aria-label', tx('btn')); }
     if (tb) { const h = ICON.replace('<svg', '<svg class="it-ic"') + `<span class="it-lb">${esc(tx('btn'))}</span>`; if (tb.innerHTML !== h) tb.innerHTML = h; }
+    if (inl) render();
     if (ov && ov.classList.contains('show')) render();
   };
   // phones: a tab in the bottom bar, left of the online tab
   const placeTab = tries => {
     const bar = document.getElementById('mtabs');
     if (!bar) { if (tries < 40) setTimeout(() => placeTab(tries + 1), 200); return; }
+    // (2026-11-13) with the info tabs (shared/infotabs.js): 戦績 is a tab like 形勢 / 棋譜 — its record shown in a card under the board
+    const kf = document.querySelector('.kifu-card');
+    if (!window.InfoTabs && kf && tries < 25) { setTimeout(() => placeTab(tries + 1), 200); return; }   // (infotabs.js may load later: defer)
+    if (window.InfoTabs && kf) {
+      const card = document.createElement('div'); card.className = 'card grc-card'; card.id = 'grcCard';
+      inl = document.createElement('div'); inl.className = 'grc grc-inl'; card.appendChild(inl); kf.after(card);
+      inl.addEventListener('click', onClick);
+      const add = () => { const b = InfoTabs.add('rec', card, tx('btn'), ICON); if (!b) return setTimeout(add, 200); tb = b; tb.classList.add('grc-tab-it'); b.addEventListener('click', () => { confirmOn = false; render(); }); render(); };
+      add(); relabel(); return;
+    }
     tb = document.createElement('button'); tb.type = 'button'; tb.className = 'grc-tab';
     tb.addEventListener('click', e => { e.stopPropagation(); open(); });
     const ol = bar.querySelector('[data-t=online]'); if (ol) bar.insertBefore(tb, ol); else bar.appendChild(tb);
