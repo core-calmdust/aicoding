@@ -16,7 +16,7 @@
   const A = window.AtlasNPC = window.AtlasNPC || {};
   if (A.skin) return;
   const SRC = (document.currentScript && document.currentScript.src) || location.href;
-  const BASE = new URL('./', SRC).href, ATLAS = new URL('../', BASE).href, IMG = new URL('../images/atlas/', ATLAS).href, V = '9';
+  const BASE = new URL('./', SRC).href, ATLAS = new URL('../', BASE).href, IMG = new URL('../images/atlas/', ATLAS).href, V = '10';
   const LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
   const loaded = {};
   const load = src => loaded[src] || (loaded[src] = new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); }));
@@ -31,15 +31,25 @@
     if (!A.BOSSES) need.push(load(BASE + 'roster.js?v=' + V));
     if (!window.AtlasArt) need.push(load(ATLAS + 'art.js?v=12').catch(() => {}));
     return Promise.all(need).then(() => load(BASE + 't/' + lang + '.js?v=' + V).catch(() => load(BASE + 't/en.js?v=' + V)))
-      .then(() => load(BASE + 't2/' + lang + '.js?v=' + V).catch(() => {}));   // more lines + the watchers' own ways of talking (t2/, where there is one)
+      .then(() => load(BASE + 't2/' + lang + '.js?v=' + V).catch(() => {}))   // more lines + the watchers' own ways of talking (t2/, where there is one)
+      .then(() => load(BASE + 't3/' + lang + '.js?v=' + V).catch(() => {}));   // the Atlamo's chatter: their own lines, more trivia, days of the year (t3/, ja · en)
   }
   // t2/<lang>.js: more lines for the bosses' voices (added to t/<lang>.js) and the watchers' lines by their voice (fanv)
-  A.more = function (lang, o) {
-    const T = A.T && A.T[lang]; if (!T || T.__more) return; T.__more = true;
+  // t3/<lang>.js (tag 't3', 2026-11-13): sp (each creature's own lines), trivia (more per game, after t/'s four), day ('MM-DD' or
+  // 'MM-nWd' = the n-th weekday of the month), dsp (a day's lines for one creature), mon (1–12), wd (0 = Sunday … 6), g (the home talk's
+  // shared lines, added to talk/<lang>.js) — kept on T.x; the profile talk (atlas/avtalk.js) and the watchers at the table use them
+  A.more = function (lang, o, tag) {
+    const T = A.T && A.T[lang], key = '__more' + (tag || ''); if (!T || T[key]) return; T[key] = true;
     Object.keys(o.voice || {}).forEach(v => { const d = T.voice[v] = T.voice[v] || {}; Object.keys(o.voice[v]).forEach(k => { d[k] = (d[k] || []).concat(o.voice[v][k]); }); });
     Object.keys(o.fan || {}).forEach(k => { T.fan[k] = (T.fan[k] || []).concat(o.fan[k]); });
     if (o.fanv) T.fanv = o.fanv;
+    Object.keys(o.trivia || {}).forEach(g => { T.trivia[g] = (T.trivia[g] || []).concat(o.trivia[g]); });
+    if (o.sp || o.day) T.x = { sp: o.sp || {}, day: o.day || {}, dsp: o.dsp || {}, mon: o.mon || {}, wd: o.wd || [], g: o.g || {} };
   };
+  // today's keys for T.x.day / dsp: 'MM-DD' and 'MM-nWd' (e.g. '05-2Su' = the 2nd Sunday of May)
+  A.dayKeys = (d = new Date()) => { const p = n => String(n).padStart(2, '0'), m = p(d.getMonth() + 1); return [m + '-' + p(d.getDate()), m + '-' + (Math.floor((d.getDate() - 1) / 7) + 1) + ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'][d.getDay()]]; };
+  // what the creature `sp` could say about today (its own line for the day first, then the day's lines)
+  A.dayLines = (X, sp, d) => { if (!X || !X.x) return []; const K = A.dayKeys(d), own = [], all = []; K.forEach(k => { const s = X.x.dsp[k]; if (s && sp && s[sp]) own.push(...s[sp]); if (X.x.day[k]) all.push(...X.x.day[k]); }); return own.concat(all); };
   A.ensure = ensure; A.lang = () => langNow();
   const TX = () => (A.T && (A.T[langNow()] || A.T.en || A.T.ja)) || null;
   const avUrl = id => IMG + 'av/' + id + '.webp?v=1';
@@ -103,7 +113,7 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
   /* ---------------- the conversation (shared by both hosts) ---------------- */
   // ui: { say(who, html, meta), clear() }   who: 'boss' | 'fan'
   function Talk(game, ui, o) {
-    const S = { game, level: 0, bi: -1, boss: null, fan: null, fans: [], here: 0, lastFan: null, ply: -1, last: -99, next: 3, hAt: 0, hNow: null, triv: 0, told: [], over: false, greeted: false, joined: false, fanTurn: 0, pace: o.pace || 1, early: o.early || 12, timers: [] };
+    const S = { chat: 0, dayTold: false, game, level: 0, bi: -1, boss: null, fan: null, fans: [], here: 0, lastFan: null, ply: -1, last: -99, next: 3, hAt: 0, hNow: null, triv: 0, told: [], over: false, greeted: false, joined: false, fanTurn: 0, pace: o.pace || 1, early: o.early || 12, timers: [] };
     const later = (f, ms) => { S.timers.push(setTimeout(f, ms)); };
     function chooseFan(not = []) {
       let owned = [];
@@ -128,8 +138,11 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
       fanv: key => { const X = TX(), fv = X && S.fan && X.fanv && X.fanv[S.fan.v]; return fv ? fv[key] : null; },
       fan: key => { const X = TX(); return X ? X.fan[key] : null; },
       triv: () => { const X = TX(); return (X && X.trivia[game]) || null; },
+      // the watcher's own chatter (t3/): 'sp:<species>' its lines, 'day:<species>' today's
+      x: key => { const X = TX(), [k, sp] = key.split(':'); if (!X || !X.x) return null; return k === 'day' ? A.dayLines(X, sp) : X.x.sp[sp] || null; },
     };
-    const lineOf = c => { const L = lists[c.src](c.key); return L && L.length ? L[Math.min(c.i, L.length - 1)] : ''; };
+    // (a list another language does not have as long — t3/ is ja · en only — says nothing rather than a different line)
+    const lineOf = c => { const L = lists[c.src](c.key); return L && L.length && c.i < L.length ? L[c.i] : ''; };
     const metaOf = c => { if (c.src !== 'boss' && S.fans[c.f]) S.fan = S.fans[c.f]; return c.src === 'boss' ? bossMeta() : fanMeta(c.src === 'triv'); };
     function speak(c) {
       if (c.src !== 'boss') c.f = S.fans.indexOf(S.fan);
@@ -154,6 +167,17 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
       const i = pick(left); S.told.push(i); S.triv++;
       speak({ src: 'triv', key: '', i }); return true;
     }
+    // a quiet moment: the watcher chats — about today first (a day of the year it has something to say about), then its own lines
+    function chat() {
+      const X = TX(); if (!X || !X.x || !nextFan()) return false;
+      const sp = S.fan.sp, D = S.dayTold ? [] : A.dayLines(X, sp);
+      if (D.length) {   // (its own line for the day if it has one)
+        const own = A.dayKeys().some(k => X.x.dsp[k] && X.x.dsp[k][sp]), line = own ? D[0] : fresh(D);
+        S.dayTold = true; S.chat++; speak({ src: 'x', key: 'day:' + sp, i: D.indexOf(line) }); return true;
+      }
+      const L = X.x.sp[sp]; if (!L || !L.length) return false;
+      const line = fresh(L); S.chat++; speak({ src: 'x', key: 'sp:' + sp, i: L.indexOf(line) }); return true;
+    }
     // the language changed: the bubble on screen now says its line in the new language (same place, same time left)
     function relang() {
       const c = S.cur; if (!c || !ui.showing || !ui.showing()) return;
@@ -165,7 +189,7 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
     }
     function newGame(ply) {
       S.timers.forEach(clearTimeout); S.timers = [];
-      S.ply = ply; S.over = false; S.triv = 0; S.told = []; S.joined = false; S.fanTurn = 0; S.here = 0; S.lastFan = null;
+      S.ply = ply; S.over = false; S.triv = 0; S.told = []; S.chat = 0; S.dayTold = false; S.joined = false; S.fanTurn = 0; S.here = 0; S.lastFan = null;
       S.fans = []; const n = Math.random() < .45 ? 3 : 2; for (let i = 0; i < n; i++) S.fans.push(chooseFan(S.fans.map(f => f.sp)));
       S.fan = S.fans[0];
       greet();
@@ -191,10 +215,11 @@ html[lang=ar] .npc-tx,html[lang=ar] .npc-nm{direction:rtl;text-align:right}
       else if (ply >= S.next) {
         const calm = hh == null || Math.abs(hh) < .3;
         if (ply <= S.early * S.pace && calm && S.triv < 4 && Math.random() < .6 && trivia()) said = true;
+        else if (calm && S.here && S.chat < 6 && Math.random() < (S.dayTold ? .25 : .45) && chat()) said = true;   // (t3/: the watchers' chatter)
         else if (hh != null && S.fanTurn < 1 && Math.random() < .3) { fan(hh > .3 ? 'cheer' : hh < -.3 ? 'worry' : 'close'); S.fanTurn++; said = true; }
         else {
           S.fanTurn = 0;
-          if (hh == null) { if (!(S.triv < 4 && Math.random() < .5 && trivia())) boss('even'); }
+          if (hh == null) { if (!(S.triv < 4 && Math.random() < .5 && trivia()) && !(S.here && S.chat < 6 && Math.random() < .35 && chat())) boss('even'); }
           else boss(hh < -.5 ? 'lead' : hh < -.15 ? (Math.random() < .6 ? 'lead' : 'even') : hh <= .15 ? 'even' : hh <= .55 ? 'behind' : 'losing');
           said = true;
         }

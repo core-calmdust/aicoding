@@ -8,7 +8,7 @@
      today: { id, name }, fresh: { id, name } | null, gameName(id), onDress(), onPlay(id) } */
 (function () {
   'use strict';
-  const V = '1', BASE = new URL('./', document.currentScript.src).href;
+  const V = '2', BASE = new URL('./', document.currentScript.src).href;
   const LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
   const loaded = {};
   const load = src => loaded[src] || (loaded[src] = new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); }));
@@ -17,7 +17,7 @@
   const fill = (s, v) => String(s || '').replace(/\{(\w+)\}/g, (m, k) => v[k] != null ? v[k] : m);
   const pick = a => a && a.length ? a[Math.floor(Math.random() * a.length)] : '';
   // the creature's game, for its trivia (the others talk about today's game)
-  const GAME = { shogi: 'shogi', knight: 'chess', rook: 'chess', bishop: 'chess', pawn: 'chess', ryuou: 'shogi', keima: 'shogi', disc: 'reversi', flippanda: 'reversi', stone: 'go', goke: 'go', dot: 'dots', plop: 'connect4', gem: 'mancala', dice: 'backgammon', owl: 'morris', crab: 'checkers', renju: 'gomoku', bee: 'hex', frog: 'ludo', sealion: 'carrom' };
+  const GAME = { tile: 'sudoku', joker: 'poker', hedgehog: 'solitaire', momonga: 'blackjack', koala: 'baccarat', camel: 'speedsudoku', marble: 'peg', mole: 'jailbreak', shogi: 'shogi', knight: 'chess', rook: 'chess', bishop: 'chess', pawn: 'chess', ryuou: 'shogi', keima: 'shogi', disc: 'reversi', flippanda: 'reversi', stone: 'go', goke: 'go', dot: 'dots', plop: 'connect4', gem: 'mancala', dice: 'backgammon', owl: 'morris', crab: 'checkers', renju: 'gomoku', bee: 'hex', frog: 'ludo', sealion: 'carrom' };
   // lines said lately (kept across visits) are skipped while there are others
   const RK = 'atlas-avtalk-recent';
   const recent = () => { try { return JSON.parse(localStorage.getItem(RK) || '[]'); } catch (e) { return []; } };
@@ -45,12 +45,14 @@
   const npc = lang => window.AtlasNPC && AtlasNPC.ensure ? AtlasNPC.ensure(lang).then(() => AtlasNPC.T && (AtlasNPC.T[lang] || AtlasNPC.T.en)).catch(() => null) : Promise.resolve(null);
   // ---- the conversation: three lines and the buttons at the end
   function compose(c, T, N) {
-    const sp = ((c.av && c.av.icon) || '').replace(/^av-/, '').replace(/-\d+$/, ''), G = T.g, v = { name: c.name || '' };
+    const sp = ((c.av && c.av.icon) || '').replace(/^av-/, '').replace(/-\d+$/, ''), v = { name: c.name || '' };
+    // more lines from atlas/npc/t3/<lang>.js (ja · en): the shared ones added to talk/<lang>.js, the creature's own, today's (2026-11-13)
+    const X = N && N.x, G = {}; Object.keys(T.g).concat(Object.keys((X && X.g) || {})).forEach(k => { G[k] = (T.g[k] || []).concat((X && X.g[k]) || []); });
     const h = new Date().getHours(), slot = h >= 5 && h < 10 ? 'morning' : h < 17 && h >= 10 ? 'day' : h >= 17 && h < 22 ? 'evening' : 'night';
     const boss = /^boss-([a-z0-9]+)-(\d+)$/.exec(sp), B = boss && window.AtlasNPC && AtlasNPC.BOSSES && AtlasNPC.BOSSES[boss[1]] && AtlasNPC.BOSSES[boss[1]][+boss[2] - 1];
     const voice = B && N && N.voice && N.voice[B.v];
     const me = B ? (B.n[c.lang] || B.n.en) : '';
-    const own = voice ? [].concat(voice.lead || [], voice.gain || [], voice.win || [], voice.even || [], voice.draw || []).map(x => fill(x, { me })) : (T.s[sp] || []).map(x => fill(x, v));
+    const own = voice ? [].concat(voice.lead || [], voice.gain || [], voice.win || [], voice.even || [], voice.draw || []).map(x => fill(x, { me })) : (T.s[sp] || []).concat((X && X.sp[sp]) || []).map(x => fill(x, v));
     const game = boss ? boss[1] : GAME[sp] || (c.today && c.today.id), gname = id => (c.gameName && c.gameName(id)) || id;
     const triv = N && N.trivia && game && N.trivia[game];
     const lines = [], btn = [];
@@ -59,6 +61,11 @@
     // 2. a topic
     const topics = [];
     if (own.length) topics.push([4, () => fresh(own)]);
+    // the day of the year (its own line for the day if it has one), the month, the day of the week
+    const now = new Date(), day = window.AtlasNPC && AtlasNPC.dayLines ? AtlasNPC.dayLines(N, boss ? '' : sp, now) : [];
+    if (day.length) topics.push([5, () => { const ownDay = AtlasNPC.dayKeys(now).some(k => X.dsp[k] && X.dsp[k][sp]); return ownDay && Math.random() < .7 ? day[0] : fresh(day); }]);
+    if (X && X.mon[now.getMonth() + 1]) topics.push([1.2, () => fresh(X.mon[now.getMonth() + 1])]);
+    if (X && X.wd[now.getDay()]) topics.push([.8, () => fresh(X.wd[now.getDay()])]);
     if (triv && triv.length) topics.push([2.5, () => fill(pick(G.trivia), { game: gname(game) }) + '\n' + fresh(triv)]);
     const st = [];
     if (c.streak >= 3) st.push(fill(pick(G.streak), { n: c.streak })); else st.push(pick(G.streakLow));
