@@ -93,7 +93,7 @@
     // ctx.pz: a puzzle driven by atlas/puzzles.js — the position is ctx.pz.fen, the side to move plays (at the bottom), no AI:
     // after each of the player's moves ctx.pz.moved(uci, info) decides; replies come through api.pz.play (2026-11-10)
     const PZ = ctx.pz || null;
-    let human = PZ ? (PZ.fen.split(' ')[1] === 'b' ? 1 : 0) : pvp ? 0 : ctx.side === 2 ? 1 : 0, flip = human === 1;   // engine colours: 0 = White, 1 = Black; the player's side is at the bottom
+    let human = PZ ? (PZ.me === 0 || PZ.me === 1 ? PZ.me : PZ.fen.split(' ')[1] === 'b' ? 1 : 0) : pvp ? 0 : ctx.side === 2 ? 1 : 0, flip = human === 1;   // (a tactic: the opponent's move comes first — the player is the other side: PZ.me, 2026-11-13)   // engine colours: 0 = White, 1 = Black; the player's side is at the bottom
     const mover = () => pvp && pos ? pos.side : human, mcol = () => mover() ? 'b' : 'w';   // the side whose taps count now
     // 0x88 square ↔ screen cell (f: 0 = left column, r: 0 = top row)
     const scr = sq => { const f = sq & 7, r = sq >> 4; return flip ? [7 - f, r] : [f, 7 - r]; };
@@ -355,7 +355,7 @@
       later(() => { busy = false; showMarks(); next(); }, wait + 200);
     }
     hud('');
-    loadEngine().then(e => { if (stopped) return; E = e; if (!pvp) worker = new Worker(BASE + 'engine.js' + VER); if (PZ) pzLoad(PZ.fen); else begin(null); }).catch(() => hud('⚠'));
+    loadEngine().then(e => { if (stopped) return; E = e; if (!pvp) worker = new Worker(BASE + 'engine.js' + VER); if (PZ) pzLoad(PZ.fen, PZ.sol, PZ.toMove, PZ.me); else begin(null); }).catch(() => hud('⚠'));
 
     // test hooks (positions on screen, state, a set-up position)
     const dbg = {
@@ -393,10 +393,11 @@
       pzOn = false; const st = status(); legal = [];
       PZ.moved(uciOf(moves[moves.length - 1]), { mate: st.over && st.why === 'mate', over: st.over, why: st.why, check: pos.inCheck(), n: moves.length });
     }
-    function pzLoad(fen) {   // a new puzzle: the side to move is put at the bottom, the pieces drop in
+    function pzLoad(fen, sol, toMove, me) {   // a new puzzle: the player's side (me; else the side to move) is put at the bottom, the pieces drop in
+      if (me === 0 || me === 1) PZ.me = me; else delete PZ.me;
       if (!E) { PZ.fen = fen; return; }   // (the engine is still loading: it starts from PZ.fen)
       timers.forEach(clearTimeout); timers.length = 0; closePromo(); clear(mv); clear(hl);
-      human = fen.split(' ')[1] === 'b' ? 1 : 0; flip = human === 1;
+      human = me === 0 || me === 1 ? me : fen.split(' ')[1] === 'b' ? 1 : 0; flip = human === 1;
       startFen = fen; moves = []; over = false; busy = true; sel = -1; thinking = false; jid++; pzOn = false;
       refresh(); const wait = setup();
       later(() => { showMarks(); pzWait(); if (PZ.ready) PZ.ready(); }, wait + 200);

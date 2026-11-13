@@ -397,9 +397,9 @@
       const opts = { ready: () => onReady(p), moved: (u, info) => onMoved(p, u, info) };
       if (!sess) {
         sess = ad.start({ el: ctx.el, Table3D: ctx.Table3D, lang: ctx.lang, t: ctx.t, mode: 'pz', level: 20, side: 1, bar: false, hud: () => {}, onTurn: () => {}, onEnd: () => {},
-          pz: Object.assign({ fen: p.fen, sfen: p.sfen, sol: p.P.sol, cells: p.cells, toMove: p.toMove }, { ready: () => cur && cur.ready && cur.ready(), moved: (u, i) => cur && cur.moved && cur.moved(u, i) }) });
+          pz: Object.assign({ fen: p.fen, sfen: p.sfen, sol: p.P.sol, cells: p.cells, toMove: p.toMove, me: p.me }, { ready: () => cur && cur.ready && cur.ready(), moved: (u, i) => cur && cur.moved && cur.moved(u, i) }) });
         ctx.Table3D.play(true);   // (after start(): the adapter's show() puts its board on the table in the showcase view)
-      } else pz().load(p.fen || p.sfen || p.cells, p.P.sol, p.toMove);
+      } else pz().load(p.fen || p.sfen || p.cells, p.P.sol, p.toMove, p.me);
       cur.ready = opts.ready; cur.moved = opts.moved;
       say((first ? (line('hi') || X.hi[id]) : line('intro')) + ' ' + goal(p)); first = false;
     }
