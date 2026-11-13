@@ -7,16 +7,30 @@
 #   FULL (ms per move for Gikou WITHOUT a depth limit, 1 thread, e.g. FULL=5000; default: not played), P (processes for FULL,
 #   default 6: Gikou plays on time here, so leave cores free), then GAMES = games per process (P x GAMES in all).
 #   NODES may also be a time, e.g. NODES=4000ms (our engine, 1 thread, native: about the speed of the browser's wasm).
+#   THREADS (default 1): our side on that many threads = the site's multi-thread search (the browser's engine_mt.wasm, native);
+#     the helper threads sleep while Gikou thinks. With THREADS > 1 one game at a time (P = 1), so the cores are ours.
+#   FISCHER (e.g. FISCHER=300000,10000 = 5 min + 10 s per move, Floodgate's clock): both sides on that clock (Gikou manages its
+#     own time; ours thinks up to increment + remaining / 25 per move). Used with FULL=1 (any value: the clock replaces it).
+#   e.g. the peak on a Mac with 10 performance cores, on Floodgate's clock, 8 games (about 25 minutes each):
+#     DEPTHS="" FULL=1 FISCHER=300000,10000 THREADS=10 GAMES=8 bash shogi/tools/match/run-gikou.sh
 #   e.g. the strongest node level vs full Gikou:  DEPTHS="" FULL=5000 NODES=2200000 GAMES=4 bash shogi/tools/match/run-gikou.sh
 set -e
 HERE=$(cd "$(dirname "$0")" && pwd); REPO=$(cd "$HERE/../../.." && pwd)
-WORK=${WORK:-$HOME/shogi-gikou-work}; NODES=${NODES:-1500000}; DEPTHS=${DEPTHS-"5 6 7"}; GAMES=${GAMES:-40}; FULL=${FULL:-}; P=${P:-6}
+WORK=${WORK:-$HOME/shogi-gikou-work}; NODES=${NODES:-1500000}; DEPTHS=${DEPTHS-"5 6 7"}; GAMES=${GAMES:-40}; FULL=${FULL:-}; THREADS=${THREADS:-1}; FISCHER=${FISCHER:-}; if [ "$THREADS" -gt 1 ]; then P=${P:-1}; else P=${P:-6}; fi
 NET=${NET:-$REPO/shogi/nnue.bin.gz}
 mkdir -p "$WORK"; cd "$WORK"
 gunzip -c "$NET" > net.bin 2>/dev/null || cp "$NET" net.bin
 H=$(od -An -t d4 -j 4 -N 4 net.bin | tr -d ' ')
 echo "== build the site's engine (net: $NET, hidden $H)"
 cc -O3 -DNATIVE -DNUE_H=$H -w -o usimatch "$HERE/usimatch.c"
+UM=./usimatch; MTOPT=""
+if [ "$THREADS" -gt 1 ]; then
+  cc -O3 -DNATIVE -DMT -DNUE_H=$H -w -o usimatch-mt "$HERE/usimatch.c" -lpthread
+  UM=./usimatch-mt; MTOPT="--threads $THREADS"
+  echo "== what the threads give here (2 s per position)"
+  ./usimatch net.bin bench 2000 1 "$HERE/openings.txt"
+  ./usimatch-mt net.bin bench 2000 $THREADS "$HERE/openings.txt"
+fi
 
 if [ ! -x gikou/release ] || [ ! -f gikou/.build3 ]; then
   echo "== Gikou"
@@ -65,19 +79,21 @@ echo "(logs: $WORK/match-n$NODES-d*.log)"
 fi
 
 if [ -n "$FULL" ]; then
-  echo "== matches: our $NODES per move vs Gikou without a depth limit, $FULL ms per move, 1 thread: $P processes x $GAMES games"
+  TAG="$NODES-full$FULL"; CLOCK="--byoyomi $FULL"; WHAT="our $NODES per move"; GW="$FULL ms per move"
+  if [ -n "$FISCHER" ]; then TAG="fischer-t$THREADS"; CLOCK="--fischer $FISCHER"; WHAT="our side"; GW="both on the clock $FISCHER (base ms, increment ms)"; fi
+  echo "== matches: $WHAT ($THREADS thread(s)) vs Gikou without a depth limit, 1 thread, $GW: $P processes x $GAMES games"
   i=1
   while [ $i -le $P ]; do
     R=$(( (i - 1) * 7 % 100 ))   # each process starts at another opening
     tail -n +$(( R + 1 )) "$HERE/openings.txt" > "op-$i.txt"; if [ $R -gt 0 ]; then head -n $R "$HERE/openings.txt" >> "op-$i.txt"; fi
-    ./usimatch net.bin $NODES "$WORK/gikou/release" "$WORK/gikou" $GAMES --opt Threads=1 --opt USI_Hash=256 --opt OwnBook=false --opt USI_Ponder=false \
-      --openings "op-$i.txt" --byoyomi $FULL > "match-n$NODES-full$FULL-$i.log" 2>&1 &
+    $UM net.bin $NODES "$WORK/gikou/release" "$WORK/gikou" $GAMES --opt Threads=1 --opt USI_Hash=256 --opt OwnBook=false --opt USI_Ponder=false \
+      --openings "op-$i.txt" $CLOCK $MTOPT > "match-n$TAG-$i.log" 2>&1 &
     i=$((i + 1))
   done
   wait
-  for f in match-n$NODES-full$FULL-*.log; do grep "total" "$f" | tail -1; done | sed 's/.*total +\([0-9]*\) -\([0-9]*\) =\([0-9]*\).*/\1 \2 \3/' | awk -v l="$NODES" -v b="$FULL" '
+  for f in match-n$TAG-*.log; do grep "total" "$f" | tail -1; done | sed 's/.*total +\([0-9]*\) -\([0-9]*\) =\([0-9]*\).*/\1 \2 \3/' | awk -v l="$WHAT, $THREADS thread(s)" -v b="$GW" '
     { w += $1; lo += $2; d += $3 }
     END { n = w + lo + d; if (!n) { print "no games finished"; exit 1 } s = (w + d / 2) / n; c = s; if (c < 0.01) c = 0.01; if (c > 0.99) c = 0.99;
-          printf "ours (%s) vs Gikou full (%s ms): +%d -%d =%d  score %.3f  Elo %+.0f%s\n", l, b, w, lo, d, s, -400 * log(1 / c - 1) / log(10), (s < 0.01 || s > 0.99) ? " (or beyond: one-sided)" : "" }'
-  echo "(logs: $WORK/match-n$NODES-full$FULL-*.log)"
+          printf "ours (%s) vs Gikou full (%s): +%d -%d =%d  score %.3f  Elo %+.0f%s\n", l, b, w, lo, d, s, -400 * log(1 / c - 1) / log(10), (s < 0.01 || s > 0.99) ? " (or beyond: one-sided)" : "" }'
+  echo "(logs: $WORK/match-n$TAG-*.log; while it runs: tail -f $WORK/match-n$TAG-1.log)"
 fi

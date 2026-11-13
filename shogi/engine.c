@@ -15,7 +15,11 @@ typedef unsigned int u32;
 #include <string.h>
 #include <time.h>
 #define EXPORT(name)
+#ifdef MT   /* (tools/match/usimatch.c --threads: the multi-thread search of engine_mt.wasm on pthreads) */
+#define TLS _Thread_local
+#else
 #define TLS
+#endif
 static double js_now(void) { struct timespec t; clock_gettime(CLOCK_MONOTONIC, &t); return t.tv_sec * 1000.0 + t.tv_nsec / 1e6; }
 static void js_progress(i32 depth, double score, i32 nodes, i32 *pv, i32 pvlen) { (void)depth; (void)score; (void)nodes; (void)pv; (void)pvlen; }
 static void js_aprogress(i32 depth, i32 n, i32 *moves, double *scores) { (void)depth; (void)n; (void)moves; (void)scores; }
@@ -2036,6 +2040,9 @@ EXPORT(reset_search) void reset_search(void) { memset(history, 0, sizeof history
 
 #ifdef MT
 /* ------------------------------------------------------------------ threads (engine_mt.wasm, see pro/) */
+#ifdef NATIVE
+static void mt_thread_native(int id) { threadId = id; }   /* (a pthread: its thread-local state is already there) */
+#else
 extern unsigned char __heap_base;
 extern void __wasm_init_tls(void *);
 EXPORT(mt_heap_base) u32 mt_heap_base(void) { return (u32)&__heap_base; }
@@ -2043,5 +2050,6 @@ EXPORT(mt_tls_size) u32 mt_tls_size(void) { return __builtin_wasm_tls_size(); }
 /* every instance first: mt_stack (its own stack top; a function without a frame of its own), then mt_thread */
 EXPORT(mt_stack) void mt_stack(u32 stackTop) { __asm__ volatile(".globaltype __stack_pointer, i32\n local.get %0\n global.set __stack_pointer" :: "r"(stackTop)); }
 EXPORT(mt_thread) void mt_thread(u32 tls, int id) { __wasm_init_tls((void *)tls); threadId = id; }
+#endif
 EXPORT(mt_stop) void mt_stop(int v) { __atomic_store_n(&gStop, v, __ATOMIC_SEQ_CST); }
 #endif
