@@ -969,9 +969,6 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) .ol-rkbtn:hover{border-color:#e0b65a
   html.atlas-skin:not(.atlas-2d) body:not(#_) #lessonList .lx-banner .tx b:not(#_){font-size:17px}
   /* puzzles (pzbook): cards side by side as rows — the board on the left, smaller */
   html.atlas-skin:not(.atlas-2d) body:not(#_) .pbh{gap:10px}
-  html.atlas-skin:not(.atlas-2d) body:not(#_) .pbh-hero:not(#_){padding:10px 16px;gap:14px}
-  html.atlas-skin:not(.atlas-2d) body:not(#_) .pbh-hero .pb-ring:not(#_){width:62px;height:62px}
-  html.atlas-skin:not(.atlas-2d) body:not(#_) .pbh-hero .pb-ring b{font-size:17px}
   html.atlas-skin:not(.atlas-2d) body:not(#_) .pbh-card:not(#_){flex-direction:row;align-items:center;padding:8px 10px 8px 8px;gap:10px}
   html.atlas-skin:not(.atlas-2d) body:not(#_) .pbh-th:not(#_){width:72px;padding:0;background:none}
   html.atlas-skin:not(.atlas-2d) body:not(#_) .pbh-bd:not(#_),html.atlas-skin:not(.atlas-2d) body:not(#_) .pbh-bd.tall:not(#_){width:100%}
@@ -1004,3 +1001,24 @@ html.atlas-skin body:not(#_) .lxh-tx small{font-size:13px;line-height:1.5;color:
 }
 /* online: the two boxes (レート戦 / 部屋で対戦) as the other tabs' boxes — cream, a thin sand border, a solid foot, no gradient */
 html.atlas-skin body:not(#_) .ol-lux .ol-pane:not(#_):not(#_){background:#fffaf0!important;background-image:none!important;border:1px solid #ecdab4!important;border-radius:16px!important;box-shadow:0 3px 0 #ecdab4!important}
+/* (2026-11-13) the lesson / opening header as tall as the puzzles' (ring 84px, the same padding), a 続きから button on the right;
+   the category tabs as low as the new-game dialog's mode tabs (40px); the category banner in the boxes' plain style (as 今日の一問) */
+html.atlas-skin body:not(#_) .lxh:not(#_){padding:16px 18px;min-height:133px;box-sizing:border-box}
+html.atlas-skin body:not(#_) .lxh-ring:not(#_){width:84px;height:84px}
+html.atlas-skin body:not(#_) .lxh-ring b:not(#_){font-size:24px}
+html.atlas-skin body:not(#_) .lxh-ring small:not(#_){font-size:12px}
+html.atlas-skin body:not(#_) .lxh-tx b:not(#_){font-size:26px}
+html.atlas-skin body:not(#_) .lxh-tx small:not(#_){font-size:14px}
+html.atlas-skin body:not(#_) .lxh-cont{flex:none;display:flex;flex-direction:column;align-items:center;gap:2px;max-width:240px;padding:12px 22px;border:0;border-radius:14px;background:#ff5d5d;color:#fff;box-shadow:0 4px 0 #d93c3c;font:inherit;font-size:17px;font-weight:900;cursor:pointer}
+html.atlas-skin body:not(#_) .lxh-cont small{font-size:12px;font-weight:600;opacity:.9;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html.atlas-skin body:not(#_) .lxh-cont:active{transform:translateY(2px);box-shadow:0 2px 0 #d93c3c}
+html.atlas-skin body:not(#_) .lxh-cont.hidden{display:none}
+@media (max-width:760px){ html.atlas-skin body:not(#_) .lxh:not(#_){min-height:0;flex-wrap:wrap;padding:12px} html.atlas-skin body:not(#_) .lxh-ring:not(#_){width:60px;height:60px} html.atlas-skin body:not(#_) .lxh-tx b:not(#_){font-size:19px} html.atlas-skin body:not(#_) .lxh-tx small:not(#_){font-size:12px} html.atlas-skin body:not(#_) .lxh-cont{flex:1 1 100%;max-width:none;padding:9px 12px;font-size:15px} }
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal :is(.lx-tabs,.pbh-tabs):not(#_):not(#_){padding:4px!important;min-height:0!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal :is(.lx-tabs,.pbh-tabs) > button:not(#_):not(#_){height:32px!important;min-height:0!important;padding:0 8px!important;font-size:13px!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal :is(.lx-tabs,.pbh-tabs) > button :is(.ic,img,svg,canvas):not(#_){width:22px!important;height:22px!important;max-height:22px}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal :is(.lx-tabs,.pbh-tabs) > button small:not(#_){display:inline}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal .lx-banner:not(#_):not(#_){background:#fffaf0!important;background-image:none!important;border:2px solid #ead9b6!important;border-radius:20px!important;box-shadow:0 3px 0 #ead9b6!important}
+/* (2026-11-13) text fields (name, room title, room key …): a brighter, near-white fill */
+html.atlas-skin body:not(#_) :is(.modal, .dock, #dock) :is(input:not([type]), input[type=text], input[type=search], textarea):not(#_):not(#_){background:#fffefb!important;border-color:#ead9b6!important}
+html.atlas-skin body:not(#_) :is(.modal, .dock, #dock) :is(input:not([type]), input[type=text], input[type=search], textarea):focus:not(#_):not(#_){border-color:#e0b65a!important;outline:none}
