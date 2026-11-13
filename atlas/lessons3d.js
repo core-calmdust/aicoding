@@ -195,7 +195,8 @@
     opening(key, lang) {
       const s = this.data.sets.find(x => x.id === key); if (!s) return null;
       const probs = (s.problems || []).length ? (s.handi ? s.problems.map((p, i) => i) : shuffle(s.problems.map((p, i) => i))).slice(0, 5).sort((a, b) => s.handi ? a - b : 0).map(i => s.problems[i]) : [];
-      return { id: s.id, title: L(s.title, lang), intro: L(s.short, lang), start: s.study && s.study.start, steps: (s.study && s.study.steps || []).map(x => x[0]), notes: s.study && s.study.notes || {},
+      const nc = NC.shogi || {}, notes = Object.assign({}, s.study && s.study.notes || {}); Object.keys(nc).forEach(k => { const m = k.match(/^op:(.+)\/n(\d+)$/); if (m && m[1] === s.id) notes[m[2]] = nc[k]; });   // (3D: the notes without coordinates)
+      return { id: s.id, title: L(s.title, lang), intro: L(nc['op:' + s.id + '/short'] || s.short, lang), start: s.study && s.study.start, steps: (s.study && s.study.steps || []).map(x => x[0]), notes,
         probs: probs.map(p => ({ pos: p.sfen, kind: 'best', P: p, ans: (p.accept || p.pv || (p.cand && [p.cand[0][0]]) || [])[0] })),
         save: (pts, max) => { const pr = J(this.OKEY, {}), o = pr[s.id] || { best: 0, pass: false }, pass = pts >= Math.ceil(max * PASS); pr[s.id] = { best: Math.max(o.best || 0, Math.round(pts * 100 / max)), pass: o.pass || pass }; put(this.OKEY, pr); return pass; } };
     },
@@ -350,7 +351,7 @@
   /* the same texts without coordinates, for the 3D board (2026-11-14): atlas/nocoord/<game>.json { '<lesson id>/<ramp index>/<field>': { lang: text } }
      (the full games keep their own texts: their boards show coordinates) */
   const NC = {};
-  const ncLoad = id => NC[id] ? Promise.resolve(NC[id]) : fetch('nocoord/' + id + '.json?v=1').then(r => r.ok ? r.json() : {}).catch(() => ({})).then(o => (NC[id] = o));
+  const ncLoad = id => NC[id] ? Promise.resolve(NC[id]) : fetch('nocoord/' + id + '.json?v=2').then(r => r.ok ? r.json() : {}).catch(() => ({})).then(o => (NC[id] = o));
   function ncApply(id, L2) {
     const T = NC[id] || {}; if (!L2 || !L2.ramp) return L2;
     L2.ramp = L2.ramp.map((it, j) => { const o = Object.assign({}, it); ['body', 'h', 'y', 'b', 'g', 't'].forEach(f => { const v = T[L2.id + '/' + j + '/' + f]; if (v) o[f] = v; }); return o; });
