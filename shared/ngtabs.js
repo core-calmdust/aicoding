@@ -173,12 +173,12 @@ const CSS = `
   .modal :is(div,section):not(.hidden):not([hidden]):has(> :is(.seg.ls-tabs, #segLs)), .modal:has(> :is(.seg.ls-tabs, #segLs)){display:flex!important;flex-direction:column}   /* (a hidden view stays hidden: the lesson / puzzle lists hide while an item opens) */
   .modal:has(> :is(.seg.ls-tabs, #segLs)) > :not(.ls-tabs):not(#segLs){flex:none}
   html body:not(#_) .modal:not(#_):not(#_) :is(.seg.ls-tabs, #segLs):not(#_):not(#_){order:100;position:sticky!important;top:auto!important;bottom:0!important;z-index:7;margin:10px 0 0!important;flex:none}
-  html body:not(#_) .modal:not(#_):not(#_) :has(> :is(.seg.ls-tabs, #segLs)) > .modal-actions:not(#_):not(#_){order:99;position:sticky!important;bottom:var(--lsT,58px)!important;z-index:8;margin-bottom:0!important}
+  html body:not(#_) .modal:not(#_):not(#_) :has(> :is(.seg.ls-tabs, #segLs)) > .modal-actions:not(#_):not(#_){order:99;position:sticky!important;bottom:var(--lsT,44px)!important;z-index:8;margin-bottom:0!important}
   html.atlas-skin body:not(#_) .modal:not(#_):not(#_) :is(.seg.ls-tabs, #segLs):not(#_):not(#_){box-shadow:0 12px 0 12px var(--a-paper,#fbf5e7)!important}   /* (the cover only round the sides and under the tabs, never over the buttons above them) */
-  html body:not(#_) .modal:not(#_):not(#_) :has(> :is(.seg.ls-tabs, #segLs)) > .modal-actions:not(#_):not(#_){bottom:var(--lsT,50px)!important;padding:10px 0 8px!important;margin-top:40px!important;background:var(--a-paper,var(--panel,#1b130d))!important}
+  html body:not(#_) .modal:not(#_):not(#_) :has(> :is(.seg.ls-tabs, #segLs)) > .modal-actions:not(#_):not(#_){bottom:var(--lsT,44px)!important;padding:10px 0 12px!important;margin-top:40px!important;background:var(--a-paper,var(--panel,#1b130d))!important}
   .modal :is(div,section):has(> :is(.seg.ls-tabs, #segLs)):has(> .rt-host){height:100%;min-height:0}
   .modal :has(> :is(.seg.ls-tabs, #segLs)) > .rt-host{flex:1 1 auto!important;min-height:0!important}
-  .modal:has(> :is(.seg.ls-tabs, #segLs)) .rt > .rt-nav{position:sticky;bottom:var(--lsT,50px);z-index:8;background:var(--a-paper,var(--panel,#1b130d));padding-bottom:8px}
+  .modal:has(> :is(.seg.ls-tabs, #segLs)) .rt > .rt-nav{position:sticky;bottom:var(--lsT,44px);z-index:8;background:var(--a-paper,var(--panel,#1b130d));padding-bottom:8px}
 }
 `;
 const lang = () => (s => /^zh-(tw|hk|mo|hant)/i.test(s) ? 'zh-TW' : s.slice(0, 2).toLowerCase())(document.documentElement.lang || 'ja');
@@ -329,4 +329,30 @@ function rlInit() {
   paint();
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', rlInit); else rlInit();
+// (2026-11-13) phones: the buttons over the bottom tabs sit right on them — no gap where the list shows through. The sticky
+// offset (--lsT) is measured: the tabs' top against the buttons' bottom, set on each dialog whose tabs are at the bottom
+function lsFit() {
+  if (!matchMedia('(pointer: coarse) and (max-width: 760px)').matches) return;
+  // the tabs stay at the bottom in a list's child views too (a lesson's intro, a puzzle level's grid …): the view's own tabs, or
+  // the list view's moved in while it is shown (and back when the list returns)
+  document.querySelectorAll('.overlay.show .modal').forEach(m => {
+    const views = [...m.children].filter(v => v.tagName === 'DIV' && v.id);
+    const shown = views.find(v => !v.classList.contains('hidden') && !v.hidden && v.getClientRects().length); if (!shown) return;
+    if (shown.querySelector(':scope > :is(.seg.ls-tabs, #segLs)')) return;
+    const t = m.querySelector(':scope > div > :is(.seg.ls-tabs, #segLs)'); if (!t) return;
+    t.dataset.lsHome = t.dataset.lsHome || t.parentElement.id;
+    shown.appendChild(t);
+  });
+  document.querySelectorAll('[data-ls-home]').forEach(t => { const h = document.getElementById(t.dataset.lsHome); if (h && t.parentElement !== h && !h.classList.contains('hidden') && h.getClientRects().length) h.prepend(t); });
+  document.querySelectorAll('.overlay.show .modal, .modal.show').forEach(m => {
+    const t = [...m.querySelectorAll('.seg.ls-tabs, #segLs')].find(x => x.getClientRects().length); if (!t) return;
+    const a = [...m.querySelectorAll('.modal-actions, .rt > .rt-nav')].find(x => x.getClientRects().length && getComputedStyle(x).position === 'sticky'); if (!a) return;
+    const cur = parseFloat(getComputedStyle(m).getPropertyValue('--lsT')) || parseFloat(getComputedStyle(a).bottom) || 44;
+    const d = a.getBoundingClientRect().bottom - t.getBoundingClientRect().top;   // (>0: over the tabs, <0: a gap)
+    if (Math.abs(d) > .5) m.style.setProperty('--lsT', Math.max(0, cur + d) + 'px');
+  });
+}
+{ let q = 0; const later = () => { if (!q) q = requestAnimationFrame(() => { q = 0; lsFit(); }); };
+  new MutationObserver(later).observe(document.documentElement, { subtree: true, attributes: true, attributeFilter: ['class', 'hidden'] });
+  addEventListener('resize', later); document.addEventListener('scroll', later, true); }
 })();
