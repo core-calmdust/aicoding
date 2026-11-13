@@ -162,10 +162,11 @@
     let tall = false, ST = [], KH = Y;   // KH: the height the pieces in hand rest at (the stand's top; on the table when tall)
     const GRID_W = [[-.92, -1.12], [0, -1.12], [.92, -1.12], [-.92, 0], [0, 0], [.92, 0], [0, 1.12]];   // (pieces in hand made larger, 2026-11-11)          // 3 × 3 on the upright plate
     const GRID_T = [[-3.3, 0], [-2.2, 0], [-1.1, 0], [0, 0], [1.1, 0], [2.2, 0], [3.3, 0]];   // tall screens: one row on the table along the board's edge (no stands, 2026-11-09)
+    const boardDepth = () => { try { let d = 0; board.children.forEach(o => { if ((o.userData && o.userData.ty != null) || stands.includes(o) || o.isSprite) return; if (o.isMesh || o.isGroup) { const b = new TH.Box3().setFromObject(o); if (!b.isEmpty() && b.max.y > .05) d = Math.max(d, (b.max.z - b.min.z) / (SC || 1)); } }); return d; } catch (e) { return 0; } };   // (the board model's real depth, rim and all)
     function layout() {
       const r = ctx.el.getBoundingClientRect();
       tall = r.width < r.height * .95;
-      const BWd = FW + 1, BDd = FH + 1;
+      const BDd = Math.max(FH + 1, (board.userData.outer || 0) * FH, boardDepth() - .1), BWd = FW + (BDd - FH);   // (the board's real size with its rim: the pieces in hand had slipped under its edge, 2026-11-13)
       const SZ = FH / 2 + (board.userData.mg || 0) - 3.55 / 2;   // (3.55: the stand's top plate, models/shogi.js komadai)
       // phones (tall): no stands — the pieces in hand lie in a row on the table just below (yours) / above (the AI's) the board, so
       // the board itself can be framed much larger (2026-11-09)
@@ -177,7 +178,7 @@
       board.position.z = tall ? 0 : .25;
       // 詰将棋 (ctx.pz) on phones: the defender's pieces in hand (the row above the board) must be read — more room at the top
       if (PZ && pzFit()) { T3.kick(400); return; }
-      if (T3.fit) T3.fit(Object.assign(tall ? { w: (PZ ? FW + .7 : FW + 1.8) * SC, d: (PZ ? FH + 1.9 : FH + 1 + 2 * 1.45) * SC, y: Y * SC, pitch: 1.53, cz: PZ ? -.3 * SC : 0 } : { w: (FW + 8.2) * SC, d: Math.max(FH + 3.2, 12.4) * SC, y: Y * SC, pitch: 1.53 }, PZ && zEase ? { ease: true, ek: .14 } : {}));
+      if (T3.fit) T3.fit(Object.assign(tall ? { w: (PZ ? FW + .7 : FW + 1.8) * SC, d: (PZ ? FH + 1.9 : BDd + 2 * 1.45) * SC, y: Y * SC, pitch: 1.53, cz: PZ ? -.3 * SC : 0 } : { w: (FW + 8.2) * SC, d: Math.max(FH + 3.2, 12.4) * SC, y: Y * SC, pitch: 1.53 }, PZ && zEase ? { ease: true, ek: .14 } : {}));
       T3.kick(400);
     }
     const HS = () => tall ? .9 : 1.08;   // a piece in hand (was .82 everywhere)
