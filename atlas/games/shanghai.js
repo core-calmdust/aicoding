@@ -50,7 +50,8 @@
 /* 縦横切り替え (phones): the button sits left of やめる; turned = the camera is rolled 90° and the page's UI turns with it (#bv.land.shl, html.sh-land) */
 .shlb{position:absolute;z-index:3;top:calc(12px + env(safe-area-inset-top));inset-inline-end:calc(22px + var(--shq,96px));display:none;width:var(--hudh,45px);height:var(--hudh,45px);padding:0;align-items:center;justify-content:center;border-radius:50%;border:0;cursor:pointer;background:#fffdf7;color:#2b3044;box-shadow:0 4px 0 #eadfc6,0 10px 18px -10px rgba(0,0,0,.5)}
 .shlb svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-.bv.playing .shlb.can{display:inline-flex}.shlb.on{background:#ffcc33;box-shadow:0 4px 0 #e0a416,0 10px 18px -10px rgba(0,0,0,.5)}
+.bv.playing .shlb.can{display:inline-flex}
+.bv.playing.shb:not(.land) .hud{max-width:calc(100% - 50px - var(--shq,96px) - var(--hudh,45px) - env(safe-area-inset-left) - env(safe-area-inset-right))!important}   /* (the HUD stops short of the 縦横 button: a long one is scaled down by the portal) */.shlb.on{background:#ffcc33;box-shadow:0 4px 0 #e0a416,0 10px 18px -10px rgba(0,0,0,.5)}
 .shlb.pulse::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:3px solid #ffcc33;animation:shlp 1.1s ease-out infinite;pointer-events:none}
 @keyframes shlp{0%{opacity:.95;transform:scale(1)}100%{opacity:0;transform:scale(1.6)}}
 .bv.land.shl .hud{left:calc(100% - 10px - env(safe-area-inset-right))!important;right:auto!important;top:calc(12px + env(safe-area-inset-top))!important;bottom:auto!important;transform-origin:0 0!important;transform:rotate(90deg)!important;max-width:calc(100vh - 230px)!important;zoom:1!important;white-space:nowrap}
@@ -235,7 +236,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     }
     function frame() {
       const can = mqC.matches && mqP.matches, tn = landOn && can;
-      lb.classList.toggle('can', can); lb.classList.toggle('on', tn);
+      lb.classList.toggle('can', can); lb.classList.toggle('on', tn); if (bvEl) bvEl.classList.toggle('shb', can);
       if (bvEl) { bvEl.classList.toggle('land', tn); bvEl.classList.toggle('shl', tn); const q = document.getElementById('bvQuit'); if (q && q.offsetWidth) bvEl.style.setProperty('--shq', q.offsetWidth + 'px'); }
       document.documentElement.classList.toggle('sh-land', tn);
       const tall = innerHeight > innerWidth * 1.15;
@@ -248,16 +249,16 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     lb.onclick = e => { e.stopPropagation(); landOn = !landOn; try { localStorage.setItem('atlas-shanghai-land', landOn ? '1' : '0'); } catch (x) {} lb.classList.remove('pulse'); frame(); };
     const onRs = () => { if (!stopped) frame(); };
     addEventListener('resize', onRs); (mqP.addEventListener ? mqP.addEventListener('change', onRs) : mqP.addListener(onRs));
-    frame(); setTimeout(onRs, 300);
+    frame(); setTimeout(() => { if (!stopped) { frame(); hud(); } }, 300);
     if (!landOn && mqC.matches && mqP.matches) { lb.classList.add('pulse'); setTimeout(() => lb.classList.remove('pulse'), 4500); }   // (it is there: a few rings on the first look)
 
     /* the HUD: tiles left · the mission / pairs open · the clock */
     function hud() {
-      const nl = left(), mv = K.moves(G, alive, face).length, tt = elapsed();
-      let mid = tx('h.pairs', { n: mv });
+      const nl = left(), tt = elapsed();
+      let mid = '';   // (free play: no "pairs open" count — ユーザー 2026-11-14; the HUD is 残り · タイム)
       if (ST) { mid = ST.type === 'pairs' ? tx('h.got', { a: got, b: ST.goal }) : ST.type === 'gold' ? tx('h.gold', { a: goldGot, b: ST.gold }) : missionText(ST, lang); }
       const clk = ST && ST.limit ? `<span class="hs${ST.limit - tt <= 10 ? ' on' : ''}">${esc(tx('h.limit'))} <b>${mmss(ST.limit - tt)}</b></span>` : `<span class="hs">${esc(tx('h.time'))} <b>${mmss(tt)}</b></span>`;
-      ctx.hud(`<span class="hs on"><b>${nl}</b>${esc(tx('h.left'))}</span><span class="hm">${esc(mid)}</span>${clk}`);
+      ctx.hud(`<span class="hs on"><b>${nl}</b>${esc(tx('h.left'))}</span>${mid ? `<span class="hm">${esc(mid)}</span>` : ''}${clk}`);
     }
     function clock() { clearInterval(clockT); clockT = setInterval(() => { if (stopped || over) { clearInterval(clockT); return; } hud(); if (ST && ST.limit && elapsed() >= ST.limit) fail('timeup'); }, 500); }
     function toast(msg, ms) {
@@ -430,7 +431,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
         if (im.userData.dispose) im.userData.dispose(); if (shm.userData.dispose) shm.userData.dispose();
         if (sky) { sky.geometry.dispose(); sky.material.map.dispose(); sky.material.dispose(); }
         removeEventListener('resize', onRs); (mqP.removeEventListener ? mqP.removeEventListener('change', onRs) : mqP.removeListener(onRs));
-        lb.remove(); if (bvEl) { bvEl.classList.remove('land', 'shl'); } document.documentElement.classList.remove('sh-land');
+        lb.remove(); if (bvEl) { bvEl.classList.remove('land', 'shl', 'shb'); } document.documentElement.classList.remove('sh-land');
         document.querySelectorAll('.shrot').forEach(e => e.remove());
         try { if (window.__tbar) window.__tbar.place(); } catch (e) {}
         if (window.__shPlay === dbg) delete window.__shPlay;
