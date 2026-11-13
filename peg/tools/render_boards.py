@@ -370,8 +370,7 @@ def build(g, look):
         for at, w in ((.035, .035), ((gc - gw) if not tri else .2, .04), (inner, .04)):
             A[m & (np.abs(ed - at) < w)] = 0.03
         gm = (gd < gw) & m; A[gm] = 0.03
-        cm = m & (cd < CUP_R); A[cm] = np.array([1.12, 1.1, 1.06]) * (.82 + .18 * (cd[cm] / CUP_R))[..., None]
-        ring = m & (np.abs(cd - CUP_R) < .045); A[ring] = 0.03
+        cm = m & (cd < CUP_R + .045); A[cm] = np.array([.05, .05, .06]) * (1.4 - .4 * (cd[cm] / (CUP_R + .045)))[..., None]   # (black holes, 2026-11-13)
         G[:] = .15
     else:   # night: an abstract board — flat colour fields like a print, no realism (user 2026-11-11)
         H[:] = np.where(m, .5 * smooth_step(ed, 0, .05), 0)          # flat: only a crisp edge

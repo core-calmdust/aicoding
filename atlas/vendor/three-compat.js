@@ -42,7 +42,7 @@
         // r128 (legacy lights): a point / spot light with no distance did not fade with distance at all; r186 always divides by
         // distance^decay — far lights (the felt room's lamp, 2026-11-13) went dark. No distance → decay 0 (no fading), as r128.
         let dc = a[3] !== undefined && name === 'PointLight' ? a[3] : a[5] !== undefined && name === 'SpotLight' ? a[5] : 1;
-        Object.defineProperty(this, 'decay', { configurable: true, get() { return this.distance > 0 ? dc : 0; }, set(v) { dc = v; } });
+        Object.defineProperty(this, 'decay', { configurable: true, get() { return 0; }, set(v) { dc = v; } });   // (2026-11-13: also with a distance — r128's legacy fade (1 - d/D)^decay is close to r186's own range window; dividing by d^decay on top darkened the felt room's lamp)
       } } }; };
   ['DirectionalLight', 'HemisphereLight', 'AmbientLight'].forEach(n => wrap(n));
   ['PointLight', 'SpotLight'].forEach(n => wrap(n, true));

@@ -399,7 +399,7 @@
     if (threeP) return threeP;
     threeP = new Promise(res => {
       const go = () => {
-        const t = window.THREE ? Promise.resolve() : /[?&]three=128\b/.test(location.search) ? loadScript(THREE_URL) : loadScript(new URL('../atlas/vendor/three-r186.min.js?v=1', location.href).href).then(() => loadScript(new URL('../atlas/vendor/three-compat.js?v=13', location.href).href));   // (r186 by default, 2026-11-13)
+        const t = window.THREE ? Promise.resolve() : /[?&]three=128\b/.test(location.search) ? loadScript(THREE_URL) : loadScript(new URL('../atlas/vendor/three-r186.min.js?v=1', location.href).href).then(() => loadScript(new URL('../atlas/vendor/three-compat.js?v=14', location.href).href));   // (r186 by default, 2026-11-13)
         t.then(() => window.UrDice3D ? null : loadScript(BASE + '../atlas/models/ur-dice.js?v=2')).then(() => res(!!(window.THREE && window.UrDice3D && THREE.WebGLRenderer))).catch(() => res(false));
       };
       const idle = () => (window.requestIdleCallback ? requestIdleCallback(go, { timeout: 1500 }) : setTimeout(go, 200));

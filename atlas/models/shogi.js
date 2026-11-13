@@ -437,7 +437,7 @@
     const look = lookOf(o), LM = faceMats(look);
     const kaya = LM ? LM.leg : M({ map: X.wood('kayaSide2', '#caa075', '#9c6c3c', 512, 512, 2.4), roughness: .5, bumpScale: .003 });
     const endF = LM ? LM.side : M({ map: sideGrain('kayaSideF3', 1024, 256, 3), roughness: .5, bumpScale: .002 });
-    const endS = LM ? LM.end : M({ map: sideGrain('kayaSideS3', 1024, 256, 11), roughness: .5, bumpScale: .002 });
+    const endS = LM ? LM.end : M({ map: endGrain('kayaEndS2', 512, 256, -1.4, .5, .5), roughness: .5, bumpScale: .003 });   // (the left / right sides: the end grain as before; only the faces toward the players are 柾目)
     const top = new TT.MeshPhysicalMaterial({ map: boardTop(n, cr, EXT, look, nh), bumpMap: boardBump(n, cr, EXT, nh), bumpScale: .006, roughness: .95, clearcoat: 0, reflectivity: 0, envMapIntensity: .6 });   // matte: no glare from the room's lights on the playing field, in any room (2026-11-12)
     top.map.anisotropy = 8;
     const bottom = LM ? LM.bottom : M({ color: 0x8c643c, roughness: .7 });
