@@ -93,7 +93,7 @@
   }
   // 筒子・索子・花／季節: the pictures traced in colour from the same photos (atlas/tools/shanghai-glyphs.py art →
   // atlas/img/shanghai-art.png, 8×4 RGBA cells: 0–8 筒子, 9–17 索子 (9 = 一索の鳥), 18–21 梅蘭菊竹, 22–25 春夏秋冬), 2026-11-14
-  const ART_URL = new URL('../img/shanghai-art.png?v=2', (document.currentScript && document.currentScript.src) || location.href).href;
+  const ART_URL = new URL('../img/shanghai-art.png?v=3', (document.currentScript && document.currentScript.src) || location.href).href;
   let artImg = null;
   const artCell = f => f >= 9 && f < 27 ? f - 9 : f >= 34 && f < 42 ? 18 + (f - 34) : -1;
   function art(c, f) { const k = artCell(f); if (!artImg || k < 0) return false; c.drawImage(artImg, (k % 8) * GW, Math.floor(k / 8) * GH, GW, GH, 0, 0, 256, 362); return true; }

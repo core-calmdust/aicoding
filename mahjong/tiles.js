@@ -111,7 +111,7 @@ const GW = 280, GH = 390, SHEET = new URL('../atlas/img/', (document.currentScri
 let gImg = null, aImg = null, readyP = null;
 function ready() {
   const one = (u, set) => new Promise(res => { const im = new Image(); im.onload = () => { set(im); res(); }; im.onerror = () => res(); im.src = SHEET + u; setTimeout(res, 5000); });
-  return readyP || (readyP = Promise.all([one('shanghai-glyphs.png?v=1', im => { gImg = im; }), one('shanghai-art.png?v=2', im => { aImg = im; })]));
+  return readyP || (readyP = Promise.all([one('shanghai-glyphs.png?v=1', im => { gImg = im; }), one('shanghai-art.png?v=3', im => { aImg = im; })]));
 }
 const GROUND = '#fafaf6';
 // one cell of a sheet in a colour (glyph sheet: channel ch; art sheet: ch < 0 keeps its colours, or recolours all to `col`)
