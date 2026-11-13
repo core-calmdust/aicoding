@@ -861,3 +861,11 @@ html.atlas-skin body:not(#_) .ed-pop button:hover,html.atlas-skin body:not(#_) .
 html.atlas-skin body:not(#_) .ed-help{color:#8a7552!important;font-size:13.5px!important}
 /* (2026-11-13) phones: the tool row's buttons rounded squares, not circles (the card-button pill rule had reached them) */
 html.atlas-skin:not(.atlas-land):not(.atlas-2d) body:not(#_) .card.controls .btn:not(#_):not(#_){border-radius:14px!important}
+/* (2026-11-13) shogi on phones: the players' box above the board kept slim (it took a fifth of the screen) */
+@media (max-width:760px) and (orientation:portrait){
+  html.atlas-skin.atlas-shogi:not(.atlas-2d):not(.atlas-land) body:not(#_) .card.players:not(#_){padding:6px 8px!important;gap:6px!important;border-radius:18px!important}
+  html.atlas-skin.atlas-shogi:not(.atlas-2d):not(.atlas-land) body:not(#_) .card.players > .player:not(#_):not(#_){min-height:0!important;padding:6px 12px!important;border-radius:14px!important}
+  html.atlas-skin.atlas-shogi:not(.atlas-2d):not(.atlas-land) body:not(#_) .card.players > .player :is(.name, .nm):not(#_){font-size:13px!important}
+}
+/* (2026-11-13) phones: the buttons inside the dialog's fixed foot stay above its tabs (the dialogs' sticky-button rule slid them down over the tabs while the list scrolled) */
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal.ngt-on .ngt-foot > .modal-actions:not(#_):not(#_){position:relative!important;bottom:auto!important;padding-bottom:8px!important;margin-bottom:0!important}
