@@ -37,7 +37,10 @@
   // a live online game (body.in-online, every game's online UI) never freezes: the opponent's moves, the clocks and the 3D board
   // keep up while another window is in front (2026-11-12)
   const live = () => !!(document.body && document.body.classList.contains('in-online'));
-  const out = () => !live() && (document.hidden || (document.hasFocus && !document.hasFocus()));
+  // while the game is starting up (the page still loading, the full version's 「よみこみちゅう」 screen up — also the portal's, opening a
+  // game) nothing freezes: the loading finishes in the background (2026-11-13)
+  const loading = () => { const h = document.documentElement; return document.readyState !== 'complete' || (h.classList.contains('atlas-skin') && !h.classList.contains('atlas-ready')) || !!document.querySelector('.atlas-load:not(.out)'); };
+  const out = () => !live() && !loading() && (document.hidden || (document.hasFocus && !document.hasFocus()));
   const check = () => (out() ? freeze() : thaw());
   addEventListener('blur', () => setTimeout(check, 0)); addEventListener('focus', check); addEventListener('pageshow', check);
   document.addEventListener('visibilitychange', check);
@@ -47,5 +50,5 @@
   // any click / key on the page means it is in front again
   addEventListener('pointerdown', check, true); addEventListener('keydown', check, true);
   addEventListener('pointermove', () => { if (frozen) check(); }, true);   // (the pointer moving over the page while it is in front)
-  setInterval(() => { if (frozen) check(); }, 500);   // a safety net: a missed focus event can never leave the page stuck
+  setInterval(check, 500);   // a safety net: a missed focus event can never leave the page stuck (and a loading that ended while the window was behind freezes now)
 })();
