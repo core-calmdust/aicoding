@@ -1757,6 +1757,32 @@
     prepared[id] = { g, extra, st: stamp(), fn: MODELS[id] };
   }
   // (fn: a board built by the builder of the time — atlas/lazy.js replaces a game's builder with its full model when the game is opened)
+  // the neighbours ‹ › built ahead in idle time (app.js prefetch, 2026-11-13): in stages so no frame of the turntable is held long —
+  // the model, then its merge, then its shaders (compileAsync where the browser compiles in parallel), then its pictures uploaded one per idle slot
+  let pfQuiet = 0;   // (its textures being made: no frame is asked for — nothing on screen changes)
+  const idleRun = fn => { pfQuiet++; try { fn(); } catch (e) {} pfQuiet--; };
+  const idleDo = fn => new Promise(res => (window.requestIdleCallback ? requestIdleCallback(() => { idleRun(fn); res(); }, { timeout: 1500 }) : setTimeout(() => { idleRun(fn); res(); }, 60)));
+  async function prefetch(id, still, wrap) {
+    if (!R || prepared[id] || !MODELS[id] || kept.some(e => e.id === id) || (cur && cur.userData.showId === id)) return;
+    let g = null; const fn = MODELS[id];
+    await idleDo(() => { if (still()) g = wrap ? wrap(fn) : fn(); }); if (!g) return;
+    await idleDo(() => { if (still()) { g.userData.merged = true; mergeStatic(g); } });
+    if (!still() || prepared[id] || MODELS[id] !== fn) return;
+    const tmp = new (T().Scene)(); tmp.add(g);
+    try { if (R.compileAsync) await R.compileAsync(tmp, cam); else await idleDo(() => R.compile(tmp, cam)); } catch (e) {}
+    tmp.remove(g);
+    if (prepared[id] || MODELS[id] !== fn) return;
+    prepared[id] = { g, st: stamp(), fn };
+  }
+  async function preUpload(id, still) {   // (after its textures are drawn: the first frame of the board has no big uploads left)
+    const p = prepared[id]; if (!p || !R.initTexture) return;
+    const ts = new Set(); p.g.traverse(o => { const ms = o.material ? [].concat(o.material) : []; ms.forEach(m => TEXK.forEach(k => { const t = m[k]; if (t && t.isTexture && !t.isRenderTargetTexture && t.image) ts.add(t); })); });
+    for (const t of ts) { if (!still() || prepared[id] !== p) return; await idleDo(() => R.initTexture(t)); }
+  }
+  // prepared boards that are no longer neighbours are freed (only the two around the board on show stay built)
+  function unprepare(keepIds) {
+    Object.keys(prepared).forEach(id => { if (keepIds.includes(id)) return; const p = prepared[id]; delete prepared[id]; const c = p.g; dispose(c); freeBoard(c, [scene, cur, ...kept.map(e => e.c), ...Object.values(prepared).map(q => q.g)]); });
+  }
   function take(id) { const p = prepared[id]; delete prepared[id]; return p && p.st === stamp() && p.fn === MODELS[id] ? p : null; }
   function show(id, model, opts = {}) {
     if (!R) return null;
@@ -1906,7 +1932,7 @@
     if (hooked) return; hooked = true;
     try {   // a texture uploaded again (a texgen picture done, a loaded image, a redrawn canvas): a frame for it
       const TP = T().Texture.prototype, d = Object.getOwnPropertyDescriptor(TP, 'needsUpdate');
-      if (d && d.set) Object.defineProperty(TP, 'needsUpdate', { configurable: true, get: d.get, set(v) { d.set.call(this, v); if (v === true && R) kick(150); } });
+      if (d && d.set) Object.defineProperty(TP, 'needsUpdate', { configurable: true, get: d.get, set(v) { d.set.call(this, v); if (v === true && R && !pfQuiet) kick(150); } });   // (not for a board being built ahead off screen: prefetch)
     } catch (e) {}
     const de = document.documentElement, pk = () => poke(), pkLong = () => poke(600);
     // (an attribute written with its old value — a clock re-setting its class — or a text change is no layout change: ignored)
@@ -2379,5 +2405,5 @@
   try { if (sessionStorage.getItem('t3d-debug')) setTimeout(() => R && dbgToggle(true), 500); } catch (e) {}
   setInterval(() => { if (dbgOn && performance.now() - dbgT > 1000) { dbgFps = 0; dbgT = performance.now(); dbgPaint(); } }, 1000);   // (the loop sleeps when nothing moves: keep the numbers fresh)
 
-  window.Table3D = { swap, swapCancel, drawNow, placeOff: PLACE_OFF, fitRect, modelRect, _texT: texT, _texCache: texCache, _texFile: texFile, decoOn, boSet: on => { BO_OK = !!on; bo.key = ''; kick(400); }, debug: dbgToggle, TABLES, placeMon, setTable, table: () => tableStyle, setBright, bright: () => bright, turn, museum, setShift, quiet, setTimeOfDay, timeOfDayPick: todPick, share, lp, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, tatami: () => tatamiTex(), stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, rvDisc, rvMats, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
+  window.Table3D = { prefetch, preUpload, unprepare, swap, swapCancel, drawNow, placeOff: PLACE_OFF, fitRect, modelRect, _texT: texT, _texCache: texCache, _texFile: texFile, decoOn, boSet: on => { BO_OK = !!on; bo.key = ''; kick(400); }, debug: dbgToggle, TABLES, placeMon, setTable, table: () => tableStyle, setBright, bright: () => bright, turn, museum, setShift, quiet, setTimeOfDay, timeOfDayPick: todPick, share, lp, mergeStatic, _scene, lite: LITE, coarse: COARSE, texScale, _dbg, snap, fit, kick, align, reveal, planks, felt, setInset, cloth, wasDrag, prepare, canvasTex, wood, woodTop, makeNoise, RB, grid, tatami: () => tatamiTex(), stone, project, mount, show, play, pick, MODELS, M, mesh, bevelDisc, rvDisc, rvMats, disc, cellPos, contact, ok: () => !!R, renderer: () => R, floorImage };
 })();

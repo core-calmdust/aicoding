@@ -790,6 +790,33 @@
     }
     else $('gl').innerHTML = `<div style="position:absolute;inset:0;display:grid;place-items:center"><img src="${artSrc(g)}" alt="" style="width:min(70vw,420px)"></div>`;
     bvCard(g, id, push, flown);
+    if (glOK && !back) prefetchAround(id);
+  }
+  /* ---------- the boards either side (‹ ›) are got ready behind the one on show (2026-11-13) ----------
+     Once this board and its pictures are done and the view has settled: the neighbours' files load, their textures are drawn in the
+     texgen workers, their models are built and their shaders compiled in idle time (Table3D.prefetch, in stages), then their pictures
+     are uploaded one per idle slot. Stepping to one then shows it at once. Only the two neighbours stay built (unprepare).
+     Stops as soon as another board is opened or a game / the rules start. Off on lite devices (memory) and with ?noprefetch. */
+  let pfTok = 0;
+  const PF_OFF = /[?&]noprefetch\b/.test(location.search);
+  function prefetchAround(id) {
+    const tok = ++pfTok; if (PF_OFF || !window.Table3D || !Table3D.prefetch || Table3D.lite) return;
+    const list = A_.byUpdate(), i = list.findIndex(x => x.id === id); if (i < 0 || list.length < 2) return;
+    const nbs = [...new Set([list[(i + 1) % list.length].id, list[(i - 1 + list.length) % list.length].id])].filter(n => n !== id);
+    const still = () => tok === pfTok && bvGame && bvGame.id === id && $('bv').classList.contains('on') && !$('bv').classList.contains('playing') && !$('bv').classList.contains('rules');
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    (async () => {
+      await texReady(id); await (pend3d || Promise.resolve()); await wait(1500); if (!still()) return;
+      try { Table3D.unprepare(nbs); } catch (e) {}
+      for (const n of nbs) {
+        if (!still()) return;
+        if (window.AtlasLazy && !AtlasLazy.loaded(n)) { await AtlasLazy.need(n); await wait(300); if (!still()) return; }
+        await Table3D.prefetch(n, still, f => tagged(n, f));   // (its textures go to the workers under its own name)
+        if (!still()) return;
+        if (TG) await TG.idle([n]); await wait(200);
+        if (still()) await Table3D.preUpload(n, still);
+      }
+    })().catch(() => {});
   }
   /* ---------- 種目 (shogi, 2026-11-12): the variants as cards with their starting position drawn — like the encyclopedia's own pages;
      every one plays on the 3D table (games/shogi-play.js), the full version opens with it chosen (?variant=) ---------- */
