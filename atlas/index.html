@@ -2177,7 +2177,9 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 <div class="toast" id="toast"></div>
 <canvas id="confetti"></canvas>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>/* three.js r186 trial (2026-11-13): ?three=186 loads the new version and the r128 compatibility layer; otherwise r128 as before */
+if (/[?&]three=186\b/.test(location.search)) document.write('<script src="vendor/three-r186.min.js?v=1"><\/script><script src="vendor/three-compat.js?v=6"><\/script>');
+else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');</script>
 <script src="texgen.js?v=2"></script>
 <script src="npc/roster.js?v=7"></script>
 <script src="art.js?v=12"></script>
@@ -2222,7 +2224,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   }, 60);
 };</script>
 <script src="../shared/tapword.js?v=1"></script>
-<script src="lazy.js?v=149"></script>
+<script src="lazy.js?v=151"></script>
 <script src="puzzle-lines.js?v=1"></script>
 <script src="puzzles.js?v=15"></script>
 <script src="lessons3d.js?v=12"></script>

@@ -1953,7 +1953,7 @@ html.atlas-skin #newOverlay #lvNote{display:none!important}   /* (the long note 
 <script src="variants/mini.js?v=20261021vb"></script>
 <script src="variants/hasami.js?v=20261021vb"></script>
 <script src="variants/variants.js?v=20261112bw"></script>
-<script src="rvbox.js?v=20261113hd"></script>
+<script src="rvbox.js?v=20261113hd3"></script>
 <script src="rvtip.js?v=20261107l14"></script>
 <script src="../shared/coachkit.js?v=17l14"></script>
 <script src="../shared/record.js?v=12l14"></script>
@@ -2295,7 +2295,7 @@ function pieceEl(code, promoted) {
     // image piece sets (lishogi assets; see pieces/README.md for authors and licences)
     el.classList.add('img'); el.classList.remove('g');
     const up = (col === 1) !== flip, code = tp === OU ? (col ? 'OU' : 'GY') : PCODE[tp];
-    const src = `pieces/${settings.pieces}/${up ? 1 : 0}${code}.svg?v=15`;
+    const src = `pieces/${settings.pieces}/${up ? 1 : 0}${code}.svg?v=16`;
     k.innerHTML = `<img src="${src}" alt="" draggable="false">`;
     // the face's wood grain: its own patch of the grain texture for each kind (and side), rotated with the piece
     const gi = tp * 2 + (up ? 1 : 0);
@@ -2314,7 +2314,7 @@ function preloadPieces(set) {
   if (!PIECE_SETS[set] || PRELOAD[set]) return;
   PRELOAD[set] = [];
   for (const side of [0, 1]) for (const code of PCODE.slice(1).concat('GY')) {
-    const im = new Image(); im.src = `pieces/${set}/${side}${code}.svg?v=15`;
+    const im = new Image(); im.src = `pieces/${set}/${side}${code}.svg?v=16`;
     if (im.decode) im.decode().catch(() => {});
     PRELOAD[set].push(im);
   }
@@ -3476,7 +3476,7 @@ function dsgPiece(tp, gote, cx, cy, cw, ch, set, S, id) {
   const rot = gote ? ` transform="rotate(180 ${cx} ${cy})"` : '';
   if (PIECE_SETS[set]) {
     const code = tp === OU ? (gote ? 'OU' : 'GY') : PCODE[tp], w = cw * 1.12, h = ch * 1.12;
-    return `<image href="pieces/${set}/${gote ? 1 : 0}${code}.svg?v=15" x="${cx - w / 2}" y="${cy - h / 2}" width="${w}" height="${h}"${S.imgF ? ` style="filter:${S.imgF}"` : ''}/>`;
+    return `<image href="pieces/${set}/${gote ? 1 : 0}${code}.svg?v=16" x="${cx - w / 2}" y="${cy - h / 2}" width="${w}" height="${h}"${S.imgF ? ` style="filter:${S.imgF}"` : ''}/>`;
   }
   const w = cw * sz[0], h = ch * sz[1], x = cx - w / 2, y = cy - h / 2;
   const pts = [[.5, 0], [.83, .13], [.97, 1], [.03, 1], [.17, .13]].map(([a, b]) => `${(x + a * w).toFixed(2)},${(y + b * h).toFixed(2)}`).join(' ');
@@ -3995,9 +3995,9 @@ function rvbCands(push, done) {
   const sf = P.sfen(), key = rvbKey(), mv = game.moves.slice(0, cur), vr = game.variant && window.Variants ? Variants.eng(game.variant) : '';
   const played = !inStudy() && cur < game.moves.length ? game.moves[cur] : '';
   const names = pv => { const p = vr ? Variants.pos(vr) : new E.Position(), out = []; let prevTo = -1; try { p.setSfen(sf); for (const u of pv.slice(0, 10)) { const m = p.fromUsi(u); if (!p.legalMoves(true).includes(m)) break; out.push((p.side ? '△' : '▲') + kifName(p, m, prevTo)); prevTo = E.mTo(m); p.doMove(m); p.sp = 0; } } catch (e) {} return out; };
-  const val = s => Math.abs(s) >= E.MATE - 200 ? fmtScore(s) : Math.round(winRate(s) * 100) + '%';
+  const val = s => Math.abs(s) >= E.MATE - 200 ? (s > 0 ? '100%' : '0%') : Math.round(winRate(s) * 100) + '%';   // (詰み: 100% / 0%, 2026-11-13)
   const conv = list => (list || []).map(e => { const pv = e.pv && e.pv.length ? e.pv : [e.move], nm = names(pv); const wr = winRate(e.score);
-    return { id: e.move, move: escHb(nm[0] || e.move), val: val(e.score), cls: wr > 0.56 ? 'pos' : wr < 0.44 ? 'neg' : '', pv: escHb(nm.slice(1).join(' ')), played: e.move === played, ref: { u: e.move, pv, key } }; });
+    return { id: e.move, move: escHb(nm[0] || e.move), val: val(e.score), cls: wr > 0.505 ? 'pos' : wr < 0.495 ? 'neg' : '', pv: escHb(nm.slice(1).join(' ')), played: e.move === played, ref: { u: e.move, pv, key } }; });
   rvbKill();
   const mp = !vr && MTP && MTP.pool();   // (the threads when free)
   if (mp) {
@@ -6670,7 +6670,7 @@ if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStar
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/img/tex/baked.js?v=2')).then(() => load('../atlas/table3d.js?v=163')).then(() => load('../atlas/tables3d.js?v=106')).then(() => load('../atlas/skin/common.js?v=95')).then(() => load('../atlas/models/shogi.js?v=87')).then(() => load('../atlas/skin/shogi.js?v=73'))
+  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/img/tex/baked.js?v=2')).then(() => load('../atlas/table3d.js?v=163')).then(() => load('../atlas/tables3d.js?v=106')).then(() => load('../atlas/skin/common.js?v=96')).then(() => load('../atlas/models/shogi.js?v=89')).then(() => load('../atlas/skin/shogi.js?v=75'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
