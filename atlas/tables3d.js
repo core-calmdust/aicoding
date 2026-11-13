@@ -198,8 +198,8 @@
     // atlas/skin/amazons.js: 'atlas-amazons-look' ('temple' the default | 'ruins'); the figures: 'atlas-amazons-pc3'
     amazons: { list: ['temple', 'ruins', 'krater', 'navy', 'camp', 'minimal'], get: () => { const v = ls.get('atlas-amazons-look'); return ['ruins', 'krater', 'navy', 'camp', 'minimal'].includes(v) ? v : 'temple'; }, set: k => ls.set('atlas-amazons-look', k) },
     // peg solitaire (atlas/models/peg.js): the 2D page's own board design ('aicoding-peg' settings.bd), as senet
-    peg: { list: ['walnut', 'maple', 'stone', 'night'],
-      get: () => { try { const d = (JSON.parse(ls.get('aicoding-peg') || '{}').settings || {}).bd; return ['maple', 'stone', 'night'].includes(d) ? d : 'walnut'; } catch (e) { return 'walnut'; } },
+    peg: { list: ['walnut', 'maple', 'stone', 'night', 'art', 'pop'],
+      get: () => { try { const d = (JSON.parse(ls.get('aicoding-peg') || '{}').settings || {}).bd; return ['maple', 'stone', 'night', 'art', 'pop'].includes(d) ? d : 'walnut'; } catch (e) { return 'walnut'; } },
       set: k => { try { const o = JSON.parse(ls.get('aicoding-peg') || '{}') || {}; o.settings = o.settings || {}; o.settings.bd = k; ls.set('aicoding-peg', JSON.stringify(o)); } catch (e) {} } },
     // shogi (atlas/models/shogi.js LOOK, 2026-11-11): 'atlas-shogi-look' — 本榧 (the default) · 蒔絵 · 新榧 · 漆黒 · 寄木細工 · 山桜
     shogi: { list: ['kaya', 'makie', 'grain', 'ink', 'yosegi', 'sakura'], get: () => { const v = ls.get('atlas-shogi-look'); return ['makie', 'grain', 'ink', 'yosegi', 'sakura'].includes(v) ? v : 'kaya'; }, set: k => ls.set('atlas-shogi-look', k) },
@@ -260,6 +260,8 @@
     maple: { ja: "ヴェルサイユ", en: "Versailles", zh: "凡尔赛", 'zh-TW': "凡爾賽", ko: "베르사유", es: "Versalles", fr: "Versailles", pt: "Versalhes", de: "Versailles", ru: "Версаль", tr: "Versay", id: "Versailles", hi: "वर्साय", ar: "فرساي" },
     stone: { ja: "大理石と真鍮", en: "Marble & brass", zh: "大理石与黄铜", 'zh-TW': "大理石與黃銅", ko: "대리석과 황동", es: "Mármol y latón", fr: "Marbre et laiton", pt: "Mármore e latão", de: "Marmor & Messing", ru: "Мрамор и латунь", tr: "Mermer ve pirinç", id: "Marmer & kuningan", hi: "संगमरमर और पीतल", ar: "رخام ونحاس" },
     night: { ja: "アブストラクト", en: "Abstract", zh: "抽象", 'zh-TW': "抽象", ko: "추상", es: "Abstracto", fr: "Abstrait", pt: "Abstrato", de: "Abstrakt", ru: "Абстракция", tr: "Soyut", id: "Abstrak", hi: "अमूर्त", ar: "تجريدي" } },
+    art: { ja: "カラフルアート", en: "Colourful art", zh: "缤纷艺术", 'zh-TW': "繽紛藝術", ko: "컬러풀 아트", es: "Arte de colores", fr: "Art coloré", pt: "Arte colorida", de: "Bunte Kunst", ru: "Цветное искусство", tr: "Renkli sanat", id: "Seni warna-warni", hi: "रंगीन कला", ar: "فن ملوّن" },
+    pop: { ja: "ポップアート", en: "Pop art", zh: "波普艺术", 'zh-TW': "普普藝術", ko: "팝아트", es: "Pop art", fr: "Pop art", pt: "Pop art", de: "Pop-Art", ru: "Поп-арт", tr: "Pop art", id: "Seni pop", hi: "पॉप आर्ट", ar: "فن البوب" },
   hockey: {
     classic: { ja: 'クラシック', en: 'Classic', zh: '经典', 'zh-TW': '經典', ko: '클래식', es: 'Clásico', fr: 'Classique', pt: 'Clássico', de: 'Klassisch', ru: 'Классика', tr: 'Klasik', id: 'Klasik', hi: 'क्लासिक', ar: 'كلاسيك' },
     air: { ja: 'エアホッケー', en: 'Air hockey', zh: '气垫球', 'zh-TW': '氣墊球', ko: '에어하키', es: 'Air hockey', fr: 'Air-hockey', pt: 'Air hockey', de: 'Airhockey', ru: 'Аэрохоккей', tr: 'Hava hokeyi', id: 'Air hockey', hi: 'एयर हॉकी', ar: 'هوكي الهواء' },
@@ -271,7 +273,7 @@
   X.boardName = (k, lang, id) => { const g = id && NG[id] && NG[id][k]; if (g) return g[lang] || g.en; const o = N3[k]; if (!o) return k; const n = o[lang] || o.en, c = n.replace(/\s*(?:3D|ثلاثي(?: الأبعاد)?)$/, '').trim(); return c || n; };   // (2026-11-10: the boards' names without '3D')
   // the full games' 「3D盤」 tiles: the board alone, from straight above, no room (atlas/tools/boardicon.html, 2026-11-09)
   X.boardIcon = (id, k) => new URL('img/boardic-' + id + '-' + k + '.webp?v=' + (id === 'backgammon' ? 2 : 1), ME).href;
-  X.boardThumb = (id, k) => new URL('img/board-' + id + '-' + k + '.webp?v=' + (id === 'senet' ? 3 : id === 'carrom' ? 5 : id === 'crokinole' ? 5 : id === 'konane' ? 2 : id === 'ludo' ? 2 : id === 'hockey' ? 2 : id === 'peg' ? 4 : id === 'backgammon' ? 2 : 1), ME).href;
+  X.boardThumb = (id, k) => new URL('img/board-' + id + '-' + k + '.webp?v=' + (id === 'senet' ? 3 : id === 'carrom' ? 5 : id === 'crokinole' ? 5 : id === 'konane' ? 2 : id === 'ludo' ? 2 : id === 'hockey' ? 2 : id === 'peg' ? 5 : id === 'backgammon' ? 2 : 1), ME).href;
   // choose a board for a game: the shared key is written and the showcase board (if it is that game's) is rebuilt at once
   X.setBoard = (id, k) => { const B = BOARDS[id]; if (!B || !B.list.includes(k)) return; B.set(k); try { dispatchEvent(new CustomEvent('atlas-board', { detail: { id, look: k } })); } catch (e) {} };
   // 駒: the games whose 3D figures come in sets (the board view's panel shows them as a row under 盤; the full game's 「3D駒」 too)
@@ -301,7 +303,7 @@
       futofude: { ja: '浮木', en: 'Ukiki', zh: '浮木', 'zh-TW': '浮木', ko: '우키키', es: 'Ukiki', fr: 'Ukiki', pt: 'Ukiki', de: 'Ukiki', ru: 'Укики', tr: 'Ukiki', id: 'Ukiki', hi: 'उकिकी', ar: 'أوكيكي' } } };   // (futofude: the key; 浮木 = マンボウ in dialect, after sunfish-shogi)
   // peg solitaire (atlas/models/peg.js SETS, 2026-11-11): the 2D page's marble sets ('aicoding-peg' settings.pg — the same choice in 2D and 3D);
   // the pictures are the 2D page's own marbles (peg/img/m-<set>-<k>.webp)
-  PIECES.peg = { list: ['glass', 'pearl', 'steel', 'peg', 'mod'],
+  PIECES.peg = { list: ['glass', 'pearl', 'steel', 'peg', 'mod', 'rainbow'],
     get: () => { try { const v = (JSON.parse(ls.get('aicoding-peg') || '{}').settings || {}).pg; return PIECES.peg.list.includes(v) ? v : 'glass'; } catch (e) { return 'glass'; } },
     set: k => { try { const o = JSON.parse(ls.get('aicoding-peg') || '{}') || {}; o.settings = o.settings || {}; o.settings.pg = k; ls.set('aicoding-peg', JSON.stringify(o)); } catch (e) {} },
     thumb: k => new URL('../peg/img/m-' + k + '-1.webp?v=5', ME).href,
@@ -310,6 +312,7 @@
       pearl: { ja: "陶器の玉", en: "Ceramic balls", zh: "陶瓷珠", 'zh-TW': "陶瓷珠", ko: "도자기 구슬", es: "Bolas de cerámica", fr: "Billes en céramique", pt: "Bolinhas de cerâmica", de: "Keramikkugeln", ru: "Керамические шарики", tr: "Seramik toplar", id: "Bola keramik", hi: "चीनी मिट्टी की गोलियाँ", ar: "كرات خزفية" },
       steel: { ja: "宝石", en: "Jewels", zh: "宝石", 'zh-TW': "寶石", ko: "보석", es: "Joyas", fr: "Joyaux", pt: "Joias", de: "Edelsteine", ru: "Драгоценности", tr: "Mücevherler", id: "Permata", hi: "रत्न", ar: "جواهر" },
       peg: { ja: "木のペグ", en: "Wooden pegs", zh: "木钉", 'zh-TW': "木釘", ko: "나무 페그", es: "Clavijas de madera", fr: "Chevilles en bois", pt: "Pinos de madeira", de: "Holzstifte", ru: "Деревянные колышки", tr: "Ahşap çiviler", id: "Pasak kayu", hi: "लकड़ी की खूँटियाँ", ar: "أوتاد خشبية" },
+      rainbow: { ja: "レインボー", en: "Rainbow", zh: "彩虹", 'zh-TW': "彩虹", ko: "레인보우", es: "Arcoíris", fr: "Arc-en-ciel", pt: "Arco-íris", de: "Regenbogen", ru: "Радуга", tr: "Gökkuşağı", id: "Pelangi", hi: "इंद्रधनुष", ar: "قوس قزح" },
       mod: { ja: "アブストラクトの駒", en: "Abstract pieces", zh: "抽象棋子", 'zh-TW': "抽象棋子", ko: "추상 말", es: "Fichas abstractas", fr: "Pions abstraits", pt: "Peças abstratas", de: "Abstrakte Steine", ru: "Абстрактные фишки", tr: "Soyut taşlar", id: "Bidak abstrak", hi: "अमूर्त गोटियाँ", ar: "قطع تجريدية" }
     } };
   X.PIECES = PIECES;

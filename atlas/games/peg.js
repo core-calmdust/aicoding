@@ -147,7 +147,8 @@
       let rec = null, nb = false;
       try { const d = JSON.parse(localStorage.getItem('aicoding-peg') || '{}') || {}, R = d.recs = d.recs || {}, k = bid + ':' + E.startHole(bid), r = R[k] || {};
         nb = r.best === undefined || left < r.best || (left === r.best && perfect && !r.perfect);
-        if (nb) R[k] = { best: left, perfect: perfect || !!r.perfect }; else if (perfect) R[k].perfect = true;
+        const day = (d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'))(new Date());
+        if (nb) R[k] = { best: left, perfect: perfect || !!r.perfect, date: day }; else if (perfect && !r.perfect) R[k].date = day; else if (perfect) R[k].perfect = true;
         localStorage.setItem('aicoding-peg', JSON.stringify(d)); rec = R[k]; } catch (e) {}
       const BL = BEST[lang] || BEST.en, bestTx = rec ? (nb && hist.length ? '🏅 ' + tx('res.best') + ' · ' : '') + BL + ': ' + tx('res.left', { n: rec.best }) + (rec.perfect ? ' · 👑 ' + tx('rec.perfect') : '') : '';
       const title = left === 1 ? (perfect ? tx('res.perfect') : tx('res.one')) : left === 2 ? tx('res.two') : left === 3 ? tx('res.three') : left <= 5 ? tx('res.five') : tx('res.many');

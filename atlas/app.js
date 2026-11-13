@@ -860,7 +860,7 @@
       const PT = (k, v) => { const D = window.PEG_I18N && PEG_I18N[k]; let x = D ? D[lang] || D.en || '' : ''; if (v) for (const q in v) x = x.split('{' + q + '}').join(v[q]); return x; };
       const paint = () => { const z = $('bvSize') ? +$('bvSize').value : 1, b = IDS[z - 1] || 'english'; let R = {}; try { R = (JSON.parse(localStorage.getItem('aicoding-peg') || '{}') || {}).recs || {}; } catch (e) {}
         const E = window.PegEngine, r = E ? R[b + ':' + E.startHole(b)] : Object.keys(R).filter(k => k.startsWith(b + ':')).map(k => R[k])[0];
-        el.innerHTML = `<span>${esc(PEG_BEST[lang] || PEG_BEST.en)}</span><b>${r ? esc(PT('res.left', { n: r.best }) || String(r.best)) : '—'}</b>${r && r.perfect ? `<em>👑 ${esc(PT('rec.perfect'))}</em>` : ''}`; };
+        el.innerHTML = `<span>${esc(PEG_BEST[lang] || PEG_BEST.en)}</span><b>${r ? esc(PT('res.left', { n: r.best }) || String(r.best)) : '—'}</b>${r && r.perfect ? `<em>👑 ${esc(PT('rec.perfect'))}</em>` : ''}${r && r.date ? `<small class="pgd">${esc(new Date(r.date + 'T12:00:00').toLocaleDateString(lang, { year: 'numeric', month: 'short', day: 'numeric' }))}</small>` : ''}`; };
       paint(); if ($('bvSize')) $('bvSize').addEventListener('change', paint);
     }
     if (PZX && $('bvPz')) $('bvPz').onclick = e => { const b = e.target.closest('[data-pz]'); if (!b) return; try { SFX.tap && SFX.tap(); } catch (x) {} if (b.dataset.pz === 'list') puzzleSheet(g); else startPuzzle({ daily: b.dataset.pz }); };
