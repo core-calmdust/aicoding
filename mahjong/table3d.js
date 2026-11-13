@@ -4,6 +4,29 @@
 (function (root) {
 'use strict';
 const W = 1, H = 1.36, D = 0.78;
+// the polished lavender stone of the tile backs (a canvas, drawn once): a pale mauve ground, soft cloudy depth, a few
+// milky veins and fine darker threads, a faint glitter of crystals
+function stoneTex() {
+  const S = 512, c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d');
+  let seed = 7; const R = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const base = g.createLinearGradient(0, 0, S, S); base.addColorStop(0, '#b7a2e0'); base.addColorStop(.5, '#a68ed6'); base.addColorStop(1, '#b3a0dc');
+  g.fillStyle = base; g.fillRect(0, 0, S, S);
+  for (let i = 0; i < 26; i++) { const x = R() * S, y = R() * S, r = 40 + R() * 140, gr = g.createRadialGradient(x, y, 0, x, y, r), light = R() < .5;
+    gr.addColorStop(0, light ? 'rgba(236,226,255,.28)' : 'rgba(120,92,180,.22)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, S, S); }
+  const vein = (col, w, blur, n) => { g.save(); g.strokeStyle = col; g.lineWidth = w; g.shadowColor = col; g.shadowBlur = blur; g.lineCap = 'round';
+    for (let k = 0; k < n; k++) { let x = R() * S, y = R() * S, a = R() * 6.28; g.beginPath(); g.moveTo(x, y); for (let i = 0; i < 18; i++) { a += (R() - .5) * .9; x += Math.cos(a) * 26; y += Math.sin(a) * 26; g.lineTo(x, y); } g.stroke(); } g.restore(); };
+  vein('rgba(246,240,255,.55)', 2.2, 10, 6); vein('rgba(250,246,255,.8)', .8, 2, 8); vein('rgba(110,80,170,.35)', .7, 1, 10);
+  for (let i = 0; i < 900; i++) { g.fillStyle = `rgba(255,255,255,${.1 + R() * .35})`; g.fillRect(R() * S, R() * S, 1, 1); }
+  const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; return t;
+}
+// a small studio around the table for the polished surfaces to reflect: a soft ceiling light, a window strip, dark walls
+function studioEnv() {
+  const c = document.createElement('canvas'); c.width = 512; c.height = 256; const g = c.getContext('2d');
+  const v = g.createLinearGradient(0, 0, 0, 256); v.addColorStop(0, '#d8d4e4'); v.addColorStop(.45, '#6c6878'); v.addColorStop(1, '#2a2632'); g.fillStyle = v; g.fillRect(0, 0, 512, 256);
+  const L = g.createRadialGradient(256, 10, 4, 256, 10, 120); L.addColorStop(0, 'rgba(255,255,255,1)'); L.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = L; g.fillRect(0, 0, 512, 140);
+  g.fillStyle = 'rgba(255,250,240,.85)'; g.fillRect(60, 70, 70, 50); g.fillRect(380, 80, 50, 40);
+  const t = new THREE.CanvasTexture(c); t.mapping = THREE.EquirectangularReflectionMapping; t.encoding = THREE.sRGBEncoding; return t;
+}
 // a rounded tile part (w × h, d thick along z, centred): corner radius r, edges rounded by b. withFace: group 0 is the +z face
 // (uv 0..1 over the tile), group 1 everything else; otherwise one group. ~120 triangles.
 function roundTile(w, h, d, r, b, withFace) {
@@ -149,7 +172,13 @@ class Table3D {
     this.geoFront = roundTile(W, H, 0.5, 0.13, 0.05, true);
     this.geoBack = roundTile(W, H, 0.28, 0.13, 0.05, false);
     this.matIvory = new THREE.MeshStandardMaterial({ color: new THREE.Color(0xf7f7f3).convertSRGBToLinear(), roughness: .38, metalness: 0 });
-    this.matBack = new THREE.MeshStandardMaterial({ color: new THREE.Color(0x6a3cc0).convertSRGBToLinear(), roughness: .32, metalness: .05 });
+    // the back (2026-11-14, ユーザー：紫をもう少し淡く、高級石を磨いたような質感): a pale lavender stone with soft veins, polished
+    // (a clear coat over it, a little studio light reflected in it) — four cuts of the same slab so neighbours don't match
+    this.envTex = studioEnv();
+    const stone = stoneTex();
+    this.matBacks = [0, 1, 2, 3].map(k => { const t = stone.clone(); t.needsUpdate = true; t.offset.set(k * .27, k * .41); t.rotation = k * .9; t.center.set(.5, .5);
+      return new THREE.MeshPhysicalMaterial({ map: t, roughness: .2, metalness: 0, clearcoat: 1, clearcoatRoughness: .06, envMap: this.envTex, envMapIntensity: .75 }); });
+    this.matBack = this.matBacks[0];
     this.matHi = new THREE.MeshStandardMaterial({ color: 0xfff1b8, roughness: .35, emissive: 0x6a5208, emissiveIntensity: .45 });
     this.setInfo({ round: 0, kyoku: 0, honba: 0, kyotaku: 0, left: 70, scores: [25000, 25000, 25000, 25000], dealer: 0, turn: -1 });
   }
@@ -174,7 +203,7 @@ class Table3D {
     const fm = this.faceMat(id);
     const front = new THREE.Mesh(this.geoFront, [fm.normal, this.matIvory]);   // (group 0: the face cap, 1: the rest)
     front.position.z = D / 2 - 0.25;
-    const back = new THREE.Mesh(this.geoBack, this.matBack);
+    const back = new THREE.Mesh(this.geoBack, this.matBacks[id % 4]);
     back.position.z = -D / 2 + 0.14;
     front.castShadow = back.castShadow = true; front.receiveShadow = true;
     g.add(front, back);
