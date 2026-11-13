@@ -898,3 +898,16 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) .modal.ngt-on > .ngt-foot:not(#_){ma
 /* (2026-11-13) phones: the 戦績 tab's page — the record laid flat on it, no card of its own */
 html.atlas-skin body:not(#_) .grc-card .grc.grc-inl{background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important}
 html.atlas-skin body:not(#_) .grc-card .grc.grc-inl .grc-hd{background:transparent!important}
+/* (2026-11-13) phones, new game: the 戦型 list opens over the panel (not cut by it); everything a size smaller for a calmer, easier read */
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl.ngt-on .ng-col:has(.csp.open):not(#_){overflow:visible!important;z-index:9;position:relative}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl.ngt-on .ng-cols:has(.csp.open):not(#_){overflow:visible!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl.ngt-on .csp.open :is(.csp-list,.csp-pop,ul){z-index:20}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl.ngt-on[data-ngl-order] :is(#segColor,#segClock,#segHandi) > button:not(#_):not(#_){min-height:38px!important;padding:6px 4px!important;font-size:13.5px!important;border-radius:9px!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl.ngt-on[data-ngl-order] :is(#segColor,#segClock,#segHandi):not(#_){gap:6px!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl.ngt-on .ng-col > .field > label:first-child:not(#_):not(#_){font-size:11px!important;margin-bottom:6px!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl.ngt-on #segMode ~ .pd :is(button,.pd-btn):not(#_), html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl.ngt-on .pd-btn:not(#_){min-height:40px!important;height:40px!important;font-size:14.5px!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal.ngt-on .ngt-foot > .modal-actions:not(#_):not(#_):not(#_){padding:8px 2px 6px!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal.ngt-on .ngt-foot > .modal-actions .mbtn:not(#_):not(#_){min-height:44px!important;height:44px!important;font-size:16px!important;padding:0 12px!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal.ngt-on .ngt-bar button:not(#_):not(#_){min-height:42px!important;padding:5px 6px!important;font-size:13px!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngt-on > h2:not(#_){font-size:20px!important;margin-bottom:8px!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngt-on .credit:not(#_):not(#_){margin-bottom:44px!important}   /* (the last line clear of the frosted band at the end) */
