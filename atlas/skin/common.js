@@ -892,15 +892,16 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
       const list = lx.parentElement, view = list && list.parentElement; if (!view) return;
       const h2 = view.querySelector(':scope > h2'); if (!h2) return;
       const p = h2.nextElementSibling && h2.nextElementSibling.tagName === 'P' ? h2.nextElementSibling : null;
-      const tabs = lx.querySelector(':scope > .lx-tabs, :scope > .lxh-fix > .lx-tabs');
+      const tabs = lx.querySelector(':scope > .lx-tabs, :scope > .lxh-fix > .lxh-box > .lx-tabs');
       let n = 0, m = 0;
       (tabs ? [...tabs.children] : [lx.querySelector('.lx-banner .pg')].filter(Boolean)).forEach(e => { const x = (e.textContent || '').match(/(\d+)\s*\/\s*(\d+)/); if (x) { n += +x[1]; m += +x[2]; } });
       let fix = lx.querySelector(':scope > .lxh-fix');
-      if (!fix) { fix = document.createElement('div'); fix.className = 'lxh-fix'; lx.prepend(fix); }
+      if (!fix) { fix = document.createElement('div'); fix.className = 'lxh-fix'; fix.innerHTML = '<div class="lxh-box"></div>'; lx.prepend(fix); }
+      const box = fix.firstElementChild;
       const sig = h2.textContent + '|' + (p ? p.textContent : '') + '|' + n + '/' + m;
       if (fix.dataset.sig !== sig) {
         fix.dataset.sig = sig;
-        let hero = fix.querySelector(':scope > .lxh'); if (!hero) { hero = document.createElement('div'); hero.className = 'lxh'; fix.prepend(hero); }
+        let hero = box.querySelector(':scope > .lxh'); if (!hero) { hero = document.createElement('div'); hero.className = 'lxh'; box.prepend(hero); }
         const ja = /^ja/.test(document.documentElement.lang || 'ja'), kind = (view.querySelector('#segLs .sel, .ls-tabs .sel') || {}).dataset || {};
         const desc = (p && p.textContent.trim()) || (kind.v === 'open' ? (ja ? '定石の手順を覚えて、その局面で練習しよう。' : 'Learn the lines, then practise them.') : (ja ? '考え方を学んで練習問題に挑戦しよう。' : 'Learn the ideas, then try the problems.'));
         hero.innerHTML = (m ? `<span class="lxh-ring" style="--p:${n / m}"><b>${n}</b><small>/${m}</small></span>` : '') +
@@ -920,7 +921,8 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
           cont.onclick = () => card.click();
         }
       }
-      if (tabs && tabs.parentElement !== fix) fix.appendChild(tabs);
+      if (tabs && tabs.parentElement !== box) box.appendChild(tabs);
+      box.classList.toggle('tabs', !!tabs);
       view.classList.add('lxh-on');
       // PC: pinned under the dialog's own tabs
       const seg = view.querySelector(':scope > .seg.ls-tabs, :scope > #segLs');
