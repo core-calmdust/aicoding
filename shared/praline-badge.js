@@ -95,7 +95,7 @@ html.prlb-on-pc .prlb-foot{display:none!important}
 .prlb.prlb-3d .prlb-w{height:12px;margin:0;transform:none}
 .prlb.prlb-3d:hover{opacity:1}
 .prlb.prlb-3d[hidden]{display:none!important}
-html:not(.prlb-on-pc) .prlb.prlb-3d{padding:5px;bottom:auto;top:var(--prlb-3dt,calc(64px + env(safe-area-inset-top)));right:calc(10px + env(safe-area-inset-right))}
+html:not(.prlb-on-pc) .prlb.prlb-3d{padding:5px;right:calc(10px + env(safe-area-inset-right));bottom:calc(14px + env(safe-area-inset-bottom))}   /* (phones: the icon at the bottom right, 2026-11-13) */
 html:not(.prlb-on-pc) .prlb.prlb-3d .prlb-t{display:none}
 html:not(.prlb-on-pc) .prlb.prlb-3d .prlb-ic{width:20px;height:20px}
 @media print{.prlb-pc,.prlb-3d{display:none!important}}`;
