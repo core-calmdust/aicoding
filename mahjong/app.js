@@ -915,6 +915,8 @@ function moveCursor(d) {
   UIS.picked = ids[i]; SND.pick(); renderHand(); TB.highlightType(T(UIS.picked));
 }
 document.addEventListener('keydown', e => {
+  // I: the 3D table's debug readout (polygons, draw calls, textures)
+  if ((e.key === 'i' || e.key === 'I') && !e.ctrlKey && !e.metaKey && !e.altKey && !(e.target.closest && e.target.closest('input,textarea,select')) && TB && TB.toggleDebug) { TB.toggleDebug(); return; }
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   const tag = (e.target.tagName || '').toLowerCase();
   if (tag === 'input' || tag === 'select' || tag === 'textarea') return;
