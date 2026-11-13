@@ -16,6 +16,7 @@
 //       `exact`; with `end` empties or fewer the search goes on to the end of the game — engine.js lv.end), no book, no clock: the result depends only on the settings. Defaults: ../../weights.bin.gz, 10,16,18.
 //       --ta / --tb: Multi-ProbCut's t (1.5 in the game; 0 = off). The same weights and settings on both sides = the
 //       balance between the side to move first and the other (black and white with --ply 10 openings).
+//       --ma / --mb: the least remaining depth Multi-ProbCut cuts at (2 since search v8, 2026-11-13; 3 = as before).
 //       Prints A's score, Elo and mean disc difference with their standard errors (by opening pair).
 #define _GNU_SOURCE
 #include <math.h>
@@ -28,7 +29,7 @@ typedef uint64_t u64; typedef uint32_t u32;
 double now(void) { struct timespec t; clock_gettime(CLOCK_REALTIME, &t); return t.tv_sec * 1e3 + t.tv_nsec / 1e6; }   // (the engine's clock)
 
 typedef struct {   // one engine instance (its own copy of the library: its own tables)
-  void *h; Model M; double A, B, C, t;
+  void *h; Model M; double A, B, C, t; int mmin;   /* mmin: Multi-ProbCut from this remaining depth (search v8: 2, before 3) */
   int (*search)(u32, u32, u32, u32, int, int, int, int, int);
   int (*solve)(u32, u32, u32, u32, int, int, int, int, int);
   void (*set_state)(double, double, int, double, double, double, double, int, int, int, int, int);
@@ -66,7 +67,7 @@ static int load(Eng *E, const char *so, const char *wf) {
 }
 #define lo32(x) ((u32)(x))
 #define hi32(x) ((u32)((x) >> 32))
-static void st(Eng *E) { E->set_state(0, 0, E->t > 0, E->t > 0 ? E->t : 1.5, E->A, E->B, E->C, 3, 13, 18, 2, 8); }
+static void st(Eng *E) { E->set_state(0, 0, E->t > 0, E->t > 0 ? E->t : 1.5, E->A, E->B, E->C, E->mmin, 13, 18, 2, 8); }   /* (search v8: Multi-ProbCut from remaining depth 2, as engine.js minDepthW; --ma / --mb) */
 // engine.js rootPVS (one thread)
 static int rootPVS(Eng *E, u64 P, u64 O, const int *mv, int n, int depth, int exact, int alpha, int beta, int *bm) {
   const int e = 64 - rv_pc(P | O); int best = -99999; *bm = mv[0];
@@ -131,11 +132,12 @@ static int openings(int argc, char **argv) {
   return 0;
 }
 static int match(int argc, char **argv) {
-  const char *wa = "../../weights.bin.gz", *wb = "../../weights.bin.gz", *la = "10,16,18", *lb = 0, *gf = 0, *so = "./rveng.so"; double ta = 1.5, tb = 1.5; long N = 1000; int PR = 0;
+  const char *wa = "../../weights.bin.gz", *wb = "../../weights.bin.gz", *la = "10,16,18", *lb = 0, *gf = 0, *so = "./rveng.so"; double ta = 1.5, tb = 1.5; int ma = 2, mb = 2; long N = 1000; int PR = 0;
   for (int i = 3; i < argc; i++) {
     if (!strcmp(argv[i], "--wa")) wa = argv[++i]; else if (!strcmp(argv[i], "--wb")) wb = argv[++i];
     else if (!strcmp(argv[i], "--a")) la = argv[++i]; else if (!strcmp(argv[i], "--b")) lb = argv[++i];
     else if (!strcmp(argv[i], "--ta")) ta = atof(argv[++i]); else if (!strcmp(argv[i], "--tb")) tb = atof(argv[++i]);
+    else if (!strcmp(argv[i], "--ma")) ma = atoi(argv[++i]); else if (!strcmp(argv[i], "--mb")) mb = atoi(argv[++i]);
     else if (!strcmp(argv[i], "--n")) N = atol(argv[++i]); else if (!strcmp(argv[i], "--procs")) PR = atoi(argv[++i]);
     else if (!strcmp(argv[i], "--games")) gf = argv[++i]; else if (!strcmp(argv[i], "--engine")) so = argv[++i];
   }
@@ -151,7 +153,7 @@ static int match(int argc, char **argv) {
     if (pipe(pipes[k])) return 1;
     if (fork() == 0) {
       Eng A, B; if (load(&A, so, wa) || load(&B, so2, wb)) _exit(1);
-      levelOf(&A, la); levelOf(&B, lb); A.t = ta; B.t = tb;
+      levelOf(&A, la); levelOf(&B, lb); A.t = ta; B.t = tb; A.mmin = ma; B.mmin = mb;
       FILE *o = fdopen(pipes[k][1], "w"); char r1[160], r2[160];
       for (long i = k; i < N; i += PR) { const int d1 = game(&A, &B, op[i].P, op[i].O, r1), d2 = -game(&B, &A, op[i].P, op[i].O, r2); fprintf(o, "%ld %d %d %s %s\n", i, d1, d2, r1, r2); fflush(o); }
       _exit(0);
@@ -186,6 +188,6 @@ int main(int argc, char **argv) {
   if (argc >= 4 && !strcmp(argv[1], "openings")) return openings(argc, argv);
   if (argc >= 3 && !strcmp(argv[1], "match")) return match(argc, argv);
   fprintf(stderr, "usage: rvmatch openings pairs.bin openings.bin [--ply 10] [--max 1] [--n 3000]\n"
-                  "       rvmatch match openings.bin [--wa a.bin.gz] [--wb b.bin.gz] [--a depth,exact,wld] [--b …] [--ta 1.5] [--tb 1.5] [--n 1000] [--procs N] [--games out.txt]\n");
+                  "       rvmatch match openings.bin [--wa a.bin.gz] [--wb b.bin.gz] [--a depth,exact,wld] [--b …] [--ta 1.5] [--tb 1.5] [--ma 2] [--mb 2] [--n 1000] [--procs N] [--games out.txt]\n");
   return 1;
 }

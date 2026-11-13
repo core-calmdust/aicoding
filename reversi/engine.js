@@ -434,7 +434,9 @@ function sortMoves(base, n) { // insertion sort descending by SC
 
 // -------------------------------------------------------- Multi-ProbCut
 // sigma (centi-discs) of (deep - shallow) search values, fitted on sample positions: s = A + B*depth + C*empties
-const MPC = { on: true, t: 1.5, A: 357.32, B: 1.1, C: -3.14, minDepth: 3 }; // fitted on 700 sample positions (depths 0-10)
+const MPC = { on: true, t: 1.5, A: 357.32, B: 1.1, C: -3.14, minDepth: 3, minDepthW: 2 }; // fitted on 700 sample positions (depths 0-10)
+// (search v8, 2026-11-13) minDepthW: engine.c (WebAssembly) cuts from remaining depth 2 too, with the evaluation as the probe (its sigma from
+// the same formula matches the measured one); the JS fallback stays at 3. MODEL_CARD.md「探索 v8」
 const mpcShallow = d => 2 * (d >> 2) + (d & 1); // ~d/2, same parity as d
 // -------------------------------------------------------- midgame PVS
 // ---- incremental pattern indices: per ply, A = indices with side-to-move coded 1 / opponent 2, B = colours swapped
@@ -763,7 +765,7 @@ function wasmWeights() {
 }
 function wasmIn() {
   if (WX.set_node_max) WX.set_node_max(nodeMax);
-  WX.set_state(nodes, deadline === Infinity ? 0 : deadline, MPC.on ? 1 : 0, MPC.t, MPC.A, MPC.B, MPC.C, MPC.minDepth, TUNE.evalMin, TUNE.searchMin, TUNE.sDepth, TUNE.kE);
+  WX.set_state(nodes, deadline === Infinity ? 0 : deadline, MPC.on ? 1 : 0, MPC.t, MPC.A, MPC.B, MPC.C, MPC.minDepthW, TUNE.evalMin, TUNE.searchMin, TUNE.sDepth, TUNE.kE);
 }
 function wasmOut(v) { nodes = WX.get_nodes(); if (WX.get_aborted()) { aborted = true; throw ABORT; } return v; }
 function search(pl, ph, ol, oh, depth, alpha, beta, ply, passed) {

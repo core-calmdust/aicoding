@@ -99,6 +99,7 @@ cc -O3 -o rvmatch rvmatch.c -ldl -lz -lm
 ./rvmatch match op10.bin --a 11,16,18 --b 10,16,18 --n 2000
 # 先後の釣り合い：A・B を同じにして「先に打つ側の成績」を見る
 ./rvmatch match op10.bin --n 3000
+./rvmatch match op10.bin --ma 3 --mb 2 --n 2000                           # 探索 v8 の MPC（残り深さ2から）と以前（3から）を同じ深さで（rveng.so は新しい engine.c）
 ```
 - 出力：A の得点率・Elo・平均石差（± は標準誤差。**2倍を超えたら差がある**と見てよい）、先に打つ側／後に打つ側の別。
 - `--a 深さ,完全読み,勝敗読み[,end]`（今の Lv.20 は `13,20,22,26`。4つ目は「このマス数以下なら終局まで読む」＝ `engine.js` の `lv.end`、省くと なし）、`--procs`（既定は全コア）、`--ta 0`（MPC なし）、`--games out.txt`（棋譜）。
