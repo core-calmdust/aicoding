@@ -185,6 +185,9 @@ html[dir=rtl] .grc,html[lang=ar] .grc{direction:rtl}
   body.it-on .mtabs .grc-tab{display:flex}
   body.it-on .grc-menu, body.it-on .grc-ic{display:none!important}
   body.it-on .grc-card{display:block}
+  /* (2026-11-13) the 戦績 tab as the online tab: a page of its own over the game, above the tab bar — no scrolling to it */
+  body.it-on[data-it=rec]:not(.mtab-online) .grc-card{position:fixed!important;left:0!important;right:0!important;top:0!important;bottom:var(--it-b,calc(50px + env(safe-area-inset-bottom)))!important;z-index:44!important;margin:0!important;border-radius:0!important;border:0!important;overflow-y:auto!important;overscroll-behavior:contain;background:var(--a-paper,var(--bg,#14100c))!important;padding-top:env(safe-area-inset-top)!important}
+  html.atlas-skin body.it-on[data-it=rec]:not(.mtab-online) .grc-card{background:radial-gradient(circle at 1px 1px,rgba(200,150,60,.16) 1.4px,transparent 1.6px) 0 0/22px 22px,#fffaf0!important}
 }
 .grc-card{display:none;padding:0!important;overflow:hidden}
 .grc.grc-inl{width:auto!important;height:auto!important;max-height:none!important;display:block!important;border:0!important;box-shadow:none!important;border-radius:0!important;background:transparent!important}
@@ -303,6 +306,11 @@ function init(o) {
       const card = document.createElement('div'); card.className = 'card grc-card'; card.id = 'grcCard';
       inl = document.createElement('div'); inl.className = 'grc grc-inl'; card.appendChild(inl); kf.after(card);
       inl.addEventListener('click', onClick);
+      // its own page (fixed, over the game) lives straight in <body>: inside the scrolling column a fixed box is placed and moved with it
+      const home = () => { const on = document.body.dataset.it === 'rec' && !document.body.classList.contains('mtab-online') && InfoTabs.phone();
+        if (on && card.parentNode !== document.body) { document.body.appendChild(card); render(); }
+        else if (!on && card.previousElementSibling !== kf) kf.after(card); };
+      new MutationObserver(home).observe(document.body, { attributes: true, attributeFilter: ['data-it', 'class'] }); addEventListener('resize', home);
       const add = () => { const b = InfoTabs.add('rec', card, tx('btn'), ICON); if (!b) return setTimeout(add, 200); tb = b; tb.classList.add('grc-tab-it'); b.addEventListener('click', () => { confirmOn = false; render(); }); render(); };
       add(); relabel(); return;
     }

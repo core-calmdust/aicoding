@@ -182,6 +182,7 @@ function init(tries) {
     const again = cur === b.dataset.it && !document.body.classList.contains('mtab-online');
     cur = b.dataset.it; saved = true; try { localStorage.setItem(KEY, cur); } catch (x) {}
     apply();
+    if (cur === 'rec') { requestAnimationFrame(fix); return; }   // (戦績: its own page, as the online tab — no scrolling)
     const sc = scroller(), H = sc.clientHeight, top0 = sc.getBoundingClientRect().top;
     // a shorter box: keep the view inside its new length in the same frame
     { const max = sc.scrollHeight - H; if (sc.scrollTop > max) sc.scrollTop = Math.max(0, max); }
