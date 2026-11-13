@@ -44,7 +44,7 @@
       name: N('ブラックジャック', 'Blackjack', '21点', '블랙잭', 'Blackjack', 'Blackjack', 'Blackjack', 'Blackjack', 'ब्लैकजैक', 'بلاك جاك', 'Блэкджек', '21點', 'Blackjack', 'Blackjack') },
     { id: 'solitaire', cat: 'puzzle', store: ['aicoding-solitaire'], href: 'solitaire/', color: '#2f6b4f', released: '2026-10-28', tags: ['classic', 'card', 'daily', 'variants', 'mobile'], total: {},
       name: N('ソリティア', 'Solitaire', '纸牌接龙', '솔리테어', 'Solitario', 'Solitaire', 'Paciência', 'Solitär', 'सॉलिटेयर', 'سوليتير', 'Пасьянс', '接龍', 'Solitaire', 'Solitaire') },
-    { id: 'peg', cat: 'puzzle', store: ['aicoding-peg'], href: 'peg/', color: '#7d5ba6', beta: true, released: '2026-11-11', tags: ['classic', 'daily', 'puzzles', 'variants', 'mobile'], total: { pz: 337 },
+    { id: 'peg', cat: 'puzzle', store: ['aicoding-peg'], href: 'atlas/#games/peg', only3d: true, color: '#7d5ba6', beta: true, released: '2026-11-11', tags: ['classic', 'daily', 'puzzles', 'variants', 'mobile'], total: { pz: 337 },
       name: N('ペグソリテール', 'Peg Solitaire', '孔明棋', '페그 솔리테르', 'Solitario de clavijas', 'Solitaire', 'Resta Um', 'Solitär', 'पेग सॉलिटेयर', 'سوليتير الأوتاد', 'Солитер', '孔明棋', 'Peg Solitaire', 'Peg Solitaire') },
     { id: 'checkers', cat: 'chess', store: ['aicoding-checkers', 'checkers-online-name'], href: 'checkers/', color: '#8e2a3c', released: '2026-10-21', tags: ['classic', 'ai', 'online', 'rated', 'daily', 'lessons', 'puzzles', 'openings', 'mobile'], total: { pz: 500, ls: 13 },
       name: N('チェッカー V2', 'Checkers V2', '跳棋（国际跳棋·英式） V2', '체커 V2', 'Damas V2', 'Dames anglaises V2', 'Damas V2', 'Dame V2', 'चेकर्स V2', 'الداما V2', 'Шашки V2', '西洋跳棋（英式） V2', 'Dam V2', 'Dama V2') },
