@@ -123,25 +123,32 @@ EXPORT(ttprobe) int ttprobe(u32 h1, u32 h2) { return tlook(h1, h2, IO, IO + 1, I
 typedef struct { i8 sq[N], cap[N]; int res[3], side, ply, fr; u32 h1, h2; } P;
 static inline int own(int x) { return x ? (x <= 2 ? 1 : 2) : 0; }
 static inline int isQ(int x) { return x == 2 || x == 4; }
-static int trapped(const P *p, int t, int pl) {
+static inline int trapped(const P *p, int t, int pl) {
   int o = 3 - pl;
   for (int d = 0; d < 3; d++) { int a = NB[t][d], b = NB[t][d + 3]; if (a >= 0 && b >= 0 && own(p->sq[a]) == o && own(p->sq[b]) == o) return 1; }
   return 0;
 }
-static int pending(const P *p, int pl, int *out) {   // queen first, then guards in index order
+// (2026-11-13, speed) the two sides' pieces (at most 7 each) in the order of the cells: one scan of the board per node, used by
+// the move generator, the evaluation and the phase test instead of a scan each — the same moves in the same order
+typedef struct { int L[3][16], n[3]; } PLs;
+static inline void collect(const P *p, PLs *pl) {
+  pl->n[1] = pl->n[2] = 0;
+  for (int i = 0; i < N; i++) { const int x = p->sq[i]; if (x) { const int w = x <= 2 ? 1 : 2; if (pl->n[w] < 16) pl->L[w][pl->n[w]++] = i; } }
+}
+static int pendingPL(const P *p, int pl, int *out, const PLs *ps) {   // queen first, then guards in index order
   int n = 0, q = -1;
-  for (int i = 0; i < N; i++) if (p->cap[i] && own(p->sq[i]) == pl) { if (isQ(p->sq[i])) q = i; else out[n++] = i; }
+  for (int k = 0; k < ps->n[pl]; k++) { const int i = ps->L[pl][k]; if (p->cap[i]) { if (isQ(p->sq[i])) q = i; else out[n++] = i; } }
   if (q >= 0) { for (int j = n; j > 0; j--) out[j] = out[j - 1]; out[0] = q; n++; }
   return n;
 }
-static int genMoves(const P *p, int *out) {
+static int genMovesPL(const P *p, int *out, const PLs *ps) {
   int pl = p->side + 1, n = 0;
   if (p->res[pl] > 0) {
     for (int t = 0; t < N; t++) if (!p->sq[t] && t != IDXC && !trapped(p, t, pl)) out[n++] = RES + 92 * t;
     if (!n) for (int t = 0; t < N; t++) if (!p->sq[t] && t != IDXC) out[n++] = RES + 92 * t;
     return n;
   }
-  int pd[N], np = pending(p, pl, pd);
+  int pd[16], np = pendingPL(p, pl, pd, ps);
   if (np) {
     int qd = isQ(p->sq[pd[0]]), nl = qd ? 1 : np;
     for (int li = 0; li < nl; li++) {
@@ -156,8 +163,8 @@ static int genMoves(const P *p, int *out) {
     if (!n) out[n++] = PASS;
     return n;
   }
-  for (int f = 0; f < N; f++) {
-    int x = p->sq[f]; if (own(x) != pl) continue;
+  for (int k = 0; k < ps->n[pl]; k++) {
+    const int f = ps->L[pl][k], x = p->sq[f];
     int rf = RING[f], q = isQ(x);
     for (int d = 0; d < 6; d++) {
       int t = NB[f][d];
@@ -169,6 +176,7 @@ static int genMoves(const P *p, int *out) {
   if (!n) out[n++] = PASS;
   return n;
 }
+static int genMoves(const P *p, int *out) { PLs ps; collect(p, &ps); return genMovesPL(p, out, &ps); }
 static int capsOf(const P *p, int m, int *out) {
   if (m == PASS) return 0;
   int f = m % 92, t = m / 92;
@@ -209,10 +217,12 @@ static int terminal(const P *p, int ply) {
   if (p->ply >= RCAP) return drawV(p);
   return NOTOVER;
 }
-static int sideScore(const P *p, int pl) {
+// (2026-11-13, speed: the evaluation scans the board once for the two sides' pieces (at most 7 each) and its parts walk those
+// lists instead of the 91 cells — the same values. claude/agon-spec.md「高速化」)
+static int sideScore(const P *p, int pl, const int *own_, int nOwn) {
   int o = 3 - pl, G = pl == 1 ? 1 : 3, QK = G + 1, v = 0, ringG = 0;
-  for (int i = 0; i < N; i++) {
-    int x = p->sq[i]; if (own(x) != pl) continue;
+  for (int k = 0; k < nOwn; k++) {
+    const int i = own_[k], x = p->sq[i];
     if (x == QK) { v -= p->cap[i] ? 80 + RING[i] * 20 : RING[i] * 110; if (i == IDXC && !p->cap[i]) v += 260; }
     else { if (p->cap[i]) v -= 120 + 4 * 100; else { v -= (RING[i] - 1) * 100; if (RING[i] == 1) ringG++; } }
   }
@@ -223,35 +233,62 @@ static int sideScore(const P *p, int pl) {
   if (ringG >= 5 && !onThrone(p, pl)) v -= 120;
   return v;
 }
-static TLS int HSEEN[256], hStamp = 0;
-static int hangN(const P *p, int pl) {
-  int o = 3 - pl, n = 0;
-  if (++hStamp > 2000000000) { for (int i = 0; i < 256; i++) HSEEN[i] = 0; hStamp = 1; }
-  int st = hStamp;
-  for (int f = 0; f < N; f++) {
-    if (own(p->sq[f]) != o || p->cap[f]) continue;
-    int rf = RING[f], qf = isQ(p->sq[f]);
-    for (int d = 0; d < 6; d++) {
-      int t = NB[f][d]; if (t < 0 || p->sq[t] || RING[t] > rf || (t == IDXC && !qf)) continue;
+// the number of pl's pieces that the other side (o) could capture with one move: a piece a of pl (not captured) with an o
+// piece b right behind it in a direction e and, on the other side of a, an empty cell t that an o piece f (not captured,
+// next to t, not from a lower ring, the centre only for the queen) may step onto without being trapped there.
+// (2026-11-13: counted from the victims' side — the same number as the loop over o's moves, a fraction of the work.)
+static int hangN(const P *p, int pl, const int *own_, int nOwn, int lim) {   // own_: the cells of pl's pieces; stops at lim
+  const int o = 3 - pl; int n = 0;
+  for (int k = 0; k < nOwn; k++) {
+    const int a = own_[k];
+    if (p->cap[a]) continue;
+    for (int e = 0; e < 6; e++) {
+      const int b = NB[a][e]; if (b < 0 || own(p->sq[b]) != o) continue;
+      const int t = NB[a][e < 3 ? e + 3 : e - 3]; if (t < 0 || p->sq[t]) continue;
       if (trapped(p, t, o)) continue;
-      for (int e = 0; e < 6; e++) { int a = NB[t][e]; if (a < 0 || own(p->sq[a]) != pl || p->cap[a] || HSEEN[a] == st) continue; int b = NB[a][e]; if (b >= 0 && b != f && own(p->sq[b]) == o) { HSEEN[a] = st; n++; } }
+      int ok = 0; const int rt = RING[t];
+      for (int d = 0; d < 6 && !ok; d++) {
+        const int f = NB[t][d]; if (f < 0 || f == b) continue;
+        const int x = p->sq[f];
+        if (own(x) != o || p->cap[f] || rt > RING[f] || (t == IDXC && !isQ(x))) continue;
+        ok = 1;
+      }
+      if (ok) { n++; break; }
     }
+    if (n >= lim) break;
   }
   return n;
 }
-static int evaluate(const P *p) {
+static int evaluatePL(const P *p, const PLs *ps) {
   int me = p->side + 1, op = 3 - me;
-  int v = sideScore(p, me) - sideScore(p, op) + 40;
+  const int (*L)[16] = ps->L, *n = ps->n;
+  int v = sideScore(p, me, L[me], n[me]) - sideScore(p, op, L[op], n[op]) + 40;
   if (!(p->res[1] + p->res[2] > 0)) {
-    int hn = hangN(p, me); if (hn > 1) v -= (hn - 1) * 70 * 2;
-    int gn = hangN(p, op); if (gn) v += 35;
+    int hn = hangN(p, me, L[me], n[me], 99); if (hn > 1) v -= (hn - 1) * 70 * 2;
+    int gn = hangN(p, op, L[op], n[op], 1); if (gn) v += 35;
   }
   return v;
 }
+static int evaluate(const P *p) { PLs ps; collect(p, &ps); return evaluatePL(p, &ps); }
+static inline int isMovePhasePL(const P *p, const PLs *ps) { int pl = p->side + 1; if (p->res[pl] > 0) return 0; for (int k = 0; k < ps->n[pl]; k++) if (p->cap[ps->L[pl][k]]) return 0; return 1; }
 static int isMovePhase(const P *p) { int pl = p->side + 1; if (p->res[pl] > 0) return 0; for (int i = 0; i < N; i++) if (p->cap[i] && own(p->sq[i]) == pl) return 0; return 1; }
-static int seenBefore(u32 h1, u32 h2) { for (int i = 0; i < rhN; i++) if (RH1[i] == h1 && RH2[i] == h2) return 1; return 0; }
-static double moveScore(const P *p, int m, int ttm, int k) {
-  if (m == ttm) return 1e9; if (m == k) return 1e8; if (m == PASS) return -1e6;
+// (2026-11-13, speed) the game's positions before the search (RH[0 .. rhBase), fixed during a search) behind a 4096-bit filter
+// of their h1: a position whose bit is not set is in none of them, so only the line being searched is compared one by one.
+// rhBuild at every place that loads the history (abRoot, search() from the page, a helper's spLoadPos). The same answers.
+static TLS u64 RHF[64]; static TLS int rhBase = 0;
+static void rhBuild(int n) {
+  for (int i = 0; i < 64; i++) RHF[i] = 0;
+  for (int i = 0; i < n; i++) { const u32 k = RH1[i] & 4095; RHF[k >> 6] |= 1ULL << (k & 63); }
+  rhBase = n;
+}
+static int seenBefore(u32 h1, u32 h2) {
+  const int base = rhBase <= rhN ? rhBase : 0;
+  if (base) { const u32 k = h1 & 4095; if ((RHF[k >> 6] >> (k & 63)) & 1) for (int i = 0; i < base; i++) if (RH1[i] == h1 && RH2[i] == h2) return 1; }
+  for (int i = base; i < rhN; i++) if (RH1[i] == h1 && RH2[i] == h2) return 1;
+  return 0;
+}
+static int moveScore(const P *p, int m, int ttm, int k) {   // (whole numbers: as the doubles before, compared the same way)
+  if (m == ttm) return 1000000000; if (m == k) return 100000000; if (m == PASS) return -1000000;
   int f = m % 92, t = m / 92;
   if (f == RES || p->cap[f]) return 1000 - RING[t] * 10;
   int cs[6], nc = capsOf(p, m, cs);
@@ -260,11 +297,11 @@ static double moveScore(const P *p, int m, int ttm, int k) {
   if (RING[t] == 1) s += 60;
   return s;
 }
-static TLS double OSC[MAXMV];
+static TLS int OSC[MAXMV];
 static void orderMoves(const P *p, int *L, int n, int ttm, int ply) {
   int k = (ply >= 0 && ply < MAXPLY && killers[ply]) ? killers[ply] : -1, out[MAXMV];
   for (int i = 0; i < n; i++) {
-    int m = L[i]; double v = moveScore(p, m, ttm, k);
+    int m = L[i]; const int v = moveScore(p, m, ttm, k);
     int j = i; while (j > 0 && OSC[j - 1] < v) { OSC[j] = OSC[j - 1]; out[j] = out[j - 1]; j--; }
     OSC[j] = v; out[j] = m;
   }
@@ -300,11 +337,12 @@ static int qsearch(const P *p, int a, int b, int ply, int qd) {
 #endif
   if ((((long long)nodes) & 1023) == 0) POLL();
   int tv = terminal(p, ply); if (tv != NOTOVER) return tv;
-  int stand = evaluate(p);
-  if (qd <= 0 || !isMovePhase(p)) return stand;
+  PLs ps; collect(p, &ps);
+  int stand = evaluatePL(p, &ps);
+  if (qd <= 0 || !isMovePhasePL(p, &ps)) return stand;
   if (stand >= b) return stand;
   if (stand > a) a = stand;
-  int best = stand, L[MAXMV], n = genMoves(p, L), cs[6];
+  int best = stand, L[MAXMV], n = genMovesPL(p, L, &ps), cs[6];
   for (int i = 0; i < n; i++) {
     int m = L[i];
     if (m == PASS || !capsOf(p, m, cs)) continue;
@@ -385,7 +423,7 @@ static int spFillPos(SPt *s, const P *p) {
   return 1;
 }
 static void spLoadPos(const SPt *s, int top, int fresh) {
-  *slot(s->ply) = s->pos; rhN = s->rhn; for (int i = 0; i < rhN; i++) { RH1[i] = s->rh1[i]; RH2[i] = s->rh2[i]; }
+  *slot(s->ply) = s->pos; rhN = s->rhn; for (int i = 0; i < rhN; i++) { RH1[i] = s->rh1[i]; RH2[i] = s->rh2[i]; } rhBuild(rhN);
   (void)top; (void)fresh;
 }
 static int spSearch(SPt *s, int i, int a) {
@@ -411,7 +449,7 @@ static P ROOTP;
 __attribute__((export_name("search"))) int csearch(int d, int a, int b, int ply) {
   P *p = &ROOTP;
   for (int i = 0; i < N; i++) { p->sq[i] = SQ[i]; p->cap[i] = CAP[i]; }
-  p->side = IO[8]; p->ply = IO[9]; p->h1 = (u32)IO[10]; p->h2 = (u32)IO[11]; p->fr = IO[12]; rhN = IO[13];
+  p->side = IO[8]; p->ply = IO[9]; p->h1 = (u32)IO[10]; p->h2 = (u32)IO[11]; p->fr = IO[12]; rhN = IO[13]; rhBuild(rhN);
   p->res[0] = 0; p->res[1] = IO[14]; p->res[2] = IO[15]; rootSide = IO[16]; RCAP = IO[17];
   return search(p, d, a, b, ply);
 }
@@ -424,7 +462,7 @@ static TLS int histN;
 static void abRoot(void) {
   P *p = &ST[0];
   for (int i = 0; i < N; i++) { p->sq[i] = SQ[i]; p->cap[i] = CAP[i]; }
-  p->side = IO[8]; p->ply = IO[9]; p->h1 = (u32)IO[10]; p->h2 = (u32)IO[11]; p->fr = IO[12]; histN = rhN = IO[13];
+  p->side = IO[8]; p->ply = IO[9]; p->h1 = (u32)IO[10]; p->h2 = (u32)IO[11]; p->fr = IO[12]; histN = rhN = IO[13]; rhBuild(rhN);
   p->res[0] = 0; p->res[1] = IO[14]; p->res[2] = IO[15]; rootSide = IO[16]; RCAP = IO[17];
 }
 static int rootChild(int m, int d, int a, int b) { play(&ST[1], &ST[0], m); rhN = histN; return -search(&ST[1], d - 1, a, b, 1); }
