@@ -5,9 +5,9 @@
    straight grain (柾目) and a crisp lacquer-black grid with star points (星);
    the legs are the traditional gardenia-fruit shape (くちなしの実).
    Two looks:
-     'lacquer'  black urushi sides with gold 沈金 landscapes in a cusped
-                cartouche (pagoda, halls, pines, bridge, moon, mist, waves),
-                a different scene on each side; black lacquered legs
+     'lacquer'  black urushi sides with gold 蒔絵 pictures (山水楼閣 · 松に鶴 · 扇流し · 梅に月,
+                images/atlas/shogi3d/go-lacquer-<0…3>.webp), a different scene on each side;
+                black lacquered legs
      'kaya'     all natural kaya: dramatic flame grain on the sides, kaya legs
    Stones: slate black (那智黒, soft sheen) and clam-shell white (蛤) with fine
    growth stripes, a proper double-convex shape. Bowls (碁笥): turned mulberry
@@ -424,6 +424,10 @@
   function artMR(side, W, H) { art(side, W, H); return cv['gbArtMR' + side]; }
 
   /* ---------- materials (shared) ---------- */
+  const GIMG = (() => { try { return new URL('../../images/atlas/shogi3d/', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../images/atlas/shogi3d/'; } })(), GIMGV = '?v=1', itex = {};
+  function imgTex(name, srgb = true) { if (itex[name]) return itex[name];
+    const t = new (T().TextureLoader)().load(GIMG + name + '.webp' + GIMGV, () => { if (X.kick) X.kick(300); });
+    if (srgb) t.encoding = T().sRGBEncoding; t.anisotropy = 8; return (itex[name] = t); }
   const mats = {};
   function matsFor(n, margin, look) {
     const key = n + look; if (mats[key]) return mats[key];
@@ -440,12 +444,11 @@
       o.leg = M({ map: tex('gbLegK', kayaGrain('gbLegK', 256, 512, 5, { ring: 5 }), true, true), bumpScale: .002, roughness: .4, clearcoat: .35, clearcoatRoughness: .3 });
       o.bottom = M({ color: 0xb98a46, roughness: .8 });
     } else {
-      o.sides = [0, 1, 2, 3].map(s => {
-        const a = art(s, 2048, 640), m = M({ map: tex('gbArt' + s, a), bump: false, roughness: 1, metalness: 1, clearcoat: 1, clearcoatRoughness: .05 });
-        const mr = tex('gbArtMR' + s, artMR(s, 2048, 640), false); m.roughnessMap = mr; m.metalnessMap = mr;
-        m.emissiveMap = m.map; m.emissive = new TT.Color(.6, .52, .38);   // the gold keeps glowing even where it mirrors the dark floor
-        return m;
-      });
+      // (2026-11-13, the user: 伝統工芸品の質に) the four faces are 蒔絵 pictures made like the shogi 蒔絵 board's (atlas/tools/shogi-tex.html
+      // go0…go3: gold powders grain by grain, raised gold, engraved lines): 山水楼閣 · 松に鶴 · 扇流し · 梅に月 — the colour + a map
+      // (R height, G roughness, B metalness), a deep clear lacquer over all. The canvas-drawn 沈金 (art()) is no longer used.
+      o.sides = [0, 1, 2, 3].map(s => { const mm = imgTex('go-lacquer-' + s + '-m', false);
+        return M({ map: imgTex('go-lacquer-' + s), roughnessMap: mm, metalnessMap: mm, bumpMap: mm, bumpScale: .0035, roughness: 1, metalness: .5, clearcoat: .8, clearcoatRoughness: .08, envMapIntensity: 1.5 }); });
       o.leg = M({ color: 0x0c0908, roughness: .14, clearcoat: 1, clearcoatRoughness: .04 });
       o.bottom = M({ color: 0x130e0b, roughness: .6 });
     }

@@ -45,6 +45,7 @@ URL: https://core-calmdust.github.io/aicoding/go/ （2026-10-22 main に公開�
   - atlas/rules/go.js：ゴイシペン案内のルール整備10ステップ（9路、10言語）。
   - atlas/games/go.js：ちゃぶ台対局（9/13/19路、日本ルール、パス2回→自動整地、AIは ../go/engine.js、Lv1〜32（ちゃぶ台は分離していないので最強 I〜V も1スレッド）、レベルの rating はEGF換算）。ボードカードは2行目に「持ち時間｜碁盤サイズ」（1行目の強さ｜手番と同じ列）。
   - atlas/skin/go.js：go/?skin=atlas のフル3D（石の落下・取り上げアニメ、最終手、整地の死に石表示、5〜19路で盤再生成、盤デザイン「榧3D」「漆・沈金3D」）。盤の大きさは2D版とほぼ同じ（手前の側面と脚は少しはみ出す）。フル3Dではレッスン・詰碁の拡大表示はせず全盤表示。
+  - 3Dの「漆」盤の側面（2026-11-13 作り直し、五目並べと共通の `atlas/models/goban.js`）：canvas で描いた沈金（ベクター調）をやめ、将棋の蒔絵盤と同じ作り方の絵にした（金粉を粒単位で蒔く・高蒔絵の陰影・毛彫り）。4面：正面＝山水楼閣、右＝松に鶴（月・波）、奥＝扇流し（扇に金の飛鶴）、左＝梅に月（老梅・流水）。絵は `images/atlas/shogi3d/go-lacquer-<0…3>.webp` と `-m`（R高さ・G粗さ・B金属）、`atlas/tools/shogi-tex.html` の `makie('go0…go3')` で描いて `shogi-tex.py` で書き出す。材質は蒔絵盤と同じ（金属度 ×0.5、深い透明漆）。
   - atlas/app.js FULL_SKIN に go。
 
 ## 保存キー
