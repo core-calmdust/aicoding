@@ -8,6 +8,6 @@ self.addEventListener('message', function boot(e) {
   X.mt_stack(m.top); X.mt_thread(m.tls, m.id || 0);   // (id: the busy marks' owner, Praline)
   self.REVERSI_WX = Object.assign({}, X, { memory: m.mem });   // engine.js reads WX.memory
   if (m.ctl) self.REVERSI_SPLIT = m.ctl;   // (the endgame solve is split at the root over the threads: engine.js rootSplit)
-  importScripts('../engine.js?v=70');
+  importScripts('../engine.js?v=71');
   self.postMessage({ type: 'mtready' });
 });

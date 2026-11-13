@@ -1,6 +1,8 @@
 // Reversi search core in C (WebAssembly): the midgame PVS (pattern evaluation with incremental indices, Multi-ProbCut,
-// transposition table) and the exact endgame solver. The midgame is the same as engine.js's JS fallback (same nodes and
-// values); the endgame solver here is faster than the JS one (same exact scores). The JS root drivers call into it.
+// transposition table) and the exact endgame solver. The midgame without Multi-ProbCut (Lv.1-21) gives the same values as
+// engine.js's JS fallback; with it (search v7, 2026-11-13: the last ply on its own, a shallow table, speed-first ordering —
+// MODEL_CARD.md「探索 v7」) this search reads fewer nodes than the JS one, which stays as v6. The endgame solver here is
+// faster than the JS one (same exact scores). The JS root drivers call into it.
 // Build: tools/build-wasm.sh → engine-wasm.js (the module as base64, loaded by the worker with importScripts).
 // Boards are 64-bit (bit s = square s, a1 = 0); the JS side passes them as two 32-bit halves.
 typedef unsigned long long u64;
@@ -225,7 +227,10 @@ static int finalScore(u64 P, u64 O) {
 static i16 *W; static int WCAP;
 static int NINST, NPHASE, PHASE_SIZE, USE_EXT, EXT_OFF;
 static int I_OFF[MAXI], SQ_START[65], SQI[MAXI * 10], SQP[MAXI * 10];
-static TLS unsigned short STA[NSTK * MAXI], STB[NSTK * MAXI];   // pattern indices (< 3^10, fit 16 bits), a fixed stride of MAXI per ply so a child copies whole vectors
+/* (v7) the solver keeps the pattern indices from parent to child: IXP / IXO[ply] = the position whose indices are at ply
+   (0: none) — set by the solver itself just before it calls solve at ply, else initIdx as before */
+static TLS u64 IXP[NSTK], IXO[NSTK];
+static TLS unsigned short STA[NSTK * MAXI] __attribute__((aligned(16))), STB[NSTK * MAXI] __attribute__((aligned(16)));   // pattern indices (< 3^10, fit 16 bits), a fixed stride of MAXI per ply so a child copies whole vectors
 #ifdef MT
 static volatile int wLock;
 #endif
@@ -257,7 +262,22 @@ EXPORT(w_defer) void w_defer(void) { wDefer = 1; }
 EXPORT(w_ptr) i16 *w_ptr(void) { return W && WCAP >= WMAX_OLD ? W : w_alloc(WMAX_OLD); }
 EXPORT(w_max) int w_max(void) { return WMAX_OLD; }
 EXPORT(tab_ptr) int *tab_ptr(int k) { return k == 0 ? I_OFF : k == 1 ? SQ_START : k == 2 ? SQI : SQP; }
-EXPORT(set_patterns) void set_patterns(int ninst, int nphase, int phaseSize, int useExt, int extOff) { NINST = ninst; NPHASE = nphase; PHASE_SIZE = phaseSize; USE_EXT = useExt == 1 ? 4 : useExt; EXT_OFF = extOff; }
+/* (v7, 2026-11-13) DV[q]: the pattern index weights (3^k) of square q in every instance as one vector (0 where q is not in
+   the instance), so a child's indices are whole-vector adds per changed square (Egaroucid's SIMD feature update: one
+   vector add per flipped square instead of a scatter over the instances); NIV: the instances rounded up to 8 lanes.
+   PHB[discs]: the phase's offset in W (no division per evaluation). Built by set_patterns from the tables above. */
+static unsigned short DV[64][MAXI] __attribute__((aligned(16)));
+static int NIV = MAXI, PHB[65];
+EXPORT(set_patterns) void set_patterns(int ninst, int nphase, int phaseSize, int useExt, int extOff) {
+  NINST = ninst; NPHASE = nphase; PHASE_SIZE = phaseSize; USE_EXT = useExt == 1 ? 4 : useExt; EXT_OFF = extOff;
+  NIV = (ninst + 7) & ~7; if (NIV > MAXI) NIV = MAXI;
+  for (int q = 0; q < 64; q++) {   /* (built aside and written once: every thread of engine_mt.wasm writes the same values) */
+    unsigned short t[MAXI]; for (int i = 0; i < MAXI; i++) t[i] = 0;
+    for (int j = SQ_START[q]; j < SQ_START[q + 1]; j++) t[SQI[j]] += (unsigned short)SQP[j];
+    for (int i = 0; i < MAXI; i++) DV[q][i] = t[i];
+  }
+  for (int d = 0; d <= 64; d++) { int ply = d - 4, ph = ply < 0 ? 0 : (ply * NPHASE / 61); PHB[d] = (ph < NPHASE ? ph : NPHASE - 1) * PHASE_SIZE; }
+}
 static inline int phaseOf(int discs) { int ply = discs - 4, ph = (ply * NPHASE / 61); return ph < NPHASE ? ph : NPHASE - 1; }
 static inline int extSum(u64 P, u64 O, int base) {
   int mp = pc(genMoves(P, O)), mo = pc(genMoves(O, P));
@@ -281,18 +301,44 @@ static void initIdx(int ply, u64 P, u64 O) {
   for (u64 x = P; x; x &= x - 1) { int q = lsb(x); for (int j = SQ_START[q], e = SQ_START[q + 1]; j < e; j++) { STA[a0 + SQI[j]] += SQP[j]; STB[a0 + SQI[j]] += 2 * SQP[j]; } }
   for (u64 x = O; x; x &= x - 1) { int q = lsb(x); for (int j = SQ_START[q], e = SQ_START[q + 1]; j < e; j++) { STA[a0 + SQI[j]] += 2 * SQP[j]; STB[a0 + SQI[j]] += SQP[j]; } }
 }
-static void childIdx(int ply, int s, u64 f) {
-  int a0 = ply * MAXI, c0 = a0 + MAXI;
-  for (int i = 0; i < MAXI; i++) { STA[c0 + i] = STB[a0 + i]; STB[c0 + i] = STA[a0 + i]; }
-  for (int j = SQ_START[s], e = SQ_START[s + 1]; j < e; j++) { STA[c0 + SQI[j]] += 2 * SQP[j]; STB[c0 + SQI[j]] += SQP[j]; }
-  for (u64 x = f; x; x &= x - 1) { int q = lsb(x); for (int j = SQ_START[q], e = SQ_START[q + 1]; j < e; j++) { STA[c0 + SQI[j]] += SQP[j]; STB[c0 + SQI[j]] -= SQP[j]; } }
+/* (v7) a child's indices by whole vectors: A' = B + 2·DV[s] + ΣDV[flipped], B' = A + DV[s] − ΣDV[flipped] (16-bit lanes; the
+   same values as the scatter over SQ_START before). half: only A' (the child's own view — a leaf's evaluation needs no more) */
+#ifdef __wasm_simd128__
+static inline void childIdxV(int ply, int s, u64 f, int half) {
+  const v128_t *a = (const v128_t *)(STA + ply * MAXI), *b = (const v128_t *)(STB + ply * MAXI);
+  v128_t *ca = (v128_t *)(STA + ply * MAXI + MAXI), *cb = (v128_t *)(STB + ply * MAXI + MAXI);
+  const int nv = NIV >> 3;
+  v128_t F[MAXI / 8];
+  { const v128_t *d = (const v128_t *)DV[s]; for (int i = 0; i < nv; i++) F[i] = d[i]; }
+  if (half) {
+    for (int i = 0; i < nv; i++) F[i] = wasm_i16x8_add(F[i], F[i]);
+    for (u64 x = f; x; x &= x - 1) { const v128_t *d = (const v128_t *)DV[lsb(x)]; for (int i = 0; i < nv; i++) F[i] = wasm_i16x8_add(F[i], d[i]); }
+    for (int i = 0; i < nv; i++) ca[i] = wasm_i16x8_add(b[i], F[i]);
+    return;
+  }
+  v128_t G[MAXI / 8];
+  for (int i = 0; i < nv; i++) G[i] = wasm_i64x2_splat(0);
+  for (u64 x = f; x; x &= x - 1) { const v128_t *d = (const v128_t *)DV[lsb(x)]; for (int i = 0; i < nv; i++) G[i] = wasm_i16x8_add(G[i], d[i]); }
+  for (int i = 0; i < nv; i++) { ca[i] = wasm_i16x8_add(b[i], wasm_i16x8_add(wasm_i16x8_add(F[i], F[i]), G[i])); cb[i] = wasm_i16x8_sub(wasm_i16x8_add(a[i], F[i]), G[i]); }
 }
+#else
+static inline void childIdxV(int ply, int s, u64 f, int half) {
+  const unsigned short *a = STA + ply * MAXI, *b = STB + ply * MAXI; unsigned short *ca = STA + ply * MAXI + MAXI, *cb = STB + ply * MAXI + MAXI;
+  const int n = NIV; unsigned short G[MAXI];
+  for (int i = 0; i < n; i++) G[i] = 0;
+  for (u64 x = f; x; x &= x - 1) { const unsigned short *d = DV[lsb(x)]; for (int i = 0; i < n; i++) G[i] += d[i]; }
+  const unsigned short *d = DV[s];
+  for (int i = 0; i < n; i++) ca[i] = (unsigned short)(b[i] + 2 * d[i] + G[i]);
+  if (!half) for (int i = 0; i < n; i++) cb[i] = (unsigned short)(a[i] + d[i] - G[i]);
+}
+#endif
+static void childIdx(int ply, int s, u64 f) { childIdxV(ply, s, f, 0); }
 static void passIdx(int ply) {
   int a0 = ply * MAXI, c0 = a0 + MAXI;
-  for (int i = 0; i < MAXI; i++) { STA[c0 + i] = STB[a0 + i]; STB[c0 + i] = STA[a0 + i]; }
+  for (int i = 0; i < NIV; i++) { STA[c0 + i] = STB[a0 + i]; STB[c0 + i] = STA[a0 + i]; }
 }
 static int evalAt(int ply, u64 P, u64 O) {
-  int base = phaseOf(pc(P | O)) * PHASE_SIZE, a0 = ply * MAXI, s = W[base + PHASE_SIZE - 1];
+  int base = PHB[pc(P | O)], a0 = ply * MAXI, s = W[base + PHASE_SIZE - 1];
   for (int i = 0; i < NINST; i++) s += W[base + I_OFF[i] + STA[a0 + i]];
   if (USE_EXT) s += extSum(P, O, base);
   return (s * 100) / 32;
@@ -363,36 +409,45 @@ static inline void checkTime(void) {
 
 #define ET_SIZE (1 << 19)
 #define ET_MASK (ET_SIZE - 1)
-#ifndef MT
-static u64 EKP[ET_SIZE], EKO[ET_SIZE]; static i8 E_LO[ET_SIZE], E_HI[ET_SIZE], E_M[ET_SIZE]; static u8 E_V[ET_SIZE];
-#else
 /* MT (2026-11-09): the tables are written by many threads at once, so an entry is three 64-bit words checked against
    each other (k1 = P ^ data, k2 = O ^ data: an entry half written by another thread no longer matches and is a miss —
    before, the key of one position could be read with the bounds of another). The midgame table: buckets of 4 entries
    (the deepest / of this search kept, the shallowest / oldest replaced; before: one entry, always replaced, so the helpers'
    leaves wiped the lead's deep entries), 4M entries (96 MB) placed above the threads' slots by init(), and an age per
-   search (tt_new). data: lo (16) | hi (16) | depth + 1 (8) | move (8) | age (8). */
-#endif
+   search (tt_new). data: lo (16) | hi (16) | depth + 1 (8) | move (8) | age (8). (v7, 2026-11-13) the one-thread build's endgame
+   table is the same packed one (before: six arrays, so a probe touched three cache lines and a store six) */
 /* (2026-11-13) the one-thread build uses the same midgame table (buckets of 4, the deepest / newest kept): 2^18 buckets = 1M
    entries, the memory of the old one-entry table, and at depth 20 it reads about half the positions */
 typedef struct { u64 k1, k2, dt; } TTE;
 static TTE *TTB; static u32 TTM; static u32 TT_AGE = 1; static int TT_LOG;
 #define TT_LOG_MAX 20   /* buckets: 2^20 × 4 entries × 24 bytes */
-#ifdef MT
 static TTE ETB[ET_SIZE];   /* the endgame table: dt = empties (8, 0 = free) | move (8) | hi + 128 (8) | lo + 128 (8), low to high */
-#endif
 #define DT_LO(d) ((int)((d) & 0xFFFF) - 32768)
 #define DT_HI(d) ((int)(((d) >> 16) & 0xFFFF) - 32768)
 #define DT_D(d) ((int)(((d) >> 32) & 0xFF) - 1)
 #define DT_M(d) ((int)(i8)(((d) >> 40) & 0xFF))
 #define DT_A(d) ((u32)(((d) >> 48) & 0xFF))
-static inline TTE *ttFind(u64 P, u64 O, u32 h, u64 *out) {
-  TTE *b = TTB + ((h & TTM) << 2);
+/* (v7, 2026-11-13) the shallow table: the nodes of remaining depth <= SH_D (most of the nodes, each worth little) in a
+   small table of their own that stays in the cache (Edax's shallow_table), so their probes no longer miss the cache and
+   their entries no longer push out the deep ones. A node of depth SH_D + 1 that misses the main table looks here too (its
+   move from the iteration before). Shared by the threads like the main table (the same lock-free entries). */
+#ifndef SH_LOG
+#define SH_LOG 14
+#endif
+#define SH_D 2
+static TTE TTSH[4 << SH_LOG];
+static inline TTE *ttBucket(u32 h, int depth) { return depth <= SH_D ? TTSH + ((h & ((1u << SH_LOG) - 1)) << 2) : TTB + ((h & TTM) << 2); }
+static inline TTE *ttFindB(TTE *b, u64 P, u64 O, u64 *out) {
   for (int i = 0; i < 4; i++) { const u64 d = b[i].dt; if ((b[i].k1 ^ d) == P && (b[i].k2 ^ d) == O) { *out = d; return b + i; } }
   return 0;
 }
+static inline TTE *ttFind(u64 P, u64 O, u32 h, int depth, u64 *out) {
+  TTE *r = ttFindB(ttBucket(h, depth), P, O, out);
+  if (!r && depth == SH_D + 1) r = ttFindB(ttBucket(h, SH_D), P, O, out);
+  return r;
+}
 static void ttStore(u64 P, u64 O, u32 h, int depth, int move, int lo, int hi) {
-  TTE *b = TTB + ((h & TTM) << 2), *r = b; int rs = 1 << 30;
+  TTE *b = ttBucket(h, depth), *r = b; int rs = 1 << 30;
   const u64 nd = (u64)(u32)(lo + 32768) | (u64)(u32)(hi + 32768) << 16 | (u64)(u32)(depth + 1) << 32 | (u64)(u8)move << 40 | (u64)TT_AGE << 48;
   for (int i = 0; i < 4; i++) {
     const u64 d = b[i].dt;
@@ -410,6 +465,7 @@ EXPORT(tt_bits) int tt_bits(int n) { if (n > 0 && n <= TT_LOG) TTM = (1u << n) -
 #ifdef MT
 static TLS int ROT1;
 EXPORT(set_rot1) void set_rot1(int k) { ROT1 = k; }
+#endif
 static inline int etGet(u64 P, u64 O, int i, int *lo, int *hi, int *mv) {
   for (int k = 0; k < 2; k++) {
     const u64 d = ETB[i + k].dt;
@@ -417,7 +473,6 @@ static inline int etGet(u64 P, u64 O, int i, int *lo, int *hi, int *mv) {
   }
   return -1;
 }
-#endif
 static u32 hash(u64 P, u64 O) {   // = engine.js hash on the four 32-bit halves
   u32 pl = (u32)P, ph = (u32)(P >> 32), ol = (u32)O, oh = (u32)(O >> 32);
   u32 h = ((pl ^ 0x9E3779B9u) * 0x85EBCA6Bu) ^ ((ph + 0x7F4A7C15u) * 0xC2B2AE35u) ^ ((ol ^ 0x165667B1u) * 0x27D4EB2Fu) ^ ((oh + 0x61C88647u) * 0x9E3779B1u);
@@ -430,7 +485,8 @@ static TTE TTS1[4 << TT_LOG_ST];
 EXPORT(clear_tt) void clear_tt(void) {
   TTB = TTS1; TT_LOG = TT_LOG_ST; TTM = (1u << TT_LOG_ST) - 1;
   for (int i = 0; i < (4 << TT_LOG_ST); i++) { TTS1[i].k1 = 0; TTS1[i].k2 = 0; TTS1[i].dt = 0; }
-  for (int i = 0; i < ET_SIZE; i++) { E_V[i] = 0; E_M[i] = -1; }
+  for (int i = 0; i < (4 << SH_LOG); i++) { TTSH[i].k1 = 0; TTSH[i].k2 = 0; TTSH[i].dt = 0; }
+  for (int i = 0; i < ET_SIZE; i++) { ETB[i].k1 = 0; ETB[i].k2 = 0; ETB[i].dt = 0; }
 }
 #else
 static void ttAlloc(void) {   /* once (init): the midgame table above everything the page has placed (the threads' slots) */
@@ -443,6 +499,7 @@ static void ttAlloc(void) {   /* once (init): the midgame table above everything
 }
 EXPORT(clear_tt) void clear_tt(void) {
   if (TTB) __builtin_memset(TTB, 0, (sizeof(TTE) << 2) << TT_LOG);
+  __builtin_memset(TTSH, 0, sizeof TTSH);
   __builtin_memset(ETB, 0, sizeof ETB);
 }
 #endif
@@ -475,6 +532,32 @@ static void spOpen(SPt *sp, int kind, u64 P, u64 O, int depth, int alpha, int be
 static int END_SW;
 EXPORT(set_end) void set_end(int e) { END_SW = e; }
 static int solve(u64 P, u64 O, int alpha, int beta, int empties, int ply, int passed);
+static int searchI(u64 P, u64 O, int depth, int alpha, int beta, int ply, int passed);
+/* (v7, 2026-11-13) the last ply of the Multi-ProbCut search (remaining depth 1) on its own, as Edax's / Egaroucid's
+   shallow functions: no transposition table (a probe and a store per node, mostly cache misses, for positions that cost
+   less than the probe), no move list and no sort — the moves by square class (corners, edges, inner, X / C squares, about
+   the old SQV order) and each child evaluated straight from the parent's indices (only the child's own view, childIdxV half).
+   Each child still counts as a node, as before. */
+static const u64 PRIO[4] = { 0x8100000000000081ULL, 0x3C0081818181003CULL, 0x003C7E7E7E7E3C00ULL, 0x42C300000000C342ULL };
+static int search1(u64 P, u64 O, u64 m, int alpha, int beta, int ply, int ttMove, int *bm) {
+  int best = -32767;
+  if (ttMove >= 0 && ((m >> ttMove) & 1)) {   /* (the table's move first: the re-search of a node that failed high) */
+    const int s = ttMove; const u64 f = flips(s, P, O), nP = P | f | (1ULL << s), nO = O & ~f;
+    CHECK_NODES()
+    childIdxV(ply, s, f, 1);
+    best = -evalAt(ply + 1, nO, nP); *bm = s;
+    if (best > alpha) { alpha = best; if (alpha >= beta) return best; }
+    m &= ~(1ULL << s);
+  }
+  for (int k = 0; k < 4; k++) for (u64 c = m & PRIO[k]; c; c &= c - 1) {
+    const int s = lsb(c); const u64 f = flips(s, P, O), nP = P | f | (1ULL << s), nO = O & ~f;
+    CHECK_NODES()
+    childIdxV(ply, s, f, 1);
+    const int v = -evalAt(ply + 1, nO, nP);
+    if (v > best) { best = v; *bm = s; if (v > alpha) { alpha = v; if (alpha >= beta) return best; } }
+  }
+  return best;
+}
 static int searchI(u64 P, u64 O, int depth, int alpha, int beta, int ply, int passed) {
   CHECK_NODES()
   if (END_SW) {
@@ -484,6 +567,7 @@ static int searchI(u64 P, u64 O, int depth, int alpha, int beta, int ply, int pa
       if (a < -64) a = -64;
       if (b > 64) b = 64;
       if (b <= a) b = a + 1;
+      IXP[ply] = P; IXO[ply] = O;   /* (v7: our indices are the solver's) */
       const int v = solve(P, O, a, b, e, ply, passed);
       return aborted ? 0 : v * 100;
     }
@@ -493,7 +577,7 @@ static int searchI(u64 P, u64 O, int depth, int alpha, int beta, int ply, int pa
 #ifdef MT
   int ttAll = 0;   /* (v6) the entry is an upper bound: an ALL node */
 #endif
-  if (ttFind(P, O, h, &td)) {
+  if (ttFind(P, O, h, depth, &td)) {
     ttMove = DT_M(td);
 #ifdef MT
     ttAll = DT_LO(td) <= -32767;
@@ -514,6 +598,12 @@ static int searchI(u64 P, u64 O, int depth, int alpha, int beta, int ply, int pa
     passIdx(ply);
     int v = -searchI(O, P, depth, -beta, -alpha, ply + 1, 1);
     return aborted ? 0 : v;
+  }
+  if (depth == 1 && MPC_ON) {   /* (v7) the last ply: search1 */
+    int bm = -1; const int v = search1(P, O, m, alpha, beta, ply, ttMove, &bm);
+    if (aborted) return 0;
+    ttStore(P, O, h, 1, bm, v > alpha ? v : -32767, v < beta ? v : 32767);
+    return v;
   }
   if (MPC_ON && depth >= MPC_MIN && beta - alpha == 1 && MPC_A > 0) {
     int empties = 64 - pc(P | O), ds = 2 * (depth >> 2) + (depth & 1);
@@ -563,13 +653,22 @@ static int searchI(u64 P, u64 O, int depth, int alpha, int beta, int ply, int pa
     int s = MV[base + i], sc;
     MF[base + i] = 0;
     if (s == ttMove) sc = 1 << 29;
-    else if (ordDepth < 0) sc = SQV[s];
+    else if (ordDepth < 0) {
+      sc = SQV[s];
+      if (MPC_ON) {   /* (v7) remaining depth 2: fewest replies first (Egaroucid's / Edax's speed-first ordering), corners counted twice */
+        const u64 f = flips(s, P, O), om = genMoves(O & ~f, P | f | (1ULL << s));
+        MF[base + i] = f; sc -= 20 * (pc(om) + pc(om & 0x8100000000000081ULL));
+      }
+    }
     else {
       u64 f = flips(s, P, O), nP = P | f | (1ULL << s), nO = O & ~f;
       MF[base + i] = f;
-      childIdx(ply, s, f);
+      childIdxV(ply, s, f, ordDepth == 0);   /* (v7: an evaluation needs only the child's own view) */
       if (ordDepth == 0) sc = -evalAt(ply + 1, nO, nP);
-      else { sc = -searchI(nO, nP, ordDepth, -32000, 32000, ply + 1, 0); if (aborted) return 0; }
+      else {   /* (v7) the shallow search's window from 4 discs below alpha up (Edax's sort_alpha): moves far below alpha need no exact value */
+        const int lo = MPC_ON && alpha - 400 > -32000 ? alpha - 400 : -32000;
+        sc = -searchI(nO, nP, ordDepth, -32000, -lo, ply + 1, 0); if (aborted) return 0;
+      }
     }
     SC[base + i] = sc;
   }
@@ -726,7 +825,6 @@ static int solve3(u64 P, u64 O, int alpha, int beta, int x1, int x2, int x3, int
 }
 /* 4-7 empties: E = the empty squares, par = the quadrants with an odd number of them. The squares in odd quadrants
    first, each group by square class (corners, edges, inner, X and C squares last); a move must touch an opponent disc */
-static const u64 PRIO[4] = { 0x8100000000000081ULL, 0x3C0081818181003CULL, 0x003C7E7E7E7E3C00ULL, 0x42C300000000C342ULL };
 static const u64 QPAR[16] = { 0x0ULL, 0xF0F0F0FULL, 0xF0F0F0F0ULL, 0xFFFFFFFFULL, 0xF0F0F0F00000000ULL, 0xF0F0F0F0F0F0F0FULL, 0xF0F0F0FF0F0F0F0ULL,
   0xF0F0F0FFFFFFFFFULL, 0xF0F0F0F000000000ULL, 0xF0F0F0F00F0F0F0FULL, 0xF0F0F0F0F0F0F0F0ULL, 0xF0F0F0F0FFFFFFFFULL, 0xFFFFFFFF00000000ULL,
   0xFFFFFFFF0F0F0F0FULL, 0xFFFFFFFFF0F0F0F0ULL, 0xFFFFFFFFFFFFFFFFULL };
@@ -774,13 +872,6 @@ EXPORT(set_stab) void set_stab(int on, int mn) { STAB_ON = on; (void)mn; }
    of this solve can never be reached again and counts as free). E_V = the empties of the entry (0 = free) */
 static TLS int gRootE = 64;
 #define ET_MIN 8
-#ifndef MT
-static inline int etFind(u64 P, u64 O, int i) {
-  if (E_V[i] && EKP[i] == P && EKO[i] == O) return i;
-  if (E_V[i + 1] && EKP[i + 1] == P && EKO[i + 1] == O) return i + 1;
-  return -1;
-}
-#endif
 static int solve(u64 P, u64 O, int alpha, int beta, int empties, int ply, int passed) {
   if (empties <= SMALL) return solveSmall(P, O, alpha, beta, empties, passed);
 #ifdef MT
@@ -791,25 +882,15 @@ static int solve(u64 P, u64 O, int alpha, int beta, int empties, int ply, int pa
   int ti = -1, hb = -1, ttMove = -1;
   if (empties >= ET_MIN) {
     hb = hash(P, O) & ET_MASK & ~1;
-#ifndef MT
-    ti = etFind(P, O, hb);
-    if (ti >= 0) {
-      int lo = E_LO[ti], hi = E_HI[ti];
-#else
     int lo, hi, em;
     ti = etGet(P, O, hb, &lo, &hi, &em);
     if (ti >= 0) {
-#endif
       if (lo >= beta) return lo;
       if (hi <= alpha) return hi;
       if (lo == hi) return lo;
       if (lo > alpha) alpha = lo;
       if (hi < beta) beta = hi;
-#ifndef MT
-      ttMove = E_M[ti];
-#else
       ttMove = em;
-#endif
     }
   }
   if (STAB_ON && alpha >= STAB_T[empties]) {   // the opponent's stable discs bound our score from above
@@ -821,11 +902,12 @@ static int solve(u64 P, u64 O, int alpha, int beta, int empties, int ply, int pa
   if (!m) {
     if (passed) return finalScore(P, O);
     if (!genMoves(O, P)) return finalScore(P, O);
+    IXP[ply + 1] = IXO[ply + 1] = 0;
     int v = -solve(O, P, -beta, -alpha, empties, ply + 1, 1);
     return aborted ? 0 : v;
   }
   int base = ply * 36, n = 0, etc = empties >= 15, ev = empties >= T_EVALMIN && (m & (m - 1));
-  if (ev) initIdx(ply, P, O);   // the children's pattern indices incrementally (for the evaluation / shallow search below)
+  if (ev && !(IXP[ply] == P && IXO[ply] == O)) { initIdx(ply, P, O); IXP[ply] = P; IXO[ply] = O; }   // the children's pattern indices incrementally (for the evaluation / shallow search below; v7: kept from the parent when it made them)
   for (u64 x = m; x; x &= x - 1) MV[base + n++] = (i8)lsb(x);
   for (int i = 0; i < n; i++) {
     int s = MV[base + i];
@@ -833,24 +915,23 @@ static int solve(u64 P, u64 O, int alpha, int beta, int empties, int ply, int pa
     MF[base + i] = f;
     if (n == 1) break;
     if (etc) {
-#ifndef MT
-      int ci = etFind(nO, nP, hash(nO, nP) & ET_MASK & ~1);
-      if (ci >= 0 && -E_HI[ci] >= beta) return -E_HI[ci];
-#else
       int clo, chi, cm;
       if (etGet(nO, nP, hash(nO, nP) & ET_MASK & ~1, &clo, &chi, &cm) >= 0 && -chi >= beta) return -chi;
-#endif
     }
     if (s == ttMove) { SC[base + i] = 1 << 29; continue; }
     u64 om = genMoves(nO, nP);
-    int sc = -(pc(om) + 2 * pc(om & 0x8100000000000081ULL)) * 64;
+    /* (v7, 2026-11-13) the opponent's replies weigh more (Egaroucid / Edax "speed-first": fewest replies first, the cheapest
+       refutation of a null window): 64 → 128 per reply with the evaluation (13+ empties), 256 below (the replies first, the
+       square's value only between equals). Exact solves read 13–20% fewer nodes (MODEL_CARD.md「探索 v7」) */
+    int sc = -(pc(om) + 2 * pc(om & 0x8100000000000081ULL)) * (ev ? 128 : 256);
     if (empties > 14) sc -= pc(neighbours(nP) & ~(nP | nO)) * 8;
     sc += SQV[s];
     if (ev) {
-      childIdx(ply, s, f);
+      childIdxV(ply, s, f, empties < T_SEARCHMIN);   /* (an evaluation needs only the child's own view) */
       /* (2026-11-12) the ordering search gets a ply deeper every SOLVE_STEP empties above T_SEARCHMIN: with (13, 18, 2) and
          step 3 an exact solve at 27 empties takes a third of the time and a win/draw/loss solve half (the same values) */
-      if (empties >= T_SEARCHMIN) { int v = searchI(nO, nP, T_SDEPTH + (empties - T_SEARCHMIN) / SOLVE_STEP, -32000, 32000, ply + 1, 0); if (aborted) return 0; sc -= (v * T_KE) >> 4; }
+      /* (v7) a shallow search's value counts twice an evaluation's (2·T_KE) */
+      if (empties >= T_SEARCHMIN) { int v = searchI(nO, nP, T_SDEPTH + (empties - T_SEARCHMIN) / SOLVE_STEP, -32000, 32000, ply + 1, 0); if (aborted) return 0; sc -= (v * T_KE) >> 3; }
       else sc -= (evalAt(ply + 1, nO, nP) * T_KE) >> 4;
     }
     SC[base + i] = sc;
@@ -877,6 +958,8 @@ static int solve(u64 P, u64 O, int alpha, int beta, int empties, int ply, int pa
 #endif
     int s = MV[base + i];
     u64 f = MF[base + i], nP = P | f | (1ULL << s), nO = O & ~f; int v;
+    if (empties - 1 >= T_EVALMIN && (IXP[ply] == P && IXO[ply] == O)) { childIdx(ply, s, f); IXP[ply + 1] = nO; IXO[ply + 1] = nP; }   /* (v7) the child's indices from ours */
+    else IXP[ply + 1] = IXO[ply + 1] = 0;
 #ifdef MT
     u64 bk = 0; int mk = -1;
     if (empties >= busyE) {
@@ -902,19 +985,12 @@ static int solve(u64 P, u64 O, int alpha, int beta, int empties, int ply, int pa
     if (v > best) { best = v; bestMove = s; if (v > alpha) { alpha = v; if (alpha >= beta) break; } }
   }
   if (hb >= 0) {
-#ifndef MT
-    ti = etFind(P, O, hb);
-    if (ti < 0) { const int v0 = E_V[hb] > gRootE ? 0 : E_V[hb], v1 = E_V[hb + 1] > gRootE ? 0 : E_V[hb + 1]; ti = v0 <= v1 ? hb : hb + 1; }
-    EKP[ti] = P; EKO[ti] = O; E_V[ti] = (u8)empties; E_M[ti] = (i8)bestMove;
-    E_LO[ti] = (i8)(best > alpha0 ? best : -99); E_HI[ti] = (i8)(best < beta ? best : 99);
-#else
     int x0, x1, x2;
     ti = etGet(P, O, hb, &x0, &x1, &x2);
     if (ti < 0) { const int e0 = (int)(ETB[hb].dt & 0xFF), e1 = (int)(ETB[hb + 1].dt & 0xFF), v0 = e0 > gRootE ? 0 : e0, v1 = e1 > gRootE ? 0 : e1; ti = v0 <= v1 ? hb : hb + 1; }
     const int lo = best > alpha0 ? best : -99, hi = best < beta ? best : 99;
     const u64 nd = (u64)(u8)empties | (u64)(u8)bestMove << 8 | (u64)(u32)(hi + 128) << 16 | (u64)(u32)(lo + 128) << 24;
     ETB[ti].dt = nd; ETB[ti].k1 = P ^ nd; ETB[ti].k2 = O ^ nd;
-#endif
   }
   return best;
 }
@@ -968,6 +1044,7 @@ static int spSearch(SPt *s, int i, int a) {
       v = -searchE(nO, nP, s->depth - 1, -a - 1, -a, 1, 0);
       if (!aborted && v > a) { const int a2 = __atomic_load_n(&s->alpha, __ATOMIC_ACQUIRE), lo = v - 1 > a2 ? v - 1 : a2; if (lo < b) v = -searchE(nO, nP, s->depth - 1, -b, -lo, 1, 0); }
     } else {
+      IXP[1] = IXO[1] = 0;
       v = -solve(nO, nP, -a - 1, -a, s->depth - 1, 1, 0);
       if (!aborted && v > a) { const int a2 = __atomic_load_n(&s->alpha, __ATOMIC_ACQUIRE), lo = v - 1 > a2 ? v - 1 : a2; if (lo < b) v = -solve(nO, nP, -b, -lo, s->depth - 1, 1, 0); }
     }
@@ -980,6 +1057,7 @@ static int spSearch(SPt *s, int i, int a) {
     v = -searchI(nO, nP, s->depth - 1, -a - 1, -a, s->ply + 1, 0);
     if (!aborted && v > a && v < b) v = -searchI(nO, nP, s->depth - 1, -b, -v, s->ply + 1, 0);
   } else {
+    IXP[s->ply + 1] = IXO[s->ply + 1] = 0;
     v = -solve(nO, nP, -a - 1, -a, s->depth - 1, s->ply + 1, 0);
     if (!aborted && v > a && v < b) v = -solve(nO, nP, -b, -v, s->depth - 1, s->ply + 1, 0);
   }
@@ -1016,6 +1094,7 @@ EXPORT(root_mt) int root_mt(u32 pl, u32 ph, u32 ol, u32 oh, int exact, int depth
   gRootMove = -1; gRootIdx = -1; gRootScore = 0; curSP = 0; curIdx = -1;
   if (n <= 0) return 0;
   if (exact) gRootE = empties;
+  IXP[1] = IXO[1] = 0;
   int best, bestMove = ROOTMV[0];
   { const int m = ROOTMV[0]; const u64 f = flips(m, P, O), nP = P | f | (1ULL << m), nO = O & ~f;
     best = exact ? -solve(nO, nP, -beta, -alpha, empties - 1, 1, 0) : -searchE(nO, nP, depth - 1, -beta, -alpha, 1, 0);
@@ -1046,7 +1125,7 @@ EXPORT(root_mt) int root_mt(u32 pl, u32 ph, u32 ol, u32 oh, int exact, int depth
 // ------------------------------------------------------------------ exports (boards as 32-bit halves, as in engine.js)
 static inline u64 B(u32 l, u32 h) { return (u64)h << 32 | l; }
 EXPORT(search) int search(u32 pl, u32 ph, u32 ol, u32 oh, int depth, int alpha, int beta, int ply, int passed) { return searchE(B(pl, ph), B(ol, oh), depth, alpha, beta, ply, passed); }
-EXPORT(solve_) int solve_(u32 pl, u32 ph, u32 ol, u32 oh, int alpha, int beta, int empties, int ply, int passed) { gRootE = empties + 1; return solve(B(pl, ph), B(ol, oh), alpha, beta, empties, ply, passed); }
+EXPORT(solve_) int solve_(u32 pl, u32 ph, u32 ol, u32 oh, int alpha, int beta, int empties, int ply, int passed) { gRootE = empties + 1; IXP[ply] = IXO[ply] = 0; return solve(B(pl, ph), B(ol, oh), alpha, beta, empties, ply, passed); }
 EXPORT(evaluate) int evaluate(u32 pl, u32 ph, u32 ol, u32 oh) { return evalFull(B(pl, ph), B(ol, oh)); }
 EXPORT(init) void init(void) {
   initRays(); initRayM(); initRayV(); initDiag(); initCnt();
