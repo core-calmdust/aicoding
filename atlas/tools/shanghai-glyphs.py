@@ -122,6 +122,13 @@ def art(src, out):
             if k <= 8: lab[inkm & (lab != 1)] = 3
         p = paint(C(c, r), force)
         y, x = divmod(k, 8); sheet[y * GH:(y + 1) * GH, x * GW:(x + 1) * GW] = p
+    # 一索 (cell 9): our own design — a sparrow on bamboo (atlas/tools/shanghai-bird.svg, rendered with rsvg-convert), not the
+    # photo's peacock (ユーザー 2026-11-14：写真そのままの孔雀なので独自の解釈を)
+    import os, subprocess, io
+    svg = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'shanghai-bird.svg')
+    png = subprocess.run(['rsvg-convert', '-w', str(GW), '-h', str(GH), svg], capture_output=True, check=True).stdout
+    b = np.array(Image.open(io.BytesIO(png)).convert('RGBA')).astype(float); b[:, :, 3] /= 255
+    sheet[GH:2 * GH, GW:2 * GW] = b
     s = sheet.copy(); s[:, :, 3] *= 255
     Image.fromarray(s.astype('uint8'), 'RGBA').save(out, optimize=True)
 

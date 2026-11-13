@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 390" width="280" height="390">
+  <!-- 一索（上海・麻雀の牌）：竹にとまる雀 — 麻雀の「雀」にちなんだ独自の図案（2026-11-14）。牌の塗り5色だけの平塗り。
+       atlas/tools/shanghai-glyphs.py art が shanghai-art.png のセル9にこれを描き込む -->
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- the bamboo: a stalk with three nodes, a branch, leaves -->
+    <path d="M60 372 L60 34" stroke="#127040" stroke-width="17"/>
+    <path d="M51 112 h18 M51 204 h18 M51 296 h18" stroke="#fafaf6" stroke-width="4"/>
+    <path d="M64 258 C110 252 170 262 236 282" stroke="#127040" stroke-width="9"/>
+    <path d="M64 70 C92 52 118 44 150 44 C122 56 98 66 66 84 Z" fill="#127040" stroke="#127040" stroke-width="3"/>
+    <path d="M64 120 C88 108 104 92 116 72 C112 98 96 116 66 132 Z" fill="#127040" stroke="#127040" stroke-width="3"/>
+    <path d="M56 160 C34 146 24 126 22 104 C38 120 50 134 58 150 Z" fill="#127040" stroke="#127040" stroke-width="3"/>
+    <path d="M236 282 C248 300 252 318 250 340 C240 324 232 306 230 288 Z" fill="#127040" stroke="#127040" stroke-width="3"/>
+    <path d="M206 274 C222 292 226 312 222 334 C212 316 206 298 204 280 Z" fill="#127040" stroke="#127040" stroke-width="3"/>
+  </g>
+  <!-- the tail: three long feathers, each with a white quill -->
+  <g stroke-linecap="round">
+    <path d="M178 226 C204 262 220 300 222 352 C206 312 188 278 166 244 Z" fill="#1c3c86"/>
+    <path d="M190 220 C222 248 246 280 262 324 C238 294 214 268 182 240 Z" fill="#127040"/>
+    <path d="M170 232 C182 270 186 310 178 356 C170 316 162 284 156 252 Z" fill="#d0122a"/>
+    <path d="M182 238 C200 272 210 302 214 334 M194 232 C220 256 238 280 250 308 M168 248 C174 280 176 308 174 336" fill="none" stroke="#fafaf6" stroke-width="3"/>
+  </g>
+  <!-- the body, the red breast, the green wing with white feather lines -->
+  <ellipse cx="150" cy="204" rx="50" ry="38" transform="rotate(-18 150 204)" fill="#1c3c86"/>
+  <ellipse cx="128" cy="218" rx="30" ry="25" transform="rotate(-18 128 218)" fill="#d0122a"/>
+  <path d="M128 192 C150 176 188 178 208 198 C196 220 168 232 136 222 C142 212 140 200 128 192 Z" fill="#127040"/>
+  <path d="M150 196 C166 192 182 196 194 206 M146 208 C162 206 176 210 186 218 M144 219 C156 220 166 223 174 228" fill="none" stroke="#fafaf6" stroke-width="3.2" stroke-linecap="round"/>
+  <!-- the head: navy cap, a white cheek, the eye, a gold beak and a small gold crest -->
+  <circle cx="112" cy="160" r="26" fill="#1c3c86"/>
+  <path d="M94 170 C100 182 116 186 128 178 C120 176 108 172 100 164 Z" fill="#fafaf6"/>
+  <circle cx="104" cy="154" r="8" fill="#fafaf6"/>
+  <circle cx="102.5" cy="154" r="4.2" fill="#141414"/>
+  <path d="M88 160 L64 166 L88 172 Z" fill="#e0a81c"/>
+  <path d="M110 134 C106 120 112 110 120 104 M118 135 C120 122 128 114 138 112 M126 138 C132 128 142 124 150 126" fill="none" stroke="#e0a81c" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="120" cy="104" r="4.5" fill="#d0122a"/><circle cx="138" cy="112" r="4.5" fill="#d0122a"/><circle cx="150" cy="126" r="4.5" fill="#d0122a"/>
+  <!-- the feet on the branch -->
+  <path d="M138 236 L136 254 M130 254 h14 M158 238 L158 256 M152 256 h14" fill="none" stroke="#d0122a" stroke-width="4" stroke-linecap="round"/>
+</svg>
