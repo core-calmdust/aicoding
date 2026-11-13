@@ -230,8 +230,8 @@
   // 飛鶴: a crane in flight, in profile (flying toward +x before the turn `rot`; z = body to wing tip). Gold, feather by feather as in
   // maki-e / nihonga: both wings raised — long primaries, the black secondaries (the lacquer showing through), rows of scalloped coverts —
   // the neck stretched forward with its black stripe, a red crown, the legs trailing
-  function crane(m, x, y, z, rot) {
-    const on = (k, fn) => { const g = G(m, k); g.save(); g.translate(x, y); g.rotate(rot); g.scale(z, z); fn(g); g.restore(); };
+  function crane(m, x, y, z, rot, flip = 1) {   // (flip −1: flying toward −x)
+    const on = (k, fn) => { const g = G(m, k); g.save(); g.translate(x, y); g.rotate(rot); g.scale(z * flip, z); fn(g); g.restore(); };
     const FILLS = ['pao', 'pgold', 'flat', 'akakin', 'blue', 'silver', 'raised', 'aokin', 'red', 'flake'];
     const erase = fn => FILLS.forEach(k => on(k, g => { g.globalCompositeOperation = 'destination-out'; fn(g); }));   // black: the lacquer itself
     const lerp = (p, q, t) => [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t];
@@ -350,13 +350,41 @@
     g.putImageData(im, 0, 0); gm.putImageData(mm, 0, 0);
     return [c, cm];
   }
+  // 老梅: an old plum — a gnarled bough that turns at every joint, tapering, twigs full of blossoms and buds (the go board's 梅に月)
+  function plumTree(m, W, H, x0, y0, ang, len, w0, bias = 0) {
+    const sc = W / 3072, g = G(m, 'raised'), a = G(m, 'aokin'), rd = G(m, 'red'), c = G(m, 'cut'), l = G(m, 'line');
+    const bloom = (cx, cy, r) => { const rot = R(0, Math.PI);
+      for (let k = 0; k < 5; k++) { const t = rot + k * Math.PI * 2 / 5; a.beginPath(); a.arc(cx + Math.cos(t) * r * .6, cy + Math.sin(t) * r * .6, r * .48, 0, Math.PI * 2); a.fill(); }
+      rd.beginPath(); rd.arc(cx, cy, r * .24, 0, 7); rd.fill();
+      c.lineWidth = .9 * sc; for (let k = 0; k < 5; k++) { const t = rot + k * Math.PI * 2 / 5 + Math.PI / 5; c.beginPath(); c.moveTo(cx + Math.cos(t) * r * .3, cy + Math.sin(t) * r * .3); c.lineTo(cx + Math.cos(t) * r * .9, cy + Math.sin(t) * r * .9); c.stroke(); }
+      l.lineWidth = .8 * sc; for (let k = 0; k < 9; k++) { const t = rot + k * .7, q = r * R(.4, .6); l.beginPath(); l.moveTo(cx, cy); l.lineTo(cx + Math.cos(t) * q, cy + Math.sin(t) * q); l.stroke(); } };
+    const bud = (cx, cy, r) => { a.beginPath(); a.arc(cx, cy, r, 0, 7); a.fill(); rd.beginPath(); rd.arc(cx, cy + r * .5, r * .45, 0, 7); rd.fill(); };
+    const bough = (x, y, an, ln, w, d) => {
+      const n = Math.max(2, Math.round(ln / ((d ? 46 : 70) * sc))); let px = x, py = y;
+      for (let k = 0; k < n; k++) { an += R(-.34, .34) + bias * (d ? 0 : 1); const st = ln / n * R(.8, 1.2), ex = px + Math.cos(an) * st, ey = py + Math.sin(an) * st, ww = w * (1 - k / n * .5);
+        g.lineWidth = ww; g.beginPath(); g.moveTo(px, py); g.lineTo(ex, ey); g.stroke();
+        if (ww > 5 * sc) { c.lineWidth = .9 * sc; c.beginPath(); c.moveTo(px, py + ww * .22); c.lineTo(ex, ey + ww * .22); c.stroke(); if (rnd() < .4) { c.beginPath(); c.arc((px + ex) / 2, (py + ey) / 2, ww * .2, 0, 5); c.stroke(); } }   // bark: a line along it, a knot here and there
+        if (d < 3 && rnd() < (d ? .55 : .8)) bough(ex, ey, an + R(.45, 1.1) * (rnd() < .5 ? -1 : 1), ln * R(.28, .5), Math.max(2.2 * sc, ww * .5), d + 1);
+        if (d) { const q = rnd(); if (q < .6) bloom(ex + R(-8, 8) * sc, ey + R(-8, 8) * sc, R(13, 19) * sc); else if (q < .85) bud(ex + R(-6, 6) * sc, ey + R(-6, 6) * sc, R(4, 6) * sc); }
+        px = ex; py = ey; }
+      if (d) bloom(px, py, R(12, 17) * sc);
+    };
+    bough(x0, y0, ang, len * sc, w0 * sc, 0);
+  }
+  // 月: a full moon in pale gold powder, denser toward its rim, a hairline round it
+  function moon(m, W, H, x, y, r) {
+    const sc = W / 3072, g = G(m, 'pao'), l = G(m, 'line');
+    const gr = g.createRadialGradient(x - r * .2, y - r * .2, r * .1, x, y, r); gr.addColorStop(0, 'rgba(255,255,255,.35)'); gr.addColorStop(.75, 'rgba(255,255,255,.6)'); gr.addColorStop(1, 'rgba(255,255,255,.95)');
+    g.fillStyle = gr; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill();
+    l.lineWidth = 1.6 * sc; l.beginPath(); l.arc(x, y, r, 0, 7); l.stroke();
+  }
   const MK = {};
   function makie(kind) {
     if (MK[kind]) return MK[kind];
-    seed = kind === 'side' ? 11 : kind === 'end' ? 23 : kind === 'stand' ? 37 : 51;
-    const W = kind === 'stand' ? 1024 : kind === 'leg' ? 512 : 3072, H = kind === 'stand' ? 1024 : kind === 'leg' ? 512 : 1352,   // (1352: the taller board of 2026-11-12, 10 × 4.4 — was 800 for 2.6)
+    seed = kind === 'side' || kind === 'go0' ? 11 : kind === 'end' || kind === 'go2' ? 23 : kind === 'stand' ? 37 : kind === 'go1' ? 83 : kind === 'go3' ? 97 : 51;
+    const GO = /^go\d$/.test(kind), W = GO ? 2048 : kind === 'stand' ? 1024 : kind === 'leg' ? 512 : 3072, H = GO ? 640 : kind === 'stand' ? 1024 : kind === 'leg' ? 512 : 1352,   // (go0…go3: the four faces of the go board, 10 × 3 — atlas/models/goban.js, 2026-11-13)   // (1352: the taller board of 2026-11-12, 10 × 4.4 — was 800 for 2.6)
     m = masks(W, H), sc = W / 3072;
-    if (kind === 'side') {   // 山水楼閣図
+    if (kind === 'side' || kind === 'go0') {   // 山水楼閣図
       // distant mountains (pale gold powder), a pagoda on the far shore, mist
       [[W * .3, W * .62, H * .42, H * .22, 3], [W * .52, W * .9, H * .44, H * .26, 5], [W * .1, W * .4, H * .4, H * .14, 7]].forEach(([a, b, y, h, s]) => hill(m, W, H, a, b, y, h, s, .55, 'pao'));
       mist(m, W, H, W * .36, H * .12, W * .3, H * .06); mist(m, W, H, W * .7, H * .3, W * .24, H * .05);
@@ -374,7 +402,24 @@
       rock(m, W, H, W * .7, H * .93, 80 * sc, 34 * sc); rock(m, W, H, W * .47, H * .9, 50 * sc, 20 * sc); rock(m, W, H, W * .2, H * .97, 70 * sc, 26 * sc);
       plum(m, W, H, W * .97, H * .9, -Math.PI + .7, 160, .9);
       kinji(m, W, H); nashiji(m, W, H, 26000); rim(m, W, H, 24 * sc);
-    } else if (kind === 'end') {   // 扇流し
+    } else if (kind === 'go1') {   // 松に鶴: an old pine on the shore, cranes crossing the moon over the waves
+      moon(m, W, H, W * .7, H * .3, H * .2);
+      mist(m, W, H, W * .46, H * .16, W * .3, H * .07); mist(m, W, H, W * .78, H * .5, W * .24, H * .06);
+      waves(m, W, H, H * .7, H * .98, 3.7, 1);
+      hill(m, W, H, -W * .05, W * .32, H * 1.02, H * .44, 2.3, 1);
+      pineTree(m, W, H, W * .1, H * .8, 430 * sc, .2, 5); pineTree(m, W, H, W * .25, H * .8, 250 * sc, -.15, 6);
+      rock(m, W, H, W * .37, H * .93, 90 * sc, 36 * sc); rock(m, W, H, W * .92, H * .95, 80 * sc, 30 * sc);
+      crane(m, W * .5, H * .46, 165 * sc, -.14); crane(m, W * .66, H * .62, 120 * sc, .04); crane(m, W * .86, H * .36, 100 * sc, -.22);
+      kinji(m, W, H); nashiji(m, W, H, 12000); rim(m, W, H, 24 * sc);
+    } else if (kind === 'go3') {   // 梅に月: an old plum reaching in from the right, the moon, a stream, small birds
+      moon(m, W, H, W * .3, H * .32, H * .19);
+      mist(m, W, H, W * .08, H * .16, W * .28, H * .07); mist(m, W, H, W * .5, H * .44, W * .22, H * .055);
+      stream(m, W, H, [[W * .04, H * .74], [W * .28, H * .82], [W * .52, H * .76], [W * .76, H * .86], [W * 1.02, H * .8]], 11, 9, 2);
+      plumTree(m, W, H, W * 1.01, H * .97, -Math.PI + .5, 1500, 40, -.03); plumTree(m, W, H, W * 1.0, H * .2, Math.PI - .25, 620, 20, .03);
+      plumTree(m, W, H, -W * .01, H * .98, -.55, 520, 18, 0);
+      birds(m, W, H, W * .5, H * .2, 7, 13 * sc);
+      kinji(m, W, H); nashiji(m, W, H, 12000); rim(m, W, H, 24 * sc);
+    } else if (kind === 'end' || kind === 'go2') {   // 扇流し
       stream(m, W, H, [[W * .06, H * .6], [W * .3, H * .7], [W * .55, H * .64], [W * .8, H * .74], [W * 1.02, H * .7]], 11, 9, 1);
       fan(m, W, H, W * .3, H * .78, H * .5, -Math.PI * .92, -Math.PI * .28, 1);
       fan(m, W, H, W * .7, H * .86, H * .36, -Math.PI * .8, -Math.PI * .32, 2);
@@ -704,6 +749,8 @@
     'top-sakura': () => sakuraTop(1800, 1980, 9),
     'side-makie': () => makie('side')[0], 'side-makie-m': () => makie('side')[1],
     'end-makie': () => makie('end')[0], 'end-makie-m': () => makie('end')[1],
+    'go-lacquer-0': () => makie('go0')[0], 'go-lacquer-0-m': () => makie('go0')[1], 'go-lacquer-1': () => makie('go1')[0], 'go-lacquer-1-m': () => makie('go1')[1],   // (the go board's 蒔絵 faces: front, right, back, left)
+    'go-lacquer-2': () => makie('go2')[0], 'go-lacquer-2-m': () => makie('go2')[1], 'go-lacquer-3': () => makie('go3')[0], 'go-lacquer-3-m': () => makie('go3')[1],
     'stand-makie': () => makie('stand')[0], 'stand-makie-m': () => makie('stand')[1],
     'leg-makie': () => makie('leg')[0],
     // 新榧 (spruce, pale and straight) — the faces show end grain, as the 本榧 board
@@ -722,7 +769,7 @@
     'stand-sakura': () => raden('stand')[0], 'stand-sakura-m': () => raden('stand')[1],
   };
   window.NAMES = Object.keys(GENS);
-  window.GEN = async (name, q = .88) => { const c = await GENS[name](); return c.toDataURL('image/webp', /-m$/.test(name) ? .9 : /makie|sakura/.test(name) ? .84 : q); };
+  window.GEN = async (name, q = .88) => { const c = await GENS[name](); return c.toDataURL('image/webp', /-m$/.test(name) ? .9 : /makie|sakura|lacquer/.test(name) ? .84 : q); };
   const t = new URLSearchParams(location.search).get('t');
   if (t) GEN(t).then(u => { const im = new Image(); im.src = u; document.getElementById('out').append(t, im); });
   window.READY = true;
