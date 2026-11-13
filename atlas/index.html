@@ -1640,7 +1640,7 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 /* many choices (ludo: rule × players): the toggle takes the row and wraps */
 .bvi .opts label:has(.sidetg button:nth-child(5)){flex:1 1 100%!important;flex-wrap:wrap}.bvi .sidetg:has(button:nth-child(5)){flex:1 1 100%;flex-wrap:wrap}.bvi .sidetg:has(button:nth-child(5)) button{flex:1 1 30%;padding-inline:6px}
 .bvi .act.act3 #bvTable.mxfull{background:#ffeccc;color:#7a4a12;box-shadow:0 4px 0 #f0cf98;border:2px solid #f6dcae}.bvi .act.act3 #bvTable.mxfull:hover{background:#ffe4b8}   /* (the 書斎で遊ぶ colours, 2026-11-11) */
-.bvi .mxb.mxic{width:48px;padding:0}.bvi .mxb.mxic svg{width:22px;height:22px}
+.bvi .mxb.mxic{width:48px;padding:0}.bvi .mxb.mxic .hb-ic{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:#fff;background:linear-gradient(150deg,#ffe27a,#f2b51c 55%,#d98f0b);box-shadow:inset 0 -2px 0 rgba(150,90,0,.28)}.bvi .mxb.mxic svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linejoin:round;stroke-linecap:round}   /* レート戦の戦績: the header's gold trophy (was an unfilled path → a black blob, 2026-11-13) */
 .lvs-l .lvpvp{width:100%;text-align:start;font:inherit;cursor:pointer;background:linear-gradient(100deg,#e3f3ff,#f6fbff 70%);border-color:#cfe6f7;padding:6px 12px 6px 10px}
 .lvs-l .lvpvp svg{width:96px;height:80px;flex:none;margin:-2px 0}.lvs-l .lvpvp small{color:#4f7fa3}
 .lvs-sec.first{margin-top:0}
@@ -1868,13 +1868,15 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 .bvi #bvRt .mxrow{display:flex;gap:10px;align-items:center}.bvi #bvRt .mxrow > label{flex:1 1 auto!important;min-width:0;display:flex;align-items:center;gap:8px;white-space:nowrap}.bvi #bvRt .mxrow .mxb{flex:none}
 .bvi #bvRt .sidetg,.bvi #bvLs .sidetg{flex:1}.bvi #bvRt .sidetg button,.bvi #bvLs .sidetg button{flex:1}
 .bvi #bvLs > label{flex:1 1 100%!important}.mxb.pzok{overflow:visible}.mxb.pzok::after{position:absolute;top:-8px;right:-8px;margin:0!important;box-shadow:0 0 0 2px #fff}.bvi .mxb{min-width:0}.bvi .mxb i{flex:none}   /* (the ✓ on the corner: it no longer pushes the label out — phones, 2026-11-13) */
-@media (max-width:819px){.bvi #bvOpts:has(#bvPegBest) select,.bvi #bvOpts:has(#bvPegBest) .lvpick{height:56px!important;min-height:56px!important;box-sizing:border-box}.bvi #bvPegBest{min-height:56px;padding:6px 16px}.bvi #bvPegBest b{font-size:20px}}   /* (phones: the board pulldown and the best box the same height) */
+.bvi .mxb.pzd{gap:6px;padding:0 8px}.bvi .mxb.pzd span{min-width:0}.mxb .ez{flex:none;font-style:normal;font-size:10.5px;line-height:1;font-weight:900;letter-spacing:.05em;padding:3px 6px;border-radius:99px;background:#e9f5ee;color:#2e7d55;border:1.5px solid #9fd8b8}   /* (ペグ: 今日のパズル / 今日のパズル EASY — no stars, EASY a small pill: the label fits, 2026-11-13) */
+@media (max-width:819px){.bvi .mxb.pzd{font-size:13.5px}}
 .bvi #bvLs .mxwide{flex:1 1 100%;width:100%;height:auto;min-height:48px}   /* (問題一覧 as big as the puzzles' one, 2026-11-13) */
 .bvi .mxnote{font-size:12.5px;font-weight:700;color:var(--ink2);padding:2px}
 .bvi .mxb{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:0;height:48px;padding:0 12px;border-radius:14px;border:2px solid var(--line);background:#fff;box-shadow:0 3px 0 var(--line);font:900 14.5px var(--font);color:var(--ink);cursor:pointer;white-space:nowrap}
 .bvi .mxb.pzok,.mxb.pzok{position:relative;background:#eef8f1!important;border-color:#9fd8b8!important;box-shadow:0 3px 0 #9fd8b8!important;color:#2e7d55}.mxb.pzok::after{content:'✓';flex:none;display:inline-grid;place-items:center;width:20px;height:20px;margin-left:2px;border-radius:50%;background:#2f9a6a;color:#fff;font-size:12px;font-weight:900}   /* (today's puzzle solved, 2026-11-13) */
 .bvi .mxb:hover{background:#fffaf0}
-.bvi #bvMBody > #bvPz:not([hidden]){height:100%;box-sizing:border-box;align-content:stretch}.bvi #bvMBody > #bvPz:not([hidden]) > .mxb{height:auto;min-height:48px}   /* (the パズル panel fills the settings' height like the other tabs: the rows below no longer sit higher, 2026-11-13) */
+.bvi #bvMBody > #bvPz:not([hidden]){height:100%;box-sizing:border-box;align-content:stretch}.bvi #bvMBody > #bvPz:not([hidden]) > .mxb{height:auto;min-height:48px}
+@media (max-width:819px){.bvi #bvMBody > #bvPz:not([hidden]) > .mxb{min-height:42px}.bvi #bvPz{gap:10px 10px}.bvi #bvPegBest{min-height:44px;padding:4px 14px}.bvi #bvPegBest b{font-size:19px}}   /* (phones, 2026-11-13: ペグ's boxes the size of the other games' — the board pulldown is the usual 38px, the best box and the puzzle buttons a little over it) */   /* (the パズル panel fills the settings' height like the other tabs: the rows below no longer sit higher, 2026-11-13) */
 .bvi .pgbest{flex:1 1 100%;box-sizing:border-box;display:flex;align-items:center;gap:12px;margin:0!important;padding:10px 16px;border-radius:14px;background:#fff;border:2px solid var(--line);box-shadow:0 3px 0 var(--line);font-size:15px;font-weight:900;color:#2b3044}.bvi .pgbest b{margin-inline-start:auto;font-size:23px;line-height:1.1;font-weight:900;color:#e5484d;letter-spacing:.02em;text-shadow:0 2px 0 rgba(229,72,77,.15)}.bvi .pgbest .pgd{font-size:12.5px;font-weight:700;color:#9a8762}.bvi .pgbest em + .pgd{margin-inline-start:0}.bvi .pgbest em{margin-inline-start:0;font-style:normal;font-weight:900;font-size:15px;color:#b07a00;background:#fff;border:2px solid #f3dca0;border-radius:99px;padding:3px 12px}   /* (ペグ: the chosen board's best, large; the same gap as the rows above — 2026-11-13) */
 .bvi #bvPz{display:grid;grid-template-columns:1fr 1fr;gap:10px}.bvi #bvPz .mxb[data-pz="list"]:nth-child(3){grid-column:1 / -1}
 .bvi .act.act3.act1 > a.btn{grid-column:1 / -1}
@@ -1958,7 +1960,7 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 .vsheet .vgrps{overflow:auto;min-height:0;flex:1 1 auto;padding-bottom:12px}.vsheet .vgrps .lvs-l{overflow:visible;max-height:none;flex:none}
 .vgh{display:flex;align-items:center;gap:10px;margin:10px 16px 2px;font-weight:900;font-size:14px;color:var(--ink)}.vgh::after{content:'';flex:1;height:2px;border-radius:2px;background:var(--line)}
 .bvi .vopts{display:flex;align-items:stretch;gap:10px}.bvi .vopts .vrow{flex:1 1 50%!important}
-.bvi .rtnow2{flex:1 1 50%;min-width:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:2px;padding:6px 14px;border-radius:16px;background:#fff;border:2px solid var(--line);line-height:1.1}.bvi .rtnow2[hidden]{display:none}.bvi .rtnow2 small{font-size:11px;font-weight:800;color:var(--ink2)}.bvi .rtnow2 b{font-size:18px;font-weight:900;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.bvi .rtnow2{flex:1 1 50%;min-width:0;display:flex;flex-direction:row;justify-content:space-between;align-items:center;gap:10px;padding:6px 14px;border-radius:16px;background:#fff;border:2px solid var(--line);line-height:1.1}.bvi .rtnow2[hidden]{display:none}.bvi .rtnow2 small{flex:none;font-size:13px;font-weight:800;color:var(--ink2);white-space:nowrap}.bvi .rtnow2 b{min-width:0;font-size:20px;font-weight:900;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:end}   /* 現在のレート: the label on the left, the value on the right (2026-11-13) */
 /* (games with a 種目 row — shogi: every box the same height and every gap the same, in each tab, 2026-11-12) */
 .bvi .mbody:has(#bvVarRow){--bh:38px;--bg:10px}
 @media (min-width:820px){.bvi .mbody:has(#bvVarRow){--bh:48px;--bg:12px}}
@@ -2212,12 +2214,12 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 <canvas id="confetti"></canvas>
 
 <script>/* three.js r186 + the r128 compatibility layer (2026-11-13: the default; ?three=128 loads the old version) */
-if (!/[?&]three=128\b/.test(location.search)) document.write('<script src="vendor/three-r186.min.js?v=1"><\/script><script src="vendor/three-compat.js?v=14"><\/script>');
+if (!/[?&]three=128\b/.test(location.search)) document.write('<script src="vendor/three-r186.min.js?v=1"><\/script><script src="vendor/three-compat.js?v=15"><\/script>');
 else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');</script>
 <script src="texgen.js?v=2"></script>
 <script src="npc/roster.js?v=7"></script>
 <script src="art.js?v=12"></script>
-<script src="../shared/atlas.js?v=20261113pg3"></script>
+<script src="../shared/atlas.js?v=20261113bb1"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261109ac2as1"></script>
 <script src="i18n/v.js?v=73pj"></script>
@@ -2234,11 +2236,11 @@ else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.j
 </script>
 <script src="gamelist-i18n.js?v=14pg"></script>
 <script src="img/tex/baked.js?v=2"></script>
-<script src="table3d.js?v=164"></script>
+<script src="table3d.js?v=165"></script>
 <script>/* the places other than the chabudai (tables3d.js, 440 KB): at once when one is chosen, else in idle time after the page has
    loaded (2026-11-10); 'atlas-places' tells the page they are there */
 (function () {
-  var SRC = 'tables3d.js?v=114', k = 0, p = null;
+  var SRC = 'tables3d.js?v=117', k = 0, p = null;
   try { k = +(localStorage.getItem('atlas-table') || 0) || 0; var m = /[?&]tbl=(\d+)/.exec(location.search); if (m) k = +m[1]; } catch (e) {}
   window.AtlasPlaces = function () { return p || (p = new Promise(function (res) { var s = document.createElement('script'); s.src = SRC; s.onload = s.onerror = function () { res(); try { dispatchEvent(new Event('atlas-places')); } catch (e) {} }; document.head.appendChild(s); })); };
   if (k) { document.write('<script src="' + SRC + '"><\/script>'); p = Promise.resolve(); }
@@ -2258,7 +2260,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   }, 60);
 };</script>
 <script src="../shared/tapword.js?v=1"></script>
-<script src="lazy.js?v=177"></script>
+<script src="lazy.js?v=179"></script>
 <script src="puzzle-lines.js?v=1"></script>
 <script src="puzzles.js?v=22"></script>
 <script src="lessons3d.js?v=13"></script>
@@ -2270,12 +2272,12 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="gacha3d.js?v=7"></script>
 <script src="../shared/resign.js?v=3"></script><script src="../shared/drawoffer.js?v=1"></script>
 <script src="../shared/tick.js?v=2"></script>
-<script src="gamelist.js?v=34"></script>
+<script src="gamelist.js?v=35"></script>
 <link rel="stylesheet" href="worldmap.css?v=18">
 <script src="worldmap.js?v=34"></script>
 <script src="npc/npc.js?v=30"></script>
 <script src="avtalk.js?v=2"></script>
-<script src="app.js?v=344"></script>
+<script src="app.js?v=346"></script>
 <script src="../shared/praline-badge.js?v=8" data-portal defer></script>
 </body>
 </html>
