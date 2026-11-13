@@ -791,10 +791,15 @@
         for (let k = 0; k < 12; k++) rFall(m, R(W * .55, W * .97), R(H * .5, H * .95), R(26, 38) * sc, R(0, 6.3));
         nashiji(mk, W, H, 5000);
       } else {
-        dust(W * .4, H * .6, W * .5, H * .34, .2, .2);
-        const P = []; sakuraBough(mk, m, W, W + 30, H * .84, Math.PI + .45, 1900, 42, -.03, P);
-        sakuraBough(mk, m, W, -30, H * .12, .22, 700, 28, -.012, P);
-        for (let k = 0; k < 11; k++) rFall(m, R(W * .04, W * .55), R(H * .35, H * .94), R(26, 38) * sc, R(0, 6.3));
+        // (2026-11-13) the long face's composition mirrored: the bough climbs from the lower right corner, its branch reaches left and droops
+        let P, J; const clr = o => Object.values(o).forEach(cn => ctx(cn).clearRect(0, 0, W, H));
+        const tryIt = sd => { seed = sd; clr(m); clr(mk); dust(W * .4, H * .56, W * .5, H * .36, .2, .2);
+          P = [[W * .9, H * .86, H * .36, 1]]; J = sakuraBough(mk, m, W, W * .92, H + 30, -Math.PI + .72, 1750, 48, -.004, P);
+          const e = J[J.length - 1], n0 = P.length; sakuraBough(mk, m, W, e[0], e[1], Math.PI + .12, 1050, 22, -.075, P);
+          const Q = P.filter(q => !q[3]), top = Math.min(...Q.map(q => q[1] - q[2])), right = Math.max(...Q.map(q => q[0] + q[2])), left = Math.min(...Q.map(q => q[0] - q[2])), bot = Math.max(...P.slice(n0).map(q => q[1] + q[2]));
+          return Math.max(0, H * .04 - top) * 3 + Math.max(0, W * .05 - left) + Math.max(0, left - W * .2) + Math.max(0, right - W) + Math.max(0, bot - H * .6) + Math.max(0, H * .3 - bot) + Math.abs(e[0] - W * .44) * .3 + Math.max(0, e[1] - H * .2) + Math.max(0, 22 - P.length) * 40; };
+        { let best = 0, bs = 1e9; for (let t = 0; t < 160; t++) { const v = tryIt(67 + t * 7); if (v < bs) { bs = v; best = 67 + t * 7; } if (v < 12) break; } tryIt(best); }
+        for (let k = 0; k < 11; k++) rFall(m, R(W * .04, W * .45), R(H * .5, H * .95), R(26, 38) * sc, R(0, 6.3));
         nashiji(mk, W, H, 5000);
       }
       return (RD[kind] = composeRaden(m, W, H, seed, 'red', composeMakie(mk, W, H, seed, red)));
