@@ -1057,3 +1057,9 @@ html.atlas-skin body:not(#_) .lxh-ex:hover{border-color:#e0b65a}
 html.atlas-skin body:not(#_) .lxh-ex:active{transform:translateY(2px);box-shadow:0 2px 0 #e6d6b2}
 html.atlas-skin body:not(#_) .lx > .lx-grid.lxh-moved{display:none!important}
 @media (max-width:760px){ html.atlas-skin body:not(#_) .lxh-acts{flex:1 1 100%} html.atlas-skin body:not(#_) .lxh-acts > *{flex:1 1 0;width:auto!important} html.atlas-skin body:not(#_) .lxh-ex{height:auto;font-size:14px} }
+/* (2026-11-13) every red button raised like the white ones (a 2px edge and a 4px foot of a softer shade — the deep red foot made
+   the red buttons look lower than the white ones beside them) */
+html.atlas-skin body:not(#_) :is(.modal, .ngt-foot, .dock, #dock, .grc-ov, .card) :is(.modal-actions, .rt-nav, .lesson-actions, .ngt-foot, .ol-acts, .ol-bot) :is(button, .mbtn, a.mbtn):is(.go, .primary, .gbtn):not(:disabled):not(#_):not(#_):not(#_),
+html.atlas-skin body:not(#_) :is(.lxh-cont, .pb-cont, .pbh-daily .go:not(.ok), .pzx-daily .go:not(.ok)):not(#_):not(#_):not(#_){border:2px solid #f25454!important;box-shadow:0 4px 0 #e24a4a!important;box-sizing:border-box}
+html.atlas-skin body:not(#_) :is(.modal, .ngt-foot, .dock, #dock, .grc-ov, .card) :is(.modal-actions, .rt-nav, .lesson-actions, .ngt-foot, .ol-acts, .ol-bot) :is(button, .mbtn, a.mbtn):is(.go, .primary, .gbtn):not(:disabled):active:not(#_):not(#_):not(#_),
+html.atlas-skin body:not(#_) :is(.lxh-cont, .pb-cont):active:not(#_):not(#_):not(#_){transform:translateY(2px);box-shadow:0 2px 0 #e24a4a!important}
