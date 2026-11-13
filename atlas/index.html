@@ -1962,17 +1962,17 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 .bvi .vopts{display:flex;align-items:stretch;gap:10px}.bvi .vopts .vrow{flex:1 1 50%!important}
 .bvi .rtnow2{flex:1 1 50%;min-width:0;display:flex;flex-direction:row;justify-content:space-between;align-items:center;gap:10px;padding:6px 14px;border-radius:16px;background:#fff;border:2px solid var(--line);line-height:1.1}.bvi .rtnow2[hidden]{display:none}.bvi .rtnow2 small{flex:none;font-size:13px;font-weight:800;color:var(--ink2);white-space:nowrap}.bvi .rtnow2 b{min-width:0;font-size:20px;font-weight:900;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:end}   /* 現在のレート: the label on the left, the value on the right (2026-11-13) */
 /* (games with a 種目 row — shogi: every box the same height and every gap the same, in each tab, 2026-11-12) */
-.bvi .mbody:has(#bvVarRow){--bh:38px;--bg:10px}
-@media (min-width:820px){.bvi .mbody:has(#bvVarRow){--bh:48px;--bg:12px}}
-.bvi .mbody:has(#bvVarRow){gap:var(--bg)}
-.bvi .mbody:has(#bvVarRow) .opts{gap:var(--bg) 14px!important}
-.bvi .mbody:has(#bvVarRow) #bvRt .mxrow{gap:14px}
-.bvi .mbody:has(#bvVarRow) .opts label{min-height:0}
-.bvi .mbody:has(#bvVarRow) .sidetg{box-sizing:border-box;height:var(--bh);align-items:stretch}
-.bvi .mbody:has(#bvVarRow) .sidetg button{padding-block:0;display:flex;align-items:center;justify-content:center}
-.bvi .mbody:has(#bvVarRow) .lvpick,.bvi .mbody:has(#bvVarRow) #bvRtRec{box-sizing:border-box;height:var(--bh)}
-.bvi .mbody:has(#bvVarRow) .rtnow2{box-sizing:border-box;height:var(--bh);padding-block:0;overflow:hidden}
-.bvi .mbody:has(#bvVarRow) .vopts{align-items:center}
+.bvi .mbody:is(:has(#bvVarRow),:has(#bvRt)){--bh:38px;--bg:10px}
+@media (min-width:820px){.bvi .mbody:is(:has(#bvVarRow),:has(#bvRt)){--bh:48px;--bg:12px}}
+.bvi .mbody:is(:has(#bvVarRow),:has(#bvRt)){gap:var(--bg)}
+.bvi .mbody:is(:has(#bvVarRow),:has(#bvRt)) .opts{gap:var(--bg) 14px!important}
+.bvi .mbody:is(:has(#bvVarRow),:has(#bvRt)) #bvRt .mxrow{gap:14px}
+.bvi .mbody:is(:has(#bvVarRow),:has(#bvRt)) .opts label{min-height:0}
+.bvi .mbody:is(:has(#bvVarRow),:has(#bvRt)) .sidetg{box-sizing:border-box;height:var(--bh);align-items:stretch}
+.bvi .mbody:is(:has(#bvVarRow),:has(#bvRt)) .sidetg button{padding-block:0;display:flex;align-items:center;justify-content:center}
+.bvi .mbody:is(:has(#bvVarRow),:has(#bvRt)) .lvpick,.bvi .mbody:is(:has(#bvVarRow),:has(#bvRt)) #bvRtRec{box-sizing:border-box;height:var(--bh)}
+.bvi .mbody:is(:has(#bvVarRow),:has(#bvRt)) .rtnow2{box-sizing:border-box;height:var(--bh);padding-block:0;overflow:hidden}
+.bvi .mbody:is(:has(#bvVarRow),:has(#bvRt)) .vopts{align-items:center}
 .vcard .vrt{align-self:flex-start;margin:0 4px;padding:2px 8px;border-radius:999px;background:#eef6ff;color:#2a5a9a;font-size:11.5px;font-weight:900}
 .lvs-l.vgrid{grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:10px;padding:6px 14px 10px}
 .lvs-l .vcard{display:flex;flex-direction:column;align-items:stretch;gap:6px;padding:8px 8px 10px;border-radius:18px;box-shadow:0 3px 0 var(--line);transition:transform .12s}
@@ -2263,7 +2263,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="lazy.js?v=195"></script>
 <script src="puzzle-lines.js?v=1"></script>
 <script src="puzzles.js?v=24"></script>
-<script src="lessons3d.js?v=16"></script>
+<script src="lessons3d.js?v=17"></script>
 <script src="missions.js?v=8"></script>
 <link rel="stylesheet" href="historia.css?v=15">
 <script src="historia.js?v=41"></script>
@@ -2277,7 +2277,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=34"></script>
 <script src="npc/npc.js?v=32"></script>
 <script src="avtalk.js?v=3"></script>
-<script src="app.js?v=351"></script>
+<script src="app.js?v=352"></script>
 <script src="../shared/praline-badge.js?v=8" data-portal defer></script>
 </body>
 </html>
