@@ -4,18 +4,31 @@
 (function (root) {
 'use strict';
 const W = 1, H = 1.36, D = 0.78;
-// the polished lavender stone of the tile backs (a canvas, drawn once): a pale mauve ground, soft cloudy depth, a few
-// milky veins and fine darker threads, a faint glitter of crystals
+// the polished stone of the tile backs (a canvas, drawn once). 2026-11-14 (ユーザー: the colour is right, but the pattern read as
+// block noise, not as stone): the old one was a straight gradient with a few polylines of straight segments under a wide blur —
+// stretched over a tile that showed as rectangles and steps. Now the pattern is grown the way stone looks: smooth fractal noise
+// (several octaves, each one interpolated, so nothing has an edge), folded through itself (a domain warp) so the clouds flow, and
+// a few soft pale veins that follow the same flow. It stays as faint as before (clouds ±3%, veins +5%), it wraps (the four
+// backs take different pieces of it), and a little dither keeps the dark purple from banding into steps.
 function stoneTex() {
-  const S = 512, c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d');
+  const S = 512, c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d'), im = g.createImageData(S, S), o = im.data;
   let seed = 7; const R = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-  const base = g.createLinearGradient(0, 0, S, S); base.addColorStop(0, '#5f3a8c'); base.addColorStop(.5, '#55337f'); base.addColorStop(1, '#5c3889');   // (a deep 袱紗 purple, ユーザー 2026-11-14)
-  g.fillStyle = base; g.fillRect(0, 0, S, S);
-  // (no clouds: ユーザー「模様はもっと目立たなくていい」— only the faintest veins and grain)
-  const vein = (col, w, blur, n) => { g.save(); g.strokeStyle = col; g.lineWidth = w; g.shadowColor = col; g.shadowBlur = blur; g.lineCap = 'round';
-    for (let k = 0; k < n; k++) { let x = R() * S, y = R() * S, a = R() * 6.28; g.beginPath(); g.moveTo(x, y); for (let i = 0; i < 18; i++) { a += (R() - .5) * .9; x += Math.cos(a) * 26; y += Math.sin(a) * 26; g.lineTo(x, y); } g.stroke(); } g.restore(); };
-  vein('rgba(200,180,235,.06)', 2, 10, 3); vein('rgba(220,205,245,.08)', .7, 2, 3);   // (only a hint of stone: ユーザー「素材感強すぎ」)
-  for (let i = 0; i < 300; i++) { g.fillStyle = `rgba(255,255,255,${.04 + R() * .1})`; g.fillRect(R() * S, R() * S, 1, 1); }
+  const grid = P => { const a = new Float32Array(P * P); for (let i = 0; i < P * P; i++) a[i] = R(); return a; };
+  const sm = t => t * t * t * (t * (t * 6 - 15) + 10);
+  const val = (G, P, u, v) => { const x = u * P, y = v * P, x0 = Math.floor(x), y0 = Math.floor(y), fx = sm(x - x0), fy = sm(y - y0), i0 = ((x0 % P) + P) % P, j0 = ((y0 % P) + P) % P, i1 = (i0 + 1) % P, j1 = (j0 + 1) % P;
+    return (G[j0 * P + i0] * (1 - fx) + G[j0 * P + i1] * fx) * (1 - fy) + (G[j1 * P + i0] * (1 - fx) + G[j1 * P + i1] * fx) * fy; };
+  const oct = ps => ps.map(P => [grid(P), P]);
+  const fbm = (O, u, v) => { let s = 0, a = .5, n = 0; for (const [G, P] of O) { s += val(G, P, u, v) * a; n += a; a *= .5; } return s / n; };   // 0..1, periodic
+  const A = oct([3, 6, 12, 24, 48]), B = oct([2, 4, 8, 16]), Cc = oct([2, 4, 8, 16]);
+  const br = 0x59, bg = 0x36, bb = 0x86;   // the deep 袱紗 purple (unchanged)
+  for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+    const u = x / S, v = y / S, wx = (fbm(B, u, v) - .5) * .5, wy = (fbm(Cc, u, v) - .5) * .5;        // the fold
+    const cl = fbm(A, u + wx, v + wy) - .5;                                                         // the clouds
+    const ph = (u + wx * 1.4) * 2 + (v + wy * 1.4) * 1 + cl * 1.6, vn = Math.pow(1 - Math.abs(Math.sin(ph * Math.PI)), 9);   // thin veins along the flow
+    const f = 1 + cl * .1 + vn * .04, d = (R() - .5) * 1.6, p = (y * S + x) * 4;
+    o[p] = Math.min(255, br * f + vn * 5 + d); o[p + 1] = Math.min(255, bg * f + vn * 4 + d); o[p + 2] = Math.min(255, bb * f + vn * 6 + d); o[p + 3] = 255;
+  }
+  g.putImageData(im, 0, 0);
   const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; return t;
 }
 // a small studio around the table for the polished surfaces to reflect: a soft ceiling light, a window strip, dark walls

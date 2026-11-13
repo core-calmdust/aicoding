@@ -85,7 +85,7 @@
   }
   // the hand of the characters (萬子・風牌・發・中・花／季節): traced from photos of real Japanese tiles into one sheet
   // (atlas/tools/shanghai-glyphs.py → atlas/img/shanghai-glyphs.png): 8×3 cells of GW×GH, ink per channel (R black, G red, B green)
-  const GW = 280, GH = 390, GLYPH_URL = new URL('../img/shanghai-glyphs.png?v=2', (document.currentScript && document.currentScript.src) || location.href).href;
+  const GW = 280, GH = 390, GLYPH_URL = new URL('../img/shanghai-glyphs.png?v=3', (document.currentScript && document.currentScript.src) || location.href).href;
   let glyphImg = null, glyphPr = null; const glyphCv = {};
   function glyphP() {
     const one = (url, set) => new Promise(res => { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { set(im); res(); }; im.onerror = () => res(); im.src = url; setTimeout(res, 4000); });
