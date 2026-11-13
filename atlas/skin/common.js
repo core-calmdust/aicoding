@@ -549,7 +549,7 @@
     if (o.turn === false || !T3.turn) return;
     cancelAnimationFrame(turnRaf);
     const st = boardDom.style, ups = o.upright ? [...boardDom.querySelectorAll(o.upright)] : [];
-    const clear = () => { st.rotate = st.scale = ''; ups.forEach(e => { e.style.rotate = ''; }); };
+    const clear = () => { st.rotate = st.scale = st.willChange = ''; ups.forEach(e => { e.style.rotate = ''; }); };
     const b = box();
     if (document.documentElement.classList.contains('atlas-2d') || !host.getClientRects().length || !b.w) { turnRaf = 0; clear(); turnRest(); document.documentElement.classList.remove('atlas-turning'); return; }   // (the 2D board: no turn, the 3D one rests in place for later)
     const front = o.turn === 'y', Y1 = holdYaw(), d = Y1 ? -1 : 1;   // yaw = Y1 + d·a while a goes π → 0
@@ -580,6 +580,7 @@
     const step = now => { const k = window.__atlasTurnK ?? Math.min(1, (now - t0) / D);   // (__atlasTurnK: a fixed point of the turn, for checking it)
       if (k >= 1) return done(); pose(Math.PI * (1 - ease(k))); turnRaf = requestAnimationFrame(step); };
     document.documentElement.classList.add('atlas-turning');   // (html.atlas-turning: glare layers over the board fade out meanwhile — skin.css)
+    st.willChange = 'rotate, scale';   // (its own layer while turning: the pieces' masks and shadows are drawn once, not again every frame — the 3D shogi board turned slowly, 2026-11-13)
     pose(Math.PI); turnRaf = requestAnimationFrame(step);
   }
   /* ---------- the portal's top bar: logo, coins, language, home (same layout as the portal) ---------- */
