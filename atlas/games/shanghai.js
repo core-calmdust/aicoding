@@ -47,6 +47,25 @@
     if (cssDone) return; cssDone = true;
     const s = document.createElement('style');
     s.textContent = `
+/* 縦横切り替え (phones): the button sits left of やめる; turned = the camera is rolled 90° and the page's UI turns with it (#bv.land.shl, html.sh-land) */
+.shlb{position:absolute;z-index:3;top:calc(12px + env(safe-area-inset-top));inset-inline-end:calc(22px + var(--shq,96px));display:none;width:var(--hudh,45px);height:var(--hudh,45px);padding:0;align-items:center;justify-content:center;border-radius:50%;border:0;cursor:pointer;background:#fffdf7;color:#2b3044;box-shadow:0 4px 0 #eadfc6,0 10px 18px -10px rgba(0,0,0,.5)}
+.shlb svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.bv.playing .shlb.can{display:inline-flex}.shlb.on{background:#ffcc33;box-shadow:0 4px 0 #e0a416,0 10px 18px -10px rgba(0,0,0,.5)}
+.shlb.pulse::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:3px solid #ffcc33;animation:shlp 1.1s ease-out infinite;pointer-events:none}
+@keyframes shlp{0%{opacity:.95;transform:scale(1)}100%{opacity:0;transform:scale(1.6)}}
+.bv.land.shl .hud{left:calc(100% - 10px - env(safe-area-inset-right))!important;right:auto!important;top:calc(12px + env(safe-area-inset-top))!important;bottom:auto!important;transform-origin:0 0!important;transform:rotate(90deg)!important;max-width:calc(100vh - 230px)!important;zoom:1!important;white-space:nowrap}
+.bv.land.shl .quit{inset-inline:auto!important;left:calc(100% - 10px - env(safe-area-inset-right))!important;top:calc(100% - 12px - env(safe-area-inset-bottom))!important;transform-origin:0 0;transform:rotate(90deg) translateX(-100%)}
+.bv.land.shl .shlb{inset-inline:auto;left:calc(100% - 10px - env(safe-area-inset-right));top:calc(100% - 12px - env(safe-area-inset-bottom));transform-origin:0 0;transform:rotate(90deg) translateX(calc(-100% - var(--shq,96px) - 8px))}
+.bv.land.shl .endc{transform:translate(-50%,-50%) rotate(90deg);max-width:calc(100vh - 150px)}
+.bv.land.shl .endc.on{animation:shpopl .4s cubic-bezier(.3,1.5,.5,1)}
+@keyframes shpopl{from{transform:translate(-50%,-50%) rotate(90deg) scale(.85);opacity:0}}
+html.sh-land .shtoast{left:calc(16px + env(safe-area-inset-left));bottom:auto;top:50%;transform-origin:0 0;transform:rotate(90deg) translate(-50%,-100%);max-width:min(70vh,560px);white-space:nowrap}
+html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
+.shrot{position:fixed;inset:0;z-index:96;display:grid;place-items:center;pointer-events:none;opacity:1;transition:opacity .4s}.shrot.off{opacity:0}
+.shrot>div{display:flex;flex-direction:column;align-items:center;gap:10px;padding:20px 26px;border-radius:24px;background:rgba(16,22,40,.86);color:#fff;font-weight:800;font-size:18px;text-align:center;transform:rotate(90deg);white-space:nowrap}
+.shrot svg{width:92px;height:92px;fill:none;stroke:#ffd76a;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.shrot .ph{transform-origin:50% 50%;animation:shrotp 1.3s ease-in-out infinite alternate}
+@keyframes shrotp{0%,20%{transform:rotate(90deg)}80%,100%{transform:rotate(0)}}
 .shtoast{position:fixed;left:50%;bottom:calc(var(--tbclear,18px) + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:90;max-width:min(92vw,560px);padding:11px 20px;border-radius:99px;background:#163a2e;color:#fff;font-weight:700;font-size:16px;text-align:center;box-shadow:0 10px 24px -10px rgba(0,0,0,.5);pointer-events:none}
 .shask{position:fixed;inset:0;z-index:95;display:grid;place-items:center;background:rgba(10,14,24,.35)}
 .shask>div{background:#fffdf7;color:#1d2433;border-radius:20px;padding:22px 24px 18px;width:min(88vw,420px);box-shadow:0 24px 60px -20px rgba(0,0,0,.6);text-align:center}
@@ -176,9 +195,61 @@
     function faces() { for (let i = 0; i < n; i++) im.userData.setFace(i, face[i]); }
     faces();
     g.userData = { top: base + THh * (zMax + 1), _rb: Math.max(W, D) / 2 };
+    /* a stage is played on its constellation's night sky (ユーザー 2026-11-14: the background follows the theme): a cloth on the
+       table under the mat — a deep sky in the constellation's own hue, a field of stars, and the constellation itself drawn
+       above, below and beside the mat (so it shows in portrait, in landscape and on a wide screen). Free play keeps the table. */
+    let sky = null;
+    if (ST) {
+      const ai = Math.floor(ST.s / 10), con = CON[K.AREAS[ai]], S = Math.max(W, D) * 3 + 16, CS = innerWidth < 700 ? 1024 : 2048, cv = document.createElement('canvas'); cv.width = cv.height = CS;
+      const c = cv.getContext('2d'), R = K.rng ? K.rng(977 + ST.s * 13) : Math.random, u = CS / S, hue = (205 + ai * 30) % 360;
+      const bg = c.createRadialGradient(CS / 2, CS / 2, 0, CS / 2, CS / 2, CS * .62); bg.addColorStop(0, `hsl(${hue},52%,27%)`); bg.addColorStop(.45, `hsl(${(hue + 14) % 360},56%,17%)`); bg.addColorStop(1, `hsl(${(hue + 30) % 360},60%,8%)`);
+      c.fillStyle = bg; c.fillRect(0, 0, CS, CS);
+      for (let i = 0; i < 9; i++) { const x = R() * CS, y = R() * CS, r = CS * (.1 + R() * .16), ng = c.createRadialGradient(x, y, 0, x, y, r); ng.addColorStop(0, `hsla(${(hue + 40 + R() * 80) % 360},70%,60%,.13)`); ng.addColorStop(1, 'hsla(0,0%,0%,0)'); c.fillStyle = ng; c.fillRect(x - r, y - r, 2 * r, 2 * r); }
+      for (let i = 0; i < (CS > 1024 ? 1500 : 800); i++) { const x = R() * CS, y = R() * CS, r = (.5 + R() * R() * 1.5) * CS / 1024; c.fillStyle = `rgba(255,${235 + R() * 20 | 0},${200 + R() * 55 | 0},${.3 + R() * .6})`; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); }
+      const fw = Math.max(3.2, Math.min(W * .95, 6.5)), fs = fw / 100, fh = 64 * fs, ed = edges(K.AREAS[ai]);
+      const fig = (cx, cz) => {
+        const X = q => (cx + (q[0] - 50) * fs + S / 2) * u, Y = q => (cz + (q[1] - 32) * fs + S / 2) * u;
+        c.strokeStyle = 'rgba(255,224,150,.6)'; c.lineWidth = Math.max(1.5, .035 * u); c.lineCap = 'round'; c.beginPath(); ed.forEach(e => { c.moveTo(X(con.p[e[0]]), Y(con.p[e[0]])); c.lineTo(X(con.p[e[1]]), Y(con.p[e[1]])); }); c.stroke();
+        con.p.forEach(q => { const x = X(q), y = Y(q), r = .2 * u, gl = c.createRadialGradient(x, y, 0, x, y, r); gl.addColorStop(0, 'rgba(255,244,200,.95)'); gl.addColorStop(.25, 'rgba(255,220,130,.55)'); gl.addColorStop(1, 'rgba(255,220,130,0)'); c.fillStyle = gl; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); c.fillStyle = '#fffbe8'; c.beginPath(); c.arc(x, y, .055 * u, 0, 7); c.fill(); });
+      };
+      const gz = D / 2 + .9 + fh / 2, gx = W / 2 + .9 + fw / 2;
+      fig(0, -gz); fig(0, gz); fig(-gx, 0); fig(gx, 0);
+      const tex = new TH3.CanvasTexture(cv); if ('colorSpace' in tex) tex.colorSpace = 'srgb'; else if (TH3.sRGBEncoding) tex.encoding = TH3.sRGBEncoding; tex.anisotropy = 4;
+      const pg = new TH3.PlaneGeometry(S, S); pg.rotateX(-Math.PI / 2);
+      sky = new TH3.Mesh(pg, new TH3.MeshStandardMaterial({ map: tex, roughness: 1, metalness: 0 })); sky.position.y = .006; sky.receiveShadow = true; g.add(sky);
+    }
     T3.show('shanghai', g);
-    const tall = innerHeight > innerWidth * 1.15;
-    if (T3.fit) T3.fit(tall ? { w: W + 1.1, d: D + 1.6, y: base + THh, pitch: 1.28 } : { w: W + 1.0, d: D + 1.1, y: base + THh, pitch: 1.12 });   // (a little room round the mat: never touching the edges)
+    /* 縦横切り替え (phones, ユーザー 2026-11-14): with the phone's rotation locked the game can still be played sideways — the camera
+       rolls 90° (the layout gets the long side of the screen) and the page's UI turns with it; a short guide says to hold the
+       phone sideways. The choice is remembered (atlas-shanghai-land). Only where it means something: a touch screen held upright. */
+    const bvEl = ctx.el.parentNode, mqC = matchMedia('(pointer: coarse)'), mqP = matchMedia('(orientation: portrait)');
+    let landOn = false, turnedNow = false; try { landOn = localStorage.getItem('atlas-shanghai-land') === '1'; } catch (e) {}
+    css();
+    const lb = document.createElement('button'); lb.type = 'button'; lb.className = 'shlb'; lb.title = tx('b.land'); lb.setAttribute('aria-label', tx('b.land'));
+    lb.innerHTML = '<svg viewBox="0 0 24 24"><rect x="3.5" y="2.5" width="8" height="13" rx="1.8"/><rect x="8.5" y="13.5" width="13" height="8" rx="1.8" stroke-dasharray="2.4 2.2"/><path d="M15 4.5a5.5 5.5 0 0 1 5.5 5.5"/><path d="M22.4 8 20.5 10.2 18.3 8.4"/></svg>';
+    if (bvEl) bvEl.appendChild(lb);
+    function guide() {
+      const el = document.createElement('div'); el.className = 'shrot';
+      el.innerHTML = `<div><svg viewBox="0 0 48 48"><g class="ph"><rect x="15" y="6" width="18" height="36" rx="3.5"/><path d="M21.5 37.5h5"/></g></svg><span>${esc(tx('msg.hold'))}</span></div>`;
+      document.body.appendChild(el); setTimeout(() => el.classList.add('off'), 2300); setTimeout(() => el.remove(), 2750);
+    }
+    function frame() {
+      const can = mqC.matches && mqP.matches, tn = landOn && can;
+      lb.classList.toggle('can', can); lb.classList.toggle('on', tn);
+      if (bvEl) { bvEl.classList.toggle('land', tn); bvEl.classList.toggle('shl', tn); const q = document.getElementById('bvQuit'); if (q && q.offsetWidth) bvEl.style.setProperty('--shq', q.offsetWidth + 'px'); }
+      document.documentElement.classList.toggle('sh-land', tn);
+      const tall = innerHeight > innerWidth * 1.15;
+      if (T3.fit) T3.fit(tn ? { w: W + 1.2, d: D + 1.6, y: base + THh, pitch: 1.12, roll: 1 }
+        : tall ? { w: W + 1.1, d: D + 1.6, y: base + THh, pitch: 1.28 } : { w: W + 1.0, d: D + 1.1, y: base + THh, pitch: 1.12 });   // (a little room round the mat: never touching the edges)
+      try { if (window.__tbar) window.__tbar.place(); } catch (e) {}
+      if (tn && !turnedNow) guide();
+      turnedNow = tn; kick(400);
+    }
+    lb.onclick = e => { e.stopPropagation(); landOn = !landOn; try { localStorage.setItem('atlas-shanghai-land', landOn ? '1' : '0'); } catch (x) {} lb.classList.remove('pulse'); frame(); };
+    const onRs = () => { if (!stopped) frame(); };
+    addEventListener('resize', onRs); (mqP.addEventListener ? mqP.addEventListener('change', onRs) : mqP.addListener(onRs));
+    frame(); setTimeout(onRs, 300);
+    if (!landOn && mqC.matches && mqP.matches) { lb.classList.add('pulse'); setTimeout(() => lb.classList.remove('pulse'), 4500); }   // (it is there: a few rings on the first look)
 
     /* the HUD: tiles left · the mission / pairs open · the clock */
     function hud() {
@@ -357,6 +428,11 @@
         if (toastEl) toastEl.remove(); if (askEl) askEl.remove();
         ctx.el.removeEventListener('click', onClick);
         if (im.userData.dispose) im.userData.dispose(); if (shm.userData.dispose) shm.userData.dispose();
+        if (sky) { sky.geometry.dispose(); sky.material.map.dispose(); sky.material.dispose(); }
+        removeEventListener('resize', onRs); (mqP.removeEventListener ? mqP.removeEventListener('change', onRs) : mqP.removeListener(onRs));
+        lb.remove(); if (bvEl) { bvEl.classList.remove('land', 'shl'); } document.documentElement.classList.remove('sh-land');
+        document.querySelectorAll('.shrot').forEach(e => e.remove());
+        try { if (window.__tbar) window.__tbar.place(); } catch (e) {}
         if (window.__shPlay === dbg) delete window.__shPlay;
       },
     };

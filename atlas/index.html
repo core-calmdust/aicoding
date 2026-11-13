@@ -406,6 +406,7 @@ html.hand-on,html.hand-on body,html.hand-on body *{-webkit-user-select:none;user
 .endc h3{margin:0;font-family:var(--round);font-size:min(30px,7.2vw);white-space:nowrap}.endc{max-width:calc(100vw - 24px);box-sizing:border-box}
 .endc .sc{font-family:var(--round);font-weight:700;font-size:20px;color:var(--ink2)}
 .endc .eacts{width:100%}.endc .eacts > .btn{flex:1 1 0;min-width:0;white-space:nowrap;padding-left:10px;padding-right:10px}   /* (やめる · もう一局 side by side on phones too, 2026-11-13) */
+@media (max-width:560px){.endc .eacts.e3{gap:6px!important}.endc .eacts.e3 > .btn{font-size:15px;padding-left:4px;padding-right:4px;min-width:0!important;overflow:hidden;text-overflow:clip}}   /* (three buttons — 上海's 次へ — fit a phone, 2026-11-14) */
 @media (min-width:900px) and (pointer:fine){.endc{gap:16px;padding:36px 48px;min-width:460px;border-radius:34px}.endc h3{font-size:42px}.endc .sc{font-size:28px}.endc .gnote{font-size:17px}.endc .gbest{font-size:19px;font-weight:800}.endc .btn{min-width:170px!important;height:60px!important;font-size:20px!important;padding:0 26px!important}}   /* (PC: the end card larger, 2026-11-13) */
 /* table play: the action bar (待った · 投了 · ヒント) with the clocks at its ends — bottom centre, the board is framed above it */
 .tbar{position:absolute;z-index:3;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;align-items:center;gap:6px;padding:5px;border-radius:99px;background:rgba(255,253,247,.95);border:2px solid #fff;box-shadow:0 10px 24px -12px rgba(80,40,0,.5);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .3s}
@@ -2260,7 +2261,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   }, 60);
 };</script>
 <script src="../shared/tapword.js?v=1"></script>
-<script src="lazy.js?v=214"></script>
+<script src="lazy.js?v=215"></script>
 <script src="puzzle-lines.js?v=1"></script>
 <script src="puzzles.js?v=26"></script>
 <script src="lessons3d.js?v=34"></script>
@@ -2277,7 +2278,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=34"></script>
 <script src="npc/npc.js?v=32"></script>
 <script src="avtalk.js?v=3"></script>
-<script src="app.js?v=352"></script>
+<script src="app.js?v=353"></script>
 <script src="../shared/praline-badge.js?v=8" data-portal defer></script>
 </body>
 </html>
