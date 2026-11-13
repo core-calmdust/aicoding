@@ -935,3 +935,8 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) .modal.ngt-on .ngt-foot > .modal-act
 @media (pointer: coarse) and (max-width: 760px){
   html.atlas-skin body:not(#_) .modal:not(#_):not(#_) :is(.modal-actions, .rt-nav) :is(button, .mbtn, a.mbtn):not(#_):not(#_):not(#_){min-height:40px!important;height:40px!important;padding:0 12px!important;font-size:15px!important;line-height:1!important;border-radius:12px!important}
 }
+@media (pointer: coarse) and (max-width: 760px){
+  /* (2026-11-13) a lone bottom button (閉じる alone) the size of one of three, centred — not a full-width bar */
+  html.atlas-skin body:not(#_) .modal:not(#_):not(#_) .modal-actions:has(> :is(button,.mbtn):only-child){justify-content:center!important}
+  html.atlas-skin body:not(#_) .modal:not(#_):not(#_) .modal-actions > :is(button,.mbtn):only-child:not(#_):not(#_):not(#_){flex:0 0 calc((100% - 20px) / 3)!important;width:calc((100% - 20px) / 3)!important;max-width:none!important}
+}
