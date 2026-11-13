@@ -1726,9 +1726,15 @@
       S0.body.className = 'lesson-list lx-on';
       S0.body.innerHTML = `<div class="pzh-box">${hero}${tabs}</div>` + ban + `<div class="lx-grid">${list.map(card).join('')}</div>`;
     };
+    // a set's problems (2026-11-13): a header like the list's (the set's picture, its aim, the progress), then a tile per problem with
+    // its own small board, the number and the stars (stages still locked greyed)
+    let PB = null; if (AtlasPuzzles.book) AtlasPuzzles.book(g.id).then(b => { PB = b; }).catch(() => {});
+    const thumbOf = P => !P ? '' : P.fen ? (window.AtlasMini ? AtlasMini.chess(P.fen) : '') : P.p && P.b ? (window.AtlasMini && AtlasMini.peg ? AtlasMini.peg(P.b + ':' + P.p + ':' + P.t) : '') : P.cells ? pzMini(P.cells) : '';
     const showSet = k => { const x = sets.find(y => String(y.key) === String(k)); if (!x) return; S0.back.hidden = false; S0.title.textContent = x.title;
+      const list = PB ? PB.problems(x.key) : [], done = x.recs.filter(v => v > 0).length, st = x.recs.reduce((a, v) => a + v, 0), th0 = /^fen:/.test(x.board || '') ? (window.AtlasMini ? AtlasMini.chess(x.board.slice(4)) : '') : /^peg:/.test(x.board || '') ? (window.AtlasMini && AtlasMini.peg ? AtlasMini.peg(x.board.slice(4)) : '') : pzMini(x.board);
       S0.body.className = 'lesson-list lx-on lvs-l';
-      S0.body.innerHTML = `<div class="pzs-grid pzh-grid">${x.recs.map((v, j) => `<button type="button" data-i="${x.key}" data-j="${j}" class="pzs-c${v ? ' ok' : ''}" ${x.open[j] ? '' : 'disabled'}><b>${j + 1}</b><small>${x.open[j] ? STAR(v) : '🔒'}</small></button>`).join('')}</div>`;
+      S0.body.innerHTML = `<div class="pzs-head">${th0 ? `<span class="pzs-hth">${th0}</span>` : ''}<span class="pzs-htx"><b>${esc(x.title)}</b>${x.desc ? `<small>${esc(x.desc)}</small>` : ''}<span class="pzh-row"><span class="pzh-bar"><i style="width:${x.recs.length ? Math.round(done * 100 / x.recs.length) : 0}%"></i></span><span class="pzh-n">${done}/${x.recs.length} · ★${st}/${x.recs.length * 3}</span></span></span></div>`
+        + `<div class="pzs-grid pzh-grid pzs-img">${x.recs.map((v, j) => `<button type="button" data-i="${x.key}" data-j="${j}" class="pzs-c${v ? ' ok' : ''}" ${x.open[j] ? '' : 'disabled'}>${x.open[j] && list[j] ? `<span class="pzs-th">${thumbOf(list[j])}</span>` : ''}<b>${j + 1}</b><small>${x.open[j] ? STAR(v) : '🔒'}</small></button>`).join('')}</div>`;
       const nx = S0.body.querySelector('.pzs-c:not(.ok):not(:disabled)'); if (nx) nx.scrollIntoView({ block: 'center' }); };
     Promise.all([AtlasPuzzles.sets(g.id, lang), AtlasPuzzles.cats ? AtlasPuzzles.cats(g.id, lang).catch(() => null) : null]).then(([S, C]) => { sets = S; cats = C; showSets(); }).catch(() => { S0.body.textContent = '⚠'; });
     S0.back.onclick = () => { try { SFX.tap && SFX.tap(); } catch (x) {} showSets(); };

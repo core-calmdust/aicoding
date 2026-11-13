@@ -174,11 +174,18 @@
   // peg solitaire (2026-11-13): 'board:pegs:goal' (peg/puzzles.json b · p · t) on the board's own hole layout (PegEngine)
   window.AtlasMini.peg = cells => {
     const E = window.PegEngine, [b, p, t] = String(cells || '').split(':'), B = E && E.BOARDS[b]; if (!B) return '';
-    const xs = B.pos.map(q => q[0]), ys = B.pos.map(q => q[1]), x0 = Math.min(...xs), y0 = Math.min(...ys), w = Math.max(...xs) - x0 + 1, h = Math.max(...ys) - y0 + 1, S = Math.max(w, h), k = 76 / S, ox = 4 + (S - w) * k / 2 + k / 2, oy = 4 + (S - h) * k / 2 + k / 2;
-    const tri = !!B.tri, kk = tri ? k * .6 : k, ox2 = tri ? 42 - (w - 1) * kk / 2 : ox, oy2 = tri ? 50 - (h - 1) * kk / 2 : oy;   // (the triangle: a triangular plate, the holes smaller to fit it)
-    let o = `<svg viewBox="0 0 84 84" aria-hidden="true">` + (tri ? `<path d="M42 3 L81 76 Q82 80 78 80 L6 80 Q2 80 3 76 Z" fill="#8f5a36" stroke-linejoin="round"/><path d="M42 9 L75 74 L9 74 Z" fill="#a86c40" stroke="#5a321a" stroke-width="1" stroke-linejoin="round"/>` : `<circle cx="42" cy="42" r="41" fill="#8f5a36"/><circle cx="42" cy="42" r="37.5" fill="#a86c40" stroke="#5a321a" stroke-width="1"/>`);
-    B.pos.forEach(([x, y], i) => { const K = tri ? kk : k, cx = (tri ? ox2 : ox) + (x - x0) * K, cy = (tri ? oy2 : oy) + (y - y0) * K, on = p[i] === '1';
-      o += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(K * .3).toFixed(1)}" fill="#3a1e0e"/>` + (on ? `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(K * .36).toFixed(1)}" fill="#e2493f" stroke="#7a1a12" stroke-width=".5"/>` : '') + (+t === i ? `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(K * .44).toFixed(1)}" fill="none" stroke="#ffd36b" stroke-width="1.2"/>` : ''); });
+    const xs = B.pos.map(q => q[0]), ys = B.pos.map(q => q[1]), x0 = Math.min(...xs), y0 = Math.min(...ys), w = Math.max(...xs) - x0, h = Math.max(...ys) - y0;
+    let o = '<svg viewBox="0 0 84 84" aria-hidden="true">', K, ox, oy;
+    if (B.tri) {   // a triangular plate: the same rim all round (an inset of the outline), the holes spread over its face (2026-11-13)
+      const T = [[42, 6], [80, 72], [4, 72]], I = [42, 50], ins = (q, f) => q.map(([x, y]) => [I[0] + (x - I[0]) * f, I[1] + (y - I[1]) * f]), pth = q => 'M' + q.map(v => v.map(n => n.toFixed(1)).join(' ')).join('L') + 'Z';
+      o += `<path d="${pth(T)}" fill="#8f5a36" stroke="#8f5a36" stroke-width="6" stroke-linejoin="round"/><path d="${pth(ins(T, .84))}" fill="#a86c40" stroke="#5a321a" stroke-width="1" stroke-linejoin="round"/>`;
+      K = 62 * .84 * .8 / w; ox = I[0] - w * K / 2; oy = I[1] + (h * K) / 3 - h * K;   // (the holes' triangle on the plate's centre)
+    } else {
+      const S = Math.max(w, h) + 1; K = 76 / S; ox = 42 - w * K / 2; oy = 42 - h * K / 2;
+      o += `<circle cx="42" cy="42" r="41" fill="#8f5a36"/><circle cx="42" cy="42" r="37.5" fill="#a86c40" stroke="#5a321a" stroke-width="1"/>`;
+    }
+    B.pos.forEach(([x, y], i) => { const cx = (ox + (x - x0) * K).toFixed(1), cy = (oy + (y - y0) * K).toFixed(1);
+      o += `<circle cx="${cx}" cy="${cy}" r="${(K * .3).toFixed(1)}" fill="#3a1e0e"/>` + (p[i] === '1' ? `<circle cx="${cx}" cy="${cy}" r="${(K * .36).toFixed(1)}" fill="#e2493f" stroke="#7a1a12" stroke-width=".5"/>` : '') + (+t === i ? `<circle cx="${cx}" cy="${cy}" r="${(K * .44).toFixed(1)}" fill="none" stroke="#ffd36b" stroke-width="1.2"/>` : ''); });
     return o + '</svg>';
   };
   /* ---------- the two collections: problems, records ---------- */
@@ -620,7 +627,7 @@
 
   // the raw collection for the portal's illustrated 問題一覧 (atlas/app.js tsumeBook): the sets, each set's problems as the
   // full game lists them (pinned old / new versions), the daily picks
-  const book = id => loadBook(id).then(B => ({ sets: B.sets(), data: B.data, problems: i => id === 'shogi' ? B.list(B.data.sets[i], B.stars()) : B.data.levels[i].puzzles, daily: w => dailyPick(id, w), LAST: B.LAST, DAILY: DAILY[id] }));
+  const book = id => loadBook(id).then(B => ({ sets: B.sets(), data: B.data, problems: i => id === 'shogi' ? B.list(B.data.sets[i], B.stars()) : id === 'peg' ? B.data.themes[i].list : B.data.levels[i].puzzles, daily: w => dailyPick(id, w), LAST: B.LAST, DAILY: DAILY[id] }));
   // today's puzzle solved? (the card's ✓, 2026-11-13) — the full games' own daily stores
   function done(id, which) {
     const D = DAILY[id]; if (!D) return false; const k = D[which] || D.d1, o = store.get(k, null) || {}, today = ymd(new Date());

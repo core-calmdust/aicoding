@@ -1729,6 +1729,15 @@ html:has(#bv.on,#hist.on,#ov.on,.lvsheet) :is(.updline,#gsSeg),.updline[hidden],
 #lessonOverlay .pzh-ic.sm{width:24px;height:24px;border-radius:8px;padding:4px}
 #lessonOverlay .pzh-grid{grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:10px}
 #lessonOverlay .pzh-grid .pzs-c{height:66px;border-radius:16px}
+/* a set's problems with pictures (2026-11-13): the set's header, then tiles with each problem's board */
+#lessonOverlay .pzs-head{display:flex;align-items:center;gap:16px;margin:0 0 14px;padding:12px 16px;border-radius:20px;background:#fffaf0;border:2px solid #ead9b6;box-shadow:0 3px 0 #ead9b6}
+#lessonOverlay .pzs-hth{flex:none;width:96px;height:96px;display:grid;place-items:center}#lessonOverlay .pzs-hth svg{width:100%;height:100%;filter:drop-shadow(0 3px 5px rgba(90,55,10,.25))}
+#lessonOverlay .pzs-htx{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}#lessonOverlay .pzs-htx b{font:900 22px var(--font);color:var(--ink)}#lessonOverlay .pzs-htx small{font:700 13px/1.5 var(--font);color:var(--ink2)}
+#lessonOverlay .pzs-img{grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:12px}
+#lessonOverlay .pzs-img .pzs-c{height:auto!important;padding:8px 6px 7px;gap:3px;border-radius:16px}
+#lessonOverlay .pzs-img .pzs-th{display:grid;place-items:center;width:100%;aspect-ratio:1;border-radius:12px;background:radial-gradient(closest-side,rgba(120,80,30,.12),transparent 80%),#f8efd9;padding:6px;box-sizing:border-box}
+#lessonOverlay .pzs-img .pzs-th svg{width:100%;height:100%}
+#lessonOverlay .pzs-img .pzs-c:disabled{min-height:150px}
 /* 詰将棋の一覧 (tsumeBook, 2026-11-12): 続きから in the hero, the dailies, a coloured mark + difficulty bars per set */
 #lessonOverlay .pzh-sn{margin-inline-start:12px;color:#b36b00}
 #lessonOverlay .pzh-go{position:relative;flex:none;display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px 22px;border:0;border-radius:18px;background:var(--coral);color:#fff;box-shadow:0 4px 0 var(--coral2);font-family:var(--font);cursor:pointer;max-width:240px}
@@ -1860,7 +1869,7 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 .bvi .mxb{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:0;height:48px;padding:0 12px;border-radius:14px;border:2px solid var(--line);background:#fff;box-shadow:0 3px 0 var(--line);font:900 14.5px var(--font);color:var(--ink);cursor:pointer;white-space:nowrap}
 .bvi .mxb.pzok,.mxb.pzok{position:relative;background:#eef8f1!important;border-color:#9fd8b8!important;box-shadow:0 3px 0 #9fd8b8!important;color:#2e7d55}.mxb.pzok::after{content:'✓';flex:none;display:inline-grid;place-items:center;width:20px;height:20px;margin-left:2px;border-radius:50%;background:#2f9a6a;color:#fff;font-size:12px;font-weight:900}   /* (today's puzzle solved, 2026-11-13) */
 .bvi .mxb:hover{background:#fffaf0}
-.bvi .pgbest{flex:1 1 100%;box-sizing:border-box;display:flex;align-items:center;gap:12px;margin:0!important;padding:10px 16px;border-radius:14px;background:#fff;border:2px solid var(--line);box-shadow:0 3px 0 var(--line);font-size:15px;font-weight:900;color:#2b3044}.bvi .pgbest b{font-size:30px;line-height:1.1;font-weight:900;color:#e5484d;letter-spacing:.02em;text-shadow:0 2px 0 rgba(229,72,77,.15)}.bvi .pgbest .pgd{margin-inline-start:auto;font-size:12.5px;font-weight:700;color:#9a8762}.bvi .pgbest em + .pgd{margin-inline-start:0}.bvi .pgbest em{margin-inline-start:auto;font-style:normal;font-weight:900;font-size:15px;color:#b07a00;background:#fff;border:2px solid #f3dca0;border-radius:99px;padding:3px 12px}   /* (ペグ: the chosen board's best, large; the same gap as the rows above — 2026-11-13) */
+.bvi .pgbest{flex:1 1 100%;box-sizing:border-box;display:flex;align-items:center;gap:12px;margin:0!important;padding:10px 16px;border-radius:14px;background:#fff;border:2px solid var(--line);box-shadow:0 3px 0 var(--line);font-size:15px;font-weight:900;color:#2b3044}.bvi .pgbest b{margin-inline-start:auto;font-size:23px;line-height:1.1;font-weight:900;color:#e5484d;letter-spacing:.02em;text-shadow:0 2px 0 rgba(229,72,77,.15)}.bvi .pgbest .pgd{font-size:12.5px;font-weight:700;color:#9a8762}.bvi .pgbest em + .pgd{margin-inline-start:0}.bvi .pgbest em{margin-inline-start:0;font-style:normal;font-weight:900;font-size:15px;color:#b07a00;background:#fff;border:2px solid #f3dca0;border-radius:99px;padding:3px 12px}   /* (ペグ: the chosen board's best, large; the same gap as the rows above — 2026-11-13) */
 .bvi #bvPz{display:grid;grid-template-columns:1fr 1fr;gap:10px}.bvi #bvPz .mxb[data-pz="list"]:nth-child(3){grid-column:1 / -1}
 .bvi .act.act3.act1 > a.btn{grid-column:1 / -1}
 .bvi .act.act3 #bvTable.mxw{background:#fff;color:var(--ink);box-shadow:0 4px 0 var(--line);border:2px solid var(--line)}
@@ -2223,7 +2232,7 @@ else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.j
 <script>/* the places other than the chabudai (tables3d.js, 440 KB): at once when one is chosen, else in idle time after the page has
    loaded (2026-11-10); 'atlas-places' tells the page they are there */
 (function () {
-  var SRC = 'tables3d.js?v=108', k = 0, p = null;
+  var SRC = 'tables3d.js?v=109', k = 0, p = null;
   try { k = +(localStorage.getItem('atlas-table') || 0) || 0; var m = /[?&]tbl=(\d+)/.exec(location.search); if (m) k = +m[1]; } catch (e) {}
   window.AtlasPlaces = function () { return p || (p = new Promise(function (res) { var s = document.createElement('script'); s.src = SRC; s.onload = s.onerror = function () { res(); try { dispatchEvent(new Event('atlas-places')); } catch (e) {} }; document.head.appendChild(s); })); };
   if (k) { document.write('<script src="' + SRC + '"><\/script>'); p = Promise.resolve(); }
@@ -2243,9 +2252,9 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   }, 60);
 };</script>
 <script src="../shared/tapword.js?v=1"></script>
-<script src="lazy.js?v=166"></script>
+<script src="lazy.js?v=167"></script>
 <script src="puzzle-lines.js?v=1"></script>
-<script src="puzzles.js?v=20"></script>
+<script src="puzzles.js?v=21"></script>
 <script src="lessons3d.js?v=13"></script>
 <script src="missions.js?v=8"></script>
 <link rel="stylesheet" href="historia.css?v=15">
@@ -2260,7 +2269,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=34"></script>
 <script src="npc/npc.js?v=30"></script>
 <script src="avtalk.js?v=2"></script>
-<script src="app.js?v=341"></script>
+<script src="app.js?v=342"></script>
 <script src="../shared/praline-badge.js?v=8" data-portal defer></script>
 </body>
 </html>
