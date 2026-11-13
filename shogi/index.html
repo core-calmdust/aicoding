@@ -4049,7 +4049,7 @@ function rvbArrows() {
   });
   return out;
 }
-if (window.RvBox && window.HeaderBar && !document.documentElement.classList.contains('atlas-skin')) RVB = RvBox.create({
+if (window.RvBox && window.HeaderBar) RVB = RvBox.create({   // (the full version too, 2026-11-13: 分析 shows the box under the board, as reversi)
   app: document.querySelector('.app'), media: HeaderBar.MEDIA, lang: () => LANG, boardWrap: document.querySelector('.board-area .frame'), boardRing: boardEl,
   refresh: () => { if (game) { drawArrows(); rvbRender(); } },
   onStudy: () => rvbStart(),
