@@ -2214,7 +2214,7 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 <canvas id="confetti"></canvas>
 
 <script>/* three.js r186 + the r128 compatibility layer (2026-11-13: the default; ?three=128 loads the old version) */
-if (!/[?&]three=128\b/.test(location.search)) document.write('<script src="vendor/three-r186.min.js?v=1"><\/script><script src="vendor/three-compat.js?v=14"><\/script>');
+if (!/[?&]three=128\b/.test(location.search)) document.write('<script src="vendor/three-r186.min.js?v=1"><\/script><script src="vendor/three-compat.js?v=15"><\/script>');
 else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');</script>
 <script src="texgen.js?v=2"></script>
 <script src="npc/roster.js?v=7"></script>
@@ -2240,7 +2240,7 @@ else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.j
 <script>/* the places other than the chabudai (tables3d.js, 440 KB): at once when one is chosen, else in idle time after the page has
    loaded (2026-11-10); 'atlas-places' tells the page they are there */
 (function () {
-  var SRC = 'tables3d.js?v=116', k = 0, p = null;
+  var SRC = 'tables3d.js?v=117', k = 0, p = null;
   try { k = +(localStorage.getItem('atlas-table') || 0) || 0; var m = /[?&]tbl=(\d+)/.exec(location.search); if (m) k = +m[1]; } catch (e) {}
   window.AtlasPlaces = function () { return p || (p = new Promise(function (res) { var s = document.createElement('script'); s.src = SRC; s.onload = s.onerror = function () { res(); try { dispatchEvent(new Event('atlas-places')); } catch (e) {} }; document.head.appendChild(s); })); };
   if (k) { document.write('<script src="' + SRC + '"><\/script>'); p = Promise.resolve(); }

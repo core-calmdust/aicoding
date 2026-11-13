@@ -4,7 +4,7 @@
    - colour management off: hex colours are taken as they are and the code's own convertSRGBToLinear() does the conversion, as in r128
    - .encoding / outputEncoding / sRGBEncoding / LinearEncoding → colorSpace / outputColorSpace / SRGBColorSpace / LinearSRGBColorSpace
    - the lights' intensities: r128's non-physical lighting is r186's physical one × π for directional / hemisphere / ambient lights;
-     point and spot lights take r128's decay (1) and the same × π */
+     point and spot lights take r128's decay (1), r128's fade with distance (the shader's getDistanceAttenuation) and the same × π */
 (function () {
   const T = window.THREE; if (!T || T.__compat) return; T.__compat = 1;
   try { T.ColorManagement.enabled = false; } catch (e) {}
@@ -36,13 +36,17 @@
       set(v) { if (v === true) { const im = this.image, w = im && (im.width || im.videoWidth), h = im && (im.height || im.videoHeight);
         if (w && h && this.__wh && this.__wh !== w + 'x' + h) this.dispose(); if (w && h) this.__wh = w + 'x' + h; } d.set.call(this, v); } }); }
   const PI = Math.PI;
+  // r128 (physicallyCorrectLights off): a point / spot light fades only inside its range, by (1 - d/D)^decay; with no range, not at all
+  try { const C = T.ShaderChunk, k = 'lights_pars_begin', i = C[k].indexOf('float getDistanceAttenuation('), j = C[k].indexOf('float getSpotAttenuation(');
+    if (i >= 0 && j > i) C[k] = C[k].slice(0, i) + 'float getDistanceAttenuation( const in float lightDistance, const in float cutoffDistance, const in float decayExponent ) {\n\tif ( cutoffDistance > 0.0 && decayExponent > 0.0 ) return pow( saturate( - lightDistance / cutoffDistance + 1.0 ), decayExponent );\n\treturn 1.0;\n}\n' + C[k].slice(j); } catch (e) {}
   const wrap = (name, decay) => { const B = T[name]; if (!B) return;
     X[name] = class extends B { constructor(...a) { super(...a); this.intensity *= PI;
       if (decay && this.decay !== undefined) {
-        // r128 (legacy lights): a point / spot light with no distance did not fade with distance at all; r186 always divides by
-        // distance^decay — far lights (the felt room's lamp, 2026-11-13) went dark. No distance → decay 0 (no fading), as r128.
-        let dc = a[3] !== undefined && name === 'PointLight' ? a[3] : a[5] !== undefined && name === 'SpotLight' ? a[5] : 1;
-        Object.defineProperty(this, 'decay', { configurable: true, get() { return 0; }, set(v) { dc = v; } });   // (2026-11-13: also with a distance — r128's legacy fade (1 - d/D)^decay is close to r186's own range window; dividing by d^decay on top darkened the felt room's lamp)
+        // (2026-11-13, v15) r128's own fade with distance, exactly: the shader's getDistanceAttenuation is r128's legacy one again (below),
+        // so decay is the real r128 value (default 1). Before, decay was forced to 0 and r186's range window stood in for the fade — but
+        // that window stays near 1 until the very end of the range where r128 fell off steadily ((1 - d/D)^decay): lamps over a table
+        // came out 1.5–2× too bright (the felt room, the sky lounge, the dining room at night — boards burnt out).
+        this.decay = name === 'PointLight' ? (a[3] !== undefined ? a[3] : 1) : (a[5] !== undefined ? a[5] : 1);
       } } }; };
   ['DirectionalLight', 'HemisphereLight', 'AmbientLight'].forEach(n => wrap(n));
   ['PointLight', 'SpotLight'].forEach(n => wrap(n, true));
