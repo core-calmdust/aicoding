@@ -138,12 +138,13 @@
     let face = dl.face.slice(), alive = new Array(n).fill(1), plan = dl.order.map(p => p.slice());
     const gold = new Set(ST && ST.type === 'gold' ? K.goldTiles(dl, ST.gold) : []);
     let sel = -1, busy = true, over = false, stopped = false, ply = 0, hist = [], hints = 0, shufs = 0, got = 0, goldGot = 0, hintPair = null;
-    let t0 = 0, tEnd = 0, clockT = 0, toastEl = null, toastT = 0, askEl = null;
+    let t0 = 0, tEnd = 0, pen = 0, clockT = 0, toastEl = null, toastT = 0, askEl = null;
     const timers = [], later = (f, ms) => timers.push(setTimeout(() => { if (!stopped) f(); }, ms));
     const kick = ms => { if (T3.kick) T3.kick(ms || 150); };
     const anim = (dur, f, done) => { const a0 = performance.now(); (function s(now) { if (stopped) return; const k = Math.min(1, Math.max(0, (now - a0) / dur)); f(k); kick(120); if (k < 1) requestAnimationFrame(s); else if (done) done(); })(a0); };
     const left = () => alive.reduce((s, v) => s + v, 0);
-    const elapsed = () => t0 ? ((tEnd || performance.now()) - t0) / 1000 : 0;
+    const SHUF_PEN = 10;   // a shuffle costs time: +10 s on the clock each (ユーザー 2026-11-14). It stays even if the shuffle is undone.
+    const elapsed = () => t0 ? ((tEnd || performance.now()) - t0) / 1000 + pen : 0;
 
     /* the board: the mat and the tiles (one InstancedMesh) */
     const TW = M3.TW, TD = M3.TD, THh = M3.TH;
@@ -276,7 +277,7 @@
       css(); if (askEl) askEl.remove();
       const el = askEl = document.createElement('div'); el.className = 'shask';
       const lbl = ST ? tx('msg.shufLeft', { n: SHUF_MAX - shufs }) : tx('b.shuffle');
-      el.innerHTML = `<div><b>${esc(tx('r.stuck'))}</b><p>${esc(tx('msg.stuck'))}</p><div class="r"><button class="n">${esc(tx('b.later'))}</button><button class="y">${esc(lbl)}</button></div></div>`;
+      el.innerHTML = `<div><b>${esc(tx('r.stuck'))}</b><p>${esc(tx('msg.stuck'))}<br><small style="opacity:.8">${esc(tx('msg.shufPen', { n: SHUF_PEN }))}</small></p><div class="r"><button class="n">${esc(tx('b.later'))}</button><button class="y">${esc(lbl)}</button></div></div>`;
       document.body.appendChild(el);
       el.querySelector('.n').onclick = () => { el.remove(); askEl = null; };
       el.querySelector('.y').onclick = () => { el.remove(); askEl = null; shuffle(); };
@@ -285,7 +286,7 @@
       if (busy || over) return;
       if (ST && (ST.type === 'pure' || shufs >= SHUF_MAX)) { toast(tx('msg.noshuf')); return; }
       const r = K.reshuffle(G, alive, face); if (!r) return;
-      busy = true; shufs++; ply++; hist.push({ t: 's', face: face.slice() }); SFX.shuf();
+      busy = true; shufs++; pen += SHUF_PEN; ply++; hist.push({ t: 's', face: face.slice() }); SFX.shuf(); toast(tx('msg.shufPen', { n: SHUF_PEN }), 2200); hud();
       if (sel >= 0) { st8[sel].lift = 0; sel = -1; } hintPair = null;
       const idx = []; alive.forEach((v, i) => { if (v) idx.push(i); });
       anim(520, k => { const h = Math.sin(k * Math.PI) * .45; idx.forEach((i, j) => { st8[i].lift = h; st8[i].rz = Math.sin(k * Math.PI * 2 + j) * .08 * Math.sin(k * Math.PI); place(i); }); im.instanceMatrix.needsUpdate = true;
