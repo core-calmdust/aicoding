@@ -200,7 +200,7 @@
     sakura: { top: 'top-sakura', side: 'sakura', stand: 'sakura', leg: ['#8a3a26', '#4a1c12'], bottom: 0x2a0806, line: 'rgba(48,20,10,.92)', raden: true },   // (v3: 朱溜 lacquer with 螺鈿 cherry blossoms and a 鶯)
   };
   const SH3 = (() => { try { return new URL('../../images/atlas/shogi3d/', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../images/atlas/shogi3d/'; } })();
-  const SH3V = '?v=15';
+  const SH3V = '?v=16';
   const lookOf = o => { const k = (o && o.look) || (X.BOARDS && X.BOARDS.shogi ? X.BOARDS.shogi.get() : 'kaya'); return LOOK[k] ? k : 'kaya'; };
   const imgs = {};
   function withImg(name, fn) {
