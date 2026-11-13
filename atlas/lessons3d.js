@@ -370,8 +370,72 @@
     rampPos: it => gPos(it, { noForbid: false }), rampBody: (it, lang) => L(it.body, lang),
     rampMarks: it => (it.marks || []).map(([q, c]) => [GSQ(q), GMK[c] || 'hl']),
     rampOk: (it, u) => gCells(it.ok || []).includes(u), rampAns: it => GSQ((it.ok || [])[0]), rampLook: it => gCells(it.look || []).map(q => [q, 'ring']),
+    rampSeq: it => gCells(it.seq || []), nm: m => GNM(m),
   };
-  const DATA = { shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU };
+  /* go (2026-11-13): go/lessons.json (21 steps of 5 problems on 7–19 boards: ok 20 · good 16 · half 10 points; the right line is played
+     out after the answer; a warm-up ramp before some) and go/openings.json (45 joseki / fuseki: the line move by move with notes and the
+     AI's values, then 5 practice positions). Progress = the full game's ('aicoding-go-lessons' / 'aicoding-go-open'). The texts are in the
+     JSON files themselves (all languages). A position here is { spec: { n, stones, turn }, me, view, marks } (index: row × n + column, row 0 at the top). */
+  const GOC = 'ABCDEFGHJKLMNOPQRST';
+  const goPc = (q, N) => { if (q == null) return null; if (typeof q === 'number') return q; q = String(q).toUpperCase(); if (q === 'PASS') return -1; const x = GOC.indexOf(q[0]), y = N - parseInt(q.slice(1), 10); return x >= 0 && x < N && y >= 0 && y < N ? y * N + x : null; };
+  const goPcs = (a, N) => (a || []).map(q => goPc(q, N)).filter(x => x != null);
+  const goNm = (m, N) => m < 0 ? 'pass' : GOC[m % N] + (N - Math.floor(m / N));
+  const goSpec = o => window.AtlasMini && AtlasMini.goSpec ? AtlasMini.goSpec(o) : o;
+  const goCrop = (sp, extra) => {   // = go/app.js cropOf(spec, extra, 9)
+    const n = sp.n || 9; if (n <= 9) return null; const S = []; for (let i = 0; i < n * n; i++) if (sp.stones[i] === 'b' || sp.stones[i] === 'w') S.push(i); (extra || []).forEach(i => { if (i >= 0) S.push(i); }); if (!S.length) return null;
+    const xs = S.map(i => i % n), ys = S.map(i => Math.floor(i / n)); let x0 = Math.max(0, Math.min(...xs) - 1), x1 = Math.min(n - 1, Math.max(...xs) + 1), y0 = Math.max(0, Math.min(...ys) - 1), y1 = Math.min(n - 1, Math.max(...ys) + 1);
+    const grow = (a, b) => { while (b - a + 1 < 9) { if (b < n - 1 && (a <= 0 || n - 1 - b <= a)) b++; else a--; } return [a, b]; }; [x0, x1] = grow(x0, x1); [y0, y1] = grow(y0, y1);
+    if (x0 <= 2) x0 = 0; if (y0 <= 2) y0 = 0; if (x1 >= n - 3) x1 = n - 1; if (y1 >= n - 3) y1 = n - 1;
+    return Math.max(x1 - x0, y1 - y0) + 1 >= n - 2 ? null : [x0, y0, x1, y1];
+  };
+  const GO_CLS = { ok: 'ok', ng: 'ng', hang: 'ng', tri: 'hl', sq: 'hl', dash: 'ring', hl2: 'ring', x: 'ng' };
+  let goRulesP = null;
+  const goRules = () => window.GoRules ? Promise.resolve() : goRulesP || (goRulesP = new Promise(res => { const sc = document.createElement('script'); sc.src = '../go/rules.js?v=2'; sc.onload = sc.onerror = () => res(); document.head.appendChild(sc); }));
+  const GO = {
+    LKEY: 'aicoding-go-lessons', OKEY: 'aicoding-go-open', data: null,
+    load() {
+      if (this.p) return this.p;
+      return (this.p = Promise.all([getJ('../go/lessons.json?v=20261113'), getJ('../go/openings.json?v=3'), goRules()]).then(([ls, op]) => { this.data = { ls, op }; return this; }).catch(e => { this.p = null; throw e; }));
+    },
+    mini: (sp, view) => window.AtlasMini && AtlasMini.go ? AtlasMini.go(sp, view) : '',
+    opStart: g => goSpec(g.start ? Object.assign({ n: g.n || 19 }, g.start) : { n: g.n || 19 }),
+    opLine: g => goPcs(g.line, g.n || 19),
+    after(sp, mv) { const R = window.GoRules; if (!R) return sp; let p = R.Pos.from(sp); for (const m of mv) { const r = p.tryPlay(m); if (!r) break; p = r.pos; } return p.spec(); },
+    list(kind, lang) {
+      const D = this.data;
+      if (kind === 'open') { const pr = J(this.OKEY, {}), cn = id => { const c = D.op.cats.find(x => x.id === id); return c ? L(c.title, lang) : id; };
+        return D.op.sets.map(g => ({ key: g.id, cat: g.cat, catName: cn(g.cat), title: L(g.title, lang), sub: L(g.short, lang), svg: this.mini(this.after(this.opStart(g), this.opLine(g).slice(0, g.show || 6)), g.view || null), st: pr[g.id] ? (pr[g.id].pass ? 'pass' : 'try') : '' })); }
+      const pr = J(this.LKEY, {}), cn = id => { const c = (D.ls.courses || []).find(x => x.id === id); return c ? L(c.title, lang) : id; };
+      return D.ls.steps.map((s, i) => { const P = (s.problems || [])[0], sp = P ? goSpec(P.s) : null; return { key: String(i), cat: s.course, catName: cn(s.course), title: L(s.title, lang), sub: L(s.sub, lang), svg: sp ? this.mini(sp, P.view || goCrop(sp)) : '', st: pr[s.id] ? (pr[s.id].clear ? 'pass' : 'try') : '', full: false }; });
+    },
+    lesson(key, lang) {
+      const s = this.data.ls.steps[+key]; if (!s) return null;
+      const RU = (k, v) => fill(L((this.data.ls.rampUi || {})[k], lang), v || {});
+      return { id: s.id, title: L(s.title, lang), intro: L(s.intro, lang), ramp: s.ramp && s.ramp.length ? s.ramp : null, RU,
+        probs: (s.problems || []).map(P => { const sp = goSpec(P.s), N = sp.n, ok = goPcs(P.ok, N);
+          return { pos: { spec: sp, me: sp.turn || 1, view: P.view || goCrop(sp, ok) }, kind: 'best', P: { ok, good: goPcs(P.good, N), half: goPcs(P.half, N) }, ask: L(s.goal, lang), ans: ok[0], line: goPcs(P.line, N), N,
+            good: () => L(P.why, lang), ng: () => L(P.ng, lang) || L(P.why, lang), hintTx: L(s.hint, lang), hint: ok.length ? [[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([dx, dy]) => { const x = ok[0] % N + dx, y = Math.floor(ok[0] / N) + dy; return x >= 0 && y >= 0 && x < N && y < N && sp.stones[y * N + x] === '.' ? y * N + x : -1; }).filter(q => q >= 0) : null }; }),
+        save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }, pass = pts >= max * .75; pr[s.id] = { best: Math.max(o.best || 0, pts), clear: o.clear || pass }; put(this.LKEY, pr); return pass; } };
+    },
+    opening(key, lang) {
+      const g = this.data.op.sets.find(x => x.id === key); if (!g) return null;
+      const N = g.n || 19, st = this.opStart(g), line = this.opLine(g), notes = {};
+      line.forEach((m, i) => { const side = i % 2 ? 3 - (st.turn || 1) : st.turn || 1, ev = g.evals && g.evals[i] != null ? ` <small>(${(g.evals[i] >= 0 ? '+' : '') + g.evals[i]})</small>` : '';
+        notes[String(i)] = `<b>${i + 1}. ${side === 1 ? '●' : '○'} ${goNm(m, N)}</b>${ev}` + ((g.notes || {})[String(i + 1)] ? '<br>' + L(g.notes[String(i + 1)], lang) : ''); });
+      const self = this, probs = shuffle(g.problems || []).slice(0, 5).sort((a, b) => a.at - b.at).map(P => { const ok = goPcs(P.ok, N);
+        const o = { kind: 'best', P: { ok, good: goPcs(P.good, N), half: goPcs(P.half, N) }, ask: L(self.data.op.goal || null, lang) || '', ans: ok[0], N };
+        Object.defineProperty(o, 'pos', { get() { const sp = self.after(st, line.slice(0, P.at)); return { spec: sp, me: sp.turn || 1, view: g.view || null }; } });   // (the position after `at` moves: the rules are loaded by then)
+        return o; });
+      return { id: g.id, title: L(g.title, lang), intro: L(g.story, lang) || L(g.short, lang), start: { spec: st, me: g.side || st.turn || 1, view: g.view || null }, steps: line, notes, probs,
+        save: (pts, max) => { const pr = J(this.OKEY, {}), o = pr[g.id] || { best: 0, pass: false }, pass = pts >= max * .75; pr[g.id] = Object.assign(o, { best: Math.max(o.best || 0, pts), pass: o.pass || pass, seen: true }); put(this.OKEY, pr); return pass; } };
+    },
+    points: (P, u) => (P.ok || []).includes(u) ? 20 : (P.good || []).includes(u) ? 16 : (P.half || []).includes(u) ? 10 : 0,   // = go/learn.js problemPoints
+    rampPos: it => { const sp = goSpec(it.s); return { spec: sp, me: sp.turn || 1, view: it.view || null }; }, rampBody: (it, lang) => L(it.body, lang),
+    rampMarks: it => { const N = goSpec(it.s).n; return (it.marks || []).map(([q, c]) => [goPc(q, N), GO_CLS[c] || 'hl']).filter(x => x[0] != null && x[0] >= 0); },
+    rampOk: (it, u) => goPcs(it.ok, goSpec(it.s).n).includes(u), rampAns: it => goPcs(it.ok, goSpec(it.s).n)[0], rampLook: it => goPcs(it.look, goSpec(it.s).n).map(q => [q, 'ring']),
+    rampSeq: it => goPcs(it.seq, goSpec(it.s).n), nm: (m, it) => goNm(m, goSpec(it.s).n),
+  };
+  const DATA = { shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO };
 
   function list(id, kind, lang) { const D = DATA[id]; return D.load().then(() => D.list(kind, lang)); }
   function next(id, kind, lang) { return list(id, kind, lang).then(L2 => { const x = L2.find(i => !i.full && i.st !== 'pass') || L2.find(i => !i.full); return x ? x.key : null; }); }
@@ -442,12 +506,14 @@
     function board(pos, sol, drill) {   // a position on the table (the first one starts the adapter); drill: chess's ★ stage { stars, safe }
       return new Promise(res => {
         onReady = res;
-        const G = pos && typeof pos === 'object' ? pos : null;   // (gomoku: { start, rule, me, last, pick, noForbid })
+        const G = pos && typeof pos === 'object' ? pos : null;   // (gomoku: { start, rule, me, last, pick, noForbid } · go: { spec, me, view, marks })
+        if (sess && id === 'go' && G && pz() && pz().n !== (G.spec.n || 9)) { sess.stop(); sess = null; }   // (go: another board size — a new board)
         if (!sess) {
           sess = ad.start({ el: ctx.el, Table3D: ctx.Table3D, lang: ctx.lang, t: ctx.t, mode: 'pz', level: 20, side: 1, bar: false, hud: () => {}, onTurn: () => {}, onEnd: () => {},
             pz: Object.assign({ fen: pos, sfen: pos, sol: sol || [], drill: drill || null, counts: id === 'reversi', ready: () => { const f = onReady; onReady = null; if (f) f(); }, moved: (u, i) => onMoved && onMoved(u, i) }, G || {}) });
           ctx.Table3D.play(true);
-        } else if (G) pz().load(G.start, G.rule, G.me, G.last, { pick: G.pick, noForbid: G.noForbid });
+        } else if (G && id === 'go') pz().load(G.spec, G.me, { view: G.view, marks: G.marks });
+        else if (G) pz().load(G.start, G.rule, G.me, G.last, { pick: G.pick, noForbid: G.noForbid });
         else if (drill && pz().drill) pz().drill(Object.assign({ fen: pos }, drill));
         else pz().load(pos, sol || []);
       });
@@ -469,7 +535,7 @@
         if (D.rampMarks) {   // gomoku: marks on points
           if (rh === 1) { say(L(it.h, ctx.lang)); pz().mark(D.rampMarks(it)); }
           else if (rh === 2) { say(L(it.h, ctx.lang) + '<br>' + RU('look')); pz().mark(D.rampMarks(it).concat(D.rampLook(it))); }
-          else { const a = D.rampAns(it); say(RU('ans', { m: GNM(a) })); pz().mark(D.rampMarks(it).concat([[a, 'ok']])); }
+          else { const a = D.rampAns(it); say(RU('ans', { m: D.nm(a, it) })); pz().mark(D.rampMarks(it).concat([[a, 'ok']])); }
           return;
         }
         if (rh === 1) { say(L(it.h, ctx.lang)); pz().annot && pz().annot(null); }
@@ -478,7 +544,7 @@
       };
       await board(D.rampPos ? D.rampPos(it) : it.fen); if (stopped || phase !== 'ramp' || cur.ri !== i) return;
       const marks0 = () => { if (D.rampMarks) pz().mark(D.rampMarks(it)); else if (pz().annot) pz().annot(it.k === 'explain' ? rmk(it) : null); };
-      if (it.k === 'explain' && it.seq && it.seq.length) { for (const q of it.seq) { await sleep(420); if (stopped || phase !== 'ramp' || cur.ri !== i) return; await pz().play(GSQ(q)); } }   // (an example sequence, played out)
+      if (it.k === 'explain' && it.seq && it.seq.length) { for (const q of (D.rampSeq ? D.rampSeq(it) : it.seq)) { await sleep(420); if (stopped || phase !== 'ramp' || cur.ri !== i) return; await pz().play(q); } }   // (an example sequence, played out)
       marks0();
       onMoved = u => {
         if (stopped || phase !== 'ramp' || cur.ri !== i) return;
@@ -621,13 +687,14 @@
     }
     function scored(p, pts, msg, u) {
       p.done = true; const n = Math.max(0, pts - (p.hinted && pts > 0 ? HINT_PEN : 0)); cur.res[cur.k] = n; dots();
-      if (id === 'gomoku' && typeof u === 'number') {   // (gomoku: the lesson's own words — why it wins / which points were right; the points marked)
+      if ((id === 'gomoku' || id === 'go') && typeof u === 'number') {   // (gomoku: the lesson's own words — why it wins / which points were right; the points marked)
         const okA = (p.P.ok && p.P.ok.length ? p.P.ok : [p.ans]).filter(q => q >= 0);
         if (pts < 16 || !p.good) pz().mark([...okA.filter(q => q !== u).slice(0, 4).map(q => [q, 'ok']), [u, pts >= 16 ? 'ok' : 'ng']]);
-        say(`${pts >= 16 ? line('solved') || pick(X.good) : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (pts >= 16 ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : '<br>' + fill(ANSW[ctx.lang] || ANSW.en, { m: GNM(p.ans) })));
+        say(`${pts >= 16 ? line('solved') || pick(X.good) : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (pts >= 16 ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : '<br>' + fill(ANSW[ctx.lang] || ANSW.en, { m: id === 'go' ? goNm(p.ans, p.N || 19) : GNM(p.ans) })) + (id === 'go' && pts < 20 && p.ans >= 0 ? '<br>' + fill(ANSW[ctx.lang] || ANSW.en, { m: goNm(p.ans, p.N || 19) }) : ''));
+        if (id === 'go' && p.line && p.line.length > 1) { const k = cur.k; later(async () => { if (!cur || cur.k !== k || phase !== 'prob') return; pz().undo(9); for (const q of p.line) { await sleep(700); if (!cur || cur.k !== k || phase !== 'prob' || stopped) return; await pz().play(q); } }, 900); }   // (go: the right line played out, as the full game)
         try { chime(pts >= 16); } catch (e) {}
         act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
-        if (pts >= 16 && cur.k + 1 < cur.probs.length) { const k = cur.k; later(() => { if (cur && cur.k === k && phase === 'prob' && !more.length) { cur.k++; prob(); } }, 2400); }   // (right: on to the next one by itself)
+        if (pts >= 16 && cur.k + 1 < cur.probs.length) { const k = cur.k, w = 2400 + (id === 'go' && p.line && p.line.length > 1 ? 900 + 700 * p.line.length : 0); later(() => { if (cur && cur.k === k && phase === 'prob' && !more.length) { cur.k++; prob(); } }, w); }   // (right: on to the next one by itself)
         return;
       }
       if (pts >= 16) say(`${line('solved') || pick(X.good)} <b>${fill(X.pts, { n })}</b>${p.why ? '<br>' + p.why : ''}`);

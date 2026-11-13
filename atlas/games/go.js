@@ -61,12 +61,18 @@
   function start(ctx) {
     const T3 = ctx.Table3D, TH = window.THREE, GB = T3.goban, t = ctx.t, X = TX[ctx.lang] || TX.en, lang = ctx.lang;
     const L = { you: t('p.you'), ai: t('p.ai'), turn: t('p.turn'), think: t('p.think'), win: t('res.win'), lose: t('res.lose'), draw: t('res.draw') };
-    const n = [9, 13, 19].includes(+ctx.size) ? +ctx.size : 9;
+    const PZ = ctx.pz || null;   // PZ: a puzzle / lesson position (atlas/puzzles.js · lessons3d.js): { spec: { n, stones, turn }, me, view } — no AI, ctx.pz.moved decides
+    const n = PZ && PZ.spec && PZ.spec.n ? PZ.spec.n : [9, 13, 19].includes(+ctx.size) ? +ctx.size : 9;
     const board = T3.MODELS.go(true, { n }); T3.show('go', board);
     const U = board.userData, Y = U.top, c = U.cell;
     const tall = innerHeight > innerWidth * 1.15;   // phones held upright: the width decides, so frame a little wider and keep the board centred
-    if (T3.fit) T3.fit(tall ? { w: U.W + 1.9, d: U.W + 3.4, y: Y - 1.3, cy: Y, pitch: 1.0 } : { w: U.W + .6, d: U.W + 3.4, y: Y - 2.4, cy: Y, pitch: 1.0 });   // the whole board from the player's side: the near side and the legs show
-    const pvp = ctx.mode === 'pvp', human = pvp ? 1 : ctx.side === 2 ? 2 : 1, ai = 3 - human;
+    const fitAll = () => { if (T3.fit) T3.fit(tall ? { w: U.W + 1.9, d: U.W + 3.4, y: Y - 1.3, cy: Y, pitch: 1.0 } : { w: U.W + .6, d: U.W + 3.4, y: Y - 2.4, cy: Y, pitch: 1.0 }); };   // the whole board from the player's side: the near side and the legs show
+    // a puzzle's part of a big board (view [x0, y0, x1, y1]): the camera frames that corner / side, a little wider than it
+    const fitView = v => { if (!v || !T3.fit) return fitAll(); const [a, b] = [U.pt(v[0], v[1]), U.pt(v[2], v[3])], w = Math.abs(b[0] - a[0]) + c * 2.4, d = Math.abs(b[1] - a[1]) + c * 2.4, k = Math.max(w, d);
+      T3.fit({ w: k + (tall ? 1.2 : .6), d: k + 2.2, y: Y - .6, cy: Y, pitch: 1.0, cx: (a[0] + b[0]) / 2, cz: (a[1] + b[1]) / 2 - c * 1.4, ease: true }); };   // (a little past the part's middle: the panel at the bottom covers the near side)
+    if (PZ && PZ.view) fitView(PZ.view); else fitAll();
+    const pvp = ctx.mode === 'pvp';
+    let human = PZ ? PZ.me || 1 : pvp ? 1 : ctx.side === 2 ? 2 : 1, ai = 3 - human, startSpec = PZ ? PZ.spec : { n };
     const pname = col => col === 1 ? X.p1 : X.p2, fmt = (s, o) => s.replace(/\{(\w+)\}/g, (_, k) => o[k] !== undefined ? o[k] : '');
     const pts = v => { v = Math.abs(Math.round(v * 2) / 2); return lang === 'ja' ? (v % 1 ? Math.floor(v) + '目半' : v + '目') : fmt(X.pts, { n: v % 1 ? v.toFixed(1) : String(v) }); };
     const xz = m => U.pt(m % n, Math.floor(m / n));
@@ -117,8 +123,8 @@
 
     /* ---------- marks: the last move, the hint, the counted territory, dead stones ---------- */
     const basic = (color, op) => new TH.MeshBasicMaterial({ color, transparent: true, opacity: op, toneMapped: false, depthWrite: false });
-    const MAT = { last: basic(0xff3b2b, .95), tb: basic(0x15161a, .88), tw: basic(0xfaf7ee, .95), deadB: null, deadW: null };
-    const GEO = { last: new TH.CylinderGeometry(c * .13, c * .13, .01, 24), terr: new TH.BoxGeometry(c * .36, .012, c * .36) };
+    const MAT = { last: basic(0xff3b2b, .95), tb: basic(0x15161a, .88), tw: basic(0xfaf7ee, .95), deadB: null, deadW: null, ok: basic(0x2fd17a, .75), ng: basic(0xe0301e, .85), hl: basic(0xffb21a, .62) };
+    const GEO = { last: new TH.CylinderGeometry(c * .13, c * .13, .01, 24), terr: new TH.BoxGeometry(c * .36, .012, c * .36), dot: new TH.CylinderGeometry(c * .28, c * .28, .008, 28) };
     const H = c * .47 * GB.SH * 2;   // stone height
     let pulsing = [], pulseOn = false;
     function clearMarks() { while (marks.children.length) marks.remove(marks.children[0]); pulsing = []; kick(); }
@@ -127,6 +133,12 @@
       clearMarks(); hintM = -1; hintJ++;
       const lm = moves.length ? moves[moves.length - 1] : -1;
       if (lm >= 0 && pos.b[lm]) addMark(GEO.last, MAT.last, lm, H + .004);
+      if (PZ) pzMarks.forEach(([m, k]) => {
+        if (m < 0) return;
+        if (k === 'ring' && !pos.b[m]) { const g = GB.tapMark(c), [x, z] = xz(m); g.position.set(x, Y, z); marks.add(g); pulsing.push(g); return; }   // (the vivid "here" marker)
+        addMark(GEO.dot, k === 'ng' ? MAT.ng : k === 'ok' ? MAT.ok : MAT.hl, m, pos.b[m] ? H + .006 : .008);
+      });
+      if (pulsing.length && !pulseOn) { pulseOn = true; pulse(); }
     }
     function pulse() { if (stopped || !pulsing.length) { pulseOn = false; return; } const now = performance.now(); pulsing.forEach(m => m.userData.tick(now)); kick(60); requestAnimationFrame(pulse); }
     function deadMat(col) {
@@ -236,11 +248,13 @@
       return p.tryPlay(m, 0, true) === null ? X.suicide : X.superko;
     }
     function onClick(e) {
-      if (over || busy || !pos || T3.wasDrag() || (e.target.closest && e.target.closest('.hud,.tbar'))) return;
+      if (over || busy || !pos || T3.wasDrag() || (e.target.closest && e.target.closest('.hud,.tbar')) || (PZ && !pzOn)) return;
       if (!pvp && pos.turn !== human) return;
       const m = pointOf(e); if (m < 0 || pos.b[m]) return;
       if (!pos.legal(m)) { toast(illegalWhy(m)); pachi(.6); return; }
-      busy = true; const w = play(m); hud(''); later(next, w + 60);
+      busy = true; const w = play(m); hud('');
+      if (PZ) { pzOn = false; pzMarks = []; later(() => { showMarks(); if (PZ.moved) PZ.moved(m, { n: moves.length }); }, Math.max(0, w) + 60); return; }
+      later(next, w + 60);
     }
     function onHud(e) {
       const b = e.target.closest && e.target.closest('[data-gop]'); if (!b || stopped) return;
@@ -259,7 +273,42 @@
       later(next, 650);
     }
     hud('');
-    loadRules().then(r => { if (stopped) return; R = r; begin(); }).catch(() => hud('⚠'));
+    loadRules().then(r => { if (stopped) return; R = r; if (PZ) { pzLoad(PZ.spec, PZ.me, { view: PZ.view, marks: PZ.marks }); return; } begin(); }).catch(() => hud('⚠'));
+
+    /* ---------- puzzle / lesson mode (ctx.pz, 2026-11-13): a position from go/puzzles.json · lessons.json · openings.json, no AI; the caller
+       judges each move (ctx.pz.moved) and plays the replies (api.pz.play). 詰碁 is judged by the game's own solver in its worker
+       ({ type: 'tsumego', P, moves, left, defend | reached }, go/tsumego.js), as go/learn.js asks it ---------- */
+    let pzOn = false, pzMarks = [];
+    function pzLoad(spec, me, o) {
+      if (!R) { PZ.spec = spec; PZ.me = me; return true; }
+      if ((spec.n || 9) !== n) return false;   // (another size: the caller starts the board again)
+      timers.forEach(clearTimeout); timers.length = 0; jid++; pzOn = false; pzMarks = (o && o.marks) || [];
+      startSpec = spec; human = me || spec.turn || 1; ai = 3 - human;
+      moves = []; aiWr = []; pos = R.Pos.from(spec); over = false; busy = true; while (terr.children.length) terr.remove(terr.children[0]);
+      Object.keys(st).forEach(k => drop(+k));
+      const all = []; for (let i = 0; i < n * n; i++) if (pos.b[i]) all.push(i);
+      all.forEach((m, i) => later(() => place(m, pos.b[m], true), 40 + i * 22));
+      fitView(o && o.view);
+      later(() => { showMarks(); busy = false; pzOn = true; if (PZ.ready) PZ.ready(); }, 40 + all.length * 22 + 380);
+      return true;
+    }
+    function rebuild() { let p = R.Pos.from(startSpec); for (const m of moves) { const r = p.tryPlay(m); if (!r) break; p = r.pos; } pos = p; redraw(); }
+    const pzApi = {
+      n,
+      load: (spec, me, o) => pzLoad(spec, me, o),
+      wait() { busy = false; pzOn = true; showMarks(); },
+      play: m => new Promise(res => { if (!pos || (m !== R.PASS && (m < 0 || !pos.legal(m)))) return res(false); pzOn = false; pzMarks = []; busy = true; const w = play(m); later(() => { busy = false; showMarks(); res(true); }, Math.max(0, w) + 60); }),
+      undo(k = 1) { timers.forEach(clearTimeout); timers.length = 0; moves.splice(Math.max(0, moves.length - k)); rebuild(); pzMarks = []; showMarks(); },
+      moves: () => moves.slice(),
+      state: () => ({ turn: pos ? pos.turn : 1, n }),
+      mark(list) { pzMarks = list == null ? [] : typeof list === 'number' ? [[list, 'ring']] : list.slice(); showMarks(); kick(400); },
+      tsumego: (P, left, defend, mvs) => request({ type: 'tsumego', P, moves: mvs || moves.slice(), left, defend: !!defend }).then(r => (r && r.list) || null),   // (mvs: e.g. before the move just played)
+      reached: P => request({ type: 'tsumego', P, moves: moves.slice(), reached: true }).then(r => !!(r && r.reached)),
+      name: m => m === (R && R.PASS) ? X.pass : R ? R.coord(m, n) : '',
+      pass: () => R ? R.PASS : -1,
+      coord: s => R ? R.parseCoord(s, n) : -1,
+      spec: o => { if (!o) return { n: 9 }; if (o.stones || !o.ab && !o.aw) return Object.assign({ n: o.n || 9 }, o); const N = o.n || 19, a = Array(N * N).fill('.'); for (const q of o.ab || []) { const i = R.parseCoord(q, N); if (i != null && i >= 0) a[i] = 'b'; } for (const q of o.aw || []) { const i = R.parseCoord(q, N); if (i != null && i >= 0) a[i] = 'w'; } return { n: N, stones: a.join(''), turn: o.turn || 1 }; },
+    };
 
     // test hooks (positions on screen, state)
     const dbg = {
@@ -277,7 +326,7 @@
       hud(L.lose); later(() => ctx.onEnd({ win: false, draw: false, level: ctx.level, score: r }), 200);
     }
     const api = {
-      human: human - 1,
+      human: human - 1, pz: PZ ? pzApi : null,
       canUndo: () => myTurn() && moves.length >= undoN() + (pvp || human === 1 ? 0 : 1),
       undo() {
         if (!api.canUndo()) return;
