@@ -200,7 +200,7 @@
     sakura: { top: 'top-sakura', side: 'sakura', stand: 'sakura', leg: ['#8a3a26', '#4a1c12'], bottom: 0x2a0806, line: 'rgba(48,20,10,.92)', raden: true },   // (v3: 朱溜 lacquer with 螺鈿 cherry blossoms and a 鶯)
   };
   const SH3 = (() => { try { return new URL('../../images/atlas/shogi3d/', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../images/atlas/shogi3d/'; } })();
-  const SH3V = '?v=14';
+  const SH3V = '?v=15';
   const lookOf = o => { const k = (o && o.look) || (X.BOARDS && X.BOARDS.shogi ? X.BOARDS.shogi.get() : 'kaya'); return LOOK[k] ? k : 'kaya'; };
   const imgs = {};
   function withImg(name, fn) {
@@ -225,12 +225,12 @@
       #ifdef USE_ROUGHNESSMAP
       { vec4 nmr = texture2D( roughnessMap, vUv ); float shl = smoothstep( .13, .17, nmr.r ) * ( 1. - smoothstep( .23, .27, nmr.r ) );
         if ( shl > 0. ) { float vd = dot( normal, normalize( -vViewPosition ) ); float lum = dot( diffuseColor.rgb, vec3( .3, .5, .2 ) );
-          float ph = fract( vd * 2.6 + lum * 2.6 + vUv.x * 4. + vUv.y * 2. );
+          float ph = fract( vd * 3.6 + lum * 2.6 + vUv.x * 4. + vUv.y * 2. );
           vec3 rb = .55 + .45 * cos( 6.2832 * ( ph + vec3( 0., .33, .67 ) ) );
-          diffuseColor.rgb = mix( diffuseColor.rgb, diffuseColor.rgb * .72 + rb * lum * .8, shl * .8 ); } }
+          diffuseColor.rgb = mix( diffuseColor.rgb, diffuseColor.rgb * .5 + rb * lum * 1.05, shl * .9 ); } }   // (2026-11-13: the shift with the viewing angle stronger)
       #endif`);
     };
-    m.customProgramCacheKey = () => 'nacre2';
+    m.customProgramCacheKey = () => 'nacre3';
     return m;
   }
   const lookMats = {};
