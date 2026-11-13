@@ -82,7 +82,7 @@ let WA = null;
 function loadCore() {
   try {
     let b64 = null;
-    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('core-wasm.js?v=2'); b64 = self.UG_WASM; }
+    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('core-wasm.js?v=3'); b64 = self.UG_WASM; }
     else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') { const g = globalThis, had = 'self' in g, old = g.self; g.self = g; try { require(require('path').join(__dirname, 'core-wasm.js')); b64 = g.UG_WASM; } finally { if (had) g.self = old; else delete g.self; } }
     if (!b64 || (typeof process !== 'undefined' && process.env && process.env.UG_NOWASM)) return;
     const bin = typeof atob === 'function' ? Uint8Array.from(atob(b64), c => c.charCodeAt(0)) : Buffer.from(b64, 'base64');
@@ -282,13 +282,15 @@ const LEVELS = [null,
   { d: 3, noise: 4 },                    // 7級
   { d: 4, noise: 4 },                    // 6級
   { d: 4, noise: 2 },                    // 5級
-  { s: 1, nk: 3 },                       // 4級  (about 3,000 positions per move)
-  { s: 1, nk: 7 },                       // 3級
-  { s: 1, nk: 15 },                      // 2級
-  { s: 1, nk: 30 },                      // 1級
-  { s: 1, nk: 60 },                      // 初段
-  { s: 1, nk: 120 },                     // 二段
-  { s: 1, nk: 220 },                     // 三段
+  // (2026-11-13, search v2: nk2 = the positions on the 3×3 rule (c33), where v2 reads much deeper — the same strength as nk
+  //  before; the other rules keep nk. claude/ugolki-spec.md「探索 v2」)
+  { s: 1, nk: 3, nk2: 1.6 },             // Lv.12  (about 3,000 positions per move)
+  { s: 1, nk: 7, nk2: 3.5 },             // Lv.13
+  { s: 1, nk: 15, nk2: 6.5 },            // Lv.14
+  { s: 1, nk: 30, nk2: 10 },             // Lv.15
+  { s: 1, nk: 60, nk2: 17 },             // Lv.16
+  { s: 1, nk: 120, nk2: 27 },            // Lv.17
+  { s: 1, nk: 220, nk2: 45 },            // Lv.18
   { s: 1, ms: 1200, book: 1 },           // 四段
   { s: 1, ms: 2500, book: 1 },           // 五段
   // the top levels (2026-11-09, common rule「最上位のレベルの追加」): twice the time per step up to 20 s, every thread of the
@@ -393,9 +395,9 @@ function search(pos, d, a, b, ply) {
   TT.set(key, { h2: pos.h2, d, v: best, f: best <= a0 ? 2 : best >= b ? 1 : 0, m: bm, ply: pos.ply });
   return best;
 }
-function rootValues(pos, d, hist) {
+function rootValues(pos, d, hist, v2) {   // v2: the analysis reads with search v2 (core.c); the levels by depth as before
   const A = abCore();
-  if (A) { abRoot(A, pos, hist); const k = A.x.ab_values(d); abBack(A); const out = []; for (let i = 0; i < k; i++) out.push({ m: A.aom[i], v: A.aov[i] }); return out; }
+  if (A) { abRoot(A, pos, hist); const k = v2 && A.x.ab_values2 ? A.x.ab_values2(d, 1) : A.x.ab_values(d); abBack(A); const out = []; for (let i = 0; i < k; i++) out.push({ m: A.aom[i], v: A.aov[i] }); return out; }
   const L = orderMoves(pos, pos.moves(), -1, 0), out = [];
   for (const m of L) {
     const q = pos.clone().play(m);
@@ -481,7 +483,8 @@ function think(start, moves, level, rand, rule) {
     const vals = rootValues(pos, 3, hist), good = vals.filter(e => e.v >= vals[0].v - 10);
     return { move: good[Math.floor(rand() * good.length)].m, v: vals[0].v };
   }
-  const r = bestMove(pos, hist, L.dx || 60, L.ms || 3000, L.nk || 0);
+  const A2 = abCore(), nk = L.nk2 && RK === 'c33' && A2 && A2.x.ab_values2 ? L.nk2 : L.nk;   // (search v2 in the core only)
+  const r = bestMove(pos, hist, L.dx || 60, L.ms || 3000, nk || 0);
   return thinkFin(pos, hist, r);
 }
 // the strong steps' answer from the search's result (also the end of a search on several threads, shared/mtsplit.js)
@@ -493,7 +496,7 @@ function analyze(start, moves, ms, onProgress, rule) {
   nodes = 0; stop = false; tEnd = Date.now() + (ms || 1000); nodeLimit = Infinity;
   let list = [], depth = 0;
   for (let d = 1; d <= 30; d++) {
-    const vals = rootValues(pos, d, hist);
+    const vals = rootValues(pos, d, hist, 1);
     if (stop && vals.length < pos.moves().length) break;
     list = vals.map(e => ({ ...e, kind: kindOf(e.v) })); depth = d;
     if (onProgress) onProgress(list, d);

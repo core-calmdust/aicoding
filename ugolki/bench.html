@@ -59,7 +59,7 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);ma
 
 <div class="card"><h2>結果</h2><div class="tw"><table id="tbl"><thead><tr><th>測定</th><th>方式</th><th>スレッド</th><th>時間</th><th>1スレッド比</th><th>幾何平均</th><th>効率</th><th>nps（合計）</th><th>1スレッドと一致</th></tr></thead><tbody></tbody></table></div><pre id="log"></pre></div>
 </main>
-<script src="engine.js?v=7-ab"></script>
+<script src="engine.js?v=8-sv2"></script>
 <script src="../shared/mtengine.js?v=8"></script><script src="../shared/mtsplit.js?v=6"></script>
 <script>MTSplit.init({ sw: 'sw.js?v=1' });</script>
 
@@ -82,7 +82,7 @@ env();
 const E = window.UgolkiEngine;
 const RULE = 'c33', D = { light: 8, normal: 10, heavy: 11 }, TA = { light: 1000, normal: 2000, heavy: 4000 };
 const G = {
-  url: 'engine.js?v=7-ab', drive: MTSplit.ladder.drive,
+  url: 'engine.js?v=8-sv2', drive: MTSplit.ladder.drive,
   positions() {   // two games of Lv.6 vs Lv.6 (a fixed random seed), every 10 plies from ply 10
     const out = []; let seed = 7; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
     E.setRule(RULE);
@@ -109,7 +109,7 @@ const G = {
 // Young Brothers Wait in C, one table in the shared memory) — sh (shared/mtsplit.js with the shared table) is its fallback now
 const CY = () => !!(window.MTEngine && MTEngine.isolated && MTEngine.pool);
 const MODES = T => MTSplit.shared ? (CY() ? ['cy', 'sh', 'ns'] : ['sh', 'ns']) : ['ns'], MODE_NAME = { cy: 'C・YBW', sh: '共有・YBW', alt: '共有・Lazy', ns: '非共有' }, MODE_KEY = { cy: 'c-ybw', sh: 'shared', alt: 'shared-lazy', ns: 'split' };
-const MC_CFG = { wasm: 'core_mt.wasm?v=1', lead: G.url + '&mt=1', helper: 'mt-helper.js?v=1', slot: 4 << 20, initial: 1024, maximum: 16384,   // (the same as app.js MCP)
+const MC_CFG = { wasm: 'core_mt.wasm?v=2', lead: G.url + '&mt=1', helper: 'mt-helper.js?v=1', slot: 4 << 20, initial: 1024, maximum: 16384,   // (the same as app.js MCP)
   imports: mem => ({ env: { memory: mem, now: () => Date.now() } }), help: () => ({}) };
 let cpool = null;   // (one pool for every C・YBW run: 'newgame' empties its table before each)
 async function cyOnce(t, msg) {

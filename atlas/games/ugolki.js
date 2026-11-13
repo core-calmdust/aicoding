@@ -13,7 +13,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../ugolki/', VER = '?v=7-ab';   // same file / version as ugolki/index.html → shared cache
+  const BASE = '../ugolki/', VER = '?v=8-sv2';   // same file / version as ugolki/index.html → shared cache
   let engP = null;
   function loadEngine() {
     if (window.UgolkiEngine) return Promise.resolve(window.UgolkiEngine);
@@ -327,7 +327,7 @@
     id: ['Pemula: kadang mengambil jalan memutar', 'Dasar–menengah: membaca jalur lompatan beberapa langkah ke depan', 'Mahir: membangun jalur dan blok', 'Ahli: pencarian mendalam yang menghitung balapan'],
     tr: ['Başlangıç: bazen uzun yolu seçer', 'Acemi–orta: birkaç hamle ilerideki atlama yollarını okur', 'İleri: yollar ve bloklar kurar', 'Uzman: yarışı hesaplayan derin arama'],
   };
-  const RATING = [0, 450, 575, 700, 825, 950, 1075, 1200, 1325, 1450, 1575, 1700, 1825, 1950, 2030, 2090, 2150, 2200, 2250, 2300, 2350, 2410, 2455, 2470];   // ugolki RT_LV (rated games)
+  const RATING = [0, 450, 575, 700, 825, 950, 1075, 1200, 1325, 1450, 1575, 1700, 1825, 1950, 2030, 2090, 2150, 2200, 2250, 2400, 2450, 2510, 2555, 2570];   // ugolki RT_LV (rated games)
   const W7 = (a, b, c, d, e, f) => [a, a, a, a, b, b, b, b, b, c, c, c, c, c, c, d, d, d, e, f];
   const WHO = {
     ja: W7('はじめての人に', 'ルールを覚えた人に', '慣れてきた人に', '強い人に', '上級者でも手ごわい', '最強レベル'),
