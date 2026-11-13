@@ -48,7 +48,7 @@
     c.fillStyle = g; c.beginPath(); c.arc(W / 2, W / 2, W / 2, 0, 7); c.fill();
   }), transparent: true, roughness: .9, depthWrite: false, bump: false }));
   const faceMat = (look, id) => mat('face' + look + id, () => {
-    const tx = new (T().TextureLoader)().load(IMG + 'bd-' + look + '-' + id + '.webp?v=5', () => { if (X.kick) X.kick(200); });
+    const tx = new (T().TextureLoader)().load(IMG + 'bd-' + look + '-' + id + '.webp?v=6', () => { if (X.kick) X.kick(200); });
     tx.anisotropy = 4; if (T().sRGBEncoding) tx.encoding = T().sRGBEncoding;
     return new (T().MeshStandardMaterial)({ map: tx, transparent: false, alphaTest: .92, roughness: .45, metalness: 0, polygonOffset: true, polygonOffsetFactor: -1 });   // (opaque + alpha test: no sorting flicker with the marbles)
   });
