@@ -933,8 +933,11 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
       document.querySelectorAll('.modal .lesson-list > .lx').forEach(one);
       document.querySelectorAll('.lxh-on').forEach(v => { if (!v.querySelector('.lesson-list > .lx > .lxh-fix')) v.classList.remove('lxh-on'); });
     }
+    // (run in the observer's own callback — before the page paints — so a re-rendered list never shows a frame without its header:
+    //  a timer let the bare list flash on every tab switch, 2026-11-13 the user)
+    const ours = rs => rs.some(r => { const t = r.target; return t.nodeType === 1 && (t.closest('.lesson-list') || t.querySelector && t.querySelector(':scope > .lesson-list, :scope .lesson-list > .lx')); });
     let q = 0; const later = () => { if (!q) q = setTimeout(() => { q = 0; scan(); }, 30); };
-    const go = () => { scan(); new MutationObserver(later).observe(document.body, { childList: true, subtree: true }); addEventListener('resize', later); };
+    const go = () => { scan(); new MutationObserver(rs => { if (ours(rs)) scan(); }).observe(document.body, { childList: true, subtree: true }); addEventListener('resize', later); };
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
   })();
   window.AtlasSkin = { init };
