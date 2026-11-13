@@ -116,7 +116,7 @@
   const CERAMIC = ['#8cbca8', '#2b4085', '#d19a3d', '#cc3d29', '#ede6d1', '#333338'];
   const JEWEL = ['#d10a24', '#102ed1', '#089a4c', '#8c24cc', '#f79a1a', '#59cce6'];
   const POP = ['#f2242f', '#ff6f9e', '#ffc61f', '#3f80ff', '#f4f2ea', '#1a1a1e'];   // (the pop board's colours)
-  const RAINBOW = ['#6cbf48', '#ee4e50', '#7fae58', '#f2e07a', '#f2ae08', '#c04656', '#148277', '#acd232', '#f0ce1e', '#f2953b', '#ae5555', '#1c9a8c', '#e4da58', '#f2cc0e', '#f2754b', '#94d8a8', '#e0b6c4', '#08a6d8', '#acd8cc', '#ecccca', '#f2888f', '#28576f', '#98cee0', '#98b2da', '#c4a0d0', '#b669c3', '#1d6e9c', '#2ccbe0', '#8955b2', '#a17aa8', '#01b5d3', '#76596f'];   // (sampled from the reference photo)
+  const RAINBOW = ['#ff5f6d', '#ff8a5c', '#ffb347', '#ffd84a', '#d9f25a', '#8ee86a', '#4fe0a0', '#3fe0d0', '#4cc9ff', '#6aa8ff', '#9a8cff', '#c37bff', '#f07cf0', '#ff7cbf', '#ff9fb2', '#ffc0e0', '#b8f0ff', '#c8ffb0'];   // (vivid pastels — bright, clean, nothing dull or dark; 2026-11-13)
   const PAINT = ['#c72924', '#1f5cb3', '#1f8047', '#e6a81f', '#6b338c', '#ebe6d6'];
   // abstract pieces (for the abstract board): flat matte discs, the top painted with the 2D page's motif (m-mod-<k>.webp)
   const MOD = ['#d4694a', '#e3b34a', '#2e8f8a', '#f0e6d4', '#ed8c80', '#5473b3'];
@@ -130,7 +130,7 @@
     const k = (i * 7 + 3) % 6;
     if (set === 'rainbow') {   // the painted wooden rainbow set: the 32 colours of the user's reference photo, mixed over the board (2026-11-13)
       const c = RAINBOW[(i * 13 + 5) % RAINBOW.length];
-      return mat('mrb' + c, () => X.M({ color: c, roughness: .62 }));
+      return mat('mrb' + c, () => { const m = X.M({ color: c, roughness: .5 }); m.emissive.set(c).convertSRGBToLinear().multiplyScalar(.32); return m; });   // (a little of its own colour glowing: the room's light and the tone mapping no longer dull it)
     }
     if (set === 'mod') return mat('mmod' + k, () => X.M({ color: MOD[k], roughness: .75 }));
     if (set === 'pearl') return mat('mcer' + k, () => X.M({ color: CERAMIC[k], roughness: .28, clearcoat: .8, clearcoatRoughness: .2 }));
