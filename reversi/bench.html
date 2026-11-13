@@ -85,7 +85,7 @@ const SPLIT = QS.get('split') ? QS.get('split').split(',').map(Number) : null;
 // (2026-11-13) ?mtv=5: the current engine_mt.wasm with v5's split points (no ALL node split at once — engine.c mt_split's mtv,
 // MODEL_CARD.md「マルチスレッド v6」), to compare v6 with v5 on the same machine
 const MTV = +(QS.get('mtv') || 0);
-const ENGINE = PREV ? 'v4.1 (prev, engine_mt_v41.wasm)' : (MTV === 5 ? 'v5 Praline (mtv=5)' : 'v6 Praline') + ' / search v7' + (SPLIT ? ' split ' + SPLIT.join(',') : '');
+const ENGINE = PREV ? 'v4.1 (prev, engine_mt_v41.wasm)' : (MTV === 5 ? 'v5 Praline (mtv=5)' : 'v6 Praline') + ' / search v8' + (SPLIT ? ' split ' + SPLIT.join(',') : '');
 
 function env() {
   $('#env').innerHTML = [
@@ -123,7 +123,7 @@ async function setup() {
   const wt = await loadWeights();
   // the same pool as the game page (index.html MTP): lead and helpers are mt-worker.js on a shared engine_mt.wasm
   pool = MTEngine.pool({
-    wasm: PREV ? 'engine_mt_v41.wasm?v=1' : 'engine_mt.wasm?v=14', lead: 'mt-worker.js?v=24', helper: 'mt-worker.js?v=24', slot: 2 << 20, initial: 1024, maximum: 16384,
+    wasm: PREV ? 'engine_mt_v41.wasm?v=1' : 'engine_mt.wasm?v=15', lead: 'mt-worker.js?v=25', helper: 'mt-worker.js?v=25', slot: 2 << 20, initial: 1024, maximum: 16384,
     imports: mem => ({ env: { memory: mem, now: () => Date.now() } }),
     after: async (X, mem, ws) => {
       if (!PX) { PX = X; if (X.w_defer) X.w_defer(); X.init(); if (!PREV && X.mt_split && (SPLIT || MTV)) { const a = (SPLIT || []).slice(0, 6); while (a.length < 6) a.push(0); X.mt_split(...a, MTV); } }   // (?split=: the split settings of every thread — shared memory)
@@ -153,7 +153,7 @@ async function run() {
   const t00 = performance.now(); let doneW = 0;
   const totalW = COUNTS.length * (MP.length * T + EP.length * 6000) + 1500;   // (rough weights for the bar)
   const tick = (add, msg) => { doneW += add; $('#bar i').style.width = Math.min(100, doneW / totalW * 100) + '%'; if (msg) $('#st').textContent = msg + `　経過 ${Math.round((performance.now() - t00) / 1000)}秒`; };
-  lines = [`reversi bench (mt ${ENGINE}, 2026-11-13c) ${new Date().toISOString()} | ${ua} | isolated ${ISO} | hc ${HC} | mid ${MP.length}x${T}ms (36 empties) | end ${EP.length}x24 empties exact`];
+  lines = [`reversi bench (mt ${ENGINE}, 2026-11-13d) ${new Date().toISOString()} | ${ua} | isolated ${ISO} | hc ${HC} | mid ${MP.length}x${T}ms (36 empties) | end ${EP.length}x24 empties exact`];
   const M = {}, E = {};   // per thread count
   // midgame: iterative deepening for T ms (use 1.0: a new depth may start until T, cut at T); per depth the time and move
   const midCfg = { depth: 60, exact: 0, time: T, use: 1, max: T, mpc: 1 };

@@ -51,7 +51,7 @@ static int setup(const char *wfile) {
   if (M.mpc[0] > 0) { MA = M.mpc[0]; MB = M.mpc[1]; MC = M.mpc[2]; }
   return 0;
 }
-static void state(int mpc) { set_state(0, 0, mpc, 1.5, MA, MB, MC, 3, 13, 18, 2, 8); }
+static void state(int mpc) { set_state(0, 0, mpc, 1.5, MA, MB, MC, 2, 13, 18, 2, 8); }   /* (search v8: Multi-ProbCut from remaining depth 2, as engine.js minDepthW) */
 static inline u32 lo32(u64 x) { return (u32)x; }
 static inline u32 hi32(u64 x) { return (u32)(x >> 32); }
 // the value for P (discs): exact with at most `exact` empties, else the midgame search to `depth` (iterative deepening)
