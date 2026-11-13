@@ -1025,3 +1025,13 @@ html.atlas-skin body:not(#_) :is(.modal, .dock, #dock) :is(input:not([type]), in
 /* (2026-11-13) the pinned header's paper ring only above and at the sides (below it covered the banner's top line); its own
    bottom padding hides the cards scrolling under it */
 html.atlas-skin body:not(#_) .lxh-fix.pin:not(#_){clip-path:inset(-14px -14px 0 -14px);padding-bottom:10px;margin-bottom:2px}
+/* (2026-11-13) the lesson / opening header and its category tabs as one box: the tabs run along the box's bottom */
+html.atlas-skin body:not(#_) .lxh-fix > .lxh-box:not(#_):not(#_){display:flex!important;flex-direction:column!important;gap:0!important;padding:0!important;border-radius:20px!important;background:#fffaf0!important;border:2px solid #ead9b6!important;box-shadow:0 3px 0 #ead9b6!important;overflow:hidden}
+html.atlas-skin body:not(#_) .lxh-box > .lxh:not(#_){border:0!important;box-shadow:none!important;border-radius:0!important;background:none!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal .lxh-box > .lx-tabs:not(#_):not(#_){margin:0!important;border-radius:0!important;background:#f5ecd8!important;border-top:2px solid #efe3c8!important;padding:5px 8px!important}
+/* the puzzles' 続きから as big as the lessons' */
+html.atlas-skin body:not(#_) :is(.pbh-hero,.pzx-hero,.pb-head) .pb-cont:not(#_){padding:12px 22px!important;min-width:190px;border-radius:14px!important;font-size:17px!important;font-weight:900!important;box-shadow:0 4px 0 #d93c3c!important}
+html.atlas-skin body:not(#_) :is(.pbh-hero,.pzx-hero,.pb-head) .pb-cont small:not(#_){font-size:12px!important}
+@media (max-width:760px){ html.atlas-skin body:not(#_) :is(.pbh-hero,.pzx-hero,.pb-head) .pb-cont:not(#_){min-width:0;padding:9px 12px!important;font-size:15px!important} }
+/* PC: every list's last lines clear the frosted band above the buttons (rules / lessons / puzzles dialogs of every game) */
+@media (min-width:761px){ html.atlas-skin:not(.atlas-2d) body:not(#_) .modal :has(> :is(.seg.ls-tabs, #segLs)) > :has(+ .modal-actions){padding-bottom:40px!important} }
