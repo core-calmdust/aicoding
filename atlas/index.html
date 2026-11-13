@@ -1860,7 +1860,7 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 .bvi .mxb{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:0;height:48px;padding:0 12px;border-radius:14px;border:2px solid var(--line);background:#fff;box-shadow:0 3px 0 var(--line);font:900 14.5px var(--font);color:var(--ink);cursor:pointer;white-space:nowrap}
 .bvi .mxb.pzok,.mxb.pzok{position:relative;background:#eef8f1!important;border-color:#9fd8b8!important;box-shadow:0 3px 0 #9fd8b8!important;color:#2e7d55}.mxb.pzok::after{content:'✓';display:inline-grid;place-items:center;width:20px;height:20px;margin-left:2px;border-radius:50%;background:#2f9a6a;color:#fff;font-size:12px;font-weight:900}   /* (today's puzzle solved, 2026-11-13) */
 .bvi .mxb:hover{background:#fffaf0}
-.bvi .pgbest{flex:1 1 100%;display:flex;align-items:center;gap:10px;margin-top:4px;padding:10px 14px;border-radius:14px;background:#fff8e6;border:2px solid #f3dca0;font-size:14px;color:#6b5a3e}.bvi .pgbest b{font-size:17px;font-weight:900;color:#2b3044}.bvi .pgbest em{font-style:normal;font-weight:800;color:#b07a00}   /* (ペグ: the chosen board's best, 2026-11-13) */.bvi .mxb i{font-style:normal;color:#c98a2a;display:inline-flex}.bvi .mxb svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.bvi .pgbest{flex:1 1 100%;box-sizing:border-box;display:flex;align-items:center;gap:12px;margin:0!important;padding:10px 16px;border-radius:14px;background:linear-gradient(120deg,#fff3d1,#fffaf0 70%);border:2px solid #f3dca0;box-shadow:0 3px 0 #f3dca0;font-size:14px;font-weight:800;color:#8a6a2e}.bvi .pgbest b{font-size:30px;line-height:1.1;font-weight:900;color:#e5484d;letter-spacing:.02em;text-shadow:0 2px 0 rgba(229,72,77,.15)}.bvi .pgbest em{margin-inline-start:auto;font-style:normal;font-weight:900;font-size:15px;color:#b07a00;background:#fff;border:2px solid #f3dca0;border-radius:99px;padding:3px 12px}   /* (ペグ: the chosen board's best, large; the same gap as the rows above — 2026-11-13) */
 .bvi #bvPz{display:grid;grid-template-columns:1fr 1fr;gap:10px}.bvi #bvPz .mxb[data-pz="list"]:nth-child(3){grid-column:1 / -1}
 .bvi .act.act3.act1 > a.btn{grid-column:1 / -1}
 .bvi .act.act3 #bvTable.mxw{background:#fff;color:var(--ink);box-shadow:0 4px 0 var(--line);border:2px solid var(--line)}
@@ -2243,7 +2243,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   }, 60);
 };</script>
 <script src="../shared/tapword.js?v=1"></script>
-<script src="lazy.js?v=163"></script>
+<script src="lazy.js?v=165"></script>
 <script src="puzzle-lines.js?v=1"></script>
 <script src="puzzles.js?v=19"></script>
 <script src="lessons3d.js?v=13"></script>
@@ -2260,7 +2260,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=34"></script>
 <script src="npc/npc.js?v=30"></script>
 <script src="avtalk.js?v=2"></script>
-<script src="app.js?v=339"></script>
+<script src="app.js?v=340"></script>
 <script src="../shared/praline-badge.js?v=8" data-portal defer></script>
 </body>
 </html>
