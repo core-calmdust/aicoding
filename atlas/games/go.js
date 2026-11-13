@@ -273,13 +273,14 @@
       later(next, 650);
     }
     hud('');
-    loadRules().then(r => { if (stopped) return; R = r; if (PZ) { pzLoad(PZ.spec, PZ.me, { view: PZ.view, marks: PZ.marks }); return; } begin(); }).catch(() => hud('⚠'));
+    loadRules().then(r => { if (stopped) return; R = r; if (PZ) { pzLoad(PZ.spec, PZ.me, { view: PZ.view, marks: PZ.marks, lock: PZ.lock }); return; } begin(); }).catch(() => hud('⚠'));
 
     /* ---------- puzzle / lesson mode (ctx.pz, 2026-11-13): a position from go/puzzles.json · lessons.json · openings.json, no AI; the caller
        judges each move (ctx.pz.moved) and plays the replies (api.pz.play). 詰碁 is judged by the game's own solver in its worker
        ({ type: 'tsumego', P, moves, left, defend | reached }, go/tsumego.js), as go/learn.js asks it ---------- */
     let pzOn = false, pzMarks = [];
     function pzLoad(spec, me, o) {
+      PZ.lock = !!(o && o.lock);   // (a lesson's opening picture: for looking only)
       if (!R) { PZ.spec = spec; PZ.me = me; return true; }
       if ((spec.n || 9) !== n) return false;   // (another size: the caller starts the board again)
       timers.forEach(clearTimeout); timers.length = 0; jid++; pzOn = false; pzMarks = (o && o.marks) || [];
@@ -289,14 +290,14 @@
       const all = []; for (let i = 0; i < n * n; i++) if (pos.b[i]) all.push(i);
       all.forEach((m, i) => later(() => place(m, pos.b[m], true), 40 + i * 22));
       fitView(o && o.view);
-      later(() => { showMarks(); busy = false; pzOn = true; if (PZ.ready) PZ.ready(); }, 40 + all.length * 22 + 380);
+      later(() => { showMarks(); busy = false; pzOn = !PZ.lock; if (PZ.ready) PZ.ready(); }, 40 + all.length * 22 + 380);
       return true;
     }
     function rebuild() { let p = R.Pos.from(startSpec); for (const m of moves) { const r = p.tryPlay(m); if (!r) break; p = r.pos; } pos = p; redraw(); }
     const pzApi = {
       n,
       load: (spec, me, o) => pzLoad(spec, me, o),
-      wait() { busy = false; pzOn = true; showMarks(); },
+      wait() { busy = false; pzOn = !PZ.lock; showMarks(); },
       play: m => new Promise(res => { if (!pos || (m !== R.PASS && (m < 0 || !pos.legal(m)))) return res(false); pzOn = false; pzMarks = []; busy = true; const w = play(m); later(() => { busy = false; showMarks(); res(true); }, Math.max(0, w) + 60); }),
       undo(k = 1) { timers.forEach(clearTimeout); timers.length = 0; moves.splice(Math.max(0, moves.length - k)); rebuild(); pzMarks = []; showMarks(); },
       moves: () => moves.slice(),

@@ -75,6 +75,12 @@
   };
   // shogi opening categories (= shogi/openings-ui.js tabs)
   const OPCAT = {"ja":{"beg":"初級","mid":"中級","adv":"上級","sp":"特殊","new":"流行","castle":"囲い","handi":"駒落ち"},"en":{"beg":"Beginner","mid":"Standard","adv":"Advanced","sp":"Surprise","new":"Trending","castle":"Castles","handi":"Handicap"},"zh":{"beg":"入门","mid":"中级","adv":"高级","sp":"奇袭","new":"流行","castle":"围","handi":"让子"},"ko":{"beg":"초급","mid":"중급","adv":"고급","sp":"특수","new":"유행","castle":"성","handi":"접장기"},"es":{"beg":"Inicial","mid":"Medio","adv":"Avanzado","sp":"Sorpresa","new":"Moda","castle":"Castillos","handi":"Hándicap"},"fr":{"beg":"Débutant","mid":"Moyen","adv":"Avancé","sp":"Surprise","new":"Tendance","castle":"Châteaux","handi":"Handicap"},"pt":{"beg":"Inicial","mid":"Médio","adv":"Avançado","sp":"Surpresa","new":"Moda","castle":"Castelos","handi":"Handicap"},"de":{"beg":"Einstieg","mid":"Mittel","adv":"Profi","sp":"Exoten","new":"Trend","castle":"Burgen","handi":"Vorgabe"},"hi":{"beg":"शुरुआती","mid":"मध्यम","adv":"उन्नत","sp":"अनोखे","new":"ट्रेंड","castle":"किले","handi":"हैंडीकैप"},"ar":{"beg":"مبتدئ","mid":"متوسط","adv":"متقدم","sp":"مفاجآت","new":"رائج","castle":"القلاع","handi":"الإعاقة"},"ru":{"beg":"Начальный","mid":"Стандарт","adv":"Продвинутый","sp":"Сюрпризы","new":"Тренды","castle":"Крепости","handi":"Фора"},"zh-TW":{"beg":"入門","mid":"標準","adv":"進階","sp":"奇襲","new":"流行","castle":"圍","handi":"讓子"},"id":{"beg":"Pemula","mid":"Standar","adv":"Mahir","sp":"Kejutan","new":"Tren","castle":"Benteng","handi":"Handikap"},"tr":{"beg":"Başlangıç","mid":"Standart","adv":"İleri","sp":"Sürpriz","new":"Popüler","castle":"Kaleler","handi":"Handikap"}};
+  let autoCssDone = false;
+  function autoCss() {   // the auto-advance meter: a bar filling the 次へ button (shared/cardbar.js .cb-auto)
+    if (autoCssDone) return; autoCssDone = true; const st = document.createElement('style');
+    st.textContent = `.lsg [data-a=next].ls-auto{position:relative;overflow:hidden}.lsg [data-a=next].ls-auto::after{content:'';position:absolute;inset-inline-start:0;bottom:0;height:4px;width:100%;background:currentColor;opacity:.55;transform-origin:left;animation:lsAuto var(--ls-auto-ms,2400ms) linear forwards}html[dir=rtl] .lsg [data-a=next].ls-auto::after{transform-origin:right}@keyframes lsAuto{from{transform:scaleX(0)}to{transform:scaleX(1)}}`;
+    document.head.appendChild(st);
+  }
   // the lesson's / opening's topic, said as a sentence: [lesson, opening]
   const TOPIC = {
     ja: ['今日は「{t}」について学ぶよ！', '今日は「{t}」の進み方を見ていこう！'], en: ["Today we'll learn about {t}!", "Today let's look at how {t} goes!"],
@@ -220,6 +226,11 @@
       const pr = J(this.LKEY, {});
       return D.ls.steps.map((s, i) => ({ key: String(i), cat: s.course || 'tactics', catName: this.tx('course.' + (s.course || 'tactics'), lang), title: this.tx('ls.' + s.id + '.title', lang) || s.id, sub: this.tx('ls.' + s.id + '.sub', lang), svg: mini((s.diagram && s.diagram.fen) || ((s.problems || [])[0] || {}).fen || ((s.stages || [])[0] || {}).fen),
         st: pr[s.id] ? (pr[s.id].clear ? 'pass' : 'try') : '', full: false }));   // (the beginner drills play on the 3D table too, 2026-11-13)
+    },
+    introPos(c) {   // the lesson's diagram (chess/lessons.json step.diagram: fen, dots, hl, arrows), shown locked while the intro is read
+      const s = this.data.ls.steps.find(x => x.id === c.id), d = s && s.diagram; if (!d || !d.fen) return null;
+      const fen = d.fen.split(' ').length > 1 ? d.fen.split(' ')[0] + ' w - - 0 1' : d.fen + ' w - - 0 1';
+      return { pos: fen, drill: { stars: [], lock: true }, annot: [...(d.dots || []).map(q => ({ at: q, cls: 'ok' })), ...(d.hl || []).map(q => ({ at: q, cls: 'hang' })), ...(d.arrows || []).map(([a, b]) => ({ arrow: [a, b], cls: '' }))] };
     },
     lesson(key, lang) {
       const s = this.data.ls.steps[+key]; if (!s) return null;
@@ -381,6 +392,10 @@
     rampMarks: it => (it.marks || []).map(([q, c]) => [GSQ(q), GMK[c] || 'hl']),
     rampOk: (it, u) => gCells(it.ok || []).includes(u), rampAns: it => GSQ((it.ok || [])[0]), rampLook: it => gCells(it.look || []).map(q => [q, 'ring']),
     rampSeq: it => gCells(it.seq || []), nm: m => GNM(m),
+    introPos(c) {   // the lesson's diagram (gomoku/lessons.json step.diagram: b, w stones; o = the point that matters, d = a point to avoid)
+      const s = this.data.ls.steps.find(x => x.id === c.id), d = s && s.diagram; if (!d) return { pos: { start: null, rule: 'renju', me: 1, last: -1, lock: true, noForbid: true } };
+      return { pos: { start: { b: gCells(d.b), w: gCells(d.w), side: 1 }, rule: 'free', me: 1, last: -1, lock: true, noForbid: true }, marks: [...gCells(d.o).map(q => [q, 'ok']), ...gCells(d.d).map(q => [q, 'ng'])] };
+    },
   };
   /* go (2026-11-13): go/lessons.json (21 steps of 5 problems on 7–19 boards: ok 20 · good 16 · half 10 points; the right line is played
      out after the answer; a warm-up ramp before some) and go/openings.json (45 joseki / fuseki: the line move by move with notes and the
@@ -444,6 +459,10 @@
     rampMarks: it => { const N = goSpec(it.s).n; return (it.marks || []).map(([q, c]) => [goPc(q, N), GO_CLS[c] || 'hl']).filter(x => x[0] != null && x[0] >= 0); },
     rampOk: (it, u) => goPcs(it.ok, goSpec(it.s).n).includes(u), rampAns: it => goPcs(it.ok, goSpec(it.s).n)[0], rampLook: it => goPcs(it.look, goSpec(it.s).n).map(q => [q, 'ring']),
     rampSeq: it => goPcs(it.seq, goSpec(it.s).n), nm: (m, it) => goNm(m, goSpec(it.s).n),
+    introPos(c) {   // the lesson's diagram (go/lessons.json step.diagram: s, marks), shown locked while the intro is read
+      const s = this.data.ls.steps.find(x => x.id === c.id), d = s && s.diagram; if (!d || !d.s) return null; const sp = goSpec(d.s), N = sp.n;
+      return { pos: { spec: sp, me: sp.turn || 1, view: d.view || goCrop(sp), lock: true }, marks: (d.marks || []).map(([q, k]) => [goPc(q, N), GO_CLS[k] || 'hl']).filter(x => x[0] != null && x[0] >= 0) };
+    },
   };
   const DATA = { shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO };
 
@@ -504,6 +523,17 @@
       const P = pages(html); more = P.slice(1); show(P[0]); apply();
     }
     const nextB = () => $('[data-a=next]');
+    /* auto-advance (2026-11-14, = shared/cardbar.js autoNext): after a right answer the next problem comes by itself; meanwhile the
+       次へ button fills up as a meter. Any tap / key before then cancels it (the player stays on the answer). */
+    let autoT = 0, autoOff = null;
+    function autoCancel() { clearTimeout(autoT); autoT = 0; const b = nextB(); if (b) b.classList.remove('ls-auto'); if (autoOff) { autoOff(); autoOff = null; } }
+    function autoGo(ms, ok, fire) {
+      autoCancel(); autoCss();
+      const b = nextB(); if (b) { b.style.setProperty('--ls-auto-ms', ms + 'ms'); void b.offsetWidth; b.classList.add('ls-auto'); }
+      const stop = e => { if (e && e.isTrusted === false) return; autoCancel(); };
+      setTimeout(() => { if (!autoT) return; ['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, stop, true)); autoOff = () => ['pointerdown', 'keydown'].forEach(ev => document.removeEventListener(ev, stop, true)); }, 0);
+      autoT = setTimeout(() => { autoT = 0; const go = !stopped && (!ok || ok()); autoCancel(); if (go) fire(); }, ms);
+    }
     const head = txt => { $('.pg').textContent = txt ? ' · ' + txt : ''; };
     function act(nextLabel, { hint = false, again = false, nextOn = true } = {}) { want = { nextLabel, nextOn }; $('[data-a=hint]').disabled = !hint; $('[data-a=again]').disabled = !again; apply(); }
     function apply() {
@@ -522,8 +552,8 @@
           sess = ad.start({ el: ctx.el, Table3D: ctx.Table3D, lang: ctx.lang, t: ctx.t, mode: 'pz', level: 20, side: 1, bar: false, hud: () => {}, onTurn: () => {}, onEnd: () => {},
             pz: Object.assign({ fen: pos, sfen: pos, sol: sol || [], drill: drill || null, counts: id === 'reversi', ready: () => { const f = onReady; onReady = null; if (f) f(); }, moved: (u, i) => onMoved && onMoved(u, i) }, G || {}) });
           ctx.Table3D.play(true);
-        } else if (G && id === 'go') pz().load(G.spec, G.me, { view: G.view, marks: G.marks });
-        else if (G) pz().load(G.start, G.rule, G.me, G.last, { pick: G.pick, noForbid: G.noForbid });
+        } else if (G && id === 'go') pz().load(G.spec, G.me, { view: G.view, marks: G.marks, lock: !!G.lock });
+        else if (G) pz().load(G.start, G.rule, G.me, G.last, { pick: G.pick, noForbid: G.noForbid, lock: !!G.lock });
         else if (drill && pz().drill) pz().drill(Object.assign({ fen: pos }, drill));
         else pz().load(pos, sol || []);
       });
@@ -562,7 +592,7 @@
         if (D.rampOk ? D.rampOk(it, u) : it.ok.includes(u)) {
           ok = true; if (D.rampMarks) pz().mark(null); else if (pz().annot) pz().annot(null); say(`✓ ${L(it.y, ctx.lang)}`); try { chime(true); } catch (e) {}
           act(last ? RU('main') : RU('next'), {});
-          later(() => { if (cur && phase === 'ramp' && cur.ri === i && !more.length) goOn(); }, 2600);   // (right: on to the next step by itself)
+          autoGo(2600, () => cur && phase === 'ramp' && cur.ri === i && !more.length, goOn);   // (right: on to the next step by itself, the meter on 次へ)
           return;
         }
         say(RU('ng')); try { chime(false); } catch (e) {}
@@ -591,7 +621,7 @@
         say(`${line('solved') || dx('dr.clear')} <b>${'★'.repeat(n)}${'☆'.repeat(3 - n)}</b><br>${fill(dx('dr.used'), { n: k, p: st.par })}${n < 3 ? ' ' + dx('dr.tryPar') : ''}`);
         try { chime(true); } catch (e) {}
         const last = i + 1 >= cur.drill.length; act(last ? X.result : X.next, { again: true });
-        if (!last) later(() => { if (cur && cur.k === i && phase === 'prob' && !more.length) drill(i + 1); }, 2200);   // (cleared: on to the next stage by itself)
+        if (!last) autoGo(2200, () => cur && cur.k === i && phase === 'prob' && !more.length, () => drill(i + 1));   // (cleared: on to the next stage by itself, the meter on 次へ)
       };
       pz().wait();
     }
@@ -613,10 +643,13 @@
       cur = Object.assign(L2, { key, k: 0, res: [], si: 0 }); head(cur.title);
       phase = 'intro'; dots();
       say(`${fill((TOPIC[ctx.lang] || TOPIC.en)[ctx.kind === 'open' ? 1 : 0], { t: `<b>${cur.title}</b>` })}<br>${cur.intro || ''}`);   // (「今日は『ルーク』について学ぶよ！」 — not the bare title, 2026-11-14)
-      if (cur.drill) { cur.stars = []; cur.probs = cur.drill.map(() => ({})); act(X.start); $('[data-a=next]').onclick = () => drill(0); board(dfen(cur.drill[0]), [], { stars: cur.drill[0].stars, safe: !!cur.drill[0].safe }); return; }
+      // (2026-11-14) while the introduction is read, the board shows the lesson's own picture (its diagram) for looking only — never the
+      // first problem: no ★, no answer marks, nothing to move until はじめる
+      const intro = () => { const ip = D.introPos && D.introPos(cur); if (!ip) return; board(ip.pos, [], ip.drill).then(() => { if (stopped || phase !== 'intro' || !pz()) return; if (ip.annot && pz().annot) pz().annot(ip.annot); if (ip.marks && pz().mark) pz().mark(ip.marks); }); };
+      if (cur.drill) { cur.stars = []; cur.probs = cur.drill.map(() => ({})); act(X.start); $('[data-a=next]').onclick = () => drill(0); intro(); return; }
       act(X.start); $('[data-a=next]').onclick = () => (ctx.kind === 'open' && cur.steps.length ? study() : cur.ramp ? ramp(0) : prob());
       if (ctx.kind === 'open' && cur.start) board(cur.start);   // (the opening's start position is on the table while reading)
-      else if (cur.probs[0]) board(cur.probs[0].pos, cur.probs[0].sol);
+      else intro();
     }
     // the study line: one move at a time, its note when there is one
     async function study() {
@@ -704,13 +737,14 @@
         if (id === 'go' && p.line && p.line.length > 1) { const k = cur.k; later(async () => { if (!cur || cur.k !== k || phase !== 'prob') return; pz().undo(9); for (const q of p.line) { await sleep(700); if (!cur || cur.k !== k || phase !== 'prob' || stopped) return; await pz().play(q); } }, 900); }   // (go: the right line played out, as the full game)
         try { chime(pts >= 16); } catch (e) {}
         act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
-        if (pts >= 16 && cur.k + 1 < cur.probs.length) { const k = cur.k, w = 2400 + (id === 'go' && p.line && p.line.length > 1 ? 900 + 700 * p.line.length : 0); later(() => { if (cur && cur.k === k && phase === 'prob' && !more.length) { cur.k++; prob(); } }, w); }   // (right: on to the next one by itself)
+        if (pts >= 16 && cur.k + 1 < cur.probs.length) { const k = cur.k, w = 2400 + (id === 'go' && p.line && p.line.length > 1 ? 900 + 700 * p.line.length : 0); autoGo(w, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); }); }   // (right: on to the next one by itself)
         return;
       }
       if (pts >= 16) say(`${line('solved') || pick(X.good)} <b>${fill(X.pts, { n })}</b>${p.why ? '<br>' + p.why : ''}`);
       else { if (p.ans) pz().mark(p.ans); const nm = p.kind !== 'tsume' && moveName(p.pos, p.ans); say(`${msg || (pts > 0 ? X.partial : X.wrong)} <b>${fill(X.pts, { n })}</b>${nm ? '<br>' + fill(ANSW[ctx.lang] || ANSW.en, { m: `<b>${nm}</b>` }) : ''}${p.why ? '<br>' + p.why : ''}`); }
       try { chime(pts >= 16); } catch (e) {}
       act(cur.k + 1 < cur.probs.length ? X.next : X.result, {});
+      if (pts >= 16 && cur.k + 1 < cur.probs.length) { const k = cur.k; autoGo(2400, () => cur && cur.k === k && phase === 'prob' && !more.length, () => { cur.k++; prob(); }); }   // (right: the next problem by itself, the meter on 次へ)
     }
     function finish() {
       phase = 'done'; dots();
@@ -751,7 +785,7 @@
       answer: async u => { const p = cur && cur.probs[cur.k]; if (!p || !pz()) return; u = u || p.ans; await pz().play(u); moved(p, u, { mate: false }); } };   // (test hook)
     window.__atlasLs = dbg;
     return {
-      stop() { stopped = true; if (window.__atlasLs === dbg) delete window.__atlasLs; clearInterval(typeT); timers.forEach(clearTimeout); if (sess) sess.stop(); sess = null; el.remove(); },
+      stop() { autoCancel(); stopped = true; if (window.__atlasLs === dbg) delete window.__atlasLs; clearInterval(typeT); timers.forEach(clearTimeout); if (sess) sess.stop(); sess = null; el.remove(); },
       panel: el, _debug: dbg,
     };
   }

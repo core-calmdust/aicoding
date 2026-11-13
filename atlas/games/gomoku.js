@@ -218,9 +218,9 @@
     });
     function pzStatus() { const s = status(); return { over: !!s.over, winner: s.winner || 0, five: !!(s.over && s.winner && s.line), why: s.why || '' }; }
     function pzAfter(bl) { const m = moves[moves.length - 1]; showMarks(); if (PZ.moved) PZ.moved(m, Object.assign({ n: moves.length, blunder: bl || '' }, pzStatus())); }
-    function pzWait() { busy = false; pzOn = true; showMarks(); }
+    function pzWait() { busy = false; pzOn = !PZ.lock; showMarks(); }   // (lock: a lesson's opening picture, for looking only)
     function pzLoad(start, r, me, last, o) {
-      PZ.start = start; PZ.rule = r; PZ.me = me; PZ.last = last; PZ.noForbid = !!(o && o.noForbid); PZ.judge = (o && o.judge) || ''; PZ.pick = !!(o && o.pick);
+      PZ.start = start; PZ.rule = r; PZ.me = me; PZ.last = last; PZ.noForbid = !!(o && o.noForbid); PZ.judge = (o && o.judge) || ''; PZ.pick = !!(o && o.pick); PZ.lock = !!(o && o.lock);
       if (!E) return;   // (the engine is still loading: it starts from PZ)
       timers.forEach(clearTimeout); timers.length = 0; jid++; pzJ++; pzOn = false; pzMarks = [];
       Object.values(st).forEach(g => stones.remove(g)); for (const k in st) delete st[k];
@@ -264,7 +264,7 @@
       hud(''); later(next, 650);
     }
     hud('');
-    loadEngine().then(e => { if (stopped) return; E = e; if (PZ) { pzLoad(PZ.start, PZ.rule, PZ.me, PZ.last, { noForbid: PZ.noForbid, judge: PZ.judge, pick: PZ.pick }); return; } worker = new Worker(BASE + 'engine.js' + VER); begin(); }).catch(() => hud('⚠'));
+    loadEngine().then(e => { if (stopped) return; E = e; if (PZ) { pzLoad(PZ.start, PZ.rule, PZ.me, PZ.last, { noForbid: PZ.noForbid, judge: PZ.judge, pick: PZ.pick, lock: PZ.lock }); return; } worker = new Worker(BASE + 'engine.js' + VER); begin(); }).catch(() => hud('⚠'));
 
     // test hooks (positions on screen, state)
     const dbg = {
