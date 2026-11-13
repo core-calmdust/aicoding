@@ -16,7 +16,7 @@
   const A = window.AtlasNPC = window.AtlasNPC || {};
   if (A.skin) return;
   const SRC = (document.currentScript && document.currentScript.src) || location.href;
-  const BASE = new URL('./', SRC).href, ATLAS = new URL('../', BASE).href, IMG = new URL('../images/atlas/', ATLAS).href, V = '10';
+  const BASE = new URL('./', SRC).href, ATLAS = new URL('../', BASE).href, IMG = new URL('../images/atlas/', ATLAS).href, V = '11';
   const LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
   const loaded = {};
   const load = src => loaded[src] || (loaded[src] = new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); }));
@@ -32,7 +32,8 @@
     if (!window.AtlasArt) need.push(load(ATLAS + 'art.js?v=12').catch(() => {}));
     return Promise.all(need).then(() => load(BASE + 't/' + lang + '.js?v=' + V).catch(() => load(BASE + 't/en.js?v=' + V)))
       .then(() => load(BASE + 't2/' + lang + '.js?v=' + V).catch(() => {}))   // more lines + the watchers' own ways of talking (t2/, where there is one)
-      .then(() => load(BASE + 't3/' + lang + '.js?v=' + V).catch(() => {}));   // the Atlamo's chatter: their own lines, more trivia, days of the year (t3/, ja · en)
+      .then(() => load(BASE + 't3/' + lang + '.js?v=' + V).catch(() => {}))   // the Atlamo's chatter: their own lines, more trivia, days of the year (t3/)
+      .then(() => { load(BASE + 't4/' + lang + '.js?v=' + V).catch(() => {}); });   // …and a great deal more of it (t4/, large: comes in the background, added when it arrives)
   }
   // t2/<lang>.js: more lines for the bosses' voices (added to t/<lang>.js) and the watchers' lines by their voice (fanv)
   // t3/<lang>.js (tag 't3', 2026-11-13): sp (each creature's own lines), trivia (more per game, after t/'s four), day ('MM-DD' or
@@ -44,7 +45,12 @@
     Object.keys(o.fan || {}).forEach(k => { T.fan[k] = (T.fan[k] || []).concat(o.fan[k]); });
     if (o.fanv) T.fanv = o.fanv;
     Object.keys(o.trivia || {}).forEach(g => { T.trivia[g] = (T.trivia[g] || []).concat(o.trivia[g]); });
-    if (o.sp || o.day) T.x = { sp: o.sp || {}, day: o.day || {}, dsp: o.dsp || {}, mon: o.mon || {}, wd: o.wd || [], g: o.g || {} };
+    if (o.sp || o.day) {   // (t4/ adds to what t3/ gave, list by list, in the same order in every language)
+      const X = T.x = T.x || { sp: {}, day: {}, dsp: {}, mon: {}, wd: [], g: {} }, cat = (D, S) => Object.keys(S || {}).forEach(k => { D[k] = (D[k] || []).concat(S[k]); });
+      cat(X.sp, o.sp); cat(X.day, o.day); cat(X.mon, o.mon); cat(X.g, o.g);
+      (o.wd || []).forEach((l, i) => { X.wd[i] = (X.wd[i] || []).concat(l); });
+      Object.keys(o.dsp || {}).forEach(d => { cat(X.dsp[d] = X.dsp[d] || {}, o.dsp[d]); });
+    }
   };
   // today's keys for T.x.day / dsp: 'MM-DD' and 'MM-nWd' (e.g. '05-2Su' = the 2nd Sunday of May)
   A.dayKeys = (d = new Date()) => { const p = n => String(n).padStart(2, '0'), m = p(d.getMonth() + 1); return [m + '-' + p(d.getDate()), m + '-' + (Math.floor((d.getDate() - 1) / 7) + 1) + ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'][d.getDay()]]; };
