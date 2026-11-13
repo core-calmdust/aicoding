@@ -419,6 +419,8 @@ Mac（M4 Pro、Chrome 157）の v4 の bench：中盤の共通の深さまで ×
 - 再現（作業機）：`tools/mtsim` の `gen.py`・`dump.js`（`reversi`）・`g_reversi.h`（ファイルの先頭のコマンド）。`SIM_SPLIT=d,e,bd,be,chk,sn`・`SIM_YBWN=9`（10スレッドより先を Lazy）・`SIM_END=1`（終盤）。前の版は `reversi/engine_mt_v41.wasm` の元の `engine.c`（git の履歴）を同じ `gen.py` に通す。
 - 1スレッドの一致：`tools/mt-one.js`（`engine_mt.wasm` の1スレッドを `engine.js` の think で：中盤 MPC あり深さ13・なし深さ9 各8局面、`lv.end`（終局まで読む）4局面、勝敗読み8局面、完全読み 8＋4局面）で、前の配信版と**手・評価値・深さ・局面数・深さごとの経過がすべて一致**（40局面、計6.06億局面）。JS だけの読み（`--nowasm`）も前の `engine.js` と一致。
 
+**headless Chrome（作業機、2スレッド）**：`bench.html`（新・`?prev=1` とも分離あり・石差の一致）、対局ページ PC 1440×900／スマホ 390×844（AI 同士 Lv.36 対 Lv.28 をスレッドの組で）、フル機能版（`?skin=atlas`）、`pro/`（2スレッドで AI の手・解析）、大百科がエラーなく動く（作業機の headless は WebGL がなく、大百科の3D卓は2Dの表示になる）。`tools/levelmatch.js --plan L27:L28 --games 2 --threads 12`（YBW 10＋Lazy 2）も最後まで打てた。
+
 **Mac で確かめること**：`reversi/bench.html`（新）と `reversi/bench.html?prev=1`（v4.1、前の `engine_mt.wasm` をそのまま `engine_mt_v41.wasm` として置いた）を同じ設定で1回ずつ測り、結果を並べる。中盤の共通の深さまでの時間・終盤の時間（1・2・4・8・10・14スレッド）。14 が 10 より遅ければ PRO の既定（性能コアまで）のまま。`?split=5,12,99,99,256`（既定と同じ）を変えて試すこともできる。
 
 ## やさしいレベル Lv.1〜13（2026-11-10）
