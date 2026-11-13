@@ -21,3 +21,10 @@ scale HalfKP:  positions 200000  mean |net| 847  mean |data score| 3983  loss as
 speed current 996 knps, HalfKP 949 knps
 HalfKP vs current (30000): +136 -123 =1  score 0.525  Elo +17 (-25 .. +60)
 HalfKP vs current (300ms): +135 -122 =3  score 0.525  Elo +17 (-25 .. +60)
+
+KMAP=k1 ROUND=4 from v7 (not adopted: within noise)
+epoch 0  valid 0.02939   epoch 1  0.02925   epoch 2  0.02926   epoch 3  0.02920   epoch 4  0.02915
+scale current: mean |net| 819  best fit: net x 1.50 (loss 0.01996)
+scale new:     mean |net| 822  best fit: net x 1.50 (loss 0.01992)
+new vs current (30000): +137 -122 =1  score 0.529  Elo +20 (-22 .. +63)
+new vs current (300ms): +130 -125 =5  score 0.510  Elo +7 (-35 .. +49)
