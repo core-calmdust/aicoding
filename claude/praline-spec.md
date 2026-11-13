@@ -86,7 +86,7 @@ wasm の αβ エンジン（`engine_mt.wasm`、`-DMT`）の**仕事を分ける
 | タフル（`tafl/`） | C（wasm、NNUE） | **YBW**（3、busy marks なし） | mtengine・**praline（移行済み）**・proset・ponder |
 | モリス（`morris/`） | C（wasm） | **YBW**（3）＋busy marks | mtengine・**praline（移行済み）**・proset |
 | ファノロナ（`fanorona/`、アルケルケは1スレッド） | C（wasm） | **YBW**（3）＋busy marks | mtengine・**praline（移行済み）**・proset |
-| リバーシ（`reversi/`） | C（wasm）＋JS | **YBW**（中盤は深さ5、読み切りは12マス）＋10スレッドより先は Lazy SMP（2026-11-13、v5。busy marks は入れたが効かず既定でなし） | mtengine・**praline（2026-11-13、分割点256個・`PL_NO_VALS`・`PL_MT_SPLIT`）**・proset・ponder |
+| リバーシ（`reversi/`） | C（wasm）＋JS | **YBW**（中盤は深さ5、読み切りは12マス）＋10スレッドより先は Lazy SMP（2026-11-13、v5。busy marks は入れたが効かず既定でなし）。v6（同日）：表で ALL 節と分かる中盤の節（残り深さ7以上）は最初の手を待たずに分ける | mtengine・**praline（2026-11-13、分割点256個・`PL_NO_VALS`・`PL_MT_SPLIT`）**・proset・ponder |
 | 将棋（`shogi/`） | C（wasm、NNUE） | **YBW**（4）＋busy marks＋10スレッドより先は Lazy SMP（`YBW_MAX`） | mtengine・**praline（移行済み、`PL_VAL` double・読み筋・`PL_IDLE_HOOK`）**・proset・ponder |
 | チェス（`chess/`） | C（wasm、NNUE） | **YBW**（6、予想カット節も）＋busy marks＋10スレッドより先は Lazy SMP（2026-11-12、v3。前は YBW 1＋Lazy SMP） | mtengine・**praline（移行済み、読み筋・カットの印・`PL_MT_SPLIT`）**・proset・ponder |
 | 五目並べ（`gomoku/`） | **C（wasm、2026-11-12）**：盤の形・禁手・VCF/VCT・αβ・評価ネットごと `core.c`（`core_simd.wasm`／`core.wasm`、スレッドは `core_mt.wasm`）。JS は予備（`?nowasm`） | **YBW**（4、読み筋の節は2）＋busy marks、解析は候補手を分割点に | mtengine・**praline（2026-11-12）**・proset |
@@ -117,8 +117,10 @@ wasm の αβ エンジン（`engine_mt.wasm`、`-DMT`）の**仕事を分ける
 | 将棋 | YBW（その4の前） | ×2.16 | ×3.59 | ×4.78 | ×4.48 | ×3.31 → その4（YBW 10＋Lazy）で再計測待ち |
 | チェッカー | Lazy＋busy marks（YBW の前） | — | — | ×5.06 | ×5.19 | ×5.81 |
 | ファノロナ | Lazy＋busy marks（YBW の前） | — | — | ×4.39 | ×4.86 | ×4.37 |
-| リバーシ中盤 | YBW v4（v4.1 の前） | ×1.58 | ×2.52 | ×3.45 | ×3.07 | ×2.87 → v5（Praline、YBW 10＋Lazy）で再計測待ち（`bench.html` と `?prev=1`） |
-| リバーシ終盤 | YBW v4 | ×1.75 | ×3.81 | ×6.14 | ×6.81 | ×7.35 → v5 で再計測待ち |
+| リバーシ中盤 | YBW v4（v4.1 の前） | ×1.58 | ×2.52 | ×3.45 | ×3.07 | ×2.87 |
+| リバーシ中盤 | v5（Praline、YBW 10＋Lazy） | ×1.65 | ×2.63 | ×3.22 | ×3.80 | ×2.55 → v6（ALL 節をすぐ分ける）で再計測待ち（`bench.html` と `?mtv=5`） |
+| リバーシ終盤 | YBW v4 | ×1.75 | ×3.81 | ×6.14 | ×6.81 | ×7.35 |
+| リバーシ完全読み | v5 | ×2.00 | ×3.85 | ×5.96 | ×6.62 | ×6.03 |
 | チェス | Lazy SMP（v2 の前） | — | — | ×2.53 | — | ×2.72 → v3（YBW 10＋busy marks＋Lazy）で計測待ち |
 | ウゴルキ／アゴン／コナネ | YBW＋共有（JS） | — | — | ×3.88／×3.32／×2.38 | — | （14 は 8 より遅い） |
 | コナネ | 同上（手伝いの前） | ×1.37 | ×2.23 | ×2.14 | — | ×2.24 |
@@ -258,6 +260,7 @@ JavaScript エンジンは `shared/mtsplit.js`（＋`mttt.js`）、独立な仕�
 - 設定：中盤の分割の深さ5、読み切りの分割12マス（14 から）、時計の確認 256局面ごと（4096 から）、busy marks は効かず既定でなし、10スレッドより先は Lazy SMP（`engine_mt.wasm` の `mt_lazy`＝自分の分割点を開かない・根の結果はスレッドごと、`engine.js` の `LAZY.ybwHelpers` 9、深さの受け渡しは v3 の `lzPut`／`JMP`）。
 - **一致**：通常版 `engine.wasm` は前処理後のソースが同じ（作り直していない）。`engine_mt.wasm` の1スレッドは `reversi/tools/mt-one.js` の40局面（中盤 MPC あり／なし、`lv.end`、勝敗読み、完全読み）で手・評価値・深さ・局面数が前の配信版と全一致。JS だけの読みも一致。
 - `tools/mtsim`（`g_reversi.h`：engine.js の反復深化・読み切りを C で。中盤15局面・1スレッド300万局面、終盤12局面・20マス）：中盤 2／4／8 ×1.49／2.50／3.35（前 ×1.50／2.41／3.37）、遅いコアあり 8／10／14 ×3.40／3.33／3.36（前 ×3.35／3.13／2.91）。終盤 ×1.70／3.04／5.19（前 ×1.67／2.93／4.87）、遅いコアあり ×5.47／5.45／5.48（前 ×4.72／4.51／4.56）。中盤は余分な局面（8スレッドで1スレッドの約1.9倍）が大きく、同じ速さのコアでは伸びない。詳細は reversi/MODEL_CARD.md「マルチスレッド v5（Praline）」。Mac は `reversi/bench.html` と `?prev=1`（前の `engine_mt_v41.wasm`）で並べて測る。
+- **v6（2026-11-13、中盤の余分な局面の内訳）**：8スレッドで全スレッドの局面は1スレッドの ×1.84。余分のうち 45% は「カットした分割点で、カットした手より後ろの手」、23% は「二度読みで使わなかった分」、残り 32% は木の形の違い。PVS の読み直し・Multi-ProbCut の試し読み・置換表の当たり・反復深化のやり直しは増えていない。余分な局面の大半は空いているスレッドが読んでおり、減らしても速くならない（カットしそうな節で分けるのを遅らせると無駄は半分になるが手の空いた時間が増えて ×3.42 → ×2.89）。効いたのは仕事を増やす方：表で ALL 節（前に下回った）と分かる null window の節は、表の手をひとりで先に読まずに最初の手の前から分ける（リバーシのつなぎ側、共通ヘッダは変えていない）。中盤 8／10スレッド ×3.40／×3.76 → ×3.61／×4.06、終盤は同じ。ほかのゲームの YBW にも同じ考え（ALL 節では最初の手を待たない）を試す価値がある。詳細は reversi/MODEL_CARD.md「マルチスレッド v6」。
 
 ---
 

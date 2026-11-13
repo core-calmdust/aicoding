@@ -41,7 +41,7 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);ma
 <body>
 <main>
 <h1>リバーシ マルチスレッド ベンチマーク</h1>
-<p class="sub">対局ページと同じ方式（Document-Isolation-Policy の分離、engine_mt.wasm の YBW 分割探索）で、スレッド数ごとの読みの速さを測ります。PC の Chrome で開き、ほかのアプリを閉じて「開始」。終わったら「結果をコピー」を押して貼り付けてください（約5分）。前の方式（Praline 以前の v4.1）と比べるときは、このページを <code>?prev=1</code> を付けて開き、もう一度測ります。</p>
+<p class="sub">対局ページと同じ方式（Document-Isolation-Policy の分離、engine_mt.wasm の YBW 分割探索）で、スレッド数ごとの読みの速さを測ります。PC の Chrome で開き、ほかのアプリを閉じて「開始」。終わったら「結果をコピー」を押して貼り付けてください（約5分）。前の方式と比べるときは、このページを <code>?mtv=5</code>（v5：ALL 節をすぐには分けない）や <code>?prev=1</code>（Praline 以前の v4.1）を付けて開き、もう一度測ります。</p>
 
 <div class="card"><div class="kv" id="env"></div></div>
 
@@ -82,7 +82,10 @@ let started = 0, lines = [], pool = null, PX = null;
 // midgame's split depth, the solver's split empties, the busy marks' depth / empties (99 none), the clock's interval).
 const QS = new URLSearchParams(location.search), PREV = QS.get('prev') === '1';
 const SPLIT = QS.get('split') ? QS.get('split').split(',').map(Number) : null;
-const ENGINE = PREV ? 'v4.1 (prev, engine_mt_v41.wasm)' : 'v5 Praline' + (SPLIT ? ' split ' + SPLIT.join(',') : '');
+// (2026-11-13) ?mtv=5: the current engine_mt.wasm with v5's split points (no ALL node split at once — engine.c mt_split's mtv,
+// MODEL_CARD.md「マルチスレッド v6」), to compare v6 with v5 on the same machine
+const MTV = +(QS.get('mtv') || 0);
+const ENGINE = PREV ? 'v4.1 (prev, engine_mt_v41.wasm)' : (MTV === 5 ? 'v5 Praline (mtv=5)' : 'v6 Praline') + (SPLIT ? ' split ' + SPLIT.join(',') : '');
 
 function env() {
   $('#env').innerHTML = [
@@ -120,10 +123,10 @@ async function setup() {
   const wt = await loadWeights();
   // the same pool as the game page (index.html MTP): lead and helpers are mt-worker.js on a shared engine_mt.wasm
   pool = MTEngine.pool({
-    wasm: PREV ? 'engine_mt_v41.wasm?v=1' : 'engine_mt.wasm?v=12', lead: 'mt-worker.js?v=23', helper: 'mt-worker.js?v=23', slot: 2 << 20, initial: 1024, maximum: 16384,
+    wasm: PREV ? 'engine_mt_v41.wasm?v=1' : 'engine_mt.wasm?v=13', lead: 'mt-worker.js?v=23', helper: 'mt-worker.js?v=23', slot: 2 << 20, initial: 1024, maximum: 16384,
     imports: mem => ({ env: { memory: mem, now: () => Date.now() } }),
     after: async (X, mem, ws) => {
-      if (!PX) { PX = X; if (X.w_defer) X.w_defer(); X.init(); if (SPLIT && !PREV && X.mt_split) X.mt_split(...SPLIT); }   // (?split=: the split settings of every thread — shared memory)
+      if (!PX) { PX = X; if (X.w_defer) X.w_defer(); X.init(); if (!PREV && X.mt_split && (SPLIT || MTV)) { const a = (SPLIT || []).slice(0, 6); while (a.length < 6) a.push(0); X.mt_split(...a, MTV); } }   // (?split=: the split settings of every thread — shared memory)
       ws.forEach(w => w.postMessage({ type: 'weights', buffer: wt.buffer.slice(0), nphase: wt.nphase }));
     },
     help: m => { const o = m.opts || {}, ex = o.cfg.exact; return { cells: m.cells, toMove: m.toMove, cfg: { depth: 60, exact: ex, wld: o.cfg.wld || ex + 2, mpc: 1 } }; },   // (= index.html MTP.help with opts.cfg)
@@ -150,7 +153,7 @@ async function run() {
   const t00 = performance.now(); let doneW = 0;
   const totalW = COUNTS.length * (MP.length * T + EP.length * 6000) + 1500;   // (rough weights for the bar)
   const tick = (add, msg) => { doneW += add; $('#bar i').style.width = Math.min(100, doneW / totalW * 100) + '%'; if (msg) $('#st').textContent = msg + `　経過 ${Math.round((performance.now() - t00) / 1000)}秒`; };
-  lines = [`reversi bench (mt ${ENGINE}, 2026-11-13) ${new Date().toISOString()} | ${ua} | isolated ${ISO} | hc ${HC} | mid ${MP.length}x${T}ms (36 empties) | end ${EP.length}x24 empties exact`];
+  lines = [`reversi bench (mt ${ENGINE}, 2026-11-13b) ${new Date().toISOString()} | ${ua} | isolated ${ISO} | hc ${HC} | mid ${MP.length}x${T}ms (36 empties) | end ${EP.length}x24 empties exact`];
   const M = {}, E = {};   // per thread count
   // midgame: iterative deepening for T ms (use 1.0: a new depth may start until T, cut at T); per depth the time and move
   const midCfg = { depth: 60, exact: 0, time: T, use: 1, max: T, mpc: 1 };

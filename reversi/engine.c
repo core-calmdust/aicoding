@@ -329,6 +329,12 @@ static int chkQ = CHK_Q;          /* (v5: 4096 before) a thread checks the clock
 static TLS double nextChk;
 static int busyD = 99, busyE = 99;   /* busy marks from this remaining depth (midgame) / these empties (solver); 99: none */
 static int splitN = 1;               /* the moves searched at a null-window node before it is split (1: the first, YBW) */
+/* (2026-11-13, v6) ALL nodes split at once: a null-window node whose table entry is an upper bound (it failed low before —
+   an ALL node, every move is searched anyway) of the midgame search, remaining depth >= allD, is split before its first
+   move when a helper is idle: the table's move goes to the split point first instead of being searched alone (tools/mtsim:
+   from depth 5 the endgame's midgame part before the solve was a little worse, 7 the best; the solver likewise was a little
+   slower, not done). One thread: never (no idle helper). splitAll 0: as v5 (mt_split's mtv 5). MODEL_CARD.md「マルチスレッド v6」 */
+static int splitAll = 1, allD = 7;
 static inline u64 bkey(u64 P, u64 O) {   /* the busy marks' key of a position */
   u64 k = P * 0x9E3779B97F4A7C15ULL ^ (O + 0x632BE59BD9B4E019ULL) * 0xC2B2AE3D27D4EB4FULL;
   k ^= k >> 31; k *= 0x94D049BB133111EBULL; return k ^ (k >> 29);
@@ -484,8 +490,14 @@ static int searchI(u64 P, u64 O, int depth, int alpha, int beta, int ply, int pa
   }
   if (depth <= 0) return evalAt(ply, P, O);
   u32 h = hash(P, O); int ttMove = -1; u64 td;
+#ifdef MT
+  int ttAll = 0;   /* (v6) the entry is an upper bound: an ALL node */
+#endif
   if (ttFind(P, O, h, &td)) {
     ttMove = DT_M(td);
+#ifdef MT
+    ttAll = DT_LO(td) <= -32767;
+#endif
     if (DT_D(td) >= depth) {
       int lo = DT_LO(td), hi = DT_HI(td);
       if (lo >= beta) return lo;
@@ -526,7 +538,9 @@ static int searchI(u64 P, u64 O, int depth, int alpha, int beta, int ply, int pa
     : depth >= 9 ? 3 : depth >= 6 ? 2 : depth >= 4 ? 1 : depth >= 3 ? 0 : -1;
   int alpha0 = alpha, best = -32767, bestMove = -1, first = 0;
 #ifdef MT
-  if (MPC_ON && ordDepth >= 0 && ttMove >= 0 && ((m >> ttMove) & 1) && !(ply == 1 && ROT1)) {
+  /* (v6) an ALL node with an idle helper: no table's move alone first — ordered with the others and split at once */
+  const int xall = splitAll && ttAll && beta - alpha == 1 && depth >= splitD && depth >= allD && !lazyT && gIdle > 0;
+  if (MPC_ON && ordDepth >= 0 && ttMove >= 0 && ((m >> ttMove) & 1) && !(ply == 1 && ROT1) && !xall) {
 #else
   if (MPC_ON && ordDepth >= 0 && ttMove >= 0 && ((m >> ttMove) & 1)) {
 #endif
@@ -574,7 +588,7 @@ static int searchI(u64 P, u64 O, int depth, int alpha, int beta, int ply, int pa
      position another thread is searching right now is put off to the end of the node (one thread alone: as before). */
   int defI[BUSY_DEF], nDef = 0, noSplit = lazyT;
   for (int k = 0; k < n + nDef; k++) {
-    if (k + first >= (beta - alpha == 1 ? splitN : 1) && k < n && !noSplit && n + nDef - k >= 2 && depth >= splitD && (gIdle > 0 || (gWaitN > 0 && spWanted()))) {
+    if ((k + first >= (beta - alpha == 1 ? splitN : 1) || xall) && k < n && !noSplit && n + nDef - k >= 2 && depth >= splitD && (gIdle > 0 || (gWaitN > 0 && spWanted()))) {
       SPt *sp = spAlloc();
       if (sp) {
         int bm = bestMove;
@@ -976,8 +990,10 @@ static int spSearch(SPt *s, int i, int a) {
 #include "../shared/praline/praline_ybw.h"
 /* the split settings (tools/mtsim, bench pages): the midgame's least remaining depth, the solver's least empties, the busy
    marks' least depth / empties (99: none), the clock's interval in nodes, the moves searched at a null-window node before
-   a split; <= 0 keeps a setting */
-EXPORT(mt_split) void mt_split(int d, int e, int bd, int be, int chk, int sn) {
+   a split; <= 0 keeps a setting. mtv (v6): 5 the split points as v5 (no ALL node split at once), 6 as now (bench.html ?mtv=) */
+#define RV_MT_SPLIT7 1   /* (tools/mtsim/g_reversi.h: the 7 arguments) */
+EXPORT(mt_split) void mt_split(int d, int e, int bd, int be, int chk, int sn, int mtv) {
+  if (mtv > 0) splitAll = mtv >= 6;
   if (d > 0) splitD = d;
   if (e > 0) splitE = e;
   if (bd > 0) busyD = bd;
