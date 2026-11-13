@@ -901,8 +901,24 @@ html.atlas-skin #bdRow.a3v-row{display:grid}html.atlas-skin .a3v-row ~ .bd-note{
       if (fix.dataset.sig !== sig) {
         fix.dataset.sig = sig;
         let hero = fix.querySelector(':scope > .lxh'); if (!hero) { hero = document.createElement('div'); hero.className = 'lxh'; fix.prepend(hero); }
+        const ja = /^ja/.test(document.documentElement.lang || 'ja'), kind = (view.querySelector('#segLs .sel, .ls-tabs .sel') || {}).dataset || {};
+        const desc = (p && p.textContent.trim()) || (kind.v === 'open' ? (ja ? '定石の手順を覚えて、その局面で練習しよう。' : 'Learn the lines, then practise them.') : (ja ? '考え方を学んで練習問題に挑戦しよう。' : 'Learn the ideas, then try the problems.'));
         hero.innerHTML = (m ? `<span class="lxh-ring" style="--p:${n / m}"><b>${n}</b><small>/${m}</small></span>` : '') +
-          `<span class="lxh-tx"><b>${esc(h2.textContent.trim())}</b>${p && p.textContent.trim() ? `<small>${esc(p.textContent.trim())}</small>` : ''}</span>`;
+          `<span class="lxh-tx"><b>${esc(h2.textContent.trim())}</b><small>${esc(desc)}</small></span>` +
+          `<button type="button" class="lxh-cont hidden"><span></span><small></small></button>`;
+      }
+      // 続きから: the first card of the shown category not yet passed
+      const cont = fix.querySelector('.lxh-cont');
+      if (cont) {
+        const card = [...lx.querySelectorAll('.lx-grid .lx-card, .lx-grid .lesson-item')].find(c => !c.classList.contains('done') && !c.disabled);
+        cont.classList.toggle('hidden', !card);
+        if (card) {
+          const ja = /^ja/.test(document.documentElement.lang || 'ja'), no = card.querySelector('.lx-no'), tt = card.querySelector('.lx-t');
+          const a1 = (ja ? '続きから ▶ ' : 'Continue ▶ ') + (no ? no.textContent.trim() : ''), a2 = tt ? tt.firstChild && tt.firstChild.textContent.trim() || tt.textContent.trim() : '';
+          if (cont.firstChild.textContent !== a1) cont.firstChild.textContent = a1;
+          if (cont.lastChild.textContent !== a2) cont.lastChild.textContent = a2;
+          cont.onclick = () => card.click();
+        }
       }
       if (tabs && tabs.parentElement !== fix) fix.appendChild(tabs);
       view.classList.add('lxh-on');
