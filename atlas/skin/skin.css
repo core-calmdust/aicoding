@@ -866,7 +866,7 @@ html.atlas-skin:not(.atlas-land):not(.atlas-2d) body:not(#_) .card.controls .btn
   html.atlas-skin.atlas-shogi:not(.atlas-2d):not(.atlas-land) body:not(#_) .card.players:not(#_){padding:6px 8px!important;gap:6px!important;border-radius:18px!important}
   html.atlas-skin.atlas-shogi:not(.atlas-2d):not(.atlas-land) body:not(#_) .card.players > .player:not(#_):not(#_){min-height:0!important;padding:6px 12px!important;border-radius:14px!important}
   html.atlas-skin.atlas-shogi:not(.atlas-2d):not(.atlas-land) body:not(#_) .card.players > .player :is(.name, .nm):not(#_){font-size:13px!important}
-  html.atlas-skin.atlas-shogi:not(.atlas-2d):not(.atlas-land) body:not(#_) .card.players:not(#_):not(#_){margin-bottom:-8px!important;box-sizing:border-box!important;width:calc(100vw - 0px)!important;max-width:none!important;margin-left:calc(50% - 50vw)!important;margin-right:calc(50% - 50vw)!important}   /* (as wide as the tool row above it) */   /* (the board right under it) */
+  html.atlas-skin.atlas-shogi:not(.atlas-2d):not(.atlas-land) body:not(#_) .card.players:not(#_):not(#_){margin-bottom:-12px!important}   /* (the same 8px gap to the board's wood under it as to the tool row above it; the wood starts ~12px into the board area) */   /* (the board right under it) */
 }
 /* (2026-11-13) phones: the buttons inside the dialog's fixed foot stay above its tabs (the dialogs' sticky-button rule slid them down over the tabs while the list scrolled) */
 html.atlas-skin:not(.atlas-2d) body:not(#_) .modal.ngt-on .ngt-foot > .modal-actions:not(#_):not(#_){position:relative!important;bottom:auto!important;padding-bottom:8px!important;margin-bottom:0!important}
@@ -881,6 +881,17 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl.ngt-on[data
 html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl.ngt-on[data-ngl-order] :is(#fLevel,#fLevel2) .cs-wrap .csp-btn:not(#_):not(#_){height:34px!important;font-size:13.5px!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl.ngt-on[data-ngl-order] :is(#fLevel,#fLevel2) .pro-btn:not(#_){transform:scale(.85);transform-origin:right center}
 /* (2026-11-13) phones, new game: the tiles only (the pulldown copy under them hidden), room under the panels' last row, the credit over the buttons not blurred */
-html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] .field > .seg.pd-on ~ .pd:not(#_){display:none!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order] :is(#fHandi,#fClock,#fColor) > .seg.pd-on ~ .pd:not(#_){display:none!important}   /* (the mode row keeps its pulldown) */
 html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl.ngt-on[data-ngl-order] .ng-col:not(#_):not(#_):not(#_){padding-bottom:24px!important}
 html.atlas-skin:not(.atlas-2d) body:not(#_) .modal.ngt-on .ngt-foot > .modal-actions::before{display:none!important}
+/* (2026-11-13, common rule) phones: the frosted band over the dialog's fixed foot (buttons + tabs) — the text scrolling under it
+   is frosted wherever it can be seen; the band sits on the foot itself, above the credit line that the foot holds */
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal.ngt-on > .ngt-foot::before{content:'';position:absolute;left:0;right:0;top:-38px;height:38px;background:linear-gradient(rgba(251,245,231,0),rgba(251,245,231,.5) 60%,rgba(251,245,231,.85));-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);-webkit-mask-image:linear-gradient(transparent,#000 40%);mask-image:linear-gradient(transparent,#000 40%);pointer-events:none;z-index:5}
+/* (2026-11-13) phones: the foot's buttons at the same place on every tab (ゲーム / ルール / デザイン), and room before the foot so the last line (the credit) clears the frosted band at the end */
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal.ngt-on .ngt-foot > .modal-actions:not(#_):not(#_):not(#_){margin:0!important;padding:10px 0 8px!important;bottom:auto!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) .modal.ngt-on > .ngt-foot:not(#_){margin-top:40px!important}
+@media (pointer: coarse) and (max-width: 760px){
+  /* (2026-11-13, common rule) the rule tour's buttons over the page: frosted where the text runs under them */
+  html.atlas-skin body:not(#_) .modal .rt > .rt-nav{position:sticky}
+  html.atlas-skin body:not(#_) .modal .rt > .rt-nav:not(#_)::before{content:''!important;position:absolute!important;left:0;right:0;top:-44px!important;height:44px!important;background:linear-gradient(rgba(251,245,231,0),rgba(251,245,231,.5) 60%,rgba(251,245,231,.85));-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);-webkit-mask-image:linear-gradient(transparent,#000 40%);mask-image:linear-gradient(transparent,#000 40%);pointer-events:none}
+}
