@@ -12,7 +12,7 @@ OUT=${1:?usage: build-kp.sh <out folder> [net]}; mkdir -p "$OUT"
 KB=${KB:-9}; H=${H:-512}
 if [ -n "$2" ] && [ -f "$2" ]; then
   MAGIC=$(od -An -t x4 -N 4 "$2" | tr -d ' ')
-  if [ "$MAGIC" = 4b45554e ]; then H=$(od -An -t d4 -j 4 -N 4 "$2" | tr -d ' '); KB=$(od -An -t d4 -j 12 -N 4 "$2" | tr -d ' '); fi
+  if [ "$MAGIC" = 4b45554e ] || [ "$MAGIC" = 4f45554e ]; then H=$(od -An -t d4 -j 4 -N 4 "$2" | tr -d ' '); KB=$(od -An -t d4 -j 12 -N 4 "$2" | tr -d ' '); fi
 fi
 CUR_H=$(gzip -dc "$SHOGI/nnue.bin.gz" | od -An -t d4 -j 4 -N 4 | tr -d ' ')
 cc -O3 -w -o "$OUT/prep" "$HERE/prep.c"
