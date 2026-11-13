@@ -1953,7 +1953,7 @@ html.atlas-skin #newOverlay #lvNote{display:none!important}   /* (the long note 
 <script src="variants/mini.js?v=20261021vb"></script>
 <script src="variants/hasami.js?v=20261021vb"></script>
 <script src="variants/variants.js?v=20261112bw"></script>
-<script src="rvbox.js?v=20261107l14"></script>
+<script src="rvbox.js?v=20261113hd"></script>
 <script src="rvtip.js?v=20261107l14"></script>
 <script src="../shared/coachkit.js?v=17l14"></script>
 <script src="../shared/record.js?v=12l14"></script>
@@ -2721,7 +2721,7 @@ function playerName(c) {
   if (settings.mode === 'pvp') return cname(c);
   const cs = window.CpuStyle && game ? CpuStyle.tag(game, c, t) : '';
   const lvN = i => game && game.variant && Variants.eng(game.variant) ? Variants.lvName(i) : t('lv')[i];
-  if (settings.mode === 'watch') return aiP() + lvN(c === 0 ? settings.level : settings.level2) + (proCfg(c === 0 ? settings.level : settings.level2) ? ' PRO' : '') + cs;
+  if (settings.mode === 'watch') return aiP() + lvN(c === 0 ? settings.level : settings.level2) + (proCfg(c === 0 ? settings.level : settings.level2, c) ? ' PRO' : '') + cs;
   if (game && game.rated) return c === game.human ? t('you') + ' · R' + game.rated.my : aiP() + rtLvName(game.rated.lv) + ' · R' + game.rated.or;
   return c === game.human ? t('you') : aiP() + lvN(settings.level) + (proCfg(settings.level) ? ' PRO' : '') + cs;
 }
@@ -2996,7 +2996,7 @@ async function schedule() {
     setStatus(side, t('thinking'), true);
     const t0 = performance.now();
     await weightsReady; if (token !== busyToken) return;
-    const pc = proCfg(levelOf(side)), lv = pc ? pc.opts : LEVELS[levelOf(side)];   // PRO mode: a level of its own
+    const pc = proCfg(levelOf(side), side), lv = pc ? pc.opts : LEVELS[levelOf(side)];   // PRO mode: a level of its own
     let bm = null, bmLbl = 'book';
     if (window.CpuStyle && CpuStyle.active(game, side, idx)) {   // chosen strategy (cpu-style.js): consistent book move / plan move / null = engine
       const r = await CpuStyle.move({ E, P, game, side, ply: idx, book: (pc ? pc.book : levelOf(side) >= 2) ? BOOK : null, think: (mv, o) => aiCall({ type: 'think', sfen: game.start, moves: mv, opts: o }) });
@@ -3557,8 +3557,15 @@ var PRO = window.ProSet ? ProSet.init({ game: 'shogi', lang: () => LANG, level: 
   store: { get: () => settings.pro, set: v => { settings.pro = v; } }, defaults: PRO_DEF,
   params: [{ key: 'limit', kinds: { time: [0.1, 60], depth: [1, 30], nodes: [100, 1e8] } }, { key: 'threads' }, { key: 'ponder' },
     { key: 'book' }, { key: 'var' }, { key: 'eval' }, { key: 'resign' }] }) : null;
+// AI同士: 後手AI's own PRO (2026-11-13) — its button beside 後手AIの強さ, its panel under 手合い (the right panel)
+var PRO2 = window.ProSet ? ProSet.init({ game: 'shogi-w2', field: '#fLevel2', lang: () => LANG, level: () => +$('#rngLevel2').value, show: () => dlg.mode === 'watch' && !proVariantEng(),
+  store: { get: () => settings.pro2, set: v => { settings.pro2 = v; } }, defaults: PRO_DEF,
+  params: [{ key: 'limit', kinds: { time: [0.1, 60], depth: [1, 30], nodes: [100, 1e8] } }, { key: 'threads' },
+    { key: 'book' }, { key: 'var' }, { key: 'eval' }, { key: 'resign' }] }) : null;
+{ const pn = document.querySelector('#fLevel2 > .pro-panel'), h = $('#fHandi'); if (pn && h) { pn.classList.add('pro-under'); pn.dataset.ng = 'rules'; h.after(pn); } }   // (data-ng: kept after the settings when the panels are rebalanced)
 // the PRO settings of an AI side: { opts (for engine.js 'think'), book, resign, threads } or null (the level as it is; rated / online / variants with their own engine)
-function proCfg(lv) {
+function proCfg(lv, side) {
+  const PRO = settings.mode === 'watch' && side === 1 ? PRO2 : window.PRO;   // (AI同士: 後手AI has its own)
   if (!PRO || !game || game.rated || !(settings.mode === 'ai' || settings.mode === 'watch') || (game.variant && window.Variants && Variants.eng(game.variant))) return null;
   const e = PRO.get(lv); if (!e) return null;
   const L = LEVELS[lv] || LEVELS[LV_DEFAULT], o = {};
@@ -6659,7 +6666,7 @@ if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStar
 (function () {
   if (!/[?&]skin=atlas\b/.test(location.search)) return;
   document.documentElement.classList.add('atlas-skin');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=90l44'; document.head.appendChild(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '../atlas/skin/skin.css?v=90l45'; document.head.appendChild(css);
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net

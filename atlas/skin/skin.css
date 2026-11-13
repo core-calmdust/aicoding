@@ -847,3 +847,9 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-or
 /* (2026-11-13) the panels' shadow is never washed out by the frosted band over the buttons (it was, while PRO was closed and the
    panels reached down under it): the panels lie above that band; the dialog does not scroll then (ng-fit), so nothing slides under it */
 html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order].ng-fit[data-ngt=rules] .ng-cols:not(.ngt-hide){position:relative;z-index:8}
+/* (2026-11-13) the panels exactly the room's height, PRO open or not (open, they were cut to it; closed, they stretched a little past) */
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order].ng-fit[data-ngt=rules] .ng-cols:not(.ngt-hide):not(#_){align-items:start!important}
+html.atlas-skin:not(.atlas-2d) body:not(#_) #newOverlay > .modal.ngl[data-ngl-order].ng-fit[data-ngt=rules] .ng-cols > .ng-col:not(.ngt-hide):not(.ngl-empty):not(#_){height:var(--ngmax)!important;box-sizing:border-box}
+/* (2026-11-13, common) the 検討 box's 検討する / 元に戻す buttons: the red action button, as shogi's box (reversi / go / hex rbox.js) */
+html.atlas-skin body:not(#_) #rbox .rb-acts :is(.rb-study,.rb-restore):not(#_){background:#ff5d5d!important;color:#fff!important;box-shadow:0 3px 0 #d93c3c!important;border:0!important;font-weight:900;border-radius:10px}
+html.atlas-skin body:not(#_) #rbox .rb-acts :is(.rb-study,.rb-restore):hover{filter:brightness(1.05)}
