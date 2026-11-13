@@ -314,13 +314,13 @@
   function nashiji(m, W, H, n) { const f = G(m, 'flake'), sc = W / 3072; for (let k = 0; k < n; k++) { const x = R(0, W), y = R(0, H), s = R(1, 2.6) * Math.max(sc, .5); f.save(); f.globalAlpha = R(.4, .9); f.translate(x, y); f.rotate(R(0, 3)); f.fillRect(-s / 2, -s / 3, s, s * .7); f.restore(); } }
   // 金地: gold powder rising from the bottom edge (ぼかし), a thin gold band along the top and bottom edges
   function kinji(m, W, H) { const g = G(m, 'pgold'), sc = W / 3072;
-    const lg = g.createLinearGradient(0, H, 0, H * .7); lg.addColorStop(0, 'rgba(255,255,255,.85)'); lg.addColorStop(.3, 'rgba(255,255,255,.3)'); lg.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = lg; g.fillRect(0, H * .78, W, H * .22);
+    const lg = g.createLinearGradient(0, H, 0, H * .7); lg.addColorStop(0, 'rgba(255,255,255,.85)'); lg.addColorStop(.3, 'rgba(255,255,255,.3)'); lg.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = lg; g.fillRect(0, H * .7, W, H * .3);   // (2026-11-13: from where the gradient starts — it began at .78 with a visible step on the red lacquer)
     const tg = g.createLinearGradient(0, 0, 0, H * .12); tg.addColorStop(0, 'rgba(255,255,255,.85)'); tg.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = tg; g.fillRect(0, 0, W, H * .12);
     const f = G(m, 'flat'); f.fillRect(0, 0, W, 7 * sc); f.fillRect(0, H - 7 * sc, W, 7 * sc); }
   function rim(m, W, H, inset) { const g = G(m, 'line'); g.lineWidth = 2.2 * W / 3072; g.strokeRect(inset, inset * .5, W - inset * 2, H - inset); }
   function blurMask(c, px) { const o = cv(c.width, c.height), g = ctx(o); g.filter = `blur(${px}px)`; g.drawImage(c, 0, 0); return o; }
   // compose → [colour canvas, map canvas (R height, G roughness, B metalness)]
-  function composeMakie(m, W, H, s) {
+  function composeMakie(m, W, H, s, ground) {   // ground(x, y) → [r, g, b]: a lacquer other than black (the 山桜 board's 朱溜)
     const rd = k => ctx(m[k]).getImageData(0, 0, W, H).data, D = {}; LAYERS.forEach(k => D[k] = rd(k));
     const Hb = ctx(blurMask(m.raised, 2.4 * W / 3072)).getImageData(0, 0, W, H).data, Ab = ctx(blurMask(m.aokin, 1.8 * W / 3072)).getImageData(0, 0, W, H).data;
     const c = cv(W, H), cm = cv(W, H), g = ctx(c), gm = ctx(cm), im = g.createImageData(W, H), mm = gm.createImageData(W, H), d = im.data, e = mm.data;
@@ -329,6 +329,7 @@
       const i = (y * W + x) * 4, a = i + 3;
       const lq = 9 + (vnoise(x * .003, y * .008, s) - .5) * 4;
       let r = lq + 2, gg = lq, b = lq - 1, h = 0, rough = 26 + vnoise(x * .02, y * .02, s + 4) * 10, met = 0;
+      if (ground) { const q = ground(x, y); r = q[0]; gg = q[1]; b = q[2]; }
       const gr = hash(x, y, s) - .5, gr2 = vnoise(x * .35, y * .35, s + 8) - .5;
       const put = (col, k, rg, mt, ht, sp = 1) => { if (k <= 0) return; const L = 1 + gr * .28 * sp + gr2 * .22 * sp; r = mix(r, col[0] * L, k); gg = mix(gg, col[1] * L, k); b = mix(b, col[2] * L, k); rough = mix(rough, rg + gr * 30, k); met = mix(met, mt, k); h = Math.max(h, ht * k); };
       // powders (蒔きぼかし): each grain on or off by the density
@@ -673,13 +674,15 @@
   function goldLines(m, W, H, y0, n, s) { const g = ctx(m.flat); g.strokeStyle = '#fff'; g.lineCap = 'round';
     for (let k = 0; k < n; k++) { g.lineWidth = (k === 0 ? 7 : 3.5) * W / 3072; g.beginPath(); for (let x = -10; x <= W + 10; x += 8) { const y = y0 + k * 16 * W / 3072 + (s < 0 ? Math.sin(x / W * Math.PI * 2) * H * .05 + Math.sin(x / W * Math.PI * 6) * H * .01 : Math.sin(x / W * 4.2 + s) * H * .06 + Math.sin(x / W * 11 + s * 2) * H * .012); /* (s < 0: whole waves, at y0 on both edges — the line runs on round the board's four faces, 2026-11-12) */ x < 0 ? g.moveTo(x, y) : g.lineTo(x, y); } g.stroke(); } }
   // compose → [colour, map (R height, G roughness, B metalness)]
-  function composeRaden(m, W, H, s, ground) {
+  function composeRaden(m, W, H, s, ground, base) {   // base: [colour, map] canvases of a 蒔絵 picture under the shell (the 山桜 board)
     const rd = k => ctx(m[k]).getImageData(0, 0, W, H).data, Sh = rd('shell'), Kd = rd('kind'), F = rd('flat'), Ct = rd('cut'), Ey = rd('eye');
     const c = cv(W, H), cm = cv(W, H), g = ctx(c), gm = ctx(cm), im = g.createImageData(W, H), mm = gm.createImageData(W, H), d = im.data, e = mm.data;
     const G0 = ground === 'black' ? [12, 9, 8] : [86, 16, 14], G1 = ground === 'black' ? [6, 5, 5] : [46, 8, 8];
+    const Bc = base ? ctx(base[0]).getImageData(0, 0, W, H).data : null, Bm = base ? ctx(base[1]).getImageData(0, 0, W, H).data : null;
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
       const i = (y * W + x) * 4, t = fbm(x / W * 2.2, y / H * 1.4, s, 3), lq = .5 + (t - .5) * 1.2;
       let r = mix(G1[0], G0[0], lq), gg = mix(G1[1], G0[1], lq), b = mix(G1[2], G0[2], lq), h = 0, rough = 22, met = 0;
+      if (Bc) { r = Bc[i]; gg = Bc[i + 1]; b = Bc[i + 2]; h = Bm[i]; rough = Bm[i + 1]; met = Bm[i + 2]; if (h > 30 && h < 72) h = 72 + (h - 30) * .4; }   // (the gold's heights kept clear of the shell's 40–52: the 3D shader tells shell by its height)
       const fa = F[i + 3] / 255; if (fa) { const L = 1 + (hash(x, y, s) - .5) * .3; r = mix(r, 236 * L, fa); gg = mix(gg, 190 * L, fa); b = mix(b, 98 * L, fa); rough = mix(rough, 60, fa); met = mix(met, 255, fa); h = 30 * fa; }
       const sa = Sh[i + 3] / 255;
       if (sa) {
@@ -709,6 +712,29 @@
     }
     g.putImageData(im, 0, 0); gm.putImageData(mm, 0, 0); return [c, cm];
   }
+  // 山桜の枝 (2026-11-13): the bough in raised gold 蒔絵 (bark with its cross-wise lenticels cut in), the blossoms in shell (螺鈿) — single
+  // five-petalled flowers on long stalks, three to five from one point — with the young red-bronze leaves that open with them (赤金)
+  function sakuraBough(mk, m, W, x0, y0, ang, len, w0, bias) {
+    const sc = W / 3072, g = G(mk, 'raised'), c = G(mk, 'cut'), l = G(mk, 'line'), ak = G(mk, 'akakin');
+    const leaf = (x, y, a, z) => { ak.save(); ak.translate(x, y); ak.rotate(a); ak.beginPath(); ak.moveTo(0, 0); ak.bezierCurveTo(z * .3, -z * .3, z * .75, -z * .26, z, 0); ak.bezierCurveTo(z * .75, z * .26, z * .3, z * .3, 0, 0); ak.fill(); ak.restore();
+      c.save(); c.translate(x, y); c.rotate(a); c.lineWidth = 1.1 * sc; c.beginPath(); c.moveTo(z * .06, 0); c.lineTo(z * .92, 0); c.stroke(); c.restore(); };
+    const umbel = (x, y, a) => { const n = 3 + Math.floor(rnd() * 2);
+      for (let k = 0; k < 2 + Math.floor(rnd() * 2); k++) leaf(x, y, a + R(-1.5, 1.5), R(46, 70) * sc);
+      for (let k = 0; k < n; k++) { const q = a + (k - (n - 1) / 2) * R(.62, .85) + R(-.12, .12), d = R(86, 128) * sc, bx = x + Math.cos(q) * d, by = y + Math.sin(q) * d;
+        l.lineWidth = 1.6 * sc; l.beginPath(); l.moveTo(x, y); l.quadraticCurveTo(x + Math.cos(q) * d * .5 + R(-6, 6) * sc, y + Math.sin(q) * d * .5 + 8 * sc, bx, by); l.stroke();   // the long stalk
+        if (rnd() < .2) rBud(m, bx, by, R(15, 19) * sc, q + Math.PI / 2); else rPetal(m, bx, by, R(34, 46) * sc, R(0, 6.3)); } };
+    const bough = (x, y, an, ln, w, d) => {
+      const n = Math.max(3, Math.round(ln / ((d ? 85 : 120) * sc))); let px = x, py = y;
+      for (let k = 0; k < n; k++) { an += R(-.17, .17) + bias * (d ? .4 : 1); const st = ln / n * R(.85, 1.15), ex = px + Math.cos(an) * st, ey = py + Math.sin(an) * st, ww = w * (1 - k / n * .55);
+        g.lineWidth = ww; g.beginPath(); g.moveTo(px, py); g.lineTo(ex, ey); g.stroke();
+        if (ww > 9 * sc) { c.lineWidth = 1.2 * sc; const nx = -Math.sin(an), ny = Math.cos(an); for (let q = 0; q < 3; q++) { const t = R(.1, .9), o = R(-.3, .3) * ww, hl = R(.12, .3) * ww, mx = px + (ex - px) * t + nx * o, my = py + (ey - py) * t + ny * o; c.beginPath(); c.moveTo(mx - nx * hl, my - ny * hl); c.lineTo(mx + nx * hl, my + ny * hl); c.stroke(); } }   // 皮目
+        if (d < 2 && k > 0 && rnd() < (d ? .16 : .42)) bough(ex, ey, an + R(.5, 1.0) * (rnd() < .5 ? -1 : 1), ln * R(.22, .36), Math.max(4 * sc, ww * .45), d + 1);
+        if (d && k > 0 && rnd() < .4) umbel(ex, ey, an + (rnd() < .5 ? -1 : 1) * R(.7, 1.4));
+        px = ex; py = ey; }
+      umbel(px, py, an);
+    };
+    bough(x0, y0, ang, len * sc, w0 * sc, 0);
+  }
   const RD = {};
   function raden(kind) {
     if (RD[kind]) return RD[kind];
@@ -716,21 +742,28 @@
     const W = kind === 'stand' ? 1024 : 3072, H = kind === 'stand' ? 1024 : 1352, m = radenMasks(W, H), sc = W / 3072, blooms = [];
     const bloomAll = (big, more = 0) => blooms.forEach(([x, y, a], i) => { const n = 2 + more + Math.floor(rnd() * 3);
       for (let k = 0; k < n; k++) { const q = a + R(-1.6, 1.6), dd = R(20, 70) * sc * big; if (rnd() < .2) rBud(m, x + Math.cos(q) * dd, y + Math.sin(q) * dd, R(14, 18) * sc * big, q + 1.57); else rPetal(m, x + Math.cos(q) * dd, y + Math.sin(q) * dd, R(36, 50) * sc * big, R(0, 6.3)); } });
-    if (kind === 'side') {
-      goldLines(m, W, H, H * .72, 3, -1);
-      // (2026-11-13, the user: 螺鈿をもう少し目立つように — thicker boughs, larger and fuller clusters, one more bough on each face)
-      const P = rBranch(m, -30, H * .95, -.3, W * .5, 64 * sc, 0, sc, blooms);
-      rBranch(m, W + 30, H * .2, Math.PI - .25, W * .3, 44 * sc, 1, sc, blooms);
-      rBranch(m, W * .62, -20, Math.PI * .62, W * .16, 34 * sc, 1, sc, blooms);
-      bloomAll(1.4, 1);
-      const bp = P.reduce((a, p) => Math.abs(p[1] - H * .62) < Math.abs(a[1] - H * .62) ? p : a, P[1]); uguisu(m, bp[0] + 10 * sc, bp[1] - 76 * sc, 2.0 * sc, 1);
-      for (let k = 0; k < 18; k++) rFall(m, R(W * .45, W * .95), R(H * .25, H * .95), R(20, 30) * sc, R(0, 6.3));
-    } else if (kind === 'end') {
-      goldLines(m, W, H, H * .72, 3, -1);
-      rBranch(m, W + 30, H * .9, Math.PI + .35, W * .5, 58 * sc, 0, sc, blooms);
-      rBranch(m, -30, H * .12, .28, W * .26, 40 * sc, 1, sc, blooms);
-      bloomAll(1.4, 1);
-      for (let k = 0; k < 14; k++) rFall(m, R(W * .05, W * .5), R(H * .2, H * .9), R(20, 30) * sc, R(0, 6.3));
+    // (2026-11-13, the user: 螺鈿のまま、伝統工芸の作品として「山桜」を) 吉野の山桜: far hills in gold powder under bands of 霞, a bough of
+    // mountain cherry in raised gold with shell blossoms and red-gold young leaves, petals of shell on the air, gold dust rising from the foot
+    if (kind === 'side' || kind === 'end') {
+      const mk = masks(W, H), red = (x, y) => { const t = fbm(x / W * 2.2, y / H * 1.4, seed, 3), q = .5 + (t - .5) * 1.2; return [mix(46, 86, q), mix(8, 16, q), mix(8, 14, q)]; };
+      if (kind === 'side') {
+        [[W * .34, W * .7, H * .5, H * .2, 3], [W * .56, W * .98, H * .52, H * .26, 5], [W * .2, W * .46, H * .5, H * .13, 7]].forEach(([a2, b2, y, h, sd]) => hill(mk, W, H, a2, b2, y, h, sd, .5, 'pao'));
+        hill(mk, W, H, W * .62, W * 1.05, H * .66, H * .16, 4, .7);
+        mist(mk, W, H, W * .4, H * .13, W * .3, H * .055); mist(mk, W, H, W * .66, H * .36, W * .3, H * .05); mist(mk, W, H, W * .3, H * .56, W * .26, H * .045);
+        sakuraBough(mk, m, W, -30, H * .98, -.42, 1750, 74, -.012);
+        sakuraBough(mk, m, W, W + 30, H * .16, Math.PI - .2, 820, 40, .02);
+        uguisu(m, W * .2, H * .62, 2.0 * sc, 1);
+        for (let k = 0; k < 16; k++) rFall(m, R(W * .5, W * .97), R(H * .3, H * .92), R(18, 27) * sc, R(0, 6.3));
+        kinji(mk, W, H); nashiji(mk, W, H, 9000); rim(mk, W, H, 24 * sc);
+      } else {
+        [[W * .02, W * .4, H * .5, H * .2, 9], [W * .26, W * .62, H * .54, H * .14, 11]].forEach(([a2, b2, y, h, sd]) => hill(mk, W, H, a2, b2, y, h, sd, .5, 'pao'));
+        mist(mk, W, H, W * .1, H * .14, W * .34, H * .055); mist(mk, W, H, W * .3, H * .4, W * .3, H * .05);
+        sakuraBough(mk, m, W, W + 30, H * .96, Math.PI + .4, 1500, 66, .014);
+        sakuraBough(mk, m, W, -30, H * .14, .22, 640, 34, -.02);
+        for (let k = 0; k < 14; k++) rFall(m, R(W * .05, W * .55), R(H * .3, H * .92), R(18, 27) * sc, R(0, 6.3));
+        kinji(mk, W, H); nashiji(mk, W, H, 9000); rim(mk, W, H, 24 * sc);
+      }
+      return (RD[kind] = composeRaden(m, W, H, seed, 'red', composeMakie(mk, W, H, seed, red)));
     } else {
       goldLines(m, W, H, H * .7, 2, .4);
       rBranch(m, -20, H * .85, -.55, W * .7, 30 * sc * 3, 1, sc * 3, blooms);
