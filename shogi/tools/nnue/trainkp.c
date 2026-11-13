@@ -238,15 +238,22 @@ static int load_ckpt(const char *path, int *ep, long *b, int *it, long *start) {
 /* --init: the current engine net (NUEQ, 2534 inputs) goes into the shared copy (or into every bucket without one) */
 static int load_init(const char *path) {
   FILE *f = fopen(path, "rb"); if (!f) { perror(path); return 0; }
-  int32_t hd[3]; if (fread(hd, 4, 3, f) != 3 || hd[0] != MAGIC_Q || hd[1] != H || hd[2] != BASE) { fprintf(stderr, "init: %s is not a %d-wide NUEQ net (gunzip it first)\n", path, H); return 0; }
-  int16_t *w1 = malloc((size_t)BASE * H * 2); if (fread(w1, 2, (size_t)BASE * H, f) != (size_t)BASE * H) return 0;
+  /* a narrower net (h < H) is widened: its h units are the first h, the new ones start with small random first-layer
+     weights and a zero output weight, so the evaluation at the start is exactly that of the narrower net */
+  int32_t hd[3]; if (fread(hd, 4, 3, f) != 3 || hd[0] != MAGIC_Q || hd[1] > H || hd[1] < 1 || hd[2] != BASE) { fprintf(stderr, "init: %s is not a NUEQ net of at most %d units (gunzip it first)\n", path, H); return 0; }
+  const int h = hd[1];
+  int16_t *w1 = malloc((size_t)BASE * h * 2); if (fread(w1, 2, (size_t)BASE * h, f) != (size_t)BASE * h) return 0;
   for (long r = 0; r < ROWS; r++) {
     int into = FACT ? r >= (long)KB * BASE : 1;
-    for (int i = 0; i < H; i++) W1[(size_t)r * H + i] = into ? w1[(size_t)(r % BASE) * H + i] / (float)QA : 0;
+    for (int i = 0; i < h; i++) W1[(size_t)r * H + i] = into ? w1[(size_t)(r % BASE) * h + i] / (float)QA : 0;
+    for (int i = h; i < H; i++) W1[(size_t)r * H + i] = into ? randn() * 0.05f : 0;
   }
   free(w1);
-  for (int i = 0; i < H; i++) { int32_t b; if (fread(&b, 4, 1, f) != 1) return 0; B1[i] = b / (float)QA; }
-  for (int i = 0; i < 2 * H; i++) { int16_t w; if (fread(&w, 2, 1, f) != 1) return 0; W2[i] = w / (float)QB; }
+  for (int i = 0; i < H; i++) B1[i] = 0;
+  for (int i = 0; i < h; i++) { int32_t b; if (fread(&b, 4, 1, f) != 1) return 0; B1[i] = b / (float)QA; }
+  for (int i = 0; i < 2 * H; i++) W2[i] = 0;
+  for (int c = 0; c < 2; c++) for (int i = 0; i < h; i++) { int16_t w; if (fread(&w, 2, 1, f) != 1) return 0; W2[c * H + i] = w / (float)QB; }
+  if (h < H) printf("init: widened from %d to %d units\n", h, H);
   int32_t b2; if (fread(&b2, 4, 1, f) != 1) return 0; B2[0] = (float)(b2 / ((double)QA * QB));
   for (int b = 1; b < OB; b++) { memcpy(W2 + (size_t)b * 2 * H, W2, (size_t)2 * H * 4); B2[b] = B2[0]; }   /* every output bucket starts as the one output */
   fclose(f); return 1;

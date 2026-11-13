@@ -551,6 +551,24 @@
       const q = arc(.36); g.add(at(marble(0x3d7fe0, .56), q[0], q[1] + .12, q[2]));
       return g;
     },
+    shanghai() {   // a corner of a green-felt mahjong table: a little stack of ivory tiles, and a big 中 tile lifting off toward its twin
+      const felt = M({ map: X.canvasTex('icshf', 256, 256, (c, W) => { c.fillStyle = '#2f6b55'; c.fillRect(0, 0, W, W); for (let i = 0; i < 2600; i++) { c.fillStyle = `rgba(${Math.random() < .5 ? '255,255,255' : '0,0,0'},.05)`; c.fillRect(Math.random() * W, Math.random() * W, 1.5, 1.5); } }), roughness: .95 });
+      const g = boardChunk(3, 3.6, felt, M({ map: softWood('icshs', '#8a5430', '#4a2a14'), roughness: .4 }));
+      const S = X.shanghai; if (!S) return g;
+      // a tile turned to read upright from the corner-on view; tilt: leaning toward the viewer
+      const tile = (f, s, tilt) => { const im = S.tiles(1, 'jade'); im.userData.setFace(0, f); im.setMatrixAt(0, new T.Matrix4()); im.setColorAt(0, new T.Color(.8, .8, .8)); im.castShadow = true;
+        const inner = new T.Group(); inner.add(im); inner.position.set(0, 0, 0); inner.rotation.x = tilt || 0;
+        const outer = new T.Group(); outer.add(inner); outer.rotation.y = -Math.PI / 4; outer.scale.setScalar(s); return outer; };
+      const y0 = .5, h = S.TH * .82;
+      g.add(at(tile(9, .82), -.95, y0, -.25));      // 一筒
+      g.add(at(tile(26, .82), -.2, y0, -1.0));      // 九索
+      g.add(at(tile(27, .82), -.55, y0 + h, -.6)); // 東, on the two
+      g.add(at(tile(33, .82), .95, y0, .2));        // the lying 中
+      const big = tile(33, 1.45, .62); big.position.set(-.15, y0 + .55, .95); g.add(big);   // the 中 lifting
+      const dotM = gloss(0xf1c879);
+      [[.4, .9, .55], [.62, .72, .36]].forEach(([x, y, z]) => { const d = ball(.07, dotM); d.position.set(x, y0 + y, z); g.add(d); });
+      return g;
+    },
     tafl() {   // a corner of the hnefatafl board: the king steps onto the knotted corner square, attackers too late
       const top = M({ map: X.canvasTex('ictf', 512, 512, (c, W) => {
         c.drawImage(X.wood('ictfw', '#d4a66a', '#8a5e34').image, 0, 0, W, W); const s = W / 3;

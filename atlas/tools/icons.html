@@ -10,6 +10,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="../img/tex/baked.js?v=2"></script>
 <script src="../table3d.js"></script>
+<script src="../models/shanghai.js"></script>
 <script src="../icons3d.js"></script>
 <script src="../avatars3d.js"></script>
 <script src="../avatars/sp-games.js"></script>
@@ -20,7 +21,8 @@
 <script src="../npc/roster.js"></script>
 <script src="../avatars/sp-boss.js"></script>
 <script>
-(function () {
+// (上海: the tile faces wait for their font — Noto Serif JP — before the scene is drawn)
+((window.Table3D && Table3D.shanghai) ? Table3D.shanghai.ready() : Promise.resolve()).then(function () {
   const id = new URLSearchParams(location.search).get('id') || 'reversi', S = 640;
   const R = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
   R.setPixelRatio(1); R.setSize(S, S); R.shadowMap.enabled = true; R.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -75,6 +77,6 @@
   if (part === 'top') floor.visible = false;
   R.render(scene, cam);
   window.SHOT = R.domElement.toDataURL('image/png');
-})();
+});
 </script>
 </body></html>
