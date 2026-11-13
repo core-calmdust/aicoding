@@ -268,7 +268,7 @@
   window.Atlas3D = window.Atlas3D || {};
   window.Atlas3D.peg = {
     levels: 0, solo: true, table: false, sizes: [1, 2, 3, 4, 5], size0: 1,
-    sizeLabel: lang => BOARD_LBL[lang] || BOARD_LBL.en,
+    sizeLabel: () => '',   // (no 「盤」 caption before the board tabs, 2026-11-13)
     sizeName: (z, lang) => PT('bd.' + IDS[z - 1], lang) || IDS[z - 1],
     start,
   };

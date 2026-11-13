@@ -329,37 +329,71 @@ def build(g, look):
         put(ma.arr(.5), verde, .85); put(mb.arr(.5), sienna, .85); put(mr.arr(.5), BRASS, .85, 1, .003)
         cm = cup > 0; A[cm] *= (.8 + .2 * (1 - cup[cm]))[..., None]; G[cm] = .3
         gm = (gd < gw) & m; A[gm] = A[gm] * .9; G[gm] = .4
-    elif look == 'art':   # colourful art (2026-11-13): a white matte ceramic plate, a raised lip, soft round dimples — the marbles are the colour
+    elif look == 'art':   # colourful art: a white matte ceramic plate with painted pastel rainbows in the empty corners and a hue ring
         A[:] = np.array([1.2, 1.19, 1.16]) * (.985 + .015 * norm01(fbm((N, N), [3, 1], [1, .5], seed=41)))[..., None]; G[:] = .22
         lip = m & (gd >= gw) & (ed < (gc - gw if not tri else .2)); H[lip] += .03
-        put(line(inner, .01), np.array([1.1, 1.09, 1.06]), .2, 0, -.006)                       # a faint pressed line round the face
+        import colorsys
+        hue = (np.arctan2(c.v, c.u) / (2 * math.pi)) % 1
+        hr = np.dstack([np.array(colorsys.hls_to_rgb(0, 0, 0))[None, None, :].repeat(1, 0)] * 0) if False else None
+        ring = line(inner, .028)
+        hh = hue[ring]; rgb = np.array([colorsys.hls_to_rgb(h, .7, .6) for h in hh], np.float32) * 1.12
+        A[ring] = rgb; G[ring] = .3
+        PAST = [(.96, .55, .55), (.98, .74, .45), (.98, .9, .5), (.6, .85, .6), (.55, .75, .95), (.75, .62, .92)]
+        corners = spots(c, g, g['gr'] - gw - .12) if not tri else tri_spots(c, g)
+        for x, y, room, a in corners:
+            R0 = min(room * (1.25 if tri else 1.05), 1.6)
+            for b, col in enumerate(PAST):   # a rainbow: six arcs, its feet toward the board's centre
+                r1 = R0 * (1 - b * .14); r2 = r1 - R0 * .11
+                d = np.hypot(c.u - x, c.v - y)
+                ang = np.arctan2(c.v - y, c.u - x) - math.atan2(-y, -x)
+                ang = (ang + math.pi) % (2 * math.pi) - math.pi
+                arc = m & (d < r1) & (d >= r2) & (np.abs(ang) > math.pi / 2)
+                A[arc] = np.array(col) * 1.1; G[arc] = .3
+            cl = m & (np.hypot(c.u - x - math.cos(math.atan2(-y, -x)) * R0 * .25, c.v - y - math.sin(math.atan2(-y, -x)) * R0 * .25) < R0 * .14)
         cm = cup > 0; A[cm] *= (.9 + .1 * (1 - cup[cm]))[..., None]; G[cm] = .12
         gm = (gd < gw) & m; A[gm] *= .93; G[gm] = .15
-    elif look == 'pop':   # pop art (2026-11-13): comic-print yellow with red Ben-Day dots, a blue burst, thick black outlines, flat colour
+    elif look == 'pop':   # pop art (2026-11-13): white with uneven red polka dots, a radiant heart and dancing figures in thick black line
         H[:] = np.where(m, .5 * smooth_step(ed, 0, .05), 0)
         u, v = c.u, c.v
-        A[:] = np.array([1.0, .86, .12])
-        # Ben-Day dots: a rotated grid, the dots growing toward one corner
-        ru, rv = (u + v) * .7071, (v - u) * .7071, 
-        cell = .32; du = (ru / cell) % 1 - .5; dv = (rv / cell) % 1 - .5
-        grow = np.clip((u * .25 - v * .3 + 1.4) / 2.6, .12, .46)
-        dot = m & (np.hypot(du, dv) < grow)
-        A[dot] = np.array([.93, .16, .2])
-        # a starburst behind the middle, flat blue with a black outline
-        ang = np.arctan2(v + .2, u - .3); rb = 1.5 + .55 * (np.sin(ang * 9) > 0)
-        rr = np.hypot(u - .3, v + .2)
-        burst = m & (rr < rb * .9 + .35 * np.cos(ang * 9))
-        A[burst] = np.array([.14, .42, .92])
-        edge = m & (np.abs(rr - (rb * .9 + .35 * np.cos(ang * 9))) < .05)
-        A[edge] = 0.03
-        # the rim: white, between thick black lines; the groove black
+        A[:] = np.array([1.12, 1.1, 1.06])
+        rr_ = np.random.default_rng(77); dots = np.zeros((N, N), bool)
+        for _ in range(int(g['size'] ** 2 * 5)):   # polka dots of uneven size, a little wobbly
+            x, y = rr_.uniform(-g['size'] / 2, g['size'] / 2, 2); r = rr_.uniform(.06, .2) * (1 if rr_.random() > .12 else 1.6)
+            wob = 1 + .08 * np.sin(np.arctan2(v - y, u - x) * rr_.integers(3, 6) + rr_.uniform(0, 6))
+            dots |= np.hypot(u - x, v - y) < r * wob
+        A[m & dots] = np.array([.92, .1, .16])
+        im = Image.new('L', (N, N), 0); dr = ImageDraw.Draw(im); P = lambda x, y: ((x + c.h) * px, (y + c.h) * px)
+        fill = Image.new('L', (N, N), 0); df = ImageDraw.Draw(fill); W = int(.11 * px)
+        def heart(cx, cy, s):
+            pts = [(cx + s * 16 * math.sin(t) ** 3 / 17, cy - s * (13 * math.cos(t) - 5 * math.cos(2 * t) - 2 * math.cos(3 * t) - math.cos(4 * t)) / 17) for t in np.linspace(0, 2 * math.pi, 120)]
+            df.polygon([P(*p) for p in pts], fill=255); dr.line([P(*p) for p in pts + pts[:1]], fill=255, width=W, joint='curve')
+            for t in range(0):   # (no rays: across the holes they read as lines joining them)
+                a = t / 12 * 2 * math.pi; r0, r1 = s * 1.25, s * 1.6
+                dr.line([P(cx + math.cos(a) * r0, cy + math.sin(a) * r0), P(cx + math.cos(a) * r1, cy + math.sin(a) * r1)], fill=255, width=W)
+        def dancer(cx, cy, s, flip):
+            f = -1 if flip else 1
+            dr.ellipse([P(cx - s * .28, cy - s * 1.25), P(cx + s * .28, cy - s * .7)], outline=255, width=W)   # head
+            body = [P(cx, cy - s * .7), P(cx + f * s * .1, cy + s * .2)]; dr.line(body, fill=255, width=int(W * 1.6))
+            dr.line([P(cx - f * s * .7, cy - s * 1.0), P(cx, cy - s * .45), P(cx + f * s * .75, cy - s * .2)], fill=255, width=int(W * 1.3), joint='curve')   # arms up and out
+            dr.line([P(cx - f * s * .55, cy + s * .95), P(cx + f * s * .1, cy + s * .2), P(cx + f * s * .7, cy + s * .7), P(cx + f * s * .5, cy + s * 1.05)], fill=255, width=int(W * 1.3), joint='curve')   # legs mid-step
+            for t in range(3):   # motion marks
+                a = -math.pi / 2 + (t - 1) * .5; dr.line([P(cx + math.cos(a) * s * 1.45, cy - s * .2 + math.sin(a) * s * 1.45), P(cx + math.cos(a) * s * 1.75, cy - s * .2 + math.sin(a) * s * 1.75)], fill=255, width=W)
+        if not tri:
+            S = g['R'] / 4.3
+            heart(0, .15, 1.7 * S)
+            for x, y, room, a in spots(c, g, g['gr'] - .3):
+                dancer(x, y + .1, min(room, 1.3) * .8, x < 0)
+        else:
+            heart(0, .7, 1.25); [dancer(x, y, min(r_, 1) * .55, x < 0) for x, y, r_, a in tri_spots(c, g)[:2]]
+        fm = np.array(fill) > 127; ln = np.array(im) > 127
+        A[m & fm & ~dots] = np.array([.95, .14, .2]); A[m & fm & dots] = np.array([1.1, 1.06, 1.0])   # the heart: red, its dots white
+        A[m & ln] = .03
         rimz = m & (ed < (gc - gw if not tri else .2)) & (gd >= gw)
-        A[rimz] = np.array([1.0, .99, .96])
+        A[rimz] = np.array([.95, .14, .2])
         for at, w in ((.035, .035), ((gc - gw) if not tri else .2, .04), (inner, .04)):
             A[m & (np.abs(ed - at) < w)] = 0.03
         gm = (gd < gw) & m; A[gm] = 0.03
-        # holes: white discs with a thick black outline and a comic shine
-        cm = m & (cd < CUP_R); A[cm] = np.array([1.0, .99, .96]) * (.82 + .18 * (cd[cm] / CUP_R))[..., None]
+        cm = m & (cd < CUP_R); A[cm] = np.array([1.12, 1.1, 1.06]) * (.82 + .18 * (cd[cm] / CUP_R))[..., None]
         ring = m & (np.abs(cd - CUP_R) < .045); A[ring] = 0.03
         G[:] = .15
     else:   # night: an abstract board — flat colour fields like a print, no realism (user 2026-11-11)

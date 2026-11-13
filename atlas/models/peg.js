@@ -72,7 +72,7 @@
   }
   function board(id, look) {
     id = id || 'english'; look = LOOKS.includes(look) ? look : lookNow();
-    const TT = T(), E = window.PegEngine, B = E.BOARDS[id], S = shape(B), g = new TT.Group(); rbN = B.n;
+    const TT = T(), E = window.PegEngine, B = E.BOARDS[id], S = shape(B), g = new TT.Group(); rbPts = S.pts; rbR = Math.max(...S.pts.map(([x, y]) => Math.hypot(x, y))) || 3;
     // this board's own materials, swapped in place by setSet (the portal's 盤 row: a board kept from before / merged meshes
     // still show the chosen design — the same fix as chess)
     const W = woodMat(look).clone(), RM = rimMat(look).clone(), GM = grooveMat(look).clone(), FM = faceMat(look, id).clone();
@@ -123,10 +123,17 @@
     tx.anisotropy = 4; if (T().sRGBEncoding) tx.encoding = T().sRGBEncoding;
     return new (T().MeshStandardMaterial)({ map: tx, roughness: .75, metalness: 0 });
   });
-  let rbN = 33;   // (the board in use: its hole count, for the rainbow sweep)
+  let rbPts = [], rbR = 3;   // (the board in use: its holes, for the rainbow set's colours)
   function marbleMat(i, set) {
     const k = (i * 7 + 3) % 6;
-    if (set === 'rainbow') { const h = Math.round((i % rbN) / rbN * 36) / 36; return mat('mrb' + h, () => { const c = new (T().Color)().setHSL(h * .92, .62, .62); return X.M({ color: '#' + c.getHexString(), roughness: .62 }); }); }
+    if (set === 'rainbow') {   // the painted wooden rainbow set (the user's reference): the colour by where the ball starts — greens top-left,
+      // blues top-right, purples right, pinks bottom, reds and oranges bottom-left, yellows left; deep at the rim, pastel toward the centre
+      const q = rbPts[i] || [0, 0], a = ((Math.atan2(q[0], -q[1]) * 180 / Math.PI) + 360) % 360, rr = Math.min(1, Math.hypot(q[0], q[1]) / rbR);
+      const HK = [[0, 165], [55, 205], [100, 270], [150, 300], [190, 340], [235, 368], [270, 410], [315, 455], [360, 525]];
+      let h = 165; for (let k = 1; k < HK.length; k++) if (a <= HK[k][0]) { const [a0, h0] = HK[k - 1], [a1, h1] = HK[k]; h = h0 + (h1 - h0) * (a - a0) / (a1 - a0); break; }
+      h = Math.round((h % 360) / 6) * 6; const L = Math.round((.74 - .34 * rr) * 20) / 20, S2 = .5 + .2 * rr;
+      return mat('mrb' + h + ':' + L, () => { const c = new (T().Color)().setHSL(h / 360, S2, L); return X.M({ color: '#' + c.getHexString(), roughness: .6 }); });
+    }
     if (set === 'mod') return mat('mmod' + k, () => X.M({ color: MOD[k], roughness: .75 }));
     if (set === 'pearl') return mat('mcer' + k, () => X.M({ color: CERAMIC[k], roughness: .28, clearcoat: .8, clearcoatRoughness: .2 }));
     if (set === 'steel') return mat('mjw' + k, () => { const m = X.M({ color: JEWEL[k], roughness: 0, metalness: .1, clearcoat: 1, clearcoatRoughness: 0, envMapIntensity: 4.5, transparent: true, opacity: .84, flatShading: true }); m.emissive.set(JEWEL[k]).convertSRGBToLinear().multiplyScalar(.28); try { m.ior = 2.4; if ('iridescence' in m) { m.iridescence = 1; m.iridescenceIOR = 1.9; } } catch (e) {} return m; });   // (jewels, 2026-11-13: cut facets that each catch the light, see-through, a play of colour — sparkle, not a glass ball)
