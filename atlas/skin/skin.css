@@ -1022,3 +1022,6 @@ html.atlas-skin:not(.atlas-2d) body:not(#_) .modal .lx-banner:not(#_):not(#_){ba
 /* (2026-11-13) text fields (name, room title, room key …): a brighter, near-white fill */
 html.atlas-skin body:not(#_) :is(.modal, .dock, #dock) :is(input:not([type]), input[type=text], input[type=search], textarea):not(#_):not(#_){background:#fffefb!important;border-color:#ead9b6!important}
 html.atlas-skin body:not(#_) :is(.modal, .dock, #dock) :is(input:not([type]), input[type=text], input[type=search], textarea):focus:not(#_):not(#_){border-color:#e0b65a!important;outline:none}
+/* (2026-11-13) the pinned header's paper ring only above and at the sides (below it covered the banner's top line); its own
+   bottom padding hides the cards scrolling under it */
+html.atlas-skin body:not(#_) .lxh-fix.pin:not(#_){clip-path:inset(-14px -14px 0 -14px);padding-bottom:10px;margin-bottom:2px}
