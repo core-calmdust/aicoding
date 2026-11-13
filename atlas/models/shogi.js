@@ -335,6 +335,28 @@
       for (let i = 0; i <= Math.max(n, nh); i++) { c.lineWidth = i === 0 || i === n ? 3.4 : 2.2; if (i <= n) { c.beginPath(); c.moveTo(ox + i * cw, oy); c.lineTo(ox + i * cw, oy + nh * ch); c.stroke(); } c.lineWidth = i === 0 || i === nh ? 3.4 : 2.2; if (i <= nh) { c.beginPath(); c.moveTo(ox, oy + i * ch); c.lineTo(ox + n * cw, oy + i * ch); c.stroke(); } }
     });
   }
+  // (2026-11-13) the block's sides: a real 柾目 (straight grain) — long horizontal growth lines of uneven spacing and strength that drift
+  // gently, a warm tone that shifts slowly along the board, fine fibres; no noise speckle
+  function sideGrain(key, w, h, seed) {
+    return canvasTex(key, w, h, c => {
+      let sd = seed * 9301 + 49297; const r = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+      const g0 = c.createLinearGradient(0, 0, w, 0); g0.addColorStop(0, '#c99c6c'); g0.addColorStop(.35, '#d3a878'); g0.addColorStop(.7, '#c49464'); g0.addColorStop(1, '#cfa272');
+      c.fillStyle = g0; c.fillRect(0, 0, w, h);
+      const waves = [r() * 6, r() * 6, r() * 6];
+      let y = 0;
+      while (y < h) {   // the growth lines: late wood (darker, thin) after early wood (paler, wider)
+        y += 2.5 + r() * 9; const th = .6 + r() * 1.6, a = .1 + r() * .28;
+        c.strokeStyle = `rgba(${110 + r() * 20 | 0},${66 + r() * 16 | 0},${30 + r() * 10 | 0},${a})`; c.lineWidth = th; c.beginPath();
+        for (let x = 0; x <= w; x += 8) { const yy = y + Math.sin(x / w * 6.28 * 1.3 + waves[0] + y * .02) * 1.6 + Math.sin(x / w * 6.28 * 3.1 + waves[1]) * .6; x ? c.lineTo(x, yy) : c.moveTo(x, yy); }
+        c.stroke();
+        if (r() < .35) { c.strokeStyle = `rgba(255,236,200,${.06 + r() * .08})`; c.lineWidth = 1 + r() * 2; c.beginPath(); for (let x = 0; x <= w; x += 8) { const yy = y + 2 + Math.sin(x / w * 6.28 * 1.3 + waves[0] + y * .02) * 1.6; x ? c.lineTo(x, yy) : c.moveTo(x, yy); } c.stroke(); }
+      }
+      for (let k = 0; k < 260; k++) {   // fine fibres along the grain
+        const fy = r() * h, fx = r() * w, L = 30 + r() * 140; c.strokeStyle = `rgba(90,52,22,${.03 + r() * .05})`; c.lineWidth = .5; c.beginPath(); c.moveTo(fx, fy); c.lineTo(fx + L, fy + (r() - .5)); c.stroke();
+      }
+      const sh = c.createLinearGradient(0, 0, 0, h); sh.addColorStop(0, 'rgba(255,240,215,.08)'); sh.addColorStop(1, 'rgba(60,30,10,.1)'); c.fillStyle = sh; c.fillRect(0, 0, w, h);
+    });
+  }
   // the sides of the block show end grain: tight growth rings arching across the face (like the photo of a real 榧 board)
   function endGrain(key, w, h, cx, cy, k) {
     return canvasTex(key, w, h, (c) => { paint(c.canvas, 'endGrain', { seed: key.length * 7, cx, cy, k }); });
@@ -414,8 +436,8 @@
     const n = cr ? o.n : o.w ? o.w : o.n === 5 ? 5 : 9, nh = !cr && o.h ? o.h : n, big = Math.max(n, nh), MG = mgOf(n, nh, cr), k = big === 9 ? 1 : cr ? n / 9 : Math.max(.62, big / 9 * .9), FW = n * CW, FH = nh * CH, EXT = Math.max(0, +o.ext || 0), BW = FW + MG * 2, BD = FH + MG * 2 + EXT * 2, THICK = 4.4 * k;   // (a 足付き盤 of about 6 寸 — the block half its width, the user's photo, 2026-11-12; was 2.6)
     const look = lookOf(o), LM = faceMats(look);
     const kaya = LM ? LM.leg : M({ map: X.wood('kayaSide2', '#caa075', '#9c6c3c', 512, 512, 2.4), roughness: .5, bumpScale: .003 });
-    const endF = LM ? LM.side : M({ map: endGrain('kayaEndF2', 512, 256, .5, 2.6, .7), roughness: .5, bumpScale: .003 });
-    const endS = LM ? LM.end : M({ map: endGrain('kayaEndS2', 512, 256, -1.4, .5, .5), roughness: .5, bumpScale: .003 });
+    const endF = LM ? LM.side : M({ map: sideGrain('kayaSideF3', 1024, 256, 3), roughness: .5, bumpScale: .002 });
+    const endS = LM ? LM.end : M({ map: sideGrain('kayaSideS3', 1024, 256, 11), roughness: .5, bumpScale: .002 });
     const top = new TT.MeshPhysicalMaterial({ map: boardTop(n, cr, EXT, look, nh), bumpMap: boardBump(n, cr, EXT, nh), bumpScale: .006, roughness: .95, clearcoat: 0, reflectivity: 0, envMapIntensity: .6 });   // matte: no glare from the room's lights on the playing field, in any room (2026-11-12)
     top.map.anisotropy = 8;
     const bottom = LM ? LM.bottom : M({ color: 0x8c643c, roughness: .7 });

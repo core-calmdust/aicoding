@@ -48,7 +48,7 @@
     c.fillStyle = g; c.beginPath(); c.arc(W / 2, W / 2, W / 2, 0, 7); c.fill();
   }), transparent: true, roughness: .9, depthWrite: false, bump: false }));
   const faceMat = (look, id) => mat('face' + look + id, () => {
-    const tx = new (T().TextureLoader)().load(IMG + 'bd-' + look + '-' + id + '.webp?v=6', () => { if (X.kick) X.kick(200); });
+    const tx = new (T().TextureLoader)().load(IMG + 'bd-' + look + '-' + id + '.webp?v=7', () => { if (X.kick) X.kick(200); });
     tx.anisotropy = 4; if (T().sRGBEncoding) tx.encoding = T().sRGBEncoding;
     return new (T().MeshStandardMaterial)({ map: tx, transparent: false, alphaTest: .92, roughness: .45, metalness: 0, polygonOffset: true, polygonOffsetFactor: -1 });   // (opaque + alpha test: no sorting flicker with the marbles)
   });
@@ -127,18 +127,21 @@
   let rbPts = [], rbR = 3;   // (the board in use: its holes, for the rainbow set's colours)
   function marbleMat(i, set) {
     const k = (i * 7 + 3) % 6;
-    if (set === 'rainbow') {   // the painted wooden rainbow set (the user's reference): the colour by where the ball starts — greens top-left,
-      // blues top-right, purples right, pinks bottom, reds and oranges bottom-left, yellows left; deep at the rim, pastel toward the centre
-      const q = rbPts[i] || [0, 0], a = ((Math.atan2(q[0], -q[1]) * 180 / Math.PI) + 360) % 360, rr = Math.min(1, Math.hypot(q[0], q[1]) / rbR);
-      const HK = [[0, 165], [55, 205], [100, 270], [150, 300], [190, 340], [235, 368], [270, 410], [315, 455], [360, 525]];
-      let h = 165; for (let k = 1; k < HK.length; k++) if (a <= HK[k][0]) { const [a0, h0] = HK[k - 1], [a1, h1] = HK[k]; h = h0 + (h1 - h0) * (a - a0) / (a1 - a0); break; }
-      h = Math.round((h % 360) / 6) * 6; const L = Math.round((.74 - .34 * rr) * 20) / 20, S2 = .5 + .2 * rr;
+    if (set === 'rainbow') {   // the painted wooden rainbow set: colours mixed over the board (2026-11-13: random, not a sweep) — rich and pastel tones
+      let hh = (i * 2654435761 >>> 0) / 4294967296, q = ((i + 7) * 2246822519 >>> 0) / 4294967296;
+      const h = Math.round(hh * 30) * 12, L = [.5, .6, .7, .78][Math.floor(q * 4)], S2 = L > .72 ? .7 : .78;
       return mat('mrb' + h + ':' + L, () => { const c = new (T().Color)().setHSL(h / 360, S2, L); return X.M({ color: '#' + c.getHexString(), roughness: .6 }); });
     }
     if (set === 'mod') return mat('mmod' + k, () => X.M({ color: MOD[k], roughness: .75 }));
     if (set === 'pearl') return mat('mcer' + k, () => X.M({ color: CERAMIC[k], roughness: .28, clearcoat: .8, clearcoatRoughness: .2 }));
     if (set === 'steel') return mat('mjw' + k, () => { const m = X.M({ color: JEWEL[k], roughness: 0, metalness: .1, clearcoat: 1, clearcoatRoughness: 0, envMapIntensity: 4.5, transparent: true, opacity: .84, flatShading: true }); m.emissive.set(JEWEL[k]).convertSRGBToLinear().multiplyScalar(.28); try { m.ior = 2.4; if ('iridescence' in m) { m.iridescence = 1; m.iridescenceIOR = 1.9; } } catch (e) {} return m; });   // (jewels, 2026-11-13: cut facets that each catch the light, see-through, a play of colour — sparkle, not a glass ball)
-    if (set === 'pop') return mat('mpop' + k, () => X.M({ color: POP[k], roughness: .18, clearcoat: .8, clearcoatRoughness: .1 }));
+    if (set === 'pop') return mat('mpop' + k, () => X.M({ roughness: .62, bump: false, map: X.canvasTex('pgPop' + k, 256, 128, (c, W, H) => {   // matte painted toys, each with a pattern (2026-11-13)
+      const bg = POP[k], fg = k === 4 ? '#f2242f' : k === 5 ? '#ffc61f' : k === 2 ? '#f2242f' : '#f4f2ea', kind = k % 3;
+      c.fillStyle = bg; c.fillRect(0, 0, W, H); c.fillStyle = fg; c.strokeStyle = '#111'; c.lineWidth = 3;
+      if (kind === 0) { for (let y = 10; y < H; y += 26) for (let x = (y / 26 % 2) * 16 + 8; x < W; x += 32) { c.beginPath(); c.arc(x, y, 6.5, 0, 7); c.fill(); } }   // polka dots
+      else if (kind === 1) { for (const y of [H * .3, H * .5, H * .7]) { c.fillRect(0, y - 7, W, 14); c.fillStyle = '#111'; c.fillRect(0, y - 9, W, 2); c.fillRect(0, y + 7, W, 2); c.fillStyle = fg; } }   // stripes round the middle
+      else { for (const x of [W * .25, W * .75]) { const y = H * .5, s2 = 22; c.beginPath(); c.moveTo(x, y + s2 * .9); c.bezierCurveTo(x - s2 * 1.6, y - s2 * .1, x - s2 * .6, y - s2 * 1.1, x, y - s2 * .35); c.bezierCurveTo(x + s2 * .6, y - s2 * 1.1, x + s2 * 1.6, y - s2 * .1, x, y + s2 * .9); c.fill(); c.stroke(); } }   // a heart on each side
+    }) }));
     if (set === 'peg') return mat('mpeg' + k, () => X.M({ color: PAINT[k], roughness: .3, clearcoat: .7, clearcoatRoughness: .25 }));
     const c = GLASS[k];
     return mat('mg' + c, () => X.M({ color: c, roughness: .04, clearcoat: 1, clearcoatRoughness: .03, envMapIntensity: 1.6 }));
