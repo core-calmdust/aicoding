@@ -356,7 +356,7 @@
   // phones / lite: the standard shader with the same cheap tint (no clearcoat)
   function pearl(m, amt) {
     m.onBeforeCompile = sh => {
-      sh.fragmentShader = sh.fragmentShader.replace('gl_FragColor = vec4( outgoingLight, diffuseColor.a );', `
+      sh.fragmentShader = (T().__uvDefs || '') + sh.fragmentShader.replace('gl_FragColor = vec4( outgoingLight, diffuseColor.a );', `
         {
           float shM = texture2D( roughnessMap, vUv ).r;
           float ndv = clamp( dot( normal, normalize( vViewPosition ) ), 0.0, 1.0 );

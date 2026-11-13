@@ -1,4 +1,4 @@
-/* three.js r186 with the r128 code of this site (2026-11-13, trial): loaded right after vendor/three-r186.min.js (an IIFE build of
+/* three.js r186 with the r128 code of this site (2026-11-13; the default since then — ?three=128 loads r128 instead): loaded right after vendor/three-r186.min.js (an IIFE build of
    three@0.186 exposing window.THREE, made with esbuild from the npm package). It brings back what r128 had, so the 3D code runs
    unchanged:
    - colour management off: hex colours are taken as they are and the code's own convertSRGBToLinear() does the conversion, as in r128
@@ -8,7 +8,12 @@
 (function () {
   const T = window.THREE; if (!T || T.__compat) return; T.__compat = 1;
   try { T.ColorManagement.enabled = false; } catch (e) {}
-  const X = Object.assign({}, T);   // (an ES module namespace object is frozen: work on a copy and publish it as THREE)
+  // r128 code that patches 'gl_FragColor = vec4( outgoingLight, diffuseColor.a );' in onBeforeCompile: in r186 that line sits in the
+  // opaque_fragment chunk, so the library's shaders get it written out (the patches find it again)
+  try { for (const k in T.ShaderLib) { const L = T.ShaderLib[k]; if (L && typeof L.fragmentShader === 'string' && L.fragmentShader.includes('#include <opaque_fragment>')) L.fragmentShader = L.fragmentShader.replace('#include <opaque_fragment>', T.ShaderChunk.opaque_fragment); } } catch (e) {}
+  const X = Object.assign({}, T);
+  // r128's shared vUv is per map in r186 (vMapUv, vRoughnessMapUv …): onBeforeCompile code that reads vUv puts THREE.__uvDefs first
+  X.__uvDefs = '#ifndef vUv\n#if defined( USE_MAP )\n#define vUv vMapUv\n#elif defined( USE_ROUGHNESSMAP )\n#define vUv vRoughnessMapUv\n#elif defined( USE_NORMALMAP )\n#define vUv vNormalMapUv\n#elif defined( USE_EMISSIVEMAP )\n#define vUv vEmissiveMapUv\n#elif defined( USE_BUMPMAP )\n#define vUv vBumpMapUv\n#endif\n#endif\n';   // (an ES module namespace object is frozen: work on a copy and publish it as THREE)
   X.sRGBEncoding = 3001; X.LinearEncoding = 3000;
   const cs = v => v === 3001 ? T.SRGBColorSpace : v === 3000 ? T.LinearSRGBColorSpace : v;
   const enc = c => c === T.SRGBColorSpace ? 3001 : 3000;

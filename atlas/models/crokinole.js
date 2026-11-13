@@ -58,7 +58,7 @@
     m.onBeforeCompile = sh => {
       sh.uniforms.uT = RGB.uT;
       if (mode !== 'uv') sh.vertexShader = 'varying vec3 vCkP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvCkP = position;');
-      sh.fragmentShader = 'uniform float uT;\n' + (mode !== 'uv' ? 'varying vec3 vCkP;\n' : '') + HUE + sh.fragmentShader;
+      sh.fragmentShader = (T().__uvDefs || '') + 'uniform float uT;\n' + (mode !== 'uv' ? 'varying vec3 vCkP;\n' : '') + HUE + sh.fragmentShader;
       const hue = mode === 'uv' ? 'vec2 ckp = vUv - 0.5; float ckh = atan(ckp.y, ckp.x) / 6.2831853 - length(ckp) * 1.2 - uT * 0.16;'
         : mode === 'halo' ? 'float ckh = atan(vCkP.z, vCkP.x) / 6.2831853 + uT * 1.4;'
         : 'float ckh = atan(vCkP.z, vCkP.x) / 6.2831853 - uT * 0.5;';

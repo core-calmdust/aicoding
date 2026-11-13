@@ -444,8 +444,8 @@ html.atlas-skin .dsg button.sel{background:#fff3d6;border-color:var(--brass)}
 body.in-lesson .lesson-card{display:block}
 .edit-card{display:none}
 body.in-edit .edit-card{display:block}
-.ed-pop{position:fixed;z-index:70;display:flex;gap:6px;padding:6px;border-radius:12px;background:var(--panel2,#2a2118);border:1px solid var(--line);box-shadow:0 8px 24px rgba(0,0,0,.35)}
-.ed-pop button{font:inherit;font-size:13px;font-weight:700;padding:7px 12px;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--text);cursor:pointer;white-space:nowrap}
+.ed-pop{position:fixed;z-index:70;display:flex;gap:8px;padding:8px;border-radius:12px;background:var(--panel2,#2a2118);border:1px solid var(--line);box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.ed-pop button{font:inherit;font-size:15px;font-weight:700;padding:11px 18px;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--text);cursor:pointer;white-space:nowrap}
 .ed-pop button:disabled{opacity:.4;cursor:default}
 .ed-help{margin:2px 0 8px;font-size:12.5px;line-height:1.6;color:var(--muted)}
 .ed-file{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
@@ -3812,8 +3812,8 @@ function edPop(s) {
   btn('toHand', () => { if (edToHand({ b: s }, edCol(q))) edDone(); }, tp === OU);
   document.body.appendChild(box);
   const w = box.offsetWidth, h = box.offsetHeight;
-  let x = cell.left + cell.width / 2 - w / 2, y = cell.bottom + 6;
-  if (y + h > innerHeight - 8) y = cell.top - h - 6;
+  let x = cell.left + cell.width / 2 - w / 2, y = cell.top - h - 8;   // (above the piece; under it only at the very top)
+  if (y < 8) y = cell.bottom + 8;
   box.style.left = Math.max(8, Math.min(innerWidth - w - 8, x)) + 'px'; box.style.top = Math.max(8, y) + 'px';
 }
 document.addEventListener('pointerdown', e => { if (!e.target.closest || e.target.closest('.ed-pop')) return; if (!edit) return; const x = document.querySelector('.ed-pop'); if (x && !e.target.closest('#board')) edPopClose(); }, true);
@@ -6770,7 +6770,7 @@ if (window.Online && Online.available) setInterval(() => { if (dock.on) chatStar
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(() => load('../atlas/img/tex/baked.js?v=2')).then(() => load('../atlas/table3d.js?v=163')).then(() => load('../atlas/tables3d.js?v=107')).then(() => load('../atlas/skin/common.js?v=96')).then(() => load('../atlas/models/shogi.js?v=89')).then(() => load('../atlas/skin/shogi.js?v=75'))
+  (/[?&]three=128\b/.test(location.search) ? load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js') : load('../atlas/vendor/three-r186.min.js?v=1').then(() => load('../atlas/vendor/three-compat.js?v=9'))).then(() => load('../atlas/img/tex/baked.js?v=2')).then(() => load('../atlas/table3d.js?v=163')).then(() => load('../atlas/tables3d.js?v=107')).then(() => load('../atlas/skin/common.js?v=96')).then(() => load('../atlas/models/shogi.js?v=90')).then(() => load('../atlas/skin/shogi.js?v=75'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>
