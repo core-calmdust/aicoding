@@ -210,3 +210,6 @@ cc -O3 -o rvmatch rvmatch.c -ldl -lz -lm
 
 ### 作業機に残していないもの
 学習データ（Egaroucid の公開データ。再配布不可）と、試しに学習した重み S・L は残していない。同じものは Mac で `rvtrain train pairs.bin games.bin --tie 1 --window 0 --max-pos 2000000 --iters 150` で作れる。
+
+## 9. 探索 v7（2026-11-13、読みを速く）
+上の「4. 強さを上げるなら：読みを速くする」の1つ目。1スレッドの同じ深さまでの時間が中盤で約0.7倍、完全読みで約0.76〜0.86倍（wasm、局面数は −11〜−24%）。深さ固定の強さは同じ。詳細は `reversi/MODEL_CARD.md`「探索 v7」。Mac で `bench.html`（1スレッドの行）と `levelmatch --plan top` の測り直しが必要。
