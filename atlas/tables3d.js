@@ -522,7 +522,7 @@
     const TT = o.TT, D = DRINK[T] || DRINK.day, s = SEG(o, 48), night = T === 'night';
     // crystal: nearly clear face-on, brighter and more opaque where the wall turns away (a fresnel edge), so the outline reads
     const crys = () => { const m = M({ color: 0xf4f8fa, roughness: .015, clearcoat: 1, clearcoatRoughness: .02, transparent: true, opacity: .1, depthWrite: false, envMapIntensity: 2.6 }); if ('reflectivity' in m) m.reflectivity = .9;
-      m.onBeforeCompile = (sh) => { sh.fragmentShader = sh.fragmentShader.replace('gl_FragColor = vec4( outgoingLight, diffuseColor.a );', 'float frs = pow(1.0 - abs(dot(normalize(vViewPosition), normal)), 2.5); outgoingLight += vec3(frs * .22); diffuseColor.a = clamp(diffuseColor.a + frs * .5, 0.0, 1.0);\ngl_FragColor = vec4( outgoingLight, diffuseColor.a );'); };
+      m.onBeforeCompile = (sh) => { sh.fragmentShader = sh.fragmentShader.replace('#include <opaque_fragment>', TT.ShaderChunk.opaque_fragment || '#include <opaque_fragment>').replace('gl_FragColor = vec4( outgoingLight, diffuseColor.a );', 'float frs = pow(1.0 - abs(dot(normalize(vViewPosition), normal)), 2.5); outgoingLight += vec3(frs * .22); diffuseColor.a = clamp(diffuseColor.a + frs * .5, 0.0, 1.0);\ngl_FragColor = vec4( outgoingLight, diffuseColor.a );'); };
       m.customProgramCacheKey = () => 'crys-fresnel'; return m; };
     const liqM = () => M({ color: D.col, roughness: D.rough, clearcoat: D.cc, transparent: D.op < 1, opacity: D.op, depthWrite: D.op > .9, envMapIntensity: 1.4 });
     const glassMesh = (pts) => { const m = lathe(TT, pts, s, crys()); m.renderOrder = 2; return m; };
