@@ -2438,10 +2438,10 @@
   addEventListener('hashchange', () => setTimeout(dsegPos, 0)); setTimeout(dsegPos, 1500); if (document.fonts && document.fonts.ready) document.fonts.ready.then(dsegPos);   //  the bar grows when its labels' web font arrives, e.g. Arabic)
   function dressInfo(it) {
     openSheet(`<div class="dinfo"><div class="card item r${it.rar} locked" data-kind="${it.kind}"><span class="rar">${ART.RAR[it.rar]}</span><div class="art">${ART.svg(it.id)}</div></div>
-      <h3>${esc(iname(it))}</h3><div class="gnote">${t('kind.' + it.kind)} · ${t('dress.notyet')}</div><p class="dget">${t('dress.get')}</p>
-      <div class="dbtns"><button class="btn sun" id="diG">${t('tab.gacha')}</button><button class="btn sky" id="diS">${t('tab.shop')}</button><button class="btn ghost" id="diX">${t('g.close')}</button></div></div>`, 'dsh');
-    $('diG').onclick = () => { closeSheet(); go('gacha'); };
-    $('diS').onclick = () => { closeSheet(); go('shop'); };
+      <h3>${esc(iname(it))}</h3><div class="gnote">${t('kind.' + it.kind)} · ${t('dress.notyet')}</div><p class="dget">${it.earn ? '🎁 ' + esc(it.earn.how[lang] || it.earn.how.en) : t('dress.get')}</p>
+      <div class="dbtns">${it.earn ? '' : `<button class="btn sun" id="diG">${t('tab.gacha')}</button><button class="btn sky" id="diS">${t('tab.shop')}</button>`}<button class="btn ghost" id="diX">${t('g.close')}</button></div></div>`, 'dsh');
+    // (2026-11-14) a game's own guide (it.earn: クジャクパイ in 上海) is won by playing that game — no gacha / shop buttons
+    if (!it.earn) { $('diG').onclick = () => { closeSheet(); go('gacha'); }; $('diS').onclick = () => { closeSheet(); go('shop'); }; }
     $('diX').onclick = closeSheet;
   }
   // tap the character in the dress-up preview: it reacts with a random little animation (+ hearts / stars / notes popping out)

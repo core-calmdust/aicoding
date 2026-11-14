@@ -87,5 +87,11 @@
   add('bk.lapis', '瑠璃', 'Lapis', '琉璃', '琉璃', '청금석', 'Lapislázuli', 'Lapis', 'Lápis-lazúli', 'Lapis', 'Лазурит', 'Lapis', 'Lapis', 'लाजवर्द', 'لازورد');
   add('bk.ebony', '黒檀', 'Ebony', '乌木', '烏木', '흑단', 'Ébano', 'Ébène', 'Ébano', 'Ebenholz', 'Эбен', 'Abanoz', 'Eboni', 'आबनूस', 'أبنوس');
   add('bk.coral', '珊瑚', 'Coral', '珊瑚', '珊瑚', '산호', 'Coral', 'Corail', 'Coral', 'Koralle', 'Коралл', 'Mercan', 'Koral', 'मूंगा', 'مرجان');
+  // rewards (2026-11-14): ¢10 for every new ★ of a stage, クジャクパイ won in four tiers
+  add('rw.coin', '報酬 ¢{n}', 'Reward ¢{n}', '奖励 ¢{n}', '獎勵 ¢{n}', '보상 ¢{n}', 'Premio ¢{n}', 'Gain ¢{n}', 'Prêmio ¢{n}', 'Belohnung ¢{n}', 'Награда ¢{n}', 'Ödül ¢{n}', 'Hadiah ¢{n}', 'इनाम ¢{n}', 'المكافأة ¢{n}');
+  add('rw.got', '{name}をもらった！', 'You got {name}!', '获得了{name}！', '獲得了{name}！', '{name}을(를) 받았어요!', '¡Conseguiste a {name}!', 'Vous obtenez {name} !', 'Você ganhou {name}!', '{name} erhalten!', 'Получен персонаж: {name}!', '{name} kazandın!', 'Kamu mendapat {name}!', 'आपको {name} मिला!', 'حصلت على {name}!');
+  add('rw.dress', 'きせかえで着替えられるよ', 'Wear it in Dress-up', '可在换装中使用', '可在換裝中使用', '꾸미기에서 바꿀 수 있어요', 'Póntelo en Vestir', 'À porter dans Habillage', 'Use em Visual', 'In der Garderobe anziehen', 'Наденьте в «Гардеробе»', 'Giydir bölümünde kullan', 'Pakai di Ganti gaya', 'ड्रेस-अप में पहनें', 'ارتدِه في التلبيس');
+  add('rw.star', 'クリア報酬：★1つにつき ¢{n}', 'Clear reward: ¢{n} for each ★', '通关奖励：每颗★ ¢{n}', '通關獎勵：每顆★ ¢{n}', '클리어 보상: ★ 하나당 ¢{n}', 'Premio: ¢{n} por cada ★', 'Gain : ¢{n} par ★', 'Prêmio: ¢{n} por ★', 'Belohnung: ¢{n} pro ★', 'Награда: ¢{n} за каждую ★', 'Ödül: her ★ için ¢{n}', 'Hadiah: ¢{n} tiap ★', 'इनाम: हर ★ पर ¢{n}', 'المكافأة: ¢{n} لكل ★');
+  add('rw.next', '{name}まであと{n}ステージ', '{n} more stages to {name}', '再通关{n}关得到{name}', '再通關{n}關得到{name}', '{name}까지 {n}스테이지', '{n} etapas más para {name}', 'Encore {n} étapes pour {name}', 'Mais {n} fases para {name}', 'Noch {n} Stufen bis {name}', 'Ещё {n} этапов до: {name}', '{name} için {n} bölüm daha', '{n} tahap lagi menuju {name}', '{name} तक {n} स्टेज और', '{n} مراحل أخرى حتى {name}');
   window.SHANGHAI_I18N = D;
 })();

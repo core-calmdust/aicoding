@@ -16,7 +16,7 @@
   const A = window.AtlasNPC = window.AtlasNPC || {};
   if (A.skin) return;
   const SRC = (document.currentScript && document.currentScript.src) || location.href;
-  const BASE = new URL('./', SRC).href, ATLAS = new URL('../', BASE).href, IMG = new URL('../images/atlas/', ATLAS).href, V = '11';
+  const BASE = new URL('./', SRC).href, ATLAS = new URL('../', BASE).href, IMG = new URL('../images/atlas/', ATLAS).href, V = '12';
   const LANGS = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
   const loaded = {};
   const load = src => loaded[src] || (loaded[src] = new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); }));
@@ -29,7 +29,7 @@
   function ensure(lang) {
     const need = [];
     if (!A.BOSSES) need.push(load(BASE + 'roster.js?v=' + V));
-    if (!window.AtlasArt) need.push(load(ATLAS + 'art.js?v=12').catch(() => {}));
+    if (!window.AtlasArt) need.push(load(ATLAS + 'art.js?v=13').catch(() => {}));
     return Promise.all(need).then(() => load(BASE + 't/' + lang + '.js?v=' + V).catch(() => load(BASE + 't/en.js?v=' + V)))
       .then(() => load(BASE + 't2/' + lang + '.js?v=' + V).catch(() => {}))   // more lines + the watchers' own ways of talking (t2/, where there is one)
       .then(() => load(BASE + 't3/' + lang + '.js?v=' + V).catch(() => {}))   // the Atlamo's chatter: their own lines, more trivia, days of the year (t3/)

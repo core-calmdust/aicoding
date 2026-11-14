@@ -67,6 +67,9 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
 .shrot svg{width:92px;height:92px;fill:none;stroke:#ffd76a;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
 .shrot .ph{transform-origin:50% 50%;animation:shrotp 1.3s ease-in-out infinite alternate}
 @keyframes shrotp{0%,20%{transform:rotate(90deg)}80%,100%{transform:rotate(0)}}
+.shgift{position:fixed;left:50%;top:calc(18px + env(safe-area-inset-top));z-index:130;display:flex;align-items:center;gap:12px;padding:10px 18px 10px 10px;border-radius:22px;background:#fffdf7;color:#1d2433;box-shadow:0 14px 34px -12px rgba(0,0,0,.55);transform:translate(-50%,-140%);opacity:0;transition:transform .45s cubic-bezier(.3,1.4,.5,1),opacity .3s;max-width:min(94vw,520px);cursor:pointer}
+.shgift.on{transform:translate(-50%,0);opacity:1}.shgift img{width:68px;height:68px;flex:none}.shgift b{display:block;font-size:17px;line-height:1.35}.shgift small{display:flex;align-items:center;gap:8px;font-size:14.5px;opacity:.85;margin-top:3px}
+.shgift .sr{font-style:normal;font-weight:900;font-size:12px;padding:2px 7px;border-radius:7px;color:#fff;background:#8a94a8}.shgift .sr.r1{background:#3f8ae0}.shgift .sr.r2{background:#a35ad8}.shgift .sr.r3{background:linear-gradient(135deg,#f2b63a,#e0567a)}
 .shtoast{position:fixed;left:50%;bottom:calc(var(--tbclear,18px) + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:90;max-width:min(92vw,560px);padding:11px 20px;border-radius:99px;background:#163a2e;color:#fff;font-weight:700;font-size:16px;text-align:center;box-shadow:0 10px 24px -10px rgba(0,0,0,.5);pointer-events:none}
 .shask{position:fixed;inset:0;z-index:95;display:grid;place-items:center;background:rgba(10,14,24,.35)}
 .shask>div{background:#fffdf7;color:#1d2433;border-radius:20px;padding:22px 24px 18px;width:min(88vw,420px);box-shadow:0 24px 60px -20px rgba(0,0,0,.6);text-align:center}
@@ -92,6 +95,8 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
 .shmap .hd h2{margin:0;font-size:22px;letter-spacing:.04em;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .shmap .hd .tot{font-size:17px;font-weight:800;color:#ffd76a;white-space:nowrap}
 .shmap .x{font:inherit;font-size:22px;width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
+.shmap .gift{position:relative;align-self:center;display:flex;align-items:center;gap:8px;margin:0 16px 2px;padding:4px 14px 4px 4px;border-radius:99px;background:rgba(255,215,106,.14);border:1px solid rgba(255,215,106,.35);font-size:15px;font-weight:800;color:#ffe7a0;white-space:nowrap;max-width:calc(100% - 32px);overflow:hidden;text-overflow:ellipsis}.shmap .gift img{width:38px;height:38px;flex:none}
+.shmap .sh .rw{display:inline-block;margin-top:2px;font-weight:800;color:#ffd76a}
 .shmap .ars{position:relative;display:flex;gap:8px;overflow-x:auto;padding:4px 16px 10px;scrollbar-width:none}.shmap .ars::-webkit-scrollbar{display:none}
 .shmap .ar{flex:none;font:inherit;font-size:15px;font-weight:700;padding:9px 14px;border-radius:99px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#dfe3ff;cursor:pointer;white-space:nowrap}
 .shmap .ar.on{background:#ffd76a;color:#241a05;border-color:#ffd76a}.shmap .ar.lk{opacity:.45}
@@ -149,6 +154,39 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
   }
   const parOf = st => st.limit ? Math.round(st.limit * .75) : st.par;
   function starsText(st, lang) { return TX('star2', lang, { t: mmss(parOf(st)) }) + ' · ' + TX('star3', lang); }
+
+  /* ---------- rewards (2026-11-14, ユーザー: ルールコース・ヒストリア・ステージの報酬をほかのゲームとそろえ、新しいアトラモを報酬に) ----------
+     · Coins: every ★ won on a stage pays ¢10 (a cleared stage ¢10–30). The portal's purse is derived (shared/atlas.js coins():
+       achievements + bonus + Shanghai's stars × COIN_STAR − spent), so nothing is paid twice and it follows the synced record.
+     · クジャクパイ (av-peacock-0..3, not in the gacha or the shop): N the rules course (atlas/rules/shanghai.js), R the first
+       constellation (10 stages), SR 60 stages, SSR all 120. Granted once each into the portal's wallet (Atlas.load / save). */
+  const COIN_STAR = 10, GIFT_AT = [0, 10, 60, 120];
+  const Reward = {
+    COIN_STAR, GIFT_AT,
+    has(t) { try { return !!(window.Atlas && Atlas.load && Atlas.load().owned.includes('av-peacock-' + t)); } catch (e) { return false; } },
+    // give tier t (once): true when it is new
+    grant(t, lang) {
+      try {
+        if (!window.Atlas || !Atlas.load) return false;
+        const W = Atlas.load(), id = 'av-peacock-' + t; if (!W || W.owned.includes(id)) return false;
+        W.owned.push(id); Atlas.save(W); giftToast(t, lang); return true;
+      } catch (e) { return false; }
+    },
+    // after a stage: the tiers the number of cleared stages has reached
+    check(lang) { const c = Object.keys(prog().st).filter(s => prog().st[s] > 0).length; let got = -1; for (let t = 1; t < 4; t++) if (c >= GIFT_AT[t] && Reward.grant(t, lang)) got = t; return got; },
+    // the next tier still to win by stages: { t, left } or null
+    next() { const c = Object.keys(prog().st).filter(s => prog().st[s] > 0).length; for (let t = 1; t < 4; t++) if (!Reward.has(t) && c < GIFT_AT[t]) return { t, left: GIFT_AT[t] - c }; return null; },
+  };
+  window.ShanghaiReward = Reward;
+  function giftToast(t, lang) {
+    css(); const R = ['N', 'R', 'SR', 'SSR'][t], it = window.AtlasArt && AtlasArt.byId && AtlasArt.byId('av-peacock-' + t), nm = it ? (it.name[lang] || it.name.en) : 'Peacotile';
+    const el = document.createElement('div'); el.className = 'shgift'; el.setAttribute('role', 'status');
+    el.innerHTML = `<img src="../images/atlas/av/peacock-${t}.webp" alt=""><div><b>🎁 ${esc(TX('rw.got', lang, { name: nm }))}</b><small><span class="sr r${t}">${R}</span>${esc(TX('rw.dress', lang))}</small></div>`;
+    const close = () => { el.classList.remove('on'); setTimeout(() => el.remove(), 500); };
+    el.onclick = close; document.body.appendChild(el); requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('on')));
+    setTimeout(close, 6500);
+    try { if (window.SFX && SFX.win) SFX.win(); } catch (e) {}
+  }
 
   /* ---------- the game on the table ---------- */
   function start(ctx) {
@@ -392,11 +430,14 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
       }
       let stars = 1; if (tt <= parOf(ST)) { stars = 2; if (!hints && !shufs) stars = 3; }
       const S = d.st = d.st || {}, B = d.bt = d.bt || {}, s = ST.s, nb = B[s] === undefined || tt < B[s];
-      S[s] = Math.max(S[s] || 0, stars); if (nb) B[s] = tt; save(d);
+      const was = S[s] || 0;
+      S[s] = Math.max(was, stars); if (nb) B[s] = tt; save(d);
+      const coin = (S[s] - was) * COIN_STAR;   // (the ★ won for the first time pay ¢10 each — the purse itself is derived from the stars)
+      later(() => Reward.check(lang), 1900);
       const nx = s + 1 < 120 ? s + 1 : null;
       later(() => ctx.onEnd({ win: true, draw: false, solo: true, level: 0,
         title: tx('r.stage') + ' ' + '★'.repeat(stars) + '☆'.repeat(3 - stars), score: stageName(s, lang) + ' · ' + tx('r.time', { t: mmss(tt) }),
-        best: (nb && S[s] ? tx('r.best', { t: mmss(B[s]) }) : tx('r.best', { t: mmss(B[s]) })) + ' · ' + '★'.repeat(S[s]),
+        best: tx('r.best', { t: mmss(B[s]) }) + ' · ' + '★'.repeat(S[s]) + (coin ? ' · ' + tx('rw.coin', { n: coin }) : ''),
         opp: stageName(s, lang), key: 'st' + s, why: tx('r.stage') + ' ' + stars + '★',
         again: { label: tx('b.toMap'), go: restart => stageMap({ lang, play: p => restart(() => { AD.pending = p; AD.last = p; }) }) },   // (a cleared stage: マップへ instead of もう一局 — back to the course, ユーザー 2026-11-14)
         next: nx != null ? { label: tx('b.next'), go: () => { AD.pending = nx; AD.last = nx; } } : null }), 800);
@@ -481,7 +522,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     css(); const lang = o.lang, K = C(), AR = K.AREAS;
     let P = prog(), area = Math.floor(nextStage(P) / 10), pick = nextStage(P);
     const el = document.createElement('div'); el.className = 'shmap';
-    el.innerHTML = `<div class="sky"><canvas></canvas></div><div class="hd"><h2></h2><span class="tot"></span><button type="button" class="x" aria-label="${esc(TX('b.close', lang))}">✕</button></div><div class="ars"></div><div class="fld"><button type="button" class="nav l">‹</button><div class="cst"></div><button type="button" class="nav r">›</button></div><div class="sh"></div>`;
+    el.innerHTML = `<div class="sky"><canvas></canvas></div><div class="hd"><h2></h2><span class="tot"></span><button type="button" class="x" aria-label="${esc(TX('b.close', lang))}">✕</button></div><div class="ars"></div><div class="gift"></div><div class="fld"><button type="button" class="nav l">‹</button><div class="cst"></div><button type="button" class="nav r">›</button></div><div class="sh"></div>`;
     document.body.appendChild(el); requestAnimationFrame(() => { el.classList.add('on'); stars(el.querySelector('canvas')); });
     const $ = q => el.querySelector(q);
     const close = () => { el.classList.remove('on'); setTimeout(() => el.remove(), 260); removeEventListener('keydown', key); };
@@ -493,6 +534,9 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     function paint() {
       const tot = Object.values(P.st).reduce((a, v) => a + v, 0);
       $('h2').textContent = TX('st.title', lang); $('.tot').textContent = '★ ' + tot + ' / 360';
+      const nx = Reward.next(), it = nx && window.AtlasArt && AtlasArt.byId && AtlasArt.byId('av-peacock-' + nx.t);
+      $('.gift').innerHTML = nx ? `<img src="../images/atlas/av/peacock-${nx.t}.webp" alt=""><span>${esc(TX('rw.next', lang, { n: nx.left, name: it ? it.name[lang] || it.name.en : 'Peacotile' }))}</span>` : '';
+      $('.gift').style.display = nx ? '' : 'none';
       $('.ars').innerHTML = AR.map((a, i) => { const st = Array.from({ length: 10 }, (_, k) => P.st[i * 10 + k] || 0).reduce((x, v) => x + v, 0); return `<button type="button" class="ar${i === area ? ' on' : ''}${areaOpen(i) ? '' : ' lk'}" data-a="${i}">${esc(TX('ar.' + a, lang))}<em>★${st}</em></button>`; }).join('');
       const on = $('.ar.on'); if (on) on.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
       // a tall screen (phones): the figure turned a quarter (x ↔ y) so it fills the height rather than a thin strip
@@ -507,7 +551,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     }
     function sheet() {
       const s = pick, st = K.stage(s), ul = unlocked(P, s), sr = P.st[s] || 0, bt = P.bt[s];
-      $('.sh').innerHTML = `<div class="tx"><h3>${esc(stageName(s, lang))} · ${esc(TX('lay.' + st.lay, lang))} <small style="opacity:.7;font-size:15px">${esc(TX('tiles', lang, { n: st.n }))}</small></h3><div class="mi">${esc(missionText(st, lang))}</div><div class="sub">${ul ? esc(starsText(st, lang)) + (sr ? '<br>' + '★'.repeat(sr) + '☆'.repeat(3 - sr) + (bt != null ? ' · ' + esc(TX('r.best', lang, { t: mmss(bt) })) : '') : '') : esc(TX('st.lock', lang))}</div></div><button type="button" class="go"${ul ? '' : ' disabled'}>${esc(TX('b.start', lang))} ▶</button>`;
+      $('.sh').innerHTML = `<div class="tx"><h3>${esc(stageName(s, lang))} · ${esc(TX('lay.' + st.lay, lang))} <small style="opacity:.7;font-size:15px">${esc(TX('tiles', lang, { n: st.n }))}</small></h3><div class="mi">${esc(missionText(st, lang))}</div><div class="sub">${ul ? esc(starsText(st, lang)) + (sr ? '<br>' + '★'.repeat(sr) + '☆'.repeat(3 - sr) + (bt != null ? ' · ' + esc(TX('r.best', lang, { t: mmss(bt) })) : '') : '') : esc(TX('st.lock', lang))}<br><span class="rw">${esc(TX('rw.star', lang, { n: COIN_STAR }))}</span></div></div><button type="button" class="go"${ul ? '' : ' disabled'}>${esc(TX('b.start', lang))} ▶</button>`;
       $('.go').onclick = () => { if (!ul) return; close(); o.play(s); };
     }
     el.addEventListener('click', e => {

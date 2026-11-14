@@ -263,6 +263,20 @@
       items.push({ id: `av-${sp}-${t}`, kind: 'icon', rar, d: { sp, t }, name });
     }
   });
+  // (2026-11-14) earned species: a game's own guide, won by playing it (not in the gacha or the shop). how[t] = how to get tier t.
+  //   クジャクパイ (peacock, atlas/avatars/sp-e.js): 上海 — N the rules course, R 10 stages (the first constellation), SR 60, SSR all 120.
+  const EARN = [['peacock', 'shanghai', {"ja": "クジャクパイ", "en": "Peacotile", "zh": "孔雀牌", "zh-TW": "孔雀牌", "ko": "공작패", "es": "Pavofichas", "fr": "Paontuile", "pt": "Pavopeça", "de": "Pfauenstein", "ru": "Павлиноплитка", "tr": "Tavuskoşu Taşı", "id": "Meraktile", "hi": "मोरटाइल", "ar": "طاووس البلاط"},
+    [{"ja": "上海のルールコースを最後まで見る", "en": "Finish Shanghai's rules course", "zh": "看完上海的规则课程", "zh-TW": "看完上海的規則課程", "ko": "상하이 룰 코스를 끝까지 보기", "es": "Termina el curso de reglas de Shanghái", "fr": "Terminez le cours de règles de Shanghai", "pt": "Conclua o curso de regras do Xangai", "de": "Schließe den Regelkurs von Shanghai ab", "ru": "Пройдите курс правил «Шанхая» до конца", "tr": "Şanghay kural kursunu bitir", "id": "Selesaikan kursus aturan Shanghai", "hi": "शंघाई का नियम कोर्स पूरा करें", "ar": "أكمل دورة قواعد شنغهاي"},
+     {"ja": "上海のステージで最初の星座（10ステージ）をクリア", "en": "Clear the first constellation (10 stages) in Shanghai", "zh": "通关上海第一个星座（10关）", "zh-TW": "通關上海第一個星座（10關）", "ko": "상하이 첫 별자리(10스테이지) 클리어", "es": "Supera la primera constelación (10 etapas) de Shanghái", "fr": "Terminez la première constellation (10 étapes) de Shanghai", "pt": "Conclua a primeira constelação (10 fases) do Xangai", "de": "Schaffe das erste Sternbild (10 Stufen) in Shanghai", "ru": "Пройдите первое созвездие (10 этапов) в «Шанхае»", "tr": "Şanghay'da ilk takımyıldızı (10 bölüm) bitir", "id": "Selesaikan rasi pertama (10 tahap) di Shanghai", "hi": "शंघाई का पहला तारामंडल (10 स्टेज) पूरा करें", "ar": "أكمل البرج الأول (10 مراحل) في شنغهاي"},
+     {"ja": "上海のステージを60クリア（6つの星座）", "en": "Clear 60 Shanghai stages (six constellations)", "zh": "通关上海60关（6个星座）", "zh-TW": "通關上海60關（6個星座）", "ko": "상하이 스테이지 60개 클리어(별자리 6개)", "es": "Supera 60 etapas de Shanghái (seis constelaciones)", "fr": "Terminez 60 étapes de Shanghai (six constellations)", "pt": "Conclua 60 fases do Xangai (seis constelações)", "de": "Schaffe 60 Shanghai-Stufen (sechs Sternbilder)", "ru": "Пройдите 60 этапов «Шанхая» (шесть созвездий)", "tr": "Şanghay'da 60 bölüm bitir (altı takımyıldız)", "id": "Selesaikan 60 tahap Shanghai (enam rasi)", "hi": "शंघाई के 60 स्टेज पूरे करें (छह तारामंडल)", "ar": "أكمل 60 مرحلة في شنغهاي (ستة أبراج)"},
+     {"ja": "上海の120ステージをすべてクリア", "en": "Clear all 120 Shanghai stages", "zh": "通关上海全部120关", "zh-TW": "通關上海全部120關", "ko": "상하이 120스테이지 모두 클리어", "es": "Supera las 120 etapas de Shanghái", "fr": "Terminez les 120 étapes de Shanghai", "pt": "Conclua as 120 fases do Xangai", "de": "Schaffe alle 120 Shanghai-Stufen", "ru": "Пройдите все 120 этапов «Шанхая»", "tr": "Şanghay'ın 120 bölümünün hepsini bitir", "id": "Selesaikan semua 120 tahap Shanghai", "hi": "शंघाई के सभी 120 स्टेज पूरे करें", "ar": "أكمل كل مراحل شنغهاي الـ120"}]]];
+  EARN.forEach(([sp, game, nm, how]) => {
+    for (let t = 0; t < 4; t++) {
+      const name = {};
+      Object.keys(nm).forEach(l => { const w = (TIER_NAME[l] || TIER_NAME.en)[t]; name[l] = w ? (l === 'ja' ? `${nm[l]}（${w}）` : `${nm[l]} (${w})`) : nm[l]; });
+      items.push({ id: `av-${sp}-${t}`, kind: 'icon', rar: t, d: { sp, t }, name, nogacha: true, earn: { game, how: how[t] } });
+    }
+  });
   // the AI bosses (atlas/npc/roster.js, 2026-11-09): N / R / SR = beat the 1st / 2nd / 3rd level of the boss's
   // three (not in the gacha or the shop), SSR / UR (the strongest boss of each game, and a celestial boss) = gacha only.
   // Images: images/atlas/av/boss-<game>-<n>-<0..3>.webp
