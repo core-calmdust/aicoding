@@ -1,5 +1,5 @@
 /* Futebol de botão AI worker: { id, s (state), level, seed, keeper: side } → { id, move } (the move it means; the hand's error is added by the page) */
-importScripts('engine.js?v=1');
+importScripts('engine.js?v=2');
 self.onmessage = e => {
   const d = e.data || {};
   try {

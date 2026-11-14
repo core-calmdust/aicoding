@@ -23,7 +23,7 @@
   const LO = () => !!(X.coarse || X.lite);
   const SZ = v => Math.round(v * (X.texScale ? X.texScale() : 1));
   const E = () => window.BotaoEngine;
-  const FW = 104, FL = 167, HW = FW / 2, H = FL / 2, PS = 8, PE = 10, TX = HW + PS, TY = H + PE, GW = 12.5, GHW = GW / 2, GD = 5, GH = 5;
+  const FW = 104, FL = 167, HW = FW / 2, H = FL / 2, PS = 8, PE = 10, TX = HW + PS, TY = H + PE, GW = 15, GHW = GW / 2, GD = 5, GH = 5;
   const RB = 2.4, RBALL = .8, KHW = 4, KHD = 1.75, KH = 1.6, BH = .75;
   const FR = 3, RAILH = 2.2;   // the rail round the table (width, height above the top), cm
   const K = .066, TOP = .3;
