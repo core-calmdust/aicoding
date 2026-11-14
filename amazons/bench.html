@@ -62,7 +62,7 @@ pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:var(--mut);ma
 
 <div class="card"><h2>αβ（Lv.9〜18・解析）</h2><div class="tw"><table id="tbl"><thead><tr><th>測定</th><th>方式</th><th>スレッド</th><th>時間</th><th>1スレッド比</th><th>幾何平均</th><th>効率</th><th>nps（合計）</th><th>1スレッドと一致</th></tr></thead><tbody></tbody></table></div><pre id="log"></pre></div>
 </main>
-<script src="engine.js?v=13"></script>
+<script src="engine.js?v=14"></script>
 <script src="../shared/mtengine.js?v=8"></script><script src="../shared/mtsplit.js?v=6"></script>
 <script>MTSplit.init({ sw: 'sw.js?v=1' });</script>
 
@@ -85,7 +85,7 @@ env();
 // ---- the game: G = { url, warm?, ready?, positions(weight) → [{ name, moves }], tests: [{ key, label, msg(p, weight), cmp(r) → string (the answer compared with 1 thread) }] }
 
 const E = window.AmazonsEngine;
-const ENGINE = 'engine.js?v=13';   // (the game page's ENGINE_URL in app.js: the same file and cache entry)
+const ENGINE = 'engine.js?v=14';   // (the game page's ENGINE_URL in app.js: the same file and cache entry)
 const D = { light: 6, normal: 8, heavy: 9 }, TA = { light: 1000, normal: 2000, heavy: 4000 }, EST = { light: 3, normal: 7, heavy: 18 };
 const TM = { light: 1000, normal: 2000, heavy: 4000 }, EST_MC = { light: 3, normal: 6, heavy: 12 };   // (the MCTS: ms per search; minutes on a 14-core Mac)
 // the reference move of each position: one thread with REF_X times the time (2026-11-10: ×4 was weaker than the searches on 8 or

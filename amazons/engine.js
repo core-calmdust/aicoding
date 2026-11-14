@@ -246,6 +246,26 @@ function waLoad(pos) { if (WA.buf !== WA.x.memory.buffer) waViews(); WA.sq.set(p
 // lost piece.
 const EW = { t1: 1.0, t2: 0.45, c1: 0.5, c2: 0.35, mob: 1.0, tempo: 0.05 };
 let evals = 0;
+// The evaluation of the alpha-beta search (2026-11-14, claude/amazons-spec.md「評価 v2」): 0 the classic weights above, 1 v2
+// (core.c EPC[1]: t2 0.85, c1 0.35, c2 0.6 — the same arithmetic). The upper alpha-beta levels (LEVELS ev: 1) search with v2;
+// every other search (the weak levels, analysis, hints, the review, puzzles) with the classic set, as before. evSet sets the
+// weights of the JS and of the cores; the search's tables (TT, CC and the cores') are emptied when a search starts with the
+// other set than the values in them (tabFor), so a v2 search never reads a classic value nor the other way round.
+const EWS = [{ t2: 0.45, c1: 0.5, c2: 0.35 }, { t2: 0.85, c1: 0.35, c2: 0.6 }];
+let evm = 0, tabEvm = 0;
+function evSet(m) {
+  m = m ? 1 : 0; if (m === evm) return;
+  evm = m; Object.assign(EW, EWS[m]);
+  if (WA && WA.x.ev_set) WA.x.ev_set(-1, m);
+  if (MX && MX.x.ev_set) MX.x.ev_set(-1, m);
+}
+function tabFor() {
+  if (tabEvm === evm) return;
+  tabEvm = evm; TT.clear(); CC.clear();
+  if (WA && WA.x.ab_newgame) WA.x.ab_newgame();
+  if (MX && MX.x.ab_newgame) MX.x.ab_newgame();
+}
+const evOf = L => (L && L.ev ? 1 : 0);
 // The distance terms are summed from counts (how many empty squares White reaches in i moves and Black in j), in a fixed
 // order: core.c (bit boards) builds the same counts and does the same arithmetic, so both give the same value.
 const ML = 99, CQ = new Int32Array(ML * ML), OA = new Int32Array(ML), OB = new Int32Array(ML);
@@ -460,6 +480,7 @@ function store(pos, d, v, f, m, ply) {
 }
 // root: the values of the root candidates at depth d (each with a full window: an honest value per move for the lists)
 function rootValues(pos, C, d) {
+  tabFor();
   const out = [], A = abCore();
   if (A) {
     abRoot(A, pos, C); abSync(A); const k = A.x.ab_values(d); abBack(A);
@@ -477,6 +498,7 @@ function rootValues(pos, C, d) {
 }
 function bestMove(pos, maxD, ms, ek, rootK) {
   nodes = 0; evals = 0; stop = false; tEnd = ms ? Date.now() + ms : Infinity; evalLimit = ek ? ek * 1000 : Infinity;
+  tabFor();
   const C = cands(pos, rootK || 16, 0, 20);
   if (!C.length) return { move: -1, v: -WIN, depth: 0 };
   let best = { move: C[0].m, v: C[0].s, depth: 1 };
@@ -537,8 +559,8 @@ function mcts(pos, o) {
   if (exact) C.vcap = Math.max(C.vcap || 0, want);
   X.mcts_alloc(exact ? Math.ceil(C.vcap * 1.05) + 64 : want); if (X.mcts_limit) X.mcts_limit(o.pool > 0 ? o.pool : 0); mcViews(C);
   MC_KEYS.forEach((k, i) => X.mcts_set(i, p[k]));
-  const evm = X.ev_set ? (p.ev | 0) : 0;   // (the evaluation of this search: claude/amazons-spec.md「評価 v2」; back to the classic one after it)
-  if (X.ev_set) { X.ev_reset(); X.ev_set(-1, evm); if (evm && p.ep) for (const k in p.ep) X.ev_set(+k, p.ep[k]); }
+  const mev = X.ev_set ? (p.ev | 0) : 0;   // (the evaluation of this search: claude/amazons-spec.md「評価 v2」; back to the alpha-beta search's (evm) after it)
+  if (X.ev_set) { X.ev_reset(); X.ev_set(-1, mev); if (mev && p.ep) for (const k in p.ep) X.ev_set(+k, p.ep[k]); }
   if (X.mcts_vnodes) X.mcts_set(16, exact ? C.vcap : 0);
   C.sq.set(pos.sq); C.q.set(pos.q);
   X.mcts_begin(pos.turn, o.seed | 0);
@@ -551,7 +573,7 @@ function mcts(pos, o) {
     o.onProgress(mcList(C), n);
   }
   const list = mcList(C);
-  if (evm) { X.ev_set(-1, 0); X.ev_reset(); }
+  if (mev) { X.ev_set(-1, evm); X.ev_reset(); }
   evals = X.mcts_evals();
   if (ms && !o.pool) {   // (the rate of the next pool: a search that filled half its pool made more nodes than it could keep)
     const el = Math.max(50, Date.now() - t0), nn = X.mcts_nodes(), r = nn / el / thr * (nn > want * 0.5 ? 2 : 1);
@@ -588,25 +610,29 @@ const LEVELS = [null,
   { d: 1, noise: 105, qk: 8 },          // 5
   { d: 1, noise: 70, qk: 10 },          // 6
   { d: 1, noise: 45, qk: 12 },          // 7
-  { d: 1, noise: 25, qk: 14 },          // 8
+  { d: 3, noise: 200, qk: 14 },         // 8  (2026-11-14: the best 10 valued at depth 3 with more noise — between the one-ply Lv.7 and Lv.9; was d 1, noise 25)
   { s: 1, nk: 2 },                      // 9
   { s: 1, nk: 3 },                      // 10
   { s: 1, nk: 4.5 },                    // 11
   { s: 1, nk: 6 },                      // 12  (about 6,000 evaluations per move)
-  { s: 1, nk: 10 },                     // 13
-  { s: 1, nk: 16 },                     // 14
-  { s: 1, nk: 24 },                     // 15
-  { s: 1, nk: 36 },                    // 16
-  { s: 1, nk: 52 },                    // 17
-  { s: 1, nk: 75 },                    // 18
+  // (2026-11-14, claude/amazons-spec.md「レベルの測り直し」) from Lv.13 the evaluation v2 (ev: the alpha-beta search too) and budgets
+  // that step evenly up to Lv.19 (native self-play of neighbours, tools/native_match.c; before: 10 16 24 36 52 75 thousand with the
+  // classic evaluation). The alpha-beta search stops gaining at ~150 thousand evaluations a move (300 and 500 were no stronger),
+  // so Lv.16〜18 are the MCTS by evaluations (mc with nk: one thread like every level by evaluations, ~+150 Elo per doubling)
+  { s: 1, nk: 16, ev: 1 },              // 13
+  { s: 1, nk: 40, ev: 1 },              // 14
+  { s: 1, nk: 150, ev: 1 },             // 15
+  { s: 1, nk: 200, mc: 1, ev: 1 },      // 16
+  { s: 1, nk: 500, mc: 1, ev: 1 },      // 17
+  { s: 1, nk: 1200, mc: 1, ev: 1 },     // 18
   // Lv.19〜23 think by time with the MCTS (mc, 2026-11-10: stronger than the alpha-beta search in the same CPU time — tools/mcts_match.js,
   // claude/amazons-spec.md「MCTS」), on the threads of the page's MCTS pool (core_mt.wasm, shared/mtengine.js) when it is there
-  { s: 1, ms: 1500, mc: 1 },            // 19
-  { s: 1, ms: 3000, mc: 1 },            // 20
+  { s: 1, ms: 1500, mc: 1, ev: 1 },            // 19
+  { s: 1, ms: 3000, mc: 1, ev: 1 },            // 20
   // the top levels (common rule「最上位のレベルの追加」): twice the time per step up to 20 s, on every thread — one thread without the option
-  { s: 1, ms: 6000, mc: 1 },            // 21
-  { s: 1, ms: 12000, mc: 1 },           // 22
-  { s: 1, ms: 20000, mc: 1 },           // 23
+  { s: 1, ms: 6000, mc: 1, ev: 1 },            // 21
+  { s: 1, ms: 12000, mc: 1, ev: 1 },           // 22
+  { s: 1, ms: 20000, mc: 1, ev: 1 },           // 23
 ];
 function gauss(rand) { let u = 0, v = 0; while (!u) u = rand(); while (!v) v = rand(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
 function replay(start, moves) {
@@ -636,7 +662,7 @@ function think(start, moves, level, rand, rule, cfg) {
     nodes = 0; evals = 0; stop = false; tEnd = Date.now() + 4000; evalLimit = Infinity;
     const C = cands(pos, 24, 0, L.qk || 12);
     if (C.length === 1) return { move: C[0].m, v: C[0].s };
-    const vals = L.d >= 2 ? rootValues(pos, C.slice(0, 10), 2).concat(C.slice(10).map(c => ({ m: c.m, v: c.s - 40 }))) : C.map(c => ({ m: c.m, v: c.s }));
+    const vals = L.d >= 2 ? rootValues(pos, C.slice(0, 10), L.d).concat(C.slice(10).map(c => ({ m: c.m, v: c.s - 40 }))) : C.map(c => ({ m: c.m, v: c.s }));
     vals.sort((x, y) => y.v - x.v);
     if (vals[0].v < -WINT) return { move: resist(pos, vals), v: vals[0].v };
     let best = vals[0].m, bv = -Infinity;
@@ -644,8 +670,9 @@ function think(start, moves, level, rand, rule, cfg) {
     return { move: best, v: vals[0].v };
   }
   if (L.mc && mcCore()) { const r = mctsThink(pos, L); if (r) return r; }
-  const r = bestMove(pos, L.dx || 40, L.ms || 0, L.nk || (L.ms ? 0 : 60));
-  return thinkFin(pos, r);
+  evSet(evOf(L));
+  const nk = L.mc && L.nk ? Math.min(L.nk, 150) : L.nk;   // (an MCTS level without the core — no WebAssembly: the alpha-beta search, at most Lv.15's budget)
+  try { return thinkFin(pos, bestMove(pos, L.dx || 40, L.ms || 0, nk || (L.ms ? 0 : 60))); } finally { evSet(0); }
 }
 // the strong steps' answer from the search's result (also the end of a search on several threads, shared/mtsplit.js)
 function thinkFin(pos, r) {
@@ -717,38 +744,44 @@ function mtPlan(m) {
   if (m.job === 'think') {
     const L = m.cfg || LEVELS[m.level] || LEVELS[10];
     if (!L.s || L.mc) return { result: think(m.start, m.moves, m.level, null, null, m.cfg) };   // (the MCTS: one thread here; its own pool reads it on several)
-    const C = cands(pos, 16, 0, 20);
+    evSet(evOf(L)); tabFor(); const C = cands(pos, 16, 0, 20); evSet(0);
     if (C.length === 1 || C[0].s > WINT) return { result: { move: C[0].m, v: C[0].s, depth: 1 } };
     return { plan: { kind: 'best', kids: C.map(c => ({ m: c.m, s: -1 })), inf, maxD: L.dx || 40, ms: L.ms || 0, nodes: (L.nk || (L.ms ? 0 : 60)) * 1000, win: WINT, partialIfBetter: true, splitMin: 4, ...(abCore() ? { help: false } : {}) } };
   }
   const C = cands(pos, 14, 0, 18, m.extra), cj = m.job === 'cands';
   return { plan: { kind: 'all', kids: C.map(c => c.s > WINT ? { m: c.m, s: -1, t: c.s } : { m: c.m, s: -1 }), inf, maxD: 30, ms: m.time || (cj ? 1200 : 1000), win: WINT, stopAll: true, progress: true, pv: cj ? m.plies || 5 : 0, pvK: m.k || 5, ...(abCore() ? { help: false } : {}) } };
 }
+const jobEv = m => evOf(m.cfg || (m.level ? LEVELS[m.level] : null));   // (shared/mtsplit.js's tasks carry the job's message)
 function mtV(m) {
   const { pos, ply } = mtNode(m);
   nodes = 0; evals = 0; stop = false; tEnd = m.until || Infinity; evalLimit = m.nl || Infinity;
+  evSet(jobEv(m)); tabFor();
   const A = abCore(); let v;
   if (A) { abPos(A, pos); abSync(A); v = A.x.ab_search(pos.side, pos.h1, pos.h2, m.d, m.wa, m.wb, ply); abBack(A); }
   else v = search(pos, m.d, m.wa, m.wb, ply);
+  evSet(0);
   return { v, ok: !stop, nodes: evals };
 }
 function mtKids(m) {
   const { pos, ply } = mtNode(m);
   if (!pos.canMove(pos.turn)) return { kids: [] };
   nodes = 0; evals = 0; stop = false; tEnd = Infinity; evalLimit = Infinity;
-  const A = abCore();
-  if (A) {
-    abPos(A, pos); abSync(A); const n = A.x.ab_kids(pos.side, pos.h1, pos.h2, ply); abBack(A);
-    const kids = []; for (let i = 0; i < n; i++) { const s = A.aov[i]; kids.push(s > WINT ? { m: A.aom[i], s: -1, t: s } : { m: A.aom[i], s: -1 }); }
-    return { kids, nodes: evals };
-  }
-  const C = candsC(pos, CK, ply, QKEEP_BASE), e = ttGet(pos), em = e ? e.m : -1;
-  if (em >= 0) { const i = C.findIndex(x => x.m === em); if (i > 0) { const x = C[i]; C.splice(i, 1); C.unshift(x); } }
-  return { kids: C.map(c => c.s > WINT ? { m: c.m, s: -1, t: c.s } : { m: c.m, s: -1 }), nodes: evals };
+  evSet(jobEv(m)); tabFor();
+  try {
+    const A = abCore();
+    if (A) {
+      abPos(A, pos); abSync(A); const n = A.x.ab_kids(pos.side, pos.h1, pos.h2, ply); abBack(A);
+      const kids = []; for (let i = 0; i < n; i++) { const s = A.aov[i]; kids.push(s > WINT ? { m: A.aom[i], s: -1, t: s } : { m: A.aom[i], s: -1 }); }
+      return { kids, nodes: evals };
+    }
+    const C = candsC(pos, CK, ply, QKEEP_BASE), e = ttGet(pos), em = e ? e.m : -1;
+    if (em >= 0) { const i = C.findIndex(x => x.m === em); if (i > 0) { const x = C[i]; C.splice(i, 1); C.unshift(x); } }
+    return { kids: C.map(c => c.s > WINT ? { m: c.m, s: -1, t: c.s } : { m: c.m, s: -1 }), nodes: evals };
+  } finally { evSet(0); }
 }
 function mtFin(m) {
   const r = m.raw;
-  if (m.job === 'think') { const { pos } = replay(m.start, m.moves); return { result: thinkFin(pos, { move: r.m, v: r.v, depth: r.depth }) }; }
+  if (m.job === 'think') { const { pos } = replay(m.start, m.moves); evSet(jobEv(m)); try { return { result: thinkFin(pos, { move: r.m, v: r.v, depth: r.depth }) }; } finally { evSet(0); } }
   let list = (r.list || []).map(e => Object.assign({ m: e.m, v: e.v, kind: kindOf(e.v) }, e.pv ? { pv: e.pv } : {}));
   if (!list.length) { const { pos } = replay(m.start, m.moves); list = cands(pos, 14, 0, 18).map(c => ({ m: c.m, v: c.s, kind: kindOf(c.s) })); }
   if (m.job === 'cands') list = list.slice(0, m.k || 5);

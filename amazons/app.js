@@ -108,7 +108,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=13';
+const ENGINE_URL = 'engine.js?v=14';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -163,7 +163,7 @@ function request(which, msg, onProgress) {
     return (async () => { const t0 = Date.now(); while (!P.pool('ai') && Date.now() - t0 < 4000) await new Promise(r => setTimeout(r, 100)); return request(which, Object.assign({}, msg, { waited: 1 }), onProgress); })();
   }
   if (mc) {   // the MCTS: its own pool of threads (PRO: with more than one thread), else the one-thread worker
-    const mp = MCP && (!msg.cfg || msg.cfg.threads > 1) && MCP.pool(which === 'ai' ? 'ai' : null);
+    const mp = MCP && (msg.cfg ? msg.cfg.threads > 1 : mtLevel(msg.level) || which === 'ana') && MCP.pool(which === 'ai' ? 'ai' : null);   // (Lv.16〜18: the MCTS by evaluations, one thread like the other levels by evaluations — 2026-11-14)
     if (mp) { const t0 = performance.now(), full = { start: startSpec, rule: gv, ...msg, mtThreads: msg.cfg ? msg.cfg.threads : mcThreads() }; return mp.run(full, onProgress, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full, onProgress) : r; }); }
     return requestW(which, msg, onProgress);
   }
@@ -1290,8 +1290,11 @@ $('#segColor').onclick = e => { const b = e.target.closest('button'); if (b) { d
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 // PRO mode (shared/proset.js; common rule「対局設定の Pro モード」): advanced settings for the AI beside the level — vs the AI /
 // AI vs AI, never rated. ProSet.ladder() turns the changed values into a step of this engine's ladder (engine.js think: cfg).
-const PRO_L = window.ProSet ? ProSet.ladder(E.LEVELS, { dmax: 20, nmax: 20000000 }) : null;
-// the search: MCTS (the default of Lv.19〜23) or alpha-beta (Lv.9〜18); a depth limit is always the alpha-beta search
+// (2026-11-14) Lv.8 values its best 10 moves at depth 3 with noise 200 (claude/amazons-spec.md「レベルの測り直し」); ProSet takes its
+// mildest noise of「ばらつき」from the last noisy level, so it sees Lv.8's old 25 and proCfg gives Lv.8 its own 200 back
+const PRO_LV = E.LEVELS.map((L, i) => i === 8 && L && L.d >= 3 ? Object.assign({}, L, { noise: 25 }) : L);
+const PRO_L = window.ProSet ? ProSet.ladder(PRO_LV, { dmax: 20, nmax: 20000000 }) : null;
+// the search: MCTS (the default of Lv.16〜23 since 2026-11-14) or alpha-beta (Lv.9〜15); a depth limit is always the alpha-beta search
 const PRO_ALGO = { key: 'algo', type: 'choice', group: 'read', when: e => e.limit && e.limit.k !== 'depth',
   label: { ja: '探索の方式', en: 'Search', zh: '搜索方式', 'zh-TW': '搜尋方式', ko: '탐색 방식', es: 'Búsqueda', fr: 'Recherche', pt: 'Busca', de: 'Suche', ru: 'Поиск', tr: 'Arama', id: 'Pencarian', hi: 'खोज का तरीका', ar: 'طريقة البحث' },
   help: { ja: 'MCTS は有望な手を深く読み、αβ は候補をそろえて読みます。同じ時間では MCTS のほうが強めです。', en: 'MCTS reads the promising moves deeper; alpha-beta reads the candidates evenly. In the same time MCTS is stronger.', zh: 'MCTS 深入计算有希望的着法，αβ 均匀地计算候选。同样时间下 MCTS 更强。', 'zh-TW': 'MCTS 深入計算有希望的著法，αβ 均勻地計算候選。同樣時間下 MCTS 較強。', ko: 'MCTS는 유망한 수를 깊이 읽고, αβ는 후보를 고르게 읽습니다. 같은 시간이면 MCTS가 더 강합니다.', es: 'MCTS lee más hondo las jugadas prometedoras; alfa-beta lee los candidatos por igual. Con el mismo tiempo, MCTS es más fuerte.', fr: 'MCTS lit plus loin les coups prometteurs ; alpha-bêta lit les candidats de façon égale. À temps égal, MCTS est plus fort.', pt: 'MCTS lê mais fundo os lances promissores; alfa-beta lê os candidatos por igual. No mesmo tempo, MCTS é mais forte.', de: 'MCTS liest vielversprechende Züge tiefer, Alpha-Beta liest die Kandidaten gleichmäßig. Bei gleicher Zeit ist MCTS stärker.', ru: 'MCTS глубже считает перспективные ходы, альфа-бета — все кандидаты поровну. За то же время MCTS сильнее.', tr: 'MCTS umut veren hamleleri daha derin okur, alfa-beta adayları eşit okur. Aynı sürede MCTS daha güçlüdür.', id: 'MCTS membaca langkah yang menjanjikan lebih dalam; alfa-beta membaca kandidat secara merata. Dalam waktu sama MCTS lebih kuat.', hi: 'MCTS आशाजनक चालें गहराई से पढ़ता है, αβ सभी उम्मीदवार बराबर पढ़ता है। उतने ही समय में MCTS ज़्यादा मज़बूत है।', ar: 'يقرأ MCTS النقلات الواعدة أعمق، ويقرأ ألفا-بيتا المرشحات بالتساوي. في الوقت نفسه يكون MCTS أقوى.' },
@@ -1321,6 +1324,8 @@ function proCfg(lv, p) {
   const e = P.get(lv); if (!e) return null;
   const c = Object.assign(PRO_L.cfg(e, lv), MTP ? { threads: e.threads || 1 } : {});
   if (e.algo === 'mc' && c.s && !c.dx) c.mc = 1;   // (the MCTS with a time or evaluation limit)
+  if (lv === 8 && !c.s && PRO_LV[8] !== E.LEVELS[8] && c.noise === PRO_LV[8].noise && !(e.changed || []).includes('var')) c.noise = E.LEVELS[8].noise;
+  if (c.s && (E.LEVELS[lv] || {}).ev) c.ev = 1;   // (the alpha-beta search with the level's evaluation: v2 from Lv.13, claude/amazons-spec.md「レベルの測り直し（2026-11-14）」)
   return c;
 }
 function proTag(lv, p) { return proCfg(lv, p) ? ' PRO' : ''; }
@@ -1365,7 +1370,7 @@ $('#btnStart').onclick = () => {
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_CLOCK = { base: 300000, inc: 3000 };
 // rating of each AI step (a first estimate from short matches of neighbouring levels on the work machine; to be measured on the
 // user's Mac): about +110 per step at the bottom, smaller at the top
-const RT_LV = [0, 350, 460, 570, 680, 790, 900, 1000, 1100, 1200, 1300, 1390, 1480, 1560, 1640, 1710, 1780, 1840, 1900, 2340, 2410, 2470, 2520, 2560];   // (Lv.19〜23 = the MCTS since 2026-11-10: the alpha-beta values +200, provisional — in the same CPU time it beat the alpha-beta search 82.5% at 0.5 s and 15 of 16 at 1.5 s; +170 more for the evaluation v2 of 2026-11-14 (+177 Elo in the same CPU time, claude/amazons-spec.md「評価 v2」); to be measured on the user's Mac)
+const RT_LV = [0, 350, 400, 490, 580, 610, 640, 710, 920, 1140, 1210, 1250, 1280, 1400, 1630, 1770, 1910, 2020, 2090, 2140, 2180, 2210, 2240, 2260];   // (2026-11-14, claude/amazons-spec.md「レベルの測り直し」: measured — native self-play of neighbouring levels at their own limits on one thread, a Bradley–Terry fit from Lv.1 = 350, the flat Lv.10〜12 evened out; Lv.21〜23 extrapolated from Lv.19 → 20. With several threads Lv.19〜23 read more and are stronger than these)
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };
