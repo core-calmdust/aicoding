@@ -1428,9 +1428,8 @@ async function showFinal(d) {
       <div class="agst-main">
         <h2 class="fn-t">${t('final')}</h2>
         <div class="fn-rows">${rank.map((s, i) => { const c = UIS.chars[s]; return `<div class="fn-r r${i} ${s === ME ? 'mine' : ''}" data-ps="${s}" style="--c:${c.color};--i:${i}"><em class="mv-r r${i}">${t('rank')[i]}</em><img src="${charImg(c, 'face')}" alt=""><b>${esc(L(c.name))}${s === ME ? ` <small>(${t('you')})</small>` : ''}</b><span>${d.scores[s].toLocaleString()}</span></div>`; }).join('')}</div>
-        ${rk ? rankStrip(rk) : ''}
-        <div class="earn">${icon('coin')} ${t('earned', { n: coins })}</div>
-        <div class="cbtns"><button class="btn" data-a="home">${t('toHome')}</button><button class="btn gold" data-a="again">${t('again')}</button></div>
+        <div class="fn-foot">${rk ? rankStrip(rk) : '<span></span>'}<div class="earn">${icon('coin')} ${t('earned', { n: coins })}</div>
+          <div class="cbtns"><button class="btn" data-a="home">${t('toHome')}</button><button class="btn gold" data-a="again">${t('again')}</button></div></div>
       </div>
     </div>`, 'stage');
   SND.ok();

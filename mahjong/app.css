@@ -1563,3 +1563,47 @@ body:has(#game:not([hidden])) #bgfx::after{display:none}
   background:linear-gradient(118deg,transparent 30%,rgba(255,160,205,.2) 42%,rgba(255,240,248,.75) 50%,rgba(255,160,205,.2) 58%,transparent 70%);
   transform:translateX(-110%);animation:doraSlide 2.6s linear infinite;will-change:transform}
 @keyframes doraSlide{0%{transform:translateX(-110%)}50%,100%{transform:translateX(110%)}}
+
+/* ================= the luxury pass (ユーザー 2026-11-14: no more flat yellow buttons; text that reads; Mincho everywhere) =================
+   Buttons are black lacquer framed in a thin gold line with a second hairline inside, the label in spaced gold Mincho;
+   the primary one a shade richer (a warm gold glow from within), the secondary one quiet. Selected segments the same way. */
+:root{--lq1:#221a33;--lq2:#0c0915;--gl:#e8ce8c;--gl2:#f7e7bd}
+.btn,.go,.btn.gold,.agst > .nx,.mvst > .nx,.rkp > .nx,.rkg > .nx{font-family:var(--serif)!important;font-weight:800;letter-spacing:.24em;text-indent:.24em;text-shadow:none;transition:border-color .2s,box-shadow .2s,transform .1s,color .2s}
+.btn.gold,.go,.agst > .nx,.mvst > .nx,.rkp > .nx,.rkg > .nx{color:var(--gl2);background:radial-gradient(120% 140% at 50% 0%,rgba(232,206,140,.22),transparent 60%),linear-gradient(180deg,var(--lq1),var(--lq2));
+  border:1px solid rgba(232,206,140,.85);box-shadow:inset 0 0 0 3px var(--lq2),inset 0 0 0 4px rgba(232,206,140,.32),0 8px 24px rgba(0,0,0,.45),0 0 18px rgba(232,206,140,.12)}
+.btn.gold:hover,.go:hover,.agst > .nx:hover,.mvst > .nx:hover{border-color:var(--gl2);box-shadow:inset 0 0 0 3px var(--lq2),inset 0 0 0 4px rgba(247,231,189,.55),0 8px 24px rgba(0,0,0,.45),0 0 26px rgba(232,206,140,.3);color:#fff6dc}
+.btn.gold:active,.go:active{transform:translateY(1px)}
+.btn:not(.gold){color:#d9cdee;background:linear-gradient(180deg,rgba(40,32,60,.85),rgba(14,10,24,.9));border:1px solid rgba(232,206,140,.28)}
+.btn:not(.gold):hover{border-color:rgba(232,206,140,.6);color:#f2e6c8}
+.agst > .nx::before,.mvst > .nx::before{display:none}
+.agst > .nx,.mvst > .nx,.rkp > .nx,.rkg > .nx{clip-path:none;border-radius:2px}
+/* the home's big start: a lacquer plate with a double gold frame, the words in gold leaf */
+:is(#home,#chara).aaa .aa-go{clip-path:none;border-radius:3px}
+:is(#home,#chara).aaa .aa-go .ag-k{background:linear-gradient(180deg,#fff7de 0%,#f0d38c 45%,#b98a3e 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 0 rgba(0,0,0,.6))}
+:is(#home,#chara).aaa .aa-go .ag-s{color:rgba(232,206,140,.75);font-family:var(--serif)}
+:is(#home,#chara).aaa .aa-go::after{background:linear-gradient(105deg,transparent 40%,rgba(255,240,200,.16) 50%,transparent 60%) no-repeat;background-size:250% 100%}
+/* selected segments and tabs: the same lacquer and gold line, never a gold fill */
+.seg button.on,.st-row .seg button.on,:is(#home,#chara).aaa .seg button.on,#chara.ch2 .ch-tabs button.on,.ps-tabs button.on{background:radial-gradient(120% 160% at 50% 0%,rgba(232,206,140,.2),transparent 65%),linear-gradient(180deg,var(--lq1),var(--lq2));color:var(--gl2);box-shadow:inset 0 0 0 1px rgba(232,206,140,.8),0 0 14px rgba(232,206,140,.15)}
+.seg button{font-family:var(--serif);font-weight:800}
+.st-m{background:linear-gradient(180deg,var(--lq1),var(--lq2));color:var(--gl2);box-shadow:inset 0 0 0 1px rgba(232,206,140,.7)}
+
+/* the final result, laid out again: places in a calmer column, everything below them on one dark glass panel (no text over the bands) */
+.fnst .agst-main{top:calc(var(--u)*6);bottom:calc(var(--u)*4);gap:calc(var(--u)*1.4);justify-content:flex-start;z-index:2}
+.fnst .fn-t{font-size:calc(var(--u)*5.4);letter-spacing:.3em;background:linear-gradient(180deg,#fff7de,#e8c77e 55%,#b98a3e);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 0 rgba(0,0,0,.55))}
+.fn-rows{gap:calc(var(--u)*1.1)}
+.fn-r{height:calc(var(--u)*11.4);grid-template-columns:calc(var(--u)*11) calc(var(--u)*9) 1fr auto;background:linear-gradient(90deg,rgba(12,10,26,.92),rgba(28,24,52,.9));border:1px solid rgba(232,206,140,.45);clip-path:polygon(2% 0,100% 0,98% 100%,0 100%)}
+.fn-r.r0{background:linear-gradient(90deg,rgba(60,14,26,.95),rgba(120,26,44,.92) 60%,rgba(60,14,26,.95));border-color:rgba(247,231,189,.9)}
+.fn-r img{width:calc(var(--u)*8.6);height:calc(var(--u)*8.6)}
+.fn-r b{font-family:'Cinzel',var(--serif);font-weight:800;letter-spacing:.08em;font-size:calc(var(--u)*3.4);color:#f6ecd6}
+.fn-r b small{font-family:var(--serif);letter-spacing:0}
+.fn-r span{font-size:calc(var(--u)*6.2);color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.55)}
+.fn-r .mv-r{font-size:calc(var(--u)*5)}
+.fn-foot{margin-top:auto;display:grid;grid-template-columns:1fr auto;align-items:center;gap:calc(var(--u)*1.2) 2.4cqw;padding:calc(var(--u)*1.8) 2.2cqw;
+  background:linear-gradient(180deg,rgba(10,8,22,.9),rgba(6,4,14,.94));border:1px solid rgba(232,206,140,.4);box-shadow:inset 0 0 0 3px rgba(6,4,14,.9),inset 0 0 0 4px rgba(232,206,140,.15),0 10px 40px rgba(0,0,0,.55);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.fn-foot .rk-strip{justify-content:flex-start;font-size:max(13px,calc(var(--u)*2.4));color:#efe3c6}
+.fn-foot .rk-strip .rk-sb{align-items:flex-start}.fn-foot .rk-sb .rk-bar{max-width:none;width:100%}
+.fn-foot .rk-nx{color:#cdbfe6;font-family:var(--serif);font-weight:600}
+.fn-foot .rk-g{color:#f3d68e}
+.fn-foot .earn{margin:0;font-family:var(--serif);font-weight:800;font-size:max(15px,calc(var(--u)*3));color:var(--gl2);justify-content:flex-end;display:flex;align-items:center;gap:.4em}
+.fn-foot .cbtns{grid-column:1/-1;display:flex;gap:1.5cqw;justify-content:flex-end}
+.fn-foot .cbtns .btn{min-width:16cqw;font-size:max(15px,calc(var(--u)*2.8));padding:calc(var(--u)*1.4) 2cqw}
