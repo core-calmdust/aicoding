@@ -339,6 +339,9 @@ function buildHand(env) {
   return rig;
 }
 const ROW = 6;
+// the opponents' hand rows stand inside the slot the automatic table raises them from (ユーザー 2026-11-15) — the slot pressed into
+// the felt runs x −7.3…7.3, z 7.42…8.40 from its owner's side: the row starts at its left end and stands on its middle line
+const HX0 = -7.27, HZ = 7.91, HGAP = 0.25;
 const SPD = 1.6;   // every movement on the table runs this much faster than its written duration (ユーザー 2026-11-14: a little quicker overall)
 const PI = Math.PI;
 
@@ -829,7 +832,7 @@ class Table3D {
     this.tweens = this.tweens.filter(t => t.sort !== seat);
     if (S.ran) { const rig = this.hand(seat); this.handFx = this.handFx.filter(h => h.rig !== rig); if (rig.visible) this._handBack(seat); }
   }
-  _slot(seat, i) { const p = this.local(seat, -6.6 + i * (W + 0.02) + W / 2, 8.45); return { x: p.x, y: H / 2, z: p.z, rx: 0, ry: seat * PI / 2, rz: 0 }; }
+  _slot(seat, i) { const p = this.local(seat, HX0 + i * (W + 0.02) + W / 2, HZ); return { x: p.x, y: H / 2, z: p.z, rx: 0, ry: seat * PI / 2, rz: 0 }; }
   _pose(g) { return { x: g.position.x, y: g.position.y, z: g.position.z, rx: g.rotation.x, ry: g.rotation.y, rz: g.rotation.z }; }
   _runSort(S) {
     if (!this._sortLive(S) || S.ran) return;
@@ -945,7 +948,7 @@ class Table3D {
     return seat % 2 ? { x: p.x, z: p.z, hx: hz, hz: hx } : { x: p.x, z: p.z, hx, hz };
   }
   handOrigin(seat, lx) {   // a tile standing in the owner's hand (the row the opponents' tiles stand in; the player's own is at the near edge)
-    const p = this.local(seat, lx || 0, seat === 0 ? 9.9 : 8.45);
+    const p = this.local(seat, lx || 0, seat === 0 ? 9.9 : HZ);
     return { x: p.x, y: H / 2, z: p.z, rx: 0, ry: seat * PI / 2, rz: 0 };
   }
   layoutHand(seat, ids, drawn, open, slide) {   // slide: after a discard — the tiles wait a moment, then slide together
@@ -953,12 +956,12 @@ class Table3D {
     if (S) { if (!open && drawn == null && ids.length === S.ids.length && ids.every((id, i) => id === S.ids[i])) return; this._cancelSort(seat); }   // (a 理牌 under way over the same tiles places them itself)
     // opponents: standing tiles; open = lay face up (end of hand)
     const n = ids.length + (drawn != null ? 1 : 0);
-    let x = -6.6;
-    const lz = 8.45;
+    let x = HX0;
+    const lz = HZ;
     const all = drawn != null ? ids.concat([drawn]) : ids;
     all.forEach((id, i) => {
       const g = this.tile(id);
-      if (drawn != null && i === all.length - 1) x += 0.3;
+      if (drawn != null && i === all.length - 1) x += HGAP;
       this.place(g, seat, x + W / 2, open ? lz - 0.2 : lz, open ? 'flat' : 'stand', open && g.visible && g.userData.pose === 'stand' ? { dur: 300 + i * 12 } : slide && g.visible && g.userData.pose === 'stand' ? { dur: 240, delay: 620, level: true } : null);   // (opened: each tile falls forward where it stands — テンパイ / 和了)
       this.setTileLook(g, 'normal');
       x += W + 0.02;
