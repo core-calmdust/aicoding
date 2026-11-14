@@ -801,20 +801,23 @@
     if (dieMats[id]) return dieMats[id];
     const TT = T(), [f, p, gold] = DIE[id] || DIE.gold;
     return (dieMats[id] = { body: new TT.MeshPhysicalMaterial({ color: new TT.Color(f).convertSRGBToLinear(), roughness: .28, clearcoat: .9, clearcoatRoughness: .08 }),
-      pip: gold ? new TT.MeshStandardMaterial({ color: new TT.Color(p).convertSRGBToLinear(), metalness: 1, roughness: .25 }) : new TT.MeshStandardMaterial({ color: new TT.Color(p).convertSRGBToLinear(), roughness: .45 }) });
+      pip: gold ? new TT.MeshStandardMaterial({ color: new TT.Color(p).convertSRGBToLinear(), metalness: 1, roughness: .25, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }) : new TT.MeshStandardMaterial({ color: new TT.Color(p).convertSRGBToLinear(), roughness: .45, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }) });
   }
+  // a pip: a round painted dot lying on the face (2026-11-15: the half-sunk low-poly spheres were cut by the rounded edges into dashes)
+  const pipGeos = {};
+  function pipGeo(size) { const k = size.toFixed(3); if (pipGeos[k]) return pipGeos[k]; const TT = T(), g = new TT.CircleGeometry(size * .078, 28); return (pipGeos[k] = g); }
   function die(id = 'gold', size = .8) {
     const TT = T(), m = dieMat(id), g = new TT.Group(), h = size / 2;
     const body = new TT.Mesh(RB(size, size, size, size * .16, 2), m.body); body.castShadow = body.receiveShadow = true; g.add(body);
-    const pg = new TT.SphereGeometry(size * .085, 6, 4), sp = size * .27;
+    const pg = pipGeo(size), sp = size * .27;
     // face → (normal axis, u axis, v axis): the pip grid i → col (i % 3), row (i / 3 | 0) as seen from outside, top row towards −z (screen up) on the top face
     const F = { 1: [[0, 1, 0], [1, 0, 0], [0, 0, 1]], 6: [[0, -1, 0], [1, 0, 0], [0, 0, -1]], 3: [[1, 0, 0], [0, 0, -1], [0, -1, 0]], 4: [[-1, 0, 0], [0, 0, 1], [0, -1, 0]], 2: [[0, 0, 1], [1, 0, 0], [0, -1, 0]], 5: [[0, 0, -1], [-1, 0, 0], [0, -1, 0]] };
     for (const v in F) {
       const [n, u, w] = F[v];
       for (const i of PIPS[v]) {
-        const cu = (i % 3 - 1) * sp, cw = ((i / 3 | 0) - 1) * sp, d = h - size * .035;
+        const cu = (i % 3 - 1) * sp, cw = ((i / 3 | 0) - 1) * sp, d = h + size * .002;
         const s = new TT.Mesh(pg, m.pip); s.position.set(n[0] * d + u[0] * cu + w[0] * cw, n[1] * d + u[1] * cu + w[1] * cw, n[2] * d + u[2] * cu + w[2] * cw);
-        s.scale.set(n[0] ? .55 : 1, n[1] ? .55 : 1, n[2] ? .55 : 1); g.add(s);
+        s.quaternion.setFromUnitVectors(new TT.Vector3(0, 0, 1), new TT.Vector3(n[0], n[1], n[2])); g.add(s);
       }
     }
     g.userData.die = id; return g;
@@ -831,11 +834,11 @@
   function dieG(id = 'gold', size = .82) {
     const TT = T(), m = dieMat(id), g = new TT.Group(), h = size / 2;
     const body = new TT.Mesh(RB(size, size, size, size * .16, 2), m.body); body.castShadow = body.receiveShadow = true; g.add(body);
-    const pg = new TT.SphereGeometry(size * .085, 6, 4), sp = size * .76 / 3;
+    const pg = pipGeo(size), sp = size * .76 / 3;
     for (const F of GF) for (const i of PIPS[F.v]) {
-      const cu = (i % 3 - 1) * sp, cw = ((i / 3 | 0) - 1) * sp, d = h - size * .035, s = new TT.Mesh(pg, m.pip);
+      const cu = (i % 3 - 1) * sp, cw = ((i / 3 | 0) - 1) * sp, d = h + size * .002, s = new TT.Mesh(pg, m.pip);
       s.position.set(F.n[0] * d + F.u[0] * cu + F.w[0] * cw, F.n[1] * d + F.u[1] * cu + F.w[1] * cw, F.n[2] * d + F.u[2] * cu + F.w[2] * cw);
-      s.scale.set(F.n[0] ? .55 : 1, F.n[1] ? .55 : 1, F.n[2] ? .55 : 1); g.add(s);
+      s.quaternion.setFromUnitVectors(new TT.Vector3(0, 0, 1), new TT.Vector3(F.n[0], F.n[1], F.n[2])); g.add(s);
     }
     g.userData.die = id; return g;
   }
