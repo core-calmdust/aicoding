@@ -953,7 +953,7 @@ async function onEvent(ev, d) {
       SND.music(null);
       clearActs();
       for (let s = 1; s < 4; s++) if (d.tenpai[s]) TB.layoutHand(s, d.hands[s], null, true);
-      if (!d.abort) [0, 1, 2, 3].forEach((s, i) => sleep(i * 520).then(() => SND.voice(d.tenpai[(G.dealer + s) % 4] ? 'tenpai' : 'noten')));   // (each player declares, from the dealer round)
+      if (!d.abort) SND.voice(d.tenpai[ME] ? 'tenpai' : 'noten');   // (ユーザー 2026-11-14: only the player's own テンパイ / ノーテン)   // (each player declares, from the dealer round)
       await showRyuukyoku(d);
       break;
     }
