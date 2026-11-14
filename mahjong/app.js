@@ -673,7 +673,7 @@ const AUTO = /[?&]auto/.test(location.search);
 async function startGame() {
   $('#home').hidden = true; $('#game').hidden = false;
   closeModal();
-  if (!TB) { TB = new Table3D($('#stage')); TB.setQuality(DB.set.lite ? 'lite' : 'high'); TB.doraFn = isDora; }
+  if (!TB) { TB = new Table3D($('#stage')); TB.setQuality(DB.set.lite ? 'lite' : 'high'); TB.doraFn = isDora; TB.onTileLand = () => SND.tile(); }
   TB.resume();
   TB.hideAll();
   const me = seatChar(MJChars.get(DB.sel), useKey(DB.sel));
@@ -746,8 +746,7 @@ async function onEvent(ev, d) {
     case 'discard': {
       const p = g.P[d.seat];
       if (d.riichi) { await cutin(d.seat, 'riichi'); SND.bgm(true); }
-      SND.tile();
-      layoutRiver(d.seat, true);
+      layoutRiver(d.seat, true);   // (the tile's sound plays when it lands — TB.onTileLand)
       // (others: the hand tidies the row after laying the tile — the drawn tile goes to its place, or the row is pushed together. ユーザー 2026-11-14)
       if (d.seat !== ME) { const dr = UIS.drawnBy[d.seat]; TB.sortAfterDiscard(d.seat, p.hand, dr != null && !d.tsumogiri && p.hand.includes(dr) ? dr : null); }
       else { clearActs(); renderHand(); }
