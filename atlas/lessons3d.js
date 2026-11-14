@@ -819,13 +819,18 @@
       tx.onclick = () => { if (typing) { clearInterval(typeT); typing = false; nodes.forEach(([n, s]) => { n.textContent = s; }); } else if (more.length) turn(); };
       const pic = $('.pic'); pic.classList.remove('talk'); void pic.offsetWidth; pic.classList.add('talk');
     }
-    function turn() { show(more.shift()); apply(); }
+    let hist = [];   // (the pages of the current speech already shown: ← goes back through them, 2026-11-15)
+    function turn() { const h = more.shift(); hist.push(h); show(h); apply(); }
+    function back() {
+      if (hist.length < 2) return false;
+      more.unshift(hist.pop()); show(hist[hist.length - 1]); $('.tx').onclick(); apply(); return true;   // (shown whole: it has been read)
+    }
     function say(html) {
       html = String(html || '').replace(/[ \u00a0]*\u0001/g, '').replace(/\u0002[ \u00a0]*/g, '');   // (ja mark phrases: SP)
       if (id === 'checkers' && window.Table3D && Table3D.checkers && Table3D.checkers.recolor) html = Table3D.checkers.recolor(html, ctx.lang);   // (黒 / 白 → the chosen set's colours, 2026-11-14)
       html = voice(String(html || '').replace(/<p[^>]*>/g, '').replace(/<\/p>\s*/g, '<br>').replace(/(<br>\s*)+$/, ''));   // (the chess texts come as <p> paragraphs)
       if (!greeted && X.hi && html !== X.loading) { greeted = true; html = X.hi + '<br>' + html; }
-      const P = pages(html); more = P.slice(1); show(P[0]); apply();
+      const P = pages(html); more = P.slice(1); hist = [P[0]]; show(P[0]); apply();
     }
     const nextB = () => $('[data-a=next]');
     /* auto-advance (2026-11-14, = shared/cardbar.js autoNext): after a right answer the next problem comes by itself; meanwhile the
@@ -1132,9 +1137,13 @@
       } catch (e) {}
     }
     $('[data-a=again]').onclick = () => cur && open(cur.key);
-    /* Enter = 次へ / はじめる (2026-11-14, a common rule for every lesson): not while typing in a field, nor on a focused button (its own Enter) */
+    /* Enter / → = 次へ / はじめる (2026-11-14, a common rule for every lesson; → and ← 2026-11-15): not while typing in a field, nor on a focused button (its own Enter) */
     const onKey = e => {
-      if (e.key !== 'Enter' || e.isComposing || e.keyCode === 229 || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey || e.repeat || stopped || !el.isConnected) return;
+      if (e.key === 'ArrowLeft' && !e.isComposing && !e.metaKey && !e.ctrlKey && !e.altKey && !e.shiftKey && !stopped && el.isConnected) {   // ← = the previous page of the speech
+        const a = document.activeElement; if (a && a !== document.body && a.closest && a.closest('input,textarea,select,[contenteditable="true"]')) return;
+        if (back()) { e.preventDefault(); e.stopImmediatePropagation(); } return;
+      }
+      if ((e.key !== 'Enter' && e.key !== 'ArrowRight') || e.isComposing || e.keyCode === 229 || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey || e.repeat || stopped || !el.isConnected) return;
       const a = document.activeElement; if (a && a !== document.body && a.closest && a.closest('input,textarea,select,[contenteditable="true"]')) return;
       if (a && a.matches && a.matches('button:focus-visible,a:focus-visible,[role=button]:focus-visible')) return;
       const b = nextB(); if (!b || b.disabled || !b.getClientRects().length) return;

@@ -260,7 +260,7 @@
         const pips = path.reduce((a, s) => a + s.die, 0), at = locOf(T.side, to), [x, z] = landXZ(T.side, at);
         if (to === 0) trayGlow(T.side); else glowPt(at, 0x2fd17a, .42);
         popIn(ring(x, Y + .03, z, path.some(s => s.hit) ? 0xff5d5d : 0x2fd17a), 1);
-        const sp = numSprite(pips); sp.position.set(x, Y + .8, z); marks.add(sp); popIn(sp, .62); T3.kick(200);
+        const sp = numSprite(pips); sp.position.set(x, Y + .06, z); marks.add(sp); popIn(sp, .62); T3.kick(200);
       }
       say(L.tapDest);
     }
@@ -537,7 +537,7 @@
         if (c) popIn(ring(c.m.position.x, c.m.position.y + M3.CK_H + .04, c.m.position.z, 0xff7a1a), 1.25);
         const at = locOf(T.side, st.to), [x, z] = landXZ(T.side, at);
         if (st.to === 0) trayGlow(T.side); else glowPt(at, 0xffb03a, .5);
-        const sp = numSprite(i + 1); sp.position.set(x, Y + .8, z); marks.add(sp); popIn(sp, .5);
+        const sp = numSprite(i + 1); sp.position.set(x, Y + .06, z); marks.add(sp); popIn(sp, .5);
       });
       T3.kick(300);
     }
