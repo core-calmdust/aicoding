@@ -108,11 +108,15 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
 .shmap .ar{flex:none;font:inherit;font-size:15px;font-weight:700;padding:9px 14px;border-radius:99px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#dfe3ff;cursor:pointer;white-space:nowrap}
 .shmap .ar.on{background:#ffd76a;color:#241a05;border-color:#ffd76a}.shmap .ar.lk{opacity:.45}
 .shmap .ar em{font-style:normal;font-size:13px;margin-left:6px;opacity:.85}
-.shmap .fld{position:relative;flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:6px 16px}
-.shmap .cst{position:relative;width:min(100%,calc((100vh - 300px) * 100 / 64),980px);aspect-ratio:100/64;--nd:clamp(44px,6.4vw,62px)}
-.shmap .cst.port{aspect-ratio:auto;width:100%;height:100%}
-.shmap .cst svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
-.shmap .nm{position:absolute;left:0;top:-4px;font-size:clamp(26px,5vw,44px);font-weight:900;letter-spacing:.06em;color:rgba(255,255,255,.14);pointer-events:none;white-space:nowrap}
+.shmap .fld{position:relative;flex:1;min-height:0}
+.shmap .vp{position:absolute;inset:0;overflow:hidden;touch-action:none;cursor:grab;-webkit-user-select:none;user-select:none}
+.shmap .vp.drag{cursor:grabbing}
+.shmap .wld{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
+.shmap .wld > svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.shmap .wld .pn{font-size:6.4px;font-weight:900;letter-spacing:.3px;fill:rgba(255,255,255,.13);stroke:none}
+.shmap .wld .pn.on{fill:rgba(255,226,150,.22)}
+.shmap .zoom{position:absolute;right:10px;bottom:10px;display:flex;flex-direction:column;gap:6px;z-index:3}
+.shmap .zoom button{font:inherit;font-size:22px;font-weight:900;width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(16,20,52,.7);color:#fff;cursor:pointer;line-height:1}
 .shmap .nd{position:absolute;transform:translate(-50%,-50%);width:var(--nd);height:var(--nd);border-radius:50%;border:2px solid rgba(255,255,255,.35);background:radial-gradient(circle at 40% 35%,#3a4580,#141a40);color:#fff;font:inherit;font-weight:900;font-size:calc(var(--nd) * .36);cursor:pointer;display:grid;place-items:center;padding:0}
 .shmap .nd.ok{background:radial-gradient(circle at 40% 35%,#fff6c8,#f2c24a 55%,#b9851a);color:#3a2604;border-color:#fff3b0;box-shadow:0 0 18px 4px rgba(255,214,106,.55)}
 .shmap .nd.cur{border-color:#9fe8ff;box-shadow:0 0 0 0 rgba(159,232,255,.7);animation:shpulse 1.6s infinite}
@@ -125,9 +129,9 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
 .shmap .sh .sub{font-size:15px;opacity:.8;margin-top:4px;line-height:1.45}
 .shmap .sh .go{flex:none;font:inherit;font-weight:900;font-size:19px;padding:16px 22px;border-radius:16px;border:0;background:#ffd76a;color:#241a05;cursor:pointer;white-space:nowrap}
 .shmap .sh .go:disabled{opacity:.4;cursor:default}
-.shmap .nav{position:absolute;top:50%;transform:translateY(-50%);font:inherit;font-size:26px;width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
+.shmap .nav{position:absolute;z-index:3;top:50%;transform:translateY(-50%);font:inherit;font-size:26px;width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
 .shmap .nav.l{left:8px}.shmap .nav.r{right:8px}.shmap .nav:disabled{opacity:.2}
-@media (max-width:600px){.shmap .hd{padding:calc(8px + env(safe-area-inset-top)) 12px 6px}.shmap .hd h2{font-size:19px}.shmap .hd .tot{font-size:15px}.shmap .x{width:40px;height:40px;font-size:19px}.shmap .ars{padding:2px 12px 8px;gap:6px}.shmap .ar{font-size:14px;padding:7px 12px}.shmap .gift{margin:0 12px 2px;padding:2px 12px 2px 2px}.shmap .fld{padding:4px 10px}.shmap .nm{font-size:24px}.shmap .nd .sr{font-size:11px;margin-top:1px}
+@media (max-width:600px){.shmap .hd{padding:calc(8px + env(safe-area-inset-top)) 12px 6px}.shmap .hd h2{font-size:19px}.shmap .hd .tot{font-size:15px}.shmap .x{width:40px;height:40px;font-size:19px}.shmap .ars{padding:2px 12px 8px;gap:6px}.shmap .ar{font-size:14px;padding:7px 12px}.shmap .gift{margin:0 12px 2px;padding:2px 12px 2px 2px}.shmap .nd .sr{font-size:11px;margin-top:1px}
 .shmap .sh{width:calc(100vw - 20px);margin-bottom:calc(10px + env(safe-area-inset-bottom));padding:12px 14px;gap:8px;border-radius:18px}.shmap .sh h3{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.shmap .sh .mi{font-size:16px}.shmap .sh .sub{font-size:13.5px;margin-top:2px;line-height:1.4}.shmap .sh .go{padding:12px 16px;font-size:17px}.shmap .gift{font-size:14px}.shmap .gift img{width:30px;height:30px}.shmap .sh .gfl{margin-top:6px;font-size:14.5px}.shmap .sh .gfl img{width:36px;height:36px}.shmap .sh{flex-direction:column;align-items:stretch}.shmap .sh .go{width:100%}.shmap .nav{display:none}.shmap .cst{width:100%}}
 `;
     document.head.appendChild(s);
@@ -192,15 +196,17 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     COIN_STAR, GIFT_AT,
     has(t) { try { return !!(window.Atlas && Atlas.load && Atlas.load().owned.includes('av-peacock-' + t)); } catch (e) { return false; } },
     // give tier t (once): true when it is new
-    grant(t, lang) {
+    grant(t, lang, wait) {
       try {
         if (!window.Atlas || !Atlas.load) return false;
         const W = Atlas.load(), id = 'av-peacock-' + t; if (!W || W.owned.includes(id)) return false;
-        W.owned.push(id); Atlas.save(W); giftToast(t, lang); return true;
+        W.owned.push(id); Atlas.save(W); if (wait) setTimeout(() => giftToast(t, lang), wait); else giftToast(t, lang); return true;
       } catch (e) { return false; }
     },
     // after a stage: the tiers the number of cleared stages has reached
-    check(lang) { const S = prog().st; let got = -1; for (let t = 1; t < 4; t++) if (S[GIFT_S[t]] > 0 && Reward.grant(t, lang)) got = t; return got; },
+    // (2026-11-14 fix) given at once when the stage is won (the toast follows ~2 s later, even if the player moves on at once):
+    // before, the whole check waited 1.9 s on a game timer, and leaving at once put the gift off to the next stage won
+    check(lang, wait) { const S = prog().st; let got = -1; for (let t = 1; t < 4; t++) if (S[GIFT_S[t]] > 0 && Reward.grant(t, lang, wait)) got = t; return got; },
     // the tier waiting on stage s (0 = none)
     at(s) { const t = GIFT_S.indexOf(s); return t > 0 ? t : 0; },
     // the next tier still to win by stages: { t, left } or null
@@ -512,7 +518,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
       const was = S[s] || 0;
       S[s] = Math.max(was, stars); if (nb) B[s] = tt; save(d);
       const coin = (S[s] - was) * COIN_STAR;   // (the ★ won for the first time pay ¢10 each — the purse itself is derived from the stars)
-      later(() => Reward.check(lang), 1900);
+      Reward.check(lang, 1900);
       const nx = s + 1 < 120 ? s + 1 : null;
       later(() => ctx.onEnd({ win: true, draw: false, solo: true, level: 0,
         title: tx('r.stage') + ' ' + '★'.repeat(stars) + '☆'.repeat(3 - stars), score: stageName(s, lang) + ' · ' + tx('r.time', { t: mmss(tt) }),
@@ -594,48 +600,128 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
   }
 
   /* ---------- the star map ---------- */
-  function stars(cv) {   // a field of small stars (drawn once per open)
-    const r = cv.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1); cv.width = r.width * dpr; cv.height = r.height * dpr;
-    const c = cv.getContext('2d'); let s = 99; const R = () => (s = (s * 16807) % 2147483647) / 2147483647;
-    for (let i = 0; i < 260; i++) { const x = R() * cv.width, y = R() * cv.height, a = R(); c.fillStyle = `rgba(255,255,255,${.15 + a * .7})`; c.beginPath(); c.arc(x, y, (.3 + a * a * 1.3) * dpr, 0, 7); c.fill(); }
+  /* ---------- the night sky behind the map: a field of stars that twinkle, a few brighter ones with soft flares, now and then a
+     shooting star, drifting slowly with the map (parallax). Its own light loop (~30 fps) only while the map is open and shown. ---------- */
+  function skyLoop(cv, getPan) {
+    const c = cv.getContext('2d'); let W = 0, H = 0, dpr = 1, raf = 0, last = 0, stopped = false, shoot = null, nextShoot = performance.now() + 2500;
+    let s = 99; const R = () => (s = (s * 16807) % 2147483647) / 2147483647;
+    const S = Array.from({ length: 340 }, () => ({ x: R(), y: R(), a: R(), ph: R() * 6.3, sp: .6 + R() * 1.8, d: .15 + R() * .5 }));
+    const B = Array.from({ length: 16 }, () => ({ x: R(), y: R(), ph: R() * 6.3, sp: .4 + R() * .8, hue: R() }));
+    function size() { const r = cv.getBoundingClientRect(); dpr = Math.min(2, devicePixelRatio || 1); W = cv.width = Math.max(1, r.width * dpr); H = cv.height = Math.max(1, r.height * dpr); }
+    size();
+    function frame(now) {
+      raf = 0; if (stopped) return;
+      if (!document.hidden && now - last >= 32) {
+        last = now; const t = now / 1000, px = getPan() * dpr; c.clearRect(0, 0, W, H);
+        S.forEach(o => { const tw = .55 + .45 * Math.sin(t * o.sp + o.ph), x = ((o.x * W - px * o.d) % W + W) % W, y = o.y * H, rr = (.35 + o.a * o.a * 1.3) * dpr;
+          c.fillStyle = `rgba(255,255,255,${(.12 + o.a * .7) * tw})`; c.beginPath(); c.arc(x, y, rr, 0, 7); c.fill(); });
+        B.forEach(o => { const tw = Math.max(0, Math.sin(t * o.sp + o.ph)), x = ((o.x * W - px * .35) % W + W) % W, y = o.y * H, k = (2 + tw * 9) * dpr;
+          const col = o.hue < .3 ? '200,220,255' : o.hue < .6 ? '255,236,190' : '230,210,255';
+          const g = c.createRadialGradient(x, y, 0, x, y, k); g.addColorStop(0, `rgba(${col},${.25 + .6 * tw})`); g.addColorStop(1, `rgba(${col},0)`); c.fillStyle = g; c.beginPath(); c.arc(x, y, k, 0, 7); c.fill();
+          c.strokeStyle = `rgba(${col},${.35 * tw})`; c.lineWidth = .8 * dpr; c.beginPath(); c.moveTo(x - k * 1.6, y); c.lineTo(x + k * 1.6, y); c.moveTo(x, y - k * 1.6); c.lineTo(x, y + k * 1.6); c.stroke(); });
+        if (!shoot && now > nextShoot) shoot = { x: (.2 + R() * .7) * W, y: R() * H * .45, t0: now, vx: -(.6 + R() * .5) * W, vy: .35 * H };
+        if (shoot) { const k = (now - shoot.t0) / 900; if (k >= 1) { shoot = null; nextShoot = now + 4000 + R() * 7000; } else {
+          const x = shoot.x + shoot.vx * k, y = shoot.y + shoot.vy * k, a = Math.sin(k * Math.PI), g = c.createLinearGradient(x, y, x - shoot.vx * .12, y - shoot.vy * .12);
+          g.addColorStop(0, `rgba(255,255,255,${.85 * a})`); g.addColorStop(1, 'rgba(255,255,255,0)'); c.strokeStyle = g; c.lineWidth = 1.6 * dpr; c.beginPath(); c.moveTo(x, y); c.lineTo(x - shoot.vx * .12, y - shoot.vy * .12); c.stroke(); } }
+      }
+      raf = requestAnimationFrame(frame);
+    }
+    raf = requestAnimationFrame(frame);
+    return { size, stop() { stopped = true; cancelAnimationFrame(raf); } };
   }
+
+  /* ---------- 星座マップ (2026-11-14 改): the twelve constellations side by side as one long night sky, linked star to star. Drag (or swipe)
+     to travel left and right, the wheel / pinch / ± to zoom; the tabs fly to a constellation. Each constellation has its zodiac
+     figure drawn behind its stars (shanghai-zodiac.js: blinking, slowly changing faces, a swaying part). ---------- */
+  const PW = 116, PH = 64;   // one constellation's box in the long sky (x 0..100 of CON plus a gap), the sky's height
   function stageMap(o) {
     css(); const lang = o.lang, K = C(), AR = K.AREAS;
+    if (window.ShanghaiZodiac && !document.getElementById('shzod-css')) { const st = document.createElement('style'); st.id = 'shzod-css'; st.textContent = ShanghaiZodiac.css; document.head.appendChild(st); }
     let P = prog(), area = Math.floor(nextStage(P) / 10), pick = nextStage(P);
     const el = document.createElement('div'); el.className = 'shmap';
-    el.innerHTML = `<div class="sky"><canvas></canvas></div><div class="hd"><h2></h2><span class="tot"></span><button type="button" class="x" aria-label="${esc(TX('b.close', lang))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div class="ars"></div><div class="gift"></div><div class="fld"><button type="button" class="nav l">‹</button><div class="cst"></div><button type="button" class="nav r">›</button></div><div class="sh"></div>`;
-    document.body.appendChild(el); requestAnimationFrame(() => { el.classList.add('on'); stars(el.querySelector('canvas')); });
-    const $ = q => el.querySelector(q);
-    function onFit() { requestAnimationFrame(fit); }
-    const close = () => { el.classList.remove('on'); setTimeout(() => el.remove(), 260); removeEventListener('keydown', key); removeEventListener('resize', onFit); if (window.visualViewport) visualViewport.removeEventListener('resize', onFit); };
-    const key = e => { if (e.key === 'Escape') close(); if (e.key === 'ArrowLeft') go(area - 1); if (e.key === 'ArrowRight') go(area + 1); };
+    el.innerHTML = `<div class="sky"><canvas></canvas></div><div class="hd"><h2></h2><span class="tot"></span><button type="button" class="x" aria-label="${esc(TX('b.close', lang))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div class="ars"></div><div class="gift"></div><div class="fld"><div class="vp"><div class="wld"></div></div><button type="button" class="nav l">‹</button><button type="button" class="nav r">›</button><div class="zoom"><button type="button" data-z="1">＋</button><button type="button" data-z="-1">－</button></div></div><div class="sh"></div>`;
+    document.body.appendChild(el);
+    const $ = q => el.querySelector(q), vp = $('.vp'), wld = $('.wld');
+    // the pan / zoom: the long sky drawn at u px per unit, then scaled by z and moved by (tx, ty)
+    let u = 6, z = 1, tx = 0, ty = 0, raf = 0, anim = null;
+    const WW = PW * 12;
+    const sky = skyLoop($('canvas'), () => tx);
+    requestAnimationFrame(() => el.classList.add('on'));
+    const ZMIN = () => Math.min(1, (vp.clientWidth - 20) / (WW * u)) * .9, ZMAX = 3;
+    function clamp() {
+      const vw = vp.clientWidth, vh = vp.clientHeight, w = WW * u * z, h = PH * u * z, m = Math.min(120, vw * .3);
+      tx = w + 2 * m <= vw ? (vw - w) / 2 : Math.min(m, Math.max(vw - w - m, tx));
+      ty = h <= vh ? (vh - h) / 2 : Math.min(20, Math.max(vh - h - 20, ty));
+    }
+    function apply() { clamp(); wld.style.transform = `translate3d(${tx}px,${ty}px,0) scale(${z})`; track(); }
+    const centerOf = a => (a * PW + 8 + 50) * u;   // the middle of constellation a, in sky px at z = 1
+    function aim(a, smooth) {
+      const ttx = vp.clientWidth / 2 - centerOf(a) * z;
+      if (!smooth) { tx = ttx; apply(); return; }
+      const f0 = tx, t0 = performance.now(); anim = { stop: false };
+      const A = anim; (function st(now) { if (A.stop) return; const k = Math.min(1, (now - t0) / 520), e = 1 - Math.pow(1 - k, 3); tx = f0 + (ttx - f0) * e; apply(); if (k < 1) requestAnimationFrame(st); })(t0);
+    }
+    // which constellation is in the middle of the view: its tab lights up
+    function track() {
+      const a = Math.max(0, Math.min(11, Math.floor(((vp.clientWidth / 2 - tx) / z / u) / PW)));
+      if (a === area) return; area = a; tabs();
+    }
+    function layout() {
+      const vh = vp.clientHeight, vw = vp.clientWidth;
+      u = Math.max(3, Math.min(vh / (PH + 6), vw / 72));   // the sky's height fits the view; a constellation is not wider than ~1.4 views
+      wld.style.width = WW * u + 'px'; wld.style.height = PH * u + 'px';
+      wld.style.setProperty('--nd', Math.round(Math.max(34, Math.min(60, u * 6.2))) + 'px');
+      sky.size(); z = Math.max(ZMIN(), Math.min(ZMAX, z));
+    }
+    function onFit() { const c = (vp.clientWidth / 2 - tx) / z; layout(); tx = vp.clientWidth / 2 - c * z; apply(); }
+    const close = () => { el.classList.remove('on'); sky.stop(); setTimeout(() => el.remove(), 260); removeEventListener('keydown', key); removeEventListener('resize', onFit); if (window.visualViewport) visualViewport.removeEventListener('resize', onFit); };
+    const key = e => { if (e.key === 'Escape') close(); if (e.key === 'ArrowLeft') go(area - 1); if (e.key === 'ArrowRight') go(area + 1); if (e.key === '+' || e.key === '=') zoomAt(1.25); if (e.key === '-') zoomAt(.8); };
     addEventListener('keydown', key);
     addEventListener('resize', onFit); if (window.visualViewport) visualViewport.addEventListener('resize', onFit);
     $('.x').onclick = close;
     const areaOpen = a => unlocked(P, a * 10);
-    function go(a) { if (a < 0 || a > 11) return; area = a; const fs = a * 10; pick = Array.from({ length: 10 }, (_, k) => fs + k).find(s => unlocked(P, s) && !cleared(P, s)); if (pick == null) pick = fs; paint(); }
-    function paint() {
+    function go(a) { if (a < 0 || a > 11) return; const fs = a * 10; let pk = Array.from({ length: 10 }, (_, k) => fs + k).find(s => unlocked(P, s) && !cleared(P, s)); if (pk == null) pk = fs; pick = pk; area = a; tabs(); nodes(); sheet(); aim(a, true); }
+    function zoomAt(f, cx, cy) {
+      const vw = vp.clientWidth, vh = vp.clientHeight; cx = cx == null ? vw / 2 : cx; cy = cy == null ? vh / 2 : cy;
+      const z2 = Math.max(ZMIN(), Math.min(ZMAX, z * f)); tx = cx - (cx - tx) * z2 / z; ty = cy - (cy - ty) * z2 / z; z = z2; apply();
+    }
+    function tabs() {
+      $('.ars').innerHTML = AR.map((a, i) => { const st = Array.from({ length: 10 }, (_, k) => P.st[i * 10 + k] || 0).reduce((x, v) => x + v, 0); return `<button type="button" class="ar${i === area ? ' on' : ''}${areaOpen(i) ? '' : ' lk'}" data-a="${i}">${esc(TX('ar.' + a, lang))}<em>★${st}</em>${[1, 2, 3].filter(t => Math.floor(GIFT_S[t] / 10) === i && !Reward.has(t)).map(t => `<img class="agf" src="../images/atlas/av/peacock-${t}.webp" alt="">`).join('')}</button>`; }).join('');
+      const on = $('.ar.on'); if (on) on.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+      wld.querySelectorAll('.pn').forEach((t, i) => t.classList.toggle('on', i === area));
+    }
+    // every constellation's stars, evenly spaced inside its box, in the long sky's units
+    const PTS = AR.map((a, i) => even(CON[a].p.map(p => p.slice()), edges(a), 100, 64, 1, 1).map(([x, y]) => [i * PW + 8 + x, y]));
+    function art() {
+      const lit = ([i, j], fs) => cleared(P, fs + i) && cleared(P, fs + j);
+      let svg = `<svg viewBox="0 0 ${WW} ${PH}" preserveAspectRatio="none">`;
+      AR.forEach((a, i) => {
+        const fs = i * 10, done = Array.from({ length: 10 }, (_, k) => cleared(P, fs + k)).filter(Boolean).length;
+        svg += `<text class="pn${i === area ? ' on' : ''}" x="${i * PW + 8}" y="7">${esc(TX('ar.' + a, lang))}</text>`;
+        svg += `<g class="fig${done === 10 ? ' lit' : ''}" transform="translate(${i * PW + 8} 0)" style="--dl:${-i * .6}s;opacity:${(.55 + .45 * done / 10).toFixed(2)}">${window.ShanghaiZodiac ? ShanghaiZodiac(a, i) : ''}</g>`;
+        edges(a).forEach(e => { const [x1, y1] = PTS[i][e[0]], [x2, y2] = PTS[i][e[1]], L = lit(e, fs);
+          svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${L ? '#ffd76a' : 'rgba(180,200,255,.3)'}" stroke-width="${L ? .7 : .35}" stroke-linecap="round" ${L ? 'filter="drop-shadow(0 0 1.2px #ffd76a)"' : 'stroke-dasharray="1 1.2"'}/>`; });
+        if (i < 11) { const [x1, y1] = PTS[i][9], [x2, y2] = PTS[i + 1][0], L = cleared(P, fs + 9);   // the road on to the next constellation
+          svg += `<path d="M${x1} ${y1} C${x1 + 14} ${y1} ${x2 - 14} ${y2} ${x2} ${y2}" fill="none" stroke="${L ? 'rgba(255,215,106,.7)' : 'rgba(180,200,255,.22)'}" stroke-width="${L ? .55 : .35}" stroke-dasharray="${L ? '2 1.4' : '1 1.6'}" stroke-linecap="round"/>`; }
+      });
+      return svg + '</svg>';
+    }
+    function nodes() {
+      let h = '';
+      AR.forEach((a, i) => PTS[i].forEach(([x, y], k) => {
+        const s = i * 10 + k, ok = cleared(P, s), ul = unlocked(P, s), sr = P.st[s] || 0, t = Reward.at(s);
+        h += `<button type="button" class="nd${ok ? ' ok' : ''}${ul && !ok ? ' cur' : ''}${ul ? '' : ' lk'}" style="left:${x / WW * 100}%;top:${y / PH * 100}%${s === pick ? ';outline:3px solid #fff;outline-offset:3px' : ''}" data-s="${s}">${k + 1}${sr ? `<span class="sr">${'★'.repeat(sr)}${'☆'.repeat(3 - sr)}</span>` : ''}${t ? `<i class="gft">${Reward.has(t) ? '✓' : '🎁'}</i>` : ''}</button>` +
+          (t ? `<img class="gf${Reward.has(t) ? ' got' : ''}" style="left:${x / WW * 100}%;top:${y / PH * 100}%" src="../images/atlas/av/peacock-${t}.webp" alt="">` : '');
+      }));
+      wld.querySelectorAll('.nd,.gf').forEach(n => n.remove());
+      wld.insertAdjacentHTML('beforeend', h);
+    }
+    function head() {
       const tot = Object.values(P.st).reduce((a, v) => a + v, 0);
       $('h2').textContent = TX('st.title', lang); $('.tot').textContent = '★ ' + tot + ' / 360';
       const nx = Reward.next(), it = nx && window.AtlasArt && AtlasArt.byId && AtlasArt.byId('av-peacock-' + nx.t);
       $('.gift').innerHTML = nx ? `<img src="../images/atlas/av/peacock-${nx.t}.webp" alt=""><span>${esc(TX('rw.next', lang, { n: nx.left, name: it ? it.name[lang] || it.name.en : 'Peacotile' }))}</span>` : '';
       $('.gift').style.display = nx ? '' : 'none';
-      $('.ars').innerHTML = AR.map((a, i) => { const st = Array.from({ length: 10 }, (_, k) => P.st[i * 10 + k] || 0).reduce((x, v) => x + v, 0); return `<button type="button" class="ar${i === area ? ' on' : ''}${areaOpen(i) ? '' : ' lk'}" data-a="${i}">${esc(TX('ar.' + a, lang))}<em>★${st}</em>${[1, 2, 3].filter(t => Math.floor(GIFT_S[t] / 10) === i && !Reward.has(t)).map(t => `<img class="agf" src="../images/atlas/av/peacock-${t}.webp" alt="">`).join('')}</button>`; }).join('');
-      const on = $('.ar.on'); if (on) on.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
-      // a tall screen (phones): the figure turned a quarter (x ↔ y) so it fills the height rather than a thin strip
-      const port = innerHeight > innerWidth * 1.1, a = AR[area], fs = area * 10, VW = port ? 64 : 100, VH = port ? 100 : 64;
-      let pts = CON[a].p.map(([x, y]) => port ? [y, x] : [x, y]);
-      // phones (2026-11-14): the figure stretched to fill the whole box left for it (both ways), so its ten stars spread out instead of crowding
-      if (port) { const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]), x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
-        pts = pts.map(([x, y]) => [9 + (x1 > x0 ? (x - x0) / (x1 - x0) : .5) * (VW - 18), 7 + (y1 > y0 ? (y - y0) / (y1 - y0) : .5) * (VH - 15)]); }
-      pts = even(pts, edges(a), VW, VH, port ? innerWidth / VW : 1, port ? innerHeight * .5 / VH : 1);
-      $('.cst').classList.toggle('port', port);
-      const lit = ([i, j]) => cleared(P, fs + i) && cleared(P, fs + j);
-      $('.cst').innerHTML = `<div class="nm">${esc(TX('ar.' + a, lang))}</div><svg viewBox="0 0 ${VW} ${VH}" preserveAspectRatio="none">${edges(a).map(e => { const [x1, y1] = pts[e[0]], [x2, y2] = pts[e[1]]; return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${lit(e) ? '#ffd76a' : 'rgba(180,200,255,.28)'}" stroke-width="${lit(e) ? .7 : .35}" stroke-linecap="round" ${lit(e) ? 'filter="drop-shadow(0 0 1.2px #ffd76a)"' : 'stroke-dasharray="1 1.2"'}/>`; }).join('')}</svg>` +
-        pts.map(([x, y], k) => { const s = fs + k, ok = cleared(P, s), ul = unlocked(P, s), sr = P.st[s] || 0;
-          return `<button type="button" class="nd${ok ? ' ok' : ''}${ul && !ok ? ' cur' : ''}${ul ? '' : ' lk'}" style="left:${x / VW * 100}%;top:${y / VH * 100}%${s === pick ? ';outline:3px solid #fff;outline-offset:3px' : ''}" data-s="${s}">${k + 1}${sr ? `<span class="sr">${'★'.repeat(sr)}${'☆'.repeat(3 - sr)}</span>` : ''}${Reward.at(s) ? `<i class="gft">${Reward.has(Reward.at(s)) ? '✓' : '🎁'}</i>` : ''}</button>${Reward.at(s) ? `<img class="gf${Reward.has(Reward.at(s)) ? ' got' : ''}" style="left:${x / VW * 100}%;top:${y / VH * 100}%" src="../images/atlas/av/peacock-${Reward.at(s)}.webp" alt="">` : ''}`; }).join('');
-      $('.nav.l').disabled = area === 0; $('.nav.r').disabled = area === 11;
-      sheet(); fit();
     }
     // the stage that hands over a クジャクパイ: its picture and name in the sheet
     function giftLine(s) {
@@ -643,34 +729,51 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
       const it = window.AtlasArt && AtlasArt.byId && AtlasArt.byId('av-peacock-' + t), nm = it ? it.name[lang] || it.name.en : 'Peacotile', got = Reward.has(t);
       return `<div class="gfl${got ? ' got' : ''}"><img src="../images/atlas/av/peacock-${t}.webp" alt=""><span>${got ? '✓ ' : '🎁 '}${esc(TX(got ? 'rw.have' : 'rw.here', lang, { name: nm }))}</span></div>`;
     }
-    // (2026-11-14) the figure sized to the room actually left between the tabs and the sheet (phones: the browser bars make vh lie),
-    // and the stars sized to the figure, so ten of them never crowd into each other
-    function fit() {
-      const f = $('.fld'), c = $('.cst'); if (!f || !c) return;
-      const cs = getComputedStyle(f), W = f.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight), H = f.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - 22;
-      const port = c.classList.contains('port');
-      if (port) {   // phones: the whole box (the figure is stretched to it)
-        c.style.width = Math.max(160, W) + 'px'; c.style.height = Math.max(200, H) + 'px';
-        c.style.setProperty('--nd', Math.round(Math.max(34, Math.min(54, W * .14, H * .1))) + 'px'); return;
-      }
-      const w = Math.max(160, Math.min(W, H * 100 / 64, 980)); c.style.width = w + 'px'; c.style.height = '';
-      c.style.setProperty('--nd', Math.round(Math.max(34, Math.min(62, w * .064))) + 'px');
-    }
     function sheet() {
       const s = pick, st = K.stage(s), ul = unlocked(P, s), sr = P.st[s] || 0, bt = P.bt[s];
       $('.sh').innerHTML = `<div class="tx"><h3>${esc(stageName(s, lang))} · ${esc(TX('lay.' + st.lay, lang))} <small style="opacity:.7;font-size:15px">${esc(TX('tiles', lang, { n: st.n }))}</small></h3><div class="mi">${esc(missionText(st, lang))}</div><div class="sub">${ul ? esc(starsText(st, lang)) + (sr ? '<br>' + '★'.repeat(sr) + '☆'.repeat(3 - sr) + (bt != null ? ' · ' + esc(TX('r.best', lang, { t: mmss(bt) })) : '') : '') : esc(TX('st.lock', lang))}<br><span class="rw">${esc(TX('rw.star', lang, { n: COIN_STAR }))}</span>${giftLine(s)}</div></div><button type="button" class="go"${ul ? '' : ' disabled'}>${esc(TX('b.start', lang))} ▶</button>`;
       $('.go').onclick = () => { if (!ul) return; close(); o.play(s); };
+      requestAnimationFrame(onFit);
     }
+    /* ---------- drag to travel, flick to glide, pinch / wheel to zoom; a tap (no drag) picks a stage ---------- */
+    const pts = new Map(); let moved = 0, lastX = 0, lastY = 0, vx = 0, lt = 0, pinch = null, glide = 0;
+    vp.addEventListener('pointerdown', e => {
+      if (anim) anim.stop = true; cancelAnimationFrame(glide);
+      pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (pts.size === 1) { moved = 0; lastX = e.clientX; lastY = e.clientY; vx = 0; lt = performance.now(); }
+      if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), z }; }
+    });
+    vp.addEventListener('pointermove', e => {
+      if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      const r = vp.getBoundingClientRect();
+      if (pts.size === 2 && pinch) { const [a, b] = [...pts.values()], d = Math.hypot(a.x - b.x, a.y - b.y); zoomAt(pinch.z * d / pinch.d / z, (a.x + b.x) / 2 - r.left, (a.y + b.y) / 2 - r.top); moved = 99; return; }
+      const dx = e.clientX - lastX, dy = e.clientY - lastY, now = performance.now();
+      moved += Math.abs(dx) + Math.abs(dy); if (moved > 6) { vp.classList.add('drag'); if (!vp.hasPointerCapture(e.pointerId)) try { vp.setPointerCapture(e.pointerId); } catch (_) {} }
+      if (moved > 6) { tx += dx; ty += dy; apply(); vx = dx / Math.max(1, now - lt) * 16; }
+      lastX = e.clientX; lastY = e.clientY; lt = now;
+    });
+    const up = e => {
+      if (!pts.has(e.pointerId)) return; pts.delete(e.pointerId); if (pts.size < 2) pinch = null; if (pts.size) return;
+      vp.classList.remove('drag');
+      if (moved > 6 && Math.abs(vx) > 1.5) { let v = vx; (function gl() { v *= .93; tx += v; apply(); if (Math.abs(v) > .3) glide = requestAnimationFrame(gl); })(); }
+    };
+    vp.addEventListener('pointerup', up); vp.addEventListener('pointercancel', up);
+    vp.addEventListener('wheel', e => {
+      e.preventDefault(); const r = vp.getBoundingClientRect();
+      if (e.ctrlKey || Math.abs(e.deltaY) >= Math.abs(e.deltaX)) zoomAt(Math.exp(-e.deltaY * (e.ctrlKey ? .01 : .0018)), e.clientX - r.left, e.clientY - r.top);
+      else { tx -= e.deltaX; apply(); }
+    }, { passive: false });
     el.addEventListener('click', e => {
       const a = e.target.closest('[data-a]'); if (a) { go(+a.dataset.a); return; }
-      const n = e.target.closest('.nd'); if (n) { pick = +n.dataset.s; paint(); return; }
+      const zb = e.target.closest('[data-z]'); if (zb) { zoomAt(+zb.dataset.z > 0 ? 1.3 : 1 / 1.3); return; }
+      const n = e.target.closest('.nd'); if (n) { if (moved > 6) return; pick = +n.dataset.s; nodes(); sheet(); return; }
       if (e.target.closest('.nav.l')) go(area - 1); else if (e.target.closest('.nav.r')) go(area + 1);
     });
-    // swipe between the constellations (phones)
-    let sx = null; el.addEventListener('touchstart', e => { if (e.target.closest('.ars,.sh')) { sx = null; return; } sx = e.touches[0].clientX; }, { passive: true });
-    el.addEventListener('touchend', e => { if (sx == null) return; const dx = e.changedTouches[0].clientX - sx; if (Math.abs(dx) > 60) go(area + (dx < 0 ? 1 : -1)); sx = null; });
-    paint();
-    return { close };
+    head(); wld.innerHTML = art(); tabs(); nodes(); sheet();
+    // open on the stage to play next (its star a little left of the middle, so the road ahead shows)
+    function aimPick() { const [x] = PTS[Math.floor(pick / 10)][pick % 10]; tx = vp.clientWidth * .42 - x * u * z; apply(); }
+    layout(); z = Math.max(ZMIN(), 1); aimPick();
+    requestAnimationFrame(() => { layout(); aimPick(); });
+    return { close, _dbg: { pan: () => ({ tx, ty, z, u, area }), zoomAt, go } };
   }
 
   window.Atlas3D = window.Atlas3D || {};
