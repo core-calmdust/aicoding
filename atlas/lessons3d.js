@@ -97,6 +97,22 @@
      (VOICE; other languages: the plain lines above). The lesson texts themselves come from the full games' data, written
      politely (です・ます): in Japanese the guide says them in plain, friendly speech (casualJa). */
   const VOICE = {
+    xiangqi: {
+      ja: { hi: 'ショウギツネだよ！ いっしょにシャンチーのお勉強をしよう。', partial: 'いい手だね。でもいちばんは緑の矢印の手なんだ。', wrong: 'おしい！ 正解は緑の矢印の手だよ。', hintSay: 'ヒントだよ。金の丸の駒に注目してみて。', opGoal: 'この局面、いちばん良い次の一手はどれかな？' },
+      en: { hi: "Shogitsune here! Let's study xiangqi together.", partial: 'A nice move! But the green arrow is the best.', wrong: 'So close! The green arrow is the answer.', hintSay: 'Psst — look at the pieces in the gold rings!', opGoal: 'What is the best next move here?' },
+      zh: { hi: '我是将棋狐！一起来学象棋吧。', partial: '好棋！不过最好的是绿色箭头那一步。', wrong: '差一点！正解是绿色箭头那一步。', hintSay: '提示：注意金色圆圈里的棋子。', opGoal: '这个局面，最好的下一步是哪一步？' },
+      'zh-TW': { hi: '我是將棋狐！一起來學象棋吧。', partial: '好棋！不過最好的是綠色箭頭那一步。', wrong: '差一點！正解是綠色箭頭那一步。', hintSay: '提示：注意金色圓圈裡的棋子。', opGoal: '這個局面，最好的下一步是哪一步？' },
+      ko: { hi: '쇼기여우야! 같이 샹치를 공부하자.', partial: '좋은 수야! 하지만 가장 좋은 건 초록 화살표 수야.', wrong: '아깝다! 정답은 초록 화살표 수야.', hintSay: '힌트: 금색 원 안의 말을 봐.', opGoal: '이 국면에서 가장 좋은 다음 수는?' },
+      es: { hi: '¡Soy Shogizorro! Estudiemos xiangqi juntos.', partial: '¡Buena jugada! Pero la mejor es la flecha verde.', wrong: '¡Casi! La respuesta es la flecha verde.', hintSay: 'Pista: mira las piezas con anillo dorado.', opGoal: '¿Cuál es la mejor jugada aquí?' },
+      fr: { hi: 'C’est Shogirenard ! Étudions le xiangqi ensemble.', partial: 'Joli coup ! Mais le meilleur, c’est la flèche verte.', wrong: 'Presque ! La réponse est la flèche verte.', hintSay: 'Indice : regarde les pièces dans les anneaux dorés.', opGoal: 'Quel est le meilleur coup ici ?' },
+      pt: { hi: 'Aqui é a Shogiraposa! Vamos estudar xiangqi juntos.', partial: 'Boa jogada! Mas a melhor é a seta verde.', wrong: 'Quase! A resposta é a seta verde.', hintSay: 'Dica: veja as peças nos anéis dourados.', opGoal: 'Qual é o melhor lance aqui?' },
+      de: { hi: 'Hier ist Shogifuchs! Lass uns zusammen Xiangqi lernen.', partial: 'Guter Zug! Aber am besten ist der grüne Pfeil.', wrong: 'Knapp! Die Antwort ist der grüne Pfeil.', hintSay: 'Tipp: Schau auf die Steine in den goldenen Ringen.', opGoal: 'Was ist hier der beste Zug?' },
+      ru: { hi: 'Это Сёгицунэ! Давай вместе изучать сянци.', partial: 'Хороший ход! Но лучший — зелёная стрелка.', wrong: 'Почти! Ответ — зелёная стрелка.', hintSay: 'Подсказка: смотри на фигуры в золотых кольцах.', opGoal: 'Какой здесь лучший ход?' },
+      tr: { hi: 'Ben Shogitsune! Birlikte xiangqi çalışalım.', partial: 'Güzel hamle! Ama en iyisi yeşil ok.', wrong: 'Az kaldı! Cevap yeşil ok.', hintSay: 'İpucu: altın halkalardaki taşlara bak.', opGoal: 'Burada en iyi hamle hangisi?' },
+      id: { hi: 'Aku Shogitsune! Ayo belajar xiangqi bersama.', partial: 'Langkah bagus! Tapi yang terbaik panah hijau.', wrong: 'Hampir! Jawabannya panah hijau.', hintSay: 'Petunjuk: lihat bidak di cincin emas.', opGoal: 'Langkah terbaik di sini yang mana?' },
+      hi: { hi: 'मैं शोगित्सुने हूँ! चलो साथ में शियांगची सीखें।', partial: 'अच्छी चाल! पर सबसे अच्छी हरे तीर वाली है।', wrong: 'बस थोड़ा सा! जवाब हरे तीर वाली चाल है।', hintSay: 'संकेत: सुनहरे घेरे वाले मोहरे देखो।', opGoal: 'यहाँ सबसे अच्छी अगली चाल कौन सी है?' },
+      ar: { hi: 'أنا شوغيتسوني! لنتعلّم الشيانغتشي معًا.', partial: 'نقلة جيدة! لكن الأفضل هو السهم الأخضر.', wrong: 'قريب جدًا! الإجابة هي السهم الأخضر.', hintSay: 'تلميح: انظر إلى القطع داخل الحلقات الذهبية.', opGoal: 'ما أفضل نقلة هنا؟' },
+    },
     checkers: {
       ja: { hi: 'チェッカニだよ！ いっしょにチェッカーのお勉強をしよう。', partial: 'いい手だね。でもいちばんは緑の矢印の手なんだ。', wrong: 'おしい！ 正解は緑の矢印の手だよ。', hintSay: 'ヒントだよ。金の丸の駒に注目してみて。', opGoal: 'この局面、いちばん良い次の一手はどれかな？' },
       en: { hi: "Checkrab here! Let's study checkers together.", partial: 'A nice move! But the green arrow is the best.', wrong: 'So close! The green arrow is the answer.', hintSay: 'Psst — look at the pieces in the gold rings!', opGoal: 'What is the best next move here?' },
@@ -562,7 +578,77 @@
       return { pos: { spec: it.s, me: it.s.side === 2 ? 2 : 1, lock: true } };   // (its marks belong to the end of the example line: not here)
     },
   };
-  const DATA = { shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS };
+  /* xiangqi (2026-11-14, as checkers): the lessons (xiangqi/lessons.json: 16 steps of 5 one-move problems — 'ok' kinds and 'sc' kinds
+     scored by the engine's values (= xiangqi/app.js problemPoints), warm-up ramps before some steps) and the 14 named openings
+     (openings.json: the line move by move with its notes, then practice positions). Progress = the full game's
+     ('aicoding-xiangqi-lessons' { id: { best, clear } }, 'aicoding-xiangqi-open' { id: { best, pass } }). Texts: xiangqi/i18n.js (a
+     sandbox). The 3D board has no coordinates: the moves the texts name ({m}, {x}) become their arrows. A position here is
+     { spec: FEN, me: 1 Red / 2 Black }. Moves: xiangqi/engine.js move numbers; the ramps name points and moves in ICCS (e3, e3d5). */
+  const XQ_ENG = '../xiangqi/engine.js?v=20261114w';   // (the table adapter's file: one cache)
+  const xqEng = () => window.XiangqiEngine ? Promise.resolve(window.XiangqiEngine) : new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = XQ_ENG; sc.onload = () => window.XiangqiEngine ? res(window.XiangqiEngine) : rej(new Error('engine')); sc.onerror = rej; document.head.appendChild(sc); });
+  const xqMe = fen => / b$/.test(String(fen || '')) ? 2 : 1;
+  const xqSq = n => { const f = 'abcdefghi'.indexOf(String(n)[0]), r = +String(n).slice(1); return f < 0 || !(r >= 0 && r <= 9) ? -1 : (9 - r) * 9 + f; };
+  const xqParse = (fen, nm) => { const E = window.XiangqiEngine; if (!E) return null; try { return E.parse(E.Pos.from(fen), nm); } catch (e) { return null; } };
+  const xqS = v => { const E = window.XiangqiEngine, W = E ? E.WIN : 30000, WT = E ? E.WINT : 29000; return v > WT ? 0.9 + 0.1 * Math.min(1, 6 / (W - v + 1)) : v < -WT ? -(0.9 + 0.1 * Math.min(1, 6 / (W + v + 1))) : v > WT - 1000 ? 0.88 : v < -(WT - 1000) ? -0.88 : Math.tanh(v / 450) * 0.82; };   // (= xiangqi/app.js sOfV)
+  const XIANGQI = {
+    LKEY: 'aicoding-xiangqi-lessons', OKEY: 'aicoding-xiangqi-open', data: null, I: null,
+    load() {
+      if (this.p) return this.p;
+      return (this.p = Promise.all([getJ('../xiangqi/lessons.json?v=20261104rp'), getJ('../xiangqi/openings.json?v=2'), getJ('../xiangqi/lux.json?v=1').catch(() => ({})), fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd1').then(r => r.text()), xqEng()])
+        .then(([ls, op, lux, tx]) => { const w = {}; try { new Function('window', tx)(w); } catch (e) { console.warn('[lessons3d] xiangqi texts', e); } this.I = w.I18N || {}; this.data = { ls, op, lux }; return this; })
+        .catch(e => { this.p = null; throw e; }));
+    },
+    tx(k, lang, v) { const I = this.I || {}; let x = I[lang] && I[lang][k]; if (x === undefined) x = I.en && I.en[k]; if (x === undefined) x = (I.ja && I.ja[k]) || ''; return v ? fill(x, v) : x; },
+    mini: fen => window.AtlasMini && AtlasMini.xiangqi ? AtlasMini.xiangqi(fen) : '',
+    lineSpec(line) { const E = window.XiangqiEngine; if (!E) return null; const p = E.replay(null, line).pos; return E.toFen ? E.toFen(p) : p.fen ? p.fen() : null; },
+    list(kind, lang) {
+      const D = this.data;
+      if (kind === 'open') { const pr = J(this.OKEY, {}); return D.op.sets.map(g => ({ key: g.id, cat: g.grp, catName: this.tx('op.grp.' + g.grp, lang), title: L(g.title, lang), sub: g.short ? L(g.short, lang) : '', svg: this.mini(this.lineSpec(g.study.line.slice(0, g.show || 3))), st: pr[g.id] ? (pr[g.id].pass ? 'pass' : 'try') : '' })); }
+      const pr = J(this.LKEY, {});
+      return D.ls.steps.map((s, i) => ({ key: String(i), cat: s.course, catName: this.tx('course.' + s.course, lang), title: this.tx('ls.' + s.id + '.title', lang), sub: this.tx('ls.' + s.id + '.sub', lang), svg: s.problems && s.problems[0] ? this.mini(s.problems[0].s) : '', st: pr[s.id] ? (pr[s.id].clear ? 'pass' : 'try') : '' }));
+    },
+    lesson(key, lang) {
+      const s = this.data.ls.steps[+key]; if (!s) return null;
+      const T = (k, v) => this.tx('ls.' + s.id + '.' + k, lang, v), RU = (k, v) => fill(L((this.data.ls.rampUi || {})[k], lang), v || {}), E = window.XiangqiEngine;
+      return { id: s.id, title: T('title'), intro: T('intro'), ramp: s.ramp && s.ramp.length ? s.ramp : null, RU,
+        probs: (s.problems || []).map(P => { const good = P.ok || [P.best];
+          return { pos: { spec: P.s, me: xqMe(P.s) }, kind: 'best', P, ask: T('goal'), ans: P.ok ? P.ok[0] : P.best, hintTx: T('hint'), hint: E ? [...new Set(good.map(E.mFrom))] : null,
+            good: () => T('why', { m: CKM('ok', lang), x: CKM('ng', lang) }), ng: () => T('ng', { m: CKM('ok', lang), x: CKM('ng', lang) }) }; }),
+        save: (pts, max) => { const pr = J(this.LKEY, {}), o = pr[s.id] || { best: 0, clear: false }, pass = pts >= max * .75; pr[s.id] = { best: Math.max(o.best || 0, pts), clear: o.clear || pass }; put(this.LKEY, pr); return pass; } };
+    },
+    opening(key, lang) {
+      const g = this.data.op.sets.find(x => x.id === key); if (!g) return null;
+      const notes = {}; (g.study.notes || []).forEach((n, i) => { if (n) notes[String(i)] = L(n, lang); });
+      const it = g.intro && (g.intro[lang] || g.intro.en), hist = Array.isArray(it) ? it.join(' ') : it || '';
+      const probs = shuffle(g.problems || []).slice(0, 5);
+      return { id: g.id, title: L(g.title, lang), intro: hist, start: { spec: null, me: g.side === 2 ? 2 : 1 }, steps: g.study.line.slice(), notes,
+        probs: probs.map(P => ({ pos: { spec: P.s, me: xqMe(P.s) }, kind: 'best', P, ask: this.tx('op.goal', lang), ans: P.best, hintTx: this.tx('op.hint', lang), hint: window.XiangqiEngine ? [XiangqiEngine.mFrom(P.best)] : null, ng: () => this.tx('op.why', lang, { m: CKM('ok', lang) }) })),
+        save: (pts, max) => { const pr = J(this.OKEY, {}), o = pr[g.id] || { best: 0, pass: false }, pass = pts >= max * .75; pr[g.id] = { best: Math.max(o.best || 0, pts), pass: o.pass || pass }; put(this.OKEY, pr); return pass; } };
+    },
+    points(P, m) {   // = xiangqi/app.js problemPoints
+      const E = window.XiangqiEngine, WIN = E ? E.WIN : 30000, WINT = E ? E.WINT : 29000;
+      if (P.ok) return P.ok.includes(m) ? 20 : 0;
+      const val = new Map(P.sc), best = Math.max(...P.sc.map(e => e[1])), mine = val.has(m) ? val.get(m) : -WIN;
+      if (mine >= best - 10 && !(best > WINT && mine < best)) return 20;
+      if (best > WINT && mine > WINT) return 16;
+      if (best > WINT && mine <= WINT) return mine > -WINT && mine >= 300 ? 8 : mine > -100 ? 4 : 0;
+      if (mine < -WINT && best >= -WINT) return 0;
+      return Math.max(0, Math.round(20 * (1 - (xqS(best) - xqS(mine)) / 0.5)));
+    },
+    // the warm-up (lessons.json step.ramp: points in ICCS, moves in ICCS): its position, marks, the right moves, the example line
+    rampPos: it => ({ spec: it.s, me: xqMe(it.s) }), rampBody: (it, lang) => L(it.body, lang),
+    rampMarks: it => (it.marks || []).map(([q, c]) => [xqSq(q), c === 'ng' ? 'ng' : c === 'ok' ? 'ok' : 'hl']).filter(x => x[0] >= 0),
+    rampOk: (it, u) => { const E = window.XiangqiEngine; if (!E) return false; const p = E.Pos.from(it.s); return (it.ok || []).includes(E.name(p, u, 'iccs')); },
+    rampAns: it => ({ m: xqParse(it.s, (it.ok || [])[0]) }), rampLook: it => (it.look || []).map(q => [xqSq(q), 'ring']).filter(x => x[0] >= 0),
+    rampSeq(it) { const E = window.XiangqiEngine; if (!E) return []; let p = E.Pos.from(it.s); const out = []; for (const nm of it.seq || []) { const m = E.parse(p, nm); if (m == null) break; out.push(m); p = p.clone().play(m); } return out; },
+    spOk: lang => CKM('ok', lang),
+    introPos(c) {   // while the intro is read: the warm-up's first picture (locked), else the first problem's position (locked)
+      const s = this.data.ls.steps.find(x => x.id === c.id), it = s && s.ramp && s.ramp[0];
+      if (it && it.k === 'explain') return { pos: { spec: it.s, me: xqMe(it.s), lock: true } };
+      return null;
+    },
+  };
+  const DATA = { shogi: SHOGI, chess: CHESS, reversi: REVERSI, gomoku: GOMOKU, go: GO, checkers: CHECKERS, xiangqi: XIANGQI };
 
   function list(id, kind, lang) { const D = DATA[id]; return Promise.all([D.load(), ncLoad(id)]).then(() => D.list(kind, lang)); }
   function next(id, kind, lang) { return list(id, kind, lang).then(L2 => { const x = L2.find(i => !i.full && i.st !== 'pass') || L2.find(i => !i.full); return x ? x.key : null; }); }
@@ -653,7 +739,7 @@
             pz: Object.assign({ fen: pos, sfen: pos, sol: sol || [], drill: drill || null, lock: !!lock, counts: id === 'reversi', ready: () => { const f = onReady; onReady = null; if (f) f(); }, moved: (u, i) => onMoved && onMoved(u, i) }, G || {}) });
           ctx.Table3D.play(true);
         } else if (G && id === 'go') pz().load(G.spec, G.me, { view: G.view, marks: G.marks, lock: !!G.lock });
-        else if (G && id === 'checkers') pz().load(G.spec, G.me, { lock: !!G.lock });
+        else if (G && (id === 'checkers' || id === 'xiangqi')) pz().load(G.spec, G.me, { lock: !!G.lock });
         else if (G) pz().load(G.start, G.rule, G.me, G.last, { pick: G.pick, noForbid: G.noForbid, lock: !!G.lock });
         else if (drill && pz().drill) pz().drill(Object.assign({ fen: pos }, drill));
         else if (id === 'shogi') pz().load(pos, sol || [], { lock: !!lock });
@@ -698,7 +784,7 @@
           return;
         }
         say(RU('ng')); try { chime(false); } catch (e) {}
-        if (D.rampMarks && id !== 'checkers') pz().mark([[u, 'ng']]);   // (checkers: a move number, not a square — the miss is taken back below)
+        if (D.rampMarks && id !== 'checkers' && id !== 'xiangqi') pz().mark([[u, 'ng']]);   // (checkers / xiangqi: a move number, not a square — the miss is taken back below)
         later(() => { if (cur && phase === 'ramp' && cur.ri === i && !ok) { if (!(it.pick)) pz().undo(1); marks0(); pz().wait(); } }, 1100);
       };
       pz().wait();
@@ -776,7 +862,7 @@
     // (2026-11-12) every problem says first whose turn it is (the side the player plays): 「あなたは●黒番。」
     const SIDE = { ja: ['あなたは<b>●黒番</b>。', 'あなたは<b>○白番</b>。'], en: ['You play <b>● Black</b>. ', 'You play <b>○ White</b>. '], zh: ['你执<b>●黑</b>。', '你执<b>○白</b>。'], 'zh-TW': ['你執<b>●黑</b>。', '你執<b>○白</b>。'], ko: ['당신은 <b>●흑</b> 차례. ', '당신은 <b>○백</b> 차례. '], es: ['Juegas con <b>● negras</b>. ', 'Juegas con <b>○ blancas</b>. '], fr: ['Vous jouez les <b>● noirs</b>. ', 'Vous jouez les <b>○ blancs</b>. '], pt: ['Você joga de <b>● pretas</b>. ', 'Você joga de <b>○ brancas</b>. '], de: ['Du spielst <b>● Schwarz</b>. ', 'Du spielst <b>○ Weiß</b>. '], ru: ['Вы играете <b>● чёрными</b>. ', 'Вы играете <b>○ белыми</b>. '], tr: ['<b>● Siyah</b> oynuyorsun. ', '<b>○ Beyaz</b> oynuyorsun. '], id: ['Kamu main <b>● Hitam</b>. ', 'Kamu main <b>○ Putih</b>. '], hi: ['आप <b>● काले</b> से खेल रहे हैं। ', 'आप <b>○ सफ़ेद</b> से खेल रहे हैं। '], ar: ['أنت تلعب <b>● بالأسود</b>. ', 'أنت تلعب <b>○ بالأبيض</b>. '] };
     function sideLine(p) {
-      if (id === 'checkers' && p && p.pos && p.pos.me && D.tx) return D.tx('ls.turn', ctx.lang, { c: '<b>' + D.tx(p.pos.me === 1 ? 'p1' : 'p2', ctx.lang) + '</b>' }) + ' ';   // (「黒の番です。」)
+      if ((id === 'checkers' || id === 'xiangqi') && p && p.pos && p.pos.me && D.tx) return D.tx('ls.turn', ctx.lang, { c: '<b>' + D.tx(p.pos.me === 1 ? 'p1' : 'p2', ctx.lang) + '</b>' }) + ' ';   // (「黒の番です。」)
       if (id === 'gomoku' && p && p.pos && p.pos.me && !p.pos.pick && D.tx) return D.tx('ls.turn', ctx.lang, { c: '<b>' + D.tx(p.pos.me === 1 ? 'p1' : 'p2', ctx.lang) + '</b>' }) + ' ';   // (「白の番です。」)
       if (id !== 'reversi' || !p || !p.pos) return '';
       const s = String(p.pos).split(':')[1]; if (s !== '1' && s !== '2') return '';
@@ -834,7 +920,7 @@
     }
     function scored(p, pts, msg, u) {
       p.done = true; const n = Math.max(0, pts - (p.hinted && pts > 0 ? HINT_PEN : 0)); cur.res[cur.k] = n; dots();
-      if (id === 'checkers' && typeof u === 'number') {   // (checkers: the lesson's own words, the moves named by their arrows; back to the problem with the right move green, yours red)
+      if ((id === 'checkers' || id === 'xiangqi') && typeof u === 'number') {   // (checkers / xiangqi: the lesson's own words, the moves named by their arrows; back to the problem with the right move green, yours red)
         const right = pts >= 16, k = cur.k;
         say(`${right ? line('solved') || pick(X.good) : pts > 0 ? X.partial : X.wrong} <b>${fill(X.pts, { n })}</b>` + (right ? (p.good ? '<br>' + p.good(u) : '') : p.ng ? '<br>' + p.ng(u) : ''));
         try { chime(right); } catch (e) {}
