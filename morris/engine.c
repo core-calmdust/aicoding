@@ -44,56 +44,6 @@ typedef int32_t i32; typedef uint32_t u32; typedef int8_t i8; typedef uint8_t u8
 #define LMR_I 3
 #define LMR_I2 8
 #endif
-// (2026-11-14) search v2 (MODEL_CARD.md「探索 v2」): stronger pruning, no training. Only where v2on (best() with a time / node
-// limit — Lv.9 and up, analysis); the depth levels (Lv.8, maxDepth < 30) and root_values() search as before. -DSV_x=0 drops one.
-#ifndef SV_NULL
-#define SV_NULL 1          // null move: 1 = only while the side to move still places (no zugzwang there), 2 = always
-#endif
-#ifndef SV_RFP
-#define SV_RFP 1
-#endif
-#ifndef RFP_D
-#define RFP_D 5
-#endif
-#ifndef RFP_M
-#define RFP_M 100
-#endif
-#ifndef SV_LMP
-#define SV_LMP 1
-#endif
-#ifndef LMP_D
-#define LMP_D 3
-#endif
-#ifndef LMP_A
-#define LMP_A 4
-#endif
-#ifndef LMP_B
-#define LMP_B 2
-#endif
-#ifndef SV_FUT
-#define SV_FUT 1
-#endif
-#ifndef FUT_D
-#define FUT_D 2
-#endif
-#ifndef FUT_M
-#define FUT_M 150
-#endif
-#ifndef SV_LMRT
-#define SV_LMRT 1
-#endif
-#ifndef LMR_C
-#define LMR_C 60           // reduction = LMR_C/100 + ln(depth)·ln(move number)·100/LMR_K
-#endif
-#ifndef LMR_K
-#define LMR_K 180
-#endif
-#ifndef SV_IIR
-#define SV_IIR 1
-#endif
-#ifndef V2_MIN_D
-#define V2_MIN_D 30
-#endif
 
 static TLS i32 IO[8192];
 EXPORT(io_ptr) i32 *io_ptr(void) { return IO; }
@@ -544,50 +494,6 @@ static inline void pickBest(int *mv, int *sc, int i, int n) {
   for (int j = i + 1; j < n; j++) if (sc[j] > sc[bi]) bi = j;
   int m = mv[bi]; mv[bi] = mv[i]; mv[i] = m; int t = sc[bi]; sc[bi] = sc[i]; sc[i] = t;
 }
-// search v2: the late move reduction of the move i (before v2 / v2 off: as before, 1 or 2), and the quiet moves left out
-static volatile int v2on;   // (shared: the helper threads search the split points as the main thread)
-static TLS u8 noNull[MAXPLY + 16];
-static u8 LT[64][64];
-static float lnf(float x) {   // (no libm) ln x for x >= 1: x = m·2^k, m in [1, 2), ln m by the atanh series
-  int k = 0; while (x >= 2) { x *= 0.5f; k++; }
-  float z = (x - 1) / (x + 1), z2 = z * z, t = z, r = 0; for (int j = 1; j < 30; j += 2) { r += t / j; t *= z2; }
-  return 2 * r + k * 0.69314718f;
-}
-static void lmrInit(void) {
-  for (int d = 0; d < 64; d++) for (int i = 0; i < 64; i++) {
-    float r = d && i ? LMR_C / 100.0f + lnf((float)d) * lnf((float)i) * 100.0f / LMR_K : 0; LT[d][i] = (u8)(r < 0 ? 0 : (int)r);
-  }
-}
-static inline int lmrR(int depth, int i, int m, int ply, int pv, int v2) {
-  if (i == 0 || ((m >> 10) & 31) != NONE || m == killer[ply * 2] || m == killer[ply * 2 + 1]) return 0;
-#ifdef LMR
-  if (!v2 || !SV_LMRT) return depth >= LMR_D && i >= LMR_I ? ((i >= LMR_I2 && depth >= 5) ? 2 : 1) : 0;
-  if (depth < 3 || i < 2) return 0;
-  int r = LT[depth < 63 ? depth : 63][i < 63 ? i : 63] - pv;
-  if (r > depth - 2) r = depth - 2;
-  return r < 0 ? 0 : r;
-#else
-  (void)depth; (void)pv; (void)v2; return 0;
-#endif
-}
-static inline int svPrune(int depth, int i, int m, int pv, int se, int alpha) {
-  if (pv || i == 0 || ((m >> 10) & 31) != NONE || se == -INF) return 0;
-#if SV_LMP
-  if (depth <= LMP_D && i >= LMP_A + LMP_B * depth * depth) return 1;
-#endif
-#if SV_FUT
-  if (depth <= FUT_D && i >= 2 && se + FUT_M * depth <= alpha && alpha < WINT) return 1;
-#endif
-  (void)depth; (void)alpha; return 0;
-}
-static void ttClear(void) {
-#ifdef MT
-  for (unsigned i = 0; i < sizeof(TTM) / 8; i++) TTM[i] = 0;
-#else
-  for (int i = 0; i < TT_SIZE; i++) { TT[i].k1 = 0; TT[i].k2 = 0; TT[i].d = 0; TT[i].fl = 0; }
-#endif
-}
-static void setV2(int on) { if (!LT[2][2] && !LT[63][63]) lmrInit(); if (on != v2on) { ttClear(); v2on = on; } }
 static int qsearch(Pos *p, int alpha, int beta, int ply, int qd) {
   nodes++;
   int s = p->side;
@@ -645,26 +551,6 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply) {
     }
   }
 #endif
-  const int pv = beta - alpha > 1, v2 = v2on;
-  int se = -INF;
-  if (v2 && !pv && ply > 0 && beta < WINT && beta > -WINT) {
-    se = evaluate(p);
-#if SV_RFP
-    if (depth <= RFP_D && se - RFP_M * depth >= beta) return se;
-#endif
-#if SV_NULL
-    if (depth >= 3 && se >= beta && !noNull[ply] && (SV_NULL == 2 || p->hand[s] > 0)) {
-      const int q0 = p->quiet; p->quiet = 0; p->side = 3 - s; p->h1 ^= zs; p->h2 ^= zs2; noNull[ply + 1] = 1;
-      int v = -search(p, depth - 1 - (2 + depth / 4), -beta, -beta + 1, ply + 1);
-      noNull[ply + 1] = 0; p->side = s; p->h1 ^= zs; p->h2 ^= zs2; p->quiet = q0;
-      if (aborted) return 0;
-      if (v >= beta) return v > WINT ? beta : v;
-    }
-#endif
-  }
-#if SV_IIR
-  if (v2 && ttm < 0 && depth >= 4) depth--;
-#endif
   int *mv = buf[ply], n = gen(p, mv);
   if (n == 0) return p->cnt[1] + p->cnt[2] == N ? 0 : -(WIN - ply);
   int *sc = scb[ply];
@@ -684,9 +570,12 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply) {
         for (int j = k; j < n + nDef; j++) {
           int ii, m2;
           if (j < n) { pickBest(mv, sc, j, n); m2 = mv[j]; ii = j; } else { m2 = defM[j - n]; ii = defI[j - n]; }
-          if (v2 && svPrune(depth, ii, m2, pv, se, alpha)) continue;
           if (ns == SP_MV) { ns = -1; break; }
-          sp->mv[ns] = m2; sp->red[ns] = (u8)lmrR(depth, ii, m2, ply, pv, v2); ns++;
+          int R = 0;
+#ifdef LMR
+          if (depth >= LMR_D && ii >= LMR_I && ((m2 >> 10) & 31) == NONE && m2 != killer[ply * 2] && m2 != killer[ply * 2 + 1]) R = (ii >= LMR_I2 && depth >= 5) ? 2 : 1;
+#endif
+          sp->mv[ns] = m2; sp->red[ns] = (u8)R; ns++;
         }
       }
       if (ns >= 2) {
@@ -704,14 +593,16 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply) {
       noSplit = 1;   // (fewer than 2 moves left, or no free slot: on alone)
     }
     if (k < n) { pickBest(mv, sc, k, n); m = mv[k]; i = k; } else { m = defM[k - n]; i = defI[k - n]; }
-    if (v2 && best > -WINT && svPrune(depth, i, m, pv, se, alpha)) continue;
     play(p, m); rep[repLen++] = p->h1;
     if (k < n && i > 0 && depth >= BUSY_D && nDef < BUSY_DEF && busyOther(busyK(p))) { repLen--; undo(p, m); defM[nDef] = m; defI[nDef++] = i; continue; }
     const int mk = depth >= BUSY_D ? busySet(busyK(p)) : -1;
     int v;
     if (i == 0) v = -search(p, depth - 1, -beta, -alpha, ply + 1);
     else {
-      const int R = lmrR(depth, i, m, ply, pv, v2);
+      int R = 0;
+#ifdef LMR
+      if (depth >= LMR_D && i >= LMR_I && ((m >> 10) & 31) == NONE && m != killer[ply * 2] && m != killer[ply * 2 + 1]) R = (i >= LMR_I2 && depth >= 5) ? 2 : 1;
+#endif
       v = -search(p, depth - 1 - R, -alpha - 1, -alpha, ply + 1);
       if (R && v > alpha && !aborted) v = -search(p, depth - 1, -alpha - 1, -alpha, ply + 1);
       if (v > alpha && v < beta && !aborted) v = -search(p, depth - 1, -beta, -alpha, ply + 1);
@@ -720,12 +611,14 @@ static int search(Pos *p, int depth, int alpha, int beta, int ply) {
 #else
   for (int i = 0; i < n; i++) {
     pickBest(mv, sc, i, n); int m = mv[i];
-    if (v2 && best > -WINT && svPrune(depth, i, m, pv, se, alpha)) break;   // (the moves after a pruned quiet one are quiet)
     play(p, m); rep[repLen++] = p->h1;
     int v;
     if (i == 0) v = -search(p, depth - 1, -beta, -alpha, ply + 1);
     else {
-      const int R = lmrR(depth, i, m, ply, pv, v2);
+      int R = 0;
+#ifdef LMR
+      if (depth >= LMR_D && i >= LMR_I && ((m >> 10) & 31) == NONE && m != killer[ply * 2] && m != killer[ply * 2 + 1]) R = (i >= LMR_I2 && depth >= 5) ? 2 : 1;
+#endif
       v = -search(p, depth - 1 - R, -alpha - 1, -alpha, ply + 1);
       if (R && v > alpha && !aborted) v = -search(p, depth - 1, -alpha - 1, -alpha, ply + 1);
       if (v > alpha && v < beta && !aborted) v = -search(p, depth - 1, -beta, -alpha, ply + 1);
@@ -871,7 +764,7 @@ static int rootValues(int depth, int *mv, int n, int *out) {
 }
 // fixed-depth root values (used by the noisy levels): returns 1 when complete
 EXPORT(root_values) int root_values(int depth) {
-  int vals[MAXMV]; setV2(0);
+  int vals[MAXMV];
   if (!rootValues(depth, rootMv, rootN, vals)) return 0;
   IO[0] = rootN; for (int i = 0; i < rootN; i++) { IO[1 + 2 * i] = rootMv[i]; IO[2 + 2 * i] = vals[i]; }
   return 1;
@@ -880,10 +773,6 @@ EXPORT(set_limit) void set_limit(double ms, double mn) { limit(ms, mn); }
 // iterative deepening best move; IO out: m, v, depth
 EXPORT(best) void best(int maxDepth, double ms, double mn) {
   Pos *p = &P; limit(ms, mn);
-#ifdef MT
-  if (threadId == 0)
-#endif
-  setV2(maxDepth >= V2_MIN_D);
   if (rootN == 1) { IO[0] = rootMv[0]; IO[1] = 0; IO[2] = 0; return; }
   int bestM = rootMv[0], bestV = 0, done = 0, ord[MAXMV];
 #ifdef MT
@@ -971,7 +860,7 @@ EXPORT(best) void best(int maxDepth, double ms, double mn) {
 }
 // analysis: all root moves, iterative deepening until time runs out; IO out: n, depth, (m, v)...
 EXPORT(analyze) void analyze(double ms, int maxDepth) {
-  limit(ms, 0); setV2(1);
+  limit(ms, 0);
   double t0 = now();
   int mv[MAXMV], vals[MAXMV], last[MAXMV], n = rootN, depth = 0, have = 0;
   for (int i = 0; i < n; i++) mv[i] = rootMv[i];
