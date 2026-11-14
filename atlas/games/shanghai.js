@@ -83,6 +83,8 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
 .shstg .strow{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}.shstg .strow .mapb{padding:12px 10px;font-size:16px;background:linear-gradient(135deg,#1b2350,#3a2a6e);box-shadow:0 4px 0 #11163a}.shstg .mapb i{color:#ffd76a}.shstg .mapb span{display:flex;flex-direction:column;align-items:flex-start;line-height:1.2}.shstg .mapb small{font-size:12px;color:#ffe7a0;font-weight:700}
 .shstg .dyb{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font:inherit;padding:10px;border-radius:14px;border:2px solid var(--line,#eadfc6);background:#fff;color:#2b3044;cursor:pointer;box-shadow:0 3px 0 var(--line,#eadfc6)}.shstg .dyb b{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:900}.shstg .dyb b em{font-style:normal;font-size:11px;font-weight:900;color:#fff;background:#e5484d;border-radius:99px;padding:2px 7px;letter-spacing:.04em}.shstg .dyb small{font-size:12px;font-weight:700;color:#9a8762}.shstg .dyb.done small{color:#2f9a6a}
 html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
+@media (min-width:820px){html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidden!important;pointer-events:none}
+.bvi #bvMBody:has(> #bvStg){position:relative}.bvi #bvMBody > #bvStg.shstg:not([hidden]){position:absolute;left:0;right:0;top:0;height:calc(100% + var(--shdh,86px));box-sizing:border-box;justify-content:space-between;margin:0!important}}
 #lessonOverlay #lessonList .lx-grid:not(.pzh-days) > .lx-card.shbd > .lx-th{background:radial-gradient(ellipse at 50% 40%,#3a7a60,#24503f)!important}.lx-card.shbd .lx-th svg{width:88%;height:84%}#lessonOverlay #lessonList .lx-grid:not(.pzh-days) > .lx-card.shcr > .lx-th{padding:0!important;overflow:hidden;background:#0d1236!important}.lx-card.shbd.sel{border-color:#ff5d5d;box-shadow:0 0 0 2px rgba(255,93,93,.25)}
 .shstg .pg{font-size:16px;font-weight:700;color:var(--ink,#2a2f3a)}
 .shstg .nx{font-size:15px;opacity:.8}
@@ -741,6 +743,11 @@ html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
       (A.wait ? `<span class="sw"><img src="../images/atlas/av/peacock-${[1, 2, 3].find(t => !Reward.has(t))}.webp" alt="">${esc(TX('st.wait', lang, { n: A.wait }))}</span>` : '') + `</div>`;
   }
   function stageBind(host, lang, play) {
+    // (2026-11-14, ユーザー: フリーとステージでカードの高さを同じに、スタート上の無駄な空きを詰める) PC: the stage panel lies over the
+    // body and the (hidden) スタート's place: the card keeps the free tab's height, and the free tab measures only its own rows
+    const fit = () => { const b = document.getElementById('bvMBody'), st = document.getElementById('bvStart'); if (!b || !st || !st.offsetHeight) return;
+      const d = st.getBoundingClientRect().bottom - b.getBoundingClientRect().bottom; if (d > 20) b.style.setProperty('--shdh', Math.round(d) + 'px'); };
+    requestAnimationFrame(() => requestAnimationFrame(fit)); setTimeout(fit, 400);
     host.addEventListener('click', e => {
       if (e.target.closest('[data-shmap]')) stageMap({ lang, play, course: lastCourse() });
       else if (e.target.closest('[data-shlist]')) courseList(lang, play);
