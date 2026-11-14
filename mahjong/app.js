@@ -74,6 +74,10 @@ const IC = {
   coin: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5h4.5a2 2 0 0 1 0 4H9"/></svg>',
   stats: '<svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
   keys: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M9.3 9.3a2.8 2.8 0 1 1 3.9 2.6c-.8.4-1.2 1-1.2 1.9v.4"/><path d="M12 17.3h.01"/></svg>',   // (？ — ユーザー 2026-11-14)
+  gear: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.6M12 18.6v2.6M21.2 12h-2.6M5.4 12H2.8M18.5 5.5l-1.8 1.8M7.3 16.7l-1.8 1.8M18.5 18.5l-1.8-1.8M7.3 7.3L5.5 5.5"/><circle cx="12" cy="12" r="6.6"/></svg>',
+  rated: '<svg viewBox="0 0 24 24"><path d="M4 20V14h4v6M10 20V9h4v11M16 20V4h4v16M3 20h18"/></svg>',
+  lesson: '<svg viewBox="0 0 24 24"><path d="M3 6.5 12 3l9 3.5-9 3.5z"/><path d="M7 8.3V13c0 1.6 2.2 3 5 3s5-1.4 5-3V8.3M21 6.5V12"/></svg>',
+  rules: '<svg viewBox="0 0 24 24"><path d="M5 4h10l4 4v12H5z"/><path d="M15 4v4h4M8.5 12h7M8.5 15.5h7"/></svg>',
   chest: '<svg viewBox="0 0 24 24"><path d="M3 10h18v10H3zM3 10a9 5 0 0 1 18 0"/><path d="M11 13h2v3h-2z"/></svg>',
 };
 const icon = k => IC[k] || '';
@@ -213,24 +217,26 @@ function confirmBox(q) {
 function applyText() {
   document.querySelectorAll('[data-t]').forEach(el => { el.textContent = t(el.dataset.t); });
   document.querySelectorAll('[data-tt]').forEach(el => { el.title = t(el.dataset.tt); el.setAttribute('aria-label', t(el.dataset.tt)); });
-  $('#langSel').value = I18N.lang;
   document.title = I18N.lang === 'ja' ? '雀華 〜姫たちの麻雀〜' : 'JANKA — Mahjong of the Princesses';
 }
 function sndIcons() { for (const b of document.querySelectorAll('.snd')) b.innerHTML = DB.set.snd ? IC.snd : IC.mute; }
 function renderHome() {
   applyText();
   $('#coinN').textContent = DB.coins.toLocaleString();
-  $('#btnGacha').innerHTML = IC.gacha; $('#btnColl').innerHTML = IC.collection; $('#btnPortal').innerHTML = IC.home;
+  $('#btnPortal').innerHTML = IC.home; $('#btnSet').innerHTML = IC.gear;
   $('#coinBox .coin').innerHTML = IC.coin;
-  sndIcons();
-  $('#btnLite').innerHTML = IC.bolt; applyLite();
+  // the menu under the play panel (ユーザー 2026-11-14: only the system's buttons stay at the top right; the rest are here)
+  $('#btnGacha').innerHTML = `${IC.gacha}<span>${esc(t('gacha'))}</span>`; $('#btnColl').innerHTML = `${IC.collection}<span>${esc(t('chars'))}</span>`;
+  document.querySelectorAll('#luxMenu [data-soon]').forEach(b => { b.innerHTML = `${IC[b.dataset.soon] || ''}<span>${esc(t(b.dataset.soon))}</span><em>${esc(t('soon'))}</em>`; });
+  sndIcons(); applyLite();
   const c = MJChars.get(DB.sel);
   const o = DB.chars[c.id], uk = useKey(c.id);
+  $('#pArt').innerHTML = `<button class="pimg frame fr-${c.rarity}" id="pImg" style="--c:${c.color};--c2:${c.color2}"><img src="${charImg(c, 'full')}" alt=""><i class="fx-sh"></i><span class="ptap">${esc(t('tapChange'))}</span></button>`;
   $('#partner').innerHTML = `
-    <button class="pimg frame fr-${c.rarity}" id="pImg" style="--c:${c.color};--c2:${c.color2}"><img src="${charImg(c, 'full')}" alt=""><i class="fx-sh"></i><span class="ptap">${esc(t('tapChange'))}</span></button>
     <div class="pinfo">
       <div class="prow"><div class="prar r-${c.rarity}">${c.rarity}</div><button class="psbtn" id="pStats">${IC.stats}<span>${esc(t('stats'))}</span></button></div>
       <div class="pname">${esc(L(c.name))}<small>${esc(L(c.title))}</small></div>
+      <i class="lx-rule"></i>
       ${skillBlock(uk)}
       ${o.skills.length > 1 ? `<div class="skpick"><small>${t('useThis')}</small><div class="skl" id="homeSk">${o.skills.map(k => skillChip(k, k === uk ? 'on' : '', `data-k="${k}"`)).join('')}</div></div>` : ''}
       <p class="pprof">${esc(L(c.profile))}</p>
@@ -245,18 +251,37 @@ function renderHome() {
   seg($('#optSkill'), [['1', t('skillOn')], ['0', t('skillOff')]], DB.set.skills ? '1' : '0', v => DB.set.skills = v === '1');
   seg($('#optLv'), t('lv').map((x, i) => [String(i), x]), String(DB.set.lv), v => DB.set.lv = +v);
 }
-$('#partner').addEventListener('click', e => { if (e.target.closest('#pImg')) { SND.pick(); openChara(DB.sel); } else if (e.target.closest('#pStats')) openStats(null); });
-$('#langSel').addEventListener('change', e => { I18N.set(e.target.value); renderHome(); if (window.GameRecord) GameRecord.relabel(); });
+$('#pArt').addEventListener('click', e => { if (e.target.closest('#pImg')) { SND.pick(); openChara(DB.sel); } });
+$('#partner').addEventListener('click', e => { if (e.target.closest('#pStats')) openStats(null); });
+$('#luxMenu').addEventListener('click', e => { if (e.target.closest('[data-soon]')) { SND.pick(); toast(t('soon')); } });
+// settings (the gear at the top right): language, sound, light mode
+function openSettings() {
+  SND.pick();
+  const row = (k, items, cur) => `<div class="st-row"><small>${esc(t(k))}</small><div class="seg" data-k="${k}">${items.map(([v, lab]) => `<button class="${v === cur ? 'on' : ''}" data-v="${v}">${esc(lab)}</button>`).join('')}</div></div>`;
+  const draw = () => `<h2>${esc(t('settings'))}</h2>
+    ${row('language', [['ja', '日本語'], ['en', 'English']], I18N.lang)}
+    ${row('sound', [['1', t('on')], ['0', t('off')]], DB.set.snd ? '1' : '0')}
+    ${row('lite', [['0', t('off')], ['1', t('on')]], DB.set.lite ? '1' : '0')}
+    <p class="st-note">${esc(t('liteNote'))}</p>
+    <div class="cbtns"><button class="btn gold" data-a="close">${esc(t('close'))}</button></div>`;
+  const box = modal(draw(), 'settings');
+  box.addEventListener('click', e => {
+    if (e.target.closest('[data-a=close]')) { closeModal(); return; }
+    const b = e.target.closest('.seg button'); if (!b) return;
+    const k = b.parentNode.dataset.k, v = b.dataset.v; SND.pick();
+    if (k === 'language') { I18N.set(v); renderHome(); if (window.GameRecord) GameRecord.relabel(); }
+    else if (k === 'sound') { DB.set.snd = v === '1'; save(); sndIcons(); SND.unlock(); }
+    else if (k === 'lite') { DB.set.lite = v === '1'; save(); applyLite(); }
+    box.innerHTML = draw();
+  });
+}
+$('#btnSet').addEventListener('click', openSettings);
 // 戦績: a labelled button in the home header (PC and phones — this game has no bottom tab bar)
-if (window.GameRecord) { GameRecord.init({ game: 'mahjong', lang: () => I18N.lang, menu: '#home .top', btnClass: 'ib rec' }); const rb = $('#btnRecord'); if (rb) $('#home .top').insertBefore(rb, $('#btnGacha')); }
+if (window.GameRecord) { GameRecord.init({ game: 'mahjong', lang: () => I18N.lang, menu: '#luxMenu', btnClass: 'lm rec' }); const rb = $('#btnRecord'); if (rb) $('#luxMenu').insertBefore(rb, $('#luxMenu [data-soon]')); }
 function applyLite() {
   document.documentElement.classList.toggle('lite', !!DB.set.lite);
-  const b = $('#btnLite');
-  if (b) { b.classList.toggle('on', !!DB.set.lite); b.title = t(DB.set.lite ? 'liteOn' : 'liteOff'); b.setAttribute('aria-label', b.title); }
   if (TB) TB.setQuality(DB.set.lite ? 'lite' : 'high');
 }
-$('#btnLite').addEventListener('click', () => { DB.set.lite = !DB.set.lite; save(); applyLite(); toast(t(DB.set.lite ? 'liteOn' : 'liteOff')); });
-$('#btnSnd').addEventListener('click', () => { DB.set.snd = !DB.set.snd; save(); sndIcons(); SND.unlock(); });
 $('#gSnd').addEventListener('click', () => { DB.set.snd = !DB.set.snd; save(); sndIcons(); });
 // phones always use the landscape layout; held upright, the whole UI is turned 90° (no reliance on the OS rotation)
 const PHONE = matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 600;
