@@ -81,11 +81,16 @@
       if (!(U && U.pyr) || !a) { if (ghost) ghost.count = 0; return; }
       if (!ghost || ghost.parent !== board) {
         if (ghost && ghost.parent) ghost.parent.remove(ghost);
-        const m = new TH.MeshBasicMaterial({ color: 0x7fd8ff, transparent: true, opacity: .42, blending: TH.AdditiveBlending, depthWrite: false, depthTest: false, toneMapped: false });
-        ghost = new TH.InstancedMesh(new TH.SphereGeometry(P3.R * .9, 18, 12), m, B.n); ghost.renderOrder = 5; ghost.frustumCulled = false; board.add(ghost);
+        const m = new TH.MeshBasicMaterial({ color: 0x6fd6ff, transparent: true, opacity: .75, side: TH.DoubleSide, blending: TH.AdditiveBlending, depthWrite: false, depthTest: false, toneMapped: false });
+        // a flat disc of light where a marble can sit (user: 玉より置ける面を半透明の水色の面で — a ball was mistaken for a marble), the rim a little brighter
+        const tx = document.createElement('canvas'); tx.width = tx.height = 64; const c2 = tx.getContext('2d'), gr = c2.createRadialGradient(32, 32, 4, 32, 32, 31);
+        gr.addColorStop(0, 'rgba(255,255,255,.55)'); gr.addColorStop(.72, 'rgba(255,255,255,.7)'); gr.addColorStop(.86, 'rgba(255,255,255,1)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+        c2.fillStyle = gr; c2.fillRect(0, 0, 64, 64); m.map = new TH.CanvasTexture(tx);
+        const dg = new TH.CircleGeometry(.36, 32); dg.rotateX(-Math.PI / 2);
+        ghost = new TH.InstancedMesh(dg, m, B.n); ghost.renderOrder = 5; ghost.frustumCulled = false; board.add(ghost);
       }
       const M4 = new TH.Matrix4(); let k = 0;
-      for (let i = 0; i < B.n; i++) if (!a[i]) { const [x, z] = U.pt(i); M4.makeTranslation(x, TOP + Y(i) + P3.R * .87, z); ghost.setMatrixAt(k++, M4); }
+      for (let i = 0; i < B.n; i++) if (!a[i]) { const [x, z] = U.pt(i); M4.makeTranslation(x, TOP + Y(i) + .03, z); ghost.setMatrixAt(k++, M4); }
       ghost.count = k; ghost.instanceMatrix.needsUpdate = true; kick(120);
     }
     function marks(hint) {
@@ -343,7 +348,7 @@
         timers.forEach(clearTimeout); clearTimeout(toastT); if (toastEl) toastEl.remove();
         ctx.el.removeEventListener('click', onClick); ctx.el.removeEventListener('pointerdown', onDown); removeEventListener('pointermove', onMove); removeEventListener('pointerup', onUp); removeEventListener('pointercancel', onUp);
         if (worker) worker.terminate(); worker = null;
-        if (ghost) { ghost.geometry.dispose(); ghost.material.dispose(); }
+        if (ghost) { ghost.geometry.dispose(); if (ghost.material.map) ghost.material.map.dispose(); ghost.material.dispose(); }
         Object.values(MAT).forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose());
         if (window.__pgPlay === dbg) delete window.__pgPlay;
       },
