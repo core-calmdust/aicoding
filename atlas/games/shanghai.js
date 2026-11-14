@@ -85,7 +85,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
 html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
 html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidden!important;pointer-events:none}
 #bvMBody:has(> #bvStg){position:relative}#bvMBody > #bvStg.shstg:not([hidden]){position:absolute;left:0;right:0;top:0;height:calc(100% + var(--shdh,86px));box-sizing:border-box;justify-content:stretch;gap:10px;margin:0!important}#bvStg.shstg:not([hidden]) > *{flex:1 1 0;min-height:0}#bvStg.shstg .strow > *{height:100%;box-sizing:border-box}
-.lx-card.shbd .shrw{margin-inline-start:auto;display:inline-flex;gap:2px}.lx-card.shbd .shrw img{width:30px;height:30px;opacity:.6;filter:grayscale(.7)}.lx-card.shbd .shrw img.got{opacity:1;filter:none}#lessonOverlay #lessonList .lx-grid:not(.pzh-days) > .lx-card.shbd > .lx-th{background:radial-gradient(ellipse at 50% 40%,#3a7a60,#24503f)!important}.lx-card.shbd .lx-th svg{width:88%;height:84%}#lessonOverlay #lessonList .lx-grid:not(.pzh-days) > .lx-card.shcr > .lx-th{padding:0!important;overflow:hidden;background:#0d1236!important}.lx-card.shbd.sel{border-color:#ff5d5d;box-shadow:0 0 0 2px rgba(255,93,93,.25)}
+.lx-card.shcr .shrw{margin-inline-start:auto;display:inline-flex;gap:2px}.lx-card.shcr .shrw img{width:26px;height:26px;opacity:.6;filter:grayscale(.7)}.lx-card.shcr .shrw img.got{opacity:1;filter:none}.lx-card.shbd .shrw{margin-inline-start:auto;display:inline-flex;gap:2px}.lx-card.shbd .shrw img{width:30px;height:30px;opacity:.6;filter:grayscale(.7)}.lx-card.shbd .shrw img.got{opacity:1;filter:none}#lessonOverlay #lessonList .lx-grid:not(.pzh-days) > .lx-card.shbd > .lx-th{background:radial-gradient(ellipse at 50% 40%,#3a7a60,#24503f)!important}.lx-card.shbd .lx-th svg{width:88%;height:84%}#lessonOverlay #lessonList .lx-grid:not(.pzh-days) > .lx-card.shcr > .lx-th{padding:0!important;overflow:hidden;background:#0d1236!important}.lx-card.shbd.sel{border-color:#ff5d5d;box-shadow:0 0 0 2px rgba(255,93,93,.25)}
 .shstg .pg{font-size:16px;font-weight:700;color:var(--ink,#2a2f3a)}
 .shstg .nx{font-size:15px;opacity:.8}
 .shstg .mapb{display:flex;align-items:center;justify-content:center;gap:10px;font:inherit;font-weight:800;font-size:18px;padding:14px;border-radius:16px;border:0;cursor:pointer;color:#fff;background:linear-gradient(135deg,#1b2350,#3a2a6e 60%,#5a3a8a);box-shadow:0 8px 20px -10px rgba(30,20,80,.8);white-space:nowrap}
@@ -299,6 +299,26 @@ html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidde
     at(s) { const t = GIFT_S.indexOf(s); return t > 0 ? t : 0; },
     // the next tier still to win by stages: { t, left } or null
     next() { const S = prog().st; for (let t = 1; t < 4; t++) if (!Reward.has(t) && !(S[GIFT_S[t]] > 0)) { let left = 0; for (let k = 0; k <= GIFT_S[t]; k++) if (!(S[k] > 0)) left++; return { t, left }; } return null; },
+    // (2026-11-14) the scene courses: each has its own companion (atlas/avatars/sp-f.js), N/R/SR/SSR. The harder the course, the sooner the
+    // better ones: easy (base 0) N/R on stages, SR/SSR for ★150/★180 · middle (base 1–2) N/R/SR on stages, SSR for ★180 · hard (base 3+) all four on stages.
+    SP: { forest: 'kinoko', sweets: 'macaron', sea: 'tako', castle: 'unipony', festival: 'kingyo', autumn: 'momiji', snow: 'yukidaru', desert: 'saboten', toys: 'buriki', space: 'hoshippi' },
+    gifts(cid) {
+      if (cid === 'zodiac') return [1, 2, 3].map(t => ({ sp: 'peacock', t, s: GIFT_S[t] }));
+      const c = courseOf(cid), sp = Reward.SP[cid]; if (!c || !sp) return [];
+      const G = c.base === 0 ? [{ s: 29 }, { s: 59 }, { star: 150 }, { star: 180 }] : c.base <= 2 ? [{ s: 19 }, { s: 39 }, { s: 59 }, { star: 180 }] : [{ s: 14 }, { s: 29 }, { s: 44 }, { s: 59 }];
+      return G.map((g, t) => Object.assign({ sp, t }, g));
+    },
+    giftAt(cid, s) { return Reward.gifts(cid).find(g => g.s === s) || null; },
+    // hand over what a course's progress has earned (a stage cleared, ★ enough)
+    course(cid, lang, wait) { const P = cprog(cid), tot = Object.values(P.st).reduce((a, v) => a + v, 0); let k = 0;
+      Reward.gifts(cid).forEach(g => { if ((g.s != null ? P.st[g.s] > 0 : tot >= g.star) && Reward.grant(g.t, lang, wait + k * 1700, g.sp)) k++; }); return k; },
+    // the next gift of a course still to win: { g, left (stages or ★), star }
+    cnext(cid) { const P = cprog(cid), tot = Object.values(P.st).reduce((a, v) => a + v, 0);
+      for (const g of Reward.gifts(cid)) { if (Reward.has(g.t, g.sp)) continue;
+        if (g.s != null) { if (P.st[g.s] > 0) continue; let left = 0; for (let k = 0; k <= g.s; k++) if (!(P.st[k] > 0)) left++; return { g, left }; }
+        if (tot < g.star) return { g, left: g.star - tot, star: true }; }
+      return null; },
+    gname(g, lang) { const it = window.AtlasArt && AtlasArt.byId && AtlasArt.byId('av-' + g.sp + '-' + g.t); return it ? it.name[lang] || it.name.en : g.sp; },
     // (2026-11-14) free play: every board has its own reward(s) with a rule — d: this difficulty or harder (1 入門 … 5 達人), t: within t seconds.
     // The three dragon tiles: ハクパイ (haku) on the small boards, ハツパイ (hatsu) on the middle ones, チュンパイ (chun) on the big ones.
     BOARD: {
@@ -677,7 +697,7 @@ html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidde
       const was = S[s] || 0;
       S[s] = Math.max(was, stars); if (nb) B[s] = tt; save(d);
       const coin = (S[s] - was) * COIN_STAR;   // (the ★ won for the first time pay ¢10 each — the purse itself is derived from the stars)
-      if (zod) Reward.check(lang, 1900);
+      if (zod) Reward.check(lang, 1900); else Reward.course(ST.cid, lang, 1900);
       const cid = ST.cid, nx = s + 1 < cN(cid) ? { c: cid, s: s + 1 } : null;
       later(() => ctx.onEnd({ win: true, draw: false, solo: true, level: 0,
         title: tx('r.stage') + ' ' + '★'.repeat(stars) + '☆'.repeat(3 - stars), score: stageName(s, lang) + ' · ' + tx('r.time', { t: mmss(tt) }),
@@ -769,7 +789,7 @@ html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidde
   function allProg() {
     const ids = ['zodiac'].concat(COURSES.map(c => c.id)); let c = 0, n = 0, st = 0;
     ids.forEach(id => { const P = cprog(id), N = cN(id); n += N; Object.keys(P.st).forEach(k => { if (P.st[k] > 0) { c++; st += P.st[k]; } }); });
-    return { c, n, st, wait: [1, 2, 3].filter(t => !Reward.has(t)).length };
+    const G = []; ids.forEach(id => Reward.gifts(id).forEach(g => { if (!Reward.has(g.t, g.sp)) G.push(g); })); return { c, n, st, wait: G.length, wg: G[0] };
   }
   const lastCourse = () => { const l = pend(window.Atlas3D && Atlas3D.shanghai && Atlas3D.shanghai.last); return l && l.c && (l.c === 'zodiac' || courseOf(l.c)) ? l.c : 'zodiac'; };
   const cname = (id, lang) => id === 'zodiac' ? TX('st.title', lang) : TX('cn.' + id, lang);
@@ -780,7 +800,7 @@ html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidde
     return `<div class="strow"><button type="button" class="mapb lst" data-shlist><i>▦</i>${esc(TX('cl.title', lang))}</button><button type="button" class="mapb" data-shmap><i>✦</i><span>${esc(TX('cl.cont', lang))}<small>${esc(cname(lc, lang))}</small></span></button></div>` +
       `<div class="strow">${dy('n')}${dy('h')}</div>` +
       `<div class="stinfo"><span class="sc">${esc(TX('st.clear', lang, { c: A.c, n: A.n }))}</span><span class="ss">★ ${A.st}</span>` +
-      (A.wait ? `<span class="sw"><img src="../images/atlas/av/peacock-${[1, 2, 3].find(t => !Reward.has(t))}.webp" alt="">${esc(TX('st.wait', lang, { n: A.wait }))}</span>` : '') + `</div>`;
+      (A.wait ? `<span class="sw"><img src="../images/atlas/av/${A.wg.sp}-${A.wg.t}.webp" alt="">${esc(TX('st.wait', lang, { n: A.wait }))}</span>` : '') + `</div>`;
   }
   function stageBind(host, lang, play) {
     // (2026-11-14, ユーザー: フリーとステージでカードの高さを同じに、スタート上の無駄な空きを詰める) PC: the stage panel lies over the
@@ -813,7 +833,7 @@ html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidde
       const A = allProg();
       const tabs = `<div class="lx-tabs">${['e', 'm', 'h'].map(k => { const xs = ids.filter(id => tier(id) === k), d = xs.reduce((a, id) => a + info(id).d, 0), n = xs.reduce((a, id) => a + info(id).N, 0); return `<button type="button" data-cat="${k}" class="${k === cur ? 'sel' : ''}"><span class="nm">${esc(TX('cl.tab.' + k, lang))}</span><span class="ct${d >= n ? ' ok' : ''}">${d}/${n}</span></button>`; }).join('')}</div>`;
       const card = id => { const { N, d, st } = info(id), full = d >= N;
-        return `<button type="button" class="lx-card shcr${full ? ' done' : ''}" data-set="" data-course="${id}"><span class="lx-th">${courseThumb(id)}</span><span class="lx-tx"><span class="lx-top"><span class="lx-st${full ? ' ok' : d ? ' so' : ' new'}">${full ? '✓' : d ? d + '/' + N : 'NEW'}</span></span><span class="lx-t">${esc(cname(id, lang))}</span><span class="lx-desc">${esc(TX('cd.' + id, lang))}</span><span class="pzh-row"><span class="pzh-bar"><i style="width:${Math.round(d * 100 / N)}%"></i></span><span class="pzh-st">★ ${st}/${N * 3}</span></span></span></button>`; };
+        return `<button type="button" class="lx-card shcr${full ? ' done' : ''}" data-set="" data-course="${id}"><span class="lx-th">${courseThumb(id)}</span><span class="lx-tx"><span class="lx-top"><span class="lx-st${full ? ' ok' : d ? ' so' : ' new'}">${full ? '✓' : d ? d + '/' + N : 'NEW'}</span></span><span class="lx-t">${esc(cname(id, lang))}</span><span class="lx-desc">${esc(TX('cd.' + id, lang))}</span><span class="pzh-row"><span class="pzh-bar"><i style="width:${Math.round(d * 100 / N)}%"></i></span><span class="pzh-st">★ ${st}/${N * 3}</span><span class="shrw">${Reward.gifts(id).map(g => `<img class="${Reward.has(g.t, g.sp) ? 'got' : ''}" src="../images/atlas/av/${g.sp}-${g.t}.webp" alt="">`).join('')}</span></span></span></button>`; };   // (the course's Atlamo: dim until won)
       S0.body.className = 'lesson-list lx-on';
       S0.body.innerHTML = `<div class="pzh-box">${heroHtml(lang, TX('cl.title', lang), A.c, A.n)}${tabs}</div><div class="lx-grid">${ids.filter(id => tier(id) === cur).map(card).join('')}</div>`;
     };
@@ -894,7 +914,7 @@ html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidde
     const LITE = !ZOD && LITE_SCN(), BMPX = Math.min(1600, Math.round(116 * Math.min(innerHeight / 64, 14) * Math.min(1.6, devicePixelRatio || 1)));
     const AR = ZOD ? K.AREAS : Array.from({ length: CO.n }, (_, i) => 'a' + i), NA = AR.length, N = NA * 10;
     const areaName = i => ZOD ? TX('ar.' + AR[i], lang) : TX('an.' + cid + '.' + i, lang);   // (2026-11-14: each area has its own name, was エリア1…)
-    const RA = s => ZOD ? Reward.at(s) : 0, edg = i => ZOD ? edges(AR[i]) : Array.from({ length: 9 }, (_, k) => [k, k + 1]);
+    const RA = s => Reward.giftAt(cid, s), edg = i => ZOD ? edges(AR[i]) : Array.from({ length: 9 }, (_, k) => [k, k + 1]);
     if (window.ShanghaiZodiac && !document.getElementById('shzod-css')) { const st = document.createElement('style'); st.id = 'shzod-css'; st.textContent = ShanghaiZodiac.css; document.head.appendChild(st); }
     let P = cprog(cid), area = Math.floor(nextStage(P, N) / 10), pick = nextStage(P, N);
     if (o.pick != null && o.pick < N) { pick = o.pick; area = Math.floor(pick / 10); }
@@ -973,8 +993,8 @@ html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidde
       let h = '';
       AR.forEach((a, i) => PTS[i].forEach(([x, y], k) => {
         const s = i * 10 + k, ok = cleared(P, s), ul = unlocked(P, s), sr = P.st[s] || 0, t = RA(s);
-        h += `<button type="button" class="nd${s === pick ? ' pk' : ''}${ok ? ' ok' : ''}${ul && !ok ? ' cur' : ''}${ul ? '' : ' lk'}" style="left:${x / WW * 100}%;top:${y / PH * 100}%" data-s="${s}">${k + 1}${sr ? `<span class="sr">${'★'.repeat(sr)}${'☆'.repeat(3 - sr)}</span>` : ''}${t ? `<i class="gft">${Reward.has(t) ? '✓' : '🎁'}</i>` : ''}</button>` +
-          (t ? `<img class="gf${Reward.has(t) ? ' got' : ''}" style="left:${x / WW * 100}%;top:${y / PH * 100}%" src="../images/atlas/av/peacock-${t}.webp" alt="">` : '');
+        h += `<button type="button" class="nd${s === pick ? ' pk' : ''}${ok ? ' ok' : ''}${ul && !ok ? ' cur' : ''}${ul ? '' : ' lk'}" style="left:${x / WW * 100}%;top:${y / PH * 100}%" data-s="${s}">${k + 1}${sr ? `<span class="sr">${'★'.repeat(sr)}${'☆'.repeat(3 - sr)}</span>` : ''}${t ? `<i class="gft">${Reward.has(t.t, t.sp) ? '✓' : '🎁'}</i>` : ''}</button>` +
+          (t ? `<img class="gf${Reward.has(t.t, t.sp) ? ' got' : ''}" style="left:${x / WW * 100}%;top:${y / PH * 100}%" src="../images/atlas/av/${t.sp}-${t.t}.webp" alt="">` : '');
       }));
       wld.querySelectorAll('.nd,.gf').forEach(n => n.remove());
       wld.insertAdjacentHTML('beforeend', h);
@@ -984,15 +1004,15 @@ html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidde
     function head() {
       const tot = Object.values(P.st).reduce((a, v) => a + v, 0);
       $('h2').textContent = ZOD ? TX('st.title', lang) : TX('cn.' + cid, lang); $('.story').textContent = ZOD ? TX('st.story', lang) : TX('cd.' + cid, lang); $('.tot').textContent = '★ ' + tot + ' / ' + N * 3;
-      const nx = ZOD ? Reward.next() : null, it = nx && window.AtlasArt && AtlasArt.byId && AtlasArt.byId('av-peacock-' + nx.t);
-      $('.gift').innerHTML = nx ? `<img src="../images/atlas/av/peacock-${nx.t}.webp" alt=""><span>${esc(TX('rw.next', lang, { n: nx.left, name: it ? it.name[lang] || it.name.en : 'Peacotile' }))}</span>` : '';
+      const nx = Reward.cnext(cid);
+      $('.gift').innerHTML = nx ? `<img src="../images/atlas/av/${nx.g.sp}-${nx.g.t}.webp" alt=""><span>${esc(TX(nx.star ? 'rw.nexts' : 'rw.next', lang, { n: nx.left, name: Reward.gname(nx.g, lang) }))}</span>` : '';
       $('.gift').style.display = nx ? '' : 'none';
     }
     // the stage that hands over a クジャクパイ: its picture and name in the sheet
     function giftLine(s) {
-      const t = RA(s); if (!t) return '';
-      const it = window.AtlasArt && AtlasArt.byId && AtlasArt.byId('av-peacock-' + t), nm = it ? it.name[lang] || it.name.en : 'Peacotile', got = Reward.has(t);
-      return `<div class="gfl${got ? ' got' : ''}"><img src="../images/atlas/av/peacock-${t}.webp" alt=""><span>${got ? '✓ ' : '🎁 '}${esc(TX(got ? 'rw.have' : 'rw.here', lang, { name: nm }))}</span></div>`;
+      const g = RA(s); if (!g) return '';
+      const nm = Reward.gname(g, lang), got = Reward.has(g.t, g.sp);
+      return `<div class="gfl${got ? ' got' : ''}"><img src="../images/atlas/av/${g.sp}-${g.t}.webp" alt=""><span>${got ? '✓ ' : '🎁 '}${esc(TX(got ? 'rw.have' : 'rw.here', lang, { name: nm }))}</span></div>`;
     }
     // the box below the sky: the constellation's picture with this stage's star ringed · the stage, its mission, the record · スタート
     // (2026-11-14, ユーザー: 画像をうまく組み込んで綺麗に見やすく、PCは文字も大きく; a pick refills it without re-laying the map)
