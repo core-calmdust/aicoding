@@ -1617,13 +1617,6 @@ body:has(#game:not([hidden])) #bgfx::after{display:none}
 :is(#home,#chara).aaa .ap-rank{height:42px;box-sizing:border-box;padding:0 12px}
 :is(#home,#chara).aaa .ap-rank .rkb{font-size:13px}
 :is(#home,#chara).aaa .ap-rank > span{flex-direction:row;align-items:baseline;gap:10px}
-/* the far player's badge lies in a row over the far rail, small (ユーザー 2026-11-15: standing at the end of the far hand row it
-   covered her melds — the corner where melds go) */
-#game #opp2{flex-direction:row;align-items:center;gap:8px;left:50%!important;right:auto!important;transform:translateX(-50%)!important;top:4px!important;--bf:calc(var(--bf0, 66px) * .62)}
-html.ds #game #opp2{--bf:clamp(44px, calc(var(--GH) * .062), 58px)}
-#game #opp2 .bf em{transform:scale(.8)}
-#game #opp2 .bt{align-items:flex-start}
-#game #opp2 .bk{margin-left:2px}
 
 /* (ユーザー 2026-11-15) the titles above 十段, not yet reached: a dark, sealed badge of ？？？ */
 .rkb.rk-x{--a:#4a3f66;--b:#17112a;--t:#b9a9e0;--g:radial-gradient(closest-side,rgba(120,90,200,.35),transparent)}
@@ -1669,3 +1662,11 @@ html.ds #acts .ab.rii:not(.on) kbd{color:var(--gl2);background:rgba(232,206,140,
 #game .bf.rii .fr-SR{animation:ringSpin 4s linear infinite,riiPulse 1.4s ease-in-out infinite}
 #game .bf.rii .fr-SSR{animation:ringSpin 2.6s linear infinite,riiPulse 1.4s ease-in-out infinite}
 #game .bf.rii .fr-UR{animation:ringSpin 1.8s linear infinite,riiPulse 1.4s ease-in-out infinite}
+/* (ユーザー 2026-11-15) the player across: the same full-size badge as the others — no shrunken row. Nothing at the top of the table is
+   free (her melds lie along the far rail, the right player's run up the right rail into that corner), so her badge stands in the
+   right-hand column outside the felt, just under the corner buttons, and the right player's badge moves down below it. */
+html.ds #game #opp2,html.lp #game #opp2{left:auto;transform:none}
+html.ds #game #opp2{right:var(--gi);top:calc(var(--gi) + 32px * var(--hz, 1) + 14px)}
+html.ds #game #opp1{top:calc(var(--gi) + 32px * var(--hz, 1) + 14px + var(--bf) + 104px)}
+html.lp #game #opp2{right:max(14px,var(--sr));top:calc(max(10px,var(--st)) + 42px)}
+html.lp #game #opp1{top:calc(max(10px,var(--st)) + 42px + var(--bf) + 74px)}
