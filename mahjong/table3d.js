@@ -530,22 +530,25 @@ class Table3D {
       const want = g.visible && (g.userData.pose === 'flat' || g.userData.pose === 'side') && this.doraFn(g.userData.id);
       let o = g.userData.dora;
       if (want && !o) {
-        if (!this.doraMat) { this.doraGeo = this._faceSkin();
+        // (ユーザー 2026-11-14: the glow covers the whole tile, every side — a skin over the full block — and looks the same as in the hand row)
+        if (!this.doraMat) { this.doraGeo = this._tileSkin();
           this.doraMat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: { uT: { value: -1 } },
-            vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-            fragmentShader: `varying vec2 vUv; uniform float uT;
-              float rr(vec2 p, vec2 b, float r){ vec2 q = abs(p) - b + r; return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r; }
+            vertexShader: `varying vec3 vP; varying vec3 vN; varying vec3 vV; varying float vF;
+              void main(){ vP = position; vF = normal.z; vec4 mv = modelViewMatrix * vec4(position, 1.0); vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }`,
+            fragmentShader: `varying vec3 vP; varying vec3 vN; varying vec3 vV; varying float vF; uniform float uT;
               float star(vec2 s, float k){ return k * (exp(-abs(s.x) * 46.0 - abs(s.y) * 7.0) + exp(-abs(s.y) * 46.0 - abs(s.x) * 7.0) + exp(-dot(s, s) * 420.0)); }
-              void main(){ vec2 p = (vUv - .5) * vec2(1.0, 1.36); float d = rr(p, vec2(.5, .68), .14); if (d > 0.0) discard;
-                float rim = smoothstep(-.06, -.004, d);
-                float ang = fract(atan(p.x, p.y) / 6.2831853 + .5), dd = abs(fract(ang - uT * 1.15 + .5) - .5);   // a light runs once round the rim
-                float run = uT < 0.0 ? 0.0 : rim * exp(-dd * dd / .006) * sin(clamp(uT, 0.0, 1.0) * 3.14159);
+              void main(){
+                vec2 p = vP.xy / vec2(${(W / 2).toFixed(3)}, ${(H / 2).toFixed(3)});            // -1..1 over the tile, on every side
+                float edge = max(abs(p.x), abs(p.y));
+                float fres = pow(1.0 - abs(dot(normalize(vN), normalize(vV))), 2.0);   // brighter where the surface turns away: the outline from any angle
+                float rim = smoothstep(.78, .97, edge) * (vF > .5 ? 1.0 : .5) + fres * .4;
+                float ang = fract(atan(p.x, p.y) / 6.2831853 + .5), dd = abs(fract(ang - uT * 1.15 + .5) - .5);   // a light runs once round the tile
+                float run = uT < 0.0 ? 0.0 : smoothstep(.7, .97, edge) * exp(-dd * dd / .006) * sin(clamp(uT, 0.0, 1.0) * 3.14159);
                 float t1 = uT < 0.0 ? 0.0 : max(0.0, sin(clamp(uT * 1.7, 0.0, 1.0) * 3.14159)), t2 = uT < 0.0 ? 0.0 : max(0.0, sin(clamp(uT * 1.7 - .7, 0.0, 1.0) * 3.14159));
-                float st = star((vUv - vec2(.86, .9)) * vec2(1.0, 1.36), t1) + star((vUv - vec2(.12, .08)) * vec2(1.0, 1.36) * 1.35, t2);
-                float sw = uT < 0.0 ? 0.0 : clamp(uT * 1.25, 0.0, 1.0), bp = (vUv.x - .5) * .8 + (vUv.y - .5) - mix(-1.15, 1.15, sw);
-                float band = uT < 0.0 ? 0.0 : (exp(-bp * bp / .006) * .85 + exp(-bp * bp / .05) * .25) * sin(sw * 3.14159);   // (ユーザー 2026-11-14: a light that runs across the face itself)
-                band *= 1.35;
-                float a = clamp(.16 + rim * .8 + run * 1.2 + st + band, 0.0, .96);   // (ユーザー 2026-11-14: a little gold all the time, the light stronger)
+                float st = vF > .5 ? star((p - vec2(.72, .8)) * vec2(.5, .68), t1) + star((p - vec2(-.76, -.84)) * vec2(.5, .68) * 1.35, t2) : 0.0;
+                float sw = uT < 0.0 ? 0.0 : clamp(uT * 1.25, 0.0, 1.0), bp = p.x * .4 + p.y * .5 - mix(-1.3, 1.3, sw);
+                float band = uT < 0.0 ? 0.0 : (exp(-bp * bp / .006) * .85 + exp(-bp * bp / .05) * .25) * sin(sw * 3.14159) * 1.35;   // a band of light sweeps across the tile
+                float a = clamp(.15 + rim * .6 + run * 1.2 + st + band, 0.0, .96);
                 gl_FragColor = vec4(mix(vec3(1.0, .72, .22), vec3(1.0, .97, .86), clamp(run * 1.4 + st + band * 1.2, 0.0, 1.0)), a); }` }); }
         o = g.userData.dora = new THREE.Mesh(this.doraGeo, this.doraMat); o.renderOrder = 3; g.add(o);
       }
@@ -556,6 +559,12 @@ class Table3D {
   }
   // the dora's glow lies on the face itself (ユーザー 2026-11-14: not a flat pane over the tile, like a case): the face's own
   // triangles (the flat and the start of the round-over) lifted a hair along their normals, uv 0..1 over that area
+  _tileSkin() {   // the whole tile (white part and back), lifted a hair along the normals
+    const parts = [this.geoFront, this.geoBack], pos = [], nor = [];
+    for (const f of parts) { const P = f.attributes.position, N = f.attributes.normal;
+      for (let i = 0; i < P.count; i++) { pos.push(P.getX(i) + N.getX(i) * .004, P.getY(i) + N.getY(i) * .004, P.getZ(i) + N.getZ(i) * .004); nor.push(N.getX(i), N.getY(i), N.getZ(i)); } }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3)); return g;
+  }
   _faceSkin() {
     const f = this.geoFront, gr = f.groups[0], P = f.attributes.position, N = f.attributes.normal, U = f.attributes.uv, n = gr.count;
     const pos = new Float32Array(n * 3), uv = new Float32Array(n * 2); let u0 = 1e9, u1 = -1e9, v0 = 1e9, v1 = -1e9;

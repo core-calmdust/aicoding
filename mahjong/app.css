@@ -1328,3 +1328,11 @@ html,body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 img{-webkit-user-drag:none;user-drag:none}
 input,textarea{-webkit-user-select:text;user-select:text}
 html.lp #chara.ch2 .ch-info{justify-content:flex-start}
+
+/* the dora in the hand row: the same as on the table (ユーザー 2026-11-14) — a little gold over the whole tile, the gold edge with its
+   running light, and a band of light that sweeps across the tile every 2.6 s, with the two stars */
+.tl.dora .dg{border-radius:inherit}
+.tl.dora .dg{background:linear-gradient(118deg,transparent 42%,rgba(255,250,230,.75) 50%,transparent 58%) no-repeat,linear-gradient(118deg,transparent 30%,rgba(255,220,150,.2) 50%,transparent 70%) no-repeat,rgba(255,196,80,.16);
+  background-size:260% 100%,260% 100%,auto;background-position:180% 0,180% 0,0 0;animation:doraBand 2.6s linear infinite}
+@keyframes doraBand{0%{background-position:180% 0,180% 0,0 0}50%,100%{background-position:-80% 0,-80% 0,0 0}}
+.tl.dora .dg::before,.tl.dora .dg::after{z-index:1}
