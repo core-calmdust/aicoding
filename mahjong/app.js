@@ -140,7 +140,7 @@ const SND = (() => {
   for (const k in TRK) Object.assign(TRK[k], { url: null, el: null, g: null, on: false, t: 0 });
   const idle = f => (window.requestIdleCallback ? requestIdleCallback(f, { timeout: 600 }) : setTimeout(f, 60));
   function mkctx() { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } return ac; }
-  function load() { if (loading) return; loading = true; const a = mkctx(); let i = 0; const music = ['title', 'main', 'main2', 'main3', 'score', 'riichi'];
+  function load() { if (loading) return; loading = true; const a = mkctx(); let i = 0; const music = ['title'];   // (2026-11-15: only the title's track up front — a game's tracks are fetched as the game begins: fetchTrk)
     const next = () => {
       if (i < NAMES.length) { const n = NAMES[i++];
         fetch(`${ASSETS}snd/${n}.mp3`).then(r => r.ok ? r.arrayBuffer() : Promise.reject()).then(b => a ? new Promise((ok, ng) => a.decodeAudioData(b, ok, ng)) : null)
@@ -151,6 +151,9 @@ const SND = (() => {
           .catch(() => {}).finally(() => idle(next));
       } };
     idle(next); }
+  // a track fetched whole (in the background) when it is about to be wanted — not all six at once (ユーザー 2026-11-15)
+  function fetchTrk(k) { const B = TRK[k]; if (!B || B.url || B.el || B.getting) return; B.getting = true;
+    fetch(`${ASSETS}snd/${B.file}.mp3`).then(r => r.ok ? r.blob() : Promise.reject()).then(b => { if (!B.el) { B.url = URL.createObjectURL(b); if (ac) prep(B); } }).catch(() => {}).finally(() => { B.getting = false; }); }
   // the <audio> element and its gain node are made ahead of time, not at the moment the track is wanted
   function prep(B) { const a = ac; if (!a || B.el) return; if (!B.url) B.url = `${ASSETS}snd/${B.file}.mp3`;
     B.el = new Audio(B.url); B.el.loop = !B.once; B.el.preload = 'auto';
@@ -187,7 +190,7 @@ const SND = (() => {
     music,
     resume: () => music(want),
     score() { const B = TRK.score; if (B.el) { B.on = false; B.el.pause(); } music('score'); },   // (once per results screen, from its top)
-    newGame() { mainKey = ['main', 'main2', 'main3'][(Math.random() * 3) | 0]; },
+    newGame() { mainKey = ['main', 'main2', 'main3'][(Math.random() * 3) | 0]; if (on()) { fetchTrk(mainKey); fetchTrk('riichi'); fetchTrk('score'); } },
     // the window behind / in front again: the sound stops and comes back where it was
     gate(off) { const a = ac; if (!a) return;
       if (off) { if (a.state === 'running') a.suspend(); for (const k in TRK) if (TRK[k].el && TRK[k].on) TRK[k].el.pause(); }
@@ -205,7 +208,7 @@ const SND = (() => {
     ok: () => { tone(988, .25, 'sine', .12); tone(1319, .5, 'sine', .1, .12); },
     pick: () => tone(660, .06, 'triangle', .06),
     gacha: r => { const b = r === 'SSR' ? 4 : r === 'SR' ? 3 : 2; for (let i = 0; i < b + 2; i++) tone(500 + i * 180, .3, 'triangle', .1, i * .07); },
-    unlock: () => { ctx(); load(); for (const k in TRK) prep(TRK[k]); },
+    unlock: () => { ctx(); load(); prep(TRK.title); },
   };
 })();
 addEventListener("load", () => setTimeout(() => SND.preload(), 400));

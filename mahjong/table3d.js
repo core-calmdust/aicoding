@@ -1198,10 +1198,12 @@ class Table3D {
     // the dora's glint: a light runs round the rim of every dora that lies face up and two small stars twinkle, about once in three seconds
     // (at ~30 frames a second when it is the only thing changing: the whole table is redrawn for it)
     // (`quiet`: a full-screen result is over the table — nothing behind it needs to move, so the glint waits: 2026-11-14, optimisation)
-    if (this._doraN && !this.quiet) { const ph = now % 2600, on = ph < 1300;
-      if (on && (moved || now - (this._glT || 0) > 32)) { this._glT = now; this.doraMat.uniforms.uT.value = ph / 1300; this.dirty = true; } else if (this._doraOn) { this.doraMat.uniforms.uT.value = -1; this.dirty = true; }
+    // (2026-11-15, ユーザー: for phones' batteries) on a touch screen the glint comes every ~4 s and is drawn at 20 frames a second
+    const MOB = this._mob ?? (this._mob = matchMedia('(pointer: coarse)').matches), GSTEP = MOB ? 50 : 32;
+    if (this._doraN && !this.quiet) { const ph = now % (MOB ? 4200 : 2600), on = ph < 1300;
+      if (on && (moved || now - (this._glT || 0) > GSTEP)) { this._glT = now; this.doraMat.uniforms.uT.value = ph / 1300; this.dirty = true; } else if (this._doraOn) { this.doraMat.uniforms.uT.value = -1; this.dirty = true; }
       this._doraOn = on; }
-    if (this._callG && this._callG.visible && this.callMat && (moved || now - (this._clT || 0) > 32)) { this._clT = now; this.callMat.uniforms.uT.value = (now % 1400) / 1400; this.dirty = true; }
+    if (this._callG && this._callG.visible && this.callMat && (moved || now - (this._clT || 0) > GSTEP)) { this._clT = now; this.callMat.uniforms.uT.value = (now % 1400) / 1400; this.dirty = true; }
     if (this._ov) this.dirty = true;
     if (!this.dirty || document.hidden) return;
     this.dirty = false;
