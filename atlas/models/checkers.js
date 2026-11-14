@@ -9,7 +9,7 @@
      leather  金箔押しの革     bottle-green and cream calf squares, a wide gold-leaf border tooled with a Greek key, gold fillets, a
                              gilt-wood frame with a mahogany bead
      boulle   ブール象嵌       Boulle marquetry (Louis XIV): red tortoiseshell squares and engraved brass squares (metal), brass
-                             scrolls on ebony in the border, a tortoiseshell frame with a gilt bead and gilt-bronze corner mounts
+                             scrolls on ebony in the border, a tortoiseshell frame with a gilt bead
    Pieces (Table3D.PIECES.checkers, 'atlas-checkers-pc3'), in order, the first the default; g = Black's side (moves first):
      stone (black / white marble) · rbmarble (black / red marble) · rmarble (red / white marble) · metal (gold / silver,
      turned with ring grooves) · ebony (ebony / ivory with an inlaid ring) · urushi (black / vermilion lacquer, a gold band).
@@ -309,7 +309,7 @@
   const FRAMES = {
     lacquer: () => ({ prof: 'round', m: mat('core', () => phys({ color: 0x0e0e10, roughness: .2, clearcoat: 1, clearcoatRoughness: .05, envMapIntensity: 1.3 })) }),
     marble: () => ({ prof: 'chamfer', m: sheetMat('frNero', 'nero', { roughness: .12, clearcoat: 1, clearcoatRoughness: .04 }), core: 0x121214, bead: metalMat('brass', 0xd8b064, .22) }),
-    tort: () => ({ prof: 'cushion', m: sheetMat('frTort', 'tort', { roughness: .14, clearcoat: 1, clearcoatRoughness: .03 }), core: 0x2a0905, bead: metalMat('gold', 0xe6bd62, .2), corners: metalMat('ormolu', 0xd9ae55, .3) }),
+    tort: () => ({ prof: 'cushion', m: sheetMat('frTort', 'tort', { roughness: .14, clearcoat: 1, clearcoatRoughness: .03 }), core: 0x2a0905, bead: metalMat('gold', 0xe6bd62, .2) }),
     gilt: () => ({ prof: 'ogee', m: metalMat('giltwood', 0xe2b456, .26), core: 0x2a0d06, bead: sheetMat('frMahog', 'mahog', { roughness: .2, clearcoat: 1, clearcoatRoughness: .05 }) }),   // a gilt-wood frame with a mahogany bead
     step: () => ({ prof: 'step', m: mat('core', () => phys({ color: 0x0e0e10, roughness: .2, clearcoat: 1, clearcoatRoughness: .05, envMapIntensity: 1.3 })), bead: metalMat('gold', 0xe6bd62, .2) }),
     ormolu: () => ({ prof: 'cushion', m: metalMat('ormolu', 0xd9ae55, .3), core: 0x1a1406, bead: metalMat('gold', 0xe6bd62, .2) }),

@@ -171,13 +171,13 @@ html.lp #game .rs{gap:8px}html.lp #game .rs .stk{width:30px;height:5px}html.lp #
    the rare characters' frames): a thin gold line around the tile with a light running along it, and two small stars that twinkle in turn */
 @property --da{syntax:'<angle>';inherits:false;initial-value:0deg}
 .tl.dora::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:2;padding:calc(var(--tw)*.035);
-  background:conic-gradient(from var(--da),rgba(255,190,70,.62) 0 66%,rgba(255,226,150,.9) 82%,#fffbe6 90%,rgba(255,190,70,.62) 97%);
+  background:conic-gradient(from var(--da),rgba(255,110,170,.62) 0 66%,rgba(255,170,210,.9) 82%,#fff0f7 90%,rgba(255,110,170,.62) 97%);
   -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);
-  filter:drop-shadow(0 0 calc(var(--tw)*.03) rgba(255,200,90,.55));animation:doraRun 2.8s linear infinite}
+  filter:drop-shadow(0 0 calc(var(--tw)*.03) rgba(255,110,170,.55));animation:doraRun 2.8s linear infinite}
 @keyframes doraRun{to{--da:360deg}}
 .tl .dg{position:absolute;inset:0;pointer-events:none;z-index:3}
 .dg::before,.dg::after{content:"";position:absolute;width:calc(var(--tw)*.6);aspect-ratio:1;margin:calc(var(--tw)*-.3) 0 0 calc(var(--tw)*-.3);opacity:0;
-  background:radial-gradient(closest-side,#fff 0,rgba(255,244,200,.85) 35%,transparent 100%) center/20% 20% no-repeat,radial-gradient(closest-side,rgba(255,248,214,.95),transparent) center/100% 6% no-repeat,radial-gradient(closest-side,rgba(255,248,214,.95),transparent) center/6% 100% no-repeat;
+  background:radial-gradient(closest-side,#fff 0,rgba(255,220,236,.85) 35%,transparent 100%) center/20% 20% no-repeat,radial-gradient(closest-side,rgba(255,226,240,.95),transparent) center/100% 6% no-repeat,radial-gradient(closest-side,rgba(255,226,240,.95),transparent) center/6% 100% no-repeat;
   animation:doraStar 3.4s ease-in-out infinite}
 .dg::before{left:90%;top:7%}.dg::after{left:9%;top:94%;width:calc(var(--tw)*.34);margin:calc(var(--tw)*-.17) 0 0 calc(var(--tw)*-.17);animation-delay:1.7s}
 @keyframes doraStar{0%,58%,100%{opacity:0;transform:scale(.2) rotate(0)}72%{opacity:.9;transform:scale(1) rotate(18deg)}86%{opacity:0;transform:scale(.25) rotate(36deg)}}
@@ -1332,7 +1332,11 @@ html.lp #chara.ch2 .ch-info{justify-content:flex-start}
 /* the dora in the hand row: the same as on the table (ユーザー 2026-11-14) — a little gold over the whole tile, the gold edge with its
    running light, and a band of light that sweeps across the tile every 2.6 s, with the two stars */
 .tl.dora .dg{border-radius:inherit}
-.tl.dora .dg{background:linear-gradient(118deg,transparent 42%,rgba(255,250,230,.75) 50%,transparent 58%) no-repeat,linear-gradient(118deg,transparent 30%,rgba(255,220,150,.2) 50%,transparent 70%) no-repeat,rgba(255,196,80,.16);
+.tl.dora .dg{background:linear-gradient(118deg,transparent 42%,rgba(255,240,248,.75) 50%,transparent 58%) no-repeat,linear-gradient(118deg,transparent 30%,rgba(255,160,205,.2) 50%,transparent 70%) no-repeat,rgba(255,110,170,.14);
   background-size:260% 100%,260% 100%,auto;background-position:180% 0,180% 0,0 0;animation:doraBand 2.6s linear infinite}
 @keyframes doraBand{0%{background-position:180% 0,180% 0,0 0}50%,100%{background-position:-80% 0,-80% 0,0 0}}
 .tl.dora .dg::before,.tl.dora .dg::after{z-index:1}
+/* the end-of-hand stages keep to the game's own box (a squarish window: not over the bands), and the Next button is a size
+   smaller, inside it (ユーザー 2026-11-14) */
+.modal.stage .mbox{--gw:min(var(--W),calc(var(--H) * 2.4));--gh:min(var(--H),calc(var(--W) / 1.36));inset:auto;left:calc((var(--W) - var(--gw)) / 2);top:calc((var(--H) - var(--gh)) / 2);width:var(--gw);height:var(--gh)}
+.agst > .nx,.mvst > .nx{min-width:13cqw;font-size:max(13px,calc(var(--u)*2.5));padding:calc(var(--u)*1.1) 1.6cqw;bottom:calc(var(--u)*3)}

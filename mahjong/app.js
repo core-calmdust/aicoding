@@ -751,7 +751,7 @@ async function onEvent(ev, d) {
       if (d.seat !== ME) { const dr = UIS.drawnBy[d.seat]; TB.sortAfterDiscard(d.seat, p.hand, dr != null && !d.tsumogiri && p.hand.includes(dr) ? dr : null); }
       else { clearActs(); renderHand(); }
       UIS.drawnBy[d.seat] = null;
-      await sleep(d.seat === ME ? 720 : 860);   // (ユーザー 2026-11-14: the next player's draw showed while the hand was still putting the tile out — wait until it is about down)
+      await sleep(d.seat === ME ? 600 : 700);   // (ユーザー 2026-11-14: the next player's draw showed while the hand was still putting the tile out — wait until it is about down)
       break;
     }
     case 'riichi-stick': SND.stick(); TB.setStick(d.seat, true); refreshTable(); renderBadges(); break;
@@ -1204,9 +1204,9 @@ async function showMoves(d, o = {}) {
     const t0 = opp ? .34 : .3, t1 = opp ? .66 : .7, p0 = at(t0), p1 = at(t1), pm = at(.5), q2 = [2 * pm[0] - (p0[0] + p1[0]) / 2, 2 * pm[1] - (p0[1] + p1[1]) / 2];
     const dp = `M${p0[0].toFixed(1)} ${p0[1].toFixed(1)} Q${q2[0].toFixed(1)} ${q2[1].toFixed(1)} ${p1[0].toFixed(1)} ${p1[1].toFixed(1)}`;
     h += `<path class="mv-a" id="mvp${k}" style="--k:${k}" pathLength="1" d="${dp}" fill="none" stroke="#eaffff" stroke-width="${(u * 1.5).toFixed(1)}" stroke-linecap="round" marker-end="url(#mvh)" filter="url(#mvg)"/>`;
-    // (ユーザー 2026-11-14: something is sent along the arrow) — bright points of light run down it to the receiver, over and over
-    for (let j = 0; j < 3; j++) { const b0 = (.62 + k * .08 + j * .3).toFixed(2);
-      h += `<circle r="${(u * 1.7).toFixed(1)}" fill="#ffe08a" stroke="#fff6d8" stroke-width="${(u * .4).toFixed(1)}" opacity="0" filter="url(#mvd)"><animateMotion dur=".9s" begin="${b0}s" repeatCount="indefinite" calcMode="spline" keyTimes="0;1" keySplines=".45 0 .55 1"><mpath href="#mvp${k}"/></animateMotion><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.15;.8;1" dur=".9s" begin="${b0}s" repeatCount="indefinite"/></circle>`; }
+    // (ユーザー 2026-11-14: something is sent along the arrow — quietly: a soft glint slides down it to the receiver, over and over)
+    { const b0 = (.62 + k * .08).toFixed(2);
+      h += `<path d="${dp}" pathLength="1" fill="none" stroke="#ffffff" stroke-opacity=".8" stroke-width="${(u * 1).toFixed(1)}" stroke-linecap="round" stroke-dasharray=".1 .9" stroke-dashoffset="1" opacity="0"><animate attributeName="stroke-dashoffset" from="1.1" to="0" dur="1.3s" begin="${b0}s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;.9;.9;0" keyTimes="0;.15;.75;1" dur="1.3s" begin="${b0}s" repeatCount="indefinite"/></path>`; }
     k++;
   }
   svg.innerHTML = h;
