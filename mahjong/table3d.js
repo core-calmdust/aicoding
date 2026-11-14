@@ -260,7 +260,7 @@ function buildHand(env) {
   return rig;
 }
 const ROW = 6;
-const SPD = 1.3;   // every movement on the table runs this much faster than its written duration (ユーザー 2026-11-14: a little quicker overall)
+const SPD = 1.6;   // every movement on the table runs this much faster than its written duration (ユーザー 2026-11-14: a little quicker overall)
 const PI = Math.PI;
 
 function roundRect(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
@@ -549,7 +549,7 @@ class Table3D {
                 float sw = uT < 0.0 ? 0.0 : clamp(uT * 1.25, 0.0, 1.0), bp = p.x * .4 + p.y * .5 - mix(-1.3, 1.3, sw);
                 float band = uT < 0.0 ? 0.0 : (exp(-bp * bp / .006) * .85 + exp(-bp * bp / .05) * .25) * sin(sw * 3.14159) * 1.35;   // a band of light sweeps across the tile
                 float a = clamp(.15 + rim * .6 + run * 1.2 + st + band, 0.0, .96);
-                gl_FragColor = vec4(mix(vec3(1.0, .72, .22), vec3(1.0, .97, .86), clamp(run * 1.4 + st + band * 1.2, 0.0, 1.0)), a); }` }); }
+                gl_FragColor = vec4(mix(vec3(1.0, .42, .68), vec3(1.0, .92, .96), clamp(run * 1.4 + st + band * 1.2, 0.0, 1.0)), a); }` }); }
         o = g.userData.dora = new THREE.Mesh(this.doraGeo, this.doraMat); o.renderOrder = 3; g.add(o);
       }
       if (o) o.visible = !!want;
