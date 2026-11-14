@@ -83,8 +83,8 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
 .shstg .strow{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}.shstg .strow .mapb{padding:12px 10px;font-size:16px;background:linear-gradient(135deg,#1b2350,#3a2a6e);box-shadow:0 4px 0 #11163a}.shstg .mapb i{color:#ffd76a}.shstg .mapb span{display:flex;flex-direction:column;align-items:flex-start;line-height:1.2}.shstg .mapb small{font-size:12px;color:#ffe7a0;font-weight:700}
 .shstg .dyb{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font:inherit;padding:10px;border-radius:14px;border:2px solid var(--line,#eadfc6);background:#fff;color:#2b3044;cursor:pointer;box-shadow:0 3px 0 var(--line,#eadfc6)}.shstg .dyb b{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:900}.shstg .dyb b em{font-style:normal;font-size:11px;font-weight:900;color:#fff;background:#e5484d;border-radius:99px;padding:2px 7px;letter-spacing:.04em}.shstg .dyb small{font-size:12px;font-weight:700;color:#9a8762}.shstg .dyb.done small{color:#2f9a6a}
 html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
-@media (min-width:820px){html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidden!important;pointer-events:none}
-.bvi #bvMBody:has(> #bvStg){position:relative}.bvi #bvMBody > #bvStg.shstg:not([hidden]){position:absolute;left:0;right:0;top:0;height:calc(100% + var(--shdh,86px));box-sizing:border-box;justify-content:space-between;margin:0!important}}
+html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidden!important;pointer-events:none}
+#bvMBody:has(> #bvStg){position:relative}#bvMBody > #bvStg.shstg:not([hidden]){position:absolute;left:0;right:0;top:0;height:calc(100% + var(--shdh,86px));box-sizing:border-box;justify-content:space-between;margin:0!important}
 #lessonOverlay #lessonList .lx-grid:not(.pzh-days) > .lx-card.shbd > .lx-th{background:radial-gradient(ellipse at 50% 40%,#3a7a60,#24503f)!important}.lx-card.shbd .lx-th svg{width:88%;height:84%}#lessonOverlay #lessonList .lx-grid:not(.pzh-days) > .lx-card.shcr > .lx-th{padding:0!important;overflow:hidden;background:#0d1236!important}.lx-card.shbd.sel{border-color:#ff5d5d;box-shadow:0 0 0 2px rgba(255,93,93,.25)}
 .shstg .pg{font-size:16px;font-weight:700;color:var(--ink,#2a2f3a)}
 .shstg .nx{font-size:15px;opacity:.8}
@@ -103,7 +103,8 @@ html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
 .shmap .hd,.shmap .ars,.shmap .gift,.shmap .sh{flex-shrink:0}.shmap .hd{height:auto!important;max-height:none!important}
 .shmap .hd{position:relative;display:flex;align-items:center;gap:12px;padding:calc(12px + env(safe-area-inset-top)) 16px 8px}
 .shmap .hd h2{margin:0;font-size:22px;letter-spacing:.04em;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.shmap .hd .shtl{flex:1;min-width:0}.shmap .hd .em{display:none;flex:none}.shmap .hd .em.zx{display:none!important}.shmap .hd .emi{object-fit:cover;border-radius:14px;border:2px solid #e8c877}.shmap.scn .sky{background-size:cover;background-position:50% 100%;filter:blur(16px) brightness(.62) saturate(1.1);transform:scale(1.12)}.shmap.scn .sky canvas{display:none}.shmap.scn .wld .pn{fill:rgba(255,255,255,.85);paint-order:stroke;stroke:rgba(0,0,0,.35);stroke-width:.6px}.shmap .sh .art.scn{padding:0;overflow:hidden}.shmap .sh .art.scn svg{border-radius:14px 14px 0 0}.shmap .sh .art.scn b{margin:4px 0 6px}.shmap .hd .story{display:none;margin:4px 0 0;font-size:15px;line-height:1.55;color:#c8d2f4;opacity:.9;max-width:760px}
+.shmap .hd .shtl{flex:1;min-width:0}.shmap .hd .em{display:none;flex:none}.shmap .hd .em.zx{display:none!important}.shmap .hd .emi{object-fit:cover;border-radius:14px;border:2px solid #e8c877}@media (pointer:coarse),(max-width:819px){.shmap.scn .sky{filter:none!important;transform:none!important;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(0,0,0,.4))!important}}
+.shmap.scn .sky{background-color:transparent;background-size:cover;background-position:50% 100%;filter:blur(16px) brightness(.62) saturate(1.1);transform:scale(1.12)}.shmap.scn .sky canvas{display:none}.shmap.scn .wld .pn{fill:rgba(255,255,255,.85);paint-order:stroke;stroke:rgba(0,0,0,.35);stroke-width:.6px}.shmap .sh .art.scn{padding:0;overflow:hidden}.shmap .sh .art.scn svg{border-radius:14px 14px 0 0}.shmap .sh .art.scn b{margin:4px 0 6px}.shmap .hd .story{display:none;margin:4px 0 0;font-size:15px;line-height:1.55;color:#c8d2f4;opacity:.9;max-width:760px}
 @media (min-width:820px){.shmap .hd{gap:18px;padding:calc(18px + env(safe-area-inset-top)) 24px 10px}.shmap .hd .em{display:block;width:64px;height:64px;filter:drop-shadow(0 0 14px rgba(255,215,106,.35))}.shmap .hd h2{font-size:34px;letter-spacing:.08em;color:#ffe7a0;text-shadow:0 0 18px rgba(255,215,106,.35)}.shmap .hd .story{display:block}.shmap .hd .tot{font-size:21px}}
 .shmap .hd .tot{font-size:17px;font-weight:800;color:#ffd76a;white-space:nowrap}
 .shmap .x{flex:none;width:46px;height:46px;padding:0;display:grid;place-items:center;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
@@ -229,6 +230,30 @@ html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
   // the winding path of an area's ten stars (x 0..100, y 0..64), a little different area to area
   const cPts = (id, i) => window.ShanghaiScenes ? ShanghaiScenes.pts(id, i) : Array.from({ length: 10 }, (_, k) => [R1(4 + k * 10.2), R1(44 + 9 * Math.sin(k * .78 + i))]);
   const R1 = v => Math.round(v * 10) / 10;
+  // (2026-11-14, ユーザー: スマホでかなり重い) the scene drawn once into a bitmap per area (blob URL, cached for the session): the map
+  // on phones, the stage box, the cards and the header show these pictures instead of the live vector (thousands of shapes)
+  const LITE_SCN = () => { try { return matchMedia('(pointer: coarse)').matches || innerWidth < 820; } catch (e) { return false; } };
+  // areaKey → the bitmap's blob URL. Made one at a time (a queue: no burst of work), kept in the Cache Storage too so the next visit
+  // shows them at once. Until it is ready an element marked data-scn="<key>" shows nothing (no heavy vector meanwhile) and is
+  // filled in when it is (img src / svg image href).
+  const BMC = {}, BMQ = [], BLANK = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+  let bmBusy = false;
+  const scnKey = (id, i, w) => id + '-' + i + '-' + w;
+  const scnFill = (k, u) => document.querySelectorAll(`[data-scn="${k}"]`).forEach(e => { if (e.tagName.toLowerCase() === 'img') e.src = u; else e.setAttribute('href', u); });
+  function bmNext() {
+    if (bmBusy || !BMQ.length) return; bmBusy = true;
+    const { id, i, w, k } = BMQ.shift(), h = Math.round(w * 64 / 116), req = 'https://cache.local/shanghai-scn/v1/' + k + '.jpg';
+    const done = b => { bmBusy = false; if (b) { BMC[k] = URL.createObjectURL(b); scnFill(k, BMC[k]); } setTimeout(bmNext, 30); };
+    const draw = () => { const im = new Image(); im.onload = () => { try { const c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(im, 0, 0, w, h);
+      c.toBlob(b => { if (b && window.caches) caches.open('aicoding-shanghai-scn').then(C => C.put(req, new Response(b))).catch(() => {}); done(b); }, 'image/jpeg', .9); } catch (e) { done(null); } }; im.onerror = () => done(null); im.src = sceneUrl(id, i, w, h); };
+    if (window.caches) caches.open('aicoding-shanghai-scn').then(C => C.match(req)).then(r => r ? r.blob().then(done) : draw()).catch(draw); else draw();
+  }
+  function areaImg(id, i, w, first) {
+    const k = scnKey(id, i, w); if (BMC[k]) return { k, u: BMC[k] };
+    if (!BMQ.some(q => q.k === k)) { const q = { id, i, w, k }; if (first) BMQ.unshift(q); else BMQ.push(q); setTimeout(bmNext, 0); }
+    return { k, u: BLANK };
+  }
+  const scnImg = (id, i, w, style, first) => { const a = areaImg(id, i, w, first); return `<img data-scn="${a.k}" src="${a.u}" alt="" style="${style || ''}">`; };
   // a course's area drawn as a picture (an <img> / a canvas source / a CSS background): the scene's SVG as a data URL
   const sceneUrl = (id, i, w, h) => window.ShanghaiScenes ? 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${i * 116} 0 116 64" width="${w || 464}" height="${h || 256}" preserveAspectRatio="xMidYMid slice">${ShanghaiScenes.svg(id, courseOf(id).n, 'u' + id)}</svg>`) : '';
   // the pending stage: a number (a zodiac stage, as before) or { c: course, s } or { daily: 'n' | 'h' }
@@ -758,7 +783,7 @@ html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
   const heroHtml = (lang, title, c, n) => `<div class="pzh-hero"><img class="pzh-ch" src="../images/atlas/av/peacock-0.webp" alt=""><div class="pzh-tx"><small>${esc(({ ja: '上海', zh: '上海', zhT: '上海', ko: '상하이' })[lang] || 'Shanghai')}</small><b>${esc(title)}</b><span class="pzh-bar"><i style="width:${n ? Math.round(c * 100 / n) : 0}%"></i></span><span class="pzh-n">${c} / ${n}</span></div></div>`;
   // a course's picture for its card: the scene (or, for 星座, a constellation of stars on the night sky)
   function courseThumb(id) {
-    if (id !== 'zodiac') return window.ShanghaiScenes ? ShanghaiScenes.slice(id, 0, courseOf(id).n, 't' + id) : '';
+    if (id !== 'zodiac') return window.ShanghaiScenes ? scnImg(id, 0, 348, 'width:100%;height:100%;object-fit:cover;background:' + (window.ShanghaiScenes ? ShanghaiScenes.tint(id) : '#223')) : '';
     const S = CON.leo, E = edges('leo');
     return `<svg viewBox="-6 -4 112 72" style="width:100%;height:100%;background:radial-gradient(ellipse at 50% 30%,#3a3a8a,#0d1236 75%)">${E.map(([i, j]) => `<line x1="${S.p[i][0]}" y1="${S.p[i][1]}" x2="${S.p[j][0]}" y2="${S.p[j][1]}" stroke="#ffd76a" stroke-width=".8" opacity=".8"/>`).join('')}${S.p.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2.2" fill="#fff6d0"/>`).join('')}</svg>`;
   }
@@ -851,6 +876,7 @@ html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
   const PW = 116, PH = 64;   // one constellation's box in the long sky (x 0..100 of CON plus a gap), the sky's height
   function stageMap(o) {
     css(); const lang = o.lang, K = C(), cid = o.course && courseOf(o.course) ? o.course : 'zodiac', ZOD = cid === 'zodiac', CO = courseOf(cid);
+    const LITE = !ZOD && LITE_SCN(), BMPX = Math.min(1600, Math.round(116 * Math.min(innerHeight / 64, 14) * Math.min(1.6, devicePixelRatio || 1)));
     const AR = ZOD ? K.AREAS : Array.from({ length: CO.n }, (_, i) => 'a' + i), NA = AR.length, N = NA * 10;
     const areaName = i => ZOD ? TX('ar.' + AR[i], lang) : TX('st.area', lang, { n: i + 1 });
     const RA = s => ZOD ? Reward.at(s) : 0, edg = i => ZOD ? edges(AR[i]) : Array.from({ length: 9 }, (_, k) => [k, k + 1]);
@@ -858,7 +884,7 @@ html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
     let P = cprog(cid), area = Math.floor(nextStage(P, N) / 10), pick = nextStage(P, N);
     if (o.pick != null && o.pick < N) { pick = o.pick; area = Math.floor(pick / 10); }
     const el = document.createElement('div'); el.className = 'shmap' + (ZOD ? '' : ' scn'); if (!ZOD) { el.style.background = window.ShanghaiScenes ? ShanghaiScenes.tint(cid) : '#1b2140'; scnCss(); }
-    el.innerHTML = `<div class="sky"><canvas></canvas></div><div class="hd">${ZOD ? '' : `<img class="em emi" src="${sceneUrl(cid, 0, 128, 128)}" alt="">`}<svg class="em${ZOD ? '' : ' zx'}" viewBox="0 0 64 64" aria-hidden="true"><defs><radialGradient id="shemg" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#3b4aa0"/><stop offset="1" stop-color="#121640"/></radialGradient></defs><rect x="10" y="4" width="44" height="56" rx="8" fill="url(#shemg)" stroke="#e8c877" stroke-width="2"/><rect x="14" y="8" width="36" height="48" rx="5" fill="none" stroke="rgba(232,200,119,.35)"/><path d="M20 44 L28 34 L36 38 L44 22 M28 34 L30 22" fill="none" stroke="#ffe39a" stroke-width="1.4" stroke-linecap="round"/><g fill="#fff6d8"><circle cx="20" cy="44" r="2.2"/><circle cx="28" cy="34" r="2.6"/><circle cx="36" cy="38" r="2"/><circle cx="44" cy="22" r="2.8"/><circle cx="30" cy="22" r="1.8"/></g></svg><div class="shtl"><h2></h2><p class="story"></p></div><span class="tot"></span><button type="button" class="x" aria-label="${esc(TX('b.close', lang))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div class="ars"></div><div class="fld"><div class="vp"><div class="wld"></div></div><button type="button" class="nav l">‹</button><button type="button" class="nav r">›</button><div class="zoom"><button type="button" data-z="1">＋</button><button type="button" data-z="-1">－</button></div></div><div class="gift"></div><div class="sh"></div>`;   // (the next gift: just above the stage box — ユーザー 2026-11-14)
+    el.innerHTML = `<div class="sky"><canvas></canvas></div><div class="hd">${ZOD ? '' : scnImg(cid, 0, 232).replace('<img ', '<img class="em emi" ')}<svg class="em${ZOD ? '' : ' zx'}" viewBox="0 0 64 64" aria-hidden="true"><defs><radialGradient id="shemg" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#3b4aa0"/><stop offset="1" stop-color="#121640"/></radialGradient></defs><rect x="10" y="4" width="44" height="56" rx="8" fill="url(#shemg)" stroke="#e8c877" stroke-width="2"/><rect x="14" y="8" width="36" height="48" rx="5" fill="none" stroke="rgba(232,200,119,.35)"/><path d="M20 44 L28 34 L36 38 L44 22 M28 34 L30 22" fill="none" stroke="#ffe39a" stroke-width="1.4" stroke-linecap="round"/><g fill="#fff6d8"><circle cx="20" cy="44" r="2.2"/><circle cx="28" cy="34" r="2.6"/><circle cx="36" cy="38" r="2"/><circle cx="44" cy="22" r="2.8"/><circle cx="30" cy="22" r="1.8"/></g></svg><div class="shtl"><h2></h2><p class="story"></p></div><span class="tot"></span><button type="button" class="x" aria-label="${esc(TX('b.close', lang))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div class="ars"></div><div class="fld"><div class="vp"><div class="wld"></div></div><button type="button" class="nav l">‹</button><button type="button" class="nav r">›</button><div class="zoom"><button type="button" data-z="1">＋</button><button type="button" data-z="-1">－</button></div></div><div class="gift"></div><div class="sh"></div>`;   // (the next gift: just above the stage box — ユーザー 2026-11-14)
     document.body.appendChild(el);
     const $ = q => el.querySelector(q), vp = $('.vp'), wld = $('.wld');
     // the pan / zoom: the long sky drawn at u px per unit, then scaled by z and moved by (tx, ty)
@@ -909,13 +935,13 @@ html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
       $('.ars').innerHTML = AR.map((a, i) => { const st = Array.from({ length: 10 }, (_, k) => P.st[i * 10 + k] || 0).reduce((x, v) => x + v, 0); return `<button type="button" class="ar${i === area ? ' on' : ''}${areaOpen(i) ? '' : ' lk'}" data-a="${i}">${esc(areaName(i))}<em>★${st}</em>${(ZOD ? [1, 2, 3] : []).filter(t => Math.floor(GIFT_S[t] / 10) === i && !Reward.has(t)).map(t => `<img class="agf" src="../images/atlas/av/peacock-${t}.webp" alt="">`).join('')}</button>`; }).join('');
       const on = $('.ar.on'); if (on) on.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
       wld.querySelectorAll('.pn').forEach((t, i) => t.classList.toggle('on', i === area));
-      if (!ZOD && $('.sky').dataset.a !== String(area)) { $('.sky').dataset.a = area; $('.sky').style.backgroundImage = `url("${sceneUrl(cid, area, 232, 128)}")`; }   // (a scene course: this area's picture, blurred, fills the screen round the map)
+      if (!ZOD && !LITE && $('.sky').dataset.a !== String(area)) { const sk = $('.sky'); sk.dataset.a = area; const a2 = areaImg(cid, area, 232, true); sk.style.backgroundImage = `url("${a2.u}")`; if (a2.u === BLANK) { const t = setInterval(() => { if (sk.dataset.a !== String(area) || !sk.isConnected) return clearInterval(t); if (BMC[a2.k]) { sk.style.backgroundImage = `url("${BMC[a2.k]}")`; clearInterval(t); } }, 300); } }   // (a scene course: this area's picture, blurred, fills the screen round the map)
     }
     // every constellation's stars, evenly spaced inside its box, in the long sky's units
     const PTS = AR.map((a, i) => (ZOD ? CON[a].p : cPts(cid, i)).map(([x, y]) => [i * PW + 8 + x, y]));   // (placed by hand on the figures, already evenly spaced)
     function art() {
       const lit = ([i, j], fs) => cleared(P, fs + i) && cleared(P, fs + j);
-      let svg = `<svg viewBox="0 0 ${WW} ${PH}" preserveAspectRatio="none">` + (!ZOD && window.ShanghaiScenes ? ShanghaiScenes.svg(cid, NA, 'm' + cid) : '');   // (a scene course: one continuous landscape, its road through every stage)
+      let svg = `<svg viewBox="0 0 ${WW} ${PH}" preserveAspectRatio="none">` + (!ZOD && window.ShanghaiScenes ? (LITE ? AR.map((_, i) => `<image class="scbm" data-scn="${scnKey(cid, i, BMPX)}" href="${areaImg(cid, i, BMPX, i === area).u}" x="${i * PW - .05}" y="0" width="${PW + .1}" height="${PH}" preserveAspectRatio="none"/>`).join('') : ShanghaiScenes.svg(cid, NA, 'm' + cid)) : '');   // (phones: the areas as bitmaps — light to pan and zoom; PC: the live vector with its motion)   // (a scene course: one continuous landscape, its road through every stage)
       AR.forEach((a, i) => {
         const fs = i * 10, done = Array.from({ length: 10 }, (_, k) => cleared(P, fs + k)).filter(Boolean).length;
         svg += `<text class="pn${i === area ? ' on' : ''}" x="${i * PW + 8}" y="7">${esc(areaName(i))}</text>`;
@@ -957,7 +983,7 @@ html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
     function conArt(a, k) {
       if (!ZOD) {   // a scene course: this area's picture with its path, this stage's star ringed
         const Q = cPts(cid, a).map(([x, y]) => [a * PW + 8 + x, y]), fs = a * 10;
-        let v = `<svg viewBox="${a * PW} 0 116 64" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${window.ShanghaiScenes ? ShanghaiScenes.svg(cid, NA, 'b' + cid) : ''}`;
+        let v = `<svg viewBox="${a * PW} 0 116 64" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${window.ShanghaiScenes ?  `<image data-scn="${scnKey(cid, a, 464)}" href="${areaImg(cid, a, 464, true).u}" x="${a * PW}" y="0" width="116" height="64" preserveAspectRatio="none"/>` : ''}`;
         for (let j = 0; j < 9; j++) { const L = cleared(P, fs + j) && cleared(P, fs + j + 1); if (!L) continue; v += `<line class="cl${L ? ' on' : ''}" x1="${Q[j][0]}" y1="${Q[j][1]}" x2="${Q[j + 1][0]}" y2="${Q[j + 1][1]}" style="stroke:${L ? '#ffd76a' : 'rgba(255,255,255,.85)'}"/>`; }
         Q.forEach(([x, y], j) => { v += j === k ? `<circle class="cpk" cx="${x}" cy="${y}" r="5.4"/><circle class="cst on" cx="${x}" cy="${y}" r="2.6"/>` : `<circle class="cst${cleared(P, fs + j) ? ' on' : ''}" cx="${x}" cy="${y}" r="1.8" style="${cleared(P, fs + j) ? '' : 'fill:#fff;stroke:rgba(0,0,0,.35);stroke-width:.3'}"/>`; });
         return v + '</svg>';
