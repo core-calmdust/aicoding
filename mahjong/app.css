@@ -1670,3 +1670,17 @@ html.ds #game #opp2{right:var(--gi);top:calc(var(--gi) + 32px * var(--hz, 1) + 1
 html.ds #game #opp1{top:calc(var(--gi) + 32px * var(--hz, 1) + 14px + var(--bf) + 104px)}
 html.lp #game #opp2{right:max(14px,var(--sr));top:calc(max(10px,var(--st)) + 42px)}
 html.lp #game #opp1{top:calc(max(10px,var(--st)) + 42px + var(--bf) + 74px)}
+/* 先読み (ユーザー 2026-11-15): the next three draws, once, in the middle of the screen — a lacquer plate, gold lines, big tiles */
+.peekpop{position:absolute;inset:0;z-index:60;display:grid;place-items:center;background:rgba(6,3,14,.45);opacity:0;transition:opacity .25s;cursor:pointer}
+.peekpop.show{opacity:1}
+.pk-box{display:flex;flex-direction:column;align-items:center;gap:14px;padding:22px 34px 16px;border-radius:6px;
+  background:radial-gradient(120% 140% at 50% 0%,rgba(232,206,140,.22),transparent 60%),linear-gradient(180deg,var(--lq1),var(--lq2));
+  border:1px solid rgba(232,206,140,.85);box-shadow:inset 0 0 0 4px var(--lq2),inset 0 0 0 5px rgba(232,206,140,.35),0 18px 50px rgba(0,0,0,.6),0 0 40px rgba(232,206,140,.18);
+  transform:scale(.9);transition:transform .3s cubic-bezier(.2,1.4,.4,1)}
+.peekpop.show .pk-box{transform:none}
+.pk-box small{font-family:var(--serif);font-weight:800;font-size:clamp(16px, calc(var(--GH, 700px) * .03), 24px);letter-spacing:.3em;text-indent:.3em;color:var(--gl2)}
+.pk-t{display:flex;gap:clamp(8px, 1.4vmin, 16px)}
+.pk-t > span{opacity:0;transform:translateY(10px);animation:pkIn .35s calc(.12s + var(--i) * .1s) cubic-bezier(.2,1.2,.4,1) forwards}
+.pk-t .tl{--tw:clamp(46px, calc(var(--GH, 700px) * .1), 84px)}
+@keyframes pkIn{to{opacity:1;transform:none}}
+.pk-box em{font-style:normal;font-size:12px;letter-spacing:.12em;color:rgba(217,205,238,.7)}
