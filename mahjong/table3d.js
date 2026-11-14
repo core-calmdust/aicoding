@@ -269,10 +269,42 @@ function buildHand(env) {
   // (ユーザー 2026-11-14: the hand looked dark in the shade — fair and clean like a hand model's: lighter skin that glows a little from within
   // (so the shaded side stays rosy, never grey), and casts no shadow on itself)
   const skin = new THREE.MeshPhysicalMaterial({ vertexColors: true, color: new THREE.Color(0xf6e6de).convertSRGBToLinear(), roughness: .5, metalness: 0, sheen: .35, sheenRoughness: .5, sheenColor: new THREE.Color(0xffe0d4), emissive: new THREE.Color(0xc98a78), emissiveIntensity: .32, envMap: env, envMapIntensity: .35 });
-  skin.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader.replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+  // (ユーザー 2026-11-14: a feel of skin — a fine texture on the hand.) The mesh has no uv, so the detail is solid noise in the hand's own
+  // space, worked into the normal as a bump: pores (a fine pitted grain), the faint diamond lines of skin, and a slow unevenness; the
+  // same noise makes the gloss uneven (the pores matt, the skin between a little sheen) and the colour very slightly blotchy.
+  skin.onBeforeCompile = sh => {
+    sh.vertexShader = 'varying vec3 vSkP;\n' + sh.vertexShader.replace('#include <morphtarget_vertex>', '#include <morphtarget_vertex>\n vSkP = transformed;');
+    sh.fragmentShader = `varying vec3 vSkP;
+      float skH(vec3 p){ return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453); }
+      float skN(vec3 p){ vec3 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f);
+        return mix(mix(mix(skH(i), skH(i + vec3(1,0,0)), f.x), mix(skH(i + vec3(0,1,0)), skH(i + vec3(1,1,0)), f.x), f.y),
+                   mix(mix(skH(i + vec3(0,0,1)), skH(i + vec3(1,0,1)), f.x), mix(skH(i + vec3(0,1,1)), skH(i + vec3(1,1,1)), f.x), f.y), f.z); }
+      float skHeight(vec3 p){
+        float pore = smoothstep(.62, .82, skN(p * 46.)) ;                                  // pits
+        float lines = abs(sin(dot(p, vec3(31., 9., 23.)) + skN(p * 7.) * 3.)) * abs(sin(dot(p, vec3(-11., 27., 19.)) + skN(p * 6.) * 3.));   // the skin's criss-cross lines
+        return -pore * .6 + (1. - smoothstep(0., .25, lines)) * -.35 + skN(p * 9.) * .4; }
+      vec3 skPerturb(vec3 surf_pos, vec3 n, vec2 dH, float fd){ vec3 sx = dFdx(surf_pos), sy = dFdy(surf_pos), r1 = cross(sy, n), r2 = cross(n, sx);
+        float det = dot(sx, r1) * fd; vec3 g = sign(det) * (dH.x * r1 + dH.y * r2); return normalize(abs(det) * n - g); }
+    ` + sh.fragmentShader
+      .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+        { float hh = skHeight(vSkP) * .0016; normal = skPerturb(-vViewPosition, normal, vec2(dFdx(hh), dFdy(hh)), faceDirection); }`)
+      .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
+        roughnessFactor = clamp(roughnessFactor * (.9 + .25 * smoothstep(.55, .85, skN(vSkP * 46.))), .05, 1.);`)
+      .replace('#include <color_fragment>', `#include <color_fragment>
+        diffuseColor.rgb *= .97 + .06 * skN(vSkP * 4.5);`)
+      .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
     { vec3 sL = normalize((viewMatrix * vec4(.2, 1., .3, 0.)).xyz); float sn = dot(normalize(vNormal), sL), sv = 1. - clamp(dot(normalize(vNormal), normalize(vViewPosition)), 0., 1.);
       totalEmissiveRadiance += diffuseColor.rgb * vec3(1., .3, .2) * (smoothstep(-.55, .05, sn) * (1. - smoothstep(.0, .6, sn)) * .34 + sv * sv * sv * .16); }`); };
-  const nail = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: .22, clearcoat: 1, clearcoatRoughness: .08, envMap: env, envMapIntensity: .7, emissive: new THREE.Color(0x40141c), emissiveIntensity: .35 });
+  const nail = new THREE.MeshPhysicalMaterial({ vertexColors: true, side: THREE.DoubleSide, roughness: .22, clearcoat: 1, clearcoatRoughness: .05, envMap: env, envMapIntensity: .9,   // (long nails: a thin shell, seen from both sides — ユーザー 2026-11-14)
+    emissive: new THREE.Color(0x40141c), emissiveIntensity: .35 });
+  // the nails (ユーザー 2026-11-14, a picture of long coffin nails): a sheer nude pink under a high gloss, with fine glitter in it —
+  // tiny flecks that flash as the hand turns
+  nail.onBeforeCompile = sh => {
+    sh.vertexShader = 'varying vec3 vNkP;\n' + sh.vertexShader.replace('#include <morphtarget_vertex>', '#include <morphtarget_vertex>\n vNkP = transformed;');
+    sh.fragmentShader = 'varying vec3 vNkP;\nfloat nkH(vec3 p){ return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453); }\n' + sh.fragmentShader.replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+      { vec3 c = floor(vNkP * 90.), f = fract(vNkP * 90.) - .5; float r = nkH(c);
+        if (r > .78) { vec3 fn = normalize(vec3(nkH(c + 1.), nkH(c + 2.), nkH(c + 3.)) - .5); float sp = pow(max(0., dot(reflect(normalize(vViewPosition), normalize(vNormal)), fn)), 6.);
+          totalEmissiveRadiance += vec3(1., .95, .97) * sp * smoothstep(.45, .1, length(f)) * 2.2; } }`); };
   const hand = new THREE.Mesh(g, [skin, nail]); hand.castShadow = true; hand.frustumCulled = false; rig.add(hand); if (Hd.mi) hand.morphTargetInfluences = [0];
   // the sleeve (ユーザー 2026-11-14: only a glimpse of the wrist, the sleeve long; a pattern as on a Chinese dress): crimson silk
   // brocade — gold flower roundels and cloud scrolls woven in — closing just above the wrist in a black band between two gold pipings.

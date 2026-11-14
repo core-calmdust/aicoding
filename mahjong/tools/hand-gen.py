@@ -95,7 +95,7 @@ for f, dn, tn in [(x, x + '-finger-phalanx-distal', x + '-finger-tip') for x in 
     m = (wj > .5) & (al > .38) & (al < 1.12) & (h > .02) & (lat < .22)
     isn |= m
     wr = np.exp(-(np.linalg.norm(out - b, axis=1) / .45) ** 2)[:, None]; col = col * (1 - wr * .45) + np.array([218, 140, 126]) * wr * .45   # 指先の赤み
-col[isn] = (238, 160, 174)
+col[isn] = (226, 182, 176)   # (the nail bed, the same nude as the long nails over it)
 
 # ---- つまむポーズ（ユーザー 2026-11-14：親指と人差し指で向かい合わせにつまみ、親指が牌の下面を支え、人差し指を上面に添える）----
 # 置くポーズ（上の、親指が横にある形）と同じ面の並びのまま、親指だけを牌の下へ回した形をもう一つ作る（実行時に二つの間を動かす）。
@@ -156,6 +156,7 @@ for e0, q0 in cands[:6]:                       # よい出だしをいくつか�
         if it % 500 == 499: sg *= .6
     if best is None or cur[0] < best[0]: best = cur
 outA, _, gA = poseA(best[1]); YA = outA[wdi]; RgA = RG(best[1])
+DA = {n: (D[n][0].copy(), D[n][1].copy()) for n in names}            # つまむポーズの関節（長い爪を同じように動かすため）
 print('pinch: cost', round(best[0], 4), 'thumb top y', round(float(YA[:, 1].max()), 3), '(want', round(-GAP, 3), ')', 'q', np.round(best[1], 2))
 assert abs(YA[:, 1].max() + GAP) < .08, 'the thumb does not reach the underside of the tile'
 for n in names: D[n] = DB[n]
@@ -220,6 +221,52 @@ for f in ('index', 'middle', 'ring', 'pinky', 'thumb'):
         c2 = c2 * (1 - w) + np.array([214, 124, 112]) * w
 under = np.clip(-nor[:, 1] * 1.4, 0, 1)[:, None] * .22; c2 = c2 * (1 - under) + np.array([232, 158, 150]) * under
 col = np.where(skin[:, None], c2, col)
+
+# ---- 長めのネイル（ユーザー 2026-11-14「長めのネイルもつけてOK」）----
+# 各指の末節に、爪の付け根から指先の先まで伸びる薄い殻（横に反ったアーモンド形）を足す。末節の関節と一緒に動くので、
+# 置くポーズ・つまむポーズの両方で指に付いたまま。色はネイルの桃色、材質は爪（つや）。
+def nail_shell(f, dn, tn, ext):
+    # ext: how far the free edge runs past the fingertip, in the rig's units (a tile is 1 wide). The 'tip' joint is not the end of
+    # the finger — the end is found from the finger's own vertices (the furthest along the bone).
+    a0, b0 = jpos[dn], jpos[tn]; d0 = b0 - a0; L = np.linalg.norm(d0); d0 = d0 / L
+    up0 = np.array([1., 0, 0]) - d0 * d0[0]; up0 /= np.linalg.norm(up0); sd0 = np.cross(d0, up0)
+    wj = np.zeros(len(V))
+    for c in range(4): wj += np.where((JI[:, c] == idx[dn]) | (JI[:, c] == idx[tn]), JW[:, c], 0)
+    q = V - a0; al = q @ d0 / L; h = q @ up0; lt = q @ sd0
+    fm = wj > .5; alE = al[fm].max()
+    m = fm & (al > alE * .45) & (al < alE * .9)
+    htop = np.percentile(h[m], 98); wd = np.percentile(np.abs(lt[m & (h > np.percentile(h[m], 60))]), 92)
+    ex = ext / (L * S * .95)                                                                  # (rig units → the bone's)
+    s0, s1 = alE * .48, alE + ex
+    ns, nt = 20, 11; P = []
+    for i in range(ns):
+        sv = s0 + (s1 - s0) * i / (ns - 1); u = (sv - s0) / (s1 - s0)
+        k = 1.0
+        if u < .12: k *= .55 + .45 * math.sin(u / .12 * math.pi / 2)                            # the cuticle end, rounded
+        if sv > alE * .92: k *= 1 - .45 * min(1., (sv - alE * .92) / (s1 - alE * .92))           # tapering to a coffin tip (flat end)
+        for j in range(nt):
+            th = -1 + 2 * j / (nt - 1); wn = wd * .82 * k
+            y = htop + .02 * L - (th * th) * wd * .28                                             # the nail's sideways curve
+            P.append(a0 + d0 * (sv * L) + up0 * y + sd0 * (th * wn))
+    P = np.array(P); Fs = []
+    for i in range(ns - 1):
+        for j in range(nt - 1):
+            v0 = i * nt + j; Fs += [(v0, v0 + nt, v0 + 1), (v0 + 1, v0 + nt, v0 + nt + 1)]
+    return P, np.array(Fs)
+def to_out(Pm, Dm, dn, A):
+    R, t = Dm[dn]; X = pit(rig(Pm @ R.T + t))
+    return X @ RgA.T - gA + OFF if A else X - grip + OFF
+add_o, add_a, add_f = [], [], []
+for f, dn, tn, ext in [('index', 'index-finger-phalanx-distal', 'index-finger-tip', .3), ('middle', 'middle-finger-phalanx-distal', 'middle-finger-tip', .3),
+                       ('ring', 'ring-finger-phalanx-distal', 'ring-finger-tip', .28), ('pinky', 'pinky-finger-phalanx-distal', 'pinky-finger-tip', .24),
+                       ('thumb', 'thumb-phalanx-distal', 'thumb-tip', .24)]:
+    Pm, Fs = nail_shell(f, dn, tn, ext); base = len(out) + sum(len(x) for x in add_o)
+    add_o.append(to_out(Pm, DB, dn, False)); add_a.append(to_out(Pm, DA, dn, True)); add_f.append(Fs + base)
+nadd = sum(len(x) for x in add_o)   # (the nails' colour: a sheer nude pink, as in the picture the user gave)
+out = np.concatenate([out] + add_o); outA = np.concatenate([outA] + add_a); F = np.concatenate([F] + add_f)
+col = np.concatenate([col, np.tile(np.array([226, 182, 176], float), (nadd, 1))]); isn = np.concatenate([isn, np.ones(nadd, bool)])
+nor = vnormals(out, F); norA = vnormals(outA, F)
+mv = np.where(np.linalg.norm(outA - out, axis=1) > 1e-4)[0]
 fn = isn[F].sum(1) >= 3
 F2 = np.concatenate([F[~fn], F[fn]])
 # 袖口の位置（手首の関節の少し手前）と、そこの腕の太さ
