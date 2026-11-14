@@ -72,19 +72,27 @@ let WA = null;
 function loadCore() {
   try {
     let b64 = null;
-    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('core-wasm.js?v=4'); b64 = self.KN_WASM; }
+    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('core-wasm.js?v=5'); b64 = self.KN_WASM; }
     else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') { const g = globalThis, had = 'self' in g, old = g.self; g.self = g; try { require(require('path').join(__dirname, 'core-wasm.js')); b64 = g.KN_WASM; } finally { if (had) g.self = old; else delete g.self; } }
     if (!b64 || (typeof process !== 'undefined' && process.env && process.env.KN_NOWASM)) return;
-    const bin = typeof atob === 'function' ? Uint8Array.from(atob(b64), c => c.charCodeAt(0)) : Buffer.from(b64, 'base64');
-    let io = null;
-    const env = {
-      poll: () => (Date.now() > tEnd || (SH !== null && SH.stopped())) ? 1 : 0,
-      shget: (h1, h2) => { const e = SH.get(h1 >>> 0, h2 >>> 0); if (!e) return 0; io[0] = e.d; io[1] = e.f; io[2] = e.v; io[3] = e.m; return 1; },
-      shput: (h1, h2, d, v, f, m) => { SH.put(h1 >>> 0, h2 >>> 0, d, v, f, m, 0); },
-    };
-    const x = new WebAssembly.Instance(new WebAssembly.Module(bin), { env }).exports, buf = x.memory.buffer;
-    io = new Int32Array(buf, x.iop(), 16);
-    WA = coreViews(x, buf, io);
+    // (2026-11-15) the SIMD build first; the one without SIMD where that does not compile (KN_NOSIMD=1 in Node to check it)
+    const g = typeof self !== 'undefined' ? self : globalThis, list = [b64, g.KN_WASM0];
+    if (typeof process !== 'undefined' && process.env && process.env.KN_NOSIMD) list.shift();
+    for (const s of list) {
+      if (!s) continue;
+      try {
+        const bin = typeof atob === 'function' ? Uint8Array.from(atob(s), c => c.charCodeAt(0)) : Buffer.from(s, 'base64');
+        let io = null;
+        const env = {
+          poll: () => (Date.now() > tEnd || (SH !== null && SH.stopped())) ? 1 : 0,
+          shget: (h1, h2) => { const e = SH.get(h1 >>> 0, h2 >>> 0); if (!e) return 0; io[0] = e.d; io[1] = e.f; io[2] = e.v; io[3] = e.m; return 1; },
+          shput: (h1, h2, d, v, f, m) => { SH.put(h1 >>> 0, h2 >>> 0, d, v, f, m, 0); },
+        };
+        const x = new WebAssembly.Instance(new WebAssembly.Module(bin), { env }).exports, buf = x.memory.buffer;
+        io = new Int32Array(buf, x.iop(), 16);
+        WA = coreViews(x, buf, io); WA.simd = s === b64; return;
+      } catch (e) { WA = null; }
+    }
   } catch (e) { WA = null; }
 }
 // the views of a core's memory: core-wasm.js (WA) or the lead's core_mt.wasm (MX)
