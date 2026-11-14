@@ -393,17 +393,16 @@ static inline int vFromTT(int v, int ply) { return v > WINT ? v - ply : v < -WIN
 #endif
 // (2026-11-15) the bucket table is Praline's (shared/praline/praline_tt.h): w >> 58 = in use; replace the shallowest / oldest
 #define PL_TT_BITS TTM_BITS
-#define PL_TT_USED(e) ((e)[1] >> 58)
-#define PL_TT_SCORE(e) (!((e)[1] >> 58) ? -1000 : (int)(i8)((e)[1] >> 32) - ((((e)[1] >> 48) & 255) != ttAge ? 16 : 0))
+#define PL_TT_USED(w, c) ((w) >> 58)
+#define PL_TT_SCORE(w, c) (!((w) >> 58) ? -1000 : (int)(i8)((w) >> 32) - ((((w) >> 48) & 255) != ttAge ? 16 : 0))
 #include "../shared/praline/praline_tt.h"
 static inline void ttGet(u64 key, TTE *e) {
-  const u64 *x = plttFind(key, key);
-  if (x) { const u64 w = x[1]; e->key = key; e->v = (i16)(w & 0xFFFF); e->m = (u16)(w >> 16); e->d = (i8)(w >> 32); e->flag = (u8)((w >> 40) & 3); e->age = (u8)(w >> 48); return; }
+  u64 w, c;
+  if (plttFind(key, key, &w, &c)) { e->key = key; e->v = (i16)(w & 0xFFFF); e->m = (u16)(w >> 16); e->d = (i8)(w >> 32); e->flag = (u8)((w >> 40) & 3); e->age = (u8)(w >> 48); return; }
   e->key = ~key; e->v = 0; e->m = 0; e->d = -1; e->flag = 0; e->age = 0;
 }
 static void ttStore(u64 key, int d, int flag, int v, Move m, int ply) {
-  int hit; u64 *x = plttSlot(key, key, &hit);
-  const u64 old = hit ? x[1] : 0;
+  int hit; u64 old, oc; u64 *x = plttSlot(key, key, &hit, &old, &oc);
   u64 mv = m ? (u64)m << 16 : old ? (old & 0xFFFF0000ull) : 0;   // (no move: keep the entry's own)
   u64 w = (u64)(u16)(i16)vToTT(v, ply) | mv | (u64)(u8)(i8)(d > 120 ? 120 : d < -1 ? -1 : d) << 32 | (u64)(flag & 3) << 40 | (u64)ttAge << 48 | 1ull << 58;
   plttWrite(x, key, w, 0);

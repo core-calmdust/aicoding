@@ -983,13 +983,13 @@ typedef unsigned long long u64;
 /* (2026-11-15) the bucket table is Praline's (shared/praline/praline_tt.h): indexed by hl, the key hl | hh checked; w >> 63 =
    in use; replace the shallowest / oldest */
 #define PL_TT_BITS TTM_BITS
-#define PL_TT_USED(e) ((e)[1] >> 63)
-#define PL_TT_SCORE(e) (!((e)[1] >> 63) ? -1000 : (int)(((e)[1] >> 32) & 255) - ((((e)[1] >> 42) & 31) != (u64)(ttAge & 31) ? 16 : 0))
+#define PL_TT_USED(w, c) ((w) >> 63)
+#define PL_TT_SCORE(w, c) (!((w) >> 63) ? -1000 : (int)(((w) >> 32) & 255) - ((((w) >> 42) & 31) != (u64)(ttAge & 31) ? 16 : 0))
 #include "../shared/praline/praline_tt.h"
 static inline u64 ttKey(void) { return (u64)(u32)hl | (u64)(u32)hh << 32; }
 static inline void ttGet(TTEntry *e) {
-  const u64 *x = plttFind(ttKey(), (u32)hl);
-  if (x) { const u64 w = x[1]; e->key = hh; e->move = (i32)((w >> 16) & 0x7FFF); e->data = (i32)((w & 0xFFFF) | ((w >> 32) & 255) << 16 | ((w >> 40) & 3) << 24 | ((w >> 42) & 31) << 26); return; }
+  u64 w, c;
+  if (plttFind(ttKey(), (u32)hl, &w, &c)) { e->key = hh; e->move = (i32)((w >> 16) & 0x7FFF); e->data = (i32)((w & 0xFFFF) | ((w >> 32) & 255) << 16 | ((w >> 40) & 3) << 24 | ((w >> 42) & 31) << 26); return; }
   e->key = ~hh; e->move = 0; e->data = 0;
 }
 /* (2026-11-11) gStop, threadId, the busy marks and the split points of Young Brothers Wait are Praline's, the site's common
@@ -1102,8 +1102,7 @@ static inline int timeUp(void) {
 }
 #ifdef MT
 static void store(int depth, double score, int flag, int move, int ply) {
-  const u64 key = ttKey(); int hit; u64 *x = plttSlot(key, (u32)hl, &hit);
-  const u64 old = hit ? x[1] : 0;
+  const u64 key = ttKey(); int hit; u64 old, oc; u64 *x = plttSlot(key, (u32)hl, &hit, &old, &oc);
   if (score > MATE - MAXPLY) score += ply; else if (score < -MATE + MAXPLY) score -= ply;
   if (!move && old) move = (int)((old >> 16) & 0x7FFF);
   u64 w = (u64)((i32)score & 0xffff) | (u64)(move & 0x7FFF) << 16 | (u64)(depth & 255) << 32 | (u64)(flag & 3) << 40 | (u64)(ttAge & 31) << 42 | 1ull << 63;

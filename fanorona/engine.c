@@ -370,17 +370,16 @@ static inline int vFromTT(int v, int ply) { return v > WINT ? v - ply : v < -WIN
 // (2026-11-15) the bucket table is Praline's (shared/praline/praline_tt.h): 3 words an entry; w >> 58 = in use
 #define PL_TT_BITS TTM_BITS
 #define PL_TT_WORDS 3
-#define PL_TT_USED(e) ((e)[1] >> 58)
-#define PL_TT_SCORE(e) (!((e)[1] >> 58) ? -1000 : (int)(i8)((e)[1] >> 32) - ((((e)[1] >> 48) & 255) != ttAge ? 16 : 0))
+#define PL_TT_USED(w, c) ((w) >> 58)
+#define PL_TT_SCORE(w, c) (!((w) >> 58) ? -1000 : (int)(i8)((w) >> 32) - ((((w) >> 48) & 255) != ttAge ? 16 : 0))
 #include "../shared/praline/praline_tt.h"
 static inline void ttGet(u64 key, TTE *e) {
-  const u64 *x = plttFind(key, key);
-  if (x) { const u64 w = x[1], c = x[2]; e->key = key; e->cap = c; e->v = (i16)(w & 0xFFFF); e->f = (u8)(w >> 16); e->t = (u8)(w >> 24); e->d = (i8)(w >> 32); e->flag = (u8)((w >> 40) & 3); e->age = (u8)(w >> 48); return; }
+  u64 w, c;
+  if (plttFind(key, key, &w, &c)) { e->key = key; e->cap = c; e->v = (i16)(w & 0xFFFF); e->f = (u8)(w >> 16); e->t = (u8)(w >> 24); e->d = (i8)(w >> 32); e->flag = (u8)((w >> 40) & 3); e->age = (u8)(w >> 48); return; }
   e->key = ~key; e->cap = 0; e->v = 0; e->f = 255; e->t = 0; e->d = -1; e->flag = 0; e->age = 0;
 }
 static void ttStore(u64 key, int d, int flag, int v, const Move *m, int ply) {
-  int hit; u64 *x = plttSlot(key, key, &hit);
-  const u64 ow = hit ? x[1] : 0, oc = hit ? x[2] : 0;
+  int hit; u64 ow, oc; u64 *x = plttSlot(key, key, &hit, &ow, &oc);
   u64 mv, c;   // (no move: keep the entry's own, or none)
   if (m) { mv = (u64)m->f << 16 | (u64)m->t << 24; c = m->cap; } else if (hit) { mv = ow & 0xFFFF0000ull; c = oc; } else { mv = (u64)255 << 16; c = 0; }
   u64 w = (u64)(u16)(i16)vToTT(v, ply) | mv | (u64)(u8)(i8)(d > 120 ? 120 : d) << 32 | (u64)(flag & 3) << 40 | (u64)ttAge << 48 | 1ull << 58;

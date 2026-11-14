@@ -22,6 +22,11 @@ s = open(f'{repo}/{game}/' + ('core.c' if game in ('amazons', 'ugolki', 'agon', 
 # so that the rewrites below (the busy marks' accessors) reach the common code too
 s = re.sub(r'#include "\.\./shared/praline/([a-z_]+\.h)"\n', lambda m: open(f'{repo}/shared/praline/{m.group(1)}').read(), s)
 
+# (2026-11-15) the shared table of shared/praline/praline_tt.h (inlined above): its word reads / writes are the simulation's
+# (the engines that use it: xiangqi, janggi, chess, shogi, tafl here; the old per-game rewrites of bk[…] are gone)
+if '#define PRALINE_TT_H\n' in s:
+    s = s.replace('#define PRALINE_TT_H\n', '#define PRALINE_TT_H\n#define PL_TT_RD(p) SIMR((u64 *)(p))\n#define PL_TT_WR(p, v) SIMW((p), (v))\n', 1)
+
 def rep(a, b, count=1):
     global s
     n = s.count(a)
@@ -37,30 +42,18 @@ def cut_threads(marker):
 
 if game in ('xiangqi', 'janggi'):
     cut_threads('// ---------------------------------------------------------------- threads (engine_mt.wasm')
-    rep('u64 w = bk[2 * j + 1], kx = bk[2 * j];', 'u64 w = SIMR((u64 *)&bk[2 * j + 1]), kx = SIMR((u64 *)&bk[2 * j]);')
-    rep('u64 w = bk[2 * i + 1], kx = bk[2 * i];', 'u64 w = SIMR(&bk[2 * i + 1]), kx = SIMR(&bk[2 * i]);')
-    rep('bk[2 * j + 1] = w; bk[2 * j] = key ^ w;', 'SIMW(&bk[2 * j + 1], w); SIMW(&bk[2 * j], key ^ w);')
     rep('  nodes++;\n', '  nodes++; SIM_NODE();\n', 0)
 elif game == 'chess':
     cut_threads('/* ------------------------------------------------------------------ threads (engine_mt.wasm')
-    rep('u64 w = bk[2 * j + 1], kx = bk[2 * j];', 'u64 w = SIMR((u64 *)&bk[2 * j + 1]), kx = SIMR((u64 *)&bk[2 * j]);')
-    rep('u64 w = bk[2 * i + 1], kx = bk[2 * i];', 'u64 w = SIMR(&bk[2 * i + 1]), kx = SIMR(&bk[2 * i]);')
-    rep('bk[2 * j + 1] = w; bk[2 * j] = key ^ w;', 'SIMW(&bk[2 * j + 1], w); SIMW(&bk[2 * j], key ^ w);')
     ck = 'CHK_MASK' if '& CHK_MASK) == 0)) check_time();' in s else '2047'   # (2026-11-12: the threads' stops every CHK_MASK + 1 nodes)
     rep('if ((++nodes, ((long long)nodes & %s) == 0)) check_time();' % ck, 'if ((++nodes, SIM_NODE_E(), ((long long)nodes & %s) == 0)) check_time();' % ck, 0)
 elif game == 'shogi':   # (built with -DNATIVE: its native block, with thread-local state as -DMT)
     rep('#define EXPORT(name)\n#define TLS\n', '#define EXPORT(name)\n#define TLS _Thread_local\n')
     cut_threads('/* ------------------------------------------------------------------ threads (engine_mt.wasm')
-    rep('u64 w = bk[2 * j + 1], kx = bk[2 * j];', 'u64 w = SIMR((u64 *)&bk[2 * j + 1]), kx = SIMR((u64 *)&bk[2 * j]);')
-    rep('u64 w = bk[2 * i + 1], kx = bk[2 * i];', 'u64 w = SIMR(&bk[2 * i + 1]), kx = SIMR(&bk[2 * i]);')
-    rep('bk[2 * j + 1] = w; bk[2 * j] = key ^ w;', 'SIMW(&bk[2 * j + 1], w); SIMW(&bk[2 * j], key ^ w);')
     rep('  nodes++;\n  if (timeUp()) return 0;', '  nodes++; SIM_NODE();\n  if (timeUp()) return 0;', 0)
 elif game == 'tafl':    # (2026-11-11; built with -DNATIVE: its native block, with thread-local state as -DMT)
     rep('#define EXPORT(name)\n#define TLS\n', '#define EXPORT(name)\n#define TLS _Thread_local\n')
     cut_threads('/* ------------------------------------------------------------------ threads (engine_mt.wasm')
-    rep('u64 w = bk[2 * j + 1], kx = bk[2 * j];', 'u64 w = SIMR((u64 *)&bk[2 * j + 1]), kx = SIMR((u64 *)&bk[2 * j]);')
-    rep('u64 w = bk[2 * i + 1], kx = bk[2 * i];', 'u64 w = SIMR(&bk[2 * i + 1]), kx = SIMR(&bk[2 * i]);')
-    rep('bk[2 * j + 1] = w; bk[2 * j] = key ^ w;', 'SIMW(&bk[2 * j + 1], w); SIMW(&bk[2 * j], key ^ w);')
     rep('  nodes++;\n', '  nodes++; SIM_NODE();\n', 0)
 elif game in ('ugolki', 'agon', 'konane', 'gomoku'):   # (gomoku 2026-11-12: clang -O2 -DMT -DNATIVE, SIM_NODE() in core.c's pmake, delayed stores 0; positions / tables: gomoku/tools/mtsim_pos.js)   # (2026-11-11: core.c with -DMT -DNATIVE; SIM_NODE() is in its search(); positions: ugolki/tools/mtsim_pos.js)
     pass

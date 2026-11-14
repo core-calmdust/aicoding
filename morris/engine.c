@@ -458,16 +458,16 @@ static u8 ttAge;
 // (2026-11-15) the bucket table is Praline's (shared/praline/praline_tt.h): indexed by h1, the whole key h1:h2 checked;
 // w >> 56 = in use; replace the shallowest / oldest
 #define PL_TT_BITS TTM_BITS
-#define PL_TT_USED(e) ((e)[1] >> 56)
-#define PL_TT_SCORE(e) (!((e)[1] >> 56) ? -1000 : (int)(i8)((e)[1] >> 32) - ((((e)[1] >> 48) & 255) != ttAge ? 16 : 0))
+#define PL_TT_USED(w, c) ((w) >> 56)
+#define PL_TT_SCORE(w, c) (!((w) >> 56) ? -1000 : (int)(i8)((w) >> 32) - ((((w) >> 48) & 255) != ttAge ? 16 : 0))
 #include "../shared/praline/praline_tt.h"
 static inline int ttLoad(const Pos *p, int *m, int *d, int *v, int *f) {
-  const u64 *x = plttFind((u64)p->h1 << 32 | p->h2, p->h1);
-  if (x) { const u64 w = x[1]; *v = (int16_t)(w & 0xFFFF); *m = (int)((w >> 16) & 0x7FFF); *d = (i8)(w >> 32); *f = (int)((w >> 40) & 3); return 1; }
+  u64 w, c;
+  if (plttFind((u64)p->h1 << 32 | p->h2, p->h1, &w, &c)) { *v = (int16_t)(w & 0xFFFF); *m = (int)((w >> 16) & 0x7FFF); *d = (i8)(w >> 32); *f = (int)((w >> 40) & 3); return 1; }
   return 0;
 }
 static void ttSave(const Pos *p, int sv, int m, int d, int f) {
-  const u64 key = (u64)p->h1 << 32 | p->h2; int hit; u64 *x = plttSlot(key, p->h1, &hit);
+  const u64 key = (u64)p->h1 << 32 | p->h2; int hit; u64 ow, oc; u64 *x = plttSlot(key, p->h1, &hit, &ow, &oc);
   u64 w = (u64)(uint16_t)(int16_t)sv | (u64)(m & 0x7FFF) << 16 | (u64)(u8)(i8)d << 32 | (u64)(f & 3) << 40 | (u64)ttAge << 48 | 1ull << 56;
   plttWrite(x, key, w, 0);
 }

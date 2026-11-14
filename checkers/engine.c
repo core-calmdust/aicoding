@@ -571,19 +571,18 @@ static void ttStore(u64 key, int d, int flag, int v, const Move *m, int ply) {
 #define PL_TT_BITS TTM_BITS
 #define PL_TT_WAYS 2
 #define PL_TT_WORDS 3
-#define PL_TT_SCORE(e) ((int)(i8)(e)[2] - ((((e)[2] >> 16) & 255) != (u64)ttAge ? 8 : 0))
+#define PL_TT_SCORE(w, c) ((int)(i8)(c) - ((((c) >> 16) & 255) != (u64)ttAge ? 8 : 0))
 #include "../shared/praline/praline_tt.h"
 static inline void ttLoad(u64 key, TTE *e) {
-  const u64 *x = plttFind(key, key);
-  if (x) {
-    const u64 a = x[1], b = x[2];
+  u64 a, b;
+  if (plttFind(key, key, &a, &b)) {
     e->key = key; e->cap = (u32)a; e->v = (i16)(a >> 32); e->ft[0] = (u8)(a >> 48); e->ft[1] = (u8)(a >> 56);
     e->d = (i8)b; e->flag = (u8)(b >> 8); e->age = (u8)(b >> 16); return;
   }
   e->key = ~key;
 }
 static void ttStore(u64 key, int d, int flag, int v, const Move *m, int ply) {
-  int hit, age = ttAge; u64 *x = plttSlot(key, key, &hit);
+  int hit, age = ttAge; u64 oa, ob; u64 *x = plttSlot(key, key, &hit, &oa, &ob);
   u64 a = (u64)m->cap | (u64)(u16)(i16)vToTT(v, ply) << 32 | (u64)m->f << 48 | (u64)(u8)(m->t | (m->promo << 7)) << 56;
   u64 b = (u64)(u8)(i8)(d > 120 ? 120 : d) | (u64)flag << 8 | (u64)age << 16;
   plttWrite(x, key, a, b);

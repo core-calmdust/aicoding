@@ -573,16 +573,16 @@ enum { TT_NONE, TT_UPPER, TT_LOWER, TT_EXACT };
 static u8 ttAge;   /* the main thread advances it for every search */
 /* (2026-11-15) the bucket table is Praline's (shared/praline/praline_tt.h): w >> 63 = in use; replace the shallowest / oldest */
 #define PL_TT_BITS TTM_BITS
-#define PL_TT_USED(e) ((e)[1] >> 63)
-#define PL_TT_SCORE(e) (!((e)[1] >> 63) ? -1000 : (int)(((e)[1] >> 49) & 255) - ((((e)[1] >> 59) & 15) != (u64)(ttAge & 15) ? 16 : 0))
+#define PL_TT_USED(w, c) ((w) >> 63)
+#define PL_TT_SCORE(w, c) (!((w) >> 63) ? -1000 : (int)(((w) >> 49) & 255) - ((((w) >> 59) & 15) != (u64)(ttAge & 15) ? 16 : 0))
 #include "../shared/praline/praline_tt.h"
 static inline void tt_get(u64 key, TTE *e) {
-  const u64 *x = plttFind(key, key);
-  if (x) { const u64 w = x[1]; e->key = key; e->score = (i16)(w & 0xFFFF); e->eval = (i16)(w >> 16); e->move = (u32)(w >> 32) & 0x1FFFF; e->depth = (u8)(w >> 49); e->flag = (u8)((w >> 57) & 3); return; }
+  u64 w, c;
+  if (plttFind(key, key, &w, &c)) { e->key = key; e->score = (i16)(w & 0xFFFF); e->eval = (i16)(w >> 16); e->move = (u32)(w >> 32) & 0x1FFFF; e->depth = (u8)(w >> 49); e->flag = (u8)((w >> 57) & 3); return; }
   e->key = ~key; e->score = 0; e->eval = -INF; e->move = 0; e->depth = 0; e->flag = TT_NONE;
 }
 static void tt_put(u64 key, int depth, int score, int eval, int flag, int move) {
-  int hit; u64 *x = plttSlot(key, key, &hit);
+  int hit; u64 ow, oc; u64 *x = plttSlot(key, key, &hit, &ow, &oc);
   u64 w = (u64)(unsigned short)score | (u64)(unsigned short)eval << 16 | (u64)((u32)move & 0x1FFFF) << 32 | (u64)(depth & 255) << 49 | (u64)(flag & 3) << 57 | (u64)(ttAge & 15) << 59 | 1ull << 63;
   plttWrite(x, key, w, 0);
 }
