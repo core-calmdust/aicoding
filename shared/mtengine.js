@@ -27,6 +27,26 @@
   'use strict';
   if (window.MTEngine) return;
   const DIR = location.pathname.replace(/[^/]*$/, '');
+  // (2026-11-15) ?health=1 (engine-health.html): the page's one-thread engine workers start through shared/corestat.js, which
+  // reports the core they really run (WebAssembly or JavaScript); the threads' workers (&mt=1, mt-helper) are left as they are
+  const CS = [];
+  if (/[?&]health=1\b/.test(location.search) && window.Worker && typeof BroadcastChannel === 'function') {
+    const OW = window.Worker, PROBE = new URL('corestat.js?v=1', (document.currentScript && document.currentScript.src) || location.href).href;
+    new BroadcastChannel('corestat').onmessage = e => { const r = e.data; if (r && CS[r.id]) Object.assign(CS[r.id], r); };
+    window.Worker = class extends OW {
+      constructor(u, o) {
+        let url = u;
+        try {
+          const a = new URL(String(u), location.href);
+          if (a.origin === location.origin && !(o && o.type === 'module') && !/mt-helper|[?&]mt=1\b/.test(a.href)) {
+            CS.push({ url: a.pathname + a.search, files: [], mods: [], errs: [] });
+            url = PROBE + '&u=' + encodeURIComponent(a.href) + '&id=' + (CS.length - 1);
+          }
+        } catch (e) { /* the worker as asked */ }
+        super(url, o);
+      }
+    };
+  }
   const K_PREF = 'aicoding-mt', K_PREF0 = 'aicoding-mt:' + DIR, K_COI = 'aicoding-mt-coi:' + DIR, K_RELOAD = 'coi-reload:' + location.pathname, K_NODIP = 'aicoding-mt-nodip', K_HEAL = 'aicoding-mt-heal:' + location.pathname;
   const LS = {
     get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } },
@@ -366,7 +386,8 @@
       if (q && start) { try { await Promise.race([q.ready, new Promise(r => setTimeout(r, 15000))]); } catch (e) {} }
       pools.push(Object.assign({ wasm: u.wasm, lead: u.lead, made: !!q }, q ? q.state() : {}));
     }
-    return { can: CAN, isolated: ISO, coi: COI, on: on(), helpers: helpers(), perf: perfThreads(), touch: TOUCH, pools };
+    if (start && CS.length) await new Promise(r => setTimeout(r, 1500));   // (the one-thread workers' cores: shared/corestat.js)
+    return { can: CAN, isolated: ISO, coi: COI, on: on(), helpers: helpers(), perf: perfThreads(), touch: TOUCH, pools, workers: CS };
   }
   // engine-health.html opens the page in a frame; an isolated page cannot be read from outside, so it asks by message
   addEventListener('message', e => {
