@@ -40,6 +40,7 @@ function load() {
   // stats existed only know the places: they are kept as `old` and counted in すべて.
   if (!d.pstats) d.pstats = { v: MJStats.V, skill: MJStats.blank(), std: MJStats.blank(), chars: {}, old: d.stats.games ? Object.assign(MJStats.blank(), { games: d.stats.games, rank: d.stats.rank.slice() }) : null };
   MJStats.fix(d.pstats.skill); MJStats.fix(d.pstats.std); d.pstats.chars = d.pstats.chars || {};
+  d.rank = Object.assign({ pt: 0, games: 0 }, d.rank || {});   // 段位戦: the points (they only add up)
   return d;
 }
 const owns = id => !!DB.chars[id];
@@ -73,6 +74,7 @@ const IC = {
   bolt: '<svg viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>',
   coin: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5h4.5a2 2 0 0 1 0 4H9"/></svg>',
   stats: '<svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
+  rank: '<svg viewBox="0 0 24 24"><path d="M4 8l4 3 4-6 4 6 4-3-2 10H6z"/><path d="M6 21h12"/></svg>',
   keys: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M9.3 9.3a2.8 2.8 0 1 1 3.9 2.6c-.8.4-1.2 1-1.2 1.9v.4"/><path d="M12 17.3h.01"/></svg>',   // (？ — ユーザー 2026-11-14)
   gear: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.6M12 18.6v2.6M21.2 12h-2.6M5.4 12H2.8M18.5 5.5l-1.8 1.8M7.3 16.7l-1.8 1.8M18.5 18.5l-1.8-1.8M7.3 7.3L5.5 5.5"/><circle cx="12" cy="12" r="6.6"/></svg>',
   rated: '<svg viewBox="0 0 24 24"><path d="M4 20V14h4v6M10 20V9h4v11M16 20V4h4v16M3 20h18"/></svg>',
@@ -301,6 +303,7 @@ function renderHome() {
   const mi = (ic, lab, sub) => `<i class="lm-i">${ic}</i><span class="lm-t"><b>${esc(lab)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</span>`;
   $('#btnGacha').innerHTML = mi(IC.gacha, t('gacha'), 'GACHA'); $('#btnColl').innerHTML = mi(IC.collection, t('chars'), 'CHARACTERS');
   $('#btnStats').innerHTML = mi(IC.stats, t('stats'), 'STATS');
+  $('#btnRated').innerHTML = mi(IC.rank, t('rated'), 'RANKED');
   document.querySelectorAll('#luxMenu [data-soon]').forEach(b => { b.innerHTML = mi(IC[b.dataset.soon] || '', t(b.dataset.soon), t('soon')); });
   sndIcons(); applyLite();
   const c = MJChars.get(DB.sel);
@@ -314,7 +317,7 @@ function renderHome() {
     $('#aaBlur').src = full;
   }
   const P = DB.pstats, all = MJStats.derive(MJStats.sum(P.skill, P.std, P.old));
-  $('#aaProf').innerHTML = `<img src="${charImg(c, 'face')}" alt=""><span><b>${esc(t('you'))}</b><small>${esc(t('psGames'))} ${all.games} ・ ${esc(t('psAvgRank'))} ${all.avgRank == null ? '—' : all.avgRank.toFixed(2)}</small></span>`;
+  $('#aaProf').innerHTML = `<img src="${charImg(c, 'face')}" alt=""><span><b>${esc(t('you'))}</b><small>${esc(t('psGames'))} ${all.games} ・ ${esc(t('psAvgRank'))} ${all.avgRank == null ? '—' : all.avgRank.toFixed(2)}</small></span>${rankBadge(MJRank.at(DB.rank.pt), 'sm')}`;
   $('#partner').innerHTML = `
     <div class="pp-r"><em class="prar r-${c.rarity}">${c.rarity}</em><span class="pp-f">${esc(L(MJChars.families[c.family].name))}</span></div>
     <div class="pp-n">${esc(L(c.name))}</div>
@@ -322,7 +325,7 @@ function renderHome() {
     <div class="pp-sk">${skillChip(uk, 'on')}${o.skills.length > 1 ? `<span class="pp-more" id="ppMore">${esc(t('ownedSkills'))} ${o.skills.length}</span>` : ''}</div>
     <button class="pp-chg" id="ppChg">${IC.swap}<span>${esc(t('tapChange'))}</span></button>`;
   // pick-up banner: the best character not yet owned (or the best of all)
-  const pick = MJChars.list.filter(x => !owns(x.id)).sort((a, b) => RORD[a.rarity] - RORD[b.rarity])[0] || MJChars.list.find(x => x.rarity === 'UR');
+  const pick = MJChars.list.filter(x => !owns(x.id) && x.reward == null).sort((a, b) => RORD[a.rarity] - RORD[b.rarity])[0] || MJChars.list.find(x => x.rarity === 'UR');
   $('#aaBanner').innerHTML = `<i class="ab-art" style="background-image:url('${charImg(pick, 'bust')}')"></i><span class="ab-rib">PICK UP</span><span class="ab-tx"><em class="r-${pick.rarity}">${pick.rarity}</em><b>${esc(L(pick.name))}</b><small>${esc(L(pick.title))}</small></span><span class="ab-go">${esc(t('gacha'))} ›</span>`;
   $('#aaBanner').style.setProperty('--c', pick.color);
   $('#aaGoSub').textContent = `${t(DB.set.len === 'south' ? 'south' : 'east')} ・ ${t(DB.set.skills ? 'skillOn' : 'skillOff')} ・ BOT ${t('lv')[DB.set.lv]}`;
@@ -339,6 +342,7 @@ function renderHome() {
 $('#pArt').addEventListener('click', e => { if (e.target.closest('#pImg')) homeSay(); });
 $('#partner').addEventListener('click', e => { if (e.target.closest('#ppChg, #ppMore')) { SND.pick(); openChara(DB.sel); } });
 $('#btnStats').addEventListener('click', () => openStats(null));
+$('#btnRated').addEventListener('click', openRanked);
 $('#aaProf').addEventListener('click', () => openStats(null));
 $('#aaBanner').addEventListener('click', () => { SND.pick(); openGacha(); });
 // tapping her: a line of hers in a speech bubble
@@ -486,6 +490,73 @@ $('#btnGacha').addEventListener('click', openGacha);
 $('#btnColl').addEventListener('click', () => openChara(DB.sel));
 $('#chBack').addEventListener('click', () => { SND.pick(); closeChara(); });
 
+// ---------------------------------------------------------------- 段位戦 (ranked)
+// (ユーザー 2026-11-14) the ladder of 麻雀天聖's 段位戦: 見習い → 10級 … 1級 → 初段 … 十段 → titles growing grander up to 雀神.
+// Points only add up. Every second rank brings a reward character (the summer series). Skills on; the BOTs get stronger with the rank.
+function rankBadge(r, sz = '') { return `<span class="rkb rk-${r.tier} ${sz}"><i></i><b>${esc(L(r.name))}</b></span>`; }
+function rankBar(pt) {
+  const r = MJRank.at(pt), n = MJRank.next(pt);
+  const f = n ? (pt - r.pt) / (n.pt - r.pt) : 1;
+  return `<div class="rk-bar"><i style="--f:${f.toFixed(3)}"></i></div><small class="rk-nx">${n ? esc(t('rkNext', { r: L(n.name), n: n.pt - pt })) : esc(t('rkTop'))}</small>`;
+}
+function rankStrip(rk) {
+  return `<div class="rk-strip ${rk.ups.length ? 'up' : ''}">${rankBadge(rk.r1)}<span class="rk-g">${esc(t('rkGain', { n: rk.gain }))}</span>
+    <span class="rk-pt">${DB.rank.pt} pt</span>${rk.ups.length ? `<em class="rk-up">${esc(t('rkUp'))}</em>` : ''}<div class="rk-sb">${rankBar(DB.rank.pt)}</div></div>`;
+}
+function openRanked() {
+  SND.pick();
+  const pt = DB.rank.pt, cur = MJRank.at(pt), nx = MJRank.next(pt);
+  const nextGift = MJRank.list.find(x => x.reward && x.i > cur.i);
+  const P = MJRank.POINTS, lvName = t('lv')[MJRank.botLv(pt)];
+  const rows = MJRank.list.slice().reverse().map(x => {
+    const g = x.reward ? MJChars.get(x.reward) : null, got = g && owns(g.id);
+    return `<div class="rk-row ${x.i === cur.i ? 'cur' : x.i < cur.i ? 'past' : ''}">${rankBadge(x, 'sm')}<span class="rk-need">${x.pt} pt</span>${g ? `<span class="rk-gift ${got ? 'got' : ''}">${frame(g, 'face')}<em class="r-${g.rarity}">${g.rarity}</em>${got ? `<b>${esc(L(g.name))}</b>` : `<b>？？？</b>`}</span>` : '<span class="rk-gift none"></span>'}</div>`;
+  }).join('');
+  const b = modal(`
+    <div class="rkd">
+      <header><h2>${esc(t('rated'))}<small>RANKED</small></h2><button class="x" data-a="close">×</button></header>
+      <div class="rk-main">
+        <div class="rk-me">
+          <div class="rk-big">${rankBadge(cur, 'lg')}</div>
+          <div class="rk-pts"><b>${pt}</b> pt <small>${esc(t('rkGames', { n: DB.rank.games }))}</small></div>
+          ${rankBar(pt)}
+          ${nextGift ? `<div class="rk-ng"><span class="rk-gimg">${frame(MJChars.get(nextGift.reward), 'face')}</span><span><small>${esc(t('rkNextGift'))}</small><b>？？？</b><em>${esc(t('rkGiftAt', { r: L(nextGift.name), n: Math.max(0, nextGift.pt - pt) }))}</em></span></div>` : ''}
+          <p class="rk-rule">${esc(t('rkRule', { lv: lvName }))}</p>
+          <div class="rk-go">
+            <button class="go rk-b" data-len="east"><b>${esc(t('east'))}</b><small>${[0, 1, 2].map(i => `${esc(t('rank')[i])} +${P.east[i]}`).join(' ・ ')}</small></button>
+            <button class="go rk-b" data-len="south"><b>${esc(t('south'))}</b><small>${[0, 1, 2].map(i => `${esc(t('rank')[i])} +${P.south[i]}`).join(' ・ ')}</small></button>
+          </div>
+        </div>
+        <div class="rk-ladder" id="rkLadder">${rows}</div>
+      </div>
+    </div>`, 'ranked');
+  void nx;
+  const curRow = b.querySelector('.rk-row.cur'); if (curRow) requestAnimationFrame(() => curRow.scrollIntoView({ block: 'center' }));
+  b.addEventListener('click', e => {
+    if (e.target.closest('[data-a=close]')) { closeModal(); return; }
+    const g = e.target.closest('[data-len]'); if (!g) return;
+    SND.unlock(); closeModal(); $('#chara').hidden = true; startGame({ ranked: true, len: g.dataset.len });
+  });
+}
+// a rank gained: the new badge large, then each reward character revealed
+async function showPromotion(rk) {
+  const top = rk.r1;
+  if (rk.ups.length) {
+  const b = modal(`<div class="rkp rk-${top.tier}"><i class="rkp-rays"></i><small class="rkp-k">${esc(t('rkUp'))}</small>${rankBadge(top, 'xl')}
+    <p class="rkp-from">${esc(L(rk.r0.name))} → ${esc(L(top.name))}</p>${rk.gifts.length ? `<p class="rkp-gn">${esc(t('rkGiftGet'))}</p>` : ''}<button class="btn gold nx" data-a="ok">${t('next')}</button></div>`, 'stage rkps');
+  SND.limit(top.tier === 't3' ? 5 : top.tier === 't2' ? 4 : top.tier === 't1' ? 3 : 2);
+  await waitClick(b, '[data-a=ok]');
+  }
+  for (const id of rk.gifts) {
+    const c = MJChars.get(id), k = useKey(id);
+    const g = modal(`<div class="rkg" style="--c:${c.color};--c2:${c.color2}"><i class="rkp-rays"></i><div class="rkg-ch"><img src="${charImg(c, 'full')}" alt=""></div>
+      <div class="rkg-tx"><small>${esc(t('rkGiftGet'))}</small><em class="prar r-${c.rarity}">${c.rarity}</em><b>${esc(L(c.name))}</b><span>${esc(L(c.title))}</span>${skillChip(k, 'on')}</div>
+      <button class="btn gold nx" data-a="ok">${t('next')}</button></div>`, 'stage rkps');
+    SND.gacha(c.rarity);
+    await waitClick(g, '[data-a=ok]');
+  }
+}
+
 // ---------------------------------------------------------------- gacha
 const COST1 = 300, COST10 = 2700;
 function rollRarity(guarantee) {
@@ -497,8 +568,9 @@ function rollRarity(guarantee) {
 }
 function rollChar(guarantee) {
   let r = rollRarity(guarantee);
-  let pool = MJChars.list.filter(c => c.rarity === r);
-  if (!pool.length) pool = MJChars.list;
+  const gl = MJChars.list.filter(c => c.reward == null);   // (the 段位戦's reward characters never come from the gacha)
+  let pool = gl.filter(c => c.rarity === r);
+  if (!pool.length) pool = gl;
   return pool[(Math.random() * pool.length) | 0];
 }
 const DUPE = { N: 30, R: 80, SR: 250, SSR: 800, UR: 2000 };
@@ -586,7 +658,8 @@ function renderChara() {
   if ($('#chArt').dataset.id !== c.id + (own ? '' : 'x')) {
     $('#chArt').dataset.id = c.id + (own ? '' : 'x');
     $('#chArt').innerHTML = `<i class="aa-aura"></i><div class="aa-ch ${own ? '' : 'lock'}"><img src="${full}" alt="" draggable="false"></div>` +
-      (own ? '' : `<div class="unlock"><i>${IC.lock}</i><b>${esc(t('lockedT'))}</b><span>${esc(t('lockedS', { r: c.rarity }))}</span><button class="go sm" data-a="gacha">${esc(t('toGacha'))}</button></div>`);
+      (own ? '' : c.reward != null ? `<div class="unlock"><i>${IC.lock}</i><b>${esc(t('lockedT'))}</b><span>${esc(t('rkLocked', { r: L(MJRank.list[c.reward].name) }))}</span><button class="go sm" data-a="rated">${esc(t('rated'))}</button></div>`
+        : `<div class="unlock"><i>${IC.lock}</i><b>${esc(t('lockedT'))}</b><span>${esc(t('lockedS', { r: c.rarity }))}</span><button class="go sm" data-a="gacha">${esc(t('toGacha'))}</button></div>`);
     $('#chBlur').src = full;
     $('#chArt').classList.remove('in'); void $('#chArt').offsetWidth; $('#chArt').classList.add('in');
   }
@@ -610,7 +683,7 @@ function renderChara() {
     const sb = e.target.closest('.sib'); if (sb) { chView = sb.dataset.id; SND.pick(); renderChara(); }
   };
 }
-$('#chArt').addEventListener('click', e => { if (e.target.closest('[data-a=gacha]')) { SND.pick(); openGacha(); } });
+$('#chArt').addEventListener('click', e => { if (e.target.closest('[data-a=gacha]')) { SND.pick(); openGacha(); } else if (e.target.closest('[data-a=rated]')) { SND.pick(); openRanked(); } });
 $('#chTabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (!b) return; chTab = b.dataset.tab; SND.pick(); renderChara(); });
 $('#chList').addEventListener('click', e => { const b = e.target.closest('.chi'); if (!b) return; chView = b.dataset.id; SND.pick(); renderChara(); });
 
@@ -722,20 +795,22 @@ class AutoMe extends SlowBot {     // ?auto: the player's seat plays itself (tes
 // auto-advance result screens in ?auto mode
 const AUTO = /[?&]auto/.test(location.search);
 
-async function startGame() {
+async function startGame(opt = {}) {   // opt.ranked: a 段位戦 game, opt.len its length
   $('#home').hidden = true; $('#game').hidden = false;
   closeModal();
   if (!TB) { TB = new Table3D($('#stage')); TB.setQuality(DB.set.lite ? 'lite' : 'high'); TB.doraFn = isDora; TB.onTileLand = () => SND.tile(); TB.warm(); }
   TB.resume();
   TB.hideAll();
   const me = seatChar(MJChars.get(DB.sel), useKey(DB.sel));
-  const others = MJChars.list.filter(c => c.id !== me.id).sort(() => Math.random() - .5).slice(0, 3).map(c => seatChar(c, rollSkillKey()));
+  const others = MJChars.list.filter(c => c.id !== me.id && (c.reward == null || owns(c.id)))   // (a reward character not yet earned never sits at the table)
+   .sort(() => Math.random() - .5).slice(0, 3).map(c => seatChar(c, rollSkillKey()));
   const chars = [me, ...others];
   chars.forEach(c => { const im = new Image(); im.src = charImg(c, 'full'); if (im.decode) im.decode().catch(() => {}); });   // cut-in art, loaded and decoded in advance
-  UIS = { chars, players: [{ kind: 'me' }, ...[1, 2, 3].map(() => ({ kind: 'bot', lv: DB.set.lv }))], track: new MJStats.Tracker(), drawnBy: [null, null, null, null], abort: false, hand: [], intel: null, picked: null, riichiMode: false, resolve: null, opts: null, kind: null };
+  const ranked = !!opt.ranked, len = ranked ? opt.len : DB.set.len, lv = ranked ? MJRank.botLv(DB.rank.pt) : DB.set.lv, skills = ranked ? true : DB.set.skills;
+  UIS = { ranked: ranked ? { len } : null, lv, chars, players: [{ kind: 'me' }, ...[1, 2, 3].map(() => ({ kind: 'bot', lv }))], track: new MJStats.Tracker(), drawnBy: [null, null, null, null], abort: false, hand: [], intel: null, picked: null, riichiMode: false, resolve: null, opts: null, kind: null };
   const auto = /[?&]auto/.test(location.search);
-  const agents = [auto ? new AutoMe(DB.set.lv) : new Human(), new SlowBot(DB.set.lv), new SlowBot(DB.set.lv), new SlowBot(DB.set.lv)];
-  G = new MJGame({ agents, chars, rules: { length: DB.set.len, skills: DB.set.skills }, ui: onEvent });
+  const agents = [auto ? new AutoMe(lv) : new Human(), new SlowBot(lv), new SlowBot(lv), new SlowBot(lv)];
+  G = new MJGame({ agents, chars, rules: { length: len, skills }, ui: onEvent });
   UIS.game = G;
   TB.setSleeves(chars.map(c => c.color));   // (each seat's sleeve in her sisters' colour)
   $('#gSnd').innerHTML = IC.gear; $('#gExit').innerHTML = IC.exit;
@@ -1285,7 +1360,7 @@ async function showRyuukyoku(d) {
 const PTS = { ja: '{n}点', en: '{n} pts', zh: '{n}点', ko: '{n}점', es: '{n} pts', fr: '{n} pts', pt: '{n} pts', de: '{n} Pkt.', hi: '{n} अंक', ar: '{n} نقطة', ru: '{n} очк.', 'zh-TW': '{n}點', id: '{n} poin', tr: '{n} puan' };
 function recordGame(d, myRank) {
   if (!window.GameRecord || /[?&]auto/.test(location.search) || !G || !G.rules) return;
-  const r = G.rules, lv = DB.set.lv;
+  const r = G.rules, lv = UIS.lv ?? DB.set.lv;
   try { GameRecord.add({ mode: 'ai', res: myRank === 0 ? 'w' : myRank === 3 ? 'l' : 'd', opp: t(r.length === 'south' ? 'south' : 'east') + ' · ' + t(r.skills ? 'skillOn' : 'skillOff') + ' · BOT ' + t('lv')[lv], key: r.length + ':' + (r.skills ? 1 : 0) + ':' + lv, why: t('rank')[myRank] + ' · ' + (PTS[I18N.lang] || PTS.en).replace('{n}', d.scores[ME].toLocaleString()) }); } catch (e) {}
 }
 async function showFinal(d) {
@@ -1299,6 +1374,16 @@ async function showFinal(d) {
     const pc = DB.pstats.chars[UIS.chars[ME].id] = DB.pstats.chars[UIS.chars[ME].id] || { g: 0, r: [0, 0, 0, 0] };
     pc.g++; pc.r[myRank]++;
   }
+  // 段位戦: the points, promotions and their rewards
+  let rk = null;
+  if (UIS.ranked && !AUTO) {
+    const gain = MJRank.POINTS[UIS.ranked.len][myRank], before = DB.rank.pt, r0 = MJRank.at(before);
+    DB.rank.pt += gain; DB.rank.games++;
+    const r1 = MJRank.at(DB.rank.pt), ups = MJRank.list.slice(r0.i + 1, r1.i + 1), gifts = [];
+    for (const u of MJRank.list.slice(1, r1.i + 1)) if (u.reward && !owns(u.reward))   // (any reward of a rank reached and not yet held)
+      { const k = rollSkillKey(); DB.chars[u.reward] = { skills: [k], use: k }; gifts.push(u.reward); }
+    rk = { gain, before, r0, r1, ups, gifts };
+  }
   save();
   recordGame(d, myRank);
   const w = UIS.chars[rank[0]];
@@ -1310,6 +1395,7 @@ async function showFinal(d) {
       <div class="agst-main">
         <h2 class="fn-t">${t('final')}</h2>
         <div class="fn-rows">${rank.map((s, i) => { const c = UIS.chars[s]; return `<div class="fn-r r${i} ${s === ME ? 'mine' : ''}" data-ps="${s}" style="--c:${c.color};--i:${i}"><em class="mv-r r${i}">${t('rank')[i]}</em><img src="${charImg(c, 'face')}" alt=""><b>${esc(L(c.name))}${s === ME ? ` <small>(${t('you')})</small>` : ''}</b><span>${d.scores[s].toLocaleString()}</span></div>`; }).join('')}</div>
+        ${rk ? rankStrip(rk) : ''}
         <div class="earn">${icon('coin')} ${t('earned', { n: coins })}</div>
         <div class="cbtns"><button class="btn" data-a="home">${t('toHome')}</button><button class="btn gold" data-a="again">${t('again')}</button></div>
       </div>
@@ -1317,10 +1403,15 @@ async function showFinal(d) {
   SND.ok();
   await new Promise(res => box.addEventListener('click', e => {
     const ps = e.target.closest('[data-ps]'); if (ps) { openStats(+ps.dataset.ps); return; }
-    const a = e.target.closest('[data-a]'); if (!a) return;
-    closeModal();
-    if (a.dataset.a === 'home') quitGame(); else { UIS.abort = true; startGame(); }
-    res();
+    const a = e.target.closest('[data-a]'); if (!a || box.busy) return;
+    box.busy = true;
+    (async () => {
+      if (rk && (rk.ups.length || rk.gifts.length)) await showPromotion(rk);   // (a rank gained: its own screen, and the reward characters)
+      closeModal();
+      const again = UIS.ranked;
+      if (a.dataset.a === 'home') quitGame(); else { UIS.abort = true; startGame(again ? { ranked: true, len: again.len } : {}); }
+      res();
+    })();
   }));
 }
 
@@ -1407,5 +1498,5 @@ I18N.set(I18N.lang);
 MJTiles.ready().then(() => { MJTiles.reset(); ART.clear(); renderHome(); });   // (the tile faces from the 上海 sheets, 2026-11-14)
 document.fonts && document.fonts.load('800 40px "Shippori Mincho B1"', '一萬東南西北發中雀華').then(() => { MJTiles.reset(); ART.clear(); renderHome(); });
 renderHome(); homeEnter();
-window.JANKA = { get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, SND, DB, startGame, quitGame, cutin, showMoves, showFinal, showAgari };
+window.JANKA = { get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, SND, DB, startGame, quitGame, cutin, showMoves, showFinal, showAgari, openRanked, showPromotion };
 })();
