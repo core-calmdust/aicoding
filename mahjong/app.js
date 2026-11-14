@@ -122,7 +122,8 @@ const SND = (() => {
   // the music (ユーザー 2026-11-14): 'main' plays through the game, 'riichi' (the tension track) takes over when someone declares
   // riichi and hands back at the end of the hand. Each is an <audio> element into the context, with a gain node for the crossfades;
   // the main track carries on from where it was, the riichi track starts from the top each time.
-  const TRK = { title: { file: 'bgm-title', vol: .34, restart: true }, main: { file: 'bgm-main', vol: .3, restart: false }, riichi: { file: 'bgm-riichi', vol: .42, restart: true } };
+  // (the music's levels from its loudness, EBU R128: title −14.4 LUFS → ≈ −22, main −19 → ≈ −26 under the voices, riichi −12.3 → ≈ −24)
+  const TRK = { title: { file: 'bgm-title', vol: .42, restart: true }, main: { file: 'bgm-main', vol: .45, restart: false }, riichi: { file: 'bgm-riichi', vol: .26, restart: true } };
   for (const k in TRK) Object.assign(TRK[k], { url: null, el: null, g: null, on: false, t: 0 });
   const idle = f => (window.requestIdleCallback ? requestIdleCallback(f, { timeout: 600 }) : setTimeout(f, 60));
   function mkctx() { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } return ac; }
@@ -153,12 +154,16 @@ const SND = (() => {
         fade(B, B.vol, k === 'main' ? 1.6 : .8);
       } else if (B.on) { B.on = false; fade(B, 0, 1.4); clearTimeout(B.t); B.t = setTimeout(() => { if (!B.on && B.el) B.el.pause(); }, 1500); }
     } }
-  function play(n, g = 1, rate = 1) { const a = ctx(); if (!a || !on()) return false; load(); const b = BUF[n]; if (!b) return false;
+  // each recording's level, measured (ffmpeg astats RMS peak / EBU R128) and evened out (ユーザー 2026-11-14: the volumes at their best):
+  // the tile clacks soft (they come often, ≈ −25 dB), the sticks a little above (≈ −20), the voices clear on top (≈ −12)
+  const GAIN = { tile1: .65, tile2: .62, tile3: .6, stick1: .95, stick2: .63, stick3: .67,
+    'v-chi': 1.1, 'v-kan': .68, 'v-noten': .92, 'v-pon': .65, 'v-riichi': 1.45, 'v-ron': .61, 'v-tenpai': .78, 'v-tsumo': .66 };
+  function play(n, g = 1, rate = 1) { g *= GAIN[n] || 1; const a = ctx(); if (!a || !on()) return false; load(); const b = BUF[n]; if (!b) return false;
     const s = a.createBufferSource(); s.buffer = b; s.playbackRate.value = rate; const v = a.createGain(); v.gain.value = g; s.connect(v).connect(seOut(a)); s.start(); return true; }
   const pick3 = k => `${k}${1 + ((Math.random() * 3) | 0)}`;
   return {
-    tile: () => { if (!play(pick3('tile'), .9, .96 + Math.random() * .08)) click(); },
-    stick: () => { if (!play(pick3('stick'), .85)) tone(1800, .08, 'triangle', .06); },
+    tile: () => { if (!play(pick3('tile'), 1, .96 + Math.random() * .08)) click(); },
+    stick: () => { if (!play(pick3('stick'), 1)) tone(1800, .08, 'triangle', .06); },
     voice: k => play('v-' + k, 1),
     preload: () => load(),
     _trk: TRK,
