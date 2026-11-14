@@ -225,6 +225,7 @@ class Table3D {
     this.faceTex = new Map();
     this.dirty = true;
     this.build(mobile);
+    this.scene.traverse(o => { if (o.isLight) o.layers.enable(1); });   // (the overlay pass draws layer 1 only: the lights must reach it)
     this.resize();
     this._ro = new ResizeObserver(() => this.resize());
     this._ro.observe(host);
@@ -450,6 +451,16 @@ class Table3D {
     if (!rig) { if (!this.handProto) this.handProto = buildHand(this.envTex); rig = this.hands[seat] = this.handProto.clone(true); rig.rotation.y = seat * PI / 2; rig.visible = false; this.scene.add(rig); }
     return rig;
   }
+  // where a tile must float to cover a tile of the page's hand row: (cx, cy) its centre and w its width, in CSS px inside the
+  // table's canvas. It faces the camera, at the depth where a tile is exactly that wide.
+  screenPose(cx, cy, w) {
+    const cv = this.renderer.domElement, Wc = cv.clientWidth || 1, Hc = cv.clientHeight || 1, cam = this.camera;
+    const d = W * Hc / (2 * Math.tan(cam.fov * PI / 360) * w);
+    const fwd = new THREE.Vector3(); cam.getWorldDirection(fwd);
+    const q = new THREE.Vector3(cx / Wc * 2 - 1, 1 - cy / Hc * 2, .5).unproject(cam).sub(cam.position).normalize();
+    const pos = cam.position.clone().addScaledVector(q, d / q.dot(fwd)), e = new THREE.Euler().setFromQuaternion(cam.quaternion, 'YXZ');
+    return { x: pos.x, y: pos.y, z: pos.z, rx: e.x, ry: e.y, rz: e.z, page: true };
+  }
   _top(rx) { const c = Math.cos(rx); return D / 2 + (H / 2 - D / 2) * c * c; }   // how far the tile's top is above its centre (standing: H/2, lying: D/2)
   // a discard (ユーザー 2026-11-14: the hand takes the tile out of the owner's own hand and puts it out): the hand comes in over
   // the hand tiles, down onto the tile where it stands (from: its pose there; null = where it is now), lifts it and lays it at `to`.
@@ -458,8 +469,9 @@ class Table3D {
     this.tweens = this.tweens.filter(t => t.g !== g);
     g.visible = true; g.position.set(f.x, f.y, f.z); g.rotation.set(f.rx, f.ry, f.rz); g.userData.target = to;
     const out = this.local(seat, 0, 3.4), r = { x: f.x + out.x, y: f.y + 2.6, z: f.z + out.z };   // from behind and above the tile
+    if (f.page) { g.traverse(o => o.layers.enable(1)); rig.traverse(o => o.layers.enable(1)); this._ov = { g, rig }; }   // (the tile of the page's hand row: drawn over the page too)
     this.handFx = this.handFx.filter(h => h.rig !== rig); rig.visible = true; rig.position.set(r.x, r.y, r.z);
-    this.handFx.push({ rig, from: r, to: { x: f.x, y: f.y + this._top(f.rx), z: f.z }, t0: performance.now(), dur: 200, then: () => { if (g.userData.target === to) this.tween(g, to, 300, f, seat); else this._handBack(seat); } });
+    this.handFx.push({ rig, from: r, to: { x: f.x, y: f.y + this._top(f.rx), z: f.z }, t0: performance.now(), dur: f.page ? 240 : 200, then: () => { if (g.userData.target === to) this.tween(g, to, 300, f, seat); else this._handBack(seat); } });
     this.dirty = true;
   }
   _handRest(seat) { const p = this.local(seat, 0, 12.5); return { x: p.x, y: 3.2, z: p.z }; }   // off the table, on the owner's side
@@ -483,9 +495,9 @@ class Table3D {
     this.handFx.push({ rig, from: r, to: { x: from.x, y: from.y + D / 2, z: from.z }, t0: performance.now(), dur: 240, then: () => this.tween(g, to, 320, from, seat, done) });
     this.dirty = true;
   }
-  hideAll() { for (const g of this.tiles.values()) { g.visible = false; this.setTileLook(g, 'normal'); } this.sticks.forEach(s => s.visible = false); this.tweens = []; this.handFx = []; (this.hands || []).forEach(h => { if (h) h.visible = false; }); this.dirty = true; }
+  hideAll() { for (const g of this.tiles.values()) { g.visible = false; this.setTileLook(g, 'normal'); } this.sticks.forEach(s => s.visible = false); this.tweens = []; this.handFx = []; if (this._ov) { this._ov.g.traverse(o => o.layers.disable(1)); this._ov.rig.traverse(o => o.layers.disable(1)); this._ov = null; if (this.over) this.over.getContext('2d').clearRect(0, 0, this.over.width, this.over.height); } (this.hands || []).forEach(h => { if (h) h.visible = false; }); this.dirty = true; }
 
-  layoutRiver(seat, river, animLast, fromLx) {   // fromLx: where in the owner's hand the discard stood (the player's own hand is drawn in the page: app.js gives the place)
+  layoutRiver(seat, river, animLast, fromLx) {   // fromLx: where the player's own discard stood — a pose from screenPose() (the tile of the page's hand row), or a place along the near edge
     let row = 0, col = 0, x = -3.0 * W;
     river.forEach((r, i) => {
       if (col === ROW && row < 2) { row++; col = 0; x = -3.0 * W; }
@@ -494,7 +506,7 @@ class Table3D {
       const w = side ? H : W;
       const lx = x + (w - W) / 2;
       const lz = 3.56 + row * (H + 0.02) + (side ? (H - W) / 2 * 0 : 0);
-      const anim = (animLast && i === river.length - 1) ? { reach: seat, from: g.visible && g.userData.pose === 'stand' ? null : this.handOrigin(seat, fromLx) } : null;   // (the hand takes the tile out of the owner's hand)
+      const anim = (animLast && i === river.length - 1) ? { reach: seat, from: g.visible && g.userData.pose === 'stand' ? null : fromLx && typeof fromLx === 'object' ? fromLx : this.handOrigin(seat, fromLx) } : null;   // (the hand takes the tile out of the owner's hand)
       this.place(g, seat, lx, lz, side ? 'side' : 'flat', anim);
       g.userData.taken = !!r.taken;
       g.visible = !r.taken;
@@ -637,6 +649,7 @@ class Table3D {
     const w = this.host.clientWidth || 1, h = this.host.clientHeight || 1;
     this.renderer.setSize(w, h, false);
     this.renderer.domElement.style.width = w + 'px'; this.renderer.domElement.style.height = h + 'px';
+    if (this.over) { this.over.width = this.renderer.domElement.width; this.over.height = this.renderer.domElement.height; }
     const a = w / h;
     this.camera.aspect = a;
     // fit the table width: landscape tilts toward the player, portrait looks almost straight down
@@ -725,9 +738,20 @@ class Table3D {
     if (this._doraN) { const ph = now % 3300, on = ph < 900;
       if (on) { this.doraMat.uniforms.uT.value = ph / 900; this.dirty = true; } else if (this._doraOn) { this.doraMat.uniforms.uT.value = -1; this.dirty = true; }
       this._doraOn = on; }
+    if (this._ov) this.dirty = true;
     if (!this.dirty || document.hidden) return;
     this.dirty = false;
     this._doraSync();
+    // the player's own discard: the hand and the tile are also drawn over the page (the hand row is HTML, above the table's
+    // canvas) — first only those two (layer 1) on a clear canvas, copied to the overlay; then the whole scene as usual
+    if (this._ov) {
+      if (!this.over) { const c = this.over = document.createElement('canvas'); c.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;z-index:6;pointer-events:none'; c.width = this.renderer.domElement.width; c.height = this.renderer.domElement.height; (this.host.parentNode || this.host).appendChild(c); }
+      const sm = this.renderer.shadowMap.enabled; this.renderer.shadowMap.enabled = false;
+      this.camera.layers.set(1); this.renderer.render(this.scene, this.camera); this.camera.layers.set(0);
+      this.renderer.shadowMap.enabled = sm;
+      const x = this.over.getContext('2d'); x.clearRect(0, 0, this.over.width, this.over.height); x.drawImage(this.renderer.domElement, 0, 0);
+      const O = this._ov; if (!O.rig.visible && !this.tweens.some(t => t.g === O.g) && !this.handFx.some(h => h.rig === O.rig)) { x.clearRect(0, 0, this.over.width, this.over.height); O.g.traverse(o => o.layers.disable(1)); O.rig.traverse(o => o.layers.disable(1)); this._ov = null; }
+    }
     this.renderer.render(this.scene, this.camera);
     if (this._dbg) this._dbgPaint(now);
   }

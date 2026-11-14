@@ -533,9 +533,11 @@ function refreshTable() {
 function layoutRiver(s, anim) {
   const p = G.P[s];
   const riv = p.river.map((r, i) => ({ id: r.id, taken: r.taken, sideways: i === p.riichiTurn || (p.riichiTurn >= 0 && i > p.riichiTurn && p.river.slice(p.riichiTurn, i).every(x => x.taken) && i === firstVisibleAfter(p)) }));
-  // my own discard leaves from where the tile stood in my hand (the hand is drawn in the page: its place across the screen → the table's near edge)
+  // my own discard: the hand pinches the very tile of my hand row (the page's tile: its place and size on the screen → a pose
+  // in front of the camera that covers it) and takes it out to the river
   let lx = 0;
-  if (anim && s === ME && riv.length) { try { const el = document.querySelector(`#hand .tl[data-id="${riv[riv.length - 1].id}"]`), st = $('#stage').getBoundingClientRect(); if (el && st.width && !document.documentElement.classList.contains('lp')) { const r = el.getBoundingClientRect(); lx = ((r.left + r.width / 2 - st.left) / st.width - .5) * 13.6; } } catch (e) {} }
+  if (anim && s === ME && riv.length) { try { const el = document.querySelector(`#hand .tl[data-id="${riv[riv.length - 1].id}"]`), st = $('#stage').getBoundingClientRect();
+    if (el && st.width && !document.documentElement.classList.contains('lp')) { const r = el.getBoundingClientRect(); lx = TB.screenPose(r.left + r.width / 2 - st.left, r.top + r.height / 2 - st.top, r.width); } } catch (e) {} }
   TB.layoutRiver(s, riv, anim, lx);
 }
 function firstVisibleAfter(p) {   // riichi tile was called: the next visible tile is turned instead
