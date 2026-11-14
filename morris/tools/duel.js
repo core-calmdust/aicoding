@@ -3,6 +3,8 @@
 //   node morris/tools/duel.js <A.wasm> <B.wasm> t <ms[:ms of B]> <games> <seed> …
 // The rules (and the page's end of game: status, threefold repetition) are engine.js's. Every opening (random plies) is played
 // twice with the colours swapped; each engine's table is cleared at the start of a game. A's wins / losses / draws, Elo, depths.
+// EG=A | B | AB (environment): that engine searches with the endgame database (nine-eg.mdb.gz / twelve-eg.mdb.gz, perfect.js),
+// as the page's time-based levels (2026-11-14, MODEL_CARD.md「終盤データベース」).
 'use strict';
 const fs = require('fs'), path = require('path');
 const W = path.resolve(__dirname, '..'), E = require(W + '/engine.js');
@@ -12,7 +14,18 @@ const X = two(xs), N = +Ns, variant = varA || 'nine', pre = preS === undefined ?
 let s = (+seedS || 1) * 2654435761 >>> 0; const rnd = () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; };
 const nb = fs.readFileSync(W + '/evalnet.bin'), dv = new DataView(nb.buffer, nb.byteOffset);
 const H = dv.getUint32(4, true), net = new Float32Array(nb.buffer.slice(nb.byteOffset + 8, nb.byteOffset + 8 + 4 * (71 * H + 2 * H + 1)));
-function load(f) {
+const EG = process.env.EG || '';
+let PF = null;
+function egLoad(x, variant) {   // as engine.js egSync: the classes into memory grown for them, then eg_use(1)
+  if (!PF) { PF = require(W + '/perfect.js'); PF.setDB(require('zlib').gunzipSync(fs.readFileSync(W + '/' + variant + '-eg.mdb.gz'))); }
+  const c = PF.classes(variant); let need = 0; for (const k of c.list) need += k.n;
+  let at = x.memory.buffer.byteLength; x.memory.grow(Math.ceil(need / 65536));
+  const S = new Uint8Array(x.memory.buffer, x.eg_sym_ptr(), 16 * 24); c.sym.slice(0, 16).forEach((g, i) => S.set(g, i * 24));
+  x.eg_init(Math.min(16, c.sym.length), E.geom(variant).mills.length);
+  for (const k of c.list) { new Uint8Array(x.memory.buffer, at, k.n).set(c.u8.subarray(k.off, k.off + k.n)); x.eg_add(k.m, k.o, at); at += k.n; }
+  x.eg_use(1);
+}
+function load(f, who) {
   const x = new WebAssembly.Instance(new WebAssembly.Module(fs.readFileSync(f)), { env: { now: () => Date.now(), progress: () => {} } }).exports;
   const io = () => new Int32Array(x.memory.buffer, x.io_ptr(), 8192);
   const G = E.geom(variant), a = [G.n, G.pieces, G.fly ? 1 : 0, G.mills.length];
@@ -22,9 +35,10 @@ function load(f) {
   a.push(extra.length / 2, ...extra);
   io().set(a); x.set_geometry();
   if (variant === 'nine') { new Float32Array(x.memory.buffer, x.net_ptr(), net.length).set(net); x.net_on(H); }
+  if (EG.includes(who)) egLoad(x, variant);
   return { x, io };
 }
-const P = [load(path.resolve(fA)), load(path.resolve(fB))];
+const P = [load(path.resolve(fA), 'A'), load(path.resolve(fB), 'B')];
 let w = 0, l = 0, dr = 0, op = []; const ds = [0, 0], dn = [0, 0];
 for (let g = 0; g < N; g++) {
   if (g % 2 === 0) op = Array.from({ length: pre }, () => rnd());

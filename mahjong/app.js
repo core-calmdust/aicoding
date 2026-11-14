@@ -87,12 +87,19 @@ const SND = (() => {
   let ac = null;
   const ctx = () => { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } if (ac && ac.state === 'suspended') ac.resume(); return ac; };
   const on = () => DB.set.snd && !document.hidden;
+  // two buses (ユーザー 2026-11-14: the effects and the music each with their own volume and mute — the gear in the game)
+  let seB = null, bgB = null;
+  const vol = k => (DB.set[k + 'On'] === false ? 0 : Math.max(0, Math.min(1, DB.set[k + 'Vol'] ?? 1)));
+  const seOut = a => { if (!seB) { seB = a.createGain(); seB.gain.value = vol('se'); seB.connect(a.destination); } return seB; };
+  const bgOut = a => { if (!bgB) { bgB = a.createGain(); bgB.gain.value = vol('bg'); bgB.connect(a.destination); } return bgB; };
+  function levels() { const a = ac; if (!a) return; const t = a.currentTime;
+    for (const [B, k] of [[seOut(a), 'se'], [bgOut(a), 'bg']]) { B.gain.cancelScheduledValues(t); B.gain.setValueAtTime(B.gain.value, t); B.gain.linearRampToValueAtTime(vol(k), t + .12); } }
   function tone(f, d, type = 'sine', g = .15, delay = 0, f2) {
     const a = ctx(); if (!a || !on()) return;
     const o = a.createOscillator(), v = a.createGain(), t0 = a.currentTime + delay;
     o.type = type; o.frequency.setValueAtTime(f, t0); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t0 + d);
     v.gain.setValueAtTime(0, t0); v.gain.linearRampToValueAtTime(g, t0 + .01); v.gain.exponentialRampToValueAtTime(.0001, t0 + d);
-    o.connect(v).connect(a.destination); o.start(t0); o.stop(t0 + d + .05);
+    o.connect(v).connect(seOut(a)); o.start(t0); o.stop(t0 + d + .05);
   }
   function click(g = .35) {
     const a = ctx(); if (!a || !on()) return;
@@ -101,57 +108,63 @@ const SND = (() => {
     const s = a.createBufferSource(); s.buffer = n;
     const f = a.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 2400; f.Q.value = 1.2;
     const v = a.createGain(); v.gain.value = g;
-    s.connect(f).connect(v).connect(a.destination); s.start();
+    s.connect(f).connect(v).connect(seOut(a)); s.start();
     tone(1500, .05, 'triangle', .05);
   }
-  document.addEventListener('visibilitychange', () => { if (ac) { if (document.hidden) ac.suspend(); else ac.resume(); } const B = SND && SND._bgm; if (B && B.el && B.on) { if (document.hidden) B.el.pause(); else { const p = B.el.play(); if (p && p.catch) p.catch(() => {}); } } });
+  document.addEventListener('visibilitychange', () => { if (ac) { if (document.hidden) ac.suspend(); else ac.resume(); } if (window.SND) for (const B of Object.values(SND._trk || {})) if (B.el && B.on) { if (document.hidden) B.el.pause(); else { const p = B.el.play(); if (p && p.catch) p.catch(() => {}); } } });
   // recorded sounds (ユーザー 2026-11-14): tiles laid down (three, picked at random), the point sticks (riichi, paying for a skill),
   // and the calls in a voice (リーチ・ツモ・ロン・ポン・チー・カン・テンパイ・ノーテン). Decoded on first use; until then the synth stands in.
   // Everything is fetched and decoded in the background right after the page loads (ユーザー 2026-11-14: no hitch the first time a
   // sound plays): one file at a time when the browser is idle — the short ones first, then the riichi music — so the load is spread
   // out and nothing waits on the network once the game is running. Decoding needs no click (a suspended context decodes fine).
   const BUF = {}, NAMES = ['tile1', 'tile2', 'tile3', 'stick1', 'stick2', 'stick3', 'v-riichi', 'v-tsumo', 'v-ron', 'v-pon', 'v-chi', 'v-kan', 'v-tenpai', 'v-noten'];
-  let loading = false, bgmUrl = null;
+  let loading = false;
+  // the music (ユーザー 2026-11-14): 'main' plays through the game, 'riichi' (the tension track) takes over when someone declares
+  // riichi and hands back at the end of the hand. Each is an <audio> element into the context, with a gain node for the crossfades;
+  // the main track carries on from where it was, the riichi track starts from the top each time.
+  const TRK = { title: { file: 'bgm-title', vol: .34, restart: true }, main: { file: 'bgm-main', vol: .3, restart: false }, riichi: { file: 'bgm-riichi', vol: .42, restart: true } };
+  for (const k in TRK) Object.assign(TRK[k], { url: null, el: null, g: null, on: false, t: 0 });
   const idle = f => (window.requestIdleCallback ? requestIdleCallback(f, { timeout: 600 }) : setTimeout(f, 60));
   function mkctx() { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } return ac; }
-  function load() { if (loading) return; loading = true; const a = mkctx(); let i = 0;
+  function load() { if (loading) return; loading = true; const a = mkctx(); let i = 0; const music = ['title', 'main', 'riichi'];
     const next = () => {
       if (i < NAMES.length) { const n = NAMES[i++];
         fetch(`${ASSETS}snd/${n}.mp3`).then(r => r.ok ? r.arrayBuffer() : Promise.reject()).then(b => a ? new Promise((ok, ng) => a.decodeAudioData(b, ok, ng)) : null)
           .then(buf => { if (buf) BUF[n] = buf; }).catch(() => {}).finally(() => idle(next));
-      } else if (!bgmUrl) {      // the music: the whole file into memory, so it starts at once and never stalls mid-play
-        fetch(`${ASSETS}snd/bgm-riichi.mp3`).then(r => r.ok ? r.blob() : Promise.reject()).then(b => { bgmUrl = URL.createObjectURL(b); prepBgm(); }).catch(() => { bgmUrl = `${ASSETS}snd/bgm-riichi.mp3`; });
+      } else if (music.length) {      // the music: the whole file into memory, so it starts at once and never stalls mid-play
+        const B = TRK[music.shift()]; if (B.url) return idle(next);
+        fetch(`${ASSETS}snd/${B.file}.mp3`).then(r => r.ok ? r.blob() : Promise.reject()).then(b => { if (!B.el) B.url = URL.createObjectURL(b); prep(B); })
+          .catch(() => {}).finally(() => idle(next));
       } };
     idle(next); }
-  // the <audio> element and its gain node are made ahead of time (when the sound is first unlocked), not at the moment of riichi
-  function prepBgm() { const a = ac; if (!a || !bgmUrl) return; const B = SND._bgm || (SND._bgm = { el: null, g: null, on: false, t: 0 }); if (B.el) return;
-    B.el = new Audio(bgmUrl); B.el.loop = true; B.el.preload = 'auto';
-    try { const src = a.createMediaElementSource(B.el); B.g = a.createGain(); B.g.gain.value = 0; src.connect(B.g).connect(a.destination); } catch (e) { B.g = null; } }
+  // the <audio> element and its gain node are made ahead of time, not at the moment the track is wanted
+  function prep(B) { const a = ac; if (!a || B.el) return; if (!B.url) B.url = `${ASSETS}snd/${B.file}.mp3`;
+    B.el = new Audio(B.url); B.el.loop = true; B.el.preload = 'auto';
+    try { const src = a.createMediaElementSource(B.el); B.g = a.createGain(); B.g.gain.value = 0; src.connect(B.g).connect(bgOut(a)); } catch (e) { B.g = null; } }
+  function fade(B, to, sec) { const a = ac; if (B.g) { const t = a.currentTime; B.g.gain.cancelScheduledValues(t); B.g.gain.setValueAtTime(B.g.gain.value, t); B.g.gain.linearRampToValueAtTime(to, t + sec); } else if (B.el) B.el.volume = to; }
+  let want = 'title';   // the track that should be playing (the title screen's to begin with) (kept while the sound is off, so it comes back when switched on)
+  function music(name) {
+    want = name; const a = ctx(); if (!a) return;
+    for (const k in TRK) { const B = TRK[k];
+      if (k === name && on()) {
+        if (B.on) continue; prep(B); if (!B.el) continue;
+        B.on = true; clearTimeout(B.t); if (B.restart) B.el.currentTime = 0;
+        const p = B.el.play(); if (p && p.catch) p.catch(() => {});
+        fade(B, B.vol, k === 'main' ? 1.6 : .8);
+      } else if (B.on) { B.on = false; fade(B, 0, 1.4); clearTimeout(B.t); B.t = setTimeout(() => { if (!B.on && B.el) B.el.pause(); }, 1500); }
+    } }
   function play(n, g = 1, rate = 1) { const a = ctx(); if (!a || !on()) return false; load(); const b = BUF[n]; if (!b) return false;
-    const s = a.createBufferSource(); s.buffer = b; s.playbackRate.value = rate; const v = a.createGain(); v.gain.value = g; s.connect(v).connect(a.destination); s.start(); return true; }
+    const s = a.createBufferSource(); s.buffer = b; s.playbackRate.value = rate; const v = a.createGain(); v.gain.value = g; s.connect(v).connect(seOut(a)); s.start(); return true; }
   const pick3 = k => `${k}${1 + ((Math.random() * 3) | 0)}`;
   return {
     tile: () => { if (!play(pick3('tile'), .9, .96 + Math.random() * .08)) click(); },
     stick: () => { if (!play(pick3('stick'), .85)) tone(1800, .08, 'triangle', .06); },
     voice: k => play('v-' + k, 1),
     preload: () => load(),
-    // the riichi music (ユーザー 2026-11-14): when someone declares riichi the tension track starts (looping) and fades out when
-    // the hand ends. Streamed through an <audio> element into the same context (a gain node for the fades).
-    bgm(onoff) {
-      const a = ctx(); if (!a) return;
-      const B = this._bgm || (this._bgm = { el: null, g: null, on: false, t: 0 });
-      if (onoff) {
-        if (!on() || B.on) return;
-        if (!B.el) { if (!bgmUrl) bgmUrl = `${ASSETS}snd/bgm-riichi.mp3`; prepBgm(); if (!B.el) return; }
-        B.on = true; clearTimeout(B.t); B.el.currentTime = 0;
-        const p = B.el.play(); if (p && p.catch) p.catch(() => {});
-        if (B.g) { const t = a.currentTime; B.g.gain.cancelScheduledValues(t); B.g.gain.setValueAtTime(B.g.gain.value, t); B.g.gain.linearRampToValueAtTime(.42, t + .8); } else B.el.volume = .42;
-      } else {
-        if (!B.on) return; B.on = false;
-        if (B.g) { const t = a.currentTime; B.g.gain.cancelScheduledValues(t); B.g.gain.setValueAtTime(B.g.gain.value, t); B.g.gain.linearRampToValueAtTime(0, t + 1.4); }
-        clearTimeout(B.t); B.t = setTimeout(() => { if (!B.on && B.el) B.el.pause(); }, 1500);
-      }
-    },
+    _trk: TRK,
+    music,
+    resume: () => music(want),
+    levels,   // after the sound is switched back on
     call: () => { tone(520, .16, 'square', .06); tone(780, .2, 'square', .05, .08); },
     riichi: () => { tone(880, .5, 'sine', .14); tone(1320, .7, 'sine', .1, .08); tone(1760, .9, 'sine', .06, .16); },
     // the fanfare as the 満貫/跳満/… stamp lands: longer and brighter the bigger the hand
@@ -164,10 +177,13 @@ const SND = (() => {
     ok: () => { tone(988, .25, 'sine', .12); tone(1319, .5, 'sine', .1, .12); },
     pick: () => tone(660, .06, 'triangle', .06),
     gacha: r => { const b = r === 'SSR' ? 4 : r === 'SR' ? 3 : 2; for (let i = 0; i < b + 2; i++) tone(500 + i * 180, .3, 'triangle', .1, i * .07); },
-    unlock: () => { ctx(); load(); prepBgm(); },
+    unlock: () => { ctx(); load(); for (const k in TRK) prep(TRK[k]); },
   };
 })();
-addEventListener("load", () => setTimeout(() => SND.preload(), 400));   // sounds load in the background from the start (spread out, idle time)
+addEventListener("load", () => setTimeout(() => SND.preload(), 400));
+// the title music starts with the first touch or key (browsers let sound start only then) (ユーザー 2026-11-14)
+{ const go = () => { removeEventListener('pointerdown', go, true); removeEventListener('keydown', go, true); SND.unlock(); SND.resume(); };
+  addEventListener('pointerdown', go, true); addEventListener('keydown', go, true); }   // sounds load in the background from the start (spread out, idle time)
 
 // ---------------------------------------------------------------- character art
 const ART = new Map();
@@ -270,7 +286,7 @@ function applyText() {
   document.querySelectorAll('[data-tt]').forEach(el => { el.title = t(el.dataset.tt); el.setAttribute('aria-label', t(el.dataset.tt)); });
   document.title = I18N.lang === 'ja' ? '雀華 〜姫たちの麻雀〜' : 'JANKA — Mahjong of the Princesses';
 }
-function sndIcons() { for (const b of document.querySelectorAll('.snd')) b.innerHTML = DB.set.snd ? IC.snd : IC.mute; }
+function sndIcons() { for (const b of document.querySelectorAll('.snd')) b.innerHTML = IC.gear; }
 function renderHome() {
   applyText();
   $('#coinN').textContent = DB.coins.toLocaleString();
@@ -400,19 +416,29 @@ $('#luxMenu').addEventListener('click', e => { if (e.target.closest('[data-soon]
 function openSettings() {
   SND.pick();
   const row = (k, items, cur) => `<div class="st-row"><small>${esc(t(k))}</small><div class="seg" data-k="${k}">${items.map(([v, lab]) => `<button class="${v === cur ? 'on' : ''}" data-v="${v}">${esc(lab)}</button>`).join('')}</div></div>`;
+  // a volume row: its name, a slider, a mute button (ユーザー 2026-11-14)
+  const vrow = k => { const off = DB.set[k + 'On'] === false, v = Math.round((DB.set[k + 'Vol'] ?? 1) * 100);
+    return `<div class="st-row st-vol ${off ? 'off' : ''}"><small>${esc(t(k === 'se' ? 'se' : 'music'))}<b>${off ? esc(t('mute')) : v}</b></small><div class="st-v"><button class="st-m" data-m="${k}" aria-label="${esc(t('mute'))}">${off ? IC.mute : IC.snd}</button><input type="range" min="0" max="100" step="5" value="${v}" data-k="${k}" style="--p:${v}%"></div></div>`; };
   const draw = () => `<h2>${esc(t('settings'))}</h2>
     ${row('language', [['ja', '日本語'], ['en', 'English']], I18N.lang)}
-    ${row('sound', [['1', t('on')], ['0', t('off')]], DB.set.snd ? '1' : '0')}
+    ${vrow('se')}${vrow('bg')}
     ${row('lite', [['0', t('off')], ['1', t('on')]], DB.set.lite ? '1' : '0')}
     <p class="st-note">${esc(t('liteNote'))}</p>
     <div class="cbtns"><button class="btn gold" data-a="close">${esc(t('close'))}</button></div>`;
   const box = modal(draw(), 'settings');
+  box.addEventListener('input', e => {
+    const r = e.target.closest('input[type=range]'); if (!r) return;
+    const k = r.dataset.k; DB.set[k + 'Vol'] = r.value / 100; DB.set[k + 'On'] = true; DB.set.snd = true; save(); r.style.setProperty('--p', r.value + '%');
+    const row = r.closest('.st-vol'); row.classList.remove('off'); row.querySelector('small b').textContent = r.value; row.querySelector('.st-m').innerHTML = IC.snd;
+    SND.unlock(); SND.levels(); SND.resume(); });
+  box.addEventListener('change', e => { if (e.target.dataset.k === 'se') SND.tile(); });   // a sample of the effects' level
   box.addEventListener('click', e => {
     if (e.target.closest('[data-a=close]')) { closeModal(); return; }
+    const m = e.target.closest('.st-m');
+    if (m) { const k = m.dataset.m; DB.set[k + 'On'] = DB.set[k + 'On'] === false; DB.set.snd = true; save(); SND.unlock(); SND.levels(); SND.resume(); sndIcons(); box.innerHTML = draw(); if (DB.set[k + 'On']) SND.pick(); return; }
     const b = e.target.closest('.seg button'); if (!b) return;
     const k = b.parentNode.dataset.k, v = b.dataset.v; SND.pick();
     if (k === 'language') { I18N.set(v); renderHome(); if (window.GameRecord) GameRecord.relabel(); }
-    else if (k === 'sound') { DB.set.snd = v === '1'; save(); sndIcons(); SND.unlock(); if (!DB.set.snd) SND.bgm(false); }
     else if (k === 'lite') { DB.set.lite = v === '1'; save(); applyLite(); }
     box.innerHTML = draw();
   });
@@ -427,7 +453,7 @@ function applyLite() {
   if (TB) TB.setQuality(DB.set.lite ? 'lite' : 'high');
   if (typeof homeFx === 'function' && $('#aaFx')) homeFx();
 }
-$('#gSnd').addEventListener('click', () => { DB.set.snd = !DB.set.snd; save(); sndIcons(); if (!DB.set.snd) SND.bgm(false); });
+$('#gSnd').addEventListener('click', openSettings);   // the gear: the same settings as the home screen's (ユーザー 2026-11-14)
 // phones always use the landscape layout; held upright, the whole UI is turned 90° (no reliance on the OS rotation)
 const PHONE = matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 600;
 function fitRoot() {
@@ -707,7 +733,7 @@ async function startGame() {
   G = new MJGame({ agents, chars, rules: { length: DB.set.len, skills: DB.set.skills }, ui: onEvent });
   UIS.game = G;
   TB.setSleeves(chars.map(c => c.color));   // (each seat's sleeve in her sisters' colour)
-  $('#gSnd').innerHTML = DB.set.snd ? IC.snd : IC.mute; $('#gExit').innerHTML = IC.exit;
+  $('#gSnd').innerHTML = IC.gear; $('#gExit').innerHTML = IC.exit;
   $('#gKeys').innerHTML = IC.keys; $('#gKeys').title = t('keysT'); $('#gKeys').setAttribute('aria-label', t('keysT')); showKeys(false);
   $('#khelp').innerHTML = t('keys');
   sndIcons();
@@ -730,7 +756,7 @@ $('#gExit').addEventListener('click', async () => {
 });
 function quitGame() {
   if (UIS) UIS.abort = true;
-  SND.bgm(false);
+  SND.music('title');
   closeStats();
   $('#dealAsk').hidden = true;
   G = null;
@@ -750,7 +776,7 @@ async function onEvent(ev, d) {
   switch (ev) {
     case 'game-start': renderBadges(); break;
     case 'hand-start': {
-      SND.bgm(false);
+      SND.music('main');
       TB.hideAll();
       UIS.intel = null; $('#intel').hidden = true;
       refreshTable(); renderBadges(); renderHand(); layoutAll();
@@ -766,7 +792,7 @@ async function onEvent(ev, d) {
     }
     case 'discard': {
       const p = g.P[d.seat];
-      if (d.riichi) { await cutin(d.seat, 'riichi'); SND.bgm(true); }
+      if (d.riichi) { await cutin(d.seat, 'riichi'); SND.music('riichi'); }
       layoutRiver(d.seat, true);   // (the tile's sound plays when it lands — TB.onTileLand)
       // (others: the hand tidies the row after laying the tile — the drawn tile goes to its place, or the row is pushed together. ユーザー 2026-11-14)
       if (d.seat !== ME) { const dr = UIS.drawnBy[d.seat]; TB.sortAfterDiscard(d.seat, p.hand, dr != null && !d.tsumogiri && p.hand.includes(dr) ? dr : null); }
@@ -800,7 +826,7 @@ async function onEvent(ev, d) {
       break;
     }
     case 'agari': {
-      SND.bgm(false);
+      SND.music(null);   // (ユーザー 2026-11-14: no music over the results — it comes back with the next hand, on the table)
       clearActs();
       for (const r of d.results) await cutin(r.seat, r.tsumo ? 'tsumo' : 'ron');
       SND.win();
@@ -811,7 +837,7 @@ async function onEvent(ev, d) {
       break;
     }
     case 'ryuukyoku': {
-      SND.bgm(false);
+      SND.music(null);
       clearActs();
       for (let s = 1; s < 4; s++) if (d.tenpai[s]) TB.layoutHand(s, d.hands[s], null, true);
       if (!d.abort) [0, 1, 2, 3].forEach((s, i) => sleep(i * 520).then(() => SND.voice(d.tenpai[(G.kyoku + s) % 4] ? 'tenpai' : 'noten')));   // (each player declares, from the dealer round)

@@ -65,6 +65,17 @@ node tools/solvedb.js stats ~/morris-db/nine-q50 64 0.05 | tee -a ~/morris-db/ni
 caffeinate -i ./tools/solve nine -q 0 -t 12 all 2>&1 | tee -a ~/morris-db/nine-q0.log
 ```
 
+## 終盤データベース（サイトに組み込み済み・数秒）
+
+ナイン・トゥエルブの、盤上の駒が8個以下の移動段階だけ（`nine-eg.mdb.gz`・`twelve-eg.mdb.gz`、MODEL_CARD.md「終盤データベース」）：
+
+```sh
+./tools/solve nine -s 8 moving && ./tools/solve nine -s 8 verify
+node tools/solvedb.js pack ~/morris-db/nine-q50 nine-eg.mdb && gzip -9 nine-eg.mdb
+```
+
+（`~/morris-db/nine-q50` にナイン全体のファイルがあるときは、`-d` で別のフォルダにしてから pack する。）
+
 ## トゥエルブ（任意・大きい）
 
 ```sh
