@@ -14,14 +14,14 @@
      · Out over a side line: throw-in; over an end line: goal kick or corner.
    Units: centimetres. The field is 104 × 167 (x across, y along), origin in the middle. Side 0 (you, the near side)
    defends the goal at y = +H and attacks towards y = −H; side 1 the reverse.
-   Game scale (playability): the ball is 1.6 cm (the real felt ball is 1 cm), buttons 4.8 cm, the goal 12.5 cm.
+   Game scale (playability): the ball is 1.6 cm (the real felt ball is 1 cm), buttons 4.8 cm, the goal 15 cm (12.5 at first: with the 8 cm keeper too few shots went in — 2026-11-15).
    ===================================================================== */
 (function (root) {
   'use strict';
   const FW = 104, FL = 167, HW = FW / 2, H = FL / 2,        // the field
     PS = 8, PE = 10,                                        // the side / end runs of table outside the lines
     TX = HW + PS, TY = H + PE,                              // the table's rim (the frame stops everything there)
-    GW = 12.5, GHW = GW / 2, GD = 5,                        // the goal (inside width, depth of the net)
+    GW = 15, GHW = GW / 2, GD = 5,                          // the goal (inside width, depth of the net)
     SA_W = 30, SA_D = 11, BA_W = 60, BA_D = 30,             // small area, big area
     PEN = 20.5, CR = 16,                                    // the penalty mark, the centre circle
     RB = 2.4, RBALL = .8, KHW = 4, KHD = 1.75,              // button radius, ball radius, the goalkeeper's half sizes (8 × 3.5)
@@ -248,8 +248,10 @@
     // 2. a goal
     if (sim.goal) {
       const g = sim.goal.side, scorer = 1 - g;   // the goal of side g: a point for the other side
-      const valid = (shot && p === scorer) || lastTeam === g;   // a declared shot, or an own goal
-      if (valid) { s.score[scorer]++; goal = scorer; msg.push(lastTeam === g && !(shot && p === scorer) ? 'own' : 'goal'); s.log.push({ ply: s.ply, side: scorer, own: lastTeam === g }); afterGoal(s, g); return done(); }
+      // a declared shot, or an own goal: the side that flicked put it in its own goal (a deflection off a defender
+      // from an undeclared flick is not a goal — 2026-11-15: the AI was banking balls off defenders to score)
+      const valid = (shot && p === scorer) || (p === g && lastTeam === g);
+      if (valid) { s.score[scorer]++; goal = scorer; msg.push(!(shot && p === scorer) ? 'own' : 'goal'); s.log.push({ ply: s.ply, side: scorer, own: lastTeam === g }); afterGoal(s, g); return done(); }
       msg.push('nogoal'); restartFor(s, g, 'gk', 0, goalY(g)); return done();
     }
     // 3. out of play
@@ -345,9 +347,9 @@
     lv = Math.max(1, Math.min(20, lv | 0)); const k = (lv - 1) / 19;
     return {
       lv, dirs: lv < 4 ? 8 : lv < 9 ? 12 : lv < 15 ? 18 : 24, pows: lv < 6 ? 3 : 4, reach: 22 + k * 22,
-      angSd: (4.6 - Math.pow(k, .8) * 4.3) * Math.PI / 180, vSd: .1 - k * .075,
-      robust: lv >= 12 ? (lv >= 17 ? 4 : 2) : 0, pickTop: lv <= 3 ? 4 : lv <= 7 ? 2 : 1,
-      shotBar: .62 - k * .34,          // how sure of a goal it wants before declaring a shot
+      angSd: (2.4 - Math.pow(k, .8) * 2.1) * Math.PI / 180, vSd: .07 - k * .045,   // a weak hand is still a hand: it aims, a little off (2026-11-15: 4.6° looked random)
+      robust: lv < 8 ? 3 : lv < 15 ? 4 : 5, pickTop: lv <= 3 ? 4 : lv <= 7 ? 2 : 1,
+      shotBar: .3 + k * .08,           // how sure of a goal it wants before declaring a shot (its own hand counted in)
       keepSd: 6 - k * 5.4,             // the goalkeeper's placing error (cm)
       defend: k,                       // weight on its own shape when the ball is lost
     };
@@ -362,28 +364,82 @@
     const b = s.b[i], gx = s.ball.x - Math.cos(th) * (RB + RBALL), gy = s.ball.y - Math.sin(th) * (RB + RBALL);
     const a = Math.atan2(gy - b.y, gx - b.x), cut = Math.abs(((a - th + 3 * Math.PI) % (2 * Math.PI)) - Math.PI);
     if (cut > 1.15) return null;
-    if (Math.hypot(gx - b.x, gy - b.y) < .2) return null;
-    return { i, ang: a, v: v / Math.max(.45, Math.cos(cut)) };
+    const run = Math.hypot(gx - b.x, gy - b.y); if (run < .2) return null;
+    // the button has to get there: it slides to a stop at DEC_B, so it needs at least this speed to meet the ball
+    const reach = Math.sqrt(2 * DEC_B * (run + 1.5)) * 1.08; if (reach > VMAX) return null;
+    return { i, ang: a, v: Math.min(VMAX, Math.max(reach, v / Math.max(.45, Math.cos(cut)))) };
+  }
+  // how far the ball rolls from speed vb (cm/s) on the cloth, and back: the speed that rolls it `dist` cm
+  const VB_RATIO = (1 + E_BBALL) * MB / (MB + MBALL);   // a straight hit: the ball leaves at this times the button's speed
+  function rollOf(vb) { let v = vb, d = 0; while (v > .6) { v -= (DEC_BALL0 + DEC_BALL1 * v) * DT; d += Math.max(0, v) * DT; } return d; }
+  const ROLL = []; for (let vb = 0; vb <= 480; vb += 3) ROLL.push(rollOf(vb));
+  function ballSpeedFor(dist) {
+    if (dist <= 0) return 0; let k = 1; while (k < ROLL.length && ROLL[k] < dist) k++;
+    if (k >= ROLL.length) return 480; const a = ROLL[k - 1], b = ROLL[k]; return (k - 1 + (dist - a) / Math.max(1e-6, b - a)) * 3;
+  }
+  // a flick from button i that sends the ball off at angle th to roll about `dist` cm (ghost-ball aim; the button slows
+  // on its way to the ball, a cut passes on less). null when the cut is too fine or the button cannot get there.
+  function aimRoll(s, i, th, dist) {
+    const b = s.b[i], gx = s.ball.x - Math.cos(th) * (RB + RBALL), gy = s.ball.y - Math.sin(th) * (RB + RBALL);
+    const a = Math.atan2(gy - b.y, gx - b.x), cut = Math.abs(((a - th + 3 * Math.PI) % (2 * Math.PI)) - Math.PI), run = Math.hypot(gx - b.x, gy - b.y);
+    if (cut > 1.15 || run < .2) return null;
+    // (it should still be moving when it gets there: a hand that comes up a little short would miss the ball outright)
+    const vc = Math.max(14 + run * .9, ballSpeedFor(dist) / (VB_RATIO * Math.max(.4, Math.cos(cut)))), v = Math.sqrt(vc * vc + 2 * DEC_B * (run + .3)) * 1.01;
+    if (Math.sqrt(2 * DEC_B * (run + 1.5)) > VMAX) return null;
+    return { i, ang: a, v: Math.min(VMAX, v) };
+  }
+  // the player's aim (2026-11-15): you point where the BALL should go and how far; this finds the flick that does it.
+  // th: the ball's direction, dist: how far it should roll (cm). Beyond the finest cut a button can make, the direction is
+  // pulled in toward the straight line (limited: true). null when the button cannot reach the ball.
+  function ballAim(s, i, th, dist) {
+    const b = s.b[i], a0 = Math.atan2(s.ball.y - b.y, s.ball.x - b.x);
+    let rel = ((th - a0 + 3 * Math.PI) % (2 * Math.PI)) - Math.PI, limited = false;
+    const LIM = 1.2; if (Math.abs(rel) > LIM) { rel = Math.sign(rel) * LIM; limited = true; }
+    for (let k = 0; k < 16; k++) {
+      const c = aimRoll(s, i, a0 + rel, dist);
+      if (c) return { i, ang: c.ang, v: c.v, th: a0 + rel, limited };
+      rel *= .88; limited = true;
+    }
+    return null;
+  }
+  // where the ball goes for a flick (no wobble): its path from the contact to its first knock or its stop,
+  // and what stops the path ('rim' | 'piece' | 'keep' | 'post' | 'goal' | 'out' | 'stop'); null when the ball is not hit first
+  function ballPath(s, move) {
+    const sim = simulate(s, move, { frames: true }), F = sim.frames;
+    if (!sim.first || sim.first.what !== 'ball') return { sim, path: null, first: sim.first };
+    let t0 = -1, t1 = sim.dur, end = 'stop';
+    for (const e of sim.events) {
+      if (t0 < 0) { if (e.k === 'ball' && (e.a === move.i || e.b === move.i)) t0 = e.t; continue; }
+      const isBall = e.i === BALL || e.a === BALL || e.b === BALL || e.k === 'goal' || e.k === 'out';
+      if (!isBall || (e.k === 'ball' && (e.a === move.i || e.b === move.i) && e.t - t0 < .05)) continue;
+      t1 = e.t; end = e.k === 'ball' ? 'piece' : e.k; break;
+    }
+    if (t0 < 0) t0 = 0;
+    const path = [], i0 = Math.max(0, Math.floor(t0 * FPS)), i1 = Math.min(F.length - 1, Math.ceil(t1 * FPS));
+    for (let k = i0; k <= i1; k++) path.push([F[k][BALL * 2], F[k][BALL * 2 + 1]]);
+    return { sim, path, end, first: sim.first };
   }
   // how well side t stands with the ball where it is (bigger = better for t), the ball t's to play
-  function attackValue(s, t, rem) {
-    const gx = 0, gy = goalY(1 - t), bx = s.ball.x, by = s.ball.y;
-    const dGoal = Math.hypot(bx - gx, by - gy);
-    let v = (H - Math.abs(by - gy)) * .55;   // ground gained
-    v -= Math.abs(bx) * .12;
-    // a button of t's near the ball, with a clear run to it
-    let reach = 0;
+  function attackValue(s, t, rem, sk) {
+    const gy = goalY(1 - t), bx = s.ball.x, by = s.ball.y, sd = sk ? Math.max(.004, sk.angSd) : .02;
+    const dGoal = Math.hypot(bx, by - gy);
+    let v = (H - Math.abs(by - gy)) * .35;   // ground gained
+    v -= Math.abs(bx) * .08;
+    // control: the surest next touch — a button of t's near the ball (the chance this hand meets it), better from behind it.
+    // Possession only lasts while a button can reach the ball, so this weighs more than the ground gained.
+    let ctrl = 0;
     for (let i = t * 10; i < t * 10 + 10; i++) {
-      const b = s.b[i], d = Math.hypot(b.x - bx, b.y - by);
-      if (d < 30) { const back = (by - b.y) * fwd(t) > -2 ? 1 : .55; reach = Math.max(reach, (1 - d / 30) * back); }
+      const b = s.b[i], d = Math.hypot(b.x - bx, b.y - by) - RB - RBALL; if (d > 70) continue;
+      const hit = Phi((RB + RBALL) * .7 / Math.max(.25, Math.max(1, d) * sd)), back = (by - b.y) * fwd(t) > -1 ? 1 : .6;
+      ctrl = Math.max(ctrl, hit * back * (d < 45 ? 1 : 1 - (d - 45) / 50));
     }
-    v += reach * 22;
+    v += ctrl * 70;
     // a shot on: close, in front, the line to goal open
     if (inAttack(t, by) && dGoal < 75) {
       const open = laneOpen(s, bx, by, gy, t);
-      v += (1 - dGoal / 75) * 40 * open * (rem > 0 ? 1 : .2) * Math.max(.25, 1 - Math.abs(bx) / 45);
+      v += (1 - dGoal / 75) * 45 * open * ctrl * (rem > 0 ? 1 : .2) * Math.max(.25, 1 - Math.abs(bx) / 45);
     }
-    v += Math.min(rem, 12) * .6;
+    v += Math.min(rem, 12) * 1.5;
     return v;
   }
   // the share of the goal mouth the ball sees past the defenders' buttons and keeper
@@ -411,11 +467,14 @@
     if (r.goal === 1 - p) return -1000;
     let v;
     if (s.pos === p) {
-      v = 120 + attackValue(s, p, s.rem);
-      if (s.restart === 'fk' || s.restart === 'corner') v += 8;
+      v = 120 + attackValue(s, p, s.rem, sk);
+      if (s.restart === 'fk') v += 6;
+      // a throw-in / corner won off a defender gives a placed taker and fresh touches; worth less than it looks
+      // (2026-11-15: the AI kept knocking the ball off defenders over the line on purpose — odd to watch)
+      else if (s.restart === 'throw') v -= 30; else if (s.restart === 'corner') v -= 18;
       if (s.restart === 'pen') v += 260;
     } else {
-      v = -60 - attackValue(s, 1 - p, s.rem) * 1.1;
+      v = -60 - attackValue(s, 1 - p, s.rem, sk) * 1.1;
       if (s.restart === 'pen') v -= 300;
       else if (s.restart === 'fk' && inAttack(1 - p, s.ball.y)) v -= 20;
       v += shapeValue(s, p) * 6 * (sk ? sk.defend : 1);
@@ -427,12 +486,18 @@
     const t = s.pos, out = [];
     const goalDir = Math.atan2(goalY(1 - t) - s.ball.y, -s.ball.x);
     const dirs = []; for (let k = 0; k < sk.dirs; k++) dirs.push(goalDir + (k / sk.dirs) * 2 * Math.PI);
-    const dists = sk.pows === 3 ? [16, 40, 75] : [12, 28, 50, 85];
-    for (let i = t * 10; i < t * 10 + 10; i++) {
-      if (!canFlick(s, i)) continue;
-      const d = Math.hypot(s.b[i].x - s.ball.x, s.b[i].y - s.ball.y);
-      if (d > sk.reach + RB) continue;
-      for (const th of dirs) for (const dd of dists) { const c = aimAt(s, i, th, speedFor(dd)); if (c) { c.th = th; out.push(c); } }
+    const dists = sk.pows === 3 ? [10, 24, 45, 80] : [7, 14, 24, 38, 60, 95];
+    // the buttons within this level's reach — and always the nearest four (a long hit is better than no plan at all:
+    // left with one blocked button the AI used to foul on purpose)
+    const near = [];
+    for (let i = t * 10; i < t * 10 + 10; i++) if (canFlick(s, i)) near.push([i, Math.hypot(s.b[i].x - s.ball.x, s.b[i].y - s.ball.y)]);
+    near.sort((a, b) => a[1] - b[1]);
+    for (let n = 0; n < near.length; n++) {
+      const [i, d] = near[n];
+      if (d > sk.reach + RB && n >= 4) break;
+      // the ball's direction straight on from this button (no cut: the surest contact), and the spread round the goal's
+      const own = [Math.atan2(s.ball.y - s.b[i].y, s.ball.x - s.b[i].x)];
+      for (const th of dirs.concat(own)) for (const dd of dists) { const c = aimRoll(s, i, th, dd); if (c) { c.th = th; out.push(c); } }
     }
     return out;
   }
@@ -455,10 +520,12 @@
     if (s.shot) return bestShot(s, sk, R);
     // a shot worth calling?
     if (canShoot(s)) {
-      const pred = clone(s); pred.shot = true; keeperFor(pred, 1 - p, Math.min(20, level + 2), (seed || 1) + 3, true);
-      const sh = bestShot(pred, sk, R);
-      const need = sk.shotBar * (s.rem <= 2 ? .55 : s.rem <= 4 ? .8 : 1);
-      if (sh && sh.p >= need) return { declare: true, p: sh.p };
+      // the keeper is set after the call, so the chance is averaged over a few keepers (one guess was too hopeful:
+      // the AI kept calling shots it then put into the keeper's hands)
+      let pSum = 0; const KN = 3;
+      for (let q = 0; q < KN; q++) { const pred = clone(s); pred.shot = true; keeperFor(pred, 1 - p, Math.min(20, level + 2), (seed || 1) + 3 + q * 101, true); const sh = bestShot(pred, sk, R); pSum += sh ? sh.p : 0; }
+      const pr = pSum / KN, need = sk.shotBar * (s.rem <= 2 ? .55 : s.rem <= 4 ? .8 : 1);
+      if (pr >= need) return { declare: true, p: pr };
     }
     let cs = candidates(s, sk);
     if (!cs.length) cs = candidates(s, Object.assign({}, sk, { reach: 95 }));   // nobody near the ball: a long run at it
@@ -469,13 +536,17 @@
     }
     // a fine cut from far away often misses the ball altogether (a furada): weigh each flick by its chance of a contact
     const miss = clone(s); freshPossession(miss, 1 - p); const vMiss = evaluate(s, { s: miss, goal: -1 }, p, sk);
-    const phit = c => { if (sk.lv < 4) return 1; const b = s.b[c.i], d = Math.hypot(s.ball.x - b.x, s.ball.y - b.y), cut = c.th == null ? 0 : Math.abs(((c.ang - c.th + 3 * Math.PI) % (2 * Math.PI)) - Math.PI), m = (RB + RBALL) * (1 - Math.sin(cut)) + .2; return Phi(m / Math.max(.05, d * sk.angSd)); };
+    const phit = c => { const b = s.b[c.i], d = Math.hypot(s.ball.x - b.x, s.ball.y - b.y), cut = c.th == null ? 0 : Math.abs(((c.ang - c.th + 3 * Math.PI) % (2 * Math.PI)) - Math.PI), m = (RB + RBALL) * (1 - Math.sin(cut)) + .2; return Phi(m / Math.max(.05, d * sk.angSd)); };
     let sc = cs.map(c => { const h = phit(c); return { c, v: h * evaluate(s, resolve(s, simulate(s, c)), p, sk) + (1 - h) * vMiss }; });
     sc.sort((a, b) => b.v - a.v);
-    if (sk.robust) {
-      const top = sc.slice(0, 6);
-      top.forEach(e => { let tot = 0; for (let k = 0; k < sk.robust; k++) tot += evaluate(s, resolve(s, simulate(s, jitter(e.c, { angSd: Math.max(sk.angSd, .006), vSd: Math.max(sk.vSd, .03) }, R))), p, sk); e.rv = e.v * .35 + tot / sk.robust * .65; });
-      top.sort((a, b) => b.rv - a.rv); sc.splice(0, top.length, ...top);
+    // the plan has to survive this hand: the best few are tried again with the level's own wobble, and judged by the
+    // average (a flick that only works when perfect is not chosen by a shaky hand)
+    {
+      const seen = new Set(), top = [];
+      for (const e of sc) { const key = e.c.i + ':' + e.c.ang.toFixed(3) + ':' + Math.round(e.c.v); if (seen.has(key)) continue; seen.add(key); top.push(e); if (top.length >= 8) break; }
+      const n = sk.robust, ws = { angSd: Math.max(sk.angSd, .005), vSd: Math.max(sk.vSd, .025) };
+      top.forEach(e => { let tot = 0; for (let k = 0; k < n; k++) tot += evaluate(s, resolve(s, simulate(s, jitter(e.c, ws, R))), p, sk); e.rv = e.v * .25 + tot / n * .75; });
+      top.sort((a, b) => b.rv - a.rv); sc = top;
     }
     const pk = sc[Math.floor(R() * Math.min(sk.pickTop, sc.length))].c;
     return { i: pk.i, ang: pk.ang, v: Math.min(VMAX, pk.v) };
@@ -486,10 +557,10 @@
     let best = null;
     for (const c of cs) {
       const r0 = resolve(s, simulate(s, c)); let g = r0.goal === p ? 1 : 0;
-      if (!g && sk.lv < 10) continue;
+      if (!g) continue;
       // robustness: the shot with this level's own wobble
       let n = 1;
-      const tries = sk.lv >= 14 ? 4 : sk.lv >= 6 ? 2 : 1;
+      const tries = 4;
       for (let k = 0; k < tries; k++) { const j = jitter(c, sk, R); if (resolve(s, simulate(s, j)).goal === p) g++; n++; }
       const pr = g / n;
       if (!best || pr > best.p) best = { i: c.i, ang: c.ang, v: c.v, p: pr };
@@ -524,7 +595,7 @@
     const c = clone(s); return setKeeper(c, t, k.x, k.y);
   }
 
-  const api = { DIM, VMAX, VMIN, team, goalY, fwd, inAttack, inSmall, inBig, newMatch, kickoff, restartFor, canShoot, canFlick, simulate, resolve, timeUp, keeperBox, setKeeper, keeperFor, aimTrace, wobble, perform, think, skill, speedFor, aimAt, clone, laneOpen };
+  const api = { _int: { candidates: (s, sk) => candidates(s, sk), evaluate: (a, b, c, d) => evaluate(a, b, c, d), attackValue: (a, b, c, d) => attackValue(a, b, c, d), skill: l => skill(l) }, DIM, VMAX, VMIN, team, goalY, fwd, inAttack, inSmall, inBig, newMatch, kickoff, restartFor, canShoot, canFlick, simulate, resolve, timeUp, keeperBox, setKeeper, keeperFor, aimTrace, wobble, perform, think, skill, speedFor, aimAt, aimRoll, ballAim, ballPath, ballSpeedFor, rollOf, clone, laneOpen };
   root.BotaoEngine = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof self !== 'undefined' ? self : this);
