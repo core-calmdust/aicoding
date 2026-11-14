@@ -631,11 +631,11 @@ class Table3D {
     // (ユーザー 2026-11-14: it should be plain where the tile is taken from — the others' too. The hand comes down on the tile
     // where it stands in the row, lifts it straight up out of the row, then carries it to the river; the row closes afterwards.)
     const go = () => { if (g.userData.target !== to) return this._handBack(seat);
-      if (f.page) return this.tween(g, to, 440, f, seat);
+      if (f.page) return this.tween(g, to, 440, f, seat, () => this._land('river', seat));
       // (ユーザー 2026-11-14: pinched between the thumb and the forefinger — as the tile comes up out of the row it is turned flat,
       // the thumb going under it and the forefinger lying on its face; so it is carried, and the thumb slips out as it is laid down)
       const up = { x: f.x, y: f.y + 0.95, z: f.z, rx: to.rx, ry: f.ry, rz: to.rz };
-      this.tween(g, up, 250, f, seat, () => { if (g.userData.target === to) { this.tween(g, to, 460, up, seat, () => this._sortNext(seat)); this.tweens[this.tweens.length - 1].grip = 'held'; } else this._handBack(seat); });
+      this.tween(g, up, 250, f, seat, () => { if (g.userData.target === to) { this.tween(g, to, 460, up, seat, () => { this._land('river', seat); this._sortNext(seat); }); this.tweens[this.tweens.length - 1].grip = 'held'; } else this._handBack(seat); });
       const tw = this.tweens[this.tweens.length - 1]; tw.level = true; tw.grip = 'take'; g.userData.target = to; };
     this.handFx.push({ rig, from: r, to: { x: f.x, y: f.y + this._top(f.rx), z: f.z }, t0: performance.now(), dur: f.page ? 380 : 280, then: go });
     this.dirty = true;
@@ -699,6 +699,8 @@ class Table3D {
     } else { this.sorting[seat] = null; this._handBack(seat); }
     this.dirty = true;
   }
+  // a tile set down on the table — a discard in the river, the called tile in a meld: the app plays the tile's sound (ユーザー 2026-11-14)
+  _land(kind, seat) { if (this.onTileLand) try { this.onTileLand(kind, seat); } catch (e) {} }
   _handRest(seat) { const p = this.local(seat, 0, 12.5); return { x: p.x, y: 3.2, z: p.z }; }   // off the table, on the owner's side
   _handBack(seat) { const rig = this.hand(seat); this.pinch(rig, 0); const f = { x: rig.position.x, y: rig.position.y, z: rig.position.z }, d = this.local(seat, 0, 6.5);
     this.handFx = this.handFx.filter(h => h.rig !== rig);
@@ -712,12 +714,13 @@ class Table3D {
     const shown = g.visible, to = shown ? g.userData.target : this.handOrigin(seat), rig = this.hand(seat);
     if (!to) return;
     const done = shown ? null : () => { g.visible = false; };
-    if (!from) { g.visible = true; this.tween(g, to, 320, this.handOrigin(seat), seat, done); return; }
+    const landed = () => { if (done) done(); this._land('meld', seat); };
+    if (!from) { g.visible = true; this.tween(g, to, 320, this.handOrigin(seat), seat, landed); return; }
     g.visible = true; this._drop(g, seat);
     g.position.set(from.x, from.y, from.z); g.rotation.set(from.rx, from.ry, from.rz);
     const r = this._handRest(seat);
     this.handFx = this.handFx.filter(h => h.rig !== rig); rig.visible = true; rig.position.set(r.x, r.y, r.z);
-    this.handFx.push({ rig, from: r, to: { x: from.x, y: from.y + D / 2, z: from.z }, t0: performance.now(), dur: 240, then: () => this.tween(g, to, 420, from, seat, done) });
+    this.handFx.push({ rig, from: r, to: { x: from.x, y: from.y + D / 2, z: from.z }, t0: performance.now(), dur: 240, then: () => this.tween(g, to, 420, from, seat, landed) });
     this.dirty = true;
   }
   hideAll() { if (this.sorting) for (const S of this.sorting) if (S) clearTimeout(S.timer); this.sorting = []; for (const g of this.tiles.values()) { g.visible = false; this.setTileLook(g, 'normal'); } this.sticks.forEach(s => s.visible = false); this.tweens = []; this.handFx = []; if (this._ov) { this._ov.g.traverse(o => o.layers.disable(1)); this._ov.rig.traverse(o => o.layers.disable(1)); this._ov = null; if (this.r2) this.r2.clear(); } (this.hands || []).forEach(h => { if (h) h.visible = false; }); this.dirty = true; }
