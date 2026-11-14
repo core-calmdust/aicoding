@@ -82,5 +82,15 @@ if (G === 'reversi') {   // (2026-11-13) bench.html's MID (36 empties) + self-pl
   while (oe.length < NEND) oe.push(line(selfPlay(END_E, 4)));
   fs.writeFileSync('pos_reversi_end.txt', oe.join('\n') + '\n');
 }
+if (G === 'mancala') {   // (2026-11-14) kalah / oware / mangala / bohnen / ayo: seeded games (Lv.5 with a fixed random), the board
+  // after 4–20 moves; IO = [14 pits / stores, side, rule index (engine.c R_*)]
+  E.setRandom(() => { rs = (rs * 1103515245 + 12345) & 0x7fffffff; return rs / 0x80000000; });
+  const RS = ['kalah', 'oware', 'mangala', 'bohnen', 'ayo'];
+  for (let g = 0; out.length < NPOS; g++) {
+    const rules = RS[g % RS.length], len = 4 + rnd(17); let b = E.initial(4), side = 0, ok = true;
+    for (let i = 0; i < len; i++) { const r = E.chooseMove(b, side, rules, 5); if (r.move < 0) { ok = false; break; } const c = Int8Array.from(b), x = E.play(c, side, r.move, E.RULES[rules]); b = c; if (x.over) { ok = false; break; } if (!x.extra) side = 1 - side; }
+    if (ok && E.legal(b, side, rules).length > 1) out.push('P ' + Array.from(b).join(' ') + ' ' + side + ' ' + E.RULE_IDS.indexOf(rules));
+  }
+}
 fs.writeFileSync('pos_' + G + '.txt', out.join('\n') + '\n');
 console.log(out.length + ' positions');

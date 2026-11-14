@@ -99,7 +99,7 @@ function save() {
 
 // ====================================================================== workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=20261111c1';
+const ENGINE_URL = 'engine.js?v=20261114p1';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -126,7 +126,12 @@ function noteNps(nodes, ms) {
 // plies at 8 threads (each worker with a table of its own), the reason for the change.
 if (window.MTSplit) MTSplit.init({ sw: 'sw.js?v=1' });
 const MTP = window.MTSplit ? MTSplit.use({ url: ENGINE_URL, drive: MTSplit.ladder.drive }) : null;
-if (window.MTEngine && MTEngine.coi && window.MancalaOnline) MancalaOnline.available = false;   // (the COOP mode: online play / sign-in switch back to one thread — shared/mtengine.js)
+if (window.MTEngine && MTEngine.coi && window.MancalaOnline) MancalaOnline.available = false;
+// (2026-11-14) On an isolated page the threads are engine_mt.wasm's instead (shared/mtengine.js: the lead engine.js?…&mt=1, the
+// helpers mt-helper.js): Praline's Young Brothers Wait in C splits every node of the search (and the root), one table in the
+// shared memory (claude/mancala-spec.md「Praline」). mtsplit.js stays for a page that is not isolated, and while that pool is busy.
+const MCP = window.MTEngine && MTEngine.use ? MTEngine.use({ wasm: 'engine_mt.wasm?v=1', lead: ENGINE_URL + (ENGINE_URL.includes('?') ? '&' : '?') + 'mt=1', helper: 'mt-helper.js?v=1', slot: 4 << 20, initial: 1024, maximum: 16384,
+  imports: mem => ({ env: { memory: mem, now: () => performance.now() } }), help: () => ({}), isDone: m => m.type === 'move' || m.type === 'analyze' || m.type === 'error' }) : null;   // (the COOP mode: online play / sign-in switch back to one thread — shared/mtengine.js)
 const mtLevel = lv => { const L = E.LEVELS[lv]; return !!(L && L.kind === 'time'); };
 function mtWants(which, msg) {
   if (msg.type === 'analyze') return true;
@@ -135,6 +140,8 @@ function mtWants(which, msg) {
   return mtLevel(msg.level);
 }
 function request(which, msg) {
+  const cp = MCP && MTEngine.on() && mtWants(which, msg) && MCP.pool(which === 'ai' ? 'ai' : null);
+  if (cp) { const t0 = performance.now(), full = { ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }; return cp.run(full, null, which).then(r => { if (r && r.type !== 'error') noteNps(r.nodes, performance.now() - t0); return r === undefined || (r && r.type === 'error') ? requestW(which, full) : r; }); }
   const mp = MTP && mtWants(which, msg) && MTP.pool(which === 'ai' ? 'ai' : null);
   if (mp) { const t0 = performance.now(), full = { ...msg, ...(msg.cfg ? { mtThreads: msg.cfg.threads } : {}) }; return mp.run(full, null, which).then(r => { if (r) noteNps(r.nodes, performance.now() - t0); return r === undefined ? requestW(which, full) : r; }); }
   return requestW(which, msg);
@@ -145,6 +152,7 @@ function requestW(which, msg) {   // (the one-thread workers)
 }
 function cancelWorker(which) {
   if (MTP) MTP.cancel(which);
+  if (MCP) MCP.cancel(which);
   const w = which === 'ai' ? aiW : anaW;
   if (!w.jobs.size) return;
   w.terminate(); w.jobs.forEach(j => j.resolve(null));
@@ -2524,7 +2532,7 @@ function bxAnalyze(p) {
   const id = ++jobId, at = inStudy() ? -1 : cur, run = rv, msg = { type: 'analyze', ...posMsg(p, game.rules), ms: 800, pv: 8 };
   // the threads when free (shared/mtsplit.js), else a worker of its own
   const viaW = () => { const w = bxW = makeWorker(); return new Promise(resolve => { w.jobs.set(id, { resolve }); w.postMessage({ ...msg, id }); }).then(r => { if (bxW === w) { w.terminate(); bxW = null; } return r; }); };
-  const mp = MTP && MTP.pool();
+  const mp = (MCP && MTEngine.on() && MCP.pool()) || (MTP && MTP.pool());
   bxJob = id;
   (mp ? mp.run(msg, null, 'rvb').then(r => r === undefined && bxJob === id ? viaW() : r) : viaW()).then(res => {
     if (bxJob !== id) return;
@@ -2542,7 +2550,7 @@ function bxAnalyze(p) {
     renderInfo(); renderFx();
   });
 }
-function bxStop() { if (bxJob && MTP) MTP.cancel('rvb'); bxJob = 0; if (bxW) { bxW.terminate(); bxW.jobs.forEach(j => j.resolve(null)); bxW = null; } bxPending = ''; }
+function bxStop() { if (bxJob && MTP) MTP.cancel('rvb'); if (bxJob && MCP) MCP.cancel('rvb'); bxJob = 0; if (bxW) { bxW.terminate(); bxW.jobs.forEach(j => j.resolve(null)); bxW = null; } bxPending = ''; }
 const bxMv = (side, k, extra) => `<span class="bx-m"><i class="p${side}"></i>${k + 1}${extra ? '<sup>+</sup>' : ''}</span>`;
 function bxPV(p, line) {
   let b = Int8Array.from(p.b), out = '';

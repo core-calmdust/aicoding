@@ -87,6 +87,10 @@ elif game == 'reversi':   # (2026-11-13: engine.c with -DMT -DNATIVE -DENGINE_AL
     if 'splitHere(' in s:
         rep('(void)now();', 'SIM_IDLE();', 0)
         rep('      checkTime();   /* (the lead\'s deadline; the simulation\'s clock) */', '      SIM_IDLE(); checkTime();')
+elif game == 'mancala':   # (2026-11-14: engine.c with -DMT -DNATIVE, Praline's YBW; g_mancala.h, positions: dump.js mancala)
+    rep('const u64 w = __atomic_load_n(&TT[ti].w, __ATOMIC_RELAXED), k = __atomic_load_n(&TT[ti].k, __ATOMIC_RELAXED);', 'const u64 w = SIMR(&TT[ti].w), k = SIMR(&TT[ti].k);')
+    rep('__atomic_store_n(&TT[ti].w, w, __ATOMIC_RELAXED); __atomic_store_n(&TT[ti].k, (u64)key ^ w, __ATOMIC_RELAXED);', 'SIMW(&TT[ti].w, w); SIMW(&TT[ti].k, (u64)key ^ w);')
+    rep('  if (((long long)(++nodes) & 1023) == 0) mtCheck();', '  SIM_NODE(); if (((long long)(++nodes) & 1023) == 0) mtCheck();')
 else:
     raise SystemExit('game?')
 
