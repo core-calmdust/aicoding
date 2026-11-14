@@ -2246,11 +2246,11 @@ else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.j
 </script>
 <script src="gamelist-i18n.js?v=14pgs"></script>
 <script src="img/tex/baked.js?v=2"></script>
-<script src="table3d.js?v=168"></script>
+<script src="table3d.js?v=169"></script>
 <script>/* the places other than the chabudai (tables3d.js, 440 KB): at once when one is chosen, else in idle time after the page has
    loaded (2026-11-10); 'atlas-places' tells the page they are there */
 (function () {
-  var SRC = 'tables3d.js?v=123', k = 0, p = null;
+  var SRC = 'tables3d.js?v=124', k = 0, p = null;
   try { k = +(localStorage.getItem('atlas-table') || 0) || 0; var m = /[?&]tbl=(\d+)/.exec(location.search); if (m) k = +m[1]; } catch (e) {}
   window.AtlasPlaces = function () { return p || (p = new Promise(function (res) { var s = document.createElement('script'); s.src = SRC; s.onload = s.onerror = function () { res(); try { dispatchEvent(new Event('atlas-places')); } catch (e) {} }; document.head.appendChild(s); })); };
   if (k) { document.write('<script src="' + SRC + '"><\/script>'); p = Promise.resolve(); }
@@ -2270,7 +2270,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   }, 60);
 };</script>
 <script src="../shared/tapword.js?v=1"></script>
-<script src="lazy.js?v=276"></script>
+<script src="lazy.js?v=277"></script>
 <script src="puzzle-lines.js?v=1"></script>
 <script src="puzzles.js?v=29"></script>
 <script src="lessons3d.js?v=38"></script>

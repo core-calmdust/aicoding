@@ -33,13 +33,14 @@
 <script src="../../crokinole/engine.js"></script>
 <script src="../models/crokinole.js"></script>
 <script src="../models/checkers.js"></script>
+<script src="../models/xiangqi.js"></script>
 <script>
 (function () {
   const q = new URLSearchParams(location.search), X = window.Table3D, id = q.get('game') || 'ludo', look = q.get('look'), W = +q.get('w') || 512, H = +q.get('h') || 512, el = q.get('el') ? +q.get('el') : 90;   // (2026-11-09: straight down by default — the board as a flat icon, like the 2D tiles)
   if (look && X.BOARDS[id]) X.BOARDS[id].set(look);
   if (id === 'senet' && look) try { localStorage.setItem('aicoding-senet', JSON.stringify({ settings: { design: look } })); } catch (e) {}
   X.mount(document.getElementById('gl'));
-  const g = X.MODELS[id](id === 'senet' || id === 'amazons' || id === 'shogi' || id === 'checkers');   // (amazons: the board alone, without the showcase's game)
+  const g = X.MODELS[id](id === 'senet' || id === 'amazons' || id === 'shogi' || id === 'checkers' || id === 'xiangqi');   // (amazons: the board alone, without the showcase's game)
   X.show(id, g, { still: true }); X.quiet(true); X.snap();
   setTimeout(() => { X.kick(3000); setTimeout(() => (window.AtlasTexGen ? AtlasTexGen.settle() : Promise.resolve()).then(() => { X.kick(1500); setTimeout(shoot, 1200); }), 5000); }, 800);   // (waits for the procedural textures)
   function shoot() {
