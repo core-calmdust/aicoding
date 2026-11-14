@@ -2037,6 +2037,17 @@
   }
   renderPlace();
   $('bvQuit').onclick = () => { if (rulesFromList && $('bv').classList.contains('rules')) { rulesFromList = false; closeBoard(); } else openBoard(bvGame.id); };   // rules opened from the game list: back to the list
+  // (2026-11-14) Esc with a picker / panel open over the board (the card's level, size, mode … list sheets, 上海's 星座マップ, the
+  // records overlay): close just that one and stay on the game's 3D view — before the board's own Esc (back to the page you came
+  // from) or anything else runs. Capture phase on window: the first listener of all. One rule for every game.
+  addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    const top = [...document.querySelectorAll('.lvsheet:not(.out), .shmap.on, #recOv.on')].pop(); if (!top) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    const x = top.querySelector(':scope .lvs-x, :scope > .hd .x, :scope .recx, :scope [aria-label][class$="x"]');
+    if (top.id === 'recOv') { top.classList.remove('on'); return; }
+    if (x) x.click(); else top.remove();
+  }, true);
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('bv').classList.contains('on') && !$('ov').classList.contains('on')) { if ($('bv').classList.contains('playing')) { const q = $('bvQuit'); if (q) q.click(); } else closeBoard(); } });   // in a game (or the rules on the table): back to the 3D view, like the × (2026-11-10)
   // ‹ › / ← → / swipe: the previous / next game on the chabudai (same order as the game grid)
   function stepBoard(d) {
