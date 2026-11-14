@@ -4,13 +4,13 @@
 // The clock is this process's CPU time (a budget in ms is the same CPU time on a crowded machine). claude/amazons-spec.md「評価 v2」.
 //   clang -O3 -march=native -DNATIVE -w -o /tmp/amz_match amazons/tools/native_match.c -lm
 //   /tmp/amz_match A B pairs [seed] [part/n]
-//   a player: mc:ms=300,ev=1 | mc:nk=60,ev=0,c=0.25 | ab:ms=300,ev=1 | ab:nk=24 (nk: thousands of evaluations a move)
+//   a player: mc:ms=300,ev=2 | mc:nk=60,ev=0,c=0.25 | ab:ms=300,ev=1 | ab:nk=24 (nk: thousands of evaluations a move)
 //             | lv:noise=420,qk=3 (engine.js's one-ply levels Lv.1〜8: the candidates' scores with Gaussian noise; d=2: the
 //             best 10 valued at depth d as engine.js think with L.d ≥ 2, the rest their score − 40) | L<n>: the
 //             level n as in engine.js LEVELS (L1 … L23; one thread, the time levels by this process's CPU time; L19:ms=150 etc.
 //             overrides a key). Each player keeps its own alpha-beta tables (the table and the candidate cache) from move to
 //             move, as its own worker would (2026-11-14: before, both players shared them).
-//             MCTS keys as engine.js MC (qk k qkr kr po s np c a pwa pwk pwb pom vl b0 la); e<k>=v sets the evaluation's
+//             MCTS keys as engine.js MC (qk k qkr kr po s np c a pwa pwk pwb pom vl b0 la fin); e<k>=v sets the evaluation's
 //             parameter k (ev_set(k, v)) for that player
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,19 +21,20 @@
 double now(void) { struct timespec t; clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &t); return t.tv_sec * 1e3 + t.tv_nsec / 1e6; }
 static const char *MCK[] = { "qk", "k", "qkr", "kr", "po", "s", "np", "c", "a", "pwa", "pwk", "pwb", "pom", "vl", "b0", "la" };
 static const double MCD[] = { 10, 24, 20, 48, 0, 400, 2, 0.25, 0.3, 3, 1, 0.5, 0.5, 1, 300, 8 };
+#define FIN_DEF 0.5   // (engine.js MC.fin, core.c P_FIN — mcts_set 17; fin=0: the most visited move as before 2026-11-14)
 #define NEP 32
-typedef struct { int mc, ev, lv, qk, d; double ms, nk, noise, mcp[16]; int nep; int epk[NEP]; double epv[NEP]; const char *name;
+typedef struct { int mc, ev, lv, qk, d; double ms, nk, noise, fin, mcp[16]; int nep; int epk[NEP]; double epv[NEP]; const char *name;
   TTS *ttp; unsigned ttm; int ttc; CCS *ccp; unsigned ccm; int ccc; } Player;
-// engine.js LEVELS (LVEV: the evaluation of each level, 1 = v2)
+// engine.js LEVELS (LVEV: the evaluation of each level, 1 = v2, 2 = v3)
 static const double LVN[24] = { 0, 420, 300, 210, 150, 105, 70, 45, 200 };
 static const int LVD[24] = { 0, 1, 1, 1, 1, 1, 1, 1, 3 };
 static const int LVQ[24] = { 0, 3, 4, 5, 6, 8, 10, 12, 14 };
 static const double LVK[24] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 4.5, 6, 16, 40, 150, 200, 500, 1200 };
 static const int LVMC[24] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1 };
 static const double LVMS[24] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1500, 3000, 6000, 12000, 20000 };
-static const int LVEV[24] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+static const int LVEV[24] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2 };   // (2 = v3: the MCTS levels, 2026-11-14)
 static void parseP(const char *s, Player *P) {
-  memset(P, 0, sizeof *P); P->name = s; P->mc = !strncmp(s, "mc", 2); P->lv = !strncmp(s, "lv", 2); memcpy(P->mcp, MCD, sizeof MCD);
+  memset(P, 0, sizeof *P); P->fin = -1; P->name = s; P->mc = !strncmp(s, "mc", 2); P->lv = !strncmp(s, "lv", 2); memcpy(P->mcp, MCD, sizeof MCD);
   if (s[0] == 'L' && s[1] >= '0' && s[1] <= '9') {
     int n = atoi(s + 1); if (n < 1) n = 1; if (n > 23) n = 23;
     if (n <= 8) { P->lv = 1; P->noise = LVN[n]; P->qk = LVQ[n]; P->d = LVD[n]; }
@@ -45,7 +46,7 @@ static void parseP(const char *s, Player *P) {
   char buf[512]; strncpy(buf, c + 1, 511); buf[511] = 0;
   for (char *tok = strtok(buf, ","); tok; tok = strtok(0, ",")) {
     char *eq = strchr(tok, '='); if (!eq) continue; *eq = 0; double v = atof(eq + 1);
-    if (!strcmp(tok, "ms")) P->ms = v; else if (!strcmp(tok, "nk")) P->nk = v; else if (!strcmp(tok, "ev")) P->ev = (int)v;
+    if (!strcmp(tok, "ms")) P->ms = v; else if (!strcmp(tok, "fin")) P->fin = v; else if (!strcmp(tok, "nk")) P->nk = v; else if (!strcmp(tok, "ev")) P->ev = (int)v;
     else if (!strcmp(tok, "noise")) P->noise = v; else if (!strcmp(tok, "qk") && P->lv) P->qk = (int)v; else if (!strcmp(tok, "d")) P->d = (int)v;
     else if (tok[0] == 'e' && tok[1] >= '0' && tok[1] <= '9') { if (P->nep < NEP) { P->epk[P->nep] = atoi(tok + 1); P->epv[P->nep++] = v; } }
     else for (int k = 0; k < 16; k++) if (!strcmp(tok, MCK[k])) P->mcp[k] = v;
@@ -75,6 +76,7 @@ static void setEval(const Player *P) {
 }
 static int thinkMC(const Player *P, int seed) {
   for (int k = 0; k < 16; k++) mcts_set(k, (float)P->mcp[k]);
+  mcts_set(17, (float)(P->fin >= 0 ? P->fin : FIN_DEF));
   double evl = P->nk * 1000, ms = P->ms;
   double est = ms > 0 ? ms * 400 * 2.6 : evl / 200 * P->mcp[1] * 1.3; int want = (int)est; if (want < 65536) want = 65536; if (want > (1 << 22)) want = 1 << 22;
   mcts_alloc(want); mcts_limit(0); mcts_set(16, 0);

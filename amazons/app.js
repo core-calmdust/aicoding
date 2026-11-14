@@ -108,7 +108,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=14-zf1';
+const ENGINE_URL = 'engine.js?v=15';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -142,7 +142,7 @@ const mtLevel = lv => { const L = E.LEVELS[lv]; return !!(L && L.s && L.ms && !L
 // core.c now, and on these threads the helpers take moves at its split points (Praline's Young Brothers Wait in core_mt.wasm,
 // claude/amazons-spec.md「αβ を C に」). Without an isolated page (no shared memory): shared/mtsplit.js's workers as before (each
 // with its own core: the root moves and the main line shared out, no shared table).
-const MCP = window.MTEngine && MTEngine.use ? MTEngine.use({ wasm: 'core_mt.wasm?v=7', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=2', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = core_mt.wasm's (1 GiB); initial ≥ its declared 617 pages
+const MCP = window.MTEngine && MTEngine.use ? MTEngine.use({ wasm: 'core_mt.wasm?v=8', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=2', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = core_mt.wasm's (1 GiB); initial ≥ its declared 617 pages
   imports: mem => ({ env: { memory: mem, now: () => Date.now() } }), help: () => ({}) }) : null;
 const mcJob = msg => msg.type === 'think' && (msg.cfg ? !!(msg.cfg.s && msg.cfg.mc) : !!(E.LEVELS[msg.level] || {}).mc);
 // the MCTS's default thread count (2026-11-10): the performance cores (shared/mtengine.js perfThreads — 10 of the user's M4 Pro's
@@ -1370,7 +1370,7 @@ $('#btnStart').onclick = () => {
 const RT_STORE = STORE + '-rated', RT_START = 1000, RT_CLOCK = { base: 300000, inc: 3000 };
 // rating of each AI step (a first estimate from short matches of neighbouring levels on the work machine; to be measured on the
 // user's Mac): about +110 per step at the bottom, smaller at the top
-const RT_LV = [0, 350, 400, 490, 580, 610, 640, 710, 920, 1140, 1210, 1250, 1280, 1400, 1630, 1770, 1910, 2020, 2090, 2140, 2180, 2210, 2240, 2260];   // (2026-11-14, claude/amazons-spec.md「レベルの測り直し」: measured — native self-play of neighbouring levels at their own limits on one thread, a Bradley–Terry fit from Lv.1 = 350, the flat Lv.10〜12 evened out; Lv.21〜23 extrapolated from Lv.19 → 20. With several threads Lv.19〜23 read more and are stronger than these)
+const RT_LV = [0, 350, 400, 490, 580, 610, 640, 710, 920, 1140, 1210, 1250, 1280, 1400, 1630, 1770, 1955, 2065, 2135, 2185, 2225, 2255, 2285, 2305];   // (2026-11-15: Lv.16〜23 +45, the MCTS's v3 evaluation and final move — claude/amazons-spec.md「評価 v3 と最後の手の選び方」) (2026-11-14, claude/amazons-spec.md「レベルの測り直し」: measured — native self-play of neighbouring levels at their own limits on one thread, a Bradley–Terry fit from Lv.1 = 350, the flat Lv.10〜12 evened out; Lv.21〜23 extrapolated from Lv.19 → 20. With several threads Lv.19〜23 read more and are stronger than these)
 function rtLoad() {
   let s = null; try { s = JSON.parse(localStorage.getItem(RT_STORE) || 'null'); } catch (e) {}
   if (!s || typeof s.r !== 'number' || !isFinite(s.r)) s = { r: RT_START, n: 0, w: 0, l: 0, d: 0, hist: [] };

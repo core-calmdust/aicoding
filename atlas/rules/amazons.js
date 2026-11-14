@@ -10,7 +10,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const GUIDE = '../images/atlas/av/frog-0.webp', ENG = '../amazons/engine.js?v=14-zf1', N = 10;
+  const GUIDE = '../images/atlas/av/frog-0.webp', ENG = '../amazons/engine.js?v=15', N = 10;
   const loadEngine = () => window.AmazonsEngine ? Promise.resolve(window.AmazonsEngine) : new Promise((res, rej) => { const s = document.createElement('script'); s.src = ENG; s.onload = () => window.AmazonsEngine ? res(window.AmazonsEngine) : rej(); s.onerror = rej; document.head.appendChild(s); });
   const START = { w: ['a4', 'd1', 'g1', 'j4'], b: ['a7', 'd10', 'g10', 'j7'] };
   const WALL = 'abcdefghij'.split('').map(f => f + '4');

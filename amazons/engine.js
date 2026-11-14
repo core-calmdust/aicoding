@@ -218,7 +218,7 @@ let WA = null;
 (function loadCore() {
   try {
     let b64 = null;
-    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('core-wasm.js?v=8'); b64 = self.AMZ_WASM; }
+    if (typeof self !== 'undefined' && typeof importScripts === 'function' && typeof window === 'undefined') { importScripts('core-wasm.js?v=9'); b64 = self.AMZ_WASM; }
     else if (typeof module !== 'undefined' && module.exports && typeof require === 'function') { const g = typeof globalThis !== 'undefined' ? globalThis : global, had = 'self' in g, old = g.self; g.self = g; try { require(require('path').join(__dirname, 'core-wasm.js')); b64 = g.AMZ_WASM; } finally { if (had) g.self = old; else delete g.self; } }
     if (!b64 || (typeof process !== 'undefined' && process.env && process.env.AMZ_NOWASM)) return;
     // (the SIMD build first; the one without SIMD where that does not compile — AMZ_NOSIMD=1 in Node to check it)
@@ -530,7 +530,7 @@ function bestMove(pos, maxD, ms, ek, rootK) {
 // the candidate list (the evaluation of its children = its value), the children pre-selected and valued by the evaluation
 // (prior), progressive widening and implicit minimax values. Only with the WebAssembly core (mcts: null without it).
 // o: { ms (time), nk (thousands of evaluations), sims (visits), seed, prm (parameters, MC), onProgress(list, sims) }
-const MC = { qk: 10, k: 24, qkr: 20, kr: 48, po: 0, s: 400, np: 2, c: 0.25, a: 0.3, pwa: 3, pwk: 1, pwb: 0.5, pom: 0.5, vl: 1, b0: 300, la: 8, ev: 1 };   // (ev: the evaluation's weights — 1 = v2 since 2026-11-14, core.c ev_set; the alpha-beta search keeps the classic ones)
+const MC = { qk: 10, k: 24, qkr: 20, kr: 48, po: 0, s: 400, np: 2, c: 0.25, a: 0.3, pwa: 3, pwk: 1, pwb: 0.5, pom: 0.5, vl: 1, b0: 300, la: 8, ev: 2, fin: 0.5 };   // (ev: the evaluation's weights, core.c ev_set — 1 = v2 (2026-11-14), 2 = v3 since 2026-11-14 (t1 counts 2 − e: more as the board closes); the alpha-beta search keeps the classic ones or v2 (Lv.13〜15). fin (2026-11-14, core.c P_FIN): the move is the best value among the root's children with at least fin × the most visits)
 const MC_KEYS = ['qk', 'k', 'qkr', 'kr', 'po', 's', 'np', 'c', 'a', 'pwa', 'pwk', 'pwb', 'pom', 'vl', 'b0', 'la'];
 let MX = null;   // the core of the MCTS: { x, views } — WA (one thread) or the multi-thread core of the lead (mt=1)
 function mcCore() { return MX || WA; }
@@ -564,6 +564,7 @@ function mcts(pos, o) {
   const mev = X.ev_set ? (p.ev | 0) : 0;   // (the evaluation of this search: claude/amazons-spec.md「評価 v2」; back to the alpha-beta search's (evm) after it)
   if (X.ev_set) { X.ev_reset(); X.ev_set(-1, mev); if (mev && p.ep) for (const k in p.ep) X.ev_set(+k, p.ep[k]); }
   if (X.mcts_vnodes) X.mcts_set(16, exact ? C.vcap : 0);
+  X.mcts_set(17, p.fin || 0);   // (an older core ignores it)
   C.sq.set(pos.sq); C.q.set(pos.q);
   X.mcts_begin(pos.turn, o.seed | 0);
   const t0 = Date.now();

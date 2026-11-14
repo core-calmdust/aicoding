@@ -182,15 +182,18 @@ static void terms(int La, int Lb, double kap, int kind) {
 // ---- the evaluation's weights (2026-11-14, claude/amazons-spec.md「評価 v2」): EVM 0 = the classic set (exactly engine.js's
 // evalFor: the same constants in the same arithmetic), 1 = v2 (the king-distance terms t2 / c2 count more and the queen-distance
 // position term c1 less; tuned by self-play matches of the MCTS, tools/native_match.c). ev_set(k, v): k < 0 the set, else
-// parameter k of the set in use (tools); ev_reset: both sets back to their values.
+// parameter k of the set in use (tools); ev_reset: every set back to its values.
 // EP: 0 W0 (w at which the board counts as open), 1 t1, 2 t1·e, 3 t2, 4 c1, 5 c2, 6 κ (the side to move's share of a tie)
 #define NEPS 7
-static const double EPC[2][NEPS] = { { 40, 1.0, 0, 0.45, 0.5, 0.35, 0.05 }, { 40, 1.0, 0, 0.85, 0.35, 0.6, 0.05 } };
-static double EPS[2][NEPS] = { { 40, 1.0, 0, 0.45, 0.5, 0.35, 0.05 }, { 40, 1.0, 0, 0.85, 0.35, 0.6, 0.05 } };
+// (2026-11-14) EVM 2 = v3, the MCTS's (Lv.16〜23): v2 with the territory t1 counting more as the board closes — 2 − e (2 on a
+// separated board, 1 on an open one as in v2; EP[2] = t1·e = −1). claude/amazons-spec.md「評価 v3」
+#define NEVM 3
+static const double EPC[NEVM][NEPS] = { { 40, 1.0, 0, 0.45, 0.5, 0.35, 0.05 }, { 40, 1.0, 0, 0.85, 0.35, 0.6, 0.05 }, { 40, 2.0, -1.0, 0.85, 0.35, 0.6, 0.05 } };
+static double EPS[NEVM][NEPS] = { { 40, 1.0, 0, 0.45, 0.5, 0.35, 0.05 }, { 40, 1.0, 0, 0.85, 0.35, 0.6, 0.05 }, { 40, 2.0, -1.0, 0.85, 0.35, 0.6, 0.05 } };
 static int EVM = 0;
 static const double *EP = EPS[0];
-__attribute__((export_name("ev_reset"))) void ev_reset(void) { for (int j = 0; j < 2; j++) for (int i = 0; i < NEPS; i++) EPS[j][i] = EPC[j][i]; }
-__attribute__((export_name("ev_set"))) void ev_set(int k, double v) { if (k < 0) { EVM = v > 0 ? 1 : 0; EP = EPS[EVM]; } else if (k < NEPS) EPS[EVM][k] = v; }
+__attribute__((export_name("ev_reset"))) void ev_reset(void) { for (int j = 0; j < NEVM; j++) for (int i = 0; i < NEPS; i++) EPS[j][i] = EPC[j][i]; }
+__attribute__((export_name("ev_set"))) void ev_set(int k, double v) { if (k < 0) { EVM = v > 1 ? 2 : v > 0 ? 1 : 0; EP = EPS[EVM]; } else if (k < NEPS) EPS[EVM][k] = v; }
 __attribute__((export_name("ev_mode"))) int ev_mode(void) { return EVM; }
 // the value for `me` with `toMove` to move (evalFor in engine.js)
 __attribute__((export_name("ev"))) int ev(int me, int toMove) {
@@ -338,6 +341,9 @@ static float P_S = 400.f, P_NP = 2.f, P_C = 0.25f, P_A = 0.3f, P_PWA = 3.f, P_PW
 // reaches them (lazy children, below): with K = 24 a node expanded on its first visit allocated 24 children of which the
 // window lets it see 4 at N = 1 and 9 only at N = 35 — most of them never. P_LA = 0: every child at once (as before).
 static int P_LA = 8;
+// (2026-11-14) The move played (mcts_out's first): among the root's children with at least P_FIN of the most visits, the best
+// value (valOf: the mean mixed with the implicit minimax value) — not only the most visited. 0: the most visited (before).
+static float P_FIN = 0.f;
 // The pool's fill that raises expT (mcts_run) is the larger of the nodes made / the pool and the nodes the search would have
 // made with every child at once (vNodes: K per expansion) / VPOOL: with VPOOL = the pool (a search by visits or evaluations,
 // engine.js) the waits come exactly where they came before (the same tree, the same result); VPOOL = 0 (a search by time):
@@ -564,7 +570,7 @@ EXPORT(mcts_set) void mcts_set(int k, float v) {
   switch (k) {
     case 0: P_QK = (int)v; break; case 1: P_K = (int)v; break; case 2: P_QKR = (int)v; break; case 3: P_KR = (int)v; break;
     case 4: P_PO = (int)v; break; case 5: P_S = v; break; case 6: P_NP = v; break; case 7: P_C = v; break; case 8: P_A = v; break;
-    case 9: P_PWA = v; break; case 10: P_PWK = v; break; case 11: P_PWB = v; break; case 12: P_POM = v; break; case 13: VLOSS = v; break; case 14: BIAS0 = v; break; case 15: P_LA = (int)v; break; case 16: VPOOL = v; break;
+    case 9: P_PWA = v; break; case 10: P_PWK = v; break; case 11: P_PWB = v; break; case 12: P_POM = v; break; case 13: VLOSS = v; break; case 14: BIAS0 = v; break; case 15: P_LA = (int)v; break; case 16: VPOOL = v; break; case 17: P_FIN = v; break;
   }
 }
 // a new tree on the position SQ / Q with `side` to move (the root expanded); seed: the random numbers (the playouts).
@@ -633,6 +639,11 @@ EXPORT(mcts_out) int mcts_out(void) {
   Node *ch = &T[r->first];
   for (int i = 0; i < n; i++) for (int j = i + 1; j < n; j++)   // most visited first, then the value; a proven win first, proven losses last
     if (outKey(&ch[idx[j]]) > outKey(&ch[idx[i]])) { int x = idx[i]; idx[i] = idx[j]; idx[j] = x; }
+  if (P_FIN > 0 && n > 1 && ch[idx[0]].proof == 0) {   // (the best value among the well-visited: first; a proven win stays first)
+    int b = 0; float lim = P_FIN * ch[idx[0]].n;
+    for (int i = 1; i < n; i++) { Node *c = &ch[idx[i]]; if (c->proof >= 0 && c->n >= lim && valOf(c) > valOf(&ch[idx[b]])) b = i; }
+    if (b) { int x = idx[b]; for (int i = b; i > 0; i--) idx[i] = idx[i - 1]; idx[0] = x; }
+  }
   for (int i = 0; i < n; i++) { Node *c = &ch[idx[i]]; RM[i] = c->m; RN[i] = (int)c->n; RV[i] = valOf(c); RP[i] = (int)c->sc; }
   return n;
 }
