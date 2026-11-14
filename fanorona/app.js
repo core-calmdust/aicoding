@@ -1823,6 +1823,10 @@ const PZ_TSVG = {   // course badges (step1..step3 / end4 / end5 show their numb
   count: '<path d="M4 7h9M4 12h6M4 17h9"/><path d="M16 9l4 3-4 3"/>',
   chain: '<path d="M4 18 9 9l5 6 6-9"/><circle cx="4" cy="18" r="1.6"/><circle cx="20" cy="6" r="1.6"/>',
   gain2: '<path d="M5 19V9M12 19V5M19 19v-7"/>',
+  // Alquerque (alquerque/puzzles.json): the route of a jump / a sacrifice / three moves deep
+  route: '<path d="M4 19c4-1 4-7 8-7s4-6 8-7"/><path d="M12 12l5 5"/><circle cx="4" cy="19" r="1.6"/><circle cx="20" cy="5" r="1.6"/>',
+  sac: '<circle cx="9" cy="9" r="3.4"/><path d="M14 14l6 6M20 14l-6 6"/><path d="M4 20c1.5-3 3-4 5-4"/>',
+  gain3: '<path d="M4 19V11M9 19V8M14 19V5M19 19v-4"/>',
 };
 const pzBadge = T => PZ_TSVG[T.id] ? `<svg viewBox="0 0 24 24" aria-hidden="true">${PZ_TSVG[T.id]}</svg>` : `<b class="gl">${(T.id.match(/\d+$/) || [''])[0]}</b>`;
 function pzThumbOf(T, j, date) { if (j < 0) j = T.puzzles.length - 1; const P = pzAt(T, j, date); return P && P.s ? { board: pzThumbSVG(T, j, P), tm: `<span class="pdisc p${P.s.side === P2 ? 2 : 1}"></span>` } : { board: '' }; }
