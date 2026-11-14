@@ -19,7 +19,8 @@
 // are unused (value 0).
 //
 // Build:  cc -O3 -o solve solve.c -lpthread
-// Usage:  ./solve <six|nine|twelve> [-q 50|0] [-t threads] [-d outdir] [moving|placing|all|verify|plan]
+// Usage:  ./solve <six|nine|twelve> [-q 50|0] [-t threads] [-d outdir] [-s maxpieces] [moving|placing|all|verify|plan]
+//   -s N: moving phase only up to N pieces on the board in all (the endgame databases of nine / twelve: -s 8 moving)
 //   outdir defaults to ~/morris-db (keeps the data out of the repository).
 //   -q 0 = no quiet-move rule (classic, as in Gasser 1996).  Finished classes are files in outdir and are
 //   skipped on the next run, so an interrupted run continues where it stopped.
@@ -134,7 +135,7 @@ static inline int decode(u64 id, int m, int o, u32 *A, u32 *B) {   // returns 0 
 // ------------------------------------------------------------------ classes, files
 // type: 0 moving (hm = ho = 0), 1 placing
 typedef struct { int hm, ho, m, o; u64 n; int width; void *v; } Cls;
-static const char *OUT = NULL; static int QL = 50; static int THREADS = 2;
+static const char *OUT = NULL; static int QL = 50; static int THREADS = 2; static int SMAX = 99;
 static char dirName[256];
 static u64 clsN(int m, int o) { return (u64)orb[m].nOrb * Cb[N - m][o]; }
 static void fname(char *fn, int hm, int ho, int m, int o) {
@@ -393,6 +394,7 @@ int main(int argc, char **argv) {
     if (!strcmp(argv[i], "-q") && i + 1 < argc) QL = atoi(argv[++i]);
     else if (!strcmp(argv[i], "-t") && i + 1 < argc) THREADS = atoi(argv[++i]);
     else if (!strcmp(argv[i], "-d") && i + 1 < argc) OUT = argv[++i];
+    else if (!strcmp(argv[i], "-s") && i + 1 < argc) SMAX = atoi(argv[++i]);
     else what = argv[i];
   }
   memset(used, 0, sizeof used); searchSym(0);
@@ -412,7 +414,7 @@ int main(int argc, char **argv) {
     return 0;
   }
   if (!strcmp(what, "moving") || !strcmp(what, "all"))
-    for (int s = 6; s <= 2 * P; s++) for (int m = 3; m <= P; m++) { int o = s - m; if (o < m || o > P || m + o > N) continue; solveMovingGroup(m, o); }
+    for (int s = 6; s <= 2 * P && s <= SMAX; s++) for (int m = 3; m <= P; m++) { int o = s - m; if (o < m || o > P || m + o > N) continue; solveMovingGroup(m, o); }
   if (!strcmp(what, "placing") || !strcmp(what, "all")) solvePlacing();
   if (!strcmp(what, "verify")) {
     u64 bad = 0;

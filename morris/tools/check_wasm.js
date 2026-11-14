@@ -3,6 +3,8 @@
 // 12 bench.html positions + 6 late nine, 6 twelve, 6 six (seeded random games): best(depth) and root_values(depth − 6) of
 // each; the md5 of all the moves, values, depths and node counts. Before the SIMD work (engine.c of #1634):
 //   depth 13: engine.wasm / engine_simd.wasm 037f3504e6c220fd47ca093056b12046, engine_mt.wasm (1 thread) 2ca7cf15122d3f07b8de46f23394d074
+// EG=off | on (environment, 2026-11-14): the endgame databases (nine-eg / twelve-eg.mdb.gz) loaded, probing off (must give the
+// same md5 as without them: Lv.8 and root_values as before) or on (the time-based levels / analysis).
 'use strict';
 const fs = require('fs'), crypto = require('crypto');
 const W = require('path').resolve(__dirname, '..'), WASM = require('path').resolve(W, process.argv[2] || 'engine_simd.wasm'), MT = process.argv[3] === 'mt', DN = +(process.argv[4] || 13), MODE = process.argv[5] || 'check';
@@ -45,8 +47,19 @@ const b = fs.readFileSync(W + '/evalnet.bin'), dv = new DataView(b.buffer, b.byt
 const H = dv.getUint32(4, true), f = new Float32Array(b.buffer.slice(b.byteOffset + 8, b.byteOffset + 8 + 4 * (71 * H + 2 * H + 1)));
 new Float32Array(mem.buffer, X.net_ptr(), f.length).set(f); X.net_on(H);
 const hash = crypto.createHash('md5'); const lines = []; let totN = 0, totMs = 0;
+const EG = process.env.EG || '';
+function egLoad(variant) {   // as engine.js egSync
+  const PF = require(W + '/perfect.js'); PF.setDB(require('zlib').gunzipSync(fs.readFileSync(W + '/' + variant + '-eg.mdb.gz')));
+  const c = PF.classes(variant); let need = 0; for (const k of c.list) need += k.n;
+  let at = mem.buffer.byteLength; mem.grow(Math.ceil(need / 65536));
+  new Uint8Array(mem.buffer, X.eg_sym_ptr(), 16 * 24).set(c.sym.slice(0, 16).flatMap(g => Array.from(g)));
+  X.eg_init(Math.min(16, c.sym.length), E.geom(variant).mills.length);
+  for (const k of c.list) { new Uint8Array(mem.buffer, at, k.n).set(c.u8.subarray(k.off, k.off + k.n)); X.eg_add(k.m, k.o, at); at += k.n; }
+  X.eg_use(EG === 'on' ? 1 : 0);
+}
 for (const [variant, list, D] of SETS) {
   io().set(geoIO(variant)); X.set_geometry();
+  if (EG && variant !== 'six') egLoad(variant);
   for (let i = 0; i < list.length; i++) {
     X.new_game(); io().set(E.setupIO(variant, null, list[i])); const n = X.setup();
     const t0 = process.hrtime.bigint();
