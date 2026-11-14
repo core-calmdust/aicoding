@@ -1,6 +1,6 @@
 # フチボウ・ジ・ボタン（botao）仕様
 
-ブラジル生まれのボタンのサッカー（Futebol de Botão）。キャロム・クロキノール・テーブルホッケーに続く「アクション・おはじき」カテゴリの3D専用タイトル（2D版はない）。2026-11-15 公開（BETA）。ターン制で、腕前（はじく正確さ）と読み（パス・位置取り・シュートの選択・キーパーの構え）の両方が問われる。
+ブラジル生まれのボタンのサッカー（Futebol de Botão）。キャロム・クロキノール・テーブルホッケーに続く「アクション・おはじき」カテゴリの3D専用タイトル（2D版はない）。2026-11-15 公開（ALPHA）。ターン制で、腕前（はじく正確さ）と読み（パス・位置取り・シュートの選択・キーパーの構え）の両方が問われる。
 
 ## 構成
 | ファイル | 役割 |
@@ -13,7 +13,7 @@
 | `atlas/rules/botao.js` | ルールコース（案内役：びんのフタに乗ったタンピーニャ、`images/atlas/av/disc-1.webp`）。9ページ |
 | `atlas/historia/s/botao.json`・`atlas/historia/<lang>/botao.json` | ヒストリア（14言語）。図は historia.js の `botao` 型（縦のフィールド、"x,y,c" c: r 赤ボタン / b 青 / o ボール / k・K キーパー） |
 
-- 台帳：`shared/atlas.js` の GAMES（`only3d`、`cat: 'action'`、`beta: true`、テーマ色 #5f9e1a＝芝の黄緑。他ゲームの緑（リバーシ #22aa74・アマゾンズ #3f8a5c 等）と被らない明るさ）。UPDATES に1行（14言語）。
+- 台帳：`shared/atlas.js` の GAMES（`only3d`、`cat: 'action'`、`alpha: true`、テーマ色 #5f9e1a＝芝の黄緑。他ゲームの緑（リバーシ #22aa74・アマゾンズ #3f8a5c 等）と被らない明るさ）。UPDATES に1行（14言語）。
 - トップページ：GAMES に `key:'fb'`（`fb.title/desc/play`、14言語）、`images/botao.webp`（tools/topdown.html、エンジン同士の数手後の局面）、アイコン `images/icons/botao.svg`。
 - ポータル：アイコン `images/atlas/botao.webp`（icons3d.js `botao()`：芝の切れ端・白いゴール・赤い大きなボタンと白い紋章・ボール）、一覧 `atlas/shots/botao.webp`、盤のサムネイル `atlas/img/board-botao-<look>.webp`、盤選びの絵 `atlas/img/pick/botao-<look>.webp`（tools/boards.html）。
 - 地図（mapdata.js）：サンパウロ・リオデジャネイロ・ブダペスト・タンブリッジ・ウェルズ。一覧のひとこと `tl.botao`、紹介 `about.botao`・`hist.botao`（i18n.js → `node tools/i18n-split.js`）。

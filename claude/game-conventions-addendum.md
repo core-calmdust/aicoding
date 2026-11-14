@@ -46,6 +46,11 @@
 - 新しい文言は最初から14言語。既存の文言は順次追加し、**ゲームの言語メニューに4言語を出すのは、そのゲームの未翻訳が0になってから**（`node tools/i18n-langs.js coverage <game>`）。
 - 詳細（言語コード、表示順、zh-TW の用語、判定方法、道具）は `claude/handoff-common-rules.md` §19。
 
+## 新作は ALPHA から（規定・2026-11-15）
+- **これから公開する新作は、リリース当初は ALPHA 版にする**（2026-11-15 ユーザー指示。BETA の規定より優先）。フチボウ・ジ・ボタンから適用。既存の BETA タイトル（チャンギ等）はそのまま。
+- 付け方：トップページ `index.html` のゲーム定義に `alpha:true`（アイコン左上の ALPHA と詳細パネルの「アルファ版」タグ。開発室の LAB に移す必要はない）、ポータル `shared/atlas.js` の GAMES に `alpha: true`（大百科の ALPHA バッジ。BETA と同じく単独で、NEW・ORIGINAL・UPDATE の代わりに出る。`badges()`：ALPHA → BETA → NEW → …）。UPDATES の公開行は「（ALPHA）」。
+- ALPHA → BETA → 正式版の切り替えはユーザーが指示する（Claude の判断で変えない）。
+
 ## 新作のBETAバッジ（規定・2026-11-08）
 - 出来たばかりのゲームには BETA バッジを付ける。対象はチャンギ以降に追加したタイトル（現在：チャンギ・アマゾンズ。ルドーは 2026-11-09、テーブルホッケーは 2026-11-10 に正式版）。**これから追加するゲームも最初から付ける**。
 - 付け方：トップページ `index.html` のゲーム定義に `beta:1`（アイコンの BETA と詳細パネルの「β版」タグ）、ポータル `shared/atlas.js` の GAMES に `beta: true`（大百科の BETA バッジ。NEW・UPDATE の代わりに出る）。`shared/atlas.js` を変えたら全ページの `atlas.js?v=` を上げる。
