@@ -417,7 +417,7 @@ class Table3D {
     const wood = woodTex(); this.envTex = this.envTex || studioEnv();
     // (ユーザー 2026-11-14: glossy — a deep lacquer over the open-pored wood: the coat is near mirror-smooth and shows the room's lights
     // as long highlights along the rails, the wood under it stays satin, the pores read through the coat as a fine texture)
-    const rimMat = new THREE.MeshPhysicalMaterial({ map: wood.map, bumpMap: wood.bump, bumpScale: .9, roughness: .5, metalness: 0, clearcoat: 1, clearcoatRoughness: .06, envMap: this.envTex, envMapIntensity: 1.2 });
+    const rimMat = new THREE.MeshStandardMaterial({ map: wood.map, bumpMap: wood.bump, bumpScale: .9, roughness: .16, metalness: 0, envMap: this.envTex, envMapIntensity: 1.25 });   // (2026-11-14, optimisation: the lacquer's gloss in one smooth layer instead of a clear coat over a satin wood)
     const lipMat = new THREE.MeshStandardMaterial({ color: 0x0d0d10, roughness: .45, metalness: .2 });
     const RW = 1.75, RH0 = -0.28, RH1 = 0.92, RR = 0.26, RL = 21.1, RC = 10.55 + RW / 2;   // rail: width, bottom, top, edge radius, length, centre line
     { const sh = new THREE.Shape(), x0 = -RW / 2, x1 = RW / 2;
@@ -454,7 +454,7 @@ class Table3D {
     const rsq = (h, r) => { const p = new THREE.Shape(); p.moveTo(-h + r, -h); p.lineTo(h - r, -h); p.quadraticCurveTo(h, -h, h, -h + r); p.lineTo(h, h - r); p.quadraticCurveTo(h, h, h - r, h); p.lineTo(-h + r, h); p.quadraticCurveTo(-h, h, -h, h - r); p.lineTo(-h, -h + r); p.quadraticCurveTo(-h, -h, -h + r, -h); return p; };
     const cgeo = new THREE.ExtrudeGeometry(rsq(CH - .07, CR), { depth: 0.12, bevelEnabled: true, bevelThickness: 0.07, bevelSize: 0.07, bevelSegments: 3, curveSegments: 6 });
     for (const t of [this.conTex, this.conETex]) { t.repeat.set(1 / (CH * 2), 1 / (CH * 2)); t.offset.set(.5, .5); }
-    const conTop = new THREE.MeshPhysicalMaterial({ map: this.conTex, roughness: .34, metalness: .25, clearcoat: 1, clearcoatRoughness: .08, envMap: this.envTex, envMapIntensity: .55, emissive: 0xffffff, emissiveMap: this.conETex, emissiveIntensity: .95 });
+    const conTop = new THREE.MeshStandardMaterial({ map: this.conTex, roughness: .14, metalness: .25, envMap: this.envTex, envMapIntensity: .7, emissive: 0xffffff, emissiveMap: this.conETex, emissiveIntensity: .95 });
     const conSide = new THREE.MeshStandardMaterial({ color: 0x9aa0aa, roughness: .28, metalness: .9, envMap: this.envTex, envMapIntensity: .8 });   // a bright metal trim round the panel
     const con = new THREE.Mesh(cgeo, [conTop, conSide]);
     con.rotation.x = -PI / 2; con.position.y = 0.36; con.castShadow = true; con.receiveShadow = true; s.add(con);
@@ -1166,7 +1166,8 @@ class Table3D {
     const moved = this.dirty;   // (anything moved or changed this frame: the shadows are redrawn too)
     // the dora's glint: a light runs round the rim of every dora that lies face up and two small stars twinkle, about once in three seconds
     // (at ~30 frames a second when it is the only thing changing: the whole table is redrawn for it)
-    if (this._doraN) { const ph = now % 2600, on = ph < 1300;
+    // (`quiet`: a full-screen result is over the table — nothing behind it needs to move, so the glint waits: 2026-11-14, optimisation)
+    if (this._doraN && !this.quiet) { const ph = now % 2600, on = ph < 1300;
       if (on && (moved || now - (this._glT || 0) > 32)) { this._glT = now; this.doraMat.uniforms.uT.value = ph / 1300; this.dirty = true; } else if (this._doraOn) { this.doraMat.uniforms.uT.value = -1; this.dirty = true; }
       this._doraOn = on; }
     if (this._ov) this.dirty = true;

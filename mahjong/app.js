@@ -302,10 +302,11 @@ function toast(msg, ms = 1800) {
 function modal(html, cls = '') {
   const m = $('#modal');
   m.className = 'modal ' + cls; m.innerHTML = `<div class="mbox">${html}</div>`; m.hidden = false;
+  if (TB) TB.quiet = /\bstage\b/.test(cls);   // (a result over the whole table: the table's own animation rests behind it)
   requestAnimationFrame(() => m.classList.add('show'));
   return m.firstElementChild;
 }
-function closeModal() { const m = $('#modal'); m.classList.remove('show'); m.hidden = true; m.innerHTML = ''; }
+function closeModal() { const m = $('#modal'); m.classList.remove('show'); m.hidden = true; m.innerHTML = ''; if (TB) TB.quiet = false; }
 function confirmBox(q) {
   return new Promise(res => {
     const b = modal(`<p class="cq">${esc(q)}</p><div class="cbtns"><button class="btn" data-a="no">${t('no')}</button><button class="btn gold" data-a="yes">${t('yes')}</button></div>`, 'small');
