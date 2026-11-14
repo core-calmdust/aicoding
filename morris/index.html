@@ -1335,7 +1335,7 @@ body.in-online:not(.ol-over) #coachCard{display:none!important}
 </div>
 
 <script src="i18n.js?v=20261107l14"></script>
-<script src="i18n_more.js?v=20261107l14"></script>
+<script src="i18n_more.js?v=20261107l14-nd1"></script>
 <script src="i18n_perfect.js?v=1"></script>
 <script src="i18n_coach.js?v=5sq-ls"></script>
 <script src="../shared/coachkit.js?v=17l14"></script>
@@ -1867,7 +1867,7 @@ function playerName(p) {
   if (lesson) return '';
   if (settings.mode === 'online' && window.olPlayerName) return olPlayerName(p);
   if (settings.mode === 'pvp') return '';
-  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(p))}${proTag(levelFor(p))}`;
+  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(p))}${proTag(levelFor(p), p)}`;
   if (rgame) return p === humanColor ? t('you') + ' · R' + rgame.my : `${AIW()} ${rtLvName(rgame.lv)} · R${rgame.or}`;
   return p === humanColor ? t('you') : `${AIW()} ${LV(settings.level)}${proTag(settings.level)}`;
 }
@@ -2091,13 +2091,14 @@ async function maybeAI(tok) {
   if (!isAIColor(p)) return;
   thinking = p; renderInfo(); boardEl.classList.remove('can');
   const t0 = Date.now(), shown = moves.slice(0, cur);
-  const res = await request('ai', { type: 'think', moves: shown, level: levelFor(p), cfg: proCfg(levelFor(p)) });
+  const res = await request('ai', { type: 'think', moves: shown, level: levelFor(p), cfg: proCfg(levelFor(p), p) });
   if (!res || tok !== busyToken) { if (tok === busyToken) { thinking = 0; renderInfo(); } return; }
   const prevDur = cur > 0 ? moveDur(moves[cur - 1]) : 0;
   const wait = (settings.mode === 'watch' ? Math.max(700, prevDur + 120) : animating ? prevDur : 0) - (Date.now() - t0);   // AIの着手は即時：前の手のアニメが終わるのを待つだけ（観戦だけ間を取る）
   if (wait > 0) await new Promise(r => setTimeout(r, wait));
   if (tok !== busyToken) return;
   thinking = 0;
+  if (settings.mode === 'watch' && res && typeof res.v === 'number' && !evals[cur]) { const ev = evalFromList([{ v: res.v }], p); if (ev) { evals[cur] = ev; renderInfo(); } }   // AI同士: the AI's own value as the 形勢 when the analysis gave none (2026-11-14)
   if (res.move === undefined || res.move < 0) { renderInfo(); return; }
   playMove(res.move);
 }
@@ -2565,11 +2566,16 @@ $('#optPfCh').onchange = e => { draft.pfCh = e.target.checked; };
 var PRO = window.ProSet ? ProSet.init({ game: 'morris', lang: () => LANG, level: () => draft.level || settings.level, show: () => (draft.mode === 'ai' || draft.mode === 'watch') && !(draft.rule === 'six' && (draft.level === PF_LV || (draft.mode === 'watch' && draft.level2 === PF_LV))),
   store: { get: () => settings.pro, set: v => { settings.pro = v; } },
   defaults: lv => { const L = E.LEVELS[lv] || E.LEVELS[5]; return { limit: L.noise === undefined && L.ms ? { k: 'time', v: L.ms / 1000 } : { k: 'depth', v: L.d }, var: L.noise === undefined ? 0 : L.blunder ? 2 : 1, threads: MTP && mtLevel(lv) ? ProSet.defThreads() : 1 }; },
+  params: [{ key: 'limit', kinds: { time: [0.1, 30], depth: [1, 40] } }].concat(MTP ? [{ key: 'threads' }] : [], [{ key: 'var' }]) }) : null;
+// AI同士: the second AI has a PRO of its own beside its level (#fLevel2), as reversi / shogi (2026-11-14)
+var PRO2 = window.ProSet ? ProSet.init({ game: 'morris-w2', field: '#fLevel2', lang: () => LANG, level: () => draft.level2 || settings.level2, show: () => draft.mode === 'watch' && !(draft.rule === 'six' && (draft.level === PF_LV || (draft.mode === 'watch' && draft.level2 === PF_LV))),
+  store: { get: () => settings.pro2, set: v => { settings.pro2 = v; } },
+  defaults: lv => { const L = E.LEVELS[lv] || E.LEVELS[5]; return { limit: L.noise === undefined && L.ms ? { k: 'time', v: L.ms / 1000 } : { k: 'depth', v: L.d }, var: L.noise === undefined ? 0 : L.blunder ? 2 : 1, threads: MTP && mtLevel(lv) ? ProSet.defThreads() : 1 }; },
   params: [{ key: 'limit', kinds: { time: [0.1, 30], depth: [1, 40] } }].concat(MTP ? [{ key: 'threads' }] : [], [{ key: 'var' }]) }) : null;   // (threads: 本編のマルチスレッド, any limit of the search; every thread by default for the levels that think by time)
-function proGet(lv) { if (lv === PF_LV || !PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; return PRO.get(lv); }
-function proTag(lv) { return proCfg(lv) ? ' PRO' : ''; }
-function proCfg(lv) {
-  const e = proGet(lv); if (!e) return null;
+function proGet(lv, PRO = window.PRO) { if (lv === PF_LV || !PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; return PRO.get(lv); }
+function proTag(lv, p) { return proCfg(lv, p) ? ' PRO' : ''; }
+function proCfg(lv, p) {
+  const e = proGet(lv, settings.mode === 'watch' && p !== undefined && p !== P1 && window.PRO2 ? window.PRO2 : window.PRO); if (!e) return null;
   const L = E.LEVELS[lv] || E.LEVELS[5], c = e.limit.k === 'depth' ? { d: e.limit.v } : { d: 60, ms: Math.round(e.limit.v * 1000) };
   if (e.var) { if (!e.changed.includes('var') && L.noise !== undefined) { c.noise = L.noise; if (L.blunder) c.blunder = L.blunder; } else c.noise = e.var === 1 ? 14 : 90; }
   if (MTP) c.threads = e.threads || 1;
@@ -3909,7 +3915,7 @@ window.addEventListener('resize', () => renderFx());
 <script src="../shared/infotabs.js?v=24" data-strips defer></script>
 <script src="../shared/pickdrop.js?v=8l14"></script>
 <script src="../shared/ngtabs.js?v=36"></script>
-<script src="../shared/nglux.js?v=24l16"></script>
+<script src="../shared/nglux.js?v=24l16"></script><script src="../shared/ngdisp.js?v=1-nd1"></script>
 <script src="../shared/resumeng.js?v=1l14"></script>
 <script src="../shared/langsel.js?v=2l14" defer></script>
 <script src="../shared/rulelink.js?v=1l14"></script>

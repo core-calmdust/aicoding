@@ -702,7 +702,7 @@ function sideName(s) {
   if (lesson || puzzle) return s === 0 ? t('you') : (puzzle && puzzle.P.kind === 'end' ? t('defender') : t('opp'));
   if (settings.mode === 'online' && window.olPlayerName) return olPlayerName(s);
   if (settings.mode === 'ai') return s === game.human ? t('you') : `${AIW()} ${LV(settings.level)}${proTag(settings.level)}`;
-  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(s))}${proTag(levelFor(s))}`;
+  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(s))}${proTag(levelFor(s), s)}`;
   return t(s === 0 ? 'p0' : 'p1');
 }
 function shortName(s) {
@@ -935,7 +935,7 @@ async function maybeAI(tok) {
   const p = shownPos(), side = p.side, idx = cur;
   thinking = side; renderInfo();
   const t0 = performance.now();
-  const res = await request('ai', { type: 'move', ...posMsg(p, game.rules), level: levelFor(side), cfg: proCfg(levelFor(side)) });
+  const res = await request('ai', { type: 'move', ...posMsg(p, game.rules), level: levelFor(side), cfg: proCfg(levelFor(side), side) });
   if (!res || tok !== busyToken) { if (tok === busyToken) { thinking = -1; renderInfo(); } return; }
   if (res.value !== undefined && res.value !== null) evals[idx] = { v: side === 0 ? res.value : -res.value, exact: !!res.exact };
   const wait = (settings.mode === 'watch' ? 600 : 0) - (performance.now() - t0);   // AIの着手は即時：前の種まきアニメは終わっている（もう一回の案内もアニメの中）。観戦だけ間を取る
@@ -1282,10 +1282,16 @@ var PRO = window.ProSet ? ProSet.init({ game: 'mancala', lang: () => LANG, level
   defaults: lv => { const L = E.LEVELS[lv] || E.LEVELS[5]; const d = L.kind === 'time' ? { limit: { k: 'time', v: L.ms / 1000 }, var: 0 } : L.kind === 'depth' ? { limit: { k: 'depth', v: L.depth }, var: !L.noise ? 0 : L.noise >= 100 ? 2 : 1 } : { limit: { k: 'depth', v: 1 }, var: 2 }; if (MTP) d.threads = L.kind === 'time' ? ProSet.maxThreads() : 1; return d; },
   // threads (本編のマルチスレッド, shared/mtsplit.js): with a time or a depth; the default is every thread for the levels that think by time
   params: [{ key: 'limit', kinds: { time: [0.1, 30], depth: [1, 30] } }].concat(MTP ? [{ key: 'threads' }] : [], [{ key: 'var', when: e => e.limit.k === 'depth' }]) }) : null;
-function proGet(lv) { if (!PRO || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; return PRO.get(lv); }
-function proTag(lv) { return proCfg(lv) ? ' PRO' : ''; }
-function proCfg(lv) {
-  const e = proGet(lv); if (!e) return null;
+// AI同士: the second AI has a PRO of its own beside its level (#fLevel2), as reversi / shogi (2026-11-14)
+var PRO2 = window.ProSet ? ProSet.init({ game: 'mancala-w2', field: '#fLevel2', lang: () => LANG, level: () => draft.level2 || settings.level2, show: () => draft.mode === 'watch',
+  store: { get: () => settings.pro2, set: v => { settings.pro2 = v; } },
+  defaults: lv => { const L = E.LEVELS[lv] || E.LEVELS[5]; const d = L.kind === 'time' ? { limit: { k: 'time', v: L.ms / 1000 }, var: 0 } : L.kind === 'depth' ? { limit: { k: 'depth', v: L.depth }, var: !L.noise ? 0 : L.noise >= 100 ? 2 : 1 } : { limit: { k: 'depth', v: 1 }, var: 2 }; if (MTP) d.threads = L.kind === 'time' ? ProSet.maxThreads() : 1; return d; },
+  // threads (本編のマルチスレッド, shared/mtsplit.js): with a time or a depth; the default is every thread for the levels that think by time
+  params: [{ key: 'limit', kinds: { time: [0.1, 30], depth: [1, 30] } }].concat(MTP ? [{ key: 'threads' }] : [], [{ key: 'var', when: e => e.limit.k === 'depth' }]) }) : null;
+function proGet(lv, PRO = window.PRO) { if (!PRO || !(settings.mode === 'ai' || settings.mode === 'watch')) return null; return PRO.get(lv); }
+function proTag(lv, p) { return proCfg(lv, p) ? ' PRO' : ''; }
+function proCfg(lv, p) {
+  const e = proGet(lv, settings.mode === 'watch' && p !== undefined && p !== 0 && window.PRO2 ? window.PRO2 : window.PRO); if (!e) return null;
   const L = E.LEVELS[lv] || E.LEVELS[5];
   const th = MTP ? { threads: e.threads || 1 } : {};
   if (e.limit.k === 'time') return Object.assign({ kind: 'time', ms: Math.round(e.limit.v * 1000) }, th);
