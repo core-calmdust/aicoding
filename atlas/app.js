@@ -989,7 +989,23 @@
     if ($('bvRules') && matchMedia('(max-width: 819px)').matches) { const rw = $('bvi').querySelector('.row'); if (rw) { $('bvRules').classList.add('ph'); rw.appendChild($('bvRules')); } }   // phones
     // the board card's choices as our own UI (no system pickers): the side as a two-button toggle,
     // the level as a button that opens a list sheet with each level's name, meter and who it suits
-    ['bvSide', 'bvSize', 'bvRtOpp', 'bvLsK', 'bvShM', 'bvShD'].forEach(sid => { if (!$(sid)) return;   // (bvShM / bvShD: 上海's free モード and 難易度, data-pick="sheet")
+    ['bvSide', 'bvSize', 'bvRtOpp', 'bvLsK', 'bvShM', 'bvShD'].forEach(sid => { if (!$(sid)) return;
+      // (2026-11-14) data-pick="drop": a small list that drops down right under the button (a few choices: 上海's 難易度)
+      if ($(sid).dataset.pick === 'drop') {
+        const sel = $(sid), bt = document.createElement('button'); bt.type = 'button'; bt.className = 'lvpick'; sel.hidden = true; sel.after(bt);
+        const paint = () => { const o = sel.options[sel.selectedIndex]; bt.innerHTML = `<span>${esc(o ? o.textContent : '')}</span><i>▾</i>`; };
+        sel.addEventListener('change', paint); paint();
+        bt.onclick = e => { e.stopPropagation(); if (document.querySelector('.lvdrop')) { document.querySelector('.lvdrop').remove(); return; }
+          const r = bt.getBoundingClientRect(), dd = document.createElement('div'); dd.className = 'lvdrop'; dd.setAttribute('role', 'listbox');
+          dd.innerHTML = [...sel.options].map(o => { const inf = ad.optInfo ? ad.optInfo(sid, o.value, lang) || {} : {}; return `<button type="button" role="option" data-v="${esc(o.value)}" class="${o.value === sel.value ? 'on' : ''}"><b>${esc(o.textContent)}</b>${inf.sub ? `<small>${esc(inf.sub)}</small>` : ''}</button>`; }).join('');
+          document.body.appendChild(dd); const w = Math.max(r.width, 240), h = dd.offsetHeight, below = innerHeight - r.bottom - 10;
+          dd.style.minWidth = w + 'px'; dd.style.left = Math.max(8, Math.min(innerWidth - dd.offsetWidth - 8, r.left)) + 'px'; dd.style.top = (h <= below || r.top < h ? r.bottom + 6 : r.top - h - 6) + 'px';
+          const off = ev => { if (!dd.contains(ev.target)) { dd.remove(); document.removeEventListener('pointerdown', off, true); } };
+          document.addEventListener('pointerdown', off, true);
+          dd.onclick = ev => { const b = ev.target.closest('[data-v]'); if (!b) return; sel.value = b.dataset.v; sel.dispatchEvent(new Event('change')); dd.remove(); document.removeEventListener('pointerdown', off, true); };
+          if (window.AtlasSfx) try { AtlasSfx.tap(); } catch (x) {} };
+        return;
+      }   // (bvShM / bvShD: 上海's free モード and 難易度, data-pick="sheet")
       // many choices (ludo: rule × players): a picker button + a list sheet instead of a wrapping toggle — phones (2026-11-09),
       // and on every screen for a game with house rules (its own row under the level: the same pulldown as the level)
       if ((sid === 'bvSize' && $(sid).options.length > 3 && (ad.house || ad.sizePick || matchMedia('(max-width: 819px)').matches)) || $(sid).dataset.pick === 'sheet') {   // (adapter.sizePick: the board as a pulldown on every screen — 上海)
@@ -999,7 +1015,8 @@
         bt.onclick = () => {
           const lab = sel.closest('label'), hd = lab ? [...lab.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim() : '';
           const sh = document.createElement('div'); sh.className = 'lvsheet tcsheet'; sh.innerHTML = `<div class="lvs-in" role="listbox"><div class="lvs-h">${esc(hd)}<button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div><div class="lvs-l">` +
-            [...sel.options].map(o => `<button type="button" role="option" data-v="${esc(o.value)}" class="${o.value === sel.value ? 'on' : ''}"><span class="nm">${esc(o.textContent)}</span></button>`).join('') + `</div></div>`;
+            [...sel.options].map(o => { const inf = ad.optInfo ? ad.optInfo(sid, o.value, lang) || {} : {}; if (inf.art) sh.classList.add('artsh'); if (inf.sub) sh.classList.add('subsh');   // (adapter.optInfo(select id, value, lang) → { art: svg, sub: a line }: a picture and a short description per choice)
+              return `<button type="button" role="option" data-v="${esc(o.value)}" class="${o.value === sel.value ? 'on' : ''}">${inf.art ? `<span class="oa">${inf.art}</span>` : ''}<span class="nm">${esc(inf.name || o.textContent)}</span>${inf.sub ? `<small class="os">${esc(inf.sub)}</small>` : ''}</button>`; }).join('') + `</div></div>`;
           document.body.appendChild(sh); requestAnimationFrame(() => sh.classList.add('on'));
           const close = () => { if (sh.classList.contains('out')) return; sh.classList.add('out'); sh.classList.remove('on'); setTimeout(() => sh.remove(), 240); };
           sh.onclick = e => { const b = e.target.closest('[data-v]'); if (b) { sel.value = b.dataset.v; sel.dispatchEvent(new Event('change')); close(); return; } if (e.target === sh || e.target.closest('.lvs-x')) close(); };
@@ -2042,7 +2059,7 @@
   // from) or anything else runs. Capture phase on window: the first listener of all. One rule for every game.
   addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
-    const top = [...document.querySelectorAll('.lvsheet:not(.out), .shmap.on, #recOv.on')].pop(); if (!top) return;
+    const top = [...document.querySelectorAll('.lvsheet:not(.out), .shmap.on, #recOv.on, .lvdrop')].pop(); if (!top) return;
     e.preventDefault(); e.stopImmediatePropagation();
     const x = top.querySelector(':scope .lvs-x, :scope > .hd .x, :scope .recx, :scope [aria-label][class$="x"]');
     if (top.id === 'recOv') { top.classList.remove('on'); return; }

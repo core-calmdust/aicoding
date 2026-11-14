@@ -246,15 +246,25 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
      (the most pairs open of a few), roomy times · 中級: no shuffle · 上級: no shuffle, no undo, no hints, a hard deal (the fewest
      pairs open), tight times.  Records: free[<layout>] for ノーマル·初級 (as before), else free['<layout>:<mode>:<diff>']. */
   const FMODES = ['clear', 'time', 'pairs', 'gold'];
-  const freePick = () => { const st = load().settings || {}; return { mode: FMODES.includes(st.fm) ? st.fm : 'clear', diff: [1, 2, 3].includes(+st.fd) ? +st.fd : 1 }; };
-  const freeKey = (lay, m, d) => m === 'clear' && d === 1 ? lay : lay + ':' + m + ':' + d;
+  // (2026-11-14) five difficulties (入門・初級・中級・上級・達人); the old three (fd 1..3) read as 初級・中級・達人
+  const DIFFS = [1, 2, 3, 4, 5];
+  const freePick = () => { const st = load().settings || {}; const d = DIFFS.includes(+st.fd5) ? +st.fd5 : ({ 1: 2, 2: 3, 3: 5 })[+st.fd] || 2; return { mode: FMODES.includes(st.fm) ? st.fm : 'clear', diff: d }; };
+  const freeKey = (lay, m, d) => m === 'clear' && d === 2 ? lay : lay + ':' + m + ':d' + d;   // (ノーマル・初級 keeps the old free[<layout>] record)
   function freeMission(lay, n) {
-    const { mode, diff } = freePick(), pairs = n / 2, pace = [0, 7, 5, 3.6][diff];   // seconds a pair
-    const M = { type: mode, diff, key: freeKey(lay, mode, diff), noShuf: diff >= 2, noUndo: diff >= 3, noHint: diff >= 3 };
+    const { mode, diff } = freePick(), pairs = n / 2, pace = [0, 9, 7, 5, 4.2, 3.4][diff];   // seconds a pair
+    // 入門・初級: everything allowed · 中級: no shuffle · 上級: no shuffle, no undo · 達人: no shuffle, no undo, no hints
+    const M = { type: mode, diff, key: freeKey(lay, mode, diff), noShuf: diff >= 3, noUndo: diff >= 4, noHint: diff >= 5 };
     if (mode === 'time') M.limit = Math.max(30, Math.round(pairs * pace / 5) * 5);
     if (mode === 'pairs') { M.goal = Math.max(4, Math.round(pairs * .5)); M.limit = Math.max(20, Math.round(M.goal * (pace + 1.5) / 5) * 5); }
-    if (mode === 'gold') M.gold = Math.min(pairs - 1, [0, 2, 4, 6][diff]) * 2;
+    if (mode === 'gold') M.gold = Math.min(pairs - 1, [0, 2, 3, 4, 5, 6][diff]) * 2;
     return M;
+  }
+
+  // a board seen from above: its tiles, the upper layers lighter (the card's board picker, the map's stage box)
+  function layArt(lay, cls) {
+    const L = C().LAYOUTS[lay], xs = L.map(p => p[0]), ys = L.map(p => p[1]), x0 = Math.min(...xs), y0 = Math.min(...ys), w = Math.max(...xs) - x0 + 2, h = Math.max(...ys) - y0 + 2;
+    const o = L.slice().sort((p, q) => p[2] - q[2]).map(([x, y, zz]) => `<rect x="${(x - x0 - zz * .25).toFixed(2)}" y="${((y - y0) * 1.25 - zz * .3).toFixed(2)}" width="1.86" height="2.4" rx=".3" fill="hsl(40,${30 + zz * 8}%,${70 + zz * 6}%)" stroke="rgba(40,30,10,.55)" stroke-width=".12"/>`).join('');
+    return `<svg${cls ? ` class="${cls}"` : ''} viewBox="-1.2 -1.4 ${w + 1.4} ${h * 1.25 + 1.6}" aria-hidden="true">${o}</svg>`;
   }
 
   /* ---------- the game on the table ---------- */
@@ -270,8 +280,9 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     const FM = ST ? null : freeMission(lay, n);
     const MS = ST || FM;   // the mission in force (a stage's, or the free game's)
     let dl = K.deal(P, ST ? ST.seed : 0);
-    if (FM && FM.diff !== 2) {   // the deal itself by difficulty: 初級 the deal with the most pairs open at the start (of a few), 上級 the fewest
-      for (let k = 0; k < 5; k++) { const d2 = K.deal(P, 0), a = K.moves(d2.G, new Array(n).fill(1), d2.face).length, b = K.moves(dl.G, new Array(n).fill(1), dl.face).length; if (FM.diff === 1 ? a > b : a < b) dl = d2; }
+    if (FM && FM.diff !== 3) {   // the deal itself by difficulty: 入門・初級 the deal with the most pairs open at the start (of 8 / 4), 上級・達人 the fewest
+      const tries = [0, 8, 4, 0, 4, 8][FM.diff], easy = FM.diff <= 2;
+      for (let k = 0; k < tries; k++) { const d2 = K.deal(P, 0), a = K.moves(d2.G, new Array(n).fill(1), d2.face).length, b = K.moves(dl.G, new Array(n).fill(1), dl.face).length; if (easy ? a > b : a < b) dl = d2; }
     }
     const G = dl.G;
     let face = dl.face.slice(), alive = new Array(n).fill(1), plan = dl.order.map(p => p.slice());
@@ -635,7 +646,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     const fp = freePick(), opt = (v, l, on) => `<option value="${v}"${on ? ' selected' : ''}>${esc(l)}</option>`;
     const row = document.createElement('div'); row.className = 'shfrow';
     row.innerHTML = `<label class="shfl">${esc(TX('f.mode', lang))}<select id="bvShM" data-pick="sheet">${FMODES.map(m => opt(m, TX('fm.' + m, lang), m === fp.mode)).join('')}</select></label>` +
-      `<label class="shfl">${esc(TX('f.diff', lang))}<select id="bvShD" data-pick="sheet">${[1, 2, 3].map(d => opt(d, TX('fd.' + d, lang), d === fp.diff)).join('')}</select></label>`;
+      `<label class="shfl">${esc(TX('f.diff', lang))}<select id="bvShD" data-pick="drop">${DIFFS.map(d => opt(d, TX('fd.' + d, lang), d === fp.diff)).join('')}</select></label>`;
     host.appendChild(row);
     const el = document.createElement('div'); el.className = 'pgbest'; host.appendChild(el);
     const paint = () => {
@@ -643,7 +654,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
       const r = (load().free || {})[freeKey(lay, m, dd)];
       el.innerHTML = `<span>${esc(TX('best', lang))}</span>` + (r ? `<b class="shbt">${r.tiles ? esc(TX('f.tiles', lang, { n: r.tiles })) : '—'}</b><b>${r.best !== undefined ? mmss(r.best) : '—'}</b>` : '<b>—</b>');
     };
-    const saveSt = () => { const d = load(); d.settings = Object.assign({}, d.settings, { fm: row.querySelector('#bvShM').value, fd: +row.querySelector('#bvShD').value }); save(d); paint(); };
+    const saveSt = () => { const d = load(); d.settings = Object.assign({}, d.settings, { fm: row.querySelector('#bvShM').value, fd5: +row.querySelector('#bvShD').value }); save(d); paint(); };
     row.querySelector('#bvShM').addEventListener('change', saveSt); row.querySelector('#bvShD').addEventListener('change', saveSt);
     paint(); const s = document.getElementById('bvSize'); if (s) s.addEventListener('change', paint);
   }
@@ -814,11 +825,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
       S.p.forEach(([x, y], j) => { v += j === k ? `<circle class="cpk" cx="${x}" cy="${y}" r="5.4"/><circle class="cst on" cx="${x}" cy="${y}" r="2.6"/>` : `<circle class="cst${cleared(P, fs + j) ? ' on' : ''}" cx="${x}" cy="${y}" r="1.7"/>`; });
       return v + '</svg>';
     }
-    function layMini(lay) {   // the board seen from above: its tiles, the upper layers lighter
-      const L = K.LAYOUTS[lay], xs = L.map(p => p[0]), ys = L.map(p => p[1]), x0 = Math.min(...xs), y0 = Math.min(...ys), w = Math.max(...xs) - x0 + 2, h = Math.max(...ys) - y0 + 2;
-      const o = L.slice().sort((p, q) => p[2] - q[2]).map(([x, y, zz]) => `<rect x="${(x - x0 - zz * .25).toFixed(2)}" y="${((y - y0) * 1.25 - zz * .3).toFixed(2)}" width="1.86" height="2.4" rx=".3" fill="hsl(40,${30 + zz * 8}%,${70 + zz * 6}%)" stroke="rgba(40,30,10,.55)" stroke-width=".12"/>`).join('');
-      return `<svg class="lm" viewBox="-1.2 -1.4 ${w + 1.4} ${h * 1.25 + 1.6}" aria-hidden="true">${o}</svg>`;
-    }
+    const layMini = lay => layArt(lay, 'lm');
     function sheet() {
       const s = pick, st = K.stage(s), a = Math.floor(s / 10), ul = unlocked(P, s), sr = P.st[s] || 0, bt = P.bt[s], box = $('.sh'), h0 = box.offsetHeight;
       box.innerHTML = `<div class="art">${conArt(a, s % 10)}<b>${esc(TX('ar.' + AR[a], lang))}</b></div>` +
@@ -874,6 +881,13 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
   window.Atlas3D.shanghai = {
     levels: 0, solo: true, table: false, sizes: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], size0: 1,
     sizeLabel: lang => TX('f.board', lang), sizePick: true,
+    // the pickers' pictures and lines: the board from above · each mode in a line · each difficulty in a line
+    optInfo: (sid, v, lang) => {
+      if (sid === 'bvSize') { const k = C().FREE[v - 1], lv = Math.min(5, Math.ceil(v / 2)); return k ? { art: layArt(k), name: TX('lay.' + k, lang), sub: '★'.repeat(lv) + '☆'.repeat(5 - lv) + ' · ' + TX('tiles', lang, { n: C().LAYOUTS[k].length }) } : null; }
+      if (sid === 'bvShM') return { sub: TX('fmd.' + v, lang) };
+      if (sid === 'bvShD') return { sub: TX('fdd.' + v, lang) };
+      return null;
+    },
     sizeName: (z, lang) => { const k = C() && C().FREE[z - 1], lv = Math.min(5, Math.ceil(z / 2)); return k ? TX('lay.' + k, lang) + ' · ' + '★'.repeat(lv) + '☆'.repeat(5 - lv) + ' · ' + TX('tiles', lang, { n: C().LAYOUTS[k].length }) : String(z); },   // (the board's name · how hard (FREE is in order of difficulty, two a step) · its tiles)
     stages: true, modeName: (m, lang) => TX(m === 'stage' ? 'm.stage' : 'm.free', lang),
     stagePanel, stageBind, freeBind, stageMap, pending: null, last: null, nextStage: () => nextStage(prog()),
