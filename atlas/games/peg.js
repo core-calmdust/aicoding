@@ -90,7 +90,9 @@
         ghostRim = new TH.InstancedMesh(rg, mk(.95), B.n); ghostRim.renderOrder = 6; ghostRim.frustumCulled = false; board.add(ghostRim);
       }
       const M4 = new TH.Matrix4(); let k = 0;
-      for (let i = 0; i < B.n; i++) if (!a[i]) { const [x, z] = U.pt(i); M4.makeTranslation(x, TOP + Y(i) + .03, z); ghost.setMatrixAt(k, M4); ghostRim.setMatrixAt(k++, M4); }
+      // only where a marble can jump to (user, 2026-11-14): with a marble chosen, its landing places; otherwise every move's landing place
+      const to = new Set(E.moves(B, a).filter(j => sel < 0 || j[0] === sel).map(j => j[2]));
+      for (let i = 0; i < B.n; i++) if (!a[i] && to.has(i)) { const [x, z] = U.pt(i); M4.makeTranslation(x, TOP + Y(i) + .03, z); ghost.setMatrixAt(k, M4); ghostRim.setMatrixAt(k++, M4); }
       ghost.count = ghostRim.count = k; ghost.instanceMatrix.needsUpdate = ghostRim.instanceMatrix.needsUpdate = true; kick(120);
       // one colour at a time going round the rainbow like a gaming light (user, 2026-11-14): 2.5 s a turn, vivid, a soft breathing; see-through (fill .22, rim .55 — user: 濃すぎる・透明感を)
       if (!hueT) hueT = setInterval(() => { if (stopped || !ghost || !ghost.count) return; const t = performance.now(), b = .85 + .15 * Math.sin(t / 380);
@@ -162,7 +164,7 @@
     function deselect() { if (sel >= 0 && pcs[sel]) { const g = pcs[sel], h0 = g.userData.h0 || 0; if (h0 > 0) anim(120, k => lift(g, h0 * (1 - k))); } sel = -1; }
     function jump(j) {
       busy = true; jid++; const [f, o, t] = j, g = pcs[f], v = pcs[o]; sel = -1;
-      delete pcs[f]; delete pcs[o]; pcs[t] = g; a = E.apply(a, j); hist.push(j); ply++; ghosts();
+      delete pcs[f]; delete pcs[o]; pcs[t] = g; a = E.apply(a, j); hist.push(j); ply++; if (ghost) ghost.count = ghostRim.count = 0;
       while (hl.children.length) hl.remove(hl.children[0]);
       const [x0, z0] = U.pt(f), [x1, z1] = U.pt(t), h0 = g.userData.h0 || 0, y0 = Y(f), y1 = Y(t);
       anim(420, k => { const q = io(k); g.position.x = x0 + (x1 - x0) * q; g.position.z = z0 + (z1 - z0) * q; g.userData.by = y0 + (y1 - y0) * q; lift(g, Math.sin(k * Math.PI) * .95 + h0 * (1 - k)); g.rotation.z = -q * Math.PI * 1.2 * Math.sign(x1 - x0 || 1); },
