@@ -570,29 +570,23 @@ enum { TT_NONE, TT_UPPER, TT_LOWER, TT_EXACT };
 #ifndef TTM_BITS
 #define TTM_BITS 20
 #endif
-static u64 ttm[(1u << TTM_BITS) * 8];
 static u8 ttAge;   /* the main thread advances it for every search */
+/* (2026-11-15) the bucket table is Praline's (shared/praline/praline_tt.h): w >> 63 = in use; replace the shallowest / oldest */
+#define PL_TT_BITS TTM_BITS
+#define PL_TT_USED(e) ((e)[1] >> 63)
+#define PL_TT_SCORE(e) (!((e)[1] >> 63) ? -1000 : (int)(((e)[1] >> 49) & 255) - ((((e)[1] >> 59) & 15) != (u64)(ttAge & 15) ? 16 : 0))
+#include "../shared/praline/praline_tt.h"
 static inline void tt_get(u64 key, TTE *e) {
-  const u64 *bk = &ttm[(key & ((1u << TTM_BITS) - 1)) * 8];
-  for (int j = 0; j < 4; j++) {
-    u64 w = bk[2 * j + 1], kx = bk[2 * j];
-    if ((kx ^ w) == key && (w >> 63)) { e->key = key; e->score = (i16)(w & 0xFFFF); e->eval = (i16)(w >> 16); e->move = (u32)(w >> 32) & 0x1FFFF; e->depth = (u8)(w >> 49); e->flag = (u8)((w >> 57) & 3); return; }
-  }
+  const u64 *x = plttFind(key, key);
+  if (x) { const u64 w = x[1]; e->key = key; e->score = (i16)(w & 0xFFFF); e->eval = (i16)(w >> 16); e->move = (u32)(w >> 32) & 0x1FFFF; e->depth = (u8)(w >> 49); e->flag = (u8)((w >> 57) & 3); return; }
   e->key = ~key; e->score = 0; e->eval = -INF; e->move = 0; e->depth = 0; e->flag = TT_NONE;
 }
 static void tt_put(u64 key, int depth, int score, int eval, int flag, int move) {
-  u64 *bk = &ttm[(key & ((1u << TTM_BITS) - 1)) * 8];
-  int j = 0, q = 1 << 30;
-  for (int i = 0; i < 4; i++) {
-    u64 w = bk[2 * i + 1], kx = bk[2 * i];
-    if ((kx ^ w) == key && (w >> 63)) { j = i; break; }
-    int s = !(w >> 63) ? -1000 : (int)((w >> 49) & 255) - (((w >> 59) & 15) != (u64)(ttAge & 15) ? 16 : 0);
-    if (s < q) { q = s; j = i; }
-  }
+  int hit; u64 *x = plttSlot(key, key, &hit);
   u64 w = (u64)(unsigned short)score | (u64)(unsigned short)eval << 16 | (u64)((u32)move & 0x1FFFF) << 32 | (u64)(depth & 255) << 49 | (u64)(flag & 3) << 57 | (u64)(ttAge & 15) << 59 | 1ull << 63;
-  bk[2 * j + 1] = w; bk[2 * j] = key ^ w;
+  plttWrite(x, key, w, 0);
 }
-EXPORT(tt_clear) void tt_clear(void) { memset(ttm, 0, sizeof ttm); ttAge = 0; }
+EXPORT(tt_clear) void tt_clear(void) { memset(PL_TT, 0, sizeof PL_TT); ttAge = 0; }
 #define TT_PROBE(k) TTE e_, *e = &e_; tt_get((k), e)
 #else
 static TTE tt[TT_SIZE];
