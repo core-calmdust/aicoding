@@ -81,7 +81,7 @@
       if (!(U && U.pyr) || !a) { if (ghost) ghost.count = 0; return; }
       if (!ghost || ghost.parent !== board) {
         if (ghost && ghost.parent) ghost.parent.remove(ghost);
-        const m = new TH.MeshBasicMaterial({ color: 0x6fd6ff, transparent: true, opacity: .75, side: TH.DoubleSide, blending: TH.AdditiveBlending, depthWrite: false, depthTest: false, toneMapped: false });
+        const m = new TH.MeshBasicMaterial({ color: 0x1e9bff, transparent: true, opacity: .62, side: TH.DoubleSide, depthWrite: false, depthTest: false, toneMapped: false });
         // a flat disc of light where a marble can sit (user: 玉より置ける面を半透明の水色の面で — a ball was mistaken for a marble), the rim a little brighter
         const tx = document.createElement('canvas'); tx.width = tx.height = 64; const c2 = tx.getContext('2d'), gr = c2.createRadialGradient(32, 32, 4, 32, 32, 31);
         gr.addColorStop(0, 'rgba(255,255,255,.55)'); gr.addColorStop(.72, 'rgba(255,255,255,.7)'); gr.addColorStop(.86, 'rgba(255,255,255,1)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
