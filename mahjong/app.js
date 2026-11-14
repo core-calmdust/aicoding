@@ -128,14 +128,14 @@ const SND = (() => {
   // the main track carries on from where it was, the riichi track starts from the top each time.
   // (the music's levels from its loudness, EBU R128: title −14.4 LUFS → ≈ −22, main −19 → ≈ −26 under the voices, riichi −12.3 → ≈ −24)
   // (levels from each file's loudness, EBU R128 — title −14.4 LUFS → ≈ −22; the game's tracks ≈ −26 under the voices: main −19,
-  // main2 −13.9, main3 −13.4; riichi ≈ −24: riichi −12.3; the results of a hand ≈ −24: score −15.7)
+  // main2 −13.9, main3 −13.4; riichi ≈ −24: riichi −12.3; the results of a hand ≈ −24: score −14.9)
   const TRK = {
     title: { file: 'bgm-title', vol: .42, restart: true },
     main: { file: 'bgm-main', vol: .45, restart: false },
     main2: { file: 'bgm-main2', vol: .25, restart: false },
     main3: { file: 'bgm-main3', vol: .235, restart: false },
     riichi: { file: 'bgm-riichi', vol: .26, restart: true },
-    score: { file: 'bgm-score', vol: .38, restart: true },
+    score: { file: 'score-jingle', vol: .35, restart: true, once: true },   // (ユーザー 2026-11-15: a short piece, once per results screen — no loop)
   };
   for (const k in TRK) Object.assign(TRK[k], { url: null, el: null, g: null, on: false, t: 0 });
   const idle = f => (window.requestIdleCallback ? requestIdleCallback(f, { timeout: 600 }) : setTimeout(f, 60));
@@ -153,7 +153,8 @@ const SND = (() => {
     idle(next); }
   // the <audio> element and its gain node are made ahead of time, not at the moment the track is wanted
   function prep(B) { const a = ac; if (!a || B.el) return; if (!B.url) B.url = `${ASSETS}snd/${B.file}.mp3`;
-    B.el = new Audio(B.url); B.el.loop = true; B.el.preload = 'auto';
+    B.el = new Audio(B.url); B.el.loop = !B.once; B.el.preload = 'auto';
+    if (B.once) B.el.addEventListener('ended', () => { B.on = false; });   // (played to its end: the next results screen plays it again)
     try { const src = a.createMediaElementSource(B.el); B.g = a.createGain(); B.g.gain.value = 0; src.connect(B.g).connect(bgOut(a)); } catch (e) { B.g = null; } }
   function fade(B, to, sec) { const a = ac; if (B.g) { const t = a.currentTime; B.g.gain.cancelScheduledValues(t); B.g.gain.setValueAtTime(B.g.gain.value, t); B.g.gain.linearRampToValueAtTime(to, t + sec); } else if (B.el) B.el.volume = to; }
   let want = 'title';   // the track that should be playing (the title screen's to begin with) (kept while the sound is off, so it comes back when switched on)
@@ -185,6 +186,7 @@ const SND = (() => {
     _trk: TRK,
     music,
     resume: () => music(want),
+    score() { const B = TRK.score; if (B.el) { B.on = false; B.el.pause(); } music('score'); },   // (once per results screen, from its top)
     newGame() { mainKey = ['main', 'main2', 'main3'][(Math.random() * 3) | 0]; },
     // the window behind / in front again: the sound stops and comes back where it was
     gate(off) { const a = ac; if (!a) return;
@@ -954,7 +956,7 @@ async function onEvent(ev, d) {
       break;
     }
     case 'agari': {
-      SND.music('score');   // (ユーザー 2026-11-14: the results of a hand have their own music; the game's comes back with the next hand, on the table)
+      SND.music(null);   // (the game's music stops at the end of a hand; each results screen plays its own short piece once — SND.score) (ユーザー 2026-11-14: the results of a hand have their own music; the game's comes back with the next hand, on the table)
       clearActs();
       for (const r of d.results) await cutin(r.seat, r.tsumo ? 'tsumo' : 'ron');
       SND.win();
@@ -965,7 +967,7 @@ async function onEvent(ev, d) {
       break;
     }
     case 'ryuukyoku': {
-      SND.music('score');
+      SND.music(null);
       clearActs();
       for (let s = 1; s < 4; s++) if (d.tenpai[s]) TB.layoutHand(s, d.hands[s], null, true);
       if (!d.abort) SND.voice(d.tenpai[ME] ? 'tenpai' : 'noten');   // (ユーザー 2026-11-14: only the player's own テンパイ / ノーテン)   // (each player declares, from the dealer round)
@@ -1319,6 +1321,7 @@ function waitClick(box, sel) { return new Promise(res => { const b = box.querySe
 //     scores counting to their new values, each player's place                                      (showMoves, once)
 //  A drawn hand: the tenpai hands are laid open where they stand on the table (no list of hands), then 2 with テンパイ / ノーテン.
 async function showAgari(d, r, last) {
+  SND.score();
   const c = UIS.chars[r.seat], res = r.res;
   const ys = res.list.filter(([k, h]) => !(k === 'ura' && !h && !(G.P[r.seat].riichi)));
   const yl = ys.map(([k, h], i) =>
@@ -1401,6 +1404,7 @@ async function showMoves(d, o = {}) {
   closeModal();
 }
 async function showRyuukyoku(d) {
+  SND.score();
   const ab = d.abort ? t('abort')[d.abort] || d.abort : '';
   await showMoves(d, { title: `${t('ryuukyoku')}${ab ? ` <small>${esc(ab)}</small>` : ''}`, tags: d.abort ? null : [0, 1, 2, 3].map(s => [d.tenpai[s] ? t('tenpai') : t('noten'), d.tenpai[s]]) });
 }
