@@ -23,7 +23,8 @@ const LIST = RAW.map(([pt, name, tier], i) => ({ i, pt, name, tier, reward: REWA
 const POINTS = { east: [8, 2, 1, 0], south: [16, 4, 2, 0] };
 function at(pt) { let r = LIST[0]; for (const x of LIST) if (pt >= x.pt) r = x; return r; }
 function next(pt) { return LIST.find(x => x.pt > pt) || null; }
-// the BOTs grow stronger with the rank: 級 → 初級, 初段〜五段 → 中級, 六段〜十段 → 上級, the titles → 達人
-function botLv(pt) { const i = at(pt).i; return i <= 10 ? 1 : i <= 15 ? 2 : i <= 20 ? 3 : 4; }
+// the BOTs grow stronger with the rank (ユーザー 2026-11-14: it was hard from the very start): 見習い〜5級 → 入門,
+// 4級〜1級 → 初級, 初段〜五段 → 中級, 六段〜十段 → 上級, the titles → 達人
+function botLv(pt) { const i = at(pt).i; return i <= 6 ? 0 : i <= 10 ? 1 : i <= 15 ? 2 : i <= 20 ? 3 : 4; }
 root.MJRank = { list: LIST, at, next, botLv, POINTS, REWARD };
 })(window);
