@@ -36,24 +36,44 @@ function weaveTex() {
   g.putImageData(im, 0, 0);
   const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(10, 10); return t;
 }
-// walnut, lacquered: long streaks, the rings' figure folded by the grain, pores. u runs along the grain and wraps.
+// walnut, lacquered (ユーザー 2026-11-14: a more real grain, and a gloss): a flat-sawn board — the growth rings cut at a slant
+// show as long bands that open into flame-like arches (cathedrals) and close again, each ring a pale early wood fading into a dark,
+// sharp late-wood edge; open pores as fine dark dashes along the grain (thick in the early wood), a few darker mineral streaks,
+// and a slow shift of colour from honey to chocolate along the board. A matching height map (the pores and the late wood a hair
+// lower) gives the lacquer something to catch on. u runs along the grain and wraps.
 function woodTex() {
-  const Wd = 1024, Hd = 256, c = document.createElement('canvas'); c.width = Wd; c.height = Hd; const g = c.getContext('2d'), im = g.createImageData(Wd, Hd), o = im.data, N = mkNoise(53);
-  const A = N.oct([4, 8, 16, 32]), B = N.oct([2, 4, 8]), Cn = N.oct([8, 16, 32, 64]);
-  const mix = (a, b, t) => a + (b - a) * t;
+  const Wd = 2048, Hd = 512, N = mkNoise(53);
+  const c = document.createElement('canvas'); c.width = Wd; c.height = Hd; const g = c.getContext('2d'), im = g.createImageData(Wd, Hd), o = im.data;
+  const cb = document.createElement('canvas'); cb.width = Wd; cb.height = Hd; const gb = cb.getContext('2d'), ib = gb.createImageData(Wd, Hd), ob = ib.data;
+  const A = N.oct([3, 6, 12]), B = N.oct([2, 4]), Cn = N.oct([16, 32, 64]), Dn = N.oct([4, 8]), Pn = N.oct([256, 128]);
+  const mix = (a, b, t) => a + (b - a) * t, sstep = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+  const H = new Float32Array(Wd * Hd);
   for (let y = 0; y < Hd; y++) for (let x = 0; x < Wd; x++) {
     const u = x / Wd, v = y / Hd;
-    const fold = N.fbm(B, u, v) - .5;                                   // the board's slow wander
-    const ring = v * 7 + fold * 3.2 + (N.fbm(A, u, v * 3) - .5) * .8;      // growth rings, cut along the length: long figure
-    const fig = Math.pow(.5 + .5 * Math.sin(ring * 6.2832), 2.2);         // dark late wood in narrow bands
-    const streak = N.fbm(Cn, u, v * 6) - .5;                             // fine streaks along the grain
-    let t = .42 + fig * .34 + streak * .5 + fold * .25; t = Math.min(1, Math.max(0, t));
-    const d = (N.R() - .5) * 3, p = (y * Wd + x) * 4;
-    o[p] = mix(54, 142, t) + d; o[p + 1] = mix(30, 88, t) + d; o[p + 2] = mix(16, 50, t) + d; o[p + 3] = 255;
+    const warp = N.fbm(B, u, v) - .5, slow = N.fbm(Dn, u, v * .5);
+    // the cathedrals: the ring index bends into arches along the board (two arches per wrap), their tips wandering
+    const arch = Math.pow(Math.abs(Math.sin((u + warp * .15) * Math.PI)), 4) * 1.3;   // one long, narrow arch per length of board
+    const ring = v * 7.5 + warp * 1.1 + arch + (N.fbm(A, u * 1.5, v * 1.5) - .5) * .55 + (N.fbm(Dn, u * .5, v) - .5) * 1.4;   // (uneven spacing from year to year)
+    const f = ring - Math.floor(ring);
+    const late = sstep(.62, .9, f) * (1 - sstep(.93, 1, f));               // early wood pale, darkening into a sharp late-wood edge
+    const streak = N.fbm(Cn, u, v * 5) - .5;                               // fine streaks along the grain
+    const mineral = Math.max(0, N.fbm(A, u * .7 + .3, v * 4) - .62) * 3;   // the odd darker streak
+    let t = .64 - late * .34 + streak * .3 - mineral * .35 + (slow - .5) * .3; t = Math.min(1, Math.max(0, t));
+    // pores: short dark dashes along the grain (high-frequency noise squeezed along u), more of them in the early wood
+    const pn = N.fbm(Pn, u * .25, v * 3);
+    const pore = sstep(.66 - (1 - late) * .04, .76, pn);
+    const warm = slow;                                                       // honey ↔ chocolate along the board
+    const d = (N.R() - .5) * 2.5, p = (y * Wd + x) * 4;
+    let r = mix(mix(46, 58, warm), mix(150, 170, warm), t), gg = mix(mix(24, 30, warm), mix(92, 104, warm), t), bb = mix(mix(12, 14, warm), mix(50, 52, warm), t);
+    r *= 1 - pore * .3; gg *= 1 - pore * .34; bb *= 1 - pore * .34;
+    o[p] = r + d; o[p + 1] = gg + d; o[p + 2] = bb + d; o[p + 3] = 255;
+    const h = .6 - late * .25 - pore * .5 + streak * .1; H[y * Wd + x] = h;
+    const k = Math.max(0, Math.min(255, h * 255)); ob[p] = ob[p + 1] = ob[p + 2] = k; ob[p + 3] = 255;
   }
-  g.putImageData(im, 0, 0);
-  for (let i = 0; i < 1500; i++) { const x = N.R() * Wd, y = N.R() * Hd, l = 6 + N.R() * 26; g.strokeStyle = `rgba(24,10,4,${.1 + N.R() * .16})`; g.lineWidth = .6 + N.R() * .5; g.beginPath(); g.moveTo(x, y); g.lineTo(x + l, y + (N.R() - .5) * 1.2); g.stroke(); }   // pores
-  const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; return t;
+  g.putImageData(im, 0, 0); gb.putImageData(ib, 0, 0);
+  const tex = cv => { const t = new THREE.CanvasTexture(cv); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; return t; };
+  const map = tex(c); map.encoding = THREE.sRGBEncoding;
+  return { map, bump: tex(cb) };
 }
 // a seven-segment digit (the score unit's LED): the lit segments in `col`, the unlit ones as a ghost when `ghost` is given
 const SEG = { '0': 'abcdef', '1': 'bc', '2': 'abged', '3': 'abgcd', '4': 'fgbc', '5': 'afgcd', '6': 'afgedc', '7': 'abc', '8': 'abcdefg', '9': 'abcdfg', '-': 'g', ' ': '' };
@@ -360,7 +380,9 @@ class Table3D {
 
     // ---- the frame: four walnut rails with rounded edges and four rounded corner blocks, lacquered; a black lip round the cloth
     const wood = woodTex(); this.envTex = this.envTex || studioEnv();
-    const rimMat = new THREE.MeshPhysicalMaterial({ map: wood, roughness: .42, metalness: 0, clearcoat: .55, clearcoatRoughness: .22, envMap: this.envTex, envMapIntensity: .5 });
+    // (ユーザー 2026-11-14: glossy — a deep lacquer over the open-pored wood: the coat is near mirror-smooth and shows the room's lights
+    // as long highlights along the rails, the wood under it stays satin, the pores read through the coat as a fine texture)
+    const rimMat = new THREE.MeshPhysicalMaterial({ map: wood.map, bumpMap: wood.bump, bumpScale: .9, roughness: .5, metalness: 0, clearcoat: 1, clearcoatRoughness: .06, envMap: this.envTex, envMapIntensity: 1.2 });
     const lipMat = new THREE.MeshStandardMaterial({ color: 0x0d0d10, roughness: .45, metalness: .2 });
     const RW = 1.75, RH0 = -0.28, RH1 = 0.92, RR = 0.26, RL = 21.1, RC = 10.55 + RW / 2;   // rail: width, bottom, top, edge radius, length, centre line
     { const sh = new THREE.Shape(), x0 = -RW / 2, x1 = RW / 2;
