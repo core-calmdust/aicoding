@@ -300,8 +300,8 @@ class Table3D {
     // light on the middle of the table, the rim a tone lower. So the fill and the key are a little under what a flat light would
     // need, and a wide, fully soft spot from above the middle adds the rest: brightest at the score unit, easing off to the rails
     // (no edge to the pool — penumbra 1). It is light, not paint: the cloth's own texture stays even, so a new skin gets the same mood.
-    s.add(new THREE.HemisphereLight(0xf2f6ff, 0x141a30, 0.3));
-    const pool = new THREE.SpotLight(0xfff3e2, 1.45, 0, 0.34, 1, 1); pool.position.set(0, 24, 1.5); pool.target.position.set(0, 0, 0.6); s.add(pool); s.add(pool.target);
+    s.add(new THREE.HemisphereLight(0xf2f6ff, 0x141a30, 0.26));
+    const pool = new THREE.SpotLight(0xfff3e2, 1.1, 0, 0.42, 1, 1); pool.position.set(0, 24, 1.5); pool.target.position.set(0, 0, 0.6); s.add(pool); s.add(pool.target);
     const key = new THREE.DirectionalLight(0xffffff, 0.4);
     key.position.set(-6, 22, 10);
     key.castShadow = true;

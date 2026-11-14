@@ -1982,7 +1982,7 @@ body:has(#bv.on) .msbtn,body:has(.recov.on) .msbtn,body:has(#pg-map.on) .msbtn,b
 .bvi .mbody:is(:has(#bvVarRow),:has(#bvRt)) .lvpick,.bvi .mbody:is(:has(#bvVarRow),:has(#bvRt)) #bvRtRec{box-sizing:border-box;height:var(--bh)}
 .bvi .mbody:is(:has(#bvVarRow),:has(#bvRt)) .rtnow2{box-sizing:border-box;height:var(--bh);padding-block:0;overflow:hidden}
 .bvi .mbody:is(:has(#bvVarRow),:has(#bvRt)) .vopts{align-items:center}
-.bvi .vopts.rtonly{margin:0;min-height:var(--bh,48px)}.bvi .vopts.rtonly .rtnow2{flex:1 1 100%}
+.bvi .vopts.rtonly{margin:0;min-height:var(--bh,48px)}.bvi .vopts > #bvRtRec.rtrec{flex:none;align-self:stretch;height:auto;min-height:var(--bh,48px)}.bvi .vopts > #bvRtRec[hidden]{display:none}.bvi .vopts:has(> #bvRtRec:not([hidden])) .rtnow2 small{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}.bvi .vopts:has(> #bvRtRec:not([hidden])) .rtnow2 b{flex:none}.bvi .vopts:not(.rtonly):has(> #bvRtRec:not([hidden])) .rtnow2{flex:0 1 auto;justify-content:center}.bvi .vopts:not(.rtonly):has(> #bvRtRec:not([hidden])) .rtnow2 small{display:none}.bvi .vopts.rtonly .rtnow2{flex:1 1 100%}
 .vcard .vrt{align-self:flex-start;margin:0 4px;padding:2px 8px;border-radius:999px;background:#eef6ff;color:#2a5a9a;font-size:11.5px;font-weight:900}
 .lvs-l.vgrid{grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:10px;padding:6px 14px 10px}
 .lvs-l .vcard{display:flex;flex-direction:column;align-items:stretch;gap:6px;padding:8px 8px 10px;border-radius:18px;box-shadow:0 3px 0 var(--line);transition:transform .12s}
@@ -2232,11 +2232,11 @@ else document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.j
 <script src="../shared/atlas.js?v=20261114xq1"></script>
 <script src="../shared/atlas-firebase-config.js?v=ac1"></script>
 <script src="../shared/atlas-account.js?v=20261109ac2as1"></script>
-<script src="i18n/v.js?v=76pg"></script>
+<script src="i18n/v.js?v=77pg"></script>
 <script>/* the UI strings: only ja, en and the page language (atlas/i18n/<lang>.js, made from i18n.js by tools/i18n-split.js — 2026-11-10);
    when they were made from another version of i18n.js than FULL, the whole i18n.js loads instead. Edit i18n.js, bump FULL's ?v=, run the tool. */
 (function () {
-  var FULL = 'i18n.js?v=76pg', S = window.ATLAS_I18N_SPLIT, v = FULL.split('v=')[1], l = 'ja';
+  var FULL = 'i18n.js?v=77pg', S = window.ATLAS_I18N_SPLIT, v = FULL.split('v=')[1], l = 'ja';
   try { l = localStorage.getItem('aicoding-lang') || (function (x) { return /^zh-(tw|hk|mo|hant)/i.test(x) ? 'zh-TW' : String(x).slice(0, 2); })(navigator.language || 'ja'); } catch (e) {}
   if (!S || S.v !== v) { document.write('<script src="' + FULL + '"><\/script>'); return; }
   var L = ['ja', 'en']; if (S.langs.indexOf(l) >= 0 && L.indexOf(l) < 0) L.push(l);
@@ -2270,7 +2270,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
   }, 60);
 };</script>
 <script src="../shared/tapword.js?v=1"></script>
-<script src="lazy.js?v=267"></script>
+<script src="lazy.js?v=272"></script>
 <script src="puzzle-lines.js?v=1"></script>
 <script src="puzzles.js?v=29"></script>
 <script src="lessons3d.js?v=38"></script>
@@ -2292,7 +2292,7 @@ window.AtlasRgdTimer = function (btn, ms, alive) {
 <script src="worldmap.js?v=35"></script>
 <script src="npc/npc.js?v=34"></script>
 <script src="avtalk.js?v=3"></script>
-<script src="app.js?v=365"></script>
+<script src="app.js?v=366"></script>
 <script src="../shared/praline-badge.js?v=8" data-portal defer></script>
 </body>
 </html>
