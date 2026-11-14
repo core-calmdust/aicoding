@@ -50,6 +50,14 @@ page = f"""{title}
 <style>:root{{color-scheme:dark}} html,body{{background:#120d22;height:100%}}</style>
 {body.strip()}
 """
+# cache busting (2026-11-14: an update did not show — the bundle's scripts had no version, so the browser kept the old ones):
+# every local script / stylesheet gets ?h=<the first 8 hex digits of its content's hash>
+import hashlib
+def _h(m):
+    f = files.get(m.group(2))
+    if not f or not os.path.isfile(f): return m.group(0)
+    return m.group(1) + m.group(2) + '?h=' + hashlib.sha256(open(f, 'rb').read()).hexdigest()[:8] + m.group(3)
+page = re.sub(r'((?:src|href)=")([A-Za-z0-9_.-]+\.(?:js|css))(")', _h, page)
 open(os.path.join(out, 'janka.html'), 'w', encoding='utf-8').write(page)
 # index.html: the same page as a whole document (what the Artifact serves)
 open(os.path.join(out, 'index.html'), 'w', encoding='utf-8').write('<!DOCTYPE html>\n<html lang="ja">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n'
