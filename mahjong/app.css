@@ -1165,7 +1165,7 @@ html.lp #home.aaa{inset:auto;left:0;top:0;width:calc(var(--W) / var(--PZ));heigh
 #home.aaa .aa-ui > *{pointer-events:auto}
 /* top: player plate · coins · settings · home */
 #home.aaa .aa-top{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;gap:10px;padding:20px 34px 0}
-#home.aaa .aa-prof{display:flex;align-items:center;gap:12px;padding:6px 22px 6px 6px;border-radius:99px;border:1px solid rgba(232,206,140,.4);background:linear-gradient(90deg,rgba(14,9,28,.85),rgba(14,9,28,.35));clip-path:polygon(0 0,100% 0,94% 100%,0 100%)}
+#home.aaa .aa-prof{display:flex;align-items:center;gap:12px;padding:6px 22px 6px 6px;border-radius:99px;border:1px solid rgba(232,206,140,.4);background:linear-gradient(90deg,rgba(14,9,28,.88),rgba(14,9,28,.55))}   /* (a plain pill — the slanted cut clipped its frame, ユーザー 2026-11-14) */
 #home.aaa .aa-prof img{width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid #e8ce8c;box-shadow:0 0 12px rgba(232,206,140,.4)}
 #home.aaa .aa-prof span{display:flex;flex-direction:column;align-items:flex-start;line-height:1.25}
 #home.aaa .aa-prof b{font-family:var(--serif);font-size:17px;color:#fff3d6;letter-spacing:.08em}
