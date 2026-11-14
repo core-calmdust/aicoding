@@ -10,8 +10,14 @@ const W = 1, H = 1.36, D = 0.78;
 // JANKA_TEXGEN for the baking tool.
 const BAKE_V = 1, BAKED = {};
 if (!/[?&]nobake\b/.test(location.search)) for (const n of ['felt', 'wood', 'woodb', 'stone']) { const im = new Image(); im.decoding = 'async'; im.src = (root.JANKA_ASSETS || '../images/mahjong/') + 'tex/' + n + '.webp?v=' + BAKE_V; BAKED[n] = im; }
+// (2026-11-15, ユーザー「スマホで落ちまくる」: memory) on a touch device the big pictures are kept at half size — on a phone's screen
+// the felt and the rails never show more than that — and once a picture that never changes is on the graphics card, the copy the
+// page kept of it is let go (lean). Desktop as before.
+const MOB = matchMedia('(pointer: coarse)').matches;
 function bakedCanvas(name) { const im = BAKED[name]; if (!im || !im.complete || !im.naturalWidth) return null;
-  const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight; c.getContext('2d').drawImage(im, 0, 0); return c; }
+  const f = MOB && name !== 'stone' ? .5 : 1, c = document.createElement('canvas'); c.width = Math.round(im.naturalWidth * f); c.height = Math.round(im.naturalHeight * f);
+  c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); return c; }
+function lean(t) { if (!MOB || !t) return t; const prev = t.onUpdate; t.onUpdate = () => { if (prev) prev(); const c = t.image; if (c && c.getContext && c.width > 64) c.width = c.height = 1; t.onUpdate = null; }; return t; }
 const keepGen = (name, c) => { (root.JANKA_TEXGEN = root.JANKA_TEXGEN || {})[name] = c; };
 // ---- the table's own materials (2026-11-14, ユーザー: a more real automatic table — a quieter felt, real wood with rounded
 // edges, the lift seams of an automatic table, a real score unit) ----
@@ -52,7 +58,7 @@ function weaveTex() {
 // lower) gives the lacquer something to catch on. u runs along the grain and wraps.
 function woodTex() {
   const tex = cv => { const t = new THREE.CanvasTexture(cv); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; return t; };
-  { const bm = bakedCanvas('wood'), bb = bakedCanvas('woodb'); if (bm && bb) { const map = tex(bm); map.encoding = THREE.sRGBEncoding; return { map, bump: tex(bb) }; } }
+  { const bm = bakedCanvas('wood'), bb = bakedCanvas('woodb'); if (bm && bb) { const map = lean(tex(bm)); map.encoding = THREE.sRGBEncoding; return { map, bump: lean(tex(bb)) }; } }
   const Wd = 4096, Hd = 384, N = mkNoise(53);   // (one whole rail along u: nothing repeats along a rail — ユーザー 2026-11-14)
   const c = document.createElement('canvas'); c.width = Wd; c.height = Hd; const g = c.getContext('2d'), im = g.createImageData(Wd, Hd), o = im.data;
   const cb = document.createElement('canvas'); cb.width = Wd; cb.height = Hd; const gb = cb.getContext('2d'), ib = gb.createImageData(Wd, Hd), ob = ib.data;
@@ -422,7 +428,7 @@ class Table3D {
     { const sh = g.createRadialGradient(0, 0, 1.5 * U, 0, 0, 2.6 * U); sh.addColorStop(0, 'rgba(4,8,18,.6)'); sh.addColorStop(.75, 'rgba(4,8,18,.3)'); sh.addColorStop(1, 'rgba(4,8,18,0)'); g.fillStyle = sh; g.fillRect(-2.7 * U, -2.7 * U, 5.4 * U, 5.4 * U); }
     g.setTransform(1, 0, 0, 1, 0, 0);
     keepGen('felt', fc); }
-    const felt = new THREE.CanvasTexture(fc); felt.encoding = THREE.sRGBEncoding; felt.anisotropy = 8;
+    const felt = lean(new THREE.CanvasTexture(fc)); felt.encoding = THREE.sRGBEncoding; felt.anisotropy = 8;
     const table = new THREE.Mesh(new THREE.PlaneGeometry(21.2, 21.2), new THREE.MeshStandardMaterial({ map: felt, roughness: 1, metalness: 0, bumpMap: napTex(), bumpScale: .012 }));
     table.rotation.x = -PI / 2; table.receiveShadow = true; s.add(table);
     // ---- the floor under the table: a dark Chinese carpet (ユーザー 2026-11-14) — an indigo field with scattered roundels and
@@ -576,7 +582,7 @@ class Table3D {
   // the rest of the code moves) are copied in. ~180 draw calls (and as many again for the shadows) become 3.
   _atlas() {
     if (this.A && (this.A.sheets || !MJTiles.sheets())) return this.A;
-    const FW = MJTiles.FW, FH = MJTiles.FH, pad = 8, cw = FW + pad * 2, ch = FH + pad * 2, cols = 8, rows = 5;
+    const sc = this.mobile ? .5 : 1, FW = Math.round(MJTiles.FW * sc), FH = Math.round(MJTiles.FH * sc), pad = this.mobile ? 4 : 8, cw = FW + pad * 2, ch = FH + pad * 2, cols = 8, rows = 5;
     const mk = () => { const c = document.createElement('canvas'); c.width = cols * cw; c.height = rows * ch; return c; };
     const cv = mk(), cn = MJTiles.sheets() ? mk() : null, g = cv.getContext('2d'), gn = cn && cn.getContext('2d');
     const cells = {}; let k = 0;
@@ -585,7 +591,7 @@ class Table3D {
       const col = k % cols, row = (k / cols) | 0, x = col * cw + pad, y = row * ch + pad;
       put(g, MJTiles.canvas(t, red), x, y); if (gn) put(gn, MJTiles.normal(t, red), x, y);
       cells[t + (red ? 'r' : '')] = [col, rows - 1 - row]; k++; }
-    const tex = c => { const t = new THREE.CanvasTexture(c); t.anisotropy = 8; return t; };
+    const tex = c => { const t = lean(new THREE.CanvasTexture(c)); t.anisotropy = 8; return t; };
     const map = tex(cv); map.encoding = THREE.sRGBEncoding;
     const A = { map, nrm: cn ? tex(cn) : null, cells, sheets: !!cn, cell: new THREE.Vector4(cw / cv.width, ch / cv.height, FW / cv.width, FH / cv.height), pad: new THREE.Vector2(pad / cv.width, pad / cv.height) };
     if (this.A && this.I) { const m = this.I.face.material; m.map = A.map; m.normalMap = A.nrm; m.needsUpdate = true; }
