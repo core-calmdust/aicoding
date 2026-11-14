@@ -95,7 +95,7 @@ for f, dn, tn in [(x, x + '-finger-phalanx-distal', x + '-finger-tip') for x in 
     m = (wj > .5) & (al > .38) & (al < 1.12) & (h > .02) & (lat < .22)
     isn |= m
     wr = np.exp(-(np.linalg.norm(out - b, axis=1) / .45) ** 2)[:, None]; col = col * (1 - wr * .45) + np.array([218, 140, 126]) * wr * .45   # 指先の赤み
-col[isn] = (226, 182, 176)   # (the nail bed, the same nude as the long nails over it)
+pass   # (the nail bed stays skin coloured: the long nail lies over it)
 
 # ---- つまむポーズ（ユーザー 2026-11-14：親指と人差し指で向かい合わせにつまみ、親指が牌の下面を支え、人差し指を上面に添える）----
 # 置くポーズ（上の、親指が横にある形）と同じ面の並びのまま、親指だけを牌の下へ回した形をもう一つ作る（実行時に二つの間を動かす）。
@@ -226,32 +226,51 @@ col = np.where(skin[:, None], c2, col)
 # 各指の末節に、爪の付け根から指先の先まで伸びる薄い殻（横に反ったアーモンド形）を足す。末節の関節と一緒に動くので、
 # 置くポーズ・つまむポーズの両方で指に付いたまま。色はネイルの桃色、材質は爪（つや）。
 def nail_shell(f, dn, tn, ext):
-    # ext: how far the free edge runs past the fingertip, in the rig's units (a tile is 1 wide). The 'tip' joint is not the end of
-    # the finger — the end is found from the finger's own vertices (the furthest along the bone).
+    # (ユーザー 2026-11-14: the nail must sit on the finger cleanly.) A solid nail: its top follows the finger's own surface from the
+    # cuticle to the fingertip (sampled from the finger's vertices, a hair above them), then runs straight on as the free edge and
+    # narrows to a coffin tip; a thin underside and side walls close it, so the free edge has a real thickness and no seam shows.
+    # ext: how far the free edge runs past the fingertip, in the rig's units (a tile is 1 wide).
     a0, b0 = jpos[dn], jpos[tn]; d0 = b0 - a0; L = np.linalg.norm(d0); d0 = d0 / L
     up0 = np.array([1., 0, 0]) - d0 * d0[0]; up0 /= np.linalg.norm(up0); sd0 = np.cross(d0, up0)
     wj = np.zeros(len(V))
     for c in range(4): wj += np.where((JI[:, c] == idx[dn]) | (JI[:, c] == idx[tn]), JW[:, c], 0)
     q = V - a0; al = q @ d0 / L; h = q @ up0; lt = q @ sd0
-    fm = wj > .5; alE = al[fm].max()
+    fm = (wj > .5) & (h > 0); alE = al[wj > .5].max()
     m = fm & (al > alE * .45) & (al < alE * .9)
-    htop = np.percentile(h[m], 98); wd = np.percentile(np.abs(lt[m & (h > np.percentile(h[m], 60))]), 92)
-    ex = ext / (L * S * .95)                                                                  # (rig units → the bone's)
-    s0, s1 = alE * .48, alE + ex
-    ns, nt = 20, 11; P = []
+    htop = np.percentile(h[m], 98); wd = np.percentile(np.abs(lt[m & (h > np.percentile(h[m], 55))]), 92)
+    # the finger's cross-section along the bone: its centre and half sizes (up and across), fitted with a smooth curve, so the nail
+    # wraps the finger as a clean, even shell (sampling the raw vertices gave a ragged surface)
+    fa = wj > .5; xs, ch, rh, cl, rl = [], [], [], [], []
+    for a_ in np.linspace(alE * .42, alE * .86, 9):
+        k = fa & (np.abs(al - a_) < alE * .05)
+        if k.sum() < 6: continue
+        xs.append(a_); ch.append((h[k].max() + h[k].min()) / 2); rh.append((h[k].max() - h[k].min()) / 2); cl.append((lt[k].max() + lt[k].min()) / 2); rl.append((lt[k].max() - lt[k].min()) / 2)
+    xs = np.array(xs); fit = lambda y: np.poly1d(np.polyfit(xs, np.array(y), 1))
+    Fch, Frh, Fcl, Frl = fit(ch), fit(rh), fit(cl), fit(rl)
+    ex = ext / (L * S * .95)
+    s0, sE, s1 = alE * .5, alE * .86, alE + ex
+    off, T = .015 * L, .045 * L
+    ns, nt = 28, 15; top = np.zeros((ns, nt, 3)); bot = np.zeros((ns, nt, 3))
     for i in range(ns):
-        sv = s0 + (s1 - s0) * i / (ns - 1); u = (sv - s0) / (s1 - s0)
+        sv = s0 + (s1 - s0) * i / (ns - 1); u = (sv - s0) / (s1 - s0); sc = min(sv, sE)
         k = 1.0
-        if u < .12: k *= .55 + .45 * math.sin(u / .12 * math.pi / 2)                            # the cuticle end, rounded
-        if sv > alE * .92: k *= 1 - .45 * min(1., (sv - alE * .92) / (s1 - alE * .92))           # tapering to a coffin tip (flat end)
+        if u < .08: k *= .45 + .55 * math.sqrt(max(0., 1 - ((.08 - u) / .08) ** 2))          # a rounded cuticle line
+        if sv > sE: k *= 1 - .38 * min(1., (sv - sE) / (s1 - sE))                           # narrowing to the coffin tip
+        c_h, r_h, c_l, r_l = Fch(sc), Frh(sc), Fcl(sc), Frl(sc)
         for j in range(nt):
-            th = -1 + 2 * j / (nt - 1); wn = wd * .82 * k
-            y = htop + .02 * L - (th * th) * wd * .28                                             # the nail's sideways curve
-            P.append(a0 + d0 * (sv * L) + up0 * y + sd0 * (th * wn))
-    P = np.array(P); Fs = []
+            ph = (-1 + 2 * j / (nt - 1)) * 1.05 * k
+            for out_, rr in ((top, off), (bot, off - T)):
+                y = c_h + (r_h + rr) * math.cos(ph); l = c_l + (r_l + rr) * math.sin(ph)
+                out_[i, j] = a0 + d0 * (sv * L) + up0 * y + sd0 * l
+    P = np.concatenate([top.reshape(-1, 3), bot.reshape(-1, 3)]); nb = ns * nt; Fs = []
     for i in range(ns - 1):
         for j in range(nt - 1):
             v0 = i * nt + j; Fs += [(v0, v0 + nt, v0 + 1), (v0 + 1, v0 + nt, v0 + nt + 1)]
+            w0 = nb + v0; Fs += [(w0, w0 + 1, w0 + nt), (w0 + 1, w0 + nt + 1, w0 + nt)]
+    ring = [(0, j) for j in range(nt)] + [(i, nt - 1) for i in range(1, ns)] + [(ns - 1, j) for j in range(nt - 2, -1, -1)] + [(i, 0) for i in range(ns - 2, 0, -1)]
+    for k in range(len(ring)):                         # the side walls (the rim of the nail)
+        a, b = ring[k], ring[(k + 1) % len(ring)]; ia, ib = a[0] * nt + a[1], b[0] * nt + b[1]
+        Fs += [(ia, nb + ia, ib), (ib, nb + ia, nb + ib)]
     return P, np.array(Fs)
 def to_out(Pm, Dm, dn, A):
     R, t = Dm[dn]; X = pit(rig(Pm @ R.T + t))
@@ -264,7 +283,7 @@ for f, dn, tn, ext in [('index', 'index-finger-phalanx-distal', 'index-finger-ti
     add_o.append(to_out(Pm, DB, dn, False)); add_a.append(to_out(Pm, DA, dn, True)); add_f.append(Fs + base)
 nadd = sum(len(x) for x in add_o)   # (the nails' colour: a sheer nude pink, as in the picture the user gave)
 out = np.concatenate([out] + add_o); outA = np.concatenate([outA] + add_a); F = np.concatenate([F] + add_f)
-col = np.concatenate([col, np.tile(np.array([226, 182, 176], float), (nadd, 1))]); isn = np.concatenate([isn, np.ones(nadd, bool)])
+col = np.concatenate([col, np.tile(np.array([226, 182, 176], float), (nadd, 1))]); isn = np.concatenate([np.zeros(len(isn), bool), np.ones(nadd, bool)])   # (the old painted nail is skin again: the nail is the shell alone)
 nor = vnormals(out, F); norA = vnormals(outA, F)
 mv = np.where(np.linalg.norm(outA - out, axis=1) > 1e-4)[0]
 fn = isn[F].sum(1) >= 3
