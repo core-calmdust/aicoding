@@ -154,6 +154,11 @@ const SND = (() => {
     },
     call: () => { tone(520, .16, 'square', .06); tone(780, .2, 'square', .05, .08); },
     riichi: () => { tone(880, .5, 'sine', .14); tone(1320, .7, 'sine', .1, .08); tone(1760, .9, 'sine', .06, .16); },
+    // the fanfare as the 満貫/跳満/… stamp lands: longer and brighter the bigger the hand
+    limit: lv => { const base = [523, 659, 784, 1046, 1319, 1568, 2093]; const n = 2 + lv;
+      for (let i = 0; i < n; i++) tone(base[Math.min(i, 6)] * (lv >= 5 ? 1.5 : 1), .35 + lv * .08, 'triangle', .1, i * (.09 - lv * .008));
+      if (lv >= 3) tone(base[0] / 2, 1.2 + lv * .2, 'sine', .12, 0);
+      if (lv >= 4) for (let i = 0; i < 6; i++) tone(2093 + i * 260, .25, 'sine', .04, .5 + i * .06); },
     win: () => { [523, 659, 784, 1046].forEach((f, i) => tone(f, .5, 'triangle', .12, i * .09)); tone(1568, 1.2, 'sine', .08, .4); },
     skill: () => { tone(300, .5, 'sawtooth', .05, 0, 1200); tone(1200, .6, 'sine', .1, .3); },
     ok: () => { tone(988, .25, 'sine', .12); tone(1319, .5, 'sine', .1, .12); },
@@ -1168,8 +1173,11 @@ async function showAgari(d, r, last) {
   const melds = r.melds.map(m => `<span class="meld">${m.tiles.map((id, i) => m.type === 'ankan' && (i === 0 || i === 3) ? backHTML('sm') : tileHTML(id, 'sm')).join('')}</span>`).join('');
   const pts = r.moves.filter(m => m[2] !== 'shugi').reduce((a, m) => a + m[1], 0);
   const lim = res.limit ? t(res.limit) : '';
+  // the better the hand, the louder its points (ユーザー 2026-11-14): 0 plain · 1 満貫 · 2 跳満 · 3 倍満 · 4 三倍満/数え · 5 役満
+  const lv = { mangan: 1, haneman: 2, baiman: 3, sanbaiman: 4, kazoe: 4, yakuman: 5, dbl_yakuman: 5 }[res.limit] || 0;
+  const spark = lv >= 3 ? `<div class="ag-spark">${Array.from({ length: lv >= 5 ? 26 : lv >= 4 ? 18 : 10 }, (_, i) => `<i style="--x:${(Math.random() * 100).toFixed(1)}%;--y:${(Math.random() * 100).toFixed(1)}%;--d:${(Math.random() * 1.6).toFixed(2)}s;--s:${(.5 + Math.random() * .9).toFixed(2)}"></i>`).join('')}</div>` : '';
   const box = modal(`
-    <div class="agst" style="--c:${c.color};--c2:${c.color2};--n:${ys.length}">
+    <div class="agst lv${lv}" style="--c:${c.color};--c2:${c.color2};--n:${ys.length}">${lv >= 2 ? '<div class="ag-flash"></div>' : ''}
       <div class="agst-bg"></div>
       <div class="agst-ch"><img src="${charImg(c, 'full')}" alt=""></div>
       <div class="agst-who"><b>${esc(L(c.name))}</b><span>${r.tsumo ? t('tsumo') : t('ron')}</span></div>
@@ -1178,10 +1186,11 @@ async function showAgari(d, r, last) {
         <div class="ag-dora"><span><small>${t('dora')}</small>${d.dora.map(x => typeHTML(x, 'xs')).join('')}</span>${G.P[r.seat].riichi ? `<span><small>${I18N.yaku('ura')}</small>${d.ura.slice(0, d.dora.length).map(x => typeHTML(x, 'xs')).join('')}</span>` : ''}</div>
         <div class="agst-mid"><div class="ag-yaku">${yl}</div>${res.yakumanN ? '' : `<div class="agst-han"><b>${res.han}</b><span>${t('han', { n: '' }).trim() || '翻'}</span><small>${t('fu', { n: res.fu })}</small></div>`}</div>
         ${res.shugi ? `<div class="ag-note">${esc(I18N.L(MJSkills.get('shugi').name))} ×${res.shugi}</div>` : ''}
-        <div class="agst-total">${lim ? `<em class="stamp">${esc(lim)}</em>` : ''}<b>${pts.toLocaleString()}</b></div>
+        <div class="agst-total">${lim ? `<em class="stamp">${esc(lim)}</em>` : ''}<span class="ag-pw">${lv >= 3 ? '<span class="ag-rays"></span>' : ''}<b data-v="${pts.toLocaleString()}">${pts.toLocaleString()}</b>${spark}</span></div>
       </div>
       <button class="btn gold nx">${t('next')}</button>
     </div>`, 'stage');
+  if (lim) sleep(1000 + ys.length * 160).then(() => SND.limit(lv));
   await waitClick(box, '.nx');
   void last;
 }
@@ -1367,5 +1376,5 @@ I18N.set(I18N.lang);
 MJTiles.ready().then(() => { MJTiles.reset(); ART.clear(); renderHome(); });   // (the tile faces from the 上海 sheets, 2026-11-14)
 document.fonts && document.fonts.load('800 40px "Shippori Mincho B1"', '一萬東南西北發中雀華').then(() => { MJTiles.reset(); ART.clear(); renderHome(); });
 renderHome(); homeEnter();
-window.JANKA = { get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, SND, DB, startGame, quitGame, cutin, showMoves, showFinal };
+window.JANKA = { get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, SND, DB, startGame, quitGame, cutin, showMoves, showFinal, showAgari };
 })();
