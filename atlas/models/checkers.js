@@ -335,10 +335,10 @@
       const n = LO() ? 3 : 5, r = .022, x0 = IW - .045, bp = [[x0 - r, H2 - .001]]; for (let i = 1; i < n; i++) { const a = Math.PI - i / n * Math.PI; bp.push([x0 + Math.cos(a) * r, H2 + Math.sin(a) * r]); } bp.push([x0 + r, H2 - .001]);
       const b = new TT.Mesh(sweep(A, bp), F.bead); b.castShadow = false; b.receiveShadow = true; base.add(b);
     }
-    if (F.corners) {   // brass corner mounts: an L on each corner of the frame's top
-      const cg = new TT.BoxGeometry(.62, .02, .1), c2 = new TT.BoxGeometry(.1, .02, .62);
-      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => [[cg, .31 - .05, 0], [c2, 0, .31 - .05]].forEach(([geo, dx, dz]) => {
-        const m = new TT.Mesh(geo, F.corners); m.position.set(sx * (A - .05 - dx), H2 + .008, sz * (A - .05 - dz)); m.castShadow = true; m.receiveShadow = true; base.add(m); }));
+    if (F.corners) {   // gilt-bronze corner plates: a small bevelled diamond lying on the flat of the frame's top at each corner
+      // (2026-11-14: the L-shaped mounts reached over the cushion's rounded outer edge and looked afloat)
+      const d = .32, cg = new TT.CylinderGeometry(.085, .095, .014, 4); cg.rotateY(Math.PI / 4);
+      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => { const m = new TT.Mesh(cg, F.corners); m.position.set(sx * (A - d), H2 + .007, sz * (A - d)); m.rotation.y = Math.PI / 4; m.castShadow = false; m.receiveShadow = true; base.add(m); });
     }
     const fg = new TT.PlaneGeometry(IN, IN); fg.rotateX(-Math.PI / 2);
     const field = new TT.Mesh(fg, top); field.position.y = HF + .002; field.receiveShadow = true; field.renderOrder = -2; base.add(field);   // drawn first: the reflections test against it
