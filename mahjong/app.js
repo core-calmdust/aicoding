@@ -73,6 +73,7 @@ const IC = {
   bolt: '<svg viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>',
   coin: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5h4.5a2 2 0 0 1 0 4H9"/></svg>',
   stats: '<svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
+  keys: '<svg viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6 10h.01M9 10h.01M12 10h.01M15 10h.01M18 10h.01M7.5 14h9"/></svg>',
   chest: '<svg viewBox="0 0 24 24"><path d="M3 10h18v10H3zM3 10a9 5 0 0 1 18 0"/><path d="M11 13h2v3h-2z"/></svg>',
 };
 const icon = k => IC[k] || '';
@@ -523,6 +524,7 @@ async function startGame() {
   UIS.game = G;
   TB.setSleeves(chars.map(c => c.color));   // (each seat's sleeve in her sisters' colour)
   $('#gSnd').innerHTML = DB.set.snd ? IC.snd : IC.mute; $('#gExit').innerHTML = IC.exit;
+  $('#gKeys').innerHTML = IC.keys; $('#gKeys').title = t('keysT'); $('#gKeys').setAttribute('aria-label', t('keysT')); showKeys(false);
   $('#khelp').innerHTML = t('keys');
   sndIcons();
   const g0 = G;
@@ -534,6 +536,10 @@ $('#game .hud').addEventListener('click', e => {
   const o = e.target.closest('.opp, .me .mb'); if (!o || !UIS) return;
   openStats(o.id ? +o.id.slice(3) : ME);
 });
+// the keyboard help (PC): folded away; the button at the top right opens and closes it (ユーザー 2026-11-14)
+function showKeys(on) { $('#khelp').classList.toggle('open', on); $('#gKeys').classList.toggle('on', on); $('#gKeys').setAttribute('aria-expanded', on ? 'true' : 'false'); }
+$('#gKeys').addEventListener('click', e => { e.stopPropagation(); SND.pick(); showKeys(!$('#khelp').classList.contains('open')); });
+document.addEventListener('pointerdown', e => { if ($('#khelp').classList.contains('open') && !e.target.closest('#khelp, #gKeys')) showKeys(false); }, true);
 $('#gExit').addEventListener('click', async () => {
   if (!(await confirmBox(t('exitQ')))) return;
   quitGame();
@@ -1112,6 +1118,7 @@ document.addEventListener('keydown', e => {
   const tag = (e.target.tagName || '').toLowerCase();
   if (tag === 'input' || tag === 'select' || tag === 'textarea') return;
   const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+  if (k === 'Escape' && $('#khelp').classList.contains('open')) { e.preventDefault(); showKeys(false); return; }
   if (!$('#pstats').hidden) { if (k === 'Escape' || k === 'Enter') { e.preventDefault(); closeStats(); } return; }
   const m = $('#modal');
   // modal screens
