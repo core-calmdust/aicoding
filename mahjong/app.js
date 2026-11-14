@@ -104,7 +104,7 @@ const SND = (() => {
     s.connect(f).connect(v).connect(a.destination); s.start();
     tone(1500, .05, 'triangle', .05);
   }
-  document.addEventListener('visibilitychange', () => { if (ac) { if (document.hidden) ac.suspend(); else ac.resume(); } });
+  document.addEventListener('visibilitychange', () => { if (ac) { if (document.hidden) ac.suspend(); else ac.resume(); } const B = SND && SND._bgm; if (B && B.el && B.on) { if (document.hidden) B.el.pause(); else { const p = B.el.play(); if (p && p.catch) p.catch(() => {}); } } });
   // recorded sounds (ユーザー 2026-11-14): tiles laid down (three, picked at random), the point sticks (riichi, paying for a skill),
   // and the calls in a voice (リーチ・ツモ・ロン・ポン・チー・カン・テンパイ・ノーテン). Decoded on first use; until then the synth stands in.
   const BUF = {}, NAMES = ['tile1', 'tile2', 'tile3', 'stick1', 'stick2', 'stick3', 'v-riichi', 'v-tsumo', 'v-ron', 'v-pon', 'v-chi', 'v-kan', 'v-tenpai', 'v-noten'];
@@ -119,6 +119,24 @@ const SND = (() => {
     stick: () => { if (!play(pick3('stick'), .85)) tone(1800, .08, 'triangle', .06); },
     voice: k => play('v-' + k, 1),
     preload: () => load(),
+    // the riichi music (ユーザー 2026-11-14): when someone declares riichi the tension track starts (looping) and fades out when
+    // the hand ends. Streamed through an <audio> element into the same context (a gain node for the fades).
+    bgm(onoff) {
+      const a = ctx(); if (!a) return;
+      const B = this._bgm || (this._bgm = { el: null, g: null, on: false, t: 0 });
+      if (onoff) {
+        if (!on() || B.on) return;
+        if (!B.el) { B.el = new Audio(`${ASSETS}snd/bgm-riichi.mp3`); B.el.loop = true; B.el.preload = 'auto'; B.el.crossOrigin = 'anonymous';
+          try { const src = a.createMediaElementSource(B.el); B.g = a.createGain(); B.g.gain.value = 0; src.connect(B.g).connect(a.destination); } catch (e) { B.g = null; } }
+        B.on = true; clearTimeout(B.t); B.el.currentTime = 0;
+        const p = B.el.play(); if (p && p.catch) p.catch(() => {});
+        if (B.g) { const t = a.currentTime; B.g.gain.cancelScheduledValues(t); B.g.gain.setValueAtTime(B.g.gain.value, t); B.g.gain.linearRampToValueAtTime(.42, t + .8); } else B.el.volume = .42;
+      } else {
+        if (!B.on) return; B.on = false;
+        if (B.g) { const t = a.currentTime; B.g.gain.cancelScheduledValues(t); B.g.gain.setValueAtTime(B.g.gain.value, t); B.g.gain.linearRampToValueAtTime(0, t + 1.4); }
+        clearTimeout(B.t); B.t = setTimeout(() => { if (!B.on && B.el) B.el.pause(); }, 1500);
+      }
+    },
     call: () => { tone(520, .16, 'square', .06); tone(780, .2, 'square', .05, .08); },
     riichi: () => { tone(880, .5, 'sine', .14); tone(1320, .7, 'sine', .1, .08); tone(1760, .9, 'sine', .06, .16); },
     win: () => { [523, 659, 784, 1046].forEach((f, i) => tone(f, .5, 'triangle', .12, i * .09)); tone(1568, 1.2, 'sine', .08, .4); },
@@ -373,7 +391,7 @@ function openSettings() {
     const b = e.target.closest('.seg button'); if (!b) return;
     const k = b.parentNode.dataset.k, v = b.dataset.v; SND.pick();
     if (k === 'language') { I18N.set(v); renderHome(); if (window.GameRecord) GameRecord.relabel(); }
-    else if (k === 'sound') { DB.set.snd = v === '1'; save(); sndIcons(); SND.unlock(); }
+    else if (k === 'sound') { DB.set.snd = v === '1'; save(); sndIcons(); SND.unlock(); if (!DB.set.snd) SND.bgm(false); }
     else if (k === 'lite') { DB.set.lite = v === '1'; save(); applyLite(); }
     box.innerHTML = draw();
   });
@@ -388,7 +406,7 @@ function applyLite() {
   if (TB) TB.setQuality(DB.set.lite ? 'lite' : 'high');
   if (typeof homeFx === 'function' && $('#aaFx')) homeFx();
 }
-$('#gSnd').addEventListener('click', () => { DB.set.snd = !DB.set.snd; save(); sndIcons(); });
+$('#gSnd').addEventListener('click', () => { DB.set.snd = !DB.set.snd; save(); sndIcons(); if (!DB.set.snd) SND.bgm(false); });
 // phones always use the landscape layout; held upright, the whole UI is turned 90° (no reliance on the OS rotation)
 const PHONE = matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 600;
 function fitRoot() {
@@ -691,6 +709,7 @@ $('#gExit').addEventListener('click', async () => {
 });
 function quitGame() {
   if (UIS) UIS.abort = true;
+  SND.bgm(false);
   closeStats();
   $('#dealAsk').hidden = true;
   G = null;
@@ -710,6 +729,7 @@ async function onEvent(ev, d) {
   switch (ev) {
     case 'game-start': renderBadges(); break;
     case 'hand-start': {
+      SND.bgm(false);
       TB.hideAll();
       UIS.intel = null; $('#intel').hidden = true;
       refreshTable(); renderBadges(); renderHand(); layoutAll();
@@ -725,7 +745,7 @@ async function onEvent(ev, d) {
     }
     case 'discard': {
       const p = g.P[d.seat];
-      if (d.riichi) await cutin(d.seat, 'riichi');
+      if (d.riichi) { await cutin(d.seat, 'riichi'); SND.bgm(true); }
       SND.tile();
       layoutRiver(d.seat, true);
       // (others: the hand tidies the row after laying the tile — the drawn tile goes to its place, or the row is pushed together. ユーザー 2026-11-14)
@@ -760,6 +780,7 @@ async function onEvent(ev, d) {
       break;
     }
     case 'agari': {
+      SND.bgm(false);
       clearActs();
       for (const r of d.results) await cutin(r.seat, r.tsumo ? 'tsumo' : 'ron');
       SND.win();
@@ -770,6 +791,7 @@ async function onEvent(ev, d) {
       break;
     }
     case 'ryuukyoku': {
+      SND.bgm(false);
       clearActs();
       for (let s = 1; s < 4; s++) if (d.tenpai[s]) TB.layoutHand(s, d.hands[s], null, true);
       if (!d.abort) [0, 1, 2, 3].forEach((s, i) => sleep(i * 520).then(() => SND.voice(d.tenpai[(G.kyoku + s) % 4] ? 'tenpai' : 'noten')));   // (each player declares, from the dealer round)
@@ -1330,5 +1352,5 @@ I18N.set(I18N.lang);
 MJTiles.ready().then(() => { MJTiles.reset(); ART.clear(); renderHome(); });   // (the tile faces from the 上海 sheets, 2026-11-14)
 document.fonts && document.fonts.load('800 40px "Shippori Mincho B1"', '一萬東南西北發中雀華').then(() => { MJTiles.reset(); ART.clear(); renderHome(); });
 renderHome(); homeEnter();
-window.JANKA = { get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, DB, startGame, quitGame, cutin, showMoves, showFinal };
+window.JANKA = { get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, SND, DB, startGame, quitGame, cutin, showMoves, showFinal };
 })();
