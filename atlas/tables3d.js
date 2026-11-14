@@ -290,7 +290,7 @@
   const PIECES = {
     // checkers (atlas/models/checkers.js SETS, 2026-11-14): 'atlas-checkers-pc3'
     checkers: { list: ['stone', 'rbmarble', 'rmarble', 'metal', 'ebony', 'urushi'], get: () => { const v = ls.get('atlas-checkers-pc3'); return PIECES.checkers.list.includes(v) ? v : 'stone'; }, set: k => ls.set('atlas-checkers-pc3', k),
-      thumb: k => new URL('img/pc3-checkers-' + k + '.webp?v=3', ME).href,
+      thumb: k => new URL('img/pc3-checkers-' + k + '.webp?v=4', ME).href,
       names: {
         metal: { ja: '金と銀', en: 'Gold & silver', zh: '金与银', 'zh-TW': '金與銀', ko: '금과 은', es: 'Oro y plata', fr: 'Or et argent', pt: 'Ouro e prata', de: 'Gold & Silber', ru: 'Золото и серебро', tr: 'Altın ve gümüş', id: 'Emas & perak', hi: 'सोना और चाँदी', ar: 'ذهب وفضة' },
         ebony: { ja: '黒檀と象牙', en: 'Ebony & ivory', zh: '乌木与象牙', 'zh-TW': '烏木與象牙', ko: '흑단과 상아', es: 'Ébano y marfil', fr: 'Ébène et ivoire', pt: 'Ébano e marfim', de: 'Ebenholz & Elfenbein', ru: 'Эбен и кость', tr: 'Abanoz ve fildişi', id: 'Eboni & gading', hi: 'आबनूस और हाथीदाँत', ar: 'أبنوس وعاج' },
