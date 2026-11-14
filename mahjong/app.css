@@ -127,7 +127,7 @@ svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.9;stroke
 /* collection */
 .cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
 .cc{border-radius:16px;overflow:hidden;background:var(--panel);border:1px solid var(--line);display:flex;flex-direction:column}
-.cc.lock .cci img{filter:brightness(0) opacity(.5)}
+.cc.lock .cci img{filter:brightness(0)}
 .cci{aspect-ratio:1/1;background:linear-gradient(160deg,var(--c),var(--c2))}
 .cci img{width:100%;height:100%;object-fit:cover;display:block}
 .ccb{padding:8px 10px 4px;display:flex;flex-direction:column;gap:3px}
@@ -541,7 +541,7 @@ button.pimg:hover img{filter:brightness(1.06)}
 .chi img{width:100%;aspect-ratio:1;border-radius:14px;object-fit:cover;border:2px solid rgba(255,255,255,.14);box-shadow:0 4px 12px rgba(0,0,0,.4);transition:transform .12s}
 .chi.on img{border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,206,140,.3),0 0 20px var(--c)}
 .chi:hover img{transform:translateY(-2px)}
-.chi.lock img{filter:brightness(.15) saturate(0)}
+.chi.lock img{filter:brightness(0)}
 .chi span{font-size:11.5px;font-weight:700;white-space:nowrap}
 .chi em{position:absolute;top:4px;left:4px;font-style:normal;font-family:'Cinzel',serif;font-size:9.5px;font-weight:800;background:rgba(10,6,22,.85);padding:1px 5px;border-radius:6px}
 .chi .pm{position:absolute;top:2px;right:6px;font-style:normal;color:#ffd24a;text-shadow:0 0 6px #000}
@@ -628,7 +628,7 @@ html.lp .ch-vars button{width:30px}
 #game .bf .frame > img{border-radius:10%}
 .chi .frame{width:100%;aspect-ratio:1;border-radius:14px}
 .chi .frame > img{border-radius:12px}
-.chi.lock .frame > img{filter:brightness(.15) saturate(0)}
+.chi.lock .frame > img{filter:brightness(0)}
 .chi.on .frame{outline:2px solid var(--gold);outline-offset:2px}
 .fi > .frame{width:54px;height:54px;border-radius:50%}
 .fi > .frame > img{border-radius:50%}
@@ -649,7 +649,7 @@ html.lp .ch-vars button{width:30px}
 .sib{width:44px;height:44px;padding:0;border:0;background:none;border-radius:10px}
 .sib .frame{width:100%;height:100%;border-radius:10px}
 .sib .frame > img{border-radius:8px}
-.sib.lock .frame > img{filter:brightness(.15) saturate(0)}
+.sib.lock .frame > img{filter:brightness(0)}
 .sib.on .frame{outline:2px solid var(--gold);outline-offset:2px}
 
 /* skill chips + skill rarity */
@@ -725,7 +725,7 @@ body:has(#game:not([hidden])) #bgfx{background:radial-gradient(ellipse at 50% 50
 .fr-lock .fx-sh,.lock .frame .fx-sh{display:none}
 .ch-art img.lock{filter:brightness(0)!important;opacity:1!important}
 .ch-art.fr-lock{background:radial-gradient(ellipse at 50% 40%,#3a2f5c,#151022)!important}
-.ch-art.fr-lock > img{opacity:.85!important}
+.ch-art.fr-lock > img{opacity:1!important}
 /* locked character: unlock prompt */
 .unlock{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:20px;
   background:radial-gradient(ellipse at 50% 45%,rgba(60,44,110,.55),rgba(10,6,22,.2) 70%)}
@@ -1291,7 +1291,7 @@ html.lp :is(#home,#chara).aaa .ab-tx small{display:none}
 #chara.ch2 .ch-hero.in .aa-ch{animation:chHeroIn .55s cubic-bezier(.2,.8,.2,1) both}
 @keyframes chHeroIn{from{opacity:0;transform:translateX(30px)}}
 #chara.ch2 .aa-ch{cursor:default}
-#chara.ch2 .aa-ch.lock img{filter:grayscale(1) brightness(.22) contrast(1.3) drop-shadow(0 0 3px rgba(232,206,140,.55));opacity:.95;animation:none}
+#chara.ch2 .aa-ch.lock img{filter:brightness(0) drop-shadow(0 0 3px rgba(232,206,140,.55));opacity:1;animation:none}
 #chara.ch2 .ch-hero .unlock{position:absolute;inset:auto;left:50%;bottom:20%;transform:translateX(-50%);z-index:3;display:flex;flex-direction:column;align-items:center;gap:8px;padding:22px 30px;border-radius:18px;background:rgba(10,6,22,.78);border:1px solid rgba(232,206,140,.45);text-align:center;white-space:nowrap}
 #chara.ch2 .ch-hero .unlock i{display:block;width:48px;height:48px;padding:11px;color:var(--gold)}
 #chara.ch2 .ch-hero .unlock b{font-family:var(--serif);font-size:24px;color:#f3dfb0}
@@ -1475,7 +1475,7 @@ html.lite .rkb.rk-t3::before,html.lite .rkb.rk-t3 b{animation:none}
 .rk-need{font-family:var(--serif);font-size:13px;color:var(--muted)}
 .rk-gift{display:flex;align-items:center;gap:8px;min-width:0}
 .rk-gift > :first-child{width:38px!important;height:38px!important;flex:none}
-.rk-gift:not(.got) > :first-child{filter:brightness(.25) saturate(0)}
+.fr-lock > img{filter:brightness(0)!important}
 .rk-gift em{font-style:normal;font-family:'Cinzel',serif;font-size:11px;font-weight:800}
 .rk-gift b{font-family:var(--serif);font-size:14px;color:#fff3d6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rk-gift:not(.got) b{color:var(--muted)}
@@ -1617,3 +1617,15 @@ body:has(#game:not([hidden])) #bgfx::after{display:none}
 :is(#home,#chara).aaa .ap-rank{height:42px;box-sizing:border-box;padding:0 12px}
 :is(#home,#chara).aaa .ap-rank .rkb{font-size:13px}
 :is(#home,#chara).aaa .ap-rank > span{flex-direction:row;align-items:baseline;gap:10px}
+/* the far player's badge lies in a row over the far rail, small (ユーザー 2026-11-15: standing at the end of the far hand row it
+   covered her melds — the corner where melds go) */
+#game #opp2{flex-direction:row;align-items:center;gap:8px;left:50%!important;right:auto!important;transform:translateX(-50%)!important;top:4px!important;--bf:calc(var(--bf0, 66px) * .62)}
+html.ds #game #opp2{--bf:clamp(44px, calc(var(--GH) * .062), 58px)}
+#game #opp2 .bf em{transform:scale(.8)}
+#game #opp2 .bt{align-items:flex-start}
+#game #opp2 .bk{margin-left:2px}
+
+/* (ユーザー 2026-11-15) the titles above 十段, not yet reached: a dark, sealed badge of ？？？ */
+.rkb.rk-x{--a:#4a3f66;--b:#17112a;--t:#b9a9e0;--g:radial-gradient(closest-side,rgba(120,90,200,.35),transparent)}
+.rk-row.rk-veil{background:linear-gradient(90deg,rgba(120,90,200,.16),rgba(120,90,200,.02));box-shadow:inset 0 0 0 1px rgba(150,120,230,.35)}
+.rk-vt{grid-column:2 / -1;font-family:var(--serif);font-size:15px;color:#cdbff2;letter-spacing:.12em}

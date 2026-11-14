@@ -362,7 +362,7 @@ function renderHome() {
     : `${t(DB.set.len === 'south' ? 'south' : 'east')} ・ ${t(DB.set.skills ? 'skillOn' : 'skillOff')} ・ BOT ${t('lv')[DB.set.lv]}`;
   $('#optSkill').hidden = $('#optLv').hidden = rankedMode; $('#optRank').hidden = !rankedMode;
   if (rankedMode) { const r = MJRank.at(DB.rank.pt), n = MJRank.next(DB.rank.pt);
-    $('#optRank').innerHTML = `${rankBadge(r)}<span><b>${DB.rank.pt} pt</b><small>${n ? esc(t('rkNext', { r: L(n.name), n: n.pt - DB.rank.pt })) : esc(t('rkTop'))}</small></span><button class="ap-rk-more" data-a="ranked">${esc(t('rkLadder'))} ›</button>`;
+    $('#optRank').innerHTML = `${rankBadge(r)}<span><b>${DB.rank.pt} pt</b><small>${n ? esc(t('rkNext', { r: rkName(n), n: n.pt - DB.rank.pt })) : esc(t('rkTop'))}</small></span><button class="ap-rk-more" data-a="ranked">${esc(t('rkLadder'))} ›</button>`;
     $('#optRank').onclick = e => { if (e.target.closest('[data-a=ranked]')) openRanked(); }; }
   const hs = $('#homeSk');
   if (hs) hs.onclick = e => { const b = e.target.closest('[data-k]'); if (!b) return; DB.chars[c.id].use = b.dataset.k; save(); SND.pick(); renderHome(); };
@@ -540,11 +540,15 @@ $('#chBack').addEventListener('click', () => { SND.pick(); closeChara(); });
 // ---------------------------------------------------------------- 段位戦 (ranked)
 // (ユーザー 2026-11-14) the ladder of 麻雀天聖's 段位戦: 見習い → 10級 … 1級 → 初段 … 十段 → titles growing grander up to 雀神.
 // Points only add up. Every second rank brings a reward character (the summer series). Skills on; the BOTs get stronger with the rank.
-function rankBadge(r, sz = '') { return `<span class="rkb rk-${r.tier} ${sz}"><i></i><b>${esc(L(r.name))}</b></span>`; }
+// (ユーザー 2026-11-15) the titles above 十段 stay unknown until reached: a badge of ？？？ (what lies up there…?)
+const RK_VEIL = 21;
+function rkSeen(r) { return r.i < RK_VEIL || r.i <= MJRank.at(DB.rank.pt).i; }
+function rkName(r) { return rkSeen(r) ? L(r.name) : '？？？'; }
+function rankBadge(r, sz = '') { return rkSeen(r) ? `<span class="rkb rk-${r.tier} ${sz}"><i></i><b>${esc(L(r.name))}</b></span>` : `<span class="rkb rk-x ${sz}"><i></i><b>？？？</b></span>`; }
 function rankBar(pt) {
   const r = MJRank.at(pt), n = MJRank.next(pt);
   const f = n ? (pt - r.pt) / (n.pt - r.pt) : 1;
-  return `<div class="rk-bar"><i style="--f:${f.toFixed(3)}"></i></div><small class="rk-nx">${n ? esc(t('rkNext', { r: L(n.name), n: n.pt - pt })) : esc(t('rkTop'))}</small>`;
+  return `<div class="rk-bar"><i style="--f:${f.toFixed(3)}"></i></div><small class="rk-nx">${n ? esc(t('rkNext', { r: rkName(n), n: n.pt - pt })) : esc(t('rkTop'))}</small>`;
 }
 function rankStrip(rk) {
   return `<div class="rk-strip ${rk.ups.length ? 'up' : ''}">${rankBadge(rk.r1)}<span class="rk-g">${esc(t('rkGain', { n: rk.gain }))}</span>
@@ -555,9 +559,11 @@ function openRanked() {
   const pt = DB.rank.pt, cur = MJRank.at(pt), nx = MJRank.next(pt);
   const nextGift = MJRank.list.find(x => x.reward && x.i > cur.i);
   const P = MJRank.POINTS, lvName = MJRank.botName(pt, t('lv'));
-  const rows = MJRank.list.slice().reverse().map(x => {
+  const veiled = MJRank.list.some(x => !rkSeen(x));
+  const rows = (veiled ? `<div class="rk-row rk-veil">${rankBadge(MJRank.list[MJRank.list.length - 1], 'sm')}<span class="rk-vt">${esc(t('rkVeil'))}</span></div>` : '') +
+    MJRank.list.filter(rkSeen).reverse().map(x => {
     const g = x.reward ? MJChars.get(x.reward) : null, got = g && owns(g.id);
-    return `<div class="rk-row ${x.i === cur.i ? 'cur' : x.i < cur.i ? 'past' : ''}">${rankBadge(x, 'sm')}<span class="rk-need">${x.pt} pt</span>${g ? `<span class="rk-gift ${got ? 'got' : ''}">${frame(g, 'face')}<em class="r-${g.rarity}">${g.rarity}</em>${got ? `<b>${esc(L(g.name))}</b>` : `<b>？？？</b>`}</span>` : '<span class="rk-gift none"></span>'}</div>`;
+    return `<div class="rk-row ${x.i === cur.i ? 'cur' : x.i < cur.i ? 'past' : ''}">${rankBadge(x, 'sm')}<span class="rk-need">${x.pt} pt</span>${g ? `<span class="rk-gift ${got ? 'got' : ''}">${frame(g, 'face', got ? '' : 'fr-lock')}<em class="r-${g.rarity}">${g.rarity}</em>${got ? `<b>${esc(L(g.name))}</b>` : `<b>？？？</b>`}</span>` : '<span class="rk-gift none"></span>'}</div>`;
   }).join('');
   const b = modal(`
     <div class="rkd">
@@ -567,7 +573,7 @@ function openRanked() {
           <div class="rk-big">${rankBadge(cur, 'lg')}</div>
           <div class="rk-pts"><b>${pt}</b> pt <small>${esc(t('rkGames', { n: DB.rank.games }))}</small></div>
           ${rankBar(pt)}
-          ${nextGift ? `<div class="rk-ng"><span class="rk-gimg">${frame(MJChars.get(nextGift.reward), 'face')}</span><span><small>${esc(t('rkNextGift'))}</small><b>？？？</b><em>${esc(t('rkGiftAt', { r: L(nextGift.name), n: Math.max(0, nextGift.pt - pt) }))}</em></span></div>` : ''}
+          ${nextGift ? `<div class="rk-ng"><span class="rk-gimg rk-sil">${frame(MJChars.get(nextGift.reward), 'face', 'fr-lock')}</span><span><small>${esc(t('rkNextGift'))}</small><b>？？？</b><em>${esc(t('rkGiftAt', { r: rkName(nextGift), n: Math.max(0, nextGift.pt - pt) }))}</em></span></div>` : ''}
           <p class="rk-rule">${esc(t('rkRule', { lv: lvName }))}</p>
           <div class="rk-go">
             <button class="go rk-b" data-len="east"><b>${esc(t('east'))}</b><small>${[0, 1, 2].map(i => `${esc(t('rank')[i])} +${P.east[i]}`).join(' ・ ')}</small></button>
@@ -705,9 +711,10 @@ function renderChara() {
   if ($('#chArt').dataset.id !== c.id + (own ? '' : 'x')) {
     $('#chArt').dataset.id = c.id + (own ? '' : 'x');
     $('#chArt').innerHTML = `<i class="aa-aura"></i><div class="aa-ch ${own ? '' : 'lock'}"><img src="${full}" alt="" draggable="false"></div>` +
-      (own ? '' : c.reward != null ? `<div class="unlock"><i>${IC.lock}</i><b>${esc(t('lockedT'))}</b><span>${esc(t('rkLocked', { r: L(MJRank.list[c.reward].name) }))}</span><button class="go sm" data-a="rated">${esc(t('rated'))}</button></div>`
-        : `<div class="unlock"><i>${IC.lock}</i><b>${esc(t('lockedT'))}</b><span>${esc(t('lockedS', { r: c.rarity }))}</span><button class="go sm" data-a="gacha">${esc(t('toGacha'))}</button></div>`);
-    $('#chBlur').src = full;
+      (own ? '' : c.reward != null ? `<div class="unlock"><i>${IC.lock}</i><b>？？？</b><span>${esc(t('mystery'))}<br>${esc(t('rkLocked', { r: rkName(MJRank.list[c.reward]) }))}</span><button class="go sm" data-a="rated">${esc(t('rated'))}</button></div>`
+        : `<div class="unlock"><i>${IC.lock}</i><b>？？？</b><span>${esc(t('mystery'))}<br>${esc(t('lockedS', { r: c.rarity }))}</span><button class="go sm" data-a="gacha">${esc(t('toGacha'))}</button></div>`);
+    $('#chBlur').src = own ? full : '';   // (a locked character: nothing of her shows, not even blurred behind)
+    $('#chBlur').style.visibility = own ? '' : 'hidden';
     $('#chArt').classList.remove('in'); void $('#chArt').offsetWidth; $('#chArt').classList.add('in');
   }
   const sisters = MJChars.list.filter(x => x.family === c.family);
@@ -1165,7 +1172,7 @@ function myCall(o, res) {
   UIS.kind = 'call'; UIS.opts = o;
   clearActs();
   let done = false;
-  const finish = a => { if (done) return; done = true; clearActs(); UIS.kind = null; UIS.opts = null; res(a); };
+  const finish = a => { if (done) return; done = true; clearActs(); TB.markCall(null); UIS.kind = null; UIS.opts = null; res(a); };
   if (o.canRon) btn(t('ron'), 'win', () => finish({ act: 'ron' }), 'win');
   if (o.pons) btn(t('pon'), 'call', () => finish({ act: 'pon', use: o.pons[0] }), 'pon');
   if (o.minkan) btn(t('kan'), 'call', () => finish({ act: 'minkan' }), 'kan');
@@ -1179,7 +1186,7 @@ function myCall(o, res) {
   btn(t('skip'), 'skip', () => finish({ act: 'pass' }), 'skip');
   bindActKeys();
   placeActsAtPointer();
-  TB.highlightType(T(o.tile));
+  TB.markCall(o.tile);   // (ユーザー 2026-11-15: the tile on offer glows like a dora, in yellow — not every tile of its kind lit up)
 }
 
 // PC: call buttons sit just above the draw-tile slot at the right end of the hand (not in the rotated phone layout)
@@ -1208,6 +1215,12 @@ function placeActsAtPointer() {
 
 // while a call (chi/pon/kan/ron) is offered, clicking anywhere except the buttons skips it
 $('#game').addEventListener('click', e => {
+  // (ユーザー 2026-11-15) a click on the table on my turn discards the tile just drawn (ツモ切り), as a click there passes a call
+  if (UIS && UIS.kind === 'turn' && UIS.resolve && !e.target.closest('#hand, #acts, #chiPick, .tbtns, #skBtn, #dealAsk, .opp, #mePanel, #meBadge, .me, #khelp, #rbox, .modal')) {
+    const dr = document.querySelector('#hand .tl.drawn');
+    if (dr && !dr.classList.contains('no')) { SND.pick(); doDiscard(+dr.dataset.id); }
+    return;
+  }
   if (!UIS || UIS.kind !== 'call') return;
   if (e.target.closest('#acts, #chiPick, .tbtns, #skBtn, #dealAsk')) return;
   const s = $('#acts .skip'); if (s) s.click();
