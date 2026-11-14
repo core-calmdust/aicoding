@@ -773,6 +773,7 @@
     const $ = s => el.querySelector(s);
     function say(html) {   // typed speech; a tap on the bubble shows it all
       html = String(html).replace(/[ \u00a0]*\u0001/g, '').replace(/\u0002[ \u00a0]*/g, '');   // (ja mark phrases: SP)
+      if (id === 'backgammon' && ctx.lang === 'ja' && window.AtlasGuideJa) html = AtlasGuideJa(html, id);   // (ダイスン's own way of talking, atlas/lessons3d.js)
       if (id === 'checkers' && window.Table3D && Table3D.checkers && Table3D.checkers.recolor) html = Table3D.checkers.recolor(html, ctx.lang);   // (黒 / 白 → the chosen set's colours, 2026-11-14)
       const tx = $('.tx'); tx.innerHTML = html; clearInterval(typeT);
       const nodes = []; (function walk(n) { n.childNodes.forEach(c => { if (c.nodeType === 3) nodes.push([c, c.textContent]); else walk(c); }); })(tx);
