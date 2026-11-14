@@ -1552,3 +1552,14 @@ html:not(.lp) #opp2{left:71.5%}
 /* the bands above / below the table on a squarish window: plain dark, nothing of the home behind */
 body:has(#game:not([hidden])) #bgfx{background:#05040a}
 body:has(#game:not([hidden])) #bgfx::after{display:none}
+/* (2026-11-14, optimisation) the dora's effects in the hand row move by transform and opacity only — nothing is repainted per
+   frame: the edge light pulses instead of running round (a running conic gradient repainted the tile and its glow every frame),
+   and the band is an element that slides across instead of a background that moves */
+.tl.dora::before{animation:doraPulse 2.8s ease-in-out infinite;filter:none;box-shadow:0 0 calc(var(--tw)*.06) rgba(255,110,170,.45);will-change:opacity}
+@keyframes doraPulse{0%,100%{opacity:.75}50%{opacity:1}}
+.tl.dora .dg{background:rgba(255,110,170,.14);animation:none}
+.tl.dora .dg > b{position:absolute;inset:0;border-radius:inherit;overflow:hidden;pointer-events:none}
+.tl.dora .dg > b::before{content:"";position:absolute;inset:0;
+  background:linear-gradient(118deg,transparent 30%,rgba(255,160,205,.2) 42%,rgba(255,240,248,.75) 50%,rgba(255,160,205,.2) 58%,transparent 70%);
+  transform:translateX(-110%);animation:doraSlide 2.6s linear infinite;will-change:transform}
+@keyframes doraSlide{0%{transform:translateX(-110%)}50%,100%{transform:translateX(110%)}}
