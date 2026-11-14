@@ -989,10 +989,10 @@
     if ($('bvRules') && matchMedia('(max-width: 819px)').matches) { const rw = $('bvi').querySelector('.row'); if (rw) { $('bvRules').classList.add('ph'); rw.appendChild($('bvRules')); } }   // phones
     // the board card's choices as our own UI (no system pickers): the side as a two-button toggle,
     // the level as a button that opens a list sheet with each level's name, meter and who it suits
-    ['bvSide', 'bvSize', 'bvRtOpp', 'bvLsK'].forEach(sid => { if (!$(sid)) return;
+    ['bvSide', 'bvSize', 'bvRtOpp', 'bvLsK', 'bvShM', 'bvShD'].forEach(sid => { if (!$(sid)) return;   // (bvShM / bvShD: 上海's free モード and 難易度, data-pick="sheet")
       // many choices (ludo: rule × players): a picker button + a list sheet instead of a wrapping toggle — phones (2026-11-09),
       // and on every screen for a game with house rules (its own row under the level: the same pulldown as the level)
-      if (sid === 'bvSize' && $(sid).options.length > 3 && (ad.house || matchMedia('(max-width: 819px)').matches)) {
+      if ((sid === 'bvSize' && $(sid).options.length > 3 && (ad.house || ad.sizePick || matchMedia('(max-width: 819px)').matches)) || $(sid).dataset.pick === 'sheet') {   // (adapter.sizePick: the board as a pulldown on every screen — 上海)
         const sel = $(sid), bt = document.createElement('button'); bt.type = 'button'; bt.className = 'lvpick'; sel.hidden = true; sel.after(bt);
         const paint = () => { const o = sel.options[sel.selectedIndex]; bt.innerHTML = `<span>${esc(o ? o.textContent : '')}</span><i>▾</i>`; };
         sel.addEventListener('change', paint); paint();

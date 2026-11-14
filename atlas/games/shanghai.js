@@ -76,6 +76,8 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
 .shask b{display:block;font-size:22px;margin-bottom:8px}.shask p{margin:0 0 16px;font-size:17px;line-height:1.5}
 .shask .r{display:flex;gap:10px}.shask button{flex:1;font:inherit;font-weight:800;font-size:17px;padding:12px 8px;border-radius:14px;border:0;cursor:pointer;white-space:nowrap}
 .shask .y{background:#1f6a4c;color:#fff}.shask .n{background:#ece6d8;color:#3a3f4c}
+.bvi #bvOpts.shf > label:has(#bvSize){flex:1 1 100%!important}.bvi #bvOpts.shf .shfrow{display:contents}.bvi #bvOpts.shf .shfl{flex:1 1 0!important;min-width:0}
+.bvi #bvOpts.shf .pgbest .shbt{margin-inline-start:auto}.bvi #bvOpts.shf .pgbest .shbt + b{margin-inline-start:14px}
 .shstg{display:flex;flex-direction:column;gap:10px;align-items:stretch}
 .shstg .pg{font-size:16px;font-weight:700;color:var(--ink,#2a2f3a)}
 .shstg .nx{font-size:15px;opacity:.8}
@@ -224,6 +226,23 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     try { if (window.SFX && SFX.win) SFX.win(); } catch (e) {}
   }
 
+  /* ---------- free play: the mode and the difficulty (2026-11-14, ユーザー: フリーでもモードと難易度を選べるように) ----------
+     モード — the stage missions on any board: ノーマル (clear it) · タイムアタック (clear it within a time) · ペアアタック (take half
+     the pairs within a time) · 金の牌 (take the golden tiles).  難易度 — 初級: undo, hints and shuffles as you like, an easy deal
+     (the most pairs open of a few), roomy times · 中級: no shuffle · 上級: no shuffle, no undo, no hints, a hard deal (the fewest
+     pairs open), tight times.  Records: free[<layout>] for ノーマル·初級 (as before), else free['<layout>:<mode>:<diff>']. */
+  const FMODES = ['clear', 'time', 'pairs', 'gold'];
+  const freePick = () => { const st = load().settings || {}; return { mode: FMODES.includes(st.fm) ? st.fm : 'clear', diff: [1, 2, 3].includes(+st.fd) ? +st.fd : 1 }; };
+  const freeKey = (lay, m, d) => m === 'clear' && d === 1 ? lay : lay + ':' + m + ':' + d;
+  function freeMission(lay, n) {
+    const { mode, diff } = freePick(), pairs = n / 2, pace = [0, 7, 5, 3.6][diff];   // seconds a pair
+    const M = { type: mode, diff, key: freeKey(lay, mode, diff), noShuf: diff >= 2, noUndo: diff >= 3, noHint: diff >= 3 };
+    if (mode === 'time') M.limit = Math.max(30, Math.round(pairs * pace / 5) * 5);
+    if (mode === 'pairs') { M.goal = Math.max(4, Math.round(pairs * .5)); M.limit = Math.max(20, Math.round(M.goal * (pace + 1.5) / 5) * 5); }
+    if (mode === 'gold') M.gold = Math.min(pairs - 1, [0, 2, 4, 6][diff]) * 2;
+    return M;
+  }
+
   /* ---------- the game on the table ---------- */
   function start(ctx) {
     const T3 = ctx.Table3D, TH3 = window.THREE, M3 = T3.shanghai, lang = ctx.lang, tx = (k, v) => TX(k, lang, v), K = C();
@@ -233,9 +252,16 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     if (ctx.mode === 'stage') { const s = AD.pending != null ? AD.pending : AD.last != null ? AD.last : nextStage(prog()); AD.pending = null; AD.last = s; ST = K.stage(s); }
     const lay = ST ? ST.lay : K.FREE[(ctx.size || 1) - 1] || 'petit';
     const P = K.LAYOUTS[lay], n = P.length;
-    const dl = K.deal(P, ST ? ST.seed : 0), G = dl.G;
+    // (2026-11-14) free play: the card's モード and 難易度 — the stage missions on any board (FM: the free mission, null in a stage)
+    const FM = ST ? null : freeMission(lay, n);
+    const MS = ST || FM;   // the mission in force (a stage's, or the free game's)
+    let dl = K.deal(P, ST ? ST.seed : 0);
+    if (FM && FM.diff !== 2) {   // the deal itself by difficulty: 初級 the deal with the most pairs open at the start (of a few), 上級 the fewest
+      for (let k = 0; k < 5; k++) { const d2 = K.deal(P, 0), a = K.moves(d2.G, new Array(n).fill(1), d2.face).length, b = K.moves(dl.G, new Array(n).fill(1), dl.face).length; if (FM.diff === 1 ? a > b : a < b) dl = d2; }
+    }
+    const G = dl.G;
     let face = dl.face.slice(), alive = new Array(n).fill(1), plan = dl.order.map(p => p.slice());
-    const gold = new Set(ST && ST.type === 'gold' ? K.goldTiles(dl, ST.gold) : []);
+    const gold = new Set(MS && MS.type === 'gold' ? K.goldTiles(dl, MS.gold) : []);
     let sel = -1, busy = true, over = false, stopped = false, ply = 0, hist = [], hints = 0, shufs = 0, got = 0, goldGot = 0, hintPair = null;
     let t0 = 0, tEnd = 0, pen = 0, clockT = 0, toastEl = null, toastT = 0, askEl = null;
     const timers = [], later = (f, ms) => timers.push(setTimeout(() => { if (!stopped) f(); }, ms));
@@ -391,11 +417,11 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     function hud() {
       const nl = left(), tt = elapsed();
       let mid = '';   // (free play: no "pairs open" count — ユーザー 2026-11-14; the HUD is 残り · タイム)
-      if (ST) { mid = ST.type === 'pairs' ? tx('h.got', { a: got, b: ST.goal }) : ST.type === 'gold' ? tx('h.gold', { a: goldGot, b: ST.gold }) : missionText(ST, lang); }
-      const clk = ST && ST.limit ? `<span class="hs${ST.limit - tt <= 10 ? ' on' : ''}">${esc(tx('h.limit'))} <b>${mmss(ST.limit - tt)}</b></span>` : `<span class="hs">${esc(tx('h.time'))} <b>${mmss(tt)}</b></span>`;
+      if (MS && !(FM && FM.type === 'clear')) { mid = MS.type === 'pairs' ? tx('h.got', { a: got, b: MS.goal }) : MS.type === 'gold' ? tx('h.gold', { a: goldGot, b: MS.gold }) : missionText(MS, lang); }
+      const clk = MS && MS.limit ? `<span class="hs${MS.limit - tt <= 10 ? ' on' : ''}">${esc(tx('h.limit'))} <b>${mmss(Math.max(0, MS.limit - tt))}</b></span>` : `<span class="hs">${esc(tx('h.time'))} <b>${mmss(tt)}</b></span>`;
       ctx.hud(`<span class="hs on"><b>${nl}</b>${esc(tx('h.left'))}</span>${mid ? `<span class="hm">${esc(mid)}</span>` : ''}${clk}`);
     }
-    function clock() { clearInterval(clockT); clockT = setInterval(() => { if (stopped || over) { clearInterval(clockT); return; } hud(); if (ST && ST.limit && elapsed() >= ST.limit) fail('timeup'); }, 500); }
+    function clock() { clearInterval(clockT); clockT = setInterval(() => { if (stopped || over) { clearInterval(clockT); return; } hud(); if (MS && MS.limit && elapsed() >= MS.limit) fail('timeup'); }, 500); }
     function toast(msg, ms) {
       css(); if (toastEl) toastEl.remove(); clearTimeout(toastT);
       toastEl = document.createElement('div'); toastEl.className = 'shtoast'; toastEl.textContent = msg; document.body.appendChild(toastEl);
@@ -471,15 +497,16 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     function after() {
       busy = false; hud(); turn();
       if (!left()) { win(); return; }
-      if (ST && ST.type === 'pairs' && got >= ST.goal) { win(); return; }
-      if (ST && ST.type === 'gold' && goldGot >= ST.gold) { win(); return; }
+      if (MS && MS.type === 'pairs' && got >= MS.goal) { win(); return; }
+      if (MS && MS.type === 'gold' && goldGot >= MS.gold) { win(); return; }
       checkStuck();
     }
     function checkStuck() {
       if (over || K.moves(G, alive, face).length) return;
-      if (ST && (ST.type === 'pure' || shufs >= SHUF_MAX)) { later(() => fail('stuck'), 500); return; }
+      if (!canShuf()) { later(() => fail('stuck'), 500); return; }
       later(ask, 420);
     }
+    function canShuf() { return ST ? !(ST.type === 'pure' || shufs >= SHUF_MAX) : !FM.noShuf; }
     function ask() {
       css(); if (askEl) askEl.remove();
       const el = askEl = document.createElement('div'); el.className = 'shask';
@@ -491,7 +518,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     }
     function shuffle() {
       if (busy || over) return;
-      if (ST && (ST.type === 'pure' || shufs >= SHUF_MAX)) { toast(tx('msg.noshuf')); return; }
+      if (!canShuf()) { toast(tx(FM ? 'msg.noShufD' : 'msg.noshuf')); return; }
       const r = K.reshuffle(G, alive, face); if (!r) return;
       busy = true; shufs++; pen += SHUF_PEN; ply++; hist.push({ t: 's', face: face.slice() }); SFX.shuf(); toast(tx('msg.shufPen', { n: SHUF_PEN }), 2200); hud();
       if (sel >= 0) { st8[sel].lift = 0; sel = -1; } hintPair = null;
@@ -509,9 +536,10 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
       const idx = []; alive.forEach((v, i) => { if (v) idx.push(i); });
       if (idx.length) anim(700, k => { idx.forEach(i => { st8[i].lift = Math.sin(k * Math.PI) * .5; place(i); }); im.instanceMatrix.needsUpdate = true; });
       if (!ST) {
-        const F = d.free = d.free || {}, r = F[lay] || {}, nb = r.best === undefined || tt < r.best;
-        F[lay] = { best: nb ? tt : r.best, n: (r.n || 0) + 1, date: nb ? today() : r.date }; save(d);
-        later(() => ctx.onEnd({ win: true, draw: false, solo: true, level: 0, title: tx('r.clear'), score: tx('r.time', { t: mmss(tt) }), best: (nb ? '🏅 ' + tx('r.newBest') + ' · ' : '') + tx('r.best', { t: mmss(F[lay].best) }), opp: tx('lay.' + lay), key: lay, why: tx('r.clear') + ' · ' + mmss(tt) }), 800);
+        const F = d.free = d.free || {}, r = F[FM.key] || {}, nb = r.best === undefined || tt < r.best, tk = n - left();
+        F[FM.key] = { best: nb ? tt : r.best, tiles: Math.max(r.tiles || 0, tk), n: (r.n || 0) + 1, date: nb ? today() : r.date }; save(d);
+        const sub = tx('lay.' + lay) + ' · ' + tx('fm.' + FM.type) + ' · ' + tx('fd.' + FM.diff);
+        later(() => ctx.onEnd({ win: true, draw: false, solo: true, level: 0, title: tx('r.clear'), score: tx('r.time', { t: mmss(tt) }) + (FM.type === 'clear' ? '' : ' · ' + tx('f.tiles', { n: tk })), best: (nb ? '🏅 ' + tx('r.newBest') + ' · ' : '') + tx('r.best', { t: mmss(F[FM.key].best) }), opp: sub, key: FM.key, why: tx('r.clear') + ' · ' + mmss(tt) }), 800);
         return;
       }
       let stars = 1; if (tt <= parOf(ST)) { stars = 2; if (!hints && !shufs) stars = 3; }
@@ -531,8 +559,9 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     function fail(why) {
       if (over) return; over = true; tEnd = performance.now(); clearInterval(clockT); turn();
       if (askEl) { askEl.remove(); askEl = null; }
+      if (FM) { const d = load(), F = d.free = d.free || {}, r = F[FM.key] || {}, tk = n - left(); F[FM.key] = Object.assign({}, r, { tiles: Math.max(r.tiles || 0, tk), n: (r.n || 0) + 1 }); save(d); }   // (a free game that ended early still counts its tiles: the card's 最多 n枚)
       later(() => ctx.onEnd({ win: false, draw: false, solo: true, level: 0, title: tx('r.fail'), score: (why === 'timeup' ? tx('r.timeup') : tx('r.stuck')) + ' · ' + tx('r.left', { n: left() }),
-        best: ST ? stageName(ST.s, lang) + ' · ' + missionText(ST, lang) : '', opp: ST ? stageName(ST.s, lang) : tx('lay.' + lay), key: ST ? 'st' + ST.s : lay, why: tx('r.fail') }), 600);
+        best: ST ? stageName(ST.s, lang) + ' · ' + missionText(ST, lang) : tx('fm.' + FM.type) + ' · ' + tx('fd.' + FM.diff), opp: ST ? stageName(ST.s, lang) : tx('lay.' + lay), key: ST ? 'st' + ST.s : FM.key, why: tx('r.fail') }), 600);
     }
 
     /* ---------- set up ---------- */
@@ -541,18 +570,19 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
 
     const api = {
       human: 0, noResign: true,
-      canUndo: () => !busy && !over && !!hist.length,
+      canUndo: () => !busy && !over && !!hist.length && !(FM && FM.noUndo),
       undo() {
         if (!api.canUndo()) return; const h = hist.pop(); ply++; hintPair = null;
         if (sel >= 0) { st8[sel].lift = 0; sel = -1; }
         if (h.t === 'p') { alive[h.a] = alive[h.b] = 1; [h.a, h.b].forEach(i => { const S = st8[i]; S.fly = 0; S.lift = 0; S.dx = S.dz = 0; S.rz = 0; S.s = 1; }); got--; if (gold.has(h.a)) goldGot--; if (gold.has(h.b)) goldGot--; if (goldFx) goldFx.go(); }
         else { face = h.face; faces(); }
-        pen += UNDO_PEN; toast(tx(ST && ST.limit ? 'msg.undoPenL' : 'msg.undoPen', { n: UNDO_PEN }), 1400);
+        pen += UNDO_PEN; toast(tx(MS && MS.limit ? 'msg.undoPenL' : 'msg.undoPen', { n: UNDO_PEN }), 1400);
         plan = null; paintAll(); hud(); turn(); SFX.tap();
       },
-      canHint: () => !busy && !over && !(ST && ST.type === 'pure'),
+      canHint: () => !busy && !over && !(ST && ST.type === 'pure') && !(FM && FM.noHint),
       hint() {
         if (ST && ST.type === 'pure') { toast(tx('msg.pure')); return Promise.resolve(false); }
+        if (FM && FM.noHint) { toast(tx('msg.noHintD')); return Promise.resolve(false); }
         if (!api.canHint()) return Promise.resolve(false);
         const h = K.hint(G, alive, face, plan, 400);
         if (!h) { ask(); return Promise.resolve(true); }
@@ -587,9 +617,20 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
 
   /* ---------- the card: the free tab's best time, the stage tab's panel ---------- */
   function freeBind(host, lang) {
-    css(); const el = document.createElement('div'); el.className = 'pgbest'; host.appendChild(el);
-    const paint = () => { const z = document.getElementById('bvSize') ? +document.getElementById('bvSize').value : 1, lay = C().FREE[z - 1] || 'petit', r = (load().free || {})[lay];
-      el.innerHTML = `<span>${esc(TX('best', lang))}</span><b>${r ? mmss(r.best) : '—'}</b>${r && r.date ? `<small class="pgd">${esc(new Date(r.date + 'T12:00:00').toLocaleDateString(lang, { year: 'numeric', month: 'short', day: 'numeric' }))}</small>` : ''}`; };
+    css(); host.classList.add('shf');
+    const fp = freePick(), opt = (v, l, on) => `<option value="${v}"${on ? ' selected' : ''}>${esc(l)}</option>`;
+    const row = document.createElement('div'); row.className = 'shfrow';
+    row.innerHTML = `<label class="shfl">${esc(TX('f.mode', lang))}<select id="bvShM" data-pick="sheet">${FMODES.map(m => opt(m, TX('fm.' + m, lang), m === fp.mode)).join('')}</select></label>` +
+      `<label class="shfl">${esc(TX('f.diff', lang))}<select id="bvShD" data-pick="sheet">${[1, 2, 3].map(d => opt(d, TX('fd.' + d, lang), d === fp.diff)).join('')}</select></label>`;
+    host.appendChild(row);
+    const el = document.createElement('div'); el.className = 'pgbest'; host.appendChild(el);
+    const paint = () => {
+      const z = document.getElementById('bvSize') ? +document.getElementById('bvSize').value : 1, lay = C().FREE[z - 1] || 'petit', m = row.querySelector('#bvShM').value, dd = +row.querySelector('#bvShD').value;
+      const r = (load().free || {})[freeKey(lay, m, dd)];
+      el.innerHTML = `<span>${esc(TX('best', lang))}</span>` + (r ? `<b class="shbt">${r.tiles ? esc(TX('f.tiles', lang, { n: r.tiles })) : '—'}</b><b>${r.best !== undefined ? mmss(r.best) : '—'}</b>` : '<b>—</b>');
+    };
+    const saveSt = () => { const d = load(); d.settings = Object.assign({}, d.settings, { fm: row.querySelector('#bvShM').value, fd: +row.querySelector('#bvShD').value }); save(d); paint(); };
+    row.querySelector('#bvShM').addEventListener('change', saveSt); row.querySelector('#bvShD').addEventListener('change', saveSt);
     paint(); const s = document.getElementById('bvSize'); if (s) s.addEventListener('change', paint);
   }
   function stagePanel(lang) {
@@ -780,7 +821,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
   window.Atlas3D = window.Atlas3D || {};
   window.Atlas3D.shanghai = {
     levels: 0, solo: true, table: false, sizes: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], size0: 1,
-    sizeLabel: () => '',
+    sizeLabel: lang => TX('f.board', lang), sizePick: true,
     sizeName: (z, lang) => { const k = C() && C().FREE[z - 1]; return k ? TX('lay.' + k, lang) + ' · ' + TX('tiles', lang, { n: C().LAYOUTS[k].length }) : String(z); },
     stages: true, modeName: (m, lang) => TX(m === 'stage' ? 'm.stage' : 'm.free', lang),
     stagePanel, stageBind, freeBind, stageMap, pending: null, last: null, nextStage: () => nextStage(prog()),
