@@ -85,7 +85,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
 html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
 html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidden!important;pointer-events:none}
 #bvMBody:has(> #bvStg){position:relative}#bvMBody > #bvStg.shstg:not([hidden]){position:absolute;left:0;right:0;top:0;height:calc(100% + var(--shdh,86px));box-sizing:border-box;justify-content:stretch;gap:10px;margin:0!important}#bvStg.shstg:not([hidden]) > *{flex:1 1 0;min-height:0}#bvStg.shstg .strow > *{height:100%;box-sizing:border-box}
-#lessonOverlay #lessonList .lx-grid:not(.pzh-days) > .lx-card.shbd > .lx-th{background:radial-gradient(ellipse at 50% 40%,#3a7a60,#24503f)!important}.lx-card.shbd .lx-th svg{width:88%;height:84%}#lessonOverlay #lessonList .lx-grid:not(.pzh-days) > .lx-card.shcr > .lx-th{padding:0!important;overflow:hidden;background:#0d1236!important}.lx-card.shbd.sel{border-color:#ff5d5d;box-shadow:0 0 0 2px rgba(255,93,93,.25)}
+.lx-card.shbd .shrw{margin-inline-start:auto;display:inline-flex;gap:2px}.lx-card.shbd .shrw img{width:30px;height:30px;opacity:.6;filter:grayscale(.7)}.lx-card.shbd .shrw img.got{opacity:1;filter:none}#lessonOverlay #lessonList .lx-grid:not(.pzh-days) > .lx-card.shbd > .lx-th{background:radial-gradient(ellipse at 50% 40%,#3a7a60,#24503f)!important}.lx-card.shbd .lx-th svg{width:88%;height:84%}#lessonOverlay #lessonList .lx-grid:not(.pzh-days) > .lx-card.shcr > .lx-th{padding:0!important;overflow:hidden;background:#0d1236!important}.lx-card.shbd.sel{border-color:#ff5d5d;box-shadow:0 0 0 2px rgba(255,93,93,.25)}
 .shstg .pg{font-size:16px;font-weight:700;color:var(--ink,#2a2f3a)}
 .shstg .nx{font-size:15px;opacity:.8}
 .shstg .mapb{display:flex;align-items:center;justify-content:center;gap:10px;font:inherit;font-weight:800;font-size:18px;padding:14px;border-radius:16px;border:0;cursor:pointer;color:#fff;background:linear-gradient(135deg,#1b2350,#3a2a6e 60%,#5a3a8a);box-shadow:0 8px 20px -10px rgba(30,20,80,.8);white-space:nowrap}
@@ -299,10 +299,18 @@ html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidde
     at(s) { const t = GIFT_S.indexOf(s); return t > 0 ? t : 0; },
     // the next tier still to win by stages: { t, left } or null
     next() { const S = prog().st; for (let t = 1; t < 4; t++) if (!Reward.has(t) && !(S[GIFT_S[t]] > 0)) { let left = 0; for (let k = 0; k <= GIFT_S[t]; k++) if (!(S[k] > 0)) left++; return { t, left }; } return null; },
-    // (2026-11-14) チュンパイ: good results in free play — N any clear, R 中級+, SR 上級+ on a board of 100+ tiles, SSR 達人 on 亀
-    FREE_OK: [() => true, d => d >= 3, (d, n) => d >= 4 && n >= 100, (d, n, lay) => d >= 5 && lay === 'turtle'],
-    free(diff, n, lay, lang, wait) { let got = -1; for (let t = 0; t < 4; t++) if (Reward.FREE_OK[t](diff, n, lay) && Reward.grant(t, lang, wait, 'chun')) got = t; return got; },
-    freeNext() { for (let t = 0; t < 4; t++) if (!Reward.has(t, 'chun')) return t; return -1; },
+    // (2026-11-14) free play: every board has its own reward(s) with a rule — d: this difficulty or harder (1 入門 … 5 達人), t: within t seconds.
+    // The three dragon tiles: ハクパイ (haku) on the small boards, ハツパイ (hatsu) on the middle ones, チュンパイ (chun) on the big ones.
+    BOARD: {
+      petit: [['haku', 0, {}], ['haku', 3, { d: 5, t: 50 }]], twin: [['haku', 1, { d: 3 }]], pyramid: [['haku', 2, { t: 100 }]],
+      tower: [['hatsu', 0, { d: 3 }]], cross: [['hatsu', 1, { t: 180 }]], bridge: [['hatsu', 2, { d: 4 }]],
+      fortress: [['chun', 0, {}], ['chun', 1, { d: 4 }]], butterfly: [['chun', 2, { d: 4, t: 420 }]], dragon: [['hatsu', 3, { d: 5 }]], turtle: [['chun', 3, { d: 5 }]],
+    },
+    ok(r, diff, tt) { return (!r.d || diff >= r.d) && (!r.t || tt <= r.t); },
+    free(lay, diff, tt, lang, wait) { let k = 0; (Reward.BOARD[lay] || []).forEach(([sp, t, r]) => { if (Reward.ok(r, diff, tt) && Reward.grant(t, lang, wait + k * 1700, sp)) k++; }); return k; },
+    freeNext(lay) { return (Reward.BOARD[lay] || []).find(([sp, t]) => !Reward.has(t, sp)) || null; },
+    // the rule as words: クリア / 中級以上でクリア / 1:40以内にクリア / 上級以上で7:00以内にクリア
+    rule(r, lang) { const d = r.d ? TX('fd.' + r.d, lang) : '', t = r.t ? mmss(r.t) : ''; const x = r.d === 5 ? 'x' : ''; return TX(r.d && r.t ? 'rw.dt' + x : r.d ? 'rw.d' + x : r.t ? 'rw.t' : 'rw.c', lang, { d, t }); },
   };
   window.ShanghaiReward = Reward;
   function giftToast(t, lang, sp = 'peacock') {
@@ -658,7 +666,7 @@ html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidde
       if (!ST) {
         const F = d.free = d.free || {}, r = F[FM.key] || {}, nb = r.best === undefined || tt < r.best, tk = n - left();
         F[FM.key] = { best: nb ? tt : r.best, tiles: Math.max(r.tiles || 0, tk), n: (r.n || 0) + 1, date: nb ? today() : r.date }; save(d);
-        Reward.free(FM.diff, n, lay, lang, 1900);
+        Reward.free(lay, FM.diff, tt, lang, 1900);
         const sub = tx('lay.' + lay) + ' · ' + tx('fm.' + FM.type) + ' · ' + tx('fd.' + FM.diff);
         later(() => ctx.onEnd({ win: true, draw: false, solo: true, level: 0, title: tx('r.clear'), score: tx('r.time', { t: mmss(tt) }) + (FM.type === 'clear' ? '' : ' · ' + tx('f.tiles', { n: tk })), best: (nb ? '🏅 ' + tx('r.newBest') + ' · ' : '') + tx('r.best', { t: mmss(F[FM.key].best) }), opp: sub, key: FM.key, why: tx('r.clear') + ' · ' + mmss(tt) }), 350);
         return;
@@ -749,9 +757,9 @@ html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidde
     const paint = () => {
       const z = document.getElementById('bvSize') ? +document.getElementById('bvSize').value : 1, lay = C().FREE[z - 1] || 'petit', m = row.querySelector('#bvShM').value, dd = +row.querySelector('#bvShD').value;
       const r = (load().free || {})[freeKey(lay, m, dd)];
-      const ft = Reward.freeNext();
+      const ft = Reward.freeNext(lay);
       el.innerHTML = `<span>${esc(TX('best', lang))}</span>` + (r ? `<b class="shbt">${r.tiles ? esc(TX('f.tiles', lang, { n: r.tiles })) : '—'}</b><b>${r.best !== undefined ? mmss(r.best) : '—'}</b>` : '<b class="shbt">—</b>') +
-        (ft >= 0 ? `<i class="shfw"><img src="../images/atlas/av/chun-${ft}.webp" alt="">${esc(TX('fw.' + ft, lang))}</i>` : '');
+        (ft ? `<i class="shfw"><img src="../images/atlas/av/${ft[0]}-${ft[1]}.webp" alt="">${esc(TX('fw.line', lang, { c: Reward.rule(ft[2], lang), n: TX('sp.' + ft[0], lang), r: ['N', 'R', 'SR', 'SSR'][ft[1]] }))}</i>` : '');
     };
     const saveSt = () => { const d = load(); d.settings = Object.assign({}, d.settings, { fm: row.querySelector('#bvShM').value, fd5: +row.querySelector('#bvShD').value }); save(d); paint(); };
     row.querySelector('#bvShM').addEventListener('change', saveSt); row.querySelector('#bvShD').addEventListener('change', saveSt);
@@ -822,7 +830,7 @@ html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidde
     const S0 = AtlasUI.bookSheet(TX('f.board', lang)), K = C(), fp = freePick(), F = load().free || {};
     const played = K.FREE.filter(k => Object.keys(F).some(x => x === k || x.indexOf(k + ':') === 0)).length;
     const card = (k, z) => { const lv = Math.min(5, Math.ceil(z / 2)), r = F[freeKey(k, fp.mode, fp.diff)], on = String(z) === sel.value;
-      return `<button type="button" class="lx-card shbd${on ? ' sel' : ''}${r ? ' done' : ''}" data-set="" data-z="${z}"><span class="lx-th">${layArt(k)}</span><span class="lx-tx"><span class="lx-top"><span class="lx-st${r ? ' ok' : ' new'}">${r ? '✓' : 'NEW'}</span></span><span class="lx-t">${esc(TX('lay.' + k, lang))}</span><span class="lx-desc">${'★'.repeat(lv)}${'☆'.repeat(5 - lv)} · ${esc(TX('tiles', lang, { n: K.LAYOUTS[k].length }))}</span><span class="pzh-row"><span class="pzh-st">${esc(TX('best', lang))} ${r && r.best != null ? mmss(r.best) : '—'}</span></span></span></button>`; };
+      return `<button type="button" class="lx-card shbd${on ? ' sel' : ''}${r ? ' done' : ''}" data-set="" data-z="${z}"><span class="lx-th">${layArt(k)}</span><span class="lx-tx"><span class="lx-top"><span class="lx-st${r ? ' ok' : ' new'}">${r ? '✓' : 'NEW'}</span></span><span class="lx-t">${esc(TX('lay.' + k, lang))}</span><span class="lx-desc">${'★'.repeat(lv)}${'☆'.repeat(5 - lv)} · ${esc(TX('tiles', lang, { n: K.LAYOUTS[k].length }))}</span><span class="pzh-row"><span class="pzh-st">${esc(TX('best', lang))} ${r && r.best != null ? mmss(r.best) : '—'}</span><span class="shrw">${(Reward.BOARD[k] || []).map(([sp, t, rr]) => `<img class="${Reward.has(t, sp) ? 'got' : ''}" src="../images/atlas/av/${sp}-${t}.webp" alt="" title="${esc(Reward.rule(rr, lang))}">`).join('')}</span></span></span></button>`; };   // (the board's Atlamo: dim until won)
     S0.body.className = 'lesson-list lx-on';
     S0.body.innerHTML = `<div class="pzh-box">${heroHtml(lang, TX('f.board', lang), played, K.FREE.length)}</div><div class="lx-grid">${K.FREE.map((k, i) => card(k, i + 1)).join('')}</div>`;
     S0.body.onclick = e => { const b = e.target.closest('[data-z]'); if (!b) return; sel.value = b.dataset.z; sel.dispatchEvent(new Event('change')); S0.close(); };
