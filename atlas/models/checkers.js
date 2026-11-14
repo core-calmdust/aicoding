@@ -1,20 +1,19 @@
 /* =====================================================================
    Checkers (English draughts) on the 3D table — six luxury boards and six sets of checkers (2026-11-14).
-   Boards (Table3D.BOARDS.checkers, 'atlas-checkers-look'):
-     lacquer  黒漆          grey-black burl and ivory squares, a thick rounded black lacquer frame (the first board)
+   Boards (Table3D.BOARDS.checkers, 'atlas-checkers-look'), in the menus' order; the first is the default:
      marble   赤と黒の大理石    Nero Marquina and Rosso Levanto squares, a double brass fillet, a chamfered Nero frame with a brass bead
-     raden    螺鈿            mother-of-pearl and tamenuri (red-brown) lacquer squares, gold fillets with gold flakes (nashiji) in the
-                             border, a rounded tamenuri frame with a gilt bead
-     leather  金箔押しの革     bottle-green and cream calf squares, a wide gold-leaf border tooled with a Greek key, gold fillets, a
-                             gilt-wood frame with a mahogany bead
+     lacquer  黒漆          grey-black burl and ivory squares, a thick rounded black lacquer frame (the first board)
      deco     アールデコ       Macassar ebony and sycamore, gold chevrons and stepped corners in the border, a stepped black
                              lacquer frame with a gilt edge
      lapis    ラピスラズリ      lapis lazuli and white onyx squares (a mirror gloss), gold fillets and rosettes, a gilt-bronze frame
-   (2026-11-14 second round: 寄木細工 dropped, 大理石と真鍮 became red and black, 螺鈿 added.)
-   Pieces (Table3D.PIECES.checkers, 'atlas-checkers-pc3'); g = Black's side (moves first), w = White's side:
-     metal (gold / silver, turned with ring grooves) · ebony (ebony / ivory with an inlaid ring) · stone (black / white
-     marble discs) · pearl (black / white pearl, iridescent domes) · urushi (black / vermilion lacquer with a gold band) ·
-     rmarble (red / white marble discs). Kings: two stacked with a little crown.
+     leather  金箔押しの革     bottle-green and cream calf squares, a wide gold-leaf border tooled with a Greek key, gold fillets, a
+                             gilt-wood frame with a mahogany bead
+     boulle   ブール象嵌       Boulle marquetry (Louis XIV): red tortoiseshell squares and engraved brass squares (metal), brass
+                             scrolls on ebony in the border, a tortoiseshell frame with a gilt bead and gilt-bronze corner mounts
+   Pieces (Table3D.PIECES.checkers, 'atlas-checkers-pc3'), in order, the first the default; g = Black's side (moves first):
+     stone (black / white marble) · rbmarble (black / red marble) · rmarble (red / white marble) · metal (gold / silver,
+     turned with ring grooves) · ebony (ebony / ivory with an inlaid ring) · urushi (black / vermilion lacquer, a gold band).
+     Kings: two stacked with a little crown.
    The glossy fields mirror the pieces (stencil reflections, PC only).
    Registers into Table3D:
      Table3D.MODELS.checkers(live, look)   board (+ a mid-game position unless live)
@@ -36,16 +35,15 @@
   function phys(o) {   // lite: the standard shader (no clearcoat)
     const TT = T(), p = Object.assign({}, o);
     if (p.color !== undefined) p.color = lin(p.color);
-    if (X.lite) { delete p.clearcoat; delete p.clearcoatRoughness; delete p.iridescence; delete p.iridescenceIOR; delete p.iridescenceThicknessRange; return new TT.MeshStandardMaterial(p); }
-    if (p.iridescence !== undefined && !('iridescence' in TT.MeshPhysicalMaterial.prototype || new TT.MeshPhysicalMaterial().iridescence !== undefined)) { delete p.iridescence; delete p.iridescenceIOR; delete p.iridescenceThicknessRange; }   // (three r128 tools: no iridescence)
+    if (X.lite) { delete p.clearcoat; delete p.clearcoatRoughness; return new TT.MeshStandardMaterial(p); }
     return new TT[p.clearcoat !== undefined ? 'MeshPhysicalMaterial' : 'MeshStandardMaterial'](p);
   }
   const mats = {}, mat = (k, f) => mats[k] || (mats[k] = f());
   const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } } };
-  const LOOKS = ['lacquer', 'marble', 'raden', 'leather', 'deco', 'lapis'];
-  const SETS = ['metal', 'ebony', 'stone', 'pearl', 'urushi', 'rmarble'];
-  const lookOf = k => LOOKS.includes(k) ? k : (X.BOARDS && X.BOARDS.checkers ? X.BOARDS.checkers.get() : (LOOKS.includes(ls.get('atlas-checkers-look')) ? ls.get('atlas-checkers-look') : 'lacquer'));
-  const pcSet = () => { const v = ls.get('atlas-checkers-pc3'); return SETS.includes(v) ? v : 'metal'; };
+  const LOOKS = ['marble', 'lacquer', 'deco', 'lapis', 'leather', 'boulle'];
+  const SETS = ['stone', 'rbmarble', 'rmarble', 'metal', 'ebony', 'urushi'];
+  const lookOf = k => LOOKS.includes(k) ? k : (X.BOARDS && X.BOARDS.checkers ? X.BOARDS.checkers.get() : (LOOKS.includes(ls.get('atlas-checkers-look')) ? ls.get('atlas-checkers-look') : 'marble'));
+  const pcSet = () => { const v = ls.get('atlas-checkers-pc3'); return SETS.includes(v) ? v : 'stone'; };
 
   /* ---------- textures: the pixel loops (self-contained: on the portal they run in a worker, atlas/texgen.js) ---------- */
   const raw = {};
@@ -122,22 +120,23 @@
           return c;
         });
       },
-      // mother-of-pearl (raden): pale shell with drifting pastel colours (pink / green / blue), fine growth lines and the cracks
-      // between the inlaid pieces
-      nacre(d, W, H, p) {
-        const N = makeNoise(p.seed || 71), TAU = Math.PI * 2;
+      // red tortoiseshell (Boulle): warm amber-red with dark mottled blotches and soft translucent depth
+      tort(d, W, H, p) {
+        const N = makeNoise(p.seed || 71), A = hexRGB('#8a2a10'), B = hexRGB('#240703'), C = hexRGB('#b85424');
         pix(d, W, H, (x, y) => {
-          const w = N(x * 3 + 1, y * 3, 4), band = Math.sin((x * 16 + y * 7 + w * 7) * TAU) * .5 + .5, hue = N(x * 4 + 2, y * 4 + 5, 3) * 2.4 + band * .5;
-          const k = 26 + band * 16, c = [218 + k * Math.sin(hue * TAU), 222 + k * Math.sin(hue * TAU + 2.1), 224 + k * Math.sin(hue * TAU + 4.2)];
-          const g = (N(x * 60, y * 9 + w * 3, 2) - .5) * 16 + band * 8;
-          const cr = Math.abs(N(x * 5 + 9, y * 5 + 3, 3) - .5) < .008 ? -55 : 0;
-          return [c[0] + g + cr, c[1] + g + cr, c[2] + g + cr];
+          const q = N(x * 3 + 1, y * 3 + 7, 4), b = N(x * 6 + q * 2.5, y * 6 - q * 2.5, 4), dark = cl((b - .36) * 2.6);
+          let c = mix(A, B, dark); c = mix(c, C, cl((N(x * 9 + 3, y * 9, 3) - .62) * 3) * .5);
+          const f = (N(x * 70, y * 70, 2) - .5) * 12; return [c[0] + f, c[1] + f * .7, c[2] + f * .5];
         });
       },
-      // tamenuri: a deep red-brown lacquer with a soft cloud
-      tame(d, W, H, p) {
-        const N = makeNoise(p.seed || 83), A = hexRGB('#5a1c10'), B = hexRGB('#250805');
-        pix(d, W, H, (x, y) => { const t = cl(.45 + (N(x * 2.5, y * 2.5, 4) - .5) * 1.1 + (N(x * 30, y * 30, 2) - .5) * .12); return mix(A, B, t); });
+      // engraved brass: a brushed pale gold with fine engraved scroll lines
+      brass(d, W, H, p) {
+        const N = makeNoise(p.seed || 83), A = hexRGB('#f6dc94'), B = hexRGB('#d0a650');
+        pix(d, W, H, (x, y) => {
+          let c = mix(A, B, cl(.4 + (N(x * 2, y * 2, 3) - .5) * .8 + (N(x * 400, y * 3, 1) - .5) * .25));
+          const e = Math.abs(Math.sin((x * 9 + Math.sin(y * 18 + N(x * 3, y * 3, 2) * 4) * .6) * Math.PI)); if (e < .05) c = mix(c, hexRGB('#6a4a18'), .55);
+          return c;
+        });
       },
       // white onyx: a warm translucent white with soft curved bands
       onyx(d, W, H, p) {
@@ -168,12 +167,12 @@
     nero: ['marble', { base: '#141416', vein: '#e6e2da', vein2: '#77736c', cloud: '#232326', seed: 7, s: 1.7, vw: .035, amt: .75, grain: 6 }],
     cala: ['marble', { base: '#f1eee8', vein: '#8d877e', vein2: '#bdb6aa', cloud: '#e6e2da', seed: 11, s: 1.4, vw: .028, amt: .62, grain: 5 }],
     rosso: ['marble', { base: '#8a1d17', vein: '#f0e2da', vein2: '#c4675a', cloud: '#5e100c', seed: 13, s: 1.6, vw: .03, amt: .7, grain: 7 }],
-    nacre: ['nacre', { seed: 71 }],
+    tort: ['tort', { seed: 71 }],
+    brass: ['brass', { seed: 83 }],
     // the marble discs' caps: bolder veins (a piece shows only a little of the sheet)
     neroC: ['marble', { base: '#151517', vein: '#ece8e0', vein2: '#8a857c', cloud: '#26262a', seed: 17, s: .9, vw: .07, amt: .95, grain: 6 }],
     calaC: ['marble', { base: '#f3f0ea', vein: '#7d766c', vein2: '#a99f92', cloud: '#e4dfd6', seed: 19, s: .9, vw: .06, amt: .9, grain: 5 }],
     rossoC: ['marble', { base: '#9a2219', vein: '#f6e8e0', vein2: '#d07a6a', cloud: '#6a120c', seed: 23, s: .9, vw: .07, amt: .95, grain: 7 }],
-    tame: ['tame', { seed: 83 }],
     mahog: ['wood', { a: '#8e3a22', b: '#4a160c', seed: 19, rings: 22, ringAmt: .35, warp: 1.8, dir: 1, curl: .08, curlF: 30 }],
     green: ['leather', { a: '#1f4a35', b: '#0d2a1d', seed: 17 }],
     cream: ['leather', { a: '#efe3c6', b: '#cbb48a', seed: 23 }],
@@ -187,9 +186,9 @@
   const LK = {
     lacquer: { dark: 'burl', light: 'ivory', band: 'burl', rot: true, joint: 'rgba(20,20,22,.35)', inlay: 'rgba(232,226,210,.55)', vig: .25, top: { roughness: .14, clearcoat: 1, clearcoatRoughness: .03 }, frame: 'lacquer' },
     marble: { dark: 'nero', light: 'rosso', band: 'nero', rot: true, joint: 'rgba(30,20,18,.45)', fillet: BRASS, deco: 'double', vig: .12, top: { roughness: .08, clearcoat: 1, clearcoatRoughness: .03 }, frame: 'marble' },
-    raden: { dark: 'tame', light: 'nacre', band: 'tame', rot: true, joint: 'rgba(40,10,6,.5)', fillet: GOLD, deco: 'nashiji', vig: .14, top: { roughness: .08, clearcoat: 1, clearcoatRoughness: .02 }, frame: 'tame' },
     leather: { dark: 'green', light: 'cream', band: 'green', joint: 'rgba(10,30,20,.55)', fillet: GOLD, deco: 'gilt', vig: .14, top: { roughness: .5, clearcoat: .3, clearcoatRoughness: .4 }, frame: 'gilt' },
     deco: { dark: 'macas', light: 'syca', band: 'macas', grainTurn: true, joint: 'rgba(20,12,6,.5)', fillet: GOLD, deco: 'chevron', vig: .14, top: { roughness: .22, clearcoat: 1, clearcoatRoughness: .06 }, frame: 'step' },
+    boulle: { dark: 'tort', light: 'brass', band: 'tort', rot: true, joint: 'rgba(40,14,4,.5)', fillet: BRASS, deco: 'boulle', metalLight: true, vig: .14, top: { roughness: .12, clearcoat: 1, clearcoatRoughness: .03 }, frame: 'tort' },
     lapis: { dark: 'lapis', light: 'onyx', band: 'lapis', rot: true, joint: 'rgba(12,20,60,.45)', fillet: GOLD, deco: 'rosette', vig: .1, top: { roughness: .03, clearcoat: 1, clearcoatRoughness: .008, envMapIntensity: 2.2 }, frame: 'ormolu' },
   };
   function goldGrad(c, x0, y0, x1, y1, G) { const g = c.createLinearGradient(x0, y0, x1, y1); g.addColorStop(0, G[0]); g.addColorStop(.45, G[1]); g.addColorStop(.55, G[0]); g.addColorStop(1, G[2]); return g; }
@@ -198,15 +197,20 @@
     const o = MG * k, F = 8 * k, G = L.fillet || GOLD, line = (pad, w) => { c.lineWidth = w; c.strokeRect(o - pad, o - pad, F + 2 * pad, F + 2 * pad); };
     c.save();
     if (L.deco === 'double') { c.strokeStyle = goldGrad(c, 0, 0, Wd, Wd, G); line(k * .07, k * .035); line(k * .27, k * .02); }
-    if (L.deco === 'nashiji') {   // gold fillets and gold flakes (nashiji) scattered in the border
-      c.strokeStyle = goldGrad(c, 0, 0, Wd, Wd, G); line(k * .05, k * .03); line(k * .31, k * .03);
-      const R0 = makeNoise(91), a0 = o - k * .28, a1 = o - k * .08;
-      for (let i = 0; i < 1400; i++) {
-        const u = R0(i * .37, 1.3, 1), v = R0(2.1, i * .41, 1), side = i % 4, along = a0 + u * (Wd - 2 * a0), across = a0 + v * (a1 - a0);
-        const [x, y] = side === 0 ? [along, across] : side === 1 ? [along, Wd - across] : side === 2 ? [across, along] : [Wd - across, along];
-        const r = k * (.004 + R0(i * .9, 7.7, 1) * .01); c.fillStyle = `rgba(${230 + R0(i, 3, 1) * 25 | 0},${180 + R0(i, 5, 1) * 40 | 0},${80 + R0(i, 9, 1) * 40 | 0},${.55 + R0(i, 11, 1) * .45})`;
-        c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fill();
-      }
+    if (L.deco === 'boulle') {   // an ebony band with brass fillets and running brass scrolls (rinceaux), a brass rosette at each corner
+      const a = o - k * .32, b = o - k * .05, G2 = goldGrad(c, 0, 0, Wd, Wd, G);
+      c.fillStyle = '#140a06'; c.beginPath(); c.rect(a, a, Wd - 2 * a, Wd - 2 * a); c.rect(b, Wd - b, Wd - 2 * b, -(Wd - 2 * b)); c.fill('evenodd');
+      c.strokeStyle = G2; c.lineWidth = k * .018; c.strokeRect(a, a, Wd - 2 * a, Wd - 2 * a); c.strokeRect(b, b, Wd - 2 * b, Wd - 2 * b);
+      const h = b - a, mid = a + h / 2, st = h * 1.35, r = h * .3;
+      c.lineWidth = k * .012; c.lineCap = 'round';
+      for (let s = 0; s < 4; s++) { c.save(); c.translate(Wd / 2, Wd / 2); c.rotate(s * Math.PI / 2); c.translate(-Wd / 2, -Wd / 2);
+        let up = 1; for (let x = a + h * 1.2; x < Wd - a - h * 1.6; x += st, up = -up) {   // a wave with a curl in each loop
+          c.beginPath(); c.moveTo(x, mid); c.bezierCurveTo(x + st * .3, mid - up * r * 1.3, x + st * .7, mid - up * r * 1.3, x + st, mid); c.stroke();
+          c.beginPath(); c.arc(x + st * .5, mid - up * r * .35, r * .45, 0, Math.PI * 1.6 * up, up < 0); c.stroke();
+          c.fillStyle = G2; c.beginPath(); c.arc(x + st * .5, mid - up * r * .35, r * .14, 0, Math.PI * 2); c.fill(); }
+        c.restore(); }
+      [[a, a], [Wd - b, a], [a, Wd - b], [Wd - b, Wd - b]].forEach(([x, y]) => { c.save(); c.translate(x + h / 2, y + h / 2); c.fillStyle = G2;
+        for (let i = 0; i < 8; i++) { c.rotate(Math.PI / 4); c.beginPath(); c.ellipse(h * .2, 0, h * .18, h * .07, 0, 0, Math.PI * 2); c.fill(); } c.restore(); });
     }
     if (L.deco === 'gilt') {   // a gold-leaf border (the leather shows only in the tooled Greek key), double gold fillets, gold corner squares
       const a = o - k * .34, b = o - k * .035, gl = goldGrad(c, 0, 0, Wd, Wd, ['#fff1b8', '#e2b240', '#9a6a18']);
@@ -305,7 +309,7 @@
   const FRAMES = {
     lacquer: () => ({ prof: 'round', m: mat('core', () => phys({ color: 0x0e0e10, roughness: .2, clearcoat: 1, clearcoatRoughness: .05, envMapIntensity: 1.3 })) }),
     marble: () => ({ prof: 'chamfer', m: sheetMat('frNero', 'nero', { roughness: .12, clearcoat: 1, clearcoatRoughness: .04 }), core: 0x121214, bead: metalMat('brass', 0xd8b064, .22) }),
-    tame: () => ({ prof: 'round', m: mat('tameFr', () => phys({ color: 0x3a110a, roughness: .16, clearcoat: 1, clearcoatRoughness: .03, envMapIntensity: 1.4 })), core: 0x2a0b06, bead: metalMat('gold', 0xe6bd62, .2) }),
+    tort: () => ({ prof: 'cushion', m: sheetMat('frTort', 'tort', { roughness: .14, clearcoat: 1, clearcoatRoughness: .03 }), core: 0x2a0905, bead: metalMat('gold', 0xe6bd62, .2), corners: metalMat('ormolu', 0xd9ae55, .3) }),
     gilt: () => ({ prof: 'ogee', m: metalMat('giltwood', 0xe2b456, .26), core: 0x2a0d06, bead: sheetMat('frMahog', 'mahog', { roughness: .2, clearcoat: 1, clearcoatRoughness: .05 }) }),   // a gilt-wood frame with a mahogany bead
     step: () => ({ prof: 'step', m: mat('core', () => phys({ color: 0x0e0e10, roughness: .2, clearcoat: 1, clearcoatRoughness: .05, envMapIntensity: 1.3 })), bead: metalMat('gold', 0xe6bd62, .2) }),
     ormolu: () => ({ prof: 'cushion', m: metalMat('ormolu', 0xd9ae55, .3), core: 0x1a1406, bead: metalMat('gold', 0xe6bd62, .2) }),
@@ -314,6 +318,12 @@
     const look = lookOf(lk), L = LK[look], TT = T(), g = new TT.Group(), base = new TT.Group(); g.add(base);
     const ft = fieldTex(look); ft.anisotropy = 8;
     const top = mat('top-' + look, () => { const m = phys(Object.assign({ map: ft, color: 0xffffff, metalness: 0, envMapIntensity: 1.4 }, L.top));
+      if (L.metalLight) {   // the light squares are metal (Boulle's brass): a metalness / roughness map (B: metal, G: roughness)
+        const mc = document.createElement('canvas'); mc.width = mc.height = 256; const q = mc.getContext('2d'), k = 256 / IN, o = MG * k;
+        q.fillStyle = `rgb(0,${Math.round((L.top.roughness || .12) * 255)},0)`; q.fillRect(0, 0, 256, 256); q.fillStyle = 'rgb(0,60,150)';
+        for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) if ((r + f) % 2 === 0) q.fillRect(o + f * k, o + r * k, k, k);
+        const mt = new TT.CanvasTexture(mc); m.metalnessMap = m.roughnessMap = mt; m.metalness = 1; m.roughness = 1;
+      }
       Object.assign(m, { stencilWrite: true, stencilRef: 2, stencilFunc: TT.AlwaysStencilFunc, stencilZPass: TT.ReplaceStencilOp, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -6 }); return m; });   // (polygon offset: in front of the core's top)
     const F = FRAMES[L.frame]();
     // the core: a slab under the whole board
@@ -344,7 +354,6 @@
   function profile(kind, lo) {
     const base = [[0, 0], [R - .03, 0], [R - .008, .01], [R, .03], [R + .004, PH * .5], [R, PH - .03], [R - .01, PH - .008], [R - .035, PH]];
     if (kind === 'stone') return [[0, 0], [R - .025, 0], [R, .025], [R, PH - .045], [R - .045, PH], [0, PH]];
-    if (kind === 'pearl') return [[0, 0], [R - .05, 0], [R - .015, .015], [R, .05], [R - .004, PH - .055], [R - .03, PH - .02], [R * .8, PH + .004], [R * .55, PH + .022], [R * .28, PH + .032], [0, PH + .035]];
     if (kind === 'urushi') return [[0, 0], [R - .03, 0], [R - .004, .02], [R, .05], [R, PH - .05], [R - .03, PH - .012], [R * .72, PH + .006], [R * .35, PH + .016], [0, PH + .018]];
     if (kind === 'ebony') return base.concat([[R * .66, PH], [R * .62, PH - .016], [R * .5, PH - .016], [R * .46, PH - .004], [R * .2, PH + .002], [0, PH + .004]]);
     if (lo) return base.concat([[R * .55, PH - .035], [R * .25, PH - .03], [0, PH - .02]]);
@@ -358,7 +367,7 @@
     p.push([r - .015, y - .016], [r * .55, y - .012], [r * .35, y + .012], [r * .12, y + .02], [0, y + .021]);
     return p;
   }
-  const GEOK = { metal: 'metal', ebony: 'ebony', stone: 'stone', pearl: 'pearl', urushi: 'urushi', rmarble: 'stone' };
+  const GEOK = { metal: 'metal', ebony: 'ebony', stone: 'stone', urushi: 'urushi', rmarble: 'stone', rbmarble: 'stone' };
   function pieceGeo(set, lo) {
     const kind = GEOK[set] || 'metal', key = kind + (lo ? 'lo' : LO() ? 'mid' : 'hi'); if (geos[key]) return geos[key];
     const TT = T(), segs = lo ? 12 : LO() ? 20 : 24;
@@ -386,7 +395,7 @@
     metal: { g: () => phys({ color: 0xf0c25e, metalness: 1, roughness: .2, envMapIntensity: 1.4 }), w: () => phys({ color: 0xe6e8ec, metalness: 1, roughness: .16, envMapIntensity: 1.4 }), ref: [0xb88a3a, 0xa9adb3] },
     ebony: { g: () => phys({ color: 0x1c1512, roughness: .32, clearcoat: .7, clearcoatRoughness: .12 }), w: () => phys({ color: 0xeee2c6, roughness: .36, clearcoat: .5, clearcoatRoughness: .15 }), ref: [0x2a201a, 0xcfc2a4], inlay: true, crown: 0xd8b064 },
     stone: { g: () => phys({ color: 0x1b1b1d, roughness: .12, clearcoat: 1, clearcoatRoughness: .04 }), w: () => phys({ color: 0xece8e1, roughness: .12, clearcoat: 1, clearcoatRoughness: .04 }), ref: [0x232325, 0xd4d0c8], cap: ['neroC', 'calaC'], crown: 0xd8b064 },
-    pearl: { g: () => phys({ color: 0x3a3540, roughness: .18, clearcoat: .8, clearcoatRoughness: .1, iridescence: 1, iridescenceIOR: 1.35, iridescenceThicknessRange: [250, 700], envMapIntensity: 1.6 }), w: () => phys({ color: 0xf2e9e2, roughness: .14, clearcoat: 1, clearcoatRoughness: .06, iridescence: 1, iridescenceIOR: 1.45, iridescenceThicknessRange: [300, 900], envMapIntensity: 1.8 }), ref: [0x34303a, 0xd8d0c6], crown: 0xe6bd62 },
+    rbmarble: { g: () => phys({ color: 0x1b1b1d, roughness: .12, clearcoat: 1, clearcoatRoughness: .04 }), w: () => phys({ color: 0x8e1f19, roughness: .12, clearcoat: 1, clearcoatRoughness: .04 }), ref: [0x232325, 0x6e1a14], cap: ['neroC', 'rossoC'], crown: 0xd8b064 },
     urushi: { g: () => phys({ color: 0x121113, roughness: .16, clearcoat: 1, clearcoatRoughness: .03 }), w: () => phys({ color: 0xb2261c, roughness: .18, clearcoat: 1, clearcoatRoughness: .03 }), ref: [0x1a191b, 0x8a2016], band: true, crown: 0xe6bd62 },
     rmarble: { g: () => phys({ color: 0x8e1f19, roughness: .12, clearcoat: 1, clearcoatRoughness: .04 }), w: () => phys({ color: 0xece8e1, roughness: .12, clearcoat: 1, clearcoatRoughness: .04 }), ref: [0x6e1a14, 0xd4d0c8], cap: ['rossoC', 'calaC'], crown: 0xd8b064 },
   };
@@ -422,26 +431,26 @@
   // per language and set: [Black's side, White's side]; the shape of each entry follows the language's grammar (see conv below)
   const IV = w => ({ i: w });
   const TG = {
-    ja: { metal: ['金', '銀'], ebony: ['黒檀', '象牙'], stone: ['黒', '白'], pearl: ['黒真珠', '白真珠'], urushi: ['黒', '朱'], rmarble: ['赤', '白'] },
-    zh: { metal: ['金', '银'], ebony: ['乌木', '象牙'], stone: ['黑', '白'], pearl: ['黑珍珠', '白珍珠'], urushi: ['黑', '朱红'], rmarble: ['红', '白'] },
-    'zh-TW': { metal: ['金', '銀'], ebony: ['烏木', '象牙'], stone: ['黑', '白'], pearl: ['黑珍珠', '白珍珠'], urushi: ['黑', '朱紅'], rmarble: ['紅', '白'] },
-    ko: { metal: ['금', '은'], ebony: ['흑단', '상아'], stone: ['흑', '백'], pearl: ['흑진주', '백진주'], urushi: ['흑', '주홍'], rmarble: ['빨강', '백'] },
-    en: { metal: ['gold', 'silver'], ebony: ['ebony', 'ivory'], stone: ['black', 'white'], pearl: ['black pearl', 'white pearl'], urushi: ['black', 'vermilion'], rmarble: ['red', 'white'] },
-    id: { metal: ['emas', 'perak'], ebony: ['eboni', 'gading'], stone: ['hitam', 'putih'], pearl: ['mutiara hitam', 'mutiara putih'], urushi: ['hitam', 'merah kirmizi'], rmarble: ['merah', 'putih'] },
-    tr: { metal: ['altın', 'gümüş'], ebony: ['abanoz', 'fildişi'], stone: ['siyah', 'beyaz'], pearl: ['siyah inci', 'beyaz inci'], urushi: ['siyah', 'vermilyon'], rmarble: ['kırmızı', 'beyaz'] },
+    ja: { metal: ['金', '銀'], ebony: ['黒檀', '象牙'], stone: ['黒', '白'], rbmarble: ['黒', '赤'], urushi: ['黒', '朱'], rmarble: ['赤', '白'] },
+    zh: { metal: ['金', '银'], ebony: ['乌木', '象牙'], stone: ['黑', '白'], rbmarble: ['黑', '红'], urushi: ['黑', '朱红'], rmarble: ['红', '白'] },
+    'zh-TW': { metal: ['金', '銀'], ebony: ['烏木', '象牙'], stone: ['黑', '白'], rbmarble: ['黑', '紅'], urushi: ['黑', '朱紅'], rmarble: ['紅', '白'] },
+    ko: { metal: ['금', '은'], ebony: ['흑단', '상아'], stone: ['흑', '백'], rbmarble: ['흑', '빨강'], urushi: ['흑', '주홍'], rmarble: ['빨강', '백'] },
+    en: { metal: ['gold', 'silver'], ebony: ['ebony', 'ivory'], stone: ['black', 'white'], rbmarble: ['black', 'red'], urushi: ['black', 'vermilion'], rmarble: ['red', 'white'] },
+    id: { metal: ['emas', 'perak'], ebony: ['eboni', 'gading'], stone: ['hitam', 'putih'], rbmarble: ['hitam', 'merah'], urushi: ['hitam', 'merah kirmizi'], rmarble: ['merah', 'putih'] },
+    tr: { metal: ['altın', 'gümüş'], ebony: ['abanoz', 'fildişi'], stone: ['siyah', 'beyaz'], rbmarble: ['siyah', 'kırmızı'], urushi: ['siyah', 'vermilyon'], rmarble: ['kırmızı', 'beyaz'] },
     // es / pt: { s: stem + o|a|os|as } · { e: word ending in -e, + s in the plural } · { i: invariant }
-    es: { metal: [{ s: 'dorad' }, { s: 'platead' }], ebony: [IV('de ébano'), IV('de marfil')], stone: [{ s: 'negr' }, { s: 'blanc' }], pearl: [IV('de perla negra'), IV('de perla blanca')], urushi: [{ s: 'negr' }, IV('bermellón')], rmarble: [{ s: 'roj' }, { s: 'blanc' }] },
-    pt: { metal: [{ s: 'dourad' }, { s: 'pratead' }], ebony: [IV('de ébano'), IV('de marfim')], stone: [{ s: 'pret' }, { s: 'branc' }], pearl: [IV('de pérola negra'), IV('de pérola branca')], urushi: [{ s: 'pret' }, IV('vermelhão')], rmarble: [{ s: 'vermelh' }, { s: 'branc' }] },
+    es: { metal: [{ s: 'dorad' }, { s: 'platead' }], ebony: [IV('de ébano'), IV('de marfil')], stone: [{ s: 'negr' }, { s: 'blanc' }], rbmarble: [{ s: 'negr' }, { s: 'roj' }], urushi: [{ s: 'negr' }, IV('bermellón')], rmarble: [{ s: 'roj' }, { s: 'blanc' }] },
+    pt: { metal: [{ s: 'dourad' }, { s: 'pratead' }], ebony: [IV('de ébano'), IV('de marfim')], stone: [{ s: 'pret' }, { s: 'branc' }], rbmarble: [{ s: 'pret' }, { s: 'vermelh' }], urushi: [{ s: 'pret' }, IV('vermelhão')], rmarble: [{ s: 'vermelh' }, { s: 'branc' }] },
     // fr: { m, f } (+ s in the plural) · { i }
-    fr: { metal: [{ m: 'doré', f: 'dorée' }, { m: 'argenté', f: 'argentée' }], ebony: [IV('d’ébène'), IV('d’ivoire')], stone: [{ m: 'noir', f: 'noire' }, { m: 'blanc', f: 'blanche' }], pearl: [IV('de perle noire'), IV('de perle blanche')], urushi: [{ m: 'noir', f: 'noire' }, IV('vermillon')], rmarble: [{ m: 'rouge', f: 'rouge' }, { m: 'blanc', f: 'blanche' }] },
+    fr: { metal: [{ m: 'doré', f: 'dorée' }, { m: 'argenté', f: 'argentée' }], ebony: [IV('d’ébène'), IV('d’ivoire')], stone: [{ m: 'noir', f: 'noire' }, { m: 'blanc', f: 'blanche' }], rbmarble: [{ m: 'noir', f: 'noire' }, { m: 'rouge', f: 'rouge' }], urushi: [{ m: 'noir', f: 'noire' }, IV('vermillon')], rmarble: [{ m: 'rouge', f: 'rouge' }, { m: 'blanc', f: 'blanche' }] },
     // de: { a: adjective stem (+ the source's ending), n: noun }
-    de: { metal: [{ a: 'golden', n: 'Gold' }, { a: 'silbern', n: 'Silber' }], ebony: [{ a: 'ebenholzfarben', n: 'Ebenholz' }, { a: 'elfenbeinfarben', n: 'Elfenbein' }], stone: [{ a: 'schwarz', n: 'Schwarz' }, { a: 'weiß', n: 'Weiß' }], pearl: [{ a: 'perlschwarz', n: 'Schwarzperle' }, { a: 'perlweiß', n: 'Weißperle' }], urushi: [{ a: 'schwarz', n: 'Schwarz' }, { a: 'zinnoberrot', n: 'Zinnober' }], rmarble: [{ a: 'rot', n: 'Rot' }, { a: 'weiß', n: 'Weiß' }] },
+    de: { metal: [{ a: 'golden', n: 'Gold' }, { a: 'silbern', n: 'Silber' }], ebony: [{ a: 'ebenholzfarben', n: 'Ebenholz' }, { a: 'elfenbeinfarben', n: 'Elfenbein' }], stone: [{ a: 'schwarz', n: 'Schwarz' }, { a: 'weiß', n: 'Weiß' }], rbmarble: [{ a: 'schwarz', n: 'Schwarz' }, { a: 'rot', n: 'Rot' }], urushi: [{ a: 'schwarz', n: 'Schwarz' }, { a: 'zinnoberrot', n: 'Zinnober' }], rmarble: [{ a: 'rot', n: 'Rot' }, { a: 'weiß', n: 'Weiß' }] },
     // ru: adjective stems (the source's ending is kept: all hard stems)
-    ru: { metal: ['золот', 'серебрян'], ebony: ['эбенов', 'костян'], stone: ['чёрн', 'бел'], pearl: ['жемчужно-чёрн', 'жемчужно-бел'], urushi: ['чёрн', 'киноварн'], rmarble: ['красн', 'бел'] },
+    ru: { metal: ['золот', 'серебрян'], ebony: ['эбенов', 'костян'], stone: ['чёрн', 'бел'], rbmarble: ['чёрн', 'красн'], urushi: ['чёрн', 'киноварн'], rmarble: ['красн', 'бел'] },
     // ar: { m, f }
-    ar: { metal: [{ m: 'ذهبي', f: 'ذهبية' }, { m: 'فضي', f: 'فضية' }], ebony: [{ m: 'أبنوسي', f: 'أبنوسية' }, { m: 'عاجي', f: 'عاجية' }], stone: [{ m: 'أسود', f: 'سوداء' }, { m: 'أبيض', f: 'بيضاء' }], pearl: [{ m: 'أسود', f: 'سوداء' }, { m: 'لؤلؤي', f: 'لؤلؤية' }], urushi: [{ m: 'أسود', f: 'سوداء' }, { m: 'قرمزي', f: 'قرمزية' }], rmarble: [{ m: 'أحمر', f: 'حمراء' }, { m: 'أبيض', f: 'بيضاء' }] },
+    ar: { metal: [{ m: 'ذهبي', f: 'ذهبية' }, { m: 'فضي', f: 'فضية' }], ebony: [{ m: 'أبنوسي', f: 'أبنوسية' }, { m: 'عاجي', f: 'عاجية' }], stone: [{ m: 'أسود', f: 'سوداء' }, { m: 'أبيض', f: 'بيضاء' }], rbmarble: [{ m: 'أسود', f: 'سوداء' }, { m: 'أحمر', f: 'حمراء' }], urushi: [{ m: 'أسود', f: 'سوداء' }, { m: 'قرمزي', f: 'قرمزية' }], rmarble: [{ m: 'أحمر', f: 'حمراء' }, { m: 'أبيض', f: 'بيضاء' }] },
     // hi: a word ending in ा takes the source's ा / ी / े
-    hi: { metal: ['सुनहरा', 'चाँदी'], ebony: ['आबनूसी', 'हाथीदाँत'], stone: ['काला', 'सफ़ेद'], pearl: ['काला मोती', 'सफ़ेद मोती'], urushi: ['काला', 'सिंदूरी'], rmarble: ['लाल', 'सफ़ेद'] },
+    hi: { metal: ['सुनहरा', 'चाँदी'], ebony: ['आबनूसी', 'हाथीदाँत'], stone: ['काला', 'सफ़ेद'], rbmarble: ['काला', 'लाल'], urushi: ['काला', 'सिंदूरी'], rmarble: ['लाल', 'सफ़ेद'] },
   };
   const cap = (w, like) => like && like[0] !== like[0].toLowerCase() && !/^(d’|de )/.test(w) ? w.charAt(0).toLocaleUpperCase(like.startsWith('İ') || like.startsWith('I') ? 'tr' : undefined) + w.slice(1) : w;
   const tgOf = (lang, set) => (TG[lang] || TG.en)[setOf(set)];
@@ -486,7 +495,7 @@
   }
   const side = (col, lang, set) => { const w = tgOf(lng(lang), set)[col === 'g' || col === 1 ? 0 : 1]; return typeof w === 'string' ? w : w.i || w.n || w.m || (w.s ? w.s + 'o' : w.e) || ''; };
   const SW = { metal: ['#fff1c2,#e8b64e 45%,#8a6418', '#fff,#d6d9de 45%,#7c8189'], ebony: ['#6a5446,#2a1d17 45%,#0d0907', '#fffaf0,#efe3c8 45%,#b9a888'],
-    stone: ['#8a8a8e,#2a2a2e 45%,#0b0b0c', '#ffffff,#eeebe5 45%,#b4aea4'], pearl: ['#8a8494,#2e2a33 45%,#0e0c10', '#ffffff,#f2ece4 45%,#c9bfb3'],
+    stone: ['#8a8a8e,#2a2a2e 45%,#0b0b0c', '#ffffff,#eeebe5 45%,#b4aea4'], rbmarble: ['#8a8a8e,#2a2a2e 45%,#0b0b0c', '#ff9a8a,#b2261e 45%,#5a0d09'],
     urushi: ['#6b6b70,#1a191b 45%,#050505', '#ff9b86,#c8301f 45%,#6e120b'], rmarble: ['#ff9a8a,#b2261e 45%,#5a0d09', '#ffffff,#eeebe5 45%,#b4aea4'] };
   const swatch = (col, set) => `radial-gradient(circle at 35% 30%,${SW[setOf(set)][col === 'g' || col === 1 ? 0 : 1]})`;
   const tone = (col, set) => SW[setOf(set)][col === 'g' || col === 1 ? 0 : 1].split(',').map(x => x.trim().split(' ')[0]);   // [light, mid, dark]
@@ -506,7 +515,7 @@
     return g;
   };
   // the squares' colours of each look for flat pictures (the full game's small boards while its 3D board is shown): [dark, light]
-  const MINI = { lacquer: ['#3a3a3e', '#e6dfcc'], marble: ['#1e1e20', '#9a2a22'], raden: ['#3a1009', '#ece6e2'], leather: ['#1d4532', '#ece0c2'], deco: ['#3a2616', '#efe3c9'], lapis: ['#1d3a9a', '#f3eee3'] };
+  const MINI = { lacquer: ['#3a3a3e', '#e6dfcc'], marble: ['#1e1e20', '#9a2a22'], boulle: ['#5a1a0a', '#d9b25a'], leather: ['#1d4532', '#ece0c2'], deco: ['#3a2616', '#efe3c9'], lapis: ['#1d3a9a', '#f3eee3'] };
   const mini = lk => MINI[lookOf(lk)];
   X.checkers = { board, piece, S, OW, R, LOOKS, SETS, pcSet, side, swatch, tone, recolor, mini };
 })();
