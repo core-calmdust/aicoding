@@ -337,7 +337,7 @@ class Table3D {
     const r = this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'low-power' });
     const mobile = matchMedia('(pointer: coarse)').matches;
     this.mobile = mobile;
-    r.setPixelRatio(Math.min(window.devicePixelRatio || 1, mobile ? 1.25 : 1.5));
+    r.setPixelRatio(Math.min(window.devicePixelRatio || 1, mobile ? 1.25 : 1.5)); this.prMax = mobile ? 1.25 : 1.5; this.dyn = 1;
     r.outputEncoding = THREE.sRGBEncoding;
     r.shadowMap.enabled = true;
     r.shadowMap.type = THREE.PCFShadowMap;
@@ -990,8 +990,14 @@ class Table3D {
   }
 
   // ---------------------------------------------------------------- camera / loop
+  // (ユーザー 2026-11-14: full screen on a Mac dropped frames) the drawing resolution has a budget of pixels: a big window (a Retina
+  // screen in full screen is ~4–5 million at 1.5×) is drawn at a lower ratio and scaled up, and if frames still come slowly while
+  // things move, the ratio steps down a little more (and back up when there is room). `prMax`: the quality's ceiling.
+  _pr() { const w = this.host.clientWidth || 1, h = this.host.clientHeight || 1, BUDGET = this.lite ? 1.6e6 : 2.6e6;
+    return Math.max(.6, Math.min(window.devicePixelRatio || 1, this.prMax || 1.5, Math.sqrt(BUDGET / (w * h))) * (this.dyn || 1)); }
   resize() {
     const w = this.host.clientWidth || 1, h = this.host.clientHeight || 1;
+    const pr = this._pr(); if (Math.abs(this.renderer.getPixelRatio() - pr) > .01) this.renderer.setPixelRatio(pr);
     this.renderer.setSize(w, h, false);
     this.renderer.domElement.style.width = w + 'px'; this.renderer.domElement.style.height = h + 'px';
     if (this.r2) { this.r2.setPixelRatio(this.renderer.getPixelRatio()); this.r2.setSize(w, h, false); }
@@ -1015,8 +1021,9 @@ class Table3D {
   }
   // quality: 'high' | 'lite'. Lite drops shadows and renders at 1x pixel ratio.
   setQuality(q) {
-    const lite = q === 'lite';
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, lite ? 1 : this.mobile ? 1.25 : 1.5));
+    const lite = q === 'lite'; this.lite = lite;
+    this.prMax = lite ? 1 : this.mobile ? 1.25 : 1.5; this.dyn = 1;
+    this.renderer.setPixelRatio(this._pr());
     if (this.r2) { this.r2.setPixelRatio(this.renderer.getPixelRatio()); this.r2.setSize(this.host.clientWidth || 1, this.host.clientHeight || 1, false); }
     this.renderer.shadowMap.enabled = !lite;
     this.key.castShadow = !lite;
@@ -1103,6 +1110,12 @@ class Table3D {
       if (!O.rig.visible && !this.tweens.some(t => t.g === O.g) && !this.handFx.some(h => h.rig === O.rig)) { R2.clear(); O.g.traverse(o => o.layers.disable(1)); O.rig.traverse(o => o.layers.disable(1)); this._ov = null; }
     }
     this.renderer.render(this.scene, this.camera);
+    // frame pacing while things move (consecutive frames only): slow → a lower drawing ratio, quick again → back up
+    { const P = this._pace || (this._pace = { last: 0, ema: 16, t: 0 }), dt = now - P.last; P.last = now;
+      if (dt > 0 && dt < 120) { P.ema += (dt - P.ema) * .08;
+        if (now - P.t > 1200) { P.t = now; const d0 = this.dyn || 1;
+          if (P.ema > 24 && d0 > .62) this.dyn = d0 * .85; else if (P.ema < 15 && d0 < 1) this.dyn = Math.min(1, d0 * 1.08);
+          if (this.dyn !== d0) this.resize(); } } }
     if (this._dbg) this._dbgPaint(now);
   }
   // screen position of a seat's area (for placing HTML badges)
