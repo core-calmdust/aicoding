@@ -679,7 +679,7 @@ if (olOn()) ON.onAuth(() => { if (chat.unsub) { chat.unsub(); chat.unsub = null;
 // rated: the record with the newest game, its history united by game id; settings / name: newest wins.
 const C4Sync = (() => {
   const META = 'connect4-sync-meta';
-  const SET_KEYS = ['sound', 'eval', 'anim', 'last', 'threat', 'hint', 'level', 'level2', 'color', 'lang'];
+  const SET_KEYS = ['sound', 'eval', 'anim', 'last', 'threat', 'hint', 'level', 'level2', 'pro', 'pro2', 'color', 'lang'];
   const RT_STORE = 'c4-rated-v1';   // rated.js
   const get = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; } };
   const put = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };

@@ -1003,8 +1003,18 @@ function rng(seedStr) { const h = cyrb128(seedStr); let a = h[0], b = h[1]; retu
 function gauss(r) { let u = 0, v = 0; while (u === 0) u = r(); v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
 const NOISE = [0, 0, 0.5, 0.25, 0.12, 0.06, 0.025, 0, 0, 0, 0];
 // Levels: 1 random · 2–6 net with decreasing noise · 7 net 0-ply · 8 1-ply · 9 2-ply (narrow) · 10 2-ply (wide, ~1–2 s)
-function aiChoosePlay(pos, side, dice, level, tag, pre) {
+function aiChoosePlay(pos, side, dice, level, tag, pre, cfg) {
   const r = rng(key(pos) + '|' + dice.join('') + '|' + level + '|' + (tag || ''));
+  if (cfg) {   // (2026-11-15) the page's PRO mode: { ply 0–2, noise, fast } — 0-ply (the fast net: fast), 1-ply = level 8's search, 2-ply = level 10's
+    const o = cfg.ply >= 2 ? Object.assign({}, LEVEL_OPTS[10]) : cfg.ply >= 1 ? Object.assign({}, LEVEL_OPTS[8]) : { ply: 0, fast: !!cfg.fast };
+    if (o.time && !pre) o.deadline = nowMs() + o.time;
+    if (pre) o.pre = pre;
+    const pl = analyzePlays(pos, side, dice[0], dice[1], o);
+    if (pl.length === 1 || !cfg.noise) return pl[0];
+    let best = pl[0], be = -1e9;
+    for (const x of pl) { const e = x.e + cfg.noise * gauss(r); if (e > be) { be = e; best = x; } }
+    return best;
+  }
   if (level <= 1) { const pl = genPlays(pos, side, dice[0], dice[1]); return pl[Math.floor(r() * pl.length)]; }
   if (level <= 7) {
     // gentle levels use the fast net (+ noise); level 7 = strongest 0-ply evaluator
@@ -1045,7 +1055,7 @@ function aiCube(level, pos, side, ctx, takerView) {
 
 
 Object.assign(BG, {
-  aiChoosePlay, aiCube, LEVEL_OPTS, planPly, setNets, setWasm, wasm: () => !!WX, hybN, escapes, loadWildbg, wbEval, wbInputs, setWildbg: w => { WB = w; },
+  aiChoosePlay, aiCube, LEVEL_OPTS, NOISE, planPly, setNets, setWasm, wasm: () => !!WX, hybN, escapes, loadWildbg, wbEval, wbInputs, setWildbg: w => { WB = w; },
   OFF, BAR, initial, clone, key, pips, onBoard, allHome, contact, winner, winKind, dest, apply, mvFrom, mvTo, mvHit,
   genPlays, maxUse, legalSteps, notation, ptName, cyrb128, DiceStream, randomSeed, sha256, replay, encodeGame, decodeGame,
   NIN, features, Net, sanitize, flip, equity, choose, BO_N, boIndex, boIndexPos, loadBearoff, boDist, isBearoffPos, bearoffEval,

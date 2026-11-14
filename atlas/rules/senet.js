@@ -258,7 +258,7 @@
     document.addEventListener('keydown', onKey, true);
     requestAnimationFrame(() => el.classList.add('on'));
     say('…'); buttons();
-    loadJS(BASE + 'engine.js?v=6', () => !!window.SenetEngine).then(() => loadJS(BASE + 'sprites.js?v=1', () => !!window.SENET_SPRITES).catch(() => null).then(() => loadJS(BASE + 'board2d.js?v=6', () => !!window.SenetBoard2D))).then(() => loadJS(BASE + 'tour.js?v=2', () => !!window.SenetTour)).then(() => {
+    loadJS(BASE + 'engine.js?v=7', () => !!window.SenetEngine).then(() => loadJS(BASE + 'sprites.js?v=1', () => !!window.SENET_SPRITES).catch(() => null).then(() => loadJS(BASE + 'board2d.js?v=6', () => !!window.SenetBoard2D))).then(() => loadJS(BASE + 'tour.js?v=2', () => !!window.SenetTour)).then(() => {
       if (stopped) return; E = window.SenetEngine; TX = window.SenetTour && SenetTour._TX;
       kit = window.SenetKit.make(T3, { sfx: x => SND[x] && SND[x](), top: true, stage: true });
       later(() => go(0), 250);

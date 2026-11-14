@@ -100,7 +100,7 @@
     const all = order.map((c, i) => { const q = solve(X, msg.moves, c, true, p.hard); ps.push(q); return q.then(x => { if (decided >= 0) return; if (!x || !x.ok) { fail = true; r[i] = null; return; } r[i] = x.v; check(); }); });
     await Promise.all(all);
     if (X.cancelled) return null;
-    const fin = o => X.exec(Object.assign({ type: 'mtfin', kind: 'perfect', moves: msg.moves, level: msg.level, order, t0: p.t0 }, o), undefined, 100).then(f => f ? Object.assign({ type: 'result' }, f.result) : off(X));
+    const fin = o => X.exec(Object.assign({ type: 'mtfin', kind: 'perfect', moves: msg.moves, level: msg.level, cfg: msg.cfg, order, t0: p.t0 }, o), undefined, 100).then(f => f ? Object.assign({ type: 'result' }, f.result) : off(X));
     if (decided >= 0) return fin({ move: order[decided], cls: 1, msProof: Date.now() - p.t0 });
     if (fail) return undefined;   // (out of even the long budget: the one-thread worker, which falls back to the search)
     const cls = Math.max.apply(null, r.map(v => Math.sign(v)));
@@ -113,7 +113,7 @@
   }
 
   async function think(X, msg) {
-    const pre = await X.exec({ type: 'mtplan', job: 'think', moves: msg.moves, level: msg.level }, undefined, 100);
+    const pre = await X.exec({ type: 'mtplan', job: 'think', moves: msg.moves, level: msg.level, cfg: msg.cfg }, undefined, 100);
     if (!pre) return off(X);
     if (pre.result) return Object.assign({ type: 'result' }, pre.result);
     const p = pre.plan;
@@ -137,7 +137,7 @@
       if (bestCls <= 0) await Promise.all(sorted.filter(e => e.kind !== 'exact' && e.kind !== 'heur' && Math.sign(e.v) === bestCls).map(e => solve(X, msg.moves, e.c, false, dl + 300).then(r => { if (r && r.ok) { e.kind = 'exact'; e.v = r.v; } })));
       if (X.cancelled) return null;
     }
-    const f = await X.exec({ type: 'mtfin', kind: 'tail', moves: msg.moves, level: msg.level, list, depth: p.depth, t0: p.t0 }, undefined, 100);
+    const f = await X.exec({ type: 'mtfin', kind: 'tail', moves: msg.moves, level: msg.level, cfg: msg.cfg, list, depth: p.depth, t0: p.t0 }, undefined, 100);
     return f ? Object.assign({ type: 'result' }, f.result) : off(X);
   }
 

@@ -339,7 +339,7 @@
   for (let L = 1; L <= 20; L++) LEVELS.push({ depth: L >= 19 ? 3 : L >= 13 ? 2 : 1, temp: 0, rand: RAND[L] });
   const timeLimitOf = (level, opts) => (opts && opts.timeLimit) || (LEVELS[level].depth >= 3 ? (level >= 20 ? 1500 : 700) : 1e9);
   function think(s, n, level, opts) {
-    opts = opts || {}; const rng = opts.rng || Math.random, L = LEVELS[Math.max(1, Math.min(20, level || 20))];
+    opts = opts || {}; const rng = opts.rng || Math.random, L0 = LEVELS[Math.max(1, Math.min(20, level || 20))], L = opts.cfg ? Object.assign({}, L0, opts.cfg) : L0;   // (opts.cfg: the page's PRO mode — depth / rand)
     const ms = legalMoves(s, n); if (!ms.length) return null; if (ms.length === 1) return ms[0];
     if (!opts.ev && L.rand && rng() < L.rand) { const c = ms.filter(m => m.capture || m.finish), pool = c.length && rng() < .4 ? c : ms; return pool[Math.floor(rng() * pool.length)]; }
     let ev;

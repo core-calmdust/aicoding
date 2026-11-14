@@ -15,7 +15,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 // ====================================================================== settings / i18n
-const settings = { mode: 'ai', rule: 'std', color: '0', level: 6, level2: 12, clock: 0, fis: '5+3', speed: 2, autoRoll: false, autoPick: true, eval: true, last: true, danger: true, coach: true, sound: true, design: 'tut', pieces: 'tut', lang: '' };
+const settings = { pro: null, pro2: null, mode: 'ai', rule: 'std', color: '0', level: 6, level2: 12, clock: 0, fis: '5+3', speed: 2, autoRoll: false, autoPick: true, eval: true, last: true, danger: true, coach: true, sound: true, design: 'tut', pieces: 'tut', lang: '' };
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); if (n.startsWith('zh')) return /^zh-(tw|hk|mo|hant)/.test(n) ? 'zh-TW' : 'zh'; return SUPPORTED.find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
 const AIW = () => ({ ru: 'ИИ', tr: 'YZ' })[LANG] || 'AI';   // the word "AI" in displayed player labels (ru / tr use their own abbreviation; saved records keep 'AI')
@@ -138,30 +138,31 @@ let aiW = null, jobSeq = 0;
 const jobs = new Map();
 function worker() {
   if (aiW === false) return null;
-  if (!aiW) { try { aiW = new Worker('worker.js?v=6'); aiW.onmessage = e => { const d = e.data, j = jobs.get(d.id); if (j) j(d); }; aiW.onerror = () => { aiW = false; }; } catch (e) { aiW = false; return null; } }
+  if (!aiW) { try { aiW = new Worker('worker.js?v=7'); aiW.onmessage = e => { const d = e.data, j = jobs.get(d.id); if (j) j(d); }; aiW.onerror = () => { aiW = false; }; } catch (e) { aiW = false; return null; } }
   return aiW;
 }
 // the threads (shared/mtworkers.js; common rule 2026-11-08「本編のマルチスレッド」): a pool of these workers shares out the
 // expectiminimax as "move × the next throw" tasks (E.splitEval — the same numbers as E.evaluate) and the review by position.
 // Used for the AI's levels that read 3+ throws (time-capped), the hint (one throw deeper than without threads) and the review.
-const MW = window.MTWorkers ? (MTWorkers.init(), MTWorkers).use({ url: 'worker.js?v=6', all: true }) : null;
+const MW = window.MTWorkers ? (MTWorkers.init(), MTWorkers).use({ url: 'worker.js?v=7', all: true }) : null;
 async function mtEval(st, n, depth, tag, prio, until) {
   const P = MW && MW.pool(prio); if (!P) return null;
   const sp = E.splitEval(st, n, depth, E.fineFor(depth, P.threads));   // (heavy positions: also by the moves of each throw)
   const r = await P.map(sp.tasks.map(t => ({ type: 'roll', state: t.state, n: t.n, d: t.d, k: t.k, until })), { tag });
   return r ? sp.combine(r.map(x => x.v)) : null;
 }
-async function think(st, n, level) {
-  const lv = E.LEVELS[Math.max(1, Math.min(20, level))];
+async function think(st, n, level, cfg) {
+  const lv = Object.assign({}, E.LEVELS[Math.max(1, Math.min(20, level))], cfg || {});   // (cfg: PRO mode, proCfg)
+  const o = cfg ? { cfg, timeLimit: cfg.depth >= 3 ? 20000 : undefined } : undefined;
   if (MW && lv.depth >= 3 && E.legalMoves(st, n).length > 1) {
-    const ev = await mtEval(st, n, lv.depth, 'ai', 'ai', Date.now() + E.timeLimitOf(level));
-    if (ev) { const m = E.think(st, n, level, { ev }); return m ? { from: m.from, to: m.to } : null; }
+    const ev = await mtEval(st, n, lv.depth, 'ai', 'ai', Date.now() + (o && o.timeLimit || E.timeLimitOf(level)));
+    if (ev) { const m = E.think(st, n, level, { ev, cfg }); return m ? { from: m.from, to: m.to } : null; }
   }
   return new Promise(res => {
     const w = worker();
-    if (!w) { setTimeout(() => { const m = E.think(st, n, level); res(m ? { from: m.from, to: m.to } : null); }, 30); return; }
-    const id = ++jobSeq; jobs.set(id, d => { jobs.delete(id); if (d.error) { const m = E.think(st, n, level); res(m ? { from: m.from, to: m.to } : null); } else res(d.move); });
-    w.postMessage({ id, type: 'think', state: E.clone(st), n, level });
+    if (!w) { setTimeout(() => { const m = E.think(st, n, level, o); res(m ? { from: m.from, to: m.to } : null); }, 30); return; }
+    const id = ++jobSeq; jobs.set(id, d => { jobs.delete(id); if (d.error) { const m = E.think(st, n, level, o); res(m ? { from: m.from, to: m.to } : null); } else res(d.move); });
+    w.postMessage({ id, type: 'think', state: E.clone(st), n, level, cfg: cfg || null });
   });
 }
 let rvGen = 0;
@@ -486,8 +487,8 @@ function homeCount(st, s) { const g = E.RULES[st.rule].goal; return st.pos[s].fi
 function playerName(s) {
   if (settings.mode === 'online' && typeof olPlayerName === 'function') return olPlayerName(s);
   if (settings.mode === 'pvp') return sideName(s);
-  if (settings.mode === 'watch') return AIW() + ' ' + LV(levelFor(s));
-  return s === game.human ? t('you') : AIW() + ' ' + LV(levelFor(s)) + (rgame && !phone() ? ` (R${rgame.or})` : '');   // (phones: the narrow card shows the level only)
+  if (settings.mode === 'watch') return AIW() + ' ' + LV(levelFor(s)) + proTag(s);
+  return s === game.human ? t('you') : AIW() + ' ' + LV(levelFor(s)) + proTag(s) + (rgame && !phone() ? ` (R${rgame.or})` : '');   // (phones: the narrow card shows the level only)
 }
 function renderInfo() {
   const st = curState(), rl = E.RULES[st.rule], rc = E.raceCount(st), sta = special ? { over: false } : statusAt(cur);
@@ -742,7 +743,7 @@ async function afterPosition() {
     const r = game.roll, ms = r.n ? E.legalMoves(st, r.n) : [];
     if (!ms.length) { thinking = 0; afterRoll(tok); return; }
     thinking = 1; renderInfo();
-    const t0 = performance.now(), mv = await think(st, r.n, levelFor(st.turn));
+    const t0 = performance.now(), mv = await think(st, r.n, levelFor(st.turn), proCfg(st.turn));
     const wait = (settings.mode === 'watch' ? 420 / SPD() : 0) - (performance.now() - t0);   // AIの着手は即時（観戦だけ間を取る）
     if (wait > 0) await sleep(wait);
     thinking = 0;
@@ -832,7 +833,7 @@ function recordGame(sta) {
   if (!window.GameRecord || settings.mode === 'watch' || !game.plies.length) return;
   const mode = rgame ? 'rated' : settings.mode === 'pvp' ? 'pvp' : 'ai';
   if (mode === 'pvp') return;
-  try { GameRecord.add({ mode, res: sta.winner === game.human ? 'w' : 'l', side: game.first === game.human ? 0 : 1, opp: 'AI ' + LV(levelFor(1)), key: 'ai:' + levelFor(1), n: game.plies.length, why: t('res.why.' + (sta.why || 'home')) }); } catch (e) {}
+  try { GameRecord.add({ mode, res: sta.winner === game.human ? 'w' : 'l', side: game.first === game.human ? 0 : 1, opp: 'AI ' + LV(levelFor(1)) + proTag(1 - game.human), key: (proFor(1 - game.human) ? 'ai:pro' : 'ai:') + levelFor(1), n: game.plies.length, why: t('res.why.' + (sta.why || 'home')) }); } catch (e) {}
 }
 function showOverlay(s) { $(s).classList.add('show'); }
 function hideOverlay(s) { $(s).classList.remove('show'); }
@@ -1057,6 +1058,28 @@ $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; $('#levelName
 // デザインは選んだ瞬間に盤へ反映（共通ルール）：開始・キャンセルを待たない
 $('#bdRow').onclick = e => { const b = e.target.closest('button'); if (!b) return; draft.design = b.dataset.v; designPickers(); setDesign(draft.design, draft.pieces); };
 $('#pcRow').onclick = e => { const b = e.target.closest('button'); if (!b) return; draft.pieces = b.dataset.v; designPickers(); setDesign(draft.design, draft.pieces); };
+// PRO mode (shared/proset.js; common rule「対局設定の Pro モード」, 2026-11-15): beside the level — vs the AI / AI vs AI, never
+// rated. 読みの深さ (throws read after the move, engine.js LEVELS depth) and 手のばらつき (the chance of a random move, LEVELS rand);
+// the threads (shared/mtworkers.js) are used as for the levels (3+ throws). The changed values go to engine.js think as opts.cfg.
+const PRO_RAND = [0, 0.05, 0.2];   // 手のばらつき なし／小（≈ Lv.13）／大（≈ Lv.8）
+const PRO_UNIT = { depth: { ja: '投げ先', en: 'throws', zh: '掷', 'zh-TW': '擲', ko: '번 앞', es: 'tiradas', fr: 'lancers', pt: 'lances', de: 'Würfe', ru: 'бросков', tr: 'atış', id: 'lemparan', hi: 'फेंक', ar: 'رميات' } };
+const proDefaults = lv => { const L = E.LEVELS[lv] || E.LEVELS[20]; return { limit: { k: 'depth', v: L.depth }, var: L.rand > 0.06 ? 2 : L.rand > 0 ? 1 : 0 }; };
+const proParams = () => [{ key: 'limit', kinds: { depth: [1, 4] }, kunit: PRO_UNIT }, { key: 'var' }];
+var PRO = window.ProSet ? ProSet.init({ game: 'senet', lang: () => LANG, level: () => draft.level || settings.level, show: () => draft.mode === 'ai' || draft.mode === 'watch',
+  store: { get: () => settings.pro, set: v => { settings.pro = v; save(); } }, defaults: proDefaults, params: proParams() }) : null;
+var PRO2 = window.ProSet ? ProSet.init({ game: 'senet-w2', field: '#fLevel2', lang: () => LANG, level: () => draft.level2 || settings.level2, show: () => draft.mode === 'watch',
+  store: { get: () => settings.pro2, set: v => { settings.pro2 = v; save(); } }, defaults: proDefaults, params: proParams() }) : null;
+function proFor(side) {
+  if (rgame || special || ken || !(settings.mode === 'ai' || settings.mode === 'watch')) return null;
+  const P = settings.mode === 'watch' && side === 1 ? window.PRO2 : window.PRO;
+  return P ? P.get(levelFor(side)) : null;
+}
+function proCfg(side) {
+  const e = proFor(side); if (!e) return null;
+  const L = E.LEVELS[levelFor(side)] || E.LEVELS[20];
+  return { depth: e.limit.v, rand: e.changed.includes('var') ? PRO_RAND[e.var] : L.rand };
+}
+function proTag(side) { return proFor(side) ? ' PRO' : ''; }
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
 $('#btnStart').onclick = () => {
   hideOverlay('#newOverlay');

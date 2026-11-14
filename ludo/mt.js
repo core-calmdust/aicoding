@@ -9,7 +9,7 @@
    on one thread. Each position is now cut into parts so that there are about 4 tasks a thread (the parts' playouts added up
    in order on the page: the same sum, the same win chance). */
 window.LudoMT = (function () {
-  const MW = window.MTWorkers ? (MTWorkers.init(), MTWorkers).use({ url: 'worker.js?v=3', warm: { type: 'ping' }, all: true }) : null;
+  const MW = window.MTWorkers ? (MTWorkers.init(), MTWorkers).use({ url: 'worker.js?v=4', warm: { type: 'ping' }, all: true }) : null;
   let rate = 0;
   async function wpMany(list, onEach, o) {
     o = o || {};

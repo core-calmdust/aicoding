@@ -1241,7 +1241,7 @@ body .info-line{font-size:12.5px}
 <script src="coach-i18n.js?v=6"></script>
 <script src="../shared/export.js?v=9l14"></script>
 <script src="../shared/mtengine.js?v=12"></script><script src="../shared/mtsplit.js?v=6"></script>
-<script src="mt.js?v=2"></script>
+<script src="../shared/proset.js?v=5t2svhxbf-sp2-pd1p"></script><script src="mt.js?v=3"></script>
 <script>
 'use strict';
 // ====================================================================== rules
@@ -1289,7 +1289,7 @@ const canDrop = (moves, c) => gridOf(moves)[c].length < ROWS;
 
 // ====================================================================== state
 const STORE = 'aicoding-connect4-v2';
-const settings = { mode: 'ai', color: 1, level: 5, level2: 5, anim: true, sound: true, hint: false, eval: true, last: true, threat: false, coach: true, lang: '' };
+const settings = { pro: null, pro2: null, mode: 'ai', color: 1, level: 5, level2: 5, anim: true, sound: true, hint: false, eval: true, last: true, threat: false, coach: true, lang: '' };
 const SUPPORTED = ['ja', 'en', 'zh', 'zh-TW', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'];
 function detectLang() { const n = (navigator.language || 'ja').toLowerCase(); if (/^zh-(tw|hk|mo|hant)/.test(n)) return 'zh-TW'; return ['ja', 'zh', 'ko', 'es', 'fr', 'pt', 'de', 'ru', 'tr', 'id', 'hi', 'ar'].find(c => n.startsWith(c)) || 'en'; }
 let LANG = detectLang();
@@ -1386,7 +1386,7 @@ const bookReady = fetch('book.json').then(r => r.ok ? r.json() : null).catch(() 
 let TREEBUF = null;
 const treeReady = fetch('tree.bin').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null).then(b => (TREEBUF = b));
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=20261109rs-sh1';
+const ENGINE_URL = 'engine.js?v=20261115p';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -1680,8 +1680,8 @@ function playerName(p) {
   if (puzzle) return p === puzzle.me ? t('you') : t('defender');
   if (settings.mode === 'online' && window.olPlayerName) return olPlayerName(p);
   if (settings.mode === 'pvp') return '';
-  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(p))}`;
-  return p === humanColor ? t('you') : `${AIW()} ${LV(settings.level)}`;
+  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(p))}${proTag(p)}`;
+  return p === humanColor ? t('you') : `${AIW()} ${LV(settings.level)}${proTag(p)}`;
 }
 let thinking = 0;  // color currently thinking
 function renderInfo() {
@@ -1818,7 +1818,7 @@ async function maybeAI(tok) {
   if (!isAIColor(p)) return;
   thinking = p; renderInfo(); hitsEl.classList.remove('can');
   const t0 = Date.now();
-  const res = await request('ai', { type: 'think', moves: shown, level: levelFor(p) });
+  const res = await request('ai', { type: 'think', moves: shown, level: levelFor(p), cfg: proCfg(p) });
   if (!res || tok !== busyToken) { if (tok === busyToken) { thinking = 0; renderInfo(); } return; }
   const wait = settings.mode === 'watch' ? 650 - (Date.now() - t0) : dropEndAt - performance.now();   // AIの着手は即時：前の駒が落ち切るのを待つだけ（観戦だけ間を取る）
   if (wait > 0) await new Promise(r => setTimeout(r, wait));
@@ -1884,7 +1884,7 @@ function recordGame(st) {
   if (st.resign && moves.length < 2) return;   // resigning before playing is not a game
   recordedMv = moves;
   const rated = !!(window.rtGame && rtGame()), lv = levelFor(humanColor === P1 ? P2 : P1);
-  GameRecord.add({ mode: rated ? 'rated' : 'ai', res: !st.winner ? 'd' : st.winner === humanColor ? 'w' : 'l', side: humanColor - 1, opp: 'AI Lv.' + lv + ' ' + LV(lv), key: (rated ? 'rt:' : 'ai:') + lv, n: moves.length, why: st.resign ? resignText(st) : st.draw ? t('res.drawSub') : '' });
+  GameRecord.add({ mode: rated ? 'rated' : 'ai', res: !st.winner ? 'd' : st.winner === humanColor ? 'w' : 'l', side: humanColor - 1, opp: 'AI Lv.' + lv + ' ' + LV(lv) + (rated ? '' : proTag(humanColor === P1 ? P2 : P1)), key: (rated ? 'rt:' : proFor(humanColor === P1 ? P2 : P1) ? 'ai:pro' : 'ai:') + lv, n: moves.length, why: st.resign ? resignText(st) : st.draw ? t('res.drawSub') : '' });
 }
 function resignText(st) { const x = RS_TXT[LANG] || RS_TXT.en; return settings.mode === 'pvp' ? x[1].replace('{c}', pname(st.loser)) : x[0]; }
 function canResign() {
@@ -2155,6 +2155,39 @@ $('#segMode').onclick = e => { const b = e.target.closest('button'); if (b) { dr
 $('#segColor').onclick = e => { const b = e.target.closest('button'); if (b) { draft.color = +b.dataset.v; segSync(); } };
 $('#levelRange').oninput = e => { draft.level = +e.target.value; segSync(); };
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
+// PRO mode (shared/proset.js; common rule「対局設定の Pro モード」, 2026-11-15): beside the level — vs the AI / AI vs AI, never rated.
+// 思考の制限 (time: the search then the solver in the last 80 % as Lv.7; depth: the search only), 定跡, 手のばらつき and
+// 必ず読み切る (Lv.8's exact solve, up to 60 s). The changed values go to engine.js think as cfg on top of the level's.
+const C4_LV = { 1: { depth: 1, noise: 60, blunder: 0.35 }, 2: { depth: 2, noise: 25, blunder: 0.12 }, 3: { depth: 4, noise: 10, blunder: 0.04 }, 4: { depth: 6, noise: 4 }, 5: { depth: 8, noise: 1.5 },
+  6: { depth: 12, time: 500 }, 7: { depth: 42, time: 1000, book: 4 }, 8: { depth: 42, time: 1800, book: 99, perfect: true } };   // (engine.js LEVELS)
+const PRO_VAR = [{ noise: 0, blunder: 0 }, { noise: 4, blunder: 0 }, { noise: 25, blunder: 0.12 }];   // なし／小（≈ Lv.4）／大（≈ Lv.2）
+const PRO_PERFECT = {
+  label: { ja: '必ず読み切る', en: 'Always solve', zh: '必定算到底', 'zh-TW': '必定算到底', ko: '반드시 끝까지 읽기', es: 'Resolver siempre', fr: 'Toujours résoudre', pt: 'Sempre resolver', de: 'Immer ausrechnen', ru: 'Всегда решать', tr: 'Her zaman çöz', id: 'Selalu selesaikan', hi: 'हमेशा अंत तक गणना', ar: 'الحل الكامل دائمًا' },
+  help: { ja: '定跡の外では毎手、勝ち・引き分け・負けが決まるまで読みます（最大60秒）。', en: 'Outside the book, every move is read until the result (win, draw or loss) is proven (up to 60 s).', zh: '在定式之外，每步都计算到胜、和、负确定为止（最多60秒）。', 'zh-TW': '在定式之外，每步都計算到勝、和、負確定為止（最多60秒）。', ko: '정석 밖에서는 매 수 승·무·패가 확정될 때까지 읽습니다(최대 60초).', es: 'Fuera del libro, cada jugada se calcula hasta probar el resultado (victoria, tablas o derrota), hasta 60 s.', fr: 'Hors de la bibliothèque, chaque coup est calculé jusqu’à prouver le résultat (gain, nulle ou perte), jusqu’à 60 s.', pt: 'Fora do livro, cada lance é calculado até provar o resultado (vitória, empate ou derrota), até 60 s.', de: 'Außerhalb der Eröffnungsbibliothek wird jeder Zug gerechnet, bis das Ergebnis (Sieg, Remis, Niederlage) bewiesen ist (bis 60 s).', ru: 'Вне дебютной книги каждый ход считается до доказанного результата (победа, ничья или поражение), до 60 с.', tr: 'Açılış kitabının dışında her hamle sonuç (galibiyet, beraberlik, yenilgi) kanıtlanana kadar hesaplanır (en çok 60 sn).', id: 'Di luar buku pembukaan, tiap langkah dihitung sampai hasilnya (menang, seri, kalah) terbukti (hingga 60 dtk).', hi: 'ओपनिंग बुक के बाहर हर चाल तब तक गिनी जाती है जब तक नतीजा (जीत, ड्रॉ या हार) साबित न हो (60 सेकंड तक)।', ar: 'خارج كتاب الافتتاحيات تُحسب كل نقلة حتى تثبت النتيجة (فوز أو تعادل أو خسارة)، حتى 60 ثانية.' } };
+const proDefaults = lv => { const L = C4_LV[lv] || C4_LV[5], n = L.noise || 0; return { limit: L.time ? { k: 'time', v: L.time / 1000 } : { k: 'depth', v: L.depth }, book: !!L.book, var: n >= 10 ? 2 : n > 0 ? 1 : 0, perfect: !!L.perfect }; };
+const proParams = () => [{ key: 'limit', kinds: { time: [0.1, 30], depth: [1, 42] } }, { key: 'perfect', type: 'bool', group: 'read', label: PRO_PERFECT.label, help: PRO_PERFECT.help }, { key: 'book' }, { key: 'var' }];
+var PRO = window.ProSet ? ProSet.init({ game: 'connect4', lang: () => LANG, level: () => draft.level || settings.level, show: () => draft.mode === 'ai' || draft.mode === 'watch',
+  store: { get: () => settings.pro, set: v => { settings.pro = v; save(); } }, defaults: proDefaults, params: proParams() }) : null;
+var PRO2 = window.ProSet ? ProSet.init({ game: 'connect4-w2', field: '#fLevel2', lang: () => LANG, level: () => draft.level2 || settings.level2, show: () => draft.mode === 'watch',
+  store: { get: () => settings.pro2, set: v => { settings.pro2 = v; save(); } }, defaults: proDefaults, params: proParams() }) : null;
+function proFor(p) {
+  if ((window.rtGame && rtGame()) || lesson || puzzle || !(settings.mode === 'ai' || settings.mode === 'watch')) return null;
+  const P = settings.mode === 'watch' && p !== P1 ? window.PRO2 : window.PRO;
+  return P ? P.get(levelFor(p)) : null;
+}
+function proCfg(p) {
+  const e = proFor(p); if (!e) return null;
+  const L = C4_LV[levelFor(p)] || C4_LV[5], o = {}, ch = k => e.changed.includes(k);
+  if (ch('limit')) {
+    if (e.limit.k === 'time') { const ms = Math.round(e.limit.v * 1000); Object.assign(o, { depth: 42, time: ms, solve: Math.round(ms * 0.8), solveLate: 0 }); }
+    else Object.assign(o, { depth: e.limit.v, time: 0, solve: 0, solveLate: 0 });
+  }
+  if (ch('book')) o.book = e.book ? L.book || 99 : 0;
+  if (ch('var')) Object.assign(o, PRO_VAR[e.var]);
+  if (ch('perfect')) { o.perfect = !!e.perfect; if (e.perfect) { o.hard = 60000; o.time = o.time || L.time || 1800; if (!o.book && !ch('book')) o.book = 99; } }
+  return o;
+}
+function proTag(p) { return proFor(p) ? ' PRO' : ''; }
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
 $('#btnStart').onclick = () => {
   hideOverlay('#newOverlay');
