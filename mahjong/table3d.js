@@ -441,7 +441,7 @@ class Table3D {
         const m = new THREE.Mesh(cq, rimMat); m.rotation.y = k * PI / 2; const q = this.local(k, 10.53, -10.53 + 0); m.position.set(0, 0, 0);
         // the block's own corner sits at the cloth's corner (+x, −z in its own frame), turned round the table's centre
         const piv = new THREE.Group(); piv.rotation.y = k * PI / 2; m.rotation.y = 0; m.position.set(10.53, 0, -10.53); piv.add(m); m.castShadow = m.receiveShadow = true; s.add(piv); void q; } }
-    const under = new THREE.Mesh(new THREE.PlaneGeometry(160, 160), new THREE.MeshStandardMaterial({ color: 0x0c0a14, roughness: 1 }));
+    const under = new THREE.Mesh(new THREE.PlaneGeometry(160, 160), new THREE.MeshBasicMaterial({ color: new THREE.Color(0x05040a).convertSRGBToLinear() }));   // (the floor beyond the rug: the same dark as the page round the table — ユーザー 2026-11-14: a lighter band showed at the top)
     under.rotation.x = -PI / 2; under.position.y = -0.4; s.add(under);
 
     // ---- the score unit (the centre of an automatic table): a rounded panel under a clear cover, standing on a narrower

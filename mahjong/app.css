@@ -1543,3 +1543,9 @@ html.ds .pstats .ps-box{zoom:1}
 html.ds .grc-ov > *{zoom:var(--MZ,1)}
 html.fz *,html.fz *::before,html.fz *::after{animation-play-state:paused!important}
 :is(#home,#chara).aaa .ap-rank{padding:5px 12px}:is(#home,#chara).aaa .ap-rank .rkb{font-size:14px}
+/* the game's corner buttons in a 2×2 block (ユーザー 2026-11-14: four in a row ran into the far player's card) */
+#game .tbtns{display:grid;grid-template-columns:repeat(2,auto);gap:6px}
+#game .tbtns .ib[hidden]{display:none}
+/* the bands above / below the table on a squarish window: plain dark, nothing of the home behind */
+body:has(#game:not([hidden])) #bgfx{background:#05040a}
+body:has(#game:not([hidden])) #bgfx::after{display:none}
