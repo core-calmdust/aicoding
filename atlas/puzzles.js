@@ -482,8 +482,11 @@
      'aicoding-backgammon-pz-last', the daily 'aicoding-backgammon-v2-daily'. Texts: the game's i18n*.js (a sandbox). On the 3D table
      you always play the near side: a problem for the other side is turned round (the two halves of the position swapped — the
      plays are written in the mover's own numbering, so they stay as they are). Rules: backgammon/bg.js (window.BG, loaded by the table). ---------- */
-  const BG_TX = ['../backgammon/i18n.js?v=20261107l14b', '../backgammon/i18n-x.js?v=20261111c8', '../backgammon/i18n-ls.js?v=20261107l14', '../backgammon/i18n-op.js?v=20261107l14'];
-  const bgTexts = () => Promise.all(BG_TX.map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(L => { const w = {}; for (const tx of L) { try { new Function('window', 'var I18N = window.I18N || (window.I18N = {});\n' + tx.replace(/^\s*var I18N = window\.I18N = \{\};/m, ''))(w); } catch (e) { console.warn('[puzzles] backgammon texts', e); } } return w.I18N || {}; });
+  const BG_TX = ['../backgammon/i18n.js?v=20261107l14b', '../backgammon/i18n-x.js?v=20261111c8', '../backgammon/i18n-ls.js?v=20261107l14', '../backgammon/i18n-op.js?v=20261107l14', '../backgammon/i18n-teach.js?v=1', '../backgammon/i18n-ls2.js?v=1'];
+  const bgTexts = () => Promise.all(BG_TX.map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(L => { const w = {}; for (const tx of L) { try { new Function('window', 'var I18N = window.I18N || (window.I18N = {});\n' + tx.replace(/^\s*var I18N = window\.I18N = \{\};/m, ''))(w); } catch (e) { console.warn('[puzzles] backgammon texts', e); } } window.AtlasBgTeach = { name: w.BGTeachName, html: w.BGTeachHTML }; return w.I18N || {}; });
+  // the commentary engine (backgammon/explain.js: what a play is for) — after the rules (it reads window.BG when it loads)
+  const bgScript = (src, test) => test() ? Promise.resolve() : new Promise(res => { const sc = document.createElement('script'); sc.src = src; sc.onload = sc.onerror = () => res(); document.head.appendChild(sc); });
+  window.AtlasBgExplain = window.AtlasBgExplain || (() => bgScript('../backgammon/bg.js?v=20261111c1', () => window.BG && BG.genPlays).then(() => bgScript('../backgammon/explain.js?v=20261115t', () => window.BGX && BGX.teach)));
   window.AtlasBgTexts = window.AtlasBgTexts || (() => window.__bgTx || (window.__bgTx = bgTexts()));
   const bgTurn = (pos, side) => side === 1 ? String(pos).slice(26) + String(pos).slice(0, 26) : String(pos);   // (the mover always at the near side)
   const bgCk = () => { let ck = ['gold', 'black']; try { const st = (JSON.parse(localStorage.getItem('aicoding-backgammon-v2') || '{}') || {}).settings || {}; if (st.ck && st.ck[0] && st.ck[1] && st.ck[0] !== st.ck[1]) ck = st.ck.slice(); } catch (e) {} return ck; };
@@ -687,7 +690,7 @@
   const catsOf = (id, lang) => loadBook(id).then(B => B.cats ? { cats: B.cats(lang), guide: B.guide } : null);
   function loadBook(id) {
     const B = BOOK[id]; if (B.data) return Promise.resolve(B);
-    return B.p || (B.p = Promise.all([fetch(B.url).then(r => r.json()), id === 'peg' ? fetch('../peg/daily.json?v=2').then(r => r.json()).catch(() => null) : id === 'gomoku' ? fetch('../gomoku/i18n.js?v=20261112c1').then(r => r.text()).catch(() => '') : id === 'go' ? fetch('../go/i18n.js?v=20261113').then(r => r.text()).catch(() => '') : id === 'checkers' ? fetch('../checkers/i18n.js?v=20261107l14-nd1').then(r => r.text()).catch(() => '') : id === 'xiangqi' ? fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd1').then(r => r.text()).catch(() => '') : id === 'backgammon' ? AtlasBgTexts() : null]).then(([d, dl]) => {
+    return B.p || (B.p = Promise.all([fetch(B.url).then(r => r.json()), id === 'peg' ? fetch('../peg/daily.json?v=2').then(r => r.json()).catch(() => null) : id === 'gomoku' ? fetch('../gomoku/i18n.js?v=20261112c1').then(r => r.text()).catch(() => '') : id === 'go' ? fetch('../go/i18n.js?v=20261113').then(r => r.text()).catch(() => '') : id === 'checkers' ? fetch('../checkers/i18n.js?v=20261107l14-nd1').then(r => r.text()).catch(() => '') : id === 'xiangqi' ? fetch('../xiangqi/i18n.js?v=4lv-l14-pro-nd1').then(r => r.text()).catch(() => '') : id === 'backgammon' ? Promise.all([AtlasBgTexts(), AtlasBgExplain()]).then(r => r[0]) : null]).then(([d, dl]) => {
       B.data = id === 'shogi' || id === 'peg' || id === 'gomoku' || id === 'go' || id === 'checkers' || id === 'xiangqi' || id === 'backgammon' ? B.prep(d) : d; if (id === 'peg') B.daily = dl;
       if (id === 'gomoku' || id === 'go' || id === 'checkers' || id === 'xiangqi') { const w = {}; try { new Function('window', dl)(w); } catch (e) {} B.I = w.I18N || {}; }
       if (id === 'backgammon') B.I = dl || {};   // (a sandbox: the page's own words stay untouched)
@@ -725,7 +728,7 @@
 .pzst{width:22px;height:22px;fill:#e6dccb;stroke:none}.pzst.on{fill:#ffb81c;filter:drop-shadow(0 1px 0 #c98400)}
 @keyframes pzPop{0%{transform:scale(.2)}70%{transform:scale(1.25)}100%{transform:scale(1)}}.pzst.on{animation:pzPop .4s cubic-bezier(.3,1.5,.5,1) both}
 .pzst.on:nth-child(2){animation-delay:.12s}.pzst.on:nth-child(3){animation-delay:.24s}
-.bgch{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 2px}.bgch[hidden]{display:none}.bgch .btn{flex:1 1 auto;min-width:0;padding:7px 10px;font-size:13px;background:#fff;color:#2b3044;border:2px solid #e2d6bf;box-shadow:none}.bgch .btn.ok{background:#1ea36c;color:#fff;border-color:#1ea36c}.bgch .btn.ng{background:#ff5d5d;color:#fff;border-color:#ff5d5d}
+.bg-teach{margin-top:6px;font-size:.9em;line-height:1.5}.bg-teach .bt-h{font-weight:800;color:#8a5a14;margin-top:4px}.bg-teach ul{margin:2px 0 0;padding-inline-start:1.2em}.bg-teach li{margin:1px 0}.bgch{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 2px}.bgch[hidden]{display:none}.bgch .btn{flex:1 1 auto;min-width:0;padding:7px 10px;font-size:13px;background:#fff;color:#2b3044;border:2px solid #e2d6bf;box-shadow:none}.bgch .btn.ok{background:#1ea36c;color:#fff;border-color:#1ea36c}.bgch .btn.ng{background:#ff5d5d;color:#fff;border-color:#ff5d5d}
 @media (max-width:600px){.rgd.pzg .pic{display:none!important}.rgd.pzg .bub::before,.rgd.pzg .bub::after{display:none!important}}`;   // (phones: no guide picture in the puzzle / lesson box — it broke the row of buttons, 2026-11-11)
     document.head.appendChild(s);
   }
@@ -1192,11 +1195,16 @@
       const q0 = bgDec(p.bg.pos);
       return (p._plays = p.P.plays.map(([m, e]) => { const q = q0.slice(), mv = []; for (let i = 0; i < m.length; i += 2) mv.push(BG.apply(q, 0, m.charCodeAt(i) - 65, m.charCodeAt(i + 1) - 65)); return { moves: mv, key: BG.key(q), e }; }));
     }
-    const bgN = mv => `<bdi class="mv">${BG.notation(mv)}</bdi>`;
-    function bgWhy(p, mine) {   // the stored explanation: what the position asks for, why the best play is right
+    const bgN = () => ctx.lang === 'ja' ? '緑の矢印の手' : '<i class="ls-spot ok"></i>';   // (the 3D board has no point numbers: the move is its green arrows)
+    function bgWhy(p, mine, mineSteps) {   // what the position asks for, then what the best play is for (and what yours gives up)
       const P = p.P, out = []; if (P.sit) out.push(B.tx(P.sit[0], ctx.lang, P.sit[1]));
-      if (P.r && !p.cube) { const L = bgPlays(p), alt = mine > 0 && mine < L.length ? mine : (P.alt || 1); if (L[alt] && alt === (P.alt || 1)) out.push(P.r.slice(0, 2).map(r => B.tx(r[0], ctx.lang, r[1])).join(' ')); }
-      return out.filter(Boolean).length ? '<br><small>' + out.filter(Boolean).join('<br>') + '</small>' : '';
+      let teach = '';
+      if (!p.cube && window.BGX && BGX.teach && window.AtlasBgTeach && AtlasBgTeach.html) {
+        try { const L = bgPlays(p), q0 = bgDec(p.bg.pos), mk = mv => { const q = q0.slice(); mv.forEach(c => BG.apply(q, 0, BG.mvFrom(c), BG.mvTo(c))); return { moves: mv, pos: q }; };
+          const mineP = mineSteps ? mk(mineSteps) : mine > 0 && L[mine] ? mk(L[mine].moves) : null;
+          teach = AtlasBgTeach.html(BGX.teach(q0, 0, mk(L[0].moves), mineP), (k, v) => B.tx(k, ctx.lang, v), false, true); } catch (e) { console.warn(e); }
+      }
+      return (out.length ? '<br><small>' + out.join('<br>') + '</small>' : '') + teach;
     }
     function bgReach(q, left, used, dice) {   // the final positions a part-played roll can still reach
       const out = new Set(), seen = new Set();
@@ -1216,7 +1224,7 @@
       if (p !== cur) return; const L = bgPlays(p), k = mine && L.findIndex(x => x.moves.join() === mine.join()), myE = k >= 0 ? L[k].e : null;
       p.failed = true; p.state = 'fail'; streak = 0; chime(false); buttons();
       pz().reset(); pz().mark([{ play: L[0].moves, cls: 'ok' }, { play: mine, cls: 'ng' }]);
-      say(`${blunder ? (line('wrong') || X.wrongNo) : B.tx('pz.fail', ctx.lang)} ${B.tx('pz.failWhy', ctx.lang, { m: bgN(L[0].moves), l: myE == null ? '>' + (L[0].e - L[L.length - 1].e).toFixed(3) : (L[0].e - myE).toFixed(3) })}` + bgWhy(p, k) + ' ' + (line('retry') || X.retry));
+      say(`${blunder ? (line('wrong') || X.wrongNo) : B.tx('pz.fail', ctx.lang)} ${B.tx('pz.failWhy', ctx.lang, { m: bgN(L[0].moves), l: myE == null ? '>' + (L[0].e - L[L.length - 1].e).toFixed(3) : (L[0].e - myE).toFixed(3) })} ` + (line('retry') || X.retry) + bgWhy(p, k, mine));
     }
     function bgMoved(p, u) {
       if (p !== cur || stopped) return; const L = bgPlays(p), mine = L.findIndex(x => x.key === u.key);

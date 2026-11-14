@@ -136,7 +136,7 @@ svg :is([stroke="#ffe6a0"],[fill="#ffe6a0"],[stroke="#fff3cf"],[stroke="#dfe3ea"
 .die i{width:72%;height:72%;margin:auto;border-radius:50%;visibility:hidden}
 .die.p0 i{background:radial-gradient(circle at 40% 35%,var(--k0p1),var(--k0p2))}
 .die.p1 i{background:radial-gradient(circle at 40% 35%,var(--k1p1),var(--k1p2))}
-.die i.on{visibility:visible}
+.die i.on{visibility:visible}.die i.on.ace{background:#d0121c!important;width:92%;height:92%;box-shadow:inset 0 1px 2px rgba(0,0,0,.35)!important}
 .die.used{opacity:.32;filter:grayscale(.6)}
 .dice3d{position:absolute;left:0;top:0;pointer-events:none}
 .die.dbl{animation:dblGlow 1.1s ease-out}
@@ -1541,13 +1541,15 @@ html.lnd .toast{font-size:13px;padding:9px 16px}
 <script src="i18n-x.js?v=20261111c8"></script>
 <script src="i18n-ls.js?v=20261107l14"></script>
 <script src="i18n-op.js?v=20261107l14"></script>
+<script src="i18n-teach.js?v=1"></script>
+<script src="i18n-ls2.js?v=1"></script>
 <script src="bg.js?v=20261111c1"></script>
 <script src="../shared/tick.js?v=2l14"></script>
 <script src="i18n-online.js?v=20261107l14-hb1"></script>
 <script src="firebase-config.js?v=ac1"></script>
 <script src="../shared/onlinesec.js?v=2l14as1"></script>
 <script src="online.js?v=stale2pfas1tq"></script>
-<script src="explain.js?v=20261021pz"></script>
+<script src="explain.js?v=20261115t"></script>
 <script src="../shared/resign.js?v=3l14"></script>
 <script src="../shared/rulesoffer.js?v=17l14j"></script>
 <script src="../shared/headerbar.js?v=63"></script>
@@ -1557,7 +1559,7 @@ html.lnd .toast{font-size:13px;padding:9px 16px}
 <script src="../shared/watchpause.js?v=2l14"></script>
 <script src="../shared/ruletour.js?v=30tw"></script>
 <script src="../shared/pzbook.js?v=8l14"></script>
-<script src="dice3d.js?v=20261021pz"></script>
+<script src="dice3d.js?v=20261115r"></script>
 <script src="themes.js?v=20261111c8"></script>
 <script src="../shared/coachkit.js?v=17l14"></script>
 <script src="../shared/record.js?v=16"></script>
@@ -1579,7 +1581,7 @@ html.lnd .toast{font-size:13px;padding:9px 16px}
   const f = document.createElement('link'); f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=RocknRoll+One&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@600;700&display=swap'; document.head.appendChild(f);
   const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   if (window.AtlasLoading) { AtlasLoading.show(); setTimeout(() => AtlasLoading.hide(), 12000); }   // safety net
-  (/[?&]three=128\b/.test(location.search) ? load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js') : load('../atlas/vendor/three-r186.min.js?v=1').then(() => load('../atlas/vendor/three-compat.js?v=15'))).then(() => load('../atlas/img/tex/baked.js?v=2')).then(() => load('../atlas/table3d.js?v=169')).then(() => load('../atlas/tables3d.js?v=126')).then(() => load('../atlas/skin/common.js?v=105')).then(() => load('../atlas/models/backgammon.js?v=122')).then(() => load('../atlas/skin/backgammon.js?v=10'))
+  (/[?&]three=128\b/.test(location.search) ? load('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js') : load('../atlas/vendor/three-r186.min.js?v=1').then(() => load('../atlas/vendor/three-compat.js?v=15'))).then(() => load('../atlas/img/tex/baked.js?v=2')).then(() => load('../atlas/table3d.js?v=169')).then(() => load('../atlas/tables3d.js?v=126')).then(() => load('../atlas/skin/common.js?v=105')).then(() => load('../atlas/models/backgammon.js?v=123')).then(() => load('../atlas/skin/backgammon.js?v=10'))
     .catch(() => { document.documentElement.classList.remove('atlas-skin'); if (window.AtlasLoading) AtlasLoading.hide(); });
 })();
 </script>

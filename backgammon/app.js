@@ -378,7 +378,7 @@ function dieHTML(s, v, x, y, used, size, yaw) {
   // yaw: the angle a thrown die came to rest at; the drop shadow is turned back so it still falls straight down
   const rot = yaw ? `transform:rotate(${yaw.toFixed(4)}rad);--sx:${(0.08 * Math.sin(yaw)).toFixed(4)};--sy:${(0.08 * Math.cos(yaw)).toFixed(4)};` : '';
   let h = `<div class="die p${s}${used ? ' used' : ''}" style="left:${U(MX(x))};top:${U(MY(y))};${size ? `--ds:${size};` : ''}${rot}">`;
-  for (let i = 0; i < 9; i++) h += `<i class="${on.has(i) ? 'on' : ''}"></i>`;
+  for (let i = 0; i < 9; i++) h += `<i class="${on.has(i) ? (+v === 1 ? 'on ace' : 'on') : ''}"></i>`;   // (the ace in red, 2026-11-15)
   return h + '</div>';
 }
 // dice of side s: values, which are used
@@ -2337,7 +2337,7 @@ async function bgDiagram(mode) {
       const ds = P * 0.7, cx = st.lastSide === 0 ? ox + half + bar + half / 2 : ox + half / 2, cy = oy + H / 2;
       st.dice.forEach((d, k) => { const x = cx + (k ? 4 : -ds - 4), y = cy - ds / 2; gg.fillStyle = col(st.lastSide); gg.strokeStyle = ink; gg.lineWidth = 1.4; gg.beginPath(); gg.roundRect(x, y, ds, ds, 5); gg.fill(); gg.stroke();
         const pip = [[], [[.5, .5]], [[.25, .25], [.75, .75]], [[.25, .25], [.5, .5], [.75, .75]], [[.25, .25], [.75, .25], [.25, .75], [.75, .75]], [[.25, .25], [.75, .25], [.5, .5], [.25, .75], [.75, .75]], [[.25, .22], [.75, .22], [.25, .5], [.75, .5], [.25, .78], [.75, .78]]][d];
-        gg.fillStyle = st.lastSide ? '#fff' : ink; for (const [u, v] of pip) { gg.beginPath(); gg.arc(x + u * ds, y + v * ds, ds * 0.085, 0, 7); gg.fill(); } });
+        gg.fillStyle = d === 1 ? '#d0121c' : st.lastSide ? '#fff' : ink; for (const [u, v] of pip) { gg.beginPath(); gg.arc(x + u * ds, y + v * ds, ds * (d === 1 ? 0.11 : 0.085), 0, 7); gg.fill(); } });
     }
   } });
 }
@@ -2809,6 +2809,7 @@ function openIntro(i) {
   let body = t('ls.' + s.id + '.intro', { c: pname(0), o: pname(1), fig0: '{fig0}', fig1: '{fig1}' });
   if (s.figs) body = body.replace(/\{fig(\d)\}/g, (_, i) => s.figs[+i] ? lsFigHTML(s.figs[+i], t('ls.' + s.id + '.cap' + i)) : '');
   else body = dia + body;
+  if (window.BGLsKeys) body += BGLsKeys(s.id, t);   // (2026-11-15: three principles for the step)
   // the common lesson page (shared/luxintro.js, 2026-11-11): board · facts · how to think · trivia — as much as shogi's page
   if (window.LuxIntro) {
     const THK = s.figs ? body : body.replace(dia, ''), FG = s.figs ? '' : dia || lsThumb(s);   // (no diagram: the first problem's position)
@@ -2944,16 +2945,12 @@ function renderLessonFb() {
   $('#lsFb').innerHTML = h;
 }
 // why the best play is better (computed features -> the same templates as the review), plus what kind of position it is
-function lsWhyHTML(P, F) {
-  if (!window.BGX || !F.plays || F.plays.length < 2) return '';
+function lsWhyHTML(P, F) {   // (2026-11-15) what the best play is for and what the chosen play gives up (explain.js teach), then the kind of position
+  if (!window.BGX || !F.plays || !F.plays.length) return '';
   try {
-    const p = decPos(P.pos), mineBest = F.mine === 0 || F.pts === 20, alt = mineBest ? F.plays[1] : F.plays[F.mine];
-    if (!alt) return '';
-    const x = BGX.compare(p, P.side, F.plays[0], alt);
-    const NEG = ['x.shots', 'x.shots0', 'x.win', 'x.stack', 'x.noHit', 'x.subtle'];
-    const r = x.r.filter(z => !(mineBest && NEG.includes(z.k)) && z.k !== 'x.win');
-    const li = r.map(z => `<li>${t(z.k, z.a)}</li>`).join('');
-    return `<div class="ls-why">${li ? `<ul>${li}</ul>` : ''}<div class="sit"><b>${t('rv.sitLbl')}</b>${t(x.sit.k, x.sit.a)}</div></div>`;
+    const p = decPos(P.pos), mineBest = F.mine === 0 || F.pts === 20;
+    const T = BGX.teach(p, P.side, F.plays[0], mineBest ? null : F.plays[F.mine]), x = BGX.situation(p, P.side);
+    return (window.BGTeachHTML ? BGTeachHTML(T, t, true) : '') + `<div class="ls-why"><div class="sit"><b>${t('rv.sitLbl')}</b>${t(x.k, x.a)}</div></div>`;
   } catch (e) { return ''; }
 }
 function tagText(P) { return P.tags && P.tags.length ? P.tags.map(tg => t('tag.' + tg[0], { n: tg[1] })).join(' ') : ''; }
@@ -3126,13 +3123,14 @@ function pzExplainHTML(mine) {
   let h = '<div class="ls-why pz-why">';
   if (P.sit) h += `<div class="sit" style="margin:0 0 6px"><b>${t('rv.sitLbl')}</b>${t(P.sit[0], P.sit[1])}</div>`;
   if (P.cx) h += `<ul>${P.cx.map(r => `<li>${t(r[0], r[1])}</li>`).join('')}</ul>`;
+  if (plays && window.BGX && BGX.teach && window.BGTeachHTML) { try { const mi = mine > 0 && mine < plays.length ? mine : -1; h += BGTeachHTML(BGX.teach(decPos(P.pos), P.side, plays[0], mi > 0 ? plays[mi] : null), t, true); } catch (e) {} }
   if (plays && P.r) {
     const alt = mine > 0 && mine < plays.length ? mine : (P.alt || 1), altP = plays[alt];
     const rs = (alt === (P.alt || 1) ? P.r : null);
     if (altP) h += `<div class="pz-alt">${t('pz.altIs', { m: mvb(BG.notation(altP.moves)), d: (plays[0].e - altP.e).toFixed(3) })}</div>`;
     let list = rs;
     if (!list && window.BGX) { try { list = BGX.compare(decPos(P.pos), P.side, plays[0], altP).r.map(z => [z.k, z.a]); } catch (e) { list = P.r; } }
-    if (list && list.length) h += `<ul>${list.map(r => `<li class="${r[0] === 'x.win' ? 'num' : ''}">${t(r[0], r[1])}</li>`).join('')}</ul>`;
+    if (list && list.length && !(window.BGX && BGX.teach && window.BGTeachHTML)) h += `<ul>${list.map(r => `<li class="${r[0] === 'x.win' ? 'num' : ''}">${t(r[0], r[1])}</li>`).join('')}</ul>`;   // (the old feature list: only without the teaching comment below)
   }
   return h + '</div>';
 }

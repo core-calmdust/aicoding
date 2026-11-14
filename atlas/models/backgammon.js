@@ -801,8 +801,11 @@
     if (dieMats[id]) return dieMats[id];
     const TT = T(), [f, p, gold] = DIE[id] || DIE.gold;
     return (dieMats[id] = { body: new TT.MeshPhysicalMaterial({ color: new TT.Color(f).convertSRGBToLinear(), roughness: .28, clearcoat: .9, clearcoatRoughness: .08 }),
-      pip: gold ? new TT.MeshStandardMaterial({ color: new TT.Color(p).convertSRGBToLinear(), metalness: 1, roughness: .25, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }) : new TT.MeshStandardMaterial({ color: new TT.Color(p).convertSRGBToLinear(), roughness: .45, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }) });
+      pip: gold ? new TT.MeshStandardMaterial({ color: new TT.Color(p).convertSRGBToLinear(), metalness: 1, roughness: .25, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }) : new TT.MeshStandardMaterial({ color: new TT.Color(p).convertSRGBToLinear(), roughness: .45, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }),
+      // the ace in red (2026-11-15) — on a red die it keeps the die's own pip colour
+      one: id === 'red' ? null : new TT.MeshStandardMaterial({ color: new TT.Color('#d0121c').convertSRGBToLinear(), roughness: .4, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }) });
   }
+  const pipM = (m, v) => +v === 1 && m.one ? m.one : m.pip;
   // a pip: a round painted dot lying on the face (2026-11-15: the half-sunk low-poly spheres were cut by the rounded edges into dashes)
   const pipGeos = {};
   function pipGeo(size) { const k = size.toFixed(3); if (pipGeos[k]) return pipGeos[k]; const TT = T(), g = new TT.CircleGeometry(size * .078, 28); return (pipGeos[k] = g); }
@@ -816,7 +819,7 @@
       const [n, u, w] = F[v];
       for (const i of PIPS[v]) {
         const cu = (i % 3 - 1) * sp, cw = ((i / 3 | 0) - 1) * sp, d = h + size * .002;
-        const s = new TT.Mesh(pg, m.pip); s.position.set(n[0] * d + u[0] * cu + w[0] * cw, n[1] * d + u[1] * cu + w[1] * cw, n[2] * d + u[2] * cu + w[2] * cw);
+        const s = new TT.Mesh(pg, pipM(m, v)); if (+v === 1) s.scale.setScalar(1.3); s.position.set(n[0] * d + u[0] * cu + w[0] * cw, n[1] * d + u[1] * cu + w[1] * cw, n[2] * d + u[2] * cu + w[2] * cw);
         s.quaternion.setFromUnitVectors(new TT.Vector3(0, 0, 1), new TT.Vector3(n[0], n[1], n[2])); g.add(s);
       }
     }
@@ -836,7 +839,7 @@
     const body = new TT.Mesh(RB(size, size, size, size * .16, 2), m.body); body.castShadow = body.receiveShadow = true; g.add(body);
     const pg = pipGeo(size), sp = size * .76 / 3;
     for (const F of GF) for (const i of PIPS[F.v]) {
-      const cu = (i % 3 - 1) * sp, cw = ((i / 3 | 0) - 1) * sp, d = h + size * .002, s = new TT.Mesh(pg, m.pip);
+      const cu = (i % 3 - 1) * sp, cw = ((i / 3 | 0) - 1) * sp, d = h + size * .002, s = new TT.Mesh(pg, pipM(m, F.v)); if (F.v === 1) s.scale.setScalar(1.3);
       s.position.set(F.n[0] * d + F.u[0] * cu + F.w[0] * cw, F.n[1] * d + F.u[1] * cu + F.w[1] * cw, F.n[2] * d + F.u[2] * cu + F.w[2] * cw);
       s.quaternion.setFromUnitVectors(new TT.Vector3(0, 0, 1), new TT.Vector3(F.n[0], F.n[1], F.n[2])); g.add(s);
     }
