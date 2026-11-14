@@ -22,7 +22,12 @@
   if (!THREE || !T3 || !T3.checkers || !E || !window.AtlasSkin || typeof window.syncPieces !== 'function' || typeof window.animateMove !== 'function') return;
   const boardDom = document.getElementById('board'), piecesDom = document.getElementById('pieces'), de = document.documentElement;
   de.classList.add('atlas-checkers');
-  const root = T3.MODELS.checkers(true), U = root.userData, S = U.S, Y = U.top, OUT = U.outer, FR = (OUT * S - S) / 2;   // FR: the board's margin round the field (squares)
+  let root = T3.MODELS.checkers(true), U = root.userData, Y = U.top;   // (rebuilt when the look changes: build())
+  const S = U.S, OUT = U.outer, FR = (OUT * S - S) / 2;   // FR: the board's margin round the field (squares) — the same for every look
+  const C3 = T3.checkers, pc3 = () => C3.pcSet();
+  // the page's little discs in the chosen set's two colours (CSS variables on <html>)
+  function setPcVars() { const d = document.documentElement.style; d.setProperty('--ckG', C3.swatch(1)); d.setProperty('--ckW', C3.swatch(2)); const g = C3.tone(1), w = C3.tone(2); d.setProperty('--ckGbar', `linear-gradient(90deg,${g[1]},${g[2]})`); d.setProperty('--ckWbar', `linear-gradient(90deg,${w[1]},${w[0]})`); }
+  setPcVars();
 
   /* ---------- page layout: the DOM frame = the 3D board's outer edge ---------- */
   const st = document.createElement('style');
@@ -54,16 +59,16 @@ html.atlas-checkers .pieces .pc.mustjump{animation:ckMJ 1.1s ease-in-out infinit
 @keyframes ckMJ{0%,100%{box-shadow:0 0 0 2px rgba(255,180,40,.75),0 0 10px rgba(255,180,40,.45)}50%{box-shadow:0 0 0 4px rgba(255,180,40,.95),0 0 22px rgba(255,180,40,.85)}}
 html.atlas-checkers .pieces .pc.threat{box-shadow:0 0 0 2.5px rgba(255,90,70,.9),0 0 12px rgba(255,90,70,.6)!important}
 html.atlas-checkers .pieces .hov{opacity:.35}
-html.atlas-checkers .pieces .hov.p1{background:radial-gradient(circle at 35% 30%,#fff1c2,#e8b64e 45%,#8a6418)!important}
-html.atlas-checkers .pieces .hov.p2{background:radial-gradient(circle at 35% 30%,#fff,#d6d9de 45%,#7c8189)!important}
+html.atlas-checkers .pieces .hov.p1{background:var(--ckG)!important}
+html.atlas-checkers .pieces .hov.p2{background:var(--ckW)!important}
 html.atlas-checkers .reserve{height:${C(FR.toFixed(3))}!important;padding-inline-start:${C(.45)}!important}
 html.atlas-checkers .reserve .rv{width:${C(.36)}!important;height:${C(.36)}!important;box-shadow:0 2px 3px rgba(0,0,0,.45)!important}
-html.atlas-checkers .reserve .rv.p1{background:radial-gradient(circle at 35% 30%,#fff1c2,#e8b64e 45%,#8a6418)!important}
-html.atlas-checkers .reserve .rv.p2{background:radial-gradient(circle at 35% 30%,#fff,#d6d9de 45%,#7c8189)!important}
-html.atlas-checkers .pdisc.p1,html.atlas-checkers .kifu button i.p1,html.atlas-checkers .rv-list .mv i.p1{background:radial-gradient(circle at 35% 30%,#fff1c2,#e8b64e 45%,#8a6418)!important;box-shadow:0 1px 2px rgba(0,0,0,.3)!important}
-html.atlas-checkers .pdisc.p2,html.atlas-checkers .kifu button i.p2,html.atlas-checkers .rv-list .mv i.p2{background:radial-gradient(circle at 35% 30%,#fff,#d6d9de 45%,#7c8189)!important;box-shadow:0 1px 2px rgba(0,0,0,.3)!important}
-html.atlas-checkers .evalbar{background:linear-gradient(90deg,#d6d9de,#f4f5f7)!important}
-html.atlas-checkers .evalbar .fill{background:linear-gradient(90deg,#f0c25e,#b8862a)!important}
+html.atlas-checkers .reserve .rv.p1{background:var(--ckG)!important}
+html.atlas-checkers .reserve .rv.p2{background:var(--ckW)!important}
+html.atlas-checkers .pdisc.p1,html.atlas-checkers .kifu button i.p1,html.atlas-checkers .rv-list .mv i.p1{background:var(--ckG)!important;box-shadow:0 1px 2px rgba(0,0,0,.3)!important}
+html.atlas-checkers .pdisc.p2,html.atlas-checkers .kifu button i.p2,html.atlas-checkers .rv-list .mv i.p2{background:var(--ckW)!important;box-shadow:0 1px 2px rgba(0,0,0,.3)!important}
+html.atlas-checkers .evalbar{background:var(--ckWbar)!important}
+html.atlas-checkers .evalbar .fill{background:var(--ckGbar)!important}
 html.atlas-checkers .reserve .rv::before{box-shadow:inset 0 0 0 1px rgba(0,0,0,.18)!important}
 html.atlas-checkers .reserve .lbl{color:rgba(255,250,240,.92)!important;text-shadow:0 1px 2px rgba(0,0,0,.6)}
 html.atlas-checkers .sqfx.last{background:rgba(255,206,90,.32)!important;box-shadow:inset 0 0 0 2px rgba(255,206,90,.55)!important}
@@ -72,9 +77,11 @@ html.atlas-checkers .dest{background:rgba(60,214,130,.9)!important;box-shadow:0 
 html.atlas-checkers .dest.mid{background:rgba(60,214,130,.55)!important}
 html.atlas-checkers .sqfx.trail{background:rgba(60,214,130,.18)!important}
 html.atlas-checkers #fPieces{display:none!important}
-html.atlas-checkers .ck3dnote{margin:0;padding:12px 14px;border-radius:14px;background:#f8f0e0;border:2px solid #ead9b6;font-size:13px;line-height:1.6;color:#4a4f66}
-html.atlas-2d .ck3dnote{display:none!important}
-html.atlas-checkers .ck3dnote b{display:block;font-size:14px;color:#2b3044;margin-bottom:2px}
+html.atlas-skin #f3D{margin:12px 0 0;padding:10px 12px 12px;border-radius:14px;background:#f6f1e4;border:2px solid #e2cf9e}
+html.atlas-skin #f3D > label{display:block;font-weight:700;font-size:13px;color:#7a5a1c;margin:0 0 8px}
+html.atlas-skin #f3D > label.pc3l{margin-top:12px}
+html.atlas-skin #f3D .bdrow button img{display:block;width:100%;aspect-ratio:1/1;object-fit:contain;border-radius:8px}
+html.atlas-skin #f3D .bdrow.pc3 button img{aspect-ratio:3/2;background:radial-gradient(80% 80% at 50% 40%,#6a5e52,#2a231d);padding:4%;box-sizing:border-box}
 @media (max-width: 760px){html.atlas-checkers .frame{margin-top:${C(.1)}!important}}
 `;
   document.head.appendChild(st);
@@ -89,6 +96,8 @@ html.atlas-checkers .ck3dnote b{display:block;font-size:14px;color:#2b3044;margi
     skip: 'lines|\\.pc|\\.rv|reserve|sqfx|\\.dest|\\.mark|\\.hov|fxsvg|hintlbl|frame|prompt|crown',
     start(lv, side, mode) {
       if (typeof openNewDialog !== 'function' || typeof draft !== 'object' || typeof segSync !== 'function' || !document.getElementById('btnStart')) return null;
+      // the portal's card: straight to the puzzles / the lessons / the online match search (checkers/app.js AtlasDeep, 2026-11-14)
+      if (/^(puzzle|lesson|online)$/.test(mode)) { if (!window.AtlasDeep) return null; const q = new URLSearchParams(location.search); return AtlasDeep(mode, q.get('sub'), q.get('tc')); }
       openNewDialog();
       draft.mode = mode === 'rated' || mode === 'pvp' ? mode : 'ai';
       if (side === 1 || side === 2) draft.color = side;
@@ -100,36 +109,87 @@ html.atlas-checkers .ck3dnote b{display:block;font-size:14px;color:#2b3044;margi
   if (!skin) return;
   T3.show('checkers', root, { still: true });
   skin.alignTo(S, Y);
-  // デザイン: "3D board" first in the board row, or one of the game's own 2D boards (shown as the plain 2D page)
-  if (skin.view) skin.view({ key: 'atlas-checkers-view', row: document.getElementById('bdRow'), img: '../images/atlas/checkers.webp', cls: ['atlas-checkers'] });
+  let built = U.look;
+  function build() {   // a new look: a new board (the checkers on it are made again by mirror())
+    const look = T3.BOARDS.checkers.get(); if (look === built) return false;
+    built = look; tok++;
+    for (const [, o] of P3) drop(o.g); P3.clear();
+    root = T3.MODELS.checkers(true, look); U = root.userData; Y = U.top;
+    T3.show('checkers', root, { still: true }); skin.alignTo(S, Y);
+    dispatchEvent(new Event('resize')); T3.kick(600);
+    return true;
+  }
+  // デザイン: 「3D盤」 (six boards) and 「3D駒」 (six sets) under the game's own 2D boards (picking a 2D board shows the plain 2D page)
+  const V = skin.view && skin.view({ key: 'atlas-checkers-view', cls: ['atlas-checkers'] });
   T3.kick(800);
   { let last = ''; const app = document.querySelector('.app');   // the online dock / header bar can move the board without resizing it
     const chk = () => { const r = boardDom.getBoundingClientRect(), k = Math.round(r.left) + ',' + Math.round(r.top + scrollY) + ',' + Math.round(r.width); if (k !== last) { last = k; dispatchEvent(new Event('resize')); } };
     if (app && window.ResizeObserver) new ResizeObserver(() => requestAnimationFrame(chk)).observe(app); setTimeout(chk, 3000); setTimeout(chk, 6000); }
 
-  /* ---------- the new-game dialog: the 3D set replaces the 2D board / piece designs ---------- */
-  const NOTE = {
-    ja: ['3D高級盤', '漆塗りの盤面と黒漆の枠、金（黒）と銀（白）の金属駒で表示しています。'],
-    en: ['Luxury 3D board', 'Lacquered field in a black lacquer frame, with gold (Black) and silver (White) metal checkers.'],
-    zh: ['3D豪华棋盘', '漆面棋盘配黑漆边框，金色（黑方）与银色（白方）金属棋子。'],
-    ko: ['3D 고급 판', '옻칠 판면과 검은 옻칠 테두리, 금(흑)·은(백) 금속 말로 표시합니다.'],
-    es: ['Tablero 3D de lujo', 'Campo lacado en marco de laca negra, con piezas metálicas doradas (negras) y plateadas (blancas).'],
-    fr: ['Damier 3D de luxe', 'Champ laqué dans un cadre en laque noire, pions métalliques or (Noirs) et argent (Blancs).'],
-    pt: ['Tabuleiro 3D de luxo', 'Campo laqueado em moldura de laca preta, com peças de metal douradas (pretas) e prateadas (brancas).'],
-    de: ['Luxus-3D-Brett', 'Lackiertes Spielfeld im schwarzen Lackrahmen, mit goldenen (Schwarz) und silbernen (Weiß) Metallsteinen.'],
-    hi: ['3D लक्ज़री बोर्ड', 'लाख वाला बोर्ड, काले लाख का फ़्रेम, और सुनहरी (काला) व चाँदी (सफ़ेद) धातु की गोटियाँ।'],
-    ar: ['رقعة فاخرة ثلاثية الأبعاد', 'سطح مطلي بالورنيش داخل إطار من الورنيش الأسود، مع قطع معدنية ذهبية (الأسود) وفضية (الأبيض).'],
-    ru: ['Роскошная 3D-доска', 'Лаковое поле в чёрной лаковой раме, с золотыми (чёрные) и серебряными (белые) металлическими шашками.'],
-    'zh-TW': ['高級3D棋盤', '漆面棋盤配黑漆邊框，搭配金色（黑方）與銀色（白方）的金屬棋子。'],
-    id: ['Papan 3D mewah', 'Bidang berpernis dalam bingkai pernis hitam, dengan bidak logam emas (Hitam) dan perak (Putih).'],
-    tr: ['Lüks 3D tahta', 'Siyah lake çerçeve içinde lake alan, altın (Siyah) ve gümüş (Beyaz) metal taşlarla.'],
-  };
+  /* ---------- the new-game dialog: 「3D盤」 (boards) and 「3D駒」 (sets) under the 2D boards (as amazons, 2026-11-14) ---------- */
+  const T3L = { ja: '3D盤', en: '3D boards', zh: '3D棋盘', ko: '3D 판', es: 'Tableros 3D', fr: 'Plateaux 3D', pt: 'Tabuleiros 3D', de: '3D-Bretter', hi: '3D बोर्ड', ar: 'رقع ثلاثية الأبعاد', ru: '3D-доски', 'zh-TW': '3D棋盤', id: 'Papan 3D', tr: '3D tahtalar' };
+  const P3L = { ja: '3D駒', en: '3D pieces', zh: '3D棋子', ko: '3D 말', es: 'Piezas 3D', fr: 'Pièces 3D', pt: 'Peças 3D', de: '3D-Steine', hi: '3D गोटियाँ', ar: 'قطع ثلاثية الأبعاد', ru: '3D-шашки', 'zh-TW': '3D棋子', id: 'Bidak 3D', tr: '3D taşlar' };
+  const lng = () => (l => /^zh-(tw|hk|mo|hant)/i.test(l) ? 'zh-TW' : String(l).slice(0, 2))((document.getElementById('langSel') || {}).value || (typeof LANG !== 'undefined' ? LANG : 'ja'));
+  const is3 = () => !V || V.is3d();
+  const relabel = () => { const ls = document.getElementById('langSel'); if (ls) try { ls.dispatchEvent(new Event('change')); } catch (e) {} };   // the page redraws its words (as on a language change): they follow the set's colours
+  function setLook(k) {
+    if (T3.setBoard) T3.setBoard('checkers', k); else T3.BOARDS.checkers.set(k);
+    if (V && !V.is3d()) { V.set(true); relabel(); }
+    if (build()) { try { mirror(); } catch (e) {} }
+    paint3();
+  }
+  function setSet(k) {
+    if (T3.setPieces) T3.setPieces('checkers', k); else T3.PIECES.checkers.set(k);
+    if (V && !V.is3d()) V.set(true);
+    setPcVars(); tok++; for (const [, o] of P3) drop(o.g); P3.clear();
+    try { mirror(); } catch (e) {}
+    relabel(); paint3();
+  }
+  let f3 = null;
+  function paint3() {
+    const B = T3.BOARDS.checkers, P = T3.PIECES.checkers; if (!f3 || !B || !P) return;
+    const l = lng(), cur = B.get(), on = is3(), cs = pc3();
+    const [lb, lp] = f3.querySelectorAll('label'); lb.textContent = T3L[l] || T3L.en; lp.textContent = P3L[l] || P3L.en;
+    const [row, prow] = f3.querySelectorAll('.bdrow');
+    if (!row.children.length) B.list.forEach(k => {
+      const bt = document.createElement('button'); bt.type = 'button'; bt.dataset.look = k;
+      const im = document.createElement('img'); im.src = T3.boardIcon ? T3.boardIcon('checkers', k) : ''; im.alt = ''; im.draggable = false;
+      bt.append(im, document.createElement('span')); bt.onclick = () => setLook(k); row.appendChild(bt);
+    });
+    if (!prow.children.length) P.list.forEach(k => {
+      const bt = document.createElement('button'); bt.type = 'button'; bt.dataset.set = k;
+      const im = document.createElement('img'); im.src = P.thumb(k); im.alt = ''; im.draggable = false;
+      bt.append(im, document.createElement('span')); bt.onclick = () => setSet(k); prow.appendChild(bt);
+    });
+    row.querySelectorAll('button').forEach(bt => { const k = bt.dataset.look, sel = on && cur === k; bt.querySelector('span').textContent = T3.boardName ? T3.boardName(k, l, 'checkers') : k; bt.classList.toggle('sel', sel); bt.setAttribute('aria-pressed', String(sel)); });
+    prow.querySelectorAll('button').forEach(bt => { const k = bt.dataset.set, sel = on && cs === k; bt.querySelector('span').textContent = T3.pieceName ? T3.pieceName('checkers', k, l) : k; bt.classList.toggle('sel', sel); bt.setAttribute('aria-pressed', String(sel)); });
+    const r2 = document.getElementById('bdRow');
+    if (r2 && on) r2.querySelectorAll('button').forEach(b => { if (b.classList.contains('sel')) b.classList.remove('sel'); if (b.getAttribute('aria-pressed') === 'true') b.setAttribute('aria-pressed', 'false'); });
+  }
   const fd = document.getElementById('fDesign');
   if (fd) {
-    const p = document.createElement('p'); p.className = 'ck3dnote'; fd.appendChild(p);
-    const paint = () => { const l = (document.getElementById('langSel') || {}).value || 'ja', n = NOTE[l] || NOTE.en; p.innerHTML = ''; const b = document.createElement('b'); b.textContent = n[0]; p.append(b, n[1]); };
-    paint(); const ls = document.getElementById('langSel'); if (ls) ls.addEventListener('change', () => setTimeout(paint, 30));
+    f3 = document.createElement('div'); f3.id = 'f3D';
+    f3.innerHTML = '<label></label><div class="bdrow"></div><label class="pc3l"></label><div class="bdrow pc3"></div>'; fd.appendChild(f3);
+    paint3(); const ls = document.getElementById('langSel'); if (ls) ls.addEventListener('change', () => setTimeout(paint3, 30));
+    const r2 = document.getElementById('bdRow');
+    if (r2) r2.addEventListener('click', e => { if (e.target.closest('button') && V) { V.set(false); setTimeout(() => { paint3(); relabel(); }, 0); } }, true);
+    if (typeof window.designPickers === 'function') { const od = window.designPickers; window.designPickers = function () { const r = od.apply(this, arguments); try { paint3(); } catch (e) {} return r; }; }
   }
+  addEventListener('storage', e => { if (e.key === 'atlas-checkers-look' || e.key === 'atlas-checkers-pc3') { setPcVars(); tok++; for (const [, o] of P3) drop(o.g); P3.clear(); build(); try { mirror(); } catch (x) {} relabel(); paint3(); } });
+
+  /* ---------- words and pictures: 黒 / 白 become the 3D set's colours (金 / 銀 …) while the 3D board is shown (2026-11-14) ---------- */
+  // the page's texts all come through t() (the rules tour, lessons, puzzles, turn labels); its small boards through miniSVG()
+  if (typeof window.t === 'function') { const ot = window.t; window.t = function (k, v) { const x = ot.apply(this, arguments); return is3() && typeof x === 'string' && !/^(meta\.|lang|pcs?\.|bd\.)/.test(k) ? C3.recolor(x, typeof LANG !== 'undefined' ? LANG : 'ja') : x; }; }
+  if (typeof window.miniSVG === 'function' && typeof PC_PAL === 'object') {   // (PC_PAL / BD_PAL: the page's own palettes; '__a3' = the 3D set / look)
+    const om = window.miniSVG;
+    window.miniSVG = function (spec, o) {
+      if (!is3() || (o && (o.pcs || o.bd))) return om.apply(this, arguments);   // (the デザイン tab's 2D previews keep their own colours)
+      const g = C3.tone(1), w = C3.tone(2); PC_PAL.__a3 = [[g[1], g[2]], [w[1], w[2]]];
+      if (typeof BD_PAL === 'object' && C3.mini) BD_PAL.__a3 = C3.mini();
+      return om.call(this, spec, Object.assign({}, o || {}, { pcs: '__a3' }, typeof BD_PAL === 'object' && BD_PAL.__a3 ? { bd: '__a3' } : {}));
+    };
+  }
+  if (is3() && pc3() !== 'stone') setTimeout(relabel, 0);
 
   /* ---------- 3D pieces mirrored from the page's pieces ---------- */
   const io = k => k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
@@ -140,7 +200,7 @@ html.atlas-checkers .ck3dnote b{display:block;font-size:14px;color:#2b3044;margi
   const animOk = () => { try { return typeof animOn === 'function' ? animOn() : true; } catch (e) { return true; } };
   const anim = (dur, f, done, my) => { const t0 = performance.now(); (function s(n) { if (my !== undefined && my !== tok) return; const k = Math.min(1, Math.max(0, (n - t0) / dur)); f(k); T3.kick(120); if (k < 1) requestAnimationFrame(s); else if (done) done(); })(t0); };
   function mk(k, sq) {
-    const g = U.piece(colOf(k) === 1 ? 'g' : 'w', isKing(k), { reflect: true });
+    const g = U.piece(colOf(k) === 1 ? 'g' : 'w', isKing(k), { reflect: U.mirror });
     const sh = T3.contact(.36, .55); sh.position.y = .002; g.add(sh); g.userData.sh = sh;
     g.userData.rf = g.children.find(o => o.userData && o.userData.reflection) || null;
     const [x, z] = xz(sq); g.position.set(x, Y, z); root.add(g); return g;

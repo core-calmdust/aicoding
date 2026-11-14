@@ -1734,7 +1734,7 @@
   const KEEP_N = COARSE ? 2 : 3, kept = [];   // [{ id, c, st }]
   // the settings a showcase board is built from (the goban look, the backgammon checker colours): a kept / prepared board is
   // only reused while they are unchanged (a table game can change them)
-  const stamp = () => { try { const ls = localStorage; let ck = ''; try { ck = JSON.stringify(JSON.parse(ls.getItem('aicoding-backgammon-v2') || '{}').settings.ck || ''); } catch (e) {} return (ls.getItem('atlas-go-look') || '') + '|' + (ls.getItem('atlas-gomoku-look') || '') + '|' + ck + '|' + ['atlas-chess-pc', 'atlas-chess-pc-bd', 'atlas-bg-look', 'atlas-agon-look', 'atlas-agon-look3', 'atlas-konane-look', 'atlas-amazons-look', 'atlas-amazons-pc3', 'atlas-carrom-look', 'atlas-crokinole-look', 'atlas-ludo-look', 'atlas-hockey-look', 'atlas-shogi-look', 'atlas-shogi-pc3'].map(k => ls.getItem(k) || '').join(',') + '|' + (() => { try { return (JSON.parse(ls.getItem('aicoding-senet') || '{}').settings || {}).design || ''; } catch (e) { return ''; } })() + '|' + (() => { try { const o = JSON.parse(ls.getItem('aicoding-peg') || '{}').settings || {}; return (o.bd || '') + ',' + (o.pg || ''); } catch (e) { return ''; } })(); } catch (e) { return ''; } };   // (peg: the 2D page's board / marble designs, 2026-11-11)
+  const stamp = () => { try { const ls = localStorage; let ck = ''; try { ck = JSON.stringify(JSON.parse(ls.getItem('aicoding-backgammon-v2') || '{}').settings.ck || ''); } catch (e) {} return (ls.getItem('atlas-go-look') || '') + '|' + (ls.getItem('atlas-gomoku-look') || '') + '|' + ck + '|' + ['atlas-chess-pc', 'atlas-chess-pc-bd', 'atlas-bg-look', 'atlas-agon-look', 'atlas-agon-look3', 'atlas-konane-look', 'atlas-amazons-look', 'atlas-amazons-pc3', 'atlas-carrom-look', 'atlas-crokinole-look', 'atlas-ludo-look', 'atlas-hockey-look', 'atlas-shogi-look', 'atlas-shogi-pc3', 'atlas-checkers-look', 'atlas-checkers-pc3'].map(k => ls.getItem(k) || '').join(',') + '|' + (() => { try { return (JSON.parse(ls.getItem('aicoding-senet') || '{}').settings || {}).design || ''; } catch (e) { return ''; } })() + '|' + (() => { try { const o = JSON.parse(ls.getItem('aicoding-peg') || '{}').settings || {}; return (o.bd || '') + ',' + (o.pg || ''); } catch (e) { return ''; } })(); } catch (e) { return ''; } };   // (peg: the 2D page's board / marble designs, 2026-11-11)
   function keepBoard(id, c, next) {
     kept.push({ id, c, st: c.userData.st ?? stamp() });   // (the settings it was built with: a board changed just now is not kept as the new look)
     while (kept.length > KEEP_N) { const k = kept.shift(); dispose(k.c); freeBoard(k.c, [scene, next, ...kept.map(e => e.c)]); }
@@ -2344,7 +2344,7 @@
   /* ---------- I key: the debug overlay (2026-11-09) ----------
      Scene / board / room triangles, meshes, draw calls, lights, textures, the place / time / brightness, camera and renderer.
      Toggled by I (not while typing); remembered for the tab (sessionStorage). Updated twice a second from the last frame drawn. */
-  let dbgEl = null, dbgOn = false, dbgT = 0, dbgFrames = 0, dbgFps = 0, dbgLast = 0;
+  let dbgEl = null, dbgOn = false, dbgT = 0, dbgFrames = 0, dbgFps = 0, dbgLast = 0, dbgIdle = false, dbgIv = 0;
   const PLACE_N = () => { try { const X = window.Table3D, l = (document.documentElement.lang || 'ja').slice(0, 2); return X.PLACES ? (X.PLACES.name[l] || X.PLACES.name.en)[tableStyle] : String(tableStyle); } catch (e) { return String(tableStyle); } };
   function dbgCount(obj) {   // visible triangles / meshes under obj (instances counted; hidden and merged-away meshes skipped)
     let tri = 0, mesh = 0, inst = 0, pts = 0;
@@ -2361,23 +2361,27 @@
     let lights = 0, shadows = 0; scene.traverse(o => { if (o.isLight && o.visible) { lights++; if (o.castShadow) shadows++; } });
     const BUD = { room: 60000, board: cur && cur.userData.gameId === 'chess' ? 120000 : 80000 }, warn = (v, b) => v > b ? ' style="color:#ff8a7a"' : '';
     const gl = R.getContext(), dpr = R.getPixelRatio(), sz = R.getSize(new (T().Vector2)());
+    // (2026-11-14) nothing drawn lately (on-demand rendering parked, Table3D.quiet, a page over the room): the per-frame numbers
+    // are 0 — not the last frame's — so the panel shows what is being drawn now
+    const idle = dbgIdle, z0 = v => idle ? 0 : v;
+    if (idle) { room.tri = 0; board.tri = 0; }
     const rows = [
       ['place', mountOpts.plain ? `${tableStyle} · ${PLACE_N()} (page floor)` : `${tableStyle} · ${PLACE_N()}`],
       ['time / bright', `${roomMode || '-'} (${todPick()}) · ${['暗い', '標準', '明るい'][bright] || bright}`],
       ['board', (cur && cur.userData.gameId) || '-'],
       ['mode', `${mode}${museumOn ? ' · museum' : ''}${alignFn ? ' · skin' : ''}${LITE ? ' · lite' : ''}${COARSE ? ' · coarse' : ''}`],
       ['', ''],
-      ['tris · scene', `<b>${fmt(all.tri)}</b>  (drawn ${fmt(info.render.triangles)})`],
+      ['tris · scene', idle ? '<b>0</b>  (停止中 · 描画なし)' : `<b>${fmt(all.tri)}</b>  (drawn ${fmt(info.render.triangles)})`],
       ['tris · room', `<b${warn(room.tri, BUD.room)}>${fmt(room.tri)}</b> / ${fmt(BUD.room)}`],
       ['tris · board', `<b${warn(board.tri, BUD.board)}>${fmt(board.tri)}</b> / ${fmt(BUD.board)}`],
       ['meshes', `scene ${all.mesh} · room ${room.mesh} · board ${board.mesh}` + (all.inst ? ` · inst ${all.inst}` : '')],
       ['points / lines', fmt(all.pts)],
-      ['draw calls', String(info.render.calls)],
+      ['draw calls', String(z0(info.render.calls))],
       ['lights', `${lights} (${shadows} with shadow)`],
       ['geom / tex', `${info.memory.geometries} / ${info.memory.textures}`],
       ['programs', String((info.programs || []).length)],
       ['', ''],
-      ['fps', dbgFps ? dbgFps.toFixed(0) : '-'],
+      ['fps', idle ? '0 (停止中)' : dbgFps ? dbgFps.toFixed(0) : '-'],
       ['canvas', `${Math.round(sz.x)}×${Math.round(sz.y)} @${dpr.toFixed(2)}x · exp ${R.toneMappingExposure.toFixed(2)}`],
       ['camera', cam ? `fov ${cam.fov.toFixed(1)} · zoom ${zoom.toFixed(2)} · tilt ${tilt.toFixed(2)} · yaw ${(yaw % 6.283).toFixed(2)}` : '-'],
       ['gpu', (() => { try { const e = gl.getExtension('WEBGL_debug_renderer_info'); return e ? String(gl.getParameter(e.UNMASKED_RENDERER_WEBGL)).slice(0, 48) : 'webgl' + (R.capabilities.isWebGL2 ? '2' : '1'); } catch (e) { return '-'; } })()],
@@ -2385,7 +2389,7 @@
     dbgEl.innerHTML = '<div class="t3dbg-h">3D DEBUG <span>I で閉じる</span></div>' + rows.map(([k, v]) => k ? `<div><i>${k}</i><span>${v}</span></div>` : '<hr>').join('');
   }
   function dbgTick(now) {   // called from the loop after each drawn frame
-    if (!dbgOn) return; dbgFrames++;
+    if (!dbgOn) return; dbgFrames++; dbgLast = now; if (dbgIdle) { dbgIdle = false; dbgPaint(); }
     if (now - dbgT > 500) { dbgFps = dbgFrames * 1000 / (now - dbgT); dbgFrames = 0; dbgT = now; dbgPaint(); }
   }
   function dbgToggle(on) {
@@ -2395,7 +2399,9 @@
       document.head.appendChild(st); dbgEl = document.createElement('div'); dbgEl.className = 't3dbg'; document.body.appendChild(dbgEl);
     }
     if (dbgEl) dbgEl.hidden = !dbgOn;
-    if (dbgOn) { dbgT = performance.now(); dbgFrames = 0; dbgPaint(); kick(1200); }
+    clearInterval(dbgIv); dbgIv = 0;
+    if (dbgOn) { dbgT = performance.now(); dbgFrames = 0; dbgIdle = false; dbgPaint(); kick(1200);
+      dbgIv = setInterval(() => { const id = performance.now() - dbgLast > 700; if (id !== dbgIdle) { dbgIdle = id; if (id) dbgFps = 0; dbgPaint(); } }, 500); }   // (the loop sleeps when nothing changes: watch from outside it)
   }
   addEventListener('keydown', e => {
     if (e.repeat || e.ctrlKey || e.metaKey || e.altKey || (e.key !== 'i' && e.key !== 'I')) return;

@@ -405,8 +405,17 @@ class MJGame {
       if (o.canRon || o.pons || o.minkan || o.chis) opts.push(o);
     }
     if (!opts.length) { this.settleRiichi(from); return {}; }
-    // ask everyone (in parallel for fairness, BOTs answer immediately)
-    const answers = await Promise.all(opts.map(o => this.agents[o.seat].react(this, o.seat, o)));
+    // ask the BOTs first (they answer at once); a ron there wins at once (ユーザー 2026-11-14): the player is then not offered
+    // a pon / chi for that tile — only a ron of their own, if they have one (double ron). Otherwise the player is asked as usual.
+    const answers = new Array(opts.length).fill(null);
+    const isBot = i => !this.agents[opts[i].seat].interactive;
+    await Promise.all(opts.map((o, i) => isBot(i) ? this.agents[o.seat].react(this, o.seat, o).then(a => { answers[i] = a; }) : null));
+    const botRon = opts.some((o, i) => isBot(i) && o.canRon && answers[i] && answers[i].act === 'ron');
+    await Promise.all(opts.map((o, i) => {
+      if (isBot(i)) return null;
+      if (botRon) return o.canRon ? this.agents[o.seat].react(this, o.seat, { seat: o.seat, tile: o.tile, from: o.from, canRon: true, ronRes: o.ronRes }).then(a => { answers[i] = a; }) : null;
+      return this.agents[o.seat].react(this, o.seat, o).then(a => { answers[i] = a; });
+    }));
     // ron(s)
     const rons = [];
     opts.forEach((o, i) => {

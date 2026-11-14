@@ -1063,3 +1063,10 @@ html.atlas-skin body:not(#_) :is(.modal, .ngt-foot, .dock, #dock, .grc-ov, .card
 html.atlas-skin body:not(#_) :is(.lxh-cont, .pb-cont, .pbh-daily .go:not(.ok), .pzx-daily .go:not(.ok)):not(#_):not(#_):not(#_){border:2px solid #f25454!important;box-shadow:0 4px 0 #e24a4a!important;box-sizing:border-box}
 html.atlas-skin body:not(#_) :is(.modal, .ngt-foot, .dock, #dock, .grc-ov, .card) :is(.modal-actions, .rt-nav, .lesson-actions, .ngt-foot, .ol-acts, .ol-bot) :is(button, .mbtn, a.mbtn):is(.go, .primary, .gbtn):not(:disabled):active:not(#_):not(#_):not(#_),
 html.atlas-skin body:not(#_) :is(.lxh-cont, .pb-cont):active:not(#_):not(#_):not(#_){transform:translateY(2px);box-shadow:0 2px 0 #e24a4a!important}
+/* the resign / draw confirmation (shared/resign.js): a white box like the other boxes of the portal look (2026-11-14) */
+html.atlas-skin .rsg-box{background:#fffdf7!important;color:#2b3044!important;border:2px solid #ead9b6!important;box-shadow:0 6px 0 #efe3c8,0 24px 60px rgba(0,0,0,.35)!important}
+html.atlas-skin .rsg-q{color:#2b3044!important}
+html.atlas-skin .rsg-sub{color:#6a7088!important}
+html.atlas-skin .rsg-flag{background:rgba(255,107,91,.12)!important;color:#e5533f!important}
+html.atlas-skin .rsg-btns button:not(.yes){background:#fff!important;color:#2b3044!important;border:2px solid #ead9b6!important;box-shadow:0 3px 0 #efe3c8}
+html.atlas-skin .rsg-ov.draw .rsg-flag{color:#b8862a!important}

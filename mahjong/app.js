@@ -6,7 +6,12 @@ const t = (k, v) => I18N.t(k, v);
 const L = o => I18N.L(o);
 const T = id => id >> 2;
 const FAST = /[?&]fast/.test(location.search) ? 0.12 : 1;
-const sleep = ms => new Promise(r => setTimeout(r, ms * FAST));
+// waits that stand still while the window is not in front (shared/focusgate.js stops performance.now() then): the game does not
+// go on behind another window (common rule; ユーザー 2026-11-14)
+const frozen = () => !!(window.__focusGate && window.__focusGate.frozen);
+const PACE = .8;   // the game's waits (and with them the cut-ins and result screens) run this much of their written length (ユーザー 2026-11-14: a little quicker)
+const sleep = ms => new Promise(r => { const end = performance.now() + ms * FAST * PACE;
+  (function tick() { const left = end - performance.now(); if (left <= 0 && !frozen()) return r(); setTimeout(tick, Math.max(16, Math.min(left, 150))); })(); });
 const ASSETS = window.JANKA_ASSETS || '../images/mahjong/';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -31,6 +36,10 @@ function load() {
   d.set = Object.assign({ len: 'east', skills: true, lv: 2, snd: true, lite: weak }, d.set || {});
   if (window.PhoneSnd && PhoneSnd.phone) d.set.snd = true;   // phones: the silent switch decides (shared/phonesnd.js)
   d.stats = Object.assign({ games: 0, rank: [0, 0, 0, 0] }, d.stats || {});
+  // スタッツ (pstats.js): raw counters by mode, and games / places by the character played. Games from before the
+  // stats existed only know the places: they are kept as `old` and counted in すべて.
+  if (!d.pstats) d.pstats = { v: MJStats.V, skill: MJStats.blank(), std: MJStats.blank(), chars: {}, old: d.stats.games ? Object.assign(MJStats.blank(), { games: d.stats.games, rank: d.stats.rank.slice() }) : null };
+  MJStats.fix(d.pstats.skill); MJStats.fix(d.pstats.std); d.pstats.chars = d.pstats.chars || {};
   return d;
 }
 const owns = id => !!DB.chars[id];
@@ -63,6 +72,12 @@ const IC = {
   lock: '<svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><path d="M12 14v3"/></svg>',
   bolt: '<svg viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>',
   coin: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5h4.5a2 2 0 0 1 0 4H9"/></svg>',
+  stats: '<svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
+  keys: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M9.3 9.3a2.8 2.8 0 1 1 3.9 2.6c-.8.4-1.2 1-1.2 1.9v.4"/><path d="M12 17.3h.01"/></svg>',   // (？ — ユーザー 2026-11-14)
+  gear: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.6M12 18.6v2.6M21.2 12h-2.6M5.4 12H2.8M18.5 5.5l-1.8 1.8M7.3 16.7l-1.8 1.8M18.5 18.5l-1.8-1.8M7.3 7.3L5.5 5.5"/><circle cx="12" cy="12" r="6.6"/></svg>',
+  rated: '<svg viewBox="0 0 24 24"><path d="M4 20V14h4v6M10 20V9h4v11M16 20V4h4v16M3 20h18"/></svg>',
+  lesson: '<svg viewBox="0 0 24 24"><path d="M3 6.5 12 3l9 3.5-9 3.5z"/><path d="M7 8.3V13c0 1.6 2.2 3 5 3s5-1.4 5-3V8.3M21 6.5V12"/></svg>',
+  rules: '<svg viewBox="0 0 24 24"><path d="M5 4h10l4 4v12H5z"/><path d="M15 4v4h4M8.5 12h7M8.5 15.5h7"/></svg>',
   chest: '<svg viewBox="0 0 24 24"><path d="M3 10h18v10H3zM3 10a9 5 0 0 1 18 0"/><path d="M11 13h2v3h-2z"/></svg>',
 };
 const icon = k => IC[k] || '';
@@ -89,9 +104,39 @@ const SND = (() => {
     s.connect(f).connect(v).connect(a.destination); s.start();
     tone(1500, .05, 'triangle', .05);
   }
-  document.addEventListener('visibilitychange', () => { if (ac) { if (document.hidden) ac.suspend(); else ac.resume(); } });
+  document.addEventListener('visibilitychange', () => { if (ac) { if (document.hidden) ac.suspend(); else ac.resume(); } const B = SND && SND._bgm; if (B && B.el && B.on) { if (document.hidden) B.el.pause(); else { const p = B.el.play(); if (p && p.catch) p.catch(() => {}); } } });
+  // recorded sounds (ユーザー 2026-11-14): tiles laid down (three, picked at random), the point sticks (riichi, paying for a skill),
+  // and the calls in a voice (リーチ・ツモ・ロン・ポン・チー・カン・テンパイ・ノーテン). Decoded on first use; until then the synth stands in.
+  const BUF = {}, NAMES = ['tile1', 'tile2', 'tile3', 'stick1', 'stick2', 'stick3', 'v-riichi', 'v-tsumo', 'v-ron', 'v-pon', 'v-chi', 'v-kan', 'v-tenpai', 'v-noten'];
+  let loading = false;
+  function load() { const a = ctx(); if (!a || loading) return; loading = true;
+    for (const n of NAMES) fetch(`${ASSETS}snd/${n}.mp3`).then(r => r.ok ? r.arrayBuffer() : Promise.reject()).then(b => new Promise((ok, ng) => a.decodeAudioData(b, ok, ng))).then(buf => { BUF[n] = buf; }).catch(() => {}); }
+  function play(n, g = 1, rate = 1) { const a = ctx(); if (!a || !on()) return false; load(); const b = BUF[n]; if (!b) return false;
+    const s = a.createBufferSource(); s.buffer = b; s.playbackRate.value = rate; const v = a.createGain(); v.gain.value = g; s.connect(v).connect(a.destination); s.start(); return true; }
+  const pick3 = k => `${k}${1 + ((Math.random() * 3) | 0)}`;
   return {
-    tile: () => click(),
+    tile: () => { if (!play(pick3('tile'), .9, .96 + Math.random() * .08)) click(); },
+    stick: () => { if (!play(pick3('stick'), .85)) tone(1800, .08, 'triangle', .06); },
+    voice: k => play('v-' + k, 1),
+    preload: () => load(),
+    // the riichi music (ユーザー 2026-11-14): when someone declares riichi the tension track starts (looping) and fades out when
+    // the hand ends. Streamed through an <audio> element into the same context (a gain node for the fades).
+    bgm(onoff) {
+      const a = ctx(); if (!a) return;
+      const B = this._bgm || (this._bgm = { el: null, g: null, on: false, t: 0 });
+      if (onoff) {
+        if (!on() || B.on) return;
+        if (!B.el) { B.el = new Audio(`${ASSETS}snd/bgm-riichi.mp3`); B.el.loop = true; B.el.preload = 'auto'; B.el.crossOrigin = 'anonymous';
+          try { const src = a.createMediaElementSource(B.el); B.g = a.createGain(); B.g.gain.value = 0; src.connect(B.g).connect(a.destination); } catch (e) { B.g = null; } }
+        B.on = true; clearTimeout(B.t); B.el.currentTime = 0;
+        const p = B.el.play(); if (p && p.catch) p.catch(() => {});
+        if (B.g) { const t = a.currentTime; B.g.gain.cancelScheduledValues(t); B.g.gain.setValueAtTime(B.g.gain.value, t); B.g.gain.linearRampToValueAtTime(.42, t + .8); } else B.el.volume = .42;
+      } else {
+        if (!B.on) return; B.on = false;
+        if (B.g) { const t = a.currentTime; B.g.gain.cancelScheduledValues(t); B.g.gain.setValueAtTime(B.g.gain.value, t); B.g.gain.linearRampToValueAtTime(0, t + 1.4); }
+        clearTimeout(B.t); B.t = setTimeout(() => { if (!B.on && B.el) B.el.pause(); }, 1500);
+      }
+    },
     call: () => { tone(520, .16, 'square', .06); tone(780, .2, 'square', .05, .08); },
     riichi: () => { tone(880, .5, 'sine', .14); tone(1320, .7, 'sine', .1, .08); tone(1760, .9, 'sine', .06, .16); },
     win: () => { [523, 659, 784, 1046].forEach((f, i) => tone(f, .5, 'triangle', .12, i * .09)); tone(1568, 1.2, 'sine', .08, .4); },
@@ -99,7 +144,7 @@ const SND = (() => {
     ok: () => { tone(988, .25, 'sine', .12); tone(1319, .5, 'sine', .1, .12); },
     pick: () => tone(660, .06, 'triangle', .06),
     gacha: r => { const b = r === 'SSR' ? 4 : r === 'SR' ? 3 : 2; for (let i = 0; i < b + 2; i++) tone(500 + i * 180, .3, 'triangle', .1, i * .07); },
-    unlock: () => ctx(),
+    unlock: () => { ctx(); load(); },
   };
 })();
 
@@ -202,28 +247,43 @@ function confirmBox(q) {
 function applyText() {
   document.querySelectorAll('[data-t]').forEach(el => { el.textContent = t(el.dataset.t); });
   document.querySelectorAll('[data-tt]').forEach(el => { el.title = t(el.dataset.tt); el.setAttribute('aria-label', t(el.dataset.tt)); });
-  $('#langSel').value = I18N.lang;
   document.title = I18N.lang === 'ja' ? '雀華 〜姫たちの麻雀〜' : 'JANKA — Mahjong of the Princesses';
 }
 function sndIcons() { for (const b of document.querySelectorAll('.snd')) b.innerHTML = DB.set.snd ? IC.snd : IC.mute; }
 function renderHome() {
   applyText();
   $('#coinN').textContent = DB.coins.toLocaleString();
-  $('#btnGacha').innerHTML = IC.gacha; $('#btnColl').innerHTML = IC.collection; $('#btnPortal').innerHTML = IC.home;
+  $('#btnPortal').innerHTML = IC.home; $('#btnSet').innerHTML = IC.gear;
   $('#coinBox .coin').innerHTML = IC.coin;
-  sndIcons();
-  $('#btnLite').innerHTML = IC.bolt; applyLite();
+  // the menu down the left (ユーザー 2026-11-14: only the system's buttons stay at the top right; the rest are here)
+  const mi = (ic, lab, sub) => `<i class="lm-i">${ic}</i><span class="lm-t"><b>${esc(lab)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</span>`;
+  $('#btnGacha').innerHTML = mi(IC.gacha, t('gacha'), 'GACHA'); $('#btnColl').innerHTML = mi(IC.collection, t('chars'), 'CHARACTERS');
+  $('#btnStats').innerHTML = mi(IC.stats, t('stats'), 'STATS');
+  document.querySelectorAll('#luxMenu [data-soon]').forEach(b => { b.innerHTML = mi(IC[b.dataset.soon] || '', t(b.dataset.soon), t('soon')); });
+  sndIcons(); applyLite();
   const c = MJChars.get(DB.sel);
   const o = DB.chars[c.id], uk = useKey(c.id);
+  const home = $('#home'); home.style.setProperty('--c', c.color); home.style.setProperty('--c2', c.color2);
+  // the partner, large and free of any box (AAA title screen, ユーザー 2026-11-14), and the same art blurred as the room's light
+  const full = charImg(c, 'full');
+  if ($('#pArt').dataset.id !== c.id) {
+    $('#pArt').dataset.id = c.id;
+    $('#pArt').innerHTML = `<i class="aa-aura"></i><button class="aa-ch" id="pImg" aria-label="${esc(L(c.name))}"><img src="${full}" alt="" draggable="false"></button>`;
+    $('#aaBlur').src = full;
+  }
+  const P = DB.pstats, all = MJStats.derive(MJStats.sum(P.skill, P.std, P.old));
+  $('#aaProf').innerHTML = `<img src="${charImg(c, 'face')}" alt=""><span><b>${esc(t('you'))}</b><small>${esc(t('psGames'))} ${all.games} ・ ${esc(t('psAvgRank'))} ${all.avgRank == null ? '—' : all.avgRank.toFixed(2)}</small></span>`;
   $('#partner').innerHTML = `
-    <button class="pimg frame fr-${c.rarity}" id="pImg" style="--c:${c.color};--c2:${c.color2}"><img src="${charImg(c, 'full')}" alt=""><i class="fx-sh"></i><span class="ptap">${esc(t('tapChange'))}</span></button>
-    <div class="pinfo">
-      <div class="prar r-${c.rarity}">${c.rarity}</div>
-      <div class="pname">${esc(L(c.name))}<small>${esc(L(c.title))}</small></div>
-      ${skillBlock(uk)}
-      ${o.skills.length > 1 ? `<div class="skpick"><small>${t('useThis')}</small><div class="skl" id="homeSk">${o.skills.map(k => skillChip(k, k === uk ? 'on' : '', `data-k="${k}"`)).join('')}</div></div>` : ''}
-      <p class="pprof">${esc(L(c.profile))}</p>
-    </div>`;
+    <div class="pp-r"><em class="prar r-${c.rarity}">${c.rarity}</em><span class="pp-f">${esc(L(MJChars.families[c.family].name))}</span></div>
+    <div class="pp-n">${esc(L(c.name))}</div>
+    <div class="pp-t">${esc(L(c.title))}</div>
+    <div class="pp-sk">${skillChip(uk, 'on')}${o.skills.length > 1 ? `<span class="pp-more" id="ppMore">${esc(t('ownedSkills'))} ${o.skills.length}</span>` : ''}</div>
+    <button class="pp-chg" id="ppChg">${IC.swap}<span>${esc(t('tapChange'))}</span></button>`;
+  // pick-up banner: the best character not yet owned (or the best of all)
+  const pick = MJChars.list.filter(x => !owns(x.id)).sort((a, b) => RORD[a.rarity] - RORD[b.rarity])[0] || MJChars.list.find(x => x.rarity === 'UR');
+  $('#aaBanner').innerHTML = `<i class="ab-art" style="background-image:url('${charImg(pick, 'bust')}')"></i><span class="ab-rib">PICK UP</span><span class="ab-tx"><em class="r-${pick.rarity}">${pick.rarity}</em><b>${esc(L(pick.name))}</b><small>${esc(L(pick.title))}</small></span><span class="ab-go">${esc(t('gacha'))} ›</span>`;
+  $('#aaBanner').style.setProperty('--c', pick.color);
+  $('#aaGoSub').textContent = `${t(DB.set.len === 'south' ? 'south' : 'east')} ・ ${t(DB.set.skills ? 'skillOn' : 'skillOff')} ・ BOT ${t('lv')[DB.set.lv]}`;
   const hs = $('#homeSk');
   if (hs) hs.onclick = e => { const b = e.target.closest('[data-k]'); if (!b) return; DB.chars[c.id].use = b.dataset.k; save(); SND.pick(); renderHome(); };
   const seg = (el, items, cur, cb) => {
@@ -234,19 +294,119 @@ function renderHome() {
   seg($('#optSkill'), [['1', t('skillOn')], ['0', t('skillOff')]], DB.set.skills ? '1' : '0', v => DB.set.skills = v === '1');
   seg($('#optLv'), t('lv').map((x, i) => [String(i), x]), String(DB.set.lv), v => DB.set.lv = +v);
 }
-$('#partner').addEventListener('click', e => { if (e.target.closest('#pImg')) { SND.pick(); openChara(DB.sel); } });
-$('#langSel').addEventListener('change', e => { I18N.set(e.target.value); renderHome(); if (window.GameRecord) GameRecord.relabel(); });
+$('#pArt').addEventListener('click', e => { if (e.target.closest('#pImg')) homeSay(); });
+$('#partner').addEventListener('click', e => { if (e.target.closest('#ppChg, #ppMore')) { SND.pick(); openChara(DB.sel); } });
+$('#btnStats').addEventListener('click', () => openStats(null));
+$('#aaProf').addEventListener('click', () => openStats(null));
+$('#aaBanner').addEventListener('click', () => { SND.pick(); openGacha(); });
+// tapping her: a line of hers in a speech bubble
+let sayT = 0;
+function homeSay() {
+  const c = MJChars.get(DB.sel), ks = Object.keys(c.lines || {}); if (!ks.length) return;
+  SND.pick();
+  const el = $('#aaSay'); el.textContent = L(c.lines[ks[(Math.random() * ks.length) | 0]]); el.hidden = false; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
+  clearTimeout(sayT); sayT = setTimeout(() => { el.classList.remove('on'); }, 2600);
+}
+// the room: specks of light drifting in the warm air (ユーザー 2026-11-14: not vector dots — real light). Pre-rendered soft sprites
+// drawn additively: a few large out-of-focus bokeh discs far in front, fine motes in the light that twinkle (the brightest
+// throw a faint star), everything soft-edged and warm. A small 2D canvas, only while the home is on screen; none in light mode.
+const HFX = { run: false, parts: [], spr: null };
+function hfxSprites() {
+  const mk = (n, draw) => { const c = document.createElement('canvas'); c.width = c.height = n; draw(c.getContext('2d'), n / 2); return c; };
+  return {
+    mote: mk(64, (g, r) => { const gr = g.createRadialGradient(r, r, 0, r, r, r);
+      gr.addColorStop(0, 'rgba(255,250,235,1)'); gr.addColorStop(.08, 'rgba(255,236,190,.95)'); gr.addColorStop(.22, 'rgba(255,208,130,.38)'); gr.addColorStop(.5, 'rgba(255,180,90,.1)'); gr.addColorStop(1, 'rgba(255,170,80,0)');
+      g.fillStyle = gr; g.fillRect(0, 0, 2 * r, 2 * r); }),
+    star: mk(96, (g, r) => { g.translate(r, r); for (const [w, l, a] of [[1.6, r, .55], [1, r * .7, .35]]) for (let k = 0; k < 2; k++) { g.rotate(k ? Math.PI / 2 : 0);
+      const gr = g.createLinearGradient(-l, 0, l, 0); gr.addColorStop(0, 'rgba(255,230,180,0)'); gr.addColorStop(.5, `rgba(255,246,220,${a})`); gr.addColorStop(1, 'rgba(255,230,180,0)');
+      g.fillStyle = gr; g.fillRect(-l, -w / 2, 2 * l, w); } }),
+    bokeh: mk(128, (g, r) => { const gr = g.createRadialGradient(r, r, 0, r, r, r * .96);
+      gr.addColorStop(0, 'rgba(255,214,150,.42)'); gr.addColorStop(.72, 'rgba(255,206,140,.5)'); gr.addColorStop(.86, 'rgba(255,224,170,.62)'); gr.addColorStop(.94, 'rgba(255,200,130,.18)'); gr.addColorStop(1, 'rgba(255,190,120,0)');
+      g.fillStyle = gr; g.beginPath(); g.arc(r, r, r, 0, 7); g.fill(); }),
+  };
+}
+function homeFx() {
+  const cv = $('#aaFx'); if (!cv) return;
+  const on = !$('#home').hidden && !DB.set.lite;
+  if (!on) { HFX.run = false; const g = cv.getContext('2d'); g.clearRect(0, 0, cv.width, cv.height); return; }
+  if (HFX.run) return; HFX.run = true;
+  if (!HFX.spr) HFX.spr = hfxSprites();
+  const g = cv.getContext('2d'), S = HFX.spr;
+  let last = performance.now();
+  const spawn = (W, H, kind, top) => {
+    const z = kind === 'bokeh' ? .6 + Math.random() * .4 : kind === 'near' ? .35 + Math.random() * .25 : Math.random() * .3;   // depth: 1 = nearest
+    return { kind, z, x: Math.random() * W, y: top ? -40 : Math.random() * H,
+      vx: (4 + Math.random() * 10) * (.4 + z), vy: (3 + Math.random() * 8) * (.4 + z) * (Math.random() < .3 ? -.4 : 1),
+      size: kind === 'bokeh' ? 34 + Math.random() * 70 : kind === 'near' ? 10 + Math.random() * 12 : 4 + Math.random() * 6,
+      a: kind === 'bokeh' ? .06 + Math.random() * .1 : kind === 'near' ? .55 + Math.random() * .4 : .35 + Math.random() * .45,
+      ph: Math.random() * 6.3, sp: .6 + Math.random() * 1.6 };
+  };
+  const step = now => {
+    if (!HFX.run) return;
+    if ($('#home').hidden || DB.set.lite) { HFX.run = false; g.clearRect(0, 0, cv.width, cv.height); return; }
+    const W = cv.clientWidth, H = cv.clientHeight, dpr = Math.min(1.5, devicePixelRatio || 1);
+    if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+    const dt = Math.min(50, now - last) / 1000; last = now;
+    const P = HFX.parts;
+    if (!P.length) { for (let i = 0; i < 90; i++) P.push(spawn(W, H, 'far')); for (let i = 0; i < 22; i++) P.push(spawn(W, H, 'near')); for (let i = 0; i < 9; i++) P.push(spawn(W, H, 'bokeh')); }
+    const hs = getComputedStyle($('#home')), mx = parseFloat(hs.getPropertyValue('--mx')) || 0, my = parseFloat(hs.getPropertyValue('--my')) || 0;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+    g.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < P.length; i++) {
+      const p = P[i];
+      p.x += (p.vx + Math.sin(now / 1700 + p.ph) * 6) * dt; p.y += (p.vy + Math.cos(now / 2100 + p.ph) * 4) * dt;
+      if (p.x > W + 80 || p.y > H + 80 || p.y < -90) { P[i] = spawn(W, H, p.kind, true); P[i].x = Math.random() * W * .9 - W * .15; continue; }
+      const px = p.x - mx * 30 * p.z, py = p.y - my * 20 * p.z;   // (nearer specks move more with the pointer)
+      // brighter in the shaft of light from the upper left, fainter in the dark corners
+      const lit = .45 + .55 * Math.max(0, 1 - Math.hypot(px / W - .35, py / H - .3) * 1.4);
+      const tw = p.kind === 'bokeh' ? .75 + .25 * Math.sin(now / 2600 * p.sp + p.ph) : Math.pow(.5 + .5 * Math.sin(now / 700 * p.sp + p.ph), 2.2);
+      const al = p.a * lit * (p.kind === 'bokeh' ? tw : .25 + .75 * tw), sz = p.size * (p.kind === 'bokeh' ? 1 : .8 + .35 * tw);
+      g.globalAlpha = Math.min(1, al);
+      g.drawImage(p.kind === 'bokeh' ? S.bokeh : S.mote, px - sz, py - sz, sz * 2, sz * 2);
+      if (p.kind === 'near' && tw > .82) { const k = (tw - .82) / .18, ss = sz * 2.6; g.globalAlpha = Math.min(1, al * k); g.drawImage(S.star, px - ss, py - ss, ss * 2, ss * 2); }
+    }
+    g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+    requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+// a little depth: the art and the room shift against each other with the pointer
+$('#home').addEventListener('pointermove', e => { const r = $('#home').getBoundingClientRect(); $('#home').style.setProperty('--mx', ((e.clientX - r.left) / r.width - .5).toFixed(3)); $('#home').style.setProperty('--my', ((e.clientY - r.top) / r.height - .5).toFixed(3)); });
+// entering the home: the pieces come in one after another
+function homeEnter() { const h = $('#home'); h.classList.remove('enter'); void h.offsetWidth; h.classList.add('enter'); homeFx(); }
+$('#luxMenu').addEventListener('click', e => { if (e.target.closest('[data-soon]')) { SND.pick(); toast(t('soon')); } });
+// settings (the gear at the top right): language, sound, light mode
+function openSettings() {
+  SND.pick();
+  const row = (k, items, cur) => `<div class="st-row"><small>${esc(t(k))}</small><div class="seg" data-k="${k}">${items.map(([v, lab]) => `<button class="${v === cur ? 'on' : ''}" data-v="${v}">${esc(lab)}</button>`).join('')}</div></div>`;
+  const draw = () => `<h2>${esc(t('settings'))}</h2>
+    ${row('language', [['ja', '日本語'], ['en', 'English']], I18N.lang)}
+    ${row('sound', [['1', t('on')], ['0', t('off')]], DB.set.snd ? '1' : '0')}
+    ${row('lite', [['0', t('off')], ['1', t('on')]], DB.set.lite ? '1' : '0')}
+    <p class="st-note">${esc(t('liteNote'))}</p>
+    <div class="cbtns"><button class="btn gold" data-a="close">${esc(t('close'))}</button></div>`;
+  const box = modal(draw(), 'settings');
+  box.addEventListener('click', e => {
+    if (e.target.closest('[data-a=close]')) { closeModal(); return; }
+    const b = e.target.closest('.seg button'); if (!b) return;
+    const k = b.parentNode.dataset.k, v = b.dataset.v; SND.pick();
+    if (k === 'language') { I18N.set(v); renderHome(); if (window.GameRecord) GameRecord.relabel(); }
+    else if (k === 'sound') { DB.set.snd = v === '1'; save(); sndIcons(); SND.unlock(); if (!DB.set.snd) SND.bgm(false); }
+    else if (k === 'lite') { DB.set.lite = v === '1'; save(); applyLite(); }
+    box.innerHTML = draw();
+  });
+}
+$('#btnSet').addEventListener('click', openSettings);
 // 戦績: a labelled button in the home header (PC and phones — this game has no bottom tab bar)
-if (window.GameRecord) { GameRecord.init({ game: 'mahjong', lang: () => I18N.lang, menu: '#home .top', btnClass: 'ib rec' }); const rb = $('#btnRecord'); if (rb) $('#home .top').insertBefore(rb, $('#btnGacha')); }
+if (window.GameRecord) { GameRecord.init({ game: 'mahjong', lang: () => I18N.lang, menu: '#luxMenu', btnClass: 'lm rec' }); const rb = $('#btnRecord'); if (rb) { $('#luxMenu').insertBefore(rb, $('#btnStats'));
+  const fix = () => { const sp = rb.querySelector('span'); if (sp && !rb.querySelector('.lm-t')) { const ic = rb.querySelector('svg'); rb.innerHTML = `<i class="lm-i">${ic ? ic.outerHTML : ''}</i><span class="lm-t"><b>${esc(sp.textContent)}</b><small>RECORD</small></span>`; } };
+  fix(); new MutationObserver(fix).observe(rb, { childList: true }); } }
 function applyLite() {
   document.documentElement.classList.toggle('lite', !!DB.set.lite);
-  const b = $('#btnLite');
-  if (b) { b.classList.toggle('on', !!DB.set.lite); b.title = t(DB.set.lite ? 'liteOn' : 'liteOff'); b.setAttribute('aria-label', b.title); }
   if (TB) TB.setQuality(DB.set.lite ? 'lite' : 'high');
+  if (typeof homeFx === 'function' && $('#aaFx')) homeFx();
 }
-$('#btnLite').addEventListener('click', () => { DB.set.lite = !DB.set.lite; save(); applyLite(); toast(t(DB.set.lite ? 'liteOn' : 'liteOff')); });
-$('#btnSnd').addEventListener('click', () => { DB.set.snd = !DB.set.snd; save(); sndIcons(); SND.unlock(); });
-$('#gSnd').addEventListener('click', () => { DB.set.snd = !DB.set.snd; save(); sndIcons(); });
+$('#gSnd').addEventListener('click', () => { DB.set.snd = !DB.set.snd; save(); sndIcons(); if (!DB.set.snd) SND.bgm(false); });
 // phones always use the landscape layout; held upright, the whole UI is turned 90° (no reliance on the OS rotation)
 const PHONE = matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 600;
 function fitRoot() {
@@ -256,8 +416,9 @@ function fitRoot() {
   de.style.setProperty('--W', (rot ? h : w) + 'px'); de.style.setProperty('--H', (rot ? w : h) + 'px');
   // desktop: home and character screens are laid out at a 1280-wide landscape design size and scaled to fit
   de.classList.toggle('ds', !PHONE);
+  if (PHONE) { const W0 = rot ? h : w, H0 = rot ? w : h; de.style.setProperty('--PZ', Math.min(W0 / 1000, H0 / 560).toFixed(4)); }   // (the home is laid out on a 1000×560 stage and scaled, as on PC)
   if (!PHONE) {
-    const GW = Math.min(w, h * 2.0), GH = Math.min(h, w / 1.45);
+    const GW = Math.min(w, h * 2.4), GH = Math.min(h, w / 1.36);   // (the same landscape box as the game: a squarish window gets a band above and below)
     const Z = Math.max(.5, Math.min(GW / 1280, GH / 760, 1.6));
     // game HUD scale for big windows (icons, panels and tiles grow with the window instead of stopping at fixed px)
     de.style.setProperty('--hz', Math.max(1, Math.min(2, Math.min(h, w / 1.36) / 860)).toFixed(3));
@@ -347,38 +508,49 @@ function openChara(id) {
   closeModal();
   $('#home').hidden = true; $('#chara').hidden = false;
   $('#chBack').innerHTML = IC.exit;
+  const chs = $('#chara'); chs.classList.remove('enter'); void chs.offsetWidth; chs.classList.add('enter');
   renderChara();
 }
-function closeChara() { $('#chara').hidden = true; $('#home').hidden = false; renderHome(); }
+function closeChara() { $('#chara').hidden = true; $('#home').hidden = false; renderHome(); homeEnter(); }
+let chTab = 'all';
 function renderChara() {
   applyText();
   $('#coinN2').textContent = DB.coins.toLocaleString();
   $('#chara .coin').innerHTML = IC.coin;
-  const list = MJChars.list.slice().sort((a, b) => (!owns(a.id)) - (!owns(b.id)) || RORD[a.rarity] - RORD[b.rarity] || FORD.indexOf(a.family) - FORD.indexOf(b.family));
   $('#chCount').textContent = `${t('owned')} ${Object.keys(DB.chars).length} / ${MJChars.list.length}`;
+  // the list (AAA viewer, ユーザー 2026-11-14): filter tabs, then cards
+  const tabs = [['all', t('psAll')], ['own', t('owned')], ['UR', 'UR'], ['SSR', 'SSR'], ['SR', 'SR'], ['R', 'R'], ['N', 'N']];
+  $('#chTabs').innerHTML = tabs.map(([k, lab]) => `<button class="${k === chTab ? 'on' : ''}" data-tab="${k}">${esc(lab)}</button>`).join('');
+  const list = MJChars.list.filter(c => chTab === 'all' || (chTab === 'own' ? owns(c.id) : c.rarity === chTab))
+    .sort((a, b) => (!owns(a.id)) - (!owns(b.id)) || RORD[a.rarity] - RORD[b.rarity] || FORD.indexOf(a.family) - FORD.indexOf(b.family));
   $('#chList').innerHTML = list.map(c => {
     const own = owns(c.id);
     return `<button class="chi ${own ? '' : 'lock'} ${c.id === chView ? 'on' : ''}" data-id="${c.id}" style="--c:${c.color}">
       ${frame(c, 'face')}<em class="r-${c.rarity}">${c.rarity}</em>${own ? '' : `<i class="lk">${IC.lock}</i>`}${c.id === DB.sel ? '<i class="pm">★</i>' : ''}<span>${own ? esc(L(c.name)) : '？？？'}</span></button>`;
   }).join('');
   const c = MJChars.get(chView), own = owns(c.id);
-  const art = $('#chArt');
-  art.className = `ch-art frame ${own ? 'fr-' + c.rarity : 'fr-lock'}`;
-  art.style.setProperty('--c', c.color); art.style.setProperty('--c2', c.color2);
-  art.innerHTML = `<img class="${own ? '' : 'lock'}" src="${charImg(c, 'full')}" alt=""><i class="fx-sh"></i>` +
-    (own ? '' : `<div class="unlock"><i>${IC.lock}</i><b>${esc(t('lockedT'))}</b><span>${esc(t('lockedS', { r: c.rarity }))}</span><button class="go sm" data-a="gacha">${esc(t('toGacha'))}</button></div>`);
-  art.onclick = e => { if (e.target.closest('[data-a=gacha]')) { SND.pick(); openGacha(); } };
+  const ch = $('#chara'); ch.style.setProperty('--c', c.color); ch.style.setProperty('--c2', c.color2);
+  const full = charImg(c, 'full');
+  if ($('#chArt').dataset.id !== c.id + (own ? '' : 'x')) {
+    $('#chArt').dataset.id = c.id + (own ? '' : 'x');
+    $('#chArt').innerHTML = `<i class="aa-aura"></i><div class="aa-ch ${own ? '' : 'lock'}"><img src="${full}" alt="" draggable="false"></div>` +
+      (own ? '' : `<div class="unlock"><i>${IC.lock}</i><b>${esc(t('lockedT'))}</b><span>${esc(t('lockedS', { r: c.rarity }))}</span><button class="go sm" data-a="gacha">${esc(t('toGacha'))}</button></div>`);
+    $('#chBlur').src = full;
+    $('#chArt').classList.remove('in'); void $('#chArt').offsetWidth; $('#chArt').classList.add('in');
+  }
   const sisters = MJChars.list.filter(x => x.family === c.family);
   const o = DB.chars[c.id], uk = own ? useKey(c.id) : null;
   $('#chInfo').innerHTML = `
-    <div class="prar r-${c.rarity}">${c.rarity}</div>
-    <div class="pname">${own ? esc(L(c.name)) : '？？？'}<small>${esc(L(c.title))}</small></div>
+    <div class="pp-r"><em class="prar r-${c.rarity}">${c.rarity}</em><span class="pp-f">${esc(L(MJChars.families[c.family].name))}</span></div>
+    <div class="pp-n">${own ? esc(L(c.name)) : '？？？'}</div>
+    <div class="pp-t">${esc(L(c.title))}</div>
+    <i class="ci-rule"></i>
     ${own ? `${skillBlock(uk)}
       <div class="skpick"><small>${t('ownedSkills')} ${o.skills.length}${o.skills.length > 1 ? ` ・ ${t('useThis')}` : ''}</small>
       <div class="skl" id="chSk">${o.skills.map(k => skillChip(k, k === uk ? 'on' : '', `data-k="${k}"`)).join('')}</div></div>
       <p class="pprof">${esc(L(c.profile))}</p>` : `<div class="chsel lockline"><i>${IC.lock}</i>${esc(t('notOwned'))}</div>`}
-    <div class="sis"><small>${esc(L(MJChars.families[c.family].name))}</small><div>${sisters.map(x => `<button class="sib ${x.id === c.id ? 'on' : ''} ${owns(x.id) ? '' : 'lock'}" data-id="${x.id}">${frame(x, 'face')}</button>`).join('')}</div></div>
-    ${own ? (c.id === DB.sel ? `<div class="chsel on">★ ${t('isPartner')}</div>` : `<button class="go sm" id="chSet">${t('setPartner')}</button>`) : ''}`;
+    <div class="sis"><small>${esc(t('sisters'))}</small><div>${sisters.map(x => `<button class="sib ${x.id === c.id ? 'on' : ''} ${owns(x.id) ? '' : 'lock'}" data-id="${x.id}" title="${owns(x.id) ? esc(L(x.name)) : '？？？'}">${frame(x, 'face')}</button>`).join('')}</div></div>
+    ${own ? (c.id === DB.sel ? `<div class="chsel on">★ ${t('isPartner')}</div>` : `<button class="go ch-go" id="chSet">${t('setPartner')}</button>`) : ''}`;
   const b = $('#chSet');
   if (b) b.onclick = () => { DB.sel = c.id; save(); SND.ok(); renderChara(); };
   $('#chInfo').onclick = e => {
@@ -386,7 +558,92 @@ function renderChara() {
     const sb = e.target.closest('.sib'); if (sb) { chView = sb.dataset.id; SND.pick(); renderChara(); }
   };
 }
+$('#chArt').addEventListener('click', e => { if (e.target.closest('[data-a=gacha]')) { SND.pick(); openGacha(); } });
+$('#chTabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (!b) return; chTab = b.dataset.tab; SND.pick(); renderChara(); });
 $('#chList').addEventListener('click', e => { const b = e.target.closest('.chi'); if (!b) return; chView = b.dataset.id; SND.pick(); renderChara(); });
+
+// ---------------------------------------------------------------- スタッツ (player stats)
+// Tap a character (home: the partner's スタッツ button; in a game: any seat's face; the final places) → that player's stats,
+// with the character large on the left. Who a seat is comes from UIS.players[s]: { kind: 'me' } · { kind: 'bot', lv } ·
+// later { kind: 'online', uid, name } (read through MJStats.remote — the same raw counters as the player's own).
+let PS = null;
+const RANKC = ['#ffc94a', '#e6ecf5', '#f0a48a', '#8fd9c0'];
+const pct = (x, d = 1) => x == null ? '—' : (x * 100).toFixed(d) + '%';
+const num = (x, d = 0) => x == null ? '—' : (+x).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
+function inGame() { return !!(UIS && G && !$('#game').hidden); }
+async function openStats(s) {             // s: a seat of the game on screen; null = the player (home)
+  SND.pick();
+  const ig = s != null && inGame();
+  const pl = ig ? (UIS.players && UIS.players[s]) || { kind: s === ME ? 'me' : 'bot', lv: DB.set.lv } : { kind: 'me' };
+  const c = ig ? UIS.chars[s] : seatChar(MJChars.get(DB.sel), useKey(DB.sel));
+  const tabs = [];
+  if (pl.kind === 'me') {
+    const P = DB.pstats;
+    tabs.push(['all', t('psAll'), MJStats.sum(P.skill, P.std, P.old)], ['skill', t('skillOn'), P.skill], ['std', t('skillOff'), P.std]);
+  } else if (pl.kind === 'online' && MJStats.remote) {
+    let r = null; try { r = await MJStats.remote(pl.uid); } catch (e) {}
+    if (r && r.raw) tabs.push(['all', t('psAll'), MJStats.sum(r.raw.skill, r.raw.std)], ['skill', t('skillOn'), MJStats.fix(r.raw.skill)], ['std', t('skillOff'), MJStats.fix(r.raw.std)]);
+  }
+  if (ig && UIS.track) tabs.push(['game', t('psGame'), UIS.track.seat[s]]);
+  let tab = tabs[0] ? tabs[0][0] : 'game';
+  if (ig && pl.kind === 'me' && !tabs[0][2].games) tab = 'game';      // nothing finished yet: start on this game
+  PS = { s, ig, pl, c, tabs, tab };
+  renderStats();
+  const el = $('#pstats'); el.hidden = false; requestAnimationFrame(() => el.classList.add('show'));
+}
+function closeStats() { const el = $('#pstats'); if (el.hidden) return; el.classList.remove('show'); el.hidden = true; el.innerHTML = ''; PS = null; }
+function renderStats() {
+  const P = PS, c = P.c, pl = P.pl;
+  const tb = P.tabs.find(x => x[0] === P.tab) || P.tabs[0];
+  const raw = tb ? tb[2] : MJStats.blank(), D = MJStats.derive(raw), isG = !!tb && tb[0] === 'game';
+  const who = pl.kind === 'me' ? t('you') : pl.kind === 'bot' ? 'BOT · ' + t('lv')[pl.lv | 0] : esc(pl.name || '');
+  const sk = (P.ig ? (c.skill ? MJSkills.key(c.skill, c.tier | 0) : null) : useKey(c.id));
+  const empty = isG ? !D.hands : !D.games && !D.hands;
+  let place = null; if (isG && G) place = G.ranking().indexOf(P.s);
+  const big = isG
+    ? [[t('psHands'), num(D.hands)], [t('psNow'), place == null ? '—' : t('rank')[place]], [t('psWin'), pct(D.win)], [t('psDealin'), pct(D.dealin)]]
+    : [[t('psGames'), num(D.games)], [t('psAvgRank'), num(D.avgRank, 2)], [t('psWin'), pct(D.win)], [t('psDealin'), pct(D.dealin)]];
+  const rows = (isG ? [] : [[t('psTop'), pct(D.top)], [t('psRentai'), pct(D.rentai)], [t('psLastAvoid'), pct(D.lastAvoid)], [t('psAvgScore'), num(D.avgScore)], [t('psBust'), pct(D.bust)]])
+    .concat([[t('psRiichi'), pct(D.riichi)], [t('psCall'), pct(D.call)], [t('psTsumo'), pct(D.tsumo)], [t('psRiichiWin'), pct(D.riichiWin)],
+      [t('psAvgWin'), num(D.avgWin)], [t('psAvgDeal'), num(D.avgDealin)], [t('psDrawTen'), pct(D.drawTenpai)],
+      isG ? [t('psSkillN'), num(raw.skillUses)] : [t('psSkill'), num(D.skillPerGame, 2)], [t('psYakuman'), num(D.yakuman)]]);
+  const mw = D.maxWin;
+  const mwHtml = mw && mw.pts ? `<b class="ps-mwp">${num(mw.pts)}</b><span>${mw.limit ? esc(t(mw.limit)) : esc(t('han', { n: mw.han }) + ' ' + t('fu', { n: mw.fu }))}${mw.yaku ? ` · ${esc(I18N.yaku(mw.yaku))}` : ''}</span>` : `<span class="ps-none">—</span>`;
+  const ymax = D.yakuTop.length ? D.yakuTop[0][1] : 1;
+  const yHtml = D.yakuTop.length ? D.yakuTop.map(([k, n]) => `<div class="ps-yk"><span>${esc(I18N.yaku(k))}</span><i><u style="width:${(n / ymax * 100).toFixed(1)}%"></u></i><b>${n}</b></div>`).join('') : `<span class="ps-none">—</span>`;
+  let chHtml = '';
+  if (pl.kind === 'me' && tb && tb[0] === 'all') {
+    const ch = Object.entries(DB.pstats.chars).filter(([id]) => MJChars.get(id)).sort((a, b) => b[1].g - a[1].g).slice(0, 6);
+    if (ch.length) chHtml = `<section class="ps-sec ps-chs"><h4>${t('psChars')}</h4><div>${ch.map(([id, o]) => { const x = MJChars.get(id); const ar = o.g ? (o.r[0] + o.r[1] * 2 + o.r[2] * 3 + o.r[3] * 4) / o.g : null; return `<div class="ps-ch" style="--c:${x.color}"><img src="${charImg(x, 'face')}" alt=""><b>${esc(L(x.name))}</b><small>${esc(t('psGamesN', { n: o.g }))} · ${esc(t('psAvgRank'))} ${num(ar, 2)}</small></div>`; }).join('')}</div></section>`;
+  }
+  $('#pstats').innerHTML = `
+    <div class="ps-box" style="--c:${c.color};--c2:${c.color2}">
+      <div class="ps-art ch-art frame fr-${c.rarity}" style="--c:${c.color};--c2:${c.color2}"><img src="${charImg(c, 'full')}" alt=""><i class="fx-sh"></i></div>
+      <div class="ps-main">
+        <header class="ps-h">
+          <div class="ps-id"><em class="prar r-${c.rarity}">${c.rarity}</em><div><b>${esc(L(c.name))}</b><small>${esc(L(c.title))}</small></div></div>
+          <span class="ps-who">${who}</span>
+          <button class="x" data-a="close" aria-label="${esc(t('close'))}">×</button>
+        </header>
+        ${sk ? `<div class="ps-sk">${skillChip(sk)}</div>` : ''}
+        ${P.tabs.length > 1 ? `<div class="ps-tabs">${P.tabs.map(([k, lab]) => `<button class="${k === (tb && tb[0]) ? 'on' : ''}" data-tab="${k}">${esc(lab)}</button>`).join('')}</div>` : ''}
+        <div class="ps-body">
+          ${!tb ? `<p class="ps-empty">${esc(t('psNoData'))}</p>` : empty ? `<p class="ps-empty">${esc(t(isG ? 'psEmptyG' : 'psEmpty'))}</p>` : `
+          <div class="ps-big">${big.map(([l, v]) => `<div><small>${esc(l)}</small><b>${v}</b></div>`).join('')}</div>
+          ${isG ? '' : `<section class="ps-sec"><h4>${t('psRanks')}</h4><div class="ps-rbar">${D.rankP.map((p, i) => p ? `<i style="flex:${p};--rc:${RANKC[i]}"><b>${t('rank')[i]}</b><span>${pct(p)}</span></i>` : '').join('')}</div>
+            <div class="ps-rn">${raw.rank.map((n, i) => `<span style="--rc:${RANKC[i]}"><i></i>${t('rank')[i]} <b>${n}</b></span>`).join('')}</div></section>`}
+          <div class="ps-grid">${rows.map(([l, v]) => `<div><span>${esc(l)}</span><b>${v}</b></div>`).join('')}</div>
+          <div class="ps-cols"><section class="ps-sec ps-mw"><h4>${t('psMaxWin')}</h4><div>${mwHtml}</div></section><section class="ps-sec"><h4>${t('psYaku')}</h4><div class="ps-yks">${yHtml}</div></section></div>
+          ${chHtml}`}
+          ${pl.kind === 'bot' ? `<p class="ps-note">${esc(t('psBotNote'))}</p>` : pl.kind === 'me' ? `<p class="ps-note">${esc(t('psNote'))}</p>` : ''}
+        </div>
+      </div>
+    </div>`;
+}
+$('#pstats').addEventListener('click', e => {
+  const tb = e.target.closest('[data-tab]'); if (tb && PS) { PS.tab = tb.dataset.tab; SND.pick(); renderStats(); return; }
+  if (e.target.closest('[data-a=close]') || !e.target.closest('.ps-main, .ps-art')) { SND.pick(); closeStats(); }
+});
 
 // ================================================================ GAME
 let G = null;          // MJGame
@@ -395,6 +652,7 @@ let UIS = null;        // ui state for the game screen
 const ME = 0;
 
 class Human {
+  get interactive() { return true; }   // (game.js asks the BOTs first and skips the player's call offer when a BOT rons)
   dealSkill(g, s, o) { return new Promise(res => askDealSkill(o, res)); }
   turn(g, s, o) { return new Promise(res => myTurn(o, res)); }
   react(g, s, o) { return new Promise(res => myCall(o, res)); }
@@ -415,34 +673,48 @@ const AUTO = /[?&]auto/.test(location.search);
 async function startGame() {
   $('#home').hidden = true; $('#game').hidden = false;
   closeModal();
-  if (!TB) { TB = new Table3D($('#stage')); TB.setQuality(DB.set.lite ? 'lite' : 'high'); TB.doraFn = isDora; }
+  if (!TB) { TB = new Table3D($('#stage')); TB.setQuality(DB.set.lite ? 'lite' : 'high'); TB.doraFn = isDora; TB.onTileLand = () => SND.tile(); }
   TB.resume();
   TB.hideAll();
   const me = seatChar(MJChars.get(DB.sel), useKey(DB.sel));
   const others = MJChars.list.filter(c => c.id !== me.id).sort(() => Math.random() - .5).slice(0, 3).map(c => seatChar(c, rollSkillKey()));
   const chars = [me, ...others];
   chars.forEach(c => { const im = new Image(); im.src = charImg(c, 'full'); });   // cut-in art, loaded in advance
-  UIS = { chars, abort: false, hand: [], intel: null, picked: null, riichiMode: false, resolve: null, opts: null, kind: null };
+  UIS = { chars, players: [{ kind: 'me' }, ...[1, 2, 3].map(() => ({ kind: 'bot', lv: DB.set.lv }))], track: new MJStats.Tracker(), drawnBy: [null, null, null, null], abort: false, hand: [], intel: null, picked: null, riichiMode: false, resolve: null, opts: null, kind: null };
   const auto = /[?&]auto/.test(location.search);
   const agents = [auto ? new AutoMe(DB.set.lv) : new Human(), new SlowBot(DB.set.lv), new SlowBot(DB.set.lv), new SlowBot(DB.set.lv)];
   G = new MJGame({ agents, chars, rules: { length: DB.set.len, skills: DB.set.skills }, ui: onEvent });
   UIS.game = G;
+  TB.setSleeves(chars.map(c => c.color));   // (each seat's sleeve in her sisters' colour)
   $('#gSnd').innerHTML = DB.set.snd ? IC.snd : IC.mute; $('#gExit').innerHTML = IC.exit;
+  $('#gKeys').innerHTML = IC.keys; $('#gKeys').title = t('keysT'); $('#gKeys').setAttribute('aria-label', t('keysT')); showKeys(false);
   $('#khelp').innerHTML = t('keys');
   sndIcons();
   const g0 = G;
   try { await G.run(); } catch (e) { if (e !== 'abort') { console.error(e); toast('Error: ' + e.message, 5000); } }
   if (g0 !== G) return;
 }
+// a seat's face → that player's stats
+$('#game .hud').addEventListener('click', e => {
+  const o = e.target.closest('.opp, .me .mb'); if (!o || !UIS) return;
+  openStats(o.id ? +o.id.slice(3) : ME);
+});
+// the keyboard help (PC): folded away; the ？ button at the top right opens and closes it (ユーザー 2026-11-14)
+function showKeys(on) { $('#khelp').classList.toggle('open', on); $('#gKeys').classList.toggle('on', on); $('#gKeys').setAttribute('aria-expanded', on ? 'true' : 'false'); }
+$('#gKeys').addEventListener('click', e => { e.stopPropagation(); SND.pick(); showKeys(!$('#khelp').classList.contains('open')); });
+document.addEventListener('pointerdown', e => { if ($('#khelp').classList.contains('open') && !e.target.closest('#khelp, #gKeys')) showKeys(false); }, true);
 $('#gExit').addEventListener('click', async () => {
   if (!(await confirmBox(t('exitQ')))) return;
   quitGame();
 });
 function quitGame() {
   if (UIS) UIS.abort = true;
+  SND.bgm(false);
+  closeStats();
   $('#dealAsk').hidden = true;
   G = null;
   $('#game').hidden = true; $('#home').hidden = false;
+  setTimeout(homeEnter, 0);
   if (TB) TB.pause();
   closeModal(); $('#cutin').hidden = true;
   renderHome();
@@ -452,9 +724,12 @@ function quitGame() {
 async function onEvent(ev, d) {
   if (!UIS || UIS.abort || UIS.game !== G) throw 'abort';
   const g = G;
+  UIS.track.on(ev, d, g);
+  if (ev === 'agari' || ev === 'ryuukyoku' || ev === 'game-end') closeStats();
   switch (ev) {
     case 'game-start': renderBadges(); break;
     case 'hand-start': {
+      SND.bgm(false);
       TB.hideAll();
       UIS.intel = null; $('#intel').hidden = true;
       refreshTable(); renderBadges(); renderHand(); layoutAll();
@@ -463,24 +738,25 @@ async function onEvent(ev, d) {
     }
     case 'draw': {
       TB.setInfo({ left: g.liveLeft(), turn: d.seat });
-      const rl = document.querySelector('#rbox .rl'); if (rl) rl.textContent = t('left', { n: g.liveLeft() });
+      UIS.drawnBy[d.seat] = d.id;
       if (d.seat === ME) renderHand(d.id);
       else TB.layoutHand(d.seat, g.P[d.seat].hand.slice(0, -1), g.P[d.seat].hand[g.P[d.seat].hand.length - 1]);
       break;
     }
     case 'discard': {
       const p = g.P[d.seat];
-      if (d.riichi) await cutin(d.seat, 'riichi');
-      SND.tile();
-      layoutRiver(d.seat, true);
-      if (d.seat !== ME) TB.layoutHand(d.seat, p.hand, null, false, true);   // (the gap the tile left stays open a moment, then the row closes up)
+      if (d.riichi) { await cutin(d.seat, 'riichi'); SND.bgm(true); }
+      layoutRiver(d.seat, true);   // (the tile's sound plays when it lands — TB.onTileLand)
+      // (others: the hand tidies the row after laying the tile — the drawn tile goes to its place, or the row is pushed together. ユーザー 2026-11-14)
+      if (d.seat !== ME) { const dr = UIS.drawnBy[d.seat]; TB.sortAfterDiscard(d.seat, p.hand, dr != null && !d.tsumogiri && p.hand.includes(dr) ? dr : null); }
       else { clearActs(); renderHand(); }
-      await sleep(d.seat === ME ? 120 : 160);
+      UIS.drawnBy[d.seat] = null;
+      await sleep(d.seat === ME ? 720 : 860);   // (ユーザー 2026-11-14: the next player's draw showed while the hand was still putting the tile out — wait until it is about down)
       break;
     }
-    case 'riichi-stick': TB.setStick(d.seat, true); refreshTable(); renderBadges(); break;
+    case 'riichi-stick': SND.stick(); TB.setStick(d.seat, true); refreshTable(); renderBadges(); break;
     case 'call': {
-      SND.call();
+      SND.call(); SND.voice(d.type === 'chi' ? 'chi' : d.type === 'pon' ? 'pon' : 'kan');
       await callout(d.seat, d.type === 'chi' ? t('chi') : d.type === 'pon' ? t('pon') : t('kan'));
       // the caller's hand takes the tile (チー・ポン・明槓: from the river where it lies; 暗槓・加槓: from the caller's own hand)
       const cid = d.called != null ? d.called : d.added != null ? d.added : d.tiles[0], was = d.called != null ? TB.tilePose(cid) : null;
@@ -493,6 +769,7 @@ async function onEvent(ev, d) {
     }
     case 'dora': refreshTable(); renderHand(); TB.dirty = true; break;
     case 'skill': {
+      if (d.cost > 0) SND.stick();   // (the points go into the pot)
       await cutin(d.seat, 'skill', d);
       refreshTable(); renderBadges();
       if (d.seat === ME) {
@@ -502,6 +779,7 @@ async function onEvent(ev, d) {
       break;
     }
     case 'agari': {
+      SND.bgm(false);
       clearActs();
       for (const r of d.results) await cutin(r.seat, r.tsumo ? 'tsumo' : 'ron');
       SND.win();
@@ -512,8 +790,10 @@ async function onEvent(ev, d) {
       break;
     }
     case 'ryuukyoku': {
+      SND.bgm(false);
       clearActs();
       for (let s = 1; s < 4; s++) if (d.tenpai[s]) TB.layoutHand(s, d.hands[s], null, true);
+      if (!d.abort) [0, 1, 2, 3].forEach((s, i) => sleep(i * 520).then(() => SND.voice(d.tenpai[(G.kyoku + s) % 4] ? 'tenpai' : 'noten')));   // (each player declares, from the dealer round)
       await showRyuukyoku(d);
       break;
     }
@@ -525,11 +805,16 @@ function refreshTable() {
   const g = G;
   TB.setInfo({ round: g.round, kyoku: g.kyoku, honba: g.honba, kyotaku: g.kyotaku, left: g.liveLeft ? g.liveLeft() : 70, scores: g.scores.slice(), dealer: g.kyoku });
   const inds = g.doraInds ? g.doraInds() : [];
-  const roundTxt = t('kyoku', { w: t('round')[g.round], n: g.kyoku + 1 });
-  $('#rbox').innerHTML = `<div class="rk"><b>${roundTxt}</b><span>${t('honba', { n: g.honba })}</span></div>
-    <div class="rd"><small>${t('dora')}</small>${[0, 1, 2, 3, 4].map(i => i < inds.length ? typeHTML(inds[i], 'xs') : backHTML('xs')).join('')}</div>
-    <div class="rl">${t('left', { n: g.liveLeft ? g.liveLeft() : 70 })}</div>`;
+  // (ユーザー 2026-11-14: the box shows the dora, and under it the pot and the counters as stick × n — the round and the tiles
+  // left are on the score unit in the middle of the table)
+  const ky = Math.round(g.kyotaku / 100) / 10;
+  // (the dora indicators as the 3D tiles of the table — TB.tileShot; no label)
+  const shot = (id, bk) => `<span class="t3"><img src="${TB.tileShot(id, bk)}" alt="" draggable="false"></span>`;
+  $('#rbox').innerHTML = `<div class="rd" title="${esc(t('dora'))}">${[0, 1, 2, 3, 4].map(i => i < inds.length ? shot(inds[i] * 4 + (inds[i] === 4 || inds[i] === 13 || inds[i] === 22 ? 1 : 0)) : shot(0, true)).join('')}</div>
+    <div class="rs"><span title="${esc(t('kyotakuT'))}">${STICK1000}<b>×${ky}</b></span><span title="${esc(t('honbaT'))}">${STICK100}<b>×${g.honba}</b></span></div>`;
 }
+const STICK1000 = '<svg class="stk" viewBox="0 0 64 10"><rect x="1" y="1" width="62" height="8" rx="4" fill="#f4f1ea" stroke="#9aa0b0" stroke-width=".8"/><circle cx="32" cy="5" r="2.6" fill="#d8283c"/></svg>';
+const STICK100 = '<svg class="stk" viewBox="0 0 64 10"><rect x="1" y="1" width="62" height="8" rx="4" fill="#f4f1ea" stroke="#9aa0b0" stroke-width=".8"/><g fill="#2a2a33"><circle cx="9" cy="3.6" r="1.1"/><circle cx="13" cy="3.6" r="1.1"/><circle cx="9" cy="6.4" r="1.1"/><circle cx="13" cy="6.4" r="1.1"/><circle cx="51" cy="3.6" r="1.1"/><circle cx="55" cy="3.6" r="1.1"/><circle cx="51" cy="6.4" r="1.1"/><circle cx="55" cy="6.4" r="1.1"/></g></svg>';
 function layoutRiver(s, anim) {
   const p = G.P[s];
   const riv = p.river.map((r, i) => ({ id: r.id, taken: r.taken, sideways: i === p.riichiTurn || (p.riichiTurn >= 0 && i > p.riichiTurn && p.river.slice(p.riichiTurn, i).every(x => x.taken) && i === firstVisibleAfter(p)) }));
@@ -696,7 +981,7 @@ function myTurn(o, res) {
   bindActKeys();
   // riichi: auto tsumogiri when there is nothing else to do
   if (o.mustTsumogiri && !o.canTsumo && !(o.ankans && o.ankans.length)) {
-    setTimeout(() => { if (UIS.resolve === res) doDiscard(o.drawn); }, 420);
+    sleep(420).then(() => { if (UIS.resolve === res) doDiscard(o.drawn); });
   }
 }
 function myCall(o, res) {
@@ -834,6 +1119,7 @@ async function cutin(s, kind, d) {
   void el.offsetWidth;
   el.classList.add('show');
   if (kind === 'riichi') SND.riichi(); else if (kind === 'skill') SND.skill(); else SND.ok();
+  if (kind === 'riichi' || kind === 'tsumo' || kind === 'ron') SND.voice(kind);
   await sleep((kind === 'skill' ? 1700 : kind === 'riichi' ? 1450 : 1500) + [0, 0, 150, 350, 650][rk]);
   el.classList.add('out');
   await sleep(260);
@@ -850,7 +1136,7 @@ function scoreRows(d, winners) {
   }).join('')}</div>`;
   void g;
 }
-function waitClick(box, sel) { return new Promise(res => { const b = box.querySelector(sel); b.onclick = () => { SND.pick(); res(); }; if (AUTO) setTimeout(res, 1600); }); }
+function waitClick(box, sel) { return new Promise(res => { const b = box.querySelector(sel); b.onclick = () => { SND.pick(); res(); }; if (AUTO) sleep(1600).then(res); }); }
 
 // ---- the end of a hand (2026-11-14, ユーザー: the basic plan) ----
 //  1  the win: the winner's character large, the hand, the yaku one by one, the points large        (showAgari, one per winner)
@@ -901,20 +1187,27 @@ async function showMoves(d, o = {}) {
         </div>`; }).join('')}
       <button class="btn gold nx">${t('next')}</button>
     </div>`, 'stage clear');
-  // arrows: from every player who pays to every player who is paid (drawn between the panels as they are laid out)
+  // arrows: from every player who pays to every player who is paid (drawn between the panels as they are laid out). (2026-11-14: the glow
+  // filter's region is the whole stage — sized by the path's own box, a straight arrow through the centre had no height and was not drawn)
   const svg = box.querySelector('.mv-ar'), R = box.getBoundingClientRect(), mid = el => { const r = el.getBoundingClientRect(); return [r.left - R.left + r.width / 2, r.top - R.top + r.height / 2, r.width, r.height]; };
   const P = {}; box.querySelectorAll('.mv-p').forEach(el => { P[el.dataset.s] = mid(el); });
   const cx = R.width / 2, cy = R.height / 2, u = Math.min(R.width, R.height) / 100;
   svg.setAttribute('viewBox', `0 0 ${R.width} ${R.height}`);
   let h = `<defs><marker id="mvh" viewBox="0 0 10 10" refX="6.5" refY="5" markerWidth="3.3" markerHeight="3.3" orient="auto-start-reverse"><path d="M0 0 10 5 0 10 2.6 5z" fill="#eaffff"/></marker>
-    <filter id="mvg" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="${(u * .9).toFixed(1)}" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>`;
+    <filter id="mvg" filterUnits="userSpaceOnUse" x="0" y="0" width="${R.width.toFixed(0)}" height="${R.height.toFixed(0)}"><feGaussianBlur stdDeviation="${(u * .9).toFixed(1)}" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="mvd" x="-150%" y="-150%" width="400%" height="400%"><feGaussianBlur stdDeviation="${(u * .9).toFixed(1)}" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>`;
   let k = 0;
   for (let a = 0; a < 4; a++) if (d.delta[a] < 0) for (let b = 0; b < 4; b++) if (d.delta[b] > 0) {
     const A = P[a], B = P[b], opp = (a - b + 4) % 4 === 2, mx = (A[0] + B[0]) / 2, my = (A[1] + B[1]) / 2;
     const qx = opp ? mx : mx + (mx - cx) * .55, qy = opp ? my : my + (my - cy) * .55;       // neighbours: the arrow bows outward round the centre
     const at = tt => [(1 - tt) * (1 - tt) * A[0] + 2 * (1 - tt) * tt * qx + tt * tt * B[0], (1 - tt) * (1 - tt) * A[1] + 2 * (1 - tt) * tt * qy + tt * tt * B[1]];
     const t0 = opp ? .34 : .3, t1 = opp ? .66 : .7, p0 = at(t0), p1 = at(t1), pm = at(.5), q2 = [2 * pm[0] - (p0[0] + p1[0]) / 2, 2 * pm[1] - (p0[1] + p1[1]) / 2];
-    h += `<path class="mv-a" style="--k:${k++}" pathLength="1" d="M${p0[0].toFixed(1)} ${p0[1].toFixed(1)} Q${q2[0].toFixed(1)} ${q2[1].toFixed(1)} ${p1[0].toFixed(1)} ${p1[1].toFixed(1)}" fill="none" stroke="#eaffff" stroke-width="${(u * 1.5).toFixed(1)}" stroke-linecap="round" marker-end="url(#mvh)" filter="url(#mvg)"/>`;
+    const dp = `M${p0[0].toFixed(1)} ${p0[1].toFixed(1)} Q${q2[0].toFixed(1)} ${q2[1].toFixed(1)} ${p1[0].toFixed(1)} ${p1[1].toFixed(1)}`;
+    h += `<path class="mv-a" id="mvp${k}" style="--k:${k}" pathLength="1" d="${dp}" fill="none" stroke="#eaffff" stroke-width="${(u * 1.5).toFixed(1)}" stroke-linecap="round" marker-end="url(#mvh)" filter="url(#mvg)"/>`;
+    // (ユーザー 2026-11-14: something is sent along the arrow) — bright points of light run down it to the receiver, over and over
+    for (let j = 0; j < 3; j++) { const b0 = (.62 + k * .08 + j * .3).toFixed(2);
+      h += `<circle r="${(u * 1.7).toFixed(1)}" fill="#ffe08a" stroke="#fff6d8" stroke-width="${(u * .4).toFixed(1)}" opacity="0" filter="url(#mvd)"><animateMotion dur=".9s" begin="${b0}s" repeatCount="indefinite" calcMode="spline" keyTimes="0;1" keySplines=".45 0 .55 1"><mpath href="#mvp${k}"/></animateMotion><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.15;.8;1" dur=".9s" begin="${b0}s" repeatCount="indefinite"/></circle>`; }
+    k++;
   }
   svg.innerHTML = h;
   // the scores count to their new values once the arrows are out
@@ -944,7 +1237,13 @@ async function showFinal(d) {
   const myRank = rank.indexOf(ME);
   // 1st = two single pulls, 2nd = one pull (COST1 each); hanchan pays double
   const coins = [COST1 * 2, COST1, 120, 60][myRank] * (G.rules.length === 'south' ? 2 : 1);
-  DB.coins += coins; DB.stats.games++; DB.stats.rank[myRank]++; save();
+  DB.coins += coins; DB.stats.games++; DB.stats.rank[myRank]++;
+  if (!AUTO) {   // スタッツ: this game's counters into the mode's total, and the place under the character played
+    MJStats.add(DB.pstats[G.rules.skills ? 'skill' : 'std'], UIS.track.seat[ME]);
+    const pc = DB.pstats.chars[UIS.chars[ME].id] = DB.pstats.chars[UIS.chars[ME].id] || { g: 0, r: [0, 0, 0, 0] };
+    pc.g++; pc.r[myRank]++;
+  }
+  save();
   recordGame(d, myRank);
   const w = UIS.chars[rank[0]];
   const box = modal(`
@@ -954,13 +1253,14 @@ async function showFinal(d) {
       <div class="agst-who"><b>${esc(L(w.name))}</b><span>${t('rank')[0]}</span></div>
       <div class="agst-main">
         <h2 class="fn-t">${t('final')}</h2>
-        <div class="fn-rows">${rank.map((s, i) => { const c = UIS.chars[s]; return `<div class="fn-r r${i} ${s === ME ? 'mine' : ''}" style="--c:${c.color};--i:${i}"><em class="mv-r r${i}">${t('rank')[i]}</em><img src="${charImg(c, 'face')}" alt=""><b>${esc(L(c.name))}${s === ME ? ` <small>(${t('you')})</small>` : ''}</b><span>${d.scores[s].toLocaleString()}</span></div>`; }).join('')}</div>
+        <div class="fn-rows">${rank.map((s, i) => { const c = UIS.chars[s]; return `<div class="fn-r r${i} ${s === ME ? 'mine' : ''}" data-ps="${s}" style="--c:${c.color};--i:${i}"><em class="mv-r r${i}">${t('rank')[i]}</em><img src="${charImg(c, 'face')}" alt=""><b>${esc(L(c.name))}${s === ME ? ` <small>(${t('you')})</small>` : ''}</b><span>${d.scores[s].toLocaleString()}</span></div>`; }).join('')}</div>
         <div class="earn">${icon('coin')} ${t('earned', { n: coins })}</div>
         <div class="cbtns"><button class="btn" data-a="home">${t('toHome')}</button><button class="btn gold" data-a="again">${t('again')}</button></div>
       </div>
     </div>`, 'stage');
   SND.ok();
   await new Promise(res => box.addEventListener('click', e => {
+    const ps = e.target.closest('[data-ps]'); if (ps) { openStats(+ps.dataset.ps); return; }
     const a = e.target.closest('[data-a]'); if (!a) return;
     closeModal();
     if (a.dataset.a === 'home') quitGame(); else { UIS.abort = true; startGame(); }
@@ -988,6 +1288,8 @@ document.addEventListener('keydown', e => {
   const tag = (e.target.tagName || '').toLowerCase();
   if (tag === 'input' || tag === 'select' || tag === 'textarea') return;
   const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+  if (k === 'Escape' && $('#khelp').classList.contains('open')) { e.preventDefault(); showKeys(false); return; }
+  if (!$('#pstats').hidden) { if (k === 'Escape' || k === 'Enter') { e.preventDefault(); closeStats(); } return; }
   const m = $('#modal');
   // modal screens
   if (!m.hidden) {
@@ -1048,6 +1350,6 @@ new MutationObserver(() => { clearTimeout(ffxT); ffxT = setTimeout(() => FrameFX
 I18N.set(I18N.lang);
 MJTiles.ready().then(() => { MJTiles.reset(); ART.clear(); renderHome(); });   // (the tile faces from the 上海 sheets, 2026-11-14)
 document.fonts && document.fonts.load('800 40px "Shippori Mincho B1"', '一萬東南西北發中雀華').then(() => { MJTiles.reset(); ART.clear(); renderHome(); });
-renderHome();
-window.JANKA = { get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, DB, startGame, quitGame, cutin, showMoves, showFinal };
+renderHome(); homeEnter();
+window.JANKA = { get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, SND, DB, startGame, quitGame, cutin, showMoves, showFinal };
 })();

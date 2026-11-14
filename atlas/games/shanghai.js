@@ -76,7 +76,14 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
 .shask b{display:block;font-size:22px;margin-bottom:8px}.shask p{margin:0 0 16px;font-size:17px;line-height:1.5}
 .shask .r{display:flex;gap:10px}.shask button{flex:1;font:inherit;font-weight:800;font-size:17px;padding:12px 8px;border-radius:14px;border:0;cursor:pointer;white-space:nowrap}
 .shask .y{background:#1f6a4c;color:#fff}.shask .n{background:#ece6d8;color:#3a3f4c}
+.bvi #bvOpts.shf > label:has(#bvSize){flex:1 1 100%!important}.bvi #bvOpts.shf .shfrow{display:contents}.bvi #bvOpts.shf .shfl{flex:1 1 0!important;min-width:0}
+.bvi #bvOpts.shf .pgbest .shbt{margin-inline-start:auto}.bvi #bvOpts.shf .pgbest .shbt + b{margin-inline-start:14px}
 .shstg{display:flex;flex-direction:column;gap:10px;align-items:stretch}
+.shstg .stinfo{box-sizing:border-box;width:100%;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:10px 14px;border-radius:14px;background:#fff;border:2px solid var(--line,#eadfc6);font-weight:900;font-size:15px;color:#2b3044}.shstg .stinfo .ss{color:#e0a020}.shstg .stinfo .sw{display:flex;align-items:center;gap:6px;flex:1 1 100%;font-size:13.5px;color:#7a5a20}.shstg .stinfo .sw img{width:30px;height:30px}
+.shstg .strow{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}.shstg .strow .mapb{padding:12px 10px;font-size:16px;background:linear-gradient(135deg,#1b2350,#3a2a6e);box-shadow:0 4px 0 #11163a}.shstg .mapb i{color:#ffd76a}.shstg .mapb span{display:flex;flex-direction:column;align-items:flex-start;line-height:1.2}.shstg .mapb small{font-size:12px;color:#ffe7a0;font-weight:700}
+.shstg .dyb{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font:inherit;padding:10px;border-radius:14px;border:2px solid var(--line,#eadfc6);background:#fff;color:#2b3044;cursor:pointer;box-shadow:0 3px 0 var(--line,#eadfc6)}.shstg .dyb b{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:900}.shstg .dyb b em{font-style:normal;font-size:11px;font-weight:900;color:#fff;background:#e5484d;border-radius:99px;padding:2px 7px;letter-spacing:.04em}.shstg .dyb small{font-size:12px;font-weight:700;color:#9a8762}.shstg .dyb.done small{color:#2f9a6a}
+html:has(#bvStg:not([hidden])) #bvStart{display:none!important}
+#lessonOverlay #lessonList .lx-grid:not(.pzh-days) > .lx-card.shbd > .lx-th{background:radial-gradient(ellipse at 50% 40%,#3a7a60,#24503f)!important}.lx-card.shbd .lx-th svg{width:88%;height:84%}#lessonOverlay #lessonList .lx-grid:not(.pzh-days) > .lx-card.shcr > .lx-th{padding:0!important;overflow:hidden;background:#0d1236!important}.lx-card.shbd.sel{border-color:#ff5d5d;box-shadow:0 0 0 2px rgba(255,93,93,.25)}
 .shstg .pg{font-size:16px;font-weight:700;color:var(--ink,#2a2f3a)}
 .shstg .nx{font-size:15px;opacity:.8}
 .shstg .mapb{display:flex;align-items:center;justify-content:center;gap:10px;font:inherit;font-weight:800;font-size:18px;padding:14px;border-radius:16px;border:0;cursor:pointer;color:#fff;background:linear-gradient(135deg,#1b2350,#3a2a6e 60%,#5a3a8a);box-shadow:0 8px 20px -10px rgba(30,20,80,.8);white-space:nowrap}
@@ -91,50 +98,69 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
 .shmap.on{opacity:1}
 .shmap .sky{position:absolute;inset:0;pointer-events:none;background:radial-gradient(60% 50% at 70% 30%,rgba(110,60,180,.35),transparent 70%),radial-gradient(50% 45% at 20% 75%,rgba(40,90,190,.35),transparent 70%),radial-gradient(40% 35% at 45% 50%,rgba(200,80,160,.16),transparent 70%),linear-gradient(#070a1c,#0d1238 60%,#151040)}
 .shmap .sky canvas{position:absolute;inset:0;width:100%;height:100%}
+.shmap .hd,.shmap .ars,.shmap .gift,.shmap .sh{flex-shrink:0}.shmap .hd{height:auto!important;max-height:none!important}
 .shmap .hd{position:relative;display:flex;align-items:center;gap:12px;padding:calc(12px + env(safe-area-inset-top)) 16px 8px}
-.shmap .hd h2{margin:0;font-size:22px;letter-spacing:.04em;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.shmap .hd h2{margin:0;font-size:22px;letter-spacing:.04em;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.shmap .hd .shtl{flex:1;min-width:0}.shmap .hd .em{display:none;flex:none}.shmap .hd .em.zx{display:none!important}.shmap .hd .emi{object-fit:cover;border-radius:14px;border:2px solid #e8c877}.shmap.scn .sky{background-size:cover;background-position:50% 100%;filter:blur(16px) brightness(.62) saturate(1.1);transform:scale(1.12)}.shmap.scn .sky canvas{display:none}.shmap.scn .wld .pn{fill:rgba(255,255,255,.85);paint-order:stroke;stroke:rgba(0,0,0,.35);stroke-width:.6px}.shmap .sh .art.scn{padding:0;overflow:hidden}.shmap .sh .art.scn svg{border-radius:14px 14px 0 0}.shmap .sh .art.scn b{margin:4px 0 6px}.shmap .hd .story{display:none;margin:4px 0 0;font-size:15px;line-height:1.55;color:#c8d2f4;opacity:.9;max-width:760px}
+@media (min-width:820px){.shmap .hd{gap:18px;padding:calc(18px + env(safe-area-inset-top)) 24px 10px}.shmap .hd .em{display:block;width:64px;height:64px;filter:drop-shadow(0 0 14px rgba(255,215,106,.35))}.shmap .hd h2{font-size:34px;letter-spacing:.08em;color:#ffe7a0;text-shadow:0 0 18px rgba(255,215,106,.35)}.shmap .hd .story{display:block}.shmap .hd .tot{font-size:21px}}
 .shmap .hd .tot{font-size:17px;font-weight:800;color:#ffd76a;white-space:nowrap}
 .shmap .x{flex:none;width:46px;height:46px;padding:0;display:grid;place-items:center;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
 .shmap .x svg{width:56%;height:56%;display:block;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}
-.shmap .gift{position:relative;align-self:center;display:flex;align-items:center;gap:8px;margin:0 16px 2px;padding:4px 14px 4px 4px;border-radius:99px;background:rgba(255,215,106,.14);border:1px solid rgba(255,215,106,.35);font-size:15px;font-weight:800;color:#ffe7a0;white-space:nowrap;max-width:calc(100% - 32px);overflow:hidden;text-overflow:ellipsis}.shmap .gift img{width:38px;height:38px;flex:none}
+.shmap .gift{position:relative;align-self:center;display:flex;align-items:center;gap:8px;margin:0 16px 8px;padding:4px 14px 4px 4px;border-radius:99px;background:rgba(255,215,106,.14);border:1px solid rgba(255,215,106,.35);font-size:15px;font-weight:800;color:#ffe7a0;white-space:nowrap;max-width:calc(100% - 32px);overflow:hidden;text-overflow:ellipsis}.shmap .gift img{width:38px;height:38px;flex:none}
 .shmap .gf{position:absolute;z-index:2;width:calc(var(--nd) * 1.3);height:auto;margin-top:calc(var(--nd) * -1.8 + 10px);transform:translateX(-50%);pointer-events:none;filter:drop-shadow(0 4px 8px rgba(0,0,0,.6));animation:shgfb 2.4s ease-in-out infinite}
 .shmap .gf.got{opacity:.55;animation:none;filter:grayscale(.2) drop-shadow(0 3px 6px rgba(0,0,0,.5))}
 .shmap .nd .gft{position:absolute;right:-8px;top:-6px;font-style:normal;font-size:15px;line-height:1;width:24px;height:24px;display:grid;place-items:center;border-radius:50%;background:#ffd76a;color:#241a05;font-weight:900;box-shadow:0 2px 6px rgba(0,0,0,.5)}
-@keyframes shgfb{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-5px)}}
+@keyframes shgfb{0%,100%{transform:translateX(-50%) scale(var(--iz,1)) translateY(0)}50%{transform:translateX(-50%) scale(var(--iz,1)) translateY(-5px)}}
+.shmap .gf{transform-origin:50% calc(var(--nd) * 1.8 - 10px)}
 .shmap .ar .agf{width:26px;height:26px;margin:-6px -6px -6px 6px;vertical-align:middle}
 .shmap .sh .gfl{display:flex;align-items:center;gap:8px;margin-top:8px;padding:4px 12px 4px 4px;border-radius:14px;background:rgba(255,215,106,.14);border:1px solid rgba(255,215,106,.35);font-weight:800;color:#ffe7a0;font-size:15.5px}.shmap .sh .gfl img{width:44px;height:44px;flex:none}.shmap .sh .gfl.got{opacity:.7}
+.shmap .sh .rs{color:#ffd76a;letter-spacing:1px}.shmap .sh .rb{color:#9fe8ff;font-weight:800;margin-inline-start:6px}
+.shmap .sh .recs{margin-top:10px;font-size:16.5px}.shmap .sh .recs .rs{margin-inline-start:2px}
 .shmap .sh .rw{display:inline-block;margin-top:2px;font-weight:800;color:#ffd76a}
 .shmap .ars{position:relative;display:flex;gap:8px;overflow-x:auto;padding:4px 16px 10px;scrollbar-width:none}.shmap .ars::-webkit-scrollbar{display:none}
 .shmap .ar{flex:none;font:inherit;font-size:15px;font-weight:700;padding:9px 14px;border-radius:99px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#dfe3ff;cursor:pointer;white-space:nowrap}
 .shmap .ar.on{background:#ffd76a;color:#241a05;border-color:#ffd76a}.shmap .ar.lk{opacity:.45}
 .shmap .ar em{font-style:normal;font-size:13px;margin-left:6px;opacity:.85}
-.shmap .fld{position:relative;flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:6px 16px}
-.shmap .cst{position:relative;width:min(100%,calc((100vh - 300px) * 100 / 64),980px);aspect-ratio:100/64;--nd:clamp(44px,6.4vw,62px)}
-.shmap .cst.port{aspect-ratio:auto;width:100%;height:100%}
-.shmap .cst svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
-.shmap .nm{position:absolute;left:0;top:-4px;font-size:clamp(26px,5vw,44px);font-weight:900;letter-spacing:.06em;color:rgba(255,255,255,.14);pointer-events:none;white-space:nowrap}
-.shmap .nd{position:absolute;transform:translate(-50%,-50%);width:var(--nd);height:var(--nd);border-radius:50%;border:2px solid rgba(255,255,255,.35);background:radial-gradient(circle at 40% 35%,#3a4580,#141a40);color:#fff;font:inherit;font-weight:900;font-size:calc(var(--nd) * .36);cursor:pointer;display:grid;place-items:center;padding:0}
+.shmap .fld{position:relative;flex:1;min-height:0}
+.shmap .vp{position:absolute;inset:0;overflow:hidden;touch-action:none;cursor:grab;-webkit-user-select:none;user-select:none}
+.shmap .vp.drag{cursor:grabbing}
+.shmap .wld{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
+.shmap .wld > svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.shmap .wld .pn{font-size:6.4px;font-weight:900;letter-spacing:.3px;fill:rgba(255,255,255,.13);stroke:none}
+.shmap .wld .pn.on{fill:rgba(255,226,150,.22)}
+.shmap .zoom{position:absolute;right:10px;bottom:10px;display:flex;flex-direction:column;gap:6px;z-index:3}
+.shmap .zoom button{font:inherit;font-size:22px;font-weight:900;width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(16,20,52,.7);color:#fff;cursor:pointer;line-height:1}
+.shmap .nd{position:absolute;transform:translate(-50%,-50%) scale(var(--iz,1));width:var(--nd);height:var(--nd);border-radius:50%;border:2px solid rgba(255,255,255,.35);background:radial-gradient(circle at 40% 35%,#3a4580,#141a40);color:#fff;font:inherit;font-weight:900;font-size:calc(var(--nd) * .36);cursor:pointer;display:grid;place-items:center;padding:0}
 .shmap .nd.ok{background:radial-gradient(circle at 40% 35%,#fff6c8,#f2c24a 55%,#b9851a);color:#3a2604;border-color:#fff3b0;box-shadow:0 0 18px 4px rgba(255,214,106,.55)}
 .shmap .nd.cur{border-color:#9fe8ff;box-shadow:0 0 0 0 rgba(159,232,255,.7);animation:shpulse 1.6s infinite}
 .shmap .nd.lk{opacity:.4;cursor:default}
 .shmap .nd .sr{position:absolute;top:100%;left:50%;transform:translateX(-50%);font-size:13px;letter-spacing:-1px;color:#ffd76a;white-space:nowrap;margin-top:3px;text-shadow:0 1px 3px #000}
 @keyframes shpulse{0%{box-shadow:0 0 0 0 rgba(159,232,255,.7)}70%{box-shadow:0 0 0 16px rgba(159,232,255,0)}100%{box-shadow:0 0 0 0 rgba(159,232,255,0)}}
-.shmap .sh{position:relative;margin:0 auto calc(14px + env(safe-area-inset-bottom));width:min(94vw,640px);background:rgba(16,20,52,.92);border:1px solid rgba(255,255,255,.18);border-radius:22px;padding:16px 18px;display:flex;gap:14px;align-items:center;backdrop-filter:blur(6px)}
+.shmap .sh{position:relative;margin:0 auto calc(14px + env(safe-area-inset-bottom));width:min(94vw,860px);background:rgba(16,20,52,.92);border:1px solid rgba(255,255,255,.18);border-radius:22px;padding:16px 18px;display:flex;gap:14px;align-items:center;backdrop-filter:blur(6px)}
 .shmap .sh .tx{flex:1;min-width:0}
-.shmap .sh h3{margin:0 0 4px;font-size:20px}.shmap .sh .mi{font-size:18px;font-weight:800;color:#ffe7a0;line-height:1.35}
-.shmap .sh .sub{font-size:15px;opacity:.8;margin-top:4px;line-height:1.45}
-.shmap .sh .go{flex:none;font:inherit;font-weight:900;font-size:19px;padding:16px 22px;border-radius:16px;border:0;background:#ffd76a;color:#241a05;cursor:pointer;white-space:nowrap}
+.shmap .sh .art{flex:none;position:relative;width:220px;align-self:stretch;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:16px;background:radial-gradient(ellipse at 50% 40%,rgba(90,110,220,.28),rgba(10,12,40,.2) 70%);border:1px solid rgba(255,255,255,.08);padding:6px 4px 8px}
+.shmap .sh .art svg{width:100%;height:auto;overflow:visible}.shmap .sh .art b{font-size:15px;font-weight:900;color:#c9d6ff;letter-spacing:.06em;margin-top:2px}
+.shmap .sh .art .cl{stroke:rgba(200,215,255,.35);stroke-width:.5;stroke-dasharray:1.4 1.2}.shmap .sh .art .cl.on{stroke:#ffd76a;stroke-dasharray:none;stroke-width:.7}
+.shmap .sh .art .cst{fill:rgba(220,230,255,.55)}.shmap .sh .art .cst.on{fill:#ffe9a8}
+.shmap .sh .art .cpk{fill:rgba(255,215,106,.18);stroke:#fff;stroke-width:.6;animation:shpk 1.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes shpk{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.25);opacity:.6}}
+.shmap .sh h3{display:flex;align-items:center;gap:14px;flex-wrap:wrap}.shmap .sh h3 .sn{white-space:nowrap}.shmap .sh .ly{display:inline-flex;align-items:center;gap:8px;margin:0;font-size:16px;font-weight:800;color:#dfe6ff}.shmap .sh .ly .lm{width:46px;height:30px;flex:none}.shmap .sh .ly em{font-style:normal;opacity:.65;font-size:14px}
+.shmap .nd.pk{outline:3px solid #fff;outline-offset:3px}
+.shmap .sh h3{margin:0 0 2px;font-size:24px}.shmap .sh .mi{font-size:21px;font-weight:800;color:#ffe7a0;line-height:1.35}
+.shmap .sh .sub{font-size:16.5px;opacity:.8;margin-top:4px;line-height:1.45}
+.shmap .sh .go{flex:none;font:inherit;font-weight:900;font-size:22px;padding:20px 28px;border-radius:16px;border:0;background:#ffd76a;color:#241a05;cursor:pointer;white-space:nowrap}
 .shmap .sh .go:disabled{opacity:.4;cursor:default}
-.shmap .nav{position:absolute;top:50%;transform:translateY(-50%);font:inherit;font-size:26px;width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
+.shmap .nav{position:absolute;z-index:3;top:50%;transform:translateY(-50%);font:inherit;font-size:26px;width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
 .shmap .nav.l{left:8px}.shmap .nav.r{right:8px}.shmap .nav:disabled{opacity:.2}
-@media (max-width:600px){.shmap .hd{padding:calc(8px + env(safe-area-inset-top)) 12px 6px}.shmap .hd h2{font-size:19px}.shmap .hd .tot{font-size:15px}.shmap .x{width:40px;height:40px;font-size:19px}.shmap .ars{padding:2px 12px 8px;gap:6px}.shmap .ar{font-size:14px;padding:7px 12px}.shmap .gift{margin:0 12px 2px;padding:2px 12px 2px 2px}.shmap .fld{padding:4px 10px}.shmap .nm{font-size:24px}.shmap .nd .sr{font-size:11px;margin-top:1px}
-.shmap .sh{width:calc(100vw - 20px);margin-bottom:calc(10px + env(safe-area-inset-bottom));padding:12px 14px;gap:8px;border-radius:18px}.shmap .sh h3{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.shmap .sh .mi{font-size:16px}.shmap .sh .sub{font-size:13.5px;margin-top:2px;line-height:1.4}.shmap .sh .go{padding:12px 16px;font-size:17px}.shmap .gift{font-size:14px}.shmap .gift img{width:30px;height:30px}.shmap .sh .gfl{margin-top:6px;font-size:14.5px}.shmap .sh .gfl img{width:36px;height:36px}.shmap .sh{flex-direction:column;align-items:stretch}.shmap .sh .go{width:100%}.shmap .nav{display:none}.shmap .cst{width:100%}}
+@media (max-width:600px){.shmap .hd{padding:calc(8px + env(safe-area-inset-top)) 12px 6px}.shmap .hd h2{font-size:19px}.shmap .hd .tot{font-size:15px}.shmap .x{width:40px;height:40px;font-size:19px}.shmap .ars{padding:2px 12px 8px;gap:6px}.shmap .ar{font-size:14px;padding:7px 12px}.shmap .gift{margin:0 12px 6px;padding:2px 12px 2px 2px}.shmap .nd .sr{font-size:11px;margin-top:1px}
+.shmap .sh{width:calc(100vw - 20px);margin-bottom:calc(10px + env(safe-area-inset-bottom));padding:12px 14px;gap:8px;border-radius:18px}.shmap .sh h3{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.shmap .sh .mi{font-size:16px}.shmap .sh .sub{font-size:13.5px;margin-top:2px;line-height:1.4}.shmap .sh .go{padding:12px 16px;font-size:17px}.shmap .gift{font-size:14px}.shmap .gift img{width:30px;height:30px}.shmap .sh .gfl{margin-top:6px;font-size:14.5px}.shmap .sh .gfl img{width:36px;height:36px}.shmap .sh{display:grid;grid-template-columns:96px 1fr;gap:8px 10px;align-items:start}.shmap .sh .art{width:auto;padding:4px 2px 6px;border-radius:12px}.shmap .sh .art b{font-size:11.5px}.shmap .sh .ly{font-size:14px;margin:0}.shmap .sh h3{gap:8px;white-space:normal}.shmap .sh .ly .lm{width:34px;height:22px}.shmap .sh .ly em{font-size:12.5px}.shmap .sh .recs{font-size:13.5px;margin-top:6px}.shmap .sh .go{grid-column:1/-1;width:100%}.shmap .nav{display:none}.shmap .cst{width:100%}}
 `;
     document.head.appendChild(s);
   }
 
   /* ---------- the constellations: 10 stars each (x 0..100, y 0..64) and their lines ---------- */
-  const CON = {
+  // (2026-11-14) the stars sit where the traditional figures put them: shanghai-zodiac.js owns them (these are the old fallback)
+  const CON = (window.ShanghaiZodiac && ShanghaiZodiac.stars) || {
     aries: { p: [[8, 40], [18, 33], [28, 28], [39, 26], [50, 28], [60, 33], [68, 40], [77, 45], [86, 43], [93, 35]] },
     taurus: { p: [[8, 10], [18, 18], [30, 26], [42, 32], [52, 36], [60, 30], [66, 20], [72, 10], [70, 44], [88, 54]], e: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [4, 8], [8, 9]] },
     gemini: { p: [[22, 58], [26, 46], [30, 34], [34, 22], [38, 10], [56, 8], [60, 20], [64, 32], [68, 44], [72, 56]] },
@@ -173,7 +199,44 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
   const prog = () => { const d = load(); return { st: d.st || {}, bt: d.bt || {} }; };
   const cleared = (P, s) => (P.st[s] || 0) > 0;
   const unlocked = (P, s) => s === 0 || cleared(P, s - 1);
-  const nextStage = P => { for (let s = 0; s < 120; s++) if (!cleared(P, s)) return s; return 119; };
+  const nextStage = (P, N) => { N = N || 120; for (let s = 0; s < N; s++) if (!cleared(P, s)) return s; return N - 1; };
+
+  /* ---------- the courses (2026-11-14, ユーザー: 星座マップをテンプレに、さまざまなモチーフとテーマで10コース) ----------
+     星座 (zodiac): 12 constellations × 10, the figures of shanghai-zodiac.js, the night sky, the クジャクパイ gifts.
+     The ten others: 6 scenes × 10 — the portal's scene pictures (images/atlas/bg) as the map's panels, a winding path of stars on
+     each; a course starts at its own difficulty step and climbs one step an area (shanghai-core courseStage). Progress:
+     zodiac in st / bt (as before), the others in cs[<id>] = { st, bt }. Every ★ pays ¢10 alike (shared/atlas.js). */
+  const COURSES = [
+    { id: 'forest', base: 0, bg: [307, 308, 310, 311, 380, 381], tint: '#1d3a2a' },
+    { id: 'sweets', base: 0, bg: [317, 318, 320, 321, 384, 386], tint: '#3a2236' },
+    { id: 'sea', base: 1, bg: [312, 313, 315, 403, 322, 324], tint: '#14304a' },
+    { id: 'castle', base: 1, bg: [325, 326, 344, 345, 347, 378], tint: '#2c2550' },
+    { id: 'festival', base: 2, bg: [389, 390, 356, 357, 330, 332], tint: '#33203f' },
+    { id: 'autumn', base: 2, bg: [333, 334, 335, 405, 406, 336], tint: '#3a2418' },
+    { id: 'snow', base: 3, bg: [337, 340, 341, 360, 361, 362], tint: '#1b2a44' },
+    { id: 'desert', base: 4, bg: [363, 364, 366, 382, 367, 365], tint: '#3a2a18' },
+    { id: 'toys', base: 5, bg: [370, 368, 369, 372, 373, 374], tint: '#2a2440' },
+    { id: 'space', base: 6, bg: [396, 397, 342, 343, 388, 398], tint: '#141838' },
+  ];
+  const courseOf = id => COURSES.find(c => c.id === id) || null;
+  const cprog = id => { if (!id || id === 'zodiac') return prog(); const d = load(), c = (d.cs || {})[id] || {}; return { st: c.st || {}, bt: c.bt || {} }; };
+  const cN = id => id && id !== 'zodiac' ? (courseOf(id) ? courseOf(id).bg.length * 10 : 0) : 120;
+  // a course's stage s (zodiac: as before)
+  const cStage = (id, s) => { const K = C(); if (!id || id === 'zodiac') { const st = K.stage(s); st.cid = 'zodiac'; return st; } const ci = COURSES.findIndex(c => c.id === id), st = K.courseStage(ci, COURSES[ci].base, s); st.cid = id; return st; };
+  // the winding path of an area's ten stars (x 0..100, y 0..64), a little different area to area
+  const cPts = i => Array.from({ length: 10 }, (_, k) => [R1(8 + k * 9.4), R1(34 + 13 * Math.sin(k * .82 + i * 1.7) + 4 * Math.cos(k * 1.9 + i))]);
+  const R1 = v => Math.round(v * 10) / 10;
+  const bgUrl = n => '../images/atlas/bg/b' + String(n).padStart(3, '0') + '.webp';
+  // the pending stage: a number (a zodiac stage, as before) or { c: course, s } or { daily: 'n' | 'h' }
+  const pend = v => v == null ? null : typeof v === 'number' ? { c: 'zodiac', s: v } : v;
+  // 本日の上海 / HARD: one deal a day for everyone (the date's seed), a board by the date — HARD on a big board with 達人's rules
+  const dayHash = str => { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
+  function dailySpec(kind, date) {
+    const K = C(), h = dayHash((date || today()) + ':' + kind), F = K.FREE;
+    const lay = kind === 'h' ? F[6 + h % 4] : F[2 + h % 5];
+    return { lay, seed: (h % 2147483000) + 1 };
+  }
+  const dailyRec = () => { const d = load(); return (d.dy && d.dy.date === today()) ? d.dy : { date: today() }; };
   const stageName = (s, lang) => TX('st.stage', lang, { a: Math.floor(s / 10) + 1, b: s % 10 + 1 });
   function missionText(st, lang) {
     const n = st.type === 'gold' ? st.gold : st.goal;
@@ -192,15 +255,17 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     COIN_STAR, GIFT_AT,
     has(t) { try { return !!(window.Atlas && Atlas.load && Atlas.load().owned.includes('av-peacock-' + t)); } catch (e) { return false; } },
     // give tier t (once): true when it is new
-    grant(t, lang) {
+    grant(t, lang, wait) {
       try {
         if (!window.Atlas || !Atlas.load) return false;
         const W = Atlas.load(), id = 'av-peacock-' + t; if (!W || W.owned.includes(id)) return false;
-        W.owned.push(id); Atlas.save(W); giftToast(t, lang); return true;
+        W.owned.push(id); Atlas.save(W); if (wait) setTimeout(() => giftToast(t, lang), wait); else giftToast(t, lang); return true;
       } catch (e) { return false; }
     },
     // after a stage: the tiers the number of cleared stages has reached
-    check(lang) { const S = prog().st; let got = -1; for (let t = 1; t < 4; t++) if (S[GIFT_S[t]] > 0 && Reward.grant(t, lang)) got = t; return got; },
+    // (2026-11-14 fix) given at once when the stage is won (the toast follows ~2 s later, even if the player moves on at once):
+    // before, the whole check waited 1.9 s on a game timer, and leaving at once put the gift off to the next stage won
+    check(lang, wait) { const S = prog().st; let got = -1; for (let t = 1; t < 4; t++) if (S[GIFT_S[t]] > 0 && Reward.grant(t, lang, wait)) got = t; return got; },
     // the tier waiting on stage s (0 = none)
     at(s) { const t = GIFT_S.indexOf(s); return t > 0 ? t : 0; },
     // the next tier still to win by stages: { t, left } or null
@@ -217,18 +282,64 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     try { if (window.SFX && SFX.win) SFX.win(); } catch (e) {}
   }
 
+  /* ---------- free play: the mode and the difficulty (2026-11-14, ユーザー: フリーでもモードと難易度を選べるように) ----------
+     モード — the stage missions on any board: ノーマル (clear it) · タイムアタック (clear it within a time) · ペアアタック (take half
+     the pairs within a time) · 金の牌 (take the golden tiles).  難易度 — 初級: undo, hints and shuffles as you like, an easy deal
+     (the most pairs open of a few), roomy times · 中級: no shuffle · 上級: no shuffle, no undo, no hints, a hard deal (the fewest
+     pairs open), tight times.  Records: free[<layout>] for ノーマル·初級 (as before), else free['<layout>:<mode>:<diff>']. */
+  const FMODES = ['clear', 'time', 'pairs', 'gold'];
+  // (2026-11-14) five difficulties (入門・初級・中級・上級・達人); the old three (fd 1..3) read as 初級・中級・達人
+  const DIFFS = [1, 2, 3, 4, 5];
+  const freePick = () => { const st = load().settings || {}; const d = DIFFS.includes(+st.fd5) ? +st.fd5 : ({ 1: 2, 2: 3, 3: 5 })[+st.fd] || 2; return { mode: FMODES.includes(st.fm) ? st.fm : 'clear', diff: d }; };
+  const freeKey = (lay, m, d) => m === 'clear' && d === 2 ? lay : lay + ':' + m + ':d' + d;   // (ノーマル・初級 keeps the old free[<layout>] record)
+  function dailyMission(DY, n) {   // 本日: the clear with 初級's help · HARD: 達人's rules against the clock
+    const pairs = n / 2, hard = DY.kind === 'h';
+    const M = { type: hard ? 'time' : 'clear', diff: hard ? 5 : 2, key: 'dy-' + DY.kind, daily: DY.kind, noShuf: hard, noUndo: hard, noHint: hard };
+    if (hard) M.limit = Math.max(30, Math.round(pairs * 4.2 / 5) * 5);
+    return M;
+  }
+  function freeMission(lay, n) {
+    const { mode, diff } = freePick(), pairs = n / 2, pace = [0, 9, 7, 5, 4.2, 3.4][diff];   // seconds a pair
+    // 入門・初級: everything allowed · 中級: no shuffle · 上級: no shuffle, no undo · 達人: no shuffle, no undo, no hints
+    const M = { type: mode, diff, key: freeKey(lay, mode, diff), noShuf: diff >= 3, noUndo: diff >= 4, noHint: diff >= 5 };
+    if (mode === 'time') M.limit = Math.max(30, Math.round(pairs * pace / 5) * 5);
+    if (mode === 'pairs') { M.goal = Math.max(4, Math.round(pairs * .5)); M.limit = Math.max(20, Math.round(M.goal * (pace + 1.5) / 5) * 5); }
+    if (mode === 'gold') M.gold = Math.min(pairs - 1, [0, 2, 3, 4, 5, 6][diff]) * 2;
+    return M;
+  }
+
+  // a board seen from above: its tiles, the upper layers lighter (the card's board picker, the map's stage box)
+  function layArt(lay, cls) {
+    const L = C().LAYOUTS[lay], xs = L.map(p => p[0]), ys = L.map(p => p[1]), x0 = Math.min(...xs), y0 = Math.min(...ys), w = Math.max(...xs) - x0 + 2, h = Math.max(...ys) - y0 + 2;
+    const o = L.slice().sort((p, q) => p[2] - q[2]).map(([x, y, zz]) => `<rect x="${(x - x0 - zz * .25).toFixed(2)}" y="${((y - y0) * 1.25 - zz * .3).toFixed(2)}" width="1.86" height="2.4" rx=".3" fill="hsl(40,${30 + zz * 8}%,${70 + zz * 6}%)" stroke="rgba(40,30,10,.55)" stroke-width=".12"/>`).join('');
+    return `<svg${cls ? ` class="${cls}"` : ''} viewBox="-1.2 -1.4 ${w + 1.4} ${h * 1.25 + 1.6}" aria-hidden="true">${o}</svg>`;
+  }
+
   /* ---------- the game on the table ---------- */
   function start(ctx) {
     const T3 = ctx.Table3D, TH3 = window.THREE, M3 = T3.shanghai, lang = ctx.lang, tx = (k, v) => TX(k, lang, v), K = C();
     const AD = window.Atlas3D.shanghai;
     // the stage: one picked on the map / 次のステージ (adapter.pending), else the one played last, else the next to clear
     let ST = null;
-    if (ctx.mode === 'stage') { const s = AD.pending != null ? AD.pending : AD.last != null ? AD.last : nextStage(prog()); AD.pending = null; AD.last = s; ST = K.stage(s); }
-    const lay = ST ? ST.lay : K.FREE[(ctx.size || 1) - 1] || 'petit';
+    let DY = null;   // 本日の上海: { kind, lay, seed }
+    if (ctx.mode === 'stage') {
+      const pd = pend(AD.pending != null ? AD.pending : AD.last != null ? AD.last : 0); AD.pending = null;
+      if (pd && pd.daily) DY = Object.assign({ kind: pd.daily }, dailySpec(pd.daily));
+      else { const c = pd && courseOf(pd.c) ? pd.c : 'zodiac', s = Math.max(0, Math.min(cN(c) - 1, pd ? pd.s : nextStage(cprog(c), cN(c)))); AD.last = { c, s }; ST = cStage(c, s); }
+    }
+    const lay = ST ? ST.lay : DY ? DY.lay : K.FREE[(ctx.size || 1) - 1] || 'petit';
     const P = K.LAYOUTS[lay], n = P.length;
-    const dl = K.deal(P, ST ? ST.seed : 0), G = dl.G;
+    // (2026-11-14) free play: the card's モード and 難易度 — the stage missions on any board (FM: the free mission, null in a stage)
+    const FM = ST ? null : DY ? dailyMission(DY, n) : freeMission(lay, n);
+    const MS = ST || FM;   // the mission in force (a stage's, or the free game's)
+    let dl = K.deal(P, ST ? ST.seed : DY ? DY.seed : 0);
+    if (FM && !DY && FM.diff !== 3) {   // the deal itself by difficulty: 入門・初級 the deal with the most pairs open at the start (of 8 / 4), 上級・達人 the fewest
+      const tries = [0, 8, 4, 0, 4, 8][FM.diff], easy = FM.diff <= 2;
+      for (let k = 0; k < tries; k++) { const d2 = K.deal(P, 0), a = K.moves(d2.G, new Array(n).fill(1), d2.face).length, b = K.moves(dl.G, new Array(n).fill(1), dl.face).length; if (easy ? a > b : a < b) dl = d2; }
+    }
+    const G = dl.G;
     let face = dl.face.slice(), alive = new Array(n).fill(1), plan = dl.order.map(p => p.slice());
-    const gold = new Set(ST && ST.type === 'gold' ? K.goldTiles(dl, ST.gold) : []);
+    const gold = new Set(MS && MS.type === 'gold' ? K.goldTiles(dl, MS.gold) : []);
     let sel = -1, busy = true, over = false, stopped = false, ply = 0, hist = [], hints = 0, shufs = 0, got = 0, goldGot = 0, hintPair = null;
     let t0 = 0, tEnd = 0, pen = 0, clockT = 0, toastEl = null, toastT = 0, askEl = null;
     const timers = [], later = (f, ms) => timers.push(setTimeout(() => { if (!stopped) f(); }, ms));
@@ -258,7 +369,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
       im.geometry.computeBoundingBox(); const top = im.geometry.boundingBox.max.y;
       const ctex = (w, h, draw) => { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = new TH3.CanvasTexture(c); t.colorSpace = TH3.SRGBColorSpace; return t; };
       const haloT = ctex(128, 160, (c, w, h) => { const gr = c.createRadialGradient(w / 2, h / 2, 10, w / 2, h / 2, w * .62); gr.addColorStop(0, 'rgba(255,214,90,.95)'); gr.addColorStop(.45, 'rgba(255,190,50,.55)'); gr.addColorStop(1, 'rgba(255,170,30,0)'); c.fillStyle = gr; c.fillRect(0, 0, w, h); });
-      const sheenT = ctex(256, 64, (c, w, h) => { const gr = c.createLinearGradient(0, 0, w, 0); gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(.42, 'rgba(255,240,190,0)'); gr.addColorStop(.5, 'rgba(255,255,240,.95)'); gr.addColorStop(.58, 'rgba(255,240,190,0)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = gr; c.fillRect(0, 0, w, h); });
+      const sheenT = ctex(256, 64, (c, w, h) => { const gr = c.createLinearGradient(0, 0, w, 0); gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(.3, 'rgba(255,240,200,0)'); gr.addColorStop(.42, 'rgba(255,244,214,.18)'); gr.addColorStop(.5, 'rgba(255,250,232,.42)'); gr.addColorStop(.58, 'rgba(255,244,214,.18)'); gr.addColorStop(.7, 'rgba(255,240,200,0)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = gr; c.fillRect(0, 0, w, h); });
       sheenT.wrapS = TH3.ClampToEdgeWrapping; sheenT.repeat.set(.34, 1);
       const starT = ctex(64, 64, (c, w, h) => { c.translate(w / 2, h / 2); const gr = c.createRadialGradient(0, 0, 0, 0, 0, w / 2); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.25, 'rgba(255,236,150,.8)'); gr.addColorStop(1, 'rgba(255,200,60,0)'); c.fillStyle = gr;
         c.beginPath(); for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4, r = k % 2 ? 5 : 31; c.lineTo(Math.cos(a) * r, Math.sin(a) * r); } c.closePath(); c.fill(); c.beginPath(); c.arc(0, 0, 9, 0, 7); c.fill(); });
@@ -271,26 +382,24 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
         const sm = new TH3.MeshBasicMaterial({ map: sheenT.clone(), ...add, opacity: .8 }); sm.map.needsUpdate = true; sm.map.repeat.set(.5, 1);
         sm.map.center.set(.5, .5); sm.map.rotation = .55;
         const sheen = new TH3.Mesh(planeS, sm); sheen.rotation.x = -Math.PI / 2; sheen.renderOrder = 3;
-        const stars = [0, 1, 2].map(() => { const sp = new TH3.Sprite(starM.clone()); sp.renderOrder = 4; grp.add(sp); return sp; });
+        const stars = [];   // (no twinkling stars: ユーザー 2026-11-14「キラキラ星は出さずに」)
         grp.add(halo, sheen);
         return { i, halo, sheen, stars, ph: k * 1.37, sp: [0, 1, 2].map(j => ({ ph: Math.random() * 6, x: (Math.random() - .5) * TW * .9, z: (Math.random() - .5) * TD * .9 })) };
       });
       let raf = 0, last = 0;
       function frame(now) {
         raf = 0; if (stopped) return;
-        if (now - last >= 33) {
+        if (now - last >= 15) {
           last = now; const t = now / 1000; let any = false;
           items.forEach(o => {
             const S = st8[o.i], on = alive[o.i] || S.fly, sc = on ? S.s : 0, [x, y, z] = pos[o.i];
-            const vis = sc > .05; o.halo.visible = false; o.sheen.visible = vis; o.stars.forEach(sp => { sp.visible = vis; });
+            const vis = sc > .05; o.halo.visible = false; o.sheen.visible = vis; o.stars.forEach(sp => { sp.visible = false; });
             if (alive[o.i] || S.fly) any = true; if (!vis) return;
             const X = x + S.dx, Y = y + S.lift + S.dy, Z = z + S.dz;
             o.halo.position.set(X, Y + .012, Z); o.halo.scale.setScalar(sc * (1 + .06 * Math.sin(t * 2.4 + o.ph))); o.halo.material.opacity = .55 + .2 * Math.sin(t * 2.4 + o.ph);
             o.sheen.position.set(X, Y + top * sc + .004, Z); o.sheen.scale.setScalar(sc);
-            const cyc = ((t + o.ph) % 2.6) / 1.1;   // a sweep of ~1.1 s, then a rest
-            o.sheen.material.map.offset.x = cyc < 1 ? .9 - cyc * 1.4 : -1; o.sheen.visible = cyc < 1;
-            o.stars.forEach((sp, j) => { const q = o.sp[j], w = Math.max(0, Math.sin(t * 2.1 + q.ph)); sp.position.set(X + q.x, Y + top * sc + .1, Z + q.z); const k = .5 * w * w * sc; sp.scale.set(k, k, k); sp.material.rotation = t * .8 + q.ph;
-              if (w < .02) { q.x = (Math.random() - .5) * TW * .95; q.z = (Math.random() - .5) * TD * .95; } });
+            const cyc = ((t + o.ph) % 4.2) / 1.8, e = cyc < 1 ? cyc * cyc * (3 - 2 * cyc) : 1;   // a slow eased sweep (~1.8 s), then a rest
+            o.sheen.material.map.offset.x = .9 - e * 1.4; o.sheen.material.opacity = cyc < 1 ? Math.sin(cyc * Math.PI) * .9 : 0; o.sheen.visible = cyc < 1;
           });
           kick(80); if (!any) return;
         }
@@ -325,7 +434,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
        above, below and beside the mat (so it shows in portrait, in landscape and on a wide screen). Free play keeps the table. */
     let sky = null;
     if (ST) {
-      const ai = Math.floor(ST.s / 10), con = CON[K.AREAS[ai]], S = Math.max(W, D) * 3 + 16, CS = innerWidth < 700 ? 1024 : 2048, cv = document.createElement('canvas'); cv.width = cv.height = CS;
+      const zodM = ST.cid === 'zodiac', ai = Math.floor(ST.s / 10), con = CON[K.AREAS[zodM ? ai : 0]], S = Math.max(W, D) * 3 + 16, CS = innerWidth < 700 ? 1024 : 2048, cv = document.createElement('canvas'); cv.width = cv.height = CS;
       const c = cv.getContext('2d'), R = K.rng ? K.rng(977 + ST.s * 13) : Math.random, u = CS / S, hue = (205 + ai * 30) % 360;
       const bg = c.createRadialGradient(CS / 2, CS / 2, 0, CS / 2, CS / 2, CS * .62); bg.addColorStop(0, `hsl(${hue},52%,27%)`); bg.addColorStop(.45, `hsl(${(hue + 14) % 360},56%,17%)`); bg.addColorStop(1, `hsl(${(hue + 30) % 360},60%,8%)`);
       c.fillStyle = bg; c.fillRect(0, 0, CS, CS);
@@ -338,8 +447,12 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
         con.p.forEach(q => { const x = X(q), y = Y(q), r = .2 * u, gl = c.createRadialGradient(x, y, 0, x, y, r); gl.addColorStop(0, 'rgba(255,244,200,.95)'); gl.addColorStop(.25, 'rgba(255,220,130,.55)'); gl.addColorStop(1, 'rgba(255,220,130,0)'); c.fillStyle = gl; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); c.fillStyle = '#fffbe8'; c.beginPath(); c.arc(x, y, .055 * u, 0, 7); c.fill(); });
       };
       const gz = D / 2 + .9 + fh / 2, gx = W / 2 + .9 + fw / 2;
-      fig(0, -gz); fig(0, gz); fig(-gx, 0); fig(gx, 0);
-      const tex = new TH3.CanvasTexture(cv); if ('colorSpace' in tex) tex.colorSpace = 'srgb'; else if (TH3.sRGBEncoding) tex.encoding = TH3.sRGBEncoding; tex.anisotropy = 4;
+      if (zodM) { fig(0, -gz); fig(0, gz); fig(-gx, 0); fig(gx, 0); }
+      const tex = new TH3.CanvasTexture(cv);
+      if (!zodM && courseOf(ST.cid)) {   // the other courses: their scene round the mat (this area's picture, tiled, a little dimmed)
+        const im = new Image(); im.onload = () => { if (stopped) return; const t = CS / 3; for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) c.drawImage(im, i * t, j * t, t, t); c.fillStyle = 'rgba(10,12,30,.28)'; c.fillRect(0, 0, CS, CS); tex.needsUpdate = true; kick(300); };
+        im.src = bgUrl(courseOf(ST.cid).bg[ai] || courseOf(ST.cid).bg[0]);
+      } if ('colorSpace' in tex) tex.colorSpace = 'srgb'; else if (TH3.sRGBEncoding) tex.encoding = TH3.sRGBEncoding; tex.anisotropy = 4;
       const pg = new TH3.PlaneGeometry(S, S); pg.rotateX(-Math.PI / 2);
       sky = new TH3.Mesh(pg, new TH3.MeshStandardMaterial({ map: tex, roughness: 1, metalness: 0 })); sky.position.y = .006; sky.receiveShadow = true; g.add(sky);
     }
@@ -386,11 +499,11 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     function hud() {
       const nl = left(), tt = elapsed();
       let mid = '';   // (free play: no "pairs open" count — ユーザー 2026-11-14; the HUD is 残り · タイム)
-      if (ST) { mid = ST.type === 'pairs' ? tx('h.got', { a: got, b: ST.goal }) : ST.type === 'gold' ? tx('h.gold', { a: goldGot, b: ST.gold }) : missionText(ST, lang); }
-      const clk = ST && ST.limit ? `<span class="hs${ST.limit - tt <= 10 ? ' on' : ''}">${esc(tx('h.limit'))} <b>${mmss(ST.limit - tt)}</b></span>` : `<span class="hs">${esc(tx('h.time'))} <b>${mmss(tt)}</b></span>`;
+      if (MS && !(FM && FM.type === 'clear')) { mid = MS.type === 'pairs' ? tx('h.got', { a: got, b: MS.goal }) : MS.type === 'gold' ? tx('h.gold', { a: goldGot, b: MS.gold }) : missionText(MS, lang); }
+      const clk = MS && MS.limit ? `<span class="hs${MS.limit - tt <= 10 ? ' on' : ''}">${esc(tx('h.limit'))} <b>${mmss(Math.max(0, MS.limit - tt))}</b></span>` : `<span class="hs">${esc(tx('h.time'))} <b>${mmss(tt)}</b></span>`;
       ctx.hud(`<span class="hs on"><b>${nl}</b>${esc(tx('h.left'))}</span>${mid ? `<span class="hm">${esc(mid)}</span>` : ''}${clk}`);
     }
-    function clock() { clearInterval(clockT); clockT = setInterval(() => { if (stopped || over) { clearInterval(clockT); return; } hud(); if (ST && ST.limit && elapsed() >= ST.limit) fail('timeup'); }, 500); }
+    function clock() { clearInterval(clockT); clockT = setInterval(() => { if (stopped || over) { clearInterval(clockT); return; } hud(); if (MS && MS.limit && elapsed() >= MS.limit) fail('timeup'); }, 500); }
     function toast(msg, ms) {
       css(); if (toastEl) toastEl.remove(); clearTimeout(toastT);
       toastEl = document.createElement('div'); toastEl.className = 'shtoast'; toastEl.textContent = msg; document.body.appendChild(toastEl);
@@ -466,15 +579,16 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     function after() {
       busy = false; hud(); turn();
       if (!left()) { win(); return; }
-      if (ST && ST.type === 'pairs' && got >= ST.goal) { win(); return; }
-      if (ST && ST.type === 'gold' && goldGot >= ST.gold) { win(); return; }
+      if (MS && MS.type === 'pairs' && got >= MS.goal) { win(); return; }
+      if (MS && MS.type === 'gold' && goldGot >= MS.gold) { win(); return; }
       checkStuck();
     }
     function checkStuck() {
       if (over || K.moves(G, alive, face).length) return;
-      if (ST && (ST.type === 'pure' || shufs >= SHUF_MAX)) { later(() => fail('stuck'), 500); return; }
+      if (!canShuf()) { later(() => fail('stuck'), 500); return; }
       later(ask, 420);
     }
+    function canShuf() { return ST ? !(ST.type === 'pure' || shufs >= SHUF_MAX) : !FM.noShuf; }
     function ask() {
       css(); if (askEl) askEl.remove();
       const el = askEl = document.createElement('div'); el.className = 'shask';
@@ -486,7 +600,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     }
     function shuffle() {
       if (busy || over) return;
-      if (ST && (ST.type === 'pure' || shufs >= SHUF_MAX)) { toast(tx('msg.noshuf')); return; }
+      if (!canShuf()) { toast(tx(FM ? 'msg.noShufD' : 'msg.noshuf')); return; }
       const r = K.reshuffle(G, alive, face); if (!r) return;
       busy = true; shufs++; pen += SHUF_PEN; ply++; hist.push({ t: 's', face: face.slice() }); SFX.shuf(); toast(tx('msg.shufPen', { n: SHUF_PEN }), 2200); hud();
       if (sel >= 0) { st8[sel].lift = 0; sel = -1; } hintPair = null;
@@ -503,31 +617,39 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
       // the rest of the tiles (a pairs / gold mission ends early) rise and fade as a flourish
       const idx = []; alive.forEach((v, i) => { if (v) idx.push(i); });
       if (idx.length) anim(700, k => { idx.forEach(i => { st8[i].lift = Math.sin(k * Math.PI) * .5; place(i); }); im.instanceMatrix.needsUpdate = true; });
+      if (DY) {
+        const y = d.dy && d.dy.date === today() ? d.dy : (d.dy = { date: today() }), k = DY.kind, nb = y[k] === undefined || tt < y[k]; if (nb) y[k] = tt; save(d);
+        later(() => ctx.onEnd({ win: true, draw: false, solo: true, level: 0, title: tx(k === 'h' ? 'dy.h' : 'dy.n') + ' ' + tx('r.clear'), score: tx('r.time', { t: mmss(tt) }), best: tx('r.best', { t: mmss(y[k]) }), opp: tx(k === 'h' ? 'dy.h' : 'dy.n'), key: 'dy-' + k, why: tx('r.clear') + ' · ' + mmss(tt) }), 350);
+        return;
+      }
       if (!ST) {
-        const F = d.free = d.free || {}, r = F[lay] || {}, nb = r.best === undefined || tt < r.best;
-        F[lay] = { best: nb ? tt : r.best, n: (r.n || 0) + 1, date: nb ? today() : r.date }; save(d);
-        later(() => ctx.onEnd({ win: true, draw: false, solo: true, level: 0, title: tx('r.clear'), score: tx('r.time', { t: mmss(tt) }), best: (nb ? '🏅 ' + tx('r.newBest') + ' · ' : '') + tx('r.best', { t: mmss(F[lay].best) }), opp: tx('lay.' + lay), key: lay, why: tx('r.clear') + ' · ' + mmss(tt) }), 800);
+        const F = d.free = d.free || {}, r = F[FM.key] || {}, nb = r.best === undefined || tt < r.best, tk = n - left();
+        F[FM.key] = { best: nb ? tt : r.best, tiles: Math.max(r.tiles || 0, tk), n: (r.n || 0) + 1, date: nb ? today() : r.date }; save(d);
+        const sub = tx('lay.' + lay) + ' · ' + tx('fm.' + FM.type) + ' · ' + tx('fd.' + FM.diff);
+        later(() => ctx.onEnd({ win: true, draw: false, solo: true, level: 0, title: tx('r.clear'), score: tx('r.time', { t: mmss(tt) }) + (FM.type === 'clear' ? '' : ' · ' + tx('f.tiles', { n: tk })), best: (nb ? '🏅 ' + tx('r.newBest') + ' · ' : '') + tx('r.best', { t: mmss(F[FM.key].best) }), opp: sub, key: FM.key, why: tx('r.clear') + ' · ' + mmss(tt) }), 350);
         return;
       }
       let stars = 1; if (tt <= parOf(ST)) { stars = 2; if (!hints && !shufs) stars = 3; }
-      const S = d.st = d.st || {}, B = d.bt = d.bt || {}, s = ST.s, nb = B[s] === undefined || tt < B[s];
+      const zod = ST.cid === 'zodiac', CS = zod ? d : ((d.cs = d.cs || {})[ST.cid] = d.cs[ST.cid] || {});
+      const S = CS.st = CS.st || {}, B = CS.bt = CS.bt || {}, s = ST.s, nb = B[s] === undefined || tt < B[s];
       const was = S[s] || 0;
       S[s] = Math.max(was, stars); if (nb) B[s] = tt; save(d);
       const coin = (S[s] - was) * COIN_STAR;   // (the ★ won for the first time pay ¢10 each — the purse itself is derived from the stars)
-      later(() => Reward.check(lang), 1900);
-      const nx = s + 1 < 120 ? s + 1 : null;
+      if (zod) Reward.check(lang, 1900);
+      const cid = ST.cid, nx = s + 1 < cN(cid) ? { c: cid, s: s + 1 } : null;
       later(() => ctx.onEnd({ win: true, draw: false, solo: true, level: 0,
         title: tx('r.stage') + ' ' + '★'.repeat(stars) + '☆'.repeat(3 - stars), score: stageName(s, lang) + ' · ' + tx('r.time', { t: mmss(tt) }),
         best: tx('r.best', { t: mmss(B[s]) }) + ' · ' + '★'.repeat(S[s]) + (coin ? ' · ' + tx('rw.coin', { n: coin }) : ''),
-        opp: stageName(s, lang), key: 'st' + s, why: tx('r.stage') + ' ' + stars + '★',
-        again: { label: tx('b.toMap'), cls: 'sun', go: restart => stageMap({ lang, play: p => restart(() => { AD.pending = p; AD.last = p; }) }) },   // (a cleared stage: マップへ instead of もう一局 — back to the course, ユーザー 2026-11-14)
-        next: nx != null ? { label: tx('b.next'), go: () => { AD.pending = nx; AD.last = nx; } } : null }), 800);
+        opp: stageName(s, lang), key: (zod ? 'st' : cid + ':') + s, why: tx('r.stage') + ' ' + stars + '★',
+        again: { label: tx('b.toMap'), cls: 'sun', go: restart => stageMap({ lang, course: cid, play: p => restart(() => { AD.pending = p; AD.last = p; }) }) },   // (a cleared stage: マップへ instead of もう一局 — back to the course, ユーザー 2026-11-14)
+        next: nx != null ? { label: tx('b.next'), go: () => { AD.pending = nx; AD.last = nx; } } : null }), 350);
     }
     function fail(why) {
       if (over) return; over = true; tEnd = performance.now(); clearInterval(clockT); turn();
       if (askEl) { askEl.remove(); askEl = null; }
+      if (FM && !DY) { const d = load(), F = d.free = d.free || {}, r = F[FM.key] || {}, tk = n - left(); F[FM.key] = Object.assign({}, r, { tiles: Math.max(r.tiles || 0, tk), n: (r.n || 0) + 1 }); save(d); }   // (a free game that ended early still counts its tiles: the card's 最多 n枚)
       later(() => ctx.onEnd({ win: false, draw: false, solo: true, level: 0, title: tx('r.fail'), score: (why === 'timeup' ? tx('r.timeup') : tx('r.stuck')) + ' · ' + tx('r.left', { n: left() }),
-        best: ST ? stageName(ST.s, lang) + ' · ' + missionText(ST, lang) : '', opp: ST ? stageName(ST.s, lang) : tx('lay.' + lay), key: ST ? 'st' + ST.s : lay, why: tx('r.fail') }), 600);
+        best: ST ? stageName(ST.s, lang) + ' · ' + missionText(ST, lang) : DY ? tx(DY.kind === 'h' ? 'dy.h' : 'dy.n') : tx('fm.' + FM.type) + ' · ' + tx('fd.' + FM.diff), opp: ST ? stageName(ST.s, lang) : DY ? tx(DY.kind === 'h' ? 'dy.h' : 'dy.n') : tx('lay.' + lay), key: ST ? (ST.cid === 'zodiac' ? 'st' : ST.cid + ':') + ST.s : FM.key, why: tx('r.fail') }), 600);
     }
 
     /* ---------- set up ---------- */
@@ -536,18 +658,19 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
 
     const api = {
       human: 0, noResign: true,
-      canUndo: () => !busy && !over && !!hist.length,
+      canUndo: () => !busy && !over && !!hist.length && !(FM && FM.noUndo),
       undo() {
         if (!api.canUndo()) return; const h = hist.pop(); ply++; hintPair = null;
         if (sel >= 0) { st8[sel].lift = 0; sel = -1; }
         if (h.t === 'p') { alive[h.a] = alive[h.b] = 1; [h.a, h.b].forEach(i => { const S = st8[i]; S.fly = 0; S.lift = 0; S.dx = S.dz = 0; S.rz = 0; S.s = 1; }); got--; if (gold.has(h.a)) goldGot--; if (gold.has(h.b)) goldGot--; if (goldFx) goldFx.go(); }
         else { face = h.face; faces(); }
-        pen += UNDO_PEN; toast(tx(ST && ST.limit ? 'msg.undoPenL' : 'msg.undoPen', { n: UNDO_PEN }), 1400);
+        pen += UNDO_PEN; toast(tx(MS && MS.limit ? 'msg.undoPenL' : 'msg.undoPen', { n: UNDO_PEN }), 1400);
         plan = null; paintAll(); hud(); turn(); SFX.tap();
       },
-      canHint: () => !busy && !over && !(ST && ST.type === 'pure'),
+      canHint: () => !busy && !over && !(ST && ST.type === 'pure') && !(FM && FM.noHint),
       hint() {
         if (ST && ST.type === 'pure') { toast(tx('msg.pure')); return Promise.resolve(false); }
+        if (FM && FM.noHint) { toast(tx('msg.noHintD')); return Promise.resolve(false); }
         if (!api.canHint()) return Promise.resolve(false);
         const h = K.hint(G, alive, face, plan, 400);
         if (!h) { ask(); return Promise.resolve(true); }
@@ -582,106 +705,328 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
 
   /* ---------- the card: the free tab's best time, the stage tab's panel ---------- */
   function freeBind(host, lang) {
-    css(); const el = document.createElement('div'); el.className = 'pgbest'; host.appendChild(el);
-    const paint = () => { const z = document.getElementById('bvSize') ? +document.getElementById('bvSize').value : 1, lay = C().FREE[z - 1] || 'petit', r = (load().free || {})[lay];
-      el.innerHTML = `<span>${esc(TX('best', lang))}</span><b>${r ? mmss(r.best) : '—'}</b>${r && r.date ? `<small class="pgd">${esc(new Date(r.date + 'T12:00:00').toLocaleDateString(lang, { year: 'numeric', month: 'short', day: 'numeric' }))}</small>` : ''}`; };
+    css(); host.classList.add('shf');
+    const fp = freePick(), opt = (v, l, on) => `<option value="${v}"${on ? ' selected' : ''}>${esc(l)}</option>`;
+    const row = document.createElement('div'); row.className = 'shfrow';
+    row.innerHTML = `<label class="shfl">${esc(TX('f.mode', lang))}<select id="bvShM" data-pick="drop">${FMODES.map(m => opt(m, TX('fm.' + m, lang), m === fp.mode)).join('')}</select></label>` +
+      `<label class="shfl">${esc(TX('f.diff', lang))}<select id="bvShD" data-pick="drop">${DIFFS.map(d => opt(d, TX('fd.' + d, lang), d === fp.diff)).join('')}</select></label>`;
+    host.appendChild(row);
+    const el = document.createElement('div'); el.className = 'pgbest'; host.appendChild(el);
+    const paint = () => {
+      const z = document.getElementById('bvSize') ? +document.getElementById('bvSize').value : 1, lay = C().FREE[z - 1] || 'petit', m = row.querySelector('#bvShM').value, dd = +row.querySelector('#bvShD').value;
+      const r = (load().free || {})[freeKey(lay, m, dd)];
+      el.innerHTML = `<span>${esc(TX('best', lang))}</span>` + (r ? `<b class="shbt">${r.tiles ? esc(TX('f.tiles', lang, { n: r.tiles })) : '—'}</b><b>${r.best !== undefined ? mmss(r.best) : '—'}</b>` : '<b>—</b>');
+    };
+    const saveSt = () => { const d = load(); d.settings = Object.assign({}, d.settings, { fm: row.querySelector('#bvShM').value, fd5: +row.querySelector('#bvShD').value }); save(d); paint(); };
+    row.querySelector('#bvShM').addEventListener('change', saveSt); row.querySelector('#bvShD').addEventListener('change', saveSt);
     paint(); const s = document.getElementById('bvSize'); if (s) s.addEventListener('change', paint);
   }
+  // the totals over every course: stages cleared / all, ★, the クジャクパイ still waiting on the map
+  function allProg() {
+    const ids = ['zodiac'].concat(COURSES.map(c => c.id)); let c = 0, n = 0, st = 0;
+    ids.forEach(id => { const P = cprog(id), N = cN(id); n += N; Object.keys(P.st).forEach(k => { if (P.st[k] > 0) { c++; st += P.st[k]; } }); });
+    return { c, n, st, wait: [1, 2, 3].filter(t => !Reward.has(t)).length };
+  }
+  const lastCourse = () => { const l = pend(window.Atlas3D && Atlas3D.shanghai && Atlas3D.shanghai.last); return l && l.c && (l.c === 'zodiac' || courseOf(l.c)) ? l.c : 'zodiac'; };
+  const cname = (id, lang) => id === 'zodiac' ? TX('st.title', lang) : TX('cn.' + id, lang);
+  // the card's ステージ tab (2026-11-14): the totals, コース一覧 · 続きから (the course played last), 本日の上海 · HARD
   function stagePanel(lang) {
-    css(); const P = prog(), c = Object.keys(P.st).filter(s => P.st[s] > 0).length, s = Object.values(P.st).reduce((a, v) => a + v, 0), nx = nextStage(P);
-    return `<div class="stbox"><div class="pg">${esc(TX('st.progress', lang, { c, n: 120, s, t: 360 }))}</div><div class="nx">${esc(TX('st.next', lang, { s: stageName(nx, lang) + ' ' + TX('ar.' + C().AREAS[Math.floor(nx / 10)], lang) }))}</div></div><button type="button" class="mapb" data-shmap><i>✦</i>${esc(TX('b.map', lang))}</button>`;
+    css(); const A = allProg(), lc = lastCourse(), y = dailyRec();
+    const dy = k => `<button type="button" class="dyb${k === 'h' ? ' hard' : ''}${y[k] != null ? ' done' : ''}" data-shdy="${k}"><b>${esc(TX('dy.n', lang))}${k === 'h' ? '<em>HARD</em>' : ''}</b><small>${y[k] != null ? '✓ ' + esc(TX('r.best', lang, { t: mmss(y[k]) })) : esc(TX('lay.' + dailySpec(k).lay, lang))}</small></button>`;
+    return `<div class="strow"><button type="button" class="mapb lst" data-shlist><i>▦</i>${esc(TX('cl.title', lang))}</button><button type="button" class="mapb" data-shmap><i>✦</i><span>${esc(TX('cl.cont', lang))}<small>${esc(cname(lc, lang))}</small></span></button></div>` +
+      `<div class="strow">${dy('n')}${dy('h')}</div>` +
+      `<div class="stinfo"><span class="sc">${esc(TX('st.clear', lang, { c: A.c, n: A.n }))}</span><span class="ss">★ ${A.st}</span>` +
+      (A.wait ? `<span class="sw"><img src="../images/atlas/av/peacock-${[1, 2, 3].find(t => !Reward.has(t))}.webp" alt="">${esc(TX('st.wait', lang, { n: A.wait }))}</span>` : '') + `</div>`;
   }
   function stageBind(host, lang, play) {
-    host.addEventListener('click', e => { if (e.target.closest('[data-shmap]')) stageMap({ lang, play }); });
+    host.addEventListener('click', e => {
+      if (e.target.closest('[data-shmap]')) stageMap({ lang, play, course: lastCourse() });
+      else if (e.target.closest('[data-shlist]')) courseList(lang, play);
+      else { const d = e.target.closest('[data-shdy]'); if (d) play({ daily: d.dataset.shdy }); }
+    });
+  }
+  // the hero of a list sheet in the portal's style (問題一覧): the guide, the name, a bar and a count
+  const heroHtml = (lang, title, c, n) => `<div class="pzh-hero"><img class="pzh-ch" src="../images/atlas/av/peacock-0.webp" alt=""><div class="pzh-tx"><small>${esc(({ ja: '上海', zh: '上海', zhT: '上海', ko: '상하이' })[lang] || 'Shanghai')}</small><b>${esc(title)}</b><span class="pzh-bar"><i style="width:${n ? Math.round(c * 100 / n) : 0}%"></i></span><span class="pzh-n">${c} / ${n}</span></div></div>`;
+  // a course's picture for its card: the scene (or, for 星座, a constellation of stars on the night sky)
+  function courseThumb(id) {
+    if (id !== 'zodiac') return `<img src="${bgUrl(courseOf(id).bg[0])}" alt="" style="width:100%;height:100%;object-fit:cover;object-position:50% 100%">`;
+    const S = CON.leo, E = edges('leo');
+    return `<svg viewBox="-6 -4 112 72" style="width:100%;height:100%;background:radial-gradient(ellipse at 50% 30%,#3a3a8a,#0d1236 75%)">${E.map(([i, j]) => `<line x1="${S.p[i][0]}" y1="${S.p[i][1]}" x2="${S.p[j][0]}" y2="${S.p[j][1]}" stroke="#ffd76a" stroke-width=".8" opacity=".8"/>`).join('')}${S.p.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2.2" fill="#fff6d0"/>`).join('')}</svg>`;
+  }
+  // コース一覧 (2026-11-14): the courses as cards in the portal's list style (問題一覧), in three tabs by how hard; a card opens its map
+  function courseList(lang, play) {
+    if (!window.AtlasUI || !AtlasUI.bookSheet) { stageMap({ lang, play, course: lastCourse() }); return; }
+    const S0 = AtlasUI.bookSheet(TX('cl.title', lang)), TK = 'atlas-shcl';
+    const ids = ['zodiac'].concat(COURSES.map(c => c.id)), tier = id => id === 'zodiac' ? 'e' : (b => b <= 0 ? 'e' : b <= 2 ? 'm' : 'h')(courseOf(id).base);
+    let cur = 'e'; try { cur = localStorage.getItem(TK) || tier(lastCourse()); } catch (e) {}
+    const info = id => { const P = cprog(id), N = cN(id), d = Object.keys(P.st).filter(k => P.st[k] > 0).length, st = Object.values(P.st).reduce((a, v) => a + v, 0); return { N, d, st }; };
+    const paint = () => {
+      const A = allProg();
+      const tabs = `<div class="lx-tabs">${['e', 'm', 'h'].map(k => { const xs = ids.filter(id => tier(id) === k), d = xs.reduce((a, id) => a + info(id).d, 0), n = xs.reduce((a, id) => a + info(id).N, 0); return `<button type="button" data-cat="${k}" class="${k === cur ? 'sel' : ''}"><span class="nm">${esc(TX('cl.tab.' + k, lang))}</span><span class="ct${d >= n ? ' ok' : ''}">${d}/${n}</span></button>`; }).join('')}</div>`;
+      const card = id => { const { N, d, st } = info(id), full = d >= N;
+        return `<button type="button" class="lx-card shcr${full ? ' done' : ''}" data-set="" data-course="${id}"><span class="lx-th">${courseThumb(id)}</span><span class="lx-tx"><span class="lx-top"><span class="lx-st${full ? ' ok' : d ? ' so' : ' new'}">${full ? '✓' : d ? d + '/' + N : 'NEW'}</span></span><span class="lx-t">${esc(cname(id, lang))}</span><span class="lx-desc">${esc(TX('cd.' + id, lang))}</span><span class="pzh-row"><span class="pzh-bar"><i style="width:${Math.round(d * 100 / N)}%"></i></span><span class="pzh-st">★ ${st}/${N * 3}</span></span></span></button>`; };
+      S0.body.className = 'lesson-list lx-on';
+      S0.body.innerHTML = `<div class="pzh-box">${heroHtml(lang, TX('cl.title', lang), A.c, A.n)}${tabs}</div><div class="lx-grid">${ids.filter(id => tier(id) === cur).map(card).join('')}</div>`;
+    };
+    paint();
+    S0.body.onclick = e => {
+      const tb = e.target.closest('[data-cat]'); if (tb) { cur = tb.dataset.cat; try { localStorage.setItem(TK, cur); } catch (x) {} paint(); return; }
+      const cd = e.target.closest('[data-course]'); if (cd) { S0.close(); stageMap({ lang, play, course: cd.dataset.course }); }
+    };
+  }
+  // 盤の種類 as a list sheet (2026-11-14, ユーザー: 他ゲームのパズルレベルのクオリティのUIに): the boards as cards with their picture,
+  // how hard, the tiles and the best of the chosen mode and difficulty; picking one sets the card's select
+  function boardList(sel, lang) {
+    if (!window.AtlasUI || !AtlasUI.bookSheet) return false;
+    const S0 = AtlasUI.bookSheet(TX('f.board', lang)), K = C(), fp = freePick(), F = load().free || {};
+    const played = K.FREE.filter(k => Object.keys(F).some(x => x === k || x.indexOf(k + ':') === 0)).length;
+    const card = (k, z) => { const lv = Math.min(5, Math.ceil(z / 2)), r = F[freeKey(k, fp.mode, fp.diff)], on = String(z) === sel.value;
+      return `<button type="button" class="lx-card shbd${on ? ' sel' : ''}${r ? ' done' : ''}" data-set="" data-z="${z}"><span class="lx-th">${layArt(k)}</span><span class="lx-tx"><span class="lx-top"><span class="lx-st${r ? ' ok' : ' new'}">${r ? '✓' : 'NEW'}</span></span><span class="lx-t">${esc(TX('lay.' + k, lang))}</span><span class="lx-desc">${'★'.repeat(lv)}${'☆'.repeat(5 - lv)} · ${esc(TX('tiles', lang, { n: K.LAYOUTS[k].length }))}</span><span class="pzh-row"><span class="pzh-st">${esc(TX('best', lang))} ${r && r.best != null ? mmss(r.best) : '—'}</span></span></span></button>`; };
+    S0.body.className = 'lesson-list lx-on';
+    S0.body.innerHTML = `<div class="pzh-box">${heroHtml(lang, TX('f.board', lang), played, K.FREE.length)}</div><div class="lx-grid">${K.FREE.map((k, i) => card(k, i + 1)).join('')}</div>`;
+    S0.body.onclick = e => { const b = e.target.closest('[data-z]'); if (!b) return; sel.value = b.dataset.z; sel.dispatchEvent(new Event('change')); S0.close(); };
+    return true;
   }
 
   /* ---------- the star map ---------- */
-  function stars(cv) {   // a field of small stars (drawn once per open)
-    const r = cv.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1); cv.width = r.width * dpr; cv.height = r.height * dpr;
-    const c = cv.getContext('2d'); let s = 99; const R = () => (s = (s * 16807) % 2147483647) / 2147483647;
-    for (let i = 0; i < 260; i++) { const x = R() * cv.width, y = R() * cv.height, a = R(); c.fillStyle = `rgba(255,255,255,${.15 + a * .7})`; c.beginPath(); c.arc(x, y, (.3 + a * a * 1.3) * dpr, 0, 7); c.fill(); }
+  /* ---------- the night sky behind the map: a field of stars that twinkle, a few brighter ones with soft flares, now and then a
+     shooting star, drifting slowly with the map (parallax). Its own light loop (~30 fps) only while the map is open and shown. ---------- */
+  function skyLoop(cv, getPan) {
+    const c = cv.getContext('2d'); let W = 0, H = 0, dpr = 1, raf = 0, last = 0, stopped = false, shoot = null, nextShoot = performance.now() + 2500;
+    let s = 99; const R = () => (s = (s * 16807) % 2147483647) / 2147483647;
+    const S = Array.from({ length: 560 }, () => ({ x: R(), y: R(), a: R(), ph: R() * 6.3, sp: .6 + R() * 2.4, d: .15 + R() * .5 }));   // (2026-11-14: more sparkle — ユーザー)
+    const B = Array.from({ length: 90 }, () => ({ x: R(), y: R(), ph: R() * 6.3, sp: .4 + R() * .8, hue: R() }));
+    function size() { const r = cv.getBoundingClientRect(); dpr = Math.min(2, devicePixelRatio || 1); W = cv.width = Math.max(1, r.width * dpr); H = cv.height = Math.max(1, r.height * dpr); }
+    size();
+    // (2026-11-14, ユーザー: もっとリアルな光り方) the stars as soft photographic sprites drawn additively: a hot white core, a
+    // coloured gaussian halo, and for the bright ones faint diffraction spikes that fade along their length; they scintillate
+    const sprite = (rgb, spikes) => {
+      const N = 128, cv2 = document.createElement('canvas'); cv2.width = cv2.height = N; const g2 = cv2.getContext('2d'), m = N / 2;
+      let g = g2.createRadialGradient(m, m, 0, m, m, m); g.addColorStop(0, `rgba(${rgb},.55)`); g.addColorStop(.08, `rgba(${rgb},.32)`); g.addColorStop(.25, `rgba(${rgb},.08)`); g.addColorStop(1, `rgba(${rgb},0)`);
+      g2.fillStyle = g; g2.fillRect(0, 0, N, N);
+      g = g2.createRadialGradient(m, m, 0, m, m, N * .07); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(.45, 'rgba(255,255,255,.85)'); g.addColorStop(1, `rgba(${rgb},0)`);
+      g2.fillStyle = g; g2.beginPath(); g2.arc(m, m, N * .07, 0, 7); g2.fill();
+      if (spikes) [[1, 0], [0, 1]].forEach(([dx, dy]) => [3, 1.4, .6].forEach((w, k) => {
+        const lg = g2.createLinearGradient(m - dx * m, m - dy * m, m + dx * m, m + dy * m);
+        lg.addColorStop(0, `rgba(${rgb},0)`); lg.addColorStop(.38, `rgba(${rgb},${[.05, .14, .3][k]})`); lg.addColorStop(.5, `rgba(255,255,255,${[.12, .35, .7][k]})`); lg.addColorStop(.62, `rgba(${rgb},${[.05, .14, .3][k]})`); lg.addColorStop(1, `rgba(${rgb},0)`);
+        g2.strokeStyle = lg; g2.lineWidth = w; g2.beginPath(); g2.moveTo(m - dx * m, m - dy * m); g2.lineTo(m + dx * m, m + dy * m); g2.stroke(); }));
+      return cv2;
+    };
+    const COLS = ['200,218,255', '255,240,214', '255,214,170', '220,206,255', '185,205,255'];
+    const SPR = COLS.map(c => sprite(c, false)), SPK = COLS.map(c => sprite(c, true));
+    S.forEach(o => { o.c = Math.floor(o.ph * 7) % COLS.length; });
+    B.forEach(o => { o.c = Math.floor(o.hue * COLS.length) % COLS.length; });
+    function frame(now) {
+      raf = 0; if (stopped) return;
+      if (!document.hidden && now - last >= 32) {
+        last = now; const t = now / 1000, px = getPan() * dpr; c.clearRect(0, 0, W, H); c.globalCompositeOperation = 'lighter';
+        S.forEach(o => { const tw = .45 + .55 * Math.abs(Math.sin(t * o.sp + o.ph) * Math.sin(t * o.sp * 1.7 + o.ph * 2)), x = ((o.x * W - px * o.d) % W + W) % W, y = o.y * H, sz = (3 + o.a * o.a * 9) * dpr;
+          c.globalAlpha = Math.min(1, (.25 + o.a * .75) * tw); c.drawImage(SPR[o.c], x - sz, y - sz, sz * 2, sz * 2); });
+        B.forEach(o => { const q = Math.max(0, Math.sin(t * o.sp * 1.6 + o.ph)), p = q * q * q, tw = .1 + .9 * p * (.75 + .25 * Math.sin(t * 11 + o.ph * 5)), x = ((o.x * W - px * .35) % W + W) % W, y = o.y * H, sz = (6 + 30 * p) * dpr;   // (2026-11-14: they flare up and fade out — sparkle, not more light)
+          c.globalAlpha = tw; c.drawImage(SPK[o.c], x - sz, y - sz, sz * 2, sz * 2); });
+        c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
+        if (!shoot && now > nextShoot) shoot = { x: (.2 + R() * .7) * W, y: R() * H * .45, t0: now, vx: -(.6 + R() * .5) * W, vy: .35 * H };
+        if (shoot) { const k = (now - shoot.t0) / 900; if (k >= 1) { shoot = null; nextShoot = now + 1800 + R() * 3600; } else {
+          const x = shoot.x + shoot.vx * k, y = shoot.y + shoot.vy * k, a = Math.sin(k * Math.PI), g = c.createLinearGradient(x, y, x - shoot.vx * .12, y - shoot.vy * .12);
+          g.addColorStop(0, `rgba(255,255,255,${.85 * a})`); g.addColorStop(1, 'rgba(255,255,255,0)'); c.strokeStyle = g; c.lineWidth = 1.6 * dpr; c.beginPath(); c.moveTo(x, y); c.lineTo(x - shoot.vx * .12, y - shoot.vy * .12); c.stroke(); } }
+      }
+      raf = requestAnimationFrame(frame);
+    }
+    raf = requestAnimationFrame(frame);
+    return { size, stop() { stopped = true; cancelAnimationFrame(raf); } };
   }
+
+  /* ---------- 星座マップ (2026-11-14 改): the twelve constellations side by side as one long night sky, linked star to star. Drag (or swipe)
+     to travel left and right, the wheel / pinch / ± to zoom; the tabs fly to a constellation. Each constellation has its zodiac
+     figure drawn behind its stars (shanghai-zodiac.js: blinking, slowly changing faces, a swaying part). ---------- */
+  const PW = 116, PH = 64;   // one constellation's box in the long sky (x 0..100 of CON plus a gap), the sky's height
   function stageMap(o) {
-    css(); const lang = o.lang, K = C(), AR = K.AREAS;
-    let P = prog(), area = Math.floor(nextStage(P) / 10), pick = nextStage(P);
-    const el = document.createElement('div'); el.className = 'shmap';
-    el.innerHTML = `<div class="sky"><canvas></canvas></div><div class="hd"><h2></h2><span class="tot"></span><button type="button" class="x" aria-label="${esc(TX('b.close', lang))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div class="ars"></div><div class="gift"></div><div class="fld"><button type="button" class="nav l">‹</button><div class="cst"></div><button type="button" class="nav r">›</button></div><div class="sh"></div>`;
-    document.body.appendChild(el); requestAnimationFrame(() => { el.classList.add('on'); stars(el.querySelector('canvas')); });
-    const $ = q => el.querySelector(q);
-    function onFit() { requestAnimationFrame(fit); }
-    const close = () => { el.classList.remove('on'); setTimeout(() => el.remove(), 260); removeEventListener('keydown', key); removeEventListener('resize', onFit); if (window.visualViewport) visualViewport.removeEventListener('resize', onFit); };
-    const key = e => { if (e.key === 'Escape') close(); if (e.key === 'ArrowLeft') go(area - 1); if (e.key === 'ArrowRight') go(area + 1); };
+    css(); const lang = o.lang, K = C(), cid = o.course && courseOf(o.course) ? o.course : 'zodiac', ZOD = cid === 'zodiac', CO = courseOf(cid);
+    const AR = ZOD ? K.AREAS : CO.bg.map((_, i) => 'a' + i), NA = AR.length, N = NA * 10;
+    const areaName = i => ZOD ? TX('ar.' + AR[i], lang) : TX('st.area', lang, { n: i + 1 });
+    const RA = s => ZOD ? Reward.at(s) : 0, edg = i => ZOD ? edges(AR[i]) : Array.from({ length: 9 }, (_, k) => [k, k + 1]);
+    if (window.ShanghaiZodiac && !document.getElementById('shzod-css')) { const st = document.createElement('style'); st.id = 'shzod-css'; st.textContent = ShanghaiZodiac.css; document.head.appendChild(st); }
+    let P = cprog(cid), area = Math.floor(nextStage(P, N) / 10), pick = nextStage(P, N);
+    if (o.pick != null && o.pick < N) { pick = o.pick; area = Math.floor(pick / 10); }
+    const el = document.createElement('div'); el.className = 'shmap' + (ZOD ? '' : ' scn'); if (!ZOD) el.style.background = CO.tint;
+    el.innerHTML = `<div class="sky"><canvas></canvas></div><div class="hd">${ZOD ? '' : `<img class="em emi" src="${bgUrl(CO.bg[0])}" alt="">`}<svg class="em${ZOD ? '' : ' zx'}" viewBox="0 0 64 64" aria-hidden="true"><defs><radialGradient id="shemg" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#3b4aa0"/><stop offset="1" stop-color="#121640"/></radialGradient></defs><rect x="10" y="4" width="44" height="56" rx="8" fill="url(#shemg)" stroke="#e8c877" stroke-width="2"/><rect x="14" y="8" width="36" height="48" rx="5" fill="none" stroke="rgba(232,200,119,.35)"/><path d="M20 44 L28 34 L36 38 L44 22 M28 34 L30 22" fill="none" stroke="#ffe39a" stroke-width="1.4" stroke-linecap="round"/><g fill="#fff6d8"><circle cx="20" cy="44" r="2.2"/><circle cx="28" cy="34" r="2.6"/><circle cx="36" cy="38" r="2"/><circle cx="44" cy="22" r="2.8"/><circle cx="30" cy="22" r="1.8"/></g></svg><div class="shtl"><h2></h2><p class="story"></p></div><span class="tot"></span><button type="button" class="x" aria-label="${esc(TX('b.close', lang))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div class="ars"></div><div class="fld"><div class="vp"><div class="wld"></div></div><button type="button" class="nav l">‹</button><button type="button" class="nav r">›</button><div class="zoom"><button type="button" data-z="1">＋</button><button type="button" data-z="-1">－</button></div></div><div class="gift"></div><div class="sh"></div>`;   // (the next gift: just above the stage box — ユーザー 2026-11-14)
+    document.body.appendChild(el);
+    const $ = q => el.querySelector(q), vp = $('.vp'), wld = $('.wld');
+    // the pan / zoom: the long sky drawn at u px per unit, then scaled by z and moved by (tx, ty)
+    let u = 6, z = 1, tx = 0, ty = 0, raf = 0, anim = null;
+    const WW = PW * NA;
+    const sky = ZOD ? skyLoop($('canvas'), () => tx) : { size() {}, stop() {} };   // (the scene courses: their pictures are the sky)
+    if (window.Table3D && Table3D.quiet) Table3D.quiet(true);   // (2026-11-14) the map covers the room: the 3D scene behind it stops drawing (the showcase turntable kept it at 60 fps)
+    requestAnimationFrame(() => el.classList.add('on'));
+    const ZMIN = () => Math.min(1, (vp.clientWidth - 20) / (WW * u)) * .9, ZMAX = 3;
+    function clamp() {
+      const vw = vp.clientWidth, vh = vp.clientHeight, w = WW * u * z, h = PH * u * z, m = Math.min(120, vw * .3);
+      tx = w + 2 * m <= vw ? (vw - w) / 2 : Math.min(m, Math.max(vw - w - m, tx));
+      ty = h <= vh ? (vh - h) / 2 : Math.min(20, Math.max(vh - h - 20, ty));
+    }
+    function apply() { clamp(); wld.style.transform = `translate3d(${tx}px,${ty}px,0) scale(${z})`; wld.style.setProperty('--iz', Math.max(1, Math.min(3, .72 / z)).toFixed(3)); track(); }   // (2026-11-14 --iz: zoomed out, the stage buttons keep ~72 % of their size on screen — the picture shrinks, the buttons do not)
+    const centerOf = a => (a * PW + 8 + 50) * u;   // the middle of constellation a, in sky px at z = 1
+    function aim(a, smooth) {
+      const ttx = vp.clientWidth / 2 - centerOf(a) * z;
+      if (!smooth) { tx = ttx; apply(); return; }
+      const f0 = tx, t0 = performance.now(); anim = { stop: false };
+      const A = anim; (function st(now) { if (A.stop) return; const k = Math.min(1, (now - t0) / 520), e = 1 - Math.pow(1 - k, 3); tx = f0 + (ttx - f0) * e; apply(); if (k < 1) requestAnimationFrame(st); })(t0);
+    }
+    // which constellation is in the middle of the view: its tab lights up
+    function track() {
+      const a = Math.max(0, Math.min(NA - 1, Math.floor(((vp.clientWidth / 2 - tx) / z / u) / PW)));
+      if (a === area) return; area = a; tabs();
+    }
+    function layout() {
+      const vh = vp.clientHeight, vw = vp.clientWidth;
+      u = Math.max(3, Math.min(vh / (PH + 6), vw / 72));   // the sky's height fits the view; a constellation is not wider than ~1.4 views
+      wld.style.width = WW * u + 'px'; wld.style.height = PH * u + 'px';
+      wld.style.setProperty('--nd', Math.round(Math.max(34, Math.min(60, u * 6.2))) + 'px');
+      sky.size(); z = Math.max(ZMIN(), Math.min(ZMAX, z));
+    }
+    function onFit() { const c = (vp.clientWidth / 2 - tx) / z; layout(); tx = vp.clientWidth / 2 - c * z; apply(); }
+    const close = () => { el.classList.remove('on'); sky.stop(); if (window.Table3D && Table3D.quiet) Table3D.quiet(false); setTimeout(() => el.remove(), 260); removeEventListener('keydown', key); removeEventListener('resize', onFit); if (window.visualViewport) visualViewport.removeEventListener('resize', onFit); };
+    const key = e => { if (e.key === 'Escape') close(); if (e.key === 'ArrowLeft') go(area - 1); if (e.key === 'ArrowRight') go(area + 1); if (e.key === '+' || e.key === '=') zoomAt(1.25); if (e.key === '-') zoomAt(.8); };
     addEventListener('keydown', key);
     addEventListener('resize', onFit); if (window.visualViewport) visualViewport.addEventListener('resize', onFit);
     $('.x').onclick = close;
     const areaOpen = a => unlocked(P, a * 10);
-    function go(a) { if (a < 0 || a > 11) return; area = a; const fs = a * 10; pick = Array.from({ length: 10 }, (_, k) => fs + k).find(s => unlocked(P, s) && !cleared(P, s)); if (pick == null) pick = fs; paint(); }
-    function paint() {
+    function go(a) { if (a < 0 || a > NA - 1) return; const fs = a * 10; let pk = Array.from({ length: 10 }, (_, k) => fs + k).find(s => unlocked(P, s) && !cleared(P, s)); if (pk == null) pk = fs; pick = pk; area = a; tabs(); nodes(); sheet(); aim(a, true); }
+    function zoomAt(f, cx, cy) {
+      const vw = vp.clientWidth, vh = vp.clientHeight; cx = cx == null ? vw / 2 : cx; cy = cy == null ? vh / 2 : cy;
+      const z2 = Math.max(ZMIN(), Math.min(ZMAX, z * f)); tx = cx - (cx - tx) * z2 / z; ty = cy - (cy - ty) * z2 / z; z = z2; apply();
+    }
+    function tabs() {
+      $('.ars').innerHTML = AR.map((a, i) => { const st = Array.from({ length: 10 }, (_, k) => P.st[i * 10 + k] || 0).reduce((x, v) => x + v, 0); return `<button type="button" class="ar${i === area ? ' on' : ''}${areaOpen(i) ? '' : ' lk'}" data-a="${i}">${esc(areaName(i))}<em>★${st}</em>${(ZOD ? [1, 2, 3] : []).filter(t => Math.floor(GIFT_S[t] / 10) === i && !Reward.has(t)).map(t => `<img class="agf" src="../images/atlas/av/peacock-${t}.webp" alt="">`).join('')}</button>`; }).join('');
+      const on = $('.ar.on'); if (on) on.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+      wld.querySelectorAll('.pn').forEach((t, i) => t.classList.toggle('on', i === area));
+      if (!ZOD) $('.sky').style.backgroundImage = `url(${bgUrl(CO.bg[area])})`;   // (a scene course: this area's picture, blurred, fills the screen round the map)
+    }
+    // every constellation's stars, evenly spaced inside its box, in the long sky's units
+    const PTS = AR.map((a, i) => (ZOD ? CON[a].p : cPts(i)).map(([x, y]) => [i * PW + 8 + x, y]));   // (placed by hand on the figures, already evenly spaced)
+    function art() {
+      const lit = ([i, j], fs) => cleared(P, fs + i) && cleared(P, fs + j);
+      let svg = `<svg viewBox="0 0 ${WW} ${PH}" preserveAspectRatio="none">`;
+      AR.forEach((a, i) => {
+        const fs = i * 10, done = Array.from({ length: 10 }, (_, k) => cleared(P, fs + k)).filter(Boolean).length;
+        if (!ZOD) svg += `<image href="${bgUrl(CO.bg[i])}" x="${i * PW}" y="0" width="${PW}" height="${PH}" preserveAspectRatio="xMidYMax slice" opacity="${(.84 + .16 * done / 10).toFixed(2)}"/>`;
+        svg += `<text class="pn${i === area ? ' on' : ''}" x="${i * PW + 8}" y="7">${esc(areaName(i))}</text>`;
+        if (ZOD) svg += `<g class="fig${done === 10 ? ' lit' : ''}" transform="translate(${i * PW + 8} 0)" style="--dl:${-i * .6}s;opacity:${(.55 + .45 * done / 10).toFixed(2)}">${window.ShanghaiZodiac ? ShanghaiZodiac(a, i) : ''}</g>`;
+        edg(i).forEach(e => { const [x1, y1] = PTS[i][e[0]], [x2, y2] = PTS[i][e[1]], L = lit(e, fs);
+          svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${L ? '#ffd76a' : ZOD ? 'rgba(180,200,255,.3)' : 'rgba(255,255,255,.75)'}" stroke-width="${L ? .7 : ZOD ? .35 : .5}" stroke-linecap="round" ${L ? 'filter="drop-shadow(0 0 1.2px #ffd76a)"' : 'stroke-dasharray="1 1.2"'}/>`; });
+        if (i < NA - 1) { const [x1, y1] = PTS[i][9], [x2, y2] = PTS[i + 1][0], L = cleared(P, fs + 9);   // the road on to the next constellation
+          svg += `<path d="M${x1} ${y1} C${x1 + 14} ${y1} ${x2 - 14} ${y2} ${x2} ${y2}" fill="none" stroke="${L ? 'rgba(255,215,106,.7)' : 'rgba(180,200,255,.22)'}" stroke-width="${L ? .55 : .35}" stroke-dasharray="${L ? '2 1.4' : '1 1.6'}" stroke-linecap="round"/>`; }
+      });
+      return svg + '</svg>';
+    }
+    function nodes() {
+      let h = '';
+      AR.forEach((a, i) => PTS[i].forEach(([x, y], k) => {
+        const s = i * 10 + k, ok = cleared(P, s), ul = unlocked(P, s), sr = P.st[s] || 0, t = RA(s);
+        h += `<button type="button" class="nd${s === pick ? ' pk' : ''}${ok ? ' ok' : ''}${ul && !ok ? ' cur' : ''}${ul ? '' : ' lk'}" style="left:${x / WW * 100}%;top:${y / PH * 100}%" data-s="${s}">${k + 1}${sr ? `<span class="sr">${'★'.repeat(sr)}${'☆'.repeat(3 - sr)}</span>` : ''}${t ? `<i class="gft">${Reward.has(t) ? '✓' : '🎁'}</i>` : ''}</button>` +
+          (t ? `<img class="gf${Reward.has(t) ? ' got' : ''}" style="left:${x / WW * 100}%;top:${y / PH * 100}%" src="../images/atlas/av/peacock-${t}.webp" alt="">` : '');
+      }));
+      wld.querySelectorAll('.nd,.gf').forEach(n => n.remove());
+      wld.insertAdjacentHTML('beforeend', h);
+    }
+    // (2026-11-14) picking a stage only moves the ring and refills the box below: nothing else is rebuilt (no hitch)
+    function mark() { wld.querySelectorAll('.nd.pk').forEach(b => b.classList.remove('pk')); const b = wld.querySelector(`.nd[data-s="${pick}"]`); if (b) b.classList.add('pk'); }
+    function head() {
       const tot = Object.values(P.st).reduce((a, v) => a + v, 0);
-      $('h2').textContent = TX('st.title', lang); $('.tot').textContent = '★ ' + tot + ' / 360';
-      const nx = Reward.next(), it = nx && window.AtlasArt && AtlasArt.byId && AtlasArt.byId('av-peacock-' + nx.t);
+      $('h2').textContent = ZOD ? TX('st.title', lang) : TX('cn.' + cid, lang); $('.story').textContent = ZOD ? TX('st.story', lang) : TX('cd.' + cid, lang); $('.tot').textContent = '★ ' + tot + ' / ' + N * 3;
+      const nx = ZOD ? Reward.next() : null, it = nx && window.AtlasArt && AtlasArt.byId && AtlasArt.byId('av-peacock-' + nx.t);
       $('.gift').innerHTML = nx ? `<img src="../images/atlas/av/peacock-${nx.t}.webp" alt=""><span>${esc(TX('rw.next', lang, { n: nx.left, name: it ? it.name[lang] || it.name.en : 'Peacotile' }))}</span>` : '';
       $('.gift').style.display = nx ? '' : 'none';
-      $('.ars').innerHTML = AR.map((a, i) => { const st = Array.from({ length: 10 }, (_, k) => P.st[i * 10 + k] || 0).reduce((x, v) => x + v, 0); return `<button type="button" class="ar${i === area ? ' on' : ''}${areaOpen(i) ? '' : ' lk'}" data-a="${i}">${esc(TX('ar.' + a, lang))}<em>★${st}</em>${[1, 2, 3].filter(t => Math.floor(GIFT_S[t] / 10) === i && !Reward.has(t)).map(t => `<img class="agf" src="../images/atlas/av/peacock-${t}.webp" alt="">`).join('')}</button>`; }).join('');
-      const on = $('.ar.on'); if (on) on.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
-      // a tall screen (phones): the figure turned a quarter (x ↔ y) so it fills the height rather than a thin strip
-      const port = innerHeight > innerWidth * 1.1, a = AR[area], fs = area * 10, VW = port ? 64 : 100, VH = port ? 100 : 64;
-      let pts = CON[a].p.map(([x, y]) => port ? [y, x] : [x, y]);
-      // phones (2026-11-14): the figure stretched to fill the whole box left for it (both ways), so its ten stars spread out instead of crowding
-      if (port) { const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]), x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
-        pts = pts.map(([x, y]) => [9 + (x1 > x0 ? (x - x0) / (x1 - x0) : .5) * (VW - 18), 7 + (y1 > y0 ? (y - y0) / (y1 - y0) : .5) * (VH - 15)]); }
-      pts = even(pts, edges(a), VW, VH, port ? innerWidth / VW : 1, port ? innerHeight * .5 / VH : 1);
-      $('.cst').classList.toggle('port', port);
-      const lit = ([i, j]) => cleared(P, fs + i) && cleared(P, fs + j);
-      $('.cst').innerHTML = `<div class="nm">${esc(TX('ar.' + a, lang))}</div><svg viewBox="0 0 ${VW} ${VH}" preserveAspectRatio="none">${edges(a).map(e => { const [x1, y1] = pts[e[0]], [x2, y2] = pts[e[1]]; return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${lit(e) ? '#ffd76a' : 'rgba(180,200,255,.28)'}" stroke-width="${lit(e) ? .7 : .35}" stroke-linecap="round" ${lit(e) ? 'filter="drop-shadow(0 0 1.2px #ffd76a)"' : 'stroke-dasharray="1 1.2"'}/>`; }).join('')}</svg>` +
-        pts.map(([x, y], k) => { const s = fs + k, ok = cleared(P, s), ul = unlocked(P, s), sr = P.st[s] || 0;
-          return `<button type="button" class="nd${ok ? ' ok' : ''}${ul && !ok ? ' cur' : ''}${ul ? '' : ' lk'}" style="left:${x / VW * 100}%;top:${y / VH * 100}%${s === pick ? ';outline:3px solid #fff;outline-offset:3px' : ''}" data-s="${s}">${k + 1}${sr ? `<span class="sr">${'★'.repeat(sr)}${'☆'.repeat(3 - sr)}</span>` : ''}${Reward.at(s) ? `<i class="gft">${Reward.has(Reward.at(s)) ? '✓' : '🎁'}</i>` : ''}</button>${Reward.at(s) ? `<img class="gf${Reward.has(Reward.at(s)) ? ' got' : ''}" style="left:${x / VW * 100}%;top:${y / VH * 100}%" src="../images/atlas/av/peacock-${Reward.at(s)}.webp" alt="">` : ''}`; }).join('');
-      $('.nav.l').disabled = area === 0; $('.nav.r').disabled = area === 11;
-      sheet(); fit();
     }
     // the stage that hands over a クジャクパイ: its picture and name in the sheet
     function giftLine(s) {
-      const t = Reward.at(s); if (!t) return '';
+      const t = RA(s); if (!t) return '';
       const it = window.AtlasArt && AtlasArt.byId && AtlasArt.byId('av-peacock-' + t), nm = it ? it.name[lang] || it.name.en : 'Peacotile', got = Reward.has(t);
       return `<div class="gfl${got ? ' got' : ''}"><img src="../images/atlas/av/peacock-${t}.webp" alt=""><span>${got ? '✓ ' : '🎁 '}${esc(TX(got ? 'rw.have' : 'rw.here', lang, { name: nm }))}</span></div>`;
     }
-    // (2026-11-14) the figure sized to the room actually left between the tabs and the sheet (phones: the browser bars make vh lie),
-    // and the stars sized to the figure, so ten of them never crowd into each other
-    function fit() {
-      const f = $('.fld'), c = $('.cst'); if (!f || !c) return;
-      const cs = getComputedStyle(f), W = f.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight), H = f.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - 22;
-      const port = c.classList.contains('port');
-      if (port) {   // phones: the whole box (the figure is stretched to it)
-        c.style.width = Math.max(160, W) + 'px'; c.style.height = Math.max(200, H) + 'px';
-        c.style.setProperty('--nd', Math.round(Math.max(34, Math.min(54, W * .14, H * .1))) + 'px'); return;
+    // the box below the sky: the constellation's picture with this stage's star ringed · the stage, its mission, the record · スタート
+    // (2026-11-14, ユーザー: 画像をうまく組み込んで綺麗に見やすく、PCは文字も大きく; a pick refills it without re-laying the map)
+    function conArt(a, k) {
+      if (!ZOD) {   // a scene course: this area's picture with its path, this stage's star ringed
+        const Q = cPts(a), fs = a * 10;
+        let v = `<svg viewBox="-8 0 116 64" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><image href="${bgUrl(CO.bg[a])}" x="-8" y="0" width="116" height="64" preserveAspectRatio="xMidYMax slice"/>`;
+        for (let j = 0; j < 9; j++) { const L = cleared(P, fs + j) && cleared(P, fs + j + 1); v += `<line class="cl${L ? ' on' : ''}" x1="${Q[j][0]}" y1="${Q[j][1]}" x2="${Q[j + 1][0]}" y2="${Q[j + 1][1]}" style="stroke:${L ? '#ffd76a' : 'rgba(255,255,255,.85)'}"/>`; }
+        Q.forEach(([x, y], j) => { v += j === k ? `<circle class="cpk" cx="${x}" cy="${y}" r="5.4"/><circle class="cst on" cx="${x}" cy="${y}" r="2.6"/>` : `<circle class="cst${cleared(P, fs + j) ? ' on' : ''}" cx="${x}" cy="${y}" r="1.8" style="${cleared(P, fs + j) ? '' : 'fill:#fff;stroke:rgba(0,0,0,.35);stroke-width:.3'}"/>`; });
+        return v + '</svg>';
       }
-      const w = Math.max(160, Math.min(W, H * 100 / 64, 980)); c.style.width = w + 'px'; c.style.height = '';
-      c.style.setProperty('--nd', Math.round(Math.max(34, Math.min(62, w * .064))) + 'px');
+      const S = CON[AR[a]], fs = a * 10, done = Array.from({ length: 10 }, (_, j) => cleared(P, fs + j)).filter(Boolean).length;
+      let v = `<svg viewBox="-4 -1 108 66" aria-hidden="true"><g class="fig${done === 10 ? ' lit' : ''}">${window.ShanghaiZodiac ? ShanghaiZodiac(AR[a], a) : ''}</g>`;
+      edges(AR[a]).forEach(([i, j]) => { const L = cleared(P, fs + i) && cleared(P, fs + j); v += `<line class="cl${L ? ' on' : ''}" x1="${S.p[i][0]}" y1="${S.p[i][1]}" x2="${S.p[j][0]}" y2="${S.p[j][1]}"/>`; });
+      S.p.forEach(([x, y], j) => { v += j === k ? `<circle class="cpk" cx="${x}" cy="${y}" r="5.4"/><circle class="cst on" cx="${x}" cy="${y}" r="2.6"/>` : `<circle class="cst${cleared(P, fs + j) ? ' on' : ''}" cx="${x}" cy="${y}" r="1.7"/>`; });
+      return v + '</svg>';
     }
+    const layMini = lay => layArt(lay, 'lm');
     function sheet() {
-      const s = pick, st = K.stage(s), ul = unlocked(P, s), sr = P.st[s] || 0, bt = P.bt[s];
-      $('.sh').innerHTML = `<div class="tx"><h3>${esc(stageName(s, lang))} · ${esc(TX('lay.' + st.lay, lang))} <small style="opacity:.7;font-size:15px">${esc(TX('tiles', lang, { n: st.n }))}</small></h3><div class="mi">${esc(missionText(st, lang))}</div><div class="sub">${ul ? esc(starsText(st, lang)) + (sr ? '<br>' + '★'.repeat(sr) + '☆'.repeat(3 - sr) + (bt != null ? ' · ' + esc(TX('r.best', lang, { t: mmss(bt) })) : '') : '') : esc(TX('st.lock', lang))}<br><span class="rw">${esc(TX('rw.star', lang, { n: COIN_STAR }))}</span>${giftLine(s)}</div></div><button type="button" class="go"${ul ? '' : ' disabled'}>${esc(TX('b.start', lang))} ▶</button>`;
-      $('.go').onclick = () => { if (!ul) return; close(); o.play(s); };
+      const s = pick, st = cStage(cid, s), a = Math.floor(s / 10), ul = unlocked(P, s), sr = P.st[s] || 0, bt = P.bt[s], box = $('.sh'), h0 = box.offsetHeight;
+      box.innerHTML = `<div class="art${ZOD ? '' : ' scn'}">${conArt(a, s % 10)}<b>${esc(areaName(a))}</b></div>` +
+        `<div class="tx"><h3><span class="sn">${esc(stageName(s, lang))}</span><span class="ly">${layMini(st.lay)}<span>${esc(TX('lay.' + st.lay, lang))}</span><em>${esc(TX('tiles', lang, { n: st.n }))}</em></span></h3>` +
+        `<div class="mi">${esc(missionText(st, lang))}</div><div class="sub">${ul ? esc(starsText(st, lang)) : esc(TX('st.lock', lang))}</div>` +
+        `<div class="recs"><div>${esc(TX('rec', lang))}${sr ? `<span class="rs">${'★'.repeat(sr)}${'☆'.repeat(3 - sr)}</span>` + (bt != null ? ` <span class="rb">${esc(TX('r.best', lang, { t: mmss(bt) }))}</span>` : '') : '<span class="rb">—</span>'}</div><span class="rw">${esc(TX('rw.star', lang, { n: COIN_STAR }))}</span></div>${giftLine(s)}</div>` +
+        `<button type="button" class="go"${ul ? '' : ' disabled'}>${esc(TX('b.start', lang))} ▶</button>`;
+      box.querySelector('.go').onclick = () => { if (!ul) return; close(); o.play({ c: cid, s }); };
+      if (box.offsetHeight !== h0) requestAnimationFrame(onFit);   // (only when the box changed its height: the sky above is fitted again)
     }
+    /* ---------- drag to travel, flick to glide, pinch / wheel to zoom; a tap (no drag) picks a stage ---------- */
+    const pts = new Map(); let moved = 0, lastX = 0, lastY = 0, vx = 0, lt = 0, pinch = null, glide = 0;
+    vp.addEventListener('pointerdown', e => {
+      if (anim) anim.stop = true; cancelAnimationFrame(glide);
+      pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (pts.size === 1) { moved = 0; lastX = e.clientX; lastY = e.clientY; vx = 0; lt = performance.now(); }
+      if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), z }; }
+    });
+    vp.addEventListener('pointermove', e => {
+      if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      const r = vp.getBoundingClientRect();
+      if (pts.size === 2 && pinch) { const [a, b] = [...pts.values()], d = Math.hypot(a.x - b.x, a.y - b.y); zoomAt(pinch.z * d / pinch.d / z, (a.x + b.x) / 2 - r.left, (a.y + b.y) / 2 - r.top); moved = 99; return; }
+      const dx = e.clientX - lastX, dy = e.clientY - lastY, now = performance.now();
+      moved += Math.abs(dx) + Math.abs(dy); if (moved > 6) { vp.classList.add('drag'); if (!vp.hasPointerCapture(e.pointerId)) try { vp.setPointerCapture(e.pointerId); } catch (_) {} }
+      if (moved > 6) { tx += dx; ty += dy; apply(); vx = dx / Math.max(1, now - lt) * 16; }
+      lastX = e.clientX; lastY = e.clientY; lt = now;
+    });
+    const up = e => {
+      if (!pts.has(e.pointerId)) return; pts.delete(e.pointerId); if (pts.size < 2) pinch = null; if (pts.size) return;
+      vp.classList.remove('drag');
+      if (moved > 6 && Math.abs(vx) > 1.5) { let v = vx; (function gl() { v *= .93; tx += v; apply(); if (Math.abs(v) > .3) glide = requestAnimationFrame(gl); })(); }
+    };
+    vp.addEventListener('pointerup', up); vp.addEventListener('pointercancel', up);
+    vp.addEventListener('wheel', e => {
+      e.preventDefault(); const r = vp.getBoundingClientRect();
+      if (e.ctrlKey || Math.abs(e.deltaY) >= Math.abs(e.deltaX)) zoomAt(Math.exp(-e.deltaY * (e.ctrlKey ? .01 : .0018)), e.clientX - r.left, e.clientY - r.top);
+      else { tx -= e.deltaX; apply(); }
+    }, { passive: false });
     el.addEventListener('click', e => {
       const a = e.target.closest('[data-a]'); if (a) { go(+a.dataset.a); return; }
-      const n = e.target.closest('.nd'); if (n) { pick = +n.dataset.s; paint(); return; }
+      const zb = e.target.closest('[data-z]'); if (zb) { zoomAt(+zb.dataset.z > 0 ? 1.3 : 1 / 1.3); return; }
+      const n = e.target.closest('.nd'); if (n) { if (moved > 6) return; pick = +n.dataset.s; mark(); sheet(); return; }
       if (e.target.closest('.nav.l')) go(area - 1); else if (e.target.closest('.nav.r')) go(area + 1);
     });
-    // swipe between the constellations (phones)
-    let sx = null; el.addEventListener('touchstart', e => { if (e.target.closest('.ars,.sh')) { sx = null; return; } sx = e.touches[0].clientX; }, { passive: true });
-    el.addEventListener('touchend', e => { if (sx == null) return; const dx = e.changedTouches[0].clientX - sx; if (Math.abs(dx) > 60) go(area + (dx < 0 ? 1 : -1)); sx = null; });
-    paint();
-    return { close };
+    head(); wld.innerHTML = art(); tabs(); nodes(); sheet();
+    // open on the stage to play next (its star a little left of the middle, so the road ahead shows)
+    function aimPick() { const [x] = PTS[Math.floor(pick / 10)][pick % 10]; tx = vp.clientWidth * .42 - x * u * z; apply(); }
+    layout(); z = Math.max(ZMIN(), 1); aimPick();
+    requestAnimationFrame(() => { layout(); aimPick(); });
+    return { close, _dbg: { pan: () => ({ tx, ty, z, u, area }), zoomAt, go } };
   }
 
   window.Atlas3D = window.Atlas3D || {};
   window.Atlas3D.shanghai = {
     levels: 0, solo: true, table: false, sizes: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], size0: 1,
-    sizeLabel: () => '',
-    sizeName: (z, lang) => { const k = C() && C().FREE[z - 1]; return k ? TX('lay.' + k, lang) + ' · ' + TX('tiles', lang, { n: C().LAYOUTS[k].length }) : String(z); },
+    sizeLabel: lang => TX('f.board', lang), sizePick: true,
+    // the pickers' pictures and lines: the board from above · each mode in a line · each difficulty in a line
+    optInfo: (sid, v, lang) => {
+      if (sid === 'bvSize') { const k = C().FREE[v - 1], lv = Math.min(5, Math.ceil(v / 2)); return k ? { art: layArt(k), name: TX('lay.' + k, lang), sub: '★'.repeat(lv) + '☆'.repeat(5 - lv) + ' · ' + TX('tiles', lang, { n: C().LAYOUTS[k].length }) } : null; }
+      if (sid === 'bvShM') return { sub: TX('fmd.' + v, lang) };
+      if (sid === 'bvShD') return { sub: TX('fdd.' + v, lang) };
+      return null;
+    },
+    sizeName: (z, lang) => { const k = C() && C().FREE[z - 1], lv = Math.min(5, Math.ceil(z / 2)); return k ? TX('lay.' + k, lang) + ' · ' + '★'.repeat(lv) + '☆'.repeat(5 - lv) + ' · ' + TX('tiles', lang, { n: C().LAYOUTS[k].length }) : String(z); },   // (the board's name · how hard (FREE is in order of difficulty, two a step) · its tiles)
     stages: true, modeName: (m, lang) => TX(m === 'stage' ? 'm.stage' : 'm.free', lang),
-    stagePanel, stageBind, freeBind, stageMap, pending: null, last: null, nextStage: () => nextStage(prog()),
+    stagePanel, stageBind, freeBind, stageMap, pending: null, last: null, nextStage: () => { const c = lastCourse(); return { c, s: nextStage(cprog(c), cN(c)) }; },
+    pickSheet: (sid, sel, lang) => sid === 'bvSize' ? boardList(sel, lang) : false,
     start,
   };
 })();

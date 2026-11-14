@@ -686,7 +686,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
     let simd = true;
     try { simd = WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11])); } catch (e) { simd = false; }
     if (/[?&]nosimd=1\b/.test(self.location.search || '')) simd = false;   // (a check of the fallback)
-    const url = new URL(simd ? 'engine_simd.wasm?v=1' : 'engine.wasm?v=20261111', self.location.href);
+    const url = new URL(simd ? 'engine_simd.wasm?v=2' : 'engine.wasm?v=20261114', self.location.href);
     wReady = (MTL ? new Promise(res => self.addEventListener('message', function f(e) { if (e.data && e.data.type === 'mtinit') { self.removeEventListener('message', f); res(e.data); } }))
       .then(m => {
         const x = new WebAssembly.Instance(m.module, { env: { memory: m.mem, now: () => Date.now(), progress: d => { if (wProg) wProg(d); } } }).exports;

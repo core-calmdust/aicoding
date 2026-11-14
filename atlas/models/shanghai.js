@@ -291,7 +291,7 @@
   function tileMat(back) {
     if (mats[back]) return mats[back];
     const TT = T(), [cw, ch] = cellSize(), wo = faceOff(47);
-    const m = new TT.MeshStandardMaterial({ map: atlas(), normalMap: normalTex, vertexColors: true, roughness: .38, metalness: 0, envMapIntensity: .7 });   // (a polished resin face; the carving in the normal map)
+    const m = new TT.MeshStandardMaterial({ map: atlas(), normalMap: normalTex, vertexColors: true, roughness: .38, metalness: 0, envMapIntensity: .5, color: 0xe4e2dc });   // (2026-11-14 ユーザー: ライティングは少し抑えめ — the faces a touch less bright)   // (a polished resin face; the carving in the normal map)
     const back3 = new TT.Color(BACK_COL[back] || BACK_COL.jade).convertSRGBToLinear();
     m.onBeforeCompile = sh => {
       sh.uniforms.uCell = { value: new TT.Vector2(cw, ch) }; sh.uniforms.uWhite = { value: new TT.Vector2(wo[0] + cw * .5, wo[1] + ch * .5) };
@@ -316,10 +316,10 @@
       sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vGold;')
         .replace('#include <color_fragment>', `#include <color_fragment>
         float shLum = dot(diffuseColor.rgb, vec3(.3, .59, .11)), shG = vGold * smoothstep(.35, .8, shLum);
-        diffuseColor.rgb = mix(diffuseColor.rgb, vec3(1.0, .7, .18) * (.6 + .7 * shLum), shG);`)
-        .replace('#include <metalnessmap_fragment>', '#include <metalnessmap_fragment>\nmetalnessFactor = mix(metalnessFactor, .9, shG);')
-        .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor = mix(roughnessFactor, .2, shG);')
-        .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance += vec3(.5, .32, .06) * shG;');
+        diffuseColor.rgb = mix(diffuseColor.rgb, vec3(1.0, .78, .36) * (.62 + .58 * shLum), shG * .85);`)
+        .replace('#include <metalnessmap_fragment>', '#include <metalnessmap_fragment>\nmetalnessFactor = mix(metalnessFactor, .55, shG);')
+        .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor = mix(roughnessFactor, .3, shG);')
+        .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance += vec3(.16, .1, .02) * shG;');
     };
     m.shadowSide = TT.BackSide;   // (the shadow pass from the inner faces: no striped self-shadow on the tile walls)
     m.customProgramCacheKey = () => 'shanghai-tile-g';
