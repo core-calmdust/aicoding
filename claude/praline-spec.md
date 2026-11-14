@@ -91,7 +91,7 @@ wasm の αβ エンジン（`engine_mt.wasm`、`-DMT`）の**仕事を分ける
 | チェス（`chess/`） | C（wasm、NNUE） | **YBW**（6、予想カット節も）＋busy marks＋10スレッドより先は Lazy SMP（2026-11-12、v3。前は YBW 1＋Lazy SMP） | mtengine・**praline（移行済み、読み筋・カットの印・`PL_MT_SPLIT`）**・proset・ponder |
 | 五目並べ（`gomoku/`） | **C（wasm、2026-11-12）**：盤の形・禁手・VCF/VCT・αβ・評価ネットごと `core.c`（`core_simd.wasm`／`core.wasm`、スレッドは `core_mt.wasm`）。JS は予備（`?nowasm`） | **YBW**（4、読み筋の節は2）＋busy marks、解析は候補手を分割点に | mtengine・**praline（2026-11-12）**・proset |
 | 囲碁（`go/`）・ヘックス（`hex/`） | C（wasm） | 共有木 MCTS（virtual loss） | mtengine・proset |
-| アマゾンズ（`amazons/`） | C（wasm、αβ の探索ごと core.c、2026-11-11） | αβ は **YBW**（3）＋busy marks、Lv.19〜23 は共有木 MCTS（同じ `core_mt.wasm`、補助は両方を待つ）。分離できないページは mtsplit の非共有 | mtengine・**praline（2026-11-11）**・proset（mtsplit は非共有だけ）。MCTS は評価 v2（2026-11-14、`ev_set`、重みだけ。αβ は従来の評価） |
+| アマゾンズ（`amazons/`） | C（wasm、αβ の探索ごと core.c、2026-11-11） | αβ は **YBW**（3）＋busy marks、Lv.19〜23 は共有木 MCTS（同じ `core_mt.wasm`、補助は両方を待つ）。分離できないページは mtsplit の非共有 | mtengine・**praline（2026-11-11）**・proset（mtsplit は非共有だけ）。MCTS は評価 v2（2026-11-14、`ev_set`、重みだけ）。αβ は Lv.13〜15 だけ v2、ほかは従来の評価。Lv.16〜18 は評価数で決める1スレッドの MCTS（2026-11-14 のレベルの測り直し） |
 | ウゴルキ（`ugolki/`） | C（wasm、ルートのループも 2026-11-11） | **YBW**（3）（`core_mt.wasm`）。分離できないページは mtsplit | mtengine・**praline（2026-11-11）**・proset（mtsplit は非共有・予備） |
 | アゴン（`agon/`） | C（wasm、ルートのループも 2026-11-11） | **YBW**（3）（`core_mt.wasm`）。分離できないページは mtsplit | mtengine・**praline（2026-11-11）**・proset（mtsplit は非共有・予備） |
 | コナネ（`konane/`） | C（wasm、ルートのループも 2026-11-11） | **YBW**（3）（`core_mt.wasm`）。分離できないページは mtsplit | mtengine・**praline（2026-11-11）**・proset（mtsplit は非共有・予備） |

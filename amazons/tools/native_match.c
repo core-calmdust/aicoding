@@ -5,6 +5,11 @@
 //   clang -O3 -march=native -DNATIVE -w -o /tmp/amz_match amazons/tools/native_match.c -lm
 //   /tmp/amz_match A B pairs [seed] [part/n]
 //   a player: mc:ms=300,ev=1 | mc:nk=60,ev=0,c=0.25 | ab:ms=300,ev=1 | ab:nk=24 (nk: thousands of evaluations a move)
+//             | lv:noise=420,qk=3 (engine.js's one-ply levels Lv.1〜8: the candidates' scores with Gaussian noise; d=2: the
+//             best 10 valued at depth d as engine.js think with L.d ≥ 2, the rest their score − 40) | L<n>: the
+//             level n as in engine.js LEVELS (L1 … L23; one thread, the time levels by this process's CPU time; L19:ms=150 etc.
+//             overrides a key). Each player keeps its own alpha-beta tables (the table and the candidate cache) from move to
+//             move, as its own worker would (2026-11-14: before, both players shared them).
 //             MCTS keys as engine.js MC (qk k qkr kr po s np c a pwa pwk pwb pom vl b0 la); e<k>=v sets the evaluation's
 //             parameter k (ev_set(k, v)) for that player
 #include <stdio.h>
@@ -17,14 +22,31 @@ double now(void) { struct timespec t; clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &t
 static const char *MCK[] = { "qk", "k", "qkr", "kr", "po", "s", "np", "c", "a", "pwa", "pwk", "pwb", "pom", "vl", "b0", "la" };
 static const double MCD[] = { 10, 24, 20, 48, 0, 400, 2, 0.25, 0.3, 3, 1, 0.5, 0.5, 1, 300, 8 };
 #define NEP 32
-typedef struct { int mc, ev; double ms, nk, mcp[16]; int nep; int epk[NEP]; double epv[NEP]; const char *name; } Player;
+typedef struct { int mc, ev, lv, qk, d; double ms, nk, noise, mcp[16]; int nep; int epk[NEP]; double epv[NEP]; const char *name;
+  TTS *ttp; unsigned ttm; int ttc; CCS *ccp; unsigned ccm; int ccc; } Player;
+// engine.js LEVELS (LVEV: the evaluation of each level, 1 = v2)
+static const double LVN[24] = { 0, 420, 300, 210, 150, 105, 70, 45, 200 };
+static const int LVD[24] = { 0, 1, 1, 1, 1, 1, 1, 1, 3 };
+static const int LVQ[24] = { 0, 3, 4, 5, 6, 8, 10, 12, 14 };
+static const double LVK[24] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 4.5, 6, 16, 40, 150, 200, 500, 1200 };
+static const int LVMC[24] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1 };
+static const double LVMS[24] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1500, 3000, 6000, 12000, 20000 };
+static const int LVEV[24] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 static void parseP(const char *s, Player *P) {
-  memset(P, 0, sizeof *P); P->name = s; P->mc = !strncmp(s, "mc", 2); memcpy(P->mcp, MCD, sizeof MCD);
+  memset(P, 0, sizeof *P); P->name = s; P->mc = !strncmp(s, "mc", 2); P->lv = !strncmp(s, "lv", 2); memcpy(P->mcp, MCD, sizeof MCD);
+  if (s[0] == 'L' && s[1] >= '0' && s[1] <= '9') {
+    int n = atoi(s + 1); if (n < 1) n = 1; if (n > 23) n = 23;
+    if (n <= 8) { P->lv = 1; P->noise = LVN[n]; P->qk = LVQ[n]; P->d = LVD[n]; }
+    else if (n <= 18) { P->nk = LVK[n]; P->mc = LVMC[n]; }
+    else { P->mc = 1; P->ms = LVMS[n]; }
+    P->ev = LVEV[n];
+  }
   const char *c = strchr(s, ':'); if (!c) return;
   char buf[512]; strncpy(buf, c + 1, 511); buf[511] = 0;
   for (char *tok = strtok(buf, ","); tok; tok = strtok(0, ",")) {
     char *eq = strchr(tok, '='); if (!eq) continue; *eq = 0; double v = atof(eq + 1);
     if (!strcmp(tok, "ms")) P->ms = v; else if (!strcmp(tok, "nk")) P->nk = v; else if (!strcmp(tok, "ev")) P->ev = (int)v;
+    else if (!strcmp(tok, "noise")) P->noise = v; else if (!strcmp(tok, "qk") && P->lv) P->qk = (int)v; else if (!strcmp(tok, "d")) P->d = (int)v;
     else if (tok[0] == 'e' && tok[1] >= '0' && tok[1] <= '9') { if (P->nep < NEP) { P->epk[P->nep] = atoi(tok + 1); P->epv[P->nep++] = v; } }
     else for (int k = 0; k < 16; k++) if (!strcmp(tok, MCK[k])) P->mcp[k] = v;
   }
@@ -59,6 +81,34 @@ static int thinkMC(const Player *P, int seed) {
   load(); mcts_begin(gside, seed); mcts_run(ms, evl, 0);
   int n = mcts_out(); return n ? RM[0] : -1;
 }
+static unsigned rs1;
+static double gauss1(void) {   // engine.js gauss (Box–Muller)
+  double u = 0, v = 0;
+  while (!u) { rs1 = (rs1 * 1103515245u + 12345u) & 0x7fffffff; u = rs1 / (double)0x7fffffff; }
+  while (!v) { rs1 = (rs1 * 1103515245u + 12345u) & 0x7fffffff; v = rs1 / (double)0x7fffffff; }
+  return sqrt(-2 * log(u)) * cos(2 * 3.141592653589793 * v);
+}
+static int thinkLV(const Player *P) {   // engine.js think for a level without s: cands(pos, 24, 0, qk) with noise (no resist)
+  int M[64], S[64], n = sortedCands(gside, P->qk ? P->qk : 12, M, S, 24);
+  if (!n) return -1; if (n == 1) return M[0];
+  if (P->d >= 2) {   // rootValues(pos, C.slice(0, 10), d) (a stable sort by value) + the rest with s − 40, then sorted again
+    int k = n < 10 ? n : 10; for (int i = 0; i < k; i++) { RLM[i] = M[i]; RLS[i] = S[i]; }
+    unsigned h1, h2; keys(&h1, &h2); load(); ab_root(gside - 1, h1, h2, k);
+    ab_sync(0, 0, 1e300, 1e300, 0, 1); int got = ab_values(P->d);
+    int T[3][64], c = 0;
+    for (int i = 0; i < got; i++) { T[0][c] = AOM[i]; T[1][c] = AOV[i]; c++; }
+    for (int i = 10; i < n; i++) { T[0][c] = M[i]; T[1][c] = S[i] - 40; c++; }
+    for (int i = 1; i < c; i++) { int m = T[0][i], v = T[1][i], j = i; while (j > 0 && T[1][j - 1] < v) { T[0][j] = T[0][j - 1]; T[1][j] = T[1][j - 1]; j--; } T[0][j] = m; T[1][j] = v; }
+    for (int i = 0; i < c; i++) { M[i] = T[0][i]; S[i] = T[1][i]; } n = c;
+  }
+  if (S[0] < -WINT) return M[0];
+  int best = M[0]; double bv = -1e300;
+  for (int i = 0; i < n; i++) { double x = S[i] + (abs(S[i]) > WINT ? 0 : gauss1() * P->noise); if (x > bv) { bv = x; best = M[i]; } }
+  return best;
+}
+static void tabIn(const Player *P) { TTp = P->ttp; ttMask = P->ttm; ttCount = P->ttc; CCp = P->ccp; ccMask = P->ccm; ccCount = P->ccc; }
+static void tabOut(Player *P) { P->ttp = TTp; P->ttm = ttMask; P->ttc = ttCount; P->ccp = CCp; P->ccm = ccMask; P->ccc = ccCount; }
+static void tabNew(Player *P) { tabIn(P); ab_newgame(); tabOut(P); }
 static int thinkAB(const Player *P) {
   int M[64], S[64], n = sortedCands(gside, 20, M, S, 16);
   if (!n) return -1; if (n == 1 || S[0] > WINT) return M[0];
@@ -66,7 +116,7 @@ static int thinkAB(const Player *P) {
   unsigned h1, h2; keys(&h1, &h2); load();
   ab_root(gside - 1, h1, h2, n);
   double ek = P->nk > 0 ? P->nk * 1000 : 1e300, te = P->ms > 0 ? now() + P->ms : 1e300;
-  ab_sync(0, 0, te, ek, 0, 1); ab_best(40);
+  ab_sync(0, 0, te, ek, 0, 1); ab_best(P->d > 0 ? P->d : 40);   // (d: the depth limit, engine.js cfg dx)
   return (int)ab_res(0);
 }
 static void terr(int *a, int *b, int *sep) {   // Pos.terr: queen distances
@@ -76,19 +126,21 @@ static void terr(int *a, int *b, int *sep) {   // Pos.terr: queen distances
   *a = x; *b = y; *sep = both == 0;
 }
 static double useT[3]; static int useN[3];
-static int play(const Player *W, const Player *B, const int *op, int nop, int gseed, int *plies, int *adj) {
+static int play(Player *W, Player *B, const int *op, int nop, int gseed, int *plies, int *adj) {
   memset(GS, 0, NN); const int ws[4] = { 60, 93, 96, 69 }, bs[4] = { 30, 3, 6, 39 };   // a4 d1 g1 j4 / a7 d10 g10 j7
   for (int k = 0; k < 4; k++) { GS[ws[k]] = 1; GQ[k] = ws[k]; GS[bs[k]] = 2; GQ[4 + k] = bs[k]; }
-  gside = 1; ab_newgame();
+  gside = 1; tabNew(W); tabNew(B); rs1 = (unsigned)(gseed * 2654435761u + 7) & 0x7fffffff;
   for (int i = 0; i < nop; i++) gplay(op[i]);
   *adj = 0;
   for (int ply = nop; ply < 100; ply++) {
     load(); if (!canMove(gside)) { *plies = ply; return 3 - gside; }
     int a, b, sep; terr(&a, &b, &sep);
     if (sep && abs(a - b) >= 3) { *plies = ply; *adj = 1; return a > b ? 1 : 2; }
-    const Player *P = gside == 1 ? W : B; setEval(P);
+    Player *P = gside == 1 ? W : B; setEval(P);
     double t0 = now();
-    int m = P->mc ? thinkMC(P, gseed + ply) : thinkAB(P);
+    tabIn(P);
+    int m = P->mc ? thinkMC(P, gseed + ply) : P->lv ? thinkLV(P) : thinkAB(P);
+    tabOut(P);
     useT[gside] += now() - t0; useN[gside]++;
     if (m < 0) { *plies = ply; return 3 - gside; }
     gplay(m);
@@ -110,7 +162,7 @@ int main(int argc, char **argv) {
     for (int j = 0; j < 2; j++) { int M[64], S[64], k = sortedCands(gside, 14, M, S, 10); op[j] = M[(int)(rnd01() * k)]; gplay(op[j]); }
     if (i % pn != pi) continue;
     for (int sw = 0; sw < 2; sw++) {
-      const Player *W = sw ? &B : &A, *Bk = sw ? &A : &B;
+      Player *W = sw ? &B : &A, *Bk = sw ? &A : &B;
       memset(useT, 0, sizeof useT); memset(useN, 0, sizeof useN);
       int plies, adj, win = play(W, Bk, op, 2, i * 1000 + sw * 500 + seed, &plies, &adj);
       int aSide = sw ? 2 : 1, ok = win == aSide;

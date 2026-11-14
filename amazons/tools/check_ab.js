@@ -38,7 +38,9 @@ if (process.argv[2] === 'dump') {
   let s2 = 11; const r2 = () => { s2 = (Math.imul(s2, 1103515245) + 12345) & 0x7fffffff; return s2 / 0x7fffffff; };
   for (let g = 0; g < (quick ? 2 : 6); g++) { let p = E.Pos.from(null); const mv = []; const L0 = 8 + g * 9; for (let i = 0; i < L0; i++) { const L = p.moves(); if (!L.length) break; const m = L[Math.floor(r2() * L.length)]; p.play(m); mv.push(m); } P.push(mv); }
   // every level that counts evaluations on a few positions
-  for (const mv of P.slice(0, quick ? 2 : 8)) for (let lv = 9; lv <= (quick ? 13 : 18); lv++) { const r = E.think(null, mv, lv, rnd); note('L' + lv, [r.move, r.v, r.depth]); }
+  // (2026-11-14: Lv.16〜18 are the MCTS by evaluations — 'M': core_mt.wasm counts a budget of evaluations on its shared counters and
+  // stops a few evaluations apart, so its trees are not compared with the one-thread core's; the page reads these levels on one thread)
+  for (const mv of P.slice(0, quick ? 2 : 8)) for (let lv = 9; lv <= (quick ? 13 : 18); lv++) { const r = E.think(null, mv, lv, rnd); note((E.LEVELS[lv].mc ? 'M' : 'L') + lv, [r.move, r.v, r.depth]); }
   // fixed depths
   for (const d of quick ? [4] : [4, 5, 6]) for (const mv of P) { const r = E.think(null, mv, 0, null, null, { s: 1, dx: d, nk: 1e7 }); note('d' + d, [r.move, r.v, r.depth]); }
   // the analysis's root values
@@ -58,7 +60,7 @@ console.log('JS search (core', ref.core + '):', ref.out.length, 'searches,', ref
 let bad = 0;
 for (const [name, env] of [['core-wasm.js SIMD', {}], ['core-wasm.js without SIMD', { AMZ_NOSIMD: '1' }], ['core_mt.wasm, 1 thread', { AMZ_MT1: '1' }]]) {
   const r = run(env); let d = 0, first = -1;
-  for (let i = 0; i < ref.out.length; i++) if (ref.out[i] !== r.out[i]) { d++; if (first < 0) first = i; }
+  for (let i = 0; i < ref.out.length; i++) if (ref.out[i] !== r.out[i] && !(env.AMZ_MT1 && ref.out[i][0] === 'M')) { d++; if (first < 0) first = i; }
   console.log(`${name} (${r.core}): ${r.out.length} searches, ${d} differ${first >= 0 ? ` (first #${first}: JS ${ref.out[first]} | C ${r.out[first]})` : ''}, ${r.ms} ms (JS ${ref.ms} ms, ×${(ref.ms / r.ms).toFixed(2)})`);
   bad += d + (r.out.length !== ref.out.length ? 1 : 0);
 }
