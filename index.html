@@ -968,7 +968,7 @@ const GAMES = [
   { id:'carrom',     href:'./atlas/#games/carrom', thumb:'images/carrom.webp?v=4',  icon:'images/icons/carrom.svg',          cat:'action', kind:'3D BOARD GAME', key:'cr',   isNew:true, tags:['classic','ai','mobile'], facts:{ ai:20, players:'1–2' } },
   { id:'crokinole',  href:'./atlas/#games/crokinole', thumb:'images/crokinole.webp?v=4', icon:'images/icons/crokinole.svg',  cat:'action', kind:'3D BOARD GAME', key:'cq',   isNew:true, tags:['classic','ai','mobile'], facts:{ ai:20, players:'1–2' } },
   { id:'hockey',     href:'./atlas/#games/hockey', thumb:'images/hockey.webp?v=1', icon:'images/icons/hockey.svg',  cat:'action', kind:'3D GAME', key:'th',   isNew:true, tags:['ai','mobile'], facts:{ ai:20, players:'1–2' } },
-  { id:'botao',      href:'./atlas/#games/botao', thumb:'images/botao.webp?v=1', icon:'images/icons/botao.svg',  cat:'action', kind:'3D BOARD GAME', key:'fb',   isNew:true, beta:1, tags:['classic','ai','mobile'], facts:{ ai:20, players:'1–2' } },
+  { id:'botao',      href:'./atlas/#games/botao', thumb:'images/botao.webp?v=1', icon:'images/icons/botao.svg',  cat:'action', kind:'3D BOARD GAME', key:'fb',   isNew:true, alpha:true, tags:['classic','ai','mobile'], facts:{ ai:20, players:'1–2' } },
   { id:'reversi-v3', href:'./reversi_v3.html',thumb:'images/reversi_v3.webp',  icon:'images/icons/reversi-v3.svg?v=3',  cat:'old',     kind:'BOARD GAME', key:'rv3',  tags:['mobile'], facts:{ players:'1–2' } },
 ];
 const GX_CATS = ['all', 'board', 'puzzle', 'card', 'chess', 'line', 'race', 'hist', 'action', 'old'];   // 'classic' and 'card' are tag chips (filter on g.tags)   // same categories as the portal (atlas) + previous versions
@@ -1031,7 +1031,7 @@ function makeGallery(C) {
     a.className = 'gx-icon'; a.href = g.href; a.id = C.p + '-o-' + g.id; a.dataset.id = g.id;
     a.setAttribute('role', 'option'); a.tabIndex = -1;
     if (g.cat === 'old') a.classList.add('old');
-    a.innerHTML = `<span class="ic"><img src="${g.icon}" alt="" width="68" height="68" loading="${i < 16 ? 'eager' : 'lazy'}" decoding="async">${g.beta ? '<i class="ol bt" aria-hidden="true">BETA' + (g.beta > 1 ? g.beta : '') + '</i>' : ''}${g.soon ? '<i class="ol sn" aria-hidden="true">SOON</i>' : ''}${g.alpha === 'pre' ? '<i class="ol pa" aria-hidden="true">PRE</i>' : g.alpha ? '<i class="ol al" aria-hidden="true">ALPHA</i>' : ''}${g.cat === 'old' ? '<i class="hv" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3"/><path d="M4 4.5v3.4h3.4"/><path d="M12 8v4.3l2.8 1.7"/></svg></i>' : ''}${g.tags.includes('mobile') ? '<i class="mb" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.4"/><path d="M10.5 18.5h3"/></svg></i>' : '<i class="mb pc" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.8"/><path d="M8 20h8M12 16v4"/></svg></i>'}${g.beta ? '' : g.tags.includes('online') ? '<i class="ol" aria-hidden="true">ONLINE</i>' : g.tags.includes('original') && !g.alpha ? '<i class="ol og" aria-hidden="true">ORIGINAL</i>' : ''}${g.tags.includes('gamepad') ? '<i class="gp" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 8h10a4.5 4.5 0 0 1 4.3 5.8l-1 3.3a2.4 2.4 0 0 1-4 1L14.6 16H9.4l-1.7 2.1a2.4 2.4 0 0 1-4-1l-1-3.3A4.5 4.5 0 0 1 7 8z"/><path d="M7.5 11v3M6 12.5h3"/><circle cx="16" cy="11.5" r=".6"/><circle cx="17.6" cy="13.3" r=".6"/></svg></i>' : ''}</span><span class="nm"></span>`;
+    a.innerHTML = `<span class="ic"><img src="${g.icon}" alt="" width="68" height="68" loading="${i < 16 ? 'eager' : 'lazy'}" decoding="async">${g.beta ? '<i class="ol bt" aria-hidden="true">BETA' + (g.beta > 1 ? g.beta : '') + '</i>' : ''}${g.soon ? '<i class="ol sn" aria-hidden="true">SOON</i>' : ''}${g.alpha === 'pre' ? '<i class="ol pa" aria-hidden="true">PRE</i>' : g.alpha ? '<i class="ol al" aria-hidden="true">ALPHA</i>' : ''}${g.cat === 'old' ? '<i class="hv" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3"/><path d="M4 4.5v3.4h3.4"/><path d="M12 8v4.3l2.8 1.7"/></svg></i>' : ''}${g.tags.includes('mobile') ? '<i class="mb" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.4"/><path d="M10.5 18.5h3"/></svg></i>' : '<i class="mb pc" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.8"/><path d="M8 20h8M12 16v4"/></svg></i>'}${g.beta || g.alpha ? '' : g.tags.includes('online') ? '<i class="ol" aria-hidden="true">ONLINE</i>' : g.tags.includes('original') && !g.alpha ? '<i class="ol og" aria-hidden="true">ORIGINAL</i>' : ''}${g.tags.includes('gamepad') ? '<i class="gp" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 8h10a4.5 4.5 0 0 1 4.3 5.8l-1 3.3a2.4 2.4 0 0 1-4 1L14.6 16H9.4l-1.7 2.1a2.4 2.4 0 0 1-4-1l-1-3.3A4.5 4.5 0 0 1 7 8z"/><path d="M7.5 11v3M6 12.5h3"/><circle cx="16" cy="11.5" r=".6"/><circle cx="17.6" cy="13.3" r=".6"/></svg></i>' : ''}</span><span class="nm"></span>`;
     a.addEventListener('click', e => {
       if (e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;   // let "open in new tab" work
       e.preventDefault(); select(g.id, { focus: false, user: true });
@@ -1095,7 +1095,7 @@ function makeGallery(C) {
   // NEW / UPDATE follow the series rule in shared/atlas.js (Atlas.badges: NEW for 14 days after release, then UPDATE
   // for 14 days after a changelog line; BETA first). Titles outside that registry, or before it loads, keep isNew.
   const ATLAS_ID = { 'speed-sudoku': 'speedsudoku' };
-  const stat = g => { if (g.beta) return null; const A = window.Atlas, ag = A && A.GAMES.find(x => x.id === (ATLAS_ID[g.id] || g.id));
+  const stat = g => { if (g.beta || g.alpha) return null; const A = window.Atlas, ag = A && A.GAMES.find(x => x.id === (ATLAS_ID[g.id] || g.id));
     if (!ag) return g.isNew ? 'new' : null; const bs = A.badges(ag); return bs.includes('new') ? 'new' : bs.includes('update') ? 'update' : null; };
   const statHtml = (g, cls) => { const s = stat(g); return s === 'new' ? `<span class="${cls}">NEW</span>` : s === 'update' ? `<span class="${cls} upd">${esc(window.Atlas.badgeText('update', lang))}</span>` : ''; };
   document.addEventListener('atlasready', () => { if (cur) paint(byId(cur)); });
@@ -1331,6 +1331,6 @@ makeGallery({ p: 'nx', games: ARCADE, cats: null, store: 'aicoding-arcade', hash
 </script>
 <script src="shared/langsel.js?v=2" defer></script>
 <script>window.ATLAS_NO_ACH = 1;   // the top page reads only the badge rule from shared/atlas.js (no achievement banners here)</script>
-<script src="shared/atlas.js?v=20261115bt" defer onload="document.dispatchEvent(new Event('atlasready'))"></script>
+<script src="shared/atlas.js?v=20261115al" defer onload="document.dispatchEvent(new Event('atlasready'))"></script>
 </body>
 </html>

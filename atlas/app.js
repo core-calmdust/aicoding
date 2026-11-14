@@ -127,7 +127,7 @@
   const g3 = g => `<span class="g3" style="--c:${g.color}">${artImg(g)}</span>`;
   const gno = g => 'No.' + String(A_.GAMES.indexOf(g) + 1).padStart(2, '0');
   function tagHtml(k) { const T = A_.TAGS[k]; return `<span class="tag" style="--c:${T.c}"><svg viewBox="0 0 24 24"><path d="${T.i}"/></svg>${esc(t('tag.' + k))}</span>`; }
-  function badgeHtml(b) { return `<span class="badge ${b}">${esc(A_.badgeText ? A_.badgeText(b, lang) : { new: 'NEW', update: 'UPDATE', beta: 'BETA', original: 'ORIGINAL' }[b] || '')}</span>`; }
+  function badgeHtml(b) { return `<span class="badge ${b}">${esc(A_.badgeText ? A_.badgeText(b, lang) : { new: 'NEW', update: 'UPDATE', alpha: 'ALPHA', beta: 'BETA', original: 'ORIGINAL' }[b] || '')}</span>`; }
   function ring(pct, col) {
     const r = 22, c = 2 * Math.PI * r;
     return `<span class="ring"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="${r}" fill="none" stroke="#efe8d6" stroke-width="6"/><circle cx="26" cy="26" r="${r}" fill="none" stroke="${col}" stroke-width="6" stroke-linecap="round" stroke-dasharray="${c * pct / 100} ${c}"/></svg>${pct}%</span>`;
