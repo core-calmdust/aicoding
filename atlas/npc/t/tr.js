@@ -53,6 +53,7 @@
     carrom: ['Sokak tahtasının başında', 'Verandanın müdavimi', 'Fiske ustası', 'Tek atış vurucusu', 'Sessiz keskin nişancı', 'Kırmızı kraliçenin avcısı', 'Saraylarda doğduğu söylenen oyunun kralı'],
     crokinole: ['Kütük kulübenin yavrusu', 'Kar ayakkabılı müdavim', 'Akçaağaç ormanının şakacısı', 'Titiz hakem', 'Doğruca 20 deliğine', 'Gölün sessiz ustası', 'En eski tahtanın ustası'],
     hockey: ['Pistte şekerleme', 'Oyun salonunun müdavimi', 'Pak ustası', 'Duvar gibi kaleci', 'Sert vuruşun gücü', 'Hava masası araştırmacısı', 'Masa hokeyinin babası'],
+    peg: ["XIV. Louis'nin sarayında bilye atlatan prenses", "Topların nasıl istifleneceğini düşünen gökbilimci"],
     alquerque: ['Endülüs avlusunun çocuğu', 'Tahta desenli halı satıcısı', 'Şarkılar Kitabı\'nın yazarı', 'Çöl göğünün avcısı', 'Kastilyalı şövalye', 'Saray bahçesinin hanımı', 'Oyunlar Kitabı\'nı yaptıran kral'],
   },
   trivia: {
@@ -82,6 +83,7 @@
     carrom: ['Carrom Güney Asya\'dan gelir; Hindistan ve Sri Lanka\'da çok sevilir.', 'Kırmızı taş kraliçedir: onu soktuktan sonra kendi taşınla «örtmen» gerekir.', 'Fiskelediğin striker diğer taşlardan daha büyük ve ağırdır.', 'Taşlar kaysın diye tahtaya toz serpilir.'],
     crokinole: ['Crokinole Kanada’da doğdu: bilinen en eski tahta 1876’da Ontario’da yapıldı.', 'Diski ortadaki deliğe sokarsan 20 sayı! Hemen tahtadan alınır.', 'Tahtada rakip disk varsa birine değmelisin, yoksa faul olur.', 'Çizgiye değen disk düşük değeri alır.'],
     hockey: ['İlk masa hokeyi 1932’de Toronto’da çocuklar için yapılmış bir oyundu.', 'Hava hokeyinde masadaki küçük deliklerden hava üflenir, pak süzülür.', 'Pakı hızlı bir raketin kenarıyla sıyır, birden hızlanır.', 'Kaleni koru ve banttan açılı bir vuruş kolla.'],
+    peg: ["1697 tarihli bir Fransız gravüründe Prenses de Soubise peg solitaire oynuyor.", "İngiliz tahtasının orta problemi, aynı bilyenin art arda atlayışları tek hamle sayılırsa en az 18 hamlede çözülür.", "Kepler 1611'de topları manav tezgâhı gibi dizmenin en sık istif olduğunu tahmin etti. Bu ancak 20. yüzyılın sonunda kanıtlandı!"],
     alquerque: ['Alquerque, 10. yüzyıldan Arapça «Şarkılar Kitabı»nda geçer.', '13. yüzyılda X. Alfonso için yapılan Oyunlar Kitabı\'nda da vardır.', 'Damanın atası denir — ikisi de atlayarak taş alır.', 'Tahta çizgiler ve noktalardan oluşur; taşlar çizgiler boyunca noktadan noktaya gider.'],
   },
 } });

@@ -270,6 +270,12 @@
       b('lady', { a: 'deer', c: [0xe0b080, 0xfff4e6, 0x3a6ad8], hat: 'tiara', held: 'fan', ex: ['necklace'] }, 'アルハンブラのガゼル|Alhambra Gazelle|阿尔罕布拉羚羊|阿爾罕布拉羚羊|알함브라가젤|Газель Альгамбры|अलहम्ब्रा हिरणी|غزالة الحمراء'),
       b('king', { a: 'lion', c: [0xf0c070, 0xfff4e0, 0x9a2a24], hat: 'crown', held: 'book', ex: ['cape', 'longbeard'], bc: 0x6a4a3a, cape: 0x9a2a24 }, 'アルフォンソ賢王ライオン|Alfonso the Wise Lion|智者阿方索狮|智者阿方索獅|현왕알폰소사자|Лев Альфонсо Мудрый|बुद्धिमान अल्फ़ोंसो शेर|أسد ألفونسو الحكيم'),
     ],
+    // peg solitaire (2026-11-14): no AI — the two Atlamo come with the goals of a game without hints (atlas/games/peg.js):
+    // N 3 or fewer left · R one left · SR one left on ◎. The flat boards give the princess's, the pyramid Kepler's (UR in the gacha).
+    peg: [
+      b('lady', { a: 'squirrel', c: [0xc8865a, 0xfff2e2, 0x6a5ad8], hat: 'tiara', held: 'orb', ex: ['necklace', 'ruff'] }, 'スービーズ姫リス|Princess Soubise Squirrel|苏比斯公主松鼠|蘇比斯公主松鼠|수비즈공주다람쥐|Белка принцесса Субиз|राजकुमारी सूबीज़ गिलहरी|السنجابة الأميرة سوبيز'),
+      b('scholar', { a: 'owl', c: [0x9a8a7a, 0xf4eadc, 0x2a3a8a], hat: 'wizard', hc: [0x2a3a8a, 0xffd65a], held: 'orb', ex: ['ruff', 'glasses'] }, 'ケプラーフクロウ|Kepler Owl|开普勒猫头鹰|開普勒貓頭鷹|케플러부엉이|Сова Кеплер|केप्लर उल्लू|بومة كبلر'),
+    ],
   };
   // celestial levels (2026-11-13): the levels above CEL[game] are beyond what people play — no rewards for a win. Their boss is the
   // last of the roster (cel: 1), whose only avatar is a gacha-only UR. The bosses before it keep their bands of three.

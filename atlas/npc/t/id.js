@@ -53,6 +53,7 @@
     carrom: ['Di dekat papan di gang', 'Pelanggan tetap beranda', 'Ahli sentilan', 'Pemukul sekali tembak', 'Penembak jitu yang tenang', 'Pemburu Ratu merah', 'Raja permainan yang konon lahir di istana'],
     crokinole: ['Anak dari pondok kayu', 'Langganan bersepatu salju', 'Jahil dari hutan maple', 'Wasit yang cerewet', 'Langsung ke lubang 20', 'Ahli tenang dari danau', 'Pembuat papan tertua'],
     hockey: ['Tidur siang di arena', 'Langganan arena permainan', 'Jago menggiring keping', 'Kiper tembok baja', 'Tembakan keras', 'Peneliti meja udara', 'Bapak hoki meja'],
+    peg: ["Putri yang melompatkan kelereng di istana Louis XIV", "Astronom yang memikirkan cara menumpuk bola"],
     alquerque: ['Anak halaman Andalusia', 'Penjual karpet bermotif papan', 'Penulis Kitab Lagu', 'Pemburu langit gurun', 'Ksatria Kastilia', 'Nyonya taman istana', 'Raja yang memesan Kitab Permainan'],
   },
   trivia: {
@@ -82,6 +83,7 @@
     carrom: ['Karambol berasal dari Asia Selatan dan sangat populer di India dan Sri Lanka.', 'Bidak merah adalah Ratu: setelah memasukkannya, kamu harus «menutupnya» dengan bidakmu.', 'Striker yang disentil lebih besar dan berat dari bidak lain.', 'Papan ditaburi bedak supaya bidak meluncur.'],
     crokinole: ['Crokinole lahir di Kanada: papan tertua yang diketahui dibuat di Ontario pada 1876.', 'Masukkan keping ke lubang tengah untuk 20! Keping itu langsung diangkat dari papan.', 'Kalau ada keping lawan di papan, kamu harus mengenai salah satunya atau pelanggaran.', 'Keping yang menyentuh garis dihitung nilai yang lebih rendah.'],
     hockey: ['Hoki meja pertama adalah papan yang dibuat untuk anak-anak di Toronto pada 1932.', 'Air hockey meniupkan udara lewat lubang kecil di meja sehingga keping mengapung.', 'Sambar keping dengan tepi pemukul yang cepat, maka keping melesat.', 'Jaga gawangmu dan cari tembakan miring lewat dinding.'],
+    peg: ["Sebuah ukiran Prancis tahun 1697 menggambarkan Putri Soubise bermain peg solitaire.", "Soal tengah di papan Inggris butuh minimal 18 langkah, jika rangkaian lompatan satu kelereng dihitung satu langkah.", "Tahun 1611 Kepler menduga menumpuk bola seperti tumpukan buah di pasar adalah cara terpadat. Baru terbukti di akhir abad ke-20!"],
     alquerque: ['Alquerque muncul dalam «Kitab Lagu» Arab abad ke-10.', 'Ia juga ada di Kitab Permainan yang dibuat untuk Alfonso X pada abad ke-13.', 'Disebut leluhur dam — keduanya menangkap dengan melompat.', 'Papannya garis dan titik; bidak bergerak dari titik ke titik di sepanjang garis.'],
   },
 } });
