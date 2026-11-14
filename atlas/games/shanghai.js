@@ -77,7 +77,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
 .shask .r{display:flex;gap:10px}.shask button{flex:1;font:inherit;font-weight:800;font-size:17px;padding:12px 8px;border-radius:14px;border:0;cursor:pointer;white-space:nowrap}
 .shask .y{background:#1f6a4c;color:#fff}.shask .n{background:#ece6d8;color:#3a3f4c}
 .bvi #bvOpts.shf > label:has(#bvSize){flex:1 1 100%!important}.bvi #bvOpts.shf .shfrow{display:contents}.bvi #bvOpts.shf .shfl{flex:1 1 0!important;min-width:0}
-.bvi #bvOpts.shf .pgbest .shbt{margin-inline-start:auto}.bvi #bvOpts.shf .pgbest .shbt + b{margin-inline-start:14px}
+.bvi #bvOpts.shf .pgbest .shbt{margin-inline-start:auto}.bvi #bvOpts.shf .pgbest{flex-wrap:wrap}.bvi #bvOpts.shf .pgbest .shfw{flex-basis:100%;display:flex;align-items:center;gap:6px;font-style:normal;font-size:12px;font-weight:700;color:#8a6a1e;margin-top:4px}.bvi #bvOpts.shf .pgbest .shfw img{width:24px;height:24px}.bvi #bvOpts.shf .pgbest .shbt + b{margin-inline-start:14px}
 .shstg{display:flex;flex-direction:column;gap:10px;align-items:stretch}
 .shstg .stinfo{box-sizing:border-box;width:100%;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:10px 14px;border-radius:14px;background:#fff;border:2px solid var(--line,#eadfc6);font-weight:900;font-size:15px;color:#2b3044}.shstg .stinfo .ss{color:#e0a020}.shstg .stinfo .sw{display:flex;align-items:center;gap:6px;flex:1 1 100%;font-size:13.5px;color:#7a5a20}.shstg .stinfo .sw img{width:30px;height:30px}
 .shstg .strow{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}.shstg .strow .mapb{padding:12px 10px;font-size:16px;background:linear-gradient(135deg,#1b2350,#3a2a6e);box-shadow:0 4px 0 #11163a}.shstg .mapb i{color:#ffd76a}.shstg .strow .mapb.lst{background:#fff;color:#2b3044;border:2px solid var(--line,#eadfc6);box-shadow:0 3px 0 var(--line,#eadfc6)}.shstg .mapb.lst i{color:#c9a03a}.shstg .mapb span{display:flex;flex-direction:column;align-items:flex-start;line-height:1.2}.shstg .mapb small{font-size:12px;color:#ffe7a0;font-weight:700}
@@ -282,13 +282,13 @@ html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidde
   const COIN_STAR = 10, GIFT_AT = [0, 10, 60, 120], GIFT_S = [-1, 9, 59, 119];   // (2026-11-14) the gift sits on a stage of the map: the last of the 1st, 6th and 12th constellation
   const Reward = {
     COIN_STAR, GIFT_AT,
-    has(t) { try { return !!(window.Atlas && Atlas.load && Atlas.load().owned.includes('av-peacock-' + t)); } catch (e) { return false; } },
+    has(t, sp = 'peacock') { try { return !!(window.Atlas && Atlas.load && Atlas.load().owned.includes('av-' + sp + '-' + t)); } catch (e) { return false; } },
     // give tier t (once): true when it is new
-    grant(t, lang, wait) {
+    grant(t, lang, wait, sp = 'peacock') {
       try {
         if (!window.Atlas || !Atlas.load) return false;
-        const W = Atlas.load(), id = 'av-peacock-' + t; if (!W || W.owned.includes(id)) return false;
-        W.owned.push(id); Atlas.save(W); if (wait) setTimeout(() => giftToast(t, lang), wait); else giftToast(t, lang); return true;
+        const W = Atlas.load(), id = 'av-' + sp + '-' + t; if (!W || W.owned.includes(id)) return false;
+        W.owned.push(id); Atlas.save(W); if (wait) setTimeout(() => giftToast(t, lang, sp), wait); else giftToast(t, lang, sp); return true;
       } catch (e) { return false; }
     },
     // after a stage: the tiers the number of cleared stages has reached
@@ -299,12 +299,16 @@ html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidde
     at(s) { const t = GIFT_S.indexOf(s); return t > 0 ? t : 0; },
     // the next tier still to win by stages: { t, left } or null
     next() { const S = prog().st; for (let t = 1; t < 4; t++) if (!Reward.has(t) && !(S[GIFT_S[t]] > 0)) { let left = 0; for (let k = 0; k <= GIFT_S[t]; k++) if (!(S[k] > 0)) left++; return { t, left }; } return null; },
+    // (2026-11-14) チュンパイ: good results in free play — N any clear, R 中級+, SR 上級+ on a board of 100+ tiles, SSR 達人 on 亀
+    FREE_OK: [() => true, d => d >= 3, (d, n) => d >= 4 && n >= 100, (d, n, lay) => d >= 5 && lay === 'turtle'],
+    free(diff, n, lay, lang, wait) { let got = -1; for (let t = 0; t < 4; t++) if (Reward.FREE_OK[t](diff, n, lay) && Reward.grant(t, lang, wait, 'chun')) got = t; return got; },
+    freeNext() { for (let t = 0; t < 4; t++) if (!Reward.has(t, 'chun')) return t; return -1; },
   };
   window.ShanghaiReward = Reward;
-  function giftToast(t, lang) {
-    css(); const R = ['N', 'R', 'SR', 'SSR'][t], it = window.AtlasArt && AtlasArt.byId && AtlasArt.byId('av-peacock-' + t), nm = it ? (it.name[lang] || it.name.en) : 'Peacotile';
+  function giftToast(t, lang, sp = 'peacock') {
+    css(); const R = ['N', 'R', 'SR', 'SSR'][t], it = window.AtlasArt && AtlasArt.byId && AtlasArt.byId('av-' + sp + '-' + t), nm = it ? (it.name[lang] || it.name.en) : sp === 'chun' ? 'Chuntile' : 'Peacotile';
     const el = document.createElement('div'); el.className = 'shgift'; el.setAttribute('role', 'status');
-    el.innerHTML = `<img src="../images/atlas/av/peacock-${t}.webp" alt=""><div><b>🎁 ${esc(TX('rw.got', lang, { name: nm }))}</b><small><span class="sr r${t}">${R}</span>${esc(TX('rw.dress', lang))}</small></div>`;
+    el.innerHTML = `<img src="../images/atlas/av/${sp}-${t}.webp" alt=""><div><b>🎁 ${esc(TX('rw.got', lang, { name: nm }))}</b><small><span class="sr r${t}">${R}</span>${esc(TX('rw.dress', lang))}</small></div>`;
     const close = () => { el.classList.remove('on'); setTimeout(() => el.remove(), 500); };
     el.onclick = close; document.body.appendChild(el); requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('on')));
     setTimeout(close, 6500);
@@ -654,6 +658,7 @@ html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidde
       if (!ST) {
         const F = d.free = d.free || {}, r = F[FM.key] || {}, nb = r.best === undefined || tt < r.best, tk = n - left();
         F[FM.key] = { best: nb ? tt : r.best, tiles: Math.max(r.tiles || 0, tk), n: (r.n || 0) + 1, date: nb ? today() : r.date }; save(d);
+        Reward.free(FM.diff, n, lay, lang, 1900);
         const sub = tx('lay.' + lay) + ' · ' + tx('fm.' + FM.type) + ' · ' + tx('fd.' + FM.diff);
         later(() => ctx.onEnd({ win: true, draw: false, solo: true, level: 0, title: tx('r.clear'), score: tx('r.time', { t: mmss(tt) }) + (FM.type === 'clear' ? '' : ' · ' + tx('f.tiles', { n: tk })), best: (nb ? '🏅 ' + tx('r.newBest') + ' · ' : '') + tx('r.best', { t: mmss(F[FM.key].best) }), opp: sub, key: FM.key, why: tx('r.clear') + ' · ' + mmss(tt) }), 350);
         return;
@@ -744,7 +749,9 @@ html:has(#bvStg:not([hidden])) #bvStart{display:block!important;visibility:hidde
     const paint = () => {
       const z = document.getElementById('bvSize') ? +document.getElementById('bvSize').value : 1, lay = C().FREE[z - 1] || 'petit', m = row.querySelector('#bvShM').value, dd = +row.querySelector('#bvShD').value;
       const r = (load().free || {})[freeKey(lay, m, dd)];
-      el.innerHTML = `<span>${esc(TX('best', lang))}</span>` + (r ? `<b class="shbt">${r.tiles ? esc(TX('f.tiles', lang, { n: r.tiles })) : '—'}</b><b>${r.best !== undefined ? mmss(r.best) : '—'}</b>` : '<b>—</b>');
+      const ft = Reward.freeNext();
+      el.innerHTML = `<span>${esc(TX('best', lang))}</span>` + (r ? `<b class="shbt">${r.tiles ? esc(TX('f.tiles', lang, { n: r.tiles })) : '—'}</b><b>${r.best !== undefined ? mmss(r.best) : '—'}</b>` : '<b class="shbt">—</b>') +
+        (ft >= 0 ? `<i class="shfw"><img src="../images/atlas/av/chun-${ft}.webp" alt="">${esc(TX('fw.' + ft, lang))}</i>` : '');
     };
     const saveSt = () => { const d = load(); d.settings = Object.assign({}, d.settings, { fm: row.querySelector('#bvShM').value, fd5: +row.querySelector('#bvShD').value }); save(d); paint(); };
     row.querySelector('#bvShM').addEventListener('change', saveSt); row.querySelector('#bvShD').addEventListener('change', saveSt);
