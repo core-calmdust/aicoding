@@ -28,3 +28,20 @@ scale current: mean |net| 819  best fit: net x 1.50 (loss 0.01996)
 scale new:     mean |net| 822  best fit: net x 1.50 (loss 0.01992)
 new vs current (30000): +137 -122 =1  score 0.529  Elo +20 (-22 .. +63)
 new vs current (300ms): +130 -125 =5  score 0.510  Elo +7 (-35 .. +49)
+
+OB=8 KMAP=k1 ROUND=4 from v7 (not adopted: no gain)
+epoch 0  valid 0.02939   epoch 1  0.02919   epoch 2  0.02919   epoch 3  0.02912   epoch 4  0.02908
+scale new: mean |net| 817  best fit: net x 1.51 (loss 0.01975)
+new vs current (30000): +126 -132 =2  score 0.488  Elo -8 (-50 .. +34)
+
+H=1024 KMAP=k1 ROUND=4 from v7, widened (not adopted: stronger at equal nodes, too slow)
+epoch 0  valid 0.02939
+epoch 1  train 0.02015  valid 0.02919  lr 0.0001  1307s
+epoch 2  train 0.01968  valid 0.02916  lr 0.0001  1288s
+epoch 3  train 0.01937  valid 0.02904  lr 3e-05  1268s
+epoch 4  train 0.01927  valid 0.02903  lr 1e-05  1168s
+scale new: mean |net| 828  best fit: net x 1.49 (loss 0.01972)
+speed current: nodes 3600397  time 3505 ms  1027 knps
+speed new:     nodes 3600399  time 5863 ms  614 knps
+new vs current (30000): +153 -107 =0  score 0.588  Elo +62 (+20 .. +106)
+new vs current (300ms): +97 -160 =3  score 0.379  Elo -86 (-131 .. -44)

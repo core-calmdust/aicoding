@@ -8,10 +8,16 @@
 //   jg mate "<fen>" maxK checks       solve one position
 //   jg serve                          a game over stdin/stdout for tools/duel.py (two builds against each other):
 //                                     new <cho> <han> | mv <move> | rnd <n> | go n <nodesK> | go t <ms> | quit
+//   jg serve net.bin                  the same with the NNUE evaluation (tools/nnue/)
+//   jg nncheck net.bin                incremental NNUE == recomputed, and its scale against the hand evaluation
+//   jg nmatch net.bin lvA lvB N seed [pre]   A with the NNUE, B with the hand evaluation
+//   jg datagen out.bin games nodesK seed [net.bin]   self-play records for tools/nnue/ (appends to out.bin)
+//   jg scale games nodesK seed        the hand evaluation's points per logit of the game result (for datagen's JG_S)
 // Game end here (as janggi/engine.js judge): checkmate; a position seen 3 times or 200 plies: the points decide
 // (chariot 13, cannon 7, horse 5, elephant 3, guard 3, soldier 2; Han +1.5).
 #include "../engine.c"
 #include <math.h>
+#include "../../xiangqi/tools/nnue/xq.h"   // the training record (the two games share the board layout and the piece codes)
 
 static const char *SETUPS[4] = { "NBBN", "BNNB", "NBNB", "BNBN" };   // left to right from the player's own side: 마상상마 상마마상 마상마상 상마상마
 static void startFen(char *o, int cho, int han) {
@@ -73,6 +79,15 @@ static u64 perft(int d) {
 }
 static void mvName(char *o, Move m) { int f = MF(m), t = MT(m); sprintf(o, "%c%d%c%d", 'a' + f % 9, 9 - f / 9, 'a' + t % 9, 9 - t / 9); }
 
+// ---------------------------------------------------------------- NNUE (tools/nnue/): load a net, per-side switch for matches
+static int nnSide[2] = { -1, -1 };   // nmatch: 1 = NNUE, 0 = hand evaluation for that colour (-1: leave as is)
+static int loadNet(const char *path) {
+  FILE *f = fopen(path, "rb"); if (!f) { perror(path); return 0; }
+  int hd[3]; if (fread(hd, 4, 3, f) != 3 || hd[0] != 0x5845554E || hd[1] != XQ_H || hd[2] != XQ_IN) { fprintf(stderr, "bad net %s\n", path); return 0; }
+  if (fread(xqW1, 2, XQ_IN * XQ_H, f) != XQ_IN * XQ_H || fread(xqB1, 4, XQ_H, f) != XQ_H || fread(xqW2, 2, 2 * XQ_H, f) != 2 * XQ_H || fread(&xqB2, 4, 1, f) != 1) { fprintf(stderr, "short net\n"); return 0; }
+  fclose(f); return 1;
+}
+
 // ---------------------------------------------------------------- levels (mirrors engine.js LEVELS)
 typedef struct { double d; int noise, blunder; double nodesK; int ms; } Level;
 static Level LV[21];
@@ -84,6 +99,7 @@ static void initLevels(void) {
     { 0, 0, 0, 90, 0 }, { 0, 0, 0, 210, 0 }, { 0, 0, 0, 480, 0 }, { 0, 0, 0, 2500, 8000 }, { 0, 0, 0, 7000, 12000 } };
   memcpy(LV, T, sizeof(T));
 }
+#define JG_S 430.0   /* the hand evaluation's points per logit of the game result (jg scale) */
 static u64 rng = 88172645463325252ull;
 static u32 rnd32(void) { rng ^= rng << 13; rng ^= rng >> 7; rng ^= rng << 17; return (u32)rng; }
 static double urand(void) { return (rnd32() + 0.5) / 4294967296.0; }
@@ -122,6 +138,7 @@ static int playGame(const u8 *board0, int sd0, int la, int lb, int pre, int maxP
   for (ply = 0; ply < maxPlies; ply++) {
     setupBoard(board, sd, GH, nh, 0, 0);
     if (!rootN) { result = side ? 1 : -1; break; }   // mated
+    if (nnSide[side] >= 0 && nnSide[0] != nnSide[1]) { xq_nnue(nnSide[side]); new_game(); setupBoard(board, sd, GH, nh, 0, 0); }
     Move m = ply < pre ? rootL[rnd32() % rootN] : levelMove(side ? lb : la, 0);
     makeMove(m); GH[nh++] = m; GK[nh] = KEY;
     int cnt = 0; for (int i = nh; i >= 0; i--) if (GK[i] == KEY) cnt++;
@@ -254,8 +271,93 @@ int main(int argc, char **argv) {
     char nm[8]; mvName(nm, fm); printf("mate %d first %s count %d\n", k, nm, c1);
     return 0;
   }
+  if (argc > 1 && !strcmp(argv[1], "nncheck")) {
+    if (!loadNet(argv[2])) return 1;
+    double sxy = 0, sxx = 0; int bad = 0, n = 0, np = 0;
+    for (int g = 0; g < 200; g++) {
+      u8 b[90]; int sd; randomStart(b, &sd);
+      xq_nnue(1); setupBoard(b, sd, 0, 0, 0, 0); loadRoot();
+      Move st[200]; u8 cs[200]; int d = 0;
+      for (int k = 0; k < 160; k++) {
+        Move L[MAXMV]; int m = genLegal(L); if (!m) break;
+        st[d] = L[rnd32() % m]; if (!attackedKing(side) && urand() < 0.05) st[d] = MV(KSQ[side], KSQ[side]);   // (passes too: a test of that path)
+        if (MF(st[d]) == MT(st[d])) np++;
+        cs[d] = makeMove(st[d]); d++;
+        int inc = evaluate(); xqOk[xqTop < XQ_ST ? xqTop : 0] = 0; int full = evaluate();
+        if (inc != full) bad++;
+        if (!attackedKing(side) && k > 6) { xqOn = 0; int lin = evaluate(); xqOn = 1; if (abs(lin) < 1500) { double o = full / (double)XQ_K; sxy += o * lin; sxx += o * o; n++; } }
+        if (urand() < 0.3 && d > 0) { d--; unmakeMove(st[d], cs[d]); }
+      }
+    }
+    printf("mismatches %d   hand ~ %.0f x logit (%d positions, %d passes; XQ_K = %d)\n", bad, sxy / sxx, n, np, XQ_K);
+    return 0;
+  }
+  if (argc > 1 && !strcmp(argv[1], "nmatch")) {
+    if (!loadNet(argv[2])) return 1;
+    int A = atoi(argv[3]), Bl = atoi(argv[4]), N = atoi(argv[5]); rng ^= (u64)atoll(argv[6]) * 2654435761ull;
+    int pre = argc > 7 ? atoi(argv[7]) : 2; double sc = 0; int w = 0, l = 0;
+    for (int g = 0; g < N; g++) {
+      u8 b[90]; int sd; randomStart(b, &sd);
+      int aCho = (g & 1) == 0; nnSide[0] = aCho; nnSide[1] = !aCho;
+      int r = aCho ? playGame(b, sd, A, Bl, pre, 200, 0) : playGame(b, sd, Bl, A, pre, 200, 0);
+      if ((aCho ? r : -r) > 0) { w++; sc += 1; } else l++;
+    }
+    xq_nnue(0);
+    printf("NNUE lv %d vs hand lv %d: %d games  +%d -%d  score %.3f\n", A, Bl, N, w, l, sc / N);
+    return 0;
+  }
+  if (argc > 1 && (!strcmp(argv[1], "datagen") || !strcmp(argv[1], "scale"))) {
+    // self-play at a fixed node count from a random setup + 2..9 random plies; every position with the search score, the
+    // best move and (afterwards) the game result -> 56-byte records (xq.h). scale: fits points per logit instead of writing.
+    int dg = !strcmp(argv[1], "datagen"), o = dg ? 1 : 0;
+    int G = atoi(argv[2 + o]), nk = atoi(argv[3 + o]); rng ^= (u64)atoll(argv[4 + o]) * 2654435761ull;
+    if (dg && argc > 6) { if (!loadNet(argv[6])) return 1; xq_nnue(1); }
+    double S = xqOn ? XQ_K : (getenv("JG_S") ? atof(getenv("JG_S")) : JG_S);
+    FILE *out = dg ? fopen(argv[2], "ab") : 0; if (dg && !out) { perror(argv[2]); return 1; }
+    static Rec rec[256]; long tot = 0; double t0 = now();
+    static double fx[400000]; static signed char fy[400000]; int fn = 0;
+    for (int g = 0; g < G; g++) {
+      u8 board[90]; int sd, nh = 0, nr = 0, result = 0, pre = 2 + rnd32() % 8, ply;
+      randomStart(board, &sd); new_game(); setupBoard(board, sd, GH, 0, 0, 0); GK[0] = KEY;
+      for (ply = 0; ply < 200; ply++) {
+        setupBoard(board, sd, GH, nh, 0, 0);
+        if (!rootN) { result = side ? 1 : -1; break; }
+        Move m;
+        if (ply < pre) m = rootL[rnd32() % rootN];
+        else {
+          int v = 0;
+          if (rootN == 1) m = rootL[0]; else { best(99, 0, nk); m = (Move)IO[0]; v = IO[1]; setupBoard(board, sd, GH, nh, 0, 0); }
+          if (rootN > 1 && nr < 256) {
+            Rec *r = &rec[nr++]; memset(r, 0, sizeof *r);
+            for (int s = 0; s < 90; s++) r->b[s >> 1] |= (uint8_t)(B[s] << ((s & 1) * 4));
+            r->stm = (uint8_t)side; r->cp = (int16_t)(v > 20000 ? 30000 : v < -20000 ? -30000 : v);
+            double p = 1 / (1 + exp(-v / S)); r->w = (int16_t)lrint(p * 1000); r->l = (int16_t)(1000 - r->w);
+            r->move = (uint16_t)(MF(m) | MT(m) << 7);
+            r->flags = (uint8_t)((attackedKing(side) ? REC_CHECK : 0) | (MF(m) != MT(m) && B[MT(m)] ? REC_CAPTURE : 0));
+          }
+        }
+        makeMove(m); GH[nh++] = m; GK[nh] = KEY;
+        int cnt = 0; for (int i = nh; i >= 0; i--) if (GK[i] == KEY) cnt++;
+        if (cnt >= 3) { result = pointsResult(); break; }
+      }
+      if (!result) result = pointsResult();
+      for (int i = 0; i < nr; i++) {
+        rec[i].result = (int8_t)(rec[i].stm ? -result : result);
+        if (!dg && !(rec[i].flags & (REC_CHECK | REC_CAPTURE)) && abs(rec[i].cp) < 3000 && fn < 400000) { fx[fn] = rec[i].cp; fy[fn++] = rec[i].result > 0; }
+      }
+      if (dg) { fwrite(rec, sizeof(Rec), nr, out); fflush(out); }
+      tot += nr;
+      if (dg && (g % 50 == 49 || g == G - 1)) fprintf(stderr, "\r  %d / %d games  %ld positions  %.0f pos/s   ", g + 1, G, tot, tot / ((now() - t0) / 1000));
+    }
+    if (dg) { fclose(out); fprintf(stderr, "\n"); return 0; }
+    double a = 1 / 300.0;   // result ~ sigmoid(a * cp): Newton steps on the log-likelihood
+    for (int it = 0; it < 30; it++) { double g1 = 0, g2 = 0; for (int i = 0; i < fn; i++) { double p = 1 / (1 + exp(-a * fx[i])); g1 += (fy[i] - p) * fx[i]; g2 += p * (1 - p) * fx[i] * fx[i]; } a += g1 / (g2 + 1e-9); }
+    printf("%d positions: result ~ sigmoid(score / %.0f)\n", fn, 1 / a);
+    return 0;
+  }
   if (argc > 1 && !strcmp(argv[1], "serve")) {
     static u8 gb[90]; static int gsd, gnh; char ln[256];
+    if (argc > 2) { if (!loadNet(argv[2])) return 1; xq_nnue(1); }
     setvbuf(stdout, 0, _IOLBF, 0);
     while (fgets(ln, sizeof ln, stdin)) {
       if (!strncmp(ln, "quit", 4)) break;

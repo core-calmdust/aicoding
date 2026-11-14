@@ -70,8 +70,67 @@
     const Rr = Math.max(...pts.map(([x, y]) => Math.hypot(x, y))) + 1.22;   // (the 2D page's geometry: its pictures line up)
     return (B.geoT = { tri: false, pts, R: Rr, gr: Rr - .48, size: Rr * 2 + .12, oz: 0 });
   }
+  // the pyramid (2026-11-14): a square wooden plinth with the 16 cups of the bottom layer and a groove round it; above it a
+  // glass cage — four slanted rods up the pyramid's edges, and for each upper layer a lattice of glass rings (the cups of
+  // that layer) joined by short rods. Every hole has its height: userData.y(i) = layer × LH.
+  const LH = .72;
+  function pyramid(id, look) {
+    const TT = T(), E = window.PegEngine, B = E.BOARDS[id], g = new TT.Group(), n = B.layers, m0 = (n - 1) / 2;
+    const pts = B.pos.map(([x, y]) => [x - m0, y - m0]); rbPts = pts;
+    const W = woodMat(look).clone(), GM = grooveMat(look).clone(), RM = rimMat(look).clone();
+    const half = m0 + 1.35, gr = m0 + .95, rr = .55;   // (the plinth's half width, the groove's square, the corner radius)
+    const rsq = (h, r) => { const s = new TT.Shape(); s.moveTo(-h + r, -h); s.lineTo(h - r, -h); s.quadraticCurveTo(h, -h, h, -h + r); s.lineTo(h, h - r); s.quadraticCurveTo(h, h, h - r, h); s.lineTo(-h + r, h); s.quadraticCurveTo(-h, h, -h, h - r); s.lineTo(-h, -h + r); s.quadraticCurveTo(-h, -h, -h + r, -h); return s; };
+    const body = X.mesh(geo('pgPyrBody', () => { const ex = new TT.ExtrudeGeometry(rsq(half - .08, rr), { depth: TOP - .08, bevelEnabled: true, bevelThickness: .08, bevelSize: .08, bevelSegments: 2, curveSegments: 6 }); ex.rotateX(-Math.PI / 2); return ex; }), W);
+    g.add(body);
+    // the groove: a dark square ring round the cups, and a bead on the rim
+    const gv = X.mesh(geo('pgPyrG', () => { const s = rsq(gr + .22, .45); s.holes.push(rsq(gr - .22, .3)); const p = new TT.ShapeGeometry(s, 6); p.rotateX(-Math.PI / 2); return p; }), GM, 0, TOP + .003, 0); gv.castShadow = false; g.add(gv);
+    const bead = X.mesh(geo('pgPyrBead', () => { const s = rsq(half - .2, rr - .1), pp = s.getSpacedPoints(LO() ? 60 : 120).map(v => new TT.Vector3(v.x, 0, -v.y)); return new TT.TubeGeometry(new TT.CatmullRomCurve3(pp, true), LO() ? 60 : 120, .03, 5, true); }), RM, 0, TOP + .005, 0); g.add(bead);
+    // the bottom layer's cups (the round boards' cup picture, one instanced disc)
+    const base = B.cells.map((c, i) => i).filter(i => !B.z[i]);
+    const cupG = geo('pgPyrCup', () => { const c = new TT.CircleGeometry(CUP * 1.45, 28); c.rotateX(-Math.PI / 2); return c; });
+    const cups = new TT.InstancedMesh(cupG, cupMat(look), base.length), M4 = new TT.Matrix4();
+    base.forEach((i, k) => { M4.makeTranslation(pts[i][0], TOP + .004, pts[i][1]); cups.setMatrixAt(k, M4); }); cups.renderOrder = 1; g.add(cups);
+    // the glass: rings for the upper cups, rods (one unit cylinder, scaled and turned per rod)
+    const glass = mat('pgGlass', () => X.M({ color: '#e8f6ff', roughness: .06, metalness: 0, clearcoat: 1, clearcoatRoughness: .05, transparent: true, opacity: .5, envMapIntensity: 1.8, bump: false }));
+    const up = B.cells.map((c, i) => i).filter(i => B.z[i]), RG = .27;
+    const ringG = geo('pgPyrRing', () => { const t = new TT.TorusGeometry(RG, .028, 6, LO() ? 20 : 32); t.rotateX(Math.PI / 2); return t; });
+    const rings = new TT.InstancedMesh(ringG, glass, up.length);
+    up.forEach((i, k) => { M4.makeTranslation(pts[i][0], TOP + B.z[i] * LH, pts[i][1]); rings.setMatrixAt(k, M4); }); g.add(rings);
+    const rods = [], V = (x, y, z) => new TT.Vector3(x, y, z);
+    for (let L = 1; L < n; L++) {
+      const y = TOP + L * LH, k = n - L, o = m0 - L / 2, at = (r, c) => [c + L / 2 - m0, r + L / 2 - m0], e = o + .5;   // (e: the layer's outline, half a step outside its holes)
+      for (let r = 0; r < k; r++) for (let c = 0; c < k; c++) {
+        const [x, z] = at(r, c);
+        if (c + 1 < k) rods.push([V(x + RG, y, z), V(x + 1 - RG, y, z)]);
+        if (r + 1 < k) rods.push([V(x, y, z + RG), V(x, y, z + 1 - RG)]);
+        if (c === 0) rods.push([V(-e, y, z), V(x - RG, y, z)]); if (c === k - 1) rods.push([V(x + RG, y, z), V(e, y, z)]);
+        if (r === 0) rods.push([V(x, y, -e), V(x, y, z - RG)]); if (r === k - 1) rods.push([V(x, y, z + RG), V(x, y, e)]);
+      }
+      rods.push([V(-e, y, -e), V(e, y, -e)], [V(e, y, -e), V(e, y, e)], [V(e, y, e), V(-e, y, e)], [V(-e, y, e), V(-e, y, -e)]);
+    }
+    const e0 = m0 + .5, eT = .5, yT = TOP + (n - 1) * LH;   // the four edges of the pyramid, from the plinth to the top layer's outline
+    [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([sx, sz]) => rods.push([V(sx * e0, TOP, sz * e0), V(sx * eT, yT, sz * eT)]));
+    const rodG = geo('pgPyrRod', () => new TT.CylinderGeometry(.022, .022, 1, 6, 1, true));
+    const rodM = new TT.InstancedMesh(rodG, glass, rods.length), Q = new TT.Quaternion(), Y = V(0, 1, 0), S3 = V(1, 1, 1);
+    rods.forEach(([a, b], k) => { const d = b.clone().sub(a), l = d.length(); Q.setFromUnitVectors(Y, d.normalize()); S3.set(1, l, 1); M4.compose(a.clone().add(b).multiplyScalar(.5), Q, S3); rodM.setMatrixAt(k, M4); });
+    g.add(rodM);
+    // a glass bead on the top
+    g.add(X.mesh(geo('pgPyrTop', () => new TT.SphereGeometry(.07, 10, 8)), glass, 0, yT + .05, 0));
+    [rings, rodM].forEach(m => { m.castShadow = false; m.renderOrder = 3; });
+    const side = 2 * gr, nPer = Math.floor(side / .62);
+    g.userData = {
+      id, B, look, top: TOP, R, W: half * 2, H: half * 2, sink: 0, LH, tall: yT - TOP + R * 2, pyr: true,
+      pt: i => pts[i].slice(), y: i => B.z[i] * LH,
+      // the taken marbles go round the groove: along the front, up the right side, the back, the left (a corner each time)
+      groove: k => { const s = k % (nPer * 4), sd = Math.floor(s / nPer), t = ((s % nPer) + .5) / nPer * side - gr; const xz = [[t, gr], [gr, -t], [-t, -gr], [-gr, t]][sd]; return [xz[0], TOP + R * .78, xz[1]]; },
+      marble: (i, set) => marble(i, set),
+      setSet: k => { if (!LOOKS.includes(k) || k === g.userData.look) return; g.userData.look = k; W.copy(woodMat(k)); RM.copy(rimMat(k)); GM.copy(grooveMat(k)); cups.material = cupMat(k); [W, RM, GM].forEach(m => { m.needsUpdate = true; }); if (X.kick) X.kick(300); },
+    };
+    return g;
+  }
   function board(id, look) {
     id = id || 'english'; look = LOOKS.includes(look) ? look : lookNow();
+    if (window.PegEngine.BOARDS[id].pyr) return pyramid(id, look);
     const TT = T(), E = window.PegEngine, B = E.BOARDS[id], S = shape(B), g = new TT.Group(); rbPts = S.pts;
     // this board's own materials, swapped in place by setSet (the portal's 盤 row: a board kept from before / merged meshes
     // still show the chosen design — the same fix as chess)
@@ -102,7 +161,7 @@
     face.castShadow = false; face.receiveShadow = true; g.add(face);
     g.userData = {
       id, B, look, top: TOP, R, W: S.tri ? S.P[2][0] * 2 : S.R * 2, H: S.tri ? S.P[1][1] - S.P[0][1] : S.R * 2, sink: 0,
-      pt: i => S.pts[i].slice(),
+      pt: i => S.pts[i].slice(), y: () => 0,
       groove: k => { if (S.tri) { const n = 13, x = S.groove.x0 + (S.groove.x1 - S.groove.x0) * ((k % n) + .5) / n; return [x, TOP + R * .78, S.groove.z]; } const step = Math.min(.66 / S.gr, Math.PI * 2 / B.n), a = -Math.PI / 2 + (k + .5) * step * 1.02; return [Math.cos(a) * S.gr, TOP + R * .78, Math.sin(a) * S.gr]; },
       marble: (i, set) => marble(i, set),
       setSet: k => { if (!LOOKS.includes(k) || k === g.userData.look) return; g.userData.look = k; W.copy(woodMat(k)); RM.copy(rimMat(k)); GM.copy(grooveMat(k)); FM.copy(faceMat(k, id)); [W, RM, GM, FM].forEach(m => { m.needsUpdate = true; }); if (X.kick) X.kick(300); },

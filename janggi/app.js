@@ -116,7 +116,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=3-pro1-mt1-pd1';
+const ENGINE_URL = 'engine.js?v=4-pro1-mt1-pd1';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -141,9 +141,9 @@ let aiW = makeWorker(), anaW = makeWorker();
 // lead keeps the level's own limits; the helpers fill the shared table, so it reads deeper in the same time). The levels
 // decided by depth / positions only (Lv.1–18) stay on the one-thread workers.
 const MTP = window.MTEngine ? MTEngine.use({
-  wasm: 'engine_mt.wasm?v=6', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=2', slot: 2 << 20, initial: 1152, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
+  wasm: 'engine_mt.wasm?v=7', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=3', slot: 2 << 20, initial: 1152, maximum: 16384,   // maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => Date.now(), progress: () => {} } }),
-  help: m => ({ io: E.setupIO(m.start, m.moves || [], []) }),
+  help: m => { const L = m.type === 'think' ? m.cfg || E.LEVELS[m.level] || {} : { s: 1 }; return { io: E.setupIO(m.start, m.moves || [], []), nn: L.s ? 1 : 0 }; },   // (the evaluation the lead uses: engine.js wNN)
 }) : null;
 const mtLevel = lv => { const L = E.LEVELS[lv]; return !!(L && L.s && L.ms); };   // a level with a time limit (Lv.19・20)
 function mtWants(which, msg) {
