@@ -1356,7 +1356,7 @@ body.in-online:not(.ol-over) #coachCard{display:none!important}
 <script src="../shared/resign.js?v=3l14"></script><script src="../shared/drawoffer.js?v=1l14"></script>
 <script src="../shared/tick.js?v=2l14"></script>
 <script src="../shared/ruletour.js?v=30tw"></script>
-<script src="engine.js?v=20261111simd"></script>
+<script src="engine.js?v=20261114tx"></script>
 <script src="rvbox.js?v=20261107l14"></script><!-- 振り返りボックス (PC): 候補手・読み筋・検討 -->
 <script src="i18n-online.js?v=20261107l14-hb1"></script>
 <script src="firebase-config.js?v=ac1"></script>
@@ -1488,7 +1488,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=20261111simd';
+const ENGINE_URL = 'engine.js?v=20261114tx';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -1513,7 +1513,7 @@ let aiW = makeWorker(), anaW = makeWorker();
 // pool of threads when it is free (Lazy SMP: the lead keeps the level's own limits, the helpers fill the shared table). The
 // levels decided by depth (Lv.1〜8) stay on the one-thread workers, as does the perfect play of six men's (the database).
 const MTP = window.MTEngine ? MTEngine.use({
-  wasm: 'engine_mt.wasm?v=6', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=2', slot: 4 << 20, initial: 1152, maximum: 16384,   // slot: TLS + the 1 MB move lists + the stack; maximum = engine_mt.wasm's (1 GiB)
+  wasm: 'engine_mt.wasm?v=7', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=2', slot: 4 << 20, initial: 1152, maximum: 16384,   // slot: TLS + the 1 MB move lists + the stack; maximum = engine_mt.wasm's (1 GiB)
   imports: mem => ({ env: { memory: mem, now: () => Date.now(), progress: () => {} } }),
   help: m => ({ io: E.setupIO(m.variant, m.start, m.moves || []), gk: E.geoKey(m.variant) }),
   isDone: m => m.type === 'result' || m.type === 'candsDone', isProg: m => m.type === 'progress' || m.type === 'cands',   // (the review box streams 'cands')

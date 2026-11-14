@@ -64,6 +64,7 @@ static void link(int a, int b) { for (int k = 0; k < adjn[a]; k++) if (adjv[a][k
 static volatile int geoKey;   // the geometry in force (shared): a helper thread waits for the job's before it searches
 EXPORT(geo_key) int geo_key(void) { return __atomic_load_n(&geoKey, __ATOMIC_SEQ_CST); }
 #endif
+static void ewSelect(void);   // (the evaluation weights of the geometry, below)
 EXPORT(set_geometry) void set_geometry(void) {
   int k = 0; N = IO[k++]; PIECES = IO[k++]; FLY = IO[k++]; NM = IO[k++];
   for (int i = 0; i < N; i++) { adjn[i] = 0; prn[i] = 0; }
@@ -81,6 +82,7 @@ EXPORT(set_geometry) void set_geometry(void) {
   for (int s = 0; s < 3; s++) for (int i = 0; i < 24; i++) { zp[s][i] = rnd(); zp2[s][i] = rnd(); }
   for (int s = 0; s < 3; s++) for (int i = 0; i < 16; i++) { zh[s][i] = rnd(); zh2[s][i] = rnd(); }
   zs = rnd(); zs2 = rnd();
+  ewSelect();
 #ifdef MT
   __atomic_store_n(&geoKey, N | PIECES << 5 | FLY << 10 | NM << 11 | ne << 17, __ATOMIC_SEQ_CST);   // (last: the helpers wait for it)
 #endif
@@ -315,10 +317,29 @@ static int netEval(const Pos *p) {
   int v = (int)(out * 200.0f + (out >= 0 ? 0.5f : -0.5f));
   return v > 20000 ? 20000 : v < -20000 ? -20000 : v;
 }
+// (2026-11-14) the hand evaluation as weights × terms (MODEL_CARD.md「評価関数の Texel 調整」). EW_NINE are the weights of
+// before (nine men's: the fallback when evalnet.bin is not loaded); twelve and six use weights fitted to self-play results
+// (logistic loss), with a few new terms that are 0 in EW_NINE. Only the levels that search in WebAssembly (Lv.8 and up,
+// analysis, hints, coach, PRO) use this evaluation: Lv.1–7 search in engine.js, whose evaluation is unchanged.
+enum { F_MAT, F_THR_OWN, F_THR_OPP, F_TWO_PL, F_TWO_MV, F_MILL_PL, F_MILL_OPEN, F_MILL_SHUT, F_THRO2, F_THRO1, F_THRP,
+  F_DEG_PL, F_MOB_OWN, F_MOB_OPP, F_MOB0_OWN, F_MOB1_OWN, F_MOB0_OPP, F_MOB1_OPP,
+  F_HAND, F_FLY_OWN, F_FLY_OPP, F_SWING, F_BLOCKED, F_POT1_PL, F_MAT_MV, NF };
+#ifndef EW_TWELVE_W   // (fitted: 2,347 self-play games, 54k quiet positions; tools/texel.js)
+#define EW_TWELVE_W { 100, 24, -152, 123, 17, -42, 52, -33, 30, 70, 20, 26, 1, 4, -400, -54, 300, 30, 136, 182, -161, 45, -15, 68, 57 }
+#endif
+#ifndef EW_SIX_W   // (six: the fitted weights were no stronger at equal time — +1 Elo, 400 games — so the old ones)
+#define EW_SIX_W { 100, 24, -24, 6, 7, 8, 22, 10, -85, -18, 20, 4, 5, -5, -400, -40, 300, 30, 0, 0, 0, 0, 0, 0, 0 }
+#endif
+static const int EW_NINE[NF] = { 100, 24, -24, 6, 7, 8, 22, 10, -85, -18, 20, 4, 5, -5, -400, -40, 300, 30, 0, 0, 0, 0, 0, 0, 0 };
+static const int EW_TWELVE[NF] = EW_TWELVE_W, EW_SIX[NF] = EW_SIX_W;
+static const int *EW = EW_NINE;
+static void ewSelect(void) { EW = N == 16 ? EW_SIX : NM == 20 ? EW_TWELVE : EW_NINE; }
 static int evaluate(const Pos *p) {
   if (netH && N == 24 && NM == 16) return netEval(p);
+  const int *w = EW;
   int s = p->side, o = 3 - s; u32 S = p->bb[s], O = p->bb[o], E = ALL & ~(S | O);
-  int sc = 100 * ((p->cnt[s] + p->hand[s]) - (p->cnt[o] + p->hand[o]));
+  int mat = (p->cnt[s] + p->hand[s]) - (p->cnt[o] + p->hand[o]);
+  int sc = w[F_MAT] * mat;
   int placing = p->hand[1] > 0 || p->hand[2] > 0;
   int flyP = FLY && !p->hand[s] && p->cnt[s] == 3, flyO = FLY && !p->hand[o] && p->cnt[o] == 3;
   int thrO = 0, thrP = 0;
@@ -329,28 +350,40 @@ static int evaluate(const Pos *p) {
       int nw = 0;
       if (p->hand[who] > 0 || (who == s ? flyP : flyO)) nw = 1;
       else if (!placing) { int e = __builtin_ctz(mm & E); if (adjMask[e] & p->bb[who] & ~mm) nw = 1; }
-      if (nw) { if (who == s) thrP++; else thrO++; }
-      sc += sg * (nw ? 24 : placing ? 6 : 7);
+      if (nw) { if (who == s) { thrP++; sc += w[F_THR_OWN]; } else { thrO++; sc += w[F_THR_OPP]; } }
+      else sc += sg * w[placing ? F_TWO_PL : F_TWO_MV];
     } else if (np == 3 || no == 3) {
       int sg = np == 3 ? 1 : -1;
-      if (placing) sc += sg * 8;
-      else sc += sg * ((millAdj[k] & E) ? 22 : 10);
-    }
+      if (placing) sc += sg * w[F_MILL_PL];
+      else {
+        sc += sg * w[(millAdj[k] & E) ? F_MILL_OPEN : F_MILL_SHUT];
+        int who = np == 3 ? s : o;
+        if (w[F_SWING] && !(who == s ? flyP : flyO)) {   // a running mill: a member steps off and closes another mill there
+          int sw = 0;
+          for (u32 x = mm; x && !sw; x &= x - 1) { int f = __builtin_ctz(x); for (u32 y = adjMask[f] & E; y; y &= y - 1) if (closes(p, who, f, __builtin_ctz(y))) { sw = 1; break; } }
+          sc += sg * sw * w[F_SWING];
+        }
+      }
+    } else if (placing && np + no == 1) sc += (np ? 1 : -1) * w[F_POT1_PL];
   }
-  if (thrO >= 2) sc -= 85; else if (thrO == 1) sc -= 18;
-  if (thrP) sc += 20;
+  if (thrO >= 2) sc += w[F_THRO2]; else if (thrO == 1) sc += w[F_THRO1];
+  if (thrP) sc += w[F_THRP];
   if (placing) {
     int dp = 0; for (int d = 1; d < 5; d++) dp += d * (__builtin_popcount(S & DEG[d]) - __builtin_popcount(O & DEG[d]));
-    sc += 4 * dp;
+    sc += w[F_DEG_PL] * dp + w[F_HAND] * (p->hand[s] - p->hand[o]);
   } else {
-    int mp = 0, mo = 0;
-    for (u32 x = S; x; x &= x - 1) mp += __builtin_popcount(adjMask[__builtin_ctz(x)] & E);
-    for (u32 x = O; x; x &= x - 1) mo += __builtin_popcount(adjMask[__builtin_ctz(x)] & E);
-    if (!flyP) sc += 5 * mp - (mp == 0 ? 400 : mp == 1 ? 40 : 0);
-    if (!flyO) sc -= 5 * mo - (mo == 0 ? 300 : mo == 1 ? 30 : 0);
+    int mp = 0, mo = 0, bp = 0, bo = 0;
+    for (u32 x = S; x; x &= x - 1) { int f = __builtin_popcount(adjMask[__builtin_ctz(x)] & E); mp += f; bp += !f; }
+    for (u32 x = O; x; x &= x - 1) { int f = __builtin_popcount(adjMask[__builtin_ctz(x)] & E); mo += f; bo += !f; }
+    if (!flyP) sc += w[F_MOB_OWN] * mp + (mp == 0 ? w[F_MOB0_OWN] : mp == 1 ? w[F_MOB1_OWN] : 0);
+    if (!flyO) sc += w[F_MOB_OPP] * mo + (mo == 0 ? w[F_MOB0_OPP] : mo == 1 ? w[F_MOB1_OPP] : 0);
+    sc += w[F_BLOCKED] * ((flyP ? 0 : bp) - (flyO ? 0 : bo)) + w[F_MAT_MV] * mat;
   }
+  if (flyP) sc += w[F_FLY_OWN];
+  if (flyO) sc += w[F_FLY_OPP];
   return sc;
 }
+EXPORT(eval_root) int eval_root(void) { return evaluate(&P); }   // (tools: the evaluation of the position set up)
 
 // ---------------------------------------------------------------- search
 #define TT_BITS 20
