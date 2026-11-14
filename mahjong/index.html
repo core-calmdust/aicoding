@@ -17,47 +17,49 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Yuji+Boku&family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Cinzel:wght@600;800&family=Orbitron:wght@700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=49">
+<link rel="stylesheet" href="app.css?v=50">
 </head>
 <body>
 <div id="root">
 <div id="bgfx"></div>
 
 <!-- ============ HOME ============ -->
-<section id="home" class="screen lux">
-  <div class="lux-bg" aria-hidden="true"></div>
-  <header class="top lux-top">
-    <span class="sp"></span>
-    <div class="coins" id="coinBox"><i class="coin"></i><b id="coinN">0</b></div>
-    <button class="ib" id="btnSet" data-tt="settings"></button>
-    <a class="ib" href="../" id="btnPortal" title="CALMDUST COLLECTION"></a>
-  </header>
-  <div class="lux-stage">
-    <div class="lux-art" id="pArt"></div>
-    <div class="lux-info" id="partner"></div>
-    <main class="lux-side">
-      <div class="lux-logo">
-        <i class="lx-orn"></i>
-        <span class="lg-k">雀華</span>
-        <span class="lg-sub" data-t="sub"></span>
-        <small class="lg-ser" data-t="series"></small>
-        <i class="lx-orn b"></i>
+<section id="home" class="screen aaa">
+  <div class="aa-bg" aria-hidden="true"><img class="aa-blur" id="aaBlur" alt=""><i class="aa-wash"></i><i class="aa-lat"></i><i class="aa-beam"></i><canvas class="aa-fx" id="aaFx"></canvas><i class="aa-vig"></i></div>
+  <div class="aa-hero" id="pArt"></div>
+  <div class="aa-ui">
+    <header class="aa-top">
+      <button class="aa-prof" id="aaProf"></button>
+      <span class="sp"></span>
+      <div class="coins" id="coinBox"><i class="coin"></i><b id="coinN">0</b></div>
+      <button class="ib" id="btnSet" data-tt="settings"></button>
+      <a class="ib" href="../" id="btnPortal" title="CALMDUST COLLECTION"></a>
+    </header>
+    <div class="aa-logo">
+      <span class="lg-k" data-text="雀華">雀華</span>
+      <span class="lg-sub" data-t="sub"></span>
+      <i class="aa-orn"></i>
+      <small class="lg-ser" data-t="series"></small>
+    </div>
+    <nav class="aa-menu" id="luxMenu">
+      <button class="lm" id="btnGacha"></button>
+      <button class="lm" id="btnColl"></button>
+      <button class="lm" id="btnStats"></button>
+      <button class="lm soon" data-soon="rated"></button>
+      <button class="lm soon" data-soon="lesson"></button>
+      <button class="lm soon" data-soon="rules"></button>
+    </nav>
+    <div class="aa-plate" id="partner"></div>
+    <div class="aa-say" id="aaSay" hidden></div>
+    <button class="aa-banner" id="aaBanner"></button>
+    <div class="aa-play">
+      <div class="ap-opts">
+        <div class="seg" id="optLen"></div>
+        <div class="seg" id="optSkill"></div>
+        <div class="seg lv" id="optLv"></div>
       </div>
-      <div class="lux-play">
-        <div class="lp-h"><b data-t="bot"></b></div>
-        <div class="lp-row"><div class="seg" id="optLen"></div></div>
-        <div class="lp-row"><div class="seg" id="optSkill"></div></div>
-        <div class="lp-row"><small data-t="strength"></small><div class="seg lv" id="optLv"></div></div>
-        <button class="go" id="btnStart"><span data-t="start"></span></button>
-      </div>
-      <nav class="lux-menu" id="luxMenu">
-        <button class="lm" id="btnGacha"></button>
-        <button class="lm" id="btnColl"></button>
-        <button class="lm soon" data-soon="rated"></button>
-        <button class="lm soon" data-soon="lesson"></button>
-        <button class="lm soon" data-soon="rules"></button>
-      </nav>
-    </main>
+      <button class="go aa-go" id="btnStart"><span class="ag-k" data-t="start"></span><small class="ag-s" id="aaGoSub"></small></button>
+    </div>
   </div>
 </section>
 
@@ -124,6 +126,6 @@ else document.write('<script src="../atlas/vendor/three-r186.min.js?v=1"><\/scri
 <script src="table3d.js?v=45"></script>
 <script src="framefx.js?v=12"></script>
 <script src="../shared/record.js?v=16"></script>
-<script src="app.js?v=48"></script>
+<script src="app.js?v=49"></script>
 </body>
 </html>

@@ -225,22 +225,35 @@ function renderHome() {
   $('#coinN').textContent = DB.coins.toLocaleString();
   $('#btnPortal').innerHTML = IC.home; $('#btnSet').innerHTML = IC.gear;
   $('#coinBox .coin').innerHTML = IC.coin;
-  // the menu under the play panel (ユーザー 2026-11-14: only the system's buttons stay at the top right; the rest are here)
-  $('#btnGacha').innerHTML = `${IC.gacha}<span>${esc(t('gacha'))}</span>`; $('#btnColl').innerHTML = `${IC.collection}<span>${esc(t('chars'))}</span>`;
-  document.querySelectorAll('#luxMenu [data-soon]').forEach(b => { b.innerHTML = `${IC[b.dataset.soon] || ''}<span>${esc(t(b.dataset.soon))}</span><em>${esc(t('soon'))}</em>`; });
+  // the menu down the left (ユーザー 2026-11-14: only the system's buttons stay at the top right; the rest are here)
+  const mi = (ic, lab, sub) => `<i class="lm-i">${ic}</i><span class="lm-t"><b>${esc(lab)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</span>`;
+  $('#btnGacha').innerHTML = mi(IC.gacha, t('gacha'), 'GACHA'); $('#btnColl').innerHTML = mi(IC.collection, t('chars'), 'CHARACTERS');
+  $('#btnStats').innerHTML = mi(IC.stats, t('stats'), 'STATS');
+  document.querySelectorAll('#luxMenu [data-soon]').forEach(b => { b.innerHTML = mi(IC[b.dataset.soon] || '', t(b.dataset.soon), t('soon')); });
   sndIcons(); applyLite();
   const c = MJChars.get(DB.sel);
   const o = DB.chars[c.id], uk = useKey(c.id);
-  $('#pArt').innerHTML = `<button class="pimg frame fr-${c.rarity}" id="pImg" style="--c:${c.color};--c2:${c.color2}"><img src="${charImg(c, 'full')}" alt=""><i class="fx-sh"></i><span class="ptap">${esc(t('tapChange'))}</span></button>`;
+  const home = $('#home'); home.style.setProperty('--c', c.color); home.style.setProperty('--c2', c.color2);
+  // the partner, large and free of any box (AAA title screen, ユーザー 2026-11-14), and the same art blurred as the room's light
+  const full = charImg(c, 'full');
+  if ($('#pArt').dataset.id !== c.id) {
+    $('#pArt').dataset.id = c.id;
+    $('#pArt').innerHTML = `<i class="aa-aura"></i><button class="aa-ch" id="pImg" aria-label="${esc(L(c.name))}"><img src="${full}" alt="" draggable="false"></button>`;
+    $('#aaBlur').src = full;
+  }
+  const P = DB.pstats, all = MJStats.derive(MJStats.sum(P.skill, P.std, P.old));
+  $('#aaProf').innerHTML = `<img src="${charImg(c, 'face')}" alt=""><span><b>${esc(t('you'))}</b><small>${esc(t('psGames'))} ${all.games} ・ ${esc(t('psAvgRank'))} ${all.avgRank == null ? '—' : all.avgRank.toFixed(2)}</small></span>`;
   $('#partner').innerHTML = `
-    <div class="pinfo">
-      <div class="prow"><div class="prar r-${c.rarity}">${c.rarity}</div><button class="psbtn" id="pStats">${IC.stats}<span>${esc(t('stats'))}</span></button></div>
-      <div class="pname">${esc(L(c.name))}<small>${esc(L(c.title))}</small></div>
-      <i class="lx-rule"></i>
-      ${skillBlock(uk)}
-      ${o.skills.length > 1 ? `<div class="skpick"><small>${t('useThis')}</small><div class="skl" id="homeSk">${o.skills.map(k => skillChip(k, k === uk ? 'on' : '', `data-k="${k}"`)).join('')}</div></div>` : ''}
-      <p class="pprof">${esc(L(c.profile))}</p>
-    </div>`;
+    <div class="pp-r"><em class="prar r-${c.rarity}">${c.rarity}</em><span class="pp-f">${esc(L(MJChars.families[c.family].name))}</span></div>
+    <div class="pp-n">${esc(L(c.name))}</div>
+    <div class="pp-t">${esc(L(c.title))}</div>
+    <div class="pp-sk">${skillChip(uk, 'on')}${o.skills.length > 1 ? `<span class="pp-more" id="ppMore">${esc(t('ownedSkills'))} ${o.skills.length}</span>` : ''}</div>
+    <button class="pp-chg" id="ppChg">${IC.swap}<span>${esc(t('tapChange'))}</span></button>`;
+  // pick-up banner: the best character not yet owned (or the best of all)
+  const pick = MJChars.list.filter(x => !owns(x.id)).sort((a, b) => RORD[a.rarity] - RORD[b.rarity])[0] || MJChars.list.find(x => x.rarity === 'UR');
+  $('#aaBanner').innerHTML = `<i class="ab-art" style="background-image:url('${charImg(pick, 'bust')}')"></i><span class="ab-rib">PICK UP</span><span class="ab-tx"><em class="r-${pick.rarity}">${pick.rarity}</em><b>${esc(L(pick.name))}</b><small>${esc(L(pick.title))}</small></span><span class="ab-go">${esc(t('gacha'))} ›</span>`;
+  $('#aaBanner').style.setProperty('--c', pick.color);
+  $('#aaGoSub').textContent = `${t(DB.set.len === 'south' ? 'south' : 'east')} ・ ${t(DB.set.skills ? 'skillOn' : 'skillOff')} ・ BOT ${t('lv')[DB.set.lv]}`;
   const hs = $('#homeSk');
   if (hs) hs.onclick = e => { const b = e.target.closest('[data-k]'); if (!b) return; DB.chars[c.id].use = b.dataset.k; save(); SND.pick(); renderHome(); };
   const seg = (el, items, cur, cb) => {
@@ -251,8 +264,52 @@ function renderHome() {
   seg($('#optSkill'), [['1', t('skillOn')], ['0', t('skillOff')]], DB.set.skills ? '1' : '0', v => DB.set.skills = v === '1');
   seg($('#optLv'), t('lv').map((x, i) => [String(i), x]), String(DB.set.lv), v => DB.set.lv = +v);
 }
-$('#pArt').addEventListener('click', e => { if (e.target.closest('#pImg')) { SND.pick(); openChara(DB.sel); } });
-$('#partner').addEventListener('click', e => { if (e.target.closest('#pStats')) openStats(null); });
+$('#pArt').addEventListener('click', e => { if (e.target.closest('#pImg')) homeSay(); });
+$('#partner').addEventListener('click', e => { if (e.target.closest('#ppChg, #ppMore')) { SND.pick(); openChara(DB.sel); } });
+$('#btnStats').addEventListener('click', () => openStats(null));
+$('#aaProf').addEventListener('click', () => openStats(null));
+$('#aaBanner').addEventListener('click', () => { SND.pick(); openGacha(); });
+// tapping her: a line of hers in a speech bubble
+let sayT = 0;
+function homeSay() {
+  const c = MJChars.get(DB.sel), ks = Object.keys(c.lines || {}); if (!ks.length) return;
+  SND.pick();
+  const el = $('#aaSay'); el.textContent = L(c.lines[ks[(Math.random() * ks.length) | 0]]); el.hidden = false; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
+  clearTimeout(sayT); sayT = setTimeout(() => { el.classList.remove('on'); }, 2600);
+}
+// the room: gold dust and petals drifting in the light (a small 2D canvas, only while the home is on screen; none in light mode)
+const HFX = { run: false, parts: [] };
+function homeFx() {
+  const cv = $('#aaFx'); if (!cv) return;
+  const on = !$('#home').hidden && !DB.set.lite;
+  if (!on) { HFX.run = false; const g = cv.getContext('2d'); g.clearRect(0, 0, cv.width, cv.height); return; }
+  if (HFX.run) return; HFX.run = true;
+  const g = cv.getContext('2d');
+  let last = performance.now();
+  const step = now => {
+    if (!HFX.run) return;
+    if ($('#home').hidden || DB.set.lite) { HFX.run = false; g.clearRect(0, 0, cv.width, cv.height); return; }
+    const W = cv.clientWidth, H = cv.clientHeight, dpr = Math.min(1.5, devicePixelRatio || 1);
+    if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+    const dt = Math.min(50, now - last) / 1000; last = now;
+    const P = HFX.parts;
+    while (P.length < 70) { const petal = Math.random() < .3; P.push({ x: Math.random() * W, y: Math.random() < .5 ? Math.random() * H : -10, vx: (petal ? 14 : 4) + Math.random() * 10, vy: (petal ? 22 : 6) + Math.random() * 14, r: petal ? 3 + Math.random() * 3 : .8 + Math.random() * 1.8, a: Math.random() * 6.3, va: (Math.random() - .5) * 2, ph: Math.random() * 6.3, petal }); }
+    g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+    for (const p of P) {
+      p.x += p.vx * dt + Math.sin(now / 900 + p.ph) * 8 * dt; p.y += p.vy * dt; p.a += p.va * dt;
+      if (p.y > H + 12 || p.x > W + 12) { p.x = Math.random() * W * .8 - W * .1; p.y = -10; }
+      const tw = .45 + .55 * Math.sin(now / 520 + p.ph) ** 2;
+      if (p.petal) { g.save(); g.translate(p.x, p.y); g.rotate(p.a); g.scale(1, .55 + .45 * Math.sin(now / 400 + p.ph)); g.fillStyle = `rgba(255,190,214,${.35 * tw + .15})`; g.beginPath(); g.ellipse(0, 0, p.r * 1.6, p.r, 0, 0, 7); g.fill(); g.restore(); }
+      else { g.fillStyle = `rgba(255,226,160,${.75 * tw})`; g.beginPath(); g.arc(p.x, p.y, p.r, 0, 7); g.fill(); if (p.r > 1.9) { g.fillStyle = `rgba(255,236,190,${.12 * tw})`; g.beginPath(); g.arc(p.x, p.y, p.r * 4, 0, 7); g.fill(); } }
+    }
+    requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+// a little depth: the art and the room shift against each other with the pointer
+$('#home').addEventListener('pointermove', e => { const r = $('#home').getBoundingClientRect(); $('#home').style.setProperty('--mx', ((e.clientX - r.left) / r.width - .5).toFixed(3)); $('#home').style.setProperty('--my', ((e.clientY - r.top) / r.height - .5).toFixed(3)); });
+// entering the home: the pieces come in one after another
+function homeEnter() { const h = $('#home'); h.classList.remove('enter'); void h.offsetWidth; h.classList.add('enter'); homeFx(); }
 $('#luxMenu').addEventListener('click', e => { if (e.target.closest('[data-soon]')) { SND.pick(); toast(t('soon')); } });
 // settings (the gear at the top right): language, sound, light mode
 function openSettings() {
@@ -277,10 +334,13 @@ function openSettings() {
 }
 $('#btnSet').addEventListener('click', openSettings);
 // 戦績: a labelled button in the home header (PC and phones — this game has no bottom tab bar)
-if (window.GameRecord) { GameRecord.init({ game: 'mahjong', lang: () => I18N.lang, menu: '#luxMenu', btnClass: 'lm rec' }); const rb = $('#btnRecord'); if (rb) $('#luxMenu').insertBefore(rb, $('#luxMenu [data-soon]')); }
+if (window.GameRecord) { GameRecord.init({ game: 'mahjong', lang: () => I18N.lang, menu: '#luxMenu', btnClass: 'lm rec' }); const rb = $('#btnRecord'); if (rb) { $('#luxMenu').insertBefore(rb, $('#btnStats'));
+  const fix = () => { const sp = rb.querySelector('span'); if (sp && !rb.querySelector('.lm-t')) { const ic = rb.querySelector('svg'); rb.innerHTML = `<i class="lm-i">${ic ? ic.outerHTML : ''}</i><span class="lm-t"><b>${esc(sp.textContent)}</b><small>RECORD</small></span>`; } };
+  fix(); new MutationObserver(fix).observe(rb, { childList: true }); } }
 function applyLite() {
   document.documentElement.classList.toggle('lite', !!DB.set.lite);
   if (TB) TB.setQuality(DB.set.lite ? 'lite' : 'high');
+  if (typeof homeFx === 'function' && $('#aaFx')) homeFx();
 }
 $('#gSnd').addEventListener('click', () => { DB.set.snd = !DB.set.snd; save(); sndIcons(); });
 // phones always use the landscape layout; held upright, the whole UI is turned 90° (no reliance on the OS rotation)
@@ -292,6 +352,7 @@ function fitRoot() {
   de.style.setProperty('--W', (rot ? h : w) + 'px'); de.style.setProperty('--H', (rot ? w : h) + 'px');
   // desktop: home and character screens are laid out at a 1280-wide landscape design size and scaled to fit
   de.classList.toggle('ds', !PHONE);
+  if (PHONE) { const W0 = rot ? h : w, H0 = rot ? w : h; de.style.setProperty('--PZ', Math.min(W0 / 1000, H0 / 560).toFixed(4)); }   // (the home is laid out on a 1000×560 stage and scaled, as on PC)
   if (!PHONE) {
     const GW = Math.min(w, h * 2.0), GH = Math.min(h, w / 1.45);
     const Z = Math.max(.5, Math.min(GW / 1280, GH / 760, 1.6));
@@ -385,7 +446,7 @@ function openChara(id) {
   $('#chBack').innerHTML = IC.exit;
   renderChara();
 }
-function closeChara() { $('#chara').hidden = true; $('#home').hidden = false; renderHome(); }
+function closeChara() { $('#chara').hidden = true; $('#home').hidden = false; renderHome(); homeEnter(); }
 function renderChara() {
   applyText();
   $('#coinN2').textContent = DB.coins.toLocaleString();
@@ -575,6 +636,7 @@ function quitGame() {
   $('#dealAsk').hidden = true;
   G = null;
   $('#game').hidden = true; $('#home').hidden = false;
+  setTimeout(homeEnter, 0);
   if (TB) TB.pause();
   closeModal(); $('#cutin').hidden = true;
   renderHome();
@@ -1205,6 +1267,6 @@ new MutationObserver(() => { clearTimeout(ffxT); ffxT = setTimeout(() => FrameFX
 I18N.set(I18N.lang);
 MJTiles.ready().then(() => { MJTiles.reset(); ART.clear(); renderHome(); });   // (the tile faces from the 上海 sheets, 2026-11-14)
 document.fonts && document.fonts.load('800 40px "Shippori Mincho B1"', '一萬東南西北發中雀華').then(() => { MJTiles.reset(); ART.clear(); renderHome(); });
-renderHome();
+renderHome(); homeEnter();
 window.JANKA = { get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, DB, startGame, quitGame, cutin, showMoves, showFinal };
 })();
