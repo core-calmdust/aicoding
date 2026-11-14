@@ -164,7 +164,7 @@
   const KANJI = /[\u4e00-\u9fff々]/;
   function verb(stem) {   // the verb stem before ます → { dict, neg, vol, past }
     const k = stem.slice(-1), body = stem.slice(0, -1);
-    if (/[てで]い$/.test(stem)) return { dict: stem + 'る', neg: stem + 'ない', vol: stem + 'よう', past: stem + 'た' };   // (〜ています: the いる of the progressive)
+    if (/[てで][いみ]$/.test(stem)) return { dict: stem + 'る', neg: stem + 'ない', vol: stem + 'よう', past: stem + 'た' };   // (〜ています: the いる of the progressive)
     // し: する after a noun / particle / two kanji (確認し), す after one kanji or the a-row kana of 動かし・逃がし・増やし (godan)
     if (k === 'し' && (stem.length === 1 || (KANJI.test(stem.slice(-2, -1)) && KANJI.test(stem.slice(-3, -2))) || !(KANJI.test(stem.slice(-2, -1)) || /[かがさやらわまたな]/.test(stem.slice(-2, -1))))) return { dict: body + 'する', neg: body + 'しない', vol: body + 'しよう', past: body + 'した' };
     if (/来$/.test(stem) || /来き$/.test(stem)) return { dict: stem.replace(/き?$/, '') + 'る', neg: stem.replace(/き?$/, '') + 'ない', vol: stem.replace(/き?$/, '') + 'よう', past: stem.replace(/き?$/, '') + 'た' };
@@ -177,7 +177,8 @@
     const E = '(?=[。！？!?」（(]|<br>|</b>|</p>|$)';
     let t = String(html)
       .replace(new RegExp('でしょうか' + E, 'g'), 'かな').replace(new RegExp('でしょう' + E, 'g'), 'だろうね')
-      .replace(new RegExp('でした' + E, 'g'), 'だった\u0003P').replace(new RegExp('ですか' + E, 'g'), 'かな').replace(new RegExp('です' + E, 'g'), '\u0003D')
+      .replace(new RegExp('でした' + E, 'g'), 'だった\u0003P').replace(new RegExp('ですか' + E, 'g'), 'かな').replace(new RegExp('(しい|たい|ない|多い|強い|弱い|大きい|小さい|高い|低い|良い|いい|早い|遅い|近い|遠い|広い|狭い|危ない|少ない)です' + E, 'g'), (m, k) => k + '\u0003V')   // (多いです・新しいです → 多いよ: an adjective drops です)
+      .replace(new RegExp('です' + E, 'g'), '\u0003D')
       .replace(/だよ(?=。|<br>|$)/g, '\u0003D')   // (the hand-written casual lines too: their だよ joins the rotation)
       .replace(new RegExp('([てで])ください' + E, 'g'), '$1ね')
       .replace(/ですが/g, 'だけど')
@@ -192,35 +193,14 @@
     if (fox) return t;
     return t.replace(/\u0003D/g, 'だよ').replace(/\u0003[VP]/g, 'よ');
   }
-  /* ---------- each guide's own way of talking (2026-11-15) ----------
-     The lesson texts are long: one ending (〜だよ・〜よ) on every sentence reads as a monotone. Each guide has its endings
-     (picked in turn, never the same twice running), its verbal tic now and then, how it calls the player, and short asides
-     dropped between sentences (not every one). Used by the lessons here and the backgammon puzzles (window.AtlasGuideJa). */
-  const GSTY = {
-    backgammon: { you: 'きみ', D: ['だよ', 'なんだ', 'だワン', 'だね', 'なんだよね'], V: ['よ', 'んだ', 'んだワン', 'ね', 'ぞ', 'んだよね'], P: ['よ', 'んだ', 'ね', 'んだワン'],
-      aside: ['ワン！ ', 'クンクン… ', 'ふむふむ、', 'それでね、', 'いい？ ', 'ここ、大事だワン！ ', 'ぼくの鼻がピクピクしてきた… '] },
-    shogi: { D: ['だよ', 'だコン', 'なんだ', 'だね', 'なのよ'], V: ['よ', 'のよ', 'コン', 'ね', 'んだ'], P: ['よ', 'のよ', 'コン', 'ね'], aside: ['コンコン、', 'ふふっ、', 'それでね、', 'いい？ ', 'ここがキモだコン！ '] },
-    xiangqi: { D: ['だよ', 'だコン', 'なんだ', 'だね', 'なのよ'], V: ['よ', 'のよ', 'コン', 'ね', 'んだ'], P: ['よ', 'のよ', 'コン', 'ね'], aside: ['コンコン、', 'ふふっ、', 'それでね、', 'いい？ ', 'ここがキモだコン！ '] },
-    chess: { D: ['だよ', 'なんだ', 'だね', 'だピョン', 'なんだよね'], V: ['よ', 'んだ', 'ね', 'ピョン', 'ぞ'], P: ['よ', 'んだ', 'ね', 'ピョン'], aside: ['ピョン！ ', 'よーし、', 'それでね、', 'いい？ ', 'ここ大事！ '] },
-    checkers: { D: ['だよ', 'なんだ', 'だカニ', 'だね', 'なんだよね'], V: ['よ', 'んだ', 'カニ', 'ね', 'ぞ'], P: ['よ', 'んだ', 'カニ', 'ね'], aside: ['チョキチョキ、', 'カニカニ、', 'それでね、', 'いい？ ', 'ここ大事だカニ！ '] },
-    gomoku: { D: ['だよ', 'なんだ', 'だペン', 'だね', 'なんだよね'], V: ['よ', 'んだ', 'ペン', 'ね', 'ぞ'], P: ['よ', 'んだ', 'ペン', 'ね'], aside: ['ペンペン！ ', 'ふむふむ、', 'それでね、', 'いい？ ', 'ここ大事だペン！ '] },
-  };
+  /* ---------- the guide's speech in Japanese (2026-11-15) ----------
+     No random endings or asides: a guide's character lives in lines written for it by hand (backgammon: ダイスン,
+     backgammon/voice-dicepup-ja.js, checked by tools/voice-lint.js). Texts without such lines are only made plain. */
+  const GYOU = { backgammon: 'きみ' };
   function guideJa(html, id) {
-    const S = GSTY[id], t = casualJa(html, true);
-    if (!S) return t.replace(/\u0003D/g, 'だよ').replace(/\u0003[VP]/g, 'よ');
-    let lastE = '';   // (never the same ending twice running, whatever kind of sentence: 〜ね。〜だね。 counts as the same)
-    const pk = k => { const a = S[k], c = a.filter(x => x.slice(-1) !== lastE.slice(-1)); const x = (c.length ? c : a)[Math.floor(Math.random() * (c.length || a.length))]; lastE = x; return x; };
-    // (a short sentence — 「金の番です」 — keeps the plain ending: the flourishes are for the explanations)
-    let out = t.replace(/\u0003([DVP])/g, (_, k, at, all) => { const b = Math.max(all.lastIndexOf('。', at), all.lastIndexOf('！', at), all.lastIndexOf('<br>', at) + 3, all.lastIndexOf('<p>', at) + 2); return at - b < 12 ? (k === 'D' ? 'だよ' : 'よ') : pk(k); });
-    if (S.you) out = out.replace(/あなた/g, S.you);
-    // asides: at a sentence start (after 。！ or a line break, not before a list mark or a tag), about one in four, never two running
-    let gap = 1, lastA = '';
-    out = out.replace(/(^|[。！]|<br>)(?=[^<・💡⚖🧭\s。、])/g, (m, a, at) => {
-      if (at === 0 && a === '') return m;
-      if (gap < 2 || Math.random() > .28) { gap++; return m; }
-      gap = 0; const c = S.aside.filter(x => x !== lastA); lastA = c[Math.floor(Math.random() * c.length)]; return a + lastA;
-    });
-    return out;
+    let t = casualJa(html, id === 'shogi');
+    if (GYOU[id]) t = t.replace(/あなた/g, GYOU[id]);
+    return t;
   }
   window.AtlasGuideJa = guideJa;
   const pick = a => Array.isArray(a) ? a[Math.floor(Math.random() * a.length)] : a;
@@ -719,7 +699,7 @@
         .then(([ls, op, I]) => { this.I = I || {}; this.data = { ls, op }; return this; })
         .catch(e => { this.p = null; throw e; }));
     },
-    tx(k, lang, v) { const I = this.I || {}; let x = I[lang] && I[lang][k]; if (x === undefined) x = I.en && I.en[k]; if (x === undefined) x = (I.ja && I.ja[k]); if (x === undefined) return ''; return v && typeof x === 'string' ? fill(x, v) : x; },
+    tx(k, lang, v) { const I = this.I || {}; let x = lang === 'ja' && I['ja@dicepup'] ? I['ja@dicepup'][k] : undefined; if (x === undefined) x = I[lang] && I[lang][k];   /* (ダイスン's own lines first, backgammon/voice-dicepup-ja.js) */ if (x === undefined) x = I.en && I.en[k]; if (x === undefined) x = (I.ja && I.ja[k]); if (x === undefined) return ''; return v && typeof x === 'string' ? fill(x, v) : x; },
     names(lang) { const ck = bgCkOf(); return { c: this.tx('ng.' + ck[0], lang) || ck[0], o: this.tx('ng.' + ck[1], lang) || ck[1] }; },
     mini: (pos, dice) => window.AtlasMini && AtlasMini.backgammon ? AtlasMini.backgammon({ pos, dice }) : '',
     course(id) { const c = (this.data.ls.cats || []).find(x => x.steps.includes(id)); return c ? c.id : 'rules'; },
@@ -750,7 +730,7 @@
       const N = this.names(lang), T = (k, v) => this.tx('ls.' + s.id + '.' + k, lang, Object.assign({}, N, v || {}));
       const intro = String(T('intro', { fig0: '', fig1: '', fig2: '' }) || '').replace(/\{fig\d\}/g, '');
       const keys = this.tx('ls.' + s.id + '.keys', lang), kh = this.tx('ls.keysH', lang);   // (the step's three principles, backgammon/i18n-ls2.js)
-      const introK = intro + (keys && keys !== 'ls.' + s.id + '.keys' ? `<div class="ls-keys"><b>🧭 ${kh}</b><ul>${String(keys).split('|').map(x => '<li>' + x + '</li>').join('')}</ul></div>` : '');
+      const introK = intro + (keys && keys !== 'ls.' + s.id + '.keys' ? `<br><b>🧭 ${kh}</b>` + String(keys).split('|').map(x => { const cjk = /^(ja|zh)/.test(lang), y = cjk ? x.replace(/。(?=.)/g, '、') : x; return '<br>・' + y + (/[。！？!?.]$/.test(y) ? '' : cjk ? '。' : '.'); }).join('') : '');   // (one sentence per principle: the speech pages never cut one in two)
       return { id: s.id, title: T('title'), intro: introK,
         probs: (s.problems || []).map(P => {
           const pos = bgPos(P.pos, P.side), ask = this.tx('ls.turn', lang, { c: '<b>' + N.c + '</b>' }) + ' ';

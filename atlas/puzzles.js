@@ -482,7 +482,7 @@
      'aicoding-backgammon-pz-last', the daily 'aicoding-backgammon-v2-daily'. Texts: the game's i18n*.js (a sandbox). On the 3D table
      you always play the near side: a problem for the other side is turned round (the two halves of the position swapped — the
      plays are written in the mover's own numbering, so they stay as they are). Rules: backgammon/bg.js (window.BG, loaded by the table). ---------- */
-  const BG_TX = ['../backgammon/i18n.js?v=20261107l14b', '../backgammon/i18n-x.js?v=20261111c8', '../backgammon/i18n-ls.js?v=20261107l14', '../backgammon/i18n-op.js?v=20261107l14', '../backgammon/i18n-teach.js?v=1', '../backgammon/i18n-ls2.js?v=1'];
+  const BG_TX = ['../backgammon/i18n.js?v=20261107l14b', '../backgammon/i18n-x.js?v=20261111c8', '../backgammon/i18n-ls.js?v=20261107l14', '../backgammon/i18n-op.js?v=20261107l14', '../backgammon/i18n-teach.js?v=1', '../backgammon/i18n-ls2.js?v=1', '../backgammon/voice-dicepup-ja.js?v=1'];
   const bgTexts = () => Promise.all(BG_TX.map(u => fetch(u).then(r => r.text()).catch(() => ''))).then(L => { const w = {}; for (const tx of L) { try { new Function('window', 'var I18N = window.I18N || (window.I18N = {});\n' + tx.replace(/^\s*var I18N = window\.I18N = \{\};/m, ''))(w); } catch (e) { console.warn('[puzzles] backgammon texts', e); } } window.AtlasBgTeach = { name: w.BGTeachName, html: w.BGTeachHTML }; return w.I18N || {}; });
   // the commentary engine (backgammon/explain.js: what a play is for) — after the rules (it reads window.BG when it loads)
   const bgScript = (src, test) => test() ? Promise.resolve() : new Promise(res => { const sc = document.createElement('script'); sc.src = src; sc.onload = sc.onerror = () => res(); document.head.appendChild(sc); });
@@ -495,7 +495,7 @@
   BOOK.backgammon = {
     url: '../backgammon/puzzles.json?v=20261021fz', KEY: 'aicoding-backgammon-v2-puzzles', LAST: 'aicoding-backgammon-pz-last', KEEP: 'aicoding-backgammon-v2-pz-keep', data: null, I: null,
     prep(d) { d.levels = d.cats; return d; },
-    tx(k, lang, v) { const I = this.I || {}; let x = I[lang] && I[lang][k]; if (x === undefined) x = I.en && I.en[k]; if (x === undefined) x = (I.ja && I.ja[k]); if (x === undefined) return ''; return v && typeof x === 'string' ? fill(x, v) : x; },
+    tx(k, lang, v) { const I = this.I || {}; let x = lang === 'ja' && I['ja@dicepup'] ? I['ja@dicepup'][k] : undefined; if (x === undefined) x = I[lang] && I[lang][k];   /* (ダイスン's own lines first, backgammon/voice-dicepup-ja.js) */ if (x === undefined) x = I.en && I.en[k]; if (x === undefined) x = (I.ja && I.ja[k]); if (x === undefined) return ''; return v && typeof x === 'string' ? fill(x, v) : x; },
     sv: x => x === true ? 3 : (+x || 0),
     keep() {   // = backgammon/app.js pzKeep: the replaced puzzles a player had already met stay theirs
       const D = this.data; if (!D || !D.old || !D.cut) return [];
