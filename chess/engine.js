@@ -14,7 +14,10 @@ const mFrom = m => m & 127, mTo = m => (m >> 7) & 127, mPromo = m => (m >> 14) &
 const sqName = s => 'abcdefgh'[s & 7] + ((s >> 4) + 1);
 const sqOf = n => (n.charCodeAt(0) - 97) + ((n.charCodeAt(1) - 49) << 4);
 function xorshift(seed) { let s = seed >>> 0 || 1; return () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s | 0; }; }
-const rnd = xorshift(0x2545f491);
+// (2026-11-14) the xorshift's outputs go through murmur3's fmix32: raw, they are linear over GF(2), so the second half of
+// every key was a fixed linear map of the first — the 64-bit keys were only 32 bits (claude/praline-spec.md「Zobrist」)
+const zmix = f => () => { let z = f() >>> 0; z ^= z >>> 16; z = Math.imul(z, 0x85ebca6b); z ^= z >>> 13; z = Math.imul(z, 0xc2b2ae35); z ^= z >>> 16; return z | 0; };   // (2026-11-14) murmur3's fmix32 over the xorshift: see the Zobrist keys
+const rnd = zmix(xorshift(0x2545f491));
 const Z1 = new Int32Array(16 * 128), Z2 = new Int32Array(16 * 128), ZC1 = new Int32Array(16), ZC2 = new Int32Array(16), ZE1 = new Int32Array(8), ZE2 = new Int32Array(8);
 for (let i = 0; i < Z1.length; i++) { Z1[i] = rnd(); Z2[i] = rnd(); }
 for (let i = 0; i < 16; i++) { ZC1[i] = rnd(); ZC2[i] = rnd(); }

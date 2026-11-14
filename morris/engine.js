@@ -18,6 +18,9 @@ const VARIANTS = {
   six:    { size: 5, pieces: 6,  fly: false, diag: false },
 };
 function xorshift(seed) { let s = seed >>> 0 || 1; return () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s | 0; }; }
+// (2026-11-14) the xorshift's outputs go through murmur3's fmix32: raw, they are linear over GF(2), so the second half of
+// every key was a fixed linear map of the first — the 64-bit keys were only 32 bits (claude/praline-spec.md「Zobrist」)
+const zmix = f => () => { let z = f() >>> 0; z ^= z >>> 16; z = Math.imul(z, 0x85ebca6b); z ^= z >>> 13; z = Math.imul(z, 0xc2b2ae35); z ^= z >>> 16; return z | 0; };   // (2026-11-14) murmur3's fmix32 over the xorshift: see the Zobrist keys
 
 const geoms = {};
 function geom(name) {
@@ -43,7 +46,7 @@ function geom(name) {
   for (const [a, b] of extra) link(a, b);
   const pairs = Array.from({ length: n }, () => []);
   for (const m of mills) for (const i of m) { const o = m.filter(x => x !== i); pairs[i].push(o[0], o[1]); }
-  const rnd = xorshift(0x9e3779b9 ^ n * 7919 ^ (V.diag ? 77 : 0));
+  const rnd = zmix(xorshift(0x9e3779b9 ^ n * 7919 ^ (V.diag ? 77 : 0)));
   const zp = new Int32Array(3 * n), zp2 = new Int32Array(3 * n), zh = new Int32Array(3 * 16), zh2 = new Int32Array(3 * 16);
   for (let i = 0; i < zp.length; i++) { zp[i] = rnd(); zp2[i] = rnd(); }
   for (let i = 0; i < zh.length; i++) { zh[i] = rnd(); zh2[i] = rnd(); }
@@ -666,7 +669,7 @@ else if (typeof self !== 'undefined' && typeof importScripts === 'function') {
     let simd = true;
     try { simd = WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11])); } catch (e) { simd = false; }
     if (/[?&]nosimd=1\b/.test(self.location.search || '')) simd = false;   // (a check of the fallback)
-    const url = new URL(simd ? 'engine_simd.wasm?v=3' : 'engine.wasm?v=20261114eg', self.location.href);
+    const url = new URL(simd ? 'engine_simd.wasm?v=4' : 'engine.wasm?v=20261114zf1', self.location.href);
     wReady = (MTL ? new Promise(res => self.addEventListener('message', function f(e) { if (e.data && e.data.type === 'mtinit') { self.removeEventListener('message', f); res(e.data); } }))
       .then(m => {
         const x = new WebAssembly.Instance(m.module, { env: { memory: m.mem, now: () => Date.now(), progress: d => { if (wProg) wProg(d); } } }).exports;

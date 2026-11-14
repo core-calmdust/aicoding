@@ -531,7 +531,7 @@
      { id: { best, pass } }). Texts: checkers/i18n.js (a sandbox) and lux.json (each opening's story). The 3D board has no square numbers:
      the moves the texts name ({m}, {x}) become their arrows on the board, the ramps' and openings' own texts come from atlas/nocoord. A
      position here is { spec: { b, side } (null = the start), me }. Moves: checkers/engine.js move numbers. */
-  const CK_ENG = '../checkers/engine.js?v=rb4-pro1-n43-mt1-sv2';   // (the table adapter's file: one cache)
+  const CK_ENG = '../checkers/engine.js?v=rb4-pro1-n43-mt1-sv2-zf1';   // (the table adapter's file: one cache)
   const ckEng = () => window.CheckersEngine ? Promise.resolve(window.CheckersEngine) : new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = CK_ENG; sc.onload = () => window.CheckersEngine ? res(window.CheckersEngine) : rej(new Error('engine')); sc.onerror = rej; document.head.appendChild(sc); });
   const CK_WIN = 30000, CK_WINT = 29000;
   const ckS = v => v > CK_WINT ? 0.9 + 0.1 * Math.min(1, 6 / (CK_WIN - v + 1)) : v < -CK_WINT ? -(0.9 + 0.1 * Math.min(1, 6 / (CK_WIN + v + 1))) : v > CK_WINT - 1000 ? 0.88 : v < -(CK_WINT - 1000) ? -0.88 : Math.tanh(v / 260) * 0.82;   // (= checkers/app.js sOfV)
@@ -600,7 +600,7 @@
      ('aicoding-xiangqi-lessons' { id: { best, clear } }, 'aicoding-xiangqi-open' { id: { best, pass } }). Texts: xiangqi/i18n.js (a
      sandbox). The 3D board has no coordinates: the moves the texts name ({m}, {x}) become their arrows. A position here is
      { spec: FEN, me: 1 Red / 2 Black }. Moves: xiangqi/engine.js move numbers; the ramps name points and moves in ICCS (e3, e3d5). */
-  const XQ_ENG = '../xiangqi/engine.js?v=20261114w';   // (the table adapter's file: one cache)
+  const XQ_ENG = '../xiangqi/engine.js?v=20261114w-zf1';   // (the table adapter's file: one cache)
   const xqEng = () => window.XiangqiEngine ? Promise.resolve(window.XiangqiEngine) : new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = XQ_ENG; sc.onload = () => window.XiangqiEngine ? res(window.XiangqiEngine) : rej(new Error('engine')); sc.onerror = rej; document.head.appendChild(sc); });
   const xqMe = fen => / b$/.test(String(fen || '')) ? 2 : 1;
   const xqSq = n => { const f = 'abcdefghi'.indexOf(String(n)[0]), r = +String(n).slice(1); return f < 0 || !(r >= 0 && r <= 9) ? -1 : (9 - r) * 9 + f; };

@@ -108,7 +108,7 @@ function save() {
 
 // ====================================================================== engine workers
 let jobId = 0;
-const ENGINE_URL = 'engine.js?v=14';
+const ENGINE_URL = 'engine.js?v=14-zf1';
 function makeWorker() {
   const w = new Worker(ENGINE_URL);
   w.jobs = new Map();
@@ -142,7 +142,7 @@ const mtLevel = lv => { const L = E.LEVELS[lv]; return !!(L && L.s && L.ms && !L
 // core.c now, and on these threads the helpers take moves at its split points (Praline's Young Brothers Wait in core_mt.wasm,
 // claude/amazons-spec.md「αβ を C に」). Without an isolated page (no shared memory): shared/mtsplit.js's workers as before (each
 // with its own core: the root moves and the main line shared out, no shared table).
-const MCP = window.MTEngine && MTEngine.use ? MTEngine.use({ wasm: 'core_mt.wasm?v=6', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=2', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = core_mt.wasm's (1 GiB); initial ≥ its declared 617 pages
+const MCP = window.MTEngine && MTEngine.use ? MTEngine.use({ wasm: 'core_mt.wasm?v=7', lead: ENGINE_URL + '&mt=1', helper: 'mt-helper.js?v=2', slot: 2 << 20, initial: 1024, maximum: 16384,   // maximum = core_mt.wasm's (1 GiB); initial ≥ its declared 617 pages
   imports: mem => ({ env: { memory: mem, now: () => Date.now() } }), help: () => ({}) }) : null;
 const mcJob = msg => msg.type === 'think' && (msg.cfg ? !!(msg.cfg.s && msg.cfg.mc) : !!(E.LEVELS[msg.level] || {}).mc);
 // the MCTS's default thread count (2026-11-10): the performance cores (shared/mtengine.js perfThreads — 10 of the user's M4 Pro's

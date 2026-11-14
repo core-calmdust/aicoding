@@ -32,7 +32,9 @@ const mv = (f, t, cap) => f + 32 * t + 1024 * (cap >>> 0);
 const mFrom = m => m % 32, mTo = m => Math.floor(m / 32) % 32, mCap = m => Math.floor(m / 1024) >>> 0;
 // zobrist (two 32-bit halves)
 let zs = 0x2545F491;
-const zr = () => { zs ^= zs << 13; zs >>>= 0; zs ^= zs >>> 17; zs ^= zs << 5; zs >>>= 0; return zs; };
+// (2026-11-14) the xorshift's outputs go through murmur3's fmix32: raw, they are linear over GF(2), so the second half of
+// every key was a fixed linear map of the first — the 64-bit keys were only 32 bits (claude/praline-spec.md「Zobrist」)
+const zr = () => { zs ^= zs << 13; zs >>>= 0; zs ^= zs >>> 17; zs ^= zs << 5; zs >>>= 0; let z_ = zs; z_ ^= z_ >>> 16; z_ = Math.imul(z_, 0x85ebca6b); z_ ^= z_ >>> 13; z_ = Math.imul(z_, 0xc2b2ae35); z_ ^= z_ >>> 16; return z_ >>> 0; };
 const Z1 = [], Z2 = []; for (let k = 0; k < 4; k++) { Z1.push([]); Z2.push([]); for (let i = 0; i < 32; i++) { Z1[k].push(zr()); Z2[k].push(zr()); } }
 const ZS1 = zr(), ZS2 = zr();
 

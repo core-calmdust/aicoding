@@ -57,7 +57,9 @@ const isRemove = m => m >= 0 && mFrom(m) === mTo(m);
 let Z1 = [[], []], Z2 = [[], []], ZS1 = 0, ZS2 = 0;
 function initZobrist() {
   let zs = 0x2545F491 ^ (N * 7919);
-  const zr = () => { zs ^= zs << 13; zs >>>= 0; zs ^= zs >>> 17; zs ^= zs << 5; zs >>>= 0; return zs; };
+  // (2026-11-14) the xorshift's outputs go through murmur3's fmix32: raw, they are linear over GF(2), so the second half of
+  // every key was a fixed linear map of the first — the 64-bit keys were only 32 bits (claude/praline-spec.md「Zobrist」)
+  const zr = () => { zs ^= zs << 13; zs >>>= 0; zs ^= zs >>> 17; zs ^= zs << 5; zs >>>= 0; let z_ = zs; z_ ^= z_ >>> 16; z_ = Math.imul(z_, 0x85ebca6b); z_ ^= z_ >>> 13; z_ = Math.imul(z_, 0xc2b2ae35); z_ ^= z_ >>> 16; return z_ >>> 0; };
   Z1 = [[], []]; Z2 = [[], []];
   for (let k = 0; k < 2; k++) for (let i = 0; i < NN; i++) { Z1[k].push(zr()); Z2[k].push(zr()); }
   ZS1 = zr(); ZS2 = zr();

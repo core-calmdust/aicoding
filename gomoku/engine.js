@@ -139,7 +139,10 @@ function setLineWeights(group, arr) {   // arr: 4 * NL (role mover black, mover 
 
 // ---------------------------------------------------------------- zobrist
 function xorshift(seed) { let s = seed >>> 0 || 1; return () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s | 0; }; }
-const zr = xorshift(0x9e3779b9);
+// (2026-11-14) the xorshift's outputs go through murmur3's fmix32: raw, they are linear over GF(2), so the second half of
+// every key was a fixed linear map of the first — the 64-bit keys were only 32 bits (claude/praline-spec.md「Zobrist」)
+const zmix = f => () => { let z = f() >>> 0; z ^= z >>> 16; z = Math.imul(z, 0x85ebca6b); z ^= z >>> 13; z = Math.imul(z, 0xc2b2ae35); z ^= z >>> 16; return z | 0; };   // (2026-11-14) murmur3's fmix32 over the xorshift: see the Zobrist keys
+const zr = zmix(xorshift(0x9e3779b9));
 const ZA = new Int32Array(SIZE * 3), ZB = new Int32Array(SIZE * 3);
 for (let i = 0; i < ZA.length; i++) { ZA[i] = zr(); ZB[i] = zr(); }
 const ZS1 = zr(), ZS2 = zr();

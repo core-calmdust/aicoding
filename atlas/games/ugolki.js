@@ -13,7 +13,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../ugolki/', VER = '?v=9-sp';   // same file / version as ugolki/index.html → shared cache
+  const BASE = '../ugolki/', VER = '?v=9-sp-zf1';   // same file / version as ugolki/index.html → shared cache
   let engP = null;
   function loadEngine() {
     if (window.UgolkiEngine) return Promise.resolve(window.UgolkiEngine);
