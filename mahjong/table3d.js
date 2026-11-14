@@ -366,9 +366,9 @@ class Table3D {
     // light on the middle of the table, the rim a tone lower. So the fill and the key are a little under what a flat light would
     // need, and a wide, fully soft spot from above the middle adds the rest: brightest at the score unit, easing off to the rails
     // (no edge to the pool — penumbra 1). It is light, not paint: the cloth's own texture stays even, so a new skin gets the same mood.
-    s.add(new THREE.HemisphereLight(0xf2f6ff, 0x141a30, 0.26));
-    const pool = new THREE.SpotLight(0xfff3e2, 1.1, 0, 0.42, 1, 1); pool.position.set(0, 24, 1.5); pool.target.position.set(0, 0, 0.6); s.add(pool); s.add(pool.target);
-    const key = new THREE.DirectionalLight(0xffffff, 0.4);
+    s.add(new THREE.HemisphereLight(0xf2f6ff, 0x141a30, 0.22));
+    const pool = new THREE.SpotLight(0xfff3e2, 0.7, 0, 0.46, 1, 1); pool.position.set(0, 24, 1.5); pool.target.position.set(0, 0, 0.6); s.add(pool); s.add(pool.target);
+    const key = new THREE.DirectionalLight(0xffffff, 0.3);
     key.position.set(-6, 22, 10);
     key.castShadow = true;
     key.shadow.mapSize.set(1024, 1024);
@@ -477,7 +477,7 @@ class Table3D {
     // the tiles (2026-11-14, as 上海's): rounded white blocks with a purple back — corners and edges rounded, the face
     // carved (normal map from tiles.js). One shared geometry for the white part and one for the back.
     { const tg = tileGeos(W, H, D, 0.16, 0.15, 0.28, 0.15), tb = tileGeos(W, H, D, 0.16, 0.05, 0.28, 0.05); this.geoFront = tg.front; this.geoBack = tb.back; }   // (ユーザー 2026-11-14: the face keeps its full round edge; the purple back has the crisper edge of the tiles in the dora box — the two meet on the straight side, same outline)   // (one rounded block, split where the white meets the purple)
-    this.matIvory = new THREE.MeshStandardMaterial({ color: new THREE.Color(0xf7f7f3).convertSRGBToLinear(), roughness: .38, metalness: 0 });
+    this.matIvory = new THREE.MeshStandardMaterial({ color: new THREE.Color(0xe6e5df).convertSRGBToLinear(), roughness: .38, metalness: 0 });
     // the back (2026-11-14, ユーザー：紫をもう少し淡く、高級石を磨いたような質感): a pale lavender stone with soft veins, polished
     // (a clear coat over it, a little studio light reflected in it) — four cuts of the same slab so neighbours don't match
     this.envTex = this.envTex || studioEnv();
@@ -497,7 +497,7 @@ class Table3D {
       const tex = new THREE.CanvasTexture(MJTiles.canvas(t, red));
       tex.encoding = THREE.sRGBEncoding; tex.anisotropy = 8;
       const nrm = MJTiles.sheets() ? new THREE.CanvasTexture(MJTiles.normal(t, red)) : null; if (nrm) nrm.anisotropy = 8;
-      m = { normal: new THREE.MeshStandardMaterial({ map: tex, normalMap: nrm, roughness: .38 }), hi: new THREE.MeshStandardMaterial({ map: tex, normalMap: nrm, roughness: .38, emissive: 0xffd36a, emissiveIntensity: .28 }), dim: new THREE.MeshStandardMaterial({ map: tex, normalMap: nrm, roughness: .38, color: 0x9c9c9c }) };
+      m = { normal: new THREE.MeshStandardMaterial({ map: tex, normalMap: nrm, roughness: .38, color: 0xe4e2dc }), hi: new THREE.MeshStandardMaterial({ map: tex, normalMap: nrm, roughness: .38, emissive: 0xffd36a, emissiveIntensity: .28 }), dim: new THREE.MeshStandardMaterial({ map: tex, normalMap: nrm, roughness: .38, color: 0x9c9c9c }) };
       this.faceTex.set(k, m);
     }
     return m;
