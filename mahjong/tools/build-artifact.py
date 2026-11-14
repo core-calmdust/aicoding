@@ -69,6 +69,12 @@ for f in sorted(os.listdir(chara)):
     if f.endswith('.webp'):
         files[f'img/chara/{f}'] = os.path.join(chara, f)
 
+# the recorded sounds (app.js reads them from JANKA_ASSETS + 'snd/')
+snd = os.path.join(ROOT, 'images', 'mahjong', 'snd')
+for f in sorted(os.listdir(snd)):
+    if f.endswith('.mp3'):
+        files[f'img/snd/{f}'] = os.path.join(snd, f)
+
 # the tile sheets (tiles.js reads them from JANKA_ASSETS + 'tiles/' in the bundle)
 for f in ('shanghai-glyphs.png', 'shanghai-art.png'):
     files[f'img/tiles/{f}'] = os.path.join(ROOT, 'atlas', 'img', f)
