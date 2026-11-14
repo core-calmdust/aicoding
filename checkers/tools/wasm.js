@@ -5,7 +5,7 @@ async function load(opts) {
   opts = opts || {};
   const root = path.join(__dirname, '..');
   let prog = null;
-  const { instance } = await WebAssembly.instantiate(fs.readFileSync(path.join(root, opts.nosimd ? 'engine.wasm' : 'engine_simd.wasm')), { env: { now: () => Date.now(), progress: d => prog && prog(d) } });
+  const { instance } = await WebAssembly.instantiate(fs.readFileSync(opts.file || path.join(root, opts.nosimd ? 'engine.wasm' : 'engine_simd.wasm')), { env: { now: () => Date.now(), progress: d => prog && prog(d) } });
   const X = instance.exports;
   const io = () => new Int32Array(X.memory.buffer, X.io_ptr(), 8192);
   const netFile = opts.net || path.join(root, 'evalnet.bin.gz');
@@ -27,7 +27,7 @@ async function load(opts) {
   const wMove = (ft, cap) => E.mv(ft & 31, (ft >> 5) & 31, cap >>> 0);
   const list = () => { const r = io(), L = []; for (let i = 0; i < r[0]; i++) L.push({ m: wMove(r[2 + 3 * i], r[3 + 3 * i]), v: r[4 + 3 * i] }); return L; };
   return {
-    X, E,
+    X, E, setup, io,
     analyze(spec, moves, ms) { setup(spec, moves); X.analyze(ms, 60); return { list: list(), depth: io()[1] }; },
     best(spec, moves, ms) { setup(spec, moves); X.best(99, ms, 0); const r = io(); return { m: wMove(r[0], r[1]), v: r[2], depth: r[3] }; },
     probe(spec) { setup(spec, []); return X.eg_probe_root(); },

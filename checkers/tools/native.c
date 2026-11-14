@@ -34,7 +34,7 @@ static void useNetW(const Net *N) {
   if (N->w) { memcpy(W1, N->w, N->n * 4); net_set(N->h, N->h2, N->scale); }
 }
 // one engine "player": node budget (k), optional net
-typedef struct { int nodes; int depth; Net *net; int ms; } Player;   // nodes per move (0 = none), or ms per move
+typedef struct { int nodes; int depth; Net *net; int ms; int v2; } Player;   // v2: 1 = search v2 also with a node limit (spec "…k+v2"), −1 = the search before v2 also by time ("…ms+v1")   // nodes per move (0 = none), or ms per move
 static int setupFrom(const Pos *start, Move *hist, int nh) {
   IO[0] = start->p[0]; IO[1] = start->p[1]; IO[2] = start->k; IO[3] = start->side; IO[4] = nh;
   for (int i = 0; i < nh; i++) { IO[5 + 2 * i] = hist[i].f | (hist[i].t << 5); IO[6 + 2 * i] = hist[i].cap; }
@@ -44,6 +44,7 @@ static int pickMove(Player *P, const Pos *start, Move *hist, int nh, Move *out, 
   if (!setupFrom(start, hist, nh)) { fprintf(stderr, "bad setup\n"); exit(1); }
   if (!rootN) return 0;
   useNetW(P->net);
+  V2_FORCE = P->v2;
   best_n(P->depth ? P->depth : 99, P->ms, P->ms ? 0 : P->nodes);
   for (int i = 0; i < rootN; i++) if (rootL[i].f == (IO[0] & 31) && rootL[i].t == ((IO[0] >> 5) & 31) && rootL[i].cap == (u32)IO[1]) { *out = rootL[i]; if (val) *val = IO[2]; return 1; }
   *out = rootL[0]; return 1;
@@ -232,6 +233,7 @@ static void loadBallots(void) {
 static Player parsePlayer(const char *spec) {
   Player P = { 0, 0, 0, 0 }; char buf[512]; snprintf(buf, sizeof buf, "%s", spec);
   char *c = strchr(buf, ':'); if (c) { *c = 0; if (strcmp(c + 1, "-")) { Net *n = malloc(sizeof(Net)); *n = loadNet(c + 1); P.net = n; } }
+  if (strstr(buf, "+v2")) P.v2 = 1; else if (strstr(buf, "+v1")) P.v2 = -1;
   if (strstr(buf, "ms")) P.ms = atoi(buf); else P.nodes = (int)(atof(buf) * 1000 + 0.5);   // "1.5k" = 1,500 nodes
   return P;
 }

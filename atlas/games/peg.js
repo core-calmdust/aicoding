@@ -74,7 +74,31 @@
     let pulseOn = false;
     function pulse() { if (stopped) return; const k = .5 + .5 * Math.sin(performance.now() / 260); let any = false; hl.children.forEach(m => { if (m.userData.p) { any = true; const s = .88 + k * .24; m.scale.set(s, 1, s); } }); if (any) { kick(80); requestAnimationFrame(pulse); } else pulseOn = false; }
     const pulsing = m => { m.userData.p = true; if (!pulseOn) { pulseOn = true; requestAnimationFrame(pulse); } return m; };
+    // the pyramid's empty places (2026-11-14, user: 空いている部分がわかりにくい): a faint glass ghost of a marble in each one,
+    // seen through the marbles in front (no depth write, drawn last) — one InstancedMesh, updated with the position
+    let ghost = null, ghostRim = null;
+    function ghosts() {
+      if (!(U && U.pyr) || !a) { if (ghost) ghost.count = ghostRim.count = 0; return; }
+      if (!ghost || ghost.parent !== board) {
+        if (ghost && ghost.parent) { ghost.parent.remove(ghost); ghostRim.parent.remove(ghostRim); }
+        // a flat disc of light where a marble can sit (user: 玉より置ける面を半透明の面で — a ball was mistaken for a marble): a soft
+        // fill and a brighter rim, plain geometry (no picture: the 64 px gradient picture showed specks on phones, 2026-11-14)
+        const mk = op => new TH.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: op, side: TH.DoubleSide, depthWrite: false, depthTest: false, toneMapped: false });
+        const dg = new TH.CircleGeometry(.3, 40); dg.rotateX(-Math.PI / 2);
+        const rg = new TH.RingGeometry(.3, .37, 48); rg.rotateX(-Math.PI / 2);
+        ghost = new TH.InstancedMesh(dg, mk(.5), B.n); ghost.renderOrder = 5; ghost.frustumCulled = false; board.add(ghost);
+        ghostRim = new TH.InstancedMesh(rg, mk(.95), B.n); ghostRim.renderOrder = 6; ghostRim.frustumCulled = false; board.add(ghostRim);
+      }
+      const M4 = new TH.Matrix4(); let k = 0;
+      for (let i = 0; i < B.n; i++) if (!a[i]) { const [x, z] = U.pt(i); M4.makeTranslation(x, TOP + Y(i) + .03, z); ghost.setMatrixAt(k, M4); ghostRim.setMatrixAt(k++, M4); }
+      ghost.count = ghostRim.count = k; ghost.instanceMatrix.needsUpdate = ghostRim.instanceMatrix.needsUpdate = true; kick(120);
+      // one colour at a time going round the rainbow like a gaming light (user, 2026-11-14): 2.5 s a turn, vivid, a soft breathing
+      if (!hueT) hueT = setInterval(() => { if (stopped || !ghost || !ghost.count) return; const t = performance.now(), b = .85 + .15 * Math.sin(t / 380);
+        ghost.material.color.setHSL((t / 2500) % 1, 1, .5); ghostRim.material.color.copy(ghost.material.color); ghost.material.opacity = .45 * b; ghostRim.material.opacity = .95 * b; kick(40); }, 50);
+    }
+    let hueT = 0;
     function marks(hint) {
+      ghosts();
       while (hl.children.length) hl.remove(hl.children[0]);
       if (goal >= 0 && !over) mark(GEO.ring, MAT.goal, goal, .02);
       const last = hist[hist.length - 1]; if (last && sel < 0 && !hint) { mark(GEO.cup, MAT.last, last[2], .006); }
@@ -138,7 +162,7 @@
     function deselect() { if (sel >= 0 && pcs[sel]) { const g = pcs[sel], h0 = g.userData.h0 || 0; if (h0 > 0) anim(120, k => lift(g, h0 * (1 - k))); } sel = -1; }
     function jump(j) {
       busy = true; jid++; const [f, o, t] = j, g = pcs[f], v = pcs[o]; sel = -1;
-      delete pcs[f]; delete pcs[o]; pcs[t] = g; a = E.apply(a, j); hist.push(j); ply++;
+      delete pcs[f]; delete pcs[o]; pcs[t] = g; a = E.apply(a, j); hist.push(j); ply++; ghosts();
       while (hl.children.length) hl.remove(hl.children[0]);
       const [x0, z0] = U.pt(f), [x1, z1] = U.pt(t), h0 = g.userData.h0 || 0, y0 = Y(f), y1 = Y(t);
       anim(420, k => { const q = io(k); g.position.x = x0 + (x1 - x0) * q; g.position.z = z0 + (z1 - z0) * q; g.userData.by = y0 + (y1 - y0) * q; lift(g, Math.sin(k * Math.PI) * .95 + h0 * (1 - k)); g.rotation.z = -q * Math.PI * 1.2 * Math.sign(x1 - x0 || 1); },
@@ -328,6 +352,7 @@
         timers.forEach(clearTimeout); clearTimeout(toastT); if (toastEl) toastEl.remove();
         ctx.el.removeEventListener('click', onClick); ctx.el.removeEventListener('pointerdown', onDown); removeEventListener('pointermove', onMove); removeEventListener('pointerup', onUp); removeEventListener('pointercancel', onUp);
         if (worker) worker.terminate(); worker = null;
+        clearInterval(hueT); if (ghost) [ghost, ghostRim].forEach(g => { g.geometry.dispose(); g.material.dispose(); });
         Object.values(MAT).forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose());
         if (window.__pgPlay === dbg) delete window.__pgPlay;
       },

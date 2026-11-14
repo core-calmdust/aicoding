@@ -96,17 +96,23 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
 .shmap .hd .tot{font-size:17px;font-weight:800;color:#ffd76a;white-space:nowrap}
 .shmap .x{font:inherit;font-size:22px;width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
 .shmap .gift{position:relative;align-self:center;display:flex;align-items:center;gap:8px;margin:0 16px 2px;padding:4px 14px 4px 4px;border-radius:99px;background:rgba(255,215,106,.14);border:1px solid rgba(255,215,106,.35);font-size:15px;font-weight:800;color:#ffe7a0;white-space:nowrap;max-width:calc(100% - 32px);overflow:hidden;text-overflow:ellipsis}.shmap .gift img{width:38px;height:38px;flex:none}
+.shmap .gf{position:absolute;z-index:2;width:calc(var(--nd) * 1.3);height:auto;margin-top:calc(var(--nd) * -1.8 + 10px);transform:translateX(-50%);pointer-events:none;filter:drop-shadow(0 4px 8px rgba(0,0,0,.6));animation:shgfb 2.4s ease-in-out infinite}
+.shmap .gf.got{opacity:.55;animation:none;filter:grayscale(.2) drop-shadow(0 3px 6px rgba(0,0,0,.5))}
+.shmap .nd .gft{position:absolute;right:-8px;top:-6px;font-style:normal;font-size:15px;line-height:1;width:24px;height:24px;display:grid;place-items:center;border-radius:50%;background:#ffd76a;color:#241a05;font-weight:900;box-shadow:0 2px 6px rgba(0,0,0,.5)}
+@keyframes shgfb{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-5px)}}
+.shmap .ar .agf{width:26px;height:26px;margin:-6px -6px -6px 6px;vertical-align:middle}
+.shmap .sh .gfl{display:flex;align-items:center;gap:8px;margin-top:8px;padding:4px 12px 4px 4px;border-radius:14px;background:rgba(255,215,106,.14);border:1px solid rgba(255,215,106,.35);font-weight:800;color:#ffe7a0;font-size:15.5px}.shmap .sh .gfl img{width:44px;height:44px;flex:none}.shmap .sh .gfl.got{opacity:.7}
 .shmap .sh .rw{display:inline-block;margin-top:2px;font-weight:800;color:#ffd76a}
 .shmap .ars{position:relative;display:flex;gap:8px;overflow-x:auto;padding:4px 16px 10px;scrollbar-width:none}.shmap .ars::-webkit-scrollbar{display:none}
 .shmap .ar{flex:none;font:inherit;font-size:15px;font-weight:700;padding:9px 14px;border-radius:99px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#dfe3ff;cursor:pointer;white-space:nowrap}
 .shmap .ar.on{background:#ffd76a;color:#241a05;border-color:#ffd76a}.shmap .ar.lk{opacity:.45}
 .shmap .ar em{font-style:normal;font-size:13px;margin-left:6px;opacity:.85}
 .shmap .fld{position:relative;flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:6px 16px}
-.shmap .cst{position:relative;width:min(100%,calc((100vh - 300px) * 100 / 64),980px);aspect-ratio:100/64}
-.shmap .cst.port{aspect-ratio:64/100;width:min(100%,calc((100vh - 330px) * 64 / 100))}
+.shmap .cst{position:relative;width:min(100%,calc((100vh - 300px) * 100 / 64),980px);aspect-ratio:100/64;--nd:clamp(44px,6.4vw,62px)}
+.shmap .cst.port{aspect-ratio:auto;width:100%;height:100%}
 .shmap .cst svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
 .shmap .nm{position:absolute;left:0;top:-4px;font-size:clamp(26px,5vw,44px);font-weight:900;letter-spacing:.06em;color:rgba(255,255,255,.14);pointer-events:none;white-space:nowrap}
-.shmap .nd{position:absolute;transform:translate(-50%,-50%);width:clamp(44px,6.4vw,62px);height:clamp(44px,6.4vw,62px);border-radius:50%;border:2px solid rgba(255,255,255,.35);background:radial-gradient(circle at 40% 35%,#3a4580,#141a40);color:#fff;font:inherit;font-weight:900;font-size:clamp(16px,2vw,21px);cursor:pointer;display:grid;place-items:center;padding:0}
+.shmap .nd{position:absolute;transform:translate(-50%,-50%);width:var(--nd);height:var(--nd);border-radius:50%;border:2px solid rgba(255,255,255,.35);background:radial-gradient(circle at 40% 35%,#3a4580,#141a40);color:#fff;font:inherit;font-weight:900;font-size:calc(var(--nd) * .36);cursor:pointer;display:grid;place-items:center;padding:0}
 .shmap .nd.ok{background:radial-gradient(circle at 40% 35%,#fff6c8,#f2c24a 55%,#b9851a);color:#3a2604;border-color:#fff3b0;box-shadow:0 0 18px 4px rgba(255,214,106,.55)}
 .shmap .nd.cur{border-color:#9fe8ff;box-shadow:0 0 0 0 rgba(159,232,255,.7);animation:shpulse 1.6s infinite}
 .shmap .nd.lk{opacity:.4;cursor:default}
@@ -120,7 +126,8 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
 .shmap .sh .go:disabled{opacity:.4;cursor:default}
 .shmap .nav{position:absolute;top:50%;transform:translateY(-50%);font:inherit;font-size:26px;width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
 .shmap .nav.l{left:8px}.shmap .nav.r{right:8px}.shmap .nav:disabled{opacity:.2}
-@media (max-width:600px){.shmap .sh{flex-direction:column;align-items:stretch}.shmap .sh .go{width:100%}.shmap .nav{display:none}.shmap .cst{width:100%}}
+@media (max-width:600px){.shmap .hd{padding:calc(8px + env(safe-area-inset-top)) 12px 6px}.shmap .hd h2{font-size:19px}.shmap .hd .tot{font-size:15px}.shmap .x{width:40px;height:40px;font-size:19px}.shmap .ars{padding:2px 12px 8px;gap:6px}.shmap .ar{font-size:14px;padding:7px 12px}.shmap .gift{margin:0 12px 2px;padding:2px 12px 2px 2px}.shmap .fld{padding:4px 10px}.shmap .nm{font-size:24px}.shmap .nd .sr{font-size:11px;margin-top:1px}
+.shmap .sh{width:calc(100vw - 20px);margin-bottom:calc(10px + env(safe-area-inset-bottom));padding:12px 14px;gap:8px;border-radius:18px}.shmap .sh h3{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.shmap .sh .mi{font-size:16px}.shmap .sh .sub{font-size:13.5px;margin-top:2px;line-height:1.4}.shmap .sh .go{padding:12px 16px;font-size:17px}.shmap .gift{font-size:14px}.shmap .gift img{width:30px;height:30px}.shmap .sh .gfl{margin-top:6px;font-size:14.5px}.shmap .sh .gfl img{width:36px;height:36px}.shmap .sh{flex-direction:column;align-items:stretch}.shmap .sh .go{width:100%}.shmap .nav{display:none}.shmap .cst{width:100%}}
 `;
     document.head.appendChild(s);
   }
@@ -160,7 +167,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
        achievements + bonus + Shanghai's stars × COIN_STAR − spent), so nothing is paid twice and it follows the synced record.
      · クジャクパイ (av-peacock-0..3, not in the gacha or the shop): N the rules course (atlas/rules/shanghai.js), R the first
        constellation (10 stages), SR 60 stages, SSR all 120. Granted once each into the portal's wallet (Atlas.load / save). */
-  const COIN_STAR = 10, GIFT_AT = [0, 10, 60, 120];
+  const COIN_STAR = 10, GIFT_AT = [0, 10, 60, 120], GIFT_S = [-1, 9, 59, 119];   // (2026-11-14) the gift sits on a stage of the map: the last of the 1st, 6th and 12th constellation
   const Reward = {
     COIN_STAR, GIFT_AT,
     has(t) { try { return !!(window.Atlas && Atlas.load && Atlas.load().owned.includes('av-peacock-' + t)); } catch (e) { return false; } },
@@ -173,9 +180,11 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
       } catch (e) { return false; }
     },
     // after a stage: the tiers the number of cleared stages has reached
-    check(lang) { const c = Object.keys(prog().st).filter(s => prog().st[s] > 0).length; let got = -1; for (let t = 1; t < 4; t++) if (c >= GIFT_AT[t] && Reward.grant(t, lang)) got = t; return got; },
+    check(lang) { const S = prog().st; let got = -1; for (let t = 1; t < 4; t++) if (S[GIFT_S[t]] > 0 && Reward.grant(t, lang)) got = t; return got; },
+    // the tier waiting on stage s (0 = none)
+    at(s) { const t = GIFT_S.indexOf(s); return t > 0 ? t : 0; },
     // the next tier still to win by stages: { t, left } or null
-    next() { const c = Object.keys(prog().st).filter(s => prog().st[s] > 0).length; for (let t = 1; t < 4; t++) if (!Reward.has(t) && c < GIFT_AT[t]) return { t, left: GIFT_AT[t] - c }; return null; },
+    next() { const S = prog().st; for (let t = 1; t < 4; t++) if (!Reward.has(t) && !(S[GIFT_S[t]] > 0)) { let left = 0; for (let k = 0; k <= GIFT_S[t]; k++) if (!(S[k] > 0)) left++; return { t, left }; } return null; },
   };
   window.ShanghaiReward = Reward;
   function giftToast(t, lang) {
@@ -525,9 +534,11 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     el.innerHTML = `<div class="sky"><canvas></canvas></div><div class="hd"><h2></h2><span class="tot"></span><button type="button" class="x" aria-label="${esc(TX('b.close', lang))}">✕</button></div><div class="ars"></div><div class="gift"></div><div class="fld"><button type="button" class="nav l">‹</button><div class="cst"></div><button type="button" class="nav r">›</button></div><div class="sh"></div>`;
     document.body.appendChild(el); requestAnimationFrame(() => { el.classList.add('on'); stars(el.querySelector('canvas')); });
     const $ = q => el.querySelector(q);
-    const close = () => { el.classList.remove('on'); setTimeout(() => el.remove(), 260); removeEventListener('keydown', key); };
+    function onFit() { requestAnimationFrame(fit); }
+    const close = () => { el.classList.remove('on'); setTimeout(() => el.remove(), 260); removeEventListener('keydown', key); removeEventListener('resize', onFit); if (window.visualViewport) visualViewport.removeEventListener('resize', onFit); };
     const key = e => { if (e.key === 'Escape') close(); if (e.key === 'ArrowLeft') go(area - 1); if (e.key === 'ArrowRight') go(area + 1); };
     addEventListener('keydown', key);
+    addEventListener('resize', onFit); if (window.visualViewport) visualViewport.addEventListener('resize', onFit);
     $('.x').onclick = close;
     const areaOpen = a => unlocked(P, a * 10);
     function go(a) { if (a < 0 || a > 11) return; area = a; const fs = a * 10; pick = Array.from({ length: 10 }, (_, k) => fs + k).find(s => unlocked(P, s) && !cleared(P, s)); if (pick == null) pick = fs; paint(); }
@@ -537,21 +548,44 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
       const nx = Reward.next(), it = nx && window.AtlasArt && AtlasArt.byId && AtlasArt.byId('av-peacock-' + nx.t);
       $('.gift').innerHTML = nx ? `<img src="../images/atlas/av/peacock-${nx.t}.webp" alt=""><span>${esc(TX('rw.next', lang, { n: nx.left, name: it ? it.name[lang] || it.name.en : 'Peacotile' }))}</span>` : '';
       $('.gift').style.display = nx ? '' : 'none';
-      $('.ars').innerHTML = AR.map((a, i) => { const st = Array.from({ length: 10 }, (_, k) => P.st[i * 10 + k] || 0).reduce((x, v) => x + v, 0); return `<button type="button" class="ar${i === area ? ' on' : ''}${areaOpen(i) ? '' : ' lk'}" data-a="${i}">${esc(TX('ar.' + a, lang))}<em>★${st}</em></button>`; }).join('');
+      $('.ars').innerHTML = AR.map((a, i) => { const st = Array.from({ length: 10 }, (_, k) => P.st[i * 10 + k] || 0).reduce((x, v) => x + v, 0); return `<button type="button" class="ar${i === area ? ' on' : ''}${areaOpen(i) ? '' : ' lk'}" data-a="${i}">${esc(TX('ar.' + a, lang))}<em>★${st}</em>${[1, 2, 3].filter(t => Math.floor(GIFT_S[t] / 10) === i && !Reward.has(t)).map(t => `<img class="agf" src="../images/atlas/av/peacock-${t}.webp" alt="">`).join('')}</button>`; }).join('');
       const on = $('.ar.on'); if (on) on.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
       // a tall screen (phones): the figure turned a quarter (x ↔ y) so it fills the height rather than a thin strip
-      const port = innerHeight > innerWidth * 1.1, a = AR[area], pts = CON[a].p.map(([x, y]) => port ? [y, x] : [x, y]), fs = area * 10, VW = port ? 64 : 100, VH = port ? 100 : 64;
+      const port = innerHeight > innerWidth * 1.1, a = AR[area], fs = area * 10, VW = port ? 64 : 100, VH = port ? 100 : 64;
+      let pts = CON[a].p.map(([x, y]) => port ? [y, x] : [x, y]);
+      // phones (2026-11-14): the figure stretched to fill the whole box left for it (both ways), so its ten stars spread out instead of crowding
+      if (port) { const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]), x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+        pts = pts.map(([x, y]) => [9 + (x1 > x0 ? (x - x0) / (x1 - x0) : .5) * (VW - 18), 7 + (y1 > y0 ? (y - y0) / (y1 - y0) : .5) * (VH - 15)]); }
       $('.cst').classList.toggle('port', port);
       const lit = ([i, j]) => cleared(P, fs + i) && cleared(P, fs + j);
       $('.cst').innerHTML = `<div class="nm">${esc(TX('ar.' + a, lang))}</div><svg viewBox="0 0 ${VW} ${VH}" preserveAspectRatio="none">${edges(a).map(e => { const [x1, y1] = pts[e[0]], [x2, y2] = pts[e[1]]; return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${lit(e) ? '#ffd76a' : 'rgba(180,200,255,.28)'}" stroke-width="${lit(e) ? .7 : .35}" stroke-linecap="round" ${lit(e) ? 'filter="drop-shadow(0 0 1.2px #ffd76a)"' : 'stroke-dasharray="1 1.2"'}/>`; }).join('')}</svg>` +
         pts.map(([x, y], k) => { const s = fs + k, ok = cleared(P, s), ul = unlocked(P, s), sr = P.st[s] || 0;
-          return `<button type="button" class="nd${ok ? ' ok' : ''}${ul && !ok ? ' cur' : ''}${ul ? '' : ' lk'}" style="left:${x / VW * 100}%;top:${y / VH * 100}%${s === pick ? ';outline:3px solid #fff;outline-offset:3px' : ''}" data-s="${s}">${k + 1}${sr ? `<span class="sr">${'★'.repeat(sr)}${'☆'.repeat(3 - sr)}</span>` : ''}</button>`; }).join('');
+          return `<button type="button" class="nd${ok ? ' ok' : ''}${ul && !ok ? ' cur' : ''}${ul ? '' : ' lk'}" style="left:${x / VW * 100}%;top:${y / VH * 100}%${s === pick ? ';outline:3px solid #fff;outline-offset:3px' : ''}" data-s="${s}">${k + 1}${sr ? `<span class="sr">${'★'.repeat(sr)}${'☆'.repeat(3 - sr)}</span>` : ''}${Reward.at(s) ? `<i class="gft">${Reward.has(Reward.at(s)) ? '✓' : '🎁'}</i>` : ''}</button>${Reward.at(s) ? `<img class="gf${Reward.has(Reward.at(s)) ? ' got' : ''}" style="left:${x / VW * 100}%;top:${y / VH * 100}%" src="../images/atlas/av/peacock-${Reward.at(s)}.webp" alt="">` : ''}`; }).join('');
       $('.nav.l').disabled = area === 0; $('.nav.r').disabled = area === 11;
-      sheet();
+      sheet(); fit();
+    }
+    // the stage that hands over a クジャクパイ: its picture and name in the sheet
+    function giftLine(s) {
+      const t = Reward.at(s); if (!t) return '';
+      const it = window.AtlasArt && AtlasArt.byId && AtlasArt.byId('av-peacock-' + t), nm = it ? it.name[lang] || it.name.en : 'Peacotile', got = Reward.has(t);
+      return `<div class="gfl${got ? ' got' : ''}"><img src="../images/atlas/av/peacock-${t}.webp" alt=""><span>${got ? '✓ ' : '🎁 '}${esc(TX(got ? 'rw.have' : 'rw.here', lang, { name: nm }))}</span></div>`;
+    }
+    // (2026-11-14) the figure sized to the room actually left between the tabs and the sheet (phones: the browser bars make vh lie),
+    // and the stars sized to the figure, so ten of them never crowd into each other
+    function fit() {
+      const f = $('.fld'), c = $('.cst'); if (!f || !c) return;
+      const cs = getComputedStyle(f), W = f.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight), H = f.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - 22;
+      const port = c.classList.contains('port');
+      if (port) {   // phones: the whole box (the figure is stretched to it)
+        c.style.width = Math.max(160, W) + 'px'; c.style.height = Math.max(200, H) + 'px';
+        c.style.setProperty('--nd', Math.round(Math.max(34, Math.min(54, W * .14, H * .1))) + 'px'); return;
+      }
+      const w = Math.max(160, Math.min(W, H * 100 / 64, 980)); c.style.width = w + 'px'; c.style.height = '';
+      c.style.setProperty('--nd', Math.round(Math.max(34, Math.min(62, w * .064))) + 'px');
     }
     function sheet() {
       const s = pick, st = K.stage(s), ul = unlocked(P, s), sr = P.st[s] || 0, bt = P.bt[s];
-      $('.sh').innerHTML = `<div class="tx"><h3>${esc(stageName(s, lang))} · ${esc(TX('lay.' + st.lay, lang))} <small style="opacity:.7;font-size:15px">${esc(TX('tiles', lang, { n: st.n }))}</small></h3><div class="mi">${esc(missionText(st, lang))}</div><div class="sub">${ul ? esc(starsText(st, lang)) + (sr ? '<br>' + '★'.repeat(sr) + '☆'.repeat(3 - sr) + (bt != null ? ' · ' + esc(TX('r.best', lang, { t: mmss(bt) })) : '') : '') : esc(TX('st.lock', lang))}<br><span class="rw">${esc(TX('rw.star', lang, { n: COIN_STAR }))}</span></div></div><button type="button" class="go"${ul ? '' : ' disabled'}>${esc(TX('b.start', lang))} ▶</button>`;
+      $('.sh').innerHTML = `<div class="tx"><h3>${esc(stageName(s, lang))} · ${esc(TX('lay.' + st.lay, lang))} <small style="opacity:.7;font-size:15px">${esc(TX('tiles', lang, { n: st.n }))}</small></h3><div class="mi">${esc(missionText(st, lang))}</div><div class="sub">${ul ? esc(starsText(st, lang)) + (sr ? '<br>' + '★'.repeat(sr) + '☆'.repeat(3 - sr) + (bt != null ? ' · ' + esc(TX('r.best', lang, { t: mmss(bt) })) : '') : '') : esc(TX('st.lock', lang))}<br><span class="rw">${esc(TX('rw.star', lang, { n: COIN_STAR }))}</span>${giftLine(s)}</div></div><button type="button" class="go"${ul ? '' : ' disabled'}>${esc(TX('b.start', lang))} ▶</button>`;
       $('.go').onclick = () => { if (!ul) return; close(); o.play(s); };
     }
     el.addEventListener('click', e => {

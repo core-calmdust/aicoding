@@ -508,6 +508,7 @@ async function onEvent(ev, d) {
       for (const r of d.results) if (r.seat !== ME) TB.layoutHand(r.seat, r.hand, null, true);
       await sleep(400);
       for (let i = 0; i < d.results.length; i++) await showAgari(d, d.results[i], i === d.results.length - 1);
+      await showMoves(d, { win: d.results.map(r => r.seat) });
       break;
     }
     case 'ryuukyoku': {
@@ -532,7 +533,18 @@ function refreshTable() {
 function layoutRiver(s, anim) {
   const p = G.P[s];
   const riv = p.river.map((r, i) => ({ id: r.id, taken: r.taken, sideways: i === p.riichiTurn || (p.riichiTurn >= 0 && i > p.riichiTurn && p.river.slice(p.riichiTurn, i).every(x => x.taken) && i === firstVisibleAfter(p)) }));
-  TB.layoutRiver(s, riv, anim);
+  // my own discard: the hand pinches the very tile of my hand row (the page's tile: its place and size on the screen → a pose
+  // in front of the camera that covers it) and takes it out to the river
+  let lx = 0;
+  // (the tile's place is read from the layout — offsets up to #game — not from the screen: on a phone held upright the whole
+  // game is turned 90°, where screen rectangles are turned too. 2026-11-14: with that case left out the hand came from the
+  // table's edge instead, which is what a phone or a narrow window showed)
+  if (anim && s === ME && riv.length) { try {
+    const el = document.querySelector(`#hand .tl[data-id="${riv[riv.length - 1].id}"]`), root = $('#game');
+    const off = e => { let x = 0, y = 0; for (let n = e; n && n !== root; n = n.offsetParent) { x += n.offsetLeft; y += n.offsetTop; } return [x, y]; };
+    if (el && root.contains(el)) { const [ex, ey] = off(el), [sx, sy] = off($('#stage')); lx = TB.screenPose(ex + el.offsetWidth / 2 - sx, ey + el.offsetHeight / 2 - sy, el.offsetWidth); }
+  } catch (e) {} }
+  TB.layoutRiver(s, riv, anim, lx);
 }
 function firstVisibleAfter(p) {   // riichi tile was called: the next visible tile is turned instead
   if (p.riichiTurn < 0 || !p.river[p.riichiTurn].taken) return -1;
@@ -840,43 +852,85 @@ function scoreRows(d, winners) {
 }
 function waitClick(box, sel) { return new Promise(res => { const b = box.querySelector(sel); b.onclick = () => { SND.pick(); res(); }; if (AUTO) setTimeout(res, 1600); }); }
 
+// ---- the end of a hand (2026-11-14, ユーザー: the basic plan) ----
+//  1  the win: the winner's character large, the hand, the yaku one by one, the points large        (showAgari, one per winner)
+//  2  the points move: four panels where the players sit, arrows from who pays to who is paid, the
+//     scores counting to their new values, each player's place                                      (showMoves, once)
+//  A drawn hand: the tenpai hands are laid open where they stand on the table (no list of hands), then 2 with テンパイ / ノーテン.
 async function showAgari(d, r, last) {
   const c = UIS.chars[r.seat], res = r.res;
-  const yl = res.list.filter(([k, h]) => !(k === 'ura' && !h && !(G.P[r.seat].riichi))).map(([k, h]) =>
-    `<div class="yk"><span>${esc(I18N.yaku(k))}</span><b>${res.yakumanN ? (h >= 26 ? t('dbl_yakuman') : t('yakuman')) : t('han', { n: h })}</b></div>`).join('');
+  const ys = res.list.filter(([k, h]) => !(k === 'ura' && !h && !(G.P[r.seat].riichi)));
+  const yl = ys.map(([k, h], i) =>
+    `<div class="yk" style="--i:${i}"><span>${esc(I18N.yaku(k))}</span><b>${res.yakumanN ? (h >= 26 ? t('dbl_yakuman') : t('yakuman')) : t('han', { n: h })}</b></div>`).join('');
   const hand = r.hand.slice(0, r.tsumo ? -1 : r.hand.length - 1).sort((a, b) => a - b);
   const melds = r.melds.map(m => `<span class="meld">${m.tiles.map((id, i) => m.type === 'ankan' && (i === 0 || i === 3) ? backHTML('sm') : tileHTML(id, 'sm')).join('')}</span>`).join('');
-  const pays = r.moves.filter(m => m[2] !== 'shugi').reduce((a, m) => a + m[1], 0);
+  const pts = r.moves.filter(m => m[2] !== 'shugi').reduce((a, m) => a + m[1], 0);
   const lim = res.limit ? t(res.limit) : '';
-  const pts = pays;
   const box = modal(`
-    <div class="agari" style="--c:${c.color};--c2:${c.color2}">
-      <div class="ag-art frame fr-${c.rarity}"><img src="${charImg(c, 'bust')}" alt=""><i class="fx-sh"></i><div class="ag-who"><b>${esc(L(c.name))}</b><span>${r.tsumo ? t('tsumo') : t('ron')}</span></div></div>
-      <div class="ag-main">
+    <div class="agst" style="--c:${c.color};--c2:${c.color2};--n:${ys.length}">
+      <div class="agst-bg"></div>
+      <div class="agst-ch"><img src="${charImg(c, 'full')}" alt=""></div>
+      <div class="agst-who"><b>${esc(L(c.name))}</b><span>${r.tsumo ? t('tsumo') : t('ron')}</span></div>
+      <div class="agst-main">
         <div class="ag-hand">${hand.map(id => tileHTML(id, 'md')).join('')}${melds}<span class="gap"></span>${tileHTML(r.winId, 'md win')}</div>
         <div class="ag-dora"><span><small>${t('dora')}</small>${d.dora.map(x => typeHTML(x, 'xs')).join('')}</span>${G.P[r.seat].riichi ? `<span><small>${I18N.yaku('ura')}</small>${d.ura.slice(0, d.dora.length).map(x => typeHTML(x, 'xs')).join('')}</span>` : ''}</div>
-        <div class="ag-yaku">${yl}</div>
-        <div class="ag-total">${res.yakumanN ? '' : `<span>${t('fu', { n: res.fu })} ${t('han', { n: res.han })}</span>`}<b>${pts.toLocaleString()}</b>${lim ? `<em class="stamp">${esc(lim)}</em>` : ''}</div>
+        <div class="agst-mid"><div class="ag-yaku">${yl}</div>${res.yakumanN ? '' : `<div class="agst-han"><b>${res.han}</b><span>${t('han', { n: '' }).trim() || '翻'}</span><small>${t('fu', { n: res.fu })}</small></div>`}</div>
         ${res.shugi ? `<div class="ag-note">${esc(I18N.L(MJSkills.get('shugi').name))} ×${res.shugi}</div>` : ''}
-        ${scoreRows(d, [r.seat])}
-        <button class="btn gold nx">${t('next')}</button>
+        <div class="agst-total">${lim ? `<em class="stamp">${esc(lim)}</em>` : ''}<b>${pts.toLocaleString()}</b></div>
       </div>
-    </div>`, 'wide res');
+      <button class="btn gold nx">${t('next')}</button>
+    </div>`, 'stage');
   await waitClick(box, '.nx');
-  if (last) closeModal();
+  void last;
+}
+// the points move. o.title: a heading (流局 …) · o.tags[seat]: a word on the panel (テンパイ / ノーテン) · o.win: the winners' seats
+async function showMoves(d, o = {}) {
+  const before = d.scores.map((v, s) => v - d.delta[s]);
+  const order = [0, 1, 2, 3].sort((a, b) => d.scores[b] - d.scores[a] || a - b), rank = []; order.forEach((s, i) => { rank[s] = i; });
+  const box = modal(`
+    <div class="mvst">
+      ${o.title ? `<h2 class="mv-t">${o.title}</h2>` : ''}
+      <svg class="mv-ar"></svg>
+      ${[0, 1, 2, 3].map(s => { const c = UIS.chars[s], dl = d.delta[s], rel = (s - ME + 4) % 4;
+        return `<div class="mv-p p${rel} ${dl > 0 ? 'up' : dl < 0 ? 'dn' : ''} ${o.win && o.win.includes(s) ? 'win' : ''}" data-s="${s}" style="--c:${c.color}">
+          <div class="mv-n"><b>${esc(L(c.name))}${s === ME ? ` <small>(${t('you')})</small>` : ''}</b>${o.tags && o.tags[s] ? `<i class="${o.tags[s][1] ? 'tp' : ''}">${esc(o.tags[s][0])}</i>` : ''}</div>
+          <img class="mv-f" src="${charImg(c, 'face')}" alt="">
+          <em class="mv-r r${rank[s]}">${t('rank')[rank[s]]}</em>
+          <span class="mv-v">${before[s].toLocaleString()}</span>
+          <span class="mv-d">${dl > 0 ? '+' : ''}${dl ? dl.toLocaleString() : ''}</span>
+        </div>`; }).join('')}
+      <button class="btn gold nx">${t('next')}</button>
+    </div>`, 'stage clear');
+  // arrows: from every player who pays to every player who is paid (drawn between the panels as they are laid out)
+  const svg = box.querySelector('.mv-ar'), R = box.getBoundingClientRect(), mid = el => { const r = el.getBoundingClientRect(); return [r.left - R.left + r.width / 2, r.top - R.top + r.height / 2, r.width, r.height]; };
+  const P = {}; box.querySelectorAll('.mv-p').forEach(el => { P[el.dataset.s] = mid(el); });
+  const cx = R.width / 2, cy = R.height / 2, u = Math.min(R.width, R.height) / 100;
+  svg.setAttribute('viewBox', `0 0 ${R.width} ${R.height}`);
+  let h = `<defs><marker id="mvh" viewBox="0 0 10 10" refX="6.5" refY="5" markerWidth="3.3" markerHeight="3.3" orient="auto-start-reverse"><path d="M0 0 10 5 0 10 2.6 5z" fill="#eaffff"/></marker>
+    <filter id="mvg" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="${(u * .9).toFixed(1)}" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>`;
+  let k = 0;
+  for (let a = 0; a < 4; a++) if (d.delta[a] < 0) for (let b = 0; b < 4; b++) if (d.delta[b] > 0) {
+    const A = P[a], B = P[b], opp = (a - b + 4) % 4 === 2, mx = (A[0] + B[0]) / 2, my = (A[1] + B[1]) / 2;
+    const qx = opp ? mx : mx + (mx - cx) * .55, qy = opp ? my : my + (my - cy) * .55;       // neighbours: the arrow bows outward round the centre
+    const at = tt => [(1 - tt) * (1 - tt) * A[0] + 2 * (1 - tt) * tt * qx + tt * tt * B[0], (1 - tt) * (1 - tt) * A[1] + 2 * (1 - tt) * tt * qy + tt * tt * B[1]];
+    const t0 = opp ? .34 : .3, t1 = opp ? .66 : .7, p0 = at(t0), p1 = at(t1), pm = at(.5), q2 = [2 * pm[0] - (p0[0] + p1[0]) / 2, 2 * pm[1] - (p0[1] + p1[1]) / 2];
+    h += `<path class="mv-a" style="--k:${k++}" pathLength="1" d="M${p0[0].toFixed(1)} ${p0[1].toFixed(1)} Q${q2[0].toFixed(1)} ${q2[1].toFixed(1)} ${p1[0].toFixed(1)} ${p1[1].toFixed(1)}" fill="none" stroke="#eaffff" stroke-width="${(u * 1.5).toFixed(1)}" stroke-linecap="round" marker-end="url(#mvh)" filter="url(#mvg)"/>`;
+  }
+  svg.innerHTML = h;
+  // the scores count to their new values once the arrows are out
+  const T0 = performance.now() + (AUTO ? 150 : 650) * (FAST < 1 ? .3 : 1), DUR = 800 * (FAST < 1 ? .3 : 1);
+  await new Promise(done => { (function step(now) {
+    if (!box.isConnected) return done();
+    const kk = Math.min(1, Math.max(0, (now - T0) / DUR)), e = 1 - Math.pow(1 - kk, 3);
+    box.querySelectorAll('.mv-p').forEach(el => { const s = +el.dataset.s; el.querySelector('.mv-v').textContent = (Math.round((before[s] + d.delta[s] * e) / 100) * 100).toLocaleString(); });
+    if (kk < 1) requestAnimationFrame(step); else { box.classList.add('done'); done(); }
+  })(performance.now()); });
+  await waitClick(box, '.nx');
+  closeModal();
 }
 async function showRyuukyoku(d) {
   const ab = d.abort ? t('abort')[d.abort] || d.abort : '';
-  const box = modal(`
-    <div class="ryu">
-      <h2>${t('ryuukyoku')}${ab ? ` <small>${esc(ab)}</small>` : ''}</h2>
-      <div class="rh">${[0, 1, 2, 3].map(s => `<div class="rhr"><img src="${charImg(UIS.chars[s], 'face')}" alt=""><b class="${d.tenpai[s] ? 'tp' : ''}">${d.tenpai[s] ? t('tenpai') : t('noten')}</b>
-        <div class="rht">${d.tenpai[s] ? d.hands[s].slice().sort((a, b) => a - b).map(id => tileHTML(id, 'xs')).join('') : ''}</div></div>`).join('')}</div>
-      ${scoreRows(d)}
-      <button class="btn gold nx">${t('next')}</button>
-    </div>`, 'wide res');
-  await waitClick(box, '.nx');
-  closeModal();
+  await showMoves(d, { title: `${t('ryuukyoku')}${ab ? ` <small>${esc(ab)}</small>` : ''}`, tags: d.abort ? null : [0, 1, 2, 3].map(s => [d.tenpai[s] ? t('tenpai') : t('noten'), d.tenpai[s]]) });
 }
 // 勝敗記録 (shared/record.js): one entry per finished game vs the BOTs — 1st = win, 4th = loss, 2nd / 3rd = draw
 const PTS = { ja: '{n}点', en: '{n} pts', zh: '{n}点', ko: '{n}점', es: '{n} pts', fr: '{n} pts', pt: '{n} pts', de: '{n} Pkt.', hi: '{n} अंक', ar: '{n} نقطة', ru: '{n} очк.', 'zh-TW': '{n}點', id: '{n} poin', tr: '{n} puan' };
@@ -892,13 +946,19 @@ async function showFinal(d) {
   const coins = [COST1 * 2, COST1, 120, 60][myRank] * (G.rules.length === 'south' ? 2 : 1);
   DB.coins += coins; DB.stats.games++; DB.stats.rank[myRank]++; save();
   recordGame(d, myRank);
+  const w = UIS.chars[rank[0]];
   const box = modal(`
-    <div class="final">
-      <h2>${t('final')}</h2>
-      <div class="fr">${rank.map((s, i) => { const c = UIS.chars[s]; return `<div class="fi r${i} ${s === ME ? 'me' : ''}" style="--c:${c.color}"><em>${t('rank')[i]}</em>${frame(c, 'face')}<b>${esc(L(c.name))}${s === ME ? ` <small>(${t('you')})</small>` : ''}</b><span>${d.scores[s].toLocaleString()}</span></div>`; }).join('')}</div>
-      <div class="earn">${icon('coin')} ${t('earned', { n: coins })}</div>
-      <div class="cbtns"><button class="btn" data-a="home">${t('toHome')}</button><button class="btn gold" data-a="again">${t('again')}</button></div>
-    </div>`, 'wide res');
+    <div class="agst fnst" style="--c:${w.color};--c2:${w.color2}">
+      <div class="agst-bg"></div>
+      <div class="agst-ch"><img src="${charImg(w, 'full')}" alt=""></div>
+      <div class="agst-who"><b>${esc(L(w.name))}</b><span>${t('rank')[0]}</span></div>
+      <div class="agst-main">
+        <h2 class="fn-t">${t('final')}</h2>
+        <div class="fn-rows">${rank.map((s, i) => { const c = UIS.chars[s]; return `<div class="fn-r r${i} ${s === ME ? 'mine' : ''}" style="--c:${c.color};--i:${i}"><em class="mv-r r${i}">${t('rank')[i]}</em><img src="${charImg(c, 'face')}" alt=""><b>${esc(L(c.name))}${s === ME ? ` <small>(${t('you')})</small>` : ''}</b><span>${d.scores[s].toLocaleString()}</span></div>`; }).join('')}</div>
+        <div class="earn">${icon('coin')} ${t('earned', { n: coins })}</div>
+        <div class="cbtns"><button class="btn" data-a="home">${t('toHome')}</button><button class="btn gold" data-a="again">${t('again')}</button></div>
+      </div>
+    </div>`, 'stage');
   SND.ok();
   await new Promise(res => box.addEventListener('click', e => {
     const a = e.target.closest('[data-a]'); if (!a) return;
@@ -989,5 +1049,5 @@ I18N.set(I18N.lang);
 MJTiles.ready().then(() => { MJTiles.reset(); ART.clear(); renderHome(); });   // (the tile faces from the 上海 sheets, 2026-11-14)
 document.fonts && document.fonts.load('800 40px "Shippori Mincho B1"', '一萬東南西北發中雀華').then(() => { MJTiles.reset(); ART.clear(); renderHome(); });
 renderHome();
-window.JANKA = { get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, DB, startGame, quitGame, cutin };
+window.JANKA = { get G() { return G; }, get UIS() { return UIS; }, get TB() { return TB; }, DB, startGame, quitGame, cutin, showMoves, showFinal };
 })();

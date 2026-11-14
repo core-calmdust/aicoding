@@ -10,6 +10,7 @@ URL: https://core-calmdust.github.io/aicoding/checkers/ ／ 旧版 checker.html 
 ## エンジン（engine.c → engine.wasm / engine_simd.wasm）
 - 盤は32ビットのビットボード。手の内部表現 m = 元 + 32×先 + 1024×取った駒のマスク（wasm 入出力は (元|先<<5, マスク)）。
 - PVS＋aspiration、置換表、killer/history、LMR、1手しかない手の延長、末端は取りの解消まで読む。
+- 探索 v2（2026-11-14）：ヌルムーブ（駒6枚以上）・逆フューティリティ・フューティリティ・LMP・LMR の対数表・IIR。取りのある局面・成る手は枝刈りしない。使うのは局面数の制限のない探索（四段・五段・PRO・分析）だけで、4級〜三段・15級〜5級は前の探索のまま（`tools/check_v2.js` で一致を確認）。詳細と計測は checkers/MODEL_CARD.md「探索 v2」。
 - 評価：NNUE（v2、`CKN2`、net-43、H=256、2026-11-08 から。int16 の差分更新アキュムレータ、駒数バケツ）。旧 v1（128→64→32→1、`CKN1`）もエンジンは読める。弱いレベル（15級〜5級）は手作り評価。
 - 終盤DB：4駒以下の勝ち負け引き分け（egdb4.bin.gz 517KB）を読み込む。
 - ブラウザがSIMD対応なら engine_simd.wasm（NNUE で非SIMD の約4倍速）。ビルドは tools/build.sh。NNUE は v1 より1局面あたり重い（wasm SIMD で約0.56倍の局面数/秒）。
@@ -24,7 +25,7 @@ URL: https://core-calmdust.github.io/aicoding/checkers/ ／ 旧版 checker.html 
 ## AIの強さ（20段階）
 - 15級〜1級、初段〜五段。engine.js の LEVELS と tools/native.c の LVS を同じ値に保つ（native の lv コマンドで隣接レベルを対戦させて調整）。
 - 15級〜5級：手作り評価・固定深さ＋ノイズ＋一定確率の悪手。4級〜三段：学習評価・1手の局面数で区切る（net-43 で 900〜12万。v1 のときの 2千〜50万と同じ強さになるよう測り直し済み、端末の速さによらない。nk は千単位で小数可）。ネットを替えたらこの局面数を測り直す（RT_LV は変えない）。四段・五段：1秒／2.5秒、序盤8手は互角の手からランダム。
-- 隣接レベルの対戦結果と RT_LV（レート基準：15級450、+125ずつ、1級2090、五段2350）は checkers/MODEL_CARD.md。
+- 隣接レベルの対戦結果と RT_LV（レート基準：15級450、+125ずつ、1級2090、四段2320、五段2370。四段・五段は 2026-11-14 の探索 v2 で +20）は checkers/MODEL_CARD.md。
 
 ## オンライン
 - Firebase（匿名＋Googleログイン、Realtime Database）。Firebaseプロジェクト checkers-multiplay（asia-southeast1）。database.rules.json の v は ^(english)$。
