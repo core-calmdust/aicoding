@@ -76,25 +76,25 @@
     const pulsing = m => { m.userData.p = true; if (!pulseOn) { pulseOn = true; requestAnimationFrame(pulse); } return m; };
     // the pyramid's empty places (2026-11-14, user: 空いている部分がわかりにくい): a faint glass ghost of a marble in each one,
     // seen through the marbles in front (no depth write, drawn last) — one InstancedMesh, updated with the position
-    let ghost = null;
+    let ghost = null, ghostRim = null;
     function ghosts() {
-      if (!(U && U.pyr) || !a) { if (ghost) ghost.count = 0; return; }
+      if (!(U && U.pyr) || !a) { if (ghost) ghost.count = ghostRim.count = 0; return; }
       if (!ghost || ghost.parent !== board) {
-        if (ghost && ghost.parent) ghost.parent.remove(ghost);
-        const m = new TH.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .9, side: TH.DoubleSide, depthWrite: false, depthTest: false, toneMapped: false });
-        // a flat disc of light where a marble can sit (user: 玉より置ける面を半透明の水色の面で — a ball was mistaken for a marble), the rim a little brighter
-        const tx = document.createElement('canvas'); tx.width = tx.height = 64; const c2 = tx.getContext('2d'), gr = c2.createRadialGradient(32, 32, 4, 32, 32, 31);
-        gr.addColorStop(0, 'rgba(255,255,255,.55)'); gr.addColorStop(.72, 'rgba(255,255,255,.7)'); gr.addColorStop(.86, 'rgba(255,255,255,1)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
-        c2.fillStyle = gr; c2.fillRect(0, 0, 64, 64); m.map = new TH.CanvasTexture(tx);
-        const dg = new TH.CircleGeometry(.36, 32); dg.rotateX(-Math.PI / 2);
-        ghost = new TH.InstancedMesh(dg, m, B.n); ghost.renderOrder = 5; ghost.frustumCulled = false; board.add(ghost);
+        if (ghost && ghost.parent) { ghost.parent.remove(ghost); ghostRim.parent.remove(ghostRim); }
+        // a flat disc of light where a marble can sit (user: 玉より置ける面を半透明の面で — a ball was mistaken for a marble): a soft
+        // fill and a brighter rim, plain geometry (no picture: the 64 px gradient picture showed specks on phones, 2026-11-14)
+        const mk = op => new TH.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: op, side: TH.DoubleSide, depthWrite: false, depthTest: false, toneMapped: false });
+        const dg = new TH.CircleGeometry(.3, 40); dg.rotateX(-Math.PI / 2);
+        const rg = new TH.RingGeometry(.3, .37, 48); rg.rotateX(-Math.PI / 2);
+        ghost = new TH.InstancedMesh(dg, mk(.5), B.n); ghost.renderOrder = 5; ghost.frustumCulled = false; board.add(ghost);
+        ghostRim = new TH.InstancedMesh(rg, mk(.95), B.n); ghostRim.renderOrder = 6; ghostRim.frustumCulled = false; board.add(ghostRim);
       }
       const M4 = new TH.Matrix4(); let k = 0;
-      for (let i = 0; i < B.n; i++) if (!a[i]) { const [x, z] = U.pt(i); M4.makeTranslation(x, TOP + Y(i) + .03, z); ghost.setMatrixAt(k++, M4); }
-      ghost.count = k; ghost.instanceMatrix.needsUpdate = true; kick(120);
-      // the colour goes slowly round the hues (user: 青一色だと青い玉と重なって見にくい — gently, not flashy): ~10 s a turn, a few steps a second
-      // (2026-11-14: one colour at a time going round the rainbow like a gaming light — 2.5 s a turn, vivid, a soft breathing)
-      if (!hueT) hueT = setInterval(() => { if (stopped || !ghost || !ghost.count) return; const t = performance.now(); ghost.material.color.setHSL((t / 2500) % 1, 1, .5); ghost.material.opacity = .85 + .12 * Math.sin(t / 380); kick(40); }, 50);
+      for (let i = 0; i < B.n; i++) if (!a[i]) { const [x, z] = U.pt(i); M4.makeTranslation(x, TOP + Y(i) + .03, z); ghost.setMatrixAt(k, M4); ghostRim.setMatrixAt(k++, M4); }
+      ghost.count = ghostRim.count = k; ghost.instanceMatrix.needsUpdate = ghostRim.instanceMatrix.needsUpdate = true; kick(120);
+      // one colour at a time going round the rainbow like a gaming light (user, 2026-11-14): 2.5 s a turn, vivid, a soft breathing
+      if (!hueT) hueT = setInterval(() => { if (stopped || !ghost || !ghost.count) return; const t = performance.now(), b = .85 + .15 * Math.sin(t / 380);
+        ghost.material.color.setHSL((t / 2500) % 1, 1, .5); ghostRim.material.color.copy(ghost.material.color); ghost.material.opacity = .45 * b; ghostRim.material.opacity = .95 * b; kick(40); }, 50);
     }
     let hueT = 0;
     function marks(hint) {
@@ -352,7 +352,7 @@
         timers.forEach(clearTimeout); clearTimeout(toastT); if (toastEl) toastEl.remove();
         ctx.el.removeEventListener('click', onClick); ctx.el.removeEventListener('pointerdown', onDown); removeEventListener('pointermove', onMove); removeEventListener('pointerup', onUp); removeEventListener('pointercancel', onUp);
         if (worker) worker.terminate(); worker = null;
-        clearInterval(hueT); if (ghost) { ghost.geometry.dispose(); if (ghost.material.map) ghost.material.map.dispose(); ghost.material.dispose(); }
+        clearInterval(hueT); if (ghost) [ghost, ghostRim].forEach(g => { g.geometry.dispose(); g.material.dispose(); });
         Object.values(MAT).forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose());
         if (window.__pgPlay === dbg) delete window.__pgPlay;
       },
