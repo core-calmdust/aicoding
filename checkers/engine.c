@@ -710,7 +710,7 @@ static inline int timeUp(void) {
 #ifndef SV_IIR
 #define SV_IIR 1
 #endif
-static int V2_NODES;   // (tools/native.c: v2 with a node limit too, for equal-node matches)
+static int V2_FORCE;   // (tools/native.c: 1 = v2 also with a node limit, −1 = the search before v2 also by time; matches)
 static volatile int v2on;   // (shared: the helper threads search the split points as the main thread)
 static TLS u8 noNull[MAXPLY + 8];
 static u8 LT[64][64];
@@ -1087,7 +1087,7 @@ static void bestN(int maxDepth, int ms, u64 nodeLim) {
 #ifdef MT
   if (threadId == 0)
 #endif
-  setV2(V2_NODES || nodeLim == 0);
+  setV2(V2_FORCE ? V2_FORCE > 0 : nodeLim == 0);
   beginSearch(ms); nodeLimit_on = nodeLim > 0; nodeLimit = nodeLim; nodeMask = nodeLimit_on && nodeLim < 100000 ? 127 : 2047;
   if (rootN == 0) { IO[0] = -1; IO[1] = 0; IO[2] = -WIN; IO[3] = 0; return; }
   Move bm = rootL[0]; int bv = 0, bd = 0;

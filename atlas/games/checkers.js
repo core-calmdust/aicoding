@@ -14,7 +14,7 @@
    ===================================================================== */
 (function () {
   'use strict';
-  const BASE = '../checkers/', VER = '?v=rb4-pro1-n43-mt1';   // same file / version as checkers/index.html → shared cache
+  const BASE = '../checkers/', VER = '?v=rb4-pro1-n43-mt1-sv2';   // same file / version as checkers/index.html → shared cache
   let engP = null;
   function loadEngine() {
     if (window.CheckersEngine) return Promise.resolve(window.CheckersEngine);
@@ -447,7 +447,7 @@
     id: { kyu: '{n} kyu', dan: ['1 dan', '2 dan', '3 dan', '4 dan', '5 dan'], lvd: ['Pemula: kadang memberikan bidak', 'Dasar–klub: membaca beberapa langkah ke depan', 'Mahir: melihat tembakan lompatan beruntun', 'Ahli: pencarian mendalam dengan basis data akhir permainan'] },
     tr: { kyu: '{n} kyu', dan: ['1 dan', '2 dan', '3 dan', '4 dan', '5 dan'], lvd: ['Acemi: bazen taş kaptırır', 'Başlangıç–kulüp: birkaç hamle ileriyi okur', 'İleri: çoklu atlama vuruşlarını görür', 'Uzman: oyunsonu veritabanlı derin arama'] },
   };
-  const RATING = [0, 450, 575, 700, 825, 950, 1075, 1200, 1325, 1450, 1575, 1700, 1825, 1950, 2030, 2090, 2150, 2200, 2250, 2300, 2350];   // checkers RT_LV (rated games)
+  const RATING = [0, 450, 575, 700, 825, 950, 1075, 1200, 1325, 1450, 1575, 1700, 1825, 1950, 2030, 2090, 2150, 2200, 2250, 2320, 2370];   // checkers RT_LV (rated games)
   const W7 = (a, b, c, d, e, f) => [a, a, a, a, b, b, b, b, b, c, c, c, c, c, c, d, d, d, e, f];
   const WHO = {
     ja: W7('はじめての人に', 'ルールを覚えた人に', '慣れてきた人に', '強い人に', '上級者でも手ごわい', '最強レベル'),
