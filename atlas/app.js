@@ -1013,6 +1013,7 @@
         const paint = () => { const o = sel.options[sel.selectedIndex]; bt.innerHTML = `<span>${esc(o ? o.textContent : '')}</span><i>▾</i>`; };
         sel.addEventListener('change', paint); paint();
         bt.onclick = () => {
+          if (ad.pickSheet && ad.pickSheet(sid, sel, lang)) return;   // (a game's own list for this choice: 上海's 盤の種類)
           const lab = sel.closest('label'), hd = lab ? [...lab.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim() : '';
           const sh = document.createElement('div'); sh.className = 'lvsheet tcsheet'; sh.innerHTML = `<div class="lvs-in" role="listbox"><div class="lvs-h">${esc(hd)}<button type="button" class="lvs-x" aria-label="${esc(t('bv.close'))}">✕</button></div><div class="lvs-l">` +
             [...sel.options].map(o => { const inf = ad.optInfo ? ad.optInfo(sid, o.value, lang) || {} : {}; if (inf.art) sh.classList.add('artsh'); if (inf.sub) sh.classList.add('subsh');   // (adapter.optInfo(select id, value, lang) → { art: svg, sub: a line }: a picture and a short description per choice)
@@ -1704,7 +1705,8 @@
     addEventListener('keydown', onEsc, true);
     sh.addEventListener('click', e => { if (e.target === sh || e.target.closest('.bk-x')) close(); });
     return { sh, close, body: sh.querySelector('#lessonList'), back: sh.querySelector('.bk-bk'), title: sh.querySelector('.bk-t') };
-  }
+  }  window.AtlasUI = Object.assign(window.AtlasUI || {}, { bookSheet });   // (2026-11-14) the list sheet for a game's own lists (上海's コース一覧・盤の種類)
+
   // レッスン・定跡の一覧 (2026-11-13, every game): the same header as 詰将棋 / 問題一覧 — the guide, the title, the progress over all the
   // chapters and 続きから (the first card not yet passed), with the chapter tabs along its bottom. Kept up as the list re-renders.
   function lxHead(S0, g, title) {

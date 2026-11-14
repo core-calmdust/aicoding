@@ -79,6 +79,10 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
 .bvi #bvOpts.shf > label:has(#bvSize){flex:1 1 100%!important}.bvi #bvOpts.shf .shfrow{display:contents}.bvi #bvOpts.shf .shfl{flex:1 1 0!important;min-width:0}
 .bvi #bvOpts.shf .pgbest .shbt{margin-inline-start:auto}.bvi #bvOpts.shf .pgbest .shbt + b{margin-inline-start:14px}
 .shstg{display:flex;flex-direction:column;gap:10px;align-items:stretch}
+.shstg .stinfo{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:10px 14px;border-radius:14px;background:#fff;border:2px solid var(--line,#eadfc6);font-weight:900;font-size:15px;color:#2b3044}.shstg .stinfo .ss{color:#e0a020}.shstg .stinfo .sw{display:flex;align-items:center;gap:6px;flex:1 1 100%;font-size:13.5px;color:#7a5a20}.shstg .stinfo .sw img{width:30px;height:30px}
+.shstg .strow{display:grid;grid-template-columns:1fr 1fr;gap:10px}.shstg .strow .mapb{padding:12px 10px;font-size:16px}.shstg .mapb span{display:flex;flex-direction:column;align-items:flex-start;line-height:1.2}.shstg .mapb small{font-size:12px;opacity:.8;font-weight:700}.shstg .mapb.lst{background:linear-gradient(135deg,#2a6a52,#1f4f3e)}
+.shstg .dyb{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font:inherit;padding:10px;border-radius:14px;border:2px solid #f3d48a;background:linear-gradient(180deg,#fff8e3,#ffefc2);color:#5a3a08;cursor:pointer;box-shadow:0 3px 0 #e8c46a}.shstg .dyb b{font-size:15px;font-weight:900}.shstg .dyb small{font-size:12px;font-weight:700;opacity:.8}.shstg .dyb.hard{border-color:#e9a0a0;background:linear-gradient(180deg,#fff0f0,#ffd9d9);color:#7a1f1f;box-shadow:0 3px 0 #e08a8a}.shstg .dyb.done{opacity:.85}
+#lessonOverlay #lessonList .lx-grid:not(.pzh-days) > .lx-card.shbd > .lx-th{background:radial-gradient(ellipse at 50% 40%,#3a7a60,#24503f)!important}.lx-card.shbd .lx-th svg{width:88%;height:84%}#lessonOverlay #lessonList .lx-grid:not(.pzh-days) > .lx-card.shcr > .lx-th{padding:0!important;overflow:hidden;background:#0d1236!important}.lx-card.shbd.sel{border-color:#ff5d5d;box-shadow:0 0 0 2px rgba(255,93,93,.25)}
 .shstg .pg{font-size:16px;font-weight:700;color:var(--ink,#2a2f3a)}
 .shstg .nx{font-size:15px;opacity:.8}
 .shstg .mapb{display:flex;align-items:center;justify-content:center;gap:10px;font:inherit;font-weight:800;font-size:18px;padding:14px;border-radius:16px;border:0;cursor:pointer;color:#fff;background:linear-gradient(135deg,#1b2350,#3a2a6e 60%,#5a3a8a);box-shadow:0 8px 20px -10px rgba(30,20,80,.8);white-space:nowrap}
@@ -96,7 +100,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
 .shmap .hd,.shmap .ars,.shmap .gift,.shmap .sh{flex-shrink:0}.shmap .hd{height:auto!important;max-height:none!important}
 .shmap .hd{position:relative;display:flex;align-items:center;gap:12px;padding:calc(12px + env(safe-area-inset-top)) 16px 8px}
 .shmap .hd h2{margin:0;font-size:22px;letter-spacing:.04em;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.shmap .hd .shtl{flex:1;min-width:0}.shmap .hd .em{display:none;flex:none}.shmap .hd .story{display:none;margin:4px 0 0;font-size:15px;line-height:1.55;color:#c8d2f4;opacity:.9;max-width:760px}
+.shmap .hd .shtl{flex:1;min-width:0}.shmap .hd .em{display:none;flex:none}.shmap .hd .em.zx{display:none!important}.shmap .hd .emi{object-fit:cover;border-radius:14px;border:2px solid #e8c877}.shmap.scn .sky{background-size:cover;background-position:50% 100%;filter:blur(16px) brightness(.62) saturate(1.1);transform:scale(1.12)}.shmap.scn .sky canvas{display:none}.shmap.scn .wld .pn{fill:rgba(255,255,255,.85);paint-order:stroke;stroke:rgba(0,0,0,.35);stroke-width:.6px}.shmap .sh .art.scn{padding:0;overflow:hidden}.shmap .sh .art.scn svg{border-radius:14px 14px 0 0}.shmap .sh .art.scn b{margin:4px 0 6px}.shmap .hd .story{display:none;margin:4px 0 0;font-size:15px;line-height:1.55;color:#c8d2f4;opacity:.9;max-width:760px}
 @media (min-width:820px){.shmap .hd{gap:18px;padding:calc(18px + env(safe-area-inset-top)) 24px 10px}.shmap .hd .em{display:block;width:64px;height:64px;filter:drop-shadow(0 0 14px rgba(255,215,106,.35))}.shmap .hd h2{font-size:34px;letter-spacing:.08em;color:#ffe7a0;text-shadow:0 0 18px rgba(255,215,106,.35)}.shmap .hd .story{display:block}.shmap .hd .tot{font-size:21px}}
 .shmap .hd .tot{font-size:17px;font-weight:800;color:#ffd76a;white-space:nowrap}
 .shmap .x{flex:none;width:46px;height:46px;padding:0;display:grid;place-items:center;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
@@ -194,7 +198,44 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
   const prog = () => { const d = load(); return { st: d.st || {}, bt: d.bt || {} }; };
   const cleared = (P, s) => (P.st[s] || 0) > 0;
   const unlocked = (P, s) => s === 0 || cleared(P, s - 1);
-  const nextStage = P => { for (let s = 0; s < 120; s++) if (!cleared(P, s)) return s; return 119; };
+  const nextStage = (P, N) => { N = N || 120; for (let s = 0; s < N; s++) if (!cleared(P, s)) return s; return N - 1; };
+
+  /* ---------- the courses (2026-11-14, ユーザー: 星座マップをテンプレに、さまざまなモチーフとテーマで10コース) ----------
+     星座 (zodiac): 12 constellations × 10, the figures of shanghai-zodiac.js, the night sky, the クジャクパイ gifts.
+     The ten others: 6 scenes × 10 — the portal's scene pictures (images/atlas/bg) as the map's panels, a winding path of stars on
+     each; a course starts at its own difficulty step and climbs one step an area (shanghai-core courseStage). Progress:
+     zodiac in st / bt (as before), the others in cs[<id>] = { st, bt }. Every ★ pays ¢10 alike (shared/atlas.js). */
+  const COURSES = [
+    { id: 'forest', base: 0, bg: [307, 308, 310, 311, 380, 381], tint: '#1d3a2a' },
+    { id: 'sweets', base: 0, bg: [317, 318, 320, 321, 384, 386], tint: '#3a2236' },
+    { id: 'sea', base: 1, bg: [312, 313, 315, 403, 322, 324], tint: '#14304a' },
+    { id: 'castle', base: 1, bg: [325, 326, 344, 345, 347, 378], tint: '#2c2550' },
+    { id: 'festival', base: 2, bg: [389, 390, 356, 357, 330, 332], tint: '#33203f' },
+    { id: 'autumn', base: 2, bg: [333, 334, 335, 405, 406, 336], tint: '#3a2418' },
+    { id: 'snow', base: 3, bg: [337, 340, 341, 360, 361, 362], tint: '#1b2a44' },
+    { id: 'desert', base: 4, bg: [363, 364, 366, 382, 367, 365], tint: '#3a2a18' },
+    { id: 'toys', base: 5, bg: [370, 368, 369, 372, 373, 374], tint: '#2a2440' },
+    { id: 'space', base: 6, bg: [396, 397, 342, 343, 388, 398], tint: '#141838' },
+  ];
+  const courseOf = id => COURSES.find(c => c.id === id) || null;
+  const cprog = id => { if (!id || id === 'zodiac') return prog(); const d = load(), c = (d.cs || {})[id] || {}; return { st: c.st || {}, bt: c.bt || {} }; };
+  const cN = id => id && id !== 'zodiac' ? (courseOf(id) ? courseOf(id).bg.length * 10 : 0) : 120;
+  // a course's stage s (zodiac: as before)
+  const cStage = (id, s) => { const K = C(); if (!id || id === 'zodiac') { const st = K.stage(s); st.cid = 'zodiac'; return st; } const ci = COURSES.findIndex(c => c.id === id), st = K.courseStage(ci, COURSES[ci].base, s); st.cid = id; return st; };
+  // the winding path of an area's ten stars (x 0..100, y 0..64), a little different area to area
+  const cPts = i => Array.from({ length: 10 }, (_, k) => [R1(8 + k * 9.4), R1(34 + 13 * Math.sin(k * .82 + i * 1.7) + 4 * Math.cos(k * 1.9 + i))]);
+  const R1 = v => Math.round(v * 10) / 10;
+  const bgUrl = n => '../images/atlas/bg/b' + String(n).padStart(3, '0') + '.webp';
+  // the pending stage: a number (a zodiac stage, as before) or { c: course, s } or { daily: 'n' | 'h' }
+  const pend = v => v == null ? null : typeof v === 'number' ? { c: 'zodiac', s: v } : v;
+  // 本日の上海 / HARD: one deal a day for everyone (the date's seed), a board by the date — HARD on a big board with 達人's rules
+  const dayHash = str => { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
+  function dailySpec(kind, date) {
+    const K = C(), h = dayHash((date || today()) + ':' + kind), F = K.FREE;
+    const lay = kind === 'h' ? F[6 + h % 4] : F[2 + h % 5];
+    return { lay, seed: (h % 2147483000) + 1 };
+  }
+  const dailyRec = () => { const d = load(); return (d.dy && d.dy.date === today()) ? d.dy : { date: today() }; };
   const stageName = (s, lang) => TX('st.stage', lang, { a: Math.floor(s / 10) + 1, b: s % 10 + 1 });
   function missionText(st, lang) {
     const n = st.type === 'gold' ? st.gold : st.goal;
@@ -250,6 +291,12 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
   const DIFFS = [1, 2, 3, 4, 5];
   const freePick = () => { const st = load().settings || {}; const d = DIFFS.includes(+st.fd5) ? +st.fd5 : ({ 1: 2, 2: 3, 3: 5 })[+st.fd] || 2; return { mode: FMODES.includes(st.fm) ? st.fm : 'clear', diff: d }; };
   const freeKey = (lay, m, d) => m === 'clear' && d === 2 ? lay : lay + ':' + m + ':d' + d;   // (ノーマル・初級 keeps the old free[<layout>] record)
+  function dailyMission(DY, n) {   // 本日: the clear with 初級's help · HARD: 達人's rules against the clock
+    const pairs = n / 2, hard = DY.kind === 'h';
+    const M = { type: hard ? 'time' : 'clear', diff: hard ? 5 : 2, key: 'dy-' + DY.kind, daily: DY.kind, noShuf: hard, noUndo: hard, noHint: hard };
+    if (hard) M.limit = Math.max(30, Math.round(pairs * 4.2 / 5) * 5);
+    return M;
+  }
   function freeMission(lay, n) {
     const { mode, diff } = freePick(), pairs = n / 2, pace = [0, 9, 7, 5, 4.2, 3.4][diff];   // seconds a pair
     // 入門・初級: everything allowed · 中級: no shuffle · 上級: no shuffle, no undo · 達人: no shuffle, no undo, no hints
@@ -273,14 +320,19 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     const AD = window.Atlas3D.shanghai;
     // the stage: one picked on the map / 次のステージ (adapter.pending), else the one played last, else the next to clear
     let ST = null;
-    if (ctx.mode === 'stage') { const s = AD.pending != null ? AD.pending : AD.last != null ? AD.last : nextStage(prog()); AD.pending = null; AD.last = s; ST = K.stage(s); }
-    const lay = ST ? ST.lay : K.FREE[(ctx.size || 1) - 1] || 'petit';
+    let DY = null;   // 本日の上海: { kind, lay, seed }
+    if (ctx.mode === 'stage') {
+      const pd = pend(AD.pending != null ? AD.pending : AD.last != null ? AD.last : 0); AD.pending = null;
+      if (pd && pd.daily) DY = Object.assign({ kind: pd.daily }, dailySpec(pd.daily));
+      else { const c = pd && courseOf(pd.c) ? pd.c : 'zodiac', s = Math.max(0, Math.min(cN(c) - 1, pd ? pd.s : nextStage(cprog(c), cN(c)))); AD.last = { c, s }; ST = cStage(c, s); }
+    }
+    const lay = ST ? ST.lay : DY ? DY.lay : K.FREE[(ctx.size || 1) - 1] || 'petit';
     const P = K.LAYOUTS[lay], n = P.length;
     // (2026-11-14) free play: the card's モード and 難易度 — the stage missions on any board (FM: the free mission, null in a stage)
-    const FM = ST ? null : freeMission(lay, n);
+    const FM = ST ? null : DY ? dailyMission(DY, n) : freeMission(lay, n);
     const MS = ST || FM;   // the mission in force (a stage's, or the free game's)
-    let dl = K.deal(P, ST ? ST.seed : 0);
-    if (FM && FM.diff !== 3) {   // the deal itself by difficulty: 入門・初級 the deal with the most pairs open at the start (of 8 / 4), 上級・達人 the fewest
+    let dl = K.deal(P, ST ? ST.seed : DY ? DY.seed : 0);
+    if (FM && !DY && FM.diff !== 3) {   // the deal itself by difficulty: 入門・初級 the deal with the most pairs open at the start (of 8 / 4), 上級・達人 the fewest
       const tries = [0, 8, 4, 0, 4, 8][FM.diff], easy = FM.diff <= 2;
       for (let k = 0; k < tries; k++) { const d2 = K.deal(P, 0), a = K.moves(d2.G, new Array(n).fill(1), d2.face).length, b = K.moves(dl.G, new Array(n).fill(1), dl.face).length; if (easy ? a > b : a < b) dl = d2; }
     }
@@ -381,7 +433,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
        above, below and beside the mat (so it shows in portrait, in landscape and on a wide screen). Free play keeps the table. */
     let sky = null;
     if (ST) {
-      const ai = Math.floor(ST.s / 10), con = CON[K.AREAS[ai]], S = Math.max(W, D) * 3 + 16, CS = innerWidth < 700 ? 1024 : 2048, cv = document.createElement('canvas'); cv.width = cv.height = CS;
+      const zodM = ST.cid === 'zodiac', ai = Math.floor(ST.s / 10), con = CON[K.AREAS[zodM ? ai : 0]], S = Math.max(W, D) * 3 + 16, CS = innerWidth < 700 ? 1024 : 2048, cv = document.createElement('canvas'); cv.width = cv.height = CS;
       const c = cv.getContext('2d'), R = K.rng ? K.rng(977 + ST.s * 13) : Math.random, u = CS / S, hue = (205 + ai * 30) % 360;
       const bg = c.createRadialGradient(CS / 2, CS / 2, 0, CS / 2, CS / 2, CS * .62); bg.addColorStop(0, `hsl(${hue},52%,27%)`); bg.addColorStop(.45, `hsl(${(hue + 14) % 360},56%,17%)`); bg.addColorStop(1, `hsl(${(hue + 30) % 360},60%,8%)`);
       c.fillStyle = bg; c.fillRect(0, 0, CS, CS);
@@ -394,8 +446,12 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
         con.p.forEach(q => { const x = X(q), y = Y(q), r = .2 * u, gl = c.createRadialGradient(x, y, 0, x, y, r); gl.addColorStop(0, 'rgba(255,244,200,.95)'); gl.addColorStop(.25, 'rgba(255,220,130,.55)'); gl.addColorStop(1, 'rgba(255,220,130,0)'); c.fillStyle = gl; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); c.fillStyle = '#fffbe8'; c.beginPath(); c.arc(x, y, .055 * u, 0, 7); c.fill(); });
       };
       const gz = D / 2 + .9 + fh / 2, gx = W / 2 + .9 + fw / 2;
-      fig(0, -gz); fig(0, gz); fig(-gx, 0); fig(gx, 0);
-      const tex = new TH3.CanvasTexture(cv); if ('colorSpace' in tex) tex.colorSpace = 'srgb'; else if (TH3.sRGBEncoding) tex.encoding = TH3.sRGBEncoding; tex.anisotropy = 4;
+      if (zodM) { fig(0, -gz); fig(0, gz); fig(-gx, 0); fig(gx, 0); }
+      const tex = new TH3.CanvasTexture(cv);
+      if (!zodM && courseOf(ST.cid)) {   // the other courses: their scene round the mat (this area's picture, tiled, a little dimmed)
+        const im = new Image(); im.onload = () => { if (stopped) return; const t = CS / 3; for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) c.drawImage(im, i * t, j * t, t, t); c.fillStyle = 'rgba(10,12,30,.28)'; c.fillRect(0, 0, CS, CS); tex.needsUpdate = true; kick(300); };
+        im.src = bgUrl(courseOf(ST.cid).bg[ai] || courseOf(ST.cid).bg[0]);
+      } if ('colorSpace' in tex) tex.colorSpace = 'srgb'; else if (TH3.sRGBEncoding) tex.encoding = TH3.sRGBEncoding; tex.anisotropy = 4;
       const pg = new TH3.PlaneGeometry(S, S); pg.rotateX(-Math.PI / 2);
       sky = new TH3.Mesh(pg, new TH3.MeshStandardMaterial({ map: tex, roughness: 1, metalness: 0 })); sky.position.y = .006; sky.receiveShadow = true; g.add(sky);
     }
@@ -560,6 +616,11 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
       // the rest of the tiles (a pairs / gold mission ends early) rise and fade as a flourish
       const idx = []; alive.forEach((v, i) => { if (v) idx.push(i); });
       if (idx.length) anim(700, k => { idx.forEach(i => { st8[i].lift = Math.sin(k * Math.PI) * .5; place(i); }); im.instanceMatrix.needsUpdate = true; });
+      if (DY) {
+        const y = d.dy && d.dy.date === today() ? d.dy : (d.dy = { date: today() }), k = DY.kind, nb = y[k] === undefined || tt < y[k]; if (nb) y[k] = tt; save(d);
+        later(() => ctx.onEnd({ win: true, draw: false, solo: true, level: 0, title: tx(k === 'h' ? 'dy.h' : 'dy.n') + ' ' + tx('r.clear'), score: tx('r.time', { t: mmss(tt) }), best: tx('r.best', { t: mmss(y[k]) }), opp: tx(k === 'h' ? 'dy.h' : 'dy.n'), key: 'dy-' + k, why: tx('r.clear') + ' · ' + mmss(tt) }), 350);
+        return;
+      }
       if (!ST) {
         const F = d.free = d.free || {}, r = F[FM.key] || {}, nb = r.best === undefined || tt < r.best, tk = n - left();
         F[FM.key] = { best: nb ? tt : r.best, tiles: Math.max(r.tiles || 0, tk), n: (r.n || 0) + 1, date: nb ? today() : r.date }; save(d);
@@ -568,25 +629,26 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
         return;
       }
       let stars = 1; if (tt <= parOf(ST)) { stars = 2; if (!hints && !shufs) stars = 3; }
-      const S = d.st = d.st || {}, B = d.bt = d.bt || {}, s = ST.s, nb = B[s] === undefined || tt < B[s];
+      const zod = ST.cid === 'zodiac', CS = zod ? d : ((d.cs = d.cs || {})[ST.cid] = d.cs[ST.cid] || {});
+      const S = CS.st = CS.st || {}, B = CS.bt = CS.bt || {}, s = ST.s, nb = B[s] === undefined || tt < B[s];
       const was = S[s] || 0;
       S[s] = Math.max(was, stars); if (nb) B[s] = tt; save(d);
       const coin = (S[s] - was) * COIN_STAR;   // (the ★ won for the first time pay ¢10 each — the purse itself is derived from the stars)
-      Reward.check(lang, 1900);
-      const nx = s + 1 < 120 ? s + 1 : null;
+      if (zod) Reward.check(lang, 1900);
+      const cid = ST.cid, nx = s + 1 < cN(cid) ? { c: cid, s: s + 1 } : null;
       later(() => ctx.onEnd({ win: true, draw: false, solo: true, level: 0,
         title: tx('r.stage') + ' ' + '★'.repeat(stars) + '☆'.repeat(3 - stars), score: stageName(s, lang) + ' · ' + tx('r.time', { t: mmss(tt) }),
         best: tx('r.best', { t: mmss(B[s]) }) + ' · ' + '★'.repeat(S[s]) + (coin ? ' · ' + tx('rw.coin', { n: coin }) : ''),
-        opp: stageName(s, lang), key: 'st' + s, why: tx('r.stage') + ' ' + stars + '★',
-        again: { label: tx('b.toMap'), cls: 'sun', go: restart => stageMap({ lang, play: p => restart(() => { AD.pending = p; AD.last = p; }) }) },   // (a cleared stage: マップへ instead of もう一局 — back to the course, ユーザー 2026-11-14)
+        opp: stageName(s, lang), key: (zod ? 'st' : cid + ':') + s, why: tx('r.stage') + ' ' + stars + '★',
+        again: { label: tx('b.toMap'), cls: 'sun', go: restart => stageMap({ lang, course: cid, play: p => restart(() => { AD.pending = p; AD.last = p; }) }) },   // (a cleared stage: マップへ instead of もう一局 — back to the course, ユーザー 2026-11-14)
         next: nx != null ? { label: tx('b.next'), go: () => { AD.pending = nx; AD.last = nx; } } : null }), 350);
     }
     function fail(why) {
       if (over) return; over = true; tEnd = performance.now(); clearInterval(clockT); turn();
       if (askEl) { askEl.remove(); askEl = null; }
-      if (FM) { const d = load(), F = d.free = d.free || {}, r = F[FM.key] || {}, tk = n - left(); F[FM.key] = Object.assign({}, r, { tiles: Math.max(r.tiles || 0, tk), n: (r.n || 0) + 1 }); save(d); }   // (a free game that ended early still counts its tiles: the card's 最多 n枚)
+      if (FM && !DY) { const d = load(), F = d.free = d.free || {}, r = F[FM.key] || {}, tk = n - left(); F[FM.key] = Object.assign({}, r, { tiles: Math.max(r.tiles || 0, tk), n: (r.n || 0) + 1 }); save(d); }   // (a free game that ended early still counts its tiles: the card's 最多 n枚)
       later(() => ctx.onEnd({ win: false, draw: false, solo: true, level: 0, title: tx('r.fail'), score: (why === 'timeup' ? tx('r.timeup') : tx('r.stuck')) + ' · ' + tx('r.left', { n: left() }),
-        best: ST ? stageName(ST.s, lang) + ' · ' + missionText(ST, lang) : tx('fm.' + FM.type) + ' · ' + tx('fd.' + FM.diff), opp: ST ? stageName(ST.s, lang) : tx('lay.' + lay), key: ST ? 'st' + ST.s : FM.key, why: tx('r.fail') }), 600);
+        best: ST ? stageName(ST.s, lang) + ' · ' + missionText(ST, lang) : DY ? tx(DY.kind === 'h' ? 'dy.h' : 'dy.n') : tx('fm.' + FM.type) + ' · ' + tx('fd.' + FM.diff), opp: ST ? stageName(ST.s, lang) : DY ? tx(DY.kind === 'h' ? 'dy.h' : 'dy.n') : tx('lay.' + lay), key: ST ? (ST.cid === 'zodiac' ? 'st' : ST.cid + ':') + ST.s : FM.key, why: tx('r.fail') }), 600);
     }
 
     /* ---------- set up ---------- */
@@ -645,7 +707,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     css(); host.classList.add('shf');
     const fp = freePick(), opt = (v, l, on) => `<option value="${v}"${on ? ' selected' : ''}>${esc(l)}</option>`;
     const row = document.createElement('div'); row.className = 'shfrow';
-    row.innerHTML = `<label class="shfl">${esc(TX('f.mode', lang))}<select id="bvShM" data-pick="sheet">${FMODES.map(m => opt(m, TX('fm.' + m, lang), m === fp.mode)).join('')}</select></label>` +
+    row.innerHTML = `<label class="shfl">${esc(TX('f.mode', lang))}<select id="bvShM" data-pick="drop">${FMODES.map(m => opt(m, TX('fm.' + m, lang), m === fp.mode)).join('')}</select></label>` +
       `<label class="shfl">${esc(TX('f.diff', lang))}<select id="bvShD" data-pick="drop">${DIFFS.map(d => opt(d, TX('fd.' + d, lang), d === fp.diff)).join('')}</select></label>`;
     host.appendChild(row);
     const el = document.createElement('div'); el.className = 'pgbest'; host.appendChild(el);
@@ -658,12 +720,71 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     row.querySelector('#bvShM').addEventListener('change', saveSt); row.querySelector('#bvShD').addEventListener('change', saveSt);
     paint(); const s = document.getElementById('bvSize'); if (s) s.addEventListener('change', paint);
   }
+  // the totals over every course: stages cleared / all, ★, the クジャクパイ still waiting on the map
+  function allProg() {
+    const ids = ['zodiac'].concat(COURSES.map(c => c.id)); let c = 0, n = 0, st = 0;
+    ids.forEach(id => { const P = cprog(id), N = cN(id); n += N; Object.keys(P.st).forEach(k => { if (P.st[k] > 0) { c++; st += P.st[k]; } }); });
+    return { c, n, st, wait: [1, 2, 3].filter(t => !Reward.has(t)).length };
+  }
+  const lastCourse = () => { const l = pend(window.Atlas3D && Atlas3D.shanghai && Atlas3D.shanghai.last); return l && l.c && (l.c === 'zodiac' || courseOf(l.c)) ? l.c : 'zodiac'; };
+  const cname = (id, lang) => id === 'zodiac' ? TX('st.title', lang) : TX('cn.' + id, lang);
+  // the card's ステージ tab (2026-11-14): the totals, コース一覧 · 続きから (the course played last), 本日の上海 · HARD
   function stagePanel(lang) {
-    css(); const P = prog(), c = Object.keys(P.st).filter(s => P.st[s] > 0).length, s = Object.values(P.st).reduce((a, v) => a + v, 0), nx = nextStage(P);
-    return `<div class="stbox"><div class="pg">${esc(TX('st.progress', lang, { c, n: 120, s, t: 360 }))}</div><div class="nx">${esc(TX('st.next', lang, { s: stageName(nx, lang) + ' ' + TX('ar.' + C().AREAS[Math.floor(nx / 10)], lang) }))}</div></div><button type="button" class="mapb" data-shmap><i>✦</i>${esc(TX('b.map', lang))}</button>`;
+    css(); const A = allProg(), lc = lastCourse(), y = dailyRec();
+    const dy = k => `<button type="button" class="dyb${k === 'h' ? ' hard' : ''}${y[k] != null ? ' done' : ''}" data-shdy="${k}"><b>${esc(TX('dy.' + k, lang))}</b><small>${y[k] != null ? '✓ ' + esc(TX('r.best', lang, { t: mmss(y[k]) })) : esc(TX('lay.' + dailySpec(k).lay, lang))}</small></button>`;
+    return `<div class="stinfo"><span class="sc">${esc(TX('st.clear', lang, { c: A.c, n: A.n }))}</span><span class="ss">★ ${A.st}</span>` +
+      (A.wait ? `<span class="sw"><img src="../images/atlas/av/peacock-${[1, 2, 3].find(t => !Reward.has(t))}.webp" alt="">${esc(TX('st.wait', lang, { n: A.wait }))}</span>` : '') + `</div>` +
+      `<div class="strow"><button type="button" class="mapb lst" data-shlist><i>▦</i>${esc(TX('cl.title', lang))}</button><button type="button" class="mapb" data-shmap><i>✦</i><span>${esc(TX('cl.cont', lang))}<small>${esc(cname(lc, lang))}</small></span></button></div>` +
+      `<div class="strow">${dy('n')}${dy('h')}</div>`;
   }
   function stageBind(host, lang, play) {
-    host.addEventListener('click', e => { if (e.target.closest('[data-shmap]')) stageMap({ lang, play }); });
+    host.addEventListener('click', e => {
+      if (e.target.closest('[data-shmap]')) stageMap({ lang, play, course: lastCourse() });
+      else if (e.target.closest('[data-shlist]')) courseList(lang, play);
+      else { const d = e.target.closest('[data-shdy]'); if (d) play({ daily: d.dataset.shdy }); }
+    });
+  }
+  // the hero of a list sheet in the portal's style (問題一覧): the guide, the name, a bar and a count
+  const heroHtml = (lang, title, c, n) => `<div class="pzh-hero"><img class="pzh-ch" src="../images/atlas/av/peacock-0.webp" alt=""><div class="pzh-tx"><small>${esc(({ ja: '上海', zh: '上海', zhT: '上海', ko: '상하이' })[lang] || 'Shanghai')}</small><b>${esc(title)}</b><span class="pzh-bar"><i style="width:${n ? Math.round(c * 100 / n) : 0}%"></i></span><span class="pzh-n">${c} / ${n}</span></div></div>`;
+  // a course's picture for its card: the scene (or, for 星座, a constellation of stars on the night sky)
+  function courseThumb(id) {
+    if (id !== 'zodiac') return `<img src="${bgUrl(courseOf(id).bg[0])}" alt="" style="width:100%;height:100%;object-fit:cover;object-position:50% 100%">`;
+    const S = CON.leo, E = edges('leo');
+    return `<svg viewBox="-6 -4 112 72" style="width:100%;height:100%;background:radial-gradient(ellipse at 50% 30%,#3a3a8a,#0d1236 75%)">${E.map(([i, j]) => `<line x1="${S.p[i][0]}" y1="${S.p[i][1]}" x2="${S.p[j][0]}" y2="${S.p[j][1]}" stroke="#ffd76a" stroke-width=".8" opacity=".8"/>`).join('')}${S.p.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2.2" fill="#fff6d0"/>`).join('')}</svg>`;
+  }
+  // コース一覧 (2026-11-14): the courses as cards in the portal's list style (問題一覧), in three tabs by how hard; a card opens its map
+  function courseList(lang, play) {
+    if (!window.AtlasUI || !AtlasUI.bookSheet) { stageMap({ lang, play, course: lastCourse() }); return; }
+    const S0 = AtlasUI.bookSheet(TX('cl.title', lang)), TK = 'atlas-shcl';
+    const ids = ['zodiac'].concat(COURSES.map(c => c.id)), tier = id => id === 'zodiac' ? 'e' : (b => b <= 0 ? 'e' : b <= 2 ? 'm' : 'h')(courseOf(id).base);
+    let cur = 'e'; try { cur = localStorage.getItem(TK) || tier(lastCourse()); } catch (e) {}
+    const info = id => { const P = cprog(id), N = cN(id), d = Object.keys(P.st).filter(k => P.st[k] > 0).length, st = Object.values(P.st).reduce((a, v) => a + v, 0); return { N, d, st }; };
+    const paint = () => {
+      const A = allProg();
+      const tabs = `<div class="lx-tabs">${['e', 'm', 'h'].map(k => { const xs = ids.filter(id => tier(id) === k), d = xs.reduce((a, id) => a + info(id).d, 0), n = xs.reduce((a, id) => a + info(id).N, 0); return `<button type="button" data-cat="${k}" class="${k === cur ? 'sel' : ''}"><span class="nm">${esc(TX('cl.tab.' + k, lang))}</span><span class="ct${d >= n ? ' ok' : ''}">${d}/${n}</span></button>`; }).join('')}</div>`;
+      const card = id => { const { N, d, st } = info(id), full = d >= N;
+        return `<button type="button" class="lx-card shcr${full ? ' done' : ''}" data-set="" data-course="${id}"><span class="lx-th">${courseThumb(id)}</span><span class="lx-tx"><span class="lx-top"><span class="lx-st${full ? ' ok' : d ? ' so' : ' new'}">${full ? '✓' : d ? d + '/' + N : 'NEW'}</span></span><span class="lx-t">${esc(cname(id, lang))}</span><span class="lx-desc">${esc(TX('cd.' + id, lang))}</span><span class="pzh-row"><span class="pzh-bar"><i style="width:${Math.round(d * 100 / N)}%"></i></span><span class="pzh-st">★ ${st}/${N * 3}</span></span></span></button>`; };
+      S0.body.className = 'lesson-list lx-on';
+      S0.body.innerHTML = `<div class="pzh-box">${heroHtml(lang, TX('cl.title', lang), A.c, A.n)}${tabs}</div><div class="lx-grid">${ids.filter(id => tier(id) === cur).map(card).join('')}</div>`;
+    };
+    paint();
+    S0.body.onclick = e => {
+      const tb = e.target.closest('[data-cat]'); if (tb) { cur = tb.dataset.cat; try { localStorage.setItem(TK, cur); } catch (x) {} paint(); return; }
+      const cd = e.target.closest('[data-course]'); if (cd) { S0.close(); stageMap({ lang, play, course: cd.dataset.course }); }
+    };
+  }
+  // 盤の種類 as a list sheet (2026-11-14, ユーザー: 他ゲームのパズルレベルのクオリティのUIに): the boards as cards with their picture,
+  // how hard, the tiles and the best of the chosen mode and difficulty; picking one sets the card's select
+  function boardList(sel, lang) {
+    if (!window.AtlasUI || !AtlasUI.bookSheet) return false;
+    const S0 = AtlasUI.bookSheet(TX('f.board', lang)), K = C(), fp = freePick(), F = load().free || {};
+    const played = K.FREE.filter(k => Object.keys(F).some(x => x === k || x.indexOf(k + ':') === 0)).length;
+    const card = (k, z) => { const lv = Math.min(5, Math.ceil(z / 2)), r = F[freeKey(k, fp.mode, fp.diff)], on = String(z) === sel.value;
+      return `<button type="button" class="lx-card shbd${on ? ' sel' : ''}${r ? ' done' : ''}" data-set="" data-z="${z}"><span class="lx-th">${layArt(k)}</span><span class="lx-tx"><span class="lx-top"><span class="lx-st${r ? ' ok' : ' new'}">${r ? '✓' : 'NEW'}</span></span><span class="lx-t">${esc(TX('lay.' + k, lang))}</span><span class="lx-desc">${'★'.repeat(lv)}${'☆'.repeat(5 - lv)} · ${esc(TX('tiles', lang, { n: K.LAYOUTS[k].length }))}</span><span class="pzh-row"><span class="pzh-st">${esc(TX('best', lang))} ${r && r.best != null ? mmss(r.best) : '—'}</span></span></span></button>`; };
+    S0.body.className = 'lesson-list lx-on';
+    S0.body.innerHTML = `<div class="pzh-box">${heroHtml(lang, TX('f.board', lang), played, K.FREE.length)}</div><div class="lx-grid">${K.FREE.map((k, i) => card(k, i + 1)).join('')}</div>`;
+    S0.body.onclick = e => { const b = e.target.closest('[data-z]'); if (!b) return; sel.value = b.dataset.z; sel.dispatchEvent(new Event('change')); S0.close(); };
+    return true;
   }
 
   /* ---------- the star map ---------- */
@@ -719,17 +840,21 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
      figure drawn behind its stars (shanghai-zodiac.js: blinking, slowly changing faces, a swaying part). ---------- */
   const PW = 116, PH = 64;   // one constellation's box in the long sky (x 0..100 of CON plus a gap), the sky's height
   function stageMap(o) {
-    css(); const lang = o.lang, K = C(), AR = K.AREAS;
+    css(); const lang = o.lang, K = C(), cid = o.course && courseOf(o.course) ? o.course : 'zodiac', ZOD = cid === 'zodiac', CO = courseOf(cid);
+    const AR = ZOD ? K.AREAS : CO.bg.map((_, i) => 'a' + i), NA = AR.length, N = NA * 10;
+    const areaName = i => ZOD ? TX('ar.' + AR[i], lang) : TX('st.area', lang, { n: i + 1 });
+    const RA = s => ZOD ? Reward.at(s) : 0, edg = i => ZOD ? edges(AR[i]) : Array.from({ length: 9 }, (_, k) => [k, k + 1]);
     if (window.ShanghaiZodiac && !document.getElementById('shzod-css')) { const st = document.createElement('style'); st.id = 'shzod-css'; st.textContent = ShanghaiZodiac.css; document.head.appendChild(st); }
-    let P = prog(), area = Math.floor(nextStage(P) / 10), pick = nextStage(P);
-    const el = document.createElement('div'); el.className = 'shmap';
-    el.innerHTML = `<div class="sky"><canvas></canvas></div><div class="hd"><svg class="em" viewBox="0 0 64 64" aria-hidden="true"><defs><radialGradient id="shemg" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#3b4aa0"/><stop offset="1" stop-color="#121640"/></radialGradient></defs><rect x="10" y="4" width="44" height="56" rx="8" fill="url(#shemg)" stroke="#e8c877" stroke-width="2"/><rect x="14" y="8" width="36" height="48" rx="5" fill="none" stroke="rgba(232,200,119,.35)"/><path d="M20 44 L28 34 L36 38 L44 22 M28 34 L30 22" fill="none" stroke="#ffe39a" stroke-width="1.4" stroke-linecap="round"/><g fill="#fff6d8"><circle cx="20" cy="44" r="2.2"/><circle cx="28" cy="34" r="2.6"/><circle cx="36" cy="38" r="2"/><circle cx="44" cy="22" r="2.8"/><circle cx="30" cy="22" r="1.8"/></g></svg><div class="shtl"><h2></h2><p class="story"></p></div><span class="tot"></span><button type="button" class="x" aria-label="${esc(TX('b.close', lang))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div class="ars"></div><div class="fld"><div class="vp"><div class="wld"></div></div><button type="button" class="nav l">‹</button><button type="button" class="nav r">›</button><div class="zoom"><button type="button" data-z="1">＋</button><button type="button" data-z="-1">－</button></div></div><div class="gift"></div><div class="sh"></div>`;   // (the next gift: just above the stage box — ユーザー 2026-11-14)
+    let P = cprog(cid), area = Math.floor(nextStage(P, N) / 10), pick = nextStage(P, N);
+    if (o.pick != null && o.pick < N) { pick = o.pick; area = Math.floor(pick / 10); }
+    const el = document.createElement('div'); el.className = 'shmap' + (ZOD ? '' : ' scn'); if (!ZOD) el.style.background = CO.tint;
+    el.innerHTML = `<div class="sky"><canvas></canvas></div><div class="hd">${ZOD ? '' : `<img class="em emi" src="${bgUrl(CO.bg[0])}" alt="">`}<svg class="em${ZOD ? '' : ' zx'}" viewBox="0 0 64 64" aria-hidden="true"><defs><radialGradient id="shemg" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#3b4aa0"/><stop offset="1" stop-color="#121640"/></radialGradient></defs><rect x="10" y="4" width="44" height="56" rx="8" fill="url(#shemg)" stroke="#e8c877" stroke-width="2"/><rect x="14" y="8" width="36" height="48" rx="5" fill="none" stroke="rgba(232,200,119,.35)"/><path d="M20 44 L28 34 L36 38 L44 22 M28 34 L30 22" fill="none" stroke="#ffe39a" stroke-width="1.4" stroke-linecap="round"/><g fill="#fff6d8"><circle cx="20" cy="44" r="2.2"/><circle cx="28" cy="34" r="2.6"/><circle cx="36" cy="38" r="2"/><circle cx="44" cy="22" r="2.8"/><circle cx="30" cy="22" r="1.8"/></g></svg><div class="shtl"><h2></h2><p class="story"></p></div><span class="tot"></span><button type="button" class="x" aria-label="${esc(TX('b.close', lang))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div class="ars"></div><div class="fld"><div class="vp"><div class="wld"></div></div><button type="button" class="nav l">‹</button><button type="button" class="nav r">›</button><div class="zoom"><button type="button" data-z="1">＋</button><button type="button" data-z="-1">－</button></div></div><div class="gift"></div><div class="sh"></div>`;   // (the next gift: just above the stage box — ユーザー 2026-11-14)
     document.body.appendChild(el);
     const $ = q => el.querySelector(q), vp = $('.vp'), wld = $('.wld');
     // the pan / zoom: the long sky drawn at u px per unit, then scaled by z and moved by (tx, ty)
     let u = 6, z = 1, tx = 0, ty = 0, raf = 0, anim = null;
-    const WW = PW * 12;
-    const sky = skyLoop($('canvas'), () => tx);
+    const WW = PW * NA;
+    const sky = ZOD ? skyLoop($('canvas'), () => tx) : { size() {}, stop() {} };   // (the scene courses: their pictures are the sky)
     if (window.Table3D && Table3D.quiet) Table3D.quiet(true);   // (2026-11-14) the map covers the room: the 3D scene behind it stops drawing (the showcase turntable kept it at 60 fps)
     requestAnimationFrame(() => el.classList.add('on'));
     const ZMIN = () => Math.min(1, (vp.clientWidth - 20) / (WW * u)) * .9, ZMAX = 3;
@@ -748,7 +873,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     }
     // which constellation is in the middle of the view: its tab lights up
     function track() {
-      const a = Math.max(0, Math.min(11, Math.floor(((vp.clientWidth / 2 - tx) / z / u) / PW)));
+      const a = Math.max(0, Math.min(NA - 1, Math.floor(((vp.clientWidth / 2 - tx) / z / u) / PW)));
       if (a === area) return; area = a; tabs();
     }
     function layout() {
@@ -765,28 +890,30 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     addEventListener('resize', onFit); if (window.visualViewport) visualViewport.addEventListener('resize', onFit);
     $('.x').onclick = close;
     const areaOpen = a => unlocked(P, a * 10);
-    function go(a) { if (a < 0 || a > 11) return; const fs = a * 10; let pk = Array.from({ length: 10 }, (_, k) => fs + k).find(s => unlocked(P, s) && !cleared(P, s)); if (pk == null) pk = fs; pick = pk; area = a; tabs(); nodes(); sheet(); aim(a, true); }
+    function go(a) { if (a < 0 || a > NA - 1) return; const fs = a * 10; let pk = Array.from({ length: 10 }, (_, k) => fs + k).find(s => unlocked(P, s) && !cleared(P, s)); if (pk == null) pk = fs; pick = pk; area = a; tabs(); nodes(); sheet(); aim(a, true); }
     function zoomAt(f, cx, cy) {
       const vw = vp.clientWidth, vh = vp.clientHeight; cx = cx == null ? vw / 2 : cx; cy = cy == null ? vh / 2 : cy;
       const z2 = Math.max(ZMIN(), Math.min(ZMAX, z * f)); tx = cx - (cx - tx) * z2 / z; ty = cy - (cy - ty) * z2 / z; z = z2; apply();
     }
     function tabs() {
-      $('.ars').innerHTML = AR.map((a, i) => { const st = Array.from({ length: 10 }, (_, k) => P.st[i * 10 + k] || 0).reduce((x, v) => x + v, 0); return `<button type="button" class="ar${i === area ? ' on' : ''}${areaOpen(i) ? '' : ' lk'}" data-a="${i}">${esc(TX('ar.' + a, lang))}<em>★${st}</em>${[1, 2, 3].filter(t => Math.floor(GIFT_S[t] / 10) === i && !Reward.has(t)).map(t => `<img class="agf" src="../images/atlas/av/peacock-${t}.webp" alt="">`).join('')}</button>`; }).join('');
+      $('.ars').innerHTML = AR.map((a, i) => { const st = Array.from({ length: 10 }, (_, k) => P.st[i * 10 + k] || 0).reduce((x, v) => x + v, 0); return `<button type="button" class="ar${i === area ? ' on' : ''}${areaOpen(i) ? '' : ' lk'}" data-a="${i}">${esc(areaName(i))}<em>★${st}</em>${(ZOD ? [1, 2, 3] : []).filter(t => Math.floor(GIFT_S[t] / 10) === i && !Reward.has(t)).map(t => `<img class="agf" src="../images/atlas/av/peacock-${t}.webp" alt="">`).join('')}</button>`; }).join('');
       const on = $('.ar.on'); if (on) on.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
       wld.querySelectorAll('.pn').forEach((t, i) => t.classList.toggle('on', i === area));
+      if (!ZOD) $('.sky').style.backgroundImage = `url(${bgUrl(CO.bg[area])})`;   // (a scene course: this area's picture, blurred, fills the screen round the map)
     }
     // every constellation's stars, evenly spaced inside its box, in the long sky's units
-    const PTS = AR.map((a, i) => CON[a].p.map(([x, y]) => [i * PW + 8 + x, y]));   // (placed by hand on the figures, already evenly spaced)
+    const PTS = AR.map((a, i) => (ZOD ? CON[a].p : cPts(i)).map(([x, y]) => [i * PW + 8 + x, y]));   // (placed by hand on the figures, already evenly spaced)
     function art() {
       const lit = ([i, j], fs) => cleared(P, fs + i) && cleared(P, fs + j);
       let svg = `<svg viewBox="0 0 ${WW} ${PH}" preserveAspectRatio="none">`;
       AR.forEach((a, i) => {
         const fs = i * 10, done = Array.from({ length: 10 }, (_, k) => cleared(P, fs + k)).filter(Boolean).length;
-        svg += `<text class="pn${i === area ? ' on' : ''}" x="${i * PW + 8}" y="7">${esc(TX('ar.' + a, lang))}</text>`;
-        svg += `<g class="fig${done === 10 ? ' lit' : ''}" transform="translate(${i * PW + 8} 0)" style="--dl:${-i * .6}s;opacity:${(.55 + .45 * done / 10).toFixed(2)}">${window.ShanghaiZodiac ? ShanghaiZodiac(a, i) : ''}</g>`;
-        edges(a).forEach(e => { const [x1, y1] = PTS[i][e[0]], [x2, y2] = PTS[i][e[1]], L = lit(e, fs);
-          svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${L ? '#ffd76a' : 'rgba(180,200,255,.3)'}" stroke-width="${L ? .7 : .35}" stroke-linecap="round" ${L ? 'filter="drop-shadow(0 0 1.2px #ffd76a)"' : 'stroke-dasharray="1 1.2"'}/>`; });
-        if (i < 11) { const [x1, y1] = PTS[i][9], [x2, y2] = PTS[i + 1][0], L = cleared(P, fs + 9);   // the road on to the next constellation
+        if (!ZOD) svg += `<image href="${bgUrl(CO.bg[i])}" x="${i * PW}" y="0" width="${PW}" height="${PH}" preserveAspectRatio="xMidYMax slice" opacity="${(.84 + .16 * done / 10).toFixed(2)}"/>`;
+        svg += `<text class="pn${i === area ? ' on' : ''}" x="${i * PW + 8}" y="7">${esc(areaName(i))}</text>`;
+        if (ZOD) svg += `<g class="fig${done === 10 ? ' lit' : ''}" transform="translate(${i * PW + 8} 0)" style="--dl:${-i * .6}s;opacity:${(.55 + .45 * done / 10).toFixed(2)}">${window.ShanghaiZodiac ? ShanghaiZodiac(a, i) : ''}</g>`;
+        edg(i).forEach(e => { const [x1, y1] = PTS[i][e[0]], [x2, y2] = PTS[i][e[1]], L = lit(e, fs);
+          svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${L ? '#ffd76a' : ZOD ? 'rgba(180,200,255,.3)' : 'rgba(255,255,255,.75)'}" stroke-width="${L ? .7 : ZOD ? .35 : .5}" stroke-linecap="round" ${L ? 'filter="drop-shadow(0 0 1.2px #ffd76a)"' : 'stroke-dasharray="1 1.2"'}/>`; });
+        if (i < NA - 1) { const [x1, y1] = PTS[i][9], [x2, y2] = PTS[i + 1][0], L = cleared(P, fs + 9);   // the road on to the next constellation
           svg += `<path d="M${x1} ${y1} C${x1 + 14} ${y1} ${x2 - 14} ${y2} ${x2} ${y2}" fill="none" stroke="${L ? 'rgba(255,215,106,.7)' : 'rgba(180,200,255,.22)'}" stroke-width="${L ? .55 : .35}" stroke-dasharray="${L ? '2 1.4' : '1 1.6'}" stroke-linecap="round"/>`; }
       });
       return svg + '</svg>';
@@ -794,7 +921,7 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     function nodes() {
       let h = '';
       AR.forEach((a, i) => PTS[i].forEach(([x, y], k) => {
-        const s = i * 10 + k, ok = cleared(P, s), ul = unlocked(P, s), sr = P.st[s] || 0, t = Reward.at(s);
+        const s = i * 10 + k, ok = cleared(P, s), ul = unlocked(P, s), sr = P.st[s] || 0, t = RA(s);
         h += `<button type="button" class="nd${s === pick ? ' pk' : ''}${ok ? ' ok' : ''}${ul && !ok ? ' cur' : ''}${ul ? '' : ' lk'}" style="left:${x / WW * 100}%;top:${y / PH * 100}%" data-s="${s}">${k + 1}${sr ? `<span class="sr">${'★'.repeat(sr)}${'☆'.repeat(3 - sr)}</span>` : ''}${t ? `<i class="gft">${Reward.has(t) ? '✓' : '🎁'}</i>` : ''}</button>` +
           (t ? `<img class="gf${Reward.has(t) ? ' got' : ''}" style="left:${x / WW * 100}%;top:${y / PH * 100}%" src="../images/atlas/av/peacock-${t}.webp" alt="">` : '');
       }));
@@ -805,20 +932,27 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     function mark() { wld.querySelectorAll('.nd.pk').forEach(b => b.classList.remove('pk')); const b = wld.querySelector(`.nd[data-s="${pick}"]`); if (b) b.classList.add('pk'); }
     function head() {
       const tot = Object.values(P.st).reduce((a, v) => a + v, 0);
-      $('h2').textContent = TX('st.title', lang); $('.story').textContent = TX('st.story', lang); $('.tot').textContent = '★ ' + tot + ' / 360';
-      const nx = Reward.next(), it = nx && window.AtlasArt && AtlasArt.byId && AtlasArt.byId('av-peacock-' + nx.t);
+      $('h2').textContent = ZOD ? TX('st.title', lang) : TX('cn.' + cid, lang); $('.story').textContent = ZOD ? TX('st.story', lang) : TX('cd.' + cid, lang); $('.tot').textContent = '★ ' + tot + ' / ' + N * 3;
+      const nx = ZOD ? Reward.next() : null, it = nx && window.AtlasArt && AtlasArt.byId && AtlasArt.byId('av-peacock-' + nx.t);
       $('.gift').innerHTML = nx ? `<img src="../images/atlas/av/peacock-${nx.t}.webp" alt=""><span>${esc(TX('rw.next', lang, { n: nx.left, name: it ? it.name[lang] || it.name.en : 'Peacotile' }))}</span>` : '';
       $('.gift').style.display = nx ? '' : 'none';
     }
     // the stage that hands over a クジャクパイ: its picture and name in the sheet
     function giftLine(s) {
-      const t = Reward.at(s); if (!t) return '';
+      const t = RA(s); if (!t) return '';
       const it = window.AtlasArt && AtlasArt.byId && AtlasArt.byId('av-peacock-' + t), nm = it ? it.name[lang] || it.name.en : 'Peacotile', got = Reward.has(t);
       return `<div class="gfl${got ? ' got' : ''}"><img src="../images/atlas/av/peacock-${t}.webp" alt=""><span>${got ? '✓ ' : '🎁 '}${esc(TX(got ? 'rw.have' : 'rw.here', lang, { name: nm }))}</span></div>`;
     }
     // the box below the sky: the constellation's picture with this stage's star ringed · the stage, its mission, the record · スタート
     // (2026-11-14, ユーザー: 画像をうまく組み込んで綺麗に見やすく、PCは文字も大きく; a pick refills it without re-laying the map)
     function conArt(a, k) {
+      if (!ZOD) {   // a scene course: this area's picture with its path, this stage's star ringed
+        const Q = cPts(a), fs = a * 10;
+        let v = `<svg viewBox="-8 0 116 64" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><image href="${bgUrl(CO.bg[a])}" x="-8" y="0" width="116" height="64" preserveAspectRatio="xMidYMax slice"/>`;
+        for (let j = 0; j < 9; j++) { const L = cleared(P, fs + j) && cleared(P, fs + j + 1); v += `<line class="cl${L ? ' on' : ''}" x1="${Q[j][0]}" y1="${Q[j][1]}" x2="${Q[j + 1][0]}" y2="${Q[j + 1][1]}" style="stroke:${L ? '#ffd76a' : 'rgba(255,255,255,.85)'}"/>`; }
+        Q.forEach(([x, y], j) => { v += j === k ? `<circle class="cpk" cx="${x}" cy="${y}" r="5.4"/><circle class="cst on" cx="${x}" cy="${y}" r="2.6"/>` : `<circle class="cst${cleared(P, fs + j) ? ' on' : ''}" cx="${x}" cy="${y}" r="1.8" style="${cleared(P, fs + j) ? '' : 'fill:#fff;stroke:rgba(0,0,0,.35);stroke-width:.3'}"/>`; });
+        return v + '</svg>';
+      }
       const S = CON[AR[a]], fs = a * 10, done = Array.from({ length: 10 }, (_, j) => cleared(P, fs + j)).filter(Boolean).length;
       let v = `<svg viewBox="-4 -1 108 66" aria-hidden="true"><g class="fig${done === 10 ? ' lit' : ''}">${window.ShanghaiZodiac ? ShanghaiZodiac(AR[a], a) : ''}</g>`;
       edges(AR[a]).forEach(([i, j]) => { const L = cleared(P, fs + i) && cleared(P, fs + j); v += `<line class="cl${L ? ' on' : ''}" x1="${S.p[i][0]}" y1="${S.p[i][1]}" x2="${S.p[j][0]}" y2="${S.p[j][1]}"/>`; });
@@ -827,13 +961,13 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     }
     const layMini = lay => layArt(lay, 'lm');
     function sheet() {
-      const s = pick, st = K.stage(s), a = Math.floor(s / 10), ul = unlocked(P, s), sr = P.st[s] || 0, bt = P.bt[s], box = $('.sh'), h0 = box.offsetHeight;
-      box.innerHTML = `<div class="art">${conArt(a, s % 10)}<b>${esc(TX('ar.' + AR[a], lang))}</b></div>` +
+      const s = pick, st = cStage(cid, s), a = Math.floor(s / 10), ul = unlocked(P, s), sr = P.st[s] || 0, bt = P.bt[s], box = $('.sh'), h0 = box.offsetHeight;
+      box.innerHTML = `<div class="art${ZOD ? '' : ' scn'}">${conArt(a, s % 10)}<b>${esc(areaName(a))}</b></div>` +
         `<div class="tx"><h3><span class="sn">${esc(stageName(s, lang))}</span><span class="ly">${layMini(st.lay)}<span>${esc(TX('lay.' + st.lay, lang))}</span><em>${esc(TX('tiles', lang, { n: st.n }))}</em></span></h3>` +
         `<div class="mi">${esc(missionText(st, lang))}</div><div class="sub">${ul ? esc(starsText(st, lang)) : esc(TX('st.lock', lang))}</div>` +
         `<div class="recs"><div>${esc(TX('rec', lang))}${sr ? `<span class="rs">${'★'.repeat(sr)}${'☆'.repeat(3 - sr)}</span>` + (bt != null ? ` <span class="rb">${esc(TX('r.best', lang, { t: mmss(bt) }))}</span>` : '') : '<span class="rb">—</span>'}</div><span class="rw">${esc(TX('rw.star', lang, { n: COIN_STAR }))}</span></div>${giftLine(s)}</div>` +
         `<button type="button" class="go"${ul ? '' : ' disabled'}>${esc(TX('b.start', lang))} ▶</button>`;
-      box.querySelector('.go').onclick = () => { if (!ul) return; close(); o.play(s); };
+      box.querySelector('.go').onclick = () => { if (!ul) return; close(); o.play({ c: cid, s }); };
       if (box.offsetHeight !== h0) requestAnimationFrame(onFit);   // (only when the box changed its height: the sky above is fitted again)
     }
     /* ---------- drag to travel, flick to glide, pinch / wheel to zoom; a tap (no drag) picks a stage ---------- */
@@ -890,7 +1024,8 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     },
     sizeName: (z, lang) => { const k = C() && C().FREE[z - 1], lv = Math.min(5, Math.ceil(z / 2)); return k ? TX('lay.' + k, lang) + ' · ' + '★'.repeat(lv) + '☆'.repeat(5 - lv) + ' · ' + TX('tiles', lang, { n: C().LAYOUTS[k].length }) : String(z); },   // (the board's name · how hard (FREE is in order of difficulty, two a step) · its tiles)
     stages: true, modeName: (m, lang) => TX(m === 'stage' ? 'm.stage' : 'm.free', lang),
-    stagePanel, stageBind, freeBind, stageMap, pending: null, last: null, nextStage: () => nextStage(prog()),
+    stagePanel, stageBind, freeBind, stageMap, pending: null, last: null, nextStage: () => { const c = lastCourse(); return { c, s: nextStage(cprog(c), cN(c)) }; },
+    pickSheet: (sid, sel, lang) => sid === 'bvSize' ? boardList(sel, lang) : false,
     start,
   };
 })();

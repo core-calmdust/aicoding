@@ -184,9 +184,10 @@
     ['fortress', 'bridge', 'butterfly', 'fortress', 'bridge', 'butterfly', 'bridge', 'fortress', 'butterfly', 'dragon'],
   ];
   const BIG = ['bridge', 'butterfly', 'dragon', 'fortress', 'turtle', 'butterfly', 'dragon', 'bridge', 'turtle', 'turtle'];
-  function stage(s) {
-    const a = Math.floor(s / 10), k = s % 10, lay = a < POOL.length ? POOL[a][k] : BIG[(k + a) % 10], n = POS[lay].length;
-    const type = s === 0 ? 'clear' : MIS[k], seed = 7919 * (s + 1) + 104729;
+  // one stage at difficulty step a (0..11: the board pool, the pace), star k of its area, from a seed
+  function stage(s, lvl, seed0) {
+    const a = lvl == null ? Math.floor(s / 10) : lvl, k = s % 10, lay = a < POOL.length ? POOL[a][k] : BIG[(k + a) % 10], n = POS[lay].length;
+    const type = s === 0 ? 'clear' : MIS[k], seed = seed0 || 7919 * (s + 1) + 104729;
     const pairs = n / 2, pace = Math.max(3.2, 6.5 - a * .3);   // seconds a pair (the time missions get tighter further on)
     const st = { s, a, k, lay, n, type, seed, par: Math.round(pairs * Math.max(3.4, 5.5 - a * .18)) };
     if (type === 'time') st.limit = Math.round(pairs * pace / 5) * 5;
@@ -197,8 +198,10 @@
   // the gilded tiles of a gold stage: pairs taken late in the solution (deep in the stack)
   function goldTiles(d, count) { const G = []; const ord = d.order.slice().reverse(); for (const [a, b] of ord) { if (G.length >= count) break; G.push(a, b); } return G; }
   const STAGES = 120;
+  // (2026-11-14) the other courses (森・海・お菓子 …): course ci starts at difficulty step base, one step more each area of 10
+  function courseStage(ci, base, s) { const st = stage(s, Math.min(11, base + Math.floor(s / 10)), 7919 * (s + 1) + 104729 + (ci + 1) * 999331); st.a = Math.floor(s / 10); return st; }
 
-  const API = { cls, rng, LAYOUTS: POS, FREE, links, isFree, deal, reshuffle, moves, hint, solve, planOK, patch, AREAS, stage, goldTiles, STAGES };
+  const API = { cls, rng, LAYOUTS: POS, FREE, links, isFree, deal, reshuffle, moves, hint, solve, planOK, patch, AREAS, stage, courseStage, goldTiles, STAGES };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   root.ShanghaiCore = API;
 })(typeof window !== 'undefined' ? window : globalThis);
