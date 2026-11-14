@@ -105,8 +105,20 @@ const SND = (() => {
     tone(1500, .05, 'triangle', .05);
   }
   document.addEventListener('visibilitychange', () => { if (ac) { if (document.hidden) ac.suspend(); else ac.resume(); } });
+  // recorded sounds (ユーザー 2026-11-14): tiles laid down (three, picked at random), the point sticks (riichi, paying for a skill),
+  // and the calls in a voice (リーチ・ツモ・ロン・ポン・チー・カン・テンパイ・ノーテン). Decoded on first use; until then the synth stands in.
+  const BUF = {}, NAMES = ['tile1', 'tile2', 'tile3', 'stick1', 'stick2', 'stick3', 'v-riichi', 'v-tsumo', 'v-ron', 'v-pon', 'v-chi', 'v-kan', 'v-tenpai', 'v-noten'];
+  let loading = false;
+  function load() { const a = ctx(); if (!a || loading) return; loading = true;
+    for (const n of NAMES) fetch(`${ASSETS}snd/${n}.mp3`).then(r => r.ok ? r.arrayBuffer() : Promise.reject()).then(b => new Promise((ok, ng) => a.decodeAudioData(b, ok, ng))).then(buf => { BUF[n] = buf; }).catch(() => {}); }
+  function play(n, g = 1, rate = 1) { const a = ctx(); if (!a || !on()) return false; load(); const b = BUF[n]; if (!b) return false;
+    const s = a.createBufferSource(); s.buffer = b; s.playbackRate.value = rate; const v = a.createGain(); v.gain.value = g; s.connect(v).connect(a.destination); s.start(); return true; }
+  const pick3 = k => `${k}${1 + ((Math.random() * 3) | 0)}`;
   return {
-    tile: () => click(),
+    tile: () => { if (!play(pick3('tile'), .9, .96 + Math.random() * .08)) click(); },
+    stick: () => { if (!play(pick3('stick'), .85)) tone(1800, .08, 'triangle', .06); },
+    voice: k => play('v-' + k, 1),
+    preload: () => load(),
     call: () => { tone(520, .16, 'square', .06); tone(780, .2, 'square', .05, .08); },
     riichi: () => { tone(880, .5, 'sine', .14); tone(1320, .7, 'sine', .1, .08); tone(1760, .9, 'sine', .06, .16); },
     win: () => { [523, 659, 784, 1046].forEach((f, i) => tone(f, .5, 'triangle', .12, i * .09)); tone(1568, 1.2, 'sine', .08, .4); },
@@ -114,7 +126,7 @@ const SND = (() => {
     ok: () => { tone(988, .25, 'sine', .12); tone(1319, .5, 'sine', .1, .12); },
     pick: () => tone(660, .06, 'triangle', .06),
     gacha: r => { const b = r === 'SSR' ? 4 : r === 'SR' ? 3 : 2; for (let i = 0; i < b + 2; i++) tone(500 + i * 180, .3, 'triangle', .1, i * .07); },
-    unlock: () => ctx(),
+    unlock: () => { ctx(); load(); },
   };
 })();
 
@@ -723,9 +735,9 @@ async function onEvent(ev, d) {
       await sleep(d.seat === ME ? 720 : 860);   // (ユーザー 2026-11-14: the next player's draw showed while the hand was still putting the tile out — wait until it is about down)
       break;
     }
-    case 'riichi-stick': TB.setStick(d.seat, true); refreshTable(); renderBadges(); break;
+    case 'riichi-stick': SND.stick(); TB.setStick(d.seat, true); refreshTable(); renderBadges(); break;
     case 'call': {
-      SND.call();
+      SND.call(); SND.voice(d.type === 'chi' ? 'chi' : d.type === 'pon' ? 'pon' : 'kan');
       await callout(d.seat, d.type === 'chi' ? t('chi') : d.type === 'pon' ? t('pon') : t('kan'));
       // the caller's hand takes the tile (チー・ポン・明槓: from the river where it lies; 暗槓・加槓: from the caller's own hand)
       const cid = d.called != null ? d.called : d.added != null ? d.added : d.tiles[0], was = d.called != null ? TB.tilePose(cid) : null;
@@ -738,6 +750,7 @@ async function onEvent(ev, d) {
     }
     case 'dora': refreshTable(); renderHand(); TB.dirty = true; break;
     case 'skill': {
+      if (d.cost > 0) SND.stick();   // (the points go into the pot)
       await cutin(d.seat, 'skill', d);
       refreshTable(); renderBadges();
       if (d.seat === ME) {
@@ -759,6 +772,7 @@ async function onEvent(ev, d) {
     case 'ryuukyoku': {
       clearActs();
       for (let s = 1; s < 4; s++) if (d.tenpai[s]) TB.layoutHand(s, d.hands[s], null, true);
+      if (!d.abort) [0, 1, 2, 3].forEach((s, i) => sleep(i * 520).then(() => SND.voice(d.tenpai[(G.kyoku + s) % 4] ? 'tenpai' : 'noten')));   // (each player declares, from the dealer round)
       await showRyuukyoku(d);
       break;
     }
@@ -1084,6 +1098,7 @@ async function cutin(s, kind, d) {
   void el.offsetWidth;
   el.classList.add('show');
   if (kind === 'riichi') SND.riichi(); else if (kind === 'skill') SND.skill(); else SND.ok();
+  if (kind === 'riichi' || kind === 'tsumo' || kind === 'ron') SND.voice(kind);
   await sleep((kind === 'skill' ? 1700 : kind === 'riichi' ? 1450 : 1500) + [0, 0, 150, 350, 650][rk]);
   el.classList.add('out');
   await sleep(260);
