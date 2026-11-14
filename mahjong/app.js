@@ -171,6 +171,10 @@ const SND = (() => {
     _trk: TRK,
     music,
     resume: () => music(want),
+    // the window behind / in front again: the sound stops and comes back where it was
+    gate(off) { const a = ac; if (!a) return;
+      if (off) { if (a.state === 'running') a.suspend(); for (const k in TRK) if (TRK[k].el && TRK[k].on) TRK[k].el.pause(); }
+      else if (!document.hidden) { a.resume(); for (const k in TRK) if (TRK[k].el && TRK[k].on) { const p = TRK[k].el.play(); if (p && p.catch) p.catch(() => {}); } } },
     levels,   // after the sound is switched back on
     call: () => { tone(520, .16, 'square', .06); tone(780, .2, 'square', .05, .08); },
     riichi: () => { tone(880, .5, 'sine', .14); tone(1320, .7, 'sine', .1, .08); tone(1760, .9, 'sine', .06, .16); },
@@ -188,6 +192,11 @@ const SND = (() => {
   };
 })();
 addEventListener("load", () => setTimeout(() => SND.preload(), 400));
+// (ユーザー 2026-11-14: the title too — when the window is not in front everything stops: the sound and music pause, the CSS
+// animations hold still; shared/focusgate.js already holds the animation frames and the clock)
+{ let fz = false;
+  setInterval(() => { const f = !!(window.__focusGate && window.__focusGate.frozen); if (f === fz) return; fz = f;
+    document.documentElement.classList.toggle('fz', f); SND.gate(f); }, 200); }
 // the title music starts with the first touch or key (browsers let sound start only then) (ユーザー 2026-11-14)
 { const go = () => { removeEventListener('pointerdown', go, true); removeEventListener('keydown', go, true); SND.unlock(); SND.resume(); };
   addEventListener('pointerdown', go, true); addEventListener('keydown', go, true); }   // sounds load in the background from the start (spread out, idle time)
