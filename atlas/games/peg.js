@@ -207,12 +207,12 @@
         const W = window.Atlas && Atlas.load ? Atlas.load() : null, bi = bid === 'pyramid' ? 2 : 1;
         [left <= 3, left === 1, perfect].forEach((ok, t) => { const id = `av-boss-peg-${bi}-${t}`; if (ok && W && !(W.owned || []).includes(id)) grant.push(id); });
       } catch (e) {}
-      const BL = BEST[lang] || BEST.en, bestTx = rec ? (nb && hist.length ? '🏅 ' + tx('res.best') + ' · ' : '') + BL + ': ' + tx('res.left', { n: rec.best }) + (rec.perfect ? ' · 👑 ' + tx('rec.perfect') : '') : '';
+      const BL = BEST[lang] || BEST.en, bestTx = rec ? (nb && hist.length ? '🏅 ' + tx('res.best') + '\n' : '') + BL + ': ' + tx('res.left', { n: rec.best }) + (rec.perfect ? ' · 👑 ' + tx('rec.perfect') : '') : '';
       const title = left === 1 ? (perfect ? tx('res.perfect') : tx('res.one')) : left === 2 ? tx('res.two') : left === 3 ? tx('res.three') : left <= 5 ? tx('res.five') : tx('res.many');
       const score = tx('res.left', { n: left }) + (left === 1 && !perfect && goal >= 0 ? ' · ' + tx('res.goalHint') : '');
       hud(left === 1 ? tx('st.done1') : tx('st.done', { n: left }));
       if (left === 1) Object.values(pcs).forEach(g => anim(700, k => lift(g, Math.sin(k * Math.PI) * .7)));
-      const ck = ok => ok ? ' ✓' : ' —', goalTx = gl ? '🎯 ' + tx('rw.g3') + ck(gl.b <= 3) + ' · ' + tx('rw.g1') + ck(gl.b === 1) + ' · ' + tx('rw.pf') + ck(gl.pf) : hinted ? '🎯 ' + tx('rw.hint') : '';
+      const ck = ok => ok ? '✅ ' : '⬜ ', goalTx = gl ? '🎯 ' + tx('rw.head') + '\n' + ck(gl.b <= 3) + tx('rw.g3') + '　' + ck(gl.b === 1) + tx('rw.g1') + '　' + ck(gl.pf) + tx('rw.pf') : hinted ? '🎯 ' + tx('rw.hint') : '';   // (two lines: what the marks are, then the three goals — 2026-11-14 user: 🎯 が何の表示かわからない)
       later(() => {
         ctx.onEnd({ win: left === 1, draw: false, solo: true, level: 0, title: (perfect ? '👑 ' : '') + title, score, best: bestTx, goal: goalTx, opp: tx('bd.' + bid), key: bid, why: title + ' · ' + tx('res.left', { n: left }), left, perfect, grant });
         if (grant.length) later(() => rewardCard(grant), 900);
