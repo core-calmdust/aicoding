@@ -506,7 +506,7 @@ function playerName(p) {
   if (lesson) return '';
   if (settings.mode === 'online' && window.olPlayerName) return olPlayerName(p);
   if (settings.mode === 'pvp') return '';
-  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(p))}${proTag(levelFor(p))}`;
+  if (settings.mode === 'watch') return `${AIW()} ${LV(levelFor(p))}${proTag(levelFor(p), p)}`;
   if (rgame) return p === humanColor ? t('you') + ' · R' + rgame.my : `${AIW()} ${rtLvName(rgame.lv)} · R${rgame.or}`;
   return p === humanColor ? t('you') : `${AIW()} ${LV(settings.level)}${proTag(settings.level)}`;
 }
@@ -798,7 +798,7 @@ async function maybeAI(tok) {
   if (!isAIColor(p)) return;
   thinking = p; renderInfo(); boardEl.classList.remove('can');
   const t0 = Date.now(), shown = moves.slice(0, cur);
-  const res = await request('ai', { type: 'think', moves: shown, level: levelFor(p), cfg: proCfg(levelFor(p)) || rtCap(levelFor(p)) });
+  const res = await request('ai', { type: 'think', moves: shown, level: levelFor(p), cfg: proCfg(levelFor(p), p) || rtCap(levelFor(p)) });
   if (!res || tok !== busyToken) { if (tok === busyToken) { thinking = 0; renderInfo(); } return; }
   const prevDur = cur > 0 ? moveDur(moves[cur - 1], posAt(cur - 1).pos) : 0;
   const wait = (settings.mode === 'watch' ? Math.max(700, prevDur + 120) : animating ? prevDur : 0) - (Date.now() - t0);   // AIの着手は即時：前の手のアニメが終わるのを待つだけ（観戦だけ間を取る）
@@ -1249,6 +1249,7 @@ function segSync() {
   $('#fLevel').classList.toggle('hidden', !(m === 'ai' || m === 'watch'));
   $('#fLevel2').classList.toggle('hidden', m !== 'watch');
   $('#fDisplay').classList.toggle('hidden', !game);
+  { const md = $('#newOverlay > .modal'), o = m === 'watch' ? 'fLevel,|,fLevel2,fColor' : 'fLevel,fLevel2,|,fColor'; if (md && md.dataset.nglOrder !== o) md.dataset.nglOrder = o; }   // (AI同士: 先手AI left, 後手AI right — as shogi, 2026-11-14)
   $('#fInfo').classList.toggle('hidden', game || m === 'rated');
   $('#fInfoText').textContent = m === 'lesson' ? t('ls.desc') : m === 'puzzle' ? t('pz.desc') : '';
   $('#btnStart').textContent = m === 'lesson' ? t('ng.toLessons') : m === 'puzzle' ? t('ng.toPuzzles') : m === 'rated' ? t('rt.start') : t('start');
@@ -1304,15 +1305,41 @@ function rtCap(lv) {
   const left = rtClockLeft(toMoveAt(moves.length) - 1), ms = Math.min(L.ms, Math.max(800, left / 20 + RT_CLOCK.inc * 0.8));
   return ms >= L.ms ? null : Object.assign({}, L, { ms, threads: L.mc ? mcThreads() : MTP && MTSplit.on() ? 1 + MTSplit.helpers() : 1 });
 }
-function proCfg(lv) {
-  if (!PRO || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null;
-  const e = PRO.get(lv); if (!e) return null;
+// AI同士: the second (white) AI has a PRO of its own beside its level (#fLevel2), as reversi / shogi (2026-11-14)
+var PRO2 = PRO_L ? ProSet.init({ game: 'amazons-w', field: '#fLevel2', lang: () => LANG, level: () => draft.level2 || settings.level2, show: () => draft.mode === 'watch',
+  store: { get: () => settings.pro2, set: v => { settings.pro2 = v; } },
+  defaults: lv => Object.assign(PRO_L.defaults(lv), MTP ? { threads: !mtLevel(lv) ? 1 : (E.LEVELS[lv] || {}).mc ? ProSet.defThreads() : Math.min(ProSet.maxThreads(), MTSplit.autoThreads()) } : {}, { algo: (E.LEVELS[lv] || {}).mc ? 'mc' : 'ab' }),
+  params: (MTP ? [PRO_L.params[0], { key: 'threads' }].concat(PRO_L.params.slice(1)) : PRO_L.params).concat([PRO_ALGO]) }) : null;
+function proCfg(lv, p) {
+  const P = settings.mode === 'watch' && p === P2 ? PRO2 : PRO;   // (AI同士: the second AI's own PRO)
+  if (!P || rgame || !(settings.mode === 'ai' || settings.mode === 'watch')) return null;
+  const e = P.get(lv); if (!e) return null;
   const c = Object.assign(PRO_L.cfg(e, lv), MTP ? { threads: e.threads || 1 } : {});
   if (e.algo === 'mc' && c.s && !c.dx) c.mc = 1;   // (the MCTS with a time or evaluation limit)
   return c;
 }
-function proTag(lv) { return proCfg(lv) ? ' PRO' : ''; }
+function proTag(lv, p) { return proCfg(lv, p) ? ' PRO' : ''; }
 $('#levelRange2').oninput = e => { draft.level2 = +e.target.value; segSync(); };
+// 表示 options in the options (gear), in the game's own box (2026-11-14, as reversi / shogi): they work at once; the dialog keeps
+// its checkboxes (hidden), which the game still reads when a game starts
+(function dispGear() {
+  if (!window.HeaderBar || !HeaderBar.addOption) return;
+  document.documentElement.classList.add('ng-disp-gear');
+  const S = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"';
+  const IC = { eval: `<svg ${S}><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>`,
+    last: `<svg ${S}><circle cx="12" cy="12" r="7"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>`,
+    anim: `<svg ${S}><path d="M4 12h3M2 7h5M3 17h4"/><circle cx="15" cy="12" r="6"/></svg>`,
+    threat: `<svg ${S}><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4"/></svg>`,
+    num: `<svg ${S}><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M7 3v18M3 17h18"/></svg>` };
+  const GL = { ja: 'アマゾンズ', en: 'Amazons', zh: '亚马逊棋', 'zh-TW': '亞馬遜棋', ko: '아마존', es: 'Amazonas', fr: 'Amazones', pt: 'Amazonas', de: 'Amazonen', ru: 'Амазонки', tr: 'Amazonlar', id: 'Amazons', hi: 'एमेज़ॉन्स', ar: 'الأمازونات' };
+  [['optEval', 'eval'], ['optLast', 'last'], ['optAnim', 'anim'], ['optThreat', 'threat'], ['optNum', 'num']].forEach(([id, k]) => {
+    const cb = $('#' + id); if (!cb) return;
+    HeaderBar.addOption({ id: 'disp-' + k, icon: IC[k], type: 'toggle', group: true, groupLabel: GL, label: () => t('opt.' + k),
+      disabled: () => k === 'eval' && rtLive(), get: () => !!settings[k],
+      set: v => { settings[k] = !!v; cb.checked = !!v; save();
+        try { document.documentElement.classList.toggle('no-anim', !animOn()); renderBoard(false); renderInfo(); if (k === 'eval' && v) analyzeCurrent(busyToken); } catch (e) {} } });
+  });
+})();
 $('#btnCancelNew').onclick = () => hideOverlay('#newOverlay');
 $('#btnStart').onclick = () => {
   if (draft.mode === 'online') return;   // handled by online-ui.js
