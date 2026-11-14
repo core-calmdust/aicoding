@@ -444,38 +444,49 @@ function openChara(id) {
   closeModal();
   $('#home').hidden = true; $('#chara').hidden = false;
   $('#chBack').innerHTML = IC.exit;
+  const chs = $('#chara'); chs.classList.remove('enter'); void chs.offsetWidth; chs.classList.add('enter');
   renderChara();
 }
 function closeChara() { $('#chara').hidden = true; $('#home').hidden = false; renderHome(); homeEnter(); }
+let chTab = 'all';
 function renderChara() {
   applyText();
   $('#coinN2').textContent = DB.coins.toLocaleString();
   $('#chara .coin').innerHTML = IC.coin;
-  const list = MJChars.list.slice().sort((a, b) => (!owns(a.id)) - (!owns(b.id)) || RORD[a.rarity] - RORD[b.rarity] || FORD.indexOf(a.family) - FORD.indexOf(b.family));
   $('#chCount').textContent = `${t('owned')} ${Object.keys(DB.chars).length} / ${MJChars.list.length}`;
+  // the list (AAA viewer, ユーザー 2026-11-14): filter tabs, then cards
+  const tabs = [['all', t('psAll')], ['own', t('owned')], ['UR', 'UR'], ['SSR', 'SSR'], ['SR', 'SR'], ['R', 'R'], ['N', 'N']];
+  $('#chTabs').innerHTML = tabs.map(([k, lab]) => `<button class="${k === chTab ? 'on' : ''}" data-tab="${k}">${esc(lab)}</button>`).join('');
+  const list = MJChars.list.filter(c => chTab === 'all' || (chTab === 'own' ? owns(c.id) : c.rarity === chTab))
+    .sort((a, b) => (!owns(a.id)) - (!owns(b.id)) || RORD[a.rarity] - RORD[b.rarity] || FORD.indexOf(a.family) - FORD.indexOf(b.family));
   $('#chList').innerHTML = list.map(c => {
     const own = owns(c.id);
     return `<button class="chi ${own ? '' : 'lock'} ${c.id === chView ? 'on' : ''}" data-id="${c.id}" style="--c:${c.color}">
       ${frame(c, 'face')}<em class="r-${c.rarity}">${c.rarity}</em>${own ? '' : `<i class="lk">${IC.lock}</i>`}${c.id === DB.sel ? '<i class="pm">★</i>' : ''}<span>${own ? esc(L(c.name)) : '？？？'}</span></button>`;
   }).join('');
   const c = MJChars.get(chView), own = owns(c.id);
-  const art = $('#chArt');
-  art.className = `ch-art frame ${own ? 'fr-' + c.rarity : 'fr-lock'}`;
-  art.style.setProperty('--c', c.color); art.style.setProperty('--c2', c.color2);
-  art.innerHTML = `<img class="${own ? '' : 'lock'}" src="${charImg(c, 'full')}" alt=""><i class="fx-sh"></i>` +
-    (own ? '' : `<div class="unlock"><i>${IC.lock}</i><b>${esc(t('lockedT'))}</b><span>${esc(t('lockedS', { r: c.rarity }))}</span><button class="go sm" data-a="gacha">${esc(t('toGacha'))}</button></div>`);
-  art.onclick = e => { if (e.target.closest('[data-a=gacha]')) { SND.pick(); openGacha(); } };
+  const ch = $('#chara'); ch.style.setProperty('--c', c.color); ch.style.setProperty('--c2', c.color2);
+  const full = charImg(c, 'full');
+  if ($('#chArt').dataset.id !== c.id + (own ? '' : 'x')) {
+    $('#chArt').dataset.id = c.id + (own ? '' : 'x');
+    $('#chArt').innerHTML = `<i class="aa-aura"></i><div class="aa-ch ${own ? '' : 'lock'}"><img src="${full}" alt="" draggable="false"></div>` +
+      (own ? '' : `<div class="unlock"><i>${IC.lock}</i><b>${esc(t('lockedT'))}</b><span>${esc(t('lockedS', { r: c.rarity }))}</span><button class="go sm" data-a="gacha">${esc(t('toGacha'))}</button></div>`);
+    $('#chBlur').src = full;
+    $('#chArt').classList.remove('in'); void $('#chArt').offsetWidth; $('#chArt').classList.add('in');
+  }
   const sisters = MJChars.list.filter(x => x.family === c.family);
   const o = DB.chars[c.id], uk = own ? useKey(c.id) : null;
   $('#chInfo').innerHTML = `
-    <div class="prar r-${c.rarity}">${c.rarity}</div>
-    <div class="pname">${own ? esc(L(c.name)) : '？？？'}<small>${esc(L(c.title))}</small></div>
+    <div class="pp-r"><em class="prar r-${c.rarity}">${c.rarity}</em><span class="pp-f">${esc(L(MJChars.families[c.family].name))}</span></div>
+    <div class="pp-n">${own ? esc(L(c.name)) : '？？？'}</div>
+    <div class="pp-t">${esc(L(c.title))}</div>
+    <i class="ci-rule"></i>
     ${own ? `${skillBlock(uk)}
       <div class="skpick"><small>${t('ownedSkills')} ${o.skills.length}${o.skills.length > 1 ? ` ・ ${t('useThis')}` : ''}</small>
       <div class="skl" id="chSk">${o.skills.map(k => skillChip(k, k === uk ? 'on' : '', `data-k="${k}"`)).join('')}</div></div>
       <p class="pprof">${esc(L(c.profile))}</p>` : `<div class="chsel lockline"><i>${IC.lock}</i>${esc(t('notOwned'))}</div>`}
-    <div class="sis"><small>${esc(L(MJChars.families[c.family].name))}</small><div>${sisters.map(x => `<button class="sib ${x.id === c.id ? 'on' : ''} ${owns(x.id) ? '' : 'lock'}" data-id="${x.id}">${frame(x, 'face')}</button>`).join('')}</div></div>
-    ${own ? (c.id === DB.sel ? `<div class="chsel on">★ ${t('isPartner')}</div>` : `<button class="go sm" id="chSet">${t('setPartner')}</button>`) : ''}`;
+    <div class="sis"><small>${esc(t('sisters'))}</small><div>${sisters.map(x => `<button class="sib ${x.id === c.id ? 'on' : ''} ${owns(x.id) ? '' : 'lock'}" data-id="${x.id}" title="${owns(x.id) ? esc(L(x.name)) : '？？？'}">${frame(x, 'face')}</button>`).join('')}</div></div>
+    ${own ? (c.id === DB.sel ? `<div class="chsel on">★ ${t('isPartner')}</div>` : `<button class="go ch-go" id="chSet">${t('setPartner')}</button>`) : ''}`;
   const b = $('#chSet');
   if (b) b.onclick = () => { DB.sel = c.id; save(); SND.ok(); renderChara(); };
   $('#chInfo').onclick = e => {
@@ -483,6 +494,8 @@ function renderChara() {
     const sb = e.target.closest('.sib'); if (sb) { chView = sb.dataset.id; SND.pick(); renderChara(); }
   };
 }
+$('#chArt').addEventListener('click', e => { if (e.target.closest('[data-a=gacha]')) { SND.pick(); openGacha(); } });
+$('#chTabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (!b) return; chTab = b.dataset.tab; SND.pick(); renderChara(); });
 $('#chList').addEventListener('click', e => { const b = e.target.closest('.chi'); if (!b) return; chView = b.dataset.id; SND.pick(); renderChara(); });
 
 // ---------------------------------------------------------------- スタッツ (player stats)

@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Yuji+Boku&family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Cinzel:wght@600;800&family=Orbitron:wght@700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=52">
+<link rel="stylesheet" href="app.css?v=54">
 </head>
 <body>
 <div id="root">
@@ -64,17 +64,21 @@
 </section>
 
 <!-- ============ CHARACTERS ============ -->
-<section id="chara" class="screen" hidden>
-  <header class="top ch-top">
-    <button class="ib" id="chBack"></button>
-    <b class="ch-title" data-t="chars"></b>
-    <small class="ch-count" id="chCount"></small>
-    <span class="sp"></span>
-    <div class="coins"><i class="coin"></i><b id="coinN2">0</b></div>
-  </header>
-  <div class="ch-main">
-    <div class="ch-list" id="chList"></div>
-    <div class="ch-art" id="chArt"></div>
+<section id="chara" class="screen aaa ch2" hidden>
+  <div class="aa-bg" aria-hidden="true"><img class="aa-blur" id="chBlur" alt=""><i class="aa-wash"></i><i class="aa-lat"></i><i class="aa-vig"></i></div>
+  <div class="ch-hero" id="chArt"></div>
+  <div class="aa-ui">
+    <header class="aa-top ch-top">
+      <button class="ib" id="chBack"></button>
+      <b class="ch-title" data-t="chars"></b>
+      <small class="ch-count" id="chCount"></small>
+      <span class="sp"></span>
+      <div class="coins"><i class="coin"></i><b id="coinN2">0</b></div>
+    </header>
+    <aside class="ch-panel">
+      <div class="ch-tabs" id="chTabs"></div>
+      <div class="ch-list" id="chList"></div>
+    </aside>
     <div class="ch-info" id="chInfo"></div>
   </div>
 </section>
@@ -126,6 +130,6 @@ else document.write('<script src="../atlas/vendor/three-r186.min.js?v=1"><\/scri
 <script src="table3d.js?v=46"></script>
 <script src="framefx.js?v=12"></script>
 <script src="../shared/record.js?v=16"></script>
-<script src="app.js?v=50"></script>
+<script src="app.js?v=51"></script>
 </body>
 </html>
