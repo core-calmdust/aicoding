@@ -149,6 +149,11 @@ svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.9;stroke
 .rd{display:flex;align-items:center;gap:3px}
 .rd small{font-size:11px;color:var(--muted);margin-right:4px;font-weight:700}
 .rl{font-size:12px;color:var(--muted);font-weight:700}
+.rs{display:flex;gap:14px;align-items:center;padding-left:2px}
+.rs span{display:inline-flex;align-items:center;gap:6px}
+.rs .stk{width:44px;height:7px;flex:none;filter:drop-shadow(0 1px 1px rgba(0,0,0,.5))}
+.rs b{font-size:15px;font-weight:900;color:#e9eefc;font-variant-numeric:tabular-nums}
+html.lp #game .rs{gap:8px}html.lp #game .rs .stk{width:30px;height:5px}html.lp #game .rs b{font-size:11px}
 .tbtns{position:absolute;top:max(10px,var(--st));right:max(10px,var(--sr));display:flex;gap:6px}
 /* tiles in html */
 /* (2026-11-14, ユーザー: the shading made the corners look too round) — a real tile seen square on: a flat white face with small

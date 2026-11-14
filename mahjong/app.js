@@ -6,7 +6,11 @@ const t = (k, v) => I18N.t(k, v);
 const L = o => I18N.L(o);
 const T = id => id >> 2;
 const FAST = /[?&]fast/.test(location.search) ? 0.12 : 1;
-const sleep = ms => new Promise(r => setTimeout(r, ms * FAST));
+// waits that stand still while the window is not in front (shared/focusgate.js stops performance.now() then): the game does not
+// go on behind another window (common rule; ユーザー 2026-11-14)
+const frozen = () => !!(window.__focusGate && window.__focusGate.frozen);
+const sleep = ms => new Promise(r => { const end = performance.now() + ms * FAST;
+  (function tick() { const left = end - performance.now(); if (left <= 0 && !frozen()) return r(); setTimeout(tick, Math.max(16, Math.min(left, 150))); })(); });
 const ASSETS = window.JANKA_ASSETS || '../images/mahjong/';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -510,7 +514,7 @@ async function startGame() {
   const others = MJChars.list.filter(c => c.id !== me.id).sort(() => Math.random() - .5).slice(0, 3).map(c => seatChar(c, rollSkillKey()));
   const chars = [me, ...others];
   chars.forEach(c => { const im = new Image(); im.src = charImg(c, 'full'); });   // cut-in art, loaded in advance
-  UIS = { chars, players: [{ kind: 'me' }, ...[1, 2, 3].map(() => ({ kind: 'bot', lv: DB.set.lv }))], track: new MJStats.Tracker(), abort: false, hand: [], intel: null, picked: null, riichiMode: false, resolve: null, opts: null, kind: null };
+  UIS = { chars, players: [{ kind: 'me' }, ...[1, 2, 3].map(() => ({ kind: 'bot', lv: DB.set.lv }))], track: new MJStats.Tracker(), drawnBy: [null, null, null, null], abort: false, hand: [], intel: null, picked: null, riichiMode: false, resolve: null, opts: null, kind: null };
   const auto = /[?&]auto/.test(location.search);
   const agents = [auto ? new AutoMe(DB.set.lv) : new Human(), new SlowBot(DB.set.lv), new SlowBot(DB.set.lv), new SlowBot(DB.set.lv)];
   G = new MJGame({ agents, chars, rules: { length: DB.set.len, skills: DB.set.skills }, ui: onEvent });
@@ -559,7 +563,7 @@ async function onEvent(ev, d) {
     }
     case 'draw': {
       TB.setInfo({ left: g.liveLeft(), turn: d.seat });
-      const rl = document.querySelector('#rbox .rl'); if (rl) rl.textContent = t('left', { n: g.liveLeft() });
+      UIS.drawnBy[d.seat] = d.id;
       if (d.seat === ME) renderHand(d.id);
       else TB.layoutHand(d.seat, g.P[d.seat].hand.slice(0, -1), g.P[d.seat].hand[g.P[d.seat].hand.length - 1]);
       break;
@@ -569,8 +573,10 @@ async function onEvent(ev, d) {
       if (d.riichi) await cutin(d.seat, 'riichi');
       SND.tile();
       layoutRiver(d.seat, true);
-      if (d.seat !== ME) TB.layoutHand(d.seat, p.hand, null, false, true);   // (the gap the tile left stays open a moment, then the row closes up)
+      // (others: the hand tidies the row after laying the tile — the drawn tile goes to its place, or the row is pushed together. ユーザー 2026-11-14)
+      if (d.seat !== ME) { const dr = UIS.drawnBy[d.seat]; TB.sortAfterDiscard(d.seat, p.hand, dr != null && !d.tsumogiri && p.hand.includes(dr) ? dr : null); }
       else { clearActs(); renderHand(); }
+      UIS.drawnBy[d.seat] = null;
       await sleep(d.seat === ME ? 720 : 860);   // (ユーザー 2026-11-14: the next player's draw showed while the hand was still putting the tile out — wait until it is about down)
       break;
     }
@@ -621,11 +627,14 @@ function refreshTable() {
   const g = G;
   TB.setInfo({ round: g.round, kyoku: g.kyoku, honba: g.honba, kyotaku: g.kyotaku, left: g.liveLeft ? g.liveLeft() : 70, scores: g.scores.slice(), dealer: g.kyoku });
   const inds = g.doraInds ? g.doraInds() : [];
-  const roundTxt = t('kyoku', { w: t('round')[g.round], n: g.kyoku + 1 });
-  $('#rbox').innerHTML = `<div class="rk"><b>${roundTxt}</b><span>${t('honba', { n: g.honba })}</span></div>
-    <div class="rd"><small>${t('dora')}</small>${[0, 1, 2, 3, 4].map(i => i < inds.length ? typeHTML(inds[i], 'xs') : backHTML('xs')).join('')}</div>
-    <div class="rl">${t('left', { n: g.liveLeft ? g.liveLeft() : 70 })}</div>`;
+  // (ユーザー 2026-11-14: the box shows the dora, and under it the pot and the counters as stick × n — the round and the tiles
+  // left are on the score unit in the middle of the table)
+  const ky = Math.round(g.kyotaku / 100) / 10;
+  $('#rbox').innerHTML = `<div class="rd"><small>${t('dora')}</small>${[0, 1, 2, 3, 4].map(i => i < inds.length ? typeHTML(inds[i], 'xs') : backHTML('xs')).join('')}</div>
+    <div class="rs"><span title="${esc(t('kyotakuT'))}">${STICK1000}<b>×${ky}</b></span><span title="${esc(t('honbaT'))}">${STICK100}<b>×${g.honba}</b></span></div>`;
 }
+const STICK1000 = '<svg class="stk" viewBox="0 0 64 10"><rect x="1" y="1" width="62" height="8" rx="4" fill="#f4f1ea" stroke="#9aa0b0" stroke-width=".8"/><circle cx="32" cy="5" r="2.6" fill="#d8283c"/></svg>';
+const STICK100 = '<svg class="stk" viewBox="0 0 64 10"><rect x="1" y="1" width="62" height="8" rx="4" fill="#f4f1ea" stroke="#9aa0b0" stroke-width=".8"/><g fill="#2a2a33"><circle cx="9" cy="3.6" r="1.1"/><circle cx="13" cy="3.6" r="1.1"/><circle cx="9" cy="6.4" r="1.1"/><circle cx="13" cy="6.4" r="1.1"/><circle cx="51" cy="3.6" r="1.1"/><circle cx="55" cy="3.6" r="1.1"/><circle cx="51" cy="6.4" r="1.1"/><circle cx="55" cy="6.4" r="1.1"/></g></svg>';
 function layoutRiver(s, anim) {
   const p = G.P[s];
   const riv = p.river.map((r, i) => ({ id: r.id, taken: r.taken, sideways: i === p.riichiTurn || (p.riichiTurn >= 0 && i > p.riichiTurn && p.river.slice(p.riichiTurn, i).every(x => x.taken) && i === firstVisibleAfter(p)) }));
@@ -792,7 +801,7 @@ function myTurn(o, res) {
   bindActKeys();
   // riichi: auto tsumogiri when there is nothing else to do
   if (o.mustTsumogiri && !o.canTsumo && !(o.ankans && o.ankans.length)) {
-    setTimeout(() => { if (UIS.resolve === res) doDiscard(o.drawn); }, 420);
+    sleep(420).then(() => { if (UIS.resolve === res) doDiscard(o.drawn); });
   }
 }
 function myCall(o, res) {
@@ -946,7 +955,7 @@ function scoreRows(d, winners) {
   }).join('')}</div>`;
   void g;
 }
-function waitClick(box, sel) { return new Promise(res => { const b = box.querySelector(sel); b.onclick = () => { SND.pick(); res(); }; if (AUTO) setTimeout(res, 1600); }); }
+function waitClick(box, sel) { return new Promise(res => { const b = box.querySelector(sel); b.onclick = () => { SND.pick(); res(); }; if (AUTO) sleep(1600).then(res); }); }
 
 // ---- the end of a hand (2026-11-14, ユーザー: the basic plan) ----
 //  1  the win: the winner's character large, the hand, the yaku one by one, the points large        (showAgari, one per winner)
