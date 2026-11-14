@@ -137,25 +137,20 @@ function render(it, t) {
   it.ctx.drawImage(cv, 0, 0);
 }
 
-// (2026-11-15, ユーザー: for phones' batteries) 20 frames a second on a touch screen; and when no frame is on screen (a game is
-// being played, say) the loop no longer wakes 60 times a second — it looks again twice a second
-const STEP = matchMedia('(pointer: coarse)').matches ? 50 : 33;
 function loop(now) {
   if (!items.size) { running = false; return; }
-  if (now - last < STEP) { requestAnimationFrame(loop); return; }
+  requestAnimationFrame(loop);
+  if (now - last < 33) return;
   last = now;
-  let n = 0;
-  if (!document.hidden && !document.documentElement.classList.contains('lite') && !(window.__focusGate && window.__focusGate.frozen)) {
-    const t = now / 1000;
-    for (const it of [...items]) {
-      if (!it.el.isConnected) { items.delete(it); continue; }
-      if (!it.el.offsetParent) continue;
-      const r = it.el.getBoundingClientRect();
-      if (r.bottom < -PAD || r.top > innerHeight + PAD || r.right < -PAD || r.left > innerWidth + PAD) continue;
-      render(it, t); n++;
-    }
+  if (document.hidden || document.documentElement.classList.contains('lite')) return;
+  const t = now / 1000;
+  for (const it of [...items]) {
+    if (!it.el.isConnected) { items.delete(it); continue; }
+    if (!it.el.offsetParent) continue;
+    const r = it.el.getBoundingClientRect();
+    if (r.bottom < -PAD || r.top > innerHeight + PAD || r.right < -PAD || r.left > innerWidth + PAD) continue;
+    render(it, t);
   }
-  if (n) requestAnimationFrame(loop); else setTimeout(() => requestAnimationFrame(loop), 500);
 }
 
 root.FrameFX = { attach, detach, scan(rootEl) {
