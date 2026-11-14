@@ -1011,13 +1011,14 @@ async function showMoves(d, o = {}) {
         </div>`; }).join('')}
       <button class="btn gold nx">${t('next')}</button>
     </div>`, 'stage clear');
-  // arrows: from every player who pays to every player who is paid (drawn between the panels as they are laid out)
+  // arrows: from every player who pays to every player who is paid (drawn between the panels as they are laid out). (2026-11-14: the glow
+  // filter's region is the whole stage — sized by the path's own box, a straight arrow through the centre had no height and was not drawn)
   const svg = box.querySelector('.mv-ar'), R = box.getBoundingClientRect(), mid = el => { const r = el.getBoundingClientRect(); return [r.left - R.left + r.width / 2, r.top - R.top + r.height / 2, r.width, r.height]; };
   const P = {}; box.querySelectorAll('.mv-p').forEach(el => { P[el.dataset.s] = mid(el); });
   const cx = R.width / 2, cy = R.height / 2, u = Math.min(R.width, R.height) / 100;
   svg.setAttribute('viewBox', `0 0 ${R.width} ${R.height}`);
   let h = `<defs><marker id="mvh" viewBox="0 0 10 10" refX="6.5" refY="5" markerWidth="3.3" markerHeight="3.3" orient="auto-start-reverse"><path d="M0 0 10 5 0 10 2.6 5z" fill="#eaffff"/></marker>
-    <filter id="mvg" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="${(u * .9).toFixed(1)}" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>`;
+    <filter id="mvg" filterUnits="userSpaceOnUse" x="0" y="0" width="${R.width.toFixed(0)}" height="${R.height.toFixed(0)}"><feGaussianBlur stdDeviation="${(u * .9).toFixed(1)}" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>`;
   let k = 0;
   for (let a = 0; a < 4; a++) if (d.delta[a] < 0) for (let b = 0; b < 4; b++) if (d.delta[b] > 0) {
     const A = P[a], B = P[b], opp = (a - b + 4) % 4 === 2, mx = (A[0] + B[0]) / 2, my = (A[1] + B[1]) / 2;
