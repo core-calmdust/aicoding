@@ -771,6 +771,10 @@ class Table3D {
       shift[rw] = found[0]; back[rw] = acc = found[1];
     }
     for (const it of items) {
+      // a called tile is no longer the river's: it lies in the caller's meld (or the player's hand row) — leave it where that put it.
+      // (ユーザー 2026-11-14: a pon sometimes showed only two tiles — when the caller's melds were laid out before the discarder's
+      // river, the river took its tile back and hid it)
+      if (it.r.taken) continue;
       const g = this.tile(it.r.id), lx = it.lx + shift[it.row], lz = it.lz + back[it.row], last = animLast && it.i === river.length - 1;
       const anim = last ? { reach: seat, from: g.visible && g.userData.pose === 'stand' ? null : fromLx && typeof fromLx === 'object' ? fromLx : this.handOrigin(seat, fromLx) }   // (the hand takes the tile out of the owner's hand)
         : (g.visible && g.userData.rseat === seat && g.userData.target && Math.hypot(g.userData.target.x - this.local(seat, lx, lz).x, g.userData.target.z - this.local(seat, lx, lz).z) > .01 ? { dur: 240, level: true } : null);   // (a row moved aside slides there)
