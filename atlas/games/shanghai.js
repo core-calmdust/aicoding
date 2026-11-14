@@ -652,16 +652,33 @@ html.sh-land .shask>div{transform:rotate(90deg);width:min(64vh,420px)}
     const B = Array.from({ length: 38 }, () => ({ x: R(), y: R(), ph: R() * 6.3, sp: .4 + R() * .8, hue: R() }));
     function size() { const r = cv.getBoundingClientRect(); dpr = Math.min(2, devicePixelRatio || 1); W = cv.width = Math.max(1, r.width * dpr); H = cv.height = Math.max(1, r.height * dpr); }
     size();
+    // (2026-11-14, ユーザー: もっとリアルな光り方) the stars as soft photographic sprites drawn additively: a hot white core, a
+    // coloured gaussian halo, and for the bright ones faint diffraction spikes that fade along their length; they scintillate
+    const sprite = (rgb, spikes) => {
+      const N = 128, cv2 = document.createElement('canvas'); cv2.width = cv2.height = N; const g2 = cv2.getContext('2d'), m = N / 2;
+      let g = g2.createRadialGradient(m, m, 0, m, m, m); g.addColorStop(0, `rgba(${rgb},.55)`); g.addColorStop(.08, `rgba(${rgb},.32)`); g.addColorStop(.25, `rgba(${rgb},.08)`); g.addColorStop(1, `rgba(${rgb},0)`);
+      g2.fillStyle = g; g2.fillRect(0, 0, N, N);
+      g = g2.createRadialGradient(m, m, 0, m, m, N * .07); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(.45, 'rgba(255,255,255,.85)'); g.addColorStop(1, `rgba(${rgb},0)`);
+      g2.fillStyle = g; g2.beginPath(); g2.arc(m, m, N * .07, 0, 7); g2.fill();
+      if (spikes) [[1, 0], [0, 1]].forEach(([dx, dy]) => [3, 1.4, .6].forEach((w, k) => {
+        const lg = g2.createLinearGradient(m - dx * m, m - dy * m, m + dx * m, m + dy * m);
+        lg.addColorStop(0, `rgba(${rgb},0)`); lg.addColorStop(.38, `rgba(${rgb},${[.05, .14, .3][k]})`); lg.addColorStop(.5, `rgba(255,255,255,${[.12, .35, .7][k]})`); lg.addColorStop(.62, `rgba(${rgb},${[.05, .14, .3][k]})`); lg.addColorStop(1, `rgba(${rgb},0)`);
+        g2.strokeStyle = lg; g2.lineWidth = w; g2.beginPath(); g2.moveTo(m - dx * m, m - dy * m); g2.lineTo(m + dx * m, m + dy * m); g2.stroke(); }));
+      return cv2;
+    };
+    const COLS = ['200,218,255', '255,240,214', '255,214,170', '220,206,255', '185,205,255'];
+    const SPR = COLS.map(c => sprite(c, false)), SPK = COLS.map(c => sprite(c, true));
+    S.forEach(o => { o.c = Math.floor(o.ph * 7) % COLS.length; });
+    B.forEach(o => { o.c = Math.floor(o.hue * COLS.length) % COLS.length; });
     function frame(now) {
       raf = 0; if (stopped) return;
       if (!document.hidden && now - last >= 32) {
-        last = now; const t = now / 1000, px = getPan() * dpr; c.clearRect(0, 0, W, H);
-        S.forEach(o => { const tw = .55 + .45 * Math.sin(t * o.sp + o.ph), x = ((o.x * W - px * o.d) % W + W) % W, y = o.y * H, rr = (.35 + o.a * o.a * 1.3) * dpr;
-          c.fillStyle = `rgba(255,255,255,${(.16 + o.a * .84) * tw})`; c.beginPath(); c.arc(x, y, rr, 0, 7); c.fill(); });
-        B.forEach(o => { const tw = Math.max(0, Math.sin(t * o.sp + o.ph)), x = ((o.x * W - px * .35) % W + W) % W, y = o.y * H, k = (2 + tw * tw * 13) * dpr;
-          const col = o.hue < .3 ? '200,220,255' : o.hue < .6 ? '255,236,190' : '230,210,255';
-          const g = c.createRadialGradient(x, y, 0, x, y, k); g.addColorStop(0, `rgba(${col},${.3 + .7 * tw})`); g.addColorStop(1, `rgba(${col},0)`); c.fillStyle = g; c.beginPath(); c.arc(x, y, k, 0, 7); c.fill();
-          c.strokeStyle = `rgba(${col},${.5 * tw})`; c.lineWidth = .8 * dpr; c.beginPath(); c.moveTo(x - k * 2, y); c.lineTo(x + k * 2, y); c.moveTo(x, y - k * 2); c.lineTo(x, y + k * 2); c.stroke(); });
+        last = now; const t = now / 1000, px = getPan() * dpr; c.clearRect(0, 0, W, H); c.globalCompositeOperation = 'lighter';
+        S.forEach(o => { const tw = .7 + .3 * Math.sin(t * o.sp + o.ph) * Math.sin(t * o.sp * 1.7 + o.ph * 2), x = ((o.x * W - px * o.d) % W + W) % W, y = o.y * H, sz = (3 + o.a * o.a * 9) * dpr;
+          c.globalAlpha = Math.min(1, (.25 + o.a * .75) * tw); c.drawImage(SPR[o.c], x - sz, y - sz, sz * 2, sz * 2); });
+        B.forEach(o => { const p = .5 + .5 * Math.sin(t * o.sp + o.ph), tw = .55 + .45 * p * (.85 + .15 * Math.sin(t * 9 + o.ph * 5)), x = ((o.x * W - px * .35) % W + W) % W, y = o.y * H, sz = (14 + 20 * p) * dpr;
+          c.globalAlpha = tw; c.drawImage(SPK[o.c], x - sz, y - sz, sz * 2, sz * 2); });
+        c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
         if (!shoot && now > nextShoot) shoot = { x: (.2 + R() * .7) * W, y: R() * H * .45, t0: now, vx: -(.6 + R() * .5) * W, vy: .35 * H };
         if (shoot) { const k = (now - shoot.t0) / 900; if (k >= 1) { shoot = null; nextShoot = now + 1800 + R() * 3600; } else {
           const x = shoot.x + shoot.vx * k, y = shoot.y + shoot.vy * k, a = Math.sin(k * Math.PI), g = c.createLinearGradient(x, y, x - shoot.vx * .12, y - shoot.vy * .12);
