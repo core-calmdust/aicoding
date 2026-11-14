@@ -888,6 +888,7 @@ async function onEvent(ev, d) {
       // the caller's hand takes the tile (チー・ポン・明槓: from the river where it lies; 暗槓・加槓: from the caller's own hand)
       const cid = d.called != null ? d.called : d.added != null ? d.added : d.tiles[0], was = d.called != null ? TB.tilePose(cid) : null;
       layoutAll();
+      if (d.seat === ME && d.called != null) TB.tile(cid).visible = false;   // (my melds are drawn in the page: the tile has no place on the table — carried off toward me)
       TB.carry(d.seat, cid, was && was.seen ? was : null);
       await sleep(d.called != null ? 620 : 380);
       if (d.seat === ME) renderHand();
