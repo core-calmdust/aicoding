@@ -402,14 +402,15 @@ class Table3D {
     const to = { x: p.x, y, z: p.z, rx, ry: yaw, rz };
     g.userData.pose = pose;
     g.visible = true;
-    if (anim) this.tween(g, to, anim.dur || 260, anim.from, anim.hand);
+    if (anim && anim.reach != null) this.reach(g, anim.reach, anim.from, to);
+    else if (anim) this.tween(g, to, anim.dur || 260, anim.from, anim.hand);
     else { g.position.set(to.x, to.y, to.z); g.rotation.set(rx, yaw, rz); g.userData.target = to; this.dirty = true; }
   }
   tween(g, to, dur, from, hand, after) {   // hand: the seat whose hand carries the tile (it lets go and draws back when the tile is down)
     const f = from || { x: g.position.x, y: g.position.y, z: g.position.z, rx: g.rotation.x, ry: g.rotation.y, rz: g.rotation.z };
     this.tweens = this.tweens.filter(t => t.g !== g);
     this.tweens.push({ g, from: f, to, t0: performance.now(), dur, hand: hand == null ? null : hand, after });
-    if (hand != null) { const rig = this.hand(hand); this.handFx = this.handFx.filter(h => h.rig !== rig); rig.visible = true; rig.position.set(f.x, f.y + D / 2, f.z); }
+    if (hand != null) { const rig = this.hand(hand); this.handFx = this.handFx.filter(h => h.rig !== rig); rig.visible = true; rig.position.set(f.x, f.y + this._top(f.rx), f.z); }
     g.userData.target = to;
     this.dirty = true;
   }
@@ -449,6 +450,18 @@ class Table3D {
     if (!rig) { if (!this.handProto) this.handProto = buildHand(this.envTex); rig = this.hands[seat] = this.handProto.clone(true); rig.rotation.y = seat * PI / 2; rig.visible = false; this.scene.add(rig); }
     return rig;
   }
+  _top(rx) { const c = Math.cos(rx); return D / 2 + (H / 2 - D / 2) * c * c; }   // how far the tile's top is above its centre (standing: H/2, lying: D/2)
+  // a discard (ユーザー 2026-11-14: the hand takes the tile out of the owner's own hand and puts it out): the hand comes in over
+  // the hand tiles, down onto the tile where it stands (from: its pose there; null = where it is now), lifts it and lays it at `to`.
+  reach(g, seat, from, to) {
+    const f = from || { x: g.position.x, y: g.position.y, z: g.position.z, rx: g.rotation.x, ry: g.rotation.y, rz: g.rotation.z }, rig = this.hand(seat);
+    this.tweens = this.tweens.filter(t => t.g !== g);
+    g.visible = true; g.position.set(f.x, f.y, f.z); g.rotation.set(f.rx, f.ry, f.rz); g.userData.target = to;
+    const out = this.local(seat, 0, 3.4), r = { x: f.x + out.x, y: f.y + 2.6, z: f.z + out.z };   // from behind and above the tile
+    this.handFx = this.handFx.filter(h => h.rig !== rig); rig.visible = true; rig.position.set(r.x, r.y, r.z);
+    this.handFx.push({ rig, from: r, to: { x: f.x, y: f.y + this._top(f.rx), z: f.z }, t0: performance.now(), dur: 200, then: () => { if (g.userData.target === to) this.tween(g, to, 300, f, seat); else this._handBack(seat); } });
+    this.dirty = true;
+  }
   _handRest(seat) { const p = this.local(seat, 0, 12.5); return { x: p.x, y: 3.2, z: p.z }; }   // off the table, on the owner's side
   _handBack(seat) { const rig = this.hand(seat), f = { x: rig.position.x, y: rig.position.y, z: rig.position.z }, d = this.local(seat, 0, 6.5);
     this.handFx = this.handFx.filter(h => h.rig !== rig);
@@ -472,7 +485,7 @@ class Table3D {
   }
   hideAll() { for (const g of this.tiles.values()) { g.visible = false; this.setTileLook(g, 'normal'); } this.sticks.forEach(s => s.visible = false); this.tweens = []; this.handFx = []; (this.hands || []).forEach(h => { if (h) h.visible = false; }); this.dirty = true; }
 
-  layoutRiver(seat, river, animLast, fromSeatHand) {
+  layoutRiver(seat, river, animLast, fromLx) {   // fromLx: where in the owner's hand the discard stood (the player's own hand is drawn in the page: app.js gives the place)
     let row = 0, col = 0, x = -3.0 * W;
     river.forEach((r, i) => {
       if (col === ROW && row < 2) { row++; col = 0; x = -3.0 * W; }
@@ -481,7 +494,7 @@ class Table3D {
       const w = side ? H : W;
       const lx = x + (w - W) / 2;
       const lz = 3.56 + row * (H + 0.02) + (side ? (H - W) / 2 * 0 : 0);
-      const anim = (animLast && i === river.length - 1) ? { dur: 300, from: this.handOrigin(seat), hand: seat } : null;
+      const anim = (animLast && i === river.length - 1) ? { reach: seat, from: g.visible && g.userData.pose === 'stand' ? null : this.handOrigin(seat, fromLx) } : null;   // (the hand takes the tile out of the owner's hand)
       this.place(g, seat, lx, lz, side ? 'side' : 'flat', anim);
       g.userData.taken = !!r.taken;
       g.visible = !r.taken;
@@ -489,9 +502,9 @@ class Table3D {
       x += w + 0.02; col++;
     });
   }
-  handOrigin(seat) {
-    const p = this.local(seat, 0, seat === 0 ? 10 : 8.4);
-    return { x: p.x, y: 1.4, z: p.z, rx: -PI / 2, ry: seat * PI / 2, rz: 0 };
+  handOrigin(seat, lx) {   // a tile standing in the owner's hand (the row the opponents' tiles stand in; the player's own is at the near edge)
+    const p = this.local(seat, lx || 0, seat === 0 ? 9.9 : 8.45);
+    return { x: p.x, y: H / 2, z: p.z, rx: 0, ry: seat * PI / 2, rz: 0 };
   }
   layoutHand(seat, ids, drawn, open) {
     // opponents: standing tiles; open = lay face up (end of hand)
@@ -695,7 +708,7 @@ class Table3D {
         const arc = Math.sin(k * PI) * 0.6;
         g.position.set(f.x + (t.x - f.x) * e, f.y + (t.y - f.y) * e + arc, f.z + (t.z - f.z) * e);
         g.rotation.set(f.rx + (t.rx - f.rx) * e, f.ry + (t.ry - f.ry) * e, f.rz + (t.rz - f.rz) * e);
-        if (tw.hand != null) { const rig = this.hand(tw.hand); rig.position.set(g.position.x, g.position.y + D / 2, g.position.z); }   // the hand holds the tile
+        if (tw.hand != null) { const rig = this.hand(tw.hand); rig.position.set(g.position.x, g.position.y + this._top(g.rotation.x), g.position.z); }   // the hand holds the tile
         if (k >= 1) { if (tw.hand != null) this._handBack(tw.hand); if (tw.after) tw.after(); }
         return k < 1;
       });
