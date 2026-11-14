@@ -256,6 +256,9 @@
       deselect();
     }
     ctx.el.addEventListener('click', onClick);
+    // the board view's 駒 row (Table3D.PIECES) during a game: the pieces on the board are made again in the new set at once
+    const onPcs = e => { if (!stopped && pos && e.detail && e.detail.id === 'xiangqi') rebuild(); };
+    addEventListener('atlas-pieces', onPcs);
 
     /* ---------- puzzle / lesson mode (ctx.pz, 2026-11-14, as atlas/games/checkers.js): a position from the puzzles / lessons, no AI; the
        caller judges each move (ctx.pz.moved(m, info)) and plays the replies (api.pz.play). The solver and the evaluation come from the
@@ -413,7 +416,7 @@
       stop() {
         stopped = true; jid++;
         timers.forEach(clearTimeout);
-        ctx.el.removeEventListener('click', onClick);
+        ctx.el.removeEventListener('click', onClick); removeEventListener('atlas-pieces', onPcs);
         if (worker) worker.terminate(); worker = null; if (hintW) hintW.terminate(); hintW = null; if (pzW) pzW.terminate(); pzW = null;
         pzClear(); Object.values(pzMat).forEach(m => m.dispose()); pzGeo.disc.dispose();
         Object.values(MAT).forEach(m => m.dispose()); Object.values(GEO).forEach(g => g.dispose());
