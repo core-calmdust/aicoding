@@ -6,13 +6,17 @@
      walnut   ウォルナットと真鍮  planked American walnut, the lines carved as V grooves, a brass inlay round the field (as the modern
                              walnut sets with brass-rimmed discs)
      hongmu   紅木と金線       deep red rosewood under a clear finish, gold lines, gold 楚河 汉界 (the classic Chinese gift board)
-     raden    黒檀と螺鈿        striped ebony, the lines and the river words inlaid in mother-of-pearl
+     raden    黒漆と螺鈿        black lacquer, the lines, the river words and plum sprays in the frame inlaid in mother-of-pearl
+                             (strips and chips of shell, the colour shifting with the angle)
      lacquer  朱漆と雷文        the vermilion lacquer field with gold lines in a black lacquer frame painted with a gold Greek key and
                              white peonies, brass corners (the first 3D board)
      jade     翡翠と金          green jade with gold lines and gold words on a white-jade block
+   2026-11-14 v2: every block board (all but lacquer) and every face are pictures from atlas/tools/xiangqi-tex.py
+     (images/atlas/xiangqi3d/): real grain on the top, the long sides and the end grain on the ends; inlays as metal maps;
+     the characters drawn from real typefaces (楷書 LXGW WenKai / 明朝 Noto Serif CJK), centred and sized to fill the face.
    Pieces (Table3D.PIECES.xiangqi, 'atlas-xiangqi-pc3'), the first the default: boxwood (engraved red / black on boxwood) ·
-     brass (brass-rimmed discs: cream face with a red character / dark walnut face with a cream one) · ebony (ebony discs, a
-     carved ring, gold / silver characters) · urushi (vermilion / black lacquer, gold characters) · jade (white / green jade) ·
+     brass (brass-rimmed discs: cream face with a red character / dark face with a cream one, 明朝) · ebony (ebony discs, a
+     double ring, gold / silver characters inlaid) · urushi (vermilion / black lacquer, gold characters) · jade (white / green jade) ·
      porcelain (white porcelain, copper-red / cobalt-blue characters).
    Registers into Table3D:
      Table3D.MODELS.xiangqi(live, look)   board (+ an opening position unless live)
@@ -31,8 +35,6 @@
   const u = .9, MG = .45, FR = .72, H = .42, REC = .045;   // point step, margin round the lines, frame width, board height, field recess
   const RW = 8 * u + 2 * MG, RD = 9 * u + 2 * MG, W = RW + 2 * FR, D = RD + 2 * FR, HF = H - REC;
   const KAI = '"STKaiti","KaiTi","Kaiti SC","Kaiti TC","BiauKai","AR PL UKai CN","Noto Serif SC","Noto Serif CJK SC","Noto Serif CJK JP","Shippori Mincho B1","Songti SC",serif';
-  const MIN = '"Noto Serif SC","Noto Serif CJK SC","Noto Serif CJK JP","Shippori Mincho B1","Songti SC","STKaiti","KaiTi",serif';
-  const SANS = '"Noto Sans SC","Noto Sans CJK SC","Noto Sans CJK JP","PingFang SC","Hiragino Sans","Microsoft YaHei",sans-serif';
   const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } } };
   const LOOKS = ['kaya', 'walnut', 'hongmu', 'raden', 'lacquer', 'jade'];
   const SETS = ['boxwood', 'brass', 'ebony', 'urushi', 'jade', 'porcelain'];
@@ -55,7 +57,7 @@
      prof: [[d, y], …] d = distance in from the outer edge; walk from the outer bottom, over the top, down the inside.
      uvMode 'plan': u, v from the top view of the whole board (for the painted top) */
   function sweep(A, B, prof, uvMode) {
-    const TT = T(), P = [], N = [], UV = [], idx = [];
+    const TT = T(), P = [], N = [], UV = [], idx = [], groups = [];
     const nrm = [];
     for (let i = 0; i < prof.length; i++) {   // vertex normals in (d, y): the mean of the neighbouring segments
       let nd = 0, ny = 0;
@@ -76,18 +78,21 @@
           const x = o[0] * (hac - d) + e[0] * s, z = o[2] * (hac - d) + e[2] * s;
           P.push(x, y, z); N.push(-o[0] * nd, ny, -o[2] * nd);
           if (uvMode === 'plan') UV.push((x + A) / (2 * A), 1 - (z + B) / (2 * B));
+          else if (uvMode === 'side') UV.push((s + hal) / (2 * hal), 1 - (arc[arc.length - 1] - arc[i]) / SIDE_H);
           else UV.push((s + hal) / (2 * Math.max(A, B)) * .9 + si * .23, arc[i] * .35 + si * .19);
         }
       });
+      const i0 = idx.length;
       for (let i = 0; i < prof.length - 1; i++) {
         const a = base + i * 2, b = a + 1, c = a + 3, d = a + 2;
         if (Math.hypot(prof[i + 1][0] - prof[i][0], prof[i + 1][1] - prof[i][1]) < 1e-6) continue;
         idx.push(a, c, b, a, d, c);
       }
+      groups.push([i0, idx.length - i0, si & 1]);   // material 0: the far / near ends, 1: the long sides
     });
     const g = new TT.BufferGeometry();
     g.setAttribute('position', new TT.Float32BufferAttribute(P, 3)); g.setAttribute('normal', new TT.Float32BufferAttribute(N, 3)); g.setAttribute('uv', new TT.Float32BufferAttribute(UV, 2));
-    g.setIndex(idx); g.computeBoundingSphere(); return g;
+    g.setIndex(idx); if (uvMode === 'side') groups.forEach(([a, n, m]) => g.addGroup(a, n, m)); g.computeBoundingSphere(); return g;
   }
 
   /* ---------- the painted top: black lacquer frame with the gold key band and peonies, the vermilion field ---------- */
@@ -242,151 +247,59 @@
   }
 
 
-  /* ---------- the woods and stones: pixel loops (self-contained: on the portal they run in a worker, atlas/texgen.js) ---------- */
-  function KL(X) {
-    const makeNoise = X.makeNoise;
-    const hexRGB = c => [parseInt(c.slice(1, 3), 16), parseInt(c.slice(3, 5), 16), parseInt(c.slice(5, 7), 16)];
-    const mix = (A, B, t) => [A[0] + (B[0] - A[0]) * t, A[1] + (B[1] - A[1]) * t, A[2] + (B[2] - A[2]) * t];
-    const cl = v => Math.max(0, Math.min(1, v));
-    const pix = (d, Wd, Ht, f) => { for (let y = 0; y < Ht; y++) for (let x = 0; x < Wd; x++) { const v = f(x / Wd, y / Ht), i = (y * Wd + x) * 4; d[i] = v[0]; d[i + 1] = v[1]; d[i + 2] = v[2]; d[i + 3] = 255; } };
-    return {
-      // wood: grain along y (planks: p.planks strips across x, each its own tone and grain), growth rings, pores, an optional stripe
-      wood(d, W, H, p) {
-        const N = makeNoise(p.seed || 3), A = hexRGB(p.a), B = hexRGB(p.b), TAU = Math.PI * 2, np = p.planks || 1;
-        pix(d, W, H, (x, y) => {
-          const k = Math.floor(x * np), sh = np > 1 ? (N(k * 3.7 + 1, 2.3, 1) - .5) * (p.plankVar || .3) : 0, xs = x + k * 1.37;
-          const w = N(xs * 2 + 5, y * .35, 3) * (p.warp || 1.6), ring = Math.sin((xs * (p.rings || 26) + w * 3) * TAU) * .5 + .5;
-          let t = .45 + sh + (ring - .5) * (p.ringAmt || .35) + (N(xs * 90 + w * 4, y * 2.2, 2) - .5) * .5 + (N(xs * 3, y * 1.2, 3) - .5) * .35;
-          if (p.stripe) { const st = N(xs * 7 + 1, y * .25 + 3, 3); t += Math.pow(cl((st - .48) * 4.2), 1.4) * p.stripe - .1; }
-          let c = mix(A, B, cl(t));
-          const pore = N(xs * 260, y * 9, 1); if (pore > .78) { const q = 1 - (pore - .78) * (p.pore || 1.2); c = [c[0] * q, c[1] * q, c[2] * q]; }
-          if (np > 1) { const e = Math.abs(x * np - Math.round(x * np)); if (e < .004 * np) c = [c[0] * .6, c[1] * .6, c[2] * .6]; }   // (the joints between the planks)
-          return c;
-        });
-      },
-      // jade: deep green with milky clouds, darker veins and tiny bright crystals
-      jade(d, W, H, p) {
-        const N = makeNoise(p.seed || 41), A = hexRGB(p.a || '#1f6a46'), B = hexRGB(p.b || '#0b3a24'), Cc = hexRGB(p.c || '#8fc4a4');
-        pix(d, W, H, (x, y) => {
-          const q = N(x * 3 + 1, y * 3 + 2, 4), r = N(x * 7 + q * 2, y * 7 - q * 2, 4);
-          let c = mix(A, B, cl((r - .35) * 1.6));
-          c = mix(c, Cc, cl((N(x * 2.6 + 9, y * 2.6 + q, 4) - .6) * 3) * .55);
-          const v = Math.abs(Math.sin((x * 3 + y * 5 + q * 4) * Math.PI)); if (v < .03) c = mix(c, B, .5);
-          const sp = N(x * 200, y * 200, 1); if (sp > .9) c = mix(c, Cc, (sp - .9) * 4);
-          return c;
-        });
-      },
+  /* ---------- the block boards (2026-11-14 v2): pictures made by atlas/tools/xiangqi-tex.py (images/atlas/xiangqi3d/)
+     top-<look> / side-<look> (the long sides, along D) / end-<look> (near and far), each with a "-m" map: R height (bump),
+     G roughness, B metalness — gold and brass inlays are true metal set flush in the ground, the grooves cut by the bump,
+     the shell (metalness .35) shifts its colour with the angle you look at it from ---------- */
+  const XQ3 = (() => { try { return new URL('../../images/atlas/xiangqi3d/', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../images/atlas/xiangqi3d/'; } })();
+  const XQ3V = '?v=1';
+  const texs = {};
+  function imgTex(name, srgb = true, aniso = 8) {
+    if (texs[name]) return texs[name];
+    const TT = T(), t = new TT.TextureLoader().load(XQ3 + name + '.webp' + XQ3V, () => { if (X.kick) X.kick(300); });
+    if (srgb) t.encoding = TT.sRGBEncoding; t.anisotropy = aniso;
+    return (texs[name] = t);
+  }
+  function nacre(m) {   // the shell: where the m map's B (metalness) is about .35
+    m.onBeforeCompile = sh => {
+      sh.fragmentShader = sh.fragmentShader.replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+      #ifdef USE_METALNESSMAP
+      { float mb = texture2D( metalnessMap, vMetalnessMapUv ).b; float shl = smoothstep( .22, .3, mb ) * ( 1. - smoothstep( .42, .5, mb ) );
+        if ( shl > 0. ) { float vd = dot( normal, normalize( -vViewPosition ) ); float lum = dot( diffuseColor.rgb, vec3( .3, .5, .2 ) );
+          float ph = fract( vd * 3.2 + lum * 2.2 + vMetalnessMapUv.x * 6. + vMetalnessMapUv.y * 3. );
+          vec3 rb = .55 + .45 * cos( 6.2832 * ( ph + vec3( 0., .33, .67 ) ) );
+          diffuseColor.rgb = mix( diffuseColor.rgb, diffuseColor.rgb * .62 + rb * lum * .55, shl * .8 ); } }
+      #endif`);
     };
+    m.customProgramCacheKey = () => 'xqNacre1';
+    return m;
   }
-  function paint(c, name, p, after, c2) {
-    const TG = window.AtlasTexGen; if (TG) return TG.paint(c, KL, name, p, after, c2);
-    const g = c.getContext('2d'), a = g.createImageData(c.width, c.height);
-    (KL.L || (KL.L = KL(X)))[name](a.data, c.width, c.height, p || {});
-    g.putImageData(a, 0, 0); if (after) after(g, c.width, c.height); return c;
-  }
-  const later = (deps, c, fn) => window.AtlasTexGen ? AtlasTexGen.later(deps, c, fn) : (fn(c.getContext('2d'), c.width, c.height), c);
-  const sheets = {};
-  function sheet(key, Wd, Ht, name, p) { if (sheets[key]) return sheets[key]; const c = document.createElement('canvas'); c.width = Wd; c.height = Ht; paint(c, name, p || {}); return (sheets[key] = c); }
-  const TX = {
-    walnut: ['wood', { a: '#6e4a30', b: '#3e2616', seed: 11, rings: 9, ringAmt: .22, warp: 2.6, pore: 1.2, planks: 5, plankVar: .28 }],
-    hongmu: ['wood', { a: '#6e2416', b: '#3e0f08', seed: 15, rings: 20, ringAmt: .2, warp: 1.8, pore: 1.0 }],
-    ebony: ['wood', { a: '#3a2c24', b: '#0c0806', seed: 19, rings: 14, ringAmt: .2, warp: 1.2, stripe: 1.0, pore: .6 }],
-    jade: ['jade', { seed: 41 }],
-    wjade: ['jade', { seed: 43, a: '#eef0e4', b: '#cfd8c8', c: '#ffffff' }],
-    kayaS: ['wood', { a: '#e7c88a', b: '#b98a46', seed: 7, rings: 22, ringAmt: .3, warp: 1.2, pore: .7 }],
-  };
-  const tile = (k, Wd, Ht) => sheet('xq-' + k + Wd + 'x' + (Ht || Wd), Wd, Ht || Wd, TX[k][0], TX[k][1]);
-  // the shogi board's kaya (a same-origin picture, redrawn into the top once it has loaded)
-  let kayaImg = null;
-  const KAYA_SRC = (() => { try { return new URL('../../images/atlas/shogi-kaya.webp?v=3', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../images/atlas/shogi-kaya.webp?v=3'; } })();
-  function withKaya(fn) {
-    if (kayaImg && kayaImg.complete && kayaImg.naturalWidth) { fn(kayaImg); return; }
-    if (!kayaImg) { kayaImg = new Image(); kayaImg.src = KAYA_SRC; }
-    kayaImg.addEventListener('load', () => fn(kayaImg), { once: true });
-  }
-
-  /* ---------- the block boards: the whole top painted (wood / stone, the lines, the river words, the border) ---------- */
   const LK = {
-    kaya: { line: '#170e07', lw: .032, ink: true, words: ['楚', '河', '漢', '界'], wordCol: '#1e140c', border: [[.13, .06], [.21, .018]], gloss: { roughness: .42, clearcoat: .3, clearcoatRoughness: .3 }, side: 'kayaS', bottom: 0x8a6232 },
-    walnut: { groove: true, lw: .06, inlay: '#d6b062', words: null, gloss: { roughness: .5, clearcoat: .2, clearcoatRoughness: .4 }, side: 'walnut', base: 'walnut', bottom: 0x2a1a0e },
-    hongmu: { line: '#e3bd62', lw: .022, gold: true, words: ['楚', '河', '汉', '界'], wordCol: 'gold', border: [[.13, .045], [.2, .014]], gloss: { roughness: .14, clearcoat: 1, clearcoatRoughness: .05 }, side: 'hongmu', base: 'hongmu', bottom: 0x2a0806 },
-    raden: { line: 'nacre', lw: .03, words: ['楚', '河', '漢', '界'], wordCol: 'nacre', border: [[.13, .05], [.22, .02]], gloss: { roughness: .16, clearcoat: 1, clearcoatRoughness: .04 }, side: 'ebony', base: 'ebony', bottom: 0x0a0706 },
-    jade: { line: '#e9c76a', lw: .024, gold: true, words: ['楚', '河', '漢', '界'], wordCol: 'gold', border: [[.13, .05], [.2, .016]], gloss: { roughness: .08, clearcoat: 1, clearcoatRoughness: .03, envMapIntensity: 1.5 }, side: 'wjade', base: 'jade', bottom: 0xcfd8c8 },
+    kaya: { gloss: { roughness: 1, clearcoat: .25, clearcoatRoughness: .35 }, bump: .004, bottom: 0x8a6232 },
+    walnut: { gloss: { roughness: 1, clearcoat: .15, clearcoatRoughness: .4 }, bump: .012, bottom: 0x2a1a0e },
+    hongmu: { gloss: { roughness: 1, clearcoat: 1, clearcoatRoughness: .05 }, bump: .004, bottom: 0x2a0806 },
+    raden: { gloss: { roughness: 1, clearcoat: 1, clearcoatRoughness: .04 }, bump: .004, bottom: 0x0a0706, nacre: true },
+    jade: { gloss: { roughness: 1, clearcoat: 1, clearcoatRoughness: .03, envMapIntensity: 1.4 }, bump: .003, bottom: 0x0f4a2c },
   };
-  const GOLDG = (c, x0, y0, x1, y1) => { const g = c.createLinearGradient(x0, y0, x1, y1); g.addColorStop(0, '#f7dc8a'); g.addColorStop(.5, '#c99a3e'); g.addColorStop(1, '#efcd72'); return g; };
-  const NACRE = (c, x0, y0, x1, y1) => { const g = c.createLinearGradient(x0, y0, x1, y1); ['#f4f0ff', '#d8f0ec', '#fbe6f0', '#e8f4ff', '#f6efe0', '#dff2e6'].forEach((s, i, a) => g.addColorStop(i / (a.length - 1), s)); return g; };
-  function blockTop(look) {
-    const L = LK[look], CW = SZ(2048), CH = SZ(Math.round(2048 * D / W));
-    const c0 = document.createElement('canvas'); c0.width = CW; c0.height = CH;
-    const TT = T(), tex = new TT.CanvasTexture(c0); tex.encoding = TT.sRGBEncoding; tex.anisotropy = 8;
-    const draw = (c, img) => {
-      const k = CW / W, ky = CH / D;
-      // the ground
-      if (look === 'kaya') { c.fillStyle = '#ddb877'; c.fillRect(0, 0, CW, CH); if (img) c.drawImage(img, 0, 0, CW, CH); c.globalCompositeOperation = 'multiply'; c.fillStyle = 'rgba(236,196,128,.55)'; c.fillRect(0, 0, CW, CH); c.globalCompositeOperation = 'source-over'; }   // (a warmer gold than the picture alone under the table's light)
-      else { const s = tile(L.base, SZ(1024), SZ(1024)); c.drawImage(s, 0, 0, CW, CH); }
-      c.save(); c.scale(k, ky);
-      const ox = FR + MG, oy = FR + MG, X0 = i => ox + i * u, Y0 = j => oy + j * u;
-      const path = () => {
-        c.beginPath();
-        for (let j = 0; j < 10; j++) { c.moveTo(X0(0), Y0(j)); c.lineTo(X0(8), Y0(j)); }
-        for (let i = 0; i < 9; i++) { if (i === 0 || i === 8) { c.moveTo(X0(i), Y0(0)); c.lineTo(X0(i), Y0(9)); } else { c.moveTo(X0(i), Y0(0)); c.lineTo(X0(i), Y0(4)); c.moveTo(X0(i), Y0(5)); c.lineTo(X0(i), Y0(9)); } }
-        c.moveTo(X0(3), Y0(0)); c.lineTo(X0(5), Y0(2)); c.moveTo(X0(5), Y0(0)); c.lineTo(X0(3), Y0(2)); c.moveTo(X0(3), Y0(7)); c.lineTo(X0(5), Y0(9)); c.moveTo(X0(5), Y0(7)); c.lineTo(X0(3), Y0(9));
-        const a = u * .08, b = u * .22;
-        [[1, 2], [7, 2], [1, 7], [7, 7], [0, 3], [2, 3], [4, 3], [6, 3], [8, 3], [0, 6], [2, 6], [4, 6], [6, 6], [8, 6]].forEach(([i, j]) => {
-          for (const dx of [-1, 1]) { if ((dx < 0 && i === 0) || (dx > 0 && i === 8)) continue; for (const dy of [-1, 1]) { c.moveTo(X0(i) + dx * a, Y0(j) + dy * b); c.lineTo(X0(i) + dx * a, Y0(j) + dy * a); c.lineTo(X0(i) + dx * b, Y0(j) + dy * a); } }
-        });
-      };
-      const rect = (pad) => { c.beginPath(); c.rect(X0(0) - pad, Y0(0) - pad, 8 * u + 2 * pad, 9 * u + 2 * pad); };
-      const stroke = (shape, lw, style) => {
-        c.lineCap = 'square'; c.lineJoin = 'miter';
-        if (L.groove) {   // a V groove: a dark floor, a lit lower edge
-          shape(); c.strokeStyle = 'rgba(255,226,180,.22)'; c.lineWidth = lw * 1.5; c.save(); c.translate(.006, .009); c.stroke(); c.restore();
-          shape(); c.strokeStyle = 'rgba(14,7,2,.9)'; c.lineWidth = lw; c.stroke(); shape(); c.strokeStyle = 'rgba(0,0,0,.6)'; c.lineWidth = lw * .45; c.stroke(); return;
-        }
-        if (style === 'nacre') { shape(); c.strokeStyle = 'rgba(0,0,0,.6)'; c.lineWidth = lw * 1.35; c.stroke(); shape(); c.strokeStyle = NACRE(c, 0, 0, W, D); c.lineWidth = lw; c.stroke(); return; }
-        if (L.gold) { c.save(); c.translate(.01, .014); shape(); c.strokeStyle = 'rgba(30,6,0,.5)'; c.lineWidth = lw * 1.25; c.stroke(); c.restore(); shape(); c.strokeStyle = GOLDG(c, 0, 0, W, D); c.lineWidth = lw; c.stroke(); return; }
-        shape(); c.strokeStyle = style; c.lineWidth = lw; c.globalAlpha = .9; c.stroke(); c.globalAlpha = 1;
-      };
-      stroke(path, L.lw, L.line);
-      (L.border || []).forEach(([pad, lw]) => stroke(() => rect(pad), lw, L.line));
-      if (L.inlay) {   // the brass inlay round the field (photos: a bright strip set into the walnut)
-        const pad = .42; c.save(); c.translate(.008, .012); rect(pad); c.strokeStyle = 'rgba(20,10,4,.5)'; c.lineWidth = .075; c.stroke(); c.restore();
-        rect(pad); c.strokeStyle = GOLDG(c, 0, 0, W, D); c.lineWidth = .06; c.stroke();
-      }
-      c.restore();
-      // the river words (in pixels: tiny font sizes under a large scale rasterise badly)
-      if (L.words) {
-        c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `700 ${Math.round(u * .7 * k)}px ${KAI}`;
-        L.words.forEach((ch, n) => {
-          const i = [1.4, 2.6, 5.4, 6.6][n], x = X0(i) * k, y = (Y0(4.5) + u * .03) * ky, s = u * k;
-          if (L.wordCol === 'gold') { c.fillStyle = 'rgba(30,6,0,.5)'; c.fillText(ch, x + s * .02, y + s * .028); c.fillStyle = GOLDG(c, x - s * .3, y - s * .3, x + s * .3, y + s * .3); }
-          else if (L.wordCol === 'nacre') { c.fillStyle = 'rgba(0,0,0,.6)'; c.fillText(ch, x + s * .015, y + s * .02); c.fillStyle = NACRE(c, x - s * .3, y - s * .3, x + s * .3, y + s * .3); }
-          else { c.fillStyle = L.wordCol; c.globalAlpha = .9; }
-          c.fillText(ch, x, y); c.globalAlpha = 1;
-        });
-      }
-      const vg = c.createRadialGradient(CW / 2, CH / 2, CW * .3, CW / 2, CH / 2, CW * .75); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.18)'); c.fillStyle = vg; c.fillRect(0, 0, CW, CH);
-    };
-    if (look === 'kaya') { draw(c0.getContext('2d'), null); withKaya(img => { draw(c0.getContext('2d'), img); tex.needsUpdate = true; if (X.kick) X.kick(300); }); }
-    else later([tile(L.base, SZ(1024), SZ(1024))], c0, c => draw(c));
-    return tex;
-  }
-  function sideMat(look) {
+  function faceMat(look, part) {
     const L = LK[look];
-    return mat('side-' + look, () => { const TT = T(), t = new TT.CanvasTexture(tile(L.side, SZ(512), SZ(512))); t.encoding = TT.sRGBEncoding; t.anisotropy = 4; t.wrapS = t.wrapT = TT.RepeatWrapping; return phys(Object.assign({ map: t, color: 0xffffff }, L.gloss)); });
+    return mat(part + '-' + look, () => {
+      const mm = imgTex(part + '-' + look + '-m', false, 4);
+      const m = phys(Object.assign({ map: imgTex(part + '-' + look), color: 0xffffff, roughnessMap: mm, metalnessMap: mm, metalness: 1, bumpMap: mm, bumpScale: part === 'top' ? L.bump : .003 }, L.gloss));
+      return L.nacre ? nacre(m) : m;
+    });
   }
+  const SIDE_H = .52;   // the side pictures' height in world units, from the top edge down
   function blockBoard(look) {
     const L = LK[look], TT = T(), g = new TT.Group(), base = new TT.Group(); g.add(base);
     const A = W / 2, B = D / 2, e = .06, HB = H + .04;
-    const top = mat('top-' + look, () => phys(Object.assign({ map: blockTop(look), color: 0xffffff }, L.gloss)));
-    const side = sideMat(look);
     const add = (geo, m, cast = true) => { const x = new TT.Mesh(geo, m); x.castShadow = cast; x.receiveShadow = true; base.add(x); return x; };
-    // the block: straight sides, a small round over into the top
+    // the block: straight sides, a small round over into the top; the long sides and the ends each their own picture
     const prof = [[0, 0], [0, HB - e]]; for (let i = 1; i <= (LO() ? 2 : 4); i++) { const a = i / (LO() ? 2 : 4) * Math.PI / 2; prof.push([e - Math.cos(a) * e, HB - e + Math.sin(a) * e]); }
-    add(sweep(A, B, prof), side);
+    add(sweep(A, B, prof, 'side'), [faceMat(look, 'end'), faceMat(look, 'side')]);
     const fg = new TT.PlaneGeometry(W - 2 * e, D - 2 * e); fg.rotateX(-Math.PI / 2);
     { const P = fg.attributes.position, UV = fg.attributes.uv; for (let i = 0; i < UV.count; i++) UV.setXY(i, (P.getX(i) + A) / W, 1 - (P.getZ(i) + B) / D); }
-    const fm = add(fg, top, false); fm.position.y = HB;
+    const fm = add(fg, faceMat(look, 'top'), false); fm.position.y = HB;
     if (X.mergeStatic) { try { X.mergeStatic(base); } catch (err) {} }
     { const sc = new TT.Mesh(new TT.BoxGeometry(W - .06, HB - .03, D - .06), new TT.MeshBasicMaterial({ colorWrite: false, depthWrite: false }));
       sc.position.y = (HB - .03) / 2; sc.castShadow = true; sc.receiveShadow = false; sc.userData.noInst = true; sc.material.userData.noMerge = true; g.add(sc); }
@@ -422,46 +335,24 @@
     const g = new TT.LatheGeometry(pts.map(([a, b]) => new TT.Vector2(a, b)), LO() ? 18 : 24); if (X.share) X.share(g);
     return (geos[key] = g);
   }
-  function faceGeo() {
-    if (geos.face) return geos.face;
-    const g = new (T().CircleGeometry)(FACE, LO() ? 18 : 24); if (X.share) X.share(g); return (geos.face = g);
-  }
-  // each set: the face (ground, ink, style), the body's material
+
+  // each set: the face picture (images/atlas/xiangqi3d/pc-<set>: 7 × 2 cells, row 0 red), the finish over it
   const PS = {
-    boxwood: { face: ['#fbecc9', '#ecd2a0', '#d6b27a'], ink: ['#b5221a', '#1d1916'], font: MIN, engrave: true, ring: true, grain: true },
-    brass: { face: [['#f6ead2', '#ead8b4', '#d8c296'], ['#3a2a20', '#2a1d16', '#1c130e']], ink: ['#a61e16', '#f2e6cc'], font: SANS, weight: 700 },
-    ebony: { face: ['#2a201b', '#1a1310', '#100b09'], ink: ['gold', 'silver'], font: KAI, carved: true },
-    urushi: { face: [['#b8302a', '#9a2219', '#6e140e'], ['#2a2628', '#161315', '#0a0809']], ink: ['gold', 'gold'], font: KAI, goldRing: true },
-    jade: { face: [['#f6f7ee', '#e6ebdc', '#cfd8c4'], ['#3f8a60', '#22663f', '#0f3e25']], ink: ['#b02018', 'gold'], font: KAI, ring: true },
-    porcelain: { face: ['#ffffff', '#f4f6f8', '#dfe4ea'], ink: ['#a8261c', '#1f3f8f'], font: KAI, blueRings: true },
+    boxwood: { roughness: 1, clearcoat: .35, clearcoatRoughness: .35 },
+    brass: { roughness: 1, clearcoat: .2, clearcoatRoughness: .4 },
+    ebony: { roughness: 1, clearcoat: .6, clearcoatRoughness: .12 },
+    urushi: { roughness: 1, clearcoat: 1, clearcoatRoughness: .04 },
+    jade: { roughness: 1, clearcoat: 1, clearcoatRoughness: .04 },
+    porcelain: { roughness: 1, clearcoat: 1, clearcoatRoughness: .03 },
   };
-  function faceTex(code, set) {
-    const black = code >= 8, ch = GL[black ? 'b' : 'r'][code & 7], S = PS[set], col = black ? 1 : 0;
-    return canvasTex('xqF3_' + set + '_' + code, 256, 256, (c, Wd) => {
-      const r = Wd / 2, F = Array.isArray(S.face[0]) ? S.face[col] : S.face;
-      const gr = c.createRadialGradient(r * .75, r * .65, r * .05, r, r, r * 1.05); gr.addColorStop(0, F[0]); gr.addColorStop(.7, F[1]); gr.addColorStop(1, F[2]);
-      c.fillStyle = gr; c.fillRect(0, 0, Wd, Wd);
-      if (S.grain && X.wood) { const wd = X.wood('xqPw', '#efd6a6', '#caa067', 256, 256, 1.4); if (wd && wd.image && wd.image.width > 8) { c.globalAlpha = .35; c.globalCompositeOperation = 'multiply'; c.drawImage(wd.image, 0, 0, Wd, Wd); c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1; } }
-      if (set === 'ebony') { const N = makeNoise(5); c.globalAlpha = .25; for (let y = 0; y < Wd; y += 2) { c.fillStyle = N(3, y / Wd * 40, 2) > .55 ? '#4a3a30' : '#050302'; c.fillRect(0, y, Wd, 2); } c.globalAlpha = 1; }
-      if (set === 'jade') { const N = makeNoise(black ? 9 : 13); for (let i = 0; i < 400; i++) { const x = N(i * .3, 1, 1) * Wd, y = N(2, i * .37, 1) * Wd; c.fillStyle = black ? 'rgba(160,220,180,.08)' : 'rgba(255,255,255,.12)'; c.beginPath(); c.arc(x, y, Wd * .03, 0, 7); c.fill(); } }
-      const inkOf = k => k === 'gold' ? (() => { const g = c.createLinearGradient(r * .5, r * .4, r * 1.5, r * 1.6); g.addColorStop(0, '#fbe4a0'); g.addColorStop(.5, '#cf9e3e'); g.addColorStop(1, '#f2d27a'); return g; })()
-        : k === 'silver' ? (() => { const g = c.createLinearGradient(r * .5, r * .4, r * 1.5, r * 1.6); g.addColorStop(0, '#ffffff'); g.addColorStop(.5, '#b9bec6'); g.addColorStop(1, '#eef1f4'); return g; })() : k;
-      const ink = inkOf(S.ink[col]);
-      const engrave = draw => {   // an engraved line: a lit lower edge, a dark upper edge, the colour inside
-        if (S.engrave || S.carved) { c.save(); c.translate(Wd * .006, Wd * .008); draw(S.carved ? 'rgba(120,100,80,.5)' : 'rgba(255,246,222,.9)'); c.restore(); c.save(); c.translate(-Wd * .005, -Wd * .006); draw(S.carved ? 'rgba(0,0,0,.8)' : 'rgba(70,40,15,.55)'); c.restore(); }
-        else { c.save(); c.translate(Wd * .004, Wd * .006); draw('rgba(0,0,0,.25)'); c.restore(); }
-        draw(ink);
-      };
-      if (S.ring) engrave(cl => { c.strokeStyle = cl; c.lineWidth = Wd * .022; c.beginPath(); c.arc(r, r, r * .83, 0, 7); c.stroke(); });
-      if (S.goldRing) engrave(cl => { c.strokeStyle = cl; c.lineWidth = Wd * .016; c.beginPath(); c.arc(r, r, r * .86, 0, 7); c.stroke(); c.beginPath(); c.arc(r, r, r * .79, 0, 7); c.stroke(); });
-      if (S.blueRings) { c.strokeStyle = '#2a4ea0'; c.lineWidth = Wd * .02; c.beginPath(); c.arc(r, r, r * .88, 0, 7); c.stroke(); c.lineWidth = Wd * .008; c.beginPath(); c.arc(r, r, r * .8, 0, 7); c.stroke(); }
-      if (S.carved) {   // ebony: a carved band of small beads round the face
-        engrave(cl => { c.strokeStyle = cl; c.lineWidth = Wd * .012; c.beginPath(); c.arc(r, r, r * .9, 0, 7); c.stroke(); c.beginPath(); c.arc(r, r, r * .72, 0, 7); c.stroke(); });
-        engrave(cl => { c.fillStyle = cl; for (let k = 0; k < 36; k++) { const a = k / 36 * Math.PI * 2; c.beginPath(); c.arc(r + Math.cos(a) * r * .81, r + Math.sin(a) * r * .81, Wd * .018, 0, 7); c.fill(); } });
-      }
-      c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `${S.weight || 900} ${Math.round(Wd * (S.carved ? .46 : .54))}px ${S.font}`;
-      engrave(cl => { c.fillStyle = cl; c.fillText(ch, r, r + Wd * .025); });
-    });
+  function faceGeoOf(code) {   // the disc, its uv pointing at the code's cell
+    const key = 'face' + code + (LO() ? 'lo' : 'hi'); if (geos[key]) return geos[key];
+    const g = new (T().CircleGeometry)(FACE, LO() ? 24 : 40), UV = g.attributes.uv, col = code >= 8 ? 1 : 0, k = (code & 7) - 1;
+    for (let i = 0; i < UV.count; i++) UV.setXY(i, (k + UV.getX(i)) / 7, (1 - col + UV.getY(i)) / 2);
+    if (X.share) X.share(g); return (geos[key] = g);
+  }
+  function faceMatOf(set) {
+    return mat('pf2' + set, () => { const mm = imgTex('pc-' + set + '-m', false, 4); return phys(Object.assign({ map: imgTex('pc-' + set), color: 0xffffff, roughnessMap: mm, metalnessMap: mm, metalness: 1, bumpMap: mm, bumpScale: .006 }, PS[set])); });
   }
   // the disc's turned side: close boxwood / old ivory, fine fibres running up the edge (v), a soft cloud (u wraps round)
   function bodyTex() {
@@ -488,10 +379,9 @@
   const GEOK = { brass: 'brass', jade: 'jade', porcelain: 'porcelain' };
   function piece(code, o = {}, set0) {
     const TT = T(), black = code >= 8, tp = code & 7, set = setOf(set0 || o.set);
-    const fm = mat('pf' + set + code, () => phys(Object.assign({ map: faceTex(code, set), color: 0xffffff },
-      set === 'brass' ? { roughness: .55, clearcoat: .2, clearcoatRoughness: .4 } : set === 'urushi' || set === 'porcelain' || set === 'jade' ? { roughness: .12, clearcoat: 1, clearcoatRoughness: .04 } : set === 'ebony' ? { roughness: .32, clearcoat: .6, clearcoatRoughness: .12 } : { roughness: .45, clearcoat: .35, clearcoatRoughness: .35 })));
+    const fm = faceMatOf(set);
     const kind = GEOK[set] || 'disc', body = new TT.Mesh(bodyGeo(kind), bodyMat(set, black)); body.castShadow = true; body.receiveShadow = true;
-    const cap = new TT.Mesh(faceGeo(), fm); cap.rotation.x = -Math.PI / 2; cap.position.y = (kind === 'brass' ? PH * .92 - .014 : PH - .004) + .001; cap.castShadow = false; cap.receiveShadow = true;
+    const cap = new TT.Mesh(faceGeoOf(code), fm); cap.rotation.x = -Math.PI / 2; cap.position.y = (kind === 'brass' ? PH * .92 - .014 : PH - .004) + .001; cap.castShadow = false; cap.receiveShadow = true;
     const p = new TT.Group(); p.add(body, cap); p.userData = { code, type: TYPE[tp], black, h: PH, r: PR, set };
     return p;
   }
